@@ -287,6 +287,93 @@ export const TYPES = {
     }
   },
 
+  // Tentacle grab-slam: lash out, seize a foe, drag them in, then HURL them into geometry —
+  // the slam-damage physics (entity._slam) does the wall/ground crunch on arrival.
+  tentacle(c, def, st, g, inp) {
+    const range = def.range || 34;
+    const letGo = () => { if (c.tentacles) for (const t of c.tentacles) t.target = null; st.phase = null; st.foe = null; };
+    if (st.phase === 'reach') {
+      st.t -= inp.dt;
+      if (c.tentacles && st.foe) { st.foe.center(st.pt); for (const t of c.tentacles) t.target = st.pt; }
+      if (st.t <= 0) {
+        const foe = st.foe;
+        if (foe && foe.alive && !foe.phase && foe.invuln <= 0 && !foe.grabbedBy && c.alive &&
+            Math.hypot(foe.pos.x - c.pos.x, foe.pos.z - c.pos.z) < range + 10) {
+          st.phase = 'hold'; st.t = def.holdT || 0.55; st.esc = foe.teleEscape && foe.ki > 14;
+          foe.grabbedBy = c; foe.state = 'hit'; foe.stateT = 0; foe.vel.set(0, 0, 0);
+          g.audio.hit(140); g.world.shake(0.5);
+          g.vfx.ring(foe.pos.clone().setY(5), { color: def.color || c.def.colors.accent, r0: 1, r1: 8, life: 0.3 });
+        } else letGo();
+      }
+    } else if (st.phase === 'hold') {
+      const foe = st.foe;
+      if (!foe || !foe.alive || foe.grabbedBy !== c || !c.alive) { if (foe && foe.grabbedBy === c) foe.grabbedBy = null; letGo(); return; }
+      st.t -= inp.dt;
+      // constrict: drag the victim toward the kraken
+      const hx = c.pos.x + c.aim.x * 7 - foe.pos.x, hz = c.pos.z + c.aim.z * 7 - foe.pos.z;
+      foe.pos.x += hx * 6 * inp.dt; foe.pos.z += hz * 6 * inp.dt;
+      foe.vel.set(0, 0, 0); foe.state = 'hit'; foe.stateT = 0;
+      foe.center(st.pt); if (c.tentacles) for (const t of c.tentacles) t.target = st.pt;
+      if (foe.thorns) c.takeDamage(foe.thorns * inp.dt, { src: foe, trueDamage: true });
+      // blink-capable heroes rip free at the midpoint (same rule as front melee grabs)
+      if (st.esc && st.t <= (def.holdT || 0.55) * 0.5) {
+        st.esc = false; foe.ki -= 14; g.afterimage(foe);
+        foe.pos.x -= c.aim.x * 24; foe.pos.z -= c.aim.z * 24; foe.invuln = 0.4; foe.grabbedBy = null;
+        g.audio.teleport(); g.vfx.flash(foe.pos.clone().setY(5), foe.def.colors.accent, 6, 0.2);
+        letGo(); return;
+      }
+      if (st.t <= 0) {
+        foe.grabbedBy = null; foe.state = 'idle';
+        // hurl at the nearest cover block within 60 — else skyward so they crater on the way down
+        let tx = null, tz = null, bd = 60;
+        for (const cv of g.world.cover) { const d = Math.hypot(cv.x - foe.pos.x, cv.z - foe.pos.z); if (d < bd && d > 6) { bd = d; tx = cv.x; tz = cv.z; } }
+        const spd = def.throwSpeed || 88;
+        let kb;
+        if (tx != null) { const d = Math.hypot(tx - foe.pos.x, tz - foe.pos.z) || 1; kb = { x: (tx - foe.pos.x) / d * spd, y: 10, z: (tz - foe.pos.z) / d * spd }; }
+        else kb = { x: c.aim.x * spd * 0.7, y: 30, z: c.aim.z * spd * 0.7 };
+        foe.takeDamage((def.damage || 14) * c.powerBuff, { src: c, unblockable: true, hitstop: 0.12, kb });
+        if (c.grabHeal) c.heal((def.damage || 14) * c.grabHeal);
+        g.vfx.impact(foe.pos.clone().setY(5.6), { x: kb.x, z: kb.z }, { color: def.color || c.def.colors.accent, power: 1.7 });
+        g.world.shake(1.4); g.world.punch(0.72); g.audio.impact(1.3); g.slowmo(0.1, 0.45);
+        letGo();
+      }
+    }
+    if (inp.pressed && ready(c, def, st) && !st.phase) {
+      const foe = g.coneFoe(c, range, def.arc || 1.1) || g.nearestFoe(c, c.pos, range * 0.7);
+      if (foe) {
+        pay(c, def, st);
+        st.phase = 'reach'; st.t = def.reachT || 0.22; st.foe = foe; st.pt = st.pt || new THREE.Vector3(); foe.center(st.pt);
+        c.state = 'cast'; c.stateT = 0; g.audio.zap(240);
+      }
+    }
+  },
+
+  // Dimensional doors (think Portal): first press opens the ORANGE door at your aim,
+  // second press opens the BLUE door — fighters and projectiles that touch one exit the other.
+  portal(c, def, st, g, inp) {
+    if (inp.pressed && ready(c, def, st)) { pay(c, def, st); g.placePortal(c, def); }
+  },
+
+  // Pulse rifle / firearm — held auto-fire tracers with spread + recoil (ammo = ki)
+  rifle(c, def, st, g, inp) {
+    if (inp.held && c.ki < (def.cost || 2)) { if (!st._dry) { st._dry = true; drained(c, g); } }
+    else if (!inp.held) st._dry = false;
+    if (inp.held && st.cd <= 0 && c.ki >= (def.cost || 2)) {
+      c.ki -= (def.cost || 2); st.cd = def.interval || 0.09;
+      c.state = 'cast'; c.stateT = 0; c.punchPose = 1;
+      const m = c.muzzle(_v.clone(), 4.4, 5.7);
+      const spread = def.spread || 0.045;
+      const a = Math.atan2(c.aim3.z, c.aim3.x) + rand(-spread, spread);
+      g.projectiles.spawnProjectile(c, {
+        pos: m, vel: new THREE.Vector3(Math.cos(a), c.aim3.y + rand(-spread, spread), Math.sin(a)).setLength(def.speed || 170),
+        radius: def.radius || 0.55, damage: def.damage || 5, blast: def.blast || 2.2, power: 0.35,
+        color: def.color, color2: def.color2, life: 1.4,
+      });
+      c.vel.x -= c.aim.x * (def.recoil || 1.6); c.vel.z -= c.aim.z * (def.recoil || 1.6);   // kick
+      g.audio.blast(720 + rand(-60, 60), 0.05); g.muzzleFlash(c, def.color, 0.5);
+    }
+  },
+
   // Meteor storm from the sky at the aim point (artillery ult)
   meteor(c, def, st, g, inp) {
     if (st.count > 0) {
@@ -326,6 +413,7 @@ export const EVADE_DEFAULTS = {
   sprint: { name: 'Sprint', cost: 6, cd: 2.2, mult: 1.65, dur: 1.5 },
   slide: { name: 'Slide', cost: 4, cd: 0.9, power: 125, slideT: 0.55, iframes: 0.2 },
   phase: { name: 'Phase Slip', cost: 7, cd: 1.1, power: 95, iframes: 0.45 },
+  leap: { name: 'Leap', cost: 5, cd: 1.1, up: 46, fwd: 66 },
 };
 
 export function performEvade(c, dir, g) {
@@ -346,7 +434,13 @@ export function performEvade(c, dir, g) {
     }
     case 'sprint':
       c.sprintT = d.dur || 1.5; c.sprintMult = d.mult || 1.65;
+      c._sprintThrough = !!d.through; c._sprintLightning = !!d.lightning;   // VOLT: ghost through cover, lightning wake
       g.audio.zap(620); g.trail(c, color); g.afterimage(c);
+      break;
+    case 'leap':
+      c.vel.y += d.up || 36; c.vel.x += dx * (d.fwd || 58); c.vel.z += dz * (d.fwd || 58);
+      c.burstT = 0.55;
+      g.audio.zap(380); g.vfx.ring(c.pos.clone().setY(0.4), { color, r0: 1, r1: 9, life: 0.3, flat: true, y: 0.4 });
       break;
     case 'slide':
       c.vel.x += dx * (d.power || 125); c.vel.z += dz * (d.power || 125);

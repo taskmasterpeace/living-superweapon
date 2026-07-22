@@ -14,10 +14,29 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   If a posed screenshot shows the title screen again, the page reloaded — just recompose and re-shoot.
 
 ## Architecture (see README for the full map)
-- `data/characters.js` — the **14** heroes as **pure data**. Add a hero = add data here. Trait fields:
+- `data/characters.js` — the **18** heroes as **pure data**. Add a hero = add data here. Trait fields:
   `thorns` (hurt grabbers), `phase` (can go intangible), `grabHeal` (lifesteal throws), `teleEscape`
-  (auto-derived from any teleport slot).
-- `engine/abilities.js` — `TYPES` registry (15 power types incl. `phase`). New *kind* of power = one entry.
+  (auto-derived from any teleport slot), `metal` (robot: spark-on-hit, 0.72× knockback, foot exhaust,
+  chromed materials), `guardStrong` (riot shield: 0.55× chip + meter drain), `tentacles` (procedural
+  verlet tentacles, see below).
+- `engine/abilities.js` — `TYPES` registry (18 power types incl. `phase`, `tentacle`, `portal`, `rifle`).
+  New *kind* of power = one entry.
+- **Slam damage** (`entity._slam` + `game.onSlam`): being HURLED into cover walls / arena border / the ground
+  hurts (≤32, credited to the launcher via `lastHitBy`). Gated on `launchT` (set by takeDamage when kb>30 or
+  launch>12) — dashing/flying into walls yourself NEVER hurts. `_slamCd` debounces. Throws + tentacles +
+  fist-slams all feed it.
+- **Tentacles** (`engine/tentacles.js`): verlet chains (9 segs, tapered spheres) in WORLD space — fighters with
+  `def.tentacles` build them lazily and MUST be `dispose()`d (all entity-clear paths call `e.dispose()`).
+  Idle = noise sway; `t.target = vec3` = reach. KRAKEN's `tentacle` ability: reach → hold (drag victim in,
+  `grabbedBy` stun, teleEscape at midpoint) → hurl at the nearest cover block → slam physics does the crunch.
+- **Portals** (`game.placePortal/updatePortals`, type `portal`): press 1 = orange door at aim, press 2 = blue exit;
+  fighters + projectiles within 5u hop through (`_portalCd` 0.9s). One pair per owner; cleared on match start.
+- **Power tiers** (`entity.tierOf`: lvl 1–3=I, 4–6=II, 7–9=III, 10=MAX): crossing a tier = transformation
+  ceremony (shockwave + lightning + pillar + slowmo + "TIER II" announce), aura shifts accent→gold→white-hot
+  (`TIER_COLORS`), and the HUD meter panel physically WIDENS (+44px/tier) so a maxed meter LOOKS bigger.
+- **Will Fist grab-slam** (`summons.js`): triggering the fist with a foe under it seizes → hoists → pile-drives
+  (guaranteed ground slam). Constructs release victims on dispose.
+- Arena is **240** (`world.ARENA`, instance-mirrored for the radar) with 20 cover blocks (= fog shader MAX).
 - `engine/melee.js` — `MeleeSystem`: Strike/Guard/Grab trifecta. Called from `controlPlayer`/`controlBot`
   (keys V/G/C) and per-frame via `melee.update(f,dt)` inside `Fighter.update`.
 - `engine/game.js` — orchestrator + combat helpers + **`onHit(target,amount,opts,blocked)`** (every hit
@@ -189,6 +208,14 @@ crouches on hard landings, and bends in the ragdoll); **fixed flight** into a pr
 rise, release to **hover** (gentle bob, no coast), CTRL to descend, clean auto-land; flying pose leans + trails the legs.
 Re-verified: all 14 kits fire, all 4 modes run, ragdolls (with knees) fire in live combat, flight rises/hovers/lands,
 0 console errors, ~5.4ms/frame.
+**Creative expansion** (Goal 12): slam physics (wall/ground/border damage when launched — never self-inflicted),
+KRAKEN (verlet tentacle grappler: seize → drag → wall-slam), RIFT (Portal-style orange/blue door pairs that
+teleport fighters AND projectiles), TITAN (metal robot: pulse rifle, twin cannon, spark-on-hit, thruster exhaust),
+SARGE (human arsenal: auto carbine, hand cannon, plasma blade, riot shield guard, frag grenades, Combat Leap,
+Airstrike), VOLT reworked into a true speedster (Mach Sprint ghosts through cover w/ blue lightning wake, 12-hit
+flurry), Will Fist grab→hoist→pile-drive, visible power tiers (aura color ladder + widening HUD meters + TIER
+announcements), arena 175→240 with far-field cover. Verified: 18 kits error-free, all new mechanics unit-tested
+headless, 45s mixed-roster soak clean.
 **Evade + energy clarity + perf pass** (Goal 11): per-hero double-tap evade (dash/blink/sprint/slide/phase, data-driven,
 bots juke with it too); loud drained/denied energy feedback (see Energy clarity above) — fixed the silent beam-death and
 frozen-orb-when-dry bugs; perf issues #1–#3, #5–#10 closed (particle upload range + pool shrink, shared projectile/beam/orb

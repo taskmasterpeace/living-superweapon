@@ -6,11 +6,12 @@ import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPa
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { clamp, damp } from '../core/util.js';
 
-export const ARENA = 175; // half-extent of playfield
+export const ARENA = 240; // half-extent of playfield — big enough to fly across
 
 export class World {
   constructor(canvas) {
     this.canvas = canvas;
+    this.ARENA = ARENA;   // instance mirror — the radar reads g.world.ARENA
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance', stencil: false });
     this._maxPR = Math.min(devicePixelRatio || 1, 2);
     this.renderer.setPixelRatio(this._maxPR);
@@ -138,6 +139,7 @@ export class World {
       [-110, -20, 12, 26, 12], [108, 30, 10, 20, 10], [30, 110, 22, 14, 10],
       [-96, 96, 9, 24, 9], [96, -104, 10, 22, 10], [-30, -112, 18, 12, 12],
       [120, -30, 8, 28, 8], [-120, 40, 8, 18, 14],
+      [-180, -150, 14, 20, 12], [175, 160, 12, 24, 12], [180, -160, 10, 18, 14], [-165, 170, 16, 14, 10],   // far-field cover for the big map
     ];
     const crackTex = this._crackTexture();
     for (const [x, z, w, h, d] of spots) {

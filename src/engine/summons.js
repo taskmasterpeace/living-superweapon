@@ -82,7 +82,16 @@ export class Construct {
   trigger() {
     if (this.state !== 'idle') return;
     const g = this.game;
-    if (this.kind === 'fist') { this.state = 'punch'; this.stateT = 0; this.punchFrom = this.pos.clone(); this.punchDir = this.owner.aim.clone(); g.audio.zap(520); }
+    if (this.kind === 'fist') {
+      // a foe under the fist → SEIZE it, hoist it up, and pile-drive it into the ground
+      const prey = g.overlapFoe(this.owner, this.pos, 8);
+      if (prey && !prey.phase && prey.invuln <= 0 && !prey.grabbedBy) {
+        this.state = 'grabrise'; this.stateT = 0; this._victim = prey;
+        prey.grabbedBy = this.owner; prey.state = 'hit'; prey.vel.set(0, 0, 0);
+        g.audio.hit(150); g.world.shake(0.6);
+        g.vfx.ring(prey.pos.clone().setY(5), { color: this.color, r0: 1, r1: 9, life: 0.3 });
+      } else { this.state = 'punch'; this.stateT = 0; this.punchFrom = this.pos.clone(); this.punchDir = this.owner.aim.clone(); g.audio.zap(520); }
+    }
     else if (this.kind === 'hammer') { this.state = 'slam'; this.stateT = 0; g.audio.zap(360); }
     else if (this.kind === 'wall') { this._detonate(g); }
     else { this.life = 0; } // turret dismiss
@@ -101,8 +110,35 @@ export class Construct {
       else if (this.state === 'punch') {
         const k = this.stateT / 0.18; this.pos.copy(this.punchFrom).addScaledVector(this.punchDir, k * 34);
         const foe = game.overlapFoe(o, this.pos, 6);
-        if (foe && !this._hit) { this._hit = true; foe.takeDamage(34 * o.powerBuff, { kb: this.punchDir.clone().setLength(70).setY(0), launch: 16, hitstop: 0.1 }); game.vfx.explode(foe.pos.clone().setY(5), { color: this.color, radius: 10, power: 1.1, scorch: false }); game.world.shake(1.2); game.world.punch(0.8); }
+        if (foe && !this._hit) { this._hit = true; foe.takeDamage(34 * o.powerBuff, { src: o, kb: this.punchDir.clone().setLength(70).setY(0), launch: 16, hitstop: 0.1 }); game.vfx.explode(foe.pos.clone().setY(5), { color: this.color, radius: 10, power: 1.1, scorch: false }); game.world.shake(1.2); game.world.punch(0.8); }
         if (k >= 1) { this.state = 'idle'; this._hit = false; }
+      }
+      else if (this.state === 'grabrise') {
+        const v = this._victim;
+        if (!v || !v.alive || v.grabbedBy !== o) { if (v && v.grabbedBy === o) v.grabbedBy = null; this._victim = null; this.state = 'idle'; }
+        else {
+          this.pos.y = damp(this.pos.y, 21, 6, dt);                       // hoist
+          v.pos.set(this.pos.x, this.pos.y - 4, this.pos.z); v.vel.set(0, 0, 0); v.state = 'hit'; v.stateT = 0;
+          if (this.stateT > 0.5) { this.state = 'grabslam'; this.stateT = 0; game.audio.zap(300); }
+        }
+      }
+      else if (this.state === 'grabslam') {
+        const v = this._victim;
+        this.pos.y -= 140 * dt;                                           // pile-drive
+        if (v && v.alive && v.grabbedBy === o) { v.pos.set(this.pos.x, Math.max(0, this.pos.y - 4), this.pos.z); }
+        if (this.pos.y <= 5) {
+          this.pos.y = 8;
+          if (v && v.alive && v.grabbedBy === o) {
+            v.grabbedBy = null; v.state = 'idle'; v.pos.y = 0;
+            v.takeDamage(26 * o.powerBuff, { src: o, unblockable: true, hitstop: 0.14, kb: { x: 0, y: -10, z: 0 } });
+            v.launchT = 1.0; v.vel.y = -58; v.pos.y = 3;                  // guaranteed ground-slam crunch
+            if (v.grabHeal) {} // (no lifesteal on constructs)
+          }
+          game.vfx.explode(this.pos.clone().setY(1), { color: this.color, radius: 14, power: 1.5 });
+          game.vfx.shockwave(this.pos.clone().setY(0.2), { color: this.color, radius: 30, power: 1.4 });
+          game.world.shake(1.8); game.world.punch(0.7); game.audio.impact(1.4); game.audio.boom(0.6);
+          this._victim = null; this.state = 'idle';
+        }
       }
     } else if (this.kind === 'hammer') {
       if (this.state === 'idle') { const t = this.target(game); this.pos.x = damp(this.pos.x, t.x, 7, dt); this.pos.z = damp(this.pos.z, t.z, 7, dt); this.pos.y = damp(this.pos.y, 16, 6, dt); this.obj.rotation.y += dt; }
@@ -124,6 +160,7 @@ export class Construct {
   }
   _dispose(game) {
     if (this.dead) return; this.dead = true;
+    if (this._victim && this._victim.grabbedBy === this.owner) { this._victim.grabbedBy = null; if (this._victim.state === 'hit') this._victim.state = 'idle'; }
     if (this._cover) { const i = game.world.cover.indexOf(this._cover); if (i >= 0) game.world.cover.splice(i, 1); }
     game.vfx.flash(this.pos.clone(), this.color, 6, 0.2);
     game.scene.remove(this.obj); this.obj.children.forEach(c => { c.geometry.dispose(); c.material.dispose(); });

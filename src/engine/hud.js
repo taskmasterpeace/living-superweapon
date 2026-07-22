@@ -110,6 +110,11 @@ const CSS = `
 #hud .announce .at{ font-size:54px; font-weight:800; letter-spacing:.05em; text-shadow:0 4px 0 rgba(0,0,0,.5), 0 0 34px rgba(0,0,0,.5); }
 #hud .announce .as{ font-size:14px; letter-spacing:.22em; text-transform:uppercase; color:#e8e2d6; margin-top:2px; }
 #hud .xpwrap{ margin-top:9px; display:flex; align-items:center; gap:8px; }
+#hud .pl{ transition:min-width .5s cubic-bezier(.2,1.4,.4,1); }
+#hud .tierb{ display:inline-flex; align-items:center; justify-content:center; height:26px; padding:0 9px; border-radius:7px; font-weight:800; font-size:12px; letter-spacing:.08em; flex:0 0 auto; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.14); color:#b7b0a2; }
+#hud .tierb.t2{ background:linear-gradient(180deg,#ffd15a,#f5921a); color:#160d02; border:none; box-shadow:0 0 12px rgba(245,178,26,.5); }
+#hud .tierb.t3{ background:linear-gradient(180deg,#ffedb0,#ffd15a); color:#160d02; border:none; box-shadow:0 0 16px rgba(255,224,138,.7); }
+#hud .tierb.t4{ background:linear-gradient(180deg,#ffffff,#ffedb0); color:#160d02; border:none; box-shadow:0 0 22px rgba(255,255,255,.8); animation:kipulse .6s infinite; }
 #hud .lvl{ display:inline-flex; align-items:center; justify-content:center; width:26px; height:26px; border-radius:7px; background:linear-gradient(180deg,#ffd15a,#f5921a); color:#160d02; font-weight:800; font-size:14px; box-shadow:0 2px 0 #7a3d05; flex:0 0 auto; }
 #hud .xp{ flex:1; height:6px; border-radius:3px; background:rgba(0,0,0,.5); overflow:hidden; box-shadow:inset 0 0 0 1px rgba(255,255,255,.08); }
 #hud .xp > i{ display:block; height:100%; background:linear-gradient(90deg,#ffd15a,#ffe89a); border-radius:3px; transition:width .2s; }
@@ -147,6 +152,11 @@ export function heroStats(d) {
   if (d.thorns) tags.push('Thorns');
   if (d.phase) tags.push('Phase');
   if (d.grabHeal) tags.push('Absorb');
+  if (d.tentacles) tags.push('Tentacles');
+  if (A.some(a => a.type === 'portal')) tags.push('Portals');
+  if (A.some(a => a.type === 'rifle')) tags.push('Gunner');
+  if (d.metal) tags.push('Armored');
+  if (d.guardStrong) tags.push('Shield');
   if (hasBlink) tags.push('Blink');
   if (A.some(a => a.fly) || d.speed >= 40) tags.push('Aerial');
   return {
@@ -164,6 +174,7 @@ function describeEvade(ev) {
     case 'sprint': return 'speed surge for ~' + (ev.dur || 1.5) + 's';
     case 'slide': return 'long frictionless slide (i-frames)';
     case 'phase': return 'slip through attacks while dashing (long i-frames)';
+    case 'leap': return 'huge parabolic jump — clears buildings';
     default: return 'burst dash with i-frames';
   }
 }
@@ -185,6 +196,9 @@ function describeAbility(a) {
     case 'buff': return 'power-up' + (a.invuln ? ' + invincibility' : '') + (a.heal ? ' + heal' : '') + (a.spendAll ? ' (spends all ki)' : '');
     case 'meteor': return 'call down a meteor storm at your aim';
     case 'phase': return 'hold to go intangible — spends energy';
+    case 'tentacle': return 'tentacles seize a foe, drag them in, and SLAM them into the nearest wall';
+    case 'portal': return 'place a door, then its exit — anything that touches one comes out the other';
+    case 'rifle': return (a.interval > 0.2 ? 'heavy sidearm — hard-hitting shots' : 'full-auto tracer fire') + ' (ammo = ki)';
     default: return a.type;
   }
 }
@@ -214,7 +228,7 @@ export class HUD {
         <div class="lab">HEALTH</div><div class="bar"><i class="hpF" id="plHp"></i></div>
         <div class="lab">KI / ENERGY<span class="kistate" id="kiState">DRAINED</span></div><div class="bar" id="kiBar"><i class="kiF" id="plKi"></i></div>
         <div class="lab">GUARD</div><div class="bar gd"><i class="gdF" id="plGd"></i></div>
-        <div class="xpwrap"><span class="lvl" id="plLvl">1</span><span class="xp"><i id="plXp" style="width:0%"></i></span></div>
+        <div class="xpwrap"><span class="lvl" id="plLvl">1</span><span class="tierb" id="plTier">TIER I</span><span class="xp"><i id="plXp" style="width:0%"></i></span></div>
       </div>
       <div class="panel modebar" id="hMode" style="display:none"></div>
       <div class="announce" id="hAnn"><div class="at" id="hAnnT"></div><div class="as" id="hAnnS"></div></div>
@@ -250,7 +264,8 @@ export class HUD {
       combo: this.root.querySelector('#hCombo'), comboN: this.root.querySelector('#hComboN'),
       dmg: this.root.querySelector('#hDmg'), paused: this.root.querySelector('#hPaused'),
       flash: this.root.querySelector('#hFlash'),
-      lvl: this.root.querySelector('#plLvl'), xp: this.root.querySelector('#plXp'),
+      lvl: this.root.querySelector('#plLvl'), xp: this.root.querySelector('#plXp'), tier: this.root.querySelector('#plTier'),
+      plPanel: this.root.querySelector('.pl'),
       mode: this.root.querySelector('#hMode'), ann: this.root.querySelector('#hAnn'), annT: this.root.querySelector('#hAnnT'), annS: this.root.querySelector('#hAnnS'),
       kit: this.root.querySelector('#hKit'), kitChips: this.root.querySelector('#hKitChips'), end: this.root.querySelector('#hEnd'),
       radar: this.root.querySelector('#hRadar'), radarC: this.root.querySelector('#hRadarC'),
@@ -399,7 +414,8 @@ export class HUD {
     if (sp.behind) return;
     const el = document.createElement('div'); el.className = 'dmg'; el.textContent = text;
     el.style.color = color; el.style.left = sp.x + 'px'; el.style.top = sp.y + 'px';
-    el.style.fontSize = (tag ? 16 : Math.min(38, 18 + (+text || 0) * 0.45)) + 'px';
+    const num = +text || parseInt(String(text).replace(/[^0-9]/g, ''), 10) || 0;   // "SLAM 18" sizes by the 18
+    el.style.fontSize = (tag ? 16 : Math.min(38, 18 + num * 0.45)) + 'px';
     this.el.dmg.appendChild(el);
     const dx = (Math.random() * 2 - 1) * 32, t0 = performance.now();
     const anim = (now) => { const k = (now - t0) / 720; if (k >= 1) { el.remove(); return; } el.style.transform = `translate(-50%,-50%) translate(${dx * k}px, ${-46 * k}px)`; el.style.opacity = String(1 - k * k); requestAnimationFrame(anim); };
@@ -454,6 +470,13 @@ export class HUD {
     this.el.gd.classList.toggle('stagger', p.staggerT > 0);
     this.el.lvl.textContent = p.level;
     this.el.xp.style.width = clamp(p.level >= 10 ? 100 : p.xp / p.xpNext * 100, 0, 100) + '%';
+    // power tier: badge changes + the whole meter panel physically WIDENS — a tier-3 bar is visibly bigger than tier-1
+    if (this._tier !== p.tier) {
+      this._tier = p.tier;
+      this.el.tier.textContent = p.tier >= 4 ? 'MAX TIER' : 'TIER ' + ['', 'I', 'II', 'III'][p.tier];
+      this.el.tier.className = 'tierb' + (p.tier > 1 ? ' t' + p.tier : '');
+      this.el.plPanel.style.minWidth = (240 + (p.tier - 1) * 44) + 'px';
+    }
 
     // ability cooldowns / states
     let charging = 0, maxCharge = 1;

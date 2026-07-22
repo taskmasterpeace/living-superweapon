@@ -3,8 +3,14 @@ import * as THREE from 'three';
 import { clamp, damp, TAU, lerp } from '../core/util.js';
 import { ARENA } from './world.js';
 import { Ragdoll } from './ragdoll.js';
+import { buildTentacles } from './tentacles.js';
+
+// power tiers (Super-Saiyan-style): level 1–3 = I, 4–6 = II, 7–9 = III, 10 = MAX
+export function tierOf(level) { return level >= 10 ? 4 : level >= 7 ? 3 : level >= 4 ? 2 : 1; }
+export const TIER_COLORS = ['#ffffff', null, '#ffd24a', '#ffedb0', '#ffffff'];   // [tier] — null = hero accent
 
 let _fid = 1;
+const _anchor = new THREE.Vector3();
 // flight tuning — levitation model: hold to rise, release to HOVER, descend key to sink.
 const FLY_RISE = 30, FLY_SINK = 26, FLY_TAKEOFF = 15, FLY_HOVER_BOB = 3.2;
 
@@ -15,6 +21,10 @@ const BUILDS = {
   volt: { crest: 1, gaunt: 1 }, warden: { helmet: 1, visor: 1, pauldron: 2, gaunt: 1 }, hive: { crest: 1, pauldron: 1 },
   pyre: { crest: 1, gaunt: 1 }, torch: { crest: 1 }, apex: { crest: 1, pauldron: 1 },
   specter: { helmet: 1, visor: 1, collar: 1 }, vanguard: { helmet: 1, visor: 1, pauldron: 2, gaunt: 1 },
+  kraken: { crest: 1, collar: 1 },                                     // + tentacles from def.tentacles
+  rift: { helmet: 1, visor: 1, collar: 1 },
+  titan: { helmet: 1, visor: 1, pauldron: 2, gaunt: 1, gun: 1 },       // pulse rifle in the right fist
+  sarge: { band: 1, gaunt: 1, gun: 1, blade: 1, shield: 1 },           // rifle + plasma blade + riot shield
 };
 
 function figure(def) {
@@ -22,9 +32,10 @@ function figure(def) {
   const b = BUILDS[def.id] || {};
   const g = new THREE.Group();
   const skin = c.skin || '#e8c39a';
-  const suit = new THREE.MeshStandardMaterial({ color: c.primary, roughness: 0.48, metalness: 0.18, emissive: c.primary, emissiveIntensity: 0.05 });
-  const suit2 = new THREE.MeshStandardMaterial({ color: c.secondary, roughness: 0.5, metalness: 0.25 });
-  const skinMat = new THREE.MeshStandardMaterial({ color: skin, roughness: 0.7 });
+  const metal = !!def.metal;   // robot archetype — chromed plating instead of cloth
+  const suit = new THREE.MeshStandardMaterial({ color: c.primary, roughness: metal ? 0.28 : 0.48, metalness: metal ? 0.85 : 0.18, emissive: c.primary, emissiveIntensity: 0.05 });
+  const suit2 = new THREE.MeshStandardMaterial({ color: c.secondary, roughness: metal ? 0.32 : 0.5, metalness: metal ? 0.9 : 0.25 });
+  const skinMat = new THREE.MeshStandardMaterial({ color: metal ? c.secondary : skin, roughness: metal ? 0.3 : 0.7, metalness: metal ? 0.8 : 0 });
   const glow = new THREE.MeshStandardMaterial({ color: c.accent, emissive: c.accent, emissiveIntensity: 1.6, roughness: 0.4 });
   const armor = new THREE.MeshStandardMaterial({ color: c.secondary, roughness: 0.34, metalness: 0.62 });
   const visorMat = new THREE.MeshStandardMaterial({ color: c.accent, emissive: c.accent, emissiveIntensity: 2.0, roughness: 0.3, metalness: 0.2 });
@@ -88,6 +99,19 @@ function figure(def) {
       if (b.pauldron > 1) { const sp = new THREE.Mesh(new THREE.ConeGeometry(0.3, 0.75, 6), armor); sp.position.set(side * 0.55, 0.95, 0); sp.rotation.z = -side * 0.5; upper.add(sp); }
     }
     if (b.gaunt) { const gl = new THREE.Mesh(new THREE.CylinderGeometry(0.56, 0.5, 1.05, 10), armor); gl.position.y = -0.15; fore.add(gl); const band = new THREE.Mesh(new THREE.TorusGeometry(0.55, 0.1, 6, 12), glow.clone()); band.material.emissiveIntensity = 0.6; band.rotation.x = Math.PI / 2; band.position.y = 0.55; fore.add(band); }
+    // gear — mounted on the DRIVEN fist/fore meshes so poses and the ragdoll carry them
+    if (b.gun && side === 1) {
+      const barrel = new THREE.Mesh(new THREE.BoxGeometry(0.34, 2.0, 0.34), armor); barrel.position.set(0, -1.15, 0.16); fist.add(barrel);
+      const gbody = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.9, 0.62), armor); gbody.position.set(0, -0.3, 0.12); fist.add(gbody);
+      const tip = new THREE.Mesh(new THREE.SphereGeometry(0.2, 8, 6), glow.clone()); tip.material.emissiveIntensity = 1.5; tip.position.set(0, -2.15, 0.16); fist.add(tip);
+    }
+    if (b.blade && side === -1) {
+      const bl = new THREE.Mesh(new THREE.BoxGeometry(0.16, 2.7, 0.56), visorMat); bl.position.set(0, -1.7, 0.18); fist.add(bl);
+    }
+    if (b.shield && side === -1) {
+      const sh = new THREE.Mesh(new THREE.CylinderGeometry(1.45, 1.45, 0.22, 18), armor); sh.rotation.x = Math.PI / 2; sh.position.set(-0.35, -0.3, 0.55); fore.add(sh);
+      const boss = new THREE.Mesh(new THREE.SphereGeometry(0.4, 10, 8), glow.clone()); boss.material.emissiveIntensity = 0.7; boss.position.set(0, 0.2, 0); sh.add(boss);
+    }
     g.add(pivot);
     return pivot;
   };
@@ -188,6 +212,12 @@ export class Fighter {
     // double-tap evade + energy-drained state
     this.evadeCd = 0; this.sprintT = 0; this.sprintMult = 1.6; this._slideT = 0; this.drainedT = 0;
     this.burstT = 0;            // dash-burst window — move() doesn't clamp velocity back to walk speed
+    this._sprintThrough = false; this._sprintLightning = false;   // VOLT: run through cover, blue lightning wake
+    // slam physics: launchT > 0 = recently knocked/thrown → wall/ground impacts hurt (dashing into walls doesn't)
+    this.launchT = 0; this._slamCd = 0;
+    this.metal = !!def.metal;   // robot: sparks when hit, foot exhaust, sturdier vs knockback
+    this.tier = 1;              // power tier (from level) — drives aura color + HUD meter size
+    this.tentacles = null;      // built lazily on first update (needs the scene)
     // per-character trifecta traits
     this.thorns = def.thorns || 0;                                   // damages whoever holds you
     this.canPhase = !!def.phase;                                     // can spend energy to go intangible
@@ -205,6 +235,9 @@ export class Fighter {
     return out.set(this.pos.x + this.aim.x * fwd, this.pos.y + h, this.pos.z + this.aim.z * fwd);
   }
 
+  // Free all scene-level extras (tentacles). Call when the fighter leaves play.
+  dispose() { if (this.tentacles) { for (const t of this.tentacles) t.dispose(); this.tentacles = null; } }
+
   takeDamage(amount, opts = {}) {
     if (this.state === 'ko' || this.invuln > 0) return 0;
     // energy-intangible: strikes/projectiles pass through
@@ -217,8 +250,9 @@ export class Fighter {
     if (this.guarding && this.staggerT <= 0 && !opts.unblockable && opts.src) {
       const dx = opts.src.pos.x - this.pos.x, dz = opts.src.pos.z - this.pos.z, d = Math.hypot(dx, dz) || 1;
       if ((dx / d) * this.aim.x + (dz / d) * this.aim.z > -0.15) {   // attacker in front arc
-        amount *= opts.strike ? 0.12 : opts.dot ? 0.5 : 0.42;
-        this.guardMeter = clamp(this.guardMeter - (opts.strike ? 0.14 : opts.dot ? 0.012 : 0.22), 0, 1);
+        const sh = this.def.guardStrong ? 0.55 : 1;                  // riot shield: harder block, tougher meter
+        amount *= (opts.strike ? 0.12 : opts.dot ? 0.5 : 0.42) * sh;
+        this.guardMeter = clamp(this.guardMeter - (opts.strike ? 0.14 : opts.dot ? 0.012 : 0.22) * sh, 0, 1);
         const pb = opts.dot ? 0.8 : 5;                                // beams shove gently while blocked
         this.vel.x += (dx / d) * pb; this.vel.z += (dz / d) * pb;
         this.hitstop = Math.max(this.hitstop, opts.dot ? 0 : 0.03); this._blocked = 0.16;
@@ -236,8 +270,18 @@ export class Fighter {
     this.hp = clamp(this.hp - amount, 0, this.maxHp);
     this.ki = clamp(this.ki + amount * 0.4, 0, this.maxKi); // build ki when hurt
     this.hitFlash = 1; this.hitstop = Math.max(this.hitstop, opts.hitstop || 0.04);
-    if (opts.kb) this.vel.add(opts.kb);
-    if (opts.launch) this.vel.y += opts.launch;
+    const kbMul = this.metal ? 0.72 : 1;                     // robots are heavy — shrug off knockback
+    if (opts.kb) { this.vel.x += (opts.kb.x || 0) * kbMul; this.vel.y += (opts.kb.y || 0) * kbMul; this.vel.z += (opts.kb.z || 0) * kbMul; }
+    if (opts.launch) this.vel.y += opts.launch * kbMul;
+    // launched hard enough → walls and the ground become weapons for ~1.1s (slam damage in _physics)
+    if (!opts.slam) {
+      const kmag = opts.kb ? Math.hypot(opts.kb.x || 0, opts.kb.z || 0) : 0;
+      if (kmag > 30 || (opts.launch || 0) > 12) this.launchT = 1.1;
+    }
+    // robots shower sparks instead of bruising
+    if (this.metal && this._game && amount >= 3) {
+      this._game.particles.burst(this.pos.x, this.pos.y + 5.5, this.pos.z, { count: 8, speed: 26, life: 0.4, size: 1.8, color: ['#ffd97a', '#fff', '#ff9a2a'], up: 4, grav: 26, drag: 1.2 });
+    }
     this.state = 'hit'; this.stateT = 0;
     if (this.hp <= 0) this._ko();
     if (this._game) this._game.onHit(this, amount, opts, false);
@@ -248,6 +292,7 @@ export class Fighter {
     this.state = 'ko'; this.koT = 0; this.flyHeld = false; this.flying = false; this.descendHeld = false;
     this.guarding = false; this.phase = false; this.strikeActive = 0;
     if (this._game && (this.grabbing || this.grabbedBy)) this._game.melee.release(this.grabbing ? this : this.grabbedBy);
+    if (this._game) for (const e of this._game.entities) if (e.grabbedBy === this) { e.grabbedBy = null; if (e.state === 'hit') e.state = 'idle'; }   // tentacle holds die with the holder
     for (const k in this.slots) { this.slots[k].charging = false; this.slots[k].active = null; }
     // become a ragdoll — carry the killing blow's knockback (+ a small pop) into the sim as launch
     if (this.canPhase) { for (const m of [this.parts.mats.suit, this.parts.mats.suit2]) { m.transparent = false; m.opacity = 1; } }
@@ -257,6 +302,17 @@ export class Fighter {
 
   heal(a) { this.hp = clamp(this.hp + a, 0, this.maxHp); }
   spendKi(a) { if (this.ki < a) return false; this.ki -= a; return true; }
+
+  // Impact damage from being hurled into geometry. Only fires while launched (launchT) — dashing
+  // or flying into a wall on your own never hurts. Credit goes to whoever launched you.
+  _slam(game, speed, kind) {
+    if (!game || this.launchT <= 0 || this._slamCd > 0 || this.state === 'ko' || speed < 30) return;
+    this._slamCd = 0.45;
+    const dmg = Math.min(32, (speed - 22) * 0.5);
+    const src = this.lastHitT < 3 ? this.lastHitBy : null;
+    this.takeDamage(dmg, { src, slam: true, unblockable: true, hitstop: 0.1 });
+    if (game.onSlam) game.onSlam(this, dmg, kind);
+  }
 
   update(dt, game) {
     this.animT += dt;
@@ -270,6 +326,8 @@ export class Fighter {
     if (this.sprintT > 0) this.sprintT -= dt;
     if (this._slideT > 0) this._slideT -= dt;
     if (this.burstT > 0) this.burstT -= dt;
+    if (this.launchT > 0) this.launchT -= dt;
+    if (this._slamCd > 0) this._slamCd -= dt;
     if (this.drainedT > 0) this.drainedT -= dt;
     if (this._noKiT > 0) this._noKiT -= dt;
     for (const k in this.slots) if (this.slots[k].cd > 0) this.slots[k].cd -= dt;
@@ -281,6 +339,20 @@ export class Fighter {
     this.guardMeter = clamp(this.guardMeter + (this.guarding ? 0 : 0.55) * dt, 0, 1);
     if (game && game.melee) game.melee.update(this, dt);
     if (this.sprintT > 0 && game && Math.random() < 0.45) game.trail(this, this.def.colors.accent);   // sprint streak
+    // VOLT-style lightning wake: blue arcs crackle behind a sprinting speedster
+    if (this.sprintT > 0 && this._sprintLightning && game && Math.random() < 0.3) {
+      game.vfx.lightning(this.pos.clone().setY(1.2), { color: '#7fd4ff', count: 2, radius: 5, height: 4 });
+    }
+    // procedural tentacles (built lazily; idle sway unless an ability aims them)
+    if (this.def.tentacles && !this.tentacles && game) this.tentacles = buildTentacles(game.scene, this.def);
+    if (this.tentacles) {
+      _anchor.set(this.pos.x - this.aim.x * 1.2, this.pos.y + 6.6, this.pos.z - this.aim.z * 1.2);
+      for (const t of this.tentacles) t.update(dt, _anchor, this.animT);
+    }
+    // robot foot exhaust — thruster wash while flying or hustling
+    if (this.metal && game && (this.flying || Math.hypot(this.vel.x, this.vel.z) > 14) && Math.random() < 0.6) {
+      game.particles.spawn({ x: this.pos.x + (Math.random() * 2 - 1), y: this.pos.y + 0.8, z: this.pos.z + (Math.random() * 2 - 1), vx: -this.vel.x * 0.15, vy: this.flying ? -16 : -4, vz: -this.vel.z * 0.15, life: 0.4, size: 2.6, color: ['#ff9a2a', '#6a6f78', '#ffd97a'], drag: 1.4, shrink: true });
+    }
     this.poseStrike = damp(this.poseStrike, this.strikeActive > 0 ? 1 : 0, 18, dt);
     this.poseGuard = damp(this.poseGuard, this.guarding ? 1 : 0, 14, dt);
     this.poseGrab = damp(this.poseGrab, (this.grabState || this.grabbing) ? 1 : 0, 16, dt);
@@ -358,16 +430,21 @@ export class Fighter {
       this.pos.y = 0; if (this.vel.y < 0) this.vel.y = 0;
       if (this.flying && !this.flyHeld) this.flying = false;    // descended onto the ground → land, stop levitating
       if (impact < -30 && this.state !== 'ko') this._landT = Math.min(0.26, -impact * 0.006);   // knee-crouch on a hard landing
+      if (impact < -38) this._slam(game, -impact, 'ground');    // hurled into the floor — fall/slam damage
     }
     if (this.pos.y > 85) { this.pos.y = 85; if (this.vel.y > 0) this.vel.y = 0; }  // flight/knockback ceiling
 
-    // arena bounds
+    // arena bounds — getting hurled into the border wall slams (and bounces)
     const b = ARENA - 4;
+    if (Math.abs(this.pos.x) > b) { this._slam(game, Math.abs(this.vel.x), 'wall'); this.vel.x *= -0.4; }
+    if (Math.abs(this.pos.z) > b) { this._slam(game, Math.abs(this.vel.z), 'wall'); this.vel.z *= -0.4; }
     this.pos.x = clamp(this.pos.x, -b, b); this.pos.z = clamp(this.pos.z, -b, b);
 
     // Box3 (AABB) collision vs cover — walls block you, and you can stand on their tops
     this.onBlock = false;
+    const ghost = this.sprintT > 0 && this._sprintThrough;   // VOLT sprints straight through cover
     for (const c of game.world.cover) {
+      if (ghost) break;
       const hx = (c.hx ?? c.r) + this.radius, hz = (c.hz ?? c.r) + this.radius, top = c.top ?? c.h;
       const dx = this.pos.x - c.x, dz = this.pos.z - c.z;
       const ox = hx - Math.abs(dx), oz = hz - Math.abs(dz);
@@ -379,8 +456,9 @@ export class Fighter {
         const spd = Math.hypot(this.vel.x, this.vel.z);
         if (ox < oz) { this.pos.x += Math.sign(dx || 1) * ox; this.vel.x *= -0.3; }   // push out + bounce
         else { this.pos.z += Math.sign(dz || 1) * oz; this.vel.z *= -0.3; }
-        // slammed into a wall hard enough → crack it
+        // slammed into a wall hard enough → crack it AND hurt whoever got thrown into it
         if (spd > 34 && c.hp != null && this._game) { this._game.damageBlock(c, spd * 0.55, { x: this.pos.x, y: this.pos.y + 4, z: this.pos.z }); this.hitstop = Math.max(this.hitstop, 0.04); }
+        this._slam(game, spd, 'wall');
       }
     }
   }
@@ -461,10 +539,13 @@ export class Fighter {
     p.g.rotation.x = damp(p.g.rotation.x, this.flying ? (moving ? 0.42 : 0.12) : 0, 8, dt);
     // cape sway
     if (p.cape) { p.cape.rotation.x = -0.3 + Math.sin(this.animT * 4) * 0.1 - Math.min(0.6, Math.hypot(this.vel.x, this.vel.z) * 0.02); }
-    // aura from ki%/charge/buff
-    const auraP = clamp((this.ki / this.maxKi) * 0.25 + (anyCharge ? 0.5 : 0) + (this.powerBuff > 1 ? 0.5 : 0), 0, 1);
-    p.aura.material.opacity = damp(p.aura.material.opacity, auraP * 0.5, 8, dt);
-    p.aura.scale.set(1 + Math.sin(this.animT * 8) * 0.04, 1.7 + auraP * 0.5, 1 + Math.sin(this.animT * 8) * 0.04);
+    // aura from ki%/charge/buff — and POWER TIER: higher tiers burn brighter in gold → white-hot
+    const auraP = clamp((this.ki / this.maxKi) * 0.25 + (anyCharge ? 0.5 : 0) + (this.powerBuff > 1 ? 0.5 : 0) + (this.tier - 1) * 0.18, 0, 1);
+    const tc = TIER_COLORS[this.tier];
+    p.aura.material.color.set(tc || this.def.colors.accent);
+    p.aura.material.opacity = damp(p.aura.material.opacity, auraP * (0.5 + (this.tier - 1) * 0.1), 8, dt);
+    const tp = 1 + (this.tier - 1) * 0.08;
+    p.aura.scale.set((1 + Math.sin(this.animT * 8) * 0.04) * tp, (1.7 + auraP * 0.5) * tp, (1 + Math.sin(this.animT * 8) * 0.04) * tp);
     // contact shadow — pinned to the ground, shrinks & fades as the fighter climbs
     if (p.shadow) {
       p.shadow.position.set(0, 0.06 - this.pos.y, 0);

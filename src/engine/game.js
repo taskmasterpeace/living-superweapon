@@ -12,6 +12,7 @@ import { Gamepad } from '../core/gamepad.js';
 import { runSlot, performEvade } from './abilities.js';
 import { ROSTER } from '../data/characters.js';
 import { clamp, rand, TAU, damp } from '../core/util.js';
+import { tierOf, TIER_COLORS } from './entity.js';
 
 const _v = new THREE.Vector3();
 const SLOT_KEYS = ['lmb', 'rmb', 'q', 'e', 'r', 'f', 'shift'];
@@ -82,6 +83,7 @@ export class Game {
     this.humans = [];                // local players: [{ fighter, scheme:'kbm'|'pad' }]
     this.mode = null; this.modeId = null; this.ms = {}; this.matchOver = false; this.matchResult = null;
     this.entities = []; this.minions = []; this.constructs = [];
+    this.portals = []; this._openPair = null;   // dimensional door pairs (RIFT)
     this.aimPoint = new THREE.Vector3(20, 0, 0);
     this.time = 0; this.running = false; this.player = null;
     this.lockTarget = null; this._lastLock = null; this._sp = { x: 0, y: 0, behind: false };
@@ -285,10 +287,11 @@ export class Game {
 
   startMatch(charId) {
     // clear
-    for (const e of this.entities) this.scene.remove(e.obj);
+    for (const e of this.entities) { this.scene.remove(e.obj); if (e.dispose) e.dispose(); }
     this.entities.length = 0; this.minions.length = 0;
     for (const c of this.constructs) c._dispose(this); this.constructs.length = 0;
     this.projectiles.list.length = 0;
+    while (this.portals.length) this._closePair(this.portals[0]);
     this.hardLock = null; this.lockTarget = null;
     this.world.resetTerrain(); this.vfx.clearScorches();   // restore blocks + flatten craters each match
 
@@ -307,7 +310,7 @@ export class Game {
     if (!this.player) return;
     const def = ROSTER.find(r => r.id === charId); if (!def) return;
     const { x, z } = this.player.pos; const y = this.player.pos.y;
-    this.scene.remove(this.player.obj);
+    this.scene.remove(this.player.obj); if (this.player.dispose) this.player.dispose();
     const i = this.entities.indexOf(this.player); if (i >= 0) this.entities.splice(i, 1);
     this.player = this.addFighter(def, { isPlayer: true, team: 0, x, z });
     this.player.human = true; this.player.scheme = 'kbm';
@@ -353,10 +356,11 @@ export class Game {
     return f;
   }
   startMode(id, o = {}) {
-    for (const e of this.entities) this.scene.remove(e.obj);
+    for (const e of this.entities) { this.scene.remove(e.obj); if (e.dispose) e.dispose(); }
     this.entities.length = 0; this.minions.length = 0; this.humans.length = 0;
     for (const c of this.constructs) c._dispose(this); this.constructs.length = 0;
     this.projectiles.list.length = 0;
+    while (this.portals.length) this._closePair(this.portals[0]);
     this.hardLock = null; this.lockTarget = null; this.combo = 0; this.comboT = 0;
     this.world.resetTerrain(); this.vfx.clearScorches();
     this.modeId = id; this.mode = MODE_IMPL[id] || MODE_IMPL.training; this.ms = {}; this.matchOver = false; this.matchResult = null;
@@ -513,12 +517,26 @@ export class Game {
     if (f.buffT <= 0) f.powerBuff = f.levelMult;
     f.maxHp = Math.round(f.maxHp * 1.07); f.hp = Math.min(f.maxHp, f.hp + f.maxHp * 0.25);
     f.maxKi = Math.round(f.maxKi * 1.04);
+    // POWER TIERS (super-saiyan style): crossing 4/7/10 is a TRANSFORMATION, not just a number
+    const newTier = tierOf(f.level);
+    const tiered = newTier > f.tier; f.tier = newTier;
     if (!quiet) {
-      this.vfx.explode(f.pos.clone().setY(5), { color: f.def.colors.accent, color2: '#fff', radius: 11, power: 1.1, scorch: false });
-      this.vfx.ring(f.pos.clone().setY(3), { color: f.def.colors.accent, r0: 2, r1: 24, life: 0.6, flat: true, y: 0.5 });
-      this.audio.power(true);
-      if (this.isHuman(f) && this.hud) this.hud.announce('LEVEL ' + f.level, f.name + ' powered up', f.def.colors.accent);
-    }
+      const tc = TIER_COLORS[f.tier] || f.def.colors.accent;
+      if (tiered) {
+        this.vfx.explode(f.pos.clone().setY(5), { color: tc, color2: '#fff', radius: 16, power: 1.8, scorch: false });
+        this.vfx.shockwave(f.pos.clone().setY(0.2), { color: tc, radius: 46, power: 1.6 });
+        this.vfx.lightning(f.pos.clone().setY(2), { color: tc, count: 6, radius: 16, height: 22 });
+        for (let i = 0; i < 60; i++) this.particles.spawn({ x: f.pos.x + rand(-3, 3), y: rand(0, 6), z: f.pos.z + rand(-3, 3), vx: rand(-3, 3), vy: rand(26, 50), vz: rand(-3, 3), life: 1.2, size: 3.6, color: [tc, '#fff'], drag: 0.5 });
+        this.world.punch(0.7); this.world.shake(1.8); this.audio.power(true); this.audio.boom(0.8);
+        this.slowmo(0.3, 0.4);
+        if (this.hud && (this.isHuman(f) || this.mode)) this.hud.announce('TIER ' + ['', 'I', 'II', 'III', 'MAX'][f.tier], f.name + ' ASCENDS', tc);
+      } else {
+        this.vfx.explode(f.pos.clone().setY(5), { color: f.def.colors.accent, color2: '#fff', radius: 11, power: 1.1, scorch: false });
+        this.vfx.ring(f.pos.clone().setY(3), { color: f.def.colors.accent, r0: 2, r1: 24, life: 0.6, flat: true, y: 0.5 });
+        this.audio.power(true);
+        if (this.isHuman(f) && this.hud) this.hud.announce('LEVEL ' + f.level, f.name + ' powered up', f.def.colors.accent);
+      }
+    } else f.tier = newTier;
   }
   announceKill(killer, victim, bonus) {
     if (!this.hud) return;
@@ -544,6 +562,17 @@ export class Game {
       if (this.hud.kiWarn) this.hud.kiWarn();
     }
   }
+  // A launched fighter just hit a wall / the ground hard (entity._slam). Sell the crunch.
+  onSlam(f, dmg, kind) {
+    const p = f.pos.clone().setY(f.pos.y + 4);
+    this.vfx.impactStar(p, 8 + dmg * 0.35, '#ffffff', 0.18);
+    this.particles.burst(f.pos.x, f.pos.y + 3, f.pos.z, { count: 14, speed: 24, life: 0.5, size: 3, color: ['#8a8f99', '#fff', f.def.colors.accent], up: 8, grav: 14, drag: 1.6 });
+    if (kind === 'ground') { this.vfx.shockwave(f.pos.clone().setY(0.2), { color: '#c9cfd9', radius: 14 + dmg, power: 0.9 }); this.world.crater(f.pos.x, f.pos.z, 6, 1.2); }
+    this.world.shake(1.2); this.audio.impact(1.15); this.audio.boom(0.35);
+    if (this.hud) this.hud.damageNumber(f.pos, 'SLAM ' + Math.round(dmg), '#ffb03a', false);
+    if (this.isHuman(f) && this.hud) this.hud.flashScreen('#ff8a5a', 0.12);
+  }
+
   // Pressed an ability without the ki to pay for it (nothing fired — say so).
   onNoKi(f, key) {
     if (!this.isHuman(f)) return;
@@ -566,6 +595,69 @@ export class Game {
       this.comboT = 1.3;
     }
     if (src && !blocked && this.isHuman(src) && amount >= 1) this.grantXp(src, amount * 0.35);   // XP for landing damage
+  }
+
+  // ---------- dimensional doors (Portal-style paired rifts) ----------
+  placePortal(caster, def) {
+    const range = def.range || 80;
+    let px, pz;
+    if (caster.isPlayer) { px = this.aimPoint.x; pz = this.aimPoint.z; }
+    else { px = caster.pos.x + caster.aim.x * 34; pz = caster.pos.z + caster.aim.z * 34; }
+    const dx = px - caster.pos.x, dz = pz - caster.pos.z, d = Math.hypot(dx, dz) || 1;
+    if (d > range) { px = caster.pos.x + dx / d * range; pz = caster.pos.z + dz / d * range; }
+    const open = this._openPair && this._openPair.owner === caster && !this._openPair.b ? this._openPair : null;
+    if (open) {                                      // second press → BLUE exit door; the pair goes live
+      open.b = this._mkPortal(px, pz, def.colorB || '#37c7ff');
+      open.life = def.dur || 14; this._openPair = null;
+      this.audio.power(true);
+    } else {                                         // first press → ORANGE entry door (replaces your old pair)
+      const old = this.portals.find(p => p.owner === caster);
+      if (old) this._closePair(old);
+      const pr = { owner: caster, a: this._mkPortal(px, pz, def.colorA || '#ff8a2a'), b: null, life: (def.dur || 14) + 6 };
+      this.portals.push(pr); this._openPair = pr;
+      this.audio.teleport();
+    }
+  }
+  _mkPortal(x, z, color) {
+    const grp = new THREE.Group();
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(4.6, 0.55, 10, 36), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false }));
+    const disc = new THREE.Mesh(new THREE.CircleGeometry(4.2, 28), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.22, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+    grp.add(ring, disc); grp.position.set(x, 6.2, z);
+    this.scene.add(grp);
+    this.vfx.ring(new THREE.Vector3(x, 1, z), { color, r0: 1, r1: 10, life: 0.4, flat: true, y: 0.5 });
+    return { x, z, grp, ring, color };
+  }
+  _closePair(pr) {
+    for (const side of [pr.a, pr.b]) if (side) { this.scene.remove(side.grp); side.grp.children.forEach(m => { m.geometry.dispose(); m.material.dispose(); }); }
+    const i = this.portals.indexOf(pr); if (i >= 0) this.portals.splice(i, 1);
+    if (this._openPair === pr) this._openPair = null;
+  }
+  updatePortals(dt) {
+    for (let i = this.portals.length - 1; i >= 0; i--) {
+      const pr = this.portals[i];
+      pr.life -= dt;
+      if (pr.life <= 0 || !pr.owner.alive && !pr.b) { this._closePair(pr); continue; }
+      for (const side of [pr.a, pr.b]) if (side) {
+        side.grp.rotation.y += dt * 1.4; side.ring.rotation.z += dt * 2.2;
+        if (Math.random() < 0.2) this.particles.spawn({ x: side.x + rand(-3, 3), y: 6 + rand(-3, 3), z: side.z + rand(-3, 3), vx: 0, vy: rand(2, 6), vz: 0, life: 0.5, size: 1.8, color: [side.color, '#fff'], drag: 1, shrink: true });
+      }
+      if (!pr.b) continue;                            // only half a doorway — nothing to walk through yet
+      const hop = (obj, from, to) => {
+        obj.pos.x = to.x + (obj.pos.x - from.x); obj.pos.z = to.z + (obj.pos.z - from.z);
+        obj._portalCd = 0.9;
+        this.vfx.flash(new THREE.Vector3(from.x, 6, from.z), from.color, 5, 0.18);
+        this.vfx.flash(new THREE.Vector3(to.x, 6, to.z), to.color, 6, 0.22);
+        this.audio.teleport();
+      };
+      const tryHop = (obj, yMid) => {
+        if (obj._portalCd > 0) { obj._portalCd -= dt; return; }
+        if (yMid > 14) return;                        // doors are ground-level
+        if (Math.hypot(obj.pos.x - pr.a.x, obj.pos.z - pr.a.z) < 5) hop(obj, pr.a, pr.b);
+        else if (Math.hypot(obj.pos.x - pr.b.x, obj.pos.z - pr.b.z) < 5) hop(obj, pr.b, pr.a);
+      };
+      for (const f of this.entities) if (f.alive) tryHop(f, f.pos.y);
+      for (const o of this.projectiles.list) if (o.vel && o.sustaining === undefined && !o.dead) tryHop(o, o.pos.y);
+    }
   }
 
   // ---------- fx helpers used by abilities ----------
@@ -802,9 +894,10 @@ export class Game {
       if (wasAlive && f.state === 'ko') this.handleKO(f);
       f._wasAlive = f.state !== 'ko';
     }
-    for (let i = this.entities.length - 1; i >= 0; i--) if (this.entities[i]._remove) { this.scene.remove(this.entities[i].obj); this.entities.splice(i, 1); }  // survival dead removal
+    for (let i = this.entities.length - 1; i >= 0; i--) if (this.entities[i]._remove) { const e = this.entities[i]; this.scene.remove(e.obj); if (e.dispose) e.dispose(); this.entities.splice(i, 1); }  // survival dead removal
 
     this.resolveBodies();
+    this.updatePortals(dt);
     this.projectiles.update(dt, this);
     for (let i = this.minions.length - 1; i >= 0; i--) if (!this.minions[i].update(dt, this)) this.minions.splice(i, 1);
     for (let i = this.constructs.length - 1; i >= 0; i--) if (!this.constructs[i].update(dt, this)) this.constructs.splice(i, 1);
