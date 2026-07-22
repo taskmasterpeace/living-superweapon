@@ -148,7 +148,20 @@ function figure(def) {
   const aura = new THREE.Mesh(new THREE.SphereGeometry(3.4, 20, 16), new THREE.MeshBasicMaterial({ color: c.accent, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false }));
   aura.position.y = 5.0; aura.scale.set(1, 1.7, 1); g.add(aura);
 
-  return { g, torso, head, pelvis, cowl, emblem, aura, cape, armL, armR, legL, legR, eyeL, eyeR, shadow, mats: { suit, suit2, glow } };
+  // guard arc — a visible energy shield in front while blocking (full ring for 'barrier' guards).
+  // Reads state at a glance: bright = fresh guard, red = about to break, flash = just blocked a hit.
+  const barrier = def.guardType === 'barrier';
+  const guardArc = new THREE.Mesh(
+    new THREE.CylinderGeometry(3.8, 4.2, 6.2, 24, 1, true, barrier ? 0 : -0.85, barrier ? TAU : 1.7),
+    new THREE.MeshBasicMaterial({ color: def.guardType === 'deflect' ? '#ffd24a' : '#bfe0ff', transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide })
+  );
+  guardArc.position.y = 5.4; g.add(guardArc);
+
+  // frost shell — appears when frozen solid
+  const ice = new THREE.Mesh(new THREE.IcosahedronGeometry(4.6, 1), new THREE.MeshStandardMaterial({ color: '#bfeaff', transparent: true, opacity: 0, roughness: 0.15, metalness: 0.1, emissive: '#4fb8e6', emissiveIntensity: 0.15 }));
+  ice.position.y = 5.2; ice.scale.set(1, 1.5, 1); ice.visible = false; g.add(ice);
+
+  return { g, torso, head, pelvis, cowl, emblem, aura, cape, armL, armR, legL, legR, eyeL, eyeR, shadow, guardArc, ice, mats: { suit, suit2, glow } };
 }
 
 export class Fighter {
@@ -208,7 +221,7 @@ export class Fighter {
     this.phase = false;                 // energy-intangible
     this.poseStrike = 0; this.poseGuard = 0; this.poseGrab = 0;
     // AI reaction state (must start at 0, not undefined — guard/counter logic compares <= 0)
-    this._forceBeamT = 0; this._forceBeam = null; this._forceBeamActive = false; this._counterCd = 0; this._meleeCd = 0; this._guardT = 0;
+    this._forceBeamT = 0; this._forceBeam = null; this._forceBeamActive = false; this._counterCd = 0; this._meleeCd = 0; this._guardT = 0; this._aiCharge = 0;
     // double-tap evade + energy-drained state
     this.evadeCd = 0; this.sprintT = 0; this.sprintMult = 1.6; this._slideT = 0; this.drainedT = 0;
     this.burstT = 0;            // dash-burst window — move() doesn't clamp velocity back to walk speed
@@ -218,6 +231,13 @@ export class Fighter {
     this.metal = !!def.metal;   // robot: sparks when hit, foot exhaust, sturdier vs knockback
     this.tier = 1;              // power tier (from level) — drives aura color + HUD meter size
     this.tentacles = null;      // built lazily on first update (needs the scene)
+    // strength (1–10, default 5): melee damage up, knockback/beam-shove down, faster freeze break-outs
+    this.strength = def.strength ?? 5;
+    this.meleeCharge = 0;       // charged-melee wind-up (melee.js) — >0 while holding the punch
+    this._heavyT = 0; this._heavyP = 0; this._heavyHay = false;
+    this.frost = 0; this.frozenT = 0; this._frostImmuneT = 0;   // cold buildup → encased in ice
+    this._dots = [];            // damage-over-time stacks [{dps,t,color,kind,src}]
+    this._quiverIdx = 0;        // archer payload selector (quiver ability cycles it)
     // per-character trifecta traits
     this.thorns = def.thorns || 0;                                   // damages whoever holds you
     this.canPhase = !!def.phase;                                     // can spend energy to go intangible
@@ -238,6 +258,49 @@ export class Fighter {
   // Free all scene-level extras (tentacles). Call when the fighter leaves play.
   dispose() { if (this.tentacles) { for (const t of this.tentacles) t.dispose(); this.tentacles = null; } }
 
+  // ---- status: damage-over-time (poison/burn/gas arrows & clouds) ----
+  addDot(o) {
+    if (this.state === 'ko' || this.invuln > 0) return;
+    const same = this._dots.find(d => d.kind === o.kind);
+    if (same) { same.t = Math.max(same.t, o.dur || 3); same.dps = Math.max(same.dps, o.dps || 4); same.src = o.src || same.src; }
+    else this._dots.push({ dps: o.dps || 4, t: o.dur || 3, color: o.color || '#8fe08a', kind: o.kind || 'poison', src: o.src || null });
+  }
+
+  // ---- status: frost buildup → ENCASED IN ICE. Strength melts out faster; fire heroes resist;
+  // blink heroes spend ki to teleport out the instant it lands. A heavy hit shatters it early (bonus dmg).
+  addFrost(amt, src) {
+    if (this.state === 'ko' || this.frozenT > 0 || this._frostImmuneT > 0 || this.invuln > 0) return;
+    this.frost = clamp(this.frost + amt * (this.def.frostResist ? 0.45 : 1), 0, 1);
+    if (this.frost >= 1) {
+      this.frost = 0;
+      if (this.teleEscape && this.ki >= 20) {           // magic/blink types slip out instantly
+        this.ki -= 20;
+        if (this._game) { this._game.afterimage(this); this._game.audio.teleport(); }
+        this.pos.x -= this.aim.x * 18; this.pos.z -= this.aim.z * 18; this.invuln = 0.4; this._frostImmuneT = 2;
+        return;
+      }
+      // freeze duration: strength melts it — STR 10 ≈ 0.9s, STR 1 ≈ 2.4s
+      this.frozenT = clamp(2.6 - this.strength * 0.17, 0.8, 2.6);
+      if (src && src !== this) { this.lastHitBy = src; this.lastHitT = 0; }
+      this.guarding = false; this.meleeCharge = 0; this.strikeActive = 0;
+      this.flyHeld = false; this.descendHeld = false;
+      if (this._game) {
+        this._game.audio.zap(180);
+        this._game.particles.burst(this.pos.x, this.pos.y + 5, this.pos.z, { count: 16, speed: 14, life: 0.5, size: 2.6, color: ['#bfeaff', '#eaffff', '#fff'], up: 4, drag: 1.5 });
+        if (this._game.hud && this._game.isHuman(this)) this._game.hud.damageNumber(this.pos, 'FROZEN', '#bfeaff', true);
+      }
+    }
+  }
+  _thaw(shattered) {
+    if (this.frozenT <= 0) return;
+    this.frozenT = 0; this._frostImmuneT = 2.5; this.invuln = Math.max(this.invuln, 0.4);
+    if (this._game) {
+      this._game.particles.burst(this.pos.x, this.pos.y + 5, this.pos.z, { count: shattered ? 26 : 14, speed: shattered ? 26 : 14, life: 0.6, size: 3, color: ['#bfeaff', '#eaffff', '#fff'], up: 6, grav: 18, drag: 1.4 });
+      this._game.audio.zap(shattered ? 90 : 300);
+      if (shattered) { this._game.world.shake(0.8); this._game.audio.impact(0.9); }
+    }
+  }
+
   takeDamage(amount, opts = {}) {
     if (this.state === 'ko' || this.invuln > 0) return 0;
     // energy-intangible: strikes/projectiles pass through
@@ -246,10 +309,11 @@ export class Fighter {
       if (g && Math.random() < 0.6) g.particles.burst(this.pos.x, this.pos.y + 5, this.pos.z, { count: 3, speed: 8, life: 0.3, size: 2.2, color: [this.def.colors.accent, '#fff'] });
       return 0;
     }
-    // GUARD beats STRIKE: block frontal, non-grab damage
+    // GUARD beats STRIKE: block frontal, non-grab damage ('barrier' guards cover ALL directions)
     if (this.guarding && this.staggerT <= 0 && !opts.unblockable && opts.src) {
       const dx = opts.src.pos.x - this.pos.x, dz = opts.src.pos.z - this.pos.z, d = Math.hypot(dx, dz) || 1;
-      if ((dx / d) * this.aim.x + (dz / d) * this.aim.z > -0.15) {   // attacker in front arc
+      const inArc = this.def.guardType === 'barrier' || (dx / d) * this.aim.x + (dz / d) * this.aim.z > -0.15;
+      if (inArc) {   // attacker in front arc (or omnidirectional barrier)
         const sh = this.def.guardStrong ? 0.55 : 1;                  // riot shield: harder block, tougher meter
         amount *= (opts.strike ? 0.12 : opts.dot ? 0.5 : 0.42) * sh;
         this.guardMeter = clamp(this.guardMeter - (opts.strike ? 0.14 : opts.dot ? 0.012 : 0.22) * sh, 0, 1);
@@ -267,10 +331,15 @@ export class Fighter {
     if (this.grabState === 'startup') { this.grabState = null; this.grabT = 0; }
     if (this.grabbing && this._game) this._game.melee.release(this);
 
+    // frozen solid: a heavy hit SHATTERS the ice early for bonus damage
+    if (this.frozenT > 0 && (opts.strike || (opts.kb && Math.hypot(opts.kb.x || 0, opts.kb.z || 0) > 30))) {
+      amount *= 1.3; this._thaw(true);
+    }
     this.hp = clamp(this.hp - amount, 0, this.maxHp);
     this.ki = clamp(this.ki + amount * 0.4, 0, this.maxKi); // build ki when hurt
     this.hitFlash = 1; this.hitstop = Math.max(this.hitstop, opts.hitstop || 0.04);
-    const kbMul = this.metal ? 0.72 : 1;                     // robots are heavy — shrug off knockback
+    // STRENGTH plants your feet: 10 shrugs off ~40% of knockback, 1 gets ragdolled around
+    const kbMul = (this.metal ? 0.72 : 1) * (1.22 - this.strength * 0.047);
     if (opts.kb) { this.vel.x += (opts.kb.x || 0) * kbMul; this.vel.y += (opts.kb.y || 0) * kbMul; this.vel.z += (opts.kb.z || 0) * kbMul; }
     if (opts.launch) this.vel.y += opts.launch * kbMul;
     // launched hard enough → walls and the ground become weapons for ~1.1s (slam damage in _physics)
@@ -291,6 +360,8 @@ export class Fighter {
   _ko() {
     this.state = 'ko'; this.koT = 0; this.flyHeld = false; this.flying = false; this.descendHeld = false;
     this.guarding = false; this.phase = false; this.strikeActive = 0;
+    this.frozenT = 0; this.frost = 0; this._dots.length = 0; this.meleeCharge = 0; this._heavyT = 0;
+    if (this.parts.ice) this.parts.ice.visible = false;
     if (this._game && (this.grabbing || this.grabbedBy)) this._game.melee.release(this.grabbing ? this : this.grabbedBy);
     if (this._game) for (const e of this._game.entities) if (e.grabbedBy === this) { e.grabbedBy = null; if (e.state === 'hit') e.state = 'idle'; }   // tentacle holds die with the holder
     for (const k in this.slots) { this.slots[k].charging = false; this.slots[k].active = null; }
@@ -330,6 +401,33 @@ export class Fighter {
     if (this._slamCd > 0) this._slamCd -= dt;
     if (this.drainedT > 0) this.drainedT -= dt;
     if (this._noKiT > 0) this._noKiT -= dt;
+    if (this._frostImmuneT > 0) this._frostImmuneT -= dt;
+    if (this.frost > 0 && this.frozenT <= 0) this.frost = Math.max(0, this.frost - dt * 0.25);   // buildup decays
+    // damage-over-time stacks (poison/burn/gas)
+    for (let i = this._dots.length - 1; i >= 0; i--) {
+      const d = this._dots[i]; d.t -= dt;
+      if (this.state !== 'ko' && this.invuln <= 0) {
+        this.hp = clamp(this.hp - d.dps * dt, 0, this.maxHp);
+        if (d.src && d.src !== this) { this.lastHitBy = d.src; this.lastHitT = 0; }
+        d._acc = (d._acc || 0) + d.dps * dt; d._tick = (d._tick || 0) + dt;
+        if (d._tick > 0.6 && game && game.hud) { game.hud.damageNumber(this.pos, Math.max(1, Math.round(d._acc)), d.color, true); d._acc = 0; d._tick = 0; }
+        if (game && Math.random() < 0.25) game.particles.spawn({ x: this.pos.x + (Math.random() * 3 - 1.5), y: this.pos.y + 4 + Math.random() * 4, z: this.pos.z + (Math.random() * 3 - 1.5), vx: 0, vy: 5, vz: 0, life: 0.5, size: 2, color: d.color, drag: 1, shrink: true });
+        if (this.hp <= 0) this._ko();
+      }
+      if (d.t <= 0) this._dots.splice(i, 1);
+    }
+    // FROZEN SOLID — a block of ice: no actions, physics still shoves you around
+    if (this.frozenT > 0) {
+      this.frozenT -= dt;
+      this.guarding = false; this.meleeCharge = 0;
+      if (this.frozenT <= 0) this._thaw(false);
+      this._physics(dt, game); this._animate(dt); this._sync(); return;
+    }
+    // Green-Lantern-style barrier guards run on ki, not just the guard meter (out-drains base regen)
+    if (this.guarding && this.def.guardType === 'barrier') {
+      this.ki = Math.max(0, this.ki - 16 * dt);
+      if (this.ki <= 0) { this.guarding = false; this.staggerT = 0.4; if (game && game.onDrained) game.onDrained(this); }
+    }
     for (const k in this.slots) if (this.slots[k].cd > 0) this.slots[k].cd -= dt;
     // melee timers
     if (this.strikeCd > 0) this.strikeCd -= dt;
@@ -349,6 +447,10 @@ export class Fighter {
       _anchor.set(this.pos.x - this.aim.x * 1.2, this.pos.y + 6.6, this.pos.z - this.aim.z * 1.2);
       for (const t of this.tentacles) t.update(dt, _anchor, this.animT);
     }
+    // readability: skid dust when you're being SHOVED along the ground (beam push / knockback / blockstun)
+    if (game && this.grounded && (this.launchT > 0 || this._blocked > 0) && Math.hypot(this.vel.x, this.vel.z) > 24 && Math.random() < 0.55) {
+      game.particles.spawn({ x: this.pos.x - this.vel.x * 0.02, y: 0.6, z: this.pos.z - this.vel.z * 0.02, vx: -this.vel.x * 0.12 + (Math.random() * 2 - 1) * 4, vy: 5 + Math.random() * 4, vz: -this.vel.z * 0.12 + (Math.random() * 2 - 1) * 4, life: 0.45, size: 3, color: ['#6a655a', '#8a8577'], grav: 8, drag: 1.6 });
+    }
     // robot foot exhaust — thruster wash while flying or hustling
     if (this.metal && game && (this.flying || Math.hypot(this.vel.x, this.vel.z) > 14) && Math.random() < 0.6) {
       game.particles.spawn({ x: this.pos.x + (Math.random() * 2 - 1), y: this.pos.y + 0.8, z: this.pos.z + (Math.random() * 2 - 1), vx: -this.vel.x * 0.15, vy: this.flying ? -16 : -4, vz: -this.vel.z * 0.15, life: 0.4, size: 2.6, color: ['#ff9a2a', '#6a6f78', '#ffd97a'], drag: 1.4, shrink: true });
@@ -366,7 +468,7 @@ export class Fighter {
     // ki regen (slower while casting/charging; guarding safely doubles as a charge stance)
     const anyCharge = Object.values(this.slots).some(s => s.charging || s.sustainT > 0);
     this.ki = clamp(this.ki + (anyCharge ? 3 : 9) * dt, 0, this.maxKi);        // ki is a budget — beams drain it
-    if (this.guarding && this._blocked <= 0) this.ki = clamp(this.ki + 22 * dt, 0, this.maxKi); // guard to recover it
+    if (this.guarding && this._blocked <= 0 && this.def.guardType !== 'barrier') this.ki = clamp(this.ki + 22 * dt, 0, this.maxKi); // guard to recover it (barriers COST ki instead)
 
     if (this.hitstop > 0) { this.hitstop -= dt; this._animate(dt); this._sync(); return; }
 
@@ -464,9 +566,10 @@ export class Fighter {
   }
 
   move(dir, dt, sprint = 1) {
-    if (this.state === 'ko' || this.hitstop > 0 || this.grabbedBy || this.grabState === 'clinch' || this.staggerT > 0) return;
+    if (this.state === 'ko' || this.hitstop > 0 || this.grabbedBy || this.grabState === 'clinch' || this.staggerT > 0 || this.frozenT > 0) return;
     let s = this.speed * this.powerBuff * sprint;
     if (this.sprintT > 0) s *= this.sprintMult;   // double-tap sprint surge
+    if (this.meleeCharge > 0) s *= 0.4;           // winding up a haymaker roots you
     if (this.guarding) s *= 0.34;               // guarding slows you
     if (this.strikeActive > 0) s *= 0.5;
     this.vel.x += dir.x * s * dt * 9;
@@ -525,6 +628,33 @@ export class Fighter {
       p.armL.rotation.x = lerp(p.armL.rotation.x, -1.5, gR); p.armR.rotation.x = lerp(p.armR.rotation.x, -1.5, gR);
       p.armL.rotation.z = lerp(p.armL.rotation.z, 0.22, gR); p.armR.rotation.z = lerp(p.armR.rotation.z, -0.22, gR);
     }
+    // guard arc — glanceable shield state: visible while guarding, flashes on block, reddens near break
+    const ga = p.guardArc;
+    if (ga) {
+      const flash = this._blocked > 0 ? 0.5 : 0;
+      const target = this.guarding ? 0.24 + flash : flash * 0.7;
+      ga.material.opacity = damp(ga.material.opacity, target, 14, dt);
+      if (this.def.guardType !== 'deflect') {
+        const gm = this.guardMeter;
+        ga.material.color.setRGB(0.75 + (1 - gm) * 0.25, 0.88 * gm + 0.25 * (1 - gm), 1 * gm + 0.2 * (1 - gm));   // ice-blue → red as the meter dies
+      }
+      ga.rotation.y = damp(ga.rotation.y, 0, 20, dt);   // arc follows body facing (child of g)
+      ga.scale.setScalar(1 + Math.sin(this.animT * 10) * 0.02);
+    }
+    // frozen shell
+    if (p.ice) {
+      const iceOn = this.frozenT > 0;
+      if (p.ice.visible !== iceOn) p.ice.visible = iceOn;
+      if (iceOn) { p.ice.material.opacity = 0.66 + Math.sin(this.animT * 9) * 0.06; p.ice.rotation.y += dt * 0.4; }
+    }
+    // charged-melee wind-up: right arm coils back, fist blazes
+    if (this.meleeCharge > 0) {
+      const ch = Math.min(1, this.meleeCharge);
+      p.armR.rotation.x = lerp(p.armR.rotation.x, 0.9 + ch * 0.5, 0.8);
+      p.armR.rotation.z = lerp(p.armR.rotation.z, -0.4, 0.6);
+      p.armR.children[2].material.emissiveIntensity = 1 + ch * 2.4;
+      p.torso.rotation.y = lerp(p.torso.rotation.y, -0.35 * ch, 0.5);
+    } else if (Math.abs(p.torso.rotation.y) > 0.01) p.torso.rotation.y = damp(p.torso.rotation.y, 0, 12, dt);
     // phase-intangibility: go ghostly
     if (this.canPhase) {
       const ph = this.phase ? 0.32 : 1;

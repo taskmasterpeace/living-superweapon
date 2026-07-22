@@ -14,13 +14,31 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   If a posed screenshot shows the title screen again, the page reloaded — just recompose and re-shoot.
 
 ## Architecture (see README for the full map)
-- `data/characters.js` — the **18** heroes as **pure data**. Add a hero = add data here. Trait fields:
-  `thorns` (hurt grabbers), `phase` (can go intangible), `grabHeal` (lifesteal throws), `teleEscape`
-  (auto-derived from any teleport slot), `metal` (robot: spark-on-hit, 0.72× knockback, foot exhaust,
-  chromed materials), `guardStrong` (riot shield: 0.55× chip + meter drain), `tentacles` (procedural
-  verlet tentacles, see below).
-- `engine/abilities.js` — `TYPES` registry (18 power types incl. `phase`, `tentacle`, `portal`, `rifle`).
-  New *kind* of power = one entry.
+- `data/characters.js` — the **20** heroes as **pure data**. Add a hero = add data here. Trait fields:
+  `thorns` (hurt grabbers), `phase` (intangible), `grabHeal`, `teleEscape` (auto), `metal` (robot),
+  `guardStrong` (riot shield), `tentacles` (verlet tentacles), **`strength` 1–10** (melee dmg up,
+  knockback/beam-shove down via `kbMul`, faster ice break-outs), **`overdrive`** (comeback: drained/low-ki
+  melee hits convert damage→ki in `game.onHit`), **`threat`** (LeFevre scale, shown on select),
+  **`guardType`** `'block'|'deflect'|'barrier'`, **`meleeTiers`** 2|3, `frostResist` (fire heroes).
+- `engine/abilities.js` — `TYPES` registry (20 power types incl. `tentacle`, `portal`, `rifle`, `bow`,
+  `quiver`). New *kind* of power = one entry.
+- **Charged melee** (`melee.js chargeStart/chargeUpdate/chargeRelease/_heavy`): V tap = jab combo ·
+  short hold = straight (meleeTiers 3 only) · ≥0.55s = HAYMAKER (dmg scales with charge × strength).
+  **Haymaker vs guard = GUARD CRUSH** (blocker staggers 0.85s, −0.55 meter, wide open); jabs/straights
+  blocked = attacker punishable (strikeCd 0.5 + hitstop). AI winds up haymakers via `f._aiCharge`.
+- **Guard types**: visible `guardArc` mesh on every figure (flash on block, reddens near break).
+  `deflect` (VANGUARD/TITAN): projectiles/arrows bounce back at the shooter (Projectile `_defl`).
+  `barrier` (AURUM/RIME): blocks ALL directions, costs 16 ki/s (out-drains regen), breaks at 0 ki.
+- **Freeze** (`addFrost/_thaw`): cold cones build `frost` → encased in ice (`frozenT`, shell mesh,
+  no actions; control fns gate on `frozenT > 0`). Strength shortens it; `frostResist` halves buildup;
+  teleEscape heroes blink out for 20 ki; heavy hits shatter early for 1.3× damage. Immune 2.5s after.
+- **DoTs** (`addDot`): poison/burn/gas stacks tick hp with tinted particles + periodic numbers (arrow
+  payloads, KIVULI's gas). **Bow/quiver**: draw-scaled arrows (REAL arrow meshes, not orbs) with
+  payloads poison/flame/explosive cycled by `quiver` (kit-widget chip shows what's nocked).
+- **Grass** (`world._buildGrass`): ONE InstancedMesh, 2400 blades, vertex-shader wind; every crater/
+  scorch calls `flattenGrass` (blades in radius go down); `resetTerrain` restores. Keep it one draw call.
+- Guard binds: **C / X / Mouse4-5** (kbm) or L1 (pad). Docs: `docs/ROSTER.md` (equivalents + LeFevre
+  threat scale), `docs/VOICE_AND_SFX.md`, `docs/ENGINE_ROADMAP.md` (the 20-item plan), `docs/DESIGN_INTERVIEW.md`.
 - **Slam damage** (`entity._slam` + `game.onSlam`): being HURLED into cover walls / arena border / the ground
   hurts (≤32, credited to the launcher via `lastHitBy`). Gated on `launchT` (set by takeDamage when kb>30 or
   launch>12) — dashing/flying into walls yourself NEVER hurts. `_slamCd` debounces. Throws + tentacles +
@@ -208,6 +226,15 @@ crouches on hard landings, and bends in the ragdoll); **fixed flight** into a pr
 rise, release to **hover** (gentle bob, no coast), CTRL to descend, clean auto-land; flying pose leans + trails the legs.
 Re-verified: all 14 kits fire, all 4 modes run, ragdolls (with knees) fire in live combat, flight rises/hovers/lands,
 0 console errors, ~5.4ms/frame.
+**Combat identity** (Goal 13): charged melee (jab/straight/HAYMAKER + guard crush + punishable jabs),
+Overdrive comeback attribute (drained fists refill ki, HUD "⚡ OVERDRIVE" window), guard TYPES with a
+visible guard arc (deflect bounces bullets back — Superman-vs-Punisher; barrier blocks 360° on ki),
+Strength stat (kb resist / melee scale / ice break-outs), freeze-encase state, DoT stacks, KIVULI
+(Ugandan gas controller — crimson-rose per the no-purple rule; hexes flippable) + GALE (archer,
+draw-scaled real arrows, poison/flame/explosive quiver), grass (2400 instanced blades that burn away
+under craters/scorch and restore on reset), LeFevre threat badges + Strength on select, guard on
+C/X/Mouse4-5, 4 design docs. Verified: 20 kits error-free, every mechanic unit-tested, 60s 7-fighter
+soak clean, sim 0.64ms.
 **Creative expansion** (Goal 12): slam physics (wall/ground/border damage when launched — never self-inflicted),
 KRAKEN (verlet tentacle grappler: seize → drag → wall-slam), RIFT (Portal-style orange/blue door pairs that
 teleport fighters AND projectiles), TITAN (metal robot: pulse rifle, twin cannon, spark-on-hit, thruster exhaust),

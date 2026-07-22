@@ -4,7 +4,7 @@ export class Input {
     this.keys = new Set();
     this.justPressed = new Set();
     this.justReleased = new Set();
-    this.mouse = { x: 0, y: 0, clientX: 0, clientY: 0, left: false, right: false, leftEdge: false, rightEdge: false, leftUp: false, rightUp: false };
+    this.mouse = { x: 0, y: 0, clientX: 0, clientY: 0, left: false, right: false, leftEdge: false, rightEdge: false, leftUp: false, rightUp: false, b3: false, b4: false };
     this.wheel = 0;
     this.anyGesture = false;
   }
@@ -31,10 +31,14 @@ export class Input {
       setMouse(e); this.anyGesture = true;
       if (e.button === 0) { this.mouse.left = true; this.mouse.leftEdge = true; }
       if (e.button === 2) { this.mouse.right = true; this.mouse.rightEdge = true; }
+      if (e.button === 3) { this.mouse.b3 = true; e.preventDefault(); }        // side buttons → guard
+      if (e.button === 4) { this.mouse.b4 = true; e.preventDefault(); }
     });
     addEventListener('mouseup', (e) => {
       if (e.button === 0) { this.mouse.left = false; this.mouse.leftUp = true; }
       if (e.button === 2) { this.mouse.right = false; this.mouse.rightUp = true; }
+      if (e.button === 3) this.mouse.b3 = false;
+      if (e.button === 4) this.mouse.b4 = false;
     });
     canvas.addEventListener('contextmenu', (e) => e.preventDefault());
     canvas.addEventListener('wheel', (e) => { this.wheel += Math.sign(e.deltaY); e.preventDefault(); }, { passive: false });

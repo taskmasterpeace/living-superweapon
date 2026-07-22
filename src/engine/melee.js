@@ -1,6 +1,10 @@
 // Living Superweapon — melee trifecta: Strike (beats Grab) · Grab (beats Guard) · Guard (beats Strike).
 // Per-character variants: teleport-escape & energy-intangibility break front grabs; thorns hurt the holder;
 // grabHeal lifesteals throws. Back-grabs (from behind) are guaranteed and hit harder.
+// Charged melee: hold strike to wind up — tap jab · straight · HAYMAKER (crushes guards, see chargeRelease).
+import * as THREE from 'three';
+
+const _vv = new THREE.Vector3();
 
 export class MeleeSystem {
   constructor(game) { this.game = game; }
@@ -8,7 +12,7 @@ export class MeleeSystem {
   canAct(f) { return f.alive && f.hitstop <= 0 && f.staggerT <= 0 && !f.grabbedBy && f.grabState !== 'clinch'; }
 
   strike(f) {
-    if (!this.canAct(f) || f.grabbing || f.guarding || f.strikeActive > 0) return;
+    if (!this.canAct(f) || f.grabbing || f.guarding || f.strikeActive > 0 || f.meleeCharge > 0) return;
     if (f.strikeCd > 0 && f.comboWin <= 0) return;
     f.strikeIdx = f.comboWin > 0 ? (f.strikeIdx + 1) % 3 : 0;
     f.strikeActive = 0.2; f.strikeHit = new Set(); f.comboWin = 0;
@@ -18,6 +22,81 @@ export class MeleeSystem {
     f.vel.x += f.aim.x * lunge; f.vel.z += f.aim.z * lunge;
     this.game.audio.zap(f.strikeIdx === 2 ? 420 : 660);
     this.game.trail(f, f.def.colors.accent);
+  }
+
+  // --- charged melee (Street Fighter hold): tap = jab combo · short hold = straight · long hold = HAYMAKER.
+  // def.meleeTiers: 3 (default, all three) · 2 (jab + haymaker only) · 1 (taps too — pure jab character).
+  // Haymakers CRUSH guards: the blocker stumbles back staggered, wide open. Jabs are punishable on block.
+  chargeStart(f) {
+    if (!this.canAct(f) || f.grabbing || f.guarding || f.strikeActive > 0 || f.grabState || f.meleeCharge > 0) return;
+    f.meleeCharge = 0.001; f.state = 'cast'; f.stateT = 0;
+  }
+  chargeUpdate(f, dt) {
+    if (f.meleeCharge <= 0) return;
+    if (!this.canAct(f)) { f.meleeCharge = 0; return; }        // hit out of the wind-up (STRIKE beats charge too)
+    f.meleeCharge = Math.min(1.3, f.meleeCharge + dt);
+    const g = this.game;
+    if (f.meleeCharge > 0.3 && Math.random() < f.meleeCharge * 0.5) {
+      const m = f.muzzle(_vv, 2.2, 5.6);
+      g.particles.spawn({ x: m.x, y: m.y, z: m.z, vx: (Math.random() * 2 - 1) * 6, vy: 4, vz: (Math.random() * 2 - 1) * 6, life: 0.25, size: 1.8 + f.meleeCharge * 1.6, color: [f.def.colors.accent, '#fff'], drag: 2, shrink: true });
+    }
+    if (f.meleeCharge >= 1.29 && Math.random() < 0.2) g.world.shake(0.12);   // fully charged — rumbling
+  }
+  chargeRelease(f) {
+    const t = f.meleeCharge; f.meleeCharge = 0;
+    if (t <= 0 || !this.canAct(f)) return;
+    const tiers = f.def.meleeTiers ?? 3;
+    if (t < 0.18 || tiers === 1) { f.strikeCd = 0; this.strike(f); return; }                 // tap → jab combo
+    if (t < 0.55 && tiers >= 3) this._heavy(f, 0.45, false);                                 // straight
+    else this._heavy(f, Math.min(1, t), true);                                               // HAYMAKER
+  }
+  _heavy(f, p01, haymaker) {
+    const g = this.game;
+    const str = f.def.strength ?? 5;
+    f.strikeActive = 0; f.state = 'cast'; f.stateT = 0; f.punchPose = 1;
+    f.strikeCd = haymaker ? 0.7 : 0.45;
+    const lunge = haymaker ? 40 : 26;
+    f.vel.x += f.aim.x * lunge; f.vel.z += f.aim.z * lunge;
+    f.invuln = Math.max(f.invuln, haymaker ? 0.1 : 0.05);
+    g.audio.zap(haymaker ? 300 : 480);
+    // resolve after a tiny travel via a one-shot window
+    f._heavyT = 0.12; f._heavyP = p01; f._heavyHay = haymaker;
+  }
+  _heavyHit(f, dt) {
+    if (!(f._heavyT > 0)) return;
+    f._heavyT -= dt;
+    const g = this.game;
+    const foe = g.coneFoe(f, 13.5, 0.8);
+    if (foe) {
+      f._heavyT = 0;
+      const str = f.def.strength ?? 5, hay = f._heavyHay, p = f._heavyP;
+      const dmg = (hay ? 20 + p * 14 : 13) * (0.85 + str * 0.03) * f.powerBuff;
+      const blocked = foe.guarding && foe.staggerT <= 0 && (foe.def.guardType === 'barrier' || this._front(foe, f));
+      const imp = foe.pos.clone().set((f.pos.x + foe.pos.x) / 2, 5.7, (f.pos.z + foe.pos.z) / 2);
+      if (blocked && hay) {
+        // GUARD CRUSH — the blocker stumbles back wide open; the crowd goes wild
+        foe.guarding = false; foe.staggerT = 0.85; foe.guardMeter = Math.max(0, foe.guardMeter - 0.55);
+        foe.state = 'hit'; foe.stateT = 0;
+        foe.takeDamage(dmg * 0.35, { src: f, unblockable: true, hitstop: 0.12, kb: { x: f.aim.x * 46, y: 8, z: f.aim.z * 46 } });
+        g.vfx.impactStar(imp, 12, '#ffd24a', 0.24); g.vfx.ring(imp, { color: '#ffd24a', r0: 1, r1: 12, life: 0.3 });
+        g.world.shake(1.6); g.world.punch(0.7); g.audio.impact(1.3); g.audio.boom(0.5); g.slowmo(0.14, 0.4);
+        if (g.hud) { g.hud.damageNumber(foe.pos, 'GUARD CRUSH', '#ffd24a', true); g.hud.flashScreen('#ffd24a', 0.12); }
+      } else if (blocked) {
+        foe.takeDamage(dmg, { src: f, strike: true, hitstop: 0.07 });     // straights get blocked like strikes
+        f.strikeCd = Math.max(f.strikeCd, 0.5); f.hitstop = Math.max(f.hitstop, 0.1);   // punishable — counter window
+        g.vfx.impactStar(imp, 7, '#bfe0ff', 0.16); g.audio.zap(520);
+      } else {
+        foe.takeDamage(dmg, { src: f, strike: true, hitstop: hay ? 0.16 : 0.1, kb: { x: f.aim.x * (hay ? 54 : 26), y: hay ? 6 : 3, z: f.aim.z * (hay ? 54 : 26) }, launch: hay ? 16 : 6 });
+        f.hitstop = Math.max(f.hitstop, hay ? 0.12 : 0.07);
+        g.vfx.impact(imp, { x: f.aim.x, z: f.aim.z }, { color: f.def.colors.accent, power: hay ? 2 : 1.1 });
+        g.world.shake(hay ? 1.8 : 0.9); g.audio.impact(hay ? 1.5 : 0.9);
+        if (hay) { g.world.punch(0.68); g.slowmo(0.13, 0.4); if (g.hud) g.hud.flashScreen('#fff', 0.15); g.audio.boom(0.5); }
+      }
+    }
+  }
+  _front(foe, atk) {
+    const dx = atk.pos.x - foe.pos.x, dz = atk.pos.z - foe.pos.z, d = Math.hypot(dx, dz) || 1;
+    return (dx / d) * foe.aim.x + (dz / d) * foe.aim.z > -0.15;
   }
 
   guard(f, on) {
@@ -46,7 +125,7 @@ export class MeleeSystem {
     const dir = holder.aim, spd = back ? 62 : 46;
     v.grabbedBy = null; holder.grabbing = null; holder.grabState = null; holder.grabT = 0;
     v.state = 'idle';
-    v.takeDamage(dmg, { src: holder, unblockable: true, hitstop: 0.14, kb: { x: dir.x * spd, y: back ? 22 : 15, z: dir.z * spd } });
+    v.takeDamage(dmg, { src: holder, strike: true, unblockable: true, hitstop: 0.14, kb: { x: dir.x * spd, y: back ? 22 : 15, z: dir.z * spd } });   // strike-flagged → feeds Overdrive
     if (holder.grabHeal) holder.heal(dmg * holder.grabHeal);
     holder.hitstop = Math.max(holder.hitstop, 0.08);
     g.vfx.impact(v.pos.clone().setY(5.6), { x: dir.x, z: dir.z }, { color: holder.def.colors.accent, power: back ? 1.9 : 1.4 });
@@ -56,6 +135,8 @@ export class MeleeSystem {
 
   update(f, dt) {
     const g = this.game;
+    this.chargeUpdate(f, dt);
+    this._heavyHit(f, dt);
 
     // --- strike active window ---
     if (f.strikeActive > 0) {
@@ -70,7 +151,7 @@ export class MeleeSystem {
         foe.takeDamage(dmg, { src: f, strike: true, hitstop: hs, kb: { x: f.aim.x * (fin ? 14 : 8), y: fin ? 30 : 2, z: f.aim.z * (fin ? 14 : 8) } });
         f.hitstop = Math.max(f.hitstop, hs * (fin ? 0.9 : 0.6));      // attacker freezes too — meaty impact
         const imp = foe.pos.clone().set((f.pos.x + foe.pos.x) / 2, 5.7, (f.pos.z + foe.pos.z) / 2);
-        if (blocked) { g.vfx.impactStar(imp, 7, '#bfe0ff', 0.16); g.world.shake(0.35); g.audio.zap(520); }
+        if (blocked) { g.vfx.impactStar(imp, 7, '#bfe0ff', 0.16); g.world.shake(0.35); g.audio.zap(520); f.strikeCd = Math.max(f.strikeCd, 0.5); f.hitstop = Math.max(f.hitstop, 0.09); }   // jab blocked → punishable
         else {
           g.vfx.impact(imp, { x: f.aim.x, z: f.aim.z }, { color: f.def.colors.accent, power: fin ? 1.7 : 0.65 });
           g.world.shake(fin ? 1.5 : 0.6); g.audio.impact(fin ? 1.3 : 0.65);

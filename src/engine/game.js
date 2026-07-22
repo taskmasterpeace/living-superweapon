@@ -583,6 +583,19 @@ export class Game {
   // Called by Fighter.takeDamage for EVERY hit — damage numbers, sparks, combo.
   onHit(target, amount, opts = {}, blocked = false) {
     const src = opts.src;
+    // OVERDRIVE (per-character attribute): when your tank is empty, your FISTS refill it.
+    // spend big → go in swinging → recharge. Landing melee while drained/low converts damage to ki.
+    if (src && !blocked && opts.strike && amount >= 2 && (src.drainedT > 0 || src.ki < src.maxKi * 0.25)) {
+      const od = src.def.overdrive ?? 1;
+      if (od > 0) {
+        const gain = Math.min(amount * 1.15 * od, src.maxKi - src.ki);
+        if (gain > 1) {
+          src.ki += gain;
+          this.particles.burst(src.pos.x, src.pos.y + 5, src.pos.z, { count: 6, speed: 12, life: 0.4, size: 2, color: ['#7fe6ff', '#fff'], up: 8, drag: 1.2 });
+          if (this.isHuman(src) && this.hud) { this.hud.damageNumber(src.pos, '+' + Math.round(gain) + ' KI', '#7fe6ff', true); if (this.hud.overdriveFlash) this.hud.overdriveFlash(); }
+        }
+      }
+    }
     // directional damage cue when the human player is hit
     if (this.hud && this.hud.hitDirection && this.isHuman(target) && src && src !== target) this.hud.hitDirection(src.pos);
     if (this.hud) {
@@ -732,8 +745,8 @@ export class Game {
     if (this.hardLock && this.hardLock.alive) p.faceDir(this.hardLock.pos.x - p.pos.x, this.hardLock.pos.z - p.pos.z);
     else p.faceDir(p.aim3.x, p.aim3.z);
 
-    // stunned while held — capable heroes auto-escape via the melee system
-    if (p.grabbedBy) { p.moveDir = { x: 0, z: 0 }; return; }
+    // stunned while held or frozen solid — capable heroes auto-escape via the melee system
+    if (p.grabbedBy || p.frozenT > 0) { p.moveDir = { x: 0, z: 0 }; return; }
 
     // --- move (iso-relative; analog on pad, digital on keys) ---
     let ix = 0, iz = 0;
@@ -763,13 +776,14 @@ export class Game {
     p.descendHeld = inp.down('ControlLeft') || inp.down('ControlRight') || inp.down('KeyZ') || pad.down('descend');
     p.move(p.moveDir, dt);
 
-    // --- melee trifecta — Strike · Grab · Guard (keyboard V/G/C or pad Square/Circle/L1) ---
-    if (inp.pressed('KeyV') || pad.pressed('strike')) this.melee.strike(p);
+    // --- melee trifecta — Strike (tap=jab, HOLD=haymaker) · Grab · Guard (V/G/C+X+Mouse4, pad ▢/○/L1) ---
+    if (inp.pressed('KeyV') || pad.pressed('strike')) this.melee.chargeStart(p);
+    if (inp.released('KeyV') || pad.released('strike')) this.melee.chargeRelease(p);
     if (inp.pressed('KeyG') || pad.pressed('grab')) this.melee.grab(p);
-    this.melee.guard(p, inp.down('KeyC') || pad.down('guard'));
+    this.melee.guard(p, inp.down('KeyC') || inp.down('KeyX') || inp.mouse.b3 || inp.mouse.b4 || pad.down('guard'));
 
     // --- powers (keyboard/mouse OR gamepad) ---
-    const busy = p.guarding || p.strikeActive > 0 || p.grabState || p.grabbing;
+    const busy = p.guarding || p.strikeActive > 0 || p.grabState || p.grabbing || p.meleeCharge > 0;
     const orK = (code, a) => ({ pressed: inp.pressed(code) || pad.pressed(a), held: inp.down(code) || pad.down(a), released: inp.released(code) || pad.released(a) });
     const intents = {
       lmb: { pressed: m.leftEdge || pad.pressed('lmb'), held: m.left || pad.down('lmb'), released: m.leftUp || pad.released('lmb') },
@@ -784,7 +798,7 @@ export class Game {
   controlPad(f, dt) {
     if (!f || !f.alive || this.matchOver) { if (f) f.moveDir = { x: 0, z: 0 }; return; }
     const pad = this.pad;
-    if (f.grabbedBy) { f.moveDir = { x: 0, z: 0 }; return; }
+    if (f.grabbedBy || f.frozenT > 0) { f.moveDir = { x: 0, z: 0 }; return; }
     let tgt;
     if (pad.aiming) {
       const ax = this.right.x * pad.rx + this.fwd.x * (-pad.ry), az = this.right.z * pad.rx + this.fwd.z * (-pad.ry);
@@ -795,10 +809,11 @@ export class Game {
     const dir = _v.set(0, 0, 0).addScaledVector(this.fwd, -pad.ly).addScaledVector(this.right, pad.lx);
     if (dir.lengthSq() > 1) dir.normalize();
     f.moveDir = { x: dir.x, z: dir.z }; f.flyHeld = pad.down('fly'); f.descendHeld = pad.down('descend'); f.move(f.moveDir, dt);
-    if (pad.pressed('strike')) this.melee.strike(f);
+    if (pad.pressed('strike')) this.melee.chargeStart(f);
+    if (pad.released('strike')) this.melee.chargeRelease(f);
     if (pad.pressed('grab')) this.melee.grab(f);
     this.melee.guard(f, pad.down('guard'));
-    const busy = f.guarding || f.strikeActive > 0 || f.grabState || f.grabbing;
+    const busy = f.guarding || f.strikeActive > 0 || f.grabState || f.grabbing || f.meleeCharge > 0;
     const P = (a) => ({ pressed: pad.pressed(a), held: pad.down(a), released: pad.released(a) });
     const it = { lmb: P('lmb'), rmb: P('rmb'), q: P('q'), e: P('e'), r: P('r'), f: P('f'), shift: P('dash') };
     for (const k of SLOT_KEYS) if (f.slots[k]) feedSlot(this, f, k, it[k], busy, dt);
@@ -806,7 +821,9 @@ export class Game {
 
   controlBot(f, dt) {
     if (!f.ai || !f.alive) { f.moveDir = { x: 0, z: 0 }; return; }
-    if (f.grabbedBy) { f.moveDir = { x: 0, z: 0 }; return; }   // stunned while held
+    if (f.grabbedBy || f.frozenT > 0) { f.moveDir = { x: 0, z: 0 }; return; }   // stunned while held / frozen
+    // finish an AI haymaker wind-up
+    if (f._aiCharge > 0) { f._aiCharge -= dt; if (f._aiCharge <= 0 || f.meleeCharge <= 0) { this.melee.chargeRelease(f); f._aiCharge = 0; } }
     const it = f.ai.intent(dt, this);
     if (it.aimDir) f.faceDir(it.aimDir.x, it.aimDir.z);
     // 3D aim at the target's body centre — angles up at flyers, down at grounded foes
@@ -851,14 +868,17 @@ export class Game {
         const style = f.ai && f.ai.style, r = Math.random();
         if (style === 'grappler' && r < 0.55) this.melee.grab(f);              // Cell seeks grabs to absorb/heal
         else if (r < (style === 'rusher' ? 0.72 : 0.5)) this.melee.strike(f);
-        else if (r < 0.8) this.melee.grab(f);
+        else if (r < 0.68) this.melee.grab(f);
+        else if (r < 0.85 && !f._aiCharge && (f.def.meleeTiers ?? 3) >= 2) {   // wind up a HAYMAKER (guard-crusher)
+          this.melee.chargeStart(f); f._aiCharge = 0.55 + Math.random() * 0.55; f._meleeCd = 1.1;
+        }
         else f._guardT = 0.5;
       }
     }
     f._guardT = (f._guardT || 0) - dt;
     this.melee.guard(f, f._guardT > 0);
 
-    const busy = f.guarding || f.strikeActive > 0 || f.grabState || f.grabbing;
+    const busy = f.guarding || f.strikeActive > 0 || f.grabState || f.grabbing || f.meleeCharge > 0;
     // committed counter-beam (hold the beam slot → creates a beam battle)
     if (f._forceBeam && f._forceBeamT > 0 && !busy) {
       const first = !f._forceBeamActive; f._forceBeamActive = true;

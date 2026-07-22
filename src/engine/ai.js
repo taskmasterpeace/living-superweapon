@@ -2,8 +2,8 @@
 // beamers zone, rushers blitz, artillery kites, zoners wall up, tricksters teleport/phase, grapplers grab, summoners hide behind minions.
 import { rand, chance, pick } from '../core/util.js';
 
-const HOLD = new Set(['beam', 'charge', 'spiritbomb', 'cone', 'volley', 'phase', 'rifle']);
-const holdTime = (t) => t === 'charge' ? rand(0.9, 1.9) : t === 'spiritbomb' ? rand(1.1, 2.2) : t === 'beam' ? rand(0.9, 1.8) : t === 'phase' ? rand(0.5, 1.2) : t === 'rifle' ? rand(0.6, 1.5) : rand(0.4, 1.1);
+const HOLD = new Set(['beam', 'charge', 'spiritbomb', 'cone', 'volley', 'phase', 'rifle', 'bow']);
+const holdTime = (t) => t === 'charge' ? rand(0.9, 1.9) : t === 'spiritbomb' ? rand(1.1, 2.2) : t === 'beam' ? rand(0.9, 1.8) : t === 'phase' ? rand(0.5, 1.2) : t === 'rifle' ? rand(0.6, 1.5) : t === 'bow' ? rand(0.4, 0.95) : rand(0.4, 1.1);
 
 function deriveStyle(def) {
   const types = Object.values(def.abilities || {}).map(a => a.type);
@@ -116,9 +116,10 @@ export class AI {
         if (close) return one(T.melee) || one(T.cone) || one(T.beam);
         return one(T.beam) || one(T.rifle) || one(T.projectile) || one(T.volley);
       case 'artillery':
-        if (far) return one(T.meteor) || one(T.charge) || one(T.projectile) || one(T.beam);
+        if (T.quiver && chance(0.1)) { const q = one(T.quiver); if (q) return q; }   // archers rotate broadheads
+        if (far) return one(T.meteor) || one(T.bow) || one(T.charge) || one(T.projectile) || one(T.beam);
         if (close) return one(T.cone) || one(T.dash) || one(T.melee);
-        return one(T.charge) || one(T.projectile) || one(T.beam) || one(T.volley);
+        return one(T.bow) || one(T.charge) || one(T.projectile) || one(T.beam) || one(T.volley);
       case 'zoner':
         if (chance(0.4)) { const c = one(T.construct) || one(T.summon); if (c) return c; }
         if (close) return one(T.cone) || one(T.melee) || one(T.dash);

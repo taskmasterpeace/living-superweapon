@@ -29,6 +29,9 @@ const CSS = `
 #hud .bar.kiflash{ box-shadow:0 0 16px rgba(255,90,74,.95), inset 0 0 0 1px rgba(255,110,90,.95); }
 #hud .kistate{ color:#ff8a6a; font-weight:800; letter-spacing:.14em; margin-left:8px; opacity:0; transition:opacity .15s; }
 #hud .kistate.on{ opacity:1; animation:kipulse .45s infinite; }
+#hud .kiover{ color:#7fe6ff; font-weight:800; letter-spacing:.14em; margin-left:8px; opacity:0; transition:opacity .15s; }
+#hud .kiover.on{ opacity:1; text-shadow:0 0 10px rgba(127,230,255,.8); }
+#title .pvthreat{ display:inline-block; font-size:10px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; padding:3px 10px; border-radius:20px; margin-top:8px; border:1px solid; }
 #hud .slot.deny{ animation:slotshake .32s; }
 #hud .slot.deny{ border-color:#ff5a4a; box-shadow:0 0 12px rgba(255,90,74,.5); }
 @keyframes slotshake{ 0%,100%{transform:translateX(0)} 22%{transform:translateX(-4px)} 55%{transform:translateX(3px)} 80%{transform:translateX(-2px)} }
@@ -164,9 +167,13 @@ export function heroStats(d) {
     mobility: Math.min(10, Math.round(d.speed / 45 * 6) + (hasBlink ? 3 : 0) + (hasDash ? 1 : 0)),
     defense: Math.min(10, Math.round(d.hp / 150 * 7) + (d.phase ? 2 : 0) + (d.thorns ? 1 : 0)),
     health: n(d.hp, 150), energy: n(d.ki, 130), speed: n(d.speed, 45),
-    tags: tags.slice(0, 6),
+    strength: d.strength ?? 5,
+    tags: tags.slice(0, 7),
   };
 }
+
+// LeFevre Threat Level scale (Living Superweapon Threshold Treaty)
+export const THREAT_COLORS = { 'Low': '#8fe08a', 'Moderate': '#ffd24a', 'High': '#ff9a3a', 'Very High': '#ff5a4a', 'Extreme': '#ff2f2f' };
 
 function describeEvade(ev) {
   switch (ev.kind) {
@@ -199,6 +206,8 @@ function describeAbility(a) {
     case 'tentacle': return 'tentacles seize a foe, drag them in, and SLAM them into the nearest wall';
     case 'portal': return 'place a door, then its exit — anything that touches one comes out the other';
     case 'rifle': return (a.interval > 0.2 ? 'heavy sidearm — hard-hitting shots' : 'full-auto tracer fire') + ' (ammo = ki)';
+    case 'bow': return 'hold to draw — arrow speed & damage scale; payload from your quiver';
+    case 'quiver': return 'switch broadheads: ' + (a.payloads || ['explosive', 'flame', 'poison']).join(' / ');
     default: return a.type;
   }
 }
@@ -226,7 +235,7 @@ export class HUD {
         <div class="nm" id="plName">—</div>
         <div class="rl" id="plRole">—</div>
         <div class="lab">HEALTH</div><div class="bar"><i class="hpF" id="plHp"></i></div>
-        <div class="lab">KI / ENERGY<span class="kistate" id="kiState">DRAINED</span></div><div class="bar" id="kiBar"><i class="kiF" id="plKi"></i></div>
+        <div class="lab">KI / ENERGY<span class="kistate" id="kiState">DRAINED</span><span class="kiover" id="kiOver">⚡ OVERDRIVE — FISTS REFILL</span></div><div class="bar" id="kiBar"><i class="kiF" id="plKi"></i></div>
         <div class="lab">GUARD</div><div class="bar gd"><i class="gdF" id="plGd"></i></div>
         <div class="xpwrap"><span class="lvl" id="plLvl">1</span><span class="tierb" id="plTier">TIER I</span><span class="xp"><i id="plXp" style="width:0%"></i></span></div>
       </div>
@@ -241,7 +250,8 @@ export class HUD {
       <div class="panel hint">
         <b>WASD</b> move · <b>Mouse</b> aim · <b>Click a foe</b> to lock/face · <b>T</b> unlock<br/>
         <b>LMB/RMB</b> powers · <b>Q E F</b> skills · <b>R</b> ultimate<br/>
-        <b>V</b> strike · <b>G</b> grab · <b>C</b> guard · <b>SHIFT</b> dash · <b>2×TAP</b> move = evade<br/>
+        <b>V</b> tap jab / <b>HOLD</b> haymaker (crushes guards) · <b>G</b> grab<br/>
+        <b>C / X / Mouse4</b> guard · <b>SHIFT</b> dash · <b>2×TAP</b> move = evade<br/>
         <b>SPACE</b> fly / ascend · hold to rise, release to hover · <b>CTRL</b> descend<br/>
         <b>1–0</b>/<b>TAB</b> heroes · <b>B</b> rival · <b>ESC</b> pause<br/>
         🎮 <b>Pad</b>: sticks move/aim · R2/L2 powers · ▢○ melee · L1 guard
@@ -258,7 +268,7 @@ export class HUD {
       foe: this.root.querySelector('#hFoe'), foeName: this.root.querySelector('#foeName'), foeHp: this.root.querySelector('#foeHp'),
       name: this.root.querySelector('#plName'), role: this.root.querySelector('#plRole'),
       hp: this.root.querySelector('#plHp'), ki: this.root.querySelector('#plKi'), gd: this.root.querySelector('#plGd'),
-      kiBar: this.root.querySelector('#kiBar'), kiState: this.root.querySelector('#kiState'),
+      kiBar: this.root.querySelector('#kiBar'), kiState: this.root.querySelector('#kiState'), kiOver: this.root.querySelector('#kiOver'),
       charge: this.root.querySelector('#hCharge'), chargeI: this.root.querySelector('#hCharge > i'),
       slots: this.root.querySelector('#hSlots'),
       combo: this.root.querySelector('#hCombo'), comboN: this.root.querySelector('#hComboN'),
@@ -344,6 +354,10 @@ export class HUD {
     const se = this.slotEls?.[key];
     if (se) { se.root.classList.remove('deny'); void se.root.offsetWidth; se.root.classList.add('deny'); }
   }
+  overdriveFlash() {                                    // a fist just converted into ki
+    this.el.kiBar.style.boxShadow = '0 0 18px rgba(127,230,255,.95)';
+    clearTimeout(this._odT); this._odT = setTimeout(() => { this.el.kiBar.style.boxShadow = ''; }, 350);
+  }
 
   announce(text, sub = '', color = '#ffd24a') {
     this.el.annT.textContent = text; this.el.annT.style.color = color; this.el.annS.textContent = sub;
@@ -373,6 +387,11 @@ export class HUD {
     if (p.buffT > 0 && p.buffName) chips.push({ t: p.buffName + ' ' + Math.ceil(p.buffT) + 's', on: true });
     if (p.invuln > 0.15) chips.push({ t: 'INVINCIBLE', on: true });
     if (p.phase) chips.push({ t: 'INTANGIBLE', on: true });
+    if (p.frozenT > 0) chips.push({ t: '❄ FROZEN', on: true });
+    const bowA = Object.values(d.abilities).find(a => a.type === 'bow');
+    if (bowA) { const pls = bowA.payloads || ['explosive', 'flame', 'poison']; chips.push({ t: '➶ ' + pls[p._quiverIdx % pls.length].toUpperCase(), on: true }); }
+    if (d.guardType === 'deflect') chips.push({ t: 'DEFLECT GUARD', on: p.guarding });
+    if (d.guardType === 'barrier') chips.push({ t: 'BARRIER GUARD', on: p.guarding });
     const mine = this.game.minions.filter(m => m.owner === p).length; const maxD = Math.max(...Object.values(d.abilities).map(a => a.type === 'summon' ? (a.max || 6) : 0), 0);
     if (maxD) chips.push({ t: '◈ DRONES ' + mine + '/' + maxD, on: mine > 0 });
     const cons = this.game.constructs.filter(c => c.owner === p);
@@ -466,6 +485,8 @@ export class HUD {
     this.el.ki.classList.toggle('crit', drained || kiFrac < 0.15);
     this.el.ki.classList.toggle('low', !drained && kiFrac >= 0.15 && kiFrac < 0.38);
     this.el.kiState.classList.toggle('on', drained);
+    // OVERDRIVE window: low tank + a real overdrive attribute → your fists are batteries right now
+    this.el.kiOver.classList.toggle('on', !drained && (p.def.overdrive ?? 1) >= 0.7 && kiFrac < 0.25);
     this.el.gd.style.width = clamp(p.guardMeter * 100, 0, 100) + '%';
     this.el.gd.classList.toggle('stagger', p.staggerT > 0);
     this.el.lvl.textContent = p.level;
@@ -535,11 +556,13 @@ export class HUD {
     const renderPv = (c) => {
       const st = heroStats(c);
       pv.style.setProperty('--pc', c.colors.accent);
+      const tc = THREAT_COLORS[c.threat] || '#a49c8c';
       pv.innerHTML = `<div class="pvname" style="color:${c.colors.accent}">${c.name}</div>
         <div class="pvttl">${c.title} · ${c.role}</div>
         <div class="pvblurb">${c.blurb}</div>
+        ${c.threat ? `<div class="pvthreat" style="color:${tc};border-color:${tc}66;background:${tc}18">LeFevre Threat · ${c.threat}</div>` : ''}
         <div class="pvstats">
-          ${bar('Power', st.power, '#ff6a4a')}${bar('Range', st.range, '#ffd24a')}${bar('Mobility', st.mobility, '#7fe6ff')}
+          ${bar('Power', st.power, '#ff6a4a')}${bar('Strength', st.strength, '#e8a24a')}${bar('Range', st.range, '#ffd24a')}${bar('Mobility', st.mobility, '#7fe6ff')}
           ${bar('Defense', st.defense, '#8fe08a')}${bar('Health', st.health, '#ff8a5a')}${bar('Energy', st.energy, '#7fb0ff')}
         </div>
         ${st.tags.length ? `<div class="pvtags">${st.tags.map(t => `<span>${t}</span>`).join('')}</div>` : ''}

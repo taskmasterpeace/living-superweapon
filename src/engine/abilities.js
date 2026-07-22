@@ -6,6 +6,7 @@ const _v = new THREE.Vector3();
 
 const ORB_GEO = new THREE.SphereGeometry(1, 16, 12);                       // shared — orbs come and go constantly
 const ORB_CORE_MAT = new THREE.MeshBasicMaterial({ color: '#fff' });
+export const PAYLOAD_COLORS = { poison: '#8fe08a', flame: '#ff7a2a', explosive: '#ffd24a', gas: '#d64a72' };
 
 function ready(c, def, st) { return st.cd <= 0 && c.ki >= (def.cost || 0) && c.hitstop <= 0; }
 function pay(c, def, st) { c.ki -= (def.cost || 0); st.cd = def.cd || 0; }
@@ -106,6 +107,7 @@ export const TYPES = {
       g.projectiles.spawnProjectile(c, {
         pos: m, vel: new THREE.Vector3(Math.cos(a), c.aim3.y, Math.sin(a)).setLength(def.speed || 105),
         radius: def.radius || 0.8, damage: def.damage || 6, blast: def.blast || 3.4, power: 0.5, color: def.color, color2: def.color2,
+        arrow: def.arrow, payload: def.payload,
       });
       g.audio.blast(560 + rand(-40, 40), 0.08); g.muzzleFlash(c, def.color, 0.6, off);
     }
@@ -155,8 +157,12 @@ export const TYPES = {
         if (d > range || d < 0.1) continue;
         const dot = (dx / d) * c.aim.x + (dz / d) * c.aim.z;
         if (dot < Math.cos(arc)) continue;
-        f.takeDamage((def.dps || 26) * c.powerBuff * inp.dt, { hitstop: 0 });
-        if (def.cold) { f.vel.x *= 0.86; f.vel.z *= 0.86; f._chill = 0.5; f.speed = Math.max(8, (f.def.speed || 30) * 0.55); }
+        f.takeDamage((def.dps || 26) * c.powerBuff * inp.dt, { src: c, dot: true, hitstop: 0 });
+        if (def.cold) {
+          f.vel.x *= 0.86; f.vel.z *= 0.86; f._chill = 0.5; f.speed = Math.max(8, (f.def.speed || 30) * 0.55);
+          f.addFrost((def.frost || 0.5) * inp.dt, c);   // sustained cold ENCASES you in ice (strength breaks out)
+        }
+        if (def.gasDot) f.addDot({ dps: def.gasDot.dps || 6, dur: def.gasDot.dur || 2.2, color: def.gasDot.color || def.color, kind: def.gasDot.kind || 'gas', src: c });
         else { const pushr = (def.push || 40) * inp.dt * 8; f.vel.x += (dx / d) * pushr; f.vel.z += (dz / d) * pushr; if (def.lift) f.vel.y = Math.min(f.vel.y + def.lift * inp.dt * 24, 22); }
       }
       // mist particles
@@ -352,6 +358,47 @@ export const TYPES = {
   // second press opens the BLUE door — fighters and projectiles that touch one exit the other.
   portal(c, def, st, g, inp) {
     if (inp.pressed && ready(c, def, st)) { pay(c, def, st); g.placePortal(c, def); }
+  },
+
+  // Bow — hold to DRAW (damage/speed scale with draw), release to loose an arrow.
+  // The arrow's payload comes from the caster's quiver selection (poison / flame / explosive).
+  bow(c, def, st, g, inp) {
+    if (inp.pressed && ready(c, def, st) && !st.drawing) { st.drawing = true; st.drawT = 0; }
+    if (st.drawing) {
+      if (inp.held) {
+        st.drawT = Math.min(1, st.drawT + inp.dt / (def.drawTime || 0.85));
+        c.state = 'charge'; c.stateT = 0;
+        c.vel.x *= 0.8; c.vel.z *= 0.8;
+        if (Math.random() < 0.15) g.particles.spawn({ x: c.pos.x, y: c.pos.y + 5.8, z: c.pos.z, vx: 0, vy: 2, vz: 0, life: 0.2, size: 1.2, color: '#fff', drag: 2, shrink: true });
+      }
+      if (inp.released || (!inp.held && st.drawT > 0)) {
+        const t = st.drawT; st.drawing = false;
+        pay(c, def, st);
+        const payloads = def.payloads || ['explosive', 'flame', 'poison'];
+        const payload = payloads[c._quiverIdx % payloads.length];
+        const m = c.muzzle(_v.clone(), 3.8, 5.9);
+        g.projectiles.spawnProjectile(c, {
+          pos: m, vel: c.aim3.clone().setLength(lerp(90, def.speedMax || 210, t)),
+          radius: 0.7, damage: lerp(def.dmgMin || 7, def.dmgMax || 26, t), blast: payload === 'explosive' ? (def.blast || 11) : 1.2,
+          power: payload === 'explosive' ? 1.1 : 0.4, arrow: true, payload, life: 2.2,
+          color: PAYLOAD_COLORS[payload] || '#d8d2c4', color2: '#fff', shock: payload === 'explosive',
+        });
+        g.audio.zap(880); g.audio.blast(300, 0.06);
+      }
+    }
+  },
+
+  // Quiver — cycle the arrow payload. Free, instant; the kit widget shows what's nocked.
+  quiver(c, def, st, g, inp) {
+    if (inp.pressed && st.cd <= 0) {
+      st.cd = 0.25;
+      const payloads = def.payloads || ['explosive', 'flame', 'poison'];
+      c._quiverIdx = (c._quiverIdx + 1) % payloads.length;
+      const mode = payloads[c._quiverIdx];
+      g.vfx.ring(c.pos.clone().setY(5.5), { color: PAYLOAD_COLORS[mode] || '#fff', r0: 1, r1: 5, life: 0.25 });
+      g.audio.zap(640);
+      if (g.isHuman(c) && g.hud) g.hud.feed('Arrows: ' + mode.toUpperCase(), PAYLOAD_COLORS[mode]);
+    }
   },
 
   // Pulse rifle / firearm — held auto-fire tracers with spread + recoil (ammo = ki)

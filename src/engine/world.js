@@ -43,6 +43,7 @@ export class World {
     this._buildLights();
     this._buildSky();
     this._buildArena();
+    this._buildGrass();
     this._buildFogOfWar();
     this._buildComposer();
 
@@ -156,6 +157,69 @@ export class World {
     }
     this.scene.add(g);
     this.arena = g;
+  }
+
+  // --- grass: ONE InstancedMesh (single draw call), wind sway in the vertex shader,
+  // and every crater/scorch FLATTENS the blades inside it — cheap mileage from destruction.
+  _buildGrass() {
+    const COUNT = 2400;
+    const geo = new THREE.PlaneGeometry(1.5, 2.1, 1, 2); geo.translate(0, 1.05, 0);   // pivot at the roots
+    const mat = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.92, metalness: 0, side: THREE.DoubleSide });
+    mat.onBeforeCompile = (sh) => {
+      sh.uniforms.uTime = this._grassTime = { value: 0 };
+      sh.vertexShader = 'uniform float uTime;\n' + sh.vertexShader.replace(
+        '#include <begin_vertex>',
+        `#include <begin_vertex>
+         vec4 gw = instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0);
+         transformed.x += sin(uTime * 1.7 + gw.x * 0.33 + gw.z * 0.29) * 0.26 * position.y;`
+      );
+    };
+    const grass = new THREE.InstancedMesh(geo, mat, COUNT);
+    grass.frustumCulled = false; grass.receiveShadow = true; grass.renderOrder = 1;
+    const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), sv = new THREE.Vector3(), pv = new THREE.Vector3(), Y = new THREE.Vector3(0, 1, 0), col = new THREE.Color();
+    this._gPos = new Float32Array(COUNT * 2); this._gRot = new Float32Array(COUNT); this._gScale = new Float32Array(COUNT); this._gOn = new Uint8Array(COUNT).fill(1);
+    let placed = 0, tries = 0;
+    while (placed < COUNT && tries++ < COUNT * 30) {
+      const x = (Math.random() * 2 - 1) * (ARENA - 10), z = (Math.random() * 2 - 1) * (ARENA - 10);
+      if (Math.hypot(x, z) < 44) continue;                                    // keep the gold centre stage clean
+      let blocked = false;
+      for (const c of this.coverAll) if (Math.abs(x - c.x) < c.hx + 2 && Math.abs(z - c.z) < c.hz + 2) { blocked = true; break; }
+      if (blocked) continue;
+      const i = placed++;
+      this._gPos[i * 2] = x; this._gPos[i * 2 + 1] = z;
+      this._gRot[i] = Math.random() * Math.PI; this._gScale[i] = 0.7 + Math.random() * 0.85;
+      m4.compose(pv.set(x, 0, z), q.setFromAxisAngle(Y, this._gRot[i]), sv.setScalar(this._gScale[i]));
+      grass.setMatrixAt(i, m4);
+      grass.setColorAt(i, col.setHSL(0.26 + Math.random() * 0.06, 0.42, 0.24 + Math.random() * 0.14));
+    }
+    grass.count = placed;
+    grass.instanceMatrix.needsUpdate = true; if (grass.instanceColor) grass.instanceColor.needsUpdate = true;
+    this.grass = grass; this.scene.add(grass);
+  }
+  // scorch it, crater it, burn it — the blades in the radius go down and stay down until reset
+  flattenGrass(cx, cz, r) {
+    if (!this.grass) return;
+    const r2 = r * r; let touched = false;
+    for (let i = 0; i < this.grass.count; i++) {
+      if (!this._gOn[i]) continue;
+      const dx = this._gPos[i * 2] - cx, dz = this._gPos[i * 2 + 1] - cz;
+      if (dx * dx + dz * dz > r2) continue;
+      this._gOn[i] = 0; touched = true;
+      _gm4.makeScale(0.001, 0.001, 0.001); _gm4.setPosition(this._gPos[i * 2], -2, this._gPos[i * 2 + 1]);
+      this.grass.setMatrixAt(i, _gm4);
+    }
+    if (touched) this.grass.instanceMatrix.needsUpdate = true;
+  }
+  _restoreGrass() {
+    if (!this.grass) return;
+    const q = new THREE.Quaternion(), sv = new THREE.Vector3(), pv = new THREE.Vector3(), Y = new THREE.Vector3(0, 1, 0);
+    for (let i = 0; i < this.grass.count; i++) {
+      if (this._gOn[i]) continue;
+      this._gOn[i] = 1;
+      _gm4.compose(pv.set(this._gPos[i * 2], 0, this._gPos[i * 2 + 1]), q.setFromAxisAngle(Y, this._gRot[i]), sv.setScalar(this._gScale[i]));
+      this.grass.setMatrixAt(i, _gm4);
+    }
+    this.grass.instanceMatrix.needsUpdate = true;
   }
 
   _gridTexture() {
@@ -317,6 +381,7 @@ export class World {
       pa[i * 3 + 2] = this._gh[i]; touched = true;
     }
     if (touched) { this.groundGeo.attributes.position.needsUpdate = true; this.groundGeo.computeVertexNormals(); }
+    this.flattenGrass(cx, cz, radius * 1.2);
   }
 
   setBlockCracks(c) {
@@ -340,6 +405,7 @@ export class World {
     }
     this.cover = this.coverAll.slice();
     this.refreshFogBoxes();
+    this._restoreGrass();
     if (this.groundGeo) {
       const pa = this.groundGeo.attributes.position.array;
       for (let i = 0; i < this._gh.length; i++) { this._gh[i] = 0; pa[i * 3 + 2] = 0; }
@@ -374,6 +440,7 @@ export class World {
 
   render() {
     const now = performance.now();
+    if (this._grassTime) this._grassTime.value = now / 1000;   // wind
     if (this._lastRender) { const d = Math.min(now - this._lastRender, 100); this._ema = this._ema * 0.9 + d * 0.1; }
     this._lastRender = now;
     this.composer.render();
@@ -412,6 +479,7 @@ export class World {
 }
 
 const _proj = new THREE.Vector3();
+const _gm4 = new THREE.Matrix4();
 const _ndc = new THREE.Vector2();
 const _ray = new THREE.Raycaster();
 const _groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);

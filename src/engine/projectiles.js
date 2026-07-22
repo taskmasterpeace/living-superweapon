@@ -15,6 +15,12 @@ const MAT_CORE = new THREE.MeshBasicMaterial({ color: '#ffffff' });
 const MAT_GLOW_PROTO = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending, depthWrite: false });
 const MAT_BEAM_PROTO = new THREE.MeshBasicMaterial({ transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
 function glowMat(color, opacity = 0.5) { const m = MAT_GLOW_PROTO.clone(); m.color.set(color); m.opacity = opacity; return m; }
+const GEO_ARROW_SHAFT = new THREE.CylinderGeometry(0.09, 0.09, 3.0, 6);
+const GEO_ARROW_HEAD = new THREE.ConeGeometry(0.24, 0.7, 6);
+const GEO_ARROW_FLET = new THREE.ConeGeometry(0.3, 0.8, 4);
+const MAT_ARROW_SHAFT = new THREE.MeshStandardMaterial({ color: '#8a6a3a', roughness: 0.8 });
+const MAT_ARROW_FLET = new THREE.MeshStandardMaterial({ color: '#d8d2c4', roughness: 0.9 });
+const _AY = new THREE.Vector3(0, 1, 0);
 
 // ---- Ki-blast / big-bang orb ----
 class Projectile {
@@ -36,11 +42,22 @@ class Projectile {
     this.trailT = 0;
     this.dead = false;
 
-    const core = new THREE.Mesh(GEO_ORB, MAT_CORE);
-    const glow = new THREE.Mesh(GEO_ORB, glowMat(this.color)); glow.scale.setScalar(1.7);
-    this.obj = new THREE.Group(); this.obj.add(core, glow); this.obj.scale.setScalar(this.radius);
-    this.obj.position.copy(this.pos); game.scene.add(this.obj);
-    this.light = game.vfx.borrowLight(this.color, 3 * this.power, this.radius * 10);
+    this.arrow = !!o.arrow; this.payload = o.payload || null;
+    if (this.arrow) {
+      // a REAL arrow — shaft + head + fletching, no energy glow (payload color on the head)
+      const shaft = new THREE.Mesh(GEO_ARROW_SHAFT, MAT_ARROW_SHAFT);
+      const head = new THREE.Mesh(GEO_ARROW_HEAD, glowMat(this.color, 0.95)); head.position.y = 1.6;
+      const flet = new THREE.Mesh(GEO_ARROW_FLET, MAT_ARROW_FLET); flet.position.y = -1.3;
+      this.obj = new THREE.Group(); this.obj.add(shaft, head, flet);
+      this.obj.position.copy(this.pos); game.scene.add(this.obj);
+      this.light = null;
+    } else {
+      const core = new THREE.Mesh(GEO_ORB, MAT_CORE);
+      const glow = new THREE.Mesh(GEO_ORB, glowMat(this.color)); glow.scale.setScalar(1.7);
+      this.obj = new THREE.Group(); this.obj.add(core, glow); this.obj.scale.setScalar(this.radius);
+      this.obj.position.copy(this.pos); game.scene.add(this.obj);
+      this.light = game.vfx.borrowLight(this.color, 3 * this.power, this.radius * 10);
+    }
   }
 
   update(dt, game) {
@@ -51,13 +68,14 @@ class Projectile {
     }
     this.pos.addScaledVector(this.vel, dt);
     this.obj.position.copy(this.pos);
-    this.light.position.copy(this.pos);
-    this.obj.rotation.y += dt * 6;
-    // trail
+    if (this.light) this.light.position.copy(this.pos);
+    if (this.arrow) { _v.copy(this.vel).normalize(); this.obj.quaternion.setFromUnitVectors(_AY, _v); }   // nose into the flight path
+    else this.obj.rotation.y += dt * 6;
+    // trail (arrows leave only a whisper)
     this.trailT += dt;
-    if (this.trailT > 0.016) {
+    if (this.trailT > (this.arrow ? 0.05 : 0.016)) {
       this.trailT = 0;
-      game.particles.spawn({ x: this.pos.x, y: this.pos.y, z: this.pos.z, vx: rand(-2, 2), vy: rand(-2, 2), vz: rand(-2, 2), life: 0.35, size: this.radius * 2.2, color: [this.color, this.color2, '#ffffff'], drag: 3, shrink: true });
+      game.particles.spawn({ x: this.pos.x, y: this.pos.y, z: this.pos.z, vx: rand(-2, 2), vy: rand(-2, 2), vz: rand(-2, 2), life: this.arrow ? 0.2 : 0.35, size: this.arrow ? 1 : this.radius * 2.2, color: this.arrow ? this.color : [this.color, this.color2, '#ffffff'], drag: 3, shrink: true });
     }
     this.life -= dt;
     // collisions
@@ -65,7 +83,26 @@ class Projectile {
     for (const c of game.world.cover) { if (Math.hypot(this.pos.x - c.x, this.pos.z - c.z) < c.r + this.radius && this.pos.y < c.h) return this._impact(game, true); }
     const foe = game.overlapFoe(this.caster, this.pos, this.radius + 1.5);
     if (foe) {
-      foe.takeDamage(this.damage * this.caster.powerBuff, { kb: _v.copy(this.vel).setY(0).setLength(this.damage * 0.5 + 8).setComponent(1, 6), launch: 6 + this.power * 4, hitstop: 0.05 });
+      // Superman-style DEFLECT guard: bullets/bolts bounce right back at whoever fired them
+      if (foe.guarding && foe.staggerT <= 0 && foe.def.guardType === 'deflect' && !this._defl) {
+        const ddx = this.pos.x - foe.pos.x, ddz = this.pos.z - foe.pos.z, dd = Math.hypot(ddx, ddz) || 1;
+        if ((ddx / dd) * foe.aim.x + (ddz / dd) * foe.aim.z > -0.15) {
+          this._defl = true;
+          const shooter = this.caster;
+          this.caster = foe; this.team = foe.team; this.homing = Math.max(this.homing, 1.5);
+          if (shooter && shooter.alive) _v.copy(shooter.pos).setY(shooter.pos.y + 5).sub(this.pos).normalize().multiplyScalar(this.vel.length() * 1.08);
+          else _v.copy(this.vel).multiplyScalar(-1);
+          this.vel.copy(_v); this.life = Math.max(this.life, 1.4);
+          foe.guardMeter = Math.max(0, foe.guardMeter - 0.04);
+          game.vfx.impactStar(this.pos.clone(), 6, '#ffd24a', 0.16); game.audio.zap(760);
+          if (game.hud) game.hud.damageNumber(foe.pos, 'DEFLECT', '#ffd24a', true);
+          return true;
+        }
+      }
+      foe.takeDamage(this.damage * this.caster.powerBuff, { src: this.caster, kb: _v.copy(this.vel).setY(0).setLength(this.damage * 0.5 + 8).setComponent(1, 6), launch: 6 + this.power * 4, hitstop: 0.05 });
+      if (this.payload === 'poison') foe.addDot({ dps: 5, dur: 4, color: '#8fe08a', kind: 'poison', src: this.caster });
+      else if (this.payload === 'gas') foe.addDot({ dps: 6, dur: 3, color: '#d64a72', kind: 'gas', src: this.caster });
+      else if (this.payload === 'flame') { foe.addDot({ dps: 7, dur: 2.5, color: '#ff7a2a', kind: 'burn', src: this.caster }); game.particles.burst(foe.pos.x, foe.pos.y + 5, foe.pos.z, { count: 8, speed: 10, life: 0.5, size: 2.6, color: ['#ff7a2a', '#ffd24a'], up: 8, drag: 1.2 }); }
       if (this.pierce-- > 0) { game.vfx.flash(this.pos.clone(), this.color, this.radius * 2, 0.12); return true; }
       return this._impact(game, false, foe);
     }
@@ -81,7 +118,7 @@ class Projectile {
     game.audio.boom(clamp(this.power * 0.6, 0.2, 1.4));
     this._dispose(game); return false;
   }
-  _dispose(game) { if (this.dead) return; this.dead = true; game.scene.remove(this.obj); this.obj.children[1].material.dispose(); game.scene.remove(this.light); game.vfx.returnLight(this.light); }   // geometry + core material are shared — never dispose them
+  _dispose(game) { if (this.dead) return; this.dead = true; game.scene.remove(this.obj); this.obj.children[1].material.dispose(); if (this.light) { game.scene.remove(this.light); game.vfx.returnLight(this.light); } }   // geometry + core/shaft materials are shared — never dispose them
 }
 function o_maxspeed(p) { return p._max || 90; }
 

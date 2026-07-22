@@ -168,6 +168,7 @@ export class VFX {
     const m = new THREE.Mesh(this._decalGeo, mat);
     m.rotation.x = -Math.PI / 2; m.position.set(pos.x, 0.06 + this.scorches.length * 0.002, pos.z); m.scale.setScalar(radius);
     this.scene.add(m); this.scorches.push(m);
+    if (this.world.flattenGrass) this.world.flattenGrass(pos.x, pos.z, radius);   // burned ground = burned grass
     if (this.scorches.length > 40) { const old = this.scorches.shift(); this.scene.remove(old); old.material.dispose(); }
   }
 
