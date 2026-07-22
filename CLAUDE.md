@@ -14,7 +14,13 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   If a posed screenshot shows the title screen again, the page reloaded — just recompose and re-shoot.
 
 ## Architecture (see README for the full map)
-- `data/characters.js` — the **20** heroes as **pure data**. Add a hero = add data here. Trait fields:
+- **Sound design** (`core/audio.js`): combat SFX take an optional world `pos` — gain falls off with
+  distance to `audio.listen(x,z)` (set to the player each frame); booms carry ~240u, cracks ~110u,
+  screams ~190u. **DBZ voice synths**: `yell(pitch,dur,intensity,pos)` (detuned saws + vibrato + breath),
+  `grunt` (pain bark on slams), `cry` (KO wail — fires for every death in `handleKO`). `game.heroYell(f,i)`
+  gates on `def.yells` + `f._yellCd`; fires on charge start, long-charge (>1.15s), transforms/buffs,
+  tier-ups (`_yellCd` reset for the ascension scream), haymakers. `def.voicePitch` 0.55 (RAGE) – 1.3 (DECIBEL).
+- `data/characters.js` — the **52** heroes as **pure data**. Add a hero = add data here. Trait fields:
   `thorns` (hurt grabbers), `phase` (intangible), `grabHeal`, `teleEscape` (auto), `metal` (robot),
   `guardStrong` (riot shield), `tentacles` (verlet tentacles), **`strength` 1–10** (melee dmg up,
   knockback/beam-shove down via `kbMul`, faster ice break-outs), **`overdrive`** (comeback: drained/low-ki

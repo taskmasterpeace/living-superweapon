@@ -50,6 +50,24 @@ is the comeback attribute: when your ki tank is low/drained, landed fists conver
 Ugandan dude." KIVULI now ships in true purple (`#b06aff` / `#9a4ae0` family) — the ONE sanctioned
 purple in the entire project. The ban stands everywhere else.
 
+## The Thirty (wave 2 — Marvel-inspired · DC-inspired · COF originals)
+
+**Marvel-inspired:** IRONCLAD (powered armor, repulsors/unibeam) · RAGE (STR 10, leaps, haymakers only) ·
+STORMCALL (axe + skyfall lightning) · WEBLINE (web-snare grab-slams, wall of quips) · RIPCLAW (slash ×2 + regen) ·
+MAJESTY (Extreme, BINARY) · MYSTWARD (barrier + folds + sigils) · ONYX (kinetic deflect suit) ·
+CHAINFIRE (hellfire chain grab, fire wake) · TEMPEST (weather: gale/hail/flash-freeze).
+
+**DC-inspired:** KNIGHTFALL (no powers, Line Beacon item, batarang fans) · AEGIS (sword + bracelet-deflect +
+Golden Lasso slam) · OLYMPUS (the word made lightning) · MARSHAL (phasing heavyweight) · CIRCUIT (∞-core
+machine half, deflect) · TRENCH (spear + the Drowned Court) · DECIBEL (voicePitch 1.3 — the Canary Cry cone) ·
+COLDSNAP (cold gun, freeze rules) · FOUNDRY (hammer + rivet gun, rocket-boot leaps) · TALON (escrima acrobat, Threat Low).
+
+**COF originals:** ABEO / JELANI / KAMARIA (the Hand of Uganda bodyguard trio — metal-deflect / strength-speed /
+phasing, canon) · RAMIRO the Clown-Sheriff (shotgun + revolver + gas + Backup, canon) · JAWAH MATU (sound
+absorption — his field DRAINS your ki into his, canon) · MOSES APIO (Atlas Protocol symbiont, tendrils + regen,
+canon) · DUNE (sand shaper) · GRAVEN (the gravity controller — levitates, Event Wells, Singularity Seed) ·
+BULWARK (195 hp living rampart, squad barrier) · FERAL (thorned beast rusher).
+
 ## Guard type matrix (why blocking is character-expressive)
 
 | Type | Who | Behavior |

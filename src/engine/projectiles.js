@@ -185,7 +185,7 @@ class Projectile {
       game.vfx.lightning(p, { color: '#fff', count: 5, radius: this.blast, height: 14 });
       game.slowmo(0.2, 0.45); game.world.punch(0.7); if (game.hud) game.hud.flashScreen('#ffe8c0', 0.16);
     }
-    game.audio.boom(clamp(this.power * 0.6, 0.2, 1.4));
+    game.audio.boom(clamp(this.power * 0.6, 0.2, 1.4), p);
     this._dispose(game); return false;
   }
   _dispose(game) {
@@ -412,7 +412,7 @@ export class Projectiles {
       game.vfx.impact(p, { x: winner.dir.x, z: winner.dir.z }, { color: winner.color, power: 2 });
       game.worldImpact(c.pos.clone().setY(0.4), 44, 2.2);
       c.takeDamage(55 * winner.caster.powerBuff, { src: winner.caster, kb: { x: winner.dir.x * 80, y: 24, z: winner.dir.z * 80 }, hitstop: 0.16 });
-      game.world.punch(0.62); game.world.shake(2.3); game.slowmo(0.16, 0.4); game.audio.boom(1.3);
+      game.world.punch(0.62); game.world.shake(2.3); game.slowmo(0.16, 0.4); game.audio.boom(1.3, c.pos);
     }
     loser.end(); loser.clashLen = null; loser._clashOther = null; winner._clashOther = null;
   }

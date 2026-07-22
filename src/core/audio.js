@@ -1,6 +1,16 @@
-// Living Superweapon — lightweight WebAudio synth SFX (no assets needed)
+// Living Superweapon — lightweight WebAudio synth SFX (no assets needed).
+// PROXIMITY: combat methods take an optional world position; gain falls off with distance from the
+// listener (the player). Explosions carry farther than cracks. listen(x,z) is set every frame.
 export class AudioBus {
-  constructor() { this.ctx = null; this.master = null; this.ok = false; this.muted = false; }
+  constructor() { this.ctx = null; this.master = null; this.ok = false; this.muted = false; this._lx = 0; this._lz = 0; this._hasL = false; }
+  listen(x, z) { this._lx = x; this._lz = z; this._hasL = true; }
+  // distance → gain multiplier. reach = how far this sound family carries (units to near-silence).
+  _pg(pos, reach = 130) {
+    if (!pos || !this._hasL) return 1;
+    const d = Math.hypot((pos.x ?? 0) - this._lx, (pos.z ?? 0) - this._lz);
+    const g = 1.12 - d / reach;
+    return g <= 0.06 ? 0 : Math.min(1, g);
+  }
   init() {
     if (this.ctx) return;
     try {
@@ -30,56 +40,105 @@ export class AudioBus {
     const src = this.ctx.createBufferSource(); src.buffer = buf; return src;
   }
 
-  blast(freq = 420, dur = 0.16, type = 'sawtooth') {
+  blast(freq = 420, dur = 0.16, type = 'sawtooth', pos = null) {
     if (!this.ok || this.muted) return;
+    const pg = this._pg(pos, 120); if (!pg) return;
     const o = this.ctx.createOscillator(); o.type = type;
     o.frequency.setValueAtTime(freq, this.t);
     o.frequency.exponentialRampToValueAtTime(freq * 0.4, this.t + dur);
-    this._env(o, dur, 0.5); o.start(); o.stop(this.t + dur + 0.02);
+    this._env(o, dur, 0.5 * pg); o.start(); o.stop(this.t + dur + 0.02);
   }
-  zap(freq = 900) {
+  zap(freq = 900, pos = null) {
     if (!this.ok || this.muted) return;
+    const pg = this._pg(pos, 100); if (!pg) return;
     const o = this.ctx.createOscillator(); o.type = 'square';
     o.frequency.setValueAtTime(freq * (0.9 + Math.random() * 0.2), this.t);
     o.frequency.exponentialRampToValueAtTime(freq * 1.6, this.t + 0.05);
-    this._env(o, 0.06, 0.18); o.start(); o.stop(this.t + 0.08);
+    this._env(o, 0.06, 0.18 * pg); o.start(); o.stop(this.t + 0.08);
   }
-  hit(freq = 240) {
+  hit(freq = 240, pos = null) {
     if (!this.ok || this.muted) return;
+    const pg = this._pg(pos, 110); if (!pg) return;
     const o = this.ctx.createOscillator(); o.type = 'triangle';
     o.frequency.setValueAtTime(freq, this.t);
     o.frequency.exponentialRampToValueAtTime(freq * 0.5, this.t + 0.09);
-    this._env(o, 0.1, 0.4);
-    const n = this._noise(0.08); this._env(n, 0.08, 0.25); n.start(); n.stop(this.t + 0.08);
+    this._env(o, 0.1, 0.4 * pg);
+    const n = this._noise(0.08); this._env(n, 0.08, 0.25 * pg); n.start(); n.stop(this.t + 0.08);
     o.start(); o.stop(this.t + 0.12);
   }
-  // heavy, violent melee impact — low thud + high crack
-  impact(power = 1) {
+  // heavy, violent melee impact — low thud + high crack (cracks fade with distance faster than thuds)
+  impact(power = 1, pos = null) {
     if (!this.ok || this.muted) return;
+    const pg = this._pg(pos, 150); if (!pg) return;
     const o = this.ctx.createOscillator(); o.type = 'sine';
     o.frequency.setValueAtTime(190, this.t);
     o.frequency.exponentialRampToValueAtTime(38, this.t + 0.12);
-    this._env(o, 0.15, Math.min(0.95, 0.45 + power * 0.4), 0.002); o.start(); o.stop(this.t + 0.17);
+    this._env(o, 0.15, Math.min(0.95, 0.45 + power * 0.4) * pg, 0.002); o.start(); o.stop(this.t + 0.17);
     const o2 = this.ctx.createOscillator(); o2.type = 'square';
     o2.frequency.setValueAtTime(90, this.t); o2.frequency.exponentialRampToValueAtTime(30, this.t + 0.08);
-    this._env(o2, 0.09, 0.3 + power * 0.2, 0.001); o2.start(); o2.stop(this.t + 0.1);
+    this._env(o2, 0.09, (0.3 + power * 0.2) * pg, 0.001); o2.start(); o2.stop(this.t + 0.1);
     const n = this._noise(0.06); const f = this.ctx.createBiquadFilter();
     f.type = 'highpass'; f.frequency.value = 1400; n.connect(f);
-    this._env(f, 0.05, 0.28 + power * 0.25, 0.001); n.start(); n.stop(this.t + 0.06);
+    this._env(f, 0.05, (0.28 + power * 0.25) * pg * pg, 0.001); n.start(); n.stop(this.t + 0.06);
   }
 
-  boom(power = 1) {
+  boom(power = 1, pos = null) {
     if (!this.ok || this.muted) return;
+    const pg = this._pg(pos, 240); if (!pg) return;   // explosions carry across the arena
     const dur = 0.5 + power * 0.4;
     const o = this.ctx.createOscillator(); o.type = 'sine';
     o.frequency.setValueAtTime(160, this.t);
     o.frequency.exponentialRampToValueAtTime(30, this.t + dur);
-    this._env(o, dur, Math.min(0.9, 0.5 + power * 0.3), 0.01);
+    this._env(o, dur, Math.min(0.9, 0.5 + power * 0.3) * pg, 0.01);
     const n = this._noise(dur); const f = this.ctx.createBiquadFilter();
-    f.type = 'lowpass'; f.frequency.setValueAtTime(1200, this.t);
+    f.type = 'lowpass'; f.frequency.setValueAtTime(1200 * Math.max(0.35, pg), this.t);   // distance muffles the crack
     f.frequency.exponentialRampToValueAtTime(120, this.t + dur);
-    n.connect(f); this._env(f, dur, 0.5, 0.005); n.start(); n.stop(this.t + dur);
+    n.connect(f); this._env(f, dur, 0.5 * pg, 0.005); n.start(); n.stop(this.t + dur);
     o.start(); o.stop(this.t + dur + 0.02);
+  }
+
+  // ---- the VOICE — DBZ-style synth screams (no assets, per-character pitch) ----
+  // yell: charge/transform scream. Two detuned saws + vibrato + breath noise, rising with fury.
+  yell(pitch = 1, dur = 0.7, intensity = 1, pos = null) {
+    if (!this.ok || this.muted) return;
+    const pg = this._pg(pos, 190); if (!pg) return;   // a good scream carries
+    const base = 170 * pitch;
+    const lfo = this.ctx.createOscillator(); lfo.frequency.value = 11 + intensity * 4;
+    const lfoG = this.ctx.createGain(); lfoG.gain.value = 9 + intensity * 8;
+    lfo.connect(lfoG); lfo.start(); lfo.stop(this.t + dur + 0.1);
+    for (const det of [1, 1.011, 0.5]) {                       // two voices + a chest octave under
+      const o = this.ctx.createOscillator(); o.type = 'sawtooth';
+      o.frequency.setValueAtTime(base * det, this.t);
+      o.frequency.linearRampToValueAtTime(base * det * (1.25 + intensity * 0.2), this.t + dur * 0.8);
+      lfoG.connect(o.frequency);
+      const f = this.ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 700 * pitch; f.Q.value = 1.4;
+      o.connect(f);
+      this._env(f, dur, (det === 0.5 ? 0.16 : 0.13) * intensity * pg, 0.06);
+      o.start(); o.stop(this.t + dur + 0.05);
+    }
+    const n = this._noise(dur); const nf = this.ctx.createBiquadFilter();
+    nf.type = 'bandpass'; nf.frequency.value = 1800; nf.Q.value = 0.8; n.connect(nf);
+    this._env(nf, dur, 0.07 * intensity * pg, 0.08); n.start(); n.stop(this.t + dur);
+  }
+  // grunt: short pain bark (slams, hard hits)
+  grunt(pitch = 1, pos = null) {
+    if (!this.ok || this.muted) return;
+    const pg = this._pg(pos, 120); if (!pg) return;
+    const o = this.ctx.createOscillator(); o.type = 'sawtooth';
+    o.frequency.setValueAtTime(210 * pitch, this.t);
+    o.frequency.exponentialRampToValueAtTime(110 * pitch, this.t + 0.16);
+    const f = this.ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 620 * pitch; f.Q.value = 1.6;
+    o.connect(f); this._env(f, 0.17, 0.2 * pg, 0.008); o.start(); o.stop(this.t + 0.2);
+  }
+  // cry: the KO wail — falls away like the fighter does
+  cry(pitch = 1, pos = null) {
+    if (!this.ok || this.muted) return;
+    const pg = this._pg(pos, 170); if (!pg) return;
+    const o = this.ctx.createOscillator(); o.type = 'sawtooth';
+    o.frequency.setValueAtTime(300 * pitch, this.t);
+    o.frequency.exponentialRampToValueAtTime(90 * pitch, this.t + 0.85);
+    const f = this.ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 800 * pitch; f.Q.value = 1.5;
+    o.connect(f); this._env(f, 0.9, 0.17 * pg, 0.03); o.start(); o.stop(this.t + 0.95);
   }
   charge() {
     if (!this.ok || this.muted) return null;

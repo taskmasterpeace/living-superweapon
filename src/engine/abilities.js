@@ -40,7 +40,7 @@ export const TYPES = {
         if (blocked) { g.vfx.impactStar(imp, 7, '#bfe0ff', 0.16); g.world.shake(0.4); g.audio.zap(520); }
         else {
           g.vfx.impact(imp, { x: c.aim.x, z: c.aim.z }, { color: def.color || c.def.colors.accent, power: 1.6 });
-          g.world.shake(1.4); g.world.punch(0.72); g.audio.impact(1.2); g.audio.boom(0.3);
+          g.world.shake(1.4); g.world.punch(0.72); g.audio.impact(1.2, imp); g.audio.boom(0.3, imp);
           g.slowmo(0.1, 0.45); if (g.hud) g.hud.flashScreen('#fff', 0.14);
         }
       }
@@ -163,6 +163,7 @@ export const TYPES = {
           f.addFrost((def.frost || 0.5) * inp.dt, c);   // sustained cold ENCASES you in ice (strength breaks out)
         }
         if (def.gasDot) f.addDot({ dps: def.gasDot.dps || 6, dur: def.gasDot.dur || 2.2, color: def.gasDot.color || def.color, kind: def.gasDot.kind || 'gas', src: c });
+        if (def.kiDrain) { const dr = def.kiDrain * inp.dt; f.ki = Math.max(0, f.ki - dr); c.ki = clamp(c.ki + dr * 0.6, 0, c.maxKi); }   // JAWAH: eats their sound/energy
         else { const pushr = (def.push || 40) * inp.dt * 8; f.vel.x += (dx / d) * pushr; f.vel.z += (dz / d) * pushr; if (def.lift) f.vel.y = Math.min(f.vel.y + def.lift * inp.dt * 24, 22); }
       }
       // mist particles
@@ -288,7 +289,8 @@ export const TYPES = {
       g.vfx.explode(c.pos.clone().setY(5), { color: def.color, color2: def.color2 || '#fff', radius: 14, power: 1.4, scorch: false });
       g.vfx.shockwave(c.pos.clone().setY(0.2), { color: def.color, radius: 40, power: 1.4 });
       g.vfx.ring(c.pos.clone().setY(3), { color: def.color, r0: 2, r1: 30, life: 0.6, flat: true, y: 0.5 });
-      g.world.punch(0.72); g.world.shake(1.4); g.audio.power(true); g.audio.boom(0.7);
+      g.world.punch(0.72); g.world.shake(1.4); g.audio.power(true); g.audio.boom(0.7, c.pos);
+      if (c.def.yells) { c._yellCd = 0; g.heroYell(c, 1.4); }   // the transformation ROAR
       // rising aura pillar
       for (let i = 0; i < 40; i++) g.particles.spawn({ x: c.pos.x + rand(-3, 3), y: rand(0, 6), z: c.pos.z + rand(-3, 3), vx: rand(-3, 3), vy: rand(20, 40), vz: rand(-3, 3), life: 1.0, size: 3.4, color: [def.color, def.color2 || '#fff'], drag: 0.6 });
     }

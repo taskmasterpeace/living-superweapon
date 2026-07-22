@@ -477,7 +477,7 @@ export class Game {
       update: (dt) => { ct += dt; const k = clamp(ct / 0.5, 0, 1); mesh.position.y = y0 - k * (h * 0.92); mesh.scale.y = Math.max(0.04, 1 - k); if (crack) { crack.position.y = mesh.position.y; crack.scale.copy(mesh.scale); crack.material.opacity = 0.9 * (1 - k); } return k >= 1; },
       dispose: () => { mesh.visible = false; if (crack) crack.visible = false; },   // hidden, not disposed — resetTerrain restores it
     });
-    this.world.shake(1.5); this.world.punch(0.9); this.audio.boom(0.6);
+    this.world.shake(1.5); this.world.punch(0.9); this.audio.boom(0.6, { x: c.x, z: c.z });
   }
 
   // ---------- gamified combat: kills, streaks, XP/levels, announcer ----------
@@ -494,6 +494,7 @@ export class Game {
       killer.lastKillT = 0;
     }
     victim.streak = 0;
+    this.audio.cry(victim.def.voicePitch || 1, victim.pos);   // the falling wail
     // KO flourish — slowmo + banner when a human is involved (avoids spam in bot-vs-bot rumble)
     const involvesHuman = this.isHuman(victim) || (killer && this.isHuman(killer));
     if (involvesHuman) {
@@ -530,7 +531,8 @@ export class Game {
         this.vfx.shockwave(f.pos.clone().setY(0.2), { color: tc, radius: 46, power: 1.6 });
         this.vfx.lightning(f.pos.clone().setY(2), { color: tc, count: 6, radius: 16, height: 22 });
         for (let i = 0; i < 60; i++) this.particles.spawn({ x: f.pos.x + rand(-3, 3), y: rand(0, 6), z: f.pos.z + rand(-3, 3), vx: rand(-3, 3), vy: rand(26, 50), vz: rand(-3, 3), life: 1.2, size: 3.6, color: [tc, '#fff'], drag: 0.5 });
-        this.world.punch(0.7); this.world.shake(1.8); this.audio.power(true); this.audio.boom(0.8);
+        this.world.punch(0.7); this.world.shake(1.8); this.audio.power(true); this.audio.boom(0.8, f.pos);
+        f._yellCd = 0; this.heroYell(f, 1.6);   // the ascension SCREAM
         this.slowmo(0.3, 0.4);
         if (this.hud && (this.isHuman(f) || this.mode)) this.hud.announce('TIER ' + ['', 'I', 'II', 'III', 'MAX'][f.tier], f.name + ' ASCENDS', tc);
       } else {
@@ -565,13 +567,22 @@ export class Game {
       if (this.hud.kiWarn) this.hud.kiWarn();
     }
   }
+  // The DBZ voice: charge screams, transformation roars, battle shouts — per-character pitch,
+  // proximity-attenuated, cooldown so nobody screams every frame.
+  heroYell(f, intensity = 1) {
+    if (!f.def.yells || (f._yellCd || 0) > 0 || f.state === 'ko') return;
+    f._yellCd = 1.4 + Math.random() * 0.5;
+    this.audio.yell(f.def.voicePitch || 1, 0.5 + intensity * 0.45, intensity, f.pos);
+  }
+
   // A launched fighter just hit a wall / the ground hard (entity._slam). Sell the crunch.
   onSlam(f, dmg, kind) {
     const p = f.pos.clone().setY(f.pos.y + 4);
     this.vfx.impactStar(p, 8 + dmg * 0.35, '#ffffff', 0.18);
     this.particles.burst(f.pos.x, f.pos.y + 3, f.pos.z, { count: 14, speed: 24, life: 0.5, size: 3, color: ['#8a8f99', '#fff', f.def.colors.accent], up: 8, grav: 14, drag: 1.6 });
     if (kind === 'ground') { this.vfx.shockwave(f.pos.clone().setY(0.2), { color: '#c9cfd9', radius: 14 + dmg, power: 0.9 }); this.world.crater(f.pos.x, f.pos.z, 6, 1.2); }
-    this.world.shake(1.2); this.audio.impact(1.15); this.audio.boom(0.35);
+    this.world.shake(1.2); this.audio.impact(1.15, f.pos); this.audio.boom(0.35, f.pos);
+    this.audio.grunt(f.def.voicePitch || 1, f.pos);   // pain is universal
     if (this.hud) this.hud.damageNumber(f.pos, 'SLAM ' + Math.round(dmg), '#ffb03a', false);
     if (this.isHuman(f) && this.hud) this.hud.flashScreen('#ff8a5a', 0.12);
   }
@@ -584,8 +595,8 @@ export class Game {
     this.particles.burst(pos.x, 0.8, pos.z, { count: 16 + str * 2, speed: 18 + str * 1.5, life: 0.65, size: 3.4, color: ['#6a655a', '#8a8577', '#3a3f47'], up: 9, grav: 14, drag: 1.5 });
     this.vfx.ring(new THREE.Vector3(pos.x, 0.35, pos.z), { color: '#c9bfa9', r0: 2, r1: 9 + str * 1.2, life: 0.42, flat: true, y: 0.35 });
     this.world.shake(0.7 + power * 0.9);
-    this.audio.impact(0.75 + power * 0.5);
-    if (str >= 7) { this.audio.boom(0.55); this.world.punch(0.85); }   // the big ones land like meteors
+    this.audio.impact(0.75 + power * 0.5, pos);
+    if (str >= 7) { this.audio.boom(0.55, pos); this.world.punch(0.85); }   // the big ones land like meteors
   }
 
   // Pressed an ability without the ki to pay for it (nothing fired — say so).
@@ -975,6 +986,7 @@ export class Game {
     }
     if (this._slowT > 0) { this._slowT -= dt; dt *= this._slowMul || 1; }   // impact slow-mo
     this.time += dt;
+    if (this.player) this.audio.listen(this.player.pos.x, this.player.pos.z);   // proximity audio ears
 
     if (this.comboT > 0) { this.comboT -= dt; if (this.comboT <= 0) { this.combo = 0; if (this.hud) this.hud.combo(0); } }
     if (this.mode && !this.matchOver) this.mode.tick(this, dt);

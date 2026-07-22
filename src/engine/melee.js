@@ -58,7 +58,8 @@ export class MeleeSystem {
     const lunge = haymaker ? 40 : 26;
     f.vel.x += f.aim.x * lunge; f.vel.z += f.aim.z * lunge;
     f.invuln = Math.max(f.invuln, haymaker ? 0.1 : 0.05);
-    g.audio.zap(haymaker ? 300 : 480);
+    g.audio.zap(haymaker ? 300 : 480, f.pos);
+    if (haymaker) { if (f.def.yells) g.heroYell(f, 0.9); else g.audio.grunt(f.def.voicePitch || 1, f.pos); }   // the battle shout
     // resolve after a tiny travel via a one-shot window
     f._heavyT = 0.12; f._heavyP = p01; f._heavyHay = haymaker;
   }
@@ -79,7 +80,7 @@ export class MeleeSystem {
         foe.state = 'hit'; foe.stateT = 0;
         foe.takeDamage(dmg * 0.35, { src: f, unblockable: true, hitstop: 0.12, kb: { x: f.aim.x * 46, y: 8, z: f.aim.z * 46 } });
         g.vfx.impactStar(imp, 12, '#ffd24a', 0.24); g.vfx.ring(imp, { color: '#ffd24a', r0: 1, r1: 12, life: 0.3 });
-        g.world.shake(1.6); g.world.punch(0.7); g.audio.impact(1.3); g.audio.boom(0.5); g.slowmo(0.14, 0.4);
+        g.world.shake(1.6); g.world.punch(0.7); g.audio.impact(1.3, imp); g.audio.boom(0.5, imp); g.slowmo(0.14, 0.4);
         if (g.hud) { g.hud.damageNumber(foe.pos, 'GUARD CRUSH', '#ffd24a', true); g.hud.flashScreen('#ffd24a', 0.12); }
       } else if (blocked) {
         foe.takeDamage(dmg, { src: f, strike: true, hitstop: 0.07 });     // straights get blocked like strikes
@@ -89,7 +90,7 @@ export class MeleeSystem {
         foe.takeDamage(dmg, { src: f, strike: true, hitstop: hay ? 0.16 : 0.1, kb: { x: f.aim.x * (hay ? 54 : 26), y: hay ? 6 : 3, z: f.aim.z * (hay ? 54 : 26) }, launch: hay ? 16 : 6 });
         f.hitstop = Math.max(f.hitstop, hay ? 0.12 : 0.07);
         g.vfx.impact(imp, { x: f.aim.x, z: f.aim.z }, { color: f.def.colors.accent, power: hay ? 2 : 1.1 });
-        g.world.shake(hay ? 1.8 : 0.9); g.audio.impact(hay ? 1.5 : 0.9);
+        g.world.shake(hay ? 1.8 : 0.9); g.audio.impact(hay ? 1.5 : 0.9, imp);
         if (hay) { g.world.punch(0.68); g.slowmo(0.13, 0.4); if (g.hud) g.hud.flashScreen('#fff', 0.15); g.audio.boom(0.5); }
       }
     }
@@ -129,7 +130,7 @@ export class MeleeSystem {
     if (holder.grabHeal) holder.heal(dmg * holder.grabHeal);
     holder.hitstop = Math.max(holder.hitstop, 0.08);
     g.vfx.impact(v.pos.clone().setY(5.6), { x: dir.x, z: dir.z }, { color: holder.def.colors.accent, power: back ? 1.9 : 1.4 });
-    g.world.shake(back ? 1.7 : 1.2); g.world.punch(0.72); g.audio.impact(back ? 1.4 : 1.1); g.audio.boom(0.4);
+    g.world.shake(back ? 1.7 : 1.2); g.world.punch(0.72); g.audio.impact(back ? 1.4 : 1.1, v.pos); g.audio.boom(0.4, v.pos);
     g.slowmo(0.1, 0.42); if (g.hud) g.hud.flashScreen('#fff', 0.14);
   }
 
@@ -151,10 +152,10 @@ export class MeleeSystem {
         foe.takeDamage(dmg, { src: f, strike: true, hitstop: hs, kb: { x: f.aim.x * (fin ? 14 : 8), y: fin ? 30 : 2, z: f.aim.z * (fin ? 14 : 8) } });
         f.hitstop = Math.max(f.hitstop, hs * (fin ? 0.9 : 0.6));      // attacker freezes too — meaty impact
         const imp = foe.pos.clone().set((f.pos.x + foe.pos.x) / 2, 5.7, (f.pos.z + foe.pos.z) / 2);
-        if (blocked) { g.vfx.impactStar(imp, 7, '#bfe0ff', 0.16); g.world.shake(0.35); g.audio.zap(520); f.strikeCd = Math.max(f.strikeCd, 0.5); f.hitstop = Math.max(f.hitstop, 0.09); }   // jab blocked → punishable
+        if (blocked) { g.vfx.impactStar(imp, 7, '#bfe0ff', 0.16); g.world.shake(0.35); g.audio.zap(520, imp); f.strikeCd = Math.max(f.strikeCd, 0.5); f.hitstop = Math.max(f.hitstop, 0.09); }   // jab blocked → punishable
         else {
           g.vfx.impact(imp, { x: f.aim.x, z: f.aim.z }, { color: f.def.colors.accent, power: fin ? 1.7 : 0.65 });
-          g.world.shake(fin ? 1.5 : 0.6); g.audio.impact(fin ? 1.3 : 0.65);
+          g.world.shake(fin ? 1.5 : 0.6); g.audio.impact(fin ? 1.3 : 0.65, imp);
           if (fin) { g.world.punch(0.7); g.slowmo(0.12, 0.4); if (g.hud) g.hud.flashScreen('#fff', 0.16); g.audio.boom(0.4); }
         }
         if (!fin) f.comboWin = 0.42;

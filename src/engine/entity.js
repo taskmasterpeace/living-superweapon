@@ -80,6 +80,17 @@ const BUILDS = {
   gale: { band: 1, weaponL: 'bow', weaponR: 'knife' },                 // the ranger: bow out, knife ready
   stefanos: { collar: 1, gaunt: 1 },                                   // presidential suit lines
   sandra: { band: 1, weaponL: 'pistol', weaponR: 'pistol' },           // the Jackal: a pistol in each hand
+  // the thirty
+  ironclad: { helmet: 1, visor: 1, pauldron: 2, gaunt: 1 }, rage: { band: 1 }, stormcall: { helmet: 1, pauldron: 2, gaunt: 1, weaponR: 'axe' },
+  webline: { band: 1 }, ripclaw: { helmet: 1, gaunt: 1 }, majesty: { band: 1, pauldron: 1, gaunt: 1 },
+  mystward: { collar: 1, band: 1 }, onyx: { helmet: 1, visor: 1, collar: 1 }, chainfire: { crest: 1, gaunt: 1 }, tempest: { crest: 1, collar: 1 },
+  knightfall: { helmet: 1, visor: 1, collar: 1, gaunt: 1 }, aegis: { band: 1, pauldron: 1, gaunt: 1, weaponL: 'sword', shield: 1 },
+  olympus: { collar: 1, gaunt: 1 }, marshal: { collar: 1 }, circuit: { helmet: 1, visor: 1, pauldron: 2, gaunt: 1, gun: 1 },
+  trench: { crest: 1, pauldron: 1, weaponR: 'spear' }, decibel: { band: 1 }, coldsnap: { helmet: 1, visor: 1, gun: 1 },
+  foundry: { helmet: 1, pauldron: 2, gaunt: 1, weaponR: 'axe' }, talon: { band: 1, weaponL: 'knife', weaponR: 'knife' },
+  abeo: { helmet: 1, pauldron: 2, gaunt: 1 }, jelani: { band: 1, gaunt: 1 }, kamaria: { collar: 1, band: 1 },
+  ramiro: { band: 1, weaponR: 'shotgun', shield: 1 }, jawah: { collar: 1 }, moses: { crest: 1, gaunt: 1 },
+  dune: { collar: 1, band: 1 }, graven: { helmet: 1, visor: 1, collar: 1 }, bulwark: { helmet: 1, pauldron: 2, gaunt: 1, shield: 1 }, feral: { crest: 1, gaunt: 1 },
 };
 
 function figure(def) {
@@ -575,6 +586,12 @@ export class Fighter {
 
     // ki regen (slower while casting/charging; guarding safely doubles as a charge stance)
     const anyCharge = Object.values(this.slots).some(s => s.charging || s.sustainT > 0);
+    // the DBZ charge scream: shout when the wind-up starts, ROAR if you keep pouring into it
+    if (this._yellCd > 0) this._yellCd -= dt;
+    if (anyCharge && !this._wasCharge) { this._chargeHeldT = 0; if (game && game.heroYell) game.heroYell(this, 0.7); }
+    if (anyCharge) { this._chargeHeldT = (this._chargeHeldT || 0) + dt; if (this._chargeHeldT > 1.15 && !this._bigYelled && game && game.heroYell) { this._bigYelled = true; game.heroYell(this, 1.3); } }
+    else this._bigYelled = false;
+    this._wasCharge = anyCharge;
     if (this.energyInfinite) this.ki = this.maxKi;                             // android core — the tank never moves
     else this.ki = clamp(this.ki + (anyCharge ? 3 : 9) * dt, 0, this.maxKi);   // ki is a budget — beams drain it
     if (this.guarding && this._blocked <= 0 && this.def.guardType !== 'barrier') this.ki = clamp(this.ki + 22 * dt, 0, this.maxKi); // guard to recover it (barriers COST ki instead)
