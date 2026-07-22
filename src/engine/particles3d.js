@@ -97,11 +97,13 @@ export class Particles3D {
 
   update(dt) {
     const n = this.n;
+    let alive = 0, high = 0;                       // high = last live slot + 1, so `n` can shrink back down
     for (let i = 0; i < n; i++) {
       if (this.life[i] <= 0) continue;
       this.life[i] -= dt;
       const i3 = i * 3;
       if (this.life[i] <= 0) { this.alpha[i] = 0; this.size[i] = 0; continue; }
+      alive++; high = i + 1;
       const dragF = Math.exp(-this.drag[i] * dt);
       this.vx[i] *= dragF; this.vz[i] *= dragF; this.vy[i] *= dragF;
       this.vy[i] -= this.grav[i] * dt;
@@ -111,10 +113,15 @@ export class Particles3D {
       this.alpha[i] = t;
       this.size[i] = this.shrink[i] ? this.size0[i] * t : this.size0[i];
     }
-    this.geo.setDrawRange(0, n);
-    this.geo.attributes.position.needsUpdate = true;
-    this.geo.attributes.aColor.needsUpdate = true;
-    this.geo.attributes.aSize.needsUpdate = true;
-    this.geo.attributes.aAlpha.needsUpdate = true;
+    if (alive === 0) this.n = 0;                   // pool fully idle → next spawns start at slot 0
+    else if (high < this.n * 0.5) this.n = high;   // the live tail ended early → reclaim the dead top half
+    this.geo.setDrawRange(0, this.n);
+    if (this.n === 0) return;                      // nothing to upload
+    for (const key of ['position', 'aColor', 'aSize', 'aAlpha']) {
+      const at = this.geo.attributes[key];
+      at.clearUpdateRanges();
+      at.addUpdateRange(0, this.n * at.itemSize);  // upload only the used slots, not all 48k floats
+      at.needsUpdate = true;
+    }
   }
 }

@@ -25,8 +25,16 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
 - Player and AI both emit an **intent** `{move, aimDir, slots:{key:{pressed,held,released}}, fly}`
   routed through the same `runSlot`. Keep that symmetry.
 - Controls: WASD move · mouse aim (**hover a character to target it**, else nearest-to-cursor) · LMB/RMB/Q/E/F/R
-  powers · **V strike · G grab · C guard** · SHIFT dash · **SPACE fly** (hold = rise, release = **hover/levitate**,
-  land by descending) · **CTRL descend** · ESC pause · 1–0 swap · TAB roster · B rival.
+  powers · **V strike · G grab · C guard** · SHIFT dash · **2×TAP a move key = per-hero EVADE** · **SPACE fly**
+  (hold = rise, release = **hover/levitate**, land by descending) · **CTRL descend** · ESC pause · 1–0 swap · TAB roster · B rival.
+- **Evade** (`def.evade = {kind,...}` on each hero, defaults in `abilities.js → EVADE_DEFAULTS`, engine `performEvade`):
+  kinds `dash` / `blink` / `sprint` / `slide` (RIME ice-skate, low drag) / `phase` (SPECTER, long i-frames). Double-tap
+  detection lives in `controlPlayer` (`TAP_DIRS`, 0.28s window); bots juke incoming projectiles with it in `controlBot`.
+  ⚠️ dash/slide impulses need `burstT`/`_slideT` — `Fighter.move()` clamps velocity to walk speed otherwise.
+- **Energy clarity** (don't regress): running ki dry mid-ability is NEVER silent. `game.onDrained(f)` (smoke fizzle +
+  power-down + `drainedT` → HUD DRAINED tag + red-pulsing ki bar) fires from beams/charges/cones/volleys/phase/spirit-bomb;
+  a charge that runs dry **releases at current charge** (never a frozen orb). `game.onNoKi(f,key)` (unaffordable press)
+  → `hud.kiDenied` slot shake + ki-bar flash. Ki bar: amber <38%, red pulse <15%.
 - **Flight / levitation** (`entity._physics`): `flyHeld` rising-edge takes off into `this.flying` (gravity suspended).
   While flying: hold `flyHeld` → rise (`FLY_RISE`), `descendHeld` → sink (`FLY_SINK`), neither → **hover** at altitude
   with a gentle bob. Releasing rise clamps the upward coast so you settle where you let go. Descending onto the ground
@@ -181,6 +189,12 @@ crouches on hard landings, and bends in the ragdoll); **fixed flight** into a pr
 rise, release to **hover** (gentle bob, no coast), CTRL to descend, clean auto-land; flying pose leans + trails the legs.
 Re-verified: all 14 kits fire, all 4 modes run, ragdolls (with knees) fire in live combat, flight rises/hovers/lands,
 0 console errors, ~5.4ms/frame.
+**Evade + energy clarity + perf pass** (Goal 11): per-hero double-tap evade (dash/blink/sprint/slide/phase, data-driven,
+bots juke with it too); loud drained/denied energy feedback (see Energy clarity above) — fixed the silent beam-death and
+frozen-orb-when-dry bugs; perf issues #1–#3, #5–#10 closed (particle upload range + pool shrink, shared projectile/beam/orb
+geometry, camera-following 110-unit shadow frustum, hidden crack overlays, alloc-free control/lightning/screenToGround,
+dirty-checked HUD widgets, 25Hz radar, shader prewarm, no getComputedStyle in the loop). Sim CPU −77%, HUD −84%.
+Re-verified: 14 kits × all slots error-free, 45s AI-vs-AI soak clean, double-tap works through real key events.
 Reference shots: `lsw-title.jpeg`, `lsw-kano2.jpeg`, `lsw-bigbang2.jpeg`, `lsw-visuals-arena4.jpeg` (Goal 8 look),
 `lsw-models.jpeg` (upgraded heroes), `lsw-ui2.jpeg` (combat HUD + KO banner), `lsw-ragdoll-final.jpeg` (settled ragdoll).
 

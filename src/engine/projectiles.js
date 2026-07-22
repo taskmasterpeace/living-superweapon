@@ -5,6 +5,17 @@ import { clamp, rand, TAU } from '../core/util.js';
 const UP = new THREE.Vector3(0, 1, 0);
 const _v = new THREE.Vector3(), _v2 = new THREE.Vector3(), _q = new THREE.Quaternion();
 
+// Shared geometry + white-core material — spawning a projectile/beam must not allocate GPU buffers
+// (per-spawn churn caused GC/upload hitches). Instances scale the shared unit geometry; per-instance
+// materials are cloned from these prototypes only where opacity/color animates.
+const GEO_ORB = new THREE.SphereGeometry(1, 16, 12);
+const GEO_ORB_HI = new THREE.SphereGeometry(1, 20, 16);
+const GEO_CYL = new THREE.CylinderGeometry(1, 1, 1, 16, 1, true);
+const MAT_CORE = new THREE.MeshBasicMaterial({ color: '#ffffff' });
+const MAT_GLOW_PROTO = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending, depthWrite: false });
+const MAT_BEAM_PROTO = new THREE.MeshBasicMaterial({ transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+function glowMat(color, opacity = 0.5) { const m = MAT_GLOW_PROTO.clone(); m.color.set(color); m.opacity = opacity; return m; }
+
 // ---- Ki-blast / big-bang orb ----
 class Projectile {
   constructor(game, caster, o) {
@@ -25,8 +36,8 @@ class Projectile {
     this.trailT = 0;
     this.dead = false;
 
-    const core = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 12), new THREE.MeshBasicMaterial({ color: '#ffffff' }));
-    const glow = new THREE.Mesh(new THREE.SphereGeometry(1.7, 16, 12), new THREE.MeshBasicMaterial({ color: this.color, transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending, depthWrite: false }));
+    const core = new THREE.Mesh(GEO_ORB, MAT_CORE);
+    const glow = new THREE.Mesh(GEO_ORB, glowMat(this.color)); glow.scale.setScalar(1.7);
     this.obj = new THREE.Group(); this.obj.add(core, glow); this.obj.scale.setScalar(this.radius);
     this.obj.position.copy(this.pos); game.scene.add(this.obj);
     this.light = game.vfx.borrowLight(this.color, 3 * this.power, this.radius * 10);
@@ -70,7 +81,7 @@ class Projectile {
     game.audio.boom(clamp(this.power * 0.6, 0.2, 1.4));
     this._dispose(game); return false;
   }
-  _dispose(game) { if (this.dead) return; this.dead = true; game.scene.remove(this.obj); this.obj.children.forEach(c => { c.geometry.dispose(); c.material.dispose(); }); game.scene.remove(this.light); game.vfx.returnLight(this.light); }
+  _dispose(game) { if (this.dead) return; this.dead = true; game.scene.remove(this.obj); this.obj.children[1].material.dispose(); game.scene.remove(this.light); game.vfx.returnLight(this.light); }   // geometry + core material are shared — never dispose them
 }
 function o_maxspeed(p) { return p._max || 90; }
 
@@ -95,11 +106,11 @@ class BeamHose {
     this.endT = 0; this.dead = false;
     this.blocked = false;
 
-    // meshes: outer glow + bright core + tip
-    const cyl = new THREE.CylinderGeometry(1, 1, 1, 16, 1, true);
-    this.glow = new THREE.Mesh(cyl, new THREE.MeshBasicMaterial({ color: this.color, transparent: true, opacity: 0.42, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
-    this.core = new THREE.Mesh(cyl, new THREE.MeshBasicMaterial({ color: this.color2, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
-    this.tip = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 12), new THREE.MeshBasicMaterial({ color: this.color2, transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false }));
+    // meshes: outer glow + bright core + tip (shared unit geometry, per-instance cloned materials)
+    const beamMat = (color, opacity) => { const m = MAT_BEAM_PROTO.clone(); m.color.set(color); m.opacity = opacity; return m; };
+    this.glow = new THREE.Mesh(GEO_CYL, beamMat(this.color, 0.42));
+    this.core = new THREE.Mesh(GEO_CYL, beamMat(this.color2, 0.8));
+    this.tip = new THREE.Mesh(GEO_ORB, glowMat(this.color2, 0.85));
     this.grp = new THREE.Group(); this.grp.add(this.glow, this.core, this.tip); game.scene.add(this.grp);
     this.light = game.vfx.borrowLight(this.color, 5 * this.power, 60);
     caster.muzzle(this.muzzle);
@@ -112,6 +123,8 @@ class BeamHose {
 
   update(dt, game) {
     const c = this.caster;
+    // ran out of ki mid-beam → the beam dies, but LOUDLY (fizzle cue), never silently
+    if (this.sustaining && c.alive && this.kiPerSec * dt > c.ki) { if (game.onDrained) game.onDrained(c); this.sustaining = false; }
     if (this.sustaining && c.alive && c.spendKi(this.kiPerSec * dt)) {
       c.state = 'cast'; c.stateT = 0;
       c.muzzle(this.muzzle);
@@ -185,7 +198,7 @@ class BeamHose {
     if (!this.sustaining && this.endT >= 0.18) { this._dispose(game); return false; }
     return true;
   }
-  _dispose(game) { if (this.dead) return; this.dead = true; game.scene.remove(this.grp); [this.glow, this.core, this.tip].forEach(m => { m.geometry.dispose(); m.material.dispose(); }); game.scene.remove(this.light); game.vfx.returnLight(this.light); }
+  _dispose(game) { if (this.dead) return; this.dead = true; game.scene.remove(this.grp); [this.glow, this.core, this.tip].forEach(m => m.material.dispose()); game.scene.remove(this.light); game.vfx.returnLight(this.light); }   // geometry is shared
 }
 
 // ---- Spirit Bomb: grow a giant orb overhead, then hurl it ----
@@ -199,8 +212,8 @@ class SpiritBomb {
     this.pos = new THREE.Vector3();
     this.vel = new THREE.Vector3();
     this.life = 4;
-    const core = new THREE.Mesh(new THREE.SphereGeometry(1, 20, 16), new THREE.MeshBasicMaterial({ color: '#ffffff' }));
-    const glow = new THREE.Mesh(new THREE.SphereGeometry(1.5, 20, 16), new THREE.MeshBasicMaterial({ color: this.color, transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending, depthWrite: false }));
+    const core = new THREE.Mesh(GEO_ORB_HI, MAT_CORE);
+    const glow = new THREE.Mesh(GEO_ORB_HI, glowMat(this.color)); glow.scale.setScalar(1.5);
     this.obj = new THREE.Group(); this.obj.add(core, glow); game.scene.add(this.obj);
     this.light = game.vfx.borrowLight(this.color, 4, 80);
   }
@@ -209,6 +222,7 @@ class SpiritBomb {
   update(dt, game) {
     const c = this.caster;
     if (this.charging) {
+      if (c.alive && this.radius < this.maxR && this.kiPerSec * dt > c.ki && !this._dryFx) { this._dryFx = true; if (game.onDrained) game.onDrained(c); }
       if (c.alive && this.radius < this.maxR && c.spendKi(this.kiPerSec * dt)) this.radius += this.growRate * dt;
       c.state = 'charge'; c.stateT = 0;
       this.pos.set(c.pos.x, c.pos.y + 16 + this.radius, c.pos.z);
@@ -232,7 +246,7 @@ class SpiritBomb {
     this.obj.rotation.y += dt * 2; this.light.position.copy(this.pos); this.light.intensity = 4 + this.charge01 * 6;
     return true;
   }
-  _dispose(game) { if (this.dead) return; this.dead = true; game.scene.remove(this.obj); this.obj.children.forEach(c => { c.geometry.dispose(); c.material.dispose(); }); game.scene.remove(this.light); game.vfx.returnLight(this.light); }
+  _dispose(game) { if (this.dead) return; this.dead = true; game.scene.remove(this.obj); this.obj.children[1].material.dispose(); game.scene.remove(this.light); game.vfx.returnLight(this.light); }   // shared geo/core
 }
 
 export class Projectiles {

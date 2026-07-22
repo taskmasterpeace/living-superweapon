@@ -57,12 +57,14 @@ export class World {
     sun.position.set(120, 200, 80);
     sun.castShadow = true;
     sun.shadow.mapSize.set(2048, 2048);
-    const d = 220;
+    // tight frustum that FOLLOWS the camera target (see follow()) — the visible area is ~160 units,
+    // so a 110-unit half-extent doubles effective shadow texel density vs. covering the whole arena
+    const d = 110;
     sun.shadow.camera.left = -d; sun.shadow.camera.right = d;
     sun.shadow.camera.top = d; sun.shadow.camera.bottom = -d;
     sun.shadow.camera.near = 40; sun.shadow.camera.far = 520;
     sun.shadow.bias = -0.0004;
-    this.scene.add(sun);
+    this.scene.add(sun); this.scene.add(sun.target);
     this.sun = sun;
     // cool back-rim (opposite the sun) — edge-lights heroes so they pop off the dark arena
     const rim = new THREE.DirectionalLight('#8fb8ff', 0.75);
@@ -144,7 +146,8 @@ export class World {
       g.add(m);
       // crack overlay — fades in as the block takes damage
       const crack = new THREE.Mesh(new THREE.BoxGeometry(w * 1.015, h * 1.006, d * 1.015), new THREE.MeshBasicMaterial({ map: crackTex, transparent: true, opacity: 0, depthWrite: false }));
-      crack.position.copy(m.position); g.add(crack);
+      crack.position.copy(m.position); crack.visible = false; g.add(crack);   // hidden until damaged — 16 fewer transparent draws
+
       const hp = Math.round(70 + w * h * d * 0.017);   // destructible, but tough — bigger = tougher
       const co = { mesh: m, crack, x, z, r: Math.max(w, d) * 0.6, h, hx: w / 2, hz: d / 2, top: h, hp, maxHp: hp, y0: h / 2, w, d, destroyed: false };
       this.cover.push(co); this.coverAll.push(co);
@@ -219,15 +222,17 @@ export class World {
     this.camPos.copy(this.camDir).multiplyScalar(this.camDist).add(this.camTarget);
     this.camera.position.copy(this.camPos).add(this.shakeV);
     this.camera.lookAt(this.camTarget.x + this.shakeV.x, this.camTarget.y + this.shakeV.y, this.camTarget.z + this.shakeV.z);
+    // drag the sun's tight shadow frustum along with the view (snapped to whole units so texels don't swim)
+    const sx = Math.round(this.camTarget.x), sz = Math.round(this.camTarget.z);
+    this.sun.position.set(sx + 120, 200, sz + 80);
+    this.sun.target.position.set(sx, 0, sz);
   }
 
-  // Screen (client px) -> ground world point (y=0 plane)
+  // Screen (client px) -> ground world point (y=0 plane). Reuses one raycaster/plane (called every frame).
   screenToGround(mx, my, out = new THREE.Vector3()) {
-    const ndc = new THREE.Vector2((mx / innerWidth) * 2 - 1, -(my / innerHeight) * 2 + 1);
-    const ray = new THREE.Raycaster();
-    ray.setFromCamera(ndc, this.camera);
-    const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
-    ray.ray.intersectPlane(plane, out);
+    _ndc.set((mx / innerWidth) * 2 - 1, -(my / innerHeight) * 2 + 1);
+    _ray.setFromCamera(_ndc, this.camera);
+    _ray.ray.intersectPlane(_groundPlane, out);
     return out;
   }
 
@@ -315,6 +320,7 @@ export class World {
   setBlockCracks(c) {
     if (!c.crack) return;
     const dmg = 1 - Math.max(0, c.hp) / c.maxHp;
+    c.crack.visible = dmg > 0.001;
     c.crack.material.opacity = Math.min(0.92, dmg * 1.15);
     const s = 1 - dmg * 0.05; c.mesh.scale.set(s, 1 - dmg * 0.12, s); c.crack.scale.set(s, 1 - dmg * 0.12, s);
   }
@@ -328,7 +334,7 @@ export class World {
     for (const c of this.coverAll) {
       c.hp = c.maxHp; c.destroyed = false;
       c.mesh.visible = true; c.mesh.position.set(c.x, c.y0, c.z); c.mesh.scale.set(1, 1, 1);
-      if (c.crack) { c.crack.visible = true; c.crack.material.opacity = 0; c.crack.position.copy(c.mesh.position); c.crack.scale.set(1, 1, 1); }
+      if (c.crack) { c.crack.visible = false; c.crack.material.opacity = 0; c.crack.position.copy(c.mesh.position); c.crack.scale.set(1, 1, 1); }
     }
     this.cover = this.coverAll.slice();
     this.refreshFogBoxes();
@@ -382,6 +388,28 @@ export class World {
     this.bloom.strength = t === 2 ? 0.66 : t === 1 ? 0.55 : 0.42;
   }
   get fps() { return this._ema ? Math.round(1000 / this._ema) : 60; }
+
+  // Compile the material variants that transient FX create lazily (beams, orbs, lightning, sprites)
+  // so their first use mid-fight doesn't hitch on shader compilation.
+  prewarm() {
+    const g = new THREE.Group(); g.position.set(0, -400, 0);
+    const geo = new THREE.SphereGeometry(1, 8, 6);
+    g.add(new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ transparent: true, blending: THREE.AdditiveBlending, depthWrite: false })));
+    g.add(new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide })));
+    g.add(new THREE.Mesh(geo, new THREE.MeshBasicMaterial()));
+    g.add(new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ transparent: true, depthWrite: false })));
+    g.add(new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ roughness: 0.5, metalness: 0.2, emissive: '#111' })));
+    const lgeo = new THREE.BufferGeometry(); lgeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(6), 3));
+    g.add(new THREE.LineSegments(lgeo, new THREE.LineBasicMaterial({ transparent: true, blending: THREE.AdditiveBlending, depthWrite: false })));
+    g.add(new THREE.Sprite(new THREE.SpriteMaterial({ transparent: true, depthTest: false, depthWrite: false })));
+    this.scene.add(g);
+    this.renderer.compile(this.scene, this.camera);
+    this.scene.remove(g);
+    geo.dispose(); lgeo.dispose(); g.traverse(o => { if (o.material) o.material.dispose(); });
+  }
 }
 
 const _proj = new THREE.Vector3();
+const _ndc = new THREE.Vector2();
+const _ray = new THREE.Raycaster();
+const _groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);

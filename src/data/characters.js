@@ -7,6 +7,7 @@ export const ROSTER = [
     colors: { primary: '#d8322f', secondary: '#1560d8', accent: '#ffd24a', skin: '#e8c39a', cape: '#a81b1a' },
     hp: 130, ki: 120, speed: 34, beamMight: 1.2,
     ai: { style: 'bruiser', range: 30, aggro: 0.8, fly: 0.55 },
+    evade: { kind: 'dash', name: 'Solar Step' },
     blurb: 'A living solar reactor. Thin heat-ray, wide freezing breath, and a flight-fist that ends arguments.',
     sig: ['LMB Heat Ray (thin beam)', 'RMB Arctic Breath (wide cold)', 'Q Sky Smash (flying fist)', 'R Solar Overload'],
     abilities: {
@@ -24,6 +25,7 @@ export const ROSTER = [
     colors: { primary: '#ff7a1a', secondary: '#1f66c9', accent: '#eaffff', skin: '#e8c39a' },
     hp: 115, ki: 130, speed: 36, beamMight: 1.4,
     ai: { style: 'trickster', range: 42, aggro: 0.72, fly: 0.45 },
+    evade: { kind: 'blink', name: 'Instant Step', range: 24 },
     blurb: 'Charge the Wave Cannon like a firehose of light. Blink behind them. Then drop a sky-sized Spirit Bomb.',
     sig: ['LMB Wave Cannon (charge beam)', 'RMB Dragon Rush', 'E Instant Transmission', 'R Spirit Bomb'],
     abilities: {
@@ -41,6 +43,7 @@ export const ROSTER = [
     colors: { primary: '#2a52d8', secondary: '#d8d2c4', accent: '#f5b21a', skin: '#e8c39a' },
     hp: 120, ki: 130, speed: 33, beamMight: 1.25,
     ai: { style: 'beamer', range: 40, aggro: 0.9, fly: 0.4 },
+    evade: { kind: 'dash', name: 'Royal Sidestep' },
     blurb: 'Left-right-left-right blaster storm, a size-scaling Big Bang that cracks the ground, and the Final Flash.',
     sig: ['LMB Bakuhatsu (rapid volley)', 'Q Big Bang (charge → shockwave)', 'R Final Flash', 'F Prince’s Pride'],
     abilities: {
@@ -58,6 +61,7 @@ export const ROSTER = [
     colors: { primary: '#16a34a', secondary: '#0b3d24', accent: '#7dff9e', skin: '#caa27a' },
     hp: 125, ki: 120, speed: 32,
     ai: { style: 'zoner', range: 40, aggro: 0.55, fly: 0.2 },
+    evade: { kind: 'dash', name: 'Will Surge' },
     blurb: 'Solid-light constructs you fly with your cursor: a rocket fist, a falling hammer, a wall, a sentry turret.',
     sig: ['LMB Will Fist (steer + punch)', 'RMB Will Hammer (slam)', 'Q Barrier Wall', 'E Sentry Turret'],
     abilities: {
@@ -75,6 +79,7 @@ export const ROSTER = [
     colors: { primary: '#ff8a3d', secondary: '#2b1a10', accent: '#ffd24a', skin: '#e8c39a', cape: '#c85a1a' },
     hp: 110, ki: 130, speed: 33, beamMight: 1.25,
     ai: { style: 'artillery', range: 62, aggro: 0.55, fly: 0.45 },
+    evade: { kind: 'dash', name: 'Star Step' },
     blurb: 'Rains stars from orbit. A precision Star Lance, a swelling Nova Core, and a sky-wide Meteor Storm.',
     sig: ['LMB Star Lance (beam)', 'RMB Nova Core (charge)', 'E Solar Wind (push)', 'R Meteor Storm'],
     abilities: {
@@ -92,6 +97,7 @@ export const ROSTER = [
     colors: { primary: '#4fb8e6', secondary: '#dff6ff', accent: '#eaffff', skin: '#cfe6f0' },
     hp: 115, ki: 120, speed: 31,
     ai: { style: 'zoner', range: 44, aggro: 0.5, fly: 0.2 },
+    evade: { kind: 'slide', name: 'Ice Skate', slideT: 0.7, power: 135 },
     blurb: 'Freezes the battlefield: breath that slows to a crawl, walls of ice, and an Absolute Zero detonation.',
     sig: ['LMB Frost Breath (cold cone)', 'RMB Shard Volley', 'Q Ice Wall', 'R Absolute Zero'],
     abilities: {
@@ -109,6 +115,7 @@ export const ROSTER = [
     colors: { primary: '#ffd21a', secondary: '#1a1a22', accent: '#eaffff', skin: '#e8c39a' },
     hp: 100, ki: 120, speed: 44, thorns: 7,
     ai: { style: 'rusher', range: 18, aggro: 0.95, fly: 0.35 },
+    evade: { kind: 'blink', name: 'Zap Step', range: 26, cd: 0.85, cost: 6 },
     blurb: 'Faster than you can track. Grab him and the current bites back. Lightning flurries, arc-beams, and Overclock.',
     sig: ['LMB Lightning Flurry', 'RMB Arc Beam', 'SHIFT Blink', 'R Overclock'],
     abilities: {
@@ -126,6 +133,7 @@ export const ROSTER = [
     colors: { primary: '#2f6f7f', secondary: '#10202a', accent: '#7fe6ff', skin: '#b9c6cc' },
     hp: 140, ki: 120, speed: 30,
     ai: { style: 'bruiser', range: 30, aggro: 0.72, fly: 0.2 },
+    evade: { kind: 'dash', name: 'Gravity Shift', power: 92 },
     blurb: 'Bends weight itself. Shove crowds with force cones, drop a Singularity, then Collapse the arena.',
     sig: ['LMB Force Push (wide)', 'Q Singularity (implode)', 'RMB Graviton (lob)', 'R Collapse'],
     abilities: {
@@ -143,6 +151,7 @@ export const ROSTER = [
     colors: { primary: '#caa23a', secondary: '#2a2410', accent: '#ffdf7a', skin: '#d8b98a' },
     hp: 105, ki: 130, speed: 32,
     ai: { style: 'summoner', range: 56, aggro: 0.42, fly: 0.2 },
+    evade: { kind: 'dash', name: 'Scramble' },
     blurb: 'Never fights alone. Swarms of seeker-drones, a fixed sentinel, and an Overmind that empowers the hive.',
     sig: ['LMB Drone Swarm', 'RMB Sentinel Turret', 'E Hunter Pack', 'R Overmind'],
     abilities: {
@@ -160,6 +169,7 @@ export const ROSTER = [
     colors: { primary: '#ff3b1a', secondary: '#2a0d06', accent: '#ffb03a', skin: '#e0a878' },
     hp: 135, ki: 120, speed: 32,
     ai: { style: 'artillery', range: 44, aggro: 0.78, fly: 0.3 },
+    evade: { kind: 'dash', name: 'Flare Step' },
     blurb: 'Walking eruption. Lobbed fireballs, a roaring flame cone, a swelling Magma Bomb, and a Rain of Fire.',
     sig: ['LMB Fireball (lob)', 'RMB Flamethrower', 'Q Magma Bomb (charge)', 'R Rain of Fire'],
     abilities: {
@@ -177,6 +187,7 @@ export const ROSTER = [
     colors: { primary: '#ff5a1a', secondary: '#7a1f06', accent: '#ffd24a', skin: '#e8b98a' },
     hp: 105, ki: 130, speed: 40, thorns: 9,
     ai: { style: 'rusher', range: 30, aggro: 0.82, fly: 0.75 },
+    evade: { kind: 'sprint', name: 'Jet Sprint', mult: 1.7, dur: 1.6 },
     blurb: 'Flame on. A fast flyer wrapped in fire — grab him and you burn. Jets, homing fireballs, and a supernova.',
     sig: ['LMB Flame Jet (fire beam)', 'RMB Fire Blast (cone)', 'E Flaming Fist (fly-in)', 'Thorns: burns grabbers'],
     abilities: {
@@ -194,6 +205,7 @@ export const ROSTER = [
     colors: { primary: '#2f9e57', secondary: '#14361f', accent: '#bfff6a', skin: '#6fae7a' },
     hp: 145, ki: 120, speed: 32, grabHeal: 0.6, beamMight: 1.4,
     ai: { style: 'grappler', range: 30, aggro: 0.78, fly: 0.4 },
+    evade: { kind: 'blink', name: 'Zanzoken', range: 22 },
     blurb: 'A bio-engineered predator. His throws drain your life to heal him, he regenerates, and charges a perfect wave.',
     sig: ['LMB Kamehameha (charge)', 'G Absorbing throw (heals him)', 'F Regenerate', 'E Zanzoken (blink)'],
     abilities: {
@@ -211,6 +223,7 @@ export const ROSTER = [
     colors: { primary: '#2f8f6a', secondary: '#b23a2a', accent: '#ffe066', skin: '#b9c6cc' },
     hp: 120, ki: 130, speed: 34, phase: true,
     ai: { style: 'trickster', range: 38, aggro: 0.68, fly: 0.5 },
+    evade: { kind: 'phase', name: 'Ghost Slip' },
     blurb: 'Controls his own density. Phase through everything with energy, or turn diamond-hard to hit like a truck.',
     sig: ['LMB Solar Beam (forehead)', 'Q Intangibility (phase)', 'RMB Density Punch', 'F Max Density'],
     abilities: {
@@ -228,6 +241,7 @@ export const ROSTER = [
     colors: { primary: '#1560d8', secondary: '#d8d2c4', accent: '#ffd24a', skin: '#e8c39a', cape: '#a81b1a' },
     hp: 150, ki: 110, speed: 42,
     ai: { style: 'rusher', range: 24, aggro: 0.92, fly: 0.8 },
+    evade: { kind: 'sprint', name: 'Blitz Run', mult: 1.75, dur: 1.4 },
     blurb: 'Bulletproof and airborne. Tackles across the sky, laser-visions from range, and turns briefly untouchable.',
     sig: ['RMB Flying Tackle (air ram)', 'E Sky Combo (aerial rush)', 'F Invincible (i-frames)', 'LMB Laser Vision'],
     abilities: {

@@ -9,13 +9,20 @@ import { AI } from './ai.js';
 import { Minion, Construct } from './summons.js';
 import { MeleeSystem } from './melee.js';
 import { Gamepad } from '../core/gamepad.js';
-import { runSlot } from './abilities.js';
+import { runSlot, performEvade } from './abilities.js';
 import { ROSTER } from '../data/characters.js';
 import { clamp, rand, TAU, damp } from '../core/util.js';
 
 const _v = new THREE.Vector3();
 const SLOT_KEYS = ['lmb', 'rmb', 'q', 'e', 'r', 'f', 'shift'];
+const TAP_DIRS = [['KeyW', 'ArrowUp', 0, 1], ['KeyS', 'ArrowDown', 0, -1], ['KeyA', 'ArrowLeft', -1, 0], ['KeyD', 'ArrowRight', 1, 0]];
 const NULL_PAD = { active: false, aiming: false, moving: false, lx: 0, ly: 0, rx: 0, ry: 0, down: () => false, pressed: () => false, released: () => false };
+const _inp = { pressed: false, held: false, released: false, dt: 0 };   // scratch intent — runSlot reads it synchronously
+function feedSlot(g, f, k, it, busy, dt) {
+  const blocked = busy && k !== 'shift';
+  _inp.pressed = blocked ? false : it.pressed; _inp.held = blocked ? false : it.held; _inp.released = it.released; _inp.dt = dt;
+  runSlot(f, k, _inp, g);
+}
 
 // Game modes: setup spawns, tick drives it, onKO scores, isOver returns a result, hud describes the top bar.
 const MODE_IMPL = {
@@ -523,6 +530,27 @@ export class Game {
     if (killer === this.player && this.hud.scorePopup) this.hud.scorePopup(victim.pos, bonus);
   }
 
+  // ---------- energy clarity ----------
+  // A sustained/charged ability just ran the caster's ki dry. Make the failure readable:
+  // smoke-fizzle VFX, a power-down cue, a DRAINED tag, and a short "winded" state the HUD shows.
+  onDrained(f) {
+    if (f.drainedT > 0.2) return;                      // debounce — one cue per drain event
+    f.drainedT = 1.5;
+    this.particles.burst(f.pos.x, f.pos.y + 6, f.pos.z, { count: 12, speed: 9, life: 0.7, size: 3.2, color: ['#6a7078', '#3a3f47', f.def.colors.accent], up: 7, grav: -2, drag: 1.8 });
+    this.vfx.ring(f.pos.clone().setY(f.pos.y + 5), { color: '#8a9099', r0: 4, r1: 1, life: 0.3 });
+    try { this.audio.zap(140); this.audio.zap(90); } catch (e) {}
+    if (this.isHuman(f) && this.hud) {
+      this.hud.damageNumber(f.pos, 'DRAINED', '#7fbfff', true);
+      if (this.hud.kiWarn) this.hud.kiWarn();
+    }
+  }
+  // Pressed an ability without the ki to pay for it (nothing fired — say so).
+  onNoKi(f, key) {
+    if (!this.isHuman(f)) return;
+    if (this.hud && this.hud.kiDenied) this.hud.kiDenied(key);
+    if ((f._noKiT || 0) <= 0) { f._noKiT = 0.25; try { this.audio.zap(120); } catch (e) {} }
+  }
+
   // Called by Fighter.takeDamage for EVERY hit — damage numbers, sparks, combo.
   onHit(target, amount, opts = {}, blocked = false) {
     const src = opts.src;
@@ -627,6 +655,18 @@ export class Game {
     const dir = _v.set(0, 0, 0).addScaledVector(this.fwd, iz).addScaledVector(this.right, ix);
     if (dir.lengthSq() > 1) dir.normalize();     // keep analog magnitude, cap at 1
     p.moveDir = { x: dir.x, z: dir.z };
+    // double-tap a move key → this hero's evade tech (dash / blink / sprint / slide / phase — data-driven)
+    if (!this._tapT) this._tapT = {};
+    for (const [k1, k2, tx, tz] of TAP_DIRS) {
+      if (inp.pressed(k1) || inp.pressed(k2)) {
+        const now = performance.now() / 1000, last = this._tapT[k1] || -9;
+        this._tapT[k1] = now;
+        if (now - last < 0.28 && now - last > 0.04) {
+          const ex = this.right.x * tx + this.fwd.x * tz, ez = this.right.z * tx + this.fwd.z * tz;
+          performEvade(p, { x: ex, z: ez }, this);
+        }
+      }
+    }
     p.flyHeld = inp.down('Space') || pad.down('fly');
     p.descendHeld = inp.down('ControlLeft') || inp.down('ControlRight') || inp.down('KeyZ') || pad.down('descend');
     p.move(p.moveDir, dt);
@@ -645,7 +685,7 @@ export class Game {
       q: orK('KeyQ', 'q'), e: orK('KeyE', 'e'), r: orK('KeyR', 'r'), f: orK('KeyF', 'f'),
       shift: orK('ShiftLeft', 'dash'),
     };
-    for (const k of SLOT_KEYS) if (p.slots[k]) runSlot(p, k, busy && k !== 'shift' ? { pressed: false, held: false, released: intents[k].released, dt } : { ...intents[k], dt }, this);
+    for (const k of SLOT_KEYS) if (p.slots[k]) feedSlot(this, p, k, intents[k], busy, dt);
   }
 
   // Player 2 (gamepad): right-stick auto-aims, left-stick moves.
@@ -669,7 +709,7 @@ export class Game {
     const busy = f.guarding || f.strikeActive > 0 || f.grabState || f.grabbing;
     const P = (a) => ({ pressed: pad.pressed(a), held: pad.down(a), released: pad.released(a) });
     const it = { lmb: P('lmb'), rmb: P('rmb'), q: P('q'), e: P('e'), r: P('r'), f: P('f'), shift: P('dash') };
-    for (const k of SLOT_KEYS) if (f.slots[k]) runSlot(f, k, busy && k !== 'shift' ? { pressed: false, held: false, released: it[k].released, dt } : { ...it[k], dt }, this);
+    for (const k of SLOT_KEYS) if (f.slots[k]) feedSlot(this, f, k, it[k], busy, dt);
   }
 
   controlBot(f, dt) {
@@ -697,8 +737,15 @@ export class Game {
         const bk = ['lmb', 'rmb', 'r', 'e', 'q'].find(k => f.slots[k] && f.slots[k].def.type === 'beam' && f.slots[k].cd <= 0 && f.ki > 30);
         if (bk && f._forceBeamT <= 0 && f._counterCd <= 0 && Math.random() < 0.7) { f._forceBeam = bk; f._forceBeamT = 1.1 + Math.random() * 1.3; f._counterCd = 3.5; } // counter-beam → CLASH
         else if (f._forceBeamT <= 0) f._guardT = Math.max(f._guardT || 0, 0.32);                                                                                    // else block
-      } else if (this.incomingProjectile(f) && Math.random() < 0.3 && f._forceBeamT <= 0) {
-        f._guardT = Math.max(f._guardT || 0, 0.28);
+      } else {
+        const proj = this.incomingProjectile(f);
+        if (proj && f._forceBeamT <= 0) {
+          // juke sideways with the hero's own evade tech, else block
+          if (f.def.evade && f.evadeCd <= 0 && Math.random() < 0.35) {
+            const vl = Math.hypot(proj.vel.x, proj.vel.z) || 1, side = Math.random() < 0.5 ? 1 : -1;
+            performEvade(f, { x: (-proj.vel.z / vl) * side, z: (proj.vel.x / vl) * side }, this);
+          } else if (Math.random() < 0.3) f._guardT = Math.max(f._guardT || 0, 0.28);
+        }
       }
     }
 
@@ -726,7 +773,7 @@ export class Game {
       runSlot(f, f._forceBeam, { pressed: first, held: true, released: false, dt }, this);
     } else {
       if (f._forceBeamActive) { runSlot(f, f._forceBeam, { pressed: false, held: false, released: true, dt }, this); f._forceBeamActive = false; f._forceBeam = null; }
-      if (!busy) for (const k of SLOT_KEYS) if (f.slots[k] && it.slots[k]) runSlot(f, k, { ...it.slots[k], dt }, this);
+      if (!busy) for (const k of SLOT_KEYS) if (f.slots[k] && it.slots[k]) feedSlot(this, f, k, it.slots[k], false, dt);
     }
   }
 

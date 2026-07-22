@@ -23,6 +23,16 @@ const CSS = `
 #hud .bar > i{ display:block; height:100%; width:50%; border-radius:6px; transition:width .09s linear; }
 #hud .hpF{ background:linear-gradient(90deg,#ff5a4a,#ff9a3a); }
 #hud .kiF{ background:linear-gradient(90deg,#3aa0ff,#7fe6ff); }
+#hud .kiF.low{ background:linear-gradient(90deg,#f5a21a,#ffd97a); }
+#hud .kiF.crit{ background:linear-gradient(90deg,#ff5a4a,#ff9a3a); animation:kipulse .45s infinite; }
+@keyframes kipulse{ 50%{ filter:brightness(1.7); } }
+#hud .bar.kiflash{ box-shadow:0 0 16px rgba(255,90,74,.95), inset 0 0 0 1px rgba(255,110,90,.95); }
+#hud .kistate{ color:#ff8a6a; font-weight:800; letter-spacing:.14em; margin-left:8px; opacity:0; transition:opacity .15s; }
+#hud .kistate.on{ opacity:1; animation:kipulse .45s infinite; }
+#hud .slot.deny{ animation:slotshake .32s; }
+#hud .slot.deny{ border-color:#ff5a4a; box-shadow:0 0 12px rgba(255,90,74,.5); }
+@keyframes slotshake{ 0%,100%{transform:translateX(0)} 22%{transform:translateX(-4px)} 55%{transform:translateX(3px)} 80%{transform:translateX(-2px)} }
+#hud .slot .cost.nope{ color:#ff7a6a; font-weight:800; }
 #hud .lab{ font-size:10px; letter-spacing:.14em; color:#8b8577; text-transform:uppercase; margin-top:8px; }
 #hud .slots{ left:50%; transform:translateX(-50%); bottom:16px; display:flex; gap:8px; padding:10px; }
 #hud .slot{ width:66px; height:66px; border-radius:10px; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.10); position:relative; overflow:hidden; display:flex; flex-direction:column; justify-content:flex-end; padding:6px; }
@@ -148,6 +158,16 @@ export function heroStats(d) {
   };
 }
 
+function describeEvade(ev) {
+  switch (ev.kind) {
+    case 'blink': return 'short teleport in the tapped direction (i-frames)';
+    case 'sprint': return 'speed surge for ~' + (ev.dur || 1.5) + 's';
+    case 'slide': return 'long frictionless slide (i-frames)';
+    case 'phase': return 'slip through attacks while dashing (long i-frames)';
+    default: return 'burst dash with i-frames';
+  }
+}
+
 function describeAbility(a) {
   switch (a.type) {
     case 'beam': return (a.charge ? 'Chargeable ' : '') + 'steerable energy beam' + (a.radius > 2 ? ' (wide)' : ' (thin)');
@@ -192,7 +212,7 @@ export class HUD {
         <div class="nm" id="plName">—</div>
         <div class="rl" id="plRole">—</div>
         <div class="lab">HEALTH</div><div class="bar"><i class="hpF" id="plHp"></i></div>
-        <div class="lab">KI / ENERGY</div><div class="bar"><i class="kiF" id="plKi"></i></div>
+        <div class="lab">KI / ENERGY<span class="kistate" id="kiState">DRAINED</span></div><div class="bar" id="kiBar"><i class="kiF" id="plKi"></i></div>
         <div class="lab">GUARD</div><div class="bar gd"><i class="gdF" id="plGd"></i></div>
         <div class="xpwrap"><span class="lvl" id="plLvl">1</span><span class="xp"><i id="plXp" style="width:0%"></i></span></div>
       </div>
@@ -207,7 +227,7 @@ export class HUD {
       <div class="panel hint">
         <b>WASD</b> move · <b>Mouse</b> aim · <b>Click a foe</b> to lock/face · <b>T</b> unlock<br/>
         <b>LMB/RMB</b> powers · <b>Q E F</b> skills · <b>R</b> ultimate<br/>
-        <b>V</b> strike · <b>G</b> grab · <b>C</b> guard · <b>SHIFT</b> dash<br/>
+        <b>V</b> strike · <b>G</b> grab · <b>C</b> guard · <b>SHIFT</b> dash · <b>2×TAP</b> move = evade<br/>
         <b>SPACE</b> fly / ascend · hold to rise, release to hover · <b>CTRL</b> descend<br/>
         <b>1–0</b>/<b>TAB</b> heroes · <b>B</b> rival · <b>ESC</b> pause<br/>
         🎮 <b>Pad</b>: sticks move/aim · R2/L2 powers · ▢○ melee · L1 guard
@@ -224,6 +244,7 @@ export class HUD {
       foe: this.root.querySelector('#hFoe'), foeName: this.root.querySelector('#foeName'), foeHp: this.root.querySelector('#foeHp'),
       name: this.root.querySelector('#plName'), role: this.root.querySelector('#plRole'),
       hp: this.root.querySelector('#plHp'), ki: this.root.querySelector('#plKi'), gd: this.root.querySelector('#plGd'),
+      kiBar: this.root.querySelector('#kiBar'), kiState: this.root.querySelector('#kiState'),
       charge: this.root.querySelector('#hCharge'), chargeI: this.root.querySelector('#hCharge > i'),
       slots: this.root.querySelector('#hSlots'),
       combo: this.root.querySelector('#hCombo'), comboN: this.root.querySelector('#hComboN'),
@@ -242,6 +263,9 @@ export class HUD {
   // ---- combat UI: radar, hit direction, KO banner ----
   updateRadar(g) {
     const ctx = this._radarCtx; if (!ctx || this.el.radar.style.display === 'none') return;
+    const now = performance.now();                                   // ~25 Hz is plenty for a minimap
+    if (this._radarLast && now - this._radarLast < 40) return;
+    this._radarLast = now;
     const W = 152, R = W / 2, cx = R, cy = R, A = (g.world && g.world.ARENA) || 175, sc = (R - 9) / A;
     const toXY = (wx, wz) => [cx + wx * sc, cy + wz * sc];
     ctx.clearRect(0, 0, W, W);
@@ -295,6 +319,17 @@ export class HUD {
   }
   setCombatUI(on) { this.el.radar.style.display = on ? 'block' : 'none'; }
 
+  // ---- energy feedback ----
+  kiWarn() {                                            // ki ran dry mid-ability — flash the bar
+    this.el.kiBar.classList.add('kiflash');
+    clearTimeout(this._kiT); this._kiT = setTimeout(() => this.el.kiBar.classList.remove('kiflash'), 650);
+  }
+  kiDenied(key) {                                       // pressed something you can't afford
+    this.kiWarn();
+    const se = this.slotEls?.[key];
+    if (se) { se.root.classList.remove('deny'); void se.root.offsetWidth; se.root.classList.add('deny'); }
+  }
+
   announce(text, sub = '', color = '#ffd24a') {
     this.el.annT.textContent = text; this.el.annT.style.color = color; this.el.annS.textContent = sub;
     this.el.ann.style.opacity = '1'; this.el.ann.style.transform = 'translateX(-50%) scale(1.12)';
@@ -310,9 +345,11 @@ export class HUD {
     const h = g.mode.hud(g);
     if (h.type === 'training') { el.style.display = 'none'; return; }
     el.style.display = 'flex';
-    if (h.type === 'duel') el.innerHTML = `<div class="seg"><div class="mv" style="color:#8fe08a">${h.a}</div><div class="ml">${h.aName}</div></div><div class="vs">${h.a}–${h.b} · first to ${h.target}</div><div class="seg"><div class="mv" style="color:#ff6a5a">${h.b}</div><div class="ml">${h.bName}</div></div>`;
-    else if (h.type === 'survival') el.innerHTML = `<div class="seg"><div class="mv" style="color:#ffb03a">${h.wave}</div><div class="ml">Wave</div></div><div class="seg"><div class="mv">${h.score}</div><div class="ml">Score</div></div><div class="seg"><div class="mv" style="color:#ff6a5a">${'♥'.repeat(h.lives) || '—'}</div><div class="ml">Lives</div></div>`;
-    else if (h.type === 'rumble') el.innerHTML = `<div class="seg"><div class="mv" style="color:#7fe6ff">${h.frags}</div><div class="ml">Frags / ${h.target}</div></div><div class="seg"><div class="mv">${h.timer}</div><div class="ml">Seconds</div></div>`;
+    let html = '';
+    if (h.type === 'duel') html = `<div class="seg"><div class="mv" style="color:#8fe08a">${h.a}</div><div class="ml">${h.aName}</div></div><div class="vs">${h.a}–${h.b} · first to ${h.target}</div><div class="seg"><div class="mv" style="color:#ff6a5a">${h.b}</div><div class="ml">${h.bName}</div></div>`;
+    else if (h.type === 'survival') html = `<div class="seg"><div class="mv" style="color:#ffb03a">${h.wave}</div><div class="ml">Wave</div></div><div class="seg"><div class="mv">${h.score}</div><div class="ml">Score</div></div><div class="seg"><div class="mv" style="color:#ff6a5a">${'♥'.repeat(h.lives) || '—'}</div><div class="ml">Lives</div></div>`;
+    else if (h.type === 'rumble') html = `<div class="seg"><div class="mv" style="color:#7fe6ff">${h.frags}</div><div class="ml">Frags / ${h.target}</div></div><div class="seg"><div class="mv">${h.timer}</div><div class="ml">Seconds</div></div>`;
+    if (html !== this._modeHtml) { this._modeHtml = html; el.innerHTML = html; }   // dirty-check — no per-frame DOM rebuild
   }
 
   updateKitWidget(p) {
@@ -330,7 +367,8 @@ export class HUD {
     if (d.thorns) chips.push({ t: 'THORNS', on: false });
     if (!chips.length) { el.style.display = 'none'; return; }
     el.style.display = 'block';
-    this.el.kitChips.innerHTML = chips.map(c => `<span class="chip${c.on ? ' on' : ''}" style="${c.on ? `background:${acc}22;border-color:${acc}88;color:${acc}` : ''}">${c.t}</span>`).join('');
+    const html = chips.map(c => `<span class="chip${c.on ? ' on' : ''}" style="${c.on ? `background:${acc}22;border-color:${acc}88;color:${acc}` : ''}">${c.t}</span>`).join('');
+    if (html !== this._kitHtml) { this._kitHtml = html; this.el.kitChips.innerHTML = html; }   // dirty-check
   }
 
   showEndScreen(result, g) {
@@ -386,7 +424,7 @@ export class HUD {
       d.className = 'slot' + (k === 'r' ? ' ult' : '');
       d.innerHTML = `<div class="key">${label}</div><div class="cost">${a.cost ? a.cost : a.kiPerSec ? a.kiPerSec + '/s' : ''}</div><div class="an">${a.name}</div><div class="cd" style="height:0%"></div>`;
       this.el.slots.appendChild(d);
-      this.slotEls[k] = { root: d, cd: d.querySelector('.cd') };
+      this.slotEls[k] = { root: d, cd: d.querySelector('.cd'), cost: d.querySelector('.cost') };
     }
   }
 
@@ -407,6 +445,11 @@ export class HUD {
     const g = this.game, p = g.player; if (!p) return;
     this.el.hp.style.width = clamp(p.hp / p.maxHp * 100, 0, 100) + '%';
     this.el.ki.style.width = clamp(p.ki / p.maxKi * 100, 0, 100) + '%';
+    // energy readability: amber when low, red pulse when critical, DRAINED tag after an all-in fizzle
+    const kiFrac = p.ki / p.maxKi, drained = p.drainedT > 0;
+    this.el.ki.classList.toggle('crit', drained || kiFrac < 0.15);
+    this.el.ki.classList.toggle('low', !drained && kiFrac >= 0.15 && kiFrac < 0.38);
+    this.el.kiState.classList.toggle('on', drained);
     this.el.gd.style.width = clamp(p.guardMeter * 100, 0, 100) + '%';
     this.el.gd.classList.toggle('stagger', p.staggerT > 0);
     this.el.lvl.textContent = p.level;
@@ -418,8 +461,10 @@ export class HUD {
       const se = this.slotEls?.[k]; if (!se) continue; const st = p.slots[k]; const def = st.def;
       const cdPct = def.cd ? clamp(st.cd / def.cd, 0, 1) * 100 : 0;
       se.cd.style.height = cdPct + '%';
-      const dim = (def.cost && p.ki < def.cost) || st.cd > 0.01;
+      const broke = !!(def.cost && p.ki < def.cost);
+      const dim = broke || st.cd > 0.01;
       se.root.classList.toggle('dim', !!dim);
+      if (se.cost) se.cost.classList.toggle('nope', broke);   // cost turns red when unaffordable
       se.root.classList.toggle('on', !!(st.charging || st.active));
       if (st.charging) { charging = st.chargeT; maxCharge = def.maxCharge || 1.6; }
       if (st.active && st.active.charge01 != null) { charging = st.active.charge01; maxCharge = 1; }
@@ -475,7 +520,8 @@ export class HUD {
           ${bar('Defense', st.defense, '#8fe08a')}${bar('Health', st.health, '#ff8a5a')}${bar('Energy', st.energy, '#7fb0ff')}
         </div>
         ${st.tags.length ? `<div class="pvtags">${st.tags.map(t => `<span>${t}</span>`).join('')}</div>` : ''}
-        <div class="pvabil">${SLOT_ORDER.filter(s => c.abilities[s.k]).map(s => { const a = c.abilities[s.k]; return `<div class="ab"><b style="color:${c.colors.accent}">${s.label}</b><span class="an">${a.name}</span><span class="ad">${describeAbility(a)}</span></div>`; }).join('')}</div>`;
+        <div class="pvabil">${SLOT_ORDER.filter(s => c.abilities[s.k]).map(s => { const a = c.abilities[s.k]; return `<div class="ab"><b style="color:${c.colors.accent}">${s.label}</b><span class="an">${a.name}</span><span class="ad">${describeAbility(a)}</span></div>`; }).join('')}
+        ${c.evade ? `<div class="ab"><b style="color:${c.colors.accent}">2×TAP</b><span class="an">${c.evade.name || 'Evade'}</span><span class="ad">${describeEvade(c.evade)}</span></div>` : ''}</div>`;
     };
     const renderTabs = () => {
       const allow2 = selMode === 'duel' || selMode === 'rumble';
@@ -506,6 +552,6 @@ export class HUD {
     this.title.querySelector('#startBtn').onclick = () => onStart({ mode: selMode, p1: selP1.id, p2: selP2.id, twoPlayer: two });
   }
 
-  showTitle() { this.title.style.display = 'flex'; this.title.style.visibility = 'visible'; this.title.style.opacity = '1'; }
-  hideTitle() { this.title.style.opacity = '0'; setTimeout(() => { this.title.style.display = 'none'; }, 250); this.title.style.transition = 'opacity .25s'; }
+  showTitle() { this.titleOpen = true; this.title.style.display = 'flex'; this.title.style.visibility = 'visible'; this.title.style.opacity = '1'; }
+  hideTitle() { this.titleOpen = false; this.title.style.opacity = '0'; setTimeout(() => { this.title.style.display = 'none'; }, 250); this.title.style.transition = 'opacity .25s'; }
 }

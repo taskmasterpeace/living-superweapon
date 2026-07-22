@@ -53,12 +53,13 @@ export class VFX {
     shell.position.copy(pos); shell.scale.setScalar(radius * 0.3); this.scene.add(shell);
     const l = this.borrowLight(color, 10 * power, radius * 8); l.position.copy(pos);
     let t = 0; const life = 0.5 + power * 0.15;
+    const c1 = new THREE.Color(color), c2 = new THREE.Color(color2);   // once per explosion, not per frame
     this._add({
       update: (dt) => {
         t += dt; const k = t / life;
         shell.scale.setScalar(radius * (0.3 + k * 1.1));
         shell.material.opacity = Math.max(0, 0.9 * (1 - k));
-        shell.material.color.lerpColors(new THREE.Color(color), new THREE.Color(color2), k);
+        shell.material.color.lerpColors(c1, c2, k);
         l.intensity = Math.max(0, 10 * power * (1 - k * k));
         return k >= 1;
       },
@@ -106,17 +107,20 @@ export class VFX {
   // Branching lightning bolts from a point, flicker briefly.
   lightning(pos, opt = {}) {
     const color = opt.color || '#bfefff', count = opt.count || 5, radius = opt.radius || 20, height = opt.height || 16;
-    const positions = [];
+    // one fixed-size buffer per strike, refilled in place on each flicker (no per-flicker allocations)
+    const arr = new Float32Array((count * 5 + 3 * 6) * 6);
+    let w = 0;
     const bolt = (x0, y0, z0, x1, y1, z1, segs) => {
       let px = x0, py = y0, pz = z0;
       for (let s = 1; s <= segs; s++) {
         const t = s / segs;
         const nx = lerp(x0, x1, t) + rand(-2, 2), ny = lerp(y0, y1, t) + rand(-1.5, 1.5), nz = lerp(z0, z1, t) + rand(-2, 2);
-        positions.push(px, py, pz, nx, ny, nz); px = nx; py = ny; pz = nz;
+        arr[w++] = px; arr[w++] = py; arr[w++] = pz; arr[w++] = nx; arr[w++] = ny; arr[w++] = nz;
+        px = nx; py = ny; pz = nz;
       }
     };
     const build = () => {
-      positions.length = 0;
+      w = 0;
       for (let i = 0; i < count; i++) {
         const a = rand(0, TAU), r = rand(radius * 0.3, radius);
         bolt(pos.x, pos.y + 0.5, pos.z, pos.x + Math.cos(a) * r, pos.y + rand(0, 3), pos.z + Math.sin(a) * r, 5);
@@ -126,7 +130,8 @@ export class VFX {
     };
     build();
     const geo = new THREE.BufferGeometry();
-    geo.setAttribute('position', new THREE.Float32BufferAttribute(positions.slice(), 3));
+    const attr = new THREE.BufferAttribute(arr, 3).setUsage(THREE.DynamicDrawUsage);
+    geo.setAttribute('position', attr);
     const mat = new THREE.LineBasicMaterial({ color, transparent: true, opacity: 1, blending: THREE.AdditiveBlending, depthWrite: false });
     const seg = new THREE.LineSegments(geo, mat); this.scene.add(seg);
     const l = this.borrowLight(color, 6, radius * 3); l.position.copy(pos); l.position.y += 3;
@@ -134,7 +139,7 @@ export class VFX {
     this._add({
       update: (dt) => {
         t += dt; flick += dt;
-        if (flick > 0.04) { flick = 0; build(); geo.setAttribute('position', new THREE.Float32BufferAttribute(positions.slice(), 3)); geo.attributes.position.needsUpdate = true; }
+        if (flick > 0.04) { flick = 0; build(); attr.needsUpdate = true; }
         mat.opacity = Math.max(0, 1 - t / life);
         l.intensity = Math.max(0, 6 * (1 - t / life));
         return t >= life;

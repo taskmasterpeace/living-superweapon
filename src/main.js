@@ -11,6 +11,7 @@ const audio = new AudioBus();
 const game = new Game(canvas, input, audio);
 const hud = new HUD(game);
 game.hud = hud;
+game.world.prewarm();   // compile lazy FX shaders up-front — no first-use hitches mid-fight
 
 let started = false;
 
@@ -37,8 +38,8 @@ game.onKill = (f) => {
 const digits = { Digit1: 0, Digit2: 1, Digit3: 2, Digit4: 3, Digit5: 4, Digit6: 5, Digit7: 6, Digit8: 7, Digit9: 8, Digit0: 9 };
 addEventListener('keydown', (e) => {
   if (!started) return;
-  if (e.code === 'Tab') { e.preventDefault(); if (hud.title.style.display === 'none' || getComputedStyle(hud.title).opacity === '0') openMenu(); else { game.running = true; hud.hideTitle(); } return; }
-  if (e.code === 'Escape' && game.player && hud.title.style.display === 'none') { game.running = !game.running; hud.setPaused(!game.running); return; }
+  if (e.code === 'Tab') { e.preventDefault(); if (!hud.titleOpen) openMenu(); else { game.running = true; hud.hideTitle(); } return; }
+  if (e.code === 'Escape' && game.player && !hud.titleOpen) { game.running = !game.running; hud.setPaused(!game.running); return; }
   if (game.running === false) return;
   if (e.code === 'KeyB') { const b = game.spawnRival(); hud.feed('A rival ' + b.name + ' enters the arena!', b.def.colors.accent); }
   if (e.code === 'KeyM') { audio.muted = !audio.muted; hud.feed(audio.muted ? 'Muted' : 'Sound on', '#9fb2c9'); }
@@ -53,7 +54,7 @@ function cycleHero(dir) {
 }
 function padSystem() {
   if (!started) return;
-  const inMatch = hud.title.style.display === 'none' || getComputedStyle(hud.title).opacity === '0';
+  const inMatch = !hud.titleOpen;   // cached flag — no getComputedStyle in the frame loop
   if (game.pad.pressed('start') && inMatch) { game.running = !game.running; hud.setPaused(!game.running); }
   if (game.pad.pressed('select')) { if (inMatch) openMenu(); else { game.running = true; hud.setPaused(false); hud.hideTitle(); } }
   if (inMatch && game.running && game.pad.pressed('swap')) cycleHero(1);

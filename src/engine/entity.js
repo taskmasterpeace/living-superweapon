@@ -185,6 +185,9 @@ export class Fighter {
     this.poseStrike = 0; this.poseGuard = 0; this.poseGrab = 0;
     // AI reaction state (must start at 0, not undefined — guard/counter logic compares <= 0)
     this._forceBeamT = 0; this._forceBeam = null; this._forceBeamActive = false; this._counterCd = 0; this._meleeCd = 0; this._guardT = 0;
+    // double-tap evade + energy-drained state
+    this.evadeCd = 0; this.sprintT = 0; this.sprintMult = 1.6; this._slideT = 0; this.drainedT = 0;
+    this.burstT = 0;            // dash-burst window — move() doesn't clamp velocity back to walk speed
     // per-character trifecta traits
     this.thorns = def.thorns || 0;                                   // damages whoever holds you
     this.canPhase = !!def.phase;                                     // can spend energy to go intangible
@@ -263,6 +266,12 @@ export class Fighter {
     if (this._landT > 0) this._landT -= dt; if (this._liftFx > 0) this._liftFx -= dt;
     if (this._chill > 0) { this._chill -= dt; if (this._chill <= 0) this.speed = this.def.speed || 30; }
     if (this.invuln > 0) this.invuln -= dt;
+    if (this.evadeCd > 0) this.evadeCd -= dt;
+    if (this.sprintT > 0) this.sprintT -= dt;
+    if (this._slideT > 0) this._slideT -= dt;
+    if (this.burstT > 0) this.burstT -= dt;
+    if (this.drainedT > 0) this.drainedT -= dt;
+    if (this._noKiT > 0) this._noKiT -= dt;
     for (const k in this.slots) if (this.slots[k].cd > 0) this.slots[k].cd -= dt;
     // melee timers
     if (this.strikeCd > 0) this.strikeCd -= dt;
@@ -271,6 +280,7 @@ export class Fighter {
     if (this._blocked > 0) this._blocked -= dt;
     this.guardMeter = clamp(this.guardMeter + (this.guarding ? 0 : 0.55) * dt, 0, 1);
     if (game && game.melee) game.melee.update(this, dt);
+    if (this.sprintT > 0 && game && Math.random() < 0.45) game.trail(this, this.def.colors.accent);   // sprint streak
     this.poseStrike = damp(this.poseStrike, this.strikeActive > 0 ? 1 : 0, 18, dt);
     this.poseGuard = damp(this.poseGuard, this.guarding ? 1 : 0, 14, dt);
     this.poseGrab = damp(this.poseGrab, (this.grabState || this.grabbing) ? 1 : 0, 16, dt);
@@ -337,8 +347,8 @@ export class Fighter {
         this.vel.y -= 60 * dt;                               // gravity — jumps & knockback arcs
       }
     }
-    // horizontal drag
-    const dragF = Math.exp(-6 * dt);
+    // horizontal drag (near-frictionless while sliding — RIME's ice skate etc.)
+    const dragF = Math.exp((this._slideT > 0 ? -1.3 : -6) * dt);
     this.vel.x *= dragF; this.vel.z *= dragF;
     this.vel.y = clamp(this.vel.y, -160, 70);       // never let launches/lift escape
 
@@ -378,11 +388,14 @@ export class Fighter {
   move(dir, dt, sprint = 1) {
     if (this.state === 'ko' || this.hitstop > 0 || this.grabbedBy || this.grabState === 'clinch' || this.staggerT > 0) return;
     let s = this.speed * this.powerBuff * sprint;
+    if (this.sprintT > 0) s *= this.sprintMult;   // double-tap sprint surge
     if (this.guarding) s *= 0.34;               // guarding slows you
     if (this.strikeActive > 0) s *= 0.5;
     this.vel.x += dir.x * s * dt * 9;
     this.vel.z += dir.z * s * dt * 9;
-    const mx = s; const h = Math.hypot(this.vel.x, this.vel.z);
+    // during a dash/slide burst the clamp lifts, so the impulse actually carries you (drag reins it in)
+    const mx = (this.burstT > 0 || this._slideT > 0) ? Math.max(s, 150) : s;
+    const h = Math.hypot(this.vel.x, this.vel.z);
     if (h > mx) { this.vel.x = this.vel.x / h * mx; this.vel.z = this.vel.z / h * mx; }
     if (dir.x || dir.z) { if (this.state === 'idle' || this.state === 'move') this.state = 'move'; }
     else if (this.state === 'move') this.state = 'idle';

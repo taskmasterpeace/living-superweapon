@@ -4,17 +4,23 @@ import { clamp, rand, TAU, lerp } from '../core/util.js';
 
 const _v = new THREE.Vector3();
 
+const ORB_GEO = new THREE.SphereGeometry(1, 16, 12);                       // shared — orbs come and go constantly
+const ORB_CORE_MAT = new THREE.MeshBasicMaterial({ color: '#fff' });
+
 function ready(c, def, st) { return st.cd <= 0 && c.ki >= (def.cost || 0) && c.hitstop <= 0; }
 function pay(c, def, st) { c.ki -= (def.cost || 0); st.cd = def.cd || 0; }
 function chargeOrb(c, st, color) {
   if (!st.orb) {
-    const core = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 12), new THREE.MeshBasicMaterial({ color: '#fff' }));
-    const glow = new THREE.Mesh(new THREE.SphereGeometry(1.6, 16, 12), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending, depthWrite: false }));
+    const core = new THREE.Mesh(ORB_GEO, ORB_CORE_MAT);
+    const glow = new THREE.Mesh(ORB_GEO, new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending, depthWrite: false }));
+    glow.scale.setScalar(1.6);
     st.orb = new THREE.Group(); st.orb.add(core, glow); c._game.scene.add(st.orb);
   }
   return st.orb;
 }
-function killOrb(c, st) { if (st.orb) { c._game.scene.remove(st.orb); st.orb.children.forEach(m => { m.geometry.dispose(); m.material.dispose(); }); st.orb = null; } }
+function killOrb(c, st) { if (st.orb) { c._game.scene.remove(st.orb); st.orb.children[1].material.dispose(); st.orb = null; } }
+// out of ki while holding a charge/sustain → make the failure LOUD and readable (never a silent freeze)
+function drained(c, g) { if (g && g.onDrained) g.onDrained(c); }
 
 // Each type: run(c, def, st, g, inp)  — inp = { pressed, held, released, dt }
 export const TYPES = {
@@ -88,6 +94,8 @@ export const TYPES = {
 
   // Rapid alternating-hand volley (Vegeta bakuhatsu)
   volley(c, def, st, g, inp) {
+    if (inp.held && c.ki < (def.cost || 3)) { if (!st._dry) { st._dry = true; drained(c, g); } }
+    else if (!inp.held) st._dry = false;
     if (inp.held && st.cd <= 0 && c.ki >= (def.cost || 3)) {
       c.ki -= (def.cost || 3); st.cd = def.interval || 0.08; st.side = (st.side || 1) * -1;
       c.state = 'cast'; c.stateT = 0; c.punchPose = 1;
@@ -112,13 +120,16 @@ export const TYPES = {
       else { st.active = g.spawnBeamFor(c, def, 1); pay(c, def, st); }
     }
     if (st.charging) {
-      if (inp.held && c.spendKi((def.kiChargePerSec || 14) * inp.dt) && st.chargeT < (def.maxCharge || 1.6)) {
+      const dry = inp.held && st.chargeT < (def.maxCharge || 1.6) && !c.spendKi((def.kiChargePerSec || 14) * inp.dt);
+      if (inp.held && !dry && st.chargeT < (def.maxCharge || 1.6)) {
         st.chargeT += inp.dt; c.state = 'charge';
         const orb = chargeOrb(c, st, def.color2 || def.color); const m = c.muzzle(_v.clone(), 3.6, 5.8);
         orb.position.copy(m); orb.scale.setScalar(0.6 + st.chargeT * 1.6);
         if (st.sfx) st.sfx.ramp(st.chargeT / (def.maxCharge || 1.6));
         g.chargeGather(c, def.color, m, 0.5 + st.chargeT);
-      } else if (inp.released || st.chargeT >= (def.maxCharge || 1.6)) {
+      } else if (inp.released || st.chargeT >= (def.maxCharge || 1.6) || dry) {
+        // ran dry mid-charge → fire at whatever you paid for (never a frozen orb), with a clear cue
+        if (dry) drained(c, g);
         const p = 1 + (st.chargeT / (def.maxCharge || 1.6)) * (def.chargePower || 1.4);
         killOrb(c, st); if (st.sfx) { st.sfx.stop(); st.sfx = null; }
         st.charging = false; st.active = g.spawnBeamFor(c, def, p); pay(c, def, st);
@@ -131,6 +142,8 @@ export const TYPES = {
 
   // Wide breath cone — cold (slow) or force (push)
   cone(c, def, st, g, inp) {
+    if (inp.held && c.ki < (def.kiPerSec || 18) * inp.dt) { if (!st._dry) { st._dry = true; drained(c, g); } }
+    else if (!inp.held) st._dry = false;
     if (inp.held && c.ki >= (def.kiPerSec || 18) * inp.dt) {
       c.ki -= (def.kiPerSec || 18) * inp.dt; c.state = 'cast'; c.stateT = 0;
       c.vel.x *= 0.7; c.vel.z *= 0.7;
@@ -159,7 +172,9 @@ export const TYPES = {
   charge(c, def, st, g, inp) {
     if (inp.pressed && ready(c, def, st) && !st.charging) { st.charging = true; st.chargeT = 0; st.sfx = g.audio.charge(); }
     if (st.charging) {
-      if (inp.held && c.spendKi((def.kiPerSec || 12) * inp.dt)) {
+      const dry = inp.held && !c.spendKi((def.kiPerSec || 12) * inp.dt);
+      if (dry) drained(c, g);                                  // out of ki → hurl what you built up, loudly
+      if (inp.held && !dry) {
         st.chargeT = Math.min(def.maxCharge || 2.2, st.chargeT + inp.dt); c.state = 'charge';
         c.vel.x *= 0.85; c.vel.z *= 0.85;
         const c01 = st.chargeT / (def.maxCharge || 2.2);
@@ -169,7 +184,7 @@ export const TYPES = {
         g.chargeGather(c, def.color, m, 0.6 + c01 * 1.6);
         if (c01 > 0.6 && Math.random() < c01 * 0.4) g.world.shake(0.15 * c01);
         if (c01 >= 1 && Math.random() < 0.3) g.vfx.lightning(m, { color: def.color, count: 2, radius: 8, height: 6 });
-      } else if (inp.released || (!inp.held)) {
+      } else if (inp.released || (!inp.held) || dry) {
         const c01 = st.chargeT / (def.maxCharge || 2.2);
         st.charging = false; if (st.sfx) { st.sfx.stop(); st.sfx = null; }
         const orbPos = st.orb ? st.orb.position.clone() : c.muzzle(new THREE.Vector3());
@@ -221,7 +236,7 @@ export const TYPES = {
     if (inp.held && c.spendKi((def.kiPerSec || 16) * inp.dt)) {
       if (!c.phase) { c.phase = true; g.audio.teleport(); g.vfx.ring(c.pos.clone().setY(5), { color: def.color || c.def.colors.accent, r0: 2, r1: 8, life: 0.3 }); }
       if (Math.random() < 0.25) g.particles.burst(c.pos.x, c.pos.y + 5, c.pos.z, { count: 2, speed: 6, life: 0.4, size: 2.2, color: [def.color || c.def.colors.accent, '#fff'] });
-    } else if (c.phase) { c.phase = false; g.audio.zap(240); }
+    } else if (c.phase) { c.phase = false; g.audio.zap(240); if (inp.held) drained(c, g); }   // ki ran out mid-phase
   },
 
   // Quick mobility dash (i-frames)
@@ -230,6 +245,7 @@ export const TYPES = {
       pay(c, def, st);
       const dir = (c.moveDir && (c.moveDir.x || c.moveDir.z)) ? c.moveDir : c.aim;
       c.vel.x += dir.x * (def.power || 90); c.vel.z += dir.z * (def.power || 90);
+      c.burstT = 0.3;                                 // let the impulse carry — move() won't clamp it away
       c.invuln = def.iframes || 0.22; g.afterimage(c); g.audio.zap(500); g.trail(c, def.color || c.def.colors.accent);
     }
   },
@@ -296,7 +312,58 @@ export const TYPES = {
 
 export function runSlot(c, key, inp, g) {
   const st = c.slots[key]; if (!st) return;
+  // pressing an ability you can't afford → tell the player WHY nothing happened
+  if (inp.pressed && (st.def.cost || 0) > c.ki && st.cd <= 0 && g.onNoKi) g.onNoKi(c, key);
   const fn = TYPES[st.def.type]; if (fn) fn(c, st.def, st, g, inp);
+}
+
+// ---------- double-tap evade — per-hero movement tech (data: def.evade = {kind,...}) ----------
+// kinds: dash (burst + i-frames) · blink (short teleport) · sprint (speed surge while it lasts)
+//        slide (long low-friction skate) · phase (dash while intangible)
+export const EVADE_DEFAULTS = {
+  dash: { name: 'Evade Dash', cost: 5, cd: 0.7, power: 105, iframes: 0.22 },
+  blink: { name: 'Blink', cost: 8, cd: 1.0, range: 22, iframes: 0.3 },
+  sprint: { name: 'Sprint', cost: 6, cd: 2.2, mult: 1.65, dur: 1.5 },
+  slide: { name: 'Slide', cost: 4, cd: 0.9, power: 125, slideT: 0.55, iframes: 0.2 },
+  phase: { name: 'Phase Slip', cost: 7, cd: 1.1, power: 95, iframes: 0.45 },
+};
+
+export function performEvade(c, dir, g) {
+  const ev = c.def.evade; if (!ev || c.evadeCd > 0 || c.grabbedBy || c.staggerT > 0 || c.state === 'ko') return false;
+  const d = { ...EVADE_DEFAULTS[ev.kind || 'dash'], ...ev };
+  if (c.ki < (d.cost || 0)) { if (g.onNoKi) g.onNoKi(c, 'evade'); return false; }
+  c.ki -= d.cost || 0; c.evadeCd = d.cd || 0.7;
+  const color = d.color || c.def.colors.accent;
+  const dl = Math.hypot(dir.x, dir.z) || 1; const dx = dir.x / dl, dz = dir.z / dl;
+  switch (d.kind) {
+    case 'blink': {
+      g.afterimage(c); g.vfx.flash(c.pos.clone().setY(5), color, 5, 0.18); g.audio.teleport();
+      c.pos.x += dx * (d.range || 22); c.pos.z += dz * (d.range || 22);
+      c.vel.multiplyScalar(0.25); c.invuln = Math.max(c.invuln, d.iframes || 0.3);
+      g.afterimage(c); g.vfx.flash(c.pos.clone().setY(5), color, 6, 0.2);
+      g.particles.burst(c.pos.x, 5, c.pos.z, { count: 14, speed: 22, life: 0.35, size: 2.4, color: ['#fff', color] });
+      break;
+    }
+    case 'sprint':
+      c.sprintT = d.dur || 1.5; c.sprintMult = d.mult || 1.65;
+      g.audio.zap(620); g.trail(c, color); g.afterimage(c);
+      break;
+    case 'slide':
+      c.vel.x += dx * (d.power || 125); c.vel.z += dz * (d.power || 125);
+      c._slideT = d.slideT || 0.55; c.invuln = Math.max(c.invuln, d.iframes || 0.2);
+      g.audio.zap(440); g.trail(c, color);
+      break;
+    case 'phase':
+      c.vel.x += dx * (d.power || 95); c.vel.z += dz * (d.power || 95);
+      c.burstT = 0.32; c.invuln = Math.max(c.invuln, d.iframes || 0.45);
+      g.afterimage(c); g.afterimage(c); g.audio.teleport(); g.trail(c, color);
+      break;
+    default: // dash
+      c.vel.x += dx * (d.power || 105); c.vel.z += dz * (d.power || 105);
+      c.burstT = 0.3; c.invuln = Math.max(c.invuln, d.iframes || 0.22);
+      g.afterimage(c); g.audio.zap(500); g.trail(c, color);
+  }
+  return true;
 }
 
 export function abilityLabel(def) { return def.name; }
