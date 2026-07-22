@@ -97,6 +97,9 @@ export class Ragdoll {
       return Math.hypot(ra[0] - rb[0], ra[1] - rb[1], ra[2] - rb[2]);
     });
     this.asleep = false; this._still = 0;
+    // WEIGHT: strong/heavy fighters fall harder and hit the ground like they mean it
+    this._impacted = false;
+    this.gravMul = 0.88 + (fighter.strength ?? 5) * 0.032;   // STR 1 ≈ 0.91× · STR 10 ≈ 1.2×
 
     // hide the aura shell while ragdolling (it would float, unanchored)
     if (p.aura) p.aura.material.opacity = 0;
@@ -112,7 +115,7 @@ export class Ragdoll {
       const pt = this.P[k];
       const vx = (pt.pos.x - pt.prev.x) * DAMP, vy = (pt.pos.y - pt.prev.y) * DAMP, vz = (pt.pos.z - pt.prev.z) * DAMP;
       pt.prev.copy(pt.pos);
-      pt.pos.x += vx; pt.pos.y += vy + GRAV * dt2 * pt.w; pt.pos.z += vz;
+      pt.pos.x += vx; pt.pos.y += vy + GRAV * this.gravMul * dt2 * pt.w; pt.pos.z += vz;
       energy += vx * vx + vy * vy + vz * vz;
     }
     // satisfy constraints
@@ -141,6 +144,12 @@ export class Ragdoll {
       const pt = this.P[k], r = GROUND_R[k] || DEFAULT_R;
       // ground
       if (pt.pos.y < r) {
+        // first hard core-impact BREAKS the ground — crater/dust scaled by the fighter's strength
+        const drop = pt.prev.y - pt.pos.y;
+        if (!this._impacted && drop > 0.5 && (k === 'chest' || k === 'pelvis' || k === 'head')) {
+          this._impacted = true;
+          if (game && game.onRagdollImpact) game.onRagdollImpact(this.f, drop * 60, pt.pos);
+        }
         pt.pos.y = r;
         pt.prev.x += (pt.pos.x - pt.prev.x) * GROUND_FRICTION;   // friction: bleed horizontal speed
         pt.prev.z += (pt.pos.z - pt.prev.z) * GROUND_FRICTION;

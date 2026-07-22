@@ -31,6 +31,7 @@ function figure(def) {
   const c = def.colors || def;
   const b = BUILDS[def.id] || {};
   const g = new THREE.Group();
+  g.rotation.order = 'YXZ';   // yaw → pitch → roll, so flight pitch/bank happen along the FACING axis
   const skin = c.skin || '#e8c39a';
   const metal = !!def.metal;   // robot archetype — chromed plating instead of cloth
   const suit = new THREE.MeshStandardMaterial({ color: c.primary, roughness: metal ? 0.28 : 0.48, metalness: metal ? 0.85 : 0.18, emissive: c.primary, emissiveIntensity: 0.05 });
@@ -709,8 +710,22 @@ export class Fighter {
     const fi = anyCharge ? 2.2 : (cast > 0.3 ? 1.2 : 0);
     p.armL.children[2].material.emissiveIntensity = damp(p.armL.children[2].material.emissiveIntensity, fi, 10, dt);
     p.armR.children[2].material.emissiveIntensity = p.armL.children[2].material.emissiveIntensity;
-    // flight lean — tilt forward into a cruise, a gentle superhero float while hovering
-    p.g.rotation.x = damp(p.g.rotation.x, this.flying ? (moving ? 0.42 : 0.12) : 0, 8, dt);
+    // flight pose — the body aligns with the direction of TRAVEL:
+    // level cruise → prone (head first, Superman), rising → vertical (head points where you're going),
+    // pure up/down or hovering at altitude → fully upright, dives → nose-down, strafes → bank into the turn.
+    let pitchT = 0, rollT = 0;
+    if (this.flying) {
+      const fwd = this.vel.x * this.aim.x + this.vel.z * this.aim.z;       // motion along facing
+      const latR = this.vel.x * this.aim.z - this.vel.z * this.aim.x;      // motion to the body's right
+      const vy = this.vel.y;
+      const k = clamp((Math.hypot(this.vel.x, this.vel.z, vy * 0.5) - 6) / 20, 0, 1);   // engage with real speed
+      const ang = fwd > 2 ? Math.atan2(fwd, vy) : 0;                       // vertical travel stays feet-first
+      pitchT = clamp(ang, 0, 1.85) * k;
+      if (fwd < -4) pitchT = -0.25 * k;                                    // backpedal: slight back-lean
+      rollT = clamp(-latR * 0.014, -0.5, 0.5) * k;
+    }
+    p.g.rotation.x = damp(p.g.rotation.x, pitchT, 7, dt);
+    p.g.rotation.z = damp(p.g.rotation.z, rollT, 7, dt);
     // cape sway
     if (p.cape) { p.cape.rotation.x = -0.3 + Math.sin(this.animT * 4) * 0.1 - Math.min(0.6, Math.hypot(this.vel.x, this.vel.z) * 0.02); }
     // aura from ki%/charge/buff — and POWER TIER: higher tiers burn brighter in gold → white-hot

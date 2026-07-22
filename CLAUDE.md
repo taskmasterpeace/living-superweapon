@@ -70,6 +70,14 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   RIME/WARDEN/PYRE/RIFT/TITAN/KIVULI) · 3 = full flight. `flyStyle`: 'fire' = Torch wake (TORCH/PYRE),
   'ice' = RIME rides a frozen board (mesh in `parts.iceBoard`). `energyInfinite` (TITAN): ki pinned at max,
   spendKi always true, HUD shows "∞ CORE", **tier hard-capped at II** in levelUp — the DBZ-android tradeoff.
+- **Flight POSE** (`_animate`, figure group order **'YXZ'** — yaw→pitch→roll along the facing axis; do NOT
+  revert to default XYZ, it turns the lean into a sideways roll): body aligns with the TRAVEL direction —
+  level cruise = prone head-first (~87°), rising = vertical (head points where you're going), pure up/down
+  and hover-at-altitude = fully upright, dives = nose-down (capped 1.85 rad), strafes bank (`rollT` from
+  lateral velocity). Engagement scales with speed (`k` ramps 6→26 u/s) so drift/hover stays vertical.
+- **Ragdoll weight** (`ragdoll.js`): `gravMul` from strength (heavies fall harder); first hard core impact
+  (chest/pelvis/head, >~30 u/s) fires `game.onRagdollImpact` → strength-scaled crater + dust + shake
+  (STR ≥ 7 lands like a meteor). One impact per ragdoll (`_impacted`).
 - **PURPLE EXCEPTION**: KIVULI ONLY (creator override 2026-07-22). No other purple anywhere, ever.
 - Design docs: `docs/DESIGN_DECISIONS.md` (creator interview rulings — READ before big design calls),
   `docs/CODEX.md` (power schema), `docs/NEXT_CHARACTERS.md` (COF canon import queue: Stefanos/Sandra/…).

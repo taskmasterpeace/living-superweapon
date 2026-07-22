@@ -575,6 +575,18 @@ export class Game {
     if (this.isHuman(f) && this.hud) this.hud.flashScreen('#ff8a5a', 0.12);
   }
 
+  // A KO'd body just hit the dirt (ragdoll core impact). Weight = strength: the heavies BREAK the ground.
+  onRagdollImpact(f, spd, pos) {
+    const str = f.strength ?? 5;
+    const power = clamp(spd / 55, 0.5, 1.7) * (0.65 + str * 0.09);
+    this.world.crater(pos.x, pos.z, 3.5 + str * 0.55, 0.8 + power * 0.9);
+    this.particles.burst(pos.x, 0.8, pos.z, { count: 16 + str * 2, speed: 18 + str * 1.5, life: 0.65, size: 3.4, color: ['#6a655a', '#8a8577', '#3a3f47'], up: 9, grav: 14, drag: 1.5 });
+    this.vfx.ring(new THREE.Vector3(pos.x, 0.35, pos.z), { color: '#c9bfa9', r0: 2, r1: 9 + str * 1.2, life: 0.42, flat: true, y: 0.35 });
+    this.world.shake(0.7 + power * 0.9);
+    this.audio.impact(0.75 + power * 0.5);
+    if (str >= 7) { this.audio.boom(0.55); this.world.punch(0.85); }   // the big ones land like meteors
+  }
+
   // Pressed an ability without the ki to pay for it (nothing fired — say so).
   onNoKi(f, key) {
     if (!this.isHuman(f)) return;
