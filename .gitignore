@@ -1,0 +1,15 @@
+# dependencies
+node_modules/
+
+# build output
+dist/
+.vite/
+
+# tooling / local artifacts
+.playwright-mcp/
+.claude/settings.local.json
+*.log
+
+# os
+.DS_Store
+Thumbs.db

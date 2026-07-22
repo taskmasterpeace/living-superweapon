@@ -1,0 +1,788 @@
+// Living Superweapon — game orchestrator: entities, control, combat helpers, main update.
+import * as THREE from 'three';
+import { World } from './world.js';
+import { Particles3D } from './particles3d.js';
+import { VFX } from './vfx.js';
+import { Projectiles } from './projectiles.js';
+import { Fighter } from './entity.js';
+import { AI } from './ai.js';
+import { Minion, Construct } from './summons.js';
+import { MeleeSystem } from './melee.js';
+import { Gamepad } from '../core/gamepad.js';
+import { runSlot } from './abilities.js';
+import { ROSTER } from '../data/characters.js';
+import { clamp, rand, TAU, damp } from '../core/util.js';
+
+const _v = new THREE.Vector3();
+const SLOT_KEYS = ['lmb', 'rmb', 'q', 'e', 'r', 'f', 'shift'];
+const NULL_PAD = { active: false, aiming: false, moving: false, lx: 0, ly: 0, rx: 0, ry: 0, down: () => false, pressed: () => false, released: () => false };
+
+// Game modes: setup spawns, tick drives it, onKO scores, isOver returns a result, hud describes the top bar.
+const MODE_IMPL = {
+  duel: {
+    setup(g, o) {
+      g.ms = { p1KO: 0, enemyKO: 0, target: 3 };
+      g.ms.p1 = g.humans[0].fighter;
+      g.ms.enemy = o.twoPlayer ? g.humans[1].fighter : g.spawnEnemy(o.enemy, { x: 0, z: -42, aiLevel: 1.25 });
+    },
+    tick() {},
+    onKO(g, v) { if (v === g.ms.p1) g.ms.enemyKO++; else if (v === g.ms.enemy) g.ms.p1KO++; },
+    isOver(g) { if (g.ms.p1KO >= g.ms.target) return { win: true, title: 'VICTORY', lines: ['You bested ' + g.ms.enemy.name] }; if (g.ms.enemyKO >= g.ms.target) return { win: false, title: 'DEFEAT', lines: [g.ms.enemy.name + ' won the duel'] }; return null; },
+    hud(g) { return { type: 'duel', a: g.ms.p1KO, b: g.ms.enemyKO, target: g.ms.target, aName: 'YOU', bName: g.ms.enemy ? g.ms.enemy.name : 'RIVAL' }; },
+  },
+  survival: {
+    setup(g) { g.ms = { wave: 0, score: 0, lives: 3, betweenT: 1.5 }; },
+    tick(g, dt) {
+      const bots = g.entities.filter(e => e.ai && e.alive).length;
+      if (bots === 0) { g.ms.betweenT -= dt; if (g.ms.betweenT <= 0) { g.ms.wave++; g._spawnWave(g.ms.wave); g.ms.betweenT = 3.6; if (g.hud) g.hud.announce('WAVE ' + g.ms.wave, g._waveCount(g.ms.wave) + ' rivals incoming', '#ffb03a'); } }
+    },
+    onKO(g, v) { if (v.ai) g.ms.score += 120 + g.ms.wave * 20; else if (g.isHuman(v)) { g.ms.lives--; if (g.hud) g.hud.announce(g.ms.lives > 0 ? 'DOWN!' : 'LAST BREATH', g.ms.lives + ' lives left', '#ff5a4a'); } },
+    isOver(g) { if (g.ms.lives <= 0 && g.humans.every(h => !h.fighter.alive)) return { win: false, title: 'OVERWHELMED', lines: ['Reached Wave ' + g.ms.wave, 'Score ' + g.ms.score] }; return null; },
+    hud(g) { return { type: 'survival', wave: g.ms.wave, score: g.ms.score, lives: Math.max(0, g.ms.lives) }; },
+  },
+  rumble: {
+    setup(g) { g.ms = { target: 12, timer: 99 }; const chars = ROSTER.map(r => r.id).sort(() => Math.random() - 0.5); for (let i = 0; i < 3; i++) g.spawnEnemy(chars[i], { aiLevel: 1, r: 82 }); },
+    tick(g, dt) { g.ms.timer -= dt; },
+    onKO() {},
+    isOver(g) {
+      const hi = g.humans.reduce((m, h) => Math.max(m, h.fighter.kills), 0);
+      const bot = g.entities.filter(e => e.ai).reduce((m, b) => Math.max(m, b.kills), 0);
+      if (hi >= g.ms.target) return { win: true, title: 'VICTORY', lines: [hi + ' KOs — arena cleared'] };
+      if (bot >= g.ms.target) return { win: false, title: 'DEFEAT', lines: ['A rival hit ' + g.ms.target + ' first'] };
+      if (g.ms.timer <= 0) return hi >= bot ? { win: true, title: 'TIME — YOU WIN', lines: [hi + ' KOs'] } : { win: false, title: 'TIME — YOU LOSE', lines: [hi + ' KOs'] };
+      return null;
+    },
+    hud(g) { const hi = g.humans.reduce((m, h) => Math.max(m, h.fighter.kills), 0); return { type: 'rumble', frags: hi, target: g.ms.target, timer: Math.max(0, Math.ceil(g.ms.timer)) }; },
+  },
+  training: {
+    setup(g) { g.spawnDummy(-34, -20); g.spawnDummy(34, -20); g.spawnRival(); },
+    tick() {}, onKO() {}, isOver() { return null; },
+    hud() { return { type: 'training' }; },
+  },
+};
+
+export class Game {
+  constructor(canvas, input, audio) {
+    this.input = input; this.audio = audio; this.pad = new Gamepad();
+    this.world = new World(canvas);
+    this.scene = this.world.scene;
+    this.particles = new Particles3D(this.scene);
+    this.vfx = new VFX(this.world, this.particles);
+    this.projectiles = new Projectiles(this);
+    this.melee = new MeleeSystem(this);
+    this.hud = null;                 // set by main.js — for damage numbers / combo
+    this.combo = 0; this.comboT = 0;
+    this.humans = [];                // local players: [{ fighter, scheme:'kbm'|'pad' }]
+    this.mode = null; this.modeId = null; this.ms = {}; this.matchOver = false; this.matchResult = null;
+    this.entities = []; this.minions = []; this.constructs = [];
+    this.aimPoint = new THREE.Vector3(20, 0, 0);
+    this.time = 0; this.running = false; this.player = null;
+    this.lockTarget = null; this._lastLock = null; this._sp = { x: 0, y: 0, behind: false };
+    this.hardLock = null; this._aim3pt = new THREE.Vector3();
+    // field of vision — enemies only shown where the player can see them
+    this.fov = true; this.visNear = 26; this.visRange = 96; this.visCos = Math.cos(0.96); this.visReveal = 130;
+    this._ghostGeo = new THREE.CapsuleGeometry(1.5, 3.2, 4, 8);
+    this._buildReticle();
+    this._buildLockMark();
+
+    // camera-aligned movement basis
+    const cd = this.world.camDir;
+    this.fwd = new THREE.Vector3(-cd.x, 0, -cd.z).normalize();
+    this.right = new THREE.Vector3().crossVectors(this.fwd, new THREE.Vector3(0, 1, 0)).normalize();
+
+    this.onKill = null; // hud hook
+  }
+
+  _buildReticle() {
+    this.reticle = new THREE.Group();
+    const mk = (o) => new THREE.MeshBasicMaterial({ color: '#ffd24a', transparent: true, opacity: o, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+    const ring = new THREE.Mesh(new THREE.RingGeometry(3.1, 3.7, 40), mk(0.85));
+    ring.rotation.x = -Math.PI / 2; this.reticle.add(ring);
+    const ring2 = new THREE.Mesh(new THREE.RingGeometry(4.6, 4.9, 4), mk(0.6)); // square-ish bracket
+    ring2.rotation.x = -Math.PI / 2; ring2.rotation.z = Math.PI / 4; this.reticle.add(ring2);
+    const chev = new THREE.Mesh(new THREE.ConeGeometry(1.1, 1.8, 3), mk(0.95));
+    chev.rotation.x = Math.PI; chev.position.y = 13; this.reticle.add(chev);
+    this.reticle.visible = false; this.scene.add(this.reticle);
+    this._retRing = ring; this._retRing2 = ring2; this._retChev = chev;
+  }
+
+  _buildLockMark() {
+    const cv = document.createElement('canvas'); cv.width = cv.height = 64; const x = cv.getContext('2d');
+    x.fillStyle = '#ff2f2f'; x.beginPath(); x.moveTo(32, 54); x.lineTo(9, 12); x.lineTo(55, 12); x.closePath(); x.fill();
+    x.strokeStyle = '#fff'; x.lineWidth = 4; x.stroke();
+    const tex = new THREE.CanvasTexture(cv);
+    this.redTri = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false, depthWrite: false }));
+    this.redTri.scale.set(6, 6, 6); this.redTri.visible = false; this.scene.add(this.redTri);
+  }
+
+  updateReticle(dt) {
+    // gold soft reticle = where the mouse is aiming (what your attacks will hit)
+    const t = this.lockTarget;
+    if (t && t.alive) {
+      this.reticle.visible = true;
+      this.reticle.position.set(t.pos.x, 0.35, t.pos.z);
+      this._retRing.rotation.z += dt * 1.6; this._retRing2.rotation.z -= dt * 1.1;
+      this._retChev.position.y = 13 + t.pos.y + Math.sin(this.time * 7) * 0.6;
+      const c = t.def.colors.accent;
+      this._retRing.material.color.set(c); this._retRing2.material.color.set(c); this._retChev.material.color.set(c);
+    } else this.reticle.visible = false;
+    // red triangle = the hard-locked target (who you face) — only while you can see them
+    const h = this.hardLock;
+    if (h && h.alive && (!this.fov || (h._vis || 1) > 0.35)) {
+      this.redTri.visible = true;
+      this.redTri.position.set(h.pos.x, h.pos.y + 15 + Math.sin(this.time * 5) * 0.7, h.pos.z);
+    } else this.redTri.visible = false;
+  }
+
+  // ---------- field of vision ----------
+  updateVision(dt) {
+    const p = this.player;
+    if (!p || !this.fov) { for (const e of this.entities) { e._vis = 1; if (e.obj) e.obj.visible = true; } this.world.setFogEnabled(false); return; }
+    this.world.setFogEnabled(true);
+    const h2 = this.humans[1] && this.humans[1].fighter;
+    this.world.updateFog(p.pos.x, p.pos.z, p.aim.x, p.aim.z, p.def.colors.accent, (h2 && h2.alive) ? h2.pos : null);
+    for (const e of this.entities) {
+      if (this.isHuman(e)) { e._vis = 1; e.obj.visible = true; continue; }       // teammates always visible
+      let see = this._humanSees(p, e) || (h2 && h2.alive && this._humanSees(h2, e));
+      if (!see) { const d = Math.hypot(e.pos.x - p.pos.x, e.pos.z - p.pos.z); if (d < this.visReveal && this._bright(e)) see = true; }
+      e._vis = damp(e._vis == null ? (see ? 1 : 0) : e._vis, see ? 1 : 0, 12, dt);
+      if (see && !e._seen) this._revealFx(e);
+      if (!see && e._seen) this._lastKnown(e);
+      e._seen = see;
+      const show = e._vis > 0.35;
+      if (e.obj.visible !== show) e.obj.visible = show;
+    }
+  }
+  _humanSees(p, e) {
+    const dx = e.pos.x - p.pos.x, dz = e.pos.z - p.pos.z, d = Math.hypot(dx, dz) || 1;
+    if (d < this.visNear) return true;
+    if (d < this.visRange && ((dx / d) * p.aim.x + (dz / d) * p.aim.z) > this.visCos) return this.canSee(p, e);
+    return false;
+  }
+
+  canSee(a, b) {
+    for (const c of this.world.cover) {
+      if (Math.min(a.pos.y, b.pos.y) + 5 > (c.top ?? c.h)) continue;              // both above the block → seen over it
+      if (this._segBox(a.pos.x, a.pos.z, b.pos.x, b.pos.z, c.x, c.z, (c.hx ?? c.r) + 1, (c.hz ?? c.r) + 1)) return false;
+    }
+    return true;
+  }
+  _segBox(x0, z0, x1, z1, cx, cz, hx, hz) {
+    const dx = x1 - x0, dz = z1 - z0; let tmin = 0, tmax = 1;
+    if (Math.abs(dx) < 1e-5) { if (x0 < cx - hx || x0 > cx + hx) return false; }
+    else { let t1 = (cx - hx - x0) / dx, t2 = (cx + hx - x0) / dx; if (t1 > t2) { const t = t1; t1 = t2; t2 = t; } tmin = Math.max(tmin, t1); tmax = Math.min(tmax, t2); if (tmin > tmax) return false; }
+    if (Math.abs(dz) < 1e-5) { if (z0 < cz - hz || z0 > cz + hz) return false; }
+    else { let t1 = (cz - hz - z0) / dz, t2 = (cz + hz - z0) / dz; if (t1 > t2) { const t = t1; t1 = t2; t2 = t; } tmin = Math.max(tmin, t1); tmax = Math.min(tmax, t2); if (tmin > tmax) return false; }
+    return tmin > 0.03 && tmin < 0.985;
+  }
+  _bright(e) {
+    if (e.state === 'charge') return true;
+    for (const o of this.projectiles.list) if (o.caster === e && (o.sustaining || (o.radius || 0) > 3.5)) return true;
+    return false;
+  }
+  _revealFx(e) { if ((e._vis || 0) > 0.85) return; this.vfx.ring(e.pos.clone().setY(0.5), { color: e.def.colors.accent, r0: 1, r1: 8, life: 0.35, flat: true, y: 0.5 }); }
+  _qSprite() {
+    if (!this._qTex) { const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d'); x.fillStyle = '#ff3b3b'; x.font = 'bold 54px sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('?', 32, 36); this._qTex = new THREE.CanvasTexture(c); }
+    const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: this._qTex, transparent: true, depthTest: false, depthWrite: false })); s.scale.set(5, 5, 5); return s;
+  }
+  _lastKnown(e) {
+    const m = new THREE.Mesh(this._ghostGeo, new THREE.MeshBasicMaterial({ color: '#9aa', transparent: true, opacity: 0.34, depthWrite: false }));
+    m.position.copy(e.pos); m.position.y += 5; m.rotation.y = e.facing; this.scene.add(m);
+    const q = this._qSprite(); q.position.set(e.pos.x, e.pos.y + 13, e.pos.z); this.scene.add(q);
+    let t = 0; const life = 2.6;
+    this.vfx._add({ update: (dt) => { t += dt; const k = t / life; m.material.opacity = 0.34 * (1 - k); q.material.opacity = 1 - k * k; return k >= 1; }, dispose: () => { this.scene.remove(m); m.material.dispose(); this.scene.remove(q); q.material.dispose(); } });
+  }
+
+  // Target the character the cursor is OVER; else the foe nearest the cursor (aim-assist).
+  pickTarget(p) {
+    const cx = this.input.mouse.clientX, cy = this.input.mouse.clientY;
+    let hover = null, hoverD = 1e9, near = null, nearD = 210;
+    const sp = this._sp, sp2 = this._sp2 || (this._sp2 = { x: 0, y: 0, behind: false });
+    for (const f of this.entities) {
+      if (!this.isFoe(p, f)) continue;
+      if (this.fov && (f._vis || 0) < 0.4) continue;                        // can't target what you can't see
+      this.world.screenPosOf(f.pos.x, f.pos.y + 5, f.pos.z, sp);
+      if (sp.behind) continue;
+      this.world.screenPosOf(f.pos.x, f.pos.y + 9.5, f.pos.z, sp2);
+      const half = Math.max(28, Math.hypot(sp.x - sp2.x, sp.y - sp2.y) + 22); // on-screen body size
+      const d = Math.hypot(sp.x - cx, sp.y - cy);
+      if (d < half && d < hoverD) { hoverD = d; hover = f; }               // cursor is over this character
+      let nd = d; if (f === this._lastLock) nd -= 55;                      // stickiness
+      if (nd < nearD) { nearD = nd; near = f; }
+    }
+    const pick = hover || near; this._lastLock = pick; return pick;
+  }
+
+  // Nearest foe within a cone of a world aim direction (gamepad right-stick).
+  pickTargetDir(p, dx, dz) {
+    const dl = Math.hypot(dx, dz) || 1; dx /= dl; dz /= dl;
+    let best = null, bestDot = 0.4;
+    for (const f of this.entities) {
+      if (!this.isFoe(p, f)) continue;
+      const fx = f.pos.x - p.pos.x, fz = f.pos.z - p.pos.z, d = Math.hypot(fx, fz) || 1;
+      if (d > 130) continue;
+      const dot = (fx / d) * dx + (fz / d) * dz;
+      if (dot > bestDot) { bestDot = dot; best = f; }
+    }
+    this._lastLock = best; return best;
+  }
+
+  slowmo(dur, mul = 0.42) { this._slowT = Math.max(this._slowT || 0, dur); this._slowMul = mul; }
+
+  // An enemy beam currently aimed at f (for AI to block / counter).
+  incomingBeam(f) {
+    for (const o of this.projectiles.list) {
+      if (o.sustaining === undefined || !o.sustaining || o.dead || o.team === f.team || o.caster === f) continue;
+      const dx = f.pos.x - o.muzzle.x, dz = f.pos.z - o.muzzle.z, D = Math.hypot(dx, dz);
+      if (D > o.maxLen + 10 || D < 3) continue;
+      if ((o.dir.x * dx + o.dir.z * dz) / D > 0.7) return o;
+    }
+    return null;
+  }
+  // An enemy projectile heading at f.
+  incomingProjectile(f) {
+    for (const o of this.projectiles.list) {
+      if (o.sustaining !== undefined || !o.vel || o.team === f.team) continue;
+      const dx = f.pos.x - o.pos.x, dz = f.pos.z - o.pos.z, D = Math.hypot(dx, dz);
+      if (D > 24 || D < 1) continue;
+      const vl = Math.hypot(o.vel.x, o.vel.z) || 1;
+      if ((o.vel.x * dx + o.vel.z * dz) / (D * vl) > 0.6) return o;
+    }
+    return null;
+  }
+
+  // Soft body separation so fighters don't stack (skips grab pairs).
+  resolveBodies() {
+    const E = this.entities;
+    for (let i = 0; i < E.length; i++) {
+      const a = E[i]; if (!a.alive) continue;
+      for (let j = i + 1; j < E.length; j++) {
+        const b = E[j]; if (!b.alive) continue;
+        if (a.grabbing === b || b.grabbing === a || a.grabbedBy === b || b.grabbedBy === a) continue;
+        if (Math.abs(b.pos.y - a.pos.y) > 7) continue;
+        const dx = b.pos.x - a.pos.x, dz = b.pos.z - a.pos.z, d = Math.hypot(dx, dz), min = a.radius + b.radius;
+        if (d < min && d > 0.001) {
+          const push = (min - d) * 0.5, nx = dx / d, nz = dz / d;
+          a.pos.x -= nx * push; a.pos.z -= nz * push; b.pos.x += nx * push; b.pos.z += nz * push;
+        }
+      }
+    }
+  }
+
+  // ---------- setup ----------
+  addFighter(def, opts) {
+    const f = new Fighter(def, opts); f._game = this;
+    this.scene.add(f.obj); this.entities.push(f);
+    return f;
+  }
+
+  startMatch(charId) {
+    // clear
+    for (const e of this.entities) this.scene.remove(e.obj);
+    this.entities.length = 0; this.minions.length = 0;
+    for (const c of this.constructs) c._dispose(this); this.constructs.length = 0;
+    this.projectiles.list.length = 0;
+    this.hardLock = null; this.lockTarget = null;
+    this.world.resetTerrain(); this.vfx.clearScorches();   // restore blocks + flatten craters each match
+
+    const def = ROSTER.find(r => r.id === charId) || ROSTER[0];
+    this.player = this.addFighter(def, { isPlayer: true, team: 0, x: 0, z: 30 });
+    this.player.ai = null;
+
+    // training dummies
+    this.spawnDummy(-34, -20); this.spawnDummy(34, -20);
+    // a live rival
+    this.spawnRival();
+    this.running = true;
+  }
+
+  setPlayerChar(charId) {
+    if (!this.player) return;
+    const def = ROSTER.find(r => r.id === charId); if (!def) return;
+    const { x, z } = this.player.pos; const y = this.player.pos.y;
+    this.scene.remove(this.player.obj);
+    const i = this.entities.indexOf(this.player); if (i >= 0) this.entities.splice(i, 1);
+    this.player = this.addFighter(def, { isPlayer: true, team: 0, x, z });
+    this.player.human = true; this.player.scheme = 'kbm';
+    if (this.humans[0]) this.humans[0].fighter = this.player; else this.humans.push({ fighter: this.player, scheme: 'kbm' });
+    this.player.pos.y = y;
+    this.vfx.flash(this.player.pos.clone().setY(5), def.colors.accent, 10, 0.4);
+    this.vfx.ring(this.player.pos.clone().setY(1), { color: def.colors.accent, r0: 2, r1: 16, life: 0.4, flat: true, y: 0.4 });
+  }
+
+  spawnDummy(x, z) {
+    const def = { name: 'Training Bot', colors: { primary: '#3a4150', secondary: '#272c36', accent: '#9fb2c9', skin: '#cfd6e0' }, hp: 120, ki: 100, speed: 0, abilities: {} };
+    const d = this.addFighter(def, { team: 1, dummy: true, x, z });
+    return d;
+  }
+
+  spawnRival(charId) {
+    const pick = charId ? ROSTER.find(r => r.id === charId) : ROSTER[(Math.random() * ROSTER.length) | 0];
+    const ang = rand(0, TAU), r = 60;
+    const b = this.addFighter(pick, { team: 1, x: Math.cos(ang) * r, z: Math.sin(ang) * r - 20 });
+    b.ai = new AI(b, 1);
+    this.vfx.flash(b.pos.clone().setY(5), pick.colors.accent, 10, 0.4);
+    return b;
+  }
+
+  // ---------- modes & players ----------
+  spawnEnemy(charId, o = {}) {
+    const pick = charId ? (ROSTER.find(r => r.id === charId) || ROSTER[0]) : ROSTER[(Math.random() * ROSTER.length) | 0];
+    const ang = rand(0, TAU), r = o.r ?? 70;
+    const b = this.addFighter(pick, { team: o.team ?? 1, x: o.x ?? Math.cos(ang) * r, z: o.z ?? Math.sin(ang) * r });
+    b.ai = new AI(b, o.aiLevel || 1);
+    if (o.noRespawn) b.noRespawn = true;
+    for (let i = 1; i < (o.level || 1); i++) this.levelUp(b, true);   // scale up quietly
+    b.xp = 0;
+    this.vfx.flash(b.pos.clone().setY(5), pick.colors.accent, 9, 0.35);
+    return b;
+  }
+  spawnHuman(charId, scheme, o = {}) {
+    const def = ROSTER.find(r => r.id === charId) || ROSTER[0];
+    const f = this.addFighter(def, { isPlayer: this.humans.length === 0, team: o.team ?? 0, x: o.x ?? 0, z: o.z ?? 30 });
+    f.human = true; f.scheme = scheme; f.pnum = this.humans.length + 1;
+    this.humans.push({ fighter: f, scheme });
+    if (this.humans.length === 1) this.player = f;
+    return f;
+  }
+  startMode(id, o = {}) {
+    for (const e of this.entities) this.scene.remove(e.obj);
+    this.entities.length = 0; this.minions.length = 0; this.humans.length = 0;
+    for (const c of this.constructs) c._dispose(this); this.constructs.length = 0;
+    this.projectiles.list.length = 0;
+    this.hardLock = null; this.lockTarget = null; this.combo = 0; this.comboT = 0;
+    this.world.resetTerrain(); this.vfx.clearScorches();
+    this.modeId = id; this.mode = MODE_IMPL[id] || MODE_IMPL.training; this.ms = {}; this.matchOver = false; this.matchResult = null;
+    const two = !!o.twoPlayer;
+    this.spawnHuman(o.p1 || 'sol', 'kbm', { x: two ? -20 : 0, z: 30 });
+    if (two) this.spawnHuman(o.p2 || 'vega', 'pad', { x: 20, z: 30, team: id === 'duel' ? 1 : 0 });
+    this.mode.setup(this, o);
+    this.running = true;
+  }
+  endMatch(result) {
+    if (this.matchOver) return;
+    this.matchOver = true; this.matchResult = result;
+    this.slowmo(0.35, 0.4); this.world.punch(0.8);
+    if (this.hud) this.hud.showEndScreen(result, this);
+  }
+  _waveCount(n) { return Math.min(6, 1 + Math.floor(n * 0.7)); }
+  _spawnWave(n) {
+    const count = this._waveCount(n), level = 1 + Math.floor((n - 1) / 2), chars = ROSTER.map(r => r.id);
+    for (let i = 0; i < count; i++) {
+      const ang = (i / count) * TAU;
+      this.spawnEnemy(chars[(Math.random() * chars.length) | 0], { x: Math.cos(ang) * 100, z: Math.sin(ang) * 100, level, aiLevel: Math.min(1.7, 1 + n * 0.05), noRespawn: true });
+    }
+  }
+
+  // ---------- combat helpers ----------
+  isFoe(a, b) { return b && b.alive && b !== a && (b.team !== a.team || b.isDummy) && !(a.isDummy); }
+
+  nearestFoe(caster, pos, maxDist = 200) {
+    let best = null, bd = maxDist * maxDist;
+    for (const f of this.entities) {
+      if (!this.isFoe(caster, f)) continue;
+      const dx = f.pos.x - pos.x, dz = f.pos.z - pos.z; const d = dx * dx + dz * dz;
+      if (d < bd) { bd = d; best = f; }
+    }
+    return best;
+  }
+
+  overlapFoe(caster, pos, radius) {
+    for (const f of this.entities) {
+      if (!this.isFoe(caster, f)) continue;
+      const dx = f.pos.x - pos.x, dz = f.pos.z - pos.z;
+      if (Math.hypot(dx, dz) < radius + f.radius && Math.abs(pos.y - (f.pos.y + 5)) < 9) return f;
+    }
+    return null;
+  }
+
+  coneFoe(caster, range, arc) {
+    let best = null, bd = range * range;
+    for (const f of this.entities) {
+      if (!this.isFoe(caster, f)) continue;
+      const dx = f.pos.x - caster.pos.x, dz = f.pos.z - caster.pos.z; const d = Math.hypot(dx, dz);
+      if (d > range) continue;
+      const dot = (dx / (d || 1)) * caster.aim.x + (dz / (d || 1)) * caster.aim.z;
+      if (dot < Math.cos(arc)) continue;
+      if (d * d < bd) { bd = d * d; best = f; }
+    }
+    return best;
+  }
+
+  areaDamage(caster, pos, radius, damage, power = 1) {
+    for (const f of this.entities) {
+      if (!this.isFoe(caster, f)) continue;
+      const dx = f.pos.x - pos.x, dz = f.pos.z - pos.z, dy = (f.pos.y + 5) - pos.y;
+      const d = Math.hypot(dx, dz, dy);
+      if (d > radius + f.radius) continue;
+      const fall = 1 - clamp(d / (radius + f.radius), 0, 1) * 0.6;
+      const kb = _v.set(dx, 0, dz).setLength((damage * 0.6 + 12) * fall);
+      f.takeDamage(damage * fall * caster.powerBuff, { kb, launch: (6 + power * 6) * fall, hitstop: 0.05 });
+    }
+    this.worldImpact(pos, radius, power);   // crater the ground + damage cover
+  }
+
+  // ---------- destructible environment ----------
+  // A blast on the world: crater the ground (big hits only) and damage nearby cover.
+  worldImpact(pos, radius, power = 1) {
+    if (pos.y < 6.5 && (power >= 1.25 || radius >= 14)) {
+      this.world.crater(pos.x, pos.z, Math.min(radius * 0.45, 22), Math.min(power * 1.3, 5));
+      this.vfx.scorch(new THREE.Vector3(pos.x, 0.14, pos.z), Math.min(radius * 0.5, 24), '#161a22');  // scorched pit
+    }
+    for (let i = this.world.cover.length - 1; i >= 0; i--) {
+      const c = this.world.cover[i]; if (c.hp == null || c.hp <= 0) continue;
+      const d = Math.hypot(pos.x - c.x, pos.z - c.z);
+      if (d < radius + (c.r || 6)) { const fall = 1 - clamp((d - (c.r || 6)) / (radius + 1), 0, 1); this.damageBlock(c, power * 20 * fall, pos); }
+    }
+  }
+  damageBlock(c, amt, pos) {
+    if (c.hp == null || c.hp <= 0 || amt <= 0) return;
+    c.hp -= amt;
+    const py = Math.min(c.top || c.h, (pos && pos.y) || 6);
+    this.particles.burst(c.x + rand(-c.hx, c.hx), py, c.z + rand(-c.hz, c.hz), { count: 4 + (amt * 0.12 | 0), speed: 12, life: 0.5, size: 3.2, color: ['#3a3a44', '#22232c', '#6a6a74'], up: 5, grav: 8, drag: 1.5 });
+    this.world.setBlockCracks(c);
+    if (c.hp <= 0) this.shatterBlock(c);
+  }
+  shatterBlock(c) {
+    const w = c.w || c.r * 1.6, h = c.h, d = c.d || c.r * 1.6;
+    const mat = new THREE.MeshStandardMaterial({ color: '#161a24', roughness: 0.9, metalness: 0.05 });
+    for (let i = 0; i < 11; i++) {
+      const s = rand(1.4, 3.4);
+      const chunk = new THREE.Mesh(new THREE.BoxGeometry(s, s, s), mat);
+      let px = c.x + rand(-w / 2, w / 2), py = rand(2, h), pz = c.z + rand(-d / 2, d / 2);
+      chunk.position.set(px, py, pz); chunk.castShadow = true; this.scene.add(chunk);
+      let vx = rand(-20, 20), vy = rand(12, 28), vz = rand(-20, 20), sp = rand(-7, 7), t = 0;
+      this.vfx._add({
+        update: (dt) => { t += dt; vy -= 62 * dt; px += vx * dt; py += vy * dt; pz += vz * dt; if (py < 1) { py = 1; vy *= -0.32; vx *= 0.6; vz *= 0.6; } chunk.position.set(px, py, pz); chunk.rotation.x += sp * dt; chunk.rotation.z += sp * 0.7 * dt; if (t > 2) { chunk.material.transparent = true; chunk.material.opacity = Math.max(0, 1 - (t - 2) / 0.9); } return t > 2.9; },
+        dispose: () => { this.scene.remove(chunk); chunk.geometry.dispose(); },
+      });
+    }
+    this.particles.burst(c.x, h * 0.5, c.z, { count: 28, speed: 16, life: 1.0, size: 6.5, color: ['#3a3a44', '#22232c', '#4a4a55'], up: 8, grav: 4, drag: 1.2 });
+    this.vfx.scorch(new THREE.Vector3(c.x, 0.2, c.z), (c.r || 6) * 1.25, '#20242e');
+    this.world.crater(c.x, c.z, (c.r || 6) * 0.7, 2.2);
+    const mesh = c.mesh, crack = c.crack, y0 = c.y0; this.world.removeBlockFromCover(c);
+    let ct = 0; this.vfx._add({
+      update: (dt) => { ct += dt; const k = clamp(ct / 0.5, 0, 1); mesh.position.y = y0 - k * (h * 0.92); mesh.scale.y = Math.max(0.04, 1 - k); if (crack) { crack.position.y = mesh.position.y; crack.scale.copy(mesh.scale); crack.material.opacity = 0.9 * (1 - k); } return k >= 1; },
+      dispose: () => { mesh.visible = false; if (crack) crack.visible = false; },   // hidden, not disposed — resetTerrain restores it
+    });
+    this.world.shake(1.5); this.world.punch(0.9); this.audio.boom(0.6);
+  }
+
+  // ---------- gamified combat: kills, streaks, XP/levels, announcer ----------
+  isHuman(f) { return this.humans.some(h => h.fighter === f); }
+
+  handleKO(victim) {
+    const src = victim.lastHitBy;
+    const killer = (src && victim.lastHitT < 4 && src !== victim && src.def) ? src : null;
+    if (killer) {
+      const bonus = 100 + Math.max(0, killer.streak) * 25;
+      killer.kills++; killer.score += bonus; killer.streak++;
+      this.grantXp(killer, 45 + victim.level * 12);
+      if (this.isHuman(killer)) this.announceKill(killer, victim, bonus);
+      killer.lastKillT = 0;
+    }
+    victim.streak = 0;
+    // KO flourish — slowmo + banner when a human is involved (avoids spam in bot-vs-bot rumble)
+    const involvesHuman = this.isHuman(victim) || (killer && this.isHuman(killer));
+    if (involvesHuman) {
+      this.slowmo(0.45, 0.34); if (this.world.punch) this.world.punch(0.9);
+      if (this.hud && this.hud.showKO) {
+        const down = this.isHuman(victim);
+        this.hud.showKO(down ? 'DOWN' : 'K.O.', victim.name, down ? '#ff5a4a' : (killer ? killer.def.colors.accent : '#fff'));
+      }
+    }
+    if (this.mode && this.mode.onKO) this.mode.onKO(this, victim, killer);
+    if (this.onKill) this.onKill(victim);
+  }
+
+  grantXp(f, amt) {
+    if (!f) return; f.xp += amt;
+    while (f.level < 10 && f.xp >= f.xpNext) { f.xp -= f.xpNext; this.levelUp(f); }
+    if (f.level >= 10) f.xp = Math.min(f.xp, f.xpNext);
+  }
+  levelUp(f, quiet = false) {
+    f.level++; f.xpNext = Math.round(f.xpNext * 1.35);
+    f.levelMult = 1 + (f.level - 1) * 0.06;              // level → damage (capped at lvl 10)
+    if (f.buffT <= 0) f.powerBuff = f.levelMult;
+    f.maxHp = Math.round(f.maxHp * 1.07); f.hp = Math.min(f.maxHp, f.hp + f.maxHp * 0.25);
+    f.maxKi = Math.round(f.maxKi * 1.04);
+    if (!quiet) {
+      this.vfx.explode(f.pos.clone().setY(5), { color: f.def.colors.accent, color2: '#fff', radius: 11, power: 1.1, scorch: false });
+      this.vfx.ring(f.pos.clone().setY(3), { color: f.def.colors.accent, r0: 2, r1: 24, life: 0.6, flat: true, y: 0.5 });
+      this.audio.power(true);
+      if (this.isHuman(f) && this.hud) this.hud.announce('LEVEL ' + f.level, f.name + ' powered up', f.def.colors.accent);
+    }
+  }
+  announceKill(killer, victim, bonus) {
+    if (!this.hud) return;
+    let text = null, sub = killer.name;
+    if (!this.ms.firstBlood) { this.ms.firstBlood = true; text = 'FIRST BLOOD'; }
+    else if (killer.lastKillT < 2.2) { killer._multi = (killer._multi || 1) + 1; const m = killer._multi; text = m >= 4 ? 'QUAD KO!' : m === 3 ? 'TRIPLE KO!' : 'DOUBLE KO!'; }
+    else { killer._multi = 1; const s = killer.streak; if (s === 3) text = 'RAMPAGE'; else if (s === 5) text = 'UNSTOPPABLE'; else if (s >= 7) text = 'GODLIKE'; if (text) sub = killer.name + ' · ' + s + ' streak'; }
+    if (text) this.hud.announce(text, sub, killer.def.colors.accent);
+    if (killer === this.player && this.hud.scorePopup) this.hud.scorePopup(victim.pos, bonus);
+  }
+
+  // Called by Fighter.takeDamage for EVERY hit — damage numbers, sparks, combo.
+  onHit(target, amount, opts = {}, blocked = false) {
+    const src = opts.src;
+    // directional damage cue when the human player is hit
+    if (this.hud && this.hud.hitDirection && this.isHuman(target) && src && src !== target) this.hud.hitDirection(src.pos);
+    if (this.hud) {
+      if (blocked) this.hud.damageNumber(target.pos, 'BLOCK', '#bfe0ff', true);
+      else if (amount >= 5) this.hud.damageNumber(target.pos, Math.round(amount), src === this.player ? '#ffe08a' : '#ff9a6a');
+    }
+    this.vfx.flash(target.pos.clone().setY(5.6), blocked ? '#cfe6ff' : (target.def.colors.accent || '#fff'), blocked ? 3 : 2.4, 0.1);
+    if (src === this.player && !blocked) {
+      if (amount >= 5) { this.combo++; if (this.hud) this.hud.combo(this.combo); }
+      this.comboT = 1.3;
+    }
+    if (src && !blocked && this.isHuman(src) && amount >= 1) this.grantXp(src, amount * 0.35);   // XP for landing damage
+  }
+
+  // ---------- fx helpers used by abilities ----------
+  spawnBeamFor(caster, def, p = 1) {
+    return this.projectiles.spawnBeam(caster, {
+      radius: (def.radius || 1.6) * (def.chargeWidth ? (1 + (p - 1) * 0.6) : 1),
+      tipSpeed: def.tipSpeed || 150, maxLen: def.maxLen || 120,
+      dps: (def.dps || 60) * p, kiPerSec: def.kiPerSec || 22,
+      color: def.color, color2: def.color2, power: (def.power || 1) * p, steer: def.steer,
+      might: (def.might || (def.dps || 60) / 50) * p * (caster.def.beamMight || 1),   // char treats the budget differently
+    });
+  }
+
+  chargeGather(caster, color, pos, intensity = 1) {
+    const n = Math.ceil(1 + intensity * 2);
+    for (let i = 0; i < n; i++) {
+      const a = rand(0, TAU), r = rand(8, 16 + intensity * 6), h = rand(-6, 6);
+      this.particles.spawn({ x: pos.x + Math.cos(a) * r, y: pos.y + h, z: pos.z + Math.sin(a) * r, vx: -Math.cos(a) * r * 3, vy: -h * 3, vz: -Math.sin(a) * r * 3, life: 0.34, size: 2.4, color: [color, '#fff'], drag: 0.2, shrink: true });
+    }
+  }
+
+  muzzleFlash(caster, color, scale = 1, off) {
+    const m = caster.muzzle(_v.clone()); if (off) m.add(off);
+    this.vfx.flash(m, color || '#fff', 4 * scale, 0.1);
+    this.particles.burst(m.x, m.y, m.z, { count: 5, speed: 14, life: 0.22, size: 2.2 * scale, color: [color, '#fff'], dir: { x: caster.aim.x, z: caster.aim.z }, spread: 0.6 });
+  }
+
+  trail(caster, color) {
+    for (let i = 0; i < 5; i++) this.particles.spawn({ x: caster.pos.x + rand(-1, 1), y: 5 + rand(-3, 3), z: caster.pos.z + rand(-1, 1), vx: -caster.vel.x * 0.2, vy: 0, vz: -caster.vel.z * 0.2, life: 0.26, size: 3, color: [color, '#fff'], drag: 2, shrink: true });
+  }
+
+  afterimage(caster) {
+    const m = new THREE.Mesh(this._ghostGeo, new THREE.MeshBasicMaterial({ color: caster.def.colors.accent, transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending, depthWrite: false }));
+    m.position.copy(caster.pos); m.position.y += 5; m.rotation.y = caster.facing; this.scene.add(m);
+    let t = 0; this.vfx._add({ update: (dt) => { t += dt; m.material.opacity = 0.5 * (1 - t / 0.35); m.scale.setScalar(1 + t * 0.5); return t >= 0.35; }, dispose: () => { this.scene.remove(m); m.material.dispose(); } });
+  }
+
+  summon(caster, def) {
+    const n = def.count || 3;
+    for (let i = 0; i < n; i++) this.minions.push(new Minion(this, caster, def, i));
+    // cap
+    while (this.minions.filter(m => m.owner === caster).length > (def.max || 6)) { const idx = this.minions.findIndex(m => m.owner === caster); this.minions[idx]._dispose(this); this.minions.splice(idx, 1); }
+  }
+
+  spawnConstruct(caster, def) {
+    const c = new Construct(this, caster, def); this.constructs.push(c); return c;
+  }
+
+  // ---------- control ----------
+  controlPlayer(dt) {
+    const p = this.player; if (!p || !p.alive) { if (p) { p.moveDir = { x: 0, z: 0 }; } this.lockTarget = null; return; }
+    const inp = this.input, m = inp.mouse, pad = this.humans.length < 2 ? this.pad : NULL_PAD;   // in 2P the pad drives P2
+
+    // --- targeting: click a character to HARD-LOCK (red triangle → you face it); mouse still AIMs ---
+    const a3 = this._aim3pt;
+    let soft;
+    if (pad.active && pad.aiming) {
+      const ax = this.right.x * pad.rx + this.fwd.x * (-pad.ry), az = this.right.z * pad.rx + this.fwd.z * (-pad.ry);
+      soft = this.pickTargetDir(p, ax, az);
+      if (soft) soft.center(a3); else a3.set(p.pos.x + ax * 50, 6, p.pos.z + az * 50);
+    } else {
+      soft = this.pickTarget(p);                                   // foe under/near the cursor (gives height)
+      if (soft) soft.center(a3); else { this.world.screenToGround(m.clientX, m.clientY, a3); a3.y = 3; }
+    }
+    if ((m.leftEdge || pad.pressed('lmb')) && soft) this.hardLock = soft;   // click a character to lock onto it
+    if (inp.pressed('KeyT')) this.hardLock = null;                          // T clears the lock
+    if (this.hardLock && !this.hardLock.alive) this.hardLock = null;
+    this.lockTarget = soft;
+    this.aimPoint.copy(a3).setY(0);
+    p.aim3.set(a3.x - p.pos.x, a3.y - (p.pos.y + 5.8), a3.z - p.pos.z).normalize();
+    // facing: hard-locked → always face the lock; otherwise face where you aim
+    if (this.hardLock && this.hardLock.alive) p.faceDir(this.hardLock.pos.x - p.pos.x, this.hardLock.pos.z - p.pos.z);
+    else p.faceDir(p.aim3.x, p.aim3.z);
+
+    // stunned while held — capable heroes auto-escape via the melee system
+    if (p.grabbedBy) { p.moveDir = { x: 0, z: 0 }; return; }
+
+    // --- move (iso-relative; analog on pad, digital on keys) ---
+    let ix = 0, iz = 0;
+    if (pad.active && pad.moving) { ix = pad.lx; iz = -pad.ly; }
+    else {
+      if (inp.down('KeyW') || inp.down('ArrowUp')) iz += 1;
+      if (inp.down('KeyS') || inp.down('ArrowDown')) iz -= 1;
+      if (inp.down('KeyA') || inp.down('ArrowLeft')) ix -= 1;
+      if (inp.down('KeyD') || inp.down('ArrowRight')) ix += 1;
+    }
+    const dir = _v.set(0, 0, 0).addScaledVector(this.fwd, iz).addScaledVector(this.right, ix);
+    if (dir.lengthSq() > 1) dir.normalize();     // keep analog magnitude, cap at 1
+    p.moveDir = { x: dir.x, z: dir.z };
+    p.flyHeld = inp.down('Space') || pad.down('fly');
+    p.descendHeld = inp.down('ControlLeft') || inp.down('ControlRight') || inp.down('KeyZ') || pad.down('descend');
+    p.move(p.moveDir, dt);
+
+    // --- melee trifecta — Strike · Grab · Guard (keyboard V/G/C or pad Square/Circle/L1) ---
+    if (inp.pressed('KeyV') || pad.pressed('strike')) this.melee.strike(p);
+    if (inp.pressed('KeyG') || pad.pressed('grab')) this.melee.grab(p);
+    this.melee.guard(p, inp.down('KeyC') || pad.down('guard'));
+
+    // --- powers (keyboard/mouse OR gamepad) ---
+    const busy = p.guarding || p.strikeActive > 0 || p.grabState || p.grabbing;
+    const orK = (code, a) => ({ pressed: inp.pressed(code) || pad.pressed(a), held: inp.down(code) || pad.down(a), released: inp.released(code) || pad.released(a) });
+    const intents = {
+      lmb: { pressed: m.leftEdge || pad.pressed('lmb'), held: m.left || pad.down('lmb'), released: m.leftUp || pad.released('lmb') },
+      rmb: { pressed: m.rightEdge || pad.pressed('rmb'), held: m.right || pad.down('rmb'), released: m.rightUp || pad.released('rmb') },
+      q: orK('KeyQ', 'q'), e: orK('KeyE', 'e'), r: orK('KeyR', 'r'), f: orK('KeyF', 'f'),
+      shift: orK('ShiftLeft', 'dash'),
+    };
+    for (const k of SLOT_KEYS) if (p.slots[k]) runSlot(p, k, busy && k !== 'shift' ? { pressed: false, held: false, released: intents[k].released, dt } : { ...intents[k], dt }, this);
+  }
+
+  // Player 2 (gamepad): right-stick auto-aims, left-stick moves.
+  controlPad(f, dt) {
+    if (!f || !f.alive || this.matchOver) { if (f) f.moveDir = { x: 0, z: 0 }; return; }
+    const pad = this.pad;
+    if (f.grabbedBy) { f.moveDir = { x: 0, z: 0 }; return; }
+    let tgt;
+    if (pad.aiming) {
+      const ax = this.right.x * pad.rx + this.fwd.x * (-pad.ry), az = this.right.z * pad.rx + this.fwd.z * (-pad.ry);
+      tgt = this.pickTargetDir(f, ax, az);
+      if (!tgt) { f.aim3.set(ax, 0.02, az).normalize(); f.faceDir(ax, az); }
+    } else tgt = this.nearestFoe(f, f.pos, 200);
+    if (tgt) { f.aim3.set(tgt.pos.x - f.pos.x, (tgt.pos.y + 5.2) - (f.pos.y + 5.8), tgt.pos.z - f.pos.z).normalize(); f.faceDir(tgt.pos.x - f.pos.x, tgt.pos.z - f.pos.z); }
+    const dir = _v.set(0, 0, 0).addScaledVector(this.fwd, -pad.ly).addScaledVector(this.right, pad.lx);
+    if (dir.lengthSq() > 1) dir.normalize();
+    f.moveDir = { x: dir.x, z: dir.z }; f.flyHeld = pad.down('fly'); f.descendHeld = pad.down('descend'); f.move(f.moveDir, dt);
+    if (pad.pressed('strike')) this.melee.strike(f);
+    if (pad.pressed('grab')) this.melee.grab(f);
+    this.melee.guard(f, pad.down('guard'));
+    const busy = f.guarding || f.strikeActive > 0 || f.grabState || f.grabbing;
+    const P = (a) => ({ pressed: pad.pressed(a), held: pad.down(a), released: pad.released(a) });
+    const it = { lmb: P('lmb'), rmb: P('rmb'), q: P('q'), e: P('e'), r: P('r'), f: P('f'), shift: P('dash') };
+    for (const k of SLOT_KEYS) if (f.slots[k]) runSlot(f, k, busy && k !== 'shift' ? { pressed: false, held: false, released: it[k].released, dt } : { ...it[k], dt }, this);
+  }
+
+  controlBot(f, dt) {
+    if (!f.ai || !f.alive) { f.moveDir = { x: 0, z: 0 }; return; }
+    if (f.grabbedBy) { f.moveDir = { x: 0, z: 0 }; return; }   // stunned while held
+    const it = f.ai.intent(dt, this);
+    if (it.aimDir) f.faceDir(it.aimDir.x, it.aimDir.z);
+    // 3D aim at the target's body centre — angles up at flyers, down at grounded foes
+    const at = it.target || this.nearestFoe(f, f.pos, 500);
+    if (at) f.aim3.set(at.pos.x - f.pos.x, (at.pos.y + 5.2) - (f.pos.y + 5.8), at.pos.z - f.pos.z).normalize();
+    else f.aim3.set(f.aim.x, 0, f.aim.z);
+    const dir = _v.set(it.move.x, 0, it.move.z); if (dir.lengthSq() > 1) dir.normalize();
+    f.moveDir = { x: dir.x, z: dir.z };
+    f.flyHeld = !!it.fly;
+    f.descendHeld = f.flying && !it.fly;      // no longer wants to fly → sink back down and land
+    f.move(f.moveDir, dt);
+
+    // --- defensive reactions to incoming beams / projectiles ---
+    if (f._forceBeamT > 0) f._forceBeamT -= dt;
+    f._counterCd = (f._counterCd || 0) - dt;
+    if (!f.grabbing && !f.grabState) {
+      const beam = this.incomingBeam(f);
+      if (beam) {
+        f.faceDir(beam.caster.pos.x - f.pos.x, beam.caster.pos.z - f.pos.z);   // turn to face it (block/clash from the front)
+        const bk = ['lmb', 'rmb', 'r', 'e', 'q'].find(k => f.slots[k] && f.slots[k].def.type === 'beam' && f.slots[k].cd <= 0 && f.ki > 30);
+        if (bk && f._forceBeamT <= 0 && f._counterCd <= 0 && Math.random() < 0.7) { f._forceBeam = bk; f._forceBeamT = 1.1 + Math.random() * 1.3; f._counterCd = 3.5; } // counter-beam → CLASH
+        else if (f._forceBeamT <= 0) f._guardT = Math.max(f._guardT || 0, 0.32);                                                                                    // else block
+      } else if (this.incomingProjectile(f) && Math.random() < 0.3 && f._forceBeamT <= 0) {
+        f._guardT = Math.max(f._guardT || 0, 0.28);
+      }
+    }
+
+    // close-range melee mixups (skip if committing to a counter-beam)
+    if (!f._forceBeam && !f.grabbing && !f.grabState && !f.strikeActive) {
+      const foe = this.nearestFoe(f, f.pos, 15);
+      const d = foe ? Math.hypot(foe.pos.x - f.pos.x, foe.pos.z - f.pos.z) : 99;
+      f._meleeCd = (f._meleeCd || 0) - dt;
+      if (foe && d < 11 && f._meleeCd <= 0) {
+        f._meleeCd = 0.45 + Math.random() * 0.7;
+        const style = f.ai && f.ai.style, r = Math.random();
+        if (style === 'grappler' && r < 0.55) this.melee.grab(f);              // Cell seeks grabs to absorb/heal
+        else if (r < (style === 'rusher' ? 0.72 : 0.5)) this.melee.strike(f);
+        else if (r < 0.8) this.melee.grab(f);
+        else f._guardT = 0.5;
+      }
+    }
+    f._guardT = (f._guardT || 0) - dt;
+    this.melee.guard(f, f._guardT > 0);
+
+    const busy = f.guarding || f.strikeActive > 0 || f.grabState || f.grabbing;
+    // committed counter-beam (hold the beam slot → creates a beam battle)
+    if (f._forceBeam && f._forceBeamT > 0 && !busy) {
+      const first = !f._forceBeamActive; f._forceBeamActive = true;
+      runSlot(f, f._forceBeam, { pressed: first, held: true, released: false, dt }, this);
+    } else {
+      if (f._forceBeamActive) { runSlot(f, f._forceBeam, { pressed: false, held: false, released: true, dt }, this); f._forceBeamActive = false; f._forceBeam = null; }
+      if (!busy) for (const k of SLOT_KEYS) if (f.slots[k] && it.slots[k]) runSlot(f, k, { ...it.slots[k], dt }, this);
+    }
+  }
+
+  // ---------- main update ----------
+  update(dt) {
+    dt = Math.min(dt, 0.033);
+    this.pad.update();
+    if (!this.running) {
+      this.world.follow(this.player ? _v.copy(this.player.pos).setY(6) : _v.set(0, 6, 0), dt);
+      this.world.render(); return;
+    }
+    if (this._slowT > 0) { this._slowT -= dt; dt *= this._slowMul || 1; }   // impact slow-mo
+    this.time += dt;
+
+    if (this.comboT > 0) { this.comboT -= dt; if (this.comboT <= 0) { this.combo = 0; if (this.hud) this.hud.combo(0); } }
+    if (this.mode && !this.matchOver) this.mode.tick(this, dt);
+
+    // control: P1 (keyboard+mouse), P2+ (gamepad), everyone else = AI
+    this.controlPlayer(dt);
+    for (let i = 1; i < this.humans.length; i++) this.controlPad(this.humans[i].fighter, dt);
+    for (const f of this.entities) if (!this.isHuman(f)) this.controlBot(f, dt);
+
+    for (const f of this.entities) {
+      const wasAlive = f._wasAlive !== false;
+      f.update(dt, this);
+      if (wasAlive && f.state === 'ko') this.handleKO(f);
+      f._wasAlive = f.state !== 'ko';
+    }
+    for (let i = this.entities.length - 1; i >= 0; i--) if (this.entities[i]._remove) { this.scene.remove(this.entities[i].obj); this.entities.splice(i, 1); }  // survival dead removal
+
+    this.resolveBodies();
+    this.projectiles.update(dt, this);
+    for (let i = this.minions.length - 1; i >= 0; i--) if (!this.minions[i].update(dt, this)) this.minions.splice(i, 1);
+    for (let i = this.constructs.length - 1; i >= 0; i--) if (!this.constructs[i].update(dt, this)) this.constructs.splice(i, 1);
+    this.particles.update(dt);
+    this.vfx.update(dt);
+    this.updateVision(dt);
+    this.updateReticle(dt);
+    if (this.mode && !this.matchOver) { const over = this.mode.isOver(this); if (over) this.endMatch(over); }
+
+    this.followHumans(dt);
+    this.world.render();
+  }
+
+  followHumans(dt) {
+    if (this.humans.length >= 2 && this.humans[1].fighter.alive) {
+      const a = this.humans[0].fighter.pos, b = this.humans[1].fighter.pos;
+      const spread = Math.hypot(a.x - b.x, a.z - b.z);
+      this.world.setBaseZoom(clamp(spread * 0.6 + 56, 78, 128));
+      this.world.follow(_v.set((a.x + b.x) / 2, 6 + (a.y + b.y) * 0.2, (a.z + b.z) / 2), dt);
+    } else if (this.player) {
+      this.world.setBaseZoom(78);
+      _v.copy(this.player.pos); _v.x += (this.aimPoint.x - this.player.pos.x) * 0.12; _v.z += (this.aimPoint.z - this.player.pos.z) * 0.12;
+      this.world.follow(_v, dt);
+    }
+  }
+}
+
+export { ROSTER };
