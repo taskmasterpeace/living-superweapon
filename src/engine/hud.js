@@ -166,6 +166,7 @@ export function heroStats(d) {
   else if (d.flightTier === 2) tags.push('Levitator');
   if (d.flyStyle === 'ice') tags.push('Rider');
   if (d.flyStyle === 'fire') tags.push('Fire Wake');
+  if ((d.items || []).length) tags.push('Gadgeteer');
   if (hasBlink) tags.push('Blink');
   if (A.some(a => a.fly) || d.speed >= 40) tags.push('Aerial');
   return {
@@ -258,7 +259,7 @@ export class HUD {
         <b>WASD</b> move · <b>Mouse</b> aim · <b>Click a foe</b> to lock/face · <b>T</b> unlock<br/>
         <b>LMB/RMB</b> powers · <b>Q E H</b> skills · <b>R</b> ultimate<br/>
         <b>V</b> tap jab / <b>HOLD</b> haymaker (crushes guards) · <b>G</b> grab<br/>
-        <b>C / X / Mouse4</b> guard · <b>SHIFT</b> dash · <b>2×TAP</b> move = evade<br/>
+        <b>C / Mouse4</b> guard · <b>X</b> item (beacon) · <b>SHIFT</b> dash · <b>2×TAP</b> move = evade<br/>
         <b>F</b> flight ON/OFF · <b>SPACE</b> rise · release = hover · <b>CTRL</b> descend<br/>
         <b>1–0</b>/<b>TAB</b> heroes · <b>B</b> rival · <b>ESC</b> pause<br/>
         🎮 <b>Pad</b>: sticks move/aim · R2/L2 powers · ▢○ melee · L1 guard
@@ -318,6 +319,13 @@ export class HUD {
       const vis = g.fov ? (e._vis || 0) : 1;
       if (vis > 0.4) { const [ex, ey] = toXY(e.pos.x, e.pos.z); ctx.fillStyle = '#ff5a4a'; ctx.beginPath(); ctx.arc(ex, ey, 3.4, 0, TAU); ctx.fill(); ctx.strokeStyle = 'rgba(0,0,0,.5)'; ctx.lineWidth = 1; ctx.stroke(); }
       else if (e._lastKnown) { const [lx, ly] = toXY(e._lastKnown.x, e._lastKnown.z); ctx.fillStyle = 'rgba(255,90,74,.6)'; ctx.font = 'bold 11px Inter,sans-serif'; ctx.fillText('?', lx - 3, ly + 4); }
+    }
+    // deployed beacon — gold diamond so she always knows where home is
+    if (P && P.items) for (const it of P.items) if (it.state === 'deployed' && it.pos) {
+      const [bx, by] = toXY(it.pos.x, it.pos.z);
+      ctx.save(); ctx.translate(bx, by); ctx.rotate(Math.PI / 4);
+      ctx.fillStyle = P.def.colors.accent; ctx.fillRect(-3, -3, 6, 6);
+      ctx.strokeStyle = 'rgba(0,0,0,.6)'; ctx.lineWidth = 1; ctx.strokeRect(-3, -3, 6, 6); ctx.restore();
     }
     // player marker + facing tick
     if (P) { const [px, py] = toXY(P.pos.x, P.pos.z); ctx.strokeStyle = 'rgba(255,210,74,.9)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px + P.aim.x * 13, py + P.aim.z * 13); ctx.stroke(); ctx.fillStyle = '#ffd24a'; ctx.beginPath(); ctx.arc(px, py, 3.8, 0, TAU); ctx.fill(); ctx.strokeStyle = '#160d02'; ctx.lineWidth = 1.2; ctx.stroke(); }
@@ -399,6 +407,11 @@ export class HUD {
     if (bowA) { const pls = bowA.payloads || ['explosive', 'flame', 'poison']; chips.push({ t: '➶ ' + pls[p._quiverIdx % pls.length].toUpperCase(), on: true }); }
     if (d.guardType === 'deflect') chips.push({ t: 'DEFLECT GUARD', on: p.guarding });
     if (d.guardType === 'barrier') chips.push({ t: 'BARRIER GUARD', on: p.guarding });
+    for (const it of p.items || []) chips.push({
+      t: '◈ ' + (it.def.name || it.def.kind).toUpperCase() + ' — ' + (it.state === 'ready' ? 'X TO PLANT' : it.state === 'deployed' ? 'X TO RECALL' : 'RECHARGING ' + Math.ceil(it.cd) + 's'),
+      on: it.state === 'deployed',
+    });
+    if (p._revealT > 0) chips.push({ t: '👁 THE RING SEES ' + Math.ceil(p._revealT) + 's', on: true });
     const mine = this.game.minions.filter(m => m.owner === p).length; const maxD = Math.max(...Object.values(d.abilities).map(a => a.type === 'summon' ? (a.max || 6) : 0), 0);
     if (maxD) chips.push({ t: '◈ DRONES ' + mine + '/' + maxD, on: mine > 0 });
     const cons = this.game.constructs.filter(c => c.owner === p);
@@ -608,7 +621,8 @@ export class HUD {
         </div>
         ${st.tags.length ? `<div class="pvtags">${st.tags.map(t => `<span>${t}</span>`).join('')}</div>` : ''}
         <div class="pvabil">${SLOT_ORDER.filter(s => c.abilities[s.k]).map(s => { const a = c.abilities[s.k]; return `<div class="ab"><b style="color:${c.colors.accent}">${s.label}</b><span class="an">${a.name}</span><span class="ad">${describeAbility(a)}</span></div>`; }).join('')}
-        ${c.evade ? `<div class="ab"><b style="color:${c.colors.accent}">2×TAP</b><span class="an">${c.evade.name || 'Evade'}</span><span class="ad">${describeEvade(c.evade)}</span></div>` : ''}</div>`;
+        ${c.evade ? `<div class="ab"><b style="color:${c.colors.accent}">2×TAP</b><span class="an">${c.evade.name || 'Evade'}</span><span class="ad">${describeEvade(c.evade)}</span></div>` : ''}
+        ${(c.items || []).map(it => `<div class="ab"><b style="color:${c.colors.accent}">X</b><span class="an">${it.name}</span><span class="ad">carried item — plant it, then press again from anywhere to teleport back to it</span></div>`).join('')}</div>`;
     };
     const renderTabs = () => {
       const allow2 = selMode === 'duel' || selMode === 'rumble';

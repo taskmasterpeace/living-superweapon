@@ -386,6 +386,28 @@ export const ROSTER = [
       r: { type: 'facebomb', name: 'THE MARLETTA', cost: 30, cd: 17, kiPerSec: 13, maxCharge: 2.4, minR: 2, maxR: 5.5, dmgMin: 30, dmgMax: 85, blastMin: 16, blastMax: 36, armDelay: 0.65, homing: 2.3, speed: 34, color: '#ffe8c0' },
     },
   },
+  {
+    // COF canon: SANDRA — "Its Voice" / the L.A. Jackal. ✅ A Black woman, THE FIRST JACKAL
+    // (LSW blood-hunter). Her ring is a node of a sentient alien data-lifeform: every networked
+    // camera its eye. Clean extractions — the victim survives. She killed Marletta.
+    id: 'sandra', name: 'SANDRA', title: 'The First Jackal', role: 'LSW Hunter',
+    colors: { primary: '#1a1c22', secondary: '#3a2c1a', accent: '#ffb03a', skin: '#7a5238' },
+    hp: 115, ki: 105, speed: 37, strength: 4, overdrive: 1.1, threat: 'High', flightTier: 0, grabHeal: 0.35, meleeTiers: 3,
+    items: [{ kind: 'beacon', name: 'Extraction Beacon', cd: 3.5 }],
+    ai: { style: 'zoner', range: 44, aggro: 0.7, fly: 0 },
+    evade: { kind: 'dash', name: 'Jackal Roll', iframes: 0.3, cost: 4, cd: 0.55 },
+    blurb: 'The first Jackal. Hunts living superweapons for a living — twin pistols, a ring that sees through every camera on Earth, and a beacon she plants BEFORE the fight starts.',
+    sig: ['X Extraction Beacon (plant → recall to it)', 'LMB Twin Pistols', 'Q The Ring Sees (wallhack)', 'R Clean Extraction'],
+    abilities: {
+      lmb: { type: 'rifle', name: 'Twin Pistols', cost: 3, interval: 0.16, damage: 10, speed: 165, radius: 0.6, blast: 2.6, spread: 0.03, recoil: 1.2, color: '#ffb03a', color2: '#fff' },
+      rmb: { type: 'rifle', name: 'Suppressed SMG', cost: 2, interval: 0.07, damage: 4, speed: 175, radius: 0.5, blast: 2, spread: 0.06, recoil: 0.8, color: '#ffd97a', color2: '#fff' },
+      q: { type: 'buff', name: 'The Ring Sees', cost: 16, cd: 15, mult: 1.15, dur: 8, reveal: true, color: '#ffb03a', color2: '#fff' },
+      e: { type: 'melee', name: 'Pistol Whip', cost: 8, cd: 0.8, damage: 18, range: 11, arc: 0.85, lunge: 34, knock: 42, launch: 8, color: '#ffb03a' },
+      f: { type: 'projectile', name: 'Tracker Round', cost: 7, cd: 0.6, damage: 12, speed: 140, radius: 0.7, blast: 3, homing: 4, color: '#ffb03a', color2: '#fff' },
+      shift: { type: 'dash', name: 'Slip the Frame', cost: 4, cd: 0.5, power: 96, iframes: 0.28, color: '#ffb03a' },
+      r: { type: 'rush', name: 'Clean Extraction', cost: 18, cd: 12, range: 64, hits: 7, interval: 0.08, damage: 8, finisher: 34, color: '#ffb03a' },
+    },
+  },
 ];
 
 export const SLOT_ORDER = [

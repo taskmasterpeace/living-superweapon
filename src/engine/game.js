@@ -163,6 +163,7 @@ export class Game {
     }
   }
   _humanSees(p, e) {
+    if (p._revealT > 0) return true;                 // The Ring Sees — the network is her retina
     const dx = e.pos.x - p.pos.x, dz = e.pos.z - p.pos.z, d = Math.hypot(dx, dz) || 1;
     if (d < this.visNear) return true;
     if (d < this.visRange && ((dx / d) * p.aim.x + (dz / d) * p.aim.z) > this.visCos) return this.canSee(p, e);
@@ -690,6 +691,53 @@ export class Game {
     }
   }
 
+  // ---------- items (gadgets outside the ability slots — no ki, one button) ----------
+  // Teleport beacon: press once to PLANT it where you stand, press again — from anywhere — to
+  // snap back to it. Bait-and-swap: plant, push in shooting, then vanish back to your spot.
+  useItem(f) {
+    const it = f.items && f.items[0]; if (!it) return;
+    if (it.def.kind !== 'beacon') return;
+    if (it.state === 'cooldown') { if (this.isHuman(f) && this.hud) this.hud.feed('Beacon recharging…', '#8b8577'); return; }
+    const acc = f.def.colors.accent;
+    if (it.state === 'ready') {
+      // PLANT — a humming tripod with a light shaft, right at her feet
+      const grp = new THREE.Group();
+      const base = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.4, 0.5, 10), new THREE.MeshStandardMaterial({ color: '#2a2f38', roughness: 0.4, metalness: 0.7 }));
+      base.position.y = 0.25; grp.add(base);
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(1.5, 0.14, 8, 24), new THREE.MeshBasicMaterial({ color: acc, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false }));
+      ring.rotation.x = Math.PI / 2; ring.position.y = 0.6; grp.add(ring);
+      const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.55, 9, 8, 1, true), new THREE.MeshBasicMaterial({ color: acc, transparent: true, opacity: 0.22, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+      shaft.position.y = 4.8; grp.add(shaft);
+      grp.position.set(f.pos.x, Math.max(0, f.pos.y), f.pos.z);
+      this.scene.add(grp);
+      it.mesh = grp; it.pos = grp.position.clone(); it.state = 'deployed';
+      f._beaconHp = f.hp;   // AI remembers how healthy she was when she planted it
+      this.vfx.ring(it.pos.clone().setY(0.5), { color: acc, r0: 1, r1: 9, life: 0.4, flat: true, y: 0.5 });
+      this.audio.zap(520); this.audio.zap(760);
+      if (this.isHuman(f) && this.hud) this.hud.feed('Beacon planted — press again to recall', acc);
+    } else if (it.state === 'deployed') {
+      // RECALL — vanish, reappear at the beacon, pick it back up
+      this.afterimage(f);
+      this.vfx.flash(f.pos.clone().setY(5), acc, 6, 0.2);
+      f.pos.set(it.pos.x, it.pos.y, it.pos.z); f.vel.multiplyScalar(0.2);
+      f.flying = false; f.invuln = Math.max(f.invuln, 0.35);
+      this.afterimage(f);
+      this.vfx.flash(f.pos.clone().setY(5), acc, 7, 0.25); this.audio.teleport();
+      this.particles.burst(f.pos.x, 4, f.pos.z, { count: 16, speed: 22, life: 0.4, size: 2.4, color: ['#fff', acc] });
+      if (it.mesh) { this.scene.remove(it.mesh); it.mesh.traverse(o => { if (o.material) o.material.dispose(); if (o.geometry) o.geometry.dispose(); }); it.mesh = null; }
+      it.pos = null; it.state = 'cooldown'; it.cd = it.def.cd || 3;
+    }
+  }
+  updateItems(dt) {
+    for (const f of this.entities) if (f.items) for (const it of f.items) {
+      if (it.state === 'deployed' && it.mesh) {
+        it.mesh.children[1].rotation.z += dt * 2;                                  // ring spin
+        it.mesh.children[2].material.opacity = 0.16 + Math.sin(this.time * 5) * 0.07;
+        if (Math.random() < 0.1) this.particles.spawn({ x: it.pos.x + rand(-1, 1), y: 0.6, z: it.pos.z + rand(-1, 1), vx: 0, vy: 8, vz: 0, life: 0.5, size: 1.6, color: f.def.colors.accent, drag: 0.5, shrink: true });
+      }
+    }
+  }
+
   // ---------- fx helpers used by abilities ----------
   spawnBeamFor(caster, def, p = 1) {
     return this.projectiles.spawnBeam(caster, {
@@ -797,7 +845,8 @@ export class Game {
     if (inp.pressed('KeyV') || pad.pressed('strike')) this.melee.chargeStart(p);
     if (inp.released('KeyV') || pad.released('strike')) this.melee.chargeRelease(p);
     if (inp.pressed('KeyG') || pad.pressed('grab')) this.melee.grab(p);
-    this.melee.guard(p, inp.down('KeyC') || inp.down('KeyX') || inp.mouse.b3 || inp.mouse.b4 || pad.down('guard'));
+    this.melee.guard(p, inp.down('KeyC') || inp.mouse.b3 || inp.mouse.b4 || pad.down('guard'));
+    if (inp.pressed('KeyX') && p.items.length) this.useItem(p);   // X = the carried item (beacon: plant / recall)
 
     // --- powers (keyboard/mouse OR gamepad) ---
     const busy = p.guarding || p.strikeActive > 0 || p.grabState || p.grabbing || p.meleeCharge > 0;
@@ -876,6 +925,15 @@ export class Game {
       }
     }
 
+    // items: the AI plants its beacon when healthy, and BAILS back to it when the fight turns
+    if (f.items.length) {
+      const it = f.items[0];
+      if (it.def.kind === 'beacon') {
+        if (it.state === 'ready' && f.hp > f.maxHp * 0.55 && Math.random() < 0.005) this.useItem(f);
+        else if (it.state === 'deployed' && (f.hp < (f._beaconHp || f.maxHp) - 28 || (f.hp < f.maxHp * 0.3 && Math.random() < 0.05))) this.useItem(f);
+      }
+    }
+
     // close-range melee mixups (skip if committing to a counter-beam)
     if (!f._forceBeam && !f.grabbing && !f.grabState && !f.strikeActive) {
       const foe = this.nearestFoe(f, f.pos, 15);
@@ -935,6 +993,7 @@ export class Game {
     for (let i = this.entities.length - 1; i >= 0; i--) if (this.entities[i]._remove) { const e = this.entities[i]; this.scene.remove(e.obj); if (e.dispose) e.dispose(); this.entities.splice(i, 1); }  // survival dead removal
 
     this.resolveBodies();
+    this.updateItems(dt);
     this.updatePortals(dt);
     this.projectiles.update(dt, this);
     for (let i = this.minions.length - 1; i >= 0; i--) if (!this.minions[i].update(dt, this)) this.minions.splice(i, 1);

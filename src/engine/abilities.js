@@ -281,6 +281,7 @@ export const TYPES = {
     if (inp.pressed && ready(c, def, st)) {
       pay(c, def, st);
       if (def.spendAll) { c.ki = 0; }
+      if (def.reveal) c._revealT = def.dur || 8;   // Its Voice: every camera is her eye — fog hides nothing
       c.powerBuff = def.mult || 1.6; c.buffT = def.dur || 10;
       if (def.heal) c.heal(def.heal);
       c.invuln = Math.max(c.invuln, def.invuln || 0.6);   // "invincible" heroes pass big invuln windows

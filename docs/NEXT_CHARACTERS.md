@@ -17,7 +17,7 @@ after the Jackal **Sandra** killed his pregnant wife **Marletta**.
 - R `charge` **These Wounds Will Not Heal** — max-charge detonation
 - Voice: Greek-accented gravitas; barks reference Marletta sparingly (it should hurt, not be spammed)
 
-## 2. SANDRA — "Its Voice" / The L.A. Jackal (USA)
+## 2. SANDRA — ✅ SHIPPED (in-roster as `sandra`; beacon became the ITEM system on X)
 **Canon:** ✅ a Black woman, **THE FIRST JACKAL** (LSW blood-hunter). Her ring is a node of **"Its Voice,"
 a sentient alien data-lifeform** — all networked cameras are its eyes, mics its ears. Does "clean"
 extractions (victim survives). Travels country to country hunting LSWs. Killed Marletta.

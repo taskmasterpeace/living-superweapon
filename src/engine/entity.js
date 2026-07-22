@@ -79,6 +79,7 @@ const BUILDS = {
   sarge: { band: 1, gaunt: 1, gun: 1, weaponL: 'sword', shield: 1 },   // rifle + plasma SWORD + riot shield
   gale: { band: 1, weaponL: 'bow', weaponR: 'knife' },                 // the ranger: bow out, knife ready
   stefanos: { collar: 1, gaunt: 1 },                                   // presidential suit lines
+  sandra: { band: 1, weaponL: 'pistol', weaponR: 'pistol' },           // the Jackal: a pistol in each hand
 };
 
 function figure(def) {
@@ -299,6 +300,9 @@ export class Fighter {
     this.frost = 0; this.frozenT = 0; this._frostImmuneT = 0;   // cold buildup → encased in ice
     this._dots = [];            // damage-over-time stacks [{dps,t,color,kind,src}]
     this._quiverIdx = 0;        // archer payload selector (quiver ability cycles it)
+    // ITEMS — gadgets a character CARRIES, outside the ability slots: no ki, cooldown-only,
+    // one button (X). First kind: the teleport beacon (drop → fight elsewhere → recall to it).
+    this.items = (def.items || []).map(d => ({ def: d, state: 'ready', cd: 0, pos: null, mesh: null }));
     // per-character trifecta traits
     this.thorns = def.thorns || 0;                                   // damages whoever holds you
     this.canPhase = !!def.phase;                                     // can spend energy to go intangible
@@ -330,8 +334,15 @@ export class Fighter {
     return out.set(this.pos.x + this.aim.x * fwd, this.pos.y + h, this.pos.z + this.aim.z * fwd);
   }
 
-  // Free all scene-level extras (tentacles). Call when the fighter leaves play.
-  dispose() { if (this.tentacles) { for (const t of this.tentacles) t.dispose(); this.tentacles = null; } }
+  // Free all scene-level extras (tentacles, deployed items). Call when the fighter leaves play.
+  dispose() {
+    if (this.tentacles) { for (const t of this.tentacles) t.dispose(); this.tentacles = null; }
+    for (const it of this.items) if (it.mesh) {
+      it.mesh.parent && it.mesh.parent.remove(it.mesh);
+      it.mesh.traverse(o => { if (o.material) o.material.dispose(); if (o.geometry) o.geometry.dispose(); });
+      it.mesh = null; it.state = 'ready'; it.pos = null;
+    }
+  }
 
   // ---- status: damage-over-time (poison/burn/gas arrows & clouds) ----
   addDot(o) {
@@ -477,6 +488,8 @@ export class Fighter {
     if (this.drainedT > 0) this.drainedT -= dt;
     if (this._noKiT > 0) this._noKiT -= dt;
     this._bowDraw = damp(this._bowDraw || 0, this._bowDrawT || 0, 16, dt);   // archer draw pose blend
+    for (const it of this.items) if (it.cd > 0) { it.cd -= dt; if (it.cd <= 0 && it.state === 'cooldown') it.state = 'ready'; }
+    if (this._revealT > 0) this._revealT -= dt;
     if (this._frostImmuneT > 0) this._frostImmuneT -= dt;
     if (this.frost > 0 && this.frozenT <= 0) this.frost = Math.max(0, this.frost - dt * 0.25);   // buildup decays
     // damage-over-time stacks (poison/burn/gas)

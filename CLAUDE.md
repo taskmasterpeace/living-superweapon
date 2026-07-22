@@ -81,6 +81,13 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
 - **Weapons registry** (`entity.js buildWeapon`): pistol/shotgun/rifle/sword/knife/spear/axe/bow meshes,
   mounted on fists via BUILDS `weaponL:/weaponR:` (or legacy `gun`) — SARGE sword+rifle+shield, GALE bow+knife.
   All along the arm's −Y axis so poses + ragdoll carry them.
+- **ITEMS** (`def.items` on the hero, runtime `f.items`, button **X** — guard is C/Mouse4-5 only now):
+  gadgets a character CARRIES, outside the ability slots — no ki, cooldown-only. `game.useItem(f)`
+  dispatches by kind. First kind `beacon` (SANDRA): X plants a tripod at her feet, X again — from
+  anywhere — teleports her back to it (state ready→deployed→cooldown; mesh disposed via `f.dispose()`;
+  AI plants when healthy + bails to it when hurt; radar shows a gold diamond; kit-widget chip shows state).
+- **Reveal buff** (`def.reveal` on a buff → `f._revealT`): `_humanSees` returns true while active —
+  SANDRA's "The Ring Sees" wallhack (Its Voice reads every camera).
 - **THE MARLETTA** (`facebomb` type + Projectile `face/armDelay`): charge grows her (size/damage/blast by
   charge), release → slow homing canvas-face sprite; ANY contact (foe/ground/cover/timeout) → `_arm()`:
   she stops, trembles, blushes toward burning for `armDelay` (0.65s), then detonates with double shockwave
