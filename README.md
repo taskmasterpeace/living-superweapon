@@ -8,6 +8,29 @@ data description that the engine brings to life with real 3D VFX, dynamic lighti
 
 > Machine King Labs · demo-first, offline, runs in any modern browser.
 
+![Living Superweapon — title & roster](lsw-title.jpeg)
+
+## Gallery
+
+<table>
+<tr>
+<td width="50%"><img src="lsw-ui2.jpeg" alt="Combat HUD"><br/><sub><b>Gamified combat HUD</b> — radar/minimap, KO banner + slow-mo, directional damage, low-HP danger pulse.</sub></td>
+<td width="50%"><img src="lsw-beamclash.jpeg" alt="Beam clash"><br/><sub><b>Beam battles</b> — beams are hoses, not lasers. Opposing beams clash; the struggle point slides toward the weaker ki budget.</sub></td>
+</tr>
+<tr>
+<td width="50%"><img src="lsw-models.jpeg" alt="Hero models"><br/><sub><b>14 authored heroes</b> — procedural figures with capes, helmets, visors, energy crests, pauldrons, contact shadows.</sub></td>
+<td width="50%"><img src="lsw-ragdoll-final.jpeg" alt="Ragdoll KO"><br/><sub><b>Verlet ragdoll KOs</b> — the killing blow's knockback tumbles the body; it folds at the knees and settles into a heap.</sub></td>
+</tr>
+<tr>
+<td width="50%"><img src="lsw-destruction.jpeg" alt="Destructible arena"><br/><sub><b>Destructible arena</b> — blasts crater the ground and crack cover; enough damage shatters a block into rubble.</sub></td>
+<td width="50%"><img src="lsw-fov-live.jpeg" alt="Fog of war"><br/><sub><b>Fog of war</b> — you only see what your hero can. Enemies fade out and drop a "?" at their last-known spot; juke bots around cover.</sub></td>
+</tr>
+<tr>
+<td width="50%"><img src="lsw-flight.jpeg" alt="Flight and levitation"><br/><sub><b>Flight & levitation</b> — hold to rise, release to hover, descend to land; fight in the air with 3D aim.</sub></td>
+<td width="50%"><img src="lsw-visuals-arena4.jpeg" alt="Rendering"><br/><sub><b>HDR pipeline</b> — half-float composer, half-res bloom, rim lighting, gradient sky, gold arena glow, adaptive quality.</sub></td>
+</tr>
+</table>
+
 ---
 
 ## Run it
