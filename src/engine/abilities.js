@@ -6,7 +6,7 @@ const _v = new THREE.Vector3();
 
 const ORB_GEO = new THREE.SphereGeometry(1, 16, 12);                       // shared — orbs come and go constantly
 const ORB_CORE_MAT = new THREE.MeshBasicMaterial({ color: '#fff' });
-export const PAYLOAD_COLORS = { poison: '#8fe08a', flame: '#ff7a2a', explosive: '#ffd24a', gas: '#d64a72' };
+export const PAYLOAD_COLORS = { poison: '#8fe08a', flame: '#ff7a2a', explosive: '#ffd24a', gas: '#9a4ae0' };
 
 function ready(c, def, st) { return st.cd <= 0 && c.ki >= (def.cost || 0) && c.hitstop <= 0; }
 function pay(c, def, st) { c.ki -= (def.cost || 0); st.cd = def.cd || 0; }
@@ -34,7 +34,7 @@ export const TYPES = {
       if (foe && !st.hit.has(foe.id)) {
         st.hit.add(foe.id);
         const blocked = foe.guarding && foe.staggerT <= 0;
-        foe.takeDamage((def.damage || 20) * c.powerBuff, { src: c, strike: true, kb: _v.copy(c.aim).setLength(def.knock || 40).setY(0), launch: def.launch || 12, hitstop: 0.13 });
+        foe.takeDamage((def.damage || 20) * c.powerBuff, { src: c, strike: true, dmgClass: def.dmgClass, kb: _v.copy(c.aim).setLength(def.knock || 40).setY(0), launch: def.launch || 12, hitstop: 0.13 });
         c.hitstop = Math.max(c.hitstop, 0.08);          // attacker freeze for weight
         const imp = foe.pos.clone().set((c.pos.x + foe.pos.x) / 2, 5.7, (c.pos.z + foe.pos.z) / 2);
         if (blocked) { g.vfx.impactStar(imp, 7, '#bfe0ff', 0.16); g.world.shake(0.4); g.audio.zap(520); }

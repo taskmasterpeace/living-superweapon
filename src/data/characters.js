@@ -5,7 +5,7 @@ export const ROSTER = [
   {
     id: 'sol', name: 'SOL', title: 'Man of Sunlight', role: 'Bruiser / Beam',
     colors: { primary: '#d8322f', secondary: '#1560d8', accent: '#ffd24a', skin: '#e8c39a', cape: '#a81b1a' },
-    hp: 130, ki: 120, speed: 34, beamMight: 1.2, strength: 8, overdrive: 1.3, threat: 'Very High', frostResist: true,
+    hp: 130, ki: 120, speed: 34, beamMight: 1.2, strength: 8, overdrive: 1.3, threat: 'Very High', frostResist: true, flightTier: 3,
     ai: { style: 'bruiser', range: 30, aggro: 0.8, fly: 0.55 },
     evade: { kind: 'dash', name: 'Solar Step' },
     blurb: 'A living solar reactor. Thin heat-ray, wide freezing breath, and a flight-fist that ends arguments.',
@@ -95,7 +95,7 @@ export const ROSTER = [
   {
     id: 'rime', name: 'RIME', title: 'The Deep Cold', role: 'Cryo Control',
     colors: { primary: '#4fb8e6', secondary: '#dff6ff', accent: '#eaffff', skin: '#cfe6f0' },
-    hp: 115, ki: 120, speed: 31, strength: 4, overdrive: 0.8, threat: 'High', guardType: 'barrier',
+    hp: 115, ki: 120, speed: 31, strength: 4, overdrive: 0.8, threat: 'High', guardType: 'barrier', flightTier: 2, flyStyle: 'ice',
     ai: { style: 'zoner', range: 44, aggro: 0.5, fly: 0.2 },
     evade: { kind: 'slide', name: 'Ice Skate', slideT: 0.7, power: 135 },
     blurb: 'Freezes the battlefield: breath that slows to a crawl, walls of ice, and an Absolute Zero detonation.',
@@ -113,7 +113,7 @@ export const ROSTER = [
   {
     id: 'volt', name: 'VOLT', title: 'The Overclock', role: 'Speed / Lightning',
     colors: { primary: '#ffd21a', secondary: '#1a1a22', accent: '#eaffff', skin: '#e8c39a' },
-    hp: 100, ki: 120, speed: 44, thorns: 7, strength: 3, overdrive: 1.6, threat: 'Moderate',
+    hp: 100, ki: 120, speed: 44, thorns: 7, strength: 3, overdrive: 1.6, threat: 'Moderate', flightTier: 1,
     ai: { style: 'rusher', range: 18, aggro: 0.95, fly: 0.35 },
     evade: { kind: 'sprint', name: 'Mach Sprint', mult: 1.95, dur: 1.3, through: true, lightning: true, cost: 7 },
     blurb: 'Faster than you can track. Grab him and the current bites back. Lightning flurries, arc-beams, and Overclock.',
@@ -131,7 +131,7 @@ export const ROSTER = [
   {
     id: 'warden', name: 'WARDEN', title: 'Gravity Anchor', role: 'Control / Slam',
     colors: { primary: '#2f6f7f', secondary: '#10202a', accent: '#7fe6ff', skin: '#b9c6cc' },
-    hp: 140, ki: 120, speed: 30, strength: 8, overdrive: 1.1, threat: 'High', meleeTiers: 2,
+    hp: 140, ki: 120, speed: 30, strength: 8, overdrive: 1.1, threat: 'High', meleeTiers: 2, flightTier: 2,
     ai: { style: 'bruiser', range: 30, aggro: 0.72, fly: 0.2 },
     evade: { kind: 'dash', name: 'Gravity Shift', power: 92 },
     blurb: 'Bends weight itself. Shove crowds with force cones, drop a Singularity, then Collapse the arena.',
@@ -149,7 +149,7 @@ export const ROSTER = [
   {
     id: 'hive', name: 'HIVE', title: 'The Conclave', role: 'Summoner',
     colors: { primary: '#caa23a', secondary: '#2a2410', accent: '#ffdf7a', skin: '#d8b98a' },
-    hp: 105, ki: 130, speed: 32, strength: 3, overdrive: 0.7, threat: 'Moderate',
+    hp: 105, ki: 130, speed: 32, strength: 3, overdrive: 0.7, threat: 'Moderate', flightTier: 1,
     ai: { style: 'summoner', range: 56, aggro: 0.42, fly: 0.2 },
     evade: { kind: 'dash', name: 'Scramble' },
     blurb: 'Never fights alone. Swarms of seeker-drones, a fixed sentinel, and an Overmind that empowers the hive.',
@@ -167,7 +167,7 @@ export const ROSTER = [
   {
     id: 'pyre', name: 'PYRE', title: 'Living Wildfire', role: 'Fire Bruiser',
     colors: { primary: '#ff3b1a', secondary: '#2a0d06', accent: '#ffb03a', skin: '#e0a878' },
-    hp: 135, ki: 120, speed: 32, strength: 7, overdrive: 1.2, threat: 'Very High', frostResist: true,
+    hp: 135, ki: 120, speed: 32, strength: 7, overdrive: 1.2, threat: 'Very High', frostResist: true, flightTier: 2, flyStyle: 'fire',
     ai: { style: 'artillery', range: 44, aggro: 0.78, fly: 0.3 },
     evade: { kind: 'dash', name: 'Flare Step' },
     blurb: 'Walking eruption. Lobbed fireballs, a roaring flame cone, a swelling Magma Bomb, and a Rain of Fire.',
@@ -185,7 +185,7 @@ export const ROSTER = [
   {
     id: 'torch', name: 'TORCH', title: 'The Human Flame', role: 'Fire Flyer / Air',
     colors: { primary: '#ff5a1a', secondary: '#7a1f06', accent: '#ffd24a', skin: '#e8b98a' },
-    hp: 105, ki: 130, speed: 40, thorns: 9, strength: 4, overdrive: 1.3, threat: 'High', frostResist: true,
+    hp: 105, ki: 130, speed: 40, thorns: 9, strength: 4, overdrive: 1.3, threat: 'High', frostResist: true, flightTier: 3, flyStyle: 'fire',
     ai: { style: 'rusher', range: 30, aggro: 0.82, fly: 0.75 },
     evade: { kind: 'sprint', name: 'Jet Sprint', mult: 1.7, dur: 1.6 },
     blurb: 'Flame on. A fast flyer wrapped in fire — grab him and you burn. Jets, homing fireballs, and a supernova.',
@@ -257,7 +257,7 @@ export const ROSTER = [
   {
     id: 'kraken', name: 'KRAKEN', title: 'The Abyss Given Form', role: 'Tentacle Grappler',
     colors: { primary: '#0f6f7f', secondary: '#062a30', accent: '#4affd4', skin: '#7fb8ac' },
-    hp: 140, ki: 125, speed: 29, grabHeal: 0.4, strength: 8, overdrive: 1.4, threat: 'Very High', meleeTiers: 2,
+    hp: 140, ki: 125, speed: 29, grabHeal: 0.4, strength: 8, overdrive: 1.4, threat: 'Very High', meleeTiers: 2, flightTier: 1,
     tentacles: { count: 4, segs: 9, segLen: 1.7, radius: 0.55, color: '#0b4a54', color2: '#4affd4' },
     ai: { style: 'grappler', range: 26, aggro: 0.8, fly: 0.15 },
     evade: { kind: 'slide', name: 'Undertow', slideT: 0.6, power: 120 },
@@ -265,7 +265,7 @@ export const ROSTER = [
     sig: ['LMB Abyssal Grab (seize → wall slam)', 'RMB Riptide Lash (wide sweep)', 'Q Ink Burst', 'R Leviathan'],
     abilities: {
       lmb: { type: 'tentacle', name: 'Abyssal Grab', cost: 18, cd: 4.5, range: 36, holdT: 0.55, damage: 16, throwSpeed: 92, color: '#4affd4' },
-      rmb: { type: 'melee', name: 'Riptide Lash', cost: 12, cd: 1.0, damage: 24, range: 15, arc: 1.25, lunge: 30, knock: 54, launch: 14, color: '#4affd4' },
+      rmb: { type: 'melee', name: 'Riptide Lash', cost: 12, cd: 1.0, damage: 24, range: 15, arc: 1.25, lunge: 30, knock: 54, launch: 14, dmgClass: 'slash', color: '#4affd4' },
       q: { type: 'cone', name: 'Ink Burst', kiPerSec: 16, range: 30, arc: 1.2, dps: 18, push: 44, color: '#0b4a54' },
       e: { type: 'projectile', name: 'Abyss Bolt', cost: 7, cd: 0.4, damage: 16, speed: 82, radius: 1.4, blast: 6, homing: 2, color: '#2fdfc0', color2: '#eafff8' },
       f: { type: 'buff', name: 'Deep Hunger', cost: 24, cd: 18, mult: 1.5, dur: 10, heal: 30, color: '#4affd4', color2: '#eafff8' },
@@ -276,7 +276,7 @@ export const ROSTER = [
   {
     id: 'rift', name: 'RIFT', title: 'The Doorbreaker', role: 'Portal Tactician',
     colors: { primary: '#2b2f38', secondary: '#c9cfd9', accent: '#ff8a2a', skin: '#d8b98a' },
-    hp: 110, ki: 135, speed: 34, strength: 3, overdrive: 0.8, threat: 'High',
+    hp: 110, ki: 135, speed: 34, strength: 3, overdrive: 0.8, threat: 'High', flightTier: 2,
     ai: { style: 'trickster', range: 40, aggro: 0.65, fly: 0.35 },
     evade: { kind: 'blink', name: 'Side Door', range: 24 },
     blurb: 'Opens doors in the world itself. Orange in, blue out — fighters, fireballs, everything goes through. Geometry is a suggestion.',
@@ -294,7 +294,7 @@ export const ROSTER = [
   {
     id: 'titan', name: 'TITAN', title: 'The War Engine', role: 'Armored Juggernaut',
     colors: { primary: '#5a6470', secondary: '#2a2f38', accent: '#ff9a2a', skin: '#8a919c' },
-    hp: 165, ki: 140, speed: 26, metal: true, beamMight: 1.3, strength: 9, overdrive: 0.6, threat: 'High', guardType: 'deflect', meleeTiers: 2,
+    hp: 165, ki: 140, speed: 26, metal: true, beamMight: 1.3, strength: 9, overdrive: 0.6, threat: 'High', guardType: 'deflect', meleeTiers: 2, flightTier: 2, energyInfinite: true,
     ai: { style: 'beamer', range: 44, aggro: 0.75, fly: 0.35 },
     evade: { kind: 'dash', name: 'Thruster Burn', power: 100 },
     blurb: 'Not a man — a machine of war. Battery-fed twin cannons, a pulse rifle, thruster exhaust, and armor that showers sparks instead of blood.',
@@ -312,7 +312,7 @@ export const ROSTER = [
   {
     id: 'sarge', name: 'SARGE', title: 'The Last Soldier', role: 'Human Arsenal',
     colors: { primary: '#5a6a3a', secondary: '#2c3320', accent: '#ffd24a', skin: '#c9915a' },
-    hp: 125, ki: 100, speed: 33, guardStrong: true, strength: 4, overdrive: 1.0, threat: 'Low',
+    hp: 125, ki: 100, speed: 33, guardStrong: true, strength: 4, overdrive: 1.0, threat: 'Low', flightTier: 0,
     ai: { style: 'zoner', range: 48, aggro: 0.6, fly: 0 },
     evade: { kind: 'leap', name: 'Combat Leap', up: 48, fwd: 68 },
     blurb: 'No powers. Just a pulse carbine, a plasma blade, a riot shield, grenades, and legs that clear a building. Somehow still terrifying.',
@@ -320,7 +320,7 @@ export const ROSTER = [
     abilities: {
       lmb: { type: 'rifle', name: 'Pulse Carbine', cost: 2, interval: 0.08, damage: 5, speed: 180, radius: 0.5, blast: 2, spread: 0.05, recoil: 1.6, color: '#ffe08a', color2: '#fff' },
       rmb: { type: 'projectile', name: 'Frag Grenade', cost: 9, cd: 0.8, damage: 24, speed: 58, radius: 1.3, blast: 13, grav: 11, shock: true, color: '#8a915a', color2: '#ffd24a' },
-      q: { type: 'melee', name: 'Plasma Blade', cost: 10, cd: 0.9, damage: 26, range: 12, arc: 0.9, lunge: 40, knock: 50, launch: 12, color: '#7fd4ff' },
+      q: { type: 'melee', name: 'Plasma Blade', cost: 10, cd: 0.9, damage: 26, range: 12, arc: 0.9, lunge: 40, knock: 50, launch: 12, dmgClass: 'slash', color: '#7fd4ff' },
       e: { type: 'rifle', name: 'Hand Cannon', cost: 5, interval: 0.34, damage: 16, speed: 150, radius: 0.8, blast: 3.5, spread: 0.015, recoil: 3.2, color: '#ffd24a', color2: '#fff' },
       f: { type: 'buff', name: 'Stim Shot', cost: 18, cd: 16, mult: 1.35, dur: 8, heal: 34, color: '#8fe08a', color2: '#fff' },
       shift: { type: 'dash', name: 'Combat Roll', cost: 4, cd: 0.55, power: 92, iframes: 0.3, color: '#ffd24a' },
@@ -328,29 +328,29 @@ export const ROSTER = [
     },
   },
   {
-    // NOTE: designed as "the purple gas controller" — the global no-purple rule is honored with a
-    // crimson-rose bloom instead (hue ~345). To override YOUR OWN rule, swap these three hexes.
+    // PURPLE OVERRIDE — creator ruling 2026-07-22: "we need to break the no-purple rule for my
+    // Ugandan dude." KIVULI is the ONE sanctioned purple in the project. Everything else stays banned.
     id: 'kivuli', name: 'KIVULI', title: 'The Breath of Kampala', role: 'Gas Controller',
-    colors: { primary: '#3a1420', secondary: '#1a0a10', accent: '#d64a72', skin: '#6a4a3a' },
-    hp: 115, ki: 135, speed: 33, strength: 4, overdrive: 0.9, threat: 'High',
+    colors: { primary: '#4a2a80', secondary: '#1e1038', accent: '#b06aff', skin: '#6a4a3a' },
+    hp: 115, ki: 135, speed: 33, strength: 4, overdrive: 0.9, threat: 'High', flightTier: 2,
     ai: { style: 'trickster', range: 34, aggro: 0.6, fly: 0.3 },
     evade: { kind: 'phase', name: 'Mist Walk' },
-    blurb: 'From Kampala, Uganda. Exhales a living gas that chokes, blinds — and turns SOLID on his command. Walls, blades, coffins of hardened vapor.',
+    blurb: 'From Kampala, Uganda. Exhales a living purple gas that chokes, blinds — and turns SOLID on his command. Walls, blades, coffins of hardened vapor.',
     sig: ['LMB Choking Veil (gas cone, lingering damage)', 'RMB Solid Smoke (gas hardens into a wall)', 'Q Gas Form (intangible)', 'R Asphyxia'],
     abilities: {
-      lmb: { type: 'cone', name: 'Choking Veil', kiPerSec: 17, range: 34, arc: 1.15, dps: 14, push: 6, gasDot: { dps: 7, dur: 2.6, color: '#d64a72', kind: 'gas' }, color: '#d64a72' },
-      rmb: { type: 'construct', name: 'Solid Smoke', cost: 12, cd: 6, construct: 'wall', duration: 9, holdTrigger: true, color: '#d64a72' },
-      q: { type: 'phase', name: 'Gas Form', kiPerSec: 17, color: '#d64a72' },
-      e: { type: 'projectile', name: 'Creeping Cloud', cost: 8, cd: 0.5, damage: 12, speed: 54, radius: 1.9, blast: 9, homing: 1.6, payload: 'gas', color: '#d64a72', color2: '#ffd9e0' },
-      f: { type: 'buff', name: 'Second Wind', cost: 22, cd: 18, mult: 1.4, dur: 9, heal: 30, color: '#d64a72', color2: '#ffd9e0' },
-      shift: { type: 'dash', name: 'Vapor Slip', cost: 5, cd: 0.55, power: 98, iframes: 0.26, color: '#d64a72' },
-      r: { type: 'charge', name: 'Asphyxia', cost: 8, cd: 14, kiPerSec: 12, maxCharge: 2.3, minR: 1.8, maxR: 7, dmgMin: 22, dmgMax: 78, maxBlast: 36, speedMin: 32, speedMax: 56, chargePower: 3, color: '#d64a72', color2: '#ffd9e0' },
+      lmb: { type: 'cone', name: 'Choking Veil', kiPerSec: 17, range: 34, arc: 1.15, dps: 14, push: 6, gasDot: { dps: 7, dur: 2.6, color: '#9a4ae0', kind: 'gas' }, color: '#9a4ae0' },
+      rmb: { type: 'construct', name: 'Solid Smoke', cost: 12, cd: 6, construct: 'wall', duration: 9, holdTrigger: true, color: '#9a4ae0' },
+      q: { type: 'phase', name: 'Gas Form', kiPerSec: 17, color: '#b06aff' },
+      e: { type: 'projectile', name: 'Creeping Cloud', cost: 8, cd: 0.5, damage: 12, speed: 54, radius: 1.9, blast: 9, homing: 1.6, payload: 'gas', color: '#9a4ae0', color2: '#e8d0ff' },
+      f: { type: 'buff', name: 'Second Wind', cost: 22, cd: 18, mult: 1.4, dur: 9, heal: 30, color: '#b06aff', color2: '#e8d0ff' },
+      shift: { type: 'dash', name: 'Vapor Slip', cost: 5, cd: 0.55, power: 98, iframes: 0.26, color: '#b06aff' },
+      r: { type: 'charge', name: 'Asphyxia', cost: 8, cd: 14, kiPerSec: 12, maxCharge: 2.3, minR: 1.8, maxR: 7, dmgMin: 22, dmgMax: 78, maxBlast: 36, speedMin: 32, speedMax: 56, chargePower: 3, color: '#9a4ae0', color2: '#e8d0ff' },
     },
   },
   {
     id: 'gale', name: 'GALE', title: 'The Last Ranger', role: 'Archer / Trick Arrows',
     colors: { primary: '#2e4a2a', secondary: '#16220f', accent: '#9fe06a', skin: '#d8a878' },
-    hp: 105, ki: 100, speed: 36, strength: 3, overdrive: 1.1, threat: 'Low',
+    hp: 105, ki: 100, speed: 36, strength: 3, overdrive: 1.1, threat: 'Low', flightTier: 0,
     ai: { style: 'artillery', range: 58, aggro: 0.55, fly: 0 },
     evade: { kind: 'leap', name: 'Vault', up: 42, fwd: 60 },
     blurb: 'No powers — a bow, a knife, and a quiver of nasty ideas. Draw deep and switch broadheads: poison bleeds, flame burns, explosive erases.',
@@ -359,7 +359,7 @@ export const ROSTER = [
       lmb: { type: 'bow', name: 'Longshot', cost: 6, cd: 0.25, drawTime: 0.85, dmgMin: 8, dmgMax: 30, speedMax: 215, blast: 11, payloads: ['explosive', 'flame', 'poison'], color: '#9fe06a' },
       rmb: { type: 'projectile', name: 'Concussion Shot', cost: 8, cd: 0.7, damage: 16, speed: 130, radius: 0.8, blast: 7, arrow: true, shock: true, color: '#ffd24a', color2: '#fff' },
       q: { type: 'quiver', name: 'Switch Broadheads', payloads: ['explosive', 'flame', 'poison'], color: '#9fe06a' },
-      e: { type: 'melee', name: 'Ranger Knife', cost: 8, cd: 0.8, damage: 20, range: 11, arc: 0.85, lunge: 38, knock: 40, launch: 8, color: '#9fe06a' },
+      e: { type: 'melee', name: 'Ranger Knife', cost: 8, cd: 0.8, damage: 20, range: 11, arc: 0.85, lunge: 38, knock: 40, launch: 8, dmgClass: 'slash', color: '#9fe06a' },
       f: { type: 'buff', name: 'Deadeye', cost: 18, cd: 16, mult: 1.5, dur: 8, color: '#9fe06a', color2: '#fff' },
       shift: { type: 'dash', name: 'Tumble', cost: 4, cd: 0.5, power: 94, iframes: 0.3, color: '#9fe06a' },
       r: { type: 'volley', name: 'Arrow Storm', cost: 4, interval: 0.07, damage: 8, speed: 150, radius: 0.6, blast: 3, spread: 0.12, arrow: true, color: '#9fe06a', color2: '#fff' },
@@ -369,5 +369,5 @@ export const ROSTER = [
 
 export const SLOT_ORDER = [
   { k: 'lmb', label: 'LMB' }, { k: 'rmb', label: 'RMB' }, { k: 'shift', label: 'SHIFT' },
-  { k: 'q', label: 'Q' }, { k: 'e', label: 'E' }, { k: 'f', label: 'F' }, { k: 'r', label: 'R' },
+  { k: 'q', label: 'Q' }, { k: 'e', label: 'E' }, { k: 'f', label: 'H' }, { k: 'r', label: 'R' },   // F is the flight toggle now
 ];

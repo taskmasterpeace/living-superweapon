@@ -184,7 +184,7 @@ export class Fighter {
     this.aim3 = new THREE.Vector3(1, 0, 0); // full 3D attack direction (adjusts up/down for height)
 
     this.maxHp = def.hp || 100; this.hp = this.maxHp;
-    this.maxKi = def.ki || 100; this.ki = this.maxKi * 0.5;
+    this.maxKi = def.ki || 100; this.ki = def.energyInfinite ? (def.ki || 100) : this.maxKi * 0.5;
     this.speed = def.speed || 30;
     this.radius = 2.2;
 
@@ -233,6 +233,10 @@ export class Fighter {
     this.tentacles = null;      // built lazily on first update (needs the scene)
     // strength (1–10, default 5): melee damage up, knockback/beam-shove down, faster freeze break-outs
     this.strength = def.strength ?? 5;
+    // flight expertise: 0 = grounded (leapers) · 1 = clumsy forward flier (can't hover — Greatest
+    // American Hero) · 2 = levitator (hover + reposition, no cruise speed) · 3 = full flight (Superman)
+    this.flightTier = def.flightTier ?? 3;
+    this.energyInfinite = !!def.energyInfinite;   // android core: ki never drains — but tier caps at II
     this.meleeCharge = 0;       // charged-melee wind-up (melee.js) — >0 while holding the punch
     this._heavyT = 0; this._heavyP = 0; this._heavyHay = false;
     this.frost = 0; this.frozenT = 0; this._frostImmuneT = 0;   // cold buildup → encased in ice
@@ -247,6 +251,20 @@ export class Fighter {
 
   get grounded() { return (this.pos.y <= 0.01 || this.onBlock) && !this.flying; }
   get alive() { return this.state !== 'ko'; }
+
+  // F key: flight is a MODE you switch on and off, not a button you hold.
+  toggleFlight() {
+    if (this.state === 'ko' || this.grabbedBy || this.frozenT > 0) return;
+    if (this.flying) { this.flying = false; }                       // cut it — gravity takes you down
+    else if (this.flightTier > 0) {
+      this.flying = true;
+      if (this.pos.y < 1.5) this.vel.y = 15;                        // pop off the ground
+      this._liftFx = 0.25;
+      if (this._game) { try { this._game.audio.zap(560); } catch (e) {} }
+    } else if (this._game && this._game.isHuman(this) && this._game.hud) {
+      this._game.hud.feed(this.name + ' cannot fly', '#8b8577');    // leapers stay honest
+    }
+  }
 
   faceDir(dx, dz) { if (dx * dx + dz * dz > 1e-4) { this.facing = Math.atan2(dx, dz); this.aim.set(dx, 0, dz).normalize(); } }
   center(out = new THREE.Vector3()) { return out.set(this.pos.x, this.pos.y + 5.2, this.pos.z); }
@@ -372,7 +390,7 @@ export class Fighter {
   }
 
   heal(a) { this.hp = clamp(this.hp + a, 0, this.maxHp); }
-  spendKi(a) { if (this.ki < a) return false; this.ki -= a; return true; }
+  spendKi(a) { if (this.energyInfinite) return true; if (this.ki < a) return false; this.ki -= a; return true; }
 
   // Impact damage from being hurled into geometry. Only fires while launched (launchT) — dashing
   // or flying into a wall on your own never hurts. Credit goes to whoever launched you.
@@ -455,6 +473,25 @@ export class Fighter {
     if (this.metal && game && (this.flying || Math.hypot(this.vel.x, this.vel.z) > 14) && Math.random() < 0.6) {
       game.particles.spawn({ x: this.pos.x + (Math.random() * 2 - 1), y: this.pos.y + 0.8, z: this.pos.z + (Math.random() * 2 - 1), vx: -this.vel.x * 0.15, vy: this.flying ? -16 : -4, vz: -this.vel.z * 0.15, life: 0.4, size: 2.6, color: ['#ff9a2a', '#6a6f78', '#ffd97a'], drag: 1.4, shrink: true });
     }
+    // signature flight styles — the old-Torch fire wake, the Iceman ride
+    const flySpd = Math.hypot(this.vel.x, this.vel.z);
+    if (game && this.flying && this.def.flyStyle === 'fire' && flySpd > 8 && Math.random() < 0.8) {
+      game.particles.spawn({ x: this.pos.x - this.vel.x * 0.04, y: this.pos.y + 3.5 + Math.random() * 3, z: this.pos.z - this.vel.z * 0.04, vx: -this.vel.x * 0.2 + (Math.random() * 2 - 1) * 4, vy: 3 + Math.random() * 5, vz: -this.vel.z * 0.2 + (Math.random() * 2 - 1) * 4, life: 0.55, size: 3.4, color: ['#ff6a1a', '#ffd24a', '#ff3b1a'], drag: 1, shrink: true });
+    }
+    if (this.def.flyStyle === 'ice') {
+      // he doesn't fly — he RIDES: a frozen board under his feet + a frost ribbon behind
+      if (!this.parts.iceBoard) {
+        const b = new THREE.Mesh(new THREE.BoxGeometry(3.6, 0.35, 6.2), new THREE.MeshStandardMaterial({ color: '#bfeaff', transparent: true, opacity: 0.78, roughness: 0.15, metalness: 0.1, emissive: '#4fb8e6', emissiveIntensity: 0.3 }));
+        b.visible = false; this.obj.add(b); this.parts.iceBoard = b;
+      }
+      const board = this.parts.iceBoard;
+      board.visible = this.flying;
+      if (this.flying) {
+        board.position.set(0, 0.35, 0.4);
+        board.rotation.x = Math.sin(this.animT * 2.6) * 0.05;
+        if (game && flySpd > 8 && Math.random() < 0.7) game.particles.spawn({ x: this.pos.x - this.vel.x * 0.06, y: this.pos.y + 0.5, z: this.pos.z - this.vel.z * 0.06, vx: -this.vel.x * 0.1, vy: -2, vz: -this.vel.z * 0.1, life: 0.7, size: 2.4, color: ['#bfeaff', '#eaffff'], drag: 0.8, shrink: true });
+      }
+    }
     this.poseStrike = damp(this.poseStrike, this.strikeActive > 0 ? 1 : 0, 18, dt);
     this.poseGuard = damp(this.poseGuard, this.guarding ? 1 : 0, 14, dt);
     this.poseGrab = damp(this.poseGrab, (this.grabState || this.grabbing) ? 1 : 0, 16, dt);
@@ -467,7 +504,8 @@ export class Fighter {
 
     // ki regen (slower while casting/charging; guarding safely doubles as a charge stance)
     const anyCharge = Object.values(this.slots).some(s => s.charging || s.sustainT > 0);
-    this.ki = clamp(this.ki + (anyCharge ? 3 : 9) * dt, 0, this.maxKi);        // ki is a budget — beams drain it
+    if (this.energyInfinite) this.ki = this.maxKi;                             // android core — the tank never moves
+    else this.ki = clamp(this.ki + (anyCharge ? 3 : 9) * dt, 0, this.maxKi);   // ki is a budget — beams drain it
     if (this.guarding && this._blocked <= 0 && this.def.guardType !== 'barrier') this.ki = clamp(this.ki + 22 * dt, 0, this.maxKi); // guard to recover it (barriers COST ki instead)
 
     if (this.hitstop > 0) { this.hitstop -= dt; this._animate(dt); this._sync(); return; }
@@ -500,8 +538,8 @@ export class Fighter {
   _physics(dt, game) {
     // --- flight / levitation ---
     if (this.state !== 'ko') {
-      // rising edge of the ascend intent → take off into levitation
-      if (this.flyHeld && !this._flyPrev && !this.flying) {
+      // rising edge of the ascend intent → take off into levitation (grounded heroes can't)
+      if (this.flyHeld && !this._flyPrev && !this.flying && this.flightTier > 0) {
         this.flying = true;
         if (this.pos.y < 1.5) this.vel.y = FLY_TAKEOFF;      // pop off the ground so even a tap lifts into a hover
         this._liftFx = 0.25;
@@ -515,8 +553,13 @@ export class Fighter {
         let target, rate;
         if (this.flyHeld) { target = FLY_RISE; rate = 7; }                 // ascend
         else if (this.descendHeld) { target = -FLY_SINK; rate = 7; }       // descend
+        else if (this.flightTier <= 1) { target = -7; rate = 4; }          // tier 1 can't hover — it sags
         else { target = Math.sin(this.animT * 2.3) * FLY_HOVER_BOB; rate = 5; }  // hover: gentle levitation bob
         this.vel.y = damp(this.vel.y, target, rate, dt);
+        if (this.flightTier <= 1) {                                        // clumsy drift — the GAH wobble
+          this.vel.x += Math.sin(this.animT * 3.1) * 9 * dt;
+          this.vel.z += Math.cos(this.animT * 2.6) * 9 * dt;
+        }
       } else if (this.pos.y > 0 || this.vel.y > 0) {
         this.vel.y -= 60 * dt;                               // gravity — jumps & knockback arcs
       }
@@ -570,6 +613,7 @@ export class Fighter {
     let s = this.speed * this.powerBuff * sprint;
     if (this.sprintT > 0) s *= this.sprintMult;   // double-tap sprint surge
     if (this.meleeCharge > 0) s *= 0.4;           // winding up a haymaker roots you
+    if (this.flying) s *= this.flightTier >= 3 ? 1 : this.flightTier === 2 ? 0.62 : 0.85;   // levitators reposition, fliers cruise
     if (this.guarding) s *= 0.34;               // guarding slows you
     if (this.strikeActive > 0) s *= 0.5;
     this.vel.x += dir.x * s * dt * 9;

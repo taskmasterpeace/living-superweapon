@@ -160,6 +160,12 @@ export function heroStats(d) {
   if (A.some(a => a.type === 'rifle')) tags.push('Gunner');
   if (d.metal) tags.push('Armored');
   if (d.guardStrong) tags.push('Shield');
+  if (d.energyInfinite) tags.push('∞ Core');
+  if (d.flightTier === 0) tags.push('Grounded');
+  else if (d.flightTier === 1) tags.push('Clumsy Flier');
+  else if (d.flightTier === 2) tags.push('Levitator');
+  if (d.flyStyle === 'ice') tags.push('Rider');
+  if (d.flyStyle === 'fire') tags.push('Fire Wake');
   if (hasBlink) tags.push('Blink');
   if (A.some(a => a.fly) || d.speed >= 40) tags.push('Aerial');
   return {
@@ -249,10 +255,10 @@ export class HUD {
       <div class="panel slots" id="hSlots"></div>
       <div class="panel hint">
         <b>WASD</b> move · <b>Mouse</b> aim · <b>Click a foe</b> to lock/face · <b>T</b> unlock<br/>
-        <b>LMB/RMB</b> powers · <b>Q E F</b> skills · <b>R</b> ultimate<br/>
+        <b>LMB/RMB</b> powers · <b>Q E H</b> skills · <b>R</b> ultimate<br/>
         <b>V</b> tap jab / <b>HOLD</b> haymaker (crushes guards) · <b>G</b> grab<br/>
         <b>C / X / Mouse4</b> guard · <b>SHIFT</b> dash · <b>2×TAP</b> move = evade<br/>
-        <b>SPACE</b> fly / ascend · hold to rise, release to hover · <b>CTRL</b> descend<br/>
+        <b>F</b> flight ON/OFF · <b>SPACE</b> rise · release = hover · <b>CTRL</b> descend<br/>
         <b>1–0</b>/<b>TAB</b> heroes · <b>B</b> rival · <b>ESC</b> pause<br/>
         🎮 <b>Pad</b>: sticks move/aim · R2/L2 powers · ▢○ melee · L1 guard
       </div>
@@ -426,8 +432,9 @@ export class HUD {
     requestAnimationFrame(() => { el.style.transition = `opacity ${dur}s ease-out`; el.style.opacity = '0'; });
   }
 
-  // floating combat number at a world position
-  damageNumber(worldPos, text, color = '#fff', tag = false) {
+  // floating combat number at a world position. slash=true kicks OUTWARD-DOWN (offense reads
+  // differently from the defensive popups, which float up).
+  damageNumber(worldPos, text, color = '#fff', tag = false, slash = false) {
     if (!this.game.world) return;
     const sp = this.game.world.screenPosOf(worldPos.x, worldPos.y + 7, worldPos.z);
     if (sp.behind) return;
@@ -435,11 +442,37 @@ export class HUD {
     el.style.color = color; el.style.left = sp.x + 'px'; el.style.top = sp.y + 'px';
     const num = +text || parseInt(String(text).replace(/[^0-9]/g, ''), 10) || 0;   // "SLAM 18" sizes by the 18
     el.style.fontSize = (tag ? 16 : Math.min(38, 18 + num * 0.45)) + 'px';
+    if (slash) { el.style.fontStyle = 'italic'; el.style.textShadow = '0 2px 5px rgba(0,0,0,.85), 0 0 12px rgba(255,90,74,.7)'; }
     this.el.dmg.appendChild(el);
-    const dx = (Math.random() * 2 - 1) * 32, t0 = performance.now();
-    const anim = (now) => { const k = (now - t0) / 720; if (k >= 1) { el.remove(); return; } el.style.transform = `translate(-50%,-50%) translate(${dx * k}px, ${-46 * k}px)`; el.style.opacity = String(1 - k * k); requestAnimationFrame(anim); };
+    const dx = slash ? (36 + Math.random() * 26) * (Math.random() < 0.5 ? -1 : 1) : (Math.random() * 2 - 1) * 32;
+    const dy = slash ? 30 : -46;
+    const t0 = performance.now();
+    const anim = (now) => { const k = (now - t0) / 720; if (k >= 1) { el.remove(); return; } el.style.transform = `translate(-50%,-50%) translate(${dx * k}px, ${dy * k}px)${slash ? ' rotate(-8deg)' : ''}`; el.style.opacity = String(1 - k * k); requestAnimationFrame(anim); };
     requestAnimationFrame(anim);
     while (this.el.dmg.children.length > 48) this.el.dmg.firstChild.remove();
+  }
+
+  // ---- Danger Room: live DPS meters floating over training dummies ----
+  updateDpsMeters(g) {
+    const on = g.modeId === 'training' && g.running;
+    this._dpsEls = this._dpsEls || {};
+    if (!on) { for (const id in this._dpsEls) { this._dpsEls[id].remove(); delete this._dpsEls[id]; } return; }
+    for (const e of g.entities) {
+      if (!e.isDummy) continue;
+      let el = this._dpsEls[e.id];
+      if (!el) {
+        el = document.createElement('div'); el.className = 'dmg'; el.style.fontSize = '12px'; el.style.color = '#7fe6ff';
+        el.style.textAlign = 'center'; this.el.dmg.appendChild(el); this._dpsEls[e.id] = el;
+      }
+      const log = e._dmgLog || [];
+      while (log.length && log[0].t < g.time - 3) log.shift();
+      const dps = log.reduce((s, x) => s + x.a, 0) / 3;
+      const sp = g.world.screenPosOf(e.pos.x, e.pos.y + 16, e.pos.z);
+      el.style.left = sp.x + 'px'; el.style.top = sp.y + 'px';
+      el.style.transform = 'translate(-50%,-50%)';
+      el.style.display = sp.behind ? 'none' : 'block';
+      el.textContent = dps > 0.5 ? `DPS ${dps.toFixed(0)} · Σ ${Math.round(e._dmgTotal || 0)}` : (e._dmgTotal ? `Σ ${Math.round(e._dmgTotal)}` : 'DPS —');
+    }
   }
 
   combo(n) {
@@ -482,11 +515,17 @@ export class HUD {
     this.el.ki.style.width = clamp(p.ki / p.maxKi * 100, 0, 100) + '%';
     // energy readability: amber when low, red pulse when critical, DRAINED tag after an all-in fizzle
     const kiFrac = p.ki / p.maxKi, drained = p.drainedT > 0;
-    this.el.ki.classList.toggle('crit', drained || kiFrac < 0.15);
-    this.el.ki.classList.toggle('low', !drained && kiFrac >= 0.15 && kiFrac < 0.38);
-    this.el.kiState.classList.toggle('on', drained);
-    // OVERDRIVE window: low tank + a real overdrive attribute → your fists are batteries right now
-    this.el.kiOver.classList.toggle('on', !drained && (p.def.overdrive ?? 1) >= 0.7 && kiFrac < 0.25);
+    if (p.energyInfinite) {   // android core — the tank literally cannot move
+      this.el.ki.classList.remove('crit', 'low'); this.el.kiState.classList.remove('on'); this.el.kiOver.classList.remove('on');
+      if (this._infML !== p.id) { this._infML = p.id; this.el.kiState.textContent = '∞ CORE'; this.el.kiState.classList.add('on'); this.el.kiState.style.color = '#7fe6ff'; }
+    } else {
+      if (this._infML) { this._infML = 0; this.el.kiState.textContent = 'DRAINED'; this.el.kiState.style.color = ''; }
+      this.el.ki.classList.toggle('crit', drained || kiFrac < 0.15);
+      this.el.ki.classList.toggle('low', !drained && kiFrac >= 0.15 && kiFrac < 0.38);
+      this.el.kiState.classList.toggle('on', drained);
+      // OVERDRIVE window: low tank + a real overdrive attribute → your fists are batteries right now
+      this.el.kiOver.classList.toggle('on', !drained && (p.def.overdrive ?? 1) >= 0.7 && kiFrac < 0.25);
+    }
     this.el.gd.style.width = clamp(p.guardMeter * 100, 0, 100) + '%';
     this.el.gd.classList.toggle('stagger', p.staggerT > 0);
     this.el.lvl.textContent = p.level;
@@ -527,6 +566,7 @@ export class HUD {
     } else this.el.foe.style.display = 'none';
     this.updateModeBar(g);
     this.updateKitWidget(p);
+    this.updateDpsMeters(g);
     // radar (hidden at the title / while paused) + low-HP danger pulse
     const inMatch = !!(g.mode && g.running);
     this.el.radar.style.display = inMatch ? 'block' : 'none';

@@ -101,7 +101,7 @@ class Projectile {
       }
       foe.takeDamage(this.damage * this.caster.powerBuff, { src: this.caster, kb: _v.copy(this.vel).setY(0).setLength(this.damage * 0.5 + 8).setComponent(1, 6), launch: 6 + this.power * 4, hitstop: 0.05 });
       if (this.payload === 'poison') foe.addDot({ dps: 5, dur: 4, color: '#8fe08a', kind: 'poison', src: this.caster });
-      else if (this.payload === 'gas') foe.addDot({ dps: 6, dur: 3, color: '#d64a72', kind: 'gas', src: this.caster });
+      else if (this.payload === 'gas') foe.addDot({ dps: 6, dur: 3, color: '#9a4ae0', kind: 'gas', src: this.caster });
       else if (this.payload === 'flame') { foe.addDot({ dps: 7, dur: 2.5, color: '#ff7a2a', kind: 'burn', src: this.caster }); game.particles.burst(foe.pos.x, foe.pos.y + 5, foe.pos.z, { count: 8, speed: 10, life: 0.5, size: 2.6, color: ['#ff7a2a', '#ffd24a'], up: 8, drag: 1.2 }); }
       if (this.pierce-- > 0) { game.vfx.flash(this.pos.clone(), this.color, this.radius * 2, 0.12); return true; }
       return this._impact(game, false, foe);

@@ -517,8 +517,10 @@ export class Game {
     if (f.buffT <= 0) f.powerBuff = f.levelMult;
     f.maxHp = Math.round(f.maxHp * 1.07); f.hp = Math.min(f.maxHp, f.hp + f.maxHp * 0.25);
     f.maxKi = Math.round(f.maxKi * 1.04);
-    // POWER TIERS (super-saiyan style): crossing 4/7/10 is a TRANSFORMATION, not just a number
-    const newTier = tierOf(f.level);
+    // POWER TIERS (super-saiyan style): crossing 4/7/10 is a TRANSFORMATION, not just a number.
+    // Android cores (energyInfinite) never drain — but they CAP at Tier II: ascended heroes out-scale them.
+    let newTier = tierOf(f.level);
+    if (f.energyInfinite) newTier = Math.min(newTier, 2);
     const tiered = newTier > f.tier; f.tier = newTier;
     if (!quiet) {
       const tc = TIER_COLORS[f.tier] || f.def.colors.accent;
@@ -534,7 +536,7 @@ export class Game {
         this.vfx.explode(f.pos.clone().setY(5), { color: f.def.colors.accent, color2: '#fff', radius: 11, power: 1.1, scorch: false });
         this.vfx.ring(f.pos.clone().setY(3), { color: f.def.colors.accent, r0: 2, r1: 24, life: 0.6, flat: true, y: 0.5 });
         this.audio.power(true);
-        if (this.isHuman(f) && this.hud) this.hud.announce('LEVEL ' + f.level, f.name + ' powered up', f.def.colors.accent);
+        if (this.isHuman(f) && this.hud) this.hud.announce('LEVEL ' + f.level, `+6% DMG · +7% HP · +4% KI`, f.def.colors.accent);   // the delta card — SEE what leveling gave you
       }
     } else f.tier = newTier;
   }
@@ -600,8 +602,11 @@ export class Game {
     if (this.hud && this.hud.hitDirection && this.isHuman(target) && src && src !== target) this.hud.hitDirection(src.pos);
     if (this.hud) {
       if (blocked) this.hud.damageNumber(target.pos, 'BLOCK', '#bfe0ff', true);
+      else if (opts.dmgClass === 'slash' && amount >= 3) this.hud.damageNumber(target.pos, '⚔ ' + Math.round(amount), '#ffdcdc', false, true);   // claws/blades read as SLASH
       else if (amount >= 5) this.hud.damageNumber(target.pos, Math.round(amount), src === this.player ? '#ffe08a' : '#ff9a6a');
     }
+    // Danger Room: dummies log incoming damage for the live DPS meters
+    if (target.isDummy && !blocked) { (target._dmgLog = target._dmgLog || []).push({ t: this.time, a: amount }); target._dmgTotal = (target._dmgTotal || 0) + amount; }
     this.vfx.flash(target.pos.clone().setY(5.6), blocked ? '#cfe6ff' : (target.def.colors.accent || '#fff'), blocked ? 3 : 2.4, 0.1);
     if (src === this.player && !blocked) {
       if (amount >= 5) { this.combo++; if (this.hud) this.hud.combo(this.combo); }
@@ -788,9 +793,10 @@ export class Game {
     const intents = {
       lmb: { pressed: m.leftEdge || pad.pressed('lmb'), held: m.left || pad.down('lmb'), released: m.leftUp || pad.released('lmb') },
       rmb: { pressed: m.rightEdge || pad.pressed('rmb'), held: m.right || pad.down('rmb'), released: m.rightUp || pad.released('rmb') },
-      q: orK('KeyQ', 'q'), e: orK('KeyE', 'e'), r: orK('KeyR', 'r'), f: orK('KeyF', 'f'),
+      q: orK('KeyQ', 'q'), e: orK('KeyE', 'e'), r: orK('KeyR', 'r'), f: orK('KeyH', 'f'),   // 4th power lives on H — F toggles flight
       shift: orK('ShiftLeft', 'dash'),
     };
+    if (inp.pressed('KeyF')) p.toggleFlight();   // flight is a MODE now: F on, F off
     for (const k of SLOT_KEYS) if (p.slots[k]) feedSlot(this, p, k, intents[k], busy, dt);
   }
 

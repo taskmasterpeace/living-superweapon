@@ -44,9 +44,9 @@ is the comeback attribute: when your ki tank is low/drained, landed fists conver
 | **GALE** | Hawkeye / Green Arrow — the last ranger | UK (dry wit) | **Low** | 3 | 1.1 | Draw-scaled Longshot, switchable broadheads (poison/flame/explosive), Arrow Storm |
 
 ### Palette note — KIVULI
-Designed as "the purple gas controller." The house rule (global CLAUDE.md) bans purple absolutely,
-so he ships in **crimson-rose bloom** (`#d64a72` family, hue ~345). If the designer overrides his own
-rule, swap the three hexes in `data/characters.js` — everything else (gas DoT, solidify, phase) is color-agnostic.
+**Purple override RULED by the creator (2026-07-22):** "we need to break the no-purple rule for my
+Ugandan dude." KIVULI now ships in true purple (`#b06aff` / `#9a4ae0` family) — the ONE sanctioned
+purple in the entire project. The ban stands everywhere else.
 
 ## Guard type matrix (why blocking is character-expressive)
 

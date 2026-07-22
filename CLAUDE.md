@@ -61,9 +61,18 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   routes through here → damage numbers, combo, sparks) + soft lock-on (`pickTarget`, `updateReticle`).
 - Player and AI both emit an **intent** `{move, aimDir, slots:{key:{pressed,held,released}}, fly}`
   routed through the same `runSlot`. Keep that symmetry.
-- Controls: WASD move · mouse aim (**hover a character to target it**, else nearest-to-cursor) · LMB/RMB/Q/E/F/R
-  powers · **V strike · G grab · C guard** · SHIFT dash · **2×TAP a move key = per-hero EVADE** · **SPACE fly**
-  (hold = rise, release = **hover/levitate**, land by descending) · **CTRL descend** · ESC pause · 1–0 swap · TAB roster · B rival.
+- Controls: WASD move · mouse aim (**hover a character to target it**, else nearest-to-cursor) · LMB/RMB/Q/E/**H**/R
+  powers (the 4th power slot is `f` in data but bound to **KeyH**) · **F = FLIGHT TOGGLE** (mode on/off;
+  SPACE rise, release hover, CTRL descend; SPACE rising-edge still auto-takes-off) · **V tap jab / hold
+  HAYMAKER · G grab · C/X/Mouse4-5 guard** · SHIFT dash · **2×TAP move = EVADE** · ESC pause · 1–0 swap · TAB roster · B rival.
+- **Flight tiers** (`def.flightTier`): 0 = grounded (SARGE/GALE — leap only, toggle refuses) · 1 = clumsy
+  (VOLT/HIVE/KRAKEN — sags when not rising, sine drift, no hover) · 2 = levitator (0.62× air speed —
+  RIME/WARDEN/PYRE/RIFT/TITAN/KIVULI) · 3 = full flight. `flyStyle`: 'fire' = Torch wake (TORCH/PYRE),
+  'ice' = RIME rides a frozen board (mesh in `parts.iceBoard`). `energyInfinite` (TITAN): ki pinned at max,
+  spendKi always true, HUD shows "∞ CORE", **tier hard-capped at II** in levelUp — the DBZ-android tradeoff.
+- **PURPLE EXCEPTION**: KIVULI ONLY (creator override 2026-07-22). No other purple anywhere, ever.
+- Design docs: `docs/DESIGN_DECISIONS.md` (creator interview rulings — READ before big design calls),
+  `docs/CODEX.md` (power schema), `docs/NEXT_CHARACTERS.md` (COF canon import queue: Stefanos/Sandra/…).
 - **Evade** (`def.evade = {kind,...}` on each hero, defaults in `abilities.js → EVADE_DEFAULTS`, engine `performEvade`):
   kinds `dash` / `blink` / `sprint` / `slide` (RIME ice-skate, low drag) / `phase` (SPECTER, long i-frames). Double-tap
   detection lives in `controlPlayer` (`TAP_DIRS`, 0.28s window); bots juke incoming projectiles with it in `controlBot`.
