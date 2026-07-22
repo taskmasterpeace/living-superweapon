@@ -365,6 +365,27 @@ export const ROSTER = [
       r: { type: 'volley', name: 'Arrow Storm', cost: 4, interval: 0.07, damage: 8, speed: 150, radius: 0.6, blast: 3, spread: 0.12, arrow: true, color: '#9fe06a', color2: '#fff' },
     },
   },
+  {
+    // COF canon: Alexandr Stefanos, President of Greece — the First Celebrity Superweapon.
+    // Explosive energy that FORMS, then fires or propels. His wife Marletta was murdered by the
+    // Jackal Sandra; THE MARLETTA is her face — it drifts to you, lingers a heartbeat, and detonates.
+    id: 'stefanos', name: 'KING STEFANOS', title: 'The First Celebrity Superweapon', role: 'Formed Explosives',
+    colors: { primary: '#2a5ad8', secondary: '#e8e4da', accent: '#ffd24a', skin: '#d8b088' },
+    hp: 120, ki: 140, speed: 33, strength: 5, overdrive: 0.9, threat: 'Very High', flightTier: 3,
+    ai: { style: 'artillery', range: 50, aggro: 0.62, fly: 0.55 },
+    evade: { kind: 'dash', name: 'Propulsion Step' },
+    blurb: 'President of Greece. His energy takes SHAPE before it strikes — jagged motes, concussive forms, and one shape he can never put down: her face, arriving slow, leaving nothing.',
+    sig: ['R THE MARLETTA (charge → homing face → delayed detonation)', 'LMB Formed Charge', 'RMB Mote Storm', 'Q Concussive Form'],
+    abilities: {
+      lmb: { type: 'projectile', name: 'Formed Charge', cost: 7, cd: 0.38, damage: 17, speed: 96, radius: 1.3, blast: 7, color: '#ffd24a', color2: '#fff2c0' },
+      rmb: { type: 'volley', name: 'Mote Storm', cost: 3, interval: 0.08, damage: 6, speed: 110, radius: 0.8, blast: 3.6, spread: 0.13, color: '#ffd24a', color2: '#fff' },
+      q: { type: 'cone', name: 'Concussive Form', kiPerSec: 16, range: 32, arc: 1.1, dps: 16, push: 52, lift: 5, color: '#ffe8c0' },
+      e: { type: 'charge', name: 'Pressure Sphere', cost: 6, cd: 1.0, kiPerSec: 12, maxCharge: 2.2, minR: 1.4, maxR: 6, dmgMin: 22, dmgMax: 76, maxBlast: 30, speedMin: 42, speedMax: 72, chargePower: 2.8, color: '#ffd24a', color2: '#fff2c0' },
+      f: { type: 'buff', name: 'These Wounds Will Not Heal', cost: 26, cd: 20, mult: 1.65, dur: 10, color: '#ffd24a', color2: '#ffffff' },
+      shift: { type: 'dash', name: 'Propelled Slip', cost: 5, cd: 0.55, power: 100, iframes: 0.25, color: '#ffd24a' },
+      r: { type: 'facebomb', name: 'THE MARLETTA', cost: 30, cd: 17, kiPerSec: 13, maxCharge: 2.4, minR: 2, maxR: 5.5, dmgMin: 30, dmgMax: 85, blastMin: 16, blastMax: 36, armDelay: 0.65, homing: 2.3, speed: 34, color: '#ffe8c0' },
+    },
+  },
 ];
 
 export const SLOT_ORDER = [

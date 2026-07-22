@@ -42,6 +42,7 @@ is the comeback attribute: when your ki tank is low/drained, landed fists conver
 | **SARGE** | Punisher × Captain America kit — the last soldier | USA (gravel) | **Low** | 4 | 1.0 | Pulse carbine, hand cannon, plasma blade, riot shield, Airstrike, Combat Leap |
 | **KIVULI** | Gas-phase controller — the breath of Kampala | **Uganda** (Luganda-accented) | High | 4 | 0.9 | Choking Veil (lingering gas), **Solid Smoke** (gas → hard wall), Gas Form, Asphyxia |
 | **GALE** | Hawkeye / Green Arrow — the last ranger | UK (dry wit) | **Low** | 3 | 1.1 | Draw-scaled Longshot, switchable broadheads (poison/flame/explosive), Arrow Storm |
+| **KING STEFANOS** | COF canon — the First Celebrity Superweapon | Greece (presidential gravitas) | Very High | 5 | 0.9 | Formed explosives; **THE MARLETTA** — his murdered wife's face, charged, homing, delayed detonation |
 
 ### Palette note — KIVULI
 **Purple override RULED by the creator (2026-07-22):** "we need to break the no-purple rule for my

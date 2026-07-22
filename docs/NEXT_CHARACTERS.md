@@ -3,7 +3,7 @@
 Grounded in `D:\git\COF` (bible/CHARACTER_ROSTER.md). Per the COF golden rule: canon facts cited,
 gameplay mappings marked `[PROPOSED]` until the creator blesses them.
 
-## 1. KING STEFANOS — "The First Celebrity Superweapon" (Greece)
+## 1. KING STEFANOS — ✅ SHIPPED (in-roster as `stefanos`, THE MARLETTA on R)
 **Canon:** Alexandr Stefanos, 41, President of Greece (from Min. of Interior). Grey-gifted **explosive
 energy**: concentrates energy that *forms*, then **fires** (jagged motes that detonate on solid contact;
 spikes caused premature blasts → grew into precision) or **propels** (flight). Pacifist turned vengeful

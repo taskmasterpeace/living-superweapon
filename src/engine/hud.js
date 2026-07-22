@@ -213,6 +213,7 @@ function describeAbility(a) {
     case 'portal': return 'place a door, then its exit — anything that touches one comes out the other';
     case 'rifle': return (a.interval > 0.2 ? 'heavy sidearm — hard-hitting shots' : 'full-auto tracer fire') + ' (ammo = ki)';
     case 'bow': return 'hold to draw — arrow speed & damage scale; payload from your quiver';
+    case 'facebomb': return 'charge her up — she drifts to the target, lingers a heartbeat, then DETONATES';
     case 'quiver': return 'switch broadheads: ' + (a.payloads || ['explosive', 'flame', 'poison']).join(' / ');
     default: return a.type;
   }

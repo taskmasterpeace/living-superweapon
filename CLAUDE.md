@@ -75,6 +75,16 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   level cruise = prone head-first (~87°), rising = vertical (head points where you're going), pure up/down
   and hover-at-altitude = fully upright, dives = nose-down (capped 1.85 rad), strafes bank (`rollT` from
   lateral velocity). Engagement scales with speed (`k` ramps 6→26 u/s) so drift/hover stays vertical.
+  **Superhero limbs**: prone cruise = lead fist punched past the head (armR −2.95) + off arm swept back,
+  legs trail only when prone (`fp × prone`); hover = arms flared, legs hanging straight. Combat poses win
+  (`combatPose` gate). Archers get a draw pose (`_bowDraw` ← `_bowDrawT` from the bow ability).
+- **Weapons registry** (`entity.js buildWeapon`): pistol/shotgun/rifle/sword/knife/spear/axe/bow meshes,
+  mounted on fists via BUILDS `weaponL:/weaponR:` (or legacy `gun`) — SARGE sword+rifle+shield, GALE bow+knife.
+  All along the arm's −Y axis so poses + ragdoll carry them.
+- **THE MARLETTA** (`facebomb` type + Projectile `face/armDelay`): charge grows her (size/damage/blast by
+  charge), release → slow homing canvas-face sprite; ANY contact (foe/ground/cover/timeout) → `_arm()`:
+  she stops, trembles, blushes toward burning for `armDelay` (0.65s), then detonates with double shockwave
+  + lightning + slowmo. Deflect guards can't bounce her. KING STEFANOS (`stefanos`, COF canon) carries her on R.
 - **Ragdoll weight** (`ragdoll.js`): `gravMul` from strength (heavies fall harder); first hard core impact
   (chest/pelvis/head, >~30 u/s) fires `game.onRagdollImpact` → strength-scaled crater + dust + shake
   (STR ≥ 7 lands like a meteor). One impact per ragdoll (`_impacted`).

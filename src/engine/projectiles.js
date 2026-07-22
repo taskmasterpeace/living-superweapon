@@ -15,6 +15,42 @@ const MAT_CORE = new THREE.MeshBasicMaterial({ color: '#ffffff' });
 const MAT_GLOW_PROTO = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending, depthWrite: false });
 const MAT_BEAM_PROTO = new THREE.MeshBasicMaterial({ transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
 function glowMat(color, opacity = 0.5) { const m = MAT_GLOW_PROTO.clone(); m.color.set(color); m.opacity = opacity; return m; }
+// THE MARLETTA — a serene glowing face, painted once (canvas), billboarded on the projectile.
+let _faceTex = null;
+function faceTexture() {
+  if (_faceTex) return _faceTex;
+  const c = document.createElement('canvas'); c.width = c.height = 256; const x = c.getContext('2d');
+  const g = x.createRadialGradient(128, 128, 10, 128, 128, 126);
+  g.addColorStop(0, 'rgba(255,240,214,0.95)'); g.addColorStop(0.55, 'rgba(255,220,170,0.35)'); g.addColorStop(1, 'rgba(255,200,140,0)');
+  x.fillStyle = g; x.fillRect(0, 0, 256, 256);
+  // face — pale oval, slightly tilted
+  x.save(); x.translate(128, 132); x.rotate(-0.06);
+  x.fillStyle = 'rgba(255,246,232,0.92)';
+  x.beginPath(); x.ellipse(0, 0, 44, 58, 0, 0, Math.PI * 2); x.fill();
+  // hair sweep — soft strokes framing the face
+  x.strokeStyle = 'rgba(255,224,170,0.55)'; x.lineCap = 'round';
+  for (let i = 0; i < 7; i++) {
+    x.lineWidth = 7 - i * 0.6; x.beginPath();
+    x.moveTo(-40 + i * 3, -52 + i * 2);
+    x.quadraticCurveTo(-74 - i * 5, 6 + i * 8, -34 - i * 6, 78 + i * 6); x.stroke();
+    x.beginPath(); x.moveTo(38 - i * 3, -54 + i * 2);
+    x.quadraticCurveTo(72 + i * 5, 4 + i * 8, 30 + i * 6, 80 + i * 6); x.stroke();
+  }
+  // closed eyes — two gentle downward arcs + lash hints
+  x.strokeStyle = 'rgba(120,84,54,0.85)'; x.lineWidth = 3;
+  x.beginPath(); x.arc(-17, -8, 10, 0.25, Math.PI - 0.25); x.stroke();
+  x.beginPath(); x.arc(17, -8, 10, 0.25, Math.PI - 0.25); x.stroke();
+  x.lineWidth = 2;
+  x.beginPath(); x.arc(-17, -13, 13, 0.5, Math.PI - 0.5); x.stroke();   // brows
+  x.beginPath(); x.arc(17, -13, 13, 0.5, Math.PI - 0.5); x.stroke();
+  // nose hint + soft lips
+  x.strokeStyle = 'rgba(150,104,70,0.5)'; x.beginPath(); x.moveTo(0, -2); x.lineTo(-2, 14); x.stroke();
+  x.fillStyle = 'rgba(196,110,96,0.8)';
+  x.beginPath(); x.ellipse(0, 28, 11, 4.5, 0, 0, Math.PI * 2); x.fill();
+  x.restore();
+  _faceTex = new THREE.CanvasTexture(c); return _faceTex;
+}
+
 const GEO_ARROW_SHAFT = new THREE.CylinderGeometry(0.09, 0.09, 3.0, 6);
 const GEO_ARROW_HEAD = new THREE.ConeGeometry(0.24, 0.7, 6);
 const GEO_ARROW_FLET = new THREE.ConeGeometry(0.3, 0.8, 4);
@@ -43,7 +79,17 @@ class Projectile {
     this.dead = false;
 
     this.arrow = !!o.arrow; this.payload = o.payload || null;
-    if (this.arrow) {
+    this.face = !!o.face; this.armDelay = o.armDelay || 0; this._armed = false; this._armT = 0;
+    if (this.face) {
+      // THE MARLETTA: a billboarded serene face wrapped in glow — she drifts, arrives, lingers, detonates
+      const spr = new THREE.Sprite(new THREE.SpriteMaterial({ map: faceTexture(), transparent: true, depthWrite: false }));
+      spr.scale.setScalar(3.2);
+      const halo = new THREE.Mesh(GEO_ORB, glowMat(this.color, 0.35)); halo.scale.setScalar(1.35);
+      this.obj = new THREE.Group(); this.obj.add(halo, spr); this._faceSpr = spr;
+      this.obj.scale.setScalar(this.radius);
+      this.obj.position.copy(this.pos); game.scene.add(this.obj);
+      this.light = game.vfx.borrowLight(this.color, 4 * this.power, this.radius * 14);
+    } else if (this.arrow) {
       // a REAL arrow — shaft + head + fletching, no energy glow (payload color on the head)
       const shaft = new THREE.Mesh(GEO_ARROW_SHAFT, MAT_ARROW_SHAFT);
       const head = new THREE.Mesh(GEO_ARROW_HEAD, glowMat(this.color, 0.95)); head.position.y = 1.6;
@@ -60,7 +106,25 @@ class Projectile {
     }
   }
 
+  // The Marletta has ARRIVED: she stops, hangs in the air, trembles... then goes off.
+  _arm(game) {
+    this._armed = true; this._armT = this.armDelay;
+    this.vel.set(0, 0, 0);
+    game.audio.zap(880); game.audio.zap(220); game.world.shake(0.3);
+    game.vfx.ring(this.pos.clone(), { color: this.color, r0: this.radius, r1: this.radius * 4, life: 0.3 });
+  }
+
   update(dt, game) {
+    if (this._armed) {
+      this._armT -= dt;
+      const k = 1 - Math.max(0, this._armT) / (this.armDelay || 1);
+      this.obj.scale.setScalar(this.radius * (1 + k * 0.55 + Math.sin(k * 30) * 0.07));   // trembling swell
+      if (this._faceSpr) this._faceSpr.material.color.setRGB(1, 1 - k * 0.45, 1 - k * 0.65);   // serene → burning
+      if (this.light) this.light.intensity = 4 * this.power * (1 + k * 2.5);
+      if (Math.random() < 0.6) game.particles.spawn({ x: this.pos.x + rand(-1, 1) * this.radius * 2, y: this.pos.y + rand(-1, 1) * this.radius * 2, z: this.pos.z + rand(-1, 1) * this.radius * 2, vx: 0, vy: 3, vz: 0, life: 0.3, size: 2.2, color: [this.color, '#fff'], drag: 1, shrink: true });
+      if (this._armT <= 0) return this._impact(game, this.pos.y < 3);
+      return true;
+    }
     if (this.grav) this.vel.y -= this.grav * dt;
     if (this.homing) {
       const t = game.nearestFoe(this.caster, this.pos, 120);
@@ -78,11 +142,12 @@ class Projectile {
       game.particles.spawn({ x: this.pos.x, y: this.pos.y, z: this.pos.z, vx: rand(-2, 2), vy: rand(-2, 2), vz: rand(-2, 2), life: this.arrow ? 0.2 : 0.35, size: this.arrow ? 1 : this.radius * 2.2, color: this.arrow ? this.color : [this.color, this.color2, '#ffffff'], drag: 3, shrink: true });
     }
     this.life -= dt;
-    // collisions
-    if (this.pos.y <= this.radius * 0.5 && this.ground) return this._impact(game, true);
-    for (const c of game.world.cover) { if (Math.hypot(this.pos.x - c.x, this.pos.z - c.z) < c.r + this.radius && this.pos.y < c.h) return this._impact(game, true); }
+    // collisions — delayed-blast payloads ARM instead of exploding on contact
+    if (this.pos.y <= this.radius * 0.5 && this.ground) { if (this.armDelay && !this._armed) { this._arm(game); return true; } return this._impact(game, true); }
+    for (const c of game.world.cover) { if (Math.hypot(this.pos.x - c.x, this.pos.z - c.z) < c.r + this.radius && this.pos.y < c.h) { if (this.armDelay && !this._armed) { this._arm(game); return true; } return this._impact(game, true); } }
     const foe = game.overlapFoe(this.caster, this.pos, this.radius + 1.5);
     if (foe) {
+      if (this.armDelay && !this._armed) { this._arm(game); return true; }   // she reaches you... and waits
       // Superman-style DEFLECT guard: bullets/bolts bounce right back at whoever fired them
       if (foe.guarding && foe.staggerT <= 0 && foe.def.guardType === 'deflect' && !this._defl) {
         const ddx = this.pos.x - foe.pos.x, ddz = this.pos.z - foe.pos.z, dd = Math.hypot(ddx, ddz) || 1;
@@ -106,7 +171,7 @@ class Projectile {
       if (this.pierce-- > 0) { game.vfx.flash(this.pos.clone(), this.color, this.radius * 2, 0.12); return true; }
       return this._impact(game, false, foe);
     }
-    if (this.life <= 0) return this._impact(game, false);
+    if (this.life <= 0) { if (this.armDelay && !this._armed) { this._arm(game); return true; } return this._impact(game, false); }
     return true;
   }
 
@@ -115,10 +180,20 @@ class Projectile {
     game.vfx.explode(p, { color: this.color, color2: this.color2, radius: this.blast, power: this.power, scorch: hitGround });
     game.areaDamage(this.caster, p, this.blast, this.damage * 0.8, this.power);
     if (this.shock && hitGround) game.vfx.shockwave(p, { color: this.color, radius: this.blast * 2.2, power: this.power });
+    if (this.face) {   // the Marletta goes off — a grief-shaped crater
+      game.vfx.shockwave(p.clone().setY(0.2), { color: this.color, radius: this.blast * 2.6, power: this.power });
+      game.vfx.lightning(p, { color: '#fff', count: 5, radius: this.blast, height: 14 });
+      game.slowmo(0.2, 0.45); game.world.punch(0.7); if (game.hud) game.hud.flashScreen('#ffe8c0', 0.16);
+    }
     game.audio.boom(clamp(this.power * 0.6, 0.2, 1.4));
     this._dispose(game); return false;
   }
-  _dispose(game) { if (this.dead) return; this.dead = true; game.scene.remove(this.obj); this.obj.children[1].material.dispose(); if (this.light) { game.scene.remove(this.light); game.vfx.returnLight(this.light); } }   // geometry + core/shaft materials are shared — never dispose them
+  _dispose(game) {
+    if (this.dead) return; this.dead = true; game.scene.remove(this.obj);
+    if (this.face) { this.obj.children[0].material.dispose(); this.obj.children[1].material.dispose(); }   // halo + sprite (texture is shared)
+    else this.obj.children[1].material.dispose();                                                          // geometry + core/shaft materials are shared
+    if (this.light) { game.scene.remove(this.light); game.vfx.returnLight(this.light); }
+  }
 }
 function o_maxspeed(p) { return p._max || 90; }
 

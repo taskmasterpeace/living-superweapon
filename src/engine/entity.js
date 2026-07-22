@@ -14,6 +14,58 @@ const _anchor = new THREE.Vector3();
 // flight tuning — levitation model: hold to rise, release to HOVER, descend key to sink.
 const FLY_RISE = 30, FLY_SINK = 26, FLY_TAKEOFF = 15, FLY_HOVER_BOB = 3.2;
 
+// ---- weapon models — one registry, every archetype: mounts on the DRIVEN fist meshes so
+// poses and the ragdoll carry them. Built along the arm's -Y axis (same convention as the rifle).
+function buildWeapon(kind, m) {
+  const g = new THREE.Group();
+  const add = (mesh, x, y, z, rx = 0, rz = 0) => { mesh.position.set(x, y, z); mesh.rotation.x = rx; mesh.rotation.z = rz; g.add(mesh); return mesh; };
+  switch (kind) {
+    case 'pistol':
+      add(new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.55, 0.5), m.armor), 0, -0.15, 0.1);
+      add(new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.9, 0.3), m.armor), 0, -0.6, 0.28);
+      break;
+    case 'shotgun': {
+      add(new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.14, 2.4, 8), m.armor), -0.14, -1.1, 0.14);
+      add(new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.14, 2.4, 8), m.armor), 0.14, -1.1, 0.14);
+      add(new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.9, 0.5), m.armor), 0, 0.25, 0.1);
+      break;
+    }
+    case 'sword': {
+      const blade = add(new THREE.Mesh(new THREE.BoxGeometry(0.14, 3.0, 0.5), m.visorMat), 0, -2.1, 0.16);
+      blade.scale.z = 1; add(new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.14, 0.62), m.armor), 0, -0.55, 0.16);   // guard
+      add(new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.5, 8), m.armor), 0, -0.25, 0.16);              // grip
+      break;
+    }
+    case 'knife':
+      add(new THREE.Mesh(new THREE.BoxGeometry(0.12, 1.3, 0.36), m.visorMat), 0, -0.95, 0.16);
+      add(new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.1, 0.4), m.armor), 0, -0.3, 0.16);
+      break;
+    case 'spear': {
+      add(new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 4.8, 8), m.armor), 0, -1.4, 0.16);
+      add(new THREE.Mesh(new THREE.ConeGeometry(0.22, 0.9, 6), m.visorMat), 0, -3.9, 0.16, Math.PI);
+      break;
+    }
+    case 'axe': {
+      add(new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 3.4, 8), m.armor), 0, -1.2, 0.16);
+      add(new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.9, 0.16), m.visorMat), -0.6, -2.6, 0.16, 0, 0.2);   // twin heads
+      add(new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.9, 0.16), m.visorMat), 0.6, -2.6, 0.16, 0, -0.2);
+      break;
+    }
+    case 'bow': {
+      // vertical arc + string — held out in the off hand; the draw pose does the rest
+      const arc = add(new THREE.Mesh(new THREE.TorusGeometry(1.7, 0.09, 6, 20, Math.PI * 1.16), m.armor), 0, -0.6, 0.2);
+      arc.rotation.z = Math.PI * 0.92;
+      add(new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 3.1, 4), m.armor), 0.42, -0.6, 0.2);   // string
+      break;
+    }
+    case 'rifle':
+      add(new THREE.Mesh(new THREE.BoxGeometry(0.34, 2.0, 0.34), m.armor), 0, -1.15, 0.16);
+      add(new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.9, 0.62), m.armor), 0, -0.3, 0.12);
+      break;
+  }
+  return g;
+}
+
 // per-hero silhouette flourishes (all mounted on driven meshes so the ragdoll carries them).
 const BUILDS = {
   sol: { pauldron: 1, gaunt: 1 }, kano: { band: 1, gaunt: 1 }, vega: { pauldron: 1, gaunt: 1, collar: 1 },
@@ -24,7 +76,9 @@ const BUILDS = {
   kraken: { crest: 1, collar: 1 },                                     // + tentacles from def.tentacles
   rift: { helmet: 1, visor: 1, collar: 1 },
   titan: { helmet: 1, visor: 1, pauldron: 2, gaunt: 1, gun: 1 },       // pulse rifle in the right fist
-  sarge: { band: 1, gaunt: 1, gun: 1, blade: 1, shield: 1 },           // rifle + plasma blade + riot shield
+  sarge: { band: 1, gaunt: 1, gun: 1, weaponL: 'sword', shield: 1 },   // rifle + plasma SWORD + riot shield
+  gale: { band: 1, weaponL: 'bow', weaponR: 'knife' },                 // the ranger: bow out, knife ready
+  stefanos: { collar: 1, gaunt: 1 },                                   // presidential suit lines
 };
 
 function figure(def) {
@@ -113,6 +167,8 @@ function figure(def) {
       const sh = new THREE.Mesh(new THREE.CylinderGeometry(1.45, 1.45, 0.22, 18), armor); sh.rotation.x = Math.PI / 2; sh.position.set(-0.35, -0.3, 0.55); fore.add(sh);
       const boss = new THREE.Mesh(new THREE.SphereGeometry(0.4, 10, 8), glow.clone()); boss.material.emissiveIntensity = 0.7; boss.position.set(0, 0.2, 0); sh.add(boss);
     }
+    const wk = side === -1 ? b.weaponL : b.weaponR;   // any registry weapon in either hand
+    if (wk) fist.add(buildWeapon(wk, { armor, glow, visorMat }));
     g.add(pivot);
     return pivot;
   };
@@ -420,6 +476,7 @@ export class Fighter {
     if (this._slamCd > 0) this._slamCd -= dt;
     if (this.drainedT > 0) this.drainedT -= dt;
     if (this._noKiT > 0) this._noKiT -= dt;
+    this._bowDraw = damp(this._bowDraw || 0, this._bowDrawT || 0, 16, dt);   // archer draw pose blend
     if (this._frostImmuneT > 0) this._frostImmuneT -= dt;
     if (this.frost > 0 && this.frozenT <= 0) this.frost = Math.max(0, this.frost - dt * 0.25);   // buildup decays
     // damage-over-time stacks (poison/burn/gas)
@@ -641,11 +698,15 @@ export class Fighter {
     const rc = Math.sin(this.animT * 12) * (moving ? 0.7 : 0.05);
     this._flyPose = damp(this._flyPose || 0, this.flying ? 1 : 0, 7, dt);
     const fp = this._flyPose, kneeBase = 0.14;
+    const prone = clamp(this.obj.rotation.x / 1.5, 0, 1);        // how horizontal the body currently is
     let hipL = rc, hipR = -rc;
     let kneeL = kneeBase + clamp(rc, 0, 1) * 1.5 * mv;   // knee bends as that leg lifts behind
     let kneeR = kneeBase + clamp(-rc, 0, 1) * 1.5 * mv;
-    hipL = lerp(hipL, 0.44, fp); hipR = lerp(hipR, 0.44, fp);   // flight: thighs trail
-    kneeL = lerp(kneeL, 0.95, fp); kneeR = lerp(kneeR, 0.95, fp); // flight: knees tuck
+    const trail = fp * prone;                                    // legs trail only when CRUISING prone —
+    hipL = lerp(hipL, 0.44, trail); hipR = lerp(hipR, 0.44, trail);   // hovering keeps them hanging straight
+    kneeL = lerp(kneeL, 0.9, trail); kneeR = lerp(kneeR, 0.9, trail);
+    kneeL = lerp(kneeL, 0.08, fp * (1 - prone)); kneeR = lerp(kneeR, 0.08, fp * (1 - prone));   // hover: straight legs
+    hipL = lerp(hipL, 0.06, fp * (1 - prone)); hipR = lerp(hipR, 0.06, fp * (1 - prone));
     kneeL += land * 0.9; kneeR += land * 0.9;                    // landing crouch
     hipL -= land * 0.5; hipR -= land * 0.5;
     p.legL.rotation.x = hipL; p.legR.rotation.x = hipR;
@@ -672,6 +733,28 @@ export class Fighter {
     if (gR > 0.02) {
       p.armL.rotation.x = lerp(p.armL.rotation.x, -1.5, gR); p.armR.rotation.x = lerp(p.armR.rotation.x, -1.5, gR);
       p.armL.rotation.z = lerp(p.armL.rotation.z, 0.22, gR); p.armR.rotation.z = lerp(p.armR.rotation.z, -0.22, gR);
+    }
+    // SUPERHERO flight arms — prone cruise: lead fist punched out past the head, off arm swept back
+    // along the hip; hover: relaxed float with arms slightly flared. Combat poses always win.
+    const combatPose = Math.max(cast, punch, gS, gG, gR, this._bowDraw || 0, this.meleeCharge > 0 ? 1 : 0);
+    const flyArm = this._flyPose * (1 - combatPose);
+    if (flyArm > 0.02) {
+      const pr = prone * flyArm, hov = (1 - prone) * flyArm;
+      p.armR.rotation.x = lerp(p.armR.rotation.x, -2.95, pr);
+      p.armL.rotation.x = lerp(p.armL.rotation.x, 0.35, pr);
+      p.armL.rotation.z = lerp(p.armL.rotation.z, 0.14, pr);
+      p.armR.rotation.x = lerp(p.armR.rotation.x, -0.22, hov * 0.85);
+      p.armL.rotation.x = lerp(p.armL.rotation.x, -0.22, hov * 0.85);
+      p.armL.rotation.z = lerp(p.armL.rotation.z, 0.4, hov);
+      p.armR.rotation.z = lerp(p.armR.rotation.z, -0.4, hov);
+    }
+    // bow draw: bow arm locked out, draw hand pulled to the cheek
+    const bd = this._bowDraw || 0;
+    if (bd > 0.02) {
+      p.armL.rotation.x = lerp(p.armL.rotation.x, -1.55, bd);
+      p.armL.rotation.z = lerp(p.armL.rotation.z, 0.1, bd);
+      p.armR.rotation.x = lerp(p.armR.rotation.x, -1.15, bd);
+      p.armR.rotation.z = lerp(p.armR.rotation.z, -0.45, bd);
     }
     // guard arc — glanceable shield state: visible while guarding, flashes on block, reddens near break
     const ga = p.guardArc;

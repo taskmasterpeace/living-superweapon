@@ -367,12 +367,13 @@ export const TYPES = {
     if (st.drawing) {
       if (inp.held) {
         st.drawT = Math.min(1, st.drawT + inp.dt / (def.drawTime || 0.85));
+        c._bowDrawT = st.drawT;                       // drives the draw pose (bow arm out, hand to cheek)
         c.state = 'charge'; c.stateT = 0;
         c.vel.x *= 0.8; c.vel.z *= 0.8;
         if (Math.random() < 0.15) g.particles.spawn({ x: c.pos.x, y: c.pos.y + 5.8, z: c.pos.z, vx: 0, vy: 2, vz: 0, life: 0.2, size: 1.2, color: '#fff', drag: 2, shrink: true });
       }
       if (inp.released || (!inp.held && st.drawT > 0)) {
-        const t = st.drawT; st.drawing = false;
+        const t = st.drawT; st.drawing = false; c._bowDrawT = 0;
         pay(c, def, st);
         const payloads = def.payloads || ['explosive', 'flame', 'poison'];
         const payload = payloads[c._quiverIdx % payloads.length];
@@ -418,6 +419,43 @@ export const TYPES = {
       });
       c.vel.x -= c.aim.x * (def.recoil || 1.6); c.vel.z -= c.aim.z * (def.recoil || 1.6);   // kick
       g.audio.blast(720 + rand(-60, 60), 0.05); g.muzzleFlash(c, def.color, 0.5);
+    }
+  },
+
+  // THE MARLETTA (King Stefanos) — charge a serene glowing face; release it and it DRIFTS after its
+  // target, arrives... hangs there for a heartbeat... then detonates a massive delayed shockwave.
+  // Size, damage, and blast all scale with how much energy he pours into her.
+  facebomb(c, def, st, g, inp) {
+    if (inp.pressed && ready(c, def, st) && !st.charging) { st.charging = true; st.chargeT = 0; st.sfx = g.audio.charge(); }
+    if (st.charging) {
+      const dry = inp.held && !c.spendKi((def.kiPerSec || 13) * inp.dt);
+      if (dry) drained(c, g);
+      if (inp.held && !dry) {
+        st.chargeT = Math.min(def.maxCharge || 2.2, st.chargeT + inp.dt); c.state = 'charge';
+        c.vel.x *= 0.85; c.vel.z *= 0.85;
+        const c01 = st.chargeT / (def.maxCharge || 2.2);
+        const orb = chargeOrb(c, st, def.color || '#ffe8c0'); const m = c.muzzle(_v.clone(), 3.6, 6.4);
+        orb.position.copy(m); orb.scale.setScalar(1 + c01 * 2.6);
+        if (st.sfx) st.sfx.ramp(c01);
+        g.chargeGather(c, def.color || '#ffe8c0', m, 0.6 + c01 * 1.5);
+      } else if (inp.released || (!inp.held) || dry) {
+        const c01 = st.chargeT / (def.maxCharge || 2.2);
+        st.charging = false; if (st.sfx) { st.sfx.stop(); st.sfx = null; }
+        const from = st.orb ? st.orb.position.clone() : c.muzzle(new THREE.Vector3());
+        killOrb(c, st);
+        if (c01 < 0.1) { st.cd = 0.3; return; }        // barely formed — she fades
+        pay(c, def, st);
+        g.projectiles.spawnProjectile(c, {
+          pos: from, vel: c.aim3.clone().setLength(def.speed || 34),
+          radius: (def.minR || 2) + c01 * ((def.maxR || 5.5) - (def.minR || 2)),
+          damage: (def.dmgMin || 28) + c01 * ((def.dmgMax || 80) - (def.dmgMin || 28)),
+          blast: (def.blastMin || 16) + c01 * ((def.blastMax || 34) - (def.blastMin || 16)),
+          power: 1.4 + c01 * 1.2, homing: def.homing || 2.2, life: 7,
+          face: true, armDelay: def.armDelay || 0.6, shock: true, ground: true,
+          color: def.color || '#ffe8c0', color2: '#ffffff',
+        });
+        g.audio.blast(180, 0.25); g.world.punch(0.88); g.vfx.flash(from, def.color || '#ffe8c0', 8 + c01 * 8, 0.25);
+      }
     }
   },
 
