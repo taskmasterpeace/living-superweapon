@@ -2,6 +2,27 @@
 
 *A complete guide to the game, written to be read aloud.*
 
+Everything in here describes what the game actually does. Where a number appears, it was measured
+from the running game rather than estimated. If the game changes, this changes with it.
+
+**CONTENTS**
+
+1. What this game is
+2. Arriving — the opening card
+3. The body — moving, evading, flying, and the marker under your feet
+4. The fist — the melee triangle, the haymaker, the block law, throwing the city
+5. The powers — charging, beams, tiers
+6. Damage — the eight types and what actually hurts what
+7. The city is alive — people, the villain law, the crowd fighting back, destruction
+8. What it all sounds like — the mix, the city bed, voices, bodies, energy, the score
+9. The broadcast — the news crew and the post-match report
+10. Reading the screen — every element of the HUD, and the home page
+11. The opponents — how the AI thinks, and the two laws it obeys
+12. How to win
+
+*Appendix A — control schemes and the controller*
+*Appendix B — playing it on a TV or a Steam Deck*
+
 ---
 
 ## PART ONE — WHAT THIS GAME IS
@@ -36,7 +57,25 @@ The city decides what the fight looks like. The country decides what happens to 
 
 ---
 
-## PART TWO — THE BODY. HOW YOU MOVE.
+## PART TWO — ARRIVING
+
+A match doesn't start. It **opens**, the way a film opens on a city.
+
+The screen holds on a card: the city's name, large, with the country under it in gold. Beneath
+that, the facts — population and what kind of place this is, which districts it's built from, a
+crime index and a safety index with bars, how many seconds the police take here, and whether people
+like you are legal in this country at all. If vigilantism is banned, that word sits there in red.
+
+Then the card lifts, the background fades up through it, and you're standing in the street.
+
+**The Danger Room does something different.** It doesn't arrive — it *boots*. The card goes
+holo-cyan, and instead of a city it lists a system coming online: environment PROJECTED, subject
+LIVE, safeties ENGAGED, telemetry RECORDING, with a progress bar filling underneath. It's a
+simulation and it should say so.
+
+---
+
+## PART THREE — THE BODY. HOW YOU MOVE.
 
 ### Walking, and the double tap
 
@@ -128,7 +167,7 @@ Learn those five colours and you can read a fight from across the block.
 
 ---
 
-## PART THREE — THE FIST. HOW YOU FIGHT.
+## PART FOUR — THE FIST. HOW YOU FIGHT.
 
 ### The triangle
 
@@ -212,7 +251,7 @@ lie to you.
 
 ---
 
-## PART FOUR — THE POWERS
+## PART FIVE — THE POWERS
 
 Every character has a kit of abilities on the mouse buttons and Q, E, H and R. R is always the
 ultimate. All of them spend **ki** — the blue bar — and if you run out mid-ability, the game tells
@@ -241,7 +280,7 @@ exchange his tier is hard-capped at two. That's the android trade.
 
 ---
 
-## PART FIVE — DAMAGE, AND WHAT ACTUALLY HURTS WHAT
+## PART SIX — DAMAGE, AND WHAT ACTUALLY HURTS WHAT
 
 Every hit in this game carries a **type**, and every fighter carries resistances. This is the part
 most players will never see written down, and it decides fights.
@@ -253,8 +292,8 @@ There are eight types.
 **Ballistic** is bullets, and it has its own scale. A bullet meets **armour** first — a flat
 subtraction, with sparks off the plate — and then **toughness**, which scales with Strength. The
 measured numbers tell the story: one shotgun blast does sixty damage to an unarmoured hero, about
-eleven to RAGE, and *zero* through TITAN's plate. A gun is lethal to a person and an annoyance to a
-superweapon.
+eleven to RAGE, and *zero* through TITAN's plate. A gun is lethal to a person and an annoyance to an
+ascendant.
 
 **Energy** is ki — blasts and beams. The universal currency. Few things resist it.
 
@@ -286,7 +325,7 @@ lie to you about what the engine is doing.
 
 ---
 
-## PART SIX — THE CITY IS ALIVE
+## PART SEVEN — THE CITY IS ALIVE
 
 ### The people
 
@@ -369,7 +408,101 @@ corner bodega with an awning and a lit sign, facing the junction.
 
 ---
 
-## PART SEVEN — THE BROADCAST
+## PART EIGHT — WHAT IT ALL SOUNDS LIKE
+
+There isn't a single recorded sound in this game. Every noise you hear is generated, live, from
+maths — which is why the whole thing fits in one file that runs with no internet.
+
+### The mix
+
+Five separate channels, each with its own fader in Options: **music**, **combat and world**,
+**voices**, **city ambience**, and **interface and broadcast**. Turn the music down without
+touching the punches. They all feed a compressor that rides the whole programme, so a star
+sphere going off over a busy street doesn't tear your ears off and a quiet moment still has weight.
+
+### The city has a sound, and it changes as you walk
+
+There's a continuous bed underneath everything, and it follows *where you're standing*.
+
+Downtown is traffic and crowd. The docks are surf, gulls and a container yard clanking. Industrial
+is machinery. The greenbelt is wind and birdsong. Out in the county it's mostly wind and insects,
+because a village is not a small city.
+
+**Night changes it.** Traffic falls away, the crowd thins, and the countryside gets *louder* —
+crickets instead of birds, and somewhere a dog barking in the dark.
+
+**Altitude changes it too.** Climb and the street falls away beneath you until there's almost
+nothing but wind. That's a real cue: if you can't hear the city, you're too high to be part of it.
+
+The layers crossfade over about a second, so walking a block is a fade, never a cut. On top of the
+bed you'll catch one-off details — a car horn, a distant siren for a fight that isn't yours, gulls,
+a clank from the works.
+
+### People actually talk
+
+This is the part worth explaining, because it isn't a sound library.
+
+A human voice is a buzz from your vocal folds, shaped by the resonances of your throat and mouth.
+The game builds exactly that: a buzzing tone with a natural wobble, pushed through three filters
+tuned to the frequencies that make a vowel a vowel. Change those three numbers and "ah" becomes
+"oh". String several together with a pitch contour over the top and you have a **word** — not a
+word in any language, but a word your ear accepts as one.
+
+So civilians speak. You won't catch what they're saying, and that's correct — you're hearing a
+stranger shout from across a street.
+
+Speakers differ by **pitch and by the length of their throat**, which means a man, a woman, an
+elder and a child are genuinely different people rather than one voice sped up. A shorter throat
+puts those three resonances higher, so a child sounds *smaller* rather than just higher-pitched —
+which is the difference between a real child's voice and a man's played fast. Elders sound
+breathier, because there's more air in the buzz.
+
+There are ten emotional shapes — idle chatter, noticing you, pointing you out, fear, screaming,
+panic, anger, squaring up, pain, and awe — and the synth improvises *inside* each shape. **No line
+is ever the same twice.** You will never hear a civilian repeat themselves, because there's nothing
+to repeat.
+
+What you'll actually hear: muttering as you walk past, someone going *up* at the end of a sentence
+when they spot you, a scream when a blast takes someone down, and — in a country that's outlawed
+you — the flat, falling tone of somebody deciding to square up before they draw.
+
+### You can hear what someone is made of
+
+When a fighter lands, the sound tells you what their body is.
+
+**Flesh** thumps. **Metal** clangs and then *rings*, with a servo edge to it. **Stone** drops like a
+boulder. An **energy** body barely makes contact at all. A hard landing shakes debris loose on top.
+
+You do not have to look to know a robot just landed behind you.
+
+### Energy
+
+The hardest thing in the game to make sound right, because "energy" isn't a real sound — there's
+nothing to record.
+
+Three ingredients do the work. First, the tones stacked on top of each other are deliberately **not**
+musical intervals — they're irrational ratios, so your ear can never resolve them into a note. You
+hear a *force* rather than a chord. Second, **ring modulation**: two tones multiplied together,
+leaving only their sum and difference. That's the metallic, unplaceable shimmer, and it's the main
+event. Third, **crackle** — the sound of air being ionised, arcing over the top.
+
+So a charge starts as a low gather and climbs, getting brighter and *less stable* as it fills, and
+past about a quarter full it starts to spit. That instability is your cue to release.
+
+A beam is the sustained version of the same voice — and a beam that's **losing a clash audibly
+strains**. You can hear which way a beam struggle is going without looking at it.
+
+Ascending to a new power tier makes the air crack three times.
+
+### The score
+
+A drone underneath everything, always there. When a fight starts, a heartbeat pulse arrives beneath
+it and the filter opens up as things escalate. It crossfades between menu, combat and victory, and
+it never loops, so it doesn't wear out the way a short track would.
+
+---
+
+## PART NINE — THE BROADCAST
 
 There is a news crew in almost every match, and they are real objects in the world.
 
@@ -398,7 +531,23 @@ shutouts. It estimates the damage in dollars. It quotes witnesses by district.
 
 ---
 
-## PART EIGHT — READING THE SCREEN
+### The home page is a news hour
+
+Before you even start, the menu is a broadcast. There's a monitor with a KMK 9 bug, a blinking LIVE
+light, the real in-world clock and a lower third — and **it plays actual footage from your last
+match.** Not a mockup: the frames the field crew genuinely captured, with analogue snow between
+clips.
+
+If you haven't fought yet it runs a broadcast test card that says NO FOOTAGE ON FILE, because a
+dead monitor reads as broken rather than as "nothing has happened yet."
+
+The headline beside it comes from the live record — who holds the belt, who leads the book, what
+happened recently. On a fresh install it tells you plainly that nothing is on record. It never
+invents a story.
+
+---
+
+## PART TEN — READING THE SCREEN
 
 **Bottom left** is you: health, energy, guard meter, your level badge and experience bar. Energy
 turns amber below thirty-eight percent and pulses red below fifteen.
@@ -426,7 +575,7 @@ cheating.
 
 ---
 
-## PART NINE — THE OPPONENTS
+## PART ELEVEN — THE OPPONENTS
 
 The AI in this game is built on two laws, and both were fixed because they were broken.
 
@@ -460,7 +609,7 @@ Measured: circle-strafing leaves a bot about four degrees behind on average — 
 
 ---
 
-## PART TEN — HOW TO WIN
+## PART TWELVE — HOW TO WIN
 
 **Read the ground marker.** Colour tells you altitude, wedge tells you where they're looking, inner
 ring tells you what they're doing. Orange means a haymaker is coming.
@@ -488,7 +637,7 @@ is a choice the game will let you make. It just won't let you make it quietly.
 
 ---
 
-## APPENDIX — CONTROL SCHEMES
+## APPENDIX A — CONTROL SCHEMES
 
 Three layouts, switchable in Options, and the help panel always shows the one you're using.
 
@@ -507,3 +656,35 @@ covers your remaining abilities. Start pauses, select opens the roster.
 In menus, the d-pad or left stick moves a gold focus ring, A confirms, B goes back. The whole game —
 every roster screen, every panel, the pause menu, and quitting — is drivable without ever touching a
 mouse or a keyboard.
+
+**The help panel follows the device in your hands.** Pick up a controller and it stops talking about
+WASD and starts showing △ ○ ✕ □, L1, R2 — PlayStation faces by default, A/B/X/Y if it recognises an
+Xbox pad. Put the controller down and it goes back to keys. It changes the moment you do.
+
+---
+
+## APPENDIX B — PLAYING IT ON A TV OR A STEAM DECK
+
+The game ships as a real desktop application as well as in a browser. No dev server, no terminal,
+no mouse required.
+
+**On Windows**, there's a single portable executable — put it anywhere, double-click it, and it
+opens fullscreen. Windows will warn about an unknown publisher because it isn't code-signed; that's
+expected.
+
+**On a Steam Deck**, extract the Linux build, mark the binary executable, and check it launches in
+Desktop Mode first. Then add it through Steam's *Add a Non-Steam Game*, and — this is the step
+everyone misses — open its Properties and set the **Controller Layout to Gamepad**. The Deck
+defaults non-Steam games to a desktop preset where the sticks push a mouse cursor around instead of
+driving your character.
+
+Because there's no keyboard on a Deck and no window chrome in fullscreen, the pause menu grows an
+extra row on desktop: **Quit Game**. Without it you'd have no way out.
+
+Two notes on performance. The simulation deliberately clamps its timestep, which means a low frame
+rate shows up as *slow motion* rather than stutter — that's the GPU asking for mercy, not a bug.
+Drop Render Quality in Options, or cap the Deck to 40 Hz; this game is much more pleasant locked at
+40 than fluctuating around 60. The renderer also has three adaptive quality tiers and drops one
+automatically when frame time slips, so it degrades gracefully rather than falling over.
+
+Full setup instructions are in `DESKTOP_AND_STEAM_DECK.md`.

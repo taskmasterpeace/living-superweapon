@@ -1,4 +1,4 @@
-# PLAYING LIVING SUPERWEAPON ON DESKTOP AND STEAM DECK
+# PLAYING WAR WORLD: ASCENDANTS ON DESKTOP AND STEAM DECK
 
 The game now ships as a real desktop application. No browser, no dev server, no terminal, no
 mouse, no keyboard. You launch it and you're in the game.
@@ -46,16 +46,16 @@ npm run desktop          # build and run it locally, without packaging
 with no extra setup (75 MB portable, verified launching). Building the **Linux AppImage from
 Windows FAILS** at the final packaging step: the AppImage tool needs a Linux host. What *does*
 build cleanly on Windows is `release/linux-unpacked/` — the complete Linux application directory,
-including the `living-superweapon` binary. Tar that up and it runs on the Deck.
+including the `war-world-ascendants` binary. Tar that up and it runs on the Deck.
 
 So the honest state today:
 
 | target | built on Windows? | file |
 |---|---|---|
-| Windows portable `.exe` | **yes, verified** | `LivingSuperweapon-…-win-x64.exe` (75 MB) |
+| Windows portable `.exe` | **yes, verified** | `WarWorldAscendants-…-win-x64.exe` (~75 MB) |
 | Windows installer | **yes** | NSIS `.exe` |
 | Linux unpacked dir | **yes** | `release/linux-unpacked/` (281 MB) |
-| Linux `.tar.gz` | **yes** | `LivingSuperweapon-…-linux-x64.tar.gz` (110 MB) |
+| Linux `.tar.gz` | **yes** | `WarWorldAscendants-…-linux-x64.tar.gz` (~110 MB) |
 | Linux AppImage | **no — needs a Linux host** | build from WSL, a Linux box, or the Deck |
 
 Use the **tar.gz** path on the Deck below. It's one extra step (extract) and avoids AppImage's FUSE
@@ -67,13 +67,13 @@ dependency entirely, which is arguably more reliable anyway.
 
 ### Step 1 — get the file onto the Deck
 
-Copy `LivingSuperweapon-0.1.0-linux-x64.tar.gz` from `release/` to the Deck. Any of:
+Copy `WarWorldAscendants-0.1.0-linux-x64.tar.gz` from `release/` to the Deck. Any of:
 
 - a USB stick or microSD card
 - `scp` over your network (the Deck runs SSH once you enable it)
 - upload it somewhere and download it in Desktop Mode's browser
 
-Put it somewhere permanent — `/home/deck/Games/LivingSuperweapon/` is a good habit. **Do not leave
+Put it somewhere permanent — `/home/deck/Games/WarWorld/` is a good habit. **Do not leave
 it in `~/Downloads`**; you'll clear that folder one day and break your library entry.
 
 ### Step 2 — extract it and make it executable
@@ -83,10 +83,10 @@ Press the **STEAM** button → **Power** → **Switch to Desktop**.
 Open **Konsole** and run:
 
 ```bash
-mkdir -p ~/Games/LivingSuperweapon
-tar -xzf ~/Downloads/LivingSuperweapon-0.1.0-linux-x64.tar.gz -C ~/Games/LivingSuperweapon
-chmod +x ~/Games/LivingSuperweapon/linux-unpacked/living-superweapon
-~/Games/LivingSuperweapon/linux-unpacked/living-superweapon
+mkdir -p ~/Games/WarWorld
+tar -xzf ~/Downloads/WarWorldAscendants-0.1.0-linux-x64.tar.gz -C ~/Games/WarWorld
+chmod +x ~/Games/WarWorld/linux-unpacked/war-world-ascendants
+~/Games/WarWorld/linux-unpacked/war-world-ascendants
 ```
 
 **That last line should launch the game.** Confirm it runs in Desktop Mode before going further —
@@ -94,7 +94,7 @@ if it doesn't launch here it won't launch from Steam either, and it's far easier
 at this stage.
 
 The binary you point Steam at is:
-`/home/deck/Games/LivingSuperweapon/linux-unpacked/living-superweapon`
+`/home/deck/Games/WarWorld/linux-unpacked/war-world-ascendants`
 
 ### Step 3 — add it to Steam
 
@@ -103,7 +103,7 @@ Still in Desktop Mode, open **Steam** → bottom-left **Add a Game** → **Add a
 
 Set the file-type filter to **All Files** — the picker hides non-`.desktop` entries by default and
 this is where most people get stuck. Navigate to
-`/home/deck/Games/LivingSuperweapon/linux-unpacked/living-superweapon`, select it, then
+`/home/deck/Games/WarWorld/linux-unpacked/war-world-ascendants`, select it, then
 **Add Selected Programs**.
 
 ### Step 4 — set the controller layout
@@ -193,7 +193,7 @@ time slips, so it degrades gracefully rather than falling over. You can lock a t
 
 ## WINDOWS
 
-`LivingSuperweapon-…-win-x64.exe` in `release/` is **portable** — put it anywhere and double-click.
+`WarWorldAscendants-…-win-x64.exe` in `release/` is **portable** — put it anywhere and double-click.
 The NSIS build is a normal installer if you'd rather have a Start-menu entry.
 
 Windows will show an "unknown publisher" warning, because the executable isn't code-signed. Signing

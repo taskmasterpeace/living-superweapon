@@ -86,7 +86,7 @@ applied at the choke point.
 | type | sources | what it's for |
 |---|---|---|
 | `physical` | fists, slams, thrown cars, melee weapons | the baseline — nothing resists it much |
-| `ballistic` | bullets, pellets | lethal to people, an annoyance to superweapons |
+| `ballistic` | bullets, pellets | lethal to people, an annoyance to ascendants |
 | `energy` | ki blasts, beams, star spheres | the universal currency — few resistances |
 | `fire` | flame arrows, burn stacks, PYRE/TORCH | strong vs flesh, weak vs metal |
 | `cold` | frost cones, RIME | builds FREEZE; fire heroes shrug it off |
