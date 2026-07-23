@@ -611,6 +611,11 @@ export class HUD {
     // cover blocks
     ctx.fillStyle = 'rgba(120,132,155,.55)';
     for (const c of (g.world && g.world.cover) || []) { const [x, y] = toXY(c.x, c.z); const w = (c.hx ?? c.r) * sc, h = (c.hz ?? c.r) * sc; ctx.fillRect(x - w, y - h, Math.max(2, w * 2), Math.max(2, h * 2)); }
+    // district labels
+    ctx.font = '700 8px sans-serif'; ctx.textAlign = 'center'; ctx.globalAlpha = 0.85;
+    const lab = (t, wx, wz, col) => { const [x, y] = toXY(wx, wz); ctx.fillStyle = col; ctx.fillText(t, x, y); };
+    lab('COM', -96, -140, '#9fc0ff'); lab('RES', 0, 140, '#ffb87a'); lab('IND', 156, -20, '#c0d0e0'); lab('MIL', -144, 200, '#a8c070');
+    ctx.globalAlpha = 1;
     const P = g.player;
     // player vision wedge
     if (P) {

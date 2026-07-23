@@ -178,13 +178,28 @@ export class World {
     // The district: cover blocks are BUILDINGS now — white stone, windowed faces, varied
     // skyline. Same footprints as before (cover balance is tuned), heights re-sculpted.
     this.cover = []; this.coverAll = [];
-    const winTex = this._windowTexture();
-    const mkWin = (tint) => new THREE.MeshStandardMaterial({
-      map: winTex.map, emissiveMap: winTex.glow, emissive: '#ffca7a', emissiveIntensity: 0.1,
+    const mkWin = (tex, tint, emissive = '#ffca7a') => new THREE.MeshStandardMaterial({
+      map: tex.map, emissiveMap: tex.glow, emissive, emissiveIntensity: 0.1,
       color: tint, roughness: 0.82, metalness: 0.05,
     });
-    this._winMats = [mkWin('#e6e0d2'), mkWin('#d6cfbd')];
-    const roofMat = new THREE.MeshStandardMaterial({ color: '#b9b2a0', roughness: 0.9, metalness: 0.04 });
+    const texC = this._windowTexture('commercial');
+    this._winMats = [
+      mkWin(texC, '#e6e0d2'), mkWin(texC, '#d6cfbd'),                       // commercial A/B
+      mkWin(this._windowTexture('residential'), '#e2cfae'),                 // residential
+      mkWin(this._windowTexture('industrial'), '#b8bcc0', '#cfe8ff'),       // industrial (cool glow)
+      mkWin(this._windowTexture('military'), '#8f9472', '#b8ffb0'),         // military (green slits)
+    ];
+    const bridgeMat = new THREE.MeshStandardMaterial({ color: '#c5beb0', roughness: 0.9, metalness: 0.05 });
+    // per-district ROOFS — from the sky you see rooftops, not facades; this is what makes
+    // the four sections readable on the full-map view
+    const roofMats = [
+      new THREE.MeshStandardMaterial({ color: '#b9b2a0', roughness: 0.9, metalness: 0.04 }),   // commercial pale
+      new THREE.MeshStandardMaterial({ color: '#b9b2a0', roughness: 0.9, metalness: 0.04 }),
+      new THREE.MeshStandardMaterial({ color: '#a85c3e', roughness: 0.92, metalness: 0.02 }),  // residential terracotta
+      new THREE.MeshStandardMaterial({ color: '#5f666c', roughness: 0.75, metalness: 0.35 }),  // industrial steel
+      new THREE.MeshStandardMaterial({ color: '#5c6044', roughness: 0.92, metalness: 0.05 }),  // military olive
+    ];
+    const roofMat = roofMats[0];
     // one window bay tile ≈ 28 units; scale each face's UVs so windows stay true-size per building
     const scaleBoxUV = (geo, w, h, d) => {
       const uv = geo.attributes.uv, B = 28, R = 16;
@@ -195,39 +210,46 @@ export class World {
       }
       uv.needsUpdate = true;
     };
-    // DISTRICTS at TRUE CITY SCALE (block grid = 96u cells, streets between them; ≤20 = fog cap).
-    // Buildings FILL their blocks now (30-64u footprints vs a 9.6u hero) — you fight in the
-    // streets between them and on their roofs, not over a model-train set.
+    // FOUR NAMED DISTRICTS at city scale (96u block cells; total cover ≤20 = fog cap).
+    // style: 0/1 = COMMERCIAL glass · 2 = RESIDENTIAL warm stone · 3 = INDUSTRIAL steel ·
+    // 4 = MILITARY olive · 5 = the BRIDGE deck (standable — block-top physics is free)
     const spots = [
-      // downtown — the skyline (NW quadrant)
-      [-192, -192, 48, 44, 40], [-96, -192, 40, 38, 40], [-192, -96, 40, 34, 40], [-96, -96, 36, 28, 36],
-      // midtown north
-      [0, -192, 56, 22, 40], [96, -192, 44, 26, 36], [0, -96, 44, 18, 36], [96, -96, 40, 20, 36],
-      // midtown east
-      [96, 0, 40, 16, 36],
-      // old town — low & wide, rooftop-brawl country
-      [-96, 96, 46, 12, 38], [0, 96, 54, 10, 42], [96, 96, 42, 14, 34],
-      [-192, 192, 40, 16, 34], [-96, 192, 30, 10, 26], [0, 192, 58, 12, 40], [96, 192, 42, 12, 34],
-      // dockside warehouses (against the harbor)
-      [169, -96, 28, 10, 50], [169, 40, 28, 12, 44],
+      // COMMERCIAL — the downtown skyline, NW + north
+      [-192, -192, 48, 44, 40, 0], [-96, -192, 40, 38, 40, 1], [-192, -96, 40, 34, 40, 1], [-96, -96, 36, 28, 36, 0],
+      [0, -192, 56, 22, 40, 1], [96, -192, 44, 26, 36, 0], [96, -96, 40, 20, 36, 1], [0, -96, 44, 18, 36, 0],
+      // RESIDENTIAL — warm low homes, south
+      [-96, 96, 44, 12, 36, 2], [0, 96, 50, 10, 40, 2], [96, 96, 40, 14, 34, 2], [0, 192, 54, 12, 38, 2],
+      // INDUSTRIAL — dockside warehouses against the harbor
+      [169, -96, 28, 12, 50, 3], [169, 40, 28, 14, 44, 3],
+      // MILITARY — the SW compound: two bunkers + a watchtower
+      [-192, 192, 40, 10, 34, 4], [-96, 192, 34, 8, 28, 4], [-146, 168, 8, 26, 8, 4],
+      // THE BRIDGE — a deck across the harbor at z=0 (top y=3: dry feet over deep water)
+      [195, 0, 80, 3, 16, 5],
       // west park cells (-192,0) and (-192,96) stay OPEN — the park belt
     ];
     const crackTex = this._crackTexture();
-    let bi = 0;
-    for (const [x, z, w, h, d] of spots) {
+    for (const [x, z, w, h, d, style = 0] of spots) {
       const geo = new THREE.BoxGeometry(w, h, d);
-      scaleBoxUV(geo, w, h, d);
-      const win = this._winMats[bi++ % 2];
+      const isBridge = style === 5;
+      if (!isBridge) scaleBoxUV(geo, w, h, d);
+      const win = isBridge ? bridgeMat : this._winMats[Math.min(style, 4)];
       // ONE material per box (1 draw + 1 shadow draw — material arrays would 6× that);
       // the roof is a child slab that inherits the shatter-sink transform and casts nothing.
-      // Only the TALL buildings cast shadows — low old-town shadows barely read at iso zoom,
-      // and every caster is another full pass over the shadow map each frame.
+      // Only TALL buildings cast shadows — every caster is another pass over the shadow map.
       const m = new THREE.Mesh(geo, win);
       m.position.set(x, h / 2, z); m.castShadow = h >= 20; m.receiveShadow = true;
-      const roof = new THREE.Mesh(new THREE.PlaneGeometry(w, d), roofMat);
-      roof.rotation.x = -Math.PI / 2; roof.position.y = h / 2 + 0.05;
-      roof.receiveShadow = true;
-      m.add(roof);
+      if (!isBridge) {
+        const roof = new THREE.Mesh(new THREE.PlaneGeometry(w, d), roofMats[Math.min(style, 4)]);
+        roof.rotation.x = -Math.PI / 2; roof.position.y = h / 2 + 0.05;
+        roof.receiveShadow = true;
+        m.add(roof);
+      } else {
+        // guard rails ride the deck (children — shatter carries them into the drink)
+        for (const side of [-1, 1]) {
+          const rail = new THREE.Mesh(new THREE.BoxGeometry(w, 1.4, 0.5), bridgeMat);
+          rail.position.set(0, h / 2 + 0.7, side * (d / 2 - 0.35)); m.add(rail);
+        }
+      }
       g.add(m);
       // crack overlay — fades in as the block takes damage
       const crack = new THREE.Mesh(new THREE.BoxGeometry(w * 1.015, h * 1.006, d * 1.015), new THREE.MeshBasicMaterial({ map: crackTex, transparent: true, opacity: 0, depthWrite: false }));
@@ -336,6 +358,50 @@ export class World {
       const ac = new THREE.Mesh(new THREE.BoxGeometry(Math.min(6, c.w * 0.22), 2.6, Math.min(6, c.d * 0.22)), acMat);
       ac.position.set(c.w * 0.24, c.h / 2 + 1.35, -c.d * 0.22); c.mesh.add(ac);
     }
+
+    // ---- district dressing (decor only — no cover slots, no fog boxes) ----
+    // INDUSTRIAL: storage tanks + a quay crane over the water
+    const tankGeos = [[160, -30], [172, -22], [158, -12]].map(([x, z]) =>
+      new THREE.CylinderGeometry(6.5, 6.5, 11, 12).translate(x, 5.5, z));
+    const tanks = new THREE.Mesh(mergeGeometries(tankGeos), new THREE.MeshStandardMaterial({ color: '#8f979c', roughness: 0.6, metalness: 0.5 }));
+    tankGeos.forEach(t => t.dispose()); tanks.castShadow = false; tanks.receiveShadow = true; g.add(tanks);
+    const craneGeos = [
+      new THREE.BoxGeometry(8, 4, 8).translate(180, 2, 74),        // base
+      new THREE.BoxGeometry(2.6, 38, 2.6).translate(180, 21, 74),  // mast
+      new THREE.BoxGeometry(44, 2.2, 2.2).translate(196, 38, 74),  // jib out over the water
+      new THREE.BoxGeometry(12, 2.2, 2.2).translate(170, 38, 74),  // counter-jib
+      new THREE.BoxGeometry(1, 10, 1).translate(212, 32.8, 74),    // cable
+    ];
+    const crane = new THREE.Mesh(mergeGeometries(craneGeos), new THREE.MeshStandardMaterial({ color: '#c9a227', roughness: 0.55, metalness: 0.4 }));
+    craneGeos.forEach(t => t.dispose()); crane.castShadow = true; g.add(crane);
+
+    // MILITARY: perimeter fence (with a gate gap) + helipad
+    const fenceMat = new THREE.MeshStandardMaterial({ color: '#55583f', roughness: 0.8, metalness: 0.3 });
+    const fenceGeos = [
+      new THREE.BoxGeometry(180, 3.5, 1).translate(-138, 1.75, 146),   // north run
+      new THREE.BoxGeometry(1, 3.5, 88).translate(-48, 1.75, 190),     // east run
+      new THREE.BoxGeometry(60, 3.5, 1).translate(-198, 1.75, 234),    // south-west stub (gate gap mid-south)
+    ];
+    const fence = new THREE.Mesh(mergeGeometries(fenceGeos), fenceMat);
+    fenceGeos.forEach(t => t.dispose()); fence.castShadow = false; g.add(fence);
+    const heliTex = (() => {
+      const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d');
+      x.strokeStyle = '#e8e2d4'; x.lineWidth = 7; x.beginPath(); x.arc(64, 64, 52, 0, Math.PI * 2); x.stroke();
+      x.font = '900 64px sans-serif'; x.fillStyle = '#e8e2d4'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('H', 64, 68);
+      return new THREE.CanvasTexture(c);
+    })();
+    const heli = new THREE.Mesh(new THREE.CircleGeometry(13, 24), new THREE.MeshBasicMaterial({ map: heliTex, transparent: true, opacity: 0.8, depthWrite: false }));
+    heli.rotation.x = -Math.PI / 2; heli.position.set(-144, 0.12, 205); g.add(heli);
+
+    // DISTRICT WASHES — faint color fields so the sections read from the sky (+ the radar labels)
+    const wash = (wd, dp, x, z, col, op) => {
+      const p = new THREE.Mesh(new THREE.PlaneGeometry(wd, dp), new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: op, depthWrite: false }));
+      p.rotation.x = -Math.PI / 2; p.position.set(x, 0.09, z); g.add(p);
+    };
+    wash(288, 192, -96, -144, '#7fb0ff', 0.07);   // commercial — cool
+    wash(288, 192, 0, 144, '#ff9a3a', 0.07);      // residential — warm
+    wash(64, 240, 156, -24, '#9fb2c9', 0.1);      // industrial — steel
+    wash(192, 92, -144, 196, '#7a8a4a', 0.12);    // military — olive
   }
 
   // 0 = dry land · 1 = shallow shelf · 2 = deep water
@@ -449,23 +515,51 @@ export class World {
     return t;
   }
 
-  // Building facades — one shared 4×4-window tile (repeats every ~28 units) + a separate
+  // Building facades per DISTRICT — a shared tile (repeats every ~28 units) + a separate
   // pure-glow map (black except the LIT windows) so night emissive lights ONLY the glass.
-  _windowTexture() {
+  _windowTexture(style = 'commercial') {
     const c = document.createElement('canvas'); c.width = c.height = 256;
     const g = document.createElement('canvas'); g.width = g.height = 256;
     const x = c.getContext('2d'), y = g.getContext('2d');
-    x.fillStyle = '#ddd6c6'; x.fillRect(0, 0, 256, 256);          // stone
     y.fillStyle = '#000'; y.fillRect(0, 0, 256, 256);
-    for (let r = 0; r < 4; r++) for (let col = 0; col < 4; col++) {
-      const px = col * 64 + 12, py = r * 64 + 10, w = 40, h = 44;
-      const lit = Math.random() < 0.3;
-      x.fillStyle = lit ? '#ffd9a0' : (Math.random() < 0.5 ? '#2c3342' : '#39414f');
+    const win = (px, py, w, h, lit, litCol, glass) => {
+      x.fillStyle = lit ? litCol : glass;
       x.fillRect(px, py, w, h);
       x.strokeStyle = 'rgba(60,54,40,0.55)'; x.lineWidth = 3; x.strokeRect(px, py, w, h);
-      x.fillStyle = 'rgba(255,255,255,0.10)'; x.fillRect(px + 4, py + 4, w - 8, 10);   // glass sheen
-      x.fillStyle = 'rgba(90,80,60,0.35)'; x.fillRect(px - 3, py + h, w + 6, 4);       // sill
-      if (lit) { y.fillStyle = '#ffca7a'; y.fillRect(px, py, w, h); }
+      x.fillStyle = 'rgba(255,255,255,0.10)'; x.fillRect(px + 3, py + 3, w - 6, Math.max(6, h * 0.22));
+      if (lit) { y.fillStyle = litCol; y.fillRect(px, py, w, h); }
+    };
+    if (style === 'residential') {                                 // warm stone, homey 2×3 windows + sills
+      x.fillStyle = '#d9c9ae'; x.fillRect(0, 0, 256, 256);
+      x.fillStyle = 'rgba(150,100,60,0.12)'; for (let i = 0; i < 256; i += 22) x.fillRect(0, i, 256, 3);   // course lines
+      for (let r = 0; r < 3; r++) for (let col = 0; col < 3; col++) {
+        const px = col * 84 + 16, py = r * 84 + 16, lit = Math.random() < 0.42;
+        win(px, py, 52, 56, lit, '#ffcf8a', '#3a3630');
+        x.fillStyle = 'rgba(120,80,50,0.5)'; x.fillRect(px - 4, py + 56, 60, 5);    // sill
+      }
+    } else if (style === 'industrial') {                           // corrugated steel + one big bay door
+      x.fillStyle = '#9aa0a2'; x.fillRect(0, 0, 256, 256);
+      x.fillStyle = 'rgba(60,66,70,0.35)'; for (let i = 0; i < 256; i += 12) x.fillRect(i, 0, 4, 256);     // corrugation
+      x.fillStyle = '#5b6165'; x.fillRect(70, 96, 116, 160);                                                // bay door
+      x.strokeStyle = 'rgba(30,34,38,0.6)'; x.lineWidth = 4; x.strokeRect(70, 96, 116, 160);
+      for (let i = 108; i < 256; i += 24) { x.beginPath(); x.moveTo(70, i); x.lineTo(186, i); x.stroke(); }
+      win(16, 18, 52, 34, Math.random() < 0.3, '#cfe8ff', '#2c3342');                                       // hi window
+      win(188, 18, 52, 34, Math.random() < 0.3, '#cfe8ff', '#2c3342');
+      x.fillStyle = '#f5b21a'; for (let i = 0; i < 256; i += 32) x.fillRect(i, 250, 16, 6);                 // hazard base stripe
+    } else if (style === 'military') {                             // olive drab, slit windows, stencil band
+      x.fillStyle = '#6b6f52'; x.fillRect(0, 0, 256, 256);
+      x.fillStyle = 'rgba(40,44,30,0.35)'; for (let i = 0; i < 256; i += 64) x.fillRect(0, i, 256, 6);
+      for (let col = 0; col < 3; col++) win(col * 84 + 22, 44, 44, 16, Math.random() < 0.25, '#b8ffb0', '#20261e');
+      for (let col = 0; col < 3; col++) win(col * 84 + 22, 150, 44, 16, Math.random() < 0.25, '#b8ffb0', '#20261e');
+      x.fillStyle = 'rgba(20,22,16,0.55)'; x.fillRect(0, 208, 256, 26);
+      x.fillStyle = '#c9c2a0'; x.font = '800 20px monospace'; x.textAlign = 'center'; x.fillText('RESTRICTED', 128, 227);
+    } else {                                                       // commercial — the glass grid
+      x.fillStyle = '#ddd6c6'; x.fillRect(0, 0, 256, 256);
+      for (let r = 0; r < 4; r++) for (let col = 0; col < 4; col++) {
+        const px = col * 64 + 12, py = r * 64 + 10;
+        win(px, py, 40, 44, Math.random() < 0.3, '#ffd9a0', Math.random() < 0.5 ? '#2c3342' : '#39414f');
+        x.fillStyle = 'rgba(90,80,60,0.35)'; x.fillRect(px - 3, py + 44, 46, 4);
+      }
     }
     const mk = (cv) => { const t = new THREE.CanvasTexture(cv); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 4; return t; };
     return { map: mk(c), glow: mk(g) };

@@ -4,7 +4,7 @@
 // v1 of the Witness Layer: no police escalation yet, but the city is no longer empty.
 import * as THREE from 'three';
 
-const COUNT = 64;
+const COUNT = 30;   // a present crowd, not a swarm (creator note: "don't make too many")
 const WALK = 0, FLEE = 1, DOWN = 2, FILM = 3;
 const _m4 = new THREE.Matrix4(), _q = new THREE.Quaternion(), _p = new THREE.Vector3(), _s = new THREE.Vector3(1, 1, 1);
 const _Y = new THREE.Vector3(0, 1, 0), _Z = new THREE.Vector3(0, 0, 1);
@@ -12,7 +12,7 @@ const _Y = new THREE.Vector3(0, 1, 0), _Z = new THREE.Vector3(0, 0, 1);
 export class Pedestrians {
   constructor(scene, arena, waterX) {
     this.arena = arena; this.waterX = waterX;   // stay off the harbor
-    const geo = new THREE.CapsuleGeometry(0.8, 3.6, 3, 8); geo.translate(0, 2.6, 0);   // human-scale next to a 9.6u hero
+    const geo = new THREE.CapsuleGeometry(0.88, 4.6, 3, 8); geo.translate(0, 3.15, 0);   // ~7.2u — true human scale against the buildings (heroes at 9.6u stay larger than life)
     const mat = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.9, metalness: 0 });
     this.mesh = new THREE.InstancedMesh(geo, mat, COUNT);
     this.mesh.frustumCulled = false; this.mesh.castShadow = false; this.mesh.receiveShadow = true;
