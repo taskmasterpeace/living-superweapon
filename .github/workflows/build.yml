@@ -1,0 +1,60 @@
+# Builds the game on GitHub's own machines and attaches the results to a Release.
+#
+# WHY THIS EXISTS: an AppImage — the single-file, no-typing Steam Deck download — can only be
+# built on Linux. Development happens on Windows, which can't produce one. This runs the Linux
+# build on GitHub's Ubuntu runners so the AppImage exists, and builds the Windows .exe alongside
+# it so the whole release is reproducible from CI rather than from one person's laptop.
+#
+# Trigger it by hand from the Actions tab (or `gh workflow run build.yml`), or by pushing a v* tag.
+# It uploads every artifact to the release named by `release_tag` (default v0.1.0).
+
+name: build-desktop
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Release tag to attach the builds to"
+        required: true
+        default: "v0.1.0"
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write        # required to upload assets to a Release
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: npm }
+      - run: npm ci
+      # AppImage (single file, no extraction) + tar.gz fallback. Building an AppImage does not
+      # need FUSE — only running one does — so no extra system packages are required here.
+      - run: npx electron-builder --linux AppImage tar.gz --publish never
+      - name: List what got built
+        run: ls -la release/
+      - name: Attach to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.inputs.release_tag || github.ref_name }}
+        run: |
+          gh release upload "$TAG" release/*.AppImage release/*.tar.gz --clobber
+
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: npm }
+      - run: npm ci
+      - run: npx electron-builder --win portable nsis --publish never
+      - name: Attach to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.inputs.release_tag || github.ref_name }}
+        shell: bash
+        run: |
+          gh release upload "$TAG" release/*.exe --clobber
