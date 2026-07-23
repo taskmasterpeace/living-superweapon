@@ -974,6 +974,12 @@ export class Game {
       killer._mastery[killer._lastSlot] = (killer._mastery[killer._lastSlot] || 0) + 1;
     }
     if (victim.def.police && this.police) this.police.onCopDown(killer);   // villainy squared
+    // THE HERO SIDE — a CLEAN rival takedown (no civilians harmed, not a cop, not a civilian) by the
+    // human player, in a country where vigilantism is legal, makes the crowd cheer instead of flee.
+    if (killer && this.isHuman(killer) && !victim.def.police && !victim.isDummy && !killer.def.police
+        && this.peds && this.peds.cheer && this.police && this.police.heatOf(killer) < 8) {
+      this.peds.cheer(victim.pos.x, victim.pos.z);
+    }
     // the news layer: log the knockdown, and the camera swings to the body
     if (!victim.isDummy && this.mode) {
       this.matchLog.push({ t: this.matchT, type: 'ko', v: victim.name, vid: victim.def.id, k: killer ? killer.name : null, kid: killer && killer.def ? killer.def.id : null, kind: victim._lastHitKind || 'blast', at: this.world.districtAt(victim.pos.x, victim.pos.z) });
@@ -1192,6 +1198,8 @@ export class Game {
     }
     // (5) NEMESIS — whoever put you down last is marked, and beating them pays
     if (target && this.isHuman(target) && src && src.def && !src.def.police) target._lastAggressor = src;
+    // ATTACKING THE POLICE escalates on its own — every hit on a badge books heat and hardens them.
+    if (!blocked && target && target.def && target.def.police && src && src.def && !src.def.police && this.police) this.police.onCopHurt(src, amount);
     // a solid hit is LOUD — nearby bots hear the scuffle and come looking (fair discovery)
     if (amount >= 10 && src && src !== target) this.noise(target.pos, Math.min(1.6, 0.5 + amount * 0.02), src);
     // the news desk's ledger: who dealt what, the biggest hit on record, and hot moments worth a camera

@@ -387,11 +387,32 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   values are an integrity index (Norway 85, Japan 76, Mexico 34, Somalia 20) — i.e. CPI-style.
   I read it backwards first and made Norway the crooked one. The field is renamed in the bake
   specifically so nobody repeats that.
-- Not yet wired, all authored and waiting: `milBudget`/`milService` (is the ARMY a real escalation
-  tier here), `mediaFreedom` (what KMK 9 may broadcast), `lswActivity`/`lswRegs` and `vigilantism`
-  (Banned/Regulated/Legal — whether an unregistered hero is a criminal on landing), `terrorism`,
-  `science`, `cloning`, `capitalPunishment`, plus `motto`, `demonym`, `leaderTitle` and the named
-  head of state for the news desk and the codex.
+- **THE MILITARY TIER — `milBudget`/`milService` are LIVE now** (2026-07-23). The wanted ladder
+  runs ★ beat cops (heat 35) → ★★ patrol backup (90) → ★★★ TACTICAL/SWAT (160) → **★★★★ the
+  MILITARY (240)**, and the top rung EXISTS ONLY where the state has an army to send:
+  `police._hasMilitary()` = `milBudget >= 52 || milService >= 60` (median milBudget ~41; USA/Japan
+  ~85, Somalia 25). A lawless country tops out at SWAT and just keeps sending them — that
+  difference is the payoff. `GUARD_DEF` in police.js: 145hp, `armor: 8`, `body: 'metal'`, an
+  assault rifle + a rifle-grenade, deployed 4 at a time; the escalation announces
+  "THE MILITARY IS DEPLOYING" and the news runs it at priority 3. ⚠ Adding the 4th tier exposed a
+  latent `'☆'.repeat(3 - lvl)` in `hud.js` (→ `.repeat(-1)` RangeError every frame at ★★★★) — the
+  wanted display now caps at 4 and shows a 🪖 MARTIAL row.
+- **ATTACKING THE POLICE ESCALATES HARD** (Robert's ruling): `onCopDown` JUMPS you to at least the
+  next star + compounds per badge (`_copsKilled * 18`); `onCopHurt(src, amount)` (hooked in
+  `game.onHit` for any hit on a `def.police` target) books `amount * 0.55` heat and pulls
+  reinforcements in. Both OVERRIDE a corrupt "unanswered" call — a bought state ignores a civilian
+  call but never its own officers being shot. Verified: a cop kill at heat 50 → 118 (past ★).
+- **VIGILANTISM is now genuinely tri-modal** (`data/pedestrians.js`, `setVigilantism`): **Legal** —
+  a sanctioned Ascendant, NOBODY draws, and a CLEAN rival KO by the human player earns a CROWD
+  CHEER (`peds.cheer`, hooked in handleKO when `heatOf(killer) < 8`). **Regulated** — neutral, they
+  film, and draw ONLY when the violence is CLOSE (`d2 < 320`, ~18u — personally threatened).
+  **Banned** — you're a criminal on sight, they draw from across the street and every phone is
+  evidence. **CROWD CONTAGION**: `_embolden` (a drawn weapon rallies the block, ×draw-chance) and
+  `_panic` (a fresh corpse — especially an armed one — collapses bravado and scatters them). Both
+  decay to calm. Verified: Regulated-far 0 armed, Regulated-close 3, Banned-close 9, Legal 0.
+- Still authored and waiting: `mediaFreedom` (what KMK 9 may broadcast), `lswActivity`/`lswRegs`
+  (registration status), `terrorism`, `science`, `cloning`, `capitalPunishment`, plus `motto`,
+  `demonym`, `leaderTitle` and the named head of state for the news desk and the codex.
 - ⚠ **`_teardownCity` used to leak materials.** It disposed geometry only, so every rebuild
   orphaned a ground/wall/water/quay/lamp material plus ONE crack-overlay material per building.
   Rebuilding 7 cities took a soak from 6.4ms to 48.6ms/frame. It now disposes per-city materials

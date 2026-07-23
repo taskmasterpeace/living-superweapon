@@ -2323,7 +2323,9 @@ export class HUD {
     // the wanted meter — the city has opinions about who hurts humans
     if (g.police) {
       const lvl = g.police.wantedLevel(p);
-      const txt = lvl ? `🚨 WANTED ${'★'.repeat(lvl)}${'☆'.repeat(3 - lvl)}` : '';
+      // ⚠ the ladder now goes to 4 (the MILITARY tier) — `3 - lvl` would be -1 and .repeat throws.
+      const MAXW = 4;
+      const txt = lvl ? (lvl >= MAXW ? `🪖 MARTIAL ${'★'.repeat(lvl)}` : `🚨 WANTED ${'★'.repeat(lvl)}${'☆'.repeat(Math.max(0, MAXW - 1 - lvl))}`) : '';
       if (txt !== this._wantedTxt) { this._wantedTxt = txt; this.el.wanted.style.display = lvl ? 'block' : 'none'; this.el.wanted.textContent = txt; }
     }
     this.updateModeBar(g);

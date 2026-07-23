@@ -32,6 +32,20 @@ export const SWAT_DEF = {
     shift: { type: 'dash', name: 'Breach Sprint', cost: 4, cd: 0.8, power: 80, iframes: 0.12, color: '#5aa0ff' },
   },
 };
+// THE TOP OF THE LADDER — the state sends its ARMY. Reachable ONLY in a country whose military
+// budget says it HAS one to send (see _hasMilitary), so a broke state tops out at SWAT and a
+// superpower brings out armour. Soldiers are plated (armor eats bullets — but the villain fights
+// with energy) and carry a grenade, so they're a real escalation, not more of the same.
+export const GUARD_DEF = {
+  ...COP_DEF, id: 'police', name: 'SOLDIER', title: 'National Guard', role: 'Military',
+  colors: { primary: '#3a4a2c', secondary: '#232a1a', accent: '#9bd07a', skin: '#caa27a' },
+  hp: 145, ki: 90, speed: 27, strength: 6, meleeTiers: 3, armor: 8, body: 'metal',
+  abilities: {
+    lmb: { type: 'rifle', name: 'Assault Rifle', cost: 1.2, interval: 0.12, damage: 5, speed: 168, radius: 0.55, color: '#e6ffcf' },
+    rmb: { type: 'projectile', name: 'Rifle Grenade', cost: 10, cd: 3.6, damage: 20, speed: 96, radius: 1.2, blast: 11, grav: 5, shock: true, color: '#ffd24a', color2: '#fff' },
+    shift: { type: 'dash', name: 'Combat Roll', cost: 4, cd: 0.9, power: 82, iframes: 0.14, color: '#9bd07a' },
+  },
+};
 
 export class PoliceSystem {
   constructor(game) {
@@ -52,7 +66,22 @@ export class PoliceSystem {
   get active() { return !!(this.g.mode && this.g.modeId !== 'training' && !(this.g.netplay && this.g.netplay.active)); }
 
   heatOf(f) { return this.heat.get(f) || 0; }
-  wantedLevel(f) { const h = this.heatOf(f); return h >= 160 ? 3 : h >= 90 ? 2 : h >= THRESH ? 1 : 0; }
+  // THE LADDER: ★ beat cops (35) → ★★ patrol backup (90) → ★★★ TACTICAL/SWAT (160) →
+  // ★★★★ the MILITARY (240) — but the top rung only exists where the STATE has an army to send.
+  // A lawless country tops out at SWAT and just keeps sending them; that difference is the point.
+  wantedLevel(f) {
+    const h = this.heatOf(f);
+    if (h >= 240 && this._hasMilitary()) return 4;
+    return h >= 160 ? 3 : h >= 90 ? 2 : h >= THRESH ? 1 : 0;
+  }
+  // Does this theater's country field a real military? Median milBudget is ~41; a superpower is
+  // 80-90, a failed state ~25. Above ~52 = there's an army that could roll in.
+  _hasMilitary() {
+    if (this._milCache !== undefined && this._milCountry === (this.g.world.plan || {}).country) return this._milCache;
+    const C = countryOf((this.g.world.plan || {}).country);
+    this._milCountry = (this.g.world.plan || {}).country;
+    return (this._milCache = !!C && (C.milBudget >= 52 || C.milService >= 60));
+  }
   villain() {
     let best = null, bh = THRESH - 0.01;
     for (const [f, h] of this.heat) if (f.alive !== undefined && h > bh && f.def && !f.def.police && this.g.entities.includes(f)) { bh = h; best = f; }
@@ -67,11 +96,29 @@ export class PoliceSystem {
     const lvl = this.wantedLevel(src);
     if (lvl > 0 && this.g.hud && this.g.isHuman(src)) this.g.hud.feed(`🚨 WANTED ${'★'.repeat(lvl)} — civilians harmed`, '#5aa0ff');
   }
+  // KILLING A BADGE JUMPS THE LADDER — it does not tick it. One dead officer pushes you at least to
+  // the next star, and every subsequent one compounds. (Robert's ruling: attacking police escalates
+  // HARD.) A corrupt state can look away from a civilian call; it does NOT look away from its own
+  // officers being killed — that overrides an "unanswered" dispatch on the spot.
   onCopDown(killer) {
     if (!this.active || !killer || !killer.def || killer.def.police) return;
     this.g.cityStats.cops = (this.g.cityStats.cops || 0) + 1;
-    this.heat.set(killer, this.heatOf(killer) + HEAT_COP);
+    this._copsKilled = (this._copsKilled || 0) + 1;
+    const cur = this.heatOf(killer);
+    const jumpTo = cur < 90 ? 100 : cur < 160 ? 172 : cur < 240 ? 252 : cur + 60;   // straight to the next rung
+    this.heat.set(killer, Math.max(cur, jumpTo) + this._copsKilled * 18);
     this._lastHarmT = this.g.time;
+    if (this._respT >= 900) { this._respT = -1; this._announced = false; }   // the "unanswered" call is now answered
+    if (this.g.hud && this.g.isHuman(killer)) this.g.hud.feed('🚔 OFFICER DOWN — the response hardens', '#ff6a5a');
+  }
+  // HURTING an officer (not just killing) is a crime that escalates on its own — softer than a KO,
+  // but it books heat and makes them radio for backup sooner.
+  onCopHurt(src, amount) {
+    if (!this.active || !src || !src.def || src.def.police || !(amount > 1)) return;
+    this.heat.set(src, this.heatOf(src) + amount * 0.55);
+    this._lastHarmT = this.g.time;
+    if (this._respT >= 900) { this._respT = -1; this._announced = false; }        // shooting at cops answers the call too
+    if (this.cops.length) this._reinforceT = Math.min(this._reinforceT, 3.5);     // "shots fired, requesting backup"
   }
 
   // --- what the CROWD knows, for the pedestrian layer -------------------------------------
@@ -126,9 +173,13 @@ export class PoliceSystem {
     if (V) {
       const lvl = this.wantedLevel(V);
       if (lvl > (this._lastLvl || 0) && this.cops.length > 0) {
-        if (g.hud) g.hud.announce(`WANTED ${'★'.repeat(lvl)}`, lvl >= 3 ? 'SPECIAL RESPONSE AUTHORIZED' : 'ADDITIONAL UNITS EN ROUTE', '#5aa0ff');
+        const esc = lvl >= 4 ? 'THE MILITARY IS DEPLOYING' : lvl >= 3 ? 'SPECIAL RESPONSE AUTHORIZED' : 'ADDITIONAL UNITS EN ROUTE';
+        if (g.hud) g.hud.announce(`WANTED ${'★'.repeat(lvl)}`, esc, lvl >= 4 ? '#9bd07a' : '#5aa0ff');
         try { g.audio.siren(V.pos, lvl); } catch {}
-        if (g.news && lvl >= 3) g.news.highlight('police', 'SWAT AUTHORIZED — ' + g.world.districtAt(V.pos.x, V.pos.z), { dur: 2.2, priority: 2, focus: V.pos });
+        if (g.news && lvl >= 3) {
+          const head = lvl >= 4 ? 'MILITARY DEPLOYED — ' : 'SWAT AUTHORIZED — ';
+          g.news.highlight('police', head + g.world.districtAt(V.pos.x, V.pos.z), { dur: 2.4, priority: lvl >= 4 ? 3 : 2, focus: V.pos });
+        }
       }
       this._lastLvl = lvl;
     } else this._lastLvl = 0;
@@ -176,7 +227,7 @@ export class PoliceSystem {
     // reinforcements while the villain stays hot
     this._reinforceT -= dt;
     const cap = 2 + this.wantedLevel(V) * 2;
-    if (this._reinforceT <= 0 && this.cops.filter(f => f.alive).length < Math.min(cap, 8) && this.cops.length > 0) {
+    if (this._reinforceT <= 0 && this.cops.filter(f => f.alive).length < Math.min(cap, 10) && this.cops.length > 0) {
       this._reinforceT = 16;
       this._sendCruiser(V);
     }
@@ -213,8 +264,8 @@ export class PoliceSystem {
     const g = this.g;
     if (!V || !this.active) return;
     const lvl = this.wantedLevel(V);
-    const def = lvl >= 3 ? SWAT_DEF : COP_DEF;
-    const n = lvl >= 3 ? 3 : 2;
+    const def = lvl >= 4 ? GUARD_DEF : lvl >= 3 ? SWAT_DEF : COP_DEF;
+    const n = lvl >= 4 ? 4 : lvl >= 3 ? 3 : 2;
     for (let i = 0; i < n; i++) {
       this._unitNo++;
       const d = { ...def, name: `${def.name} ${String(this._unitNo).padStart(2, '0')}` };
@@ -225,7 +276,7 @@ export class PoliceSystem {
     this.cops.push(...g.entities.slice(-n));
     // the cruiser parks and becomes part of the street (destructible like any car)
     g.world.cars.push({ mesh: cruiser.grp, x: cruiser.grp.position.x, z: cruiser.grp.position.z, hp: 30, maxHp: 30, dead: false, paint: cruiser.grp.children[0].material });
-    if (g.hud) g.hud.feed(`🚔 Units on scene — ${V.name} is the target`, '#5aa0ff');
+    if (g.hud) g.hud.feed(`${lvl >= 4 ? '🪖 The Guard is' : '🚔 Units'} on scene — ${V.name} is the target`, lvl >= 4 ? '#9bd07a' : '#5aa0ff');
     if (g.news) g.news.highlight('police', 'UNITS ON SCENE — ' + g.world.districtAt(cruiser.grp.position.x, cruiser.grp.position.z), { dur: 2.2, priority: 1, focus: cruiser.grp.position });
   }
 }

@@ -18,7 +18,11 @@ const WALK = 0, FLEE = 1, DOWN = 2, FILM = 3, ARMED = 4;
 //     shot fired is another siren.
 //   · Where it is LEGAL, nobody films you like a criminal and nobody draws. You are supposed to
 //     be here.
-const ARM_RATE = { Banned: 0.34, Regulated: 0.10, Legal: 0 };   // chance a witness is carrying
+// Chance a witness to VIOLENCE is carrying, by the country's stance on vigilantes:
+//   Legal      — you're a sanctioned Ascendant. Nobody draws on you. Ever. (They cheer clean wins.)
+//   Regulated  — neutral. They'll only pull a weapon if you bring the violence CLOSE to them.
+//   Banned     — you're a criminal on sight of violence; they draw from across the street.
+const ARM_RATE = { Banned: 0.34, Regulated: 0.18, Legal: 0 };
 
 const GRID = 96, SIDEWALK = 8;                          // street pitch + sidewalk offset from the lane line
 const _m4 = new THREE.Matrix4(), _q = new THREE.Quaternion(), _q2 = new THREE.Quaternion(), _p = new THREE.Vector3(), _s = new THREE.Vector3(1, 1, 1);
@@ -47,6 +51,8 @@ export class Pedestrians {
     this._turnCd = new Float32Array(COUNT);              // no double-turning at one crossing
     this._fire = new Float32Array(COUNT);                // armed-citizen trigger cycle
     this.vigilantism = 'Regulated'; this.armRate = ARM_RATE.Regulated;
+    this._embolden = 0;   // crowd bravado 0..1 — one drawn weapon emboldens the next witness (a mob)
+    this._panic = 0;      // seconds of terror after a civilian dies — bravado collapses, they flee
     this.reset();
     scene.add(this.mesh); scene.add(this.head);
   }
@@ -99,15 +105,35 @@ export class Pedestrians {
       if (this._ss && Math.random() < 0.35) this._ss.say({ x: this.px[i], z: this.pz[i] }, 'fear', { urgent: true });
     }
   }
+  // THE HERO SIDE. In a country where vigilantism is LEGAL, a clean takedown — a rival dropped with
+  // no civilians hurt — earns a CHEER, not a scream. Nearby people turn, raise their phones, and
+  // the block goes up. This is the flip of the villain law: keep your hands clean and you're a hero.
+  cheer(x, z) {
+    if (this.vigilantism !== 'Legal') return;
+    const r2 = 130 * 130; let cheered = 0;
+    for (let i = 0; i < COUNT; i++) {
+      const stt = this.state[i]; if (stt === DOWN || stt === ARMED) continue;
+      const dx = this.px[i] - x, dz = this.pz[i] - z; if (dx * dx + dz * dz > r2) continue;
+      this.state[i] = FILM; this.t[i] = 2.5 + Math.random() * 2; this.dir[i] = Math.atan2(-dx, -dz); cheered++;
+      if (this._ss && cheered <= 4 && Math.random() < 0.7) this._ss.say({ x: this.px[i], z: this.pz[i] }, Math.random() < 0.5 ? 'awe' : 'point', { urgent: true, gain: 0.4 });
+    }
+    if (cheered) { this.mesh.instanceMatrix.needsUpdate = true; this.head.instanceMatrix.needsUpdate = true; }
+    return cheered;
+  }
   blast(x, z, r) {
     const r2 = r * r; let downed = 0;
     for (let i = 0; i < COUNT; i++) {
       if (this.state[i] === DOWN) continue;
       const dx = this.px[i] - x, dz = this.pz[i] - z;
       if (dx * dx + dz * dz > r2) continue;
+      const wasArmed = this.state[i] === ARMED;
       this.state[i] = DOWN; this.t[i] = 4.5; this._write(i); downed++;
       // A PERSON GOING DOWN SCREAMS. This is the sound that should make you feel it.
       if (this._ss && downed <= 3) this._ss.say({ x: this.px[i], z: this.pz[i] }, 'scream', { urgent: true, gain: 0.5 });
+      // A FRESH CORPSE BREAKS NERVE. Seeing one of their own fall — especially one who dared to
+      // draw — scatters the crowd: panic spikes, the mob's bravado collapses.
+      this._panic = Math.max(this._panic, wasArmed ? 4.5 : 3);
+      this._embolden *= wasArmed ? 0.25 : 0.55;
     }
     if (downed) { this.mesh.instanceMatrix.needsUpdate = true; this.head.instanceMatrix.needsUpdate = true; }
     this.scare(x, z, r * 3.2);
@@ -118,6 +144,9 @@ export class Pedestrians {
     const A = this.arena - 10;
     let moved = false;
     const P = game.player;
+    // crowd mood eases back to calm — bravado bleeds off, terror fades
+    if (this._embolden > 0) this._embolden = Math.max(0, this._embolden - dt * 0.12);
+    if (this._panic > 0) this._panic -= dt;
     for (let i = 0; i < COUNT; i++) {
       const st = this.state[i];
       this.t[i] -= dt; this._turnCd[i] -= dt;
@@ -177,15 +206,25 @@ export class Pedestrians {
           if (game.soundscape) game.soundscape.say({ x: this.px[i], z: this.pz[i] }, d2 < 60 ? 'panic' : 'fear', { urgent: true });
         }
         else if (d2 < 1100 && this.t[i] <= 0) {
-          // Seeing you HURT someone is different from seeing you exist. A witness to violence in
-          // a place that bans vigilantism may draw instead of filming.
+          // Seeing you HURT someone is different from seeing you exist. What a witness DOES about it
+          // is the country's stance made personal:
           const witnessed = game.police && game.police.heatOf && game.police.heatOf(P) > 8;
-          if (witnessed && Math.random() < (this.armRate || 0)) {
+          // DRAW CHANCE by stance. Banned: from across the street. Regulated: only if the violence
+          // is CLOSE (they feel personally in it). Legal: never — you're supposed to be here.
+          // Contagion: a mob emboldens itself (_embolden); a fresh corpse terrifies it (_panic).
+          let drawChance = 0;
+          if (witnessed) {
+            if (this.vigilantism === 'Banned') drawChance = this.armRate;
+            else if (this.vigilantism === 'Regulated' && d2 < 320) drawChance = this.armRate;   // ~18u — up close
+          }
+          drawChance *= (1 + this._embolden);
+          if (this._panic > 0) drawChance *= 0.35;
+          if (drawChance > 0 && Math.random() < drawChance) {
             this.state[i] = ARMED; this.t[i] = 6 + Math.random() * 6; this._fire[i] = 0.4;
+            this._embolden = Math.min(1, this._embolden + 0.28);   // one drawn weapon rallies the block
             if (game.soundscape) game.soundscape.say({ x: this.px[i], z: this.pz[i] }, Math.random() < 0.5 ? 'anger' : 'challenge');
           } else {
             this.state[i] = FILM; this.t[i] = 2 + Math.random() * 2.5;
-            // seeing a superweapon in the street is worth a word — awe, or pointing them out
             if (game.soundscape && Math.random() < 0.5) game.soundscape.say({ x: this.px[i], z: this.pz[i] }, Math.random() < 0.5 ? 'awe' : 'point');
           }
           this.dir[i] = Math.atan2(dx, dz);
