@@ -65,6 +65,7 @@ export class TouchControls {
     // --- the two thumb zones ---
     const zoneL = root.querySelector('#tzL'), zoneR = root.querySelector('#tzR');
     const start = (side) => (e) => {
+      if (!this.enabled) return;                 // menus must keep their native touch behaviour
       e.preventDefault();
       const t = e.changedTouches ? e.changedTouches[0] : e;
       const st = { id: t.identifier ?? 'm', x0: t.clientX, y0: t.clientY };
@@ -72,6 +73,10 @@ export class TouchControls {
       else { this._aim = st; this._place(this._stickR, t.clientX, t.clientY); }
     };
     const move = (e) => {
+      // ⚠ This is a GLOBAL touchmove listener. It must ONLY swallow the gesture when a stick is
+      // actually being dragged — preventDefault()ing every move killed scrolling on every menu
+      // (you couldn't reach the START button), which is exactly the bug this comment prevents.
+      if (!this.enabled || (!this._move && !this._aim)) return;
       e.preventDefault();
       const list = e.changedTouches ? Array.from(e.changedTouches) : [e];
       for (const t of list) {

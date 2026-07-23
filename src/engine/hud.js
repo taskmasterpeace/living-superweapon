@@ -584,7 +584,10 @@ const CSS = `
      Every screen must be reachable and readable on an iPhone. Multi-column layouts
      collapse to one scrollable column; tap targets grow; the HUD compacts. */
   @media (max-width: 900px){
-    #title{ gap:10px; padding:12px 10px calc(12px + env(safe-area-inset-bottom)); justify-content:flex-start; overflow-y:auto; }
+    /* the title screen is a SCROLLING PAGE on a phone — pan-y so iOS never swallows the gesture,
+       and bottom padding so nothing hides under the fixed ENTER bar */
+    #title{ gap:10px; justify-content:flex-start; overflow-y:auto; -webkit-overflow-scrolling:touch;
+      touch-action:pan-y; padding:12px 10px calc(96px + env(safe-area-inset-bottom)); }
     #title h1{ font-size:clamp(22px,7vw,38px); margin-top:2px; }
     #title .topbar{ position:static; order:-1; width:100%; display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin-bottom:2px; }
     #title .topbar button{ padding:10px 6px; font-size:11px; }
@@ -595,7 +598,12 @@ const CSS = `
     #title .modes{ gap:8px; }
     #title .modecard{ width:calc(50% - 8px); padding:9px 10px; }
     .roster{ grid-template-columns:repeat(2,1fr); max-height:none; }
-    .startbtn{ position:sticky; bottom:0; width:100%; padding:15px 20px; font-size:15px; }
+    /* ENTER THE ARENA is FIXED to the bottom of the viewport: you can always reach it, at any
+       scroll position. (Sticky inside a nested flex column did not survive on iOS.) */
+    .startbtn{ position:fixed; left:10px; right:10px; bottom:calc(10px + env(safe-area-inset-bottom));
+      width:auto; margin:0; padding:16px 20px; font-size:16px; z-index:40; }
+    #title .roster{ padding-bottom:4px; }
+    #title .modehint{ margin-bottom:2px; }
     /* overlays: full-bleed sheets */
     .lswovl{ align-items:stretch; }
     .lswovl.codex{ overflow-y:auto; -webkit-overflow-scrolling:touch; }
@@ -645,10 +653,9 @@ const CSS = `
     #hud .endscr .btns{ flex-direction:column; width:100%; }
     #hud .endscr button{ width:100%; }
   }
-  /* only nag during a MATCH — menus, registry and the codex read fine in portrait */
-  @media (max-width: 900px) and (orientation: portrait){
-    body.playing #hud .rotate{ display:flex !important; }
-  }
+  /* NO ORIENTATION GATE. The game is perfectly playable in portrait (you just see less of the
+     street), and a full-screen "rotate your device" wall is one more thing standing between the
+     player and the fight. Landscape is a suggestion, not a requirement. */
   /* rotate nudge — the arena reads far better in landscape on a phone */
   #hud .rotate{ position:absolute; inset:0; z-index:30; display:none; align-items:center; justify-content:center;
     background:rgba(4,5,9,.92); pointer-events:auto; text-align:center; padding:24px; }
