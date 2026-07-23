@@ -427,6 +427,29 @@ value is missing from the scale, add a token rather than a one-off.
   pointing at a fog-hidden enemy would be a wallhack and would undo the AI honesty work.
 - KIT chips dock directly above the player panel (were floating detached at `bottom:250px`).
 
+## CONTROL SCHEMES + the organised help panel (2026-07-23)
+- **One source of truth: `KEYMAPS` in `core/settings.js`** (NOT hud.js — game.js imports it, and a
+  game→hud import is circular). Every binding a scheme owns lives on the map — `up/down/guard/item`
+  (key codes) + `upLabel/downLabel/guardLabel/itemLabel/swapLabel` (what the help panel prints) +
+  `wheel: 'hero'|'ability'` + `digitsSwap`. Engine and help panel read the SAME object, so the
+  hint can never lie about your bindings. `keymap(name)` resolves + tolerates the early `southpaw`
+  build (→ HYBRID). Persisted as `SETTINGS.scheme`; picked in Options → CONTROL SCHEME (chips +
+  live blurb).
+  - **CLASSIC** — what shipped. Wheel (and 1–0) swaps hero · Z descend · C guard · X gadget.
+  - **PILOT** — wheel picks the POWER, hero swap moves to `[` `]` · SPACE up / C down · X guard · Z gadget.
+  - **HYBRID** — PILOT's wheel + brackets, guard/gadget left on the old C/X muscle memory.
+  ⚠ **No two keys in one scheme may collide.** Guard and gadget were BOTH hard-coded to `KeyX`
+  before this became data (pressing X in the old "southpaw" both raised guard and threw the beacon).
+  That's why `item` is on the map and `controlPlayer` reads `KM.item`, never a literal.
+- **WHEEL-SELECT has a trigger.** In an `ability` scheme the wheel sets `p._selSlot`, the HUD chip
+  outlines (`hud.selectSlot` → `.slot.sel`), and `controlPlayer` REDIRECTS the LMB intent onto the
+  selected slot (LMB is blanked so it can't double-fire). A selection with no trigger is just a
+  highlight, not a control. `cycleHero` resets `_selSlot` to `lmb` — a new kit is a new slot list.
+- **The help panel is grouped** (`hud.buildHintBody`, rebuilt on every scheme change and from
+  `armHintTimer`): MOVE & AIM · MELEE · POWERS · FLIGHT · SYSTEM, each a titled `.hgrp` of
+  `<b>key</b><span>what it does</span>` rows built from the active KEYMAP. It was one flat wall.
+  Ref: `lsw-help-pilot.jpeg`, `lsw-options-schemes.jpeg`.
+
 ## Player-facing shell (options · onboarding · roster nav)
 - **The cast layer** (`data/identities.js` + `engine/icons.js` + `hud.kitFacts`): every hero has a
   `def.person` — civilian name, home city, country, flag (canon anchors: KIVULI=Kampala,

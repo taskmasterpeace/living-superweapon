@@ -3,7 +3,7 @@ import { ROSTER, SLOT_ORDER } from '../data/characters.js';
 import { MODES } from '../data/modes.js';
 import { clamp, TAU } from '../core/util.js';
 import { ATTR_DEFS, TALENTS, deriveAttrs, heroTalents, rankName, rankColor, RANKS } from '../data/ranks.js';
-import { SETTINGS, saveSettings, applySettings } from '../core/settings.js';
+import { SETTINGS, saveSettings, applySettings, KEYMAPS, keymap } from '../core/settings.js';
 import { identityOf } from '../data/identities.js';
 import { icon, ATTR_ICON, ICON_MEANING } from './icons.js';
 import { writeBroadcast, tapeRows, llmPunchUp, titleCase, money, causeLine, mulberry } from '../data/news.js';
@@ -34,6 +34,8 @@ function agoStr(t) {
   return `${Math.round(s / 86400)}d ago`;
 }
 const isSynthDef = (c) => /unit|lab-grown|synthezoid|war engine|synthetic/i.test((identityOf(c).n || ''));
+
+// (KEYMAPS live in core/settings.js so game.js can read them without importing the HUD)
 
 // ---- THE CODEX: case-file generators — every line derived from the REAL kit data ----
 function cfAbilityRows(def) {
@@ -154,12 +156,19 @@ const CSS = `
 #hud .slot.ult{ border-color:rgba(245,178,26,.5); box-shadow:0 0 16px rgba(245,178,26,.25); }
 #hud .slot.dim{ opacity:.4; }
 #hud .slot.on{ border-color:var(--gold); box-shadow:0 0 16px rgba(255,210,74,.5); }
+#hud .slot.sel{ outline:2px solid var(--info); outline-offset:2px; }   /* wheel-selected power */
 #hud .foe{ left:50%; transform:translateX(-50%); top:16px; width:min(520px,60vw); padding:8px 12px; text-align:center; }
 #hud .foe .fn{ font-weight:700; letter-spacing:.06em; font-size:var(--t-md); }
 #hud .foe .bar{ height:9px; }
 #hud .foe .fhpF{ background:linear-gradient(90deg,var(--danger),#ffb03a); }
 #hud .hint{ right:18px; bottom:18px; padding:10px 12px; max-width:260px; font-size:var(--t-body); color:var(--text-3); line-height:1.6; transition:opacity .4s ease, transform .4s ease; }
 #hud .hint b{ color:var(--gold); font-weight:700; }
+#hud .hint .hgrp{ margin-bottom:7px; }
+#hud .hint .hgt{ font-family:var(--f-mono); font-size:var(--t-micro); letter-spacing:var(--tr-wider); color:var(--info);
+  border-bottom:1px solid rgba(127,230,255,.22); padding-bottom:2px; margin-bottom:3px; }
+#hud .hint .hgr{ display:flex; gap:8px; line-height:1.35; }
+#hud .hint .hgr b{ flex:0 0 92px; text-align:right; font-size:var(--t-label); }
+#hud .hint .hgr span{ color:var(--text-3); font-size:var(--t-label); }
 /* the wall of text earns its place for ~18s, then gets out of the way (F1 brings it back) */
 #hud .hint.mini{ max-width:none; padding:6px 11px; font-size:var(--t-label); letter-spacing:.14em; color:var(--text-5); }
 #hud .hint.mini .hintbody{ display:none; }
@@ -875,7 +884,7 @@ export class HUD {
       <div class="rotate" id="hRotate"><div><div class="ri">📱</div><div style="font-size:18px;font-weight:800;letter-spacing:.1em;color:var(--gold)">ROTATE YOUR DEVICE</div><div style="font-size:13px;color:var(--text-3);margin-top:6px">The arena plays in landscape.</div></div></div>
       <div class="panel hint" id="hHint">
         <div class="hintchip">❓ <b>F1</b> CONTROLS</div>
-        <div class="hintbody">
+        <div class="hintbody" id="hHintBody">
         <b>WASD</b> move · <b>Mouse</b> aim · <b>Click a foe</b> to lock/face · <b>T</b> unlock<br/>
         <b>LMB/RMB</b> powers · <b>Q E H</b> skills · <b>R</b> ultimate<br/>
         <b>V</b> tap jab / <b>HOLD</b> haymaker (crushes guards) · <b>G</b> grab<br/>
@@ -1190,11 +1199,36 @@ export class HUD {
     }
   }
   setHintVisible(v) { if (this.el.hint) this.el.hint.style.display = v ? 'block' : 'none'; }
+  // The help panel, ORGANISED — one titled group per thing you do, instead of a wall of prose.
+  // Rebuilt whenever the control scheme changes so it always shows YOUR bindings, not defaults.
+  buildHintBody() {
+    const el = this.root.querySelector('#hHintBody'); if (!el) return;
+    const K = keymap(SETTINGS.scheme);
+    const grp = (title, rows) => `<div class="hgrp"><div class="hgt">${title}</div>${rows.filter(Boolean).map(([k, d]) => `<div class="hgr"><b>${k}</b><span>${d}</span></div>`).join('')}</div>`;
+    const wheelSel = K.wheel === 'ability';
+    el.innerHTML =
+      grp('MOVE & AIM', [['WASD', 'move'], ['MOUSE', 'aim'], ['CLICK FOE', 'lock on · T to release'], ['2×TAP', 'evade'], ['SHIFT', 'dash']]) +
+      grp('MELEE', [['V', 'tap = jab · HOLD = haymaker'], ['G', 'grab · hoist a car/tree'], [K.guardLabel, 'guard (hold)']]) +
+      grp('POWERS', [
+        wheelSel ? ['WHEEL', 'pick a power'] : null,
+        [wheelSel ? 'LMB' : 'LMB / RMB', wheelSel ? 'fire the picked power' : 'primary · secondary'],
+        wheelSel ? ['RMB', 'secondary'] : null,
+        ['Q / E', 'skills'], ['H', '4th power'], ['R', 'ULTIMATE'], [K.itemLabel, 'gadget'],
+      ]) +
+      grp('FLIGHT', [['F', 'flight ON/OFF'], [K.upLabel, 'rise'], [K.downLabel, 'descend'], ['SHIFT (air)', 'cruise']]) +
+      grp('SYSTEM', [[K.swapLabel, 'swap hero'], ['TAB', 'roster'], ['B', 'spawn rival'], ['ESC', 'pause'], ['F1', 'this panel']]);
+  }
   // The full control list is onboarding, not furniture: it earns ~18s of a fresh match, then
   // collapses to a corner chip. F1 (or the Options toggle) brings it back any time.
   hintFull(on) { if (this.el.hint) this.el.hint.classList.toggle('mini', !on); }
   toggleHint() { if (this.el.hint) { this.el.hint.classList.toggle('mini'); this._hintPinned = !this.el.hint.classList.contains('mini'); } }
+  // wheel-select feedback: light the chosen slot so the wheel has a visible consequence
+  selectSlot(key) {
+    if (!this.slotEls) return;
+    for (const k in this.slotEls) this.slotEls[k].root.classList.toggle('sel', k === key);
+  }
   armHintTimer() {
+    this.buildHintBody();   // always show the ACTIVE scheme's bindings
     clearTimeout(this._hintT); this._hintPinned = false;
     this.hintFull(true);
     this._hintT = setTimeout(() => { if (!this._hintPinned) this.hintFull(false); }, 18000);
@@ -1466,6 +1500,10 @@ export class HUD {
       ${toggle('dmgNumbers', 'Damage Numbers')}
       ${toggle('hints', 'Controls Hint Panel')}
       ${toggle('aimAssist', 'Aim Assist · magnet targeting')}
+      <div class="orow"><span class="ol">Control Scheme</span><div class="chips3">
+        ${Object.entries(KEYMAPS).map(([k, m]) => `<span class="c3${keymap(S.scheme) === m ? ' on' : ''}" data-scheme="${k}">${m.name}</span>`).join('')}
+      </div></div>
+      <div class="oline2" id="schemeBlurb">${esc(keymap(S.scheme).blurb)}</div>
       <div class="orow"><span class="ol">Render Quality</span><div class="chips3">
         ${[['auto', 'AUTO'], ['2', 'HIGH'], ['1', 'BALANCED'], ['0', 'LOW']].map(([v, n]) => `<span class="c3${String(S.quality) === v ? ' on' : ''}" data-q="${v}">${n}</span>`).join('')}
       </div></div>
@@ -1480,6 +1518,11 @@ export class HUD {
     });
     this.optionsEl.querySelectorAll('[data-t]').forEach(c => c.onclick = () => { S[c.dataset.t] = c.dataset.on === '1'; apply(); this.showOptions(); });
     this.optionsEl.querySelectorAll('[data-q]').forEach(c => c.onclick = () => { S.quality = c.dataset.q === 'auto' ? 'auto' : c.dataset.q; apply(); this.showOptions(); });
+    this.optionsEl.querySelectorAll('[data-scheme]').forEach(c => c.onclick = () => {
+      S.scheme = c.dataset.scheme; apply(); this.buildHintBody(); this.hintFull(true);   // show the new bindings
+      this.feed('Controls: ' + keymap(S.scheme).name, 'var(--gold)');
+      this.showOptions();
+    });
     this.optionsEl.querySelector('.odone').onclick = () => { apply(); this.optionsEl.style.display = 'none'; };
     this.optionsEl.style.display = 'flex';
   }

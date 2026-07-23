@@ -6,7 +6,7 @@ import { HUD } from './engine/hud.js';
 import { runBenchmark } from './bench/benchmark.js';
 import { CreatorUI } from './engine/creatorUI.js';
 import { runSlot, performEvade } from './engine/abilities.js';
-import { loadSettings, applySettings } from './core/settings.js';
+import { loadSettings, applySettings, SETTINGS, KEYMAPS, keymap } from './core/settings.js';
 import { installCustoms, loadCustoms, freshPicks, buildDef, tally, validate, saveCustom, deleteCustom } from './data/creator.js';
 import { applyIdentities } from './data/identities.js';
 import { Tutorial } from './engine/tutorial.js';
@@ -164,16 +164,37 @@ addEventListener('keydown', (e) => {
   if (e.code === 'Tab') { e.preventDefault(); if (!hud.titleOpen) openMenu(); else { game.running = true; hud.hideTitle(); } return; }
   if (e.code === 'Escape' && game.player && !hud.titleOpen) { game.running = !game.running; hud.setPaused(!game.running); return; }
   if (game.running === false) return;
+  // brackets swap hero in the non-classic schemes (the wheel is busy selecting powers there)
+  const KM = keymap(SETTINGS.scheme);
+  if (KM.wheel !== 'hero') {
+    if (e.code === 'BracketRight') { cycleHero(1); return; }
+    if (e.code === 'BracketLeft') { cycleHero(-1); return; }
+  }
   if (e.code === 'KeyB') { const b = game.spawnRival(); hud.feed('A rival ' + b.name + ' enters the arena!', b.def.colors.accent); }
   if (e.code === 'KeyM') { audio.muted = !audio.muted; try { localStorage.setItem('threshold_muted', audio.muted ? '1' : '0'); } catch {} hud.feed(audio.muted ? '🔇 Muted (M)' : '🔊 Sound on (M)', '#9fb2c9'); }
-  if (e.code in digits) { const c = ROSTER[digits[e.code]]; if (c) { game.setPlayerChar(c.id); hud.setPlayer(c); hud.feed('Now piloting ' + c.name + ' · ' + c.title, c.colors.accent); } }
+  if (KM.digitsSwap && e.code in digits) { const c = ROSTER[digits[e.code]]; if (c) { game.setPlayerChar(c.id); hud.setPlayer(c); hud.feed('Now piloting ' + c.name + ' · ' + c.title, c.colors.accent); } }
 });
 
+// WHEEL-SELECT: step through the hero's power slots and fire the chosen one with LMB. The HUD
+// slot lights up so the wheel has a visible consequence instead of being a silent state change.
+const ABIL_ORDER = ['lmb', 'rmb', 'q', 'e', 'f', 'r'];
+function cycleAbility(dir) {
+  const p = game.player; if (!p) return;
+  const have = ABIL_ORDER.filter(k => p.slots[k]);
+  if (!have.length) return;
+  const cur = have.indexOf(have.includes(p._selSlot) ? p._selSlot : have[0]);
+  const next = have[(cur + dir + have.length) % have.length];
+  p._selSlot = next;
+  hud.selectSlot(next);
+  hud.feed('▸ ' + (p.slots[next].def.name || next).toUpperCase(), 'var(--gold)');
+}
 function cycleHero(dir) {
   if (!game.player) return;
   const cur = ROSTER.findIndex(r => r.id === game.player.def.id);
   const n = ROSTER[(cur + dir + ROSTER.length) % ROSTER.length];
   game.setPlayerChar(n.id); hud.setPlayer(n); hud.feed('Now piloting ' + n.name + ' · ' + n.title, n.colors.accent);
+  if (game.player) game.player._selSlot = 'lmb';   // a new kit means a new slot list — never point at a stale power
+  hud.selectSlot('lmb');
 }
 function padSystem() {
   if (!started) return;
@@ -192,7 +213,12 @@ function frame(now) {
       hud.update(); padSystem();
       if (game.running) tutorial.update(Math.min(dt, 0.05));
       if (game.running) netplay.update(Math.min(dt, 0.05));
-      if (game.running && !hud.titleOpen && input.wheel) cycleHero(Math.sign(input.wheel));   // wheel = swap hero
+      // WHEEL: classic swaps hero; the other schemes cycle your selected POWER instead, which is
+      // what you reach for mid-fight (hero swap moves to the brackets).
+      if (game.running && !hud.titleOpen && input.wheel) {
+        if (keymap(SETTINGS.scheme).wheel === 'hero') cycleHero(Math.sign(input.wheel));
+        else cycleAbility(Math.sign(input.wheel));
+      }
     }
   }
   catch (err) { console.error(err); }
@@ -202,7 +228,7 @@ function frame(now) {
 requestAnimationFrame(frame);
 
 // expose for debugging + performance benchmarking
-window.LSW = { game, hud, ROSTER, runSlot, performEvade, input, tutorial, netplay, creator: { ui: creator, freshPicks, buildDef, tally, validate, saveCustom, deleteCustom, loadCustoms } };
+window.LSW = { game, hud, ROSTER, runSlot, performEvade, input, tutorial, netplay, SETTINGS, KEYMAPS, creator: { ui: creator, freshPicks, buildDef, tally, validate, saveCustom, deleteCustom, loadCustoms } };
 window.LSW.runBenchmark = (opts) => runBenchmark(game, hud, opts);
 if (location.search.includes('bench')) {
   addEventListener('load', () => setTimeout(async () => {

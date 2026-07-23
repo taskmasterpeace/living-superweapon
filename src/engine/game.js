@@ -13,7 +13,7 @@ import { NewsCrew } from './newscrew.js';
 import { PoliceSystem } from './police.js';
 import { buildReport } from '../data/news.js';
 import { koElo, matchElo } from '../data/rankings.js';
-import { SETTINGS } from '../core/settings.js';
+import { SETTINGS, keymap } from '../core/settings.js';
 import { Gamepad } from '../core/gamepad.js';
 import { runSlot, performEvade } from './abilities.js';
 import { ROSTER } from '../data/characters.js';
@@ -1443,8 +1443,10 @@ export class Game {
         }
       }
     }
-    p.flyHeld = inp.down('Space') || pad.down('fly');
-    p.descendHeld = inp.down('ControlLeft') || inp.down('ControlRight') || inp.down('KeyZ') || pad.down('descend');
+    // flight + guard keys come from the active control scheme (Options → Control Scheme)
+    const KM = keymap(SETTINGS.scheme);
+    p.flyHeld = inp.down(KM.up) || pad.down('fly');
+    p.descendHeld = inp.down(KM.down) || inp.down('ControlLeft') || inp.down('ControlRight') || pad.down('descend');
     p.cruiseHeld = p.flying && (inp.down('ShiftLeft') || inp.down('ShiftRight'));   // held SHIFT in the air = sustained cruise
     p.move(p.moveDir, dt);
 
@@ -1457,8 +1459,8 @@ export class Game {
       if (p._carry) this.throwProp(p);
       else if (!this.grabProp(p)) { this.melee.grab(p); if (np) np.queueMelee('grab'); }
     }
-    this.melee.guard(p, inp.down('KeyC') || inp.mouse.b3 || inp.mouse.b4 || pad.down('guard'));
-    if (inp.pressed('KeyX') && p.items.length) this.useItem(p);   // X = the carried item (beacon: plant / recall)
+    this.melee.guard(p, inp.down(KM.guard) || inp.mouse.b3 || inp.mouse.b4 || pad.down('guard'));
+    if (inp.pressed(KM.item) && p.items.length) this.useItem(p);   // the carried item (beacon: plant / recall)
 
     // --- powers (keyboard/mouse OR gamepad) ---
     const busy = p.guarding || p.strikeActive > 0 || p.grabState || p.grabbing || p.meleeCharge > 0 || p.staggerT > 0;
@@ -1469,6 +1471,13 @@ export class Game {
       q: orK('KeyQ', 'q'), e: orK('KeyE', 'e'), r: orK('KeyR', 'r'), f: orK('KeyH', 'f'),   // 4th power lives on H — F toggles flight
       shift: orK('ShiftLeft', 'dash'),
     };
+    // WHEEL-SELECT (PILOT/SOUTHPAW): the wheel PICKS a power and LMB FIRES it. Without this the
+    // wheel would only ever light a chip — a selection has to have a trigger, or it isn't a control.
+    if (KM.wheel === 'ability' && p._selSlot && p._selSlot !== 'lmb' && p.slots[p._selSlot]) {
+      const sel = p._selSlot, L = intents.lmb;
+      intents[sel] = { pressed: intents[sel].pressed || L.pressed, held: intents[sel].held || L.held, released: intents[sel].released || L.released };
+      intents.lmb = { pressed: false, held: false, released: false };
+    }
     if (inp.pressed('KeyF')) p.toggleFlight();   // flight is a MODE now: F on, F off
     if (np) for (const k of SLOT_KEYS) {          // stream ability intents to the other machine
       if (!p.slots[k]) continue;
