@@ -580,6 +580,81 @@ const CSS = `
 #title .pvcodex{ cursor:pointer; margin-top:11px; text-align:center; font-family:var(--mono); font-size:var(--t-label); font-weight:700; letter-spacing:.22em; color:#0d0e12; background:linear-gradient(180deg,var(--gold),var(--gold-warm)); border-radius:var(--r-2); padding:9px 8px; box-shadow:0 3px 0 var(--gold-shadow); user-select:none; }
 #title .pvcodex:hover{ filter:brightness(1.08); }
 .lswovl table.rk tr{ cursor:pointer; }
+  /* ================= RESPONSIVE: phones & tablets =================
+     Every screen must be reachable and readable on an iPhone. Multi-column layouts
+     collapse to one scrollable column; tap targets grow; the HUD compacts. */
+  @media (max-width: 900px){
+    #title{ gap:10px; padding:12px 10px calc(12px + env(safe-area-inset-bottom)); justify-content:flex-start; overflow-y:auto; }
+    #title h1{ font-size:clamp(22px,7vw,38px); margin-top:2px; }
+    #title .topbar{ position:static; order:-1; width:100%; display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin-bottom:2px; }
+    #title .topbar button{ padding:10px 6px; font-size:11px; }
+    #title .clsbar{ width:100%; }
+    #title .clsbar .clsline{ font-size:8px; letter-spacing:.1em; }
+    #title .selwrap{ flex-direction:column; gap:12px; }
+    #title .preview{ flex:0 0 auto; max-height:none; width:100%; }
+    #title .modes{ gap:8px; }
+    #title .modecard{ width:calc(50% - 8px); padding:9px 10px; }
+    .roster{ grid-template-columns:repeat(2,1fr); max-height:none; }
+    .startbtn{ position:sticky; bottom:0; width:100%; padding:15px 20px; font-size:15px; }
+    /* overlays: full-bleed sheets */
+    .lswovl{ align-items:stretch; }
+    .lswovl.codex{ overflow-y:auto; -webkit-overflow-scrolling:touch; }
+    .lswovl.codex .cfbox{ max-height:none; }   /* the OVERLAY scrolls the case file, not the box */
+    .lswovl .cftop{ flex-wrap:wrap; gap:6px; }
+    .lswovl .cftop .cft{ font-size:var(--t-micro); letter-spacing:var(--tr); flex:1 1 100%; order:3; white-space:normal; }
+    .lswovl .cffoot{ flex-direction:column; gap:4px; text-align:center; }
+    .lswovl .cfhead{ padding:12px 14px 4px; }
+    .lswovl .cfgrid{ padding:8px 14px 4px; }
+    .lswovl .obox, .lswovl .cfbox{ width:100% !important; max-height:100vh; border-radius:0; margin:0;
+      padding-top:calc(14px + env(safe-area-inset-top)); padding-bottom:calc(14px + env(safe-area-inset-bottom)); }
+    .lswovl .atwrap, .lswovl .brwrap{ flex-direction:column; }
+    .lswovl .atrows{ max-height:38vh; }
+    .lswovl .brcol{ gap:7px; }
+    .lswovl .bm::after{ display:none; }
+    .lswovl .rkmeta{ display:none; }
+    .lswovl table.rk td, .lswovl table.rk th{ padding:5px 4px; }
+    .lswovl .odone{ padding:15px 18px; }
+    /* the case file stacks to one column */
+    .lswovl .cfgrid{ grid-template-columns:1fr; }
+    .lswovl .cfrow{ flex-wrap:wrap; }
+    .lswovl .cfrow .k{ flex:0 0 110px; }
+    .lswovl .cfrow .v{ flex:1 1 100%; padding-left:110px; margin-top:-14px; }
+    /* wide data tables scroll sideways instead of blowing out the page */
+    .lswovl table.rk{ display:block; overflow-x:auto; white-space:nowrap; }
+    .lswovl table.rk td.rec:last-of-type, .lswovl table.rk th:nth-child(6){ display:none; }  /* KO col: least useful on a phone */
+    .lswovl .cfhead{ flex-wrap:wrap; }
+    .lswovl .cfstamp{ position:static; transform:none; margin-top:8px; }
+    .lswovl table.cfarm{ display:block; overflow-x:auto; white-space:nowrap; }
+    /* the news broadcast stacks: TV first, then the script */
+    #hud .nbody{ flex-direction:column; }
+    #hud .ncl{ flex:0 0 auto; }
+    #hud .nhead{ font-size:22px; }
+    #hud .endscr.news{ padding:10px 8px 42px; }
+    #hud .nboards{ flex-direction:column; }
+    /* HUD compaction so the play area survives */
+    #hud .hint{ display:none; }
+    #hud .radar{ width:104px; height:104px; top:calc(8px + env(safe-area-inset-top)); right:8px; }
+    #hud .radar canvas{ width:104px; height:104px; }
+    #hud .alt{ top:calc(120px + env(safe-area-inset-top)); right:8px; width:44px; padding:5px; }
+    #hud .pip{ display:none; }
+    #hud .pl{ left:8px; bottom:calc(8px + env(safe-area-inset-bottom)); min-width:150px; padding:8px 10px; transform:scale(.9); transform-origin:bottom left; }
+    #hud .kit{ left:8px; bottom:calc(150px + env(safe-area-inset-bottom)); transform:scale(.85); transform-origin:bottom left; }
+    #hud .slots{ display:none; }              /* the touch rail replaces them */
+    #hud .cityplate{ bottom:auto; top:calc(8px + env(safe-area-inset-top)); left:8px; transform:none; font-size:8.5px; max-width:52vw; }
+    #hud .modebar{ top:calc(4px + env(safe-area-inset-top)); transform:translateX(-50%) scale(.85); }
+    #hud .endscr .btns{ flex-direction:column; width:100%; }
+    #hud .endscr button{ width:100%; }
+  }
+  /* only nag during a MATCH — menus, registry and the codex read fine in portrait */
+  @media (max-width: 900px) and (orientation: portrait){
+    body.playing #hud .rotate{ display:flex !important; }
+  }
+  /* rotate nudge — the arena reads far better in landscape on a phone */
+  #hud .rotate{ position:absolute; inset:0; z-index:30; display:none; align-items:center; justify-content:center;
+    background:rgba(4,5,9,.92); pointer-events:auto; text-align:center; padding:24px; }
+  #hud .rotate div{ font-family:var(--f-display); }
+  #hud .rotate .ri{ font-size:44px; margin-bottom:10px; animation:rot 2.2s ease-in-out infinite; }
+  @keyframes rot{ 0%,100%{ transform:rotate(0); } 50%{ transform:rotate(90deg); } }
 `;
 
 // Derive a 0–10 stat profile + trait tags from a character's raw data.
@@ -754,6 +829,7 @@ export class HUD {
       <div class="dmgwrap" id="hDmg"></div>
       <div class="panel slots" id="hSlots"></div>
       <div class="foearrow" id="hFoeArrow"><i></i><u></u><span></span></div>
+      <div class="rotate" id="hRotate"><div><div class="ri">📱</div><div style="font-size:18px;font-weight:800;letter-spacing:.1em;color:var(--gold)">ROTATE YOUR DEVICE</div><div style="font-size:13px;color:var(--text-3);margin-top:6px">The arena plays in landscape.</div></div></div>
       <div class="panel hint" id="hHint">
         <div class="hintchip">❓ <b>F1</b> CONTROLS</div>
         <div class="hintbody">

@@ -12,6 +12,7 @@ import { applyIdentities } from './data/identities.js';
 import { Tutorial } from './engine/tutorial.js';
 import { Netplay } from './engine/netplay.js';
 import { Tournament } from './engine/tournament.js';
+import { TouchControls, isTouchDevice } from './core/touch.js';
 
 const canvas = document.getElementById('game');
 const input = new Input(); input.bind(canvas);
@@ -33,6 +34,20 @@ try {
 } catch { /* diagnostics only */ }
 
 let started = false;
+
+// ---- TOUCH (iPhone / iPad): the on-screen controls feed game.pad, so every existing
+// control path works unchanged. Visible only in a match, only on a touch device.
+const touch = new TouchControls(game.pad);
+// ⚠ ORDER: game.update() polls pad.update() first, and that CLEARS cur/lx/ly when no physical
+// pad is present — so touch must merge in AFTER the poll, not before. Wrap it.
+const _padUpdate = game.pad.update.bind(game.pad);
+game.pad.update = () => { _padUpdate(); touch.apply(); };
+if (isTouchDevice()) {
+  document.body.classList.add('is-touch');
+  touch.mount();
+  addEventListener('orientationchange', () => setTimeout(() => game.world.resize(), 250));
+}
+game.touch = touch;
 
 const tutorial = new Tutorial(game, hud);
 // ---- ONLINE: rooms + netcode (Supabase Realtime transport) ----
@@ -72,13 +87,15 @@ function beginMatch(c) {
   game.startMode(c.mode || 'training', c);
   hud.setPlayer(ROSTER.find(r => r.id === (c.p1 || 'sol')));
   hud.armHintTimer();          // the control wall shows for ~18s, then folds into a corner chip (F1)
+  touch.show(isTouchDevice());  // thumb controls belong to the match, not the menus
+  document.body.classList.add('playing');
   started = true; game._lastCfg = c;
   hud.hideEndScreen(); hud.hideTitle();
   if (c.tutorial) tutorial.begin(); else tutorial.skip();
 }
 hud.onBracketContinue = () => { if (game._lastCfg) enter(game._lastCfg); };
 hud.onProvingGround = () => enter({ mode: 'training', p1: hud.selectedHero || 'sol' });
-function openMenu() { game.running = false; hud.hideEndScreen(); hud.buildTitle(enter); hud.showTitle(); }
+function openMenu() { game.running = false; touch.show(false); document.body.classList.remove('playing'); hud.hideEndScreen(); hud.buildTitle(enter); hud.showTitle(); }
 
 // ---- ORIGIN: install saved customs, wire the forge ----
 installCustoms(ROSTER);
