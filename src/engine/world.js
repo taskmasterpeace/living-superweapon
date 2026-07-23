@@ -7,8 +7,14 @@ import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { clamp, damp } from '../core/util.js';
 import { buildTiles } from './citytiles.js';
-import { CELL, districtNameAt, thresholdPlan } from '../data/cityplan.js';
+import { CELL, districtNameAt, thresholdPlan, ROAD, junctionAt } from '../data/cityplan.js';
 import { mulberry } from '../data/news.js';
+
+// FOG OCCLUSION GRID — the replacement for the old 24-box uniform array. 256² texels over the
+// 700u fog plane is ~2.7u a texel: finer than any wall is thin, and the march is 26 taps whether
+// the city has 20 buildings or 200. FOG_STEPS is baked into the shader source, so it must be a
+// literal the GLSL compiler can see.
+const FOG_RES = 384, FOG_EXT = 700, FOG_STEPS = 26;
 
 export const ARENA = 240; // half-extent of the FLAGSHIP playfield (generated cities set world.ARENA per plan)
 
@@ -518,11 +524,16 @@ export class World {
     const rng = mulberry((plan.seed * 131 + N * 17) | 0);
     const g = new THREE.Group();
     // ground — same crater-able plane, sized to the plan; the road texture tiles one ring per cell
-    const tex = this._groundTex || (this._groundTex = this._gridTexture());
+    const tex = plan.roads
+      ? (this._lotTex || (this._lotTex = this._gridTexture(false)))   // roads are geometry — don't paint them twice
+      : (this._groundTex || (this._groundTex = this._gridTexture()));
     tex.repeat.set(N, N);
     const SEG = 22 * N + 2;
     const groundGeo = new THREE.PlaneGeometry(A * 2, A * 2, SEG, SEG);
-    const ground = new THREE.Mesh(groundGeo, new THREE.MeshStandardMaterial({ map: tex, roughness: 0.92, metalness: 0.0, color: '#b9b1a2' }));
+    // THE GROUND CARRIES THE REGION. It is the single biggest surface in frame, so tinting it is
+    // what actually makes Kabul stop looking like Oslo — the facades alone were too subtle to read.
+    const gCol = (plan.region && plan.region.ground) || '#b9b1a2';
+    const ground = new THREE.Mesh(groundGeo, new THREE.MeshStandardMaterial({ map: tex, roughness: 0.92, metalness: 0.0, color: gCol }));
     ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; g.add(ground);
     this.ground = ground; this.groundGeo = groundGeo;
     const pa = groundGeo.attributes.position.array; const nV = pa.length / 3;
@@ -607,6 +618,9 @@ export class World {
     for (const [px, pz, hw, hd, dep, ry] of (this._pendingCuts || [])) this.trench(px, pz, hw, hd, dep, 11, ry);
     this._pendingPits = []; this._pendingCuts = [];
     this._ghBase = Float32Array.from(this._gh);
+    // ROADS LAST — they drape over the finished ground, so they dip into the metro cut and
+    // ride the mining spoil instead of hovering over a hole they can't see.
+    this._buildRoadNet(plan, g);
     this.groundGeo.computeVertexNormals(); this._normalsDirty = false;
     // greenery from what the tiles asked for
     this._buildGreenery([], treeSpots, 0);
@@ -697,7 +711,7 @@ export class World {
 
   // The White City tile — one 24-unit district block per repeat: bone plaza + asphalt
   // cross-streets with lane dashes and crosswalks. Repeats 20× across the arena.
-  _gridTexture() {
+  _gridTexture(streets = true) {
     const c = document.createElement('canvas'); c.width = c.height = 512;
     const x = c.getContext('2d');
     // plaza — pale bone stone with a soft paver grid
@@ -705,39 +719,41 @@ export class World {
     x.fillStyle = 'rgba(255,255,255,0.05)'; x.fillRect(64, 64, 192, 192); x.fillRect(256, 256, 192, 192);
     x.strokeStyle = 'rgba(90,80,60,0.12)'; x.lineWidth = 1.5;
     for (let i = 64; i <= 512; i += 64) { x.beginPath(); x.moveTo(i + .5, 0); x.lineTo(i + .5, 512); x.stroke(); x.beginPath(); x.moveTo(0, i + .5); x.lineTo(512, i + .5); x.stroke(); }
-    // ---- THE STREET SECTION -------------------------------------------------------------------
-    // ⚠ The ground is the single biggest surface in frame and it used to read as a near-black slab:
-    // the asphalt was #57544c under a #8f897d multiply, so ~40% of every tile went to mud. A street
-    // is layered — SIDEWALK, curb, gutter, carriageway, markings — and each layer needs its own value.
-    const ST = 116;                                     // carriageway width in px (~22u at 96u cells)
-    const SW = 30;                                      // sidewalk band OUTSIDE the curb
-    // sidewalk: pale concrete, slightly cooler than the plaza so the kerb line reads
-    x.fillStyle = '#c3bcac';
-    x.fillRect(0, 0, ST / 2 + SW, 512); x.fillRect(512 - ST / 2 - SW, 0, ST / 2 + SW, 512);
-    x.fillRect(0, 0, 512, ST / 2 + SW); x.fillRect(0, 512 - ST / 2 - SW, 512, ST / 2 + SW);
-    // paving joints on the sidewalk — stops it reading as flat card
-    x.strokeStyle = 'rgba(120,112,96,0.16)'; x.lineWidth = 1.2;
-    for (let i = 0; i <= 512; i += 22) { x.beginPath(); x.moveTo(i + .5, 0); x.lineTo(i + .5, 512); x.stroke(); x.beginPath(); x.moveTo(0, i + .5); x.lineTo(512, i + .5); x.stroke(); }
-    // carriageway: real asphalt grey, not black
-    x.fillStyle = '#6e6a61';
-    x.fillRect(0, 0, ST / 2, 512); x.fillRect(512 - ST / 2, 0, ST / 2, 512);
-    x.fillRect(0, 0, 512, ST / 2); x.fillRect(0, 512 - ST / 2, 512, ST / 2);
-    // a darker gutter strip where the road meets the kerb — the shadow line that sells depth
-    x.fillStyle = 'rgba(40,38,33,0.30)';
-    for (const p of [ST / 2 - 7, 512 - ST / 2]) { x.fillRect(p, 0, 7, 512); x.fillRect(0, p, 512, 7); }
-    // curbs — bright concrete edge
-    x.strokeStyle = 'rgba(246,241,228,0.95)'; x.lineWidth = 5;
-    for (const p of [ST / 2, 512 - ST / 2]) { x.beginPath(); x.moveTo(p, 0); x.lineTo(p, 512); x.stroke(); x.beginPath(); x.moveTo(0, p); x.lineTo(512, p); x.stroke(); }
-    // lane dashes (gold — the city's trim color)
-    x.strokeStyle = 'rgba(245,178,26,0.55)'; x.lineWidth = 5; x.setLineDash([26, 22]);
-    x.beginPath(); x.moveTo(0.5, 0); x.lineTo(0.5, 512); x.stroke();
-    x.beginPath(); x.moveTo(0, 0.5); x.lineTo(512, 0.5); x.stroke();
-    x.setLineDash([]);
-    // crosswalk ticks where street meets plaza
-    x.fillStyle = 'rgba(240,234,218,0.7)';
-    for (let i = -40; i <= 40; i += 16) {
-      x.fillRect(256 + i, ST / 2 + 4, 9, 26); x.fillRect(256 + i, 512 - ST / 2 - 30, 9, 26);
-      x.fillRect(ST / 2 + 4, 256 + i, 26, 9); x.fillRect(512 - ST / 2 - 30, 256 + i, 26, 9);
+    if (streets) {
+      // ---- THE STREET SECTION -------------------------------------------------------------------
+      // ⚠ The ground is the single biggest surface in frame and it used to read as a near-black slab:
+      // the asphalt was #57544c under a #8f897d multiply, so ~40% of every tile went to mud. A street
+      // is layered — SIDEWALK, curb, gutter, carriageway, markings — and each layer needs its own value.
+      const ST = 116;                                     // carriageway width in px (~22u at 96u cells)
+      const SW = 30;                                      // sidewalk band OUTSIDE the curb
+      // sidewalk: pale concrete, slightly cooler than the plaza so the kerb line reads
+      x.fillStyle = '#c3bcac';
+      x.fillRect(0, 0, ST / 2 + SW, 512); x.fillRect(512 - ST / 2 - SW, 0, ST / 2 + SW, 512);
+      x.fillRect(0, 0, 512, ST / 2 + SW); x.fillRect(0, 512 - ST / 2 - SW, 512, ST / 2 + SW);
+      // paving joints on the sidewalk — stops it reading as flat card
+      x.strokeStyle = 'rgba(120,112,96,0.16)'; x.lineWidth = 1.2;
+      for (let i = 0; i <= 512; i += 22) { x.beginPath(); x.moveTo(i + .5, 0); x.lineTo(i + .5, 512); x.stroke(); x.beginPath(); x.moveTo(0, i + .5); x.lineTo(512, i + .5); x.stroke(); }
+      // carriageway: real asphalt grey, not black
+      x.fillStyle = '#6e6a61';
+      x.fillRect(0, 0, ST / 2, 512); x.fillRect(512 - ST / 2, 0, ST / 2, 512);
+      x.fillRect(0, 0, 512, ST / 2); x.fillRect(0, 512 - ST / 2, 512, ST / 2);
+      // a darker gutter strip where the road meets the kerb — the shadow line that sells depth
+      x.fillStyle = 'rgba(40,38,33,0.30)';
+      for (const p of [ST / 2 - 7, 512 - ST / 2]) { x.fillRect(p, 0, 7, 512); x.fillRect(0, p, 512, 7); }
+      // curbs — bright concrete edge
+      x.strokeStyle = 'rgba(246,241,228,0.95)'; x.lineWidth = 5;
+      for (const p of [ST / 2, 512 - ST / 2]) { x.beginPath(); x.moveTo(p, 0); x.lineTo(p, 512); x.stroke(); x.beginPath(); x.moveTo(0, p); x.lineTo(512, p); x.stroke(); }
+      // lane dashes (gold — the city's trim color)
+      x.strokeStyle = 'rgba(245,178,26,0.55)'; x.lineWidth = 5; x.setLineDash([26, 22]);
+      x.beginPath(); x.moveTo(0.5, 0); x.lineTo(0.5, 512); x.stroke();
+      x.beginPath(); x.moveTo(0, 0.5); x.lineTo(512, 0.5); x.stroke();
+      x.setLineDash([]);
+      // crosswalk ticks where street meets plaza
+      x.fillStyle = 'rgba(240,234,218,0.7)';
+      for (let i = -40; i <= 40; i += 16) {
+        x.fillRect(256 + i, ST / 2 + 4, 9, 26); x.fillRect(256 + i, 512 - ST / 2 - 30, 9, 26);
+        x.fillRect(ST / 2 + 4, 256 + i, 26, 9); x.fillRect(512 - ST / 2 - 30, 256 + i, 26, 9);
+      }
     }
     const t = new THREE.CanvasTexture(c);
     // 5 repeats over 480u = a 96-unit CITY BLOCK per tile with ~22u-wide streets — real streets
@@ -910,39 +926,51 @@ export class World {
 
   // --- Fog of war: darken the ground outside a vision cone + near radius, with wall shadows ---
   _buildFogOfWar() {
-    const MAX = 24;   // structural-cover ceiling (generated plans cap at 24 cells — cityplan STRUCT_CAP)
-    const bc = [], bh = [];
-    for (let i = 0; i < MAX; i++) { bc.push(new THREE.Vector2()); bh.push(new THREE.Vector2()); }
-    let n = 0;
-    for (const c of this.cover) { if (n >= MAX) break; bc[n].set(c.x, c.z); bh[n].set((c.hx ?? c.r) + 1, (c.hz ?? c.r) + 1); n++; }
+    // ---- THE OCCUPANCY GRID ------------------------------------------------------------------
+    // ⚠ THIS USED TO BE A FIXED ARRAY OF 24 BOXES. `uniform vec2 uBoxC[24]` is a GLSL compile-time
+    // constant, so the shader — not the design — decided how dense a city could be: cityplan's
+    // STRUCT_CAP existed ONLY to match it, and a Mega City threw a third of itself away as empty
+    // plaza and came out feeling EMPTIER than a small town. Occlusion is a coarse GRID TEXTURE
+    // now and the segment test is a short march through it, so the cost is O(1) in the number of
+    // buildings. There is no ceiling any more — density is a design dial again.
+    const RES = FOG_RES, EXT = FOG_EXT;                       // 256 texels across 700 world units ≈ 2.7u
+    this._occData = new Uint8Array(RES * RES);
+    this._occTex = new THREE.DataTexture(this._occData, RES, RES, THREE.RedFormat, THREE.UnsignedByteType);
+    this._occTex.minFilter = this._occTex.magFilter = THREE.NearestFilter;
+    this._occTex.wrapS = this._occTex.wrapT = THREE.ClampToEdgeWrapping;
+    this._occTex.needsUpdate = true;
     this.fogMat = new THREE.ShaderMaterial({
       transparent: true, depthWrite: false,
       uniforms: {
         uPlayer: { value: new THREE.Vector2(0, 0) }, uDir: { value: new THREE.Vector2(0, 1) },
         uP2: { value: new THREE.Vector2(0, 0) }, uHas2: { value: 0 },
         uCos: { value: Math.cos(0.96) }, uRange: { value: 96 }, uNear: { value: 26 }, uDark: { value: 0.74 },   // softened for the White City — unseen streets ghost through instead of blacking out
-        uTint: { value: new THREE.Color('#ffd24a') }, uBoxC: { value: bc }, uBoxH: { value: bh }, uBoxN: { value: n },
+        uTint: { value: new THREE.Color('#ffd24a') }, uOcc: { value: this._occTex }, uOccExt: { value: EXT },
       },
       vertexShader: `varying vec2 vW; void main(){ vW=(modelMatrix*vec4(position,1.0)).xz; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
       fragmentShader: `
         precision highp float;
         varying vec2 vW; uniform vec2 uPlayer; uniform vec2 uDir; uniform vec2 uP2; uniform float uHas2, uCos, uRange, uNear, uDark;
-        uniform vec3 uTint; uniform vec2 uBoxC[${MAX}]; uniform vec2 uBoxH[${MAX}]; uniform int uBoxN;
-        bool segBox(vec2 p0, vec2 p1, vec2 c, vec2 h){
-          vec2 d=p1-p0, mn=c-h, mx=c+h; float tmin=0.0, tmax=1.0;
-          for(int a=0;a<2;a++){
-            float dd=(a==0)?d.x:d.y, pa=(a==0)?p0.x:p0.y, na=(a==0)?mn.x:mn.y, xa=(a==0)?mx.x:mx.y;
-            if(abs(dd)<1e-4){ if(pa<na||pa>xa) return false; }
-            else { float t1=(na-pa)/dd, t2=(xa-pa)/dd; if(t1>t2){float t=t1;t1=t2;t2=t;} tmin=max(tmin,t1); tmax=min(tmax,t2); if(tmin>tmax) return false; }
+        uniform vec3 uTint; uniform sampler2D uOcc; uniform float uOccExt;
+        // march the sight line through the occupancy grid. Skips the first and last few percent so
+        // standing against a wall doesn't blind you to your own feet — same tolerance the old
+        // analytic box test used (tmin > 0.03, tmin < 0.985).
+        bool blocked(vec2 p0, vec2 p1){
+          vec2 d = p1 - p0;
+          if (dot(d,d) < 4.0) return false;
+          for (int i = 1; i < ${FOG_STEPS}; i++) {
+            float t = 0.03 + (0.955 / float(${FOG_STEPS})) * float(i);
+            vec2 uv = (p0 + d * t) / uOccExt + 0.5;
+            if (texture2D(uOcc, uv).r > 0.5) return true;
           }
-          return tmin>0.03 && tmin<0.985;
+          return false;
         }
         void main(){
           vec2 d = vW - uPlayer; float dist = length(d); vec2 nd = d/max(dist,0.001);
           float near = 1.0 - smoothstep(uNear*0.72, uNear, dist);
           float cone = smoothstep(uCos-0.10, uCos+0.03, dot(nd,uDir)) * (1.0 - smoothstep(uRange*0.72, uRange, dist));
           // walls cast vision shadows over the cone (not the near bubble)
-          if(cone > 0.01){ for(int i=0;i<${MAX};i++){ if(i>=uBoxN) break; if(segBox(uPlayer, vW, uBoxC[i], uBoxH[i])){ cone=0.0; break; } } }
+          if(cone > 0.01 && blocked(uPlayer, vW)) cone = 0.0;
           float near2 = uHas2 * (1.0 - smoothstep(uNear * 0.72, uNear, length(vW - uP2)));   // 2nd player reveal bubble
           float vis = clamp(max(max(near, cone), near2), 0.0, 1.0);
           // faint warm rim right at the vision edge
@@ -965,11 +993,28 @@ export class World {
     if (p2) { u.uP2.value.set(p2.x, p2.z); u.uHas2.value = 1; } else u.uHas2.value = 0;
   }
   setFogEnabled(on) { if (this.fog) this.fog.visible = on; }
+  // Rasterise every live cover box into the occupancy grid. No budget, no sort, no ceiling —
+  // a 40-building city and a 400-building city cost the same to look through.
   refreshFogBoxes() {
-    if (!this.fogMat) return;
-    const u = this.fogMat.uniforms, bc = u.uBoxC.value, bh = u.uBoxH.value; let n = 0;
-    for (const c of this.cover) { if (n >= bc.length) break; bc[n].set(c.x, c.z); bh[n].set((c.hx ?? c.r) + 1, (c.hz ?? c.r) + 1); n++; }
-    u.uBoxN.value = n;
+    if (!this._occData) return;
+    const D = this._occData, RES = FOG_RES, EXT = FOG_EXT, S = EXT / RES;
+    D.fill(0);
+    for (const c of this.cover) {
+      if (c.destroyed) continue;
+      const hx = c.hx ?? c.r, hz = c.hz ?? c.r;
+      // ⚠ RASTERISE THE INTERIOR, never the bounding texels. Growing each box outward by a texel
+      // put a ~2u halo of false occlusion around every wall, and a fighter standing flush against
+      // one was blinded to their own feet. Ceil/floor keeps the occluder inside the real building.
+      let c0 = Math.ceil((c.x - hx) / S + RES / 2), c1 = Math.floor((c.x + hx) / S + RES / 2);
+      let r0 = Math.ceil((c.z - hz) / S + RES / 2), r1 = Math.floor((c.z + hz) / S + RES / 2);
+      // a box thinner than one texel would vanish entirely — give it its centre texel
+      if (c1 < c0) { c0 = c1 = Math.round(c.x / S + RES / 2); }
+      if (r1 < r0) { r0 = r1 = Math.round(c.z / S + RES / 2); }
+      c0 = Math.max(0, c0); c1 = Math.min(RES - 1, c1);
+      r0 = Math.max(0, r0); r1 = Math.min(RES - 1, r1);
+      for (let r = r0; r <= r1; r++) { const base = r * RES; for (let cc = c0; cc <= c1; cc++) D[base + cc] = 255; }
+    }
+    this._occTex.needsUpdate = true;
   }
 
   // THE GROUND IS REAL. Bilinear sample of the terrain heightfield at a world point.
@@ -1008,6 +1053,114 @@ export class World {
     }
     this.groundGeo.attributes.position.needsUpdate = true; this._normalsDirty = true;
     this.flattenGrass(cx, cz, Math.max(hw, hd) + slope);
+  }
+
+  // ---- THE ROAD NETWORK ---------------------------------------------------------------------
+  // Roads used to be a WRAPPED GROUND TEXTURE. That one fact is why every cell had a street on
+  // all four sides, forever: no junctions, no dead ends, no dirt lanes, no highway, and no way to
+  // connect one specific cell to another. Roads are GEOMETRY now, built from `plan.roads` — an
+  // edge whose class is R_NONE is simply not built, which is what makes a dead end possible.
+  // Each edge is a subdivided ribbon DRAPED over the heightfield (so it dips into the metro cut
+  // and rides the mining spoil instead of floating), textured with a real street CROSS-SECTION
+  // that tiles along the run, and merged into ONE mesh per road class — five draws for a city.
+  _roadTex(classId) {
+    this._roadTexes = this._roadTexes || {};
+    if (this._roadTexes[classId]) return this._roadTexes[classId];
+    const R = ROAD[classId];
+    const c = document.createElement('canvas'); c.width = c.height = 128;
+    const x = c.getContext('2d');
+    const dirt = R.mat === 'dirt';
+    if (dirt) {
+      x.fillStyle = '#9a8261'; x.fillRect(0, 0, 128, 128);
+      x.fillStyle = 'rgba(112,92,62,0.5)'; x.fillRect(30, 0, 16, 128); x.fillRect(82, 0, 16, 128);   // wheel ruts
+      x.fillStyle = 'rgba(160,142,108,0.55)';
+      for (let i = 0; i < 260; i++) x.fillRect((i * 61) % 128, (i * 37) % 128, 2, 2);                 // gravel (deterministic)
+      x.fillStyle = 'rgba(126,132,86,0.35)'; x.fillRect(60, 0, 8, 128);                               // grass down the crown
+    } else {
+      x.fillStyle = '#c3bcac'; x.fillRect(0, 0, 128, 128);                                            // sidewalk shoulder
+      x.strokeStyle = 'rgba(120,112,96,0.16)'; x.lineWidth = 1;
+      for (let i = 0; i < 128; i += 11) { x.beginPath(); x.moveTo(0, i + .5); x.lineTo(128, i + .5); x.stroke(); }
+      x.fillStyle = '#6e6a61'; x.fillRect(11, 0, 106, 128);                                           // carriageway
+      x.fillStyle = 'rgba(40,38,33,0.30)'; x.fillRect(11, 0, 7, 128); x.fillRect(110, 0, 7, 128);      // gutter shadow
+      x.fillStyle = 'rgba(246,241,228,0.95)'; x.fillRect(9, 0, 3, 128); x.fillRect(116, 0, 3, 128);    // kerb
+      x.fillStyle = 'rgba(245,178,26,0.62)';
+      if (R.markings === 'dash') { for (let y = 0; y < 128; y += 30) x.fillRect(62, y, 4, 16); }
+      else if (R.markings === 'double') { x.fillRect(57, 0, 3, 128); x.fillRect(68, 0, 3, 128); }
+      else if (R.markings === 'divided') {
+        x.fillStyle = 'rgba(150,150,132,0.55)'; x.fillRect(56, 0, 16, 128);                            // median
+        x.fillStyle = 'rgba(245,178,26,0.6)'; x.fillRect(54, 0, 3, 128); x.fillRect(71, 0, 3, 128);
+        x.fillStyle = 'rgba(240,238,230,0.5)';
+        for (let y = 0; y < 128; y += 26) { x.fillRect(34, y, 3, 12); x.fillRect(91, y, 3, 12); }      // lane lines
+      }
+    }
+    const tx = new THREE.CanvasTexture(c);
+    tx.wrapS = tx.wrapT = THREE.RepeatWrapping; tx.anisotropy = 8;
+    this._roadTexes[classId] = tx;
+    return tx;
+  }
+  _roadMat(classId) {
+    this._roadMats = this._roadMats || {};
+    if (!this._roadMats[classId]) {
+      const m = new THREE.MeshStandardMaterial({ map: this._roadTex(classId), roughness: 0.95, metalness: 0, color: '#b9b1a2' });
+      m.userData._shared = true;             // cached across cities — _teardownCity must not kill it
+      this._roadMats[classId] = m;
+    }
+    return this._roadMats[classId];
+  }
+  _buildRoadNet(plan, group) {
+    if (!plan || !plan.roads) return 0;
+    const A = plan.arena, N = plan.N, RD = plan.roads;
+    const byClass = {};
+    const add = (cid, geo) => (byClass[cid] || (byClass[cid] = [])).push(geo);
+    // one ribbon between two points, subdivided finely enough to follow the ground
+    const ribbon = (cid, x0, z0, x1, z1) => {
+      const w = ROAD[cid].width, dx = x1 - x0, dz = z1 - z0, len = Math.hypot(dx, dz);
+      if (len < 0.5) return;
+      const geo = new THREE.PlaneGeometry(w, len, 2, Math.max(2, Math.round(len / 7)));
+      const uv = geo.attributes.uv, reps = Math.max(1, Math.round(len / 24));
+      for (let i = 0; i < uv.count; i++) uv.setY(i, uv.getY(i) * reps);   // tile the section along the run
+      geo.rotateX(-Math.PI / 2);
+      geo.rotateY(Math.atan2(dx, dz));
+      geo.translate((x0 + x1) / 2, 0, (z0 + z1) / 2);
+      add(cid, geo);
+    };
+    for (let r = 0; r <= N; r++) for (let c = 0; c < N; c++) {           // horizontal edges (run along X)
+      const cid = RD.h[r][c]; if (!cid) continue;
+      const z = -A + r * CELL;
+      ribbon(cid, -A + c * CELL, z, -A + (c + 1) * CELL, z);
+    }
+    for (let r = 0; r < N; r++) for (let c = 0; c <= N; c++) {           // vertical edges (run along Z)
+      const cid = RD.v[r][c]; if (!cid) continue;
+      const x = -A + c * CELL;
+      ribbon(cid, x, -A + r * CELL, x, -A + (r + 1) * CELL);
+    }
+    // junction patches — a crossing must read as one surface, not two ribbons overlapping
+    let junctions = 0;
+    for (let r = 0; r <= N; r++) for (let c = 0; c <= N; c++) {
+      const j = junctionAt(plan, r, c);
+      if (!j || j.deg === 0) continue;
+      junctions++;
+      const cid = Math.max(j.n, j.e, j.s, j.w), w = ROAD[cid].width;
+      const p = new THREE.PlaneGeometry(w, w, 2, 2);
+      p.rotateX(-Math.PI / 2); p.translate(-A + c * CELL, 0, -A + r * CELL);
+      add(cid, p);
+    }
+    // DRAPE + merge: one mesh per class, every vertex sitting just above the real ground
+    let meshes = 0;
+    this._roadMeshes = [];
+    for (const cid in byClass) {
+      const merged = mergeGeometries(byClass[cid]);
+      byClass[cid].forEach(gg => gg.dispose());
+      if (!merged) continue;
+      const pos = merged.attributes.position;
+      for (let i = 0; i < pos.count; i++) pos.setY(i, this.heightAt(pos.getX(i), pos.getZ(i)) + 0.12);
+      pos.needsUpdate = true; merged.computeVertexNormals();
+      const m = new THREE.Mesh(merged, this._roadMat(cid | 0));
+      m.receiveShadow = true; m.renderOrder = 1;
+      group.add(m); this._roadMeshes.push(m); meshes++;
+    }
+    this._roadStats = { classes: meshes, junctions };
+    return meshes;
   }
 
   // --- destructible terrain (GeoMod-lite): crater the ground ---

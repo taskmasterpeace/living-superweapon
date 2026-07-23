@@ -11,7 +11,7 @@ import { icon, ATTR_ICON, ICON_MEANING } from './icons.js';
 import { writeBroadcast, tapeRows, llmPunchUp, titleCase, money, causeLine, mulberry } from '../data/news.js';
 import { recOf, snapshotTable, rankingTable, recentIncidents, championId, tournamentNo } from '../data/rankings.js';
 import { cityList } from '../data/cities.js';
-import { generatePlan, thresholdPlan, galleryPlan, TILE_INFO, VARIANTS, popLabel, CELL } from '../data/cityplan.js';
+import { generatePlan, thresholdPlan, galleryPlan, TILE_INFO, VARIANTS, popLabel, CELL, TILE_FOOT, applyPlanEdits, regionOf, ROAD } from '../data/cityplan.js';
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
@@ -326,6 +326,31 @@ const CSS = `
   justify-content:center; font-size:11px; border:1px dashed var(--line-2); }
 .lswovl .atpalhint{ font-family:var(--f-mono); font-size:var(--t-micro); color:var(--text-5);
   letter-spacing:.06em; margin-bottom:8px; }
+.lswovl .atsw i{ display:block; font-style:normal; font-size:9px; line-height:18px; text-align:center;
+  color:rgba(20,18,12,.65); }                                    /* ▦ marks a multi-cell footprint */
+.lswovl .atstep{ display:flex; align-items:center; gap:4px; font-family:var(--f-mono);
+  font-size:var(--t-micro); color:var(--text-5); letter-spacing:.08em; margin-bottom:7px; }
+.lswovl .atstep b{ color:var(--gold); min-width:44px; text-align:center; }
+.lswovl .atsm{ width:20px; height:20px; border-radius:var(--r-1); background:var(--surface-hi);
+  border:1px solid var(--line-2); color:var(--text-2); cursor:pointer; font-size:12px; line-height:1; }
+.lswovl .atsm:hover{ border-color:var(--gold); color:var(--gold); }
+.lswovl .atrow2{ display:flex; gap:6px; }
+.lswovl .atrow2 .odone{ flex:1; min-width:0; }
+.lswovl .odone[disabled]{ opacity:.35; pointer-events:none; }
+/* --- saved layouts + plan JSON --- */
+.lswovl .lyrows{ max-height:210px; overflow-y:auto; margin:10px 0; }
+.lswovl .lyrow{ display:flex; justify-content:space-between; align-items:center; gap:8px; padding:7px 9px;
+  background:var(--surface-raised); border:1px solid var(--line); border-radius:var(--r-2); margin-bottom:5px; }
+.lswovl .lyrow b{ display:block; color:var(--text); font-size:var(--t-md); }
+.lswovl .lyrow span{ font-family:var(--f-mono); font-size:var(--t-micro); color:var(--text-5); letter-spacing:.06em; }
+.lswovl .lysm{ padding:4px 9px; font-size:var(--t-micro); margin-left:5px; }
+.lswovl .lyname{ display:flex; gap:6px; margin-bottom:10px; }
+.lswovl .lyname input{ flex:1; background:var(--surface-hi); border:1px solid var(--line-2); color:var(--text);
+  border-radius:var(--r-2); padding:7px 9px; font-family:var(--f-display); }
+.lswovl .lyjson textarea{ width:100%; height:64px; background:var(--ink); color:var(--text-3); resize:vertical;
+  border:1px solid var(--line-2); border-radius:var(--r-2); padding:7px; font-family:var(--f-mono);
+  font-size:var(--t-micro); margin-bottom:6px; }
+.lswovl .lylbl{ font-family:var(--f-mono); font-size:var(--t-micro); color:var(--text-5); letter-spacing:.1em; margin-bottom:4px; }
 /* ---- THE COLD OPEN: the home page as a news hour ---- */
 #title .colddesk{ display:flex; gap:18px; align-items:stretch; max-width:60rem; margin:64px auto 4px; margin-top:max(64px, 0px);
   padding:12px; background:var(--surface); border:1px solid var(--line); border-radius:var(--r-3); }
@@ -955,16 +980,10 @@ function describeAbility(a) {
   }
 }
 
-// Re-apply hand-painted cells on top of a freshly generated plan. Kept module-level so both the
-// Atlas preview and the live match resolve a theater identically — one code path, no drift.
-export function applyPlanEdits(plan, edits) {
-  if (!edits || !plan || !plan.cells) return plan;
-  for (const key in edits) {
-    const [r, c] = key.split(',').map(Number);
-    if (plan.cells[r] && plan.cells[r][c] !== undefined) plan.cells[r][c] = { ...edits[key] };
-  }
-  return plan;
-}
+// The edit layer lives in the PLANNER now (it has to re-derive sockets and the road graph after a
+// paint). Re-exported here because the atlas and everything that resolves a theater import it from
+// the HUD — one code path, no drift.
+export { applyPlanEdits } from '../data/cityplan.js';
 
 export class HUD {
   constructor(game) {
@@ -1114,18 +1133,44 @@ export class HUD {
     if (t.flagship || t.cityId == null) return thresholdPlan();
     const city = cityList()[t.cityId];
     if (!city) return thresholdPlan();
-    const plan = generatePlan(city, t.seed || 1);
+    const plan = generatePlan(city, t.seed || 1, { N: t.N, waterCols: t.waterCols });
     return applyPlanEdits(plan, t.edits);   // hand-painted cells win over the generator
   }
-  // THE MAP MAKER'S EDIT LAYER. Painted cells are stored SEPARATELY from the generated plan as
-  // { "r,c": {t, v} }, so the generator stays the source of truth and your hand edits ride on top:
-  // reroll the seed and everything you painted survives, because it is re-applied after generation.
-  _paintCell(plan, st, r, c) {
-    if (!plan.cells || !plan.cells[r]) return;
-    const key = r + ',' + c;
-    if (st.paint === 'ERASE') delete st.edits[key];
-    else st.edits[key] = { t: st.paint, v: (Math.random() * (VARIANTS[st.paint] || 1)) | 0 };
+  // --- the map maker's tools -------------------------------------------------------------------
+  // Every mutation goes through _mapEdit so UNDO is a single unconditional rule instead of a thing
+  // each button has to remember to do. The stack holds the whole edit set (they're tiny) plus the
+  // grid and coastline, because resizing the grid is an edit you must be able to take back too.
+  _mapEdit(st, fn) {
+    (st.hist || (st.hist = [])).push(JSON.stringify({ e: st.edits, N: st.N, w: st.waterCols, s: st.seed }));
+    if (st.hist.length > 50) st.hist.shift();
+    fn();
   }
+  _mapUndo(st) {
+    if (!st.hist || !st.hist.length) return false;
+    const p = JSON.parse(st.hist.pop());
+    st.edits = p.e; st.N = p.N; st.waterCols = p.w; st.seed = p.s;
+    return true;
+  }
+  // Painting. LOCK freezes whatever the generator put here so rerolls can't touch it — that is how
+  // you keep the two blocks you like and shuffle the rest of the city around them.
+  _paintCell(plan, st, r, c) {
+    const key = r + ',' + c;
+    const cur = plan.cells && plan.cells[r] && plan.cells[r][c];
+    this._mapEdit(st, () => {
+      if (st.paint === 'ERASE') { delete st.edits[key]; return; }
+      if (st.paint === 'LOCK') {
+        if (st.edits[key] && st.edits[key].lock) { delete st.edits[key]; return; }   // click again to unlock
+        if (!cur) return;
+        const a = cur.ref ? plan.cells[cur.ref[0]][cur.ref[1]] : cur;
+        const ak = cur.ref ? cur.ref.join(',') : key;
+        st.edits[ak] = { t: a.t, v: a.v || 0, lock: true };
+        return;
+      }
+      st.edits[key] = { t: st.paint, v: (Math.random() * (VARIANTS[st.paint] || 1)) | 0 };
+    });
+  }
+  _layouts() { try { return JSON.parse(localStorage.getItem('threshold_layouts_v1') || '{}'); } catch { return {}; } }
+  _saveLayouts(o) { try { localStorage.setItem('threshold_layouts_v1', JSON.stringify(o)); } catch {} }
 
   _drawPlanPreview(cvs, plan) {
     const x = cvs.getContext('2d'); const S = cvs.width;
@@ -1138,30 +1183,62 @@ export class HUD {
       x.fillText('FLAGSHIP THEATER — HAND-BUILT', S / 2, S / 2 + 10);
       return;
     }
+    // ⚠ Canvas 2D cannot read CSS tokens — every colour in here must be a literal.
     const N = plan.N, pad = 12, cs = (S - pad * 2) / N, gap = Math.max(2, cs * 0.1);
     for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
       const cell = plan.cells[r][c];
       const px = pad + c * cs, py = pad + r * cs;
       if (!cell) { x.fillStyle = '#181a20'; x.fillRect(px + gap / 2, py + gap / 2, cs - gap, cs - gap); continue; }
       if (cell.t === 'water') { x.fillStyle = '#2a5a78'; x.fillRect(px, py, cs, cs); continue; }
-      x.fillStyle = (TILE_INFO[cell.t] ? TILE_INFO[cell.t].c : 'var(--text-6)') + 'cc';
-      x.fillRect(px + gap / 2, py + gap / 2, cs - gap, cs - gap);
+      if (cell.ref) continue;                                   // the anchor paints the whole footprint
+      const fw = cell.fw || 1, fh = cell.fh || 1;
+      x.fillStyle = (TILE_INFO[cell.t] ? TILE_INFO[cell.t].c : '#6a6458') + 'cc';
+      x.fillRect(px + gap / 2, py + gap / 2, cs * fw - gap, cs * fh - gap);
+      if (fw > 1 || fh > 1) {                                   // a multi-cell structure reads as ONE box
+        x.strokeStyle = 'rgba(20,18,12,.6)'; x.lineWidth = 2;
+        x.strokeRect(px + gap / 2, py + gap / 2, cs * fw - gap, cs * fh - gap);
+      }
       x.fillStyle = 'rgba(0,0,0,.55)'; x.font = `700 ${Math.max(7, cs * 0.16)}px Consolas,monospace`; x.textAlign = 'center';
-      x.fillText((cell.t[0] + (cell.v ?? '')).toUpperCase(), px + cs / 2, py + cs / 2 + 3);
+      x.fillText((cell.t[0] + (cell.v ?? '')).toUpperCase(), px + cs * fw / 2, py + cs * fh / 2 + 3);
+      if (cell.lock) { x.fillStyle = '#f5b21a'; x.font = `${Math.max(8, cs * 0.2)}px sans-serif`; x.textAlign = 'left'; x.fillText('🔒', px + 2, py + cs * 0.24); }
+      else if (cell.painted) { x.fillStyle = '#f5b21a'; x.fillRect(px + gap / 2, py + gap / 2, 4, 4); }
+    }
+    // THE ROAD GRAPH, drawn as the graph it is: thickness = class, absent = no road at all. This is
+    // the whole point of the rewrite made visible — you can SEE the dead ends and the dirt tracks.
+    if (plan.roads) {
+      // values chosen to READ on the dark panel — the first pass used real asphalt greys and the
+      // whole graph was invisible, which defeated the point of drawing it
+      const W = [0, 1.4, 2.6, 4, 5.4], COL = [null, '#a08a5e', '#8d8676', '#b8ad93', '#e0d3ad'];
+      const at = (i) => pad + i * cs;
+      for (let r = 0; r <= N; r++) for (let c = 0; c < N; c++) {
+        const k = plan.roads.h[r][c]; if (!k) continue;
+        x.strokeStyle = COL[k]; x.lineWidth = W[k];
+        x.beginPath(); x.moveTo(at(c), at(r)); x.lineTo(at(c + 1), at(r)); x.stroke();
+      }
+      for (let r = 0; r < N; r++) for (let c = 0; c <= N; c++) {
+        const k = plan.roads.v[r][c]; if (!k) continue;
+        x.strokeStyle = COL[k]; x.lineWidth = W[k];
+        x.beginPath(); x.moveTo(at(c), at(r)); x.lineTo(at(c), at(r + 1)); x.stroke();
+      }
     }
     x.fillStyle = '#ffd97a'; x.font = '800 12px Rajdhani,sans-serif'; x.textAlign = 'left';
     x.fillText(plan.name.toUpperCase(), pad, S - 4);
   }
   showAtlas() {
     const cities = cityList();
-    const st = this._atlasSt || (this._atlasSt = { q: '', type: 'ALL', sel: this.theater.flagship ? -1 : (this.theater.cityId ?? -1), seed: this.theater.seed || 1, paint: 'residential', edits: { ...(this.theater.edits || {}) } });
+    const st = this._atlasSt || (this._atlasSt = {
+      q: '', type: 'ALL', sel: this.theater.flagship ? -1 : (this.theater.cityId ?? -1),
+      seed: this.theater.seed || 1, paint: 'residential', edits: { ...(this.theater.edits || {}) },
+      N: this.theater.N || 0, waterCols: this.theater.waterCols, hist: [],
+    });
     const TYPES = ['ALL', 'Military', 'Political', 'Industrial', 'Company', 'Seaport', 'Resort', 'Mining', 'Educational', 'Temple'];
     const render = () => {
       const q = st.q.toLowerCase();
       let L = cities.filter(c => (st.type === 'ALL' || c.types.includes(st.type)) && (!q || (c.name + ' ' + c.country).toLowerCase().includes(q)));
       const shown = L.slice(0, 28);
       const selCity = st.sel >= 0 ? cities[st.sel] : null;
-      const plan = st.sel < 0 ? thresholdPlan() : applyPlanEdits(generatePlan(selCity, st.seed), st.edits);
+      const plan = st.sel < 0 ? thresholdPlan()
+        : applyPlanEdits(generatePlan(selCity, st.seed, { N: st.N || undefined, waterCols: st.waterCols }), st.edits);
       this.atlasEl.innerHTML = `<div class="obox" style="width:min(940px,96vw)">
         <div class="rkhead"><div class="n9" style="background:#2a5a78">🗺</div>
           <div class="rt"><b>CITY ATLAS — THEATER SELECT</b><span>the world sheet · ${cities.length} registered cities</span></div>
@@ -1185,12 +1262,26 @@ export class HUD {
             <div class="atmeta" id="atMeta"></div>
             <div class="atbtns">
               <div class="atpal" id="atPal"></div>
-              <div class="atpalhint">Click the map to paint · painted cells survive a reroll</div>
-              <button class="odone oghost" id="atSeed">⟳ REROLL LAYOUT (SEED ${st.seed})</button>
-              <button class="odone oghost" id="atClr">✕ CLEAR ${Object.keys(st.edits).length} PAINTED CELL${Object.keys(st.edits).length === 1 ? '' : 'S'}</button>
+              <div class="atpalhint">Click the map to paint · <b>🔒 LOCK</b> freezes a cell against rerolls · painted cells survive everything</div>
+              <div class="atstep">
+                <span>GRID</span>
+                <button class="atsm" data-step="N-1">−</button><b id="atNv">${plan.N}×${plan.N}</b><button class="atsm" data-step="N1">+</button>
+                <span style="margin-left:10px">COAST</span>
+                <button class="atsm" data-step="W-1">−</button><b>${plan.waterCols} COL</b><button class="atsm" data-step="W1">+</button>
+              </div>
+              <div class="atrow2">
+                <button class="odone oghost" id="atSeed">⟳ SEED ${st.seed}</button>
+                <button class="odone oghost" id="atUndo" ${st.hist && st.hist.length ? '' : 'disabled'}>↶ UNDO${st.hist && st.hist.length ? ' ' + st.hist.length : ''}</button>
+              </div>
+              <div class="atrow2">
+                <button class="odone oghost" id="atClr">✕ ${Object.keys(st.edits).length} EDIT${Object.keys(st.edits).length === 1 ? '' : 'S'}</button>
+                <button class="odone oghost" id="atLay">💾 LAYOUTS ${Object.keys(this._layouts()).length}</button>
+              </div>
               <button class="odone" id="atSet">📍 SET AS THEATER</button>
-              <button class="odone oghost" id="atGal">🧱 TILE PROVING GROUND</button>
-              <button class="odone oghost" id="atClose">CLOSE</button>
+              <div class="atrow2">
+                <button class="odone oghost" id="atGal">🧱 PROVING GROUND</button>
+                <button class="odone oghost" id="atClose">CLOSE</button>
+              </div>
             </div>
           </div>
         </div>
@@ -1203,12 +1294,17 @@ export class HUD {
       $('#atQ').oninput = (e) => { st.q = e.target.value; render(); setTimeout(() => { const i = $('#atQ'); i.focus(); i.setSelectionRange(i.value.length, i.value.length); }, 0); };
       this.atlasEl.querySelectorAll('[data-at]').forEach(ch => ch.onclick = () => { st.type = ch.dataset.at; render(); });
       this.atlasEl.querySelectorAll('[data-ci]').forEach(row => row.onclick = () => { st.sel = +row.dataset.ci; st.seed = 1; render(); });
-      // --- the tile palette: every declared tile plus an eraser, so it can never go stale
+      // --- the tile palette: every declared tile plus water, lock and an eraser. Derived from
+      // TILE_INFO, so a new tile type shows up here for free and the palette can never go stale.
       const pal = $('#atPal');
       if (pal) {
-        pal.innerHTML = Object.keys(TILE_INFO).map(t =>
-          `<span class="atsw${st.paint === t ? ' on' : ''}" data-paint="${t}" title="${esc(TILE_INFO[t].label)}" style="--sw:${TILE_INFO[t].c}"></span>`).join('')
-          + `<span class="atsw era${st.paint === 'ERASE' ? ' on' : ''}" data-paint="ERASE" title="Erase — back to the generator">✕</span>`;
+        pal.innerHTML = Object.keys(TILE_INFO).map(t => {
+          const f = TILE_FOOT[t];
+          return `<span class="atsw${st.paint === t ? ' on' : ''}" data-paint="${t}" title="${esc(TILE_INFO[t].label)}${f ? ` — ${f[0]}×${f[1]} CELLS` : ''}" style="--sw:${TILE_INFO[t].c}">${f ? '<i>▦</i>' : ''}</span>`;
+        }).join('')
+          + `<span class="atsw${st.paint === 'water' ? ' on' : ''}" data-paint="water" title="WATER — paint the sea" style="--sw:#2a5a78"></span>`
+          + `<span class="atsw era${st.paint === 'LOCK' ? ' on' : ''}" data-paint="LOCK" title="LOCK — freeze this cell against rerolls">🔒</span>`
+          + `<span class="atsw era${st.paint === 'ERASE' ? ' on' : ''}" data-paint="ERASE" title="Erase — hand the cell back to the generator">✕</span>`;
         pal.querySelectorAll('[data-paint]').forEach(sw => sw.onclick = () => { st.paint = sw.dataset.paint; render(); });
       }
       // --- click the preview to paint that cell
@@ -1224,10 +1320,24 @@ export class HUD {
           this._paintCell(plan, st, r, c); render();
         };
       }
-      $('#atClr').onclick = () => { st.edits = {}; render(); };
-      $('#atSeed').onclick = () => { st.seed++; render(); };
+      $('#atClr').onclick = () => { this._mapEdit(st, () => { st.edits = {}; }); render(); };
+      $('#atSeed').onclick = () => { this._mapEdit(st, () => { st.seed++; }); render(); };
+      $('#atUndo').onclick = () => { if (this._mapUndo(st)) render(); };
+      // GRID RESIZE + COASTLINE. Both go through the plan's override channel, so the generator
+      // re-runs at the new size and your painted cells are re-applied on top (clipped if they now
+      // fall outside the grid — an edit is never silently destroyed by a resize you can undo).
+      this.atlasEl.querySelectorAll('[data-step]').forEach(b => b.onclick = () => {
+        const d = b.dataset.step, k = d[0], dv = +d.slice(1);
+        this._mapEdit(st, () => {
+          if (k === 'N') st.N = Math.max(2, Math.min(9, (st.N || plan.N) + dv));
+          else st.waterCols = Math.max(0, Math.min(3, (st.waterCols != null ? st.waterCols : plan.waterCols) + dv));
+        });
+        render();
+      });
+      $('#atLay').onclick = () => this._showLayouts(st, render);
       $('#atSet').onclick = () => {
-        this.theater = st.sel < 0 ? { flagship: true, seed: 1 } : { cityId: st.sel, seed: st.seed, edits: { ...st.edits } };
+        this.theater = st.sel < 0 ? { flagship: true, seed: 1 }
+          : { cityId: st.sel, seed: st.seed, edits: { ...st.edits }, N: st.N || 0, waterCols: st.waterCols };
         try { localStorage.setItem('threshold_theater_v1', JSON.stringify(this.theater)); } catch {}
         this.atlasEl.style.display = 'none';
         const tt = this.title.querySelector('#termTheater'); if (tt) tt.textContent = st.sel < 0 ? 'THE WHITE CITY' : cities[st.sel].name.toUpperCase();
@@ -1235,9 +1345,63 @@ export class HUD {
       };
       $('#atGal').onclick = () => { this.theater = { gallery: true }; this.atlasEl.style.display = 'none'; this.onProvingGround && this.onProvingGround(); };
       $('#atClose').onclick = () => { this.atlasEl.style.display = 'none'; };
+      // Ctrl+Z anywhere in the atlas — the shortcut people try first
+      this.atlasEl.onkeydown = (e) => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); if (this._mapUndo(st)) render(); } };
+      this.atlasEl.tabIndex = -1;
     };
     render();
     this.atlasEl.style.display = 'flex';
+    this.atlasEl.focus();
+  }
+
+  // ---- NAMED LAYOUTS + PLAN JSON --------------------------------------------------------------
+  // A theater used to be ONE persisted slot: you could not keep two versions of a city, and there
+  // was no way to move a map you liked to another machine. A layout is the whole authored state —
+  // city, seed, grid, coastline and every painted cell — saved under a name, and the same object
+  // is what the JSON box exports and imports.
+  _showLayouts(st, rerender) {
+    const L = this._layouts();
+    const cities = cityList();
+    const cur = { cityId: st.sel, seed: st.seed, N: st.N || 0, waterCols: st.waterCols, edits: st.edits };
+    const el = this.layoutEl || (this.layoutEl = (() => { const d = document.createElement('div'); d.className = 'lswovl'; d.id = 'hLayouts'; document.body.appendChild(d); return d; })());
+    const draw = () => {
+      const names = Object.keys(this._layouts());
+      el.innerHTML = `<div class="obox" style="width:min(620px,94vw)">
+        <div class="rkhead"><div class="n9" style="background:#5a4a2a">💾</div>
+          <div class="rt"><b>SAVED LAYOUTS</b><span>name a map · reload it · move it between machines</span></div></div>
+        <div class="lyrows">${names.length ? names.map(n => `<div class="lyrow"><div><b>${esc(n)}</b><span>${esc((cities[this._layouts()[n].cityId] || {}).name || '—')} · SEED ${this._layouts()[n].seed} · ${Object.keys(this._layouts()[n].edits || {}).length} EDITS</span></div>
+          <div><button class="odone oghost lysm" data-load="${esc(n)}">LOAD</button><button class="odone oghost lysm" data-del="${esc(n)}">✕</button></div></div>`).join('') : '<div class="ac3" style="padding:10px;text-align:center">No layouts saved yet.</div>'}</div>
+        <div class="lyname"><input id="lyN" placeholder="name this layout…"><button class="odone" id="lySave">SAVE CURRENT</button></div>
+        <div class="lyjson"><div class="lylbl">PLAN JSON — copy it out, paste one in</div>
+          <textarea id="lyJ" spellcheck="false">${esc(JSON.stringify(cur))}</textarea>
+          <div class="atrow2"><button class="odone oghost" id="lyCopy">📋 COPY</button><button class="odone oghost" id="lyImp">⇩ IMPORT PASTED</button></div></div>
+        <button class="odone oghost" id="lyClose">CLOSE</button>
+      </div>`;
+      const $ = (s) => el.querySelector(s);
+      el.querySelectorAll('[data-load]').forEach(b => b.onclick = () => {
+        const o = this._layouts()[b.dataset.load]; if (!o) return;
+        this._mapEdit(st, () => { st.sel = o.cityId; st.seed = o.seed; st.N = o.N || 0; st.waterCols = o.waterCols; st.edits = { ...(o.edits || {}) }; });
+        el.style.display = 'none'; rerender();
+      });
+      el.querySelectorAll('[data-del]').forEach(b => b.onclick = () => { const o = this._layouts(); delete o[b.dataset.del]; this._saveLayouts(o); draw(); });
+      $('#lySave').onclick = () => {
+        const n = ($('#lyN').value || '').trim(); if (!n) return;
+        const o = this._layouts(); o[n] = cur; this._saveLayouts(o); draw(); rerender();
+        this.feed('Layout saved — ' + n.toUpperCase(), '#7fb0d0');
+      };
+      $('#lyCopy').onclick = () => { const t = $('#lyJ'); t.select(); try { document.execCommand('copy'); this.feed('Plan JSON copied', '#7fb0d0'); } catch {} };
+      $('#lyImp').onclick = () => {
+        try {
+          const o = JSON.parse($('#lyJ').value);
+          if (o.cityId == null || !o.edits) throw new Error('not a plan');
+          this._mapEdit(st, () => { st.sel = o.cityId; st.seed = o.seed || 1; st.N = o.N || 0; st.waterCols = o.waterCols; st.edits = { ...o.edits }; });
+          el.style.display = 'none'; rerender(); this.feed('Plan imported', '#7fb0d0');
+        } catch (err) { this.feed('That is not a plan JSON — ' + err.message, '#e05a4a'); }
+      };
+      $('#lyClose').onclick = () => { el.style.display = 'none'; };
+    };
+    draw();
+    el.style.display = 'flex';
   }
 
   // ---- the KMK 9 SPORTS DESK power board — every match (AI or piloted) moves the book ----

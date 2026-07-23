@@ -5,7 +5,15 @@
 // fog boxes, collision); flavor props are decor the fights smash through visually.
 // House rules apply: NO purple anywhere, warm-neutral + gold, per-district accent temperature.
 import * as THREE from 'three';
-import { CELL } from '../data/cityplan.js';
+import { CELL, regionOf } from '../data/cityplan.js';
+
+// ---- REGION SKINS ---------------------------------------------------------------------------
+// Every city carries a `cultureCode` (14 architectural regions) and until now NOTHING read it, so
+// Kabul was built out of the same greys as Oslo. The whole palette is now pulled toward the
+// region's table entry before a single tile is raised: walls, roofs, greenery, sand, plaza.
+// One lever, applied once per city build — no per-tile branching, no `if (country === …)`.
+const _c = new THREE.Color();
+const tint = (base, toward, k) => '#' + _c.set(base).lerp(new THREE.Color(toward), k).getHexString();
 
 // one window bay ≈ 17 units (a real ~3.2m floor at hero scale) — facades stay true on any box
 function scaleBoxUV(geo, w, h, d) {
@@ -15,20 +23,26 @@ function scaleBoxUV(geo, w, h, d) {
   uv.needsUpdate = true;
 }
 
-function mats(world) {
-  if (world._tileMats) return world._tileMats;
+function mats(world, region) {
+  const R = region || regionOf(0);
+  // ⚠ The cache is keyed by REGION. Teardown runs BEFORE the next city is built, so the old
+  // region's materials are disposed with the meshes that used them — dispose here too if the
+  // region changes mid-session (atlas hopping between continents) or they orphan silently.
+  if (world._tileMats && world._tileMatsRegion === R.key) return world._tileMats;
+  if (world._tileMats) for (const m of Object.values(world._tileMats)) { if (Array.isArray(m)) m.forEach(x => x.dispose()); else m.dispose(); }
+  world._tileMatsRegion = R.key;
   const S = (c, o = {}) => new THREE.MeshStandardMaterial({ color: c, roughness: o.r ?? 0.85, metalness: o.m ?? 0.05, ...(o.fs ? { flatShading: true } : {}), ...(o.e ? { emissive: o.e, emissiveIntensity: o.ei ?? 0.4 } : {}) });
   const B = (c, o = {}) => new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: o.o ?? 0.85, depthWrite: false });
   world._tileMats = {
-    stone: S('#cfc8b6'), white: S('#e8e2d4', { r: 0.7 }), marble: S('#efe9dc', { r: 0.55 }),
-    terraRoof: S('#a85c3e', { r: 0.92 }), paleRoof: S('#b9b2a0'), steelRoof: S('#5f666c', { r: 0.75, m: 0.35 }), oliveRoof: S('#5c6044'),
+    stone: S(tint('#cfc8b6', R.wall, 0.8)), white: S(tint('#e8e2d4', R.wall, 0.55), { r: 0.7 }), marble: S(tint('#efe9dc', R.wall, 0.3), { r: 0.55 }),
+    terraRoof: S(tint('#a85c3e', R.roof, 0.85), { r: 0.92 }), paleRoof: S(tint('#b9b2a0', R.roof, 0.4)), steelRoof: S('#5f666c', { r: 0.75, m: 0.35 }), oliveRoof: S('#5c6044'),
     steel: S('#8f979c', { r: 0.6, m: 0.5 }), rust: S('#8a5a3a', { r: 0.95 }), dark: S('#22252c', { r: 0.7, m: 0.3 }),
     olive: S('#6b6f52'), fence: S('#55583f', { r: 0.8, m: 0.3 }),
     gold: S('#c9a227', { r: 0.55, m: 0.4 }), domeGold: S('#d8b24a', { r: 0.4, m: 0.6, e: '#7a5a10', ei: 0.25 }),
     wood: S('#7a5a3a', { r: 0.95 }), deck: S('#c9b89a', { r: 0.9 }),
-    sandM: B('#d8c090', { o: 0.9 }), poolM: B('#5ad0e8', { o: 0.9 }), plazaM: B('#e0d8c4', { o: 0.55 }),
-    lawnM: B('#7aa456', { o: 0.9 }), pondM: B('#5aa8cc', { o: 0.9 }),   // unlit decals — write the value you want to SEE
-    palmT: S('#8a6a42', { r: 0.95, fs: true }), palmF: S('#3a7a3a', { r: 0.9, fs: true }),
+    sandM: B(tint('#d8c090', R.ground, 0.5), { o: 0.9 }), poolM: B('#5ad0e8', { o: 0.9 }), plazaM: B(tint('#e0d8c4', R.ground, 0.5), { o: 0.55 }),
+    lawnM: B(tint('#7aa456', R.green, 0.75), { o: 0.9 }), pondM: B('#5aa8cc', { o: 0.9 }),   // unlit decals — write the value you want to SEE
+    palmT: S('#8a6a42', { r: 0.95, fs: true }), palmF: S(tint('#3a7a3a', R.green, 0.6), { r: 0.9, fs: true }),
     canvas: S('#e8e2d4', { r: 0.95 }), red: S('#a8362e', { r: 0.8 }),
     containers: ['#8a2a24', '#2a4a6a', '#3a6a4a', '#c9762a', '#5a5a64'].map(c => S(c, { r: 0.6, m: 0.3 })),
     // --- THE METRO ---
@@ -39,6 +53,10 @@ function mats(world) {
     fieldA: S('#7d7c44', { r: 1 }), fieldB: S('#6b5a38', { r: 1 }),
     barn: S('#8a3a2e', { r: 0.95 }), barnRoof: S('#4c4a46', { r: 0.9 }),
     silo: S('#c8c2b2', { r: 0.7, m: 0.2 }), stoneWall: S('#a8a294', { r: 0.95 }),
+    // --- THE FIELD + THE YARDS (multi-cell landmarks) ---
+    tarmac: S('#63615c', { r: 0.98 }), runwayLine: B('#f0ead8', { o: 0.9 }),
+    ballast: S('#7d766a', { r: 1 }), rail: S('#6a6a70', { r: 0.5, m: 0.6 }),
+    fuselage: S('#e6e8ea', { r: 0.4, m: 0.35 }), livery: S('#2a5a8a', { r: 0.5, m: 0.3 }),
   };
   return world._tileMats;
 }
@@ -76,6 +94,18 @@ function reg(world, m, x, z, hx, hz, top, hp) {
   return co;
 }
 const disc = (ctx, mat, x, z, r, y = 0.1, seg = 26) => { const p = mesh(ctx, new THREE.CircleGeometry(r, seg), mat, x, y, z, { recv: false }); p.rotation.x = -Math.PI / 2; return p; };
+// a box with the facade UVs already scaled — for the structures that aren't tower()s
+const boxUV = (w, h, d) => { const g = new THREE.BoxGeometry(w, h, d); scaleBoxUV(g, w, h, d); return g; };
+const slab = (ctx, mat, x, z, w, d, y = 0.14) => { const p = mesh(ctx, new THREE.PlaneGeometry(w, d), mat, x, y, z, { recv: false }); p.rotation.x = -Math.PI / 2; return p; };
+// a parked airliner — decor, not cover; it exists so the apron reads as a working field
+function plane(ctx, x, z, yaw) {
+  const M2 = ctx.mats;
+  const body = mesh(ctx, new THREE.CylinderGeometry(3.4, 2.6, 40, 10), M2.fuselage, x, 5.6, z, { rz: Math.PI / 2, ry: yaw, cast: true });
+  body.rotation.set(0, yaw, Math.PI / 2);
+  mesh(ctx, new THREE.BoxGeometry(4, 0.9, 38), M2.fuselage, x, 5.2, z, { ry: yaw, cast: true });        // wings
+  mesh(ctx, new THREE.BoxGeometry(7, 9, 0.8), M2.livery, x - 17 * Math.cos(yaw), 10, z - 17 * Math.sin(yaw), { ry: yaw, cast: true });   // tail
+  for (const s of [-1, 1]) mesh(ctx, new THREE.CylinderGeometry(2, 2, 7, 8), M2.livery, x + s * 4 * Math.sin(-yaw), 3.4, z + s * 11 * Math.cos(yaw), { rz: Math.PI / 2, ry: yaw });
+}
 function palm(ctx, x, z, s = 1) {
   const M2 = ctx.mats;
   mesh(ctx, new THREE.CylinderGeometry(0.7 * s, 1.1 * s, 18 * s, 5), M2.palmT, x, 9 * s, z, { cast: true });
@@ -341,16 +371,81 @@ const T = {
     else ctx.treeSpots.push([cx, cz]);
   },
   // ---- NEW TILES: the city gets more to fight through ----
-  stadium(ctx, cx, cz, v) {           // an arena bowl: banked stands you can stand on, open field
+  // THE BOWL — the first tile to claim a real FOOTPRINT. On a 2×2 anchor `ctx.W`/`ctx.D` are
+  // ~192u, so the stands are a genuine ring you run laps inside rather than ten blocks crammed
+  // into one 96u cell. It still builds correctly at 1×1 (the proving ground) — everything is
+  // derived from the footprint, nothing is hard-coded to one size.
+  stadium(ctx, cx, cz, v) {
     const M2 = ctx.mats, W = ctx.world;
-    disc(ctx, M2.lawnM, cx, cz, 30, 0.1, 30);
-    const N = 10;
+    const R = Math.min(ctx.W, ctx.D) * 0.42, inner = R * 0.72;
+    disc(ctx, M2.lawnM, cx, cz, inner * 0.86, 0.1, 30);
+    const N = Math.max(10, Math.round(R * 0.26));
     for (let i = 0; i < N; i++) {     // the ring of stands, each a real standable block
-      const a = (i / N) * Math.PI * 2, r = 40;
-      tower(ctx, cx + Math.cos(a) * r, cz + Math.sin(a) * r, 17, v === 0 ? 22 : 30, 17, W._winMats[0], M2.paleRoof);
+      const a = (i / N) * Math.PI * 2;
+      const w = Math.max(15, (2 * Math.PI * R / N) * 0.92);
+      tower(ctx, cx + Math.cos(a) * R, cz + Math.sin(a) * R, w, v === 0 ? 22 : 30, w, W._winMats[0], M2.paleRoof);
     }
-    for (const s of [-1, 1]) { mesh(ctx, new THREE.BoxGeometry(1.2, 34, 1.2), M2.steel, cx + s * 34, 17, cz - 34, { cast: true });
-      mesh(ctx, new THREE.BoxGeometry(9, 5, 1), M2.gold, cx + s * 34, 33, cz - 34, { cast: true }); }   // floodlight masts
+    for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
+      const mx = cx + sx * R * 0.88, mz = cz + sz * R * 0.88;
+      mesh(ctx, new THREE.BoxGeometry(1.2, 34, 1.2), M2.steel, mx, 17, mz, { cast: true });
+      mesh(ctx, new THREE.BoxGeometry(9, 5, 1), M2.gold, mx, 33, mz, { cast: true });                   // floodlight masts
+    }
+  },
+  // THE FIELD — a 2×3 airport. This is the proof that footprints are real: a 570u runway cannot
+  // be expressed on a 96u grid at all, and because the planner marks the covered cells as one
+  // owner, the road graph refuses to cut a street across the strip.
+  airport(ctx, cx, cz, v) {
+    const M2 = ctx.mats, W = ctx.world, rng = ctx.rng;
+    const RW = ctx.W - 24, RD = Math.min(34, ctx.D * 0.2);
+    slab(ctx, M2.tarmac, cx, cz + ctx.D * 0.12, RW, RD);
+    for (let i = -Math.floor(RW / 40); i <= Math.floor(RW / 40); i++)                                    // centreline
+      slab(ctx, M2.runwayLine, cx + i * 40, cz + ctx.D * 0.12, 18, 1.6, 0.16);
+    slab(ctx, M2.tarmac, cx - RW * 0.1, cz - ctx.D * 0.2, RW * 0.55, RD * 0.8);                          // apron
+    // the terminal — long, low, glass, facing the apron
+    const tW = ctx.W * 0.42, tz = cz - ctx.D * 0.34;
+    const term = mesh(ctx, boxUV(tW, 22, 30), W._winMats[0], cx - ctx.W * 0.08, 11, tz, { cast: true });
+    reg(W, term, cx - ctx.W * 0.08, tz, tW / 2, 15, 22, 340);
+    mesh(ctx, new THREE.BoxGeometry(tW + 4, 1.4, 32), M2.paleRoof, cx - ctx.W * 0.08, 22.4, tz);
+    // the control tower — the landmark you navigate by from the far side of the city
+    const cwx = cx + ctx.W * 0.26, cwz = tz - 4;
+    const shaft = mesh(ctx, boxUV(13, 62, 13), M2.white, cwx, 31, cwz, { cast: true });
+    reg(W, shaft, cwx, cwz, 6.5, 6.5, 62, 260);
+    mesh(ctx, new THREE.CylinderGeometry(11, 9, 12, 8), W._winMats[0], cwx, 68, cwz, { cast: true });
+    mesh(ctx, new THREE.CylinderGeometry(11.5, 11.5, 1.4, 8), M2.steelRoof, cwx, 74.6, cwz);
+    // hangars along the far edge + parked aircraft, so the field reads as working
+    for (let i = 0; i < 2; i++) {
+      const hx = cx - ctx.W * 0.28 + i * ctx.W * 0.3, hz = cz + ctx.D * 0.36;
+      const h = mesh(ctx, boxUV(52, 26, 34), W._winMats[3], hx, 13, hz, { cast: true });
+      reg(W, h, hx, hz, 26, 17, 26, 220);
+      mesh(ctx, new THREE.CylinderGeometry(17, 17, 52, 12, 1, false, 0, Math.PI), M2.steelRoof, hx, 26, hz, { rz: Math.PI / 2, cast: true });
+    }
+    for (let i = 0; i < 3; i++) plane(ctx, cx - RW * 0.22 + i * 44, cz - ctx.D * 0.16, rng() * 0.4 - 0.2);
+  },
+  // THE YARDS — a 1×3 rail yard: parallel tracks, rolling stock, a loading shed and a water
+  // tower. Linear like the metro, but at grade, so it is long low cover across a whole flank.
+  railyard(ctx, cx, cz, v) {
+    const M2 = ctx.mats, W = ctx.world, rng = ctx.rng;
+    const L = ctx.W - 20, lanes = ctx.D > 120 ? 6 : 4;
+    slab(ctx, M2.ballast, cx, cz, L, lanes * 13 + 10, 0.12);
+    for (let i = 0; i < lanes; i++) {
+      const z = cz - (lanes - 1) * 6.5 + i * 13;
+      for (const s of [-1, 1]) mesh(ctx, new THREE.BoxGeometry(L, 0.9, 1.1), M2.rail, cx, 0.7, z + s * 3.2);
+      for (let j = 0; j < 3; j++) if (rng() < 0.62) {                          // rolling stock as real cover
+        const w = 34 + rng() * 16, wx = cx - L / 2 + 22 + j * (L / 3) + rng() * 10;
+        const car = mesh(ctx, boxUV(w, 13, 11), M2.containers[(rng() * M2.containers.length) | 0], wx, 8, z, { cast: true });
+        reg(W, car, wx, z, w / 2, 5.5, 14.5, 70);
+        mesh(ctx, new THREE.BoxGeometry(w * 0.9, 1.2, 12), M2.dark, wx, 1.6, z);
+      }
+    }
+    const sx = cx - L * 0.32, sz = cz + (lanes * 6.5 + 22);
+    const shed = mesh(ctx, boxUV(74, 24, 30), W._winMats[3], sx, 12, sz, { cast: true });
+    reg(W, shed, sx, sz, 37, 15, 24, 240);
+    mesh(ctx, new THREE.BoxGeometry(78, 1.6, 33), M2.steelRoof, sx, 24.6, sz);
+    const wx = cx + L * 0.3, wz = sz - 4;                                       // the water tower
+    for (const [ox, oz] of [[-6, -6], [6, -6], [-6, 6], [6, 6]]) mesh(ctx, new THREE.BoxGeometry(1.6, 30, 1.6), M2.steel, wx + ox, 15, wz + oz, { cast: true });
+    const tank = mesh(ctx, new THREE.CylinderGeometry(11, 11, 16, 10), M2.rust, wx, 38, wz, { cast: true });
+    reg(W, tank, wx, wz, 11, 11, 46, 130);
+    mesh(ctx, new THREE.ConeGeometry(11.6, 6, 10), M2.steelRoof, wx, 49, wz, { cast: true });
   },
   hospital(ctx, cx, cz, v) {          // civic block with a helipad roof and an ambulance bay
     const M2 = ctx.mats, W = ctx.world;
@@ -478,13 +573,28 @@ const T = {
 
 // Build every cell of a generated plan into `group`. Returns { treeSpots } for the tree system.
 export function buildTiles(world, group, plan, rng) {
-  const M2 = mats(world);
-  const ctx = { world, g: group, rng, mats: M2, treeSpots: [] };
+  const region = plan.region || regionOf(plan.culture);
+  const M2 = mats(world, region);
+  // the facades are cached once at boot (they carry baked textures) — the REGION drives their
+  // colour multiply, so a Middle Eastern city warms up without rebuilding a single canvas
+  if (world._winMats) {
+    const wt = [0.85, 0.9, 0.8, 0.25, 0.0];               // industrial/military keep their identity
+    for (let i = 0; i < world._winMats.length; i++) {
+      const m = world._winMats[i];
+      m.userData._baseCol = m.userData._baseCol || m.color.clone();
+      m.color.copy(m.userData._baseCol).lerp(new THREE.Color(region.wall), wt[i] ?? 0.3);
+    }
+  }
+  const ctx = { world, g: group, rng, mats: M2, region, treeSpots: [], W: CELL, D: CELL, fw: 1, fh: 1 };
   const A = plan.arena;
   for (let r = 0; r < plan.N; r++) for (let c = 0; c < plan.N; c++) {
     const cell = plan.cells[r][c];
-    if (!cell || cell.t === 'water') continue;
-    const cx = -A + c * CELL + CELL / 2, cz = -A + r * CELL + CELL / 2;
+    // ⚠ a `ref` cell is COVERED by a multi-cell structure — its anchor already built it. Building
+    // it again is how you get three stadiums stacked inside one stadium.
+    if (!cell || cell.t === 'water' || cell.ref) continue;
+    const fw = cell.fw || 1, fh = cell.fh || 1;
+    ctx.fw = fw; ctx.fh = fh; ctx.W = fw * CELL; ctx.D = fh * CELL;
+    const cx = -A + (c + fw / 2) * CELL, cz = -A + (r + fh / 2) * CELL;   // centre of the WHOLE footprint
     const builder = T[cell.t];
     if (builder) builder(ctx, cx, cz, cell.v || 0, cell);   // cell carries r/c, neighbours, sockets, frontage
   }

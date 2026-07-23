@@ -75,13 +75,15 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
 - **THE WORLD LAYER — procedural cities off the world sheet** (`data/cities.js` 1,050 real cities
   baked from Robert's Country Master Sheet: name/country/pop/popType/cityTypes×4/crime/safety;
   `data/cityplan.js` planner; `engine/citytiles.js` tile library; world.js `rebuildCity(plan)`):
-  cities generate on the SAME sectional grid as the flagship (96u `CELL`s + 22u streets — the ground
-  texture draws one road ring per cell, `repeat.set(N,N)`). `generatePlan(city, seed)` sizes the grid
+  cities generate on the SAME sectional grid as the flagship (96u `CELL`s + 22u streets — ⚠ streets
+  are a real ROAD GRAPH now, see below; the ground texture is only the lot surface).
+  `generatePlan(city, seed, opts)` sizes the grid
   by popType (Village/Small Town 3 → Town/Small City 4 → City/Large City 5 → Mega 6 = arena 288),
   places IDENTITY tiles first (seaport/resort hug the east water column, political takes the center,
   military/mining cluster at edges, campus pairs, corporate core), fills with commercial/residential
-  + parks, and caps STRUCTURAL cells at 24 (`STRUCT_CAP`, matches fog MAX; overflow → plaza).
-  **Tiles**: 13 types × 2–3 variants (residential courts/L-blocks/towers-in-park · commercial ·
+  + parks. ⚠ Placement is a TABLE now (`PLACEMENT`) and the old 24-cell `STRUCT_CAP` is gone — see
+  the road-graph section below.
+  **Tiles**: 20 types × 2–3 variants (residential courts/L-blocks/towers-in-park · commercial ·
   corporate HQ+logo/skybridge twins · industrial warehouses/tank-farm/conveyor works · military
   fenced compounds w/ helipads/barracks · CAPITOL dome+colonnade+flags/ministries+obelisk · campus
   quad+bell-tower/library · temple pagoda/gold-dome+minaret/ziggurat · MINING (real pits dug into
@@ -362,16 +364,56 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
 - Ruling (2026-07-23): the map maker stays a GAME FEATURE for now and gets extracted later — but
   hold the discipline, no game types leaking into the plan. `cityplan.js` is already engine-agnostic
   (zero Three.js); keep it that way. Interiors are PARKED — see `docs/BACKLOG.md`.
-- Assessment + research live in this session's findings; the outstanding structural work in
-  priority order is: **road graph** (roads are still a wrapped ground TEXTURE, which forbids
-  T-junctions, dirt roads and cell-to-cell connection) → **multi-cell footprints** (anchor + `ref`
-  cells) → **placement as a data table** (rarity/landmarks have no seam today) → **editor**
-  (paint + lock + undo + plan JSON).
-- ⚠ `STRUCT_CAP = 24` is NOT a design choice — it exists to serve `MAX = 24` in the fog shader,
-  which is a GLSL compile-time constant. Density is capped by a shader, which is why bigger cities
-  get emptier rather than denser. Lifting it means moving wall occlusion off uniform arrays.
 - ⚠ **Canvas 2D cannot read CSS tokens.** `ctx.fillStyle = 'var(--gold)'` is silently ignored and
   keeps the previous colour. Anything painted into a `<canvas>` must use literals.
+
+## THE ROAD GRAPH + FOOTPRINTS + THE DENSITY CAP (2026-07-23) — read `docs/THE_MAP_MAKER.md`
+- **ROADS ARE DATA, NOT A TEXTURE** (`ROAD`/`buildRoads`/`roadAt`/`junctionAt` in `cityplan.js`;
+  `world._buildRoadNet`). Nodes are the (N+1)² lattice of cell corners; `plan.roads.h[r][c]` joins
+  node(r,c)→(r,c+1) and `.v[r][c]` joins (r,c)→(r+1,c); the value is a CLASS and **0 means there is
+  no road here** — that is what makes a dead end possible. Classes: `track` 9u dirt · `street` 22u ·
+  `arterial` 30u · `highway` 38u, chosen from the traffic WEIGHT of the two districts an edge sits
+  between. Geometry: one subdivided ribbon per edge **draped over `heightAt`** (so it dips into the
+  metro cut), a junction patch per node, merged into ONE mesh per class. Built AFTER excavation in
+  `_buildGenCity` for exactly that reason.
+  ⚠ `_gridTexture(streets=false)` for generated cities — the ground is a LOT SURFACE now; only the
+  flagship (no road graph) still paints its streets into the texture. Never paint roads twice.
+  ⚠ Nothing DRIVES on the graph yet. Traffic/peds/police approach must query `roadAt`, not re-derive.
+- **MULTI-CELL FOOTPRINTS** (`TILE_FOOT`): the ANCHOR cell carries `{t,v,fh,fw}`, every covered cell
+  carries `{t, ref:[ar,ac]}`. `buildTiles` SKIPS ref cells (building one twice stacks three stadiums
+  inside a stadium) and hands the builder `ctx.W`/`ctx.D` = the whole footprint, so a tile sizes
+  itself. Shipped: stadium 2×2 · airport 2×3 · railyard 1×3; the planner tries each BOTH ways round.
+  ⚠ Two cells of the same owner get `R_NONE` between them — no street runs through an airport.
+- **PLACEMENT IS A TABLE** (`PLACEMENT`), not an `if` chain: `{ t, need, minN, chance, foot,
+  landmark, rural, score }` where `score` sums named terms (`center rim ring water south cluster
+  jitter`). Rows are ATOMIC — a second berth is a second row. Landmarks are never demoted by the
+  density budget; `ref` cells never count toward it.
+- **THE DENSITY CAP IS GONE.** `STRUCT_CAP = 24` existed only to match `uniform vec2 uBoxC[24]` in
+  the fog shader (a GLSL compile-time constant) — the SHADER decided how dense a city could be, so
+  a Mega City came out emptier than a small town. Fog occlusion is now an OCCUPANCY GRID
+  (`FOG_RES 384` texels over `FOG_EXT 700`, `refreshFogBoxes` rasterises the INTERIOR of each cover
+  box) and the shader marches `FOG_STEPS 26` taps through it — O(1) in building count, 0.026ms to
+  rebuild. Budget is now `min(64, round(N²·0.82)+4)`: Tokyo 79 cover pieces, an 8×8 override 99.
+  ⚠ Rasterise the INTERIOR (ceil/floor), never the bounding texels — growing each box outward put a
+  ~2u halo of false occlusion around every wall and blinded a fighter standing flush against one.
+  ⚠ Fog SHADING is now approximate (96% agreement with analytic LOS at working range). Gameplay LOS
+  (`game.canSee`, AI vision, targeting) is UNCHANGED and still exact. Don't "fix" one with the other.
+- **REGION SKINS** (`REGIONS`/`regionOf` + `cultureOf` in cities.js): the 14 architectural regions
+  finally drive the build — wall/roof/ground/greenery, applied once per city in `mats(world, region)`
+  (cache keyed by region, old set disposed on change) plus a `_winMats` colour multiply. **The
+  GROUND carries it** — facades alone were too subtle to read. The sheet's 21 blank rows are filled
+  from the modal code of that country's other cities (Hell, Norway → West Europe via Oslo).
+  ⚠ Los Angeles is coded 14 (MIDDLE EASTERN) in Robert's source sheet. That is a DATA error, not a
+  code one, and is deliberately NOT overridden — fix it in the sheet.
+- **THE MAP MAKER IS AN EDITOR NOW** (`hud.showAtlas` + `_mapEdit`/`_mapUndo`/`_showLayouts`):
+  paint (incl. water), 🔒 LOCK a generated cell against rerolls, undo 50 deep (Ctrl+Z), resize the
+  grid 2×2–9×9, move the coastline 0–3 columns, named layouts + plan JSON in/out
+  (`threshold_layouts_v1`). Overrides ride `generatePlan(city, seed, {N, waterCols, landmarks})`.
+  ⚠ `applyPlanEdits` lives in `cityplan.js`, not the HUD — after a paint the SOCKETS and the ROAD
+  GRAPH must be re-derived (`computeSockets` + `buildRoads`) or the editor is drawing a lie.
+  ⚠ Sockets are derived LAST in generatePlan, after the density budget demotes cells — they used to
+  run before it, so a plaza'd cell kept the neighbour data of the tower it used to be.
+  Refs: `wwa-mapmaker.jpeg`, `wwa-airport.jpeg`, `wwa-region-kabul.jpeg`, `wwa-region-tokyo.jpeg`.
 
 ## THE COUNTRY SHEET — the state behind the city (2026-07-23)
 - `data/countries.js` — **168 nations, 25 fields**, baked from Robert's Country Master Sheet. The

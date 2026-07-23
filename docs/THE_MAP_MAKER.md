@@ -1,19 +1,19 @@
 # THE MAP MAKER — what it is, how to use it, and where it stops
 
-*Evaluated and updated 2026-07-23. Every claim here was checked against the running game.*
+*Rewritten 2026-07-23, after the road graph. Every claim here was checked against the running game.*
 
 ---
 
 ## WHAT IT IS
 
 The map maker is the **CITY ATLAS**. It turns any of **1,050 real cities** into a playable
-battlefield, lets you **hand-paint** the layout, and drops you into it.
+battlefield, lets you **author** the layout, and drops you into it.
 
-A city is a grid of **cells**. Each cell is 96 units square — a real city block — with 22-unit
-streets between them. A cell holds one **tile**: a residential court, a corporate tower, a temple, a
-metro station, farmland. There are **18 tile types with 2–3 variants each**, so ~40 distinct blocks.
+A city is a grid of **cells**. Each cell is 96 units square — a real city block. A cell holds one
+**tile**: a residential court, a corporate tower, a temple, a metro station, farmland. There are
+**20 tile types with 2–3 variants each**, and three of them claim more than one cell.
 
-The grid size comes from the city's real population:
+The grid size comes from the city's real population, and you can override it:
 
 | Population type | Grid | Arena |
 |---|---|---|
@@ -24,6 +24,56 @@ The grid size comes from the city's real population:
 
 ---
 
+## THE ROAD GRAPH
+
+**Roads used to be a wrapped ground texture.** Every cell had a street on all four sides, forever.
+That single fact forbade T-junctions, dead ends, dirt tracks, road hierarchy, and any road that
+connects one specific place to another.
+
+Roads are **data on the plan** now:
+
+- **Nodes** — the (N+1)² lattice of cell corners.
+- **Edges** — `plan.roads.h[r][c]` joins node(r,c)→node(r,c+1); `.v[r][c]` joins node(r,c)→node(r+1,c).
+- Each edge carries a **class**, and class `0` means **there is no road here** — which is the
+  whole point.
+
+| Class | Width | Surface | Markings |
+|---|---|---|---|
+| `none` | — | — | nothing is built |
+| `track` | 9u | dirt, ruts, grass down the crown | none |
+| `street` | 22u | asphalt | centre dashes |
+| `arterial` | 30u | asphalt | double yellow |
+| `highway` | 38u | asphalt | median + lane lines |
+
+The class comes from the **traffic weight** of the two districts an edge sits between — a corporate
+core gets an arterial, open farmland gets a dirt track, and two cells of the *same multi-cell
+structure* get **no road at all**, because a street does not run through an airport.
+
+Every edge is built as a real ribbon mesh **draped over the terrain heightfield**, so a road dips
+into the metro cut and rides the mining spoil instead of hovering over a hole it can't see. The
+whole network merges into **one mesh per road class** — five draws for a city.
+
+Measured (Tokyo, 6×6): 84 edges — 70 street, 8 arterial, 6 highway — and 46 junctions.
+Benguela (5×5): 16 edges are `none`. A village gets dirt tracks and dead ends.
+
+---
+
+## MULTI-CELL STRUCTURES
+
+A tile used to be exactly one cell. A footprint tile claims a **rectangle**: the **anchor** cell
+holds the structure and knows its size (`fh`/`fw`); every cell it covers holds a `ref` back to the
+anchor. Planner, roads, districts and the editor all read the same shape.
+
+| Tile | Footprint | What it is |
+|---|---|---|
+| **THE BOWL** (stadium) | 2×2 | a real stadium ring you run laps inside, ~192u across |
+| **THE FIELD** (airport) | 2×3 | runway with centreline, control tower, terminal, hangars, parked aircraft |
+| **THE YARDS** (railyard) | 1×3 | parallel tracks, rolling stock as cover, loading shed, water tower |
+
+The planner tries each footprint **both ways round**, so a 1×3 yard runs along whichever axis fits.
+
+---
+
 ## HOW TO USE IT
 
 ### Opening it
@@ -31,152 +81,186 @@ The grid size comes from the city's real population:
 
 ### 1. Find a city
 Type in **QUERY** — a city or a country. Or use the type chips (MILITARY, POLITICAL, SEAPORT,
-MINING…) to filter to cities famous for that. Click a row to select it.
-
-The panel on the right shows what you're getting: population, city types, crime and safety indices,
-grid size, and how many seconds the police take to arrive here.
+MINING…). Click a row to select it.
 
 ### 2. Read the plan
-The coloured grid is a live top-down preview of the actual layout. Each square is one city block,
-labelled with its tile and variant — `R2` is residential variant 2, `C0` commercial variant 0,
-`M0` metro, `P1` park.
+The coloured grid is a live top-down preview of the actual layout. `R2` is residential variant 2,
+`A1` an airport, `M0` metro. Multi-cell structures draw as **one box**. The **road graph is drawn
+on top** — thickness is the class, and a missing line is a road that genuinely isn't there.
 
 ### 3. Reroll it
-**⟳ REROLL LAYOUT** advances the seed and regenerates. Same city, different city. Keep pressing
-until the shape is interesting — it's deterministic, so a given city + seed is always the same map.
+**⟳ SEED** advances the seed and regenerates. Same city, different city. It's deterministic, so a
+given city + seed is always the same map.
 
-### 4. Paint it *(new)*
-Under the preview is the **tile palette** — one swatch per tile type, plus **✕** to erase.
+### 4. Paint it
+Under the preview is the palette — one swatch per tile type, plus **water**, **🔒 lock** and an
+eraser. Swatches marked **▦** claim more than one cell.
 
-1. Click a swatch to pick a tile.
-2. **Click any cell in the preview** to paint it.
-3. Click **✕** then a cell to remove your edit and give it back to the generator.
+1. Click a swatch to pick a tool.
+2. **Click any cell in the preview** to apply it.
+3. **✕** hands a cell back to the generator.
 
-**Painted cells survive a reroll.** That's the important part: you can lock in the two blocks you
-care about — put a stadium here, run a metro line across there — and then keep rerolling the seed
-until the *rest* of the city arranges itself around them. The generator stays the author of
-everything you haven't touched.
+**🔒 LOCK** freezes whatever the generator put in a cell. That is the important one: lock the two
+blocks you like, then keep rerolling until the *rest* of the city arranges itself around them.
+Click a locked cell again to release it.
 
-**✕ CLEAR n PAINTED CELLS** wipes your edits.
+Painting re-derives the **edge sockets and the road graph** — paint a park beside a barracks and
+the fence knows; paint an airport and the road through it closes.
 
-### 5. Play it
-**📍 SET AS THEATER** saves the city, the seed *and* your painted cells. Every match from then on
-is fought there, until you pick another. It persists across restarts.
+### 5. Resize the grid, move the coastline
+**GRID − / +** takes any city from 2×2 to 9×9. **COAST − / +** sets how many columns of the east
+edge are sea (0–3). Both are undoable, and painted cells outside a shrunken grid are clipped, not
+destroyed — grow it back and they return.
 
-### 6. Inspect every tile
-**🧱 TILE PROVING GROUND** builds one map containing every tile type in the game, side by side, in
-the Danger Room. This is the bench for judging tiles — it's how the screenshots in this document
-were taken, and it can never go stale because it derives from the tile table itself.
+### 6. Undo
+**↶ UNDO** (or **Ctrl+Z**) unwinds the last 50 actions — paints, locks, clears, rerolls, resizes.
+
+### 7. Save, name, export
+**💾 LAYOUTS** opens the drawer: name the current map and save it, reload or delete any saved one,
+and copy or paste the **plan JSON** — city, seed, grid, coastline and every painted cell in one
+line of text you can move between machines.
+
+### 8. Play it
+**📍 SET AS THEATER** saves everything. Every match from then on is fought there. It persists
+across restarts.
+
+### 9. Inspect every tile
+**🧱 PROVING GROUND** builds one map containing every tile type in the game, side by side, in the
+Danger Room. It derives from the tile table itself, so it can never go stale.
+
+---
+
+## REGION SKINS
+
+Every city carries a `cultureCode` — one of 14 architectural regions — and until now **nothing read
+it**, so Kabul was built out of the same greys as Oslo. One table (`REGIONS` in `cityplan.js`) now
+pulls the whole palette before a tile is raised: wall tone, roof, ground, greenery.
+
+The **ground carries it**, because it is the biggest surface in frame. Kabul builds in warm sand
+(`#d5c6a2`) with tan roofs; Tokyo in cool grey (`#b7b8b4`) with slate. See
+`wwa-region-kabul.jpeg` and `wwa-region-tokyo.jpeg` — same engine, same tiles, two different worlds.
+
+⚠ The sheet has **21 rows with no code**. Those are filled from the **most common code among that
+country's other cities** — Hell, Norway is blank, Oslo says West Europe, so Hell builds as West
+Europe. Derived from the sheet, never invented.
+
+⚠ It does **not** correct rows that are coded *wrong*. **Los Angeles is coded 14 (Middle Eastern)
+in the source sheet.** Silently overriding authored data would hide the error — fix it in the sheet.
+
+---
+
+## THE DENSITY CAP IS GONE
+
+`STRUCT_CAP = 24` was never a design choice. It existed to match `uniform vec2 uBoxC[24]` in the
+fog-of-war shader — a GLSL compile-time constant. A Mega City threw a third of itself away as empty
+plaza and came out feeling **emptier** than a small town.
+
+Fog occlusion is now a **coarse occupancy grid** (384² texels over the 700u fog plane, ~1.8u each)
+and the sight test is a 26-step march through it. Cost is **O(1) in the number of buildings** —
+rasterising the whole grid takes **0.026 ms**.
+
+The budget is a design dial again: `min(64, round(N² × 0.82) + 4)`. Measured cover pieces per city:
+Tokyo 6×6 → **79**, an 8×8 override → **99**. The old ceiling was 24.
+
+**What this costs:** the fog *shading* is now approximate at the texel scale. Against the engine's
+exact analytic line-of-sight it agrees on **96% of sight lines at the fog's working range**, with
+the errors being sub-texel edge cases at building corners. Gameplay LOS — AI vision, targeting,
+`canSee` — is **unchanged and still exact**. Only the darkening on the ground is approximate, and
+in exchange the 25th building in a city casts a vision shadow at all, which it never used to.
+
+---
+
+## THE PLACEMENT TABLE
+
+Which tile goes where used to be a hand-written chain of `if` statements inside the generator. It is
+a **table** now (`PLACEMENT` in `cityplan.js`), one row per structure the planner may place:
+
+```js
+{ t: 'airport', minN: 6, foot: [2, 3], landmark: true, score: { rim: 4, water: -2 } }
+```
+
+- `t` the tile · `need` only if the city sheet lists this specialisation · `minN` smallest grid that
+  gets one · `chance` rarity · `foot` footprint · `landmark` never demoted by the density budget
+- `score` is where it wants to sit, summed from named terms: `center` `rim` `ring` `water` `south`
+  `cluster` `jitter`
+
+Rows are **atomic** — a second berth or a second campus is a second row. Rarity, landmarks and
+"only cities big enough" are content you edit in one place, not code.
 
 ---
 
 ## CAPABILITIES — what it can do today
 
-- Browse and search **1,050 real cities** across **168 real countries**
-- Filter by the city's real specialisation
-- **Deterministic generation** — a city + seed always produces the same map, so a layout you like is
-  reproducible forever
-- **Live 2D plan preview** with per-cell tile and variant
-- **Reroll** the layout without changing city
-- **Paint individual cells** from an 18-tile palette, with an eraser
-- **Painted cells survive rerolls** and reach the live match
-- **Persist** a theater (city + seed + edits) across sessions
-- **Tile proving ground** showing the whole tile library on one map
+- Browse and search **1,050 real cities** across **168 real countries**, filtered by specialisation
+- **Deterministic generation** — city + seed always produces the same map
+- **A real road graph** — junctions, T-junctions, dead ends, dirt tracks, arterials, a highway ring
+- **Multi-cell structures** — airport, rail yard, a stadium that reads as a stadium
+- **Region skins** from the city's real architectural region
+- **Live 2D plan preview** showing footprints as single structures and the road graph on top
+- **Paint** any cell from a 20-tile palette, plus **water**
+- **Lock** a cell against rerolls · **undo** 50 deep · **Ctrl+Z**
+- **Resize the grid** 2×2 → 9×9 · **move the coastline** 0–3 columns
+- **Named layouts** and **plan JSON** import/export
+- **Persist** a theater across sessions
+- Tile proving ground showing the whole library on one map
 - The city's real data drives play: crime and safety set police response; the country sets whether
   the army can be called and whether armed civilians will draw on you
 
-## LIMITATIONS — what it can't do yet
+## LIMITATIONS — what it still can't do
 
 Straight answers, no hedging:
 
-- **No multi-cell structures.** Every tile is exactly one 96u cell. An airport, a rail yard, or a
-  downtown core that spans two blocks cannot be expressed. This is the biggest single limit.
-- **Roads are a texture, not a graph.** The street grid is painted onto the ground, so every cell
-  has streets on all four sides — always. No T-junctions, no dead ends, no dirt roads, no
-  highway, and no road that connects one specific cell to another.
-- **Density is capped by a shader.** `STRUCT_CAP = 24` exists because the fog-of-war shader holds a
-  fixed 24-occluder array. Overflow blocks become empty plaza — which is why a Mega City can come
-  out feeling *emptier* than a small one rather than denser.
-- **No undo.** Painting is immediate; the only reset is clearing all edits.
-- **No save/load or export.** You can't name a layout, keep several, or move one between machines.
-  The theater is a single persisted slot.
-- **The preview is a schematic, not the real thing.** It shows the layout truthfully, but you have
-  to enter the map to see how it actually looks.
-- **You can't paint water, change the grid size, or move the coastline.** Water is always the east
-  column and only appears for seaport/resort cities.
-- **No landmarks.** You can't say "this city always has this specific structure."
 - **No interiors.** Buildings are solid. (Parked deliberately — see `BACKLOG.md`.)
-- **No terrain painting.** Hills, rivers and cliffs can't be authored; only the mining pits and the
+- **No terrain painting.** Hills, rivers and cliffs can't be authored. Only mining pits and the
   metro cut carve the ground, and only because those tiles ask for it.
-
----
-
-## WHAT I FIXED IN THIS PASS
-
-Evaluated by screenshotting the tile proving ground and real cities at several zooms, day and
-night. Two things were badly wrong, both in the **ground** — the largest surface on screen:
-
-**1. The street was a black slab.** The asphalt was `#57544c` under a `#8f897d` material multiply,
-and roughly 40% of every tile is road, so in daylight the whole city read as bright buildings
-floating on a dark void. There was a kerb line but **no sidewalk**, so towers sat directly on the
-carriageway.
-
-The street is now a proper section: a pale concrete **sidewalk** band with paving joints, a bright
-**kerb**, a darker **gutter** shadow line, real asphalt grey, and lane markings that read.
-
-**2. Parks rendered as holes.** Lawns are *unlit* decals — whatever value you write is what you see,
-with no sun to lift it — and they were mid-dark greens over a dark ground, so they looked like
-shadows cut into the pavement rather than grass. The greens are now written at the value they
-should appear.
-
-**3. The atlas was read-only.** It could browse and reroll but not author. It now paints.
+- **No real tunnels.** A heightfield is one surface and cannot fold over itself, so there is no
+  ceiling. The metro is an open cut for exactly that reason. See COMBAT_MANUAL §6.
+- **Water is still a column on the east edge.** You can widen it, and you can paint water into any
+  cell, but you cannot draw a river, a bay or an island coastline.
+- **Roads follow the lattice.** Every edge runs between two cell corners: no curves, no diagonals,
+  no roads that ignore the grid.
+- **No drag-paint or rectangle fill.** One cell per click.
+- **The preview is a schematic.** It's truthful about layout, but you have to enter the map to see
+  how it looks.
+- **Region skins are palette-only.** Roof *geometry* doesn't change yet — the `pitch` and `dome`
+  columns are authored in the REGIONS table and nothing reads them.
+- **No traffic.** The road graph exists and nothing drives on it yet. That is the next payoff:
+  `roadAt(plan, x, z)` and `junctionAt(plan, r, c)` are the queries a traffic, pedestrian or
+  police-approach system should use.
 
 ---
 
 ## WHAT TO DO NEXT — in priority order
 
-These are ranked by how much they unlock, not by effort.
+**1. Drive the graph.** Traffic, pedestrians on the pavement, police cruisers that approach along a
+real route, the news helicopter following an arterial. The data is there; nothing reads it yet.
 
-**1. A real road graph.** Roads become data — nodes at cell corners, edges with a class
-(dirt / street / arterial / highway) — instead of a wrapped texture. This is the keystone: it
-unlocks T-junctions, dead ends, dirt tracks through farmland, correct intersections, roads that
-follow the terrain and *bridge* the metro cut instead of dripping into it, and a network that
-traffic, pedestrians, police and the news helicopter can all actually drive. Everything else on this
-list is easier once it exists.
+**2. Roof geometry per region.** `REGIONS[].pitch` and `.dome` are authored and unread. Pitched
+roofs in the Caribbean, domes in the Middle East — for very little code, since the tiles already
+take a roof material.
 
-**2. Multi-cell footprints.** An anchor cell holds the real structure and the cells it covers hold a
-reference to it. That's the whole mechanism, and it buys airports, rail yards, a stadium that reads
-as a stadium, a seaport spanning the full water column, and a true downtown core.
+**3. Drag-paint and rectangle fill.** The single biggest quality-of-life gap in the editor now.
 
-**3. Placement as a data table.** Today, which tile goes where is a hand-written chain of `if`
-statements. Move it to a table — `{ when, min, max, weight, score, footprint }` per tile — and
-rarity, landmarks, and "this city always has exactly one of these" all become editable content
-rather than code. This is also the table the editor should expose.
+**4. Coastline authoring.** Water is paintable per cell but the shore is still a straight column —
+a real bay would want the water mesh and `waterAt()` to read the plan instead of one x threshold.
 
-**4. Lift the density cap.** Move fog occlusion off the fixed uniform array (a data texture, or a
-coarse grid) so `STRUCT_CAP` becomes a density *dial* instead of a hard ceiling, and big cities can
-actually feel big.
-
-**5. Editor quality of life.** Undo, save/load named layouts, plan JSON import/export, and a
-*lock* toggle so a cell can be protected from rerolls without being repainted.
-
-**6. Region skins from `cultureCode`.** Every city already carries one of 14 architectural regions
-(East Asia, West Europe, Middle Eastern, South America…) and **nothing reads it**. One palette
-table — roof material, wall tone, vegetation, ground colour — would make Kabul stop looking like
-Oslo, for very little code.
+**5. Interiors.** Still the biggest structural change left. Parked; see `BACKLOG.md`.
 
 ---
 
 ## THE CAPTURE HARNESS
 
-The screenshots here were taken with a small rig worth keeping. In the browser console:
+The screenshots here were taken by posing the camera by hand in the console:
 
 ```js
-CITYCAM.open(() => galleryPlan())   // build a plan, kill the sim wash + fog, hide the HUD
-CITYCAM.day(0.25)                   // 0.25 = midday, 0.75 = midnight
-CITYCAM.look(x, z, zoom)            // aim the iso camera at a world point and freeze the sim
+world.rebuildCity(generatePlan(city, seed))
+world.setSim(false); world.setFogEnabled(false)   // Danger Room tints holo-cyan; fog hides blocks
+game.update = () => {}                            // the camera fights you unless the sim is frozen
+world.camTarget.set(x, 0, z); world.frustum = world._baseFrustum = 190
+world.camPos.copy(world.camDir).multiplyScalar(world.camDist).add(world.camTarget)
+world.camera.position.copy(world.camPos); world.camera.lookAt(world.camTarget)
+world.render()
 ```
 
-Three gotchas it exists to solve: the Danger Room paints everything holo-cyan (`world.setSim(false)`),
-fog hides distant blocks (`setFogEnabled(false)`), and the camera fights you unless you replace
-`game.update` with a bare `world.render()`.
+⚠ The camera is **orthographic** and driven from `camTarget`/`camDir`/`frustum` — setting
+`camera.position` alone does nothing, because `follow()` overwrites it on the next frame.
