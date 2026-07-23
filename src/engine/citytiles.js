@@ -280,6 +280,38 @@ const T = {
     if (v === 1) { disc(ctx, M2.pondM, cx + 6, cz - 4, 12, 0.11, 22); mesh(ctx, new THREE.CylinderGeometry(1.2, 2.8, 24, 4), M2.marble, cx - 16, 12, cz + 12, { cast: true }); }
     else ctx.treeSpots.push([cx, cz]);
   },
+  // ---- NEW TILES: the city gets more to fight through ----
+  stadium(ctx, cx, cz, v) {           // an arena bowl: banked stands you can stand on, open field
+    const M2 = ctx.mats, W = ctx.world;
+    disc(ctx, M2.lawnM, cx, cz, 30, 0.1, 30);
+    const N = 10;
+    for (let i = 0; i < N; i++) {     // the ring of stands, each a real standable block
+      const a = (i / N) * Math.PI * 2, r = 40;
+      tower(ctx, cx + Math.cos(a) * r, cz + Math.sin(a) * r, 17, v === 0 ? 22 : 30, 17, W._winMats[0], M2.paleRoof);
+    }
+    for (const s of [-1, 1]) { mesh(ctx, new THREE.BoxGeometry(1.2, 34, 1.2), M2.steel, cx + s * 34, 17, cz - 34, { cast: true });
+      mesh(ctx, new THREE.BoxGeometry(9, 5, 1), M2.gold, cx + s * 34, 33, cz - 34, { cast: true }); }   // floodlight masts
+  },
+  hospital(ctx, cx, cz, v) {          // civic block with a helipad roof and an ambulance bay
+    const M2 = ctx.mats, W = ctx.world;
+    tower(ctx, cx - 4, cz - 6, 46, v === 0 ? 60 : 84, 34, W._winMats[0], M2.paleRoof);
+    if (W._heliTex) disc(ctx, new THREE.MeshBasicMaterial({ map: W._heliTex, transparent: true, opacity: 0.85, depthWrite: false }), cx - 4, cz - 6, 11, (v === 0 ? 60 : 84) + 0.3, 24);
+    mesh(ctx, new THREE.BoxGeometry(26, 7, 12), M2.white, cx + 16, 3.5, cz + 26, { cast: true });      // the bay canopy
+    for (const s of [-1, 1]) mesh(ctx, new THREE.BoxGeometry(1.2, 7, 1.2), M2.steel, cx + 16 + s * 12, 3.5, cz + 32);
+    disc(ctx, M2.plazaM, cx - 22, cz + 24, 13, 0.09);
+    ctx.treeSpots.push([cx - 24, cz + 26]);
+  },
+  market(ctx, cx, cz, v) {            // low stalls + awnings: dense cover, nothing tall
+    const M2 = ctx.mats, rng = ctx.rng;
+    disc(ctx, M2.plazaM, cx, cz, 36, 0.08, 28);
+    const rows = v === 0 ? 3 : 4;
+    for (let r = 0; r < rows; r++) for (let c2 = 0; c2 < 3; c2++) {
+      const x = cx - 26 + c2 * 26, z = cz - 26 + r * 18 + (rng() - 0.5) * 3;
+      mesh(ctx, new THREE.BoxGeometry(14, 6, 9), M2.wood, x, 3, z, { cast: true });
+      mesh(ctx, new THREE.BoxGeometry(16, 1.2, 11), (rng() < 0.5 ? M2.red : M2.canvas), x, 7, z, { cast: true });
+    }
+    ctx.treeSpots.push([cx + 30, cz - 28], [cx - 30, cz + 30]);
+  },
   plaza(ctx, cx, cz, v) {
     const M2 = ctx.mats, rng = ctx.rng;
     disc(ctx, M2.plazaM, cx, cz, 34, 0.08, 30);

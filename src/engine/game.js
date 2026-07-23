@@ -151,6 +151,7 @@ export class Game {
     this._buildReticle();
     this._buildLockMark();
     this._buildPlayerMark();
+    this._buildThrowArc();
 
     // camera-aligned movement basis
     const cd = this.world.camDir;
@@ -199,6 +200,149 @@ export class Game {
     if (this._pmColor !== p.def.colors.accent) {   // wears your hero's colour
       this._pmColor = p.def.colors.accent;
       this._pmRing.material.color.set(this._pmColor); this._pmGlow.material.color.set(this._pmColor);
+    }
+  }
+
+  // ---------- THE THROW ARC: aim before you lob ----------
+  // Any gravity-bound projectile (grenades) gets a dotted parabola from the muzzle to where it
+  // will actually land, plus a landing ring. Same maths the projectile uses, so it never lies.
+  _buildThrowArc() {
+    const g = new THREE.Group(); g.visible = false;
+    const dotGeo = new THREE.SphereGeometry(0.34, 6, 5);
+    this._arcDots = [];
+    for (let i = 0; i < 26; i++) {
+      const m = new THREE.Mesh(dotGeo, new THREE.MeshBasicMaterial({ color: '#ffd24a', transparent: true, opacity: 0.6, depthWrite: false }));
+      g.add(m); this._arcDots.push(m);
+    }
+    const ring = new THREE.Mesh(new THREE.RingGeometry(2.2, 3.0, 22), new THREE.MeshBasicMaterial({ color: '#ffd24a', transparent: true, opacity: 0.7, depthWrite: false, side: THREE.DoubleSide }));
+    ring.rotation.x = -Math.PI / 2; g.add(ring); this._arcRing = ring;
+    this.scene.add(g); this.throwArc = g;
+  }
+  updateThrowArc() {
+    const arc = this.throwArc, p = this.player;
+    if (!arc) return;
+    let def = null;
+    if (p && p.alive && this.mode && this.running && !this.matchOver) {
+      for (const k of SLOT_KEYS) {                       // the first READY lobbed weapon they carry
+        const s = p.slots[k]; if (!s) continue;
+        const d = s.def;
+        if ((d.type === 'projectile' && d.grav > 0) && s.cd <= 0 && p.ki >= (d.cost || 0)) { def = d; break; }
+      }
+      if (!def && p._carry) def = { _prop: true };       // carrying a car/tree = also a throw
+    }
+    if (!def) { if (arc.visible) arc.visible = false; return; }
+    arc.visible = true;
+    // launch state: muzzle + the same velocity the ability would use
+    const spd = def._prop ? 74 : (def.speed || 58);
+    const grav = def._prop ? 62 : (def.grav || 11) * 6;   // projectile grav is scaled in flight
+    const m = p.muzzle(_v.clone(), 4, 6.4);
+    const dir = p.aim3;
+    let vx = dir.x * spd, vy = (dir.y + 0.34) * spd, vz = dir.z * spd;   // thrown things get lofted
+    let x = m.x, y = m.y, z = m.z, land = null;
+    const step = 0.055;
+    for (let i = 0; i < this._arcDots.length; i++) {
+      const d = this._arcDots[i];
+      x += vx * step; y += vy * step; z += vz * step; vy -= grav * step;
+      if (y <= 0.4 && !land) { land = { x, z }; y = 0.4; }
+      d.position.set(x, y, z);
+      d.visible = !land || i < 2;
+      d.material.opacity = 0.62 * (1 - i / this._arcDots.length);
+      if (land) d.visible = false;
+    }
+    if (land) { this._arcRing.visible = true; this._arcRing.position.set(land.x, 0.3, land.z); }
+    else this._arcRing.visible = false;
+    const col = p._carry ? '#ff8a3a' : '#ffd24a';
+    if (this._arcCol !== col) { this._arcCol = col; for (const d of this._arcDots) d.material.color.set(col); this._arcRing.material.color.set(col); }
+  }
+
+  // ---------- CARRY & THROW: the city is ammunition ----------
+  // Cars, street trees and lightpoles can be torn up and hurled. Strength gates what you can
+  // lift (a car needs real muscle), and the thrown prop hurts whatever it lands on.
+  propInReach(f) {
+    const R = 22, s = f.strength ?? 5;
+    let best = null, bd = R * R;
+    if (s >= 6) for (const car of this.world.cars || []) {          // cars need muscle
+      if (car.dead || car.carried) continue;
+      const dx = car.x - f.pos.x, dz = car.z - f.pos.z, d = dx * dx + dz * dz;
+      if (d < bd) { bd = d; best = { kind: 'car', ref: car, x: car.x, z: car.z }; }
+    }
+    const G = this.world.grass;                                     // street trees (instanced)
+    if (G && this.world._gPos) for (let i = 0; i < G.count; i++) {
+      if (!this.world._gOn[i]) continue;
+      const gx = this.world._gPos[i * 2], gz = this.world._gPos[i * 2 + 1];
+      const dx = gx - f.pos.x, dz = gz - f.pos.z, d = dx * dx + dz * dz;
+      if (d < bd) { bd = d; best = { kind: 'tree', idx: i, x: gx, z: gz }; }
+    }
+    return best;
+  }
+  grabProp(f) {
+    if (f._carry || f.grabbing || f.grabbedBy) return false;
+    const t = this.propInReach(f); if (!t) return false;
+    let mesh = null;
+    if (t.kind === 'car') {
+      t.ref.carried = true; t.ref.mesh.visible = false;
+      mesh = new THREE.Mesh(this.world._carGeo, t.ref.paint);
+    } else {
+      this.world.flattenGrass(t.x, t.z, 0.5);                        // pull it out of the ground
+      const trunk = new THREE.Mesh(new THREE.CylinderGeometry(1.0, 1.5, 14, 6), new THREE.MeshStandardMaterial({ color: '#5a4630', roughness: 0.9, flatShading: true }));
+      const crown = new THREE.Mesh(new THREE.IcosahedronGeometry(9.5, 0), new THREE.MeshStandardMaterial({ color: '#4a6a3a', roughness: 0.9, flatShading: true }));
+      crown.position.y = 12; mesh = new THREE.Group(); mesh.add(trunk, crown);
+    }
+    mesh.castShadow = true; this.scene.add(mesh);
+    f._carry = { kind: t.kind, mesh, t: 0 };
+    f.speed = (f.def.speed || 30) * 0.72;                            // hauling it slows you down
+    this.audio.impact(0.7, f.pos); this.world.shake(0.5);
+    if (this.isHuman(f) && this.hud) this.hud.feed(`Hoisted a ${t.kind} — press G again to THROW`, '#ff8a3a');
+    return true;
+  }
+  throwProp(f) {
+    const c = f._carry; if (!c) return;
+    f._carry = null; f.speed = f.def.speed || 30;
+    const spd = 74, dir = f.aim3;
+    const vel = new THREE.Vector3(dir.x * spd, (dir.y + 0.34) * spd, dir.z * spd);
+    const pos = f.muzzle(new THREE.Vector3(), 5, 6.4);
+    const mesh = c.mesh; mesh.position.copy(pos);
+    const str = f.strength ?? 5, dmg = (c.kind === 'car' ? 34 : 22) + str * 3;
+    let spin = rand(-5, 5), t = 0;
+    this.audio.boom(0.4, f.pos); this.heroYell(f, 1.1);
+    this.vfx._add({
+      update: (dt) => {
+        t += dt; vel.y -= 62 * dt;
+        mesh.position.addScaledVector(vel, dt);
+        mesh.rotation.z += spin * dt; mesh.rotation.x += spin * 0.5 * dt;
+        // a car is 24u long and a tree is 20u tall — they need a hitbox to match, and a tall one:
+        // `overlapFoe`'s ±9u vertical window let a lobbed car sail clean over someone's head.
+        const R = c.kind === 'car' ? 13 : 10, RV = c.kind === 'car' ? 16 : 14;
+        let foe = null;
+        for (const e of this.entities) {
+          if (!this.isFoe(f, e)) continue;
+          const dx = e.pos.x - mesh.position.x, dz = e.pos.z - mesh.position.z;
+          if (Math.hypot(dx, dz) < R + e.radius && Math.abs((e.pos.y + 5) - mesh.position.y) < RV) { foe = e; break; }
+        }
+        const grounded = mesh.position.y <= 1.2;
+        if (foe || grounded || t > 4) {
+          const p = mesh.position.clone(); p.y = Math.max(0.4, p.y);
+          if (foe) foe.takeDamage(dmg, { src: f, kb: vel.clone().setY(0).setLength(dmg * 0.7), launch: 14, hitstop: 0.12 });
+          this.areaDamage(f, p, c.kind === 'car' ? 13 : 9, dmg * 0.5, 1.5);
+          if (c.kind === 'car') { this.vfx.explode(p, { color: '#ff8a3d', color2: '#ffd24a', radius: 12, power: 1.6 }); this.audio.boom(0.6, p); }
+          else { this.particles.burst(p.x, p.y, p.z, { count: 14, speed: 16, life: 0.6, size: 3, color: ['#5a4630', '#4a6a3a'], up: 6, grav: 12, drag: 1.4 }); this.audio.impact(1.1, p); }
+          this.world.shake(1.3);
+          return true;
+        }
+        return false;
+      },
+      dispose: () => { this.scene.remove(mesh); },
+    });
+  }
+  updateCarry(dt) {
+    for (const f of this.entities) {
+      const c = f._carry; if (!c) continue;
+      if (!f.alive) { this.scene.remove(c.mesh); f._carry = null; f.speed = f.def.speed || 30; continue; }
+      c.t += dt;
+      const h = c.kind === 'car' ? 13 : 15;
+      c.mesh.position.set(f.pos.x - f.aim.x * 1.5, f.pos.y + h + Math.sin(c.t * 3) * 0.3, f.pos.z - f.aim.z * 1.5);
+      c.mesh.rotation.y = f.facing + Math.PI / 2;
+      c.mesh.rotation.z = Math.sin(c.t * 2.2) * 0.05;
     }
   }
 
@@ -1194,7 +1338,11 @@ export class Game {
     const np = this.netplay && this.netplay.active ? this.netplay : null;
     if (inp.pressed('KeyV') || pad.pressed('strike')) { this.melee.chargeStart(p); if (np) np.queueMelee('cs'); }
     if (inp.released('KeyV') || pad.released('strike')) { this.melee.chargeRelease(p); if (np) np.queueMelee('cr'); }
-    if (inp.pressed('KeyG') || pad.pressed('grab')) { this.melee.grab(p); if (np) np.queueMelee('grab'); }
+    // G: carrying → THROW it · something heavy in reach → hoist it · otherwise the normal grab
+    if (inp.pressed('KeyG') || pad.pressed('grab')) {
+      if (p._carry) this.throwProp(p);
+      else if (!this.grabProp(p)) { this.melee.grab(p); if (np) np.queueMelee('grab'); }
+    }
     this.melee.guard(p, inp.down('KeyC') || inp.mouse.b3 || inp.mouse.b4 || pad.down('guard'));
     if (inp.pressed('KeyX') && p.items.length) this.useItem(p);   // X = the carried item (beacon: plant / recall)
 
@@ -1386,6 +1534,8 @@ export class Game {
     this.updateVision(dt);
     this.updateReticle(dt);
     this.updatePlayerMark(dt);
+    this.updateCarry(dt);
+    this.updateThrowArc();
     if (this.mode && !this.matchOver) { const over = this.mode.isOver(this); if (over) this.endMatch(over); }
 
     this.followHumans(dt);

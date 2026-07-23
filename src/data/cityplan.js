@@ -25,8 +25,11 @@ export const TILE_INFO = {
   resort:      { label: 'RESORT',      c: '#ffd6a0' },
   park:        { label: 'GREENBELT',   c: '#6a9a4a' },
   plaza:       { label: 'PLAZA',       c: '#d8d2c4' },
+  stadium:     { label: 'THE BOWL',    c: '#8fe08a' },
+  hospital:    { label: 'MEDICAL',     c: '#e8e2d6' },
+  market:      { label: 'THE MARKET',  c: '#e8a24a' },
 };
-export const VARIANTS = { residential: 3, commercial: 3, company: 2, industrial: 3, military: 2, political: 2, educational: 2, temple: 3, mining: 2, seaport: 2, resort: 2, park: 2, plaza: 2 };
+export const VARIANTS = { residential: 3, commercial: 3, company: 2, industrial: 3, military: 2, political: 2, educational: 2, temple: 3, mining: 2, seaport: 2, resort: 2, park: 2, plaza: 2, stadium: 2, hospital: 2, market: 2 };
 
 const GRID_BY_POP = { 'Village': 3, 'Small Town': 3, 'Town': 4, 'Small City': 4, 'City': 5, 'Large City': 5, 'Mega City': 6 };
 const STRUCT_CAP = 24;   // hard ceiling on structural (cover/fog) cells — perf + fog shader budget
@@ -75,6 +78,12 @@ export function generatePlan(city, seed = 1) {
     if (t === 'company') { put(take((r, c) => -edge(r, c) * 2), 'company'); if (N >= 5) put(take((r, c) => -edge(r, c) * 2), 'company'); }
     if (t === 'industrial') { put(take((r, c) => edge(r, c) + nearWater(r, c) * 2), 'industrial'); if (N >= 5) put(take((r, c) => edge(r, c) + nearWater(r, c) * 2), 'industrial'); }
   }
+  // --- civic amenities: every real city has these regardless of what it's FAMOUS for ---
+  // (bigger places get more of them — this is what makes two same-type cities feel different)
+  put(take((r, c) => -Math.abs(edge(r, c) - 1) * 2), 'hospital');          // always a hospital
+  if (N >= 5) put(take((r, c) => edge(r, c) * 1.5), 'stadium');           // the bowl sits out of the core
+  if (N >= 4) put(take((r, c) => -edge(r, c)), 'market');                 // markets want footfall
+  if (N >= 6) put(take((r, c) => -edge(r, c)), 'market');
   // --- the base city: commercial core, residential ring, green lungs ---
   const parks = N >= 6 ? 3 : N >= 5 ? 2 : 1;
   for (let i = 0; i < parks; i++) put(take((r, c) => -Math.abs(edge(r, c) - 1) + (rng() - 0.5)), 'park');
@@ -105,7 +114,7 @@ export function thresholdPlan() {
 
 // The TILE PROVING GROUND — every tile type laid out on one map for review (the map-maker's bench).
 export function galleryPlan() {
-  const order = ['residential', 'commercial', 'company', 'industrial', 'military', 'political', 'educational', 'temple', 'mining', 'seaport', 'resort', 'park'];
+  const order = ['residential', 'commercial', 'company', 'industrial', 'military', 'political', 'educational', 'temple', 'mining', 'seaport', 'resort', 'park', 'stadium', 'hospital', 'market'];
   const N = 5;
   const plan = {
     name: 'TILE PROVING GROUND', country: 'Registry Test Range', popType: 'City', popLabel: 'EVERY TILE · FOR REVIEW',
