@@ -11,7 +11,7 @@ import { icon, ATTR_ICON, ICON_MEANING } from './icons.js';
 import { writeBroadcast, tapeRows, llmPunchUp, titleCase, money, causeLine, mulberry } from '../data/news.js';
 import { recOf, snapshotTable, rankingTable, recentIncidents, championId, tournamentNo } from '../data/rankings.js';
 import { cityList } from '../data/cities.js';
-import { generatePlan, thresholdPlan, galleryPlan, TILE_INFO, popLabel } from '../data/cityplan.js';
+import { generatePlan, thresholdPlan, galleryPlan, TILE_INFO, VARIANTS, popLabel, CELL } from '../data/cityplan.js';
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
@@ -316,6 +316,16 @@ const CSS = `
 .lswovl .netp.wait b{ color:var(--text-5); font-size:var(--t-md); }
 .lswovl .vs2{ font-weight:800; color:var(--gold); }
 .lswovl .hsec{ margin-bottom:13px; }
+/* --- THE MAP MAKER palette --- */
+.lswovl .atpal{ display:flex; flex-wrap:wrap; gap:5px; margin:10px 0 4px; }
+.lswovl .atsw{ width:22px; height:22px; border-radius:var(--r-1); background:var(--sw); cursor:pointer;
+  border:2px solid transparent; transition:transform .08s, border-color .12s; }
+.lswovl .atsw:hover{ transform:translateY(-2px); }
+.lswovl .atsw.on{ border-color:var(--text); box-shadow:0 0 0 2px var(--ink), 0 0 0 4px var(--gold); }
+.lswovl .atsw.era{ background:var(--surface-hi); color:var(--text-3); display:flex; align-items:center;
+  justify-content:center; font-size:11px; border:1px dashed var(--line-2); }
+.lswovl .atpalhint{ font-family:var(--f-mono); font-size:var(--t-micro); color:var(--text-5);
+  letter-spacing:.06em; margin-bottom:8px; }
 /* ---- THE COLD OPEN: the home page as a news hour ---- */
 #title .colddesk{ display:flex; gap:18px; align-items:stretch; max-width:60rem; margin:64px auto 4px; margin-top:max(64px, 0px);
   padding:12px; background:var(--surface); border:1px solid var(--line); border-radius:var(--r-3); }
@@ -945,6 +955,17 @@ function describeAbility(a) {
   }
 }
 
+// Re-apply hand-painted cells on top of a freshly generated plan. Kept module-level so both the
+// Atlas preview and the live match resolve a theater identically — one code path, no drift.
+export function applyPlanEdits(plan, edits) {
+  if (!edits || !plan || !plan.cells) return plan;
+  for (const key in edits) {
+    const [r, c] = key.split(',').map(Number);
+    if (plan.cells[r] && plan.cells[r][c] !== undefined) plan.cells[r][c] = { ...edits[key] };
+  }
+  return plan;
+}
+
 export class HUD {
   constructor(game) {
     this.game = game;
@@ -1092,8 +1113,20 @@ export class HUD {
     if (t.gallery) return galleryPlan();
     if (t.flagship || t.cityId == null) return thresholdPlan();
     const city = cityList()[t.cityId];
-    return city ? generatePlan(city, t.seed || 1) : thresholdPlan();
+    if (!city) return thresholdPlan();
+    const plan = generatePlan(city, t.seed || 1);
+    return applyPlanEdits(plan, t.edits);   // hand-painted cells win over the generator
   }
+  // THE MAP MAKER'S EDIT LAYER. Painted cells are stored SEPARATELY from the generated plan as
+  // { "r,c": {t, v} }, so the generator stays the source of truth and your hand edits ride on top:
+  // reroll the seed and everything you painted survives, because it is re-applied after generation.
+  _paintCell(plan, st, r, c) {
+    if (!plan.cells || !plan.cells[r]) return;
+    const key = r + ',' + c;
+    if (st.paint === 'ERASE') delete st.edits[key];
+    else st.edits[key] = { t: st.paint, v: (Math.random() * (VARIANTS[st.paint] || 1)) | 0 };
+  }
+
   _drawPlanPreview(cvs, plan) {
     const x = cvs.getContext('2d'); const S = cvs.width;
     x.clearRect(0, 0, S, S);
@@ -1121,14 +1154,14 @@ export class HUD {
   }
   showAtlas() {
     const cities = cityList();
-    const st = this._atlasSt || (this._atlasSt = { q: '', type: 'ALL', sel: this.theater.flagship ? -1 : (this.theater.cityId ?? -1), seed: this.theater.seed || 1 });
+    const st = this._atlasSt || (this._atlasSt = { q: '', type: 'ALL', sel: this.theater.flagship ? -1 : (this.theater.cityId ?? -1), seed: this.theater.seed || 1, paint: 'residential', edits: { ...(this.theater.edits || {}) } });
     const TYPES = ['ALL', 'Military', 'Political', 'Industrial', 'Company', 'Seaport', 'Resort', 'Mining', 'Educational', 'Temple'];
     const render = () => {
       const q = st.q.toLowerCase();
       let L = cities.filter(c => (st.type === 'ALL' || c.types.includes(st.type)) && (!q || (c.name + ' ' + c.country).toLowerCase().includes(q)));
       const shown = L.slice(0, 28);
       const selCity = st.sel >= 0 ? cities[st.sel] : null;
-      const plan = st.sel < 0 ? thresholdPlan() : generatePlan(selCity, st.seed);
+      const plan = st.sel < 0 ? thresholdPlan() : applyPlanEdits(generatePlan(selCity, st.seed), st.edits);
       this.atlasEl.innerHTML = `<div class="obox" style="width:min(940px,96vw)">
         <div class="rkhead"><div class="n9" style="background:#2a5a78">🗺</div>
           <div class="rt"><b>CITY ATLAS — THEATER SELECT</b><span>the world sheet · ${cities.length} registered cities</span></div>
@@ -1151,7 +1184,10 @@ export class HUD {
             <canvas id="atCv" width="260" height="260"></canvas>
             <div class="atmeta" id="atMeta"></div>
             <div class="atbtns">
+              <div class="atpal" id="atPal"></div>
+              <div class="atpalhint">Click the map to paint · painted cells survive a reroll</div>
               <button class="odone oghost" id="atSeed">⟳ REROLL LAYOUT (SEED ${st.seed})</button>
+              <button class="odone oghost" id="atClr">✕ CLEAR ${Object.keys(st.edits).length} PAINTED CELL${Object.keys(st.edits).length === 1 ? '' : 'S'}</button>
               <button class="odone" id="atSet">📍 SET AS THEATER</button>
               <button class="odone oghost" id="atGal">🧱 TILE PROVING GROUND</button>
               <button class="odone oghost" id="atClose">CLOSE</button>
@@ -1167,9 +1203,31 @@ export class HUD {
       $('#atQ').oninput = (e) => { st.q = e.target.value; render(); setTimeout(() => { const i = $('#atQ'); i.focus(); i.setSelectionRange(i.value.length, i.value.length); }, 0); };
       this.atlasEl.querySelectorAll('[data-at]').forEach(ch => ch.onclick = () => { st.type = ch.dataset.at; render(); });
       this.atlasEl.querySelectorAll('[data-ci]').forEach(row => row.onclick = () => { st.sel = +row.dataset.ci; st.seed = 1; render(); });
+      // --- the tile palette: every declared tile plus an eraser, so it can never go stale
+      const pal = $('#atPal');
+      if (pal) {
+        pal.innerHTML = Object.keys(TILE_INFO).map(t =>
+          `<span class="atsw${st.paint === t ? ' on' : ''}" data-paint="${t}" title="${esc(TILE_INFO[t].label)}" style="--sw:${TILE_INFO[t].c}"></span>`).join('')
+          + `<span class="atsw era${st.paint === 'ERASE' ? ' on' : ''}" data-paint="ERASE" title="Erase — back to the generator">✕</span>`;
+        pal.querySelectorAll('[data-paint]').forEach(sw => sw.onclick = () => { st.paint = sw.dataset.paint; render(); });
+      }
+      // --- click the preview to paint that cell
+      const cv = $('#atCv');
+      if (cv && st.sel >= 0 && plan.cells) {
+        cv.style.cursor = 'crosshair';
+        cv.onclick = (ev) => {
+          const b = cv.getBoundingClientRect();
+          const S = cv.width, pad = 12, N = plan.N, cs = (S - pad * 2) / N;
+          const px = (ev.clientX - b.left) * (S / b.width), py = (ev.clientY - b.top) * (S / b.height);
+          const c = Math.floor((px - pad) / cs), r = Math.floor((py - pad) / cs);
+          if (r < 0 || c < 0 || r >= N || c >= N) return;
+          this._paintCell(plan, st, r, c); render();
+        };
+      }
+      $('#atClr').onclick = () => { st.edits = {}; render(); };
       $('#atSeed').onclick = () => { st.seed++; render(); };
       $('#atSet').onclick = () => {
-        this.theater = st.sel < 0 ? { flagship: true, seed: 1 } : { cityId: st.sel, seed: st.seed };
+        this.theater = st.sel < 0 ? { flagship: true, seed: 1 } : { cityId: st.sel, seed: st.seed, edits: { ...st.edits } };
         try { localStorage.setItem('threshold_theater_v1', JSON.stringify(this.theater)); } catch {}
         this.atlasEl.style.display = 'none';
         const tt = this.title.querySelector('#termTheater'); if (tt) tt.textContent = st.sel < 0 ? 'THE WHITE CITY' : cities[st.sel].name.toUpperCase();

@@ -152,7 +152,7 @@ export class World {
     // multiply color keeps it from blowing out under ACES at noon)
     const tex = this._groundTex || (this._groundTex = this._gridTexture());
     tex.repeat.set(5, 5);
-    const mat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.9, metalness: 0.0, color: '#8f897d' });
+    const mat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.92, metalness: 0.0, color: '#b9b1a2' });
     const SEG = 112;
     const groundGeo = new THREE.PlaneGeometry(ARENA * 2, ARENA * 2, SEG, SEG);
     const ground = new THREE.Mesh(groundGeo, mat);
@@ -522,7 +522,7 @@ export class World {
     tex.repeat.set(N, N);
     const SEG = 22 * N + 2;
     const groundGeo = new THREE.PlaneGeometry(A * 2, A * 2, SEG, SEG);
-    const ground = new THREE.Mesh(groundGeo, new THREE.MeshStandardMaterial({ map: tex, roughness: 0.9, metalness: 0.0, color: '#8f897d' }));
+    const ground = new THREE.Mesh(groundGeo, new THREE.MeshStandardMaterial({ map: tex, roughness: 0.92, metalness: 0.0, color: '#b9b1a2' }));
     ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; g.add(ground);
     this.ground = ground; this.groundGeo = groundGeo;
     const pa = groundGeo.attributes.position.array; const nV = pa.length / 3;
@@ -630,9 +630,11 @@ export class World {
       const c = document.createElement('canvas'); c.width = c.height = 128;
       const x = c.getContext('2d');
       const gr = x.createRadialGradient(64, 64, 10, 64, 64, 64);
-      gr.addColorStop(0, 'rgba(74,104,58,0.85)'); gr.addColorStop(0.75, 'rgba(66,94,52,0.7)'); gr.addColorStop(1, 'rgba(60,86,48,0)');
+      // ⚠ these are UNLIT (MeshBasic) decals — whatever value you write here is what you SEE, with
+      // no sun to lift it. The old greens were mid-dark and read as holes cut in the pavement.
+      gr.addColorStop(0, 'rgba(122,164,86,0.95)'); gr.addColorStop(0.7, 'rgba(104,146,74,0.82)'); gr.addColorStop(1, 'rgba(92,132,66,0)');
       x.fillStyle = gr; x.fillRect(0, 0, 128, 128);
-      x.fillStyle = 'rgba(104,138,76,0.5)';
+      x.fillStyle = 'rgba(150,190,110,0.45)';
       for (let i = 0; i < 260; i++) x.fillRect(Math.random() * 128, Math.random() * 128, 2, 2);
       return new THREE.CanvasTexture(c);
     })());
@@ -703,13 +705,28 @@ export class World {
     x.fillStyle = 'rgba(255,255,255,0.05)'; x.fillRect(64, 64, 192, 192); x.fillRect(256, 256, 192, 192);
     x.strokeStyle = 'rgba(90,80,60,0.12)'; x.lineWidth = 1.5;
     for (let i = 64; i <= 512; i += 64) { x.beginPath(); x.moveTo(i + .5, 0); x.lineTo(i + .5, 512); x.stroke(); x.beginPath(); x.moveTo(0, i + .5); x.lineTo(512, i + .5); x.stroke(); }
-    // the streets — an asphalt cross along the tile edges (wraps into a full grid)
-    const ST = 116;                                     // street width in px (~5.4u)
-    x.fillStyle = '#57544c';
+    // ---- THE STREET SECTION -------------------------------------------------------------------
+    // ⚠ The ground is the single biggest surface in frame and it used to read as a near-black slab:
+    // the asphalt was #57544c under a #8f897d multiply, so ~40% of every tile went to mud. A street
+    // is layered — SIDEWALK, curb, gutter, carriageway, markings — and each layer needs its own value.
+    const ST = 116;                                     // carriageway width in px (~22u at 96u cells)
+    const SW = 30;                                      // sidewalk band OUTSIDE the curb
+    // sidewalk: pale concrete, slightly cooler than the plaza so the kerb line reads
+    x.fillStyle = '#c3bcac';
+    x.fillRect(0, 0, ST / 2 + SW, 512); x.fillRect(512 - ST / 2 - SW, 0, ST / 2 + SW, 512);
+    x.fillRect(0, 0, 512, ST / 2 + SW); x.fillRect(0, 512 - ST / 2 - SW, 512, ST / 2 + SW);
+    // paving joints on the sidewalk — stops it reading as flat card
+    x.strokeStyle = 'rgba(120,112,96,0.16)'; x.lineWidth = 1.2;
+    for (let i = 0; i <= 512; i += 22) { x.beginPath(); x.moveTo(i + .5, 0); x.lineTo(i + .5, 512); x.stroke(); x.beginPath(); x.moveTo(0, i + .5); x.lineTo(512, i + .5); x.stroke(); }
+    // carriageway: real asphalt grey, not black
+    x.fillStyle = '#6e6a61';
     x.fillRect(0, 0, ST / 2, 512); x.fillRect(512 - ST / 2, 0, ST / 2, 512);
     x.fillRect(0, 0, 512, ST / 2); x.fillRect(0, 512 - ST / 2, 512, ST / 2);
-    // curbs
-    x.strokeStyle = 'rgba(240,234,218,0.85)'; x.lineWidth = 4;
+    // a darker gutter strip where the road meets the kerb — the shadow line that sells depth
+    x.fillStyle = 'rgba(40,38,33,0.30)';
+    for (const p of [ST / 2 - 7, 512 - ST / 2]) { x.fillRect(p, 0, 7, 512); x.fillRect(0, p, 512, 7); }
+    // curbs — bright concrete edge
+    x.strokeStyle = 'rgba(246,241,228,0.95)'; x.lineWidth = 5;
     for (const p of [ST / 2, 512 - ST / 2]) { x.beginPath(); x.moveTo(p, 0); x.lineTo(p, 512); x.stroke(); x.beginPath(); x.moveTo(0, p); x.lineTo(512, p); x.stroke(); }
     // lane dashes (gold — the city's trim color)
     x.strokeStyle = 'rgba(245,178,26,0.55)'; x.lineWidth = 5; x.setLineDash([26, 22]);

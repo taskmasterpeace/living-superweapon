@@ -27,7 +27,7 @@ function mats(world) {
     gold: S('#c9a227', { r: 0.55, m: 0.4 }), domeGold: S('#d8b24a', { r: 0.4, m: 0.6, e: '#7a5a10', ei: 0.25 }),
     wood: S('#7a5a3a', { r: 0.95 }), deck: S('#c9b89a', { r: 0.9 }),
     sandM: B('#d8c090', { o: 0.9 }), poolM: B('#5ad0e8', { o: 0.9 }), plazaM: B('#e0d8c4', { o: 0.55 }),
-    lawnM: B('#4a683a', { o: 0.8 }), pondM: B('#4a90b8', { o: 0.85 }),
+    lawnM: B('#7aa456', { o: 0.9 }), pondM: B('#5aa8cc', { o: 0.9 }),   // unlit decals — write the value you want to SEE
     palmT: S('#8a6a42', { r: 0.95, fs: true }), palmF: S('#3a7a3a', { r: 0.9, fs: true }),
     canvas: S('#e8e2d4', { r: 0.95 }), red: S('#a8362e', { r: 0.8 }),
     containers: ['#8a2a24', '#2a4a6a', '#3a6a4a', '#c9762a', '#5a5a64'].map(c => S(c, { r: 0.6, m: 0.3 })),
