@@ -185,6 +185,37 @@ export class Game {
     g.visible = false; this.scene.add(g);
     this.playerMark = g; this._pmRing = ring; this._pmGlow = glow;
   }
+  // TELEPORT TARGETING — the blink always went to your aim point, but with nothing drawn there
+  // you were guessing. This puts a ring exactly where you WILL land (range-clamped, so it stops
+  // at the edge of what the ability can actually reach) whenever a blink is ready to fire.
+  updateBlinkMark(dt) {
+    if (!this._blinkMark) {
+      const g = new THREE.Group();
+      const ring = new THREE.Mesh(new THREE.RingGeometry(3.4, 4.2, 32), new THREE.MeshBasicMaterial({ color: '#eaffff', transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+      ring.rotation.x = -Math.PI / 2;
+      const pip = new THREE.Mesh(new THREE.ConeGeometry(1, 2.4, 4), new THREE.MeshBasicMaterial({ color: '#eaffff', transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false }));
+      pip.rotation.x = Math.PI; pip.position.y = 7;
+      g.add(ring, pip); g.visible = false; this.scene.add(g);
+      this._blinkMark = g; this._bmRing = ring; this._bmPip = pip;
+    }
+    const p = this.player, m = this._blinkMark;
+    let slot = null;
+    if (p && p.alive && this.running && !this.matchOver) {
+      for (const k in p.slots) { const s = p.slots[k]; if (s.def.type === 'teleport' && s.cd <= 0 && p.ki >= (s.def.cost || 0)) { slot = s; break; } }
+    }
+    if (!slot) { if (m.visible) m.visible = false; return; }
+    const range = slot.def.range || 42;
+    const dx = this.aimPoint.x - p.pos.x, dz = this.aimPoint.z - p.pos.z, d = Math.hypot(dx, dz) || 1;
+    const dd = Math.min(range, d);
+    m.visible = true;
+    m.position.set(p.pos.x + (dx / d) * dd, 0.2, p.pos.z + (dz / d) * dd);
+    this._bmRing.rotation.z += dt * 2.2;
+    this._bmPip.position.y = 7 + Math.sin(this.time * 6) * 0.7;
+    const capped = d > range;                       // out of reach = amber, in reach = clean white
+    const col = capped ? '#ffb03a' : '#eaffff';
+    if (this._bmCol !== col) { this._bmCol = col; this._bmRing.material.color.set(col); this._bmPip.material.color.set(col); }
+  }
+
   updatePlayerMark(dt) {
     const m = this.playerMark, p = this.player;
     if (!m) return;
@@ -1609,6 +1640,7 @@ export class Game {
     this.updateVision(dt);
     this.updateReticle(dt);
     this.updatePlayerMark(dt);
+    this.updateBlinkMark(dt);
     this.updateCarry(dt);
     this.updateThrowArc();
     if (this.mode && !this.matchOver) { const over = this.mode.isOver(this); if (over) this.endMatch(over); }
