@@ -6,8 +6,8 @@
 // A plan: { name, country, popType, popLabel, types, crime, safety, seed,
 //           N (cells per side), arena (half-extent = N*48), water (bool), waterCols,
 //           cells[row][col] = { t: tileType, v: variant } | null (open street/plaza ground) }
-// Tile types: residential commercial company industrial military political educational
-//             temple mining seaport resort park plaza  (+ 'bridge' on water maps)
+// Tile types are whatever TILE_INFO declares — see below. Do not maintain a second list here;
+// the gallery/proving-ground and the atlas both derive from that one table.
 import { mulberry } from './news.js';
 
 export const CELL = 96;                          // one district cell, matching the ground texture
@@ -142,7 +142,10 @@ export function thresholdPlan() {
 
 // The TILE PROVING GROUND — every tile type laid out on one map for review (the map-maker's bench).
 export function galleryPlan() {
-  const order = ['residential', 'commercial', 'company', 'industrial', 'military', 'political', 'educational', 'temple', 'mining', 'seaport', 'resort', 'park', 'stadium', 'hospital', 'market', 'metro', 'farmland'];
+  // ⚠ DERIVED, never hand-listed. This was a literal array and it had already drifted — `plaza`
+  // was missing, so plaza variants could not be reviewed on the proving ground at all. A new tile
+  // now shows up here for free, which is the whole point of the bench.
+  const order = Object.keys(TILE_INFO);
   const N = 5;
   const plan = {
     name: 'TILE PROVING GROUND', country: 'Registry Test Range', popType: 'City', popLabel: 'EVERY TILE · FOR REVIEW',

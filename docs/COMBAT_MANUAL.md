@@ -91,7 +91,8 @@ applied at the choke point.
 | `fire` | flame arrows, burn stacks, PYRE/TORCH | strong vs flesh, weak vs metal |
 | `cold` | frost cones, RIME | builds FREEZE; fire heroes shrug it off |
 | `toxic` | poison, gas, KIVULI | **needs a metabolism — machines are immune** |
-| `acid` | NEW — see §4 | **corrodes ARMOUR; weak against bare flesh** |
+| `acid` | see §4 | **corrodes ARMOUR; weak against bare flesh** |
+| `magic` | MYSTWARD's wand, MARSHAL's telepathy | **attacks the WILL and siphons ki**; resisted by RESOLVE |
 
 ### Resistances
 

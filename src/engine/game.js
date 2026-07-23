@@ -1351,6 +1351,7 @@ export class Game {
       dps: (def.dps || 60) * p, kiPerSec: def.kiPerSec || 22,
       color: def.color, color2: def.color2, power: (def.power || 1) * p, steer: def.steer,
       might: (def.might || (def.dps || 60) / 50) * p * (caster.def.beamMight || 1),   // char treats the budget differently
+      dtype: def.dtype, siphon: def.siphon,                                             // arcane beams drink ki
     });
   }
 

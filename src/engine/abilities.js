@@ -109,6 +109,7 @@ export const TYPES = {
         radius: def.radius || 1.4, damage: def.damage || 14, blast: def.blast || 5, power: def.power || 1,
         homing: def.homing || 0, color: def.color, color2: def.color2, grav: def.grav || 0, shock: def.shock,
         arrow: def.arrow, payload: def.payload, boomerang: def.boomerang, range: def.range,
+        dtype: def.dtype, siphon: def.siphon,          // the damage TYPE rides the shot
       });
       g.audio.blast(460, 0.14); g.muzzleFlash(c, def.color);
     }

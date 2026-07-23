@@ -1007,9 +1007,9 @@ export class HUD {
     x.clearRect(0, 0, S, S);
     x.fillStyle = '#0c0e14'; x.fillRect(0, 0, S, S);
     if (!plan.cells) {   // the flagship — stylized card
-      x.fillStyle = 'var(--gold-pale)'; x.font = '800 15px Rajdhani,sans-serif'; x.textAlign = 'center';
+      x.fillStyle = '#ffd97a'; x.font = '800 15px Rajdhani,sans-serif'; x.textAlign = 'center';
       x.fillText('THE WHITE CITY', S / 2, S / 2 - 8);
-      x.fillStyle = 'var(--text-5)'; x.font = '9px Consolas,monospace';
+      x.fillStyle = '#8b8577'; x.font = '9px Consolas,monospace';
       x.fillText('FLAGSHIP THEATER — HAND-BUILT', S / 2, S / 2 + 10);
       return;
     }
@@ -1024,7 +1024,7 @@ export class HUD {
       x.fillStyle = 'rgba(0,0,0,.55)'; x.font = `700 ${Math.max(7, cs * 0.16)}px Consolas,monospace`; x.textAlign = 'center';
       x.fillText((cell.t[0] + (cell.v ?? '')).toUpperCase(), px + cs / 2, py + cs / 2 + 3);
     }
-    x.fillStyle = 'var(--gold-pale)'; x.font = '800 12px Rajdhani,sans-serif'; x.textAlign = 'left';
+    x.fillStyle = '#ffd97a'; x.font = '800 12px Rajdhani,sans-serif'; x.textAlign = 'left';
     x.fillText(plan.name.toUpperCase(), pad, S - 4);
   }
   showAtlas() {
@@ -1040,7 +1040,7 @@ export class HUD {
       this.atlasEl.innerHTML = `<div class="obox" style="width:min(940px,96vw)">
         <div class="rkhead"><div class="n9" style="background:#2a5a78">🗺</div>
           <div class="rt"><b>CITY ATLAS — THEATER SELECT</b><span>the world sheet · ${cities.length} registered cities</span></div>
-          <div class="rkmeta">TILES: 13 TYPES · 2–3 VARIANTS<br/>GRID: 96u CELLS + 22u STREETS</div></div>
+          <div class="rkmeta">TILES: ${Object.keys(TILE_INFO).length} TYPES · 2–3 VARIANTS<br/>GRID: 96u CELLS + 22u STREETS</div></div>
         <div class="atwrap">
           <div class="atlist">
             <input id="atQ" placeholder="QUERY: city or country…" value="${esc(st.q)}">
@@ -1608,6 +1608,9 @@ export class HUD {
     el.style.display = 'flex';
   }
 
+  // ⚠ CANVAS 2D CANNOT READ CSS TOKENS. `ctx.fillStyle = '#ffd24a'` is silently ignored and
+  // the previous colour is kept — it is not an error, it just draws the wrong thing. Anything
+  // painted into a <canvas> must use these literals. Keep them in sync with :root in index.html.
   // ---- combat UI: radar, hit direction, KO banner ----
   updateRadar(g) {
     const ctx = this._radarCtx; if (!ctx || this.el.radar.style.display === 'none') return;
@@ -1656,7 +1659,7 @@ export class HUD {
       ctx.strokeStyle = 'rgba(0,0,0,.6)'; ctx.lineWidth = 1; ctx.strokeRect(-3, -3, 6, 6); ctx.restore();
     }
     // player marker + facing tick
-    if (P) { const [px, py] = toXY(P.pos.x, P.pos.z); ctx.strokeStyle = 'rgba(255,210,74,.9)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px + P.aim.x * 13, py + P.aim.z * 13); ctx.stroke(); ctx.fillStyle = 'var(--gold)'; ctx.beginPath(); ctx.arc(px, py, 3.8, 0, TAU); ctx.fill(); ctx.strokeStyle = 'var(--on-gold)'; ctx.lineWidth = 1.2; ctx.stroke(); }
+    if (P) { const [px, py] = toXY(P.pos.x, P.pos.z); ctx.strokeStyle = 'rgba(255,210,74,.9)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px + P.aim.x * 13, py + P.aim.z * 13); ctx.stroke(); ctx.fillStyle = '#ffd24a'; ctx.beginPath(); ctx.arc(px, py, 3.8, 0, TAU); ctx.fill(); ctx.strokeStyle = '#160d02'; ctx.lineWidth = 1.2; ctx.stroke(); }
     ctx.restore();
     ctx.strokeStyle = 'rgba(245,178,26,.32)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(cx, cy, R - 3, 0, TAU); ctx.stroke();
   }

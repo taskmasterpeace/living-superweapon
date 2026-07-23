@@ -91,6 +91,7 @@ class Projectile {
     this.arrow = !!o.arrow; this.payload = o.payload || null;
     this.bullet = !!o.bullet;                      // real ballistics read as METAL, not energy
     this.ballistic = !!o.ballistic; this.weapon = o.weapon || null;   // drives the armour/toughness scale
+    this.dtype = o.dtype || null; this.siphon = o.siphon;              // damage type rides the projectile
     this.face = !!o.face; this.armDelay = o.armDelay || 0; this._armed = false; this._armT = 0;
     if (this.face) {
       // THE MARLETTA: a billboarded serene face wrapped in glow — she drifts, arrives, lingers, detonates
@@ -231,7 +232,7 @@ class Projectile {
           return true;
         }
       }
-      foe.takeDamage(this.damage * this.caster.powerBuff, { src: this.caster, ballistic: this.ballistic, weapon: this.weapon, kb: _v.copy(this.vel).setY(0).setLength(this.damage * (this.ballistic ? 0.12 : 0.5) + (this.ballistic ? 2 : 8)).setComponent(1, this.ballistic ? 1 : 6), launch: this.ballistic ? 0 : 6 + this.power * 4, hitstop: this.ballistic ? 0.02 : 0.05 });
+      foe.takeDamage(this.damage * this.caster.powerBuff, { src: this.caster, ballistic: this.ballistic, weapon: this.weapon, dtype: this.dtype, siphon: this.siphon, kb: _v.copy(this.vel).setY(0).setLength(this.damage * (this.ballistic ? 0.12 : 0.5) + (this.ballistic ? 2 : 8)).setComponent(1, this.ballistic ? 1 : 6), launch: this.ballistic ? 0 : 6 + this.power * 4, hitstop: this.ballistic ? 0.02 : 0.05 });
       // ACID: corrodes the plate for 5s — the counter to the armour that stops bullets
       if (this.payload === 'acid') { foe.addDot({ dps: 6, dur: 5, color: '#c8e04a', kind: 'acid', corrode: 4, src: this.caster }); game.particles.burst(foe.pos.x, foe.pos.y + 5, foe.pos.z, { count: 9, speed: 11, life: 0.6, size: 2.8, color: ['#c8e04a', '#9ab030', '#e6f0a0'], up: 7, drag: 1.1 }); }
       else if (this.payload === 'poison') foe.addDot({ dps: 5, dur: 4, color: '#8fe08a', kind: 'poison', src: this.caster });
@@ -288,7 +289,7 @@ class BeamHose {
     this.radius = o.radius || 1.6;             // beam thickness
     this.tipSpeed = o.tipSpeed || 150;         // how fast the tip races out (waterhose, not instant)
     this.maxLen = o.maxLen || 120;
-    this.dps = o.dps || 60;
+    this.dps = o.dps || 60; this.dtype = o.dtype || null; this.siphon = o.siphon;   // an arcane beam SIPHONS
     this.kiPerSec = o.kiPerSec || 22;
     this.color = o.color || '#8fe3ff'; this.color2 = o.color2 || '#eaffff';
     this.power = o.power || 1;
@@ -379,7 +380,7 @@ class BeamHose {
         const dd = Math.hypot(f.pos.x - px, (f.pos.y + 5.2) - py, f.pos.z - pz);
         if (dd < this.radius + f.radius + 1) {
           // src+dot so GUARD can block beams (drains guard over time); strong physical shove along the beam
-          f.takeDamage(this.dps * c.powerBuff * dt, { src: c, dot: true, kb: _v.copy(this.dir).setLength(this.dps * 0.04 + 16), hitstop: 0 });
+          f.takeDamage(this.dps * c.powerBuff * dt, { src: c, dot: true, dtype: this.dtype, siphon: this.siphon, kb: _v.copy(this.dir).setLength(this.dps * 0.04 + 16), hitstop: 0 });
           game.particles.burst(px, py, pz, { count: 2, speed: 12, life: 0.3, size: 2, color: ['#fff', this.color], dir: { x: this.dir.x, z: this.dir.z }, spread: 1.4 });
         }
       }

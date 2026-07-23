@@ -86,7 +86,7 @@ export const bandOf = (y) => y < 8 ? 0 : y < 150 ? 1 : y < 260 ? 2 : 3;
 // Every damage event carries a `dtype`. Every fighter carries a resistance table. ONE multiplier,
 // applied at the takeDamage choke point, so a defence can never be bypassed by a new ability
 // forgetting about it. Missing entry = 1.0 = full damage.
-export const DTYPES = ['physical', 'ballistic', 'energy', 'fire', 'cold', 'toxic', 'acid'];
+export const DTYPES = ['physical', 'ballistic', 'energy', 'fire', 'cold', 'toxic', 'acid', 'magic'];
 export const DTYPE_INFO = {
   physical:  { label: 'PHYSICAL',  c: '#e8e2d4', note: 'Fists, slams, thrown cars. The baseline — almost nothing resists it.' },
   ballistic: { label: 'BALLISTIC', c: '#c9b98a', note: 'Bullets. Meets ARMOUR then TOUGHNESS — lethal to people, an annoyance to superweapons.' },
@@ -95,14 +95,23 @@ export const DTYPE_INFO = {
   cold:      { label: 'COLD',      c: '#bfeaff', note: 'Builds FROST until the target is encased. Fire-blooded heroes shrug it off.' },
   toxic:     { label: 'TOXIC',     c: '#8fe08a', note: 'Poison and gas. Needs a metabolism — machines are immune.' },
   acid:      { label: 'ACID',      c: '#c8e04a', note: 'CORRODES ARMOUR for its duration. Weak on bare flesh, devastating on a plated chassis.' },
+  magic:     { label: 'MAGIC',     c: '#ff7a5a', note: 'Attacks the WILL and SIPHONS energy — drains their ki straight into the caster. Resisted by RESOLVE.' },
 };
 // Derived so no hero has to be hand-authored to be correct. `def.resist` always wins.
 // ⚠ Every resistance must cut BOTH ways (manual §3): metal resists toxic and fire, and is WEAK
 // to acid. A resistance with no matching weakness is just a nerf, not a system.
 // which damage type each damage-over-time kind lands as
 export const DOT_DTYPE = { poison: 'toxic', gas: 'toxic', burn: 'fire', acid: 'acid' };
-export function resistOf(def) {
-  const r = { physical: 1, ballistic: 1, energy: 1, fire: 1, cold: 1, toxic: 1, acid: 1 };
+export function resistOf(def, sheet) {
+  const r = { physical: 1, ballistic: 1, energy: 1, fire: 1, cold: 1, toxic: 1, acid: 1, magic: 1 };
+  // MAGIC is resisted by RESOLVE — the will stat finally defends something. Cuts both ways:
+  // an iron-willed fighter shrugs it off, a fragile one takes MORE than baseline.
+  // ⚠ CENTRED ON THE ROSTER'S ACTUAL MEDIAN (res 6, range 5-9). Centring on 5 made the curve
+  // top out at 1.0, so NOTHING in the game was weak to magic — a resistance with no matching
+  // weakness is just a nerf (manual §3). Now roughly half the cast is soft to it.
+  const res = (sheet && sheet.attrs && sheet.attrs.res) || 6;
+  r.magic = Math.max(0.55, Math.min(1.3, 1.45 - res * 0.07));
+  if (def.warded) r.magic *= 0.5;
   if (def.metal) { r.toxic = 0; r.fire = 0.6; r.acid = 1.6; }
   else if ((def.armor || 0) > 0) { r.acid = 1.4; }
   else r.acid = 0.7;                                    // bare flesh: acid is the WRONG tool
@@ -366,7 +375,7 @@ export class Fighter {
     // the SHEET — seven ranked attributes + talents baked to flat multipliers (data/ranks.js).
     // This is the D&D layer: FGT/AGL/MGT/VIG/INT/AWR/RES all do real engine work.
     this.sheet = bakeSheet(def);
-    this.resist = resistOf(def);       // damage-type resistances, derived + def overrides (manual §3)
+    this.resist = resistOf(def, this.sheet);       // damage-type resistances, derived + def overrides (manual §3)
     this._corrode = 0;                 // ACID: seconds of armour corrosion left
     this._corrodeAmt = 0;              // how much armour is currently eaten
     this.attrs = this.sheet.attrs;
@@ -517,6 +526,23 @@ export class Fighter {
         if (rz === 0) {                                  // outright immune — say so, don't fail silently
           if (this._game && this._game.hud && Math.random() < 0.25) this._game.hud.damageNumber(this.pos, 'IMMUNE', '#9fb2c9', true);
           return 0;
+        }
+      }
+      // MAGIC SIPHONS: the wand pulls their tank into yours. An `energyInfinite` frame (TITAN)
+      // has no tank to drain, so the siphon finds nothing — it still takes the DAMAGE, it just
+      // can't be milked. Explicitly guarded: the pin happens in update(), so without this the
+      // ki visibly dipped and refilled every hit.
+      if (dtype === 'magic' && amount > 0 && !this.def.energyInfinite) {
+        const pull = Math.min(this.ki, amount * (opts.siphon || 0.8));
+        if (pull > 0) {
+          this.ki = Math.max(0, this.ki - pull);
+          const s2 = opts.src;
+          if (s2 && s2 !== this && s2.maxKi) s2.ki = clamp(s2.ki + pull * 0.6, 0, s2.maxKi);
+          if (this._game && Math.random() < 0.3) {
+            this._game.particles.spawn({ x: this.pos.x, y: this.pos.y + 5, z: this.pos.z,
+              vx: (Math.random() * 2 - 1) * 5, vy: 7, vz: (Math.random() * 2 - 1) * 5,
+              life: 0.5, size: 2.4, color: ['#ff7a5a', '#ffd9b0'], drag: 1.3, shrink: true });
+          }
         }
       }
       // ACID CORRODES: eats into this fighter's armour for the duration, which is what makes it
