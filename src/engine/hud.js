@@ -149,6 +149,8 @@ const CSS = `
 #hud .slot .cost{ position:absolute; top:4px; right:6px; font-size:var(--t-label); color:#7fbfff; }
 #hud .slot .an{ font-size:var(--t-label); line-height:1.05; color:var(--text); font-weight:600; }
 #hud .slot .cd{ position:absolute; left:0; right:0; bottom:0; background:rgba(0,0,0,.62); height:0%; transition:height .05s linear; }
+#hud .slot .cdn{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+  font-family:var(--f-mono); font-size:var(--t-lg); font-weight:700; color:var(--gold-pale); text-shadow:0 2px 6px #000; pointer-events:none; }
 #hud .slot.ult{ border-color:rgba(245,178,26,.5); box-shadow:0 0 16px rgba(245,178,26,.25); }
 #hud .slot.dim{ opacity:.4; }
 #hud .slot.on{ border-color:var(--gold); box-shadow:0 0 16px rgba(255,210,74,.5); }
@@ -1233,8 +1235,10 @@ export class HUD {
   // counts, the player's exact combat state, per-dummy DPS, and — critically — each bot's
   // HONEST senses (what it believes, from which source, and how good its hands are). If a
   // system misbehaves, it should be visible here before it's visible in a bug report.
+  // (5) telemetry is normally a Danger Room thing, but F2 forces it anywhere
+  toggleTelemetry() { this._telForce = !this._telForce; this.feed(this._telForce ? '◈ Telemetry ON (F2)' : '◈ Telemetry off (F2)', 'var(--info)'); }
   updateTelemetry(g) {
-    const on = g.modeId === 'training' && g.running;
+    const on = (g.modeId === 'training' || this._telForce) && g.running;
     if (on !== this._simOn) { this._simOn = on; this.root.classList.toggle('sim', on); }
     if (!on) return;
     const now = performance.now();
@@ -1744,6 +1748,11 @@ export class HUD {
     this.el.end.querySelector('#eMenu').onclick = () => { this.hideEndScreen(); if (this.onMenu) this.onMenu(); };
     try { this.game.audio.sting(); } catch {}
     this._startTV(rep);
+    // (9) SKIP THE TYPING — click/tap the report and the whole script lands at once.
+    const sc0 = this.el.end.querySelector('#nScript');
+    if (sc0) sc0.style.cursor = 'pointer';
+    this.el.end.onclick = (ev) => { if (ev.target.tagName === 'BUTTON') return; this._skipType = true; };
+    this._skipType = false;
     this._typeScript(b.script, () => {
       const w = this.el.end.querySelector('#nWit'), sc = this.el.end.querySelector('#nScript');
       if (w && b.witness) {
@@ -1789,7 +1798,7 @@ export class HUD {
       const text = L.text; let i = 0; let last = performance.now();
       const tick = (now) => {
         if (this._tvRun !== run || !sc.isConnected) return;
-        const n = Math.max(1, Math.round((now - last) / 11));   // ~90 chars/sec
+        const n = this._skipType ? text.length : Math.max(1, Math.round((now - last) / 11));   // ~90 chars/sec, or instant on click
         last = now; i = Math.min(text.length, i + n);
         tx.textContent = text.slice(0, i);
         if (i < text.length) requestAnimationFrame(tick);
@@ -1950,9 +1959,9 @@ export class HUD {
       const a = def.abilities[k]; if (!a) continue;
       const d = document.createElement('div');
       d.className = 'slot' + (k === 'r' ? ' ult' : '');
-      d.innerHTML = `<div class="key">${label}</div><div class="cost">${a.cost ? a.cost : a.kiPerSec ? a.kiPerSec + '/s' : ''}</div><div class="an">${a.name}</div><div class="cd" style="height:0%"></div>`;
+      d.innerHTML = `<div class="key">${label}</div><div class="cost">${a.cost ? a.cost : a.kiPerSec ? a.kiPerSec + '/s' : ''}</div><div class="an">${a.name}</div><div class="cd" style="height:0%"></div><div class="cdn"></div>`;
       this.el.slots.appendChild(d);
-      this.slotEls[k] = { root: d, cd: d.querySelector('.cd'), cost: d.querySelector('.cost') };
+      this.slotEls[k] = { root: d, cd: d.querySelector('.cd'), cost: d.querySelector('.cost'), cdn: d.querySelector('.cdn') };
     }
   }
 
@@ -2004,6 +2013,11 @@ export class HUD {
       const se = this.slotEls?.[k]; if (!se) continue; const st = p.slots[k]; const def = st.def;
       const cdPct = def.cd ? clamp(st.cd / def.cd, 0, 1) * 100 : 0;
       se.cd.style.height = cdPct + '%';
+      // (8) NUMERIC COOLDOWN — "2.4" beats guessing from a shrinking bar
+      if (se.cdn) {
+        const secs = st.cd > 0.05 ? (st.cd < 1 ? st.cd.toFixed(1) : Math.ceil(st.cd)) : '';
+        if (se._cdn !== secs) { se._cdn = secs; se.cdn.textContent = secs; }
+      }
       const broke = !!(def.cost && p.ki < def.cost);
       const dim = broke || st.cd > 0.01;
       se.root.classList.toggle('dim', !!dim);
@@ -2064,7 +2078,12 @@ export class HUD {
 
   // ---------- Title / select ----------
   buildTitle(onStart) {
-    let selMode = 'duel', selP1 = ROSTER[0], selP2 = ROSTER[2], two = false;
+    // (10) OPEN WHERE YOU LEFT OFF — last hero, mode and format are restored from prefs
+    const PF = this.prefs || {};
+    let selMode = MODES.some(m => m.id === PF.mode) ? PF.mode : 'duel';
+    let selP1 = ROSTER.find(r => r.id === PF.p1) || ROSTER[0];
+    let selP2 = ROSTER[2], two = !!PF.two;
+    if (PF.format) this._tFormat = PF.format;
     this.title.innerHTML = `
       <div class="topbar"><button id="tAtlas">🗺 Atlas</button><button id="tRank">📊 Rankings</button><button id="tNet">🌐 Online</button><button id="tTut">🎓 Tutorial</button><button id="tOpt">⚙ Options</button><button id="tHow">❓ How to Play</button></div>
       <div class="tag">Machine King Labs · Living Superweapon</div>

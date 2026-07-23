@@ -84,6 +84,7 @@ function beginMatch(c) {
       hud.feed('Theater: ' + plan.name.toUpperCase() + (plan.country ? ' · ' + plan.country : ''), '#7fb0d0');
     }
   } catch (err) { console.error('theater', err); }
+  savePrefs(c);                // (3) remember this loadout for next launch
   game.startMode(c.mode || 'training', c);
   hud.setPlayer(ROSTER.find(r => r.id === (c.p1 || 'sol')));
   hud.armHintTimer();          // the control wall shows for ~18s, then folds into a corner chip (F1)
@@ -131,15 +132,40 @@ game.onKill = (f) => {
 };
 
 const digits = { Digit1: 0, Digit2: 1, Digit3: 2, Digit4: 3, Digit5: 4, Digit6: 5, Digit7: 6, Digit8: 7, Digit9: 8, Digit0: 9 };
+// ---------- QUALITY OF LIFE ----------
+// (1) AUTO-PAUSE on tab blur — you should never come back to a corpse because you alt-tabbed.
+addEventListener('blur', () => {
+  if (started && game.running && !hud.titleOpen && !game.matchOver) { game.running = false; hud.setPaused(true); game._blurPaused = true; }
+});
+// (2) AUDIO UNLOCK — browsers block sound until a gesture; take the first one we get.
+const unlock = () => { try { audio.init(); audio.resume(); applySettings(game); } catch {} };
+addEventListener('pointerdown', unlock, { once: true });
+addEventListener('keydown', unlock, { once: true });
+// (3) REMEMBER THE LAST LOADOUT — hero, mode and tournament format survive a reload.
+const PREF = 'threshold_prefs_v1';
+function savePrefs(c) { try { localStorage.setItem(PREF, JSON.stringify({ p1: c.p1, mode: c.mode, format: c.format, two: c.twoPlayer })); } catch {} }
+export function loadPrefs() { try { return JSON.parse(localStorage.getItem(PREF) || 'null'); } catch { return null; } }
+hud.prefs = loadPrefs();
+// (4) MUTE PERSISTS and says so, instead of silently forgetting between sessions.
+try { audio.muted = localStorage.getItem('threshold_muted') === '1'; } catch {}
+
 addEventListener('keydown', (e) => {
   if (e.code === 'Escape' && hud.overlayOpen()) { hud.closeOverlays(); return; }   // options/how-to first
   if (e.code === 'F1') { e.preventDefault(); hud.toggleHint(); return; }           // controls, on demand
+  if (e.code === 'F2') { e.preventDefault(); hud.toggleTelemetry(); return; }      // (5) telemetry in ANY mode
+  // (6) END SCREEN KEYS — Enter takes the rematch, Esc goes to the menu. No mouse hunt.
+  if (started && game.matchOver && hud.el.end.style.display !== 'none') {
+    if (e.code === 'Enter' || e.code === 'NumpadEnter') { const b = hud.el.end.querySelector('#eRematch'); if (b) { b.click(); return; } }
+    if (e.code === 'Escape') { const b = hud.el.end.querySelector('#eMenu'); if (b) { b.click(); return; } }
+  }
+  // (7) "/" jumps to the roster search instead of reaching for the mouse
+  if (e.key === '/' && hud.titleOpen) { const q = document.querySelector('#fQ'); if (q) { e.preventDefault(); q.focus(); q.select(); return; } }
   if (!started) return;
   if (e.code === 'Tab') { e.preventDefault(); if (!hud.titleOpen) openMenu(); else { game.running = true; hud.hideTitle(); } return; }
   if (e.code === 'Escape' && game.player && !hud.titleOpen) { game.running = !game.running; hud.setPaused(!game.running); return; }
   if (game.running === false) return;
   if (e.code === 'KeyB') { const b = game.spawnRival(); hud.feed('A rival ' + b.name + ' enters the arena!', b.def.colors.accent); }
-  if (e.code === 'KeyM') { audio.muted = !audio.muted; hud.feed(audio.muted ? 'Muted' : 'Sound on', '#9fb2c9'); }
+  if (e.code === 'KeyM') { audio.muted = !audio.muted; try { localStorage.setItem('threshold_muted', audio.muted ? '1' : '0'); } catch {} hud.feed(audio.muted ? '🔇 Muted (M)' : '🔊 Sound on (M)', '#9fb2c9'); }
   if (e.code in digits) { const c = ROSTER[digits[e.code]]; if (c) { game.setPlayerChar(c.id); hud.setPlayer(c); hud.feed('Now piloting ' + c.name + ' · ' + c.title, c.colors.accent); } }
 });
 
