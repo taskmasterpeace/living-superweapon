@@ -407,64 +407,68 @@ export class World {
   // 0 = dry land · 1 = shallow shelf · 2 = deep water
   waterAt(x) { return x < this.waterX ? 0 : x < this.deepX ? 1 : 2; }
 
-  // --- grass: ONE InstancedMesh (single draw call), wind sway in the vertex shader,
-  // and every crater/scorch FLATTENS the blades inside it — cheap mileage from destruction.
+  // --- the GREEN layer: real TREES in ORGANIZED rows (trunks + canopies, two instanced
+  // draws) over lawn decals. The old grass blades read as floating confetti at every zoom —
+  // gone forever. Blasts still FELL trees in the radius; resetTerrain replants.
   _buildGrass() {
-    const COUNT = 2400;
-    const geo = new THREE.PlaneGeometry(1.5, 2.1, 1, 2); geo.translate(0, 1.05, 0);   // pivot at the roots
-    const mat = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.92, metalness: 0, side: THREE.DoubleSide });
-    mat.onBeforeCompile = (sh) => {
-      sh.uniforms.uTime = this._grassTime = { value: 0 };
-      sh.vertexShader = 'uniform float uTime;\n' + sh.vertexShader.replace(
-        '#include <begin_vertex>',
-        `#include <begin_vertex>
-         vec4 gw = instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0);
-         transformed.x += sin(uTime * 1.7 + gw.x * 0.33 + gw.z * 0.29) * 0.26 * position.y;`
-      );
-    };
-    const grass = new THREE.InstancedMesh(geo, mat, COUNT);
-    grass.frustumCulled = false; grass.receiveShadow = true; grass.renderOrder = 1;
+    // lawns — soft green fields under the parks
+    const lawnTex = (() => {
+      const c = document.createElement('canvas'); c.width = c.height = 128;
+      const x = c.getContext('2d');
+      const gr = x.createRadialGradient(64, 64, 10, 64, 64, 64);
+      gr.addColorStop(0, 'rgba(74,104,58,0.85)'); gr.addColorStop(0.75, 'rgba(66,94,52,0.7)'); gr.addColorStop(1, 'rgba(60,86,48,0)');
+      x.fillStyle = gr; x.fillRect(0, 0, 128, 128);
+      x.fillStyle = 'rgba(104,138,76,0.5)';
+      for (let i = 0; i < 260; i++) x.fillRect(Math.random() * 128, Math.random() * 128, 2, 2);
+      return new THREE.CanvasTexture(c);
+    })();
+    for (const [x, z, r] of [[-192, 0, 42], [-192, 96, 40], [-96, 20, 17], [-40, 148, 15], [148, 140, 14]]) {
+      const p = new THREE.Mesh(new THREE.CircleGeometry(r, 26), new THREE.MeshBasicMaterial({ map: lawnTex, transparent: true, depthWrite: false }));
+      p.rotation.x = -Math.PI / 2; p.position.set(x, 0.11, z); this.scene.add(p);
+    }
+    // tree spots — rings around the park lawns + straight sidewalk rows in the residential south
+    const spots = [];
+    const ring = (px, pz, r, n) => { for (let i = 0; i < n; i++) { const a = (i / n) * Math.PI * 2 + 0.3; spots.push([px + Math.cos(a) * r + (Math.random() * 2 - 1) * 2, pz + Math.sin(a) * r + (Math.random() * 2 - 1) * 2]); } };
+    ring(-192, 0, 33, 8); ring(-192, 96, 31, 8);
+    ring(-96, 20, 13, 4); ring(-40, 148, 12, 4); ring(148, 140, 11, 4);
+    for (const z of [57, 153]) for (const x of [-120, -96, -72, -24, 0, 24, 72, 96, 120]) spots.push([x + (Math.random() * 2 - 1) * 1.5, z]);
+    const P = spots.filter(([x, z]) => Math.hypot(x, z) > 50 && x < this.waterX - 8 && Math.abs(x) < ARENA - 8 && Math.abs(z) < ARENA - 8 &&
+      !this.coverAll.some(c => Math.abs(x - c.x) < c.hx + 4 && Math.abs(z - c.z) < c.hz + 4));
+    const COUNT = P.length;
+    const trunkGeo = new THREE.CylinderGeometry(0.55, 0.85, 5.5, 6); trunkGeo.translate(0, 2.75, 0);
+    const canopyGeo = new THREE.IcosahedronGeometry(4.8, 0); canopyGeo.translate(0, 8.6, 0);
+    const trunks = new THREE.InstancedMesh(trunkGeo, new THREE.MeshStandardMaterial({ color: '#5a4630', roughness: 0.9, flatShading: true }), COUNT);
+    const canopy = new THREE.InstancedMesh(canopyGeo, new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.9, flatShading: true }), COUNT);
+    trunks.frustumCulled = false; canopy.frustumCulled = false;
+    trunks.receiveShadow = true; canopy.receiveShadow = true;
     const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), sv = new THREE.Vector3(), pv = new THREE.Vector3(), Y = new THREE.Vector3(0, 1, 0), col = new THREE.Color();
     this._gPos = new Float32Array(COUNT * 2); this._gRot = new Float32Array(COUNT); this._gScale = new Float32Array(COUNT); this._gOn = new Uint8Array(COUNT).fill(1);
-    // city grass lives in PARKS — two full park BLOCKS on the west belt + pocket squares
-    const PARKS = [
-      [-192, 0, 38], [-192, 96, 36],                    // the west park blocks (open cells)
-      [-96, 20, 18], [-40, 148, 16], [148, 140, 15],    // pocket squares
-      [-40, -40, 14], [140, 12, 14], [40, 170, 14],
-    ];
-    let placed = 0, tries = 0;
-    while (placed < COUNT && tries++ < COUNT * 30) {
-      const [px, pz, pr] = PARKS[(Math.random() * PARKS.length) | 0];
-      const a = Math.random() * Math.PI * 2, rr = Math.sqrt(Math.random()) * pr;
-      const x = px + Math.cos(a) * rr, z = pz + Math.sin(a) * rr;
-      if (Math.hypot(x, z) < 44 || Math.abs(x) > ARENA - 8 || Math.abs(z) > ARENA - 8) continue;
-      let blocked = false;
-      for (const c of this.coverAll) if (Math.abs(x - c.x) < c.hx + 2 && Math.abs(z - c.z) < c.hz + 2) { blocked = true; break; }
-      if (blocked) continue;
-      const i = placed++;
+    P.forEach(([x, z], i) => {
       this._gPos[i * 2] = x; this._gPos[i * 2 + 1] = z;
-      this._gRot[i] = Math.random() * Math.PI; this._gScale[i] = 0.7 + Math.random() * 0.85;
+      this._gRot[i] = Math.random() * Math.PI * 2;
+      this._gScale[i] = 0.85 + Math.random() * 0.4;
       m4.compose(pv.set(x, 0, z), q.setFromAxisAngle(Y, this._gRot[i]), sv.setScalar(this._gScale[i]));
-      grass.setMatrixAt(i, m4);
-      grass.setColorAt(i, col.setHSL(0.22 + Math.random() * 0.05, 0.34, 0.20 + Math.random() * 0.11));   // olive park green
-    }
-    grass.count = placed;
-    grass.instanceMatrix.needsUpdate = true; if (grass.instanceColor) grass.instanceColor.needsUpdate = true;
-    this.grass = grass; this.scene.add(grass);
+      trunks.setMatrixAt(i, m4); canopy.setMatrixAt(i, m4);
+      canopy.setColorAt(i, col.setHSL(0.24 + Math.random() * 0.05, 0.38, 0.26 + Math.random() * 0.08));
+    });
+    trunks.instanceMatrix.needsUpdate = true; canopy.instanceMatrix.needsUpdate = true;
+    if (canopy.instanceColor) canopy.instanceColor.needsUpdate = true;
+    this.grass = trunks; this._canopy = canopy;   // this.grass keeps every old integration hook alive
+    this.scene.add(trunks); this.scene.add(canopy);
   }
-  // scorch it, crater it, burn it — the blades in the radius go down and stay down until reset
+  // a blast in the radius FELLS the trees — gone until the next match replants them
   flattenGrass(cx, cz, r) {
     if (!this.grass) return;
-    const r2 = r * r; let touched = false;
+    const r2 = (r + 4) * (r + 4); let touched = false;
     for (let i = 0; i < this.grass.count; i++) {
       if (!this._gOn[i]) continue;
       const dx = this._gPos[i * 2] - cx, dz = this._gPos[i * 2 + 1] - cz;
       if (dx * dx + dz * dz > r2) continue;
       this._gOn[i] = 0; touched = true;
       _gm4.makeScale(0.001, 0.001, 0.001); _gm4.setPosition(this._gPos[i * 2], -2, this._gPos[i * 2 + 1]);
-      this.grass.setMatrixAt(i, _gm4);
+      this.grass.setMatrixAt(i, _gm4); this._canopy.setMatrixAt(i, _gm4);
     }
-    if (touched) this.grass.instanceMatrix.needsUpdate = true;
+    if (touched) { this.grass.instanceMatrix.needsUpdate = true; this._canopy.instanceMatrix.needsUpdate = true; }
   }
   _restoreGrass() {
     if (!this.grass) return;
@@ -473,9 +477,9 @@ export class World {
       if (this._gOn[i]) continue;
       this._gOn[i] = 1;
       _gm4.compose(pv.set(this._gPos[i * 2], 0, this._gPos[i * 2 + 1]), q.setFromAxisAngle(Y, this._gRot[i]), sv.setScalar(this._gScale[i]));
-      this.grass.setMatrixAt(i, _gm4);
+      this.grass.setMatrixAt(i, _gm4); this._canopy.setMatrixAt(i, _gm4);
     }
-    this.grass.instanceMatrix.needsUpdate = true;
+    this.grass.instanceMatrix.needsUpdate = true; this._canopy.instanceMatrix.needsUpdate = true;
   }
 
   // The White City tile — one 24-unit district block per repeat: bone plaza + asphalt
