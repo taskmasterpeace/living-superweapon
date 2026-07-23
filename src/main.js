@@ -89,9 +89,13 @@ function beginMatch(c) {
   try {
     const plan = hud.resolveTheaterPlan();
     const cur = game.world.plan;
-    if (plan && (!cur || cur.name !== plan.name || cur.seed !== plan.seed)) {
+    // ⚠ THE THEATER SIGNATURE. This used to compare NAME AND SEED only, so every other thing the
+    // map maker can change — grid size, cell size, population preset, coastline, and every painted
+    // cell — silently failed to reach the match: you authored a city and then fought in the old one.
+    const sig = (p) => p && [p.name, p.seed, p.N, p.cell, p.waterCols, p.popType, p.flagship,
+      p.cells ? p.cells.flat().map(c => c ? c.t + (c.v ?? '') : '-').join('') : ''].join('|');
+    if (plan && sig(cur) !== sig(plan)) {
       game.world.rebuildCity(plan);
-      game.peds.setCity(game.world.ARENA, game.world.waterX);
       // THE VIGILANTISM LAW: the country decides how this street reacts to a superweapon.
       game.peds.setVigilantism((countryOf(plan.country) || {}).vigilantism);
       hud.feed('Theater: ' + plan.name.toUpperCase() + (plan.country ? ' · ' + plan.country : ''), '#7fb0d0');

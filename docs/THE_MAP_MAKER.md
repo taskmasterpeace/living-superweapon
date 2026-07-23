@@ -13,14 +13,33 @@ A city is a grid of **cells**. Each cell is 96 units square — a real city bloc
 **tile**: a residential court, a corporate tower, a temple, a metro station, farmland. There are
 **20 tile types with 2–3 variants each**, and three of them claim more than one cell.
 
-The grid size comes from the city's real population, and you can override it:
+The grid size comes from the city's real population, and you can override every part of it:
 
-| Population type | Grid | Arena |
-|---|---|---|
-| Village · Small Town | 3×3 | 288u |
-| Town · Small City | 4×4 | 384u |
-| City · Large City | 5×5 | 480u |
-| Mega City | 6×6 | 576u |
+| Population type | Grid | Across | Character |
+|---|---|---|---|
+| Village | 2×2 | 192u | a hamlet: farms and dirt tracks |
+| Small Town | 3×3 | 288u | the countryside proper |
+| Town | 4×4 | 384u | the first real streets |
+| Small City · City | 5×5 | 480u | blocks, a hospital, a market |
+| Large City | 6×6 | 576u | a stadium, a rail yard, a metro |
+| Mega City | 8×8 | 768u | an airport, a highway ring, a cross-town arterial |
+
+**Scale used to be a lie.** City and Large City were both 5×5 and a Mega City only 6×6, so the
+three tiers holding 96% of the sheet produced nearly identical maps — measured 17.1, 17.0 and 20.6
+structural cells. The ladder now measures **1.0 / 2.7 / 14.7 / 18.5 / 17.2 / 21.6 / 47.7**: a Mega
+City is genuinely 2.8× a City, and a village is a village.
+
+## SCALE — the generator is not tied to this game
+
+The 96-unit cell is the **unit, not a limit**. Every tile builder is authored in base units and
+never thinks about scale; the plan carries its own `cell` (32–240u) and the whole world follows —
+cells, roads, lamps, cars, the shoreline, the fog. Verified end to end from 32u to 240u: cover boxes
+scale linearly (25×10×8 → 185×75×60 units), fighters spawn inside and stand on the ground, no errors.
+
+Set it with the **CELL − / +** control, or `generatePlan(city, seed, { cell: 160 })`.
+
+That is what makes this usable for a game that isn't at superhero scale: a tight 48u-cell arena
+brawler and a 200u-cell open world come out of the same generator.
 
 ---
 
@@ -48,6 +67,14 @@ Roads are **data on the plan** now:
 The class comes from the **traffic weight** of the two districts an edge sits between — a corporate
 core gets an arterial, open farmland gets a dirt track, and two cells of the *same multi-cell
 structure* get **no road at all**, because a street does not run through an airport.
+
+**Rural places top out at one metalled road.** A village used to come out with thirteen paved
+streets, because a farmhouse counts as `residential` and anything of that weight got asphalt.
+Everything else out there is a dirt track now.
+
+**Nothing is landlocked.** A block with no road on any of its four sides is an unreachable
+building — it was happening on 11 real cities. Every structural cell is guaranteed an approach on
+its busiest side. **Dead ends get a real turning head** rather than a square stub.
 
 Every edge is built as a real ribbon mesh **draped over the terrain heightfield**, so a road dips
 into the metro cut and rides the mining spoil instead of hovering over a hole it can't see. The
@@ -124,9 +151,56 @@ line of text you can move between machines.
 **📍 SET AS THEATER** saves everything. Every match from then on is fought there. It persists
 across restarts.
 
-### 9. Inspect every tile
+### 9. Build it — LIVE 3D
+**🎥 BUILD IT — LIVE 3D** raises the **real city** behind the panel. The panel becomes a left rail,
+the HUD gets out of the way, and every edit rebuilds immediately (a rebuild is 7–10ms).
+
+- **drag** to orbit · **right-drag** or **shift-drag** to pan · **wheel** to zoom
+
+The 2D preview is a schematic and always will be. This is where you find out whether the map is any
+good. Render quality is pinned to maximum while the tool owns the screen.
+
+### 10. Set the scale and the size of place
+**CELL − / +** sets the world scale (32–240u a cell). The **population chips** — VILLAGE, SMALL
+TOWN, TOWN … MEGA CITY — regenerate any row of the sheet at that size, which also flips the rural
+switch. That is how you reach the countryside at all: the sheet contains exactly **one Village and
+sixteen Small Towns out of 1,050 cities**, so rural content was effectively unreachable by browsing.
+
+### 11. Read the validation line
+Under the controls the tool reports what it built and what is **wrong** with it: landlocked cells,
+orphaned footprint refs, holes in a footprint, footprints running off the grid, cells missing
+sockets. These are the same assertions the headless sweep runs, so the panel and the test cannot
+disagree. All 1,050 cities × 3 seeds — **3,150 plans, 0 problems**.
+
+### 12. Inspect every tile
 **🧱 PROVING GROUND** builds one map containing every tile type in the game, side by side, in the
 Danger Room. It derives from the tile table itself, so it can never go stale.
+
+---
+
+## THE COUNTRYSIDE
+
+The country is not a city with fewer buildings — it is a **different fight**: open sightlines, low
+cover you vault rather than hide behind, and long runs of nothing.
+
+It was badly broken, and none of it was visible because the sheet has almost no rural rows. What
+was wrong:
+
+- **A village had thirteen paved streets.** A farmhouse counts as `residential`, and anything of
+  that traffic weight got asphalt. Rural now tops out at one metalled road; the rest are dirt tracks.
+- **Apartment towers in a hamlet.** Residential variant 2 is towers-in-the-park. Guarded now, in
+  both the base fill and the placement table.
+- **The fields rendered near-black.** They were written as lit materials; like the lawns, crops are
+  unlit decals — you write the value you want to see.
+- **Streetlights and parked cars stood in ploughed fields.** Both follow the road graph now: a lamp
+  needs a metalled junction, a car parks on a real kerb.
+- **On an even grid there was no village at all.** The "centre cell becomes homes" rule tested for a
+  cell at distance 0 from the middle, which no cell satisfies when the grid is 2×2. The village
+  core, the parish church and the market are explicit placement rows now.
+
+What is there now: strip fields with furrows in a patchwork of crops, **hedgerows** on the sides
+that face open country (the countryside's only chest-high cover), barn + silo + tractor + hay bales,
+orchard rows with a windpump, dry stone walls and a water trough. Ref: `wwa-country.jpeg`.
 
 ---
 
@@ -206,6 +280,10 @@ Rows are **atomic** — a second berth or a second campus is a second row. Rarit
 - The city's real data drives play: crime and safety set police response; the country sets whether
   the army can be called and whether armed civilians will draw on you
 
+- **Live 3D** authoring with an orbit camera, rebuilding on every edit
+- **Scale** the world 32–240u a cell, and regenerate any city at any population tier
+- **Validation** in-panel, using the same assertions as the test sweep
+
 ## LIMITATIONS — what it still can't do
 
 Straight answers, no hedging:
@@ -220,8 +298,6 @@ Straight answers, no hedging:
 - **Roads follow the lattice.** Every edge runs between two cell corners: no curves, no diagonals,
   no roads that ignore the grid.
 - **No drag-paint or rectangle fill.** One cell per click.
-- **The preview is a schematic.** It's truthful about layout, but you have to enter the map to see
-  how it looks.
 - **Region skins are palette-only.** Roof *geometry* doesn't change yet — the `pitch` and `dome`
   columns are authored in the REGIONS table and nothing reads them.
 - **No traffic.** The road graph exists and nothing drives on it yet. That is the next payoff:
@@ -234,6 +310,7 @@ Straight answers, no hedging:
 
 **1. Drive the graph.** Traffic, pedestrians on the pavement, police cruisers that approach along a
 real route, the news helicopter following an arterial. The data is there; nothing reads it yet.
+`roadAt(plan, x, z)` and `junctionAt(plan, r, c)` are the queries to use — do not re-derive a grid.
 
 **2. Roof geometry per region.** `REGIONS[].pitch` and `.dome` are authored and unread. Pitched
 roofs in the Caribbean, domes in the Middle East — for very little code, since the tiles already

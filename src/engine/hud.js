@@ -11,7 +11,7 @@ import { icon, ATTR_ICON, ICON_MEANING } from './icons.js';
 import { writeBroadcast, tapeRows, llmPunchUp, titleCase, money, causeLine, mulberry } from '../data/news.js';
 import { recOf, snapshotTable, rankingTable, recentIncidents, championId, tournamentNo } from '../data/rankings.js';
 import { cityList } from '../data/cities.js';
-import { generatePlan, thresholdPlan, galleryPlan, TILE_INFO, VARIANTS, popLabel, CELL, TILE_FOOT, applyPlanEdits, regionOf, ROAD } from '../data/cityplan.js';
+import { generatePlan, thresholdPlan, galleryPlan, TILE_INFO, VARIANTS, popLabel, CELL, CELL_RANGE, POP_TYPES, TILE_FOOT, applyPlanEdits, regionOf, ROAD } from '../data/cityplan.js';
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
@@ -351,6 +351,23 @@ const CSS = `
   border:1px solid var(--line-2); border-radius:var(--r-2); padding:7px; font-family:var(--f-mono);
   font-size:var(--t-micro); margin-bottom:6px; }
 .lswovl .lylbl{ font-family:var(--f-mono); font-size:var(--t-micro); color:var(--text-5); letter-spacing:.1em; margin-bottom:4px; }
+/* --- dev-tool controls: population preset, cell size, validation --- */
+.lswovl .atdim{ margin-left:auto; color:var(--text-6); }
+.lswovl .atpop{ display:flex; flex-wrap:wrap; gap:3px; margin-bottom:7px; }
+.lswovl .atpop .c3{ font-size:var(--t-micro); padding:2px 6px; }
+.lswovl .atval{ font-family:var(--f-mono); font-size:var(--t-micro); letter-spacing:.05em;
+  border-left:2px solid var(--line-2); padding:4px 0 4px 7px; margin-bottom:8px; }
+.lswovl .atval .vok{ color:var(--text-5); }
+.lswovl .atval .vbad{ color:var(--danger); }
+.lswovl .odone.on{ background:var(--grad-gold); color:var(--on-gold); border-color:var(--gold); }
+/* --- LIVE 3D: the panel becomes a rail over the real city --- */
+#hAtlas.live{ justify-content:flex-start; align-items:flex-start; background:none; pointer-events:none; }
+#hAtlas.live .obox{ width:min(430px,92vw) !important; margin:10px 0 0 10px; max-height:calc(100vh - 20px);
+  overflow-y:auto; pointer-events:auto; background:var(--surface-solid); box-shadow:0 18px 60px rgba(0,0,0,.7); }
+#hAtlas.live .atlist{ display:none; }              /* the city list is not what you need while building */
+#hAtlas.live .atwrap{ display:block; }
+.maplive{ position:fixed; inset:0; z-index:61; cursor:grab; }
+.maplive:active{ cursor:grabbing; }
 /* ---- THE COLD OPEN: the home page as a news hour ---- */
 #title .colddesk{ display:flex; gap:18px; align-items:stretch; max-width:60rem; margin:64px auto 4px; margin-top:max(64px, 0px);
   padding:12px; background:var(--surface); border:1px solid var(--line); border-radius:var(--r-3); }
@@ -1133,7 +1150,7 @@ export class HUD {
     if (t.flagship || t.cityId == null) return thresholdPlan();
     const city = cityList()[t.cityId];
     if (!city) return thresholdPlan();
-    const plan = generatePlan(city, t.seed || 1, { N: t.N, waterCols: t.waterCols });
+    const plan = generatePlan(city, t.seed || 1, { N: t.N, waterCols: t.waterCols, cell: t.cell, popType: t.popType });
     return applyPlanEdits(plan, t.edits);   // hand-painted cells win over the generator
   }
   // --- the map maker's tools -------------------------------------------------------------------
@@ -1141,14 +1158,14 @@ export class HUD {
   // each button has to remember to do. The stack holds the whole edit set (they're tiny) plus the
   // grid and coastline, because resizing the grid is an edit you must be able to take back too.
   _mapEdit(st, fn) {
-    (st.hist || (st.hist = [])).push(JSON.stringify({ e: st.edits, N: st.N, w: st.waterCols, s: st.seed }));
+    (st.hist || (st.hist = [])).push(JSON.stringify({ e: st.edits, N: st.N, w: st.waterCols, s: st.seed, c: st.cell, p: st.popType }));
     if (st.hist.length > 50) st.hist.shift();
     fn();
   }
   _mapUndo(st) {
     if (!st.hist || !st.hist.length) return false;
     const p = JSON.parse(st.hist.pop());
-    st.edits = p.e; st.N = p.N; st.waterCols = p.w; st.seed = p.s;
+    st.edits = p.e; st.N = p.N; st.waterCols = p.w; st.seed = p.s; st.cell = p.c; st.popType = p.p;
     return true;
   }
   // Painting. LOCK freezes whatever the generator put here so rerolls can't touch it — that is how
@@ -1171,6 +1188,126 @@ export class HUD {
   }
   _layouts() { try { return JSON.parse(localStorage.getItem('threshold_layouts_v1') || '{}'); } catch { return {}; } }
   _saveLayouts(o) { try { localStorage.setItem('threshold_layouts_v1', JSON.stringify(o)); } catch {} }
+
+  // ---- LIVE 3D: the map maker builds the REAL city while you author it ------------------------
+  // The 2D preview is a schematic and always will be. A city generator you cannot SEE is not a
+  // tool, so LIVE mode raises the actual meshes behind the panel and hands you an orbit camera.
+  // Every edit rebuilds, debounced — the cost of a rebuild is a few milliseconds, so it can be
+  // immediate rather than a "preview" button you have to remember to press.
+  _liveOn(plan) {
+    const g = this.game; if (!g || !g.world) return;
+    this._mapLive = true;
+    this._mapCamState = this._mapCamState || { yaw: Math.PI * 0.25, pitch: 0.86, zoom: 260, x: 0, z: 0 };
+    g.mapCam = this._mapCamState;
+    this._titleWasShown = this.title && this.title.style.display !== 'none';
+    if (this.title) this.title.style.display = 'none';
+    if (this.root) this.root.style.display = 'none';         // radar, feed, kit chips — match furniture
+    g.world.setSim && g.world.setSim(false);
+    g.world.setFogEnabled(false);
+    // AUTHORING WANTS FULL RESOLUTION. The adaptive tier drops the pixel ratio to 0.72 after a
+    // slow frame, and a city rebuild is a slow frame — so the tool came up soft the moment you
+    // used it. Pin quality while the map maker owns the screen; restore whatever it was on exit.
+    this._qWas = g.world.qualityOverride;
+    g.world.qualityOverride = 2;
+    g.world._qTier = 2; g.world._applyQuality && g.world._applyQuality();
+    this.atlasEl.classList.add('live');
+    this._liveRebuild(plan, true);
+    this._bindLiveInput();
+  }
+  _liveOff() {
+    const g = this.game;
+    this._mapLive = false;
+    if (g) g.mapCam = null;
+    if (g && g.world) {
+      g.world.setFogEnabled(true);
+      g.world.qualityOverride = this._qWas === undefined ? null : this._qWas;
+      if (g.world.qualityOverride != null) { g.world._qTier = g.world.qualityOverride; g.world._applyQuality && g.world._applyQuality(); }
+    }
+    this.atlasEl.classList.remove('live');
+    if (this.root) this.root.style.display = '';
+    if (this._titleWasShown && this.title) this.title.style.display = '';
+    if (this._liveEl) { this._liveEl.remove(); this._liveEl = null; }
+  }
+  _liveRebuild(plan, now) {
+    if (!this._mapLive || !plan || !plan.cells) return;
+    clearTimeout(this._liveT);
+    const go = () => {
+      const g = this.game; if (!g || !g.world) return;
+      const t0 = performance.now();
+      g.world.rebuildCity(plan);
+      g.world.setSim && g.world.setSim(false);
+      g.world.setFogEnabled(false);
+      // frame the whole plan the first time; afterwards keep whatever view you were working in
+      if (this._liveFit !== plan.arena) { this._mapCamState.zoom = plan.arena * 0.85; this._liveFit = plan.arena; }
+      this._liveMs = performance.now() - t0;
+      const st = this.atlasEl.querySelector('#atLiveMs');
+      if (st) st.textContent = `${g.world.cover.length} COVER · ${this._liveMs.toFixed(1)}ms`;
+    };
+    if (now) go(); else this._liveT = setTimeout(go, 90);
+  }
+  // Drag to orbit · right-drag or shift-drag to pan · wheel to zoom. The capture layer sits BEHIND
+  // the panel, so the controls stay clickable while the rest of the screen drives the camera.
+  _bindLiveInput() {
+    if (this._liveEl) return;
+    const el = document.createElement('div');
+    el.className = 'maplive';
+    document.body.appendChild(el);
+    this._liveEl = el;
+    const C = this._mapCamState;
+    let drag = null;
+    // ⚠ setPointerCapture throws if the pointer is already gone (a stray synthetic event, a mouse
+    // released outside the window). Camera drag must never be able to throw into the frame loop.
+    el.onpointerdown = (e) => { drag = { x: e.clientX, y: e.clientY, pan: e.button === 2 || e.shiftKey }; try { el.setPointerCapture(e.pointerId); } catch {} };
+    el.onpointerup = (e) => { drag = null; try { el.releasePointerCapture(e.pointerId); } catch {} };
+    el.oncontextmenu = (e) => e.preventDefault();
+    el.onpointermove = (e) => {
+      if (!drag) return;
+      const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+      drag.x = e.clientX; drag.y = e.clientY;
+      if (drag.pan) {
+        const k = C.zoom / 420, cy = Math.cos(C.yaw), sy = Math.sin(C.yaw);
+        C.x -= (dx * cy - dy * sy) * k; C.z -= (dx * sy + dy * cy) * k;
+      } else { C.yaw -= dx * 0.006; C.pitch = Math.max(0.12, Math.min(1.52, C.pitch + dy * 0.005)); }
+    };
+    el.onwheel = (e) => { e.preventDefault(); C.zoom = Math.max(40, Math.min(1400, C.zoom * (e.deltaY > 0 ? 1.12 : 0.89))); };
+  }
+
+  // ---- VALIDATION: the checks that found the real bugs, run in the tool ------------------------
+  // A dev tool should tell you when it has produced something broken. These are exactly the
+  // assertions the headless sweep runs, so the panel and the test can never disagree.
+  _validatePlan(plan) {
+    const out = [];
+    if (!plan || !plan.cells) return out;
+    const N = plan.N, C = plan.cells;
+    let landlocked = 0, orphan = 0, holes = 0, offgrid = 0, nosock = 0, structural = 0;
+    for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
+      const cell = C[r][c];
+      if (!cell) { out.push({ bad: 1, t: `EMPTY CELL at ${r},${c}` }); continue; }
+      if (!cell.edge || !cell.nb) nosock++;
+      if (cell.ref) {
+        const a = C[cell.ref[0]] && C[cell.ref[0]][cell.ref[1]];
+        if (!a || a.ref || a.t !== cell.t) orphan++;
+        continue;
+      }
+      if (cell.t !== 'water' && cell.t !== 'park' && cell.t !== 'plaza' && cell.t !== 'farmland') structural++;
+      const fh = cell.fh || 1, fw = cell.fw || 1;
+      if (r + fh > N || c + fw > N) offgrid++;
+      else for (let i = 0; i < fh; i++) for (let j = 0; j < fw; j++) {
+        if (!i && !j) continue;
+        const o = C[r + i][c + j];
+        if (!o || !o.ref || o.ref[0] !== r || o.ref[1] !== c) holes++;
+      }
+      if (cell.t === 'water' || !plan.roads) continue;
+      if (!(plan.roads.h[r][c] || plan.roads.h[r + 1][c] || plan.roads.v[r][c] || plan.roads.v[r][c + 1])) landlocked++;
+    }
+    if (landlocked) out.push({ bad: 1, t: `${landlocked} LANDLOCKED — no road on any side` });
+    if (orphan) out.push({ bad: 1, t: `${orphan} ORPHANED footprint cells` });
+    if (holes) out.push({ bad: 1, t: `${holes} HOLES in a footprint` });
+    if (offgrid) out.push({ bad: 1, t: `${offgrid} footprints RUN OFF the grid` });
+    if (nosock) out.push({ bad: 1, t: `${nosock} cells have NO SOCKETS` });
+    out.push({ bad: 0, t: `${structural} structural · ${N * N} cells · ${plan.arena * 2}u across` });
+    return out;
+  }
 
   _drawPlanPreview(cvs, plan) {
     const x = cvs.getContext('2d'); const S = cvs.width;
@@ -1229,7 +1366,8 @@ export class HUD {
     const st = this._atlasSt || (this._atlasSt = {
       q: '', type: 'ALL', sel: this.theater.flagship ? -1 : (this.theater.cityId ?? -1),
       seed: this.theater.seed || 1, paint: 'residential', edits: { ...(this.theater.edits || {}) },
-      N: this.theater.N || 0, waterCols: this.theater.waterCols, hist: [],
+      N: this.theater.N || 0, waterCols: this.theater.waterCols, cell: this.theater.cell || 0,
+      popType: this.theater.popType || null, hist: [],
     });
     const TYPES = ['ALL', 'Military', 'Political', 'Industrial', 'Company', 'Seaport', 'Resort', 'Mining', 'Educational', 'Temple'];
     const render = () => {
@@ -1238,11 +1376,11 @@ export class HUD {
       const shown = L.slice(0, 28);
       const selCity = st.sel >= 0 ? cities[st.sel] : null;
       const plan = st.sel < 0 ? thresholdPlan()
-        : applyPlanEdits(generatePlan(selCity, st.seed, { N: st.N || undefined, waterCols: st.waterCols }), st.edits);
+        : applyPlanEdits(generatePlan(selCity, st.seed, { N: st.N || undefined, waterCols: st.waterCols, cell: st.cell, popType: st.popType }), st.edits);
       this.atlasEl.innerHTML = `<div class="obox" style="width:min(940px,96vw)">
         <div class="rkhead"><div class="n9" style="background:#2a5a78">🗺</div>
           <div class="rt"><b>CITY ATLAS — THEATER SELECT</b><span>the world sheet · ${cities.length} registered cities</span></div>
-          <div class="rkmeta">TILES: ${Object.keys(TILE_INFO).length} TYPES · 2–3 VARIANTS<br/>GRID: 96u CELLS + 22u STREETS</div></div>
+          <div class="rkmeta">TILES: ${Object.keys(TILE_INFO).length} TYPES · 2–3 VARIANTS<br/>CELL ${plan.cell || CELL}u · ${plan.N}×${plan.N} · ${plan.arena * 2}u ACROSS</div></div>
         <div class="atwrap">
           <div class="atlist">
             <input id="atQ" placeholder="QUERY: city or country…" value="${esc(st.q)}">
@@ -1269,6 +1407,13 @@ export class HUD {
                 <span style="margin-left:10px">COAST</span>
                 <button class="atsm" data-step="W-1">−</button><b>${plan.waterCols} COL</b><button class="atsm" data-step="W1">+</button>
               </div>
+              <div class="atstep">
+                <span>CELL</span>
+                <button class="atsm" data-step="C-8">−</button><b>${plan.cell}u</b><button class="atsm" data-step="C8">+</button>
+                <span class="atdim">${plan.arena * 2}u ACROSS · ${(plan.arena * 2 * 0.19).toFixed(0)}m</span>
+              </div>
+              <div class="atpop">${POP_TYPES.map(p => `<span class="c3${plan.popType === p ? ' on' : ''}" data-pop="${esc(p)}">${esc(p.toUpperCase())}</span>`).join('')}</div>
+              <div class="atval">${this._validatePlan(plan).map(v => `<div class="${v.bad ? 'vbad' : 'vok'}">${v.bad ? '⚠' : '✓'} ${esc(v.t)}</div>`).join('')}</div>
               <div class="atrow2">
                 <button class="odone oghost" id="atSeed">⟳ SEED ${st.seed}</button>
                 <button class="odone oghost" id="atUndo" ${st.hist && st.hist.length ? '' : 'disabled'}>↶ UNDO${st.hist && st.hist.length ? ' ' + st.hist.length : ''}</button>
@@ -1277,6 +1422,8 @@ export class HUD {
                 <button class="odone oghost" id="atClr">✕ ${Object.keys(st.edits).length} EDIT${Object.keys(st.edits).length === 1 ? '' : 'S'}</button>
                 <button class="odone oghost" id="atLay">💾 LAYOUTS ${Object.keys(this._layouts()).length}</button>
               </div>
+              <button class="odone${this._mapLive ? ' on' : ''}" id="atLive">${this._mapLive ? '⏹ EXIT LIVE 3D' : '🎥 BUILD IT — LIVE 3D'}</button>
+              ${this._mapLive ? `<div class="atpalhint" id="atLiveMs">building…</div><div class="atpalhint">drag orbit · right-drag or shift-drag pan · wheel zoom</div>` : ''}
               <button class="odone" id="atSet">📍 SET AS THEATER</button>
               <div class="atrow2">
                 <button class="odone oghost" id="atGal">🧱 PROVING GROUND</button>
@@ -1330,21 +1477,33 @@ export class HUD {
         const d = b.dataset.step, k = d[0], dv = +d.slice(1);
         this._mapEdit(st, () => {
           if (k === 'N') st.N = Math.max(2, Math.min(9, (st.N || plan.N) + dv));
+          else if (k === 'C') st.cell = Math.max(CELL_RANGE[0], Math.min(CELL_RANGE[1], (st.cell || plan.cell) + dv));
           else st.waterCols = Math.max(0, Math.min(3, (st.waterCols != null ? st.waterCols : plan.waterCols) + dv));
         });
         render();
       });
+      // POPULATION TYPE is a generator input, not just a label — it sets the grid AND flips the
+      // rural switch, so this is the control that lets you author a hamlet on any row of the sheet.
+      this.atlasEl.querySelectorAll('[data-pop]').forEach(b => b.onclick = () => {
+        this._mapEdit(st, () => { st.popType = b.dataset.pop === (selCity && selCity.popType) ? null : b.dataset.pop; st.N = 0; });
+        render();
+      });
+      $('#atLive').onclick = () => {
+        if (this._mapLive) this._liveOff(); else this._liveOn(plan);
+        render();
+      };
       $('#atLay').onclick = () => this._showLayouts(st, render);
       $('#atSet').onclick = () => {
         this.theater = st.sel < 0 ? { flagship: true, seed: 1 }
-          : { cityId: st.sel, seed: st.seed, edits: { ...st.edits }, N: st.N || 0, waterCols: st.waterCols };
+          : { cityId: st.sel, seed: st.seed, edits: { ...st.edits }, N: st.N || 0, waterCols: st.waterCols, cell: st.cell || 0, popType: st.popType || null };
         try { localStorage.setItem('threshold_theater_v1', JSON.stringify(this.theater)); } catch {}
         this.atlasEl.style.display = 'none';
         const tt = this.title.querySelector('#termTheater'); if (tt) tt.textContent = st.sel < 0 ? 'THE WHITE CITY' : cities[st.sel].name.toUpperCase();
         this.feed('Theater set — ' + (st.sel < 0 ? 'THE WHITE CITY' : cities[st.sel].name.toUpperCase()), '#7fb0d0');
       };
       $('#atGal').onclick = () => { this.theater = { gallery: true }; this.atlasEl.style.display = 'none'; this.onProvingGround && this.onProvingGround(); };
-      $('#atClose').onclick = () => { this.atlasEl.style.display = 'none'; };
+      $('#atClose').onclick = () => { this.atlasEl.style.display = 'none'; this._liveOff(); };
+      if (this._mapLive) this._liveRebuild(plan);      // authoring IS the preview — every edit rebuilds
       // Ctrl+Z anywhere in the atlas — the shortcut people try first
       this.atlasEl.onkeydown = (e) => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); if (this._mapUndo(st)) render(); } };
       this.atlasEl.tabIndex = -1;
@@ -1362,7 +1521,7 @@ export class HUD {
   _showLayouts(st, rerender) {
     const L = this._layouts();
     const cities = cityList();
-    const cur = { cityId: st.sel, seed: st.seed, N: st.N || 0, waterCols: st.waterCols, edits: st.edits };
+    const cur = { cityId: st.sel, seed: st.seed, N: st.N || 0, waterCols: st.waterCols, cell: st.cell || 0, popType: st.popType || null, edits: st.edits };
     const el = this.layoutEl || (this.layoutEl = (() => { const d = document.createElement('div'); d.className = 'lswovl'; d.id = 'hLayouts'; document.body.appendChild(d); return d; })());
     const draw = () => {
       const names = Object.keys(this._layouts());
@@ -1380,7 +1539,7 @@ export class HUD {
       const $ = (s) => el.querySelector(s);
       el.querySelectorAll('[data-load]').forEach(b => b.onclick = () => {
         const o = this._layouts()[b.dataset.load]; if (!o) return;
-        this._mapEdit(st, () => { st.sel = o.cityId; st.seed = o.seed; st.N = o.N || 0; st.waterCols = o.waterCols; st.edits = { ...(o.edits || {}) }; });
+        this._mapEdit(st, () => { st.sel = o.cityId; st.seed = o.seed; st.N = o.N || 0; st.waterCols = o.waterCols; st.cell = o.cell || 0; st.popType = o.popType || null; st.edits = { ...(o.edits || {}) }; });
         el.style.display = 'none'; rerender();
       });
       el.querySelectorAll('[data-del]').forEach(b => b.onclick = () => { const o = this._layouts(); delete o[b.dataset.del]; this._saveLayouts(o); draw(); });
@@ -1394,7 +1553,7 @@ export class HUD {
         try {
           const o = JSON.parse($('#lyJ').value);
           if (o.cityId == null || !o.edits) throw new Error('not a plan');
-          this._mapEdit(st, () => { st.sel = o.cityId; st.seed = o.seed || 1; st.N = o.N || 0; st.waterCols = o.waterCols; st.edits = { ...o.edits }; });
+          this._mapEdit(st, () => { st.sel = o.cityId; st.seed = o.seed || 1; st.N = o.N || 0; st.waterCols = o.waterCols; st.cell = o.cell || 0; st.popType = o.popType || null; st.edits = { ...o.edits }; });
           el.style.display = 'none'; rerender(); this.feed('Plan imported', '#7fb0d0');
         } catch (err) { this.feed('That is not a plan JSON — ' + err.message, '#e05a4a'); }
       };

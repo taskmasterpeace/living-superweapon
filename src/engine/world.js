@@ -191,16 +191,23 @@ export class World {
     // The district: cover blocks are BUILDINGS now — white stone, windowed faces, varied
     // skyline. Same footprints as before (cover balance is tuned), heights re-sculpted.
     this.cover = []; this.coverAll = [];
-    const mkWin = (tex, tint, emissive = '#ffca7a') => new THREE.MeshStandardMaterial({
-      map: tex.map, emissiveMap: tex.glow, emissive, emissiveIntensity: 0.1,
-      color: tint, roughness: 0.82, metalness: 0.05,
-    });
+    // ⚠ `bay` = the world HEIGHT OF ONE TEXTURE TILE, and every facade texture draws a GRID of
+    // windows, so it is 17 units per window ROW — not 17 per tile. Getting this wrong squeezed
+    // four storeys into seventeen units and made every building in the game read as a toy.
+    const mkWin = (tex, tint, emissive = '#ffca7a', bay = 68) => {
+      const m = new THREE.MeshStandardMaterial({
+        map: tex.map, emissiveMap: tex.glow, emissive, emissiveIntensity: 0.1,
+        color: tint, roughness: 0.82, metalness: 0.05,
+      });
+      m.userData.bay = bay;
+      return m;
+    };
     const texC = this._windowTexture('commercial');
     this._winMats = [
-      mkWin(texC, '#e6e0d2'), mkWin(texC, '#d6cfbd'),                       // commercial A/B
-      mkWin(this._windowTexture('residential'), '#e2cfae'),                 // residential
-      mkWin(this._windowTexture('industrial'), '#b8bcc0', '#cfe8ff'),       // industrial (cool glow)
-      mkWin(this._windowTexture('military'), '#8f9472', '#b8ffb0'),         // military (green slits)
+      mkWin(texC, '#e6e0d2', undefined, 68), mkWin(texC, '#d6cfbd', undefined, 68),   // commercial — 4 rows
+      mkWin(this._windowTexture('residential'), '#e2cfae', undefined, 51),            // residential — 3 rows
+      mkWin(this._windowTexture('industrial'), '#b8bcc0', '#cfe8ff', 30),             // industrial — one warehouse bay
+      mkWin(this._windowTexture('military'), '#8f9472', '#b8ffb0', 34),               // military — 2 rows of slits
     ];
     const bridgeMat = new THREE.MeshStandardMaterial({ color: '#c5beb0', roughness: 0.9, metalness: 0.05 });
     // per-district ROOFS — from the sky you see rooftops, not facades; this is what makes
@@ -213,9 +220,10 @@ export class World {
       new THREE.MeshStandardMaterial({ color: '#5c6044', roughness: 0.92, metalness: 0.05 }),  // military olive
     ];
     const roofMat = roofMats[0];
-    // one window bay tile ≈ 17 units — a REAL ~3.2m floor next to the 9.6u (1.8m) heroes
-    const scaleBoxUV = (geo, w, h, d) => {
-      const uv = geo.attributes.uv, B = 17, R = 16;
+    // one window ROW ≈ 17 units — a REAL ~3.2m floor next to the 9.6u (1.8m) heroes. `bay` is the
+    // height of the whole texture TILE, which draws several rows (see the note on mkWin above).
+    const scaleBoxUV = (geo, w, h, d, bay = 68) => {
+      const uv = geo.attributes.uv, B = bay, R = 16;
       const f = [[d / B, h / B], [d / B, h / B], [w / R, d / R], [w / R, d / R], [w / B, h / B], [w / B, h / B]];
       for (let fi = 0; fi < 6; fi++) for (let v = 0; v < 4; v++) {
         const i = fi * 4 + v;
@@ -246,8 +254,8 @@ export class World {
     for (const [x, z, w, h, d, style = 0] of spots) {
       const geo = new THREE.BoxGeometry(w, h, d);
       const isBridge = style === 5;
-      if (!isBridge) scaleBoxUV(geo, w, h, d);
       const win = isBridge ? bridgeMat : this._winMats[Math.min(style, 4)];
+      if (!isBridge) scaleBoxUV(geo, w, h, d, win.userData.bay || 68);
       // ONE material per box (1 draw + 1 shadow draw — material arrays would 6× that);
       // the roof is a child slab that inherits the shatter-sink transform and casts nothing.
       // Only TALL buildings cast shadows — every caster is another pass over the shadow map.
@@ -516,11 +524,19 @@ export class World {
       this.ARENA = plan.arena;
       this._buildGenCity(plan);
     }
+    this._fitFog(plan);
     this.refreshFogBoxes();
     this.resize();
+    // ⚠ ONE NOTIFICATION POINT for everything that is keyed to the old map. Re-gridding the
+    // civilians used to happen only in beginMatch, so a rebuild from the map tool left a crowd
+    // standing in the void outside a smaller arena, and old scorch decals hung in mid-air.
+    if (this.onRebuilt) this.onRebuilt(plan);
   }
   _buildGenCity(plan) {
     const A = plan.arena, N = plan.N;
+    // THE PLAN OWNS THE SCALE. `plan.cell` (default 96) sizes every cell, road, lamp and shore, so
+    // the same generator produces a tight 48u-cell arena or a 200u-cell open world.
+    const K = plan.cell || CELL, S = plan.scale || 1;
     const rng = mulberry((plan.seed * 131 + N * 17) | 0);
     const g = new THREE.Group();
     // ground — same crater-able plane, sized to the plan; the road texture tiles one ring per cell
@@ -532,7 +548,12 @@ export class World {
     const groundGeo = new THREE.PlaneGeometry(A * 2, A * 2, SEG, SEG);
     // THE GROUND CARRIES THE REGION. It is the single biggest surface in frame, so tinting it is
     // what actually makes Kabul stop looking like Oslo — the facades alone were too subtle to read.
-    const gCol = (plan.region && plan.region.ground) || '#b9b1a2';
+    // In the COUNTRY it also carries the countryside: a hamlet standing on pale urban lot-surface
+    // read as a car park with barns on it.
+    const R = plan.region || { ground: '#b9b1a2', green: '#6f9a4e' };
+    const gCol = plan.rural
+      ? '#' + new THREE.Color(R.ground).lerp(new THREE.Color(R.green), 0.45).getHexString()
+      : R.ground;
     const ground = new THREE.Mesh(groundGeo, new THREE.MeshStandardMaterial({ map: tex, roughness: 0.92, metalness: 0.0, color: gCol }));
     ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; g.add(ground);
     this.ground = ground; this.groundGeo = groundGeo;
@@ -551,7 +572,7 @@ export class World {
     walls.castShadow = false; walls.receiveShadow = true; g.add(walls);
     // water column (seaport / resort shores)
     if (plan.water) {
-      this.waterX = A - CELL + 10; this.deepX = A - CELL / 2 - 2;
+      this.waterX = A - plan.waterCols * K + 10 * S; this.deepX = A - (plan.waterCols - 0.5) * K - 2 * S;
       const wTex = this._waterTex || (this._waterTex = (() => {
         const c = document.createElement('canvas'); c.width = 256; c.height = 64;
         const x = c.getContext('2d');
@@ -579,12 +600,18 @@ export class World {
     } else { this.waterX = A + 500; this.deepX = A + 600; }
     // THE TILES — every cell raised by its type builder
     const { treeSpots } = buildTiles(this, g, plan, rng);
-    // streetlights at every interior intersection (2 instanced draws)
+    // STREETLIGHTS FOLLOW THE ROAD GRAPH. They used to be stamped at every interior lattice point
+    // regardless of whether a road was there — which is how a village ended up with lamp posts
+    // standing in the middle of a ploughed field. A lamp needs a METALLED road and a junction.
     const lampSpots = [];
-    for (let k = 1; k < N; k++) for (let j = 1; j < N; j++) lampSpots.push([-A + k * CELL + 6, -A + j * CELL + 6]);
+    for (let k = 1; k < N; k++) for (let j = 1; j < N; j++) {
+      const jn = junctionAt(plan, j, k);
+      if (!jn || jn.deg < 2 || Math.max(jn.n, jn.e, jn.s, jn.w) < 2) continue;   // dirt tracks are unlit
+      lampSpots.push([-A + k * K + 6 * S, -A + j * K + 6 * S]);
+    }
     if (lampSpots.length) {
-      const poleGeo = new THREE.CylinderGeometry(0.35, 0.5, 32, 6); poleGeo.translate(0, 16, 0);
-      const headGeo = new THREE.SphereGeometry(1.15, 8, 6); headGeo.translate(0, 32.8, 0);
+      const poleGeo = new THREE.CylinderGeometry(0.35 * S, 0.5 * S, 32 * S, 6); poleGeo.translate(0, 16 * S, 0);
+      const headGeo = new THREE.SphereGeometry(1.15 * S, 8, 6); headGeo.translate(0, 32.8 * S, 0);
       this._lampMat = this._lampMat || new THREE.MeshStandardMaterial({ color: '#fff2cc', emissive: '#ffca7a', emissiveIntensity: 0.15, roughness: 0.4 });
       const poleMat = new THREE.MeshStandardMaterial({ color: '#4a463c', roughness: 0.7, metalness: 0.4 });
       const poles = new THREE.InstancedMesh(poleGeo, poleMat, lampSpots.length);
@@ -594,17 +621,26 @@ export class World {
       poles.castShadow = false; heads.castShadow = false;
       g.add(poles); g.add(heads);
     }
-    // parked cars at the curbs
+    // PARKED CARS SIT ON REAL ROADS. They used to be scattered on the lattice whether or not a
+    // road was there, so cars were parked in fields and inside buildings. Pick an actual edge from
+    // the graph and park along its kerb — and a hamlet gets a couple of vehicles, not sixteen.
     this.cars = [];
-    const nCars = Math.min(16, N * 3);
+    const edges = [];
+    for (let r = 0; r <= N; r++) for (let c = 0; c < N; c++) if (plan.roads.h[r][c] >= 2) edges.push([true, r, c, plan.roads.h[r][c]]);
+    for (let r = 0; r < N; r++) for (let c = 0; c <= N; c++) if (plan.roads.v[r][c] >= 2) edges.push([false, r, c, plan.roads.v[r][c]]);
+    const nCars = edges.length ? Math.min(plan.rural ? 3 : 18, Math.max(2, Math.round(edges.length * 0.45))) : 0;
     for (let i = 0; i < nCars; i++) {
-      const alongX = rng() < 0.5;
-      const lane = -A + (1 + (rng() * (N - 1)) | 0) * CELL + (rng() < 0.5 ? -13.5 : 13.5);
-      const along = (rng() * 2 - 1) * (A - 30);
-      let x = alongX ? along : lane, z = alongX ? lane : along;
-      if (x > this.waterX - 12) x = this.waterX - 12 - rng() * 60;
+      const [alongX, er, ec, cls] = edges[(rng() * edges.length) | 0];
+      const kerb = (ROAD[cls].width * S) / 2 - 4.5 * S;                       // just inside the gutter
+      const off = (rng() < 0.5 ? -1 : 1) * kerb;
+      const t = 0.18 + rng() * 0.64;                                          // somewhere along the block
+      let x, z;
+      if (alongX) { x = -A + (ec + t) * K; z = -A + er * K + off; }
+      else { x = -A + ec * K + off; z = -A + (er + t) * K; }
+      if (plan.water && x > this.waterX - 12 * S) continue;
       const m = new THREE.Mesh(this._carGeo, this._carPaints[i % this._carPaints.length]);
       m.position.set(x, 0, z); m.rotation.y = alongX ? Math.PI / 2 : 0; m.castShadow = false; m.receiveShadow = true;
+      if (S !== 1) m.scale.setScalar(S);
       g.add(m);
       this.cars.push({ mesh: m, x, z, hp: 30, maxHp: 30, dead: false, paint: this._carPaints[i % this._carPaints.length] });
     }
@@ -847,6 +883,28 @@ export class World {
   shake(a) { this._shake = Math.min(this._shake + a * (this.shakeMult ?? 1), 8); }
   punch(z) { this.frustumTarget = Math.min(this.frustumTarget, this.frustum * z); } // zoom IN briefly
 
+  // ---- THE MAP TOOL CAMERA ---------------------------------------------------------------------
+  // A free orbit/pan/zoom over the plan, for authoring rather than playing. The match camera is a
+  // fixed isometric that eases toward the player; this one takes its direction straight from the
+  // tool so you can get under a bridge or look along a runway. Same orthographic camera — only
+  // `camDir` and the frustum change, so nothing else in the pipeline has to know about it.
+  orbit(cam) {
+    const p = Math.max(0.12, Math.min(1.52, cam.pitch));
+    this.camDir.set(Math.sin(cam.yaw) * Math.cos(p), Math.sin(p), Math.cos(cam.yaw) * Math.cos(p)).normalize();
+    this.camTarget.set(cam.x || 0, 0, cam.z || 0);
+    this.frustum = this.frustumTarget = this._baseFrustum = cam.zoom;
+    const asp = innerWidth / innerHeight;
+    this.camera.left = -this.frustum * asp; this.camera.right = this.frustum * asp;
+    this.camera.top = this.frustum; this.camera.bottom = -this.frustum;
+    this.camera.updateProjectionMatrix();
+    this.camPos.copy(this.camDir).multiplyScalar(this.camDist).add(this.camTarget);
+    this.camera.position.copy(this.camPos);
+    this.camera.lookAt(this.camTarget);
+    const sx = Math.round(this.camTarget.x), sz = Math.round(this.camTarget.z);
+    this.sun.position.set(sx + 120, 200, sz + 80);
+    this.sun.target.position.set(sx, 0, sz);
+  }
+
   follow(target, dt) {
     // target: Vector3 (player world pos). Ease camera focus toward it.
     this.camTarget.x = damp(this.camTarget.x, target.x, 8, dt);
@@ -979,10 +1037,21 @@ export class World {
           gl_FragColor = vec4(col, (1.0 - vis) * uDark);
         }`,
     });
-    const g = new THREE.PlaneGeometry(700, 700);   // covers every plan size (mega city = 576) — built once
+    const g = new THREE.PlaneGeometry(FOG_EXT, FOG_EXT);   // one geometry, SCALED to fit any plan
     this.fog = new THREE.Mesh(g, this.fogMat);
     this.fog.rotation.x = -Math.PI / 2; this.fog.position.y = 0.4; this.fog.renderOrder = 2;
     this.scene.add(this.fog);
+    this._fogExt = FOG_EXT;
+  }
+  // The fog plane and the occupancy grid must COVER THE WHOLE MAP. They were a fixed 700 units,
+  // which was fine while the biggest city was 576 across — an 8×8 grid is 768, and a scaled plan
+  // can be far bigger, so anything past the edge simply had no fog at all.
+  _fitFog(plan) {
+    if (!this.fogMat) return;
+    const need = Math.max(FOG_EXT, (plan ? plan.arena : this.ARENA) * 2 + 140);
+    this._fogExt = need;
+    this.fog.scale.set(need / FOG_EXT, need / FOG_EXT, 1);
+    this.fogMat.uniforms.uOccExt.value = need;
   }
 
   updateFog(px, pz, dx, dz, tint, p2) {
@@ -997,7 +1066,7 @@ export class World {
   // a 40-building city and a 400-building city cost the same to look through.
   refreshFogBoxes() {
     if (!this._occData) return;
-    const D = this._occData, RES = FOG_RES, EXT = FOG_EXT, S = EXT / RES;
+    const D = this._occData, RES = FOG_RES, EXT = this._fogExt || FOG_EXT, S = EXT / RES;
     D.fill(0);
     for (const c of this.cover) {
       if (c.destroyed) continue;
@@ -1109,15 +1178,15 @@ export class World {
   }
   _buildRoadNet(plan, group) {
     if (!plan || !plan.roads) return 0;
-    const A = plan.arena, N = plan.N, RD = plan.roads;
+    const A = plan.arena, N = plan.N, RD = plan.roads, K = plan.cell || CELL, S = plan.scale || 1;
     const byClass = {};
     const add = (cid, geo) => (byClass[cid] || (byClass[cid] = [])).push(geo);
     // one ribbon between two points, subdivided finely enough to follow the ground
     const ribbon = (cid, x0, z0, x1, z1) => {
-      const w = ROAD[cid].width, dx = x1 - x0, dz = z1 - z0, len = Math.hypot(dx, dz);
+      const w = ROAD[cid].width * S, dx = x1 - x0, dz = z1 - z0, len = Math.hypot(dx, dz);
       if (len < 0.5) return;
-      const geo = new THREE.PlaneGeometry(w, len, 2, Math.max(2, Math.round(len / 7)));
-      const uv = geo.attributes.uv, reps = Math.max(1, Math.round(len / 24));
+      const geo = new THREE.PlaneGeometry(w, len, 2, Math.max(2, Math.round(len / (7 * S))));
+      const uv = geo.attributes.uv, reps = Math.max(1, Math.round(len / (24 * S)));
       for (let i = 0; i < uv.count; i++) uv.setY(i, uv.getY(i) * reps);   // tile the section along the run
       geo.rotateX(-Math.PI / 2);
       geo.rotateY(Math.atan2(dx, dz));
@@ -1126,24 +1195,34 @@ export class World {
     };
     for (let r = 0; r <= N; r++) for (let c = 0; c < N; c++) {           // horizontal edges (run along X)
       const cid = RD.h[r][c]; if (!cid) continue;
-      const z = -A + r * CELL;
-      ribbon(cid, -A + c * CELL, z, -A + (c + 1) * CELL, z);
+      const z = -A + r * K;
+      ribbon(cid, -A + c * K, z, -A + (c + 1) * K, z);
     }
     for (let r = 0; r < N; r++) for (let c = 0; c <= N; c++) {           // vertical edges (run along Z)
       const cid = RD.v[r][c]; if (!cid) continue;
-      const x = -A + c * CELL;
-      ribbon(cid, x, -A + r * CELL, x, -A + (r + 1) * CELL);
+      const x = -A + c * K;
+      ribbon(cid, x, -A + r * K, x, -A + (r + 1) * K);
     }
-    // junction patches — a crossing must read as one surface, not two ribbons overlapping
-    let junctions = 0;
+    // junction patches — a crossing must read as one surface, not two ribbons overlapping. A DEAD
+    // END gets a turning head instead: the road has to stop somewhere, and a square stub reads as
+    // an unfinished mesh where a circle reads as a cul-de-sac.
+    let junctions = 0, deadEnds = 0;
     for (let r = 0; r <= N; r++) for (let c = 0; c <= N; c++) {
       const j = junctionAt(plan, r, c);
       if (!j || j.deg === 0) continue;
       junctions++;
-      const cid = Math.max(j.n, j.e, j.s, j.w), w = ROAD[cid].width;
-      const p = new THREE.PlaneGeometry(w, w, 2, 2);
-      p.rotateX(-Math.PI / 2); p.translate(-A + c * CELL, 0, -A + r * CELL);
-      add(cid, p);
+      const cid = Math.max(j.n, j.e, j.s, j.w), w = ROAD[cid].width * S;
+      const px = -A + c * K, pz = -A + r * K;
+      if (j.deg === 1) {
+        deadEnds++;
+        const head = new THREE.CircleGeometry(w * 0.78, 14);
+        head.rotateX(-Math.PI / 2); head.translate(px, 0, pz);
+        add(cid, head);
+      } else {
+        const p = new THREE.PlaneGeometry(w, w, 2, 2);
+        p.rotateX(-Math.PI / 2); p.translate(px, 0, pz);
+        add(cid, p);
+      }
     }
     // DRAPE + merge: one mesh per class, every vertex sitting just above the real ground
     let meshes = 0;
@@ -1159,7 +1238,7 @@ export class World {
       m.receiveShadow = true; m.renderOrder = 1;
       group.add(m); this._roadMeshes.push(m); meshes++;
     }
-    this._roadStats = { classes: meshes, junctions };
+    this._roadStats = { classes: meshes, junctions, deadEnds };
     return meshes;
   }
 

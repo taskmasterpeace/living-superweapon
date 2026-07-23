@@ -130,6 +130,13 @@ export class Game {
     this.peds = new Pedestrians(this.world.scene, this.world.ARENA || 240, this.world.waterX || 188);
     this.news = new NewsCrew(this);  // the KMK 9 field crew — films the fight, records the clips
     this.police = new PoliceSystem(this);   // the city's answer to whoever hurts humans
+    // EVERY city rebuild re-grids what was keyed to the old map — whether it came from a match,
+    // the atlas, or the map maker's live preview. There is exactly one of these for a reason.
+    this.world.onRebuilt = (plan) => {
+      this.peds.setCity(this.world.ARENA, this.world.waterX);
+      this.vfx.clearScorches();
+      if (this.news && this.news.reset) this.news.reset();
+    };
     // the match record the news desk reports from (reset in startMode)
     this.matchT = 0; this.matchLog = [];
     this.cityStats = { civs: 0, cars: 0, blocks: 0, craters: 0 };
@@ -1656,6 +1663,9 @@ export class Game {
     this.pad.update();
     this.audio.sweep();   // kill orphaned sustained sounds (stuck-tone watchdog) — even on title/pause
     if (!this.running) {
+      // THE MAP TOOL owns the camera while it is open — authoring a city is not a paused match,
+      // and `follow` would drag the view back to the player every frame.
+      if (this.mapCam) { this.world.orbit(this.mapCam); this.world.render(); return; }
       this.world.follow(this.player ? _v.copy(this.player.pos).setY(6) : _v.set(0, 6, 0), dt);
       this.world.render(); return;
     }

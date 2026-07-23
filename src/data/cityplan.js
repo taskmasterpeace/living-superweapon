@@ -11,7 +11,12 @@
 import { mulberry } from './news.js';
 import { cultureOf } from './cities.js';
 
-export const CELL = 96;                          // one district cell, matching the ground texture
+// THE BASE CELL. Every tile builder is authored against this: a 96-unit district block, sized so a
+// 9.6u (1.8m) hero fights DOWN through a real city. It is the UNIT, not a hard limit — a plan can
+// carry its own `cell` and the whole world scales with it (see `ctx.S` in citytiles.js), which is
+// what makes this generator usable for a game that isn't at superhero scale.
+export const CELL = 96;
+export const CELL_RANGE = [32, 240];             // what the map maker will let you dial it to
 export const TILE_INFO = {
   residential: { label: 'RESIDENTIAL', c: '#ff9a3a' },
   commercial:  { label: 'COMMERCIAL',  c: '#9fc0ff' },
@@ -46,7 +51,15 @@ export const VARIANTS = { residential: 3, commercial: 3, company: 2, industrial:
 export const TILE_FOOT = { stadium: [2, 2], airport: [2, 3], railyard: [1, 3] };
 export const isRef = (cell) => !!(cell && cell.ref);
 
-const GRID_BY_POP = { 'Village': 3, 'Small Town': 3, 'Town': 4, 'Small City': 4, 'City': 5, 'Large City': 5, 'Mega City': 6 };
+// ⚠ SCALE HAS TO READ. City and Large City were BOTH 5×5 and a Mega City was only 6×6, so the
+// three tiers 96% of the sheet falls into produced almost the same map — measured 17.1 / 17.0 /
+// 20.6 structural cells. The ladder is spread out now, and a Village is finally a hamlet rather
+// than a small downtown.
+export const GRID_BY_POP = { 'Village': 2, 'Small Town': 3, 'Town': 4, 'Small City': 5, 'City': 5, 'Large City': 6, 'Mega City': 8 };
+export const POP_TYPES = ['Village', 'Small Town', 'Town', 'Small City', 'City', 'Large City', 'Mega City'];
+// Where the countryside starts. This is the switch that decides farmland-and-tracks vs blocks-and-
+// streets, so it is named data rather than an inline string comparison in three places.
+const RURAL_POP = { 'Village': 1, 'Small Town': 1 };
 // DENSITY. This used to be a hard 24 to match a fixed-size array in the fog shader, which meant a
 // Mega City (36 cells) threw a third of itself away as empty plaza and came out FEELING EMPTIER
 // than a small city. The fog now uses a coarse occupancy GRID instead of a uniform array, so the
@@ -96,6 +109,14 @@ export const PLACEMENT = [
   { t: 'hospital', score: { ring: 2 } },
   { t: 'market',   minN: 4, score: { center: 1 } },
   { t: 'market',   minN: 6, score: { center: 1, cluster: -1 } },
+  // --- THE COUNTRYSIDE. Rural maps skip every row above (a hamlet has no corporate core and no
+  // hospital district), so the few things a village DOES have are declared here explicitly.
+  // ⚠ Without these a 2×2 village generated as pure farmland with nobody living in it: the old
+  // "centre cell becomes homes" rule tested `edge === 0`, which no cell satisfies on an even grid.
+  { t: 'residential', rural: 'only', score: { center: 3 } },                    // the village core
+  { t: 'residential', rural: 'only', minN: 3, chance: 0.7, score: { center: 2, cluster: 1.5 } },
+  { t: 'temple',      rural: 'only', minN: 3, chance: 0.55, score: { center: 1 } },   // the parish church
+  { t: 'market',      rural: 'only', minN: 4, chance: 0.6, score: { center: 2 } },    // market day
   // --- greenbelt
   { t: 'park',     score: { ring: 1, jitter: 1 } },
   { t: 'park',     minN: 5, score: { ring: 1, jitter: 1 } },
@@ -153,7 +174,7 @@ const WEIGHT = {
   mining: 1, resort: 2, park: 1, plaza: 1, farmland: 0, water: 0,
 };
 function buildRoads(plan, rng) {
-  const N = plan.N, C = plan.cells;
+  const N = plan.N, C = plan.cells, rural = !!plan.rural;
   const h = [], v = [];
   const tAt = (r, c) => (C[r] && C[r][c]) ? C[r][c].t : null;
   const wAt = (r, c) => { const t = tAt(r, c); return t == null ? -1 : (WEIGHT[t] ?? 2); };
@@ -176,6 +197,10 @@ function buildRoads(plan, rng) {
     const w = Math.max(wa, wb);
     if (w <= 0) return R_NONE;                        // open country either side — no made road
     if (w === 1) return R_TRACK;                      // a dirt track serves the quiet edge
+    // ⚠ THE COUNTRYSIDE IS NOT A CITY WITH FEWER HOUSES. A village used to come out with 13 paved
+    // streets because a farmhouse counts as `residential` (weight 2) and any weight ≥2 got asphalt.
+    // Rural places top out at ONE metalled road; everything else is a dirt track.
+    if (rural) return w >= 4 ? R_STREET : R_TRACK;
     if (w >= 5) return R_ARTERIAL;
     return R_STREET;
   };
@@ -191,12 +216,38 @@ function buildRoads(plan, rng) {
   }
   // ONE RING ROAD: promote a full row and column to highway on cities big enough to warrant it.
   // This is the linear structure the concentric-square placement never had.
-  if (N >= 5) {
+  if (N >= 5 && !rural) {
     const hr = 1 + ((rng() * (N - 1)) | 0);
     for (let c = 0; c < N; c++) if (h[hr][c] !== R_NONE) h[hr][c] = R_HIGHWAY;
     plan.highwayRow = hr;
+    // a big city gets a cross street too, so the network has a spine both ways instead of one
+    // stripe and a grid of side roads
+    if (N >= 7) {
+      const vc = 2 + ((rng() * (N - 3)) | 0);
+      for (let r = 0; r < N; r++) if (v[r][vc] !== R_NONE) v[r][vc] = R_ARTERIAL;
+      plan.arterialCol = vc;
+    }
   }
   plan.roads = { h, v };
+  // ⚠ NOTHING IS LANDLOCKED. A block with no road on any of its four sides is an unreachable
+  // building — measured on 11 real cities before this. Give every structural cell at least one
+  // approach, choosing the side whose neighbour is the busiest thing next door.
+  let rescued = 0;
+  for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
+    const cell = C[r][c];
+    if (!cell || cell.ref || cell.t === 'water') continue;
+    if (h[r][c] || h[r + 1][c] || v[r][c] || v[r][c + 1]) continue;
+    const sides = [
+      { w: wAt(r - 1, c), put: (k) => h[r][c] = k },
+      { w: wAt(r + 1, c), put: (k) => h[r + 1][c] = k },
+      { w: wAt(r, c - 1), put: (k) => v[r][c] = k },
+      { w: wAt(r, c + 1), put: (k) => v[r][c + 1] = k },
+    ];
+    sides.sort((a, b) => b.w - a.w);
+    sides[0].put(rural ? R_TRACK : R_STREET);
+    rescued++;
+  }
+  plan.rescuedCells = rescued;
   return plan;
 }
 
@@ -204,23 +255,23 @@ function buildRoads(plan, rng) {
 // (pedestrians, traffic, police approach, the news chopper) should use instead of re-deriving a grid.
 export function roadAt(plan, x, z) {
   if (!plan || !plan.roads) return 0;
-  const N = plan.N, A = plan.arena, R = plan.roads;
-  const fx = (x + A) / CELL, fz = (z + A) / CELL;          // lattice coords
+  const N = plan.N, A = plan.arena, R = plan.roads, K = plan.cell || CELL, S = plan.scale || 1;
+  const fx = (x + A) / K, fz = (z + A) / K;               // lattice coords
   const nr = Math.round(fz), nc = Math.round(fx);
   let best = 0;
   // horizontal edge near this z line
   if (nr >= 0 && nr <= N) {
     const c = Math.floor(fx);
     if (c >= 0 && c < N && R.h[nr] && R.h[nr][c]) {
-      const dist = Math.abs(z - (-A + nr * CELL));
-      if (dist <= ROAD[R.h[nr][c]].width / 2) best = Math.max(best, R.h[nr][c]);
+      const dist = Math.abs(z - (-A + nr * K));
+      if (dist <= ROAD[R.h[nr][c]].width * S / 2) best = Math.max(best, R.h[nr][c]);
     }
   }
   if (nc >= 0 && nc <= N) {
     const r = Math.floor(fz);
     if (r >= 0 && r < N && R.v[r] && R.v[r][nc]) {
-      const dist = Math.abs(x - (-A + nc * CELL));
-      if (dist <= ROAD[R.v[r][nc]].width / 2) best = Math.max(best, R.v[r][nc]);
+      const dist = Math.abs(x - (-A + nc * K));
+      if (dist <= ROAD[R.v[r][nc]].width * S / 2) best = Math.max(best, R.v[r][nc]);
     }
   }
   return best;
@@ -247,20 +298,23 @@ export function popLabel(popType, pop) {
 // the grid, move the coastline, and pin a structure without the sheet having to know about it.
 export function generatePlan(city, seed = 1, opts = {}) {
   const rng = mulberry((seed * 7919 + city.pop % 997 + city.name.length * 31) | 0);
-  const N = Math.max(2, Math.min(9, opts.N || GRID_BY_POP[city.popType] || 5));
+  const popType = opts.popType || city.popType;
+  const N = Math.max(2, Math.min(9, opts.N || GRID_BY_POP[popType] || 5));
+  const cell = Math.max(CELL_RANGE[0], Math.min(CELL_RANGE[1], opts.cell || CELL));
   const types = city.types.length ? city.types.map(t => t.toLowerCase()) : ['company', 'industrial'];
   const wantWater = types.includes('seaport') || types.includes('resort');
   const waterCols = Math.max(0, Math.min(N - 1, opts.waterCols != null ? opts.waterCols : (wantWater ? 1 : 0)));
   const plan = {
-    name: city.name, country: city.country, popType: city.popType, popLabel: popLabel(city.popType, city.pop),
-    types: city.types, crime: city.crime, safety: city.safety, seed, N, arena: N * CELL / 2,
+    name: city.name, country: city.country, popType, popLabel: popLabel(popType, city.pop),
+    types: city.types, crime: city.crime, safety: city.safety, seed, N,
+    cell, scale: cell / CELL, arena: N * cell / 2,
     water: waterCols > 0, waterCols, flagship: false,
     culture: cultureOf(city), region: regionOf(cultureOf(city)),
     cells: Array.from({ length: N }, () => Array(N).fill(null)),
   };
   const water = plan.water;
   const C = plan.cells, mid = (N - 1) / 2;
-  const rural = N <= 3 || city.popType === 'Village' || city.popType === 'Small Town';
+  const rural = RURAL_POP[popType] || N <= 3;
   const freeAt = (r, c) => r >= 0 && r < N && c >= 0 && c < N && C[r][c] == null;
   for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
     if (c >= N - waterCols) C[r][c] = { t: 'water' };                  // the east shore
@@ -286,7 +340,11 @@ export function generatePlan(city, seed = 1, opts = {}) {
   // STAMP a footprint: the anchor carries the structure and its size, the covered cells carry a
   // ref. Nothing downstream has to guess — roads, districts and the editor all read the same shape.
   const stamp = (r, c, fh, fw, t, landmark) => {
-    const v = (rng() * (VARIANTS[t] || 1)) | 0;
+    let v = (rng() * (VARIANTS[t] || 1)) | 0;
+    // ⚠ residential variant 2 is TOWERS-IN-THE-PARK. The base fill already guards against putting
+    // apartment blocks in a hamlet; the PLACEMENT table has to guard too, or the village CORE —
+    // the one cell that is definitely houses — comes out as a tower.
+    if (rural && t === 'residential' && v === 2) v = rng() < 0.5 ? 0 : 1;
     C[r][c] = { t, v, fh, fw, landmark: !!landmark };
     for (let i = 0; i < fh; i++) for (let j = 0; j < fw; j++) {
       if (i || j) C[r + i][c + j] = { t, v, ref: [r, c] };
@@ -351,9 +409,17 @@ export function generatePlan(city, seed = 1, opts = {}) {
     // blocks, so a hamlet in the hills read as a downtown with fewer buildings. They now fill
     // with FARMLAND — a hard core of homes at the centre, open country everywhere else.
     const t = rural
-      ? (edge(r, c) === 0 ? 'residential' : rng() < 0.78 ? 'farmland' : 'residential')
+      ? (edge(r, c) === 0 ? 'residential' : rng() < 0.82 ? 'farmland' : 'residential')
       : (edge(r, c) <= mid * 0.55 ? 'commercial' : rng() < 0.62 ? 'residential' : 'commercial');
-    C[r][c] = { t, v: (rng() * (VARIANTS[t] || 1)) | 0 };
+    // ⚠ residential variant 2 is TOWERS-IN-THE-PARK — four-storey walk-ups. A village was getting
+    // apartment blocks, which is the single loudest thing wrong with the countryside.
+    let v = (rng() * (VARIANTS[t] || 1)) | 0;
+    if (rural && t === 'residential' && v === 2) v = rng() < 0.5 ? 0 : 1;
+    // ⚠ Farmland variants are a PATCHWORK, not a dice roll. Rolled independently, three of four
+    // fields in a hamlet came up as orchards and the whole village was one crop. Offsetting by
+    // position guarantees adjacent fields differ — which is also what real farmland looks like.
+    if (t === 'farmland') v = (r * 2 + c + ((rng() * 3) | 0)) % VARIANTS.farmland;
+    C[r][c] = { t, v };
   }
   plan.rural = rural;
   // --- structural budget: farthest-from-center overflow becomes plaza (open ground) ---
@@ -490,6 +556,13 @@ export function galleryPlan() {
     plan.cells[r][c] = { t, v: Math.floor(i / order.length) % (VARIANTS[t] || 1) };
     i++;
   }
+  // ⚠ THE BENCH HAS TO BE A REAL PLAN. This used to hand back bare cells with no sockets and no
+  // road graph, so every socket-aware tile (temple precinct, military perimeter, the bodega, farm
+  // hedgerows) behaved differently here than in a real city — and the first tile to read
+  // `cell.edge` without a guard threw outright. If the proving ground isn't built the same way a
+  // city is, it is not proving anything.
+  computeSockets(plan);
+  buildRoads(plan, mulberry(1));
   return plan;
 }
 
@@ -504,9 +577,9 @@ export function districtNameAt(plan, x, z) {
     if (z > 60) return 'THE SOUTHSIDE';
     return 'MIDTOWN PLAZA';
   }
-  const N = plan.N, A = plan.arena;
-  const c = Math.max(0, Math.min(N - 1, Math.floor((x + A) / CELL)));
-  const r = Math.max(0, Math.min(N - 1, Math.floor((z + A) / CELL)));
+  const N = plan.N, A = plan.arena, K = plan.cell || CELL;
+  const c = Math.max(0, Math.min(N - 1, Math.floor((x + A) / K)));
+  const r = Math.max(0, Math.min(N - 1, Math.floor((z + A) / K)));
   const cell = plan.cells[r] && plan.cells[r][c];
   if (!cell) return 'THE OUTSKIRTS';
   if (cell.t === 'water') return 'THE WATERFRONT';

@@ -415,6 +415,70 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   run before it, so a plaza'd cell kept the neighbour data of the tower it used to be.
   Refs: `wwa-mapmaker.jpeg`, `wwa-airport.jpeg`, `wwa-region-kabul.jpeg`, `wwa-region-tokyo.jpeg`.
 
+## THE MAP MAKER AS A DEV TOOL (2026-07-23) — scale, the countryside, live 3D
+- **THE SCALE CONTRACT** (`plan.cell`, default `CELL` 96; `plan.scale = cell/96`; `CELL_RANGE`
+  32–240). A tile builder is authored in BASE units and never thinks about scale. `ctx.S` is applied
+  at the FIVE helpers every tile goes through (`mesh` · `tower` · `reg` · `disc`/`slab`), by scaling
+  the mesh and its OFFSET FROM THE CELL CENTRE (`sx`/`sz` in citytiles.js). Nothing reparents, so
+  cover boxes stay in world space and the ragdoll, `resetTerrain`, occlusion and physics are
+  untouched. ⚠ `reg()` takes position + extent from the MESH (already scaled) — the x/z args are
+  the caller's base-unit intent and are wrong at any scale but 1. ⚠ treeSpots, `_pendingCuts` and
+  `_pendingPits` are pushed as raw world coords, so `buildTiles` converts whatever a tile appended
+  (snapshot lengths before, transform after). Verified 32u→240u: cover boxes scale linearly
+  (25×10×8 → 185×75×60), fighters spawn inside and stand on the ground, 0 errors.
+- **THE FOG FITS THE MAP** (`world._fitFog`). The fog plane and `uOccExt` were a fixed 700u, fine
+  while the biggest city was 576 across — an 8×8 grid is 768 and a scaled plan can be far bigger,
+  so anything past the edge had NO FOG AT ALL. Now `max(700, arena*2 + 140)`, mesh scaled to match.
+- **⚠ THE WINDOW-BAY BUG** (`scaleBoxUV(geo,w,h,d,bay)` + `mat.userData.bay`). `B = 17` treated the
+  whole facade texture as ONE 17u floor, but every window texture draws a GRID (commercial 4×4,
+  residential 3×3, military 2×3) — so every storey in the game was ~0.8m tall and a one-storey
+  farmhouse rendered as a four-storey apartment block. Each window material now declares the world
+  height of its tile: commercial 68 · residential 51 · military 34 · industrial 30. Both copies of
+  `scaleBoxUV` (citytiles + the flagship's local one in `_buildArena`) take it.
+  ⚠ Consequence worth knowing: at 1:1 the tallest tower (150u) is now ~9 storeys / 28m. If you want
+  real skyscrapers, raise the TOWER HEIGHTS — don't re-break the bay.
+- **SCALE READS ACROSS THE POP LADDER.** City and Large City were both 5×5 and Mega City only 6×6,
+  so the three tiers holding 96% of the sheet produced nearly identical maps (measured 17.1 / 17.0 /
+  20.6 structural cells). `GRID_BY_POP` is now Village 2 · Small Town 3 · Town 4 · Small City 5 ·
+  City 5 · Large City 6 · Mega City 8 → measured 1.0 / 2.7 / 14.7 / 18.5 / 17.2 / 21.6 / **47.7**.
+- **THE COUNTRYSIDE IS A DIFFERENT FIGHT, not a city with fewer buildings** (`RURAL_POP`,
+  `plan.rural`). What was wrong and is fixed: a village had **13 paved streets** (a farmhouse is
+  `residential`, weight 2, and anything ≥2 got asphalt — rural now tops out at ONE metalled road,
+  everything else is a dirt track) · **apartment towers in a hamlet** (residential variant 2 is
+  towers-in-the-park; guarded in BOTH the base fill and `stamp()`) · **fields rendered near-black**
+  (they were lit MeshStandard; crops are UNLIT decals now, like the lawns) · **streetlights and
+  parked cars standing in ploughed fields** (both follow the ROAD GRAPH now — a lamp needs a
+  metalled junction, a car parks on a real edge's kerb) · **no village at all on an even grid**
+  (the old "centre cell becomes homes" rule tested `edge === 0`, which no cell satisfies when N is
+  even — the village core, church and market are explicit `rural:'only'` PLACEMENT rows now).
+  Farmland is strip fields with furrows, HEDGEROWS on the socket-open sides (the country's only
+  chest-high cover), barn+silo+tractor+hay, orchard rows with a windpump, dry stone walls.
+  ⚠ Farmland variants are a PATCHWORK keyed on position — rolled independently, three of four
+  fields in a hamlet came up identical. Ref: `wwa-country.jpeg`.
+- **NOTHING IS LANDLOCKED** (`buildRoads` → `plan.rescuedCells`): a structural cell with no road on
+  any of its four sides is an unreachable building. Measured on 11 real cities before this; every
+  such cell now gets an approach on its busiest side. Dead ends also get a real turning head
+  (`junctionAt(...).deg === 1` → circle, not a square stub).
+- **LIVE 3D** (`hud._liveOn/_liveOff/_liveRebuild` + `world.orbit` + `game.mapCam`): the map maker
+  raises the REAL city behind the panel and hands you drag-orbit / shift-drag-pan / wheel-zoom.
+  Every edit rebuilds, debounced ~90ms (a rebuild is 7–10ms). The panel becomes a left rail
+  (`#hAtlas.live`), HUD chrome hides, and **quality is pinned to tier 2** — a rebuild is a slow
+  frame, so the adaptive tier used to drop the tool to 0.72 pixel ratio the moment you used it.
+  ⚠ `game.update`'s `!running` branch honours `mapCam` INSTEAD of `follow()`, or the view snaps back
+  to the player every frame. ⚠ `setPointerCapture` throws if the pointer is already gone — always
+  try/catch, camera drag must never throw into the frame loop.
+- **THE TOOL VALIDATES** (`hud._validatePlan`, shown in the panel): landlocked cells, orphaned
+  footprint refs, holes in a footprint, footprints running off the grid, cells with no sockets.
+  These are the SAME assertions the headless sweep runs, so the panel and the test cannot disagree.
+  Verified 3,150 plans (1,050 cities × 3 seeds): **0 problems**.
+- **POP-TYPE OVERRIDE** is the control that makes the countryside reachable at all — the sheet has
+  exactly **1 Village and 16 Small Towns out of 1,050**, so rural content was effectively dead.
+  `generatePlan(city, seed, {popType})` builds any row of the sheet at any size.
+- ⚠ **`galleryPlan` must be a REAL plan.** It handed back bare cells with no sockets and no road
+  graph, so socket-aware tiles behaved differently on the bench than in a city — and the first tile
+  to read `cell.edge` without a guard threw and took the whole build down. It calls
+  `computeSockets` + `buildRoads` now, and builders still guard (`cell && cell.edge && cell.nb`).
+
 ## THE COUNTRY SHEET — the state behind the city (2026-07-23)
 - `data/countries.js` — **168 nations, 25 fields**, baked from Robert's Country Master Sheet. The
   cities sheet says WHERE a fight happens; this says **what the state is like when it does**.

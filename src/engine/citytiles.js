@@ -15,9 +15,14 @@ import { CELL, regionOf } from '../data/cityplan.js';
 const _c = new THREE.Color();
 const tint = (base, toward, k) => '#' + _c.set(base).lerp(new THREE.Color(toward), k).getHexString();
 
-// one window bay ≈ 17 units (a real ~3.2m floor at hero scale) — facades stay true on any box
-function scaleBoxUV(geo, w, h, d) {
-  const uv = geo.attributes.uv, B = 17, R = 16;
+// ⚠ ONE WINDOW ROW = ONE FLOOR ≈ 17 UNITS (a real ~3.2m storey at hero scale). The divisor is the
+// height of the WHOLE TEXTURE TILE, not of one window — and every facade texture draws a GRID of
+// windows (commercial 4×4, residential 3×3, military 2×3). Dividing by 17 therefore squeezed four
+// floors into seventeen units: every storey in the game was ~0.8m tall, which is why a one-storey
+// farmhouse rendered as a four-storey apartment block and towers read as toys. Each window
+// material now declares the world height of its tile (`userData.bay`) and that is what we divide by.
+function scaleBoxUV(geo, w, h, d, bay = 17) {
+  const uv = geo.attributes.uv, B = bay, R = 16;
   const f = [[d / B, h / B], [d / B, h / B], [w / R, d / R], [w / R, d / R], [w / B, h / B], [w / B, h / B]];
   for (let fi = 0; fi < 6; fi++) for (let v = 0; v < 4; v++) { const i = fi * 4 + v; uv.setXY(i, uv.getX(i) * f[fi][0], uv.getY(i) * f[fi][1]); }
   uv.needsUpdate = true;
@@ -50,9 +55,16 @@ function mats(world, region) {
     trainSide: S('#c2c8d0', { r: 0.45, m: 0.55 }), trainTrim: S('#2a5a8a', { r: 0.6, m: 0.3 }),
     metroSign: S('#d8d2c4', { r: 0.7, e: '#f5b21a', ei: 0.55 }),
     // --- THE COUNTRY ---
+    // ⚠ crops are UNLIT decals (B, not S). Written as lit standard materials they rendered
+    // near-black and every field read as a hole cut in the ground. Write the value you want to SEE.
+    cropA: B(tint('#9aa956', R.green, 0.35), { o: 1 }), cropB: B(tint('#c2b45e', R.green, 0.2), { o: 1 }),
+    cropC: B(tint('#7f9a4c', R.green, 0.45), { o: 1 }), fallow: B(tint('#a4855c', R.ground, 0.45), { o: 1 }),
+    furrow: B('#6d5a3c', { o: 0.35 }), dirtYard: B(tint('#b09872', R.ground, 0.5), { o: 0.95 }),
+    hedge: S(tint('#4e7038', R.green, 0.5), { r: 1, fs: true }), hay: S('#cbb267', { r: 1 }),
     fieldA: S('#7d7c44', { r: 1 }), fieldB: S('#6b5a38', { r: 1 }),
     barn: S('#8a3a2e', { r: 0.95 }), barnRoof: S('#4c4a46', { r: 0.9 }),
-    silo: S('#c8c2b2', { r: 0.7, m: 0.2 }), stoneWall: S('#a8a294', { r: 0.95 }),
+    silo: S('#c8c2b2', { r: 0.7, m: 0.2 }), stoneWall: S(tint('#a8a294', R.wall, 0.4), { r: 0.95 }),
+    tractorBody: S('#2f6b34', { r: 0.6, m: 0.3 }), tyre: S('#26262a', { r: 0.95 }),
     // --- THE FIELD + THE YARDS (multi-cell landmarks) ---
     tarmac: S('#63615c', { r: 0.98 }), runwayLine: B('#f0ead8', { o: 0.9 }),
     ballast: S('#7d766a', { r: 1 }), rail: S('#6a6a70', { r: 0.5, m: 0.6 }),
@@ -62,41 +74,64 @@ function mats(world, region) {
 }
 
 // ---------- shared builders ----------
+// ⚠ THE SCALE CONTRACT. A tile builder is written in BASE units — the 96-unit cell the White City
+// proved out — and never thinks about scale. `ctx.S` (= plan.cell / 96) is applied HERE, at the
+// five helpers every tile goes through, by scaling each mesh and its OFFSET FROM THE CELL CENTRE.
+// Nothing reparents, so cover boxes stay in world space and the ragdoll, resetTerrain, occlusion
+// and physics all keep working untouched. Set plan.cell and the whole city changes size.
+const sx = (ctx, x) => ctx.cx + (x - ctx.cx) * ctx.S;      // world X from a base-unit X
+const sz = (ctx, z) => ctx.cz + (z - ctx.cz) * ctx.S;      // world Z from a base-unit Z
 function mesh(ctx, geo, mat, x, y, z, o = {}) {
   const m = new THREE.Mesh(geo, mat);
-  m.position.set(x, y, z);
+  m.position.set(sx(ctx, x), y * ctx.S, sz(ctx, z));
+  if (ctx.S !== 1) m.scale.setScalar(ctx.S);
   if (o.ry) m.rotation.y = o.ry; if (o.rx) m.rotation.x = o.rx; if (o.rz) m.rotation.z = o.rz;
   m.castShadow = !!o.cast; m.receiveShadow = o.recv !== false;
   ctx.g.add(m); return m;
 }
 // a structural, destructible building with a windowed facade + roof slab + crack overlay
 function tower(ctx, x, z, w, h, d, winMat, roofMat, o = {}) {
-  const world = ctx.world;
-  const geo = new THREE.BoxGeometry(w, h, d); scaleBoxUV(geo, w, h, d);
+  const world = ctx.world, S = ctx.S;
+  const geo = new THREE.BoxGeometry(w, h, d); scaleBoxUV(geo, w, h, d, (winMat && winMat.userData.bay) || 17);
   const m = new THREE.Mesh(geo, winMat);
-  m.position.set(x, h / 2, z); m.castShadow = h >= 44; m.receiveShadow = true;
+  const wx = sx(ctx, x), wz = sz(ctx, z), W = w * S, H = h * S, D = d * S;
+  m.position.set(wx, H / 2, wz); m.castShadow = H >= 44; m.receiveShadow = true;
+  if (S !== 1) m.scale.setScalar(S);
   ctx.g.add(m);
   if (roofMat) { const roof = new THREE.Mesh(new THREE.PlaneGeometry(w, d), roofMat); roof.rotation.x = -Math.PI / 2; roof.position.y = h / 2 + 0.05; roof.receiveShadow = true; m.add(roof); }
   const crack = new THREE.Mesh(new THREE.BoxGeometry(w * 1.015, h * 1.006, d * 1.015), new THREE.MeshBasicMaterial({ map: world._crackTex, transparent: true, opacity: 0, depthWrite: false }));
-  crack.position.copy(m.position); crack.visible = false; ctx.g.add(crack);
-  const hp = Math.round(70 + w * h * d * 0.0075);
-  const co = { mesh: m, crack, x, z, r: Math.max(w, d) * 0.6, h, hx: w / 2, hz: d / 2, top: h, hp, maxHp: hp, y0: h / 2, w, d, destroyed: false };
+  crack.position.copy(m.position); crack.scale.copy(m.scale); crack.visible = false; ctx.g.add(crack);
+  const hp = Math.round(70 + W * H * D * 0.0075);
+  const co = { mesh: m, crack, x: wx, z: wz, r: Math.max(W, D) * 0.6, h: H, hx: W / 2, hz: D / 2, top: H, hp, maxHp: hp, y0: H / 2, w: W, d: D, destroyed: false };
   world.cover.push(co); world.coverAll.push(co);
   return m;
 }
 // Register an already-built mesh as destructible cover. tower() does this for buildings; this is
 // for the pieces that aren't box towers (metro platforms, train cars, barns, stone walls). Must
 // push to BOTH lists — `cover` is the live set, `coverAll` is what resetTerrain restores from.
+// ⚠ Position and extent come from the MESH, which mesh() has already scaled — the x/z arguments
+// are the caller's base-unit intent and would be wrong at any scale but 1.
 function reg(world, m, x, z, hx, hz, top, hp) {
-  const co = { mesh: m, crack: null, x, z, r: Math.max(hx, hz), h: top, hx, hz, top,
+  const S = m.scale.x || 1;
+  hx *= S; hz *= S; top *= S;
+  const co = { mesh: m, crack: null, x: m.position.x, z: m.position.z, r: Math.max(hx, hz), h: top, hx, hz, top,
                hp, maxHp: hp, y0: m.position.y, w: hx * 2, d: hz * 2, destroyed: false };
   world.cover.push(co); world.coverAll.push(co);
   return co;
 }
 const disc = (ctx, mat, x, z, r, y = 0.1, seg = 26) => { const p = mesh(ctx, new THREE.CircleGeometry(r, seg), mat, x, y, z, { recv: false }); p.rotation.x = -Math.PI / 2; return p; };
 // a box with the facade UVs already scaled — for the structures that aren't tower()s
-const boxUV = (w, h, d) => { const g = new THREE.BoxGeometry(w, h, d); scaleBoxUV(g, w, h, d); return g; };
+const boxUV = (w, h, d, mat) => { const g = new THREE.BoxGeometry(w, h, d); scaleBoxUV(g, w, h, d, (mat && mat.userData && mat.userData.bay) || 17); return g; };
 const slab = (ctx, mat, x, z, w, d, y = 0.14) => { const p = mesh(ctx, new THREE.PlaneGeometry(w, d), mat, x, y, z, { recv: false }); p.rotation.x = -Math.PI / 2; return p; };
+// a parked tractor — the one piece of machinery that tells you which century the farm is in
+function tractor(ctx, x, z, yaw) {
+  const M2 = ctx.mats;
+  mesh(ctx, new THREE.BoxGeometry(11, 4, 5), M2.tractorBody, x, 3.4, z, { ry: yaw, cast: true });
+  mesh(ctx, new THREE.BoxGeometry(4.4, 5, 4.6), M2.tractorBody, x - 2.6 * Math.cos(yaw), 7.4, z - 2.6 * Math.sin(yaw), { ry: yaw, cast: true });
+  for (const [d, r] of [[4.6, 3.4], [-3.4, 2.1]]) for (const s of [-1, 1])
+    mesh(ctx, new THREE.CylinderGeometry(r, r, 1.8, 10), M2.tyre,
+      x + d * Math.cos(yaw) - s * 3 * Math.sin(yaw), r, z + d * Math.sin(yaw) + s * 3 * Math.cos(yaw), { rz: Math.PI / 2, ry: yaw });
+}
 // a parked airliner — decor, not cover; it exists so the apron reads as a working field
 function plane(ctx, x, z, yaw) {
   const M2 = ctx.mats;
@@ -403,7 +438,7 @@ const T = {
     slab(ctx, M2.tarmac, cx - RW * 0.1, cz - ctx.D * 0.2, RW * 0.55, RD * 0.8);                          // apron
     // the terminal — long, low, glass, facing the apron
     const tW = ctx.W * 0.42, tz = cz - ctx.D * 0.34;
-    const term = mesh(ctx, boxUV(tW, 22, 30), W._winMats[0], cx - ctx.W * 0.08, 11, tz, { cast: true });
+    const term = mesh(ctx, boxUV(tW, 22, 30, W._winMats[0]), W._winMats[0], cx - ctx.W * 0.08, 11, tz, { cast: true });
     reg(W, term, cx - ctx.W * 0.08, tz, tW / 2, 15, 22, 340);
     mesh(ctx, new THREE.BoxGeometry(tW + 4, 1.4, 32), M2.paleRoof, cx - ctx.W * 0.08, 22.4, tz);
     // the control tower — the landmark you navigate by from the far side of the city
@@ -415,7 +450,7 @@ const T = {
     // hangars along the far edge + parked aircraft, so the field reads as working
     for (let i = 0; i < 2; i++) {
       const hx = cx - ctx.W * 0.28 + i * ctx.W * 0.3, hz = cz + ctx.D * 0.36;
-      const h = mesh(ctx, boxUV(52, 26, 34), W._winMats[3], hx, 13, hz, { cast: true });
+      const h = mesh(ctx, boxUV(52, 26, 34, W._winMats[3]), W._winMats[3], hx, 13, hz, { cast: true });
       reg(W, h, hx, hz, 26, 17, 26, 220);
       mesh(ctx, new THREE.CylinderGeometry(17, 17, 52, 12, 1, false, 0, Math.PI), M2.steelRoof, hx, 26, hz, { rz: Math.PI / 2, cast: true });
     }
@@ -438,7 +473,7 @@ const T = {
       }
     }
     const sx = cx - L * 0.32, sz = cz + (lanes * 6.5 + 22);
-    const shed = mesh(ctx, boxUV(74, 24, 30), W._winMats[3], sx, 12, sz, { cast: true });
+    const shed = mesh(ctx, boxUV(74, 24, 30, W._winMats[3]), W._winMats[3], sx, 12, sz, { cast: true });
     reg(W, shed, sx, sz, 37, 15, 24, 240);
     mesh(ctx, new THREE.BoxGeometry(78, 1.6, 33), M2.steelRoof, sx, 24.6, sz);
     const wx = cx + L * 0.3, wz = sz - 4;                                       // the water tower
@@ -524,41 +559,81 @@ const T = {
   },
   // THE COUNTRY — Villages and Small Towns were being built as miniature cities. Farmland gives
   // the small places the rural character they actually have: open sightlines, low cover, long grass.
-  farmland(ctx, cx, cz, v) {
-    const M2 = ctx.mats, W = ctx.world, rng = ctx.rng;
-    // ploughed fields — big flat colour blocks, no cover, so the countryside fights OPEN
-    for (let i = 0; i < 4; i++) {
-      const fx = cx - 24 + (i % 2) * 48, fz = cz - 24 + ((i / 2) | 0) * 48;
-      const f = mesh(ctx, new THREE.PlaneGeometry(42, 42), i % 2 ? M2.fieldA : M2.fieldB, fx, 0.06, fz, { recv: true });
-      f.rotation.x = -Math.PI / 2;
+  // ---- THE COUNTRYSIDE ------------------------------------------------------------------------
+  // The country is not a city with fewer buildings — it is a DIFFERENT FIGHT: open sightlines, low
+  // cover you vault rather than hide behind, and long runs of nothing. Everything here is built to
+  // read from the air, because that is how you will usually see it.
+  // ⚠ Fields are UNLIT decals (MeshBasic), like the lawns. Written as lit materials they came out
+  // near-black and the whole village looked like holes cut in the ground.
+  farmland(ctx, cx, cz, v, cell) {
+    const M2 = ctx.mats, W = ctx.world, rng = ctx.rng, R = ctx.region;
+    const HW = ctx.W / 2 - 4, HD = ctx.D / 2 - 4;
+    // --- the fields: strips, not squares. Real farmland is ploughed in long runs, and the stripes
+    // are what makes the countryside legible from altitude instead of a flat green nothing.
+    const strips = 3 + ((rng() * 3) | 0), along = rng() < 0.5;
+    const crops = [M2.cropA, M2.cropB, M2.cropC, M2.fallow];
+    for (let i = 0; i < strips; i++) {
+      const t = (i + 0.5) / strips, m = crops[(rng() * crops.length) | 0];
+      if (along) slab(ctx, m, cx, cz - HD + t * HD * 2, HW * 2, (HD * 2) / strips - 1.2, 0.07);
+      else slab(ctx, m, cx - HW + t * HW * 2, cz, (HW * 2) / strips - 1.2, HD * 2, 0.07);
+      // furrows — a few darker lines per strip so a field has grain at ground level too
+      for (let f = 1; f < 4; f++) {
+        const u = (f / 4 - 0.5) * ((HD * 2) / strips - 1.2);
+        if (along) slab(ctx, M2.furrow, cx, cz - HD + t * HD * 2 + u, HW * 2, 0.9, 0.08);
+        else slab(ctx, M2.furrow, cx - HW + t * HW * 2 + u, cz, 0.9, HD * 2, 0.08);
+      }
     }
-    if (v === 0) {          // the homestead: barn, silo, farmhouse
-      const barn = mesh(ctx, new THREE.BoxGeometry(26, 16, 18), M2.barn, cx - 22, 8, cz - 20, { cast: true });
-      reg(W, barn, cx - 22, cz - 20, 13, 9, 16, 190);
-      const roof = mesh(ctx, new THREE.CylinderGeometry(10, 10, 18, 3, 1, false, 0, Math.PI), M2.barnRoof, cx - 22, 16, cz - 20, { cast: true });
+    // --- HEDGEROWS: the field boundary, and the countryside's only chest-high cover. Sockets tell
+    // us which sides face open country, so a hedge never runs down the middle of the village road.
+    const hedge = (x, z, w, d) => {
+      const m = mesh(ctx, new THREE.BoxGeometry(w, 6, d), M2.hedge, x, 3, z, { cast: true });
+      reg(W, m, x, z, w / 2, d / 2, 6, 60);
+    };
+    // ⚠ guard the sockets. A builder must never assume they exist — a hand-authored or imported
+    // plan can hand you bare cells, and a tile that throws takes the whole city build with it.
+    if (cell && cell.edge && cell.nb) perimeter(cell, (side) => {
+      if (cell.edge[side] === 'water') return;
+      const o = HW - 3;
+      if (side === 'n') hedge(cx, cz - o, HW * 1.7, 3.4);
+      else if (side === 's') hedge(cx, cz + o, HW * 1.7, 3.4);
+      else if (side === 'w') hedge(cx - o, cz, 3.4, HD * 1.7);
+      else hedge(cx + o, cz, 3.4, HD * 1.7);
+    });
+    if (v === 0) {          // THE HOMESTEAD — barn, silo, farmhouse, yard
+      const bx = cx - 22, bz = cz - 20;
+      const barn = mesh(ctx, boxUV(26, 16, 18), M2.barn, bx, 8, bz, { cast: true });
+      reg(W, barn, bx, bz, 13, 9, 16, 190);
+      const roof = mesh(ctx, new THREE.CylinderGeometry(10, 10, 18, 3, 1, false, 0, Math.PI), M2.barnRoof, bx, 16, bz, { cast: true });
       roof.rotation.z = -Math.PI / 2; roof.rotation.y = Math.PI / 2;
+      mesh(ctx, new THREE.BoxGeometry(9, 11, 0.6), M2.dark, bx, 5.5, bz + 9.2);            // the barn door
       const silo = mesh(ctx, new THREE.CylinderGeometry(6, 6, 34, 12), M2.silo, cx + 4, 17, cz - 24, { cast: true });
       reg(W, silo, cx + 4, cz - 24, 6, 6, 34, 200);
       mesh(ctx, new THREE.ConeGeometry(6.6, 7, 12), M2.steelRoof, cx + 4, 37.5, cz - 24, { cast: true });
       tower(ctx, cx + 28, cz + 24, 17, 12, 15, W._winMats[2], M2.terraRoof);
-    } else if (v === 1) {   // the orchard + windpump — trees are the cover here
-      for (let i = 0; i < 14; i++) ctx.treeSpots.push([cx - 34 + (i % 5) * 17, cz - 30 + ((i / 5) | 0) * 20]);
-      mesh(ctx, new THREE.CylinderGeometry(0.5, 1.1, 28, 6), M2.steel, cx + 30, 14, cz - 28, { cast: true });
-      for (let i = 0; i < 6; i++) {
-        const b = mesh(ctx, new THREE.PlaneGeometry(2.4, 7), M2.white, cx + 30, 30, cz - 28, { recv: false });
-        b.material.side = THREE.DoubleSide; b.rotation.z = (i / 6) * Math.PI * 2; b.translateY(4.4);
+      slab(ctx, M2.dirtYard, cx - 6, cz - 20, 46, 30, 0.1);                                 // the packed yard
+      tractor(ctx, cx + 12, cz - 6, rng() * 6);
+      for (let i = 0; i < 5; i++) mesh(ctx, new THREE.CylinderGeometry(3, 3, 4.4, 10), M2.hay, cx - 34 + i * 8, 2.2, cz + 30, { rz: Math.PI / 2, cast: true });
+    } else if (v === 1) {   // THE ORCHARD — trees in rows are the cover, plus a windpump landmark
+      const rows = 4, per = 5;
+      for (let i = 0; i < rows * per; i++) ctx.treeSpots.push([cx - 32 + (i % per) * 16, cz - 28 + ((i / per) | 0) * 18]);
+      const wx = cx + 34, wz = cz - 30;
+      for (const [ox, oz] of [[-3, -3], [3, -3], [-3, 3], [3, 3]]) mesh(ctx, new THREE.BoxGeometry(0.9, 30, 0.9), M2.steel, wx + ox * (1 - 0.5), 15, wz + oz * (1 - 0.5), { cast: true });
+      const hub = mesh(ctx, new THREE.CylinderGeometry(1.2, 1.2, 1.6, 8), M2.steel, wx, 31, wz, { rz: Math.PI / 2, cast: true });
+      for (let i = 0; i < 8; i++) {                                                          // the wind pump fan
+        const b = mesh(ctx, new THREE.PlaneGeometry(2.2, 7), M2.white, wx, 31, wz, { recv: false });
+        b.material.side = THREE.DoubleSide; b.rotation.z = (i / 8) * Math.PI * 2; b.translateY(4.6);
       }
-      const shed = mesh(ctx, new THREE.BoxGeometry(15, 8, 12), M2.barn, cx - 26, 4, cz + 22, { cast: true });
+      const shed = mesh(ctx, boxUV(15, 8, 12), M2.barn, cx - 26, 4, cz + 22, { cast: true });
       reg(W, shed, cx - 26, cz + 22, 7.5, 6, 8, 120);
-    } else {                // grazing land: fences, water trough, a stone wall to duck behind
-      const w = mesh(ctx, new THREE.BoxGeometry(70, 5, 2.4), M2.stoneWall, cx, 2.5, cz - 18, { cast: true });
-      reg(W, w, cx, cz - 18, 35, 1.2, 5, 90);
-      const w2 = mesh(ctx, new THREE.BoxGeometry(2.4, 5, 54), M2.stoneWall, cx + 26, 2.5, cz + 14, { cast: true });
-      reg(W, w2, cx + 26, cz + 14, 1.2, 27, 5, 80);
-      for (let i = 0; i < 8; i++) ctx.treeSpots.push([cx - 36 + rng() * 72, cz + 10 + rng() * 34]);
+    } else {                // GRAZING LAND — dry stone walls you vault, a trough, scattered oaks
+      const wall = (x, z, w, d, hp) => { const m = mesh(ctx, new THREE.BoxGeometry(w, 5.5, d), M2.stoneWall, x, 2.75, z, { cast: true }); reg(W, m, x, z, w / 2, d / 2, 5.5, hp); };
+      wall(cx, cz - 18, 70, 2.4, 90);
+      wall(cx + 26, cz + 14, 2.4, 54, 80);
+      wall(cx - 30, cz + 26, 34, 2.4, 60);
+      const tr = mesh(ctx, new THREE.BoxGeometry(12, 3, 4), M2.stoneWall, cx - 6, 1.5, cz + 6, { cast: true });   // water trough
+      mesh(ctx, new THREE.BoxGeometry(11, 0.4, 3.2), M2.pondM, cx - 6, 2.9, cz + 6, { recv: false });
+      for (let i = 0; i < 6; i++) ctx.treeSpots.push([cx - 34 + rng() * 68, cz + 8 + rng() * 32]);
     }
-    // fence posts along the lane — decor, sells the scale
-    for (let i = 0; i < 10; i++) mesh(ctx, new THREE.BoxGeometry(0.7, 4, 0.7), M2.wood, cx - 40 + i * 9, 2, cz + 42);
   },
   plaza(ctx, cx, cz, v) {
     const M2 = ctx.mats, rng = ctx.rng;
@@ -585,18 +660,30 @@ export function buildTiles(world, group, plan, rng) {
       m.color.copy(m.userData._baseCol).lerp(new THREE.Color(region.wall), wt[i] ?? 0.3);
     }
   }
-  const ctx = { world, g: group, rng, mats: M2, region, treeSpots: [], W: CELL, D: CELL, fw: 1, fh: 1 };
-  const A = plan.arena;
+  const A = plan.arena, cellSize = plan.cell || CELL, S = cellSize / CELL;
+  const ctx = { world, g: group, rng, mats: M2, region, treeSpots: [], plan,
+                W: CELL, D: CELL, fw: 1, fh: 1, S, cell: cellSize, cx: 0, cz: 0 };
+  world._pendingCuts = world._pendingCuts || []; world._pendingPits = world._pendingPits || [];
   for (let r = 0; r < plan.N; r++) for (let c = 0; c < plan.N; c++) {
     const cell = plan.cells[r][c];
     // ⚠ a `ref` cell is COVERED by a multi-cell structure — its anchor already built it. Building
     // it again is how you get three stadiums stacked inside one stadium.
     if (!cell || cell.t === 'water' || cell.ref) continue;
     const fw = cell.fw || 1, fh = cell.fh || 1;
-    ctx.fw = fw; ctx.fh = fh; ctx.W = fw * CELL; ctx.D = fh * CELL;
-    const cx = -A + (c + fw / 2) * CELL, cz = -A + (r + fh / 2) * CELL;   // centre of the WHOLE footprint
+    ctx.fw = fw; ctx.fh = fh;
+    ctx.W = fw * CELL; ctx.D = fh * CELL;                                  // BASE units — helpers scale
+    ctx.cx = -A + (c + fw / 2) * cellSize; ctx.cz = -A + (r + fh / 2) * cellSize;
     const builder = T[cell.t];
-    if (builder) builder(ctx, cx, cz, cell.v || 0, cell);   // cell carries r/c, neighbours, sockets, frontage
+    if (!builder) continue;
+    // the three things builders push as raw world coordinates have to be scaled too — snapshot the
+    // lengths, run the tile, then convert whatever it appended
+    const t0 = ctx.treeSpots.length, k0 = world._pendingCuts.length, p0 = world._pendingPits.length;
+    builder(ctx, ctx.cx, ctx.cz, cell.v || 0, cell);   // cell carries r/c, neighbours, sockets, frontage
+    if (S !== 1) {
+      for (let i = t0; i < ctx.treeSpots.length; i++) { const t = ctx.treeSpots[i]; t[0] = sx(ctx, t[0]); t[1] = sz(ctx, t[1]); }
+      for (let i = k0; i < world._pendingCuts.length; i++) { const k = world._pendingCuts[i]; k[0] = sx(ctx, k[0]); k[1] = sz(ctx, k[1]); k[2] *= S; k[3] *= S; k[4] *= S; }
+      for (let i = p0; i < world._pendingPits.length; i++) { const p = world._pendingPits[i]; p[0] = sx(ctx, p[0]); p[1] = sz(ctx, p[1]); p[2] *= S; p[3] *= S; }
+    }
   }
   return { treeSpots: ctx.treeSpots };
 }
