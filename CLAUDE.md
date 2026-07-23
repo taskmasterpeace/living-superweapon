@@ -377,6 +377,21 @@ value is missing from the scale, add a token rather than a one-off.
 - The identity across every screen is **document + broadcast furniture**: hairline borders, dashed
   §section rules, mono micro-labels, classified stamps, one gold accent on warm-neutral dark.
 
+## Combat readability (2026-07-23) — what a fighter is doing, at a glance
+- **Guns are ballistics, not ki.** `rifle` spawns `bullet: true` projectiles: a brass slug
+  (`GEO_BULLET`, built along +Z, quaternion-aligned to travel) with a tracer streak trailing it,
+  a grey smoke wisp instead of a plasma tail, and NO pooled light (guns fire a lot). Audio is
+  `audio.gunshot()` — noise crack + low thump + room slap; never reuse `zap`/`blast` for firearms.
+- **The ground marker is the state display** (`figure()` → `bandRing` + `faceWedge` + `stateRing`,
+  driven in `_animate`): ring colour = altitude band · **`faceWedge`** = a bright arc at the FRONT
+  showing exactly where they're looking (⚠ it counter-rotates `this.facing - obj.rotation.y`,
+  because the group already carries the damped body yaw — without that it lags the real aim) ·
+  **`stateRing`** = blue guarding · green grabbing · orange swelling with `meleeCharge` (haymaker
+  wind-up — the tell that lets you react) · white on a committed strike · red while staggered.
+- **ALT ladder** (`hud.updateAltitude`): four rungs GND/BLD/SKY/CLD, live band lit in the hero's
+  accent, altitude in metres (1u ≈ 0.19m), and the panel nudges up/down when you cross a band.
+  Band thresholds must stay in sync with `ALT_BANDS`/`bandOf` in entity.js (8 / 150 / 260).
+
 ## HUD readability (2026-07-23)
 - **The controls wall auto-folds.** `hud.armHintTimer()` (called from `main.beginMatch`) shows the full
   control list for ~18s of a fresh match, then collapses it to a corner chip — **F1** toggles it back and
