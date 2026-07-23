@@ -758,6 +758,7 @@ export class HUD {
   // differently from the defensive popups, which float up).
   damageNumber(worldPos, text, color = '#fff', tag = false, slash = false) {
     if (this.dmgNumbersOff) return;
+    if (this.el.dmg.childElementCount > 48) return;   // AoE storms don't get to drown the DOM
     if (!this.game.world) return;
     const sp = this.game.world.screenPosOf(worldPos.x, worldPos.y + 7, worldPos.z);
     if (sp.behind) return;

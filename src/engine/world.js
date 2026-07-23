@@ -60,7 +60,7 @@ export class World {
     const sun = new THREE.DirectionalLight('#fff2dc', 1.8);
     sun.position.set(120, 200, 80);
     sun.castShadow = true;
-    sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.mapSize.set(1536, 1536);   // 55% of 2048²'s pixels — visually identical at iso zoom
     // tight frustum that FOLLOWS the camera target (see follow()) — the visible area is ~160 units,
     // so a 110-unit half-extent doubles effective shadow texel density vs. covering the whole arena
     const d = 110;
@@ -173,7 +173,7 @@ export class World {
     ].map(([w, d, x, z]) => new THREE.BoxGeometry(w, wh, d).translate(x, wh / 2, z));
     const walls = new THREE.Mesh(mergeGeometries(wallGeos), wallMat);
     wallGeos.forEach(gg => gg.dispose());
-    walls.castShadow = true; walls.receiveShadow = true; g.add(walls);
+    walls.castShadow = false; walls.receiveShadow = true; g.add(walls);   // their shadows fall OUTSIDE the arena
 
     // The district: cover blocks are BUILDINGS now — white stone, windowed faces, varied
     // skyline. Same footprints as before (cover balance is tuned), heights re-sculpted.
@@ -220,8 +220,10 @@ export class World {
       const win = this._winMats[bi++ % 2];
       // ONE material per box (1 draw + 1 shadow draw — material arrays would 6× that);
       // the roof is a child slab that inherits the shatter-sink transform and casts nothing.
+      // Only the TALL buildings cast shadows — low old-town shadows barely read at iso zoom,
+      // and every caster is another full pass over the shadow map each frame.
       const m = new THREE.Mesh(geo, win);
-      m.position.set(x, h / 2, z); m.castShadow = true; m.receiveShadow = true;
+      m.position.set(x, h / 2, z); m.castShadow = h >= 20; m.receiveShadow = true;
       const roof = new THREE.Mesh(new THREE.PlaneGeometry(w, d), roofMat);
       roof.rotation.x = -Math.PI / 2; roof.position.y = h / 2 + 0.05;
       roof.receiveShadow = true;
@@ -288,7 +290,7 @@ export class World {
     this.cars = [];
     carSpots.forEach(([x, z, axis], i) => {
       const m = new THREE.Mesh(carGeo, paints[i % paints.length]);
-      m.position.set(x, 0, z); m.rotation.y = axis ? Math.PI / 2 : 0; m.castShadow = true; m.receiveShadow = true;
+      m.position.set(x, 0, z); m.rotation.y = axis ? Math.PI / 2 : 0; m.castShadow = false; m.receiveShadow = true;   // hugs the ground — a cast shadow buys nothing
       g.add(m);
       this.cars.push({ mesh: m, x, z, hp: 30, maxHp: 30, dead: false, paint: paints[i % paints.length] });
     });
@@ -614,7 +616,9 @@ export class World {
       this._gh[i] = clamp(this._gh[i] + dh, -6.5, 1.4);                                        // accumulate, clamped (the limit)
       pa[i * 3 + 2] = this._gh[i]; touched = true;
     }
-    if (touched) { this.groundGeo.attributes.position.needsUpdate = true; this.groundGeo.computeVertexNormals(); }
+    // normals recompute is ~12ms on the 112×112 grid — BATCH it: chained explosions (car
+    // rows, meteor storms) mark dirty and the render loop recomputes ONCE per frame
+    if (touched) { this.groundGeo.attributes.position.needsUpdate = true; this._normalsDirty = true; }
     this.flattenGrass(cx, cz, radius * 1.2);
   }
 
@@ -678,6 +682,7 @@ export class World {
 
   render() {
     const now = performance.now();
+    if (this._normalsDirty) { this._normalsDirty = false; this.groundGeo.computeVertexNormals(); }   // one recompute per frame, no matter how many craters landed
     if (this._grassTime) this._grassTime.value = now / 1000;   // wind
     if (this._waterT) this._waterT.value = now / 1000;         // harbor swell
     if (this._lastRender) {
