@@ -296,6 +296,9 @@ class BeamHose {
     this.steer = o.steer == null ? 10 : o.steer; // how fast beam rotates to aim
     this.might = o.might || ((o.dps || 60) / 50);  // beam-battle strength (from dps, charge, character)
     this.clashLen = null; this.clashing = false; this._clashOther = null; this._clashT = 0.5;
+    // THE BEAM VOICE — a sustained inharmonic/ring-mod stack that STRAINS when the beam is
+    // losing a clash. Held for the beam's life and stopped in _dispose.
+    this._voice = this.game.audio.beamVoice ? this.game.audio.beamVoice(caster.pos) : null;
     this.tipDist = 0;
     this.dir = caster.aim3.clone().normalize();   // 3D — angles up/down toward the target's height
     this.muzzle = new THREE.Vector3();
@@ -331,9 +334,17 @@ class BeamHose {
       this.tipDist = Math.min(this.maxLen, this.tipDist + this.tipSpeed * dt);
       // slow the caster while firing
       c.vel.x *= 0.5; c.vel.z *= 0.5;
+      // DRIVE THE VOICE. A beam that is LOSING a clash strains upward — the ring mod climbs and
+      // the hiss opens, so you can hear which way a beam struggle is going without looking.
+      if (this._voice) {
+        let I = 0.75 + Math.min(0.5, this.power * 0.25);
+        if (this.clashing) I += (this._clashT < 0.5 ? (0.5 - this._clashT) : 0) * 1.6;
+        this._voice.set(I, c.pos);
+      }
     } else {
       this.sustaining = false;
       this.endT += dt;
+      if (this._voice) this._voice.set(0.08, c.pos);
     }
 
     // resolve blocked length against cover/ground
@@ -395,11 +406,11 @@ class BeamHose {
     if (!this.sustaining && this.endT >= 0.18) { this._dispose(game); return false; }
     return true;
   }
-  _dispose(game) { if (this.dead) return; this.dead = true; game.scene.remove(this.grp); [this.glow, this.core, this.tip].forEach(m => m.material.dispose()); game.scene.remove(this.light); game.vfx.returnLight(this.light); }   // geometry is shared
+  _dispose(game) { if (this.dead) return; this.dead = true; if (this._voice) { this._voice.stop(); this._voice = null; } game.scene.remove(this.grp); [this.glow, this.core, this.tip].forEach(m => m.material.dispose()); game.scene.remove(this.light); game.vfx.returnLight(this.light); }   // geometry is shared
 }
 
 // ---- Star Sphere: grow a giant orb overhead, then hurl it ----
-class SpiritBomb {
+class GrowingOrb {
   constructor(game, caster, o) {
     this.game = game; this.caster = caster; this.team = caster.team;
     this.color = o.color || '#8fffcf'; this.color2 = o.color2 || '#eaffff';
@@ -450,7 +461,7 @@ export class Projectiles {
   constructor(game) { this.game = game; this.list = []; }
   spawnProjectile(caster, o) { const p = new Projectile(this.game, caster, o); this.list.push(p); return p; }
   spawnBeam(caster, o) { const b = new BeamHose(this.game, caster, o); this.list.push(b); return b; }
-  spawnSpiritBomb(caster, o) { const s = new SpiritBomb(this.game, caster, o); this.list.push(s); return s; }
+  spawnGrowingOrb(caster, o) { const s = new GrowingOrb(this.game, caster, o); this.list.push(s); return s; }
   update(dt, game) {
     this._beamClash(dt, game);
     for (let i = this.list.length - 1; i >= 0; i--) { if (!this.list[i].update(dt, game)) this.list.splice(i, 1); }

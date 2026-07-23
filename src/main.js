@@ -237,6 +237,9 @@ function frame(now) {
     if (started) {
       hud.update(); padSystem();
       uinav.update(Math.min(dt, 0.05));
+      // The help panel must follow the DEVICE. Plug a pad in mid-match and the glyphs swap.
+      { const p = !!(game.pad && game.pad.connected && game.pad.active);
+        if (p !== hud._hintPad) hud.buildHintBody(); }
       if (game.running) soundscape.update(Math.min(dt, 0.05), game);
       if (game.running) tutorial.update(Math.min(dt, 0.05));
       if (game.running) netplay.update(Math.min(dt, 0.05));

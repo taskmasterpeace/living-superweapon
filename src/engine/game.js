@@ -1024,6 +1024,8 @@ export class Game {
         f._yellCd = 0; this.heroYell(f, 1.6);   // the ascension SCREAM
         this.slowmo(0.3, 0.4);
         if (this.hud && (this.isHuman(f) || this.mode)) this.hud.announce('TIER ' + ['', 'I', 'II', 'III', 'MAX'][f.tier], f.name + ' ASCENDS', tc);
+        // ASCENDING SPITS. Three arcs over half a second — the air can't hold it.
+        if (this.audio.arc) for (let i = 0; i < 3; i++) setTimeout(() => this.audio.arc(1.1 + f.tier * 0.2, f.pos), i * 140);
         if (this.news) this.news.highlight('tier', f.name + ' ASCENDS — POWER READINGS SPIKE', { dur: 2.4, priority: 2, focus: f.pos });
       } else {
         this.vfx.explode(f.pos.clone().setY(5), { color: f.def.colors.accent, color2: '#fff', radius: 11, power: 1.1, scorch: false });

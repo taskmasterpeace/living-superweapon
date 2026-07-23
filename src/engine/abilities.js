@@ -111,7 +111,8 @@ export const TYPES = {
         arrow: def.arrow, payload: def.payload, boomerang: def.boomerang, range: def.range,
         dtype: def.dtype, siphon: def.siphon,          // the damage TYPE rides the shot
       });
-      g.audio.blast(460, 0.14); g.muzzleFlash(c, def.color);
+      if (def.dtype === 'magic') g.audio.zap(760, c.pos); else g.audio.kiRelease(0.32, c.pos);
+      g.muzzleFlash(c, def.color);
     }
   },
 
@@ -226,7 +227,7 @@ export const TYPES = {
           radius: lerp(def.minR || 1.3, def.maxR || 5, c01), damage: lerp(def.dmgMin || 20, def.dmgMax || 70, c01),
           blast: lerp(8, def.maxBlast || 26, c01), power, color: def.color, color2: def.color2, shock: true, ground: true,
         });
-        g.audio.blast(300, 0.2 + c01 * 0.2); g.world.punch(0.85 - c01 * 0.15); g.world.shake(0.6 + c01);
+        g.audio.kiRelease(0.5 + c01 * 1.1, c.pos); g.world.punch(0.85 - c01 * 0.15); g.world.shake(0.6 + c01);
         g.vfx.flash(orbPos, def.color, 8 + c01 * 8, 0.2);
       }
     }
@@ -236,12 +237,12 @@ export const TYPES = {
   growingorb(c, def, st, g, inp) {
     if (st.active && st.active.dead) { st.active = null; st.cd = def.cd || 0; if (st.sfx) { st.sfx.stop(); st.sfx = null; } }
     if (inp.pressed && ready(c, def, st) && !st.active) {
-      pay(c, def, st); st.active = g.projectiles.spawnSpiritBomb(c, { minR: def.minR || 4, maxR: def.maxR || 18, growRate: def.growRate || 8, kiPerSec: def.kiPerSec || 16, color: def.color, color2: def.color2 });
+      pay(c, def, st); st.active = g.projectiles.spawnGrowingOrb(c, { minR: def.minR || 4, maxR: def.maxR || 18, growRate: def.growRate || 8, kiPerSec: def.kiPerSec || 16, color: def.color, color2: def.color2 });
       st.sfx = g.audio.charge();
     }
     if (st.active) {
       if (st.sfx) st.sfx.ramp(st.active.charge01);
-      if (inp.released) { st.active.launch(); if (st.sfx) { st.sfx.stop(); st.sfx = null; } st.active = null; g.audio.blast(260, 0.3); g.world.shake(0.5); }
+      if (inp.released) { st.active.launch(); if (st.sfx) { st.sfx.stop(); st.sfx = null; } st.active = null; g.audio.kiRelease(1.4, c.pos); g.world.shake(0.5); }
     }
   },
 

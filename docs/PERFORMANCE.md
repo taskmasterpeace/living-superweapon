@@ -80,7 +80,7 @@ and `attributes.{position,aColor,aSize,aAlpha}.needsUpdate = true` re-uploads th
 (c) early-out the whole update+upload when live == 0. **Moves:** `update` ms ↓, `render` ↓ (fewer points), heap.
 
 ### 2. Projectiles / beams / spirit-bombs create fresh geometry + materials per spawn 🔴
-**Where:** `src/engine/projectiles.js` — `Projectile` ctor (L28–29), `BeamHose` ctor (L99–102), `SpiritBomb`
+**Where:** `src/engine/projectiles.js` — `Projectile` ctor (L28–29), `BeamHose` ctor (L99–102), `GrowingOrb`
 ctor (L202–203). Also `Minion`/`Construct` (`src/engine/summons.js` L16–17, L54–62).
 **Evidence:** `memory.geometries 412`; `frame.p95 10 ms`; a full GC fired mid-run. Volley heroes (VEGA
 Volley 0.07 s, SOL Heat Flurry 0.08 s, HIVE) spawn ~13 blasts/s each, every one `new SphereGeometry` ×2 +

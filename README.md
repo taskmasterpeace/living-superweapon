@@ -253,7 +253,7 @@ src/
     vfx.js                explosions, shockwaves, lightning, rings, scorch, flashes
     entity.js             Fighter: authored figure (+per-hero flourishes), physics, flight, combat, KO
     ragdoll.js            verlet ragdoll — drives the figure meshes into a physics tumble on KO
-    projectiles.js        Projectile · BeamHose (hose) · SpiritBomb
+    projectiles.js        Projectile · BeamHose (hose) · GrowingOrb
     abilities.js          the ability TYPES registry (15 power types)
     melee.js              the Strike / Guard / Grab trifecta + per-hero variants
     summons.js            Minion (drones) · Construct (fist/hammer/wall/turret)

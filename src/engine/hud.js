@@ -1,6 +1,7 @@
 // WAR WORLD: ASCENDANTS — DOM HUD + character-select screen.
 import { ROSTER, SLOT_ORDER } from '../data/characters.js';
 import { DTYPES, DTYPE_INFO, resistOf } from './entity.js';
+import { glyph, padActive, padFaces } from '../core/glyphs.js';
 import { MODES } from '../data/modes.js';
 import { clamp, TAU } from '../core/util.js';
 import { ATTR_DEFS, TALENTS, deriveAttrs, heroTalents, rankName, rankColor, RANKS } from '../data/ranks.js';
@@ -1279,17 +1280,30 @@ export class HUD {
     const K = keymap(SETTINGS.scheme);
     const grp = (title, rows) => `<div class="hgrp"><div class="hgt">${title}</div>${rows.filter(Boolean).map(([k, d]) => `<div class="hgr"><b>${k}</b><span>${d}</span></div>`).join('')}</div>`;
     const wheelSel = K.wheel === 'ability';
-    el.innerHTML =
-      grp('MOVE & AIM', [['WASD', 'move'], ['MOUSE', 'aim'], ['CLICK FOE', 'lock on · T to release'], ['2×TAP', 'evade'], ['SHIFT', 'dash']]) +
-      grp('MELEE', [['V', 'tap = jab · HOLD = haymaker'], ['G', 'grab · hoist a car/tree'], [K.guardLabel, 'guard (hold)']]) +
-      grp('POWERS', [
-        wheelSel ? ['WHEEL', 'pick a power'] : null,
-        [wheelSel ? 'LMB' : 'LMB / RMB', wheelSel ? 'fire the picked power' : 'primary · secondary'],
-        wheelSel ? ['RMB', 'secondary'] : null,
-        ['Q / E', 'skills'], ['H', '4th power'], ['R', 'ULTIMATE'], [K.itemLabel, 'gadget'],
-      ]) +
-      grp('FLIGHT', [['F', 'flight ON/OFF'], [K.upLabel, 'rise'], [K.downLabel, 'descend'], ['SHIFT (air)', 'cruise']]) +
-      grp('SYSTEM', [[K.swapLabel, 'swap hero'], ['TAB', 'roster'], ['B', 'spawn rival'], ['ESC', 'pause'], ['F1', 'this panel']]);
+    // ⚠ IF A PAD IS THE ACTIVE DEVICE, PRINT PAD GLYPHS. Telling a Steam Deck player about WASD
+    // and LMB is telling them about keys that do not exist on the machine in their hands.
+    const pad = this.game && this.game.pad;
+    const P = padActive(pad);
+    const G = (a) => glyph(a, pad);
+    this._hintPad = P;                                   // so armHintTimer can re-render on change
+    el.innerHTML = P
+      ? grp('MOVE & AIM', [[G('move'), 'move'], [G('aim'), 'aim'], [G('dash'), 'dash'], ['2×FLICK', 'evade']]) +
+        grp('MELEE', [[G('strike'), 'tap = jab · HOLD = haymaker'], [G('grab'), 'grab · hoist a car/tree'], [G('guard'), 'guard (hold)']]) +
+        grp('POWERS', [[G('lmb') + ' / ' + G('rmb'), 'primary · secondary'],
+          [G('q') + ' / ' + G('e'), 'skills'], [G('f'), '4th power'], [G('ult'), 'ULTIMATE'], [G('item'), 'gadget']]) +
+        grp('FLIGHT', [[G('fly'), 'flight ON / rise'], [G('descend'), 'descend'], [G('dash') + ' (air)', 'cruise']]) +
+        grp('SYSTEM', [[G('swap'), 'swap hero'], [G('roster'), 'roster'], [G('pause'), 'pause'],
+          [G('confirm') + ' / ' + G('back'), 'confirm · back (menus)']])
+      : grp('MOVE & AIM', [['WASD', 'move'], ['MOUSE', 'aim'], ['CLICK FOE', 'lock on · T to release'], ['2×TAP', 'evade'], ['SHIFT', 'dash']]) +
+        grp('MELEE', [['V', 'tap = jab · HOLD = haymaker'], ['G', 'grab · hoist a car/tree'], [K.guardLabel, 'guard (hold)']]) +
+        grp('POWERS', [
+          wheelSel ? ['WHEEL', 'pick a power'] : null,
+          [wheelSel ? 'LMB' : 'LMB / RMB', wheelSel ? 'fire the picked power' : 'primary · secondary'],
+          wheelSel ? ['RMB', 'secondary'] : null,
+          ['Q / E', 'skills'], ['H', '4th power'], ['R', 'ULTIMATE'], [K.itemLabel, 'gadget'],
+        ]) +
+        grp('FLIGHT', [['F', 'flight ON/OFF'], [K.upLabel, 'rise'], [K.downLabel, 'descend'], ['SHIFT (air)', 'cruise']]) +
+        grp('SYSTEM', [[K.swapLabel, 'swap hero'], ['TAB', 'roster'], ['B', 'spawn rival'], ['ESC', 'pause'], ['F1', 'this panel']]);
   }
   // The full control list is onboarding, not furniture: it earns ~18s of a fresh match, then
   // collapses to a corner chip. F1 (or the Options toggle) brings it back any time.

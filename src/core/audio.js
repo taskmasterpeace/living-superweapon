@@ -200,22 +200,234 @@ export class AudioBus {
     const f = this.ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 800 * pitch; f.Q.value = 1.5;
     o.connect(f); this._env(f, 0.9, 0.17 * pg, 0.03); o.start(); o.stop(this.t + 0.95);
   }
+  // ================= THE ENERGY VOICE ==========================================================
+  // Ki was one sawtooth through a bandpass, which reads as a synth NOTE, not as POWER. Three
+  // things make a sound read as energy rather than music:
+  //
+  //   1. INHARMONIC PARTIALS. A musical tone stacks integer multiples (1, 2, 3, 4). Energy stacks
+  //      irrational ones (1, 2.41, 3.86, 5.13) — the ear cannot resolve it into a pitch, so it
+  //      hears a FORCE instead of a note.
+  //   2. RING MODULATION. Multiply two oscillators and you get only their sum and difference
+  //      frequencies. That metallic, unplaceable shimmer is the sound of something that should
+  //      not exist. It is the single biggest ingredient here.
+  //   3. CRACKLE. Short filtered noise grains on top read as ARCING — air being ionised. Without
+  //      it, energy sounds smooth and synthetic instead of dangerous.
+  //
+  // Everything below is built from those three.
+
+  // A ring modulator in WebAudio: a gain node whose GAIN is driven by an oscillator swinging
+  // through zero. That multiplication IS the ring mod. Baseline gain 0 = no carrier leaks through.
+  _ringMod(carrierFreq, modFreq) {
+    const car = this.ctx.createOscillator(); car.type = 'sine'; car.frequency.value = carrierFreq;
+    const mod = this.ctx.createOscillator(); mod.type = 'sine'; mod.frequency.value = modFreq;
+    const ring = this.ctx.createGain(); ring.gain.value = 0;
+    mod.connect(ring.gain);
+    car.connect(ring);
+    return {
+      car, mod, out: ring,
+      start: (t) => { car.start(t); mod.start(t); },
+      stop: (t) => { try { car.stop(t); mod.stop(t); } catch (e) {} },
+    };
+  }
+
+  // Arcing: noise through a bandpass whose frequency is chopped by a fast square LFO, which turns
+  // smooth hiss into discrete electrical grains.
+  _crackle(dur, gain, band = 3000, at = 0) {
+    const n = this._noise(dur);
+    const bp = this.ctx.createBiquadFilter(); bp.type = 'bandpass';
+    bp.frequency.value = band; bp.Q.value = 1.4;
+    const lfo = this.ctx.createOscillator(); lfo.type = 'square'; lfo.frequency.value = rand2(18, 55);
+    const lg = this.ctx.createGain(); lg.gain.value = band * 0.55;
+    lfo.connect(lg); lg.connect(bp.frequency); lfo.start(this.t + at); lfo.stop(this.t + at + dur);
+    const g = this.ctx.createGain();
+    g.gain.setValueAtTime(0.0001, this.t + at);
+    g.gain.exponentialRampToValueAtTime(Math.max(0.0002, gain), this.t + at + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, this.t + at + dur);
+    n.connect(bp); bp.connect(g); g.connect(this.bus.sfx); n.start(this.t + at);
+    return g;
+  }
+
+  // THE CHARGE — a sustained gather. Sub-bass weight, a rising inharmonic stack, a ring-mod
+  // shimmer that grows brighter AND less stable as it fills, and arcing that speeds up.
+  // Keeps the {ramp, stop, last} handle contract, so every existing caller is unchanged.
   charge() {
     if (!this.ok || this.muted) return null;
-    const o = this.ctx.createOscillator(); o.type = 'sawtooth';
-    o.frequency.setValueAtTime(60, this.t);
-    o.frequency.linearRampToValueAtTime(520, this.t + 2.4);
-    const g = this.ctx.createGain(); g.gain.setValueAtTime(0.0001, this.t);
-    g.gain.exponentialRampToValueAtTime(0.14, this.t + 0.3);
-    const f = this.ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 600; f.Q.value = 4;
-    o.connect(f); f.connect(g); g.connect(this.bus.sfx); o.start();
+    const t = this.t;
+    const g = this.ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.15, t + 0.35);
+    g.connect(this.bus.sfx);
+
+    // (1) THE SUB — the weight underneath. This is the part you feel rather than hear.
+    const sub = this.ctx.createOscillator(); sub.type = 'sine';
+    sub.frequency.setValueAtTime(34, t); sub.frequency.linearRampToValueAtTime(78, t + 2.6);
+    const subG = this.ctx.createGain(); subG.gain.value = 0.85;
+    sub.connect(subG); subG.connect(g); sub.start();
+
+    // (2) THE INHARMONIC STACK — irrational ratios, so it never resolves into a chord
+    const parts = [];
+    for (const ratio of [1, 2.41, 3.86, 5.13]) {
+      const o = this.ctx.createOscillator(); o.type = ratio === 1 ? 'sawtooth' : 'triangle';
+      o.frequency.setValueAtTime(58 * ratio, t);
+      o.frequency.linearRampToValueAtTime(300 * ratio, t + 2.6);
+      const og = this.ctx.createGain(); og.gain.value = 0.34 / ratio;
+      o.connect(og); og.connect(g); o.start();
+      parts.push(o);
+    }
+
+    // (3) THE RING-MOD SHIMMER — the part that says this is not of this world
+    const rm = this._ringMod(420, 137);
+    const rmG = this.ctx.createGain(); rmG.gain.value = 0.5;
+    rm.out.connect(rmG); rmG.connect(g); rm.start(t);
+
+    const f = this.ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 600; f.Q.value = 3.2;
+
+    let crackT = 0;
     const h = {
-      o, g, f, last: performance.now(),
-      ramp: (lvl) => { h.last = performance.now(); try { f.frequency.setTargetAtTime(300 + lvl * 2600, this.t, 0.05); } catch (e) {} },
-      stop: () => { this._sus.delete(h); try { g.gain.setTargetAtTime(0.0001, this.t, 0.05); o.stop(this.t + 0.3); } catch (e) {} },
+      g, f, last: performance.now(),
+      ramp: (lvl) => {
+        h.last = performance.now();
+        try {
+          const L = Math.max(0, Math.min(1, lvl));
+          f.frequency.setTargetAtTime(300 + L * 2600, this.t, 0.05);
+          // as it fills, the ring mod climbs and detunes — the sound becomes less stable
+          rm.car.frequency.setTargetAtTime(420 + L * 1500, this.t, 0.08);
+          rm.mod.frequency.setTargetAtTime(137 + L * 420, this.t, 0.08);
+          rmG.gain.setTargetAtTime(0.3 + L * 0.9, this.t, 0.1);
+          // and it begins to ARC — crackle rate scales with how full it is
+          const now = performance.now();
+          if (L > 0.25 && now - crackT > (260 - L * 190)) {
+            crackT = now;
+            this._crackle(rand2(0.04, 0.1), 0.03 + L * 0.05, rand2(1800, 5200));
+          }
+        } catch (e) {}
+      },
+      stop: () => {
+        this._sus.delete(h);
+        try {
+          g.gain.setTargetAtTime(0.0001, this.t, 0.05);
+          sub.stop(this.t + 0.35);
+          parts.forEach(o => o.stop(this.t + 0.35));
+          rm.stop(this.t + 0.35);
+        } catch (e) {}
+      },
     };
     this._sus.add(h);   // watchdog-tracked: dies unless kept alive by ramp() (see sweep)
     return h;
+  }
+
+  // THE RELEASE — a charged ki attack leaving your hands. Sub-thump for the shove, an inharmonic
+  // burst for the mass, a long descending ring-mod tail for the travel, arcing across all of it.
+  kiRelease(power = 1, pos = null) {
+    if (!this.ok || this.muted) return;
+    const pg = this._pg(pos, 230); if (!pg) return;
+    const p = Math.max(0.2, Math.min(1.6, power)) * pg, t = this.t;
+
+    const sub = this.ctx.createOscillator(); sub.type = 'sine';
+    sub.frequency.setValueAtTime(120 * (1 + p * 0.3), t);
+    sub.frequency.exponentialRampToValueAtTime(28, t + 0.5 + p * 0.4);
+    this._env(sub, 0.6 + p * 0.5, 0.5 * p, 0.004);
+    sub.start(); sub.stop(t + 1.2 + p);
+
+    for (const ratio of [1, 2.41, 3.86]) {
+      const o = this.ctx.createOscillator(); o.type = 'sawtooth';
+      o.frequency.setValueAtTime(260 * ratio * (0.8 + p * 0.5), t);
+      o.frequency.exponentialRampToValueAtTime(70 * ratio, t + 0.42);
+      const lp = this.ctx.createBiquadFilter(); lp.type = 'lowpass';
+      lp.frequency.setValueAtTime(5200, t); lp.frequency.exponentialRampToValueAtTime(500, t + 0.5);
+      const g = this.ctx.createGain();
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(Math.max(0.0002, (0.16 / ratio) * p), t + 0.012);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.55);
+      o.connect(lp); lp.connect(g); g.connect(this.bus.sfx); o.start(); o.stop(t + 0.6);
+    }
+
+    const rm = this._ringMod(1400 * (0.7 + p * 0.6), 380);
+    const rg = this.ctx.createGain();
+    rg.gain.setValueAtTime(0.0001, t);
+    rg.gain.exponentialRampToValueAtTime(Math.max(0.0002, 0.11 * p), t + 0.03);
+    rg.gain.exponentialRampToValueAtTime(0.0001, t + 0.85 + p * 0.5);
+    rm.car.frequency.exponentialRampToValueAtTime(220, t + 0.9);
+    rm.mod.frequency.exponentialRampToValueAtTime(90, t + 0.9);
+    rm.out.connect(rg); rg.connect(this.bus.sfx); rm.start(t); rm.stop(t + 1.5 + p);
+
+    this._crackle(0.22 + p * 0.2, 0.09 * p, 3400);
+    this._crackle(0.1, 0.06 * p, 7000, 0.03);
+  }
+
+  // A BEAM is the sustained form of the same voice. set(intensity) rides it, so a beam losing a
+  // clash audibly strains.
+  beamVoice(pos = null) {
+    if (!this.ok || this.muted) return null;
+    const t = this.t;
+    const g = this.ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.10, t + 0.08);
+    g.connect(this.bus.sfx);
+
+    const sub = this.ctx.createOscillator(); sub.type = 'sine'; sub.frequency.value = 62;
+    const sg = this.ctx.createGain(); sg.gain.value = 0.8; sub.connect(sg); sg.connect(g); sub.start();
+
+    const parts = [];
+    for (const ratio of [1, 2.41, 3.86]) {
+      const o = this.ctx.createOscillator(); o.type = 'sawtooth'; o.frequency.value = 150 * ratio;
+      const og = this.ctx.createGain(); og.gain.value = 0.22 / ratio;
+      o.connect(og); og.connect(g); o.start(); parts.push(o);
+    }
+    const rm = this._ringMod(900, 260);
+    const rg = this.ctx.createGain(); rg.gain.value = 0.55;
+    rm.out.connect(rg); rg.connect(g); rm.start(t);
+
+    // a constant hiss underneath — the air being cooked
+    const hiss = this._noise(4); hiss.loop = true;
+    const hf = this.ctx.createBiquadFilter(); hf.type = 'bandpass'; hf.frequency.value = 2600; hf.Q.value = 0.8;
+    const hg = this.ctx.createGain(); hg.gain.value = 0.05;
+    hiss.connect(hf); hf.connect(hg); hg.connect(g); hiss.start();
+
+    let crackT = 0;
+    const h = {
+      last: performance.now(),
+      set: (intensity = 1, p2 = null) => {
+        h.last = performance.now();
+        const I = Math.max(0, Math.min(1.6, intensity));
+        try {
+          const dist = this._pg(p2 || pos, 240);
+          g.gain.setTargetAtTime(0.10 * I * (dist || 1), this.t, 0.08);
+          rm.car.frequency.setTargetAtTime(700 + I * 900, this.t, 0.12);
+          rm.mod.frequency.setTargetAtTime(200 + I * 260, this.t, 0.12);
+          hg.gain.setTargetAtTime(0.03 + I * 0.05, this.t, 0.1);
+          const now = performance.now();
+          if (now - crackT > 120) { crackT = now; this._crackle(0.05, 0.018 * I, rand2(2200, 6000)); }
+        } catch (e) {}
+      },
+      stop: () => {
+        this._sus.delete(h);
+        try {
+          g.gain.setTargetAtTime(0.0001, this.t, 0.06);
+          sub.stop(this.t + 0.4);
+          parts.forEach(o => o.stop(this.t + 0.4));
+          rm.stop(this.t + 0.4); hiss.stop(this.t + 0.4);
+        } catch (e) {}
+      },
+    };
+    this._sus.add(h);
+    return h;
+  }
+
+  // A short electrical ARC — auras, tier-ups, lightning, anything that should spit.
+  arc(power = 1, pos = null) {
+    if (!this.ok || this.muted) return;
+    const pg = this._pg(pos, 170); if (!pg) return;
+    const p = power * pg;
+    for (let i = 0; i < 2 + ((Math.random() * 3) | 0); i++) {
+      this._crackle(rand2(0.03, 0.09), rand2(0.02, 0.06) * p, rand2(1800, 7000), i * rand2(0.01, 0.06));
+    }
+    const rm = this._ringMod(rand2(1600, 3200), rand2(300, 900));
+    const g = this.ctx.createGain();
+    g.gain.setValueAtTime(0.0001, this.t);
+    g.gain.exponentialRampToValueAtTime(Math.max(0.0002, 0.05 * p), this.t + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, this.t + 0.18);
+    rm.out.connect(g); g.connect(this.bus.sfx); rm.start(this.t); rm.stop(this.t + 0.22);
   }
   teleport() {
     if (!this.ok || this.muted) return;
