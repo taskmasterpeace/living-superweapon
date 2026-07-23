@@ -160,6 +160,19 @@ const CSS = `
 #title .rcard.forge{ border-style:dashed; border-color:rgba(255,210,74,.4); background:rgba(255,210,74,.04); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; min-height:96px; text-align:center; }
 #title .rcard.forge .fplus{ font-size:26px; font-weight:800; color:#ffd24a; line-height:1; }
 #title .rcard.forge:hover{ box-shadow:0 0 22px -6px #ffd24a; }
+/* interactive tutorial banner */
+#hud .tut{ left:50%; transform:translateX(-50%); top:64px; width:min(560px,82vw); padding:13px 18px 12px; text-align:center; z-index:8; }
+#hud .tut .tstep{ font-size:9.5px; letter-spacing:.24em; color:#8b8577; text-transform:uppercase; }
+#hud .tut .tobj{ font-family:'Rajdhani','Inter',sans-serif; font-weight:800; font-size:27px; color:#ffd24a; letter-spacing:.04em; line-height:1.1; margin:2px 0; }
+#hud .tut .tkeys{ display:inline-block; font-weight:800; font-size:13px; color:#160d02; background:linear-gradient(180deg,#ffd15a,#f5921a); padding:4px 13px; border-radius:8px; margin:4px 0 2px; box-shadow:0 2px 0 #7a3d05; }
+#hud .tut .ttip{ font-size:12px; color:#b7b0a2; margin-top:4px; }
+#hud .tut .tdots{ display:flex; gap:5px; justify-content:center; margin-top:9px; }
+#hud .tut .tdots i{ width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,.14); }
+#hud .tut .tdots i.on{ background:#ffd24a; box-shadow:0 0 8px rgba(255,210,74,.6); }
+#hud .tut .tskip{ position:absolute; top:9px; right:12px; cursor:pointer; font-size:10px; letter-spacing:.12em; color:#8b8577; text-transform:uppercase; pointer-events:auto; }
+#hud .tut .tskip:hover{ color:#ffd24a; }
+@keyframes tutpop{ 0%{ transform:translateX(-50%) scale(.92);} 60%{ transform:translateX(-50%) scale(1.05);} 100%{ transform:translateX(-50%) scale(1);} }
+#hud .tut.pop{ animation:tutpop .3s ease; }
 /* pause menu */
 #hud .paused{ flex-direction:column; pointer-events:auto; z-index:45; }
 #hud .paused .pwrap{ display:flex; flex-direction:column; gap:10px; align-items:center; background:rgba(8,10,16,.78); border:1px solid rgba(255,255,255,.12); border-radius:16px; padding:26px 34px; backdrop-filter:blur(6px); }
@@ -177,6 +190,7 @@ const CSS = `
 .lswovl .c3{ cursor:pointer; font-size:11px; font-weight:800; padding:6px 12px; border-radius:9px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.04); color:#b7b0a2; }
 .lswovl .c3.on{ background:linear-gradient(180deg,#ffd15a,#f5921a); color:#160d02; border-color:transparent; }
 .lswovl .odone{ cursor:pointer; margin-top:10px; font-family:inherit; font-weight:800; letter-spacing:.12em; font-size:14px; color:#160d02; padding:12px 26px; border:none; border-radius:10px; background:linear-gradient(180deg,#ffd15a,#f5921a); box-shadow:0 4px 0 #7a3d05; text-transform:uppercase; width:100%; }
+.lswovl .odone.oghost{ background:rgba(255,255,255,.08); color:#e8e2d6; box-shadow:none; border:1px solid rgba(255,255,255,.15); }
 .lswovl .hsec{ margin-bottom:13px; }
 .lswovl .hsec .ht{ font-size:11px; letter-spacing:.18em; color:#ffcf7a; text-transform:uppercase; margin-bottom:5px; }
 .lswovl .hsec .hb{ font-size:13.5px; color:#c9c2b4; line-height:1.65; }
@@ -392,6 +406,14 @@ export class HUD {
         <b>1–0</b>/<b>TAB</b> heroes · <b>B</b> rival · <b>ESC</b> pause<br/>
         🎮 <b>Pad</b>: sticks move/aim · R2/L2 powers · ▢○ melee · L1 guard
       </div>
+      <div class="panel tut" id="hTut" style="display:none">
+        <span class="tskip" id="hTutSkip">skip ✕</span>
+        <div class="tstep" id="hTutStep"></div>
+        <div class="tobj" id="hTutObj"></div>
+        <div><span class="tkeys" id="hTutKeys"></span></div>
+        <div class="ttip" id="hTutTip"></div>
+        <div class="tdots" id="hTutDots"></div>
+      </div>
       <div class="paused" id="hPaused"><div class="pwrap">
         <div class="t">PAUSED</div>
         <button data-p="resume">▶ Resume</button>
@@ -424,7 +446,10 @@ export class HUD {
       hits: this.root.querySelector('#hHits'), danger: this.root.querySelector('#hDanger'),
       ko: this.root.querySelector('#hKO'), koT: this.root.querySelector('#hKOt'), koS: this.root.querySelector('#hKOs'),
       hint: this.root.querySelector('#hHint'),
+      tut: this.root.querySelector('#hTut'), tutStep: this.root.querySelector('#hTutStep'), tutObj: this.root.querySelector('#hTutObj'),
+      tutKeys: this.root.querySelector('#hTutKeys'), tutTip: this.root.querySelector('#hTutTip'), tutDots: this.root.querySelector('#hTutDots'),
     };
+    this.root.querySelector('#hTutSkip').onclick = () => { this.hideTutorial(); this.onTutorialSkip && this.onTutorialSkip(); };
     this._radarCtx = this.el.radarC.getContext('2d');
     // pause menu actions
     this.el.paused.querySelectorAll('button').forEach(b => b.onclick = () => {
@@ -443,6 +468,20 @@ export class HUD {
     this.optionsEl = mk('hOptions'); this.howtoEl = mk('hHowto');
   }
   setHintVisible(v) { if (this.el.hint) this.el.hint.style.display = v ? 'block' : 'none'; }
+
+  // ---- interactive tutorial banner ----
+  showTutorial(st, i, n) {
+    const t = this.el.tut; t.style.display = 'block';
+    t.classList.remove('pop'); void t.offsetWidth; t.classList.add('pop');
+    this.el.tutStep.textContent = `LEARN TO PLAY — ${i + 1} / ${n}`;
+    this.el.tutObj.textContent = st.obj;
+    this.el.tutKeys.textContent = st.keys;
+    this.el.tutTip.textContent = st.tip;
+    this.el.tutDots.innerHTML = Array.from({ length: n }, (_, k) => `<i class="${k < i ? 'on' : ''}"></i>`).join('');
+  }
+  tutorialStepDone() { this.flashScreen('#ffd24a', 0.08); }
+  completeTutorial() { this.hideTutorial(); }
+  hideTutorial() { if (this.el.tut) this.el.tut.style.display = 'none'; }
   overlayOpen() { return this.optionsEl.style.display === 'flex' || this.howtoEl.style.display === 'flex'; }
   closeOverlays() { this.optionsEl.style.display = 'none'; this.howtoEl.style.display = 'none'; }
 
@@ -485,9 +524,12 @@ export class HUD {
       <div class="hsec"><div class="ht">Gadgets & The Meter</div><div class="hb"><b>X</b> uses your carried gadget (beacon, medkit, flashbang…) · low ki opens <em>OVERDRIVE</em> — your fists refill the tank · leveling up climbs <em>TIERS</em>: your aura and your meter literally grow</div></div>
       <div class="hsec"><div class="ht">Swapping & The Rest</div><div class="hb"><b>MOUSE WHEEL</b> or <b>1–0</b> swap hero mid-match · <b>TAB</b> roster · <b>B</b> spawns a rival · <b>ESC</b> pause · <b>M</b> mute · 🎮 pad: sticks move/aim · R2/L2 powers · ▢ ○ melee · L1 guard · ✕ fly</div></div>
       <div class="hsec"><div class="ht">The Golden Rule</div><div class="hb">The LeFevre threat scale is real — a Street-tier human <em>should</em> lose to a Cosmic superweapon. Lopsided is honest. Pick your fights, or forge your own weapon in <b>ORIGIN</b>.</div></div>
-      <button class="odone">Got It — Let's Fight</button>
+      <button class="odone" id="howtoTut">🎓 Play the Tutorial — learn by doing</button>
+      <button class="odone oghost">Got It — Let's Fight</button>
     </div>`;
-    this.howtoEl.querySelector('.odone').onclick = () => { try { localStorage.setItem('threshold_howto_seen', '1'); } catch {} this.howtoEl.style.display = 'none'; };
+    const seen = () => { try { localStorage.setItem('threshold_howto_seen', '1'); } catch {} this.howtoEl.style.display = 'none'; };
+    this.howtoEl.querySelector('.oghost').onclick = seen;
+    this.howtoEl.querySelector('#howtoTut').onclick = () => { seen(); this.onTutorial && this.onTutorial(); };
     this.howtoEl.style.display = 'flex';
   }
 
@@ -796,7 +838,7 @@ export class HUD {
   buildTitle(onStart) {
     let selMode = 'duel', selP1 = ROSTER[0], selP2 = ROSTER[2], two = false;
     this.title.innerHTML = `
-      <div class="topbar"><button id="tOpt">⚙ Options</button><button id="tHow">❓ How to Play</button></div>
+      <div class="topbar"><button id="tTut">🎓 Tutorial</button><button id="tOpt">⚙ Options</button><button id="tHow">❓ How to Play</button></div>
       <div class="tag">Machine King Labs · Living Superweapon</div>
       <h1>LIVING SUPERWEAPON</h1>
       <div class="modes" id="modes"></div>
@@ -958,6 +1000,7 @@ export class HUD {
     // top bar
     this.title.querySelector('#tOpt').onclick = () => this.showOptions();
     this.title.querySelector('#tHow').onclick = () => this.showHowto();
+    this.title.querySelector('#tTut').onclick = () => this.onTutorial && this.onTutorial();
     renderFilters(); renderRoster(); renderModes(); renderTabs();
     this.title.querySelector('#startBtn').onclick = () => onStart({ mode: selMode, p1: selP1.id, p2: selP2.id, twoPlayer: two });
   }

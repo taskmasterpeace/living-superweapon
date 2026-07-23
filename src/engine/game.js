@@ -63,7 +63,7 @@ const MODE_IMPL = {
     hud(g) { const hi = g.humans.reduce((m, h) => Math.max(m, h.fighter.kills), 0); return { type: 'rumble', frags: hi, target: g.ms.target, timer: Math.max(0, Math.ceil(g.ms.timer)) }; },
   },
   training: {
-    setup(g) { g.spawnDummy(-34, -20); g.spawnDummy(34, -20); g.spawnRival(); },
+    setup(g, o) { g.spawnDummy(-34, -20); g.spawnDummy(34, -20); if (!o || !o.tutorial) g.spawnRival(); },   // tutorial = calm room
     tick() {}, onKO() {}, isOver() { return null; },
     hud() { return { type: 'training' }; },
   },

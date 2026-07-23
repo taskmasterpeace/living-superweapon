@@ -5,10 +5,11 @@ import { Game, ROSTER } from './engine/game.js';
 import { HUD } from './engine/hud.js';
 import { runBenchmark } from './bench/benchmark.js';
 import { CreatorUI } from './engine/creatorUI.js';
-import { runSlot } from './engine/abilities.js';
+import { runSlot, performEvade } from './engine/abilities.js';
 import { loadSettings, applySettings } from './core/settings.js';
 import { installCustoms, loadCustoms, freshPicks, buildDef, tally, validate, saveCustom, deleteCustom } from './data/creator.js';
 import { applyIdentities } from './data/identities.js';
+import { Tutorial } from './engine/tutorial.js';
 
 const canvas = document.getElementById('game');
 const input = new Input(); input.bind(canvas);
@@ -21,6 +22,7 @@ loadSettings(); applySettings(game);   // player settings (volume/shake/quality/
 
 let started = false;
 
+const tutorial = new Tutorial(game, hud);
 function enter(cfg) {
   audio.init(); audio.resume(); applySettings(game);   // master gain exists only after init
   const c = (typeof cfg === 'string') ? { mode: 'training', p1: cfg } : cfg;
@@ -28,6 +30,7 @@ function enter(cfg) {
   hud.setPlayer(ROSTER.find(r => r.id === (c.p1 || 'sol')));
   started = true; game._lastCfg = c;
   hud.hideEndScreen(); hud.hideTitle();
+  if (c.tutorial) tutorial.begin(); else tutorial.skip();
 }
 function openMenu() { game.running = false; hud.hideEndScreen(); hud.buildTitle(enter); hud.showTitle(); }
 
@@ -51,7 +54,9 @@ hud.showTitle();
 hud.onRematch = () => { if (game._lastCfg) enter(game._lastCfg); };
 hud.onMenu = () => openMenu();
 hud.onResume = () => { game.running = true; hud.setPaused(false); };
-// first-timers get the manual once
+hud.onTutorial = () => enter({ mode: 'training', p1: 'sol', tutorial: true });   // SOL teaches every system
+hud.onTutorialSkip = () => tutorial.skip();
+// first-timers get the manual once (with the LEARN BY DOING funnel inside)
 if (!localStorage.getItem('threshold_howto_seen')) hud.showHowto();
 
 game.onKill = (f) => {
@@ -92,6 +97,7 @@ function frame(now) {
     game.update(Math.min(dt, 0.05));
     if (started) {
       hud.update(); padSystem();
+      if (game.running) tutorial.update(Math.min(dt, 0.05));
       if (game.running && !hud.titleOpen && input.wheel) cycleHero(Math.sign(input.wheel));   // wheel = swap hero
     }
   }
@@ -102,7 +108,7 @@ function frame(now) {
 requestAnimationFrame(frame);
 
 // expose for debugging + performance benchmarking
-window.LSW = { game, hud, ROSTER, runSlot, input, creator: { ui: creator, freshPicks, buildDef, tally, validate, saveCustom, deleteCustom, loadCustoms } };
+window.LSW = { game, hud, ROSTER, runSlot, performEvade, input, tutorial, creator: { ui: creator, freshPicks, buildDef, tally, validate, saveCustom, deleteCustom, loadCustoms } };
 window.LSW.runBenchmark = (opts) => runBenchmark(game, hud, opts);
 if (location.search.includes('bench')) {
   addEventListener('load', () => setTimeout(async () => {

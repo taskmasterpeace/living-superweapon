@@ -205,6 +205,15 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
 - **Roster navigation** (`buildTitle`): filter chips (threat tiers · fliers/grounded · CUSTOM), sort
   (name/threat/power/hp/speed), live search, "n / N weapons" count, arrow-key card navigation + Enter to
   start. Stat bars/attr rows/threat badge all carry native `title` tooltips explaining what they do.
+- **Interactive tutorial** (`engine/tutorial.js` + hud `#hTut` banner): LEARN TO PLAY watches REAL
+  inputs — 13 steps (move · LMB · RMB · jab · haymaker · guard · grab · evade · fly · land · gadget ·
+  ult · KO a bot), each `check(f, game, S, dt)` reads live fighter state; non-applicable steps
+  (no flight / no gadget) auto-skip via `enabled(f)`. Runs in a calm Danger Room
+  (`training` setup skips the rival when `o.tutorial`). Entry: title 🎓 button, HOW-TO overlay's
+  "learn by doing" funnel, `hud.onTutorial`. Held power types (cone/phase/lifedrain) leave no
+  cd/sustain trace, so `runSlot` stamps `f._slotUse[key]` on any real press/hold — the tutorial's
+  (and future telemetry's) universal "this slot was used" signal. Completion sets
+  `threshold_tutorial_done` + announces. Headless-verified all steps end-to-end via `LSW.tutorial`.
 
 ## Modes, progression & local multiplayer
 - **Modes** (`MODE_IMPL` in `game.js`, metadata in `data/modes.js`): duel / survival / rumble / training, each with
