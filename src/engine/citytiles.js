@@ -65,6 +65,15 @@ function mats(world, region) {
     barn: S('#8a3a2e', { r: 0.95 }), barnRoof: S('#4c4a46', { r: 0.9 }),
     silo: S('#c8c2b2', { r: 0.7, m: 0.2 }), stoneWall: S(tint('#a8a294', R.wall, 0.4), { r: 0.95 }),
     tractorBody: S('#2f6b34', { r: 0.6, m: 0.3 }), tyre: S('#26262a', { r: 0.95 }),
+    // --- LANDMARKS ---
+    bronze: S('#8a6a3a', { r: 0.45, m: 0.7 }), slate: S(tint('#4a4e56', R.roof, 0.35), { r: 0.85 }),
+    beacon: S('#ff5a3a', { r: 0.4, e: '#ff3b20', ei: 1.6 }),
+    // --- THE WILD (ground decals are UNLIT, same law as the lawns and the crops) ---
+    // ⚠ a forest FLOOR is leaf litter in shade, not a lawn. Tinted too far toward the region's
+    // greenery it came out as bright meadow with trees standing on it.
+    forestFloor: B(tint('#3d4a2c', R.green, 0.22), { o: 1 }), jungleFloor: B(tint('#263a24', R.green, 0.18), { o: 1 }),
+    trail: B(tint('#8a7148', R.ground, 0.4), { o: 0.95 }), scree: B(tint('#8f887c', R.ground, 0.45), { o: 1 }),
+    rock: S(tint('#7d7770', R.wall, 0.25), { r: 1, fs: true }), fern: S(tint('#3f7038', R.green, 0.5), { r: 1, fs: true }),
     // --- THE FIELD + THE YARDS (multi-cell landmarks) ---
     tarmac: S('#63615c', { r: 0.98 }), runwayLine: B('#f0ead8', { o: 0.9 }),
     ballast: S('#7d766a', { r: 1 }), rail: S('#6a6a70', { r: 0.5, m: 0.6 }),
@@ -81,12 +90,16 @@ function mats(world, region) {
 // and physics all keep working untouched. Set plan.cell and the whole city changes size.
 const sx = (ctx, x) => ctx.cx + (x - ctx.cx) * ctx.S;      // world X from a base-unit X
 const sz = (ctx, z) => ctx.cz + (z - ctx.cz) * ctx.S;      // world Z from a base-unit Z
+// THE GROUND A TILE STANDS ON. Flat maps return 0 and nothing changes; on a map with relief this
+// is the cell's levelled pad height, so a whole block sits together on its terrace instead of each
+// piece floating or burying itself independently.
 function mesh(ctx, geo, mat, x, y, z, o = {}) {
   const m = new THREE.Mesh(geo, mat);
-  m.position.set(sx(ctx, x), y * ctx.S, sz(ctx, z));
+  m.position.set(sx(ctx, x), y * ctx.S + ctx.gy, sz(ctx, z));
   if (ctx.S !== 1) m.scale.setScalar(ctx.S);
   if (o.ry) m.rotation.y = o.ry; if (o.rx) m.rotation.x = o.rx; if (o.rz) m.rotation.z = o.rz;
   m.castShadow = !!o.cast; m.receiveShadow = o.recv !== false;
+  m.userData.gy = ctx.gy;                          // reg() needs it to make `top` absolute
   ctx.g.add(m); return m;
 }
 // a structural, destructible building with a windowed facade + roof slab + crack overlay
@@ -94,15 +107,17 @@ function tower(ctx, x, z, w, h, d, winMat, roofMat, o = {}) {
   const world = ctx.world, S = ctx.S;
   const geo = new THREE.BoxGeometry(w, h, d); scaleBoxUV(geo, w, h, d, (winMat && winMat.userData.bay) || 17);
   const m = new THREE.Mesh(geo, winMat);
-  const wx = sx(ctx, x), wz = sz(ctx, z), W = w * S, H = h * S, D = d * S;
-  m.position.set(wx, H / 2, wz); m.castShadow = H >= 44; m.receiveShadow = true;
+  const wx = sx(ctx, x), wz = sz(ctx, z), W = w * S, H = h * S, D = d * S, gy = ctx.gy;
+  m.position.set(wx, gy + H / 2, wz); m.castShadow = H >= 44; m.receiveShadow = true;
   if (S !== 1) m.scale.setScalar(S);
   ctx.g.add(m);
   if (roofMat) { const roof = new THREE.Mesh(new THREE.PlaneGeometry(w, d), roofMat); roof.rotation.x = -Math.PI / 2; roof.position.y = h / 2 + 0.05; roof.receiveShadow = true; m.add(roof); }
   const crack = new THREE.Mesh(new THREE.BoxGeometry(w * 1.015, h * 1.006, d * 1.015), new THREE.MeshBasicMaterial({ map: world._crackTex, transparent: true, opacity: 0, depthWrite: false }));
   crack.position.copy(m.position); crack.scale.copy(m.scale); crack.visible = false; ctx.g.add(crack);
   const hp = Math.round(70 + W * H * D * 0.0075);
-  const co = { mesh: m, crack, x: wx, z: wz, r: Math.max(W, D) * 0.6, h: H, hx: W / 2, hz: D / 2, top: H, hp, maxHp: hp, y0: H / 2, w: W, d: D, destroyed: false };
+  // ⚠ `top` is the ABSOLUTE height you stand on — physics compares it to a fighter's world y — so
+  // it has to include the ground the building sits on, not just its own height.
+  const co = { mesh: m, crack, x: wx, z: wz, r: Math.max(W, D) * 0.6, h: H, hx: W / 2, hz: D / 2, top: gy + H, hp, maxHp: hp, y0: gy + H / 2, w: W, d: D, destroyed: false };
   world.cover.push(co); world.coverAll.push(co);
   return m;
 }
@@ -114,6 +129,7 @@ function tower(ctx, x, z, w, h, d, winMat, roofMat, o = {}) {
 function reg(world, m, x, z, hx, hz, top, hp) {
   const S = m.scale.x || 1;
   hx *= S; hz *= S; top *= S;
+  top += (m.userData.gy || 0);                     // stand on the terrace, not on y=0
   const co = { mesh: m, crack: null, x: m.position.x, z: m.position.z, r: Math.max(hx, hz), h: top, hx, hz, top,
                hp, maxHp: hp, y0: m.position.y, w: hx * 2, d: hz * 2, destroyed: false };
   world.cover.push(co); world.coverAll.push(co);
@@ -559,6 +575,290 @@ const T = {
   },
   // THE COUNTRY — Villages and Small Towns were being built as miniature cities. Farmland gives
   // the small places the rural character they actually have: open sightlines, low cover, long grass.
+  // ---- THE LANDMARKS ---------------------------------------------------------------------------
+  // Chosen per city by data/landmarks.js, named there too. These are the structures a city is
+  // KNOWN for, so they are deliberately taller, stranger and more expensive than their neighbours —
+  // if a landmark doesn't dominate its skyline it isn't doing its job.
+  //
+  // THE MONUMENT — the thing in the square everyone meets at. Four forms, and the REGION picks
+  // which reads as native: an arch, a column, a stepped obelisk, a standing figure.
+  monument(ctx, cx, cz, v) {
+    const M2 = ctx.mats, W = ctx.world, R = ctx.region;
+    disc(ctx, M2.plazaM, cx, cz, 40, 0.09, 34);
+    for (const [ox, oz] of [[-30, -30], [30, -30], [-30, 30], [30, 30]]) ctx.treeSpots.push([cx + ox, cz + oz]);
+    const stone = M2.marble;
+    // the plinth is shared by every form — it is what makes it read as a monument, not a building
+    const pl = mesh(ctx, new THREE.BoxGeometry(24, 5, 24), stone, cx, 2.5, cz, { cast: true });
+    reg(W, pl, cx, cz, 12, 12, 5, 260);
+    if (v === 0) {                       // A TRIUMPHAL ARCH — you can run through it
+      const legW = 9, span = 34, h = 40;
+      for (const s of [-1, 1]) {
+        const lx = cx + s * (span / 2 - legW / 2);
+        const leg = mesh(ctx, new THREE.BoxGeometry(legW, h, 16), stone, lx, 5 + h / 2, cz, { cast: true });
+        reg(W, leg, lx, cz, legW / 2, 8, 5 + h, 420);
+      }
+      mesh(ctx, new THREE.BoxGeometry(span + 6, 12, 19), stone, cx, 5 + h + 6, cz, { cast: true });
+      mesh(ctx, new THREE.BoxGeometry(span + 10, 3, 22), M2.gold, cx, 5 + h + 13.5, cz, { cast: true });
+    } else if (v === 1) {                // A COLUMN — a single vertical you can see across the city
+      const h = 62;
+      const col = mesh(ctx, new THREE.CylinderGeometry(4.4, 5.4, h, 14), stone, cx, 5 + h / 2, cz, { cast: true });
+      reg(W, col, cx, cz, 5.4, 5.4, 5 + h, 380);
+      mesh(ctx, new THREE.CylinderGeometry(7, 5, 5, 14), stone, cx, 5 + h + 2.5, cz, { cast: true });
+      mesh(ctx, new THREE.SphereGeometry(4.4, 12, 10), M2.gold, cx, 5 + h + 8, cz, { cast: true });
+    } else if (v === 2) {                // A STEPPED OBELISK
+      let y = 5, s = 17;
+      for (let i = 0; i < 4; i++) { const h = 13 - i * 1.6; mesh(ctx, new THREE.BoxGeometry(s, h, s), stone, cx, y + h / 2, cz, { cast: true }); y += h; s *= 0.72; }
+      const sp = mesh(ctx, new THREE.CylinderGeometry(0.4, 3.4, 26, 4), R.dome > 0.2 ? M2.domeGold : stone, cx, y + 13, cz, { cast: true });
+      reg(W, sp, cx, cz, 8, 8, y + 26, 340);
+    } else {                             // A STANDING FIGURE on a tall plinth
+      const h = 26;
+      const p2 = mesh(ctx, new THREE.BoxGeometry(15, h, 15), stone, cx, 5 + h / 2, cz, { cast: true });
+      reg(W, p2, cx, cz, 7.5, 7.5, 5 + h, 300);
+      const y0 = 5 + h;
+      mesh(ctx, new THREE.CylinderGeometry(2.6, 3.2, 15, 8), M2.bronze, cx, y0 + 7.5, cz, { cast: true });   // body
+      mesh(ctx, new THREE.SphereGeometry(2.9, 10, 8), M2.bronze, cx, y0 + 17, cz, { cast: true });           // head
+      const arm = mesh(ctx, new THREE.CylinderGeometry(1.1, 1.1, 13, 6), M2.bronze, cx + 3.4, y0 + 12, cz, { rz: -0.9, cast: true });
+      arm.rotation.z = -0.9;
+    }
+  },
+  // THE SPIRE — the tallest thing for miles. Deliberately far above the 150u tower ceiling, because
+  // a landmark you can't see from the far side of the map is not a landmark.
+  tower(ctx, cx, cz, v) {
+    const M2 = ctx.mats, W = ctx.world;
+    const H = v === 0 ? 210 : v === 1 ? 250 : 180;
+    disc(ctx, M2.plazaM, cx, cz, 34, 0.09, 30);
+    if (v === 1) {                       // a LATTICE mast — four legs tapering to a spire
+      const base = 26;
+      for (let i = 0; i < 5; i++) {
+        const t0 = i / 5, t1 = (i + 1) / 5;
+        const s0 = base * (1 - t0 * 0.82), s1 = base * (1 - t1 * 0.82);
+        const seg = mesh(ctx, new THREE.CylinderGeometry(s1 / 2, s0 / 2, H / 5, 4, 1, true), M2.steel, cx, H * t0 + H / 10, cz, { cast: true });
+        seg.material = M2.steel;
+      }
+      const core = mesh(ctx, new THREE.BoxGeometry(9, H, 9), M2.steel, cx, H / 2, cz, { cast: true });
+      reg(W, core, cx, cz, 13, 13, H, 900);
+      mesh(ctx, new THREE.CylinderGeometry(0.6, 2.4, 40, 6), M2.steel, cx, H + 20, cz, { cast: true });
+      mesh(ctx, new THREE.SphereGeometry(2.2, 8, 6), M2.beacon, cx, H + 42, cz);
+    } else {                             // a CONCRETE shaft with an observation pod
+      const rB = v === 0 ? 9 : 11;
+      const shaft = mesh(ctx, new THREE.CylinderGeometry(rB * 0.55, rB, H, 14), M2.white, cx, H / 2, cz, { cast: true });
+      reg(W, shaft, cx, cz, rB, rB, H, 950);
+      const py = H * 0.78;
+      mesh(ctx, new THREE.CylinderGeometry(rB * 2.4, rB * 1.6, 15, 16), W._winMats[0], cx, py, cz, { cast: true });
+      mesh(ctx, new THREE.CylinderGeometry(rB * 2.5, rB * 2.5, 1.6, 16), M2.steelRoof, cx, py + 8.3, cz, { cast: true });
+      mesh(ctx, new THREE.CylinderGeometry(0.5, 2, 34, 6), M2.steel, cx, H + 17, cz, { cast: true });
+      mesh(ctx, new THREE.SphereGeometry(2, 8, 6), M2.beacon, cx, H + 35, cz);
+    }
+  },
+  // THE GREAT HOUSE — one slot, four forms. `cell.faith` comes from the architectural region, so
+  // this builds a gothic cathedral in Oslo and a domed mosque in Kabul from the same placement row.
+  cathedral(ctx, cx, cz, v, cell) {
+    const M2 = ctx.mats, W = ctx.world;
+    const faith = (cell && cell.faith) || 'cathedral';
+    disc(ctx, M2.plazaM, cx, cz, 42, 0.09, 32);
+    if (faith === 'mosque') {
+      const hall = mesh(ctx, boxUV(50, 20, 50, M2.white), M2.white, cx, 10, cz, { cast: true });
+      reg(W, hall, cx, cz, 25, 25, 20, 620);
+      mesh(ctx, new THREE.SphereGeometry(21, 20, 14, 0, Math.PI * 2, 0, Math.PI / 2), M2.domeGold, cx, 20, cz, { cast: true });
+      mesh(ctx, new THREE.SphereGeometry(3.4, 10, 8), M2.domeGold, cx, 43, cz, { cast: true });
+      for (const [ox, oz] of [[-30, -30], [30, -30], [-30, 30], [30, 30]]) {      // four minarets
+        const mn = mesh(ctx, new THREE.CylinderGeometry(2.6, 3.4, 58, 10), M2.white, cx + ox, 29, cz + oz, { cast: true });
+        reg(W, mn, cx + ox, cz + oz, 3.4, 3.4, 58, 240);
+        mesh(ctx, new THREE.ConeGeometry(4.2, 9, 10), M2.domeGold, cx + ox, 62, cz + oz, { cast: true });
+      }
+    } else if (faith === 'pagoda') {
+      let y = 0, s = 42;
+      for (let i = 0; i < 5; i++) {
+        const h = 15 - i * 1.4;
+        const t = mesh(ctx, boxUV(s, h, s, M2.stone), M2.stone, cx, y + h / 2, cz, { cast: true });
+        if (i === 0) reg(W, t, cx, cz, s / 2, s / 2, h, 560);
+        mesh(ctx, new THREE.BoxGeometry(s + 12, 2.6, s + 12), M2.terraRoof, cx, y + h + 1.3, cz, { cast: true });
+        y += h + 2.6; s *= 0.82;
+      }
+      mesh(ctx, new THREE.CylinderGeometry(0.6, 1.6, 16, 6), M2.gold, cx, y + 8, cz, { cast: true });
+    } else if (faith === 'temple') {
+      const base = mesh(ctx, boxUV(52, 14, 52, M2.stone), M2.stone, cx, 7, cz, { cast: true });
+      reg(W, base, cx, cz, 26, 26, 14, 600);
+      let y = 14, s = 30;
+      for (let i = 0; i < 6; i++) { const h = 9 - i * 0.9; mesh(ctx, new THREE.CylinderGeometry(s * 0.42, s * 0.5, h, 8), M2.stone, cx, y + h / 2, cz, { cast: true }); y += h; s *= 0.86; }
+      mesh(ctx, new THREE.SphereGeometry(4, 10, 8), M2.gold, cx, y + 4, cz, { cast: true });
+    } else {                             // a GOTHIC cathedral: nave, transept, two west towers
+      const nave = mesh(ctx, boxUV(30, 30, 62, M2.stone), M2.stone, cx, 15, cz, { cast: true });
+      reg(W, nave, cx, cz, 15, 31, 30, 640);
+      mesh(ctx, new THREE.BoxGeometry(58, 26, 22), M2.stone, cx, 13, cz + 4, { cast: true });          // transept
+      const roof = mesh(ctx, new THREE.CylinderGeometry(16, 16, 62, 3, 1, false, 0, Math.PI), M2.slate, cx, 30, cz, { cast: true });
+      roof.rotation.z = -Math.PI / 2; roof.rotation.y = Math.PI / 2;
+      for (const s of [-1, 1]) {
+        const tx = cx + s * 11, tz = cz - 34;
+        const tw = mesh(ctx, boxUV(15, 66, 15, M2.stone), M2.stone, tx, 33, tz, { cast: true });
+        reg(W, tw, tx, tz, 7.5, 7.5, 66, 380);
+        mesh(ctx, new THREE.ConeGeometry(11, 26, 4), M2.slate, tx, 79, tz, { cast: true });
+      }
+      mesh(ctx, new THREE.CylinderGeometry(9, 9, 1.4, 16), M2.gold, cx, 24, cz - 30.5, { rx: Math.PI / 2, cast: true });  // rose window
+    }
+  },
+  // THE PALACE — a long colonnaded front, wings, a court and a formal garden. 1×2, so it reads as
+  // a compound rather than a block.
+  palace(ctx, cx, cz, v) {
+    const M2 = ctx.mats, W = ctx.world;
+    const HW = ctx.W / 2 - 10, HD = ctx.D / 2 - 10;
+    disc(ctx, M2.plazaM, cx, cz + HD * 0.5, HW * 0.9, 0.09, 30);
+    const main = mesh(ctx, boxUV(HW * 1.3, 30, 34, M2.marble), M2.marble, cx, 15, cz - HD * 0.25, { cast: true });
+    reg(W, main, cx, cz - HD * 0.25, HW * 0.65, 17, 30, 700);
+    mesh(ctx, new THREE.BoxGeometry(HW * 1.34, 3, 38), M2.paleRoof, cx, 31.5, cz - HD * 0.25);
+    for (const s of [-1, 1]) {                        // the wings, reaching forward to make a court
+      const wx = cx + s * HW * 0.58;
+      const wing = mesh(ctx, boxUV(24, 24, HD * 0.9, M2.marble), M2.marble, wx, 12, cz + HD * 0.15, { cast: true });
+      reg(W, wing, wx, cz + HD * 0.15, 12, HD * 0.45, 24, 420);
+    }
+    for (let i = -5; i <= 5; i++)                     // the colonnade
+      mesh(ctx, new THREE.CylinderGeometry(2.2, 2.4, 26, 10), M2.marble, cx + i * (HW * 0.2), 13, cz - HD * 0.25 + 19, { cast: true });
+    mesh(ctx, new THREE.BoxGeometry(HW * 0.5, 3.4, 4), M2.marble, cx, 27, cz - HD * 0.25 + 19, { cast: true });
+    if (v === 1) mesh(ctx, new THREE.SphereGeometry(15, 18, 12, 0, Math.PI * 2, 0, Math.PI / 2), M2.domeGold, cx, 31, cz - HD * 0.25, { cast: true });
+    for (const s of [-1, 1]) flagpole(ctx, cx + s * HW * 0.3, cz + HD * 0.45, 30);
+    disc(ctx, M2.lawnM, cx, cz + HD * 0.62, HW * 0.55, 0.1, 26);
+  },
+  // THE CITADEL — the old fortress the city grew around. Ramparts you can stand on, corner towers,
+  // a gate, and a keep. This is the one landmark that is mostly WALLS, so it fights differently.
+  fortress(ctx, cx, cz, v) {
+    const M2 = ctx.mats, W = ctx.world;
+    const HW = ctx.W / 2 - 12, HD = ctx.D / 2 - 12, H = 26;
+    const wall = (x, z, w, d) => {
+      const m = mesh(ctx, boxUV(w, H, d, M2.stone), M2.stone, x, H / 2, z, { cast: true });
+      reg(W, m, x, z, w / 2, d / 2, H, 520);
+    };
+    wall(cx, cz - HD, HW * 2, 9);
+    wall(cx, cz + HD, HW * 2, 9);
+    wall(cx - HW, cz, 9, HD * 2);
+    wall(cx + HW, cz, 9, HD * 2);
+    for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {         // corner drum towers
+      const tx = cx + sx * HW, tz = cz + sz * HD;
+      const t = mesh(ctx, new THREE.CylinderGeometry(13, 14, H + 12, 12), M2.stone, tx, (H + 12) / 2, tz, { cast: true });
+      reg(W, t, tx, tz, 13, 13, H + 12, 460);
+      mesh(ctx, new THREE.ConeGeometry(15, 12, 12), M2.slate, tx, H + 18, tz, { cast: true });
+    }
+    // the gate — a real opening you fight through
+    mesh(ctx, new THREE.BoxGeometry(18, 15, 11), M2.dark, cx, 7.5, cz + HD);
+    const keep = mesh(ctx, boxUV(38, 52, 38, M2.stone), M2.stone, cx, 26, cz - HD * 0.15, { cast: true });
+    reg(W, keep, cx, cz - HD * 0.15, 19, 19, 52, 780);
+    for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]])
+      mesh(ctx, new THREE.BoxGeometry(9, 62, 9), M2.stone, cx + sx * 17, 31, cz - HD * 0.15 + sz * 17, { cast: true });
+    flagpole(ctx, cx, cz - HD * 0.15, 74);
+    disc(ctx, M2.dirtYard, cx, cz + HD * 0.3, HW * 0.7, 0.1, 24);
+  },
+  // THE COLLEGE — a quadrangle you can run the cloister of, a domed library, a bell tower.
+  university(ctx, cx, cz, v) {
+    const M2 = ctx.mats, W = ctx.world;
+    const HW = ctx.W / 2 - 12, HD = ctx.D / 2 - 12;
+    disc(ctx, M2.lawnM, cx, cz, Math.min(HW, HD) * 0.62, 0.1, 30);
+    const range = (x, z, w, d, h) => {
+      const m = mesh(ctx, boxUV(w, h, d, W._winMats[2]), W._winMats[2], x, h / 2, z, { cast: true });
+      reg(W, m, x, z, w / 2, d / 2, h, 380);
+      mesh(ctx, new THREE.BoxGeometry(w + 3, 2.4, d + 3), M2.slate, x, h + 1.2, z);
+    };
+    range(cx, cz - HD * 0.8, HW * 1.6, 22, 26);
+    range(cx, cz + HD * 0.8, HW * 1.6, 22, 22);
+    range(cx - HW * 0.85, cz, 20, HD * 1.3, 24);
+    range(cx + HW * 0.85, cz, 20, HD * 1.3, 24);
+    // the library: a rotunda with a dome — the one piece that says "this is not an office block"
+    const lx = cx + HW * 0.35, lz = cz - HD * 0.15;
+    const lib = mesh(ctx, new THREE.CylinderGeometry(17, 18, 30, 16), M2.marble, lx, 15, lz, { cast: true });
+    reg(W, lib, lx, lz, 17, 17, 30, 480);
+    mesh(ctx, new THREE.SphereGeometry(17, 18, 12, 0, Math.PI * 2, 0, Math.PI / 2), M2.paleRoof, lx, 30, lz, { cast: true });
+    const bx = cx - HW * 0.5, bz = cz + HD * 0.2;                          // the bell tower
+    const bt = mesh(ctx, boxUV(14, 58, 14, M2.stone), M2.stone, bx, 29, bz, { cast: true });
+    reg(W, bt, bx, bz, 7, 7, 58, 340);
+    mesh(ctx, new THREE.BoxGeometry(17, 4, 17), M2.stone, bx, 59, bz, { cast: true });
+    mesh(ctx, new THREE.ConeGeometry(11, 14, 4), M2.slate, bx, 68, bz, { cast: true });
+    for (let i = 0; i < 6; i++) ctx.treeSpots.push([cx - 20 + (i % 3) * 20, cz - 12 + ((i / 3) | 0) * 24]);
+  },
+
+  // ---- THE WILD ---------------------------------------------------------------------------------
+  // THE WOODS. A forest is not a park with more trees: a park is open ground you can see across,
+  // a forest is a place where SIGHTLINES DIE. Cover here is soft and everywhere (trunks), the
+  // hard cover is rare (boulders, fallen giants), and the only fast ground is the path — which
+  // curves, so you never see far down it. `v` sets how thick it is: woodland, deep forest, jungle.
+  forest(ctx, cx, cz, v, cell) {
+    const M2 = ctx.mats, W = ctx.world, rng = ctx.rng;
+    const HW = ctx.W / 2 - 2, HD = ctx.D / 2 - 2;
+    const jungle = v === 2;
+    slab(ctx, jungle ? M2.jungleFloor : M2.forestFloor, cx, cz, HW * 2, HD * 2, 0.07);
+    // THE PATH — a meander, not a line. Three control points wobbled off the axis and walked with
+    // short quads, so it reads as a trail worn by feet rather than a road that happens to be brown.
+    const along = (cell && cell.face === 'e') || (cell && cell.face === 'w') || rng() < 0.5;
+    const amp = HW * 0.42, segs = 14;
+    const pathPts = [];
+    const ph = rng() * 6.28, wob = 0.7 + rng() * 0.9;
+    for (let i = 0; i <= segs; i++) {
+      const t = i / segs, u = -1 + t * 2;
+      const off = Math.sin(ph + t * 3.1 * wob) * amp * (0.35 + 0.65 * Math.sin(t * Math.PI));
+      pathPts.push(along ? [cx + u * HW, cz + off] : [cx + off, cz + u * HD]);
+    }
+    for (let i = 0; i < pathPts.length - 1; i++) {
+      const [x0, z0] = pathPts[i], [x1, z1] = pathPts[i + 1];
+      const dx = x1 - x0, dz = z1 - z0, len = Math.hypot(dx, dz);
+      const q = mesh(ctx, new THREE.PlaneGeometry(len + 2.2, 7.5), M2.trail, (x0 + x1) / 2, 0.1, (z0 + z1) / 2, { recv: false });
+      q.rotation.x = -Math.PI / 2; q.rotation.z = -Math.atan2(dz, dx);
+    }
+    // trees everywhere EXCEPT on the trail — a forest you cannot walk through is a wall
+    const near = (x, z) => { for (const [px, pz] of pathPts) if ((x - px) ** 2 + (z - pz) ** 2 < 150) return true; return false; };
+    const n = jungle ? 46 : v === 1 ? 34 : 22;
+    for (let i = 0; i < n; i++) {
+      const x = cx + (rng() * 2 - 1) * HW * 0.94, z = cz + (rng() * 2 - 1) * HD * 0.94;
+      if (near(x, z)) continue;
+      ctx.treeSpots.push([x, z]);
+    }
+    // the hard cover: boulders, and fallen giants you vault or shelter behind
+    const rocks = jungle ? 2 : 4;
+    for (let i = 0; i < rocks; i++) {
+      const x = cx + (rng() * 2 - 1) * HW * 0.8, z = cz + (rng() * 2 - 1) * HD * 0.8;
+      if (near(x, z)) continue;
+      const s = 5 + rng() * 6;
+      const b = mesh(ctx, new THREE.DodecahedronGeometry(s, 0), M2.rock, x, s * 0.62, z, { cast: true });
+      b.rotation.set(rng(), rng(), rng());
+      reg(W, b, x, z, s * 0.85, s * 0.85, s * 1.2, 200);
+    }
+    for (let i = 0; i < 2; i++) {
+      const x = cx + (rng() * 2 - 1) * HW * 0.7, z = cz + (rng() * 2 - 1) * HD * 0.7;
+      if (near(x, z)) continue;
+      const L = 26 + rng() * 16, a = rng() * 3.14;
+      const log = mesh(ctx, new THREE.CylinderGeometry(2.6, 3.2, L, 8), M2.palmT, x, 2.9, z, { rz: Math.PI / 2, ry: a, cast: true });
+      log.rotation.set(0, a, Math.PI / 2);
+      reg(W, log, x, z, L * 0.4, 3.2, 5.5, 90);
+    }
+    if (jungle) for (let i = 0; i < 10; i++) {                       // undergrowth: waist-high, blocks nothing but hides feet
+      const x = cx + (rng() * 2 - 1) * HW * 0.9, z = cz + (rng() * 2 - 1) * HD * 0.9;
+      if (near(x, z)) continue;
+      const f = mesh(ctx, new THREE.IcosahedronGeometry(5 + rng() * 3, 0), M2.fern, x, 2.4, z);
+      f.scale.set(1, 0.42, 1);
+    }
+  },
+  // THE HEIGHTS. Rock, scree and a switchback trail. The tile does not raise the land itself —
+  // `plan.relief` does that globally — but it is where the land is left UNPADDED, so this is the
+  // only ground in a city that is genuinely uneven under your feet.
+  mountain(ctx, cx, cz, v) {
+    const M2 = ctx.mats, W = ctx.world, rng = ctx.rng;
+    const HW = ctx.W / 2 - 2, HD = ctx.D / 2 - 2;
+    slab(ctx, M2.scree, cx, cz, HW * 2, HD * 2, 0.07);
+    // outcrops — big enough to break a beam, irregular enough not to read as boxes
+    const n = v === 0 ? 7 : 5;
+    for (let i = 0; i < n; i++) {
+      const x = cx + (rng() * 2 - 1) * HW * 0.82, z = cz + (rng() * 2 - 1) * HD * 0.82;
+      const s = 11 + rng() * 16;
+      const b = mesh(ctx, new THREE.DodecahedronGeometry(s, 0), M2.rock, x, s * 0.5, z, { cast: true });
+      b.rotation.set(rng() * 0.4, rng() * 3, rng() * 0.4);
+      b.scale.set(1, 0.7 + rng() * 0.6, 1);
+      reg(W, b, x, z, s * 0.8, s * 0.8, s * 1.1, 300);
+    }
+    for (let i = 0; i < 14; i++) {                                   // scree: small stuff underfoot
+      const x = cx + (rng() * 2 - 1) * HW, z = cz + (rng() * 2 - 1) * HD, s = 1.6 + rng() * 2.6;
+      const r2 = mesh(ctx, new THREE.DodecahedronGeometry(s, 0), M2.rock, x, s * 0.5, z);
+      r2.rotation.set(rng(), rng(), rng());
+    }
+    if (v === 1) for (let i = 0; i < 6; i++)                         // a stand of hardy pines
+      ctx.treeSpots.push([cx + (rng() * 2 - 1) * HW * 0.7, cz + (rng() * 2 - 1) * HD * 0.7]);
+  },
+
   // ---- THE COUNTRYSIDE ------------------------------------------------------------------------
   // The country is not a city with fewer buildings — it is a DIFFERENT FIGHT: open sightlines, low
   // cover you vault rather than hide behind, and long runs of nothing. Everything here is built to
@@ -662,7 +962,7 @@ export function buildTiles(world, group, plan, rng) {
   }
   const A = plan.arena, cellSize = plan.cell || CELL, S = cellSize / CELL;
   const ctx = { world, g: group, rng, mats: M2, region, treeSpots: [], plan,
-                W: CELL, D: CELL, fw: 1, fh: 1, S, cell: cellSize, cx: 0, cz: 0 };
+                W: CELL, D: CELL, fw: 1, fh: 1, S, cell: cellSize, cx: 0, cz: 0, gy: 0 };
   world._pendingCuts = world._pendingCuts || []; world._pendingPits = world._pendingPits || [];
   for (let r = 0; r < plan.N; r++) for (let c = 0; c < plan.N; c++) {
     const cell = plan.cells[r][c];
@@ -673,6 +973,7 @@ export function buildTiles(world, group, plan, rng) {
     ctx.fw = fw; ctx.fh = fh;
     ctx.W = fw * CELL; ctx.D = fh * CELL;                                  // BASE units — helpers scale
     ctx.cx = -A + (c + fw / 2) * cellSize; ctx.cz = -A + (r + fh / 2) * cellSize;
+    ctx.gy = world.heightAt ? world.heightAt(ctx.cx, ctx.cz) : 0;   // the terrace this block sits on
     const builder = T[cell.t];
     if (!builder) continue;
     // the three things builders push as raw world coordinates have to be scaled too — snapshot the

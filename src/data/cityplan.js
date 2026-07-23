@@ -10,6 +10,7 @@
 // the gallery/proving-ground and the atlas both derive from that one table.
 import { mulberry } from './news.js';
 import { cultureOf } from './cities.js';
+import { pickLandmarks, nameLandmark, faithOf } from './landmarks.js';
 
 // THE BASE CELL. Every tile builder is authored against this: a 96-unit district block, sized so a
 // 9.6u (1.8m) hero fights DOWN through a real city. It is the UNIT, not a hard limit — a plan can
@@ -36,10 +37,19 @@ export const TILE_INFO = {
   market:      { label: 'THE MARKET',  c: '#e8a24a' },
   metro:       { label: 'THE LINE',    c: '#7fd0c0' },
   farmland:    { label: 'THE COUNTY',  c: '#9ab061' },
+  forest:      { label: 'THE WOODS',   c: '#3f7a3a' },
+  mountain:    { label: 'THE HEIGHTS', c: '#8a8478' },
   airport:     { label: 'THE FIELD',   c: '#bfc8d8' },
   railyard:    { label: 'THE YARDS',   c: '#b08d5a' },
+  // --- LANDMARKS (chosen per city by data/landmarks.js, never by a fixed placement row) ---
+  monument:    { label: 'THE MONUMENT', c: '#e8dcc0' },
+  tower:       { label: 'THE SPIRE',    c: '#cfe0f0' },
+  cathedral:   { label: 'THE GREAT HOUSE', c: '#f0e0b0' },
+  palace:      { label: 'THE PALACE',   c: '#f5d99a' },
+  fortress:    { label: 'THE CITADEL',  c: '#a89880' },
+  university:  { label: 'THE COLLEGE',  c: '#a8e08a' },
 };
-export const VARIANTS = { residential: 3, commercial: 3, company: 2, industrial: 3, military: 2, political: 2, educational: 2, temple: 3, mining: 2, seaport: 2, resort: 2, park: 2, plaza: 2, stadium: 2, hospital: 2, market: 2, metro: 2, farmland: 3, airport: 2, railyard: 2 };
+export const VARIANTS = { residential: 3, commercial: 3, company: 2, industrial: 3, military: 2, political: 2, educational: 2, temple: 3, mining: 2, seaport: 2, resort: 2, park: 2, plaza: 2, stadium: 2, hospital: 2, market: 2, metro: 2, farmland: 3, forest: 3, mountain: 2, airport: 2, railyard: 2, monument: 4, tower: 3, cathedral: 4, palace: 2, fortress: 2, university: 2 };
 
 // ---- MULTI-CELL FOOTPRINTS ------------------------------------------------------------------
 // A tile used to be exactly one 96u cell, which is why there could be no airport, no rail yard,
@@ -48,7 +58,7 @@ export const VARIANTS = { residential: 3, commercial: 3, company: 2, industrial:
 // the anchor so the planner, the roads, the districts and the editor all agree on who owns it.
 //   anchor  { t, v, r, c, fh, fw }          covered  { t, ref: [ar, ac] }
 // `foot` is [rows, cols]; the planner also tries it ROTATED, so a 1×3 yard can run either way.
-export const TILE_FOOT = { stadium: [2, 2], airport: [2, 3], railyard: [1, 3] };
+export const TILE_FOOT = { stadium: [2, 2], airport: [2, 3], railyard: [1, 3], palace: [1, 2], fortress: [2, 2], university: [1, 2] };
 export const isRef = (cell) => !!(cell && cell.ref);
 
 // ⚠ SCALE HAS TO READ. City and Large City were BOTH 5×5 and a Mega City was only 6×6, so the
@@ -101,10 +111,11 @@ export const PLACEMENT = [
   { t: 'company',     need: 'company',     minN: 5, score: { center: 2 } },
   { t: 'industrial',  need: 'industrial',  score: { rim: 1, water: 2 } },
   { t: 'industrial',  need: 'industrial',  minN: 5, score: { rim: 1, water: 2 } },
-  // --- the multi-cell landmarks: things that simply could not exist on a 1×1 grid
-  { t: 'airport',  minN: 6, foot: [2, 3], landmark: true, score: { rim: 4, water: -2 } },
-  { t: 'railyard', minN: 5, foot: [1, 3], landmark: true, chance: 0.75, score: { rim: 2, cluster: 1 } },
-  { t: 'stadium',  minN: 5, foot: [2, 2], landmark: true, score: { rim: 1.5 } },
+  // ⚠ THE SPECIAL STRUCTURES ARE NOT LISTED HERE ANY MORE. Airport, stadium, rail yard and the
+  // new monument/tower/cathedral/palace/fortress/university are chosen per city by
+  // `pickLandmarks` (data/landmarks.js) from a budget derived off the city's own row, and are
+  // injected into this table at generate time. Adding one as a fixed row here would give it to
+  // every city again, which is exactly what made them read as furniture.
   // --- civic amenities: every real city has these regardless of what it's famous for
   { t: 'hospital', score: { ring: 2 } },
   { t: 'market',   minN: 4, score: { center: 1 } },
@@ -117,6 +128,14 @@ export const PLACEMENT = [
   { t: 'residential', rural: 'only', minN: 3, chance: 0.7, score: { center: 2, cluster: 1.5 } },
   { t: 'temple',      rural: 'only', minN: 3, chance: 0.55, score: { center: 1 } },   // the parish church
   { t: 'market',      rural: 'only', minN: 4, chance: 0.6, score: { center: 2 } },    // market day
+  // --- THE WILD. What is left over at the edge of the map is not a vacant lot — it is the country
+  // the city was built in. `biome` decides which: woods, jungle or bare rock.
+  { t: 'forest',   biome: ['forest', 'jungle'], score: { rim: 3, jitter: 1 } },
+  { t: 'forest',   biome: ['forest', 'jungle'], minN: 5, score: { rim: 3, cluster: 2 } },
+  { t: 'forest',   biome: ['forest', 'jungle'], minN: 7, score: { rim: 2, cluster: 2 } },
+  { t: 'mountain', biome: ['mountain'], score: { rim: 4 } },
+  { t: 'mountain', biome: ['mountain'], minN: 5, score: { rim: 3, cluster: 2 } },
+  { t: 'mountain', biome: ['mountain'], minN: 7, score: { rim: 3, cluster: 2 } },
   // --- greenbelt
   { t: 'park',     score: { ring: 1, jitter: 1 } },
   { t: 'park',     minN: 5, score: { ring: 1, jitter: 1 } },
@@ -147,6 +166,40 @@ export const REGIONS = {
 };
 export const regionOf = (code) => REGIONS[code] || REGIONS[0];
 
+// ---- RELIEF: what the land under this city is doing -------------------------------------------
+// The terrain was a table everywhere. `plan.relief` raises it before anything is built (see
+// world._buildRelief), and the built-up cells are then levelled onto terraces so a block stands on
+// flat ground. `amp` is the peak-to-trough height in base units — 0 is the old flat world.
+//   flat       nothing (the default; costs nothing and changes nothing)
+//   hills      gentle rolling ground, sightlines break over a rise
+//   valley     ringed by high ground — the city sits in a bowl
+//   plateau    the town stands up on a shelf, ground falls away at the rim
+//   coastal    falls steadily toward the water
+//   mountains  serious relief at the rim, a hard bowl in the middle
+export const RELIEFS = {
+  flat:      { kind: 'flat',      amp: 0 },
+  hills:     { kind: 'hills',     amp: 16 },
+  valley:    { kind: 'valley',    amp: 30 },
+  plateau:   { kind: 'plateau',   amp: 26 },
+  coastal:   { kind: 'coastal',   amp: 14 },
+  mountains: { kind: 'mountains', amp: 54 },
+};
+export const RELIEF_KEYS = Object.keys(RELIEFS);
+// What kind of country is this? Derived from the sheet — `terrain` if the row has one, otherwise a
+// sane read of what the city IS. ⚠ Never invents: an uncoded city on no water is 'hills', which is
+// the least opinionated thing that isn't a table.
+export function reliefFor(city, water) {
+  let key = (city && city.terrain && RELIEFS[city.terrain]) ? city.terrain : null;
+  if (!key) {
+    const types = (city && city.types || []).map(t => t.toLowerCase());
+    key = types.includes('mining') ? 'hills' : water ? 'coastal' : 'hills';
+  }
+  // ⚠ A PORT IS ON THE SEA. A city with a shoreline cannot also be ringed by mountains — the water
+  // column would sit at the bottom of a wall. Coastal cities soften to a slope down to the water.
+  if (water && (key === 'mountains' || key === 'valley')) key = 'coastal';
+  return RELIEFS[key];
+}
+
 // ---- THE ROAD GRAPH -------------------------------------------------------------------------
 // Roads used to be a wrapped ground TEXTURE that painted a street on all four sides of every cell,
 // forever. That forbade T-junctions, dead ends, dirt tracks, road hierarchy, and any road that
@@ -171,7 +224,7 @@ export const R_NONE = 0, R_TRACK = 1, R_STREET = 2, R_ARTERIAL = 3, R_HIGHWAY = 
 const WEIGHT = {
   company: 5, political: 5, commercial: 4, market: 4, metro: 4, stadium: 3, hospital: 3,
   residential: 2, educational: 2, temple: 2, seaport: 3, industrial: 3, military: 2,
-  mining: 1, resort: 2, park: 1, plaza: 1, farmland: 0, water: 0,
+  mining: 1, resort: 2, park: 1, plaza: 1, farmland: 0, forest: 0, mountain: 0, water: 0,
 };
 function buildRoads(plan, rng) {
   const N = plan.N, C = plan.cells, rural = !!plan.rural;
@@ -232,10 +285,14 @@ function buildRoads(plan, rng) {
   // ⚠ NOTHING IS LANDLOCKED. A block with no road on any of its four sides is an unreachable
   // building — measured on 11 real cities before this. Give every structural cell at least one
   // approach, choosing the side whose neighbour is the busiest thing next door.
+  // ⚠ WILD GROUND IS NOT LANDLOCKED, IT IS WILD. The rescue exists so a BUILDING is never
+  // unreachable; running a street to every patch of forest, mountain or field turned an all-woods
+  // map into a street grid with trees in it. Nobody needs vehicle access to a wood.
+  const NO_RESCUE = { water: 1, forest: 1, mountain: 1, farmland: 1, park: 1, plaza: 1 };
   let rescued = 0;
   for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
     const cell = C[r][c];
-    if (!cell || cell.ref || cell.t === 'water') continue;
+    if (!cell || cell.ref || NO_RESCUE[cell.t]) continue;
     if (h[r][c] || h[r + 1][c] || v[r][c] || v[r][c + 1]) continue;
     const sides = [
       { w: wAt(r - 1, c), put: (k) => h[r][c] = k },
@@ -248,6 +305,32 @@ function buildRoads(plan, rng) {
     rescued++;
   }
   plan.rescuedCells = rescued;
+  // ---- ROUNDABOUTS are a DECISION, not a geometry rule ----------------------------------------
+  // The first pass built one at every junction where an arterial met anything, which on a city
+  // with a highway ring meant nineteen of them — roundabouts scattered like confetti down a
+  // straight road. A city gets AT MOST a couple, at its genuinely busiest crossings, and they are
+  // chosen here so the road geometry can TRIM its ribbons back to them instead of running through.
+  plan.roundabouts = [];
+  if (!rural && N >= 5) {
+    const cands = [];
+    for (let r = 1; r < N; r++) for (let c = 1; c < N; c++) {
+      const jn = junctionAt(plan, r, c);
+      if (!jn || jn.deg < 3) continue;
+      const cls = [jn.n, jn.e, jn.s, jn.w].filter(Boolean).sort((a, b) => b - a);
+      if (cls[0] < R_ARTERIAL || cls[1] < R_STREET) continue;
+      // busiest crossing wins: total class weight, degree, and a nudge toward the centre
+      cands.push({ r, c, s: cls.reduce((a, b) => a + b, 0) * 2 + jn.deg * 3
+        - (Math.abs(r - N / 2) + Math.abs(c - N / 2)) + rng() * 2 });
+    }
+    cands.sort((a, b) => b.s - a.s);
+    const want = N >= 8 ? 2 : 1;
+    for (const cd of cands) {
+      if (plan.roundabouts.length >= want) break;
+      // never two in a row — they must read as landmarks, not as a pattern
+      if (plan.roundabouts.some(([r2, c2]) => Math.abs(r2 - cd.r) + Math.abs(c2 - cd.c) < 3)) continue;
+      plan.roundabouts.push([cd.r, cd.c]);
+    }
+  }
   return plan;
 }
 
@@ -310,6 +393,10 @@ export function generatePlan(city, seed = 1, opts = {}) {
     cell, scale: cell / CELL, arena: N * cell / 2,
     water: waterCols > 0, waterCols, flagship: false,
     culture: cultureOf(city), region: regionOf(cultureOf(city)),
+    // ⚠ the water guard applies to an OVERRIDE too — forcing 'mountains' on a port would otherwise
+    // build a sea running over a ridge, which is exactly the bug the guard exists to prevent
+    relief: reliefFor(opts.relief ? { terrain: opts.relief, types: city.types } : city, waterCols > 0),
+    biome: opts.biome || city.biome || null,
     cells: Array.from({ length: N }, () => Array(N).fill(null)),
   };
   const water = plan.water;
@@ -349,6 +436,7 @@ export function generatePlan(city, seed = 1, opts = {}) {
     for (let i = 0; i < fh; i++) for (let j = 0; j < fw; j++) {
       if (i || j) C[r + i][c + j] = { t, v, ref: [r, c] };
     }
+    // the anchor is stamped with its name later; ref cells resolve through `ref` when asked
     (placed[t] || (placed[t] = [])).push([r, c]);
     return [r, c];
   };
@@ -368,9 +456,23 @@ export function generatePlan(city, seed = 1, opts = {}) {
     }
     return best ? stamp(best[0], best[1], best[2], best[3], row.t, row.landmark) : null;
   };
+  // --- THE LANDMARKS GO FIRST. They are the reason this city is worth fighting in, so they get
+  // first pick of the ground; everything else arranges itself around them. Each one is named here
+  // and the name rides on the cell, so districtNameAt, the news desk and the atlas all cite it.
+  plan.landmarks = [];
+  for (const L of pickLandmarks(city, popType, rng, N)) {
+    const rc = place({ ...L, landmark: true });
+    if (!rc) continue;
+    const cell = C[rc[0]][rc[1]];
+    cell.landmark = true;
+    cell.lname = nameLandmark(L.t, city, plan.region, rng);
+    cell.faith = L.t === 'cathedral' ? faithOf(plan.region) : null;
+    plan.landmarks.push({ t: L.t, name: cell.lname, r: rc[0], c: rc[1], fh: cell.fh, fw: cell.fw, why: L.why });
+  }
   // --- run the table ---
   for (const row of PLACEMENT) {
     if (row.need && !types.includes(row.need)) continue;
+    if (row.biome && !row.biome.includes(plan.biome)) continue;
     if (row.minN && N < row.minN) continue;
     if (row.rural === 'only' && !rural) continue;
     if (rural && row.rural !== 'only' && row.t !== 'park') continue;   // a village is not a small city
@@ -425,7 +527,7 @@ export function generatePlan(city, seed = 1, opts = {}) {
   // --- structural budget: farthest-from-center overflow becomes plaza (open ground) ---
   // A LANDMARK is never demoted — an airport that turns into a car park is not an airport — and a
   // covered `ref` cell isn't its own structure, so it can't be spent twice.
-  const OPEN = { water: 1, park: 1, plaza: 1, farmland: 1 };
+  const OPEN = { water: 1, park: 1, plaza: 1, farmland: 1, forest: 1, mountain: 1 };
   const structural = [];
   for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
     const cell = C[r][c];
@@ -543,7 +645,10 @@ export function galleryPlan() {
   // was missing, so plaza variants could not be reviewed on the proving ground at all. A new tile
   // now shows up here for free, which is the whole point of the bench.
   const order = Object.keys(TILE_INFO);
-  const N = 5;
+  // ⚠ THE BENCH SIZES ITSELF TO THE LIBRARY. It was a hard-coded 5×5 — 20 buildable cells — so the
+  // moment the library passed 20 tiles the last ones silently never appeared on the proving ground.
+  // A bench you can outgrow without noticing is worse than no bench.
+  const N = Math.max(5, Math.ceil(Math.sqrt(order.length + 1)) + 1);
   const plan = {
     name: 'TILE PROVING GROUND', country: 'Registry Test Range', popType: 'City', popLabel: 'EVERY TILE · FOR REVIEW',
     types: ['All'], crime: 0, safety: 100, seed: 1, N, arena: N * CELL / 2, water: true, waterCols: 1, flagship: false,
@@ -580,8 +685,10 @@ export function districtNameAt(plan, x, z) {
   const N = plan.N, A = plan.arena, K = plan.cell || CELL;
   const c = Math.max(0, Math.min(N - 1, Math.floor((x + A) / K)));
   const r = Math.max(0, Math.min(N - 1, Math.floor((z + A) / K)));
-  const cell = plan.cells[r] && plan.cells[r][c];
+  let cell = plan.cells[r] && plan.cells[r][c];
   if (!cell) return 'THE OUTSKIRTS';
+  if (cell.ref) cell = plan.cells[cell.ref[0]][cell.ref[1]] || cell;   // a landmark is one place
   if (cell.t === 'water') return 'THE WATERFRONT';
+  if (cell.lname) return cell.lname;            // "THE SPIRE OF TOKYO", not "THE DISTRICT"
   return 'THE ' + (TILE_INFO[cell.t] ? TILE_INFO[cell.t].label : 'DISTRICT');
 }

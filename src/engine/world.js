@@ -598,6 +598,10 @@ export class World {
       const quay = new THREE.Mesh(new THREE.BoxGeometry(3, 1.1, A * 2), new THREE.MeshStandardMaterial({ color: '#cfc8b6', roughness: 0.85 }));
       quay.position.set(this.waterX - 1.5, 0.55, 0); quay.receiveShadow = true; g.add(quay);
     } else { this.waterX = A + 500; this.deepX = A + 600; }
+    // THE LAND FIRST. Relief is raised, then every built-up cell is levelled to its own terrace,
+    // and only then do the tiles go up — so a building sits on the ground rather than fighting it.
+    this._buildRelief(plan);
+    this._padCells(plan);
     // THE TILES — every cell raised by its type builder
     const { treeSpots } = buildTiles(this, g, plan, rng);
     // STREETLIGHTS FOLLOW THE ROAD GRAPH. They used to be stamped at every interior lattice point
@@ -617,7 +621,7 @@ export class World {
       const poles = new THREE.InstancedMesh(poleGeo, poleMat, lampSpots.length);
       const heads = new THREE.InstancedMesh(headGeo, this._lampMat, lampSpots.length);
       const lm = new THREE.Matrix4();
-      lampSpots.forEach(([x, z], i) => { if (x < this.waterX - 4) { lm.makeTranslation(x, 0, z); } else { lm.makeScale(0.001, 0.001, 0.001); lm.setPosition(x, -5, z); } poles.setMatrixAt(i, lm); heads.setMatrixAt(i, lm); });
+      lampSpots.forEach(([x, z], i) => { if (x < this.waterX - 4) { lm.makeTranslation(x, this.heightAt(x, z), z); } else { lm.makeScale(0.001, 0.001, 0.001); lm.setPosition(x, -5, z); } poles.setMatrixAt(i, lm); heads.setMatrixAt(i, lm); });
       poles.castShadow = false; heads.castShadow = false;
       g.add(poles); g.add(heads);
     }
@@ -639,7 +643,7 @@ export class World {
       else { x = -A + ec * K + off; z = -A + (er + t) * K; }
       if (plan.water && x > this.waterX - 12 * S) continue;
       const m = new THREE.Mesh(this._carGeo, this._carPaints[i % this._carPaints.length]);
-      m.position.set(x, 0, z); m.rotation.y = alongX ? Math.PI / 2 : 0; m.castShadow = false; m.receiveShadow = true;
+      m.position.set(x, this.heightAt(x, z), z); m.rotation.y = alongX ? Math.PI / 2 : 0; m.castShadow = false; m.receiveShadow = true;
       if (S !== 1) m.scale.setScalar(S);
       g.add(m);
       this.cars.push({ mesh: m, x, z, hp: 30, maxHp: 30, dead: false, paint: this._carPaints[i % this._carPaints.length] });
@@ -650,6 +654,10 @@ export class World {
     this.cover.sort((a, b) => (b.w * b.h * b.d) - (a.w * a.h * a.d));
     // EXCAVATION — mining pits and metro cuts dig into the fresh terrain, then freeze as the
     // city's BASE heights (resetTerrain restores to these, so the land survives every match).
+    // ⚠ crater() clamps to ±a few units around `_ghBase`, so the BASE has to be the land as it
+    // stands right now. Without this the first mining pit dug into a hillside would clamp the whole
+    // hill back down to ~0 — the relief would be silently erased by the excavation that follows it.
+    this._ghBase = Float32Array.from(this._gh);
     for (const [px, pz, r, dep] of (this._pendingPits || [])) this.crater(px, pz, r, dep);
     for (const [px, pz, hw, hd, dep, ry] of (this._pendingCuts || [])) this.trench(px, pz, hw, hd, dep, 11, ry);
     this._pendingPits = []; this._pendingCuts = [];
@@ -690,7 +698,7 @@ export class World {
     })());
     for (const [x, z, r] of lawns) {
       const p = new THREE.Mesh(new THREE.CircleGeometry(r, 26), new THREE.MeshBasicMaterial({ map: lawnTex, transparent: true, depthWrite: false }));
-      p.rotation.x = -Math.PI / 2; p.position.set(x, 0.11, z); this.scene.add(p); this._cityBits.push(p);
+      p.rotation.x = -Math.PI / 2; p.position.set(x, this.heightAt(x, z) + 0.11, z); this.scene.add(p); this._cityBits.push(p);
     }
     const A = this.ARENA;
     const P = spots.filter(([x, z]) => Math.hypot(x, z) > clearCenter && x < this.waterX - 8 && Math.abs(x) < A - 8 && Math.abs(z) < A - 8 &&
@@ -709,7 +717,9 @@ export class World {
       this._gPos[i * 2] = x; this._gPos[i * 2 + 1] = z;
       this._gRot[i] = Math.random() * Math.PI * 2;
       this._gScale[i] = 0.85 + Math.random() * 0.4;
-      m4.compose(pv.set(x, 0, z), q.setFromAxisAngle(Y, this._gRot[i]), sv.setScalar(this._gScale[i]));
+      // ⚠ a tree grows out of the GROUND. Planting at y=0 was invisible while the world was flat;
+      // the moment relief existed, every tree on a hillside hung in the air or sank into it.
+      m4.compose(pv.set(x, this.heightAt(x, z), z), q.setFromAxisAngle(Y, this._gRot[i]), sv.setScalar(this._gScale[i]));
       trunks.setMatrixAt(i, m4); canopy.setMatrixAt(i, m4);
       canopy.setColorAt(i, col.setHSL(0.24 + Math.random() * 0.05, 0.38, 0.26 + Math.random() * 0.08));
     });
@@ -1104,6 +1114,112 @@ export class World {
     return a + (b - a) * tz;
   }
 
+  // ---- RELIEF: the land is not a table ----------------------------------------------------------
+  // The terrain was flat everywhere except where something dug into it. A city in a valley, a town
+  // on a ridge, a fortress on the high ground — none of it could exist. `plan.relief` raises the
+  // heightfield BEFORE any tile is built, so the tiles can then sit on the land they find.
+  //
+  // Two-part design, and the second part is the one that matters:
+  //   1. RELIEF   — a few octaves of value noise shaped by the relief kind, written into _gh.
+  //   2. PADS     — every structural cell is then LEVELLED to its own mean height, with a smooth
+  //                 apron at its edge. Real cities terrace their hillsides; without this a block
+  //                 on a slope has one corner in the air and another buried, and no amount of
+  //                 per-building fiddling fixes it. Roads drape over the result, so they ramp
+  //                 between terraces on their own.
+  _reliefNoise(seed) {
+    // deterministic value noise — a small lattice, smoothstep-interpolated. No libraries, no
+    // trig-hash artefacts, and the same city always grows the same hills.
+    const R = 16, g = new Float32Array((R + 1) * (R + 1));
+    const rnd = mulberry(seed | 0);
+    for (let i = 0; i < g.length; i++) g[i] = rnd() * 2 - 1;
+    return (u, v) => {                       // u,v in 0..1
+      const fu = clamp(u, 0, 0.9999) * R, fv = clamp(v, 0, 0.9999) * R;
+      const c0 = fu | 0, r0 = fv | 0;
+      const tu = fu - c0, tv = fv - r0;
+      const su = tu * tu * (3 - 2 * tu), sv = tv * tv * (3 - 2 * tv);
+      const i0 = r0 * (R + 1) + c0, i1 = i0 + R + 1;
+      const a = g[i0] + (g[i0 + 1] - g[i0]) * su;
+      const b = g[i1] + (g[i1 + 1] - g[i1]) * su;
+      return a + (b - a) * sv;
+    };
+  }
+  _buildRelief(plan) {
+    const rel = plan.relief;
+    if (!rel || !rel.amp || !this._gh) return 0;
+    const A = plan.arena, amp = rel.amp * (plan.scale || 1);
+    const n1 = this._reliefNoise(plan.seed * 7717 + 13);
+    const n2 = this._reliefNoise(plan.seed * 3313 + 71);
+    const pa = this.groundGeo.attributes.position.array;
+    let lo = 1e9, hi = -1e9;
+    for (let i = 0; i < this._gh.length; i++) {
+      const x = this._gvx[i], z = this._gvz[i];
+      const u = (x + A) / (A * 2), v = (z + A) / (A * 2);
+      const d = Math.max(Math.abs(x), Math.abs(z)) / A;                 // 0 centre → 1 edge
+      let h = n1(u, v) * 0.68 + n2(u * 2.7, v * 2.7) * 0.32;
+      if (rel.kind === 'valley') h = h * 0.4 + d * d * 1.35;            // ringed by high ground
+      else if (rel.kind === 'plateau') h = h * 0.4 + (1 - d * d) * 1.1; // the town sits up on it
+      else if (rel.kind === 'coastal') h = (h * 0.5 + 0.5) * (1 - u) * 1.6;   // falls to the east shore
+      else if (rel.kind === 'mountains') h = h * 1.15 + Math.pow(d, 1.6) * 1.5;
+      this._gh[i] = h * amp;
+      pa[i * 3 + 2] = this._gh[i];
+      if (this._gh[i] < lo) lo = this._gh[i];
+      if (this._gh[i] > hi) hi = this._gh[i];
+    }
+    // ⚠ THE SEA NEEDS A BED. The water plane sits at a fixed height; relief raised the ground
+    // straight through it, so a coastal city with hills came out with the sea running over a
+    // ridge. Everything seaward of the quay is pushed BELOW the waterline, with a shore apron so
+    // the land slopes into it instead of ending at a cliff.
+    if (plan.water) {
+      const wx = A - plan.waterCols * (plan.cell || CELL) + 10 * (plan.scale || 1);
+      const apron = (plan.cell || CELL) * 0.55;
+      for (let i = 0; i < this._gh.length; i++) {
+        const d = this._gvx[i] - (wx - apron);
+        if (d <= 0) continue;
+        const t = Math.min(1, d / apron);
+        const s = t * t * (3 - 2 * t);
+        this._gh[i] = this._gh[i] * (1 - s) + (-7 * (plan.scale || 1)) * s;
+        pa[i * 3 + 2] = this._gh[i];
+        if (this._gh[i] < lo) lo = this._gh[i];
+      }
+    }
+    this.groundGeo.attributes.position.needsUpdate = true; this._normalsDirty = true;
+    return hi - lo;
+  }
+  // Level each built-up cell so a block stands on flat ground, with an apron so the terrace edge
+  // is a slope you can run up rather than a cliff.
+  _padCells(plan) {
+    if (!plan.relief || !plan.relief.amp || !plan.cells || !this._gh) return;
+    const A = plan.arena, K = plan.cell || CELL;
+    const OPEN = { water: 1, park: 1, farmland: 1, forest: 1, mountain: 1 };
+    const pads = [];
+    for (let r = 0; r < plan.N; r++) for (let c = 0; c < plan.N; c++) {
+      const cell = plan.cells[r][c];
+      if (!cell || cell.ref || OPEN[cell.t]) continue;
+      const fw = cell.fw || 1, fh = cell.fh || 1;
+      const cx = -A + (c + fw / 2) * K, cz = -A + (r + fh / 2) * K;
+      pads.push({ cx, cz, hx: (fw * K) / 2 - 6, hz: (fh * K) / 2 - 6, y: this.heightAt(cx, cz) });
+    }
+    // A generous apron. Too tight and every block stands on a visible earth plinth; this is the
+    // difference between a terraced hillside and a set of buildings on pedestals.
+    const pa = this.groundGeo.attributes.position.array, apron = K * 0.42;
+    for (let i = 0; i < this._gh.length; i++) {
+      const x = this._gvx[i], z = this._gvz[i];
+      let best = null, bw = 0;
+      for (const p of pads) {
+        const dx = Math.abs(x - p.cx) - p.hx, dz = Math.abs(z - p.cz) - p.hz;
+        const d = Math.max(dx, dz);
+        if (d > apron) continue;
+        const t = d <= 0 ? 1 : 1 - d / apron;
+        const w = t * t * (3 - 2 * t);
+        if (w > bw) { bw = w; best = p; }
+      }
+      if (!best) continue;
+      this._gh[i] = this._gh[i] * (1 - bw) + best.y * bw;
+      pa[i * 3 + 2] = this._gh[i];
+    }
+    this.groundGeo.attributes.position.needsUpdate = true; this._normalsDirty = true;
+  }
+
   // A RECTANGULAR CUT into the land — what crater() is to a bomb, this is to an excavator.
   // Used by the METRO to open a cut-and-cover trench (and available to any tile that wants a
   // canal, a rail cut or a sunken plaza). Cuts with min(), so it carves instead of accumulating.
@@ -1176,18 +1292,130 @@ export class World {
     }
     return this._roadMats[classId];
   }
+  // Road paint — crosswalks, stop lines, roundabout chevrons. One shared unlit material, because
+  // paint is paint: it must read the same at noon and midnight and must never take a specular hit.
+  _roadPaintMat() {
+    if (!this._roadPaint) {
+      this._roadPaint = new THREE.MeshBasicMaterial({ color: '#efe9d8', transparent: true, opacity: 0.82, depthWrite: false });
+      this._roadPaint.userData._shared = true;
+    }
+    return this._roadPaint;
+  }
+
+  // ---- JUNCTIONS -------------------------------------------------------------------------------
+  // A crossing was a flat square patch of the widest approach. That reads as a hole in the network:
+  // no corner radius, no crosswalks, no stop line, and a T-junction looked exactly like a
+  // crossroads. A junction is now built from what `junctionAt` actually says — its DEGREE and the
+  // CLASS of each arm — so the network has grammar instead of one repeated stamp.
+  //
+  //   deg 1  dead end     → turning head (a circle, so it reads as a cul-de-sac not a cut mesh)
+  //   deg 2  corner/through → patch + a corner fillet on the inside of the turn
+  //   deg 3  tee          → patch + fillets + crosswalks on each arm
+  //   deg 4  crossroads   → the same, on four arms
+  //   arterial+ and deg≥3 → a ROUNDABOUT: annulus carriageway + a kerbed island
+  //
+  // Everything merges into the same per-class buckets, so a junction costs no extra draw calls.
+  _isRoundabout(plan, r, c) {
+    return !!(plan.roundabouts && plan.roundabouts.some(([rr, cc]) => rr === r && cc === c));
+  }
+  _buildJunction(plan, r, c, K, S, A, add, paint, island, roundR) {
+    const j = junctionAt(plan, r, c);
+    if (!j || j.deg === 0) return null;
+    const arms = [['n', j.n, 0, -1], ['e', j.e, 1, 0], ['s', j.s, 0, 1], ['w', j.w, -1, 0]].filter(a => a[1]);
+    const cid = Math.max(j.n, j.e, j.s, j.w), w = ROAD[cid].width * S;
+    const px = -A + c * K, pz = -A + r * K;
+    const flat = (geo) => { geo.rotateX(-Math.PI / 2); geo.translate(px, 0, pz); return geo; };
+
+    // A DEAD END is a turning head, not a stub.
+    if (j.deg === 1) { add(cid, flat(new THREE.CircleGeometry(w * 0.78, 14))); return 'end'; }
+
+    // A ROUNDABOUT, but only where the PLANNER said so — see plan.roundabouts. The island is real
+    // cover you can break line of sight behind, which is the whole reason to build one rather than
+    // paint one, and the ribbons feeding it have already been trimmed back to its outer edge.
+    if (this._isRoundabout(plan, r, c)) {
+      const rOut = roundR(w), rIn = rOut * 0.44;
+      add(cid, flat(new THREE.RingGeometry(rIn, rOut, 30)));
+      island(px, pz, rIn);
+      for (let i = 0; i < 12; i++) {                             // give-way chevrons on the ring
+        const a = (i / 12) * Math.PI * 2, rr = (rIn + rOut) / 2;
+        const g = new THREE.PlaneGeometry(2.6 * S, 6 * S);
+        g.rotateX(-Math.PI / 2); g.rotateY(-a); g.translate(px + Math.cos(a) * rr, 0.02, pz + Math.sin(a) * rr);
+        paint(g);
+      }
+      return 'roundabout';
+    }
+
+    add(cid, flat(new THREE.PlaneGeometry(w, w, 2, 2)));
+    // CORNER FILLETS — a quarter disc tucked into each corner between two adjacent arms, so the
+    // kerb line turns instead of stopping dead. This is the single detail that makes a junction
+    // stop looking like two ribbons crossing.
+    const has = { n: j.n, e: j.e, s: j.s, w: j.w };
+    const CORNERS = [['n', 'e', 0], ['e', 's', -Math.PI / 2], ['s', 'w', Math.PI], ['w', 'n', Math.PI / 2]];
+    for (const [a, b, rot] of CORNERS) {
+      if (!has[a] || !has[b]) continue;
+      const fr = w * 0.34;
+      const g = new THREE.CircleGeometry(fr, 8, rot, Math.PI / 2);
+      g.rotateX(-Math.PI / 2);
+      const sx = (a === 'e' || b === 'e') ? 1 : -1, sz = (a === 's' || b === 's') ? 1 : -1;
+      g.translate(px + sx * w / 2, 0.005, pz + sz * w / 2);
+      add(cid, g);
+    }
+    // CROSSWALKS + STOP LINE on every metalled arm, laid ACROSS the carriageway at the mouth of
+    // the junction. The bars must be wide and close together — the first pass used thin bars with
+    // big gaps and they read as litter scattered down the road rather than as a crossing.
+    for (const [, ac, dx, dz] of arms) {
+      if (ac < 2) continue;                                        // you don't stripe a dirt track
+      const aw = ROAD[ac].width * S, half = aw * 0.34;             // stripes span the carriageway only
+      const off = w / 2 + 5 * S;
+      const bar = 3.4 * S, gap = 5.6 * S, depth = 7 * S;
+      for (let t = -half; t <= half + 0.01; t += gap) {
+        const g = new THREE.PlaneGeometry(dx ? depth : bar, dx ? bar : depth);
+        g.rotateX(-Math.PI / 2);
+        g.translate(px + dx * off + (dx ? 0 : t), 0.02, pz + dz * off + (dz ? 0 : t));
+        paint(g);
+      }
+      const sg = new THREE.PlaneGeometry(dx ? 1.8 * S : half * 2, dx ? half * 2 : 1.8 * S);   // stop line
+      sg.rotateX(-Math.PI / 2);
+      sg.translate(px + dx * (off + depth * 0.75), 0.02, pz + dz * (off + depth * 0.75));
+      paint(sg);
+    }
+    return j.kind;
+  }
   _buildRoadNet(plan, group) {
     if (!plan || !plan.roads) return 0;
     const A = plan.arena, N = plan.N, RD = plan.roads, K = plan.cell || CELL, S = plan.scale || 1;
     const byClass = {};
     const add = (cid, geo) => (byClass[cid] || (byClass[cid] = [])).push(geo);
+    // How far a roundabout reaches — the ribbons feeding it are TRIMMED to this, or the road runs
+    // straight through the middle of the island.
+    const roundR = (w) => w * 1.15;
+    const trimFor = (r, c, cls) => this._isRoundabout(plan, r, c) ? roundR(ROAD[cls].width * S) : 0;
     // one ribbon between two points, subdivided finely enough to follow the ground
-    const ribbon = (cid, x0, z0, x1, z1) => {
+    const ribbon = (cid, x0, z0, x1, z1, trim0 = 0, trim1 = 0) => {
+      let dx0 = x1 - x0, dz0 = z1 - z0, L = Math.hypot(dx0, dz0);
+      if (L > 0 && (trim0 || trim1)) {
+        const ux = dx0 / L, uz = dz0 / L;
+        x0 += ux * trim0; z0 += uz * trim0; x1 -= ux * trim1; z1 -= uz * trim1;
+      }
       const w = ROAD[cid].width * S, dx = x1 - x0, dz = z1 - z0, len = Math.hypot(dx, dz);
       if (len < 0.5) return;
-      const geo = new THREE.PlaneGeometry(w, len, 2, Math.max(2, Math.round(len / (7 * S))));
+      const rows = Math.max(2, Math.round(len / (7 * S)));
+      const geo = new THREE.PlaneGeometry(w, len, 2, rows);
       const uv = geo.attributes.uv, reps = Math.max(1, Math.round(len / (24 * S)));
       for (let i = 0; i < uv.count; i++) uv.setY(i, uv.getY(i) * reps);   // tile the section along the run
+      // ⚠ A DIRT TRACK MEANDERS. A metalled road is surveyed and runs straight between its
+      // junctions; a track is worn by feet and carts and does not. Bending the ribbon in its own
+      // local X before it is rotated into place costs nothing and is the single thing that makes
+      // the countryside and the forest stop looking like a street grid with the paint scraped off.
+      if (cid === 1) {
+        const pos = geo.attributes.position, cols = 3;
+        const ph = (Math.abs(x0 * 0.07 + z0 * 0.13) % 6.283), amp = w * 0.9;
+        for (let i = 0; i < pos.count; i++) {
+          const row = (i / cols) | 0, t = row / rows;
+          pos.setX(i, pos.getX(i) + Math.sin(ph + t * 3.4) * amp * Math.sin(t * Math.PI));
+        }
+        pos.needsUpdate = true;
+      }
       geo.rotateX(-Math.PI / 2);
       geo.rotateY(Math.atan2(dx, dz));
       geo.translate((x0 + x1) / 2, 0, (z0 + z1) / 2);
@@ -1196,50 +1424,72 @@ export class World {
     for (let r = 0; r <= N; r++) for (let c = 0; c < N; c++) {           // horizontal edges (run along X)
       const cid = RD.h[r][c]; if (!cid) continue;
       const z = -A + r * K;
-      ribbon(cid, -A + c * K, z, -A + (c + 1) * K, z);
+      ribbon(cid, -A + c * K, z, -A + (c + 1) * K, z, trimFor(r, c, cid), trimFor(r, c + 1, cid));
     }
     for (let r = 0; r < N; r++) for (let c = 0; c <= N; c++) {           // vertical edges (run along Z)
       const cid = RD.v[r][c]; if (!cid) continue;
       const x = -A + c * K;
-      ribbon(cid, x, -A + r * K, x, -A + (r + 1) * K);
+      ribbon(cid, x, -A + r * K, x, -A + (r + 1) * K, trimFor(r, c, cid), trimFor(r + 1, c, cid));
     }
-    // junction patches — a crossing must read as one surface, not two ribbons overlapping. A DEAD
-    // END gets a turning head instead: the road has to stop somewhere, and a square stub reads as
-    // an unfinished mesh where a circle reads as a cul-de-sac.
-    let junctions = 0, deadEnds = 0;
+    // JUNCTIONS — see _buildJunction. Every crossing is built from its own degree and arm classes.
+    const marks = [];
+    const paint = (g) => marks.push(g);
+    const kinds = {};
+    const islands = [];
+    const island = (x, z, r) => islands.push([x, z, r]);
     for (let r = 0; r <= N; r++) for (let c = 0; c <= N; c++) {
-      const j = junctionAt(plan, r, c);
-      if (!j || j.deg === 0) continue;
-      junctions++;
-      const cid = Math.max(j.n, j.e, j.s, j.w), w = ROAD[cid].width * S;
-      const px = -A + c * K, pz = -A + r * K;
-      if (j.deg === 1) {
-        deadEnds++;
-        const head = new THREE.CircleGeometry(w * 0.78, 14);
-        head.rotateX(-Math.PI / 2); head.translate(px, 0, pz);
-        add(cid, head);
-      } else {
-        const p = new THREE.PlaneGeometry(w, w, 2, 2);
-        p.rotateX(-Math.PI / 2); p.translate(px, 0, pz);
-        add(cid, p);
-      }
+      const k = this._buildJunction(plan, r, c, K, S, A, add, paint, island, roundR);
+      if (k) kinds[k] = (kinds[k] || 0) + 1;
     }
     // DRAPE + merge: one mesh per class, every vertex sitting just above the real ground
     let meshes = 0;
     this._roadMeshes = [];
+    const drape = (geo, lift) => {
+      const pos = geo.attributes.position;
+      for (let i = 0; i < pos.count; i++) pos.setY(i, this.heightAt(pos.getX(i), pos.getZ(i)) + lift);
+      pos.needsUpdate = true; geo.computeVertexNormals();
+    };
     for (const cid in byClass) {
       const merged = mergeGeometries(byClass[cid]);
       byClass[cid].forEach(gg => gg.dispose());
       if (!merged) continue;
-      const pos = merged.attributes.position;
-      for (let i = 0; i < pos.count; i++) pos.setY(i, this.heightAt(pos.getX(i), pos.getZ(i)) + 0.12);
-      pos.needsUpdate = true; merged.computeVertexNormals();
+      drape(merged, 0.12);
       const m = new THREE.Mesh(merged, this._roadMat(cid | 0));
       m.receiveShadow = true; m.renderOrder = 1;
       group.add(m); this._roadMeshes.push(m); meshes++;
     }
-    this._roadStats = { classes: meshes, junctions, deadEnds };
+    if (marks.length) {                                  // all the road paint in ONE unlit draw
+      const mg = mergeGeometries(marks);
+      marks.forEach(g => g.dispose());
+      if (mg) {
+        drape(mg, 0.24);
+        const m = new THREE.Mesh(mg, this._roadPaintMat());
+        m.renderOrder = 2; group.add(m); this._roadMeshes.push(m);
+      }
+    }
+    for (const [x, z, r] of islands) this._roundaboutIsland(group, x, z, r, plan);
+    this._roadStats = { classes: meshes, junctions: Object.values(kinds).reduce((a, b) => a + b, 0),
+                        deadEnds: kinds.end || 0, roundabouts: kinds.roundabout || 0, kinds, marks: marks.length };
     return meshes;
+  }
+  // The middle of a roundabout: a kerbed, planted island. It is REAL COVER — the reason to build a
+  // roundabout instead of painting one is that it puts a hard object in the middle of a crossroads.
+  _roundaboutIsland(group, x, z, r, plan) {
+    const y = this.heightAt(x, z);
+    const kerbMat = new THREE.MeshStandardMaterial({ color: '#cfc8b6', roughness: 0.9 });
+    const kerb = new THREE.Mesh(new THREE.CylinderGeometry(r, r, 1.6, 20), kerbMat);
+    kerb.position.set(x, y + 0.8, z); kerb.receiveShadow = true; group.add(kerb);
+    const grass = new THREE.Mesh(new THREE.CircleGeometry(r * 0.88, 20),
+      new THREE.MeshBasicMaterial({ color: (plan.region && plan.region.green) || '#6f9a4e', depthWrite: false }));
+    grass.rotation.x = -Math.PI / 2; grass.position.set(x, y + 1.65, z); group.add(grass);
+    // a monument on the island — small, but it is the thing you navigate by
+    const h = r * 1.5;
+    const ob = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.1, r * 0.18, h, 4),
+      new THREE.MeshStandardMaterial({ color: '#dcd4c0', roughness: 0.8 }));
+    ob.position.set(x, y + 1.6 + h / 2, z); ob.castShadow = true; group.add(ob);
+    const co = { mesh: kerb, crack: null, x, z, r: r * 1.05, h: y + h + 2, hx: r, hz: r,
+                 top: y + 1.6, hp: 400, maxHp: 400, y0: kerb.position.y, w: r * 2, d: r * 2, destroyed: false };
+    this.cover.push(co); this.coverAll.push(co);
   }
 
   // --- destructible terrain (GeoMod-lite): crater the ground ---

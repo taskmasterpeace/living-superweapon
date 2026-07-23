@@ -59,7 +59,7 @@ Roads are **data on the plan** now:
 | Class | Width | Surface | Markings |
 |---|---|---|---|
 | `none` | — | — | nothing is built |
-| `track` | 9u | dirt, ruts, grass down the crown | none |
+| `track` | 9u | dirt, ruts, grass down the crown — and it **meanders** | none |
 | `street` | 22u | asphalt | centre dashes |
 | `arterial` | 30u | asphalt | double yellow |
 | `highway` | 38u | asphalt | median + lane lines |
@@ -80,8 +80,110 @@ Every edge is built as a real ribbon mesh **draped over the terrain heightfield*
 into the metro cut and rides the mining spoil instead of hovering over a hole it can't see. The
 whole network merges into **one mesh per road class** — five draws for a city.
 
+### Junctions have grammar
+A crossing is built from what the graph says about it — its **degree** and the **class of each arm**:
+
+- **dead end** → a turning head, so it reads as a cul-de-sac rather than a cut mesh
+- **corner, tee, crossroads** → a patch, plus a **corner fillet** on each inside corner (the one
+  detail that stops a junction reading as two ribbons crossing), plus **zebra crossings** and a
+  **stop line** on every metalled arm
+- **roundabout** → a ring, a kerbed and planted island that is real cover, and give-way chevrons
+
+⚠ Roundabouts are chosen by the **planner**, not by the geometry. The first pass built one wherever
+an arterial met anything — on a city with a highway ring that was nineteen of them, in a straight
+line, with the roads running through the middle of every island. A city now gets at most one or two,
+at its genuinely busiest crossings, and the ribbons feeding them are trimmed back to the ring.
+
 Measured (Tokyo, 6×6): 84 edges — 70 street, 8 arterial, 6 highway — and 46 junctions.
 Benguela (5×5): 16 edges are `none`. A village gets dirt tracks and dead ends.
+
+---
+
+## LANDMARKS — how special structures get seeded
+
+Stadiums, airports and rail yards used to be fixed rows in the placement table: every city big
+enough got one of each, in roughly the same place, with no name. That is furniture. A landmark is
+the opposite — it is the thing you say when someone asks where the fight was.
+
+The system has four parts (`data/landmarks.js`):
+
+**1. A budget, derived from the city's own row.** Population tier, how many specialisations it has,
+its rating in the sheet, whether it is flagged high-value. Derived, not rolled, so it is stable and
+explicable: a hamlet earns none, a mega city four or five. Measured across all 1,050 cities, two is
+the mode.
+
+**2. A weighted pool, gated by what the city actually is.** `needs` decides eligibility — a capital
+can raise a palace, a shrine city a great religious building, a university town a great library.
+`weight` ranks them, the seed breaks ties, so the same city always produces the same landmarks.
+
+**3. The region picks the form.** One "great religious building" slot builds a gothic cathedral in
+Oslo, a domed mosque in Kabul, a tiered pagoda in Tokyo, a mandir in Mumbai. One slot, fourteen
+answers — this is what stops every city's landmark looking alike.
+
+**4. A generated name.** `THE KABUL JAMI` · `THE TOKYO SHRINE` · `THE UNIVERSITY OF OSLO` ·
+`THE MARSHALLING YARDS` · `THE OBELISK`. The name rides on the anchor cell and covered cells resolve
+through it, so a 2×3 airport reports **one** place — which means the news desk, the codex and the
+district lower-third can all cite it.
+
+| Landmark | Footprint | Needs |
+|---|---|---|
+| **monument** — arch, column, obelisk or standing figure | 1×1 | any city |
+| **tower** — a 210–250u spire, far above the normal skyline | 1×1 | company · political |
+| **cathedral** — cathedral / mosque / pagoda / mandir by region | 1×1 | temple · political |
+| **palace** — colonnade, wings, a court and a garden | 1×2 | political |
+| **fortress** — ramparts you fight on, corner drums, a keep | 2×2 | military |
+| **university** — a quadrangle, a domed library, a bell tower | 1×2 | educational |
+| **stadium · airport · railyard · seaport** | 2×2 · 2×3 · 1×3 · 2×1 | see the pool |
+
+Placement itself is not special-cased: a chosen landmark becomes a row handed to the normal
+placement machinery, so footprints, scoring and the density budget behave exactly as for anything
+else. Only the *choosing* and the *naming* are special. Landmarks go down **first**, so they get
+first pick of the ground and the rest of the city arranges itself around them.
+
+---
+
+## TERRAIN — relief, and the wild
+
+**The land used to be a table.** Flat everywhere except where something dug into it: a city in a
+valley, a town on a ridge, a fortress on the high ground — none of it could exist.
+
+`plan.relief` raises the heightfield **before any tile is built**, then every built-up cell is
+**levelled onto its own terrace** with a smooth apron. Real cities terrace their hillsides; without
+that step a block on a slope has one corner in the air and another buried. Roads drape over the
+result, so they ramp between terraces by themselves.
+
+| Relief | Amplitude | What it is |
+|---|---|---|
+| `flat` | 0 | costs nothing, changes nothing |
+| `coastal` | 14 | falls steadily toward the water |
+| `hills` | 16 | sightlines break over a rise |
+| `plateau` | 26 | the town stands on a shelf |
+| `valley` | 30 | ringed by high ground |
+| `mountains` | 54 | serious relief at the rim |
+
+⚠ A city with a shoreline can never be `mountains` or `valley` — the water column would sit at the
+bottom of a wall — so those soften to `coastal`. The sea is also carved a **bed**: everything
+seaward of the quay is pushed below the waterline with a shore apron.
+
+**The wild** is two tiles. **THE WOODS** (`forest`, with a jungle variant) is not a park with more
+trees: a park is open ground you can see across, a forest is where sightlines die. Soft cover
+everywhere (trunks), rare hard cover (boulders, fallen giants), undergrowth in jungle — and a
+**meandering path** that trees are excluded from, the only fast ground, curving so you never see far
+down it. **THE HEIGHTS** (`mountain`) is rock outcrops and scree, and it is deliberately left
+*unpadded* — the only ground in a city that is genuinely uneven underfoot.
+
+Dirt tracks meander too, everywhere in the world, not just in the woods.
+
+⚠ Wild ground is **not** landlocked. The rule that guarantees every *building* a road approach was
+paving a street to every patch of forest and field; forest, mountain, farmland, park and plaza are
+exempt. An all-woods map has zero roads, zero streetlights and zero parked cars.
+
+### Where terrain data comes from
+`data/geography.js` — **authored, and labelled as such**. The world sheet has no terrain column and
+no coordinates, so there is nothing to derive it from. Rather than rewrite 1,050 rows Robert never
+entered, terrain and biome live in their own reviewable file and are joined on at load, the same way
+hero civilian identities are. Resolution is most-specific-first: a named city (Denver, Manaus,
+La Paz, Kathmandu…), then its country (142 of them), then a fallback by architectural region.
 
 ---
 

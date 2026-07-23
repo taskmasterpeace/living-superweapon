@@ -478,6 +478,71 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   graph, so socket-aware tiles behaved differently on the bench than in a city — and the first tile
   to read `cell.edge` without a guard threw and took the whole build down. It calls
   `computeSockets` + `buildRoads` now, and builders still guard (`cell && cell.edge && cell.nb`).
+  ⚠ It also SIZES ITSELF to the library (`N = ceil(sqrt(types+1))+1`) — it was a fixed 5×5, so the
+  moment the library passed 20 tiles the newest ones silently never appeared on the bench.
+
+## JUNCTIONS · LANDMARKS · TERRAIN · THE WILD (2026-07-23)
+- **JUNCTIONS HAVE GRAMMAR** (`world._buildJunction`, driven by `junctionAt().deg` + arm classes):
+  deg 1 = turning head · deg 2+ = patch + CORNER FILLETS (a quarter disc per corner — the single
+  detail that stops a crossing reading as two ribbons overlapping) + CROSSWALKS and a STOP LINE on
+  every metalled arm. All road paint merges into ONE unlit mesh (`_roadPaintMat`, `renderOrder 2`).
+  ⚠ Crosswalk bars must be WIDE and CLOSE (3.4u bar / 5.6u pitch) — thin bars with big gaps read as
+  litter scattered down the road, not as a crossing.
+- **ROUNDABOUTS ARE A PLANNER DECISION, not a geometry rule** (`plan.roundabouts`). The first pass
+  built one wherever an arterial met anything — on a city with a highway ring that was NINETEEN, and
+  the ribbons ran straight through every island. The planner now picks at most 1–2 at the genuinely
+  busiest crossings (never within 3 cells of each other), and `_buildRoadNet` TRIMS the feeding
+  ribbons back to `roundR(w)`. The island is real cover with a monument on it.
+- **DIRT TRACKS MEANDER** (`ribbon()`, class 1 only): the ribbon is bent in its own local X before
+  it is rotated into place. Costs nothing, and it is what makes the countryside and the forest stop
+  looking like a street grid with the paint scraped off.
+- **LANDMARKS — the special-structure system** (`data/landmarks.js`). Stadium/airport/railyard used
+  to be fixed PLACEMENT rows, so every big city got one of each in the same spot with no name: that
+  is furniture, not a landmark. Now: a **budget** derived from the city's own row (population tier,
+  how many specialisations, popRating, hvt → 0 for a hamlet, 4–5 for a mega city); a **weighted
+  pool** gated by `needs` (a capital is eligible for a palace, a shrine city for a great religious
+  building); and a **name** generated per city. The REGION picks the FORM — one "great religious
+  building" slot builds a gothic cathedral in Oslo, a domed mosque in Kabul (`THE KABUL JAMI`), a
+  pagoda in Tokyo (`THE TOKYO SHRINE`), a mandir in Mumbai. `cell.lname` rides on the anchor and
+  `districtNameAt` resolves `ref` cells through it, so the whole footprint reports ONE place and the
+  news desk can say "the fighting has reached THE SPIRE OF TOKYO".
+  ⚠ Landmarks are placed BEFORE the PLACEMENT table so they get first pick of the ground.
+  Measured over 1,050 cities: 2 landmarks is the mode, monument 63% · tower 41% · stadium 35%.
+  New tiles: `monument` (arch/column/obelisk/figure) · `tower` (210–250u — deliberately far above
+  the 150u tower ceiling; a landmark you can't see from across the map isn't one) · `cathedral` ·
+  `palace` (1×2) · `fortress` (2×2, ramparts you fight on) · `university` (1×2 quad).
+- **THE LAND IS NOT A TABLE** (`plan.relief`, `world._buildRelief` + `_padCells`). Value-noise
+  relief (`flat·hills·valley·plateau·coastal·mountains`, amp 0–54) is raised BEFORE any tile, then
+  every BUILT-UP cell is levelled to its own terrace with a generous apron (`K*0.42` — too tight and
+  every block stands on a visible earth plinth). Tiles then sit on what they find via `ctx.gy`.
+  ⚠ `co.top` is the ABSOLUTE height physics compares a fighter's world y against, so it must include
+  the ground the building stands on. `reg()` reads `mesh.userData.gy` for the same reason.
+  ⚠ `_ghBase` must be frozen BEFORE the pending pits/cuts run — `crater()` clamps to ±a few units
+  around it, so digging the first mine into a hillside would otherwise clamp the whole hill to ~0.
+  ⚠ THE SEA NEEDS A BED: relief ran straight through the water plane, so a coastal city had the sea
+  running over a ridge. Everything seaward of the quay is pushed below the waterline with a shore
+  apron, and `reliefFor` softens mountains/valley → coastal for ANY city with water (override included).
+  ⚠ Anything placed at a hard `y = 0` floats or sinks the moment relief exists — trees, lawn decals,
+  streetlights and parked cars all sample `heightAt` now. Verified: 58/58 towers sit at exactly
+  their terrace height, worst tree float 0.000u, 0 fighters spawn below ground.
+- **THE WILD** (`forest` 3 variants incl. jungle, `mountain` 2): a forest is not a park with more
+  trees — a park is open ground you see across, a forest is where SIGHTLINES DIE. Soft cover
+  everywhere (trunks), rare hard cover (boulders, fallen giants), undergrowth in jungle, and a
+  **meandering PATH** built from a wobbled polyline that trees are excluded from — the only fast
+  ground, and it curves so you never see far down it. `mountain` is rock outcrops and scree.
+  ⚠ WILD GROUND IS NOT LANDLOCKED: the rescue that guarantees every BUILDING an approach was paving
+  a street to every patch of forest and field. `NO_RESCUE` skips water/forest/mountain/farmland/
+  park/plaza. An all-woods map now has 0 roads, 0 lamps, 0 parked cars.
+  ⚠ A forest FLOOR is leaf litter in shade — tinted too far toward the region's greenery it came out
+  as bright meadow with trees standing on it.
+- **`data/geography.js` — TERRAIN IS AUTHORED, AND SAYS SO.** The sheet has no terrain column and no
+  coordinates (the sector reference is blank on half the rows and encodes a grid square, not a
+  landform), so there is nothing to derive it from. Rather than rewrite 1,050 rows Robert didn't
+  enter, terrain/biome live in their own file and are JOINED in `cityList()` — same pattern as hero
+  identities. Resolution: named city (Denver, Manaus, La Paz…) → country (142 of them) → region
+  fallback. Measured spread: relief hills 373 / flat 316 / mountains 171 / plateau 120 / coastal 70;
+  biome forest 379 / grass 278 / jungle 185 / desert 182 / mountain 25 / tundra 1.
+  Refs: `wwa-terrain.jpeg`, `wwa-forest.jpeg`, `landmarks.jpeg`, `junctions.jpeg`.
 
 ## THE COUNTRY SHEET — the state behind the city (2026-07-23)
 - `data/countries.js` — **168 nations, 25 fields**, baked from Robert's Country Master Sheet. The
