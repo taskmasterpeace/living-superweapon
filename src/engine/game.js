@@ -477,7 +477,7 @@ export class Game {
     this.particles.burst(car.x, 2, car.z, { count: 26, speed: 26, life: 0.85, size: 5.2, color: ['#ff8a3d', '#ffd24a', '#22232c'], up: 15, grav: 8, drag: 1.2 });
     this.vfx.scorch(new THREE.Vector3(car.x, 0.18, car.z), 8, '#161a22');
     this.audio.boom(0.55, pos); this.world.shake(1.2); this.world.punch(0.85);
-    this.areaDamage(src || this.player, pos, 10, 18, 1.3);   // hurts fighters + chains to the next car
+    this.areaDamage(src || this.player, pos, 14, 22, 2);   // hero-scale fireball — hurts fighters, craters, CHAINS to the next car
   }
   damageBlock(c, amt, pos) {
     if (c.hp == null || c.hp <= 0 || amt <= 0) return;

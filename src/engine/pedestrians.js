@@ -12,7 +12,7 @@ const _Y = new THREE.Vector3(0, 1, 0), _Z = new THREE.Vector3(0, 0, 1);
 export class Pedestrians {
   constructor(scene, arena, waterX) {
     this.arena = arena; this.waterX = waterX;   // stay off the harbor
-    const geo = new THREE.CapsuleGeometry(0.62, 1.9, 3, 8); geo.translate(0, 1.6, 0);
+    const geo = new THREE.CapsuleGeometry(0.8, 3.6, 3, 8); geo.translate(0, 2.6, 0);   // human-scale next to a 9.6u hero
     const mat = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.9, metalness: 0 });
     this.mesh = new THREE.InstancedMesh(geo, mat, COUNT);
     this.mesh.frustumCulled = false; this.mesh.castShadow = false; this.mesh.receiveShadow = true;
@@ -26,9 +26,9 @@ export class Pedestrians {
     scene.add(this.mesh);
   }
 
-  _lane() {                                   // a random street line on the 24u grid
-    const k = ((Math.random() * ((this.arena * 2) / 24 - 2)) | 0) + 1;
-    return -this.arena + k * 24;
+  _lane() {                                   // a random street line on the 96u block grid
+    const k = ((Math.random() * ((this.arena * 2) / 96 - 1)) | 0) + 1;
+    return -this.arena + k * 96;
   }
   _respawn(i) {
     const alongX = Math.random() < 0.5;
@@ -37,7 +37,7 @@ export class Pedestrians {
     if (x > this.waterX - 8) x = this.waterX - 8 - Math.random() * 40;
     this.px[i] = x; this.pz[i] = z;
     this.dir[i] = alongX ? (Math.random() < 0.5 ? 0 : Math.PI) : (Math.random() < 0.5 ? Math.PI / 2 : -Math.PI / 2);
-    this.spd[i] = 5.5 + Math.random() * 3.5;
+    this.spd[i] = 7 + Math.random() * 4;
     this.state[i] = WALK; this.t[i] = 1 + Math.random() * 4;
   }
   reset() { for (let i = 0; i < COUNT; i++) this._respawn(i); this._writeAll(); }
@@ -45,7 +45,7 @@ export class Pedestrians {
   _write(i) {
     if (this.state[i] === DOWN) {                                    // flat on the pavement
       _q.setFromAxisAngle(_Z, Math.PI / 2).premultiply(new THREE.Quaternion().setFromAxisAngle(_Y, this.dir[i]));
-      _m4.compose(_p.set(this.px[i], 0.4, this.pz[i]), _q, _s.set(1, 1, 1));
+      _m4.compose(_p.set(this.px[i], 0.9, this.pz[i]), _q, _s.set(1, 1, 1));
     } else {
       _q.setFromAxisAngle(_Y, -this.dir[i] + Math.PI / 2);
       _m4.compose(_p.set(this.px[i], 0, this.pz[i]), _q, _s.set(1, 1, 1));
@@ -88,7 +88,7 @@ export class Pedestrians {
       if (st === DOWN) { if (this.t[i] <= 0) { this._respawn(i); moved = true; } continue; }
       if (st === FILM) {
         if (P && Math.random() < dt * 2.2) {                          // paparazzi flash
-          game.particles.spawn({ x: this.px[i], y: 3.4, z: this.pz[i], vx: 0, vy: 1, vz: 0, life: 0.12, size: 3.2, color: ['#ffffff', '#cfe8ff'], drag: 0, shrink: true });
+          game.particles.spawn({ x: this.px[i], y: 5.6, z: this.pz[i], vx: 0, vy: 1, vz: 0, life: 0.12, size: 3.6, color: ['#ffffff', '#cfe8ff'], drag: 0, shrink: true });
         }
         if (this.t[i] <= 0) { this.state[i] = WALK; this.t[i] = 2 + Math.random() * 4; }
         continue;

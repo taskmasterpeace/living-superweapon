@@ -195,19 +195,22 @@ export class World {
       }
       uv.needsUpdate = true;
     };
-    // DISTRICTS (20 blocks = the fog-shader cap): downtown towers NW · midtown N/NE ·
-    // dense low old-town S · warehouses on the waterfront E · the west park stays open.
+    // DISTRICTS at TRUE CITY SCALE (block grid = 96u cells, streets between them; ≤20 = fog cap).
+    // Buildings FILL their blocks now (30-64u footprints vs a 9.6u hero) — you fight in the
+    // streets between them and on their roofs, not over a model-train set.
     const spots = [
-      // downtown — the skyline
-      [-150, -140, 14, 44, 12], [-100, -120, 12, 38, 12], [-140, -70, 10, 34, 10], [-80, -160, 10, 30, 10], [-58, -92, 9, 28, 9],
-      // midtown
-      [40, -120, 12, 26, 10], [92, -80, 10, 24, 10], [130, -150, 12, 22, 12], [60, -42, 8, 20, 8], [0, -170, 20, 16, 10],
-      // old town — low & dense, melee country
-      [-120, 90, 16, 12, 10], [-70, 122, 14, 10, 12], [-20, 152, 18, 12, 10], [32, 102, 12, 10, 12], [82, 142, 16, 14, 10], [-42, 82, 10, 8, 10], [122, 92, 12, 12, 12],
-      // waterfront warehouses
-      [158, 22, 20, 10, 14], [148, -40, 18, 12, 12],
-      // park edge pillar
-      [-170, 40, 8, 18, 8],
+      // downtown — the skyline (NW quadrant)
+      [-192, -192, 48, 44, 40], [-96, -192, 40, 38, 40], [-192, -96, 40, 34, 40], [-96, -96, 36, 28, 36],
+      // midtown north
+      [0, -192, 56, 22, 40], [96, -192, 44, 26, 36], [0, -96, 44, 18, 36], [96, -96, 40, 20, 36],
+      // midtown east
+      [96, 0, 40, 16, 36],
+      // old town — low & wide, rooftop-brawl country
+      [-96, 96, 46, 12, 38], [0, 96, 54, 10, 42], [96, 96, 42, 14, 34],
+      [-192, 192, 40, 16, 34], [-96, 192, 30, 10, 26], [0, 192, 58, 12, 40], [96, 192, 42, 12, 34],
+      // dockside warehouses (against the harbor)
+      [169, -96, 28, 10, 50], [169, 40, 28, 12, 44],
+      // west park cells (-192,0) and (-192,96) stay OPEN — the park belt
     ];
     const crackTex = this._crackTexture();
     let bi = 0;
@@ -269,17 +272,18 @@ export class World {
     const quay = new THREE.Mesh(new THREE.BoxGeometry(3, 1.1, ARENA * 2), new THREE.MeshStandardMaterial({ color: '#cfc8b6', roughness: 0.85 }));
     quay.position.set(this.waterX - 1.5, 0.55, 0); quay.receiveShadow = true; g.add(quay);
 
-    // PARKED CARS (ruled props) — destructible, they EXPLODE. One merged geometry, 4 shared paints.
+    // PARKED CARS (ruled props) — hero-scale now (~13u long vs a 9.6u fighter), curbside on
+    // the real streets. Destructible, they EXPLODE and chain. One merged geometry, 4 paints.
     const carGeo = (() => {
-      const body = new THREE.BoxGeometry(4.6, 1.3, 2.1); body.translate(0, 0.85, 0);
-      const cabin = new THREE.BoxGeometry(2.3, 1.0, 1.9); cabin.translate(-0.25, 1.95, 0);
+      const body = new THREE.BoxGeometry(13, 3.2, 5.4); body.translate(0, 1.9, 0);
+      const cabin = new THREE.BoxGeometry(6.2, 2.4, 4.6); cabin.translate(-0.9, 4.4, 0);
       return mergeGeometries([body, cabin]);
     })();
     const paints = ['#8a2a24', '#2a4a6a', '#c9c2b4', '#3a3f34'].map(c => new THREE.MeshStandardMaterial({ color: c, roughness: 0.5, metalness: 0.35 }));
     this._charred = new THREE.MeshStandardMaterial({ color: '#1c1a17', roughness: 0.95, metalness: 0.1 });
-    const carSpots = [
-      [-24, -100, 0], [-24, 34, 0], [24, 72, 0], [48, -28, 0], [-72, 62, 1], [-96, -44, 0], [72, 12, 1],
-      [96, 112, 1], [-48, -140, 0], [120, -60, 0], [24, -66, 0], [-120, 132, 1], [48, 148, 1], [144, 60, 0],
+    const carSpots = [   // [x, z, alongZ] — parked at the curb (streets at ±48/±144, curb ≈ ±9)
+      [57, -120, 1], [39, -20, 1], [57, 60, 1], [-57, -160, 1], [-39, 90, 1], [-57, 170, 1], [153, -130, 1], [-135, -57, 0],
+      [-120, 57, 0], [20, 39, 0], [80, -57, 0], [-20, -135, 0], [110, 135, 0], [-160, -39, 0],
     ];
     this.cars = [];
     carSpots.forEach(([x, z, axis], i) => {
@@ -289,19 +293,17 @@ export class World {
       this.cars.push({ mesh: m, x, z, hp: 30, maxHp: 30, dead: false, paint: paints[i % paints.length] });
     });
 
-    // STREETLIGHTS — instanced poles + instanced heads (2 draws for all 16); heads glow at night
-    const lampSpots = [
-      [-24, -24], [24, 24], [-72, 24], [72, -24], [-120, -72], [120, 72], [-24, 120], [24, -120],
-      [-168, -24], [168, 24], [-72, -168], [72, 168], [-120, 120], [120, -120], [-168, 168], [168, -72],
-    ].filter(([x]) => x < this.waterX - 6);
-    const poleGeo = new THREE.CylinderGeometry(0.22, 0.3, 9, 6); poleGeo.translate(0, 4.5, 0);
-    const headGeo = new THREE.SphereGeometry(0.7, 8, 6); headGeo.translate(0, 9.2, 0);
+    // STREETLIGHTS — hero-scale poles (15u) at the street intersections; heads glow at night
+    const lampSpots = [];
+    for (const lx of [-144, -48, 48, 144]) for (const lz of [-144, -48, 48, 144]) lampSpots.push([lx + 6, lz + 6]);
+    const poleGeo = new THREE.CylinderGeometry(0.3, 0.42, 15, 6); poleGeo.translate(0, 7.5, 0);
+    const headGeo = new THREE.SphereGeometry(0.95, 8, 6); headGeo.translate(0, 15.4, 0);
     const poleMat = new THREE.MeshStandardMaterial({ color: '#4a463c', roughness: 0.7, metalness: 0.4 });
     this._lampMat = new THREE.MeshStandardMaterial({ color: '#fff2cc', emissive: '#ffca7a', emissiveIntensity: 0.15, roughness: 0.4 });
     const poles = new THREE.InstancedMesh(poleGeo, poleMat, lampSpots.length);
     const heads = new THREE.InstancedMesh(headGeo, this._lampMat, lampSpots.length);
     const lm = new THREE.Matrix4();
-    lampSpots.forEach(([x, z], i) => { lm.makeTranslation(x + 4, 0, z + 4); poles.setMatrixAt(i, lm); heads.setMatrixAt(i, lm); });
+    lampSpots.forEach(([x, z], i) => { lm.makeTranslation(x, 0, z); poles.setMatrixAt(i, lm); heads.setMatrixAt(i, lm); });
     poles.castShadow = false; heads.castShadow = false;
     g.add(poles); g.add(heads);
 
@@ -322,15 +324,15 @@ export class World {
       const b = new THREE.Mesh(new THREE.PlaneGeometry(w, h), mat);
       b.position.set(x, y, z); b.rotation.y = ry; g.add(b); this._billMats.push(mat);
     };
-    addBill(billTex('THRESHOLD', '#f5b21a'), -142.6, 30, -140, Math.PI / 2);       // on the tallest tower's east face
-    addBill(billTex('KANO COLA', '#ff5a2a'), 130, 16, -143.8, 0);                  // midtown tower south face
+    addBill(billTex('THRESHOLD', '#f5b21a'), -167.6, 28, -192, Math.PI / 2, 26, 12);   // downtown tower, east face
+    addBill(billTex('KANO COLA', '#ff5a2a'), 96, 17, -173.6, 0, 22, 10);               // midtown tower, south face
 
     // ROOFTOP UNITS on the 6 tallest — children so shatter carries them
     const acMat = new THREE.MeshStandardMaterial({ color: '#9a948a', roughness: 0.9 });
     const tall = [...this.cover].sort((a, b) => b.h - a.h).slice(0, 6);
     for (const c of tall) {
-      const ac = new THREE.Mesh(new THREE.BoxGeometry(Math.min(3, c.w * 0.3), 1.4, Math.min(3, c.d * 0.3)), acMat);
-      ac.position.set(c.w * 0.22, c.h / 2 + 0.75, -c.d * 0.2); c.mesh.add(ac);
+      const ac = new THREE.Mesh(new THREE.BoxGeometry(Math.min(6, c.w * 0.22), 2.6, Math.min(6, c.d * 0.22)), acMat);
+      ac.position.set(c.w * 0.24, c.h / 2 + 1.35, -c.d * 0.22); c.mesh.add(ac);
     }
   }
 
@@ -356,11 +358,11 @@ export class World {
     grass.frustumCulled = false; grass.receiveShadow = true; grass.renderOrder = 1;
     const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), sv = new THREE.Vector3(), pv = new THREE.Vector3(), Y = new THREE.Vector3(0, 1, 0), col = new THREE.Color();
     this._gPos = new Float32Array(COUNT * 2); this._gRot = new Float32Array(COUNT); this._gScale = new Float32Array(COUNT); this._gOn = new Uint8Array(COUNT).fill(1);
-    // city grass lives in PARKS — the west park belt + old-town squares (never in the harbor)
+    // city grass lives in PARKS — two full park BLOCKS on the west belt + pocket squares
     const PARKS = [
-      [-120, 8, 26], [-92, 42, 20], [-150, -14, 18], [-176, 96, 18],   // the west park belt
-      [8, 58, 14], [-44, 122, 14], [58, 62, 12], [104, 120, 14],       // old-town squares
-      [96, -22, 14], [0, -62, 12], [-176, -176, 14],                   // pocket parks
+      [-192, 0, 38], [-192, 96, 36],                    // the west park blocks (open cells)
+      [-96, 20, 18], [-40, 148, 16], [148, 140, 15],    // pocket squares
+      [-40, -40, 14], [140, 12, 14], [40, 170, 14],
     ];
     let placed = 0, tries = 0;
     while (placed < COUNT && tries++ < COUNT * 30) {
@@ -438,7 +440,9 @@ export class World {
       x.fillRect(ST / 2 + 4, 256 + i, 26, 9); x.fillRect(512 - ST / 2 - 30, 256 + i, 26, 9);
     }
     const t = new THREE.CanvasTexture(c);
-    t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(20, 20);
+    // 5 repeats over 480u = a 96-unit CITY BLOCK per tile with ~22u-wide streets — real streets
+    // a 9.6u-tall hero fights DOWN, not a train-set grid he towers over
+    t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(5, 5);
     t.anisotropy = 8;
     return t;
   }
