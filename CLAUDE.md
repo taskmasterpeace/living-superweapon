@@ -352,6 +352,17 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   (`pickTarget` nearD 110) is toggleable via SETTINGS.aimAssist; yaw uses shortest-path damping
   (never revert to naive damp — it pirouettes 355° across the atan2 seam).
 
+## HUD readability (2026-07-23)
+- **The controls wall auto-folds.** `hud.armHintTimer()` (called from `main.beginMatch`) shows the full
+  control list for ~18s of a fresh match, then collapses it to a corner chip — **F1** toggles it back and
+  pins it (`toggleHint`, `_hintPinned`). It was a permanent 9-line block owning the bottom-right quadrant.
+- **"You are here"** (`game._buildPlayerMark` / `updatePlayerMark`): a soft pulsing ring under the human
+  player in their hero's accent colour. At 1:1 city scale a 9.6u hero is a speck between 150u towers.
+- **Off-screen foe arrow** (`hud.updateFoeArrow`): an edge marker with name + distance pointing at your
+  locked/visible target when it leaves frame. ⚠ It shows ONLY foes you can actually see (`_vis > 0.4`) —
+  pointing at a fog-hidden enemy would be a wallhack and would undo the AI honesty work.
+- KIT chips dock directly above the player panel (were floating detached at `bottom:250px`).
+
 ## Player-facing shell (options · onboarding · roster nav)
 - **The cast layer** (`data/identities.js` + `engine/icons.js` + `hud.kitFacts`): every hero has a
   `def.person` — civilian name, home city, country, flag (canon anchors: KIVULI=Kampala,
