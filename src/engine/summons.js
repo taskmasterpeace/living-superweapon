@@ -13,32 +13,85 @@ export class Minion {
     const a = (i / (def.count || 3)) * TAU;
     this.pos = new THREE.Vector3(owner.pos.x + Math.cos(a) * 10, 8 + rand(0, 4), owner.pos.z + Math.sin(a) * 10);
     this.aim = owner.aim.clone();
-    const body = new THREE.Mesh(new THREE.OctahedronGeometry(1.4), new THREE.MeshStandardMaterial({ color: def.color, emissive: def.color, emissiveIntensity: 1.2, roughness: 0.4 }));
-    const glow = new THREE.Mesh(new THREE.SphereGeometry(2.1, 12, 10), new THREE.MeshBasicMaterial({ color: def.color, transparent: true, opacity: 0.4, blending: THREE.AdditiveBlending, depthWrite: false }));
-    this.obj = new THREE.Group(); this.obj.add(body, glow); this.obj.position.copy(this.pos); game.scene.add(this.obj);
-    this.body = body;
+    // AN ATTACK DRONE IS A MACHINE, not a will-o'-wisp: a machined fuselage, four rotor booms
+    // with spinning props, a sensor lens and one blinking status LED. Bloom stays with ki.
+    const shell = new THREE.MeshStandardMaterial({ color: '#3a4048', roughness: 0.45, metalness: 0.85 });
+    const trim = new THREE.MeshStandardMaterial({ color: '#22262c', roughness: 0.6, metalness: 0.7 });
+    const body = new THREE.Mesh(new THREE.BoxGeometry(2.6, 1.1, 3.4), shell);
+    const nose = new THREE.Mesh(new THREE.ConeGeometry(0.75, 1.5, 6), trim);
+    nose.rotation.x = -Math.PI / 2; nose.position.z = 2.2;
+    const lens = new THREE.Mesh(new THREE.SphereGeometry(0.42, 8, 6), new THREE.MeshStandardMaterial({ color: def.color, emissive: def.color, emissiveIntensity: 1.5, roughness: 0.25 }));
+    lens.position.set(0, -0.1, 2.5);
+    const led = new THREE.Mesh(new THREE.SphereGeometry(0.22, 6, 5), new THREE.MeshStandardMaterial({ color: '#ff3b3b', emissive: '#ff3b3b', emissiveIntensity: 1.2, roughness: 0.3 }));
+    led.position.set(0, 0.75, -1.2);
+    this.obj = new THREE.Group(); this.obj.add(body, nose, lens, led);
+    this.rotors = [];
+    for (let r = 0; r < 4; r++) {                       // four booms, four props
+      const sx = r < 2 ? -1 : 1, sz = r % 2 ? -1 : 1;
+      const boom = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 2.2, 5), trim);
+      boom.rotation.z = Math.PI / 2; boom.rotation.y = sx * sz * 0.7;
+      boom.position.set(sx * 1.5, 0, sz * 1.3); this.obj.add(boom);
+      const prop = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.08, 0.28), trim);
+      prop.position.set(sx * 2.3, 0.35, sz * 2.0); this.obj.add(prop); this.rotors.push(prop);
+    }
+    this.obj.position.copy(this.pos); game.scene.add(this.obj);
+    this.body = body; this.led = led;
+    this.hp = def.hp || 18;                            // drones can be shot down — they are targets too
+    this._bob = rand(0, TAU);
+  }
+  // shot down by splash / area damage (game.areaDamage looks for takeDamage on anything hostile)
+  takeDamage(amount) {
+    this.hp -= amount;
+    if (this.hp <= 0 && !this.dead) {
+      const g = this.game;
+      g.vfx.explode(this.pos.clone(), { color: '#ffb03a', color2: '#8b8577', radius: 5, power: 0.8, scorch: false });
+      g.particles.burst(this.pos.x, this.pos.y, this.pos.z, { count: 12, speed: 20, life: 0.6, size: 1.6, color: ['#3a4048', '#ffb03a'], grav: 22, drag: 1.4 });
+      g.audio.impact(0.8, this.pos);
+      this.life = 0;
+    }
+    return amount;
   }
   update(dt, game) {
     this.life -= dt; if (this.life <= 0) { this._dispose(game); return false; }
-    const foe = game.nearestFoe(this.owner, this.pos, 90);
+    // Prefer whatever the OWNER is fighting — a drone screen should focus fire, not wander off
+    // onto three different targets. Falls back to the nearest hostile in sensor range.
+    let foe = (this.owner.isPlayer && game.hardLock && game.hardLock.alive) ? game.hardLock : null;
+    if (!foe || Math.hypot(foe.pos.x - this.pos.x, foe.pos.z - this.pos.z) > 110) foe = game.nearestFoe(this.owner, this.pos, 90);
     const home = _v.copy(this.owner.pos).setY(9);
     if (foe) {
-      // strafe near owner, aim at foe
       const desired = _v.copy(foe.pos).setY(foe.pos.y + 6).sub(this.pos);
       const dist = desired.length(); this.aim.copy(desired).normalize();
-      if (dist > 26) this.pos.addScaledVector(this.aim, 30 * dt);
-      else if (dist < 16) this.pos.addScaledVector(this.aim, -20 * dt);
+      // hold a firing ring around the target and JINK across it, so drones are hard to swat
+      const ring = this.def.standoff || 22;
+      if (dist > ring + 5) this.pos.addScaledVector(this.aim, 34 * dt);
+      else if (dist < ring - 5) this.pos.addScaledVector(this.aim, -26 * dt);
+      else { this.pos.x += -this.aim.z * 18 * dt; this.pos.z += this.aim.x * 18 * dt; }
+      this._bob += dt * 3.4;
+      this.pos.y = clamp(this.pos.y + Math.sin(this._bob) * 9 * dt, foe.pos.y + 4, foe.pos.y + 16);
       this.fireCd -= dt;
       if (this.fireCd <= 0) {
         this.fireCd = this.def.interval || 0.7;
-        game.projectiles.spawnProjectile(this, { pos: this.pos.clone(), vel: this.aim.clone().setLength(this.def.speed || 80), radius: 0.8, damage: this.def.damage || 7, blast: 3, color: this.def.color, color2: this.def.color2 || '#fff' });
+        // lead the shot like the fair-play AI does, then spread it — drones are not aimbots
+        const spd = this.def.speed || 80;
+        const lead = _v.copy(foe.pos).setY(foe.pos.y + 6);
+        if (foe.vel) lead.addScaledVector(foe.vel, Math.min(0.5, dist / spd));
+        const dir = lead.sub(this.pos).normalize();
+        dir.x += rand(-0.05, 0.05); dir.z += rand(-0.05, 0.05); dir.normalize();
+        game.projectiles.spawnProjectile(this, { pos: this.pos.clone(), vel: dir.setLength(spd), radius: 0.8, damage: this.def.damage || 7, blast: 3, color: this.def.color, color2: this.def.color2 || '#fff' });
         game.audio.blast(620, 0.06);
+        this.obj.position.addScaledVector(this.aim, -0.4);       // visible recoil kick
       }
     } else {
       // hover around owner
       const t = game.time + this.obj.id; this.pos.x = damp(this.pos.x, home.x + Math.cos(t) * 12, 3, dt); this.pos.z = damp(this.pos.z, home.z + Math.sin(t) * 12, 3, dt); this.pos.y = damp(this.pos.y, 9, 3, dt);
     }
-    this.obj.position.copy(this.pos); this.obj.rotation.y += dt * 3; this.body.rotation.x += dt * 2;
+    // fly like an aircraft: nose toward the aim, bank into the turn, rotors spinning, LED blinking
+    this.obj.position.copy(this.pos);
+    this.obj.rotation.y = Math.atan2(this.aim.x, this.aim.z);
+    this.obj.rotation.z = damp(this.obj.rotation.z || 0, foe ? -0.32 : 0, 4, dt);
+    this.obj.rotation.x = damp(this.obj.rotation.x || 0, foe ? 0.16 : 0, 4, dt);
+    for (let i = 0; i < this.rotors.length; i++) this.rotors[i].rotation.y += dt * (46 + i);
+    if (this.led) this.led.material.emissiveIntensity = (game.time * 3 % 1 < 0.5) ? 2.4 : 0.3;
     return true;
   }
   _dispose(game) { if (this.dead) return; this.dead = true; game.scene.remove(this.obj); this.obj.children.forEach(c => { c.geometry.dispose(); c.material.dispose(); }); }
