@@ -66,7 +66,8 @@ class Projectile {
     this.vel = new THREE.Vector3().copy(o.vel);
     this.radius = o.radius || 1.4;
     this.damage = o.damage || 12;
-    this.blast = o.blast || this.radius * 2.4;    // explosion AoE
+    this.blast = (o.blast || this.radius * 2.4) * ((caster.sheet && caster.sheet.blastMult) || 1);   // Demolitionist widens it
+    this.boomerang = !!o.boomerang; this._return = false; this._range = o.range || 55; this._flown = 0; this._rehitT = 0;
     this.power = o.power || 1;                     // scales fx / shake
     this.grav = o.grav || 0;                       // >0 for lobs
     this.homing = o.homing || 0;
@@ -130,6 +131,19 @@ class Projectile {
       const t = game.nearestFoe(this.caster, this.pos, 120);
       if (t) { _v.copy(t.pos).setY(t.pos.y + 5).sub(this.pos).normalize().multiplyScalar(this.homing * dt * 60); this.vel.add(_v); const sp = this.vel.length(); this.vel.setLength(clamp(sp, 20, o_maxspeed(this))); }
     }
+    // boomerang flight: out to range, then WHIP back to the thrower's hand (hits on both passes)
+    if (this.boomerang) {
+      this._flown += this.vel.length() * dt; this._rehitT -= dt;
+      if (!this._return && this._flown >= this._range) this._return = true;
+      if (this._return) {
+        const cst = this.caster;
+        if (!cst || !cst.alive) return this._impact(game, this.pos.y < 2);
+        _v.set(cst.pos.x - this.pos.x, (cst.pos.y + 5.5) - this.pos.y, cst.pos.z - this.pos.z);
+        const d = _v.length();
+        if (d < 4) { game.vfx.flash(this.pos.clone(), this.color, 3, 0.12); game.audio.zap(700, this.pos); this._dispose(game); return false; }   // caught it
+        this.vel.lerp(_v.normalize().multiplyScalar(this.vel.length() * 1.02), Math.min(1, 8 * dt));
+      }
+    }
     this.pos.addScaledVector(this.vel, dt);
     this.obj.position.copy(this.pos);
     if (this.light) this.light.position.copy(this.pos);
@@ -142,11 +156,30 @@ class Projectile {
       game.particles.spawn({ x: this.pos.x, y: this.pos.y, z: this.pos.z, vx: rand(-2, 2), vy: rand(-2, 2), vz: rand(-2, 2), life: this.arrow ? 0.2 : 0.35, size: this.arrow ? 1 : this.radius * 2.2, color: this.arrow ? this.color : [this.color, this.color2, '#ffffff'], drag: 3, shrink: true });
     }
     this.life -= dt;
-    // collisions — delayed-blast payloads ARM instead of exploding on contact
-    if (this.pos.y <= this.radius * 0.5 && this.ground) { if (this.armDelay && !this._armed) { this._arm(game); return true; } return this._impact(game, true); }
-    for (const c of game.world.cover) { if (Math.hypot(this.pos.x - c.x, this.pos.z - c.z) < c.r + this.radius && this.pos.y < c.h) { if (this.armDelay && !this._armed) { this._arm(game); return true; } return this._impact(game, true); } }
+    // collisions — delayed-blast payloads ARM instead of exploding on contact; boomerangs bounce home
+    if (this.pos.y <= this.radius * 0.5 && this.ground) {
+      if (this.boomerang) { this._return = true; this.pos.y = this.radius * 0.5 + 0.1; this.vel.y = Math.abs(this.vel.y) * 0.4; }
+      else if (this.armDelay && !this._armed) { this._arm(game); return true; }
+      else return this._impact(game, true);
+    }
+    for (const c of game.world.cover) {
+      if (Math.hypot(this.pos.x - c.x, this.pos.z - c.z) < c.r + this.radius && this.pos.y < c.h) {
+        if (this.boomerang) { this._return = true; break; }
+        if (this.armDelay && !this._armed) { this._arm(game); return true; }
+        return this._impact(game, true);
+      }
+    }
     const foe = game.overlapFoe(this.caster, this.pos, this.radius + 1.5);
     if (foe) {
+      if (this.boomerang) {   // clip them and keep flying — both passes hurt
+        if (this._rehitT <= 0) {
+          this._rehitT = 0.35;
+          foe.takeDamage(this.damage * this.caster.powerBuff, { src: this.caster, strike: true, dmgClass: 'slash', kb: _v.copy(this.vel).setY(0).setLength(this.damage * 0.4 + 8), launch: 5, hitstop: 0.06 });
+          game.vfx.impactStar(this.pos.clone(), 6, this.color, 0.15); game.audio.hit(300, this.pos);
+          this._return = true;
+        }
+        return true;
+      }
       if (this.armDelay && !this._armed) { this._arm(game); return true; }   // she reaches you... and waits
       // Superman-style DEFLECT guard: bullets/bolts bounce right back at whoever fired them
       if (foe.guarding && foe.staggerT <= 0 && foe.def.guardType === 'deflect' && !this._defl) {

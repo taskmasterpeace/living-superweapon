@@ -34,7 +34,7 @@ export class MeleeSystem {
   chargeUpdate(f, dt) {
     if (f.meleeCharge <= 0) return;
     if (!this.canAct(f)) { f.meleeCharge = 0; return; }        // hit out of the wind-up (STRIKE beats charge too)
-    f.meleeCharge = Math.min(1.3, f.meleeCharge + dt);
+    f.meleeCharge = Math.min(1.3, f.meleeCharge + dt * ((f.sheet && f.sheet.chargeRate) || 1));   // Brawlers wind up faster
     const g = this.game;
     if (f.meleeCharge > 0.3 && Math.random() < f.meleeCharge * 0.5) {
       const m = f.muzzle(_vv, 2.2, 5.6);
@@ -71,7 +71,7 @@ export class MeleeSystem {
     if (foe) {
       f._heavyT = 0;
       const str = f.def.strength ?? 5, hay = f._heavyHay, p = f._heavyP;
-      const dmg = (hay ? 20 + p * 14 : 13) * (0.85 + str * 0.03) * f.powerBuff;
+      const dmg = (hay ? 20 + p * 14 : 13) * (0.85 + str * 0.03) * f.powerBuff * (hay ? 1 : ((f.sheet && f.sheet.jabMult) || 1));
       const blocked = foe.guarding && foe.staggerT <= 0 && (foe.def.guardType === 'barrier' || this._front(foe, f));
       const imp = foe.pos.clone().set((f.pos.x + foe.pos.x) / 2, 5.7, (f.pos.z + foe.pos.z) / 2);
       if (blocked && hay) {
@@ -146,7 +146,7 @@ export class MeleeSystem {
       if (foe && f.strikeHit && !f.strikeHit.has(foe.id)) {
         f.strikeHit.add(foe.id);
         const fin = f.strikeIdx === 2;
-        const dmg = (fin ? 17 : 8) * f.powerBuff;
+        const dmg = (fin ? 17 : 8) * f.powerBuff * ((f.sheet && f.sheet.jabMult) || 1);   // FIGHTING + Martial Artist
         const hs = fin ? 0.14 : 0.07;
         const blocked = foe.guarding && foe.staggerT <= 0;
         foe.takeDamage(dmg, { src: f, strike: true, hitstop: hs, kb: { x: f.aim.x * (fin ? 14 : 8), y: fin ? 30 : 2, z: f.aim.z * (fin ? 14 : 8) } });

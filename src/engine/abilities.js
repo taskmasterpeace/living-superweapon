@@ -9,7 +9,7 @@ const ORB_CORE_MAT = new THREE.MeshBasicMaterial({ color: '#fff' });
 export const PAYLOAD_COLORS = { poison: '#8fe08a', flame: '#ff7a2a', explosive: '#ffd24a', gas: '#9a4ae0' };
 
 function ready(c, def, st) { return st.cd <= 0 && c.ki >= (def.cost || 0) && c.hitstop <= 0; }
-function pay(c, def, st) { c.ki -= (def.cost || 0); st.cd = def.cd || 0; }
+function pay(c, def, st) { c.ki -= (def.cost || 0); st.cd = (def.cd || 0) * ((c.sheet && c.sheet.cdMult) || 1); }   // INTELLECT + Tactician shave cooldowns
 function chargeOrb(c, st, color) {
   if (!st.orb) {
     const core = new THREE.Mesh(ORB_GEO, ORB_CORE_MAT);
@@ -88,6 +88,7 @@ export const TYPES = {
         pos: m, vel: (def.grav ? c.aim.clone().setY(0.5) : c.aim3.clone()).setLength(def.speed || 70),
         radius: def.radius || 1.4, damage: def.damage || 14, blast: def.blast || 5, power: def.power || 1,
         homing: def.homing || 0, color: def.color, color2: def.color2, grav: def.grav || 0, shock: def.shock,
+        arrow: def.arrow, payload: def.payload, boomerang: def.boomerang, range: def.range,
       });
       g.audio.blast(460, 0.14); g.muzzleFlash(c, def.color);
     }
@@ -102,7 +103,7 @@ export const TYPES = {
       c.state = 'cast'; c.stateT = 0; c.punchPose = 1;
       const off = _v.set(-c.aim.z * st.side, 0, c.aim.x * st.side).multiplyScalar(1.8);
       const m = c.muzzle(new THREE.Vector3(), 3.4, 5.8).add(off);
-      const spread = def.spread || 0.09;
+      const spread = (def.spread || 0.09) * ((c.sheet && c.sheet.spreadMult) || 1);
       const a = Math.atan2(c.aim3.z, c.aim3.x) + rand(-spread, spread);
       g.projectiles.spawnProjectile(c, {
         pos: m, vel: new THREE.Vector3(Math.cos(a), c.aim3.y, Math.sin(a)).setLength(def.speed || 105),
@@ -413,7 +414,7 @@ export const TYPES = {
       c.ki -= (def.cost || 2); st.cd = def.interval || 0.09;
       c.state = 'cast'; c.stateT = 0; c.punchPose = 1;
       const m = c.muzzle(_v.clone(), 4.4, 5.7);
-      const spread = def.spread || 0.045;
+      const spread = (def.spread || 0.045) * ((c.sheet && c.sheet.spreadMult) || 1);   // Marksman tightens the group
       const a = Math.atan2(c.aim3.z, c.aim3.x) + rand(-spread, spread);
       g.projectiles.spawnProjectile(c, {
         pos: m, vel: new THREE.Vector3(Math.cos(a), c.aim3.y + rand(-spread, spread), Math.sin(a)).setLength(def.speed || 170),
@@ -458,6 +459,64 @@ export const TYPES = {
           color: def.color || '#ffe8c0', color2: '#ffffff',
         });
         g.audio.blast(180, 0.25); g.world.punch(0.88); g.vfx.flash(from, def.color || '#ffe8c0', 8 + c01 * 8, 0.25);
+      }
+    }
+  },
+
+  // Proximity mines — plant up to `max` at your aim; they arm, blink, and erase whoever steps close.
+  mine(c, def, st, g, inp) {
+    st.list = st.list || [];
+    for (let i = st.list.length - 1; i >= 0; i--) {
+      const m = st.list[i];
+      m.arm -= inp.dt; m.life -= inp.dt;
+      m.mesh.children[1].material.opacity = m.arm > 0 ? 0.25 : 0.45 + Math.sin(g.time * 9) * 0.35;   // armed = blinking
+      const foe = m.arm <= 0 ? g.overlapFoe(c, m.pos, def.trigger || 7) : null;
+      if (foe || m.life <= 0) {
+        if (foe) {
+          g.vfx.explode(m.pos.clone().setY(0.6), { color: def.color || '#ff5a4a', color2: '#ffd97a', radius: def.blast || 12, power: 1.3 });
+          g.areaDamage(c, m.pos.clone().setY(1), (def.blast || 12) * ((c.sheet && c.sheet.blastMult) || 1), def.damage || 24, 1.3);
+          g.audio.boom(0.8, m.pos);
+        } else g.vfx.flash(m.pos.clone().setY(1), def.color || '#ff5a4a', 3, 0.2);   // timed out — fizzle
+        g.scene.remove(m.mesh); m.mesh.traverse(o => { if (o.material) o.material.dispose(); if (o.geometry) o.geometry.dispose(); });
+        st.list.splice(i, 1);
+      }
+    }
+    if (inp.pressed && ready(c, def, st)) {
+      pay(c, def, st);
+      let px = g.aimPoint.x, pz = g.aimPoint.z;
+      if (!c.isPlayer) { px = c.pos.x + c.aim.x * 16; pz = c.pos.z + c.aim.z * 16; }
+      const dx = px - c.pos.x, dz = pz - c.pos.z, d = Math.hypot(dx, dz) || 1, rng = def.range || 55;
+      if (d > rng) { px = c.pos.x + dx / d * rng; pz = c.pos.z + dz / d * rng; }
+      const grp = new THREE.Group();
+      const disc = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 1.1, 0.35, 8), new THREE.MeshStandardMaterial({ color: '#2a2f38', roughness: 0.5, metalness: 0.6 }));
+      disc.position.y = 0.2; grp.add(disc);
+      const lamp = new THREE.Mesh(ORB_GEO, new THREE.MeshBasicMaterial({ color: def.color || '#ff5a4a', transparent: true, opacity: 0.3, blending: THREE.AdditiveBlending, depthWrite: false }));
+      lamp.scale.setScalar(0.35); lamp.position.y = 0.5; grp.add(lamp);
+      grp.position.set(px, 0, pz); g.scene.add(grp);
+      st.list.push({ pos: new THREE.Vector3(px, 0.5, pz), mesh: grp, arm: def.armT || 0.6, life: def.duration || 18 });
+      if (st.list.length > (def.max || 3)) { const old = st.list.shift(); g.scene.remove(old.mesh); old.mesh.traverse(o => { if (o.material) o.material.dispose(); if (o.geometry) o.geometry.dispose(); }); }
+      g.audio.zap(360, c.pos);
+    }
+  },
+
+  // Life drain — a held siphon: the nearest foe in your arc withers while you knit back together.
+  lifedrain(c, def, st, g, inp) {
+    if (inp.held && c.ki < (def.kiPerSec || 14) * inp.dt) { if (!st._dry) { st._dry = true; drained(c, g); } }
+    else if (!inp.held) st._dry = false;
+    if (inp.held && c.spendKi((def.kiPerSec || 14) * inp.dt)) {
+      c.state = 'cast'; c.stateT = 0;
+      const foe = g.coneFoe(c, def.range || 26, def.arc || 0.9);
+      if (foe && !foe.phase) {
+        const dealt = foe.takeDamage((def.dps || 22) * c.powerBuff * inp.dt, { src: c, dot: true, hitstop: 0 });
+        if (dealt > 0) c.heal(dealt * (def.ratio || 0.6));
+        if (Math.random() < 0.5) {
+          const t = Math.random();
+          g.particles.spawn({
+            x: foe.pos.x + (c.pos.x - foe.pos.x) * t, y: 5 + Math.sin(t * 6) * 1.5, z: foe.pos.z + (c.pos.z - foe.pos.z) * t,
+            vx: (c.pos.x - foe.pos.x) * 0.8, vy: 2, vz: (c.pos.z - foe.pos.z) * 0.8,
+            life: 0.35, size: 2, color: [def.color || '#9dff5a', '#fff'], drag: 0.5, shrink: true,
+          });
+        }
       }
     }
   },
@@ -508,7 +567,7 @@ export function performEvade(c, dir, g) {
   const ev = c.def.evade; if (!ev || c.evadeCd > 0 || c.grabbedBy || c.staggerT > 0 || c.state === 'ko') return false;
   const d = { ...EVADE_DEFAULTS[ev.kind || 'dash'], ...ev };
   if (c.ki < (d.cost || 0)) { if (g.onNoKi) g.onNoKi(c, 'evade'); return false; }
-  c.ki -= d.cost || 0; c.evadeCd = d.cd || 0.7;
+  c.ki -= d.cost || 0; c.evadeCd = (d.cd || 0.7) * ((c.sheet && c.sheet.evadeCdMult) || 1);   // AGILITY + Acrobat recover faster
   const color = d.color || c.def.colors.accent;
   const dl = Math.hypot(dir.x, dir.z) || 1; const dx = dir.x / dl, dz = dir.z / dl;
   switch (d.kind) {

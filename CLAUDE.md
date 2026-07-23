@@ -20,6 +20,20 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   `grunt` (pain bark on slams), `cry` (KO wail — fires for every death in `handleKO`). `game.heroYell(f,i)`
   gates on `def.yells` + `f._yellCd`; fires on charge start, long-charge (>1.15s), transforms/buffs,
   tier-ups (`_yellCd` reset for the ascension scream), haymakers. `def.voicePitch` 0.55 (RAGE) – 1.3 (DECIBEL).
+- **The tabletop layer** (`data/ranks.js`, baked per-fighter as `f.sheet` in the ctor): seven attributes
+  (Fighting/Agility/Might/Vigor/Intellect/Awareness/Resolve) on a named 10-rank ladder (Civilian→Cosmic),
+  DERIVED from hero data with `def.attrs` overrides; talents (1–3 per hero, `HERO_TALENTS` + kit-derived
+  fallback) bake to flat multipliers: `cdMult` (pay() + items), `jabMult` (melee.js), `spreadMult`
+  (rifle/volley), `blastMult` (Projectile ctor + mines), `evadeCdMult`, `ccRecover` (stagger/frozen
+  decrement), `healMult`, `odWindow` (Overdrive threshold), `sumDurMult`, `chargeRate`, `predator`,
+  `kiRegenMult`, `visMult` (fog range). Character select renders the full sheet (ranks/talents/gear).
+- **Gadgets** (items on X, `charges` per life, refilled on respawn): beacon · medkit · flashbang
+  (staggers + wipes bot memory) · jetcell (temp flightTier 3) · shieldpack (`f._shieldHp` ablative pool
+  in takeDamage). Bots use all of them (`controlBot` items block).
+- **New powers**: `mine` (plant ≤3 proximity charges — meshes swept in `dispose()`), `lifedrain`
+  (held siphon → self-heal), `boomerang` projectile flag (out-clip-return, hits both passes; bounces
+  home off walls/ground). Balance: `docs/BALANCE.md` — AI-vs-AI audit method + first-pass rulings
+  (martial rushers trimmed, TITAN/VEGA/PYRE buffed; Threat-Low gear humans losing to Very-High is BY RULING).
 - `data/characters.js` — the **52** heroes as **pure data**. Add a hero = add data here. Trait fields:
   `thorns` (hurt grabbers), `phase` (intangible), `grabHeal`, `teleEscape` (auto), `metal` (robot),
   `guardStrong` (riot shield), `tentacles` (verlet tentacles), **`strength` 1–10** (melee dmg up,

@@ -2,8 +2,8 @@
 // beamers zone, rushers blitz, artillery kites, zoners wall up, tricksters teleport/phase, grapplers grab, summoners hide behind minions.
 import { rand, chance, pick } from '../core/util.js';
 
-const HOLD = new Set(['beam', 'charge', 'spiritbomb', 'cone', 'volley', 'phase', 'rifle', 'bow', 'facebomb']);
-const holdTime = (t) => t === 'charge' ? rand(0.9, 1.9) : t === 'spiritbomb' ? rand(1.1, 2.2) : t === 'beam' ? rand(0.9, 1.8) : t === 'phase' ? rand(0.5, 1.2) : t === 'rifle' ? rand(0.6, 1.5) : t === 'bow' ? rand(0.4, 0.95) : t === 'facebomb' ? rand(1.2, 2.2) : rand(0.4, 1.1);
+const HOLD = new Set(['beam', 'charge', 'spiritbomb', 'cone', 'volley', 'phase', 'rifle', 'bow', 'facebomb', 'lifedrain']);
+const holdTime = (t) => t === 'charge' ? rand(0.9, 1.9) : t === 'spiritbomb' ? rand(1.1, 2.2) : t === 'beam' ? rand(0.9, 1.8) : t === 'phase' ? rand(0.5, 1.2) : t === 'rifle' ? rand(0.6, 1.5) : t === 'bow' ? rand(0.4, 0.95) : t === 'facebomb' ? rand(1.2, 2.2) : t === 'lifedrain' ? rand(0.8, 1.6) : rand(0.4, 1.1);
 
 function deriveStyle(def) {
   const types = Object.values(def.abilities || {}).map(a => a.type);
@@ -121,16 +121,16 @@ export class AI {
         if (close) return one(T.cone) || one(T.dash) || one(T.melee);
         return one(T.bow) || one(T.charge) || one(T.projectile) || one(T.beam) || one(T.volley);
       case 'zoner':
-        if (chance(0.4)) { const c = one(T.construct) || one(T.summon); if (c) return c; }
+        if (chance(0.4)) { const c = one(T.construct) || one(T.summon) || one(T.mine); if (c) return c; }
         if (close) return one(T.cone) || one(T.melee) || one(T.dash);
-        return one(T.beam) || one(T.rifle) || one(T.projectile) || one(T.volley) || one(T.construct);
+        return one(T.beam) || one(T.rifle) || one(T.projectile) || one(T.volley) || one(T.construct) || one(T.mine);
       case 'summoner':
         if (chance(0.5)) { const s = one(T.summon) || one(T.construct); if (s) return s; }
         if (close) return one(T.cone) || one(T.dash);
         return one(T.projectile) || one(T.summon);
       case 'grappler':
         if (far) return one(T.teleport) || one(T.dash) || one(T.projectile) || one(T.beam);
-        if (close) return one(T.tentacle) || one(T.melee) || one(T.rush);   // grabs handled by controlBot melee layer
+        if (close) return one(T.lifedrain) || one(T.tentacle) || one(T.melee) || one(T.rush);   // grabs handled by controlBot melee layer
         if (T.tentacle && d < 32 && chance(0.5)) { const t = one(T.tentacle); if (t) return t; }
         return one(T.projectile) || one(T.dash) || one(T.beam);
       case 'trickster':

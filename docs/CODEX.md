@@ -77,6 +77,39 @@ Gravity-control and black-hole are two different entries — never one vague "gr
 - Only the strongest beams (Might × energy-in) **eat** piercing projectiles that fly into them.
 - Elemental rides on top of a class (heat beam = energy+heat; freeze breath = elemental cold).
 
+## The tabletop layer (data/ranks.js) — SHIPPED
+
+**The universal rank ladder** — one 10-step table every attribute reads from:
+Civilian · Trained · Exceptional · Enhanced · Superhuman · Paragon · Devastating · Cataclysmic ·
+Planetary · Cosmic. Rank badges render on the character sheet, color-coded.
+
+**Seven attributes**, each with a real engine hook (derived from hero data; `def.attrs` overrides
+any value — that's the character creator's dial):
+
+| Attribute | Engine effect |
+|---|---|
+| Fighting | jab/straight damage (`jabMult`) |
+| Agility | evade cooldown recovery |
+| Might | knockback resistance, throws, slam weight (= `strength`) |
+| Vigor | derived from hp/armor — durability rating |
+| Intellect | ability AND gadget cooldowns (`cdMult`) |
+| Awareness | fog-of-war vision range (`visMult`) |
+| Resolve | ki + guard regen, stagger/ice shake-off (`ccRecover`) |
+
+**Talents** (1–3 per hero, `HERO_TALENTS` or kit-derived): Marksman (tighter spread), Martial Artist,
+Demolitionist (+blast), Acrobat, Iron Will, Tactician (−cd), Field Medic (+healing), Brawler (faster
+haymaker wind-up), Survivor (Overdrive opens at 35% ki), Commander (+summon duration), Predator
+(+15% vs foes under 30%).
+
+**Gadget inventory** (`def.items`, X button, charges per life, refilled on respawn):
+beacon (plant → recall) · medkit · flashbang (staggers + wipes AI memory) · jetcell (temporary full
+flight for grounded heroes) · shieldpack (ablative pool that soaks hits before hp).
+
+**New power families this pass:** `mine` (plant up to 3 proximity charges), `lifedrain` (held siphon,
+damage → self-heal), and the `boomerang` projectile flag (out, clip, and return — hits both passes).
+
+Balance is now auditable: see `BALANCE.md` for the AI-vs-AI method + the first audit's rulings.
+
 ## Next codex steps
 1. Auto-generate a per-hero codex page from `data/characters.js` (script → `docs/codex/<id>.md`).
 2. Fill `dmgClass`/`element`/`bands`/`ai` on every existing ability (data-only pass).

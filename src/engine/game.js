@@ -164,9 +164,10 @@ export class Game {
   }
   _humanSees(p, e) {
     if (p._revealT > 0) return true;                 // The Ring Sees — the network is her retina
+    const vm = (p.sheet && p.sheet.visMult) || 1;    // AWARENESS extends the eye
     const dx = e.pos.x - p.pos.x, dz = e.pos.z - p.pos.z, d = Math.hypot(dx, dz) || 1;
-    if (d < this.visNear) return true;
-    if (d < this.visRange && ((dx / d) * p.aim.x + (dz / d) * p.aim.z) > this.visCos) return this.canSee(p, e);
+    if (d < this.visNear * vm) return true;
+    if (d < this.visRange * vm && ((dx / d) * p.aim.x + (dz / d) * p.aim.z) > this.visCos) return this.canSee(p, e);
     return false;
   }
 
@@ -707,9 +708,46 @@ export class Game {
   // snap back to it. Bait-and-swap: plant, push in shooting, then vanish back to your spot.
   useItem(f) {
     const it = f.items && f.items[0]; if (!it) return;
-    if (it.def.kind !== 'beacon') return;
-    if (it.state === 'cooldown') { if (this.isHuman(f) && this.hud) this.hud.feed('Beacon recharging…', '#8b8577'); return; }
     const acc = f.def.colors.accent;
+    if (it.state === 'cooldown' || it.state === 'spent') { if (this.isHuman(f) && this.hud) this.hud.feed(it.state === 'spent' ? 'No charges left' : 'Recharging…', '#8b8577'); return; }
+    // one-shot gadgets (medkit / flashbang / jump jets / shield cell) — charges, then a recharge gap
+    if (it.def.kind !== 'beacon') {
+      const spend = () => {
+        it.charges = (it.charges ?? it.def.charges ?? 1) - 1;
+        if (it.charges > 0) { it.state = 'cooldown'; it.cd = (it.def.cd || 8) * (f.sheet ? f.sheet.cdMult : 1); }
+        else it.state = 'spent';   // out until respawn refills the pouch
+      };
+      switch (it.def.kind) {
+        case 'medkit':
+          f.heal(it.def.heal || 40);
+          this.vfx.ring(f.pos.clone().setY(5), { color: '#8fe08a', r0: 2, r1: 8, life: 0.4 });
+          this.particles.burst(f.pos.x, f.pos.y + 5, f.pos.z, { count: 12, speed: 10, life: 0.6, size: 2.2, color: ['#8fe08a', '#fff'], up: 10, drag: 1 });
+          this.audio.zap(820, f.pos); spend(); break;
+        case 'flashbang': {
+          this.vfx.flash(f.pos.clone().setY(6), '#ffffff', 16, 0.3);
+          if (this.hud && this.isHuman(f)) this.hud.flashScreen('#fff', 0.2);
+          this.audio.zap(1200, f.pos); this.audio.impact(0.7, f.pos);
+          for (const e of this.entities) {
+            if (!this.isFoe(f, e)) continue;
+            const d = Math.hypot(e.pos.x - f.pos.x, e.pos.z - f.pos.z);
+            if (d > (it.def.radius || 26)) continue;
+            e.staggerT = Math.max(e.staggerT, 0.5);
+            if (e.ai) { e.ai._mem = 0; e.ai._ls = null; }   // bots lose the plot
+          }
+          spend(); break;
+        }
+        case 'jetcell':
+          if (f._jetT <= 0) f._jetPrev = f.flightTier;
+          f.flightTier = 3; f._jetT = it.def.dur || 6;
+          if (!f.flying) f.toggleFlight();
+          this.audio.zap(560, f.pos); this.audio.power(true); spend(); break;
+        case 'shieldpack':
+          f._shieldHp = it.def.shield || 45;
+          this.vfx.ring(f.pos.clone().setY(5.4), { color: '#7fe6ff', r0: 3, r1: 7, life: 0.4 });
+          this.audio.zap(700, f.pos); spend(); break;
+      }
+      return;
+    }
     if (it.state === 'ready') {
       // PLANT — a humming tripod with a light shaft, right at her feet
       const grp = new THREE.Group();
@@ -936,12 +974,17 @@ export class Game {
       }
     }
 
-    // items: the AI plants its beacon when healthy, and BAILS back to it when the fight turns
+    // items: bots use their gadgets like players would
     if (f.items.length) {
-      const it = f.items[0];
-      if (it.def.kind === 'beacon') {
+      const it = f.items[0], k = it.def.kind;
+      if (k === 'beacon') {   // plant healthy, BAIL when it turns
         if (it.state === 'ready' && f.hp > f.maxHp * 0.55 && Math.random() < 0.005) this.useItem(f);
         else if (it.state === 'deployed' && (f.hp < (f._beaconHp || f.maxHp) - 28 || (f.hp < f.maxHp * 0.3 && Math.random() < 0.05))) this.useItem(f);
+      } else if (it.state === 'ready') {
+        if (k === 'medkit' && f.hp < f.maxHp * 0.5) this.useItem(f);
+        else if (k === 'shieldpack' && f.hp < f.maxHp * 0.6 && f._shieldHp <= 0) this.useItem(f);
+        else if (k === 'flashbang' && this.nearestFoe(f, f.pos, 18) && Math.random() < 0.03) this.useItem(f);
+        else if (k === 'jetcell' && f._jetT <= 0) { const foe = this.nearestFoe(f, f.pos, 90); if (foe && foe.pos.y > 14 && Math.random() < 0.02) this.useItem(f); }
       }
     }
 

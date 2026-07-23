@@ -4,6 +4,7 @@ import { clamp, damp, TAU, lerp } from '../core/util.js';
 import { ARENA } from './world.js';
 import { Ragdoll } from './ragdoll.js';
 import { buildTentacles } from './tentacles.js';
+import { bakeSheet } from '../data/ranks.js';
 
 // power tiers (Super-Saiyan-style): level 1–3 = I, 4–6 = II, 7–9 = III, 10 = MAX
 export function tierOf(level) { return level >= 10 ? 4 : level >= 7 ? 3 : level >= 4 ? 2 : 1; }
@@ -302,6 +303,11 @@ export class Fighter {
     this.tentacles = null;      // built lazily on first update (needs the scene)
     // strength (1–10, default 5): melee damage up, knockback/beam-shove down, faster freeze break-outs
     this.strength = def.strength ?? 5;
+    // the SHEET — seven ranked attributes + talents baked to flat multipliers (data/ranks.js).
+    // This is the D&D layer: FGT/AGL/MGT/VIG/INT/AWR/RES all do real engine work.
+    this.sheet = bakeSheet(def);
+    this.attrs = this.sheet.attrs;
+    this._shieldHp = 0; this._jetT = 0; this._jetPrev = 0;   // gadget states (shield cell / jump jets)
     // flight expertise: 0 = grounded (leapers) · 1 = clumsy forward flier (can't hover — Greatest
     // American Hero) · 2 = levitator (hover + reposition, no cruise speed) · 3 = full flight (Superman)
     this.flightTier = def.flightTier ?? 3;
@@ -313,7 +319,7 @@ export class Fighter {
     this._quiverIdx = 0;        // archer payload selector (quiver ability cycles it)
     // ITEMS — gadgets a character CARRIES, outside the ability slots: no ki, cooldown-only,
     // one button (X). First kind: the teleport beacon (drop → fight elsewhere → recall to it).
-    this.items = (def.items || []).map(d => ({ def: d, state: 'ready', cd: 0, pos: null, mesh: null }));
+    this.items = (def.items || []).map(d => ({ def: d, state: 'ready', cd: 0, pos: null, mesh: null, charges: d.charges ?? 1 }));
     // per-character trifecta traits
     this.thorns = def.thorns || 0;                                   // damages whoever holds you
     this.canPhase = !!def.phase;                                     // can spend energy to go intangible
@@ -345,9 +351,13 @@ export class Fighter {
     return out.set(this.pos.x + this.aim.x * fwd, this.pos.y + h, this.pos.z + this.aim.z * fwd);
   }
 
-  // Free all scene-level extras (tentacles, deployed items). Call when the fighter leaves play.
+  // Free all scene-level extras (tentacles, deployed items, planted mines). Call when the fighter leaves play.
   dispose() {
     if (this.tentacles) { for (const t of this.tentacles) t.dispose(); this.tentacles = null; }
+    for (const k in this.slots) {
+      const st = this.slots[k];
+      if (st.list) { for (const m of st.list) if (m.mesh && m.mesh.parent) { m.mesh.parent.remove(m.mesh); m.mesh.traverse(o => { if (o.material) o.material.dispose(); if (o.geometry) o.geometry.dispose(); }); } st.list.length = 0; }
+    }
     for (const it of this.items) if (it.mesh) {
       it.mesh.parent && it.mesh.parent.remove(it.mesh);
       it.mesh.traverse(o => { if (o.material) o.material.dispose(); if (o.geometry) o.geometry.dispose(); });
@@ -400,6 +410,14 @@ export class Fighter {
 
   takeDamage(amount, opts = {}) {
     if (this.state === 'ko' || this.invuln > 0) return 0;
+    if (opts.src && opts.src.sheet && opts.src.sheet.predator && this.hp < this.maxHp * 0.3) amount *= 1.15;   // Predator talent finishes hunts
+    // shield cell gadget: an ablative pool eats hits before anything else
+    if (this._shieldHp > 0 && !opts.trueDamage) {
+      const soak = Math.min(this._shieldHp, amount);
+      this._shieldHp -= soak; amount -= soak;
+      if (this._game) this._game.particles.burst(this.pos.x, this.pos.y + 5.5, this.pos.z, { count: 5, speed: 16, life: 0.3, size: 1.8, color: ['#7fe6ff', '#fff'], drag: 1.4 });
+      if (amount <= 0.01) { if (this._game) this._game.onHit(this, 0, opts, true); return 0; }
+    }
     // energy-intangible: strikes/projectiles pass through
     if (this.phase && !opts.unblockable && !opts.trueDamage) {
       const g = this._game;
@@ -468,7 +486,7 @@ export class Fighter {
     this.vel.set(0, 0, 0);
   }
 
-  heal(a) { this.hp = clamp(this.hp + a, 0, this.maxHp); }
+  heal(a) { this.hp = clamp(this.hp + a * this.sheet.healMult, 0, this.maxHp); }
   spendKi(a) { if (this.energyInfinite) return true; if (this.ki < a) return false; this.ki -= a; return true; }
 
   // Impact damage from being hurled into geometry. Only fires while launched (launchT) — dashing
@@ -501,6 +519,12 @@ export class Fighter {
     this._bowDraw = damp(this._bowDraw || 0, this._bowDrawT || 0, 16, dt);   // archer draw pose blend
     for (const it of this.items) if (it.cd > 0) { it.cd -= dt; if (it.cd <= 0 && it.state === 'cooldown') it.state = 'ready'; }
     if (this._revealT > 0) this._revealT -= dt;
+    // jump-jet gadget: temporary full flight for grounded heroes
+    if (this._jetT > 0) {
+      this._jetT -= dt;
+      if (game && Math.random() < 0.7) game.particles.spawn({ x: this.pos.x + (Math.random() * 2 - 1), y: this.pos.y + 0.8, z: this.pos.z + (Math.random() * 2 - 1), vx: 0, vy: -12, vz: 0, life: 0.35, size: 2.2, color: ['#ffd97a', '#8a8f99'], drag: 1.2, shrink: true });
+      if (this._jetT <= 0) { this.flightTier = this._jetPrev; if (this.flying && this.flightTier < 1) this.flying = false; }
+    }
     if (this._frostImmuneT > 0) this._frostImmuneT -= dt;
     if (this.frost > 0 && this.frozenT <= 0) this.frost = Math.max(0, this.frost - dt * 0.25);   // buildup decays
     // damage-over-time stacks (poison/burn/gas)
@@ -518,7 +542,7 @@ export class Fighter {
     }
     // FROZEN SOLID — a block of ice: no actions, physics still shoves you around
     if (this.frozenT > 0) {
-      this.frozenT -= dt;
+      this.frozenT -= dt * this.sheet.ccRecover;
       this.guarding = false; this.meleeCharge = 0;
       if (this.frozenT <= 0) this._thaw(false);
       this._physics(dt, game); this._animate(dt); this._sync(); return;
@@ -532,7 +556,7 @@ export class Fighter {
     // melee timers
     if (this.strikeCd > 0) this.strikeCd -= dt;
     if (this.comboWin > 0) this.comboWin -= dt;
-    if (this.staggerT > 0) this.staggerT -= dt;
+    if (this.staggerT > 0) this.staggerT -= dt * this.sheet.ccRecover;   // RESOLVE + Iron Will shake it off
     if (this._blocked > 0) this._blocked -= dt;
     this.guardMeter = clamp(this.guardMeter + (this.guarding ? 0 : 0.55) * dt, 0, 1);
     if (game && game.melee) game.melee.update(this, dt);
@@ -593,8 +617,8 @@ export class Fighter {
     else this._bigYelled = false;
     this._wasCharge = anyCharge;
     if (this.energyInfinite) this.ki = this.maxKi;                             // android core — the tank never moves
-    else this.ki = clamp(this.ki + (anyCharge ? 3 : 9) * dt, 0, this.maxKi);   // ki is a budget — beams drain it
-    if (this.guarding && this._blocked <= 0 && this.def.guardType !== 'barrier') this.ki = clamp(this.ki + 22 * dt, 0, this.maxKi); // guard to recover it (barriers COST ki instead)
+    else this.ki = clamp(this.ki + (anyCharge ? 3 : 8) * this.sheet.kiRegenMult * dt, 0, this.maxKi);   // ki is a budget — RESOLVE refills it
+    if (this.guarding && this._blocked <= 0 && this.def.guardType !== 'barrier') this.ki = clamp(this.ki + 22 * this.sheet.kiRegenMult * dt, 0, this.maxKi); // guard to recover it (barriers COST ki instead)
 
     if (this.hitstop > 0) { this.hitstop -= dt; this._animate(dt); this._sync(); return; }
 
@@ -616,6 +640,7 @@ export class Fighter {
       // put the figure hierarchy back exactly, then respawn
       if (this.ragdoll) { this.ragdoll.restore(); this.ragdoll = null; }
       this.hp = this.maxHp; this.ki = this.maxKi * 0.4;
+      for (const it of this.items) if (it.state !== 'deployed') { it.charges = it.def.charges ?? 1; it.state = 'ready'; it.cd = 0; }   // fresh pouch each life
       this.state = 'idle'; this.invuln = 1.4; this.vel.set(0, 0, 0);
       if (this.isDummy) this.pos.copy(this.spawn);
       else { this.pos.set(this.spawn.x, 0, this.spawn.z); }

@@ -2,6 +2,7 @@
 import { ROSTER, SLOT_ORDER } from '../data/characters.js';
 import { MODES } from '../data/modes.js';
 import { clamp, TAU } from '../core/util.js';
+import { ATTR_DEFS, TALENTS, deriveAttrs, heroTalents, rankName, rankColor } from '../data/ranks.js';
 
 const CSS = `
 #hud .wrap{ position:absolute; inset:0; }
@@ -32,6 +33,19 @@ const CSS = `
 #hud .kiover{ color:#7fe6ff; font-weight:800; letter-spacing:.14em; margin-left:8px; opacity:0; transition:opacity .15s; }
 #hud .kiover.on{ opacity:1; text-shadow:0 0 10px rgba(127,230,255,.8); }
 #title .pvthreat{ display:inline-block; font-size:10px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; padding:3px 10px; border-radius:20px; margin-top:8px; border:1px solid; }
+#title .sheet{ margin-top:12px; border-top:1px solid rgba(255,255,255,.1); padding-top:10px; }
+#title .sheet .sh{ font-size:9px; letter-spacing:.22em; color:#8b8577; text-transform:uppercase; margin-bottom:6px; }
+#title .arow{ display:flex; align-items:center; gap:7px; font-size:11px; margin-bottom:3px; }
+#title .arow .an2{ width:70px; color:#a49c8c; letter-spacing:.06em; text-transform:uppercase; font-size:10px; }
+#title .arow .av{ width:14px; text-align:right; font-weight:800; color:#e8e2d6; }
+#title .arow .arank{ font-size:9px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; padding:1px 7px; border-radius:9px; border:1px solid; }
+#title .arow .abar{ flex:1; height:5px; background:rgba(0,0,0,.45); border-radius:3px; overflow:hidden; }
+#title .arow .abar i{ display:block; height:100%; border-radius:3px; }
+#title .tals{ margin-top:8px; display:flex; flex-wrap:wrap; gap:5px; }
+#title .tals span{ font-size:10px; padding:3px 9px; border-radius:14px; background:rgba(127,230,255,.1); color:#a8dcff; border:1px solid rgba(127,230,255,.28); }
+#title .tals span b{ color:#e0f2ff; }
+#title .gear{ margin-top:8px; font-size:11px; color:#c9c2b4; }
+#title .gear b{ color:#ffd24a; }
 #hud .slot.deny{ animation:slotshake .32s; }
 #hud .slot.deny{ border-color:#ff5a4a; box-shadow:0 0 12px rgba(255,90,74,.5); }
 @keyframes slotshake{ 0%,100%{transform:translateX(0)} 22%{transform:translateX(-4px)} 55%{transform:translateX(3px)} 80%{transform:translateX(-2px)} }
@@ -215,6 +229,8 @@ function describeAbility(a) {
     case 'rifle': return (a.interval > 0.2 ? 'heavy sidearm — hard-hitting shots' : 'full-auto tracer fire') + ' (ammo = ki)';
     case 'bow': return 'hold to draw — arrow speed & damage scale; payload from your quiver';
     case 'facebomb': return 'charge her up — she drifts to the target, lingers a heartbeat, then DETONATES';
+    case 'mine': return 'plant proximity mines at your aim (up to 3) — they arm, blink, and erase';
+    case 'lifedrain': return 'hold to siphon — their health flows into yours';
     case 'quiver': return 'switch broadheads: ' + (a.payloads || ['explosive', 'flame', 'poison']).join(' / ');
     default: return a.type;
   }
@@ -407,10 +423,14 @@ export class HUD {
     if (bowA) { const pls = bowA.payloads || ['explosive', 'flame', 'poison']; chips.push({ t: '➶ ' + pls[p._quiverIdx % pls.length].toUpperCase(), on: true }); }
     if (d.guardType === 'deflect') chips.push({ t: 'DEFLECT GUARD', on: p.guarding });
     if (d.guardType === 'barrier') chips.push({ t: 'BARRIER GUARD', on: p.guarding });
-    for (const it of p.items || []) chips.push({
-      t: '◈ ' + (it.def.name || it.def.kind).toUpperCase() + ' — ' + (it.state === 'ready' ? 'X TO PLANT' : it.state === 'deployed' ? 'X TO RECALL' : 'RECHARGING ' + Math.ceil(it.cd) + 's'),
-      on: it.state === 'deployed',
-    });
+    for (const it of p.items || []) {
+      const label = it.def.kind === 'beacon'
+        ? (it.state === 'ready' ? 'X TO PLANT' : it.state === 'deployed' ? 'X TO RECALL' : 'RECHARGING ' + Math.ceil(it.cd) + 's')
+        : (it.state === 'ready' ? 'X · ×' + (it.charges ?? it.def.charges ?? 1) : it.state === 'spent' ? 'SPENT' : 'CD ' + Math.ceil(it.cd) + 's');
+      chips.push({ t: '◈ ' + (it.def.name || it.def.kind).toUpperCase() + ' — ' + label, on: it.state === 'deployed' });
+    }
+    if (p._shieldHp > 0) chips.push({ t: '🛡 SHIELD ' + Math.round(p._shieldHp), on: true });
+    if (p._jetT > 0) chips.push({ t: '🔥 JETS ' + Math.ceil(p._jetT) + 's', on: true });
     if (p._revealT > 0) chips.push({ t: '👁 THE RING SEES ' + Math.ceil(p._revealT) + 's', on: true });
     const mine = this.game.minions.filter(m => m.owner === p).length; const maxD = Math.max(...Object.values(d.abilities).map(a => a.type === 'summon' ? (a.max || 6) : 0), 0);
     if (maxD) chips.push({ t: '◈ DRONES ' + mine + '/' + maxD, on: mine > 0 });
@@ -620,6 +640,15 @@ export class HUD {
           ${bar('Defense', st.defense, '#8fe08a')}${bar('Health', st.health, '#ff8a5a')}${bar('Energy', st.energy, '#7fb0ff')}
         </div>
         ${st.tags.length ? `<div class="pvtags">${st.tags.map(t => `<span>${t}</span>`).join('')}</div>` : ''}
+        ${(() => {
+          const at = deriveAttrs(c), tl = heroTalents(c);
+          const rows = ATTR_DEFS.map(a => { const v = at[a.k], rc = rankColor(v); return `<div class="arow"><span class="an2">${a.name}</span><span class="abar"><i style="width:${v * 10}%;background:${rc}"></i></span><span class="av">${v}</span><span class="arank" style="color:${rc};border-color:${rc}55;background:${rc}14">${rankName(v)}</span></div>`; }).join('');
+          const tals = tl.map(k => { const t = TALENTS[k]; return t ? `<span><b>${t.name}</b> — ${t.does}</span>` : ''; }).join('');
+          const gear = (c.items || []).map(it => `<b>${it.name}</b>${it.charges ? ` ×${it.charges}` : ''}`).join(' · ');
+          return `<div class="sheet"><div class="sh">Attributes</div>${rows}</div>
+            ${tals ? `<div class="sheet"><div class="sh">Talents</div><div class="tals">${tals}</div></div>` : ''}
+            ${gear ? `<div class="gear">⛭ Gear: ${gear} <span style="color:#8b8577">(X)</span></div>` : ''}`;
+        })()}
         <div class="pvabil">${SLOT_ORDER.filter(s => c.abilities[s.k]).map(s => { const a = c.abilities[s.k]; return `<div class="ab"><b style="color:${c.colors.accent}">${s.label}</b><span class="an">${a.name}</span><span class="ad">${describeAbility(a)}</span></div>`; }).join('')}
         ${c.evade ? `<div class="ab"><b style="color:${c.colors.accent}">2×TAP</b><span class="an">${c.evade.name || 'Evade'}</span><span class="ad">${describeEvade(c.evade)}</span></div>` : ''}
         ${(c.items || []).map(it => `<div class="ab"><b style="color:${c.colors.accent}">X</b><span class="an">${it.name}</span><span class="ad">carried item — plant it, then press again from anywhere to teleport back to it</span></div>`).join('')}</div>`;
