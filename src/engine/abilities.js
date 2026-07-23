@@ -583,7 +583,7 @@ export function runSlot(c, key, inp, g) {
   if (inp.pressed && (st.def.cost || 0) > c.ki && st.cd <= 0 && g.onNoKi) g.onNoKi(c, key);
   // stamp real input on the slot — held types (cones/phase/lifedrain) leave no cd/sustain
   // trace, so this is what the tutorial (and any future telemetry) watches
-  if (inp.pressed || inp.held) (c._slotUse || (c._slotUse = {}))[key] = true;
+  if (inp.pressed || inp.held) { (c._slotUse || (c._slotUse = {}))[key] = true; if (inp.pressed) c._lastSlot = key; }   // _lastSlot feeds the mastery counter
   const fn = TYPES[st.def.type]; if (fn) fn(c, st.def, st, g, inp);
 }
 

@@ -883,6 +883,41 @@ export class Game {
     }
     victim.streak = 0;
     if (killer) killer._bestStreak = Math.max(killer._bestStreak || 0, killer.streak);
+    // ---------- DEPTH HOOKS, part two: what a knockdown MEANS ----------
+    if (killer && !victim.isDummy) {
+      const kind = victim._lastHitKind || 'blast';
+      // (6) ENVIRONMENTAL CALLOUTS — how they died is its own little story
+      if (this.isHuman(killer) && this.hud) {
+        if (kind === 'slam') this.hud.announce('DEMOLITION', `${victim.name} went through the city`, '#c9c2b4');
+        else if (victim.pos.y > 40) this.hud.announce('SKYFALL', `${victim.name} fell out of the sky`, '#7fe6ff');
+        else if ((killer.style || 0) > 70) this.hud.announce('STYLISH K.O.', 'variety bonus banked', '#ffd24a');
+      }
+      // (7) NEMESIS — settle the score and get paid for it
+      if (killer._nemesis === victim) {
+        killer._nemesis = null; killer.score += 250;
+        if (this.isHuman(killer) && this.hud) this.hud.announce('SCORE SETTLED', `${victim.name} is no longer your nemesis`, '#8fe08a');
+      }
+      if (this.isHuman(victim) && victim._lastAggressor && victim._lastAggressor.alive) {
+        victim._nemesis = victim._lastAggressor;
+        if (this.hud) this.hud.feed(`☠ ${victim._nemesis.name} is your NEMESIS — pay them back`, '#ff8a6a');
+      }
+      // (8) STYLE BANKED — the meter converts to score, then resets. Spend it or lose it.
+      if (this.isHuman(killer) && (killer.style || 0) > 25) {
+        const rank = killer.style > 90 ? 'S' : killer.style > 65 ? 'A' : killer.style > 40 ? 'B' : 'C';
+        killer.score += Math.round(killer.style * 3);
+        if (this.hud) this.hud.scorePopup(victim.pos, `${rank}-RANK +${Math.round(killer.style * 3)}`);
+        killer.style = 0; killer._styleSeen = {};
+      }
+      // (9) THE CROWD REACTS — civilians nearby cheer the takedown (they film everything anyway)
+      if (this.peds && this.isHuman(killer)) {
+        for (let i = 0; i < 26; i++) this.particles.spawn({ x: victim.pos.x + rand(-22, 22), y: rand(1, 9), z: victim.pos.z + rand(-22, 22), vx: 0, vy: rand(9, 20), vz: 0, life: 0.7, size: 2.2, color: ['#ffd24a', '#fff'], drag: 1.1, shrink: true });
+      }
+    }
+    // (10) MASTERY — every kit logs its own use count, so the codex can show what you actually fight with
+    if (killer && killer.def && killer._lastSlot) {
+      killer._mastery = killer._mastery || {};
+      killer._mastery[killer._lastSlot] = (killer._mastery[killer._lastSlot] || 0) + 1;
+    }
     if (victim.def.police && this.police) this.police.onCopDown(killer);   // villainy squared
     // the news layer: log the knockdown, and the camera swings to the body
     if (!victim.isDummy && this.mode) {
@@ -1069,6 +1104,36 @@ export class Game {
       this.comboT = 1.3;
     }
     if (src && !blocked && this.isHuman(src) && amount >= 1) this.grantXp(src, amount * 0.35);   // XP for landing damage
+
+    // ---------- DEPTH HOOKS (cheap systems that reward how you fight, not just that you win) ----------
+    if (src && !blocked && amount >= 1 && this.isHuman(src) && !target.isDummy) {
+      // (1) STYLE — variety pays. Repeating one button decays the meter; mixing tools builds it.
+      const sig = opts.strike ? 'melee' : opts.dot ? 'beam' : opts.dmgClass === 'slash' ? 'blade' : 'blast';
+      src._styleSeen = src._styleSeen || {};
+      const fresh = !src._styleSeen[sig];
+      src._styleSeen[sig] = this.time;
+      for (const k in src._styleSeen) if (this.time - src._styleSeen[k] > 6) delete src._styleSeen[k];
+      src.style = Math.min(120, (src.style || 0) + amount * (fresh ? 1.6 : 0.5));
+      src._styleT = 3.2;
+      // (2) AERIAL — both of you off the deck is harder, so it pays more
+      if (src.pos.y > 10 && target.pos.y > 10) {
+        src.score += Math.round(amount * 0.6);
+        if ((src._airT || 0) <= 0) { src._airT = 2.5; if (this.hud) this.hud.announce('AERIAL', 'sky duel bonus', '#7fe6ff'); }
+      }
+      // (3) MOMENTUM — a clean streak with no damage taken ramps your output a little
+      src._clean = (src._clean || 0) + 1;
+      if (src._clean === 12 && this.hud) this.hud.announce('IN THE POCKET', '+10% while untouched', '#ffd24a');
+    }
+    // (4) LAST STAND — under a fifth of your health you hit harder. Comebacks should feel possible.
+    if (target && !blocked && this.isHuman(target)) {
+      target._clean = 0;
+      if (target.hp > 0 && target.hp < target.maxHp * 0.2 && !target._lastStand) {
+        target._lastStand = true;
+        if (this.hud) { this.hud.announce('LAST STAND', '+20% damage — finish it', '#ff5a4a'); this.hud.flashScreen('#ff3b3b', 0.18); }
+      } else if (target.hp > target.maxHp * 0.35) target._lastStand = false;
+    }
+    // (5) NEMESIS — whoever put you down last is marked, and beating them pays
+    if (target && this.isHuman(target) && src && src.def && !src.def.police) target._lastAggressor = src;
     // a solid hit is LOUD — nearby bots hear the scuffle and come looking (fair discovery)
     if (amount >= 10 && src && src !== target) this.noise(target.pos, Math.min(1.6, 0.5 + amount * 0.02), src);
     // the news desk's ledger: who dealt what, the biggest hit on record, and hot moments worth a camera
@@ -1508,6 +1573,14 @@ export class Game {
     if (this.player) this.audio.listen(this.player.pos.x, this.player.pos.z);   // proximity audio ears
 
     if (this.comboT > 0) { this.comboT -= dt; if (this.comboT <= 0) { this.combo = 0; if (this.hud) this.hud.combo(0); } }
+    // style bleeds away when you stop fighting, and the two damage multipliers ride powerBuff
+    for (const h of this.humans) {
+      const f = h.fighter; if (!f) continue;
+      if (f._styleT > 0) { f._styleT -= dt; } else if (f.style > 0) f.style = Math.max(0, f.style - dt * 14);
+      if (f._airT > 0) f._airT -= dt;
+      const bonus = (f._lastStand ? 0.2 : 0) + ((f._clean || 0) >= 12 ? 0.1 : 0);
+      f.powerBuff = (f.buffT > 0 ? f.powerBuff : f.levelMult) * (1 + bonus);
+    }
     if (this.mode && !this.matchOver) this.mode.tick(this, dt);
 
     // control: P1 (keyboard+mouse), P2+ (gamepad), everyone else = AI
