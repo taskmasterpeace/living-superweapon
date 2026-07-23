@@ -96,7 +96,7 @@ const BUILDS = {
 
 function figure(def) {
   const c = def.colors || def;
-  const b = BUILDS[def.id] || {};
+  const b = def.build || BUILDS[def.id] || {};   // ORIGIN customs carry their own frame
   const g = new THREE.Group();
   g.rotation.order = 'YXZ';   // yaw → pitch → roll, so flight pitch/bank happen along the FACING axis
   const skin = c.skin || '#e8c39a';

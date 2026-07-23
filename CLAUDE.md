@@ -27,6 +27,18 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   (rifle/volley), `blastMult` (Projectile ctor + mines), `evadeCdMult`, `ccRecover` (stagger/frozen
   decrement), `healMult`, `odWindow` (Overdrive threshold), `sumDurMult`, `chargeRate`, `predator`,
   `kiRegenMult`, `visMult` (fog range). Character select renders the full sheet (ranks/talents/gear).
+- **ORIGIN — the character creator** (`data/creator.js` rulebook + `engine/creatorUI.js` screen; "FORGE
+  NEW" card on the roster; ruled name-TBD, so renaming = one string): D&D point-buy over the ranks.js
+  sheet. Budgets STREET 160 → COSMIC 400 (+UNBOUND); escalating `ATTR_COST` on the rank ladder — attrs
+  literally derive hp/ki/speed/strength (`derived()`); a ~40-power catalog of ENGINE-PROVEN ability
+  configs (costs calibrated by BALANCE.md: martial priced up, charge kits down, gear cheap); traits,
+  gifts, talents, gadgets, frames (`def.build` overrides BUILDS), palettes (no purple)/skin/voice.
+  LIVE damage numbers per pick (`powerNumbers`) + auto LeFevre threat (`threatOf(points)`) — both
+  creator-interview rulings. Persists `{picks,def}` in localStorage `threshold_customs_v1`;
+  `installCustoms(ROSTER)` at boot makes customs full citizens (playable, rivals, survival waves, P2)
+  with AI doctrine derived from the kit (`deriveAI`). Sheet hooks: `def.talents`/`def.attrs`/`def.build`.
+  `validate()` gates saves (budget, LMB+RMB required, ults R-only, quiver-needs-bow). SAVE & TEST drops
+  straight into training. `LSW.creator` + `LSW.runSlot` exposed for headless testing.
 - **Gadgets** (items on X, `charges` per life, refilled on respawn): beacon · medkit · flashbang
   (staggers + wipes bot memory) · jetcell (temp flightTier 3) · shieldpack (`f._shieldHp` ablative pool
   in takeDamage). Bots use all of them (`controlBot` items block).
@@ -305,6 +317,14 @@ dirty-checked HUD widgets, 25Hz radar, shader prewarm, no getComputedStyle in th
 Re-verified: 14 kits × all slots error-free, 45s AI-vs-AI soak clean, double-tap works through real key events.
 Reference shots: `lsw-title.jpeg`, `lsw-kano2.jpeg`, `lsw-bigbang2.jpeg`, `lsw-visuals-arena4.jpeg` (Goal 8 look),
 `lsw-models.jpeg` (upgraded heroes), `lsw-ui2.jpeg` (combat HUD + KO banner), `lsw-ragdoll-final.jpeg` (settled ragdoll).
+
+**ORIGIN character creator** (Goal 14): the D&D-for-superheroes payoff. Point-buy budgets (STREET→COSMIC
++ UNBOUND), attributes on the rank ladder deriving real engine stats, ~40 engine-proven powers with LIVE
+damage numbers on every pick, gifts/talents/gadgets/frames/palettes/voice, auto-computed LeFevre threat,
+SAVE & TEST straight into training. Customs persist in localStorage and are full roster citizens (playable,
+rivals, survival waves, P2) with kit-derived AI doctrine. Verified headless end-to-end: API + real-click UI
+drive, every slot fired error-free on a custom kit, save/reload/delete clean, STREET-vs-COSMIC duel stayed
+honestly lopsided, production build passes, sim still 0.64ms/frame.
 
 ## Next / open
 - Models are now upgraded procedural figures with per-hero flourishes (`figure()`/`BUILDS`) + ragdoll; GLTF still an

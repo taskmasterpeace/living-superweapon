@@ -91,6 +91,7 @@ export const HERO_TALENTS = {
 };
 
 export function heroTalents(def) {
+  if (def.talents && def.talents.length) return def.talents.slice(0, 3);   // ORIGIN customs pick their own
   if (HERO_TALENTS[def.id]) return HERO_TALENTS[def.id];
   const A = Object.values(def.abilities || {});
   const t = [];

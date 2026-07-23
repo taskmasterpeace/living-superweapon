@@ -65,7 +65,9 @@ The canonical answers. Anything here overrides defaults. Source: creator voice-d
 - **Voices:** new pipeline (not Ad Lab). Write bark MOMENTS per character; they must also talk to EACH OTHER
   (short generic exchange lines, no specific relationships yet).
 - **Creator system:** build it; do NOT call it "Foundry" — name TBD. Must show live damage numbers while
-  picking powers and auto-compute the LeFevre rating.
+  picking powers and auto-compute the LeFevre rating. — **SHIPPED as ORIGIN (2026-07-22)**: point-buy
+  budgets (STREET→COSMIC+UNBOUND), live numbers on every power pick, auto-LeFevre from points spent,
+  SAVE & TEST into the Danger Room. "ORIGIN" is a placeholder name per this ruling — one string to rename.
 - Next canon imports queued in `NEXT_CHARACTERS.md` (Stefanos, Sandra, Clown-Sheriff, Jawah, the bodyguards).
 
 ## Deployment & tooling
@@ -79,7 +81,7 @@ The canonical answers. Anything here overrides defaults. Source: creator voice-d
 4. **Infinite-energy archetype** — SHIPPED (TITAN)
 5. **The Witness Layer** (pedestrians film → news recap) — biggest build, biggest differentiator
 6. **4-band altitude rule** — next map milestone
-7. **Character creator** (D&D × Scribblenauts) — after Codex schema stabilizes
+7. **Character creator** (D&D × Scribblenauts) — SHIPPED as ORIGIN (point-buy + live numbers + auto-threat)
 8. **Per-ability AI + synergy tags** — schema fields reserved in CODEX.md
 9. **Tournaments with LeFevre roster points**
 10. **Sound as information** → then the sound-absorber (Jawah)

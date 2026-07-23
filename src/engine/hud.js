@@ -149,6 +149,14 @@ const CSS = `
 #hud .endscr .btns{ display:flex; gap:12px; margin-top:6px; }
 #hud .endscr button{ pointer-events:auto; cursor:pointer; font-family:inherit; font-weight:800; letter-spacing:.12em; font-size:14px; color:#160d02; padding:13px 24px; border:none; border-radius:10px; background:linear-gradient(180deg,#ffd15a,#f5921a); box-shadow:0 5px 0 #7a3d05; text-transform:uppercase; }
 #hud .endscr button.ghost{ background:rgba(255,255,255,.08); color:#e8e2d6; box-shadow:none; border:1px solid rgba(255,255,255,.15); }
+/* ORIGIN — forge card + custom-hero affordances */
+#title .rcard{ position:relative; }
+#title .rcard .cchip{ position:absolute; top:8px; right:8px; font-size:8px; font-weight:800; letter-spacing:.14em; padding:2px 7px; border-radius:9px; background:rgba(255,210,74,.14); border:1px solid rgba(255,210,74,.4); color:#ffd97a; }
+#title .rcard .cedit{ position:absolute; bottom:8px; right:8px; font-size:13px; opacity:0; transition:opacity .12s; color:#ffd24a; }
+#title .rcard:hover .cedit{ opacity:.95; }
+#title .rcard.forge{ border-style:dashed; border-color:rgba(255,210,74,.4); background:rgba(255,210,74,.04); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; min-height:96px; text-align:center; }
+#title .rcard.forge .fplus{ font-size:26px; font-weight:800; color:#ffd24a; line-height:1; }
+#title .rcard.forge:hover{ box-shadow:0 0 22px -6px #ffd24a; }
 `;
 
 // Derive a 0–10 stat profile + trait tags from a character's raw data.
@@ -672,12 +680,23 @@ export class HUD {
       card.className = 'rcard' + (i === 0 ? ' sel' : '');
       card.style.setProperty('--pc', c.colors.accent);
       const cs = heroStats(c);
-      card.innerHTML = `<span class="dot"></span><div class="nm">${c.name}</div><div class="rl">${c.role}</div><div class="cstat">HP <b>${c.hp}</b> · PWR <b>${cs.power}</b> · SPD <b>${cs.speed}</b></div>`;
+      card.innerHTML = `<span class="dot"></span><div class="nm">${c.name}</div><div class="rl">${c.role}</div><div class="cstat">HP <b>${c.hp}</b> · PWR <b>${cs.power}</b> · SPD <b>${cs.speed}</b></div>`
+        + (c.isCustom ? `<span class="cchip">CUSTOM</span><span class="cedit" title="Edit in ORIGIN">✎</span>` : '');
       card.onmouseenter = () => renderPv(c);
       card.onclick = () => { selP1 = c; roster.querySelectorAll('.rcard').forEach(e => e.classList.remove('sel')); card.classList.add('sel'); renderPv(c); };
       card.ondblclick = () => onStart({ mode: selMode, p1: selP1.id, p2: selP2.id, twoPlayer: two });
+      const ed = card.querySelector('.cedit');
+      if (ed) ed.onclick = (ev) => { ev.stopPropagation(); this.onEditCustom && this.onEditCustom(c); };
       roster.appendChild(card);
     });
+    // the forge card — ORIGIN entry point
+    {
+      const forge = document.createElement('div');
+      forge.className = 'rcard forge';
+      forge.innerHTML = `<div class="fplus">＋</div><div class="nm">FORGE NEW</div><div class="rl">ORIGIN</div><div class="cstat">Point-buy your own superweapon</div>`;
+      forge.onclick = () => this.onForge && this.onForge();
+      roster.appendChild(forge);
+    }
     renderPv(selP1); renderModes(); renderTabs();
     this.title.querySelector('#startBtn').onclick = () => onStart({ mode: selMode, p1: selP1.id, p2: selP2.id, twoPlayer: two });
   }

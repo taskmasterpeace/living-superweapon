@@ -4,6 +4,9 @@ import { AudioBus } from './core/audio.js';
 import { Game, ROSTER } from './engine/game.js';
 import { HUD } from './engine/hud.js';
 import { runBenchmark } from './bench/benchmark.js';
+import { CreatorUI } from './engine/creatorUI.js';
+import { runSlot } from './engine/abilities.js';
+import { installCustoms, loadCustoms, freshPicks, buildDef, tally, validate, saveCustom, deleteCustom } from './data/creator.js';
 
 const canvas = document.getElementById('game');
 const input = new Input(); input.bind(canvas);
@@ -24,6 +27,20 @@ function enter(cfg) {
   hud.hideEndScreen(); hud.hideTitle();
 }
 function openMenu() { game.running = false; hud.hideEndScreen(); hud.buildTitle(enter); hud.showTitle(); }
+
+// ---- ORIGIN: install saved customs, wire the forge ----
+installCustoms(ROSTER);
+const creator = new CreatorUI(ROSTER);
+function afterForge(def, { test } = {}) {
+  hud.buildTitle(enter);                                  // rebuild so the new card exists
+  if (def && test) { enter({ mode: 'training', p1: def.id }); hud.feed(def.name + ' enters the Danger Room', def.colors.accent); }
+  else hud.showTitle();
+}
+hud.onForge = () => { hud.hideTitle(); creator.show({ onDone: afterForge, onCancel: () => hud.showTitle() }); };
+hud.onEditCustom = (def) => {
+  const rec = loadCustoms().find(c => c.def.id === def.id); if (!rec) return;
+  hud.hideTitle(); creator.show({ edit: rec, onDone: afterForge, onCancel: () => hud.showTitle() });
+};
 
 hud.buildTitle(enter);
 hud.showTitle();
@@ -71,7 +88,7 @@ function frame(now) {
 requestAnimationFrame(frame);
 
 // expose for debugging + performance benchmarking
-window.LSW = { game, hud, ROSTER };
+window.LSW = { game, hud, ROSTER, runSlot, creator: { ui: creator, freshPicks, buildDef, tally, validate, saveCustom, deleteCustom, loadCustoms } };
 window.LSW.runBenchmark = (opts) => runBenchmark(game, hud, opts);
 if (location.search.includes('bench')) {
   addEventListener('load', () => setTimeout(async () => {
