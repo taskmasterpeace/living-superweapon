@@ -132,12 +132,12 @@ function figure(def) {
 
   // head + jaw
   const head = new THREE.Mesh(new THREE.SphereGeometry(1.15, 16, 14), skinMat);
-  head.position.y = 8.0; head.castShadow = true; g.add(head);
+  head.position.y = 8.0; head.scale.setScalar(0.88); head.castShadow = true; g.add(head);   // a touch smaller — heroic proportions
   const jaw = new THREE.Mesh(new THREE.SphereGeometry(0.86, 12, 10), skinMat);
   jaw.position.set(0, -0.42, 0.32); jaw.scale.set(1, 0.72, 0.92); head.add(jaw);
   // hair/cowl (child of g; ragdoll pins it to the head)
   const cowl = new THREE.Mesh(new THREE.SphereGeometry(1.22, 16, 12, 0, TAU, 0, Math.PI * 0.62), suit2);
-  cowl.position.y = 8.15; g.add(cowl);
+  cowl.position.y = 8.1; cowl.scale.setScalar(0.9); g.add(cowl);   // tracks the smaller head
   if (b.helmet) { cowl.visible = false; const hel = new THREE.Mesh(new THREE.SphereGeometry(1.3, 18, 12, 0, TAU, 0, Math.PI * 0.66), armor); hel.position.y = 0.1; head.add(hel); }
   if (b.crest) {                                   // fin / flame / antenna
     const cr = new THREE.Mesh(new THREE.ConeGeometry(0.5, 1.8, 4), glow.clone()); cr.material.emissiveIntensity = 0.85; cr.position.set(0, 1.15, -0.1); head.add(cr);
@@ -154,10 +154,11 @@ function figure(def) {
 
   // arms — pivot groups; children[0]=upper,[1]=fore,[2]=fist (indices are a ragdoll contract).
   const mkArm = (side) => {
-    const pivot = new THREE.Group(); pivot.position.set(side * 1.7, 6.6, 0);
+    const pivot = new THREE.Group(); pivot.position.set(side * 1.58, 6.72, 0);   // seated INTO the torso, at shoulder height
     const upper = new THREE.Mesh(new THREE.CapsuleGeometry(0.52, 1.5, 4, 8), suit);
     upper.position.y = -1.05; upper.castShadow = true; pivot.add(upper);
-    const delt = new THREE.Mesh(new THREE.SphereGeometry(0.66, 10, 8), suit); delt.position.y = 0.35; upper.add(delt);   // deltoid cap
+    // deltoid cap sits ON the joint so the shoulder reads solid from the top-down camera
+    const delt = new THREE.Mesh(new THREE.SphereGeometry(0.74, 10, 8), suit); delt.position.set(-side * 0.1, 0.92, 0); delt.scale.set(1.05, 0.9, 1.05); upper.add(delt);
     const fore = new THREE.Mesh(new THREE.CapsuleGeometry(0.46, 1.5, 4, 8), skinMat);
     fore.position.y = -2.85; pivot.add(fore);
     const fist = new THREE.Mesh(new THREE.IcosahedronGeometry(0.66, 0), glow.clone());   // faceted glove
@@ -763,8 +764,11 @@ export class Fighter {
     const trail = fp * prone;                                    // legs trail only when CRUISING prone —
     hipL = lerp(hipL, 0.44, trail); hipR = lerp(hipR, 0.44, trail);   // hovering keeps them hanging straight
     kneeL = lerp(kneeL, 0.9, trail); kneeR = lerp(kneeR, 0.9, trail);
-    kneeL = lerp(kneeL, 0.08, fp * (1 - prone)); kneeR = lerp(kneeR, 0.08, fp * (1 - prone));   // hover: straight legs
-    hipL = lerp(hipL, 0.06, fp * (1 - prone)); hipR = lerp(hipR, 0.06, fp * (1 - prone));
+    // hover float (creator ruling): one leg tucked in an L, the other long with a soft knee —
+    // the classic comic float, not "sitting on an invisible toilet"
+    const hov = fp * (1 - prone);
+    kneeL = lerp(kneeL, 1.35, hov); kneeR = lerp(kneeR, 0.22, hov);
+    hipL = lerp(hipL, 0.55, hov); hipR = lerp(hipR, -0.12, hov);
     kneeL += land * 0.9; kneeR += land * 0.9;                    // landing crouch
     hipL -= land * 0.5; hipR -= land * 0.5;
     p.legL.rotation.x = hipL; p.legR.rotation.x = hipR;

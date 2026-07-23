@@ -4,6 +4,7 @@ import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { clamp, damp } from '../core/util.js';
 
 export const ARENA = 240; // half-extent of playfield — big enough to fly across
@@ -53,8 +54,9 @@ export class World {
 
   _buildLights() {
     const hemi = new THREE.HemisphereLight('#bcd4ff', '#43352a', 1.28);
-    this.scene.add(hemi);
-    this.scene.add(new THREE.AmbientLight('#6a7890', 0.5));
+    this.scene.add(hemi); this.hemi = hemi;
+    this.amb = new THREE.AmbientLight('#6a7890', 0.5);
+    this.scene.add(this.amb);
     const sun = new THREE.DirectionalLight('#fff2dc', 1.8);
     sun.position.set(120, 200, 80);
     sun.castShadow = true;
@@ -71,7 +73,7 @@ export class World {
     // cool back-rim (opposite the sun) — edge-lights heroes so they pop off the dark arena
     const rim = new THREE.DirectionalLight('#8fb8ff', 0.75);
     rim.position.set(-130, 90, -150);
-    this.scene.add(rim);
+    this.scene.add(rim); this.rim = rim;
     // subtle warm kicker from below-front for drama
     const kick = new THREE.DirectionalLight('#ff8a3a', 0.22);
     kick.position.set(70, 24, 120);
@@ -81,24 +83,67 @@ export class World {
   _buildSky() {
     const mat = new THREE.ShaderMaterial({
       side: THREE.BackSide, depthWrite: false, fog: false,
+      uniforms: {
+        uTop:  { value: new THREE.Color(0.03, 0.04, 0.075) },
+        uHor:  { value: new THREE.Color(0.075, 0.07, 0.10) },
+        uGlow: { value: new THREE.Color(0.10, 0.05, 0.01) },
+      },
       vertexShader: `varying vec3 vP; void main(){ vP=position; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
-      fragmentShader: `varying vec3 vP; void main(){
+      fragmentShader: `varying vec3 vP; uniform vec3 uTop, uHor, uGlow; void main(){
         vec3 n = normalize(vP); float h = n.y*0.5+0.5;
-        vec3 top = vec3(0.03,0.04,0.075), hor = vec3(0.075,0.07,0.10);
-        vec3 c = mix(hor, top, smoothstep(0.30,0.9,h));
-        c += vec3(0.10,0.05,0.01) * pow(max(0.0, dot(n, normalize(vec3(0.7,0.12,0.7)))), 5.0);   // warm horizon glow
+        vec3 c = mix(uHor, uTop, smoothstep(0.30,0.9,h));
+        c += uGlow * pow(max(0.0, dot(n, normalize(vec3(0.7,0.12,0.7)))), 5.0);   // sun-side horizon glow
         gl_FragColor = vec4(c, 1.0);
       }`,
     });
     const sky = new THREE.Mesh(new THREE.SphereGeometry(900, 24, 16), mat);
     sky.renderOrder = -1; this.scene.add(sky);
+    this.skyMat = mat;
+    // ---- day/night state (ruled: a 2-minute match ≈ 12 in-game hours → 240s full day) ----
+    this.dayT = 0.3;                       // start late morning
+    this._dnc = {                          // preallocated palette — alloc-free per-frame lerps
+      work: new THREE.Color(), work2: new THREE.Color(),
+      sunDay: new THREE.Color('#fff2dc'), sunGold: new THREE.Color('#ffbe72'), sunNight: new THREE.Color('#8fa5d8'),
+      hemiDay: new THREE.Color('#cfe0ff'), hemiNight: new THREE.Color('#8fa8d8'),
+      gndDay: new THREE.Color('#6a5f4c'), gndNight: new THREE.Color('#3a3428'),
+      topDay: new THREE.Color(0.15, 0.23, 0.42), topNight: new THREE.Color(0.03, 0.04, 0.075),
+      horDay: new THREE.Color(0.50, 0.44, 0.34), horNight: new THREE.Color(0.075, 0.07, 0.10),
+      glowTint: new THREE.Color(1.0, 0.45, 0.12),
+    };
+  }
+
+  // Advance the day and push it into the lights, sky, and building windows. dl: 1 = noon,
+  // 0 = midnight; night NEVER drops below the original arena look (Robert's rule: keep it bright).
+  updateDayNight(dts) {
+    this.dayT = (this.dayT + dts / 240) % 1;
+    const P = this._dnc; if (!P) return;
+    const dl = 0.5 + 0.5 * Math.cos((this.dayT - 0.25) * Math.PI * 2);
+    const gold = Math.exp(-((dl - 0.5) ** 2) / 0.02);                     // sunrise / sunset bell
+    if (this.sun) {
+      this.sun.intensity = 0.7 + dl * 1.1;
+      P.work.lerpColors(P.sunNight, P.sunDay, dl).lerp(P.sunGold, gold * 0.65);
+      this.sun.color.copy(P.work);
+    }
+    if (this.hemi) {
+      this.hemi.intensity = 0.95 + dl * 0.4;
+      this.hemi.color.lerpColors(P.hemiNight, P.hemiDay, dl);
+      this.hemi.groundColor.lerpColors(P.gndNight, P.gndDay, dl);
+    }
+    if (this.amb) this.amb.intensity = 0.34 + dl * 0.18;
+    if (this.rim) this.rim.intensity = 0.6 + (1 - dl) * 0.35;
+    const u = this.skyMat.uniforms;
+    u.uTop.value.lerpColors(P.topNight, P.topDay, dl);
+    u.uHor.value.lerpColors(P.horNight, P.horDay, dl);
+    u.uGlow.value.copy(P.glowTint).multiplyScalar(0.06 + gold * 0.22);
+    if (this._winMats) { const e = 0.08 + (1 - dl) * 0.5; for (const m of this._winMats) m.emissiveIntensity = e; }
   }
 
   _buildArena() {
     const g = new THREE.Group();
-    // ground texture: dark warm grid
+    // ground: the White City — bone plaza + street grid (texture carries the whites; the
+    // multiply color keeps it from blowing out under ACES at noon)
     const tex = this._gridTexture();
-    const mat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.9, metalness: 0.0, color: '#454f63' });
+    const mat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.9, metalness: 0.0, color: '#8f897d' });
     const SEG = 112;
     const groundGeo = new THREE.PlaneGeometry(ARENA * 2, ARENA * 2, SEG, SEG);
     const ground = new THREE.Mesh(groundGeo, mat);
@@ -111,41 +156,66 @@ export class World {
     this._gvx = new Float32Array(nV); this._gvz = new Float32Array(nV); this._gh = new Float32Array(nV);
     for (let i = 0; i < nV; i++) { this._gvx[i] = pa[i * 3]; this._gvz[i] = -pa[i * 3 + 1]; }
 
-    // subtle center emblem ring
-    const ring = new THREE.Mesh(
-      new THREE.RingGeometry(30, 33, 64),
-      new THREE.MeshBasicMaterial({ color: '#f5b21a', transparent: true, opacity: 0.12 })
-    );
-    ring.rotation.x = -Math.PI / 2; ring.position.y = 0.05;
-    g.add(ring);
-    // soft center glow (draws the eye to the arena centre)
-    const glow = new THREE.Mesh(new THREE.CircleGeometry(70, 48), new THREE.MeshBasicMaterial({ map: this._radialTex(), transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending, depthWrite: false }));
+    // (the gold emblem ring is baked into the radial glow texture now — one draw fewer)
+    // soft center glow — smaller & subtler on the bright plaza (less additive overdraw too)
+    const glow = new THREE.Mesh(new THREE.CircleGeometry(56, 40), new THREE.MeshBasicMaterial({ map: this._radialTex(), transparent: true, opacity: 0.38, blending: THREE.AdditiveBlending, depthWrite: false }));
     glow.rotation.x = -Math.PI / 2; glow.position.y = 0.06; g.add(glow);
 
-    // border walls (emissive strips)
-    const wallMat = new THREE.MeshStandardMaterial({ color: '#0c0e14', emissive: '#f5b21a', emissiveIntensity: 0.35, roughness: 0.6 });
+    // border walls — white stone parapets with the city's gold trim, MERGED into one
+    // mesh (4 walls → 1 draw + 1 shadow draw)
+    const wallMat = new THREE.MeshStandardMaterial({ color: '#d8d0be', emissive: '#f5b21a', emissiveIntensity: 0.22, roughness: 0.7 });
     const wh = 6, t = 3;
-    const mk = (w, d, x, z) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, wh, d), wallMat); m.position.set(x, wh / 2, z); m.castShadow = true; m.receiveShadow = true; g.add(m); };
-    mk(ARENA * 2 + t, t, 0, -ARENA); mk(ARENA * 2 + t, t, 0, ARENA);
-    mk(t, ARENA * 2 + t, -ARENA, 0); mk(t, ARENA * 2 + t, ARENA, 0);
+    const wallGeos = [
+      [ARENA * 2 + t, t, 0, -ARENA], [ARENA * 2 + t, t, 0, ARENA],
+      [t, ARENA * 2 + t, -ARENA, 0], [t, ARENA * 2 + t, ARENA, 0],
+    ].map(([w, d, x, z]) => new THREE.BoxGeometry(w, wh, d).translate(x, wh / 2, z));
+    const walls = new THREE.Mesh(mergeGeometries(wallGeos), wallMat);
+    wallGeos.forEach(gg => gg.dispose());
+    walls.castShadow = true; walls.receiveShadow = true; g.add(walls);
 
-    // Soldat-style cover: scattered blocks & pillars
+    // The district: cover blocks are BUILDINGS now — white stone, windowed faces, varied
+    // skyline. Same footprints as before (cover balance is tuned), heights re-sculpted.
     this.cover = []; this.coverAll = [];
-    // lighter cool slate + faint self-glow so shadowed faces read as volume instead of crushing to black
-    const coverMat = new THREE.MeshStandardMaterial({ color: '#252d42', emissive: '#0f1a2e', emissiveIntensity: 0.4, roughness: 0.82, metalness: 0.12 });
+    const winTex = this._windowTexture();
+    const mkWin = (tint) => new THREE.MeshStandardMaterial({
+      map: winTex.map, emissiveMap: winTex.glow, emissive: '#ffca7a', emissiveIntensity: 0.1,
+      color: tint, roughness: 0.82, metalness: 0.05,
+    });
+    this._winMats = [mkWin('#e6e0d2'), mkWin('#d6cfbd')];
+    const roofMat = new THREE.MeshStandardMaterial({ color: '#b9b2a0', roughness: 0.9, metalness: 0.04 });
+    // one window bay tile ≈ 28 units; scale each face's UVs so windows stay true-size per building
+    const scaleBoxUV = (geo, w, h, d) => {
+      const uv = geo.attributes.uv, B = 28, R = 16;
+      const f = [[d / B, h / B], [d / B, h / B], [w / R, d / R], [w / R, d / R], [w / B, h / B], [w / B, h / B]];
+      for (let fi = 0; fi < 6; fi++) for (let v = 0; v < 4; v++) {
+        const i = fi * 4 + v;
+        uv.setXY(i, uv.getX(i) * f[fi][0], uv.getY(i) * f[fi][1]);
+      }
+      uv.needsUpdate = true;
+    };
     const spots = [
-      [-52, -30, 10, 22, 10], [46, 40, 12, 16, 12], [10, -64, 26, 12, 8],
-      [-70, 58, 9, 30, 9], [72, -58, 9, 26, 9], [-14, 70, 20, 10, 12],
-      [60, 4, 8, 20, 8], [-44, 8, 8, 18, 8],
-      [-110, -20, 12, 26, 12], [108, 30, 10, 20, 10], [30, 110, 22, 14, 10],
-      [-96, 96, 9, 24, 9], [96, -104, 10, 22, 10], [-30, -112, 18, 12, 12],
-      [120, -30, 8, 28, 8], [-120, 40, 8, 18, 14],
-      [-180, -150, 14, 20, 12], [175, 160, 12, 24, 12], [180, -160, 10, 18, 14], [-165, 170, 16, 14, 10],   // far-field cover for the big map
+      [-52, -30, 10, 26, 10], [46, 40, 12, 16, 12], [10, -64, 26, 12, 8],
+      [-70, 58, 9, 38, 9], [72, -58, 9, 30, 9], [-14, 70, 20, 10, 12],
+      [60, 4, 8, 22, 8], [-44, 8, 8, 18, 8],
+      [-110, -20, 12, 34, 12], [108, 30, 10, 24, 10], [30, 110, 22, 14, 10],
+      [-96, 96, 9, 28, 9], [96, -104, 10, 26, 10], [-30, -112, 18, 12, 12],
+      [120, -30, 8, 40, 8], [-120, 40, 8, 18, 14],
+      [-180, -150, 14, 44, 12], [175, 160, 12, 36, 12], [180, -160, 10, 22, 14], [-165, 170, 16, 16, 10],   // skyline far-field
     ];
     const crackTex = this._crackTexture();
+    let bi = 0;
     for (const [x, z, w, h, d] of spots) {
-      const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), coverMat);
+      const geo = new THREE.BoxGeometry(w, h, d);
+      scaleBoxUV(geo, w, h, d);
+      const win = this._winMats[bi++ % 2];
+      // ONE material per box (1 draw + 1 shadow draw — material arrays would 6× that);
+      // the roof is a child slab that inherits the shatter-sink transform and casts nothing.
+      const m = new THREE.Mesh(geo, win);
       m.position.set(x, h / 2, z); m.castShadow = true; m.receiveShadow = true;
+      const roof = new THREE.Mesh(new THREE.PlaneGeometry(w, d), roofMat);
+      roof.rotation.x = -Math.PI / 2; roof.position.y = h / 2 + 0.05;
+      roof.receiveShadow = true;
+      m.add(roof);
       g.add(m);
       // crack overlay — fades in as the block takes damage
       const crack = new THREE.Mesh(new THREE.BoxGeometry(w * 1.015, h * 1.006, d * 1.015), new THREE.MeshBasicMaterial({ map: crackTex, transparent: true, opacity: 0, depthWrite: false }));
@@ -178,10 +248,17 @@ export class World {
     grass.frustumCulled = false; grass.receiveShadow = true; grass.renderOrder = 1;
     const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), sv = new THREE.Vector3(), pv = new THREE.Vector3(), Y = new THREE.Vector3(0, 1, 0), col = new THREE.Color();
     this._gPos = new Float32Array(COUNT * 2); this._gRot = new Float32Array(COUNT); this._gScale = new Float32Array(COUNT); this._gOn = new Uint8Array(COUNT).fill(1);
+    // city grass lives in PARKS — clustered patches between the blocks, not confetti everywhere
+    const PARKS = [
+      [-90, -85, 24], [80, 95, 22], [150, 55, 18], [-70, 140, 20], [45, -135, 22],
+      [-150, -5, 18], [140, -100, 20], [-40, 60, 14], [30, 45, 12], [-190, 100, 18], [190, -40, 16],
+    ];
     let placed = 0, tries = 0;
     while (placed < COUNT && tries++ < COUNT * 30) {
-      const x = (Math.random() * 2 - 1) * (ARENA - 10), z = (Math.random() * 2 - 1) * (ARENA - 10);
-      if (Math.hypot(x, z) < 44) continue;                                    // keep the gold centre stage clean
+      const [px, pz, pr] = PARKS[(Math.random() * PARKS.length) | 0];
+      const a = Math.random() * Math.PI * 2, rr = Math.sqrt(Math.random()) * pr;
+      const x = px + Math.cos(a) * rr, z = pz + Math.sin(a) * rr;
+      if (Math.hypot(x, z) < 44 || Math.abs(x) > ARENA - 8 || Math.abs(z) > ARENA - 8) continue;
       let blocked = false;
       for (const c of this.coverAll) if (Math.abs(x - c.x) < c.hx + 2 && Math.abs(z - c.z) < c.hz + 2) { blocked = true; break; }
       if (blocked) continue;
@@ -190,7 +267,7 @@ export class World {
       this._gRot[i] = Math.random() * Math.PI; this._gScale[i] = 0.7 + Math.random() * 0.85;
       m4.compose(pv.set(x, 0, z), q.setFromAxisAngle(Y, this._gRot[i]), sv.setScalar(this._gScale[i]));
       grass.setMatrixAt(i, m4);
-      grass.setColorAt(i, col.setHSL(0.26 + Math.random() * 0.06, 0.42, 0.24 + Math.random() * 0.14));
+      grass.setColorAt(i, col.setHSL(0.22 + Math.random() * 0.05, 0.34, 0.20 + Math.random() * 0.11));   // olive park green
     }
     grass.count = placed;
     grass.instanceMatrix.needsUpdate = true; if (grass.instanceColor) grass.instanceColor.needsUpdate = true;
@@ -222,27 +299,70 @@ export class World {
     this.grass.instanceMatrix.needsUpdate = true;
   }
 
+  // The White City tile — one 24-unit district block per repeat: bone plaza + asphalt
+  // cross-streets with lane dashes and crosswalks. Repeats 20× across the arena.
   _gridTexture() {
     const c = document.createElement('canvas'); c.width = c.height = 512;
     const x = c.getContext('2d');
-    x.fillStyle = '#242a37'; x.fillRect(0, 0, 512, 512);
-    x.fillStyle = 'rgba(255,255,255,0.014)'; x.fillRect(0, 0, 256, 256); x.fillRect(256, 256, 256, 256); // checker shade
-    x.strokeStyle = 'rgba(150,175,215,0.15)'; x.lineWidth = 1.5;
-    for (let i = 0; i <= 512; i += 32) { x.beginPath(); x.moveTo(i + .5, 0); x.lineTo(i + .5, 512); x.stroke(); x.beginPath(); x.moveTo(0, i + .5); x.lineTo(512, i + .5); x.stroke(); }
-    x.strokeStyle = 'rgba(245,178,26,0.11)'; x.lineWidth = 2.5;
-    for (let i = 0; i <= 512; i += 128) { x.beginPath(); x.moveTo(i, 0); x.lineTo(i, 512); x.stroke(); x.beginPath(); x.moveTo(0, i); x.lineTo(512, i); x.stroke(); }
-    x.strokeStyle = 'rgba(160,185,225,0.30)'; x.lineWidth = 2;   // tech corner ticks
-    for (let gx = 0; gx <= 512; gx += 128) for (let gy = 0; gy <= 512; gy += 128) { x.beginPath(); x.moveTo(gx - 6, gy); x.lineTo(gx + 6, gy); x.moveTo(gx, gy - 6); x.lineTo(gx, gy + 6); x.stroke(); }
+    // plaza — pale bone stone with a soft paver grid
+    x.fillStyle = '#cfc8b6'; x.fillRect(0, 0, 512, 512);
+    x.fillStyle = 'rgba(255,255,255,0.05)'; x.fillRect(64, 64, 192, 192); x.fillRect(256, 256, 192, 192);
+    x.strokeStyle = 'rgba(90,80,60,0.12)'; x.lineWidth = 1.5;
+    for (let i = 64; i <= 512; i += 64) { x.beginPath(); x.moveTo(i + .5, 0); x.lineTo(i + .5, 512); x.stroke(); x.beginPath(); x.moveTo(0, i + .5); x.lineTo(512, i + .5); x.stroke(); }
+    // the streets — an asphalt cross along the tile edges (wraps into a full grid)
+    const ST = 116;                                     // street width in px (~5.4u)
+    x.fillStyle = '#57544c';
+    x.fillRect(0, 0, ST / 2, 512); x.fillRect(512 - ST / 2, 0, ST / 2, 512);
+    x.fillRect(0, 0, 512, ST / 2); x.fillRect(0, 512 - ST / 2, 512, ST / 2);
+    // curbs
+    x.strokeStyle = 'rgba(240,234,218,0.85)'; x.lineWidth = 4;
+    for (const p of [ST / 2, 512 - ST / 2]) { x.beginPath(); x.moveTo(p, 0); x.lineTo(p, 512); x.stroke(); x.beginPath(); x.moveTo(0, p); x.lineTo(512, p); x.stroke(); }
+    // lane dashes (gold — the city's trim color)
+    x.strokeStyle = 'rgba(245,178,26,0.55)'; x.lineWidth = 5; x.setLineDash([26, 22]);
+    x.beginPath(); x.moveTo(0.5, 0); x.lineTo(0.5, 512); x.stroke();
+    x.beginPath(); x.moveTo(0, 0.5); x.lineTo(512, 0.5); x.stroke();
+    x.setLineDash([]);
+    // crosswalk ticks where street meets plaza
+    x.fillStyle = 'rgba(240,234,218,0.7)';
+    for (let i = -40; i <= 40; i += 16) {
+      x.fillRect(256 + i, ST / 2 + 4, 9, 26); x.fillRect(256 + i, 512 - ST / 2 - 30, 9, 26);
+      x.fillRect(ST / 2 + 4, 256 + i, 26, 9); x.fillRect(512 - ST / 2 - 30, 256 + i, 26, 9);
+    }
     const t = new THREE.CanvasTexture(c);
     t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(20, 20);
     t.anisotropy = 8;
     return t;
   }
+
+  // Building facades — one shared 4×4-window tile (repeats every ~28 units) + a separate
+  // pure-glow map (black except the LIT windows) so night emissive lights ONLY the glass.
+  _windowTexture() {
+    const c = document.createElement('canvas'); c.width = c.height = 256;
+    const g = document.createElement('canvas'); g.width = g.height = 256;
+    const x = c.getContext('2d'), y = g.getContext('2d');
+    x.fillStyle = '#ddd6c6'; x.fillRect(0, 0, 256, 256);          // stone
+    y.fillStyle = '#000'; y.fillRect(0, 0, 256, 256);
+    for (let r = 0; r < 4; r++) for (let col = 0; col < 4; col++) {
+      const px = col * 64 + 12, py = r * 64 + 10, w = 40, h = 44;
+      const lit = Math.random() < 0.3;
+      x.fillStyle = lit ? '#ffd9a0' : (Math.random() < 0.5 ? '#2c3342' : '#39414f');
+      x.fillRect(px, py, w, h);
+      x.strokeStyle = 'rgba(60,54,40,0.55)'; x.lineWidth = 3; x.strokeRect(px, py, w, h);
+      x.fillStyle = 'rgba(255,255,255,0.10)'; x.fillRect(px + 4, py + 4, w - 8, 10);   // glass sheen
+      x.fillStyle = 'rgba(90,80,60,0.35)'; x.fillRect(px - 3, py + h, w + 6, 4);       // sill
+      if (lit) { y.fillStyle = '#ffca7a'; y.fillRect(px, py, w, h); }
+    }
+    const mk = (cv) => { const t = new THREE.CanvasTexture(cv); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 4; return t; };
+    return { map: mk(c), glow: mk(g) };
+  }
   _radialTex() {
-    const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d');
-    const gr = x.createRadialGradient(64, 64, 0, 64, 64, 64);
+    const c = document.createElement('canvas'); c.width = c.height = 256; const x = c.getContext('2d');
+    const gr = x.createRadialGradient(128, 128, 0, 128, 128, 128);
     gr.addColorStop(0, 'rgba(245,178,26,0.5)'); gr.addColorStop(0.5, 'rgba(245,178,26,0.11)'); gr.addColorStop(1, 'rgba(245,178,26,0)');
-    x.fillStyle = gr; x.fillRect(0, 0, 128, 128);
+    x.fillStyle = gr; x.fillRect(0, 0, 256, 256);
+    // the emblem ring, baked in (was its own mesh + draw call): world r 30–33 of the 56u glow disc
+    x.strokeStyle = 'rgba(245,178,26,0.5)'; x.lineWidth = 7;
+    x.beginPath(); x.arc(128, 128, 128 * (31.5 / 56), 0, Math.PI * 2); x.stroke();
     return new THREE.CanvasTexture(c);
   }
 
@@ -314,7 +434,7 @@ export class World {
       uniforms: {
         uPlayer: { value: new THREE.Vector2(0, 0) }, uDir: { value: new THREE.Vector2(0, 1) },
         uP2: { value: new THREE.Vector2(0, 0) }, uHas2: { value: 0 },
-        uCos: { value: Math.cos(0.96) }, uRange: { value: 96 }, uNear: { value: 26 }, uDark: { value: 0.9 },
+        uCos: { value: Math.cos(0.96) }, uRange: { value: 96 }, uNear: { value: 26 }, uDark: { value: 0.74 },   // softened for the White City — unseen streets ghost through instead of blacking out
         uTint: { value: new THREE.Color('#ffd24a') }, uBoxC: { value: bc }, uBoxH: { value: bh }, uBoxN: { value: n },
       },
       vertexShader: `varying vec2 vW; void main(){ vW=(modelMatrix*vec4(position,1.0)).xz; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
@@ -441,7 +561,11 @@ export class World {
   render() {
     const now = performance.now();
     if (this._grassTime) this._grassTime.value = now / 1000;   // wind
-    if (this._lastRender) { const d = Math.min(now - this._lastRender, 100); this._ema = this._ema * 0.9 + d * 0.1; }
+    if (this._lastRender) {
+      const d = Math.min(now - this._lastRender, 100);
+      this._ema = this._ema * 0.9 + d * 0.1;
+      this.updateDayNight(d / 1000);                            // the sun keeps its own schedule
+    }
     this._lastRender = now;
     this.composer.render();
     this._qCool -= 0.016;

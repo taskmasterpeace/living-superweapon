@@ -458,7 +458,7 @@ export class Game {
   }
   shatterBlock(c) {
     const w = c.w || c.r * 1.6, h = c.h, d = c.d || c.r * 1.6;
-    const mat = new THREE.MeshStandardMaterial({ color: '#161a24', roughness: 0.9, metalness: 0.05 });
+    const mat = new THREE.MeshStandardMaterial({ color: '#b5ae9e', roughness: 0.9, metalness: 0.05 });   // white-stone rubble
     for (let i = 0; i < 11; i++) {
       const s = rand(1.4, 3.4);
       const chunk = new THREE.Mesh(new THREE.BoxGeometry(s, s, s), mat);
@@ -470,7 +470,7 @@ export class Game {
         dispose: () => { this.scene.remove(chunk); chunk.geometry.dispose(); },
       });
     }
-    this.particles.burst(c.x, h * 0.5, c.z, { count: 28, speed: 16, life: 1.0, size: 6.5, color: ['#3a3a44', '#22232c', '#4a4a55'], up: 8, grav: 4, drag: 1.2 });
+    this.particles.burst(c.x, h * 0.5, c.z, { count: 28, speed: 16, life: 1.0, size: 6.5, color: ['#cfc8b8', '#8b8577', '#e8e2d4'], up: 8, grav: 4, drag: 1.2 });   // masonry dust
     this.vfx.scorch(new THREE.Vector3(c.x, 0.2, c.z), (c.r || 6) * 1.25, '#20242e');
     this.world.crater(c.x, c.z, (c.r || 6) * 0.7, 2.2);
     const mesh = c.mesh, crack = c.crack, y0 = c.y0; this.world.removeBlockFromCover(c);
