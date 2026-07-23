@@ -128,8 +128,16 @@ function figure(def) {
   shadow.rotation.x = -Math.PI / 2; shadow.position.y = 0.05; shadow.renderOrder = 1; g.add(shadow);
   // altitude-band ring (the ruled four bands): ground-pinned, colored by the fighter's CURRENT
   // band — readable from across the map so you can climb to someone's level
+  // THE GROUND MARKER — the fighter's whole state, read from directly under them:
+  // ring colour = altitude band · notch = WHICH WAY THEY'RE LOOKING · ring style = what they're doing.
   const bandRing = new THREE.Mesh(new THREE.RingGeometry(3.1, 3.7, 24), new THREE.MeshBasicMaterial({ color: '#8fe08a', transparent: true, opacity: 0.5, depthWrite: false, side: THREE.DoubleSide }));
   bandRing.rotation.x = -Math.PI / 2; bandRing.position.y = 0.07; bandRing.renderOrder = 1; g.add(bandRing);
+  // the facing wedge: a bright arc at the FRONT of the ring, so you always know where they look
+  const faceWedge = new THREE.Mesh(new THREE.RingGeometry(3.0, 4.5, 18, 1, -0.42, 0.84), new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.8, depthWrite: false, side: THREE.DoubleSide }));
+  faceWedge.rotation.x = -Math.PI / 2; faceWedge.position.y = 0.09; faceWedge.renderOrder = 2; g.add(faceWedge);
+  // the state ring: flares and recolours for guard / grab / strike (blue shield, green grip, white hit)
+  const stateRing = new THREE.Mesh(new THREE.RingGeometry(4.0, 4.9, 28), new THREE.MeshBasicMaterial({ color: '#9fd0ff', transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide }));
+  stateRing.rotation.x = -Math.PI / 2; stateRing.position.y = 0.08; stateRing.renderOrder = 2; g.add(stateRing);
 
   // torso (chest taper) + neck + collar
   const torso = new THREE.Mesh(new THREE.CapsuleGeometry(1.5, 2.2, 6, 12), suit);
@@ -251,7 +259,7 @@ function figure(def) {
   const ice = new THREE.Mesh(new THREE.IcosahedronGeometry(4.6, 1), new THREE.MeshStandardMaterial({ color: '#bfeaff', transparent: true, opacity: 0, roughness: 0.15, metalness: 0.1, emissive: '#4fb8e6', emissiveIntensity: 0.15 }));
   ice.position.y = 5.2; ice.scale.set(1, 1.5, 1); ice.visible = false; g.add(ice);
 
-  return { g, torso, head, pelvis, cowl, emblem, aura, cape, armL, armR, legL, legR, eyeL, eyeR, shadow, bandRing, guardArc, ice, mats: { suit, suit2, glow } };
+  return { g, torso, head, pelvis, cowl, emblem, aura, cape, armL, armR, legL, legR, eyeL, eyeR, shadow, bandRing, faceWedge, stateRing, guardArc, ice, mats: { suit, suit2, glow } };
 }
 
 export class Fighter {
@@ -954,6 +962,28 @@ export class Fighter {
       const b = bandOf(this.pos.y);
       if (b !== this._band) { this._band = b; p.bandRing.material.color.set(ALT_BANDS[b].c); }
       p.bandRing.material.opacity = b === 0 ? 0.28 : 0.6;   // louder when someone leaves the ground
+      // FACING: the wedge sits at the front of the ring and counter-rotates the body's smoothing,
+      // so it always points exactly where this fighter is actually looking.
+      if (p.faceWedge) {
+        p.faceWedge.position.set(0, 0.1 - this.pos.y, 0);
+        p.faceWedge.rotation.z = -(this.facing - this.obj.rotation.y);   // group already carries body yaw
+        const fm = p.faceWedge.material;
+        fm.color.set(ALT_BANDS[b].c);
+        fm.opacity = 0.55 + (b === 0 ? 0 : 0.25);
+      }
+      // STATE: one ring that tells you what they're doing before it lands on you
+      if (p.stateRing) {
+        p.stateRing.position.set(0, 0.09 - this.pos.y, 0);
+        const sm = p.stateRing.material;
+        let col = null, op = 0, sc = 1;
+        if (this.guarding) { col = '#9fd0ff'; op = 0.7; sc = 1 + Math.sin(this.animT * 8) * 0.02; }        // braced
+        else if (this.grabbing || this.grabState) { col = '#8fe08a'; op = 0.75; sc = 1.06; }              // seizing
+        else if (this.meleeCharge > 0) { col = '#ff8a3a'; op = 0.45 + Math.min(0.45, this.meleeCharge * 0.6); sc = 1 + this.meleeCharge * 0.12; }  // winding up a haymaker
+        else if (this.strikeActive > 0) { col = '#ffffff'; op = 0.8; sc = 1.12; }                          // committed
+        else if (this.staggerT > 0) { col = '#ff5a4a'; op = 0.7; sc = 0.94; }                              // rocked — punish window
+        if (op > 0) { if (this._stateCol !== col) { this._stateCol = col; sm.color.set(col); } sm.opacity = op; p.stateRing.scale.setScalar(sc); }
+        else if (sm.opacity > 0) { sm.opacity = Math.max(0, sm.opacity - dt * 6); }
+      }
     }
     // cruise wind — the fastest fliers drag visible speed lines (cheap particles, speed-gated)
     if (this.flying && this._game && Math.hypot(this.vel.x, this.vel.z) > 38 && Math.random() < 0.55) {

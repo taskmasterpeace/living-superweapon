@@ -503,6 +503,15 @@ const CSS = `
 /* ---- the THEATER: in-match city nameplate + the CITY ATLAS ---- */
 #hud .cityplate{ position:absolute; left:50%; transform:translateX(-50%); bottom:108px; font-family:'Cascadia Mono',Consolas,monospace; font-size:var(--t-label); letter-spacing:.14em; color:var(--text-4); background:rgba(8,10,16,.5); border:1px solid rgba(255,255,255,.08); border-radius:var(--r-2); padding:4px 12px; pointer-events:none; }
 #hud .cityplate b{ color:var(--gold-pale); font-weight:700; }
+/* ---- ALTITUDE LADDER: which of the four bands you're in, and which way you're moving ---- */
+#hud .alt{ position:absolute; right:18px; top:196px; width:58px; display:flex; flex-direction:column-reverse; gap:3px; padding:8px 7px; align-items:stretch; }
+#hud .alt .arung{ position:relative; height:24px; border-radius:var(--r-1); background:var(--surface-hi); border:1px solid var(--line); display:flex; align-items:center; justify-content:center; transition:background .18s, border-color .18s, transform .18s; }
+#hud .alt .arung b{ font-family:var(--f-mono); font-size:var(--t-micro); letter-spacing:var(--tr); color:var(--text-6); font-weight:700; }
+#hud .alt .arung.on{ transform:scaleX(1.12); }
+#hud .alt .arung.on b{ color:var(--on-gold); }
+#hud .alt .alab{ font-family:var(--f-mono); font-size:var(--t-micro); letter-spacing:var(--tr-wide); color:var(--text-5); text-align:center; padding-bottom:3px; }
+#hud .alt .aval{ font-family:var(--f-mono); font-size:var(--t-tiny); color:var(--gold-pale); text-align:center; padding-top:4px; }
+#hud .alt .aval i{ font-style:normal; color:var(--text-5); }
 #hud .wantedrow{ font-size:var(--t-sm); font-weight:800; letter-spacing:.16em; color:var(--police); margin:1px 0 2px; text-shadow:0 0 10px rgba(90,160,255,.6); animation:pipblink 1.2s steps(2,start) infinite; }
 #title .term .thchip{ cursor:pointer; color:#7fb0d0; border-bottom:1px dashed rgba(127,176,208,.5); pointer-events:auto; }
 #title .term .thchip:hover{ color:#a8d8f0; }
@@ -778,6 +787,14 @@ export class HUD {
       <div class="panel radar" id="hRadar"><div class="rlab">Radar</div><canvas id="hRadarC" width="152" height="152"></canvas></div>
       <div class="panel pip" id="hPip" style="display:none"><div class="pipcap"><span class="pipdot"></span><span>ON AIR — KMK 9</span></div></div>
       <div class="cityplate" id="hCity" style="display:none"></div>
+      <div class="panel alt" id="hAlt" style="display:none">
+        <div class="aval" id="hAltV">0m</div>
+        <div class="arung" data-b="0"><b>GND</b></div>
+        <div class="arung" data-b="1"><b>BLD</b></div>
+        <div class="arung" data-b="2"><b>SKY</b></div>
+        <div class="arung" data-b="3"><b>CLD</b></div>
+        <div class="alab">ALT</div>
+      </div>
       <div class="kobanner" id="hKO"><div class="kob" id="hKOt">K.O.</div><div class="kos" id="hKOs"></div></div>
     </div>`;
     this.el = {
@@ -798,6 +815,8 @@ export class HUD {
       radar: this.root.querySelector('#hRadar'), radarC: this.root.querySelector('#hRadarC'),
       pip: this.root.querySelector('#hPip'),
       city: this.root.querySelector('#hCity'),
+      alt: this.root.querySelector('#hAlt'), altV: this.root.querySelector('#hAltV'),
+      altRungs: [...this.root.querySelectorAll('#hAlt .arung')],
       wanted: this.root.querySelector('#plWanted'),
       hits: this.root.querySelector('#hHits'), danger: this.root.querySelector('#hDanger'),
       ko: this.root.querySelector('#hKO'), koT: this.root.querySelector('#hKOt'), koS: this.root.querySelector('#hKOs'),
@@ -1056,6 +1075,36 @@ export class HUD {
     clearTimeout(this._hintT); this._hintPinned = false;
     this.hintFull(true);
     this._hintT = setTimeout(() => { if (!this._hintPinned) this.hintFull(false); }, 18000);
+  }
+
+  // The height meter: four rungs (GROUND / BUILDING / SKY / CLOUDS) with the live one lit in your
+  // hero's colour, plus the raw altitude. Crossing a band lights the next rung — you can watch
+  // yourself climb or drop a level.
+  updateAltitude(g, p) {
+    const el = this.el.alt; if (!el) return;
+    const show = !!(g.mode && g.running && p && p.alive);
+    if (show !== this._altOn) { this._altOn = show; el.style.display = show ? 'flex' : 'none'; }
+    if (!show) return;
+    const y = Math.max(0, p.pos.y);
+    const band = y < 8 ? 0 : y < 150 ? 1 : y < 260 ? 2 : 3;
+    const acc = p.def.colors.accent;
+    if (band !== this._altBand) {
+      const up = this._altBand != null && band > this._altBand;
+      this._altBand = band;
+      this.el.altRungs.forEach((r, i) => {
+        const on = i === band;
+        r.classList.toggle('on', on);
+        r.style.background = on ? acc : '';
+        r.style.borderColor = on ? acc : '';
+      });
+      if (this._altBand != null && band > 0) {   // a band change is worth a beat of feedback
+        el.style.transform = `translateY(${up ? 3 : -3}px)`;
+        clearTimeout(this._altT); this._altT = setTimeout(() => { el.style.transform = ''; }, 130);
+      }
+    }
+    const m = Math.round(y * 0.19);   // 1u ≈ 0.19m at true scale — report in metres, like a real altimeter
+    const txt = m > 0 ? m + 'm' : '<i>GROUND</i>';
+    if (txt !== this._altTxt) { this._altTxt = txt; this.el.altV.innerHTML = txt; }
   }
 
   // Point at the fight. Bots can genuinely hide now, so an off-screen target gets an edge marker.
@@ -1797,6 +1846,7 @@ export class HUD {
     this.updateKitWidget(p);
     this.updateDpsMeters(g);
     this.updateFoeArrow(g);
+    this.updateAltitude(g, p);
     // radar (hidden at the title / while paused) + low-HP danger pulse
     const inMatch = !!(g.mode && g.running);
     this.el.radar.style.display = inMatch ? 'block' : 'none';

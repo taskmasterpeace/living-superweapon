@@ -8,6 +8,11 @@ const _v = new THREE.Vector3(), _v2 = new THREE.Vector3(), _q = new THREE.Quater
 // Shared geometry + white-core material — spawning a projectile/beam must not allocate GPU buffers
 // (per-spawn churn caused GC/upload hitches). Instances scale the shared unit geometry; per-instance
 // materials are cloned from these prototypes only where opacity/color animates.
+// ---- ballistics: a brass slug + a hot tracer streak (shared geo/mats — guns fire a LOT) ----
+const GEO_BULLET = new THREE.CylinderGeometry(0.22, 0.16, 1.5, 6); GEO_BULLET.rotateX(Math.PI / 2);
+const GEO_TRACER = new THREE.CylinderGeometry(0.1, 0.015, 5.2, 5); GEO_TRACER.rotateX(Math.PI / 2);
+const MAT_BULLET = new THREE.MeshStandardMaterial({ color: '#e8c98a', emissive: '#ffd98a', emissiveIntensity: 0.7, roughness: 0.35, metalness: 0.9 });
+const MAT_TRACER = new THREE.MeshBasicMaterial({ color: '#ffcf6a', transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending, depthWrite: false });
 const GEO_ORB = new THREE.SphereGeometry(1, 16, 12);
 const GEO_ORB_HI = new THREE.SphereGeometry(1, 20, 16);
 const GEO_CYL = new THREE.CylinderGeometry(1, 1, 1, 16, 1, true);
@@ -57,6 +62,7 @@ const GEO_ARROW_FLET = new THREE.ConeGeometry(0.3, 0.8, 4);
 const MAT_ARROW_SHAFT = new THREE.MeshStandardMaterial({ color: '#8a6a3a', roughness: 0.8 });
 const MAT_ARROW_FLET = new THREE.MeshStandardMaterial({ color: '#d8d2c4', roughness: 0.9 });
 const _AY = new THREE.Vector3(0, 1, 0);
+const _AZ = new THREE.Vector3(0, 0, 1);   // bullets are built along +Z (see GEO_BULLET)
 
 // ---- Ki-blast / big-bang orb ----
 class Projectile {
@@ -80,6 +86,7 @@ class Projectile {
     this.dead = false;
 
     this.arrow = !!o.arrow; this.payload = o.payload || null;
+    this.bullet = !!o.bullet;                      // real ballistics read as METAL, not energy
     this.face = !!o.face; this.armDelay = o.armDelay || 0; this._armed = false; this._armT = 0;
     if (this.face) {
       // THE MARLETTA: a billboarded serene face wrapped in glow — she drifts, arrives, lingers, detonates
@@ -90,6 +97,16 @@ class Projectile {
       this.obj.scale.setScalar(this.radius);
       this.obj.position.copy(this.pos); game.scene.add(this.obj);
       this.light = game.vfx.borrowLight(this.color, 4 * this.power, this.radius * 14);
+    } else if (this.bullet) {
+      // A BULLET, not a ball of light: a tiny brass slug with a hot tracer streak drawn BEHIND it.
+      // Stretched along travel, no bloom halo — it must not read like a ki blast.
+      const slug = new THREE.Mesh(GEO_BULLET, MAT_BULLET);
+      const tracer = new THREE.Mesh(GEO_TRACER, MAT_TRACER);
+      tracer.position.z = -2.6;                    // trails the slug
+      this.obj = new THREE.Group(); this.obj.add(slug, tracer);
+      this.obj.position.copy(this.pos); game.scene.add(this.obj);
+      this._tracer = tracer;
+      this.light = null;                           // no pooled light — tracers are cheap and many
     } else if (this.arrow) {
       // a REAL arrow — shaft + head + fletching, no energy glow (payload color on the head)
       const shaft = new THREE.Mesh(GEO_ARROW_SHAFT, MAT_ARROW_SHAFT);
@@ -148,12 +165,14 @@ class Projectile {
     this.obj.position.copy(this.pos);
     if (this.light) this.light.position.copy(this.pos);
     if (this.arrow) { _v.copy(this.vel).normalize(); this.obj.quaternion.setFromUnitVectors(_AY, _v); }   // nose into the flight path
+    else if (this.bullet) { _v.copy(this.vel).normalize(); this.obj.quaternion.setFromUnitVectors(_AZ, _v); }   // slug + tracer align to travel
     else this.obj.rotation.y += dt * 6;
-    // trail (arrows leave only a whisper)
+    // trail (arrows leave only a whisper; bullets leave a thin wisp of smoke, never a plasma tail)
     this.trailT += dt;
-    if (this.trailT > (this.arrow ? 0.05 : 0.016)) {
+    if (this.trailT > (this.arrow || this.bullet ? 0.05 : 0.016)) {
       this.trailT = 0;
-      game.particles.spawn({ x: this.pos.x, y: this.pos.y, z: this.pos.z, vx: rand(-2, 2), vy: rand(-2, 2), vz: rand(-2, 2), life: this.arrow ? 0.2 : 0.35, size: this.arrow ? 1 : this.radius * 2.2, color: this.arrow ? this.color : [this.color, this.color2, '#ffffff'], drag: 3, shrink: true });
+      if (this.bullet) game.particles.spawn({ x: this.pos.x, y: this.pos.y, z: this.pos.z, vx: rand(-1, 1), vy: rand(0, 2), vz: rand(-1, 1), life: 0.22, size: 0.8, color: ['#c9c2b4', '#8b8577'], drag: 4, shrink: true });
+      else game.particles.spawn({ x: this.pos.x, y: this.pos.y, z: this.pos.z, vx: rand(-2, 2), vy: rand(-2, 2), vz: rand(-2, 2), life: this.arrow ? 0.2 : 0.35, size: this.arrow ? 1 : this.radius * 2.2, color: this.arrow ? this.color : [this.color, this.color2, '#ffffff'], drag: 3, shrink: true });
     }
     this.life -= dt;
     // collisions — delayed-blast payloads ARM instead of exploding on contact; boomerangs bounce home

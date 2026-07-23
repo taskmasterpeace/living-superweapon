@@ -215,6 +215,28 @@ export class AudioBus {
     const f = this.ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 2400; f.Q.value = 0.4;
     n.connect(f); this._env(f, dur, 0.07, 0.01); n.start(); n.stop(this.t + dur);
   }
+  // gunshot: a real firearm report — sharp transient crack, body thump, and a tail of room slap.
+  // Deliberately NOT the `zap`/`blast` synth: guns must not sound like energy weapons.
+  gunshot(power = 1, pos = null) {
+    if (!this.ok || this.muted) return;
+    const pg = this._pg(pos, 200); if (!pg) return;
+    const t = this.t;
+    // the crack: filtered noise burst, very short
+    const n = this._noise(0.09);
+    const hp = this.ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 1100;
+    n.connect(hp); this._env(hp, 0.07, 0.5 * power * pg, 0.001);
+    n.start(); n.stop(t + 0.09);
+    // the body: a fast low thump that gives it weight
+    const o = this.ctx.createOscillator(); o.type = 'triangle';
+    o.frequency.setValueAtTime(190 * power, t);
+    o.frequency.exponentialRampToValueAtTime(48, t + 0.08);
+    this._env(o, 0.1, 0.34 * power * pg, 0.001); o.start(); o.stop(t + 0.12);
+    // the tail: quiet slap off the buildings
+    const n2 = this._noise(0.18);
+    const bp = this.ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 900; bp.Q.value = 0.7;
+    n2.connect(bp); this._env(bp, 0.18, 0.1 * power * pg, 0.02);
+    n2.start(t + 0.02); n2.stop(t + 0.2);
+  }
   // siren: the two-tone whoop — dispatch and arrival announcements (proximity-attenuated)
   siren(pos = null, whoops = 2) {
     if (!this.ok || this.muted) return;

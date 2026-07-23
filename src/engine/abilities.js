@@ -439,10 +439,11 @@ export const TYPES = {
       g.projectiles.spawnProjectile(c, {
         pos: m, vel: new THREE.Vector3(Math.cos(a), c.aim3.y + rand(-spread, spread), Math.sin(a)).setLength(def.speed || 170),
         radius: def.radius || 0.55, damage: def.damage || 5, blast: def.blast || 2.2, power: 0.35,
-        color: def.color, color2: def.color2, life: 1.4,
+        color: def.color, color2: def.color2, life: 1.4, bullet: true,   // brass + tracer, never an energy orb
       });
       c.vel.x -= c.aim.x * (def.recoil || 1.6); c.vel.z -= c.aim.z * (def.recoil || 1.6);   // kick
-      g.audio.blast(720 + rand(-60, 60), 0.05); g.muzzleFlash(c, def.color, 0.5);
+      g.audio.gunshot(def.interval && def.interval < 0.2 ? 0.8 : 1.15, c.pos);   // a CRACK, not a zap
+      g.muzzleFlash(c, '#ffcf6a', 0.55);
     }
   },
 
