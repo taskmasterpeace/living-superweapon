@@ -1,4 +1,4 @@
-// Living Superweapon — DOM HUD + character-select screen.
+// WAR WORLD: ASCENDANTS — DOM HUD + character-select screen.
 import { ROSTER, SLOT_ORDER } from '../data/characters.js';
 import { DTYPES, DTYPE_INFO, resistOf } from './entity.js';
 import { MODES } from '../data/modes.js';
@@ -315,6 +315,50 @@ const CSS = `
 .lswovl .netp.wait b{ color:var(--text-5); font-size:var(--t-md); }
 .lswovl .vs2{ font-weight:800; color:var(--gold); }
 .lswovl .hsec{ margin-bottom:13px; }
+/* ---- THE ESTABLISHING SHOT: the city announces itself, then gets out of the way ---- */
+#hEstablish{ position:fixed; inset:0; z-index:64; display:none; align-items:center; justify-content:center;
+  pointer-events:none; background:var(--ink);
+  transition:background 1.5s cubic-bezier(.4,0,.2,1), opacity .9s ease; }
+#hEstablish.lift{ background:rgba(13,15,20,0); }
+#hEstablish.lift .estinner{ transform:translateY(-14px); opacity:0; }
+#hEstablish.gone{ opacity:0; }
+#hEstablish .estinner{ text-align:center; max-width:44rem; padding:0 2rem;
+  transition:transform 1.5s cubic-bezier(.4,0,.2,1), opacity 1.3s ease;
+  animation:estIn 1.1s cubic-bezier(.2,.7,.3,1) both; }
+@keyframes estIn{ from{ opacity:0; transform:translateY(16px) } to{ opacity:1; transform:none } }
+#hEstablish .estkick{ font-family:var(--f-mono); font-size:var(--t-micro); letter-spacing:var(--tr-wider);
+  color:var(--text-5); margin-bottom:14px; }
+#hEstablish .esttitle{ font-family:var(--f-display); font-weight:700; font-size:clamp(2.6rem,7vw,5.2rem);
+  line-height:1; letter-spacing:-.02em; color:var(--text); text-shadow:0 6px 40px rgba(0,0,0,.9); }
+#hEstablish .estsub{ font-family:var(--f-display); font-size:var(--t-lg); letter-spacing:var(--tr-wider);
+  text-transform:uppercase; color:var(--gold); margin-top:8px; }
+#hEstablish .eststats{ display:grid; grid-template-columns:repeat(auto-fit,minmax(9.5rem,1fr)); gap:12px 22px;
+  margin-top:26px; padding-top:18px; border-top:1px dashed var(--line-gold); }
+#hEstablish .eststat{ text-align:left; }
+#hEstablish .eststat b{ display:block; font-family:var(--f-mono); font-size:var(--t-micro);
+  letter-spacing:var(--tr-wide); color:var(--text-5); font-weight:400; margin-bottom:3px; }
+#hEstablish .eststat span{ font-family:var(--f-display); font-size:var(--t-body); color:var(--text-2); }
+#hEstablish .eststat span.estbad{ color:var(--danger); }
+#hEstablish .estbarline{ height:3px; background:var(--line); border-radius:2px; margin-top:5px; overflow:hidden; }
+#hEstablish .estbarline i{ display:block; height:100%; animation:estBar 1.4s cubic-bezier(.2,.7,.3,1) both .4s; }
+@keyframes estBar{ from{ width:0 !important } }
+/* the simulation boots instead of arriving */
+#hEstablish.sim{ background:#04191c; }
+#hEstablish.sim.lift{ background:rgba(4,25,28,0); }
+#hEstablish.sim .esttitle{ color:#7fe6d0; text-shadow:0 0 30px rgba(127,230,208,.4); }
+#hEstablish.sim .estsub{ color:#4ad8c0; }
+#hEstablish .estboot{ display:grid; gap:5px; margin-top:24px; font-family:var(--f-mono);
+  font-size:var(--t-micro); letter-spacing:var(--tr-wide); text-align:left; }
+#hEstablish .estboot div{ display:flex; justify-content:space-between; gap:2rem; color:#4ad8c0;
+  border-bottom:1px solid rgba(74,216,192,.18); padding-bottom:4px;
+  animation:estIn .5s ease both; }
+#hEstablish .estboot div:nth-child(2){ animation-delay:.18s } #hEstablish .estboot div:nth-child(3){ animation-delay:.36s }
+#hEstablish .estboot div:nth-child(4){ animation-delay:.54s }
+#hEstablish .estboot b{ color:rgba(127,230,208,.55); font-weight:400; }
+#hEstablish .estbar{ height:2px; background:rgba(74,216,192,.2); margin-top:20px; overflow:hidden; }
+#hEstablish .estbar i{ display:block; height:100%; background:#4ad8c0; width:0; animation:estBoot 1.4s ease both; }
+@keyframes estBoot{ to{ width:100% } }
+@media (max-width:640px){ #hEstablish .eststats{ grid-template-columns:1fr 1fr } }
 /* --- THE DAMAGE CODEX --- */
 .lswovl .dgbox{ max-width:64rem; }
 .lswovl .dgsub{ font-size:var(--t-sm); color:var(--text-3); line-height:1.62; margin-bottom:14px; }
@@ -459,7 +503,12 @@ const CSS = `
 #title .preview{ overflow:hidden; }
 #title .preview::before{ content:''; position:absolute; inset:0; pointer-events:none; z-index:3; background:repeating-linear-gradient(0deg, rgba(255,255,255,.022) 0 1px, transparent 1px 3px); }
 #title .preview::after{ content:'THRESHOLD REGISTRY // EYES ONLY'; position:absolute; left:50%; top:46%; transform:translate(-50%,-50%) rotate(-24deg); font-family:var(--mono); font-weight:700; font-size:30px; letter-spacing:.2em; white-space:nowrap; color:#f4efe6; opacity:.05; pointer-events:none; z-index:-1; }
-#title h1{ font-size:clamp(28px,4.6vw,54px); margin-top:26px; }   /* the registry header stack needs the air (and the topbar its corner) */
+#title h1{ font-size:clamp(28px,4.6vw,54px); margin-top:26px; display:flex; flex-direction:column; align-items:center; gap:0; line-height:.92; }
+/* WAR WORLD sits heavy; ASCENDANTS is the spaced sub-line under it — a title card, not a word. */
+#title h1 .t1{ font-weight:700; letter-spacing:-.015em; color:var(--text);
+  text-shadow:0 4px 26px rgba(0,0,0,.85), 0 0 60px rgba(255,210,74,.10); }
+#title h1 .t2{ font-size:.44em; font-weight:500; letter-spacing:.42em; color:var(--gold);
+  text-indent:.42em; margin-top:.18em; }
 #title .dsh{ display:flex; align-items:center; justify-content:space-between; gap:8px; font-family:var(--mono); font-size:var(--t-tiny); letter-spacing:.14em; color:var(--text-5); border-bottom:1px dashed rgba(245,178,26,.35); padding-bottom:6px; margin-bottom:8px; }
 #title .dsh b{ color:var(--gold-pale); font-weight:700; }
 #title .stamp{ position:absolute !important; top:44px; right:-18px; z-index:4 !important; transform:rotate(9deg); font-family:var(--mono); font-weight:700; font-size:var(--t-md); letter-spacing:.3em; color:var(--stamp); border:2.5px solid var(--stamp); border-radius:var(--r-1); padding:3px 12px 3px 15px; opacity:.8; pointer-events:none; mix-blend-mode:screen; }
@@ -650,6 +699,7 @@ const CSS = `
     #title{ gap:10px; justify-content:flex-start; overflow-y:auto; -webkit-overflow-scrolling:touch;
       touch-action:pan-y; padding:12px 10px calc(96px + env(safe-area-inset-bottom)); }
     #title h1{ font-size:clamp(22px,7vw,38px); margin-top:2px; }
+    #title h1 .t2{ letter-spacing:.3em; text-indent:.3em; }
     #title .topbar{ position:static; order:-1; width:100%; display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin-bottom:2px; }
     #title .topbar button{ padding:10px 6px; font-size:11px; }
     #title .clsbar{ width:100%; }
@@ -767,7 +817,7 @@ export function heroStats(d) {
   };
 }
 
-// LeFevre Threat Level scale (Living Superweapon Threshold Treaty)
+// LeFevre Threat Level scale (Threshold Treaty)
 export const THREAT_COLORS = { 'Low': 'var(--good)', 'Moderate': 'var(--gold)', 'High': '#ff9a3a', 'Very High': 'var(--danger)', 'Extreme': '#ff2f2f' };
 
 // "What am I getting into?" — a mechanical AT-A-GLANCE derived from the ACTUAL kit, so it can
@@ -802,7 +852,7 @@ export function kitFacts(def) {
   if (has('rifle')) out.push(['range', 'guns']);
   if (has('bow')) out.push(['range', 'a payload bow']);
   if (has('charge')) out.push(['power', 'a charge bomb — hold to grow it']);
-  if (has('spiritbomb')) out.push(['power', 'a giant channeled orb']);
+  if (has('growingorb')) out.push(['power', 'a giant channeled orb']);
   if (has('meteor')) out.push(['power', 'an airstrike ult']);
   if (has('summon')) out.push(['person', 'summons']);
   if (has('construct')) out.push(['might', 'solid-light constructs']);
@@ -838,7 +888,7 @@ function describeAbility(a) {
     case 'volley': return 'rapid alternating-hand blast volley';
     case 'cone': return a.cold ? 'wide freezing breath — slows on hit' : 'wide force cone — knockback';
     case 'charge': return 'hold to charge a size-scaling blast + ground shockwave';
-    case 'spiritbomb': return 'channel a giant orb overhead, then hurl it';
+    case 'growingorb': return 'channel a giant orb overhead, then hurl it';
     case 'melee': return (a.fly ? 'flying ' : '') + 'melee strike that launches';
     case 'rush': return 'teleporting multi-hit rush combo';
     case 'teleport': return 'blink to your aim (breaks grabs)';
@@ -994,6 +1044,8 @@ export class HUD {
   _buildOverlays() {
     const mk = (id) => { const d = document.createElement('div'); d.id = id; d.className = 'lswovl'; document.body.appendChild(d); return d; };
     this.optionsEl = mk('hOptions'); this.howtoEl = mk('hHowto'); this.onlineEl = mk('hOnline'); this.damageEl = mk('hDamage');
+    this.establishEl = document.createElement('div'); this.establishEl.id = 'hEstablish'; this.establishEl.className = 'establish';
+    this.establishEl.style.display = 'none'; document.body.appendChild(this.establishEl);
     this.rankingsEl = mk('hRankings'); this.bracketEl = mk('hBracket'); this.atlasEl = mk('hAtlas');
     this.codexEl = mk('hCodex'); this.codexEl.classList.add('codex');
     try { this.theater = JSON.parse(localStorage.getItem('threshold_theater_v1') || 'null') || { flagship: true, seed: 1 }; } catch { this.theater = { flagship: true, seed: 1 }; }
@@ -1102,7 +1154,7 @@ export class HUD {
     this.rankingsEl.innerHTML = `<div class="obox" style="width:min(780px,94vw)">
       <div class="rkhead">
         <div class="n9">9</div>
-        <div class="rt"><b>SUPERWEAPON POWER RANKINGS</b><span>KMK 9 sports desk · the official book</span></div>
+        <div class="rt"><b>ASCENDANT POWER RANKINGS</b><span>KMK 9 sports desk · the official book</span></div>
         <div class="rkmeta">INVITATIONAL #${tournamentNo()}<br/>SOURCED: AI-v-AI + PILOTED BOUTS</div>
       </div>
       <table class="rk"><tr><th>#</th><th>Δ</th><th>Weapon</th><th>Rating</th><th>Record</th><th>KO</th><th>LeFevre</th></tr>
@@ -1429,7 +1481,7 @@ export class HUD {
       this.codexEl.innerHTML = `<div class="cfbox" style="--cfa:${esc(c.colors.accent)}">
         <div class="cftop">
           <span class="clschip">TOP SECRET // THRESHOLD</span>
-          <span class="cft">CASE FILE ${esc(fno)} · SUPERWEAPON REGISTRY · COSMIC-EYES ONLY</span>
+          <span class="cft">CASE FILE ${esc(fno)} · ASCENDANT REGISTRY · COSMIC-EYES ONLY</span>
           <div class="cfnav"><span id="cfPrev" title="Previous file (←)">‹</span><span id="cfNext" title="Next file (→)">›</span><span id="cfClose" title="Close (ESC)">✕</span></div>
         </div>
         <div class="cfhead">
@@ -1516,7 +1568,14 @@ export class HUD {
     this.optionsEl.innerHTML = `<div class="obox">
       <div class="oh">Options</div>
       ${slider('master', 'Master Volume', 1, 0.05)}
-      ${slider('voice', 'Voice · Battle Cries', 1, 0.05)}
+      <div class="dgsec">THE MIX</div>
+      ${slider('volMusic', 'Music', 1, 0.05)}
+      ${slider('volSfx', 'Combat &amp; World', 1, 0.05)}
+      ${slider('volVoice', 'Voices', 1, 0.05)}
+      ${slider('volAmbient', 'City Ambience', 1, 0.05)}
+      ${slider('volUi', 'Interface &amp; Broadcast', 1, 0.05)}
+      <div class="dgsec">GAME</div>
+      ${slider('voice', 'Battle Cry Intensity', 1, 0.05)}
       ${slider('shake', 'Screen Shake', 1.5, 0.05)}
       ${toggle('dmgNumbers', 'Damage Numbers')}
       ${toggle('hints', 'Controls Hint Panel')}
@@ -1568,6 +1627,67 @@ export class HUD {
     this.howtoEl.querySelector('#howtoDmg').onclick = () => this.showDamage();
     this.howtoEl.querySelector('#howtoTut').onclick = () => { seen(); this.onTutorial && this.onTutorial(); };
     this.howtoEl.style.display = 'flex';
+  }
+
+  // ---- THE ESTABLISHING SHOT ------------------------------------------------------------
+  // Every match opens on a title card the way a film opens on a city: the name, then the facts
+  // underneath it, then the card lifts and you are standing in it. The Danger Room gets a
+  // different one — it BOOTS rather than arrives, because it is a simulation and should say so.
+  showEstablishing(plan, opts = {}) {
+    const el = this.establishEl;
+    clearTimeout(this._estT1); clearTimeout(this._estT2);
+    const sim = !!opts.sim;
+    const esc2 = (v) => esc(String(v == null ? '' : v));
+
+    if (sim) {
+      el.className = 'establish sim';
+      el.innerHTML = `
+        <div class="estinner">
+          <div class="estkick">THRESHOLD TREATY OFFICE · TRAINING DIVISION</div>
+          <div class="esttitle">THE DANGER ROOM</div>
+          <div class="estsub">SIMULATED ENVIRONMENT</div>
+          <div class="estboot">
+            <div><b>ENVIRONMENT</b><span>PROJECTED</span></div>
+            <div><b>SUBJECT</b><span>LIVE</span></div>
+            <div><b>SAFETIES</b><span>ENGAGED</span></div>
+            <div><b>TELEMETRY</b><span>RECORDING</span></div>
+          </div>
+          <div class="estbar"><i></i></div>
+        </div>`;
+    } else {
+      const C = opts.country || {};
+      const crime = plan.crime ?? 50, safety = plan.safety ?? 50;
+      const bar = (v, good) => {
+        const pct = Math.max(0, Math.min(100, v));
+        return `<div class="estbarline"><i style="width:${pct}%;background:${good ? 'var(--good)' : 'var(--danger)'}"></i></div>`;
+      };
+      el.className = 'establish';
+      el.innerHTML = `
+        <div class="estinner">
+          <div class="estkick">${esc2(opts.kicker || 'THEATER OF OPERATIONS')}</div>
+          <div class="esttitle">${esc2(plan.name)}</div>
+          <div class="estsub">${esc2(plan.country || '')}</div>
+          <div class="eststats">
+            <div class="eststat"><b>POPULATION</b><span>${esc2(plan.popLabel || '')}</span></div>
+            <div class="eststat"><b>DISTRICTS</b><span>${esc2((plan.types || []).join(' · ') || 'MIXED')}</span></div>
+            <div class="eststat"><b>CRIME INDEX</b><span>${crime}</span>${bar(crime, false)}</div>
+            <div class="eststat"><b>SAFETY INDEX</b><span>${safety}</span>${bar(safety, true)}</div>
+            ${C.lawEnforcement != null ? `<div class="eststat"><b>POLICE RESPONSE</b><span>~${opts.eta ?? '?'}s</span></div>` : ''}
+            ${C.vigilantism ? `<div class="eststat"><b>VIGILANTISM</b><span class="${C.vigilantism === 'Banned' ? 'estbad' : ''}">${esc2(C.vigilantism.toUpperCase())}</span></div>` : ''}
+          </div>
+        </div>`;
+    }
+
+    el.style.display = 'flex';
+    // three beats: HOLD on the card, LIFT the veil, then get out of the way entirely
+    el.classList.remove('lift', 'gone');
+    void el.offsetWidth;                       // force a reflow so the transition actually plays
+    this._estT1 = setTimeout(() => el.classList.add('lift'), sim ? 1500 : 2200);
+    this._estT2 = setTimeout(() => { el.classList.add('gone'); el.style.display = 'none'; }, sim ? 3200 : 4200);
+  }
+  hideEstablishing() {
+    clearTimeout(this._estT1); clearTimeout(this._estT2);
+    if (this.establishEl) { this.establishEl.style.display = 'none'; this.establishEl.classList.add('gone'); }
   }
 
   // THE DAMAGE CODEX — the in-game half of docs/COMBAT_MANUAL.md. Every row is READ FROM THE LIVE
@@ -2199,10 +2319,10 @@ export class HUD {
     if (PF.format) this._tFormat = PF.format;
     this.title.innerHTML = `
       <div class="topbar"><button id="tAtlas">🗺 Atlas</button><button id="tRank">📊 Rankings</button><button id="tNet">🌐 Online</button><button id="tTut">🎓 Tutorial</button><button id="tOpt">⚙ Options</button><button id="tHow">❓ How to Play</button></div>
-      <div class="tag">Machine King Labs · Living Superweapon</div>
-      <h1>LIVING SUPERWEAPON</h1>
-      <div class="clsbar"><span class="clschip">TOP SECRET // THRESHOLD</span><span class="clsline">THRESHOLD TREATY OFFICE — SUPERWEAPON REGISTRY · INDEX COPY 7 OF 9 · COSMIC-EYES ONLY</span><span class="clschip">LSW-INDEX</span></div>
-      <div class="term">&gt; QUERY: SUPERWEAPON INDEX — <b id="termCount"></b> · THEATER: <span class="thchip" id="termTheater" title="Open the City Atlas">${(() => { try { const t = this.theater; if (!t || t.flagship) return 'THE WHITE CITY'; if (t.gallery) return 'PROVING GROUND'; const c = cityList()[t.cityId]; return c ? c.name.toUpperCase() : 'THE WHITE CITY'; } catch { return 'THE WHITE CITY'; } })()}</span><span class="tcur">▍</span></div>
+      <div class="tag">Machine King Labs</div>
+      <h1><span class="t1">WAR WORLD</span><span class="t2">ASCENDANTS</span></h1>
+      <div class="clsbar"><span class="clschip">TOP SECRET // THRESHOLD</span><span class="clsline">THRESHOLD TREATY OFFICE — ASCENDANT REGISTRY · INDEX COPY 7 OF 9 · COSMIC-EYES ONLY</span><span class="clschip">WWA-INDEX</span></div>
+      <div class="term">&gt; QUERY: ASCENDANT INDEX — <b id="termCount"></b> · THEATER: <span class="thchip" id="termTheater" title="Open the City Atlas">${(() => { try { const t = this.theater; if (!t || t.flagship) return 'THE WHITE CITY'; if (t.gallery) return 'PROVING GROUND'; const c = cityList()[t.cityId]; return c ? c.name.toUpperCase() : 'THE WHITE CITY'; } catch { return 'THE WHITE CITY'; } })()}</span><span class="tcur">▍</span></div>
       <div class="modes" id="modes"></div>
       <div class="selwrap">
         <div class="preview" id="pv"></div>

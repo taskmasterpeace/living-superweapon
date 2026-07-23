@@ -83,7 +83,7 @@ and `attributes.{position,aColor,aSize,aAlpha}.needsUpdate = true` re-uploads th
 **Where:** `src/engine/projectiles.js` — `Projectile` ctor (L28–29), `BeamHose` ctor (L99–102), `SpiritBomb`
 ctor (L202–203). Also `Minion`/`Construct` (`src/engine/summons.js` L16–17, L54–62).
 **Evidence:** `memory.geometries 412`; `frame.p95 10 ms`; a full GC fired mid-run. Volley heroes (VEGA
-Bakuhatsu 0.07 s, SOL Heat Flurry 0.08 s, HIVE) spawn ~13 blasts/s each, every one `new SphereGeometry` ×2 +
+Volley 0.07 s, SOL Heat Flurry 0.08 s, HIVE) spawn ~13 blasts/s each, every one `new SphereGeometry` ×2 +
 2 materials, `.dispose()`d on impact → constant allocate/upload/free churn and GC pressure.
 **Fix:** share module-level unit geometries (one unit `SphereGeometry`, one unit `CylinderGeometry`) across
 **all** projectiles/beams/bombs — exactly like `VFX` already shares `_sphere`/`_ring`/`_decalGeo` — and scale

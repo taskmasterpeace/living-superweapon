@@ -115,7 +115,7 @@ export const TYPES = {
     }
   },
 
-  // Rapid alternating-hand volley (Vegeta bakuhatsu)
+  // Rapid alternating-hand volley (alternating-hand volley)
   volley(c, def, st, g, inp) {
     if (inp.held && c.ki < (def.cost || 3)) { if (!st._dry) { st._dry = true; drained(c, g); } }
     else if (!inp.held) st._dry = false;
@@ -135,7 +135,7 @@ export const TYPES = {
     }
   },
 
-  // Kamehameha-hose / heat-beam / galick beam (traveling tip, optional charge)
+  // Wave Cannon-hose / heat-beam / violet beam (traveling tip, optional charge)
   beam(c, def, st, g, inp) {
     // finish if the live beam self-terminated (ran out of ki)
     if (st.active && st.active.dead) { st.active = null; st.cd = def.cd || 0; }
@@ -197,7 +197,7 @@ export const TYPES = {
     }
   },
 
-  // Big Bang — charge scales size/damage/radius; ground impact => shockwave + lightning
+  // Nova Burst — charge scales size/damage/radius; ground impact => shockwave + lightning
   charge(c, def, st, g, inp) {
     if (inp.pressed && ready(c, def, st) && !st.charging) { st.charging = true; st.chargeT = 0; st.sfx = g.audio.charge(); }
     if (st.charging) {
@@ -232,8 +232,8 @@ export const TYPES = {
     }
   },
 
-  // Spirit Bomb — grow overhead, then hurl
-  spiritbomb(c, def, st, g, inp) {
+  // Star Sphere — grow overhead, then hurl
+  growingorb(c, def, st, g, inp) {
     if (st.active && st.active.dead) { st.active = null; st.cd = def.cd || 0; if (st.sfx) { st.sfx.stop(); st.sfx = null; } }
     if (inp.pressed && ready(c, def, st) && !st.active) {
       pay(c, def, st); st.active = g.projectiles.spawnSpiritBomb(c, { minR: def.minR || 4, maxR: def.maxR || 18, growRate: def.growRate || 8, kiPerSec: def.kiPerSec || 16, color: def.color, color2: def.color2 });

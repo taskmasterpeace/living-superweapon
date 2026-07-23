@@ -34,8 +34,15 @@ export function keymap(name) { return KEYMAPS[name] || KEYMAPS[name === 'southpa
 const LS = 'threshold_settings_v1';
 
 export const SETTINGS = {
-  master: 1,        // master volume 0–1 (scales the AudioBus master gain)
-  voice: 1,         // DBZ voice synth loudness 0–1 (yell/grunt/cry)
+  // ---- THE MIX. One fader per bus, so you can turn the music down without turning the
+  // punches down. These multiply the static balance in audio.js BUS_DEFAULT.
+  master: 1,        // master volume 0–1
+  volMusic: 1,      // score
+  volSfx: 1,        // combat, impacts, weapons, the world
+  volVoice: 1,      // battle cries AND civilian street voices
+  volAmbient: 1,    // the city bed — traffic, wind, surf, crowd murmur
+  volUi: 1,         // menus, news stings, broadcast furniture
+  voice: 1,         // DBZ battle-cry synth loudness (separate from the voice BUS)
   shake: 1,         // screen-shake multiplier 0–1.5
   dmgNumbers: true, // floating damage numbers
   hints: true,      // bottom-right controls hint panel
@@ -55,7 +62,17 @@ export function saveSettings() {
 // Push the store into the running game. Safe to call any time (audio may not be inited yet).
 export function applySettings(game) {
   const a = game.audio, w = game.world, h = game.hud;
-  if (a) { a.voiceMult = SETTINGS.voice; if (a.master) a.master.gain.value = 0.32 * SETTINGS.master; }
+  if (a) {
+    a.voiceMult = SETTINGS.voice;
+    if (a.master) a.master.gain.value = 0.32 * SETTINGS.master;
+    if (a.setBus) {                       // the per-bus faders (audio.js builds the buses on init)
+      a.setBus('music', SETTINGS.volMusic);
+      a.setBus('sfx', SETTINGS.volSfx);
+      a.setBus('voice', SETTINGS.volVoice);
+      a.setBus('ambient', SETTINGS.volAmbient);
+      a.setBus('ui', SETTINGS.volUi);
+    }
+  }
   if (w) {
     w.shakeMult = SETTINGS.shake;
     w.qualityOverride = SETTINGS.quality === 'auto' ? null : +SETTINGS.quality;

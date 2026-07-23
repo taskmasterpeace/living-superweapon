@@ -86,6 +86,8 @@ export class Pedestrians {
     this.mesh.setMatrixAt(i, _m4); this.head.setMatrixAt(i, _m4);
   }
 
+  // the soundscape handle, set by game so blast()/scare() can speak without a game reference
+  set soundscape(v) { this._ss = v; }
   scare(x, z, r) {
     const r2 = r * r;
     for (let i = 0; i < COUNT; i++) {
@@ -94,6 +96,7 @@ export class Pedestrians {
       if (dx * dx + dz * dz > r2) continue;
       this.state[i] = FLEE; this.t[i] = 2.2 + Math.random() * 1.6;
       this.dir[i] = Math.atan2(dx, dz) + (Math.random() - 0.5) * 0.5;
+      if (this._ss && Math.random() < 0.35) this._ss.say({ x: this.px[i], z: this.pz[i] }, 'fear', { urgent: true });
     }
   }
   blast(x, z, r) {
@@ -103,6 +106,8 @@ export class Pedestrians {
       const dx = this.px[i] - x, dz = this.pz[i] - z;
       if (dx * dx + dz * dz > r2) continue;
       this.state[i] = DOWN; this.t[i] = 4.5; this._write(i); downed++;
+      // A PERSON GOING DOWN SCREAMS. This is the sound that should make you feel it.
+      if (this._ss && downed <= 3) this._ss.say({ x: this.px[i], z: this.pz[i] }, 'scream', { urgent: true, gain: 0.5 });
     }
     if (downed) { this.mesh.instanceMatrix.needsUpdate = true; this.head.instanceMatrix.needsUpdate = true; }
     this.scare(x, z, r * 3.2);
@@ -166,14 +171,23 @@ export class Pedestrians {
       }
       if (P) {
         const dx = P.pos.x - this.px[i], dz = P.pos.z - this.pz[i], d2 = dx * dx + dz * dz;
-        if (d2 < 120) { this.state[i] = FLEE; this.t[i] = 1.6; this.dir[i] = Math.atan2(-dx, -dz); }
+        if (d2 < 120) {
+          this.state[i] = FLEE; this.t[i] = 1.6; this.dir[i] = Math.atan2(-dx, -dz);
+          // they SAY something when they bolt — the closer you are, the more panicked
+          if (game.soundscape) game.soundscape.say({ x: this.px[i], z: this.pz[i] }, d2 < 60 ? 'panic' : 'fear', { urgent: true });
+        }
         else if (d2 < 1100 && this.t[i] <= 0) {
           // Seeing you HURT someone is different from seeing you exist. A witness to violence in
           // a place that bans vigilantism may draw instead of filming.
           const witnessed = game.police && game.police.heatOf && game.police.heatOf(P) > 8;
           if (witnessed && Math.random() < (this.armRate || 0)) {
             this.state[i] = ARMED; this.t[i] = 6 + Math.random() * 6; this._fire[i] = 0.4;
-          } else { this.state[i] = FILM; this.t[i] = 2 + Math.random() * 2.5; }
+            if (game.soundscape) game.soundscape.say({ x: this.px[i], z: this.pz[i] }, Math.random() < 0.5 ? 'anger' : 'challenge');
+          } else {
+            this.state[i] = FILM; this.t[i] = 2 + Math.random() * 2.5;
+            // seeing a superweapon in the street is worth a word — awe, or pointing them out
+            if (game.soundscape && Math.random() < 0.5) game.soundscape.say({ x: this.px[i], z: this.pz[i] }, Math.random() < 0.5 ? 'awe' : 'point');
+          }
           this.dir[i] = Math.atan2(dx, dz);
         }
         else if (this.t[i] <= 0) this.t[i] = 3 + Math.random() * 4;

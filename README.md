@@ -115,11 +115,11 @@ Plug in any standard/DualShock pad (press a button to activate it). Everything t
 ### Enemies fight like their counterparts
 
 Every hero has an **AI style** true to who they're based on (`src/data/characters.js → ai`, driven by `src/engine/ai.js`):
-**KANO** (Goku) is a *trickster* — teleports in, kamehamehas, blinks out when low; **VEGA** (Vegeta) is a relentless
-*beamer* that crowds you with ki blasts and Big Bangs; **AURUM** (Green Lantern) is a *zoner* that walls up and drops
+**KANO** is a *trickster* — teleports in, fires wave cannons, blinks out when low; **VEGA** is a relentless
+*beamer* that crowds you with ki blasts and Nova Bursts; **AURUM** is a *zoner* that walls up and drops
 turrets; **NOVA/PYRE** are *artillery* that kite and rain fire; **VOLT/TORCH/VANGUARD** are *rushers* that blitz;
-**HIVE** is a *summoner* that hides behind drones; **APEX** (Cell) is a *grappler* that seeks throws to heal;
-**SPECTER** (Vision) *phases* to dodge. They **block, counter-beam, transform when low, and fly up to fight airborne
+**HIVE** is a *summoner* that hides behind drones; **APEX** is a *grappler* that seeks throws to heal;
+**SPECTER** *phases* to dodge. They **block, counter-beam, transform when low, and fly up to fight airborne
 foes** — and every attack now **aims in 3D**, angling up at flyers and down at grounded targets.
 
 ### Field of vision (fog of war)
@@ -168,7 +168,7 @@ Melee is deliberately **violent**: every clean strike, heavy-melee, and throw fi
 energy spray, **freezes both fighters** (hit-stop), kicks the camera, and plays a thud-and-crack; finishers add a **slow-mo**
 beat and a white screen-flash. Guarded hits shrug off with a small blue spark instead.
 
-Charge attacks (Big Bang, Wave Cannon, Spirit Bomb): **hold** the button to charge, **release** to fire.
+Charge attacks (Nova Burst, Wave Cannon, Star Sphere): **hold** the button to charge, **release** to fire.
 The longer you hold, the bigger, more damaging, and wider the blast — and the harder the ground shockwave.
 
 ### Ragdoll KOs
@@ -196,7 +196,7 @@ combo counter, and per-hero kit chips.
 
 ## The signature mechanic: beams are hoses, not lasers
 
-Real "eye-beam" lasers move too fast to feel like anything. Here every beam is a **kamehameha-hose**:
+Real "eye-beam" lasers move too fast to feel like anything. Here every beam is a **wave-hose**:
 a bright **projectile tip** races out at a finite speed, *dragging a thick beam behind it*, and you can
 **steer it with your cursor** while it's firing. Thin heat-rays are fast and precise; wide energy waves
 are slower and shove enemies back. (`src/engine/projectiles.js → BeamHose`.)
@@ -219,20 +219,20 @@ Each hero is a different stress-test of the engine. **No two kits share a shape.
 
 | # | Hero | Archetype | Showcases |
 |---|------|-----------|-----------|
-| 1 | **SOL** — Man of Sunlight | Superman | thin **Heat Ray** beam · wide **Arctic Breath** cold cone · flying **Sky Smash** fist · **Solar Overload** buff |
-| 2 | **KANO** — Spirit Warrior | Goku | chargeable **Wave Cannon** (kamehameha) · **Dragon Rush** teleport-combo · **Instant Transmission** · **Spirit Bomb** |
-| 3 | **VEGA** — Fallen Prince | Vegeta | left-right **Bakuhatsu** volley · size-scaling **Big Bang** (ground shockwave + lightning) · **Galick Gun** · **Final Flash** |
-| 4 | **AURUM** — The Willbearer | Green Lantern | **cursor-steered constructs**: rocket **Fist**, falling **Hammer**, **Barrier** wall, **Sentry** turret |
+| 1 | **SOL** — Man of Sunlight | solar paragon | thin **Heat Ray** beam · wide **Arctic Breath** cold cone · flying **Sky Smash** fist · **Solar Overload** buff |
+| 2 | **KANO** — Spirit Warrior | spirit martial artist | chargeable **Wave Cannon** (wave cannon) · **Comet Rush** teleport-combo · **Snap Transit** · **Star Sphere** |
+| 3 | **VEGA** — Fallen Prince | proud beamer | left-right **Volley** volley · size-scaling **Nova Burst** (ground shockwave + lightning) · **Violet Lance** · **Final Arc** |
+| 4 | **AURUM** — The Willbearer | construct zoner | **cursor-steered constructs**: rocket **Fist**, falling **Hammer**, **Barrier** wall, **Sentry** turret |
 | 5 | **NOVA** — Star Sovereign | cosmic artillery | **Star Lance** beam · **Nova Core** charge · **Solar Wind** push · **Meteor Storm** ultimate |
 | 6 | **RIME** — The Deep Cold | cryomancer | **Frost Breath** slow-cone · **Ice Wall** · **Cryo Beam** · **Absolute Zero** charge |
 | 7 | **VOLT** — The Overclock | speedster | **Lightning Flurry** · fast **Arc Beam** · **Blink** · **Overclock** haste |
 | 8 | **WARDEN** — Gravity Anchor | telekinetic | wide **Force Push** · **Graviton** lob · **Singularity** implosion · **Collapse** |
 | 9 | **HIVE** — The Conclave | summoner | **Drone Swarm** · **Sentinel** turret · **Hunter Pack** · **Overmind** |
 | 10 | **PYRE** — Living Wildfire | fire bruiser | lobbed **Fireball** · **Flamethrower** cone · **Magma Bomb** charge · **Rain of Fire** |
-| 11 | **TORCH** — The Human Flame | Human Torch | fast fire-flyer · **Flame Jet** · **Fire Blast** cone · thorns (**burns grabbers**) · **Supernova** |
-| 12 | **APEX** — The Perfect Being | Cell | **Kamehameha** · **absorbing throws** (lifesteal) · **Regenerate** · **Zanzoken** blink · Perfect Kamehameha |
-| 13 | **SPECTER** — The Synthezoid | Vision | **Intangibility** (energy phase) · **Density Punch** · **Solar Beam** · **Max Density** |
-| 14 | **VANGUARD** — The Invincible | invincible flyer | **Flying Tackle** · **Sky Combo** aerial rush · **Invincible** i-frames · **Laser Vision** |
+| 11 | **TORCH** — The Human Flame | fire flyer | fast fire-flyer · **Flame Jet** · **Fire Blast** cone · thorns (**burns grabbers**) · **Supernova** |
+| 12 | **APEX** — The Perfect Being | absorbing grappler | **Wave Cannon** · **absorbing throws** (lifesteal) · **Regenerate** · **Afterimage** blink · Perfect Wave |
+| 13 | **SPECTER** — The Synthezoid | phasing synthezoid | **Intangibility** (energy phase) · **Density Punch** · **Solar Beam** · **Max Density** |
+| 14 | **VANGUARD** — The Invincible | invincible flyer | **Flying Tackle** · **Sky Combo** aerial rush · **Invincible** i-frames · **Eye Beam** |
 
 ---
 
@@ -263,11 +263,11 @@ src/
 ```
 
 **How a power works:** a character's slot (`lmb`, `q`, …) holds an ability *definition* like
-`{ type:'charge', name:'Big Bang', maxCharge:2.4, minR:1.3, maxR:6.2, dmgMin:22, dmgMax:84, shock:true }`.
+`{ type:'charge', name:'Nova Burst', maxCharge:2.4, minR:1.3, maxR:6.2, dmgMin:22, dmgMax:84, shock:true }`.
 Each frame the engine builds an **intent** (from the keyboard/mouse for the player, from `ai.js` for bots)
 and dispatches it through `abilities.js → TYPES[type]`. Player and AI run the *exact same* code path.
 
-**Ability types:** `melee · rush · projectile · volley · beam · cone · charge · spiritbomb ·
+**Ability types:** `melee · rush · projectile · volley · beam · cone · charge · growingorb ·
 teleport · dash · summon · construct · buff · meteor`. Adding a new hero is pure data; adding a new
 *kind* of power is one new entry in the `TYPES` registry.
 

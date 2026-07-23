@@ -15,6 +15,7 @@ import { Netplay } from './engine/netplay.js';
 import { Tournament } from './engine/tournament.js';
 import { TouchControls, isTouchDevice } from './core/touch.js';
 import { UINav } from './core/uinav.js';
+import { Soundscape } from './core/soundscape.js';
 
 const canvas = document.getElementById('game');
 const input = new Input(); input.bind(canvas);
@@ -54,6 +55,10 @@ game.touch = touch;
 // CONTROLLER MENU NAVIGATION — makes every screen drivable from a pad (Steam Deck).
 const uinav = new UINav(game, hud);
 game.uinav = uinav;
+// THE SOUNDSCAPE — city ambience + civilian voices. Starts on the first audio unlock.
+const soundscape = new Soundscape(audio);
+game.soundscape = soundscape;
+game.peds.soundscape = soundscape;
 
 const tutorial = new Tutorial(game, hud);
 // ---- ONLINE: rooms + netcode (Supabase Realtime transport) ----
@@ -63,7 +68,7 @@ netplay.onMatchStart = (cfg) => enter(cfg);
 netplay.onMatchEnd = () => openMenu();
 netplay.onLobby = () => { if (hud.onlineEl.style.display === 'flex') hud.renderOnline(); };
 function enter(cfg) {
-  audio.init(); audio.resume(); applySettings(game);   // master gain exists only after init
+  audio.init(); audio.resume(); applySettings(game); soundscape.start();   // buses exist only after init
   const c = (typeof cfg === 'string') ? { mode: 'training', p1: cfg } : cfg;
   // THE INVITATIONAL: bracket-first flow — seeding view before round 1, standings between rounds,
   // the champion card when it's done. The Tournament object rides in the cfg across matches.
@@ -100,11 +105,22 @@ function beginMatch(c) {
   document.body.classList.add('playing');
   started = true; game._lastCfg = c;
   hud.hideEndScreen(); hud.hideTitle();
+  soundscape.music('combat');
+  // THE ESTABLISHING SHOT — the city names itself before you're standing in it.
+  try {
+    const plan = game.world.plan;
+    if (plan) {
+      const sim = (c.mode || 'training') === 'training';
+      const C = countryOf(plan.country) || {};
+      hud.showEstablishing(plan, { sim, country: C, eta: game.police ? Math.round(game.police._responseDelay()) : null,
+        kicker: c.mode === 'tournament' ? 'THE INVITATIONAL · THEATER' : 'THEATER OF OPERATIONS' });
+    }
+  } catch (err) { console.error('establishing', err); }
   if (c.tutorial) tutorial.begin(); else tutorial.skip();
 }
 hud.onBracketContinue = () => { if (game._lastCfg) enter(game._lastCfg); };
 hud.onProvingGround = () => enter({ mode: 'training', p1: hud.selectedHero || 'sol' });
-function openMenu() { game.running = false; touch.show(false); document.body.classList.remove('playing'); hud.hideEndScreen(); hud.buildTitle(enter); hud.showTitle(); }
+function openMenu() { soundscape.music('menu'); game.running = false; touch.show(false); document.body.classList.remove('playing'); hud.hideEndScreen(); hud.buildTitle(enter); hud.showTitle(); }
 
 // ---- ORIGIN: install saved customs, wire the forge ----
 installCustoms(ROSTER);
@@ -146,7 +162,7 @@ addEventListener('blur', () => {
   if (started && game.running && !hud.titleOpen && !game.matchOver) { game.running = false; hud.setPaused(true); game._blurPaused = true; }
 });
 // (2) AUDIO UNLOCK — browsers block sound until a gesture; take the first one we get.
-const unlock = () => { try { audio.init(); audio.resume(); applySettings(game); } catch {} };
+const unlock = () => { try { audio.init(); audio.resume(); applySettings(game); soundscape.start(); } catch {} };
 addEventListener('pointerdown', unlock, { once: true });
 addEventListener('keydown', unlock, { once: true });
 // (3) REMEMBER THE LAST LOADOUT — hero, mode and tournament format survive a reload.
@@ -221,6 +237,7 @@ function frame(now) {
     if (started) {
       hud.update(); padSystem();
       uinav.update(Math.min(dt, 0.05));
+      if (game.running) soundscape.update(Math.min(dt, 0.05), game);
       if (game.running) tutorial.update(Math.min(dt, 0.05));
       if (game.running) netplay.update(Math.min(dt, 0.05));
       // WHEEL: classic swaps hero; the other schemes cycle your selected POWER instead, which is
@@ -238,7 +255,7 @@ function frame(now) {
 requestAnimationFrame(frame);
 
 // expose for debugging + performance benchmarking
-window.LSW = { game, hud, ROSTER, runSlot, performEvade, input, tutorial, netplay, uinav, SETTINGS, KEYMAPS, creator: { ui: creator, freshPicks, buildDef, tally, validate, saveCustom, deleteCustom, loadCustoms } };
+window.LSW = { game, hud, ROSTER, runSlot, performEvade, input, tutorial, netplay, uinav, soundscape, SETTINGS, KEYMAPS, creator: { ui: creator, freshPicks, buildDef, tally, validate, saveCustom, deleteCustom, loadCustoms } };
 window.LSW.runBenchmark = (opts) => runBenchmark(game, hud, opts);
 if (location.search.includes('bench')) {
   addEventListener('load', () => setTimeout(async () => {

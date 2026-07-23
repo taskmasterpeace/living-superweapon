@@ -1,10 +1,25 @@
-// Living Superweapon — lightweight WebAudio synth SFX (no assets needed).
+// WAR WORLD: ASCENDANTS — the sound engine. Entirely synthesised WebAudio; no sample assets, which
+// is what lets the whole game ship as one offline file.
+//
+// THE MIX. Everything used to connect straight to a single master gain, so there was no way to
+// turn the music down without turning the punches down. There is now a real bus structure:
+//
+//     source → BUS (music · sfx · voice · ambient · ui) → glue compressor → master → out
+//
+// Each bus has its own fader in Options. The glue compressor is the "mix it down" step: it rides
+// the whole programme so a star sphere over a busy street doesn't clip, and quiet moments still
+// have presence. Buses are ducked against each other where it matters (see duck()).
 // PROXIMITY: combat methods take an optional world position; gain falls off with distance from the
 // listener (the player). Explosions carry farther than cracks. listen(x,z) is set every frame.
+// Per-bus baseline gains — the STATIC MIX. These are the balance decisions; the player's faders
+// multiply them. Voice sits forward of ambience; music sits under everything.
+const rand2 = (a, b) => a + Math.random() * (b - a);
+const BUS_DEFAULT = { music: 0.34, sfx: 1.0, voice: 0.92, ambient: 0.52, ui: 0.7 };
+
 export class AudioBus {
   constructor() { this.ctx = null; this.master = null; this.ok = false; this.muted = false; this._lx = 0; this._lz = 0; this._hasL = false; this._sus = new Set(); }
   // WATCHDOG for sustained sounds (charge hums): a handle whose owner stops ramping it — KO'd
-  // mid-charge, disposed on match restart, spirit bomb starved — self-silences instead of ringing
+  // mid-charge, disposed on match restart, star sphere starved — self-silences instead of ringing
   // forever (the "stuck tone at match start" bug). Called every frame from game.update.
   sweep() {
     if (!this._sus.size) return;
@@ -25,20 +40,57 @@ export class AudioBus {
       this.ctx = new (window.AudioContext || window.webkitAudioContext)();
       this.master = this.ctx.createGain();
       this.master.gain.value = 0.32;
-      this.master.connect(this.ctx.destination);
+
+      // GLUE COMPRESSOR — the mixdown. Gentle ratio, slow-ish release, so it evens out the
+      // programme rather than pumping. Without it, a big blast over city ambience clips hard.
+      const comp = this.ctx.createDynamicsCompressor();
+      comp.threshold.value = -14; comp.knee.value = 26; comp.ratio.value = 3.2;
+      comp.attack.value = 0.004; comp.release.value = 0.22;
+      this.comp = comp;
+
+      // A gentle high shelf takes the harsh edge off the synth stack on headphones.
+      const air = this.ctx.createBiquadFilter();
+      air.type = 'highshelf'; air.frequency.value = 5200; air.gain.value = -2.2;
+
+      this.master.connect(comp); comp.connect(air); air.connect(this.ctx.destination);
+
+      // ---- THE BUSES. One fader each, exposed in Options → Audio.
+      this.bus = {};
+      for (const name of ['music', 'sfx', 'voice', 'ambient', 'ui']) {
+        const g = this.ctx.createGain();
+        g.gain.value = BUS_DEFAULT[name];
+        g.connect(this.master);
+        this.bus[name] = g;
+      }
+      this._busLevel = { ...BUS_DEFAULT };
       this.ok = true;
     } catch (e) { this.ok = false; }
   }
   resume() { if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume(); }
   get t() { return this.ctx.currentTime; }
 
-  _env(node, dur, peak = 1, atk = 0.005) {
+  _env(node, dur, peak = 1, atk = 0.005, bus = 'sfx') {
     const g = this.ctx.createGain();
     g.gain.setValueAtTime(0.0001, this.t);
     g.gain.exponentialRampToValueAtTime(peak, this.t + atk);
     g.gain.exponentialRampToValueAtTime(0.0001, this.t + dur);
-    node.connect(g); g.connect(this.master);
+    node.connect(g); g.connect(this.bus[bus] || this.master);
     return g;
+  }
+  // Set one bus fader, 0..1.5. Called by applySettings.
+  setBus(name, v) {
+    if (!this.ok || !this.bus[name]) return;
+    this._busLevel[name] = v;
+    this.bus[name].gain.setTargetAtTime(BUS_DEFAULT[name] * v, this.t, 0.05);
+  }
+  // DUCKING — pull a bus down briefly so something more important cuts through. The news sting
+  // and the KO wail duck the ambience; the announcer ducks the music.
+  duck(name, amount = 0.35, dur = 0.9) {
+    if (!this.ok || !this.bus[name]) return;
+    const g = this.bus[name].gain, base = BUS_DEFAULT[name] * (this._busLevel[name] ?? 1);
+    g.cancelScheduledValues(this.t);
+    g.setTargetAtTime(base * amount, this.t, 0.04);
+    g.setTargetAtTime(base, this.t + dur, 0.35);
   }
   _noise(dur) {
     const n = Math.floor(this.ctx.sampleRate * dur);
@@ -156,7 +208,7 @@ export class AudioBus {
     const g = this.ctx.createGain(); g.gain.setValueAtTime(0.0001, this.t);
     g.gain.exponentialRampToValueAtTime(0.14, this.t + 0.3);
     const f = this.ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 600; f.Q.value = 4;
-    o.connect(f); f.connect(g); g.connect(this.master); o.start();
+    o.connect(f); f.connect(g); g.connect(this.bus.sfx); o.start();
     const h = {
       o, g, f, last: performance.now(),
       ramp: (lvl) => { h.last = performance.now(); try { f.frequency.setTargetAtTime(300 + lvl * 2600, this.t, 0.05); } catch (e) {} },
@@ -198,7 +250,7 @@ export class AudioBus {
         g.gain.setValueAtTime(0.0001, this.t + at);
         g.gain.exponentialRampToValueAtTime(i === 2 ? 0.16 : 0.11, this.t + at + 0.02);
         g.gain.exponentialRampToValueAtTime(0.0001, this.t + at + (i === 2 ? 0.75 : 0.2));
-        lp.connect(g); g.connect(this.master);
+        lp.connect(g); g.connect(this.bus.ui);
         o.start(this.t + at); o.stop(this.t + at + 0.8);
       }
     });
@@ -206,7 +258,7 @@ export class AudioBus {
     sh.frequency.setValueAtTime(1760, this.t + 0.58); sh.frequency.exponentialRampToValueAtTime(2217, this.t + 0.95);
     const shg = this.ctx.createGain(); shg.gain.setValueAtTime(0.0001, this.t + 0.58);
     shg.gain.exponentialRampToValueAtTime(0.05, this.t + 0.62); shg.gain.exponentialRampToValueAtTime(0.0001, this.t + 1.15);
-    sh.connect(shg); shg.connect(this.master); sh.start(this.t + 0.58); sh.stop(this.t + 1.2);
+    sh.connect(shg); shg.connect(this.bus.ui); sh.start(this.t + 0.58); sh.stop(this.t + 1.2);
   }
   // staticBurst: analog snow between replay clips
   staticBurst(dur = 0.28) {
@@ -238,6 +290,65 @@ export class AudioBus {
     n2.start(t + 0.02); n2.stop(t + 0.2);
   }
   // siren: the two-tone whoop — dispatch and arrival announcements (proximity-attenuated)
+  // ---- BODY TYPES: what a fighter is MADE OF decides what they sound like ----------------
+  // A robot landing is servo whine and a plate clang. A stone golem is a boulder dropping. An
+  // energy being barely makes contact at all. Set `def.body` on a character; `flesh` is default.
+  // Used by landings, heavy impacts and ragdoll contact.
+  land(power = 1, body = 'flesh', pos = null) {
+    if (!this.ok) return;
+    const pg = this._pg(pos, 150); if (!pg) return;
+    const p = Math.min(2.2, power) * pg;
+    const B = {
+      flesh:  { thump: 62,  dur: 0.20, noiseF: 340,  noiseQ: 1.0, ring: 0,    gain: 0.42 },
+      metal:  { thump: 84,  dur: 0.30, noiseF: 2100, noiseQ: 3.5, ring: 430,  gain: 0.50 },
+      stone:  { thump: 44,  dur: 0.40, noiseF: 520,  noiseQ: 1.4, ring: 0,    gain: 0.62 },
+      energy: { thump: 150, dur: 0.14, noiseF: 3000, noiseQ: 6.0, ring: 1200, gain: 0.22 },
+      insect: { thump: 96,  dur: 0.13, noiseF: 1500, noiseQ: 5.0, ring: 0,    gain: 0.30 },
+    }[body] || null;
+    const C = B || { thump: 62, dur: 0.2, noiseF: 340, noiseQ: 1, ring: 0, gain: 0.42 };
+
+    // the impact body — a fast downward sine thump
+    const o = this.ctx.createOscillator(); o.type = 'sine';
+    o.frequency.setValueAtTime(C.thump * 1.9, this.t);
+    o.frequency.exponentialRampToValueAtTime(C.thump * 0.6, this.t + C.dur);
+    this._env(o, C.dur, C.gain * p * 0.5, 0.004).gain;
+    o.start(); o.stop(this.t + C.dur + 0.05);
+
+    // the surface character — gravel, plate, or crackle
+    const n = this._noise(C.dur * 1.2);
+    const bp = this.ctx.createBiquadFilter(); bp.type = 'bandpass';
+    bp.frequency.value = C.noiseF; bp.Q.value = C.noiseQ;
+    const ng = this.ctx.createGain();
+    ng.gain.setValueAtTime(0.0001, this.t);
+    ng.gain.exponentialRampToValueAtTime(C.gain * p * 0.30, this.t + 0.006);
+    ng.gain.exponentialRampToValueAtTime(0.0001, this.t + C.dur * 1.2);
+    n.connect(bp); bp.connect(ng); ng.connect(this.bus.sfx); n.start();
+
+    // METAL and ENERGY ring afterwards — the tell that this is not a person
+    if (C.ring) {
+      const r = this.ctx.createOscillator(); r.type = body === 'metal' ? 'triangle' : 'sine';
+      r.frequency.setValueAtTime(C.ring * rand2(0.94, 1.06), this.t + 0.01);
+      r.frequency.exponentialRampToValueAtTime(C.ring * 0.86, this.t + 0.7);
+      const rg = this.ctx.createGain();
+      rg.gain.setValueAtTime(0.0001, this.t + 0.01);
+      rg.gain.exponentialRampToValueAtTime(C.gain * p * 0.13, this.t + 0.03);
+      rg.gain.exponentialRampToValueAtTime(0.0001, this.t + 0.75);
+      r.connect(rg); rg.connect(this.bus.sfx); r.start(this.t + 0.01); r.stop(this.t + 0.8);
+    }
+    // heavy landings shake loose debris
+    if (p > 1.1 && body !== 'energy') {
+      for (let i = 0; i < 3; i++) {
+        const d = this._noise(0.05);
+        const f = this.ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = rand2(900, 2600); f.Q.value = 8;
+        const g = this.ctx.createGain();
+        const at = this.t + 0.05 + i * rand2(0.03, 0.11);
+        g.gain.setValueAtTime(0.0001, at); g.gain.exponentialRampToValueAtTime(0.03 * p, at + 0.004);
+        g.gain.exponentialRampToValueAtTime(0.0001, at + 0.12);
+        d.connect(f); f.connect(g); g.connect(this.bus.sfx); d.start(at);
+      }
+    }
+  }
+
   siren(pos = null, whoops = 2) {
     if (!this.ok || this.muted) return;
     const pg = this._pg(pos, 260); if (!pg) return;
@@ -253,7 +364,7 @@ export class AudioBus {
       g.gain.setValueAtTime(0.0001, this.t + at);
       g.gain.exponentialRampToValueAtTime(0.085 * pg, this.t + at + 0.03);
       g.gain.exponentialRampToValueAtTime(0.0001, this.t + at + 0.42);
-      lp.connect(g); g.connect(this.master);
+      lp.connect(g); g.connect(this.bus.sfx);
       o.start(this.t + at); o.stop(this.t + at + 0.45);
     }
   }

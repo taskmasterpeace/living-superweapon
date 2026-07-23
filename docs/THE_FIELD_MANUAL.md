@@ -1,4 +1,4 @@
-# LIVING SUPERWEAPON — THE FIELD MANUAL
+# WAR WORLD: ASCENDANTS — THE FIELD MANUAL
 
 *A complete guide to the game, written to be read aloud.*
 
@@ -6,7 +6,7 @@
 
 ## PART ONE — WHAT THIS GAME IS
 
-Living Superweapon is a game about being a person who can level a city block, standing in a city
+War World: Ascendants is a game about being a person who can level a city block, standing in a city
 full of people who cannot.
 
 You look down at it from above and at an angle, the way you'd look at a model on a table. The

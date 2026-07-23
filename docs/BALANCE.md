@@ -14,7 +14,7 @@ kits. **Tuned:** jab-family damage −10–15% on those five (claw/escrima/flurr
 cd 1.0→1.1.
 
 **Undertuned cluster — standing chargers** (net < −90): TITAN −118, VEGA −98. They charge beams into
-rushdown and eat it. **Tuned:** TITAN speed 26→29 + Pulse Rifle 6→7 dmg; VEGA Bakuhatsu 6→7 dmg
+rushdown and eat it. **Tuned:** TITAN speed 26→29 + Pulse Rifle 6→7 dmg; VEGA Volley 6→7 dmg
 (his poke needed teeth). PYRE fireball speed 62→72 (his opener kept whiffing).
 
 **Working as designed (NOT tuned):** GALE −66 and SANDRA −54 are Threat-Low/High gear humans against

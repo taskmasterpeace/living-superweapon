@@ -33,13 +33,13 @@ Gravity-control and black-hole are two different entries — never one vague "gr
 |---|---|---|
 | `beam` | traveling-tip hose (thin=piercing, wide=force) | Heat Ray, Wave Cannon, Twin Cannon |
 | `projectile` | single bolt/lob (homing, grav, payloads) | Ki Blast, Graviton, Creeping Cloud |
-| `volley` | rapid alternating spray | Bakuhatsu, Arrow Storm |
+| `volley` | rapid alternating spray | Volley, Arrow Storm |
 | `cone` | breath — cold (freeze), force (push), gas (DoT) | Arctic Breath, Choking Veil |
-| `charge` | hold-to-grow orb + shockwave | Big Bang, Asphyxia |
-| `spiritbomb` | grow overhead, hurl | Spirit Bomb, Singularity |
+| `charge` | hold-to-grow orb + shockwave | Nova Burst, Asphyxia |
+| `growingorb` | grow overhead, hurl | Star Sphere, Singularity |
 | `melee` | lunging strike (dmgClass slash for blades) | Sky Smash, Plasma Blade |
-| `rush` | teleporting multi-hit combo | Dragon Rush, Lightning Flurry |
-| `teleport` | blink to aim | Instant Transmission |
+| `rush` | teleporting multi-hit combo | Comet Rush, Lightning Flurry |
+| `teleport` | blink to aim | Snap Transit |
 | `dash` | i-frame burst | Super Dash |
 | `phase` | hold intangibility | Gas Form, Intangibility |
 | `buff` | transform/power-up | Solar Overload, Overdrive Core |

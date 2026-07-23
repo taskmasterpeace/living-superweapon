@@ -126,7 +126,7 @@ export function powerNumbers(ab) {
     case 'portal': return `door pair · ${ab.range}u · ${ab.dur}s`;
     case 'buff': return `×${ab.mult} for ${ab.dur}s${ab.heal ? ` · +${ab.heal} hp` : ''}${ab.reveal ? ' · WALLHACK' : ''}`;
     case 'meteor': return `${ab.count}×${ab.damage} rain · blast ${ab.blast}`;
-    case 'spiritbomb': return `grows ${ab.minR}→${ab.maxR}u · hurl`;
+    case 'growingorb': return `grows ${ab.minR}→${ab.maxR}u · hurl`;
     case 'bow': return `${ab.dmgMin}–${ab.dmgMax} dmg draw · payloads`;
     case 'quiver': return `cycles broadheads`;
     case 'mine': return `${ab.max}×${ab.damage} traps · blast ${ab.blast}`;

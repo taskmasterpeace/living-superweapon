@@ -12,7 +12,7 @@ The canonical answers. Anything here overrides defaults. Source: creator voice-d
 - **Now-scope:** arena fighter + PvP skirmish on destructible terrain; concept layer first.
 
 ## Combat rulings
-- **TTK:** depends on the matchup — two martial artists is a long fight, Goku-vs-Punisher is not.
+- **TTK:** depends on the matchup — two martial artists is a long fight, beamer-vs-gunman is not.
   **Lopsided is honest. No scaling. Hardcore.** The announcer calls out mismatches.
 - **Guard-crush knockback scales with the ATTACKER** (Hulk ≠ Bruce Lee — Strength already drives this).
 - **Beams eat bullets:** only the most powerful beams, and it depends on energy put in →
@@ -35,7 +35,7 @@ The canonical answers. Anything here overrides defaults. Source: creator voice-d
   (VOLT, HIVE, KRAKEN — sags, drifts, no hover) · 2 levitator (repositions, no cruise: RIME, WARDEN,
   PYRE, RIFT, TITAN, KIVULI) · 3 full flight (SOL, KANO, VEGA, AURUM, NOVA, TORCH, APEX, SPECTER, VANGUARD).
 - **Ride/trail styles** — SHIPPED: RIME **rides a frozen board** (Iceman), TORCH/PYRE leave a **fire wake**
-  (old Human Torch), TITAN thruster exhaust. More styles welcome per character.
+  (the flame flyer), TITAN thruster exhaust. More styles welcome per character.
 - **Altitude bands: FOUR, hard rule** — Ground (character height + jump) · Building (2-story buildings you
   can enter, 3 stories standing on top; flying here bumps buildings) · Sky (above buildings) · **Clouds**
   (very high; ground fire at cloud targets is heavily penalized). NOT yet implemented — next map milestone.

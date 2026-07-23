@@ -94,7 +94,7 @@ export const POWERS = [
   { id: 'chainbolt',  name: 'Chain Bolt',     cat: 'blast', cost: 14, ab: { type: 'projectile', name: 'Chain Bolt', cost: 6, cd: 0.35, damage: 14, speed: 120, radius: 1.0, blast: 5, homing: 3.4, color: '#ffe066', color2: '#eaffff' } },
   { id: 'boomaxe',    name: 'Returning Axe',  cat: 'blast', cost: 18, ab: { type: 'projectile', name: 'Returning Axe', cost: 10, cd: 0.9, damage: 22, speed: 110, radius: 1.3, blast: 6, boomerang: true, range: 62, color: '#7fd4ff', color2: '#fff' } },
   { id: 'volley',     name: 'Blast Volley',   cat: 'blast', cost: 18, ab: { type: 'volley', name: 'Blast Volley', cost: 3, interval: 0.07, damage: 7, speed: 112, radius: 0.85, blast: 3.6, spread: 0.1, color: '#6ea0ff', color2: '#eaffff' } },
-  { id: 'bigbang',    name: 'Big Bang',       cat: 'charge', cost: 26, ab: { type: 'charge', name: 'Big Bang', cost: 6, cd: 1.0, kiPerSec: 12, maxCharge: 2.4, minR: 1.3, maxR: 6.2, dmgMin: 22, dmgMax: 84, maxBlast: 32, speedMin: 40, speedMax: 76, chargePower: 3, color: '#6ea0ff', color2: '#eaffff' } },
+  { id: 'bigbang',    name: 'Nova Burst',       cat: 'charge', cost: 26, ab: { type: 'charge', name: 'Nova Burst', cost: 6, cd: 1.0, kiPerSec: 12, maxCharge: 2.4, minR: 1.3, maxR: 6.2, dmgMin: 22, dmgMax: 84, maxBlast: 32, speedMin: 40, speedMax: 76, chargePower: 3, color: '#6ea0ff', color2: '#eaffff' } },
   // cones & fields
   { id: 'coldcone',   name: 'Winter Breath',  cat: 'cone', cost: 20, ab: { type: 'cone', name: 'Winter Breath', kiPerSec: 20, range: 38, arc: 1.15, dps: 26, cold: true, color: '#bfe9ff' } },
   { id: 'forcecone',  name: 'Force Push',     cat: 'cone', cost: 16, ab: { type: 'cone', name: 'Force Push', kiPerSec: 16, range: 32, arc: 1.25, dps: 16, push: 60, lift: 6, color: '#7fe6ff' } },
@@ -102,7 +102,7 @@ export const POWERS = [
   // martial (priced high — the audit says rush kits feast)
   { id: 'skysmash',   name: 'Sky Smash',      cat: 'martial', cost: 18, ab: { type: 'melee', name: 'Sky Smash', cost: 14, cd: 1.1, damage: 30, range: 13, arc: 0.75, lunge: 64, knock: 58, launch: 18, fly: true, color: '#ffd24a' } },
   { id: 'rushcombo',  name: 'Rush Combo',     cat: 'martial', cost: 16, ab: { type: 'melee', name: 'Rush Combo', cost: 12, cd: 1.2, damage: 24, range: 12, arc: 0.8, lunge: 52, knock: 46, launch: 12, color: '#6ea0ff' } },
-  { id: 'dragonrush', name: 'Dragon Rush',    cat: 'martial', cost: 20, ab: { type: 'rush', name: 'Dragon Rush', cost: 16, cd: 2.2, range: 72, hits: 7, interval: 0.09, damage: 9, finisher: 34, color: '#eaffff' } },
+  { id: 'dragonrush', name: 'Comet Rush',    cat: 'martial', cost: 20, ab: { type: 'rush', name: 'Comet Rush', cost: 16, cd: 2.2, range: 72, hits: 7, interval: 0.09, damage: 9, finisher: 34, color: '#eaffff' } },
   { id: 'flurry',     name: 'Lightning Flurry', cat: 'martial', cost: 22, ab: { type: 'rush', name: 'Lightning Flurry', cost: 10, cd: 1.1, range: 60, hits: 12, interval: 0.05, damage: 6, finisher: 30, color: '#eaffff' } },
   // mobility
   { id: 'blinkstep',  name: 'Instant Step',   cat: 'mobility', cost: 16, ab: { type: 'teleport', name: 'Instant Step', cost: 12, cd: 1.4, range: 58, color: '#eaffff' } },
@@ -129,7 +129,7 @@ export const POWERS = [
   // ultimates — R slot only
   { id: 'finalbeam',   name: 'Terminal Flash', cat: 'beam', ult: true, cost: 34, ab: { type: 'beam', name: 'Terminal Flash', cost: 24, cd: 14, radius: 3.4, tipSpeed: 150, maxLen: 170, dps: 130, kiPerSec: 30, charge: true, maxCharge: 2.0, kiChargePerSec: 20, chargePower: 2, chargeWidth: true, steer: 6, color: '#eaffa0', color2: '#ffffff' } },
   { id: 'meteorstorm', name: 'Meteor Storm',  cat: 'artillery', ult: true, cost: 32, ab: { type: 'meteor', name: 'Meteor Storm', cost: 34, cd: 18, count: 14, interval: 0.18, spread: 28, radius: 3, damage: 34, blast: 18, color: '#ff8a3d', color2: '#ffd24a' } },
-  { id: 'spiritbomb',  name: 'Spirit Bomb',   cat: 'artillery', ult: true, cost: 32, ab: { type: 'spiritbomb', name: 'Spirit Bomb', cost: 20, cd: 16, minR: 5, maxR: 20, growRate: 8, kiPerSec: 16, color: '#9effcf', color2: '#eaffff' } },
+  { id: 'growingorb',  name: 'Star Sphere',   cat: 'artillery', ult: true, cost: 32, ab: { type: 'growingorb', name: 'Star Sphere', cost: 20, cd: 16, minR: 5, maxR: 20, growRate: 8, kiPerSec: 16, color: '#9effcf', color2: '#eaffff' } },
   { id: 'overload',    name: 'Overload',      cat: 'support', ult: true, cost: 26, ab: { type: 'buff', name: 'Overload', cost: 30, cd: 22, mult: 1.7, dur: 12, heal: 40, color: '#ffd24a', color2: '#fff2c0' } },
   { id: 'collapse',    name: 'Collapse',      cat: 'charge', ult: true, cost: 30, ab: { type: 'charge', name: 'Collapse', cost: 10, cd: 15, kiPerSec: 13, maxCharge: 2.4, minR: 2, maxR: 7.5, dmgMin: 28, dmgMax: 90, maxBlast: 40, speedMin: 34, speedMax: 58, chargePower: 3.2, color: '#7fe6ff', color2: '#eaffff' } },
   { id: 'backup',      name: 'Call Backup',   cat: 'command', ult: true, cost: 26, ab: { type: 'summon', name: 'Call Backup', cost: 26, cd: 16, count: 3, max: 6, duration: 13, damage: 8, interval: 0.6, speed: 86, color: '#2a5ad8', color2: '#ff5a4a' } },

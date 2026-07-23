@@ -375,13 +375,15 @@ export class Fighter {
     // the SHEET — seven ranked attributes + talents baked to flat multipliers (data/ranks.js).
     // This is the D&D layer: FGT/AGL/MGT/VIG/INT/AWR/RES all do real engine work.
     this.sheet = bakeSheet(def);
-    this.resist = resistOf(def, this.sheet);       // damage-type resistances, derived + def overrides (manual §3)
+    this.resist = resistOf(def, this.sheet);
+    // WHAT ARE YOU MADE OF — drives landing/impact sound. Derived, with def.body as the override.
+    this.body = def.body || (def.metal ? 'metal' : def.phase ? 'energy' : def.tentacles ? 'insect' : 'flesh');       // damage-type resistances, derived + def overrides (manual §3)
     this._corrode = 0;                 // ACID: seconds of armour corrosion left
     this._corrodeAmt = 0;              // how much armour is currently eaten
     this.attrs = this.sheet.attrs;
     this._shieldHp = 0; this._jetT = 0; this._jetPrev = 0;   // gadget states (shield cell / jump jets)
     // flight expertise: 0 = grounded (leapers) · 1 = clumsy forward flier (can't hover — Greatest
-    // American Hero) · 2 = levitator (hover + reposition, no cruise speed) · 3 = full flight (Superman)
+    // American Hero) · 2 = levitator (hover + reposition, no cruise speed) · 3 = full flight (paragon)
     this.flightTier = def.flightTier ?? 3;
     this.energyInfinite = !!def.energyInfinite;   // android core: ki never drains — but tier caps at II
     this.meleeCharge = 0;       // charged-melee wind-up (melee.js) — >0 while holding the punch
@@ -862,7 +864,11 @@ export class Fighter {
       // tier-1 flier sagging out. A knockback/beam-shove dipping you to the floor no longer
       // silently cancels flight MODE — that read as "flight randomly turns off".
       if (this.flying && !this.flyHeld && (this.descendHeld || this.flightTier <= 1)) this.flying = false;
-      if (impact < -30 && this.state !== 'ko') this._landT = Math.min(0.26, -impact * 0.006);   // knee-crouch on a hard landing
+      if (impact < -30 && this.state !== 'ko') {
+        this._landT = Math.min(0.26, -impact * 0.006);   // knee-crouch on a hard landing
+        // YOU HEAR WHAT THEY ARE MADE OF. A robot clangs; a person thumps; a ghost barely lands.
+        if (game && game.audio && game.audio.land) game.audio.land(Math.min(2.2, -impact / 38), this.body, this.pos);
+      }
       if (impact < -38) this._slam(game, -impact, 'ground');    // hurled into the floor — fall/slam damage
     }
     if (this.pos.y > 320) { this.pos.y = 320; if (this.vel.y > 0) this.vel.y = 0; }  // ceiling above the CLOUDS band — towers are real now
@@ -1046,7 +1052,7 @@ export class Fighter {
     p.armL.children[2].material.emissiveIntensity = damp(p.armL.children[2].material.emissiveIntensity, fi, 10, dt);
     p.armR.children[2].material.emissiveIntensity = p.armL.children[2].material.emissiveIntensity;
     // flight pose — the body aligns with the direction of TRAVEL:
-    // level cruise → prone (head first, Superman), rising → vertical (head points where you're going),
+    // level cruise → prone (head first), rising → vertical (head points where you're going),
     // pure up/down or hovering at altitude → fully upright, dives → nose-down, strafes → bank into the turn.
     let pitchT = 0, rollT = 0;
     if (this.flying) {

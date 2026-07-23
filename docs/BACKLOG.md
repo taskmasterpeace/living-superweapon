@@ -88,3 +88,10 @@ map maker." Revisit after the map generator work above.
 - What is `Sector`? 223 codes like `LJ5`, half the rows blank. If it's a world-grid reference it
   could drive neighbouring-city consistency; if it's scaffolding, ignore the column.
 - Roster size — "we might have too many fighters." Needs a differentiation pass, not a cull.
+
+### OPEN — unreproduced
+`THREE.BufferGeometry.computeBoundingSphere(): Computed radius is NaN` fired 48× during ONE
+synthetic stress run (spawning all 52 rivals with `_remove()` while also firing every slot of
+every kit). It did NOT reproduce in normal rumble play, nor when the spawn/remove pattern was
+run in isolation. Suspect a tentacle chain (verlet, world-space) being updated after its owner
+is spliced. Not fixed, not claimed fixed — reproduce before chasing.

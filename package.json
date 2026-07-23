@@ -1,7 +1,7 @@
 {
-  "name": "living-superweapon",
+  "name": "war-world-ascendants",
   "version": "0.1.0",
-  "description": "Living Superweapon — isometric superhero action engine (Bid For Power x Soldat)",
+  "description": "WAR WORLD: ASCENDANTS \u2014 isometric superhuman action. 1,050 real cities, 168 real nations.",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -24,8 +24,8 @@
   },
   "main": "electron/main.cjs",
   "build": {
-    "appId": "com.machinekinglabs.livingsuperweapon",
-    "productName": "Living Superweapon",
+    "appId": "com.machinekinglabs.warworldascendants",
+    "productName": "War World Ascendants",
     "directories": {
       "output": "release",
       "buildResources": "electron"
@@ -50,12 +50,12 @@
           ]
         }
       ],
-      "artifactName": "LivingSuperweapon-${version}-win-x64.${ext}"
+      "artifactName": "WarWorldAscendants-${version}-win-x64.${ext}"
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
-      "shortcutName": "Living Superweapon"
+      "shortcutName": "War World: Ascendants"
     },
     "linux": {
       "target": [
@@ -73,8 +73,8 @@
         }
       ],
       "category": "Game",
-      "artifactName": "LivingSuperweapon-${version}-linux-x64.${ext}",
-      "executableName": "living-superweapon"
+      "artifactName": "WarWorldAscendants-${version}-linux-x64.${ext}",
+      "executableName": "war-world-ascendants"
     },
     "compression": "maximum"
   }

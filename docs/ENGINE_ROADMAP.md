@@ -7,7 +7,7 @@ and the world reacts like it matters. Each item lists what it builds on (we ship
 1. **Damage taxonomy — Force / Piercing / Energy / Elemental.** Every hit gets a `class`. Force pushes
    (scaled vs Strength), piercing ignores a slice of guard and *holes* blocks instead of craters,
    energy feeds clashes, elemental applies status (frost/burn/gas already exist). Beams EAT bullets:
-   sustained beams destroy piercing projectiles in their path — Superman walks Punisher's mag right back to him.
+   sustained beams destroy piercing projectiles in their path — a deflector walks a gunman's magazine right back to him.
    *Builds on: slam physics, DoTs, beam segment-damage.*
 2. **Counter/parry layer.** Tap guard in the first 0.12s of an incoming strike = parry: attacker staggers,
    you get a free back-grab window. Turns jab-vs-guard into a real mind game. *Builds on: guard-crush stagger.*

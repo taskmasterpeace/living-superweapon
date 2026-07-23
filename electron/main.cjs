@@ -1,4 +1,4 @@
-// LIVING SUPERWEAPON — the desktop shell.
+// WAR WORLD: ASCENDANTS — the desktop shell.
 //
 // This is deliberately thin. The game is untouched: Electron loads the SAME built files Vite
 // produces for the web, from disk, in a fullscreen window with no browser furniture. Nothing in
@@ -45,7 +45,7 @@ function createWindow() {
     autoHideMenuBar: true,
     backgroundColor: '#0d0f14',        // matches the game's --ink so there is no white flash
     show: false,                       // reveal only once the first frame is ready
-    title: 'LIVING SUPERWEAPON',
+    title: 'WAR WORLD: ASCENDANTS',
     icon: path.join(__dirname, 'icon.png'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),

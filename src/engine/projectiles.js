@@ -1,4 +1,4 @@
-// Living Superweapon — projectiles, beam-hoses (kamehameha), and spirit-bomb lobs.
+// Living Superweapon — projectiles, beam-hoses (wave cannon), and spirit-bomb lobs.
 import * as THREE from 'three';
 import { clamp, rand, TAU } from '../core/util.js';
 
@@ -216,7 +216,7 @@ class Projectile {
         return true;
       }
       if (this.armDelay && !this._armed) { this._arm(game); return true; }   // she reaches you... and waits
-      // Superman-style DEFLECT guard: bullets/bolts bounce right back at whoever fired them
+      // DEFLECT guard: bullets/bolts bounce right back at whoever fired them
       if (foe.guarding && foe.staggerT <= 0 && foe.def.guardType === 'deflect' && !this._defl) {
         const ddx = this.pos.x - foe.pos.x, ddz = this.pos.z - foe.pos.z, dd = Math.hypot(ddx, ddz) || 1;
         if ((ddx / dd) * foe.aim.x + (ddz / dd) * foe.aim.z > -0.15) {
@@ -282,7 +282,7 @@ class Projectile {
 }
 function o_maxspeed(p) { return p._max || 90; }
 
-// ---- Beam-hose: traveling tip drags a thick beam (kamehameha, heat-beam, galick) ----
+// ---- Beam-hose: traveling tip drags a thick beam (wave cannon, heat-beam, violet) ----
 class BeamHose {
   constructor(game, caster, o) {
     this.game = game; this.caster = caster; this.team = caster.team;
@@ -398,7 +398,7 @@ class BeamHose {
   _dispose(game) { if (this.dead) return; this.dead = true; game.scene.remove(this.grp); [this.glow, this.core, this.tip].forEach(m => m.material.dispose()); game.scene.remove(this.light); game.vfx.returnLight(this.light); }   // geometry is shared
 }
 
-// ---- Spirit Bomb: grow a giant orb overhead, then hurl it ----
+// ---- Star Sphere: grow a giant orb overhead, then hurl it ----
 class SpiritBomb {
   constructor(game, caster, o) {
     this.game = game; this.caster = caster; this.team = caster.team;

@@ -1,6 +1,6 @@
 # THE COMBAT MANUAL
 
-How damage actually works in LIVING SUPERWEAPON. Every number here is read from the code, not
+How damage actually works in WAR WORLD: ASCENDANTS. Every number here is read from the code, not
 remembered. If you change the code, change this file in the same commit.
 
 Companion docs: `BALANCE.md` (tuning rulings) · `CODEX.md` (power schema) · `ROSTER.md` (the cast).
@@ -87,7 +87,7 @@ applied at the choke point.
 |---|---|---|
 | `physical` | fists, slams, thrown cars, melee weapons | the baseline — nothing resists it much |
 | `ballistic` | bullets, pellets | lethal to people, an annoyance to superweapons |
-| `energy` | ki blasts, beams, spirit bombs | the universal currency — few resistances |
+| `energy` | ki blasts, beams, star spheres | the universal currency — few resistances |
 | `fire` | flame arrows, burn stacks, PYRE/TORCH | strong vs flesh, weak vs metal |
 | `cold` | frost cones, RIME | builds FREEZE; fire heroes shrug it off |
 | `toxic` | poison, gas, KIVULI | **needs a metabolism — machines are immune** |

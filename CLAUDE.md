@@ -742,7 +742,7 @@ value is missing from the scale, add a token rather than a one-off.
 
 ## Status
 Engine + roster + melee complete & verified: **14 kits** all fire without error; live AI combat, beams,
-Big Bang shockwave+lightning, spirit bombs, teleport, summons, cursor constructs, flight, **the Strike/
+Nova Burst shockwave+lightning, star spheres, teleport, summons, cursor constructs, flight, **the Strike/
 Guard/Grab trifecta (with teleport-escape, energy-phase, thorns, absorb-throws)**, soft lock-on reticle,
 floating damage numbers, combo counter, guard meter, pause — all working. Scene brightened; beam blobs tamed.
 **Visual overhaul + optimization** (Goal 8): HDR half-float composer, half-res bloom, adaptive resolution, rim
@@ -758,7 +758,7 @@ Re-verified: all 14 kits fire, all 4 modes run, ragdolls (with knees) fire in li
 0 console errors, ~5.4ms/frame.
 **Combat identity** (Goal 13): charged melee (jab/straight/HAYMAKER + guard crush + punishable jabs),
 Overdrive comeback attribute (drained fists refill ki, HUD "⚡ OVERDRIVE" window), guard TYPES with a
-visible guard arc (deflect bounces bullets back — Superman-vs-Punisher; barrier blocks 360° on ki),
+visible guard arc (deflect bounces bullets back — deflector-vs-gunman; barrier blocks 360° on ki),
 Strength stat (kb resist / melee scale / ice break-outs), freeze-encase state, DoT stacks, KIVULI
 (Ugandan gas controller — crimson-rose per the no-purple rule; hexes flippable) + GALE (archer,
 draw-scaled real arrows, poison/flame/explosive quiver), grass (2400 instanced blades that burn away
