@@ -520,11 +520,22 @@ export const TYPES = {
       if (!c.isPlayer) { px = c.pos.x + c.aim.x * 16; pz = c.pos.z + c.aim.z * 16; }
       const dx = px - c.pos.x, dz = pz - c.pos.z, d = Math.hypot(dx, dz) || 1, rng = def.range || 55;
       if (d > rng) { px = c.pos.x + dx / d * rng; pz = c.pos.z + dz / d * rng; }
+      // A MINE IS HARDWARE, not a spell: a squat machined casing at true 1:1 scale (~0.5m across)
+      // with a ribbed collar, three ground spikes and ONE small indicator LED. No additive glow —
+      // bloom belongs to ki. The LED blinks via opacity (children[1] — the arm loop drives it).
       const grp = new THREE.Group();
-      const disc = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 1.1, 0.35, 8), new THREE.MeshStandardMaterial({ color: '#2a2f38', roughness: 0.5, metalness: 0.6 }));
-      disc.position.y = 0.2; grp.add(disc);
-      const lamp = new THREE.Mesh(ORB_GEO, new THREE.MeshBasicMaterial({ color: def.color || '#ff5a4a', transparent: true, opacity: 0.3, blending: THREE.AdditiveBlending, depthWrite: false }));
-      lamp.scale.setScalar(0.35); lamp.position.y = 0.5; grp.add(lamp);
+      const steel = new THREE.MeshStandardMaterial({ color: '#3a4048', roughness: 0.45, metalness: 0.85 });
+      const casing = new THREE.Mesh(new THREE.CylinderGeometry(2.2, 2.6, 1.1, 10), steel);
+      casing.position.y = 0.6; casing.castShadow = true; grp.add(casing);
+      const led = new THREE.Mesh(ORB_GEO, new THREE.MeshStandardMaterial({ color: def.color || '#ff5a4a', emissive: def.color || '#ff5a4a', emissiveIntensity: 1.4, transparent: true, opacity: 0.3, roughness: 0.3 }));
+      led.scale.setScalar(0.34); led.position.y = 1.35; grp.add(led);          // index 1 — the blinker
+      const collar = new THREE.Mesh(new THREE.TorusGeometry(2.3, 0.22, 6, 14), new THREE.MeshStandardMaterial({ color: '#22262c', roughness: 0.6, metalness: 0.7 }));
+      collar.rotation.x = Math.PI / 2; collar.position.y = 1.0; grp.add(collar);
+      for (let s = 0; s < 3; s++) {                                            // spikes bite the pavement
+        const a = (s / 3) * Math.PI * 2;
+        const leg = new THREE.Mesh(new THREE.ConeGeometry(0.3, 1.3, 5), steel);
+        leg.position.set(Math.cos(a) * 2.1, 0.2, Math.sin(a) * 2.1); leg.rotation.x = Math.PI; grp.add(leg);
+      }
       grp.position.set(px, 0, pz); g.scene.add(grp);
       st.list.push({ pos: new THREE.Vector3(px, 0.5, pz), mesh: grp, arm: def.armT || 0.6, life: def.duration || 18 });
       if (st.list.length > (def.max || 3)) { const old = st.list.shift(); g.scene.remove(old.mesh); old.mesh.traverse(o => { if (o.material) o.material.dispose(); if (o.geometry) o.geometry.dispose(); }); }

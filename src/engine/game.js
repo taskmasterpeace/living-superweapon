@@ -1291,10 +1291,24 @@ export class Game {
       const grp = new THREE.Group();
       const base = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.4, 0.5, 10), new THREE.MeshStandardMaterial({ color: '#2a2f38', roughness: 0.4, metalness: 0.7 }));
       base.position.y = 0.25; grp.add(base);
-      const ring = new THREE.Mesh(new THREE.TorusGeometry(1.5, 0.14, 8, 24), new THREE.MeshBasicMaterial({ color: acc, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false }));
-      ring.rotation.x = Math.PI / 2; ring.position.y = 0.6; grp.add(ring);
-      const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.55, 9, 8, 1, true), new THREE.MeshBasicMaterial({ color: acc, transparent: true, opacity: 0.22, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
-      shaft.position.y = 4.8; grp.add(shaft);
+      // FIELD KIT, not a spell: tripod legs, a mast and a blinking status lamp. The ONLY part
+      // that earns a glow is the recall ring — that bit really is a teleport field.
+      const steel = new THREE.MeshStandardMaterial({ color: '#3a4048', roughness: 0.45, metalness: 0.85 });
+      for (let s = 0; s < 3; s++) {
+        const a = (s / 3) * Math.PI * 2 + 0.5;
+        const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.24, 3.4, 6), steel);
+        leg.position.set(Math.cos(a) * 1.4, 1.2, Math.sin(a) * 1.4);
+        leg.rotation.z = Math.cos(a) * 0.32; leg.rotation.x = -Math.sin(a) * 0.32; grp.add(leg);
+      }
+      const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.2, 4.4, 6), steel);
+      mast.position.y = 3.2; grp.add(mast);
+      const lamp = new THREE.Mesh(new THREE.SphereGeometry(0.34, 8, 6), new THREE.MeshStandardMaterial({ color: acc, emissive: acc, emissiveIntensity: 1.6, roughness: 0.3 }));
+      lamp.position.y = 5.5; grp.add(lamp);
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(2.3, 0.15, 8, 24), new THREE.MeshBasicMaterial({ color: acc, transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending, depthWrite: false }));
+      ring.rotation.x = Math.PI / 2; ring.position.y = 0.7; grp.add(ring);
+      const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.9, 3.4, 8, 1, true), new THREE.MeshBasicMaterial({ color: acc, transparent: true, opacity: 0.12, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+      shaft.position.y = 2.4; grp.add(shaft);
+      grp.userData.ring = ring; grp.userData.shaft = shaft; grp.userData.lamp = lamp;   // named refs, not child indices
       grp.position.set(f.pos.x, Math.max(0, f.pos.y), f.pos.z);
       this.scene.add(grp);
       it.mesh = grp; it.pos = grp.position.clone(); it.state = 'deployed';
@@ -1318,8 +1332,10 @@ export class Game {
   updateItems(dt) {
     for (const f of this.entities) if (f.items) for (const it of f.items) {
       if (it.state === 'deployed' && it.mesh) {
-        it.mesh.children[1].rotation.z += dt * 2;                                  // ring spin
-        it.mesh.children[2].material.opacity = 0.16 + Math.sin(this.time * 5) * 0.07;
+        const U = it.mesh.userData;                                               // ⚠ named refs: the beacon
+        if (U.ring) U.ring.rotation.z += dt * 2;                                  // is real hardware now, so
+        if (U.shaft) U.shaft.material.opacity = 0.1 + Math.sin(this.time * 5) * 0.05;   // child order shifted
+        if (U.lamp) U.lamp.material.emissiveIntensity = (this.time * 2 % 1 < 0.5) ? 2.2 : 0.35;
         if (Math.random() < 0.1) this.particles.spawn({ x: it.pos.x + rand(-1, 1), y: 0.6, z: it.pos.z + rand(-1, 1), vx: 0, vy: 8, vz: 0, life: 0.5, size: 1.6, color: f.def.colors.accent, drag: 0.5, shrink: true });
       }
     }
