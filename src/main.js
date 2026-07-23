@@ -11,6 +11,7 @@ import { installCustoms, loadCustoms, freshPicks, buildDef, tally, validate, sav
 import { applyIdentities } from './data/identities.js';
 import { Tutorial } from './engine/tutorial.js';
 import { Netplay } from './engine/netplay.js';
+import { Tournament } from './engine/tournament.js';
 
 const canvas = document.getElementById('game');
 const input = new Input(); input.bind(canvas);
@@ -43,12 +44,40 @@ netplay.onLobby = () => { if (hud.onlineEl.style.display === 'flex') hud.renderO
 function enter(cfg) {
   audio.init(); audio.resume(); applySettings(game);   // master gain exists only after init
   const c = (typeof cfg === 'string') ? { mode: 'training', p1: cfg } : cfg;
+  // THE INVITATIONAL: bracket-first flow — seeding view before round 1, standings between rounds,
+  // the champion card when it's done. The Tournament object rides in the cfg across matches.
+  if (c.mode === 'tournament') {
+    if (!c.tourney) c.tourney = new Tournament(ROSTER, c.p1 || 'sol', c.format || '1v1');
+    game._lastCfg = c;
+    hud.hideEndScreen();
+    const m = c.tourney.currentMatch();
+    if (!m) { hud.showBracket(c.tourney, { onDone: () => openMenu() }); return; }   // eliminated or crowned
+    hud.hideTitle();
+    hud.showBracket(c.tourney, { onNext: () => beginMatch(c) });
+    return;
+  }
+  beginMatch(c);
+}
+function beginMatch(c) {
+  // THE THEATER: raise the selected city before the fighters drop into it
+  try {
+    const plan = hud.resolveTheaterPlan();
+    const cur = game.world.plan;
+    if (plan && (!cur || cur.name !== plan.name || cur.seed !== plan.seed)) {
+      game.world.rebuildCity(plan);
+      game.peds.setCity(game.world.ARENA, game.world.waterX);
+      hud.feed('Theater: ' + plan.name.toUpperCase() + (plan.country ? ' · ' + plan.country : ''), '#7fb0d0');
+    }
+  } catch (err) { console.error('theater', err); }
   game.startMode(c.mode || 'training', c);
   hud.setPlayer(ROSTER.find(r => r.id === (c.p1 || 'sol')));
+  hud.armHintTimer();          // the control wall shows for ~18s, then folds into a corner chip (F1)
   started = true; game._lastCfg = c;
   hud.hideEndScreen(); hud.hideTitle();
   if (c.tutorial) tutorial.begin(); else tutorial.skip();
 }
+hud.onBracketContinue = () => { if (game._lastCfg) enter(game._lastCfg); };
+hud.onProvingGround = () => enter({ mode: 'training', p1: hud.selectedHero || 'sol' });
 function openMenu() { game.running = false; hud.hideEndScreen(); hud.buildTitle(enter); hud.showTitle(); }
 
 // ---- ORIGIN: install saved customs, wire the forge ----
@@ -87,6 +116,7 @@ game.onKill = (f) => {
 const digits = { Digit1: 0, Digit2: 1, Digit3: 2, Digit4: 3, Digit5: 4, Digit6: 5, Digit7: 6, Digit8: 7, Digit9: 8, Digit0: 9 };
 addEventListener('keydown', (e) => {
   if (e.code === 'Escape' && hud.overlayOpen()) { hud.closeOverlays(); return; }   // options/how-to first
+  if (e.code === 'F1') { e.preventDefault(); hud.toggleHint(); return; }           // controls, on demand
   if (!started) return;
   if (e.code === 'Tab') { e.preventDefault(); if (!hud.titleOpen) openMenu(); else { game.running = true; hud.hideTitle(); } return; }
   if (e.code === 'Escape' && game.player && !hud.titleOpen) { game.running = !game.running; hud.setPaused(!game.running); return; }

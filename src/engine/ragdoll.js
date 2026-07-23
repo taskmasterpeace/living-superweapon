@@ -138,7 +138,7 @@ export class Ragdoll {
   }
 
   _collide(game) {
-    const bound = ARENA - 3;
+    const bound = (game && game.world ? game.world.ARENA : ARENA) - 3;
     const cover = game && game.world ? game.world.cover : null;
     for (const k in this.P) {
       const pt = this.P[k], r = GROUND_R[k] || DEFAULT_R;

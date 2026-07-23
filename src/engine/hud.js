@@ -6,6 +6,95 @@ import { ATTR_DEFS, TALENTS, deriveAttrs, heroTalents, rankName, rankColor, RANK
 import { SETTINGS, saveSettings, applySettings } from '../core/settings.js';
 import { identityOf } from '../data/identities.js';
 import { icon, ATTR_ICON, ICON_MEANING } from './icons.js';
+import { writeBroadcast, tapeRows, llmPunchUp, titleCase, money, causeLine, mulberry } from '../data/news.js';
+import { recOf, snapshotTable, rankingTable, recentIncidents, championId, tournamentNo } from '../data/rankings.js';
+import { cityList } from '../data/cities.js';
+import { generatePlan, thresholdPlan, galleryPlan, TILE_INFO, popLabel } from '../data/cityplan.js';
+
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+// ---- THRESHOLD REGISTRY paperwork: file numbers, country codes, deterministic file dates ----
+function flagCC(flag) {
+  const cps = [...String(flag || '')].map((c) => c.codePointAt(0)).filter((c) => c >= 0x1F1E6 && c <= 0x1F1FF);
+  return cps.length >= 2 ? String.fromCharCode(65 + cps[0] - 0x1F1E6, 65 + cps[1] - 0x1F1E6) : 'XX';
+}
+function fileNoOf(c, roster) {
+  const i = roster.indexOf(c);
+  return `LSW-${String((i < 0 ? 98 : i) + 1).padStart(3, '0')}-${c.isCustom ? 'CX' : flagCC(identityOf(c).f)}`;
+}
+function fileDate(id) {
+  let h = 0; for (const ch of String(id)) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  return `${2019 + h % 7}-${String(1 + (h >> 3) % 12).padStart(2, '0')}-${String(1 + (h >> 7) % 28).padStart(2, '0')}`;
+}
+function agoStr(t) {
+  const s = (Date.now() - t) / 1000;
+  if (s < 90) return 'just now';
+  if (s < 3600) return `${Math.round(s / 60)}m ago`;
+  if (s < 86400) return `${Math.round(s / 3600)}h ago`;
+  return `${Math.round(s / 86400)}d ago`;
+}
+const isSynthDef = (c) => /unit|lab-grown|synthezoid|war engine|synthetic/i.test((identityOf(c).n || ''));
+
+// ---- THE CODEX: case-file generators — every line derived from the REAL kit data ----
+function cfAbilityRows(def) {
+  return SLOT_ORDER.filter(s => def.abilities[s.k]).map(s => {
+    const a = def.abilities[s.k];
+    const dmg = a.dmgMax ? `${a.dmgMin ?? '?'}–${a.dmgMax}` :
+      a.hits ? `${a.damage}×${a.hits}${a.finisher ? '+' + a.finisher : ''}` :
+      a.damage ? String(a.damage) : a.dps ? `${a.dps}/s` : a.heal ? `+${a.heal}hp` : a.mult ? `×${a.mult}` : '—';
+    const cost = a.cost ? `${a.cost}` : a.kiPerSec ? `${a.kiPerSec}/s` : '0';
+    const cd = a.cd ? `${a.cd}s` : a.interval ? `${(1 / a.interval).toFixed(0)}rps` : '—';
+    const reach = a.maxLen ? `${a.maxLen}u` : a.range ? `${a.range}u` : a.speed ? `v${Math.round(a.speed)}` : a.radius && a.type === 'cone' ? '—' : a.blast ? `r${a.blast}` : '—';
+    const notes = [];
+    if (a.charge || a.maxCharge) notes.push('CHARGE-SCALED');
+    if (a.homing) notes.push('HOMING');
+    if (a.cold) notes.push('FREEZE BUILDUP');
+    if (a.payloads) notes.push('PAYLOADS: ' + a.payloads.join('/').toUpperCase());
+    if (a.shock) notes.push('GROUND SHOCK');
+    if (a.invuln) notes.push('I-FRAMES');
+    if (a.spendAll) notes.push('SPENDS ALL KI');
+    if (a.steer) notes.push('STEERABLE');
+    if (a.construct) notes.push('CONSTRUCT: ' + a.construct.toUpperCase());
+    if (a.boomerang) notes.push('RETURNS');
+    return { slot: s.label, name: a.name, kind: a.type.toUpperCase(), dmg, cost, cd, reach, notes: notes.join(' · '), ult: s.k === 'r' };
+  });
+}
+// countermeasure doctrine — what the Treaty would actually brief a responder
+function cfCounterNotes(def) {
+  const N = [];
+  const A = Object.values(def.abilities || {});
+  if (def.guardType === 'barrier') N.push(['GUARD', 'Barrier covers 360° but BURNS ki (16/s) — starve the tank, then commit. It breaks at zero.']);
+  else if (def.guardType === 'deflect') N.push(['GUARD', 'Deflect guard RETURNS projectiles and arrows to the shooter. Close to fists, or open with an unblockable grab.']);
+  else N.push(['GUARD', 'Standard guard: a held HAYMAKER crushes it (0.85s stagger, meter −0.55). Jabs into a block are punishable.']);
+  if (def.teleEscape) N.push(['GRABS', 'FRONT grabs get teleported out of (20 ki). Take the back — back-grabs are unescapable on anyone.']);
+  if (def.thorns) N.push(['GRABS', 'Subject is thorned — grab attempts are punished on contact. Strike, do not latch.']);
+  if (def.grabHeal) N.push(['GRABS', 'Subject HEALS off its own grabs. Do not trade at grapple range.']);
+  if (def.phase) N.push(['PHASE', 'Can run intangible on held ki. Wait out the drain; unblockable and true damage still connect.']);
+  if ((def.overdrive ?? 1) >= 1) N.push(['ENERGY', 'OVERDRIVE: an empty tank makes their fists batteries. A drained subject at melee range is NOT disarmed.']);
+  if (def.energyInfinite) N.push(['ENERGY', 'Core never drains and never fizzles — but the platform is TIER-CAPPED at II. Outscale it in long engagements.']);
+  if (def.frostResist) N.push(['COLD', 'Frost buildup halved. Freeze doctrine is poor value against this subject.']);
+  if ((def.beamMight || 1) >= 1.2) N.push(['BEAMS', 'Certified Beam Master — do not accept a beam clash below 60% ki; the struggle point WILL walk to you.']);
+  if ((def.flightTier ?? 3) === 0) N.push(['AIR', 'Subject is GROUNDED (leap only). Take altitude and shell — they cannot follow.']);
+  else if ((def.flightTier ?? 3) === 1) N.push(['AIR', 'Clumsy flier: sags without thrust, no stable hover. Pressure them off the deck.']);
+  if ((def.strength ?? 5) >= 7) N.push(['FRAME', `STR ${def.strength}: knockback plans fail, beam-shove is halved, ice shatters early, slams land like demolition.`]);
+  if (A.some(a => a.type === 'mine')) N.push(['GROUND', 'Plants proximity mines (≤3 live). Sweep your approach lanes with ranged fire.']);
+  if (A.some(a => a.type === 'portal')) N.push(['SPACE', 'Deploys paired doors — projectiles travel through them too. Do not trust sightlines near an open ring.']);
+  if (def.tentacles) N.push(['REACH', 'Tentacle seizure drags to the nearest wall for slam damage. Break line or stay past reach.']);
+  const style = def.ai && def.ai.style;
+  const STYLE_NOTE = {
+    rusher: 'Closes distance relentlessly — keep a wall at YOUR back, never theirs.',
+    beamer: 'Sustained pressure at range — approach on the diagonal between beam windows.',
+    artillery: 'Shells from distance and altitude — the shadow of the shot is your timer.',
+    zoner: 'Controls ground with placed effects — the space they give you is the trap.',
+    bruiser: 'Mid-range trades — do not stand in their preferred band (~' + ((def.ai && def.ai.range) || 30) + 'u).',
+    trickster: 'Teleports behind committed attacks — hold your evade until AFTER the blink.',
+    grappler: 'Every approach is a grab setup — strike beats grab; interrupt the startup.',
+    summoner: 'Kills the summons first or fights two armies — your call, make it early.',
+  };
+  if (style && STYLE_NOTE[style]) N.push(['DOCTRINE', STYLE_NOTE[style]]);
+  return N.slice(0, 7);
+}
+const CF_BUILD = ['—', 'FRAIL', 'LIGHT', 'LIGHT', 'STANDARD', 'STANDARD', 'CONDITIONED', 'POWERFUL', 'HEAVY', 'SUPERHEAVY', 'IRRESISTIBLE'];
 
 const CSS = `
 #hud .wrap{ position:absolute; inset:0; }
@@ -67,8 +156,20 @@ const CSS = `
 #hud .foe .fn{ font-weight:700; letter-spacing:.06em; font-size:13px; }
 #hud .foe .bar{ height:9px; }
 #hud .foe .fhpF{ background:linear-gradient(90deg,#ff4a4a,#ffb03a); }
-#hud .hint{ right:18px; bottom:18px; padding:10px 12px; max-width:260px; font-size:12px; color:#b7b0a2; line-height:1.6; }
+#hud .hint{ right:18px; bottom:18px; padding:10px 12px; max-width:260px; font-size:12px; color:#b7b0a2; line-height:1.6; transition:opacity .4s ease, transform .4s ease; }
 #hud .hint b{ color:#ffd24a; font-weight:700; }
+/* the wall of text earns its place for ~18s, then gets out of the way (F1 brings it back) */
+#hud .hint.mini{ max-width:none; padding:6px 11px; font-size:10.5px; letter-spacing:.14em; color:#8b8577; }
+#hud .hint.mini .hintbody{ display:none; }
+#hud .hint .hintchip{ display:none; white-space:nowrap; }
+#hud .hint.mini .hintchip{ display:block; }
+#hud .hint .hintchip b{ color:#ffd24a; }
+/* off-screen target arrow — the fight can hide from you now, so point at it */
+#hud .foearrow{ position:absolute; width:0; height:0; pointer-events:none; z-index:6; opacity:0; transition:opacity .2s; }
+#hud .foearrow i{ position:absolute; left:-13px; top:-13px; width:26px; height:26px; border-radius:50%; background:rgba(255,90,74,.16); border:1.5px solid rgba(255,90,74,.85); box-shadow:0 0 14px rgba(255,90,74,.45); }
+#hud .foearrow u{ position:absolute; left:-5px; top:-24px; width:0; height:0; border-left:6px solid transparent; border-right:6px solid transparent; border-bottom:11px solid #ff5a4a; transform-origin:5px 17px; }
+#hud .foearrow span{ position:absolute; left:16px; top:-8px; font-size:10px; font-weight:800; letter-spacing:.1em; color:#ff8a7a; text-shadow:0 1px 3px #000; white-space:nowrap; }
+#hud .foearrow.on{ opacity:.95; }
 #hud .charge{ left:50%; transform:translateX(-50%); bottom:96px; width:280px; height:10px; display:none; }
 #hud .charge > i{ background:linear-gradient(90deg,#ffd24a,#ff5a2a); }
 #hud .feed{ left:18px; top:16px; padding:6px 10px; font-size:12px; color:#cbb; display:flex; flex-direction:column; gap:2px; background:transparent; border:none; }
@@ -138,7 +239,7 @@ const CSS = `
 #hud .lvl{ display:inline-flex; align-items:center; justify-content:center; width:26px; height:26px; border-radius:7px; background:linear-gradient(180deg,#ffd15a,#f5921a); color:#160d02; font-weight:800; font-size:14px; box-shadow:0 2px 0 #7a3d05; flex:0 0 auto; }
 #hud .xp{ flex:1; height:6px; border-radius:3px; background:rgba(0,0,0,.5); overflow:hidden; box-shadow:inset 0 0 0 1px rgba(255,255,255,.08); }
 #hud .xp > i{ display:block; height:100%; background:linear-gradient(90deg,#ffd15a,#ffe89a); border-radius:3px; transition:width .2s; }
-#hud .kit{ left:18px; bottom:250px; padding:9px 13px; min-width:210px; }
+#hud .kit{ left:18px; bottom:212px; padding:9px 13px; min-width:210px; }   /* docked to the player panel, not floating */
 #hud .kit .kh{ font-size:10px; letter-spacing:.16em; color:#8b8577; text-transform:uppercase; margin-bottom:5px; }
 #hud .kit .chips{ display:flex; flex-wrap:wrap; gap:5px; }
 #hud .kit .chip{ font-size:11px; font-weight:700; padding:3px 9px; border-radius:14px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.10); color:#b7b0a2; }
@@ -235,6 +336,241 @@ const CSS = `
 #title .statrow .sl svg{ color:#a49c8c; }
 #title .arow .an2 svg{ color:#a49c8c; }
 #title .rcard .cflag{ font-size:11px; font-weight:400; }
+/* ---- KMK 9 ACTION NEWS: the live field monitor (PiP) ---- */
+#hud .pip{ position:absolute; top:184px; right:18px; width:186px; padding:6px; z-index:7; }
+#hud .pip canvas{ display:block; width:100%; border-radius:7px; }
+#hud .pip .pipcap{ display:flex; align-items:center; gap:6px; font-size:9px; font-weight:800; letter-spacing:.16em; color:#ff8a7a; text-transform:uppercase; padding:0 2px 4px; }
+#hud .pip .pipdot{ width:7px; height:7px; border-radius:50%; background:#ff2f2f; box-shadow:0 0 9px rgba(255,47,47,.95); animation:pipblink 1.1s steps(2,start) infinite; }
+@keyframes pipblink{ 50%{ opacity:.2; } }
+/* ---- the broadcast end screen: a TV set playing the crew's actual footage ---- */
+#hud .endscr.news{ justify-content:flex-start; gap:0; padding:24px 20px 46px; overflow:hidden; background:radial-gradient(130% 100% at 50% 0%, rgba(18,14,9,.95), rgba(4,5,9,.99)); }
+#hud .endscr.news .nwrap{ width:min(1180px,96vw); display:flex; flex-direction:column; gap:13px; max-height:100%; min-height:0; }
+#hud .nmast{ display:flex; align-items:center; gap:12px; }
+#hud .nmast .n9{ width:38px; height:38px; border-radius:50%; background:#d81f26; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:24px; font-family:'Rajdhani','Inter',sans-serif; box-shadow:0 3px 0 #5a0a0d, 0 0 24px rgba(216,31,38,.45); flex:0 0 auto; }
+#hud .nmast .nb b{ display:block; font-size:19px; font-weight:800; letter-spacing:.12em; color:#e8e2d6; line-height:1.05; }
+#hud .nmast .nb span{ font-size:9.5px; letter-spacing:.3em; color:#f5b21a; text-transform:uppercase; }
+#hud .nmast .nlive{ margin-left:auto; display:flex; align-items:center; gap:8px; font-size:11px; font-weight:800; letter-spacing:.14em; color:#c9c2b4; }
+#hud .nmast .nlive i{ width:8px; height:8px; border-radius:50%; background:#ff2f2f; box-shadow:0 0 8px rgba(255,47,47,.9); animation:pipblink 1.1s steps(2,start) infinite; }
+#hud .nbody{ display:flex; gap:20px; min-height:0; }
+#hud .ncl{ flex:0 0 460px; display:flex; flex-direction:column; gap:8px; }
+#hud .ncr{ flex:1; min-width:0; display:flex; flex-direction:column; gap:11px; overflow-y:auto; padding-right:6px; }
+#hud .tvset{ background:linear-gradient(178deg,#262a31,#0e1013 78%); border:1px solid rgba(255,255,255,.09); border-radius:15px; padding:13px 13px 7px; box-shadow:0 24px 60px -18px rgba(0,0,0,.92), inset 0 1px 0 rgba(255,255,255,.09); }
+#hud .tvscreen{ position:relative; border-radius:8px; overflow:hidden; background:#000; box-shadow:inset 0 0 40px rgba(0,0,0,.85); }
+#hud .tvscreen canvas{ display:block; width:100%; aspect-ratio:16/9; }
+#hud .tvscan{ position:absolute; inset:0; pointer-events:none; background:repeating-linear-gradient(0deg, rgba(0,0,0,.17) 0 1px, transparent 1px 3px); }
+#hud .tvglare{ position:absolute; inset:0; pointer-events:none; background:linear-gradient(112deg, rgba(255,255,255,.10), rgba(255,255,255,.02) 26%, transparent 42%); }
+#hud .tvtag{ position:absolute; top:9px; right:9px; font-size:10px; font-weight:800; letter-spacing:.1em; color:#fff; background:rgba(216,31,38,.92); border-radius:4px; padding:3px 8px; transition:background .15s, color .15s; }
+#hud .tvtag.slow{ background:rgba(245,178,26,.95); color:#160d02; box-shadow:0 0 16px rgba(245,178,26,.5); }
+#hud .tvchin{ display:flex; align-items:center; justify-content:space-between; padding:8px 3px 3px; }
+#hud .tvchin .tvbrand{ font-size:9px; letter-spacing:.3em; color:#6b7078; font-weight:700; }
+#hud .tvchin .tvgrill{ flex:1; height:8px; margin:0 12px; background:repeating-linear-gradient(90deg, rgba(255,255,255,.09) 0 2px, transparent 2px 6px); border-radius:3px; }
+#hud .tvchin .tvled{ width:6px; height:6px; border-radius:50%; background:#8fe08a; box-shadow:0 0 7px rgba(143,224,138,.9); }
+#hud .tvcap{ font-size:11px; color:#b7b0a2; padding:2px 4px 0; min-height:17px; }
+#hud .tvprog{ display:flex; gap:3px; padding:6px 2px 2px; }
+#hud .tvprog i{ flex:1; height:3px; background:rgba(255,255,255,.13); border-radius:2px; position:relative; overflow:hidden; }
+#hud .tvprog i b{ position:absolute; left:0; top:0; bottom:0; width:0%; background:#f5b21a; box-shadow:0 0 6px rgba(245,178,26,.6); }
+#hud .tvprog i.slow b{ background:#ffd97a; }
+#hud .tvcap b{ color:#ffd24a; }
+#hud .ncrew{ font-size:9.5px; letter-spacing:.18em; color:#8b8577; text-transform:uppercase; padding:0 4px; }
+#hud .nkickrow{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+#hud .nkick{ display:inline-block; font-size:10px; font-weight:900; letter-spacing:.22em; color:#fff; background:#d81f26; padding:4px 11px; border-radius:3px; text-transform:uppercase; }
+#hud .nhead{ font-family:'Rajdhani','Inter',sans-serif; font-weight:800; font-size:33px; line-height:1.03; letter-spacing:.02em; color:#f2ead8; text-shadow:0 3px 0 rgba(0,0,0,.5); }
+#hud .nsub{ font-size:11px; letter-spacing:.2em; color:#f5b21a; text-transform:uppercase; }
+#hud .nsub b{ color:#e8e2d6; }
+#hud .nscript{ display:flex; flex-direction:column; gap:8px; border-left:3px solid rgba(245,178,26,.5); padding:2px 0 2px 12px; min-height:60px; }
+#hud .sline{ font-size:13.5px; color:#cfc8ba; line-height:1.55; }
+#hud .sline .swho{ display:inline-block; font-size:9px; font-weight:900; letter-spacing:.16em; color:#0d0e12; background:#f5b21a; border-radius:3px; padding:2px 7px; margin-right:8px; transform:translateY(-1px); text-transform:uppercase; }
+#hud .sline.field .swho{ background:#d81f26; color:#fff; }
+#hud .sline .cursor{ display:inline-block; width:7px; height:13px; background:#f5b21a; margin-left:2px; animation:pipblink .7s steps(2,start) infinite; vertical-align:-2px; }
+#hud .nboards{ display:flex; gap:12px; flex-wrap:wrap; }
+#hud .board{ flex:1; min-width:250px; background:rgba(10,12,18,.72); border:1px solid rgba(255,255,255,.09); border-radius:11px; padding:11px 13px; }
+#hud .board .bh{ font-size:9.5px; font-weight:800; letter-spacing:.24em; color:#f5b21a; text-transform:uppercase; padding-bottom:7px; border-bottom:1px solid rgba(245,178,26,.25); margin-bottom:8px; display:flex; justify-content:space-between; }
+#hud .board .bh em{ font-style:normal; color:#8b8577; letter-spacing:.1em; }
+#hud table.tape{ width:100%; border-collapse:collapse; }
+#hud table.tape th{ font-size:11.5px; font-weight:800; letter-spacing:.06em; padding:2px 4px 6px; text-align:center; }
+#hud table.tape td{ font-size:12.5px; padding:3.5px 4px; text-align:center; color:#e8e2d6; font-weight:700; border-top:1px solid rgba(255,255,255,.05); }
+#hud table.tape td.lb{ font-size:9.5px; letter-spacing:.13em; color:#8b8577; text-align:left; text-transform:uppercase; font-weight:600; }
+#hud table.tape td.win{ color:#ffd24a; }
+#hud .cityrow{ display:flex; justify-content:space-between; font-size:12px; color:#c9c2b4; padding:3.5px 0; border-top:1px solid rgba(255,255,255,.05); }
+#hud .cityrow:first-of-type{ border-top:none; }
+#hud .cityrow b{ color:#e8e2d6; }
+#hud .citysum{ margin-top:8px; padding-top:8px; border-top:1px dashed rgba(245,178,26,.35); display:flex; justify-content:space-between; align-items:baseline; }
+#hud .citysum .cl{ font-size:9.5px; letter-spacing:.18em; color:#8b8577; text-transform:uppercase; }
+#hud .citysum .cv{ font-family:'Rajdhani','Inter',sans-serif; font-size:26px; font-weight:800; color:#ffd24a; text-shadow:0 0 18px rgba(245,178,26,.35); }
+#hud .wcard{ background:rgba(216,31,38,.08); border:1px solid rgba(216,31,38,.3); border-radius:10px; padding:9px 13px; font-size:13px; color:#e8ddd0; font-style:italic; line-height:1.5; }
+#hud .wcard b{ font-style:normal; font-size:10px; letter-spacing:.14em; color:#ff8a7a; display:block; margin-top:3px; text-transform:uppercase; }
+#hud .sat{ display:none; align-items:center; gap:8px; font-size:10px; font-weight:800; letter-spacing:.18em; color:#7fe6ff; text-transform:uppercase; }
+#hud .sat i{ width:7px; height:7px; border-radius:50%; background:#7fe6ff; box-shadow:0 0 8px rgba(127,230,255,.9); animation:pipblink .9s steps(2,start) infinite; }
+#hud .nticker{ position:absolute; left:0; right:0; bottom:0; height:36px; background:#0a0b10; border-top:2px solid #f5b21a; display:flex; align-items:stretch; overflow:hidden; }
+#hud .nticker .tkbrand{ flex:0 0 auto; display:flex; align-items:center; gap:7px; background:#d81f26; color:#fff; font-weight:900; letter-spacing:.12em; font-size:12px; padding:0 14px; z-index:1; }
+#hud .nticker .tkwrap{ flex:1; position:relative; overflow:hidden; }
+#hud .nticker .tkx{ position:absolute; white-space:nowrap; font-size:12px; font-weight:700; letter-spacing:.1em; color:#d8d2c4; line-height:36px; animation:tick 38s linear infinite; }
+#hud .nticker .tkx b{ color:#f5b21a; margin:0 16px; font-weight:900; }
+@keyframes tick{ 0%{ transform:translateX(0); } 100%{ transform:translateX(-50%); } }
+#hud .endscr.news .btns{ margin:2px 0 4px; }
+@media (max-width:1020px){ #hud .ncl{ flex-basis:380px; } #hud .nhead{ font-size:26px; } }
+/* ================= THRESHOLD REGISTRY — the superweapon intelligence database ================= */
+#title{ --mono:'Cascadia Mono','Consolas',ui-monospace,'SF Mono',monospace; }
+#title .clsbar{ display:flex; align-items:center; gap:10px; width:min(1080px,94vw); }
+#title .clsbar .clschip{ flex:0 0 auto; font-family:var(--mono); font-size:9px; font-weight:700; letter-spacing:.18em; color:#fff; background:#a8161d; padding:3px 9px; border-radius:2px; }
+#title .clsbar .clsline{ flex:1; font-family:var(--mono); font-size:9.5px; letter-spacing:.24em; color:#8b8577; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; border-top:1px solid rgba(245,178,26,.28); border-bottom:1px solid rgba(245,178,26,.28); padding:3px 0; }
+#title .term{ font-family:var(--mono); font-size:11.5px; letter-spacing:.08em; color:#8fbf8a; }
+#title .term b{ color:#c8e8c0; font-weight:700; }
+#title .term .tcur{ display:inline-block; margin-left:3px; color:#8fe08a; animation:pipblink 1s steps(2,start) infinite; }
+#title .filters .flab{ font-family:var(--mono); font-size:9.5px; letter-spacing:.2em; color:#8b8577; margin-right:2px; }
+/* file cards */
+#title .rcard{ border-left:3px solid var(--tc,#5a544a); }
+#title .rcard .fhead{ display:flex; justify-content:space-between; align-items:center; margin-bottom:2px; }
+#title .rcard .fno{ font-family:var(--mono); font-size:8.5px; letter-spacing:.08em; color:#8b8577; }
+#title .rcard .fst{ font-family:var(--mono); font-size:8px; letter-spacing:.12em; color:#8fe08a; }
+#title .rcard .fst.op{ color:#7fe6ff; }
+#title .rcard .frow{ display:flex; justify-content:space-between; align-items:flex-end; margin-top:5px; }
+#title .rcard .felo{ font-family:var(--mono); font-size:9px; color:#d8c89a; letter-spacing:.06em; }
+#title .rcard .felo b{ color:#ffd24a; font-weight:700; }
+#title .rcard .fbar{ width:34px; height:9px; opacity:.5; background:repeating-linear-gradient(90deg,#c9c2b4 0 1px,transparent 1px 3px,#c9c2b4 3px 5px,transparent 5px 6px); }
+/* the dossier */
+#title .preview{ overflow:hidden; }
+#title .preview::before{ content:''; position:absolute; inset:0; pointer-events:none; z-index:3; background:repeating-linear-gradient(0deg, rgba(255,255,255,.022) 0 1px, transparent 1px 3px); }
+#title .preview::after{ content:'THRESHOLD REGISTRY // EYES ONLY'; position:absolute; left:50%; top:46%; transform:translate(-50%,-50%) rotate(-24deg); font-family:var(--mono); font-weight:700; font-size:30px; letter-spacing:.2em; white-space:nowrap; color:#f4efe6; opacity:.05; pointer-events:none; z-index:-1; }
+#title h1{ font-size:clamp(28px,4.6vw,54px); margin-top:26px; }   /* the registry header stack needs the air (and the topbar its corner) */
+#title .dsh{ display:flex; align-items:center; justify-content:space-between; gap:8px; font-family:var(--mono); font-size:9.5px; letter-spacing:.14em; color:#8b8577; border-bottom:1px dashed rgba(245,178,26,.35); padding-bottom:6px; margin-bottom:8px; }
+#title .dsh b{ color:#d8c89a; font-weight:700; }
+#title .stamp{ position:absolute !important; top:44px; right:-18px; z-index:4 !important; transform:rotate(9deg); font-family:var(--mono); font-weight:700; font-size:13px; letter-spacing:.3em; color:#c22730; border:2.5px solid #c22730; border-radius:3px; padding:3px 12px 3px 15px; opacity:.8; pointer-events:none; mix-blend-mode:screen; }
+#title .idrows{ font-family:var(--mono); font-size:10.5px; display:flex; flex-direction:column; gap:2.5px; margin:7px 0 4px; }
+#title .idrows .ir{ display:flex; gap:8px; }
+#title .idrows .ik{ flex:0 0 96px; color:#8b8577; letter-spacing:.06em; }
+#title .idrows .iv{ color:#e8e2d6; }
+#title .idrows .iv.act{ color:#8fe08a; }
+#title .idrows .iv.opn{ color:#7fe6ff; }
+#title .frec{ display:flex; gap:6px; flex-wrap:wrap; margin-top:6px; }
+#title .frec span{ font-family:var(--mono); font-size:10px; padding:3px 8px; border-radius:3px; background:rgba(245,178,26,.08); border:1px solid rgba(245,178,26,.25); color:#d8c89a; }
+#title .frec span b{ color:#ffd24a; font-weight:700; }
+#title .incid{ margin-top:6px; display:flex; flex-direction:column; gap:2px; font-family:var(--mono); font-size:10px; color:#a49c8c; }
+#title .incid .iw{ color:#8fe08a; } #title .incid .il{ color:#ff8a6a; }
+#title .sheet .sh, #title .pvsig-h{ font-family:var(--mono); letter-spacing:.2em; }
+@keyframes regsweep{ 0%{ top:-8%; } 100%{ top:108%; } }
+#title .preview .sweep{ position:absolute; left:0; right:0; height:34px; z-index:2; pointer-events:none; background:linear-gradient(180deg, transparent, rgba(245,178,26,.045), transparent); animation:regsweep 7s linear infinite; }
+/* the sports-desk power board */
+.lswovl .rkhead{ display:flex; align-items:center; gap:10px; margin-bottom:4px; }
+.lswovl .rkhead .n9{ width:30px; height:30px; border-radius:50%; background:#d81f26; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:19px; }
+.lswovl .rkhead .rt b{ display:block; font-size:17px; letter-spacing:.1em; color:#e8e2d6; line-height:1.05; }
+.lswovl .rkhead .rt span{ font-size:9px; letter-spacing:.26em; color:#f5b21a; text-transform:uppercase; }
+.lswovl .rkmeta{ margin-left:auto; font-family:'Cascadia Mono',Consolas,monospace; font-size:10px; color:#8b8577; letter-spacing:.12em; text-align:right; }
+.lswovl table.rk{ width:100%; border-collapse:collapse; }
+.lswovl table.rk th{ font-size:9px; letter-spacing:.2em; color:#8b8577; text-transform:uppercase; text-align:left; padding:7px 8px 5px; border-bottom:1px solid rgba(245,178,26,.3); }
+.lswovl table.rk td{ font-size:13px; padding:5.5px 8px; border-bottom:1px solid rgba(255,255,255,.05); color:#d8d2c4; }
+.lswovl table.rk td.rkn{ font-family:'Cascadia Mono',Consolas,monospace; color:#8b8577; width:40px; }
+.lswovl table.rk tr:nth-child(-n+3) td.rkn{ color:#ffd24a; font-weight:700; }
+.lswovl table.rk td.mv{ width:38px; font-size:11px; font-weight:800; }
+.lswovl table.rk td.mv.up{ color:#8fe08a; } .lswovl table.rk td.mv.dn{ color:#ff6a5a; } .lswovl table.rk td.mv.fl{ color:#5a544a; }
+.lswovl table.rk td.who{ font-weight:700; color:#e8e2d6; }
+.lswovl table.rk td.who i{ display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:8px; background:var(--hc); box-shadow:0 0 8px var(--hc); }
+.lswovl table.rk td.who .crown{ margin-left:7px; }
+.lswovl table.rk td.elo{ font-family:'Cascadia Mono',Consolas,monospace; color:#ffd24a; font-weight:700; }
+.lswovl table.rk td.rec{ font-family:'Cascadia Mono',Consolas,monospace; font-size:11px; color:#a49c8c; }
+.lswovl table.rk td.thr{ font-size:10px; letter-spacing:.08em; }
+.lswovl .rkfoot{ margin-top:9px; font-family:'Cascadia Mono',Consolas,monospace; font-size:9.5px; letter-spacing:.14em; color:#6b6455; }
+/* ---- THE INVITATIONAL bracket ---- */
+.lswovl .brsub{ font-family:'Cascadia Mono',Consolas,monospace; font-size:10px; letter-spacing:.16em; color:#8b8577; margin:-6px 0 4px; }
+.lswovl .brsub b{ color:#ffd24a; }
+.lswovl .brwrap{ display:flex; gap:16px; align-items:stretch; margin:12px 0 6px; }
+.lswovl .brcol{ flex:1.15; display:flex; flex-direction:column; justify-content:space-around; gap:10px; min-width:0; }
+.lswovl .brcol.champ{ flex:0.9; justify-content:center; }
+.lswovl .brh{ text-align:center; font-size:9px; font-weight:800; letter-spacing:.26em; color:#8b8577; text-transform:uppercase; margin-bottom:-4px; }
+.lswovl .bm{ position:relative; border:1px solid rgba(255,255,255,.10); border-radius:10px; background:rgba(255,255,255,.03); padding:7px 10px; }
+.lswovl .bm::after{ content:''; position:absolute; right:-16px; top:50%; width:16px; height:1px; background:rgba(245,178,26,.35); }
+.lswovl .brcol:last-child .bm::after, .lswovl .brcol.champ .bm::after{ display:none; }
+.lswovl .bm.live{ border-color:#ffd24a; animation:brpulse 1.6s ease infinite; }
+@keyframes brpulse{ 0%,100%{ box-shadow:0 0 10px -4px #ffd24a; } 50%{ box-shadow:0 0 24px -2px #ffd24a; } }
+.lswovl .bm .bs{ display:flex; align-items:center; gap:7px; padding:3px 0; font-size:12.5px; font-weight:700; color:#cfc8ba; min-width:0; }
+.lswovl .bm .bs .seed{ font-family:'Cascadia Mono',Consolas,monospace; font-size:9px; color:#8b8577; width:17px; flex:0 0 auto; }
+.lswovl .bm .bs i{ width:8px; height:8px; border-radius:50%; background:var(--hc,#8b8577); box-shadow:0 0 7px var(--hc,transparent); flex:0 0 auto; }
+.lswovl .bm .bs .bn{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.lswovl .bm .bs .belo{ margin-left:auto; font-family:'Cascadia Mono',Consolas,monospace; font-size:9.5px; color:#8b8577; flex:0 0 auto; }
+.lswovl .bm .bs.win{ color:#ffd24a; }
+.lswovl .bm .bs.win .belo{ color:#d8c89a; }
+.lswovl .bm .bs.lose{ opacity:.42; }
+.lswovl .bm .bs.lose .bn{ text-decoration:line-through; }
+.lswovl .ychip{ font-size:8px; font-weight:900; letter-spacing:.1em; background:#d81f26; color:#fff; padding:1.5px 5px; border-radius:3px; flex:0 0 auto; }
+.lswovl .bscore{ font-family:'Cascadia Mono',Consolas,monospace; font-size:10px; font-weight:700; color:#ffd24a; background:rgba(245,178,26,.12); border:1px solid rgba(245,178,26,.35); border-radius:3px; padding:1px 6px; flex:0 0 auto; }
+.lswovl .bsim{ font-size:7.5px; letter-spacing:.14em; color:#7fb0d0; border:1px solid rgba(127,176,208,.4); border-radius:3px; padding:1px 4px; flex:0 0 auto; }
+.lswovl .btbd{ color:#5a544a; font-style:italic; font-weight:600; }
+.lswovl .bchamp{ text-align:center; padding:18px 10px; border:1px dashed rgba(245,178,26,.55); border-radius:13px; background:rgba(245,178,26,.05); }
+.lswovl .bchamp .tro{ font-size:36px; filter:drop-shadow(0 0 14px rgba(245,178,26,.8)); animation:brpulse 2s ease infinite; }
+.lswovl .bchamp .cn{ font-size:17px; font-weight:800; letter-spacing:.06em; color:#ffd24a; margin-top:4px; }
+.lswovl .bchamp .cl{ font-size:8.5px; letter-spacing:.3em; color:#8b8577; text-transform:uppercase; margin-top:3px; }
+.lswovl .bchamp.tbd{ opacity:.55; }
+/* ---- the THEATER: in-match city nameplate + the CITY ATLAS ---- */
+#hud .cityplate{ position:absolute; left:50%; transform:translateX(-50%); bottom:108px; font-family:'Cascadia Mono',Consolas,monospace; font-size:10px; letter-spacing:.14em; color:#a49c8c; background:rgba(8,10,16,.5); border:1px solid rgba(255,255,255,.08); border-radius:8px; padding:4px 12px; pointer-events:none; }
+#hud .cityplate b{ color:#e8d8b0; font-weight:700; }
+#hud .wantedrow{ font-size:11px; font-weight:800; letter-spacing:.16em; color:#5aa0ff; margin:1px 0 2px; text-shadow:0 0 10px rgba(90,160,255,.6); animation:pipblink 1.2s steps(2,start) infinite; }
+#title .term .thchip{ cursor:pointer; color:#7fb0d0; border-bottom:1px dashed rgba(127,176,208,.5); pointer-events:auto; }
+#title .term .thchip:hover{ color:#a8d8f0; }
+.lswovl .atwrap{ display:flex; gap:16px; min-height:0; }
+.lswovl .atlist{ flex:1.2; min-width:0; display:flex; flex-direction:column; gap:8px; }
+.lswovl .atlist input{ font-family:'Cascadia Mono',Consolas,monospace; font-size:12px; color:#e8e2d6; background:rgba(0,0,0,.4); border:1px solid rgba(255,255,255,.14); border-radius:8px; padding:7px 11px; outline:none; }
+.lswovl .atchips{ display:flex; gap:5px; flex-wrap:wrap; }
+.lswovl .atchips .c3{ font-size:9.5px; padding:4px 9px; }
+.lswovl .atrows{ overflow-y:auto; max-height:46vh; display:flex; flex-direction:column; gap:5px; padding-right:4px; }
+.lswovl .atrow{ cursor:pointer; display:flex; align-items:center; gap:9px; border:1px solid rgba(255,255,255,.08); border-radius:9px; padding:7px 10px; background:rgba(255,255,255,.02); }
+.lswovl .atrow:hover{ border-color:rgba(245,178,26,.5); background:rgba(255,255,255,.05); }
+.lswovl .atrow.sel{ border-color:#ffd24a; background:rgba(245,178,26,.08); }
+.lswovl .atrow .an3{ font-weight:800; font-size:13.5px; color:#e8e2d6; }
+.lswovl .atrow .ac3{ font-size:10px; color:#8b8577; letter-spacing:.06em; }
+.lswovl .atrow .apop{ margin-left:auto; text-align:right; font-family:'Cascadia Mono',Consolas,monospace; font-size:9px; color:#a49c8c; letter-spacing:.04em; }
+.lswovl .atrow .atags{ display:flex; gap:3px; margin-top:2px; flex-wrap:wrap; }
+.lswovl .atrow .atags i{ display:inline-block; width:8px; height:8px; border-radius:2px; }
+.lswovl .atprev{ flex:1; display:flex; flex-direction:column; gap:9px; }
+.lswovl .atprev canvas{ width:100%; border-radius:11px; border:1px solid rgba(255,255,255,.1); background:#0c0e14; }
+.lswovl .atmeta{ font-family:'Cascadia Mono',Consolas,monospace; font-size:10.5px; color:#a49c8c; line-height:1.7; letter-spacing:.05em; }
+.lswovl .atmeta b{ color:#ffd24a; }
+.lswovl .atbtns{ display:flex; flex-direction:column; gap:7px; }
+.lswovl .atbtns .odone{ margin-top:0; }
+/* ================= THE CODEX — a Planetary-grade CASE FILE per superweapon ================= */
+.lswovl.codex{ align-items:flex-start; padding:3vh 0; overflow-y:auto; }
+.lswovl .cfbox{ position:relative; width:min(980px,95vw); margin:auto; background:linear-gradient(178deg, rgba(20,21,26,.99), rgba(13,14,18,.99)); border:1px solid rgba(245,178,26,.3); border-radius:4px; padding:0 0 18px; font-family:'Rajdhani','Inter',sans-serif; color:#d8d2c4; overflow:hidden; }
+.lswovl .cfbox::before{ content:''; position:absolute; inset:0; pointer-events:none; z-index:5; background:repeating-linear-gradient(0deg, rgba(255,255,255,.016) 0 1px, transparent 1px 3px); }
+.lswovl .cfbox::after{ content:'THRESHOLD TREATY OFFICE — UNAUTHORIZED DISCLOSURE IS A TREATY OFFENSE'; position:absolute; left:50%; top:50%; transform:translate(-50%,-50%) rotate(-28deg); font-family:'Cascadia Mono',Consolas,monospace; font-weight:700; font-size:26px; letter-spacing:.24em; white-space:nowrap; color:#f4efe6; opacity:.035; pointer-events:none; }
+.lswovl .cftop{ display:flex; align-items:center; gap:12px; background:#0a0b10; border-bottom:2px solid #f5b21a; padding:11px 18px; }
+.lswovl .cftop .clschip{ font-family:'Cascadia Mono',Consolas,monospace; font-size:9px; font-weight:700; letter-spacing:.18em; color:#fff; background:#a8161d; padding:3px 9px; border-radius:2px; flex:0 0 auto; }
+.lswovl .cftop .cft{ font-family:'Cascadia Mono',Consolas,monospace; font-size:11px; letter-spacing:.22em; color:#c9c2b4; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.lswovl .cftop .cfnav{ margin-left:auto; display:flex; gap:6px; flex:0 0 auto; }
+.lswovl .cftop .cfnav span{ cursor:pointer; width:28px; height:28px; display:inline-flex; align-items:center; justify-content:center; border:1px solid rgba(255,255,255,.18); border-radius:4px; color:#ffd24a; font-size:17px; font-weight:800; background:rgba(255,255,255,.04); user-select:none; }
+.lswovl .cftop .cfnav span:hover{ border-color:#ffd24a; }
+.lswovl .cfhead{ display:flex; align-items:flex-start; gap:18px; padding:16px 22px 6px; position:relative; }
+.lswovl .cfhead .cfportrait{ flex:0 0 92px; height:92px; border-radius:6px; border:2px solid var(--cfa,#f5b21a); display:flex; align-items:center; justify-content:center; font-size:44px; font-weight:900; color:var(--cfa,#f5b21a); background:radial-gradient(80% 80% at 50% 35%, rgba(255,255,255,.07), rgba(0,0,0,.35)); text-shadow:0 0 24px var(--cfa); }
+.lswovl .cfhead .cfid .cfalias{ font-size:36px; font-weight:800; letter-spacing:.04em; line-height:1; color:var(--cfa,#ffd24a); }
+.lswovl .cfhead .cfid .cfrole{ font-size:11px; letter-spacing:.26em; text-transform:uppercase; color:#ffcf7a; margin:3px 0 8px; }
+.lswovl .cfhead .cfid .cfmeta{ font-family:'Cascadia Mono',Consolas,monospace; font-size:10px; letter-spacing:.1em; color:#8b8577; }
+.lswovl .cfstamp{ position:absolute; right:26px; top:14px; transform:rotate(7deg); font-family:'Cascadia Mono',Consolas,monospace; font-weight:700; font-size:14px; letter-spacing:.3em; color:#c22730; border:3px solid #c22730; border-radius:3px; padding:5px 14px 5px 17px; opacity:.85; mix-blend-mode:screen; text-align:center; line-height:1.5; }
+.lswovl .cfstamp small{ display:block; font-size:8px; letter-spacing:.2em; color:#c22730; }
+.lswovl .cfgrid{ display:grid; grid-template-columns:1fr 1fr; gap:0 26px; padding:8px 22px 4px; }
+.lswovl .cfsec{ margin-bottom:13px; min-width:0; }
+.lswovl .cfsec.wide{ grid-column:1 / -1; }
+.lswovl .cfsec .cfsh{ font-family:'Cascadia Mono',Consolas,monospace; font-size:10px; font-weight:700; letter-spacing:.26em; color:#f5b21a; border-bottom:1px dashed rgba(245,178,26,.4); padding-bottom:4px; margin-bottom:7px; }
+.lswovl .cfrow{ display:flex; gap:10px; font-family:'Cascadia Mono',Consolas,monospace; font-size:11px; padding:2px 0; }
+.lswovl .cfrow .k{ flex:0 0 148px; color:#8b8577; letter-spacing:.05em; }
+.lswovl .cfrow .v{ color:#e8e2d6; min-width:0; }
+.lswovl .cfrow .v.hot{ color:#ffd24a; } .lswovl .cfrow .v.ok{ color:#8fe08a; } .lswovl .cfrow .v.syn{ color:#7fe6ff; }
+.lswovl .redact{ display:inline-block; background:#0c0d11; color:transparent; border-radius:2px; box-shadow:inset 0 0 0 1px rgba(255,255,255,.05); user-select:none; }
+.lswovl table.cfarm{ width:100%; border-collapse:collapse; font-family:'Cascadia Mono',Consolas,monospace; }
+.lswovl table.cfarm th{ font-size:8.5px; letter-spacing:.2em; color:#8b8577; text-transform:uppercase; text-align:left; padding:4px 7px; border-bottom:1px solid rgba(245,178,26,.35); }
+.lswovl table.cfarm td{ font-size:10.5px; padding:4.5px 7px; border-bottom:1px solid rgba(255,255,255,.05); color:#c9c2b4; vertical-align:top; }
+.lswovl table.cfarm td.sl2{ color:#ffd24a; font-weight:700; width:40px; }
+.lswovl table.cfarm td.an3{ color:#e8e2d6; font-weight:700; white-space:nowrap; }
+.lswovl table.cfarm td.dm{ color:#ff9a6a; }
+.lswovl table.cfarm tr.ult td{ background:rgba(245,178,26,.05); }
+.lswovl .cfcounter{ display:flex; flex-direction:column; gap:5px; }
+.lswovl .cfcounter .cn{ display:flex; gap:8px; font-size:12.5px; line-height:1.45; color:#cfc8ba; }
+.lswovl .cfcounter .cn i{ flex:0 0 auto; font-style:normal; color:#ff8a6a; font-family:'Cascadia Mono',Consolas,monospace; font-size:10px; padding-top:2px; }
+.lswovl .cfquote{ border-left:3px solid rgba(216,31,38,.6); padding:6px 12px; font-style:italic; font-size:13px; color:#e8ddd0; background:rgba(216,31,38,.05); border-radius:0 6px 6px 0; }
+.lswovl .cfquote b{ display:block; font-style:normal; font-family:'Cascadia Mono',Consolas,monospace; font-size:9px; letter-spacing:.16em; color:#ff8a7a; margin-top:4px; }
+.lswovl .cffoot{ display:flex; justify-content:space-between; align-items:center; font-family:'Cascadia Mono',Consolas,monospace; font-size:9px; letter-spacing:.18em; color:#6b6455; padding:10px 22px 0; border-top:1px dashed rgba(255,255,255,.1); margin:4px 22px 0; }
+.lswovl .cfbtnrow{ display:flex; gap:9px; padding:12px 22px 0; }
+.lswovl .cfbtnrow .odone{ margin-top:0; flex:1; }
+#title .pvcodex{ cursor:pointer; margin-top:11px; text-align:center; font-family:var(--mono); font-size:10.5px; font-weight:700; letter-spacing:.22em; color:#0d0e12; background:linear-gradient(180deg,#ffd15a,#f5921a); border-radius:8px; padding:9px 8px; box-shadow:0 3px 0 #7a3d05; user-select:none; }
+#title .pvcodex:hover{ filter:brightness(1.08); }
+.lswovl table.rk tr{ cursor:pointer; }
 `;
 
 // Derive a 0–10 stat profile + trait tags from a character's raw data.
@@ -393,6 +729,7 @@ export class HUD {
       </div>
       <div class="panel pl">
         <div class="nm" id="plName">—</div>
+        <div class="wantedrow" id="plWanted" style="display:none"></div>
         <div class="rl" id="plRole">—</div>
         <div class="lab">HEALTH</div><div class="bar"><i class="hpF" id="plHp"></i></div>
         <div class="lab">KI / ENERGY<span class="kistate" id="kiState">DRAINED</span><span class="kiover" id="kiOver">⚡ OVERDRIVE — FISTS REFILL</span></div><div class="bar" id="kiBar"><i class="kiF" id="plKi"></i></div>
@@ -407,7 +744,10 @@ export class HUD {
       <div class="combo" id="hCombo"><div class="n" id="hComboN">0</div><div class="l">Hits</div></div>
       <div class="dmgwrap" id="hDmg"></div>
       <div class="panel slots" id="hSlots"></div>
+      <div class="foearrow" id="hFoeArrow"><i></i><u></u><span></span></div>
       <div class="panel hint" id="hHint">
+        <div class="hintchip">❓ <b>F1</b> CONTROLS</div>
+        <div class="hintbody">
         <b>WASD</b> move · <b>Mouse</b> aim · <b>Click a foe</b> to lock/face · <b>T</b> unlock<br/>
         <b>LMB/RMB</b> powers · <b>Q E H</b> skills · <b>R</b> ultimate<br/>
         <b>V</b> tap jab / <b>HOLD</b> haymaker (crushes guards) · <b>G</b> grab<br/>
@@ -415,6 +755,7 @@ export class HUD {
         <b>F</b> flight ON/OFF · <b>SPACE</b> rise · release = hover · <b>Z</b> descend · <b>WHEEL</b> swap hero<br/>
         <b>1–0</b>/<b>TAB</b> heroes · <b>B</b> rival · <b>ESC</b> pause<br/>
         🎮 <b>Pad</b>: sticks move/aim · R2/L2 powers · ▢○ melee · L1 guard
+        </div>
       </div>
       <div class="panel tut" id="hTut" style="display:none">
         <span class="tskip" id="hTutSkip">skip ✕</span>
@@ -435,6 +776,8 @@ export class HUD {
       <div class="danger" id="hDanger"></div>
       <div class="hitring" id="hHits"></div>
       <div class="panel radar" id="hRadar"><div class="rlab">Radar</div><canvas id="hRadarC" width="152" height="152"></canvas></div>
+      <div class="panel pip" id="hPip" style="display:none"><div class="pipcap"><span class="pipdot"></span><span>ON AIR — KMK 9</span></div></div>
+      <div class="cityplate" id="hCity" style="display:none"></div>
       <div class="kobanner" id="hKO"><div class="kob" id="hKOt">K.O.</div><div class="kos" id="hKOs"></div></div>
     </div>`;
     this.el = {
@@ -453,9 +796,12 @@ export class HUD {
       mode: this.root.querySelector('#hMode'), ann: this.root.querySelector('#hAnn'), annT: this.root.querySelector('#hAnnT'), annS: this.root.querySelector('#hAnnS'),
       kit: this.root.querySelector('#hKit'), kitChips: this.root.querySelector('#hKitChips'), end: this.root.querySelector('#hEnd'),
       radar: this.root.querySelector('#hRadar'), radarC: this.root.querySelector('#hRadarC'),
+      pip: this.root.querySelector('#hPip'),
+      city: this.root.querySelector('#hCity'),
+      wanted: this.root.querySelector('#plWanted'),
       hits: this.root.querySelector('#hHits'), danger: this.root.querySelector('#hDanger'),
       ko: this.root.querySelector('#hKO'), koT: this.root.querySelector('#hKOt'), koS: this.root.querySelector('#hKOs'),
-      hint: this.root.querySelector('#hHint'),
+      hint: this.root.querySelector('#hHint'), foeArrow: this.root.querySelector('#hFoeArrow'),
       tut: this.root.querySelector('#hTut'), tutStep: this.root.querySelector('#hTutStep'), tutObj: this.root.querySelector('#hTutObj'),
       tutKeys: this.root.querySelector('#hTutKeys'), tutTip: this.root.querySelector('#hTutTip'), tutDots: this.root.querySelector('#hTutDots'),
     };
@@ -476,7 +822,184 @@ export class HUD {
   _buildOverlays() {
     const mk = (id) => { const d = document.createElement('div'); d.id = id; d.className = 'lswovl'; document.body.appendChild(d); return d; };
     this.optionsEl = mk('hOptions'); this.howtoEl = mk('hHowto'); this.onlineEl = mk('hOnline');
+    this.rankingsEl = mk('hRankings'); this.bracketEl = mk('hBracket'); this.atlasEl = mk('hAtlas');
+    this.codexEl = mk('hCodex'); this.codexEl.classList.add('codex');
+    try { this.theater = JSON.parse(localStorage.getItem('threshold_theater_v1') || 'null') || { flagship: true, seed: 1 }; } catch { this.theater = { flagship: true, seed: 1 }; }
   }
+
+  // ---- THE CITY ATLAS: 1,050 real cities off the world sheet → pick a theater, preview its plan ----
+  resolveTheaterPlan() {
+    const t = this.theater || { flagship: true };
+    if (t.gallery) return galleryPlan();
+    if (t.flagship || t.cityId == null) return thresholdPlan();
+    const city = cityList()[t.cityId];
+    return city ? generatePlan(city, t.seed || 1) : thresholdPlan();
+  }
+  _drawPlanPreview(cvs, plan) {
+    const x = cvs.getContext('2d'); const S = cvs.width;
+    x.clearRect(0, 0, S, S);
+    x.fillStyle = '#0c0e14'; x.fillRect(0, 0, S, S);
+    if (!plan.cells) {   // the flagship — stylized card
+      x.fillStyle = '#d8c89a'; x.font = '800 15px Rajdhani,sans-serif'; x.textAlign = 'center';
+      x.fillText('THE WHITE CITY', S / 2, S / 2 - 8);
+      x.fillStyle = '#8b8577'; x.font = '9px Consolas,monospace';
+      x.fillText('FLAGSHIP THEATER — HAND-BUILT', S / 2, S / 2 + 10);
+      return;
+    }
+    const N = plan.N, pad = 12, cs = (S - pad * 2) / N, gap = Math.max(2, cs * 0.1);
+    for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
+      const cell = plan.cells[r][c];
+      const px = pad + c * cs, py = pad + r * cs;
+      if (!cell) { x.fillStyle = '#181a20'; x.fillRect(px + gap / 2, py + gap / 2, cs - gap, cs - gap); continue; }
+      if (cell.t === 'water') { x.fillStyle = '#2a5a78'; x.fillRect(px, py, cs, cs); continue; }
+      x.fillStyle = (TILE_INFO[cell.t] ? TILE_INFO[cell.t].c : '#5a544a') + 'cc';
+      x.fillRect(px + gap / 2, py + gap / 2, cs - gap, cs - gap);
+      x.fillStyle = 'rgba(0,0,0,.55)'; x.font = `700 ${Math.max(7, cs * 0.16)}px Consolas,monospace`; x.textAlign = 'center';
+      x.fillText((cell.t[0] + (cell.v ?? '')).toUpperCase(), px + cs / 2, py + cs / 2 + 3);
+    }
+    x.fillStyle = '#f5d99a'; x.font = '800 12px Rajdhani,sans-serif'; x.textAlign = 'left';
+    x.fillText(plan.name.toUpperCase(), pad, S - 4);
+  }
+  showAtlas() {
+    const cities = cityList();
+    const st = this._atlasSt || (this._atlasSt = { q: '', type: 'ALL', sel: this.theater.flagship ? -1 : (this.theater.cityId ?? -1), seed: this.theater.seed || 1 });
+    const TYPES = ['ALL', 'Military', 'Political', 'Industrial', 'Company', 'Seaport', 'Resort', 'Mining', 'Educational', 'Temple'];
+    const render = () => {
+      const q = st.q.toLowerCase();
+      let L = cities.filter(c => (st.type === 'ALL' || c.types.includes(st.type)) && (!q || (c.name + ' ' + c.country).toLowerCase().includes(q)));
+      const shown = L.slice(0, 28);
+      const selCity = st.sel >= 0 ? cities[st.sel] : null;
+      const plan = st.sel < 0 ? thresholdPlan() : generatePlan(selCity, st.seed);
+      this.atlasEl.innerHTML = `<div class="obox" style="width:min(940px,96vw)">
+        <div class="rkhead"><div class="n9" style="background:#2a5a78">🗺</div>
+          <div class="rt"><b>CITY ATLAS — THEATER SELECT</b><span>the world sheet · ${cities.length} registered cities</span></div>
+          <div class="rkmeta">TILES: 13 TYPES · 2–3 VARIANTS<br/>GRID: 96u CELLS + 22u STREETS</div></div>
+        <div class="atwrap">
+          <div class="atlist">
+            <input id="atQ" placeholder="QUERY: city or country…" value="${esc(st.q)}">
+            <div class="atchips">${TYPES.map(t => `<span class="c3${st.type === t ? ' on' : ''}" data-at="${t}">${t.toUpperCase()}</span>`).join('')}</div>
+            <div class="atrows">
+              <div class="atrow${st.sel < 0 ? ' sel' : ''}" data-ci="-1"><div><div class="an3">THE WHITE CITY <span style="font-size:9px;color:#ffd24a">★ FLAGSHIP</span></div><div class="ac3">Threshold Treaty Zone — the hand-built original</div></div><div class="apop">CITY<br/>SAFE 62</div></div>
+              ${shown.map(c => `<div class="atrow${st.sel === c.id ? ' sel' : ''}" data-ci="${c.id}">
+                <div><div class="an3">${esc(c.name)}</div><div class="ac3">${esc(c.country)} · ${esc(c.types.join(' / ') || '—')}</div>
+                <div class="atags">${c.types.map(t => `<i style="background:${(TILE_INFO[t.toLowerCase()] || {}).c || '#5a544a'}" title="${esc(t)}"></i>`).join('')}</div></div>
+                <div class="apop">${esc(c.popType.toUpperCase())}<br/>CRIME ${c.crime}</div>
+              </div>`).join('')}
+              ${L.length > 28 ? `<div class="ac3" style="text-align:center;padding:4px">… ${L.length - 28} more — refine the query</div>` : ''}
+            </div>
+          </div>
+          <div class="atprev">
+            <canvas id="atCv" width="260" height="260"></canvas>
+            <div class="atmeta" id="atMeta"></div>
+            <div class="atbtns">
+              <button class="odone oghost" id="atSeed">⟳ REROLL LAYOUT (SEED ${st.seed})</button>
+              <button class="odone" id="atSet">📍 SET AS THEATER</button>
+              <button class="odone oghost" id="atGal">🧱 TILE PROVING GROUND</button>
+              <button class="odone oghost" id="atClose">CLOSE</button>
+            </div>
+          </div>
+        </div>
+      </div>`;
+      this._drawPlanPreview(this.atlasEl.querySelector('#atCv'), plan);
+      this.atlasEl.querySelector('#atMeta').innerHTML = st.sel < 0
+        ? `<b>THE WHITE CITY</b> — 5×5 flagship grid<br/>Four districts + harbor + the bridge<br/>Hand-tuned; the planner's benchmark`
+        : `<b>${esc(selCity.name.toUpperCase())}</b>, ${esc(selCity.country)}<br/>${esc(popLabel(selCity.popType, selCity.pop))}<br/>TYPES: ${esc(selCity.types.join(' · ') || 'GENERAL')}<br/>CRIME ${selCity.crime} · SAFETY ${selCity.safety} · GRID ${plan.N}×${plan.N}<br/>POLICE RESPONSE ~${Math.round(Math.max(5, Math.min(24, 26 - selCity.safety * 0.25)))}s ${selCity.safety >= 60 ? '· RAPID' : selCity.safety <= 30 ? '· SLOW' : ''}`;
+      const $ = (s) => this.atlasEl.querySelector(s);
+      $('#atQ').oninput = (e) => { st.q = e.target.value; render(); setTimeout(() => { const i = $('#atQ'); i.focus(); i.setSelectionRange(i.value.length, i.value.length); }, 0); };
+      this.atlasEl.querySelectorAll('[data-at]').forEach(ch => ch.onclick = () => { st.type = ch.dataset.at; render(); });
+      this.atlasEl.querySelectorAll('[data-ci]').forEach(row => row.onclick = () => { st.sel = +row.dataset.ci; st.seed = 1; render(); });
+      $('#atSeed').onclick = () => { st.seed++; render(); };
+      $('#atSet').onclick = () => {
+        this.theater = st.sel < 0 ? { flagship: true, seed: 1 } : { cityId: st.sel, seed: st.seed };
+        try { localStorage.setItem('threshold_theater_v1', JSON.stringify(this.theater)); } catch {}
+        this.atlasEl.style.display = 'none';
+        const tt = this.title.querySelector('#termTheater'); if (tt) tt.textContent = st.sel < 0 ? 'THE WHITE CITY' : cities[st.sel].name.toUpperCase();
+        this.feed('Theater set — ' + (st.sel < 0 ? 'THE WHITE CITY' : cities[st.sel].name.toUpperCase()), '#7fb0d0');
+      };
+      $('#atGal').onclick = () => { this.theater = { gallery: true }; this.atlasEl.style.display = 'none'; this.onProvingGround && this.onProvingGround(); };
+      $('#atClose').onclick = () => { this.atlasEl.style.display = 'none'; };
+    };
+    render();
+    this.atlasEl.style.display = 'flex';
+  }
+
+  // ---- the KMK 9 SPORTS DESK power board — every match (AI or piloted) moves the book ----
+  showRankings() {
+    const rows = rankingTable(ROSTER);
+    const champ = championId();
+    this.rankingsEl.innerHTML = `<div class="obox" style="width:min(780px,94vw)">
+      <div class="rkhead">
+        <div class="n9">9</div>
+        <div class="rt"><b>SUPERWEAPON POWER RANKINGS</b><span>KMK 9 sports desk · the official book</span></div>
+        <div class="rkmeta">INVITATIONAL #${tournamentNo()}<br/>SOURCED: AI-v-AI + PILOTED BOUTS</div>
+      </div>
+      <table class="rk"><tr><th>#</th><th>Δ</th><th>Weapon</th><th>Rating</th><th>Record</th><th>KO</th><th>LeFevre</th></tr>
+      ${rows.map((r) => {
+        const mv = r.moved > 0 ? `<td class="mv up">▲${r.moved}</td>` : r.moved < 0 ? `<td class="mv dn">▼${-r.moved}</td>` : '<td class="mv fl">—</td>';
+        const tc = THREAT_COLORS[r.threat] || '#a49c8c';
+        return `<tr data-cid="${esc(r.id)}" title="Open the case file"><td class="rkn">${String(r.rank).padStart(2, '0')}</td>${mv}
+          <td class="who" style="--hc:${esc(r.colors.accent)}"><i></i>${esc(r.name)}${r.id === champ ? '<span class="crown" title="Reigning Invitational champion">🏆</span>' : ''}</td>
+          <td class="elo">${r.elo}</td><td class="rec">${r.played ? r.w + '–' + r.l : 'UNTESTED'}</td>
+          <td class="rec">${r.ko}/${r.kod}</td><td class="thr" style="color:${tc}">${esc(r.threat || '—')}</td></tr>`;
+      }).join('')}</table>
+      <div class="rkfoot">RATINGS SEED FROM THE LEFEVRE SCALE · EVERY KNOCKDOWN AND DECIDED MATCH MOVES THE BOOK · KO = SCORED/CONCEDED</div>
+      <button class="odone">Done</button>
+    </div>`;
+    this.rankingsEl.querySelector('.odone').onclick = () => { this.rankingsEl.style.display = 'none'; };
+    this.rankingsEl.querySelectorAll('tr[data-cid]').forEach(tr => tr.onclick = () => {
+      const d = ROSTER.find(r2 => r2.id === tr.dataset.cid);
+      if (d) this.showCodex(d);
+    });
+    this.rankingsEl.style.display = 'flex';
+  }
+
+  // ---- THE INVITATIONAL bracket — seeding view, between-rounds view, and the champion card ----
+  showBracket(T, opts = {}) {
+    const live = T.currentMatch();
+    const sideRow = (idx, m) => {
+      if (idx == null) return `<div class="bs"><span class="seed">—</span><span class="bn btbd">AWAITING WINNER</span></div>`;
+      const s = T.sides[idx], d = T.def(s.ids[0]);
+      const won = m.winner != null && m.winner === idx, lost = m.winner != null && m.winner !== idx;
+      const score = won && m.score ? `<span class="bscore">${m.score[0]}–${m.score[1]}</span>${m.sim ? '<span class="bsim">SIM</span>' : ''}` : '';
+      return `<div class="bs${won ? ' win' : ''}${lost ? ' lose' : ''}" style="--hc:${d ? esc(d.colors.accent) : '#8b8577'}">
+        <span class="seed">S${s.seed}</span><i></i><span class="bn">${esc(T.sideName(s))}</span>${s.human ? '<span class="ychip">YOU</span>' : ''}${score || `<span class="belo">${T.sideElo(s)}</span>`}
+      </div>`;
+    };
+    const cellHtml = (m) => `<div class="bm${m === live ? ' live' : ''}">${sideRow(m.a, m)}${sideRow(m.b, m)}</div>`;
+    T._resolveLinks();
+    const champ = T.champion();
+    const champD = champ ? T.def(champ.ids[0]) : null;
+    const fmtLabel = { '1v1': 'LONE WOLF · 1v1', '2v2': 'DUOS · 2v2', '1v2': 'UNDERDOG · 1 vs 2' }[T.format] || T.format;
+    this.bracketEl.innerHTML = `<div class="obox" style="width:min(1040px,96vw)">
+      <div class="rkhead">
+        <div class="n9" style="background:linear-gradient(180deg,#ffd15a,#f5921a);color:#160d02">🏆</div>
+        <div class="rt"><b>${esc(T.label)}</b><span>single elimination · best-of-3 elimination rounds · team damage LIVE</span></div>
+        <div class="rkmeta">FORMAT: ${fmtLabel}<br/>SANCTION: THRESHOLD TREATY OFFICE</div>
+      </div>
+      <div class="brsub">&gt; SEEDED FROM THE <b>POWER RANKINGS</b> — EVERY RESULT BOOKS BACK INTO THE LEDGER</div>
+      <div class="brwrap">
+        <div class="brcol"><div class="brh">Quarterfinals</div>${T.rounds[0].map(cellHtml).join('')}</div>
+        <div class="brcol"><div class="brh">Semifinals</div>${T.rounds[1].map(cellHtml).join('')}</div>
+        <div class="brcol"><div class="brh">Grand Final</div>${T.rounds[2].map(cellHtml).join('')}</div>
+        <div class="brcol champ"><div class="brh">Champion</div>
+          <div class="bchamp${champ ? '' : ' tbd'}">
+            <div class="tro">🏆</div>
+            <div class="cn" style="${champD ? `color:${esc(champD.colors.accent)}` : ''}">${champ ? esc(T.sideName(champ)) : 'TO BE DECIDED'}</div>
+            <div class="cl">${champ ? (champ.human ? 'YOUR CITY NOW' : 'THE BOOK CLOSES') : 'WINNER TAKES THE BOOK'}</div>
+          </div>
+        </div>
+      </div>
+      ${live
+        ? `<button class="odone" id="brNext">⚔ ${esc(T.roundName())} — ${esc(T.sideName(T.playerFoeSide(live)))} — FIGHT</button>`
+        : `<button class="odone" id="brDone">${champ && champ.human ? '🏆 TAKE THE BELT — BACK TO THE REGISTRY' : 'BACK TO THE REGISTRY'}</button>`}
+    </div>`;
+    const next = this.bracketEl.querySelector('#brNext');
+    if (next) next.onclick = () => { this.hideBracket(); opts.onNext && opts.onNext(); };
+    const done = this.bracketEl.querySelector('#brDone');
+    if (done) done.onclick = () => { this.hideBracket(); opts.onDone && opts.onDone(); };
+    this.bracketEl.style.display = 'flex';
+  }
+  hideBracket() { this.bracketEl.style.display = 'none'; }
 
   // ---- ONLINE: rooms, lobby, the wire ----
   showOnline() { this.renderOnline(); this.onlineEl.style.display = 'flex'; }
@@ -525,6 +1048,46 @@ export class HUD {
     }
   }
   setHintVisible(v) { if (this.el.hint) this.el.hint.style.display = v ? 'block' : 'none'; }
+  // The full control list is onboarding, not furniture: it earns ~18s of a fresh match, then
+  // collapses to a corner chip. F1 (or the Options toggle) brings it back any time.
+  hintFull(on) { if (this.el.hint) this.el.hint.classList.toggle('mini', !on); }
+  toggleHint() { if (this.el.hint) { this.el.hint.classList.toggle('mini'); this._hintPinned = !this.el.hint.classList.contains('mini'); } }
+  armHintTimer() {
+    clearTimeout(this._hintT); this._hintPinned = false;
+    this.hintFull(true);
+    this._hintT = setTimeout(() => { if (!this._hintPinned) this.hintFull(false); }, 18000);
+  }
+
+  // Point at the fight. Bots can genuinely hide now, so an off-screen target gets an edge marker.
+  updateFoeArrow(g) {
+    const el = this.el.foeArrow; if (!el) return;
+    const inMatch = !!(g.mode && g.running && !g.matchOver);
+    let foe = null;
+    if (inMatch) {
+      const cand = (g.hardLock && g.hardLock.alive) ? g.hardLock : (g.lockTarget && g.lockTarget.alive) ? g.lockTarget : null;
+      foe = cand && !cand.isDummy ? cand : null;
+      if (!foe) { const n = g.nearestFoe(g.player, g.player.pos, 400); if (n && !n.isDummy && (!g.fov || (n._vis || 0) > 0.4)) foe = n; }
+    }
+    if (!foe) { if (this._arrowOn) { this._arrowOn = false; el.classList.remove('on'); } return; }
+    const sp = g.world.screenPosOf(foe.pos.x, foe.pos.y + 6, foe.pos.z);
+    const m = 64, W = innerWidth, H = innerHeight;
+    const off = sp.behind || sp.x < m || sp.x > W - m || sp.y < m || sp.y > H - m;
+    if (!off) { if (this._arrowOn) { this._arrowOn = false; el.classList.remove('on'); } return; }
+    // project the bearing onto the screen edge
+    const cx = W / 2, cy = H / 2;
+    let dx = sp.x - cx, dy = sp.y - cy;
+    if (sp.behind) { dx = -dx; dy = -dy; }
+    const len = Math.hypot(dx, dy) || 1; dx /= len; dy /= len;
+    const sx = Math.min(Math.abs((W / 2 - m) / (dx || 1e-6)), Math.abs((H / 2 - m) / (dy || 1e-6)));
+    const x = cx + dx * sx, y = cy + dy * sx;
+    el.style.left = x + 'px'; el.style.top = y + 'px';
+    el.querySelector('u').style.transform = `rotate(${Math.atan2(dy, dx) * 180 / Math.PI + 90}deg)`;
+    const dist = Math.round(Math.hypot(foe.pos.x - g.player.pos.x, foe.pos.z - g.player.pos.z));
+    const lab = `${foe.name} ${dist}m`;
+    if (lab !== this._arrowLab) { this._arrowLab = lab; el.querySelector('span').textContent = lab; }
+    el.querySelector('span').style.left = (x > W - m * 2.6) ? '-92px' : '16px';
+    if (!this._arrowOn) { this._arrowOn = true; el.classList.add('on'); }
+  }
 
   // ---- interactive tutorial banner ----
   showTutorial(st, i, n) {
@@ -539,8 +1102,115 @@ export class HUD {
   tutorialStepDone() { this.flashScreen('#ffd24a', 0.08); }
   completeTutorial() { this.hideTutorial(); }
   hideTutorial() { if (this.el.tut) this.el.tut.style.display = 'none'; }
-  overlayOpen() { return this.optionsEl.style.display === 'flex' || this.howtoEl.style.display === 'flex'; }
-  closeOverlays() { this.optionsEl.style.display = 'none'; this.howtoEl.style.display = 'none'; }
+  overlayOpen() { return [this.optionsEl, this.howtoEl, this.rankingsEl, this.bracketEl, this.atlasEl, this.codexEl].some(e => e && e.style.display === 'flex'); }
+  closeOverlays() { for (const e of [this.optionsEl, this.howtoEl, this.rankingsEl, this.atlasEl, this.codexEl]) if (e) e.style.display = 'none'; }   // the bracket closes only through its own buttons
+
+  // ================= THE CODEX — the full case file on one superweapon =================
+  // Every line is DERIVED from live data (kit numbers, the Elo book, AI doctrine, the registry)
+  // so the file can never lie. Planetary rules: stamps, redactions, and useful intelligence.
+  showCodex(def) {
+    const render = (c) => {
+      const idn = identityOf(c), st = heroStats(c), synth = isSynthDef(c);
+      const fno = fileNoOf(c, ROSTER), rec = recOf(c.id, c);
+      const snapAll = snapshotTable(ROSTER), me = snapAll.find(r => r.id === c.id) || { rank: '—' };
+      const incid = recentIncidents(c.id, ROSTER);
+      const champ = championId() === c.id;
+      const tc = THREAT_COLORS[c.threat] || '#a49c8c';
+      const rows = cfAbilityRows(c);
+      const counters = cfCounterNotes(c);
+      const ai = c.ai || {};
+      const at = deriveAttrs(c), tl = heroTalents(c);
+      let h = 0; for (const ch of String(c.id)) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+      const rng = mulberry(h);
+      const domKind = Object.values(c.abilities || {}).some(a => a.type === 'beam') ? 'beam'
+        : (c.strength ?? 5) >= 7 ? 'fists'
+        : Object.values(c.abilities || {}).some(a => a.dmgClass === 'slash') ? 'blade' : 'blast';
+      const vp = c.voicePitch || 1;
+      const ft = c.flightTier ?? 3;
+      const ev = c.evade || {};
+      const red = (w) => `<span class="redact">${'█'.repeat(w)}</span>`;
+      this.codexEl.innerHTML = `<div class="cfbox" style="--cfa:${esc(c.colors.accent)}">
+        <div class="cftop">
+          <span class="clschip">TOP SECRET // THRESHOLD</span>
+          <span class="cft">CASE FILE ${esc(fno)} · SUPERWEAPON REGISTRY · COSMIC-EYES ONLY</span>
+          <div class="cfnav"><span id="cfPrev" title="Previous file (←)">‹</span><span id="cfNext" title="Next file (→)">›</span><span id="cfClose" title="Close (ESC)">✕</span></div>
+        </div>
+        <div class="cfhead">
+          <div class="cfportrait">${esc(c.name[0])}</div>
+          <div class="cfid">
+            <div class="cfalias">${esc(c.name)}${champ ? ' 🏆' : ''}</div>
+            <div class="cfrole">${esc(c.title || '')} · ${esc(c.role || '')}</div>
+            <div class="cfmeta">FILE OPENED ${fileDate(c.id)} · LAST REVIEWED TODAY · HANDLER: ${red(9)}</div>
+          </div>
+          <div class="cfstamp">LEFEVRE<br/>${esc((c.threat || 'UNRATED').toUpperCase())}<small>THRESHOLD TREATY ASSESSMENT</small></div>
+        </div>
+        <div class="cfgrid">
+          <div class="cfsec">
+            <div class="cfsh">§01 · IDENTIFICATION</div>
+            <div class="cfrow"><span class="k">LEGAL NAME</span><span class="v">${esc(idn.n)}</span></div>
+            <div class="cfrow"><span class="k">REGISTERED</span><span class="v">${esc(idn.c)}</span></div>
+            <div class="cfrow"><span class="k">NATION</span><span class="v">${esc(idn.co)} ${idn.f}</span></div>
+            <div class="cfrow"><span class="k">STATUS</span><span class="v ${synth ? 'syn' : 'ok'}">● ${synth ? 'OPERATIONAL — SYNTHETIC PLATFORM' : 'ACTIVE IN THE FIELD'}</span></div>
+            <div class="cfrow"><span class="k">RESIDENCE</span><span class="v">${red(14)}</span></div>
+            <div class="cfrow"><span class="k">NEXT OF KIN</span><span class="v">${red(8)} — SEALED ADDENDUM</span></div>
+            <div class="cfrow"><span class="k">FRAME</span><span class="v">${CF_BUILD[c.strength ?? 5]} · STR ${c.strength ?? 5}/10 · 1.80m REF</span></div>
+            <div class="cfrow"><span class="k">VOICE</span><span class="v">${vp < 0.85 ? 'LOW REGISTER' : vp > 1.1 ? 'HIGH REGISTER' : 'MID REGISTER'}${c.yells ? ' · BATTLE-VOCAL CONFIRMED' : ' · QUIET OPERATOR'}</span></div>
+            <div class="cfrow"><span class="k">POWER CORE</span><span class="v ${c.energyInfinite ? 'syn' : ''}">${c.energyInfinite ? '∞ CORE — NEVER DRAINS · TIER-CAPPED II' : `KI RESERVE ${c.ki} · REGEN STANDARD`}</span></div>
+          </div>
+          <div class="cfsec">
+            <div class="cfsh">§02 · THREAT ASSESSMENT</div>
+            <div class="cfrow"><span class="k">LEFEVRE CLASS</span><span class="v" style="color:${tc};font-weight:700">${esc(c.threat || 'UNRATED')}</span></div>
+            <div class="cfrow"><span class="k">BASIS</span><span class="v">PEAK OUTPUT ${st.power}/10 · REACH ${st.range}/10 · MOBILITY ${st.mobility}/10 · RESILIENCE ${st.defense}/10</span></div>
+            <div class="cfrow"><span class="k">HULL</span><span class="v">${c.hp} HP · GUARD ${(c.guardType || 'standard').toUpperCase()}${(c.meleeTiers ?? 3) >= 3 ? ' · FULL STRIKE CHAIN' : ' · SHORT STRIKE CHAIN'}</span></div>
+            <div class="cfrow"><span class="k">FLIGHT CERT</span><span class="v">${['GROUNDED — LEAP ONLY', 'CLASS I — UNSTABLE', 'CLASS II — LEVITATOR', 'CLASS III — FULL FLIGHT'][ft]}${c.flySpeed ? ` · AIRSPEED ×${c.flySpeed}` : ''}</span></div>
+            <div class="cfrow"><span class="k">ATTRIBUTES</span><span class="v">${ATTR_DEFS.map(a => `${a.name.slice(0, 3).toUpperCase()} <b style="color:${rankColor(at[a.k])}">${at[a.k]}</b>`).join(' · ')}</span></div>
+            ${tl.length ? `<div class="cfrow"><span class="k">TALENTS</span><span class="v">${tl.map(k => TALENTS[k] ? TALENTS[k].name.toUpperCase() : '').filter(Boolean).join(' · ')}</span></div>` : ''}
+            ${(c.items || []).length ? `<div class="cfrow"><span class="k">CARRIED GEAR</span><span class="v">${c.items.map(i => i.name.toUpperCase() + (i.charges ? '×' + i.charges : '')).join(' · ')}</span></div>` : ''}
+          </div>
+          <div class="cfsec">
+            <div class="cfsh">§03 · SANCTIONED RECORD</div>
+            <div class="cfrow"><span class="k">POWER INDEX</span><span class="v hot">${rec.elo} · RANK #${me.rank}/${snapAll.length}${champ ? ' · REIGNING CHAMPION' : ''}</span></div>
+            <div class="cfrow"><span class="k">BOUT RECORD</span><span class="v">${rec.w}–${rec.l}${rec.w + rec.l ? '' : ' (UNTESTED)'}</span></div>
+            <div class="cfrow"><span class="k">KNOCKDOWNS</span><span class="v">${rec.ko} SCORED / ${rec.kod} CONCEDED</span></div>
+            ${incid.length ? incid.map(x => `<div class="cfrow"><span class="k">${x.win ? '▲ VICTORY' : '▼ DEFEAT'}</span><span class="v" style="color:${x.win ? '#8fe08a' : '#ff8a6a'}">${x.win ? 'def.' : 'lost to'} ${esc(x.vs)} · ${x.how === 'tournament' ? 'INVITATIONAL' : x.how.toUpperCase()} · ${agoStr(x.t)}</span></div>`).join('') : '<div class="cfrow"><span class="k">HISTORY</span><span class="v">NO SANCTIONED BOUTS ON RECORD</span></div>'}
+          </div>
+          <div class="cfsec">
+            <div class="cfsh">§04 · SURVEILLANCE — BEHAVIORAL DOCTRINE</div>
+            <div class="cfrow"><span class="k">DOCTRINE</span><span class="v hot">${(ai.style || 'BRAWLER').toUpperCase()}</span></div>
+            <div class="cfrow"><span class="k">ENGAGEMENT BAND</span><span class="v">~${ai.range || 30}u PREFERRED</span></div>
+            <div class="cfrow"><span class="k">AGGRESSION</span><span class="v">${Math.round((ai.aggro ?? 0.6) * 100)}%</span></div>
+            <div class="cfrow"><span class="k">AIRBORNE TENDENCY</span><span class="v">${Math.round((ai.fly ?? 0.3) * 100)}%</span></div>
+            <div class="cfrow"><span class="k">ESCAPE TECH</span><span class="v">${(ev.name || ev.kind || 'DASH').toUpperCase()} (${(ev.kind || 'dash').toUpperCase()})</span></div>
+            ${[c.thorns && 'THORNED — PUNISHES GRABS', c.phase && 'INTANGIBILITY CAPABLE', c.grabHeal && 'ABSORBS ON GRAB', c.teleEscape && 'TELEPORT ESCAPE ARTIST', c.metal && 'ARMORED CHASSIS', c.frostResist && 'COLD-HARDENED', (c.beamMight || 1) >= 1.2 && 'CERTIFIED BEAM MASTER'].filter(Boolean).map(t => `<div class="cfrow"><span class="k">FLAG</span><span class="v hot">${t}</span></div>`).join('')}
+          </div>
+          <div class="cfsec wide">
+            <div class="cfsh">§05 · DOCUMENTED ARMAMENT — VERIFIED FIGURES</div>
+            <table class="cfarm"><tr><th>SLOT</th><th>DESIGNATION</th><th>CLASS</th><th>OUTPUT</th><th>KI</th><th>CYCLE</th><th>REACH</th><th>NOTES</th></tr>
+            ${rows.map(r => `<tr class="${r.ult ? 'ult' : ''}"><td class="sl2">${esc(r.slot)}</td><td class="an3">${esc(r.name)}</td><td>${esc(r.kind)}</td><td class="dm">${esc(r.dmg)}</td><td>${esc(r.cost)}</td><td>${esc(r.cd)}</td><td>${esc(r.reach)}</td><td>${esc(r.notes)}</td></tr>`).join('')}
+            </table>
+          </div>
+          <div class="cfsec wide">
+            <div class="cfsh">§06 · IF ENCOUNTERED — COUNTERMEASURE BRIEF</div>
+            <div class="cfcounter">${counters.map(([k2, t]) => `<div class="cn"><i>[${esc(k2)}]</i><span>${esc(t)}</span></div>`).join('')}</div>
+          </div>
+          <div class="cfsec wide">
+            <div class="cfsh">§07 · FIELD INTERCEPT</div>
+            <div class="cfquote">“Subject was last observed delivering ${esc(causeLine(rng, domKind))}.”<b>— WITNESS DEPOSITION · INCIDENT FILE ${red(6)} · TRANSCRIBED BY THE ${esc(idn.co.toUpperCase())} DESK</b></div>
+          </div>
+        </div>
+        <div class="cffoot"><span>THRESHOLD TREATY OFFICE · INDEX COPY 7 OF 9</span><span>PAGE 1 OF 1 · FILE ${esc(fno)}</span></div>
+        <div class="cfbtnrow"><button class="odone oghost" id="cfDone">CLOSE FILE</button></div>
+      </div>`;
+      const nav = (d) => { const i = ROSTER.indexOf(c); render(ROSTER[(i + d + ROSTER.length) % ROSTER.length]); };
+      this.codexEl.querySelector('#cfPrev').onclick = () => nav(-1);
+      this.codexEl.querySelector('#cfNext').onclick = () => nav(1);
+      this.codexEl.querySelector('#cfClose').onclick = () => { this.codexEl.style.display = 'none'; };
+      this.codexEl.querySelector('#cfDone').onclick = () => { this.codexEl.style.display = 'none'; };
+      this.codexEl.scrollTop = 0;
+    };
+    render(def);
+    this.codexEl.style.display = 'flex';
+  }
 
   showOptions() {
     const S = SETTINGS;
@@ -611,11 +1281,13 @@ export class HUD {
     // cover blocks
     ctx.fillStyle = 'rgba(120,132,155,.55)';
     for (const c of (g.world && g.world.cover) || []) { const [x, y] = toXY(c.x, c.z); const w = (c.hx ?? c.r) * sc, h = (c.hz ?? c.r) * sc; ctx.fillRect(x - w, y - h, Math.max(2, w * 2), Math.max(2, h * 2)); }
-    // district labels
-    ctx.font = '700 8px sans-serif'; ctx.textAlign = 'center'; ctx.globalAlpha = 0.85;
-    const lab = (t, wx, wz, col) => { const [x, y] = toXY(wx, wz); ctx.fillStyle = col; ctx.fillText(t, x, y); };
-    lab('COM', -96, -140, '#9fc0ff'); lab('RES', 0, 140, '#ffb87a'); lab('IND', 156, -20, '#c0d0e0'); lab('MIL', -144, 200, '#a8c070');
-    ctx.globalAlpha = 1;
+    // district labels (canon names on the flagship only — generated cities read from their plan)
+    if (!g.world.plan || g.world.plan.flagship) {
+      ctx.font = '700 8px sans-serif'; ctx.textAlign = 'center'; ctx.globalAlpha = 0.85;
+      const lab = (t, wx, wz, col) => { const [x, y] = toXY(wx, wz); ctx.fillStyle = col; ctx.fillText(t, x, y); };
+      lab('COM', -96, -140, '#9fc0ff'); lab('RES', 0, 140, '#ffb87a'); lab('IND', 156, -20, '#c0d0e0'); lab('MIL', -144, 200, '#a8c070');
+      ctx.globalAlpha = 1;
+    }
     const P = g.player;
     // player vision wedge
     if (P) {
@@ -626,7 +1298,7 @@ export class HUD {
     for (const e of g.entities) {
       if (e === P || !e.def || e.isDummy || !e.alive) continue;
       const vis = g.fov ? (e._vis || 0) : 1;
-      if (vis > 0.4) { const [ex, ey] = toXY(e.pos.x, e.pos.z); ctx.fillStyle = '#ff5a4a'; ctx.beginPath(); ctx.arc(ex, ey, 3.4, 0, TAU); ctx.fill(); ctx.strokeStyle = 'rgba(0,0,0,.5)'; ctx.lineWidth = 1; ctx.stroke(); }
+      if (vis > 0.4) { const [ex, ey] = toXY(e.pos.x, e.pos.z); ctx.fillStyle = e.def.police ? '#5aa0ff' : '#ff5a4a'; ctx.beginPath(); ctx.arc(ex, ey, 3.4, 0, TAU); ctx.fill(); ctx.strokeStyle = 'rgba(0,0,0,.5)'; ctx.lineWidth = 1; ctx.stroke(); }
       else if (e._lastKnown) { const [lx, ly] = toXY(e._lastKnown.x, e._lastKnown.z); ctx.fillStyle = 'rgba(255,90,74,.6)'; ctx.font = 'bold 11px Inter,sans-serif'; ctx.fillText('?', lx - 3, ly + 4); }
     }
     // deployed beacon — gold diamond so she always knows where home is
@@ -702,6 +1374,7 @@ export class HUD {
     if (h.type === 'duel') html = `<div class="seg"><div class="mv" style="color:#8fe08a">${h.a}</div><div class="ml">${h.aName}</div></div><div class="vs">${h.a}–${h.b} · first to ${h.target}</div><div class="seg"><div class="mv" style="color:#ff6a5a">${h.b}</div><div class="ml">${h.bName}</div></div>`;
     else if (h.type === 'survival') html = `<div class="seg"><div class="mv" style="color:#ffb03a">${h.wave}</div><div class="ml">Wave</div></div><div class="seg"><div class="mv">${h.score}</div><div class="ml">Score</div></div><div class="seg"><div class="mv" style="color:#ff6a5a">${'♥'.repeat(h.lives) || '—'}</div><div class="ml">Lives</div></div>`;
     else if (h.type === 'rumble') html = `<div class="seg"><div class="mv" style="color:#7fe6ff">${h.frags}</div><div class="ml">Frags / ${h.target}</div></div><div class="seg"><div class="mv">${h.timer}</div><div class="ml">Seconds</div></div>`;
+    else if (h.type === 'tournament') html = `<div class="seg"><div class="mv" style="color:#8fe08a">${h.a}</div><div class="ml">YOU</div></div><div class="vs">${h.roundName} · RD ${h.round} · first to ${h.target} · ⚠ TEAM DMG</div><div class="seg"><div class="mv" style="color:#ff6a5a">${h.b}</div><div class="ml">${h.bName}</div></div>`;
     if (html !== this._modeHtml) { this._modeHtml = html; el.innerHTML = html; }   // dirty-check — no per-frame DOM rebuild
   }
 
@@ -739,9 +1412,11 @@ export class HUD {
   }
 
   showEndScreen(result, g) {
+    if (g.matchReport) { this._showBroadcast(result, g); return; }
     const p = g.player;
     const stats = [['Score', p.score], ['KOs', p.kills], ['Level', p.level]];
     if (result.wave != null) stats.unshift(['Wave', result.wave]);
+    this.el.end.classList.remove('news');
     this.el.end.innerHTML = `
       <div class="et" style="color:${result.win ? '#8fe08a' : '#ff6a5a'}">${result.title}</div>
       <div class="el">${(result.lines || []).join('<br/>')}</div>
@@ -751,7 +1426,225 @@ export class HUD {
     this.el.end.querySelector('#eRematch').onclick = () => { this.hideEndScreen(); if (this.onRematch) this.onRematch(); };
     this.el.end.querySelector('#eMenu').onclick = () => { this.hideEndScreen(); if (this.onMenu) this.onMenu(); };
   }
-  hideEndScreen() { this.el.end.style.display = 'none'; }
+
+  // ---- the KMK 9 ACTION NEWS post-fight broadcast: TV replaying the crew's REAL footage,
+  // a typed anchor script about who won and how, the tale of the tape, and the city desk ----
+  _showBroadcast(result, g) {
+    const rep = g.matchReport;
+    let b;
+    try { b = writeBroadcast(rep); } catch (e) { console.error('newsroom', e); g.matchReport = null; this.showEndScreen(result, g); return; }
+    const tape = tapeRows(rep);
+    const winColor = result.win ? '#1d7a3a' : '#8a1d24';
+    const pchip = (s) => s ? `<span style="display:inline-flex;align-items:center;gap:6px;color:${esc(s.colors.accent)}"><i style="width:9px;height:9px;border-radius:50%;background:${esc(s.colors.accent)};box-shadow:0 0 8px ${esc(s.colors.accent)}"></i>${esc(s.name)}</span>` : '—';
+    let tapeHtml = '';
+    if (tape.cols.length === 2 && !tape.ranked) {
+      const hi = (lb, av, bv) => {
+        const a = parseFloat(av), b2 = parseFloat(bv);
+        if (isNaN(a) || isNaN(b2) || a === b2) return [0, 0];
+        const lower = /TAKEN/.test(lb);                       // damage TAKEN: less is the flex
+        return (a > b2) !== lower ? [1, 0] : [0, 1];
+      };
+      tapeHtml = `<table class="tape"><tr><th class="lb"></th><th>${pchip(tape.cols[0])}</th><th>${pchip(tape.cols[1])}</th></tr>
+        ${tape.rows.map(r => { const [wa, wb] = hi(r[0], r[1], r[2]); return `<tr><td class="lb">${esc(r[0])}</td><td class="${wa ? 'win' : ''}">${esc(r[1])}</td><td class="${wb ? 'win' : ''}">${esc(r[2])}</td></tr>`; }).join('')}</table>`;
+    } else if (tape.ranked) {
+      tapeHtml = `<table class="tape">${tape.rows.map((r, i) => `<tr><td class="lb">${i + 1}. ${esc(r[0])}</td><td>${esc(r[1])}</td><td>${esc(r[2])}</td></tr>`).join('')}</table>`;
+    } else if (tape.cols.length === 1) {
+      tapeHtml = `<table class="tape"><tr><th class="lb"></th><th>${pchip(tape.cols[0])}</th></tr>${tape.rows.map(r => `<tr><td class="lb">${esc(r[0])}</td><td class="win">${esc(r[1])}</td></tr>`).join('')}</table>`;
+    }
+    for (const L of b.script) L.label = L.who === 'ANCHOR' ? titleCase(b.anchorName || 'Anchor') : titleCase(L.who);   // the desk has a name
+    const c = rep.city;
+    const cityRows = [
+      ['Civilians treated', c.civs], ['Structures down', c.blocks], ['Vehicles destroyed', c.cars], ['Impact craters', c.craters],
+    ].map(([l, v]) => `<div class="cityrow"><span>${l}</span><b>${v}</b></div>`).join('');
+    const tickerHtml = b.ticker.map(t => `<b>◆</b><span>${esc(t)}</span>`).join('');
+    this.el.end.classList.add('news');
+    this.el.end.innerHTML = `
+    <div class="nwrap">
+      <div class="nmast">
+        <div class="n9">9</div>
+        <div class="nb"><b>KMK ACTION NEWS</b><span>First on the scene</span></div>
+        <div class="nlive"><i></i> ${esc(b.clockStr)} · ${esc(b.district)}</div>
+      </div>
+      <div class="nbody">
+        <div class="ncl">
+          <div class="tvset">
+            <div class="tvscreen"><canvas id="nTv" width="640" height="360"></canvas><div class="tvscan"></div><div class="tvglare"></div><div class="tvtag" id="nTvTag">SIGNAL</div></div>
+            <div class="tvchin"><span class="tvbrand">MK·TRINITY</span><span class="tvgrill"></span><span class="tvled"></span></div>
+          <div class="tvprog" id="nTvProg"></div>
+          </div>
+          <div class="tvcap" id="nTvCap">Field footage — KMK 9</div>
+          <div class="ncrew">Desk: ${esc(titleCase(b.anchorName || 'KMK 9'))} · Field: ${esc(titleCase(rep.reporter))} · Camera: ${esc(rep.operator)}</div>
+          <div class="btns"><button id="eRematch">${g.modeId === 'tournament' ? 'CONTINUE ▸ BRACKET' : 'Rematch'}</button><button class="ghost" id="eMenu">Main Menu</button></div>
+        </div>
+        <div class="ncr">
+          <div class="nkickrow">
+            <span class="nkick">${esc(b.kicker)}</span>
+            <span class="nkick" style="background:${winColor}">${esc(result.title)}</span>
+            <span class="sat" id="nSat"><i></i> Satellite desk update</span>
+          </div>
+          <div class="nhead" id="nHead">${esc(b.headline)}</div>
+          <div class="nsub">Special report · <b>${esc(b.district)}</b> · this ${esc(b.timeWord)}</div>
+          <div class="nscript" id="nScript"></div>
+          <div class="wcard" id="nWit" style="display:none"></div>
+          <div class="nboards">
+            <div class="board"><div class="bh">Tale of the tape <em>OFFICIAL</em></div>${tapeHtml}</div>
+            <div class="board"><div class="bh">City desk <em>DAMAGE ASSESSMENT</em></div>${cityRows}
+              <div class="citysum"><span class="cl">Early estimate</span><span class="cv">${esc(money(b.est))}</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="nticker"><div class="tkbrand">KMK 9</div><div class="tkwrap"><div class="tkx">${tickerHtml}${tickerHtml}</div></div></div>
+    </div>`;
+    this.el.end.style.display = 'flex';
+    const tourn = g.modeId === 'tournament';
+    this.el.end.querySelector('#eRematch').onclick = () => {
+      this.hideEndScreen();
+      if (tourn && this.onBracketContinue) this.onBracketContinue();
+      else if (this.onRematch) this.onRematch();
+    };
+    this.el.end.querySelector('#eMenu').onclick = () => { this.hideEndScreen(); if (this.onMenu) this.onMenu(); };
+    try { this.game.audio.sting(); } catch {}
+    this._startTV(rep);
+    this._typeScript(b.script, () => {
+      const w = this.el.end.querySelector('#nWit'), sc = this.el.end.querySelector('#nScript');
+      if (w && b.witness) {
+        w.style.display = 'block'; w.style.marginTop = '4px';
+        w.innerHTML = `${esc(b.witness.quote)}<b>— ${esc(b.witness.attrib)}</b>`;
+        if (sc) sc.appendChild(w);   // lives INSIDE the script flow — can never collide with a typing line
+      }
+    });
+    // the dynamic layer: a LAN language model rewrites the desk copy when reachable (offline-safe)
+    const runId = this._tvRun;
+    llmPunchUp(rep, b).then((out) => {
+      if (!out || this._tvRun !== runId || this.el.end.style.display === 'none') return;
+      const sat = this.el.end.querySelector('#nSat'), head = this.el.end.querySelector('#nHead');
+      if (sat) sat.style.display = 'inline-flex';
+      if (head && out.headline) { head.style.transition = 'opacity .18s'; head.style.opacity = '0'; setTimeout(() => { head.textContent = out.headline; head.style.opacity = '1'; }, 190); }
+      const sc = this.el.end.querySelector('#nScript');
+      if (sc && out.anchor) for (const line of out.anchor) {
+        const d = document.createElement('div'); d.className = 'sline';
+        d.innerHTML = `<span class="swho" style="background:#7fe6ff">DESK UPDATE</span>`;
+        d.appendChild(document.createTextNode(line));
+        sc.appendChild(d);
+      }
+      const w = this.el.end.querySelector('#nWit');
+      if (w && out.witnessQuote) { w.style.display = 'block'; w.innerHTML = `${esc(out.witnessQuote)}<b>— witness statement, via the satellite desk</b>`; }
+      try { this.game.audio.zap(980); } catch {}
+    }).catch(() => {});
+  }
+
+  // typewriter for the anchor script — one line at a time, news-crawl cadence
+  _typeScript(lines, onDone) {
+    const sc = this.el.end.querySelector('#nScript'); if (!sc) return;
+    const run = this._tvRun;
+    let li = 0;
+    const nextLine = () => {
+      if (this._tvRun !== run || !sc.isConnected) return;
+      if (li >= lines.length) { if (onDone) onDone(); return; }
+      const L = lines[li++];
+      const d = document.createElement('div');
+      d.className = 'sline' + (L.who !== 'ANCHOR' ? ' field' : '');
+      d.innerHTML = `<span class="swho">${esc(L.label || (L.who === 'ANCHOR' ? 'ANCHOR' : titleCase(L.who)))}</span><span class="stx"></span><span class="cursor"></span>`;
+      sc.appendChild(d);
+      const tx = d.querySelector('.stx'), cur = d.querySelector('.cursor');
+      const text = L.text; let i = 0; let last = performance.now();
+      const tick = (now) => {
+        if (this._tvRun !== run || !sc.isConnected) return;
+        const n = Math.max(1, Math.round((now - last) / 11));   // ~90 chars/sec
+        last = now; i = Math.min(text.length, i + n);
+        tx.textContent = text.slice(0, i);
+        if (i < text.length) requestAnimationFrame(tick);
+        else { cur.remove(); setTimeout(nextLine, 200); }
+      };
+      requestAnimationFrame(tick);
+    };
+    nextLine();
+  }
+
+  // the TV: plays the crew's recorded clips in a loop with analog static between them
+  _startTV(rep) {
+    this._stopTV();
+    const run = this._tvRun = (this._tvRun || 0) + 1;
+    const cvs = this.el.end.querySelector('#nTv'); if (!cvs) return;
+    const x = cvs.getContext('2d');
+    const tag = this.el.end.querySelector('#nTvTag'), cap = this.el.end.querySelector('#nTvCap');
+    const prog = this.el.end.querySelector('#nTvProg');
+    const clips = rep.clips || [];
+    let progN = -1;
+    const syncProg = () => {   // one segment per clip; the live one fills as the playhead moves
+      if (!prog) return;
+      if (clips.length !== progN) { progN = clips.length; prog.innerHTML = clips.map(cl => `<i class="${cl.slow ? 'slow' : ''}"><b></b></i>`).join(''); }
+    };
+    syncProg();
+    // static noise tile, redrawn with random offsets — reads as analog snow
+    const noise = document.createElement('canvas'); noise.width = 160; noise.height = 90;
+    const nx = noise.getContext('2d'); const nd = nx.createImageData(160, 90);
+    for (let i = 0; i < nd.data.length; i += 4) { const v = (Math.random() * 255) | 0; nd.data[i] = nd.data[i + 1] = nd.data[i + 2] = v; nd.data[i + 3] = 255; }
+    nx.putImageData(nd, 0, 0);
+    const drawStatic = () => {
+      x.imageSmoothingEnabled = false;
+      x.drawImage(noise, (Math.random() * -40) | 0, (Math.random() * -30) | 0, 220, 130, 0, 0, 640, 360);
+      x.imageSmoothingEnabled = true;
+      x.fillStyle = 'rgba(0,0,0,0.35)'; x.fillRect(0, 0, 640, 360);
+    };
+    const load = (clip) => {
+      if (clip._imgs) return clip._ready;
+      clip._imgs = clip.frames.map((u) => { const im = new Image(); im.src = u; return im; });
+      clip._ready = Promise.all(clip._imgs.map((im) => im.decode ? im.decode().catch(() => {}) : 0));
+      return clip._ready;
+    };
+    let ci = 0, mode = clips.length ? 'static' : 'nosignal', t0 = performance.now(), prev = null;
+    let ph = 0, prevT = 0, wasSlow = false;   // float playhead — KO clips glide into slow motion at the moment of impact
+    if (!clips.length) { tag.textContent = 'NO SIGNAL'; cap.innerHTML = 'Awaiting crew footage — <b>KMK 9</b>'; }
+    const begin = (i) => {
+      ci = i % clips.length; mode = 'static'; t0 = performance.now();
+      if (prev && prev !== clips[ci]) { prev._imgs = null; prev._ready = null; }   // keep one clip decoded at a time
+      prev = clips[ci];
+      load(clips[ci]);
+      try { if (this.el.end.style.display !== 'none') this.game.audio.staticBurst(0.22); } catch {}
+      tag.textContent = `REPLAY ${ci + 1}/${clips.length}`; tag.classList.remove('slow'); wasSlow = false;
+      cap.innerHTML = `<b>${esc(clips[ci].title)}</b> · T+${esc(clips[ci].tLabel)} · cam ${esc(clips[ci].shotBy)}`;
+    };
+    const loop = (now) => {
+      if (this._tvRun !== run || !cvs.isConnected) return;
+      if (mode === 'nosignal') {
+        drawStatic();
+        if (clips.length) begin(0);                       // the last shot just wrapped behind the end screen — roll it
+      } else if (mode === 'static') {
+        drawStatic();
+        const clip = clips[ci];
+        if (now - t0 > 340 && clip && clip._imgs && clip._imgs[0] && clip._imgs[0].complete) { mode = 'play'; ph = 0; prevT = now; wasSlow = false; }
+      } else {
+        const clip = clips[ci];
+        // slow-motion window: the exact moment of a KO / massive hit crawls at 0.38×, then back to speed
+        const slowNow = !!(clip.slow && ph >= clip.slowFrom && ph <= clip.slowTo);
+        const rate = slowNow ? 0.38 : 1;
+        ph += (Math.min(now - prevT, 100) / 1000) * clip.fps * rate; prevT = now;
+        syncProg();
+        if (prog) { const segs = prog.children; for (let s = 0; s < segs.length; s++) { const bfill = segs[s].firstChild; if (bfill) bfill.style.width = s < ci ? '100%' : s === ci ? Math.min(100, (ph / clip.frames.length) * 100) + '%' : '0%'; } }
+        if (slowNow !== wasSlow) {
+          wasSlow = slowNow;
+          tag.textContent = slowNow ? 'SLO-MO ▶' : `REPLAY ${ci + 1}/${clips.length}`;
+          tag.classList.toggle('slow', slowNow);
+        }
+        const fi = Math.floor(ph);
+        if (fi >= clip.frames.length) { begin(ci + 1); }
+        else {
+          const im = clip._imgs[fi];
+          if (im && im.complete && im.naturalWidth) x.drawImage(im, 0, 0, 640, 360);
+        }
+      }
+      this._tvRaf = requestAnimationFrame(loop);
+    };
+    if (clips.length) begin(0);
+    this._tvRaf = requestAnimationFrame(loop);
+  }
+  _stopTV() {
+    this._tvRun = (this._tvRun || 0) + 1;
+    if (this._tvRaf) { cancelAnimationFrame(this._tvRaf); this._tvRaf = 0; }
+  }
+  hideEndScreen() { this._stopTV(); this.el.end.style.display = 'none'; this.el.end.classList.remove('news'); }
 
   flashScreen(color = '#ffffff', dur = 0.15) {
     const el = this.el.flash; if (!el) return;
@@ -890,16 +1783,41 @@ export class HUD {
     else if (g.lockTarget && g.lockTarget.alive) foe = g.lockTarget;
     if (foe && !foe.isDummy) {
       this.el.foe.style.display = 'block';
-      this.el.foeName.textContent = foe.name + '  ·  Lv' + foe.level + '  ·  ' + (foe.def.title || '');
+      const vil = g.police && g.police.wantedLevel(foe) > 0 ? '  ·  🚨 VILLAIN' : '';
+      this.el.foeName.textContent = foe.name + '  ·  Lv' + foe.level + '  ·  ' + (foe.def.title || '') + vil;
       this.el.foeHp.style.width = clamp(foe.hp / foe.maxHp * 100, 0, 100) + '%';
     } else this.el.foe.style.display = 'none';
+    // the wanted meter — the city has opinions about who hurts humans
+    if (g.police) {
+      const lvl = g.police.wantedLevel(p);
+      const txt = lvl ? `🚨 WANTED ${'★'.repeat(lvl)}${'☆'.repeat(3 - lvl)}` : '';
+      if (txt !== this._wantedTxt) { this._wantedTxt = txt; this.el.wanted.style.display = lvl ? 'block' : 'none'; this.el.wanted.textContent = txt; }
+    }
     this.updateModeBar(g);
     this.updateKitWidget(p);
     this.updateDpsMeters(g);
+    this.updateFoeArrow(g);
     // radar (hidden at the title / while paused) + low-HP danger pulse
     const inMatch = !!(g.mode && g.running);
     this.el.radar.style.display = inMatch ? 'block' : 'none';
     this.updateRadar(g);
+    // the theater nameplate — where in the world this fight is happening
+    const plan = g.world && g.world.plan;
+    const plateKey = inMatch && plan ? plan.name + plan.seed : '';
+    if (plateKey !== this._plateKey) {
+      this._plateKey = plateKey;
+      if (!plateKey) this.el.city.style.display = 'none';
+      else {
+        this.el.city.style.display = 'block';
+        this.el.city.innerHTML = `📍 <b>${esc(plan.name.toUpperCase())}</b> · ${esc(plan.country.toUpperCase())} — ${esc(plan.popLabel)}${plan.crime ? ` · CRIME ${plan.crime}` : ''}`;
+      }
+    }
+    // the KMK 9 live monitor — visible while the field crew is ON AIR
+    if (g.news) {
+      if (!this._pipAdopted && g.news.canvas) { this.el.pip.appendChild(g.news.canvas); this._pipAdopted = true; }
+      const onAir = inMatch && !g.matchOver && g.news.enabled && g.news.onAir;
+      if (onAir !== this._pipOn) { this._pipOn = onAir; this.el.pip.style.display = onAir ? 'block' : 'none'; }
+    }
     const hpFrac = p.hp / p.maxHp;
     this.el.danger.style.opacity = (inMatch && p.alive && hpFrac < 0.28) ? String(clamp(0.32 + Math.sin(performance.now() * 0.006) * 0.3, 0, 0.8)) : '0';
   }
@@ -908,9 +1826,11 @@ export class HUD {
   buildTitle(onStart) {
     let selMode = 'duel', selP1 = ROSTER[0], selP2 = ROSTER[2], two = false;
     this.title.innerHTML = `
-      <div class="topbar"><button id="tNet">🌐 Online</button><button id="tTut">🎓 Tutorial</button><button id="tOpt">⚙ Options</button><button id="tHow">❓ How to Play</button></div>
+      <div class="topbar"><button id="tAtlas">🗺 Atlas</button><button id="tRank">📊 Rankings</button><button id="tNet">🌐 Online</button><button id="tTut">🎓 Tutorial</button><button id="tOpt">⚙ Options</button><button id="tHow">❓ How to Play</button></div>
       <div class="tag">Machine King Labs · Living Superweapon</div>
       <h1>LIVING SUPERWEAPON</h1>
+      <div class="clsbar"><span class="clschip">TOP SECRET // THRESHOLD</span><span class="clsline">THRESHOLD TREATY OFFICE — SUPERWEAPON REGISTRY · INDEX COPY 7 OF 9 · COSMIC-EYES ONLY</span><span class="clschip">LSW-INDEX</span></div>
+      <div class="term">&gt; QUERY: SUPERWEAPON INDEX — <b id="termCount"></b> · THEATER: <span class="thchip" id="termTheater" title="Open the City Atlas">${(() => { try { const t = this.theater; if (!t || t.flagship) return 'THE WHITE CITY'; if (t.gallery) return 'PROVING GROUND'; const c = cityList()[t.cityId]; return c ? c.name.toUpperCase() : 'THE WHITE CITY'; } catch { return 'THE WHITE CITY'; } })()}</span><span class="tcur">▍</span></div>
       <div class="modes" id="modes"></div>
       <div class="selwrap">
         <div class="preview" id="pv"></div>
@@ -930,16 +1850,29 @@ export class HUD {
       const tc = THREAT_COLORS[c.threat] || '#a49c8c';
       const idn = identityOf(c);
       const facts = kitFacts(c);
-      pv.innerHTML = `<div class="pvflip"><span id="pvPrev" title="Previous weapon (←)">‹</span><span id="pvNext" title="Next weapon (→)">›</span></div>
+      const fno = fileNoOf(c, ROSTER), synth = isSynthDef(c);
+      const rec = recOf(c.id, c);
+      const snap = snapshotTable(ROSTER), me = snap.find(r => r.id === c.id) || { rank: '—' };
+      const incid = recentIncidents(c.id, ROSTER);
+      pv.innerHTML = `<div class="sweep"></div><div class="stamp">CLASSIFIED</div>
+        <div class="pvflip"><span id="pvPrev" title="Previous file (←)">‹</span><span id="pvNext" title="Next file (→)">›</span></div>
+        <div class="dsh"><span>SUBJECT FILE <b>${fno}</b></span><span>OPENED <b>${fileDate(c.id)}</b></span></div>
         <div class="pvname" style="color:${c.colors.accent}">${c.name}</div>
         <div class="pvttl">${c.title} · ${c.role}</div>
-        <div class="pvident">
-          <span title="${ICON_MEANING.person}">${icon('person', 12)} ${idn.n}</span>
-          <span title="${ICON_MEANING.pin}">${icon('pin', 12)} ${idn.c} · ${idn.co} ${idn.f}</span>
+        <div class="idrows">
+          <div class="ir"><span class="ik">LEGAL NAME</span><span class="iv">${esc(idn.n)}</span></div>
+          <div class="ir"><span class="ik">REGISTERED</span><span class="iv">${esc(idn.c)} · ${esc(idn.co)} ${idn.f}</span></div>
+          <div class="ir"><span class="ik">STATUS</span><span class="iv ${synth ? 'opn' : 'act'}">● ${synth ? 'OPERATIONAL — SYNTHETIC' : 'ACTIVE IN THE FIELD'}</span></div>
         </div>
         <div class="pvblurb">${c.blurb}</div>
+        <div class="frec">
+          <span>PWR-IDX <b>${rec.elo}</b></span><span>RANK <b>#${me.rank}</b>/${snap.length}</span>
+          <span>RECORD <b>${rec.w}–${rec.l}</b></span><span>KO <b>${rec.ko}</b>/${rec.kod}</span>
+        </div>
+        ${incid.length ? `<div class="incid">${incid.map(h => `<span class="${h.win ? 'iw' : 'il'}">${h.win ? '▲ def.' : '▼ lost to'} ${esc(h.vs)} · ${h.how === 'tournament' ? 'invitational' : h.how} · ${agoStr(h.t)}</span>`).join('')}</div>` : ''}
         <div class="glance">${facts.map(([ic, t, lead]) => `<span${lead ? ' class="lead"' : ''}>${icon(ic, 11)} ${t}</span>`).join('')}</div>
         ${c.threat ? `<div class="pvthreat" title="The LeFevre Threat Scale — the Treaty's official danger rating, Low → Extreme. Mixed matches are SUPPOSED to be lopsided; skill steals rounds, not physics." style="color:${tc};border-color:${tc}66;background:${tc}18">${icon('threat', 11)} LeFevre Threat · ${c.threat}</div>` : ''}
+        <div class="pvcodex" id="pvCodex" title="The full Treaty case file — armament figures, countermeasures, the record">📁 OPEN FULL CASE FILE — ${fno}</div>
         <div class="pvstats" title="Hover any bar for what it means">
           ${bar('Power', st.power, '#ff6a4a', 'Heaviest single hit in the kit', 'power')}${bar('Strength', st.strength, '#e8a24a', 'Physical muscle — melee damage up, knockback given & resisted, faster ice break-outs', 'strength')}${bar('Range', st.range, '#ffd24a', 'How far the kit reaches', 'range')}${bar('Mobility', st.mobility, '#7fe6ff', 'Run speed + dashes + teleports', 'mobility')}
           ${bar('Defense', st.defense, '#8fe08a', 'How hard this hero is to put down — HP, phasing, thorns', 'defense')}${bar('Health', st.health, '#ff8a5a', 'Raw hit points', 'health')}${bar('Energy', st.energy, '#7fb0ff', 'Ki pool — every power spends it; run dry and you fizzle', 'energy')}
@@ -951,18 +1884,31 @@ export class HUD {
           const ladder = `<div class="ladder" title="The rank ladder — every attribute sits on this one scale. Colors = rank tier.">${RANKS.slice(1).map((r, i) => `<i style="background:${r.c}" title="${i + 1} — ${r.n}"></i>`).join('')}<span>Civilian → Cosmic</span></div>`;
           const tals = tl.map(k => { const t = TALENTS[k]; return t ? `<span><b>${t.name}</b> — ${t.does}</span>` : ''; }).join('');
           const gear = (c.items || []).map(it => `<b>${it.name}</b>${it.charges ? ` ×${it.charges}` : ''}`).join(' · ');
-          return `<div class="sheet"><div class="sh">Attributes</div>${ladder}${rows}</div>
-            ${tals ? `<div class="sheet"><div class="sh">Talents</div><div class="tals">${tals}</div></div>` : ''}
+          return `<div class="sheet"><div class="sh">§ Attribute Panel — Treaty Assessment</div>${ladder}${rows}</div>
+            ${tals ? `<div class="sheet"><div class="sh">§ Documented Talents</div><div class="tals">${tals}</div></div>` : ''}
             ${gear ? `<div class="gear">⛭ Gear: ${gear} <span style="color:#8b8577">(X)</span></div>` : ''}`;
         })()}
-        <div class="pvabil">${SLOT_ORDER.filter(s => c.abilities[s.k]).map(s => { const a = c.abilities[s.k]; return `<div class="ab"><b style="color:${c.colors.accent}">${s.label}</b><span class="an">${a.name}</span><span class="ad">${describeAbility(a)}</span></div>`; }).join('')}
+        <div class="sheet" style="margin-top:12px;border-top:none;padding-top:0"><div class="sh">§ Known Armament / Observed Abilities</div></div>
+        <div class="pvabil" style="margin-top:2px;border-top:none;padding-top:0">${SLOT_ORDER.filter(s => c.abilities[s.k]).map(s => { const a = c.abilities[s.k]; return `<div class="ab"><b style="color:${c.colors.accent}">${s.label}</b><span class="an">${a.name}</span><span class="ad">${describeAbility(a)}</span></div>`; }).join('')}
         ${c.evade ? `<div class="ab"><b style="color:${c.colors.accent}">2×TAP</b><span class="an">${c.evade.name || 'Evade'}</span><span class="ad">${describeEvade(c.evade)}</span></div>` : ''}
         ${(c.items || []).map(it => `<div class="ab"><b style="color:${c.colors.accent}">X</b><span class="an">${it.name}</span><span class="ad">carried gadget — no ki cost, cooldown only</span></div>`).join('')}</div>`;
       const pp = pv.querySelector('#pvPrev'), pn = pv.querySelector('#pvNext');
       if (pp) pp.onclick = () => flip(-1);
       if (pn) pn.onclick = () => flip(1);
+      const cdx = pv.querySelector('#pvCodex');
+      if (cdx) cdx.onclick = () => this.showCodex(c);
     };
     const renderTabs = () => {
+      // TOURNAMENT: the tabs row becomes the FORMAT picker (the Invitational is a 1-pilot affair)
+      if (selMode === 'tournament') {
+        two = false;
+        const tf = this._tFormat || (this._tFormat = '1v1');
+        ptabs.innerHTML = [['1v1', '⚔ LONE WOLF 1v1'], ['2v2', '🤝 DUOS 2v2'], ['1v2', '🐺 UNDERDOG 1v2']]
+          .map(([v, l]) => `<span class="pt${tf === v ? ' on' : ''}" data-tf="${v}">${l}</span>`).join('')
+          + `<span style="font-size:11px;color:#8b8577">8 seeds off the power board · team damage ON</span>`;
+        ptabs.querySelectorAll('[data-tf]').forEach(el => el.onclick = () => { this._tFormat = el.dataset.tf; renderTabs(); });
+        return;
+      }
       const allow2 = selMode === 'duel' || selMode === 'rumble';
       if (!allow2) two = false;
       ptabs.innerHTML = `<span class="pt${!two ? ' on' : ''}" data-two="0">1 PLAYER</span>`
@@ -1015,21 +1961,25 @@ export class HUD {
       card.className = 'rcard';
       card.style.setProperty('--pc', c.colors.accent);
       const cs = stOf(c), tc = THREAT_COLORS[c.threat] || '#a49c8c';
-      card.innerHTML = `<span class="dot"></span><div class="nm">${c.name} <span class="cflag">${identityOf(c).f || ''}</span></div><div class="rl">${c.role}</div><div class="cstat">HP <b>${c.hp}</b> · PWR <b>${cs.power}</b> · <span style="color:${tc}">${c.threat || '—'}</span></div>`
+      card.style.setProperty('--tc', tc);
+      const synth = isSynthDef(c);
+      card.innerHTML = `<div class="fhead"><span class="fno">${fileNoOf(c, ROSTER)}</span><span class="fst${synth ? ' op' : ''}">● ${synth ? 'OPERATIONAL' : 'ACTIVE'}</span></div>`
+        + `<span class="dot"></span><div class="nm">${c.name} <span class="cflag">${identityOf(c).f || ''}</span></div><div class="rl">${c.role}</div><div class="cstat">HP <b>${c.hp}</b> · PWR <b>${cs.power}</b> · <span style="color:${tc}">${c.threat || '—'}</span></div>`
+        + `<div class="frow"><span class="felo">PWR-IDX <b>${recOf(c.id, c).elo}</b></span><span class="fbar"></span></div>`
         + (c.isCustom ? `<span class="cchip">CUSTOM</span><span class="cedit" title="Edit in ORIGIN">✎</span>` : '');
       card.onmouseenter = () => renderPv(c);
       card.onclick = () => select(c, card);
-      card.ondblclick = () => onStart({ mode: selMode, p1: selP1.id, p2: selP2.id, twoPlayer: two });
+      card.ondblclick = () => onStart({ mode: selMode, p1: selP1.id, p2: selP2.id, twoPlayer: two, format: this._tFormat || '1v1' });
       const ed = card.querySelector('.cedit');
       if (ed) ed.onclick = (ev) => { ev.stopPropagation(); this.onEditCustom && this.onEditCustom(c); };
       return card;
     };
     const renderFilters = () => {
-      filtersEl.innerHTML = THREATS.map(t => `<span class="fc${fState.threat === t ? ' on' : ''}" data-th="${t}">${t}</span>`).join('')
+      filtersEl.innerHTML = `<span class="flab">FILTER //</span>` + THREATS.map(t => `<span class="fc${fState.threat === t ? ' on' : ''}" data-th="${t}">${t}</span>`).join('')
         + ['ANY', 'FLIERS', 'GROUNDED'].map(fl => `<span class="fc${fState.flight === fl ? ' on' : ''}" data-fl="${fl}">${fl === 'ANY' ? '✈ ANY' : fl}</span>`).join('')
         + `<span class="fc${fState.custom ? ' on' : ''}" data-cu="1">CUSTOM</span>`
         + `<select id="fSort"><option value="default">SORT: ROSTER</option><option value="name">NAME</option><option value="threat">THREAT</option><option value="power">POWER</option><option value="hp">HP</option><option value="spd">SPEED</option></select>`
-        + `<input id="fQ" placeholder="Search…" value="${fState.q}"><span class="cnt" id="fCnt"></span>`;
+        + `<input id="fQ" placeholder="QUERY INDEX…" value="${fState.q}"><span class="cnt" id="fCnt"></span>`;
       filtersEl.querySelector('#fSort').value = fState.sort;
       filtersEl.querySelectorAll('[data-th]').forEach(c => c.onclick = () => { fState.threat = c.dataset.th; renderFilters(); renderRoster(); });
       filtersEl.querySelectorAll('[data-fl]').forEach(c => c.onclick = () => { fState.flight = c.dataset.fl; renderFilters(); renderRoster(); });
@@ -1047,7 +1997,8 @@ export class HUD {
       forge.innerHTML = `<div class="fplus">＋</div><div class="nm">FORGE NEW</div><div class="rl">ORIGIN</div><div class="cstat">Point-buy your own superweapon</div>`;
       forge.onclick = () => this.onForge && this.onForge();
       roster.appendChild(forge);
-      const cnt = filtersEl.querySelector('#fCnt'); if (cnt) cnt.textContent = list.length + ' / ' + ROSTER.length + ' weapons';
+      const cnt = filtersEl.querySelector('#fCnt'); if (cnt) cnt.textContent = list.length + ' / ' + ROSTER.length + ' FILES';
+      const tc2 = this.title.querySelector('#termCount'); if (tc2) tc2.textContent = `${list.length} ACTIVE FILE${list.length === 1 ? '' : 'S'}`;
       if (!list.includes(selP1)) selP1 = list[0] || ROSTER[0];
       const idx = list.indexOf(selP1);
       if (idx >= 0) cards[idx].classList.add('sel');
@@ -1062,7 +2013,7 @@ export class HUD {
       let n = null;
       if (e.code === 'ArrowRight') n = idx + 1; else if (e.code === 'ArrowLeft') n = idx - 1;
       else if (e.code === 'ArrowDown') n = idx + 5; else if (e.code === 'ArrowUp') n = idx - 5;
-      else if (e.code === 'Enter') { onStart({ mode: selMode, p1: selP1.id, p2: selP2.id, twoPlayer: two }); return; }
+      else if (e.code === 'Enter') { onStart({ mode: selMode, p1: selP1.id, p2: selP2.id, twoPlayer: two, format: this._tFormat || '1v1' }); return; }
       else return;
       e.preventDefault();
       if (list.length) { n = Math.max(0, Math.min(list.length - 1, n)); select(list[n], cards[n]); cards[n].scrollIntoView({ block: 'nearest' }); }
@@ -1073,8 +2024,11 @@ export class HUD {
     this.title.querySelector('#tHow').onclick = () => this.showHowto();
     this.title.querySelector('#tTut').onclick = () => this.onTutorial && this.onTutorial();
     this.title.querySelector('#tNet').onclick = () => this.showOnline();
+    this.title.querySelector('#tRank').onclick = () => this.showRankings();
+    this.title.querySelector('#tAtlas').onclick = () => this.showAtlas();
+    const thc = this.title.querySelector('#termTheater'); if (thc) thc.onclick = () => this.showAtlas();
     renderFilters(); renderRoster(); renderModes(); renderTabs();
-    this.title.querySelector('#startBtn').onclick = () => onStart({ mode: selMode, p1: selP1.id, p2: selP2.id, twoPlayer: two });
+    this.title.querySelector('#startBtn').onclick = () => onStart({ mode: selMode, p1: selP1.id, p2: selP2.id, twoPlayer: two, format: this._tFormat || '1v1' });
   }
 
   showTitle() { this.titleOpen = true; this.title.style.display = 'flex'; this.title.style.visibility = 'visible'; this.title.style.opacity = '1'; }

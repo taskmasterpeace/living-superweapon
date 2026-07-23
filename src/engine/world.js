@@ -6,8 +6,11 @@ import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPa
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { clamp, damp } from '../core/util.js';
+import { buildTiles } from './citytiles.js';
+import { CELL, districtNameAt, thresholdPlan } from '../data/cityplan.js';
+import { mulberry } from '../data/news.js';
 
-export const ARENA = 240; // half-extent of playfield — big enough to fly across
+export const ARENA = 240; // half-extent of the FLAGSHIP playfield (generated cities set world.ARENA per plan)
 
 export class World {
   constructor(canvas) {
@@ -43,6 +46,9 @@ export class World {
 
     this._buildLights();
     this._buildSky();
+    this._cityBits = [];                 // meshes outside the arena group (trees, lawns) — tracked for city rebuilds
+    this._crackTex = this._crackTexture();
+    this.plan = thresholdPlan();         // the flagship WHITE CITY ships as the boot theater
     this._buildArena();
     this._buildGrass();
     this._buildFogOfWar();
@@ -144,7 +150,8 @@ export class World {
     const g = new THREE.Group();
     // ground: the White City — bone plaza + street grid (texture carries the whites; the
     // multiply color keeps it from blowing out under ACES at noon)
-    const tex = this._gridTexture();
+    const tex = this._groundTex || (this._groundTex = this._gridTexture());
+    tex.repeat.set(5, 5);
     const mat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.9, metalness: 0.0, color: '#8f897d' });
     const SEG = 112;
     const groundGeo = new THREE.PlaneGeometry(ARENA * 2, ARENA * 2, SEG, SEG);
@@ -200,9 +207,9 @@ export class World {
       new THREE.MeshStandardMaterial({ color: '#5c6044', roughness: 0.92, metalness: 0.05 }),  // military olive
     ];
     const roofMat = roofMats[0];
-    // one window bay tile ≈ 28 units; scale each face's UVs so windows stay true-size per building
+    // one window bay tile ≈ 17 units — a REAL ~3.2m floor next to the 9.6u (1.8m) heroes
     const scaleBoxUV = (geo, w, h, d) => {
-      const uv = geo.attributes.uv, B = 28, R = 16;
+      const uv = geo.attributes.uv, B = 17, R = 16;
       const f = [[d / B, h / B], [d / B, h / B], [w / R, d / R], [w / R, d / R], [w / B, h / B], [w / B, h / B]];
       for (let fi = 0; fi < 6; fi++) for (let v = 0; v < 4; v++) {
         const i = fi * 4 + v;
@@ -213,21 +220,23 @@ export class World {
     // FOUR NAMED DISTRICTS at city scale (96u block cells; total cover ≤20 = fog cap).
     // style: 0/1 = COMMERCIAL glass · 2 = RESIDENTIAL warm stone · 3 = INDUSTRIAL steel ·
     // 4 = MILITARY olive · 5 = the BRIDGE deck (standable — block-top physics is free)
+    // heights at TRUE HERO SCALE (1u ≈ 0.19m; one floor ≈ 17u): downtown = 4-8 story towers,
+    // residential = 1-2 story homes, industrial = tall sheds, military = low bunkers
     const spots = [
       // COMMERCIAL — the downtown skyline, NW + north
-      [-192, -192, 48, 44, 40, 0], [-96, -192, 40, 38, 40, 1], [-192, -96, 40, 34, 40, 1], [-96, -96, 36, 28, 36, 0],
-      [0, -192, 56, 22, 40, 1], [96, -192, 44, 26, 36, 0], [96, -96, 40, 20, 36, 1], [0, -96, 44, 18, 36, 0],
+      [-192, -192, 48, 132, 40, 0], [-96, -192, 40, 114, 40, 1], [-192, -96, 40, 102, 40, 1], [-96, -96, 36, 84, 36, 0],
+      [0, -192, 56, 66, 40, 1], [96, -192, 44, 78, 36, 0], [96, -96, 40, 60, 36, 1], [0, -96, 44, 54, 36, 0],
       // RESIDENTIAL — warm low homes, south
-      [-96, 96, 44, 12, 36, 2], [0, 96, 50, 10, 40, 2], [96, 96, 40, 14, 34, 2], [0, 192, 54, 12, 38, 2],
+      [-96, 96, 44, 22, 36, 2], [0, 96, 50, 18, 40, 2], [96, 96, 40, 25, 34, 2], [0, 192, 54, 22, 38, 2],
       // INDUSTRIAL — dockside warehouses against the harbor
-      [169, -96, 28, 12, 50, 3], [169, 40, 28, 14, 44, 3],
+      [169, -96, 28, 20, 50, 3], [169, 40, 28, 24, 44, 3],
       // MILITARY — the SW compound: two bunkers + a watchtower
-      [-192, 192, 40, 10, 34, 4], [-96, 192, 34, 8, 28, 4], [-146, 168, 8, 26, 8, 4],
+      [-192, 192, 40, 14, 34, 4], [-96, 192, 34, 12, 28, 4], [-146, 168, 8, 38, 8, 4],
       // THE BRIDGE — a deck across the harbor at z=0 (top y=3: dry feet over deep water)
       [195, 0, 80, 3, 16, 5],
       // west park cells (-192,0) and (-192,96) stay OPEN — the park belt
     ];
-    const crackTex = this._crackTexture();
+    const crackTex = this._crackTex;
     for (const [x, z, w, h, d, style = 0] of spots) {
       const geo = new THREE.BoxGeometry(w, h, d);
       const isBridge = style === 5;
@@ -237,7 +246,7 @@ export class World {
       // the roof is a child slab that inherits the shatter-sink transform and casts nothing.
       // Only TALL buildings cast shadows — every caster is another pass over the shadow map.
       const m = new THREE.Mesh(geo, win);
-      m.position.set(x, h / 2, z); m.castShadow = h >= 20; m.receiveShadow = true;
+      m.position.set(x, h / 2, z); m.castShadow = h >= 44; m.receiveShadow = true;   // only true towers pay the shadow pass
       if (!isBridge) {
         const roof = new THREE.Mesh(new THREE.PlaneGeometry(w, d), roofMats[Math.min(style, 4)]);
         roof.rotation.x = -Math.PI / 2; roof.position.y = h / 2 + 0.05;
@@ -255,7 +264,7 @@ export class World {
       const crack = new THREE.Mesh(new THREE.BoxGeometry(w * 1.015, h * 1.006, d * 1.015), new THREE.MeshBasicMaterial({ map: crackTex, transparent: true, opacity: 0, depthWrite: false }));
       crack.position.copy(m.position); crack.visible = false; g.add(crack);   // hidden until damaged — 16 fewer transparent draws
 
-      const hp = Math.round(70 + w * h * d * 0.017);   // destructible, but tough — bigger = tougher
+      const hp = Math.round(70 + w * h * d * 0.0075);   // destructible, but tough — bigger = tougher (rescaled for 1:1 heights)
       const co = { mesh: m, crack, x, z, r: Math.max(w, d) * 0.6, h, hx: w / 2, hz: d / 2, top: h, hp, maxHp: hp, y0: h / 2, w, d, destroyed: false };
       this.cover.push(co); this.coverAll.push(co);
     }
@@ -298,13 +307,15 @@ export class World {
 
     // PARKED CARS (ruled props) — hero-scale now (~13u long vs a 9.6u fighter), curbside on
     // the real streets. Destructible, they EXPLODE and chain. One merged geometry, 4 paints.
-    const carGeo = (() => {
-      const body = new THREE.BoxGeometry(13, 3.2, 5.4); body.translate(0, 1.9, 0);
-      const cabin = new THREE.BoxGeometry(6.2, 2.4, 4.6); cabin.translate(-0.9, 4.4, 0);
+    // (geometry + paints CACHED on the world — generated cities park the same fleet)
+    const carGeo = this._carGeo || (this._carGeo = (() => {
+      // TRUE SCALE: ~4.6m sedan → 24u long, roof at 8.4u (chest height on a 9.6u hero)
+      const body = new THREE.BoxGeometry(24, 5, 9.6); body.translate(0, 2.7, 0);
+      const cabin = new THREE.BoxGeometry(11.5, 3.4, 8.6); cabin.translate(-1.6, 6.8, 0);
       return mergeGeometries([body, cabin]);
-    })();
-    const paints = ['#8a2a24', '#2a4a6a', '#c9c2b4', '#3a3f34'].map(c => new THREE.MeshStandardMaterial({ color: c, roughness: 0.5, metalness: 0.35 }));
-    this._charred = new THREE.MeshStandardMaterial({ color: '#1c1a17', roughness: 0.95, metalness: 0.1 });
+    })());
+    const paints = this._carPaints || (this._carPaints = ['#8a2a24', '#2a4a6a', '#c9c2b4', '#3a3f34'].map(c => new THREE.MeshStandardMaterial({ color: c, roughness: 0.5, metalness: 0.35 })));
+    this._charred = this._charred || new THREE.MeshStandardMaterial({ color: '#1c1a17', roughness: 0.95, metalness: 0.1 });
     const carSpots = [   // [x, z, alongZ] — parked at the curb (streets at ±48/±144, curb ≈ ±9)
       [57, -120, 1], [39, -20, 1], [57, 60, 1], [-57, -160, 1], [-39, 90, 1], [-57, 170, 1], [153, -130, 1], [-135, -57, 0],
       [-120, 57, 0], [20, 39, 0], [80, -57, 0], [-20, -135, 0], [110, 135, 0], [-160, -39, 0],
@@ -317,11 +328,11 @@ export class World {
       this.cars.push({ mesh: m, x, z, hp: 30, maxHp: 30, dead: false, paint: paints[i % paints.length] });
     });
 
-    // STREETLIGHTS — hero-scale poles (15u) at the street intersections; heads glow at night
+    // STREETLIGHTS — true-scale poles (32u ≈ 6m) at the street intersections; heads glow at night
     const lampSpots = [];
     for (const lx of [-144, -48, 48, 144]) for (const lz of [-144, -48, 48, 144]) lampSpots.push([lx + 6, lz + 6]);
-    const poleGeo = new THREE.CylinderGeometry(0.3, 0.42, 15, 6); poleGeo.translate(0, 7.5, 0);
-    const headGeo = new THREE.SphereGeometry(0.95, 8, 6); headGeo.translate(0, 15.4, 0);
+    const poleGeo = new THREE.CylinderGeometry(0.35, 0.5, 32, 6); poleGeo.translate(0, 16, 0);
+    const headGeo = new THREE.SphereGeometry(1.15, 8, 6); headGeo.translate(0, 32.8, 0);
     const poleMat = new THREE.MeshStandardMaterial({ color: '#4a463c', roughness: 0.7, metalness: 0.4 });
     this._lampMat = new THREE.MeshStandardMaterial({ color: '#fff2cc', emissive: '#ffca7a', emissiveIntensity: 0.15, roughness: 0.4 });
     const poles = new THREE.InstancedMesh(poleGeo, poleMat, lampSpots.length);
@@ -348,8 +359,8 @@ export class World {
       const b = new THREE.Mesh(new THREE.PlaneGeometry(w, h), mat);
       b.position.set(x, y, z); b.rotation.y = ry; g.add(b); this._billMats.push(mat);
     };
-    addBill(billTex('THRESHOLD', '#f5b21a'), -167.6, 28, -192, Math.PI / 2, 26, 12);   // downtown tower, east face
-    addBill(billTex('KANO COLA', '#ff5a2a'), 96, 17, -173.6, 0, 22, 10);               // midtown tower, south face
+    addBill(billTex('THRESHOLD', '#f5b21a'), -167.6, 84, -192, Math.PI / 2, 26, 12);   // downtown tower, east face
+    addBill(billTex('KANO COLA', '#ff5a2a'), 96, 46, -173.6, 0, 22, 10);               // midtown tower, south face
 
     // ROOFTOP UNITS on the 6 tallest — children so shatter carries them
     const acMat = new THREE.MeshStandardMaterial({ color: '#9a948a', roughness: 0.9 });
@@ -362,15 +373,15 @@ export class World {
     // ---- district dressing (decor only — no cover slots, no fog boxes) ----
     // INDUSTRIAL: storage tanks + a quay crane over the water
     const tankGeos = [[160, -30], [172, -22], [158, -12]].map(([x, z]) =>
-      new THREE.CylinderGeometry(6.5, 6.5, 11, 12).translate(x, 5.5, z));
+      new THREE.CylinderGeometry(6.5, 6.5, 18, 12).translate(x, 9, z));
     const tanks = new THREE.Mesh(mergeGeometries(tankGeos), new THREE.MeshStandardMaterial({ color: '#8f979c', roughness: 0.6, metalness: 0.5 }));
     tankGeos.forEach(t => t.dispose()); tanks.castShadow = false; tanks.receiveShadow = true; g.add(tanks);
     const craneGeos = [
       new THREE.BoxGeometry(8, 4, 8).translate(180, 2, 74),        // base
-      new THREE.BoxGeometry(2.6, 38, 2.6).translate(180, 21, 74),  // mast
-      new THREE.BoxGeometry(44, 2.2, 2.2).translate(196, 38, 74),  // jib out over the water
-      new THREE.BoxGeometry(12, 2.2, 2.2).translate(170, 38, 74),  // counter-jib
-      new THREE.BoxGeometry(1, 10, 1).translate(212, 32.8, 74),    // cable
+      new THREE.BoxGeometry(2.6, 52, 2.6).translate(180, 26, 74),  // mast
+      new THREE.BoxGeometry(44, 2.2, 2.2).translate(196, 52, 74),  // jib out over the water
+      new THREE.BoxGeometry(12, 2.2, 2.2).translate(170, 52, 74),  // counter-jib
+      new THREE.BoxGeometry(1, 14, 1).translate(212, 45, 74),      // cable
     ];
     const crane = new THREE.Mesh(mergeGeometries(craneGeos), new THREE.MeshStandardMaterial({ color: '#c9a227', roughness: 0.55, metalness: 0.4 }));
     craneGeos.forEach(t => t.dispose()); crane.castShadow = true; g.add(crane);
@@ -378,18 +389,18 @@ export class World {
     // MILITARY: perimeter fence (with a gate gap) + helipad
     const fenceMat = new THREE.MeshStandardMaterial({ color: '#55583f', roughness: 0.8, metalness: 0.3 });
     const fenceGeos = [
-      new THREE.BoxGeometry(180, 3.5, 1).translate(-138, 1.75, 146),   // north run
-      new THREE.BoxGeometry(1, 3.5, 88).translate(-48, 1.75, 190),     // east run
-      new THREE.BoxGeometry(60, 3.5, 1).translate(-198, 1.75, 234),    // south-west stub (gate gap mid-south)
+      new THREE.BoxGeometry(180, 6, 1).translate(-138, 3, 146),   // north run
+      new THREE.BoxGeometry(1, 6, 88).translate(-48, 3, 190),     // east run
+      new THREE.BoxGeometry(60, 6, 1).translate(-198, 3, 234),    // south-west stub (gate gap mid-south)
     ];
     const fence = new THREE.Mesh(mergeGeometries(fenceGeos), fenceMat);
     fenceGeos.forEach(t => t.dispose()); fence.castShadow = false; g.add(fence);
-    const heliTex = (() => {
+    const heliTex = this._heliTex || (this._heliTex = (() => {
       const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d');
       x.strokeStyle = '#e8e2d4'; x.lineWidth = 7; x.beginPath(); x.arc(64, 64, 52, 0, Math.PI * 2); x.stroke();
       x.font = '900 64px sans-serif'; x.fillStyle = '#e8e2d4'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('H', 64, 68);
       return new THREE.CanvasTexture(c);
-    })();
+    })());
     const heli = new THREE.Mesh(new THREE.CircleGeometry(13, 24), new THREE.MeshBasicMaterial({ map: heliTex, transparent: true, opacity: 0.8, depthWrite: false }));
     heli.rotation.x = -Math.PI / 2; heli.position.set(-144, 0.12, 205); g.add(heli);
 
@@ -407,12 +418,151 @@ export class World {
   // 0 = dry land · 1 = shallow shelf · 2 = deep water
   waterAt(x) { return x < this.waterX ? 0 : x < this.deepX ? 1 : 2; }
 
+  // district naming for the news desk / lower thirds — plan-aware, flagship keeps canon names
+  districtAt(x, z) { return districtNameAt(this.plan, x, z) || 'THE CITY'; }
+
+  // ---------------- PROCEDURAL CITIES (the world sheet) ----------------
+  // Tear the current city down to bare terrain systems, then raise a new one from a plan.
+  _teardownCity() {
+    if (this.arena) {
+      this.scene.remove(this.arena);
+      this.arena.traverse(o => { if (o.geometry && o.geometry !== this._carGeo) o.geometry.dispose(); });
+      this.arena = null;
+    }
+    for (const m of this._cityBits) { this.scene.remove(m); if (m.geometry) m.geometry.dispose(); }
+    this._cityBits.length = 0;
+    this.cover = []; this.coverAll = []; this.cars = [];
+    this.grass = null; this._canopy = null; this.water = null; this._waterT = null;
+    this.ground = null; this.groundGeo = null; this._ghBase = null; this._pendingPits = [];
+    if (this._fades) this._fades.clear();   // cloned cutaway materials died with their meshes
+  }
+  rebuildCity(plan) {
+    if (!plan) return;
+    this._teardownCity();
+    this.plan = plan;
+    if (plan.flagship) {
+      this.ARENA = 240;
+      this._buildArena(); this._buildGrass();
+      this._ghBase = null;
+    } else {
+      this.ARENA = plan.arena;
+      this._buildGenCity(plan);
+    }
+    this.refreshFogBoxes();
+    this.resize();
+  }
+  _buildGenCity(plan) {
+    const A = plan.arena, N = plan.N;
+    const rng = mulberry((plan.seed * 131 + N * 17) | 0);
+    const g = new THREE.Group();
+    // ground — same crater-able plane, sized to the plan; the road texture tiles one ring per cell
+    const tex = this._groundTex || (this._groundTex = this._gridTexture());
+    tex.repeat.set(N, N);
+    const SEG = 22 * N + 2;
+    const groundGeo = new THREE.PlaneGeometry(A * 2, A * 2, SEG, SEG);
+    const ground = new THREE.Mesh(groundGeo, new THREE.MeshStandardMaterial({ map: tex, roughness: 0.9, metalness: 0.0, color: '#8f897d' }));
+    ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; g.add(ground);
+    this.ground = ground; this.groundGeo = groundGeo;
+    const pa = groundGeo.attributes.position.array; const nV = pa.length / 3;
+    this._gvx = new Float32Array(nV); this._gvz = new Float32Array(nV); this._gh = new Float32Array(nV);
+    for (let i = 0; i < nV; i++) { this._gvx[i] = pa[i * 3]; this._gvz[i] = -pa[i * 3 + 1]; }
+    // border parapets
+    const wallMat = new THREE.MeshStandardMaterial({ color: '#d8d0be', emissive: '#f5b21a', emissiveIntensity: 0.22, roughness: 0.7 });
+    const wh = 6, t = 3;
+    const wallGeos = [
+      [A * 2 + t, t, 0, -A], [A * 2 + t, t, 0, A],
+      [t, A * 2 + t, -A, 0], [t, A * 2 + t, A, 0],
+    ].map(([w, d, x, z]) => new THREE.BoxGeometry(w, wh, d).translate(x, wh / 2, z));
+    const walls = new THREE.Mesh(mergeGeometries(wallGeos), wallMat);
+    wallGeos.forEach(gg => gg.dispose());
+    walls.castShadow = false; walls.receiveShadow = true; g.add(walls);
+    // water column (seaport / resort shores)
+    if (plan.water) {
+      this.waterX = A - CELL + 10; this.deepX = A - CELL / 2 - 2;
+      const wTex = this._waterTex || (this._waterTex = (() => {
+        const c = document.createElement('canvas'); c.width = 256; c.height = 64;
+        const x = c.getContext('2d');
+        const grd = x.createLinearGradient(0, 0, 256, 0);
+        grd.addColorStop(0, 'rgba(70,140,160,0.62)'); grd.addColorStop(0.42, 'rgba(40,100,130,0.78)'); grd.addColorStop(1, 'rgba(16,52,84,0.92)');
+        x.fillStyle = grd; x.fillRect(0, 0, 256, 64);
+        x.strokeStyle = 'rgba(255,255,255,0.18)'; x.lineWidth = 1.5;
+        for (let i = 0; i < 14; i++) { const y = Math.random() * 64; x.beginPath(); x.moveTo(Math.random() * 40, y); x.lineTo(40 + Math.random() * 200, y); x.stroke(); }
+        return new THREE.CanvasTexture(c);
+      })());
+      const water = new THREE.Mesh(
+        new THREE.PlaneGeometry(A - this.waterX + 6, A * 2, 12, 1),
+        new THREE.MeshStandardMaterial({ map: wTex, transparent: true, opacity: 0.88, roughness: 0.25, metalness: 0.35, color: '#9fd4e8', depthWrite: false })
+      );
+      water.rotation.x = -Math.PI / 2;
+      water.position.set((this.waterX + A + 6) / 2, 0.34, 0);
+      water.material.onBeforeCompile = (sh) => {
+        sh.uniforms.uT = this._waterT = { value: 0 };
+        sh.vertexShader = 'uniform float uT;\n' + sh.vertexShader.replace('#include <begin_vertex>',
+          `#include <begin_vertex>\n transformed.z += sin(uT*1.3 + position.x*0.14 + position.y*0.05) * 0.22;`);
+      };
+      g.add(water); this.water = water;
+      const quay = new THREE.Mesh(new THREE.BoxGeometry(3, 1.1, A * 2), new THREE.MeshStandardMaterial({ color: '#cfc8b6', roughness: 0.85 }));
+      quay.position.set(this.waterX - 1.5, 0.55, 0); quay.receiveShadow = true; g.add(quay);
+    } else { this.waterX = A + 500; this.deepX = A + 600; }
+    // THE TILES — every cell raised by its type builder
+    const { treeSpots } = buildTiles(this, g, plan, rng);
+    // streetlights at every interior intersection (2 instanced draws)
+    const lampSpots = [];
+    for (let k = 1; k < N; k++) for (let j = 1; j < N; j++) lampSpots.push([-A + k * CELL + 6, -A + j * CELL + 6]);
+    if (lampSpots.length) {
+      const poleGeo = new THREE.CylinderGeometry(0.35, 0.5, 32, 6); poleGeo.translate(0, 16, 0);
+      const headGeo = new THREE.SphereGeometry(1.15, 8, 6); headGeo.translate(0, 32.8, 0);
+      this._lampMat = this._lampMat || new THREE.MeshStandardMaterial({ color: '#fff2cc', emissive: '#ffca7a', emissiveIntensity: 0.15, roughness: 0.4 });
+      const poleMat = new THREE.MeshStandardMaterial({ color: '#4a463c', roughness: 0.7, metalness: 0.4 });
+      const poles = new THREE.InstancedMesh(poleGeo, poleMat, lampSpots.length);
+      const heads = new THREE.InstancedMesh(headGeo, this._lampMat, lampSpots.length);
+      const lm = new THREE.Matrix4();
+      lampSpots.forEach(([x, z], i) => { if (x < this.waterX - 4) { lm.makeTranslation(x, 0, z); } else { lm.makeScale(0.001, 0.001, 0.001); lm.setPosition(x, -5, z); } poles.setMatrixAt(i, lm); heads.setMatrixAt(i, lm); });
+      poles.castShadow = false; heads.castShadow = false;
+      g.add(poles); g.add(heads);
+    }
+    // parked cars at the curbs
+    this.cars = [];
+    const nCars = Math.min(16, N * 3);
+    for (let i = 0; i < nCars; i++) {
+      const alongX = rng() < 0.5;
+      const lane = -A + (1 + (rng() * (N - 1)) | 0) * CELL + (rng() < 0.5 ? -13.5 : 13.5);
+      const along = (rng() * 2 - 1) * (A - 30);
+      let x = alongX ? along : lane, z = alongX ? lane : along;
+      if (x > this.waterX - 12) x = this.waterX - 12 - rng() * 60;
+      const m = new THREE.Mesh(this._carGeo, this._carPaints[i % this._carPaints.length]);
+      m.position.set(x, 0, z); m.rotation.y = alongX ? Math.PI / 2 : 0; m.castShadow = false; m.receiveShadow = true;
+      g.add(m);
+      this.cars.push({ mesh: m, x, z, hp: 30, maxHp: 30, dead: false, paint: this._carPaints[i % this._carPaints.length] });
+    }
+    this.scene.add(g);
+    this.arena = g;
+    // fog occlusion budget: the shader reads the FIRST 24 boxes — give it the biggest buildings
+    this.cover.sort((a, b) => (b.w * b.h * b.d) - (a.w * a.h * a.d));
+    // mining pits dig into the fresh terrain, then freeze as the city's BASE heights
+    for (const [px, pz, r, dep] of (this._pendingPits || [])) this.crater(px, pz, r, dep);
+    this._pendingPits = [];
+    this._ghBase = Float32Array.from(this._gh);
+    this.groundGeo.computeVertexNormals(); this._normalsDirty = false;
+    // greenery from what the tiles asked for
+    this._buildGreenery([], treeSpots, 0);
+  }
+
   // --- the GREEN layer: real TREES in ORGANIZED rows (trunks + canopies, two instanced
   // draws) over lawn decals. The old grass blades read as floating confetti at every zoom —
   // gone forever. Blasts still FELL trees in the radius; resetTerrain replants.
   _buildGrass() {
-    // lawns — soft green fields under the parks
-    const lawnTex = (() => {
+    // the FLAGSHIP greenery: park lawns + tree rings + residential sidewalk rows
+    const spots = [];
+    const ring = (px, pz, r, n) => { for (let i = 0; i < n; i++) { const a = (i / n) * Math.PI * 2 + 0.3; spots.push([px + Math.cos(a) * r + (Math.random() * 2 - 1) * 2, pz + Math.sin(a) * r + (Math.random() * 2 - 1) * 2]); } };
+    ring(-192, 0, 33, 8); ring(-192, 96, 31, 8);
+    ring(-96, 20, 13, 4); ring(-40, 148, 12, 4); ring(148, 140, 11, 4);
+    for (const z of [57, 153]) for (const x of [-120, -96, -72, -24, 0, 24, 72, 96, 120]) spots.push([x + (Math.random() * 2 - 1) * 1.5, z]);
+    this._buildGreenery([[-192, 0, 42], [-192, 96, 40], [-96, 20, 17], [-40, 148, 15], [148, 140, 14]], spots, 50);
+  }
+  // lawns + ONE instanced tree system from a spot list — flagship and generated cities both ride this
+  _buildGreenery(lawns, spots, clearCenter = 0) {
+    const lawnTex = this._lawnTex || (this._lawnTex = (() => {
       const c = document.createElement('canvas'); c.width = c.height = 128;
       const x = c.getContext('2d');
       const gr = x.createRadialGradient(64, 64, 10, 64, 64, 64);
@@ -421,22 +571,18 @@ export class World {
       x.fillStyle = 'rgba(104,138,76,0.5)';
       for (let i = 0; i < 260; i++) x.fillRect(Math.random() * 128, Math.random() * 128, 2, 2);
       return new THREE.CanvasTexture(c);
-    })();
-    for (const [x, z, r] of [[-192, 0, 42], [-192, 96, 40], [-96, 20, 17], [-40, 148, 15], [148, 140, 14]]) {
+    })());
+    for (const [x, z, r] of lawns) {
       const p = new THREE.Mesh(new THREE.CircleGeometry(r, 26), new THREE.MeshBasicMaterial({ map: lawnTex, transparent: true, depthWrite: false }));
-      p.rotation.x = -Math.PI / 2; p.position.set(x, 0.11, z); this.scene.add(p);
+      p.rotation.x = -Math.PI / 2; p.position.set(x, 0.11, z); this.scene.add(p); this._cityBits.push(p);
     }
-    // tree spots — rings around the park lawns + straight sidewalk rows in the residential south
-    const spots = [];
-    const ring = (px, pz, r, n) => { for (let i = 0; i < n; i++) { const a = (i / n) * Math.PI * 2 + 0.3; spots.push([px + Math.cos(a) * r + (Math.random() * 2 - 1) * 2, pz + Math.sin(a) * r + (Math.random() * 2 - 1) * 2]); } };
-    ring(-192, 0, 33, 8); ring(-192, 96, 31, 8);
-    ring(-96, 20, 13, 4); ring(-40, 148, 12, 4); ring(148, 140, 11, 4);
-    for (const z of [57, 153]) for (const x of [-120, -96, -72, -24, 0, 24, 72, 96, 120]) spots.push([x + (Math.random() * 2 - 1) * 1.5, z]);
-    const P = spots.filter(([x, z]) => Math.hypot(x, z) > 50 && x < this.waterX - 8 && Math.abs(x) < ARENA - 8 && Math.abs(z) < ARENA - 8 &&
+    const A = this.ARENA;
+    const P = spots.filter(([x, z]) => Math.hypot(x, z) > clearCenter && x < this.waterX - 8 && Math.abs(x) < A - 8 && Math.abs(z) < A - 8 &&
       !this.coverAll.some(c => Math.abs(x - c.x) < c.hx + 4 && Math.abs(z - c.z) < c.hz + 4));
+    if (!P.length) { this.grass = null; this._canopy = null; return; }
     const COUNT = P.length;
-    const trunkGeo = new THREE.CylinderGeometry(0.55, 0.85, 5.5, 6); trunkGeo.translate(0, 2.75, 0);
-    const canopyGeo = new THREE.IcosahedronGeometry(4.8, 0); canopyGeo.translate(0, 8.6, 0);
+    const trunkGeo = new THREE.CylinderGeometry(1.0, 1.5, 14, 6); trunkGeo.translate(0, 7, 0);   // ~5m street trees — a hero stands UNDER them now
+    const canopyGeo = new THREE.IcosahedronGeometry(9.5, 0); canopyGeo.translate(0, 19.5, 0);
     const trunks = new THREE.InstancedMesh(trunkGeo, new THREE.MeshStandardMaterial({ color: '#5a4630', roughness: 0.9, flatShading: true }), COUNT);
     const canopy = new THREE.InstancedMesh(canopyGeo, new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.9, flatShading: true }), COUNT);
     trunks.frustumCulled = false; canopy.frustumCulled = false;
@@ -455,6 +601,7 @@ export class World {
     if (canopy.instanceColor) canopy.instanceColor.needsUpdate = true;
     this.grass = trunks; this._canopy = canopy;   // this.grass keeps every old integration hook alive
     this.scene.add(trunks); this.scene.add(canopy);
+    this._cityBits.push(trunks, canopy);
   }
   // a blast in the radius FELLS the trees — gone until the next match replants them
   flattenGrass(cx, cz, r) {
@@ -628,6 +775,50 @@ export class World {
     this.sun.target.position.set(sx, 0, sz);
   }
 
+  // ---- tower cutaway: at 1:1 scale, buildings between the camera and the player go translucent.
+  // Materials are SHARED per district — clone lazily on first fade, restore + dispose when clear.
+  updateOcclusion(p, dt = 0.016) {
+    this._fades = this._fades || new Map();
+    const cam = this.camera.position;
+    for (const c of this.cover) {
+      if (!c.mesh || (c.top ?? c.h) < 44) continue;
+      const hit = this._segBox3(cam.x, cam.y, cam.z, p.x, p.y + 6, p.z, c);
+      let f = this._fades.get(c);
+      if (hit && !f) {
+        const mats = [];
+        const clone = (m) => { const orig = m.material; m.material = orig.clone(); m.material.transparent = true; mats.push([m, orig]); };
+        clone(c.mesh);
+        for (const ch of c.mesh.children) if (ch.material) clone(ch);
+        f = { o: 1, mats }; this._fades.set(c, f);
+      }
+      if (f) {
+        f.hit = hit;
+        f.o = damp(f.o, hit ? 0.16 : 1, 7, dt);
+        for (const [m] of f.mats) m.material.opacity = f.o;
+        // battle damage respects the cutaway: the crack overlay dims with its building
+        if (c.crack && c.crack.visible) c.crack.material.opacity = Math.min(c.crack.userData.baseO ?? c.crack.material.opacity, f.o);
+        if (!hit && f.o > 0.985) {
+          for (const [m, orig] of f.mats) { m.material.dispose(); m.material = orig; }
+          if (c.crack && c.crack.visible && c.crack.userData.baseO != null) c.crack.material.opacity = c.crack.userData.baseO;
+          this._fades.delete(c);
+        }
+      }
+    }
+  }
+  _segBox3(x0, y0, z0, x1, y1, z1, c) {
+    const hx = c.hx ?? c.r, hz = c.hz ?? c.r, top = c.top ?? c.h;
+    let tmin = 0, tmax = 1;
+    const axes = [[x0, x1 - x0, c.x - hx, c.x + hx], [y0, y1 - y0, 0, top], [z0, z1 - z0, c.z - hz, c.z + hz]];
+    for (const [p0, d, mn, mx] of axes) {
+      if (Math.abs(d) < 1e-6) { if (p0 < mn || p0 > mx) return false; continue; }
+      let t1 = (mn - p0) / d, t2 = (mx - p0) / d;
+      if (t1 > t2) { const t = t1; t1 = t2; t2 = t; }
+      tmin = Math.max(tmin, t1); tmax = Math.min(tmax, t2);
+      if (tmin > tmax) return false;
+    }
+    return tmin > 0.02 && tmin < 0.98;
+  }
+
   // Screen (client px) -> ground world point (y=0 plane). Reuses one raycaster/plane (called every frame).
   screenToGround(mx, my, out = new THREE.Vector3()) {
     _ndc.set((mx / innerWidth) * 2 - 1, -(my / innerHeight) * 2 + 1);
@@ -638,7 +829,7 @@ export class World {
 
   // --- Fog of war: darken the ground outside a vision cone + near radius, with wall shadows ---
   _buildFogOfWar() {
-    const MAX = 20;
+    const MAX = 24;   // structural-cover ceiling (generated plans cap at 24 cells — cityplan STRUCT_CAP)
     const bc = [], bh = [];
     for (let i = 0; i < MAX; i++) { bc.push(new THREE.Vector2()); bh.push(new THREE.Vector2()); }
     let n = 0;
@@ -679,7 +870,7 @@ export class World {
           gl_FragColor = vec4(col, (1.0 - vis) * uDark);
         }`,
     });
-    const g = new THREE.PlaneGeometry(ARENA * 2 + 40, ARENA * 2 + 40);
+    const g = new THREE.PlaneGeometry(700, 700);   // covers every plan size (mega city = 576) — built once
     this.fog = new THREE.Mesh(g, this.fogMat);
     this.fog.rotation.x = -Math.PI / 2; this.fog.position.y = 0.4; this.fog.renderOrder = 2;
     this.scene.add(this.fog);
@@ -711,7 +902,8 @@ export class World {
       const d = Math.sqrt(d2); let dh;
       if (d < radius) { const t = d / radius; dh = -depth * Math.pow(1 - t * t, 1.5); }   // bowl
       else { const t = (d - radius) / (radius * 0.3); dh = depth * 0.22 * Math.max(0, 1 - t); } // raised rim
-      this._gh[i] = clamp(this._gh[i] + dh, -6.5, 1.4);                                        // accumulate, clamped (the limit)
+      const base = this._ghBase ? this._ghBase[i] : 0;                                    // mining pits are part of the land
+      this._gh[i] = clamp(this._gh[i] + dh, base - 6.5, base + 1.4);                      // accumulate, clamped (the limit)
       pa[i * 3 + 2] = this._gh[i]; touched = true;
     }
     // normals recompute is ~12ms on the 112×112 grid — BATCH it: chained explosions (car
@@ -725,6 +917,7 @@ export class World {
     const dmg = 1 - Math.max(0, c.hp) / c.maxHp;
     c.crack.visible = dmg > 0.001;
     c.crack.material.opacity = Math.min(0.92, dmg * 1.15);
+    c.crack.userData.baseO = c.crack.material.opacity;   // the cutaway fade needs the damage-truth to restore to
     const s = 1 - dmg * 0.05; c.mesh.scale.set(s, 1 - dmg * 0.12, s); c.crack.scale.set(s, 1 - dmg * 0.12, s);
   }
   removeBlockFromCover(c) {
@@ -748,7 +941,7 @@ export class World {
     this._restoreGrass();
     if (this.groundGeo) {
       const pa = this.groundGeo.attributes.position.array;
-      for (let i = 0; i < this._gh.length; i++) { this._gh[i] = 0; pa[i * 3 + 2] = 0; }
+      for (let i = 0; i < this._gh.length; i++) { const b = this._ghBase ? this._ghBase[i] : 0; this._gh[i] = b; pa[i * 3 + 2] = b; }   // back to the city's base land (pits stay dug)
       this.groundGeo.attributes.position.needsUpdate = true; this.groundGeo.computeVertexNormals();
     }
   }

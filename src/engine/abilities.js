@@ -8,7 +8,7 @@ const ORB_GEO = new THREE.SphereGeometry(1, 16, 12);                       // sh
 const ORB_CORE_MAT = new THREE.MeshBasicMaterial({ color: '#fff' });
 export const PAYLOAD_COLORS = { poison: '#8fe08a', flame: '#ff7a2a', explosive: '#ffd24a', gas: '#9a4ae0' };
 
-function ready(c, def, st) { return st.cd <= 0 && c.ki >= (def.cost || 0) && c.hitstop <= 0; }
+function ready(c, def, st) { return st.cd <= 0 && c.ki >= (def.cost || 0) && c.hitstop <= 0 && c.staggerT <= 0; }   // staggered fighters cast NOTHING
 function pay(c, def, st) { c.ki -= (def.cost || 0); st.cd = (def.cd || 0) * ((c.sheet && c.sheet.cdMult) || 1); }   // INTELLECT + Tactician shave cooldowns
 function chargeOrb(c, st, color) {
   if (!st.orb) {
@@ -20,6 +20,16 @@ function chargeOrb(c, st, color) {
   return st.orb;
 }
 function killOrb(c, st) { if (st.orb) { c._game.scene.remove(st.orb); st.orb.children[1].material.dispose(); st.orb = null; } }
+// KO / despawn mid-generation: silence + remove whatever the slot machines left behind.
+// Without this, an interrupted charge's hum has no stop scheduled and rings FOREVER
+// (the stuck-tone bug); the audio watchdog (audio.sweep) is the backstop for paths we miss.
+export function clearSlotFx(c) {
+  for (const k in c.slots) {
+    const s = c.slots[k];
+    if (s.sfx) { s.sfx.stop(); s.sfx = null; }
+    killOrb(c, s);
+  }
+}
 // out of ki while holding a charge/sustain → make the failure LOUD and readable (never a silent freeze)
 function drained(c, g) { if (g && g.onDrained) g.onDrained(c); }
 
@@ -54,7 +64,9 @@ export const TYPES = {
     }
   },
 
-  // Teleporting multi-hit combo
+  // Teleporting multi-hit combo. AN ACTIVE GUARD REJECTS IT: the first contact against a raised
+  // guard (any angle — you're blocking the flurry, not a direction) bounces the rusher off,
+  // ends the combo, and opens the punish window. Rushing a blocker is now a MISTAKE.
   rush(c, def, st, g, inp) {
     if (st.combo > 0) {
       st.timer -= inp.dt;
@@ -64,13 +76,21 @@ export const TYPES = {
         const off = _v.set(-c.aim.z * side, 0, c.aim.x * side).multiplyScalar(6);
         c.pos.set(f.pos.x - c.aim.x * 6 + off.x, f.pos.y, f.pos.z - c.aim.z * 6 + off.z);
         c.faceDir(f.pos.x - c.pos.x, f.pos.z - c.pos.z); c.invuln = 0.12; c.punchPose = 1;
-        const last = st.combo === 1;
-        f.takeDamage((last ? (def.finisher || 30) : (def.damage || 9)) * c.powerBuff, { kb: _v.copy(c.aim).setLength(last ? 60 : 6).setY(0), launch: last ? 20 : 2, hitstop: last ? 0.1 : 0.03 });
-        g.vfx.flash(f.pos.clone().setY(5.5), def.color || c.def.colors.accent, last ? 8 : 4, 0.12);
-        g.trail(c, def.color || c.def.colors.accent); g.audio.hit(260 + st.combo * 20);
-        if (last) { g.world.shake(1.2); g.world.punch(0.8); g.vfx.shockwave(f.pos.clone().setY(0.2), { color: def.color, radius: 26, power: 1.2 }); }
-        g.world.shake(0.3);
-        st.combo--;
+        if (f.guarding && f.staggerT <= 0) {
+          // REJECTED — chip lands, the flurry does not
+          f.takeDamage((def.damage || 9) * 0.12 * c.powerBuff, { src: c, unblockable: true, hitstop: 0.04 });
+          f.guardMeter = Math.max(0, f.guardMeter - 0.08);
+          st.combo = 0;
+          g.onBlockedStrike(c, f, { stagger: 0.55, push: 46 });
+        } else {
+          const last = st.combo === 1;
+          f.takeDamage((last ? (def.finisher || 30) : (def.damage || 9)) * c.powerBuff, { src: c, strike: true, kb: _v.copy(c.aim).setLength(last ? 60 : 6).setY(0), launch: last ? 20 : 2, hitstop: last ? 0.1 : 0.03 });
+          g.vfx.flash(f.pos.clone().setY(5.5), def.color || c.def.colors.accent, last ? 8 : 4, 0.12);
+          g.trail(c, def.color || c.def.colors.accent); g.audio.hit(260 + st.combo * 20);
+          if (last) { g.world.shake(1.2); g.world.punch(0.8); g.vfx.shockwave(f.pos.clone().setY(0.2), { color: def.color, radius: 26, power: 1.2 }); }
+          g.world.shake(0.3);
+          st.combo--;
+        }
       } else if (!st.foe || !st.foe.alive) st.combo = 0;
     }
     if (inp.pressed && ready(c, def, st)) {
@@ -213,7 +233,7 @@ export const TYPES = {
 
   // Spirit Bomb — grow overhead, then hurl
   spiritbomb(c, def, st, g, inp) {
-    if (st.active && st.active.dead) st.active = null;
+    if (st.active && st.active.dead) { st.active = null; st.cd = def.cd || 0; if (st.sfx) { st.sfx.stop(); st.sfx = null; } }
     if (inp.pressed && ready(c, def, st) && !st.active) {
       pay(c, def, st); st.active = g.projectiles.spawnSpiritBomb(c, { minR: def.minR || 4, maxR: def.maxR || 18, growRate: def.growRate || 8, kiPerSec: def.kiPerSec || 16, color: def.color, color2: def.color2 });
       st.sfx = g.audio.charge();

@@ -49,6 +49,8 @@ export class Pedestrians {
     this.state[i] = WALK; this.t[i] = 2 + Math.random() * 4; this._turnCd[i] = 0;
   }
   reset() { for (let i = 0; i < COUNT; i++) this._respawn(i); this._writeAll(); }
+  // a new theater: re-grid the crowd to the new arena + shoreline
+  setCity(arena, waterX) { this.arena = arena; this.waterX = waterX; this.reset(); }
   _writeAll() {
     for (let i = 0; i < COUNT; i++) this._write(i);
     this.mesh.instanceMatrix.needsUpdate = true; this.head.instanceMatrix.needsUpdate = true;

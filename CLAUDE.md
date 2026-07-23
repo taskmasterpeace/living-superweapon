@@ -39,6 +39,131 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   with AI doctrine derived from the kit (`deriveAI`). Sheet hooks: `def.talents`/`def.attrs`/`def.build`.
   `validate()` gates saves (budget, LMB+RMB required, ults R-only, quiver-needs-bow). SAVE & TEST drops
   straight into training. `LSW.creator` + `LSW.runSlot` exposed for headless testing.
+- **TRUE 1:1 SCALE + POLICE (the villain law)**: the world is now HUMAN-scale against the 9.6u
+  (1.8m) heroes — 1u ≈ 0.19m, one building floor = one 17u window row (`scaleBoxUV B=17`), cars
+  24u long w/ chest-high roofs, streetlights 32u, trees 14u trunks + 9.5u canopies (you stand
+  UNDER them), downtown towers 54–150u (flagship spots + every tile builder rescaled; cover hp
+  formula 0.0075/volume; only h≥44 casts shadows). Flight ceiling 320, ALT_BANDS BUILDING→150 /
+  SKY→260; entity/ragdoll bounds read `game.world.ARENA` (per-city). **Tower cutaway**
+  (`world.updateOcclusion`, called from game.update): buildings h≥44 crossing the camera→player
+  segment fade to 0.16 opacity via LAZY material clones (shared district mats stay shared;
+  restored + disposed when clear; `_teardownCity` clears `_fades`). **POLICE**
+  (`engine/police.js`): THE VILLAIN IS WHOEVER HURTS HUMANS — civilian knockdowns book HEAT on
+  the perpetrator (+12/civ, +40/officer KO'd, decay 1.3/s after 6s quiet); heat ≥35 flags the
+  villain → WANTED ★☆☆–★★★ (HUD `#plWanted`, foe-bar 🚨 VILLAIN tag, blue radar dots). Response
+  ETA comes from the theater's SAFETY INDEX (`26 - safety*0.25`s, clamp 5–24 — the world-sheet
+  payoff). Cruisers (shared car geo, black-and-white, blinking red/blue light bar) drive in from
+  the nearest dry edge, park (registered as destructible world cars), deploy OFFICERS — real
+  Fighters (team 2, `COP_DEF`/`SWAT_DEF` at wanted★★★, `police:true` keeps them OUT of the Elo
+  book) with `f.fixation = villain`: **isFoe now enforces fixation both ways** — cops only fight
+  the villain, and nobody untainted can even target a badge. Reinforcement waves every 16s up to
+  2+2·level units; villain gone → officers stand down and despawn, cruisers stay as street
+  furniture. News/feed/announce/matchLog all cover it ("POLICE DISPATCHED — THE SOUTHSIDE",
+  city-desk "responding officers injured"). Verified: idle SOL was flagged, hunted, and KO'd
+  three times by responding units, then the flag decayed and they went home. Refs:
+  `lsw-scale-street.jpeg`, `lsw-occlusion.jpeg` (cutaway), `lsw-police.jpeg`.
+  **Polish pass (2026-07-23)**: `audio.siren` two-tone whoops on dispatch/arrival + per-star
+  escalation announces ("SPECIAL RESPONSE AUTHORIZED" at ★★★, SWAT highlight for the crew);
+  exploded CRUISERS char properly (group-aware `_explodeCar` — lights die too); news van rescaled
+  to 1:1 (26u body, real wheels/mast); crack overlays respect the tower cutaway (`userData.baseO`);
+  the broadcast gained a NAMED desk anchor (ANCHORS pool → chip labels + credit line), a police-beat
+  anchor line citing the theater's actual response seconds, a WANTED ★ row in the tale of the tape,
+  a wanted ticker item + time-of-day ticker flavor, a segmented clip PROGRESS STRIP under the TV
+  (gold fill, pale for slo-mo clips), and the witness card now appends INSIDE the script flow (no
+  collision with the typing sign-off). Atlas city cards show POLICE RESPONSE ~Ns · RAPID/SLOW.
+  Ref: `lsw-news-polished.jpeg`.
+- **THE WORLD LAYER — procedural cities off the world sheet** (`data/cities.js` 1,050 real cities
+  baked from Robert's Country Master Sheet: name/country/pop/popType/cityTypes×4/crime/safety;
+  `data/cityplan.js` planner; `engine/citytiles.js` tile library; world.js `rebuildCity(plan)`):
+  cities generate on the SAME sectional grid as the flagship (96u `CELL`s + 22u streets — the ground
+  texture draws one road ring per cell, `repeat.set(N,N)`). `generatePlan(city, seed)` sizes the grid
+  by popType (Village/Small Town 3 → Town/Small City 4 → City/Large City 5 → Mega 6 = arena 288),
+  places IDENTITY tiles first (seaport/resort hug the east water column, political takes the center,
+  military/mining cluster at edges, campus pairs, corporate core), fills with commercial/residential
+  + parks, and caps STRUCTURAL cells at 24 (`STRUCT_CAP`, matches fog MAX; overflow → plaza).
+  **Tiles**: 13 types × 2–3 variants (residential courts/L-blocks/towers-in-park · commercial ·
+  corporate HQ+logo/skybridge twins · industrial warehouses/tank-farm/conveyor works · military
+  fenced compounds w/ helipads/barracks · CAPITOL dome+colonnade+flags/ministries+obelisk · campus
+  quad+bell-tower/library · temple pagoda/gold-dome+minaret/ziggurat · MINING (real pits dug into
+  the terrain — `_pendingPits` → `crater()` then frozen as `_ghBase`; resetTerrain restores to BASE
+  so pits survive, combat craters clamp relative to base) · seaport container-yard+crane/piers+ship ·
+  resort hotel+pool+palms/boardwalk+cabanas · park · plaza). Big structures register as cover
+  (destructible, crack overlays, `cover.sort` biggest-first for the 24-box fog budget); flavor props
+  are decor. **Teardown/rebuild**: `_teardownCity()` disposes the arena group + `_cityBits` (trees/
+  lawns via `_buildGreenery(lawns, spots)`); flagship rebuilds via its untouched bespoke builder
+  (`thresholdPlan()`, cells:null). ARENA is now per-instance everywhere (entity/ragdoll bounds read
+  `game.world.ARENA`); peds re-grid via `peds.setCity`; the news crew scales its van spawn; fog plane
+  is a constant 700u. **CITY ATLAS** (`hud.showAtlas`, title 🗺/theater chip in the term line):
+  search/type-filter the 1,050, live 2D plan preview canvas, REROLL seed, SET AS THEATER (persisted
+  `threshold_theater_v1`; `main.beginMatch` rebuilds when the theater changed), and the TILE PROVING
+  GROUND (`galleryPlan()` — every tile on one map, in training, for perfecting variants). In-match
+  **city nameplate** (`#hCity`): "📍 BENGUELA · ANGOLA — CITY · POP 715K · CRIME 75". Districts are
+  plan-aware everywhere via `world.districtAt` (news lower-thirds say "THE MINEWORKS"); crime/safety
+  ride the plan for future police-response pacing. Refs: `lsw-city-benguela.jpeg`,
+  `lsw-city-mazar.jpeg` (night, dome + pits), `lsw-city-gallery.jpeg`, `lsw-atlas.jpeg`.
+- **THE CODEX — the full case file** (`hud.showCodex(def)`, overlay `hCodex`; entries: the gold
+  "📁 OPEN FULL CASE FILE" button on the registry preview + any rankings-board row; ‹ › pages the
+  roster, ✕/ESC closes): a Planetary-grade dossier where EVERY line derives from live data so it
+  can never lie. §01 IDENTIFICATION (legal name/registry, synthetic detection, REDACTED residence
+  + next-of-kin bars, FRAME class from strength, voice register from `voicePitch`+`yells`, power
+  core incl. ∞-core tier-cap note) · §02 THREAT ASSESSMENT (LeFevre + basis figures, hull/guard,
+  flight cert, rank-colored attributes, talents, gear) · §03 SANCTIONED RECORD (Elo/rank/record/KO
+  + dated incident history + 🏆 REIGNING CHAMPION) · §04 SURVEILLANCE (AI doctrine style, band,
+  aggression/airborne %, escape tech, trait FLAGS) · §05 DOCUMENTED ARMAMENT (table of REAL kit
+  numbers per slot: output/ki/cycle/reach + CHARGE-SCALED/HOMING/FREEZE/PAYLOADS notes,
+  `cfAbilityRows`) · §06 IF ENCOUNTERED (rule-derived countermeasure brief, `cfCounterNotes` —
+  guard-crush lines, back-grab vs teleEscape, barrier-starving, overdrive warnings, style
+  doctrine) · §07 FIELD INTERCEPT (seeded witness line via `causeLine`). Stamp, watermark,
+  scanlines, mono case-file styling. Ref: `lsw-codex.jpeg`.
+- **THRESHOLD REGISTRY + POWER RANKINGS + THE INVITATIONAL** (`data/rankings.js`,
+  `engine/tournament.js`, hud registry/atlas/bracket/board): the select screen is a Planetary-style
+  intel database — classification bar, terminal query line (live counts + THEATER chip), FILE cards
+  (`LSW-###-CC` from flag regional-indicators, ACTIVE/OPERATIONAL status — synthetics detected from
+  `person.n`, threat stripe, live `PWR-IDX`), and the dossier: CLASSIFIED stamp, mono identity block,
+  deterministic FILE OPENED date, FIELD RECORD (Elo/rank/record/KO from the book) + recent-incident
+  lines, scanlines + sweep + watermark. **Rankings** (`threshold_rankings_v1`): per-hero Elo seeded
+  from LeFevre threat; EVERY KO between opposing registered weapons books `koElo` (k=10) and decided
+  matches book `matchElo` (duel 28 / tournament 40 / sim 6) — AI-vs-AI and piloted alike; friendly-
+  fire KOs never book. Sports-desk board (📊, `rankingTable` = the ONLY movement-Δ caller;
+  `snapshotTable` is the pure read) shows Δ arrows, records, the champion's 🏆. **Tournament** mode
+  (`MODE_IMPL.tournament` + `Tournament` class): 8 sides seeded off the book (1v8/4v5/3v6/2v7),
+  formats 1v1 / 2v2 duos (AI partner) / 1v2 underdog; matches are best-of-3 ELIMINATION rounds
+  (everyone `noRespawn`, `_tourneyRound` full-respawns per round, lead stats carry across rounds,
+  city damage persists); `friendlyFire` ON (splash-only, 50%, feed-shamed, melee/beams stay clean).
+  Off-screen matches resolve by Elo-weighted sim (SIM chip); the player's report (`reportPlayerMatch`,
+  winner-first scores) advances the bracket and crowns `crownChampion`. Flow: bracket-first
+  (`hud.showBracket` — pulsing live cell, struck losers, champion card) → match → news screen
+  (kicker "INVITATIONAL · QUARTERFINAL", CONTINUE ▸ BRACKET) → repeat → 🏆. Refs:
+  `lsw-registry.jpeg`, `lsw-bracket.jpeg`, `lsw-bracket-champion.jpeg`, `lsw-rankings.jpeg`.
+- **KMK 9 ACTION NEWS — the broadcast layer** (`engine/newscrew.js` crew + capture, `data/news.js`
+  language desk; Witness Layer act II): a camera operator (navy, red cap, shoulder rig w/ blinking
+  tally) + field reporter (crimson blazer, flagged mic) spawn with their curbside van in every
+  non-training mode and CHASE the fight — vantage picking (LOS via `game.canSee`, side-on preferred,
+  never down the beam axis), auto-zoom FOV from subject spread, handheld sway that worsens running/
+  scared, duck on near blasts, knocked FLAT by close ones (camera keeps rolling on the pavement,
+  tilted), reporter stand-ups when the fight lulls. **The camera is real**: on highlights
+  (`news.highlight` from handleKO / big onHit / shatterBlock / _explodeCar / tier-ups / collateral)
+  the operator's POV renders at 320×180 — scissored into the canvas corner BEFORE the composer pass
+  (never visible), entities force-shown (no fog for TV), shadow autoUpdate paused — blitted to a 2D
+  canvas, stamped with the broadcast package (bug, LIVE, the REAL in-world clock from `world.dayT`,
+  district lower-thirds from `districtAt`), stored as JPEG-frame clips w/ a 4-frame rolling pre-roll.
+  KO/bighit shoot 20fps and carry `slowFrom/slowTo` — the end-screen TV plays that window at 0.38×
+  with a gold SLO-MO tag. The last KO records THROUGH match end into the same array the TV plays.
+  HUD shows the live monitor (`#hPip`, the capture canvas itself) while `news.onAir`.
+  **The report**: `game` tracks `matchT`, `matchLog` (KOs w/ clock+district+blow kind from combat
+  flags: strike/slam/dot/slash→fists/slam/beam/blade), per-fighter `stats` (dmg/taken/big),
+  `cityStats` (civs/cars/blocks/craters), `bigHit`; `buildReport` at endMatch → `writeBroadcast`
+  (data/news.js) generates the anchor script in REPORTER register — civilians don't know move names
+  (kind→witness-speak), epithets from `def.person`/threat ("registered to Samuel Ellison of
+  Ellsworth, Kansas"), comeback/shutout detection, damage-$ estimate, district witnesses, ticker.
+  `hud._showBroadcast`: TV set replaying the clips (static between, one clip decoded at a time),
+  typed script, tale-of-the-tape (DAMAGE TAKEN highlights the LOWER number), city desk, scrolling
+  ticker, news sting + staticBurst (audio.js). Optional LAN LLM punch-up (`llmPunchUp` → Mac Mini
+  Ollama qwen3.5, 9s abort, localStorage `lsw_news_llm` = config JSON or 'off') — offline-procedural
+  is the contract; LLM lines slide in as "DESK UPDATE". No pronouns are ever guessed — aliases/they.
+  ⚠ areaDamage now passes `src` (explosions credit the blaster — fixed a kill-attribution gap).
+  Refs: `lsw-news-report.jpeg` (the broadcast), `lsw-news-crew.jpeg`, `lsw-news-onair.jpeg` (PiP),
+  `lsw-news-frame.jpeg` (raw captured frame).
 - **Gadgets** (items on X, `charges` per life, refilled on respawn): beacon · medkit · flashbang
   (staggers + wipes bot memory) · jetcell (temp flightTier 3) · shieldpack (`f._shieldHp` ablative pool
   in takeDamage). Bots use all of them (`controlBot` items block).
@@ -155,6 +280,13 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   Cover carries `{x,z,hx,hz,top}` (construct walls fall back to `r`/`h`).
 
 ## Hard rules (do not break)
+- **`opts.hitstop ?? 0.04`, NEVER `||`** (`entity.takeDamage`). Sustained damage — beams, cones,
+  lifedrain, DoT ticks — passes `hitstop: 0` deliberately. With `||`, that falsy zero became 0.04
+  and was RE-ARMED every frame, so anything under a beam sat in permanent hitstop: no physics, no
+  actions, frozen animation. That was the "shoot the training dummy and it freezes" report
+  (2026-07-23) and, worse, made every beam an infinite stunlock on live fighters. Discrete impacts
+  (punches, blasts) still hitstop — that's the intended weight. Same care for any future
+  hit option where 0 is a meaningful value.
 - **Beams are hoses, not lasers** — a traveling tip drags the beam (`projectiles.js → BeamHose`).
   Never make a beam instant/hitscan.
 - **Charge = scale** — hold longer ⇒ bigger orb + more damage + wider blast + harder ground
@@ -167,6 +299,19 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
 ## Trifecta rules (don't break)
 - **Strike beats Grab beats Guard beats Strike.** Guard blocks frontal strikes to ~12% chip (unblockable
   grabs ignore it); getting hit cancels your own grab start-up; back-grabs are unescapable + hit harder.
+- **THE BLOCK LAW** (`game.onBlockedStrike`, fired from the guard branch of `entity.takeDamage` for every
+  `strike`-flagged blocked hit — ONE choke point, so it covers every present and future melee source):
+  a blocked strike REJECTS the attacker — 38u bounce, 0.45s stagger, hitstop, strikeCd 0.55, charge/combo
+  window cleared (`_bounceCd` 0.3s stops bounce-locking). **PARRY**: `melee.guard` stamps `_guardUpT` on
+  the rising edge; blocking within 0.22s = 54u push, 0.8s stagger, meter refund, gold star + slowmo.
+  ⚠ Before 2026-07-23 the punish rules lived ONLY in melee.js, so `melee`-type abilities and `rush` combos
+  were FREE against a raised guard — that was the "spam wins, blocking does nothing" bug. Never
+  re-implement block punishment per-ability; it belongs at the takeDamage choke point.
+  Supporting laws: `abilities.ready()` requires `staggerT <= 0` (staggered fighters cast NOTHING) and all
+  `busy` gates include stagger; `rush` hits pass `src`/`strike` (they were anonymous — no kill credit).
+  Bots read it too: a foe guarding >0.35s is "turtling" → `controlBot` prefers GRAB or a guard-crushing
+  HAYMAKER (reach 13.5u), and `ai.pick` stops feeding rush/melee into a raised guard. See `docs/BALANCE.md`
+  Audit 2 for the measured before/after.
 - **Hitstop must NEVER drop a held guard** (`melee.guard`): every blocked hit applies hitstop to the
   blocker, so gating guard on `canAct()` made any fast combo strip the block after the first hit
   ("can't hold down block" bug, fixed 2026-07-22). Stagger/grabs/your-own-attacks still drop it.
@@ -277,9 +422,44 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   Transitions: `_revealFx` ring on appear, `_lastKnown` (fading ghost + red "?" sprite) on disappear.
 - **Integration**: `pickTarget` skips foes with `_vis<0.4`; red-triangle hidden when hardLock unseen; HUD foe-bar tracks
   the visible locked/soft target. `canSee(a,b)` = no cover box on the XZ segment (skips blocks both are above).
-- **Bot vision** (`ai.js`): `seeNear/seeRange/seeCos` cone off `bot.aim` + `game.canSee`; 4s memory (`_mem`,`_ls`).
-  Sees → attack; blind → **hunt toward last-seen (juke window) or the foe's area**, never attack. Keeps bots lethal but
-  juke-able. ⚠️ needed `damp` imported in game.js.
+- **Bot senses — THE HONESTY LAW** (`ai.js`, rebuilt 2026-07-23): a bot may act ONLY on what it has earned.
+  ⚠️ The old blind branch fell back to `real.pos` — the target's LIVE position — whenever memory expired, so a
+  bot that had never seen you still walked straight at you ("they always know where I am"). Two more leaks went
+  with it: `out.fly` read your true altitude while blind, and `controlBot`'s `aim3` fell back to
+  `nearestFoe`, tracking a body through walls. **Never read a foe's position outside the `sees` branch.**
+  · **BELIEF** (`ai.belief = {x,z,y,src}` + `_mem`) is the only knowledge: `sight` (4s, exact) ·
+  `radio` (3s, ±6u) · `noise` (2.2s, fuzz scales with distance). `remember()` refuses to overwrite a better
+  source with a worse one.
+  · **HEARING** — `game.noise(pos, loud, src)` broadcasts from explosions (`worldImpact`, loud≈0.9+power),
+  solid hits (`onHit` ≥10 dmg) and KOs (2.2). Bots hear within `hearRange × loud` and remember a JITTERED
+  point — far bangs give a vague bearing. This is how fights find each other now; a loud fighter draws a crowd,
+  a quiet one can slip a block over and vanish.
+  · **SQUAD RADIO** — `_callOut` (~2 Hz): a bot with eyes on the foe pushes the position to living allies
+  within 160u (`ai.radio`). Earned by one pair of eyes; makes 2v2 / police responses act like a unit.
+  · **SEARCH** (`_searchGoal`) — walk the lead → on arrival with nothing, the trail goes COLD (`_mem = 0`) →
+  sweep near the last lead (55u) for ~9s → then patrol the district. Eyes SWEEP while searching (`_scanA`
+  oscillates the aim off the travel path), which is what makes juking and holding still actually work.
+  · **AWARENESS pays**: `sheet.visMult` scales `seeNear/seeRange/seeCos/hearRange` — the tabletop attribute
+  now buys real perception. Flashbang clears `belief`+`_patrol` (total disorientation).
+  Verified: hidden+silent player never found (537u → closest 363u, 0 sightings); explosion heard instantly →
+  investigated → sighted; break LOS mid-fight → lost at 2.8s, searched last-known, reacquired at 9.1s;
+  duels still engage in 0.5–1.9s and resolve normally.
+- **THE FAIRNESS LAW** (`ai.js`, 2026-07-23): honest knowledge wasn't enough — the bots still *felt* like
+  cheaters because they had superhuman HANDS. Three fixes, all scaled by `ai.level` so **difficulty buys
+  skill, never certainty**:
+  · **Finite turn rate** (`_turnToward`, ~2.1–2.9 rad/s from AGILITY + level). Aim used to SNAP 180° in one
+    frame, so flanking was impossible and the vision cone was decoration. Now the head is a neck.
+  · **Imperfect aim** — a slow random walk (`_wander`, not per-frame noise, which reads as a laser with
+    static) plus distance-scaled spread and imperfect target LEADING (`out.aimAt`). ⚠ `controlBot` must aim
+    at `it.aimAt` (what the bot BELIEVES), never `target.pos` — aiming at the true body centre is an aimbot.
+  · **Reaction time** — `reflex` (0.34/level, min 0.11s) gates BOTH acquisition (`_acq`: eyes-on ≠
+    trigger-ready, and it must actually be facing you — `aimed.onTarget`) and defence (`_threatT` in
+    `controlBot`: a threat must persist for `reflex` before it may block/juke, so feints and fast openers
+    work).
+  Measured: circle-strafing at run speed leaves the bot 4.4° behind on average (it tracks you, and still
+  killed the orbiting test player), but tight orbits and forced repositioning open 170°+ breakaways —
+  flanking is a real tactic. Mirror matches prove the ladder: rookie(0.6) vs elite(1.8) = 0–3, even(1.2) =
+  2–2. Duels still first-blood in 2.4–3.3s; rumble 6 KOs/40s.
 
 ## AI, targeting & 3D aim
 - **AI styles** (`ai.js`, profiles in `characters.js → ai:{style,range,aggro,fly}`): rusher/beamer/artillery/zoner/

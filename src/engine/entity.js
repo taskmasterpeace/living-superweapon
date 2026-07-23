@@ -5,6 +5,7 @@ import { ARENA } from './world.js';
 import { Ragdoll } from './ragdoll.js';
 import { buildTentacles } from './tentacles.js';
 import { bakeSheet } from '../data/ranks.js';
+import { clearSlotFx } from './abilities.js';
 
 // power tiers (Super-Saiyan-style): level 1–3 = I, 4–6 = II, 7–9 = III, 10 = MAX
 export function tierOf(level) { return level >= 10 ? 4 : level >= 7 ? 3 : level >= 4 ? 2 : 1; }
@@ -74,12 +75,12 @@ const FLY_SPEEDS = {
   kano: 1.15, vega: 1.15, nova: 1.12, specter: 1.1, tempest: 1.1, marshal: 1.1, mystward: 1.08,
 };
 export const ALT_BANDS = [   // the ruled four altitude bands — shown as a ring under every fighter
-  { name: 'GROUND', max: 8, c: '#8fe08a' },
-  { name: 'BUILDING', max: 32, c: '#ffd24a' },
-  { name: 'SKY', max: 60, c: '#7fe6ff' },
+  { name: 'GROUND', max: 8, c: '#8fe08a' },      // street level
+  { name: 'BUILDING', max: 150, c: '#ffd24a' },  // rooftop country (1:1 towers reach ~150u)
+  { name: 'SKY', max: 260, c: '#7fe6ff' },
   { name: 'CLOUDS', max: 1e9, c: '#ffffff' },
 ];
-export const bandOf = (y) => y < 8 ? 0 : y < 32 ? 1 : y < 60 ? 2 : 3;
+export const bandOf = (y) => y < 8 ? 0 : y < 150 ? 1 : y < 260 ? 2 : 3;
 
 // per-hero silhouette flourishes (all mounted on driven meshes so the ragdoll carries them).
 const BUILDS = {
@@ -375,6 +376,7 @@ export class Fighter {
   // Free all scene-level extras (tentacles, deployed items, planted mines). Call when the fighter leaves play.
   dispose() {
     if (this.tentacles) { for (const t of this.tentacles) t.dispose(); this.tentacles = null; }
+    clearSlotFx(this);   // stop charge hums + orbs — a disposed mid-charge fighter must not ring into the next match
     for (const k in this.slots) {
       const st = this.slots[k];
       if (st.list) { for (const m of st.list) if (m.mesh && m.mesh.parent) { m.mesh.parent.remove(m.mesh); m.mesh.traverse(o => { if (o.material) o.material.dispose(); if (o.geometry) o.geometry.dispose(); }); } st.list.length = 0; }
@@ -461,10 +463,13 @@ export class Fighter {
         amount *= (opts.strike ? 0.12 : opts.dot ? 0.5 : 0.42) * sh;
         this.guardMeter = clamp(this.guardMeter - (opts.strike ? 0.14 : opts.dot ? 0.012 : 0.22) * sh, 0, 1);
         const pb = opts.dot ? 0.8 : 5;                                // beams shove gently while blocked
-        this.vel.x += (dx / d) * pb; this.vel.z += (dz / d) * pb;
+        this.vel.x -= (dx / d) * pb; this.vel.z -= (dz / d) * pb;     // braced BACKWARD, away from the attacker
         this.hitstop = Math.max(this.hitstop, opts.dot ? 0 : 0.03); this._blocked = 0.16;
         this.hp = clamp(this.hp - amount, 0, this.maxHp);
         if (this.guardMeter <= 0.001) { this.guarding = false; this.staggerT = 0.7; this.state = 'hit'; this.stateT = 0; } // guard break
+        // A BLOCKED STRIKE REJECTS THE ATTACKER — bounce + recovery stagger (parry if the guard
+        // was raised at the last instant). This is what stops melee spam against a raised guard.
+        if (opts.strike && this._game && this._game.onBlockedStrike) this._game.onBlockedStrike(opts.src, this);
         if (this._game) this._game.onHit(this, amount, opts, true);
         return amount;
       }
@@ -480,7 +485,12 @@ export class Fighter {
     }
     this.hp = clamp(this.hp - amount, 0, this.maxHp);
     this.ki = clamp(this.ki + amount * 0.4, 0, this.maxKi); // build ki when hurt
-    this.hitFlash = 1; this.hitstop = Math.max(this.hitstop, opts.hitstop || 0.04);
+    // ⚠ `??` NOT `||`: sustained sources (beams, cones, lifedrain, DoT ticks) pass hitstop: 0 on
+    // PURPOSE. With `||`, that falsy 0 became 0.04 EVERY FRAME and re-armed the freeze forever —
+    // anything under a beam was pinned in hitstop (no physics, no actions, frozen animation) for as
+    // long as the beam touched it. That was the "shoot the dummy and it freezes" bug, and it also
+    // meant any beam was a permanent stunlock on a live fighter. An explicit 0 must mean 0.
+    this.hitFlash = 1; this.hitstop = Math.max(this.hitstop, opts.hitstop ?? 0.04);
     // STRENGTH plants your feet: 10 shrugs off ~40% of knockback, 1 gets ragdolled around
     const kbMul = (this.metal ? 0.72 : 1) * (1.22 - this.strength * 0.047);
     if (opts.kb) { this.vel.x += (opts.kb.x || 0) * kbMul; this.vel.y += (opts.kb.y || 0) * kbMul; this.vel.z += (opts.kb.z || 0) * kbMul; }
@@ -507,6 +517,7 @@ export class Fighter {
     if (this.parts.ice) this.parts.ice.visible = false;
     if (this._game && (this.grabbing || this.grabbedBy)) this._game.melee.release(this.grabbing ? this : this.grabbedBy);
     if (this._game) for (const e of this._game.entities) if (e.grabbedBy === this) { e.grabbedBy = null; if (e.state === 'hit') e.state = 'idle'; }   // tentacle holds die with the holder
+    clearSlotFx(this);   // silence charge hums + remove orbs FIRST — clearing `charging` below orphans them otherwise (the stuck-tone bug)
     for (const k in this.slots) { const s = this.slots[k]; s.charging = false; s.active = null; s.chargeT = 0; s.sustainT = 0; }   // dying mid-generation leaves nothing armed
     this.cruiseHeld = false;
     if (this._held) this._held.clear();   // netplay: no ghost-held beams from a dead puppet
@@ -539,6 +550,7 @@ export class Fighter {
     if (this._chill > 0) { this._chill -= dt; if (this._chill <= 0) this.speed = this.def.speed || 30; }
     if (this.invuln > 0) this.invuln -= dt;
     if (this.evadeCd > 0) this.evadeCd -= dt;
+    if (this._bounceCd > 0) this._bounceCd -= dt;   // blocked-strike rejection debounce
     if (this.sprintT > 0) this.sprintT -= dt;
     if (this._slideT > 0) this._slideT -= dt;
     if (this.burstT > 0) this.burstT -= dt;
@@ -724,14 +736,14 @@ export class Fighter {
       if (impact < -30 && this.state !== 'ko') this._landT = Math.min(0.26, -impact * 0.006);   // knee-crouch on a hard landing
       if (impact < -38) this._slam(game, -impact, 'ground');    // hurled into the floor — fall/slam damage
     }
-    if (this.pos.y > 85) { this.pos.y = 85; if (this.vel.y > 0) this.vel.y = 0; }  // flight/knockback ceiling
+    if (this.pos.y > 320) { this.pos.y = 320; if (this.vel.y > 0) this.vel.y = 0; }  // ceiling above the CLOUDS band — towers are real now
     // harbor splashes — churning through water kicks up spray
     if (game && this.pos.y < 1.5 && game.world.waterAt && game.world.waterAt(this.pos.x) && Math.hypot(this.vel.x, this.vel.z) > 8 && Math.random() < dt * 10) {
       game.particles.spawn({ x: this.pos.x, y: 0.7, z: this.pos.z, vx: (Math.random() * 2 - 1) * 8, vy: 8 + Math.random() * 6, vz: (Math.random() * 2 - 1) * 8, life: 0.42, size: 2.8, color: ['#bfe6f2', '#7fb8d0', '#ffffff'], drag: 1.4, shrink: true });
     }
 
     // arena bounds — getting hurled into the border wall slams (and bounces)
-    const b = ARENA - 4;
+    const b = (this._game && this._game.world ? this._game.world.ARENA : ARENA) - 4;   // per-city bounds (generated maps vary)
     if (Math.abs(this.pos.x) > b) { this._slam(game, Math.abs(this.vel.x), 'wall'); this.vel.x *= -0.4; }
     if (Math.abs(this.pos.z) > b) { this._slam(game, Math.abs(this.vel.z), 'wall'); this.vel.z *= -0.4; }
     this.pos.x = clamp(this.pos.x, -b, b); this.pos.z = clamp(this.pos.z, -b, b);

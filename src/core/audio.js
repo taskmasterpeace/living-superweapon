@@ -2,7 +2,15 @@
 // PROXIMITY: combat methods take an optional world position; gain falls off with distance from the
 // listener (the player). Explosions carry farther than cracks. listen(x,z) is set every frame.
 export class AudioBus {
-  constructor() { this.ctx = null; this.master = null; this.ok = false; this.muted = false; this._lx = 0; this._lz = 0; this._hasL = false; }
+  constructor() { this.ctx = null; this.master = null; this.ok = false; this.muted = false; this._lx = 0; this._lz = 0; this._hasL = false; this._sus = new Set(); }
+  // WATCHDOG for sustained sounds (charge hums): a handle whose owner stops ramping it — KO'd
+  // mid-charge, disposed on match restart, spirit bomb starved — self-silences instead of ringing
+  // forever (the "stuck tone at match start" bug). Called every frame from game.update.
+  sweep() {
+    if (!this._sus.size) return;
+    const now = performance.now();
+    for (const h of this._sus) if (now - h.last > 450) h.stop();
+  }
   listen(x, z) { this._lx = x; this._lz = z; this._hasL = true; }
   // distance → gain multiplier. reach = how far this sound family carries (units to near-silence).
   _pg(pos, reach = 130) {
@@ -149,11 +157,13 @@ export class AudioBus {
     g.gain.exponentialRampToValueAtTime(0.14, this.t + 0.3);
     const f = this.ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 600; f.Q.value = 4;
     o.connect(f); f.connect(g); g.connect(this.master); o.start();
-    return {
-      o, g, f,
-      ramp: (lvl) => { try { f.frequency.setTargetAtTime(300 + lvl * 2600, this.t, 0.05); } catch (e) {} },
-      stop: () => { try { g.gain.setTargetAtTime(0.0001, this.t, 0.05); o.stop(this.t + 0.3); } catch (e) {} },
+    const h = {
+      o, g, f, last: performance.now(),
+      ramp: (lvl) => { h.last = performance.now(); try { f.frequency.setTargetAtTime(300 + lvl * 2600, this.t, 0.05); } catch (e) {} },
+      stop: () => { this._sus.delete(h); try { g.gain.setTargetAtTime(0.0001, this.t, 0.05); o.stop(this.t + 0.3); } catch (e) {} },
     };
+    this._sus.add(h);   // watchdog-tracked: dies unless kept alive by ramp() (see sweep)
+    return h;
   }
   teleport() {
     if (!this.ok || this.muted) return;
@@ -168,5 +178,61 @@ export class AudioBus {
     o.frequency.setValueAtTime(up ? 200 : 600, this.t);
     o.frequency.exponentialRampToValueAtTime(up ? 700 : 120, this.t + 0.5);
     this._env(o, 0.6, 0.3, 0.02); o.start(); o.stop(this.t + 0.62);
+  }
+  // ---- KMK 9 ACTION NEWS broadcast package ----
+  // sting: the urgent local-news open — timpani hit + three rising brass stabs + a hi shimmer
+  sting() {
+    if (!this.ok || this.muted) return;
+    const tym = this.ctx.createOscillator(); tym.type = 'sine';
+    tym.frequency.setValueAtTime(110, this.t); tym.frequency.exponentialRampToValueAtTime(48, this.t + 0.5);
+    this._env(tym, 0.55, 0.5, 0.004); tym.start(); tym.stop(this.t + 0.6);
+    const CHORDS = [[220, 277.2], [246.9, 311.1], [293.7, 370, 440]];   // A → B → D stabs
+    CHORDS.forEach((notes, i) => {
+      const at = 0.16 + i * 0.21;
+      for (const f0 of notes) {
+        const o = this.ctx.createOscillator(); o.type = 'sawtooth';
+        o.frequency.setValueAtTime(f0, this.t + at);
+        const lp = this.ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 1900; lp.Q.value = 0.8;
+        o.connect(lp);
+        const g = this.ctx.createGain();
+        g.gain.setValueAtTime(0.0001, this.t + at);
+        g.gain.exponentialRampToValueAtTime(i === 2 ? 0.16 : 0.11, this.t + at + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, this.t + at + (i === 2 ? 0.75 : 0.2));
+        lp.connect(g); g.connect(this.master);
+        o.start(this.t + at); o.stop(this.t + at + 0.8);
+      }
+    });
+    const sh = this.ctx.createOscillator(); sh.type = 'triangle';
+    sh.frequency.setValueAtTime(1760, this.t + 0.58); sh.frequency.exponentialRampToValueAtTime(2217, this.t + 0.95);
+    const shg = this.ctx.createGain(); shg.gain.setValueAtTime(0.0001, this.t + 0.58);
+    shg.gain.exponentialRampToValueAtTime(0.05, this.t + 0.62); shg.gain.exponentialRampToValueAtTime(0.0001, this.t + 1.15);
+    sh.connect(shg); shg.connect(this.master); sh.start(this.t + 0.58); sh.stop(this.t + 1.2);
+  }
+  // staticBurst: analog snow between replay clips
+  staticBurst(dur = 0.28) {
+    if (!this.ok || this.muted) return;
+    const n = this._noise(dur);
+    const f = this.ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 2400; f.Q.value = 0.4;
+    n.connect(f); this._env(f, dur, 0.07, 0.01); n.start(); n.stop(this.t + dur);
+  }
+  // siren: the two-tone whoop — dispatch and arrival announcements (proximity-attenuated)
+  siren(pos = null, whoops = 2) {
+    if (!this.ok || this.muted) return;
+    const pg = this._pg(pos, 260); if (!pg) return;
+    for (let i = 0; i < whoops; i++) {
+      const at = i * 0.42;
+      const o = this.ctx.createOscillator(); o.type = 'square';
+      o.frequency.setValueAtTime(660, this.t + at);
+      o.frequency.exponentialRampToValueAtTime(990, this.t + at + 0.2);
+      o.frequency.exponentialRampToValueAtTime(660, this.t + at + 0.4);
+      const lp = this.ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 2200;
+      o.connect(lp);
+      const g = this.ctx.createGain();
+      g.gain.setValueAtTime(0.0001, this.t + at);
+      g.gain.exponentialRampToValueAtTime(0.085 * pg, this.t + at + 0.03);
+      g.gain.exponentialRampToValueAtTime(0.0001, this.t + at + 0.42);
+      lp.connect(g); g.connect(this.master);
+      o.start(this.t + at); o.stop(this.t + at + 0.45);
+    }
   }
 }

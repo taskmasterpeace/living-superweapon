@@ -9,6 +9,10 @@ import { AI } from './ai.js';
 import { Minion, Construct } from './summons.js';
 import { MeleeSystem } from './melee.js';
 import { Pedestrians } from './pedestrians.js';
+import { NewsCrew } from './newscrew.js';
+import { PoliceSystem } from './police.js';
+import { buildReport } from '../data/news.js';
+import { koElo, matchElo } from '../data/rankings.js';
 import { SETTINGS } from '../core/settings.js';
 import { Gamepad } from '../core/gamepad.js';
 import { runSlot, performEvade } from './abilities.js';
@@ -69,6 +73,49 @@ const MODE_IMPL = {
     tick() {}, onKO() {}, isOver() { return null; },
     hud() { return { type: 'training' }; },
   },
+  // THE INVITATIONAL — one bracket match: best-of-3 ELIMINATION rounds (last side standing takes
+  // the round, nobody respawns mid-round), team damage LIVE. The Tournament object rides in o.tourney.
+  tournament: {
+    setup(g, o) {
+      const T = o.tourney, m = T && T.currentMatch();
+      g.ms = { T, m, aWins: 0, bWins: 0, target: 2, round: 1, betweenT: 0, roundLive: false, roundName: T ? T.roundName() : 'EXHIBITION' };
+      g.friendlyFire = true;   // the ruling: your splash is EVERYONE'S problem
+      g._tourneyRound();
+    },
+    tick(g, dt) {
+      const ms = g.ms; if (!ms.m) return;
+      if (ms.betweenT > 0) { ms.betweenT -= dt; if (ms.betweenT <= 0 && !g.matchOver) g._tourneyRound(); return; }
+      if (!ms.roundLive || g.matchOver) return;
+      const aAlive = g.entities.some(e => e.alive && e.def && !e.isDummy && e.team === 0);
+      const bAlive = g.entities.some(e => e.alive && e.def && !e.isDummy && e.team === 1);
+      if (aAlive && bAlive) return;
+      ms.roundLive = false;
+      const aWon = aAlive;                                  // double-KO edges to the challengers
+      if (aWon) ms.aWins++; else ms.bWins++;
+      g.slowmo(0.5, 0.35);
+      if (ms.aWins < ms.target && ms.bWins < ms.target) {
+        ms.round++; ms.betweenT = 3.0;
+        if (g.hud) g.hud.announce(aWon ? 'ROUND YOURS' : 'ROUND LOST', `${ms.aWins}–${ms.bWins} · first to ${ms.target}`, aWon ? '#8fe08a' : '#ff6a5a');
+      }
+    },
+    onKO() {},
+    isOver(g) {
+      const ms = g.ms; if (!ms.m) return { win: false, title: 'NO BRACKET', lines: ['Tournament state lost'] };
+      if (ms.aWins < ms.target && ms.bWins < ms.target) return null;
+      const win = ms.aWins >= ms.target, final = ms.T.isFinal(ms.m);
+      return {
+        win, tournament: true,
+        title: win ? (final ? 'CHAMPION' : 'ADVANCE') : 'ELIMINATED',
+        lines: [win
+          ? (final ? `The ${ms.T.label} is yours — ${ms.aWins}–${ms.bWins} in the final` : `${ms.roundName} taken ${ms.aWins}–${ms.bWins} — the bracket advances`)
+          : `Out in the ${ms.roundName.toLowerCase()} — ${ms.aWins}–${ms.bWins} against ${ms.T.sideName(ms.T.playerFoeSide(ms.m))}`],
+      };
+    },
+    hud(g) {
+      const ms = g.ms;
+      return { type: 'tournament', a: ms.aWins, b: ms.bWins, target: ms.target, round: ms.round, roundName: ms.roundName, bName: ms.m ? ms.T.sideName(ms.T.playerFoeSide(ms.m)) : 'RIVALS' };
+    },
+  },
 };
 
 export class Game {
@@ -81,6 +128,13 @@ export class Game {
     this.projectiles = new Projectiles(this);
     this.melee = new MeleeSystem(this);
     this.peds = new Pedestrians(this.world.scene, this.world.ARENA || 240, this.world.waterX || 188);
+    this.news = new NewsCrew(this);  // the KMK 9 field crew — films the fight, records the clips
+    this.police = new PoliceSystem(this);   // the city's answer to whoever hurts humans
+    // the match record the news desk reports from (reset in startMode)
+    this.matchT = 0; this.matchLog = [];
+    this.cityStats = { civs: 0, cars: 0, blocks: 0, craters: 0 };
+    this.bigHit = { amount: 0, by: null, kind: 'blast' };
+    this._p1MaxCombo = 0; this.matchReport = null;
     this.hud = null;                 // set by main.js — for damage numbers / combo
     this.combo = 0; this.comboT = 0;
     this.humans = [];                // local players: [{ fighter, scheme:'kbm'|'pad' }]
@@ -96,6 +150,7 @@ export class Game {
     this._ghostGeo = new THREE.CapsuleGeometry(1.5, 3.2, 4, 8);
     this._buildReticle();
     this._buildLockMark();
+    this._buildPlayerMark();
 
     // camera-aligned movement basis
     const cd = this.world.camDir;
@@ -116,6 +171,35 @@ export class Game {
     chev.rotation.x = Math.PI; chev.position.y = 13; this.reticle.add(chev);
     this.reticle.visible = false; this.scene.add(this.reticle);
     this._retRing = ring; this._retRing2 = ring2; this._retChev = chev;
+  }
+
+  // "YOU ARE HERE" — at 1:1 city scale a 9.6u hero is a speck between towers. A soft gold ring
+  // under the player (pulsing, ground-pinned) makes you findable at a glance without clutter.
+  _buildPlayerMark() {
+    const g = new THREE.Group();
+    const ring = new THREE.Mesh(new THREE.RingGeometry(4.2, 5.4, 44), new THREE.MeshBasicMaterial({ color: '#ffd24a', transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+    ring.rotation.x = -Math.PI / 2; g.add(ring);
+    const glow = new THREE.Mesh(new THREE.CircleGeometry(5.2, 32), new THREE.MeshBasicMaterial({ color: '#ffd24a', transparent: true, opacity: 0.1, blending: THREE.AdditiveBlending, depthWrite: false }));
+    glow.rotation.x = -Math.PI / 2; g.add(glow);
+    g.visible = false; this.scene.add(g);
+    this.playerMark = g; this._pmRing = ring; this._pmGlow = glow;
+  }
+  updatePlayerMark(dt) {
+    const m = this.playerMark, p = this.player;
+    if (!m) return;
+    const show = !!(p && p.alive && this.mode && this.running);
+    if (m.visible !== show) m.visible = show;
+    if (!show) return;
+    m.position.set(p.pos.x, 0.16, p.pos.z);
+    const pulse = 0.42 + Math.sin(this.time * 3.1) * 0.12;
+    this._pmRing.material.opacity = pulse;
+    this._pmGlow.material.opacity = 0.07 + Math.sin(this.time * 3.1) * 0.03;
+    const s = 1 + Math.sin(this.time * 3.1) * 0.04;
+    m.scale.set(s, 1, s);
+    if (this._pmColor !== p.def.colors.accent) {   // wears your hero's colour
+      this._pmColor = p.def.colors.accent;
+      this._pmRing.material.color.set(this._pmColor); this._pmGlow.material.color.set(this._pmColor);
+    }
   }
 
   _buildLockMark() {
@@ -154,7 +238,7 @@ export class Game {
     const h2 = this.humans[1] && this.humans[1].fighter;
     this.world.updateFog(p.pos.x, p.pos.z, p.aim.x, p.aim.z, p.def.colors.accent, (h2 && h2.alive) ? h2.pos : null);
     for (const e of this.entities) {
-      if (this.isHuman(e)) { e._vis = 1; e.obj.visible = true; continue; }       // teammates always visible
+      if (this.isHuman(e) || e.team === p.team) { e._vis = 1; e.obj.visible = true; continue; }   // your own side is always visible (incl. AI partners)
       let see = this._humanSees(p, e) || (h2 && h2.alive && this._humanSees(h2, e));
       if (!see) { const d = Math.hypot(e.pos.x - p.pos.x, e.pos.z - p.pos.z); if (d < this.visReveal && this._bright(e)) see = true; }
       e._vis = damp(e._vis == null ? (see ? 1 : 0) : e._vis, see ? 1 : 0, 12, dt);
@@ -245,6 +329,20 @@ export class Game {
 
   slowmo(dur, mul = 0.42) { this._slowT = Math.max(this._slowT || 0, dur); this._slowMul = mul; }
 
+  // ---------- SOUND: the honest way for a blind bot to find a fight ----------
+  // Bots can no longer read your position (see ai.js THE HONESTY LAW), so the world has to be
+  // audible instead. Explosions, heavy hits and KOs broadcast a position that nearby AI hears
+  // with distance-scaled FUZZ — meaning a loud fighter draws a crowd and a quiet one can slip
+  // a block over and vanish. `loud` ≈ 1 is a solid punch, 2+ is a detonation.
+  noise(pos, loud = 1, src = null) {
+    if (!this.entities.length) return;
+    for (const e of this.entities) {
+      if (!e.ai || !e.alive || e === src) continue;
+      if (src && e.team === src.team) continue;               // your own side isn't hunting you
+      e.ai.hear(pos.x, pos.z, pos.y || 0, loud);
+    }
+  }
+
   // An enemy beam currently aimed at f (for AI to block / counter).
   incomingBeam(f) {
     for (const o of this.projectiles.list) {
@@ -288,6 +386,7 @@ export class Game {
   // ---------- setup ----------
   addFighter(def, opts) {
     const f = new Fighter(def, opts); f._game = this;
+    f.stats = { dmg: 0, taken: 0, big: 0, bigKind: 'blast' }; f._bestStreak = 0;   // the news desk's stat sheet
     this.scene.add(f.obj); this.entities.push(f);
     return f;
   }
@@ -302,6 +401,7 @@ export class Game {
     this.hardLock = null; this.lockTarget = null;
     this.world.resetTerrain(); this.vfx.clearScorches();   // restore blocks + flatten craters each match
     if (this.peds) this.peds.reset();
+    if (this.news) this.news.reset(null);   // no crew on the legacy quick-boot path
 
     const def = ROSTER.find(r => r.id === charId) || ROSTER[0];
     this.player = this.addFighter(def, { isPlayer: true, team: 0, x: 0, z: 30 });
@@ -400,6 +500,12 @@ export class Game {
     this.world.resetTerrain(); this.vfx.clearScorches();
     if (this.peds) this.peds.reset();
     this.modeId = id; this.mode = MODE_IMPL[id] || MODE_IMPL.training; this.ms = {}; this.matchOver = false; this.matchResult = null;
+    this.friendlyFire = false;   // tournament setup flips it on
+    // fresh match record + the field crew rolls out (they skip the Danger Room)
+    this.matchT = 0; this.matchLog = []; this.cityStats = { civs: 0, cars: 0, blocks: 0, craters: 0, cops: 0 };
+    this.bigHit = { amount: 0, by: null, kind: 'blast' }; this._p1MaxCombo = 0; this.matchReport = null;
+    if (this.news) this.news.reset(id);
+    if (this.police) this.police.reset();
     const two = !!o.twoPlayer;
     this.spawnHuman(o.p1 || 'sol', 'kbm', { x: two ? -20 : 0, z: 30 });
     if (two) this.spawnHuman(o.p2 || 'vega', 'pad', { x: 20, z: 30, team: id === 'duel' ? 1 : 0 });
@@ -410,7 +516,55 @@ export class Game {
     if (this.matchOver) return;
     this.matchOver = true; this.matchResult = result;
     this.slowmo(0.35, 0.4); this.world.punch(0.8);
+    // NOTE: a live recording keeps rolling behind the end screen (the final KO's ragdoll IS the
+    // money shot) — it finalizes on its own clock into the same clips array the TV is playing.
+    try { this.matchReport = buildReport(this, result); } catch (e) { console.error('news desk', e); this.matchReport = null; }
+    // decided duels move the book at match weight (tournament rounds are booked by the bracket)
+    try {
+      if (this.modeId === 'duel' && this.ms.p1 && this.ms.enemy && this.ms.enemy.def) {
+        const w = result.win ? this.ms.p1 : this.ms.enemy, l = result.win ? this.ms.enemy : this.ms.p1;
+        if (w.def.id && l.def.id) matchElo(w.def.id, l.def.id, [w.def, l.def], 'duel');
+      }
+      // an Invitational match reports to the bracket: books tournament Elo, sims the rest of the
+      // round off-screen, and — if this was the final or the player's exit — crowns the champion
+      if (this.modeId === 'tournament' && this.ms.T && this.ms.m) {
+        const sc = result.win ? [this.ms.aWins, this.ms.bWins] : [this.ms.bWins, this.ms.aWins];   // winner-first, like a real box score
+        this.ms.T.reportPlayerMatch(this.ms.m, result.win, sc);
+      }
+    } catch (e) { console.error('rankings', e); }
     if (this.hud) this.hud.showEndScreen(result, this);
+  }
+  // One elimination round of an Invitational match: full respawn of both sides in line formations.
+  // City damage PERSISTS across rounds — the battlefield remembers, and so does the news desk.
+  _tourneyRound() {
+    const ms = this.ms, T = ms.T, m = ms.m; if (!m) return;
+    // the tape is cumulative: lead fighters inherit their stat sheets across rounds
+    const prevA = ms.aLeadF ? ms.aLeadF.stats : null, prevB = ms.bLeadF ? ms.bLeadF.stats : null;
+    for (const e of this.entities) { this.scene.remove(e.obj); if (e.dispose) e.dispose(); }
+    this.entities.length = 0; this.minions.length = 0; this.humans.length = 0;
+    for (const c of this.constructs) c._dispose(this); this.constructs.length = 0;
+    this.projectiles.list.length = 0;
+    while (this.portals.length) this._closePair(this.portals[0]);
+    this.hardLock = null; this.lockTarget = null;
+    const mine = T.sides[0], theirs = T.playerFoeSide(m);
+    const p1 = this.spawnHuman(mine.ids[0], 'kbm', { x: mine.ids.length > 1 ? -13 : 0, z: 46 });
+    p1.noRespawn = true;                                     // elimination rules — a round death sticks
+    if (prevA) p1.stats = prevA;
+    ms.aLeadF = p1;
+    for (let i = 1; i < mine.ids.length; i++) {
+      const ally = this.spawnEnemy(mine.ids[i], { team: 0, x: 13 + (i - 1) * 22, z: 48, aiLevel: 1.15 });
+      ally.noRespawn = true;
+    }
+    theirs.ids.forEach((id, i) => {
+      const foe = this.spawnEnemy(id, { team: 1, x: (i - (theirs.ids.length - 1) / 2) * 26, z: -46, aiLevel: 1.2 });
+      foe.noRespawn = true;
+      if (i === 0) { if (prevB) foe.stats = prevB; ms.bLeadF = foe; }
+    });
+    ms.roundLive = true;
+    if (this.hud) {
+      this.hud.setPlayer(p1.def);
+      this.hud.announce('ROUND ' + ms.round, ms.roundName + ' · vs ' + T.sideName(theirs), '#ffd24a');
+    }
   }
   _waveCount(n) { return Math.min(6, 1 + Math.floor(n * 0.7)); }
   _spawnWave(n) {
@@ -422,7 +576,14 @@ export class Game {
   }
 
   // ---------- combat helpers ----------
-  isFoe(a, b) { return b && b.alive && b !== a && (b.team !== a.team || b.isDummy) && !(a.isDummy); }
+  // fixation (police tunnel vision): a fixated fighter ONLY fights its fixation, and nobody
+  // else's targeting minds the badge — heroes who keep civilians safe never trade with cops.
+  isFoe(a, b) {
+    if (!b || !b.alive || b === a || a.isDummy) return false;
+    if (a.fixation) return b === a.fixation;
+    if (b.fixation && b.fixation !== a) return false;
+    return b.team !== a.team || b.isDummy;
+  }
 
   nearestFoe(caster, pos, maxDist = 200) {
     let best = null, bd = maxDist * maxDist;
@@ -458,13 +619,22 @@ export class Game {
 
   areaDamage(caster, pos, radius, damage, power = 1) {
     for (const f of this.entities) {
-      if (!this.isFoe(caster, f)) continue;
+      const foe = this.isFoe(caster, f);
+      // TEAM DAMAGE (tournament ruling): with friendlyFire on, your splash catches your OWN side
+      // at half strength. Melee and beams stay disciplined — explosions do not.
+      const ff = !foe && this.friendlyFire && f !== caster && f.alive && f.def && !f.isDummy && f.team === caster.team;
+      if (!foe && !ff) continue;
       const dx = f.pos.x - pos.x, dz = f.pos.z - pos.z, dy = (f.pos.y + 5) - pos.y;
       const d = Math.hypot(dx, dz, dy);
       if (d > radius + f.radius) continue;
       const fall = 1 - clamp(d / (radius + f.radius), 0, 1) * 0.6;
       const kb = _v.set(dx, 0, dz).setLength((damage * 0.6 + 12) * fall);
-      f.takeDamage(damage * fall * caster.powerBuff, { kb, launch: (6 + power * 6) * fall, hitstop: 0.05 });
+      // src attribution: explosions now CREDIT the blaster (artillery kills used to score nobody)
+      const dealt = f.takeDamage(damage * fall * caster.powerBuff * (ff ? 0.5 : 1), { src: caster, kb, launch: (6 + power * 6) * fall, hitstop: 0.05 });
+      if (ff && dealt >= 3 && this.hud && (this._ffFeedT || 0) <= this.time - 2.5) {
+        this._ffFeedT = this.time;
+        this.hud.feed(`⚠ FRIENDLY FIRE — ${caster.name} clipped ${f.name}`, '#ffb03a');
+      }
     }
     this.worldImpact(pos, radius, power, caster);   // crater the ground + damage cover + street life
   }
@@ -475,7 +645,10 @@ export class Game {
     if (pos.y < 6.5 && (power >= 1.25 || radius >= 14)) {
       this.world.crater(pos.x, pos.z, Math.min(radius * 0.45, 22), Math.min(power * 1.3, 5));
       this.vfx.scorch(new THREE.Vector3(pos.x, 0.14, pos.z), Math.min(radius * 0.5, 24), '#161a22');  // scorched pit
+      this.cityStats.craters++;
     }
+    if (this.news) this.news.onBlast(pos, radius, power);   // the crew ducks — or eats pavement
+    this.noise(pos, Math.min(2.6, 0.9 + power * 0.6 + radius * 0.02), src);   // detonations carry
     for (let i = this.world.cover.length - 1; i >= 0; i--) {
       const c = this.world.cover[i]; if (c.hp == null || c.hp <= 0) continue;
       const d = Math.hypot(pos.x - c.x, pos.z - c.z);
@@ -491,15 +664,23 @@ export class Game {
     if (this.peds && pos.y < 12) {
       this.peds.scare(pos.x, pos.z, radius * 4);
       const downed = this.peds.blast(pos.x, pos.z, Math.max(6, radius * 0.85));
-      if (downed && this.hud) {
-        this.hud.feed(`⚠ COLLATERAL — ${downed} civilian${downed > 1 ? 's' : ''} down`, '#ff8a6a');
+      if (downed) {
+        this.cityStats.civs += downed;
+        if (this.police) this.police.onCivHarm(src, downed);   // the villain is whoever hurts humans
+        if (this.hud) this.hud.feed(`⚠ COLLATERAL — ${downed} civilian${downed > 1 ? 's' : ''} down`, '#ff8a6a');
         if (src && this.isHuman(src)) src.score = Math.max(0, (src.score || 0) - 40 * downed);
+        if (downed >= 2 && this.news) this.news.highlight('collateral', 'CIVILIANS CAUGHT IN THE BLAST', { dur: 2.0, priority: 1, focus: pos });
       }
     }
   }
   _explodeCar(car, src) {
-    car.dead = true; car.mesh.material = this.world._charred; car.mesh.position.y = -0.25;
+    car.dead = true; car.mesh.position.y = -0.25;
+    // plain cars are one mesh; police cruisers are a GROUP (body + light bar) — char it ALL, kill the lights
+    if (car.mesh.isGroup) car.mesh.traverse(o => { if (o.material) { o.material = this.world._charred; } });
+    else car.mesh.material = this.world._charred;
     const pos = { x: car.x, y: 2.5, z: car.z };
+    this.cityStats.cars++;
+    if (this.news) this.news.highlight('car', 'VEHICLE FIRE — POSSIBLE CHAIN REACTION', { dur: 2.0, priority: 2, focus: pos });
     this.vfx.flash(new THREE.Vector3(car.x, 3, car.z), '#ff8a3d', 14, 0.5);
     this.particles.burst(car.x, 2, car.z, { count: 26, speed: 26, life: 0.85, size: 5.2, color: ['#ff8a3d', '#ffd24a', '#22232c'], up: 15, grav: 8, drag: 1.2 });
     this.vfx.scorch(new THREE.Vector3(car.x, 0.18, car.z), 8, '#161a22');
@@ -515,6 +696,8 @@ export class Game {
     if (c.hp <= 0) this.shatterBlock(c);
   }
   shatterBlock(c) {
+    this.cityStats.blocks++;
+    if (this.news) this.news.highlight('building', 'STRUCTURE COLLAPSE — ' + this.world.districtAt(c.x, c.z), { dur: 2.6, priority: 2, focus: { x: c.x, y: 8, z: c.z } });
     const w = c.w || c.r * 1.6, h = c.h, d = c.d || c.r * 1.6;
     const mat = new THREE.MeshStandardMaterial({ color: '#b5ae9e', roughness: 0.9, metalness: 0.05 });   // white-stone rubble
     for (let i = 0; i < 11; i++) {
@@ -553,7 +736,18 @@ export class Game {
       killer.lastKillT = 0;
     }
     victim.streak = 0;
+    if (killer) killer._bestStreak = Math.max(killer._bestStreak || 0, killer.streak);
+    if (victim.def.police && this.police) this.police.onCopDown(killer);   // villainy squared
+    // the news layer: log the knockdown, and the camera swings to the body
+    if (!victim.isDummy && this.mode) {
+      this.matchLog.push({ t: this.matchT, type: 'ko', v: victim.name, vid: victim.def.id, k: killer ? killer.name : null, kid: killer && killer.def ? killer.def.id : null, kind: victim._lastHitKind || 'blast', at: this.world.districtAt(victim.pos.x, victim.pos.z) });
+      if (this.news) this.news.highlight('ko', victim.name + ' IS DOWN' + (killer ? ' — ' + killer.name + ' STANDS' : ''), { dur: 3.4, priority: 3, focus: victim.pos });
+      // the ledger: every registered-weapon knockdown moves the power rankings (AI or human pilot
+      // alike) — friendly-fire KOs shame the feed but never touch the book
+      if (killer && killer.def && killer.def.id && victim.def.id && killer.team !== victim.team && !killer.def.police && !victim.def.police && this.modeId !== 'training') koElo(killer.def.id, victim.def.id, [killer.def, victim.def]);
+    }
     this.audio.cry(victim.def.voicePitch || 1, victim.pos);   // the falling wail
+    this.noise(victim.pos, 2.2, null);                        // a death scream carries across the district
     // KO flourish — slowmo + banner when a human is involved (avoids spam in bot-vs-bot rumble)
     const involvesHuman = this.isHuman(victim) || (killer && this.isHuman(killer));
     if (involvesHuman) {
@@ -563,7 +757,7 @@ export class Game {
         this.hud.showKO(down ? 'DOWN' : 'K.O.', victim.name, down ? '#ff5a4a' : (killer ? killer.def.colors.accent : '#fff'));
       }
     }
-    if (this.mode && this.mode.onKO) this.mode.onKO(this, victim, killer);
+    if (this.mode && this.mode.onKO && !this.matchOver) this.mode.onKO(this, victim, killer);   // the scoreboard freezes with the final whistle
     if (this.onKill) this.onKill(victim);
   }
 
@@ -594,6 +788,7 @@ export class Game {
         f._yellCd = 0; this.heroYell(f, 1.6);   // the ascension SCREAM
         this.slowmo(0.3, 0.4);
         if (this.hud && (this.isHuman(f) || this.mode)) this.hud.announce('TIER ' + ['', 'I', 'II', 'III', 'MAX'][f.tier], f.name + ' ASCENDS', tc);
+        if (this.news) this.news.highlight('tier', f.name + ' ASCENDS — POWER READINGS SPIKE', { dur: 2.4, priority: 2, focus: f.pos });
       } else {
         this.vfx.explode(f.pos.clone().setY(5), { color: f.def.colors.accent, color2: '#fff', radius: 11, power: 1.1, scorch: false });
         this.vfx.ring(f.pos.clone().setY(3), { color: f.def.colors.accent, r0: 2, r1: 24, life: 0.6, flat: true, y: 0.5 });
@@ -665,6 +860,38 @@ export class Game {
     if ((f._noKiT || 0) <= 0) { f._noKiT = 0.25; try { this.audio.zap(120); } catch (e) {} }
   }
 
+  // A raised guard just REJECTED a melee strike (called from takeDamage's guard branch for every
+  // strike-flagged blocked hit — jabs, straights, melee abilities, rush hits). The attacker BOUNCES
+  // off and eats a recovery stagger; a last-instant guard (<0.22s) is a PARRY: bigger bounce, longer
+  // stagger, meter refund. This is the law that makes blocking actually stop melee spam.
+  onBlockedStrike(att, blk, o = {}) {
+    if (!att || !blk || !att.alive) return;
+    if ((att._bounceCd || 0) > 0) return;                      // one rejection per exchange — no bounce-lock
+    att._bounceCd = 0.3;
+    const perfect = (blk._guardUpT ?? 99) < 0.22;
+    const dx = att.pos.x - blk.pos.x, dz = att.pos.z - blk.pos.z, d = Math.hypot(dx, dz) || 1;
+    const push = perfect ? 54 : (o.push ?? 38);
+    att.vel.x += (dx / d) * push; att.vel.z += (dz / d) * push; att.vel.y = Math.max(att.vel.y, 5);
+    att.staggerT = Math.max(att.staggerT, perfect ? 0.8 : (o.stagger ?? 0.45));
+    att.hitstop = Math.max(att.hitstop, 0.1);
+    att.strikeCd = Math.max(att.strikeCd || 0, 0.55);
+    att.meleeCharge = 0; att.strikeActive = 0; att.comboWin = 0;   // the chain is BROKEN
+    const imp = blk.pos.clone().set((att.pos.x + blk.pos.x) / 2, 5.8, (att.pos.z + blk.pos.z) / 2);
+    if (perfect) {
+      blk.guardMeter = clamp(blk.guardMeter + 0.12, 0, 1);         // a clean parry refunds meter
+      this.vfx.impactStar(imp, 11, '#ffd24a', 0.22);
+      this.vfx.ring(imp, { color: '#ffd24a', r0: 1, r1: 11, life: 0.3 });
+      this.audio.impact(1.0, imp); this.audio.zap(980, imp);
+      this.slowmo(0.09, 0.45); this.world.shake(0.9);
+      if (this.hud) { this.hud.damageNumber(blk.pos, 'PARRY!', '#ffd24a', true); if (this.isHuman(blk)) this.hud.flashScreen('#ffd24a', 0.1); }
+    } else {
+      this.vfx.impactStar(imp, 8, '#bfe0ff', 0.18);
+      this.audio.zap(520, imp); this.audio.impact(0.55, imp);
+      this.world.shake(0.5);
+      if (this.hud && (this.isHuman(blk) || this.isHuman(att))) this.hud.damageNumber(att.pos, 'REPELLED', '#bfe0ff', true);
+    }
+  }
+
   // Called by Fighter.takeDamage for EVERY hit — damage numbers, sparks, combo.
   onHit(target, amount, opts = {}, blocked = false) {
     const src = opts.src;
@@ -692,10 +919,21 @@ export class Game {
     if (target.isDummy && !blocked) { (target._dmgLog = target._dmgLog || []).push({ t: this.time, a: amount }); target._dmgTotal = (target._dmgTotal || 0) + amount; }
     this.vfx.flash(target.pos.clone().setY(5.6), blocked ? '#cfe6ff' : (target.def.colors.accent || '#fff'), blocked ? 3 : 2.4, 0.1);
     if (src === this.player && !blocked) {
-      if (amount >= 5) { this.combo++; if (this.hud) this.hud.combo(this.combo); }
+      if (amount >= 5) { this.combo++; if (this.combo > this._p1MaxCombo) this._p1MaxCombo = this.combo; if (this.hud) this.hud.combo(this.combo); }
       this.comboT = 1.3;
     }
     if (src && !blocked && this.isHuman(src) && amount >= 1) this.grantXp(src, amount * 0.35);   // XP for landing damage
+    // a solid hit is LOUD — nearby bots hear the scuffle and come looking (fair discovery)
+    if (amount >= 10 && src && src !== target) this.noise(target.pos, Math.min(1.6, 0.5 + amount * 0.02), src);
+    // the news desk's ledger: who dealt what, the biggest hit on record, and hot moments worth a camera
+    if (!blocked && amount >= 1 && src && src.def && src !== target && !target.isDummy) {
+      const kind = opts.strike ? 'fists' : opts.slam ? 'slam' : opts.dot ? 'beam' : opts.dmgClass === 'slash' ? 'blade' : 'blast';
+      target._lastHitKind = kind;
+      if (src.stats) { src.stats.dmg += amount; if (amount > src.stats.big) { src.stats.big = amount; src.stats.bigKind = kind; } }
+      if (target.stats) target.stats.taken += amount;
+      if (amount > this.bigHit.amount) this.bigHit = { amount, by: src, kind, t: this.matchT };
+      if (amount >= 26 && this.news) this.news.highlight('bighit', src.name + (kind === 'fists' ? ' LANDS A MASSIVE BLOW' : ' — MASSIVE ENERGY DISCHARGE'), { dur: 2.1, priority: 1, focus: target.pos });
+    }
   }
 
   // ---------- dimensional doors (Portal-style paired rifts) ----------
@@ -790,7 +1028,7 @@ export class Game {
             const d = Math.hypot(e.pos.x - f.pos.x, e.pos.z - f.pos.z);
             if (d > (it.def.radius || 26)) continue;
             e.staggerT = Math.max(e.staggerT, 0.5);
-            if (e.ai) { e.ai._mem = 0; e.ai._ls = null; }   // bots lose the plot
+            if (e.ai) { e.ai._mem = 0; e.ai.belief = null; e.ai._patrol = null; }   // flashbanged: they lose the plot entirely
           }
           spend(); break;
         }
@@ -961,7 +1199,7 @@ export class Game {
     if (inp.pressed('KeyX') && p.items.length) this.useItem(p);   // X = the carried item (beacon: plant / recall)
 
     // --- powers (keyboard/mouse OR gamepad) ---
-    const busy = p.guarding || p.strikeActive > 0 || p.grabState || p.grabbing || p.meleeCharge > 0;
+    const busy = p.guarding || p.strikeActive > 0 || p.grabState || p.grabbing || p.meleeCharge > 0 || p.staggerT > 0;
     const orK = (code, a) => ({ pressed: inp.pressed(code) || pad.pressed(a), held: inp.down(code) || pad.down(a), released: inp.released(code) || pad.released(a) });
     const intents = {
       lmb: { pressed: m.leftEdge || pad.pressed('lmb'), held: m.left || pad.down('lmb'), released: m.leftUp || pad.released('lmb') },
@@ -997,7 +1235,7 @@ export class Game {
     if (pad.released('strike')) this.melee.chargeRelease(f);
     if (pad.pressed('grab')) this.melee.grab(f);
     this.melee.guard(f, pad.down('guard'));
-    const busy = f.guarding || f.strikeActive > 0 || f.grabState || f.grabbing || f.meleeCharge > 0;
+    const busy = f.guarding || f.strikeActive > 0 || f.grabState || f.grabbing || f.meleeCharge > 0 || f.staggerT > 0;
     const P = (a) => ({ pressed: pad.pressed(a), held: pad.down(a), released: pad.released(a) });
     const it = { lmb: P('lmb'), rmb: P('rmb'), q: P('q'), e: P('e'), r: P('r'), f: P('f'), shift: P('dash') };
     for (const k of SLOT_KEYS) if (f.slots[k]) feedSlot(this, f, k, it[k], busy, dt);
@@ -1010,9 +1248,10 @@ export class Game {
     if (f._aiCharge > 0) { f._aiCharge -= dt; if (f._aiCharge <= 0 || f.meleeCharge <= 0) { this.melee.chargeRelease(f); f._aiCharge = 0; } }
     const it = f.ai.intent(dt, this);
     if (it.aimDir) f.faceDir(it.aimDir.x, it.aimDir.z);
-    // 3D aim at the target's body centre — angles up at flyers, down at grounded foes
-    const at = it.target || this.nearestFoe(f, f.pos, 500);
-    if (at) f.aim3.set(at.pos.x - f.pos.x, (at.pos.y + 5.2) - (f.pos.y + 5.8), at.pos.z - f.pos.z).normalize();
+    // 3D aim. ⚠ `it.target` is ONLY set when the AI can actually see the foe (honesty law), and
+    // `it.aimAt` is where it BELIEVES it should shoot — the target's centre plus its own lead error
+    // and hand-wander (fairness law). Never aim at the true body centre: that reads as an aimbot.
+    if (it.aimAt) f.aim3.set(it.aimAt.x - f.pos.x, (it.aimAt.y + 5.2) - (f.pos.y + 5.8), it.aimAt.z - f.pos.z).normalize();
     else f.aim3.set(f.aim.x, 0, f.aim.z);
     const dir = _v.set(it.move.x, 0, it.move.z); if (dir.lengthSq() > 1) dir.normalize();
     f.moveDir = { x: dir.x, z: dir.z };
@@ -1022,9 +1261,15 @@ export class Game {
     f.move(f.moveDir, dt);
 
     // --- defensive reactions to incoming beams / projectiles ---
+    // ⚠ FAIRNESS: a bot must not answer a threat on the frame it appears. `_reactT` is its reflex
+    // delay (from ai.reflex, so difficulty buys nerves, not precognition) — the threat has to have
+    // existed for that long before it may block or juke. Feints and fast openers now WORK.
     if (f._forceBeamT > 0) f._forceBeamT -= dt;
     f._counterCd = (f._counterCd || 0) - dt;
-    if (!f.grabbing && !f.grabState) {
+    const threatened = !!(this.incomingBeam(f) || this.incomingProjectile(f));
+    if (threatened) f._threatT = (f._threatT || 0) + dt; else f._threatT = 0;
+    const reacted = f._threatT > (f.ai.reflex || 0.2);
+    if (!f.grabbing && !f.grabState && reacted) {
       const beam = this.incomingBeam(f);
       if (beam) {
         f.faceDir(beam.caster.pos.x - f.pos.x, beam.caster.pos.z - f.pos.z);   // turn to face it (block/clash from the front)
@@ -1059,13 +1304,23 @@ export class Game {
 
     // close-range melee mixups (skip if committing to a counter-beam)
     if (!f._forceBeam && !f.grabbing && !f.grabState && !f.strikeActive) {
-      const foe = this.nearestFoe(f, f.pos, 15);
+      const foe = this.nearestFoe(f, f.pos, 16);
       const d = foe ? Math.hypot(foe.pos.x - f.pos.x, foe.pos.z - f.pos.z) : 99;
       f._meleeCd = (f._meleeCd || 0) - dt;
-      if (foe && d < 11 && f._meleeCd <= 0) {
+      // a turtling foe is worth stepping INTO grab range for (the bounce pushes bots out of it)
+      const turtleReach = foe && foe.guarding && (foe._guardUpT ?? 0) > 0.35 ? 13.5 : 11;
+      if (foe && d < turtleReach && f._meleeCd <= 0) {
         f._meleeCd = 0.45 + Math.random() * 0.7;
         const style = f.ai && f.ai.style, r = Math.random();
-        if (style === 'grappler' && r < 0.55) this.melee.grab(f);              // Cell seeks grabs to absorb/heal
+        // THE TRIFECTA, READ LIVE: a turtling foe gets GRABBED or HAYMAKERED, never jabbed at.
+        // (Bots used to spam strikes into a raised shield forever — now they solve it.)
+        const turtling = foe.guarding && (foe._guardUpT ?? 0) > 0.35;
+        if (turtling) {
+          if (r < 0.55) this.melee.grab(f);                                    // grab beats guard
+          else if (!f._aiCharge && (f.def.meleeTiers ?? 3) >= 2) { this.melee.chargeStart(f); f._aiCharge = 0.6 + Math.random() * 0.5; f._meleeCd = 1.1; }   // or CRUSH it
+          else this.melee.grab(f);
+        }
+        else if (style === 'grappler' && r < 0.55) this.melee.grab(f);         // Cell seeks grabs to absorb/heal
         else if (r < (style === 'rusher' ? 0.72 : 0.5)) this.melee.strike(f);
         else if (r < 0.68) this.melee.grab(f);
         else if (r < 0.85 && !f._aiCharge && (f.def.meleeTiers ?? 3) >= 2) {   // wind up a HAYMAKER (guard-crusher)
@@ -1077,7 +1332,7 @@ export class Game {
     f._guardT = (f._guardT || 0) - dt;
     this.melee.guard(f, f._guardT > 0);
 
-    const busy = f.guarding || f.strikeActive > 0 || f.grabState || f.grabbing || f.meleeCharge > 0;
+    const busy = f.guarding || f.strikeActive > 0 || f.grabState || f.grabbing || f.meleeCharge > 0 || f.staggerT > 0;
     // committed counter-beam (hold the beam slot → creates a beam battle)
     if (f._forceBeam && f._forceBeamT > 0 && !busy) {
       const first = !f._forceBeamActive; f._forceBeamActive = true;
@@ -1092,12 +1347,14 @@ export class Game {
   update(dt) {
     dt = Math.min(dt, 0.05);   // parity floor 20fps (was 0.033/30fps — weak GPUs played in literal slow motion)
     this.pad.update();
+    this.audio.sweep();   // kill orphaned sustained sounds (stuck-tone watchdog) — even on title/pause
     if (!this.running) {
       this.world.follow(this.player ? _v.copy(this.player.pos).setY(6) : _v.set(0, 6, 0), dt);
       this.world.render(); return;
     }
     if (this._slowT > 0) { this._slowT -= dt; dt *= this._slowMul || 1; }   // impact slow-mo
     this.time += dt;
+    if (this.mode && !this.matchOver) this.matchT += dt;   // the match clock the news report cites
     if (this.player) this.audio.listen(this.player.pos.x, this.player.pos.z);   // proximity audio ears
 
     if (this.comboT > 0) { this.comboT -= dt; if (this.comboT <= 0) { this.combo = 0; if (this.hud) this.hud.combo(0); } }
@@ -1125,11 +1382,15 @@ export class Game {
     this.particles.update(dt);
     this.vfx.update(dt);
     if (this.running && this.peds) this.peds.update(dt, this);
+    if (this.police) this.police.update(dt);
     this.updateVision(dt);
     this.updateReticle(dt);
+    this.updatePlayerMark(dt);
     if (this.mode && !this.matchOver) { const over = this.mode.isOver(this); if (over) this.endMatch(over); }
 
     this.followHumans(dt);
+    if (this.player) this.world.updateOcclusion(this.player.pos, dt);   // towers between lens and player go glassy
+    if (this.news) this.news.update(dt);   // the crew shoots BEFORE the main pass — their POV render hides under it
     this.world.render();
   }
 

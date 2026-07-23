@@ -462,12 +462,14 @@ export const ROSTER = [
   {
     id: 'webline', name: 'WEBLINE', title: 'The Neighborhood Ghost', role: 'Web Acrobat',
     colors: { primary: '#c22a1a', secondary: '#1a2c6a', accent: '#eaffff', skin: '#e8c39a' },
-    hp: 100, ki: 110, speed: 42, strength: 6, overdrive: 1.3, threat: 'Moderate', flightTier: 0,
+    hp: 100, ki: 110, speed: 42, strength: 6, overdrive: 1.3, threat: 'High', flightTier: 0,
     ai: { style: 'rusher', range: 20, aggro: 0.85, fly: 0 }, evade: { kind: 'leap', name: 'Web Vault', up: 46, fwd: 70 },
     blurb: 'Too fast to hit, too chatty to ignore. His webs pull you in — the wall does the rest.',
     abilities: {
       lmb: { type: 'tentacle', name: 'Web Snare', cost: 16, cd: 4, range: 38, holdT: 0.5, damage: 13, throwSpeed: 86, color: '#eaffff' },
-      rmb: { type: 'rush', name: 'Spider Flurry', cost: 14, cd: 1.8, range: 60, hits: 7, interval: 0.08, damage: 7, finisher: 27, color: '#eaffff' },
+      // BALANCE 2026-07-23: the flurry was a 76-dmg button every 1.8s — the "spam wins" engine.
+      // Trimmed to 6 hits on a 2.4s cycle; it's still his identity, it's no longer his whole game.
+      rmb: { type: 'rush', name: 'Spider Flurry', cost: 16, cd: 2.4, range: 60, hits: 6, interval: 0.08, damage: 7, finisher: 25, color: '#eaffff' },
       q: { type: 'volley', name: 'Web Darts', cost: 3, interval: 0.09, damage: 5, speed: 130, radius: 0.7, blast: 2.6, spread: 0.09, color: '#eaffff', color2: '#fff' },
       e: { type: 'melee', name: 'Sting Kick', cost: 9, cd: 0.8, damage: 22, range: 12, arc: 0.8, lunge: 46, knock: 44, launch: 14, fly: true, color: '#eaffff' },
       f: { type: 'buff', name: 'Danger Sense', cost: 18, cd: 16, mult: 1.3, dur: 7, invuln: 1, color: '#eaffff', color2: '#fff' },

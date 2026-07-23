@@ -105,6 +105,7 @@ export class MeleeSystem {
     // (entity.takeDamage), so gating on canAct() made any fast combo strip the guard after the
     // first block ("can't hold down block"). Stagger, grabs, and your own attacks still drop it.
     if (on && (!f.alive || f.staggerT > 0 || f.grabbedBy || f.grabState || f.grabbing || f.strikeActive > 0)) { f.guarding = false; return; }
+    if (on && !f.guarding) f._guardUpT = 0;   // rising edge — the PARRY window starts here
     f.guarding = !!on && f.alive;
   }
 
@@ -139,6 +140,7 @@ export class MeleeSystem {
 
   update(f, dt) {
     const g = this.game;
+    if (f.guarding) f._guardUpT = (f._guardUpT ?? 99) + dt;   // how long the shield has been up (parry clock)
     this.chargeUpdate(f, dt);
     this._heavyHit(f, dt);
 
