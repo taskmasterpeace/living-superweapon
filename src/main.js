@@ -10,6 +10,7 @@ import { loadSettings, applySettings } from './core/settings.js';
 import { installCustoms, loadCustoms, freshPicks, buildDef, tally, validate, saveCustom, deleteCustom } from './data/creator.js';
 import { applyIdentities } from './data/identities.js';
 import { Tutorial } from './engine/tutorial.js';
+import { Netplay } from './engine/netplay.js';
 
 const canvas = document.getElementById('game');
 const input = new Input(); input.bind(canvas);
@@ -33,6 +34,12 @@ try {
 let started = false;
 
 const tutorial = new Tutorial(game, hud);
+// ---- ONLINE: rooms + netcode (Supabase Realtime transport) ----
+const netplay = new Netplay(game, hud);
+game.netplay = netplay; hud.netplay = netplay;
+netplay.onMatchStart = (cfg) => enter(cfg);
+netplay.onMatchEnd = () => openMenu();
+netplay.onLobby = () => { if (hud.onlineEl.style.display === 'flex') hud.renderOnline(); };
 function enter(cfg) {
   audio.init(); audio.resume(); applySettings(game);   // master gain exists only after init
   const c = (typeof cfg === 'string') ? { mode: 'training', p1: cfg } : cfg;
@@ -61,8 +68,11 @@ hud.onEditCustom = (def) => {
 
 hud.buildTitle(enter);
 hud.showTitle();
-hud.onRematch = () => { if (game._lastCfg) enter(game._lastCfg); };
-hud.onMenu = () => openMenu();
+hud.onRematch = () => {
+  if (game._lastCfg && game._lastCfg.net) { openMenu(); hud.showOnline(); return; }   // online rematch = back to the lobby
+  if (game._lastCfg) enter(game._lastCfg);
+};
+hud.onMenu = () => { if (netplay.active) netplay.leave(); openMenu(); };
 hud.onResume = () => { game.running = true; hud.setPaused(false); };
 hud.onTutorial = () => enter({ mode: 'training', p1: 'sol', tutorial: true });   // SOL teaches every system
 hud.onTutorialSkip = () => tutorial.skip();
@@ -108,6 +118,7 @@ function frame(now) {
     if (started) {
       hud.update(); padSystem();
       if (game.running) tutorial.update(Math.min(dt, 0.05));
+      if (game.running) netplay.update(Math.min(dt, 0.05));
       if (game.running && !hud.titleOpen && input.wheel) cycleHero(Math.sign(input.wheel));   // wheel = swap hero
     }
   }
@@ -118,7 +129,7 @@ function frame(now) {
 requestAnimationFrame(frame);
 
 // expose for debugging + performance benchmarking
-window.LSW = { game, hud, ROSTER, runSlot, performEvade, input, tutorial, creator: { ui: creator, freshPicks, buildDef, tally, validate, saveCustom, deleteCustom, loadCustoms } };
+window.LSW = { game, hud, ROSTER, runSlot, performEvade, input, tutorial, netplay, creator: { ui: creator, freshPicks, buildDef, tally, validate, saveCustom, deleteCustom, loadCustoms } };
 window.LSW.runBenchmark = (opts) => runBenchmark(game, hud, opts);
 if (location.search.includes('bench')) {
   addEventListener('load', () => setTimeout(async () => {

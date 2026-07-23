@@ -430,6 +430,13 @@ export class Fighter {
   }
 
   takeDamage(amount, opts = {}) {
+    if (this.remote) {
+      // victim-authoritative netcode: their machine owns their hp — we just spark and
+      // remember who hit them so the KO credit lands when their death streams back
+      this.hitFlash = 1;
+      if (opts.src) { this.lastHitBy = opts.src; this.lastHitT = 0; }
+      return;
+    }
     if (this.state === 'ko' || this.invuln > 0) return 0;
     if (opts.src && opts.src.sheet && opts.src.sheet.predator && this.hp < this.maxHp * 0.3) amount *= 1.15;   // Predator talent finishes hunts
     // shield cell gadget: an ablative pool eats hits before anything else
@@ -502,6 +509,7 @@ export class Fighter {
     if (this._game) for (const e of this._game.entities) if (e.grabbedBy === this) { e.grabbedBy = null; if (e.state === 'hit') e.state = 'idle'; }   // tentacle holds die with the holder
     for (const k in this.slots) { const s = this.slots[k]; s.charging = false; s.active = null; s.chargeT = 0; s.sustainT = 0; }   // dying mid-generation leaves nothing armed
     this.cruiseHeld = false;
+    if (this._held) this._held.clear();   // netplay: no ghost-held beams from a dead puppet
     // become a ragdoll — carry the killing blow's knockback (+ a small pop) into the sim as launch
     if (this.canPhase) { for (const m of [this.parts.mats.suit, this.parts.mats.suit2]) { m.transparent = false; m.opacity = 1; } }
     this.ragdoll = new Ragdoll(this, this.vel.clone().add(new THREE.Vector3(0, 12, 0)));
@@ -671,6 +679,7 @@ export class Fighter {
   }
 
   _physics(dt, game) {
+    if (this.remote) return;   // puppets are positioned by the wire (controlRemote), not local physics
     // --- flight / levitation ---
     if (this.state !== 'ko') {
       // rising edge of the ascend intent → take off into levitation (grounded heroes can't)

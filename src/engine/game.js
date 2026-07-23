@@ -33,7 +33,7 @@ const MODE_IMPL = {
     setup(g, o) {
       g.ms = { p1KO: 0, enemyKO: 0, target: 3 };
       g.ms.p1 = g.humans[0].fighter;
-      g.ms.enemy = o.twoPlayer ? g.humans[1].fighter : g.spawnEnemy(o.enemy, { x: 0, z: -42, aiLevel: 1.25 });
+      g.ms.enemy = o.twoPlayer ? g.humans[1].fighter : (o.net ? null : g.spawnEnemy(o.enemy, { x: 0, z: -42, aiLevel: 1.25 }));   // netplay assigns the remote right after
     },
     tick() {},
     onKO(g, v) { if (v === g.ms.p1) g.ms.enemyKO++; else if (v === g.ms.enemy) g.ms.p1KO++; },
@@ -355,6 +355,33 @@ export class Game {
     this.vfx.flash(b.pos.clone().setY(5), pick.colors.accent, 9, 0.35);
     return b;
   }
+  // an online opponent: a real fighter whose authority lives on the other machine
+  spawnRemote(charId) {
+    const def = ROSTER.find(r => r.id === charId) || ROSTER[0];
+    const f = this.addFighter(def, { team: 1, x: 0, z: -34 });
+    f.remote = true; f.ai = null;
+    return f;
+  }
+  // remote puppet: interpolate toward the streamed state; big jumps = their evade/teleport
+  controlRemote(f, dt) {
+    f.moveDir = { x: 0, z: 0 };
+    const n = f._net; if (!n) return;
+    const dx = n.x - f.pos.x, dy = n.y - f.pos.y, dz = n.z - f.pos.z;
+    if (Math.hypot(dx, dz) > 26) { f.pos.set(n.x, n.y, n.z); this.afterimage(f); }
+    else { const k = 1 - Math.exp(-12 * dt); f.pos.x += dx * k; f.pos.y += dy * k; f.pos.z += dz * k; }
+    f.vel.set(n.vx || 0, n.vy || 0, n.vz || 0);               // drives the run/flight animation
+    f.faceDir(Math.sin(n.f || 0), Math.cos(n.f || 0));
+    if (n.a) f.aim3.set(n.a[0], n.a[1], n.a[2]);
+    f.flying = !!n.fl;
+    if (f.alive) f.guarding = !!n.gd;
+    if (n.k != null) f.ki = n.k;
+    if (n.h != null && f.alive) {                              // victim authority: their sim owns their hp
+      if (n.h < f.hp - 0.5) f.hitFlash = 1;
+      f.hp = n.h;
+      if (f.hp <= 0) f._ko();                                  // the KO loop below scores it
+    }
+  }
+
   spawnHuman(charId, scheme, o = {}) {
     const def = ROSTER.find(r => r.id === charId) || ROSTER[0];
     const f = this.addFighter(def, { isPlayer: this.humans.length === 0, team: o.team ?? 0, x: o.x ?? 0, z: o.z ?? 30 });
@@ -926,9 +953,10 @@ export class Game {
     p.move(p.moveDir, dt);
 
     // --- melee trifecta — Strike (tap=jab, HOLD=haymaker) · Grab · Guard (V/G/C+X+Mouse4, pad ▢/○/L1) ---
-    if (inp.pressed('KeyV') || pad.pressed('strike')) this.melee.chargeStart(p);
-    if (inp.released('KeyV') || pad.released('strike')) this.melee.chargeRelease(p);
-    if (inp.pressed('KeyG') || pad.pressed('grab')) this.melee.grab(p);
+    const np = this.netplay && this.netplay.active ? this.netplay : null;
+    if (inp.pressed('KeyV') || pad.pressed('strike')) { this.melee.chargeStart(p); if (np) np.queueMelee('cs'); }
+    if (inp.released('KeyV') || pad.released('strike')) { this.melee.chargeRelease(p); if (np) np.queueMelee('cr'); }
+    if (inp.pressed('KeyG') || pad.pressed('grab')) { this.melee.grab(p); if (np) np.queueMelee('grab'); }
     this.melee.guard(p, inp.down('KeyC') || inp.mouse.b3 || inp.mouse.b4 || pad.down('guard'));
     if (inp.pressed('KeyX') && p.items.length) this.useItem(p);   // X = the carried item (beacon: plant / recall)
 
@@ -942,6 +970,11 @@ export class Game {
       shift: orK('ShiftLeft', 'dash'),
     };
     if (inp.pressed('KeyF')) p.toggleFlight();   // flight is a MODE now: F on, F off
+    if (np) for (const k of SLOT_KEYS) {          // stream ability intents to the other machine
+      if (!p.slots[k]) continue;
+      if (intents[k].pressed) np.queueSlot(k, 1, p.aim3);
+      else if (intents[k].released) np.queueSlot(k, 3, p.aim3);
+    }
     for (const k of SLOT_KEYS) if (p.slots[k]) feedSlot(this, p, k, intents[k], busy, dt);
   }
 
@@ -1073,7 +1106,7 @@ export class Game {
     // control: P1 (keyboard+mouse), P2+ (gamepad), everyone else = AI
     this.controlPlayer(dt);
     for (let i = 1; i < this.humans.length; i++) this.controlPad(this.humans[i].fighter, dt);
-    for (const f of this.entities) if (!this.isHuman(f)) this.controlBot(f, dt);
+    for (const f of this.entities) { if (this.isHuman(f)) continue; if (f.remote) this.controlRemote(f, dt); else this.controlBot(f, dt); }
 
     for (const f of this.entities) {
       const wasAlive = f._wasAlive !== false;

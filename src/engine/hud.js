@@ -191,6 +191,16 @@ const CSS = `
 .lswovl .c3.on{ background:linear-gradient(180deg,#ffd15a,#f5921a); color:#160d02; border-color:transparent; }
 .lswovl .odone{ cursor:pointer; margin-top:10px; font-family:inherit; font-weight:800; letter-spacing:.12em; font-size:14px; color:#160d02; padding:12px 26px; border:none; border-radius:10px; background:linear-gradient(180deg,#ffd15a,#f5921a); box-shadow:0 4px 0 #7a3d05; text-transform:uppercase; width:100%; }
 .lswovl .odone.oghost{ background:rgba(255,255,255,.08); color:#e8e2d6; box-shadow:none; border:1px solid rgba(255,255,255,.15); }
+.lswovl .oline2{ font-size:12px; color:#b7b0a2; margin:8px 0; line-height:1.5; }
+.lswovl .roomcode{ text-align:center; font-size:15px; letter-spacing:.2em; color:#a49c8c; margin-bottom:12px; }
+.lswovl .roomcode b{ font-size:34px; letter-spacing:.34em; color:#ffd24a; text-shadow:0 0 18px rgba(245,178,26,.4); margin-left:8px; }
+.lswovl .netvs{ display:flex; align-items:center; gap:14px; justify-content:center; margin-bottom:14px; }
+.lswovl .netp{ flex:1; text-align:center; border:1px solid rgba(255,255,255,.12); border-radius:12px; padding:14px 10px; background:rgba(255,255,255,.03); }
+.lswovl .netp b{ display:block; font-size:16px; color:#e8e2d6; }
+.lswovl .netp span{ display:block; font-size:12px; color:#7fe6ff; margin-top:2px; }
+.lswovl .netp em{ display:block; font-style:normal; font-size:9px; letter-spacing:.2em; color:#8b8577; margin-top:5px; }
+.lswovl .netp.wait b{ color:#8b8577; font-size:13px; }
+.lswovl .vs2{ font-weight:800; color:#ffd24a; }
 .lswovl .hsec{ margin-bottom:13px; }
 .lswovl .hsec .ht{ font-size:11px; letter-spacing:.18em; color:#ffcf7a; text-transform:uppercase; margin-bottom:5px; }
 .lswovl .hsec .hb{ font-size:13.5px; color:#c9c2b4; line-height:1.65; }
@@ -465,7 +475,54 @@ export class HUD {
   // ---- options + how-to-play overlays (on <body> so they stack above the title screen) ----
   _buildOverlays() {
     const mk = (id) => { const d = document.createElement('div'); d.id = id; d.className = 'lswovl'; document.body.appendChild(d); return d; };
-    this.optionsEl = mk('hOptions'); this.howtoEl = mk('hHowto');
+    this.optionsEl = mk('hOptions'); this.howtoEl = mk('hHowto'); this.onlineEl = mk('hOnline');
+  }
+
+  // ---- ONLINE: rooms, lobby, the wire ----
+  showOnline() { this.renderOnline(); this.onlineEl.style.display = 'flex'; }
+  renderOnline() {
+    const np = this.netplay; if (!np) return;
+    const net = np.net, inLobby = net.state === 'lobby';
+    const hero = (id) => { const d = ROSTER.find(r => r.id === id); return d ? d.name : '—'; };
+    let body;
+    if (!inLobby) {
+      body = `
+        <div class="orow"><span class="ol">Callsign</span><input type="text" id="onName" maxlength="14" spellcheck="false" value="${net.identity.name || ''}" placeholder="PILOT" style="flex:1;font-family:inherit;font-size:14px;font-weight:700;color:#e8e2d6;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.14);border-radius:9px;padding:9px 11px;outline:none;"></div>
+        <div class="oline2">Playing as <b style="color:#ffd24a">${hero(this.selectedHero || 'sol')}</b> — pick a different hero on the title screen first.</div>
+        <button class="odone" id="onCreate">Create Room</button>
+        <div class="orow" style="margin-top:6px"><input type="text" id="onCode" maxlength="4" spellcheck="false" placeholder="CODE" style="width:110px;text-transform:uppercase;font-family:inherit;font-size:18px;font-weight:800;letter-spacing:.3em;color:#ffd24a;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.14);border-radius:9px;padding:9px 11px;outline:none;text-align:center;"><button class="odone oghost" id="onJoin" style="flex:1;margin-top:0">Join Room</button></div>
+        <div class="oline2" id="onStatus"></div>`;
+    } else {
+      const me = `<div class="netp"><b>${net.identity.name || 'PILOT'}</b><span>${hero(net.heroId)}</span><em>${net.isHost ? 'HOST' : 'CHALLENGER'}</em></div>`;
+      const them = net.peer
+        ? `<div class="netp"><b>${net.peer.name}</b><span>${hero(net.peer.heroId)}</span><em>${net.peer.host ? 'HOST' : 'CHALLENGER'}</em></div>`
+        : `<div class="netp wait"><b>Waiting for a challenger…</b><span>send them the code</span></div>`;
+      body = `
+        <div class="roomcode">ROOM <b>${net.room}</b></div>
+        <div class="netvs">${me}<span class="vs2">VS</span>${them}</div>
+        ${net.isHost
+          ? `<button class="odone" id="onFight" ${net.peer ? '' : 'disabled'}>⚔ FIGHT</button>`
+          : `<div class="oline2">Waiting for the host to start the duel…</div>`}
+        <button class="odone oghost" id="onLeave">Leave Room</button>`;
+    }
+    this.onlineEl.innerHTML = `<div class="obox"><div class="oh">🌐 Online Duel</div>${body}<button class="odone oghost" id="onClose" style="margin-top:6px">Close</button></div>`;
+    const $ = (s) => this.onlineEl.querySelector(s);
+    $('#onClose').onclick = () => { this.onlineEl.style.display = 'none'; };
+    const status = (t, err) => { const el = $('#onStatus'); if (el) { el.textContent = t; el.style.color = err ? '#ff8a6a' : '#8fe08a'; } };
+    if (!inLobby) {
+      $('#onName').oninput = (e) => np.net.setName(e.target.value);
+      $('#onCreate').onclick = async () => {
+        try { status('Connecting…'); np.net.setName($('#onName').value); await np.hostRoom(this.selectedHero || 'sol'); this.renderOnline(); }
+        catch (err) { status('Could not create room: ' + err.message, true); }
+      };
+      $('#onJoin').onclick = async () => {
+        try { status('Joining…'); np.net.setName($('#onName').value); await np.joinRoom($('#onCode').value, this.selectedHero || 'sol'); this.renderOnline(); }
+        catch (err) { status('Could not join: ' + err.message, true); }
+      };
+    } else {
+      const f = $('#onFight'); if (f) f.onclick = () => { this.onlineEl.style.display = 'none'; np.startOnline(); };
+      $('#onLeave').onclick = async () => { await np.leave(); this.renderOnline(); };
+    }
   }
   setHintVisible(v) { if (this.el.hint) this.el.hint.style.display = v ? 'block' : 'none'; }
 
@@ -845,7 +902,7 @@ export class HUD {
   buildTitle(onStart) {
     let selMode = 'duel', selP1 = ROSTER[0], selP2 = ROSTER[2], two = false;
     this.title.innerHTML = `
-      <div class="topbar"><button id="tTut">🎓 Tutorial</button><button id="tOpt">⚙ Options</button><button id="tHow">❓ How to Play</button></div>
+      <div class="topbar"><button id="tNet">🌐 Online</button><button id="tTut">🎓 Tutorial</button><button id="tOpt">⚙ Options</button><button id="tHow">❓ How to Play</button></div>
       <div class="tag">Machine King Labs · Living Superweapon</div>
       <h1>LIVING SUPERWEAPON</h1>
       <div class="modes" id="modes"></div>
@@ -935,11 +992,12 @@ export class HUD {
     };
     let cards = [], list = [];
     const select = (c, cardEl) => {
-      selP1 = c;
+      selP1 = c; this.selectedHero = c.id;
       roster.querySelectorAll('.rcard').forEach(e => e.classList.remove('sel'));
       if (cardEl) cardEl.classList.add('sel');
       renderPv(c);
     };
+    this.selectedHero = selP1.id;
     const flip = (d) => {
       if (!list.length) return;
       const i = Math.max(0, list.indexOf(selP1)), n = (i + d + list.length) % list.length;
@@ -1008,6 +1066,7 @@ export class HUD {
     this.title.querySelector('#tOpt').onclick = () => this.showOptions();
     this.title.querySelector('#tHow').onclick = () => this.showHowto();
     this.title.querySelector('#tTut').onclick = () => this.onTutorial && this.onTutorial();
+    this.title.querySelector('#tNet').onclick = () => this.showOnline();
     renderFilters(); renderRoster(); renderModes(); renderTabs();
     this.title.querySelector('#startBtn').onclick = () => onStart({ mode: selMode, p1: selP1.id, p2: selP2.id, twoPlayer: two });
   }
