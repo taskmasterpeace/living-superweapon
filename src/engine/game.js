@@ -8,6 +8,8 @@ import { Fighter } from './entity.js';
 import { AI } from './ai.js';
 import { Minion, Construct } from './summons.js';
 import { MeleeSystem } from './melee.js';
+import { Pedestrians } from './pedestrians.js';
+import { SETTINGS } from '../core/settings.js';
 import { Gamepad } from '../core/gamepad.js';
 import { runSlot, performEvade } from './abilities.js';
 import { ROSTER } from '../data/characters.js';
@@ -78,6 +80,7 @@ export class Game {
     this.vfx = new VFX(this.world, this.particles);
     this.projectiles = new Projectiles(this);
     this.melee = new MeleeSystem(this);
+    this.peds = new Pedestrians(this.world.scene, this.world.ARENA || 240, this.world.waterX || 188);
     this.hud = null;                 // set by main.js — for damage numbers / combo
     this.combo = 0; this.comboT = 0;
     this.humans = [];                // local players: [{ fighter, scheme:'kbm'|'pad' }]
@@ -207,7 +210,7 @@ export class Game {
   // Target the character the cursor is OVER; else the foe nearest the cursor (aim-assist).
   pickTarget(p) {
     const cx = this.input.mouse.clientX, cy = this.input.mouse.clientY;
-    let hover = null, hoverD = 1e9, near = null, nearD = 210;
+    let hover = null, hoverD = 1e9, near = null, nearD = 110;   // magnet radius trimmed (was 210 — grabbed aim from across the screen)
     const sp = this._sp, sp2 = this._sp2 || (this._sp2 = { x: 0, y: 0, behind: false });
     for (const f of this.entities) {
       if (!this.isFoe(p, f)) continue;
@@ -218,10 +221,12 @@ export class Game {
       const half = Math.max(28, Math.hypot(sp.x - sp2.x, sp.y - sp2.y) + 22); // on-screen body size
       const d = Math.hypot(sp.x - cx, sp.y - cy);
       if (d < half && d < hoverD) { hoverD = d; hover = f; }               // cursor is over this character
-      let nd = d; if (f === this._lastLock) nd -= 55;                      // stickiness
+      let nd = d; if (f === this._lastLock) nd -= 40;                      // stickiness
       if (nd < nearD) { nearD = nd; near = f; }
     }
-    const pick = hover || near; this._lastLock = pick; return pick;
+    this._hoverPick = hover;                                               // direct-hover only — hard-lock uses this
+    const pick = SETTINGS.aimAssist === false ? hover : (hover || near);   // options can turn the magnet off
+    this._lastLock = pick; return pick;
   }
 
   // Nearest foe within a cone of a world aim direction (gamepad right-stick).
@@ -296,6 +301,7 @@ export class Game {
     while (this.portals.length) this._closePair(this.portals[0]);
     this.hardLock = null; this.lockTarget = null;
     this.world.resetTerrain(); this.vfx.clearScorches();   // restore blocks + flatten craters each match
+    if (this.peds) this.peds.reset();
 
     const def = ROSTER.find(r => r.id === charId) || ROSTER[0];
     this.player = this.addFighter(def, { isPlayer: true, team: 0, x: 0, z: 30 });
@@ -365,6 +371,7 @@ export class Game {
     while (this.portals.length) this._closePair(this.portals[0]);
     this.hardLock = null; this.lockTarget = null; this.combo = 0; this.comboT = 0;
     this.world.resetTerrain(); this.vfx.clearScorches();
+    if (this.peds) this.peds.reset();
     this.modeId = id; this.mode = MODE_IMPL[id] || MODE_IMPL.training; this.ms = {}; this.matchOver = false; this.matchResult = null;
     const two = !!o.twoPlayer;
     this.spawnHuman(o.p1 || 'sol', 'kbm', { x: two ? -20 : 0, z: 30 });
@@ -432,12 +439,12 @@ export class Game {
       const kb = _v.set(dx, 0, dz).setLength((damage * 0.6 + 12) * fall);
       f.takeDamage(damage * fall * caster.powerBuff, { kb, launch: (6 + power * 6) * fall, hitstop: 0.05 });
     }
-    this.worldImpact(pos, radius, power);   // crater the ground + damage cover
+    this.worldImpact(pos, radius, power, caster);   // crater the ground + damage cover + street life
   }
 
   // ---------- destructible environment ----------
   // A blast on the world: crater the ground (big hits only) and damage nearby cover.
-  worldImpact(pos, radius, power = 1) {
+  worldImpact(pos, radius, power = 1, src = null) {
     if (pos.y < 6.5 && (power >= 1.25 || radius >= 14)) {
       this.world.crater(pos.x, pos.z, Math.min(radius * 0.45, 22), Math.min(power * 1.3, 5));
       this.vfx.scorch(new THREE.Vector3(pos.x, 0.14, pos.z), Math.min(radius * 0.5, 24), '#161a22');  // scorched pit
@@ -447,6 +454,30 @@ export class Game {
       const d = Math.hypot(pos.x - c.x, pos.z - c.z);
       if (d < radius + (c.r || 6)) { const fall = 1 - clamp((d - (c.r || 6)) / (radius + 1), 0, 1); this.damageBlock(c, power * 20 * fall, pos); }
     }
+    // parked cars catch blasts and go up in chained fireballs
+    if (this.world.cars) for (const car of this.world.cars) {
+      if (car.dead) continue;
+      const d = Math.hypot(pos.x - car.x, pos.z - car.z);
+      if (d < radius + 5) { car.hp -= 12 + power * 10; if (car.hp <= 0) this._explodeCar(car, src); }
+    }
+    // the crowd reacts: scatter wide; anyone caught in the blast goes down (collateral)
+    if (this.peds && pos.y < 12) {
+      this.peds.scare(pos.x, pos.z, radius * 4);
+      const downed = this.peds.blast(pos.x, pos.z, Math.max(6, radius * 0.85));
+      if (downed && this.hud) {
+        this.hud.feed(`⚠ COLLATERAL — ${downed} civilian${downed > 1 ? 's' : ''} down`, '#ff8a6a');
+        if (src && this.isHuman(src)) src.score = Math.max(0, (src.score || 0) - 40 * downed);
+      }
+    }
+  }
+  _explodeCar(car, src) {
+    car.dead = true; car.mesh.material = this.world._charred; car.mesh.position.y = -0.25;
+    const pos = { x: car.x, y: 2.5, z: car.z };
+    this.vfx.flash(new THREE.Vector3(car.x, 3, car.z), '#ff8a3d', 14, 0.5);
+    this.particles.burst(car.x, 2, car.z, { count: 26, speed: 26, life: 0.85, size: 5.2, color: ['#ff8a3d', '#ffd24a', '#22232c'], up: 15, grav: 8, drag: 1.2 });
+    this.vfx.scorch(new THREE.Vector3(car.x, 0.18, car.z), 8, '#161a22');
+    this.audio.boom(0.55, pos); this.world.shake(1.2); this.world.punch(0.85);
+    this.areaDamage(src || this.player, pos, 10, 18, 1.3);   // hurts fighters + chains to the next car
   }
   damageBlock(c, amt, pos) {
     if (c.hp == null || c.hp <= 0 || amt <= 0) return;
@@ -849,7 +880,10 @@ export class Game {
       soft = this.pickTarget(p);                                   // foe under/near the cursor (gives height)
       if (soft) soft.center(a3); else { this.world.screenToGround(m.clientX, m.clientY, a3); a3.y = 3; }
     }
-    if ((m.leftEdge || pad.pressed('lmb')) && soft) this.hardLock = soft;   // click a character to lock onto it
+    // hard lock ONLY on a direct click ON a character (LMB is also fire — the old "any attack
+    // click near a foe locks you" was the "faces one way while I aim another" bug)
+    if (m.leftEdge && this._hoverPick) this.hardLock = this._hoverPick;
+    else if (pad.active && pad.pressed('lmb') && soft) this.hardLock = soft;   // pads have no cursor — keep soft
     if (inp.pressed('KeyT')) this.hardLock = null;                          // T clears the lock
     if (this.hardLock && !this.hardLock.alive) this.hardLock = null;
     this.lockTarget = soft;
@@ -888,6 +922,7 @@ export class Game {
     }
     p.flyHeld = inp.down('Space') || pad.down('fly');
     p.descendHeld = inp.down('ControlLeft') || inp.down('ControlRight') || inp.down('KeyZ') || pad.down('descend');
+    p.cruiseHeld = p.flying && (inp.down('ShiftLeft') || inp.down('ShiftRight'));   // held SHIFT in the air = sustained cruise
     p.move(p.moveDir, dt);
 
     // --- melee trifecta — Strike (tap=jab, HOLD=haymaker) · Grab · Guard (V/G/C+X+Mouse4, pad ▢/○/L1) ---
@@ -950,6 +985,7 @@ export class Game {
     f.moveDir = { x: dir.x, z: dir.z };
     f.flyHeld = !!it.fly;
     f.descendHeld = f.flying && !it.fly;      // no longer wants to fly → sink back down and land
+    f.cruiseHeld = f.flying && !!it.fly;      // chasing through the air → open the throttle
     f.move(f.moveDir, dt);
 
     // --- defensive reactions to incoming beams / projectiles ---
@@ -1021,7 +1057,7 @@ export class Game {
 
   // ---------- main update ----------
   update(dt) {
-    dt = Math.min(dt, 0.033);
+    dt = Math.min(dt, 0.05);   // parity floor 20fps (was 0.033/30fps — weak GPUs played in literal slow motion)
     this.pad.update();
     if (!this.running) {
       this.world.follow(this.player ? _v.copy(this.player.pos).setY(6) : _v.set(0, 6, 0), dt);
@@ -1055,6 +1091,7 @@ export class Game {
     for (let i = this.constructs.length - 1; i >= 0; i--) if (!this.constructs[i].update(dt, this)) this.constructs.splice(i, 1);
     this.particles.update(dt);
     this.vfx.update(dt);
+    if (this.running && this.peds) this.peds.update(dt, this);
     this.updateVision(dt);
     this.updateReticle(dt);
     if (this.mode && !this.matchOver) { const over = this.mode.isOver(this); if (over) this.endMatch(over); }

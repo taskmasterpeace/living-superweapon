@@ -8,6 +8,7 @@ export const SETTINGS = {
   shake: 1,         // screen-shake multiplier 0–1.5
   dmgNumbers: true, // floating damage numbers
   hints: true,      // bottom-right controls hint panel
+  aimAssist: true,  // magnet targeting near the cursor (facing + attacks steer to the pick)
   quality: 'auto',  // 'auto' | 2 (high) | 1 (balanced) | 0 (low) — locks the adaptive tier
 };
 

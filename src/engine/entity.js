@@ -67,6 +67,20 @@ function buildWeapon(kind, m) {
   return g;
 }
 
+// per-hero FLIGHT SPEED (creator ruling: "certain people can just fly faster than others").
+// Multiplies air speed for tier-3 fliers; everyone else defaults 1. def.flySpeed overrides.
+const FLY_SPEEDS = {
+  majesty: 1.3, torch: 1.28, olympus: 1.25, sol: 1.2, vanguard: 1.2, apex: 1.2, stormcall: 1.2,
+  kano: 1.15, vega: 1.15, nova: 1.12, specter: 1.1, tempest: 1.1, marshal: 1.1, mystward: 1.08,
+};
+export const ALT_BANDS = [   // the ruled four altitude bands — shown as a ring under every fighter
+  { name: 'GROUND', max: 8, c: '#8fe08a' },
+  { name: 'BUILDING', max: 32, c: '#ffd24a' },
+  { name: 'SKY', max: 60, c: '#7fe6ff' },
+  { name: 'CLOUDS', max: 1e9, c: '#ffffff' },
+];
+export const bandOf = (y) => y < 8 ? 0 : y < 32 ? 1 : y < 60 ? 2 : 3;
+
 // per-hero silhouette flourishes (all mounted on driven meshes so the ragdoll carries them).
 const BUILDS = {
   sol: { pauldron: 1, gaunt: 1 }, kano: { band: 1, gaunt: 1 }, vega: { pauldron: 1, gaunt: 1, collar: 1 },
@@ -111,6 +125,10 @@ function figure(def) {
   // soft contact shadow (grounds the figure; repositioned every frame)
   const shadow = new THREE.Mesh(new THREE.CircleGeometry(3.0, 24), new THREE.MeshBasicMaterial({ color: '#000', transparent: true, opacity: 0.34, depthWrite: false }));
   shadow.rotation.x = -Math.PI / 2; shadow.position.y = 0.05; shadow.renderOrder = 1; g.add(shadow);
+  // altitude-band ring (the ruled four bands): ground-pinned, colored by the fighter's CURRENT
+  // band — readable from across the map so you can climb to someone's level
+  const bandRing = new THREE.Mesh(new THREE.RingGeometry(3.1, 3.7, 24), new THREE.MeshBasicMaterial({ color: '#8fe08a', transparent: true, opacity: 0.5, depthWrite: false, side: THREE.DoubleSide }));
+  bandRing.rotation.x = -Math.PI / 2; bandRing.position.y = 0.07; bandRing.renderOrder = 1; g.add(bandRing);
 
   // torso (chest taper) + neck + collar
   const torso = new THREE.Mesh(new THREE.CapsuleGeometry(1.5, 2.2, 6, 12), suit);
@@ -232,7 +250,7 @@ function figure(def) {
   const ice = new THREE.Mesh(new THREE.IcosahedronGeometry(4.6, 1), new THREE.MeshStandardMaterial({ color: '#bfeaff', transparent: true, opacity: 0, roughness: 0.15, metalness: 0.1, emissive: '#4fb8e6', emissiveIntensity: 0.15 }));
   ice.position.y = 5.2; ice.scale.set(1, 1.5, 1); ice.visible = false; g.add(ice);
 
-  return { g, torso, head, pelvis, cowl, emblem, aura, cape, armL, armR, legL, legR, eyeL, eyeR, shadow, guardArc, ice, mats: { suit, suit2, glow } };
+  return { g, torso, head, pelvis, cowl, emblem, aura, cape, armL, armR, legL, legR, eyeL, eyeR, shadow, bandRing, guardArc, ice, mats: { suit, suit2, glow } };
 }
 
 export class Fighter {
@@ -295,6 +313,8 @@ export class Fighter {
     this._forceBeamT = 0; this._forceBeam = null; this._forceBeamActive = false; this._counterCd = 0; this._meleeCd = 0; this._guardT = 0; this._aiCharge = 0;
     // double-tap evade + energy-drained state
     this.evadeCd = 0; this.sprintT = 0; this.sprintMult = 1.6; this._slideT = 0; this.drainedT = 0;
+    this.flySpeed = def.flySpeed || FLY_SPEEDS[def.id] || 1;   // who owns the sky
+    this.cruiseHeld = false;                                    // SHIFT while flying = sustained cruise
     this.burstT = 0;            // dash-burst window — move() doesn't clamp velocity back to walk speed
     this._sprintThrough = false; this._sprintLightning = false;   // VOLT: run through cover, blue lightning wake
     // slam physics: launchT > 0 = recently knocked/thrown → wall/ground impacts hurt (dashing into walls doesn't)
@@ -480,7 +500,8 @@ export class Fighter {
     if (this.parts.ice) this.parts.ice.visible = false;
     if (this._game && (this.grabbing || this.grabbedBy)) this._game.melee.release(this.grabbing ? this : this.grabbedBy);
     if (this._game) for (const e of this._game.entities) if (e.grabbedBy === this) { e.grabbedBy = null; if (e.state === 'hit') e.state = 'idle'; }   // tentacle holds die with the holder
-    for (const k in this.slots) { this.slots[k].charging = false; this.slots[k].active = null; }
+    for (const k in this.slots) { const s = this.slots[k]; s.charging = false; s.active = null; s.chargeT = 0; s.sustainT = 0; }   // dying mid-generation leaves nothing armed
+    this.cruiseHeld = false;
     // become a ragdoll — carry the killing blow's knockback (+ a small pop) into the sim as launch
     if (this.canPhase) { for (const m of [this.parts.mats.suit, this.parts.mats.suit2]) { m.transparent = false; m.opacity = 1; } }
     this.ragdoll = new Ragdoll(this, this.vel.clone().add(new THREE.Vector3(0, 12, 0)));
@@ -695,6 +716,10 @@ export class Fighter {
       if (impact < -38) this._slam(game, -impact, 'ground');    // hurled into the floor — fall/slam damage
     }
     if (this.pos.y > 85) { this.pos.y = 85; if (this.vel.y > 0) this.vel.y = 0; }  // flight/knockback ceiling
+    // harbor splashes — churning through water kicks up spray
+    if (game && this.pos.y < 1.5 && game.world.waterAt && game.world.waterAt(this.pos.x) && Math.hypot(this.vel.x, this.vel.z) > 8 && Math.random() < dt * 10) {
+      game.particles.spawn({ x: this.pos.x, y: 0.7, z: this.pos.z, vx: (Math.random() * 2 - 1) * 8, vy: 8 + Math.random() * 6, vz: (Math.random() * 2 - 1) * 8, life: 0.42, size: 2.8, color: ['#bfe6f2', '#7fb8d0', '#ffffff'], drag: 1.4, shrink: true });
+    }
 
     // arena bounds — getting hurled into the border wall slams (and bounces)
     const b = ARENA - 4;
@@ -730,7 +755,16 @@ export class Fighter {
     let s = this.speed * this.powerBuff * sprint;
     if (this.sprintT > 0) s *= this.sprintMult;   // double-tap sprint surge
     if (this.meleeCharge > 0) s *= 0.4;           // winding up a haymaker roots you
-    if (this.flying) s *= this.flightTier >= 3 ? 1 : this.flightTier === 2 ? 0.62 : 0.85;   // levitators reposition, fliers cruise
+    if (this.flying) {
+      s *= this.flightTier >= 3 ? this.flySpeed : this.flightTier === 2 ? 0.62 : 0.85;   // levitators reposition, fliers cruise
+      // SHIFT held in the air = sustained CRUISE (not the burst dash) — costs a trickle of ki
+      if (this.cruiseHeld && this.ki > 1) { s *= 1.5; this.ki = Math.max(0, this.ki - 2.6 * dt); }
+    }
+    // the harbor: shallow water slows, deep water is a swim (flight lifts you out)
+    if (!this.flying && this.pos.y < 2 && this._game && this._game.world.waterAt) {
+      const wl = this._game.world.waterAt(this.pos.x);
+      if (wl) s *= wl === 2 ? 0.45 : 0.62;
+    }
     if (this.guarding) s *= 0.34;               // guarding slows you
     if (this.strikeActive > 0) s *= 0.5;
     this.vel.x += dir.x * s * dt * 9;
@@ -746,7 +780,13 @@ export class Fighter {
   _animate(dt) {
     const p = this.parts; const moving = Math.hypot(this.vel.x, this.vel.z) > 4;
     // face
-    this.obj.rotation.y = damp(this.obj.rotation.y, this.facing, 14, dt);
+    // shortest-path yaw damp — the naive damp spun the LONG way (~355°) whenever the aim
+    // crossed the atan2 seam, reading as "he's facing the wrong way"
+    {
+      let dy = (this.facing - this.obj.rotation.y) % TAU;
+      if (dy > Math.PI) dy -= TAU; else if (dy < -Math.PI) dy += TAU;
+      this.obj.rotation.y += dy * (1 - Math.exp(-14 * dt));
+    }
     // idle bob / breathe (+ landing crouch dips the upper body)
     const bob = Math.sin(this.animT * 3.2) * 0.12;
     const land = clamp(this._landT || 0, 0, 1);
@@ -886,6 +926,21 @@ export class Fighter {
       const alt = clamp(1 - this.pos.y / 42, 0.08, 1);
       p.shadow.material.opacity = 0.36 * alt;
       p.shadow.scale.setScalar(clamp(1 - this.pos.y * 0.006, 0.4, 1));
+    }
+    // altitude-band ring: color = which of the four bands you're in (ground-pinned like the shadow)
+    if (p.bandRing) {
+      p.bandRing.position.set(0, 0.08 - this.pos.y, 0);
+      const b = bandOf(this.pos.y);
+      if (b !== this._band) { this._band = b; p.bandRing.material.color.set(ALT_BANDS[b].c); }
+      p.bandRing.material.opacity = b === 0 ? 0.28 : 0.6;   // louder when someone leaves the ground
+    }
+    // cruise wind — the fastest fliers drag visible speed lines (cheap particles, speed-gated)
+    if (this.flying && this._game && Math.hypot(this.vel.x, this.vel.z) > 38 && Math.random() < 0.55) {
+      this._game.particles.spawn({
+        x: this.pos.x - this.vel.x * 0.06, y: this.pos.y + 4.6 + (Math.random() * 2 - 1) * 2, z: this.pos.z - this.vel.z * 0.06,
+        vx: -this.vel.x * 0.22, vy: 0, vz: -this.vel.z * 0.22,
+        life: 0.28, size: 2.2, color: ['#ffffff', '#cfe8ff'], drag: 0.6, shrink: true,
+      });
     }
     // hit flash
     const hf = this.hitFlash;

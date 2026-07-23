@@ -136,6 +136,8 @@ export class World {
     u.uHor.value.lerpColors(P.horNight, P.horDay, dl);
     u.uGlow.value.copy(P.glowTint).multiplyScalar(0.06 + gold * 0.22);
     if (this._winMats) { const e = 0.08 + (1 - dl) * 0.5; for (const m of this._winMats) m.emissiveIntensity = e; }
+    if (this._lampMat) this._lampMat.emissiveIntensity = 0.12 + (1 - dl) * 1.6;            // streetlights wake at dusk
+    if (this._billMats) for (const m of this._billMats) m.emissiveIntensity = 0.22 + (1 - dl) * 0.85;
   }
 
   _buildArena() {
@@ -193,14 +195,19 @@ export class World {
       }
       uv.needsUpdate = true;
     };
+    // DISTRICTS (20 blocks = the fog-shader cap): downtown towers NW · midtown N/NE ·
+    // dense low old-town S · warehouses on the waterfront E · the west park stays open.
     const spots = [
-      [-52, -30, 10, 26, 10], [46, 40, 12, 16, 12], [10, -64, 26, 12, 8],
-      [-70, 58, 9, 38, 9], [72, -58, 9, 30, 9], [-14, 70, 20, 10, 12],
-      [60, 4, 8, 22, 8], [-44, 8, 8, 18, 8],
-      [-110, -20, 12, 34, 12], [108, 30, 10, 24, 10], [30, 110, 22, 14, 10],
-      [-96, 96, 9, 28, 9], [96, -104, 10, 26, 10], [-30, -112, 18, 12, 12],
-      [120, -30, 8, 40, 8], [-120, 40, 8, 18, 14],
-      [-180, -150, 14, 44, 12], [175, 160, 12, 36, 12], [180, -160, 10, 22, 14], [-165, 170, 16, 16, 10],   // skyline far-field
+      // downtown — the skyline
+      [-150, -140, 14, 44, 12], [-100, -120, 12, 38, 12], [-140, -70, 10, 34, 10], [-80, -160, 10, 30, 10], [-58, -92, 9, 28, 9],
+      // midtown
+      [40, -120, 12, 26, 10], [92, -80, 10, 24, 10], [130, -150, 12, 22, 12], [60, -42, 8, 20, 8], [0, -170, 20, 16, 10],
+      // old town — low & dense, melee country
+      [-120, 90, 16, 12, 10], [-70, 122, 14, 10, 12], [-20, 152, 18, 12, 10], [32, 102, 12, 10, 12], [82, 142, 16, 14, 10], [-42, 82, 10, 8, 10], [122, 92, 12, 12, 12],
+      // waterfront warehouses
+      [158, 22, 20, 10, 14], [148, -40, 18, 12, 12],
+      // park edge pillar
+      [-170, 40, 8, 18, 8],
     ];
     const crackTex = this._crackTexture();
     let bi = 0;
@@ -227,7 +234,108 @@ export class World {
     }
     this.scene.add(g);
     this.arena = g;
+    this._buildCity(g);
   }
+
+  // ---- the city dressing: harbor, cars, streetlights, billboards, rooftop units ----
+  _buildCity(g) {
+    // THE HARBOR (ruled: "first map is a city district near water") — east edge.
+    // waterAt(x): 0 dry · 1 shallow shelf (slows) · 2 deep (swim-slow)
+    this.waterX = ARENA - 52;                      // the quay line
+    this.deepX = ARENA - 26;
+    const wTex = (() => {
+      const c = document.createElement('canvas'); c.width = 256; c.height = 64;
+      const x = c.getContext('2d');
+      const grd = x.createLinearGradient(0, 0, 256, 0);
+      grd.addColorStop(0, 'rgba(70,140,160,0.62)'); grd.addColorStop(0.42, 'rgba(40,100,130,0.78)'); grd.addColorStop(1, 'rgba(16,52,84,0.92)');
+      x.fillStyle = grd; x.fillRect(0, 0, 256, 64);
+      x.strokeStyle = 'rgba(255,255,255,0.18)'; x.lineWidth = 1.5;
+      for (let i = 0; i < 14; i++) { const y = Math.random() * 64; x.beginPath(); x.moveTo(Math.random() * 40, y); x.lineTo(40 + Math.random() * 200, y); x.stroke(); }
+      const t = new THREE.CanvasTexture(c); return t;
+    })();
+    const water = new THREE.Mesh(
+      new THREE.PlaneGeometry(ARENA - this.waterX + 6, ARENA * 2, 12, 1),
+      new THREE.MeshStandardMaterial({ map: wTex, transparent: true, opacity: 0.88, roughness: 0.25, metalness: 0.35, color: '#9fd4e8', depthWrite: false })
+    );
+    water.rotation.x = -Math.PI / 2; water.rotation.z = 0;
+    water.position.set((this.waterX + ARENA + 6) / 2, 0.34, 0);
+    water.material.onBeforeCompile = (sh) => {                       // gentle swell
+      sh.uniforms.uT = this._waterT = { value: 0 };
+      sh.vertexShader = 'uniform float uT;\n' + sh.vertexShader.replace('#include <begin_vertex>',
+        `#include <begin_vertex>\n transformed.z += sin(uT*1.3 + position.x*0.14 + position.y*0.05) * 0.22;`);
+    };
+    g.add(water); this.water = water;
+    // quay edge — a pale stone lip along the shore
+    const quay = new THREE.Mesh(new THREE.BoxGeometry(3, 1.1, ARENA * 2), new THREE.MeshStandardMaterial({ color: '#cfc8b6', roughness: 0.85 }));
+    quay.position.set(this.waterX - 1.5, 0.55, 0); quay.receiveShadow = true; g.add(quay);
+
+    // PARKED CARS (ruled props) — destructible, they EXPLODE. One merged geometry, 4 shared paints.
+    const carGeo = (() => {
+      const body = new THREE.BoxGeometry(4.6, 1.3, 2.1); body.translate(0, 0.85, 0);
+      const cabin = new THREE.BoxGeometry(2.3, 1.0, 1.9); cabin.translate(-0.25, 1.95, 0);
+      return mergeGeometries([body, cabin]);
+    })();
+    const paints = ['#8a2a24', '#2a4a6a', '#c9c2b4', '#3a3f34'].map(c => new THREE.MeshStandardMaterial({ color: c, roughness: 0.5, metalness: 0.35 }));
+    this._charred = new THREE.MeshStandardMaterial({ color: '#1c1a17', roughness: 0.95, metalness: 0.1 });
+    const carSpots = [
+      [-24, -100, 0], [-24, 34, 0], [24, 72, 0], [48, -28, 0], [-72, 62, 1], [-96, -44, 0], [72, 12, 1],
+      [96, 112, 1], [-48, -140, 0], [120, -60, 0], [24, -66, 0], [-120, 132, 1], [48, 148, 1], [144, 60, 0],
+    ];
+    this.cars = [];
+    carSpots.forEach(([x, z, axis], i) => {
+      const m = new THREE.Mesh(carGeo, paints[i % paints.length]);
+      m.position.set(x, 0, z); m.rotation.y = axis ? Math.PI / 2 : 0; m.castShadow = true; m.receiveShadow = true;
+      g.add(m);
+      this.cars.push({ mesh: m, x, z, hp: 30, maxHp: 30, dead: false, paint: paints[i % paints.length] });
+    });
+
+    // STREETLIGHTS — instanced poles + instanced heads (2 draws for all 16); heads glow at night
+    const lampSpots = [
+      [-24, -24], [24, 24], [-72, 24], [72, -24], [-120, -72], [120, 72], [-24, 120], [24, -120],
+      [-168, -24], [168, 24], [-72, -168], [72, 168], [-120, 120], [120, -120], [-168, 168], [168, -72],
+    ].filter(([x]) => x < this.waterX - 6);
+    const poleGeo = new THREE.CylinderGeometry(0.22, 0.3, 9, 6); poleGeo.translate(0, 4.5, 0);
+    const headGeo = new THREE.SphereGeometry(0.7, 8, 6); headGeo.translate(0, 9.2, 0);
+    const poleMat = new THREE.MeshStandardMaterial({ color: '#4a463c', roughness: 0.7, metalness: 0.4 });
+    this._lampMat = new THREE.MeshStandardMaterial({ color: '#fff2cc', emissive: '#ffca7a', emissiveIntensity: 0.15, roughness: 0.4 });
+    const poles = new THREE.InstancedMesh(poleGeo, poleMat, lampSpots.length);
+    const heads = new THREE.InstancedMesh(headGeo, this._lampMat, lampSpots.length);
+    const lm = new THREE.Matrix4();
+    lampSpots.forEach(([x, z], i) => { lm.makeTranslation(x + 4, 0, z + 4); poles.setMatrixAt(i, lm); heads.setMatrixAt(i, lm); });
+    poles.castShadow = false; heads.castShadow = false;
+    g.add(poles); g.add(heads);
+
+    // BILLBOARDS — in-world lore, glow at night
+    const billTex = (txt, accent) => {
+      const c = document.createElement('canvas'); c.width = 256; c.height = 128;
+      const x = c.getContext('2d');
+      x.fillStyle = '#12141c'; x.fillRect(0, 0, 256, 128);
+      x.strokeStyle = accent; x.lineWidth = 6; x.strokeRect(6, 6, 244, 116);
+      x.fillStyle = accent; x.font = '800 42px sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle';
+      x.fillText(txt, 128, 54);
+      x.fillStyle = '#c9c2b4'; x.font = '600 17px sans-serif'; x.fillText('THE WHITE CITY', 128, 96);
+      return new THREE.CanvasTexture(c);
+    };
+    this._billMats = [];
+    const addBill = (tex, x, y, z, ry, w = 16, h = 8) => {
+      const mat = new THREE.MeshStandardMaterial({ map: tex, emissiveMap: tex, emissive: '#ffffff', emissiveIntensity: 0.25, roughness: 0.6 });
+      const b = new THREE.Mesh(new THREE.PlaneGeometry(w, h), mat);
+      b.position.set(x, y, z); b.rotation.y = ry; g.add(b); this._billMats.push(mat);
+    };
+    addBill(billTex('THRESHOLD', '#f5b21a'), -142.6, 30, -140, Math.PI / 2);       // on the tallest tower's east face
+    addBill(billTex('KANO COLA', '#ff5a2a'), 130, 16, -143.8, 0);                  // midtown tower south face
+
+    // ROOFTOP UNITS on the 6 tallest — children so shatter carries them
+    const acMat = new THREE.MeshStandardMaterial({ color: '#9a948a', roughness: 0.9 });
+    const tall = [...this.cover].sort((a, b) => b.h - a.h).slice(0, 6);
+    for (const c of tall) {
+      const ac = new THREE.Mesh(new THREE.BoxGeometry(Math.min(3, c.w * 0.3), 1.4, Math.min(3, c.d * 0.3)), acMat);
+      ac.position.set(c.w * 0.22, c.h / 2 + 0.75, -c.d * 0.2); c.mesh.add(ac);
+    }
+  }
+
+  // 0 = dry land · 1 = shallow shelf · 2 = deep water
+  waterAt(x) { return x < this.waterX ? 0 : x < this.deepX ? 1 : 2; }
 
   // --- grass: ONE InstancedMesh (single draw call), wind sway in the vertex shader,
   // and every crater/scorch FLATTENS the blades inside it — cheap mileage from destruction.
@@ -248,10 +356,11 @@ export class World {
     grass.frustumCulled = false; grass.receiveShadow = true; grass.renderOrder = 1;
     const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), sv = new THREE.Vector3(), pv = new THREE.Vector3(), Y = new THREE.Vector3(0, 1, 0), col = new THREE.Color();
     this._gPos = new Float32Array(COUNT * 2); this._gRot = new Float32Array(COUNT); this._gScale = new Float32Array(COUNT); this._gOn = new Uint8Array(COUNT).fill(1);
-    // city grass lives in PARKS — clustered patches between the blocks, not confetti everywhere
+    // city grass lives in PARKS — the west park belt + old-town squares (never in the harbor)
     const PARKS = [
-      [-90, -85, 24], [80, 95, 22], [150, 55, 18], [-70, 140, 20], [45, -135, 22],
-      [-150, -5, 18], [140, -100, 20], [-40, 60, 14], [30, 45, 12], [-190, 100, 18], [190, -40, 16],
+      [-120, 8, 26], [-92, 42, 20], [-150, -14, 18], [-176, 96, 18],   // the west park belt
+      [8, 58, 14], [-44, 122, 14], [58, 62, 12], [104, 120, 14],       // old-town squares
+      [96, -22, 14], [0, -62, 12], [-176, -176, 14],                   // pocket parks
     ];
     let placed = 0, tries = 0;
     while (placed < COUNT && tries++ < COUNT * 30) {
@@ -383,6 +492,7 @@ export class World {
     this.camera.left = -this.frustum * asp; this.camera.right = this.frustum * asp;
     this.camera.top = this.frustum; this.camera.bottom = -this.frustum;
     this.camera.updateProjectionMatrix();
+    if (this.bloom) this._applyQuality();   // re-derive the pixel cap for the new window size
   }
 
   setBaseZoom(f) { this._baseFrustum = f; }
@@ -518,6 +628,10 @@ export class World {
 
   // Restore all cover + flatten the ground (called on match start).
   resetTerrain() {
+    for (const car of this.cars || []) {
+      car.hp = car.maxHp; car.dead = false;
+      car.mesh.material = car.paint; car.mesh.visible = true; car.mesh.position.y = 0;
+    }
     for (const c of this.coverAll) {
       c.hp = c.maxHp; c.destroyed = false;
       c.mesh.visible = true; c.mesh.position.set(c.x, c.y0, c.z); c.mesh.scale.set(1, 1, 1);
@@ -561,6 +675,7 @@ export class World {
   render() {
     const now = performance.now();
     if (this._grassTime) this._grassTime.value = now / 1000;   // wind
+    if (this._waterT) this._waterT.value = now / 1000;         // harbor swell
     if (this._lastRender) {
       const d = Math.min(now - this._lastRender, 100);
       this._ema = this._ema * 0.9 + d * 0.1;
@@ -571,14 +686,25 @@ export class World {
     this._qCool -= 0.016;
     if (this._qCool <= 0 && this.qualityOverride == null) {   // settings can lock the tier
       if (this._ema > 24 && this._qTier > 0) { this._qTier--; this._applyQuality(); this._qCool = 1.4; }
-      else if (this._ema < 13.5 && this._qTier < 2) { this._qTier++; this._applyQuality(); this._qCool = 2.5; }
+      else if (this._ema < 17.2 && this._qTier < 2) { this._qTier++; this._applyQuality(); this._qCool = 4; }   // 13.5 was unreachable under 60Hz vsync — tiers only ever ratcheted DOWN
     }
+  }
+  // clamp total shaded pixels (~2.6MP): a 4K dpr-2 fullscreen was 10-30× the pixel load
+  // of a small pane — the #1 "fast in the pane, slow in my browser" multiplier
+  _pixelCap(pr) {
+    const cap = Math.sqrt(2.6e6 / Math.max(1, innerWidth * innerHeight));
+    return Math.min(pr, Math.max(0.55, cap));
   }
   _applyQuality() {
     const t = this._qTier;
-    this.renderer.setPixelRatio(t === 2 ? this._maxPR : t === 1 ? Math.min(this._maxPR, 1) : 0.72);
-    this.composer.setSize(innerWidth, innerHeight); this.bloom.setSize(innerWidth * 0.5, innerHeight * 0.5);
+    const pr = this._pixelCap(t === 2 ? this._maxPR : t === 1 ? Math.min(this._maxPR, 1) : 0.72);
+    this.renderer.setPixelRatio(pr);
+    this.composer.setPixelRatio(pr);   // THE tier bug: EffectComposer caches its construction-time
+    this.composer.setSize(innerWidth, innerHeight);   // ratio — tiers never actually shrank the scene pass
+    this.bloom.setSize(innerWidth * 0.5, innerHeight * 0.5);
     this.bloom.strength = t === 2 ? 0.66 : t === 1 ? 0.55 : 0.42;
+    this.bloom.enabled = t > 0;                       // potato tier: drop the whole bloom chain
+    if (this.sun) this.sun.castShadow = t > 0;        // ...and the shadow pass
   }
   get fps() { return this._ema ? Math.round(1000 / this._ema) : 60; }
 

@@ -19,6 +19,16 @@ const hud = new HUD(game);
 game.hud = hud;
 game.world.prewarm();   // compile lazy FX shaders up-front — no first-use hitches mid-fight
 loadSettings(); applySettings(game);   // player settings (volume/shake/quality/HUD) from localStorage
+// GPU sanity — software WebGL turns the game into slow motion; say WHY, loudly
+try {
+  const glc = game.world.renderer.getContext();
+  const dbg = glc.getExtension('WEBGL_debug_renderer_info');
+  const gpu = dbg ? glc.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : 'unknown';
+  console.log('[THRESHOLD] GPU:', gpu);
+  if (/swiftshader|software|basic render/i.test(String(gpu))) {
+    setTimeout(() => hud.feed('⚠ SOFTWARE rendering detected — turn ON hardware acceleration (chrome://settings/system), then relaunch Chrome', '#ff8a6a'), 1200);
+  }
+} catch { /* diagnostics only */ }
 
 let started = false;
 
