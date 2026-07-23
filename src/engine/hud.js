@@ -2,8 +2,10 @@
 import { ROSTER, SLOT_ORDER } from '../data/characters.js';
 import { MODES } from '../data/modes.js';
 import { clamp, TAU } from '../core/util.js';
-import { ATTR_DEFS, TALENTS, deriveAttrs, heroTalents, rankName, rankColor } from '../data/ranks.js';
+import { ATTR_DEFS, TALENTS, deriveAttrs, heroTalents, rankName, rankColor, RANKS } from '../data/ranks.js';
 import { SETTINGS, saveSettings, applySettings } from '../core/settings.js';
+import { identityOf } from '../data/identities.js';
+import { icon, ATTR_ICON, ICON_MEANING } from './icons.js';
 
 const CSS = `
 #hud .wrap{ position:absolute; inset:0; }
@@ -191,6 +193,24 @@ const CSS = `
 #title .filters input{ font-family:inherit; font-size:12px; color:#e8e2d6; background:rgba(0,0,0,.4); border:1px solid rgba(255,255,255,.14); border-radius:8px; padding:5px 10px; width:120px; outline:none; }
 #title .filters input:focus{ border-color:#ffd24a; }
 #title .filters .cnt{ font-size:10px; color:#8b8577; letter-spacing:.1em; margin-left:auto; }
+/* the cast layer: identity, at-a-glance, rank ladder, sheet flipping */
+#title .preview{ position:relative; }
+#title .pvflip{ position:absolute; top:14px; right:14px; display:flex; gap:6px; z-index:2; }
+#title .pvflip span{ cursor:pointer; width:26px; height:26px; display:inline-flex; align-items:center; justify-content:center; border-radius:8px; border:1px solid rgba(255,255,255,.16); background:rgba(255,255,255,.05); color:#ffd24a; font-size:16px; font-weight:800; user-select:none; }
+#title .pvflip span:hover{ border-color:#ffd24a; box-shadow:0 0 10px rgba(255,210,74,.3); }
+#title .pvident{ display:flex; flex-direction:column; gap:3px; margin:7px 0 9px; font-size:12.5px; color:#e8e2d6; }
+#title .pvident svg{ color:#ffcf7a; }
+#title .glance{ display:flex; flex-wrap:wrap; gap:5px; margin-top:10px; }
+#title .glance span{ font-size:10.5px; padding:4px 9px; border-radius:12px; background:rgba(127,230,255,.08); color:#cfe8f2; border:1px solid rgba(127,230,255,.2); }
+#title .glance span svg{ color:#7fe6ff; }
+#title .glance span.lead{ background:rgba(255,210,74,.12); color:#ffd97a; border-color:rgba(255,210,74,.35); font-weight:700; }
+#title .glance span.lead svg{ color:#ffd24a; }
+#title .ladder{ display:flex; align-items:center; gap:2px; margin:2px 0 7px; }
+#title .ladder i{ width:12px; height:5px; border-radius:2px; display:inline-block; }
+#title .ladder span{ font-size:8.5px; color:#8b8577; letter-spacing:.1em; text-transform:uppercase; margin-left:6px; }
+#title .statrow .sl svg{ color:#a49c8c; }
+#title .arow .an2 svg{ color:#a49c8c; }
+#title .rcard .cflag{ font-size:11px; font-weight:400; }
 `;
 
 // Derive a 0–10 stat profile + trait tags from a character's raw data.
@@ -237,6 +257,56 @@ export function heroStats(d) {
 
 // LeFevre Threat Level scale (Living Superweapon Threshold Treaty)
 export const THREAT_COLORS = { 'Low': '#8fe08a', 'Moderate': '#ffd24a', 'High': '#ff9a3a', 'Very High': '#ff5a4a', 'Extreme': '#ff2f2f' };
+
+// "What am I getting into?" — a mechanical AT-A-GLANCE derived from the ACTUAL kit, so it can
+// never drift from the data. Returns [iconName, text, lead?] chips.
+export function kitFacts(def) {
+  const A = Object.values(def.abilities || {});
+  const st = heroStats(def);
+  const has = (t) => A.some(a => a.type === t);
+  const STYLE = {
+    rusher: ['mobility', 'RUSHDOWN — closes fast, fights in your face'],
+    beamer: ['energy', 'BEAM PRESSURE — sustained energy at range'],
+    artillery: ['power', 'ARTILLERY — big shells from a distance'],
+    zoner: ['range', 'ZONER — controls space, punishes approach'],
+    bruiser: ['strength', 'BRUISER — mid-range brawling'],
+    trickster: ['mobility', 'TRICKSTER — teleports & mixups'],
+    grappler: ['might', 'GRAPPLER — seizes you and slams you'],
+    summoner: ['person', 'COMMANDER — minions do the fighting'],
+  };
+  const out = [];
+  const s = STYLE[def.ai && def.ai.style] || ['strength', 'BRAWLER'];
+  out.push([s[0], s[1], true]);
+  out.push(['range', st.range >= 7 ? 'LONG range' : st.range >= 4 ? 'MID range' : 'CLOSE range']);
+  const str = def.strength ?? 5;
+  out.push(['fighting', str >= 7 ? 'HEAVY fists' : str >= 4 ? 'solid fists' : 'light fists']);
+  const ft = def.flightTier ?? 3;
+  out.push(['flight', ft === 0 ? 'grounded' : ft === 1 ? 'clumsy flier' : ft === 2 ? 'levitates' : 'full flight']);
+  if (def.guardType === 'deflect') out.push(['defense', 'DEFLECT guard — bullets bounce back']);
+  else if (def.guardType === 'barrier') out.push(['defense', 'BARRIER guard — blocks 360°, costs ki']);
+  // what they actually carry
+  const nBeams = A.filter(a => a.type === 'beam').length;
+  if (nBeams) out.push(['energy', nBeams > 1 ? nBeams + ' beams' : 'a beam']);
+  if (has('rifle')) out.push(['range', 'guns']);
+  if (has('bow')) out.push(['range', 'a payload bow']);
+  if (has('charge')) out.push(['power', 'a charge bomb — hold to grow it']);
+  if (has('spiritbomb')) out.push(['power', 'a giant channeled orb']);
+  if (has('meteor')) out.push(['power', 'an airstrike ult']);
+  if (has('summon')) out.push(['person', 'summons']);
+  if (has('construct')) out.push(['might', 'solid-light constructs']);
+  if (has('tentacle')) out.push(['might', 'a grab-chain — drag & slam']);
+  if (has('portal')) out.push(['mobility', 'portals']);
+  if (A.some(a => a.type === 'cone' && a.cold)) out.push(['defense', 'a FREEZE cone']);
+  else if (has('cone')) out.push(['strength', 'a force cone']);
+  if (has('mine')) out.push(['threat', 'proximity mines']);
+  if (has('lifedrain')) out.push(['health', 'a life siphon']);
+  if (has('rush')) out.push(['fighting', 'a multi-hit rush']);
+  if (has('teleport')) out.push(['mobility', 'a teleport']);
+  if (has('phase')) out.push(['defense', 'intangibility']);
+  if (has('facebomb')) out.push(['threat', 'a homing seeker bomb']);
+  if ((def.items || []).length) out.push(['intellect', 'gadgets: ' + def.items.map(i => i.name).join(', ')]);
+  return out;
+}
 
 function describeEvade(ev) {
   switch (ev.kind) {
@@ -741,32 +811,44 @@ export class HUD {
         </div>
       </div>`;
     const modesEl = this.title.querySelector('#modes'), roster = this.title.querySelector('#roster'), pv = this.title.querySelector('#pv'), ptabs = this.title.querySelector('#ptabs'), hintEl = this.title.querySelector('#modehint');
-    const bar = (label, v, col, tip) => `<div class="statrow"${tip ? ` title="${tip}"` : ''}><span class="sl">${label}</span><span class="sb"><i style="width:${v * 10}%;background:${col}"></i></span><span class="sv">${v}</span></div>`;
+    const bar = (label, v, col, tip, ic) => `<div class="statrow"${tip ? ` title="${tip}"` : ''}><span class="sl">${ic ? icon(ic, 11) + ' ' : ''}${label}</span><span class="sb"><i style="width:${v * 10}%;background:${col}"></i></span><span class="sv">${v}</span></div>`;
     const renderPv = (c) => {
       const st = heroStats(c);
       pv.style.setProperty('--pc', c.colors.accent);
       const tc = THREAT_COLORS[c.threat] || '#a49c8c';
-      pv.innerHTML = `<div class="pvname" style="color:${c.colors.accent}">${c.name}</div>
+      const idn = identityOf(c);
+      const facts = kitFacts(c);
+      pv.innerHTML = `<div class="pvflip"><span id="pvPrev" title="Previous weapon (←)">‹</span><span id="pvNext" title="Next weapon (→)">›</span></div>
+        <div class="pvname" style="color:${c.colors.accent}">${c.name}</div>
         <div class="pvttl">${c.title} · ${c.role}</div>
+        <div class="pvident">
+          <span title="${ICON_MEANING.person}">${icon('person', 12)} ${idn.n}</span>
+          <span title="${ICON_MEANING.pin}">${icon('pin', 12)} ${idn.c} · ${idn.co} ${idn.f}</span>
+        </div>
         <div class="pvblurb">${c.blurb}</div>
-        ${c.threat ? `<div class="pvthreat" title="The LeFevre Threat Scale — the Treaty's official danger rating, Low → Extreme. Mixed matches are SUPPOSED to be lopsided; skill steals rounds, not physics." style="color:${tc};border-color:${tc}66;background:${tc}18">LeFevre Threat · ${c.threat}</div>` : ''}
+        <div class="glance">${facts.map(([ic, t, lead]) => `<span${lead ? ' class="lead"' : ''}>${icon(ic, 11)} ${t}</span>`).join('')}</div>
+        ${c.threat ? `<div class="pvthreat" title="The LeFevre Threat Scale — the Treaty's official danger rating, Low → Extreme. Mixed matches are SUPPOSED to be lopsided; skill steals rounds, not physics." style="color:${tc};border-color:${tc}66;background:${tc}18">${icon('threat', 11)} LeFevre Threat · ${c.threat}</div>` : ''}
         <div class="pvstats" title="Hover any bar for what it means">
-          ${bar('Power', st.power, '#ff6a4a', 'Heaviest single hit in the kit')}${bar('Strength', st.strength, '#e8a24a', 'Physical muscle — melee damage up, knockback given & resisted, faster ice break-outs')}${bar('Range', st.range, '#ffd24a', 'How far the kit reaches')}${bar('Mobility', st.mobility, '#7fe6ff', 'Run speed + dashes + teleports')}
-          ${bar('Defense', st.defense, '#8fe08a', 'How hard this hero is to put down — HP, phasing, thorns')}${bar('Health', st.health, '#ff8a5a', 'Raw hit points')}${bar('Energy', st.energy, '#7fb0ff', 'Ki pool — every power spends it; run dry and you fizzle')}
+          ${bar('Power', st.power, '#ff6a4a', 'Heaviest single hit in the kit', 'power')}${bar('Strength', st.strength, '#e8a24a', 'Physical muscle — melee damage up, knockback given & resisted, faster ice break-outs', 'strength')}${bar('Range', st.range, '#ffd24a', 'How far the kit reaches', 'range')}${bar('Mobility', st.mobility, '#7fe6ff', 'Run speed + dashes + teleports', 'mobility')}
+          ${bar('Defense', st.defense, '#8fe08a', 'How hard this hero is to put down — HP, phasing, thorns', 'defense')}${bar('Health', st.health, '#ff8a5a', 'Raw hit points', 'health')}${bar('Energy', st.energy, '#7fb0ff', 'Ki pool — every power spends it; run dry and you fizzle', 'energy')}
         </div>
         ${st.tags.length ? `<div class="pvtags">${st.tags.map(t => `<span>${t}</span>`).join('')}</div>` : ''}
         ${(() => {
           const at = deriveAttrs(c), tl = heroTalents(c);
-          const rows = ATTR_DEFS.map(a => { const v = at[a.k], rc = rankColor(v); return `<div class="arow" title="${a.name} — ${a.does}. Rank ${v}/10 on the ladder (Civilian → Cosmic)."><span class="an2">${a.name}</span><span class="abar"><i style="width:${v * 10}%;background:${rc}"></i></span><span class="av">${v}</span><span class="arank" style="color:${rc};border-color:${rc}55;background:${rc}14">${rankName(v)}</span></div>`; }).join('');
+          const rows = ATTR_DEFS.map(a => { const v = at[a.k], rc = rankColor(v); return `<div class="arow" title="${a.name} — ${a.does}. Rank ${v}/10 on the ladder (Civilian → Cosmic)."><span class="an2">${icon(ATTR_ICON[a.k], 11)} ${a.name}</span><span class="abar"><i style="width:${v * 10}%;background:${rc}"></i></span><span class="av">${v}</span><span class="arank" style="color:${rc};border-color:${rc}55;background:${rc}14">${rankName(v)}</span></div>`; }).join('');
+          const ladder = `<div class="ladder" title="The rank ladder — every attribute sits on this one scale. Colors = rank tier.">${RANKS.slice(1).map((r, i) => `<i style="background:${r.c}" title="${i + 1} — ${r.n}"></i>`).join('')}<span>Civilian → Cosmic</span></div>`;
           const tals = tl.map(k => { const t = TALENTS[k]; return t ? `<span><b>${t.name}</b> — ${t.does}</span>` : ''; }).join('');
           const gear = (c.items || []).map(it => `<b>${it.name}</b>${it.charges ? ` ×${it.charges}` : ''}`).join(' · ');
-          return `<div class="sheet"><div class="sh">Attributes</div>${rows}</div>
+          return `<div class="sheet"><div class="sh">Attributes</div>${ladder}${rows}</div>
             ${tals ? `<div class="sheet"><div class="sh">Talents</div><div class="tals">${tals}</div></div>` : ''}
             ${gear ? `<div class="gear">⛭ Gear: ${gear} <span style="color:#8b8577">(X)</span></div>` : ''}`;
         })()}
         <div class="pvabil">${SLOT_ORDER.filter(s => c.abilities[s.k]).map(s => { const a = c.abilities[s.k]; return `<div class="ab"><b style="color:${c.colors.accent}">${s.label}</b><span class="an">${a.name}</span><span class="ad">${describeAbility(a)}</span></div>`; }).join('')}
         ${c.evade ? `<div class="ab"><b style="color:${c.colors.accent}">2×TAP</b><span class="an">${c.evade.name || 'Evade'}</span><span class="ad">${describeEvade(c.evade)}</span></div>` : ''}
-        ${(c.items || []).map(it => `<div class="ab"><b style="color:${c.colors.accent}">X</b><span class="an">${it.name}</span><span class="ad">carried item — plant it, then press again from anywhere to teleport back to it</span></div>`).join('')}</div>`;
+        ${(c.items || []).map(it => `<div class="ab"><b style="color:${c.colors.accent}">X</b><span class="an">${it.name}</span><span class="ad">carried gadget — no ki cost, cooldown only</span></div>`).join('')}</div>`;
+      const pp = pv.querySelector('#pvPrev'), pn = pv.querySelector('#pvNext');
+      if (pp) pp.onclick = () => flip(-1);
+      if (pn) pn.onclick = () => flip(1);
     };
     const renderTabs = () => {
       const allow2 = selMode === 'duel' || selMode === 'rumble';
@@ -809,12 +891,18 @@ export class HUD {
       if (cardEl) cardEl.classList.add('sel');
       renderPv(c);
     };
+    const flip = (d) => {
+      if (!list.length) return;
+      const i = Math.max(0, list.indexOf(selP1)), n = (i + d + list.length) % list.length;
+      select(list[n], cards[n]);
+      if (cards[n]) cards[n].scrollIntoView({ block: 'nearest' });
+    };
     const mkCard = (c) => {
       const card = document.createElement('div');
       card.className = 'rcard';
       card.style.setProperty('--pc', c.colors.accent);
       const cs = stOf(c), tc = THREAT_COLORS[c.threat] || '#a49c8c';
-      card.innerHTML = `<span class="dot"></span><div class="nm">${c.name}</div><div class="rl">${c.role}</div><div class="cstat">HP <b>${c.hp}</b> · PWR <b>${cs.power}</b> · <span style="color:${tc}">${c.threat || '—'}</span></div>`
+      card.innerHTML = `<span class="dot"></span><div class="nm">${c.name} <span class="cflag">${identityOf(c).f || ''}</span></div><div class="rl">${c.role}</div><div class="cstat">HP <b>${c.hp}</b> · PWR <b>${cs.power}</b> · <span style="color:${tc}">${c.threat || '—'}</span></div>`
         + (c.isCustom ? `<span class="cchip">CUSTOM</span><span class="cedit" title="Edit in ORIGIN">✎</span>` : '');
       card.onmouseenter = () => renderPv(c);
       card.onclick = () => select(c, card);

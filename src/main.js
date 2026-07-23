@@ -8,6 +8,7 @@ import { CreatorUI } from './engine/creatorUI.js';
 import { runSlot } from './engine/abilities.js';
 import { loadSettings, applySettings } from './core/settings.js';
 import { installCustoms, loadCustoms, freshPicks, buildDef, tally, validate, saveCustom, deleteCustom } from './data/creator.js';
+import { applyIdentities } from './data/identities.js';
 
 const canvas = document.getElementById('game');
 const input = new Input(); input.bind(canvas);
@@ -32,6 +33,7 @@ function openMenu() { game.running = false; hud.hideEndScreen(); hud.buildTitle(
 
 // ---- ORIGIN: install saved customs, wire the forge ----
 installCustoms(ROSTER);
+applyIdentities(ROSTER);   // every weapon is a PERSON from a real place (def.person)
 const creator = new CreatorUI(ROSTER);
 function afterForge(def, { test } = {}) {
   hud.buildTitle(enter);                                  // rebuild so the new card exists

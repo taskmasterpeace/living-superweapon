@@ -202,6 +202,7 @@ export function tally(picks) {
 export function freshPicks() {
   return {
     name: '', title: 'Living Superweapon',
+    realName: '', city: '', country: '',
     palette: 0, skin: 0, frame: 0, cape: false,
     voicePitch: 1.0, yells: true,
     budget: 'superweapon',
@@ -234,6 +235,11 @@ export function buildDef(picks, existingId) {
   const id = existingId || ('cx_' + name.toLowerCase().replace(/[^a-z0-9]+/g, '') + '_' + Date.now().toString(36).slice(-5));
   return {
     id, name, title: picks.title || 'Living Superweapon',
+    person: {
+      n: (picks.realName || '').trim() || 'Identity sealed',
+      c: (picks.city || '').trim() || 'Undisclosed',
+      co: (picks.country || '').trim() || 'Unknown', f: '🌐',
+    },
     role: (DOCTRINE_NAMES[ai.style] || 'Bruiser') + ' / Origin',
     isCustom: true,
     colors: { primary: pal.primary, secondary: pal.secondary, accent: pal.accent, skin: SKINS[picks.skin] || SKINS[0], ...(picks.cape ? { cape: pal.primary } : {}) },

@@ -8,7 +8,8 @@ import {
   tally, freshPicks, buildDef, validate, threatOf, derived, deriveAI, saveCustom, deleteCustom,
 } from '../data/creator.js';
 import { ATTR_DEFS, TALENTS, rankName, rankColor } from '../data/ranks.js';
-import { heroStats, THREAT_COLORS } from './hud.js';
+import { heroStats, THREAT_COLORS, kitFacts } from './hud.js';
+import { icon, ATTR_ICON } from './icons.js';
 
 const CSS = `
 #origin{ position:fixed; inset:0; z-index:60; display:none; flex-direction:column; align-items:center; overflow-y:auto;
@@ -95,6 +96,13 @@ const CSS = `
 #origin .obtns .go:disabled{ opacity:.45; cursor:not-allowed; }
 #origin .obtns .ghost{ background:rgba(255,255,255,.08); color:#e8e2d6; border:1px solid rgba(255,255,255,.15); }
 #origin .obtns .danger{ background:rgba(255,74,58,.14); color:#ff8a6a; border:1px solid rgba(255,90,74,.4); }
+#origin .oident{ font-size:11.5px; color:#c9c2b4; line-height:1.75; margin-bottom:9px; }
+#origin .oident svg{ color:#ffcf7a; }
+#origin .glance2{ display:flex; flex-wrap:wrap; gap:4px; margin:2px 0 10px; }
+#origin .glance2 span{ font-size:9.5px; padding:3px 8px; border-radius:11px; background:rgba(127,230,255,.08); color:#cfe8f2; border:1px solid rgba(127,230,255,.2); }
+#origin .glance2 span svg{ color:#7fe6ff; }
+#origin .glance2 span.lead{ background:rgba(255,210,74,.12); color:#ffd97a; border-color:rgba(255,210,74,.35); font-weight:700; }
+#origin .arow2 .an svg{ color:#a49c8c; }
 `;
 
 // live numbers per power — the "show damage while picking" ruling
@@ -171,6 +179,11 @@ export class CreatorUI {
         <div class="col" id="oIdent">
           <div class="sh">Name</div><input type="text" id="oName" maxlength="14" placeholder="CODENAME" spellcheck="false">
           <div class="sh">Epithet</div><input type="text" id="oTitle" maxlength="26" placeholder="Living Superweapon" spellcheck="false">
+          <div class="sh">Civilian Identity</div><input type="text" id="oReal" maxlength="34" placeholder="Real name" spellcheck="false">
+          <div style="display:flex; gap:7px; margin-top:7px;">
+            <input type="text" id="oCity" maxlength="26" placeholder="Home city" spellcheck="false" style="flex:1">
+            <input type="text" id="oCountry" maxlength="22" placeholder="Country" spellcheck="false" style="flex:1">
+          </div>
           <div class="sh">Colors</div><div class="swatches" id="oPal"></div>
           <div class="sh">Skin</div><div class="swatches" id="oSkin"></div>
           <div class="sh">Frame</div><div class="chips2" id="oFrame"></div>
@@ -189,6 +202,10 @@ export class CreatorUI {
     nm.oninput = () => { P.name = nm.value; this.renderSheet(); this.renderHeader(); };
     tt.oninput = () => { P.title = tt.value; this.renderSheet(); };
     vc.oninput = () => { P.voicePitch = parseFloat(vc.value); this.root.querySelector('#oVoiceV').textContent = P.voicePitch.toFixed(2); };
+    for (const [id, key] of [['#oReal', 'realName'], ['#oCity', 'city'], ['#oCountry', 'country']]) {
+      const el = this.root.querySelector(id); el.value = P[key] || '';
+      el.oninput = () => { P[key] = el.value; this.renderSheet(); };
+    }
   }
 
   renderAll() { this.renderIdentity(); this.renderBuild(); this.renderSheet(); this.renderHeader(); }
@@ -231,7 +248,7 @@ export class CreatorUI {
     // attributes
     const attrRows = ATTR_DEFS.map(a => {
       const v = P.attrs[a.k], rc = rankColor(v);
-      return `<div class="arow2"><span class="an">${a.name}<span class="does">${a.does}</span></span>
+      return `<div class="arow2"><span class="an">${icon(ATTR_ICON[a.k], 10)} ${a.name}<span class="does">${a.does}</span></span>
         <button data-a="${a.k}" data-d="-1">−</button><span class="av">${v}</span><button data-a="${a.k}" data-d="1">+</button>
         <span class="arank" style="color:${rc};border-color:${rc}55;background:${rc}14">${rankName(v)}</span>
         <span class="ac">${ATTR_COST[v]}p</span></div>`;
@@ -315,8 +332,10 @@ export class CreatorUI {
     root.innerHTML = `
       <div class="bigname" style="color:${def.colors.accent}">${def.name}</div>
       <div class="bigttl">${def.title || 'Living Superweapon'}</div>
-      <div class="threatb" style="color:${tc};border-color:${tc}66;background:${tc}18">LeFevre Threat · ${def.threat}</div>
+      <div class="oident">${icon('person', 11)} ${def.person.n}<br>${icon('pin', 11)} ${def.person.c} · ${def.person.co}</div>
+      <div class="threatb" style="color:${tc};border-color:${tc}66;background:${tc}18">${icon('threat', 10)} LeFevre Threat · ${def.threat}</div>
       <div class="dline">HP <b>${d.hp}</b> · KI <b>${d.ki}</b> · SPD <b>${d.speed}</b> · STR <b>${d.strength}</b> · Doctrine <b>${ai.style.toUpperCase()}</b></div>
+      <div class="glance2">${kitFacts(def).map(([ic, t, lead]) => `<span${lead ? ' class="lead"' : ''}>${icon(ic, 10)} ${t}</span>`).join('')}</div>
       ${bar('Power', st.power, '#ff6a4a')}${bar('Range', st.range, '#ffd24a')}${bar('Mobility', st.mobility, '#7fe6ff')}
       ${bar('Defense', st.defense, '#8fe08a')}${bar('Health', st.health, '#ff8a5a')}${bar('Energy', st.energy, '#7fb0ff')}
       <div class="sh">The Kit — live numbers</div>${kit}

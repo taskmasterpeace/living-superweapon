@@ -182,6 +182,16 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   `hud.flashScreen(color,dur)` white pop, `audio.impact(power)` thud+crack. Blocked hits get a small blue star only.
 
 ## Player-facing shell (options · onboarding · roster nav)
+- **The cast layer** (`data/identities.js` + `engine/icons.js` + `hud.kitFacts`): every hero has a
+  `def.person` — civilian name, home city, country, flag (canon anchors: KIVULI=Kampala,
+  STEFANOS=Athens, SANDRA=L.A., the Hand trio, RAMIRO=Juárez; non-humans get designations).
+  `applyIdentities(ROSTER)` merges at boot; ORIGIN customs write their own via the creator's
+  Civilian Identity fields. **Icons**: one inline-SVG per stat concept (`icon(name)`,
+  `ATTR_ICON`, `ICON_MEANING`) used identically on select + sheets + ORIGIN. **`kitFacts(def)`**
+  auto-generates the "what am I getting into" chips (doctrine, range, fists, flight, guard type,
+  what they carry) FROM the kit data, so it can never lie. Select preview = the character sheet:
+  identity header, at-a-glance chips, rank-ladder legend strip, ‹ › flip arrows through the
+  filtered list, flags on roster cards.
 - **Settings** (`core/settings.js`): `SETTINGS` store persisted at `threshold_settings_v1` — master volume,
   voice (DBZ synth loudness via `audio.voiceMult`), screen shake (`world.shakeMult`), damage numbers
   (`hud.dmgNumbersOff`), controls-hint visibility, render quality (`world.qualityOverride` locks the adaptive
