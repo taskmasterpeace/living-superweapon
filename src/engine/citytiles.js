@@ -89,6 +89,44 @@ function flagpole(ctx, x, z, h = 26) {
   mesh(ctx, new THREE.PlaneGeometry(6, 3.6), ctx.mats.red, x + 3.1, h - 2.6, z, { recv: false }).material.side = THREE.DoubleSide;
 }
 
+// ---- EDGE SOCKETS (see generatePlan) — what each side of this cell faces ----
+// A perimeter should stop where the district stops. `side(cell,'n')` is 'same' when the block
+// north of you is the same district, so the fence between them should not be built at all.
+const side = (cell, d) => (cell && cell.edge && cell.edge[d]) || 'street';
+const sameNb = (cell, d) => side(cell, d) === 'same';
+// Build a perimeter ONLY on the sides that face something else. `run(w,d,ox,oz)` per side.
+function perimeter(cell, run) {
+  const H = 1;
+  if (!sameNb(cell, 'n')) run('n');
+  if (!sameNb(cell, 's')) run('s');
+  if (!sameNb(cell, 'w')) run('w');
+  if (!sameNb(cell, 'e')) run('e');
+}
+// Which world direction a side points: n=-z, s=+z, w=-x, e=+x
+const SIDE_VEC = { n: [0, -1], s: [0, 1], w: [-1, 0], e: [1, 0] };
+
+// THE BODEGA — a single-storey corner shop with an awning and a lit sign, tucked into the
+// corner of a block where two streets actually meet. This is the first thing in the generator
+// that could not exist before edge sockets: `cell.corner` is the planner telling the builder
+// WHICH two of its sides are open, so the shop faces the junction instead of a random direction.
+function bodega(ctx, cx, cz, cell, rng) {
+  const c = cell && cell.corner; if (!c) return;
+  const M2 = ctx.mats, W = ctx.world, K = CELL / 2 - 15;
+  // corner code is two side letters, e.g. 'ne' = open to the north and east
+  const sx = c.includes('e') ? 1 : -1, sz = c.includes('s') ? 1 : -1;
+  const bx = cx + sx * K, bz = cz + sz * K;
+  const shop = mesh(ctx, new THREE.BoxGeometry(24, 11, 20), W._winMats[2], bx, 5.5, bz, { cast: true });
+  reg(W, shop, bx, bz, 12, 10, 11, 120);
+  mesh(ctx, new THREE.BoxGeometry(26, 1, 22), M2.terraRoof, bx, 11.4, bz);
+  // the awning hangs over the pavement on the street-facing side
+  const aw = mesh(ctx, new THREE.BoxGeometry(26, 0.7, 7), M2.red, bx, 8.6, bz + sz * 12, { cast: true });
+  aw.rotation.x = sz * 0.12;
+  // the lit sign — this is what you actually see at night from down the block
+  mesh(ctx, new THREE.BoxGeometry(15, 3.2, 0.6), M2.metroSign, bx, 12.9, bz + sz * 10.2, { cast: true });
+  for (let i = 0; i < 3; i++)   // crates on the pavement
+    mesh(ctx, new THREE.BoxGeometry(3.4, 3, 3), M2.wood, bx - 9 + i * 4.2, 1.5, bz + sz * 13.5 + (rng() - 0.5) * 2);
+}
+
 // ---------- the tiles ----------
 const T = {
   residential(ctx, cx, cz, v) {
@@ -110,11 +148,12 @@ const T = {
       ctx.treeSpots.push([cx - 2, cz + 20], [cx + 18, cz - 16], [cx - 24, cz + 12]);
     }
   },
-  commercial(ctx, cx, cz, v) {
+  commercial(ctx, cx, cz, v, cell) {
     const W = ctx.world, wm = W._winMats[v % 2], R = ctx.mats.paleRoof, rng = ctx.rng;
     if (v === 0) { tower(ctx, cx - 15, cz - 10, 30, 96 + rng() * 26, 30, wm, R); tower(ctx, cx + 17, cz + 12, 26, 64 + rng() * 20, 26, wm, R); }
     else if (v === 1) { const p = tower(ctx, cx, cz, 52, 18, 40, wm, R); tower(ctx, cx - 6, cz - 2, 24, 112, 24, wm, R); p.castShadow = false; }
     else tower(ctx, cx, cz, 30, 118 + rng() * 22, 44, wm, R);
+    bodega(ctx, cx, cz, cell, rng);
   },
   company(ctx, cx, cz, v) {
     const W = ctx.world, wm = W._winMats[0], M2 = ctx.mats;
@@ -148,11 +187,14 @@ const T = {
       mesh(ctx, new THREE.BoxGeometry(10, 12, 10), M2.rust, cx + 32, 6, cz + 22, { cast: true });
     }
   },
-  military(ctx, cx, cz, v) {
+  military(ctx, cx, cz, v, cell) {
     const W = ctx.world, wm = W._winMats[4], M2 = ctx.mats;
     const H = CELL / 2 - 8;
-    for (const [w2, d2, ox, oz] of [[H * 2, 1, 0, -H], [H * 2, 1, 0, H], [1, H * 2, -H, 0], [1, H * 2, H, 0]])
-      mesh(ctx, new THREE.BoxGeometry(w2, 6, d2), M2.fence, cx + ox, 3, cz + oz);
+    // The perimeter fence runs only where the compound MEETS something else. Two adjacent
+    // military cells are one base, not two fenced boxes with a corridor between them.
+    const RUNS = { n: [H * 2, 1, 0, -H], s: [H * 2, 1, 0, H], w: [1, H * 2, -H, 0], e: [1, H * 2, H, 0] };
+    perimeter(cell, (d) => { const [w2, d2, ox, oz] = RUNS[d];
+      mesh(ctx, new THREE.BoxGeometry(w2, 6, d2), M2.fence, cx + ox, 3, cz + oz); });
     if (v === 0) {          // bunkers + watchtower + pad
       tower(ctx, cx - 12, cz - 10, 34, 15, 28, wm, ctx.mats.oliveRoof);
       tower(ctx, cx + 16, cz + 14, 26, 12, 22, wm, ctx.mats.oliveRoof);
@@ -199,11 +241,12 @@ const T = {
       ctx.treeSpots.push([cx - 6, cz + 24]);
     }
   },
-  temple(ctx, cx, cz, v) {
+  temple(ctx, cx, cz, v, cell) {
     const M2 = ctx.mats;
     const court = CELL / 2 - 14;
-    for (const [w2, d2, ox, oz] of [[court * 2, 1, 0, -court], [court * 2, 1, 0, court], [1, court * 2, -court, 0], [1, court * 2, court, 0]])
-      mesh(ctx, new THREE.BoxGeometry(w2, 2.2, d2), M2.stone, cx + ox, 1.1, cz + oz);
+    const CRUNS = { n: [court * 2, 1, 0, -court], s: [court * 2, 1, 0, court], w: [1, court * 2, -court, 0], e: [1, court * 2, court, 0] };
+    perimeter(cell, (d) => { const [w2, d2, ox, oz] = CRUNS[d];        // one precinct, not four walls
+      mesh(ctx, new THREE.BoxGeometry(w2, 2.2, d2), M2.stone, cx + ox, 1.1, cz + oz); });
     if (v === 0) {          // tiered pagoda — one structural base, ornamental upper tiers
       tower(ctx, cx, cz, 30, 14, 30, M2.stone, null);
       let y = 14;
@@ -333,11 +376,17 @@ const T = {
   // in a straight line along one grid row, so consecutive metro cells form ONE continuous cut
   // across the city: the linear spine the concentric-square layout never had. 13u deep, so
   // being knocked off the street into the station is a genuine fall.
-  metro(ctx, cx, cz, v) {
+  metro(ctx, cx, cz, v, cell) {
     const M2 = ctx.mats, W = ctx.world, rng = ctx.rng;
     const D = 13, HD = 26;                       // cut depth, half-depth across the tracks
     W._pendingCuts = W._pendingCuts || [];
-    W._pendingCuts.push([cx, cz, CELL / 2 + 12, HD, D, 0]);   // overshoot the cell so neighbours join up
+    // ⚠ The cut now extends ONLY toward neighbours that are also metro. Before sockets this
+    // overshot 12u past the cell on BOTH sides unconditionally — so the last station on a line
+    // dug a trench into whatever district happened to be next door, and the shared stretch
+    // between two stations was excavated twice.
+    const ext = (d) => (cell && cell.nb && cell.nb[d] === 'metro') ? 12 : -6;   // negative = stop short
+    const wW = ext('w'), wE = ext('e');
+    W._pendingCuts.push([cx + (wE - wW) / 2, cz, CELL / 2 + (wW + wE) / 2, HD, D, 0]);
     const fy = -D;                               // the station floor
     if (v === 0) {
       // --- platforms: raised slabs either side of the track, standable + destructible
@@ -437,7 +486,7 @@ export function buildTiles(world, group, plan, rng) {
     if (!cell || cell.t === 'water') continue;
     const cx = -A + c * CELL + CELL / 2, cz = -A + r * CELL + CELL / 2;
     const builder = T[cell.t];
-    if (builder) builder(ctx, cx, cz, cell.v || 0);
+    if (builder) builder(ctx, cx, cz, cell.v || 0, cell);   // cell carries r/c, neighbours, sockets, frontage
   }
   return { treeSpots: ctx.treeSpots };
 }

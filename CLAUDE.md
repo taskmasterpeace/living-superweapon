@@ -336,6 +336,68 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   has no seabed yet — `waterAt` is a drag multiplier only — which is why submarines have nowhere to
   be. The design for both is in COMBAT_MANUAL §6.
 
+## EDGE SOCKETS — every cell knows its neighbours (2026-07-23)
+- **The structural fix.** A tile builder used to receive only `(ctx, cx, cz, variant)` — a
+  write-only side-effect keyed on a POINT. It never learned its own `(row, col)`, its neighbours,
+  its frontage or its footprint. That one fact is why there were no corner tiles, no multi-cell
+  structures, and no cell-to-cell continuity; the metro had to be hacked by making every station
+  OVERSHOOT its own cell and hoping the overlap lined up.
+- `generatePlan` now stamps every cell with `r`/`c`, `nb` (neighbour TYPE per side) and
+  `edge` (the SOCKET per side): `edge` (map boundary) · `water` · `same` (identical district) ·
+  `open` (park/plaza) · `street`. Plus `face` (frontage — water beats street beats open, ties break
+  toward the centre) and `corner` (two adjacent open sides = where a bodega goes).
+  Verified symmetric: 80 adjacencies, 0 mismatches.
+- `buildTiles` passes the whole cell as a 5th arg. Builders opt in — this is additive, nothing
+  breaks if a builder ignores it.
+- **Perimeters stop where the district stops** (`perimeter(cell, run)` helper): two adjacent
+  MILITARY cells are now one base, not two fenced boxes with a corridor between them. Same for the
+  TEMPLE precinct wall.
+- **⚠ The metro cut now extends ONLY toward neighbours that are also metro.** Before this it cut
+  `CELL/2 + 12` on BOTH sides unconditionally, so an isolated station trenched into whatever
+  district was next door and a shared stretch got excavated twice. Measured: an isolated station
+  now runs 46u inside its own 48u half-cell instead of 60u.
+- **THE BODEGA** (`bodega()` in citytiles.js) — the first thing in the generator that could not
+  exist before sockets: a corner shop with an awning and a lit sign, placed at the junction
+  `cell.corner` identifies, facing the streets that are actually there.
+- Ruling (2026-07-23): the map maker stays a GAME FEATURE for now and gets extracted later — but
+  hold the discipline, no game types leaking into the plan. `cityplan.js` is already engine-agnostic
+  (zero Three.js); keep it that way. Interiors are PARKED — see `docs/BACKLOG.md`.
+- Assessment + research live in this session's findings; the outstanding structural work in
+  priority order is: **road graph** (roads are still a wrapped ground TEXTURE, which forbids
+  T-junctions, dirt roads and cell-to-cell connection) → **multi-cell footprints** (anchor + `ref`
+  cells) → **placement as a data table** (rarity/landmarks have no seam today) → **editor**
+  (paint + lock + undo + plan JSON).
+- ⚠ `STRUCT_CAP = 24` is NOT a design choice — it exists to serve `MAX = 24` in the fog shader,
+  which is a GLSL compile-time constant. Density is capped by a shader, which is why bigger cities
+  get emptier rather than denser. Lifting it means moving wall occlusion off uniform arrays.
+- ⚠ **Canvas 2D cannot read CSS tokens.** `ctx.fillStyle = 'var(--gold)'` is silently ignored and
+  keeps the previous colour. Anything painted into a `<canvas>` must use literals.
+
+## THE COUNTRY SHEET — the state behind the city (2026-07-23)
+- `data/countries.js` — **168 nations, 25 fields**, baked from Robert's Country Master Sheet. The
+  cities sheet says WHERE a fight happens; this says **what the state is like when it does**.
+  Join with `countryOf(city.country)` — ⚠ returns `null` for countries the sheet lacks, so every
+  caller MUST fall back.
+- Live now: **police response** reads `lawEnforcement` (competence), `lawBudget` (coverage) and
+  `integrity` on top of the city's safety index. Measured ETAs — Tokyo **4.0s** · Hell, Norway
+  **4.0s** · Mexico City **14.9s** · Mogadishu **15.7s** · Kabul **21.0s**. A low-integrity state
+  also just **doesn't answer** some calls (Kabul 25.6%, Tokyo 0%) — rolled ONCE per dispatch so
+  it's a quiet minute, not flickering sirens.
+- **⚠ `integrity` is HIGH = CLEAN.** The sheet's column is named `GovermentCorruption` but the
+  values are an integrity index (Norway 85, Japan 76, Mexico 34, Somalia 20) — i.e. CPI-style.
+  I read it backwards first and made Norway the crooked one. The field is renamed in the bake
+  specifically so nobody repeats that.
+- Not yet wired, all authored and waiting: `milBudget`/`milService` (is the ARMY a real escalation
+  tier here), `mediaFreedom` (what KMK 9 may broadcast), `lswActivity`/`lswRegs` and `vigilantism`
+  (Banned/Regulated/Legal — whether an unregistered hero is a criminal on landing), `terrorism`,
+  `science`, `cloning`, `capitalPunishment`, plus `motto`, `demonym`, `leaderTitle` and the named
+  head of state for the news desk and the codex.
+- ⚠ **`_teardownCity` used to leak materials.** It disposed geometry only, so every rebuild
+  orphaned a ground/wall/water/quay/lamp material plus ONE crack-overlay material per building.
+  Rebuilding 7 cities took a soak from 6.4ms to 48.6ms/frame. It now disposes per-city materials
+  while explicitly PRESERVING the shared caches (`_tileMats`, `_winMats`, `_lampMat`, `_carPaints`).
+  Verified: 10 consecutive rebuilds move geometries 264→273 and textures 25→27.
+
 ## Hard rules (do not break)
 - **`opts.hitstop ?? 0.04`, NEVER `||`** (`entity.takeDamage`). Sustained damage — beams, cones,
   lifedrain, DoT ticks — passes `hitstop: 0` deliberately. With `||`, that falsy zero became 0.04

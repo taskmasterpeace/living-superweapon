@@ -8,6 +8,7 @@
 import * as THREE from 'three';
 import { AI } from './ai.js';
 import { clamp } from '../core/util.js';
+import { countryOf } from '../data/countries.js';
 
 const HEAT_CIV = 12, HEAT_COP = 40, THRESH = 35;
 
@@ -73,10 +74,31 @@ export class PoliceSystem {
     this._lastHarmT = this.g.time;
   }
 
-  // response delay from the theater's safety index: safety 80 ≈ 6s · safety 20 ≈ 22s
+  // RESPONSE TIME = the city's safety index MET BY THE STATE THAT POLICES IT.
+  // The city sheet says how safe this place is; the COUNTRY sheet says how good and how funded
+  // its police are, and how corrupt. A well-funded force in a safe city is on you in seconds; a
+  // broke, corrupt one in a rough city takes the better part of half a minute — and sometimes
+  // doesn't come at all (see _corruptionIgnores).
   _responseDelay() {
-    const safety = (this.g.world.plan && this.g.world.plan.safety) || 50;
-    return clamp(26 - safety * 0.25, 5, 24);
+    const plan = this.g.world.plan || {};
+    const safety = plan.safety || 50;
+    const C = countryOf(plan.country);
+    let d = 26 - safety * 0.25;
+    if (C) {
+      d -= (C.lawEnforcement - 50) * 0.10;      // competence: a strong force is already close
+      d -= (C.lawBudget - 50) * 0.06;           // money: cars, radios, coverage
+      d += (50 - C.integrity) * 0.05;           // ⚠ integrity is HIGH=CLEAN — a bought force is in no hurry
+    }
+    return clamp(d, 4, 30);
+  }
+  // A BOUGHT FORCE lets some calls go unanswered entirely. ⚠ `integrity` is HIGH = CLEAN
+  // (Norway 85, Somalia 20) — the sheet's column is named GovermentCorruption but the values are
+  // an integrity index. Reading it the wrong way round makes Norway the crooked one.
+  // Rolled ONCE per dispatch so a response is either coming or it isn't — never a flicker.
+  _corruptionIgnores() {
+    const C = countryOf((this.g.world.plan || {}).country);
+    if (!C) return false;
+    return Math.random() < clamp((55 - C.integrity) / 140, 0, 0.34);
   }
 
   update(dt) {
@@ -120,6 +142,14 @@ export class PoliceSystem {
     // villain confirmed: the clock starts (speed = the city's safety index)
     for (const f of this.cops) { f._leaving = false; f.fixation = V; if (f.ai) f.ai.level = 0.85 + this.wantedLevel(V) * 0.15; }
     if (this._respT < 0 && this.cops.length === 0) {
+      // CORRUPTION: in a bought state the call sometimes simply doesn't go out. Rolled ONCE so a
+      // response is either coming or it isn't — the villain gets a long, quiet minute instead of
+      // sirens that flicker on and off.
+      if (this._corruptionIgnores()) {
+        this._respT = 999; this._announced = true;
+        if (g.hud) g.hud.feed('📻 The call goes unanswered.', '#8b8577');
+        return;
+      }
       this._respT = this._responseDelay();
       if (g.hud && !this._announced) {
         this._announced = true;

@@ -117,6 +117,43 @@ export function generatePlan(city, seed = 1) {
     put(take((r2, c2) => (r2 === r && c2 === c) ? 9 : 0), t);
   }
   plan.rural = rural;
+  // ---- EDGE SOCKETS: every cell learns what it is next to --------------------------------
+  // ⚠ THE STRUCTURAL FIX. Until this existed a builder received only (cx, cz, variant) — it never
+  // knew its own (row, col), its neighbours, or which way it faced. That is why fences ran on all
+  // four sides regardless of what was next door, why nothing could meet its neighbour, and why the
+  // metro had to be hacked by making every station OVERSHOOT its own cell and hope the overlap
+  // lined up. Sockets are the general form of that hack.
+  //   'edge'   the map boundary          'water'  the shore
+  //   'same'   an identical district      'open'   a park or plaza
+  //   'street' a real street between two different districts
+  const DIRS = { n: [-1, 0], e: [0, 1], s: [1, 0], w: [0, -1] };
+  const RANK = { water: 3, street: 2, open: 1, same: 0, edge: 0 };
+  for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
+    const cell = C[r][c]; if (!cell) continue;
+    cell.r = r; cell.c = c;
+    const nb = {}, edge = {};
+    for (const d in DIRS) {
+      const nr = r + DIRS[d][0], nc = c + DIRS[d][1];
+      const o = (nr >= 0 && nr < N && nc >= 0 && nc < N) ? C[nr][nc] : undefined;
+      nb[d] = o ? o.t : null;
+      edge[d] = !o ? 'edge' : o.t === 'water' ? 'water'
+              : o.t === cell.t ? 'same'
+              : (o.t === 'park' || o.t === 'plaza') ? 'open' : 'street';
+    }
+    cell.nb = nb; cell.edge = edge;
+    // FRONTAGE — which way this tile presents itself. A dock faces the sea; a shop faces the
+    // busiest street; ties break toward the city centre so a block never picks a side at random.
+    let best = 's', bs = -1e9;
+    for (const d of ['n', 'e', 's', 'w']) {
+      const s = RANK[edge[d]] * 10 - (Math.abs(r + DIRS[d][0] - mid) + Math.abs(c + DIRS[d][1] - mid));
+      if (s > bs) { bs = s; best = d; }
+    }
+    cell.face = best;
+    // A CORNER is a cell with streets on two ADJACENT sides — where a bodega goes.
+    const st = (d) => edge[d] === 'street' || edge[d] === 'open' || edge[d] === 'edge';
+    cell.corner = (st('n') && st('e')) ? 'ne' : (st('e') && st('s')) ? 'es'
+                : (st('s') && st('w')) ? 'sw' : (st('w') && st('n')) ? 'wn' : null;
+  }
   // --- structural budget: farthest-from-center overflow becomes plaza (open ground) ---
   const structural = [];
   for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {

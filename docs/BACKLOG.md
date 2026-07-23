@@ -54,3 +54,37 @@ Existing classes: shotgun · pistol · rifle (`def.weapon` on a `rifle` ability)
 - Flying indoors is the open question — remove the roof? Clamp flight? Both?
 - Eventually trees/greenery indoors too.
 - A military aspect is wanted; there's a sibling project with guns to learn from.
+
+---
+
+## ADDED 2026-07-23 (session 2)
+
+### THE FOUR-LEVEL LADDER — ruled, designed, not built
+Four discrete decks; you can only be BETWEEN levels while travelling. Ground is the exception
+(free levitation). Needs a ceiling, and a character in the clouds must stay visible and aimable
+from the street. Full design: `docs/PLAN_ALTITUDE_AND_INTERACTION.md`.
+
+### INTERACTION + REAL GRABBING — designed, not built
+No interact system exists at all. No dialogue/choice surface. Carrying is currently levitation —
+the prop floats ~5u above the head with no arm pose. Design + code plan in the same doc.
+
+### MAP GENERATOR — remaining structural work (ordered)
+1. ~~Edge sockets~~ **DONE**
+2. **Road graph** — roads are a ground texture; no T-junctions, no dirt roads, no connection
+3. **Multi-cell footprints** — anchor + `ref` cells; airports, rail yards, real stadiums
+4. **Placement as a data table** — `{when, min, max, weight, score, footprint}`; rarity + landmarks
+5. **The editor** — paint + LOCK authored cells + undo + plan JSON in/out + live 3D preview
+6. Connect cities by road into a continent framework; airports at multiple sizes
+
+### UNUSED DATA ALREADY PAID FOR
+`cultureCode` (14 architectural regions), `sector` (527 rows), `hvt` — parsed, read by nothing.
+
+### PARKED BY RULING
+**Interiors / procedural rooms.** Research flagged them lowest-value for this game (at 1:1 scale
+most interiors would never be entered). Robert: "we're not there yet, we just talking about the
+map maker." Revisit after the map generator work above.
+
+### OPEN QUESTIONS
+- What is `Sector`? 223 codes like `LJ5`, half the rows blank. If it's a world-grid reference it
+  could drive neighbouring-city consistency; if it's scaffolding, ignore the column.
+- Roster size — "we might have too many fighters." Needs a differentiation pass, not a cull.

@@ -467,12 +467,31 @@ export class World {
   // ---------------- PROCEDURAL CITIES (the world sheet) ----------------
   // Tear the current city down to bare terrain systems, then raise a new one from a plan.
   _teardownCity() {
+    // ⚠ MATERIALS LEAK IF YOU ONLY DISPOSE GEOMETRY. Every rebuild allocates a fresh ground,
+    // wall, water, quay and lamp material, plus ONE MeshBasicMaterial per building for its crack
+    // overlay — dozens per city. Rebuilding 7 cities in a row took a soak from 6.4ms to 48.6ms
+    // a frame. Shared/cached materials (_tileMats, _winMats, _lampMat, _carPaints, _crackTex
+    // owners) must SURVIVE, so dispose only what this city uniquely owns.
+    const keep = new Set();
+    for (const m of Object.values(this._tileMats || {})) { if (Array.isArray(m)) m.forEach(x => keep.add(x)); else keep.add(m); }
+    for (const m of (this._winMats || [])) keep.add(m);
+    for (const m of (this._carPaints || [])) keep.add(m);
+    if (this._lampMat) keep.add(this._lampMat);
+    const killMat = (mat) => {
+      if (!mat) return;
+      if (Array.isArray(mat)) { mat.forEach(killMat); return; }
+      if (keep.has(mat) || mat.userData._shared) return;
+      mat.dispose();
+    };
     if (this.arena) {
       this.scene.remove(this.arena);
-      this.arena.traverse(o => { if (o.geometry && o.geometry !== this._carGeo) o.geometry.dispose(); });
+      this.arena.traverse(o => {
+        if (o.geometry && o.geometry !== this._carGeo) o.geometry.dispose();
+        killMat(o.material);
+      });
       this.arena = null;
     }
-    for (const m of this._cityBits) { this.scene.remove(m); if (m.geometry) m.geometry.dispose(); }
+    for (const m of this._cityBits) { this.scene.remove(m); if (m.geometry) m.geometry.dispose(); killMat(m.material); }
     this._cityBits.length = 0;
     this.cover = []; this.coverAll = []; this.cars = [];
     this.grass = null; this._canopy = null; this.water = null; this._waterT = null;
