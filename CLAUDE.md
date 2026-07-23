@@ -352,6 +352,31 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   (`pickTarget` nearD 110) is toggleable via SETTINGS.aimAssist; yaw uses shortest-path damping
   (never revert to naive damp — it pirouettes 355° across the atan2 seam).
 
+## THE VISUAL LANGUAGE (2026-07-23) — read before touching any UI
+The tokens live in **`index.html :root`** and every surface draws from them. A system was
+started here long ago (`--gold/--blood/--ink/--bone`) and then ignored as each screen got built;
+the audit found **83 distinct hex colours across 401 uses, 15 border-radii and 36 font sizes**.
+It is now one system: 333 literals migrated to tokens, radii snapped to 4 steps, small type
+snapped to a 7-step scale. **Never hard-code a colour, radius, or small font-size again** — if a
+value is missing from the scale, add a token rather than a one-off.
+- **Surfaces**: `--ink` (ground) · `--surface` (in-world HUD glass) · `--surface-solid` (modals) ·
+  `--surface-raised` (cards on modals) · `--surface-hi` (chips) · `--line` / `--line-2` (hairlines) ·
+  `--line-gold` (section rules).
+- **One accent, a gold ramp**: `--gold-pale · --gold · --gold-deep · --gold-warm · --gold-shadow ·
+  --on-gold · --grad-gold`. NO PURPLE anywhere (KIVULI is the sole canon exception).
+- **Text is a 6-step ramp**, brightest → faintest: `--text · --text-2 · --text-3 · --text-4 ·
+  --text-5 · --text-6`. Labels use `--text-5`, prose `--text-2`, headings `--text`.
+- **Status colours each mean ONE thing everywhere**: `--danger` (damage/hostile) ·
+  `--danger-2` (soft warning) · `--good` (health/success) · `--info` (ki/energy/data) ·
+  `--police` (the law) · `--broadcast` (KMK 9 red, press only) · `--stamp` (classified stamps).
+- **Geometry**: radii `--r-1 4 · --r-2 8 · --r-3 12 · --r-4 16 · --r-pill 20`. Nothing between.
+- **Type**: `--t-micro 8.5 → --t-lg 15` for UI; display sizes (headlines, KO banner, scores) stay
+  expressive and unscaled. Tracking: `--tr-tight` prose → `--tr-wider` for spaced labels.
+- **Voice vs data**: `--f-display` (Rajdhani) speaks; `--f-mono` (Cascadia) reports numbers,
+  file numbers, timestamps, ratings. Never mix the roles.
+- The identity across every screen is **document + broadcast furniture**: hairline borders, dashed
+  §section rules, mono micro-labels, classified stamps, one gold accent on warm-neutral dark.
+
 ## HUD readability (2026-07-23)
 - **The controls wall auto-folds.** `hud.armHintTimer()` (called from `main.beginMatch`) shows the full
   control list for ~18s of a fresh match, then collapses it to a corner chip — **F1** toggles it back and

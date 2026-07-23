@@ -8,8 +8,62 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700;800&display=swap" rel="stylesheet" />
 <style>
+  /* ============================================================================
+     THE THRESHOLD VISUAL LANGUAGE — one system, followed everywhere.
+     Warm-neutral dark + a single gold accent. NO PURPLE (house rule; KIVULI only).
+     Surfaces are documents and broadcast furniture: hairline borders, dashed section
+     rules, mono for DATA, Rajdhani for VOICE. Every panel in the game — HUD, registry,
+     codex, bracket, atlas, news — draws from these tokens and nothing else.
+     ============================================================================ */
   :root{
-    --gold:#f5b21a; --blood:#ff3b3b; --ink:#0a0b10; --bone:#f4efe6;
+    /* — surfaces — */
+    --ink:#0a0b10;              /* deepest ground */
+    --surface:rgba(8,10,16,.55);      /* in-world glass panel (HUD) */
+    --surface-solid:rgba(14,16,24,.97);/* modal / overlay body */
+    --surface-raised:rgba(10,12,18,.72);/* card on a modal */
+    --surface-hi:rgba(255,255,255,.04); /* subtle raised chip */
+    --line:rgba(255,255,255,.10);      /* hairline */
+    --line-2:rgba(255,255,255,.18);    /* emphasis border */
+    --line-gold:rgba(245,178,26,.35);  /* section rule */
+
+    /* — the gold ramp (the one accent) — */
+    --gold-pale:#ffd97a; --gold:#ffd24a; --gold-deep:#f5b21a; --gold-warm:#f5921a;
+    --gold-shadow:#7a3d05; --on-gold:#160d02;
+    --grad-gold:linear-gradient(180deg,#ffd15a,#f5921a);
+
+    /* — text ramp (6 steps, brightest → faintest) — */
+    --text:#e8e2d6; --text-2:#c9c2b4; --text-3:#b7b0a2;
+    --text-4:#a49c8c; --text-5:#8b8577; --text-6:#5a544a;
+    --bone:#f4efe6;
+
+    /* — status (each means ONE thing everywhere) — */
+    --danger:#ff5a4a;      /* damage / loss / hostile */
+    --danger-2:#ff8a6a;    /* soft warning */
+    --good:#8fe08a;        /* health / success / active */
+    --info:#7fe6ff;        /* energy, ki, data */
+    --police:#5aa0ff;      /* the law */
+    --broadcast:#d81f26;   /* KMK 9 red — press only */
+    --stamp:#c22730;       /* classified stamps */
+    --blood:#ff3b3b;
+
+    /* — geometry: 4 steps, nothing in between — */
+    --r-1:4px; --r-2:8px; --r-3:12px; --r-4:16px; --r-pill:20px;
+
+    /* — type scale (small text; display sizes stay expressive) — */
+    --t-micro:8.5px; --t-tiny:9.5px; --t-label:10.5px;
+    --t-sm:11.5px; --t-body:12.5px; --t-md:13.5px; --t-lg:15px;
+
+    /* — tracking: labels are spaced, prose is not — */
+    --tr-tight:.04em; --tr:.1em; --tr-wide:.16em; --tr-wider:.24em;
+
+    /* — elevation — */
+    --sh-1:0 4px 14px rgba(0,0,0,.4);
+    --sh-2:0 18px 44px -12px rgba(0,0,0,.75);
+    --sh-gold:0 4px 0 var(--gold-shadow);
+
+    /* — fonts — */
+    --f-display:"Rajdhani","Inter",system-ui,sans-serif;
+    --f-mono:"Cascadia Mono",Consolas,ui-monospace,monospace;
   }
   *{ box-sizing:border-box; margin:0; padding:0; }
   html,body{ width:100%; height:100%; background:#05060a; overflow:hidden; }
@@ -31,30 +85,30 @@
   #title h1{
     font-family:"Rajdhani","Inter",sans-serif; font-weight:800; letter-spacing:.06em;
     font-size:clamp(34px,8vw,86px); line-height:.92;
-    background:linear-gradient(180deg,#fff,#ffd15a 55%,#ff7a1a);
+    background:linear-gradient(180deg,#fff,var(--gold) 55%,#ff7a1a);
     -webkit-background-clip:text; background-clip:text; color:transparent;
     text-shadow:0 0 34px rgba(255,150,30,.35); filter:drop-shadow(0 6px 0 rgba(0,0,0,.4));
   }
-  #title .tag{ letter-spacing:.44em; font-size:12px; color:#ffcf7a; text-transform:uppercase; opacity:.85; }
-  #title .sub{ max-width:640px; color:#c9c2b4; font-size:15px; line-height:1.5; }
+  #title .tag{ letter-spacing:.44em; font-size:var(--t-body); color:var(--gold-pale); text-transform:uppercase; opacity:.85; }
+  #title .sub{ max-width:640px; color:var(--text-2); font-size:var(--t-lg); line-height:1.5; }
   .roster{ display:grid; grid-template-columns:repeat(5,1fr); gap:10px; max-width:900px; width:100%; margin-top:6px; max-height:46vh; overflow-y:auto; padding-right:6px; scrollbar-width:thin; scrollbar-color:#f5b21a44 transparent; }
   .rcard{
     pointer-events:auto; cursor:pointer; border:1px solid rgba(255,255,255,.10);
-    background:rgba(255,255,255,.03); border-radius:10px; padding:12px 10px; text-align:left;
+    background:rgba(255,255,255,.03); border-radius:var(--r-3); padding:12px 10px; text-align:left;
     transition:transform .12s ease, border-color .12s ease, background .12s ease;
   }
-  .rcard:hover{ transform:translateY(-3px); border-color:var(--pc,#f5b21a); background:rgba(255,255,255,.06); }
+  .rcard:hover{ transform:translateY(-3px); border-color:var(--pc,var(--gold-deep)); background:rgba(255,255,255,.06); }
   .rcard .dot{ width:12px; height:12px; border-radius:50%; display:inline-block; box-shadow:0 0 12px var(--pc); background:var(--pc); }
   .rcard .nm{ font-weight:700; font-size:16px; margin-top:6px; letter-spacing:.02em; }
-  .rcard .rl{ font-size:11px; color:#a49c8c; text-transform:uppercase; letter-spacing:.14em; }
-  #title .hint{ font-size:13px; color:#8b8577; margin-top:8px; }
+  .rcard .rl{ font-size:var(--t-sm); color:var(--text-4); text-transform:uppercase; letter-spacing:.14em; }
+  #title .hint{ font-size:var(--t-md); color:var(--text-5); margin-top:8px; }
   .startbtn{
     pointer-events:auto; cursor:pointer; margin-top:4px; font-family:inherit; font-weight:800;
-    letter-spacing:.18em; font-size:16px; color:#160d02; padding:12px 26px; border:none; border-radius:10px;
-    background:linear-gradient(180deg,#ffd15a,#f5921a); box-shadow:0 6px 0 #7a3d05, 0 14px 30px rgba(245,146,26,.4);
+    letter-spacing:.18em; font-size:16px; color:var(--on-gold); padding:12px 26px; border:none; border-radius:var(--r-3);
+    background:linear-gradient(180deg,var(--gold),var(--gold-warm)); box-shadow:0 6px 0 var(--gold-shadow), 0 14px 30px rgba(245,146,26,.4);
     text-transform:uppercase; transition:transform .08s ease;
   }
-  .startbtn:active{ transform:translateY(3px); box-shadow:0 3px 0 #7a3d05; }
+  .startbtn:active{ transform:translateY(3px); box-shadow:0 3px 0 var(--gold-shadow); }
   .fadeout{ animation:fade .4s ease forwards; }
   @keyframes fade{ to{ opacity:0; visibility:hidden; } }
   #hud{ position:fixed; inset:0; z-index:20; pointer-events:none; }
