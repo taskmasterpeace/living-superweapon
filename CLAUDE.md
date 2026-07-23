@@ -181,6 +181,32 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   ring + shake. Strikes/heavy-melee/throws freeze BOTH fighters (`hitstop`), `game.slowmo(dur,mul)` on finishers,
   `hud.flashScreen(color,dur)` white pop, `audio.impact(power)` thud+crack. Blocked hits get a small blue star only.
 
+## The living city (map layer 2)
+- **Harbor** (`world._buildCity`): east-edge water (`waterAt(x)`: 0 dry · 1 shallow ×0.62 · 2 deep ×0.45,
+  applied in `entity.move`; spray in `_physics`; flight exits it; radar shows it). Quay lip at `waterX`.
+- **Street props**: `world.cars` (14, shared merged geo, 4 paints) — blast-damaged in `worldImpact`,
+  `game._explodeCar` chains fireballs + credits `src`; reset in `resetTerrain`. Streetlights = 2 instanced
+  draws, `_lampMat` emissive ramps at night (updateDayNight). 2 billboards (`_billMats`). Roof ACs on the
+  6 tallest (children of building meshes — shatter carries them).
+- **Pedestrians** (`engine/pedestrians.js`, ONE InstancedMesh): 64 civilians walk the 24u street grid,
+  FILM nearby fighters (phone-flash particles — the Witness Layer ruling v1), `scare()` on impacts,
+  `blast()` knocks them flat → COLLATERAL feed + human score −40/civ (`worldImpact`). `peds.reset()`
+  on match start. Police/escalation = later.
+- **Altitude bands** (`ALT_BANDS`/`bandOf` in entity.js): ring under every fighter colored by band —
+  GROUND green · BUILDING gold · SKY cyan · CLOUDS white (`parts.bandRing`, ground-pinned like the shadow).
+- **Flight speed**: `FLY_SPEEDS` registry (entity.js) or `def.flySpeed` — tier-3 air-speed multiplier.
+  **SHIFT held while flying = CRUISE** ×1.5 (2.6 ki/s; `cruiseHeld` set in controlPlayer/controlBot);
+  speed-lines spawn past 38 u/s.
+- **⚠ SLOW-MOTION LAW**: sim dt clamps at 0.05 (game.update) — below 20fps the game runs slower than
+  real time BY DESIGN of the clamp; keep the GPU cheap enough that nobody sits there. The adaptive tiers
+  MUST call `composer.setPixelRatio` (EffectComposer caches its construction-time ratio — tiers silently
+  did nothing for the scene pass until 2026-07-22). Tier 0 = no bloom pass + no shadow pass + PR 0.72;
+  `_pixelCap` bounds total shaded pixels ~2.6MP. Upshift threshold is 17.2ms (13.5 was vsync-unreachable).
+  Boot logs the GPU string and warns in-feed on SwiftShader/software WebGL.
+- **Targeting law**: hard lock ONLY on a direct click ON a character (`_hoverPick`); the aim magnet
+  (`pickTarget` nearD 110) is toggleable via SETTINGS.aimAssist; yaw uses shortest-path damping
+  (never revert to naive damp — it pirouettes 355° across the atan2 seam).
+
 ## Player-facing shell (options · onboarding · roster nav)
 - **The cast layer** (`data/identities.js` + `engine/icons.js` + `hud.kitFacts`): every hero has a
   `def.person` — civilian name, home city, country, flag (canon anchors: KIVULI=Kampala,
