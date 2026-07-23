@@ -442,6 +442,173 @@ export class AudioBus {
     o.frequency.exponentialRampToValueAtTime(180, this.t + 0.18);
     this._env(o, 0.2, 0.3); o.start(); o.stop(this.t + 0.22);
   }
+
+  // Bow LOOSE — the twang + the woody thwack of the limbs, scaled by draw (0..1). A deeper, louder
+  // release for a fuller draw. One-shot, no loop; the draw creak (sustain 'bow') stops separately.
+  bowLoose(draw = 1, pos = null) {
+    if (!this.ok || this.muted) return;
+    const pg = this._pg(pos, 120); if (!pg) return;
+    const t = this.t, d = 0.4 + draw * 0.6;
+    // the string: a fast pitch-dropping pluck
+    const o = this.ctx.createOscillator(); o.type = 'triangle';
+    o.frequency.setValueAtTime(520 - draw * 120, t); o.frequency.exponentialRampToValueAtTime(150, t + 0.09);
+    const g = this.ctx.createGain(); g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.16 * d * pg, t + 0.004); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.14);
+    o.connect(g); g.connect(this.bus.sfx); o.start(); o.stop(t + 0.16);
+    // the limbs: a short woody noise thwack
+    const n = this._noise(0.07);
+    const bp = this.ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 620; bp.Q.value = 1.6;
+    const ng = this.ctx.createGain(); ng.gain.setValueAtTime(0.0001, t);
+    ng.gain.exponentialRampToValueAtTime(0.09 * d * pg, t + 0.003); ng.gain.exponentialRampToValueAtTime(0.0001, t + 0.08);
+    n.connect(bp); bp.connect(ng); ng.connect(this.bus.sfx); n.start();
+  }
+
+  // ---- SUSTAIN: the general HELD-attack voice --------------------------------------------------
+  // Beams have beamVoice(); this is its sibling for every OTHER sustained attack — flamethrower
+  // cones, gas hisses, cryo streams, acid sprays, the life-siphon, phasing, a bow at full draw.
+  // ⚠ THE CONTRACT (matches beamVoice/charge so the watchdog + callers stay uniform):
+  //   · created already RAMPING UP (fade-in ~0.05s) so it never clicks on
+  //   · `set(intensity, pos)` every frame it's alive — drives loudness + a timbral parameter,
+  //     and stamps `last` so audio.sweep() can reap it if a caller forgets to stop it (KO mid-cone)
+  //   · `stop()` FADES OUT (~0.16s) and frees the nodes — sustained sound must never hard-cut
+  // kind: 'fire' | 'gas' | 'ice' | 'acid' | 'drain' | 'phase' | 'bow'
+  sustain(kind = 'fire', pos = null) {
+    if (!this.ok || this.muted) return null;
+    const t = this.t, ctx = this.ctx;
+    const out = ctx.createGain();
+    out.gain.setValueAtTime(0.0001, t);
+    out.connect(this.bus.sfx);
+    const nodes = [];                       // everything to stop() at the end
+    let base = 0.14;                        // per-kind target loudness at intensity 1
+    let drive = () => {};                   // per-kind response to set(I)
+
+    // a looping noise source (2s brown-ish) reused by the noisy kinds
+    const noiseLoop = () => {
+      const n = Math.floor(ctx.sampleRate * 2);
+      const buf = ctx.createBuffer(1, n, ctx.sampleRate); const d = buf.getChannelData(0);
+      let last = 0; for (let i = 0; i < n; i++) { const w = Math.random() * 2 - 1; last = (last + 0.03 * w) / 1.03; d[i] = last * 3.4; }
+      const s = ctx.createBufferSource(); s.buffer = buf; s.loop = true; s.start(); nodes.push(s); return s;
+    };
+
+    if (kind === 'fire') {
+      // FLAMETHROWER — a low roar plus a wide breathy body; the lowpass opens as it intensifies.
+      base = 0.20;
+      const s = noiseLoop();
+      const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 700; lp.Q.value = 0.9;
+      const rumble = ctx.createOscillator(); rumble.type = 'sine'; rumble.frequency.value = 68;
+      const rg = ctx.createGain(); rg.gain.value = 0.5; rumble.connect(rg); rg.connect(out); rumble.start(); nodes.push(rumble);
+      s.connect(lp); lp.connect(out);
+      let pop = 0;
+      drive = (I) => { lp.frequency.setTargetAtTime(400 + I * 1500, this.t, 0.08);
+        const now = performance.now(); if (now - pop > 90) { pop = now; this._crackle(0.04, 0.03 * I, rand2(900, 2600)); } };
+    } else if (kind === 'gas') {
+      // TOXIC HISS — thin, sinister, an amplitude wobble so it breathes like a cloud.
+      base = 0.11;
+      const s = noiseLoop();
+      const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 3200; bp.Q.value = 0.7;
+      const trem = ctx.createOscillator(); trem.type = 'sine'; trem.frequency.value = 5.5;
+      const tg = ctx.createGain(); tg.gain.value = 0.4; trem.connect(tg); tg.connect(out.gain); trem.start(); nodes.push(trem);
+      s.connect(bp); bp.connect(out);
+      drive = (I) => bp.frequency.setTargetAtTime(2400 + I * 1600, this.t, 0.12);
+    } else if (kind === 'ice') {
+      // CRYO STREAM — airy body + a high shimmer + intermittent frost ticks.
+      base = 0.13;
+      const s = noiseLoop();
+      const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 1800; bp.Q.value = 0.6;
+      s.connect(bp); bp.connect(out);
+      const shim = ctx.createOscillator(); shim.type = 'triangle'; shim.frequency.value = 5200;
+      const shg = ctx.createGain(); shg.gain.value = 0.02; shim.connect(shg); shg.connect(out); shim.start(); nodes.push(shim);
+      let tick = 0;
+      drive = (I) => { bp.frequency.setTargetAtTime(1500 + I * 900, this.t, 0.1);
+        const now = performance.now(); if (now - tick > 140) { tick = now; this._crackle(0.03, 0.02 * I, rand2(4000, 8000)); } };
+    } else if (kind === 'acid') {
+      // CORROSIVE SPRAY — a mid sizzle that BUBBLES (fast tremolo).
+      base = 0.12;
+      const s = noiseLoop();
+      const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 1400; bp.Q.value = 1.4;
+      s.connect(bp); bp.connect(out);
+      const bub = ctx.createOscillator(); bub.type = 'sawtooth'; bub.frequency.value = 11;
+      const bg = ctx.createGain(); bg.gain.value = 0.5; bub.connect(bg); bg.connect(out.gain); bub.start(); nodes.push(bub);
+      drive = (I) => bp.frequency.setTargetAtTime(1000 + I * 1100, this.t, 0.1);
+    } else if (kind === 'drain') {
+      // LIFE SIPHON — an eerie downward pull: ring-mod tone that sags, swelling when it connects.
+      base = 0.12;
+      const rm = this._ringMod(320, 47); const rg = ctx.createGain(); rg.gain.value = 0.7;
+      rm.out.connect(rg); rg.connect(out); rm.start(t); nodes.push({ stop: (x) => rm.stop(x) });
+      const sub = ctx.createOscillator(); sub.type = 'sine'; sub.frequency.value = 90;
+      const sg = ctx.createGain(); sg.gain.value = 0.4; sub.connect(sg); sg.connect(out); sub.start(); nodes.push(sub);
+      drive = (I) => { rm.car.frequency.setTargetAtTime(240 + I * 240, this.t, 0.15);
+        rm.mod.frequency.setTargetAtTime(38 + I * 40, this.t, 0.15);
+        sub.frequency.setTargetAtTime(80 + I * 40, this.t, 0.2); };
+    } else if (kind === 'phase') {
+      // INTANGIBLE HUM — two barely-detuned sines, lowpassed, whisper-quiet. Otherworldly.
+      base = 0.06;
+      for (const f of [110, 110.7, 220.4]) { const o = ctx.createOscillator(); o.type = 'sine'; o.frequency.value = f;
+        const og = ctx.createGain(); og.gain.value = f > 200 ? 0.12 : 0.4; o.connect(og); og.connect(out); o.start(); nodes.push(o); }
+      const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 900;
+      drive = () => {};
+    } else { // 'bow'
+      // BOW AT DRAW — a tightening creak: a filtered tone that RISES in pitch with draw amount.
+      base = 0.08;
+      const o = ctx.createOscillator(); o.type = 'sawtooth'; o.frequency.value = 130;
+      const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 500; lp.Q.value = 3;
+      o.connect(lp); lp.connect(out); o.start(); nodes.push(o);
+      drive = (I) => { o.frequency.setTargetAtTime(120 + I * 180, this.t, 0.05); lp.frequency.setTargetAtTime(400 + I * 700, this.t, 0.05); };
+    }
+
+    out.gain.exponentialRampToValueAtTime(base, t + 0.05);   // fade IN, never a click
+    const h = {
+      last: performance.now(),
+      set: (intensity = 1, p2 = null) => {
+        h.last = performance.now();
+        const I = Math.max(0, Math.min(1.5, fin(intensity, 1)));
+        try {
+          const dist = this._pg(p2 || pos, kind === 'fire' ? 170 : 130);
+          out.gain.setTargetAtTime(Math.max(0.0002, base * I * (dist || 1)), this.t, 0.06);
+          drive(I);
+        } catch (e) {}
+      },
+      stop: () => {
+        this._sus.delete(h);
+        try {
+          out.gain.setTargetAtTime(0.0001, this.t, 0.05);      // fade OUT — no hard cut
+          const end = this.t + 0.16;
+          nodes.forEach(n => { try { n.stop(end); } catch (e) {} });
+        } catch (e) {}
+      },
+    };
+    this._sus.add(h);
+    return h;
+  }
+
+  // A one-shot melee SWING — the whoosh before the impact, keyed to what's in the hand.
+  // fist = a low airy whoosh · blade = a bright metallic shing · blunt = a heavy displaced-air whump.
+  swing(kind = 'fist', pos = null) {
+    if (!this.ok || this.muted) return;
+    const pg = this._pg(pos, 90); if (!pg) return;
+    const t = this.t;
+    if (kind === 'blade') {
+      // a fast rising then falling filtered-noise shing with a metallic ring on top
+      const n = this._noise(0.16);
+      const bp = this.ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = 2.4;
+      bp.frequency.setValueAtTime(1400, t); bp.frequency.exponentialRampToValueAtTime(4200, t + 0.06); bp.frequency.exponentialRampToValueAtTime(1800, t + 0.15);
+      const g = this.ctx.createGain(); g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.14 * pg, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.16);
+      n.connect(bp); bp.connect(g); g.connect(this.bus.sfx); n.start();
+      const ring = this.ctx.createOscillator(); ring.type = 'triangle'; ring.frequency.setValueAtTime(3100, t); ring.frequency.exponentialRampToValueAtTime(2400, t + 0.14);
+      const rg = this.ctx.createGain(); rg.gain.setValueAtTime(0.0001, t); rg.gain.exponentialRampToValueAtTime(0.05 * pg, t + 0.02); rg.gain.exponentialRampToValueAtTime(0.0001, t + 0.15);
+      ring.connect(rg); rg.connect(this.bus.sfx); ring.start(); ring.stop(t + 0.17);
+    } else {
+      // fist / blunt: a short whoosh of displaced air — lowpassed noise that sweeps down
+      const heavy = kind === 'blunt';
+      const n = this._noise(heavy ? 0.2 : 0.13);
+      const lp = this.ctx.createBiquadFilter(); lp.type = 'lowpass';
+      lp.frequency.setValueAtTime(heavy ? 900 : 1500, t); lp.frequency.exponentialRampToValueAtTime(heavy ? 240 : 500, t + (heavy ? 0.18 : 0.11));
+      const g = this.ctx.createGain(); g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime((heavy ? 0.11 : 0.07) * pg, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + (heavy ? 0.2 : 0.12));
+      n.connect(lp); lp.connect(g); g.connect(this.bus.sfx); n.start();
+    }
+  }
   power(up = true) {
     if (!this.ok || this.muted) return;
     const o = this.ctx.createOscillator(); o.type = 'sawtooth';

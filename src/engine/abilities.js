@@ -167,7 +167,7 @@ export const TYPES = {
 
   // Wide breath cone — cold (slow) or force (push)
   cone(c, def, st, g, inp) {
-    if (inp.held && c.ki < (def.kiPerSec || 18) * inp.dt) { if (!st._dry) { st._dry = true; drained(c, g); } }
+    if (inp.held && c.ki < (def.kiPerSec || 18) * inp.dt) { if (!st._dry) { st._dry = true; drained(c, g); } if (st._loop) { st._loop.stop(); st._loop = null; } }
     else if (!inp.held) st._dry = false;
     if (inp.held && c.ki >= (def.kiPerSec || 18) * inp.dt) {
       c.ki -= (def.kiPerSec || 18) * inp.dt; c.state = 'cast'; c.stateT = 0;
@@ -194,8 +194,14 @@ export const TYPES = {
         const a = Math.atan2(c.aim.z, c.aim.x) + rand(-arc, arc);
         g.particles.spawn({ x: m.x, y: m.y + rand(-1, 1), z: m.z, vx: Math.cos(a) * range * 1.6, vz: Math.sin(a) * range * 1.6, vy: rand(-2, 2), life: 0.5, size: def.cold ? 5 : 4, color: def.color, drag: 1.4, shrink: true });
       }
-      if (Math.random() < 0.2) (def.cold ? g.audio.zap(300) : g.audio.blast(200, 0.1));
-    }
+      // THE CONE VOICE — a sustained loop keyed to the element, started on the first held frame and
+      // faded on release (not cut). fire ROARS, gas HISSES, cold CRACKLES, acid SIZZLES.
+      if (!st._loop) {
+        const kind = def.cold ? 'ice' : def.gasDot ? 'gas' : (def.dtype === 'acid') ? 'acid' : def.kiDrain ? 'gas' : 'fire';
+        st._loop = g.audio.sustain ? g.audio.sustain(kind, c.pos) : null;
+      }
+      if (st._loop) st._loop.set(0.7 + (def.dps || 26) / 60, c.pos);
+    } else if (st._loop) { st._loop.stop(); st._loop = null; }   // released / ran dry → fade out
   },
 
   // Nova Burst — charge scales size/damage/radius; ground impact => shockwave + lightning
@@ -268,9 +274,11 @@ export const TYPES = {
   // Energy-intangibility: hold to phase through strikes & projectiles (drains ki)
   phase(c, def, st, g, inp) {
     if (inp.held && c.spendKi((def.kiPerSec || 16) * inp.dt)) {
-      if (!c.phase) { c.phase = true; g.audio.teleport(); g.vfx.ring(c.pos.clone().setY(5), { color: def.color || c.def.colors.accent, r0: 2, r1: 8, life: 0.3 }); }
+      if (!c.phase) { c.phase = true; g.audio.teleport(); g.vfx.ring(c.pos.clone().setY(5), { color: def.color || c.def.colors.accent, r0: 2, r1: 8, life: 0.3 });
+        st._loop = g.audio.sustain ? g.audio.sustain('phase', c.pos) : null; }   // the otherworldly hum
+      if (st._loop) st._loop.set(1, c.pos);
       if (Math.random() < 0.25) g.particles.burst(c.pos.x, c.pos.y + 5, c.pos.z, { count: 2, speed: 6, life: 0.4, size: 2.2, color: [def.color || c.def.colors.accent, '#fff'] });
-    } else if (c.phase) { c.phase = false; g.audio.zap(240); if (inp.held) drained(c, g); }   // ki ran out mid-phase
+    } else if (c.phase) { c.phase = false; g.audio.zap(240); if (st._loop) { st._loop.stop(); st._loop = null; } if (inp.held) drained(c, g); }   // slipped back in — hum fades
   },
 
   // Quick mobility dash (i-frames)
@@ -400,6 +408,8 @@ export const TYPES = {
         c._bowDrawT = st.drawT;                       // drives the draw pose (bow arm out, hand to cheek)
         c.state = 'charge'; c.stateT = 0;
         c.vel.x *= 0.8; c.vel.z *= 0.8;
+        if (!st._loop) st._loop = g.audio.sustain ? g.audio.sustain('bow', c.pos) : null;   // string tension creak
+        if (st._loop) st._loop.set(st.drawT, c.pos);
         if (Math.random() < 0.15) g.particles.spawn({ x: c.pos.x, y: c.pos.y + 5.8, z: c.pos.z, vx: 0, vy: 2, vz: 0, life: 0.2, size: 1.2, color: '#fff', drag: 2, shrink: true });
       }
       if (inp.released || (!inp.held && st.drawT > 0)) {
@@ -414,7 +424,8 @@ export const TYPES = {
           power: payload === 'explosive' ? 1.1 : 0.4, arrow: true, payload, life: 2.2,
           color: PAYLOAD_COLORS[payload] || '#d8d2c4', color2: '#fff', shock: payload === 'explosive',
         });
-        g.audio.zap(880); g.audio.blast(300, 0.06);
+        if (st._loop) { st._loop.stop(); st._loop = null; }   // release the tension
+        g.audio.bowLoose(t, c.pos);                            // a real twang, draw-scaled
       }
     }
   },
@@ -551,11 +562,14 @@ export const TYPES = {
 
   // Life drain — a held siphon: the nearest foe in your arc withers while you knit back together.
   lifedrain(c, def, st, g, inp) {
-    if (inp.held && c.ki < (def.kiPerSec || 14) * inp.dt) { if (!st._dry) { st._dry = true; drained(c, g); } }
+    if (inp.held && c.ki < (def.kiPerSec || 14) * inp.dt) { if (!st._dry) { st._dry = true; drained(c, g); } if (st._loop) { st._loop.stop(); st._loop = null; } }
     else if (!inp.held) st._dry = false;
     if (inp.held && c.spendKi((def.kiPerSec || 14) * inp.dt)) {
       c.state = 'cast'; c.stateT = 0;
+      // THE SIPHON VOICE — a downward pull that swells when it finds a victim, fades on release.
+      if (!st._loop) st._loop = g.audio.sustain ? g.audio.sustain('drain', c.pos) : null;
       const foe = g.coneFoe(c, def.range || 26, def.arc || 0.9);
+      if (st._loop) st._loop.set(foe && !foe.phase ? 1.3 : 0.5, c.pos);
       if (foe && !foe.phase) {
         const dealt = foe.takeDamage((def.dps || 22) * c.powerBuff * inp.dt, { src: c, dot: true, hitstop: 0 });
         if (dealt > 0) c.heal(dealt * (def.ratio || 0.6));
@@ -568,7 +582,7 @@ export const TYPES = {
           });
         }
       }
-    }
+    } else if (st._loop) { st._loop.stop(); st._loop = null; }   // not held → fade out
   },
 
   // Meteor storm from the sky at the aim point (artillery ult)

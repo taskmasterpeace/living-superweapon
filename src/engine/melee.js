@@ -7,6 +7,14 @@ import * as THREE from 'three';
 const _vv = new THREE.Vector3();
 
 export class MeleeSystem {
+  _swingKind(f) {
+    if (f._swingK) return f._swingK;                      // cached per fighter
+    let k = 'fist';
+    if (f.def.strikeSound) k = f.def.strikeSound;         // explicit override
+    else if (Object.values(f.def.abilities || {}).some(a => a && a.dmgClass === 'slash')) k = 'blade';  // claws/blades shing
+    else if (f.def.metal || (f.strength || 5) >= 9) k = 'blunt';   // heavy displaced air
+    return (f._swingK = k);
+  }
   constructor(game) { this.game = game; }
 
   canAct(f) { return f.alive && f.hitstop <= 0 && f.staggerT <= 0 && !f.grabbedBy && f.grabState !== 'clinch'; }
@@ -20,7 +28,7 @@ export class MeleeSystem {
     f.state = 'cast'; f.stateT = 0;
     const lunge = f.strikeIdx === 2 ? 26 : 16;
     f.vel.x += f.aim.x * lunge; f.vel.z += f.aim.z * lunge;
-    this.game.audio.zap(f.strikeIdx === 2 ? 420 : 660);
+    this.game.audio.swing(this._swingKind(f), f.pos);
     this.game.trail(f, f.def.colors.accent);
   }
 
@@ -58,7 +66,7 @@ export class MeleeSystem {
     const lunge = haymaker ? 40 : 26;
     f.vel.x += f.aim.x * lunge; f.vel.z += f.aim.z * lunge;
     f.invuln = Math.max(f.invuln, haymaker ? 0.1 : 0.05);
-    g.audio.zap(haymaker ? 300 : 480, f.pos);
+    g.audio.swing(haymaker ? 'blunt' : this._swingKind(f), f.pos);
     if (haymaker) { if (f.def.yells) g.heroYell(f, 0.9); else g.audio.grunt(f.def.voicePitch || 1, f.pos); }   // the battle shout
     // resolve after a tiny travel via a one-shot window
     f._heavyT = 0.12; f._heavyP = p01; f._heavyHay = haymaker;

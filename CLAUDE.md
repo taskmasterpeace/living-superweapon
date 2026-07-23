@@ -422,6 +422,26 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   through a bandpass chopped by a fast square LFO = arcing). `charge()` ramps all three with fill
   level; `kiRelease(power)`; `beamVoice()` returns a handle whose `set(intensity)` makes a beam
   LOSING a clash audibly strain; `arc()` for tier-ups and lightning.
+- **SUSTAINED-ATTACK VOICES — every held attack now loops AND fades** (2026-07-23). `beamVoice()`
+  had a sibling built: `audio.sustain(kind, pos)` where kind = `fire` (flamethrower roar, lowpass
+  opens with intensity) · `gas` (sinister hiss + tremolo) · `ice` (airy body + frost ticks +
+  shimmer) · `acid` (bubbling sizzle) · `drain` (downward ring-mod pull that swells on contact) ·
+  `phase` (barely-there detuned hum) · `bow` (tightening creak that rises with draw). **The
+  contract matches beamVoice/charge**: created already fading IN (~0.05s, no click), `set(I,pos)`
+  every live frame (drives loudness + one timbral param, stamps `last` for the watchdog),
+  `stop()` fades OUT (~0.16s, never a hard cut), registered in `_sus` so `audio.sweep()` reaps it
+  if a caller forgets (KO mid-cone). Wired into `cone` (element-keyed), `lifedrain`, `phase`, `bow`
+  in abilities.js — each stores the handle on `st._loop`, drives it while held, stops on
+  release/dry. **This is the loop-vs-one-shot rule made concrete**: sustained sources loop and
+  fade; discrete ones don't.
+- **MELEE SWINGS are weapon-aware** (`audio.swing(kind, pos)`, one-shots): `fist` (low airy
+  whoosh) · `blade` (bright metallic shing + ring — auto-detected from any `dmgClass:'slash'` in
+  the kit, cached on `f._swingK`) · `blunt` (heavy displaced-air whump — metal/STR≥9, and every
+  haymaker). `bowLoose(draw,pos)` is a real draw-scaled twang + woody thwack, replacing the old
+  zap+blast. Measured RMS: blade 0.0059 (brightest) · blunt 0.0024 · fist 0.0017.
+- Verified with an analyser tap: all 7 sustain kinds sound, drive with intensity, and fade to
+  silence on stop (afterFade 0, `_sus` empties); a 30s six-fighter rumble ran 5.4ms/frame with a
+  peak of 6 concurrent sustained voices and 0 console errors.
 - ⚠ **Audio must never throw into the game loop.** WebAudio rejects NaN/Infinity on every
   AudioParam with an exception. Every public sound coerces through `fin(v, default)` first.
 - ⚠ **Latent NaN found by the new audio path** (`abilities.js` charge release): `st.chargeT` is

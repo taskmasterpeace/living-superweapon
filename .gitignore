@@ -8,6 +8,7 @@ dist/
 # packaged desktop builds (75MB exe, 110MB linux tarball) — .gitignore has NO inline comments,
 # so this pattern must sit on its own line or it is read as the literal path "release/  # ..."
 release/
+release2/
 
 # tooling / local artifacts
 .playwright-mcp/
