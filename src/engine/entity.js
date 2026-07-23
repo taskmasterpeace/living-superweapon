@@ -449,6 +449,27 @@ export class Fighter {
     }
     if (this.state === 'ko' || this.invuln > 0) return 0;
     if (opts.src && opts.src.sheet && opts.src.sheet.predator && this.hp < this.maxHp * 0.3) amount *= 1.15;   // Predator talent finishes hunts
+    // ---- THE BALLISTIC SCALE: a gun is lethal to people and an annoyance to superweapons ----
+    // A shotgun ends a pedestrian. Against a registered weapon it meets ARMOUR first (a plated
+    // chassis eats the shot), then TOUGHNESS (a Might-10 frame barely notices lead). Energy,
+    // fists and slams are unaffected — only `ballistic` damage is filtered here.
+    if (opts.ballistic) {
+      const plate = this.def.armor ?? (this.def.metal ? 9 : 0);        // flat absorb per shot
+      if (plate > 0) {
+        const stopped = Math.min(amount, plate);
+        amount -= stopped;
+        if (this._game && stopped > 0.5 && Math.random() < 0.5) {      // sparks off the plate
+          this._game.particles.burst(this.pos.x, this.pos.y + 5, this.pos.z, { count: 3, speed: 16, life: 0.22, size: 1.2, color: ['#ffd97a', '#c9c2b4'], drag: 2 });
+        }
+      }
+      const str = this.strength ?? 5;
+      if (str >= 6) amount *= Math.max(0.12, 1 - (str - 5) * 0.17);    // STR 10 takes ~15% from bullets
+      if (amount <= 0.4) {                                             // it simply did not get through
+        this.hitFlash = Math.max(this.hitFlash, 0.35);
+        if (this._game) this._game.onHit(this, 0, opts, true);
+        return 0;
+      }
+    }
     // shield cell gadget: an ablative pool eats hits before anything else
     if (this._shieldHp > 0 && !opts.trueDamage) {
       const soak = Math.min(this._shieldHp, amount);

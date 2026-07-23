@@ -11,8 +11,11 @@ const _v = new THREE.Vector3(), _v2 = new THREE.Vector3(), _q = new THREE.Quater
 // ---- ballistics: a brass slug + a hot tracer streak (shared geo/mats — guns fire a LOT) ----
 const GEO_BULLET = new THREE.CylinderGeometry(0.22, 0.16, 1.5, 6); GEO_BULLET.rotateX(Math.PI / 2);
 const GEO_TRACER = new THREE.CylinderGeometry(0.1, 0.015, 5.2, 5); GEO_TRACER.rotateX(Math.PI / 2);
-const MAT_BULLET = new THREE.MeshStandardMaterial({ color: '#e8c98a', emissive: '#ffd98a', emissiveIntensity: 0.7, roughness: 0.35, metalness: 0.9 });
-const MAT_TRACER = new THREE.MeshBasicMaterial({ color: '#ffcf6a', transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending, depthWrite: false });
+// ⚠ NOT ENERGY: a bullet is machined brass, not a spell. No emissive, no additive blending —
+// bloom is reserved for ki. It reads as metal catching the light, and the tracer is a faint
+// alpha streak (normal blending) so it never blooms into a glowing orb.
+const MAT_BULLET = new THREE.MeshStandardMaterial({ color: '#b9a06a', roughness: 0.4, metalness: 0.95 });
+const MAT_TRACER = new THREE.MeshBasicMaterial({ color: '#c9b489', transparent: true, opacity: 0.28, depthWrite: false });
 const GEO_ORB = new THREE.SphereGeometry(1, 16, 12);
 const GEO_ORB_HI = new THREE.SphereGeometry(1, 20, 16);
 const GEO_CYL = new THREE.CylinderGeometry(1, 1, 1, 16, 1, true);
@@ -87,6 +90,7 @@ class Projectile {
 
     this.arrow = !!o.arrow; this.payload = o.payload || null;
     this.bullet = !!o.bullet;                      // real ballistics read as METAL, not energy
+    this.ballistic = !!o.ballistic; this.weapon = o.weapon || null;   // drives the armour/toughness scale
     this.face = !!o.face; this.armDelay = o.armDelay || 0; this._armed = false; this._armT = 0;
     if (this.face) {
       // THE MARLETTA: a billboarded serene face wrapped in glow — she drifts, arrives, lingers, detonates
@@ -174,6 +178,17 @@ class Projectile {
       if (this.bullet) game.particles.spawn({ x: this.pos.x, y: this.pos.y, z: this.pos.z, vx: rand(-1, 1), vy: rand(0, 2), vz: rand(-1, 1), life: 0.22, size: 0.8, color: ['#c9c2b4', '#8b8577'], drag: 4, shrink: true });
       else game.particles.spawn({ x: this.pos.x, y: this.pos.y, z: this.pos.z, vx: rand(-2, 2), vy: rand(-2, 2), vz: rand(-2, 2), life: this.arrow ? 0.2 : 0.35, size: this.arrow ? 1 : this.radius * 2.2, color: this.arrow ? this.color : [this.color, this.color2, '#ffffff'], drag: 3, shrink: true });
     }
+    // Pedestrians aren't entities (they're one instanced mesh), so nothing ever collided with
+    // them. A bullet has to: that's the whole point of the ballistic scale — lethal to people.
+    if (this.ballistic && game.peds && this.pos.y < 12 && this.pos.y > 0.2) {
+      const downed = game.peds.blast(this.pos.x, this.pos.z, 2.4);
+      if (downed) {
+        game.cityStats.civs += downed;
+        if (game.police) game.police.onCivHarm(this.caster, downed);
+        if (game.hud) game.hud.feed(`⚠ CIVILIAN SHOT — ${this.caster.name}`, '#ff8a6a');
+        return this._impact(game, false);
+      }
+    }
     this.life -= dt;
     // collisions — delayed-blast payloads ARM instead of exploding on contact; boomerangs bounce home
     if (this.pos.y <= this.radius * 0.5 && this.ground) {
@@ -216,7 +231,7 @@ class Projectile {
           return true;
         }
       }
-      foe.takeDamage(this.damage * this.caster.powerBuff, { src: this.caster, kb: _v.copy(this.vel).setY(0).setLength(this.damage * 0.5 + 8).setComponent(1, 6), launch: 6 + this.power * 4, hitstop: 0.05 });
+      foe.takeDamage(this.damage * this.caster.powerBuff, { src: this.caster, ballistic: this.ballistic, weapon: this.weapon, kb: _v.copy(this.vel).setY(0).setLength(this.damage * (this.ballistic ? 0.12 : 0.5) + (this.ballistic ? 2 : 8)).setComponent(1, this.ballistic ? 1 : 6), launch: this.ballistic ? 0 : 6 + this.power * 4, hitstop: this.ballistic ? 0.02 : 0.05 });
       if (this.payload === 'poison') foe.addDot({ dps: 5, dur: 4, color: '#8fe08a', kind: 'poison', src: this.caster });
       else if (this.payload === 'gas') foe.addDot({ dps: 6, dur: 3, color: '#9a4ae0', kind: 'gas', src: this.caster });
       else if (this.payload === 'flame') { foe.addDot({ dps: 7, dur: 2.5, color: '#ff7a2a', kind: 'burn', src: this.caster }); game.particles.burst(foe.pos.x, foe.pos.y + 5, foe.pos.z, { count: 8, speed: 10, life: 0.5, size: 2.6, color: ['#ff7a2a', '#ffd24a'], up: 8, drag: 1.2 }); }
@@ -229,6 +244,21 @@ class Projectile {
 
   _impact(game, hitGround) {
     const p = this.pos.clone(); if (hitGround) p.y = 0.2;
+    // A BULLET IS NOT A BOMB: no fireball, no crater, no area damage — just a spark, a puff and
+    // a very dead civilian if it found one. This is the scale that makes guns read as guns.
+    if (this.ballistic) {
+      game.particles.burst(p.x, p.y, p.z, { count: 4, speed: 14, life: 0.2, size: 1.1, color: ['#ffd97a', '#8b8577'], drag: 2.5 });
+      if (game.peds && p.y < 12) {
+        const downed = game.peds.blast(p.x, p.z, 3.2);        // one shot, one pedestrian
+        if (downed) {
+          game.cityStats.civs += downed;
+          if (game.police) game.police.onCivHarm(this.caster, downed);
+          if (game.hud) game.hud.feed(`⚠ CIVILIAN SHOT — ${this.caster.name}`, 'var(--danger-2)');
+        }
+      }
+      game.noise(p, 0.8, this.caster);
+      return false;
+    }
     game.vfx.explode(p, { color: this.color, color2: this.color2, radius: this.blast, power: this.power, scorch: hitGround });
     game.areaDamage(this.caster, p, this.blast, this.damage * 0.8, this.power);
     if (this.shock && hitGround) game.vfx.shockwave(p, { color: this.color, radius: this.blast * 2.2, power: this.power });

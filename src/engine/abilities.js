@@ -434,16 +434,28 @@ export const TYPES = {
       c.ki -= (def.cost || 2); st.cd = def.interval || 0.09;
       c.state = 'cast'; c.stateT = 0; c.punchPose = 1;
       const m = c.muzzle(_v.clone(), 4.4, 5.7);
-      const spread = (def.spread || 0.045) * ((c.sheet && c.sheet.spreadMult) || 1);   // Marksman tightens the group
-      const a = Math.atan2(c.aim3.z, c.aim3.x) + rand(-spread, spread);
-      g.projectiles.spawnProjectile(c, {
-        pos: m, vel: new THREE.Vector3(Math.cos(a), c.aim3.y + rand(-spread, spread), Math.sin(a)).setLength(def.speed || 170),
-        radius: def.radius || 0.55, damage: def.damage || 5, blast: def.blast || 2.2, power: 0.35,
-        color: def.color, color2: def.color2, life: 1.4, bullet: true,   // brass + tracer, never an energy orb
-      });
-      c.vel.x -= c.aim.x * (def.recoil || 1.6); c.vel.z -= c.aim.z * (def.recoil || 1.6);   // kick
-      g.audio.gunshot(def.interval && def.interval < 0.2 ? 0.8 : 1.15, c.pos);   // a CRACK, not a zap
-      g.muzzleFlash(c, '#ffcf6a', 0.55);
+      // WEAPON CLASS — the same slot type, three different guns. `weapon` on the ability def:
+      //   shotgun · a fan of pellets, brutal in your face, useless across the street
+      //   pistol  · one accurate, heavy shot on a slow trigger
+      //   rifle   · fast, small, tight (the default auto-fire)
+      const cls = def.weapon || (def.interval && def.interval < 0.2 ? 'rifle' : 'pistol');
+      const SP = { shotgun: 0.17, pistol: 0.02, rifle: 0.045 };
+      const spread = (def.spread ?? SP[cls] ?? 0.045) * ((c.sheet && c.sheet.spreadMult) || 1);   // Marksman tightens the group
+      const pellets = cls === 'shotgun' ? (def.pellets || 8) : 1;
+      const base = Math.atan2(c.aim3.z, c.aim3.x);
+      for (let i = 0; i < pellets; i++) {
+        const a = base + rand(-spread, spread);
+        g.projectiles.spawnProjectile(c, {
+          pos: m, vel: new THREE.Vector3(Math.cos(a), c.aim3.y + rand(-spread, spread) * 0.7, Math.sin(a)).setLength((def.speed || 170) * (cls === 'shotgun' ? rand(0.85, 1) : 1)),
+          radius: def.radius || 0.55, damage: def.damage || 5, blast: def.blast || 2.2, power: 0.35,
+          color: def.color, color2: def.color2, life: cls === 'shotgun' ? 0.34 : 1.4,   // pellets die fast = real range falloff
+          bullet: true, ballistic: true, weapon: cls,
+        });
+      }
+      const kick = def.recoil ?? (cls === 'shotgun' ? 6.5 : cls === 'pistol' ? 3 : 1.6);
+      c.vel.x -= c.aim.x * kick; c.vel.z -= c.aim.z * kick;
+      g.audio.gunshot(cls === 'shotgun' ? 1.5 : cls === 'pistol' ? 1.25 : 0.8, c.pos);   // a CRACK, not a zap
+      g.muzzleFlash(c, '#ffcf6a', cls === 'shotgun' ? 0.9 : 0.55);
     }
   },
 

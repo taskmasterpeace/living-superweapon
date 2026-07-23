@@ -319,10 +319,10 @@ export const ROSTER = [
     blurb: 'No powers. Just a pulse carbine, a plasma blade, a riot shield, grenades, and legs that clear a building. Somehow still terrifying.',
     sig: ['LMB Pulse Carbine (auto)', 'Q Plasma Blade (slash)', 'RMB Frag Grenade', '2×TAP Combat Leap · shield guard'],
     abilities: {
-      lmb: { type: 'rifle', name: 'Pulse Carbine', cost: 2, interval: 0.08, damage: 5, speed: 180, radius: 0.5, blast: 2, spread: 0.05, recoil: 1.6, color: '#ffe08a', color2: '#fff' },
+      lmb: { type: 'rifle', weapon: 'rifle', name: 'Service Carbine', cost: 2, interval: 0.08, damage: 5, speed: 180, radius: 0.5, blast: 2, recoil: 1.6, color: '#ffe08a', color2: '#fff' },
       rmb: { type: 'projectile', name: 'Frag Grenade', cost: 9, cd: 0.8, damage: 24, speed: 58, radius: 1.3, blast: 13, grav: 11, shock: true, color: '#8a915a', color2: '#ffd24a' },
       q: { type: 'melee', name: 'Plasma Blade', cost: 10, cd: 0.9, damage: 26, range: 12, arc: 0.9, lunge: 40, knock: 50, launch: 12, dmgClass: 'slash', color: '#7fd4ff' },
-      e: { type: 'rifle', name: 'Hand Cannon', cost: 5, interval: 0.34, damage: 16, speed: 150, radius: 0.8, blast: 3.5, spread: 0.015, recoil: 3.2, color: '#ffd24a', color2: '#fff' },
+      e: { type: 'rifle', weapon: 'shotgun', name: 'Breaching Shotgun', cost: 7, interval: 0.62, damage: 9, pellets: 8, speed: 150, radius: 0.7, blast: 2.4, color: '#ffd24a', color2: '#fff' },
       f: { type: 'buff', name: 'Stim Shot', cost: 18, cd: 16, mult: 1.35, dur: 8, heal: 34, color: '#8fe08a', color2: '#fff' },
       shift: { type: 'dash', name: 'Combat Roll', cost: 4, cd: 0.55, power: 92, iframes: 0.3, color: '#ffd24a' },
       r: { type: 'meteor', name: 'Airstrike', cost: 32, cd: 18, count: 12, interval: 0.16, spread: 24, radius: 3, damage: 32, blast: 17, color: '#ff8a3d', color2: '#ffd24a' },
