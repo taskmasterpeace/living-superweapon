@@ -441,6 +441,22 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   glyphs when `padActive(pad)`, and `main.js` re-renders the panel the moment that changes.
   ⚠ `PAD_ACTION` mirrors `MAP` in `core/gamepad.js` — rebind one, rebind the other.
 
+## THE COLD OPEN — the home page as a news hour (2026-07-23)
+- `hud._startColdOpen()` (booted from `showTitle`, killed in `hideTitle` — it is a `setInterval`).
+  A KMK 9 monitor with a bug, a blinking LIVE light, the real in-world clock, a lower third and
+  scanlines, beside a headline and a stat strip.
+- **The monitor plays REAL FOOTAGE** — `game.news.clips`, the frames the field crew actually
+  captured in your last match, with analogue snow between clips. With no footage on file it runs a
+  broadcast TEST CARD, because a dead monitor on a menu reads as broken rather than as
+  "nothing has happened yet".
+- **The headlines come off the LIVE BOOK** (`snapshotTable`/`championId`/`recentIncidents`), so the
+  menu is reporting on your actual game. With an empty book it says so.
+- ⚠ **`#title` had `justify-content:center` with content taller than the viewport.** You cannot
+  scroll above a centred flex item, so once the desk was added the headline was simply unreachable
+  off the top of the screen. It is now `flex-start` + `overflow-y:auto` with `margin-top:auto` on
+  the first child — centred when it fits, scrollable when it doesn't. If you add anything tall to
+  the title, that is why.
+
 ## Hard rules (do not break)
 - **`opts.hitstop ?? 0.04`, NEVER `||`** (`entity.takeDamage`). Sustained damage — beams, cones,
   lifedrain, DoT ticks — passes `hitstop: 0` deliberately. With `||`, that falsy zero became 0.04

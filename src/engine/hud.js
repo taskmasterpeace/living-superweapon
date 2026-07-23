@@ -316,6 +316,40 @@ const CSS = `
 .lswovl .netp.wait b{ color:var(--text-5); font-size:var(--t-md); }
 .lswovl .vs2{ font-weight:800; color:var(--gold); }
 .lswovl .hsec{ margin-bottom:13px; }
+/* ---- THE COLD OPEN: the home page as a news hour ---- */
+#title .colddesk{ display:flex; gap:18px; align-items:stretch; max-width:60rem; margin:64px auto 4px; margin-top:max(64px, 0px);
+  padding:12px; background:var(--surface); border:1px solid var(--line); border-radius:var(--r-3); }
+#title .cdmon{ position:relative; flex:0 0 auto; width:288px; aspect-ratio:16/9; border-radius:var(--r-2);
+  overflow:hidden; background:#05070a; border:1px solid var(--line-2); box-shadow:inset 0 0 40px rgba(0,0,0,.9); }
+#title .cdmon canvas{ width:100%; height:100%; display:block; image-rendering:auto; }
+#title .cdscan{ position:absolute; inset:0; pointer-events:none;
+  background:repeating-linear-gradient(0deg, rgba(0,0,0,.22) 0 1px, transparent 1px 3px); }
+#title .cdbug{ position:absolute; top:7px; left:8px; font-family:var(--f-display); font-weight:700;
+  font-size:13px; letter-spacing:-.02em; color:#fff; text-shadow:0 2px 6px #000; }
+#title .cdbug b{ color:var(--broadcast); }
+#title .cdlive{ position:absolute; top:7px; right:8px; display:flex; align-items:center; gap:4px;
+  font-family:var(--f-mono); font-size:var(--t-micro); letter-spacing:var(--tr-wide); color:#fff; text-shadow:0 2px 6px #000; }
+#title .cdlive i{ width:6px; height:6px; border-radius:50%; background:var(--broadcast); animation:cdBlink 1.1s steps(1,end) infinite; }
+@keyframes cdBlink{ 50%{ opacity:.15 } }
+#title .cdclock{ position:absolute; bottom:26px; right:8px; font-family:var(--f-mono); font-size:var(--t-micro);
+  color:#fff; text-shadow:0 2px 6px #000; }
+#title .cdlower{ position:absolute; left:0; right:0; bottom:0; padding:4px 8px; background:linear-gradient(90deg,var(--broadcast),rgba(160,32,32,0));
+  font-family:var(--f-mono); font-size:var(--t-micro); letter-spacing:var(--tr-wide); color:#fff; white-space:nowrap; overflow:hidden; }
+#title .cdside{ flex:1 1 auto; min-width:0; display:flex; flex-direction:column; justify-content:center; text-align:left; gap:6px; }
+#title .cdkick{ font-family:var(--f-mono); font-size:var(--t-micro); letter-spacing:var(--tr-wider); color:var(--broadcast); }
+#title .cdhead{ font-family:var(--f-display); font-weight:700; font-size:clamp(1.1rem,2.4vw,1.7rem);
+  line-height:1.08; color:var(--text); animation:cdIn .5s ease both; }
+@keyframes cdIn{ from{ opacity:0; transform:translateY(6px) } }
+#title .cdsub{ font-size:var(--t-sm); color:var(--text-3); line-height:1.5; }
+#title .cdstats{ display:flex; flex-wrap:wrap; gap:6px 18px; margin-top:6px; padding-top:8px; border-top:1px dashed var(--line-gold); }
+#title .cdstats div{ display:flex; flex-direction:column; }
+#title .cdstats b{ font-family:var(--f-mono); font-size:var(--t-micro); letter-spacing:var(--tr-wide); color:var(--text-5); font-weight:400; }
+#title .cdstats span{ font-family:var(--f-display); font-size:var(--t-body); color:var(--gold); }
+@media (max-width:760px){
+  #title .colddesk{ flex-direction:column; align-items:center; margin-top:96px; }
+  #title .cdmon{ width:100%; max-width:340px; }
+  #title .cdside{ text-align:center; } #title .cdstats{ justify-content:center; }
+}
 /* ---- THE ESTABLISHING SHOT: the city announces itself, then gets out of the way ---- */
 #hEstablish{ position:fixed; inset:0; z-index:64; display:none; align-items:center; justify-content:center;
   pointer-events:none; background:var(--ink);
@@ -2324,6 +2358,141 @@ export class HUD {
   }
 
   // ---------- Title / select ----------
+  // ---- THE COLD OPEN --------------------------------------------------------------------
+  // The home page opens the way a news hour opens: a monitor, a bug, a clock, a lower third and
+  // a headline. The monitor plays REAL FOOTAGE — the clips the field crew actually captured in
+  // your last match. With no footage yet it runs a broadcast test card, because a dead monitor
+  // on a menu reads as broken rather than as "nothing has happened yet".
+  _startColdOpen() {
+    const cv = this.title.querySelector('#cdCv'); if (!cv) return;
+    const ctx = cv.getContext('2d');
+    const g = this.game;
+    clearInterval(this._cdT);
+
+    const clips = (g && g.news && g.news.clips) ? g.news.clips.filter(c => c && c.frames && c.frames.length) : [];
+    const headlines = this._coldHeadlines();
+    let hi = 0, ci = 0, fi = 0, tick = 0, staticFor = 0;
+    const img = new Image();
+    let imgReady = false;
+    const loadFrame = () => {
+      const clip = clips[ci % clips.length]; if (!clip) return;
+      imgReady = false;
+      img.onload = () => { imgReady = true; };
+      img.src = clip.frames[fi % clip.frames.length];
+    };
+    if (clips.length) loadFrame();
+
+    // the test card, for when there is no footage
+    const testCard = () => {
+      const w = cv.width, h = cv.height;
+      const bars = ['#5a5a5a', '#a8a020', '#20a0a8', '#20a020', '#a020a0', '#a02020', '#2020a0'];
+      bars.forEach((c, i) => { ctx.fillStyle = c; ctx.fillRect(i * w / bars.length, 0, w / bars.length + 1, h * 0.72); });
+      ctx.fillStyle = '#0d0f14'; ctx.fillRect(0, h * 0.72, w, h * 0.28);
+      ctx.fillStyle = '#8b8577'; ctx.font = '600 11px Cascadia Code, Consolas, monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('KMK 9 — NO FOOTAGE ON FILE', w / 2, h * 0.86);
+      ctx.font = '9px Cascadia Code, Consolas, monospace';
+      ctx.fillText('FIGHT SOMETHING', w / 2, h * 0.93);
+      ctx.textAlign = 'left';
+    };
+
+    const noise = (amount) => {
+      // analogue snow, drawn sparsely so it costs nothing on a menu
+      ctx.globalAlpha = amount;
+      for (let i = 0; i < 220; i++) {
+        ctx.fillStyle = Math.random() < 0.5 ? '#fff' : '#000';
+        ctx.fillRect((Math.random() * cv.width) | 0, (Math.random() * cv.height) | 0, 2, 2);
+      }
+      ctx.globalAlpha = 1;
+    };
+
+    const draw = () => {
+      tick++;
+      ctx.fillStyle = '#0d0f14'; ctx.fillRect(0, 0, cv.width, cv.height);
+      if (staticFor > 0) { staticFor--; noise(0.5); }
+      else if (clips.length && imgReady) {
+        ctx.drawImage(img, 0, 0, cv.width, cv.height);
+        noise(0.05);                                  // a permanent light grain — it is a broadcast
+      } else if (clips.length) { noise(0.4); }
+      else { testCard(); noise(0.06); }
+
+      // advance the footage at broadcast-ish speed
+      if (clips.length && tick % 5 === 0) {
+        fi++;
+        const clip = clips[ci % clips.length];
+        if (fi >= clip.frames.length) { fi = 0; ci++; staticFor = 6; }
+        loadFrame();
+      }
+      // the in-world clock, if a world exists
+      const cl = this.title.querySelector('#cdClock');
+      if (cl && g && g.world && g.world.dayT != null) {
+        const mins = Math.floor(g.world.dayT * 1440);
+        cl.textContent = String(Math.floor(mins / 60)).padStart(2, '0') + ':' + String(mins % 60).padStart(2, '0');
+      }
+      // rotate the headline
+      if (tick % 110 === 0 && headlines.length) {
+        hi = (hi + 1) % headlines.length;
+        const H = headlines[hi];
+        const hEl = this.title.querySelector('#cdHead'), sEl = this.title.querySelector('#cdSub'), lEl = this.title.querySelector('#cdLower');
+        if (hEl) { hEl.textContent = H.head; hEl.style.animation = 'none'; void hEl.offsetWidth; hEl.style.animation = ''; }
+        if (sEl) sEl.textContent = H.sub;
+        if (lEl) lEl.textContent = H.lower;
+      }
+    };
+    this._cdT = setInterval(draw, 66);                // ~15fps; it is a menu, not a game
+    if (headlines.length) {
+      const H = headlines[0];
+      const hEl = this.title.querySelector('#cdHead'), sEl = this.title.querySelector('#cdSub'), lEl = this.title.querySelector('#cdLower');
+      if (hEl) hEl.textContent = H.head;
+      if (sEl) sEl.textContent = H.sub;
+      if (lEl) lEl.textContent = H.lower;
+    }
+    // the stat strip — real numbers off the book
+    const st = this.title.querySelector('#cdStats');
+    if (st) {
+      try {
+        const table = snapshotTable(ROSTER);
+        const champ = championId();
+        const top = table[0];
+        const rows = [
+          ['REGISTERED', String(ROSTER.length)],
+          ['THEATERS', '1,050'],
+          ['NATIONS', '168'],
+          champ ? ['CHAMPION', (ROSTER.find(r => r.id === champ) || {}).name || '—'] : ['TOP RATED', top ? top.def.name : '—'],
+        ];
+        st.innerHTML = rows.map(([k, v]) => `<div><b>${esc(k)}</b><span>${esc(v)}</span></div>`).join('');
+      } catch (e) { st.innerHTML = ''; }
+    }
+  }
+  // Headlines built from the LIVE book, so the menu is reporting on your actual game.
+  _coldHeadlines() {
+    const out = [];
+    try {
+      const table = snapshotTable(ROSTER);
+      const champ = championId();
+      if (champ) {
+        const c = ROSTER.find(r => r.id === champ);
+        if (c) out.push({ head: c.name + ' HOLDS THE BELT', lower: 'THE INVITATIONAL — REIGNING CHAMPION',
+          sub: 'The Treaty Office confirms ' + c.name + ' remains undefeated at the top of the sanctioned book.' });
+      }
+      const top = table[0];
+      if (top) out.push({ head: top.def.name + ' LEADS THE BOOK', lower: 'ASCENDANT POWER RANKINGS',
+        sub: 'Rated ' + Math.round(top.elo) + ' across ' + (top.rec.w + top.rec.l) + ' sanctioned bouts.' });
+      const inc = recentIncidents ? recentIncidents(6) : [];
+      for (const i of inc.slice(0, 3)) {
+        if (!i || !i.text) continue;
+        out.push({ head: String(i.text).toUpperCase().slice(0, 54), lower: 'FIELD REPORT', sub: i.sub || 'Continuing coverage.' });
+      }
+    } catch (e) { /* the book may be empty on a fresh install */ }
+    if (!out.length) {
+      out.push({ head: 'NO SANCTIONED BOUTS ON RECORD', lower: 'THE ASCENDANT REGISTRY',
+        sub: 'Fifty-two registered weapons. One thousand and fifty cities. Nothing has happened yet.' });
+    }
+    out.push({ head: 'THE VILLAIN IS WHOEVER HURTS HUMANS', lower: 'TREATY OFFICE — STANDING NOTICE',
+      sub: 'Collateral is tracked. Police response is set by the theater. Some nations shoot back.' });
+    return out;
+  }
+
   buildTitle(onStart) {
     // (10) OPEN WHERE YOU LEFT OFF — last hero, mode and format are restored from prefs
     const PF = this.prefs || {};
@@ -2334,6 +2503,22 @@ export class HUD {
     this.title.innerHTML = `
       <div class="topbar"><button id="tAtlas">🗺 Atlas</button><button id="tRank">📊 Rankings</button><button id="tNet">🌐 Online</button><button id="tTut">🎓 Tutorial</button><button id="tOpt">⚙ Options</button><button id="tHow">❓ How to Play</button></div>
       <div class="tag">Machine King Labs</div>
+      <div class="colddesk" id="coldDesk">
+        <div class="cdmon">
+          <canvas id="cdCv" width="384" height="216"></canvas>
+          <div class="cdbug"><b>KMK</b>9</div>
+          <div class="cdlive"><i></i>LIVE</div>
+          <div class="cdclock" id="cdClock">--:--</div>
+          <div class="cdlower"><span id="cdLower">THE ASCENDANT REGISTRY</span></div>
+          <div class="cdscan"></div>
+        </div>
+        <div class="cdside">
+          <div class="cdkick">KMK 9 ACTION NEWS — CONTINUING COVERAGE</div>
+          <div class="cdhead" id="cdHead">THE ASCENDANT REGISTRY</div>
+          <div class="cdsub" id="cdSub">Fifty-two registered weapons. One thousand and fifty cities. Pick your fight.</div>
+          <div class="cdstats" id="cdStats"></div>
+        </div>
+      </div>
       <h1><span class="t1">WAR WORLD</span><span class="t2">ASCENDANTS</span></h1>
       <div class="clsbar"><span class="clschip">TOP SECRET // THRESHOLD</span><span class="clsline">THRESHOLD TREATY OFFICE — ASCENDANT REGISTRY · INDEX COPY 7 OF 9 · COSMIC-EYES ONLY</span><span class="clschip">WWA-INDEX</span></div>
       <div class="term">&gt; QUERY: ASCENDANT INDEX — <b id="termCount"></b> · THEATER: <span class="thchip" id="termTheater" title="Open the City Atlas">${(() => { try { const t = this.theater; if (!t || t.flagship) return 'THE WHITE CITY'; if (t.gallery) return 'PROVING GROUND'; const c = cityList()[t.cityId]; return c ? c.name.toUpperCase() : 'THE WHITE CITY'; } catch { return 'THE WHITE CITY'; } })()}</span><span class="tcur">▍</span></div>
@@ -2537,6 +2722,6 @@ export class HUD {
     this.title.querySelector('#startBtn').onclick = () => onStart({ mode: selMode, p1: selP1.id, p2: selP2.id, twoPlayer: two, format: this._tFormat || '1v1' });
   }
 
-  showTitle() { this.titleOpen = true; this.title.style.display = 'flex'; this.title.style.visibility = 'visible'; this.title.style.opacity = '1'; }
-  hideTitle() { this.titleOpen = false; this.title.style.opacity = '0'; setTimeout(() => { this.title.style.display = 'none'; }, 250); this.title.style.transition = 'opacity .25s'; }
+  showTitle() { this.titleOpen = true; this._startColdOpen(); this.title.style.display = 'flex'; this.title.style.visibility = 'visible'; this.title.style.opacity = '1'; }
+  hideTitle() { clearInterval(this._cdT); this._cdT = null; this.titleOpen = false; this.title.style.opacity = '0'; setTimeout(() => { this.title.style.display = 'none'; }, 250); this.title.style.transition = 'opacity .25s'; }
 }

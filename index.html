@@ -77,8 +77,13 @@
 
   /* ---- Title / select screen ---- */
   #title{
+    /* ⚠ justify-content:center + content TALLER than the viewport pushes the top off-screen and
+       makes it unreachable — you cannot scroll above a centred flex item. Once the cold-open desk
+       was added the title stack exceeded 889px on a laptop and the headline was simply gone.
+       flex-start + auto margins keeps it centred when it FITS and scrollable when it does not. */
     position:fixed; inset:0; z-index:30; display:flex; flex-direction:column;
-    align-items:center; justify-content:center; gap:18px;
+    align-items:center; justify-content:flex-start; gap:18px;
+    overflow-y:auto; overscroll-behavior:contain;
     background:radial-gradient(120% 90% at 50% 20%, rgba(30,20,10,.72), rgba(4,5,9,.96));
     text-align:center; padding:24px; pointer-events:auto;
   }
