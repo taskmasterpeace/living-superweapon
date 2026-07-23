@@ -178,12 +178,12 @@ export const TYPES = {
         if (d > range || d < 0.1) continue;
         const dot = (dx / d) * c.aim.x + (dz / d) * c.aim.z;
         if (dot < Math.cos(arc)) continue;
-        f.takeDamage((def.dps || 26) * c.powerBuff * inp.dt, { src: c, dot: true, hitstop: 0 });
+        f.takeDamage((def.dps || 26) * c.powerBuff * inp.dt, { src: c, dot: true, hitstop: 0, dtype: def.dtype || (def.cold ? 'cold' : 'energy') });
         if (def.cold) {
           f.vel.x *= 0.86; f.vel.z *= 0.86; f._chill = 0.5; f.speed = Math.max(8, (f.def.speed || 30) * 0.55);
           f.addFrost((def.frost || 0.5) * inp.dt, c);   // sustained cold ENCASES you in ice (strength breaks out)
         }
-        if (def.gasDot) f.addDot({ dps: def.gasDot.dps || 6, dur: def.gasDot.dur || 2.2, color: def.gasDot.color || def.color, kind: def.gasDot.kind || 'gas', src: c });
+        if (def.gasDot) f.addDot({ dps: def.gasDot.dps || 6, dur: def.gasDot.dur || 2.2, color: def.gasDot.color || def.color, kind: def.gasDot.kind || 'gas', corrode: def.gasDot.corrode, src: c });
         if (def.kiDrain) { const dr = def.kiDrain * inp.dt; f.ki = Math.max(0, f.ki - dr); c.ki = clamp(c.ki + dr * 0.6, 0, c.maxKi); }   // JAWAH: eats their sound/energy
         else { const pushr = (def.push || 40) * inp.dt * 8; f.vel.x += (dx / d) * pushr; f.vel.z += (dz / d) * pushr; if (def.lift) f.vel.y = Math.min(f.vel.y + def.lift * inp.dt * 24, 22); }
       }
@@ -507,7 +507,7 @@ export const TYPES = {
       if (foe || m.life <= 0) {
         if (foe) {
           g.vfx.explode(m.pos.clone().setY(0.6), { color: def.color || '#ff5a4a', color2: '#ffd97a', radius: def.blast || 12, power: 1.3 });
-          g.areaDamage(c, m.pos.clone().setY(1), (def.blast || 12) * ((c.sheet && c.sheet.blastMult) || 1), def.damage || 24, 1.3);
+          g.areaDamage(c, m.pos.clone().setY(1), (def.blast || 12) * ((c.sheet && c.sheet.blastMult) || 1), def.damage || 24, 1.3, { dtype: def.dtype, dot: def.dot });
           g.audio.boom(0.8, m.pos);
         } else g.vfx.flash(m.pos.clone().setY(1), def.color || '#ff5a4a', 3, 0.2);   // timed out — fizzle
         g.scene.remove(m.mesh); m.mesh.traverse(o => { if (o.material) o.material.dispose(); if (o.geometry) o.geometry.dispose(); });

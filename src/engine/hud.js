@@ -1,5 +1,6 @@
 // Living Superweapon — DOM HUD + character-select screen.
 import { ROSTER, SLOT_ORDER } from '../data/characters.js';
+import { DTYPES, DTYPE_INFO, resistOf } from './entity.js';
 import { MODES } from '../data/modes.js';
 import { clamp, TAU } from '../core/util.js';
 import { ATTR_DEFS, TALENTS, deriveAttrs, heroTalents, rankName, rankColor, RANKS } from '../data/ranks.js';
@@ -314,6 +315,21 @@ const CSS = `
 .lswovl .netp.wait b{ color:var(--text-5); font-size:var(--t-md); }
 .lswovl .vs2{ font-weight:800; color:var(--gold); }
 .lswovl .hsec{ margin-bottom:13px; }
+/* --- THE DAMAGE CODEX --- */
+.lswovl .dgbox{ max-width:64rem; }
+.lswovl .dgsub{ font-size:var(--t-sm); color:var(--text-3); line-height:1.62; margin-bottom:14px; }
+.lswovl .dgsec{ font-family:var(--f-mono); font-size:var(--t-micro); letter-spacing:var(--tr-wider); color:var(--text-5);
+  border-top:1px dashed var(--line-gold); padding-top:10px; margin:16px 0 8px; }
+.lswovl .dgrow{ display:flex; gap:12px; padding:10px 0; border-bottom:1px solid var(--line); }
+.lswovl .dgtag{ flex:0 0 92px; font-family:var(--f-mono); font-size:var(--t-micro); letter-spacing:var(--tr-wider);
+  color:var(--dc); border:1px solid var(--dc); border-radius:var(--r-1); padding:5px 0; text-align:center; align-self:flex-start; }
+.lswovl .dgbody{ flex:1 1 auto; min-width:0; }
+.lswovl .dgnote{ font-size:var(--t-sm); color:var(--text-2); margin-bottom:6px; line-height:1.5; }
+.lswovl .dgline{ display:flex; gap:8px; font-family:var(--f-mono); font-size:var(--t-micro); line-height:1.75; }
+.lswovl .dgline b{ flex:0 0 62px; color:var(--text-5); letter-spacing:var(--tr-wide); font-weight:400; }
+.lswovl .dgline span{ color:var(--text-3); min-width:0; overflow-wrap:anywhere; }
+.lswovl .dgline.dgw span{ color:var(--danger); }
+@media (max-width:680px){ .lswovl .dgrow{ flex-direction:column; gap:6px; } .lswovl .dgtag{ align-self:stretch; } }
 .lswovl .hsec .ht{ font-size:var(--t-sm); letter-spacing:.18em; color:var(--gold-pale); text-transform:uppercase; margin-bottom:5px; }
 .lswovl .hsec .hb{ font-size:var(--t-md); color:var(--text-2); line-height:1.65; }
 .lswovl .hsec .hb b{ color:var(--gold); }
@@ -972,7 +988,7 @@ export class HUD {
   // ---- options + how-to-play overlays (on <body> so they stack above the title screen) ----
   _buildOverlays() {
     const mk = (id) => { const d = document.createElement('div'); d.id = id; d.className = 'lswovl'; document.body.appendChild(d); return d; };
-    this.optionsEl = mk('hOptions'); this.howtoEl = mk('hHowto'); this.onlineEl = mk('hOnline');
+    this.optionsEl = mk('hOptions'); this.howtoEl = mk('hHowto'); this.onlineEl = mk('hOnline'); this.damageEl = mk('hDamage');
     this.rankingsEl = mk('hRankings'); this.bracketEl = mk('hBracket'); this.atlasEl = mk('hAtlas');
     this.codexEl = mk('hCodex'); this.codexEl.classList.add('codex');
     try { this.theater = JSON.parse(localStorage.getItem('threshold_theater_v1') || 'null') || { flagship: true, seed: 1 }; } catch { this.theater = { flagship: true, seed: 1 }; }
@@ -1378,8 +1394,8 @@ export class HUD {
   tutorialStepDone() { this.flashScreen('var(--gold)', 0.08); }
   completeTutorial() { this.hideTutorial(); }
   hideTutorial() { if (this.el.tut) this.el.tut.style.display = 'none'; }
-  overlayOpen() { return [this.optionsEl, this.howtoEl, this.rankingsEl, this.bracketEl, this.atlasEl, this.codexEl].some(e => e && e.style.display === 'flex'); }
-  closeOverlays() { for (const e of [this.optionsEl, this.howtoEl, this.rankingsEl, this.atlasEl, this.codexEl]) if (e) e.style.display = 'none'; }   // the bracket closes only through its own buttons
+  overlayOpen() { return [this.optionsEl, this.howtoEl, this.rankingsEl, this.bracketEl, this.atlasEl, this.codexEl, this.damageEl].some(e => e && e.style.display === 'flex'); }
+  closeOverlays() { for (const e of [this.optionsEl, this.howtoEl, this.rankingsEl, this.atlasEl, this.codexEl, this.damageEl]) if (e) e.style.display = 'none'; }   // the bracket closes only through its own buttons
 
   // ================= THE CODEX — the full case file on one superweapon =================
   // Every line is DERIVED from live data (kit numbers, the Elo book, AI doctrine, the registry)
@@ -1537,13 +1553,59 @@ export class HUD {
       <div class="hsec"><div class="ht">Gadgets & The Meter</div><div class="hb"><b>X</b> uses your carried gadget (beacon, medkit, flashbang…) · low ki opens <em>OVERDRIVE</em> — your fists refill the tank · leveling up climbs <em>TIERS</em>: your aura and your meter literally grow</div></div>
       <div class="hsec"><div class="ht">Swapping & The Rest</div><div class="hb"><b>MOUSE WHEEL</b> or <b>1–0</b> swap hero mid-match · <b>TAB</b> roster · <b>B</b> spawns a rival · <b>ESC</b> pause · <b>M</b> mute · 🎮 pad: sticks move/aim · R2/L2 powers · ▢ ○ melee · L1 guard · ✕ fly</div></div>
       <div class="hsec"><div class="ht">The Golden Rule</div><div class="hb">The LeFevre threat scale is real — a Street-tier human <em>should</em> lose to a Cosmic superweapon. Lopsided is honest. Pick your fights, or forge your own weapon in <b>ORIGIN</b>.</div></div>
+      <div class="hsec"><div class="ht">Damage Types</div><div class="hb">Every hit has a <em>type</em> — physical, ballistic, energy, fire, cold, toxic, acid — and every fighter resists them differently. A machine <em>cannot</em> be poisoned; <b>ACID</b> eats the armour that stops bullets. Open the codex for the full table.</div></div>
+      <button class="odone" id="howtoDmg">☣ Open the Damage Codex</button>
       <button class="odone" id="howtoTut">🎓 Play the Tutorial — learn by doing</button>
       <button class="odone oghost">Got It — Let's Fight</button>
     </div>`;
     const seen = () => { try { localStorage.setItem('threshold_howto_seen', '1'); } catch {} this.howtoEl.style.display = 'none'; };
     this.howtoEl.querySelector('.oghost').onclick = seen;
+    this.howtoEl.querySelector('#howtoDmg').onclick = () => this.showDamage();
     this.howtoEl.querySelector('#howtoTut').onclick = () => { seen(); this.onTutorial && this.onTutorial(); };
     this.howtoEl.style.display = 'flex';
+  }
+
+  // THE DAMAGE CODEX — the in-game half of docs/COMBAT_MANUAL.md. Every row is READ FROM THE LIVE
+  // TABLES (DTYPE_INFO + resistOf run against the real roster), so this screen physically cannot
+  // drift from what the engine does. Protocol §6: a new damage type shows up here for free.
+  showDamage() {
+    const el = this.damageEl;
+    const R = ROSTER;
+    // who resists / is weak to each type — computed from the same function combat uses
+    const tables = R.map(d => ({ d, r: resistOf(d) }));
+    const nameOf = (x) => x.d.name;
+    const rows = DTYPES.map(t => {
+      const info = DTYPE_INFO[t];
+      const immune = tables.filter(x => x.r[t] === 0).map(nameOf);
+      const resists = tables.filter(x => x.r[t] > 0 && x.r[t] < 0.9).map(nameOf);
+      const weak = tables.filter(x => x.r[t] > 1.05).map(nameOf);
+      const cap = (a, n = 6) => a.length > n ? a.slice(0, n).join(' · ') + ` +${a.length - n}` : (a.join(' · ') || '—');
+      return `<div class="dgrow">
+        <div class="dgtag" style="--dc:${info.c}">${info.label}</div>
+        <div class="dgbody">
+          <div class="dgnote">${esc(info.note)}</div>
+          <div class="dgline"><b>IMMUNE</b><span>${esc(cap(immune))}</span></div>
+          <div class="dgline"><b>RESISTS</b><span>${esc(cap(resists))}</span></div>
+          <div class="dgline dgw"><b>WEAK</b><span>${esc(cap(weak))}</span></div>
+        </div></div>`;
+    }).join('');
+    el.innerHTML = `<div class="obox dgbox">
+      <div class="oh">Damage Codex</div>
+      <div class="dgsub">Every hit in the game carries a TYPE. Every fighter carries resistances to those types.
+        This table is generated from the live combat tables — it is always what the engine is actually doing.</div>
+      ${rows}
+      <div class="dgsec">THE ORDER OF OPERATIONS</div>
+      <div class="dgsub">Damage is filtered in this order — anything that stops it here never reaches health:
+        <b>armour</b> (bullets only) → <b>toughness</b> (Strength) → <b>type resistance</b> →
+        <b>shield pack</b> → <b>phase</b> → <b>guard</b> → health.</div>
+      <div class="dgsec">READING A FIGHT</div>
+      <div class="dgsub"><b>IMMUNE</b> means exactly that — a machine cannot be poisoned, and the number will say so.
+        <b>ACID</b> is the answer to armour: it corrodes plate for five seconds, and a chassis that was
+        shrugging off bullets starts taking them. Against bare flesh it is the wrong tool.</div>
+      <button class="odone oghost">Close</button>
+    </div>`;
+    el.querySelector('.oghost').onclick = () => { el.style.display = 'none'; };
+    el.style.display = 'flex';
   }
 
   // ---- combat UI: radar, hit direction, KO banner ----

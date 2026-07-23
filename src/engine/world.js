@@ -162,7 +162,7 @@ export class World {
     this.ground = ground; this.groundGeo = groundGeo;
     // per-vertex world XZ + accumulated height (for GeoMod-style craters); local +z maps to world +y
     const pa = groundGeo.attributes.position.array; const nV = pa.length / 3;
-    this._gvx = new Float32Array(nV); this._gvz = new Float32Array(nV); this._gh = new Float32Array(nV);
+    this._gvx = new Float32Array(nV); this._gvz = new Float32Array(nV); this._gh = new Float32Array(nV); this._gseg = SEG;
     for (let i = 0; i < nV; i++) { this._gvx[i] = pa[i * 3]; this._gvz[i] = -pa[i * 3 + 1]; }
 
     // (the gold emblem ring is baked into the radial glow texture now — one draw fewer)
@@ -476,7 +476,7 @@ export class World {
     this._cityBits.length = 0;
     this.cover = []; this.coverAll = []; this.cars = [];
     this.grass = null; this._canopy = null; this.water = null; this._waterT = null;
-    this.ground = null; this.groundGeo = null; this._ghBase = null; this._pendingPits = [];
+    this.ground = null; this.groundGeo = null; this._ghBase = null; this._pendingPits = []; this._pendingCuts = [];
     if (this._fades) this._fades.clear();   // cloned cutaway materials died with their meshes
   }
   rebuildCity(plan) {
@@ -507,7 +507,7 @@ export class World {
     ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; g.add(ground);
     this.ground = ground; this.groundGeo = groundGeo;
     const pa = groundGeo.attributes.position.array; const nV = pa.length / 3;
-    this._gvx = new Float32Array(nV); this._gvz = new Float32Array(nV); this._gh = new Float32Array(nV);
+    this._gvx = new Float32Array(nV); this._gvz = new Float32Array(nV); this._gh = new Float32Array(nV); this._gseg = SEG;
     for (let i = 0; i < nV; i++) { this._gvx[i] = pa[i * 3]; this._gvz[i] = -pa[i * 3 + 1]; }
     // border parapets
     const wallMat = new THREE.MeshStandardMaterial({ color: '#d8d0be', emissive: '#f5b21a', emissiveIntensity: 0.22, roughness: 0.7 });
@@ -582,9 +582,11 @@ export class World {
     this.arena = g;
     // fog occlusion budget: the shader reads the FIRST 24 boxes — give it the biggest buildings
     this.cover.sort((a, b) => (b.w * b.h * b.d) - (a.w * a.h * a.d));
-    // mining pits dig into the fresh terrain, then freeze as the city's BASE heights
+    // EXCAVATION — mining pits and metro cuts dig into the fresh terrain, then freeze as the
+    // city's BASE heights (resetTerrain restores to these, so the land survives every match).
     for (const [px, pz, r, dep] of (this._pendingPits || [])) this.crater(px, pz, r, dep);
-    this._pendingPits = [];
+    for (const [px, pz, hw, hd, dep, ry] of (this._pendingCuts || [])) this.trench(px, pz, hw, hd, dep, 11, ry);
+    this._pendingPits = []; this._pendingCuts = [];
     this._ghBase = Float32Array.from(this._gh);
     this.groundGeo.computeVertexNormals(); this._normalsDirty = false;
     // greenery from what the tiles asked for
@@ -932,6 +934,44 @@ export class World {
     const u = this.fogMat.uniforms, bc = u.uBoxC.value, bh = u.uBoxH.value; let n = 0;
     for (const c of this.cover) { if (n >= bc.length) break; bc[n].set(c.x, c.z); bh[n].set((c.hx ?? c.r) + 1, (c.hz ?? c.r) + 1); n++; }
     u.uBoxN.value = n;
+  }
+
+  // THE GROUND IS REAL. Bilinear sample of the terrain heightfield at a world point.
+  // ⚠ Before this existed, physics used a hard y=0 plane and every crater, quarry and metro
+  // cut was PURELY COSMETIC — you walked on an invisible flat floor over a 5-unit pit.
+  // Everything that digs (mining pits, the metro trench, blast craters) is now standable,
+  // fall-into-able terrain. Entities cache it per frame as `f.groundY`; never call this in a
+  // tight inner loop without caching.
+  heightAt(x, z) {
+    const gh = this._gh, S = this._gseg;
+    if (!gh || !S) return 0;
+    const A = this.ARENA, W = S + 1, k = S / (A * 2);
+    const fx = clamp((x + A) * k, 0, S - 0.0001), fz = clamp((z + A) * k, 0, S - 0.0001);
+    const c0 = fx | 0, r0 = fz | 0, tx = fx - c0, tz = fz - r0;
+    const i0 = r0 * W + c0, i1 = i0 + W;
+    const a = gh[i0] + (gh[i0 + 1] - gh[i0]) * tx;
+    const b = gh[i1] + (gh[i1 + 1] - gh[i1]) * tx;
+    return a + (b - a) * tz;
+  }
+
+  // A RECTANGULAR CUT into the land — what crater() is to a bomb, this is to an excavator.
+  // Used by the METRO to open a cut-and-cover trench (and available to any tile that wants a
+  // canal, a rail cut or a sunken plaza). Cuts with min(), so it carves instead of accumulating.
+  trench(cx, cz, hw, hd, depth, slope = 11, ry = 0) {
+    if (!this.groundGeo) return;
+    const pa = this.groundGeo.attributes.position.array;
+    const cs = Math.cos(-ry), sn = Math.sin(-ry);
+    for (let i = 0; i < this._gh.length; i++) {
+      const ox = this._gvx[i] - cx, oz = this._gvz[i] - cz;
+      const lx = ox * cs - oz * sn, lz = ox * sn + oz * cs;          // into the cut's local frame
+      const d = Math.max(Math.abs(lx) - hw, Math.abs(lz) - hd);      // distance outside the rectangle
+      if (d > slope) continue;
+      const t = d <= 0 ? 1 : 1 - d / slope;
+      const dh = -depth * (t * t * (3 - 2 * t));                     // smoothstep walls, flat floor
+      if (dh < this._gh[i]) { this._gh[i] = dh; pa[i * 3 + 2] = dh; }
+    }
+    this.groundGeo.attributes.position.needsUpdate = true; this._normalsDirty = true;
+    this.flattenGrass(cx, cz, Math.max(hw, hd) + slope);
   }
 
   // --- destructible terrain (GeoMod-lite): crater the ground ---

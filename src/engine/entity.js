@@ -82,6 +82,36 @@ export const ALT_BANDS = [   // the ruled four altitude bands — shown as a rin
 ];
 export const bandOf = (y) => y < 8 ? 0 : y < 150 ? 1 : y < 260 ? 2 : 3;
 
+// ---- DAMAGE TYPES (docs/COMBAT_MANUAL.md §3) ----------------------------------------------
+// Every damage event carries a `dtype`. Every fighter carries a resistance table. ONE multiplier,
+// applied at the takeDamage choke point, so a defence can never be bypassed by a new ability
+// forgetting about it. Missing entry = 1.0 = full damage.
+export const DTYPES = ['physical', 'ballistic', 'energy', 'fire', 'cold', 'toxic', 'acid'];
+export const DTYPE_INFO = {
+  physical:  { label: 'PHYSICAL',  c: '#e8e2d4', note: 'Fists, slams, thrown cars. The baseline — almost nothing resists it.' },
+  ballistic: { label: 'BALLISTIC', c: '#c9b98a', note: 'Bullets. Meets ARMOUR then TOUGHNESS — lethal to people, an annoyance to superweapons.' },
+  energy:    { label: 'ENERGY',    c: '#7fd8ff', note: 'Ki blasts and beams. The universal currency; few resistances.' },
+  fire:      { label: 'FIRE',      c: '#ff7a2a', note: 'Burns over time. Strong against flesh, weak against plate.' },
+  cold:      { label: 'COLD',      c: '#bfeaff', note: 'Builds FROST until the target is encased. Fire-blooded heroes shrug it off.' },
+  toxic:     { label: 'TOXIC',     c: '#8fe08a', note: 'Poison and gas. Needs a metabolism — machines are immune.' },
+  acid:      { label: 'ACID',      c: '#c8e04a', note: 'CORRODES ARMOUR for its duration. Weak on bare flesh, devastating on a plated chassis.' },
+};
+// Derived so no hero has to be hand-authored to be correct. `def.resist` always wins.
+// ⚠ Every resistance must cut BOTH ways (manual §3): metal resists toxic and fire, and is WEAK
+// to acid. A resistance with no matching weakness is just a nerf, not a system.
+// which damage type each damage-over-time kind lands as
+export const DOT_DTYPE = { poison: 'toxic', gas: 'toxic', burn: 'fire', acid: 'acid' };
+export function resistOf(def) {
+  const r = { physical: 1, ballistic: 1, energy: 1, fire: 1, cold: 1, toxic: 1, acid: 1 };
+  if (def.metal) { r.toxic = 0; r.fire = 0.6; r.acid = 1.6; }
+  else if ((def.armor || 0) > 0) { r.acid = 1.4; }
+  else r.acid = 0.7;                                    // bare flesh: acid is the WRONG tool
+  if (def.frostResist) r.cold = 0.45;
+  if (def.fireBlood) r.fire = 0.35;
+  if (!def.person || !def.person.n) r.toxic = Math.min(r.toxic, 0.25);   // synthetics barely metabolise
+  return Object.assign(r, def.resist || {});
+}
+
 // per-hero silhouette flourishes (all mounted on driven meshes so the ragdoll carries them).
 const BUILDS = {
   sol: { pauldron: 1, gaunt: 1 }, kano: { band: 1, gaunt: 1 }, vega: { pauldron: 1, gaunt: 1, collar: 1 },
@@ -336,6 +366,9 @@ export class Fighter {
     // the SHEET — seven ranked attributes + talents baked to flat multipliers (data/ranks.js).
     // This is the D&D layer: FGT/AGL/MGT/VIG/INT/AWR/RES all do real engine work.
     this.sheet = bakeSheet(def);
+    this.resist = resistOf(def);       // damage-type resistances, derived + def overrides (manual §3)
+    this._corrode = 0;                 // ACID: seconds of armour corrosion left
+    this._corrodeAmt = 0;              // how much armour is currently eaten
     this.attrs = this.sheet.attrs;
     this._shieldHp = 0; this._jetT = 0; this._jetPrev = 0;   // gadget states (shield cell / jump jets)
     // flight expertise: 0 = grounded (leapers) · 1 = clumsy forward flier (can't hover — Greatest
@@ -357,7 +390,7 @@ export class Fighter {
     this.teleEscape = def.teleEscape || Object.values(def.abilities || {}).some(a => a.type === 'teleport'); // blinks out of grabs
   }
 
-  get grounded() { return (this.pos.y <= 0.01 || this.onBlock) && !this.flying; }
+  get grounded() { return (this.pos.y <= (this.groundY || 0) + 0.01 || this.onBlock) && !this.flying; }
   get alive() { return this.state !== 'ko'; }
 
   // F key: flight is a MODE you switch on and off, not a button you hold.
@@ -399,9 +432,12 @@ export class Fighter {
   // ---- status: damage-over-time (poison/burn/gas arrows & clouds) ----
   addDot(o) {
     if (this.state === 'ko' || this.invuln > 0) return;
-    const same = this._dots.find(d => d.kind === o.kind);
+    const kind = o.kind || 'poison';
+    // every stack knows its DAMAGE TYPE, so the tick can be resisted like any other hit
+    const dtype = o.dtype || DOT_DTYPE[kind] || 'toxic';
+    const same = this._dots.find(d => d.kind === kind);
     if (same) { same.t = Math.max(same.t, o.dur || 3); same.dps = Math.max(same.dps, o.dps || 4); same.src = o.src || same.src; }
-    else this._dots.push({ dps: o.dps || 4, t: o.dur || 3, color: o.color || '#8fe08a', kind: o.kind || 'poison', src: o.src || null });
+    else this._dots.push({ dps: o.dps || 4, t: o.dur || 3, color: o.color || '#8fe08a', kind, dtype, corrode: o.corrode, src: o.src || null });
   }
 
   // ---- status: frost buildup → ENCASED IN ICE. Strength melts out faster; fire heroes resist;
@@ -449,12 +485,15 @@ export class Fighter {
     }
     if (this.state === 'ko' || this.invuln > 0) return 0;
     if (opts.src && opts.src.sheet && opts.src.sheet.predator && this.hp < this.maxHp * 0.3) amount *= 1.15;   // Predator talent finishes hunts
+    // EVERY hit has a type. Callers that don't declare one get the sane default for what they are,
+    // so no damage source in the game is ever untyped and resistances can't be silently skipped.
+    const dtype = opts.dtype || (opts.ballistic ? 'ballistic' : (opts.strike || opts.slam) ? 'physical' : 'energy');
     // ---- THE BALLISTIC SCALE: a gun is lethal to people and an annoyance to superweapons ----
     // A shotgun ends a pedestrian. Against a registered weapon it meets ARMOUR first (a plated
     // chassis eats the shot), then TOUGHNESS (a Might-10 frame barely notices lead). Energy,
     // fists and slams are unaffected — only `ballistic` damage is filtered here.
     if (opts.ballistic) {
-      const plate = this.def.armor ?? (this.def.metal ? 9 : 0);        // flat absorb per shot
+      const plate = Math.max(0, (this.def.armor ?? (this.def.metal ? 9 : 0)) - (this._corrode > 0 ? this._corrodeAmt : 0));   // ACID eats the plate
       if (plate > 0) {
         const stopped = Math.min(amount, plate);
         amount -= stopped;
@@ -468,6 +507,23 @@ export class Fighter {
         this.hitFlash = Math.max(this.hitFlash, 0.35);
         if (this._game) this._game.onHit(this, 0, opts, true);
         return 0;
+      }
+    }
+    // ---- DAMAGE TYPE RESISTANCE (manual §3) — the one multiplier every defence hangs off ----
+    {
+      const rz = (this.resist && this.resist[dtype] != null) ? this.resist[dtype] : 1;
+      if (rz !== 1) {
+        amount *= rz;
+        if (rz === 0) {                                  // outright immune — say so, don't fail silently
+          if (this._game && this._game.hud && Math.random() < 0.25) this._game.hud.damageNumber(this.pos, 'IMMUNE', '#9fb2c9', true);
+          return 0;
+        }
+      }
+      // ACID CORRODES: eats into this fighter's armour for the duration, which is what makes it
+      // the counter to the ballistic scale rather than just another poison.
+      if (dtype === 'acid') {
+        this._corrode = Math.max(this._corrode, opts.corrodeDur || 5);
+        this._corrodeAmt = Math.min(12, this._corrodeAmt + (opts.corrode || 3));
       }
     }
     // shield cell gadget: an ablative pool eats hits before anything else
@@ -599,17 +655,32 @@ export class Fighter {
     if (this._frostImmuneT > 0) this._frostImmuneT -= dt;
     if (this.frost > 0 && this.frozenT <= 0) this.frost = Math.max(0, this.frost - dt * 0.25);   // buildup decays
     // damage-over-time stacks (poison/burn/gas)
+    // ⚠ DoT ticks MUST route through takeDamage (manual §2). They used to subtract HP directly,
+    // which meant every poison/burn/gas stack silently ignored armour, toughness, phase, the
+    // shield pack, guard AND every resistance — a poison arrow ticked TITAN exactly as hard as
+    // it ticked a civilian. Damage accumulates and lands as a DISCRETE tick so the number is
+    // readable and the hit-flash doesn't strobe at 60Hz.
     for (let i = this._dots.length - 1; i >= 0; i--) {
       const d = this._dots[i]; d.t -= dt;
       if (this.state !== 'ko' && this.invuln <= 0) {
-        this.hp = clamp(this.hp - d.dps * dt, 0, this.maxHp);
-        if (d.src && d.src !== this) { this.lastHitBy = d.src; this.lastHitT = 0; }
         d._acc = (d._acc || 0) + d.dps * dt; d._tick = (d._tick || 0) + dt;
-        if (d._tick > 0.6 && game && game.hud) { game.hud.damageNumber(this.pos, Math.max(1, Math.round(d._acc)), d.color, true); d._acc = 0; d._tick = 0; }
+        if (d._tick >= 0.5) {
+          this.takeDamage(d._acc, { src: d.src, dot: true, hitstop: 0, dtype: d.dtype || 'toxic', dmgColor: d.color, corrode: d.corrode, corrodeDur: d.t });
+          d._acc = 0; d._tick = 0;
+        }
         if (game && Math.random() < 0.25) game.particles.spawn({ x: this.pos.x + (Math.random() * 3 - 1.5), y: this.pos.y + 4 + Math.random() * 4, z: this.pos.z + (Math.random() * 3 - 1.5), vx: 0, vy: 5, vz: 0, life: 0.5, size: 2, color: d.color, drag: 1, shrink: true });
-        if (this.hp <= 0) this._ko();
       }
       if (d.t <= 0) this._dots.splice(i, 1);
+    }
+    // ACID: the corrosion timer, and the smoke that tells everyone the plate is open
+    if (this._corrode > 0) {
+      this._corrode -= dt;
+      if (this._corrode <= 0) { this._corrode = 0; this._corrodeAmt = 0; }
+      else if (game && Math.random() < dt * 22) {
+        game.particles.spawn({ x: this.pos.x + (Math.random() * 5 - 2.5), y: this.pos.y + 2 + Math.random() * 7, z: this.pos.z + (Math.random() * 5 - 2.5),
+          vx: (Math.random() * 2 - 1) * 2, vy: 9 + Math.random() * 5, vz: (Math.random() * 2 - 1) * 2,
+          life: 0.9, size: 3.4, color: ['#c8e04a', '#9ab030', '#e6f0a0'], drag: 0.9, shrink: true });
+      }
     }
     // FROZEN SOLID — a block of ice: no actions, physics still shoves you around
     if (this.frozenT > 0) {
@@ -739,7 +810,7 @@ export class Fighter {
         if (this.flyHeld) { target = FLY_RISE; rate = 7; }                 // ascend
         else if (this.descendHeld) { target = -FLY_SINK; rate = 7; }       // descend
         else if (this.flightTier <= 1) { target = -7; rate = 4; }          // tier 1 can't hover — it sags
-        else { target = Math.sin(this.animT * 2.3) * FLY_HOVER_BOB + (this.pos.y < 2.6 ? 7 : 0); rate = 5; }  // hover: gentle bob + a soft floor so you float, never ankle-skim
+        else { target = Math.sin(this.animT * 2.3) * FLY_HOVER_BOB + (this.pos.y < (this.groundY || 0) + 2.6 ? 7 : 0); rate = 5; }  // hover: gentle bob + a soft floor so you float, never ankle-skim
         this.vel.y = damp(this.vel.y, target, rate, dt);
         if (this.flightTier <= 1) {                                        // clumsy drift — the GAH wobble
           this.vel.x += Math.sin(this.animT * 3.1) * 9 * dt;
@@ -755,9 +826,12 @@ export class Fighter {
     this.vel.y = clamp(this.vel.y, -160, 70);       // never let launches/lift escape
 
     this.pos.x += this.vel.x * dt; this.pos.y += this.vel.y * dt; this.pos.z += this.vel.z * dt;
-    if (this.pos.y <= 0) {
+    // THE FLOOR IS THE TERRAIN, not y=0 — quarry pits, metro cuts and blast craters are real
+    // ground you stand in and can be knocked down into. Sampled ONCE per frame and cached.
+    this.groundY = (game && game.world && game.world.heightAt) ? game.world.heightAt(this.pos.x, this.pos.z) : 0;
+    if (this.pos.y <= this.groundY) {
       const impact = this.vel.y;
-      this.pos.y = 0; if (this.vel.y < 0) this.vel.y = 0;
+      this.pos.y = this.groundY; if (this.vel.y < 0) this.vel.y = 0;
       // land + exit flight only when you MEANT to come down (holding descend) or you're a clumsy
       // tier-1 flier sagging out. A knockback/beam-shove dipping you to the floor no longer
       // silently cancels flight MODE — that read as "flight randomly turns off".
@@ -972,21 +1046,22 @@ export class Fighter {
     p.aura.scale.set((1 + Math.sin(this.animT * 8) * 0.04) * tp, (1.7 + auraP * 0.5) * tp, (1 + Math.sin(this.animT * 8) * 0.04) * tp);
     // contact shadow — pinned to the ground, shrinks & fades as the fighter climbs
     if (p.shadow) {
-      p.shadow.position.set(0, 0.06 - this.pos.y, 0);
-      const alt = clamp(1 - this.pos.y / 42, 0.08, 1);
+      const gy = this.groundY || 0, aly = this.pos.y - gy;   // height ABOVE the terrain, not sea level
+      p.shadow.position.set(0, 0.06 - aly, 0);
+      const alt = clamp(1 - aly / 42, 0.08, 1);
       p.shadow.material.opacity = 0.36 * alt;
-      p.shadow.scale.setScalar(clamp(1 - this.pos.y * 0.006, 0.4, 1));
+      p.shadow.scale.setScalar(clamp(1 - aly * 0.006, 0.4, 1));
     }
     // altitude-band ring: color = which of the four bands you're in (ground-pinned like the shadow)
     if (p.bandRing) {
-      p.bandRing.position.set(0, 0.08 - this.pos.y, 0);
+      p.bandRing.position.set(0, 0.08 - this.pos.y + (this.groundY || 0), 0);
       const b = bandOf(this.pos.y);
       if (b !== this._band) { this._band = b; p.bandRing.material.color.set(ALT_BANDS[b].c); }
       p.bandRing.material.opacity = b === 0 ? 0.28 : 0.6;   // louder when someone leaves the ground
       // FACING: the wedge sits at the front of the ring and counter-rotates the body's smoothing,
       // so it always points exactly where this fighter is actually looking.
       if (p.faceWedge) {
-        p.faceWedge.position.set(0, 0.1 - this.pos.y, 0);
+        p.faceWedge.position.set(0, 0.1 - this.pos.y + (this.groundY || 0), 0);
         p.faceWedge.rotation.z = -(this.facing - this.obj.rotation.y);   // group already carries body yaw
         const fm = p.faceWedge.material;
         fm.color.set(ALT_BANDS[b].c);
@@ -994,7 +1069,7 @@ export class Fighter {
       }
       // STATE: one ring that tells you what they're doing before it lands on you
       if (p.stateRing) {
-        p.stateRing.position.set(0, 0.09 - this.pos.y, 0);
+        p.stateRing.position.set(0, 0.09 - this.pos.y + (this.groundY || 0), 0);
         const sm = p.stateRing.material;
         let col = null, op = 0, sc = 1;
         if (this.guarding) { col = '#9fd0ff'; op = 0.7; sc = 1 + Math.sin(this.animT * 8) * 0.02; }        // braced

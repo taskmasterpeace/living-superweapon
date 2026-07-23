@@ -232,7 +232,9 @@ class Projectile {
         }
       }
       foe.takeDamage(this.damage * this.caster.powerBuff, { src: this.caster, ballistic: this.ballistic, weapon: this.weapon, kb: _v.copy(this.vel).setY(0).setLength(this.damage * (this.ballistic ? 0.12 : 0.5) + (this.ballistic ? 2 : 8)).setComponent(1, this.ballistic ? 1 : 6), launch: this.ballistic ? 0 : 6 + this.power * 4, hitstop: this.ballistic ? 0.02 : 0.05 });
-      if (this.payload === 'poison') foe.addDot({ dps: 5, dur: 4, color: '#8fe08a', kind: 'poison', src: this.caster });
+      // ACID: corrodes the plate for 5s — the counter to the armour that stops bullets
+      if (this.payload === 'acid') { foe.addDot({ dps: 6, dur: 5, color: '#c8e04a', kind: 'acid', corrode: 4, src: this.caster }); game.particles.burst(foe.pos.x, foe.pos.y + 5, foe.pos.z, { count: 9, speed: 11, life: 0.6, size: 2.8, color: ['#c8e04a', '#9ab030', '#e6f0a0'], up: 7, drag: 1.1 }); }
+      else if (this.payload === 'poison') foe.addDot({ dps: 5, dur: 4, color: '#8fe08a', kind: 'poison', src: this.caster });
       else if (this.payload === 'gas') foe.addDot({ dps: 6, dur: 3, color: '#9a4ae0', kind: 'gas', src: this.caster });
       else if (this.payload === 'flame') { foe.addDot({ dps: 7, dur: 2.5, color: '#ff7a2a', kind: 'burn', src: this.caster }); game.particles.burst(foe.pos.x, foe.pos.y + 5, foe.pos.z, { count: 8, speed: 10, life: 0.5, size: 2.6, color: ['#ff7a2a', '#ffd24a'], up: 8, drag: 1.2 }); }
       if (this.pierce-- > 0) { game.vfx.flash(this.pos.clone(), this.color, this.radius * 2, 0.12); return true; }

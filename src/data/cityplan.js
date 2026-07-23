@@ -28,8 +28,10 @@ export const TILE_INFO = {
   stadium:     { label: 'THE BOWL',    c: '#8fe08a' },
   hospital:    { label: 'MEDICAL',     c: '#e8e2d6' },
   market:      { label: 'THE MARKET',  c: '#e8a24a' },
+  metro:       { label: 'THE LINE',    c: '#7fd0c0' },
+  farmland:    { label: 'THE COUNTY',  c: '#9ab061' },
 };
-export const VARIANTS = { residential: 3, commercial: 3, company: 2, industrial: 3, military: 2, political: 2, educational: 2, temple: 3, mining: 2, seaport: 2, resort: 2, park: 2, plaza: 2, stadium: 2, hospital: 2, market: 2 };
+export const VARIANTS = { residential: 3, commercial: 3, company: 2, industrial: 3, military: 2, political: 2, educational: 2, temple: 3, mining: 2, seaport: 2, resort: 2, park: 2, plaza: 2, stadium: 2, hospital: 2, market: 2, metro: 2, farmland: 3 };
 
 const GRID_BY_POP = { 'Village': 3, 'Small Town': 3, 'Town': 4, 'Small City': 4, 'City': 5, 'Large City': 5, 'Mega City': 6 };
 const STRUCT_CAP = 24;   // hard ceiling on structural (cover/fog) cells — perf + fog shader budget
@@ -78,24 +80,50 @@ export function generatePlan(city, seed = 1) {
     if (t === 'company') { put(take((r, c) => -edge(r, c) * 2), 'company'); if (N >= 5) put(take((r, c) => -edge(r, c) * 2), 'company'); }
     if (t === 'industrial') { put(take((r, c) => edge(r, c) + nearWater(r, c) * 2), 'industrial'); if (N >= 5) put(take((r, c) => edge(r, c) + nearWater(r, c) * 2), 'industrial'); }
   }
+  // --- THE LINE: a metro cut laid in a STRAIGHT ROW across the city ---
+  // Everything else here is placed by a concentric-ring score, which is why every city came out
+  // as squares-inside-squares. The metro is the one feature that runs in a LINE — the tiles
+  // overshoot their cells so consecutive stations join into one continuous 13u-deep trench you
+  // can be knocked into. Towns and up: a real transit city needs the population to justify it.
+  const rural = N <= 3 || city.popType === 'Village' || city.popType === 'Small Town';
+  if (!rural && N >= 4) {
+    const row = 1 + ((rng() * (N - 2)) | 0);                       // never the outermost row
+    const span = N >= 6 ? 3 : 2;
+    const start = Math.max(0, Math.min(N - span - (water ? 1 : 0), 1 + ((rng() * (N - span)) | 0)));
+    plan.metroRow = row;
+    for (let i = 0; i < span; i++) {
+      const c = start + i;
+      const idx = free.findIndex(([r2, c2]) => r2 === row && c2 === c);
+      if (idx >= 0) { const rc = free.splice(idx, 1)[0]; C[rc[0]][rc[1]] = { t: 'metro', v: i === 0 ? 0 : (rng() < 0.45 ? 0 : 1) }; }
+    }
+  }
   // --- civic amenities: every real city has these regardless of what it's FAMOUS for ---
   // (bigger places get more of them — this is what makes two same-type cities feel different)
   put(take((r, c) => -Math.abs(edge(r, c) - 1) * 2), 'hospital');          // always a hospital
   if (N >= 5) put(take((r, c) => edge(r, c) * 1.5), 'stadium');           // the bowl sits out of the core
   if (N >= 4) put(take((r, c) => -edge(r, c)), 'market');                 // markets want footfall
   if (N >= 6) put(take((r, c) => -edge(r, c)), 'market');
-  // --- the base city: commercial core, residential ring, green lungs ---
+  // --- the base fill ---
   const parks = N >= 6 ? 3 : N >= 5 ? 2 : 1;
   for (let i = 0; i < parks; i++) put(take((r, c) => -Math.abs(edge(r, c) - 1) + (rng() - 0.5)), 'park');
   while (free.length) {
     const [r, c] = free[0];
-    put(take((r2, c2) => (r2 === r && c2 === c) ? 9 : 0), edge(r, c) <= mid * 0.55 ? 'commercial' : rng() < 0.62 ? 'residential' : 'commercial');
+    // A VILLAGE IS NOT A SMALL CITY. Rural places got filled with commercial and residential
+    // blocks, so a hamlet in the hills read as a downtown with fewer buildings. They now fill
+    // with FARMLAND — a hard core of homes at the centre, open country everywhere else.
+    const t = rural
+      ? (edge(r, c) === 0 ? 'residential' : rng() < 0.78 ? 'farmland' : 'residential')
+      : (edge(r, c) <= mid * 0.55 ? 'commercial' : rng() < 0.62 ? 'residential' : 'commercial');
+    put(take((r2, c2) => (r2 === r && c2 === c) ? 9 : 0), t);
   }
+  plan.rural = rural;
   // --- structural budget: farthest-from-center overflow becomes plaza (open ground) ---
   const structural = [];
   for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
     const cell = C[r][c];
-    if (cell && cell.t !== 'water' && cell.t !== 'park' && cell.t !== 'plaza') structural.push([r, c, edge(r, c)]);
+    // farmland carries only 2-3 cover pieces, so it doesn't eat the structural budget the way a
+    // block of towers does — a rural map keeps ALL its country instead of being plaza'd flat.
+    if (cell && cell.t !== 'water' && cell.t !== 'park' && cell.t !== 'plaza' && cell.t !== 'farmland') structural.push([r, c, edge(r, c)]);
   }
   structural.sort((a, b) => a[2] - b[2]);
   for (let i = STRUCT_CAP; i < structural.length; i++) C[structural[i][0]][structural[i][1]] = { t: 'plaza', v: (rng() * 2) | 0 };
@@ -114,7 +142,7 @@ export function thresholdPlan() {
 
 // The TILE PROVING GROUND — every tile type laid out on one map for review (the map-maker's bench).
 export function galleryPlan() {
-  const order = ['residential', 'commercial', 'company', 'industrial', 'military', 'political', 'educational', 'temple', 'mining', 'seaport', 'resort', 'park', 'stadium', 'hospital', 'market'];
+  const order = ['residential', 'commercial', 'company', 'industrial', 'military', 'political', 'educational', 'temple', 'mining', 'seaport', 'resort', 'park', 'stadium', 'hospital', 'market', 'metro', 'farmland'];
   const N = 5;
   const plan = {
     name: 'TILE PROVING GROUND', country: 'Registry Test Range', popType: 'City', popLabel: 'EVERY TILE · FOR REVIEW',

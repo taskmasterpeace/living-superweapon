@@ -140,17 +140,19 @@ export class Ragdoll {
   _collide(game) {
     const bound = (game && game.world ? game.world.ARENA : ARENA) - 3;
     const cover = game && game.world ? game.world.cover : null;
+    const hAt = (game && game.world && game.world.heightAt) ? (x, z) => game.world.heightAt(x, z) : null;
     for (const k in this.P) {
       const pt = this.P[k], r = GROUND_R[k] || DEFAULT_R;
-      // ground
-      if (pt.pos.y < r) {
+      // ground — the TERRAIN, so bodies settle into quarry pits and craters instead of on thin air
+      const gy = hAt ? hAt(pt.pos.x, pt.pos.z) : 0;
+      if (pt.pos.y < gy + r) {
         // first hard core-impact BREAKS the ground — crater/dust scaled by the fighter's strength
         const drop = pt.prev.y - pt.pos.y;
         if (!this._impacted && drop > 0.5 && (k === 'chest' || k === 'pelvis' || k === 'head')) {
           this._impacted = true;
           if (game && game.onRagdollImpact) game.onRagdollImpact(this.f, drop * 60, pt.pos);
         }
-        pt.pos.y = r;
+        pt.pos.y = gy + r;
         pt.prev.x += (pt.pos.x - pt.prev.x) * GROUND_FRICTION;   // friction: bleed horizontal speed
         pt.prev.z += (pt.pos.z - pt.prev.z) * GROUND_FRICTION;
         if (pt.prev.y < pt.pos.y) pt.prev.y = pt.pos.y;          // no downward rebound through floor
@@ -176,7 +178,7 @@ export class Ragdoll {
     const P = this.P, g = f.parts.g, o = f.pos;
     g.rotation.set(0, 0, 0);
     // logical body position follows the pelvis (camera / targeting / vfx read f.pos)
-    o.x = P.pelvis.pos.x; o.z = P.pelvis.pos.z; o.y = 0;
+    o.x = P.pelvis.pos.x; o.z = P.pelvis.pos.z; o.y = 0;   // group stays at sea level; limbs carry world Y
     // zero the limb pivots so their child capsules live in group-local (= world - o) space
     for (const v of this.pivots) { v.position.set(0, 0, 0); v.rotation.set(0, 0, 0); v.scale.set(1, 1, 1); }
 

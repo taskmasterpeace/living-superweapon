@@ -794,7 +794,7 @@ export class Game {
     return best;
   }
 
-  areaDamage(caster, pos, radius, damage, power = 1) {
+  areaDamage(caster, pos, radius, damage, power = 1, o = {}) {
     for (const f of this.entities) {
       const foe = this.isFoe(caster, f);
       // TEAM DAMAGE (tournament ruling): with friendlyFire on, your splash catches your OWN side
@@ -807,7 +807,8 @@ export class Game {
       const fall = 1 - clamp(d / (radius + f.radius), 0, 1) * 0.6;
       const kb = _v.set(dx, 0, dz).setLength((damage * 0.6 + 12) * fall);
       // src attribution: explosions now CREDIT the blaster (artillery kills used to score nobody)
-      const dealt = f.takeDamage(damage * fall * caster.powerBuff * (ff ? 0.5 : 1), { src: caster, kb, launch: (6 + power * 6) * fall, hitstop: 0.05 });
+      const dealt = f.takeDamage(damage * fall * caster.powerBuff * (ff ? 0.5 : 1), { src: caster, kb, launch: (6 + power * 6) * fall, hitstop: 0.05, dtype: o.dtype });
+      if (o.dot && dealt > 0) f.addDot({ ...o.dot, src: caster });   // caustic/incendiary payloads ride the blast
       if (ff && dealt >= 3 && this.hud && (this._ffFeedT || 0) <= this.time - 2.5) {
         this._ffFeedT = this.time;
         this.hud.feed(`⚠ FRIENDLY FIRE — ${caster.name} clipped ${f.name}`, '#ffb03a');
@@ -1125,6 +1126,7 @@ export class Game {
     if (this.hud) {
       if (blocked) this.hud.damageNumber(target.pos, 'BLOCK', '#bfe0ff', true);
       else if (opts.dmgClass === 'slash' && amount >= 3) this.hud.damageNumber(target.pos, '⚔ ' + Math.round(amount), '#ffdcdc', false, true);   // claws/blades read as SLASH
+      else if (opts.dmgColor && amount >= 1) this.hud.damageNumber(target.pos, Math.round(amount), opts.dmgColor, true);   // DoT ticks keep their status colour
       else if (amount >= 5) this.hud.damageNumber(target.pos, Math.round(amount), src === this.player ? '#ffe08a' : '#ff9a6a');
     }
     // Danger Room: dummies log incoming damage for the live DPS meters

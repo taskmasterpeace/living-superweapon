@@ -279,6 +279,63 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   **stand on block tops** (`onBlock` → `grounded`); `game.resolveBodies()` separates overlapping fighters.
   Cover carries `{x,z,hx,hz,top}` (construct walls fall back to `r`/`h`).
 
+## DAMAGE TYPES + THE MECHANIC PROTOCOL (2026-07-23) — read `docs/COMBAT_MANUAL.md` first
+- **The manual is the contract**: `docs/COMBAT_MANUAL.md` documents the real pipeline (the order of
+  operations inside `takeDamage`, the ballistic scale, the type table, the vertical model). If you
+  change combat, change the manual IN THE SAME COMMIT. It is written to be read by a human.
+- **Every hit has a `dtype`** (`DTYPES`/`DTYPE_INFO` in entity.js): physical · ballistic · energy ·
+  fire · cold · toxic · acid. Callers that don't declare one get a sane default computed in
+  `takeDamage` (`ballistic` → `strike|slam` → else `energy`), so **no damage source is ever
+  untyped** and a new ability can't silently skip resistances.
+- **Every fighter has `f.resist`** (`resistOf(def)`, baked in the ctor). Derived so no hero has to be
+  hand-authored: `metal` → toxic 0 / fire 0.6 / **acid 1.6**; armoured → acid 1.4; bare flesh →
+  acid 0.7; `frostResist` → cold 0.45. `def.resist` overrides always win.
+  ⚠ **A resistance must cut BOTH ways** — every type something resists must be a type something else
+  is WEAK to, or it's just a nerf. Metal shrugs off poison and fire *and corrodes under acid*.
+- **⚠ DoT ticks route through `takeDamage`** (fixed 2026-07-23). They used to subtract `hp` directly,
+  so every poison/burn/gas stack bypassed armour, toughness, `phase`, the shield pack, guard and all
+  resistances — **a poison arrow ticked TITAN exactly as hard as a civilian**. Ticks now accumulate
+  and land discretely every 0.5s (readable numbers, no 60Hz hit-flash strobe). Never subtract `hp`
+  outside the choke point.
+- **ACID is the anti-armour type** — it applies `_corrode`/`_corrodeAmt`, which is subtracted from
+  `def.armor` inside the ballistic filter for the duration. Measured: a 9-damage shot did **0** to
+  TITAN, then **1.92** once corroded. Victim vents yellow-green smoke while it lasts. Carried by
+  **four** characters across four delivery systems — GALE (arrow payload) · KRAKEN (cone) ·
+  KNIGHTFALL (mine) · HIVE (projectile).
+- **THE PROTOCOL for adding a mechanic** (manual §5, Robert's ruling): it must be a data-driven TYPE
+  not an `if (def.id === …)`; route through the choke point; appear on **≥2 characters via ≥2
+  delivery systems** unless deliberately rare *and written down*; have a counter; be readable
+  (VFX + number + HUD); be in BOTH the manual and the in-game **DAMAGE CODEX**; and be verified
+  headlessly with real assertions.
+- **The DAMAGE CODEX** (`hud.showDamage()`, overlay `hDamage`, entry from the HOW-TO screen) renders
+  every type's immune/resists/weak lists by running `resistOf` over the live ROSTER — the screen
+  physically cannot drift from the engine. Ref: `lsw-damage-codex.jpeg`.
+
+## THE GROUND IS REAL — terrain height, the metro, and the countryside (2026-07-23)
+- **`world.heightAt(x, z)`** bilinear-samples the terrain heightfield; `entity._physics` caches it as
+  `f.groundY` once per frame and uses it as the floor. ⚠ Before this, physics used a hard `y = 0`
+  plane and **every crater, quarry and cut was purely cosmetic** — you walked on an invisible flat
+  floor over a 5-unit pit. Ground markers (shadow/bandRing/faceWedge/stateRing) and the ragdoll floor
+  all offset by `groundY`. Verified: a fighter dropped into a mining pit rests at −5.1 and is
+  `grounded`; flat ground still lands at exactly 0.
+- **`world.trench(cx, cz, hw, hd, depth, slope, ry)`** — the rectangular counterpart to `crater()`
+  (excavator vs bomb). Cuts with `min()` so it carves rather than accumulates. Queued via
+  `_pendingCuts` and applied before `_ghBase` freezes, exactly like mining `_pendingPits`.
+- **THE METRO** (`metro` tile, 2 variants): a 13u-deep cut-and-cover station — platforms (standable,
+  destructible), track bed, a three-car train, pillars, and stair headhouses on the street. The
+  planner lays them **in a straight ROW** so consecutive cells join into ONE continuous trench:
+  measured **228u** of unbroken cut. This is the linear spine the concentric-square placement never
+  had. Towns and up only.
+- **THE COUNTRYSIDE** (`farmland`, 3 variants): Villages and Small Towns were being generated as
+  miniature cities. `plan.rural` now fills them with fields, barns, silos, orchards and stone walls —
+  open sightlines and low cover instead of a downtown with fewer buildings. Farmland is **exempt from
+  `STRUCT_CAP`** (2–3 cover pieces, not a block of towers), so rural maps keep all their country.
+- **Real tunnels are NOT possible on the current terrain** and must not be faked: a heightfield is a
+  single surface and cannot fold over itself, so there is no "ceiling". The metro is an open cut for
+  exactly that reason. Tunnels need the roofed-volume system that interiors also need. Water likewise
+  has no seabed yet — `waterAt` is a drag multiplier only — which is why submarines have nowhere to
+  be. The design for both is in COMBAT_MANUAL §6.
+
 ## Hard rules (do not break)
 - **`opts.hitstop ?? 0.04`, NEVER `||`** (`entity.takeDamage`). Sustained damage — beams, cones,
   lifedrain, DoT ticks — passes `hitstop: 0` deliberately. With `||`, that falsy zero became 0.04

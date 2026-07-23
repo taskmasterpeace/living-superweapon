@@ -31,6 +31,14 @@ function mats(world) {
     palmT: S('#8a6a42', { r: 0.95, fs: true }), palmF: S('#3a7a3a', { r: 0.9, fs: true }),
     canvas: S('#e8e2d4', { r: 0.95 }), red: S('#a8362e', { r: 0.8 }),
     containers: ['#8a2a24', '#2a4a6a', '#3a6a4a', '#c9762a', '#5a5a64'].map(c => S(c, { r: 0.6, m: 0.3 })),
+    // --- THE METRO ---
+    platform: S('#bdb6a6', { r: 0.92 }), stationTile: S('#e6dfd0', { r: 0.55 }),
+    trainSide: S('#c2c8d0', { r: 0.45, m: 0.55 }), trainTrim: S('#2a5a8a', { r: 0.6, m: 0.3 }),
+    metroSign: S('#d8d2c4', { r: 0.7, e: '#f5b21a', ei: 0.55 }),
+    // --- THE COUNTRY ---
+    fieldA: S('#7d7c44', { r: 1 }), fieldB: S('#6b5a38', { r: 1 }),
+    barn: S('#8a3a2e', { r: 0.95 }), barnRoof: S('#4c4a46', { r: 0.9 }),
+    silo: S('#c8c2b2', { r: 0.7, m: 0.2 }), stoneWall: S('#a8a294', { r: 0.95 }),
   };
   return world._tileMats;
 }
@@ -57,6 +65,15 @@ function tower(ctx, x, z, w, h, d, winMat, roofMat, o = {}) {
   const co = { mesh: m, crack, x, z, r: Math.max(w, d) * 0.6, h, hx: w / 2, hz: d / 2, top: h, hp, maxHp: hp, y0: h / 2, w, d, destroyed: false };
   world.cover.push(co); world.coverAll.push(co);
   return m;
+}
+// Register an already-built mesh as destructible cover. tower() does this for buildings; this is
+// for the pieces that aren't box towers (metro platforms, train cars, barns, stone walls). Must
+// push to BOTH lists — `cover` is the live set, `coverAll` is what resetTerrain restores from.
+function reg(world, m, x, z, hx, hz, top, hp) {
+  const co = { mesh: m, crack: null, x, z, r: Math.max(hx, hz), h: top, hx, hz, top,
+               hp, maxHp: hp, y0: m.position.y, w: hx * 2, d: hz * 2, destroyed: false };
+  world.cover.push(co); world.coverAll.push(co);
+  return co;
 }
 const disc = (ctx, mat, x, z, r, y = 0.1, seg = 26) => { const p = mesh(ctx, new THREE.CircleGeometry(r, seg), mat, x, y, z, { recv: false }); p.rotation.x = -Math.PI / 2; return p; };
 function palm(ctx, x, z, s = 1) {
@@ -311,6 +328,93 @@ const T = {
       mesh(ctx, new THREE.BoxGeometry(16, 1.2, 11), (rng() < 0.5 ? M2.red : M2.canvas), x, 7, z, { cast: true });
     }
     ctx.treeSpots.push([cx + 30, cz - 28], [cx - 30, cz + 30]);
+  },
+  // THE METRO — a real cut-and-cover trench you fight IN, not a decal. The planner lays these
+  // in a straight line along one grid row, so consecutive metro cells form ONE continuous cut
+  // across the city: the linear spine the concentric-square layout never had. 13u deep, so
+  // being knocked off the street into the station is a genuine fall.
+  metro(ctx, cx, cz, v) {
+    const M2 = ctx.mats, W = ctx.world, rng = ctx.rng;
+    const D = 13, HD = 26;                       // cut depth, half-depth across the tracks
+    W._pendingCuts = W._pendingCuts || [];
+    W._pendingCuts.push([cx, cz, CELL / 2 + 12, HD, D, 0]);   // overshoot the cell so neighbours join up
+    const fy = -D;                               // the station floor
+    if (v === 0) {
+      // --- platforms: raised slabs either side of the track, standable + destructible
+      for (const oz of [-15, 15]) {
+        const p = mesh(ctx, new THREE.BoxGeometry(CELL + 20, 2.4, 15), M2.platform, cx, fy + 1.2, cz + oz, { cast: true });
+        reg(W, p, cx, cz + oz, (CELL + 20) / 2, 7.5, fy + 2.4, 240);
+        for (let i = -2; i <= 2; i++)            // platform pillars up to the street deck
+          mesh(ctx, new THREE.CylinderGeometry(1.5, 1.7, D - 2, 8), M2.marble, cx + i * 22, fy + (D - 2) / 2 + 2.4, cz + oz, { cast: true });
+      }
+      // --- track bed + rails down the middle
+      mesh(ctx, new THREE.BoxGeometry(CELL + 20, 0.6, 14), M2.dark, cx, fy + 0.3, cz);
+      for (const oz of [-3.2, 3.2]) mesh(ctx, new THREE.BoxGeometry(CELL + 20, 0.7, 0.9), M2.steel, cx, fy + 0.9, cz + oz);
+      // --- THE TRAIN: three cars stopped at the platform, each its own destructible block
+      for (let i = 0; i < 3; i++) {
+        const tx = cx - 34 + i * 34;
+        const car = mesh(ctx, new THREE.BoxGeometry(31, 11, 11), M2.trainSide, tx, fy + 7.2, cz, { cast: true });
+        mesh(ctx, new THREE.BoxGeometry(31.4, 2.6, 11.4), M2.trainTrim, tx, fy + 9.2, cz);
+        reg(W, car, tx, cz, 15.5, 5.5, fy + 12.7, 300);
+      }
+    } else {
+      // --- open-air halt: no train, a footbridge over the cut and a signal gantry
+      for (const oz of [-15, 15]) {
+        const p = mesh(ctx, new THREE.BoxGeometry(CELL + 20, 2.4, 15), M2.platform, cx, fy + 1.2, cz + oz, { cast: true });
+        reg(W, p, cx, cz + oz, (CELL + 20) / 2, 7.5, fy + 2.4, 240);
+      }
+      mesh(ctx, new THREE.BoxGeometry(CELL + 20, 0.6, 14), M2.dark, cx, fy + 0.3, cz);
+      for (const oz of [-3.2, 3.2]) mesh(ctx, new THREE.BoxGeometry(CELL + 20, 0.7, 0.9), M2.steel, cx, fy + 0.9, cz + oz);
+      const br = mesh(ctx, new THREE.BoxGeometry(9, 1.4, 62), M2.deck, cx + 18, 1.6, cz, { cast: true });   // footbridge at street level
+      reg(W, br, cx + 18, cz, 4.5, 31, 2.3, 150);
+      mesh(ctx, new THREE.BoxGeometry(1.6, 22, 1.6), M2.steel, cx - 26, fy + 11, cz - 20, { cast: true });
+      mesh(ctx, new THREE.BoxGeometry(1.6, 1.6, 16), M2.steel, cx - 26, fy + 21, cz - 12);
+    }
+    // --- STAIR HEADHOUSES on the street: the way in, and the landmark that says METRO
+    for (const [ex, ez] of [[cx - 36, cz - 34], [cx + 36, cz + 34]]) {
+      mesh(ctx, new THREE.BoxGeometry(11, 7, 9), M2.stationTile, ex, 3.5, ez, { cast: true });
+      mesh(ctx, new THREE.BoxGeometry(12, 1, 10), M2.metroSign, ex, 7.4, ez, { cast: true });
+      for (let s = 0; s < 7; s++)                 // the steps down into the cut
+        mesh(ctx, new THREE.BoxGeometry(9, 1.9, 2.6), M2.platform, ex, -s * 1.9 + 0.5, ez + (ez > cz ? -1 : 1) * (5 + s * 2.6));
+    }
+  },
+  // THE COUNTRY — Villages and Small Towns were being built as miniature cities. Farmland gives
+  // the small places the rural character they actually have: open sightlines, low cover, long grass.
+  farmland(ctx, cx, cz, v) {
+    const M2 = ctx.mats, W = ctx.world, rng = ctx.rng;
+    // ploughed fields — big flat colour blocks, no cover, so the countryside fights OPEN
+    for (let i = 0; i < 4; i++) {
+      const fx = cx - 24 + (i % 2) * 48, fz = cz - 24 + ((i / 2) | 0) * 48;
+      const f = mesh(ctx, new THREE.PlaneGeometry(42, 42), i % 2 ? M2.fieldA : M2.fieldB, fx, 0.06, fz, { recv: true });
+      f.rotation.x = -Math.PI / 2;
+    }
+    if (v === 0) {          // the homestead: barn, silo, farmhouse
+      const barn = mesh(ctx, new THREE.BoxGeometry(26, 16, 18), M2.barn, cx - 22, 8, cz - 20, { cast: true });
+      reg(W, barn, cx - 22, cz - 20, 13, 9, 16, 190);
+      const roof = mesh(ctx, new THREE.CylinderGeometry(10, 10, 18, 3, 1, false, 0, Math.PI), M2.barnRoof, cx - 22, 16, cz - 20, { cast: true });
+      roof.rotation.z = -Math.PI / 2; roof.rotation.y = Math.PI / 2;
+      const silo = mesh(ctx, new THREE.CylinderGeometry(6, 6, 34, 12), M2.silo, cx + 4, 17, cz - 24, { cast: true });
+      reg(W, silo, cx + 4, cz - 24, 6, 6, 34, 200);
+      mesh(ctx, new THREE.ConeGeometry(6.6, 7, 12), M2.steelRoof, cx + 4, 37.5, cz - 24, { cast: true });
+      tower(ctx, cx + 28, cz + 24, 17, 12, 15, W._winMats[2], M2.terraRoof);
+    } else if (v === 1) {   // the orchard + windpump — trees are the cover here
+      for (let i = 0; i < 14; i++) ctx.treeSpots.push([cx - 34 + (i % 5) * 17, cz - 30 + ((i / 5) | 0) * 20]);
+      mesh(ctx, new THREE.CylinderGeometry(0.5, 1.1, 28, 6), M2.steel, cx + 30, 14, cz - 28, { cast: true });
+      for (let i = 0; i < 6; i++) {
+        const b = mesh(ctx, new THREE.PlaneGeometry(2.4, 7), M2.white, cx + 30, 30, cz - 28, { recv: false });
+        b.material.side = THREE.DoubleSide; b.rotation.z = (i / 6) * Math.PI * 2; b.translateY(4.4);
+      }
+      const shed = mesh(ctx, new THREE.BoxGeometry(15, 8, 12), M2.barn, cx - 26, 4, cz + 22, { cast: true });
+      reg(W, shed, cx - 26, cz + 22, 7.5, 6, 8, 120);
+    } else {                // grazing land: fences, water trough, a stone wall to duck behind
+      const w = mesh(ctx, new THREE.BoxGeometry(70, 5, 2.4), M2.stoneWall, cx, 2.5, cz - 18, { cast: true });
+      reg(W, w, cx, cz - 18, 35, 1.2, 5, 90);
+      const w2 = mesh(ctx, new THREE.BoxGeometry(2.4, 5, 54), M2.stoneWall, cx + 26, 2.5, cz + 14, { cast: true });
+      reg(W, w2, cx + 26, cz + 14, 1.2, 27, 5, 80);
+      for (let i = 0; i < 8; i++) ctx.treeSpots.push([cx - 36 + rng() * 72, cz + 10 + rng() * 34]);
+    }
+    // fence posts along the lane — decor, sells the scale
+    for (let i = 0; i < 10; i++) mesh(ctx, new THREE.BoxGeometry(0.7, 4, 0.7), M2.wood, cx - 40 + i * 9, 2, cz + 42);
   },
   plaza(ctx, cx, cz, v) {
     const M2 = ctx.mats, rng = ctx.rng;
