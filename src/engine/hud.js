@@ -503,6 +503,40 @@ const CSS = `
 /* ---- the THEATER: in-match city nameplate + the CITY ATLAS ---- */
 #hud .cityplate{ position:absolute; left:50%; transform:translateX(-50%); bottom:108px; font-family:'Cascadia Mono',Consolas,monospace; font-size:var(--t-label); letter-spacing:.14em; color:var(--text-4); background:rgba(8,10,16,.5); border:1px solid rgba(255,255,255,.08); border-radius:var(--r-2); padding:4px 12px; pointer-events:none; }
 #hud .cityplate b{ color:var(--gold-pale); font-weight:700; }
+/* ===== THE DANGER ROOM — a simulated environment + the engine's test harness =====
+   Everything but your character should read as PROJECTED: scanned grid, corner brackets,
+   a sweeping holo line, and a live telemetry column. This is how we test the engine. */
+#hud .simfx{ position:absolute; inset:0; pointer-events:none; z-index:2; display:none; }
+#hud.sim .simfx{ display:block; }
+#hud .simfx .simgrid{ position:absolute; inset:0; opacity:.15;
+  background-image:linear-gradient(var(--info) 1px, transparent 1px), linear-gradient(90deg, var(--info) 1px, transparent 1px);
+  background-size:44px 44px; -webkit-mask-image:radial-gradient(120% 90% at 50% 50%, #000 30%, transparent 76%);
+  mask-image:radial-gradient(120% 90% at 50% 50%, #000 30%, transparent 76%); }
+#hud .simfx .simscan{ position:absolute; inset:0; opacity:.4;
+  background:repeating-linear-gradient(0deg, rgba(127,230,255,.055) 0 1px, transparent 1px 4px); }
+#hud .simfx .simsweep{ position:absolute; left:0; right:0; height:130px; opacity:.55;
+  background:linear-gradient(180deg, transparent, rgba(127,230,255,.11), transparent); animation:simsweep 6s linear infinite; }
+@keyframes simsweep{ 0%{ top:-16%; } 100%{ top:104%; } }
+#hud .simfx .simc{ position:absolute; width:26px; height:26px; border:2px solid var(--info); opacity:.5; }
+#hud .simfx .c1{ left:10px; top:10px; border-right:0; border-bottom:0; }
+#hud .simfx .c2{ right:10px; top:10px; border-left:0; border-bottom:0; }
+#hud .simfx .c3{ left:10px; bottom:10px; border-right:0; border-top:0; }
+#hud .simfx .c4{ right:10px; bottom:10px; border-left:0; border-top:0; }
+#hud .simfx .simtag{ position:absolute; left:50%; top:12px; transform:translateX(-50%);
+  font-family:var(--f-mono); font-size:var(--t-tiny); letter-spacing:var(--tr-wider); color:var(--info); opacity:.8; }
+#hud .simfx .simtag i{ display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--info);
+  margin-right:7px; animation:pipblink 1.4s steps(2,start) infinite; }
+#hud .telem{ position:absolute; left:14px; top:14px; width:236px; padding:9px 11px; z-index:8;
+  font-family:var(--f-mono); font-size:var(--t-micro); line-height:1.5; color:var(--text-4);
+  background:rgba(6,10,16,.8); border:1px solid rgba(127,230,255,.28); border-radius:var(--r-2); display:none; }
+#hud.sim .telem{ display:block; }
+#hud .telem h4{ font-size:var(--t-tiny); letter-spacing:var(--tr-wide); color:var(--info); font-weight:700;
+  border-bottom:1px solid rgba(127,230,255,.25); padding-bottom:4px; margin-bottom:5px; display:flex; justify-content:space-between; }
+#hud .telem .tg{ margin-top:6px; padding-top:5px; border-top:1px dashed rgba(255,255,255,.09); }
+#hud .telem .tr2{ display:flex; justify-content:space-between; gap:8px; }
+#hud .telem .tk{ color:var(--text-5); } #hud .telem .tv{ color:var(--text-2); }
+#hud .telem .tv.hot{ color:var(--gold); } #hud .telem .tv.bad{ color:var(--danger); } #hud .telem .tv.ok{ color:var(--good); }
+#hud .telem .subj{ color:var(--info); font-weight:700; }
 /* ---- ALTITUDE LADDER: which of the four bands you're in, and which way you're moving ---- */
 #hud .alt{ position:absolute; right:18px; top:196px; width:58px; display:flex; flex-direction:column-reverse; gap:3px; padding:8px 7px; align-items:stretch; }
 #hud .alt .arung{ position:relative; height:24px; border-radius:var(--r-1); background:var(--surface-hi); border:1px solid var(--line); display:flex; align-items:center; justify-content:center; transition:background .18s, border-color .18s, transform .18s; }
@@ -870,6 +904,10 @@ export class HUD {
       <div class="panel radar" id="hRadar"><div class="rlab">Radar</div><canvas id="hRadarC" width="152" height="152"></canvas></div>
       <div class="panel pip" id="hPip" style="display:none"><div class="pipcap"><span class="pipdot"></span><span>ON AIR — KMK 9</span></div></div>
       <div class="cityplate" id="hCity" style="display:none"></div>
+      <div class="simfx"><div class="simgrid"></div><div class="simscan"></div><div class="simsweep"></div>
+        <span class="simc c1"></span><span class="simc c2"></span><span class="simc c3"></span><span class="simc c4"></span>
+        <div class="simtag"><i></i>THRESHOLD SIMULATION — DANGER ROOM · SUBJECT IS LIVE, ALL ELSE PROJECTED</div></div>
+      <div class="telem" id="hTelem"></div>
       <div class="panel alt" id="hAlt" style="display:none">
         <div class="aval" id="hAltV">0m</div>
         <div class="arung" data-b="0"><b>GND</b></div>
@@ -897,7 +935,7 @@ export class HUD {
       kit: this.root.querySelector('#hKit'), kitChips: this.root.querySelector('#hKitChips'), end: this.root.querySelector('#hEnd'),
       radar: this.root.querySelector('#hRadar'), radarC: this.root.querySelector('#hRadarC'),
       pip: this.root.querySelector('#hPip'),
-      city: this.root.querySelector('#hCity'),
+      city: this.root.querySelector('#hCity'), telem: this.root.querySelector('#hTelem'),
       alt: this.root.querySelector('#hAlt'), altV: this.root.querySelector('#hAltV'),
       altRungs: [...this.root.querySelectorAll('#hAlt .arung')],
       wanted: this.root.querySelector('#plWanted'),
@@ -1188,6 +1226,74 @@ export class HUD {
     const m = Math.round(y * 0.19);   // 1u ≈ 0.19m at true scale — report in metres, like a real altimeter
     const txt = m > 0 ? m + 'm' : '<i>GROUND</i>';
     if (txt !== this._altTxt) { this._altTxt = txt; this.el.altV.innerHTML = txt; }
+  }
+
+  // ===== THE TEST HARNESS =====
+  // In the Danger Room we surface everything the engine knows: frame cost, live entity/FX
+  // counts, the player's exact combat state, per-dummy DPS, and — critically — each bot's
+  // HONEST senses (what it believes, from which source, and how good its hands are). If a
+  // system misbehaves, it should be visible here before it's visible in a bug report.
+  updateTelemetry(g) {
+    const on = g.modeId === 'training' && g.running;
+    if (on !== this._simOn) { this._simOn = on; this.root.classList.toggle('sim', on); }
+    if (!on) return;
+    const now = performance.now();
+    if (this._telT && now - this._telT < 120) return;    // 8 Hz — readable, and cheap
+    this._telT = now;
+    const p = g.player, w = g.world;
+    const row = (k, v, cls = '') => `<div class="tr2"><span class="tk">${k}</span><span class="tv ${cls}">${v}</span></div>`;
+    const bands = ['GROUND', 'BUILDING', 'SKY', 'CLOUDS'];
+    const b = p.pos.y < 8 ? 0 : p.pos.y < 150 ? 1 : p.pos.y < 260 ? 2 : 3;
+    const fps = w.fps, ft = (w._ema || 16.7);
+    let html = `<h4><span>◈ SIMULATION TELEMETRY</span><span>${fps} FPS</span></h4>`;
+    html += row('FRAME', ft.toFixed(1) + ' ms', ft > 24 ? 'bad' : ft < 17 ? 'ok' : 'hot');
+    html += row('QUALITY TIER', 'T' + (w._qTier ?? '?') + (w.qualityOverride != null ? ' (locked)' : ''));
+    html += row('ENTITIES', g.entities.length);
+    html += row('PROJECTILES', g.projectiles.list.length);
+    html += row('PARTICLES', (g.particles && g.particles.count) || (g.particles && g.particles.live) || '—');
+    html += row('COVER / FADES', `${w.cover.length} / ${(w._fades && w._fades.size) || 0}`);
+    // the live subject
+    html += `<div class="tg"><div class="subj">SUBJECT — ${esc(p.name)}</div>`;
+    html += row('HP / KI', `${p.hp | 0}/${p.maxHp} · ${p.ki | 0}/${p.maxKi}`, p.hp < p.maxHp * 0.3 ? 'bad' : '');
+    html += row('STATE', `${p.state}${p.hitstop > 0 ? ' +hitstop' : ''}${p.staggerT > 0 ? ' +stagger' : ''}`, p.hitstop > 0 ? 'bad' : '');
+    html += row('ALTITUDE', `${(p.pos.y * 0.19).toFixed(1)} m · ${bands[b]}`, b ? 'hot' : '');
+    html += row('FLYING / GUARD', `${p.flying ? 'YES' : 'no'} / ${p.guarding ? 'UP' : 'down'}`);
+    html += row('GUARD METER', (p.guardMeter * 100 | 0) + '%', p.guardMeter < 0.3 ? 'bad' : '');
+    html += row('TIER / LVL', `${p.tier} / ${p.level}`);
+    html += row('COMBO', g.combo + (g._p1MaxCombo ? ` (best ${g._p1MaxCombo})` : ''));
+    html += `</div>`;
+    // dummies: live damage instrumentation
+    const dummies = g.entities.filter(e => e.isDummy);
+    if (dummies.length) {
+      html += `<div class="tg"><div class="subj">DAMAGE BENCH</div>`;
+      for (const d of dummies) {
+        const log = d._dmgLog || [];
+        while (log.length && log[0].t < g.time - 3) log.shift();
+        const dps = log.reduce((s, x) => s + x.a, 0) / 3;
+        html += row(`DUMMY ${d.id}`, `${dps.toFixed(0)} dps · Σ${Math.round(d._dmgTotal || 0)}`, dps > 0.5 ? 'hot' : '');
+      }
+      html += `</div>`;
+    }
+    // every bot's honest senses + fair hands
+    const bots = g.entities.filter(e => e.ai && e.alive && !e.isDummy);
+    if (bots.length) {
+      html += `<div class="tg"><div class="subj">AI — SENSES &amp; HANDS</div>`;
+      for (const f of bots.slice(0, 3)) {
+        const ai = f.ai;
+        html += row(esc(f.name), ai._sees ? 'SEES YOU' : (ai.belief ? 'believes:' + ai.belief.src : 'no idea'), ai._sees ? 'bad' : ai.belief ? 'hot' : 'ok');
+        html += row('  reflex/turn', `${ai.reflex.toFixed(2)}s · ${ai.turnRate.toFixed(1)} r/s`);
+        html += row('  mem/jitter', `${ai._mem.toFixed(1)}s · ${(ai.aimJitter * 100).toFixed(1)}`);
+      }
+      html += `</div>`;
+    }
+    // the city / villain systems, live
+    const c = g.cityStats || {};
+    html += `<div class="tg"><div class="subj">WORLD</div>`;
+    html += row('CIV / CARS / BLOCKS', `${c.civs || 0} / ${c.cars || 0} / ${c.blocks || 0}`, (c.civs || 0) ? 'bad' : '');
+    html += row('HEAT / WANTED', `${g.police ? g.police.heatOf(p) | 0 : 0} · ${'★'.repeat(g.police ? g.police.wantedLevel(p) : 0) || '—'}`, (g.police && g.police.wantedLevel(p)) ? 'bad' : '');
+    html += row('OFFICERS', g.entities.filter(e => e.def && e.def.police).length);
+    html += `</div>`;
+    if (html !== this._telHtml) { this._telHtml = html; this.el.telem.innerHTML = html; }
   }
 
   // Point at the fight. Bots can genuinely hide now, so an off-screen target gets an edge marker.
@@ -1929,6 +2035,7 @@ export class HUD {
     this.updateKitWidget(p);
     this.updateDpsMeters(g);
     this.updateFoeArrow(g);
+    this.updateTelemetry(g);
     this.updateAltitude(g, p);
     // radar (hidden at the title / while paused) + low-HP danger pulse
     const inMatch = !!(g.mode && g.running);
