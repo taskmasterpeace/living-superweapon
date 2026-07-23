@@ -125,28 +125,83 @@ export function resistOf(def, sheet) {
 const BUILDS = {
   sol: { pauldron: 1, gaunt: 1 }, kano: { band: 1, gaunt: 1 }, vega: { pauldron: 1, gaunt: 1, collar: 1 },
   aurum: { collar: 1, gaunt: 1 }, nova: { helmet: 1, visor: 1, pauldron: 1 }, rime: { crest: 1, collar: 1 },
-  volt: { crest: 1, gaunt: 1 }, warden: { helmet: 1, visor: 1, pauldron: 2, gaunt: 1 }, hive: { crest: 1, pauldron: 1 },
+  volt: { crest: 1, gaunt: 1 }, warden: { helmet: 1, visor: 1, pauldron: 2, gaunt: 1 }, hive: { tank: 1, crest: 1, pauldron: 1 },
   pyre: { crest: 1, gaunt: 1 }, torch: { crest: 1 }, apex: { crest: 1, pauldron: 1 },
-  specter: { helmet: 1, visor: 1, collar: 1 }, vanguard: { helmet: 1, visor: 1, pauldron: 2, gaunt: 1 },
-  kraken: { crest: 1, collar: 1 },                                     // + tentacles from def.tentacles
+  specter: { hood: 1, visor: 1, collar: 1 }, vanguard: { helmet: 1, visor: 1, pauldron: 2, gaunt: 1 },
+  kraken: { horns: 1, collar: 1 },                                     // + tentacles from def.tentacles
   rift: { helmet: 1, visor: 1, collar: 1 },
   titan: { helmet: 1, visor: 1, pauldron: 2, gaunt: 1, gun: 1 },       // pulse rifle in the right fist
   sarge: { band: 1, gaunt: 1, gun: 1, weaponL: 'sword', shield: 1 },   // rifle + plasma SWORD + riot shield
   gale: { band: 1, weaponL: 'bow', weaponR: 'knife' },                 // the ranger: bow out, knife ready
   stefanos: { collar: 1, gaunt: 1 },                                   // presidential suit lines
-  sandra: { band: 1, weaponL: 'pistol', weaponR: 'pistol' },           // the Jackal: a pistol in each hand
+  sandra: { coat: 1, band: 1, weaponL: 'pistol', weaponR: 'pistol' },  // the Jackal: a pistol in each hand, long coat
   // the thirty
+  kivuli: { tank: 1, hood: 1 }, jawah: { hood: 1, collar: 1 }, moses: { horns: 1, crest: 1, gaunt: 1 },
   ironclad: { helmet: 1, visor: 1, pauldron: 2, gaunt: 1 }, rage: { band: 1 }, stormcall: { helmet: 1, pauldron: 2, gaunt: 1, weaponR: 'axe' },
-  webline: { band: 1 }, ripclaw: { helmet: 1, gaunt: 1 }, majesty: { band: 1, pauldron: 1, gaunt: 1 },
-  mystward: { collar: 1, band: 1 }, onyx: { helmet: 1, visor: 1, collar: 1 }, chainfire: { crest: 1, gaunt: 1 }, tempest: { crest: 1, collar: 1 },
-  knightfall: { helmet: 1, visor: 1, collar: 1, gaunt: 1 }, aegis: { band: 1, pauldron: 1, gaunt: 1, weaponL: 'sword', shield: 1 },
-  olympus: { collar: 1, gaunt: 1 }, marshal: { collar: 1 }, circuit: { helmet: 1, visor: 1, pauldron: 2, gaunt: 1, gun: 1 },
+  webline: { band: 1 }, ripclaw: { mane: 1, gaunt: 1 }, majesty: { wings: 1, band: 1, pauldron: 1, gaunt: 1 },
+  mystward: { hood: 1, collar: 1, coat: 1 }, onyx: { helmet: 1, visor: 1, collar: 1 }, chainfire: { horns: 1, gaunt: 1, coat: 1 }, tempest: { crest: 1, collar: 1 },
+  knightfall: { hood: 1, visor: 1, collar: 1, gaunt: 1, coat: 1 }, aegis: { band: 1, pauldron: 1, gaunt: 1, weaponL: 'sword', shield: 1 },
+  olympus: { wings: 1, collar: 1, gaunt: 1 }, marshal: { coat: 1, collar: 1 }, circuit: { tank: 1, helmet: 1, visor: 1, pauldron: 2, gun: 1 },
   trench: { crest: 1, pauldron: 1, weaponR: 'spear' }, decibel: { band: 1 }, coldsnap: { helmet: 1, visor: 1, gun: 1 },
-  foundry: { helmet: 1, pauldron: 2, gaunt: 1, weaponR: 'axe' }, talon: { band: 1, weaponL: 'knife', weaponR: 'knife' },
-  abeo: { helmet: 1, pauldron: 2, gaunt: 1 }, jelani: { band: 1, gaunt: 1 }, kamaria: { collar: 1, band: 1 },
-  ramiro: { band: 1, weaponR: 'shotgun', shield: 1 }, jawah: { collar: 1 }, moses: { crest: 1, gaunt: 1 },
-  dune: { collar: 1, band: 1 }, graven: { helmet: 1, visor: 1, collar: 1 }, bulwark: { helmet: 1, pauldron: 2, gaunt: 1, shield: 1 }, feral: { crest: 1, gaunt: 1 },
+  foundry: { tank: 1, helmet: 1, pauldron: 2, gaunt: 1, weaponR: 'axe' }, talon: { band: 1, weaponL: 'knife', weaponR: 'knife' },
+  abeo: { helmet: 1, pauldron: 2, gaunt: 1 }, jelani: { band: 1, gaunt: 1 }, kamaria: { hood: 1, collar: 1 },
+  ramiro: { coat: 1, band: 1, weaponR: 'shotgun' }, jawah: { collar: 1 }, moses: { crest: 1, gaunt: 1 },
+  dune: { collar: 1, band: 1 }, graven: { helmet: 1, visor: 1, collar: 1 }, bulwark: { helmet: 1, pauldron: 2, gaunt: 1, shield: 1 }, feral: { mane: 1, horns: 1, gaunt: 1 },
 };
+
+// THE BODY FRAME — the fix for "every character is the same guy in a different colour."
+// Derives PROPORTIONS from what a character IS: a Might-10 bruiser is a wall of muscle, a wiry
+// speedster is lean and short, a robot is a boxy chassis. So you can tell fighters apart by
+// SILHOUETTE from across the arena, not just by palette. `def.frame` overrides for a hand-tuned one.
+//   scale  — overall height/size (parts only; the group is NOT scaled, so ground markers + the
+//            ragdoll stay world-true — see applyFrame)
+//   bulk   — torso & limb thickness · broad — shoulder span · stance — leg span
+//   head   — head size ratio (heavies have small heads on huge bodies) · neck — neck thickness
+function frameOf(def) {
+  const F = { scale: 1, bulk: 1, broad: 1, head: 1, neck: 1, stance: 1 };
+  if (def.frame) return Object.assign(F, def.frame);
+  const s = def.strength ?? 5;
+  const tag = ((def.role || '') + ' ' + (def.title || '') + ' ' + (def.blurb || '')).toLowerCase();
+  if (s >= 10)      Object.assign(F, { scale: 1.20, bulk: 1.42, broad: 1.34, head: 0.84, neck: 1.5, stance: 1.28 });
+  else if (s >= 8)  Object.assign(F, { scale: 1.12, bulk: 1.28, broad: 1.24, head: 0.9, neck: 1.34, stance: 1.18 });
+  else if (s >= 7)  Object.assign(F, { scale: 1.06, bulk: 1.15, broad: 1.13, head: 0.94, neck: 1.18, stance: 1.09 });
+  else if (s <= 3)  Object.assign(F, { scale: 0.92, bulk: 0.79, broad: 0.9, head: 1.09, neck: 0.84, stance: 0.94 });
+  else if (s <= 4)  Object.assign(F, { scale: 0.97, bulk: 0.9, broad: 0.96, head: 1.03, neck: 0.92 });
+  // archetype overlays — read the concept, not just the number
+  // ⚠ WORD BOUNDARIES ARE LOAD-BEARING. Without , `imp` matches "simpler" and `small` matches
+  // "smaller" — which built RAGE (Might 10, the biggest bruiser in the game) as a CHILD, because
+  // his blurb contains the word "simpler". Never substring-match prose.
+  if (/(speed|lightning|acrobat|sprint|ranger|archer|nimble|swift)\w*/.test(tag)) { F.scale = Math.min(F.scale, 0.96); F.bulk = Math.min(F.bulk, 0.82); F.stance = Math.min(F.stance, 0.92); }
+  if (def.metal) { F.bulk = Math.max(F.bulk, 1.22); F.broad = Math.max(F.broad, 1.2); F.head = Math.min(F.head, 0.9); F.neck = Math.max(F.neck, 1.32); }   // a chassis, not a body
+  if (/(giant|colossus|titan|behemoth|rampart|fortress|mountain|atlas|leviathan)\w*/.test(tag)) { F.scale = Math.max(F.scale, 1.2); F.bulk = Math.max(F.bulk, 1.38); }
+  if (/(child|kid|imp|sprite|dwarf)/.test(tag)) { F.scale = Math.min(F.scale, 0.84); F.head = Math.max(F.head, 1.16); F.bulk = Math.min(F.bulk, 0.85); }
+  return F;
+}
+// Apply the frame to the BODY meshes only. ⚠ Deliberately does NOT scale the group `g`: the
+// ground markers (ring/wedge/shadow) sit at un-scaled world positions as children of g, and the
+// ragdoll drives body meshes in group-local space assuming g.scale=1 — scaling g would float the
+// markers and misplace ragdoll limbs. Framing the parts instead leaves both correct.
+function applyFrame(P, F) {
+  P.g.userData.frame = F;
+  const S = F.scale;
+  P.torso.position.y *= S; P.torso.scale.set(F.bulk, S, F.bulk);
+  P.pelvis.position.y *= S; P.pelvis.scale.set(F.bulk * 0.96, S, F.bulk * 0.96);
+  P.head.position.y *= S; P.head.scale.setScalar(0.88 * F.head);
+  if (P.cowl) { P.cowl.position.y *= S; P.cowl.scale.setScalar(0.9 * F.head); }
+  if (P.emblem) P.emblem.position.y *= S;
+  for (const arm of [P.armL, P.armR]) {
+    arm.position.x *= F.broad; arm.position.y *= S;
+    for (const m of arm.children) { m.scale.x *= F.bulk; m.scale.z *= F.bulk; m.scale.y *= S; m.position.y *= S; }
+  }
+  for (const leg of [P.legL, P.legR]) {
+    leg.position.x *= F.stance; leg.position.y *= S;
+    const u = leg.userData;
+    if (u.knee) u.knee.position.y *= S;
+    for (const m of [u.thigh, u.shin, u.boot]) { if (!m) continue; m.scale.x *= F.bulk; m.scale.z *= F.bulk; m.scale.y *= S; m.position.y *= S; }
+  }
+  // the energy shells wrap the torso — lift them so they still hug a tall frame
+  for (const m of [P.aura, P.guardArc, P.ice, P.cape]) if (m) m.position.y *= (1 + (S - 1) * 0.7);
+}
 
 function figure(def) {
   const c = def.colors || def;
@@ -183,6 +238,7 @@ function figure(def) {
   torso.position.y = 5.2; torso.castShadow = true; g.add(torso);
   const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.62, 1.0, 10), skinMat);
   neck.position.set(0, 2.0, 0); torso.add(neck);
+  { const nk = (def.frame || frameOf(def)).neck || 1; neck.scale.set(nk, 1, nk); }   // a heavy frame has no neck to speak of
   if (b.collar) {
     const col = new THREE.Mesh(new THREE.CylinderGeometry(1.32, 1.02, 1.2, 14, 1, true, -1.05, 2.1), armor);
     col.material.side = THREE.DoubleSide; col.position.set(0, 1.9, -0.15); torso.add(col);
@@ -210,6 +266,44 @@ function figure(def) {
     const cr2 = new THREE.Mesh(new THREE.ConeGeometry(0.34, 1.2, 4), cr.material); cr2.position.set(0, 0.9, -0.7); head.add(cr2);
   }
   if (b.band) { const bd = new THREE.Mesh(new THREE.TorusGeometry(1.16, 0.14, 8, 18), new THREE.MeshStandardMaterial({ color: c.secondary, roughness: 0.55, metalness: 0.2 })); bd.rotation.x = Math.PI / 2; bd.position.y = 0.32; head.add(bd); }
+  // ---- SIGNATURE SILHOUETTE PIECES -----------------------------------------------------------
+  // The frame gives you size; these give you SHAPE. Every one mounts on a DRIVEN mesh (head /
+  // torso / pelvis) so poses and the ragdoll carry them for free — the rig contract.
+  if (b.horns) {                                   // beast / demon read
+    for (const side of [-1, 1]) {
+      const hn = new THREE.Mesh(new THREE.ConeGeometry(0.26, 1.5, 7), armor);
+      hn.position.set(side * 0.62, 0.78, -0.05); hn.rotation.z = -side * 0.42; hn.rotation.x = -0.22; head.add(hn);
+    }
+  }
+  if (b.hood) {                                    // a raised hood — assassin / mystic
+    cowl.visible = false;
+    const hd = new THREE.Mesh(new THREE.ConeGeometry(1.5, 2.1, 10, 1, true), suit2);
+    hd.material.side = THREE.DoubleSide; hd.position.set(0, 0.42, -0.22); hd.rotation.x = -0.16; head.add(hd);
+    const drape = new THREE.Mesh(new THREE.ConeGeometry(1.32, 1.5, 10, 1, true), suit2);
+    drape.material.side = THREE.DoubleSide; drape.position.set(0, -0.55, -0.5); drape.rotation.x = 0.3; head.add(drape);
+  }
+  if (b.mane) {                                    // a shaggy volume — feral / lion
+    const mn = new THREE.Mesh(new THREE.IcosahedronGeometry(1.62, 0), suit2);
+    mn.position.set(0, -0.05, -0.28); mn.scale.set(1.1, 0.95, 1.0); head.add(mn);
+  }
+  if (b.wings) {                                   // back wings — the fliers that should LOOK it
+    for (const side of [-1, 1]) {
+      const wg = new THREE.Mesh(new THREE.PlaneGeometry(4.6, 2.4, 3, 2), new THREE.MeshStandardMaterial({ color: c.accent, emissive: c.accent, emissiveIntensity: 0.35, transparent: true, opacity: 0.72, side: THREE.DoubleSide, roughness: 0.5 }));
+      wg.position.set(side * 2.1, 0.7, -1.0); wg.rotation.y = side * 0.9; wg.rotation.z = side * 0.3; torso.add(wg);
+    }
+  }
+  if (b.tank) {                                    // a back tank / pack — gas, tech, engineer
+    const tk = new THREE.Mesh(new THREE.CapsuleGeometry(0.62, 1.7, 4, 10), armor);
+    tk.position.set(-0.62, 0.25, -1.35); torso.add(tk);
+    const tk2 = new THREE.Mesh(new THREE.CapsuleGeometry(0.62, 1.7, 4, 10), armor);
+    tk2.position.set(0.62, 0.25, -1.35); torso.add(tk2);
+    const hose = new THREE.Mesh(new THREE.TorusGeometry(0.5, 0.11, 6, 12, Math.PI), glow.clone());
+    hose.material.emissiveIntensity = 0.5; hose.position.set(0, 1.1, -1.1); hose.rotation.x = Math.PI / 2; torso.add(hose);
+  }
+  if (b.coat) {                                    // a long coat skirt — gunslinger / hunter
+    const ct = new THREE.Mesh(new THREE.CylinderGeometry(1.34, 2.0, 3.0, 12, 1, true), suit2);
+    ct.material.side = THREE.DoubleSide; ct.position.set(0, -1.25, -0.1); pelvis.add(ct);
+  }
   if (b.visor) { const vis = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.42, 0.42), visorMat); vis.position.set(0, 0.12, 0.92); head.add(vis); }
   // eyes (children of head; hidden behind a visor)
   const eyeGeo = new THREE.SphereGeometry(0.2, 8, 8);
@@ -298,7 +392,9 @@ function figure(def) {
   const ice = new THREE.Mesh(new THREE.IcosahedronGeometry(4.6, 1), new THREE.MeshStandardMaterial({ color: '#bfeaff', transparent: true, opacity: 0, roughness: 0.15, metalness: 0.1, emissive: '#4fb8e6', emissiveIntensity: 0.15 }));
   ice.position.y = 5.2; ice.scale.set(1, 1.5, 1); ice.visible = false; g.add(ice);
 
-  return { g, torso, head, pelvis, cowl, emblem, aura, cape, armL, armR, legL, legR, eyeL, eyeR, shadow, bandRing, faceWedge, stateRing, guardArc, ice, mats: { suit, suit2, glow } };
+  const P = { g, torso, head, pelvis, cowl, emblem, aura, cape, armL, armR, legL, legR, eyeL, eyeR, shadow, bandRing, faceWedge, stateRing, guardArc, ice, mats: { suit, suit2, glow } };
+  applyFrame(P, frameOf(def));   // ← the silhouette: proportions derived from who this fighter IS
+  return P;
 }
 
 export class Fighter {

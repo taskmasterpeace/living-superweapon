@@ -498,6 +498,36 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   the first child — centred when it fits, scrollable when it doesn't. If you add anything tall to
   the title, that is why.
 
+## THE BODY FRAME — fixing the roster's sameness (2026-07-23)
+- **The diagnosis.** Measured, not guessed: the whole 52-fighter roster was ONE procedural body at
+  ONE size. Every character's group scale was exactly `1`; only 22 had a BUILDS entry and those are
+  small trim (a crest, a pauldron). A Might-10 bruiser, a wiry speedster and a robot rendered at
+  identical dimensions. For a roster fighter, that is the weakest possible thing — it's the
+  "characters feel the same" note, and it was literally true.
+- **`frameOf(def)`** derives PROPORTIONS from what a fighter IS — `strength` is the spine, with
+  archetype overlays off role/title/blurb and `def.metal`. Params: `scale` (size) · `bulk` (torso &
+  limb thickness) · `broad` (shoulder span) · `stance` (leg span) · `head` (heavies get small heads
+  on huge bodies) · `neck`. `def.frame` overrides for a hand-tuned body.
+- **`applyFrame(P, F)` reshapes the BODY MESHES ONLY — it deliberately does NOT scale the group.**
+  ⚠ The ground markers (ring/wedge/shadow) are children of `g` positioned at un-scaled WORLD
+  offsets, and the ragdoll drives body meshes in group-local space assuming `g.scale === 1`.
+  Scaling `g` floats the markers off the ground AND misplaces every ragdoll limb. Framing the parts
+  leaves both correct and needs zero ragdoll changes.
+- **SIGNATURE SILHOUETTE PIECES** (new BUILDS flags, all mounted on DRIVEN meshes so poses and the
+  ragdoll carry them): `horns` · `hood` (hides the cowl) · `mane` · `wings` · `tank` (back pack +
+  hose) · `coat` (long skirt off the pelvis). Assigned by concept — hoods on KNIGHTFALL/MYSTWARD/
+  KAMARIA/SPECTER/JAWAH/KIVULI, mane+horns on FERAL, wings on OLYMPUS/MAJESTY, tanks on HIVE/
+  FOUNDRY/CIRCUIT, coats on RAMIRO/MARSHAL/SANDRA/CHAINFIRE.
+- ⚠ **WORD BOUNDARIES ARE LOAD-BEARING in `frameOf`.** The first version substring-matched prose:
+  `imp` matched **"simpler"** in RAGE's blurb, so the biggest bruiser in the game was built as a
+  CHILD (scale 0.84). Every archetype regex now uses ``. Never substring-match flavour text.
+- Verified: 52/52 framed · 7 distinct body types · mesh counts now span 45–60 (they were uniform) ·
+  measured bounding boxes give a **2.41× width spread and 1.25× height spread** where the roster
+  was previously identical (RAGE 12.47×6.16, OLYMPUS 11.75×9.44 on wings, VOLT 10.87×3.91,
+  GALE 10.01×5.10). Ragdoll verified at both frame extremes: no NaN, giants settle higher than
+  lean fighters (3.84 vs 2.94), and `restore()` puts the framed proportions back exactly.
+  364 slots across 52 heroes still fire, 8.4ms/frame, 0 errors.
+
 ## Hard rules (do not break)
 - **`opts.hitstop ?? 0.04`, NEVER `||`** (`entity.takeDamage`). Sustained damage — beams, cones,
   lifedrain, DoT ticks — passes `hitstop: 0` deliberately. With `||`, that falsy zero became 0.04
