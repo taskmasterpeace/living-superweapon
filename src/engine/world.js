@@ -421,6 +421,49 @@ export class World {
   // district naming for the news desk / lower thirds — plan-aware, flagship keeps canon names
   districtAt(x, z) { return districtNameAt(this.plan, x, z) || 'THE CITY'; }
 
+  // ---- SIMULATION MODE: the Danger Room renders the WORLD as a projection ----
+  // Everything the room fabricates (city, props, greenery, water) goes translucent holo-cyan
+  // with lit edges; the player is never touched, so the live subject reads solid against a
+  // fabricated set. Reversible: originals are stashed per-material and restored on exit.
+  setSim(on) {
+    if (!!on === !!this._simOn) return;
+    this._simOn = !!on;
+    const mats = new Set();
+    const collect = (o) => { if (!o) return; o.traverse(m => { if (m.material) (Array.isArray(m.material) ? m.material : [m.material]).forEach(x => mats.add(x)); }); };
+    collect(this.arena); collect(this.grass); collect(this._canopy);
+    for (const m of this._cityBits) collect(m);
+    const HOLO = new THREE.Color('#5fd8ff');
+    if (on) {
+      this._simSaved = [];
+      for (const m of mats) {
+        this._simSaved.push({ m, c: m.color && m.color.clone(), o: m.opacity, t: m.transparent, e: m.emissive && m.emissive.clone(), ei: m.emissiveIntensity, w: m.wireframe, d: m.depthWrite });
+        if (m.color) m.color.lerp(HOLO, 0.62);
+        m.transparent = true; m.opacity = Math.min(m.opacity ?? 1, 0.42);
+        if (m.emissive) { m.emissive.copy(HOLO); m.emissiveIntensity = 0.55; }
+        m.needsUpdate = true;
+      }
+      // a scan-line cage over the deck so the floor reads as projected, not paved
+      if (!this._simCage) {
+        const g = new THREE.PlaneGeometry(this.ARENA * 2, this.ARENA * 2, 48, 48);
+        this._simCage = new THREE.LineSegments(new THREE.WireframeGeometry(g),
+          new THREE.LineBasicMaterial({ color: '#5fd8ff', transparent: true, opacity: 0.13, depthWrite: false }));
+        this._simCage.rotation.x = -Math.PI / 2; this._simCage.position.y = 0.35;
+        g.dispose();
+      }
+      this.scene.add(this._simCage);
+    } else {
+      for (const s of (this._simSaved || [])) {
+        const m = s.m;
+        if (s.c && m.color) m.color.copy(s.c);
+        m.opacity = s.o; m.transparent = s.t; m.wireframe = s.w; m.depthWrite = s.d;
+        if (s.e && m.emissive) { m.emissive.copy(s.e); m.emissiveIntensity = s.ei; }
+        m.needsUpdate = true;
+      }
+      this._simSaved = null;
+      if (this._simCage) this.scene.remove(this._simCage);
+    }
+  }
+
   // ---------------- PROCEDURAL CITIES (the world sheet) ----------------
   // Tear the current city down to bare terrain systems, then raise a new one from a plan.
   _teardownCity() {

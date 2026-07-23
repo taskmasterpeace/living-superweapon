@@ -573,7 +573,8 @@ export class Game {
   }
 
   spawnDummy(x, z) {
-    const def = { name: 'Training Bot', colors: { primary: '#3a4150', secondary: '#272c36', accent: '#9fb2c9', skin: '#cfd6e0' }, hp: 120, ki: 100, speed: 0, abilities: {} };
+    // a PROJECTED opponent, not a mannequin — cyan construct colours mark it as fabricated
+    const def = { name: 'Sim Construct', colors: { primary: '#2f6f86', secondary: '#1d4a5c', accent: '#7fe6ff', skin: '#8fd8ee' }, hp: 120, ki: 100, speed: 0, abilities: {}, holo: true };
     const d = this.addFighter(def, { team: 1, dummy: true, x, z });
     return d;
   }
@@ -650,6 +651,7 @@ export class Game {
     this.bigHit = { amount: 0, by: null, kind: 'blast' }; this._p1MaxCombo = 0; this.matchReport = null;
     if (this.news) this.news.reset(id);
     if (this.police) this.police.reset();
+    this.world.setSim(id === 'training');   // the Danger Room fabricates its world
     const two = !!o.twoPlayer;
     this.spawnHuman(o.p1 || 'sol', 'kbm', { x: two ? -20 : 0, z: 30 });
     if (two) this.spawnHuman(o.p2 || 'vega', 'pad', { x: 20, z: 30, team: id === 'duel' ? 1 : 0 });
