@@ -377,6 +377,30 @@ value is missing from the scale, add a token rather than a one-off.
 - The identity across every screen is **document + broadcast furniture**: hairline borders, dashed
   §section rules, mono micro-labels, classified stamps, one gold accent on warm-neutral dark.
 
+## Ballistics, throwing & the city as ammunition (2026-07-23)
+- **Bloom is for KI ONLY.** Bullets are matte brass (`MAT_BULLET`, no emissive) with an alpha
+  tracer (never additive). If it isn't energy, it must not glow.
+- **Weapon classes** (`def.weapon` on a `rifle` ability): `shotgun` (8 pellets, wide spread, huge
+  kick, short `life` so falloff is PHYSICAL) · `pistol` (one accurate heavy shot) · `rifle` (fast,
+  tight auto). SARGE carries a Service Carbine + a Breaching Shotgun.
+- **THE BALLISTIC SCALE** (`entity.takeDamage`, `opts.ballistic`): lethal to people, an annoyance
+  to superweapons. Damage meets ARMOUR first (`def.armor`, or 9 flat for `def.metal` — sparks off
+  the plate), then TOUGHNESS (`str >= 6` scales it down; STR 10 takes ~15%). Measured with one
+  shotgun blast: 60 unarmoured · 0 through TITAN · 10.8 to RAGE. Energy/fists/slams bypass this.
+- Ballistic rounds do NOT explode (no fireball/crater/areaDamage) and they **collide with
+  pedestrians** — peds are one instanced mesh, so nothing had ever hit them; one shot downs a
+  civilian, books police heat on the shooter.
+- **THROW ARC** (`game.updateThrowArc`): every gravity projectile draws a dotted parabola +
+  landing ring using the SAME maths the projectile flies with, so the preview can't lie. Orange
+  while carrying a prop.
+- **CARRY & THROW** (`grabProp`/`throwProp`/`updateCarry`): **G** hoists a car (STR 6+), street
+  tree or lamp; carrying slows you ~28%; **G** again hurls it along the arc. ⚠ The impact check is
+  sized to the object (13u wide × 16u tall for a car) — `overlapFoe`'s ±9u vertical window let a
+  lobbed car sail over a fighter's head. Props are now cover AND destructible AND a weapon.
+- **New tiles**: `stadium` (ring of standable stands + floodlights), `hospital` (rooftop helipad,
+  ambulance bay), `market` (dense low stalls). Every generated city gets a hospital; bigger ones
+  get a stadium and markets, so two same-type cities stop feeling identical.
+
 ## Combat readability (2026-07-23) — what a fighter is doing, at a glance
 - **Guns are ballistics, not ki.** `rifle` spawns `bullet: true` projectiles: a brass slug
   (`GEO_BULLET`, built along +Z, quaternion-aligned to travel) with a tracer streak trailing it,
