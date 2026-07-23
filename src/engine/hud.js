@@ -1176,10 +1176,13 @@ export class HUD {
     this._mapEdit(st, () => {
       if (st.paint === 'ERASE') { delete st.edits[key]; return; }
       if (st.paint === 'LOCK') {
-        if (st.edits[key] && st.edits[key].lock) { delete st.edits[key]; return; }   // click again to unlock
         if (!cur) return;
-        const a = cur.ref ? plan.cells[cur.ref[0]][cur.ref[1]] : cur;
+        // ⚠ Resolve the ANCHOR first, then toggle. Clicking a covered cell of a footprint used to
+        // lock the anchor but never unlock it, because the toggle tested the covered cell's own key
+        // — so a locked stadium could not be released except by hitting its top-left corner.
         const ak = cur.ref ? cur.ref.join(',') : key;
+        const a = cur.ref ? plan.cells[cur.ref[0]][cur.ref[1]] : cur;
+        if (st.edits[ak] && st.edits[ak].lock) { delete st.edits[ak]; return; }   // click again to unlock
         st.edits[ak] = { t: a.t, v: a.v || 0, lock: true };
         return;
       }
