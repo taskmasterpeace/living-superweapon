@@ -9,10 +9,12 @@ import { runSlot, performEvade } from './engine/abilities.js';
 import { loadSettings, applySettings, SETTINGS, KEYMAPS, keymap } from './core/settings.js';
 import { installCustoms, loadCustoms, freshPicks, buildDef, tally, validate, saveCustom, deleteCustom } from './data/creator.js';
 import { applyIdentities } from './data/identities.js';
+import { countryOf } from './data/countries.js';
 import { Tutorial } from './engine/tutorial.js';
 import { Netplay } from './engine/netplay.js';
 import { Tournament } from './engine/tournament.js';
 import { TouchControls, isTouchDevice } from './core/touch.js';
+import { UINav } from './core/uinav.js';
 
 const canvas = document.getElementById('game');
 const input = new Input(); input.bind(canvas);
@@ -49,6 +51,10 @@ if (isTouchDevice()) {
 }
 game.touch = touch;
 
+// CONTROLLER MENU NAVIGATION — makes every screen drivable from a pad (Steam Deck).
+const uinav = new UINav(game, hud);
+game.uinav = uinav;
+
 const tutorial = new Tutorial(game, hud);
 // ---- ONLINE: rooms + netcode (Supabase Realtime transport) ----
 const netplay = new Netplay(game, hud);
@@ -81,6 +87,8 @@ function beginMatch(c) {
     if (plan && (!cur || cur.name !== plan.name || cur.seed !== plan.seed)) {
       game.world.rebuildCity(plan);
       game.peds.setCity(game.world.ARENA, game.world.waterX);
+      // THE VIGILANTISM LAW: the country decides how this street reacts to a superweapon.
+      game.peds.setVigilantism((countryOf(plan.country) || {}).vigilantism);
       hud.feed('Theater: ' + plan.name.toUpperCase() + (plan.country ? ' · ' + plan.country : ''), '#7fb0d0');
     }
   } catch (err) { console.error('theater', err); }
@@ -209,8 +217,10 @@ function frame(now) {
   const dt = (now - last) / 1000; last = now;
   try {
     game.update(Math.min(dt, 0.05));
+    if (!started) { game.pad.update(); uinav.update(Math.min(dt, 0.05)); }   // menus are drivable before the first match
     if (started) {
       hud.update(); padSystem();
+      uinav.update(Math.min(dt, 0.05));
       if (game.running) tutorial.update(Math.min(dt, 0.05));
       if (game.running) netplay.update(Math.min(dt, 0.05));
       // WHEEL: classic swaps hero; the other schemes cycle your selected POWER instead, which is
@@ -228,7 +238,7 @@ function frame(now) {
 requestAnimationFrame(frame);
 
 // expose for debugging + performance benchmarking
-window.LSW = { game, hud, ROSTER, runSlot, performEvade, input, tutorial, netplay, SETTINGS, KEYMAPS, creator: { ui: creator, freshPicks, buildDef, tally, validate, saveCustom, deleteCustom, loadCustoms } };
+window.LSW = { game, hud, ROSTER, runSlot, performEvade, input, tutorial, netplay, uinav, SETTINGS, KEYMAPS, creator: { ui: creator, freshPicks, buildDef, tally, validate, saveCustom, deleteCustom, loadCustoms } };
 window.LSW.runBenchmark = (opts) => runBenchmark(game, hud, opts);
 if (location.search.includes('bench')) {
   addEventListener('load', () => setTimeout(async () => {

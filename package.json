@@ -7,13 +7,75 @@
     "dev": "vite",
     "start": "vite",
     "build": "vite build",
-    "preview": "vite preview --host"
+    "preview": "vite preview --host",
+    "desktop": "npm run build && electron .",
+    "desktop:win": "npm run build && electron-builder --win --publish never",
+    "desktop:linux": "npm run build && electron-builder --linux --publish never",
+    "desktop:all": "npm run build && electron-builder --win --linux --publish never"
   },
   "devDependencies": {
+    "electron": "^33.4.11",
+    "electron-builder": "^25.1.8",
     "vite": "^5.4.0"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.110.8",
     "three": "^0.169.0"
+  },
+  "main": "electron/main.cjs",
+  "build": {
+    "appId": "com.machinekinglabs.livingsuperweapon",
+    "productName": "Living Superweapon",
+    "directories": {
+      "output": "release",
+      "buildResources": "electron"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "LivingSuperweapon-${version}-win-x64.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "shortcutName": "Living Superweapon"
+    },
+    "linux": {
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "tar.gz",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "category": "Game",
+      "artifactName": "LivingSuperweapon-${version}-linux-x64.${ext}",
+      "executableName": "living-superweapon"
+    },
+    "compression": "maximum"
   }
 }

@@ -924,6 +924,7 @@ export class HUD {
         <button data-p="options" class="ghost">⚙ Options</button>
         <button data-p="howto" class="ghost">❓ How to Play</button>
         <button data-p="menu" class="ghost">Main Menu</button>
+        <button data-p="quit" class="ghost" id="pQuit" style="display:none">⏻ Quit Game</button>
       </div></div>
       <div class="hitflash" id="hFlash"></div>
       <div class="danger" id="hDanger"></div>
@@ -981,7 +982,11 @@ export class HUD {
       else if (a === 'options') this.showOptions();
       else if (a === 'howto') this.showHowto();
       else if (a === 'menu') { this.setPaused(false); this.onMenu && this.onMenu(); }
+      // CONTROLLER-ONLY NEEDS A WAY OUT. On a Steam Deck there is no keyboard and no window
+      // chrome, so without this the player is trapped in a fullscreen app.
+      else if (a === 'quit' && window.LSW_DESKTOP) window.LSW_DESKTOP.quit();
     });
+    if (window.LSW_DESKTOP) { const q = this.el.paused.querySelector('#pQuit'); if (q) q.style.display = ''; }
     this._buildOverlays();
   }
 

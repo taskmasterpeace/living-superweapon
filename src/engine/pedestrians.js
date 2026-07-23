@@ -6,7 +6,20 @@
 import * as THREE from 'three';
 
 const COUNT = 30;
-const WALK = 0, FLEE = 1, DOWN = 2, FILM = 3;
+const WALK = 0, FLEE = 1, DOWN = 2, FILM = 3, ARMED = 4;
+
+// THE VIGILANTISM LAW (Robert's ruling, 2026-07-23) — the country sheet decides how a street
+// reacts to a superweapon, and it does it through the people ON that street:
+//   · A civilian who SEES you hurt someone starts FILMING. Where vigilantism is BANNED, that
+//     footage is evidence — every phone pointed at you pushes POLICE HEAT up.
+//   · Where vigilantism is BANNED, some of them don't film. They draw. An armed citizen is not
+//     a threat to a superweapon on paper (a pistol against a Might-10 frame does almost nothing —
+//     see the ballistic scale) but it is a statement: this city does not want you here, and every
+//     shot fired is another siren.
+//   · Where it is LEGAL, nobody films you like a criminal and nobody draws. You are supposed to
+//     be here.
+const ARM_RATE = { Banned: 0.34, Regulated: 0.10, Legal: 0 };   // chance a witness is carrying
+
 const GRID = 96, SIDEWALK = 8;                          // street pitch + sidewalk offset from the lane line
 const _m4 = new THREE.Matrix4(), _q = new THREE.Quaternion(), _q2 = new THREE.Quaternion(), _p = new THREE.Vector3(), _s = new THREE.Vector3(1, 1, 1);
 const _Y = new THREE.Vector3(0, 1, 0), _Z = new THREE.Vector3(0, 0, 1);
@@ -32,6 +45,8 @@ export class Pedestrians {
     this.spd = new Float32Array(COUNT);
     this.state = new Uint8Array(COUNT); this.t = new Float32Array(COUNT);
     this._turnCd = new Float32Array(COUNT);              // no double-turning at one crossing
+    this._fire = new Float32Array(COUNT);                // armed-citizen trigger cycle
+    this.vigilantism = 'Regulated'; this.armRate = ARM_RATE.Regulated;
     this.reset();
     scene.add(this.mesh); scene.add(this.head);
   }
@@ -51,6 +66,9 @@ export class Pedestrians {
   reset() { for (let i = 0; i < COUNT; i++) this._respawn(i); this._writeAll(); }
   // a new theater: re-grid the crowd to the new arena + shoreline
   setCity(arena, waterX) { this.arena = arena; this.waterX = waterX; this.reset(); }
+  // THE STANCE — 'Banned' | 'Regulated' | 'Legal', read off the country sheet when the theater is
+  // raised. Drives whether witnesses film you as evidence and whether any of them are carrying.
+  setVigilantism(v) { this.vigilantism = v || 'Regulated'; this.armRate = ARM_RATE[this.vigilantism] ?? 0.1; }
   _writeAll() {
     for (let i = 0; i < COUNT; i++) this._write(i);
     this.mesh.instanceMatrix.needsUpdate = true; this.head.instanceMatrix.needsUpdate = true;
@@ -102,8 +120,27 @@ export class Pedestrians {
       if (st === FILM) {
         if (P && Math.random() < dt * 2.2) {
           game.particles.spawn({ x: this.px[i], y: 7.4, z: this.pz[i], vx: 0, vy: 1, vz: 0, life: 0.12, size: 3.6, color: ['#ffffff', '#cfe8ff'], drag: 0, shrink: true });
+          // EVERY PHONE IS EVIDENCE. Where vigilantism is banned, being filmed while you are
+          // already flagged pushes the police response — the crowd is what calls them.
+          if (this.vigilantism === 'Banned' && game.police && game.police.witnessed) game.police.witnessed(this.px[i], this.pz[i]);
         }
         if (this.t[i] <= 0) { this.state[i] = WALK; this.t[i] = 3 + Math.random() * 4; }
+        continue;
+      }
+      // AN ARMED CITIZEN. Not a real threat to a superweapon — a pistol round meets the ballistic
+      // scale like any other — but it is the street answering back, and it makes noise the police
+      // can hear. They hold position, face you, and fire on a slow cycle until they lose nerve.
+      if (st === ARMED) {
+        if (P && P.alive) {
+          const dx = P.pos.x - this.px[i], dz = P.pos.z - this.pz[i];
+          this.dir[i] = Math.atan2(dx, dz);
+          this._fire[i] -= dt;
+          if (this._fire[i] <= 0 && dx * dx + dz * dz < 9000) {
+            this._fire[i] = 0.9 + Math.random() * 0.8;
+            if (game.civilianShot) game.civilianShot(this.px[i], this.pz[i], P);
+          }
+        }
+        if (this.t[i] <= 0) { this.state[i] = FLEE; this.t[i] = 1.8; }   // nerve runs out
         continue;
       }
       const speed = st === FLEE ? this.spd[i] * 2.7 : this.spd[i];
@@ -130,7 +167,15 @@ export class Pedestrians {
       if (P) {
         const dx = P.pos.x - this.px[i], dz = P.pos.z - this.pz[i], d2 = dx * dx + dz * dz;
         if (d2 < 120) { this.state[i] = FLEE; this.t[i] = 1.6; this.dir[i] = Math.atan2(-dx, -dz); }
-        else if (d2 < 1100 && this.t[i] <= 0) { this.state[i] = FILM; this.t[i] = 2 + Math.random() * 2.5; this.dir[i] = Math.atan2(dx, dz); }
+        else if (d2 < 1100 && this.t[i] <= 0) {
+          // Seeing you HURT someone is different from seeing you exist. A witness to violence in
+          // a place that bans vigilantism may draw instead of filming.
+          const witnessed = game.police && game.police.heatOf && game.police.heatOf(P) > 8;
+          if (witnessed && Math.random() < (this.armRate || 0)) {
+            this.state[i] = ARMED; this.t[i] = 6 + Math.random() * 6; this._fire[i] = 0.4;
+          } else { this.state[i] = FILM; this.t[i] = 2 + Math.random() * 2.5; }
+          this.dir[i] = Math.atan2(dx, dz);
+        }
         else if (this.t[i] <= 0) this.t[i] = 3 + Math.random() * 4;
       } else if (this.t[i] <= 0) this.t[i] = 3 + Math.random() * 4;
       this._write(i);

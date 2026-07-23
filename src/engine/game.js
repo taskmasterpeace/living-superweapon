@@ -794,6 +794,29 @@ export class Game {
     return best;
   }
 
+  // AN ARMED CITIZEN FIRES. The street answering back — see THE VIGILANTISM LAW in
+  // pedestrians.js. Deliberately a real ballistic round and nothing special: it meets ARMOUR and
+  // TOUGHNESS like any other bullet, so against a Might-10 frame it is almost nothing. The point
+  // is not the damage. It is the noise (police hear it), the tally, and the fact that a city
+  // where vigilantism is banned physically shoots at you.
+  civilianShot(x, z, target) {
+    if (!target || !target.alive) return;
+    // ⚠ do NOT use the shared _v here — spawnProjectile keeps the pos vector, and _v is reused
+    // by the very next caller (the aliasing rule at the top of projectiles.js, same class of bug).
+    const from = new THREE.Vector3(x, 6.4, z);
+    const dir = new THREE.Vector3(target.pos.x - x, (target.pos.y + 5) - 6.4, target.pos.z - z).normalize();
+    // civilians are bad shots — a wide, honest spread
+    dir.x += (Math.random() - 0.5) * 0.13; dir.y += (Math.random() - 0.5) * 0.06; dir.z += (Math.random() - 0.5) * 0.13;
+    this.projectiles.spawnProjectile({ pos: from, team: 3, def: { colors: { accent: '#c9b98a' } }, name: 'CITIZEN', powerBuff: 1, alive: true, isCivilian: true }, {
+      pos: from, vel: dir.normalize().multiplyScalar(150),
+      radius: 0.5, damage: 9, blast: 0, power: 0.2, life: 1.5,
+      bullet: true, ballistic: true, weapon: 'pistol', color: '#c9b98a',
+    });
+    this.audio.gunshot && this.audio.gunshot(0.55, { x, z });
+    this.noise({ x, y: 6, z }, 0.7, null);     // the police HEAR the street shooting
+    this.cityStats.shots = (this.cityStats.shots || 0) + 1;
+  }
+
   areaDamage(caster, pos, radius, damage, power = 1, o = {}) {
     for (const f of this.entities) {
       const foe = this.isFoe(caster, f);

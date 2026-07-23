@@ -21,6 +21,7 @@ const MAP = {
 export class Gamepad {
   constructor() {
     this.connected = false; this.active = false; this._everUsed = false;
+    this.btn = [];                       // raw button state by standard index (for menu nav)
     this.dead = 0.24; this.lx = 0; this.ly = 0; this.rx = 0; this.ry = 0;
     this.cur = {}; this.prev = {};
     addEventListener('gamepadconnected', () => { this.connected = true; });
@@ -33,11 +34,16 @@ export class Gamepad {
     for (const p of pads) { if (p && p.connected) { gp = p; break; } }
     this.connected = !!gp;
     this.prev = this.cur; this.cur = {};
-    if (!gp) { this.active = false; this.lx = this.ly = this.rx = this.ry = 0; return; }
+    if (!gp) { this.active = false; this.lx = this.ly = this.rx = this.ry = 0; this.btn.length = 0; return; }
     const dz = (v) => (Math.abs(v) < this.dead ? 0 : (Math.abs(v) - this.dead) / (1 - this.dead) * Math.sign(v));
     this.lx = dz(gp.axes[0] || 0); this.ly = dz(gp.axes[1] || 0);
     this.rx = dz(gp.axes[2] || 0); this.ry = dz(gp.axes[3] || 0);
     const b = gp.buttons;
+    // RAW button state by standard index, kept alongside the named map. Menu navigation
+    // (core/uinav.js) needs the D-pad and face buttons directly — the named map binds the D-pad to
+    // ability slots, which is right in a match and useless in a menu.
+    this.btn.length = b.length;
+    for (let i = 0; i < b.length; i++) this.btn[i] = !!(b[i] && b[i].pressed);
     for (const k in MAP) this.cur[k] = !!(b[MAP[k]] && b[MAP[k]].pressed);
     const anyBtn = Object.values(this.cur).some(Boolean);
     const anyStick = Math.abs(this.lx) + Math.abs(this.ly) + Math.abs(this.rx) + Math.abs(this.ry) > 0;
@@ -46,6 +52,7 @@ export class Gamepad {
   }
 
   down(a) { return !!this.cur[a]; }
+  raw(i) { return !!this.btn[i]; }      // raw standard-mapping index: 0 A · 1 B · 12-15 D-pad
   pressed(a) { return !!this.cur[a] && !this.prev[a]; }
   released(a) { return !this.cur[a] && !!this.prev[a]; }
   get moving() { return Math.abs(this.lx) + Math.abs(this.ly) > 0; }

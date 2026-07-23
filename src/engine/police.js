@@ -74,6 +74,19 @@ export class PoliceSystem {
     this._lastHarmT = this.g.time;
   }
 
+  // --- what the CROWD knows, for the pedestrian layer -------------------------------------
+  // A PHONE POINTED AT YOU IS EVIDENCE. Called by filming civilians where vigilantism is banned:
+  // the crowd itself is what escalates the response. Rate-limited so a dense street doesn't
+  // stack heat instantly — it's a pressure, not a punishment.
+  witnessed(x, z) {
+    const V = this.villain(); if (!V) return;      // ⚠ villain() is a METHOD, not a field
+    if ((this._witT || 0) > this.g.time) return;
+    this._witT = this.g.time + 0.5;
+    this.heat.set(V, (this.heat.get(V) || 0) + 1.6);
+    this._witCount = (this._witCount || 0) + 1;
+    if (this._witCount === 12 && this.g.hud) this.g.hud.feed('📱 They are filming you. The whole block is filming you.', '#9fb2c9');
+  }
+
   // RESPONSE TIME = the city's safety index MET BY THE STATE THAT POLICES IT.
   // The city sheet says how safe this place is; the COUNTRY sheet says how good and how funded
   // its police are, and how corrupt. A well-funded force in a safe city is on you in seconds; a
