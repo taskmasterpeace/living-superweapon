@@ -95,8 +95,10 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   routed through the same `runSlot`. Keep that symmetry.
 - Controls: WASD move · mouse aim (**hover a character to target it**, else nearest-to-cursor) · LMB/RMB/Q/E/**H**/R
   powers (the 4th power slot is `f` in data but bound to **KeyH**) · **F = FLIGHT TOGGLE** (mode on/off;
-  SPACE rise, release hover, CTRL descend; SPACE rising-edge still auto-takes-off) · **V tap jab / hold
-  HAYMAKER · G grab · C/X/Mouse4-5 guard** · SHIFT dash · **2×TAP move = EVADE** · ESC pause · 1–0 swap · TAB roster · B rival.
+  SPACE rise, release hover, **Z descend** — Ctrl also works but is NOT advertised: Ctrl+W closes the tab
+  online, so input.js preventDefaults the blockable Ctrl combos and all hints say Z) · **V tap jab / hold
+  HAYMAKER · G grab · C/Mouse4-5 guard** (X = item) · SHIFT dash · **2×TAP move = EVADE** · ESC pause ·
+  **MOUSE WHEEL / 1–0 swap hero** · TAB roster · B rival.
 - **Flight tiers** (`def.flightTier`): 0 = grounded (SARGE/GALE — leap only, toggle refuses) · 1 = clumsy
   (VOLT/HIVE/KRAKEN — sags when not rising, sine drift, no hover) · 2 = levitator (0.62× air speed —
   RIME/WARDEN/PYRE/RIFT/TITAN/KIVULI) · 3 = full flight. `flyStyle`: 'fire' = Torch wake (TORCH/PYRE),
@@ -140,8 +142,10 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   → `hud.kiDenied` slot shake + ki-bar flash. Ki bar: amber <38%, red pulse <15%.
 - **Flight / levitation** (`entity._physics`): `flyHeld` rising-edge takes off into `this.flying` (gravity suspended).
   While flying: hold `flyHeld` → rise (`FLY_RISE`), `descendHeld` → sink (`FLY_SINK`), neither → **hover** at altitude
-  with a gentle bob. Releasing rise clamps the upward coast so you settle where you let go. Descending onto the ground
-  (or a block top, if `descendHeld`) exits flight = lands. `grounded` = `!flying`. Player descend = Ctrl/Z, pad L3.
+  with a gentle bob **+ a soft floor** (bias up when y<2.6 so you float, never ankle-skim). Landing exits flight ONLY
+  when intentional (`descendHeld`, or tier ≤1 sagging out) — a knockback dipping you to the ground does NOT cancel
+  the mode (that read as "flight randomly turns off"; fixed 2026-07-22). Takeoff pop = `FLY_TAKEOFF` 19 (also in
+  `toggleFlight`). `grounded` = `!flying`. Player descend = **Z** (Ctrl works, unadvertised — browser shortcuts), pad L3.
   AI descends by setting `descendHeld = flying && !it.fly`. Knockback still arcs under gravity (flight is opt-in only).
 - **Gamepad** (`core/gamepad.js`, `game.pad`): standard/PS2 mapping — sticks move/aim, R2/L2 powers, □○ melee,
   L1 guard, ✕ fly, △ ult, dpad Q/E/F + swap, Start/Select pause/roster. Polled at top of `game.update`;
@@ -163,6 +167,9 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
 ## Trifecta rules (don't break)
 - **Strike beats Grab beats Guard beats Strike.** Guard blocks frontal strikes to ~12% chip (unblockable
   grabs ignore it); getting hit cancels your own grab start-up; back-grabs are unescapable + hit harder.
+- **Hitstop must NEVER drop a held guard** (`melee.guard`): every blocked hit applies hitstop to the
+  blocker, so gating guard on `canAct()` made any fast combo strip the block after the first hit
+  ("can't hold down block" bug, fixed 2026-07-22). Stagger/grabs/your-own-attacks still drop it.
 - Guarding slows you and doubles as a ki-charge stance. `guardMeter` breaks → 0.7s stagger.
 - Variants live on the def: `thorns`, `phase`, `grabHeal`, `teleEscape`. Keep the escape a FRONT-grab only.
 
@@ -173,6 +180,21 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
 - **Violent hits**: `vfx.impact(pos,dir,{color,power})` = comic impact-star (`impactStar`, canvas sprite) + spray +
   ring + shake. Strikes/heavy-melee/throws freeze BOTH fighters (`hitstop`), `game.slowmo(dur,mul)` on finishers,
   `hud.flashScreen(color,dur)` white pop, `audio.impact(power)` thud+crack. Blocked hits get a small blue star only.
+
+## Player-facing shell (options · onboarding · roster nav)
+- **Settings** (`core/settings.js`): `SETTINGS` store persisted at `threshold_settings_v1` — master volume,
+  voice (DBZ synth loudness via `audio.voiceMult`), screen shake (`world.shakeMult`), damage numbers
+  (`hud.dmgNumbersOff`), controls-hint visibility, render quality (`world.qualityOverride` locks the adaptive
+  tier; `'auto'` re-enables). `applySettings(game)` pushes it live — called at boot AND after `audio.init()`
+  (master gain exists only post-init).
+- **Options + How-to-Play overlays** (`hud._buildOverlays`): live on `<body>` (class `.lswovl`, z62) because
+  #hud (z20) stacks UNDER #title (z30). Reachable from the title top bar (⚙/❓) and the PAUSE MENU (ESC now
+  opens Resume/Options/How-to-Play/Main-Menu buttons, not just a label). ESC closes an open overlay first
+  (main.js routes before the pause toggle). **Onboarding**: how-to auto-opens once for new players
+  (localStorage `threshold_howto_seen`).
+- **Roster navigation** (`buildTitle`): filter chips (threat tiers · fliers/grounded · CUSTOM), sort
+  (name/threat/power/hp/speed), live search, "n / N weapons" count, arrow-key card navigation + Enter to
+  start. Stat bars/attr rows/threat badge all carry native `title` tooltips explaining what they do.
 
 ## Modes, progression & local multiplayer
 - **Modes** (`MODE_IMPL` in `game.js`, metadata in `data/modes.js`): duel / survival / rumble / training, each with

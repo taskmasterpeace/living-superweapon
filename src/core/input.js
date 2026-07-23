@@ -11,6 +11,10 @@ export class Input {
 
   bind(canvas) {
     addEventListener('keydown', (e) => {
+      // Stop browser shortcuts from stealing game keys online (Ctrl+S save-page, Ctrl+D bookmark,
+      // Ctrl+G find…). Ctrl+W is browser-reserved and CANNOT be blocked — which is why descend
+      // is advertised as Z, not Ctrl. (Before the repeat-gate so held combos stay suppressed.)
+      if (e.ctrlKey && ['KeyS', 'KeyD', 'KeyA', 'KeyF', 'KeyG', 'KeyH', 'KeyE', 'KeyQ'].includes(e.code)) e.preventDefault();
       if (e.repeat) return;
       if (!this.keys.has(e.code)) this.justPressed.add(e.code);
       this.keys.add(e.code);

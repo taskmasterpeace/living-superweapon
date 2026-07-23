@@ -13,7 +13,7 @@ export const TIER_COLORS = ['#ffffff', null, '#ffd24a', '#ffedb0', '#ffffff'];  
 let _fid = 1;
 const _anchor = new THREE.Vector3();
 // flight tuning — levitation model: hold to rise, release to HOVER, descend key to sink.
-const FLY_RISE = 30, FLY_SINK = 26, FLY_TAKEOFF = 15, FLY_HOVER_BOB = 3.2;
+const FLY_RISE = 30, FLY_SINK = 26, FLY_TAKEOFF = 19, FLY_HOVER_BOB = 3.2;   // decisive takeoff — clears the hover-bob dip
 
 // ---- weapon models — one registry, every archetype: mounts on the DRIVEN fist meshes so
 // poses and the ragdoll carry them. Built along the arm's -Y axis (same convention as the rifle).
@@ -336,7 +336,7 @@ export class Fighter {
     if (this.flying) { this.flying = false; }                       // cut it — gravity takes you down
     else if (this.flightTier > 0) {
       this.flying = true;
-      if (this.pos.y < 1.5) this.vel.y = 15;                        // pop off the ground
+      if (this.pos.y < 1.5) this.vel.y = 19;                        // pop off the ground (matches FLY_TAKEOFF)
       this._liftFx = 0.25;
       if (this._game) { try { this._game.audio.zap(560); } catch (e) {} }
     } else if (this._game && this._game.isHuman(this) && this._game.hud) {
@@ -667,7 +667,7 @@ export class Fighter {
         if (this.flyHeld) { target = FLY_RISE; rate = 7; }                 // ascend
         else if (this.descendHeld) { target = -FLY_SINK; rate = 7; }       // descend
         else if (this.flightTier <= 1) { target = -7; rate = 4; }          // tier 1 can't hover — it sags
-        else { target = Math.sin(this.animT * 2.3) * FLY_HOVER_BOB; rate = 5; }  // hover: gentle levitation bob
+        else { target = Math.sin(this.animT * 2.3) * FLY_HOVER_BOB + (this.pos.y < 2.6 ? 7 : 0); rate = 5; }  // hover: gentle bob + a soft floor so you float, never ankle-skim
         this.vel.y = damp(this.vel.y, target, rate, dt);
         if (this.flightTier <= 1) {                                        // clumsy drift — the GAH wobble
           this.vel.x += Math.sin(this.animT * 3.1) * 9 * dt;
@@ -686,7 +686,10 @@ export class Fighter {
     if (this.pos.y <= 0) {
       const impact = this.vel.y;
       this.pos.y = 0; if (this.vel.y < 0) this.vel.y = 0;
-      if (this.flying && !this.flyHeld) this.flying = false;    // descended onto the ground → land, stop levitating
+      // land + exit flight only when you MEANT to come down (holding descend) or you're a clumsy
+      // tier-1 flier sagging out. A knockback/beam-shove dipping you to the floor no longer
+      // silently cancels flight MODE — that read as "flight randomly turns off".
+      if (this.flying && !this.flyHeld && (this.descendHeld || this.flightTier <= 1)) this.flying = false;
       if (impact < -30 && this.state !== 'ko') this._landT = Math.min(0.26, -impact * 0.006);   // knee-crouch on a hard landing
       if (impact < -38) this._slam(game, -impact, 'ground');    // hurled into the floor — fall/slam damage
     }

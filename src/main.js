@@ -6,6 +6,7 @@ import { HUD } from './engine/hud.js';
 import { runBenchmark } from './bench/benchmark.js';
 import { CreatorUI } from './engine/creatorUI.js';
 import { runSlot } from './engine/abilities.js';
+import { loadSettings, applySettings } from './core/settings.js';
 import { installCustoms, loadCustoms, freshPicks, buildDef, tally, validate, saveCustom, deleteCustom } from './data/creator.js';
 
 const canvas = document.getElementById('game');
@@ -15,11 +16,12 @@ const game = new Game(canvas, input, audio);
 const hud = new HUD(game);
 game.hud = hud;
 game.world.prewarm();   // compile lazy FX shaders up-front — no first-use hitches mid-fight
+loadSettings(); applySettings(game);   // player settings (volume/shake/quality/HUD) from localStorage
 
 let started = false;
 
 function enter(cfg) {
-  audio.init(); audio.resume();
+  audio.init(); audio.resume(); applySettings(game);   // master gain exists only after init
   const c = (typeof cfg === 'string') ? { mode: 'training', p1: cfg } : cfg;
   game.startMode(c.mode || 'training', c);
   hud.setPlayer(ROSTER.find(r => r.id === (c.p1 || 'sol')));
@@ -46,6 +48,9 @@ hud.buildTitle(enter);
 hud.showTitle();
 hud.onRematch = () => { if (game._lastCfg) enter(game._lastCfg); };
 hud.onMenu = () => openMenu();
+hud.onResume = () => { game.running = true; hud.setPaused(false); };
+// first-timers get the manual once
+if (!localStorage.getItem('threshold_howto_seen')) hud.showHowto();
 
 game.onKill = (f) => {
   if (game.isHuman(f)) hud.feed((f.name) + ' was KO’d', '#ff6a5a');
@@ -54,6 +59,7 @@ game.onKill = (f) => {
 
 const digits = { Digit1: 0, Digit2: 1, Digit3: 2, Digit4: 3, Digit5: 4, Digit6: 5, Digit7: 6, Digit8: 7, Digit9: 8, Digit0: 9 };
 addEventListener('keydown', (e) => {
+  if (e.code === 'Escape' && hud.overlayOpen()) { hud.closeOverlays(); return; }   // options/how-to first
   if (!started) return;
   if (e.code === 'Tab') { e.preventDefault(); if (!hud.titleOpen) openMenu(); else { game.running = true; hud.hideTitle(); } return; }
   if (e.code === 'Escape' && game.player && !hud.titleOpen) { game.running = !game.running; hud.setPaused(!game.running); return; }
@@ -80,7 +86,13 @@ function padSystem() {
 let last = performance.now();
 function frame(now) {
   const dt = (now - last) / 1000; last = now;
-  try { game.update(Math.min(dt, 0.05)); if (started) { hud.update(); padSystem(); } }
+  try {
+    game.update(Math.min(dt, 0.05));
+    if (started) {
+      hud.update(); padSystem();
+      if (game.running && !hud.titleOpen && input.wheel) cycleHero(Math.sign(input.wheel));   // wheel = swap hero
+    }
+  }
   catch (err) { console.error(err); }
   input.endFrame();
   requestAnimationFrame(frame);
@@ -88,7 +100,7 @@ function frame(now) {
 requestAnimationFrame(frame);
 
 // expose for debugging + performance benchmarking
-window.LSW = { game, hud, ROSTER, runSlot, creator: { ui: creator, freshPicks, buildDef, tally, validate, saveCustom, deleteCustom, loadCustoms } };
+window.LSW = { game, hud, ROSTER, runSlot, input, creator: { ui: creator, freshPicks, buildDef, tally, validate, saveCustom, deleteCustom, loadCustoms } };
 window.LSW.runBenchmark = (opts) => runBenchmark(game, hud, opts);
 if (location.search.includes('bench')) {
   addEventListener('load', () => setTimeout(async () => {

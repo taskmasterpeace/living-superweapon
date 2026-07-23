@@ -3,6 +3,7 @@ import { ROSTER, SLOT_ORDER } from '../data/characters.js';
 import { MODES } from '../data/modes.js';
 import { clamp, TAU } from '../core/util.js';
 import { ATTR_DEFS, TALENTS, deriveAttrs, heroTalents, rankName, rankColor } from '../data/ranks.js';
+import { SETTINGS, saveSettings, applySettings } from '../core/settings.js';
 
 const CSS = `
 #hud .wrap{ position:absolute; inset:0; }
@@ -157,6 +158,39 @@ const CSS = `
 #title .rcard.forge{ border-style:dashed; border-color:rgba(255,210,74,.4); background:rgba(255,210,74,.04); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; min-height:96px; text-align:center; }
 #title .rcard.forge .fplus{ font-size:26px; font-weight:800; color:#ffd24a; line-height:1; }
 #title .rcard.forge:hover{ box-shadow:0 0 22px -6px #ffd24a; }
+/* pause menu */
+#hud .paused{ flex-direction:column; pointer-events:auto; z-index:45; }
+#hud .paused .pwrap{ display:flex; flex-direction:column; gap:10px; align-items:center; background:rgba(8,10,16,.78); border:1px solid rgba(255,255,255,.12); border-radius:16px; padding:26px 34px; backdrop-filter:blur(6px); }
+#hud .paused button{ cursor:pointer; font-family:inherit; font-weight:800; letter-spacing:.12em; font-size:14px; color:#160d02; padding:12px 26px; min-width:240px; border:none; border-radius:10px; background:linear-gradient(180deg,#ffd15a,#f5921a); box-shadow:0 4px 0 #7a3d05; text-transform:uppercase; }
+#hud .paused button.ghost{ background:rgba(255,255,255,.08); color:#e8e2d6; box-shadow:none; border:1px solid rgba(255,255,255,.15); }
+/* full-screen overlays (options / how-to-play) — live on <body> so they stack over the title */
+.lswovl{ position:fixed; inset:0; z-index:62; display:none; align-items:center; justify-content:center; background:rgba(4,5,9,.8); backdrop-filter:blur(3px); pointer-events:auto; color:#e8e2d6; }
+.lswovl .obox{ width:min(700px,94vw); max-height:88vh; overflow-y:auto; background:rgba(14,16,24,.97); border:1px solid rgba(255,255,255,.14); border-radius:16px; padding:22px 26px; font-family:"Rajdhani","Inter",system-ui,sans-serif; }
+.lswovl .oh{ font-weight:800; font-size:26px; letter-spacing:.1em; color:#ffd24a; margin-bottom:14px; text-transform:uppercase; }
+.lswovl .orow{ display:flex; align-items:center; gap:12px; margin-bottom:12px; }
+.lswovl .orow .ol{ width:200px; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:#a49c8c; }
+.lswovl .orow input[type=range]{ flex:1; accent-color:#f5b21a; }
+.lswovl .orow .ov{ width:48px; text-align:right; font-weight:800; font-size:13px; }
+.lswovl .chips3{ display:flex; gap:6px; flex-wrap:wrap; flex:1; }
+.lswovl .c3{ cursor:pointer; font-size:11px; font-weight:800; padding:6px 12px; border-radius:9px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.04); color:#b7b0a2; }
+.lswovl .c3.on{ background:linear-gradient(180deg,#ffd15a,#f5921a); color:#160d02; border-color:transparent; }
+.lswovl .odone{ cursor:pointer; margin-top:10px; font-family:inherit; font-weight:800; letter-spacing:.12em; font-size:14px; color:#160d02; padding:12px 26px; border:none; border-radius:10px; background:linear-gradient(180deg,#ffd15a,#f5921a); box-shadow:0 4px 0 #7a3d05; text-transform:uppercase; width:100%; }
+.lswovl .hsec{ margin-bottom:13px; }
+.lswovl .hsec .ht{ font-size:11px; letter-spacing:.18em; color:#ffcf7a; text-transform:uppercase; margin-bottom:5px; }
+.lswovl .hsec .hb{ font-size:13.5px; color:#c9c2b4; line-height:1.65; }
+.lswovl .hsec .hb b{ color:#ffd24a; }
+.lswovl .hsec .hb em{ color:#7fe6ff; font-style:normal; font-weight:700; }
+/* title top bar + roster filters */
+#title .topbar{ position:absolute; top:16px; right:18px; display:flex; gap:8px; }
+#title .topbar button{ cursor:pointer; font-family:inherit; font-weight:800; font-size:12px; letter-spacing:.08em; color:#e8e2d6; padding:9px 14px; border-radius:9px; border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.05); text-transform:uppercase; }
+#title .topbar button:hover{ border-color:#ffd24a; color:#ffd24a; }
+#title .filters{ display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
+#title .filters .fc{ cursor:pointer; font-size:10px; font-weight:800; letter-spacing:.08em; padding:5px 10px; border-radius:12px; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.04); color:#b7b0a2; text-transform:uppercase; }
+#title .filters .fc.on{ background:rgba(255,210,74,.16); border-color:rgba(255,210,74,.5); color:#ffd97a; }
+#title .filters select{ font-family:inherit; font-size:11px; font-weight:700; color:#e8e2d6; background:rgba(0,0,0,.5); border:1px solid rgba(255,255,255,.14); border-radius:8px; padding:5px 8px; }
+#title .filters input{ font-family:inherit; font-size:12px; color:#e8e2d6; background:rgba(0,0,0,.4); border:1px solid rgba(255,255,255,.14); border-radius:8px; padding:5px 10px; width:120px; outline:none; }
+#title .filters input:focus{ border-color:#ffd24a; }
+#title .filters .cnt{ font-size:10px; color:#8b8577; letter-spacing:.1em; margin-left:auto; }
 `;
 
 // Derive a 0–10 stat profile + trait tags from a character's raw data.
@@ -279,16 +313,22 @@ export class HUD {
       <div class="combo" id="hCombo"><div class="n" id="hComboN">0</div><div class="l">Hits</div></div>
       <div class="dmgwrap" id="hDmg"></div>
       <div class="panel slots" id="hSlots"></div>
-      <div class="panel hint">
+      <div class="panel hint" id="hHint">
         <b>WASD</b> move · <b>Mouse</b> aim · <b>Click a foe</b> to lock/face · <b>T</b> unlock<br/>
         <b>LMB/RMB</b> powers · <b>Q E H</b> skills · <b>R</b> ultimate<br/>
         <b>V</b> tap jab / <b>HOLD</b> haymaker (crushes guards) · <b>G</b> grab<br/>
         <b>C / Mouse4</b> guard · <b>X</b> item (beacon) · <b>SHIFT</b> dash · <b>2×TAP</b> move = evade<br/>
-        <b>F</b> flight ON/OFF · <b>SPACE</b> rise · release = hover · <b>CTRL</b> descend<br/>
+        <b>F</b> flight ON/OFF · <b>SPACE</b> rise · release = hover · <b>Z</b> descend · <b>WHEEL</b> swap hero<br/>
         <b>1–0</b>/<b>TAB</b> heroes · <b>B</b> rival · <b>ESC</b> pause<br/>
         🎮 <b>Pad</b>: sticks move/aim · R2/L2 powers · ▢○ melee · L1 guard
       </div>
-      <div class="paused" id="hPaused"><div class="t">PAUSED</div></div>
+      <div class="paused" id="hPaused"><div class="pwrap">
+        <div class="t">PAUSED</div>
+        <button data-p="resume">▶ Resume</button>
+        <button data-p="options" class="ghost">⚙ Options</button>
+        <button data-p="howto" class="ghost">❓ How to Play</button>
+        <button data-p="menu" class="ghost">Main Menu</button>
+      </div></div>
       <div class="hitflash" id="hFlash"></div>
       <div class="danger" id="hDanger"></div>
       <div class="hitring" id="hHits"></div>
@@ -313,8 +353,72 @@ export class HUD {
       radar: this.root.querySelector('#hRadar'), radarC: this.root.querySelector('#hRadarC'),
       hits: this.root.querySelector('#hHits'), danger: this.root.querySelector('#hDanger'),
       ko: this.root.querySelector('#hKO'), koT: this.root.querySelector('#hKOt'), koS: this.root.querySelector('#hKOs'),
+      hint: this.root.querySelector('#hHint'),
     };
     this._radarCtx = this.el.radarC.getContext('2d');
+    // pause menu actions
+    this.el.paused.querySelectorAll('button').forEach(b => b.onclick = () => {
+      const a = b.dataset.p;
+      if (a === 'resume') { this.setPaused(false); this.onResume && this.onResume(); }
+      else if (a === 'options') this.showOptions();
+      else if (a === 'howto') this.showHowto();
+      else if (a === 'menu') { this.setPaused(false); this.onMenu && this.onMenu(); }
+    });
+    this._buildOverlays();
+  }
+
+  // ---- options + how-to-play overlays (on <body> so they stack above the title screen) ----
+  _buildOverlays() {
+    const mk = (id) => { const d = document.createElement('div'); d.id = id; d.className = 'lswovl'; document.body.appendChild(d); return d; };
+    this.optionsEl = mk('hOptions'); this.howtoEl = mk('hHowto');
+  }
+  setHintVisible(v) { if (this.el.hint) this.el.hint.style.display = v ? 'block' : 'none'; }
+  overlayOpen() { return this.optionsEl.style.display === 'flex' || this.howtoEl.style.display === 'flex'; }
+  closeOverlays() { this.optionsEl.style.display = 'none'; this.howtoEl.style.display = 'none'; }
+
+  showOptions() {
+    const S = SETTINGS;
+    const slider = (key, label, max, step) => `<div class="orow"><span class="ol">${label}</span><input type="range" data-k="${key}" min="0" max="${max}" step="${step}" value="${S[key]}"><span class="ov" data-v="${key}">${Math.round(S[key] * 100)}%</span></div>`;
+    const toggle = (key, label) => `<div class="orow"><span class="ol">${label}</span><div class="chips3"><span class="c3${S[key] ? ' on' : ''}" data-t="${key}" data-on="1">ON</span><span class="c3${!S[key] ? ' on' : ''}" data-t="${key}" data-on="0">OFF</span></div></div>`;
+    this.optionsEl.innerHTML = `<div class="obox">
+      <div class="oh">Options</div>
+      ${slider('master', 'Master Volume', 1, 0.05)}
+      ${slider('voice', 'Voice · Battle Cries', 1, 0.05)}
+      ${slider('shake', 'Screen Shake', 1.5, 0.05)}
+      ${toggle('dmgNumbers', 'Damage Numbers')}
+      ${toggle('hints', 'Controls Hint Panel')}
+      <div class="orow"><span class="ol">Render Quality</span><div class="chips3">
+        ${[['auto', 'AUTO'], ['2', 'HIGH'], ['1', 'BALANCED'], ['0', 'LOW']].map(([v, n]) => `<span class="c3${String(S.quality) === v ? ' on' : ''}" data-q="${v}">${n}</span>`).join('')}
+      </div></div>
+      <button class="odone">Done</button>
+    </div>`;
+    const apply = () => { applySettings(this.game); saveSettings(); };
+    this.optionsEl.querySelectorAll('input[type=range]').forEach(r => r.oninput = () => {
+      S[r.dataset.k] = parseFloat(r.value);
+      this.optionsEl.querySelector(`[data-v="${r.dataset.k}"]`).textContent = Math.round(S[r.dataset.k] * 100) + '%';
+      apply();
+      if (r.dataset.k === 'master' || r.dataset.k === 'voice') this.game.audio.zap(700);   // audible feedback
+    });
+    this.optionsEl.querySelectorAll('[data-t]').forEach(c => c.onclick = () => { S[c.dataset.t] = c.dataset.on === '1'; apply(); this.showOptions(); });
+    this.optionsEl.querySelectorAll('[data-q]').forEach(c => c.onclick = () => { S.quality = c.dataset.q === 'auto' ? 'auto' : c.dataset.q; apply(); this.showOptions(); });
+    this.optionsEl.querySelector('.odone').onclick = () => { apply(); this.optionsEl.style.display = 'none'; };
+    this.optionsEl.style.display = 'flex';
+  }
+
+  showHowto() {
+    this.howtoEl.innerHTML = `<div class="obox">
+      <div class="oh">How to Play</div>
+      <div class="hsec"><div class="ht">Move & Aim</div><div class="hb"><b>WASD</b> move · <b>Mouse</b> aims everything · hover a foe to target them · <b>Click</b> a foe = hard lock (<b>T</b> clears) · <b>SHIFT</b> dash · <b>2×TAP</b> a direction = your evade</div></div>
+      <div class="hsec"><div class="ht">Powers</div><div class="hb"><b>LMB / RMB / Q / E / H</b> fire your powers · <b>R</b> is your ULTIMATE · many powers <em>charge</em> — hold to grow them, release to fire · everything spends <em>KI</em>: run dry and you fizzle, so watch the blue bar</div></div>
+      <div class="hsec"><div class="ht">The Melee Triangle</div><div class="hb"><b>V</b> strike (tap = jab combo · <em>hold</em> = HAYMAKER) · <b>G</b> grab · <b>C / Mouse4</b> guard — <em>Strike beats Grab · Grab beats Guard · Guard beats Strike</em> · a HAYMAKER crushes a guard wide open · back-grabs can't be escaped</div></div>
+      <div class="hsec"><div class="ht">Flight</div><div class="hb"><b>F</b> toggles flight on/off · hold <b>SPACE</b> to rise · release to hover · <b>Z</b> to descend and land · not everyone flies the same — some heroes only leap, some wobble, some cruise</div></div>
+      <div class="hsec"><div class="ht">Gadgets & The Meter</div><div class="hb"><b>X</b> uses your carried gadget (beacon, medkit, flashbang…) · low ki opens <em>OVERDRIVE</em> — your fists refill the tank · leveling up climbs <em>TIERS</em>: your aura and your meter literally grow</div></div>
+      <div class="hsec"><div class="ht">Swapping & The Rest</div><div class="hb"><b>MOUSE WHEEL</b> or <b>1–0</b> swap hero mid-match · <b>TAB</b> roster · <b>B</b> spawns a rival · <b>ESC</b> pause · <b>M</b> mute · 🎮 pad: sticks move/aim · R2/L2 powers · ▢ ○ melee · L1 guard · ✕ fly</div></div>
+      <div class="hsec"><div class="ht">The Golden Rule</div><div class="hb">The LeFevre threat scale is real — a Street-tier human <em>should</em> lose to a Cosmic superweapon. Lopsided is honest. Pick your fights, or forge your own weapon in <b>ORIGIN</b>.</div></div>
+      <button class="odone">Got It — Let's Fight</button>
+    </div>`;
+    this.howtoEl.querySelector('.odone').onclick = () => { try { localStorage.setItem('threshold_howto_seen', '1'); } catch {} this.howtoEl.style.display = 'none'; };
+    this.howtoEl.style.display = 'flex';
   }
 
   // ---- combat UI: radar, hit direction, KO banner ----
@@ -477,6 +581,7 @@ export class HUD {
   // floating combat number at a world position. slash=true kicks OUTWARD-DOWN (offense reads
   // differently from the defensive popups, which float up).
   damageNumber(worldPos, text, color = '#fff', tag = false, slash = false) {
+    if (this.dmgNumbersOff) return;
     if (!this.game.world) return;
     const sp = this.game.world.screenPosOf(worldPos.x, worldPos.y + 7, worldPos.z);
     if (sp.behind) return;
@@ -621,6 +726,7 @@ export class HUD {
   buildTitle(onStart) {
     let selMode = 'duel', selP1 = ROSTER[0], selP2 = ROSTER[2], two = false;
     this.title.innerHTML = `
+      <div class="topbar"><button id="tOpt">⚙ Options</button><button id="tHow">❓ How to Play</button></div>
       <div class="tag">Machine King Labs · Living Superweapon</div>
       <h1>LIVING SUPERWEAPON</h1>
       <div class="modes" id="modes"></div>
@@ -628,13 +734,14 @@ export class HUD {
         <div class="preview" id="pv"></div>
         <div style="flex:1; display:flex; flex-direction:column; gap:12px;">
           <div class="ptabs" id="ptabs"></div>
+          <div class="filters" id="filters"></div>
           <div class="roster" id="roster"></div>
           <button class="startbtn" id="startBtn">ENTER THE ARENA ▶</button>
           <div class="modehint" id="modehint"></div>
         </div>
       </div>`;
     const modesEl = this.title.querySelector('#modes'), roster = this.title.querySelector('#roster'), pv = this.title.querySelector('#pv'), ptabs = this.title.querySelector('#ptabs'), hintEl = this.title.querySelector('#modehint');
-    const bar = (label, v, col) => `<div class="statrow"><span class="sl">${label}</span><span class="sb"><i style="width:${v * 10}%;background:${col}"></i></span><span class="sv">${v}</span></div>`;
+    const bar = (label, v, col, tip) => `<div class="statrow"${tip ? ` title="${tip}"` : ''}><span class="sl">${label}</span><span class="sb"><i style="width:${v * 10}%;background:${col}"></i></span><span class="sv">${v}</span></div>`;
     const renderPv = (c) => {
       const st = heroStats(c);
       pv.style.setProperty('--pc', c.colors.accent);
@@ -642,15 +749,15 @@ export class HUD {
       pv.innerHTML = `<div class="pvname" style="color:${c.colors.accent}">${c.name}</div>
         <div class="pvttl">${c.title} · ${c.role}</div>
         <div class="pvblurb">${c.blurb}</div>
-        ${c.threat ? `<div class="pvthreat" style="color:${tc};border-color:${tc}66;background:${tc}18">LeFevre Threat · ${c.threat}</div>` : ''}
-        <div class="pvstats">
-          ${bar('Power', st.power, '#ff6a4a')}${bar('Strength', st.strength, '#e8a24a')}${bar('Range', st.range, '#ffd24a')}${bar('Mobility', st.mobility, '#7fe6ff')}
-          ${bar('Defense', st.defense, '#8fe08a')}${bar('Health', st.health, '#ff8a5a')}${bar('Energy', st.energy, '#7fb0ff')}
+        ${c.threat ? `<div class="pvthreat" title="The LeFevre Threat Scale — the Treaty's official danger rating, Low → Extreme. Mixed matches are SUPPOSED to be lopsided; skill steals rounds, not physics." style="color:${tc};border-color:${tc}66;background:${tc}18">LeFevre Threat · ${c.threat}</div>` : ''}
+        <div class="pvstats" title="Hover any bar for what it means">
+          ${bar('Power', st.power, '#ff6a4a', 'Heaviest single hit in the kit')}${bar('Strength', st.strength, '#e8a24a', 'Physical muscle — melee damage up, knockback given & resisted, faster ice break-outs')}${bar('Range', st.range, '#ffd24a', 'How far the kit reaches')}${bar('Mobility', st.mobility, '#7fe6ff', 'Run speed + dashes + teleports')}
+          ${bar('Defense', st.defense, '#8fe08a', 'How hard this hero is to put down — HP, phasing, thorns')}${bar('Health', st.health, '#ff8a5a', 'Raw hit points')}${bar('Energy', st.energy, '#7fb0ff', 'Ki pool — every power spends it; run dry and you fizzle')}
         </div>
         ${st.tags.length ? `<div class="pvtags">${st.tags.map(t => `<span>${t}</span>`).join('')}</div>` : ''}
         ${(() => {
           const at = deriveAttrs(c), tl = heroTalents(c);
-          const rows = ATTR_DEFS.map(a => { const v = at[a.k], rc = rankColor(v); return `<div class="arow"><span class="an2">${a.name}</span><span class="abar"><i style="width:${v * 10}%;background:${rc}"></i></span><span class="av">${v}</span><span class="arank" style="color:${rc};border-color:${rc}55;background:${rc}14">${rankName(v)}</span></div>`; }).join('');
+          const rows = ATTR_DEFS.map(a => { const v = at[a.k], rc = rankColor(v); return `<div class="arow" title="${a.name} — ${a.does}. Rank ${v}/10 on the ladder (Civilian → Cosmic)."><span class="an2">${a.name}</span><span class="abar"><i style="width:${v * 10}%;background:${rc}"></i></span><span class="av">${v}</span><span class="arank" style="color:${rc};border-color:${rc}55;background:${rc}14">${rankName(v)}</span></div>`; }).join('');
           const tals = tl.map(k => { const t = TALENTS[k]; return t ? `<span><b>${t.name}</b> — ${t.does}</span>` : ''; }).join('');
           const gear = (c.items || []).map(it => `<b>${it.name}</b>${it.charges ? ` ×${it.charges}` : ''}`).join(' · ');
           return `<div class="sheet"><div class="sh">Attributes</div>${rows}</div>
@@ -675,29 +782,95 @@ export class HUD {
       modesEl.querySelectorAll('.modecard').forEach(el => el.onclick = () => { selMode = el.dataset.m; renderModes(); hintEl.textContent = MODES.find(x => x.id === selMode).desc; renderTabs(); });
       hintEl.textContent = MODES.find(x => x.id === selMode).desc;
     };
-    ROSTER.forEach((c, i) => {
+    // ---- roster with filters / sort / search (52+ heroes need navigation) ----
+    const filtersEl = this.title.querySelector('#filters');
+    const fState = this._fState || (this._fState = { threat: 'ALL', flight: 'ANY', custom: false, q: '', sort: 'default' });
+    const THREATS = ['ALL', 'Low', 'Moderate', 'High', 'Very High', 'Extreme'];
+    const stCache = new Map(); const stOf = (c) => { if (!stCache.has(c.id)) stCache.set(c.id, heroStats(c)); return stCache.get(c.id); };
+    const listNow = () => {
+      let L = ROSTER.slice();
+      if (fState.threat !== 'ALL') L = L.filter(c => c.threat === fState.threat);
+      if (fState.flight === 'FLIERS') L = L.filter(c => (c.flightTier ?? 3) > 0);
+      if (fState.flight === 'GROUNDED') L = L.filter(c => (c.flightTier ?? 3) === 0);
+      if (fState.custom) L = L.filter(c => c.isCustom);
+      if (fState.q) { const q = fState.q.toLowerCase(); L = L.filter(c => (c.name + ' ' + (c.title || '') + ' ' + (c.role || '')).toLowerCase().includes(q)); }
+      const T = { Low: 0, Moderate: 1, High: 2, 'Very High': 3, Extreme: 4 };
+      if (fState.sort === 'name') L.sort((a, b) => a.name.localeCompare(b.name));
+      else if (fState.sort === 'threat') L.sort((a, b) => (T[b.threat] ?? -1) - (T[a.threat] ?? -1));
+      else if (fState.sort === 'power') L.sort((a, b) => stOf(b).power - stOf(a).power);
+      else if (fState.sort === 'hp') L.sort((a, b) => b.hp - a.hp);
+      else if (fState.sort === 'spd') L.sort((a, b) => b.speed - a.speed);
+      return L;
+    };
+    let cards = [], list = [];
+    const select = (c, cardEl) => {
+      selP1 = c;
+      roster.querySelectorAll('.rcard').forEach(e => e.classList.remove('sel'));
+      if (cardEl) cardEl.classList.add('sel');
+      renderPv(c);
+    };
+    const mkCard = (c) => {
       const card = document.createElement('div');
-      card.className = 'rcard' + (i === 0 ? ' sel' : '');
+      card.className = 'rcard';
       card.style.setProperty('--pc', c.colors.accent);
-      const cs = heroStats(c);
-      card.innerHTML = `<span class="dot"></span><div class="nm">${c.name}</div><div class="rl">${c.role}</div><div class="cstat">HP <b>${c.hp}</b> · PWR <b>${cs.power}</b> · SPD <b>${cs.speed}</b></div>`
+      const cs = stOf(c), tc = THREAT_COLORS[c.threat] || '#a49c8c';
+      card.innerHTML = `<span class="dot"></span><div class="nm">${c.name}</div><div class="rl">${c.role}</div><div class="cstat">HP <b>${c.hp}</b> · PWR <b>${cs.power}</b> · <span style="color:${tc}">${c.threat || '—'}</span></div>`
         + (c.isCustom ? `<span class="cchip">CUSTOM</span><span class="cedit" title="Edit in ORIGIN">✎</span>` : '');
       card.onmouseenter = () => renderPv(c);
-      card.onclick = () => { selP1 = c; roster.querySelectorAll('.rcard').forEach(e => e.classList.remove('sel')); card.classList.add('sel'); renderPv(c); };
+      card.onclick = () => select(c, card);
       card.ondblclick = () => onStart({ mode: selMode, p1: selP1.id, p2: selP2.id, twoPlayer: two });
       const ed = card.querySelector('.cedit');
       if (ed) ed.onclick = (ev) => { ev.stopPropagation(); this.onEditCustom && this.onEditCustom(c); };
-      roster.appendChild(card);
-    });
-    // the forge card — ORIGIN entry point
-    {
+      return card;
+    };
+    const renderFilters = () => {
+      filtersEl.innerHTML = THREATS.map(t => `<span class="fc${fState.threat === t ? ' on' : ''}" data-th="${t}">${t}</span>`).join('')
+        + ['ANY', 'FLIERS', 'GROUNDED'].map(fl => `<span class="fc${fState.flight === fl ? ' on' : ''}" data-fl="${fl}">${fl === 'ANY' ? '✈ ANY' : fl}</span>`).join('')
+        + `<span class="fc${fState.custom ? ' on' : ''}" data-cu="1">CUSTOM</span>`
+        + `<select id="fSort"><option value="default">SORT: ROSTER</option><option value="name">NAME</option><option value="threat">THREAT</option><option value="power">POWER</option><option value="hp">HP</option><option value="spd">SPEED</option></select>`
+        + `<input id="fQ" placeholder="Search…" value="${fState.q}"><span class="cnt" id="fCnt"></span>`;
+      filtersEl.querySelector('#fSort').value = fState.sort;
+      filtersEl.querySelectorAll('[data-th]').forEach(c => c.onclick = () => { fState.threat = c.dataset.th; renderFilters(); renderRoster(); });
+      filtersEl.querySelectorAll('[data-fl]').forEach(c => c.onclick = () => { fState.flight = c.dataset.fl; renderFilters(); renderRoster(); });
+      filtersEl.querySelector('[data-cu]').onclick = () => { fState.custom = !fState.custom; renderFilters(); renderRoster(); };
+      filtersEl.querySelector('#fSort').onchange = (e) => { fState.sort = e.target.value; renderRoster(); };
+      const q = filtersEl.querySelector('#fQ'); q.oninput = () => { fState.q = q.value; renderRoster(); };
+    };
+    const renderRoster = () => {
+      list = listNow();
+      roster.innerHTML = '';
+      cards = list.map(c => { const el = mkCard(c); roster.appendChild(el); return el; });
+      // the forge card — ORIGIN entry point
       const forge = document.createElement('div');
       forge.className = 'rcard forge';
       forge.innerHTML = `<div class="fplus">＋</div><div class="nm">FORGE NEW</div><div class="rl">ORIGIN</div><div class="cstat">Point-buy your own superweapon</div>`;
       forge.onclick = () => this.onForge && this.onForge();
       roster.appendChild(forge);
-    }
-    renderPv(selP1); renderModes(); renderTabs();
+      const cnt = filtersEl.querySelector('#fCnt'); if (cnt) cnt.textContent = list.length + ' / ' + ROSTER.length + ' weapons';
+      if (!list.includes(selP1)) selP1 = list[0] || ROSTER[0];
+      const idx = list.indexOf(selP1);
+      if (idx >= 0) cards[idx].classList.add('sel');
+      renderPv(selP1);
+    };
+    // keyboard: arrows move the highlight, Enter enters the arena
+    if (this._titleNavBound) removeEventListener('keydown', this._titleNavBound);
+    this._titleNavBound = (e) => {
+      if (!this.titleOpen || this.overlayOpen()) return;
+      const ae = document.activeElement; if (ae && (ae.tagName === 'INPUT' || ae.tagName === 'SELECT')) return;
+      const idx = Math.max(0, list.indexOf(selP1));
+      let n = null;
+      if (e.code === 'ArrowRight') n = idx + 1; else if (e.code === 'ArrowLeft') n = idx - 1;
+      else if (e.code === 'ArrowDown') n = idx + 5; else if (e.code === 'ArrowUp') n = idx - 5;
+      else if (e.code === 'Enter') { onStart({ mode: selMode, p1: selP1.id, p2: selP2.id, twoPlayer: two }); return; }
+      else return;
+      e.preventDefault();
+      if (list.length) { n = Math.max(0, Math.min(list.length - 1, n)); select(list[n], cards[n]); cards[n].scrollIntoView({ block: 'nearest' }); }
+    };
+    addEventListener('keydown', this._titleNavBound);
+    // top bar
+    this.title.querySelector('#tOpt').onclick = () => this.showOptions();
+    this.title.querySelector('#tHow').onclick = () => this.showHowto();
+    renderFilters(); renderRoster(); renderModes(); renderTabs();
     this.title.querySelector('#startBtn').onclick = () => onStart({ mode: selMode, p1: selP1.id, p2: selP2.id, twoPlayer: two });
   }
 

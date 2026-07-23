@@ -101,7 +101,10 @@ export class MeleeSystem {
   }
 
   guard(f, on) {
-    if (on && (!this.canAct(f) || f.strikeActive > 0 || f.grabState || f.grabbing)) { f.guarding = false; return; }
+    // Hitstop must NOT drop a held guard — every blocked hit applies hitstop to the blocker
+    // (entity.takeDamage), so gating on canAct() made any fast combo strip the guard after the
+    // first block ("can't hold down block"). Stagger, grabs, and your own attacks still drop it.
+    if (on && (!f.alive || f.staggerT > 0 || f.grabbedBy || f.grabState || f.grabbing || f.strikeActive > 0)) { f.guarding = false; return; }
     f.guarding = !!on && f.alive;
   }
 

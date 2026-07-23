@@ -266,7 +266,7 @@ export class World {
   }
 
   setBaseZoom(f) { this._baseFrustum = f; }
-  shake(a) { this._shake = Math.min(this._shake + a, 8); }
+  shake(a) { this._shake = Math.min(this._shake + a * (this.shakeMult ?? 1), 8); }
   punch(z) { this.frustumTarget = Math.min(this.frustumTarget, this.frustum * z); } // zoom IN briefly
 
   follow(target, dt) {
@@ -445,7 +445,7 @@ export class World {
     this._lastRender = now;
     this.composer.render();
     this._qCool -= 0.016;
-    if (this._qCool <= 0) {
+    if (this._qCool <= 0 && this.qualityOverride == null) {   // settings can lock the tier
       if (this._ema > 24 && this._qTier > 0) { this._qTier--; this._applyQuality(); this._qCool = 1.4; }
       else if (this._ema < 13.5 && this._qTier < 2) { this._qTier++; this._applyQuality(); this._qCool = 2.5; }
     }
