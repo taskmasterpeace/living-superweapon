@@ -14,6 +14,10 @@
 // Per-bus baseline gains — the STATIC MIX. These are the balance decisions; the player's faders
 // multiply them. Voice sits forward of ambience; music sits under everything.
 const rand2 = (a, b) => a + Math.random() * (b - a);
+// AUDIO MUST NEVER THROW INTO THE GAME LOOP. WebAudio rejects NaN/Infinity on every AudioParam
+// with an exception, and one bad number from a caller used to take a whole ability down with it.
+// Every public sound coerces its inputs through this first.
+const fin = (v, d = 1) => (Number.isFinite(v) ? v : d);
 const BUS_DEFAULT = { music: 0.34, sfx: 1.0, voice: 0.92, ambient: 0.52, ui: 0.7 };
 
 export class AudioBus {
@@ -288,7 +292,7 @@ export class AudioBus {
       ramp: (lvl) => {
         h.last = performance.now();
         try {
-          const L = Math.max(0, Math.min(1, lvl));
+          const L = Math.max(0, Math.min(1, fin(lvl, 0)));
           f.frequency.setTargetAtTime(300 + L * 2600, this.t, 0.05);
           // as it fills, the ring mod climbs and detunes — the sound becomes less stable
           rm.car.frequency.setTargetAtTime(420 + L * 1500, this.t, 0.08);
@@ -319,6 +323,7 @@ export class AudioBus {
   // THE RELEASE — a charged ki attack leaving your hands. Sub-thump for the shove, an inharmonic
   // burst for the mass, a long descending ring-mod tail for the travel, arcing across all of it.
   kiRelease(power = 1, pos = null) {
+    power = fin(power, 1);
     if (!this.ok || this.muted) return;
     const pg = this._pg(pos, 230); if (!pg) return;
     const p = Math.max(0.2, Math.min(1.6, power)) * pg, t = this.t;
@@ -389,7 +394,7 @@ export class AudioBus {
       last: performance.now(),
       set: (intensity = 1, p2 = null) => {
         h.last = performance.now();
-        const I = Math.max(0, Math.min(1.6, intensity));
+        const I = Math.max(0, Math.min(1.6, fin(intensity, 1)));
         try {
           const dist = this._pg(p2 || pos, 240);
           g.gain.setTargetAtTime(0.10 * I * (dist || 1), this.t, 0.08);
@@ -416,6 +421,7 @@ export class AudioBus {
 
   // A short electrical ARC — auras, tier-ups, lightning, anything that should spit.
   arc(power = 1, pos = null) {
+    power = fin(power, 1);
     if (!this.ok || this.muted) return;
     const pg = this._pg(pos, 170); if (!pg) return;
     const p = power * pg;
@@ -507,6 +513,7 @@ export class AudioBus {
   // energy being barely makes contact at all. Set `def.body` on a character; `flesh` is default.
   // Used by landings, heavy impacts and ragdoll contact.
   land(power = 1, body = 'flesh', pos = null) {
+    power = fin(power, 1);
     if (!this.ok) return;
     const pg = this._pg(pos, 150); if (!pg) return;
     const p = Math.min(2.2, power) * pg;

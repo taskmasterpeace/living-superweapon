@@ -215,7 +215,11 @@ export const TYPES = {
         if (c01 > 0.6 && Math.random() < c01 * 0.4) g.world.shake(0.15 * c01);
         if (c01 >= 1 && Math.random() < 0.3) g.vfx.lightning(m, { color: def.color, count: 2, radius: 8, height: 6 });
       } else if (inp.released || (!inp.held) || dry) {
-        const c01 = st.chargeT / (def.maxCharge || 2.2);
+        // ⚠ `st.chargeT` is undefined if a release arrives without a charge ever having started
+        // (a stray released-edge, a netplay echo, a scripted test). `undefined / n` is NaN, and
+        // `NaN < 0.12` is FALSE — so the fizzle-guard below let NaN straight through into damage,
+        // scale and audio. Clamp it to a real number first.
+        const c01 = Math.max(0, Math.min(1, (st.chargeT || 0) / (def.maxCharge || 2.2)));
         st.charging = false; if (st.sfx) { st.sfx.stop(); st.sfx = null; }
         const orbPos = st.orb ? st.orb.position.clone() : c.muzzle(new THREE.Vector3());
         killOrb(c, st);

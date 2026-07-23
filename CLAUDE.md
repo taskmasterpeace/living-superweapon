@@ -398,6 +398,49 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   while explicitly PRESERVING the shared caches (`_tileMats`, `_winMats`, `_lampMat`, `_carPaints`).
   Verified: 10 consecutive rebuilds move geometries 264→273 and textures 25→27.
 
+## SOUND (2026-07-23) — buses, the soundscape, the energy voice
+- **THE MIX.** Everything used to connect to one master gain. There is now a bus structure —
+  `music · sfx · voice · ambient · ui` → glue compressor → master. Each has a fader in Options
+  (`SETTINGS.volMusic` etc.). `audio.setBus(name, v)` and `audio.duck(name, amount, dur)`.
+  Static balance lives in `BUS_DEFAULT`; the player's faders multiply it.
+- **`core/soundscape.js`** — the city bed + civilian voices, all synthesised.
+  · **The bed** follows `world.districtAt` + time of day + altitude: traffic, wind, machine, surf,
+    crowd murmur, plus one-shot horns, clank, gulls, birdsong/crickets, dogs, distant sirens.
+    Layers EASE (≈1s) so walking a block is a crossfade.
+  · **The voices** are real formant synthesis: sawtooth glottal source + vibrato through three
+    bandpass formants. A vowel is a formant triple; a word is a sequence with a pitch contour and
+    syllable envelope. Speakers differ by pitch AND vocal-tract length. Ten emotional shapes;
+    the synth improvises inside each, so no line repeats. Rate-limited (~130ms) or a crowd mushes.
+  · **The score** — drone bed + combat heartbeat + opening filter. `music('menu'|'combat'|'victory')`.
+- **BODY TYPES.** `f.body` derives from what a character IS (`metal`/`phase`/`tentacles`),
+  `def.body` overrides. `audio.land(power, body, pos)` — measured RMS: metal 0.051 (clang + ring),
+  flesh 0.037 (thump), energy 0.018 (barely lands).
+- **THE ENERGY VOICE.** Ki was one sawtooth through a bandpass — a synth NOTE, not power. Now built
+  from three things: **inharmonic partials** (ratios 1 / 2.41 / 3.86 / 5.13, so the ear can't
+  resolve a pitch), **ring modulation** (`_ringMod` — a gain node whose gain is driven by an
+  oscillator through zero; the biggest single ingredient), and **crackle** (`_crackle` — noise
+  through a bandpass chopped by a fast square LFO = arcing). `charge()` ramps all three with fill
+  level; `kiRelease(power)`; `beamVoice()` returns a handle whose `set(intensity)` makes a beam
+  LOSING a clash audibly strain; `arc()` for tier-ups and lightning.
+- ⚠ **Audio must never throw into the game loop.** WebAudio rejects NaN/Infinity on every
+  AudioParam with an exception. Every public sound coerces through `fin(v, default)` first.
+- ⚠ **Latent NaN found by the new audio path** (`abilities.js` charge release): `st.chargeT` is
+  undefined when a release arrives with no charge started, so `undefined / maxCharge` = NaN — and
+  `NaN < 0.12` is FALSE, so the fizzle-guard let NaN through into damage, orb scale and audio.
+  `c01` is now clamped at source. If you add a charge-style ability, clamp its fraction.
+
+## THE ESTABLISHING SHOT
+- `hud.showEstablishing(plan, {sim, country, eta, kicker})`, fired from `main.beginMatch`. Three
+  beats: HOLD on the card (name, country, population, districts, crime/safety bars, police ETA,
+  vigilantism stance) → LIFT (background fades through) → GONE. The Danger Room gets a different
+  card in holo-cyan that BOOTS rather than arrives. Ref: `wwa-establishing.jpeg`.
+
+## CONTROLLER GLYPHS
+- `core/glyphs.js` — `glyph(action, pad)` returns △○✕□/L1/R2 for a PlayStation-style pad, A/B/X/Y
+  for Xbox (detected from the pad id), keyboard labels otherwise. `buildHintBody` renders pad
+  glyphs when `padActive(pad)`, and `main.js` re-renders the panel the moment that changes.
+  ⚠ `PAD_ACTION` mirrors `MAP` in `core/gamepad.js` — rebind one, rebind the other.
+
 ## Hard rules (do not break)
 - **`opts.hitstop ?? 0.04`, NEVER `||`** (`entity.takeDamage`). Sustained damage — beams, cones,
   lifedrain, DoT ticks — passes `hitstop: 0` deliberately. With `||`, that falsy zero became 0.04
