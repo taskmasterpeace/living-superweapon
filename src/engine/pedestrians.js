@@ -172,9 +172,14 @@ export class Pedestrians {
           if (this._fire[i] <= 0 && dx * dx + dz * dz < 9000) {
             this._fire[i] = 0.9 + Math.random() * 0.8;
             if (game.civilianShot) game.civilianShot(this.px[i], this.pz[i], P);
+            // a vigilante SHOUTS with the shot — the street answering back has a voice
+            if (game.soundscape && Math.random() < 0.55) game.soundscape.say({ x: this.px[i], z: this.pz[i] }, Math.random() < 0.6 ? 'anger' : 'challenge', { gain: 0.42 });
           }
         }
-        if (this.t[i] <= 0) { this.state[i] = FLEE; this.t[i] = 1.8; }   // nerve runs out
+        if (this.t[i] <= 0) {
+          this.state[i] = FLEE; this.t[i] = 1.8;                          // nerve runs out
+          if (game.soundscape) game.soundscape.say({ x: this.px[i], z: this.pz[i] }, 'fear', { gain: 0.4 });
+        }
         continue;
       }
       const speed = st === FLEE ? this.spd[i] * 2.7 : this.spd[i];
@@ -206,6 +211,12 @@ export class Pedestrians {
           if (game.soundscape) game.soundscape.say({ x: this.px[i], z: this.pz[i] }, d2 < 60 ? 'panic' : 'fear', { urgent: true });
         }
         else if (d2 < 1100 && this.t[i] <= 0) {
+          // SIGHT IS REAL FOR CIVILIANS TOO (Robert: "make sure the pedestrians are able to SEE
+          // certain things"). A wall between a witness and the violence means no witness — no
+          // filming, no drawing, no evidence. Checked only at this trigger moment, so 64 peds
+          // never pay a per-frame LOS bill. (Fleeing from CLOSE danger stays un-gated — you can
+          // HEAR a superweapon through a wall.)
+          if (!this._sees(i, P, game)) { this.t[i] = 0.7; this._write(i); continue; }
           // Seeing you HURT someone is different from seeing you exist. What a witness DOES about it
           // is the country's stance made personal:
           const witnessed = game.police && game.police.heatOf && game.police.heatOf(P) > 8;
@@ -230,9 +241,32 @@ export class Pedestrians {
           this.dir[i] = Math.atan2(dx, dz);
         }
         else if (this.t[i] <= 0) this.t[i] = 3 + Math.random() * 4;
+        // GTA2 STREET LIFE: people you WALK PAST have voices — a mutter, a "hey, look" — heard
+        // only when you're genuinely near them (positional falloff does the rest).
+        else if (d2 < 1600 && d2 > 260 && game.soundscape && Math.random() < dt * 0.05)
+          game.soundscape.say({ x: this.px[i], z: this.pz[i] }, Math.random() < 0.72 ? 'chatter' : 'notice', { gain: 0.3 });
       } else if (this.t[i] <= 0) this.t[i] = 3 + Math.random() * 4;
       this._write(i);
     }
     if (moved) { this.mesh.instanceMatrix.needsUpdate = true; this.head.instanceMatrix.needsUpdate = true; }
+  }
+
+  // Can pedestrian i actually SEE the fighter? Segment-vs-cover in XZ (same test the fog and the
+  // AI honesty law use), plus the enterable buildings' interior walls. Event-driven only.
+  _sees(i, P, game) {
+    if (!game || !game._segBox || !game.world) return true;
+    const x = this.px[i], z = this.pz[i];
+    for (const c of game.world.cover) {
+      if (c.destroyed || (c.top ?? c.h) < 7) continue;          // knee-high cover hides nothing
+      if (game._segBox(x, z, P.pos.x, P.pos.z, c.x, c.z, (c.hx ?? c.r), (c.hz ?? c.r))) return false;
+    }
+    for (const it of (game.world.interiors || [])) {
+      const pIn = Math.abs(P.pos.x - it.x) < it.hx && Math.abs(P.pos.z - it.z) < it.hz;
+      const wIn = Math.abs(x - it.x) < it.hx && Math.abs(z - it.z) < it.hz;
+      if (!pIn && !wIn && !game._segBox(x, z, P.pos.x, P.pos.z, it.x, it.z, it.hx, it.hz)) continue;
+      for (const wl of it.walls)
+        if (game._segBox(x, z, P.pos.x, P.pos.z, wl.x, wl.z, wl.hx + 0.4, wl.hz + 0.4)) return false;
+    }
+    return true;
   }
 }

@@ -9,6 +9,7 @@ import * as THREE from 'three';
 import { AI } from './ai.js';
 import { clamp } from '../core/util.js';
 import { countryOf } from '../data/countries.js';
+import { ROSTER } from '../data/characters.js';
 
 const HEAT_CIV = 12, HEAT_COP = 40, THRESH = 35;
 
@@ -30,6 +31,19 @@ export const SWAT_DEF = {
   abilities: {
     lmb: { type: 'rifle', name: 'Tactical Carbine', cost: 1.5, interval: 0.16, damage: 4, speed: 150, radius: 0.55, color: '#cfe0ff' },
     shift: { type: 'dash', name: 'Breach Sprint', cost: 4, cd: 0.8, power: 80, iframes: 0.12, color: '#5aa0ff' },
+  },
+};
+// THE FEDS — rung four. Black suits out of black Suburbans, automatic weapons, no small talk.
+// Only a state with a real federal apparatus fields them (see _hasFeds — intel budget).
+export const FED_DEF = {
+  ...COP_DEF, id: 'police', name: 'FEDERAL AGENT', title: 'Federal Response', role: 'Field Office',
+  colors: { primary: '#101216', secondary: '#1a1d24', accent: '#cfd6e4', skin: '#caa27a' },
+  hp: 110, ki: 70, speed: 29, strength: 5, meleeTiers: 3, armor: 4,
+  evade: { kind: 'dash', name: 'Break Contact' },
+  abilities: {
+    lmb: { type: 'rifle', name: 'Automatic Rifle', cost: 1.3, interval: 0.11, damage: 4.5, speed: 165, radius: 0.55, color: '#e4ecff' },
+    rmb: { type: 'rifle', weapon: 'pistol', name: 'Sidearm', cost: 1.5, interval: 0.5, damage: 7, speed: 140, radius: 0.6, color: '#cfe0ff' },
+    shift: { type: 'dash', name: 'Break Contact', cost: 4, cd: 0.85, power: 78, iframes: 0.12, color: '#cfd6e4' },
   },
 };
 // THE TOP OF THE LADDER — the state sends its ARMY. Reachable ONLY in a country whose military
@@ -61,27 +75,40 @@ export class PoliceSystem {
     for (const c of this.cruisers) { this.g.scene.remove(c.grp); c.grp.traverse(o => { if (o.geometry && o.geometry !== this.g.world._carGeo) o.geometry.dispose(); if (o.material && !o.material._shared) o.material.dispose(); }); }
     this.cruisers.length = 0;
     this.cops.length = 0;           // the fighters themselves are cleared by startMode
-    this._respT = -1; this._reinforceT = 0; this._announced = false; this._lastHarmT = -99;
+    this._respT = -1; this._reinforceT = 0; this._announced = false; this._lastHarmT = -99; this._lswSent = false; this._cCache = undefined;
   }
   get active() { return !!(this.g.mode && this.g.modeId !== 'training' && !(this.g.netplay && this.g.netplay.active)); }
 
   heatOf(f) { return this.heat.get(f) || 0; }
-  // THE LADDER: ★ beat cops (35) → ★★ patrol backup (90) → ★★★ TACTICAL/SWAT (160) →
-  // ★★★★ the MILITARY (240) — but the top rung only exists where the STATE has an army to send.
-  // A lawless country tops out at SWAT and just keeps sending them; that difference is the point.
+  // THE LADDER (Robert's ruling 2026-07-24): ★ beat cops (35) → ★★ patrol backup (90) →
+  // ★★★ TACTICAL/SWAT (160) → ★★★★ THE FEDS (240, black Suburbans + automatics) →
+  // ★★★★★ the MILITARY (340) → ★★★★★★ A SANCTIONED LSW (460) — a registered superweapon of the
+  // state's own. Every top rung exists ONLY where the country sheet says the state HAS it to
+  // send: no federal apparatus → tops out at SWAT; no army → tops out at feds; a state with a
+  // Banned/low-activity LSW program never fields one. A failed state just keeps sending SWAT —
+  // that difference is the whole point of the country sheet.
   wantedLevel(f) {
     const h = this.heatOf(f);
-    if (h >= 240 && this._hasMilitary()) return 4;
-    return h >= 160 ? 3 : h >= 90 ? 2 : h >= THRESH ? 1 : 0;
+    let lvl = h >= 460 ? 6 : h >= 340 ? 5 : h >= 240 ? 4 : h >= 160 ? 3 : h >= 90 ? 2 : h >= THRESH ? 1 : 0;
+    if (lvl >= 6 && !this._hasSanctioned()) lvl = 5;
+    if (lvl >= 5 && !this._hasMilitary()) lvl = 4;
+    if (lvl >= 4 && !this._hasFeds()) lvl = 3;
+    return lvl;
+  }
+  _country() {
+    const name = (this.g.world.plan || {}).country;
+    if (this._cCache !== undefined && this._cCountry === name) return this._cCache;
+    this._cCountry = name;
+    return (this._cCache = countryOf(name));
   }
   // Does this theater's country field a real military? Median milBudget is ~41; a superpower is
   // 80-90, a failed state ~25. Above ~52 = there's an army that could roll in.
-  _hasMilitary() {
-    if (this._milCache !== undefined && this._milCountry === (this.g.world.plan || {}).country) return this._milCache;
-    const C = countryOf((this.g.world.plan || {}).country);
-    this._milCountry = (this.g.world.plan || {}).country;
-    return (this._milCache = !!C && (C.milBudget >= 52 || C.milService >= 60));
-  }
+  _hasMilitary() { const C = this._country(); return !!C && (C.milBudget >= 52 || C.milService >= 60); }
+  // A federal response needs a federal apparatus — intel budget is the tell (US 90).
+  _hasFeds() { const C = this._country(); return !!C && (C.intelBudget >= 45 || C.lawBudget >= 62); }
+  // A sanctioned LSW responds only where superweapons are a real, legal institution
+  // (lswActivity 0-100 + lswRegs Legal/Regulated/Banned — the country sheet's payoff).
+  _hasSanctioned() { const C = this._country(); return !!C && C.lswRegs !== 'Banned' && C.lswActivity >= 40; }
   villain() {
     let best = null, bh = THRESH - 0.01;
     for (const [f, h] of this.heat) if (f.alive !== undefined && h > bh && f.def && !f.def.police && this.g.entities.includes(f)) { bh = h; best = f; }
@@ -105,7 +132,7 @@ export class PoliceSystem {
     this.g.cityStats.cops = (this.g.cityStats.cops || 0) + 1;
     this._copsKilled = (this._copsKilled || 0) + 1;
     const cur = this.heatOf(killer);
-    const jumpTo = cur < 90 ? 100 : cur < 160 ? 172 : cur < 240 ? 252 : cur + 60;   // straight to the next rung
+    const jumpTo = cur < 90 ? 100 : cur < 160 ? 172 : cur < 240 ? 252 : cur < 340 ? 352 : cur < 460 ? 472 : cur + 60;   // straight to the next rung
     this.heat.set(killer, Math.max(cur, jumpTo) + this._copsKilled * 18);
     this._lastHarmT = this.g.time;
     if (this._respT >= 900) { this._respT = -1; this._announced = false; }   // the "unanswered" call is now answered
@@ -173,12 +200,15 @@ export class PoliceSystem {
     if (V) {
       const lvl = this.wantedLevel(V);
       if (lvl > (this._lastLvl || 0) && this.cops.length > 0) {
-        const esc = lvl >= 4 ? 'THE MILITARY IS DEPLOYING' : lvl >= 3 ? 'SPECIAL RESPONSE AUTHORIZED' : 'ADDITIONAL UNITS EN ROUTE';
-        if (g.hud) g.hud.announce(`WANTED ${'★'.repeat(lvl)}`, esc, lvl >= 4 ? '#9bd07a' : '#5aa0ff');
-        try { g.audio.siren(V.pos, lvl); } catch {}
+        const esc = lvl >= 6 ? 'A SANCTIONED ASCENDANT IS CLEARED TO ENGAGE'
+          : lvl >= 5 ? 'THE MILITARY IS DEPLOYING'
+          : lvl >= 4 ? 'FEDERAL RESPONSE — AGENTS EN ROUTE'
+          : lvl >= 3 ? 'SPECIAL RESPONSE AUTHORIZED' : 'ADDITIONAL UNITS EN ROUTE';
+        if (g.hud) g.hud.announce(`WANTED ${'★'.repeat(lvl)}`, esc, lvl >= 6 ? '#ffd24a' : lvl >= 5 ? '#9bd07a' : lvl >= 4 ? '#cfd6e4' : '#5aa0ff');
+        try { g.audio.siren(V.pos, Math.min(3, lvl)); } catch {}
         if (g.news && lvl >= 3) {
-          const head = lvl >= 4 ? 'MILITARY DEPLOYED — ' : 'SWAT AUTHORIZED — ';
-          g.news.highlight('police', head + g.world.districtAt(V.pos.x, V.pos.z), { dur: 2.4, priority: lvl >= 4 ? 3 : 2, focus: V.pos });
+          const head = lvl >= 6 ? 'SANCTIONED ASCENDANT DEPLOYED — ' : lvl >= 5 ? 'MILITARY DEPLOYED — ' : lvl >= 4 ? 'FEDERAL AGENTS ON SCENE — ' : 'SWAT AUTHORIZED — ';
+          g.news.highlight('police', head + g.world.districtAt(V.pos.x, V.pos.z), { dur: 2.4, priority: lvl >= 5 ? 3 : 2, focus: V.pos });
         }
       }
       this._lastLvl = lvl;
@@ -198,7 +228,7 @@ export class PoliceSystem {
     this.cops = this.cops.filter(f => g.entities.includes(f));
     // no villain → units stand down (officers jog off and vanish)
     if (!V) {
-      this._respT = -1; this._announced = false;
+      this._respT = -1; this._announced = false; this._lswSent = false;
       for (const f of this.cops) if (!f._leaving) { f._leaving = true; f._leaveT = 3.2; }
       for (const f of this.cops) if (f._leaving && f.alive) { f._leaveT -= dt; if (f._leaveT <= 0) { f.noRespawn = true; f._remove = true; } }
       return;
@@ -243,16 +273,24 @@ export class PoliceSystem {
     const dx = V.pos.x - from[0], dz = V.pos.z - from[1], dl = Math.hypot(dx, dz) || 1;
     const stop = new THREE.Vector3(V.pos.x - (dx / dl) * 44, 0, V.pos.z - (dz / dl) * 44);
     stop.x = clamp(stop.x, -A + 16, w.waterX - 14); stop.z = clamp(stop.z, -A + 16, A - 16);
-    // the cruiser: shared car body in black-and-white + a working light bar
+    // the vehicle: black-and-white cruiser — or, at the federal rung, a BLACK SUBURBAN: all-black
+    // body, tinted glass, low-profile dash strobes instead of a roof bar. Robert's ruling.
+    const fed = V && this.wantedLevel(V) === 4;
     const grp = new THREE.Group();
-    const white = w._cruiserMat || (w._cruiserMat = Object.assign(new THREE.MeshStandardMaterial({ color: '#e8e8ea', roughness: 0.4, metalness: 0.4 }), { _shared: true }));
-    const body = new THREE.Mesh(w._carGeo, white); body.castShadow = false; body.receiveShadow = true; grp.add(body);
-    const hood = new THREE.Mesh(new THREE.BoxGeometry(7, 0.5, 9.7), Object.assign(new THREE.MeshStandardMaterial({ color: '#16181e', roughness: 0.6 }), {}));
-    hood.position.set(8, 5.3, 0); grp.add(hood);
-    const barR = new THREE.Mesh(new THREE.BoxGeometry(2.6, 1.1, 3.6), new THREE.MeshStandardMaterial({ color: '#7a1616', emissive: '#ff2f2f', emissiveIntensity: 2 }));
-    barR.position.set(-1.6, 9.1, -2.2); grp.add(barR);
-    const barB = new THREE.Mesh(new THREE.BoxGeometry(2.6, 1.1, 3.6), new THREE.MeshStandardMaterial({ color: '#16307a', emissive: '#3a7aff', emissiveIntensity: 0.3 }));
-    barB.position.set(-1.6, 9.1, 2.2); grp.add(barB);
+    const paint = fed
+      ? (w._fedMat || (w._fedMat = Object.assign(new THREE.MeshStandardMaterial({ color: '#0c0d11', roughness: 0.32, metalness: 0.6 }), { _shared: true })))
+      : (w._cruiserMat || (w._cruiserMat = Object.assign(new THREE.MeshStandardMaterial({ color: '#e8e8ea', roughness: 0.4, metalness: 0.4 }), { _shared: true })));
+    const body = new THREE.Mesh(w._carGeo, paint); body.castShadow = false; body.receiveShadow = true; grp.add(body);
+    if (fed) body.scale.set(1.12, 1.18, 1.12);                       // a Suburban stands taller than a squad car
+    if (!fed) {
+      const hood = new THREE.Mesh(new THREE.BoxGeometry(7, 0.5, 9.7), Object.assign(new THREE.MeshStandardMaterial({ color: '#16181e', roughness: 0.6 }), {}));
+      hood.position.set(8, 5.3, 0); grp.add(hood);
+    }
+    const barW = fed ? 1.3 : 2.6, barH = fed ? 0.5 : 1.1, barY = fed ? 6.4 : 9.1, barX = fed ? 9.2 : -1.6;
+    const barR = new THREE.Mesh(new THREE.BoxGeometry(barW, barH, 3.6), new THREE.MeshStandardMaterial({ color: '#7a1616', emissive: '#ff2f2f', emissiveIntensity: 2 }));
+    barR.position.set(barX, barY, -2.2); grp.add(barR);
+    const barB = new THREE.Mesh(new THREE.BoxGeometry(barW, barH, 3.6), new THREE.MeshStandardMaterial({ color: '#16307a', emissive: '#3a7aff', emissiveIntensity: 0.3 }));
+    barB.position.set(barX, barY, 2.2); grp.add(barB);
     grp.position.set(from[0], 0, from[1]);
     grp.rotation.y = Math.atan2(dx, dz) + Math.PI / 2;
     g.scene.add(grp);
@@ -264,8 +302,9 @@ export class PoliceSystem {
     const g = this.g;
     if (!V || !this.active) return;
     const lvl = this.wantedLevel(V);
-    const def = lvl >= 4 ? GUARD_DEF : lvl >= 3 ? SWAT_DEF : COP_DEF;
-    const n = lvl >= 4 ? 4 : lvl >= 3 ? 3 : 2;
+    if (lvl >= 6 && !this._lswSent) this._deploySanctioned(cruiser, V);
+    const def = lvl >= 5 ? GUARD_DEF : lvl >= 4 ? FED_DEF : lvl >= 3 ? SWAT_DEF : COP_DEF;
+    const n = lvl >= 5 ? 4 : lvl >= 3 ? 3 : 2;
     for (let i = 0; i < n; i++) {
       this._unitNo++;
       const d = { ...def, name: `${def.name} ${String(this._unitNo).padStart(2, '0')}` };
@@ -276,7 +315,35 @@ export class PoliceSystem {
     this.cops.push(...g.entities.slice(-n));
     // the cruiser parks and becomes part of the street (destructible like any car)
     g.world.cars.push({ mesh: cruiser.grp, x: cruiser.grp.position.x, z: cruiser.grp.position.z, hp: 30, maxHp: 30, dead: false, paint: cruiser.grp.children[0].material });
-    if (g.hud) g.hud.feed(`${lvl >= 4 ? '🪖 The Guard is' : '🚔 Units'} on scene — ${V.name} is the target`, lvl >= 4 ? '#9bd07a' : '#5aa0ff');
+    if (g.hud) g.hud.feed(`${lvl >= 5 ? '🪖 The Guard is' : lvl >= 4 ? '🕶 Federal agents are' : '🚔 Units'} on scene — ${V.name} is the target`, lvl >= 5 ? '#9bd07a' : lvl >= 4 ? '#cfd6e4' : '#5aa0ff');
     if (g.news) g.news.highlight('police', 'UNITS ON SCENE — ' + g.world.districtAt(cruiser.grp.position.x, cruiser.grp.position.z), { dur: 2.2, priority: 1, focus: cruiser.grp.position });
+  }
+
+  // ★★★★★★ — THE STATE'S OWN SUPERWEAPON. In a country whose sheet says superweapons are a real,
+  // legal institution (lswActivity + lswRegs), the last rung of the ladder is one of ours: a
+  // REGISTERED Ascendant cleared to engage. WHICH one leans on the CITY's stats — a safe,
+  // well-run theater rates a top-tier responder; a rough one gets whoever is posted nearby.
+  // Deterministic per city (seeded by name), flagged police so the bout never enters the Elo
+  // book, fixated on the villain like any badge. One per flag cycle — this is an event, not a wave.
+  _deploySanctioned(cruiser, V) {
+    const g = this.g;
+    this._lswSent = true;
+    const plan = g.world.plan || {};
+    const safety = plan.safety || 50;
+    const want = safety >= 60 ? ['Very High', 'Extreme', 'Cosmic'] : safety >= 35 ? ['High', 'Very High'] : ['Moderate', 'High'];
+    let pool = ROSTER.filter(r => !r.police && !r.isDummy && want.includes(r.threat) && r.id !== (V.def && V.def.id));
+    if (!pool.length) pool = ROSTER.filter(r => !r.police && !r.isDummy && r.id !== (V.def && V.def.id));
+    if (!pool.length) return;
+    let h = 7; for (const ch of String(plan.name || 'x')) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+    const src = pool[h % pool.length];
+    const d = { ...src, police: true };                          // registered responder — never books Elo
+    const f = g.addFighter(d, { team: 2, x: cruiser.grp.position.x, z: cruiser.grp.position.z + 9 });
+    f.ai = new AI(f, 1.6); f.fixation = V; f.noRespawn = true;
+    this.cops.push(f);
+    g.vfx.shockwave(f.pos.clone().setY(0.3), { color: '#ffd24a', radius: 26, power: 1.5 });
+    try { g.heroYell(f, 1.3); } catch (err) {}
+    if (g.hud) { g.hud.announce('⚡ SANCTIONED RESPONSE', `${src.name} is cleared to engage`, '#ffd24a'); g.hud.feed(`⚡ REGISTERED ASCENDANT ON SCENE — ${src.name}`, '#ffd24a'); }
+    if (g.news) g.news.highlight('police', 'SANCTIONED ASCENDANT — ' + src.name + ' ENGAGES', { dur: 3, priority: 3, focus: f.pos });
+    if (g.matchLog) g.matchLog.push({ t: g.matchT, type: 'police', v: V.name, vid: V.def.id, at: 'SANCTIONED RESPONSE — ' + src.name });
   }
 }

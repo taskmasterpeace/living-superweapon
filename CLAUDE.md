@@ -698,6 +698,36 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   while explicitly PRESERVING the shared caches (`_tileMats`, `_winMats`, `_lampMat`, `_carPaints`).
   Verified: 10 consecutive rebuilds move geometries 264→273 and textures 25→27.
 
+## THE SIX-RUNG RESPONSE + THE STREET'S VOICE (2026-07-24)
+- **THE LADDER RUNS TO SIX** (police.js): ★35 beat cops → ★★90 patrol → ★★★160 SWAT →
+  **★★★★240 THE FEDS** (`FED_DEF` — black suits, automatic rifle + sidearm, armor 4, arriving in
+  a BLACK SUBURBAN: all-black shared paint `w._fedMat`, taller body scale, low-profile dash
+  strobes instead of a roof bar) → **★★★★★340 MILITARY** → **★★★★★★460 A SANCTIONED LSW**.
+  Every top rung is GATED by the country sheet and the ladder TOPS OUT where the state runs dry:
+  `_hasFeds` (intelBudget ≥45 or lawBudget ≥62) · `_hasMilitary` (unchanged) · `_hasSanctioned`
+  (`lswRegs !== 'Banned' && lswActivity ≥ 40` — the lsw fields' payoff). Somalia at heat 999 is
+  still ★★★ SWAT forever; NYC runs the whole board. `_country()` caches the row per theater.
+- **THE SANCTIONED RESPONDER** (`_deploySanctioned`): one REGISTERED hero from the ROSTER
+  (imported from data/characters — no cycle), picked deterministically per city (name-seeded)
+  from a threat pool leveled by CITY SAFETY (safe ≥60 → Very High/Extreme/Cosmic · ≥35 →
+  High/Very High · else Moderate/High), spawned `police: true` (never books Elo), fixated like
+  any badge, ai.level 1.6, one per flag cycle (`_lswSent`, reset on stand-down). Verified: NYC
+  at ★★★★★★ deployed AURUM alongside the Guard.
+- **onCopDown jump table** extended for the new rungs (…<340→352, <460→472). HUD wanted row:
+  ⚡ SANCTIONED ★×6 · 🪖 MARTIAL ★×5 · 🕶 FEDERAL ★×4 (⚠ repeat counts clamped — the old
+  `3 - lvl` RangeError is the reason the clamp comments exist).
+- **PEDESTRIAN SIGHT IS REAL** (`peds._sees`, Robert: "make sure the pedestrians are able to
+  SEE certain things"): the film/draw witness trigger now runs segment-vs-cover + interior-wall
+  LOS (same `_segBox` the fog/AI use) — a wall between a witness and the violence means NO
+  witness, no filming, no drawing. Event-driven at the trigger moment only (64 peds never pay a
+  per-frame bill). Fleeing from CLOSE danger stays un-gated — you can HEAR a superweapon.
+- **GTA2 STREET VOICES** (soundscape.say was already the bark engine): the missing lines are
+  wired — walk-past civilians mutter/notice you (positional, ~16–40u, only heard when you're
+  actually near), vigilantes SHOUT with each shot ('anger'/'challenge') and whimper when their
+  nerve breaks ('fear'); flee/film/blast barks were already in. Staged street measured 21 barks
+  /12s across five emotions. All positional through `audio._pg` falloff — you only hear the
+  people you're around.
+
 ## THE FOUR-DECK LADDER + THE POWER CHARGE (2026-07-24)
 - **Flight is DECKS, not an axis** (`entity._physics`, plan doc PLAN_ALTITUDE_AND_INTERACTION §1):
   a flying fighter is DOCKED on a deck or IN TRANSIT. Release ascend → the servo eases you onto
