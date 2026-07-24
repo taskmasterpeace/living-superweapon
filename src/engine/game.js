@@ -601,8 +601,11 @@ export class Game {
   startMatch(charId) {
     // clear
     for (const e of this.entities) { this.scene.remove(e.obj); if (e.dispose) e.dispose(); }
-    this.entities.length = 0; this.minions.length = 0;
+    this.entities.length = 0;
+    for (const m of this.minions) if (m._dispose) m._dispose(this);   // ghost drones haunted rematches
+    this.minions.length = 0;
     for (const c of this.constructs) c._dispose(this); this.constructs.length = 0;
+    for (const pj of this.projectiles.list) if (pj._dispose) pj._dispose(this);   // returns pooled lights too
     this.projectiles.list.length = 0;
     while (this.portals.length) this._closePair(this.portals[0]);
     this.hardLock = null; this.lockTarget = null;
@@ -697,8 +700,11 @@ export class Game {
   }
   startMode(id, o = {}) {
     for (const e of this.entities) { this.scene.remove(e.obj); if (e.dispose) e.dispose(); }
-    this.entities.length = 0; this.minions.length = 0; this.humans.length = 0;
+    this.entities.length = 0; this.humans.length = 0;
+    for (const m of this.minions) if (m._dispose) m._dispose(this);
+    this.minions.length = 0;
     for (const c of this.constructs) c._dispose(this); this.constructs.length = 0;
+    for (const pj of this.projectiles.list) if (pj._dispose) pj._dispose(this);
     this.projectiles.list.length = 0;
     while (this.portals.length) this._closePair(this.portals[0]);
     this.hardLock = null; this.lockTarget = null; this.combo = 0; this.comboT = 0;
@@ -747,8 +753,11 @@ export class Game {
     // the tape is cumulative: lead fighters inherit their stat sheets across rounds
     const prevA = ms.aLeadF ? ms.aLeadF.stats : null, prevB = ms.bLeadF ? ms.bLeadF.stats : null;
     for (const e of this.entities) { this.scene.remove(e.obj); if (e.dispose) e.dispose(); }
-    this.entities.length = 0; this.minions.length = 0; this.humans.length = 0;
+    this.entities.length = 0; this.humans.length = 0;
+    for (const m of this.minions) if (m._dispose) m._dispose(this);
+    this.minions.length = 0;
     for (const c of this.constructs) c._dispose(this); this.constructs.length = 0;
+    for (const pj of this.projectiles.list) if (pj._dispose) pj._dispose(this);
     this.projectiles.list.length = 0;
     while (this.portals.length) this._closePair(this.portals[0]);
     this.hardLock = null; this.lockTarget = null;
