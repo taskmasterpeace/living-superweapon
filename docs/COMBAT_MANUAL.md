@@ -216,3 +216,31 @@ Two things have to be built, in this order:
 a *ceiling* — a second surface — which the single-heightfield terrain cannot express. When we want
 them, the honest version is a roofed-volume system (the same one interiors need), not a terrain
 trick. The metro cut is the 90% version that plays well today.
+
+## 7. CONTROL STATES — mind control
+
+`mindcontrol` (TYPES, `abilities.js`) is the first mechanic that seizes a fighter's WILL rather
+than their body. The rules, in the order of what they protect:
+
+- **Minds only.** Works on bots (`foe.ai`), never on humans, never on `def.police` — the wanted
+  ladder and fixation targeting must not be puppeteered — and never on training dummies.
+- **The flip is loaned, not sold.** The victim keeps `_oldTeam` while `_controlled`; anything that
+  DECIDES by team counts a dominated fighter on their ORIGINAL side (the tournament round check),
+  and a dominated fighter's KOs never book Elo (`koElo` guard in `handleKO`) — domination turns
+  fights, never brackets and never the book.
+- **One release path.** Expiry, victim death, and the CONTROLLER's own death (`clearSlotFx`) all
+  run the same `releaseMind` in `abilities.js`, restoring team and wiping belief. There is no path
+  that leaves a fighter permanently defected — respawn modes depend on this. Never restore `team`
+  by hand anywhere else.
+- **It reads.** Cast = DOMINATED tag + expanding ring; while held = the victim's stateRing pulses
+  cyan (the ground-marker language) + drifting motes; release = a grey collapse ring.
+- **The counter** is range and tempo: the seize is a 42u cone on a real ult slot, cooldown (18s)
+  outlasts duration (6s), and the victim wakes with a WIPED belief — it has to find the fight
+  again, because the AI honesty law applies to dominated bots too.
+
+`nova` (SUPERNOVA) is not a control state but shares one law worth writing down here: **the cost
+is the tank.** Holding feeds ALL current ki into one omnidirectional detonation — damage and
+radius scale with what was fed, at any altitude — and then the caster is bone dry: `onDrained`
+fires, and Overdrive fighters are DESIGNED to cash that emptiness in with their fists. A tap that
+fed under 12 ki fizzles LOUDLY (ring + kiRelease), never silently — the energy-clarity law holds.
+Neither mechanic adds a damage type, so the DAMAGE CODEX is unchanged by design.

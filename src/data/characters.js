@@ -189,7 +189,7 @@ export const ROSTER = [
     ai: { style: 'rusher', range: 30, aggro: 0.82, fly: 0.75 },
     evade: { kind: 'sprint', name: 'Jet Sprint', mult: 1.7, dur: 1.6 },
     blurb: 'Flame on. A fast flyer wrapped in fire — grab him and you burn. Jets, homing fireballs, and a supernova.',
-    sig: ['LMB Flame Jet (fire beam)', 'RMB Fire Blast (cone)', 'E Flaming Fist (fly-in)', 'Thorns: burns grabbers'],
+    sig: ['LMB Flame Jet (fire beam)', 'R SUPERNOVA (the whole tank, one blast)', 'E Flaming Fist (fly-in)', 'Thorns: burns grabbers'],
     abilities: {
       lmb: { type: 'beam', name: 'Flame Jet', cost: 4, cd: 0.3, radius: 1.4, tipSpeed: 190, maxLen: 120, dps: 56, kiPerSec: 16, steer: 12, color: '#ff6a1a', color2: '#ffd24a' },
       rmb: { type: 'cone', name: 'Fire Blast', kiPerSec: 18, range: 34, arc: 1.05, dps: 30, push: 20, color: '#ff6a1a' },
@@ -197,7 +197,7 @@ export const ROSTER = [
       e: { type: 'melee', name: 'Flaming Fist', cost: 12, cd: 1.0, damage: 24, range: 12, arc: 0.8, lunge: 60, knock: 48, launch: 14, fly: true, color: '#ffd24a' },
       f: { type: 'volley', name: 'Ember Storm', cost: 3, interval: 0.08, damage: 6, speed: 104, radius: 0.85, blast: 3.4, spread: 0.14, color: '#ff6a1a', color2: '#ffd24a' },
       shift: { type: 'dash', name: 'Jet Dash', cost: 4, cd: 0.45, power: 120, iframes: 0.26, color: '#ffd24a' },
-      r: { type: 'buff', name: 'Supernova', cost: 30, cd: 20, mult: 1.7, dur: 10, color: '#ff6a1a', color2: '#ffd24a' },
+      r: { type: 'nova', name: 'Supernova', cost: 0, cd: 22, feedRate: 55, maxFeed: 120, minRadius: 16, maxRadius: 44, dmgMin: 30, dmgMax: 95, color: '#ff6a1a', color2: '#ffd24a' },   // feeds the WHOLE tank — cost is everything you have
     },
   },
   {
@@ -637,7 +637,7 @@ export const ROSTER = [
       e: { type: 'teleport', name: 'Mind Skip', cost: 12, cd: 1.4, range: 52, color: '#7fd4ff' },
       f: { type: 'buff', name: 'Resolve of the Dead', cost: 24, cd: 18, mult: 1.55, dur: 10, color: '#7fd4ff', color2: '#fff' },
       shift: { type: 'dash', name: 'Wraith Dash', cost: 5, cd: 0.5, power: 98, iframes: 0.28, color: '#7fd4ff' },
-      r: { type: 'charge', name: 'Sons of the Red Sand', cost: 8, cd: 14, kiPerSec: 12, maxCharge: 2.2, minR: 1.6, maxR: 6.6, dmgMin: 24, dmgMax: 82, maxBlast: 34, speedMin: 38, speedMax: 66, chargePower: 3, dtype: 'magic', color: '#7fd4ff', color2: '#eaffff' },
+      r: { type: 'mindcontrol', name: 'Dominion', cost: 30, cd: 18, range: 42, arc: 0.7, dur: 6, color: '#7fd4ff', color2: '#eaffff' },   // the telepath's signature — a lesser mind fights for him
     },
   },
   {

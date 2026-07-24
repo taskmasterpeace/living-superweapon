@@ -32,7 +32,7 @@ is the comeback attribute: when your ki tank is low/drained, landed fists conver
 | **WARDEN** | Magneto-gravity hybrid — the anchor | Russia (bass rumble) | High | 8 | 1.1 | Force Push, Singularity, Collapse; heavy-only melee |
 | **HIVE** | Swarm summoner — the conclave | Brazil | Moderate | 3 | 0.7 | Drone swarms, Sentinel, Overmind |
 | **PYRE** | walking eruption | Mexico | Very High | 7 | 1.2 | Fireballs, Flamethrower, Rain of Fire; frost-immune |
-| **TORCH** | the flame flyer | USA (cocky kid) | High | 4 | 1.3 | Flame Jet, thorns (burns grabbers), Supernova; frost-immune |
+| **TORCH** | the flame flyer | USA (cocky kid) | High | 4 | 1.3 | Flame Jet, thorns (burns grabbers), SUPERNOVA (feeds the whole tank, total detonation — leaves him dry); frost-immune |
 | **APEX** | the perfect predator | Lab-grown (layered voice) | **Extreme** | 8 | 1.4 | Wave Cannon, absorbing throws, Regenerate |
 | **SPECTER** | Vision — density control | Synthezoid (calm) | High | 6 | 1.0 | Phase intangibility, Density Punch, Max Density |
 | **VANGUARD** | the invincible | USA (broadcast baritone) | Very High | **9** | 1.5 | Flying Tackle, Eye Beam; **deflect guard** (bullets bounce back); haymaker-only melee |
@@ -58,7 +58,7 @@ MAJESTY (Extreme, BINARY) · MYSTWARD (barrier + folds + sigils) · ONYX (kineti
 CHAINFIRE (hellfire chain grab, fire wake) · TEMPEST (weather: gale/hail/flash-freeze).
 
 **DC-inspired:** KNIGHTFALL (no powers, Line Beacon item, batarang fans) · AEGIS (sword + bracelet-deflect +
-Golden Lasso slam) · OLYMPUS (the word made lightning) · MARSHAL (phasing heavyweight) · CIRCUIT (∞-core
+Golden Lasso slam) · OLYMPUS (the word made lightning) · MARSHAL (phasing telepath — Dominion mind control) · CIRCUIT (∞-core
 machine half, deflect) · TRENCH (spear + the Drowned Court) · DECIBEL (voicePitch 1.3 — the Canary Cry cone) ·
 COLDSNAP (cold gun, freeze rules) · FOUNDRY (hammer + rivet gun, rocket-boot leaps) · TALON (escrima acrobat, Threat Low).
 

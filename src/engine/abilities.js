@@ -27,8 +27,17 @@ export function clearSlotFx(c) {
   for (const k in c.slots) {
     const s = c.slots[k];
     if (s.sfx) { s.sfx.stop(); s.sfx = null; }
+    if (s.victim) releaseMind(s, c._game);   // the CONTROLLER died/despawned mid-leash — the will snaps back
     killOrb(c, s);
   }
+}
+// Mind control ends — expiry, victim death, or the controller going down (clearSlotFx).
+// One release path so the team restore can never drift between them.
+function releaseMind(st, g) {
+  const v = st.victim; if (!v) return; st.victim = null;
+  v.team = st.oldTeam; v._controlled = false; v._oldTeam = undefined;
+  if (v.ai) v.ai.belief = null;              // waking up — no idea where anyone went
+  if (g && g.vfx) g.vfx.ring(v.pos.clone().setY(v.pos.y + 9), { color: '#c9cfd9', r0: 6, r1: 1, life: 0.3 });
 }
 // out of ki while holding a charge/sustain → make the failure LOUD and readable (never a silent freeze)
 function drained(c, g) { if (g && g.onDrained) g.onDrained(c); }
@@ -510,6 +519,75 @@ export const TYPES = {
         });
         g.audio.blast(180, 0.25); g.world.punch(0.88); g.vfx.flash(from, def.color || '#ffe8c0', 8 + c01 * 8, 0.25);
       }
+    }
+  },
+
+  // SUPERNOVA — hold to gather, and it takes EVERYTHING: the whole ki tank feeds one omnidirectional
+  // detonation centered on your own body (works exactly the same at altitude). Then you are EMPTY —
+  // drainedT opens, and if you have Overdrive, your fists are the comeback plan.
+  nova(c, def, st, g, inp) {
+    if (inp.pressed && ready(c, def, st) && !st.building) {
+      st.building = true; st.fed = 0; st.sfx = g.audio.charge();
+      if (c.def.yells) { c._yellCd = 0; g.heroYell(c, 1.2); }
+    }
+    if (st.building) {
+      const pull = (def.feedRate || 55) * inp.dt;
+      const fed = Math.min(c.ki, pull);
+      c.ki -= fed; st.fed += fed;
+      c.state = 'charge'; c.stateT = 0;
+      c.vel.x *= 0.86; c.vel.z *= 0.86;
+      g.chargeGather(c, def.color || '#ff6a1a', c.pos.clone().setY(c.pos.y + 5.5), 1 + st.fed * 0.02);
+      if (st.sfx) st.sfx.ramp(Math.min(1, st.fed / (def.maxFeed || 120)));
+      if (Math.random() < 0.3) g.world.shake(0.12 + st.fed * 0.002);
+      const done = c.ki <= 0.5 || st.fed >= (def.maxFeed || 120);
+      if (inp.released || done) {
+        st.building = false; if (st.sfx) { st.sfx.stop(); st.sfx = null; }
+        const k = st.fed / (def.maxFeed || 120);                       // 0..1 of a full tank
+        if (st.fed < 12) {                                             // barely lit — a readable fizzle, never a silent nothing
+          st.cd = 0.5;
+          g.vfx.ring(c.pos.clone().setY(c.pos.y + 5), { color: '#8b8577', r0: 3, r1: 0.5, life: 0.25 });
+          g.audio.kiRelease(0.15, c.pos);
+          return;
+        }
+        pay(c, def, st);
+        const p = c.pos.clone().setY(c.pos.y + 5);
+        const radius = (def.minRadius || 16) + k * ((def.maxRadius || 44) - (def.minRadius || 16));
+        const dmg = (def.dmgMin || 30) + k * ((def.dmgMax || 95) - (def.dmgMin || 30));
+        g.vfx.explode(p, { color: def.color || '#ff6a1a', color2: '#ffffff', radius: radius * 0.7, power: 1.6 + k * 1.4, scorch: c.pos.y < 4 });
+        g.vfx.shockwave(c.pos.clone().setY(Math.max(0.2, c.pos.y * 0.1)), { color: def.color || '#ff6a1a', radius: radius * 1.6, power: 1.5 + k });
+        g.vfx.lightning(p, { color: '#fff', count: 6, radius: radius * 0.6, height: 16 });
+        g.areaDamage(c, p, radius, dmg, 1.6 + k);
+        c.ki = 0; if (g.onDrained) { c.drainedT = 0; g.onDrained(c); }  // the price: bone dry
+        g.slowmo(0.22, 0.4); g.world.punch(0.6); g.world.shake(2.2 + k); g.audio.boom(1.4, c.pos);
+        if (g.hud && g.isHuman(c)) g.hud.flashScreen(def.color || '#ff6a1a', 0.2);
+      }
+    }
+  },
+
+  // MIND CONTROL — seize a foe and their will folds: they fight for YOU for a while.
+  // Minds only: bots yes, humans never, badges never (police fixation and the wanted ladder
+  // must not be puppeteered — see COMBAT_MANUAL §control states). The victim's KOs never book
+  // Elo, and modes count them on their ORIGINAL side, so domination turns fights, not brackets.
+  mindcontrol(c, def, st, g, inp) {
+    if (st.victim) {                                     // maintain the leash
+      const v = st.victim;
+      st.t -= inp.dt;
+      if (!v.alive || st.t <= 0) releaseMind(st, g);
+      else if (Math.random() < 0.2) {
+        g.particles.spawn({ x: v.pos.x, y: v.pos.y + 9.5, z: v.pos.z, vx: 0, vy: 3, vz: 0, life: 0.4, size: 1.8, color: [def.color || '#7fd4ff', '#fff'], drag: 1, shrink: true });
+      }
+    }
+    if (inp.pressed && ready(c, def, st) && !st.victim) {
+      const foe = g.coneFoe(c, def.range || 42, def.arc || 0.7);
+      if (foe && foe.ai && !foe._controlled && !foe.def.police && !foe.isDummy && foe.invuln <= 0) {   // minds only — humans keep theirs, badges answer to the law
+        pay(c, def, st);
+        st.victim = foe; st.oldTeam = foe.team; st.t = def.dur || 6;
+        foe.team = c.team; foe._controlled = true; foe._oldTeam = st.oldTeam;
+        foe.ai._mem = 0; foe.ai.belief = null; foe.ai._patrol = null;  // the mind is wiped, same as a flashbang
+        g.vfx.ring(foe.pos.clone().setY(foe.pos.y + 9), { color: def.color || '#7fd4ff', r0: 1, r1: 6, life: 0.4 });
+        g.audio.teleport(); g.audio.zap(180, foe.pos);
+        if (g.hud) g.hud.damageNumber(foe.pos, 'DOMINATED', def.color || '#7fd4ff', true);
+      } else if (g.isHuman(c) && g.hud) g.hud.feed('No mind in reach', '#8b8577');
     }
   },
 

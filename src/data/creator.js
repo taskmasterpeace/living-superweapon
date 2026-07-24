@@ -133,6 +133,8 @@ export const POWERS = [
   { id: 'overload',    name: 'Overload',      cat: 'support', ult: true, cost: 26, ab: { type: 'buff', name: 'Overload', cost: 30, cd: 22, mult: 1.7, dur: 12, heal: 40, color: '#ffd24a', color2: '#fff2c0' } },
   { id: 'collapse',    name: 'Collapse',      cat: 'charge', ult: true, cost: 30, ab: { type: 'charge', name: 'Collapse', cost: 10, cd: 15, kiPerSec: 13, maxCharge: 2.4, minR: 2, maxR: 7.5, dmgMin: 28, dmgMax: 90, maxBlast: 40, speedMin: 34, speedMax: 58, chargePower: 3.2, color: '#7fe6ff', color2: '#eaffff' } },
   { id: 'backup',      name: 'Call Backup',   cat: 'command', ult: true, cost: 26, ab: { type: 'summon', name: 'Call Backup', cost: 26, cd: 16, count: 3, max: 6, duration: 13, damage: 8, interval: 0.6, speed: 86, color: '#2a5ad8', color2: '#ff5a4a' } },
+  { id: 'supernova',   name: 'Supernova',     cat: 'charge', ult: true, cost: 28, ab: { type: 'nova', name: 'Supernova', cost: 0, cd: 22, feedRate: 55, maxFeed: 120, minRadius: 16, maxRadius: 44, dmgMin: 30, dmgMax: 95, color: '#ff8a3d', color2: '#ffd24a' } },   // total commitment — the drain IS the price, so it undercuts Collapse
+  { id: 'dominion',    name: 'Mind Control',  cat: 'command', ult: true, cost: 30, ab: { type: 'mindcontrol', name: 'Mind Control', cost: 30, cd: 18, range: 42, arc: 0.7, dur: 6, color: '#7fd4ff', color2: '#eaffff' } },   // turns a fight, never a bracket — minds only, never badges
 ];
 export const powerById = (id) => POWERS.find(p => p.id === id);
 

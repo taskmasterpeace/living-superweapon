@@ -2,8 +2,8 @@
 // beamers zone, rushers blitz, artillery kites, zoners wall up, tricksters teleport/phase, grapplers grab, summoners hide behind minions.
 import { rand, chance, pick } from '../core/util.js';
 
-const HOLD = new Set(['beam', 'charge', 'growingorb', 'cone', 'volley', 'phase', 'rifle', 'bow', 'facebomb', 'lifedrain']);
-const holdTime = (t) => t === 'charge' ? rand(0.9, 1.9) : t === 'growingorb' ? rand(1.1, 2.2) : t === 'beam' ? rand(0.9, 1.8) : t === 'phase' ? rand(0.5, 1.2) : t === 'rifle' ? rand(0.6, 1.5) : t === 'bow' ? rand(0.4, 0.95) : t === 'facebomb' ? rand(1.2, 2.2) : t === 'lifedrain' ? rand(0.8, 1.6) : rand(0.4, 1.1);
+const HOLD = new Set(['beam', 'charge', 'growingorb', 'cone', 'volley', 'phase', 'rifle', 'bow', 'facebomb', 'lifedrain', 'nova']);
+const holdTime = (t) => t === 'charge' ? rand(0.9, 1.9) : t === 'growingorb' ? rand(1.1, 2.2) : t === 'beam' ? rand(0.9, 1.8) : t === 'phase' ? rand(0.5, 1.2) : t === 'rifle' ? rand(0.6, 1.5) : t === 'bow' ? rand(0.4, 0.95) : t === 'facebomb' ? rand(1.2, 2.2) : t === 'lifedrain' ? rand(0.8, 1.6) : t === 'nova' ? rand(1.4, 2.4) : rand(0.4, 1.1);
 
 function deriveStyle(def) {
   const types = Object.values(def.abilities || {}).map(a => a.type);
@@ -254,7 +254,12 @@ export class AI {
     if (tgt && tgt.guarding && (tgt._guardUpT ?? 0) > 0.3 && d < 16) {
       return one(T.teleport) || one(T.dash) || one(T.projectile) || one(T.volley) || null;
     }
-    if (b.slots.r && ok('r') && chance(0.14)) return 'r';       // occasional ultimate
+    if (b.slots.r && ok('r') && chance(0.14)) {                 // occasional ultimate — but never a WASTED one
+      const rd = b.slots.r.def, rt = rd.type;
+      const waste = (rt === 'nova' && (d > 34 || b.ki < b.maxKi * 0.5))          // a supernova wants a close foe and a fed tank
+        || (rt === 'mindcontrol' && d > (rd.range || 42));                        // a mind out of reach can't be seized
+      if (!waste) return 'r';
+    }
 
     switch (this.style) {
       case 'rusher':

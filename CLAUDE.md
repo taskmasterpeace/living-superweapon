@@ -173,14 +173,25 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   (held siphon → self-heal), `boomerang` projectile flag (out-clip-return, hits both passes; bounces
   home off walls/ground). Balance: `docs/BALANCE.md` — AI-vs-AI audit method + first-pass rulings
   (martial rushers trimmed, TITAN/VEGA/PYRE buffed; Threat-Low gear humans losing to Very-High is BY RULING).
+- **NOVA + MIND CONTROL (2026-07-24 — finished the cut-off 2026-07-23 /goal)**: `nova` = TORCH's R
+  SUPERNOVA (hold FEEDS the whole ki tank; omnidirectional areaDamage at any altitude scaling with
+  fed ki; caster left bone dry via `onDrained`; <12-ki taps fizzle LOUDLY — energy-clarity law).
+  `mindcontrol` = MARSHAL's R Dominion (flips a bot's team for `dur` 6s; minds only — never humans,
+  never `def.police`, never dummies). ⚠ The guards are load-bearing: a `_controlled` fighter's KOs
+  NEVER book Elo (koElo guard), the tournament round check counts them on `f._oldTeam`, and
+  `releaseMind` (abilities.js — also run by `clearSlotFx` when the CONTROLLER dies) is the ONLY
+  team-restore path. Victim's stateRing pulses cyan while dominated; belief is wiped on seize AND
+  release (honesty law). Both in the ORIGIN catalog as ults (Supernova 28 · Mind Control 30); AI
+  uses them via the occasional-ult rule with a no-waste gate (nova wants d≤34 + ≥50% tank,
+  mindcontrol wants d≤range). Manual: COMBAT_MANUAL §7.
 - `data/characters.js` — the **52** heroes as **pure data**. Add a hero = add data here. Trait fields:
   `thorns` (hurt grabbers), `phase` (intangible), `grabHeal`, `teleEscape` (auto), `metal` (robot),
   `guardStrong` (riot shield), `tentacles` (verlet tentacles), **`strength` 1–10** (melee dmg up,
   knockback/beam-shove down via `kbMul`, faster ice break-outs), **`overdrive`** (comeback: drained/low-ki
   melee hits convert damage→ki in `game.onHit`), **`threat`** (LeFevre scale, shown on select),
   **`guardType`** `'block'|'deflect'|'barrier'`, **`meleeTiers`** 2|3, `frostResist` (fire heroes).
-- `engine/abilities.js` — `TYPES` registry (20 power types incl. `tentacle`, `portal`, `rifle`, `bow`,
-  `quiver`). New *kind* of power = one entry.
+- `engine/abilities.js` — `TYPES` registry (22 power types incl. `tentacle`, `portal`, `rifle`, `bow`,
+  `quiver`, `nova`, `mindcontrol`). New *kind* of power = one entry.
 - **Charged melee** (`melee.js chargeStart/chargeUpdate/chargeRelease/_heavy`): V tap = jab combo ·
   short hold = straight (meleeTiers 3 only) · ≥0.55s = HAYMAKER (dmg scales with charge × strength).
   **Haymaker vs guard = GUARD CRUSH** (blocker staggers 0.85s, −0.55 meter, wide open); jabs/straights

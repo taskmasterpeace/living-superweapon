@@ -103,3 +103,18 @@ AI-vs-AI after (60s duels, both at level 1.15): was 4W–1L, now **2W–3L**
 
 **Ruling:** blocking is now a real option at every range, spam is self-punishing, and the counter to
 a turtle is the grab — the trifecta finally reads the same in live play as it does on paper.
+
+### Supernova + Dominion pricing (2026-07-24 — initial ruling, pre-audit)
+
+`supernova` enters the ORIGIN catalog at **28** (charge family, ult-only): its ceiling
+(95 dmg / r 44u) edges out Collapse's 90, but the real price is baked into the mechanic —
+the caster ends at ZERO ki and drained, so it undercuts Collapse's 30. Overdrive builds are
+the intended synergy (an empty tank is their comeback), and TORCH carries overdrive 1.3 for
+exactly that reason.
+
+`dominion` (mind control) enters at **30** (command, ult-only): six seconds of a stolen bot
+swings a rumble wave or a 2v2 harder than any damage ult, but it is a dead card in a pure
+1v1 — there is nobody to turn the victim against, and the book is guarded (a dominated
+fighter's KOs never book Elo). Priced at the top of command, not above it.
+
+First AI-vs-AI audit pass for both is pending — revisit after live data.

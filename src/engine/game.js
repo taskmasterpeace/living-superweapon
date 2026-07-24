@@ -86,8 +86,10 @@ const MODE_IMPL = {
       const ms = g.ms; if (!ms.m) return;
       if (ms.betweenT > 0) { ms.betweenT -= dt; if (ms.betweenT <= 0 && !g.matchOver) g._tourneyRound(); return; }
       if (!ms.roundLive || g.matchOver) return;
-      const aAlive = g.entities.some(e => e.alive && e.def && !e.isDummy && e.team === 0);
-      const bAlive = g.entities.some(e => e.alive && e.def && !e.isDummy && e.team === 1);
+      // a DOMINATED fighter counts for their ORIGINAL side — mind control may turn a round, never END one
+      const side = (e) => (e._controlled && e._oldTeam !== undefined) ? e._oldTeam : e.team;
+      const aAlive = g.entities.some(e => e.alive && e.def && !e.isDummy && side(e) === 0);
+      const bAlive = g.entities.some(e => e.alive && e.def && !e.isDummy && side(e) === 1);
       if (aAlive && bAlive) return;
       ms.roundLive = false;
       const aWon = aAlive;                                  // double-KO edges to the challengers
@@ -993,7 +995,8 @@ export class Game {
       if (this.news) this.news.highlight('ko', victim.name + ' IS DOWN' + (killer ? ' — ' + killer.name + ' STANDS' : ''), { dur: 3.4, priority: 3, focus: victim.pos });
       // the ledger: every registered-weapon knockdown moves the power rankings (AI or human pilot
       // alike) — friendly-fire KOs shame the feed but never touch the book
-      if (killer && killer.def && killer.def.id && victim.def.id && killer.team !== victim.team && !killer.def.police && !victim.def.police && this.modeId !== 'training') koElo(killer.def.id, victim.def.id, [killer.def, victim.def]);
+      if (killer && killer.def && killer.def.id && victim.def.id && killer.team !== victim.team && !killer.def.police && !victim.def.police
+        && !killer._controlled && !victim._controlled && this.modeId !== 'training') koElo(killer.def.id, victim.def.id, [killer.def, victim.def]);   // a DOMINATED fighter's KOs are the controller's doing — the book stays honest
     }
     this.audio.cry(victim.def.voicePitch || 1, victim.pos);   // the falling wail
     this.noise(victim.pos, 2.2, null);                        // a death scream carries across the district
