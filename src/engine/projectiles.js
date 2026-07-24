@@ -111,7 +111,14 @@ class Projectile {
       // Stretched along travel, no bloom halo — it must not read like a ki blast.
       const slug = new THREE.Mesh(GEO_BULLET, MAT_BULLET);
       const tracer = new THREE.Mesh(GEO_TRACER, MAT_TRACER);
-      tracer.position.z = -5.5;                    // wide end at the slug's tail, tapering into a streak behind
+      // THE STREAK SCALES WITH SPEED. A shotgun fires 8 short-lived pellets that spawn inside the
+      // muzzle-flash bloom — a fixed 9u streak got swallowed by it. Scaling the tracer to the
+      // round's speed makes every pellet leave a long motion-streak that reads as a fan clearing
+      // the flash (and gives rifles a proper tracer too). Base geo is 9u long, centred on z.
+      const spd = this.vel ? this.vel.length() : 150;
+      const st = Math.max(0.9, Math.min(2.6, spd / 90));    // ~1.7× for a 150u pellet, ~1.9× for a 170u rifle round
+      tracer.scale.set(1, 1, st);
+      tracer.position.z = -1.2 - 4.5 * st;         // wide end at the slug's tail, tapering into the streak behind
       this.obj = new THREE.Group(); this.obj.add(slug, tracer);
       this.obj.position.copy(this.pos); game.scene.add(this.obj);
       this._tracer = tracer;
