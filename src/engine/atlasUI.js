@@ -33,7 +33,7 @@ export function mountAtlas(host, opts = {}) {
     q: '', type: 'ALL', sel: theater.flagship ? -1 : (theater.cityId ?? -1),
     seed: theater.seed || 1, paint: 'residential', edits: { ...(theater.edits || {}) },
     N: theater.N || 0, waterCols: theater.waterCols, cell: theater.cell || 0,
-    popType: theater.popType || null, humanH: theater.humanH || 0, hist: [],
+    popType: theater.popType || null, humanH: theater.humanH || 0, roomScale: theater.roomScale || 0, hist: [],
   };
 
   // ---- solo toast (in-game mounts route feed to the hud's ticker instead) --------------------
@@ -206,11 +206,11 @@ export function mountAtlas(host, opts = {}) {
     setTimeout(() => URL.revokeObjectURL(a.href), 5000);
   }
   function currentAuthored() {
-    return { fmt: 'atlas-1', cityId: st.sel, seed: st.seed, N: st.N || 0, waterCols: st.waterCols, cell: st.cell || 0, popType: st.popType || null, humanH: st.humanH || 0, edits: st.edits };
+    return { fmt: 'atlas-1', cityId: st.sel, seed: st.seed, N: st.N || 0, waterCols: st.waterCols, cell: st.cell || 0, popType: st.popType || null, humanH: st.humanH || 0, roomScale: st.roomScale || 0, edits: st.edits };
   }
   function importAuthored(o) {
     if (o.cityId == null || !o.edits) throw new Error('not a plan');
-    mapEdit(() => { st.sel = o.cityId; st.seed = o.seed || 1; st.N = o.N || 0; st.waterCols = o.waterCols; st.cell = o.cell || 0; st.popType = o.popType || null; st.humanH = o.humanH || 0; st.edits = { ...o.edits }; });
+    mapEdit(() => { st.sel = o.cityId; st.seed = o.seed || 1; st.N = o.N || 0; st.waterCols = o.waterCols; st.cell = o.cell || 0; st.popType = o.popType || null; st.humanH = o.humanH || 0; st.roomScale = o.roomScale || 0; st.edits = { ...o.edits }; });
   }
 
   // ---- the panel -------------------------------------------------------------------------------
@@ -222,7 +222,7 @@ export function mountAtlas(host, opts = {}) {
     const shown = L.slice(0, 28);
     const selCity = st.sel >= 0 ? cities[st.sel] : null;
     const plan = st.sel < 0 ? thresholdPlan()
-      : applyPlanEdits(generatePlan(selCity, st.seed, { N: st.N || undefined, waterCols: st.waterCols, cell: st.cell, popType: st.popType, humanH: st.humanH || undefined }), st.edits);
+      : applyPlanEdits(generatePlan(selCity, st.seed, { N: st.N || undefined, waterCols: st.waterCols, cell: st.cell, popType: st.popType, humanH: st.humanH || undefined, roomScale: st.roomScale || undefined }), st.edits);
     el.innerHTML = `<div class="obox" style="width:min(940px,96vw)">
       <div class="rkhead"><div class="n9" style="background:#2a5a78">🗺</div>
         <div class="rt"><b>${solo ? 'ATLAS — CITY GENERATOR' : 'CITY ATLAS — THEATER SELECT'}</b><span>the world sheet · ${cities.length} registered cities</span></div>
@@ -263,6 +263,11 @@ export function mountAtlas(host, opts = {}) {
               <span>PEOPLE</span>
               <button class="atsm" data-step="M-1.6">−</button><b>${(((plan.metric && plan.metric.humanH) || 9.6) * 0.1875).toFixed(1)}m</b><button class="atsm" data-step="M1.6">+</button>
               <span class="atdim">doors · storeys · cars fit them</span>
+            </div>
+            <div class="atstep">
+              <span>ROOMS</span>
+              <button class="atsm" data-step="R-0.15">−</button><b>×${(plan.roomScale || 1).toFixed(2)}</b><button class="atsm" data-step="R0.15">+</button>
+              <span class="atdim">interior room size (enterable homes)</span>
             </div>
             <div class="atpop">${POP_TYPES.map(p => `<span class="c3${plan.popType === p ? ' on' : ''}" data-pop="${esc(p)}">${esc(p.toUpperCase())}</span>`).join('')}</div>
             <div class="atval">${validatePlan(plan).map(v => `<div class="${v.bad ? 'vbad' : 'vok'}">${v.bad ? '⚠' : '✓'} ${esc(v.t)}</div>`).join('')}</div>
@@ -350,6 +355,7 @@ export function mountAtlas(host, opts = {}) {
       mapEdit(() => {
         if (k === 'N') st.N = Math.max(2, Math.min(9, (st.N || plan.N) + dv));
         else if (k === 'M') st.humanH = Math.max(4.8, Math.min(19.2, (st.humanH || 9.6) + dv));
+        else if (k === 'R') st.roomScale = Math.round(Math.max(0.7, Math.min(1.6, (st.roomScale || 1) + dv)) * 100) / 100;
         else if (k === 'C') st.cell = Math.max(CELL_RANGE[0], Math.min(CELL_RANGE[1], (st.cell || plan.cell) + dv));
         else st.waterCols = Math.max(0, Math.min(3, (st.waterCols != null ? st.waterCols : plan.waterCols) + dv));
       });
@@ -364,7 +370,7 @@ export function mountAtlas(host, opts = {}) {
       $('#atLive').onclick = () => { if (live) liveOff(); else liveOn(plan); render(); };
       $('#atSet').onclick = () => {
         const t = st.sel < 0 ? { flagship: true, seed: 1 }
-          : { cityId: st.sel, seed: st.seed, edits: { ...st.edits }, N: st.N || 0, waterCols: st.waterCols, cell: st.cell || 0, popType: st.popType || null, humanH: st.humanH || 0 };
+          : { cityId: st.sel, seed: st.seed, edits: { ...st.edits }, N: st.N || 0, waterCols: st.waterCols, cell: st.cell || 0, popType: st.popType || null, humanH: st.humanH || 0, roomScale: st.roomScale || 0 };
         const label = st.sel < 0 ? 'THE WHITE CITY' : cities[st.sel].name.toUpperCase();
         if (onTheater) onTheater(t, label);
         el.style.display = 'none';
@@ -454,7 +460,7 @@ export function mountAtlas(host, opts = {}) {
       if (solo && !live) {
         const selCity = st.sel >= 0 ? cities[st.sel] : null;
         const plan = st.sel < 0 ? thresholdPlan()
-          : applyPlanEdits(generatePlan(selCity, st.seed, { N: st.N || undefined, waterCols: st.waterCols, cell: st.cell, popType: st.popType, humanH: st.humanH || undefined }), st.edits);
+          : applyPlanEdits(generatePlan(selCity, st.seed, { N: st.N || undefined, waterCols: st.waterCols, cell: st.cell, popType: st.popType, humanH: st.humanH || undefined, roomScale: st.roomScale || undefined }), st.edits);
         liveOn(plan);
         render();
       }

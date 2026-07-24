@@ -204,6 +204,12 @@ class Projectile {
         return this._impact(game, true);
       }
     }
+    // interior walls stop shots — corner warfare means the corner actually protects you
+    if (!this._return && game.world.hitInteriorWall && game.world.hitInteriorWall(this.pos.x, this.pos.y, this.pos.z, this.radius)) {
+      if (this.boomerang) this._return = true;
+      else if (this.armDelay && !this._armed) { this._arm(game); return true; }
+      else return this._impact(game, true);
+    }
     const foe = game.overlapFoe(this.caster, this.pos, this.radius + 1.5);
     if (foe) {
       if (this.boomerang) {   // clip them and keep flying — both passes hurt

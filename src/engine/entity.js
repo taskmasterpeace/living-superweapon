@@ -1001,6 +1001,31 @@ export class Fighter {
         this._slam(game, spd, 'wall');
       }
     }
+    // ENTERABLE INTERIORS — the building is standable on top and hollow inside: the wall
+    // segments (with their door gaps) do the pushing, so you walk in through the door and
+    // fight around corners. Spatially gated — cost exists only at the buildings you overlap.
+    if (!ghost) for (const it of (game.world.interiors || [])) {
+      const hx = it.hx + this.radius, hz = it.hz + this.radius;
+      const dx = this.pos.x - it.x, dz = this.pos.z - it.z;
+      if (Math.abs(dx) > hx || Math.abs(dz) > hz) continue;
+      if (this.pos.y >= it.top - 2.5 && this.vel.y <= 2 && !this.flyHeld && (!this.flying || this.descendHeld)) {
+        this.pos.y = it.top; if (this.vel.y < 0) this.vel.y = 0; this.onBlock = true; this.flying = false;
+        continue;                                        // standing on the roof
+      }
+      if (this.pos.y >= it.top - 0.5) continue;          // flying above it
+      // inside: the ceiling is real — no rising out through the roof
+      if (this.pos.y > it.top - 11) { this.pos.y = it.top - 11; if (this.vel.y > 0) this.vel.y = 0; }
+      for (const wl of it.walls) {
+        const whx = wl.hx + this.radius, whz = wl.hz + this.radius;
+        const wdx = this.pos.x - wl.x, wdz = this.pos.z - wl.z;
+        const ox = whx - Math.abs(wdx), oz = whz - Math.abs(wdz);
+        if (ox <= 0 || oz <= 0) continue;
+        const spd = Math.hypot(this.vel.x, this.vel.z);
+        if (ox < oz) { this.pos.x += Math.sign(wdx || 1) * ox; this.vel.x *= -0.3; }
+        else { this.pos.z += Math.sign(wdz || 1) * oz; this.vel.z *= -0.3; }
+        this._slam(game, spd, 'wall');
+      }
+    }
   }
 
   move(dir, dt, sprint = 1) {

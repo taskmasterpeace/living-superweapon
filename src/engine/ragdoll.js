@@ -177,6 +177,18 @@ export class Ragdoll {
       // arena walls
       pt.pos.x = clamp(pt.pos.x, -bound, bound);
       pt.pos.z = clamp(pt.pos.z, -bound, bound);
+      // interior walls — a KO'd body inside a bungalow stays in its room (gated by footprint)
+      const inter = game && game.world && game.world.interiors;
+      if (inter) for (const it of inter) {
+        if (Math.abs(pt.pos.x - it.x) > it.hx + r || Math.abs(pt.pos.z - it.z) > it.hz + r) continue;
+        if (pt.pos.y > it.top + r) continue;
+        for (const wl of it.walls) {
+          const dx2 = pt.pos.x - wl.x, dz2 = pt.pos.z - wl.z;
+          if (Math.abs(dx2) > wl.hx + r || Math.abs(dz2) > wl.hz + r) continue;
+          const ox2 = wl.hx + r - Math.abs(dx2), oz2 = wl.hz + r - Math.abs(dz2);
+          if (ox2 < oz2) pt.pos.x += Math.sign(dx2 || 1) * ox2; else pt.pos.z += Math.sign(dz2 || 1) * oz2;
+        }
+      }
       // cover blocks — rest on top or get shoved out the nearest face (lets bodies drape over cover)
       if (cover) for (let i = 0; i < cover.length; i++) {
         const c = cover[i];

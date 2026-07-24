@@ -445,6 +445,19 @@ export class Game {
       if (Math.min(a.pos.y, b.pos.y) + 5 > (c.top ?? c.h)) continue;              // both above the block → seen over it
       if (this._segBox(a.pos.x, a.pos.z, b.pos.x, b.pos.z, c.x, c.z, (c.hx ?? c.r) + 1, (c.hz ?? c.r) + 1)) return false;
     }
+    // interior walls block sight exactly like cover, but only the buildings the segment touches
+    // pay anything — corner-peeking inside a bungalow rides the SAME honesty machinery as outside.
+    // ⚠ _segBox detects boundary CROSSINGS only — a segment fully inside the footprint (both
+    // fighters in the same house, the corner-warfare case) never crosses it, so the gate must
+    // also pass when either endpoint is inside.
+    for (const it of (this.world.interiors || [])) {
+      if (Math.min(a.pos.y, b.pos.y) + 5 > it.top) continue;
+      const aIn = Math.abs(a.pos.x - it.x) < it.hx + 1 && Math.abs(a.pos.z - it.z) < it.hz + 1;
+      const bIn = Math.abs(b.pos.x - it.x) < it.hx + 1 && Math.abs(b.pos.z - it.z) < it.hz + 1;
+      if (!aIn && !bIn && !this._segBox(a.pos.x, a.pos.z, b.pos.x, b.pos.z, it.x, it.z, it.hx + 1, it.hz + 1)) continue;
+      for (const wl of it.walls)
+        if (this._segBox(a.pos.x, a.pos.z, b.pos.x, b.pos.z, wl.x, wl.z, wl.hx + 0.4, wl.hz + 0.4)) return false;
+    }
     return true;
   }
   _segBox(x0, z0, x1, z1, cx, cz, hx, hz) {

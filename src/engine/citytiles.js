@@ -5,7 +5,7 @@
 // fog boxes, collision); flavor props are decor the fights smash through visually.
 // House rules apply: NO purple anywhere, warm-neutral + gold, per-district accent temperature.
 import * as THREE from 'three';
-import { CELL, regionOf, TILE_MAX_H } from '../data/cityplan.js';
+import { CELL, regionOf, TILE_MAX_H, floorplan } from '../data/cityplan.js';
 
 // ---- REGION SKINS ---------------------------------------------------------------------------
 // Every city carries a `cultureCode` (14 architectural regions) and until now NOTHING read it, so
@@ -228,6 +228,48 @@ function door(ctx, x, z, ry, kind = 'swing') {
   return g;
 }
 
+// ---------- THE BUNGALOW — interiors v1 (residential proves it first) ----------
+// A single-storey home you can actually ENTER: shell walls with a real door opening, BSP rooms
+// inside (data/cityplan.js floorplan — every room reachable by construction), a roof you can
+// still land on. NOTHING here registers as ordinary cover — the walls live in world.interiors,
+// where physics, fog, sight and projectiles consult them spatially (only when you're at the
+// building). The ceiling height rides the METRIC: rooms are people-sized, whoever the people are.
+function bungalow(ctx, bx, bz, w, d, faceZ, wm, roofMat) {
+  const W = ctx.world, M = ctx.M || 1, S = ctx.S;
+  const h = (13 + ctx.rng() * 4) * M;                   // one storey, sized to the people
+  const doorW = 5.8 * M, half = doorW / 2, T = 0.6;      // wall half-thickness (base units)
+  const fp = floorplan(w - 2.4, d - 2.4, (ctx.plan && ctx.plan.roomScale) || 1,
+    ((Math.abs(bx * 31 + bz * 17) | 0) % 9973) + 7, doorW);
+  const inter = { x: sx(ctx, bx), z: sz(ctx, bz), hx: (w / 2) * S, hz: (d / 2) * S,
+                  top: ctx.gy + h * S, walls: [], meshes: [], fadeMeshes: [], rooms: fp.rooms.length,
+                  // every way through: the front opening + each interior doorway (world coords) —
+                  // the future AI-navigation session steers blocked bots through these
+                  doorways: [[sx(ctx, bx), sz(ctx, bz + faceZ * (d / 2 - T))],
+                             ...fp.doors.map((dr) => [sx(ctx, bx + dr.x), sz(ctx, bz + dr.z)])] };
+  const segs = [];
+  const fz = faceZ * (d / 2 - T);
+  segs.push({ x: -w / 2 + T, z: 0, hx: T, hz: d / 2 }, { x: w / 2 - T, z: 0, hx: T, hz: d / 2 });
+  segs.push({ x: 0, z: -fz, hx: w / 2, hz: T });
+  segs.push({ x: -(w / 2 + half) / 2, z: fz, hx: (w / 2 - half) / 2, hz: T });
+  segs.push({ x: (w / 2 + half) / 2, z: fz, hx: (w / 2 - half) / 2, hz: T });
+  const shellN = segs.length;
+  for (const wl of fp.walls) segs.push(wl);
+  segs.forEach((wl, i) => {
+    if (wl.hx < 0.05 || wl.hz < 0.05) return;
+    const m = mesh(ctx, new THREE.BoxGeometry(wl.hx * 2, h, wl.hz * 2), i < shellN ? wm : ctx.mats.white,
+      bx + wl.x, h / 2, bz + wl.z, { cast: i < shellN });
+    inter.walls.push({ x: m.position.x, z: m.position.z, hx: wl.hx * S, hz: wl.hz * S });
+    inter.meshes.push(m);
+    if (i < shellN) inter.fadeMeshes.push(m);
+  });
+  const roof = mesh(ctx, new THREE.BoxGeometry(w, 1.1, d), roofMat, bx, h + 0.55, bz, { cast: true });
+  inter.meshes.push(roof); inter.fadeMeshes.push(roof);
+  W.interiors.push(inter);
+  const dg = door(ctx, bx, bz + faceZ * (d / 2 + 0.3), faceZ > 0 ? 0 : Math.PI, 'swing');
+  if (dg.children[1]) { dg.children[1].rotation.y = 1.85; dg.children[1].position.x -= 1.6 * M; }   // the leaf stands OPEN — you can walk in
+  return inter;
+}
+
 // ---- EDGE SOCKETS (see generatePlan) — what each side of this cell faces ----
 // A perimeter should stop where the district stops. `side(cell,'n')` is 'same' when the block
 // north of you is the same district, so the fence between them should not be built at all.
@@ -271,11 +313,10 @@ function bodega(ctx, cx, cz, cell, rng) {
 const T = {
   residential(ctx, cx, cz, v) {
     const W = ctx.world, wm = W._winMats[2], R = ctx.mats.terraRoof, rng = ctx.rng;
-    if (v === 0) {          // four low homes around a shared yard (1-1.5 stories)
+    if (v === 0) {          // four ENTERABLE bungalows around a shared yard — interiors v1
       for (const [ox, oz] of [[-19, -19], [19, -19], [-19, 19], [19, 19]]) {
         const hx = cx + ox + (rng() - 0.5) * 4, hz = cz + oz + (rng() - 0.5) * 4;
-        tower(ctx, hx, hz, 26, 16 + rng() * 8, 26, wm, R);
-        door(ctx, hx, hz + (oz < 0 ? 13.4 : -13.4), oz < 0 ? 0 : Math.PI, 'swing');   // front door on the yard
+        bungalow(ctx, hx, hz, 26, 26, oz < 0 ? 1 : -1, wm, R);   // front door on the yard
       }
       disc(ctx, ctx.mats.lawnM, cx, cz, 12, 0.1);
       ctx.treeSpots.push([cx + (rng() - 0.5) * 10, cz + (rng() - 0.5) * 10]);

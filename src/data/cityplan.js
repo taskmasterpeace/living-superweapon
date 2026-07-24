@@ -508,6 +508,7 @@ export function generatePlan(city, seed = 1, opts = {}) {
   // Distinct from `cell` (map footprint): doors, storey heights, lamps and cars derive from this,
   // so a game with taller or shorter characters gets architecture proportioned to THEM.
   const humanH = Math.max(4.8, Math.min(19.2, opts.humanH || 9.6));
+  const roomScale = Math.max(0.7, Math.min(1.6, opts.roomScale || 1));
   const rng = mulberry((seed * 7919 + city.pop % 997 + city.name.length * 31) | 0);
   const popType = opts.popType || city.popType;
   const N = Math.max(2, Math.min(9, opts.N || GRID_BY_POP[popType] || 5));
@@ -517,6 +518,7 @@ export function generatePlan(city, seed = 1, opts = {}) {
   const waterCols = Math.max(0, Math.min(N - 1, opts.waterCols != null ? opts.waterCols : (wantWater ? 1 : 0)));
   const plan = {
     metric: { humanH },
+    roomScale,
     name: city.name, country: city.country, popType, popLabel: popLabel(popType, city.pop),
     types: city.types, crime: city.crime, safety: city.safety, seed, N,
     cell, scale: cell / CELL, arena: N * cell / 2,
@@ -856,6 +858,43 @@ export function districtNameAt(plan, x, z) {
   if (cell.lname) return cell.lname;            // "THE SPIRE OF TOKYO", not "THE DISTRICT"
   if (cell.sname) return cell.sname;            // "THE CONTAINER TERMINAL", not "THE DOCKLANDS"
   return 'THE ' + (TILE_INFO[cell.t] ? TILE_INFO[cell.t].label : 'DISTRICT');
+}
+
+// ---- INTERIORS v1 — the floorplan engine -------------------------------------------------------
+// Un-parked by Robert's ruling (2026-07-24): "I want to be able to have rooms… go around corners
+// inside of the house — corner warfare." PURE data: BSP splits with one DOORWAY per cut, so every
+// room is reachable by construction (each split connects its two halves — a spanning tree).
+// Local coordinates centred on the building; walls are {x, z, hx, hz} half-extent AABBs the
+// builder converts to world space. `roomScale` is the ATLAS slider; `doorW` rides the metric.
+export function floorplan(w, d, roomScale = 1, seed = 1, doorW = 5.6) {
+  const rng = mulberry((seed * 977 + 13) | 0);
+  // ⚠ tuned so a 26u bungalow (23.6u inside) splits into 2–3 rooms at scale 1 — a cottage with
+  // one giant room defeats the whole corner-warfare point. Scale 1.6 leaves it open-plan.
+  const minRoom = Math.max(8.5, 11.5 * roomScale);
+  const rooms = [], walls = [], doors = [];
+  const split = (x0, z0, x1, z1, depth) => {
+    const W = x1 - x0, D = z1 - z0;
+    const canV = W > minRoom * 2.02, canH = D > minRoom * 2.02;
+    if ((!canV && !canH) || depth > 4) { rooms.push({ x0, z0, x1, z1 }); return; }
+    const vert = canV && (!canH || W >= D);
+    if (vert) {
+      const cut = x0 + minRoom + rng() * (W - 2 * minRoom);
+      const g0 = z0 + 1.6 + rng() * Math.max(0.1, D - 3.2 - doorW);
+      walls.push({ x: cut, z: (z0 + g0) / 2, hx: 0.6, hz: (g0 - z0) / 2 });
+      walls.push({ x: cut, z: (g0 + doorW + z1) / 2, hx: 0.6, hz: (z1 - g0 - doorW) / 2 });
+      doors.push({ x: cut, z: g0 + doorW / 2, dir: 'v' });
+      split(x0, z0, cut, z1, depth + 1); split(cut, z0, x1, z1, depth + 1);
+    } else {
+      const cut = z0 + minRoom + rng() * (D - 2 * minRoom);
+      const g0 = x0 + 1.6 + rng() * Math.max(0.1, W - 3.2 - doorW);
+      walls.push({ x: (x0 + g0) / 2, z: cut, hx: (g0 - x0) / 2, hz: 0.6 });
+      walls.push({ x: (g0 + doorW + x1) / 2, z: cut, hx: (x1 - g0 - doorW) / 2, hz: 0.6 });
+      doors.push({ x: g0 + doorW / 2, z: cut, dir: 'h' });
+      split(x0, z0, x1, cut, depth + 1); split(x0, cut, x1, z1, depth + 1);
+    }
+  };
+  split(-w / 2, -d / 2, w / 2, d / 2, 0);
+  return { rooms, walls: walls.filter((wl) => wl.hx > 0.05 && wl.hz > 0.05), doors };
 }
 
 // ---- VALIDATION — the checks that found the real bugs. ONE implementation, exported: the ATLAS

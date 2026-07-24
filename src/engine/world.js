@@ -55,6 +55,7 @@ export class World {
     this._cityBits = [];                 // meshes outside the arena group (trees, lawns) — tracked for city rebuilds
     this.doors = [];                     // every building entrance the tiles registered — the interior system's way in
     this._spinners = [];                 // things that TURN (the Ferris wheel) — ticked in render()
+    this.interiors = [];                 // enterable buildings: wall AABBs physics/sight/fog consult spatially
     this._crackTex = this._crackTexture();
     this.plan = thresholdPlan();         // the flagship WHITE CITY ships as the boot theater
     this._buildArena();
@@ -433,6 +434,16 @@ export class World {
   }
 
   // 0 = dry land · 1 = shallow shelf · 2 = deep water
+  // A projectile (or anything point-like) hitting an interior wall — spatially gated by building.
+  hitInteriorWall(x, y, z, r = 1) {
+    for (const it of this.interiors) {
+      if (y > it.top) continue;
+      if (Math.abs(x - it.x) > it.hx + r || Math.abs(z - it.z) > it.hz + r) continue;
+      for (const wl of it.walls)
+        if (Math.abs(x - wl.x) <= wl.hx + r && Math.abs(z - wl.z) <= wl.hz + r) return true;
+    }
+    return false;
+  }
   // 0 dry · 1 shallows (wade) · 2 deep/trench (swim-slow). Plan-aware: a painted lake in the
   // middle of a city counts. The flagship (no cell grid) keeps its legacy x-thresholds.
   waterAt(x, z) {
@@ -545,6 +556,8 @@ export class World {
     this.doors = [];
     this._wGrid = null;
     this._spinners = [];
+    this.interiors = [];
+    if (this._ifades) { for (const [, f] of this._ifades) for (const [m] of f.mats) m.material.dispose(); this._ifades.clear(); }
     // ⚠ MATERIALS LEAK IF YOU ONLY DISPOSE GEOMETRY. Every rebuild allocates a fresh ground,
     // wall, water, quay and lamp material, plus ONE MeshBasicMaterial per building for its crack
     // overlay — dozens per city. Rebuilding 7 cities in a row took a soak from 6.4ms to 48.6ms
@@ -662,6 +675,7 @@ export class World {
     this._padCells(plan);
     // THE TILES — every cell raised by its type builder
     this.doors = [];                       // the tiles re-register every entrance
+    this.interiors = [];
     const { treeSpots } = buildTiles(this, g, plan, rng);
     const M = ((plan.metric && plan.metric.humanH) || 9.6) / 9.6;   // the METRIC — people size, not map size
     // STREETLIGHTS FOLLOW THE ROAD GRAPH. They used to be stamped at every interior lattice point
@@ -1034,6 +1048,25 @@ export class World {
         }
       }
     }
+    // ENTERABLE buildings: shell + roof fade when the player is INSIDE — the interior cutaway.
+    // Interior walls stay solid (they are the fight); only the box you are looking through goes.
+    for (const it of this.interiors) {
+      const inside = Math.abs(p.x - it.x) < it.hx && Math.abs(p.z - it.z) < it.hz && p.y < it.top - 1;
+      let f = this._ifades && this._ifades.get(it);
+      if (inside && !f) {
+        this._ifades = this._ifades || new Map();
+        f = { o: 1, mats: it.fadeMeshes.map((m) => { const orig = m.material; m.material = orig.clone(); m.material.transparent = true; return [m, orig]; }) };
+        this._ifades.set(it, f);
+      }
+      if (f) {
+        f.o = damp(f.o, inside ? 0.13 : 1, 7, dt);
+        for (const [m] of f.mats) m.material.opacity = f.o;
+        if (!inside && f.o > 0.985) {
+          for (const [m, orig] of f.mats) { m.material.dispose(); m.material = orig; }
+          this._ifades.delete(it);
+        }
+      }
+    }
     this._updateCanopyCut(p, cam, dt);
   }
   // THE CANOPY CUTAWAY — tree tops between the lens and the player scale away exactly like the
@@ -1176,21 +1209,22 @@ export class World {
     if (!this._occData) return;
     const D = this._occData, RES = FOG_RES, EXT = this._fogExt || FOG_EXT, S = EXT / RES;
     D.fill(0);
-    for (const c of this.cover) {
-      if (c.destroyed) continue;
-      const hx = c.hx ?? c.r, hz = c.hz ?? c.r;
-      // ⚠ RASTERISE THE INTERIOR, never the bounding texels. Growing each box outward by a texel
-      // put a ~2u halo of false occlusion around every wall, and a fighter standing flush against
-      // one was blinded to their own feet. Ceil/floor keeps the occluder inside the real building.
-      let c0 = Math.ceil((c.x - hx) / S + RES / 2), c1 = Math.floor((c.x + hx) / S + RES / 2);
-      let r0 = Math.ceil((c.z - hz) / S + RES / 2), r1 = Math.floor((c.z + hz) / S + RES / 2);
+    // ⚠ RASTERISE THE INTERIOR, never the bounding texels. Growing each box outward by a texel
+    // put a ~2u halo of false occlusion around every wall, and a fighter standing flush against
+    // one was blinded to their own feet. Ceil/floor keeps the occluder inside the real building.
+    const rast = (x, z, hx, hz) => {
+      let c0 = Math.ceil((x - hx) / S + RES / 2), c1 = Math.floor((x + hx) / S + RES / 2);
+      let r0 = Math.ceil((z - hz) / S + RES / 2), r1 = Math.floor((z + hz) / S + RES / 2);
       // a box thinner than one texel would vanish entirely — give it its centre texel
-      if (c1 < c0) { c0 = c1 = Math.round(c.x / S + RES / 2); }
-      if (r1 < r0) { r0 = r1 = Math.round(c.z / S + RES / 2); }
+      if (c1 < c0) { c0 = c1 = Math.round(x / S + RES / 2); }
+      if (r1 < r0) { r0 = r1 = Math.round(z / S + RES / 2); }
       c0 = Math.max(0, c0); c1 = Math.min(RES - 1, c1);
       r0 = Math.max(0, r0); r1 = Math.min(RES - 1, r1);
       for (let r = r0; r <= r1; r++) { const base = r * RES; for (let cc = c0; cc <= c1; cc++) D[base + cc] = 255; }
-    }
+    };
+    for (const c of this.cover) { if (!c.destroyed) rast(c.x, c.z, c.hx ?? c.r, c.hz ?? c.r); }
+    // interior walls occlude the fog too — a room you haven't looked into is dark
+    for (const it of this.interiors) for (const wl of it.walls) rast(wl.x, wl.z, wl.hx, wl.hz);
     this._occTex.needsUpdate = true;
   }
 
