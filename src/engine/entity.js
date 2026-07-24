@@ -1090,6 +1090,19 @@ export class Fighter {
     // THE FLOOR IS THE TERRAIN, not y=0 — quarry pits, metro cuts and blast craters are real
     // ground you stand in and can be knocked down into. Sampled ONCE per frame and cached.
     this.groundY = (game && game.world && game.world.heightAt) ? game.world.heightAt(this.pos.x, this.pos.z) : 0;
+    // FOOTSTEPS — real recordings planted on the run-cycle's zero crossings (small-details law:
+    // the leg sine in _animate is sin(animT*12); a sign flip = a foot planting)
+    if (!this.flying && this.grounded && game && game.audio && game.audio.sample) {
+      const _sp = Math.hypot(this.vel.x, this.vel.z);
+      if (_sp > 8) {
+        const _ss = Math.sin(this.animT * 12) >= 0 ? 1 : -1;
+        if (this._stepSign && _ss !== this._stepSign) {
+          const _ru = game.world && game.world.plan && game.world.plan.rural;
+          game.audio.sample(_ru ? 'step.grass' : 'step.concrete', { pos: this.pos, gain: Math.min(1, 0.45 + _sp / 70) });
+        }
+        this._stepSign = _ss;
+      } else this._stepSign = 0;
+    }
     if (this.pos.y <= this.groundY) {
       const impact = this.vel.y;
       this.pos.y = this.groundY; if (this.vel.y < 0) this.vel.y = 0;

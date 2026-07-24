@@ -798,6 +798,30 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
 - **Codex on mobile** (≤640px, `CODEX_MOBILE` css in hud): case-file rows stack label-over-value,
   armament table scrolls sideways (`.cfarmwrap`), pager/close grow to thumb size.
 
+## THE SAMPLE BANK (2026-07-24) — real recordings for every discrete SFX
+- **`core/samples.js`** (`MANIFEST` + `SampleBank` + `HOT_SET`) + **254 Kenney CC0 oggs in
+  `/public/audio`** (~6MB, offline-first; impact/sci-fi/interface/rpg/jingle packs). Every
+  discrete audio.js method is SAMPLE-FIRST with the old synth as cold-cache fallback:
+  `sample(name, {pos, gain, rate, bus})` returns true when HANDLED (played/muted/out of
+  earshot) and false only when no buffer is decoded — the caller then synths (never silent).
+  `sampleLoop(name)` returns the sustain contract ({set(I,pos), stop(), last}, registered in
+  `_sus` for the watchdog) — the FIRE cone runs a real thrusterFire roar now.
+- Wired: punches/hits/landings (body-typed), booms (+sub layer ≥0.85), ki blast/zap/release
+  (rate rides the old freq semantics), swings (blade/fist/blunt), gunshot (plate-crack + sub —
+  no true gunfire exists in the CC0 set, documented), bow twang, teleport glitch, keystrokes,
+  UI clicks (ONE delegated capture listener in hud), book open/flip/close, FOOTSTEPS (planted
+  on the run-cycle sine's zero crossings in `_physics`; grass when `plan.rural`), and the
+  POLICE ALERT stingers: the wanted ROW transition in hud (one choke point) fires
+  `sting.wanted` (rate/gain escalate by star) + screen flash + `.lvlup` scale-pop on rise,
+  `sting.clear` + feed line on stand-down; KO involving a human = `sting.ko` (music bus).
+- **NO LSW TALKING (Robert's ruling 2026-07-24)**: `audio.heroVoice` gates yell/grunt/cry,
+  default OFF (`SETTINGS.heroVoice`, Options → Hero Voices toggle). Civilians keep their
+  formant voices — the street still talks; the weapons don't.
+- **Still synthesized by design** (no honest sample in the library; each is crafted +
+  parameter-driven): the siren two-tone, water splashes, electric arcs, the KMK 9 sting, and
+  the sustained KI energy voice (ring-mod/partials/crackle). Swapping those for generic loops
+  would be a downgrade — revisit only with better source material.
+
 ## SOUND (2026-07-23) — buses, the soundscape, the energy voice
 - **THE MIX.** Everything used to connect to one master gain. There is now a bus structure —
   `music · sfx · voice · ambient · ui` → glue compressor → master. Each has a fader in Options

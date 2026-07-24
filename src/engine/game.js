@@ -1036,6 +1036,7 @@ export class Game {
     if (!victim.isDummy && this.mode) {
       this.matchLog.push({ t: this.matchT, type: 'ko', v: victim.name, vid: victim.def.id, k: killer ? killer.name : null, kid: killer && killer.def ? killer.def.id : null, kind: victim._lastHitKind || 'blast', at: this.world.districtAt(victim.pos.x, victim.pos.z) });
       if (this.news) this.news.highlight('ko', victim.name + ' IS DOWN' + (killer ? ' — ' + killer.name + ' STANDS' : ''), { dur: 3.4, priority: 3, focus: victim.pos });
+      if (this.audio.sample && (this.isHuman(victim) || (killer && this.isHuman(killer)))) this.audio.sample('sting.ko', { bus: 'music', gain: 0.8 });
       // the ledger: every registered-weapon knockdown moves the power rankings (AI or human pilot
       // alike) — friendly-fire KOs shame the feed but never touch the book
       if (killer && killer.def && killer.def.id && victim.def.id && killer.team !== victim.team && !killer.def.police && !victim.def.police

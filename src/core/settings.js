@@ -49,7 +49,8 @@ export const SETTINGS = {
   scheme: 'classic',// control layout: classic | pilot | southpaw (see KEYMAPS in hud.js)
   aimAssist: true,  // magnet targeting near the cursor (facing + attacks steer to the pick)
   quality: 'auto',  // 'auto' | 2 (high) | 1 (balanced) | 0 (low) — locks the adaptive tier
-  opening: 'full',  // match cold-open: 'full' (cinematic, 1 of 10) | 'quick' (the card) | 'off'
+  opening: 'full',
+  heroVoice: false, // DBZ yell/grunt/KO-wail synths — OFF by ruling ('no LSW talking')  // match cold-open: 'full' (cinematic, 1 of 10) | 'quick' (the card) | 'off'
 };
 
 export function loadSettings() {
@@ -65,6 +66,7 @@ export function applySettings(game) {
   const a = game.audio, w = game.world, h = game.hud;
   if (a) {
     a.voiceMult = SETTINGS.voice;
+    a.heroVoice = !!SETTINGS.heroVoice;
     if (a.master) a.master.gain.value = 0.32 * SETTINGS.master;
     if (a.setBus) {                       // the per-bus faders (audio.js builds the buses on init)
       a.setBus('music', SETTINGS.volMusic);

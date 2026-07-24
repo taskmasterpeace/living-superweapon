@@ -643,6 +643,8 @@ const CSS = `
 #hud .alt .aval{ font-family:var(--f-mono); font-size:var(--t-tiny); color:var(--gold-pale); text-align:center; padding-top:4px; }
 #hud .alt .aval i{ font-style:normal; color:var(--text-5); }
 #hud .wantedrow{ font-size:var(--t-sm); font-weight:800; letter-spacing:.16em; color:var(--police); margin:1px 0 2px; text-shadow:0 0 10px rgba(90,160,255,.6); animation:pipblink 1.2s steps(2,start) infinite; }
+#hud .wantedrow.lvlup{ animation:wantedPop .55s cubic-bezier(.2,1.6,.4,1), pipblink 1.2s steps(2,start) infinite; }
+@keyframes wantedPop{ 0%{ transform:scale(1.7); filter:brightness(2) } 100%{ transform:scale(1); filter:none } }
 #title .term .thchip{ cursor:pointer; color:#7fb0d0; border-bottom:1px dashed rgba(127,176,208,.5); pointer-events:auto; }
 #title .term .thchip:hover{ color:#a8d8f0; }
 /* ================= THE CODEX — a Planetary-grade CASE FILE per superweapon ================= */
@@ -1582,6 +1584,7 @@ export class HUD {
       ${toggle('dmgNumbers', 'Damage Numbers')}
       ${toggle('hints', 'Controls Hint Panel')}
       ${toggle('aimAssist', 'Aim Assist · magnet targeting')}
+      ${toggle('heroVoice', 'Hero Voices · DBZ yells (off: fighters fight in silence)')}
       <div class="orow"><span class="ol">Control Scheme</span><div class="chips3">
         ${Object.entries(KEYMAPS).map(([k, m]) => `<span class="c3${keymap(S.scheme) === m ? ' on' : ''}" data-scheme="${k}">${m.name}</span>`).join('')}
       </div></div>
@@ -1605,6 +1608,13 @@ export class HUD {
     this.optionsEl.querySelectorAll('[data-t]').forEach(c => c.onclick = () => { S[c.dataset.t] = c.dataset.on === '1'; apply(); this.showOptions(); });
     this.optionsEl.querySelectorAll('[data-q]').forEach(c => c.onclick = () => { S.quality = c.dataset.q === 'auto' ? 'auto' : c.dataset.q; apply(); this.showOptions(); });
     this.optionsEl.querySelectorAll('[data-open]').forEach(c => c.onclick = () => { S.opening = c.dataset.open; apply(); this.showOptions(); });
+    if (!this._uiSndWired) {
+      this._uiSndWired = true;
+      document.addEventListener('click', (ev) => {
+        const el = ev.target && ev.target.closest && ev.target.closest('button, .c3, .chip, .rcard, .mcard, .slot, .odone, .oline, [data-t], [data-q], [data-scheme]');
+        if (el && this.game && this.game.audio) this.game.audio.sample && this.game.audio.sample('ui.click', { bus: 'ui' });
+      }, true);
+    }
     this.optionsEl.querySelectorAll('[data-scheme]').forEach(c => c.onclick = () => {
       S.scheme = c.dataset.scheme; apply(); this.buildHintBody(); this.hintFull(true);   // show the new bindings
       this.feed('Controls: ' + keymap(S.scheme).name, 'var(--gold)');
@@ -2289,7 +2299,20 @@ export class HUD {
         : lvl === 5 ? `🪖 MARTIAL ${'★'.repeat(5)}`
         : lvl === 4 ? `🕶 FEDERAL ${'★'.repeat(4)}`
         : `🚨 WANTED ${'★'.repeat(lvl)}${'☆'.repeat(Math.max(0, 3 - lvl))}`;
-      if (txt !== this._wantedTxt) { this._wantedTxt = txt; this.el.wanted.style.display = lvl ? 'block' : 'none'; this.el.wanted.textContent = txt; }
+      if (txt !== this._wantedTxt) {
+        this._wantedTxt = txt;
+        this.el.wanted.style.display = lvl ? 'block' : 'none'; this.el.wanted.textContent = txt;
+        const prev = this._wantedLvl || 0;
+        if (lvl > prev && g.audio && g.audio.sample) {
+          g.audio.sample('sting.wanted', { bus: 'music', gain: 0.45 + lvl * 0.08, rate: 0.92 + lvl * 0.05 });
+          this.flashScreen('rgba(90,160,255,0.5)', 0.12);
+          this.el.wanted.classList.remove('lvlup'); void this.el.wanted.offsetWidth; this.el.wanted.classList.add('lvlup');
+        } else if (!lvl && prev && g.audio && g.audio.sample) {
+          g.audio.sample('sting.clear', { bus: 'music', gain: 0.5 });
+          this.feed('Flag cleared — units standing down', '#7fb0d0');
+        }
+        this._wantedLvl = lvl;
+      }
     }
     this.updateModeBar(g);
     this.updateKitWidget(p);

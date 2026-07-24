@@ -1,5 +1,6 @@
-// WAR WORLD: ASCENDANTS — the sound engine. Entirely synthesised WebAudio; no sample assets, which
-// is what lets the whole game ship as one offline file.
+// WAR WORLD: ASCENDANTS — the sound engine. Discrete SFX are REAL recordings (core/samples.js,
+// Kenney CC0, /public/audio — still fully offline); the synth bodies below remain as cold-cache
+// fallbacks and as the crafted voices samples can't replace (ki sustain, siren, splash, arcs).
 //
 // THE MIX. Everything used to connect straight to a single master gain, so there was no way to
 // turn the music down without turning the punches down. There is now a real bus structure:
@@ -17,11 +18,13 @@ const rand2 = (a, b) => a + Math.random() * (b - a);
 // AUDIO MUST NEVER THROW INTO THE GAME LOOP. WebAudio rejects NaN/Infinity on every AudioParam
 // with an exception, and one bad number from a caller used to take a whole ability down with it.
 // Every public sound coerces its inputs through this first.
+import { SampleBank, HOT_SET } from './samples.js';
+
 const fin = (v, d = 1) => (Number.isFinite(v) ? v : d);
 const BUS_DEFAULT = { music: 0.34, sfx: 1.0, voice: 0.92, ambient: 0.52, ui: 0.7 };
 
 export class AudioBus {
-  constructor() { this.ctx = null; this.master = null; this.ok = false; this.muted = false; this._lx = 0; this._lz = 0; this._hasL = false; this._sus = new Set(); }
+  constructor() { this.ctx = null; this.master = null; this.ok = false; this.muted = false; this._lx = 0; this._lz = 0; this._hasL = false; this._sus = new Set(); this._bank = null; this.heroVoice = false; }
   // WATCHDOG for sustained sounds (charge hums): a handle whose owner stops ramping it — KO'd
   // mid-charge, disposed on match restart, star sphere starved — self-silences instead of ringing
   // forever (the "stuck tone at match start" bug). Called every frame from game.update.
@@ -31,6 +34,18 @@ export class AudioBus {
     for (const h of this._sus) if (now - h.last > 450) h.stop();
   }
   listen(x, z) { this._lx = x; this._lz = z; this._hasL = true; }
+  // THE SAMPLE LAYER — real recorded audio, tried FIRST by every discrete SFX below; the old
+  // synth bodies remain as fallbacks for a cold cache (never silent — the energy-clarity law).
+  sample(name, o) {
+    if (!this.ctx) return false;
+    if (!this._bank) { this._bank = new SampleBank(this); this._bank.preload(HOT_SET); }
+    return this._bank.play(name, o);
+  }
+  sampleLoop(name, o) {
+    if (!this.ctx) return null;
+    if (!this._bank) { this._bank = new SampleBank(this); this._bank.preload(HOT_SET); }
+    return this._bank.loop(name, o);
+  }
   // distance → gain multiplier. reach = how far this sound family carries (units to near-silence).
   _pg(pos, reach = 130) {
     if (!pos || !this._hasL) return 1;
@@ -106,6 +121,7 @@ export class AudioBus {
 
   blast(freq = 420, dur = 0.16, type = 'sawtooth', pos = null) {
     if (!this.ok || this.muted) return;
+    if (this.sample('ki.blast', { pos, rate: Math.max(0.6, Math.min(1.6, freq / 420)) })) return;
     const pg = this._pg(pos, 120); if (!pg) return;
     const o = this.ctx.createOscillator(); o.type = type;
     o.frequency.setValueAtTime(freq, this.t);
@@ -114,6 +130,7 @@ export class AudioBus {
   }
   zap(freq = 900, pos = null) {
     if (!this.ok || this.muted) return;
+    if (this.sample('ki.zap', { pos, rate: Math.max(0.55, Math.min(1.7, freq / 900)) })) return;
     const pg = this._pg(pos, 100); if (!pg) return;
     const o = this.ctx.createOscillator(); o.type = 'square';
     o.frequency.setValueAtTime(freq * (0.9 + Math.random() * 0.2), this.t);
@@ -122,6 +139,7 @@ export class AudioBus {
   }
   hit(freq = 240, pos = null) {
     if (!this.ok || this.muted) return;
+    if (this.sample('hit.soft', { pos, rate: Math.max(0.7, Math.min(1.5, freq / 240)) })) return;
     const pg = this._pg(pos, 110); if (!pg) return;
     const o = this.ctx.createOscillator(); o.type = 'triangle';
     o.frequency.setValueAtTime(freq, this.t);
@@ -133,6 +151,7 @@ export class AudioBus {
   // heavy, violent melee impact — low thud + high crack (cracks fade with distance faster than thuds)
   impact(power = 1, pos = null) {
     if (!this.ok || this.muted) return;
+    if (this.sample(power > 1.05 ? 'punch.heavy' : 'punch.med', { pos, gain: Math.min(1.3, 0.7 + power * 0.35) })) return;
     const pg = this._pg(pos, 150); if (!pg) return;
     const o = this.ctx.createOscillator(); o.type = 'sine';
     o.frequency.setValueAtTime(190, this.t);
@@ -176,6 +195,8 @@ export class AudioBus {
 
   boom(power = 1, pos = null) {
     if (!this.ok || this.muted) return;
+    if (power >= 0.85) this.sample('boom.deep', { pos, gain: Math.min(1.2, power * 0.7) });   // sub-layer under big ones
+    if (this.sample('boom', { pos, gain: Math.min(1.25, 0.6 + power * 0.45), rate: Math.max(0.75, 1.15 - power * 0.25) })) return;
     const pg = this._pg(pos, 240); if (!pg) return;   // explosions carry across the arena
     const dur = 0.5 + power * 0.4;
     const o = this.ctx.createOscillator(); o.type = 'sine';
@@ -192,6 +213,7 @@ export class AudioBus {
   // ---- the VOICE — DBZ-style synth screams (no assets, per-character pitch) ----
   // yell: charge/transform scream. Two detuned saws + vibrato + breath noise, rising with fury.
   yell(pitch = 1, dur = 0.7, intensity = 1, pos = null) {
+    if (!this.heroVoice) return;   // NO LSW TALKING (Options → Hero Voices to re-enable)
     if (!this.ok || this.muted) return;
     const pg = this._pg(pos, 190); if (!pg) return;   // a good scream carries
     const base = 170 * pitch;
@@ -214,6 +236,7 @@ export class AudioBus {
   }
   // grunt: short pain bark (slams, hard hits)
   grunt(pitch = 1, pos = null) {
+    if (!this.heroVoice) return;
     if (!this.ok || this.muted) return;
     const pg = this._pg(pos, 120); if (!pg) return;
     const o = this.ctx.createOscillator(); o.type = 'sawtooth';
@@ -224,6 +247,7 @@ export class AudioBus {
   }
   // cry: the KO wail — falls away like the fighter does
   cry(pitch = 1, pos = null) {
+    if (!this.heroVoice) return;
     if (!this.ok || this.muted) return;
     const pg = this._pg(pos, 170); if (!pg) return;
     const o = this.ctx.createOscillator(); o.type = 'sawtooth';
@@ -353,6 +377,7 @@ export class AudioBus {
   kiRelease(power = 1, pos = null) {
     power = fin(power, 1);
     if (!this.ok || this.muted) return;
+    if (this.sample('ki.release', { pos, gain: Math.min(1.2, 0.5 + power * 0.5), rate: Math.max(0.6, 1.2 - power * 0.35) })) return;
     const pg = this._pg(pos, 230); if (!pg) return;
     const p = Math.max(0.2, Math.min(1.6, power)) * pg, t = this.t;
 
@@ -465,6 +490,7 @@ export class AudioBus {
   }
   teleport() {
     if (!this.ok || this.muted) return;
+    if (this.sample('fx.glitch', {})) return;
     const o = this.ctx.createOscillator(); o.type = 'sine';
     o.frequency.setValueAtTime(1200, this.t);
     o.frequency.exponentialRampToValueAtTime(180, this.t + 0.18);
@@ -475,6 +501,7 @@ export class AudioBus {
   // release for a fuller draw. One-shot, no loop; the draw creak (sustain 'bow') stops separately.
   bowLoose(draw = 1, pos = null) {
     if (!this.ok || this.muted) return;
+    if (this.sample('bow.twang', { pos, gain: 0.5 + draw * 0.5, rate: 1.15 - draw * 0.3 })) { this.sample('swing.fist', { pos, gain: 0.4 + draw * 0.3, rate: 1.2 }); return; }
     const pg = this._pg(pos, 120); if (!pg) return;
     const t = this.t, d = 0.4 + draw * 0.6;
     // the string: a fast pitch-dropping pluck
@@ -502,6 +529,7 @@ export class AudioBus {
   // kind: 'fire' | 'gas' | 'ice' | 'acid' | 'drain' | 'phase' | 'bow'
   sustain(kind = 'fire', pos = null) {
     if (!this.ok || this.muted) return null;
+    if (kind === 'fire') { const h = this.sampleLoop('fire.roar', { pos }); if (h) return h; }
     const t = this.t, ctx = this.ctx;
     const out = ctx.createGain();
     out.gain.setValueAtTime(0.0001, t);
@@ -613,6 +641,7 @@ export class AudioBus {
   // fist = a low airy whoosh · blade = a bright metallic shing · blunt = a heavy displaced-air whump.
   swing(kind = 'fist', pos = null) {
     if (!this.ok || this.muted) return;
+    if (this.sample(kind === 'blade' ? 'swing.blade' : 'swing.fist', { pos, rate: kind === 'blunt' ? 0.78 : 1 })) return;
     const pg = this._pg(pos, 90); if (!pg) return;
     const t = this.t;
     if (kind === 'blade') {
@@ -649,6 +678,7 @@ export class AudioBus {
   // one key of an unseen keyboard — the case-file opening types with these (ui bus, tiny)
   keystroke() {
     if (!this.ok || this.muted) return;
+    if (this.sample('ui.key', { bus: 'ui' })) return;
     const n = this._noise(0.018); const f = this.ctx.createBiquadFilter();
     f.type = 'bandpass'; f.frequency.value = 2400 + Math.random() * 1800; f.Q.value = 1.4;
     n.connect(f);
@@ -696,6 +726,9 @@ export class AudioBus {
   // Deliberately NOT the `zap`/`blast` synth: guns must not sound like energy weapons.
   gunshot(power = 1, pos = null) {
     if (!this.ok || this.muted) return;
+    // no true gunfire in the CC0 library — a heavy plate crack at speed over a sub thump reads
+    // as a bang and is still a real recording, not a synth
+    if (this.sample('gun.crack', { pos, gain: Math.min(1.2, 0.6 + power * 0.4), rate: 1.3 })) { this.sample('boom.deep', { pos, gain: 0.3 * power, rate: 1.7 }); return; }
     const pg = this._pg(pos, 200); if (!pg) return;
     const t = this.t;
     // the crack: filtered noise burst, very short
@@ -722,6 +755,10 @@ export class AudioBus {
   land(power = 1, body = 'flesh', pos = null) {
     power = fin(power, 1);
     if (!this.ok) return;
+    if (body !== 'energy') {   // an energy being barely touches down — the synth whisper stays
+      const nm = body === 'metal' ? 'land.metal' : body === 'stone' ? 'rubble' : power > 1 ? 'land.flesh' : 'land.soft';
+      if (this.sample(nm, { pos, gain: Math.min(1.2, 0.5 + power * 0.4) })) return;
+    }
     const pg = this._pg(pos, 150); if (!pg) return;
     const p = Math.min(2.2, power) * pg;
     const B = {
