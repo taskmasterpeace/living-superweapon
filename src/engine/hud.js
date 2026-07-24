@@ -4,7 +4,7 @@ import { DTYPES, DTYPE_INFO, resistOf, bandOf } from './entity.js';
 import { glyph, padActive, padFaces } from '../core/glyphs.js';
 import { MODES } from '../data/modes.js';
 import { clamp, TAU } from '../core/util.js';
-import { ATTR_DEFS, TALENTS, deriveAttrs, heroTalents, rankName, rankColor, RANKS } from '../data/ranks.js';
+import { ATTR_DEFS, TALENTS, deriveAttrs, heroTalents, rankName, rankColor, RANKS, bakeSheet } from '../data/ranks.js';
 import { SETTINGS, saveSettings, applySettings, KEYMAPS, keymap } from '../core/settings.js';
 import { identityOf } from '../data/identities.js';
 import { icon, ATTR_ICON, ICON_MEANING } from './icons.js';
@@ -824,6 +824,15 @@ export const THREAT_COLORS = { 'Low': 'var(--good)', 'Moderate': 'var(--gold)', 
 
 // "What am I getting into?" — a mechanical AT-A-GLANCE derived from the ACTUAL kit, so it can
 // never drift from the data. Returns [iconName, text, lead?] chips.
+// RECOVERY on the LeFevre pattern — a tiered WORD, never a number (Robert 2026-07-24: "I don't
+// want numbers cause it's hard to see how that relates to other things"). Derived from the live
+// sheet multiplier, so it can never drift from what the engine actually regenerates.
+export function recoveryTier(def) {
+  if (def.energyInfinite) return '∞ CORE';
+  const m = (bakeSheet(def).kiRegenMult) || 1;
+  return m < 0.9 ? 'SLOW' : m < 1.05 ? 'STANDARD' : m < 1.25 ? 'QUICK' : m < 1.5 ? 'RAPID' : 'PRODIGIOUS';
+}
+
 export function kitFacts(def) {
   const A = Object.values(def.abilities || {});
   const st = heroStats(def);
@@ -846,6 +855,7 @@ export function kitFacts(def) {
   out.push(['fighting', str >= 7 ? 'HEAVY fists' : str >= 4 ? 'solid fists' : 'light fists']);
   const ft = def.flightTier ?? 3;
   out.push(['flight', ft === 0 ? 'grounded' : ft === 1 ? 'clumsy flier' : ft === 2 ? 'levitates' : 'full flight']);
+  out.push(['energy', recoveryTier(def) + ' recovery']);
   if (def.guardType === 'deflect') out.push(['defense', 'DEFLECT guard — bullets bounce back']);
   else if (def.guardType === 'barrier') out.push(['defense', 'BARRIER guard — blocks 360°, costs ki']);
   // what they actually carry
@@ -924,7 +934,22 @@ export { applyPlanEdits } from '../data/cityplan.js';
 export class HUD {
   constructor(game) {
     this.game = game;
-    const s = document.createElement('style'); s.textContent = CSS; document.head.appendChild(s);
+    // THE CODEX ON A PHONE (Robert 2026-07-24: "cluttered as a motherfucker, the mobile is
+    // horrible"). Below 640px the case-file rows stack label-over-value instead of fighting for
+    // a 148px label column, the armament table scrolls sideways instead of clipping, and the
+    // pager/close controls grow to thumb size. Steam Deck (1280×800) uses the desktop layout.
+    const CODEX_MOBILE = `
+    @media (max-width: 640px) {
+      .lswovl .cfbox{ width: 100vw; border-left: 0; border-right: 0; border-radius: 0; }
+      .lswovl .cfrow{ display: block; padding: 5px 0; border-bottom: 1px dashed rgba(255,255,255,.05); }
+      .lswovl .cfrow .k{ display: block; margin-bottom: 2px; }
+      .lswovl .cfrow .v{ display: block; }
+      .lswovl .cftop .cft{ font-size: var(--t-micro); letter-spacing: .08em; }
+      .lswovl .cftop .cfnav span{ width: 40px; height: 40px; font-size: 20px; }
+      .lswovl .cfarmwrap{ overflow-x: auto; }
+      .lswovl table.cfarm{ min-width: 520px; }
+    }`;
+    const s = document.createElement('style'); s.textContent = CSS + CODEX_MOBILE; document.head.appendChild(s);
     this.root = document.getElementById('hud');
     this.title = document.getElementById('title');
     this.feedLines = [];
@@ -1481,7 +1506,7 @@ export class HUD {
             <div class="cfrow"><span class="k">NEXT OF KIN</span><span class="v">${red(8)} — SEALED ADDENDUM</span></div>
             <div class="cfrow"><span class="k">FRAME</span><span class="v">${CF_BUILD[c.strength ?? 5]} · STR ${c.strength ?? 5}/10 · 1.80m REF</span></div>
             <div class="cfrow"><span class="k">VOICE</span><span class="v">${vp < 0.85 ? 'LOW REGISTER' : vp > 1.1 ? 'HIGH REGISTER' : 'MID REGISTER'}${c.yells ? ' · BATTLE-VOCAL CONFIRMED' : ' · QUIET OPERATOR'}</span></div>
-            <div class="cfrow"><span class="k">POWER CORE</span><span class="v ${c.energyInfinite ? 'syn' : ''}">${c.energyInfinite ? '∞ CORE — NEVER DRAINS · TIER-CAPPED II' : `KI RESERVE ${c.ki} · REGEN STANDARD`}</span></div>
+            <div class="cfrow"><span class="k">POWER CORE</span><span class="v ${c.energyInfinite ? 'syn' : ''}">${c.energyInfinite ? '∞ CORE — NEVER DRAINS · TIER-CAPPED II' : `KI RESERVE ${c.ki} · RECOVERY ${recoveryTier(c)}`}</span></div>
           </div>
           <div class="cfsec">
             <div class="cfsh">§02 · THREAT ASSESSMENT</div>
@@ -1511,9 +1536,9 @@ export class HUD {
           </div>
           <div class="cfsec wide">
             <div class="cfsh">§05 · DOCUMENTED ARMAMENT — VERIFIED FIGURES</div>
-            <table class="cfarm"><tr><th>SLOT</th><th>DESIGNATION</th><th>CLASS</th><th>OUTPUT</th><th>KI</th><th>CYCLE</th><th>REACH</th><th>NOTES</th></tr>
+            <div class="cfarmwrap"><table class="cfarm"><tr><th>SLOT</th><th>DESIGNATION</th><th>CLASS</th><th>OUTPUT</th><th>KI</th><th>CYCLE</th><th>REACH</th><th>NOTES</th></tr>
             ${rows.map(r => `<tr class="${r.ult ? 'ult' : ''}"><td class="sl2">${esc(r.slot)}</td><td class="an3">${esc(r.name)}</td><td>${esc(r.kind)}</td><td class="dm">${esc(r.dmg)}</td><td>${esc(r.cost)}</td><td>${esc(r.cd)}</td><td>${esc(r.reach)}</td><td>${esc(r.notes)}</td></tr>`).join('')}
-            </table>
+            </table></div>
           </div>
           <div class="cfsec wide">
             <div class="cfsh">§06 · IF ENCOUNTERED — COUNTERMEASURE BRIEF</div>

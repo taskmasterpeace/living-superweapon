@@ -387,12 +387,22 @@ export class Game {
   }
 
   _buildLockMark() {
+    // HARD LOCK reads as a CROSSHAIR now (Robert 2026-07-24: "I almost want a crosshair and a
+    // lock for when it's target locked") — ring + four ticks + centre dot, unmistakably a lock
+    // rather than the gold soft-aim reticle.
     const cv = document.createElement('canvas'); cv.width = cv.height = 64; const x = cv.getContext('2d');
-    x.fillStyle = '#ff2f2f'; x.beginPath(); x.moveTo(32, 54); x.lineTo(9, 12); x.lineTo(55, 12); x.closePath(); x.fill();
-    x.strokeStyle = '#fff'; x.lineWidth = 4; x.stroke();
+    x.strokeStyle = '#ff3b3b'; x.lineWidth = 4.5;
+    x.beginPath(); x.arc(32, 32, 19, 0, Math.PI * 2); x.stroke();
+    x.lineWidth = 5; x.lineCap = 'round';
+    for (const [x0, y0, x1, y1] of [[32, 2, 32, 13], [32, 51, 32, 62], [2, 32, 13, 32], [51, 32, 62, 32]]) {
+      x.beginPath(); x.moveTo(x0, y0); x.lineTo(x1, y1); x.stroke();
+    }
+    x.fillStyle = '#fff'; x.beginPath(); x.arc(32, 32, 3.4, 0, Math.PI * 2); x.fill();
+    x.strokeStyle = 'rgba(255,255,255,0.85)'; x.lineWidth = 1.6;
+    x.beginPath(); x.arc(32, 32, 19, 0, Math.PI * 2); x.stroke();
     const tex = new THREE.CanvasTexture(cv);
     this.redTri = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false, depthWrite: false }));
-    this.redTri.scale.set(6, 6, 6); this.redTri.visible = false; this.scene.add(this.redTri);
+    this.redTri.scale.set(7, 7, 7); this.redTri.visible = false; this.scene.add(this.redTri);
   }
 
   updateReticle(dt) {
@@ -809,6 +819,9 @@ export class Game {
       if (!this.isFoe(caster, f)) continue;
       const dx = f.pos.x - caster.pos.x, dz = f.pos.z - caster.pos.z; const d = Math.hypot(dx, dz);
       if (d > range) continue;
+      // the VERTICAL GATE (altitude plan F5): a jab must not connect with a foe a whole band
+      // overhead — melee and grabs are same-deck weapons. ~one storey of tolerance.
+      if (Math.abs(f.pos.y - caster.pos.y) > 10) continue;
       const dot = (dx / (d || 1)) * caster.aim.x + (dz / (d || 1)) * caster.aim.z;
       if (dot < Math.cos(arc)) continue;
       if (d * d < bd) { bd = d * d; best = f; }

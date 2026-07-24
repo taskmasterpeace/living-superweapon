@@ -698,6 +698,33 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   while explicitly PRESERVING the shared caches (`_tileMats`, `_winMats`, `_lampMat`, `_carPaints`).
   Verified: 10 consecutive rebuilds move geometries 264→273 and textures 25→27.
 
+## THE FOUR-DECK LADDER + THE POWER CHARGE (2026-07-24)
+- **Flight is DECKS, not an axis** (`entity._physics`, plan doc PLAN_ALTITUDE_AND_INTERACTION §1):
+  a flying fighter is DOCKED on a deck or IN TRANSIT. Release ascend → the servo eases you onto
+  the CURRENT band's deck (never "where your thumb stopped"); holding walks the rungs with a
+  click per band. GROUND (< BANDS.ground) stays free levitation with the soft floor. BUILDING's
+  deck = the ROOFTOP UNDER YOU (`_roofUnder`: cover + interiors tops) else the skyline default;
+  SKY/CLOUDS decks derive from the per-city BANDS. Servo speed caps at FLY_SINK (26) and slam
+  needs < −38, so docking can never hurt. `launchT > 0` suspends the servo entirely (knockback
+  owns the axis; band = wherever you land). `def.maxBand` ?? (tier ≥3 ? 3 : 1) — the ruled
+  levitator nerf, see BALANCE.md. Landing logic unchanged (descend still lands on roofs first).
+- **Speed feel pass 2026-07-24**: ground ×1.08 · tier-3 air ×1.2 · levitator 0.62→0.78 ·
+  clumsy 0.85→0.95 · FLY_RISE 30→46. FLY_SINK must stay 26 (servo cap).
+- **THE POWER CHARGE** (DBZ ruling): guard held with no foe inside 55u for 0.5s →
+  `chargingKi` — 40/s regen, heroYell scream, rising sparks, gold pulsing state ring — and
+  DEFENSELESS: any hit bypasses the guard branch, lands full, and interrupts with a 0.35s
+  stagger. A foe closing inside 55u drops you back to an honest block automatically. The quiet
+  in-combat guard-charge (22/s) is unchanged.
+- **RECOVERY is a WORD, not a number** (`hud.recoveryTier`, LeFevre pattern): ∞ CORE / SLOW /
+  STANDARD / QUICK / RAPID / PRODIGIOUS from the live `bakeSheet().kiRegenMult` — on the select
+  kit chips and codex §01. Never print the per-second number on a player surface.
+- **Melee vertical gate**: `coneFoe` skips foes with |Δy| > 10 — a jab can no longer connect
+  with a foe a whole band overhead (altitude plan F5). Grabs ride the same gate.
+- **HARD LOCK is a CROSSHAIR** (`game._buildLockMark`): ring + 4 ticks + centre dot, red.
+  The gold reticle stays the soft-aim cursor. Facing-follows-lock law unchanged.
+- **Codex on mobile** (≤640px, `CODEX_MOBILE` css in hud): case-file rows stack label-over-value,
+  armament table scrolls sideways (`.cfarmwrap`), pager/close grow to thumb size.
+
 ## SOUND (2026-07-23) — buses, the soundscape, the energy voice
 - **THE MIX.** Everything used to connect to one master gain. There is now a bus structure —
   `music · sfx · voice · ambient · ui` → glue compressor → master. Each has a fader in Options

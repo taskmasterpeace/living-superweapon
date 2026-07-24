@@ -118,3 +118,18 @@ swings a rumble wave or a 2v2 harder than any damage ult, but it is a dead card 
 fighter's KOs never book Elo). Priced at the top of command, not above it.
 
 First AI-vs-AI audit pass for both is pending — revisit after live data.
+
+
+## Audit note 2026-07-24 — the four-deck ladder ships (movement rulings)
+- **Flight is DECKS now** (entity.js `_physics`): release the button and the servo docks you on
+  the current band's deck; holding walks the rungs with a click each. GROUND stays free levitation.
+- **`def.maxBand`**: tier ≤2 caps at BUILDING (band 1), tier 3 reaches CLOUDS. ⚠ This is the
+  ruled NERF to levitators (RIME/WARDEN/PYRE/RIFT/TITAN/KIVULI can no longer sit in the SKY).
+  Override per hero with `maxBand` if a levitator needs the sky back — audit their win rates.
+- **Feel pass**: ground speed +8%, tier-3 air +20%, levitators 0.62→0.78, clumsy 0.85→0.95,
+  climb rate 30→46. Numbers chosen for Robert's feel test — expect a second pass.
+- **THE POWER CHARGE**: guard held while no foe is inside 55u for 0.5s → 40/s regen (vs 22
+  guard-charge, 8 base), the scream, gold pulsing state ring — and DEFENSELESS: any hit lands
+  full and interrupts. Bots don't seek it yet (they already guard-recover).
+- **Melee vertical gate**: `coneFoe` ignores foes >10u above/below — jabs and grabs are
+  same-deck weapons now (altitude plan F5 closed).

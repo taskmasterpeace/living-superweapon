@@ -15,7 +15,7 @@ export const TIER_COLORS = ['#ffffff', null, '#ffd24a', '#ffedb0', '#ffffff'];  
 let _fid = 1;
 const _anchor = new THREE.Vector3();
 // flight tuning — levitation model: hold to rise, release to HOVER, descend key to sink.
-const FLY_RISE = 30, FLY_SINK = 26, FLY_TAKEOFF = 19, FLY_HOVER_BOB = 3.2;   // decisive takeoff — clears the hover-bob dip
+const FLY_RISE = 46, FLY_SINK = 26, FLY_TAKEOFF = 19, FLY_HOVER_BOB = 3.2;   // rise 30→38 (2026-07-24 feel pass: 'flying is really slow'); SINK stays 26 — it is the deck-servo speed cap
 
 // ---- weapon models — one registry, every archetype: mounts on the DRIVEN fist meshes so
 // poses and the ragdoll carry them. Built along the arm's -Y axis (same convention as the rifle).
@@ -459,6 +459,8 @@ export class Fighter {
     // double-tap evade + energy-drained state
     this.evadeCd = 0; this.sprintT = 0; this.sprintMult = 1.6; this._slideT = 0; this.drainedT = 0;
     this.flySpeed = def.flySpeed || FLY_SPEEDS[def.id] || 1;   // who owns the sky
+    this._deckSnap = -1; this._climbBand = -1;                 // the four-deck ladder's dock state
+    this.chargingKi = false; this._chargeT = 0; this._chargeScanT = 0; this._safeDist = 1e9;   // the POWER CHARGE (DBZ ruling)
     this.cruiseHeld = false;                                    // SHIFT while flying = sustained cruise
     this.burstT = 0;            // dash-burst window — move() doesn't clamp velocity back to walk speed
     this._sprintThrough = false; this._sprintLightning = false;   // VOLT: run through cover, blue lightning wake
@@ -665,6 +667,12 @@ export class Fighter {
       return 0;
     }
     // GUARD beats STRIKE: block frontal, non-grab damage ('barrier' guards cover ALL directions)
+    // THE POWER CHARGE price: a fighter deep in the scream is DEFENSELESS — the raised guard
+    // does not block, the hit lands full and breaks the charge (DBZ ruling 2026-07-24).
+    if (this.chargingKi && amount > 0 && opts.src && opts.src !== this) {
+      this.chargingKi = false; this._chargeT = 0; this.guarding = false;
+      this.staggerT = Math.max(this.staggerT, 0.35);
+    }
     if (this.guarding && this.staggerT <= 0 && !opts.unblockable && opts.src) {
       const dx = opts.src.pos.x - this.pos.x, dz = opts.src.pos.z - this.pos.z, d = Math.hypot(dx, dz) || 1;
       const inArc = this.def.guardType === 'barrier' || (dx / d) * this.aim.x + (dz / d) * this.aim.z > -0.15;
@@ -885,7 +893,36 @@ export class Fighter {
     this._wasCharge = anyCharge;
     if (this.energyInfinite) this.ki = this.maxKi;                             // android core — the tank never moves
     else this.ki = clamp(this.ki + (anyCharge ? 3 : 8) * this.sheet.kiRegenMult * dt, 0, this.maxKi);   // ki is a budget — RESOLVE refills it
-    if (this.guarding && this._blocked <= 0 && this.def.guardType !== 'barrier') this.ki = clamp(this.ki + 22 * this.sheet.kiRegenMult * dt, 0, this.maxKi); // guard to recover it (barriers COST ki instead)
+    // guard to recover ki — and THE POWER CHARGE (DBZ ruling 2026-07-24): hold the stance while
+    // genuinely SAFE and it becomes the real thing — the scream, rising sparks, a white-hot state
+    // ring, 40/s regen. A foe closing inside 55u drops you back to an honest block on its own;
+    // getting TOUCHED mid-scream lands full damage and breaks it (see takeDamage). Defenseless
+    // is the price of charging like that — exactly the genre's bargain.
+    if (this.guarding && this._blocked <= 0 && this.def.guardType !== 'barrier') {
+      this._chargeScanT -= dt;
+      if (this._chargeScanT <= 0 && this._game) {
+        this._chargeScanT = 0.2;
+        let nd = 1e9;
+        for (const f of this._game.entities) {
+          if (!this._game.isFoe(this, f) || !f.alive) continue;
+          const d = Math.hypot(f.pos.x - this.pos.x, f.pos.z - this.pos.z);
+          if (d < nd) nd = d;
+        }
+        this._safeDist = nd;
+      }
+      this._chargeT = (this._safeDist > 55) ? this._chargeT + dt : 0;
+      const was = this.chargingKi;
+      this.chargingKi = this._chargeT > 0.5 && this.ki < this.maxKi - 1 && !this.energyInfinite;
+      if (this.chargingKi && !was && this._game.heroYell) { this._yellCd = 0; this._game.heroYell(this, 1.15); }
+      this.ki = clamp(this.ki + (this.chargingKi ? 40 : 22) * this.sheet.kiRegenMult * dt, 0, this.maxKi);
+      if (this.chargingKi && this._game.particles && Math.random() < dt * 16) {
+        this._game.particles.spawn({
+          x: this.pos.x + (Math.random() - 0.5) * 4.5, y: this.pos.y + 1, z: this.pos.z + (Math.random() - 0.5) * 4.5,
+          vx: 0, vy: 15 + Math.random() * 12, vz: 0, life: 0.5, size: 1.7,
+          color: [(this.def.colors && this.def.colors.accent) || '#ffd24a', '#fff'], drag: 1.2, shrink: true,
+        });
+      }
+    } else { this.chargingKi = false; this._chargeT = 0; }
 
     if (this.hitstop > 0) { this.hitstop -= dt; this._animate(dt); this._sync(); return; }
 
@@ -931,13 +968,64 @@ export class Fighter {
       this._flyPrev = this.flyHeld;
 
       if (this.flying) {
-        let target, rate;
-        if (this.flyHeld) { target = FLY_RISE; rate = 7; }                 // ascend
-        else if (this.descendHeld) { target = -FLY_SINK; rate = 7; }       // descend
-        else if (this.flightTier <= 1) { target = -7; rate = 4; }          // tier 1 can't hover — it sags
-        else { target = Math.sin(this.animT * 2.3) * FLY_HOVER_BOB + (this.pos.y < (this.groundY || 0) + 2.6 ? 7 : 0); rate = 5; }  // hover: gentle bob + a soft floor so you float, never ankle-skim
-        this.vel.y = damp(this.vel.y, target, rate, dt);
-        if (this.flightTier <= 1) {                                        // clumsy drift — the GAH wobble
+        // ---- THE FOUR-DECK LADDER (ruled 2026-07-23; Robert felt its absence 2026-07-24:
+        // "he was going up until I let go of the button and that's exactly where he stopped —
+        // that's not how it's supposed to work"). A flying fighter is DOCKED on a deck or IN
+        // TRANSIT between decks. GROUND is the exception — free levitation below BANDS.ground.
+        // Bands are the per-city plan.bands; BUILDING's deck is the ROOFTOP UNDER YOU when there
+        // is one (that is what keeps rooftop play alive), else the skyline default.
+        const bandAt2 = (h) => h < BANDS.ground ? 0 : h < BANDS.building ? 1 : h < BANDS.sky ? 2 : 3;
+        const maxBand = this.def.maxBand ?? (this.flightTier >= 3 ? 3 : 1);   // tier ≤2 lives below the SKY — a balance ruling, def.maxBand overrides (BALANCE.md)
+        const deckOf = (b) => {
+          if (b <= 0) return null;                                            // ground band: free float
+          if (b === 1) { const r = this._roofUnder(game); return r != null ? r + 3 : BANDS.ground + (BANDS.building - BANDS.ground) * 0.58; }
+          if (b === 2) return BANDS.building + (BANDS.sky - BANDS.building) * 0.5;
+          return BANDS.sky + (BANDS.ceiling - BANDS.sky) * 0.55;
+        };
+        if (this.launchT > 0) {
+          // knockback owns the axis — a servo here would eat the hit and make heavies weightless.
+          // When it expires your band is wherever you ended up. No snap-back tether.
+          this.vel.y -= 34 * dt;
+          this._deckSnap = -1;
+        } else if (this.flyHeld) {
+          const cb = bandAt2(this.pos.y);
+          const lid = deckOf(Math.min(cb, maxBand));
+          if (cb >= maxBand && lid != null && this.pos.y >= lid - 0.6) {
+            // your ceiling deck — the servo holds you there instead of letting you drift into a band you haven't earned
+            this.vel.y = damp(this.vel.y, clamp((lid - this.pos.y) * 2.6, -FLY_SINK, FLY_SINK * 0.9), 6, dt);
+          } else {
+            this.vel.y = damp(this.vel.y, FLY_RISE, 7, dt);                   // climb — holding the button walks the rungs
+          }
+          if (cb !== this._climbBand) {                                       // the CLICK per rung
+            this._climbBand = cb;
+            if (game && game.audio) { try { game.audio.zap(430 + cb * 90, this.pos); } catch (err) {} }
+          }
+          this._deckSnap = -1;
+        } else if (this.descendHeld) {
+          this.vel.y = damp(this.vel.y, -FLY_SINK, 7, dt);                    // sink — the landing logic still lands you on roofs first
+          this._climbBand = bandAt2(this.pos.y); this._deckSnap = -1;
+        } else if (this.flightTier <= 1) {
+          this.vel.y = damp(this.vel.y, -7, 4, dt);                           // tier 1 can't hover — it sags
+        } else {
+          // HOVER = DOCK. Releasing the button eases you onto the CURRENT band's deck — never
+          // "wherever your thumb stopped". Servo speed caps at FLY_SINK (26) and slam damage
+          // needs < −38, so docking can never hurt (the plan's safety invariant).
+          const b = Math.min(bandAt2(this.pos.y), maxBand);
+          const deck = deckOf(b);
+          if (deck == null) {
+            this.vel.y = damp(this.vel.y, Math.sin(this.animT * 2.3) * FLY_HOVER_BOB + (this.pos.y < (this.groundY || 0) + 2.6 ? 7 : 0), 5, dt);   // GROUND: free levitation + the soft floor
+          } else {
+            const err = deck - this.pos.y;
+            const bob = Math.abs(err) < 2 ? Math.sin(this.animT * 2.3) * FLY_HOVER_BOB * 0.55 : 0;
+            this.vel.y = damp(this.vel.y, clamp(err * 2.6, -FLY_SINK, FLY_SINK * 0.92) + bob, 6, dt);
+            if (Math.abs(err) < 1.8 && this._deckSnap !== b) {                // docked — one soft click
+              this._deckSnap = b;
+              if (game && game.audio) { try { game.audio.zap(430 + b * 90, this.pos); } catch (err) {} }
+            }
+          }
+          this._climbBand = bandAt2(this.pos.y);
+        }
+        if (this.flightTier <= 1) {                                           // clumsy drift — the GAH wobble
           this.vel.x += Math.sin(this.animT * 3.1) * 9 * dt;
           this.vel.z += Math.cos(this.animT * 2.6) * 9 * dt;
         }
@@ -1028,13 +1116,34 @@ export class Fighter {
     }
   }
 
+  // The highest roof (cover top or enterable-building top) under this fighter's feet — the
+  // BUILDING band's deck. Hover-only cost, a couple of AABB scans per flying fighter.
+  _roofUnder(game) {
+    if (!game || !game.world) return null;
+    let best = null;
+    const x = this.pos.x, z = this.pos.z, y = this.pos.y;
+    for (const c of game.world.cover) {
+      const top = c.top ?? c.h;
+      if (top > y + 2 || c.destroyed) continue;                 // only roofs at or below you
+      const hx = (c.hx ?? c.r) + 1.5, hz = (c.hz ?? c.r) + 1.5;
+      if (Math.abs(x - c.x) > hx || Math.abs(z - c.z) > hz) continue;
+      if (best == null || top > best) best = top;
+    }
+    for (const it of (game.world.interiors || [])) {
+      if (it.top > y + 2) continue;
+      if (Math.abs(x - it.x) > it.hx + 1.5 || Math.abs(z - it.z) > it.hz + 1.5) continue;
+      if (best == null || it.top > best) best = it.top;
+    }
+    return best;
+  }
+
   move(dir, dt, sprint = 1) {
     if (this.state === 'ko' || this.hitstop > 0 || this.grabbedBy || this.grabState === 'clinch' || this.staggerT > 0 || this.frozenT > 0) return;
-    let s = this.speed * this.powerBuff * sprint;
+    let s = this.speed * 1.08 * this.powerBuff * sprint;   // ground feel pass 2026-07-24: +8% across the board
     if (this.sprintT > 0) s *= this.sprintMult;   // double-tap sprint surge
     if (this.meleeCharge > 0) s *= 0.4;           // winding up a haymaker roots you
     if (this.flying) {
-      s *= this.flightTier >= 3 ? this.flySpeed : this.flightTier === 2 ? 0.62 : 0.85;   // levitators reposition, fliers cruise
+      s *= this.flightTier >= 3 ? this.flySpeed * 1.2 : this.flightTier === 2 ? 0.78 : 0.95;   // air feel pass 2026-07-24: fliers +20%, levitators 0.62→0.78, clumsy 0.85→0.95
       // SHIFT held in the air = sustained CRUISE (not the burst dash) — costs a trickle of ki
       if (this.cruiseHeld && this.ki > 1) { s *= 1.5; this.ki = Math.max(0, this.ki - 2.6 * dt); }
     }
@@ -1227,6 +1336,7 @@ export class Fighter {
         const sm = p.stateRing.material;
         let col = null, op = 0, sc = 1;
         if (this._controlled) { col = '#7fd4ff'; op = 0.55 + Math.sin(this.animT * 6) * 0.2; sc = 1.04; }  // DOMINATED — not their own will
+        else if (this.chargingKi) { col = '#ffe9a0'; op = 0.6 + Math.sin(this.animT * 9) * 0.3; sc = 1 + Math.sin(this.animT * 9) * 0.06; }  // THE SCREAM — charging, and defenseless
         else if (this.guarding) { col = '#9fd0ff'; op = 0.7; sc = 1 + Math.sin(this.animT * 8) * 0.02; }        // braced
         else if (this.grabbing || this.grabState) { col = '#8fe08a'; op = 0.75; sc = 1.06; }              // seizing
         else if (this.meleeCharge > 0) { col = '#ff8a3a'; op = 0.45 + Math.min(0.45, this.meleeCharge * 0.6); sc = 1 + this.meleeCharge * 0.12; }  // winding up a haymaker
