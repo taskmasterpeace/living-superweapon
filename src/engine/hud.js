@@ -1,6 +1,6 @@
 // WAR WORLD: ASCENDANTS — DOM HUD + character-select screen.
 import { ROSTER, SLOT_ORDER } from '../data/characters.js';
-import { DTYPES, DTYPE_INFO, resistOf } from './entity.js';
+import { DTYPES, DTYPE_INFO, resistOf, bandOf } from './entity.js';
 import { glyph, padActive, padFaces } from '../core/glyphs.js';
 import { MODES } from '../data/modes.js';
 import { clamp, TAU } from '../core/util.js';
@@ -1285,7 +1285,7 @@ export class HUD {
     if (show !== this._altOn) { this._altOn = show; el.style.display = show ? 'flex' : 'none'; }
     if (!show) return;
     const y = Math.max(0, p.pos.y);
-    const band = y < 8 ? 0 : y < 150 ? 1 : y < 260 ? 2 : 3;
+    const band = bandOf(y);                      // ONE rule, imported — never hand-copy the thresholds
     const acc = p.def.colors.accent;
     if (band !== this._altBand) {
       const up = this._altBand != null && band > this._altBand;
@@ -1323,7 +1323,7 @@ export class HUD {
     const p = g.player, w = g.world;
     const row = (k, v, cls = '') => `<div class="tr2"><span class="tk">${k}</span><span class="tv ${cls}">${v}</span></div>`;
     const bands = ['GROUND', 'BUILDING', 'SKY', 'CLOUDS'];
-    const b = p.pos.y < 8 ? 0 : p.pos.y < 150 ? 1 : p.pos.y < 260 ? 2 : 3;
+    const b = bandOf(p.pos.y);
     const fps = w.fps, ft = (w._ema || 16.7);
     let html = `<h4><span>◈ SIMULATION TELEMETRY</span><span>${fps} FPS</span></h4>`;
     html += row('FRAME', ft.toFixed(1) + ' ms', ft > 24 ? 'bad' : ft < 17 ? 'ok' : 'hot');

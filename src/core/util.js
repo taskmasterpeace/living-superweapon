@@ -44,3 +44,13 @@ export function mix(hex1, hex2, t) {
   const c = a.map((v, i) => Math.round(lerp(v, b[i], t)));
   return `rgb(${c[0]},${c[1]},${c[2]})`;
 }
+
+// ---- THE LAYER CONTRACT's runtime face -------------------------------------------------------
+// Per-city altitude thresholds. world.rebuildCity pushes the plan's derived bands here, so a city
+// with a 250u landmark spire has a taller BUILDING band and SKY stays a clean lane above the
+// tallest roof. Lives in util (not entity) because entity imports world and world must set this.
+export const BANDS = { ground: 8, building: 150, sky: 260, ceiling: 320, shallows: -10, depths: -26 };
+export function setBands(b) {
+  Object.assign(BANDS, { ground: 8, building: 150, sky: 260, ceiling: 320, shallows: -10, depths: -26 }, b || {});
+}
+export const bandOf = (y) => y < BANDS.ground ? 0 : y < BANDS.building ? 1 : y < BANDS.sky ? 2 : 3;

@@ -76,6 +76,36 @@ export const isRef = (cell) => !!(cell && cell.ref);
 // cell, so the news desk says THE CONTAINER TERMINAL rather than THE DOCKLANDS.
 // ⚠ Some footprints have a MEANINGFUL orientation and must not be rotated to fit. A port runs
 // ALONG the shore — rotated, a 3×1 quay becomes a 1×3 pier sticking three blocks inland.
+// ---- THE LAYER CONTRACT ------------------------------------------------------------------------
+// "Buildings could never go over the building level" — Robert's ruling, enforced BY CONSTRUCTION.
+// Every type declares the tallest thing it may raise (BASE units, before cell scale and terrace).
+// plan.bands derives from these + the relief, so the BUILDING band always covers the actual
+// skyline and SKY is a clean lane above the tallest roof. tower() clamps to the declaration; the
+// validator flags any type that forgets one. A landmark spire doesn't break the ladder — it
+// RAISES that city's building band, exactly as ruled.
+export const TILE_MAX_H = {
+  residential: 84, commercial: 142, company: 152, industrial: 52, military: 58,
+  political: 46, educational: 54, temple: 50, mining: 42, seaport: 56, resort: 80,
+  park: 26, plaza: 34, stadium: 42, hospital: 88, market: 18, metro: 14,
+  farmland: 44, forest: 38, mountain: 36, airport: 78, railyard: 54,
+  monument: 78, tower: 294, cathedral: 96, palace: 50, fortress: 78, university: 74,
+};
+export function computeBands(plan) {
+  const S = (plan.cell || CELL) / CELL;
+  let maxH = 20;
+  if (plan.cells) for (const row of plan.cells) for (const cell of row) {
+    if (!cell || cell.ref || cell.t === 'water') continue;
+    maxH = Math.max(maxH, TILE_MAX_H[cell.t] ?? 60);
+  }
+  // ⚠ plan.relief is the resolved OBJECT ({ kind, amp }), not a key — index RELIEFS only as the
+  // fallback for hand-built plans that carry a bare string.
+  const amp = plan.relief && plan.relief.amp != null ? plan.relief.amp
+    : (RELIEFS[plan.relief] || RELIEFS.flat).amp;
+  const building = Math.ceil(maxH * S + amp) + 8;
+  return { ground: 8, building, sky: building + 110, ceiling: building + 170,
+           shallows: -10, depths: -26 };
+}
+
 export const NO_ROTATE = { seaport: 1 };
 export const TILE_SIZES = {
   seaport:     [{ f: [1, 1], n: 'FISHING WHARF',     tier: 2 },
@@ -650,6 +680,7 @@ export function generatePlan(city, seed = 1, opts = {}) {
   // demote. They used to run before it, so a cell plaza'd by the budget kept the neighbour data
   // of the tower it used to be, and its neighbours kept fences facing a district that was gone.
   computeSockets(plan);
+  plan.bands = computeBands(plan);
   buildRoads(plan, rng);
   return plan;
 }
@@ -739,6 +770,7 @@ export function applyPlanEdits(plan, edits) {
     touched = true;
   }
   if (touched) { computeSockets(plan); buildRoads(plan, mulberry((plan.seed * 131 + plan.N * 17) | 0)); }
+  plan.bands = computeBands(plan);
   return plan;
 }
 
@@ -747,6 +779,7 @@ export function applyPlanEdits(plan, edits) {
 export function thresholdPlan() {
   return {
     metric: { humanH: 9.6 },
+    bands: { ground: 8, building: 158, sky: 268, ceiling: 328, shallows: -10, depths: -26 },
     name: 'THE WHITE CITY', country: 'Threshold Treaty Zone', popType: 'City', popLabel: 'CITY · POP 1.2M',
     types: ['Commercial', 'Industrial', 'Military'], crime: 38, safety: 62, seed: 0, N: 5, arena: 240,
     water: true, waterCols: 1, flagship: true, cells: null,
@@ -782,6 +815,7 @@ export function galleryPlan() {
   // city is, it is not proving anything.
   computeSockets(plan);
   buildRoads(plan, mulberry(1));
+  plan.bands = computeBands(plan);
   return plan;
 }
 
@@ -837,6 +871,15 @@ export function validatePlan(plan) {
     // open country, and a validator that doesn't know that reports phantom problems.
     if (NO_RESCUE[cell.t] || !plan.roads) continue;
     if (!(plan.roads.h[r][c] || plan.roads.h[r + 1][c] || plan.roads.v[r][c] || plan.roads.v[r][c + 1])) landlocked++;
+  }
+  const undecl = new Set();
+  if (plan.cells) for (const row of plan.cells) for (const cell of row)
+    if (cell && !cell.ref && cell.t !== 'water' && TILE_MAX_H[cell.t] === undefined) undecl.add(cell.t);
+  if (undecl.size) out.push({ bad: 1, t: `${[...undecl].join(',').toUpperCase()} MISSING a TILE_MAX_H declaration` });
+  if (plan.bands) {
+    const b = plan.bands;
+    if (!(b.ground < b.building && b.building < b.sky && b.sky < b.ceiling)) out.push({ bad: 1, t: 'BANDS out of order' });
+    else out.push({ bad: 0, t: `bands: BLD→${b.building} · SKY→${b.sky} · LID ${b.ceiling}` });
   }
   if (landlocked) out.push({ bad: 1, t: `${landlocked} LANDLOCKED — no road on any side` });
   if (orphan) out.push({ bad: 1, t: `${orphan} ORPHANED footprint cells` });

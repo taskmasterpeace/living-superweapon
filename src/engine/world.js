@@ -5,7 +5,7 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import { clamp, damp } from '../core/util.js';
+import { clamp, damp, setBands } from '../core/util.js';
 import { buildTiles } from './citytiles.js';
 import { CELL, districtNameAt, thresholdPlan, ROAD, junctionAt } from '../data/cityplan.js';
 import { mulberry } from '../data/news.js';
@@ -154,6 +154,7 @@ export class World {
   }
 
   _buildArena() {
+    setBands(this.plan && this.plan.bands);   // the flagship boot path never goes through rebuildCity
     const g = new THREE.Group();
     // ground: the White City — bone plaza + street grid (texture carries the whites; the
     // multiply color keeps it from blowing out under ACES at noon)
@@ -515,6 +516,7 @@ export class World {
     if (this._fades) this._fades.clear();   // cloned cutaway materials died with their meshes
   }
   rebuildCity(plan) {
+    setBands(plan && plan.bands);   // the layer contract follows the city
     if (!plan) return;
     this._teardownCity();
     this.plan = plan;

@@ -2,6 +2,7 @@
 // camera. The same module the in-game CITY ATLAS mounts (engine/atlasUI.js) runs the whole page.
 import { World } from '../engine/world.js';
 import { mountAtlas } from '../engine/atlasUI.js';
+import { BANDS } from '../core/util.js';
 
 const canvas = document.getElementById('game');
 const world = new World(canvas);
@@ -19,5 +20,7 @@ function frame() {
 }
 requestAnimationFrame(frame);
 
-// headless verification handle (mirrors window.LSW on the game page)
-window.ATLAS = { world, ui };
+// headless verification handle (mirrors window.LSW on the game page).
+// ⚠ BANDS must come from THIS import graph — a dynamic import('/src/core/util.js') in the console
+// can resolve to a second, phantom module instance under vite's HMR version stamps.
+window.ATLAS = { world, ui, BANDS };

@@ -5,7 +5,7 @@
 // fog boxes, collision); flavor props are decor the fights smash through visually.
 // House rules apply: NO purple anywhere, warm-neutral + gold, per-district accent temperature.
 import * as THREE from 'three';
-import { CELL, regionOf } from '../data/cityplan.js';
+import { CELL, regionOf, TILE_MAX_H } from '../data/cityplan.js';
 
 // ---- REGION SKINS ---------------------------------------------------------------------------
 // Every city carries a `cultureCode` (14 architectural regions) and until now NOTHING read it, so
@@ -110,6 +110,7 @@ function mesh(ctx, geo, mat, x, y, z, o = {}) {
 // a structural, destructible building with a windowed facade + roof slab + crack overlay
 function tower(ctx, x, z, w, h, d, winMat, roofMat, o = {}) {
   const world = ctx.world, S = ctx.S;
+  h = Math.min(h, ctx.maxH || Infinity);           // THE LAYER CONTRACT — never above the declared max
   const geo = new THREE.BoxGeometry(w, h, d); scaleBoxUV(geo, w, h, d, ((winMat && winMat.userData.bay) || 17) * CUR_M);
   const m = new THREE.Mesh(geo, winMat);
   const wx = sx(ctx, x), wz = sz(ctx, z), W = w * S, H = h * S, D = d * S, gy = ctx.gy;
@@ -1178,6 +1179,7 @@ export function buildTiles(world, group, plan, rng) {
     const builder = T[cell.t];
     if (!builder) continue;
     ctx._tile = cell.t;
+    ctx.maxH = TILE_MAX_H[cell.t] ?? Infinity;
     // the three things builders push as raw world coordinates have to be scaled too — snapshot the
     // lengths, run the tile, then convert whatever it appended
     const t0 = ctx.treeSpots.length, k0 = world._pendingCuts.length, p0 = world._pendingPits.length;

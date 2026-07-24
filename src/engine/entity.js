@@ -1,6 +1,7 @@
 // Living Superweapon — Fighter: articulated figure, stats, physics, flight, combat, ability state.
 import * as THREE from 'three';
-import { clamp, damp, TAU, lerp } from '../core/util.js';
+import { clamp, damp, TAU, lerp, BANDS, bandOf } from '../core/util.js';
+export { BANDS, bandOf, setBands } from '../core/util.js';
 import { ARENA } from './world.js';
 import { Ragdoll } from './ragdoll.js';
 import { buildTentacles } from './tentacles.js';
@@ -80,7 +81,7 @@ export const ALT_BANDS = [   // the ruled four altitude bands — shown as a rin
   { name: 'SKY', max: 260, c: '#7fe6ff' },
   { name: 'CLOUDS', max: 1e9, c: '#ffffff' },
 ];
-export const bandOf = (y) => y < 8 ? 0 : y < 150 ? 1 : y < 260 ? 2 : 3;
+// bandOf/BANDS live in core/util.js (re-exported above) — per-city, set by world.rebuildCity.
 
 // ---- DAMAGE TYPES (docs/COMBAT_MANUAL.md §3) ----------------------------------------------
 // Every damage event carries a `dtype`. Every fighter carries a resistance table. ONE multiplier,
@@ -967,7 +968,7 @@ export class Fighter {
       }
       if (impact < -38) this._slam(game, -impact, 'ground');    // hurled into the floor — fall/slam damage
     }
-    if (this.pos.y > 320) { this.pos.y = 320; if (this.vel.y > 0) this.vel.y = 0; }  // ceiling above the CLOUDS band — towers are real now
+    if (this.pos.y > BANDS.ceiling) { this.pos.y = BANDS.ceiling; if (this.vel.y > 0) this.vel.y = 0; }  // ceiling above CLOUDS — per-city, from plan.bands
     // harbor splashes — churning through water kicks up spray
     if (game && this.pos.y < 1.5 && game.world.waterAt && game.world.waterAt(this.pos.x) && Math.hypot(this.vel.x, this.vel.z) > 8 && Math.random() < dt * 10) {
       game.particles.spawn({ x: this.pos.x, y: 0.7, z: this.pos.z, vx: (Math.random() * 2 - 1) * 8, vy: 8 + Math.random() * 6, vz: (Math.random() * 2 - 1) * 8, life: 0.42, size: 2.8, color: ['#bfe6f2', '#7fb8d0', '#ffffff'], drag: 1.4, shrink: true });
