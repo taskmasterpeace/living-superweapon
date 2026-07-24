@@ -801,3 +801,42 @@ export function districtNameAt(plan, x, z) {
   if (cell.sname) return cell.sname;            // "THE CONTAINER TERMINAL", not "THE DOCKLANDS"
   return 'THE ' + (TILE_INFO[cell.t] ? TILE_INFO[cell.t].label : 'DISTRICT');
 }
+
+// ---- VALIDATION — the checks that found the real bugs. ONE implementation, exported: the ATLAS
+// panel, the headless sweep and any future test all call THIS. (It lived in hud.js first; when the
+// tool and the test drifted they disagreed by 32 phantom problems — never reimplement it.)
+export function validatePlan(plan) {
+  const out = [];
+  if (!plan || !plan.cells) return out;
+  const N = plan.N, C = plan.cells;
+  let landlocked = 0, orphan = 0, holes = 0, offgrid = 0, nosock = 0, structural = 0;
+  for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
+    const cell = C[r][c];
+    if (!cell) { out.push({ bad: 1, t: `EMPTY CELL at ${r},${c}` }); continue; }
+    if (!cell.edge || !cell.nb) nosock++;
+    if (cell.ref) {
+      const a = C[cell.ref[0]] && C[cell.ref[0]][cell.ref[1]];
+      if (!a || a.ref || a.t !== cell.t) orphan++;
+      continue;
+    }
+    if (cell.t !== 'water' && cell.t !== 'park' && cell.t !== 'plaza' && cell.t !== 'farmland') structural++;
+    const fh = cell.fh || 1, fw = cell.fw || 1;
+    if (r + fh > N || c + fw > N) offgrid++;
+    else for (let i = 0; i < fh; i++) for (let j = 0; j < fw; j++) {
+      if (!i && !j) continue;
+      const o = C[r + i][c + j];
+      if (!o || !o.ref || o.ref[0] !== r || o.ref[1] !== c) holes++;
+    }
+    // the SAME rule the generator uses (NO_RESCUE) — open country is not landlocked, it is
+    // open country, and a validator that doesn't know that reports phantom problems.
+    if (NO_RESCUE[cell.t] || !plan.roads) continue;
+    if (!(plan.roads.h[r][c] || plan.roads.h[r + 1][c] || plan.roads.v[r][c] || plan.roads.v[r][c + 1])) landlocked++;
+  }
+  if (landlocked) out.push({ bad: 1, t: `${landlocked} LANDLOCKED — no road on any side` });
+  if (orphan) out.push({ bad: 1, t: `${orphan} ORPHANED footprint cells` });
+  if (holes) out.push({ bad: 1, t: `${holes} HOLES in a footprint` });
+  if (offgrid) out.push({ bad: 1, t: `${offgrid} footprints RUN OFF the grid` });
+  if (nosock) out.push({ bad: 1, t: `${nosock} cells have NO SOCKETS` });
+  out.push({ bad: 0, t: `${structural} structural · ${N * N} cells · ${plan.arena * 2}u across` });
+  return out;
+}

@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite';
+import { fileURLToPath, URL } from 'node:url';
 
 // ⚠ `base: './'` IS LOAD-BEARING FOR THE DESKTOP BUILD.
 // Vite defaults to '/', which emits absolute asset paths like /assets/index-abc.js. Those resolve
@@ -13,5 +14,12 @@ export default defineConfig({
     // The desktop build ships the whole game offline; a bigger single chunk beats a waterfall of
     // requests over file://, where there is no HTTP caching to win back.
     chunkSizeWarningLimit: 2500,
+    // TWO entries: the game, and ATLAS — the standalone city-generator tool.
+    rollupOptions: {
+      input: {
+        main: fileURLToPath(new URL('./index.html', import.meta.url)),
+        atlas: fileURLToPath(new URL('./atlas.html', import.meta.url)),
+      },
+    },
   },
 });

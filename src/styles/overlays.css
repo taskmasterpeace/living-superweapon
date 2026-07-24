@@ -1,0 +1,115 @@
+/* =========================================================================
+ OVERLAY PRIMITIVES + THE ATLAS PANEL — one source for BOTH pages.
+ Linked from index.html (the game) and atlas.html (the standalone tool), and
+ MOVED out of hud.js's injected CSS template — never duplicated back there.
+ Uses the design tokens from src/styles/tokens.css. NO PURPLE.
+ ========================================================================= */
+
+.lswovl{ position:fixed; inset:0; z-index:62; display:none; align-items:center; justify-content:center; background:rgba(4,5,9,.8); backdrop-filter:blur(3px); pointer-events:auto; color:var(--text); }
+.lswovl .obox{ width:min(700px,94vw); max-height:88vh; overflow-y:auto; background:rgba(14,16,24,.97); border:1px solid rgba(255,255,255,.14); border-radius:var(--r-4); padding:22px 26px; font-family:"Rajdhani","Inter",system-ui,sans-serif; }
+.lswovl .oh{ font-weight:800; font-size:26px; letter-spacing:.1em; color:var(--gold); margin-bottom:14px; text-transform:uppercase; }
+.lswovl .orow{ display:flex; align-items:center; gap:12px; margin-bottom:12px; }
+.lswovl .orow .ol{ width:200px; font-size:var(--t-sm); letter-spacing:.12em; text-transform:uppercase; color:var(--text-4); }
+.lswovl .orow input[type=range]{ flex:1; accent-color:var(--gold-deep); }
+.lswovl .orow .ov{ width:48px; text-align:right; font-weight:800; font-size:var(--t-md); }
+.lswovl .chips3{ display:flex; gap:6px; flex-wrap:wrap; flex:1; }
+.lswovl .c3{ cursor:pointer; font-size:var(--t-sm); font-weight:800; padding:6px 12px; border-radius:var(--r-2); border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.04); color:var(--text-3); }
+.lswovl .c3.on{ background:linear-gradient(180deg,var(--gold),var(--gold-warm)); color:var(--on-gold); border-color:transparent; }
+.lswovl .odone{ cursor:pointer; margin-top:10px; font-family:inherit; font-weight:800; letter-spacing:.12em; font-size:var(--t-lg); color:var(--on-gold); padding:12px 26px; border:none; border-radius:var(--r-3); background:linear-gradient(180deg,var(--gold),var(--gold-warm)); box-shadow:0 4px 0 var(--gold-shadow); text-transform:uppercase; width:100%; }
+.lswovl .odone.oghost{ background:rgba(255,255,255,.08); color:var(--text); box-shadow:none; border:1px solid rgba(255,255,255,.15); }
+.lswovl .oline2{ font-size:var(--t-body); color:var(--text-3); margin:8px 0; line-height:1.5; }
+
+.lswovl .rkhead{ display:flex; align-items:center; gap:10px; margin-bottom:4px; }
+.lswovl .rkhead .n9{ width:30px; height:30px; border-radius:50%; background:var(--broadcast); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:19px; }
+.lswovl .rkhead .rt b{ display:block; font-size:17px; letter-spacing:.1em; color:var(--text); line-height:1.05; }
+.lswovl .rkhead .rt span{ font-size:var(--t-tiny); letter-spacing:.26em; color:var(--gold-deep); text-transform:uppercase; }
+.lswovl .rkmeta{ margin-left:auto; font-family:'Cascadia Mono',Consolas,monospace; font-size:var(--t-label); color:var(--text-5); letter-spacing:.12em; text-align:right; }
+
+.lswovl .atwrap{ display:flex; gap:16px; min-height:0; }
+.lswovl .atlist{ flex:1.2; min-width:0; display:flex; flex-direction:column; gap:8px; }
+.lswovl .atlist input{ font-family:'Cascadia Mono',Consolas,monospace; font-size:var(--t-body); color:var(--text); background:rgba(0,0,0,.4); border:1px solid rgba(255,255,255,.14); border-radius:var(--r-2); padding:7px 11px; outline:none; }
+.lswovl .atchips{ display:flex; gap:5px; flex-wrap:wrap; }
+.lswovl .atchips .c3{ font-size:var(--t-tiny); padding:4px 9px; }
+.lswovl .atrows{ overflow-y:auto; max-height:46vh; display:flex; flex-direction:column; gap:5px; padding-right:4px; }
+.lswovl .atrow{ cursor:pointer; display:flex; align-items:center; gap:9px; border:1px solid rgba(255,255,255,.08); border-radius:var(--r-2); padding:7px 10px; background:rgba(255,255,255,.02); }
+.lswovl .atrow:hover{ border-color:rgba(245,178,26,.5); background:rgba(255,255,255,.05); }
+.lswovl .atrow.sel{ border-color:var(--gold); background:rgba(245,178,26,.08); }
+.lswovl .atrow .an3{ font-weight:800; font-size:var(--t-md); color:var(--text); }
+.lswovl .atrow .ac3{ font-size:var(--t-label); color:var(--text-5); letter-spacing:.06em; }
+.lswovl .atrow .apop{ margin-left:auto; text-align:right; font-family:'Cascadia Mono',Consolas,monospace; font-size:var(--t-tiny); color:var(--text-4); letter-spacing:.04em; }
+.lswovl .atrow .atags{ display:flex; gap:3px; margin-top:2px; flex-wrap:wrap; }
+.lswovl .atrow .atags i{ display:inline-block; width:8px; height:8px; border-radius:var(--r-1); }
+.lswovl .atprev{ flex:1; display:flex; flex-direction:column; gap:9px; }
+.lswovl .atprev canvas{ width:100%; border-radius:var(--r-3); border:1px solid rgba(255,255,255,.1); background:#0c0e14; }
+.lswovl .atmeta{ font-family:'Cascadia Mono',Consolas,monospace; font-size:var(--t-label); color:var(--text-4); line-height:1.7; letter-spacing:.05em; }
+.lswovl .atmeta b{ color:var(--gold); }
+.lswovl .atbtns{ display:flex; flex-direction:column; gap:7px; }
+.lswovl .atbtns .odone{ margin-top:0; }
+
+/* --- THE MAP MAKER palette --- */
+.lswovl .atpal{ display:flex; flex-wrap:wrap; gap:5px; margin:10px 0 4px; }
+.lswovl .atsw{ width:22px; height:22px; border-radius:var(--r-1); background:var(--sw); cursor:pointer;
+  border:2px solid transparent; transition:transform .08s, border-color .12s; }
+.lswovl .atsw:hover{ transform:translateY(-2px); }
+.lswovl .atsw.on{ border-color:var(--text); box-shadow:0 0 0 2px var(--ink), 0 0 0 4px var(--gold); }
+.lswovl .atsw.era{ background:var(--surface-hi); color:var(--text-3); display:flex; align-items:center;
+  justify-content:center; font-size:11px; border:1px dashed var(--line-2); }
+.lswovl .atpalhint{ font-family:var(--f-mono); font-size:var(--t-micro); color:var(--text-5);
+  letter-spacing:.06em; margin-bottom:8px; }
+.lswovl .atsw i{ display:block; font-style:normal; font-size:9px; line-height:18px; text-align:center;
+  color:rgba(20,18,12,.65); }                                    /* ▦ marks a multi-cell footprint */
+.lswovl .atstep{ display:flex; align-items:center; gap:4px; font-family:var(--f-mono);
+  font-size:var(--t-micro); color:var(--text-5); letter-spacing:.08em; margin-bottom:7px; }
+.lswovl .atstep b{ color:var(--gold); min-width:44px; text-align:center; }
+.lswovl .atsm{ width:20px; height:20px; border-radius:var(--r-1); background:var(--surface-hi);
+  border:1px solid var(--line-2); color:var(--text-2); cursor:pointer; font-size:12px; line-height:1; }
+.lswovl .atsm:hover{ border-color:var(--gold); color:var(--gold); }
+.lswovl .atrow2{ display:flex; gap:6px; }
+.lswovl .atrow2 .odone{ flex:1; min-width:0; }
+.lswovl .odone[disabled]{ opacity:.35; pointer-events:none; }
+/* --- saved layouts + plan JSON --- */
+.lswovl .lyrows{ max-height:210px; overflow-y:auto; margin:10px 0; }
+.lswovl .lyrow{ display:flex; justify-content:space-between; align-items:center; gap:8px; padding:7px 9px;
+  background:var(--surface-raised); border:1px solid var(--line); border-radius:var(--r-2); margin-bottom:5px; }
+.lswovl .lyrow b{ display:block; color:var(--text); font-size:var(--t-md); }
+.lswovl .lyrow span{ font-family:var(--f-mono); font-size:var(--t-micro); color:var(--text-5); letter-spacing:.06em; }
+.lswovl .lysm{ padding:4px 9px; font-size:var(--t-micro); margin-left:5px; }
+.lswovl .lyname{ display:flex; gap:6px; margin-bottom:10px; }
+.lswovl .lyname input{ flex:1; background:var(--surface-hi); border:1px solid var(--line-2); color:var(--text);
+  border-radius:var(--r-2); padding:7px 9px; font-family:var(--f-display); }
+.lswovl .lyjson textarea{ width:100%; height:64px; background:var(--ink); color:var(--text-3); resize:vertical;
+  border:1px solid var(--line-2); border-radius:var(--r-2); padding:7px; font-family:var(--f-mono);
+  font-size:var(--t-micro); margin-bottom:6px; }
+.lswovl .lylbl{ font-family:var(--f-mono); font-size:var(--t-micro); color:var(--text-5); letter-spacing:.1em; margin-bottom:4px; }
+/* --- dev-tool controls: population preset, cell size, validation --- */
+.lswovl .atdim{ margin-left:auto; color:var(--text-6); }
+.lswovl .atpop{ display:flex; flex-wrap:wrap; gap:3px; margin-bottom:7px; }
+.lswovl .atsize{ display:flex; flex-wrap:wrap; align-items:center; gap:3px; margin:2px 0 6px; }
+.lswovl .atsize span:first-child{ font-family:var(--f-mono); font-size:var(--t-micro);
+  color:var(--text-5); letter-spacing:.1em; margin-right:3px; }
+.lswovl .atsize .c3{ font-size:var(--t-micro); padding:2px 6px; }
+.lswovl .atpop .c3{ font-size:var(--t-micro); padding:2px 6px; }
+.lswovl .atval{ font-family:var(--f-mono); font-size:var(--t-micro); letter-spacing:.05em;
+  border-left:2px solid var(--line-2); padding:4px 0 4px 7px; margin-bottom:8px; }
+.lswovl .atval .vok{ color:var(--text-5); }
+.lswovl .atval .vbad{ color:var(--danger); }
+.lswovl .odone.on{ background:var(--grad-gold); color:var(--on-gold); border-color:var(--gold); }
+/* --- LIVE 3D: the panel becomes a rail over the real city --- */
+#hAtlas.live{ justify-content:flex-start; align-items:flex-start; background:none; pointer-events:none; }
+#hAtlas.live .obox{ width:min(430px,92vw) !important; margin:10px 0 0 10px; max-height:calc(100vh - 20px);
+  overflow-y:auto; pointer-events:auto; background:var(--surface-solid); box-shadow:0 18px 60px rgba(0,0,0,.7); }
+#hAtlas.live .atlist{ display:none; }              /* the city list is not what you need while building */
+#hAtlas.live .atwrap{ display:block; }
+.maplive{ position:fixed; inset:0; z-index:61; cursor:grab; }
+.maplive:active{ cursor:grabbing; }
+
+/* --- ATLAS solo page (no game behind it) --- */
+#hAtlas.solo.live .atlist{ display:flex; }         /* solo keeps the city list while live */
+#hAtlas.solo.live .obox{ width:min(560px,96vw) !important; }
+@media (max-width:880px){ .lswovl .atwrap{ flex-direction:column; } }
+/* solo toast — the standalone page has no hud feed ticker */
+.attoast{ position:fixed; left:50%; bottom:26px; transform:translateX(-50%); z-index:70;
+  background:var(--surface-solid); border:1px solid var(--gold); border-radius:var(--r-2);
+  color:var(--text); font-family:var(--f-display); font-weight:700; letter-spacing:.06em;
+  padding:9px 16px; pointer-events:none; animation:attoast 2.6s ease forwards; }
+@keyframes attoast{ 0%{ opacity:0; translate:0 8px } 8%{ opacity:1; translate:0 0 } 82%{ opacity:1 } 100%{ opacity:0 } }

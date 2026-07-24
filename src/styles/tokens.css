@@ -1,0 +1,54 @@
+/* =========================================================================
+ THE THRESHOLD VISUAL LANGUAGE — the design tokens, one source for all pages.
+ Moved from index.html so atlas.html shares them. NO PURPLE (KIVULI only).
+ ========================================================================= */
+:root{
+  /* — surfaces — */
+  --ink:#0a0b10;              /* deepest ground */
+  --surface:rgba(8,10,16,.55);      /* in-world glass panel (HUD) */
+  --surface-solid:rgba(14,16,24,.97);/* modal / overlay body */
+  --surface-raised:rgba(10,12,18,.72);/* card on a modal */
+  --surface-hi:rgba(255,255,255,.04); /* subtle raised chip */
+  --line:rgba(255,255,255,.10);      /* hairline */
+  --line-2:rgba(255,255,255,.18);    /* emphasis border */
+  --line-gold:rgba(245,178,26,.35);  /* section rule */
+
+  /* — the gold ramp (the one accent) — */
+  --gold-pale:#ffd97a; --gold:#ffd24a; --gold-deep:#f5b21a; --gold-warm:#f5921a;
+  --gold-shadow:#7a3d05; --on-gold:#160d02;
+  --grad-gold:linear-gradient(180deg,#ffd15a,#f5921a);
+
+  /* — text ramp (6 steps, brightest → faintest) — */
+  --text:#e8e2d6; --text-2:#c9c2b4; --text-3:#b7b0a2;
+  --text-4:#a49c8c; --text-5:#8b8577; --text-6:#5a544a;
+  --bone:#f4efe6;
+
+  /* — status (each means ONE thing everywhere) — */
+  --danger:#ff5a4a;      /* damage / loss / hostile */
+  --danger-2:#ff8a6a;    /* soft warning */
+  --good:#8fe08a;        /* health / success / active */
+  --info:#7fe6ff;        /* energy, ki, data */
+  --police:#5aa0ff;      /* the law */
+  --broadcast:#d81f26;   /* KMK 9 red — press only */
+  --stamp:#c22730;       /* classified stamps */
+  --blood:#ff3b3b;
+
+  /* — geometry: 4 steps, nothing in between — */
+  --r-1:4px; --r-2:8px; --r-3:12px; --r-4:16px; --r-pill:20px;
+
+  /* — type scale (small text; display sizes stay expressive) — */
+  --t-micro:8.5px; --t-tiny:9.5px; --t-label:10.5px;
+  --t-sm:11.5px; --t-body:12.5px; --t-md:13.5px; --t-lg:15px;
+
+  /* — tracking: labels are spaced, prose is not — */
+  --tr-tight:.04em; --tr:.1em; --tr-wide:.16em; --tr-wider:.24em;
+
+  /* — elevation — */
+  --sh-1:0 4px 14px rgba(0,0,0,.4);
+  --sh-2:0 18px 44px -12px rgba(0,0,0,.75);
+  --sh-gold:0 4px 0 var(--gold-shadow);
+
+  /* — fonts — */
+  --f-display:"Rajdhani","Inter",system-ui,sans-serif;
+  --f-mono:"Cascadia Mono",Consolas,ui-monospace,monospace;
+}

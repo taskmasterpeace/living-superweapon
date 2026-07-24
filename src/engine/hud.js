@@ -11,7 +11,8 @@ import { icon, ATTR_ICON, ICON_MEANING } from './icons.js';
 import { writeBroadcast, tapeRows, llmPunchUp, titleCase, money, causeLine, mulberry } from '../data/news.js';
 import { recOf, snapshotTable, rankingTable, recentIncidents, championId, tournamentNo } from '../data/rankings.js';
 import { cityList } from '../data/cities.js';
-import { generatePlan, thresholdPlan, galleryPlan, TILE_INFO, VARIANTS, popLabel, CELL, CELL_RANGE, POP_TYPES, TILE_FOOT, TILE_SIZES, NO_RESCUE, applyPlanEdits, regionOf, ROAD } from '../data/cityplan.js';
+import { generatePlan, thresholdPlan, galleryPlan, TILE_INFO, VARIANTS, popLabel, CELL, CELL_RANGE, POP_TYPES, TILE_FOOT, TILE_SIZES, NO_RESCUE, applyPlanEdits, regionOf, ROAD, validatePlan } from '../data/cityplan.js';
+import { mountAtlas } from './atlasUI.js';
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
@@ -293,19 +294,6 @@ const CSS = `
 #hud .paused button{ cursor:pointer; font-family:inherit; font-weight:800; letter-spacing:.12em; font-size:var(--t-lg); color:var(--on-gold); padding:12px 26px; min-width:240px; border:none; border-radius:var(--r-3); background:linear-gradient(180deg,var(--gold),var(--gold-warm)); box-shadow:0 4px 0 var(--gold-shadow); text-transform:uppercase; }
 #hud .paused button.ghost{ background:rgba(255,255,255,.08); color:var(--text); box-shadow:none; border:1px solid rgba(255,255,255,.15); }
 /* full-screen overlays (options / how-to-play) — live on <body> so they stack over the title */
-.lswovl{ position:fixed; inset:0; z-index:62; display:none; align-items:center; justify-content:center; background:rgba(4,5,9,.8); backdrop-filter:blur(3px); pointer-events:auto; color:var(--text); }
-.lswovl .obox{ width:min(700px,94vw); max-height:88vh; overflow-y:auto; background:rgba(14,16,24,.97); border:1px solid rgba(255,255,255,.14); border-radius:var(--r-4); padding:22px 26px; font-family:"Rajdhani","Inter",system-ui,sans-serif; }
-.lswovl .oh{ font-weight:800; font-size:26px; letter-spacing:.1em; color:var(--gold); margin-bottom:14px; text-transform:uppercase; }
-.lswovl .orow{ display:flex; align-items:center; gap:12px; margin-bottom:12px; }
-.lswovl .orow .ol{ width:200px; font-size:var(--t-sm); letter-spacing:.12em; text-transform:uppercase; color:var(--text-4); }
-.lswovl .orow input[type=range]{ flex:1; accent-color:var(--gold-deep); }
-.lswovl .orow .ov{ width:48px; text-align:right; font-weight:800; font-size:var(--t-md); }
-.lswovl .chips3{ display:flex; gap:6px; flex-wrap:wrap; flex:1; }
-.lswovl .c3{ cursor:pointer; font-size:var(--t-sm); font-weight:800; padding:6px 12px; border-radius:var(--r-2); border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.04); color:var(--text-3); }
-.lswovl .c3.on{ background:linear-gradient(180deg,var(--gold),var(--gold-warm)); color:var(--on-gold); border-color:transparent; }
-.lswovl .odone{ cursor:pointer; margin-top:10px; font-family:inherit; font-weight:800; letter-spacing:.12em; font-size:var(--t-lg); color:var(--on-gold); padding:12px 26px; border:none; border-radius:var(--r-3); background:linear-gradient(180deg,var(--gold),var(--gold-warm)); box-shadow:0 4px 0 var(--gold-shadow); text-transform:uppercase; width:100%; }
-.lswovl .odone.oghost{ background:rgba(255,255,255,.08); color:var(--text); box-shadow:none; border:1px solid rgba(255,255,255,.15); }
-.lswovl .oline2{ font-size:var(--t-body); color:var(--text-3); margin:8px 0; line-height:1.5; }
 .lswovl .roomcode{ text-align:center; font-size:var(--t-lg); letter-spacing:.2em; color:var(--text-4); margin-bottom:12px; }
 .lswovl .roomcode b{ font-size:34px; letter-spacing:.34em; color:var(--gold); text-shadow:0 0 18px rgba(245,178,26,.4); margin-left:8px; }
 .lswovl .netvs{ display:flex; align-items:center; gap:14px; justify-content:center; margin-bottom:14px; }
@@ -316,62 +304,6 @@ const CSS = `
 .lswovl .netp.wait b{ color:var(--text-5); font-size:var(--t-md); }
 .lswovl .vs2{ font-weight:800; color:var(--gold); }
 .lswovl .hsec{ margin-bottom:13px; }
-/* --- THE MAP MAKER palette --- */
-.lswovl .atpal{ display:flex; flex-wrap:wrap; gap:5px; margin:10px 0 4px; }
-.lswovl .atsw{ width:22px; height:22px; border-radius:var(--r-1); background:var(--sw); cursor:pointer;
-  border:2px solid transparent; transition:transform .08s, border-color .12s; }
-.lswovl .atsw:hover{ transform:translateY(-2px); }
-.lswovl .atsw.on{ border-color:var(--text); box-shadow:0 0 0 2px var(--ink), 0 0 0 4px var(--gold); }
-.lswovl .atsw.era{ background:var(--surface-hi); color:var(--text-3); display:flex; align-items:center;
-  justify-content:center; font-size:11px; border:1px dashed var(--line-2); }
-.lswovl .atpalhint{ font-family:var(--f-mono); font-size:var(--t-micro); color:var(--text-5);
-  letter-spacing:.06em; margin-bottom:8px; }
-.lswovl .atsw i{ display:block; font-style:normal; font-size:9px; line-height:18px; text-align:center;
-  color:rgba(20,18,12,.65); }                                    /* ▦ marks a multi-cell footprint */
-.lswovl .atstep{ display:flex; align-items:center; gap:4px; font-family:var(--f-mono);
-  font-size:var(--t-micro); color:var(--text-5); letter-spacing:.08em; margin-bottom:7px; }
-.lswovl .atstep b{ color:var(--gold); min-width:44px; text-align:center; }
-.lswovl .atsm{ width:20px; height:20px; border-radius:var(--r-1); background:var(--surface-hi);
-  border:1px solid var(--line-2); color:var(--text-2); cursor:pointer; font-size:12px; line-height:1; }
-.lswovl .atsm:hover{ border-color:var(--gold); color:var(--gold); }
-.lswovl .atrow2{ display:flex; gap:6px; }
-.lswovl .atrow2 .odone{ flex:1; min-width:0; }
-.lswovl .odone[disabled]{ opacity:.35; pointer-events:none; }
-/* --- saved layouts + plan JSON --- */
-.lswovl .lyrows{ max-height:210px; overflow-y:auto; margin:10px 0; }
-.lswovl .lyrow{ display:flex; justify-content:space-between; align-items:center; gap:8px; padding:7px 9px;
-  background:var(--surface-raised); border:1px solid var(--line); border-radius:var(--r-2); margin-bottom:5px; }
-.lswovl .lyrow b{ display:block; color:var(--text); font-size:var(--t-md); }
-.lswovl .lyrow span{ font-family:var(--f-mono); font-size:var(--t-micro); color:var(--text-5); letter-spacing:.06em; }
-.lswovl .lysm{ padding:4px 9px; font-size:var(--t-micro); margin-left:5px; }
-.lswovl .lyname{ display:flex; gap:6px; margin-bottom:10px; }
-.lswovl .lyname input{ flex:1; background:var(--surface-hi); border:1px solid var(--line-2); color:var(--text);
-  border-radius:var(--r-2); padding:7px 9px; font-family:var(--f-display); }
-.lswovl .lyjson textarea{ width:100%; height:64px; background:var(--ink); color:var(--text-3); resize:vertical;
-  border:1px solid var(--line-2); border-radius:var(--r-2); padding:7px; font-family:var(--f-mono);
-  font-size:var(--t-micro); margin-bottom:6px; }
-.lswovl .lylbl{ font-family:var(--f-mono); font-size:var(--t-micro); color:var(--text-5); letter-spacing:.1em; margin-bottom:4px; }
-/* --- dev-tool controls: population preset, cell size, validation --- */
-.lswovl .atdim{ margin-left:auto; color:var(--text-6); }
-.lswovl .atpop{ display:flex; flex-wrap:wrap; gap:3px; margin-bottom:7px; }
-.lswovl .atsize{ display:flex; flex-wrap:wrap; align-items:center; gap:3px; margin:2px 0 6px; }
-.lswovl .atsize span:first-child{ font-family:var(--f-mono); font-size:var(--t-micro);
-  color:var(--text-5); letter-spacing:.1em; margin-right:3px; }
-.lswovl .atsize .c3{ font-size:var(--t-micro); padding:2px 6px; }
-.lswovl .atpop .c3{ font-size:var(--t-micro); padding:2px 6px; }
-.lswovl .atval{ font-family:var(--f-mono); font-size:var(--t-micro); letter-spacing:.05em;
-  border-left:2px solid var(--line-2); padding:4px 0 4px 7px; margin-bottom:8px; }
-.lswovl .atval .vok{ color:var(--text-5); }
-.lswovl .atval .vbad{ color:var(--danger); }
-.lswovl .odone.on{ background:var(--grad-gold); color:var(--on-gold); border-color:var(--gold); }
-/* --- LIVE 3D: the panel becomes a rail over the real city --- */
-#hAtlas.live{ justify-content:flex-start; align-items:flex-start; background:none; pointer-events:none; }
-#hAtlas.live .obox{ width:min(430px,92vw) !important; margin:10px 0 0 10px; max-height:calc(100vh - 20px);
-  overflow-y:auto; pointer-events:auto; background:var(--surface-solid); box-shadow:0 18px 60px rgba(0,0,0,.7); }
-#hAtlas.live .atlist{ display:none; }              /* the city list is not what you need while building */
-#hAtlas.live .atwrap{ display:block; }
-.maplive{ position:fixed; inset:0; z-index:61; cursor:grab; }
-.maplive:active{ cursor:grabbing; }
 /* ---- THE COLD OPEN: the home page as a news hour ---- */
 #title .colddesk{ display:flex; gap:18px; align-items:stretch; max-width:60rem; margin:64px auto 4px; margin-top:max(64px, 0px);
   padding:12px; background:var(--surface); border:1px solid var(--line); border-radius:var(--r-3); }
@@ -618,11 +550,6 @@ const CSS = `
 @keyframes regsweep{ 0%{ top:-8%; } 100%{ top:108%; } }
 #title .preview .sweep{ position:absolute; left:0; right:0; height:34px; z-index:2; pointer-events:none; background:linear-gradient(180deg, transparent, rgba(245,178,26,.045), transparent); animation:regsweep 7s linear infinite; }
 /* the sports-desk power board */
-.lswovl .rkhead{ display:flex; align-items:center; gap:10px; margin-bottom:4px; }
-.lswovl .rkhead .n9{ width:30px; height:30px; border-radius:50%; background:var(--broadcast); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:19px; }
-.lswovl .rkhead .rt b{ display:block; font-size:17px; letter-spacing:.1em; color:var(--text); line-height:1.05; }
-.lswovl .rkhead .rt span{ font-size:var(--t-tiny); letter-spacing:.26em; color:var(--gold-deep); text-transform:uppercase; }
-.lswovl .rkmeta{ margin-left:auto; font-family:'Cascadia Mono',Consolas,monospace; font-size:var(--t-label); color:var(--text-5); letter-spacing:.12em; text-align:right; }
 .lswovl table.rk{ width:100%; border-collapse:collapse; }
 .lswovl table.rk th{ font-size:var(--t-tiny); letter-spacing:.2em; color:var(--text-5); text-transform:uppercase; text-align:left; padding:7px 8px 5px; border-bottom:1px solid rgba(245,178,26,.3); }
 .lswovl table.rk td{ font-size:var(--t-md); padding:5.5px 8px; border-bottom:1px solid rgba(255,255,255,.05); color:var(--text-2); }
@@ -716,26 +643,6 @@ const CSS = `
 #hud .wantedrow{ font-size:var(--t-sm); font-weight:800; letter-spacing:.16em; color:var(--police); margin:1px 0 2px; text-shadow:0 0 10px rgba(90,160,255,.6); animation:pipblink 1.2s steps(2,start) infinite; }
 #title .term .thchip{ cursor:pointer; color:#7fb0d0; border-bottom:1px dashed rgba(127,176,208,.5); pointer-events:auto; }
 #title .term .thchip:hover{ color:#a8d8f0; }
-.lswovl .atwrap{ display:flex; gap:16px; min-height:0; }
-.lswovl .atlist{ flex:1.2; min-width:0; display:flex; flex-direction:column; gap:8px; }
-.lswovl .atlist input{ font-family:'Cascadia Mono',Consolas,monospace; font-size:var(--t-body); color:var(--text); background:rgba(0,0,0,.4); border:1px solid rgba(255,255,255,.14); border-radius:var(--r-2); padding:7px 11px; outline:none; }
-.lswovl .atchips{ display:flex; gap:5px; flex-wrap:wrap; }
-.lswovl .atchips .c3{ font-size:var(--t-tiny); padding:4px 9px; }
-.lswovl .atrows{ overflow-y:auto; max-height:46vh; display:flex; flex-direction:column; gap:5px; padding-right:4px; }
-.lswovl .atrow{ cursor:pointer; display:flex; align-items:center; gap:9px; border:1px solid rgba(255,255,255,.08); border-radius:var(--r-2); padding:7px 10px; background:rgba(255,255,255,.02); }
-.lswovl .atrow:hover{ border-color:rgba(245,178,26,.5); background:rgba(255,255,255,.05); }
-.lswovl .atrow.sel{ border-color:var(--gold); background:rgba(245,178,26,.08); }
-.lswovl .atrow .an3{ font-weight:800; font-size:var(--t-md); color:var(--text); }
-.lswovl .atrow .ac3{ font-size:var(--t-label); color:var(--text-5); letter-spacing:.06em; }
-.lswovl .atrow .apop{ margin-left:auto; text-align:right; font-family:'Cascadia Mono',Consolas,monospace; font-size:var(--t-tiny); color:var(--text-4); letter-spacing:.04em; }
-.lswovl .atrow .atags{ display:flex; gap:3px; margin-top:2px; flex-wrap:wrap; }
-.lswovl .atrow .atags i{ display:inline-block; width:8px; height:8px; border-radius:var(--r-1); }
-.lswovl .atprev{ flex:1; display:flex; flex-direction:column; gap:9px; }
-.lswovl .atprev canvas{ width:100%; border-radius:var(--r-3); border:1px solid rgba(255,255,255,.1); background:#0c0e14; }
-.lswovl .atmeta{ font-family:'Cascadia Mono',Consolas,monospace; font-size:var(--t-label); color:var(--text-4); line-height:1.7; letter-spacing:.05em; }
-.lswovl .atmeta b{ color:var(--gold); }
-.lswovl .atbtns{ display:flex; flex-direction:column; gap:7px; }
-.lswovl .atbtns .odone{ margin-top:0; }
 /* ================= THE CODEX — a Planetary-grade CASE FILE per superweapon ================= */
 .lswovl.codex{ align-items:flex-start; padding:3vh 0; overflow-y:auto; }
 .lswovl .cfbox{ position:relative; width:min(980px,95vw); margin:auto; background:linear-gradient(178deg, rgba(20,21,26,.99), rgba(13,14,18,.99)); border:1px solid rgba(245,178,26,.3); border-radius:var(--r-1); padding:0 0 18px; font-family:'Rajdhani','Inter',sans-serif; color:var(--text-2); overflow:hidden; }
@@ -1142,7 +1049,7 @@ export class HUD {
     this.optionsEl = mk('hOptions'); this.howtoEl = mk('hHowto'); this.onlineEl = mk('hOnline'); this.damageEl = mk('hDamage');
     this.establishEl = document.createElement('div'); this.establishEl.id = 'hEstablish'; this.establishEl.className = 'establish';
     this.establishEl.style.display = 'none'; document.body.appendChild(this.establishEl);
-    this.rankingsEl = mk('hRankings'); this.bracketEl = mk('hBracket'); this.atlasEl = mk('hAtlas');
+    this.rankingsEl = mk('hRankings'); this.bracketEl = mk('hBracket'); this.atlasEl = null;   // created by mountAtlas on first open
     this.codexEl = mk('hCodex'); this.codexEl.classList.add('codex');
     try { this.theater = JSON.parse(localStorage.getItem('threshold_theater_v1') || 'null') || { flagship: true, seed: 1 }; } catch { this.theater = { flagship: true, seed: 1 }; }
   }
@@ -1157,437 +1064,44 @@ export class HUD {
     const plan = generatePlan(city, t.seed || 1, { N: t.N, waterCols: t.waterCols, cell: t.cell, popType: t.popType });
     return applyPlanEdits(plan, t.edits);   // hand-painted cells win over the generator
   }
-  // --- the map maker's tools -------------------------------------------------------------------
-  // Every mutation goes through _mapEdit so UNDO is a single unconditional rule instead of a thing
-  // each button has to remember to do. The stack holds the whole edit set (they're tiny) plus the
-  // grid and coastline, because resizing the grid is an edit you must be able to take back too.
-  _mapEdit(st, fn) {
-    (st.hist || (st.hist = [])).push(JSON.stringify({ e: st.edits, N: st.N, w: st.waterCols, s: st.seed, c: st.cell, p: st.popType }));
-    if (st.hist.length > 50) st.hist.shift();
-    fn();
-  }
-  _mapUndo(st) {
-    if (!st.hist || !st.hist.length) return false;
-    const p = JSON.parse(st.hist.pop());
-    st.edits = p.e; st.N = p.N; st.waterCols = p.w; st.seed = p.s; st.cell = p.c; st.popType = p.p;
-    return true;
-  }
-  // Painting. LOCK freezes whatever the generator put here so rerolls can't touch it — that is how
-  // you keep the two blocks you like and shuffle the rest of the city around them.
-  _paintCell(plan, st, r, c) {
-    const key = r + ',' + c;
-    const cur = plan.cells && plan.cells[r] && plan.cells[r][c];
-    this._mapEdit(st, () => {
-      if (st.paint === 'ERASE') { delete st.edits[key]; return; }
-      if (st.paint === 'LOCK') {
-        if (!cur) return;
-        // ⚠ Resolve the ANCHOR first, then toggle. Clicking a covered cell of a footprint used to
-        // lock the anchor but never unlock it, because the toggle tested the covered cell's own key
-        // — so a locked stadium could not be released except by hitting its top-left corner.
-        const ak = cur.ref ? cur.ref.join(',') : key;
-        const a = cur.ref ? plan.cells[cur.ref[0]][cur.ref[1]] : cur;
-        if (st.edits[ak] && st.edits[ak].lock) { delete st.edits[ak]; return; }   // click again to unlock
-        st.edits[ak] = { t: a.t, v: a.v || 0, lock: true };
-        return;
-      }
-      st.edits[key] = { t: st.paint, v: (Math.random() * (VARIANTS[st.paint] || 1)) | 0, sz: st.size || 0 };
-    });
-  }
-  _layouts() { try { return JSON.parse(localStorage.getItem('threshold_layouts_v1') || '{}'); } catch { return {}; } }
-  _saveLayouts(o) { try { localStorage.setItem('threshold_layouts_v1', JSON.stringify(o)); } catch {} }
-
-  // ---- LIVE 3D: the map maker builds the REAL city while you author it ------------------------
-  // The 2D preview is a schematic and always will be. A city generator you cannot SEE is not a
-  // tool, so LIVE mode raises the actual meshes behind the panel and hands you an orbit camera.
-  // Every edit rebuilds, debounced — the cost of a rebuild is a few milliseconds, so it can be
-  // immediate rather than a "preview" button you have to remember to press.
-  _liveOn(plan) {
-    const g = this.game; if (!g || !g.world) return;
-    this._mapLive = true;
-    this._mapCamState = this._mapCamState || { yaw: Math.PI * 0.25, pitch: 0.86, zoom: 260, x: 0, z: 0 };
-    g.mapCam = this._mapCamState;
-    this._titleWasShown = this.title && this.title.style.display !== 'none';
-    if (this.title) this.title.style.display = 'none';
-    if (this.root) this.root.style.display = 'none';         // radar, feed, kit chips — match furniture
-    g.world.setSim && g.world.setSim(false);
-    g.world.setFogEnabled(false);
-    // AUTHORING WANTS FULL RESOLUTION. The adaptive tier drops the pixel ratio to 0.72 after a
-    // slow frame, and a city rebuild is a slow frame — so the tool came up soft the moment you
-    // used it. Pin quality while the map maker owns the screen; restore whatever it was on exit.
-    this._qWas = g.world.qualityOverride;
-    g.world.qualityOverride = 2;
-    g.world._qTier = 2; g.world._applyQuality && g.world._applyQuality();
-    this.atlasEl.classList.add('live');
-    this._liveRebuild(plan, true);
-    this._bindLiveInput();
-  }
-  _liveOff() {
-    const g = this.game;
-    this._mapLive = false;
-    if (g) g.mapCam = null;
-    if (g && g.world) {
-      g.world.setFogEnabled(true);
-      g.world.qualityOverride = this._qWas === undefined ? null : this._qWas;
-      if (g.world.qualityOverride != null) { g.world._qTier = g.world.qualityOverride; g.world._applyQuality && g.world._applyQuality(); }
-    }
-    this.atlasEl.classList.remove('live');
-    if (this.root) this.root.style.display = '';
-    if (this._titleWasShown && this.title) this.title.style.display = '';
-    if (this._liveEl) { this._liveEl.remove(); this._liveEl = null; }
-  }
-  _liveRebuild(plan, now) {
-    if (!this._mapLive || !plan || !plan.cells) return;
-    clearTimeout(this._liveT);
-    const go = () => {
-      const g = this.game; if (!g || !g.world) return;
-      const t0 = performance.now();
-      g.world.rebuildCity(plan);
-      g.world.setSim && g.world.setSim(false);
-      g.world.setFogEnabled(false);
-      // frame the whole plan the first time; afterwards keep whatever view you were working in
-      if (this._liveFit !== plan.arena) { this._mapCamState.zoom = plan.arena * 0.85; this._liveFit = plan.arena; }
-      this._liveMs = performance.now() - t0;
-      const st = this.atlasEl.querySelector('#atLiveMs');
-      if (st) st.textContent = `${g.world.cover.length} COVER · ${this._liveMs.toFixed(1)}ms`;
-    };
-    if (now) go(); else this._liveT = setTimeout(go, 90);
-  }
-  // Drag to orbit · right-drag or shift-drag to pan · wheel to zoom. The capture layer sits BEHIND
-  // the panel, so the controls stay clickable while the rest of the screen drives the camera.
-  _bindLiveInput() {
-    if (this._liveEl) return;
-    const el = document.createElement('div');
-    el.className = 'maplive';
-    document.body.appendChild(el);
-    this._liveEl = el;
-    const C = this._mapCamState;
-    let drag = null;
-    // ⚠ setPointerCapture throws if the pointer is already gone (a stray synthetic event, a mouse
-    // released outside the window). Camera drag must never be able to throw into the frame loop.
-    el.onpointerdown = (e) => { drag = { x: e.clientX, y: e.clientY, pan: e.button === 2 || e.shiftKey }; try { el.setPointerCapture(e.pointerId); } catch {} };
-    el.onpointerup = (e) => { drag = null; try { el.releasePointerCapture(e.pointerId); } catch {} };
-    el.oncontextmenu = (e) => e.preventDefault();
-    el.onpointermove = (e) => {
-      if (!drag) return;
-      const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
-      drag.x = e.clientX; drag.y = e.clientY;
-      if (drag.pan) {
-        const k = C.zoom / 420, cy = Math.cos(C.yaw), sy = Math.sin(C.yaw);
-        C.x -= (dx * cy - dy * sy) * k; C.z -= (dx * sy + dy * cy) * k;
-      } else { C.yaw -= dx * 0.006; C.pitch = Math.max(0.12, Math.min(1.52, C.pitch + dy * 0.005)); }
-    };
-    el.onwheel = (e) => { e.preventDefault(); C.zoom = Math.max(40, Math.min(1400, C.zoom * (e.deltaY > 0 ? 1.12 : 0.89))); };
-  }
-
-  // ---- VALIDATION: the checks that found the real bugs, run in the tool ------------------------
-  // A dev tool should tell you when it has produced something broken. These are exactly the
-  // assertions the headless sweep runs, so the panel and the test can never disagree.
-  _validatePlan(plan) {
-    const out = [];
-    if (!plan || !plan.cells) return out;
-    const N = plan.N, C = plan.cells;
-    let landlocked = 0, orphan = 0, holes = 0, offgrid = 0, nosock = 0, structural = 0;
-    for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
-      const cell = C[r][c];
-      if (!cell) { out.push({ bad: 1, t: `EMPTY CELL at ${r},${c}` }); continue; }
-      if (!cell.edge || !cell.nb) nosock++;
-      if (cell.ref) {
-        const a = C[cell.ref[0]] && C[cell.ref[0]][cell.ref[1]];
-        if (!a || a.ref || a.t !== cell.t) orphan++;
-        continue;
-      }
-      if (cell.t !== 'water' && cell.t !== 'park' && cell.t !== 'plaza' && cell.t !== 'farmland') structural++;
-      const fh = cell.fh || 1, fw = cell.fw || 1;
-      if (r + fh > N || c + fw > N) offgrid++;
-      else for (let i = 0; i < fh; i++) for (let j = 0; j < fw; j++) {
-        if (!i && !j) continue;
-        const o = C[r + i][c + j];
-        if (!o || !o.ref || o.ref[0] !== r || o.ref[1] !== c) holes++;
-      }
-      // ⚠ the SAME rule the generator uses (NO_RESCUE) — open country is not landlocked, it is
-      // open country, and a validator that doesn't know that reports 32 phantom problems.
-      if (NO_RESCUE[cell.t] || !plan.roads) continue;
-      if (!(plan.roads.h[r][c] || plan.roads.h[r + 1][c] || plan.roads.v[r][c] || plan.roads.v[r][c + 1])) landlocked++;
-    }
-    if (landlocked) out.push({ bad: 1, t: `${landlocked} LANDLOCKED — no road on any side` });
-    if (orphan) out.push({ bad: 1, t: `${orphan} ORPHANED footprint cells` });
-    if (holes) out.push({ bad: 1, t: `${holes} HOLES in a footprint` });
-    if (offgrid) out.push({ bad: 1, t: `${offgrid} footprints RUN OFF the grid` });
-    if (nosock) out.push({ bad: 1, t: `${nosock} cells have NO SOCKETS` });
-    out.push({ bad: 0, t: `${structural} structural · ${N * N} cells · ${plan.arena * 2}u across` });
-    return out;
-  }
-
-  _drawPlanPreview(cvs, plan) {
-    const x = cvs.getContext('2d'); const S = cvs.width;
-    x.clearRect(0, 0, S, S);
-    x.fillStyle = '#0c0e14'; x.fillRect(0, 0, S, S);
-    if (!plan.cells) {   // the flagship — stylized card
-      x.fillStyle = '#ffd97a'; x.font = '800 15px Rajdhani,sans-serif'; x.textAlign = 'center';
-      x.fillText('THE WHITE CITY', S / 2, S / 2 - 8);
-      x.fillStyle = '#8b8577'; x.font = '9px Consolas,monospace';
-      x.fillText('FLAGSHIP THEATER — HAND-BUILT', S / 2, S / 2 + 10);
-      return;
-    }
-    // ⚠ Canvas 2D cannot read CSS tokens — every colour in here must be a literal.
-    const N = plan.N, pad = 12, cs = (S - pad * 2) / N, gap = Math.max(2, cs * 0.1);
-    for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
-      const cell = plan.cells[r][c];
-      const px = pad + c * cs, py = pad + r * cs;
-      if (!cell) { x.fillStyle = '#181a20'; x.fillRect(px + gap / 2, py + gap / 2, cs - gap, cs - gap); continue; }
-      if (cell.t === 'water') { x.fillStyle = '#2a5a78'; x.fillRect(px, py, cs, cs); continue; }
-      if (cell.ref) continue;                                   // the anchor paints the whole footprint
-      const fw = cell.fw || 1, fh = cell.fh || 1;
-      x.fillStyle = (TILE_INFO[cell.t] ? TILE_INFO[cell.t].c : '#6a6458') + 'cc';
-      x.fillRect(px + gap / 2, py + gap / 2, cs * fw - gap, cs * fh - gap);
-      if (fw > 1 || fh > 1) {                                   // a multi-cell structure reads as ONE box
-        x.strokeStyle = 'rgba(20,18,12,.6)'; x.lineWidth = 2;
-        x.strokeRect(px + gap / 2, py + gap / 2, cs * fw - gap, cs * fh - gap);
-      }
-      x.fillStyle = 'rgba(0,0,0,.55)'; x.font = `700 ${Math.max(7, cs * 0.16)}px Consolas,monospace`; x.textAlign = 'center';
-      x.fillText((cell.t[0] + (cell.v ?? '')).toUpperCase(), px + cs * fw / 2, py + cs * fh / 2 + 3);
-      if (cell.lock) { x.fillStyle = '#f5b21a'; x.font = `${Math.max(8, cs * 0.2)}px sans-serif`; x.textAlign = 'left'; x.fillText('🔒', px + 2, py + cs * 0.24); }
-      else if (cell.painted) { x.fillStyle = '#f5b21a'; x.fillRect(px + gap / 2, py + gap / 2, 4, 4); }
-    }
-    // THE ROAD GRAPH, drawn as the graph it is: thickness = class, absent = no road at all. This is
-    // the whole point of the rewrite made visible — you can SEE the dead ends and the dirt tracks.
-    if (plan.roads) {
-      // values chosen to READ on the dark panel — the first pass used real asphalt greys and the
-      // whole graph was invisible, which defeated the point of drawing it
-      const W = [0, 1.4, 2.6, 4, 5.4], COL = [null, '#a08a5e', '#8d8676', '#b8ad93', '#e0d3ad'];
-      const at = (i) => pad + i * cs;
-      for (let r = 0; r <= N; r++) for (let c = 0; c < N; c++) {
-        const k = plan.roads.h[r][c]; if (!k) continue;
-        x.strokeStyle = COL[k]; x.lineWidth = W[k];
-        x.beginPath(); x.moveTo(at(c), at(r)); x.lineTo(at(c + 1), at(r)); x.stroke();
-      }
-      for (let r = 0; r < N; r++) for (let c = 0; c <= N; c++) {
-        const k = plan.roads.v[r][c]; if (!k) continue;
-        x.strokeStyle = COL[k]; x.lineWidth = W[k];
-        x.beginPath(); x.moveTo(at(c), at(r)); x.lineTo(at(c), at(r + 1)); x.stroke();
-      }
-    }
-    x.fillStyle = '#ffd97a'; x.font = '800 12px Rajdhani,sans-serif'; x.textAlign = 'left';
-    x.fillText(plan.name.toUpperCase(), pad, S - 4);
-  }
+  // --- THE ATLAS — extracted to engine/atlasUI.js (one module, two mounts: this in-game screen
+  // and the standalone atlas.html tool). The hud owns only THEATER persistence and the game-side
+  // furniture: hiding the title/root and handing the orbit camera to game.update via game.mapCam.
   showAtlas() {
-    const cities = cityList();
-    const st = this._atlasSt || (this._atlasSt = {
-      q: '', type: 'ALL', sel: this.theater.flagship ? -1 : (this.theater.cityId ?? -1),
-      seed: this.theater.seed || 1, paint: 'residential', edits: { ...(this.theater.edits || {}) },
-      N: this.theater.N || 0, waterCols: this.theater.waterCols, cell: this.theater.cell || 0,
-      popType: this.theater.popType || null, hist: [],
-    });
-    const TYPES = ['ALL', 'Military', 'Political', 'Industrial', 'Company', 'Seaport', 'Resort', 'Mining', 'Educational', 'Temple'];
-    const render = () => {
-      const q = st.q.toLowerCase();
-      let L = cities.filter(c => (st.type === 'ALL' || c.types.includes(st.type)) && (!q || (c.name + ' ' + c.country).toLowerCase().includes(q)));
-      const shown = L.slice(0, 28);
-      const selCity = st.sel >= 0 ? cities[st.sel] : null;
-      const plan = st.sel < 0 ? thresholdPlan()
-        : applyPlanEdits(generatePlan(selCity, st.seed, { N: st.N || undefined, waterCols: st.waterCols, cell: st.cell, popType: st.popType }), st.edits);
-      this.atlasEl.innerHTML = `<div class="obox" style="width:min(940px,96vw)">
-        <div class="rkhead"><div class="n9" style="background:#2a5a78">🗺</div>
-          <div class="rt"><b>CITY ATLAS — THEATER SELECT</b><span>the world sheet · ${cities.length} registered cities</span></div>
-          <div class="rkmeta">TILES: ${Object.keys(TILE_INFO).length} TYPES · 2–3 VARIANTS<br/>CELL ${plan.cell || CELL}u · ${plan.N}×${plan.N} · ${plan.arena * 2}u ACROSS</div></div>
-        <div class="atwrap">
-          <div class="atlist">
-            <input id="atQ" placeholder="QUERY: city or country…" value="${esc(st.q)}">
-            <div class="atchips">${TYPES.map(t => `<span class="c3${st.type === t ? ' on' : ''}" data-at="${t}">${t.toUpperCase()}</span>`).join('')}</div>
-            <div class="atrows">
-              <div class="atrow${st.sel < 0 ? ' sel' : ''}" data-ci="-1"><div><div class="an3">THE WHITE CITY <span style="font-size:var(--t-tiny);color:var(--gold)">★ FLAGSHIP</span></div><div class="ac3">Threshold Treaty Zone — the hand-built original</div></div><div class="apop">CITY<br/>SAFE 62</div></div>
-              ${shown.map(c => `<div class="atrow${st.sel === c.id ? ' sel' : ''}" data-ci="${c.id}">
-                <div><div class="an3">${esc(c.name)}</div><div class="ac3">${esc(c.country)} · ${esc(c.types.join(' / ') || '—')}</div>
-                <div class="atags">${c.types.map(t => `<i style="background:${(TILE_INFO[t.toLowerCase()] || {}).c || 'var(--text-6)'}" title="${esc(t)}"></i>`).join('')}</div></div>
-                <div class="apop">${esc(c.popType.toUpperCase())}<br/>CRIME ${c.crime}</div>
-              </div>`).join('')}
-              ${L.length > 28 ? `<div class="ac3" style="text-align:center;padding:4px">… ${L.length - 28} more — refine the query</div>` : ''}
-            </div>
-          </div>
-          <div class="atprev">
-            <canvas id="atCv" width="260" height="260"></canvas>
-            <div class="atmeta" id="atMeta"></div>
-            <div class="atbtns">
-              <div class="atpal" id="atPal"></div>
-              <div class="atsize" id="atSize"></div>
-              <div class="atpalhint">Click the map to paint · <b>🔒 LOCK</b> freezes a cell against rerolls · painted cells survive everything</div>
-              <div class="atstep">
-                <span>GRID</span>
-                <button class="atsm" data-step="N-1">−</button><b id="atNv">${plan.N}×${plan.N}</b><button class="atsm" data-step="N1">+</button>
-                <span style="margin-left:10px">COAST</span>
-                <button class="atsm" data-step="W-1">−</button><b>${plan.waterCols} COL</b><button class="atsm" data-step="W1">+</button>
-              </div>
-              <div class="atstep">
-                <span>CELL</span>
-                <button class="atsm" data-step="C-8">−</button><b>${plan.cell}u</b><button class="atsm" data-step="C8">+</button>
-                <span class="atdim">${plan.arena * 2}u ACROSS · ${(plan.arena * 2 * 0.19).toFixed(0)}m</span>
-              </div>
-              <div class="atpop">${POP_TYPES.map(p => `<span class="c3${plan.popType === p ? ' on' : ''}" data-pop="${esc(p)}">${esc(p.toUpperCase())}</span>`).join('')}</div>
-              <div class="atval">${this._validatePlan(plan).map(v => `<div class="${v.bad ? 'vbad' : 'vok'}">${v.bad ? '⚠' : '✓'} ${esc(v.t)}</div>`).join('')}</div>
-              <div class="atrow2">
-                <button class="odone oghost" id="atSeed">⟳ SEED ${st.seed}</button>
-                <button class="odone oghost" id="atUndo" ${st.hist && st.hist.length ? '' : 'disabled'}>↶ UNDO${st.hist && st.hist.length ? ' ' + st.hist.length : ''}</button>
-              </div>
-              <div class="atrow2">
-                <button class="odone oghost" id="atClr">✕ ${Object.keys(st.edits).length} EDIT${Object.keys(st.edits).length === 1 ? '' : 'S'}</button>
-                <button class="odone oghost" id="atLay">💾 LAYOUTS ${Object.keys(this._layouts()).length}</button>
-              </div>
-              <button class="odone${this._mapLive ? ' on' : ''}" id="atLive">${this._mapLive ? '⏹ EXIT LIVE 3D' : '🎥 BUILD IT — LIVE 3D'}</button>
-              ${this._mapLive ? `<div class="atpalhint" id="atLiveMs">building…</div><div class="atpalhint">drag orbit · right-drag or shift-drag pan · wheel zoom</div>` : ''}
-              <button class="odone" id="atSet">📍 SET AS THEATER</button>
-              <div class="atrow2">
-                <button class="odone oghost" id="atGal">🧱 PROVING GROUND</button>
-                <button class="odone oghost" id="atClose">CLOSE</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>`;
-      this._drawPlanPreview(this.atlasEl.querySelector('#atCv'), plan);
-      this.atlasEl.querySelector('#atMeta').innerHTML = st.sel < 0
-        ? `<b>THE WHITE CITY</b> — 5×5 flagship grid<br/>Four districts + harbor + the bridge<br/>Hand-tuned; the planner's benchmark`
-        : `<b>${esc(selCity.name.toUpperCase())}</b>, ${esc(selCity.country)}<br/>${esc(popLabel(selCity.popType, selCity.pop))}<br/>TYPES: ${esc(selCity.types.join(' · ') || 'GENERAL')}<br/>CRIME ${selCity.crime} · SAFETY ${selCity.safety} · GRID ${plan.N}×${plan.N}<br/>POLICE RESPONSE ~${Math.round(Math.max(5, Math.min(24, 26 - selCity.safety * 0.25)))}s ${selCity.safety >= 60 ? '· RAPID' : selCity.safety <= 30 ? '· SLOW' : ''}`;
-      const $ = (s) => this.atlasEl.querySelector(s);
-      $('#atQ').oninput = (e) => { st.q = e.target.value; render(); setTimeout(() => { const i = $('#atQ'); i.focus(); i.setSelectionRange(i.value.length, i.value.length); }, 0); };
-      this.atlasEl.querySelectorAll('[data-at]').forEach(ch => ch.onclick = () => { st.type = ch.dataset.at; render(); });
-      this.atlasEl.querySelectorAll('[data-ci]').forEach(row => row.onclick = () => { st.sel = +row.dataset.ci; st.seed = 1; render(); });
-      // --- the tile palette: every declared tile plus water, lock and an eraser. Derived from
-      // TILE_INFO, so a new tile type shows up here for free and the palette can never go stale.
-      const pal = $('#atPal');
-      if (pal) {
-        pal.innerHTML = Object.keys(TILE_INFO).map(t => {
-          const L = TILE_SIZES[t];
-          const tip = L ? ` — ${L.length} SIZES: ${L.map(z => z.f[0] + '×' + z.f[1]).join(' / ')}` : '';
-          return `<span class="atsw${st.paint === t ? ' on' : ''}" data-paint="${t}" title="${esc(TILE_INFO[t].label)}${tip}" style="--sw:${TILE_INFO[t].c}">${L ? '<i>▦</i>' : ''}</span>`;
-        }).join('')
-          + `<span class="atsw${st.paint === 'water' ? ' on' : ''}" data-paint="water" title="WATER — paint the sea" style="--sw:#2a5a78"></span>`
-          + `<span class="atsw era${st.paint === 'LOCK' ? ' on' : ''}" data-paint="LOCK" title="LOCK — freeze this cell against rerolls">🔒</span>`
-          + `<span class="atsw era${st.paint === 'ERASE' ? ' on' : ''}" data-paint="ERASE" title="Erase — hand the cell back to the generator">✕</span>`;
-        pal.querySelectorAll('[data-paint]').forEach(sw => sw.onclick = () => {
-          st.paint = sw.dataset.paint;
-          const L = TILE_SIZES[st.paint];                       // default to the middle rung
-          st.size = L ? Math.floor((L.length - 1) / 2) : 0;
-          render();
-        });
-      }
-      // --- THE SIZE PICKER. Only shown for a type that HAS a ladder — a park has one size and
-      // pretending otherwise would be a lie. It is how you author "a small port here, a container
-      // terminal there" rather than taking whatever the population tier happens to earn.
-      const szEl = $('#atSize');
-      if (szEl) {
-        const L = TILE_SIZES[st.paint];
-        szEl.innerHTML = !L ? '' : `<span>SIZE</span>` + L.map((z, i) =>
-          `<span class="c3${(st.size || 0) === i ? ' on' : ''}" data-size="${i}" title="${z.f[0]}×${z.f[1]} CELLS">${esc(z.n)}</span>`).join('');
-        szEl.querySelectorAll('[data-size]').forEach(b2 => b2.onclick = () => { st.size = +b2.dataset.size; render(); });
-      }
-      // --- click the preview to paint that cell
-      const cv = $('#atCv');
-      if (cv && st.sel >= 0 && plan.cells) {
-        cv.style.cursor = 'crosshair';
-        cv.onclick = (ev) => {
-          const b = cv.getBoundingClientRect();
-          const S = cv.width, pad = 12, N = plan.N, cs = (S - pad * 2) / N;
-          const px = (ev.clientX - b.left) * (S / b.width), py = (ev.clientY - b.top) * (S / b.height);
-          const c = Math.floor((px - pad) / cs), r = Math.floor((py - pad) / cs);
-          if (r < 0 || c < 0 || r >= N || c >= N) return;
-          this._paintCell(plan, st, r, c); render();
-        };
-      }
-      $('#atClr').onclick = () => { this._mapEdit(st, () => { st.edits = {}; }); render(); };
-      $('#atSeed').onclick = () => { this._mapEdit(st, () => { st.seed++; }); render(); };
-      $('#atUndo').onclick = () => { if (this._mapUndo(st)) render(); };
-      // GRID RESIZE + COASTLINE. Both go through the plan's override channel, so the generator
-      // re-runs at the new size and your painted cells are re-applied on top (clipped if they now
-      // fall outside the grid — an edit is never silently destroyed by a resize you can undo).
-      this.atlasEl.querySelectorAll('[data-step]').forEach(b => b.onclick = () => {
-        const d = b.dataset.step, k = d[0], dv = +d.slice(1);
-        this._mapEdit(st, () => {
-          if (k === 'N') st.N = Math.max(2, Math.min(9, (st.N || plan.N) + dv));
-          else if (k === 'C') st.cell = Math.max(CELL_RANGE[0], Math.min(CELL_RANGE[1], (st.cell || plan.cell) + dv));
-          else st.waterCols = Math.max(0, Math.min(3, (st.waterCols != null ? st.waterCols : plan.waterCols) + dv));
-        });
-        render();
+    if (!this._atlasUI) {
+      this._atlasUI = mountAtlas(document.body, {
+        world: this.game.world, game: this.game,
+        theater: this.theater,
+        feed: (m, c) => this.feed(m, c),
+        onTheater: (t, label) => {
+          this.theater = t;
+          try { localStorage.setItem('threshold_theater_v1', JSON.stringify(t)); } catch {}
+          const tt = this.title.querySelector('#termTheater'); if (tt) tt.textContent = label;
+          this.feed('Theater set — ' + label, '#7fb0d0');
+        },
+        onProvingGround: () => { this.theater = { gallery: true }; this.onProvingGround && this.onProvingGround(); },
+        onLiveChange: (on, cam) => {
+          const g = this.game;
+          if (on) {
+            g.mapCam = cam;
+            this._titleWasShown = this.title && this.title.style.display !== 'none';
+            if (this.title) this.title.style.display = 'none';
+            if (this.root) this.root.style.display = 'none';   // radar, feed, kit chips — match furniture
+          } else {
+            g.mapCam = null;
+            if (this.root) this.root.style.display = '';
+            if (this._titleWasShown && this.title) this.title.style.display = '';
+          }
+        },
       });
-      // POPULATION TYPE is a generator input, not just a label — it sets the grid AND flips the
-      // rural switch, so this is the control that lets you author a hamlet on any row of the sheet.
-      this.atlasEl.querySelectorAll('[data-pop]').forEach(b => b.onclick = () => {
-        this._mapEdit(st, () => { st.popType = b.dataset.pop === (selCity && selCity.popType) ? null : b.dataset.pop; st.N = 0; });
-        render();
-      });
-      $('#atLive').onclick = () => {
-        if (this._mapLive) this._liveOff(); else this._liveOn(plan);
-        render();
-      };
-      $('#atLay').onclick = () => this._showLayouts(st, render);
-      $('#atSet').onclick = () => {
-        this.theater = st.sel < 0 ? { flagship: true, seed: 1 }
-          : { cityId: st.sel, seed: st.seed, edits: { ...st.edits }, N: st.N || 0, waterCols: st.waterCols, cell: st.cell || 0, popType: st.popType || null };
-        try { localStorage.setItem('threshold_theater_v1', JSON.stringify(this.theater)); } catch {}
-        this.atlasEl.style.display = 'none';
-        const tt = this.title.querySelector('#termTheater'); if (tt) tt.textContent = st.sel < 0 ? 'THE WHITE CITY' : cities[st.sel].name.toUpperCase();
-        this.feed('Theater set — ' + (st.sel < 0 ? 'THE WHITE CITY' : cities[st.sel].name.toUpperCase()), '#7fb0d0');
-      };
-      $('#atGal').onclick = () => { this.theater = { gallery: true }; this.atlasEl.style.display = 'none'; this.onProvingGround && this.onProvingGround(); };
-      $('#atClose').onclick = () => { this.atlasEl.style.display = 'none'; this._liveOff(); };
-      if (this._mapLive) this._liveRebuild(plan);      // authoring IS the preview — every edit rebuilds
-      // Ctrl+Z anywhere in the atlas — the shortcut people try first
-      this.atlasEl.onkeydown = (e) => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); if (this._mapUndo(st)) render(); } };
-      this.atlasEl.tabIndex = -1;
-    };
-    render();
-    this.atlasEl.style.display = 'flex';
-    this.atlasEl.focus();
+      this.atlasEl = this._atlasUI.el;      // overlayOpen()/closeOverlays() read this
+    }
+    this._atlasUI.open();
   }
+  // Headless recipes and older callers reach the validator here; the ONE implementation lives in
+  // data/cityplan.js (exported), so the tool and the sweep can never disagree.
+  _validatePlan(plan) { return validatePlan(plan); }
 
-  // ---- NAMED LAYOUTS + PLAN JSON --------------------------------------------------------------
-  // A theater used to be ONE persisted slot: you could not keep two versions of a city, and there
-  // was no way to move a map you liked to another machine. A layout is the whole authored state —
-  // city, seed, grid, coastline and every painted cell — saved under a name, and the same object
-  // is what the JSON box exports and imports.
-  _showLayouts(st, rerender) {
-    const L = this._layouts();
-    const cities = cityList();
-    const cur = { cityId: st.sel, seed: st.seed, N: st.N || 0, waterCols: st.waterCols, cell: st.cell || 0, popType: st.popType || null, edits: st.edits };
-    const el = this.layoutEl || (this.layoutEl = (() => { const d = document.createElement('div'); d.className = 'lswovl'; d.id = 'hLayouts'; document.body.appendChild(d); return d; })());
-    const draw = () => {
-      const names = Object.keys(this._layouts());
-      el.innerHTML = `<div class="obox" style="width:min(620px,94vw)">
-        <div class="rkhead"><div class="n9" style="background:#5a4a2a">💾</div>
-          <div class="rt"><b>SAVED LAYOUTS</b><span>name a map · reload it · move it between machines</span></div></div>
-        <div class="lyrows">${names.length ? names.map(n => `<div class="lyrow"><div><b>${esc(n)}</b><span>${esc((cities[this._layouts()[n].cityId] || {}).name || '—')} · SEED ${this._layouts()[n].seed} · ${Object.keys(this._layouts()[n].edits || {}).length} EDITS</span></div>
-          <div><button class="odone oghost lysm" data-load="${esc(n)}">LOAD</button><button class="odone oghost lysm" data-del="${esc(n)}">✕</button></div></div>`).join('') : '<div class="ac3" style="padding:10px;text-align:center">No layouts saved yet.</div>'}</div>
-        <div class="lyname"><input id="lyN" placeholder="name this layout…"><button class="odone" id="lySave">SAVE CURRENT</button></div>
-        <div class="lyjson"><div class="lylbl">PLAN JSON — copy it out, paste one in</div>
-          <textarea id="lyJ" spellcheck="false">${esc(JSON.stringify(cur))}</textarea>
-          <div class="atrow2"><button class="odone oghost" id="lyCopy">📋 COPY</button><button class="odone oghost" id="lyImp">⇩ IMPORT PASTED</button></div></div>
-        <button class="odone oghost" id="lyClose">CLOSE</button>
-      </div>`;
-      const $ = (s) => el.querySelector(s);
-      el.querySelectorAll('[data-load]').forEach(b => b.onclick = () => {
-        const o = this._layouts()[b.dataset.load]; if (!o) return;
-        this._mapEdit(st, () => { st.sel = o.cityId; st.seed = o.seed; st.N = o.N || 0; st.waterCols = o.waterCols; st.cell = o.cell || 0; st.popType = o.popType || null; st.edits = { ...(o.edits || {}) }; });
-        el.style.display = 'none'; rerender();
-      });
-      el.querySelectorAll('[data-del]').forEach(b => b.onclick = () => { const o = this._layouts(); delete o[b.dataset.del]; this._saveLayouts(o); draw(); });
-      $('#lySave').onclick = () => {
-        const n = ($('#lyN').value || '').trim(); if (!n) return;
-        const o = this._layouts(); o[n] = cur; this._saveLayouts(o); draw(); rerender();
-        this.feed('Layout saved — ' + n.toUpperCase(), '#7fb0d0');
-      };
-      $('#lyCopy').onclick = () => { const t = $('#lyJ'); t.select(); try { document.execCommand('copy'); this.feed('Plan JSON copied', '#7fb0d0'); } catch {} };
-      $('#lyImp').onclick = () => {
-        try {
-          const o = JSON.parse($('#lyJ').value);
-          if (o.cityId == null || !o.edits) throw new Error('not a plan');
-          this._mapEdit(st, () => { st.sel = o.cityId; st.seed = o.seed || 1; st.N = o.N || 0; st.waterCols = o.waterCols; st.cell = o.cell || 0; st.popType = o.popType || null; st.edits = { ...o.edits }; });
-          el.style.display = 'none'; rerender(); this.feed('Plan imported', '#7fb0d0');
-        } catch (err) { this.feed('That is not a plan JSON — ' + err.message, '#e05a4a'); }
-      };
-      $('#lyClose').onclick = () => { el.style.display = 'none'; };
-    };
-    draw();
-    el.style.display = 'flex';
-  }
 
   // ---- the KMK 9 SPORTS DESK power board — every match (AI or piloted) moves the book ----
   showRankings() {
@@ -1907,7 +1421,7 @@ export class HUD {
   completeTutorial() { this.hideTutorial(); }
   hideTutorial() { if (this.el.tut) this.el.tut.style.display = 'none'; }
   overlayOpen() { return [this.optionsEl, this.howtoEl, this.rankingsEl, this.bracketEl, this.atlasEl, this.codexEl, this.damageEl].some(e => e && e.style.display === 'flex'); }
-  closeOverlays() { for (const e of [this.optionsEl, this.howtoEl, this.rankingsEl, this.atlasEl, this.codexEl, this.damageEl]) if (e) e.style.display = 'none'; }   // the bracket closes only through its own buttons
+  closeOverlays() { if (this._atlasUI) this._atlasUI.close(); for (const e of [this.optionsEl, this.howtoEl, this.rankingsEl, this.atlasEl, this.codexEl, this.damageEl]) if (e) e.style.display = 'none'; }   // the bracket closes only through its own buttons
 
   // ================= THE CODEX — the full case file on one superweapon =================
   // Every line is DERIVED from live data (kit numbers, the Elo book, AI doctrine, the registry)
