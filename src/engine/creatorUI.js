@@ -149,6 +149,8 @@ export class CreatorUI {
     this.root = document.createElement('div'); this.root.id = 'origin'; document.body.appendChild(this.root);
     this.open = false;
     this._esc = (e) => { if (e.code === 'Escape' && this.open) { e.stopPropagation(); this.close(false); } };
+    // ⚠ construct-once singleton: this capturing listener has no removal path by design —
+    // never instantiate a second CreatorUI (review note; add destroy() if that ever changes)
     addEventListener('keydown', this._esc, true);
   }
 

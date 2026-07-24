@@ -1107,8 +1107,8 @@ export class Game {
     if (!this.ms.firstBlood) { this.ms.firstBlood = true; text = 'FIRST BLOOD'; }
     else if (killer.lastKillT < 2.2) { killer._multi = (killer._multi || 1) + 1; const m = killer._multi; text = m >= 4 ? 'QUAD KO!' : m === 3 ? 'TRIPLE KO!' : 'DOUBLE KO!'; }
     else { killer._multi = 1; const s = killer.streak; if (s === 3) text = 'RAMPAGE'; else if (s === 5) text = 'UNSTOPPABLE'; else if (s >= 7) text = 'GODLIKE'; if (text) sub = killer.name + ' · ' + s + ' streak'; }
-    if (text) this.hud.announce(text, sub, killer.def.colors.accent);
-    if (killer === this.player && this.hud.scorePopup) this.hud.scorePopup(victim.pos, bonus);
+    if (text && this.hud) this.hud.announce(text, sub, killer.def.colors.accent);
+    if (killer === this.player && this.hud && this.hud.scorePopup) this.hud.scorePopup(victim.pos, bonus);
   }
 
   // ---------- energy clarity ----------

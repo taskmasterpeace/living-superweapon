@@ -8,7 +8,7 @@ Gravity-control and black-hole are two different entries — never one vague "gr
 
 ```js
 {
-  type: 'beam',              // mechanical family — one of the 20 registered TYPES (below)
+  type: 'beam',              // mechanical family — one of the 26 registered TYPES (below)
   name: 'Heat Ray',
   // --- cost model (pick one) ---
   cost: 4, cd: 0.3,          // ki + cooldown (default)

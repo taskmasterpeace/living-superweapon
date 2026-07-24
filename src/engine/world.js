@@ -6,7 +6,7 @@ import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPa
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { clamp, damp, setBands } from '../core/util.js';
-import { buildTiles } from './citytiles.js';
+import { buildTiles , scaleBoxUV} from './citytiles.js';
 import { CELL, districtNameAt, thresholdPlan, ROAD, junctionAt, WATER_DEPTHS } from '../data/cityplan.js';
 import { mulberry } from '../data/news.js';
 
@@ -226,15 +226,7 @@ export class World {
     const roofMat = roofMats[0];
     // one window ROW ≈ 17 units — a REAL ~3.2m floor next to the 9.6u (1.8m) heroes. `bay` is the
     // height of the whole texture TILE, which draws several rows (see the note on mkWin above).
-    const scaleBoxUV = (geo, w, h, d, bay = 68) => {
-      const uv = geo.attributes.uv, B = bay, R = 16;
-      const f = [[d / B, h / B], [d / B, h / B], [w / R, d / R], [w / R, d / R], [w / B, h / B], [w / B, h / B]];
-      for (let fi = 0; fi < 6; fi++) for (let v = 0; v < 4; v++) {
-        const i = fi * 4 + v;
-        uv.setXY(i, uv.getX(i) * f[fi][0], uv.getY(i) * f[fi][1]);
-      }
-      uv.needsUpdate = true;
-    };
+    // ONE scaleBoxUV now — imported from citytiles (the review flagged the hand-synced twin)
     // FOUR NAMED DISTRICTS at city scale (96u block cells; total cover ≤20 = fog cap).
     // style: 0/1 = COMMERCIAL glass · 2 = RESIDENTIAL warm stone · 3 = INDUSTRIAL steel ·
     // 4 = MILITARY olive · 5 = the BRIDGE deck (standable — block-top physics is free)

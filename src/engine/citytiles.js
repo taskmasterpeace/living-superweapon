@@ -21,7 +21,7 @@ const tint = (base, toward, k) => '#' + _c.set(base).lerp(new THREE.Color(toward
 // floors into seventeen units: every storey in the game was ~0.8m tall, which is why a one-storey
 // farmhouse rendered as a four-storey apartment block and towers read as toys. Each window
 // material now declares the world height of its tile (`userData.bay`) and that is what we divide by.
-function scaleBoxUV(geo, w, h, d, bay = 17) {
+export function scaleBoxUV(geo, w, h, d, bay = 17) {
   const uv = geo.attributes.uv, B = bay, R = 16;
   const f = [[d / B, h / B], [d / B, h / B], [w / R, d / R], [w / R, d / R], [w / B, h / B], [w / B, h / B]];
   for (let fi = 0; fi < 6; fi++) for (let v = 0; v < 4; v++) { const i = fi * 4 + v; uv.setXY(i, uv.getX(i) * f[fi][0], uv.getY(i) * f[fi][1]); }

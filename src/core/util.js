@@ -49,8 +49,16 @@ export function mix(hex1, hex2, t) {
 // Per-city altitude thresholds. world.rebuildCity pushes the plan's derived bands here, so a city
 // with a 250u landmark spire has a taller BUILDING band and SKY stays a clean lane above the
 // tallest roof. Lives in util (not entity) because entity imports world and world must set this.
-export const BANDS = { ground: 8, building: 150, sky: 260, ceiling: 320, shallows: -10, depths: -26 };
+const BAND_DEFAULTS = { ground: 8, building: 150, sky: 260, ceiling: 320, shallows: -10, depths: -26 };   // ONE copy (the reset used to repeat it verbatim)
+export const BANDS = { ...BAND_DEFAULTS };
 export function setBands(b) {
-  Object.assign(BANDS, { ground: 8, building: 150, sky: 260, ceiling: 320, shallows: -10, depths: -26 }, b || {});
+  Object.assign(BANDS, BAND_DEFAULTS, b || {});
 }
 export const bandOf = (y) => y < BANDS.ground ? 0 : y < BANDS.building ? 1 : y < BANDS.sky ? 2 : 3;
+
+// seeded PRNG (mulberry32) — moved from data/news.js: the city planner and the world both
+// need it, and a planner importing from the news desk was a dependency inversion (review find).
+export function mulberry(seed) {
+  let a = seed >>> 0;
+  return () => { a |= 0; a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+}

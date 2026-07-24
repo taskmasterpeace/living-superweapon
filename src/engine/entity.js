@@ -146,7 +146,7 @@ const BUILDS = {
   trench: { crest: 1, pauldron: 1, weaponR: 'spear' }, decibel: { band: 1 }, coldsnap: { helmet: 1, visor: 1, gun: 1 },
   foundry: { tank: 1, helmet: 1, pauldron: 2, gaunt: 1, weaponR: 'axe' }, talon: { band: 1, weaponL: 'knife', weaponR: 'knife' },
   abeo: { helmet: 1, pauldron: 2, gaunt: 1 }, jelani: { band: 1, gaunt: 1 }, kamaria: { hood: 1, collar: 1 },
-  ramiro: { coat: 1, band: 1, weaponR: 'shotgun' }, jawah: { collar: 1 }, moses: { crest: 1, gaunt: 1 },
+  ramiro: { coat: 1, band: 1, weaponR: 'shotgun' },   // ⚠ jawah/moses were DUPLICATED here — the repeats silently dropped their hood/horns (review find)
   dune: { collar: 1, band: 1 }, graven: { helmet: 1, visor: 1, collar: 1 }, bulwark: { helmet: 1, pauldron: 2, gaunt: 1, shield: 1 }, feral: { mane: 1, horns: 1, gaunt: 1 },
 };
 
@@ -529,6 +529,12 @@ export class Fighter {
   // Free all scene-level extras (tentacles, deployed items, planted mines). Call when the fighter leaves play.
   // (the grapnel line mesh rides along — see dispose body)
   dispose() {
+    // THE FIGURE ITSELF must free its GPU objects — figure()/buildWeapon() allocate per-fighter
+    // geometries and materials (suits, limbs, flair, weapons, the ice shell, the stun stars).
+    // Every clear path calls dispose(); without this traverse each hero swap/respawn orphaned
+    // dozens of GPU objects (the 2026-07-24 code review's headline finding). Shared textures
+    // are NOT disposed here (material.dispose never touches .map).
+    if (this.obj) this.obj.traverse((o) => { if (o.geometry) o.geometry.dispose(); if (o.material && o.material.dispose) o.material.dispose(); });
     if (this._grapLine) { this._grapLine.geometry.dispose(); this._grapLine.material.dispose(); if (this._game) this._game.scene.remove(this._grapLine); this._grapLine = null; }
     if (this.tentacles) { for (const t of this.tentacles) t.dispose(); this.tentacles = null; }
     clearSlotFx(this);   // stop charge hums + orbs — a disposed mid-charge fighter must not ring into the next match
@@ -1134,6 +1140,9 @@ export class Fighter {
         this._stepSign = _ss;
       } else this._stepSign = 0;
     }
+    // FINITE GUARD: one NaN in pos poisons the object matrix and blanks the frame with no throw.
+    // The audio path coerces every param through fin(); physics gets the same courtesy.
+    if (!Number.isFinite(this.pos.x + this.pos.y + this.pos.z)) { this.pos.set(0, 6, 0); this.vel.set(0, 0, 0); }
     if (this.pos.y <= this.groundY) {
       const impact = this.vel.y;
       this.pos.y = this.groundY; if (this.vel.y < 0) this.vel.y = 0;

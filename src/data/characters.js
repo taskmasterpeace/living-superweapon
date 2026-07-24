@@ -1,4 +1,4 @@
-// Living Superweapon — the roster. 10 characters, each a distinct kit that stresses the engine.
+// WAR WORLD: ASCENDANTS — the roster as PURE DATA. Add a hero = add an entry here (52 and counting).
 // Slots: lmb, rmb, shift(mobility), q, e, f, r(ultimate). Colors follow house rules — NO purple.
 
 export const ROSTER = [

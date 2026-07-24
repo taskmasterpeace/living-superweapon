@@ -4,7 +4,7 @@
 // Charged melee: hold strike to wind up — tap jab · straight · HAYMAKER (crushes guards, see chargeRelease).
 import * as THREE from 'three';
 
-const _vv = new THREE.Vector3();
+const _v = new THREE.Vector3();
 
 export class MeleeSystem {
   _swingKind(f) {
@@ -50,7 +50,7 @@ export class MeleeSystem {
     f.meleeCharge = Math.min(1.3, f.meleeCharge + dt * ((f.sheet && f.sheet.chargeRate) || 1));   // Brawlers wind up faster
     const g = this.game;
     if (f.meleeCharge > 0.3 && Math.random() < f.meleeCharge * 0.5) {
-      const m = f.muzzle(_vv, 2.2, 5.6);
+      const m = f.muzzle(_v, 2.2, 5.6);
       g.particles.spawn({ x: m.x, y: m.y, z: m.z, vx: (Math.random() * 2 - 1) * 6, vy: 4, vz: (Math.random() * 2 - 1) * 6, life: 0.25, size: 1.8 + f.meleeCharge * 1.6, color: [f.def.colors.accent, '#fff'], drag: 2, shrink: true });
     }
     if (f.meleeCharge >= 1.29 && Math.random() < 0.2) g.world.shake(0.12);   // fully charged — rumbling

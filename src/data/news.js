@@ -8,10 +8,8 @@
 // is the always-offline baseline and must stand alone.
 
 // ---------- seeded variety ----------
-export function mulberry(seed) {
-  let a = seed >>> 0;
-  return () => { a |= 0; a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
-}
+import { mulberry } from '../core/util.js';   // moved to core (planner/world also import it)
+export { mulberry };                          // legacy import path stays valid
 const pick = (rng, arr) => arr[(rng() * arr.length) | 0];
 
 // ---------- the city (matches world.js districts) ----------
@@ -370,8 +368,8 @@ export function tapeRows(rep) {
 // ---------- optional LAN LLM punch-up (Mac Mini Ollama). Fully offline-safe. ----------
 export async function llmPunchUp(rep, base) {
   let cfg = { url: 'http://192.168.1.217:11434/v1/chat/completions', model: 'qwen3.5' };
-  try { const o = JSON.parse(localStorage.getItem('lsw_news_llm') || 'null'); if (o && o.url) cfg = o; } catch {}
-  if (localStorage.getItem('lsw_news_llm') === 'off') return null;
+  try { const o = JSON.parse((localStorage.getItem('threshold_news_llm') || localStorage.getItem('lsw_news_llm')) || 'null'); if (o && o.url) cfg = o; } catch {}
+  if ((localStorage.getItem('threshold_news_llm') || localStorage.getItem('lsw_news_llm')) === 'off') return null;
   const facts = {
     mode: rep.kind, district: rep.district, timeOfDay: base.timeWord, matchLengthSec: Math.round(rep.clock),
     winner: rep.winner ? { alias: rep.winner.name, civilian: rep.winner.person, threat: rep.winner.threat, title: rep.winner.title, knockdowns: rep.winKO ?? rep.winner.kills } : null,
