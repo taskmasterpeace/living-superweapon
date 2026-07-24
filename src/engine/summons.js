@@ -77,7 +77,7 @@ export class Minion {
         if (foe.vel) lead.addScaledVector(foe.vel, Math.min(0.5, dist / spd));
         const dir = lead.sub(this.pos).normalize();
         dir.x += rand(-0.05, 0.05); dir.z += rand(-0.05, 0.05); dir.normalize();
-        game.projectiles.spawnProjectile(this, { pos: this.pos.clone(), vel: dir.setLength(spd), radius: 0.8, damage: this.def.damage || 7, blast: 3, color: this.def.color, color2: this.def.color2 || '#fff' });
+        game.projectiles.spawnProjectile(this.owner, { pos: this.pos.clone(), vel: dir.setLength(spd), radius: 0.8, damage: this.def.damage || 7, blast: 3, color: this.def.color, color2: this.def.color2 || '#fff' });
         game.audio.blast(620, 0.06);
         this.obj.position.addScaledVector(this.aim, -0.4);       // visible recoil kick
       }

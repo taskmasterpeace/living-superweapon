@@ -321,7 +321,7 @@ export const ROSTER = [
     sig: ['LMB Pulse Carbine (auto)', 'Q Plasma Blade (slash)', 'RMB Frag Grenade', '2×TAP Combat Leap · shield guard'],
     abilities: {
       lmb: { type: 'rifle', weapon: 'rifle', name: 'Service Carbine', cost: 2, interval: 0.08, damage: 5, speed: 180, radius: 0.5, blast: 2, recoil: 1.6, color: '#ffe08a', color2: '#fff' },
-      rmb: { type: 'projectile', name: 'Frag Grenade', cost: 9, cd: 0.8, damage: 24, speed: 58, radius: 1.3, blast: 13, grav: 11, shock: true, color: '#8a915a', color2: '#ffd24a' },
+      rmb: { type: 'projectile', name: 'Frag Grenade', cost: 9, cd: 0.8, damage: 24, speed: 58, radius: 1.3, blast: 13, grav: 11, shock: true, canister: true, color: '#8a915a', color2: '#ffd24a' },
       q: { type: 'melee', name: 'Plasma Blade', cost: 10, cd: 0.9, damage: 26, range: 12, arc: 0.9, lunge: 40, knock: 50, launch: 12, dmgClass: 'slash', color: '#7fd4ff' },
       e: { type: 'rifle', weapon: 'shotgun', name: 'Breaching Shotgun', cost: 7, interval: 0.62, damage: 9, pellets: 8, speed: 150, radius: 0.7, blast: 2.4, color: '#ffd24a', color2: '#fff' },
       f: { type: 'buff', name: 'Stim Shot', cost: 18, cd: 16, mult: 1.35, dur: 8, heal: 34, color: '#8fe08a', color2: '#fff' },
@@ -452,7 +452,7 @@ export const ROSTER = [
     blurb: 'An axe that remembers lightning. Skies answer when he shouts.',
     abilities: {
       lmb: { type: 'melee', name: 'Axe Cleave', cost: 11, cd: 0.9, damage: 30, range: 13, arc: 0.9, lunge: 42, knock: 56, launch: 16, dmgClass: 'slash', color: '#7fd4ff' },
-      rmb: { type: 'projectile', name: 'Hurled Axe', cost: 10, cd: 0.9, damage: 22, speed: 110, radius: 1.3, blast: 6, boomerang: true, range: 62, color: '#7fd4ff', color2: '#fff' },
+      rmb: { type: 'projectile', name: 'Hurled Axe', cost: 10, cd: 0.9, damage: 22, speed: 110, radius: 1.3, blast: 6, boomerang: true, blade: true, range: 62, color: '#7fd4ff', color2: '#fff' },
       q: { type: 'charge', name: 'Godblast', cost: 6, cd: 1, kiPerSec: 12, maxCharge: 2.2, minR: 1.5, maxR: 6.2, dmgMin: 24, dmgMax: 80, maxBlast: 32, speedMin: 42, speedMax: 70, chargePower: 2.9, color: '#7fd4ff', color2: '#eaffff' },
       e: { type: 'cone', name: 'Tempest Breath', kiPerSec: 16, range: 32, arc: 1.15, dps: 18, push: 50, lift: 5, color: '#bfeaff' },
       f: { type: 'buff', name: 'Wrath of the Sky', cost: 26, cd: 20, mult: 1.6, dur: 11, color: '#7fd4ff', color2: '#fff' },
@@ -583,7 +583,7 @@ export const ROSTER = [
     ai: { style: 'zoner', range: 34, aggro: 0.7, fly: 0 }, evade: { kind: 'leap', name: 'Grapnel Vault', up: 44, fwd: 64 },
     blurb: 'No powers. A plan for yours, though. Grapnel to the roofline, cape-glide off it, and he is suddenly somewhere above you.',
     abilities: {
-      lmb: { type: 'volley', name: 'Batarang Fan', cost: 3, interval: 0.11, damage: 7, speed: 125, radius: 0.7, blast: 2.6, spread: 0.12, arrow: true, oneHand: true, color: '#c9cfd9', color2: '#fff' },
+      lmb: { type: 'volley', name: 'Batarang Fan', cost: 3, interval: 0.11, damage: 7, speed: 125, radius: 0.7, blast: 2.6, spread: 0.12, blade: true, oneHand: true, color: '#c9cfd9', color2: '#fff' },
       rmb: { type: 'melee', name: 'Cross Counter', cost: 9, cd: 0.7, damage: 24, range: 11, arc: 0.85, lunge: 40, knock: 44, launch: 8, color: '#ffd24a' },
       q: { type: 'teleport', name: 'Smoke Vanish', cost: 10, cd: 1.4, range: 40, oneHand: true, color: '#8a8f99' },
       e: { type: 'mine', name: 'Caustic Charges', cost: 10, cd: 1.1, max: 3, trigger: 7, damage: 24, blast: 12, armT: 0.6, duration: 20, range: 55, dtype: 'acid', dot: { dps: 6, dur: 5, kind: 'acid', corrode: 4, color: '#c8e04a' }, color: '#c8e04a' },
@@ -797,7 +797,7 @@ export const ROSTER = [
       lmb: { type: 'rifle', name: 'Riot Scattergun', cost: 6, interval: 0.55, damage: 26, speed: 140, radius: 1.1, blast: 6, spread: 0.06, recoil: 4.5, color: '#ff5a4a', color2: '#fff' },
       rmb: { type: 'rifle', name: 'Service Revolver', cost: 4, interval: 0.3, damage: 14, speed: 155, radius: 0.7, blast: 3, spread: 0.015, recoil: 2, color: '#ffd97a', color2: '#fff' },
       q: { type: 'melee', name: 'Nightstick', cost: 9, cd: 0.7, damage: 24, range: 11, arc: 0.9, lunge: 36, knock: 46, launch: 8, color: '#ff5a4a' },
-      e: { type: 'projectile', name: 'Gas Canister', cost: 9, cd: 0.8, damage: 12, speed: 62, radius: 1.4, blast: 10, grav: 10, payload: 'gas', color: '#8a8f99', color2: '#e8e4da' },
+      e: { type: 'projectile', name: 'Gas Canister', cost: 9, cd: 0.8, damage: 12, speed: 62, radius: 1.4, blast: 10, grav: 10, payload: 'gas', canister: true, color: '#8a8f99', color2: '#e8e4da' },
       f: { type: 'buff', name: 'My Son Goes Home', cost: 20, cd: 18, mult: 1.5, dur: 10, heal: 35, color: '#ff5a4a', color2: '#fff' },
       shift: { type: 'dash', name: 'Duck & Cover', cost: 4, cd: 0.55, power: 92, iframes: 0.28, color: '#ff5a4a' },
       r: { type: 'summon', name: 'Backup Called', cost: 26, cd: 16, count: 3, max: 6, duration: 13, damage: 8, interval: 0.6, speed: 86, color: '#2a5ad8', color2: '#ff5a4a' },

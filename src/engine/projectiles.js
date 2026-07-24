@@ -20,6 +20,16 @@ const GEO_TRACER = new THREE.CylinderGeometry(0.42, 0.02, 9.0, 6); GEO_TRACER.ro
 // alpha streak on NORMAL blending, kept below the 0.8 bloom threshold so it never glows.
 const MAT_BULLET = new THREE.MeshStandardMaterial({ color: '#e9dcbb', roughness: 0.5, metalness: 0.4 });
 const MAT_TRACER = new THREE.MeshBasicMaterial({ color: '#f4d79a', transparent: true, opacity: 0.6, depthWrite: false });
+// THROWN STEEL (batarangs, hurled axes): matte metal cross that SPINS — never a ball of light
+const GEO_BLADE = new THREE.BoxGeometry(2.6, 0.14, 0.5);
+// ⚠ high metalness with no envmap renders near-BLACK — follow MAT_BULLET's recipe (low metal, bright base)
+const MAT_BLADE = new THREE.MeshStandardMaterial({ color: '#d4dde8', roughness: 0.42, metalness: 0.35 });
+// CANISTERS (frag grenades, gas bombs): a drab tumbling shell with a blinking fuse, no halo
+const GEO_CAN = new THREE.CylinderGeometry(0.52, 0.52, 1.35, 8);
+const GEO_CAN_FUSE = new THREE.SphereGeometry(0.22, 6, 5);
+const MAT_CAN = new THREE.MeshStandardMaterial({ color: '#6e7360', roughness: 0.72, metalness: 0.28 });
+// arrows earn the tracer treatment too — a pale air-wake, far fainter than a hot round
+const GEO_TRACER_Y = new THREE.CylinderGeometry(0.34, 0.02, 9.0, 6);
 const GEO_ORB = new THREE.SphereGeometry(1, 16, 12);
 const GEO_ORB_HI = new THREE.SphereGeometry(1, 20, 16);
 const GEO_CYL = new THREE.CylinderGeometry(1, 1, 1, 16, 1, true);
@@ -96,6 +106,7 @@ class Projectile {
     this.bullet = !!o.bullet;                      // real ballistics read as METAL, not energy
     this.ballistic = !!o.ballistic; this.weapon = o.weapon || null;   // drives the armour/toughness scale
     this.dtype = o.dtype || null; this.siphon = o.siphon;              // damage type rides the projectile
+    this.blade = !!o.blade; this.canister = !!o.canister;
     this.face = !!o.face; this.armDelay = o.armDelay || 0; this._armed = false; this._armT = 0;
     if (this.face) {
       // THE MARLETTA: a billboarded serene face wrapped in glow — she drifts, arrives, lingers, detonates
@@ -103,6 +114,7 @@ class Projectile {
       spr.scale.setScalar(3.2);
       const halo = new THREE.Mesh(GEO_ORB, glowMat(this.color, 0.35)); halo.scale.setScalar(1.35);
       this.obj = new THREE.Group(); this.obj.add(halo, spr); this._faceSpr = spr;
+      this._ownMats = [halo.material, spr.material];   // (face texture itself is shared)
       this.obj.scale.setScalar(this.radius);
       this.obj.position.copy(this.pos); game.scene.add(this.obj);
       this.light = game.vfx.borrowLight(this.color, 4 * this.power, this.radius * 14);
@@ -121,20 +133,49 @@ class Projectile {
       tracer.position.z = -1.2 - 4.5 * st;         // wide end at the slug's tail, tapering into the streak behind
       this.obj = new THREE.Group(); this.obj.add(slug, tracer);
       this.obj.position.copy(this.pos); game.scene.add(this.obj);
-      this._tracer = tracer;
+      this._tracer = tracer; this._ownMats = [];       // slug + tracer mats are SHARED — never dispose
       this.light = null;                           // no pooled light — tracers are cheap and many
+    } else if (this.blade) {
+      // THROWN STEEL — the bullet treatment for blades: a matte metal cross spinning end-over-end.
+      // No bloom halo, no pooled light, and NO straight tracer (a boomerang's path curves — a
+      // 9u streak behind it would lie about where it has been; the whisper trail tells the truth).
+      const w1 = new THREE.Mesh(GEO_BLADE, MAT_BLADE);
+      const w2 = new THREE.Mesh(GEO_BLADE, MAT_BLADE); w2.rotation.y = Math.PI / 2;
+      const spin = new THREE.Group(); spin.add(w1, w2);
+      this.obj = new THREE.Group(); this.obj.add(spin); this._spin = spin;
+      this._ownMats = [];                              // steel is one shared material
+      this.obj.scale.setScalar(Math.max(0.5, this.radius * 0.8));
+      this.obj.position.copy(this.pos); game.scene.add(this.obj);
+      this.light = null;
+    } else if (this.canister) {
+      // A GRENADE IS A SHELL, not a ki orb: drab body tumbling through the lob, blinking fuse LED
+      // in the payload's colour — the one honest tell of what it will do when it lands.
+      const body = new THREE.Mesh(GEO_CAN, MAT_CAN);
+      const fuse = new THREE.Mesh(GEO_CAN_FUSE, glowMat(this.color, 0.9)); fuse.position.y = 0.75;
+      this.obj = new THREE.Group(); this.obj.add(body, fuse); this._fuse = fuse;
+      this._ownMats = [fuse.material];                 // the payload-coloured fuse is per-shell
+      this.obj.scale.setScalar(Math.max(0.6, this.radius * 0.7));
+      this.obj.position.copy(this.pos); game.scene.add(this.obj);
+      this.light = null;
     } else if (this.arrow) {
       // a REAL arrow — shaft + head + fletching, no energy glow (payload color on the head)
       const shaft = new THREE.Mesh(GEO_ARROW_SHAFT, MAT_ARROW_SHAFT);
       const head = new THREE.Mesh(GEO_ARROW_HEAD, glowMat(this.color, 0.95)); head.position.y = 1.6;
       const flet = new THREE.Mesh(GEO_ARROW_FLET, MAT_ARROW_FLET); flet.position.y = -1.3;
-      this.obj = new THREE.Group(); this.obj.add(shaft, head, flet);
+      // the air-wake: pale, speed-scaled, tapering off the fletching (wide end kisses the tail)
+      const spd = this.vel ? this.vel.length() : 90;
+      const st = Math.max(0.7, Math.min(2.2, spd / 95));
+      const wake = new THREE.Mesh(GEO_TRACER_Y, new THREE.MeshBasicMaterial({ color: '#e8e2d2', transparent: true, opacity: 0.22, depthWrite: false }));
+      wake.scale.set(0.6, st, 0.6); wake.position.y = -1.3 - 4.5 * st;
+      this.obj = new THREE.Group(); this.obj.add(shaft, head, flet, wake);
+      this._ownMats = [head.material, wake.material];  // payload head + air-wake are per-arrow
       this.obj.position.copy(this.pos); game.scene.add(this.obj);
       this.light = null;
     } else {
       const core = new THREE.Mesh(GEO_ORB, MAT_CORE);
       const glow = new THREE.Mesh(GEO_ORB, glowMat(this.color)); glow.scale.setScalar(1.7);
       this.obj = new THREE.Group(); this.obj.add(core, glow); this.obj.scale.setScalar(this.radius);
+      this._ownMats = [glow.material];
       this.obj.position.copy(this.pos); game.scene.add(this.obj);
       this.light = game.vfx.borrowLight(this.color, 3 * this.power, this.radius * 10);
     }
@@ -182,12 +223,15 @@ class Projectile {
     if (this.light) this.light.position.copy(this.pos);
     if (this.arrow) { _v.copy(this.vel).normalize(); this.obj.quaternion.setFromUnitVectors(_AY, _v); }   // nose into the flight path
     else if (this.bullet) { _v.copy(this.vel).normalize(); this.obj.quaternion.setFromUnitVectors(_AZ, _v); }   // slug + tracer align to travel
+    else if (this.blade) { _v.copy(this.vel).normalize(); this.obj.quaternion.setFromUnitVectors(_AZ, _v); this._spin.rotation.x += dt * 24; }   // steel tumbles end-over-end along its path
+    else if (this.canister) { this.obj.rotation.x += dt * 7.5; this.obj.rotation.z += dt * 2.1; if (this._fuse) this._fuse.material.opacity = (Math.sin(this.life * 22) > 0) ? 0.9 : 0.25; }   // shell tumbles, fuse blinks
     else this.obj.rotation.y += dt * 6;
     // trail (arrows leave only a whisper; bullets leave a thin wisp of smoke, never a plasma tail)
     this.trailT += dt;
-    if (this.trailT > (this.arrow || this.bullet ? 0.05 : 0.016)) {
+    if (this.trailT > (this.arrow || this.bullet || this.blade || this.canister ? 0.05 : 0.016)) {
       this.trailT = 0;
-      if (this.bullet) game.particles.spawn({ x: this.pos.x, y: this.pos.y, z: this.pos.z, vx: rand(-1, 1), vy: rand(0, 2), vz: rand(-1, 1), life: 0.22, size: 0.8, color: ['#c9c2b4', '#8b8577'], drag: 4, shrink: true });
+      if (this.bullet || this.canister) game.particles.spawn({ x: this.pos.x, y: this.pos.y, z: this.pos.z, vx: rand(-1, 1), vy: rand(0, 2), vz: rand(-1, 1), life: 0.22, size: 0.8, color: ['#c9c2b4', '#8b8577'], drag: 4, shrink: true });
+      else if (this.blade) game.particles.spawn({ x: this.pos.x, y: this.pos.y, z: this.pos.z, vx: rand(-1.5, 1.5), vy: rand(-1, 1), vz: rand(-1.5, 1.5), life: 0.16, size: 0.9, color: ['#dfe6ee', '#9aa4b0'], drag: 4, shrink: true });
       else game.particles.spawn({ x: this.pos.x, y: this.pos.y, z: this.pos.z, vx: rand(-2, 2), vy: rand(-2, 2), vz: rand(-2, 2), life: this.arrow ? 0.2 : 0.35, size: this.arrow ? 1 : this.radius * 2.2, color: this.arrow ? this.color : [this.color, this.color2, '#ffffff'], drag: 3, shrink: true });
     }
     // Pedestrians aren't entities (they're one instanced mesh), so nothing ever collided with
@@ -292,8 +336,10 @@ class Projectile {
   }
   _dispose(game) {
     if (this.dead) return; this.dead = true; game.scene.remove(this.obj);
-    if (this.face) { this.obj.children[0].material.dispose(); this.obj.children[1].material.dispose(); }   // halo + sprite (texture is shared)
-    else this.obj.children[1].material.dispose();                                                          // geometry + core/shaft materials are shared
+    // every mesh branch declares its per-projectile materials in _ownMats — shared module
+    // materials (steel, brass, tracer) must NEVER be disposed here (index-guessing children[1]
+    // used to dispose the SHARED tracer mat on every bullet impact, and crashed on nested groups)
+    for (const m of this._ownMats || []) m.dispose();
     if (this.light) game.vfx.returnLight(this.light);   // returnLight owns it — the light STAYS in the scene (see the light-count law)
   }
 }

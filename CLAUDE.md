@@ -1037,6 +1037,17 @@ value is missing from the scale, add a token rather than a one-off.
 - Ballistic rounds do NOT explode (no fireball/crater/areaDamage) and they **collide with
   pedestrians** — peds are one instanced mesh, so nothing had ever hit them; one shot downs a
   civilian, books police heat on the shooter.
+- **THROWN STEEL + CANISTERS (2026-07-24, the bullet treatment spread)**: projectile flags
+  `blade` (matte spinning steel cross — STORMCALL's Hurled Axe, KNIGHTFALL's Batarang Fan via the
+  volley pass-through; no halo, no pooled light, whisper trail only — a straight tracer would LIE
+  about a boomerang's curved path) and `canister` (drab tumbling shell, payload-coloured blinking
+  fuse — SARGE Frag Grenade, KIVULI Gas Canister). Arrows gained a pale speed-scaled air-wake
+  (`GEO_TRACER_Y`). ⚠ high metalness with no envmap renders near-BLACK — follow MAT_BULLET's
+  recipe (low metal, bright base). ⚠ `Projectile._dispose` now iterates `this._ownMats`
+  (declared per mesh branch) — the old `children[1].material.dispose()` index-guess crashed on
+  nested groups AND disposed the SHARED tracer material on every bullet impact. ⚠ DRONES pass
+  `this.owner` as projectile caster (summons.js) — passing the drone itself made every drone KO
+  read "undefined STANDS", book no Elo, and credit no XP/heat. Ref: `lsw-thrown-steel.jpeg`.
 - **THROW ARC** (`game.updateThrowArc`): every gravity projectile draws a dotted parabola +
   landing ring using the SAME maths the projectile flies with, so the preview can't lie. Orange
   while carrying a prop.

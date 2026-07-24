@@ -118,6 +118,7 @@ export const TYPES = {
         radius: def.radius || 1.4, damage: def.damage || 14, blast: def.blast || 5, power: def.power || 1,
         homing: def.homing || 0, color: def.color, color2: def.color2, grav: def.grav || 0, shock: def.shock,
         arrow: def.arrow, payload: def.payload, boomerang: def.boomerang, range: def.range,
+        blade: def.blade, canister: def.canister,      // thrown steel / shells read as objects, not orbs
         dtype: def.dtype, siphon: def.siphon,          // the damage TYPE rides the shot
       });
       if (def.dtype === 'magic') g.audio.zap(760, c.pos); else g.audio.kiRelease(0.32, c.pos);
@@ -139,7 +140,7 @@ export const TYPES = {
       g.projectiles.spawnProjectile(c, {
         pos: m, vel: new THREE.Vector3(Math.cos(a), c.aim3.y, Math.sin(a)).setLength(def.speed || 105),
         radius: def.radius || 0.8, damage: def.damage || 6, blast: def.blast || 3.4, power: 0.5, color: def.color, color2: def.color2,
-        arrow: def.arrow, payload: def.payload,
+        arrow: def.arrow, payload: def.payload, blade: def.blade,
       });
       g.audio.blast(560 + rand(-40, 40), 0.08); g.muzzleFlash(c, def.color, 0.6, off);
     }
