@@ -544,6 +544,39 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   biome forest 379 / grass 278 / jungle 185 / desert 182 / mountain 25 / tundra 1.
   Refs: `wwa-terrain.jpeg`, `wwa-forest.jpeg`, `landmarks.jpeg`, `junctions.jpeg`.
 
+## SIZE TIERS (2026-07-24) — the same structure at the right scale
+- **`TILE_SIZES`** (cityplan.js): a ladder per type — `{ f:[rows,cols], n:'FISHING WHARF', tier }`,
+  smallest first. A port is a wharf in a small town and a container terminal in a mega city: the
+  same TYPE at a different SCALE, not two tiles. 14 types, 35 rungs, all verified to build.
+  `TILE_FOOT` is now DERIVED from the ladder (the middle rung) so every pre-existing caller and the
+  editor's plain paint still work.
+- **`sizeFor(t, popTier, rng, N, want)`** takes the biggest rung earned that fits, with a 30% chance
+  of dropping one rung (variety). ⚠ LANDMARKS pass `rng = null` to skip that roll — the thing a
+  city is KNOWN for is never the small version. If the size won't fit, `place()` steps DOWN the
+  ladder rather than dropping the structure: a crowded map gives you a small port, not no port.
+- **The builder does the work** — it is handed `ctx.W`/`ctx.D` for the whole footprint and sizes its
+  contents. A bigger hospital grows WINGS not height; a bigger company site grows MORE TOWERS; a
+  bigger military compound earns a runway and hangars; a port gets a berth+crane per ~78u of
+  frontage. ⚠ Only 9 of 28 builders read the footprint — giving a type a ladder means making its
+  builder adaptive FIRST, or the big version is just the small one in a bigger empty lot.
+- **⚠ `NO_ROTATE`**: some footprints have a meaningful orientation. A port runs ALONG the shore —
+  rotated, a 3×1 quay becomes a 1×3 pier sticking three blocks inland.
+- **⚠ `rural: 'ok'`** on a PLACEMENT row lets it through the rural gate. A coastal village IS a
+  fishing village; without it the gate silently denied it the one thing it is defined by.
+- **`cell.sname`** carries the size name and `districtNameAt` cites it, so the news desk says
+  THE CONTAINER TERMINAL rather than THE DOCKLANDS. Editor: a SIZE row appears under the palette
+  for types that have a ladder, and shows nothing for types that don't (a control that lies is
+  worse than no control). Ref: `wwa-portsizes.jpeg`.
+- **⚠ THE VALIDATOR AND THE GENERATOR MUST SHARE ONE RULE.** `NO_RESCUE` is exported from cityplan
+  and imported by `hud._validatePlan`. When they drifted, the tool reported 32 "landlocked" cells
+  that were open country behaving exactly as designed. Export the rule; never reimplement it.
+
+## HANDOFF
+- **`HANDOFF.md` at the repo root** is the orientation document: architecture, the ten rules that
+  are load-bearing, what is solid, what is half-built, what to do next, and the headless
+  verification recipes. Read it before `CLAUDE.md` if you are new — or if you are me with no memory
+  of today. Keep it current when a pillar moves.
+
 ## THE COUNTRY SHEET — the state behind the city (2026-07-23)
 - `data/countries.js` — **168 nations, 25 fields**, baked from Robert's Country Master Sheet. The
   cities sheet says WHERE a fight happens; this says **what the state is like when it does**.

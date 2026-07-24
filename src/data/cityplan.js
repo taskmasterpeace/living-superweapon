@@ -10,7 +10,8 @@
 // the gallery/proving-ground and the atlas both derive from that one table.
 import { mulberry } from './news.js';
 import { cultureOf } from './cities.js';
-import { pickLandmarks, nameLandmark, faithOf } from './landmarks.js';
+import { pickLandmarks, nameLandmark, faithOf, POP_TIER } from './landmarks.js';
+export { POP_TIER };
 
 // THE BASE CELL. Every tile builder is authored against this: a 96-unit district block, sized so a
 // 9.6u (1.8m) hero fights DOWN through a real city. It is the UNIT, not a hard limit — a plan can
@@ -58,8 +59,88 @@ export const VARIANTS = { residential: 3, commercial: 3, company: 2, industrial:
 // the anchor so the planner, the roads, the districts and the editor all agree on who owns it.
 //   anchor  { t, v, r, c, fh, fw }          covered  { t, ref: [ar, ac] }
 // `foot` is [rows, cols]; the planner also tries it ROTATED, so a 1×3 yard can run either way.
-export const TILE_FOOT = { stadium: [2, 2], airport: [2, 3], railyard: [1, 3], palace: [1, 2], fortress: [2, 2], university: [1, 2] };
 export const isRef = (cell) => !!(cell && cell.ref);
+
+// ---- SIZE TIERS -------------------------------------------------------------------------------
+// ⚠ A STRUCTURE IS NOT ONE SIZE. A port is a fishing wharf in a small town and a container terminal
+// in a mega city — the same TYPE at a different SCALE, not two different tiles. Before this every
+// type had exactly one footprint, so a village got the same institutional slab as Tokyo and there
+// was no way to author "a small one here, a big one there".
+//
+// Each entry is a ladder, smallest first:
+//   f     [rows, cols] footprint          n     what a structure of this size is CALLED
+//   tier  smallest population tier that earns it (1 Village … 7 Mega City)
+//
+// The builder is handed `ctx.W`/`ctx.D` for the WHOLE footprint and sizes its contents to fit — so
+// a 1×1 wharf has one berth and a 2×2 terminal has four, from the same code. The name goes on the
+// cell, so the news desk says THE CONTAINER TERMINAL rather than THE DOCKLANDS.
+// ⚠ Some footprints have a MEANINGFUL orientation and must not be rotated to fit. A port runs
+// ALONG the shore — rotated, a 3×1 quay becomes a 1×3 pier sticking three blocks inland.
+export const NO_ROTATE = { seaport: 1 };
+export const TILE_SIZES = {
+  seaport:     [{ f: [1, 1], n: 'FISHING WHARF',     tier: 2 },
+                { f: [2, 1], n: 'CARGO QUAY',        tier: 4 },
+                { f: [3, 1], n: 'CONTAINER TERMINAL', tier: 6 }],
+  university:  [{ f: [1, 1], n: 'THE COLLEGE',       tier: 3 },
+                { f: [1, 2], n: 'THE UNIVERSITY',    tier: 5 },
+                { f: [2, 2], n: 'THE CAMPUS',        tier: 6 }],
+  hospital:    [{ f: [1, 1], n: 'THE CLINIC',        tier: 1 },
+                { f: [1, 2], n: 'GENERAL HOSPITAL',  tier: 5 },
+                { f: [2, 2], n: 'THE MEDICAL CENTRE', tier: 7 }],
+  market:      [{ f: [1, 1], n: 'THE MARKET',        tier: 1 },
+                { f: [1, 2], n: 'THE GRAND BAZAAR',  tier: 5 }],
+  military:    [{ f: [1, 1], n: 'THE OUTPOST',       tier: 2 },
+                { f: [1, 2], n: 'THE GARRISON',      tier: 4 },
+                { f: [2, 2], n: 'THE AIRBASE',       tier: 6 }],
+  industrial:  [{ f: [1, 1], n: 'THE WORKS',         tier: 2 },
+                { f: [2, 1], n: 'THE PLANT',         tier: 5 },
+                { f: [2, 2], n: 'THE INDUSTRIAL PARK', tier: 7 }],
+  company:     [{ f: [1, 1], n: 'THE OFFICE BLOCK',  tier: 3 },
+                { f: [2, 1], n: 'THE CORPORATE CORE', tier: 6 }],
+  stadium:     [{ f: [1, 1], n: 'THE ARENA',         tier: 4 },
+                { f: [2, 2], n: 'THE STADIUM',       tier: 6 },
+                { f: [2, 3], n: 'THE OLYMPIC BOWL',  tier: 7 }],
+  airport:     [{ f: [1, 2], n: 'THE AIRSTRIP',      tier: 4 },
+                { f: [2, 2], n: 'THE REGIONAL FIELD', tier: 6 },
+                { f: [2, 3], n: 'INTERNATIONAL',     tier: 7 }],
+  railyard:    [{ f: [1, 2], n: 'THE SIDINGS',       tier: 4 },
+                { f: [1, 3], n: 'THE MARSHALLING YARDS', tier: 6 }],
+  palace:      [{ f: [1, 1], n: 'THE RESIDENCY',     tier: 3 },
+                { f: [1, 2], n: 'THE PALACE',        tier: 5 }],
+  fortress:    [{ f: [1, 1], n: 'THE REDOUBT',       tier: 3 },
+                { f: [2, 2], n: 'THE CITADEL',       tier: 5 }],
+  educational: [{ f: [1, 1], n: 'THE SCHOOL',        tier: 2 },
+                { f: [1, 2], n: 'THE FACULTY',       tier: 6 }],
+  resort:      [{ f: [1, 1], n: 'THE HOTEL',         tier: 3 },
+                { f: [1, 2], n: 'THE RESORT STRIP',  tier: 6 }],
+};
+// The default footprint for a type — used when nothing asks for a specific size (the map maker's
+// plain paint, and every caller that predates size tiers). Middle of the ladder, so painting a
+// stadium gives you a stadium rather than the smallest or the most extravagant thing on the list.
+export const TILE_FOOT = (() => {
+  const out = {};
+  for (const t in TILE_SIZES) {
+    const L = TILE_SIZES[t];
+    out[t] = L[Math.min(L.length - 1, Math.max(0, Math.floor((L.length - 1) / 2)))].f;
+  }
+  return out;
+})();
+// Which size of a thing THIS city gets. Biggest it has earned and that fits, with a chance of
+// dropping a rung so two mega cities don't produce identical skylines.
+export function sizeFor(t, popTier, rng, N, want) {
+  const L = TILE_SIZES[t];
+  if (!L) return { f: [1, 1], n: null, i: 0 };
+  if (want != null && L[want]) return { ...L[want], i: want };
+  let best = 0;
+  for (let i = 0; i < L.length; i++) {
+    const [fh, fw] = L[i].f;
+    if (L[i].tier <= popTier && fh <= N && fw <= N) best = i;
+  }
+  // a modest chance to build one rung smaller — variety, and it keeps a big city from being
+  // uniformly maximal
+  if (best > 0 && rng && rng() < 0.3) best--;
+  return { ...L[best], i: best };
+}
 
 // ⚠ SCALE HAS TO READ. City and Large City were BOTH 5×5 and a Mega City was only 6×6, so the
 // three tiers 96% of the sheet falls into produced almost the same map — measured 17.1 / 17.0 /
@@ -95,7 +176,7 @@ const structCap = (N) => Math.min(64, Math.round(N * N * 0.82) + 4);
 // and legible instead of hiding counts inside per-row min/max arithmetic.
 export const PLACEMENT = [
   // --- identity: what the city is FAMOUS for lands first and owns the best ground
-  { t: 'seaport',     need: 'seaport',     score: { water: 4 } },
+  { t: 'seaport',     need: 'seaport',     rural: 'ok', score: { water: 4 } },
   { t: 'seaport',     need: 'seaport',     score: { water: 4, cluster: 1 } },
   { t: 'resort',      need: 'resort',      score: { water: 3, south: 1 } },
   { t: 'resort',      need: 'resort',      minN: 5, score: { water: 3 } },
@@ -226,6 +307,7 @@ const WEIGHT = {
   residential: 2, educational: 2, temple: 2, seaport: 3, industrial: 3, military: 2,
   mining: 1, resort: 2, park: 1, plaza: 1, farmland: 0, forest: 0, mountain: 0, water: 0,
 };
+export const NO_RESCUE = { water: 1, forest: 1, mountain: 1, farmland: 1, park: 1, plaza: 1 };
 function buildRoads(plan, rng) {
   const N = plan.N, C = plan.cells, rural = !!plan.rural;
   const h = [], v = [];
@@ -288,7 +370,8 @@ function buildRoads(plan, rng) {
   // ⚠ WILD GROUND IS NOT LANDLOCKED, IT IS WILD. The rescue exists so a BUILDING is never
   // unreachable; running a street to every patch of forest, mountain or field turned an all-woods
   // map into a street grid with trees in it. Nobody needs vehicle access to a wood.
-  const NO_RESCUE = { water: 1, forest: 1, mountain: 1, farmland: 1, park: 1, plaza: 1 };
+  // ⚠ EXPORTED, because the map maker's validator has to apply the SAME rule — when it didn't, the
+  // tool reported 32 "landlocked" cells that were open country doing exactly what they should.
   let rescued = 0;
   for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
     const cell = C[r][c];
@@ -402,6 +485,7 @@ export function generatePlan(city, seed = 1, opts = {}) {
   const water = plan.water;
   const C = plan.cells, mid = (N - 1) / 2;
   const rural = RURAL_POP[popType] || N <= 3;
+  const popTier = POP_TIER[popType] || 5;      // what size of thing this city has earned
   const freeAt = (r, c) => r >= 0 && r < N && c >= 0 && c < N && C[r][c] == null;
   for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
     if (c >= N - waterCols) C[r][c] = { t: 'water' };                  // the east shore
@@ -426,13 +510,13 @@ export function generatePlan(city, seed = 1, opts = {}) {
   };
   // STAMP a footprint: the anchor carries the structure and its size, the covered cells carry a
   // ref. Nothing downstream has to guess — roads, districts and the editor all read the same shape.
-  const stamp = (r, c, fh, fw, t, landmark) => {
+  const stamp = (r, c, fh, fw, t, landmark, sname, si) => {
     let v = (rng() * (VARIANTS[t] || 1)) | 0;
     // ⚠ residential variant 2 is TOWERS-IN-THE-PARK. The base fill already guards against putting
     // apartment blocks in a hamlet; the PLACEMENT table has to guard too, or the village CORE —
     // the one cell that is definitely houses — comes out as a tower.
     if (rural && t === 'residential' && v === 2) v = rng() < 0.5 ? 0 : 1;
-    C[r][c] = { t, v, fh, fw, landmark: !!landmark };
+    C[r][c] = { t, v, fh, fw, landmark: !!landmark, sname: sname || null, sz: si || 0 };
     for (let i = 0; i < fh; i++) for (let j = 0; j < fw; j++) {
       if (i || j) C[r + i][c + j] = { t, v, ref: [r, c] };
     }
@@ -440,21 +524,38 @@ export function generatePlan(city, seed = 1, opts = {}) {
     (placed[t] || (placed[t] = [])).push([r, c]);
     return [r, c];
   };
-  // find the best free rectangle for a row, trying the footprint BOTH ways round
+  // Find the best free rectangle for a row, trying the footprint BOTH ways round. The SIZE comes
+  // from the ladder (see TILE_SIZES) unless the row pins one — and if the chosen size won't fit
+  // anywhere, it steps DOWN the ladder rather than dropping the structure entirely. A crowded map
+  // should give you a small port, not no port.
   const place = (row) => {
-    const [fh0, fw0] = row.foot || [1, 1];
-    const shapes = fh0 === fw0 ? [[fh0, fw0]] : [[fh0, fw0], [fw0, fh0]];
-    let best = null, bs = -1e9;
-    for (const [fh, fw] of shapes) {
-      for (let r = 0; r + fh <= N; r++) for (let c = 0; c + fw <= N; c++) {
-        let ok = true;
-        for (let i = 0; i < fh && ok; i++) for (let j = 0; j < fw; j++) if (!freeAt(r + i, c + j)) { ok = false; break; }
-        if (!ok) continue;
-        const s = scoreAt(row.score || {}, row.t, r + (fh - 1) / 2, c + (fw - 1) / 2) + rng() * 0.3;
-        if (s > bs) { bs = s; best = [r, c, fh, fw]; }
+    const ladder = TILE_SIZES[row.t];
+    let tries;
+    // ⚠ THE LADDER WINS when the type has one. `row.foot` is a FLOOR for types with no ladder (and
+    // for the landmark pool's fit check) — if it short-circuited the ladder, giving a type size
+    // tiers would silently do nothing for every landmark, which is where most of them are used.
+    if (!ladder && row.foot) tries = [{ f: row.foot, n: row.sname || null, i: row.sz || 0 }];
+    else if (ladder) {
+      const pick = sizeFor(row.t, popTier, row.big ? null : rng, N, row.sz);
+      tries = [];
+      for (let i = pick.i; i >= 0; i--) tries.push({ ...ladder[i], i });
+    } else tries = [{ f: [1, 1], n: null, i: 0 }];
+    for (const sz of tries) {
+      const [fh0, fw0] = sz.f;
+      const shapes = (fh0 === fw0 || NO_ROTATE[row.t]) ? [[fh0, fw0]] : [[fh0, fw0], [fw0, fh0]];
+      let best = null, bs = -1e9;
+      for (const [fh, fw] of shapes) {
+        for (let r = 0; r + fh <= N; r++) for (let c = 0; c + fw <= N; c++) {
+          let ok = true;
+          for (let i = 0; i < fh && ok; i++) for (let j = 0; j < fw; j++) if (!freeAt(r + i, c + j)) { ok = false; break; }
+          if (!ok) continue;
+          const s = scoreAt(row.score || {}, row.t, r + (fh - 1) / 2, c + (fw - 1) / 2) + rng() * 0.3;
+          if (s > bs) { bs = s; best = [r, c, fh, fw]; }
+        }
       }
+      if (best) return stamp(best[0], best[1], best[2], best[3], row.t, row.landmark, sz.n, sz.i);
     }
-    return best ? stamp(best[0], best[1], best[2], best[3], row.t, row.landmark) : null;
+    return null;
   };
   // --- THE LANDMARKS GO FIRST. They are the reason this city is worth fighting in, so they get
   // first pick of the ground; everything else arranges itself around them. Each one is named here
@@ -475,7 +576,9 @@ export function generatePlan(city, seed = 1, opts = {}) {
     if (row.biome && !row.biome.includes(plan.biome)) continue;
     if (row.minN && N < row.minN) continue;
     if (row.rural === 'only' && !rural) continue;
-    if (rural && row.rural !== 'only' && row.t !== 'park') continue;   // a village is not a small city
+    // `rural: 'ok'` = a row that belongs in the country too. A coastal village IS a fishing
+    // village; without this the rural gate silently denied it the one thing it is defined by.
+    if (rural && row.rural !== 'only' && row.rural !== 'ok' && row.t !== 'park') continue;
     if (row.chance != null && rng() > row.chance) continue;
     place(row);
   }
@@ -618,10 +721,15 @@ export function applyPlanEdits(plan, edits) {
     const e = edits[key]; if (!e || !e.t) continue;
     const [r, c] = key.split(',').map(Number);
     if (!(r >= 0 && c >= 0 && r < N && c < N)) continue;      // survives a grid RESIZE, just clipped
-    const [fh, fw] = TILE_FOOT[e.t] || [1, 1];
+    // the painted SIZE (an index into the type's ladder) decides the footprint; without one it
+    // falls back to the type's default, which is what every edit made before size tiers existed
+    const L = TILE_SIZES[e.t];
+    const chosen = (L && e.sz != null && L[e.sz]) ? L[e.sz] : null;
+    const [fh, fw] = chosen ? chosen.f : (TILE_FOOT[e.t] || [1, 1]);
     if (r + fh > N || c + fw > N) continue;                   // won't fit here — leave the generator's cell
     for (let i = 0; i < fh; i++) for (let j = 0; j < fw; j++) clearFootprint(plan, r + i, c + j);
-    C[r][c] = { t: e.t, v: e.v || 0, fh, fw, painted: true, lock: !!e.lock, landmark: fh * fw > 1 };
+    C[r][c] = { t: e.t, v: e.v || 0, fh, fw, painted: true, lock: !!e.lock, landmark: fh * fw > 1,
+                sname: chosen ? chosen.n : null, sz: e.sz || 0 };
     for (let i = 0; i < fh; i++) for (let j = 0; j < fw; j++) if (i || j) C[r + i][c + j] = { t: e.t, v: e.v || 0, ref: [r, c], painted: true };
     touched = true;
   }
@@ -690,5 +798,6 @@ export function districtNameAt(plan, x, z) {
   if (cell.ref) cell = plan.cells[cell.ref[0]][cell.ref[1]] || cell;   // a landmark is one place
   if (cell.t === 'water') return 'THE WATERFRONT';
   if (cell.lname) return cell.lname;            // "THE SPIRE OF TOKYO", not "THE DISTRICT"
+  if (cell.sname) return cell.sname;            // "THE CONTAINER TERMINAL", not "THE DOCKLANDS"
   return 'THE ' + (TILE_INFO[cell.t] ? TILE_INFO[cell.t].label : 'DISTRICT');
 }

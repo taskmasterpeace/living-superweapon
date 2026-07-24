@@ -99,6 +99,52 @@ Benguela (5×5): 16 edges are `none`. A village gets dirt tracks and dead ends.
 
 ---
 
+## SIZE TIERS — the same structure, at the right scale
+
+**A structure is not one size.** A port is a fishing wharf in a small town and a container terminal
+in a mega city — that is the same *type* at a different *scale*, not two different tiles. Before
+this every type had exactly one footprint, so a village got the same institutional slab as Tokyo,
+and there was no way to author "a small one here, a big one there".
+
+Each type with a ladder declares its rungs (`TILE_SIZES` in `cityplan.js`), smallest first, each
+with a **footprint**, a **name**, and the **smallest population tier that earns it**:
+
+| Type | Rungs |
+|---|---|
+| **seaport** | FISHING WHARF 1×1 · CARGO QUAY 2×1 · CONTAINER TERMINAL 3×1 |
+| **university** | THE COLLEGE 1×1 · THE UNIVERSITY 1×2 · THE CAMPUS 2×2 |
+| **hospital** | THE CLINIC 1×1 · GENERAL HOSPITAL 1×2 · THE MEDICAL CENTRE 2×2 |
+| **military** | THE OUTPOST 1×1 · THE GARRISON 1×2 · THE AIRBASE 2×2 |
+| **industrial** | THE WORKS 1×1 · THE PLANT 2×1 · THE INDUSTRIAL PARK 2×2 |
+| **stadium** | THE ARENA 1×1 · THE STADIUM 2×2 · THE OLYMPIC BOWL 2×3 |
+| **airport** | THE AIRSTRIP 1×2 · THE REGIONAL FIELD 2×2 · INTERNATIONAL 2×3 |
+| **market** | THE MARKET 1×1 · THE GRAND BAZAAR 1×2 |
+| **company** | THE OFFICE BLOCK 1×1 · THE CORPORATE CORE 2×1 |
+| **railyard** · **palace** · **fortress** · **educational** · **resort** | two rungs each |
+
+**The builder does the work.** Each one is handed `ctx.W`/`ctx.D` for the whole footprint and sizes
+its contents to fit — so a 1×1 wharf has one shed and one crane and a 3×1 terminal has three plus an
+admin block, from the same code. A bigger hospital grows *wings*, not height. A bigger corporate
+site grows *more towers*, not a taller one. A bigger military compound earns a *runway*.
+
+**The name goes on the cell**, so the news desk says THE CONTAINER TERMINAL rather than THE
+DOCKLANDS, and the district lower-third, the codex and the atlas all agree.
+
+**How the size is chosen.** The planner takes the biggest rung the city's population tier has
+earned and that fits on the grid, with a modest chance of dropping one rung so two mega cities
+don't produce identical skylines. **Landmarks skip that roll** — the thing a city is known for is
+never the small version. If the chosen size won't fit anywhere the planner steps *down* the ladder
+rather than dropping the structure: a crowded map gives you a small port, not no port.
+
+⚠ Some footprints have a meaningful orientation and are never rotated to fit (`NO_ROTATE`). A port
+runs *along* the shore — rotated, a 3×1 quay becomes a 1×3 pier sticking three blocks inland.
+
+**In the editor:** pick a tile, and if it has a ladder a **SIZE** row appears under the palette with
+the named rungs. Pick one and paint. Types with a single size show nothing, rather than a control
+that lies. Swatches marked **▦** have more than one size.
+
+---
+
 ## LANDMARKS — how special structures get seeded
 
 Stadiums, airports and rail yards used to be fixed rows in the placement table: every city big
@@ -382,6 +428,7 @@ Rows are **atomic** — a second berth or a second campus is a second row. Rarit
 - The city's real data drives play: crime and safety set police response; the country sets whether
   the army can be called and whether armed civilians will draw on you
 
+- **Size tiers** — 14 types with named size ladders (a fishing wharf through a container terminal)
 - **Live 3D** authoring with an orbit camera, rebuilding on every edit
 - **Scale** the world 32–240u a cell, and regenerate any city at any population tier
 - **Validation** in-panel, using the same assertions as the test sweep
@@ -407,6 +454,10 @@ Straight answers, no hedging:
   police-approach system should use.
 
 ---
+
+⚠ **19 of 28 tile builders still ignore their footprint** and are 1×1 only. Giving one a size
+ladder means making its builder read `ctx.W`/`ctx.D` first — the machinery is there, the tiles are
+the work.
 
 ## WHAT TO DO NEXT — in priority order
 

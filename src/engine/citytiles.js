@@ -236,56 +236,95 @@ const T = {
     else tower(ctx, cx, cz, 30, 118 + rng() * 22, 44, wm, R);
     bodega(ctx, cx, cz, cell, rng);
   },
+  // THE OFFICE BLOCK → THE CORPORATE CORE. A bigger site means MORE TOWERS, not a taller one —
+  // a downtown core is a cluster, and the plaza and skybridges between them are the fight.
   company(ctx, cx, cz, v) {
-    const W = ctx.world, wm = W._winMats[0], M2 = ctx.mats;
+    const W = ctx.world, wm = W._winMats[0], M2 = ctx.mats, rng = ctx.rng;
+    const HW = ctx.W / 2, HD = ctx.D / 2, core = ctx.W > CELL * 1.4 || ctx.D > CELL * 1.4;
     if (v === 0) {          // the HQ: one glass monolith + logo pylon + parking field
-      tower(ctx, cx - 6, cz, 30, 150, 30, wm, M2.steelRoof);
-      mesh(ctx, new THREE.BoxGeometry(2.6, 30, 2.6), M2.steel, cx + 26, 15, cz - 26, { cast: true });
-      mesh(ctx, new THREE.BoxGeometry(13, 6.5, 1), M2.gold, cx + 26, 33, cz - 26, { cast: true });
-      disc(ctx, M2.plazaM, cx + 18, cz + 20, 15, 0.09);
+      tower(ctx, cx - HW * 0.1, cz, 30, 150, 30, wm, M2.steelRoof);
+      mesh(ctx, new THREE.BoxGeometry(2.6, 30, 2.6), M2.steel, cx + HW * 0.45, 15, cz - HD * 0.45, { cast: true });
+      mesh(ctx, new THREE.BoxGeometry(13, 6.5, 1), M2.gold, cx + HW * 0.45, 33, cz - HD * 0.45, { cast: true });
+      disc(ctx, M2.plazaM, cx + HW * 0.3, cz + HD * 0.35, 15, 0.09);
     } else {                // twin towers with a skybridge
-      tower(ctx, cx - 17, cz, 24, 104, 26, wm, M2.steelRoof);
-      tower(ctx, cx + 17, cz, 24, 122, 26, wm, M2.steelRoof);
-      mesh(ctx, new THREE.BoxGeometry(14, 5, 9), M2.steel, cx, 78, cz, { cast: true });
+      tower(ctx, cx - HW * 0.3, cz, 24, 104, 26, wm, M2.steelRoof);
+      tower(ctx, cx + HW * 0.3, cz, 24, 122, 26, wm, M2.steelRoof);
+      mesh(ctx, new THREE.BoxGeometry(HW * 0.6, 5, 9), M2.steel, cx, 78, cz, { cast: true });
+    }
+    if (core) {             // the rest of the core — satellites of varied height, and a plaza
+      const n = Math.max(2, Math.round((ctx.W * ctx.D) / (CELL * CELL) ) );
+      for (let i = 0; i < n; i++) {
+        const a = (i / n) * Math.PI * 2 + 0.7;
+        const x = cx + Math.cos(a) * HW * 0.62, z = cz + Math.sin(a) * HD * 0.62;
+        tower(ctx, x, z, 22 + rng() * 8, 70 + rng() * 70, 22 + rng() * 8, wm, M2.steelRoof);
+      }
+      disc(ctx, M2.plazaM, cx, cz, Math.min(HW, HD) * 0.4, 0.09, 26);
     }
   },
+  // THE WORKS → THE PLANT → THE INDUSTRIAL PARK. Sheds, tanks and stacks multiply across the site.
   industrial(ctx, cx, cz, v) {
     const W = ctx.world, wm = W._winMats[3], M2 = ctx.mats, rng = ctx.rng;
-    if (v === 0) {          // warehouse rows (real ~4m sheds) + container spill
-      tower(ctx, cx - 15, cz - 12, 26, 20, 52, wm, M2.steelRoof);
-      tower(ctx, cx + 16, cz + 6, 26, 24, 44, wm, M2.steelRoof);
-      for (let i = 0; i < 4; i++) mesh(ctx, new THREE.BoxGeometry(11, 4.4, 4.6), M2.containers[(rng() * 5) | 0], cx + 8 + (rng() - 0.5) * 16, 2.2, cz - 28, { cast: true });
-    } else if (v === 1) {   // tank farm + stacks
-      tower(ctx, cx + 12, cz + 12, 34, 24, 34, wm, M2.steelRoof);
-      for (const [ox, oz, r] of [[-20, -14, 7], [-6, -22, 6], [-24, 2, 6]])
-        mesh(ctx, new THREE.CylinderGeometry(r, r, 18, 12), M2.steel, cx + ox, 9, cz + oz, { cast: true });
-      mesh(ctx, new THREE.CylinderGeometry(1.6, 2.2, 46, 8), M2.rust, cx - 2, 23, cz + 4, { cast: true });
-      mesh(ctx, new THREE.CylinderGeometry(1.3, 1.7, 38, 8), M2.rust, cx + 4, 19, cz - 2, { cast: true });
-    } else {                // the works: factory + conveyor ramp
-      tower(ctx, cx - 6, cz - 6, 44, 26, 34, wm, M2.steelRoof);
-      const ramp = mesh(ctx, new THREE.BoxGeometry(34, 1.6, 5), M2.steel, cx + 16, 12, cz + 22, { cast: true });
-      ramp.rotation.z = -0.32;
-      mesh(ctx, new THREE.BoxGeometry(10, 12, 10), M2.rust, cx + 32, 6, cz + 22, { cast: true });
+    const HW = ctx.W / 2, HD = ctx.D / 2;
+    const reps = Math.max(1, Math.round((ctx.W * ctx.D) / (CELL * CELL)));   // one "unit" per cell
+    for (let k = 0; k < reps; k++) {
+      // lay the units out along the site's long axis so a 2×1 plant reads as one works, not two
+      const t = reps === 1 ? 0 : (k / (reps - 1) - 0.5);
+      const ox = ctx.W >= ctx.D ? t * HW * 1.15 : 0, oz = ctx.W >= ctx.D ? 0 : t * HD * 1.15;
+      const bx = cx + ox, bz = cz + oz;
+      if (v === 0) {          // warehouse rows (real ~4m sheds) + container spill
+        tower(ctx, bx - 15, bz - 12, 26, 20, 52, wm, M2.steelRoof);
+        tower(ctx, bx + 16, bz + 6, 26, 24, 44, wm, M2.steelRoof);
+        for (let i = 0; i < 4; i++) mesh(ctx, new THREE.BoxGeometry(11, 4.4, 4.6), M2.containers[(rng() * 5) | 0], bx + 8 + (rng() - 0.5) * 16, 2.2, bz - 28, { cast: true });
+      } else if (v === 1) {   // tank farm + stacks
+        tower(ctx, bx + 12, bz + 12, 34, 24, 34, wm, M2.steelRoof);
+        for (const [dx, dz, r] of [[-20, -14, 7], [-6, -22, 6], [-24, 2, 6]])
+          mesh(ctx, new THREE.CylinderGeometry(r, r, 18, 12), M2.steel, bx + dx, 9, bz + dz, { cast: true });
+        mesh(ctx, new THREE.CylinderGeometry(1.6, 2.2, 46, 8), M2.rust, bx - 2, 23, bz + 4, { cast: true });
+        mesh(ctx, new THREE.CylinderGeometry(1.3, 1.7, 38, 8), M2.rust, bx + 4, 19, bz - 2, { cast: true });
+      } else {                // the works: factory + conveyor ramp
+        tower(ctx, bx - 6, bz - 6, 44, 26, 34, wm, M2.steelRoof);
+        const ramp = mesh(ctx, new THREE.BoxGeometry(34, 1.6, 5), M2.steel, bx + 16, 12, bz + 22, { cast: true });
+        ramp.rotation.z = -0.32;
+        mesh(ctx, new THREE.BoxGeometry(10, 12, 10), M2.rust, bx + 32, 6, bz + 22, { cast: true });
+      }
     }
   },
+  // THE OUTPOST → THE GARRISON → THE AIRBASE. The compound fills whatever ground it has: barracks
+  // rows multiply, and once it is big enough it earns a runway and hangars.
   military(ctx, cx, cz, v, cell) {
     const W = ctx.world, wm = W._winMats[4], M2 = ctx.mats;
-    const H = CELL / 2 - 8;
+    const HW = ctx.W / 2 - 8, HD = ctx.D / 2 - 8;
+    const airbase = ctx.W > CELL * 1.6 && ctx.D > CELL * 1.6;
     // The perimeter fence runs only where the compound MEETS something else. Two adjacent
     // military cells are one base, not two fenced boxes with a corridor between them.
-    const RUNS = { n: [H * 2, 1, 0, -H], s: [H * 2, 1, 0, H], w: [1, H * 2, -H, 0], e: [1, H * 2, H, 0] };
+    const RUNS = { n: [HW * 2, 1, 0, -HD], s: [HW * 2, 1, 0, HD], w: [1, HD * 2, -HW, 0], e: [1, HD * 2, HW, 0] };
     perimeter(cell, (d) => { const [w2, d2, ox, oz] = RUNS[d];
       mesh(ctx, new THREE.BoxGeometry(w2, 6, d2), M2.fence, cx + ox, 3, cz + oz); });
+    if (airbase) {          // a runway, hangars, and the tower — the base is an airfield now
+      slab(ctx, M2.tarmac, cx, cz + HD * 0.45, HW * 1.7, 30);
+      for (let i = -3; i <= 3; i++) slab(ctx, M2.runwayLine, cx + i * (HW * 0.4), cz + HD * 0.45, 16, 1.6, 0.16);
+      for (let i = 0; i < 2; i++) {
+        const hx = cx - HW * 0.4 + i * HW * 0.7, hz = cz - HD * 0.3;
+        const h = mesh(ctx, boxUV(46, 24, 30, wm), wm, hx, 12, hz, { cast: true });
+        reg(W, h, hx, hz, 23, 15, 24, 220);
+        mesh(ctx, new THREE.CylinderGeometry(15, 15, 46, 12, 1, false, 0, Math.PI), M2.oliveRoof, hx, 24, hz, { rz: Math.PI / 2, cast: true });
+      }
+      const tx = cx + HW * 0.75, tz = cz - HD * 0.55;
+      const twr = mesh(ctx, boxUV(12, 44, 12, wm), wm, tx, 22, tz, { cast: true });
+      reg(W, twr, tx, tz, 6, 6, 44, 240);
+      mesh(ctx, new THREE.BoxGeometry(18, 9, 18), wm, tx, 48, tz, { cast: true });
+    }
     if (v === 0) {          // bunkers + watchtower + pad
-      tower(ctx, cx - 12, cz - 10, 34, 15, 28, wm, ctx.mats.oliveRoof);
-      tower(ctx, cx + 16, cz + 14, 26, 12, 22, wm, ctx.mats.oliveRoof);
-      mesh(ctx, new THREE.BoxGeometry(5, 36, 5), M2.olive, cx + 24, 18, cz - 22, { cast: true });
-      mesh(ctx, new THREE.BoxGeometry(9, 5, 9), M2.fence, cx + 24, 38.5, cz - 22, { cast: true });
-      if (ctx.world._heliTex) disc(ctx, new THREE.MeshBasicMaterial({ map: ctx.world._heliTex, transparent: true, opacity: 0.8, depthWrite: false }), cx - 14, cz + 22, 12, 0.12, 24);
-    } else {                // barracks rows + motor pool
-      for (let i = 0; i < 3; i++) tower(ctx, cx - 22 + i * 22, cz - 12, 16, 14, 34, wm, ctx.mats.oliveRoof);
-      for (let i = 0; i < 2; i++) mesh(ctx, new THREE.BoxGeometry(16, 7, 8), M2.olive, cx - 8 + i * 20, 3.5, cz + 24, { cast: true });
-      flagpole(ctx, cx + 30, cz + 16);
+      tower(ctx, cx - HW * 0.3, cz - HD * 0.25, 34, 15, 28, wm, ctx.mats.oliveRoof);
+      tower(ctx, cx + HW * 0.4, cz + HD * 0.35, 26, 12, 22, wm, ctx.mats.oliveRoof);
+      mesh(ctx, new THREE.BoxGeometry(5, 36, 5), M2.olive, cx + HW * 0.6, 18, cz - HD * 0.55, { cast: true });
+      mesh(ctx, new THREE.BoxGeometry(9, 5, 9), M2.fence, cx + HW * 0.6, 38.5, cz - HD * 0.55, { cast: true });
+      if (ctx.world._heliTex) disc(ctx, new THREE.MeshBasicMaterial({ map: ctx.world._heliTex, transparent: true, opacity: 0.8, depthWrite: false }), cx - HW * 0.35, cz + HD * 0.55, 12, 0.12, 24);
+    } else {                // barracks rows + motor pool — more rows on a bigger compound
+      const n = Math.max(3, Math.round(ctx.W / 32));
+      for (let i = 0; i < n; i++) tower(ctx, cx - HW * 0.7 + i * (HW * 1.4 / n), cz - HD * 0.3, 16, 14, 34, wm, ctx.mats.oliveRoof);
+      for (let i = 0; i < 2; i++) mesh(ctx, new THREE.BoxGeometry(16, 7, 8), M2.olive, cx - 8 + i * 20, 3.5, cz + HD * 0.6, { cast: true });
+      flagpole(ctx, cx + HW * 0.75, cz + HD * 0.4);
     }
   },
   political(ctx, cx, cz, v) {
@@ -370,27 +409,48 @@ const T = {
       mesh(ctx, new THREE.ConeGeometry(9, 10, 10), M2.rust, cx - 30, 5, cz - 30, { cast: true });
     }
   },
+  // THE PORT — the clearest case for size tiers. A fishing wharf, a cargo quay and a container
+  // terminal are the same TYPE at three scales: the frontage, the number of berths, the number of
+  // cranes and whether there is a warehouse row at all all fall out of `ctx.D` (the run along the
+  // shore) rather than being three separate tiles.
   seaport(ctx, cx, cz, v) {
     const M2 = ctx.mats, W = ctx.world, rng = ctx.rng;
-    if (v === 0) {          // the container terminal
-      tower(ctx, cx - 20, cz - 10, 24, 20, 44, W._winMats[3], M2.steelRoof);
-      for (let i = 0; i < 9; i++) {
-        const st = (rng() * 2) | 0;
-        mesh(ctx, new THREE.BoxGeometry(11, 4.4, 4.6), M2.containers[(rng() * 5) | 0], cx + 4 + (i % 3) * 13, 2.2 + st * 4.4, cz - 20 + ((i / 3) | 0) * 12, { cast: true });
+    const HW = ctx.W / 2, HD = ctx.D / 2;
+    const big = ctx.D > CELL * 1.5, mid = ctx.D > CELL * 1.2;
+    const berths = Math.max(1, Math.round(ctx.D / 78));            // one berth per ~78u of frontage
+    if (v === 0) {          // THE CONTAINER SIDE — stacks, cranes, a shed per berth
+      for (let b = 0; b < berths; b++) {
+        const bz = cz - HD + (b + 0.5) * (ctx.D / berths);
+        tower(ctx, cx - HW * 0.55, bz, 24, 20, Math.min(44, ctx.D / berths - 12), W._winMats[3], M2.steelRoof);
+        for (let i = 0; i < 6; i++) {
+          const st = (rng() * 2) | 0;
+          mesh(ctx, new THREE.BoxGeometry(11, 4.4, 4.6), M2.containers[(rng() * 5) | 0],
+            cx - 6 + (i % 3) * 13, 2.2 + st * 4.4, bz - 12 + ((i / 3) | 0) * 12, { cast: true });
+        }
+        // one crane per berth, reaching for the water
+        const kx = cx + HW * 0.32;
+        mesh(ctx, new THREE.BoxGeometry(7, 4, 7), M2.gold, kx, 2, bz + 14, { cast: true });
+        mesh(ctx, new THREE.BoxGeometry(2.6, 50, 2.6), M2.gold, kx, 27, bz + 14, { cast: true });
+        mesh(ctx, new THREE.BoxGeometry(40, 2.2, 2.2), M2.gold, kx + 16, 50, bz + 14, { cast: true });
       }
-      // the yard crane, reaching for the water
-      mesh(ctx, new THREE.BoxGeometry(7, 4, 7), M2.gold, cx + 26, 2, cz + 28, { cast: true });
-      mesh(ctx, new THREE.BoxGeometry(2.6, 50, 2.6), M2.gold, cx + 26, 27, cz + 28, { cast: true });
-      mesh(ctx, new THREE.BoxGeometry(40, 2.2, 2.2), M2.gold, cx + 42, 50, cz + 28, { cast: true });
-    } else {                // the piers
-      tower(ctx, cx - 22, cz + 6, 22, 18, 40, W._winMats[3], M2.steelRoof);
-      for (const oz of [-22, 10]) {
-        mesh(ctx, new THREE.BoxGeometry(60, 1.6, 9), M2.deck, cx + 30, 1.3, cz + oz);
-        for (let i = 0; i < 4; i++) mesh(ctx, new THREE.CylinderGeometry(0.7, 0.85, 3.6, 6), M2.wood, cx + 6 + i * 16, 1.6, cz + oz + 5);
+      if (big) {            // a terminal is big enough to need its own admin block and gantry road
+        const ax = cx - HW * 0.8;
+        const adm = mesh(ctx, boxUV(26, 34, 22, W._winMats[0]), W._winMats[0], ax, 17, cz, { cast: true });
+        reg(W, adm, ax, cz, 13, 11, 34, 300);
       }
-      const hull = mesh(ctx, new THREE.BoxGeometry(34, 7, 12), M2.red, cx + 40, 2.4, cz - 6, { cast: true });
-      mesh(ctx, new THREE.BoxGeometry(10, 7, 9), M2.white, cx + 50, 9.4, cz - 6, { cast: true });
-      hull.rotation.y = 0.06;
+    } else {                // THE PIER SIDE — decks, bollards, and a ship if there is room
+      tower(ctx, cx - HW * 0.6, cz + 6, 22, 18, 40, W._winMats[3], M2.steelRoof);
+      const piers = Math.max(2, Math.round(ctx.D / 62));
+      for (let p = 0; p < piers; p++) {
+        const oz = -HD + (p + 0.5) * (ctx.D / piers);
+        mesh(ctx, new THREE.BoxGeometry(HW * 1.1, 1.6, 9), M2.deck, cx + HW * 0.36, 1.3, cz + oz);
+        for (let i = 0; i < 4; i++) mesh(ctx, new THREE.CylinderGeometry(0.7, 0.85, 3.6, 6), M2.wood, cx - HW * 0.1 + i * 16, 1.6, cz + oz + 5);
+      }
+      if (mid) {            // a working ship only fits once the quay is long enough to berth it
+        const hull = mesh(ctx, new THREE.BoxGeometry(Math.min(74, ctx.D * 0.5), 7, 12), M2.red, cx + HW * 0.5, 2.4, cz - HD * 0.2, { cast: true });
+        hull.rotation.y = 0.06;
+        mesh(ctx, new THREE.BoxGeometry(10, 7, 9), M2.white, cx + HW * 0.5 + 18, 9.4, cz - HD * 0.2, { cast: true });
+      }
     }
   },
   resort(ctx, cx, cz, v) {
@@ -498,25 +558,48 @@ const T = {
     reg(W, tank, wx, wz, 11, 11, 46, 130);
     mesh(ctx, new THREE.ConeGeometry(11.6, 6, 10), M2.steelRoof, wx, 49, wz, { cast: true });
   },
-  hospital(ctx, cx, cz, v) {          // civic block with a helipad roof and an ambulance bay
+  // THE CLINIC → GENERAL HOSPITAL → MEDICAL CENTRE. A bigger site buys WINGS off the main slab
+  // and a second pad, not a taller version of the same box.
+  hospital(ctx, cx, cz, v) {
     const M2 = ctx.mats, W = ctx.world;
-    tower(ctx, cx - 4, cz - 6, 46, v === 0 ? 60 : 84, 34, W._winMats[0], M2.paleRoof);
-    if (W._heliTex) disc(ctx, new THREE.MeshBasicMaterial({ map: W._heliTex, transparent: true, opacity: 0.85, depthWrite: false }), cx - 4, cz - 6, 11, (v === 0 ? 60 : 84) + 0.3, 24);
-    mesh(ctx, new THREE.BoxGeometry(26, 7, 12), M2.white, cx + 16, 3.5, cz + 26, { cast: true });      // the bay canopy
-    for (const s of [-1, 1]) mesh(ctx, new THREE.BoxGeometry(1.2, 7, 1.2), M2.steel, cx + 16 + s * 12, 3.5, cz + 32);
-    disc(ctx, M2.plazaM, cx - 22, cz + 24, 13, 0.09);
-    ctx.treeSpots.push([cx - 24, cz + 26]);
+    const HW = ctx.W / 2, HD = ctx.D / 2, big = ctx.W > CELL * 1.4 || ctx.D > CELL * 1.4;
+    const h = v === 0 ? 60 : 84;
+    const mw = Math.min(46, ctx.W * 0.42);
+    tower(ctx, cx - HW * 0.08, cz - HD * 0.1, mw, h, 34, W._winMats[0], M2.paleRoof);
+    if (W._heliTex) disc(ctx, new THREE.MeshBasicMaterial({ map: W._heliTex, transparent: true, opacity: 0.85, depthWrite: false }), cx - HW * 0.08, cz - HD * 0.1, 11, h + 0.3, 24);
+    if (big) {                        // the wings — lower, longer, flanking the tower
+      for (const s of [-1, 1]) {
+        const wx = cx + s * HW * 0.52;
+        tower(ctx, wx, cz + HD * 0.12, Math.min(34, ctx.W * 0.24), 34, Math.min(58, ctx.D * 0.5), W._winMats[0], M2.paleRoof);
+      }
+      if (W._heliTex) disc(ctx, new THREE.MeshBasicMaterial({ map: W._heliTex, transparent: true, opacity: 0.7, depthWrite: false }), cx + HW * 0.52, cz + HD * 0.12, 9, 34.3, 20);
+    }
+    mesh(ctx, new THREE.BoxGeometry(26, 7, 12), M2.white, cx + HW * 0.2, 3.5, cz + HD * 0.5, { cast: true });      // the bay canopy
+    for (const s of [-1, 1]) mesh(ctx, new THREE.BoxGeometry(1.2, 7, 1.2), M2.steel, cx + HW * 0.2 + s * 12, 3.5, cz + HD * 0.5 + 6);
+    disc(ctx, M2.plazaM, cx - HW * 0.45, cz + HD * 0.45, 13, 0.09);
+    ctx.treeSpots.push([cx - HW * 0.5, cz + HD * 0.5]);
   },
-  market(ctx, cx, cz, v) {            // low stalls + awnings: dense cover, nothing tall
+  // THE MARKET → THE GRAND BAZAAR. Stalls tile the whole site, so a bigger market is genuinely
+  // more market — dense low cover you fight through, never anything tall.
+  market(ctx, cx, cz, v) {
     const M2 = ctx.mats, rng = ctx.rng;
-    disc(ctx, M2.plazaM, cx, cz, 36, 0.08, 28);
-    const rows = v === 0 ? 3 : 4;
-    for (let r = 0; r < rows; r++) for (let c2 = 0; c2 < 3; c2++) {
-      const x = cx - 26 + c2 * 26, z = cz - 26 + r * 18 + (rng() - 0.5) * 3;
+    const HW = ctx.W / 2 - 12, HD = ctx.D / 2 - 12;
+    disc(ctx, M2.plazaM, cx, cz, Math.min(HW, HD) * 1.15, 0.08, 30);
+    const cols = Math.max(3, Math.round(ctx.W / 32)), rows = Math.max(3, Math.round(ctx.D / 24));
+    for (let r = 0; r < rows; r++) for (let c2 = 0; c2 < cols; c2++) {
+      const x = cx - HW + (c2 + 0.5) * (HW * 2 / cols);
+      const z = cz - HD + (r + 0.5) * (HD * 2 / rows) + (rng() - 0.5) * 3;
       mesh(ctx, new THREE.BoxGeometry(14, 6, 9), M2.wood, x, 3, z, { cast: true });
       mesh(ctx, new THREE.BoxGeometry(16, 1.2, 11), (rng() < 0.5 ? M2.red : M2.canvas), x, 7, z, { cast: true });
     }
-    ctx.treeSpots.push([cx + 30, cz - 28], [cx - 30, cz + 30]);
+    // a bazaar is covered — a colonnaded arcade down one side, which is real cover
+    if (ctx.W > CELL * 1.4 || ctx.D > CELL * 1.4) {
+      const ax = cx - HW - 6;
+      const arc = mesh(ctx, new THREE.BoxGeometry(12, 14, HD * 2), M2.stone, ax, 7, cz, { cast: true });
+      reg(ctx.world, arc, ax, cz, 6, HD, 14, 220);
+      mesh(ctx, new THREE.BoxGeometry(18, 2, HD * 2 + 6), M2.terraRoof, ax, 15, cz, { cast: true });
+    }
+    ctx.treeSpots.push([cx + HW * 0.9, cz - HD * 0.9], [cx - HW * 0.9, cz + HD * 0.9]);
   },
   // THE METRO — a real cut-and-cover trench you fight IN, not a decal. The planner lays these
   // in a straight line along one grid row, so consecutive metro cells form ONE continuous cut

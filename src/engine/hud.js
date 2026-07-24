@@ -11,7 +11,7 @@ import { icon, ATTR_ICON, ICON_MEANING } from './icons.js';
 import { writeBroadcast, tapeRows, llmPunchUp, titleCase, money, causeLine, mulberry } from '../data/news.js';
 import { recOf, snapshotTable, rankingTable, recentIncidents, championId, tournamentNo } from '../data/rankings.js';
 import { cityList } from '../data/cities.js';
-import { generatePlan, thresholdPlan, galleryPlan, TILE_INFO, VARIANTS, popLabel, CELL, CELL_RANGE, POP_TYPES, TILE_FOOT, applyPlanEdits, regionOf, ROAD } from '../data/cityplan.js';
+import { generatePlan, thresholdPlan, galleryPlan, TILE_INFO, VARIANTS, popLabel, CELL, CELL_RANGE, POP_TYPES, TILE_FOOT, TILE_SIZES, NO_RESCUE, applyPlanEdits, regionOf, ROAD } from '../data/cityplan.js';
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
@@ -354,6 +354,10 @@ const CSS = `
 /* --- dev-tool controls: population preset, cell size, validation --- */
 .lswovl .atdim{ margin-left:auto; color:var(--text-6); }
 .lswovl .atpop{ display:flex; flex-wrap:wrap; gap:3px; margin-bottom:7px; }
+.lswovl .atsize{ display:flex; flex-wrap:wrap; align-items:center; gap:3px; margin:2px 0 6px; }
+.lswovl .atsize span:first-child{ font-family:var(--f-mono); font-size:var(--t-micro);
+  color:var(--text-5); letter-spacing:.1em; margin-right:3px; }
+.lswovl .atsize .c3{ font-size:var(--t-micro); padding:2px 6px; }
 .lswovl .atpop .c3{ font-size:var(--t-micro); padding:2px 6px; }
 .lswovl .atval{ font-family:var(--f-mono); font-size:var(--t-micro); letter-spacing:.05em;
   border-left:2px solid var(--line-2); padding:4px 0 4px 7px; margin-bottom:8px; }
@@ -1186,7 +1190,7 @@ export class HUD {
         st.edits[ak] = { t: a.t, v: a.v || 0, lock: true };
         return;
       }
-      st.edits[key] = { t: st.paint, v: (Math.random() * (VARIANTS[st.paint] || 1)) | 0 };
+      st.edits[key] = { t: st.paint, v: (Math.random() * (VARIANTS[st.paint] || 1)) | 0, sz: st.size || 0 };
     });
   }
   _layouts() { try { return JSON.parse(localStorage.getItem('threshold_layouts_v1') || '{}'); } catch { return {}; } }
@@ -1300,7 +1304,9 @@ export class HUD {
         const o = C[r + i][c + j];
         if (!o || !o.ref || o.ref[0] !== r || o.ref[1] !== c) holes++;
       }
-      if (cell.t === 'water' || !plan.roads) continue;
+      // ⚠ the SAME rule the generator uses (NO_RESCUE) — open country is not landlocked, it is
+      // open country, and a validator that doesn't know that reports 32 phantom problems.
+      if (NO_RESCUE[cell.t] || !plan.roads) continue;
       if (!(plan.roads.h[r][c] || plan.roads.h[r + 1][c] || plan.roads.v[r][c] || plan.roads.v[r][c + 1])) landlocked++;
     }
     if (landlocked) out.push({ bad: 1, t: `${landlocked} LANDLOCKED — no road on any side` });
@@ -1403,6 +1409,7 @@ export class HUD {
             <div class="atmeta" id="atMeta"></div>
             <div class="atbtns">
               <div class="atpal" id="atPal"></div>
+              <div class="atsize" id="atSize"></div>
               <div class="atpalhint">Click the map to paint · <b>🔒 LOCK</b> freezes a cell against rerolls · painted cells survive everything</div>
               <div class="atstep">
                 <span>GRID</span>
@@ -1449,13 +1456,29 @@ export class HUD {
       const pal = $('#atPal');
       if (pal) {
         pal.innerHTML = Object.keys(TILE_INFO).map(t => {
-          const f = TILE_FOOT[t];
-          return `<span class="atsw${st.paint === t ? ' on' : ''}" data-paint="${t}" title="${esc(TILE_INFO[t].label)}${f ? ` — ${f[0]}×${f[1]} CELLS` : ''}" style="--sw:${TILE_INFO[t].c}">${f ? '<i>▦</i>' : ''}</span>`;
+          const L = TILE_SIZES[t];
+          const tip = L ? ` — ${L.length} SIZES: ${L.map(z => z.f[0] + '×' + z.f[1]).join(' / ')}` : '';
+          return `<span class="atsw${st.paint === t ? ' on' : ''}" data-paint="${t}" title="${esc(TILE_INFO[t].label)}${tip}" style="--sw:${TILE_INFO[t].c}">${L ? '<i>▦</i>' : ''}</span>`;
         }).join('')
           + `<span class="atsw${st.paint === 'water' ? ' on' : ''}" data-paint="water" title="WATER — paint the sea" style="--sw:#2a5a78"></span>`
           + `<span class="atsw era${st.paint === 'LOCK' ? ' on' : ''}" data-paint="LOCK" title="LOCK — freeze this cell against rerolls">🔒</span>`
           + `<span class="atsw era${st.paint === 'ERASE' ? ' on' : ''}" data-paint="ERASE" title="Erase — hand the cell back to the generator">✕</span>`;
-        pal.querySelectorAll('[data-paint]').forEach(sw => sw.onclick = () => { st.paint = sw.dataset.paint; render(); });
+        pal.querySelectorAll('[data-paint]').forEach(sw => sw.onclick = () => {
+          st.paint = sw.dataset.paint;
+          const L = TILE_SIZES[st.paint];                       // default to the middle rung
+          st.size = L ? Math.floor((L.length - 1) / 2) : 0;
+          render();
+        });
+      }
+      // --- THE SIZE PICKER. Only shown for a type that HAS a ladder — a park has one size and
+      // pretending otherwise would be a lie. It is how you author "a small port here, a container
+      // terminal there" rather than taking whatever the population tier happens to earn.
+      const szEl = $('#atSize');
+      if (szEl) {
+        const L = TILE_SIZES[st.paint];
+        szEl.innerHTML = !L ? '' : `<span>SIZE</span>` + L.map((z, i) =>
+          `<span class="c3${(st.size || 0) === i ? ' on' : ''}" data-size="${i}" title="${z.f[0]}×${z.f[1]} CELLS">${esc(z.n)}</span>`).join('');
+        szEl.querySelectorAll('[data-size]').forEach(b2 => b2.onclick = () => { st.size = +b2.dataset.size; render(); });
       }
       // --- click the preview to paint that cell
       const cv = $('#atCv');

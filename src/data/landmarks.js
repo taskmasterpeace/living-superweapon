@@ -66,7 +66,9 @@ export const LANDMARK_POOL = [
     why: 'the deep-water terminal' },
 ];
 
-const POP_TIER = { 'Village': 1, 'Small Town': 2, 'Town': 3, 'Small City': 4, 'City': 5, 'Large City': 6, 'Mega City': 7 };
+// The population ladder. Lives here because cityplan imports THIS file, so it cannot go the
+// other way round; cityplan re-exports it for the tool.
+export const POP_TIER = { 'Village': 1, 'Small Town': 2, 'Town': 3, 'Small City': 4, 'City': 5, 'Large City': 6, 'Mega City': 7 };
 
 // How many landmarks this city earns. Derived from the sheet so it can be explained, never rolled.
 export function landmarkBudget(city, popType) {
@@ -91,7 +93,10 @@ export function pickLandmarks(city, popType, rng, N) {
     if (fh > N || fw > N) continue;                   // it has to physically fit on this grid
     const match = !L.needs ? 0.6 : (L.needs.some(t => types.includes(t)) ? 1.6 : 0);
     if (!match) continue;
-    scored.push({ ...L, s: L.weight * match + rng() * 3 });
+    // ⚠ a landmark takes the BIGGEST size it has earned — it is the thing the city is known for,
+    // so it must not roll a small one. `foot` here is only a floor; the planner's size ladder
+    // decides the rest (and steps down if the grid genuinely has no room).
+    scored.push({ ...L, big: true, s: L.weight * match + rng() * 3 });
   }
   scored.sort((a, b) => b.s - a.s);
   return scored.slice(0, budget);
