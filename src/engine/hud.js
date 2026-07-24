@@ -2047,7 +2047,7 @@ export class HUD {
     };
     const load = (clip) => {
       if (clip._imgs) return clip._ready;
-      clip._imgs = clip.frames.map((u) => { const im = new Image(); im.src = u; return im; });
+      clip._imgs = clip.frames.map((u) => { const im = new Image(); if (u && u[0] !== '#') im.src = u; return im; });   // '#enc…' = encoder never landed — leave it blank, drawImage skips incomplete images
       clip._ready = Promise.all(clip._imgs.map((im) => im.decode ? im.decode().catch(() => {}) : 0));
       return clip._ready;
     };
@@ -2309,7 +2309,8 @@ export class HUD {
       const clip = clips[ci % clips.length]; if (!clip) return;
       imgReady = false;
       img.onload = () => { imgReady = true; };
-      img.src = clip.frames[fi % clip.frames.length];
+      const _fu = clip.frames[fi % clip.frames.length];
+      if (_fu && _fu[0] !== '#') img.src = _fu;
     };
     if (clips.length) loadFrame();
 

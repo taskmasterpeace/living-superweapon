@@ -142,6 +142,10 @@ export class NewsCrew {
 
   // ---------- lifecycle ----------
   reset(modeId) {
+    for (const c of this.clips || []) for (const u of c.frames || []) if (u && u.startsWith && u.startsWith('blob:')) URL.revokeObjectURL(u);
+    for (const u of this._preroll || []) if (u && u.startsWith && u.startsWith('blob:')) URL.revokeObjectURL(u);
+    this._pool = this._pool || [];
+    this._warmed = false;
     this.enabled = !!modeId && modeId !== 'training';
     this.grp.visible = this.enabled;
     this.clips = []; this._preroll = []; this.rec = null; this._onAirT = 0;
@@ -371,12 +375,19 @@ export class NewsCrew {
 
     // --- the broadcast: pose the lens, then capture on the record clock ---
     this._poseCamera(dt);
+    // warm the news camera's shader path ONCE, at the top of the match — its POV compiles
+    // programs the main camera never used, and a first-compile mid-fight is a visible hitch
+    if (!this._warmed) { this._warmed = true; try { this._renderPOV(null); } catch (e) {} }
     if (this.rec) {
       this.rec.acc += dt;
       const int = 1 / this.rec.fps;
-      while (this.rec.acc >= int) {
-        this.rec.acc -= int;
-        if (this.rec.frames.length < 90) this.rec.frames.push(this._capture(this.rec.lt));
+      // ⚠ ONE capture per sim frame, and the accumulator CLAMPS. The old `while` burst-captured
+      // to catch up after any stall — a 300ms hitch queued six captures into the next frame, so
+      // one spike became a freeze train. A dropped broadcast frame is invisible; a frozen game
+      // is not. The EMA guard keeps the recorder polite while the frame budget is already tight.
+      if (this.rec.acc >= int) {
+        this.rec.acc = Math.min(this.rec.acc - int, int);
+        if (this.rec.frames.length < 90 && g.world._ema < 34) this._captureFrame(this.rec.frames, this.rec.lt);
       }
       if (this.t >= this.rec.until) this._finalize();   // records THROUGH match end — the last KO wraps on its own clock
       this._onAirT = 0.8;
@@ -384,10 +395,13 @@ export class NewsCrew {
       if (this._onAirT > 0) this._onAirT -= dt;
       // rolling pre-roll so clips include the CAUSE, not just the crater
       this._capT += dt;
-      if (this._capT >= PREROLL_INT && !g.matchOver && this.g.world._qTier > 0) {
+      if (this._capT >= PREROLL_INT && !g.matchOver && this.g.world._qTier > 0 && g.world._ema < 30) {
         this._capT = 0;
-        this._preroll.push(this._capture(null));
-        if (this._preroll.length > PREROLL_MAX) this._preroll.shift();
+        this._captureFrame(this._preroll, null);
+        if (this._preroll.length > PREROLL_MAX) {
+          const dead = this._preroll.shift();
+          if (dead && dead.startsWith && dead.startsWith('blob:')) URL.revokeObjectURL(dead);
+        }
       }
     }
   }
@@ -406,7 +420,9 @@ export class NewsCrew {
       let drop = -1, dp = 1e9;
       for (let i = 0; i < this.clips.length; i++) { const c = this.clips[i]; if (c === lastKO) continue; if (c.priority < dp) { dp = c.priority; drop = i; } }
       if (drop < 0) break;
-      total -= this.clips[drop].frames.length; this.clips.splice(drop, 1);
+      total -= this.clips[drop].frames.length;
+      for (const u of this.clips[drop].frames) if (u && u.startsWith && u.startsWith('blob:')) URL.revokeObjectURL(u);
+      this.clips.splice(drop, 1);
     }
   }
 
@@ -442,7 +458,29 @@ export class NewsCrew {
   }
 
   // ---------- capture: render POV → blit → stamp the broadcast package ----------
-  _capture(lt) {
+  // ⚠ THE ENCODE IS ASYNC NOW. The old path called canvas.toDataURL('image/jpeg') SYNCHRONOUSLY
+  // for every captured frame — a main-thread JPEG encode inside the sim frame, over and over while
+  // a blocked beam kept the recorder hot. That was the "blocking completely freezes the game"
+  // report. The POV render + overlay still land in `this.canvas` (the live PiP monitor), then a
+  // POOLED COPY goes to toBlob (off-thread in every modern browser); the frame slot holds a
+  // '#enc…' token until the blob lands, written back by token so pre-roll shifts and clip
+  // shedding can never mis-file a frame. The TV and the cold open skip frames that never landed.
+  _captureFrame(arr, lt) {
+    this._renderPOV(lt);
+    let pooled = this._pool && this._pool.pop();
+    if (!pooled) { pooled = document.createElement('canvas'); pooled.width = W; pooled.height = H; }
+    pooled.getContext('2d').drawImage(this.canvas, 0, 0);
+    const token = '#enc' + (this._seq = (this._seq || 0) + 1);
+    arr.push(token);
+    pooled.toBlob((b) => {
+      const i = arr.indexOf(token);
+      if (b && i >= 0) arr[i] = URL.createObjectURL(b);
+      else if (i >= 0) arr.splice(i, 1);          // encode failed — drop the slot cleanly
+      if (!this._pool) this._pool = [];
+      if (this._pool.length < 8) this._pool.push(pooled);
+    }, 'image/jpeg', 0.62);
+  }
+  _renderPOV(lt) {
     const g = this.g, world = g.world, r = world.renderer, cv = r.domElement;
     const pr = r.getPixelRatio();
     // hide the player-UI layer of the scene — news cameras don't see fog-of-war or reticles
@@ -466,7 +504,6 @@ export class NewsCrew {
     const x = this.ctx;
     x.drawImage(cv, 0, cv.height - H, W, H, 0, 0, W, H);
     this._overlay(x, lt);
-    return this.canvas.toDataURL('image/jpeg', 0.62);
   }
 
   _buildOverlayAssets() {

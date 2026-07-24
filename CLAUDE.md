@@ -632,6 +632,19 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   stub `world.render` for sim-only numbers (2.05ms/frame, 9×9 + 28 interiors + rumble).
 - ⚠ Never `git add -A` in this repo — name the files (a stray abilities.js draft got swept into
   a commit and had to be pulled back out).
+- **THE BROADCAST ENCODE LAW (2026-07-24, "blocking freezes the game")**: the news crew's
+  `_capture` called `canvas.toDataURL('image/jpeg')` SYNCHRONOUSLY per captured frame — a
+  main-thread JPEG encode inside the sim frame, at up to 20fps, for as long as highlight()
+  kept extending the recorder (a blocked beam kept it hot indefinitely) — and the record clock
+  was a `while` that BURST-captured to catch up after any stall, so one spike became a freeze
+  train. Fixed in newscrew.js: `_captureFrame` renders the POV into the live PiP canvas then
+  hands a POOLED COPY to async `toBlob` (frame slot holds a '#enc…' token until the blob lands,
+  written back by token so pre-roll shifts / clip shedding can't mis-file); ONE capture per sim
+  frame with a clamped accumulator; `world._ema` guards (skip capture ≥34ms, preroll ≥30ms);
+  the news camera's shaders warm ONCE at match start (its POV compiles programs the main camera
+  never used). Object URLs are revoked at reset and when clips shed. The TV and cold open skip
+  '#'-token frames (drawImage of an incomplete Image is a spec-level no-op). Never put a sync
+  encode or an uncapped catch-up loop in the frame path again.
 
 ## HANDOFF
 - **`HANDOFF.md` at the repo root** is the orientation document: architecture, the ten rules that
