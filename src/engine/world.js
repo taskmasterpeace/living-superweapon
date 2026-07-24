@@ -54,6 +54,7 @@ export class World {
     this._buildSky();
     this._cityBits = [];                 // meshes outside the arena group (trees, lawns) — tracked for city rebuilds
     this.doors = [];                     // every building entrance the tiles registered — the interior system's way in
+    this._spinners = [];                 // things that TURN (the Ferris wheel) — ticked in render()
     this._crackTex = this._crackTexture();
     this.plan = thresholdPlan();         // the flagship WHITE CITY ships as the boot theater
     this._buildArena();
@@ -543,6 +544,7 @@ export class World {
   _teardownCity() {
     this.doors = [];
     this._wGrid = null;
+    this._spinners = [];
     // ⚠ MATERIALS LEAK IF YOU ONLY DISPOSE GEOMETRY. Every rebuild allocates a fresh ground,
     // wall, water, quay and lamp material, plus ONE MeshBasicMaterial per building for its crack
     // overlay — dozens per city. Rebuilding 7 cities in a row took a soak from 6.4ms to 48.6ms
@@ -1716,6 +1718,10 @@ export class World {
     if (this._normalsDirty) { this._normalsDirty = false; this.groundGeo.computeVertexNormals(); }   // one recompute per frame, no matter how many craters landed
     if (this._grassTime) this._grassTime.value = now / 1000;   // wind
     if (this._waterT) this._waterT.value = now / 1000;         // harbor swell
+    if (this._spinners.length) {
+      const sdt = Math.min((now - (this._lastRender || now)) / 1000, 0.1);
+      for (let i = 0; i < this._spinners.length; i++) this._spinners[i].obj.rotation.z += this._spinners[i].rate * sdt;
+    }
     if (this._lastRender) {
       const d = Math.min(now - this._lastRender, 100);
       this._ema = this._ema * 0.9 + d * 0.1;

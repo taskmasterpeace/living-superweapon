@@ -1147,6 +1147,82 @@ const T = {
       for (let i = 0; i < 6; i++) ctx.treeSpots.push([cx - 34 + rng() * 68, cz + 8 + rng() * 32]);
     }
   },
+  // THE FUNFAIR — tourism made playable. Midway stalls are dense low cover, the carousel and
+  // gate dress the ground, and the FERRIS WHEEL actually TURNS (world._spinners) — the landmark
+  // you see rolling from across the map. The 2×2 AMUSEMENT PARK adds a coaster loop on posts and
+  // a drop tower. Carnival palette: red, canvas, gold — NO PURPLE.
+  funfair(ctx, cx, cz, v, cell) {
+    const M2 = ctx.mats, W = ctx.world, rng = ctx.rng;
+    const HW = ctx.W / 2 - 8, HD = ctx.D / 2 - 8, big = ctx.W > CELL * 1.4;
+    disc(ctx, M2.plazaM, cx, cz, Math.min(HW, HD) * 1.05, 0.08, 30);
+    // the gate arch on the south frontage
+    const gz = cz + HD;
+    for (const s of [-1, 1]) mesh(ctx, new THREE.BoxGeometry(2.6, 18, 2.6), M2.gold, cx + s * 12, 9, gz, { cast: true });
+    mesh(ctx, new THREE.BoxGeometry(28, 4.4, 3), M2.red, cx, 19.5, gz, { cast: true });
+    mesh(ctx, new THREE.BoxGeometry(22, 2.6, 0.8), M2.metroSign, cx, 19.5, gz + 1.8, { cast: true });
+    // THE WHEEL — A-frame legs, a spoked rim, gondolas; the group spins about its own z
+    const wx = cx - HW * 0.45, wz = cz - HD * 0.35, R = big ? 30 : 21, hub = R + 7;
+    for (const s of [-1, 1]) {
+      const leg = mesh(ctx, new THREE.BoxGeometry(2.4, hub + 6, 2.4), M2.steel, wx + s * 5, (hub + 6) / 2, wz, { cast: true });
+      leg.rotation.z = s * 0.12;
+    }
+    const base = mesh(ctx, new THREE.BoxGeometry(10, 4, 8), M2.steel, wx, 2, wz, { cast: true });
+    reg(W, base, wx, wz, 6, 5, 4, 260);
+    const wheel = new THREE.Group();
+    wheel.position.set(sx(ctx, wx), hub * ctx.S + ctx.gy, sz(ctx, wz));
+    if (ctx.S !== 1) wheel.scale.setScalar(ctx.S);
+    const rim = new THREE.Mesh(new THREE.TorusGeometry(R, 1.1, 8, 26), M2.gold); rim.castShadow = true; wheel.add(rim);
+    wheel.add(new THREE.Mesh(new THREE.TorusGeometry(R * 0.55, 0.6, 6, 20), M2.steel));
+    for (let i = 0; i < 8; i++) { const sp = new THREE.Mesh(new THREE.BoxGeometry(1, R * 2, 1), M2.steel); sp.rotation.z = (i / 8) * Math.PI; wheel.add(sp); }
+    for (let i = 0; i < 10; i++) {
+      const a = (i / 10) * Math.PI * 2;
+      const go = new THREE.Mesh(new THREE.BoxGeometry(4.4, 4, 3.4), i % 2 ? M2.red : M2.canvas);
+      go.position.set(Math.cos(a) * R, Math.sin(a) * R, 0); go.castShadow = true; wheel.add(go);
+    }
+    ctx.g.add(wheel);
+    W._spinners.push({ obj: wheel, rate: 0.16 });
+    // the carousel
+    const kx = cx + HW * 0.4, kz = cz - HD * 0.3;
+    disc(ctx, M2.red, kx, kz, 9, 0.3, 18);
+    mesh(ctx, new THREE.CylinderGeometry(0.8, 0.8, 9, 8), M2.gold, kx, 4.5, kz, { cast: true });
+    mesh(ctx, new THREE.ConeGeometry(10.5, 5, 12), M2.canvas, kx, 11, kz, { cast: true });
+    for (let i = 0; i < 6; i++) { const a = (i / 6) * 6.283; mesh(ctx, new THREE.CylinderGeometry(0.25, 0.25, 7, 5), M2.steel, kx + Math.cos(a) * 6.5, 3.5, kz + Math.sin(a) * 6.5); }
+    // the midway — stall rows between the gate and the rides
+    const rows = big ? 3 : 2, cols = big ? 5 : 3;
+    for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+      const x = cx - (cols - 1) * 8 + c * 16 + (rng() - 0.5) * 2, z = cz + HD * 0.45 - r * 14;
+      mesh(ctx, new THREE.BoxGeometry(9, 5.5, 6.5), M2.wood, x, 2.75, z, { cast: true });
+      mesh(ctx, new THREE.BoxGeometry(10.5, 1.1, 8), (r + c) % 2 ? M2.red : M2.canvas, x, 6, z, { cast: true });
+    }
+    if (big) {
+      // THE COASTER — a closed elliptical loop on posts, the track riding a sine of heights
+      const rx = HW * 0.55, rz = HD * 0.55, segs = 22;
+      let px = null, py = 0, pz = null;
+      for (let i = 0; i <= segs; i++) {
+        const a = (i / segs) * Math.PI * 2;
+        const x = cx + Math.cos(a) * rx, z = cz + Math.sin(a) * rz;
+        const h = 10 + Math.sin(a * 2 + 1) * 5 + Math.max(0, Math.sin(a - 0.6)) * 10;
+        if (i % 2 === 0) mesh(ctx, new THREE.BoxGeometry(1.2, h, 1.2), M2.steel, x, h / 2, z, { cast: i % 4 === 0 });
+        if (px !== null) {
+          const dx = x - px, dz = z - pz, len = Math.hypot(dx, dz);
+          const tr = mesh(ctx, new THREE.BoxGeometry(len + 1, 0.9, 2.6), M2.red, (x + px) / 2, (h + py) / 2, (z + pz) / 2);
+          tr.rotation.order = 'YZX';
+          tr.rotation.y = -Math.atan2(dz, dx);
+          tr.rotation.z = Math.atan2(h - py, len);
+        }
+        px = x; py = h; pz = z;
+      }
+      // the drop tower
+      const dx = cx + HW * 0.5, dz = cz + HD * 0.4;
+      const dtw = mesh(ctx, new THREE.BoxGeometry(3.4, 46, 3.4), M2.steel, dx, 23, dz, { cast: true });
+      reg(W, dtw, dx, dz, 3, 3, 46, 240);
+      mesh(ctx, new THREE.BoxGeometry(10, 2.4, 10), M2.red, dx, 12, dz, { cast: true });
+      mesh(ctx, new THREE.BoxGeometry(6, 3.4, 6), M2.gold, dx, 47.5, dz, { cast: true });
+    }
+    door(ctx, cx - 6, cz + HD + 0.4, 0, 'turnstile');
+    door(ctx, cx + 6, cz + HD + 0.4, 0, 'turnstile');
+    ctx.treeSpots.push([cx - HW * 0.8, cz + HD * 0.8], [cx + HW * 0.85, cz + HD * 0.75]);
+  },
   plaza(ctx, cx, cz, v) {
     const M2 = ctx.mats, rng = ctx.rng;
     disc(ctx, M2.plazaM, cx, cz, 34, 0.08, 30);

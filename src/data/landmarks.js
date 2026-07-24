@@ -64,6 +64,9 @@ export const LANDMARK_POOL = [
   { t: 'seaport',    weight: 4,  minPop: 4, foot: [2, 1], score: { water: 5 },
     needs: ['seaport'],
     why: 'the deep-water terminal' },
+  { t: 'funfair',    weight: 6,  minPop: 4, foot: [2, 2], score: { water: 2, south: 1 },
+    needs: ['resort'],
+    why: 'the wonder wheel' },
 ];
 
 // The population ladder. Lives here because cityplan imports THIS file, so it cannot go the
@@ -127,6 +130,7 @@ const NAMES = {
   airport:    ['{C} INTERNATIONAL', '{C} AIRFIELD', 'THE {C} AERODROME'],
   railyard:   ['THE {C} YARDS', 'CENTRAL DEPOT', 'THE MARSHALLING YARDS'],
   seaport:    ['THE PORT OF {C}', '{C} DEEP WATER', 'THE CONTAINER TERMINAL'],
+  funfair:    ['THE {C} WONDER WHEEL', 'THE {C} PIER', 'THE {C} FUNFAIR', 'LUNA PARK'],
   cathedral:  null,                                   // filled from the region's faith, above
 };
 export function nameLandmark(t, city, region, rng) {

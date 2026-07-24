@@ -42,6 +42,7 @@ export const TILE_INFO = {
   mountain:    { label: 'THE HEIGHTS', c: '#8a8478' },
   airport:     { label: 'THE FIELD',   c: '#bfc8d8' },
   railyard:    { label: 'THE YARDS',   c: '#b08d5a' },
+  funfair:     { label: 'THE FUNFAIR', c: '#ff8552' },
   // --- LANDMARKS (chosen per city by data/landmarks.js, never by a fixed placement row) ---
   monument:    { label: 'THE MONUMENT', c: '#e8dcc0' },
   tower:       { label: 'THE SPIRE',    c: '#cfe0f0' },
@@ -50,7 +51,7 @@ export const TILE_INFO = {
   fortress:    { label: 'THE CITADEL',  c: '#a89880' },
   university:  { label: 'THE COLLEGE',  c: '#a8e08a' },
 };
-export const VARIANTS = { residential: 3, commercial: 3, company: 2, industrial: 3, military: 2, political: 2, educational: 2, temple: 3, mining: 2, seaport: 2, resort: 2, park: 2, plaza: 2, stadium: 2, hospital: 2, market: 2, metro: 2, farmland: 3, forest: 3, mountain: 2, airport: 2, railyard: 2, monument: 4, tower: 3, cathedral: 4, palace: 2, fortress: 2, university: 2 };
+export const VARIANTS = { funfair: 2, residential: 3, commercial: 3, company: 2, industrial: 3, military: 2, political: 2, educational: 2, temple: 3, mining: 2, seaport: 2, resort: 2, park: 2, plaza: 2, stadium: 2, hospital: 2, market: 2, metro: 2, farmland: 3, forest: 3, mountain: 2, airport: 2, railyard: 2, monument: 4, tower: 3, cathedral: 4, palace: 2, fortress: 2, university: 2 };
 
 // ---- MULTI-CELL FOOTPRINTS ------------------------------------------------------------------
 // A tile used to be exactly one 96u cell, which is why there could be no airport, no rail yard,
@@ -95,7 +96,7 @@ export const TILE_MAX_H = {
   political: 46, educational: 54, temple: 50, mining: 42, seaport: 56, resort: 80,
   park: 26, plaza: 34, stadium: 42, hospital: 88, market: 18, metro: 14,
   farmland: 44, forest: 38, mountain: 36, airport: 78, railyard: 54,
-  monument: 78, tower: 294, cathedral: 96, palace: 50, fortress: 78, university: 74,
+  monument: 78, tower: 294, cathedral: 96, palace: 50, fortress: 78, university: 74, funfair: 84,
 };
 export function computeBands(plan) {
   const S = (plan.cell || CELL) / CELL;
@@ -150,6 +151,8 @@ export const TILE_SIZES = {
                 { f: [1, 2], n: 'THE FACULTY',       tier: 6 }],
   resort:      [{ f: [1, 1], n: 'THE HOTEL',         tier: 3 },
                 { f: [1, 2], n: 'THE RESORT STRIP',  tier: 6 }],
+  funfair:     [{ f: [1, 1], n: 'THE FAIRGROUND',    tier: 3 },
+                { f: [2, 2], n: 'THE AMUSEMENT PARK', tier: 5 }],
 };
 // The default footprint for a type — used when nothing asks for a specific size (the map maker's
 // plain paint, and every caller that predates size tiers). Middle of the ladder, so painting a
@@ -217,6 +220,7 @@ export const PLACEMENT = [
   { t: 'seaport',     need: 'seaport',     score: { water: 4, cluster: 1 } },
   { t: 'resort',      need: 'resort',      score: { water: 3, south: 1 } },
   { t: 'resort',      need: 'resort',      minN: 5, score: { water: 3 } },
+  { t: 'funfair',     need: 'resort',      minN: 4, chance: 0.9, score: { water: 2, south: 1 } },
   { t: 'political',   need: 'political',   score: { center: 3 }, landmark: true },
   { t: 'military',    need: 'military',    score: { rim: 3, water: -1 } },
   { t: 'military',    need: 'military',    minN: 5, score: { cluster: 2 } },
