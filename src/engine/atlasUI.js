@@ -164,7 +164,7 @@ export function mountAtlas(host, opts = {}) {
       const cell = plan.cells[r][c];
       const px = pad + c * cs, py = pad + r * cs;
       if (!cell) { x.fillStyle = '#181a20'; x.fillRect(px + gap / 2, py + gap / 2, cs - gap, cs - gap); continue; }
-      if (cell.t === 'water') { x.fillStyle = '#2a5a78'; x.fillRect(px, py, cs, cs); continue; }
+      if (cell.t === 'water') { x.fillStyle = ['#2a5a78', '#1d4560', '#0e2a40'][Math.min(2, (cell.d || 1) - 1)]; x.fillRect(px, py, cs, cs); continue; }
       if (cell.ref) continue;                                   // the anchor paints the whole footprint
       const fw = cell.fw || 1, fh = cell.fh || 1;
       x.fillStyle = (TILE_INFO[cell.t] ? TILE_INFO[cell.t].c : '#6a6458') + 'cc';
@@ -319,8 +319,11 @@ export function mountAtlas(host, opts = {}) {
     // --- THE SIZE PICKER — only for a type that HAS a ladder; a control that lies is worse.
     const szEl = $('#atSize');
     if (szEl) {
-      const Lz = TILE_SIZES[st.paint];
-      szEl.innerHTML = !Lz ? '' : `<span>SIZE</span>` + Lz.map((z, i) =>
+      // WATER reuses the size row as its DEPTH row — the painted edit's `sz` becomes the tier
+      const Lz = st.paint === 'water'
+        ? [{ n: 'SHALLOWS', f: [1, 1] }, { n: 'THE DEEP', f: [1, 1] }, { n: 'THE TRENCH', f: [1, 1] }]
+        : TILE_SIZES[st.paint];
+      szEl.innerHTML = !Lz ? '' : `<span>${st.paint === 'water' ? 'DEPTH' : 'SIZE'}</span>` + Lz.map((z, i) =>
         `<span class="c3${(st.size || 0) === i ? ' on' : ''}" data-size="${i}" title="${z.f[0]}×${z.f[1]} CELLS">${esc(z.n)}</span>`).join('');
       szEl.querySelectorAll('[data-size]').forEach(b2 => b2.onclick = () => { st.size = +b2.dataset.size; render(); });
     }

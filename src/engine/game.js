@@ -847,6 +847,21 @@ export class Game {
     this.worldImpact(pos, radius, power, caster);   // crater the ground + damage cover + street life
   }
 
+  // A splash: ripple rings on the surface + spray. Fired by blasts over water and by ragdolls
+  // going in ("carry the fall" — it reads under slow-mo because the rings live ~0.5s).
+  splash(pos, power = 1) {
+    const p = new THREE.Vector3(pos.x, 0.55, pos.z);
+    this.vfx.ring(p, { color: '#bfe8f0', r0: 1.5, r1: 9 + power * 8, life: 0.5 });
+    this.vfx.ring(p, { color: '#7fb8c8', r0: 1, r1: 5 + power * 5, life: 0.34 });
+    const n = Math.round(8 + power * 9);
+    for (let i = 0; i < n; i++) this.particles.spawn({
+      x: pos.x + (Math.random() - 0.5) * 4, y: 0.6, z: pos.z + (Math.random() - 0.5) * 4,
+      vx: (Math.random() - 0.5) * 15, vy: 8 + Math.random() * 15 * power, vz: (Math.random() - 0.5) * 15,
+      life: 0.45 + Math.random() * 0.3, size: 1 + Math.random() * 1.1, color: ['#cfeef8', '#9fd4e8'], drag: 1.4, shrink: true,
+    });
+    if (this.audio.splash) this.audio.splash(power, pos);
+  }
+
   // ---------- destructible environment ----------
   // A blast on the world: crater the ground (big hits only) and damage nearby cover.
   worldImpact(pos, radius, power = 1, src = null) {
@@ -855,6 +870,8 @@ export class Game {
       this.vfx.scorch(new THREE.Vector3(pos.x, 0.14, pos.z), Math.min(radius * 0.5, 24), '#161a22');  // scorched pit
       this.cityStats.craters++;
     }
+    // over WATER a blast reads as water — ripple rings, spray, and the right sound
+    if (pos.y < 7 && this.world.waterAt && this.world.waterAt(pos.x, pos.z)) this.splash(pos, Math.min(2, power));
     if (this.news) this.news.onBlast(pos, radius, power);   // the crew ducks — or eats pavement
     this.noise(pos, Math.min(2.6, 0.9 + power * 0.6 + radius * 0.02), src);   // detonations carry
     for (let i = this.world.cover.length - 1; i >= 0; i--) {

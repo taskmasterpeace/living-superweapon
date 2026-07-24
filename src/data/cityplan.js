@@ -83,6 +83,13 @@ export const isRef = (cell) => !!(cell && cell.ref);
 // skyline and SKY is a clean lane above the tallest roof. tower() clamps to the declaration; the
 // validator flags any type that forgets one. A landmark spire doesn't break the ladder — it
 // RAISES that city's building band, exactly as ruled.
+// ---- THE DEEP ----------------------------------------------------------------------------------
+// Water carries an authored DEPTH TIER: 1 SHALLOWS · 2 DEEP · 3 TRENCH. The bed is real terrain
+// pushed to the tier's depth (x plan.scale), the surface tint darkens with it, and the negative
+// bands of the layer contract are where these live. Movement below the surface is a later session.
+export const WATER_DEPTHS = [0, -8, -22, -44];
+export const WATER_TIER_NAMES = ['', 'THE SHALLOWS', 'THE DEEP', 'THE TRENCH'];
+
 export const TILE_MAX_H = {
   residential: 84, commercial: 142, company: 152, industrial: 52, military: 58,
   political: 46, educational: 54, temple: 50, mining: 42, seaport: 56, resort: 80,
@@ -523,7 +530,7 @@ export function generatePlan(city, seed = 1, opts = {}) {
   const popTier = POP_TIER[popType] || 5;      // what size of thing this city has earned
   const freeAt = (r, c) => r >= 0 && r < N && c >= 0 && c < N && C[r][c] == null;
   for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
-    if (c >= N - waterCols) C[r][c] = { t: 'water' };                  // the east shore
+    if (c >= N - waterCols) C[r][c] = { t: 'water', d: Math.min(3, c - (N - waterCols) + 1) };   // the east shore — deeper as you head out
   }
   const edge = (r, c) => Math.max(Math.abs(r - mid), Math.abs(c - mid));
   const nearWater = (r, c) => water ? -(N - 1 - waterCols - c) : 0;
@@ -757,6 +764,11 @@ export function applyPlanEdits(plan, edits) {
     const e = edits[key]; if (!e || !e.t) continue;
     const [r, c] = key.split(',').map(Number);
     if (!(r >= 0 && c >= 0 && r < N && c < N)) continue;      // survives a grid RESIZE, just clipped
+    if (e.t === 'water') {                                    // painted sea — the SIZE picker doubles as the depth picker
+      clearFootprint(plan, r, c);
+      C[r][c] = { t: 'water', d: Math.min(3, (e.sz || 0) + 1), painted: true, lock: !!e.lock };
+      touched = true; continue;
+    }
     // the painted SIZE (an index into the type's ladder) decides the footprint; without one it
     // falls back to the type's default, which is what every edit made before size tiers existed
     const L = TILE_SIZES[e.t];
@@ -803,7 +815,7 @@ export function galleryPlan() {
   };
   let i = 0;
   for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
-    if (c === N - 1) { plan.cells[r][c] = { t: 'water' }; continue; }
+    if (c === N - 1) { plan.cells[r][c] = { t: 'water', d: 2 }; continue; }
     const t = order[i % order.length];
     plan.cells[r][c] = { t, v: Math.floor(i / order.length) % (VARIANTS[t] || 1) };
     i++;

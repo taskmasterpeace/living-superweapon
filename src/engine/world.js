@@ -7,7 +7,7 @@ import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { clamp, damp, setBands } from '../core/util.js';
 import { buildTiles } from './citytiles.js';
-import { CELL, districtNameAt, thresholdPlan, ROAD, junctionAt } from '../data/cityplan.js';
+import { CELL, districtNameAt, thresholdPlan, ROAD, junctionAt, WATER_DEPTHS } from '../data/cityplan.js';
 import { mulberry } from '../data/news.js';
 
 // FOG OCCLUSION GRID — the replacement for the old 24-box uniform array. 256² texels over the
@@ -432,7 +432,65 @@ export class World {
   }
 
   // 0 = dry land · 1 = shallow shelf · 2 = deep water
-  waterAt(x) { return x < this.waterX ? 0 : x < this.deepX ? 1 : 2; }
+  // 0 dry · 1 shallows (wade) · 2 deep/trench (swim-slow). Plan-aware: a painted lake in the
+  // middle of a city counts. The flagship (no cell grid) keeps its legacy x-thresholds.
+  waterAt(x, z) {
+    const G = this._wGrid;
+    if (G) {
+      if (z === undefined) return x < this.waterX ? 0 : x < this.deepX ? 1 : 2;   // legacy 1-arg caller
+      const c = Math.floor((x + G.A) / G.K), r = Math.floor((z + G.A) / G.K);
+      if (r < 0 || c < 0 || r >= G.N || c >= G.N) return 0;
+      const t = G.tg[r * G.N + c];
+      return t === 0 ? 0 : t === 1 ? 1 : 2;
+    }
+    return x < this.waterX ? 0 : x < this.deepX ? 1 : 2;
+  }
+  // the DESIGNED bed depth under a point (negative, world units) — smooth across tier boundaries
+  waterDepthAt(x, z) {
+    const G = this._wGrid;
+    if (!G) return this.waterAt(x, z) ? -6 : 0;
+    return this._sampleDepthGrid(G, x, z);
+  }
+  _sampleDepthGrid(G, x, z) {
+    const fx = (x + G.A) / G.K - 0.5, fz = (z + G.A) / G.K - 0.5;
+    const c0 = Math.floor(fx), r0 = Math.floor(fz);
+    const tx = fx - c0, tz = fz - r0;
+    const at = (r, c) => (r < 0 || c < 0 || r >= G.N || c >= G.N) ? 0 : G.dg[r * G.N + c];
+    const a = at(r0, c0) * (1 - tx) + at(r0, c0 + 1) * tx;
+    const b = at(r0 + 1, c0) * (1 - tx) + at(r0 + 1, c0 + 1) * tx;
+    return a * (1 - tz) + b * tz;
+  }
+  // Build the per-cell water grid from the plan: tg = tier (0 land), dg = target bed depth.
+  _computeWaterGrid(plan) {
+    this._wGrid = null;
+    if (!plan || !plan.cells) return;
+    const N = plan.N, K = plan.cell || 96, A = plan.arena, sc = plan.scale || 1;
+    const tg = new Uint8Array(N * N), dg = new Float32Array(N * N);
+    let any = 0;
+    for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
+      const cell = plan.cells[r][c];
+      if (cell && cell.t === 'water') {
+        const d = Math.min(3, cell.d || 1);
+        tg[r * N + c] = d; dg[r * N + c] = WATER_DEPTHS[d] * sc; any = 1;
+      }
+    }
+    if (any) this._wGrid = { tg, dg, N, K, A };
+  }
+  // BATHYMETRY — the sea gets a real bed. Runs on FLAT cities too (the old seaward push lived
+  // inside _buildRelief and silently skipped any city without relief).
+  _buildBathymetry(plan) {
+    const G = this._wGrid;
+    if (!G || !this._gh) return;
+    const pa = this.groundGeo.attributes.position.array;
+    for (let i = 0; i < this._gh.length; i++) {
+      const bed = this._sampleDepthGrid(G, this._gvx[i], this._gvz[i]);
+      if (bed >= -0.2) continue;
+      const t = Math.min(1, -bed / 6), sw = t * t * (3 - 2 * t);   // shore apron eases in
+      const h2 = this._gh[i] * (1 - sw) + bed * sw;
+      if (h2 < this._gh[i]) { this._gh[i] = h2; pa[i * 3 + 2] = h2; }
+    }
+    this.groundGeo.attributes.position.needsUpdate = true; this._normalsDirty = true;
+  }
 
   // district naming for the news desk / lower thirds — plan-aware, flagship keeps canon names
   districtAt(x, z) { return districtNameAt(this.plan, x, z) || 'THE CITY'; }
@@ -484,6 +542,7 @@ export class World {
   // Tear the current city down to bare terrain systems, then raise a new one from a plan.
   _teardownCity() {
     this.doors = [];
+    this._wGrid = null;
     // ⚠ MATERIALS LEAK IF YOU ONLY DISPOSE GEOMETRY. Every rebuild allocates a fresh ground,
     // wall, water, quay and lamp material, plus ONE MeshBasicMaterial per building for its crack
     // overlay — dozens per city. Rebuilding 7 cities in a row took a soak from 6.4ms to 48.6ms
@@ -574,6 +633,7 @@ export class World {
     const walls = new THREE.Mesh(mergeGeometries(wallGeos), wallMat);
     wallGeos.forEach(gg => gg.dispose());
     walls.castShadow = false; walls.receiveShadow = true; g.add(walls);
+    this._computeWaterGrid(plan);          // FIRST — the quay, the surface and the bed all read it
     // water column (seaport / resort shores)
     if (plan.water) {
       this.waterX = A - plan.waterCols * K + 10 * S; this.deepX = A - (plan.waterCols - 0.5) * K - 2 * S;
@@ -587,24 +647,16 @@ export class World {
         for (let i = 0; i < 14; i++) { const y = Math.random() * 64; x.beginPath(); x.moveTo(Math.random() * 40, y); x.lineTo(40 + Math.random() * 200, y); x.stroke(); }
         return new THREE.CanvasTexture(c);
       })());
-      const water = new THREE.Mesh(
-        new THREE.PlaneGeometry(A - this.waterX + 6, A * 2, 12, 1),
-        new THREE.MeshStandardMaterial({ map: wTex, transparent: true, opacity: 0.88, roughness: 0.25, metalness: 0.35, color: '#9fd4e8', depthWrite: false })
-      );
-      water.rotation.x = -Math.PI / 2;
-      water.position.set((this.waterX + A + 6) / 2, 0.34, 0);
-      water.material.onBeforeCompile = (sh) => {
-        sh.uniforms.uT = this._waterT = { value: 0 };
-        sh.vertexShader = 'uniform float uT;\n' + sh.vertexShader.replace('#include <begin_vertex>',
-          `#include <begin_vertex>\n transformed.z += sin(uT*1.3 + position.x*0.14 + position.y*0.05) * 0.22;`);
-      };
-      g.add(water); this.water = water;
+      // (surface built below from the water GRID — every painted cell gets water, not just the
+      // eastern columns; see _buildWaterSurface)
       const quay = new THREE.Mesh(new THREE.BoxGeometry(3, 1.1, A * 2), new THREE.MeshStandardMaterial({ color: '#cfc8b6', roughness: 0.85 }));
       quay.position.set(this.waterX - 1.5, 0.55, 0); quay.receiveShadow = true; g.add(quay);
     } else { this.waterX = A + 500; this.deepX = A + 600; }
+    this._buildWaterSurface(g);
     // THE LAND FIRST. Relief is raised, then every built-up cell is levelled to its own terrace,
     // and only then do the tiles go up — so a building sits on the ground rather than fighting it.
     this._buildRelief(plan);
+    this._buildBathymetry(plan);   // the sea gets its bed — flat cities included
     this._padCells(plan);
     // THE TILES — every cell raised by its type builder
     this.doors = [];                       // the tiles re-register every entrance
@@ -1151,6 +1203,64 @@ export class World {
       return a + (b - a) * sv;
     };
   }
+  // THE LIVING WATER SURFACE — one subdivided quad per water cell, merged, depth-tinted:
+  // turquoise over the shallows, near-black over the trench ("the deep end is night"), waves in
+  // the vertex stage and a drifting glint band in the fragment. NO PURPLE; ki is the only glow.
+  _buildWaterSurface(g) {
+    const G = this._wGrid;
+    if (!G) return;
+    const SEG = 6, pos = [], dep = [], idx = [];
+    for (let r = 0; r < G.N; r++) for (let c = 0; c < G.N; c++) {
+      if (!G.tg[r * G.N + c]) continue;
+      const x0 = -G.A + c * G.K, z0 = -G.A + r * G.K, base = pos.length / 3;
+      for (let i = 0; i <= SEG; i++) for (let j = 0; j <= SEG; j++) {
+        const x = x0 + (j / SEG) * G.K, z = z0 + (i / SEG) * G.K;
+        pos.push(x, 0.34, z);
+        dep.push(this._sampleDepthGrid(G, x, z));
+      }
+      for (let i = 0; i < SEG; i++) for (let j = 0; j < SEG; j++) {
+        const a = base + i * (SEG + 1) + j, b = a + 1, cc = a + SEG + 1, d2 = cc + 1;
+        idx.push(a, cc, b, b, cc, d2);
+      }
+    }
+    if (!pos.length) return;
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    geo.setAttribute('aDepth', new THREE.Float32BufferAttribute(dep, 1));
+    geo.setIndex(idx);
+    const mat = new THREE.ShaderMaterial({
+      transparent: true, depthWrite: false,
+      uniforms: { uT: { value: 0 } },
+      vertexShader: `
+        uniform float uT; attribute float aDepth; varying float vD; varying vec3 vP;
+        void main() {
+          vD = -aDepth; vP = position;
+          float k = 0.14 + min(1.0, vD / 30.0) * 0.12;
+          vec3 p = position;
+          p.y += sin(uT * 1.15 + position.x * 0.11 + position.z * 0.05) * k
+               + sin(uT * 1.9 - position.z * 0.14 + position.x * 0.03) * k * 0.55;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
+        }`,
+      fragmentShader: `
+        uniform float uT; varying float vD; varying vec3 vP;
+        void main() {
+          vec3 shal = vec3(0.180, 0.435, 0.459);       // #2e6f75
+          vec3 deep = vec3(0.071, 0.220, 0.251);       // #123840
+          vec3 tren = vec3(0.027, 0.051, 0.063);       // #070d10
+          vec3 col = mix(shal, deep, smoothstep(6.0, 22.0, vD));
+          col = mix(col, tren, smoothstep(22.0, 42.0, vD));
+          float g = sin(vP.x * 0.42 + uT * 0.8) * sin(vP.z * 0.31 - uT * 0.62);
+          col += smoothstep(0.93, 1.0, g) * 0.055 / (1.0 + vD * 0.08);
+          float a = (0.80 + min(1.0, vD / 34.0) * 0.16) * smoothstep(0.0, 3.0, vD);
+          gl_FragColor = vec4(col, a);
+        }`,
+    });
+    const water = new THREE.Mesh(geo, mat);
+    water.renderOrder = 1;
+    g.add(water);
+    this.water = water;
+    this._waterT = mat.uniforms.uT;                     // the render loop drives the swell
+  }
   _buildRelief(plan) {
     const rel = plan.relief;
     if (!rel || !rel.amp || !this._gh) return 0;
@@ -1173,23 +1283,8 @@ export class World {
       if (this._gh[i] < lo) lo = this._gh[i];
       if (this._gh[i] > hi) hi = this._gh[i];
     }
-    // ⚠ THE SEA NEEDS A BED. The water plane sits at a fixed height; relief raised the ground
-    // straight through it, so a coastal city with hills came out with the sea running over a
-    // ridge. Everything seaward of the quay is pushed BELOW the waterline, with a shore apron so
-    // the land slopes into it instead of ending at a cliff.
-    if (plan.water) {
-      const wx = A - plan.waterCols * (plan.cell || CELL) + 10 * (plan.scale || 1);
-      const apron = (plan.cell || CELL) * 0.55;
-      for (let i = 0; i < this._gh.length; i++) {
-        const d = this._gvx[i] - (wx - apron);
-        if (d <= 0) continue;
-        const t = Math.min(1, d / apron);
-        const s = t * t * (3 - 2 * t);
-        this._gh[i] = this._gh[i] * (1 - s) + (-7 * (plan.scale || 1)) * s;
-        pa[i * 3 + 2] = this._gh[i];
-        if (this._gh[i] < lo) lo = this._gh[i];
-      }
-    }
+    // (The old x-threshold seaward push lived here; per-cell BATHYMETRY in _buildBathymetry —
+    // called for every generated city, flat ones included — replaced it.)
     this.groundGeo.attributes.position.needsUpdate = true; this._normalsDirty = true;
     return hi - lo;
   }

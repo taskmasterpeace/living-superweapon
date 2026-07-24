@@ -141,8 +141,25 @@ export class Ragdoll {
     const bound = (game && game.world ? game.world.ARENA : ARENA) - 3;
     const cover = game && game.world ? game.world.cover : null;
     const hAt = (game && game.world && game.world.heightAt) ? (x, z) => game.world.heightAt(x, z) : null;
+    const wAt = (game && game.world && game.world.waterAt) ? (x, z) => game.world.waterAt(x, z) : null;
     for (const k in this.P) {
       const pt = this.P[k], r = GROUND_R[k] || DEFAULT_R;
+      // WATER — a body going in splashes ONCE (core points only) and drags below the surface,
+      // then settles on the real seabed like any other ground.
+      // ⚠ the trigger is CROSSING THE SURFACE (y≈0.34) while falling, not reaching a depth — on
+      // the flagship the bed is y=0 and a chest RESTS at its own 1.25 radius, so a depth test
+      // could never fire there. The drop gate keeps a settled, bobbing body from re-splashing.
+      if (wAt && pt.pos.y < 1.5 && wAt(pt.pos.x, pt.pos.z)) {
+        if (!this._splashed && (k === 'chest' || k === 'pelvis' || k === 'head') && (pt.prev.y - pt.pos.y) > 0.35) {
+          this._splashed = true;
+          if (game && game.splash) game.splash({ x: pt.pos.x, y: 0.4, z: pt.pos.z }, 1.3);
+        }
+        if (pt.pos.y < 1.0) {                            // water drag — all axes, gentle
+          pt.prev.x += (pt.pos.x - pt.prev.x) * 0.16;
+          pt.prev.y += (pt.pos.y - pt.prev.y) * 0.2;
+          pt.prev.z += (pt.pos.z - pt.prev.z) * 0.16;
+        }
+      }
       // ground — the TERRAIN, so bodies settle into quarry pits and craters instead of on thin air
       const gy = hAt ? hAt(pt.pos.x, pt.pos.z) : 0;
       if (pt.pos.y < gy + r) {

@@ -970,7 +970,7 @@ export class Fighter {
     }
     if (this.pos.y > BANDS.ceiling) { this.pos.y = BANDS.ceiling; if (this.vel.y > 0) this.vel.y = 0; }  // ceiling above CLOUDS — per-city, from plan.bands
     // harbor splashes — churning through water kicks up spray
-    if (game && this.pos.y < 1.5 && game.world.waterAt && game.world.waterAt(this.pos.x) && Math.hypot(this.vel.x, this.vel.z) > 8 && Math.random() < dt * 10) {
+    if (game && this.pos.y < 1.5 && game.world.waterAt && game.world.waterAt(this.pos.x, this.pos.z) && Math.hypot(this.vel.x, this.vel.z) > 8 && Math.random() < dt * 10) {
       game.particles.spawn({ x: this.pos.x, y: 0.7, z: this.pos.z, vx: (Math.random() * 2 - 1) * 8, vy: 8 + Math.random() * 6, vz: (Math.random() * 2 - 1) * 8, life: 0.42, size: 2.8, color: ['#bfe6f2', '#7fb8d0', '#ffffff'], drag: 1.4, shrink: true });
     }
 
@@ -1015,7 +1015,7 @@ export class Fighter {
     }
     // the harbor: shallow water slows, deep water is a swim (flight lifts you out)
     if (!this.flying && this.pos.y < 2 && this._game && this._game.world.waterAt) {
-      const wl = this._game.world.waterAt(this.pos.x);
+      const wl = this._game.world.waterAt(this.pos.x, this.pos.z);
       if (wl) s *= wl === 2 ? 0.45 : 0.62;
     }
     if (this.guarding) s *= 0.34;               // guarding slows you

@@ -13,9 +13,10 @@ const ui = mountAtlas(document.body, { world, solo: true });
 ui.open();                           // solo mounts go live immediately — the page IS the live view
 
 // The render loop: the panel owns the camera state; we just honour it every frame.
+// ⚠ try/catch like main.js — one throw (e.g. a zero-size window while the pane is hidden)
+// must not kill the loop forever.
 function frame() {
-  world.orbit(ui.cam);
-  world.render();
+  try { world.orbit(ui.cam); world.render(); } catch (err) { console.error(err); }
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);

@@ -146,6 +146,34 @@ export class AudioBus {
     this._env(f, 0.05, (0.28 + power * 0.25) * pg * pg, 0.001); n.start(); n.stop(this.t + 0.06);
   }
 
+  // water taking a body or a blast: a low whump swallowed by a downward-swept noise wash,
+  // then two or three droplet blips. Discrete one-shot — never loops (the loop-vs-one-shot rule).
+  splash(power = 1, pos = null) {
+    if (!this.ok || this.muted) return;
+    const pg = this._pg(pos, 190); if (!pg) return;
+    const o = this.ctx.createOscillator(); o.type = 'sine';
+    o.frequency.setValueAtTime(150, this.t);
+    o.frequency.exponentialRampToValueAtTime(46, this.t + 0.14);
+    this._env(o, 0.16, Math.min(0.8, 0.3 + power * 0.28) * pg, 0.003); o.start(); o.stop(this.t + 0.18);
+    const n = this._noise(0.42); const f = this.ctx.createBiquadFilter();
+    f.type = 'lowpass'; f.Q.value = 0.8;
+    f.frequency.setValueAtTime(2200, this.t);
+    f.frequency.exponentialRampToValueAtTime(320, this.t + 0.34);
+    n.connect(f);
+    this._env(f, 0.36, (0.34 + power * 0.3) * pg, 0.004); n.start(); n.stop(this.t + 0.42);
+    for (let i = 0; i < 3; i++) {
+      const d = this.ctx.createOscillator(); d.type = 'sine';
+      const t0 = this.t + 0.16 + i * 0.07 + Math.random() * 0.05;
+      d.frequency.setValueAtTime(900 + Math.random() * 700, t0);
+      d.frequency.exponentialRampToValueAtTime(300, t0 + 0.05);
+      const gn = this.ctx.createGain(); gn.gain.setValueAtTime(0, t0);
+      gn.gain.linearRampToValueAtTime(0.05 * pg, t0 + 0.008);
+      gn.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.06);
+      d.connect(gn); gn.connect((this.bus && this.bus.sfx) || this.master);
+      d.start(t0); d.stop(t0 + 0.08);
+    }
+  }
+
   boom(power = 1, pos = null) {
     if (!this.ok || this.muted) return;
     const pg = this._pg(pos, 240); if (!pg) return;   // explosions carry across the arena
