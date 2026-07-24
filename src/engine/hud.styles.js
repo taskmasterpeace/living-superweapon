@@ -761,3 +761,15 @@ body.tablet #touch .tzone-l{ left:24px; bottom:24px; }
 body.tablet #touch .tzone-r{ right:24px; bottom:24px; }
 body.tablet .obox button, body.tablet .odone{ min-height:42px; }   /* menu taps, not mouse clicks */
 `;
+
+
+export const DECK_CSS = `
+/* ============ STEAM DECK — body.deck (Valve UA, or 1280x800 + a pad) ============
+   A 7-inch panel read at arm's length: the TYPE RAMP steps up ~15% wholesale (token override —
+   every surface follows), focus targets grow for stick-driven menus (UINav), pad glyphs are
+   already the hint language. The HUD layout itself stays desktop — the Deck has the room. */
+body.deck{ --t-micro:10px; --t-tiny:11px; --t-label:12px; --t-sm:13px; --t-body:14.5px; --t-md:15.5px; --t-lg:17px; }
+body.deck .obox button, body.deck .odone{ min-height:42px; }
+body.deck #hud .hint{ max-width:320px; }
+body.deck .rcard, body.deck .mcard{ outline-offset:3px; }   /* stick-focus reads at couch distance */
+`;

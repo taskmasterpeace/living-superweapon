@@ -63,14 +63,20 @@ function applyPhoneMode() {
   const short = Math.min(innerWidth, innerHeight);
   const phone = touchy() && short <= 500;
   const tablet = touchy() && !phone && short <= 1100;
+  // STEAM DECK: Valve's browser carries the token; a 1280x800 window with a pad plugged in is
+  // the same machine wearing a different hat. 7-inch panel = the TYPE gets bigger, not the HUD.
+  const padIn = !!(navigator.getGamepads && Array.from(navigator.getGamepads()).some(Boolean));
+  const deck = !phone && !tablet && (/steam ?deck/i.test(navigator.userAgent) || (padIn && innerWidth === 1280 && innerHeight === 800));
   document.body.classList.toggle('phone', phone);
   document.body.classList.toggle('tablet', tablet);
+  document.body.classList.toggle('deck', deck);
   if (phone) {
     game.world._pixelCap = Math.min(game.world._pixelCap || 2.6e6, 1.35e6);
     if (game.world._qTier > 1 && !game.world.qualityOverride) { game.world._qTier = 1; game.world._applyQuality && game.world._applyQuality(); }
   } else if (tablet) {
     game.world._pixelCap = Math.min(game.world._pixelCap || 2.6e6, 2.0e6);   // retina tablets drown at full budget too
   }
+  if (deck && game.pad) game.pad.preferGlyphs = true;   // the hint panel already speaks pad when one is active
 }
 applyPhoneMode();
 addEventListener('resize', applyPhoneMode);
