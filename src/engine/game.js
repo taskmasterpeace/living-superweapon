@@ -69,7 +69,7 @@ const MODE_IMPL = {
     hud(g) { const hi = g.humans.reduce((m, h) => Math.max(m, h.fighter.kills), 0); return { type: 'rumble', frags: hi, target: g.ms.target, timer: Math.max(0, Math.ceil(g.ms.timer)) }; },
   },
   training: {
-    setup(g, o) { g.spawnDummy(-34, -20); g.spawnDummy(34, -20); if (!o || !o.tutorial) g.spawnRival(); },   // tutorial = calm room
+    setup() {},   // THE ROOM STARTS EMPTY (Robert's ruling): N orders a bot, B orders a rival
     tick() {}, onKO() {}, isOver() { return null; },
     hud() { return { type: 'training' }; },
   },
@@ -614,10 +614,7 @@ export class Game {
     this.player = this.addFighter(def, { isPlayer: true, team: 0, x: 0, z: 30 });
     this.player.ai = null;
 
-    // training dummies
-    this.spawnDummy(-34, -20); this.spawnDummy(34, -20);
-    // a live rival
-    this.spawnRival();
+    // the room starts EMPTY — N orders a training bot, B orders a rival
     this.running = true;
   }
 
@@ -1444,7 +1441,7 @@ export class Game {
       dps: (def.dps || 60) * p, kiPerSec: def.kiPerSec || 22,
       color: def.color, color2: def.color2, power: (def.power || 1) * p, steer: def.steer,
       might: (def.might || (def.dps || 60) / 50) * p * (caster.def.beamMight || 1),   // char treats the budget differently
-      dtype: def.dtype, siphon: def.siphon,                                             // arcane beams drink ki
+      dtype: def.dtype, siphon: def.siphon, spiral: def.spiral,                         // arcane beams drink ki; VEGA spirals
     });
   }
 

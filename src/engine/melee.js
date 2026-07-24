@@ -17,7 +17,7 @@ export class MeleeSystem {
   }
   constructor(game) { this.game = game; }
 
-  canAct(f) { return f.alive && f.hitstop <= 0 && f.staggerT <= 0 && !f.grabbedBy && f.grabState !== 'clinch' && !f.hanging; }   // one hand on the wall = no trifecta
+  canAct(f) { return f.alive && f.hitstop <= 0 && f.staggerT <= 0 && f.stunT <= 0 && !f.grabbedBy && f.grabState !== 'clinch' && !f.hanging; }   // one hand on the wall = no trifecta
 
   strike(f) {
     if (!this.canAct(f) || f.grabbing || f.guarding || f.strikeActive > 0 || f.meleeCharge > 0) return;

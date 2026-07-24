@@ -208,6 +208,12 @@ addEventListener('keydown', (e) => {
     if (e.code === 'BracketLeft') { cycleHero(-1); return; }
   }
   if (e.code === 'KeyB') { const b = game.spawnRival(); hud.feed('A rival ' + b.name + ' enters the arena!', b.def.colors.accent); }
+  // ORDER A TRAINING BOT — the Danger Room starts empty now; targets appear on command
+  if (e.code === 'KeyN' && game.modeId === 'training' && game.player) {
+    const p = game.player, a = Math.random() * Math.PI * 2;
+    game.spawnDummy(p.pos.x + Math.cos(a) * 16, p.pos.z + Math.sin(a) * 16);
+    hud.feed('Sim Construct deployed', '#7fe6ff');
+  }
   if (e.code === 'KeyM') { audio.muted = !audio.muted; try { localStorage.setItem('threshold_muted', audio.muted ? '1' : '0'); } catch {} hud.feed(audio.muted ? '🔇 Muted (M)' : '🔊 Sound on (M)', '#9fb2c9'); }
   if (KM.digitsSwap && e.code in digits) { const c = ROSTER[digits[e.code]]; if (c) { game.setPlayerChar(c.id); hud.setPlayer(c); hud.feed('Now piloting ' + c.name + ' · ' + c.title, c.colors.accent); } }
 });

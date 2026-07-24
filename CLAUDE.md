@@ -798,6 +798,25 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
 - **Codex on mobile** (≤640px, `CODEX_MOBILE` css in hud): case-file rows stack label-over-value,
   armament table scrolls sideways (`.cfarmwrap`), pager/close grow to thumb size.
 
+## THE PRESSURE LADDER + THE STUN + THE EMPTY ROOM (2026-07-24) — manual §9
+- **Beams enforce a strength contest now** (projectiles.js beam tick): `press = min(dps·buff/24,
+  1.25)` vs `hold = str/10 (+0.4 guarding, +0.15 metal)` → LAUNCHED (weak, unguarded, after
+  0.45s) · PUSHED (a real slide — the shove sets `burstT` to lift move()'s walk-speed clamp,
+  which is why beam knockback historically only worked on corpses) · HOLD · WALK-THROUGH
+  (str 9–10; press is capped below their hold — eating the dps is the price). The old constant
+  per-tick kb is GONE from the beam's takeDamage call.
+- **THE STUN** (entity.js): 24% of maxHp inside a rolling 2s window (`_burst`/`_burstT`) →
+  `applyStun()`: `stunT = 1.7/ccRecover`, all action gates (melee canAct, abilities ready,
+  move) treat it like stagger, guard/charges drop, and a FLYER FALLS. Three gold octahedron
+  stars orbit the head (`parts.stars`, lazy, hidden after). 4s `_stunImmune` — no chain-stuns.
+  Blocked damage never enters the window (guard is the anti-stun). Dummies exempt.
+- **The Danger Room starts EMPTY**: training.setup spawns nothing; **N** orders a Sim
+  Construct (main.js, training only), **B** orders a rival; the tutorial `ensureBot`s its own
+  targets. Verified ladder (headless, clear lane): GALE open 40u+launch+stun · GALE blocked
+  22u no-stun · VEGA 16u · RAGE 2.8u standing · RAGE vs 20dps 0u (19 dmg) · flyer VOLT
+  knocked out of the sky. **VEGA's Violet Lance**: radius 2.2→1.45 + `spiral: true` — 26
+  instanced orbs wound 3.5 turns down the hose (built/updated/disposed with the beam).
+
 ## THE SAMPLE BANK (2026-07-24) — real recordings for every discrete SFX
 - **`core/samples.js`** (`MANIFEST` + `SampleBank` + `HOT_SET`) + **254 Kenney CC0 oggs in
   `/public/audio`** (~6MB, offline-first; impact/sci-fi/interface/rpg/jingle packs). Every

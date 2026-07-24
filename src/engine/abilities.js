@@ -8,7 +8,7 @@ const ORB_GEO = new THREE.SphereGeometry(1, 16, 12);                       // sh
 const ORB_CORE_MAT = new THREE.MeshBasicMaterial({ color: '#fff' });
 export const PAYLOAD_COLORS = { poison: '#8fe08a', flame: '#ff7a2a', explosive: '#ffd24a', gas: '#9a4ae0' };
 
-function ready(c, def, st) { return st.cd <= 0 && c.ki >= (def.cost || 0) && c.hitstop <= 0 && c.staggerT <= 0; }   // staggered fighters cast NOTHING
+function ready(c, def, st) { return st.cd <= 0 && c.ki >= (def.cost || 0) && c.hitstop <= 0 && c.staggerT <= 0 && c.stunT <= 0; }   // staggered/stunned fighters cast NOTHING
 function pay(c, def, st) { c.ki -= (def.cost || 0); st.cd = (def.cd || 0) * ((c.sheet && c.sheet.cdMult) || 1); }   // INTELLECT + Tactician shave cooldowns
 function chargeOrb(c, st, color) {
   if (!st.orb) {

@@ -259,3 +259,42 @@ Neither mechanic adds a damage type, so the DAMAGE CODEX is unchanged by design.
   contract as `launchT`), and the reel lifts move()'s speed clamp via `burstT`.
 - **`glider`** (def flag): airborne + falling + ascend held (and not descend) → fall clamps to
   −8, horizontal speed ×1.4, flight pose engages. Folds on landing/descend. Mechanical, no ki.
+
+## §9 · THE BEAM PRESSURE LADDER + THE STUN (2026-07-24)
+
+**What a beam DOES to you depends on who you are.** Every sustained beam tick compares its
+PRESSURE against your HOLD:
+
+- `press = min(dps × casterPowerBuff / 24, 1.25)` — capped, so the very top of the roster can
+  wade through even an ultimate-class beam (eating the damage is the price of the walk).
+- `hold = strength/10 + 0.4 if guarding + 0.15 if metal`.
+
+The outcomes, weakest to strongest — the readable ladder:
+
+| you | result |
+|---|---|
+| `hold < press×0.47` and NOT blocking | **LAUNCHED** — after ~0.45s of pressure you are blasted off your feet (`launchT` set: walls and the ground become weapons; slam damage applies) |
+| `hold < press×0.85` | **PUSHED** — a real backward slide (the shove sets `burstT` to lift `move()`'s walk-speed clamp; without that lift the clamp crushed the shove every frame, which is why beams historically "only knocked back the dead") |
+| `hold ≥ press×0.85` | **HOLD** — you stand in it, taking damage |
+| strength 9–10 | **WALK FORWARD INTO IT** — press is capped below your hold; advance and eat it |
+
+Blocking still halves beam damage at the guard (§2) *and* raises hold by +0.4 — a weak fighter
+who blocks slides instead of flying. Beams stop at cover; a building between you and the hose
+is a real answer.
+
+**THE STUN** — burst damage in a short window scrambles ANYONE:
+
+- `takeDamage` accumulates a rolling 2-second damage window (`_burst`); crossing **24% of max
+  hp** triggers the stun: `stunT = 1.7 / ccRecover` (the tabletop attribute buys shorter stuns).
+- Stunned means: **no actions** (the melee trifecta, every ability, and movement all gate on
+  `stunT` exactly like stagger), guard drops, charges cancel — and a FLYER FALLS (`flying`
+  cleared; gravity owns them). Getting beamed out of the sky is this rule.
+- The tell: **three gold stars orbiting the head** (the cartoon law), a STUNNED damage number,
+  and a low bell.
+- Counters: **blocking** (guarded damage never enters the burst window — the guard is the
+  anti-stun), spreading damage out over time, and the **4-second immunity** after every stun
+  (no chain-stunning, ever).
+- Dummies can't be stunned (`isDummy` guard) — the Danger Room measures, it doesn't flinch.
+
+**The Danger Room starts EMPTY** (same date): no bots, no rival, until you order them —
+**N** deploys a Sim Construct, **B** orders a rival. The tutorial orders its own targets.

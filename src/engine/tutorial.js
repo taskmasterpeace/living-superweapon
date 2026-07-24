@@ -13,6 +13,8 @@ const slotUsed = (f, k) => {
   return !!s && (s.cd > 0 || s.charging || s.sustainT > 0 || s.chargeT > 0 || (f._slotUse && f._slotUse[k]));
 };
 const clearUse = (f, k) => { if (f._slotUse) delete f._slotUse[k]; };
+// the Danger Room starts EMPTY now — steps that need a target order one themselves
+const ensureBot = (f, g) => { if (g && !g.entities.some(e => e.isDummy && e.alive)) try { g.spawnDummy(f.pos.x + 10, f.pos.z); } catch (e) {} };
 
 const ACTS = [
   {
@@ -25,7 +27,7 @@ const ACTS = [
       },
       {
         id: 'fire', obj: 'Fire your main power', keys: 'LMB', tip: 'Aim at a Training Bot and let it rip.',
-        init: (S, f) => clearUse(f, 'lmb'), check: (f) => slotUsed(f, 'lmb'),
+        init: (S, f, g) => { clearUse(f, 'lmb'); ensureBot(f, g); }, check: (f) => slotUsed(f, 'lmb'),
       },
       {
         id: 'fire2', obj: 'Fire your second power', keys: 'RMB', tip: 'Some powers charge or sustain — try HOLDING it.',
@@ -33,6 +35,7 @@ const ACTS = [
       },
       {
         id: 'jab', obj: 'Throw a jab', keys: 'V — tap', tip: 'Get close to a bot first.',
+        init: (S, f, g) => ensureBot(f, g),
         check: (f) => f.strikeActive > 0,
       },
       {

@@ -1291,7 +1291,7 @@ export class HUD {
           ['Q / E', 'skills'], ['H', '4th power'], ['R', 'ULTIMATE'], [K.itemLabel, 'gadget'],
         ]) +
         grp('FLIGHT', [['F', 'flight ON/OFF'], [K.upLabel, 'rise'], [K.downLabel, 'descend'], ['SHIFT (air)', 'cruise']]) +
-        grp('SYSTEM', [[K.swapLabel, 'swap hero'], ['TAB', 'roster'], ['B', 'spawn rival'], ['ESC', 'pause'], ['F1', 'this panel']]);
+        grp('SYSTEM', [[K.swapLabel, 'swap hero'], ['TAB', 'roster'], ['B', 'order a rival'], ['N', 'order a training bot'], ['ESC', 'pause'], ['F1', 'this panel']]);
   }
   // The full control list is onboarding, not furniture: it earns ~18s of a fresh match, then
   // collapses to a corner chip. F1 (or the Options toggle) brings it back any time.

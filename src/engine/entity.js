@@ -450,6 +450,7 @@ export class Fighter {
 
     // --- melee trifecta state (Strike / Guard / Grab) ---
     this.guarding = false; this.guardMeter = 1; this.staggerT = 0; this._blocked = 0;
+    this.stunT = 0; this._stunImmune = 0; this._burst = 0; this._burstT = 0;   // THE STUN: burst damage in a short window
     this.grabbing = null; this.grabbedBy = null; this.grabState = null; this.grabT = 0; this.grabMode = '';
     this.strikeIdx = 0; this.strikeActive = 0; this.strikeCd = 0; this.comboWin = 0; this.strikeHit = null;
     this.phase = false;                 // energy-intangible
@@ -722,6 +723,15 @@ export class Fighter {
       if (kmag > 30 || (opts.launch || 0) > 12) this.launchT = 1.1;
       if ((kmag > 14 || (opts.launch || 0) > 6) && (this.hanging || this._grapple)) this.releaseHang();   // knocked off the wall
     }
+    // ---- THE STUN (manual §9): a big enough beating in a short window scrambles anyone ----
+    // Track burst damage over a rolling ~2s; crossing 24% of max hp = STUNNED (stars around the
+    // head, no actions, and a flyer FALLS — "knocked out of the air"). ccRecover shortens it,
+    // a 4s immunity stops chain-stunning, frozen fighters are already disabled.
+    if (amount > 0 && opts.src && opts.src !== this && !this.isDummy) {
+      this._burst += amount; this._burstT = 2.0;
+      if (this.stunT <= 0 && this._stunImmune <= 0 && this.frozenT <= 0 && this.state !== 'ko'
+          && this._burst >= this.maxHp * 0.24) this.applyStun();
+    }
     // robots shower sparks instead of bruising
     if (this.metal && this._game && amount >= 3) {
       this._game.particles.burst(this.pos.x, this.pos.y + 5.5, this.pos.z, { count: 8, speed: 26, life: 0.4, size: 1.8, color: ['#ffd97a', '#fff', '#ff9a2a'], up: 4, grav: 26, drag: 1.2 });
@@ -732,10 +742,24 @@ export class Fighter {
     return amount;
   }
 
+  applyStun() {
+    const rec = (this.sheet && this.sheet.ccRecover) || 1;
+    this.stunT = 1.7 / rec;
+    this._burst = 0;
+    this.flying = false; this.flyHeld = false;         // a stunned flyer FALLS — gravity owns them
+    this.gliding = false;
+    this.guarding = false; this.chargingKi = false; this.meleeCharge = 0; this.strikeActive = 0;
+    if (this._game) {
+      if (this.grabbing) this._game.melee.release(this);
+      this._game.audio.sample ? this._game.audio.sample('parry', { pos: this.pos, rate: 0.6, gain: 0.7 }) : this._game.audio.hit(180, this.pos);
+      if (this._game.hud && this._game.hud.damageNumber) this._game.hud.damageNumber(this.pos, 'STUNNED', '#ffd24a', true);
+    }
+  }
+
   _ko() {
     this.state = 'ko'; this.koT = 0; this.flyHeld = false; this.flying = false; this.descendHeld = false;
     this.guarding = false; this.phase = false; this.strikeActive = 0;
-    this.frozenT = 0; this.frost = 0; this._dots.length = 0; this.meleeCharge = 0; this._heavyT = 0;
+    this.frozenT = 0; this.frost = 0; this.stunT = 0; this._burst = 0; this._dots.length = 0; this.meleeCharge = 0; this._heavyT = 0;
     if (this.parts.ice) this.parts.ice.visible = false;
     if (this._game && (this.grabbing || this.grabbedBy)) this._game.melee.release(this.grabbing ? this : this.grabbedBy);
     if (this._game) for (const e of this._game.entities) if (e.grabbedBy === this) { e.grabbedBy = null; if (e.state === 'hit') e.state = 'idle'; }   // tentacle holds die with the holder
@@ -820,6 +844,13 @@ export class Fighter {
       }
     }
     // FROZEN SOLID — a block of ice: no actions, physics still shoves you around
+    if (this._burstT > 0) { this._burstT -= dt; if (this._burstT <= 0) this._burst = 0; }
+    if (this._stunImmune > 0) this._stunImmune -= dt;
+    if (this.stunT > 0) {
+      const rec = (this.sheet && this.sheet.ccRecover) || 1;
+      this.stunT -= dt * rec;
+      if (this.stunT <= 0) { this._stunImmune = 4; }   // no chain-stunning
+    }
     if (this.frozenT > 0) {
       this.frozenT -= dt * this.sheet.ccRecover;
       this.guarding = false; this.meleeCharge = 0;
@@ -1205,7 +1236,7 @@ export class Fighter {
   }
 
   move(dir, dt, sprint = 1) {
-    if (this.state === 'ko' || this.hitstop > 0 || this.grabbedBy || this.grabState === 'clinch' || this.staggerT > 0 || this.frozenT > 0 || this.hanging) return;   // hanging: your feet have nowhere to be
+    if (this.state === 'ko' || this.hitstop > 0 || this.grabbedBy || this.grabState === 'clinch' || this.staggerT > 0 || this.frozenT > 0 || this.stunT > 0 || this.hanging) return;   // hanging: your feet have nowhere to be
     let s = this.speed * 1.08 * this.powerBuff * sprint;   // ground feel pass 2026-07-24: +8% across the board
     if (this.sprintT > 0) s *= this.sprintMult;   // double-tap sprint surge
     if (this.meleeCharge > 0) s *= 0.4;           // winding up a haymaker roots you
@@ -1234,6 +1265,23 @@ export class Fighter {
 
   _animate(dt) {
     const p = this.parts; const moving = Math.hypot(this.vel.x, this.vel.z) > 4;
+    // STUN HALO: the cartoon law — stars orbiting the head mean "scrambled, no control"
+    if (this.stunT > 0) {
+      if (!p.stars) {
+        p.stars = [];
+        for (let i = 0; i < 3; i++) {
+          const st = new THREE.Mesh(new THREE.OctahedronGeometry(0.42, 0), new THREE.MeshBasicMaterial({ color: '#ffd24a', transparent: true, opacity: 0.95, depthWrite: false }));
+          this.obj.add(st); p.stars.push(st);
+        }
+      }
+      const t = (this._game ? this._game.time : 0) * 5.2;
+      for (let i = 0; i < 3; i++) {
+        const a = t + i * 2.094, st = p.stars[i];
+        st.visible = true;
+        st.position.set(Math.cos(a) * 2.3, 9.6 + Math.sin(t * 0.7 + i) * 0.25, Math.sin(a) * 2.3);
+        st.rotation.y = a * 2;
+      }
+    } else if (p.stars && p.stars[0].visible) { for (const st of p.stars) st.visible = false; }
     // face
     // shortest-path yaw damp — the naive damp spun the LONG way (~355°) whenever the aim
     // crossed the atan2 seam, reading as "he's facing the wrong way"

@@ -351,6 +351,7 @@ class BeamHose {
     this.game = game; this.caster = caster; this.team = caster.team;
     this.radius = o.radius || 1.6;             // beam thickness
     this.tipSpeed = o.tipSpeed || 150;         // how fast the tip races out (waterhose, not instant)
+    this.spiralOn = !!o.spiral;                // VEGA's signature: a helix riding the hose
     this.maxLen = o.maxLen || 120;
     this.dps = o.dps || 60; this.dtype = o.dtype || null; this.siphon = o.siphon;   // an arcane beam SIPHONS
     this.kiPerSec = o.kiPerSec || 22;
@@ -375,6 +376,14 @@ class BeamHose {
     this.core = new THREE.Mesh(GEO_CYL, beamMat(this.color2, 0.8));
     this.tip = new THREE.Mesh(GEO_ORB, glowMat(this.color2, 0.85));
     this.grp = new THREE.Group(); this.grp.add(this.glow, this.core, this.tip); game.scene.add(this.grp);
+    if (this.spiralOn) {
+      // 26 tiny orbs laid on a helix around the core — cheap (one InstancedMesh), and it reads
+      // as a DRILL rather than a hose, which is the whole point of the signature
+      this.spiral = new THREE.InstancedMesh(GEO_ORB, glowMat(this.color2, 0.9), 26);
+      this.spiral.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+      this.grp.add(this.spiral);
+      this._sm = new THREE.Matrix4(); this._sv = new THREE.Vector3();
+    }
     this.light = game.vfx.borrowLight(this.color, 5 * this.power, 60);
     caster.muzzle(this.muzzle);
   }
@@ -440,6 +449,24 @@ class BeamHose {
     this.glow.scale.set(this.radius * 1.5 * (0.9 + Math.sin(game.time * 40) * 0.1), len, this.radius * 1.5);
     this.core.material.opacity = 0.95 * fade; this.glow.material.opacity = 0.42 * fade;
     this.tip.position.copy(tipPos); this.tip.scale.setScalar(this.radius * 1.8 * fade);
+    if (this.spiral) {
+      // helix in world space: two perpendiculars off the beam dir, orbs wound 3.5 turns down the length
+      const d = this.dir, ax = Math.abs(d.y) > 0.9 ? _v2.set(1, 0, 0) : _v2.set(0, 1, 0);
+      const p1 = this._sv.copy(d).cross(ax).normalize();
+      const p2x = d.y * p1.z - d.z * p1.y, p2y = d.z * p1.x - d.x * p1.z, p2z = d.x * p1.y - d.y * p1.x;
+      const R = this.radius * 2.1, len2 = this.tipDist, spin = game.time * 9;
+      for (let i = 0; i < 26; i++) {
+        const t2 = i / 25, a2 = t2 * Math.PI * 7 + spin;
+        const ca = Math.cos(a2) * R, sa = Math.sin(a2) * R;
+        this._sm.makeScale(0.42, 0.42, 0.42);
+        this._sm.setPosition(
+          this.muzzle.x + d.x * t2 * len2 + p1.x * ca + p2x * sa,
+          this.muzzle.y + d.y * t2 * len2 + p1.y * ca + p2y * sa,
+          this.muzzle.z + d.z * t2 * len2 + p1.z * ca + p2z * sa);
+        this.spiral.setMatrixAt(i, this._sm);
+      }
+      this.spiral.instanceMatrix.needsUpdate = true;
+    }
     this.tip.material.opacity = 0.82 * fade;
     this.light.position.copy(tipPos); this.light.intensity = 5 * this.power * fade;
 
@@ -453,8 +480,29 @@ class BeamHose {
         const px = this.muzzle.x + this.dir.x * t, py = this.muzzle.y + this.dir.y * t, pz = this.muzzle.z + this.dir.z * t;
         const dd = Math.hypot(f.pos.x - px, (f.pos.y + 5.2) - py, f.pos.z - pz);
         if (dd < this.radius + f.radius + 1) {
-          // src+dot so GUARD can block beams (drains guard over time); strong physical shove along the beam
-          f.takeDamage(this.dps * c.powerBuff * dt, { src: c, dot: true, dtype: this.dtype, siphon: this.siphon, kb: _v.copy(this.dir).setLength(this.dps * 0.04 + 16), hitstop: 0 });
+          // src+dot so GUARD can block beams (drains guard over time)
+          f.takeDamage(this.dps * c.powerBuff * dt, { src: c, dot: true, dtype: this.dtype, siphon: this.siphon, hitstop: 0 });
+          // ---- THE PRESSURE LADDER (manual §9): what a beam DOES to you depends on who you are.
+          // press = the beam's authority · hold = strength + a raised guard. The outcomes, weakest
+          // to strongest: LAUNCHED off your feet → PUSHED sliding back → HOLD your ground →
+          // WALK FORWARD INTO IT, eating the damage. The old constant shove died against move()'s
+          // walk-speed clamp every frame — burstT lifts the clamp, which is what makes the slide real.
+          if (f.alive && f.state !== 'ko') {
+            const blocked = f.guarding && f.staggerT <= 0;
+            const press = Math.min((this.dps * c.powerBuff) / 24, 1.25);       // capped so the TOP of the roster can wade through anything
+            const hold = (f.strength ?? 5) / 10 + (blocked ? 0.4 : 0) + (f.def.metal ? 0.15 : 0);
+            if (hold < press * 0.85) {
+              const shove = (press * 0.85 - hold) * 46;
+              f.vel.x += this.dir.x * shove * dt * 8; f.vel.z += this.dir.z * shove * dt * 8;
+              f.burstT = Math.max(f.burstT || 0, 0.09);                        // the clamp-lift — same mechanism as the dash
+              f._beamPressT = (f._beamPressT || 0) + dt;
+              if (!blocked && press > hold * 1.8 && f._beamPressT > 0.45) {    // the weak get BLASTED off their feet
+                f._beamPressT = 0;
+                f.vel.x += this.dir.x * 34; f.vel.z += this.dir.z * 34; f.vel.y += 11;
+                f.launchT = 1.1;                                               // walls become weapons (slam physics)
+              }
+            } else f._beamPressT = 0;
+          }
           game.particles.burst(px, py, pz, { count: 2, speed: 12, life: 0.3, size: 2, color: ['#fff', this.color], dir: { x: this.dir.x, z: this.dir.z }, spread: 1.4 });
         }
       }
@@ -469,7 +517,7 @@ class BeamHose {
     if (!this.sustaining && this.endT >= 0.18) { this._dispose(game); return false; }
     return true;
   }
-  _dispose(game) { if (this.dead) return; this.dead = true; if (this._voice) { this._voice.stop(); this._voice = null; } game.scene.remove(this.grp); [this.glow, this.core, this.tip].forEach(m => m.material.dispose()); game.vfx.returnLight(this.light); }   // geometry is shared; the light STAYS in the scene (light-count law)
+  _dispose(game) { if (this.dead) return; this.dead = true; if (this._voice) { this._voice.stop(); this._voice = null; } game.scene.remove(this.grp); [this.glow, this.core, this.tip].forEach(m => m.material.dispose()); if (this.spiral) this.spiral.material.dispose(); game.vfx.returnLight(this.light); }   // geometry is shared; the light STAYS in the scene (light-count law)
 }
 
 // ---- Star Sphere: grow a giant orb overhead, then hurl it ----

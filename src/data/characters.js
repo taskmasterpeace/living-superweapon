@@ -48,7 +48,7 @@ export const ROSTER = [
     sig: ['LMB Volley (rapid volley)', 'Q Nova Burst (charge → shockwave)', 'R Final Arc', 'F Prince’s Pride'],
     abilities: {
       lmb: { type: 'volley', name: 'Volley', cost: 3, interval: 0.07, damage: 7, speed: 112, radius: 0.85, blast: 3.6, spread: 0.1, color: '#6ea0ff', color2: '#eaffff' },
-      rmb: { type: 'beam', name: 'Violet Lance', cost: 8, cd: 0.6, radius: 2.2, tipSpeed: 135, maxLen: 150, dps: 80, kiPerSec: 22, charge: true, maxCharge: 1.4, kiChargePerSec: 16, chargePower: 1.5, chargeWidth: true, steer: 9, color: '#5a86ff', color2: '#bfd0ff' },
+      rmb: { type: 'beam', name: 'Violet Lance', cost: 8, cd: 0.6, radius: 1.45, tipSpeed: 135, maxLen: 150, dps: 80, kiPerSec: 22, charge: true, maxCharge: 1.4, kiChargePerSec: 16, chargePower: 1.5, chargeWidth: true, steer: 9, spiral: true, color: '#5a86ff', color2: '#bfd0ff' },
       q: { type: 'charge', name: 'Nova Burst', cost: 6, cd: 1.0, kiPerSec: 12, maxCharge: 2.4, minR: 1.3, maxR: 6.2, dmgMin: 22, dmgMax: 84, maxBlast: 32, speedMin: 40, speedMax: 76, chargePower: 3, color: '#6ea0ff', color2: '#eaffff' },
       e: { type: 'melee', name: 'Rush Combo', cost: 12, cd: 1.2, damage: 24, range: 12, arc: 0.8, lunge: 52, knock: 46, launch: 12, color: '#6ea0ff' },
       f: { type: 'buff', name: 'Prince’s Pride', cost: 24, cd: 20, mult: 1.7, dur: 11, color: '#f5b21a', color2: '#fff' },
