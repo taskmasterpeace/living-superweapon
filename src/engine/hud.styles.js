@@ -695,8 +695,8 @@ export const CSS = `
   #hud .riphone{ width:26px; height:44px; border:3px solid var(--gold); border-radius:6px; margin:0 auto 10px; position:relative; }
   #hud .riphone::after{ content:''; position:absolute; left:50%; bottom:3px; transform:translateX(-50%); width:8px; height:2.5px; border-radius:2px; background:var(--gold); }
   @media (orientation: portrait){
-    body.phone.playing #hud .rotate{ display:flex; }
-    body.phone.playing #touch{ display:none !important; }   /* thumbs are useless under the gate */
+    body.phone.playing #hud .rotate, body.tablet.playing #hud .rotate{ display:flex; }
+    body.phone.playing #touch, body.tablet.playing #touch{ display:none !important; }   /* thumbs are useless under the gate */
   }
 `;
 
@@ -740,4 +740,24 @@ body.phone #hud .charge{ bottom:44vh; }
 body.phone #hud .wantedrow{ font-size:var(--t-micro); }
 body.phone #hud .announce{ transform:scale(.72); }
 body.phone #hTut{ max-width:46vw; font-size:var(--t-sm); }
+`;
+
+
+export const TABLET_CSS = `
+/* ============ TABLET MODE — body.tablet (coarse pointer, short edge 501-1100px) ============
+   An iPad has ROOM: keep the radar, the kit chips and the feed — but everything touch-sized,
+   the desktop slots row gone (the touch buttons are the slots), the hint wall gone, and the
+   player panel lifted clear of the left stick zone. */
+body.tablet #hud .hint{ display:none !important; }
+body.tablet #hud .slots{ display:none !important; }
+body.tablet #hud .radar{ transform:scale(.82); transform-origin:top right; }
+body.tablet #hud .pl{ bottom:190px; }                       /* the stick owns the corner below */
+body.tablet #hud .kit{ bottom:150px; transform:scale(.92); transform-origin:bottom left; }
+body.tablet #hud .feed div:nth-child(n+4){ display:none; }
+/* touch controls grow into iPad hands: bigger targets, inset from the bezel */
+body.tablet #touch .tbtn{ transform:scale(1.18); }
+body.tablet #touch .tstick{ transform:scale(1.15); }
+body.tablet #touch .tzone-l{ left:24px; bottom:24px; }
+body.tablet #touch .tzone-r{ right:24px; bottom:24px; }
+body.tablet .obox button, body.tablet .odone{ min-height:42px; }   /* menu taps, not mouse clicks */
 `;

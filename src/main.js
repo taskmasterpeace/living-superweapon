@@ -56,13 +56,20 @@ game.touch = touch;
 // coarse-pointer device with a phone-sized short edge gets the stripped HUD (body.phone: the
 // thumb zones own the corners; radar/hints/chips/pip get out of the way) and a lower pixel
 // budget (a phone GPU at DPR 3 drowns in the full 2.6MP cap).
-const phoneQ = () => (matchMedia('(pointer: coarse)').matches || isTouchDevice()) && Math.min(innerWidth, innerHeight) <= 500;
+// ⚠ iPadOS Safari masquerades as macOS — never sniff the UA; coarse pointer + touch points
+// is the honest signal. The ladder: PHONE (short edge ≤500) · TABLET (≤1100) · desktop.
+const touchy = () => matchMedia('(pointer: coarse)').matches || isTouchDevice() || navigator.maxTouchPoints > 1;
 function applyPhoneMode() {
-  const on = phoneQ();
-  document.body.classList.toggle('phone', on);
-  if (on) {
+  const short = Math.min(innerWidth, innerHeight);
+  const phone = touchy() && short <= 500;
+  const tablet = touchy() && !phone && short <= 1100;
+  document.body.classList.toggle('phone', phone);
+  document.body.classList.toggle('tablet', tablet);
+  if (phone) {
     game.world._pixelCap = Math.min(game.world._pixelCap || 2.6e6, 1.35e6);
     if (game.world._qTier > 1 && !game.world.qualityOverride) { game.world._qTier = 1; game.world._applyQuality && game.world._applyQuality(); }
+  } else if (tablet) {
+    game.world._pixelCap = Math.min(game.world._pixelCap || 2.6e6, 2.0e6);   // retina tablets drown at full budget too
   }
 }
 applyPhoneMode();

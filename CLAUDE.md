@@ -1161,6 +1161,12 @@ value is missing from the scale, add a token rather than a one-off.
   `<b>key</b><span>what it does</span>` rows built from the active KEYMAP. It was one flat wall.
   Ref: `lsw-help-pilot.jpeg`, `lsw-options-schemes.jpeg`.
 
+- **TABLET MODE (2026-07-24)**: the device ladder is PHONE (coarse+short≤500) · TABLET
+  (coarse+short 501-1100, iPad incl. the Mac-masquerading iPadOS via maxTouchPoints — never UA
+  sniff) · desktop. body.tablet (TABLET_CSS): radar/kit/feed KEPT but touch-sized, hint+slots
+  gone, player panel lifted 190px clear of the stick, touch buttons ×1.18 + inset 24px, menu
+  buttons min 42px tall; pixel cap 2.0MP. The in-match rotate gate covers tablets too.
+  Ref: lsw-tablet.jpeg.
 - **PHONE MODE (2026-07-24)**: body.phone (main.js applyPhoneMode — coarse pointer/touch +
   short edge ≤500px, re-checked on resize; LSW_phone() test hook). The law: the FIGHT and the
   THUMBS own the screen — hint/radar/kit chips/PiP/cityplate/slots row all hidden (PHONE_CSS in
