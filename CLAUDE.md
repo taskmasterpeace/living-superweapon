@@ -824,6 +824,25 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   (double-add duplicates them in the children array).
 - Shared temp vectors `_v/_v2` in `projectiles.js` alias — don't hold a reference across a loop that reuses them.
 
+- **THE LIGHT-COUNT LAW (2026-07-24, "blocking a beam completely freezes")**: three.js bakes the
+  number of VISIBLE lights into every material's program cache key, so the moment the count of
+  visible lights CHANGES, the renderer recompiles EVERY material in the scene at the next render.
+  The old `vfx` light pool grew lazily and flipped `.visible` on borrow/return — so a beam held on
+  a raised guard spawned a flash+light EVERY frame (onHit fires per blocked tick), the visible
+  point-light count oscillated 2↔8, and the city recompiled dozens of times a second (measured
+  +152 programs in 4s → a 400ms freeze). This PREDATES the news crew and was a second, independent
+  cause of the "blocking freezes" report. The fix (vfx.js): a FIXED pool of 14 PointLights, ALWAYS
+  in the scene and ALWAYS visible, created at construction. `borrowLight`/`returnLight` ONLY drive
+  intensity (0 = idle); neither ever touches `.visible` or adds/removes a light. On exhaustion
+  `borrowLight` STEALS the dimmest — the count never changes, so the recompile can never fire.
+  ⚠ Anything that borrows a pooled light must return it with `returnLight` ONLY — NEVER
+  `scene.remove(light)` (three projectile dispose sites did both; the remove orphaned a pool light
+  permanently and re-broke the invariant). And `onHit` throttles the sustained-block flash/number
+  to ~8/s per target (`_blkFxT`) so a held beam is one tell, not a 60/s strobe. Verified: the exact
+  repro (beam on guard, 10s) went from +152 programs / 410ms spikes to **+0 programs / 5.1ms avg,
+  lights pinned 14↔14**. Never toggle a light's visibility or change the scene light count at
+  runtime again.
+
 ## Trifecta rules (don't break)
 - **Strike beats Grab beats Guard beats Strike.** Guard blocks frontal strikes to ~12% chip (unblockable
   grabs ignore it); getting hit cancels your own grab start-up; back-grabs are unescapable + hit harder.

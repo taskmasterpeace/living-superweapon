@@ -1194,15 +1194,21 @@ export class Game {
     }
     // directional damage cue when the human player is hit
     if (this.hud && this.hud.hitDirection && this.isHuman(target) && src && src !== target) this.hud.hitDirection(src.pos);
+    // A HELD BEAM on a raised guard calls onHit EVERY FRAME (blocked + dot). Even with the light
+    // count now stable, spawning a flash mesh + a BLOCK number 60×/s is wasted churn and a strobe —
+    // throttle the sustained-block cosmetics to ~8/s per target. One tell, not sixty.
+    const beamBlock = blocked && opts.dot;
+    const showBlockFx = !beamBlock || (this.time - (target._blkFxT || -1) > 0.12);
+    if (beamBlock && showBlockFx) target._blkFxT = this.time;
     if (this.hud) {
-      if (blocked) this.hud.damageNumber(target.pos, 'BLOCK', '#bfe0ff', true);
+      if (blocked) { if (showBlockFx) this.hud.damageNumber(target.pos, 'BLOCK', '#bfe0ff', true); }
       else if (opts.dmgClass === 'slash' && amount >= 3) this.hud.damageNumber(target.pos, '⚔ ' + Math.round(amount), '#ffdcdc', false, true);   // claws/blades read as SLASH
       else if (opts.dmgColor && amount >= 1) this.hud.damageNumber(target.pos, Math.round(amount), opts.dmgColor, true);   // DoT ticks keep their status colour
       else if (amount >= 5) this.hud.damageNumber(target.pos, Math.round(amount), src === this.player ? '#ffe08a' : '#ff9a6a');
     }
     // Danger Room: dummies log incoming damage for the live DPS meters
     if (target.isDummy && !blocked) { (target._dmgLog = target._dmgLog || []).push({ t: this.time, a: amount }); target._dmgTotal = (target._dmgTotal || 0) + amount; }
-    this.vfx.flash(target.pos.clone().setY(5.6), blocked ? '#cfe6ff' : (target.def.colors.accent || '#fff'), blocked ? 3 : 2.4, 0.1);
+    if (showBlockFx) this.vfx.flash(target.pos.clone().setY(5.6), blocked ? '#cfe6ff' : (target.def.colors.accent || '#fff'), blocked ? 3 : 2.4, 0.1);
     if (src === this.player && !blocked) {
       if (amount >= 5) { this.combo++; if (this.combo > this._p1MaxCombo) this._p1MaxCombo = this.combo; if (this.hud) this.hud.combo(this.combo); }
       this.comboT = 1.3;

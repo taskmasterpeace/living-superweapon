@@ -8,22 +8,36 @@ export class VFX {
   constructor(world, particles) {
     this.world = world; this.scene = world.scene; this.P = particles;
     this.fx = [];
-    this.lightPool = [];
     this.scorches = [];
     this._sphere = new THREE.SphereGeometry(1, 16, 12);
     this._ring = new THREE.RingGeometry(0.86, 1, 48);
     this._decalGeo = new THREE.CircleGeometry(1, 32);
+    // ⚠ THE LIGHT-COUNT LAW (the beam-block freeze, 2026-07-24). three.js bakes the number of
+    // VISIBLE lights into every material's program cache key, so toggling a PointLight's
+    // `.visible` (or adding/removing one) recompiles EVERY material in the scene at the next
+    // render. The old pool grew lazily and flipped `.visible` on borrow/return — so a held beam
+    // on a raised guard spawned a flash+light EVERY frame, the visible-light count oscillated
+    // 2↔8, and the renderer recompiled the whole city dozens of times a second (measured +152
+    // programs in 4s → 400ms freeze). Fix: a FIXED pool, ALWAYS in the scene and ALWAYS visible,
+    // pre-warmed once. borrow/return only drive INTENSITY (0 = idle). The count never changes,
+    // so the recompile can never fire. On exhaustion we STEAL the dimmest light — never grow.
+    this._lights = [];
+    for (let i = 0; i < 14; i++) {
+      const l = new THREE.PointLight(0xffffff, 0, 100);
+      l.visible = true; this.scene.add(l); this._lights.push(l);
+    }
+    this.lightPool = this._lights.slice();
   }
 
   _add(o) { this.fx.push(o); return o; }
 
   borrowLight(color, intensity, dist) {
     let l = this.lightPool.pop();
-    if (!l) { l = new THREE.PointLight(0xffffff, 1, 100); this.scene.add(l); }
-    l.color.set(color); l.intensity = intensity; l.distance = dist; l.visible = true;
+    if (!l) { l = this._lights[0]; for (const x of this._lights) if (x.intensity < l.intensity) l = x; }  // all busy → steal the dimmest, never grow the count
+    l.color.set(color); l.intensity = intensity; l.distance = dist;   // stays visible — the count is constant
     return l;
   }
-  returnLight(l) { l.visible = false; l.intensity = 0; this.lightPool.push(l); }
+  returnLight(l) { if (!l) return; l.intensity = 0; if (!this.lightPool.includes(l)) this.lightPool.push(l); }   // never touch .visible, never remove from the scene
 
   flash(pos, color = '#fff', size = 6, life = 0.18) {
     const m = new THREE.Mesh(this._sphere, addMat(color, 1));

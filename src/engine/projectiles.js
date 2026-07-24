@@ -9,13 +9,17 @@ const _v = new THREE.Vector3(), _v2 = new THREE.Vector3(), _q = new THREE.Quater
 // (per-spawn churn caused GC/upload hitches). Instances scale the shared unit geometry; per-instance
 // materials are cloned from these prototypes only where opacity/color animates.
 // ---- ballistics: a brass slug + a hot tracer streak (shared geo/mats — guns fire a LOT) ----
-const GEO_BULLET = new THREE.CylinderGeometry(0.22, 0.16, 1.5, 6); GEO_BULLET.rotateX(Math.PI / 2);
-const GEO_TRACER = new THREE.CylinderGeometry(0.1, 0.015, 5.2, 5); GEO_TRACER.rotateX(Math.PI / 2);
+// The slug is bigger and the tracer longer/brighter than v1 — a matte-metal round against a dark
+// city read as a near-invisible black speck (Robert's note). Now it's a pale slug pulling a
+// visible warm streak, so you can actually track the shot.
+const GEO_BULLET = new THREE.CylinderGeometry(0.34, 0.24, 2.0, 6); GEO_BULLET.rotateX(Math.PI / 2);
+const GEO_TRACER = new THREE.CylinderGeometry(0.42, 0.02, 9.0, 6); GEO_TRACER.rotateX(Math.PI / 2);
 // ⚠ NOT ENERGY: a bullet is machined brass, not a spell. No emissive, no additive blending —
-// bloom is reserved for ki. It reads as metal catching the light, and the tracer is a faint
-// alpha streak (normal blending) so it never blooms into a glowing orb.
-const MAT_BULLET = new THREE.MeshStandardMaterial({ color: '#b9a06a', roughness: 0.4, metalness: 0.95 });
-const MAT_TRACER = new THREE.MeshBasicMaterial({ color: '#c9b489', transparent: true, opacity: 0.28, depthWrite: false });
+// bloom is reserved for ki. The slug reads as PALE metal catching the light (lighter + less
+// mirror-metal than v1, so it isn't a black dot reflecting the dark sky); the tracer is a warm
+// alpha streak on NORMAL blending, kept below the 0.8 bloom threshold so it never glows.
+const MAT_BULLET = new THREE.MeshStandardMaterial({ color: '#e9dcbb', roughness: 0.5, metalness: 0.4 });
+const MAT_TRACER = new THREE.MeshBasicMaterial({ color: '#f4d79a', transparent: true, opacity: 0.6, depthWrite: false });
 const GEO_ORB = new THREE.SphereGeometry(1, 16, 12);
 const GEO_ORB_HI = new THREE.SphereGeometry(1, 20, 16);
 const GEO_CYL = new THREE.CylinderGeometry(1, 1, 1, 16, 1, true);
@@ -107,7 +111,7 @@ class Projectile {
       // Stretched along travel, no bloom halo — it must not read like a ki blast.
       const slug = new THREE.Mesh(GEO_BULLET, MAT_BULLET);
       const tracer = new THREE.Mesh(GEO_TRACER, MAT_TRACER);
-      tracer.position.z = -2.6;                    // trails the slug
+      tracer.position.z = -5.5;                    // wide end at the slug's tail, tapering into a streak behind
       this.obj = new THREE.Group(); this.obj.add(slug, tracer);
       this.obj.position.copy(this.pos); game.scene.add(this.obj);
       this._tracer = tracer;
@@ -283,7 +287,7 @@ class Projectile {
     if (this.dead) return; this.dead = true; game.scene.remove(this.obj);
     if (this.face) { this.obj.children[0].material.dispose(); this.obj.children[1].material.dispose(); }   // halo + sprite (texture is shared)
     else this.obj.children[1].material.dispose();                                                          // geometry + core/shaft materials are shared
-    if (this.light) { game.scene.remove(this.light); game.vfx.returnLight(this.light); }
+    if (this.light) game.vfx.returnLight(this.light);   // returnLight owns it — the light STAYS in the scene (see the light-count law)
   }
 }
 function o_maxspeed(p) { return p._max || 90; }
@@ -412,7 +416,7 @@ class BeamHose {
     if (!this.sustaining && this.endT >= 0.18) { this._dispose(game); return false; }
     return true;
   }
-  _dispose(game) { if (this.dead) return; this.dead = true; if (this._voice) { this._voice.stop(); this._voice = null; } game.scene.remove(this.grp); [this.glow, this.core, this.tip].forEach(m => m.material.dispose()); game.scene.remove(this.light); game.vfx.returnLight(this.light); }   // geometry is shared
+  _dispose(game) { if (this.dead) return; this.dead = true; if (this._voice) { this._voice.stop(); this._voice = null; } game.scene.remove(this.grp); [this.glow, this.core, this.tip].forEach(m => m.material.dispose()); game.vfx.returnLight(this.light); }   // geometry is shared; the light STAYS in the scene (light-count law)
 }
 
 // ---- Star Sphere: grow a giant orb overhead, then hurl it ----
@@ -460,7 +464,7 @@ class GrowingOrb {
     this.obj.rotation.y += dt * 2; this.light.position.copy(this.pos); this.light.intensity = 4 + this.charge01 * 6;
     return true;
   }
-  _dispose(game) { if (this.dead) return; this.dead = true; game.scene.remove(this.obj); this.obj.children[1].material.dispose(); game.scene.remove(this.light); game.vfx.returnLight(this.light); }   // shared geo/core
+  _dispose(game) { if (this.dead) return; this.dead = true; game.scene.remove(this.obj); this.obj.children[1].material.dispose(); game.vfx.returnLight(this.light); }   // shared geo/core; the light STAYS in the scene (light-count law)
 }
 
 export class Projectiles {
