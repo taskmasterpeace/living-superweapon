@@ -306,7 +306,7 @@ export class HUD {
       <div class="dmgwrap" id="hDmg"></div>
       <div class="panel slots" id="hSlots"></div>
       <div class="foearrow" id="hFoeArrow"><i></i><u></u><span></span></div>
-      <div class="rotate" id="hRotate"><div><div class="ri">📱</div><div style="font-size:18px;font-weight:800;letter-spacing:.1em;color:var(--gold)">ROTATE YOUR DEVICE</div><div style="font-size:13px;color:var(--text-3);margin-top:6px">The arena plays in landscape.</div></div></div>
+      <div class="rotate" id="hRotate"><div><div class="ri riphone"></div><div style="font-size:18px;font-weight:800;letter-spacing:.1em;color:var(--gold)">ROTATE YOUR DEVICE</div><div style="font-size:13px;color:var(--text-3);margin-top:6px">The arena plays in landscape.</div></div></div>
       <div class="panel hint" id="hHint">
         <div class="hintchip">❓ <b>F1</b> CONTROLS</div>
         <div class="hintbody" id="hHintBody"></div>
@@ -1238,6 +1238,7 @@ export class HUD {
   }
 
   showEndScreen(result, g) {
+    if (this.game && this.game.touch) this.game.touch.show(false);   // thumbs off the report — rematch re-shows them
     if (g.matchReport) { this._showBroadcast(result, g); return; }
     const p = g.player;
     const stats = [['Score', p.score], ['KOs', p.kills], ['Level', p.level]];
@@ -1697,9 +1698,11 @@ export class HUD {
     const img = new Image();
     let imgReady = false;
     const loadFrame = () => {
-      const clip = clips[ci % clips.length]; if (!clip) return;
+      const live = clips.filter(c => !c._dead);
+      const clip = live[ci % live.length]; if (!clip) return;
       imgReady = false;
       img.onload = () => { imgReady = true; };
+      img.onerror = () => { clip._dead = true; imgReady = false; };   // a revoked blob kills the CLIP, not the console
       const _fu = clip.frames[fi % clip.frames.length];
       if (_fu && _fu[0] !== '#') img.src = _fu;
     };

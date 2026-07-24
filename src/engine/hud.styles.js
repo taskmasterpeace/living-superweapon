@@ -690,6 +690,14 @@ export const CSS = `
   #hud .rotate div{ font-family:var(--f-display); }
   #hud .rotate .ri{ font-size:44px; margin-bottom:10px; animation:rot 2.2s ease-in-out infinite; }
   @keyframes rot{ 0%,100%{ transform:rotate(0); } 50%{ transform:rotate(90deg); } }
+  /* ⚠ the gate was display:none with NO activating rule — dead markup. It fires ONLY for a
+     LIVE match on a phone in portrait; menus and the end-screen report scroll fine upright. */
+  #hud .riphone{ width:26px; height:44px; border:3px solid var(--gold); border-radius:6px; margin:0 auto 10px; position:relative; }
+  #hud .riphone::after{ content:''; position:absolute; left:50%; bottom:3px; transform:translateX(-50%); width:8px; height:2.5px; border-radius:2px; background:var(--gold); }
+  @media (orientation: portrait){
+    body.phone.playing #hud .rotate{ display:flex; }
+    body.phone.playing #touch{ display:none !important; }   /* thumbs are useless under the gate */
+  }
 `;
 
 export const CODEX_MOBILE = `
