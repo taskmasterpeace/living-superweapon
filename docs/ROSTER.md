@@ -28,7 +28,7 @@ is the comeback attribute: when your ki tank is low/drained, landed fists conver
 | **AURUM** | will made solid | USA (test-pilot swagger) | High | 5 | 0.9 | Cursor-steered constructs; **barrier guard** (360°, runs on ki) |
 | **NOVA** | Starfire / Captain Marvel — star artillery | Tamaran-analog (regal) | **Extreme** | 5 | 0.9 | Star Lance, Nova Core, Meteor Storm |
 | **RIME** | Iceman / Sub-Zero — the deep cold | Norway | High | 4 | 0.8 | Frost Breath (**encases in ice**), Ice Wall, Absolute Zero; barrier guard |
-| **VOLT** | The Flash — fastest alive | USA (motor-mouth) | Moderate | 3 | **1.6** | Mach Sprint THROUGH walls w/ blue lightning wake, 12-hit Lightning Flurry |
+| **VOLT** | The Flash — fastest alive | USA (motor-mouth) | Moderate | 3 | **1.6** | Mach Sprint THROUGH walls w/ blue lightning wake, 12-hit Lightning Flurry, jabs at 1.5× FLASH PACE |
 | **WARDEN** | Magneto-gravity hybrid — the anchor | Russia (bass rumble) | High | 8 | 1.1 | Force Push, Singularity, Collapse; heavy-only melee |
 | **HIVE** | Swarm summoner — the conclave | Brazil | Moderate | 3 | 0.7 | Drone swarms, Sentinel, Overmind |
 | **PYRE** | walking eruption | Mexico | Very High | 7 | 1.2 | Fireballs, Flamethrower, Rain of Fire; frost-immune |
@@ -57,7 +57,7 @@ STORMCALL (axe + skyfall lightning) · WEBLINE (web-snare grab-slams, wall of qu
 MAJESTY (Extreme, BINARY) · MYSTWARD (barrier + folds + sigils) · ONYX (kinetic deflect suit) ·
 CHAINFIRE (hellfire chain grab, fire wake) · TEMPEST (weather: gale/hail/flash-freeze).
 
-**DC-inspired:** KNIGHTFALL (no powers, Line Beacon item, batarang fans) · AEGIS (sword + bracelet-deflect +
+**DC-inspired:** KNIGHTFALL (no powers; Grapnel Line — zip/mantle/ledge-hang, cape-glide, Line Beacon, batarang fans) · AEGIS (sword + bracelet-deflect +
 Golden Lasso slam) · OLYMPUS (the word made lightning) · MARSHAL (phasing telepath — Dominion mind control) · CIRCUIT (∞-core
 machine half, deflect) · TRENCH (spear + the Drowned Court) · DECIBEL (voicePitch 1.3 — the Canary Cry cone) ·
 COLDSNAP (cold gun, freeze rules) · FOUNDRY (hammer + rivet gun, rocket-boot leaps) · TALON (escrima acrobat, Threat Low).
