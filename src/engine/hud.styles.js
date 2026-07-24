@@ -703,3 +703,33 @@ export const CODEX_MOBILE = `
       .lswovl .cfarmwrap{ overflow-x: auto; }
       .lswovl table.cfarm{ min-width: 520px; }
     }`;
+
+
+export const PHONE_CSS = `
+/* ============ PHONE MODE — body.phone (coarse pointer + short edge ≤ 500px) ============
+   The law: the FIGHT and the THUMBS own the screen. Anything informational folds away;
+   the pause menu still carries the full HUD/how-to for when the player wants to read. */
+body.phone #hud .hint{ display:none !important; }              /* the controls list is the touch layer itself */
+body.phone #hud .radar{ display:none !important; }             /* the foe arrow + edge markers carry direction */
+body.phone #hud .kit{ display:none !important; }               /* kit chips are select-screen reading */
+body.phone #hud .pip{ display:none !important; }               /* no room for the news monitor */
+body.phone #hud .cityplate{ display:none !important; }
+body.phone #hud .modebar{ top:4px; font-size:var(--t-micro); padding:3px 8px; }
+body.phone #hud .alt{ transform:scale(.72); transform-origin:right center; }
+body.phone #hud .feed{ max-width:38vw; font-size:var(--t-micro); line-height:1.35; opacity:.85; }
+body.phone #hud .feed div:nth-child(n+3){ display:none; }      /* two lines of feed, no more */
+/* the player panel becomes a compact strip pinned TOP-left — the bottom-left corner is the stick */
+body.phone #hud .pl{ left:10px; top:52px; bottom:auto; width:150px; padding:7px 9px; }
+body.phone #hud .pl .nm{ font-size:var(--t-sm); }
+body.phone #hud .pl .rl{ display:none; }
+body.phone #hud .pl .lab{ display:none; }                      /* the bars speak for themselves */
+body.phone #hud .pl .bar{ height:6px; margin:3px 0; }
+body.phone #hud .pl .xpwrap{ transform:scale(.8); transform-origin:left center; }
+body.phone #hud .slots{ display:none !important; }             /* the touch buttons ARE the slots */
+body.phone #hud .foe{ top:6px; width:min(300px,44vw); padding:4px 8px; }
+body.phone #hud .foe .fn{ font-size:var(--t-sm); }
+body.phone #hud .charge{ bottom:44vh; }
+body.phone #hud .wantedrow{ font-size:var(--t-micro); }
+body.phone #hud .announce{ transform:scale(.72); }
+body.phone #hTut{ max-width:46vw; font-size:var(--t-sm); }
+`;

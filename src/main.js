@@ -52,6 +52,22 @@ if (isTouchDevice()) {
   addEventListener('orientationchange', () => setTimeout(() => game.world.resize(), 250));
 }
 game.touch = touch;
+// PHONE MODE (Robert's ruling 2026-07-24: "the screen on iPhone is waaay too crowded") — a
+// coarse-pointer device with a phone-sized short edge gets the stripped HUD (body.phone: the
+// thumb zones own the corners; radar/hints/chips/pip get out of the way) and a lower pixel
+// budget (a phone GPU at DPR 3 drowns in the full 2.6MP cap).
+const phoneQ = () => (matchMedia('(pointer: coarse)').matches || isTouchDevice()) && Math.min(innerWidth, innerHeight) <= 500;
+function applyPhoneMode() {
+  const on = phoneQ();
+  document.body.classList.toggle('phone', on);
+  if (on) {
+    game.world._pixelCap = Math.min(game.world._pixelCap || 2.6e6, 1.35e6);
+    if (game.world._qTier > 1 && !game.world.qualityOverride) { game.world._qTier = 1; game.world._applyQuality && game.world._applyQuality(); }
+  }
+}
+applyPhoneMode();
+addEventListener('resize', applyPhoneMode);
+window.LSW_phone = applyPhoneMode;   // headless verification hook
 
 // CONTROLLER MENU NAVIGATION — makes every screen drivable from a pad (Steam Deck).
 const uinav = new UINav(game, hud);

@@ -1161,6 +1161,13 @@ value is missing from the scale, add a token rather than a one-off.
   `<b>key</b><span>what it does</span>` rows built from the active KEYMAP. It was one flat wall.
   Ref: `lsw-help-pilot.jpeg`, `lsw-options-schemes.jpeg`.
 
+- **PHONE MODE (2026-07-24)**: body.phone (main.js applyPhoneMode — coarse pointer/touch +
+  short edge ≤500px, re-checked on resize; LSW_phone() test hook). The law: the FIGHT and the
+  THUMBS own the screen — hint/radar/kit chips/PiP/cityplate/slots row all hidden (PHONE_CSS in
+  hud.styles.js), player panel becomes a compact bars-only strip TOP-left (bottom-left is the
+  stick), feed capped to two micro lines, announce/alt scaled down. Phones also get a lower
+  pixel budget (cap 1.35MP, start tier 1). Refs: lsw-phone-before.jpeg / lsw-phone-after.jpeg.
+
 ## Player-facing shell (options · onboarding · roster nav)
 - **The cast layer** (`data/identities.js` + `engine/icons.js` + `hud.kitFacts`): every hero has a
   `def.person` — civilian name, home city, country, flag (canon anchors: KIVULI=Kampala,
