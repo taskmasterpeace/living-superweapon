@@ -103,6 +103,16 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   plan-aware everywhere via `world.districtAt` (news lower-thirds say "THE MINEWORKS"); crime/safety
   ride the plan for future police-response pacing. Refs: `lsw-city-benguela.jpeg`,
   `lsw-city-mazar.jpeg` (night, dome + pits), `lsw-city-gallery.jpeg`, `lsw-atlas.jpeg`.
+- **THE SHEET (2026-07-24)**: the codex is a FULL-VIEWPORT FASERIP-style character sheet now —
+  `.cfbody` grid: left ATTRIBUTE RAIL (`.atline` rows: the seven attributes as rank NAME +
+  colored bar + number off `deriveAttrs`/`rankName`/`rankColor` — our ladder is the FASERIP
+  column) + DERIVED (hull/core/might/flight/escape) + DEFENSES (`resistOf` chips: IMMUNE/×mult,
+  rounded — the sheet can't drift from the engine) + talents + gear; right: threat/record/
+  doctrine + the wide armament/counter/intercept sections. The CREATOR's rank chips fill
+  proportionally (gradient meter). **The creator catalog is GENERIC now** ("Energy Beam",
+  "Charged Orb", "Attack Drones" — ids unchanged, saved customs safe; hero kits keep their
+  flavor names). `vfx.explode` gained a detonation kernel + pressure ring + gravity debris.
+  Ref: `lsw-sheet.jpeg`.
 - **THE CODEX — the full case file** (`hud.showCodex(def)`, overlay `hCodex`; entries: the gold
   "📁 OPEN FULL CASE FILE" button on the registry preview + any rankings-board row; ‹ › pages the
   roster, ✕/ESC closes): a Planetary-grade dossier where EVERY line derives from live data so it

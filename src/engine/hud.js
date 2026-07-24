@@ -793,6 +793,7 @@ export class HUD {
       const counters = cfCounterNotes(c);
       const ai = c.ai || {};
       const at = deriveAttrs(c), tl = heroTalents(c);
+      const rez = resistOf(c);
       let h = 0; for (const ch of String(c.id)) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
       const rng = mulberry(h);
       const domKind = Object.values(c.abilities || {}).some(a => a.type === 'beam') ? 'beam'
@@ -817,44 +818,57 @@ export class HUD {
           </div>
           <div class="cfstamp">LEFEVRE<br/>${esc((c.threat || 'UNRATED').toUpperCase())}<small>THRESHOLD TREATY ASSESSMENT</small></div>
         </div>
-        <div class="cfgrid">
+        <div class="cfbody">
+        <div class="cfrail">
           <div class="cfsec">
             <div class="cfsh">§01 · IDENTIFICATION</div>
             <div class="cfrow"><span class="k">LEGAL NAME</span><span class="v">${esc(idn.n)}</span></div>
             <div class="cfrow"><span class="k">REGISTERED</span><span class="v">${esc(idn.c)}</span></div>
             <div class="cfrow"><span class="k">NATION</span><span class="v">${esc(idn.co)} ${idn.f}</span></div>
-            <div class="cfrow"><span class="k">STATUS</span><span class="v ${synth ? 'syn' : 'ok'}">● ${synth ? 'OPERATIONAL — SYNTHETIC PLATFORM' : 'ACTIVE IN THE FIELD'}</span></div>
+            <div class="cfrow"><span class="k">STATUS</span><span class="v ${synth ? 'syn' : 'ok'}">● ${synth ? 'OPERATIONAL — SYNTHETIC' : 'ACTIVE IN THE FIELD'}</span></div>
             <div class="cfrow"><span class="k">RESIDENCE</span><span class="v">${red(14)}</span></div>
-            <div class="cfrow"><span class="k">NEXT OF KIN</span><span class="v">${red(8)} — SEALED ADDENDUM</span></div>
-            <div class="cfrow"><span class="k">FRAME</span><span class="v">${CF_BUILD[c.strength ?? 5]} · STR ${c.strength ?? 5}/10 · 1.80m REF</span></div>
-            <div class="cfrow"><span class="k">VOICE</span><span class="v">${vp < 0.85 ? 'LOW REGISTER' : vp > 1.1 ? 'HIGH REGISTER' : 'MID REGISTER'}${c.yells ? ' · BATTLE-VOCAL CONFIRMED' : ' · QUIET OPERATOR'}</span></div>
-            <div class="cfrow"><span class="k">POWER CORE</span><span class="v ${c.energyInfinite ? 'syn' : ''}">${c.energyInfinite ? '∞ CORE — NEVER DRAINS · TIER-CAPPED II' : `KI RESERVE ${c.ki} · RECOVERY ${recoveryTier(c)}`}</span></div>
+            <div class="cfrow"><span class="k">FRAME</span><span class="v">${CF_BUILD[c.strength ?? 5]} · 1.80m REF</span></div>
+            <div class="cfrow"><span class="k">VOICE</span><span class="v">${vp < 0.85 ? 'LOW REGISTER' : vp > 1.1 ? 'HIGH REGISTER' : 'MID REGISTER'}</span></div>
           </div>
+          <div class="cfsec">
+            <div class="cfsh">ATTRIBUTES — THE LADDER</div>
+            ${ATTR_DEFS.map(a => { const v = at[a.k]; return `<div class="atline" title="${esc(a.d || a.name)}"><span class="atn">${esc(a.name.toUpperCase())}</span><span class="atr" style="color:${rankColor(v)}">${esc(rankName(v).toUpperCase())}</span><span class="atb"><i style="width:${v * 10}%;background:${rankColor(v)}"></i></span><b class="atv">${v}</b></div>`; }).join('')}
+          </div>
+          <div class="cfsec">
+            <div class="cfsh">DERIVED</div>
+            <div class="cfrow"><span class="k">HULL</span><span class="v">${c.hp} HP · GUARD ${(c.guardType || 'BLOCK').toUpperCase()}</span></div>
+            <div class="cfrow"><span class="k">POWER CORE</span><span class="v ${c.energyInfinite ? 'syn' : ''}">${c.energyInfinite ? '∞ CORE — TIER-CAPPED II' : `RESERVE ${c.ki} · ${recoveryTier(c)} RECOVERY`}</span></div>
+            <div class="cfrow"><span class="k">MIGHT</span><span class="v">STR ${c.strength ?? 5}/10${(c.meleeTiers ?? 3) >= 3 ? ' · FULL STRIKE CHAIN' : ' · HEAVY HANDS'}</span></div>
+            <div class="cfrow"><span class="k">FLIGHT</span><span class="v">${['GROUNDED', 'CLASS I — UNSTABLE', 'CLASS II — LEVITATOR', 'CLASS III — FULL FLIGHT'][ft]}</span></div>
+            <div class="cfrow"><span class="k">ESCAPE</span><span class="v">${(ev.name || ev.kind || 'DASH').toUpperCase()}</span></div>
+          </div>
+          <div class="cfsec">
+            <div class="cfsh">DEFENSES — TYPED RESISTANCE</div>
+            <div class="cfres">${DTYPES.map(dt => { const rz = rez[dt] ?? 1; if (rz === 1) return ''; const info = DTYPE_INFO[dt] || {}; const cls = rz === 0 ? 'imm' : rz < 1 ? 'res' : 'weak'; return `<span class="rchip ${cls}" title="${esc(info.note || dt)}">${esc(info.label || dt.toUpperCase())} ${rz === 0 ? 'IMMUNE' : '×' + (Math.round(rz * 100) / 100)}</span>`; }).filter(Boolean).join('') || '<span class="rchip">STANDARD PROFILE — NO NOTED RESISTANCES</span>'}</div>
+          </div>
+          ${tl.length ? `<div class="cfsec"><div class="cfsh">TALENTS</div>${tl.map(k => TALENTS[k] ? `<div class="cfrow"><span class="k">◆</span><span class="v">${esc(TALENTS[k].name.toUpperCase())} — ${esc(TALENTS[k].d || '')}</span></div>` : '').join('')}</div>` : ''}
+          ${(c.items || []).length ? `<div class="cfsec"><div class="cfsh">CARRIED GEAR</div>${c.items.map(i => `<div class="cfrow"><span class="k">■</span><span class="v">${esc(i.name.toUpperCase())}${i.charges ? ' ×' + i.charges : ''}</span></div>`).join('')}</div>` : ''}
+        </div>
+        <div class="cfmain">
+          <div class="cfcols">
           <div class="cfsec">
             <div class="cfsh">§02 · THREAT ASSESSMENT</div>
             <div class="cfrow"><span class="k">LEFEVRE CLASS</span><span class="v" style="color:${tc};font-weight:700">${esc(c.threat || 'UNRATED')}</span></div>
-            <div class="cfrow"><span class="k">BASIS</span><span class="v">PEAK OUTPUT ${st.power}/10 · REACH ${st.range}/10 · MOBILITY ${st.mobility}/10 · RESILIENCE ${st.defense}/10</span></div>
-            <div class="cfrow"><span class="k">HULL</span><span class="v">${c.hp} HP · GUARD ${(c.guardType || 'standard').toUpperCase()}${(c.meleeTiers ?? 3) >= 3 ? ' · FULL STRIKE CHAIN' : ' · SHORT STRIKE CHAIN'}</span></div>
+            <div class="cfrow"><span class="k">BASIS</span><span class="v">OUTPUT ${st.power}/10 · REACH ${st.range}/10 · MOBILITY ${st.mobility}/10 · RESILIENCE ${st.defense}/10</span></div>
             <div class="cfrow"><span class="k">FLIGHT CERT</span><span class="v">${['GROUNDED — LEAP ONLY', 'CLASS I — UNSTABLE', 'CLASS II — LEVITATOR', 'CLASS III — FULL FLIGHT'][ft]}${c.flySpeed ? ` · AIRSPEED ×${c.flySpeed}` : ''}</span></div>
-            <div class="cfrow"><span class="k">ATTRIBUTES</span><span class="v">${ATTR_DEFS.map(a => `${a.name.slice(0, 3).toUpperCase()} <b style="color:${rankColor(at[a.k])}">${at[a.k]}</b>`).join(' · ')}</span></div>
-            ${tl.length ? `<div class="cfrow"><span class="k">TALENTS</span><span class="v">${tl.map(k => TALENTS[k] ? TALENTS[k].name.toUpperCase() : '').filter(Boolean).join(' · ')}</span></div>` : ''}
-            ${(c.items || []).length ? `<div class="cfrow"><span class="k">CARRIED GEAR</span><span class="v">${c.items.map(i => i.name.toUpperCase() + (i.charges ? '×' + i.charges : '')).join(' · ')}</span></div>` : ''}
           </div>
           <div class="cfsec">
             <div class="cfsh">§03 · SANCTIONED RECORD</div>
             <div class="cfrow"><span class="k">POWER INDEX</span><span class="v hot">${rec.elo} · RANK #${me.rank}/${snapAll.length}${champ ? ' · REIGNING CHAMPION' : ''}</span></div>
-            <div class="cfrow"><span class="k">BOUT RECORD</span><span class="v">${rec.w}–${rec.l}${rec.w + rec.l ? '' : ' (UNTESTED)'}</span></div>
-            <div class="cfrow"><span class="k">KNOCKDOWNS</span><span class="v">${rec.ko} SCORED / ${rec.kod} CONCEDED</span></div>
+            <div class="cfrow"><span class="k">BOUT RECORD</span><span class="v">${rec.w}–${rec.l}${rec.w + rec.l ? '' : ' (UNTESTED)'} · ${rec.ko} KO / ${rec.kod} CONCEDED</span></div>
             ${incid.length ? incid.map(x => `<div class="cfrow"><span class="k">${x.win ? '▲ VICTORY' : '▼ DEFEAT'}</span><span class="v" style="color:${x.win ? 'var(--good)' : 'var(--danger-2)'}">${x.win ? 'def.' : 'lost to'} ${esc(x.vs)} · ${x.how === 'tournament' ? 'INVITATIONAL' : x.how.toUpperCase()} · ${agoStr(x.t)}</span></div>`).join('') : '<div class="cfrow"><span class="k">HISTORY</span><span class="v">NO SANCTIONED BOUTS ON RECORD</span></div>'}
           </div>
           <div class="cfsec">
-            <div class="cfsh">§04 · SURVEILLANCE — BEHAVIORAL DOCTRINE</div>
+            <div class="cfsh">§04 · BEHAVIORAL DOCTRINE</div>
             <div class="cfrow"><span class="k">DOCTRINE</span><span class="v hot">${(ai.style || 'BRAWLER').toUpperCase()}</span></div>
-            <div class="cfrow"><span class="k">ENGAGEMENT BAND</span><span class="v">~${ai.range || 30}u PREFERRED</span></div>
-            <div class="cfrow"><span class="k">AGGRESSION</span><span class="v">${Math.round((ai.aggro ?? 0.6) * 100)}%</span></div>
-            <div class="cfrow"><span class="k">AIRBORNE TENDENCY</span><span class="v">${Math.round((ai.fly ?? 0.3) * 100)}%</span></div>
-            <div class="cfrow"><span class="k">ESCAPE TECH</span><span class="v">${(ev.name || ev.kind || 'DASH').toUpperCase()} (${(ev.kind || 'dash').toUpperCase()})</span></div>
+            <div class="cfrow"><span class="k">BAND · AGGRO · AIR</span><span class="v">~${ai.range || 30}u · ${Math.round((ai.aggro ?? 0.6) * 100)}% · ${Math.round((ai.fly ?? 0.3) * 100)}%</span></div>
             ${[c.thorns && 'THORNED — PUNISHES GRABS', c.phase && 'INTANGIBILITY CAPABLE', c.grabHeal && 'ABSORBS ON GRAB', c.teleEscape && 'TELEPORT ESCAPE ARTIST', c.metal && 'ARMORED CHASSIS', c.frostResist && 'COLD-HARDENED', (c.beamMight || 1) >= 1.2 && 'CERTIFIED BEAM MASTER'].filter(Boolean).map(t => `<div class="cfrow"><span class="k">FLAG</span><span class="v hot">${t}</span></div>`).join('')}
+          </div>
           </div>
           <div class="cfsec wide">
             <div class="cfsh">§05 · DOCUMENTED ARMAMENT — VERIFIED FIGURES</div>
@@ -871,14 +885,14 @@ export class HUD {
             <div class="cfquote">“Subject was last observed delivering ${esc(causeLine(rng, domKind))}.”<b>— WITNESS DEPOSITION · INCIDENT FILE ${red(6)} · TRANSCRIBED BY THE ${esc(idn.co.toUpperCase())} DESK</b></div>
           </div>
         </div>
+        </div>
         <div class="cffoot"><span>THRESHOLD TREATY OFFICE · INDEX COPY 7 OF 9</span><span>PAGE 1 OF 1 · FILE ${esc(fno)}</span></div>
-        <div class="cfbtnrow"><button class="odone oghost" id="cfDone">CLOSE FILE</button></div>
       </div>`;
       const nav = (d) => { const i = ROSTER.indexOf(c); render(ROSTER[(i + d + ROSTER.length) % ROSTER.length]); };
       this.codexEl.querySelector('#cfPrev').onclick = () => nav(-1);
       this.codexEl.querySelector('#cfNext').onclick = () => nav(1);
       this.codexEl.querySelector('#cfClose').onclick = () => { this.codexEl.style.display = 'none'; };
-      this.codexEl.querySelector('#cfDone').onclick = () => { this.codexEl.style.display = 'none'; };
+      const dn = this.codexEl.querySelector('#cfDone'); if (dn) dn.onclick = () => { this.codexEl.style.display = 'none'; };
       this.codexEl.scrollTop = 0;
     };
     render(def);

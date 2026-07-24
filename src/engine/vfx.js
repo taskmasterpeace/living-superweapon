@@ -79,8 +79,20 @@ export class VFX {
       },
       dispose: () => { this.scene.remove(shell); shell.material.dispose(); this.returnLight(l); },
     });
-    // sparks + embers + smoke
+    // the detonation KERNEL — a fast white core that pops and dies before the fireball peaks,
+    // which is what makes a blast read as a detonation instead of a balloon inflating
+    const core = new THREE.Mesh(this._sphere, addMat('#ffffff', 0.95));
+    core.position.copy(pos); core.scale.setScalar(radius * 0.12); this.scene.add(core);
+    let ct = 0; const clife = 0.14;
+    this._add({
+      update: (dt) => { ct += dt; const k = ct / clife; core.scale.setScalar(radius * (0.12 + k * 0.55)); core.material.opacity = Math.max(0, 0.95 * (1 - k)); return k >= 1; },
+      dispose: () => { this.scene.remove(core); core.material.dispose(); },
+    });
+    // the pressure ring, tilted flat — the blast telling the world how wide it reached
+    this.ring(pos, { color, r0: radius * 0.25, r1: radius * 1.7, life: 0.32, flat: true, opacity: 0.7 });
+    // sparks + embers + smoke + tumbling DEBRIS with real gravity
     this.P.burst(pos.x, pos.y, pos.z, { count: 26 + power * 14, speed: 20 + power * 10, life: 0.6, size: 2.6, color: ['#ffffff', color, color2], up: 4, grav: 10, drag: 1.3 });
+    this.P.burst(pos.x, pos.y, pos.z, { count: 6 + power * 5, speed: 26 + power * 8, life: 1.0, size: 1.6, color: ['#3a352c', '#57504a', color2], up: 14, grav: 60, drag: 0.6 });
     this.P.burst(pos.x, pos.y, pos.z, { count: 10, speed: 7, life: 1.1, size: 4.5, color: ['#20222c', '#15161d'], up: 6, grav: -3, drag: 1.1 });
     if (opt.scorch !== false && pos.y < 4) this.scorch(pos, radius * 0.6, color2);
     this.world.shake(0.6 + power * 0.7);

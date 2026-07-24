@@ -548,7 +548,7 @@ export const CSS = `
 #title .term .thchip:hover{ color:#a8d8f0; }
 /* ================= THE CODEX — a Planetary-grade CASE FILE per superweapon ================= */
 .lswovl.codex{ align-items:flex-start; padding:3vh 0; overflow-y:auto; }
-.lswovl .cfbox{ position:relative; width:min(980px,95vw); margin:auto; background:linear-gradient(178deg, rgba(20,21,26,.99), rgba(13,14,18,.99)); border:1px solid rgba(245,178,26,.3); border-radius:var(--r-1); padding:0 0 18px; font-family:'Rajdhani','Inter',sans-serif; color:var(--text-2); overflow:hidden; }
+.lswovl .cfbox{ position:relative; width:100vw; min-height:100vh; margin:0; background:linear-gradient(178deg, rgba(20,21,26,.99), rgba(13,14,18,.99)); border:1px solid rgba(245,178,26,.3); border-radius:var(--r-1); padding:0 0 18px; font-family:'Rajdhani','Inter',sans-serif; color:var(--text-2); overflow:hidden; }
 .lswovl .cfbox::before{ content:''; position:absolute; inset:0; pointer-events:none; z-index:5; background:repeating-linear-gradient(0deg, rgba(255,255,255,.016) 0 1px, transparent 1px 3px); }
 .lswovl .cfbox::after{ content:'THRESHOLD TREATY OFFICE — UNAUTHORIZED DISCLOSURE IS A TREATY OFFENSE'; position:absolute; left:50%; top:50%; transform:translate(-50%,-50%) rotate(-28deg); font-family:'Cascadia Mono',Consolas,monospace; font-weight:700; font-size:26px; letter-spacing:.24em; white-space:nowrap; color:#f4efe6; opacity:.035; pointer-events:none; }
 .lswovl .cftop{ display:flex; align-items:center; gap:12px; background:var(--ink); border-bottom:2px solid var(--gold-deep); padding:11px 18px; }
@@ -565,6 +565,22 @@ export const CSS = `
 .lswovl .cfstamp{ position:absolute; right:26px; top:14px; transform:rotate(7deg); font-family:'Cascadia Mono',Consolas,monospace; font-weight:700; font-size:var(--t-lg); letter-spacing:.3em; color:var(--stamp); border:3px solid var(--stamp); border-radius:var(--r-1); padding:5px 14px 5px 17px; opacity:.85; mix-blend-mode:screen; text-align:center; line-height:1.5; }
 .lswovl .cfstamp small{ display:block; font-size:var(--t-micro); letter-spacing:.2em; color:var(--stamp); }
 .lswovl .cfgrid{ display:grid; grid-template-columns:1fr 1fr; gap:0 26px; padding:8px 22px 4px; }
+/* THE SHEET (2026-07-24): full-viewport FASERIP-style layout — attribute rail left, dossier right */
+.lswovl .cfbody{ display:grid; grid-template-columns:minmax(300px,380px) 1fr; gap:0 34px; padding:10px 28px 8px; align-items:start; }
+.lswovl .cfrail{ border-right:1px solid var(--line-2); padding-right:26px; }
+.lswovl .cfmain .cfcols{ display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:0 26px; }
+.lswovl .atline{ display:grid; grid-template-columns:86px 104px 1fr 22px; gap:8px; align-items:center; padding:4.5px 0; border-bottom:1px dotted rgba(255,255,255,.05); }
+.lswovl .atline .atn{ font-family:var(--f-mono); font-size:var(--t-micro); letter-spacing:.14em; color:var(--text-5); }
+.lswovl .atline .atr{ font-family:var(--f-mono); font-size:var(--t-sm); font-weight:700; letter-spacing:.05em; }
+.lswovl .atline .atb{ height:7px; background:rgba(255,255,255,.07); border-radius:3px; overflow:hidden; }
+.lswovl .atline .atb i{ display:block; height:100%; border-radius:3px; }
+.lswovl .atline .atv{ font-family:var(--f-mono); font-size:var(--t-sm); color:var(--text-3); text-align:right; }
+.lswovl .cfres{ display:flex; flex-wrap:wrap; gap:6px; padding:6px 0; }
+.lswovl .rchip{ font-family:var(--f-mono); font-size:var(--t-micro); letter-spacing:.08em; padding:3px 9px; border-radius:var(--r-1); border:1px solid var(--line-2); color:var(--text-3); }
+.lswovl .rchip.imm{ color:var(--info); border-color:rgba(127,230,255,.4); }
+.lswovl .rchip.res{ color:var(--good); border-color:rgba(125,255,158,.35); }
+.lswovl .rchip.weak{ color:var(--danger-2); border-color:rgba(255,138,106,.4); }
+@media (max-width: 900px){ .lswovl .cfbody{ grid-template-columns:1fr; } .lswovl .cfrail{ border-right:none; padding-right:0; } }
 .lswovl .cfsec{ margin-bottom:13px; min-width:0; }
 .lswovl .cfsec.wide{ grid-column:1 / -1; }
 .lswovl .cfsec .cfsh{ font-family:'Cascadia Mono',Consolas,monospace; font-size:var(--t-label); font-weight:700; letter-spacing:.26em; color:var(--gold-deep); border-bottom:1px dashed rgba(245,178,26,.4); padding-bottom:4px; margin-bottom:7px; }

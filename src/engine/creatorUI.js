@@ -254,7 +254,7 @@ export class CreatorUI {
       const v = P.attrs[a.k], rc = rankColor(v);
       return `<div class="arow2"><span class="an">${icon(ATTR_ICON[a.k], 10)} ${a.name}<span class="does">${a.does}</span></span>
         <button data-a="${a.k}" data-d="-1">−</button><span class="av">${v}</span><button data-a="${a.k}" data-d="1">+</button>
-        <span class="arank" style="color:${rc};border-color:${rc}55;background:${rc}14">${rankName(v)}</span>
+        <span class="arank" style="color:${rc};border-color:${rc}55;background:linear-gradient(90deg,${rc}2e ${v * 10}%,${rc}0f ${v * 10}%)">${rankName(v)}</span>
         <span class="ac">${ATTR_COST[v]}p</span></div>`;
     }).join('');
     // traits
