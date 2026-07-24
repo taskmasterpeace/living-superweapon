@@ -985,27 +985,39 @@ const T = {
     // THE PATH — a meander, not a line. Three control points wobbled off the axis and walked with
     // short quads, so it reads as a trail worn by feet rather than a road that happens to be brown.
     const along = (cell && cell.face === 'e') || (cell && cell.face === 'w') || rng() < 0.5;
+    // ⚠ A FOREST IS NOT A PARK — Robert's note: "our forests look like little parks cause they
+    // have too many paths." A trail is now the EXCEPTION: woodland sometimes has one, deep forest
+    // rarely, and a jungle cuts one only where a street actually reaches it (think Vietnam — the
+    // canopy owns everything, and the one narrow trail is the scariest ground in the cell).
+    const hasStreet = cell && cell.edge && ['n', 's', 'w', 'e'].some((d) => cell.edge[d] === 'street');
+    const hasTrail = jungle ? (hasStreet && rng() < 0.8) : v === 1 ? rng() < 0.3 : rng() < 0.6;
     const amp = HW * 0.42, segs = 14;
     const pathPts = [];
-    const ph = rng() * 6.28, wob = 0.7 + rng() * 0.9;
-    for (let i = 0; i <= segs; i++) {
-      const t = i / segs, u = -1 + t * 2;
-      const off = Math.sin(ph + t * 3.1 * wob) * amp * (0.35 + 0.65 * Math.sin(t * Math.PI));
-      pathPts.push(along ? [cx + u * HW, cz + off] : [cx + off, cz + u * HD]);
-    }
-    for (let i = 0; i < pathPts.length - 1; i++) {
-      const [x0, z0] = pathPts[i], [x1, z1] = pathPts[i + 1];
-      const dx = x1 - x0, dz = z1 - z0, len = Math.hypot(dx, dz);
-      const q = mesh(ctx, new THREE.PlaneGeometry(len + 2.2, 7.5), M2.trail, (x0 + x1) / 2, 0.1, (z0 + z1) / 2, { recv: false });
-      q.rotation.x = -Math.PI / 2; q.rotation.z = -Math.atan2(dz, dx);
+    if (hasTrail) {
+      const ph = rng() * 6.28, wob = 0.7 + rng() * 0.9;
+      for (let i = 0; i <= segs; i++) {
+        const t = i / segs, u = -1 + t * 2;
+        const off = Math.sin(ph + t * 3.1 * wob) * amp * (0.35 + 0.65 * Math.sin(t * Math.PI));
+        pathPts.push(along ? [cx + u * HW, cz + off] : [cx + off, cz + u * HD]);
+      }
+      for (let i = 0; i < pathPts.length - 1; i++) {
+        const [x0, z0] = pathPts[i], [x1, z1] = pathPts[i + 1];
+        const dx = x1 - x0, dz = z1 - z0, len = Math.hypot(dx, dz);
+        const q = mesh(ctx, new THREE.PlaneGeometry(len + 2.2, jungle ? 4.6 : 7.5), M2.trail, (x0 + x1) / 2, 0.1, (z0 + z1) / 2, { recv: false });
+        q.rotation.x = -Math.PI / 2; q.rotation.z = -Math.atan2(dz, dx);
+      }
     }
     // trees everywhere EXCEPT on the trail — a forest you cannot walk through is a wall
     const near = (x, z) => { for (const [px, pz] of pathPts) if ((x - px) ** 2 + (z - pz) ** 2 < 150) return true; return false; };
-    const n = jungle ? 46 : v === 1 ? 34 : 22;
+    // LAYERED CANOPY — the third element of a tree spot is its KIND: 1 = emergent giant (the
+    // jungle's double canopy), 2 = understory. Mixing three heights is what makes jungle read as
+    // jungle instead of a park with more of the same tree.
+    const n = jungle ? 64 : v === 1 ? 40 : 24;
     for (let i = 0; i < n; i++) {
       const x = cx + (rng() * 2 - 1) * HW * 0.94, z = cz + (rng() * 2 - 1) * HD * 0.94;
       if (near(x, z)) continue;
-      ctx.treeSpots.push([x, z]);
+      const k = jungle ? (rng() < 0.3 ? 1 : rng() < 0.5 ? 2 : 0) : (v === 1 && rng() < 0.15 ? 1 : 0);
+      ctx.treeSpots.push([x, z, k]);
     }
     // the hard cover: boulders, and fallen giants you vault or shelter behind
     const rocks = jungle ? 2 : 4;
@@ -1025,11 +1037,11 @@ const T = {
       log.rotation.set(0, a, Math.PI / 2);
       reg(W, log, x, z, L * 0.4, 3.2, 5.5, 90);
     }
-    if (jungle) for (let i = 0; i < 10; i++) {                       // undergrowth: waist-high, blocks nothing but hides feet
+    if (jungle) for (let i = 0; i < 20; i++) {                       // undergrowth WALLS: waist-high, hides feet and bodies
       const x = cx + (rng() * 2 - 1) * HW * 0.9, z = cz + (rng() * 2 - 1) * HD * 0.9;
       if (near(x, z)) continue;
-      const f = mesh(ctx, new THREE.IcosahedronGeometry(5 + rng() * 3, 0), M2.fern, x, 2.4, z);
-      f.scale.set(1, 0.42, 1);
+      const f = mesh(ctx, new THREE.IcosahedronGeometry(5 + rng() * 4, 0), M2.fern, x, 2.4, z);
+      f.scale.set(1 + rng() * 0.5, 0.36 + rng() * 0.14, 1 + rng() * 0.5);
     }
   },
   // THE HEIGHTS. Rock, scree and a switchback trail. The tile does not raise the land itself —

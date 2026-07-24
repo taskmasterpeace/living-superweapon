@@ -773,19 +773,22 @@ export class World {
     trunks.receiveShadow = true; canopy.receiveShadow = true;
     const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), sv = new THREE.Vector3(), pv = new THREE.Vector3(), Y = new THREE.Vector3(0, 1, 0), col = new THREE.Color();
     this._gPos = new Float32Array(COUNT * 2); this._gRot = new Float32Array(COUNT); this._gScale = new Float32Array(COUNT); this._gOn = new Uint8Array(COUNT).fill(1);
-    P.forEach(([x, z], i) => {
+    P.forEach(([x, z, k], i) => {
       this._gPos[i * 2] = x; this._gPos[i * 2 + 1] = z;
       this._gRot[i] = Math.random() * Math.PI * 2;
-      this._gScale[i] = 0.85 + Math.random() * 0.4;
+      // KIND: 1 = emergent giant (jungle upper canopy) · 2 = understory · else a street tree
+      this._gScale[i] = k === 1 ? 1.45 + Math.random() * 0.45 : k === 2 ? 0.6 + Math.random() * 0.18 : 0.85 + Math.random() * 0.4;
       // ⚠ a tree grows out of the GROUND. Planting at y=0 was invisible while the world was flat;
       // the moment relief existed, every tree on a hillside hung in the air or sank into it.
       m4.compose(pv.set(x, this.heightAt(x, z), z), q.setFromAxisAngle(Y, this._gRot[i]), sv.setScalar(this._gScale[i]));
       trunks.setMatrixAt(i, m4); canopy.setMatrixAt(i, m4);
-      canopy.setColorAt(i, col.setHSL(0.24 + Math.random() * 0.05, 0.38, 0.26 + Math.random() * 0.08));
+      canopy.setColorAt(i, (P[i][2] ? col.setHSL(0.27 + Math.random() * 0.04, 0.5, 0.185 + Math.random() * 0.05)
+                                    : col.setHSL(0.24 + Math.random() * 0.05, 0.38, 0.26 + Math.random() * 0.08)));
     });
     trunks.instanceMatrix.needsUpdate = true; canopy.instanceMatrix.needsUpdate = true;
     if (canopy.instanceColor) canopy.instanceColor.needsUpdate = true;
     this.grass = trunks; this._canopy = canopy;   // this.grass keeps every old integration hook alive
+    this._gCut = new Float32Array(COUNT);          // canopy-cutaway lerp state, per instance
     this.scene.add(trunks); this.scene.add(canopy);
     this._cityBits.push(trunks, canopy);
   }
@@ -1029,6 +1032,39 @@ export class World {
         }
       }
     }
+    this._updateCanopyCut(p, cam, dt);
+  }
+  // THE CANOPY CUTAWAY — tree tops between the lens and the player scale away exactly like the
+  // tower cutaway, so a fighter under the trees is visible. The TRUNKS stay ("the top of the tree
+  // cuts off" — Robert), the forest keeps its shape, and this is VISUAL ONLY: fog, _vis and AI
+  // belief never read it, so a fog-hidden enemy can never be leaked by it.
+  // Budgeted: state advances every frame, matrix writes cap at 160/frame and catch up.
+  _updateCanopyCut(p, cam, dt) {
+    const cv = this._canopy;
+    if (!cv || !this._gPos || !this._gCut) return;
+    const dx = p.x - cam.x, dz = p.z - cam.z, len2 = dx * dx + dz * dz || 1;
+    let writes = 0;
+    for (let i = 0; i < cv.count; i++) {
+      if (!this._gOn[i]) continue;
+      const tx = this._gPos[i * 2] - cam.x, tz = this._gPos[i * 2 + 1] - cam.z;
+      let t = (tx * dx + tz * dz) / len2; t = t < 0 ? 0 : t > 1 ? 1 : t;
+      const ex = tx - dx * t, ez = tz - dz * t;
+      const r = 10.5 * this._gScale[i] + 4;
+      const want = (t > 0.03 && t < 0.99 && ex * ex + ez * ez < r * r) ? 1 : 0;
+      const c0 = this._gCut[i];
+      if (c0 === want && (want === 0 || c0 === 1)) continue;
+      const c1 = c0 + (want - c0) * Math.min(1, dt * 7);
+      if (Math.abs(c1 - c0) < 0.01) { this._gCut[i] = want; continue; }
+      if (writes >= 160) continue;                       // catch up next frame — never spike
+      this._gCut[i] = c1; writes++;
+      const gy = this.heightAt(this._gPos[i * 2], this._gPos[i * 2 + 1]);
+      _gcp.set(this._gPos[i * 2], gy, this._gPos[i * 2 + 1]);
+      _gcq.setFromAxisAngle(_gcY, this._gRot[i]);
+      _gcs.set(this._gScale[i] * (1 - c1 * 0.5), this._gScale[i] * (1 - c1 * 0.88), this._gScale[i] * (1 - c1 * 0.5));
+      _gm4.compose(_gcp, _gcq, _gcs);
+      cv.setMatrixAt(i, _gm4);
+    }
+    if (writes) cv.instanceMatrix.needsUpdate = true;
   }
   _segBox3(x0, y0, z0, x1, y1, z1, c) {
     const hx = c.hx ?? c.r, hz = c.hz ?? c.r, top = c.top ?? c.h;
@@ -1734,6 +1770,7 @@ export class World {
 
 const _proj = new THREE.Vector3();
 const _gm4 = new THREE.Matrix4();
+const _gcp = new THREE.Vector3(), _gcq = new THREE.Quaternion(), _gcs = new THREE.Vector3(), _gcY = new THREE.Vector3(0, 1, 0);
 const _ndc = new THREE.Vector2();
 const _ray = new THREE.Raycaster();
 const _groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
