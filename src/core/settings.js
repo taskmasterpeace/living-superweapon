@@ -49,6 +49,7 @@ export const SETTINGS = {
   scheme: 'classic',// control layout: classic | pilot | southpaw (see KEYMAPS in hud.js)
   aimAssist: true,  // magnet targeting near the cursor (facing + attacks steer to the pick)
   quality: 'auto',  // 'auto' | 2 (high) | 1 (balanced) | 0 (low) — locks the adaptive tier
+  opening: 'full',  // match cold-open: 'full' (cinematic, 1 of 10) | 'quick' (the card) | 'off'
 };
 
 export function loadSettings() {

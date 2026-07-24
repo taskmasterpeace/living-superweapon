@@ -61,6 +61,16 @@ export const GUARD_DEF = {
   },
 };
 
+// THE GATES, exported pure so the opening director (and anything else) reads the SAME rule the
+// dispatcher runs — never a reimplementation (the validator law).
+export function ladderGatesFor(C) {
+  return {
+    feds: !!C && (C.intelBudget >= 45 || C.lawBudget >= 62),
+    military: !!C && (C.milBudget >= 52 || C.milService >= 60),
+    sanctioned: !!C && C.lswRegs !== 'Banned' && C.lswActivity >= 40,
+  };
+}
+
 export class PoliceSystem {
   constructor(game) {
     this.g = game;
@@ -103,12 +113,9 @@ export class PoliceSystem {
   }
   // Does this theater's country field a real military? Median milBudget is ~41; a superpower is
   // 80-90, a failed state ~25. Above ~52 = there's an army that could roll in.
-  _hasMilitary() { const C = this._country(); return !!C && (C.milBudget >= 52 || C.milService >= 60); }
-  // A federal response needs a federal apparatus — intel budget is the tell (US 90).
-  _hasFeds() { const C = this._country(); return !!C && (C.intelBudget >= 45 || C.lawBudget >= 62); }
-  // A sanctioned LSW responds only where superweapons are a real, legal institution
-  // (lswActivity 0-100 + lswRegs Legal/Regulated/Banned — the country sheet's payoff).
-  _hasSanctioned() { const C = this._country(); return !!C && C.lswRegs !== 'Banned' && C.lswActivity >= 40; }
+  _hasMilitary() { return ladderGatesFor(this._country()).military; }
+  _hasFeds() { return ladderGatesFor(this._country()).feds; }
+  _hasSanctioned() { return ladderGatesFor(this._country()).sanctioned; }
   villain() {
     let best = null, bh = THRESH - 0.01;
     for (const [f, h] of this.heat) if (f.alive !== undefined && h > bh && f.def && !f.def.police && this.g.entities.includes(f)) { bh = h; best = f; }

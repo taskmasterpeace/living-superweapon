@@ -646,6 +646,18 @@ export class AudioBus {
   }
   // ---- KMK 9 ACTION NEWS broadcast package ----
   // sting: the urgent local-news open — timpani hit + three rising brass stabs + a hi shimmer
+  // one key of an unseen keyboard — the case-file opening types with these (ui bus, tiny)
+  keystroke() {
+    if (!this.ok || this.muted) return;
+    const n = this._noise(0.018); const f = this.ctx.createBiquadFilter();
+    f.type = 'bandpass'; f.frequency.value = 2400 + Math.random() * 1800; f.Q.value = 1.4;
+    n.connect(f);
+    this._env(f, 0.022, 0.16, 0.001, 'ui'); n.start(); n.stop(this.t + 0.03);
+    const o = this.ctx.createOscillator(); o.type = 'square';
+    o.frequency.value = 1200 + Math.random() * 500;
+    this._env(o, 0.012, 0.05, 0.001, 'ui'); o.start(); o.stop(this.t + 0.02);
+  }
+
   sting() {
     if (!this.ok || this.muted) return;
     const tym = this.ctx.createOscillator(); tym.type = 'sine';

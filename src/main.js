@@ -11,6 +11,7 @@ import { installCustoms, loadCustoms, freshPicks, buildDef, tally, validate, sav
 import { applyIdentities } from './data/identities.js';
 import { countryOf } from './data/countries.js';
 import { Tutorial } from './engine/tutorial.js';
+import { playOpening } from './engine/opening.js';
 import { Netplay } from './engine/netplay.js';
 import { Tournament } from './engine/tournament.js';
 import { TouchControls, isTouchDevice } from './core/touch.js';
@@ -102,6 +103,9 @@ function beginMatch(c) {
     }
   } catch (err) { console.error('theater', err); }
   savePrefs(c);                // (3) remember this loadout for next launch
+  // hand LAST match's footage to the opening director BEFORE startMode wipes it — the broadcast
+  // opener replays your own previous coverage ("a previous news report with them in it")
+  if (game.news && game.news.clips && game.news.clips.length) { game._openingClips = game.news.clips; game.news.clips = []; }
   game.startMode(c.mode || 'training', c);
   hud.setPlayer(ROSTER.find(r => r.id === (c.p1 || 'sol')));
   hud.armHintTimer();          // the control wall shows for ~18s, then folds into a corner chip (F1)
@@ -110,16 +114,21 @@ function beginMatch(c) {
   started = true; game._lastCfg = c;
   hud.hideEndScreen(); hud.hideTitle();
   soundscape.music('combat');
-  // THE ESTABLISHING SHOT — the city names itself before you're standing in it.
+  // THE OPENING — cinematic (1 of 10, the director) · quick (the establishing card) · off.
+  // The Danger Room keeps its holo boot card; tutorials and net matches stay quick for sync.
   try {
     const plan = game.world.plan;
     if (plan) {
       const sim = (c.mode || 'training') === 'training';
       const C = countryOf(plan.country) || {};
-      hud.showEstablishing(plan, { sim, country: C, eta: game.police ? Math.round(game.police._responseDelay()) : null,
-        kicker: c.mode === 'tournament' ? 'THE INVITATIONAL · THEATER' : 'THEATER OF OPERATIONS' });
+      const kicker = c.mode === 'tournament' ? 'THE INVITATIONAL · THEATER' : 'THEATER OF OPERATIONS';
+      if (!sim && !c.tutorial && !c.net && SETTINGS.opening === 'full') {
+        playOpening(game, hud, plan, { kicker }, null);
+      } else if (sim || SETTINGS.opening !== 'off') {
+        hud.showEstablishing(plan, { sim, country: C, eta: game.police ? Math.round(game.police._responseDelay()) : null, kicker });
+      }
     }
-  } catch (err) { console.error('establishing', err); }
+  } catch (err) { console.error('opening', err); }
   if (c.tutorial) tutorial.begin(); else tutorial.skip();
 }
 hud.onBracketContinue = () => { if (game._lastCfg) enter(game._lastCfg); };
@@ -262,7 +271,7 @@ function frame(now) {
 requestAnimationFrame(frame);
 
 // expose for debugging + performance benchmarking
-window.LSW = { game, hud, ROSTER, runSlot, performEvade, input, tutorial, netplay, uinav, soundscape, SETTINGS, KEYMAPS, creator: { ui: creator, freshPicks, buildDef, tally, validate, saveCustom, deleteCustom, loadCustoms } };
+window.LSW = { game, hud, ROSTER, runSlot, performEvade, input, tutorial, netplay, uinav, soundscape, SETTINGS, KEYMAPS, playOpening, creator: { ui: creator, freshPicks, buildDef, tally, validate, saveCustom, deleteCustom, loadCustoms } };
 window.LSW.runBenchmark = (opts) => runBenchmark(game, hud, opts);
 if (location.search.includes('bench')) {
   addEventListener('load', () => setTimeout(async () => {

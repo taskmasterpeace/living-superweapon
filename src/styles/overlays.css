@@ -113,3 +113,81 @@
   color:var(--text); font-family:var(--f-display); font-weight:700; letter-spacing:.06em;
   padding:9px 16px; pointer-events:none; animation:attoast 2.6s ease forwards; }
 @keyframes attoast{ 0%{ opacity:0; translate:0 8px } 8%{ opacity:1; translate:0 0 } 82%{ opacity:1 } 100%{ opacity:0 } }
+
+/* ================= THE OPENING DIRECTOR — ten cinematic cold-opens ================= */
+#opCine{ position:fixed; inset:0; z-index:66; pointer-events:auto; cursor:pointer;
+  display:flex; flex-direction:column; justify-content:space-between; overflow:hidden;
+  animation:opFade .5s ease; }
+#opCine.opout{ opacity:0; transition:opacity .45s ease; }
+@keyframes opFade{ from{ opacity:0 } to{ opacity:1 } }
+#opCine .opbar{ height:11vh; background:#020304; flex:0 0 auto; box-shadow:0 0 30px rgba(0,0,0,.8); }
+#opCine .opstage{ flex:1; display:flex; align-items:center; justify-content:center; text-align:center;
+  color:var(--text); font-family:var(--f-display); text-shadow:0 2px 18px rgba(0,0,0,.85); }
+#opCine .opstage.opin > *{ animation:opRise .55s ease both; }
+@keyframes opRise{ from{ opacity:0; transform:translateY(14px) } to{ opacity:1; transform:none } }
+#opCine .opskip{ position:absolute; right:16px; bottom:12.5vh; font-family:var(--f-mono);
+  font-size:var(--t-micro); letter-spacing:var(--tr-wider); color:var(--text-5); }
+#opCine .opflag{ font-size:64px; line-height:1; margin-bottom:10px; }
+#opCine .opcountry{ font-size:44px; font-weight:800; letter-spacing:.14em; }
+#opCine .opcity{ font-size:52px; font-weight:800; letter-spacing:.1em; color:var(--gold-pale); }
+#opCine .opmotto{ color:var(--text-3); font-style:italic; margin-top:6px; }
+#opCine .opkick{ font-family:var(--f-mono); font-size:var(--t-sm); letter-spacing:.3em; color:var(--gold); margin-bottom:10px; }
+#opCine .opline{ font-family:var(--f-mono); font-size:var(--t-md); letter-spacing:.12em; color:var(--text-2); margin-top:6px; }
+#opCine .opline.dim{ color:var(--text-5); }
+#opCine .opbars{ width:min(360px,70vw); margin:14px auto 0; }
+#opCine .opbarrow{ display:flex; align-items:center; gap:10px; margin:5px 0; font-family:var(--f-mono); font-size:var(--t-micro); letter-spacing:.2em; color:var(--text-4); }
+#opCine .opbarrow span{ width:64px; text-align:right; }
+#opCine .opmeter{ flex:1; height:5px; background:rgba(255,255,255,.08); border-radius:3px; overflow:hidden; }
+#opCine .opmeter i{ display:block; height:100%; }
+#opCine .opterm{ text-align:left; font-family:var(--f-mono); font-size:var(--t-lg); color:var(--good);
+  background:rgba(2,4,6,.72); border:1px solid rgba(120,255,160,.18); border-radius:var(--r-2); padding:22px 28px; min-width:min(640px,86vw); }
+#opCine .optermline{ margin:6px 0; letter-spacing:.06em; min-height:1.3em; }
+#opCine .optermline.dim{ color:rgba(120,255,160,.4); font-size:var(--t-sm); }
+#opCine .opcaret{ animation:opBlink 1s steps(1,end) infinite; }
+@keyframes opBlink{ 50%{ opacity:0 } }
+#opCine .opcard{ background:var(--surface-solid); border:1px solid var(--line-gold); border-radius:var(--r-1);
+  padding:22px 30px; min-width:min(520px,84vw); position:relative; }
+#opCine .opcardtop{ display:flex; justify-content:space-between; font-family:var(--f-mono); font-size:var(--t-micro); letter-spacing:.16em; color:var(--text-5); margin-bottom:12px; }
+#opCine .opclass{ color:#fff; background:var(--stamp, #a8161d); padding:2px 8px; border-radius:var(--r-1); }
+#opCine .opcardname, #opCine .opbigname{ font-size:46px; font-weight:800; letter-spacing:.08em; color:var(--gold-pale); }
+#opCine .opbigname{ font-size:64px; }
+#opCine .opcardsub{ font-family:var(--f-mono); font-size:var(--t-sm); letter-spacing:.2em; color:var(--text-4); margin-top:4px; }
+#opCine .opcardrows{ display:flex; gap:26px; justify-content:center; margin-top:16px; font-family:var(--f-mono); }
+#opCine .opcardrows b{ display:block; font-size:var(--t-micro); letter-spacing:.2em; color:var(--text-5); }
+#opCine .opcardrows span{ font-size:var(--t-lg); color:var(--text); }
+#opCine .opcardrows span.hot{ color:var(--danger); }
+#opCine .opstamp{ position:absolute; right:14px; bottom:10px; transform:rotate(-9deg);
+  border:2px solid var(--good); color:var(--good); font-family:var(--f-mono); font-size:var(--t-sm);
+  letter-spacing:.2em; padding:3px 10px; opacity:.9; }
+#opCine .opnews{ display:flex; gap:22px; align-items:center; text-align:left; }
+#opCine .opmon{ position:relative; width:320px; height:180px; background:#000; border:1px solid var(--line-2); border-radius:var(--r-2); overflow:hidden; }
+#opCine .opmon canvas{ width:100%; height:100%; display:block; }
+#opCine .opbug{ position:absolute; top:6px; left:8px; color:#fff; font-weight:800; font-size:13px; }
+#opCine .opbug b{ color:var(--broadcast); }
+#opCine .oplive{ position:absolute; top:6px; right:8px; color:#fff; font-family:var(--f-mono); font-size:var(--t-micro); letter-spacing:.2em; display:flex; gap:4px; align-items:center; }
+#opCine .oplive i{ width:6px; height:6px; border-radius:50%; background:var(--broadcast); animation:opBlink 1.1s steps(1,end) infinite; }
+#opCine .opheadline{ font-size:26px; font-weight:800; max-width:420px; }
+#opCine .opnewsside{ max-width:440px; }
+#opCine .opladder #opLad{ margin-top:8px; }
+#opCine .opladrow{ display:flex; gap:14px; align-items:baseline; font-family:var(--f-mono); margin:7px 0; animation:opRise .4s ease both; }
+#opCine .opladrow b{ width:96px; text-align:right; color:var(--gold); letter-spacing:.1em; }
+#opCine .opladrow span{ font-size:var(--t-lg); letter-spacing:.1em; }
+#opCine .opladrow em{ font-style:normal; font-size:var(--t-micro); letter-spacing:.16em; color:var(--text-5); }
+#opCine .opladrow.dead{ opacity:.38; } #opCine .opladrow.dead span{ text-decoration:line-through; }
+#opCine .opsat{ position:relative; width:100%; height:100%; }
+#opCine .opsatgrid{ position:absolute; inset:8%; border:1px solid rgba(127,230,255,.35);
+  background:repeating-linear-gradient(0deg, rgba(127,230,255,.07) 0 1px, transparent 1px 60px),
+             repeating-linear-gradient(90deg, rgba(127,230,255,.07) 0 1px, transparent 1px 60px); }
+#opCine .opsatcross{ position:absolute; left:50%; top:50%; transform:translate(-50%,-55%); color:var(--info); font-size:40px; font-weight:200; }
+#opCine .opsathud{ position:absolute; left:10%; bottom:12%; text-align:left; font-family:var(--f-mono); font-size:var(--t-sm); letter-spacing:.14em; color:var(--info); }
+#opCine .opsathud div{ margin:3px 0; }
+#opCine .optapenames{ display:flex; gap:20px; align-items:baseline; justify-content:center; font-size:36px; font-weight:800; letter-spacing:.06em; }
+#opCine .optapenames em{ font-style:normal; color:var(--gold); font-size:20px; }
+#opCine .optaperow{ display:flex; gap:16px; justify-content:center; font-family:var(--f-mono); margin:6px 0; font-size:var(--t-lg); }
+#opCine .optaperow b{ width:110px; color:var(--text-5); font-size:var(--t-micro); letter-spacing:.2em; align-self:center; }
+#opCine .optaperow span{ width:140px; }
+#opCine .opsirenline{ font-size:40px; font-weight:800; letter-spacing:.08em; color:var(--police, #5aa0ff); }
+#opCine .opfreeze{ align-self:flex-end; margin-bottom:3vh; }
+#opCine .opchips{ display:flex; gap:8px; justify-content:center; margin-top:14px; flex-wrap:wrap; }
+#opCine .opchips span{ font-family:var(--f-mono); font-size:var(--t-micro); letter-spacing:.1em; color:var(--text-3);
+  border:1px solid var(--line-2); border-radius:var(--r-pill); padding:4px 12px; background:rgba(255,255,255,.04); }

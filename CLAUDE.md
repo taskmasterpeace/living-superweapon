@@ -646,6 +646,31 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   '#'-token frames (drawImage of an incomplete Image is a spec-level no-op). Never put a sync
   encode or an uncapped catch-up loop in the frame path again.
 
+## THE OPENING DIRECTOR (2026-07-24) — ten cinematic cold-opens
+- **`engine/opening.js` — `playOpening(game, hud, plan, opts, onDone)`**, wired in `main.beginMatch`
+  behind `SETTINGS.opening` (Options → MATCH OPENING: CINEMATIC / QUICK CARD / OFF; training keeps
+  the holo card, tutorial/net stay quick). Every real match cold-opens country → city → ONE OF TEN
+  variants (`OPENING_NAMES`): casefile (typed registry query + TOP SECRET card) · broadcast (KMK 9
+  monitor replaying YOUR previous match's clips — beginMatch hands `news.clips` to
+  `game._openingClips` BEFORE startMode wipes them; no footage → SMPTE bars with the violet bar
+  swapped to slate) · flyover (skyline descent to spawn, live district readout) · teletype ·
+  ladder (the six-rung response ladder with dead rungs struck — reads `ladderGatesFor`, now
+  EXPORTED pure from police.js and shared by the dispatcher's `_has*`) · satellite · tape
+  (vs-card, falls back to casefile when no rival) · siren (vigilantism stance) · freeze (hero
+  shot, frustum eases 46→20) · ledger (Elo book). Everything reads live data (sheets, book,
+  LeFevre, climate, clips) so it can never lie.
+- **Mechanics**: camera rides `game.mapCam` (the map-tool channel) with `game.running=false`;
+  `finish()` restores `wasRunning`, clears mapCam, revokes `_openingClips` blob URLs; ANY
+  key/pointer skips (F12 exempt); `audio.keystroke()` ticks under the typers. **The director
+  ticks `_animate` (+`_sync`) on living fighters each step** — with the sim held nothing else
+  animates, and an un-ticked figure stands in its raw construction pose (Robert saw the crazy
+  arm). **Singleton**: a new director retires a live one through `el._finish` (rematch spam,
+  tests), and the broadcast TV interval self-clears if its canvas is detached.
+- **Testable by construction**: `playOpening(..., { manual: true, variant: i })` never touches
+  rAF — step it by hand (`op.step(0.1)` until `op.done`). Verified: all 10 variants manual-clean
+  (overlay removed, running/mapCam restored, 0 errors), real-time run clean, skip works.
+  `LSW.playOpening` exposed. Ref: `lsw-opening-freeze.jpeg`.
+
 ## HANDOFF
 - **`HANDOFF.md` at the repo root** is the orientation document: architecture, the ten rules that
   are load-bearing, what is solid, what is half-built, what to do next, and the headless

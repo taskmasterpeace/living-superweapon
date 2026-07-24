@@ -1589,6 +1589,10 @@ export class HUD {
       <div class="orow"><span class="ol">Render Quality</span><div class="chips3">
         ${[['auto', 'AUTO'], ['2', 'HIGH'], ['1', 'BALANCED'], ['0', 'LOW']].map(([v, n]) => `<span class="c3${String(S.quality) === v ? ' on' : ''}" data-q="${v}">${n}</span>`).join('')}
       </div></div>
+      <div class="orow"><span class="ol">Match Opening</span><div class="chips3">
+        ${[['full', 'CINEMATIC'], ['quick', 'QUICK CARD'], ['off', 'OFF']].map(([v, n]) => `<span class="c3${S.opening === v ? ' on' : ''}" data-open="${v}">${n}</span>`).join('')}
+      </div></div>
+      <div class="oline2">CINEMATIC cold-opens each match with one of ten openers — case file, broadcast, flyover… Any key skips.</div>
       <button class="odone">Done</button>
     </div>`;
     const apply = () => { applySettings(this.game); saveSettings(); };
@@ -1600,6 +1604,7 @@ export class HUD {
     });
     this.optionsEl.querySelectorAll('[data-t]').forEach(c => c.onclick = () => { S[c.dataset.t] = c.dataset.on === '1'; apply(); this.showOptions(); });
     this.optionsEl.querySelectorAll('[data-q]').forEach(c => c.onclick = () => { S.quality = c.dataset.q === 'auto' ? 'auto' : c.dataset.q; apply(); this.showOptions(); });
+    this.optionsEl.querySelectorAll('[data-open]').forEach(c => c.onclick = () => { S.opening = c.dataset.open; apply(); this.showOptions(); });
     this.optionsEl.querySelectorAll('[data-scheme]').forEach(c => c.onclick = () => {
       S.scheme = c.dataset.scheme; apply(); this.buildHintBody(); this.hintFull(true);   // show the new bindings
       this.feed('Controls: ' + keymap(S.scheme).name, 'var(--gold)');
