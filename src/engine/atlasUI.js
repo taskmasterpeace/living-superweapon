@@ -4,6 +4,7 @@
 // The planner stays pure (data/cityplan.js — zero Three.js); this file is UI + world-driving only.
 // Styling lives in src/styles/overlays.css, linked by BOTH pages — never inject a copy here.
 import { cityList } from '../data/cities.js';
+import { climateLine } from '../data/climate.js';
 import {
   generatePlan, applyPlanEdits, thresholdPlan, validatePlan, popLabel,
   TILE_INFO, TILE_SIZES, VARIANTS, POP_TYPES, CELL, CELL_RANGE,
@@ -293,7 +294,7 @@ export function mountAtlas(host, opts = {}) {
     drawPlanPreview(el.querySelector('#atCv'), plan);
     el.querySelector('#atMeta').innerHTML = st.sel < 0
       ? `<b>THE WHITE CITY</b> — 5×5 flagship grid<br/>Four districts + harbor + the bridge<br/>Hand-tuned; the planner's benchmark`
-      : `<b>${esc(selCity.name.toUpperCase())}</b>, ${esc(selCity.country)}<br/>${esc(popLabel(selCity.popType, selCity.pop))}<br/>TYPES: ${esc(selCity.types.join(' · ') || 'GENERAL')}<br/>CRIME ${selCity.crime} · SAFETY ${selCity.safety} · GRID ${plan.N}×${plan.N}<br/>POLICE RESPONSE ~${Math.round(Math.max(5, Math.min(24, 26 - selCity.safety * 0.25)))}s ${selCity.safety >= 60 ? '· RAPID' : selCity.safety <= 30 ? '· SLOW' : ''}`;
+      : `<b>${esc(selCity.name.toUpperCase())}</b>, ${esc(selCity.country)}<br/>${esc(popLabel(selCity.popType, selCity.pop))}<br/>TYPES: ${esc(selCity.types.join(' · ') || 'GENERAL')}<br/>CRIME ${selCity.crime} · SAFETY ${selCity.safety} · GRID ${plan.N}×${plan.N}<br/>POLICE RESPONSE ~${Math.round(Math.max(5, Math.min(24, 26 - selCity.safety * 0.25)))}s ${selCity.safety >= 60 ? '· RAPID' : selCity.safety <= 30 ? '· SLOW' : ''}<br/>${esc(climateLine(selCity.climate))}`;
     const $ = (s) => el.querySelector(s);
     $('#atQ').oninput = (e) => { st.q = e.target.value; render(); setTimeout(() => { const i = $('#atQ'); i.focus(); i.setSelectionRange(i.value.length, i.value.length); }, 0); };
     el.querySelectorAll('[data-at]').forEach(ch => ch.onclick = () => { st.type = ch.dataset.at; render(); });

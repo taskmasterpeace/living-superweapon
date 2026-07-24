@@ -15,11 +15,13 @@ export const CITY_ROWS = [["Kabul","Afghanistan",4221532,"City","Military|Politi
 // The sheet has no terrain column — the ground a city stands on is joined on from
 // data/geography.js, which is authored and reviewable rather than 1,050 hand-edited rows.
 import { geoOf } from './geography.js';
+import { climateOf } from './climate.js';
 
 export const cityList = () => CITY_ROWS.map(([name, country, pop, popType, types, crime, safety, cultureCode, countryCode, popRating, sector, hvt], i) => {
   const c = { id: i, name, country, pop, popType, types: types ? types.split('|') : [], crime, safety, cultureCode, countryCode, popRating, sector, hvt };
   const g = geoOf(c);
   c.terrain = g.terrain; c.biome = g.biome;
+  c.climate = climateOf(c);   // authored join, same pattern — January in New York vs January in Miami
   return c;
 });
 
