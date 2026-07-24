@@ -27,7 +27,7 @@ Gravity-control and black-hole are two different entries — never one vague "gr
 }
 ```
 
-## The 20 mechanical families (TYPES registry, `engine/abilities.js`)
+## The 22 mechanical families (TYPES registry, `engine/abilities.js`)
 
 | Family | What it is | Examples in-roster |
 |---|---|---|
@@ -51,6 +51,8 @@ Gravity-control and black-hole are two different entries — never one vague "gr
 | `rifle` | auto-fire tracers, recoil | Pulse Rifle, Pulse Carbine |
 | `bow` | draw-scaled arrow + payload | Longshot |
 | `quiver` | payload selector | Switch Broadheads |
+| `nova` | feed the WHOLE ki tank → omnidirectional detonation, caster left dry | Supernova |
+| `mindcontrol` | seize a bot's will → team flip for `dur` (minds only, never badges) | Dominion |
 
 ## Character-level fields (the identity layer)
 

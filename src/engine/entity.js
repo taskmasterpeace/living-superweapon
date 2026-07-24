@@ -1226,7 +1226,8 @@ export class Fighter {
         p.stateRing.position.set(0, 0.09 - this.pos.y + (this.groundY || 0), 0);
         const sm = p.stateRing.material;
         let col = null, op = 0, sc = 1;
-        if (this.guarding) { col = '#9fd0ff'; op = 0.7; sc = 1 + Math.sin(this.animT * 8) * 0.02; }        // braced
+        if (this._controlled) { col = '#7fd4ff'; op = 0.55 + Math.sin(this.animT * 6) * 0.2; sc = 1.04; }  // DOMINATED — not their own will
+        else if (this.guarding) { col = '#9fd0ff'; op = 0.7; sc = 1 + Math.sin(this.animT * 8) * 0.02; }        // braced
         else if (this.grabbing || this.grabState) { col = '#8fe08a'; op = 0.75; sc = 1.06; }              // seizing
         else if (this.meleeCharge > 0) { col = '#ff8a3a'; op = 0.45 + Math.min(0.45, this.meleeCharge * 0.6); sc = 1 + this.meleeCharge * 0.12; }  // winding up a haymaker
         else if (this.strikeActive > 0) { col = '#ffffff'; op = 0.8; sc = 1.12; }                          // committed

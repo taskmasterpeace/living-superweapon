@@ -115,6 +115,8 @@ export function powerNumbers(ab) {
     case 'rifle': return `${ab.damage}/rnd · ~${r(ab.damage / ab.interval)} dps · ${ab.spread <= 0.02 ? 'precision' : 'auto'}`;
     case 'cone': return `${ab.dps} dps · ${ab.range}u cone${ab.cold ? ' · FREEZES' : ''}${ab.push ? ' · shoves' : ''}`;
     case 'lifedrain': return `${ab.dps} dps → ${r(ab.ratio * 100)}% healed`;
+    case 'nova': return `${ab.dmgMin}–${ab.dmgMax} dmg · r ${ab.minRadius}→${ab.maxRadius}u · feeds your WHOLE tank`;
+    case 'mindcontrol': return `${ab.dur}s dominate · ${ab.range}u · minds only`;
     case 'charge': return `${ab.dmgMin}–${ab.dmgMax} dmg · blast→${ab.maxBlast} · scales`;
     case 'melee': return `${ab.damage} dmg · launch ${ab.launch || 0}${ab.fly ? ' · flying' : ''}`;
     case 'rush': return `${ab.hits}×${ab.damage} + ${ab.finisher} finisher`;

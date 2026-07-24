@@ -61,6 +61,8 @@ function cfAbilityRows(def) {
     if (a.steer) notes.push('STEERABLE');
     if (a.construct) notes.push('CONSTRUCT: ' + a.construct.toUpperCase());
     if (a.boomerang) notes.push('RETURNS');
+    if (a.type === 'nova') notes.push(`FEEDS THE WHOLE TANK · r ${a.minRadius || 16}→${a.maxRadius || 44}u · CASTER LEFT DRY`);
+    if (a.type === 'mindcontrol') notes.push(`DOMINATES ${a.dur || 6}s — MINDS ONLY, NEVER BADGES`);
     return { slot: s.label, name: a.name, kind: a.type.toUpperCase(), dmg, cost, cd, reach, notes: notes.join(' · '), ult: s.k === 'r' };
   });
 }
@@ -788,6 +790,8 @@ export function heroStats(d) {
   if (A.some(a => a.type === 'summon')) tags.push('Summoner');
   if (A.some(a => a.type === 'meteor')) tags.push('Artillery');
   if (A.some(a => a.type === 'charge')) tags.push('Charge');
+  if (A.some(a => a.type === 'nova')) tags.push('Supernova');
+  if (A.some(a => a.type === 'mindcontrol')) tags.push('Dominator');
   if (d.thorns) tags.push('Thorns');
   if (d.phase) tags.push('Phase');
   if (d.grabHeal) tags.push('Absorb');
@@ -864,6 +868,8 @@ export function kitFacts(def) {
   if (has('teleport')) out.push(['mobility', 'a teleport']);
   if (has('phase')) out.push(['defense', 'intangibility']);
   if (has('facebomb')) out.push(['threat', 'a homing seeker bomb']);
+  if (has('nova')) out.push(['energy', 'a SUPERNOVA — the whole tank, one blast']);
+  if (has('mindcontrol')) out.push(['intellect', 'a mind leash — one foe fights for them']);
   if ((def.items || []).length) out.push(['intellect', 'gadgets: ' + def.items.map(i => i.name).join(', ')]);
   return out;
 }
@@ -904,6 +910,8 @@ function describeAbility(a) {
     case 'mine': return 'plant proximity mines at your aim (up to 3) — they arm, blink, and erase';
     case 'lifedrain': return 'hold to siphon — their health flows into yours';
     case 'quiver': return 'switch broadheads: ' + (a.payloads || ['explosive', 'flame', 'poison']).join(' / ');
+    case 'nova': return 'hold to feed your WHOLE ki tank in — one omnidirectional detonation, then you are empty';
+    case 'mindcontrol': return 'seize a lesser mind — it fights for you until the leash snaps';
     default: return a.type;
   }
 }
