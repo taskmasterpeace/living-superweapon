@@ -494,3 +494,33 @@ world.render()
 
 ⚠ The camera is **orthographic** and driven from `camTarget`/`camDir`/`frustum` — setting
 `camera.position` alone does nothing, because `follow()` overwrites it on the next frame.
+
+
+---
+
+## ATLAS — THE TOOL STANDS ALONE (v1, 2026-07-24)
+
+The map maker is a product now: **ATLAS**, at `/atlas.html` beside the game. One module
+(`engine/atlasUI.js`), two mounts — the in-game CITY ATLAS screen and the standalone page (bare
+World + orbit camera + the panel, always-live, EXPORT/IMPORT of the authored `.json`). The format
+is documented in `docs/ATLAS_FORMAT.md`; `validatePlan` lives in `data/cityplan.js` so the panel
+and the headless sweep share one implementation.
+
+New dials beside GRID/COAST/CELL:
+- **PEOPLE** (`plan.metric.humanH`, 4.8–19.2u) — the METRIC contract. Doors (six kinds on every
+  inhabited builder's authored front), storey heights, streetlights and parked cars all derive
+  from how tall the people are; the CELL dial is how big the map is. Two dials, never conflated.
+- **ROOMS** (`plan.roomScale`, 0.7–1.6) — interior room size for the enterable buildings.
+- **DEPTH** — painting water offers SHALLOWS · THE DEEP · THE TRENCH; the bed is real terrain
+  (−8/−22/−44 × scale), the surface is a living depth-tinted shader (near-black over the trench).
+
+The city card gained the climate line (`data/climate.js`, authored join — zone, monthly curve,
+snow months). The layer contract (`TILE_MAX_H` → `plan.bands`) guarantees no structure enters
+SKY, and the bands print in the validation panel. New content since the last chapter: the funfair
+(Ferris wheel that turns), forest v2 (layered jungle, trails as the exception, canopy cutaway),
+and INTERIORS v1 (BSP floorplans, enterable residential bungalows, corner warfare — see
+COMBAT-facing notes in CLAUDE.md).
+
+Where it stops, honestly: bots don't navigate doorways yet (interiors store their `doorways` for
+that session); beams pass through interior walls; weather is data-only (games render it); upper
+floors and roofed voids still need the roofed-volume system.

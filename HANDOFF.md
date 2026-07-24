@@ -31,10 +31,13 @@ change the manual in the same commit.**
 Police that respond to whoever hurts civilians, a broadcast layer (KMK 9) that films the fight and
 reports it, and civilians whose willingness to draw on you comes from their country's laws.
 
-### 3. The map maker
-The CITY ATLAS is now a real editor: paint, lock, undo, resize, scale, live 3D, validation.
-**Contract: `docs/THE_MAP_MAKER.md`.** This is the part that has moved fastest and is the most
-worth continuing.
+### 3. ATLAS — the map maker is a product now
+The editor stands alone at `/atlas.html` (one module, two mounts) with file import/export and a
+documented data contract (**`docs/ATLAS_FORMAT.md`**). Since v1 (2026-07-24) it also owns: the
+METRIC contract (doors on every building, sized to the people), the LAYER contract (per-city
+altitude bands no structure can cross), authored water DEPTH with a living tinted surface,
+forest v2 with the canopy cutaway, the funfair, the climate data join, and INTERIORS v1
+(enterable bungalows, corner warfare). **Contracts: `docs/THE_MAP_MAKER.md` + `docs/ATLAS_FORMAT.md`.**
 
 ---
 
@@ -123,6 +126,11 @@ These are load-bearing. Every one of them was learned by breaking it.
 - **Netcode.** The human/scheme abstraction is LAN-ready; nothing is implemented.
 
 ## WHAT I WOULD DO NEXT, IN ORDER
+
+0. **Interiors follow-through** — bots steering through `world.interiors[].doorways` when
+   blocked (no pathfinding exists anywhere; this is the one heuristic that unlocks indoor AI),
+   beams stopping at interior walls, and the other three archetypes (commercial/institutional/
+   industrial) on the same floorplan engine.
 
 1. **Drive the road graph.** Everything is in place and nothing uses it. Highest payoff per hour.
 2. **Roof geometry per region.** Small change, large visual return.

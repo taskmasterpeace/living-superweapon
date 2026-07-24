@@ -571,6 +571,57 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   and imported by `hud._validatePlan`. When they drifted, the tool reported 32 "landlocked" cells
   that were open country behaving exactly as designed. Export the rule; never reimplement it.
 
+## ATLAS v1 — THE TOOL STANDS ALONE (2026-07-24) — read docs/ATLAS_FORMAT.md
+- **`/atlas.html` is the standalone map tool** (second vite input; `base:'./'` untouched). The
+  editor lives in `engine/atlasUI.js` — ONE module, two mounts (in-game screen passes `game` +
+  hooks; solo page is always-live with file EXPORT/IMPORT). Overlay primitives + atlas CSS moved
+  to `src/styles/overlays.css` + `tokens.css`, LINKED by both pages — moved, never copied.
+  `validatePlan` moved to cityplan.js (one rule, imported everywhere). `LSW.hud._validatePlan`
+  still works (alias). Solo handle: `window.ATLAS = { world, ui, BANDS }`.
+- **THE METRIC CONTRACT** (`plan.metric.humanH` 4.8–19.2, default 9.6): `door()` in citytiles
+  builds six entrance kinds (swing/double/slide/revolve/roller/turnstile) on every inhabited
+  builder's authored front, sized ×M NEVER ×S; window bay, lamps and cars ride M too (lamps/cars
+  used to ride S — a 240u-cell city had 80u lamp posts). Registered in `world.doors`.
+- **THE LAYER CONTRACT**: `TILE_MAX_H` (cityplan) declares every type's max height; `tower()`
+  clamps to `ctx.maxH`; `plan.bands` derives from placed types + relief → GROUND/BUILDING/SKY/
+  CEILING (+ shallows/depths). Runtime face in **core/util.js** (`BANDS`/`setBands`/`bandOf` —
+  entity re-exports; world can't import entity, entity imports world). Flight lid =
+  `BANDS.ceiling` per city. Flagship = 158/268/328. Validator flags undeclared types.
+- **THE DEEP**: water cells carry `d` 1 SHALLOWS(−8) · 2 DEEP(−22) · 3 TRENCH(−44, ×scale);
+  `_computeWaterGrid` runs FIRST in `_buildGenCity` (quay, surface, bathymetry all read it);
+  `_buildBathymetry` digs the bed (flat cities too — the old push lived inside `_buildRelief`
+  and skipped them). `waterAt(x,z)` is plan-aware (painted lakes count; flagship keeps legacy);
+  `waterDepthAt` is the continuous query. Surface = one merged depth-tinted wave shader
+  (`_buildWaterSurface`) — near-black over the trench. `game.splash()` (rings+spray+
+  `audio.splash`); ragdolls splash ON SURFACE-CROSSING (a chest RESTS at its own radius —
+  a depth test can never fire on the flagship's y=0 bed) then drag underwater.
+- **FOREST v2**: trails are the EXCEPTION (jungle cuts one only off a street socket); tree spots
+  carry a KIND (1 emergent giant / 2 understory) → real layered canopy, jungle 3.3× woodland
+  density. **CANOPY CUTAWAY** in `updateOcclusion`: canopies in the camera→player corridor scale
+  away (trunks stay), per-instance lerp, ≤160 matrix writes/frame. Visual only — fog/AI honesty
+  untouched. Measured 0.039ms.
+- **THE FUNFAIR**: type + ladder (FAIRGROUND 1×1 / AMUSEMENT PARK 2×2), landmark pool entry for
+  resort cities (THE {C} WONDER WHEEL). The wheel is in `world._spinners`, ticked in render().
+- **CLIMATE** (`data/climate.js`, authored join like geography): Köppen + lat per country
+  (all 144) + ~120 city overrides; cosine year model → `climateOf(city)` = zone/label/t[12]/
+  snowMonths; `climateLine` on the atlas card. Games render weather; ATLAS only KNOWS.
+- **INTERIORS v1**: `floorplan()` (cityplan, pure BSP, one doorway per cut → every room reachable
+  by construction). Residential v0 = four ENTERABLE bungalows (`bungalow()` in citytiles): shell
+  with a real opening, interior walls, standable roof, M-scaled ceiling. Walls live in
+  `world.interiors` (NEVER ordinary cover) and every system consults them SPATIALLY: entity
+  physics (door gaps pass, ceiling clamps), `canSee` (⚠ the aabb gate must pass when either
+  endpoint is INSIDE — `_segBox` only detects crossings, and both-inside is the corner-warfare
+  case), fog raster, `hitInteriorWall` for projectiles, ragdoll drape, and the interior CUTAWAY
+  (shell+roof fade when the player is inside; interior walls stay solid). ATLAS ROOMS dial.
+  ⚠ Known gaps, deliberate: bots don't navigate doorways (interiors carry `doorways` points for
+  that session); beams ignore interior walls.
+- ⚠ **Vite HMR version-stamps modules** — a console `import('/src/core/util.js')` can be a
+  SECOND phantom instance; verify module state through the page's own graph (ATLAS.BANDS).
+- ⚠ **A hidden browser pane renders at 0×0 and skews any measurement that includes render** —
+  stub `world.render` for sim-only numbers (2.05ms/frame, 9×9 + 28 interiors + rumble).
+- ⚠ Never `git add -A` in this repo — name the files (a stray abilities.js draft got swept into
+  a commit and had to be pulled back out).
+
 ## HANDOFF
 - **`HANDOFF.md` at the repo root** is the orientation document: architecture, the ten rules that
   are load-bearing, what is solid, what is half-built, what to do next, and the headless
