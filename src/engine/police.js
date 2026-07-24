@@ -20,7 +20,7 @@ export const COP_DEF = {
   ai: { style: 'zoner', range: 36, aggro: 0.6, fly: 0 },
   evade: { kind: 'dash', name: 'Take Cover' },
   abilities: {
-    lmb: { type: 'rifle', name: 'Service Pistol', cost: 1.5, interval: 0.46, damage: 5, speed: 130, radius: 0.6, color: '#cfe0ff' },
+    lmb: { type: 'rifle', name: 'Service Pistol', cost: 1.5, interval: 0.46, damage: 5, speed: 130, radius: 0.6, oneHand: true, color: '#cfe0ff' },
     shift: { type: 'dash', name: 'Sprint', cost: 4, cd: 0.9, power: 70, iframes: 0.1, color: '#5aa0ff' },
   },
 };
@@ -42,7 +42,7 @@ export const FED_DEF = {
   evade: { kind: 'dash', name: 'Break Contact' },
   abilities: {
     lmb: { type: 'rifle', name: 'Automatic Rifle', cost: 1.3, interval: 0.11, damage: 4.5, speed: 165, radius: 0.55, color: '#e4ecff' },
-    rmb: { type: 'rifle', weapon: 'pistol', name: 'Sidearm', cost: 1.5, interval: 0.5, damage: 7, speed: 140, radius: 0.6, color: '#cfe0ff' },
+    rmb: { type: 'rifle', weapon: 'pistol', name: 'Sidearm', cost: 1.5, interval: 0.5, damage: 7, speed: 140, radius: 0.6, oneHand: true, color: '#cfe0ff' },
     shift: { type: 'dash', name: 'Break Contact', cost: 4, cd: 0.85, power: 78, iframes: 0.12, color: '#cfd6e4' },
   },
 };

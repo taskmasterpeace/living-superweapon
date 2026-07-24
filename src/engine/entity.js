@@ -460,6 +460,7 @@ export class Fighter {
     this.evadeCd = 0; this.sprintT = 0; this.sprintMult = 1.6; this._slideT = 0; this.drainedT = 0;
     this.flySpeed = def.flySpeed || FLY_SPEEDS[def.id] || 1;   // who owns the sky
     this._deckSnap = -1; this._climbBand = -1;                 // the four-deck ladder's dock state
+    this._grapple = null; this.hanging = null; this.gliding = false;   // grapnel line / ledge-hang / mechanical wings
     this.chargingKi = false; this._chargeT = 0; this._chargeScanT = 0; this._safeDist = 1e9;   // the POWER CHARGE (DBZ ruling)
     this.cruiseHeld = false;                                    // SHIFT while flying = sustained cruise
     this.burstT = 0;            // dash-burst window — move() doesn't clamp velocity back to walk speed
@@ -525,7 +526,9 @@ export class Fighter {
   }
 
   // Free all scene-level extras (tentacles, deployed items, planted mines). Call when the fighter leaves play.
+  // (the grapnel line mesh rides along — see dispose body)
   dispose() {
+    if (this._grapLine) { this._grapLine.geometry.dispose(); this._grapLine.material.dispose(); if (this._game) this._game.scene.remove(this._grapLine); this._grapLine = null; }
     if (this.tentacles) { for (const t of this.tentacles) t.dispose(); this.tentacles = null; }
     clearSlotFx(this);   // stop charge hums + orbs — a disposed mid-charge fighter must not ring into the next match
     for (const k in this.slots) {
@@ -717,6 +720,7 @@ export class Fighter {
     if (!opts.slam) {
       const kmag = opts.kb ? Math.hypot(opts.kb.x || 0, opts.kb.z || 0) : 0;
       if (kmag > 30 || (opts.launch || 0) > 12) this.launchT = 1.1;
+      if ((kmag > 14 || (opts.launch || 0) > 6) && (this.hanging || this._grapple)) this.releaseHang();   // knocked off the wall
     }
     // robots shower sparks instead of bruising
     if (this.metal && this._game && amount >= 3) {
@@ -956,6 +960,40 @@ export class Fighter {
     if (this.remote) return;   // puppets are positioned by the wire (controlRemote), not local physics
     // --- flight / levitation ---
     if (this.state !== 'ko') {
+      // ---- THE GRAPNEL LINE: reeling and hanging own the axes — the deck servo, takeoff and
+      // gravity all yield while the line is taut (same contract as launchT for knockback).
+      if (this._grapple) {
+        const G = this._grapple; G.t += dt;
+        const dx = G.x - this.pos.x, dy = G.y - (this.pos.y + 5.2), dz = G.z - this.pos.z;
+        const d = Math.hypot(dx, dy, dz);
+        if (G.t > 2.6 || this.staggerT > 0.25) { this._grapple = null; }
+        else if (d < 3.2) {
+          if (G.mantle) {                                       // top of the line — MANTLE the roof
+            this.pos.x = G.x; this.pos.z = G.z; this.pos.y = G.top;
+            this.vel.set(0, 0, 0); this.onBlock = true; this.flying = false;
+          } else {                                              // below the lip — LEDGE HANG
+            const nx = this.pos.x - G.x, nz = this.pos.z - G.z, nl = Math.hypot(nx, nz) || 1;
+            this.hanging = { x: G.x + (nx / nl) * 2.4, y: G.y - 6.6, z: G.z + (nz / nl) * 2.4 };
+            this.vel.set(0, 0, 0); this.flying = false;
+          }
+          this._grapple = null;
+        } else {
+          const v = 90 / d;                                     // the reel: ~90u/s along the line
+          this.vel.x = dx * v; this.vel.y = dy * v; this.vel.z = dz * v;
+          this.burstT = Math.max(this.burstT || 0, 0.08);       // lift move()'s clamp — the dash gotcha
+          this.flying = false; this.gliding = false;
+        }
+      } else if (this.hanging) {
+        // cling: pinned to the wall face. Jump climbs off with a pop; descend just lets go.
+        const H = this.hanging;
+        this.pos.x = H.x; this.pos.z = H.z;
+        this.pos.y = damp(this.pos.y, H.y, 14, dt);
+        this.vel.set(0, 0, 0);
+        this.flying = false; this.gliding = false;
+        if (this.flyHeld && !this._flyPrev) { this.releaseHang(); this.vel.y = 30; }
+        else if (this.descendHeld) this.releaseHang();
+        this._flyPrev = this.flyHeld;
+      } else {
       // rising edge of the ascend intent → take off into levitation (grounded heroes can't)
       if (this.flyHeld && !this._flyPrev && !this.flying && this.flightTier > 0) {
         this.flying = true;
@@ -1030,7 +1068,17 @@ export class Fighter {
           this.vel.z += Math.cos(this.animT * 2.6) * 9 * dt;
         }
       } else if (this.pos.y > 0 || this.vel.y > 0) {
-        this.vel.y -= 60 * dt;                               // gravity — jumps & knockback arcs
+        // MECHANICAL WINGS (def.glider — KNIGHTFALL's cape, the ORIGIN gift): falling with the
+        // ascend key held spreads them. Fall clamps to a glide, air control grows (move()),
+        // the flight pose banks. No magic: gravity still owns you; landing or descend folds them.
+        if (this.def.glider && this.flyHeld && this.vel.y < 2 && !this.descendHeld && this.pos.y > (this.groundY || 0) + 2.5) {
+          this.gliding = true;
+          this.vel.y = Math.max(this.vel.y - 60 * dt, -8);
+        } else {
+          this.gliding = false;
+          this.vel.y -= 60 * dt;                             // gravity — jumps & knockback arcs
+        }
+      } else this.gliding = false;
       }
     }
     // horizontal drag (near-frictionless while sliding — RIME's ice skate etc.)
@@ -1116,6 +1164,12 @@ export class Fighter {
     }
   }
 
+  // Let go of the grapnel/ledge — the ONE release path (input, damage, KO all come through here).
+  releaseHang() {
+    this.hanging = null; this._grapple = null;
+    if (this._grapLine) this._grapLine.visible = false;
+  }
+
   // The highest roof (cover top or enterable-building top) under this fighter's feet — the
   // BUILDING band's deck. Hover-only cost, a couple of AABB scans per flying fighter.
   _roofUnder(game) {
@@ -1138,7 +1192,7 @@ export class Fighter {
   }
 
   move(dir, dt, sprint = 1) {
-    if (this.state === 'ko' || this.hitstop > 0 || this.grabbedBy || this.grabState === 'clinch' || this.staggerT > 0 || this.frozenT > 0) return;
+    if (this.state === 'ko' || this.hitstop > 0 || this.grabbedBy || this.grabState === 'clinch' || this.staggerT > 0 || this.frozenT > 0 || this.hanging) return;   // hanging: your feet have nowhere to be
     let s = this.speed * 1.08 * this.powerBuff * sprint;   // ground feel pass 2026-07-24: +8% across the board
     if (this.sprintT > 0) s *= this.sprintMult;   // double-tap sprint surge
     if (this.meleeCharge > 0) s *= 0.4;           // winding up a haymaker roots you
@@ -1152,6 +1206,7 @@ export class Fighter {
       const wl = this._game.world.waterAt(this.pos.x, this.pos.z);
       if (wl) s *= wl === 2 ? 0.45 : 0.62;
     }
+    if (this.gliding) s *= 1.4;                 // wings out — the glide carries you
     if (this.guarding) s *= 0.34;               // guarding slows you
     if (this.strikeActive > 0) s *= 0.5;
     this.vel.x += dir.x * s * dt * 9;
@@ -1182,7 +1237,7 @@ export class Fighter {
     // run cycle — hips swing, KNEES flex on the back-lift; blends to a trailing pose in flight
     const mv = moving ? 1 : 0;
     const rc = Math.sin(this.animT * 12) * (moving ? 0.7 : 0.05);
-    this._flyPose = damp(this._flyPose || 0, this.flying ? 1 : 0, 7, dt);
+    this._flyPose = damp(this._flyPose || 0, (this.flying || this.gliding) ? 1 : 0, 7, dt);   // wings-out glide borrows the flight pose
     const fp = this._flyPose, kneeBase = 0.14;
     const prone = clamp(this.obj.rotation.x / 1.5, 0, 1);        // how horizontal the body currently is
     let hipL = rc, hipR = -rc;
@@ -1331,6 +1386,23 @@ export class Fighter {
         fm.opacity = 0.55 + (b === 0 ? 0 : 0.25);
       }
       // STATE: one ring that tells you what they're doing before it lands on you
+      // THE LINE IS VISIBLE (readability ruling): a taut gold line from hand to anchor while
+      // reeling or hanging — lazily built, hidden on release, disposed with the fighter.
+      if ((this._grapple || this.hanging) && this._game) {
+        if (!this._grapLine) {
+          const ggeo = new THREE.BufferGeometry();
+          ggeo.setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(6), 3));
+          this._grapLine = new THREE.Line(ggeo, new THREE.LineBasicMaterial({ color: '#ffd24a', transparent: true, opacity: 0.85 }));
+          this._grapLine.frustumCulled = false;
+          this._game.scene.add(this._grapLine);
+        }
+        const A = this._grapple || { x: this.hanging.x, y: this.hanging.y + 6.6, z: this.hanging.z };
+        const pa = this._grapLine.geometry.attributes.position.array;
+        pa[0] = this.pos.x; pa[1] = this.pos.y + 6.6; pa[2] = this.pos.z;
+        pa[3] = A.x; pa[4] = A.y; pa[5] = A.z;
+        this._grapLine.geometry.attributes.position.needsUpdate = true;
+        this._grapLine.visible = true;
+      } else if (this._grapLine && this._grapLine.visible) this._grapLine.visible = false;
       if (p.stateRing) {
         p.stateRing.position.set(0, 0.09 - this.pos.y + (this.groundY || 0), 0);
         const sm = p.stateRing.material;
@@ -1347,7 +1419,7 @@ export class Fighter {
       }
     }
     // cruise wind — the fastest fliers drag visible speed lines (cheap particles, speed-gated)
-    if (this.flying && this._game && Math.hypot(this.vel.x, this.vel.z) > 38 && Math.random() < 0.55) {
+    if ((this.flying || this.gliding) && this._game && Math.hypot(this.vel.x, this.vel.z) > 38 && Math.random() < 0.55) {
       this._game.particles.spawn({
         x: this.pos.x - this.vel.x * 0.06, y: this.pos.y + 4.6 + (Math.random() * 2 - 1) * 2, z: this.pos.z - this.vel.z * 0.06,
         vx: -this.vel.x * 0.22, vy: 0, vz: -this.vel.z * 0.22,

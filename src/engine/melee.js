@@ -17,14 +17,19 @@ export class MeleeSystem {
   }
   constructor(game) { this.game = game; }
 
-  canAct(f) { return f.alive && f.hitstop <= 0 && f.staggerT <= 0 && !f.grabbedBy && f.grabState !== 'clinch'; }
+  canAct(f) { return f.alive && f.hitstop <= 0 && f.staggerT <= 0 && !f.grabbedBy && f.grabState !== 'clinch' && !f.hanging; }   // one hand on the wall = no trifecta
 
   strike(f) {
     if (!this.canAct(f) || f.grabbing || f.guarding || f.strikeActive > 0 || f.meleeCharge > 0) return;
     if (f.strikeCd > 0 && f.comboWin <= 0) return;
+    // THE FLASH PACE (def.meleePace — VOLT 1.5, the ORIGIN Speedster gift 1.35): a true speedster
+    // jabs at a quicker CADENCE — active windows and recovery shrink together. The PUNISH floors
+    // (blocked → strikeCd 0.5 minimums elsewhere) deliberately do NOT scale: a blocked speedster
+    // is exactly as punishable as anyone, or pace would beat the trifecta.
+    const pace = (f.def && f.def.meleePace) || 1;
     f.strikeIdx = f.comboWin > 0 ? (f.strikeIdx + 1) % 3 : 0;
-    f.strikeActive = 0.2; f.strikeHit = new Set(); f.comboWin = 0;
-    f.strikeCd = f.strikeIdx === 2 ? 0.5 : 0.3;
+    f.strikeActive = 0.2 / pace; f.strikeHit = new Set(); f.comboWin = 0;
+    f.strikeCd = (f.strikeIdx === 2 ? 0.5 : 0.3) / pace;
     f.state = 'cast'; f.stateT = 0;
     const lunge = f.strikeIdx === 2 ? 26 : 16;
     f.vel.x += f.aim.x * lunge; f.vel.z += f.aim.z * lunge;
@@ -109,6 +114,7 @@ export class MeleeSystem {
   }
 
   guard(f, on) {
+    if (f.hanging) on = false;                      // can't brace hanging off a ledge
     // Hitstop must NOT drop a held guard — every blocked hit applies hitstop to the blocker
     // (entity.takeDamage), so gating on canAct() made any fast combo strip the guard after the
     // first block ("can't hold down block"). Stagger, grabs, and your own attacks still drop it.

@@ -591,6 +591,54 @@ export const TYPES = {
     }
   },
 
+  // GRAPNEL LINE — fire at a building face. The top QUARTER of the face = zip up and MANTLE the
+  // roof (the four-deck ladder's BUILDING deck takes over). Lower = zip and LEDGE-HANG: one hand
+  // holds the wall, so only oneHand-flagged weapons fire (see runSlot); jump climbs off, descend
+  // drops, a solid hit knocks you loose. Pressing again mid-line or mid-hang lets go. The reel
+  // suspends the deck servo exactly like knockback does — the line owns the axis while it's taut.
+  grapple(c, def, st, g, inp) {
+    if (!inp.pressed) return;
+    if (c.hanging || c._grapple) { if (c.releaseHang) c.releaseHang(); return; }
+    if (!ready(c, def, st)) return;
+    const R = def.range || 95;
+    const ox = c.pos.x, oy = c.pos.y + 5.2, oz = c.pos.z;
+    let rx = (c.aim3 && c.aim3.x != null) ? c.aim3.x : c.aim.x;
+    let ry = (c.aim3 && c.aim3.y != null) ? c.aim3.y : 0.3;
+    let rz = (c.aim3 && c.aim3.z != null) ? c.aim3.z : c.aim.z;
+    ry = Math.max(ry, 0.12);                                       // a grapnel is thrown UP, never flat
+    const dl = Math.hypot(rx, ry, rz) || 1; rx /= dl; ry /= dl; rz /= dl;
+    let best = null;
+    for (const cov of g.world.cover) {
+      if (cov.destroyed) continue;
+      const hx = cov.hx ?? cov.r, hz = cov.hz ?? cov.r, top = cov.top ?? cov.h;
+      let tmin = 0.5, tmax = R, dead = false;
+      for (const [p0, d, mn, mx] of [[ox, rx, cov.x - hx, cov.x + hx], [oz, rz, cov.z - hz, cov.z + hz]]) {
+        if (Math.abs(d) < 1e-6) { if (p0 < mn || p0 > mx) { dead = true; break; } continue; }
+        let t1 = (mn - p0) / d, t2 = (mx - p0) / d;
+        if (t1 > t2) { const t = t1; t1 = t2; t2 = t; }
+        tmin = Math.max(tmin, t1); tmax = Math.min(tmax, t2);
+        if (tmin > tmax) { dead = true; break; }
+      }
+      if (dead || tmin > R) continue;
+      const hy = oy + ry * tmin;
+      const base = g.world.heightAt ? g.world.heightAt(cov.x, cov.z) : 0;
+      if (hy > top + 1 || hy < base + 2) continue;                 // sailed over the roof / into the dirt
+      if (!best || tmin < best.t) best = { t: tmin, x: ox + rx * tmin, y: hy, z: oz + rz * tmin, top, base };
+    }
+    if (!best) {
+      st.cd = 0.35;
+      if (g.isHuman(c) && g.hud) g.hud.feed('No anchor — aim the line at a building face', '#8b8577');
+      g.audio.zap(220, c.pos);
+      return;
+    }
+    pay(c, def, st);
+    // the ruling: top quarter of the FACE mantles; anything lower hangs
+    const mantle = best.y > best.top - (best.top - best.base) * 0.25;
+    c._grapple = { x: best.x, y: best.y, z: best.z, top: best.top, mantle, t: 0 };
+    g.audio.zap(760, c.pos);
+    g.vfx.ring(c.pos.clone().set(best.x, best.y, best.z), { color: def.color || '#ffd24a', r0: 0.5, r1: 3.5, life: 0.3 });
+  },
+
   // Proximity mines — plant up to `max` at your aim; they arm, blink, and erase whoever steps close.
   mine(c, def, st, g, inp) {
     st.list = st.list || [];
@@ -688,6 +736,11 @@ export const TYPES = {
 
 export function runSlot(c, key, inp, g) {
   const st = c.slots[key]; if (!st) return;
+  // LEDGE-HANG: one hand is holding the building — only oneHand-flagged abilities fire up there.
+  if (c.hanging && !st.def.oneHand) {
+    if (inp.pressed && g && g.isHuman(c) && g.hud) g.hud.feed('One hand on the wall — that needs both', '#8b8577');
+    return;
+  }
   // pressing an ability you can't afford → tell the player WHY nothing happened
   if (inp.pressed && (st.def.cost || 0) > c.ki && st.cd <= 0 && g.onNoKi) g.onNoKi(c, key);
   // stamp real input on the slot — held types (cones/phase/lifedrain) leave no cd/sustain

@@ -64,6 +64,8 @@ export const GIFTS = [
   { id: 'grabheal',    name: 'Absorb',        cost: 10, d: 'your throws feed you', def: { grabHeal: true } },
   { id: 'overdrive',   name: 'Overdrive Core', cost: 10, d: 'stronger drained-fists comeback', def: { overdrive: 1.4 } },
   { id: 'guardstrong', name: 'Riot Guard',    cost: 8,  d: 'harder guard meter', def: { guardStrong: true } },
+  { id: 'glider',      name: 'Glider Wings',  cost: 6,  d: 'hold JUMP while falling — mechanical wings, no magic', def: { glider: true } },
+  { id: 'quickhands',  name: 'Speedster Reflexes', cost: 12, d: 'melee lands at 1.35× pace (jabs, recovery)', def: { meleePace: 1.35 } },
 ];
 export const MELEE_TIERS = [
   { v: 2, name: 'Heavy Hands', cost: 0, d: 'jab + haymaker only' },
@@ -81,6 +83,8 @@ export const GADGETS = [
 // ---- The power catalog. cat drives the AI doctrine; ult:true = R-slot only. ----
 // grants: def-level traits a power brings with it (tentacle rigs, etc.).
 export const POWERS = [
+  // movement tech — gear-priced per BALANCE.md (gear cheap, martial priced up)
+  { id: 'grapnel',    name: 'Grapnel Line',   cat: 'gear', cost: 10, ab: { type: 'grapple', name: 'Grapnel Line', cost: 8, cd: 1.1, range: 95, oneHand: true, color: '#ffd24a' } },
   // beams — hoses, never lasers
   { id: 'heatray',    name: 'Heat Ray',       cat: 'beam', cost: 22, ab: { type: 'beam', name: 'Heat Ray', cost: 4, cd: 0.3, radius: 1.0, tipSpeed: 230, maxLen: 140, dps: 58, kiPerSec: 16, steer: 13, color: '#ff5a2a', color2: '#ffe08a' } },
   { id: 'wavecannon', name: 'Wave Cannon',    cat: 'beam', cost: 30, ab: { type: 'beam', name: 'Wave Cannon', cost: 8, cd: 0.6, radius: 2.6, tipSpeed: 120, maxLen: 150, dps: 88, kiPerSec: 22, charge: true, maxCharge: 1.6, kiChargePerSec: 14, chargePower: 1.7, chargeWidth: true, steer: 9, color: '#7fd4ff', color2: '#eaffff' } },

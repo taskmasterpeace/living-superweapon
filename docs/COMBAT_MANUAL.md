@@ -244,3 +244,18 @@ radius scale with what was fed, at any altitude — and then the caster is bone 
 fires, and Overdrive fighters are DESIGNED to cash that emptiness in with their fists. A tap that
 fed under 12 ki fizzles LOUDLY (ring + kiRelease), never silently — the energy-clarity law holds.
 Neither mechanic adds a damage type, so the DAMAGE CODEX is unchanged by design.
+
+
+## §8 · MOVEMENT TECH (2026-07-24)
+- **`meleePace`** (def flag, default 1): jab `strikeActive` and `strikeCd` divide by pace. The
+  blocked-strike punish floors (`Math.max(strikeCd, 0.5)` at the choke points) are NOT scaled —
+  pace buys cadence, never safety. Carriers: VOLT 1.5 · ORIGIN gift 1.35.
+- **`grapple`** (ability type): ray → first cover face within `range`; hit in the top quarter of
+  the face = reel + MANTLE the roof; lower = reel + **LEDGE HANG** (`f.hanging`). While hanging:
+  `move()` returns, melee `canAct` fails, `guard` is forced off, and `runSlot` blocks any ability
+  without **`oneHand: true`** (the flag lives on the def — batarangs, service pistols, sidearms,
+  the grapnel itself). Release: jump (pop up), descend (drop), any hit with kb>14/launch>6, or
+  re-pressing the grapple. The reel and the hang SUSPEND the four-deck ladder's servo (same
+  contract as `launchT`), and the reel lifts move()'s speed clamp via `burstT`.
+- **`glider`** (def flag): airborne + falling + ascend held (and not descend) → fall clamps to
+  −8, horizontal speed ×1.4, flight pose engages. Folds on landing/descend. Mechanical, no ki.

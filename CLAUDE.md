@@ -698,6 +698,24 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   while explicitly PRESERVING the shared caches (`_tileMats`, `_winMats`, `_lampMat`, `_carPaints`).
   Verified: 10 consecutive rebuilds move geometries 264→273 and textures 25→27.
 
+## THE MOVEMENT KITS (2026-07-24) — grapnel · glider · flash pace
+- **`grapple` type** (abilities.js): ray vs cover faces; TOP QUARTER of the face → reel (90u/s,
+  `burstT` lifts move()'s clamp — the dash gotcha) and MANTLE the roof; lower → **LEDGE HANG**
+  (`f.hanging` = cling point). Hanging: no move/strike/guard/grab; ONLY `oneHand: true` defs fire
+  (runSlot gate + feed line); release = jump (pop 30) · descend · kb>14 hit · re-press (all via
+  `releaseHang()`, the ONE path). Reel+hang suspend the deck servo like `launchT`. Gold line mesh
+  hand→anchor (lazy, disposed with the fighter). ⚠ mantle needs the LINE to reach — tall towers
+  are hang-then-refire by design. Carriers: KNIGHTFALL `f` (Grapnel Line, replaced Contingency) +
+  ORIGIN gear power `grapnel`. Bots don't fire it yet (player-tech; noted).
+- **`def.glider`** (entity gravity branch): falling + ascend held → fall clamps −8, air control
+  ×1.4 (move), `_flyPose`/wind-lines engage (cape reads as wings). Folds on landing/descend.
+  Carriers: KNIGHTFALL + ORIGIN gift `glider`.
+- **`def.meleePace`** (melee.strike): strikeActive + strikeCd ÷ pace; PUNISH FLOORS unscaled
+  (blocked speedster = punishable — or pace beats the trifecta). VOLT 1.5 (measured 1.46× jab
+  cadence) + ORIGIN gift `quickhands` 1.35. AI-vs-AI: VOLT vs FERAL 0-0/0-2 — feel, not win-rate.
+- `oneHand: true` marked on: KNIGHTFALL batarangs + Smoke Vanish + grapnel · COP Service Pistol ·
+  FED Sidearm. Manual §8 documents all three (same commit — the manual law).
+
 ## THE SIX-RUNG RESPONSE + THE STREET'S VOICE (2026-07-24)
 - **THE LADDER RUNS TO SIX** (police.js): ★35 beat cops → ★★90 patrol → ★★★160 SWAT →
   **★★★★240 THE FEDS** (`FED_DEF` — black suits, automatic rifle + sidearm, armor 4, arriving in

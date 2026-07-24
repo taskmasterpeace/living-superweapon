@@ -133,3 +133,16 @@ First AI-vs-AI audit pass for both is pending — revisit after live data.
   full and interrupts. Bots don't seek it yet (they already guard-recover).
 - **Melee vertical gate**: `coneFoe` ignores foes >10u above/below — jabs and grabs are
   same-deck weapons now (altitude plan F5 closed).
+
+
+## Audit note 2026-07-24b — the movement kits
+- **meleePace (VOLT 1.5, ORIGIN Speedster Reflexes 1.35)**: jab active windows + recovery scale
+  by pace; the PUNISH FLOORS do not (blocked → strikeCd 0.5 minimums) — a blocked speedster is
+  exactly as punishable as anyone. AI-vs-AI sanity: VOLT vs FERAL over two 60s duels went 0-0 and
+  0-2 — pace is feel, not a win-rate flip. Re-audit if VOLT's book Elo starts climbing.
+- **Grapnel Line (KNIGHTFALL f, ORIGIN gear 10pts)**: movement utility priced as gear per the
+  standing ruling. Mantle needs the line to REACH — a 130u tower top is out of range (95u) from
+  the street by design: hang mid-face, re-fire. Hanging trades the whole trifecta for position
+  (canAct blocks strike/grab, guard forced off, only oneHand weapons fire).
+- **Glider Wings (KNIGHTFALL cape, ORIGIN gift 6pts)**: fall clamps to −8 with +40% air control —
+  repositioning, not flight. Landing/descend folds them; no ki cost, no combat effect.
