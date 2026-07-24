@@ -166,12 +166,12 @@ const CSS = `
 #hud .foe .fn{ font-weight:700; letter-spacing:.06em; font-size:var(--t-md); }
 #hud .foe .bar{ height:9px; }
 #hud .foe .fhpF{ background:linear-gradient(90deg,var(--danger),#ffb03a); }
-#hud .hint{ right:18px; bottom:18px; padding:10px 12px; max-width:260px; font-size:var(--t-body); color:var(--text-3); line-height:1.6; transition:opacity .4s ease, transform .4s ease; }
+#hud .hint{ right:18px; bottom:18px; padding:14px 16px; max-width:284px; font-size:var(--t-body); color:var(--text-3); line-height:1.6; transition:opacity .4s ease, transform .4s ease; }
 #hud .hint b{ color:var(--gold); font-weight:700; }
-#hud .hint .hgrp{ margin-bottom:7px; }
+#hud .hint .hgrp{ margin-bottom:12px; } #hud .hint .hgrp:last-child{ margin-bottom:0; }
 #hud .hint .hgt{ font-family:var(--f-mono); font-size:var(--t-micro); letter-spacing:var(--tr-wider); color:var(--info);
   border-bottom:1px solid rgba(127,230,255,.22); padding-bottom:2px; margin-bottom:3px; }
-#hud .hint .hgr{ display:flex; gap:8px; line-height:1.35; }
+#hud .hint .hgr{ display:flex; gap:10px; line-height:1.6; }
 #hud .hint .hgr b{ flex:0 0 92px; text-align:right; font-size:var(--t-label); }
 #hud .hint .hgr span{ color:var(--text-3); font-size:var(--t-label); }
 /* the wall of text earns its place for ~18s, then gets out of the way (F1 brings it back) */
@@ -197,7 +197,7 @@ const CSS = `
 #title .preview .pvttl{ font-size:var(--t-body); letter-spacing:.2em; text-transform:uppercase; color:var(--gold-pale); margin:2px 0 12px; }
 #title .preview .pvblurb{ font-size:var(--t-lg); color:var(--text-2); line-height:1.5; }
 #title .preview .pvsig{ margin-top:12px; display:flex; flex-direction:column; gap:6px; }
-#title .preview .pvsig span{ font-size:var(--t-body); color:var(--text); background:rgba(255,255,255,.05); border-radius:var(--r-2); padding:5px 8px; border-left:3px solid var(--pc,var(--gold)); }
+#title .preview .pvsig span{ font-size:var(--t-body); color:var(--text); background:rgba(255,255,255,.05); border-radius:var(--r-2); padding:5px 8px; border-left:1px solid var(--pc,var(--gold)); }
 #title .rcard.sel{ border-color:var(--pc); background:rgba(255,255,255,.09); box-shadow:0 0 22px -6px var(--pc); transform:translateY(-3px); }
 #title .rcard .rl{ margin-top:2px; }
 #title .rcard .cstat{ font-size:var(--t-label); color:var(--text-5); margin-top:4px; letter-spacing:.04em; }
@@ -247,7 +247,7 @@ const CSS = `
 #hud .announce .at{ font-size:54px; font-weight:800; letter-spacing:.05em; text-shadow:0 4px 0 rgba(0,0,0,.5), 0 0 34px rgba(0,0,0,.5); }
 #hud .announce .as{ font-size:var(--t-lg); letter-spacing:.22em; text-transform:uppercase; color:var(--text); margin-top:2px; }
 #hud .xpwrap{ margin-top:9px; display:flex; align-items:center; gap:8px; }
-#hud .pl{ transition:min-width .5s cubic-bezier(.2,1.4,.4,1); }
+#hud .pl{ transition:min-width .5s cubic-bezier(.19,1,.22,1); }
 #hud .tierb{ display:inline-flex; align-items:center; justify-content:center; height:26px; padding:0 9px; border-radius:var(--r-2); font-weight:800; font-size:var(--t-body); letter-spacing:.08em; flex:0 0 auto; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.14); color:var(--text-3); }
 #hud .tierb.t2{ background:linear-gradient(180deg,var(--gold),var(--gold-warm)); color:var(--on-gold); border:none; box-shadow:0 0 12px rgba(245,178,26,.5); }
 #hud .tierb.t3{ background:linear-gradient(180deg,#ffedb0,var(--gold)); color:var(--on-gold); border:none; box-shadow:0 0 16px rgba(255,224,138,.7); }
@@ -279,6 +279,8 @@ const CSS = `
 #title .rcard.forge:hover{ box-shadow:0 0 22px -6px var(--gold); }
 /* interactive tutorial banner */
 #hud .tut{ left:50%; transform:translateX(-50%); top:64px; width:min(560px,82vw); padding:13px 18px 12px; text-align:center; z-index:8; }
+#hud .tut .tact{ font-family:var(--f-mono); font-size:var(--t-micro); letter-spacing:var(--tr-wider); color:var(--gold); margin-bottom:3px; }
+#hud .tut .tdist{ font-family:var(--f-mono); font-size:var(--t-sm); color:var(--info); margin-top:3px; min-height:1.1em; }
 #hud .tut .tstep{ font-size:var(--t-tiny); letter-spacing:.24em; color:var(--text-5); text-transform:uppercase; }
 #hud .tut .tobj{ font-family:'Rajdhani','Inter',sans-serif; font-weight:800; font-size:27px; color:var(--gold); letter-spacing:.04em; line-height:1.1; margin:2px 0; }
 #hud .tut .tkeys{ display:inline-block; font-weight:800; font-size:var(--t-md); color:var(--on-gold); background:linear-gradient(180deg,var(--gold),var(--gold-warm)); padding:4px 13px; border-radius:var(--r-2); margin:4px 0 2px; box-shadow:0 2px 0 var(--gold-shadow); }
@@ -473,7 +475,7 @@ const CSS = `
 #hud .nhead{ font-family:'Rajdhani','Inter',sans-serif; font-weight:800; font-size:33px; line-height:1.03; letter-spacing:.02em; color:var(--text); text-shadow:0 3px 0 rgba(0,0,0,.5); }
 #hud .nsub{ font-size:var(--t-sm); letter-spacing:.2em; color:var(--gold-deep); text-transform:uppercase; }
 #hud .nsub b{ color:var(--text); }
-#hud .nscript{ display:flex; flex-direction:column; gap:8px; border-left:3px solid rgba(245,178,26,.5); padding:2px 0 2px 12px; min-height:60px; }
+#hud .nscript{ display:flex; flex-direction:column; gap:8px; border-left:1px solid rgba(245,178,26,.5); padding:2px 0 2px 12px; min-height:60px; }
 #hud .sline{ font-size:var(--t-md); color:var(--text-2); line-height:1.55; }
 #hud .sline .swho{ display:inline-block; font-size:var(--t-tiny); font-weight:900; letter-spacing:.16em; color:#0d0e12; background:var(--gold-deep); border-radius:var(--r-1); padding:2px 7px; margin-right:8px; transform:translateY(-1px); text-transform:uppercase; }
 #hud .sline.field .swho{ background:var(--broadcast); color:#fff; }
@@ -515,7 +517,7 @@ const CSS = `
 #title .term .tcur{ display:inline-block; margin-left:3px; color:var(--good); animation:pipblink 1s steps(2,start) infinite; }
 #title .filters .flab{ font-family:var(--mono); font-size:var(--t-tiny); letter-spacing:.2em; color:var(--text-5); margin-right:2px; }
 /* file cards */
-#title .rcard{ border-left:3px solid var(--tc,var(--text-6)); }
+#title .rcard{ border-left:1px solid var(--tc,var(--text-6)); }
 #title .rcard .fhead{ display:flex; justify-content:space-between; align-items:center; margin-bottom:2px; }
 #title .rcard .fno{ font-family:var(--mono); font-size:var(--t-micro); letter-spacing:.08em; color:var(--text-5); }
 #title .rcard .fst{ font-family:var(--mono); font-size:var(--t-micro); letter-spacing:.12em; color:var(--good); }
@@ -684,7 +686,7 @@ const CSS = `
 .lswovl .cfcounter{ display:flex; flex-direction:column; gap:5px; }
 .lswovl .cfcounter .cn{ display:flex; gap:8px; font-size:var(--t-body); line-height:1.45; color:var(--text-2); }
 .lswovl .cfcounter .cn i{ flex:0 0 auto; font-style:normal; color:var(--danger-2); font-family:'Cascadia Mono',Consolas,monospace; font-size:var(--t-label); padding-top:2px; }
-.lswovl .cfquote{ border-left:3px solid rgba(216,31,38,.6); padding:6px 12px; font-style:italic; font-size:var(--t-md); color:var(--text-2); background:rgba(216,31,38,.05); border-radius:0 6px 6px 0; }
+.lswovl .cfquote{ border-left:1px solid rgba(216,31,38,.6); padding:6px 12px; font-style:italic; font-size:var(--t-md); color:var(--text-2); background:rgba(216,31,38,.05); border-radius:0 6px 6px 0; }
 .lswovl .cfquote b{ display:block; font-style:normal; font-family:'Cascadia Mono',Consolas,monospace; font-size:var(--t-tiny); letter-spacing:.16em; color:var(--danger-2); margin-top:4px; }
 .lswovl .cffoot{ display:flex; justify-content:space-between; align-items:center; font-family:'Cascadia Mono',Consolas,monospace; font-size:var(--t-tiny); letter-spacing:.18em; color:var(--text-6); padding:10px 22px 0; border-top:1px dashed rgba(255,255,255,.1); margin:4px 22px 0; }
 .lswovl .cfbtnrow{ display:flex; gap:9px; padding:12px 22px 0; }
@@ -988,20 +990,14 @@ export class HUD {
       <div class="rotate" id="hRotate"><div><div class="ri">📱</div><div style="font-size:18px;font-weight:800;letter-spacing:.1em;color:var(--gold)">ROTATE YOUR DEVICE</div><div style="font-size:13px;color:var(--text-3);margin-top:6px">The arena plays in landscape.</div></div></div>
       <div class="panel hint" id="hHint">
         <div class="hintchip">❓ <b>F1</b> CONTROLS</div>
-        <div class="hintbody" id="hHintBody">
-        <b>WASD</b> move · <b>Mouse</b> aim · <b>Click a foe</b> to lock/face · <b>T</b> unlock<br/>
-        <b>LMB/RMB</b> powers · <b>Q E H</b> skills · <b>R</b> ultimate<br/>
-        <b>V</b> tap jab / <b>HOLD</b> haymaker (crushes guards) · <b>G</b> grab<br/>
-        <b>C / Mouse4</b> guard · <b>X</b> item (beacon) · <b>SHIFT</b> dash · <b>2×TAP</b> move = evade<br/>
-        <b>F</b> flight ON/OFF · <b>SPACE</b> rise · release = hover · <b>Z</b> descend · <b>WHEEL</b> swap hero<br/>
-        <b>1–0</b>/<b>TAB</b> heroes · <b>B</b> rival · <b>ESC</b> pause<br/>
-        🎮 <b>Pad</b>: sticks move/aim · R2/L2 powers · ▢○ melee · L1 guard
-        </div>
+        <div class="hintbody" id="hHintBody"></div>
       </div>
       <div class="panel tut" id="hTut" style="display:none">
         <span class="tskip" id="hTutSkip">skip ✕</span>
+        <div class="tact" id="hTutAct"></div>
         <div class="tstep" id="hTutStep"></div>
         <div class="tobj" id="hTutObj"></div>
+        <div class="tdist" id="hTutDist"></div>
         <div><span class="tkeys" id="hTutKeys"></span></div>
         <div class="ttip" id="hTutTip"></div>
         <div class="tdots" id="hTutDots"></div>
@@ -1059,6 +1055,7 @@ export class HUD {
       ko: this.root.querySelector('#hKO'), koT: this.root.querySelector('#hKOt'), koS: this.root.querySelector('#hKOs'),
       hint: this.root.querySelector('#hHint'), foeArrow: this.root.querySelector('#hFoeArrow'),
       tut: this.root.querySelector('#hTut'), tutStep: this.root.querySelector('#hTutStep'), tutObj: this.root.querySelector('#hTutObj'),
+      tutAct: this.root.querySelector('#hTutAct'), tutDist: this.root.querySelector('#hTutDist'),
       tutKeys: this.root.querySelector('#hTutKeys'), tutTip: this.root.querySelector('#hTutTip'), tutDots: this.root.querySelector('#hTutDots'),
     };
     this.root.querySelector('#hTutSkip').onclick = () => { this.hideTutorial(); this.onTutorialSkip && this.onTutorialSkip(); };
@@ -1076,6 +1073,7 @@ export class HUD {
     });
     if (window.LSW_DESKTOP) { const q = this.el.paused.querySelector('#pQuit'); if (q) q.style.display = ''; }
     this._buildOverlays();
+    this.buildHintBody();   // the static wall is gone — the grouped panel is the ONLY format
   }
 
   // ---- options + how-to-play overlays (on <body> so they stack above the title screen) ----
@@ -1443,9 +1441,11 @@ export class HUD {
   }
 
   // ---- interactive tutorial banner ----
-  showTutorial(st, i, n) {
+  showTutorial(st, i, n, act) {
     const t = this.el.tut; t.style.display = 'block';
     t.classList.remove('pop'); void t.offsetWidth; t.classList.add('pop');
+    if (this.el.tutAct) this.el.tutAct.textContent = act || '';
+    if (this.el.tutDist) this.el.tutDist.textContent = '';
     this.el.tutStep.textContent = `LEARN TO PLAY — ${i + 1} / ${n}`;
     this.el.tutObj.textContent = st.obj;
     this.el.tutKeys.textContent = st.keys;
@@ -1453,6 +1453,7 @@ export class HUD {
     this.el.tutDots.innerHTML = Array.from({ length: n }, (_, k) => `<i class="${k < i ? 'on' : ''}"></i>`).join('');
   }
   tutorialStepDone() { this.flashScreen('var(--gold)', 0.08); }
+  setTutorialDist(txt) { if (this.el.tutDist && this.el.tutDist.textContent !== txt) this.el.tutDist.textContent = txt ? '🞋 ' + txt : ''; }
   completeTutorial() { this.hideTutorial(); }
   hideTutorial() { if (this.el.tut) this.el.tut.style.display = 'none'; }
   overlayOpen() { return [this.optionsEl, this.howtoEl, this.rankingsEl, this.bracketEl, this.atlasEl, this.codexEl, this.damageEl].some(e => e && e.style.display === 'flex'); }

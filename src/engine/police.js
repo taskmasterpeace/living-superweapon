@@ -87,7 +87,7 @@ export class PoliceSystem {
     this.cops.length = 0;           // the fighters themselves are cleared by startMode
     this._respT = -1; this._reinforceT = 0; this._announced = false; this._lastHarmT = -99; this._lswSent = false; this._cCache = undefined;
   }
-  get active() { return !!(this.g.mode && this.g.modeId !== 'training' && !(this.g.netplay && this.g.netplay.active)); }
+  get active() { return !!(this.g.mode && (this._forced || this.g.modeId !== 'training') && !(this.g.netplay && this.g.netplay.active)); }
 
   heatOf(f) { return this.heat.get(f) || 0; }
   // THE LADDER (Robert's ruling 2026-07-24): ★ beat cops (35) → ★★ patrol backup (90) →

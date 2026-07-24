@@ -1156,15 +1156,19 @@ value is missing from the scale, add a token rather than a one-off.
 - **Roster navigation** (`buildTitle`): filter chips (threat tiers · fliers/grounded · CUSTOM), sort
   (name/threat/power/hp/speed), live search, "n / N weapons" count, arrow-key card navigation + Enter to
   start. Stat bars/attr rows/threat badge all carry native `title` tooltips explaining what they do.
-- **Interactive tutorial** (`engine/tutorial.js` + hud `#hTut` banner): LEARN TO PLAY watches REAL
-  inputs — 13 steps (move · LMB · RMB · jab · haymaker · guard · grab · evade · fly · land · gadget ·
-  ult · KO a bot), each `check(f, game, S, dt)` reads live fighter state; non-applicable steps
-  (no flight / no gadget) auto-skip via `enabled(f)`. Runs in a calm Danger Room
-  (`training` setup skips the rival when `o.tutorial`). Entry: title 🎓 button, HOW-TO overlay's
-  "learn by doing" funnel, `hud.onTutorial`. Held power types (cone/phase/lifedrain) leave no
-  cd/sustain trace, so `runSlot` stamps `f._slotUse[key]` on any real press/hold — the tutorial's
-  (and future telemetry's) universal "this slot was used" signal. Completion sets
-  `threshold_tutorial_done` + announces. Headless-verified all steps end-to-end via `LSW.tutorial`.
+- **THE TUTORIAL IS A GTA3-GRADE GUIDED FIRST HOUR (2026-07-24)** (`engine/tutorial.js` rebuilt;
+  hud `#hTut` gains `#hTutAct` kicker + `#hTutDist` live metres): FOUR ACTS, every step still
+  `check(f, game, S, dt)` against REAL inputs. ACT I WEAPONS CHECK (the 12 control steps) ·
+  ACT II THE STREET (objective MARKER — one pulsing gold ring mesh, tutorial-owned, `heightAt`-
+  pinned, distance on the banner; reach it, HOIST a car/tree, HURL it, break a structure) ·
+  ACT III THE LAW (**`police._forced = true`** lets the response run inside the Danger Room —
+  get flagged, survive 12s of responders, then GHOST: heat is CLAMPED to 90 on ghost entry so
+  the decay lesson is ~45s however wild the rampage got — the lesson is the loop, not the
+  sentence) · ACT IV GRADUATION (spawns SARGE, KO him clean). Acts announce + feed TREATY
+  OFFICE lines; steps auto-skip via `enabled(f)`; completion = `sting.victory` +
+  `threshold_tutorial_done`. Headless-verified all 20 steps end-to-end (cops genuinely
+  dispatched in training, ring visible, decay ran, done-flag set). `runSlot` still stamps
+  `f._slotUse[key]` as the universal "slot used" signal.
 
 ## Modes, progression & local multiplayer
 - **Modes** (`MODE_IMPL` in `game.js`, metadata in `data/modes.js`): duel / survival / rumble / training, each with
