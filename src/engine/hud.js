@@ -1061,7 +1061,7 @@ export class HUD {
     if (t.flagship || t.cityId == null) return thresholdPlan();
     const city = cityList()[t.cityId];
     if (!city) return thresholdPlan();
-    const plan = generatePlan(city, t.seed || 1, { N: t.N, waterCols: t.waterCols, cell: t.cell, popType: t.popType });
+    const plan = generatePlan(city, t.seed || 1, { N: t.N, waterCols: t.waterCols, cell: t.cell, popType: t.popType, humanH: t.humanH || undefined });
     return applyPlanEdits(plan, t.edits);   // hand-painted cells win over the generator
   }
   // --- THE ATLAS — extracted to engine/atlasUI.js (one module, two mounts: this in-game screen

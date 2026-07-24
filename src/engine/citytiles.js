@@ -78,6 +78,8 @@ function mats(world, region) {
     tarmac: S('#63615c', { r: 0.98 }), runwayLine: B('#f0ead8', { o: 0.9 }),
     ballast: S('#7d766a', { r: 1 }), rail: S('#6a6a70', { r: 0.5, m: 0.6 }),
     fuselage: S('#e6e8ea', { r: 0.4, m: 0.35 }), livery: S('#2a5a8a', { r: 0.5, m: 0.3 }),
+    doorL: S('#4d3a26', { r: 0.7 }), doorMetal: S('#59616b', { r: 0.5, m: 0.55 }),
+    doorGlass: S('#1e3038', { r: 0.3, m: 0.4 }), brass: S('#c9a24d', { r: 0.32, m: 0.85 }),
   };
   return world._tileMats;
 }
@@ -88,6 +90,9 @@ function mats(world, region) {
 // five helpers every tile goes through, by scaling each mesh and its OFFSET FROM THE CELL CENTRE.
 // Nothing reparents, so cover boxes stay in world space and the ragdoll, resetTerrain, occlusion
 // and physics all keep working untouched. Set plan.cell and the whole city changes size.
+// THE METRIC — how tall the people are, as a multiplier (plan.metric.humanH / 9.6). Set once per
+// build by buildTiles; door sizes and window-bay storey heights ride it. NEVER the cell dial.
+let CUR_M = 1;
 const sx = (ctx, x) => ctx.cx + (x - ctx.cx) * ctx.S;      // world X from a base-unit X
 const sz = (ctx, z) => ctx.cz + (z - ctx.cz) * ctx.S;      // world Z from a base-unit Z
 // THE GROUND A TILE STANDS ON. Flat maps return 0 and nothing changes; on a map with relief this
@@ -105,7 +110,7 @@ function mesh(ctx, geo, mat, x, y, z, o = {}) {
 // a structural, destructible building with a windowed facade + roof slab + crack overlay
 function tower(ctx, x, z, w, h, d, winMat, roofMat, o = {}) {
   const world = ctx.world, S = ctx.S;
-  const geo = new THREE.BoxGeometry(w, h, d); scaleBoxUV(geo, w, h, d, (winMat && winMat.userData.bay) || 17);
+  const geo = new THREE.BoxGeometry(w, h, d); scaleBoxUV(geo, w, h, d, ((winMat && winMat.userData.bay) || 17) * CUR_M);
   const m = new THREE.Mesh(geo, winMat);
   const wx = sx(ctx, x), wz = sz(ctx, z), W = w * S, H = h * S, D = d * S, gy = ctx.gy;
   m.position.set(wx, gy + H / 2, wz); m.castShadow = H >= 44; m.receiveShadow = true;
@@ -137,7 +142,7 @@ function reg(world, m, x, z, hx, hz, top, hp) {
 }
 const disc = (ctx, mat, x, z, r, y = 0.1, seg = 26) => { const p = mesh(ctx, new THREE.CircleGeometry(r, seg), mat, x, y, z, { recv: false }); p.rotation.x = -Math.PI / 2; return p; };
 // a box with the facade UVs already scaled — for the structures that aren't tower()s
-const boxUV = (w, h, d, mat) => { const g = new THREE.BoxGeometry(w, h, d); scaleBoxUV(g, w, h, d, (mat && mat.userData && mat.userData.bay) || 17); return g; };
+const boxUV = (w, h, d, mat) => { const g = new THREE.BoxGeometry(w, h, d); scaleBoxUV(g, w, h, d, ((mat && mat.userData && mat.userData.bay) || 17) * CUR_M); return g; };
 const slab = (ctx, mat, x, z, w, d, y = 0.14) => { const p = mesh(ctx, new THREE.PlaneGeometry(w, d), mat, x, y, z, { recv: false }); p.rotation.x = -Math.PI / 2; return p; };
 // a parked tractor — the one piece of machinery that tells you which century the farm is in
 function tractor(ctx, x, z, yaw) {
@@ -168,6 +173,58 @@ function palm(ctx, x, z, s = 1) {
 function flagpole(ctx, x, z, h = 26) {
   mesh(ctx, new THREE.CylinderGeometry(0.2, 0.3, h, 6), ctx.mats.steel, x, h / 2, z);
   mesh(ctx, new THREE.PlaneGeometry(6, 3.6), ctx.mats.red, x + 3.1, h - 2.6, z, { recv: false }).material.side = THREE.DoubleSide;
+}
+
+// ---------- DOORS — the metric contract made visible ----------
+// Every inhabited structure gets an entrance sized to the PEOPLE, not the map: door dimensions are
+// authored in human units and scaled by ctx.M — NEVER by ctx.S. A bigger cell is a bigger city;
+// it is not a city for bigger people. The door's POSITION rides the cell scale (it sits on a wall
+// the cell dial moved); its SIZE rides the metric. Registered into world.doors so the future
+// interior system (and the build report) knows every way in.
+// kinds: swing - double - slide (storefront) - revolve (corporate/hotel) - roller (industrial) -
+//        turnstile (one fare lane; stadium/metro gates place a bank of them)
+function door(ctx, x, z, ry, kind = 'swing') {
+  const M2 = ctx.mats, M = ctx.M || 1;
+  const g = new THREE.Group();
+  g.position.set(sx(ctx, x), ctx.gy, sz(ctx, z)); g.rotation.y = ry;
+  const add = (geo, mat, px, py, pz, cast) => { const m = new THREE.Mesh(geo, mat); m.position.set(px, py, pz); m.castShadow = !!cast; m.receiveShadow = true; g.add(m); return m; };
+  const DH = 11.2 * M, t = 0.55 * M;                    // a 2.1m doorway in a 1.8m-human world
+  let w = 4.8 * M, h = DH;
+  if (kind === 'swing') {
+    add(new THREE.BoxGeometry(w + 1.6 * M, DH + 0.8 * M, t * 0.7), M2.doorMetal, 0, (DH + 0.8 * M) / 2, 0);
+    add(new THREE.BoxGeometry(w, DH, t), M2.doorL, 0.06 * M, DH / 2, 0.16 * M, true);
+    add(new THREE.SphereGeometry(0.3 * M, 6, 5), M2.brass, w * 0.34, DH * 0.47, 0.5 * M);
+  } else if (kind === 'double') {
+    w = 9.6 * M;
+    add(new THREE.BoxGeometry(w + 1.8 * M, DH + 1 * M, t * 0.7), M2.doorMetal, 0, (DH + 1 * M) / 2, 0);
+    for (const sgn of [-1, 1]) {
+      add(new THREE.BoxGeometry(w / 2 - 0.2 * M, DH, t), M2.doorL, sgn * w / 4, DH / 2, 0.16 * M, true);
+      add(new THREE.SphereGeometry(0.3 * M, 6, 5), M2.brass, sgn * 0.9 * M, DH * 0.47, 0.5 * M);
+    }
+  } else if (kind === 'slide') {
+    w = 12 * M; h = 10 * M;
+    add(new THREE.BoxGeometry(w + 1.2 * M, 1 * M, t), M2.doorMetal, 0, h + 0.5 * M, 0);
+    for (const sgn of [-1, 1]) add(new THREE.BoxGeometry(w / 2 - 0.3 * M, h, t * 0.8), M2.doorGlass, sgn * w / 4, h / 2, 0.12 * M, true);
+    for (const px of [-w / 2, 0, w / 2]) add(new THREE.BoxGeometry(0.5 * M, h, t), M2.doorMetal, px, h / 2, 0.1 * M);
+  } else if (kind === 'revolve') {
+    const r = 3.6 * M; w = r * 2; h = 11.6 * M;
+    add(new THREE.CylinderGeometry(r, r, h, 12, 1, true, 0.5, Math.PI * 1.6), M2.doorGlass, 0, h / 2, 0, true).material.side = THREE.DoubleSide;
+    add(new THREE.CylinderGeometry(r + 0.3 * M, r + 0.3 * M, 0.8 * M, 12), M2.doorMetal, 0, h + 0.3 * M, 0);
+    for (let i = 0; i < 4; i++) { const f = add(new THREE.BoxGeometry(r * 0.94, h - 1 * M, 0.28 * M), M2.doorGlass, 0, h / 2, 0, false); f.rotation.y = (i / 4) * Math.PI * 2; f.translateX(r * 0.47); }
+  } else if (kind === 'roller') {
+    w = 21 * M; h = 13.5 * M;
+    add(new THREE.BoxGeometry(w, h, t * 0.8), M2.doorMetal, 0, h / 2, 0.1 * M, true);
+    for (let i = 1; i < 5; i++) add(new THREE.BoxGeometry(w, 0.35 * M, t), M2.dark, 0, (h / 5) * i, 0.18 * M);
+    for (const sgn of [-1, 1]) add(new THREE.BoxGeometry(1 * M, h + 1 * M, t), M2.doorMetal, sgn * (w / 2 + 0.6 * M), (h + 1 * M) / 2, 0);
+  } else if (kind === 'turnstile') {
+    w = 4.3 * M; h = 4.2 * M;                            // waist-high, sized to a body — the ruling
+    for (const sgn of [-1, 1]) add(new THREE.BoxGeometry(0.9 * M, h, 0.9 * M), M2.doorMetal, sgn * w / 2, h / 2, 0, true);
+    add(new THREE.CylinderGeometry(0.22 * M, 0.22 * M, h * 0.9, 6), M2.steel, -w / 2 + 0.7 * M, h * 0.45, 0);
+    for (let i = 0; i < 3; i++) { const a = add(new THREE.BoxGeometry(w * 0.8, 0.3 * M, 0.3 * M), M2.brass, 0, h * 0.62, 0, false); a.rotation.y = (i / 3) * Math.PI * 2; a.position.x = -w / 2 + 0.7 * M; a.translateX(w * 0.4); }
+  }
+  ctx.g.add(g);
+  ctx.world.doors.push({ x: g.position.x, z: g.position.z, ry, kind, w, h, tile: ctx._tile || '' });
+  return g;
 }
 
 // ---- EDGE SOCKETS (see generatePlan) — what each side of this cell faces ----
@@ -204,6 +261,7 @@ function bodega(ctx, cx, cz, cell, rng) {
   aw.rotation.x = sz * 0.12;
   // the lit sign — this is what you actually see at night from down the block
   mesh(ctx, new THREE.BoxGeometry(15, 3.2, 0.6), M2.metroSign, bx, 12.9, bz + sz * 10.2, { cast: true });
+  door(ctx, bx, bz + sz * 10.6, sz > 0 ? 0 : Math.PI, 'slide');
   for (let i = 0; i < 3; i++)   // crates on the pavement
     mesh(ctx, new THREE.BoxGeometry(3.4, 3, 3), M2.wood, bx - 9 + i * 4.2, 1.5, bz + sz * 13.5 + (rng() - 0.5) * 2);
 }
@@ -213,27 +271,36 @@ const T = {
   residential(ctx, cx, cz, v) {
     const W = ctx.world, wm = W._winMats[2], R = ctx.mats.terraRoof, rng = ctx.rng;
     if (v === 0) {          // four low homes around a shared yard (1-1.5 stories)
-      for (const [ox, oz] of [[-19, -19], [19, -19], [-19, 19], [19, 19]])
-        tower(ctx, cx + ox + (rng() - 0.5) * 4, cz + oz + (rng() - 0.5) * 4, 26, 16 + rng() * 8, 26, wm, R);
+      for (const [ox, oz] of [[-19, -19], [19, -19], [-19, 19], [19, 19]]) {
+        const hx = cx + ox + (rng() - 0.5) * 4, hz = cz + oz + (rng() - 0.5) * 4;
+        tower(ctx, hx, hz, 26, 16 + rng() * 8, 26, wm, R);
+        door(ctx, hx, hz + (oz < 0 ? 13.4 : -13.4), oz < 0 ? 0 : Math.PI, 'swing');   // front door on the yard
+      }
       disc(ctx, ctx.mats.lawnM, cx, cz, 12, 0.1);
       ctx.treeSpots.push([cx + (rng() - 0.5) * 10, cz + (rng() - 0.5) * 10]);
     } else if (v === 1) {   // an L-block with a private court
       tower(ctx, cx - 10, cz - 14, 48, 21, 24, wm, R);
+      door(ctx, cx - 10, cz - 1.6, 0, 'swing');
       tower(ctx, cx - 22, cz + 12, 24, 25, 30, wm, R);
+      door(ctx, cx - 9.6, cz + 12, Math.PI / 2, 'swing');
       disc(ctx, ctx.mats.lawnM, cx + 14, cz + 14, 13, 0.1);
       ctx.treeSpots.push([cx + 14, cz + 14], [cx + 22, cz + 4]);
     } else {                // towers-in-the-park (4-story walk-ups)
       tower(ctx, cx - 14, cz - 8, 22, 70, 22, wm, ctx.mats.paleRoof);
+      door(ctx, cx - 14, cz + 3.4, 0, 'double');
       tower(ctx, cx + 15, cz + 10, 22, 58, 22, wm, ctx.mats.paleRoof);
+      door(ctx, cx + 15, cz + 21.4, 0, 'double');
       disc(ctx, ctx.mats.lawnM, cx, cz, 26, 0.09);
       ctx.treeSpots.push([cx - 2, cz + 20], [cx + 18, cz - 16], [cx - 24, cz + 12]);
     }
   },
   commercial(ctx, cx, cz, v, cell) {
     const W = ctx.world, wm = W._winMats[v % 2], R = ctx.mats.paleRoof, rng = ctx.rng;
-    if (v === 0) { tower(ctx, cx - 15, cz - 10, 30, 96 + rng() * 26, 30, wm, R); tower(ctx, cx + 17, cz + 12, 26, 64 + rng() * 20, 26, wm, R); }
-    else if (v === 1) { const p = tower(ctx, cx, cz, 52, 18, 40, wm, R); tower(ctx, cx - 6, cz - 2, 24, 112, 24, wm, R); p.castShadow = false; }
-    else tower(ctx, cx, cz, 30, 118 + rng() * 22, 44, wm, R);
+    if (v === 0) { tower(ctx, cx - 15, cz - 10, 30, 96 + rng() * 26, 30, wm, R); tower(ctx, cx + 17, cz + 12, 26, 64 + rng() * 20, 26, wm, R);
+      door(ctx, cx - 15, cz + 5.4, 0, 'slide'); door(ctx, cx + 17, cz + 25.4, 0, 'slide'); }
+    else if (v === 1) { const p = tower(ctx, cx, cz, 52, 18, 40, wm, R); tower(ctx, cx - 6, cz - 2, 24, 112, 24, wm, R); p.castShadow = false;
+      door(ctx, cx + 12, cz + 20.4, 0, 'slide'); }
+    else { tower(ctx, cx, cz, 30, 118 + rng() * 22, 44, wm, R); door(ctx, cx, cz + 22.4, 0, 'slide'); }
     bodega(ctx, cx, cz, cell, rng);
   },
   // THE OFFICE BLOCK → THE CORPORATE CORE. A bigger site means MORE TOWERS, not a taller one —
@@ -243,12 +310,15 @@ const T = {
     const HW = ctx.W / 2, HD = ctx.D / 2, core = ctx.W > CELL * 1.4 || ctx.D > CELL * 1.4;
     if (v === 0) {          // the HQ: one glass monolith + logo pylon + parking field
       tower(ctx, cx - HW * 0.1, cz, 30, 150, 30, wm, M2.steelRoof);
+      door(ctx, cx - HW * 0.1, cz + 15.6, 0, 'revolve');
       mesh(ctx, new THREE.BoxGeometry(2.6, 30, 2.6), M2.steel, cx + HW * 0.45, 15, cz - HD * 0.45, { cast: true });
       mesh(ctx, new THREE.BoxGeometry(13, 6.5, 1), M2.gold, cx + HW * 0.45, 33, cz - HD * 0.45, { cast: true });
       disc(ctx, M2.plazaM, cx + HW * 0.3, cz + HD * 0.35, 15, 0.09);
     } else {                // twin towers with a skybridge
       tower(ctx, cx - HW * 0.3, cz, 24, 104, 26, wm, M2.steelRoof);
+      door(ctx, cx - HW * 0.3, cz + 13.6, 0, 'revolve');
       tower(ctx, cx + HW * 0.3, cz, 24, 122, 26, wm, M2.steelRoof);
+      door(ctx, cx + HW * 0.3, cz + 13.6, 0, 'revolve');
       mesh(ctx, new THREE.BoxGeometry(HW * 0.6, 5, 9), M2.steel, cx, 78, cz, { cast: true });
     }
     if (core) {             // the rest of the core — satellites of varied height, and a plaza
@@ -273,16 +343,20 @@ const T = {
       const bx = cx + ox, bz = cz + oz;
       if (v === 0) {          // warehouse rows (real ~4m sheds) + container spill
         tower(ctx, bx - 15, bz - 12, 26, 20, 52, wm, M2.steelRoof);
+        door(ctx, bx - 15, bz + 14.6, 0, 'roller');
         tower(ctx, bx + 16, bz + 6, 26, 24, 44, wm, M2.steelRoof);
+        door(ctx, bx + 16, bz + 28.6, 0, 'roller');
         for (let i = 0; i < 4; i++) mesh(ctx, new THREE.BoxGeometry(11, 4.4, 4.6), M2.containers[(rng() * 5) | 0], bx + 8 + (rng() - 0.5) * 16, 2.2, bz - 28, { cast: true });
       } else if (v === 1) {   // tank farm + stacks
         tower(ctx, bx + 12, bz + 12, 34, 24, 34, wm, M2.steelRoof);
+        door(ctx, bx + 12, bz + 29.6, 0, 'roller');
         for (const [dx, dz, r] of [[-20, -14, 7], [-6, -22, 6], [-24, 2, 6]])
           mesh(ctx, new THREE.CylinderGeometry(r, r, 18, 12), M2.steel, bx + dx, 9, bz + dz, { cast: true });
         mesh(ctx, new THREE.CylinderGeometry(1.6, 2.2, 46, 8), M2.rust, bx - 2, 23, bz + 4, { cast: true });
         mesh(ctx, new THREE.CylinderGeometry(1.3, 1.7, 38, 8), M2.rust, bx + 4, 19, bz - 2, { cast: true });
       } else {                // the works: factory + conveyor ramp
         tower(ctx, bx - 6, bz - 6, 44, 26, 34, wm, M2.steelRoof);
+        door(ctx, bx - 6, bz + 11.6, 0, 'roller');
         const ramp = mesh(ctx, new THREE.BoxGeometry(34, 1.6, 5), M2.steel, bx + 16, 12, bz + 22, { cast: true });
         ramp.rotation.z = -0.32;
         mesh(ctx, new THREE.BoxGeometry(10, 12, 10), M2.rust, bx + 32, 6, bz + 22, { cast: true });
@@ -307,6 +381,7 @@ const T = {
         const hx = cx - HW * 0.4 + i * HW * 0.7, hz = cz - HD * 0.3;
         const h = mesh(ctx, boxUV(46, 24, 30, wm), wm, hx, 12, hz, { cast: true });
         reg(W, h, hx, hz, 23, 15, 24, 220);
+        door(ctx, hx, hz + 15.6, 0, 'roller');
         mesh(ctx, new THREE.CylinderGeometry(15, 15, 46, 12, 1, false, 0, Math.PI), M2.oliveRoof, hx, 24, hz, { rz: Math.PI / 2, cast: true });
       }
       const tx = cx + HW * 0.75, tz = cz - HD * 0.55;
@@ -316,13 +391,19 @@ const T = {
     }
     if (v === 0) {          // bunkers + watchtower + pad
       tower(ctx, cx - HW * 0.3, cz - HD * 0.25, 34, 15, 28, wm, ctx.mats.oliveRoof);
+      door(ctx, cx - HW * 0.3, cz - HD * 0.25 + 14.5, 0, 'swing');
       tower(ctx, cx + HW * 0.4, cz + HD * 0.35, 26, 12, 22, wm, ctx.mats.oliveRoof);
+      door(ctx, cx + HW * 0.4, cz + HD * 0.35 + 11.5, 0, 'swing');
       mesh(ctx, new THREE.BoxGeometry(5, 36, 5), M2.olive, cx + HW * 0.6, 18, cz - HD * 0.55, { cast: true });
       mesh(ctx, new THREE.BoxGeometry(9, 5, 9), M2.fence, cx + HW * 0.6, 38.5, cz - HD * 0.55, { cast: true });
       if (ctx.world._heliTex) disc(ctx, new THREE.MeshBasicMaterial({ map: ctx.world._heliTex, transparent: true, opacity: 0.8, depthWrite: false }), cx - HW * 0.35, cz + HD * 0.55, 12, 0.12, 24);
     } else {                // barracks rows + motor pool — more rows on a bigger compound
       const n = Math.max(3, Math.round(ctx.W / 32));
-      for (let i = 0; i < n; i++) tower(ctx, cx - HW * 0.7 + i * (HW * 1.4 / n), cz - HD * 0.3, 16, 14, 34, wm, ctx.mats.oliveRoof);
+      for (let i = 0; i < n; i++) {
+        const rx = cx - HW * 0.7 + i * (HW * 1.4 / n);
+        tower(ctx, rx, cz - HD * 0.3, 16, 14, 34, wm, ctx.mats.oliveRoof);
+        door(ctx, rx, cz - HD * 0.3 + 17.5, 0, 'swing');
+      }
       for (let i = 0; i < 2; i++) mesh(ctx, new THREE.BoxGeometry(16, 7, 8), M2.olive, cx - 8 + i * 20, 3.5, cz + HD * 0.6, { cast: true });
       flagpole(ctx, cx + HW * 0.75, cz + HD * 0.4);
     }
@@ -331,6 +412,7 @@ const T = {
     const M2 = ctx.mats, W = ctx.world;
     if (v === 0) {          // the capitol: base + drum + dome + colonnade + flags
       const base = tower(ctx, cx, cz - 4, 48, 18, 34, M2.marble, null);
+      door(ctx, cx, cz + 13.6, 0, 'double');
       mesh(ctx, new THREE.CylinderGeometry(13, 15, 11, 18), M2.marble, cx, 23.5, cz - 4, { cast: true });
       mesh(ctx, new THREE.SphereGeometry(12, 18, 12, 0, Math.PI * 2, 0, Math.PI / 2), M2.domeGold, cx, 29, cz - 4, { cast: true });
       for (let i = 0; i < 6; i++) mesh(ctx, new THREE.CylinderGeometry(1.3, 1.6, 16, 8), M2.marble, cx - 17.5 + i * 7, 8, cz + 15, { cast: true });
@@ -339,7 +421,9 @@ const T = {
       base.castShadow = true;
     } else {                // ministry slabs + obelisk
       tower(ctx, cx - 16, cz - 8, 26, 56, 20, W._winMats[0], M2.paleRoof);
+      door(ctx, cx - 16, cz + 2.6, 0, 'double');
       tower(ctx, cx + 16, cz - 8, 26, 56, 20, W._winMats[0], M2.paleRoof);
+      door(ctx, cx + 16, cz + 2.6, 0, 'double');
       mesh(ctx, new THREE.CylinderGeometry(1.2, 3.2, 36, 4), M2.marble, cx, 18, cz + 22, { cast: true });
       disc(ctx, M2.plazaM, cx, cz + 22, 13, 0.09);
     }
@@ -348,6 +432,7 @@ const T = {
     const W = ctx.world, wm = W._winMats[2], M2 = ctx.mats;
     if (v === 0) {          // the quad + bell tower
       tower(ctx, cx, cz - 20, 52, 22, 18, wm, M2.terraRoof);
+      door(ctx, cx, cz - 10.4, 0, 'double');
       tower(ctx, cx - 22, cz + 6, 18, 20, 34, wm, M2.terraRoof);
       tower(ctx, cx + 22, cz + 6, 18, 20, 34, wm, M2.terraRoof);
       mesh(ctx, new THREE.BoxGeometry(7, 46, 7), M2.stone, cx, 23, cz - 34, { cast: true });
@@ -356,6 +441,7 @@ const T = {
       ctx.treeSpots.push([cx - 8, cz + 12], [cx + 8, cz + 8]);
     } else {                // the library + dorms
       tower(ctx, cx - 8, cz - 8, 36, 44, 26, wm, M2.paleRoof);
+      door(ctx, cx - 8, cz + 5.6, 0, 'double');
       tower(ctx, cx + 22, cz + 14, 16, 28, 28, wm, M2.terraRoof);
       disc(ctx, M2.lawnM, cx - 6, cz + 24, 12, 0.1);
       ctx.treeSpots.push([cx - 6, cz + 24]);
@@ -369,6 +455,7 @@ const T = {
       mesh(ctx, new THREE.BoxGeometry(w2, 2.2, d2), M2.stone, cx + ox, 1.1, cz + oz); });
     if (v === 0) {          // tiered pagoda — one structural base, ornamental upper tiers
       tower(ctx, cx, cz, 30, 14, 30, M2.stone, null);
+      door(ctx, cx, cz + 15.6, 0, 'double');
       let y = 14;
       for (const [s, h] of [[22, 12], [14, 10]]) {
         mesh(ctx, new THREE.BoxGeometry(s, h, s), M2.stone, cx, y + h / 2, cz, { cast: true });
@@ -379,6 +466,7 @@ const T = {
       mesh(ctx, new THREE.CylinderGeometry(0.5, 0.5, 9, 6), M2.gold, cx, y + 5.5, cz, { cast: true });
     } else if (v === 1) {   // the golden dome shrine
       tower(ctx, cx, cz, 26, 16, 26, M2.stone, null);
+      door(ctx, cx, cz + 13.6, 0, 'double');
       mesh(ctx, new THREE.SphereGeometry(13, 18, 12, 0, Math.PI * 2, 0, Math.PI / 2), M2.domeGold, cx, 16, cz, { cast: true });
       mesh(ctx, new THREE.CylinderGeometry(1.8, 2.2, 40, 8), M2.stone, cx + 20, 20, cz + 18, { cast: true });
       mesh(ctx, new THREE.SphereGeometry(2.8, 10, 8), M2.domeGold, cx + 20, 41.5, cz + 18, { cast: true });
@@ -403,8 +491,10 @@ const T = {
       mesh(ctx, new THREE.ConeGeometry(11, 12, 10), M2.rust, cx + 34, 6, cz + 30, { cast: true });
       mesh(ctx, new THREE.ConeGeometry(8, 9, 10), M2.rust, cx + 24, 4.5, cz + 36, { cast: true });
       tower(ctx, cx - 30, cz + 30, 18, 14, 14, W._winMats[3], M2.steelRoof);
+      door(ctx, cx - 30, cz + 37.6, 0, 'swing');
     } else {                // quarry terraces + crusher
       tower(ctx, cx + 28, cz - 28, 20, 18, 16, W._winMats[3], M2.steelRoof);
+      door(ctx, cx + 28, cz - 19.4, 0, 'swing');
       mesh(ctx, new THREE.BoxGeometry(12, 14, 12), M2.dark, cx + 28, 7, cz + 26, { cast: true });
       mesh(ctx, new THREE.ConeGeometry(9, 10, 10), M2.rust, cx - 30, 5, cz - 30, { cast: true });
     }
@@ -422,6 +512,7 @@ const T = {
       for (let b = 0; b < berths; b++) {
         const bz = cz - HD + (b + 0.5) * (ctx.D / berths);
         tower(ctx, cx - HW * 0.55, bz, 24, 20, Math.min(44, ctx.D / berths - 12), W._winMats[3], M2.steelRoof);
+        door(ctx, cx - HW * 0.55 + 12.5, bz, Math.PI / 2, 'roller');
         for (let i = 0; i < 6; i++) {
           const st = (rng() * 2) | 0;
           mesh(ctx, new THREE.BoxGeometry(11, 4.4, 4.6), M2.containers[(rng() * 5) | 0],
@@ -437,9 +528,11 @@ const T = {
         const ax = cx - HW * 0.8;
         const adm = mesh(ctx, boxUV(26, 34, 22, W._winMats[0]), W._winMats[0], ax, 17, cz, { cast: true });
         reg(W, adm, ax, cz, 13, 11, 34, 300);
+        door(ctx, ax + 13.5, cz, Math.PI / 2, 'double');
       }
     } else {                // THE PIER SIDE — decks, bollards, and a ship if there is room
       tower(ctx, cx - HW * 0.6, cz + 6, 22, 18, 40, W._winMats[3], M2.steelRoof);
+      door(ctx, cx - HW * 0.6 + 11.5, cz + 6, Math.PI / 2, 'roller');
       const piers = Math.max(2, Math.round(ctx.D / 62));
       for (let p = 0; p < piers; p++) {
         const oz = -HD + (p + 0.5) * (ctx.D / piers);
@@ -457,6 +550,7 @@ const T = {
     const M2 = ctx.mats, W = ctx.world;
     if (v === 0) {          // the grand hotel + pool deck
       tower(ctx, cx - 16, cz - 8, 44, 76, 20, W._winMats[2], M2.paleRoof);
+      door(ctx, cx - 16, cz + 2.6, 0, 'revolve');
       disc(ctx, M2.sandM, cx + 12, cz + 22, 22, 0.08);
       disc(ctx, M2.plazaM, cx + 10, cz + 20, 13, 0.1);
       disc(ctx, M2.poolM, cx + 10, cz + 20, 10, 0.12, 22);
@@ -470,6 +564,7 @@ const T = {
         mesh(ctx, new THREE.BoxGeometry(9.6, 1.6, 8.6), M2.red, cx + 10, 7.3, cz - 30 + i * 19, { cast: true });
       }
       tower(ctx, cx - 22, cz + 4, 24, 52, 30, W._winMats[2], M2.paleRoof);
+      door(ctx, cx - 9.4, cz + 4, Math.PI / 2, 'revolve');
       palm(ctx, cx + 22, cz - 32); palm(ctx, cx + 20, cz + 30, 0.9);
     }
   },
@@ -496,6 +591,10 @@ const T = {
       const w = Math.max(15, (2 * Math.PI * R / N) * 0.92);
       tower(ctx, cx + Math.cos(a) * R, cz + Math.sin(a) * R, w, v === 0 ? 22 : 30, w, W._winMats[0], M2.paleRoof);
     }
+    for (let i = -1; i <= 1; i++) {                     // turnstile banks at the two main gates
+      door(ctx, cx - R - 5, cz + i * 5.5, -Math.PI / 2, 'turnstile');
+      door(ctx, cx + R + 5, cz + i * 5.5, Math.PI / 2, 'turnstile');
+    }
     for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
       const mx = cx + sx * R * 0.88, mz = cz + sz * R * 0.88;
       mesh(ctx, new THREE.BoxGeometry(1.2, 34, 1.2), M2.steel, mx, 17, mz, { cast: true });
@@ -516,6 +615,8 @@ const T = {
     const tW = ctx.W * 0.42, tz = cz - ctx.D * 0.34;
     const term = mesh(ctx, boxUV(tW, 22, 30, W._winMats[0]), W._winMats[0], cx - ctx.W * 0.08, 11, tz, { cast: true });
     reg(W, term, cx - ctx.W * 0.08, tz, tW / 2, 15, 22, 340);
+    door(ctx, cx - ctx.W * 0.08 - 10, tz + 15.6, 0, 'slide');
+    door(ctx, cx - ctx.W * 0.08 + 10, tz + 15.6, 0, 'slide');
     mesh(ctx, new THREE.BoxGeometry(tW + 4, 1.4, 32), M2.paleRoof, cx - ctx.W * 0.08, 22.4, tz);
     // the control tower — the landmark you navigate by from the far side of the city
     const cwx = cx + ctx.W * 0.26, cwz = tz - 4;
@@ -551,6 +652,7 @@ const T = {
     const sx = cx - L * 0.32, sz = cz + (lanes * 6.5 + 22);
     const shed = mesh(ctx, boxUV(74, 24, 30, W._winMats[3]), W._winMats[3], sx, 12, sz, { cast: true });
     reg(W, shed, sx, sz, 37, 15, 24, 240);
+    door(ctx, sx, sz + 15.6, 0, 'roller');
     mesh(ctx, new THREE.BoxGeometry(78, 1.6, 33), M2.steelRoof, sx, 24.6, sz);
     const wx = cx + L * 0.3, wz = sz - 4;                                       // the water tower
     for (const [ox, oz] of [[-6, -6], [6, -6], [-6, 6], [6, 6]]) mesh(ctx, new THREE.BoxGeometry(1.6, 30, 1.6), M2.steel, wx + ox, 15, wz + oz, { cast: true });
@@ -566,6 +668,8 @@ const T = {
     const h = v === 0 ? 60 : 84;
     const mw = Math.min(46, ctx.W * 0.42);
     tower(ctx, cx - HW * 0.08, cz - HD * 0.1, mw, h, 34, W._winMats[0], M2.paleRoof);
+    door(ctx, cx - HW * 0.08 - 8, cz - HD * 0.1 + 17.6, 0, 'double');
+    door(ctx, cx - HW * 0.08 + 9, cz - HD * 0.1 + 17.6, 0, 'slide');
     if (W._heliTex) disc(ctx, new THREE.MeshBasicMaterial({ map: W._heliTex, transparent: true, opacity: 0.85, depthWrite: false }), cx - HW * 0.08, cz - HD * 0.1, 11, h + 0.3, 24);
     if (big) {                        // the wings — lower, longer, flanking the tower
       for (const s of [-1, 1]) {
@@ -651,6 +755,7 @@ const T = {
     // --- STAIR HEADHOUSES on the street: the way in, and the landmark that says METRO
     for (const [ex, ez] of [[cx - 36, cz - 34], [cx + 36, cz + 34]]) {
       mesh(ctx, new THREE.BoxGeometry(11, 7, 9), M2.stationTile, ex, 3.5, ez, { cast: true });
+      door(ctx, ex + 8.4, ez, Math.PI / 2, 'turnstile');
       mesh(ctx, new THREE.BoxGeometry(12, 1, 10), M2.metroSign, ex, 7.4, ez, { cast: true });
       for (let s = 0; s < 7; s++)                 // the steps down into the cut
         mesh(ctx, new THREE.BoxGeometry(9, 1.9, 2.6), M2.platform, ex, -s * 1.9 + 0.5, ez + (ez > cz ? -1 : 1) * (5 + s * 2.6));
@@ -729,6 +834,7 @@ const T = {
       const py = H * 0.78;
       mesh(ctx, new THREE.CylinderGeometry(rB * 2.4, rB * 1.6, 15, 16), W._winMats[0], cx, py, cz, { cast: true });
       mesh(ctx, new THREE.CylinderGeometry(rB * 2.5, rB * 2.5, 1.6, 16), M2.steelRoof, cx, py + 8.3, cz, { cast: true });
+      door(ctx, cx, cz + rB + 0.6, 0, 'revolve');
       mesh(ctx, new THREE.CylinderGeometry(0.5, 2, 34, 6), M2.steel, cx, H + 17, cz, { cast: true });
       mesh(ctx, new THREE.SphereGeometry(2, 8, 6), M2.beacon, cx, H + 35, cz);
     }
@@ -742,6 +848,7 @@ const T = {
     if (faith === 'mosque') {
       const hall = mesh(ctx, boxUV(50, 20, 50, M2.white), M2.white, cx, 10, cz, { cast: true });
       reg(W, hall, cx, cz, 25, 25, 20, 620);
+      door(ctx, cx, cz + 25.6, 0, 'double');
       mesh(ctx, new THREE.SphereGeometry(21, 20, 14, 0, Math.PI * 2, 0, Math.PI / 2), M2.domeGold, cx, 20, cz, { cast: true });
       mesh(ctx, new THREE.SphereGeometry(3.4, 10, 8), M2.domeGold, cx, 43, cz, { cast: true });
       for (const [ox, oz] of [[-30, -30], [30, -30], [-30, 30], [30, 30]]) {      // four minarets
@@ -759,15 +866,18 @@ const T = {
         y += h + 2.6; s *= 0.82;
       }
       mesh(ctx, new THREE.CylinderGeometry(0.6, 1.6, 16, 6), M2.gold, cx, y + 8, cz, { cast: true });
+      door(ctx, cx, cz + 21.6, 0, 'double');
     } else if (faith === 'temple') {
       const base = mesh(ctx, boxUV(52, 14, 52, M2.stone), M2.stone, cx, 7, cz, { cast: true });
       reg(W, base, cx, cz, 26, 26, 14, 600);
+      door(ctx, cx, cz + 26.6, 0, 'double');
       let y = 14, s = 30;
       for (let i = 0; i < 6; i++) { const h = 9 - i * 0.9; mesh(ctx, new THREE.CylinderGeometry(s * 0.42, s * 0.5, h, 8), M2.stone, cx, y + h / 2, cz, { cast: true }); y += h; s *= 0.86; }
       mesh(ctx, new THREE.SphereGeometry(4, 10, 8), M2.gold, cx, y + 4, cz, { cast: true });
     } else {                             // a GOTHIC cathedral: nave, transept, two west towers
       const nave = mesh(ctx, boxUV(30, 30, 62, M2.stone), M2.stone, cx, 15, cz, { cast: true });
       reg(W, nave, cx, cz, 15, 31, 30, 640);
+      door(ctx, cx, cz - 31.6, Math.PI, 'double');
       mesh(ctx, new THREE.BoxGeometry(58, 26, 22), M2.stone, cx, 13, cz + 4, { cast: true });          // transept
       const roof = mesh(ctx, new THREE.CylinderGeometry(16, 16, 62, 3, 1, false, 0, Math.PI), M2.slate, cx, 30, cz, { cast: true });
       roof.rotation.z = -Math.PI / 2; roof.rotation.y = Math.PI / 2;
@@ -797,6 +907,7 @@ const T = {
     for (let i = -5; i <= 5; i++)                     // the colonnade
       mesh(ctx, new THREE.CylinderGeometry(2.2, 2.4, 26, 10), M2.marble, cx + i * (HW * 0.2), 13, cz - HD * 0.25 + 19, { cast: true });
     mesh(ctx, new THREE.BoxGeometry(HW * 0.5, 3.4, 4), M2.marble, cx, 27, cz - HD * 0.25 + 19, { cast: true });
+    door(ctx, cx, cz - HD * 0.25 + 17.6, 0, 'double');
     if (v === 1) mesh(ctx, new THREE.SphereGeometry(15, 18, 12, 0, Math.PI * 2, 0, Math.PI / 2), M2.domeGold, cx, 31, cz - HD * 0.25, { cast: true });
     for (const s of [-1, 1]) flagpole(ctx, cx + s * HW * 0.3, cz + HD * 0.45, 30);
     disc(ctx, M2.lawnM, cx, cz + HD * 0.62, HW * 0.55, 0.1, 26);
@@ -822,6 +933,7 @@ const T = {
     }
     // the gate — a real opening you fight through
     mesh(ctx, new THREE.BoxGeometry(18, 15, 11), M2.dark, cx, 7.5, cz + HD);
+    door(ctx, cx, cz + HD + 6, 0, 'roller');
     const keep = mesh(ctx, boxUV(38, 52, 38, M2.stone), M2.stone, cx, 26, cz - HD * 0.15, { cast: true });
     reg(W, keep, cx, cz - HD * 0.15, 19, 19, 52, 780);
     for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]])
@@ -840,7 +952,9 @@ const T = {
       mesh(ctx, new THREE.BoxGeometry(w + 3, 2.4, d + 3), M2.slate, x, h + 1.2, z);
     };
     range(cx, cz - HD * 0.8, HW * 1.6, 22, 26);
+    door(ctx, cx, cz - HD * 0.8 + 11.6, 0, 'double');
     range(cx, cz + HD * 0.8, HW * 1.6, 22, 22);
+    door(ctx, cx, cz + HD * 0.8 - 11.6, Math.PI, 'double');
     range(cx - HW * 0.85, cz, 20, HD * 1.3, 24);
     range(cx + HW * 0.85, cz, 20, HD * 1.3, 24);
     // the library: a rotunda with a dome — the one piece that says "this is not an office block"
@@ -848,6 +962,7 @@ const T = {
     const lib = mesh(ctx, new THREE.CylinderGeometry(17, 18, 30, 16), M2.marble, lx, 15, lz, { cast: true });
     reg(W, lib, lx, lz, 17, 17, 30, 480);
     mesh(ctx, new THREE.SphereGeometry(17, 18, 12, 0, Math.PI * 2, 0, Math.PI / 2), M2.paleRoof, lx, 30, lz, { cast: true });
+    door(ctx, lx, lz + 18.4, 0, 'double');
     const bx = cx - HW * 0.5, bz = cz + HD * 0.2;                          // the bell tower
     const bt = mesh(ctx, boxUV(14, 58, 14, M2.stone), M2.stone, bx, 29, bz, { cast: true });
     reg(W, bt, bx, bz, 7, 7, 58, 340);
@@ -993,6 +1108,7 @@ const T = {
       reg(W, silo, cx + 4, cz - 24, 6, 6, 34, 200);
       mesh(ctx, new THREE.ConeGeometry(6.6, 7, 12), M2.steelRoof, cx + 4, 37.5, cz - 24, { cast: true });
       tower(ctx, cx + 28, cz + 24, 17, 12, 15, W._winMats[2], M2.terraRoof);
+      door(ctx, cx + 28, cz + 32.1, 0, 'swing');
       slab(ctx, M2.dirtYard, cx - 6, cz - 20, 46, 30, 0.1);                                 // the packed yard
       tractor(ctx, cx + 12, cz - 6, rng() * 6);
       for (let i = 0; i < 5; i++) mesh(ctx, new THREE.CylinderGeometry(3, 3, 4.4, 10), M2.hay, cx - 34 + i * 8, 2.2, cz + 30, { rz: Math.PI / 2, cast: true });
@@ -1044,7 +1160,9 @@ export function buildTiles(world, group, plan, rng) {
     }
   }
   const A = plan.arena, cellSize = plan.cell || CELL, S = cellSize / CELL;
-  const ctx = { world, g: group, rng, mats: M2, region, treeSpots: [], plan,
+  const M = ((plan.metric && plan.metric.humanH) || 9.6) / 9.6;
+  CUR_M = M;                                             // boxUV/tower read it for the window bay
+  const ctx = { world, g: group, rng, mats: M2, region, treeSpots: [], plan, M,
                 W: CELL, D: CELL, fw: 1, fh: 1, S, cell: cellSize, cx: 0, cz: 0, gy: 0 };
   world._pendingCuts = world._pendingCuts || []; world._pendingPits = world._pendingPits || [];
   for (let r = 0; r < plan.N; r++) for (let c = 0; c < plan.N; c++) {
@@ -1059,6 +1177,7 @@ export function buildTiles(world, group, plan, rng) {
     ctx.gy = world.heightAt ? world.heightAt(ctx.cx, ctx.cz) : 0;   // the terrace this block sits on
     const builder = T[cell.t];
     if (!builder) continue;
+    ctx._tile = cell.t;
     // the three things builders push as raw world coordinates have to be scaled too — snapshot the
     // lengths, run the tile, then convert whatever it appended
     const t0 = ctx.treeSpots.length, k0 = world._pendingCuts.length, p0 = world._pendingPits.length;

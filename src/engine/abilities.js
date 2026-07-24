@@ -513,6 +513,70 @@ export const TYPES = {
     }
   },
 
+  // SUPERNOVA — hold to gather, and it takes EVERYTHING: the whole ki tank feeds one omnidirectional
+  // detonation centered on your own body (works exactly the same at altitude). Then you are EMPTY —
+  // drainedT opens, and if you have Overdrive, your fists are the comeback plan.
+  nova(c, def, st, g, inp) {
+    if (inp.pressed && ready(c, def, st) && !st.building) {
+      st.building = true; st.fed = 0; st.sfx = g.audio.charge();
+      if (c.def.yells) { c._yellCd = 0; g.heroYell(c, 1.2); }
+    }
+    if (st.building) {
+      const pull = (def.feedRate || 55) * inp.dt;
+      const fed = Math.min(c.ki, pull);
+      c.ki -= fed; st.fed += fed;
+      c.state = 'charge'; c.stateT = 0;
+      c.vel.x *= 0.86; c.vel.z *= 0.86;
+      g.chargeGather(c, def.color || '#ff6a1a', c.pos.clone().setY(c.pos.y + 5.5), 1 + st.fed * 0.02);
+      if (st.sfx) st.sfx.ramp(Math.min(1, st.fed / (def.maxFeed || 120)));
+      if (Math.random() < 0.3) g.world.shake(0.12 + st.fed * 0.002);
+      const done = c.ki <= 0.5 || st.fed >= (def.maxFeed || 120);
+      if (inp.released || done) {
+        st.building = false; if (st.sfx) { st.sfx.stop(); st.sfx = null; }
+        const k = st.fed / (def.maxFeed || 120);                       // 0..1 of a full tank
+        if (st.fed < 12) { st.cd = 0.5; return; }                      // barely lit — fizzle
+        pay(c, def, st);
+        const p = c.pos.clone().setY(c.pos.y + 5);
+        const radius = (def.minRadius || 16) + k * ((def.maxRadius || 44) - (def.minRadius || 16));
+        const dmg = (def.dmgMin || 30) + k * ((def.dmgMax || 95) - (def.dmgMin || 30));
+        g.vfx.explode(p, { color: def.color || '#ff6a1a', color2: '#ffffff', radius: radius * 0.7, power: 1.6 + k * 1.4, scorch: c.pos.y < 4 });
+        g.vfx.shockwave(c.pos.clone().setY(Math.max(0.2, c.pos.y * 0.1)), { color: def.color || '#ff6a1a', radius: radius * 1.6, power: 1.5 + k });
+        g.vfx.lightning(p, { color: '#fff', count: 6, radius: radius * 0.6, height: 16 });
+        g.areaDamage(c, p, radius, dmg, 1.6 + k);
+        c.ki = 0; if (g.onDrained) { c.drainedT = 0; g.onDrained(c); }  // the price: bone dry
+        g.slowmo(0.22, 0.4); g.world.punch(0.6); g.world.shake(2.2 + k); g.audio.boom(1.4, c.pos);
+        if (g.hud && g.isHuman(c)) g.hud.flashScreen(def.color || '#ff6a1a', 0.2);
+      }
+    }
+  },
+
+  // MIND CONTROL — channel onto a foe and their will folds: they fight for YOU for a while.
+  // (Works on any bot. Future: police/military/pedestrians when the city layer lands.)
+  mindcontrol(c, def, st, g, inp) {
+    if (st.victim) {                                     // maintain the leash
+      const v = st.victim;
+      st.t -= inp.dt;
+      if (!v.alive || st.t <= 0) {
+        v.team = st.oldTeam; v._controlled = false; st.victim = null;
+        g.vfx.ring(v.pos.clone().setY(5), { color: '#c9cfd9', r0: 6, r1: 1, life: 0.3 });
+      } else if (Math.random() < 0.2) {
+        g.particles.spawn({ x: v.pos.x, y: v.pos.y + 9.5, z: v.pos.z, vx: 0, vy: 3, vz: 0, life: 0.4, size: 1.8, color: [def.color || '#7fd4ff', '#fff'], drag: 1, shrink: true });
+      }
+    }
+    if (inp.pressed && ready(c, def, st) && !st.victim) {
+      const foe = g.coneFoe(c, def.range || 42, def.arc || 0.7);
+      if (foe && foe.ai && !foe._controlled && foe.invuln <= 0) {     // minds only — humans keep theirs
+        pay(c, def, st);
+        st.victim = foe; st.oldTeam = foe.team; st.t = def.dur || 6;
+        foe.team = c.team; foe._controlled = true;
+        foe.ai._mem = 0; foe.ai._ls = null;                            // forget everything they knew
+        g.vfx.ring(foe.pos.clone().setY(foe.pos.y + 9), { color: def.color || '#7fd4ff', r0: 1, r1: 6, life: 0.4 });
+        g.audio.teleport(foe.pos); g.audio.zap(180, foe.pos);
+        if (g.hud && g.isHuman(c)) g.hud.damageNumber(foe.pos, 'DOMINATED', def.color || '#7fd4ff', true);
+      } else if (g.isHuman(c) && g.hud) g.hud.feed('No mind in reach', '#8b8577');
+    }
+  },
+
   // Proximity mines — plant up to `max` at your aim; they arm, blink, and erase whoever steps close.
   mine(c, def, st, g, inp) {
     st.list = st.list || [];

@@ -53,6 +53,7 @@ export class World {
     this._buildLights();
     this._buildSky();
     this._cityBits = [];                 // meshes outside the arena group (trees, lawns) — tracked for city rebuilds
+    this.doors = [];                     // every building entrance the tiles registered — the interior system's way in
     this._crackTex = this._crackTexture();
     this.plan = thresholdPlan();         // the flagship WHITE CITY ships as the boot theater
     this._buildArena();
@@ -481,6 +482,7 @@ export class World {
   // ---------------- PROCEDURAL CITIES (the world sheet) ----------------
   // Tear the current city down to bare terrain systems, then raise a new one from a plan.
   _teardownCity() {
+    this.doors = [];
     // ⚠ MATERIALS LEAK IF YOU ONLY DISPOSE GEOMETRY. Every rebuild allocates a fresh ground,
     // wall, water, quay and lamp material, plus ONE MeshBasicMaterial per building for its crack
     // overlay — dozens per city. Rebuilding 7 cities in a row took a soak from 6.4ms to 48.6ms
@@ -603,7 +605,9 @@ export class World {
     this._buildRelief(plan);
     this._padCells(plan);
     // THE TILES — every cell raised by its type builder
+    this.doors = [];                       // the tiles re-register every entrance
     const { treeSpots } = buildTiles(this, g, plan, rng);
+    const M = ((plan.metric && plan.metric.humanH) || 9.6) / 9.6;   // the METRIC — people size, not map size
     // STREETLIGHTS FOLLOW THE ROAD GRAPH. They used to be stamped at every interior lattice point
     // regardless of whether a road was there — which is how a village ended up with lamp posts
     // standing in the middle of a ploughed field. A lamp needs a METALLED road and a junction.
@@ -614,8 +618,10 @@ export class World {
       lampSpots.push([-A + k * K + 6 * S, -A + j * K + 6 * S]);
     }
     if (lampSpots.length) {
-      const poleGeo = new THREE.CylinderGeometry(0.35 * S, 0.5 * S, 32 * S, 6); poleGeo.translate(0, 16 * S, 0);
-      const headGeo = new THREE.SphereGeometry(1.15 * S, 8, 6); headGeo.translate(0, 32.8 * S, 0);
+      // ⚠ THE METRIC, not the cell dial: a streetlight is a human-scale object. It used to scale
+      // with S, so a 240u-cell city had 80u lamp posts towering over its own buildings.
+      const poleGeo = new THREE.CylinderGeometry(0.35 * M, 0.5 * M, 32 * M, 6); poleGeo.translate(0, 16 * M, 0);
+      const headGeo = new THREE.SphereGeometry(1.15 * M, 8, 6); headGeo.translate(0, 32.8 * M, 0);
       this._lampMat = this._lampMat || new THREE.MeshStandardMaterial({ color: '#fff2cc', emissive: '#ffca7a', emissiveIntensity: 0.15, roughness: 0.4 });
       const poleMat = new THREE.MeshStandardMaterial({ color: '#4a463c', roughness: 0.7, metalness: 0.4 });
       const poles = new THREE.InstancedMesh(poleGeo, poleMat, lampSpots.length);
@@ -635,7 +641,7 @@ export class World {
     const nCars = edges.length ? Math.min(plan.rural ? 3 : 18, Math.max(2, Math.round(edges.length * 0.45))) : 0;
     for (let i = 0; i < nCars; i++) {
       const [alongX, er, ec, cls] = edges[(rng() * edges.length) | 0];
-      const kerb = (ROAD[cls].width * S) / 2 - 4.5 * S;                       // just inside the gutter
+      const kerb = (ROAD[cls].width * S) / 2 - 4.5 * M;                       // just inside the gutter
       const off = (rng() < 0.5 ? -1 : 1) * kerb;
       const t = 0.18 + rng() * 0.64;                                          // somewhere along the block
       let x, z;
@@ -644,7 +650,7 @@ export class World {
       if (plan.water && x > this.waterX - 12 * S) continue;
       const m = new THREE.Mesh(this._carGeo, this._carPaints[i % this._carPaints.length]);
       m.position.set(x, this.heightAt(x, z), z); m.rotation.y = alongX ? Math.PI / 2 : 0; m.castShadow = false; m.receiveShadow = true;
-      if (S !== 1) m.scale.setScalar(S);
+      if (M !== 1) m.scale.setScalar(M);          // cars are people-sized — the METRIC, never the cell dial
       g.add(m);
       this.cars.push({ mesh: m, x, z, hp: 30, maxHp: 30, dead: false, paint: this._carPaints[i % this._carPaints.length] });
     }

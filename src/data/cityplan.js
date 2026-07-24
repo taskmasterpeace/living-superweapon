@@ -463,6 +463,10 @@ export function popLabel(popType, pop) {
 // `opts` is the MAP MAKER's override channel: { N, waterCols, landmarks } — the editor can resize
 // the grid, move the coastline, and pin a structure without the sheet having to know about it.
 export function generatePlan(city, seed = 1, opts = {}) {
+  // THE METRIC CONTRACT — how tall the PEOPLE are (world units; 9.6u = today's 1.8m heroes).
+  // Distinct from `cell` (map footprint): doors, storey heights, lamps and cars derive from this,
+  // so a game with taller or shorter characters gets architecture proportioned to THEM.
+  const humanH = Math.max(4.8, Math.min(19.2, opts.humanH || 9.6));
   const rng = mulberry((seed * 7919 + city.pop % 997 + city.name.length * 31) | 0);
   const popType = opts.popType || city.popType;
   const N = Math.max(2, Math.min(9, opts.N || GRID_BY_POP[popType] || 5));
@@ -471,6 +475,7 @@ export function generatePlan(city, seed = 1, opts = {}) {
   const wantWater = types.includes('seaport') || types.includes('resort');
   const waterCols = Math.max(0, Math.min(N - 1, opts.waterCols != null ? opts.waterCols : (wantWater ? 1 : 0)));
   const plan = {
+    metric: { humanH },
     name: city.name, country: city.country, popType, popLabel: popLabel(popType, city.pop),
     types: city.types, crime: city.crime, safety: city.safety, seed, N,
     cell, scale: cell / CELL, arena: N * cell / 2,
@@ -741,6 +746,7 @@ export function applyPlanEdits(plan, edits) {
 // (world.js keeps its bespoke builder for this one; the planner just needs its card + districts).
 export function thresholdPlan() {
   return {
+    metric: { humanH: 9.6 },
     name: 'THE WHITE CITY', country: 'Threshold Treaty Zone', popType: 'City', popLabel: 'CITY · POP 1.2M',
     types: ['Commercial', 'Industrial', 'Military'], crime: 38, safety: 62, seed: 0, N: 5, arena: 240,
     water: true, waterCols: 1, flagship: true, cells: null,
