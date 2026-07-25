@@ -4,6 +4,29 @@ import { rand, TAU, lerp } from '../core/util.js';
 
 const addMat = (color, opacity = 1) => new THREE.MeshBasicMaterial({ color, transparent: true, opacity, blending: THREE.AdditiveBlending, depthWrite: false });
 
+
+// ⚠ THE VFX FINITE LAW — the visual twin of audio's `fin()`.
+//
+// Every primitive below builds geometry (or a light) straight from `pos`. A single non-finite
+// coordinate becomes an all-NaN BufferAttribute, and because these meshes are frustum-culled
+// three.js computes a bounding sphere from it and reports
+// `computeBoundingSphere(): Computed radius is NaN` — a diagnostic that survives long after
+// the transient position that caused it is gone, which is exactly why it was so hard to trace.
+//
+// One gate, at the door, for every present and future caller. In dev it NAMES the caller so
+// the upstream NaN gets fixed instead of merely absorbed.
+const okPos = (p, where) => {
+  if (p && Number.isFinite(p.x) && Number.isFinite(p.y) && Number.isFinite(p.z)) return true;
+  if (!okPos._warned) okPos._warned = new Set();
+  const site = (new Error().stack || '').split(String.fromCharCode(10))[3] || '?';
+  const key = where + site;
+  if (!okPos._warned.has(key)) {
+    okPos._warned.add(key);
+    console.warn('[VFX] non-finite position rejected by ' + where + ' <-' + site.trim());
+  }
+  return false;
+};
+
 export class VFX {
   constructor(world, particles) {
     this.world = world; this.scene = world.scene; this.P = particles;
@@ -40,6 +63,7 @@ export class VFX {
   returnLight(l) { if (!l) return; l.intensity = 0; if (!this.lightPool.includes(l)) this.lightPool.push(l); }   // never touch .visible, never remove from the scene
 
   flash(pos, color = '#fff', size = 6, life = 0.18) {
+    if (!okPos(pos, 'flash')) return;
     const m = new THREE.Mesh(this._sphere, addMat(color, 1));
     m.position.copy(pos); m.scale.setScalar(size * 0.4); this.scene.add(m);
     const l = this.borrowLight(color, 6, size * 6);
@@ -59,6 +83,7 @@ export class VFX {
 
   // Big energy explosion: flash + fireball + smoke + light + sparks (+ optional scorch)
   explode(pos, opt = {}) {
+    if (!okPos(pos, 'explode')) return;
     const color = opt.color || '#ffd15a', color2 = opt.color2 || '#ff5a2a';
     const radius = opt.radius || 12, power = opt.power || 1;
     this.flash(pos, '#ffffff', radius * 0.3, 0.14);
@@ -100,6 +125,7 @@ export class VFX {
 
   // Ground shockwave: expanding flat ring + energy dome + dust + lightning skirt.
   shockwave(pos, opt = {}) {
+    if (!okPos(pos, 'shockwave')) return;
     const color = opt.color || '#7fe0ff', power = opt.power || 1, maxR = opt.radius || 28;
     // flat ring
     const ring = new THREE.Mesh(this._ring, addMat(color, 0.9));
@@ -132,6 +158,7 @@ export class VFX {
 
   // Branching lightning bolts from a point, flicker briefly.
   lightning(pos, opt = {}) {
+    if (!okPos(pos, 'lightning')) return;
     const color = opt.color || '#bfefff', count = opt.count || 5, radius = opt.radius || 20, height = opt.height || 16;
     // one fixed-size buffer per strike, refilled in place on each flicker (no per-flicker allocations)
     const arr = new Float32Array((count * 5 + 3 * 6) * 6);
@@ -176,6 +203,7 @@ export class VFX {
 
   // generic expanding ring (air / hit)
   ring(pos, opt = {}) {
+    if (!okPos(pos, 'ring')) return;
     const color = opt.color || '#fff', r0 = opt.r0 || 1, r1 = opt.r1 || 10, life = opt.life || 0.35, y = opt.y == null ? pos.y : opt.y, flat = opt.flat;
     const m = new THREE.Mesh(this._ring, addMat(color, opt.opacity == null ? 0.9 : opt.opacity));
     if (flat) m.rotation.x = -Math.PI / 2; else m.lookAt && (m.quaternion.copy(this.world.camera.quaternion));
@@ -191,11 +219,13 @@ export class VFX {
   // RESIDUE (visual contract): what the world KEEPS after an effect. The decal tint is the
   // ability's own material, not a global black — an ice burst leaves frost, acid leaves sludge.
   residue(pos, kind = 'scorch', radius = 8) {
+    if (!okPos(pos, 'residue')) return;
     if (kind === 'none') return;
     const TINT = { scorch: '#0b0906', frost: '#cfeaff', sludge: '#7f8f28', debris: '#4a443c', crater: '#0b0906', cloud: '#2a2a2e' };
     this.scorch(pos, radius, TINT[kind] || '#0b0906');
   }
   scorch(pos, radius = 8, tint = '#000') {
+    if (!okPos(pos, 'scorch')) return;
     const mat = new THREE.MeshBasicMaterial({ color: tint, transparent: true, opacity: 0.55, depthWrite: false });
     mat.color.multiplyScalar(0.2);
     const m = new THREE.Mesh(this._decalGeo, mat);
@@ -219,6 +249,7 @@ export class VFX {
 
   // comic-style impact star (billboard, draws over everything)
   impactStar(pos, size, color = '#fff', life = 0.2) {
+    if (!okPos(pos, 'impactStar')) return;
     const mat = new THREE.SpriteMaterial({ map: this._impactTex(), color, transparent: true, opacity: 1, blending: THREE.AdditiveBlending, depthWrite: false, depthTest: false, rotation: rand(0, TAU) });
     const s = new THREE.Sprite(mat); s.position.copy(pos); s.scale.setScalar(size * 0.3); this.scene.add(s);
     let t = 0; const spin = rand(-3, 3);
@@ -227,6 +258,7 @@ export class VFX {
 
   // VIOLENT melee impact: white star + colored star + spray + shards + ring + shake
   impact(pos, dir, opt = {}) {
+    if (!okPos(pos, 'impact')) return;
     const color = opt.color || '#ffffff', power = opt.power || 1;
     this.impactStar(pos, 7 + power * 6, '#ffffff', 0.16);
     if (power > 0.9) this.impactStar(pos, 5 + power * 5, color, 0.24);
@@ -247,3 +279,4 @@ export class VFX {
   }
 }
 function easeOut(k) { return 1 - Math.pow(1 - k, 3); }
+

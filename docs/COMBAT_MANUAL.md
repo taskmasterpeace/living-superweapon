@@ -1218,3 +1218,38 @@ open, the codex renders all seven sections including its `SEEN AS` visual line, 
 codex renders every type, and a real match produces the full KMK 9 broadcast with the tale of
 the tape. Battery 52×364 + 102 catalog powers + a 15-second rumble: **0 errors, 0 orphaned
 loops, roster/tile/visual validators all zero.**
+
+## §30 · NaN <= NaN IS FALSE (2026-07-25) — the two-day bug, closed
+
+The backlog's `computeBoundingSphere(): Computed radius is NaN` had **two** causes. The first
+(the bow's missing `dt`) is §23. This is the second, and it is the one worth remembering.
+
+The altitude plumb line (§27) writes a persistent 56-vertex buffer every frame, skipping
+degenerate dashes:
+
+```js
+const y0 = Math.max(0, d - scroll), y1 = Math.min(h, y0 + 26);
+if (y1 <= y0) continue;          // <- does NOT stop a NaN
+```
+
+`Math.max(0, NaN)` is NaN. **`NaN <= NaN` is `false`.** So when `scroll` went non-finite for a
+frame, the skip did not fire, NaN went into a buffer that lives for the life of the fighter,
+and it stayed there long after the transient that caused it — which is precisely why it was
+unreproducible. Guarding the *inputs* could never have caught it.
+
+**THE RULE: validate what you WRITE, not what went in.** The write now checks the two values it
+actually stores, and the skip is `if (!(y1 > y0))` — NaN-safe — instead of `if (y1 <= y0)`,
+which is not. Any comparison-based guard on a value that could be NaN needs the same inversion.
+
+**How to find the next one.** Three's message names no object. Hook `console.error`; when it
+fires, walk the whole scene graph *at that instant* and report the first geometry holding a
+non-finite position. That named `/Scene/Group/LineSegments`, depth 2, 56 vertices, first bad
+index 1 — the tether's first Y — in one run. Patching `computeBoundingSphere` had failed twice,
+because by the time it is called the frame that wrote the NaN is over.
+
+**THE VFX FINITE LAW**, added alongside as the visual twin of audio's `fin()`: all nine `vfx`
+primitives that build geometry from a position now reject a non-finite one at the door and, in
+dev, print the calling site. A NaN position must never reach a BufferAttribute.
+
+Verified: the full combined run — 52×364 battery, 102 catalog powers, a 20-second rumble, and
+the async tail — reports **0 NaN warnings, 0 thrown errors, 0 orphaned loops**.

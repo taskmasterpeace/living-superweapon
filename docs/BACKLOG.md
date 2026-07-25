@@ -126,43 +126,46 @@ Still open from that lane: bots don't navigate doorways yet, and beams ignore in
   could drive neighbouring-city consistency; if it's scaffolding, ignore the column.
 - Roster size — "we might have too many fighters." Needs a differentiation pass, not a cull.
 
-### OPEN — ONE CAUSE FIXED, A SECOND STILL LIVE (2026-07-25)
-`THREE.BufferGeometry.computeBoundingSphere(): Computed radius is NaN` fired 48× during ONE
-synthetic stress run (spawning all 52 rivals with `_remove()` while also firing every slot of
-every kit). The old suspect — a verlet tentacle updated after its owner is spliced — was
-**wrong**. The real chain, found by re-running that exact battery:
+### ~~OPEN~~ ✅ CLOSED — BOTH CAUSES FOUND AND FIXED (2026-07-25)
+`THREE.BufferGeometry.computeBoundingSphere(): Computed radius is NaN` — 48× in one stress run,
+carried here for two days with the guess "suspect a tentacle chain". That guess was wrong, and
+so was my first fix's claim to be complete. There were **two** causes.
 
-1. a caller fires a slot without `inp.dt` (a test harness, and any future replay/net frame),
-2. `bow` integrates the draw as `st.drawT + inp.dt / drawTime` → **NaN**,
-3. release does `setLength(lerp(90, speedMax, NaN))` → an arrow with a **NaN position**,
-4. three.js computes that mesh's bounding sphere → the warning, 48 times,
-5. and the arrow's impact reached `audio.boom` → the sample bank → a **non-finite AudioParam,
-   which THROWS inside the frame loop**.
+**Cause 1 — the bow.** A caller firing a slot without `inp.dt` made `bow`'s draw fraction NaN,
+which made `setLength(lerp(90, speedMax, NaN))`, which made an arrow at a NaN position. Fixed
+by three laws applied where each was missing: `samples.js` coerces every AudioParam through
+`fin()`, `bow` clamps its draw at source, and `runSlot` floors `inp.dt`.
 
-Fixed by restating three laws the project already had, in the one place each was missing:
-`samples.js` now coerces every AudioParam through `fin()` (the synth bodies always did; the
-sample layer was added later and never got it) · `bow` clamps its draw fraction at source
-(the same law `charge`'s `c01` learned) · `runSlot` floors `inp.dt` so no caller can inject
-NaN time. Verified for THAT cause: the identical dt-less battery over 52×364 yields **0 NaN
-projectiles and 0 bounding-sphere warnings** immediately after the fix.
+**Cause 2 — the plumb line, and it is the more instructive one.** The altitude tether writes a
+persistent 56-vertex buffer every frame. Its dash offset is
+`scroll = (game.time * 22) % 50`, and the loop skipped degenerate segments with:
 
-⚠ **BUT THE WARNING RETURNED** once the Tier-2/Tier-3 systems landed, so there is a
-SECOND source and it is **not fixed**. What is known, so the next person does not re-walk
-this ground:
+```js
+const y0 = Math.max(0, d - scroll), y1 = Math.min(h, y0 + 26);
+if (y1 <= y0) continue;          // <- this does NOT stop a NaN
+```
 
-- It is a three.js **diagnostic**, not an exception. The full stress run — 52×364 slots,
-  all 102 catalog powers, a 15-second six-fighter rumble — completes with **0 thrown
-  errors, 0 orphaned audio loops** and all three validators at zero. Nothing is visibly wrong.
-- It fires only under the **combined** stress run (roster battery → catalog sweep → rumble),
-  3–4 times. Neither the rumble alone nor the catalog sweep alone reproduces it.
-- **Ruled out:** scanning every geometry in the scene after each catalog power finds no
-  persistent NaN; the same scan through a 12-second rumble finds none; no fighter ends a
-  run with a NaN position.
-- **Hardened anyway** (correct regardless of cause): the plumb-line tether now refuses to
-  write a non-finite value into its persistent buffer and SCRUBS the buffer when hiding, and
-  the rain buffer does the same. Neither was the culprit.
-- **Instrumentation that did NOT catch it:** patching `computeBoundingSphere` on the
-  prototype that owns it, then checking the position attribute on entry. The warning still
-  fired with the hook installed and caught nothing — which points at a geometry whose
-  owner is not in `game.scene` at the moment of the call (a detached or mid-dispose object),
-  or a second THREE module instance. **That is the thread to pull next.**
+**`Math.max(0, NaN)` is NaN, and `NaN <= NaN` is `false`** — so a NaN sails straight past a
+comparison-based skip and lands in a buffer that lives for the life of the fighter. The value
+then outlives whatever transient produced it, which is exactly why it was unreproducible: the
+cause was long gone by the time anything looked.
+
+**The rule that came out of it: VALIDATE WHAT YOU WRITE, NOT WHAT WENT IN.** Guarding the
+inputs (`Number.isFinite(h)`, `Number.isFinite(gy)`) was not enough and never could be. The
+write now checks the two values it actually stores, and the skip is `if (!(y1 > y0))` — which
+IS NaN-safe — rather than `if (y1 <= y0)`, which is not.
+
+**How it was finally caught**, since three's own message ("the position attribute is likely to
+have NaN values") names no object: hook `console.error`, and when the message fires, walk the
+entire scene graph *at that instant* and report the first geometry holding a non-finite
+position. It named `/Scene/Group/LineSegments`, depth 2, 56 vertices, first bad index 1 —
+the tether's first Y. Patching `computeBoundingSphere` itself had failed twice because the
+offending frame had already passed.
+
+**Hardening added alongside** (correct regardless of cause): a VFX FINITE LAW — the visual twin
+of audio's `fin()` — gating all nine `vfx` primitives that build geometry from a position, with
+a dev warning that names the calling site; plus the same output-validation on the rain buffer.
+
+Verified: the full combined stress run — 52×364 roster battery, all 102 catalog powers, a
+20-second six-fighter rumble, plus the async tail — now reports **0 NaN warnings, 0 thrown
+errors, 0 orphaned audio loops**, and the game clock never goes non-finite.

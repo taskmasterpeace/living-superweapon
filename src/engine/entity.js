@@ -1627,14 +1627,23 @@ export class Fighter {
         if (h > 14 && seen && Number.isFinite(h) && Number.isFinite(gy)) {
           p.tether.visible = true;
           const arr = p.tether.geometry.attributes.position.array;
-          const scroll = (this.flying && Math.abs(this.vel.y) > 4) ? (game ? (game.time * 22) % 50 : 0) : 0;
+          // ⚠ VALIDATE WHAT IS WRITTEN, NOT WHAT WENT IN. This is the bug that produced
+          // `computeBoundingSphere(): Computed radius is NaN` for two days. If `scroll` is ever
+          // non-finite then `y0 = Math.max(0, NaN)` is NaN, and the guard below it —
+          // `if (y1 <= y0) continue` — does NOT fire, because **NaN <= NaN is false**. A NaN
+          // sails straight past a comparison-based skip and lands in a buffer that lives for the
+          // life of the fighter. Checking the inputs is not enough; check the OUTPUT.
+          const sc = (this.flying && Math.abs(this.vel.y) > 4 && game && Number.isFinite(game.time)) ? (game.time * 22) % 50 : 0;
+          const scroll = Number.isFinite(sc) ? sc : 0;
           let n = 0;
           for (let d = 0; d < h && n < 28; d += 50) {
             const y0 = Math.max(0, d - scroll), y1 = Math.min(h, y0 + 26);
-            if (y1 <= y0) continue;
+            if (!(y1 > y0)) continue;                     // NOT `y1 <= y0` — that lets NaN through
+            const a0 = y0 - h, a1 = y1 - h;
+            if (!Number.isFinite(a0) || !Number.isFinite(a1)) continue;
             const i = n * 6;
-            arr[i] = 0; arr[i + 1] = y0 - h; arr[i + 2] = 0;
-            arr[i + 3] = 0; arr[i + 4] = y1 - h; arr[i + 5] = 0;
+            arr[i] = 0; arr[i + 1] = a0; arr[i + 2] = 0;
+            arr[i + 3] = 0; arr[i + 4] = a1; arr[i + 5] = 0;
             n++;
           }
           for (let k = n; k < 28; k++) { const i = k * 6; arr[i] = arr[i + 1] = arr[i + 2] = arr[i + 3] = arr[i + 4] = arr[i + 5] = 0; }
@@ -1711,6 +1720,7 @@ export class Fighter {
 
   _sync() { /* obj.position is this.pos (same ref); nothing extra */ }
 }
+
 
 
 
