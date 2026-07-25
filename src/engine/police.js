@@ -82,6 +82,7 @@ export class PoliceSystem {
   }
   reset() {
     this.heat.clear();
+    for (const c of this.cruisers) this._sirenOff(c);          // a loop outlives the scene unless you stop it
     for (const c of this.cruisers) { this.g.scene.remove(c.grp); c.grp.traverse(o => { if (o.geometry && o.geometry !== this.g.world._carGeo) o.geometry.dispose(); if (o.material && !o.material._shared) o.material.dispose(); }); }
     this.cruisers.length = 0;
     this.cops.length = 0;           // the fighters themselves are cleared by startMode
@@ -90,6 +91,34 @@ export class PoliceSystem {
   get active() { return !!(this.g.mode && (this._forced || this.g.modeId !== 'training') && !(this.g.netplay && this.g.netplay.active)); }
 
   heatOf(f) { return this.heat.get(f) || 0; }
+
+  // ---- THE VOICE OF THE LAW (manual §22) -------------------------------------------------
+  // Everything the police say is SYNTHESISED speech through a radio chain — no words, just the
+  // register: clipped traffic over the air (`radio`) or a shouted order through a hailer
+  // (`command`). Rate-limited by the soundscape's own voice governor, positional through the
+  // same falloff as every other sound, so you hear the units NEAR you and not the whole city.
+  _say(pos, emotion, opts = {}) {
+    const ss = this.g.soundscape; if (!ss || !ss.say) return;
+    try { ss.say(pos, emotion, { radio: true, gain: 0.34, ...opts }); } catch (e) {}
+  }
+  // dispatch: heard as a transmission from nowhere in particular (it is the radio, not a person)
+  _dispatch(pos, urgent = false) {
+    try { this.g.audio.squelch(pos, true); } catch (e) {}
+    this._say(pos, 'radio', { urgent, speaker: 'woman', gain: 0.3 });
+  }
+  // the order: the hailer chirp, then the shout. This is the sound of being TOLD to stop.
+  _order(pos) {
+    try { this.g.audio.hailer(pos); } catch (e) {}
+    this._say(pos, 'command', { urgent: true, gain: 0.42, delay: 0.26 });
+  }
+  // one wailing light bar per vehicle, created live and reaped on stand-down
+  _sirenOn(cr) {
+    if (cr._siren) return;
+    try { cr._siren = this.g.audio.sustain('siren', cr.grp.position); } catch (e) { cr._siren = null; }
+  }
+  _sirenOff(cr) {
+    if (cr._siren) { try { cr._siren.stop(); } catch (e) {} cr._siren = null; }
+  }
   // THE LADDER (Robert's ruling 2026-07-24): ★ beat cops (35) → ★★ patrol backup (90) →
   // ★★★ TACTICAL/SWAT (160) → ★★★★ THE FEDS (240, black Suburbans + automatics) →
   // ★★★★★ the MILITARY (340) → ★★★★★★ A SANCTIONED LSW (460) — a registered superweapon of the
@@ -144,6 +173,12 @@ export class PoliceSystem {
     this._lastHarmT = this.g.time;
     if (this._respT >= 900) { this._respT = -1; this._announced = false; }   // the "unanswered" call is now answered
     if (this.g.hud && this.g.isHuman(killer)) this.g.hud.feed('🚔 OFFICER DOWN — the response hardens', '#ff6a5a');
+    // OFFICER DOWN goes out over the air, and a nearby unit shouts it aloud (not on the radio —
+    // the man next to him is yelling). Two registers, one event: that is what sells it.
+    const at = killer && killer.pos;
+    this._dispatch(at, true);
+    const near = this.cops.find(f => f.alive);
+    if (near) this._say(near.pos, 'panic', { radio: false, gain: 0.4, urgent: true, delay: 0.35 });
   }
   // HURTING an officer (not just killing) is a crime that escalates on its own — softer than a KO,
   // but it books heat and makes them radio for backup sooner.
@@ -153,6 +188,11 @@ export class PoliceSystem {
     this._lastHarmT = this.g.time;
     if (this._respT >= 900) { this._respT = -1; this._announced = false; }        // shooting at cops answers the call too
     if (this.cops.length) this._reinforceT = Math.min(this._reinforceT, 3.5);     // "shots fired, requesting backup"
+    // ...and it is AUDIBLE: one "shots fired" transmission per 2.5s however fast the hits land.
+    if (this.cops.length && (this._fireCallT || 0) < this.g.time) {
+      this._fireCallT = this.g.time + 2.5;
+      this._dispatch(src.pos, true);
+    }
   }
 
   // --- what the CROWD knows, for the pedestrian layer -------------------------------------
@@ -213,6 +253,7 @@ export class PoliceSystem {
           : lvl >= 3 ? 'SPECIAL RESPONSE AUTHORIZED' : 'ADDITIONAL UNITS EN ROUTE';
         if (g.hud) g.hud.announce(`WANTED ${'★'.repeat(lvl)}`, esc, lvl >= 6 ? '#ffd24a' : lvl >= 5 ? '#9bd07a' : lvl >= 4 ? '#cfd6e4' : '#5aa0ff');
         try { g.audio.siren(V.pos, Math.min(3, lvl)); } catch {}
+        this._dispatch(V.pos, true);            // every new rung is called in over the air
         if (g.news && lvl >= 3) {
           const head = lvl >= 6 ? 'SANCTIONED ASCENDANT DEPLOYED — ' : lvl >= 5 ? 'MILITARY DEPLOYED — ' : lvl >= 4 ? 'FEDERAL AGENTS ON SCENE — ' : 'SWAT AUTHORIZED — ';
           g.news.highlight('police', head + g.world.districtAt(V.pos.x, V.pos.z), { dur: 2.4, priority: lvl >= 5 ? 3 : 2, focus: V.pos });
@@ -231,10 +272,17 @@ export class PoliceSystem {
       const blink = (g.time * 4) % 1 < 0.5;
       c.barR.material.emissiveIntensity = blink ? 2.6 : 0.3;
       c.barB.material.emissiveIntensity = blink ? 0.3 : 2.6;
+      // THE WAIL: driven at full while rolling in, easing back once parked — the lights stay on
+      // as long as there is a villain, and so does the note (loop law: set every live frame).
+      if (c._siren) c._siren.set(c.arrived ? 0.55 : 1, c.grp.position);
     }
     this.cops = this.cops.filter(f => g.entities.includes(f));
     // no villain → units stand down (officers jog off and vanish)
     if (!V) {
+      if (this._respT !== -1 || this.cops.length) {                 // the moment it goes quiet
+        for (const c of this.cruisers) this._sirenOff(c);
+        if (this.cops.length) this._dispatch(this.cops[0].pos, false);   // "all units, stand down"
+      }
       this._respT = -1; this._announced = false; this._lswSent = false;
       for (const f of this.cops) if (!f._leaving) { f._leaving = true; f._leaveT = 3.2; }
       for (const f of this.cops) if (f._leaving && f.alive) { f._leaveT -= dt; if (f._leaveT <= 0) { f.noRespawn = true; f._remove = true; } }
@@ -249,12 +297,14 @@ export class PoliceSystem {
       if (this._corruptionIgnores()) {
         this._respT = 999; this._announced = true;
         if (g.hud) g.hud.feed('📻 The call goes unanswered.', '#8b8577');
+        try { g.audio.squelch(V.pos, true); g.audio.squelch(V.pos, false); } catch (e) {}   // opened, closed, nothing said
         return;
       }
       this._respT = this._responseDelay();
       if (g.hud && !this._announced) {
         this._announced = true;
         g.hud.announce('🚨 WANTED', `${V.name} — units dispatched (ETA ${Math.round(this._respT)}s)`, '#5aa0ff');
+        this._dispatch(V.pos, true);                                 // the call goes out over the air
         g.hud.feed(`🚨 ${V.name} flagged — response en route`, '#5aa0ff');
         if (g.news) g.news.highlight('police', 'POLICE DISPATCHED — ' + g.world.districtAt(V.pos.x, V.pos.z), { dur: 2.2, priority: 1, focus: V.pos });
         g.matchLog.push({ t: g.matchT, type: 'police', v: V.name, vid: V.def.id, at: g.world.districtAt(V.pos.x, V.pos.z) });
@@ -303,7 +353,9 @@ export class PoliceSystem {
     g.scene.add(grp);
     const cr = { grp, barR, barB, t: 0, from: new THREE.Vector3(from[0], 0, from[1]), to: stop, arrived: false };
     this.cruisers.push(cr);
-    try { g.audio.siren({ x: from[0], z: from[1] }, 2); } catch {}
+    try { g.audio.siren({ x: from[0], z: from[1] }, 2); } catch {}   // the two-whoop announce...
+    this._sirenOn(cr);                                              // ...then the wail holds until stand-down
+    this._dispatch({ x: from[0], z: from[1] }, true);
   }
   _deploy(cruiser, V) {
     const g = this.g;
@@ -324,6 +376,9 @@ export class PoliceSystem {
     g.world.cars.push({ mesh: cruiser.grp, x: cruiser.grp.position.x, z: cruiser.grp.position.z, hp: 30, maxHp: 30, dead: false, paint: cruiser.grp.children[0].material });
     if (g.hud) g.hud.feed(`${lvl >= 5 ? '🪖 The Guard is' : lvl >= 4 ? '🕶 Federal agents are' : '🚔 Units'} on scene — ${V.name} is the target`, lvl >= 5 ? '#9bd07a' : lvl >= 4 ? '#cfd6e4' : '#5aa0ff');
     if (g.news) g.news.highlight('police', 'UNITS ON SCENE — ' + g.world.districtAt(cruiser.grp.position.x, cruiser.grp.position.z), { dur: 2.2, priority: 1, focus: cruiser.grp.position });
+    // ON SCENE: the hailer order at the villain, then units calling their positions.
+    this._order(cruiser.grp.position);
+    this._say(cruiser.grp.position, 'radio', { delay: 0.9 });
   }
 
   // ★★★★★★ — THE STATE'S OWN SUPERWEAPON. In a country whose sheet says superweapons are a real,

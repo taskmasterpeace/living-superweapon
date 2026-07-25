@@ -825,3 +825,74 @@ Verified headless: capacity ladder measured 1–10; SARGE refused the car WITH t
 line; KANO/RAGE car ratios exact to the formula; SOL refused the plane, RAGE hoisted
 and threw it (boom 1.2, craters, carry cleared); person-throw asymmetry measured both
 directions; 52 heroes × 364 slots, 0 errors, 0 orphaned audio loops.
+
+## §22 · THE VOICE OF THE LAW (2026-07-25) — police audio
+
+The police were VISIBLE before they were AUDIBLE: cruisers rolled in, officers deployed,
+the wanted stinger fired — but the response itself made almost no sound of its own. Two
+one-shot siren whoops on dispatch, and then a firefight with no radio in it. This is the
+audio layer for the whole ladder, built on the machinery that already exists (the bus
+structure, the positional falloff, the formant voice synth, the sustain contract).
+
+### The light bar is a LOOP (`audio.sustain('siren')`)
+
+A siren is a sustained source, so it follows the loop law (§20): created already fading in,
+`set(I, pos)` every live frame, `stop()` fades out, registered in `_sus` so the watchdog
+reaps it if a caller forgets. The synth is a square oscillator whose frequency is swept by
+a 1.15 Hz triangle LFO (±180 Hz around ~760) through a lowpass, plus a 58 Hz sawtooth
+engine bed under it so a moving cruiser has mass. `police._sirenOn/_sirenOff` are the ONLY
+create/stop paths; the wail runs at full while a vehicle is rolling in and eases to 0.55
+once it parks, because the lights stay on as long as there is a villain.
+
+- ⚠ Stopped in THREE places or it outlives the fight: stand-down (the moment `villain()`
+  goes null), `reset()` (before the scene teardown — a loop does not care that its mesh is
+  gone), and the audio sweep as a backstop.
+- Measured: one loop per vehicle (2 cruisers → `_sus` size exactly 2), RMS 0.024 live,
+  **0.000 after stop**, `_sus` back to 0 on stand-down, 0 orphans after reset + sweep.
+
+### The radio is a FILTER, not a sample (`audio.radioChain`)
+
+`radioChain()` returns the INPUT of a chain — highpass 420 · bandpass 1750 (Q 1.15) ·
+`tanh` waveshaper (speaker clip) · gain → the voice bus — and `soundscape.say(pos, emotion,
+{ radio: true })` routes the bark's envelope into it instead of straight to the bus. So the
+police use the SAME formant voice engine as every civilian; what makes them police is the
+band-limiting, the clipping, and the squelch bracket. Two new bark registers:
+
+- **`radio`** — 3–5 syllables, flat contour, fast: clipped traffic over the air.
+- **`command`** — 1–2 syllables, falling contour, full energy: a shouted order.
+
+`audio.squelch(pos, open)` is the click-and-hiss that brackets a transmission — on its own,
+with no words at all, it already reads as a police radio, which is why an UNANSWERED call
+plays a squelch open and closed with nothing between it. That silence is the sound of a
+corrupt state ignoring you. `audio.hailer(pos)` is the PA feedback chirp (900→2600 Hz
+squeal + a 120 Hz thump) that precedes an order through a loudspeaker.
+
+### What speaks, and when
+
+| Beat | Sound |
+|---|---|
+| Dispatch (the call goes out) | squelch + `radio` traffic, female dispatcher register |
+| The call goes UNANSWERED | squelch open, squelch closed, nothing said |
+| A cruiser appears | the two-whoop announce, then the **wail holds** |
+| Units on scene | `hailer` + a shouted `command` at the villain, then unit traffic |
+| Every new wanted rung | the escalation siren + a called-in transmission |
+| Shots fired at a badge | one "shots fired" transmission per 2.5s, however fast the hits land |
+| **Officer down** | urgent dispatch over the air **and** a nearby unit's un-radioed panic shout |
+| Stand-down | every siren fades out, one last transmission |
+
+Two registers on one event (the radio call AND the man next to him yelling) is what sells
+an officer going down; a single line reads as a notification.
+
+### The laws it keeps
+
+Rate-limited by the soundscape's own voice governor (a firefight cannot mush), positional
+through the same `_pg` falloff as everything else (you hear the units near you, not the
+whole city), every gain coerced through `fin()`, and the one-shot radio chain drops its
+edge to the bus after 3s so a long siege can't pile up filter graphs. Nothing here is a
+sample — there is no honest police-radio recording in the CC0 library, and a generic one
+would be a downgrade (§ the sample bank ruling).
+
+Verified: all five new sounds measurably sound (squelch 0.0016 · hailer 0.0049 · siren
+0.024 · radio voice 0.0074 · command shout 0.0124 RMS); a live ★★ response dispatched 2
+cruisers with 2 live sirens, armed the shots-fired call, jumped heat 123 → 190 on an
+officer down, then stood down to 0 live sirens and 0 orphaned loops.

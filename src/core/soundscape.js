@@ -57,6 +57,9 @@ const BARKS = {
   challenge:{ syl: [2, 4], contour: 'fall',  energy: 0.95, rate: 1.2,  vowels: 'aAoe' },
   pain:     { syl: [1, 1], contour: 'fall',  energy: 0.8,  rate: 0.8,  vowels: 'aAo' },
   awe:      { syl: [1, 2], contour: 'fall',  energy: 0.45, rate: 0.7,  vowels: 'ou' },
+  // THE LAW'S TWO REGISTERS (manual §22): clipped traffic over the air, and a shouted order.
+  radio:    { syl: [3, 5], contour: 'flat',  energy: 0.50, rate: 1.35, vowels: 'aeoAE' },
+  command:  { syl: [1, 2], contour: 'fall',  energy: 1.00, rate: 1.1,  vowels: 'aAo' },
 };
 
 const rnd = (a, b) => a + Math.random() * (b - a);
@@ -379,11 +382,18 @@ export class Soundscape {
     let gain = opts.gain ?? 0.32;
     if (pos) gain *= a._pg(pos, emotion === 'scream' ? 190 : 120);
     if (gain < 0.012) return;                       // too far to bother synthesising
-    this._voiceBark(spk, bark, { gain, delay: opts.delay || 0, bus: opts.bus || 'voice' });
+    // RADIO TRAFFIC: the same voice engine, band-limited and driven, bracketed by squelch —
+    // that bracket is what makes it read as a transmission rather than a person shouting.
+    let chain = null;
+    if (opts.radio) {
+      chain = a.radioChain(1.25);
+      try { a.squelch(pos, true); } catch (e) {}
+    }
+    this._voiceBark(spk, bark, { gain, delay: opts.delay || 0, bus: opts.bus || 'voice', chain });
   }
 
   // The synth itself: glottal source → three formants → envelope.
-  _voiceBark(spk, bark, { gain, delay = 0, bus = 'voice' }) {
+  _voiceBark(spk, bark, { gain, delay = 0, bus = 'voice', chain = null }) {
     const a = this.a, ctx = a.ctx;
     const t0 = a.t + delay;
     const syl = bark.syl[0] + ((Math.random() * (bark.syl[1] - bark.syl[0] + 1)) | 0);
@@ -442,7 +452,7 @@ export class Soundscape {
     // a gentle lowpass keeps it from getting fizzy, and a touch of the raw source adds body
     const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 3800; lp.Q.value = 0.6;
     sum.connect(lp); lp.connect(env);
-    env.connect(a.bus[bus] || a.bus.voice);
+    env.connect(chain || a.bus[bus] || a.bus.voice);
 
     osc.start(t0); osc.stop(t0 + total + 0.12);
     noise.start(t0); noise.stop(t0 + total + 0.12);

@@ -603,6 +603,23 @@ export class AudioBus {
         const og = ctx.createGain(); og.gain.value = f > 200 ? 0.12 : 0.4; o.connect(og); og.connect(out); o.start(); nodes.push(o); }
       const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 900;
       drive = () => {};
+    } else if (kind === 'siren') {
+      // THE LIGHT BAR — a continuous two-tone wail. The old siren() was a couple of one-shot
+      // whoops; a cruiser with its lights on holds the note, so this is a real loop that
+      // fades in on dispatch and out on stand-down (the loop law, manual §20).
+      base = 0.085;
+      const o = ctx.createOscillator(); o.type = 'square'; o.frequency.value = 700;
+      const sweep = ctx.createOscillator(); sweep.type = 'triangle'; sweep.frequency.value = 1.15;   // the wail rate
+      const sg = ctx.createGain(); sg.gain.value = 180;                                              // ±180Hz around 760
+      sweep.connect(sg); sg.connect(o.frequency); sweep.start(); nodes.push(sweep);
+      const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 2100; lp.Q.value = 0.8;
+      o.connect(lp); lp.connect(out); o.start(); nodes.push(o);
+      // a little engine under it so a moving cruiser has mass
+      const eng = ctx.createOscillator(); eng.type = 'sawtooth'; eng.frequency.value = 58;
+      const elp = ctx.createBiquadFilter(); elp.type = 'lowpass'; elp.frequency.value = 220;
+      const eg = ctx.createGain(); eg.gain.value = 0.22;
+      eng.connect(elp); elp.connect(eg); eg.connect(out); eng.start(); nodes.push(eng);
+      drive = (I) => { o.frequency.setTargetAtTime(700 + I * 110, this.t, 0.2); sweep.frequency.setTargetAtTime(1.0 + I * 0.5, this.t, 0.3); };
     } else { // 'bow'
       // BOW AT DRAW — a tightening creak: a filtered tone that RISES in pitch with draw amount.
       base = 0.08;
@@ -810,6 +827,65 @@ export class AudioBus {
         d.connect(f); f.connect(g); g.connect(this.bus.sfx); d.start(at);
       }
     }
+  }
+
+  // A RADIO CHAIN: what a voice sounds like through a shoulder mic — band-limited to a
+  // telephone band, driven into clipping, and a touch of grit. Returns the INPUT node; callers
+  // connect a voice into it (soundscape.say opts.chain) and it feeds the voice bus itself.
+  radioChain(gain = 1) {
+    if (!this.ok || this.muted) return null;
+    const ctx = this.ctx;
+    const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 420;
+    const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 1750; bp.Q.value = 1.15;
+    const sh = ctx.createWaveShaper();
+    const N = 1024, curve = new Float32Array(N);
+    for (let i = 0; i < N; i++) { const x = (i / (N - 1)) * 2 - 1; curve[i] = Math.tanh(x * 3.6) * 0.72; }   // speaker clip
+    sh.curve = curve; sh.oversample = '2x';
+    const out = ctx.createGain(); out.gain.value = 0.9 * gain;
+    hp.connect(bp); bp.connect(sh); sh.connect(out); out.connect(this.bus.voice);
+    // a bark is under 1.5s; drop the edge to the bus after 3 so a long firefight can't pile up
+    // filter graphs waiting on GC. This is a one-shot chain, not a sustain — no handle needed.
+    setTimeout(() => { try { out.disconnect(); } catch (e) {} }, 3000);
+    return hp;
+  }
+
+  // SQUELCH — the click-and-hiss that brackets every radio transmission. On its own it already
+  // reads as "police radio" with no words at all, which is why dispatch uses it bare.
+  squelch(pos = null, open = true) {
+    if (!this.ok || this.muted) return;
+    const pg = this._pg(pos, 120); if (!pg) return;
+    const t = this.t;
+    const n = this._noise(0.09);
+    const bp = this.ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = open ? 2100 : 1500; bp.Q.value = 1.6;
+    const g = this.ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.05 * pg, t + 0.006);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + (open ? 0.07 : 0.05));
+    n.connect(bp); bp.connect(g); g.connect(this.bus.sfx);
+    n.start(t); n.stop(t + 0.1);
+    // the click itself: a hard tick of a resonant filter
+    const o = this.ctx.createOscillator(); o.type = 'square'; o.frequency.value = open ? 1900 : 1200;
+    const og = this.ctx.createGain();
+    og.gain.setValueAtTime(0.022 * pg, t); og.gain.exponentialRampToValueAtTime(0.0001, t + 0.02);
+    o.connect(og); og.connect(this.bus.sfx); o.start(t); o.stop(t + 0.03);
+  }
+
+  // THE LOUDHAILER — the PA feedback chirp that precedes an order. Rising squeal, then a thump.
+  hailer(pos = null) {
+    if (!this.ok || this.muted) return;
+    const pg = this._pg(pos, 200); if (!pg) return;
+    const t = this.t;
+    const o = this.ctx.createOscillator(); o.type = 'sine';
+    o.frequency.setValueAtTime(900, t); o.frequency.exponentialRampToValueAtTime(2600, t + 0.16);
+    const g = this.ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.035 * pg, t + 0.04);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
+    o.connect(g); g.connect(this.bus.sfx); o.start(t); o.stop(t + 0.24);
+    const thud = this.ctx.createOscillator(); thud.type = 'sine'; thud.frequency.value = 120;
+    const tg = this.ctx.createGain();
+    tg.gain.setValueAtTime(0.03 * pg, t + 0.16); tg.gain.exponentialRampToValueAtTime(0.0001, t + 0.34);
+    thud.connect(tg); tg.connect(this.bus.sfx); thud.start(t + 0.16); thud.stop(t + 0.36);
   }
 
   siren(pos = null, whoops = 2) {

@@ -1144,6 +1144,33 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   the sustained KI energy voice (ring-mod/partials/crackle). Swapping those for generic loops
   would be a downgrade — revisit only with better source material.
 
+## THE VOICE OF THE LAW (2026-07-25) — police audio, manual §22
+- **The light bar is a LOOP**: `audio.sustain('siren')` (square osc swept ±180Hz by a 1.15Hz
+  triangle LFO through a lowpass + a 58Hz engine bed). `police._sirenOn/_sirenOff` are the ONLY
+  paths; one loop per VEHICLE, `set(I, pos)` each frame (1.0 rolling in → 0.55 parked). ⚠ Stopped
+  in THREE places or it outlives the fight: stand-down, `reset()` (before scene teardown — a loop
+  doesn't care its mesh is gone), and `audio.sweep()` as backstop.
+- **The radio is a FILTER, not a sample**: `audio.radioChain()` returns the chain INPUT (highpass
+  420 · bandpass 1750 Q1.15 · tanh waveshaper · gain → voice bus); `soundscape.say(pos, emo,
+  {radio:true})` routes the bark's env into it (`_voiceBark` gained `opts.chain`, defaulting to
+  the bus). Cops use the SAME formant engine as civilians — band-limiting + clipping + squelch is
+  what makes them police. New BARKS: `radio` (3–5 syl, flat, fast) · `command` (1–2 syl, falling,
+  full energy). ⚠ the chain disconnects itself after 3s (a bark is <1.5s) so a siege can't pile up
+  filter graphs.
+- **`audio.squelch(pos, open)`** = the click+hiss bracket; **`audio.hailer(pos)`** = PA feedback
+  chirp 900→2600Hz + 120Hz thump. An UNANSWERED call plays squelch-open then squelch-closed with
+  NOTHING between — the silence is the corrupt state ignoring you.
+- **Wired beats** (police.js `_say/_dispatch/_order`): dispatch · unanswered · cruiser arrival ·
+  units on scene (hailer + shouted order at the villain, then unit traffic) · every wanted rung ·
+  shots fired (one call per 2.5s however fast the hits land) · **officer down = TWO registers**
+  (urgent radio + a nearby unit's un-radioed panic shout — one line alone reads as a notification) ·
+  stand-down. All positional through `_pg`, all rate-limited by the soundscape voice governor.
+- ⚠ **`police.active` needs `game.mode`** — `startMatch(id)` does NOT set it, only `startMode`.
+  A headless police test built on startMatch silently dispatches nothing.
+- Verified: squelch 0.0016 · hailer 0.0049 · siren 0.024 (0.000 after stop) · radio voice 0.0074 ·
+  command 0.0124 RMS; live ★★ response = 2 cruisers / 2 live sirens / `_sus` exactly 2 → stand-down
+  0 sirens, 0 orphans; officer down jumped heat 123→190.
+
 ## SOUND (2026-07-23) — buses, the soundscape, the energy voice
 - **THE MIX.** Everything used to connect to one master gain. There is now a bus structure —
   `music · sfx · voice · ambient · ui` → glue compressor → master. Each has a fader in Options
