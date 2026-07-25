@@ -1438,3 +1438,59 @@ you travelled to is still there.
 
 Entry: the WHITE ROOM mode card. **N** toggles the dummy. **Shift+R** clears the log.
 Ref `wwa-whiteroom.png`.
+
+---
+
+## §34 · THE TRAINING HALL (2026-07-25) — the first large indoor environment
+
+The White Room stopped being a box with a dummy in it. It is now a roofed hall with apparatus,
+and it is the project's first real interior at scale — which turned out to be a different
+engineering problem from a city, in three specific ways.
+
+### What an indoor space costs in a fixed isometric camera
+
+**A solid ceiling photographs as a blank slab.** The first build put a proper roof on and the
+entire hall disappeared underneath it. Both fixes are the standard interior cutaway, made
+structural rather than dynamic: the two camera-side walls are built LOW (a parapet you see over),
+and the roof is a LATTICE OF BEAMS. You read "roofed" from the beams and the light rig in
+peripheral vision, and you can still see your own fight. Keep the roof quiet — seven thick beams
+read as bars laid across the fight; five thin ones read as a ceiling.
+
+**A roof is only possible because a room is a BOX.** The terrain heightfield cannot fold over
+itself, which is why the metro is an open cut and why there are no tunnels. Flight is clamped to
+`CEIL` in code regardless of what the geometry does, so you cannot leave an indoor room by flying.
+
+**Hiding the world cannot be a list.** The first pass hid the arena group, the city bits and the
+roads by name, and a single ambulance parked outside the wall survived all three. Enumerating what
+to hide is a losing game against a world that keeps growing. The hall now hides **everything on
+the scene except its own group, the lights, and the living fighters** — a rule that cannot be
+out-grown. ⚠ With one protection: `particles.points` is a persistent scene child, and a blanket
+hide silently kills every particle effect in the room, which is the one thing a test chamber must
+never do.
+
+### The apparatus law
+
+**The moving targets are FIGHTERS on rails.** Not bespoke hit-test objects. That buys real
+projectile collision, real melee reach, real damage types, guard interaction and scoring for free
+and forever — a hand-rolled hit test drifts from combat the first time combat changes.
+
+**The turrets fire REAL projectiles**, through `projectiles.spawnProjectile`, so guarding,
+evading, deflecting and phasing all behave exactly as they do in a match. Each one telegraphs for
+0.55s before firing: a training hall that shoots you with no warning teaches nothing except to
+stand still.
+
+**Nothing is hidden in a training hall.** The pillars are real cover, so the vision system gave
+targets standing in plain sight "last known position" ghosts — a hall full of red question marks.
+Vision is overridden for the duration and restored on close. This is the one room where the
+honesty law has nothing to protect, because there is no opponent being handed an unfair read.
+
+### The drills, and how you choose them
+
+Five: FREE PRACTICE · MOVING TARGETS · EVASION · FLIGHT COURSE · SPARRING. You change them by
+walking to a **console** and using it — the same `registerInteractable` G-chain as everything else
+in the world, so the selector is a thing in the room rather than a menu over it.
+
+Scores are the same events the rest of the game already fires: a target down is a KO, and a hit
+taken in EVASION is `onHit` seen from the other side.
+
+Ref `wwa-training-hall.png`.

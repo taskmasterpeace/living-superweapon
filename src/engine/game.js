@@ -1940,8 +1940,12 @@ export class Game {
   // Called by Fighter.takeDamage for EVERY hit — damage numbers, sparks, combo.
   onHit(target, amount, opts = {}, blocked = false) {
     const src = opts.src;
-    // THE WHITE ROOM reads the choke point rather than modelling damage itself — see whiteroom.js
-    if (this.lab) this.lab.capture(target, amount, opts, blocked);
+    // THE WHITE ROOM reads the choke point rather than modelling damage itself — see whiteroom.js.
+    // The evasion drill's score is the same event seen from the other side: a hit that lands on YOU.
+    if (this.lab) {
+      this.lab.capture(target, amount, opts, blocked);
+      if (target === this.player && amount > 0 && !blocked) this.lab.noteHitTaken();
+    }
     // OVERDRIVE (per-character attribute): when your tank is empty, your FISTS refill it.
     // spend big → go in swinging → recharge. Landing melee while drained/low converts damage to ki.
     if (src && !blocked && opts.strike && amount >= 2 && (src.drainedT > 0 || src.ki < src.maxKi * 0.25)) {
