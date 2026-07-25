@@ -1406,6 +1406,35 @@ Four laws, three of them the same idea: **a thing must not outlive the match tha
 - `training` survives as an INTERNAL mode with no card: the tutorial (`hud.onTutorial`) and the
   atlas tile proving ground (`hud.onProvingGround`) both still enter it.
 
+## THE SURVEY (2026-07-25) — the street sets the level, the lots meet it
+- **`surveyCity(plan, sampleH)` in `data/cityplan.js`** (engine-agnostic; `plan.survey` carries
+  `node`/`cell`/`onRoad`/grades/cut-fill). ⚠ Levels used to be decided INSIDE the world builder as
+  a side effect of stamping a heightfield — nothing could inspect them, the map tool couldn't draw
+  them, the validator couldn't check them. Levels are plan data, like roads and sockets.
+- **The whole system is ONE constraint**: relax junction levels against a MAX GRADE
+  (`track 20% · street 10% · arterial 8% · highway 6%`). That is what makes a street network a
+  NETWORK instead of independent ramps, and why a hillside city gets terraces for free.
+  ⚠ **ANNEAL the ground pull** — held constant it fights the constraint forever and both settle
+  into a compromise (12.8% against a 10% limit = the limit is a lie). Decayed to zero, the survey
+  converges to a network genuinely no steeper than it claims.
+  ⚠ A junction with NO roads is never surveyed — that's what stops open country being bulldozed.
+- **⚠ A LOT IS NOT FLAT.** One height per block can meet the street at the top of the hill or the
+  one at the bottom, never both; the difference comes out as a retaining wall at the kerb
+  (measured 22u). A lot is a tilted plane pinned to its OWN four surveyed corners, bilinear — every
+  frontage meets its street by construction. Mean kerb step 0.04–0.09u.
+- **⚠ ORDER IS LOAD-BEARING: survey → cut the lots → grade the corridor.** Grading first doesn't
+  hold: `_padCells`' apron reaches K*0.42 (40u), far wider than the corridor, and re-raises the
+  carriageway it just cut through. Grade AGAIN after pits/trenches/bathymetry — a mining crater's
+  RIM reaching into a street puts ground back through the tarmac. 52u → under 1u.
+- **`roadClear(plan,x,z,radius)`** is the question a placer has (`roadAt` only answers for a POINT).
+  Trees test the CANOPY radius — the canopy is what blocks a street; lawns shrink to fit their lot.
+  Trees in the carriageway: 0. ⚠ The old filter checked only cover boxes and never the road graph.
+- **`surveyAt(plan,x,z,grip)`** is the ONE function the heightfield stamp asks — and the one any
+  future traffic/navigation code must ask. ⚠ `grip`: heightAt interpolates a ~4u lattice, coarse
+  next to a 22u street, so grade one vertex PAST the kerb or a lip survives on the tarmac.
+- Checked, not asserted: `validatePlan` flags streets steeper than their class allows; the dev
+  console's `survey` command reads the plan's own numbers back. Ref `wwa-streets-graded.png`.
+
 ## SURFACES — THE FLICKER LAW (2026-07-25) — read `docs/THE_MAP_MAKER.md` §SURFACES
 - **Z-fighting is a SCALE trap, not a maths one.** A depth buffer has finite precision that gets
   coarser with distance; two surfaces closer together than that precision tear. Offsets written

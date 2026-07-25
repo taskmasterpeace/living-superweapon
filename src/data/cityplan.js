@@ -1020,9 +1020,158 @@ export function floorplan(w, d, roomScale = 1, seed = 1, doorW = 5.6) {
 // ---- VALIDATION — the checks that found the real bugs. ONE implementation, exported: the ATLAS
 // panel, the headless sweep and any future test all call THIS. (It lived in hud.js first; when the
 // tool and the test drifted they disagreed by 32 phantom problems — never reimplement it.)
+// =================================================================================================
+// THE SURVEY — the street sets the level, and the lots meet it.
+//
+// Robert, 2026-07-25: "Real cities work the other way round: the street sets the level, and the
+// lots meet it. Exactly. Make a procedural system that works."
+//
+// WHY THIS IS PLAN DATA AND NOT GEOMETRY. Before this, levels were decided inside the world
+// builder, mid-build, as a side effect of stamping a heightfield — so nothing could inspect them,
+// the map tool could not draw them, and the validator could not check them. A city's LEVELS are a
+// fact about the city, exactly like its roads and its sockets: they belong on the plan, they are
+// computed with no reference to Three.js, and the world's only job is to realise them.
+//
+// HOW A ROAD IS ACTUALLY SURVEYED, and what this reproduces:
+//   1. Fix a level at every junction, seeded from the land.
+//   2. RELAX AGAINST A MAXIMUM GRADE. A street may not be steeper than you can drive it, so where
+//      the land is steeper than the limit the survey cuts and fills until it isn't. That single
+//      constraint IS the system: it is what makes a street network a NETWORK rather than a set of
+//      independent ramps, and it is why a hillside city gets terraces and stepped levels for free
+//      instead of having them authored.
+//   3. Let every node drift gently back toward the real ground each pass, or the constraint alone
+//      would flatten the whole map to one plane. The survey follows the land as closely as the
+//      grade limit allows, and no closer.
+//   4. A junction with NO roads is never surveyed. That is what stops open country, forest and
+//      farmland being bulldozed into a plateau.
+//   5. Each cell then takes the level of its OWN frontage — the mean of the surveyed corners that
+//      actually carry a road — so a block stands flush with the streets around it. A corner with
+//      no road contributes nothing, so a lot at the edge of town is set by the one street it has.
+//
+// Grades are rise/run, the way a road sign gives them. 10% is a firm city street; a dirt track may
+// run steeper because a track is worn rather than built.
+export const MAX_GRADE = { 1: 0.20, 2: 0.10, 3: 0.08, 4: 0.06 };   // by road class: track…highway
+const GRADE_PASSES = 60;      // relaxation is cheap — ~2N(N+1) edges, 60 sweeps is well under a ms
+const GROUND_PULL = 0.03;     // how strongly a node is drawn back to the land it sits on
+
+export function surveyCity(plan, sampleH) {
+  if (!plan || !plan.roads) return null;
+  const N = plan.N, A = plan.arena, K = plan.cell || CELL, S = plan.scale || 1, R = plan.roads;
+  const at = (r, c) => sampleH(-A + c * K, -A + r * K);
+  const land = [], node = [], onRoad = [];
+  for (let r = 0; r <= N; r++) {
+    land.push([]); node.push([]); onRoad.push([]);
+    for (let c = 0; c <= N; c++) { const h = at(r, c); land[r].push(h); node[r].push(h); onRoad[r].push(false); }
+  }
+  const edges = [];
+  for (let r = 0; r <= N; r++) for (let c = 0; c < N; c++) {
+    const cid = R.h[r] && R.h[r][c]; if (!cid) continue;
+    edges.push([r, c, r, c + 1, cid]); onRoad[r][c] = true; onRoad[r][c + 1] = true;
+  }
+  for (let r = 0; r < N; r++) for (let c = 0; c <= N; c++) {
+    const cid = R.v[r] && R.v[r][c]; if (!cid) continue;
+    edges.push([r, c, r + 1, c, cid]); onRoad[r][c] = true; onRoad[r + 1][c] = true;
+  }
+  const run = K * S;
+  // ⚠ ANNEAL THE GROUND PULL, or the survey never satisfies its own limit. Held constant, the pull
+  // fights the grade constraint on every pass and the two settle into a compromise — measured at
+  // 12.8% on a mountain city against a stated 10% limit, which makes the limit a lie. Decaying it
+  // to zero means the early passes follow the land closely and the last ones are pure constraint,
+  // so the survey converges to a network that is genuinely no steeper than it claims.
+  for (let pass = 0; pass < GRADE_PASSES; pass++) {
+    const pull = GROUND_PULL * Math.max(0, 1 - pass / (GRADE_PASSES * 0.7));
+    for (const e of edges) {
+      const limit = (MAX_GRADE[e[4]] || 0.1) * run;
+      const d = node[e[2]][e[3]] - node[e[0]][e[1]];
+      if (Math.abs(d) <= limit) continue;
+      const fix = (Math.abs(d) - limit) / 2 * Math.sign(d);
+      node[e[0]][e[1]] += fix; node[e[2]][e[3]] -= fix;
+    }
+    for (let r = 0; r <= N; r++) for (let c = 0; c <= N; c++) {
+      if (onRoad[r][c]) { if (pull > 0) node[r][c] += (land[r][c] - node[r][c]) * pull; }
+      else node[r][c] = land[r][c];      // unsurveyed ground keeps its landform
+    }
+  }
+  const cellH = [];
+  for (let r = 0; r < N; r++) {
+    cellH.push([]);
+    for (let c = 0; c < N; c++) {
+      let sum = 0, n = 0;
+      const corners = [[r, c], [r, c + 1], [r + 1, c], [r + 1, c + 1]];
+      for (const q of corners) if (onRoad[q[0]][q[1]]) { sum += node[q[0]][q[1]]; n++; }
+      cellH[r].push(n ? sum / n : sampleH(-A + (c + 0.5) * K, -A + (r + 0.5) * K));
+    }
+  }
+  let worstGrade = 0, worstClass = 0, cut = 0, fill = 0, moved = 0, surveyed = 0;
+  for (const e of edges) {
+    const g = Math.abs(node[e[2]][e[3]] - node[e[0]][e[1]]) / run;
+    if (g > worstGrade) { worstGrade = g; worstClass = e[4]; }
+  }
+  for (let r = 0; r <= N; r++) for (let c = 0; c <= N; c++) {
+    if (!onRoad[r][c]) continue;
+    surveyed++;
+    const d = node[r][c] - land[r][c];
+    moved += Math.abs(d); if (d > 0) fill += d; else cut -= d;
+  }
+  plan.survey = {
+    node: node, cell: cellH, onRoad: onRoad, edges: edges.length, surveyed: surveyed,
+    worstGrade: +worstGrade.toFixed(4), worstClass: worstClass,
+    cutFill: { cut: +cut.toFixed(1), fill: +fill.toFixed(1), meanMove: +(surveyed ? moved / surveyed : 0).toFixed(2) },
+  };
+  return plan.survey;
+}
+
+// The level a point should sit at, and how strongly the survey owns it: `w` is 1 inside a
+// carriageway and falls to 0 across the verge. This is the ONE function the heightfield stamp and
+// any future traffic or navigation code should ask, so they can never disagree about the street.
+export function surveyAt(plan, x, z, grip) {
+  const SV = plan.survey; if (!SV) return null;
+  grip = grip || 0;
+  const N = plan.N, A = plan.arena, K = plan.cell || CELL, SC = plan.scale || 1, R = plan.roads;
+  const VERGE = 14 * SC;
+  const rr = Math.floor((z + A) / K), cc = Math.floor((x + A) / K);
+  let bw = 0, by = 0;
+  const edge = (cid, ax, az, bx, bz, h0, h1) => {
+    if (!cid) return;
+    const half = ROAD[cid].width * SC / 2 + grip;
+    const dx = bx - ax, dz = bz - az, L2 = dx * dx + dz * dz;
+    let t = L2 ? ((x - ax) * dx + (z - az) * dz) / L2 : 0;
+    t = t < 0 ? 0 : t > 1 ? 1 : t;                    // clamp: the junction square is graded too
+    const d = Math.hypot(x - (ax + dx * t), z - (az + dz * t)) - half;
+    if (d > VERGE) return;
+    const u = d <= 0 ? 1 : 1 - d / VERGE, w = u * u * (3 - 2 * u);
+    if (w > bw) { bw = w; by = h0 + (h1 - h0) * t; }
+  };
+  for (const r of [rr, rr + 1]) {
+    if (r < 0 || r > N || cc < 0 || cc >= N || !R.h[r]) continue;
+    edge(R.h[r][cc], -A + cc * K, -A + r * K, -A + (cc + 1) * K, -A + r * K, SV.node[r][cc], SV.node[r][cc + 1]);
+  }
+  for (const c of [cc, cc + 1]) {
+    if (rr < 0 || rr >= N || c < 0 || c > N || !R.v[rr]) continue;
+    edge(R.v[rr][c], -A + c * K, -A + rr * K, -A + c * K, -A + (rr + 1) * K, SV.node[rr][c], SV.node[rr + 1][c]);
+  }
+  return bw > 0 ? { y: by, w: bw } : null;
+}
+
 export function validatePlan(plan) {
   const out = [];
   if (!plan || !plan.cells) return out;
+  // THE SURVEY CHECKS ITSELF. A street steeper than its own class allows is a survey that did not
+  // converge, and the map tool should say so rather than shipping a cliff. (Tracks are permitted to
+  // be steep — a track is worn, not built — so each edge is judged against ITS OWN limit.)
+  if (plan.survey && plan.roads) {
+    const N = plan.N, K = plan.cell || CELL, S = plan.scale || 1, R = plan.roads, SV = plan.survey;
+    const run = K * S;
+    let steep = 0, worst = 0;
+    const test = (cid, h0, h1) => {
+      if (!cid) return;
+      const g = Math.abs(h1 - h0) / run, lim = (MAX_GRADE[cid] || 0.1) + 0.005;
+      if (g > lim) { steep++; worst = Math.max(worst, g); }
+    };
+    for (let r = 0; r <= N; r++) for (let c = 0; c < N; c++) test(R.h[r] && R.h[r][c], SV.node[r][c], SV.node[r][c + 1]);
+    for (let r = 0; r < N; r++) for (let c = 0; c <= N; c++) test(R.v[r] && R.v[r][c], SV.node[r][c], SV.node[r + 1][c]);
+    if (steep) out.push(steep + ' street(s) steeper than their class allows (worst ' + (worst * 100).toFixed(1) + '%)');
+  }
   const N = plan.N, C = plan.cells;
   let landlocked = 0, orphan = 0, holes = 0, offgrid = 0, nosock = 0, structural = 0;
   for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {

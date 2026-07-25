@@ -246,6 +246,20 @@ export class DevConsole {
       const p = P();
       G().startMode(a[0], { p1: p ? p.def.id : 'sol' }); c.ok('mode ' + a[0]);
     });
+    // THE SURVEY, READ BACK. Every number here is the plan's own, so the console cannot disagree
+    // with the city it is describing (data/cityplan.js surveyCity).
+    this.cmd('survey', 'the street survey for this city — grades, cut and fill', (a, c) => {
+      const plan = G().world.plan, SV = plan && plan.survey;
+      if (!SV) return c.warn('this theatre has no road survey (the flagship is hand-built)');
+      const CLASS = { 1: 'track', 2: 'street', 3: 'arterial', 4: 'highway' };
+      c.print('  ' + 'streets surveyed'.padEnd(22) + String(SV.edges).padStart(6) + ' edges, ' + SV.surveyed + ' junctions');
+      c.print('  ' + 'steepest street'.padEnd(22) + (SV.worstGrade * 100).toFixed(1).padStart(6) + '%   on a ' + (CLASS[SV.worstClass] || '?'));
+      c.print('  ' + 'earth cut'.padEnd(22) + String(SV.cutFill.cut).padStart(6) + 'u');
+      c.print('  ' + 'earth filled'.padEnd(22) + String(SV.cutFill.fill).padStart(6) + 'u');
+      c.print('  ' + 'mean move per junction'.padEnd(22) + String(SV.cutFill.meanMove).padStart(6) + 'u  (' + m(SV.cutFill.meanMove) + ')');
+      c.print('  relief: ' + ((plan.relief && plan.relief.kind) || '?') + '  amp ' + ((plan.relief && plan.relief.amp) || 0));
+      c.print('  the survey follows the land as closely as the grade limit allows, and no closer.');
+    });
     this.cmd('surfaces', 'run the z-fighting audit on the live scene', (a, c) => {
       const r = G().world.auditSurfaces();
       c.print(r.problems ? r.problems + ' problem(s) of ' + r.surfaces + ' surfaces' : 'clean — ' + r.surfaces + ' surfaces, 0 problems');

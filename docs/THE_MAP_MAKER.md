@@ -737,3 +737,87 @@ over-report. Neither can hide a real fight — the trade worth making.
 
 Measured after this pass: **training hall 0 problems** (was 15), flagship city **3** and a generated
 Tokyo **2**, all of which are the merged-geometry blind spot plus one pair of intersecting spheres.
+
+---
+
+## §  THE SURVEY — the street sets the level, and the lots meet it (2026-07-25)
+
+Robert: *"Real cities work the other way round: the street sets the level, and the lots meet it.
+Exactly. Make a procedural system that works."*
+
+### What was wrong
+
+`_padCells` levelled every built-up cell to the terrain height under **its own centre** — a number
+with no relationship to the street at its edge — and the roads were then **draped** over whatever
+those terraces left behind. Consequences, all measured:
+
+- Two neighbouring lots terraced to two different heights, so the road between them inherited the
+  step, and a crossing met its cross street as a **cliff**.
+- **Up to 52 units — ten metres — of ground standing above the road surface.** The grey shards
+  scattered over the streets were not debris; they were the ground coming up through the tarmac.
+- Nothing could inspect any of it. Levels were decided inside the world builder, mid-build, as a
+  side effect of stamping a heightfield, so the map tool could not draw them and the validator
+  could not check them.
+
+### The system
+
+A city's **levels** are a fact about the city, exactly like its roads and its sockets. They live on
+the plan (`surveyCity` in `data/cityplan.js`, zero Three.js), and the world's only job is to
+realise them.
+
+1. **Fix a level at every junction**, seeded from the land.
+2. **Relax against a maximum grade.** A street may not be steeper than you can drive it, so where
+   the land is steeper than the limit the survey cuts and fills until it isn't. *That single
+   constraint is the system.* It is what makes a street network a **network** rather than a set of
+   independent ramps, and it is why a hillside city gets terraces and stepped levels for free
+   instead of having them authored. `MAX_GRADE` by class: track 20% · street 10% · arterial 8% ·
+   highway 6% — a track may run steeper because a track is *worn*, not built.
+3. **Anneal the ground pull.** Each node drifts back toward the real ground every pass, decaying to
+   zero. Held constant it fights the constraint forever and the two settle into a compromise —
+   measured at 12.8% against a stated 10% limit, which makes the limit a lie. Decayed, the early
+   passes follow the land closely and the last are pure constraint, so the survey converges to a
+   network that is genuinely no steeper than it claims.
+4. **A junction with no roads is never surveyed.** That is what stops open country, forest and
+   farmland being bulldozed into a plateau.
+5. **Each lot takes the level of its own frontage** — and **a lot is not flat**. Levelling a block
+   to one height is the classic mistake: on a slope it can meet the street at the top of the hill
+   or the one at the bottom, never both, and the difference comes out as a retaining wall at the
+   kerb (measured at 22u). A lot is a gently tilted plane pinned to its **own four surveyed
+   corners**, interpolated bilinearly, so every frontage meets its street exactly by construction —
+   and the tilt is bounded by the same grade limit the streets were surveyed under, so it is always
+   ground you can build on and run up.
+
+Order is load-bearing: **survey → cut the lots to it → grade the corridor.** Grading first does not
+hold, because `_padCells`' apron reaches `K*0.42` (40u) past a lot edge — far wider than the road
+corridor — and promptly re-raises the carriageway it was just cut through. The corridor is graded
+**again** after the mining pits, metro trenches and bathymetry, since a crater *rim* reaching into a
+street puts ground straight back through the tarmac.
+
+### The keep-clear
+
+`roadClear(plan, x, z, radius)` answers the question a placer actually has — *would an object of
+this size intrude on a street?* — where `roadAt` only answers it for a point. Street trees are
+tested on their **canopy** radius, not the trunk, because the canopy is what blocks a street; lawn
+decals shrink until they fit their own lot rather than running over the tarmac.
+
+### Measured
+
+| city | relief | steepest street | mean kerb step | worst ground-through-road |
+|---|---|---|---|---|
+| New York | hills 16 | 11.5% (a track) | 0.04u | 0.26u |
+| Tokyo | mountains 54 | 10.0% | 0.09u | 0.75u |
+| La Paz | mountains 54 | 10.0% | 0.08u | 0.55u |
+| Kabul | mountains 54 | 10.0% | 0.75u | 0.37u |
+
+Ground standing above a street: **52u → under 1u**. Trees in the carriageway: **0**. The isolated
+worst-case kerb steps that remain are quarries and shorelines beside a street — real features, not
+defects.
+
+### Checked, not asserted
+
+- `validatePlan` flags any street steeper than its own class allows, so the map tool reports a
+  failed survey rather than shipping a cliff.
+- `survey` in the dev console reads the plan's own numbers back — grades, cut, fill, earth moved —
+  so the readout cannot disagree with the city it describes.
+- `surveyAt(plan, x, z)` is the **one** function the heightfield stamp asks, and the one any future
+  traffic or navigation code must ask, so they can never disagree about where the street is.

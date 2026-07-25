@@ -10,7 +10,7 @@ import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { clamp, damp, setBands, DECAL_LIFT } from '../core/util.js';
 import { buildTiles , scaleBoxUV, resetDecalLadder } from './citytiles.js';
-import { CELL, districtNameAt, thresholdPlan, ROAD, junctionAt, WATER_DEPTHS, roadClear } from '../data/cityplan.js';
+import { CELL, districtNameAt, thresholdPlan, ROAD, junctionAt, WATER_DEPTHS, roadClear, surveyCity, surveyAt } from '../data/cityplan.js';
 import { mulberry } from '../data/news.js';
 
 // FOG OCCLUSION GRID — the replacement for the old 24-box uniform array. 256² texels over the
@@ -600,7 +600,7 @@ export class World {
     this._cityBits.length = 0;
     this.cover = []; this.coverAll = []; this.cars = [];
     this.grass = null; this._canopy = null; this.water = null; this._waterT = null;
-    this.ground = null; this.groundGeo = null; this._ghBase = null; this._nodeH = null; this._pendingPits = []; this._pendingCuts = [];
+    this.ground = null; this.groundGeo = null; this._ghBase = null; this._pendingPits = []; this._pendingCuts = [];
     if (this._fades) this._fades.clear();   // cloned cutaway materials died with their meshes
   }
   rebuildCity(plan) {
@@ -687,11 +687,11 @@ export class World {
     // and only then do the tiles go up — so a building sits on the ground rather than fighting it.
     this._buildRelief(plan);
     this._buildBathymetry(plan);   // the sea gets its bed — flat cities included
-    // ⚠ THE STREET IS THE FINAL AUTHORITY. Grading first didn't hold: _padCells' apron reaches
-    // K*0.42 (40u) past a lot edge, far wider than the road corridor, so it promptly re-raised the
-    // carriageway it had just been cut through. Survey the junctions first so both passes share
-    // one datum, cut the lots to it, and grade the corridor LAST so nothing can climb back into it.
-    this._nodeH = this._roadNodeHeights(plan);
+    // SURVEY → CUT THE LOTS TO IT → GRADE THE CORRIDOR.
+    // ⚠ THE STREET IS THE FINAL AUTHORITY, and the order is load-bearing. Grading before the lots
+    // did not hold: _padCells' apron reaches K*0.42 (40u) past a lot edge, far wider than the road
+    // corridor, so it promptly re-raised the carriageway it had just been cut through.
+    this._survey(plan);
     this._padCells(plan);
     this._gradeRoads(plan);
     // THE TILES — every cell raised by its type builder
@@ -1335,83 +1335,31 @@ export class World {
   //      is pulled onto the road's own interpolated profile, blending out over a verge.
   // `_padCells` then terraces each lot to the mean of ITS OWN four corner nodes, so a block stands
   // flush with the streets that surround it instead of on a pedestal beside them.
-  _roadNodeHeights(plan) {
-    const A = plan.arena, N = plan.N, K = plan.cell || CELL, R = plan.roads;
-    const H = [];
-    for (let r = 0; r <= N; r++) {
-      H.push([]);
-      for (let c = 0; c <= N; c++) H[r].push(this.heightAt(-A + c * K, -A + r * K));
-    }
-    if (!R) return H;
-    const deg = (r, c) => {
-      let d = 0;
-      if (c > 0 && R.h[r] && R.h[r][c - 1]) d++;
-      if (c < N && R.h[r] && R.h[r][c]) d++;
-      if (r > 0 && R.v[r - 1] && R.v[r - 1][c]) d++;
-      if (r < N && R.v[r] && R.v[r][c]) d++;
-      return d;
-    };
-    for (let pass = 0; pass < 4; pass++) {
-      const next = H.map(row => row.slice());
-      for (let r = 0; r <= N; r++) for (let c = 0; c <= N; c++) {
-        if (!deg(r, c)) continue;                       // no road here — the land keeps its shape
-        let sum = 0, n = 0;
-        if (c > 0 && R.h[r] && R.h[r][c - 1]) { sum += H[r][c - 1]; n++; }
-        if (c < N && R.h[r] && R.h[r][c]) { sum += H[r][c + 1]; n++; }
-        if (r > 0 && R.v[r - 1] && R.v[r - 1][c]) { sum += H[r - 1][c]; n++; }
-        if (r < N && R.v[r] && R.v[r][c]) { sum += H[r + 1][c]; n++; }
-        if (n) next[r][c] = H[r][c] * 0.45 + (sum / n) * 0.55;
-      }
-      for (let r = 0; r <= N; r++) for (let c = 0; c <= N; c++) H[r][c] = next[r][c];
-    }
-    return H;
+  // THE WORLD REALISES THE SURVEY, IT DOES NOT INVENT IT. `surveyCity` (data/cityplan.js) decides
+  // every level from the road graph and a grade limit, with no reference to Three.js; everything
+  // below simply stamps those numbers into the heightfield. Keeping the decision in the plan is
+  // what lets the map tool draw it, the validator check it, and a future traffic system agree with
+  // it — three things that were impossible while levels were a side effect of building geometry.
+  _survey(plan) {
+    if (!plan || !plan.roads || !this._gh) return null;
+    return plan.survey || surveyCity(plan, (x, z) => this.heightAt(x, z));
   }
 
+  // Pull every vertex inside a carriageway onto the surveyed profile, blending out across the
+  // verge. GRIP: heightAt interpolates a ~4u lattice, coarse next to a 22u street, so a vertex
+  // just OUTSIDE the kerb still drags the sampled height inside it — hold full grade one vertex
+  // wider or a kerb-height lip survives on the tarmac.
   _gradeRoads(plan) {
     if (!plan || !plan.roads || !this._gh || !this.groundGeo) return 0;
-    const A = plan.arena, N = plan.N, K = plan.cell || CELL, S = plan.scale || 1, R = plan.roads;
-    const H = this._nodeH || (this._nodeH = this._roadNodeHeights(plan));
+    if (!plan.survey) this._survey(plan);
+    if (!plan.survey) return 0;
     const pa = this.groundGeo.attributes.position.array;
-    const VERGE = 14 * S;                       // how far past the kerb the grade blends out
-    // ⚠ GRADE ONE TERRAIN VERTEX WIDER THAN THE KERB. heightAt bilinearly interpolates a
-    // heightfield whose vertices are ~4u apart — coarse next to a 22u street — so a vertex sitting
-    // just OUTSIDE the carriageway still drags the sampled height INSIDE it. Holding full grade
-    // out to half + one vertex spacing is what takes the last kerb-height lip off the tarmac.
-    const GRIP = (A * 2) / 112;
+    const GRIP = (plan.arena * 2) / 112;
     let touched = 0;
     for (let i = 0; i < this._gh.length; i++) {
-      const x = this._gvx[i], z = this._gvz[i];
-      const fx = (x + A) / K, fz = (z + A) / K;
-      let bw = 0, by = 0;
-      // the four lattice lines that could carry a road near this point
-      const tryEdge = (cid, ax, az, bx, bz, h0, h1) => {
-        if (!cid) return;
-        const half = ROAD[cid].width * S / 2;
-        const dx = bx - ax, dz = bz - az, L2 = dx * dx + dz * dz;
-        // ⚠ CLAMP, DON'T REJECT. Rejecting past the ends left the JUNCTION SQUARE itself ungraded —
-        // the one place four carriageways have to agree about a height, and the exact spot in
-        // Robert's shot where one street met another as a step. Clamped, every arm pulls that
-        // square to the SAME node height, so a crossing is flat by construction.
-        let t = L2 ? ((x - ax) * dx + (z - az) * dz) / L2 : 0;
-        t = t < 0 ? 0 : t > 1 ? 1 : t;
-        const px = ax + dx * t, pz = az + dz * t;
-        const d = Math.hypot(x - px, z - pz) - (half + GRIP);
-        if (d > VERGE) return;
-        const u = d <= 0 ? 1 : 1 - d / VERGE;
-        const w = u * u * (3 - 2 * u);
-        if (w > bw) { bw = w; by = h0 + (h1 - h0) * t; }
-      };
-      const rr = Math.floor(fz), cc = Math.floor(fx);
-      for (const r of [rr, rr + 1]) for (const c of [cc]) {
-        if (r < 0 || r > N || c < 0 || c >= N || !R.h[r]) continue;
-        tryEdge(R.h[r][c], -A + c * K, -A + r * K, -A + (c + 1) * K, -A + r * K, H[r][c], H[r][c + 1]);
-      }
-      for (const r of [rr]) for (const c of [cc, cc + 1]) {
-        if (r < 0 || r >= N || c < 0 || c > N || !R.v[r]) continue;
-        tryEdge(R.v[r][c], -A + c * K, -A + r * K, -A + c * K, -A + (r + 1) * K, H[r][c], H[r + 1][c]);
-      }
-      if (bw <= 0) continue;
-      this._gh[i] = this._gh[i] * (1 - bw) + by * bw;
+      const hit = surveyAt(plan, this._gvx[i], this._gvz[i], GRIP);
+      if (!hit) continue;
+      this._gh[i] = this._gh[i] * (1 - hit.w) + hit.y * hit.w;
       pa[i * 3 + 2] = this._gh[i];
       touched++;
     }
@@ -1431,16 +1379,24 @@ export class World {
       if (!cell || cell.ref || OPEN[cell.t]) continue;
       const fw = cell.fw || 1, fh = cell.fh || 1;
       const cx = -A + (c + fw / 2) * K, cz = -A + (r + fh / 2) * K;
-      // ⚠ THE LOT IS CUT TO ITS OWN STREETS, not to the ground under its middle. Using the centre
-      // height is what let a block sit several units above the road at its kerb — the step walls.
-      const H = this._nodeH;
-      let y;
-      if (H) {
-        const c0 = Math.min(c, plan.N), c1 = Math.min(c + fw, plan.N);
-        const r0 = Math.min(r, plan.N), r1 = Math.min(r + fh, plan.N);
-        y = (H[r0][c0] + H[r0][c1] + H[r1][c0] + H[r1][c1]) / 4;
-      } else y = this.heightAt(cx, cz);
-      pads.push({ cx, cz, hx: (fw * K) / 2 - 6, hz: (fh * K) / 2 - 6, y });
+      // ⚠ THE LOT IS CUT TO ITS OWN FRONTAGE, not to the ground under its middle — that is what
+      // let a block sit several units above the road at its kerb (the step walls in Robert's shot).
+      // ⚠ AND A LOT IS NOT FLAT. Levelling a block to ONE height is the classic mistake: on a slope
+      // it can meet the street at the top of the hill or the one at the bottom, never both, and the
+      // difference comes out as a retaining wall at the kerb — measured at 22 units on a mountain
+      // city. A real block is a gently tilted plane pinned to its own four corners. Carrying the
+      // corner levels and interpolating BILINEARLY means every frontage meets its street exactly,
+      // by construction, and the tilt across a 96u block is bounded by the same grade limit the
+      // streets were surveyed under — so it is always ground you can build on and run up.
+      const SV = plan.survey;
+      const c0 = Math.min(c, plan.N), c1 = Math.min(c + fw, plan.N);
+      const r0 = Math.min(r, plan.N), r1 = Math.min(r + fh, plan.N);
+      const corners = SV
+        ? [SV.node[r0][c0], SV.node[r0][c1], SV.node[r1][c0], SV.node[r1][c1]]
+        : null;
+      const y = SV ? SV.cell[r][c] : this.heightAt(cx, cz);
+      pads.push({ cx, cz, hx: (fw * K) / 2 - 6, hz: (fh * K) / 2 - 6, y,
+                  corners, x0: -A + c * K, z0: -A + r * K, w: fw * K, d: fh * K });
     }
     // A generous apron. Too tight and every block stands on a visible earth plinth; this is the
     // difference between a terraced hillside and a set of buildings on pedestals.
@@ -1457,7 +1413,15 @@ export class World {
         if (w > bw) { bw = w; best = p; }
       }
       if (!best) continue;
-      this._gh[i] = this._gh[i] * (1 - bw) + best.y * bw;
+      // the lot's own surface at this point: bilinear across its four surveyed corners
+      let target = best.y;
+      if (best.corners) {
+        const u = Math.min(1, Math.max(0, (x - best.x0) / best.w));
+        const v = Math.min(1, Math.max(0, (z - best.z0) / best.d));
+        const [h00, h01, h10, h11] = best.corners;
+        target = (h00 * (1 - u) + h01 * u) * (1 - v) + (h10 * (1 - u) + h11 * u) * v;
+      }
+      this._gh[i] = this._gh[i] * (1 - bw) + target * bw;
       pa[i * 3 + 2] = this._gh[i];
     }
     this.groundGeo.attributes.position.needsUpdate = true; this._normalsDirty = true;
