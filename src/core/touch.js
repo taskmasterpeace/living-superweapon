@@ -1,4 +1,4 @@
-// Living Superweapon — TOUCH CONTROLS (iPhone / iPad).
+// WAR WORLD: ASCENDANTS — TOUCH CONTROLS (iPhone / iPad).
 // The trick: this emits exactly the same shape the Gamepad class does (lx/ly/rx/ry + cur/prev
 // button maps), so it feeds `game.pad` and every existing control path — controlPlayer's
 // `pad.down()/pressed()/released()`, the aim stick, melee, flight — works untouched.

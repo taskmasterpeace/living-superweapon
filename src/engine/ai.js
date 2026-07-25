@@ -1,4 +1,4 @@
-// Living Superweapon — character-authentic AI. Each hero fights in the style of its counterpart:
+// WAR WORLD: ASCENDANTS — character-authentic AI. Each hero fights in the style of its counterpart:
 // beamers zone, rushers blitz, artillery kites, zoners wall up, tricksters teleport/phase, grapplers grab, summoners hide behind minions.
 import { HOLD_TYPES, holdTimeFor } from './abilityMeta.js';
 import { rand, chance, pick } from '../core/util.js';

@@ -1,4 +1,4 @@
-// Living Superweapon — game orchestrator: entities, control, combat helpers, main update.
+// WAR WORLD: ASCENDANTS — game orchestrator: entities, control, combat helpers, main update.
 import { updateDomes, updateReshaped, domeBlocks, releasePossession } from './systems2.js';
 import { Weather, TimeFields, GravityZones, setSize, banish } from './systems.js';
 import * as THREE from 'three';
@@ -323,6 +323,17 @@ export class Game {
     }
     const col = outOfReach ? '#ff5a4a' : (p._carry || p.grabState === 'clinch') ? '#ff8a3a' : '#ffd24a';
     if (this._arcCol !== col) { this._arcCol = col; for (const d of this._arcDots) d.material.color.set(col); this._arcRing.material.color.set(col); }
+  }
+
+  // ⚠ REVIEW ITEM 6 — SIM → UI ROUTING. The Fighter used to call `_game.hud.feed(...)`,
+  // `_game.hud.damageNumber(...)` and friends directly at seventeen sites, which meant the
+  // SIMULATION knew the HUD's exact method surface: rename a HUD method and the sim breaks,
+  // and a headless run needs a fake HUD shaped like the real one. One channel instead. If
+  // nothing is listening, the sim simply carries on.
+  ui(event, ...args) {
+    const h = this.hud;
+    if (!h || typeof h[event] !== 'function') return;
+    try { return h[event](...args); } catch (e) { console.error('ui:' + event, e); }
   }
 
   // ---------- 3a · THE INTERACTABLE CONTRACT (altitude plan 3) ----------
@@ -2391,6 +2402,7 @@ export class Game {
 }
 
 export { ROSTER };
+
 
 
 

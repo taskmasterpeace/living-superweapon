@@ -1,4 +1,4 @@
-// Living Superweapon — bootstrap.
+// WAR WORLD: ASCENDANTS — bootstrap.
 import { Input } from './core/input.js';
 import { AudioBus } from './core/audio.js';
 import { Game, ROSTER } from './engine/game.js';
@@ -333,7 +333,17 @@ addEventListener('keydown', (e) => {
     hud.feed('Sim Construct deployed', '#7fe6ff');
   }
   if (e.code === 'KeyM') { audio.muted = !audio.muted; try { localStorage.setItem('threshold_muted', audio.muted ? '1' : '0'); } catch {} hud.feed(audio.muted ? '🔇 Muted (M)' : '🔊 Sound on (M)', '#9fb2c9'); }
-  if (KM.digitsSwap && e.code in digits) { const c = ROSTER[digits[e.code]]; if (c) { game.setPlayerChar(c.id); hud.setPlayer(c); hud.feed('Now piloting ' + c.name + ' · ' + c.title, c.colors.accent); } }
+  // ⚠ REVIEW ITEM 13 — DIGIT PAGING. Number keys reached only 10 of 52 heroes, so 42 of them
+  // were TAB-only forever. SHIFT pages the digit bank (1-10 / 11-20 / …), so every hero on the
+  // roster is two keys away instead of unreachable. The page wraps and is announced.
+  if (KM.digitsSwap && e.code in digits) {
+    const page = e.shiftKey ? ((game._digitPage = ((game._digitPage || 0) + 1) % Math.ceil(ROSTER.length / 10))) : (game._digitPage || 0);
+    const idx = page * 10 + digits[e.code];
+    const c = ROSTER[idx];
+    if (e.shiftKey) hud.feed(`ROSTER PAGE ${page + 1}/${Math.ceil(ROSTER.length / 10)} — keys 1-0 now select ${page * 10 + 1}-${Math.min(ROSTER.length, page * 10 + 10)}`, '#ffd24a');
+    else if (c) { game.setPlayerChar(c.id); hud.setPlayer(c); hud.feed('Now piloting ' + c.name + ' · ' + c.title, c.colors.accent); }
+    else hud.feed(`No weapon in slot ${idx + 1}`, '#8b8577');
+  }
 });
 
 // WHEEL-SELECT: step through the hero's power slots and fire the chosen one with LMB. The HUD
@@ -405,3 +415,4 @@ if (location.search.includes('bench')) {
     window.LSW.lastBench = r;
   }, 400));
 }
+

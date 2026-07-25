@@ -1,4 +1,4 @@
-// Living Superweapon — performance benchmark.
+// WAR WORLD: ASCENDANTS — performance benchmark.
 //
 // A repeatable, headless (synchronous, NOT RAF-paced) load test so the cost of an optimization
 // can be measured as a number instead of a vibe. It builds one deterministic heavy scene (a full

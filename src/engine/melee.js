@@ -1,4 +1,4 @@
-// Living Superweapon — melee trifecta: Strike (beats Grab) · Grab (beats Guard) · Guard (beats Strike).
+// WAR WORLD: ASCENDANTS — melee trifecta: Strike (beats Grab) · Grab (beats Guard) · Guard (beats Strike).
 // Per-character variants: teleport-escape & energy-intangibility break front grabs; thorns hurt the holder;
 // grabHeal lifesteals throws. Back-grabs (from behind) are guaranteed and hit harder.
 // Charged melee: hold strike to wind up — tap jab · straight · HAYMAKER (crushes guards, see chargeRelease).

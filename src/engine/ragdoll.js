@@ -1,4 +1,4 @@
-// Living Superweapon — verlet ragdoll. On KO a fighter's articulated figure becomes a
+// WAR WORLD: ASCENDANTS — verlet ragdoll. On KO a fighter's articulated figure becomes a
 // physics skeleton: point-masses at the joints, distance constraints for the bones, gravity,
 // ground + cover collision. Each bone drives one of the figure's existing capsule meshes.
 //
@@ -9,7 +9,9 @@
 // reparenting, and restore the exact original transforms on respawn.
 import * as THREE from 'three';
 import { clamp } from '../core/util.js';
-import { ARENA } from './world.js';
+import { ARENA as ARENA_FALLBACK } from './world.js';   // ⚠ review item 7: the FROZEN flagship value.
+// It is a last-resort default ONLY — every live read must go through world.ARENA, which is
+// per-city. A bare import silently clamps a Mega City back to the flagship's 240.
 
 const GRAV = -62;            // matches world gravity so it feels of-a-piece
 const DAMP = 0.986;          // air damping on verlet velocity
@@ -138,7 +140,7 @@ export class Ragdoll {
   }
 
   _collide(game) {
-    const bound = (game && game.world ? game.world.ARENA : ARENA) - 3;
+    const bound = (game && game.world ? game.world.ARENA : ARENA_FALLBACK) - 3;
     const cover = game && game.world ? game.world.cover : null;
     const hAt = (game && game.world && game.world.heightAt) ? (x, z) => game.world.heightAt(x, z) : null;
     const wAt = (game && game.world && game.world.waterAt) ? (x, z) => game.world.waterAt(x, z) : null;
@@ -253,3 +255,4 @@ export class Ragdoll {
     this.f.parts.g.rotation.set(0, 0, 0);
   }
 }
+

@@ -1,4 +1,4 @@
-// Living Superweapon — 3D additive particle system (single Points buffer, CPU sim).
+// WAR WORLD: ASCENDANTS — 3D additive particle system (single Points buffer, CPU sim).
 import * as THREE from 'three';
 import { rand, TAU } from '../core/util.js';
 

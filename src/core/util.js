@@ -1,4 +1,4 @@
-// Living Superweapon — math + helpers
+// WAR WORLD: ASCENDANTS — math + helpers
 export const TAU = Math.PI * 2;
 export const PI = Math.PI;
 

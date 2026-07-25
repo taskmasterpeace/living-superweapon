@@ -1,4 +1,4 @@
-// Living Superweapon — procedural verlet tentacles. A chain of point-masses swings from an anchor
+// WAR WORLD: ASCENDANTS — procedural verlet tentacles. A chain of point-masses swings from an anchor
 // on the fighter; idle they sway with noise, in "reach" mode the tip is pulled hard at a target.
 // Rendered as tapered spheres (shared geometry) added to the SCENE (world space), so the owning
 // Fighter must call dispose() when it leaves play.

@@ -1,4 +1,4 @@
-// Living Superweapon — gamepad support (PS2 DualShock / standard mapping).
+// WAR WORLD: ASCENDANTS — gamepad support (PS2 DualShock / standard mapping).
 // Left stick = move · Right stick = aim · triggers/buttons = powers & melee.
 //
 // Standard button indices: 0 Cross/A · 1 Circle/B · 2 Square/X · 3 Triangle/Y

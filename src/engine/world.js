@@ -1,4 +1,4 @@
-// Living Superweapon — 3D world: renderer, scene, iso camera, lights, arena, bloom.
+// WAR WORLD: ASCENDANTS — 3D world: renderer, scene, iso camera, lights, arena, bloom.
 import * as THREE from 'three';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';

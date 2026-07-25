@@ -1,4 +1,4 @@
-// Living Superweapon — game modes (menu metadata; logic lives in game.js MODE_IMPL).
+// WAR WORLD: ASCENDANTS — game modes (menu metadata; logic lives in game.js MODE_IMPL).
 export const MODES = [
   { id: 'duel', name: 'DUEL', tag: '1v1', icon: '⚔', accent: '#ff5a4a',
     desc: 'Pure one-on-one. First to 3 KOs takes it. No dummies, no distractions — just you and a rival.' },

@@ -1,4 +1,4 @@
-// Living Superweapon — summoned minions & controllable constructs.
+// WAR WORLD: ASCENDANTS — summoned minions & controllable constructs.
 import * as THREE from 'three';
 import { clamp, rand, TAU, damp } from '../core/util.js';
 
@@ -40,7 +40,16 @@ export class Minion {
     this._bob = rand(0, TAU);
   }
   // shot down by splash / area damage (game.areaDamage looks for takeDamage on anything hostile)
-  takeDamage(amount) {
+  // ⚠ REVIEW ITEM 11 — THE SUMMONS DAMAGE CONTRACT. This used to be `takeDamage(amount)`:
+  // it was called polymorphically alongside Fighter.takeDamage (same name, same call sites)
+  // but silently dropped `opts`, so a minion ignored damage TYPE, resistances and true damage.
+  // It now honours the type table like everything else. A drone is metal: it does not care
+  // about poison, and it corrodes under acid.
+  takeDamage(amount, opts = {}) {
+    const dt = opts.dtype || 'energy';
+    const RES = { toxic: 0, fire: 0.6, acid: 1.6, cold: 0.85, ballistic: 0.9 };
+    amount *= (RES[dt] ?? 1);
+    if (amount <= 0) return 0;
     this.hp -= amount;
     if (this.hp <= 0 && !this.dead) {
       const g = this.game;
@@ -219,3 +228,4 @@ export class Construct {
     game.scene.remove(this.obj); this.obj.children.forEach(c => { c.geometry.dispose(); c.material.dispose(); });
   }
 }
+

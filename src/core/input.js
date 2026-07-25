@@ -1,4 +1,4 @@
-// Living Superweapon — input manager
+// WAR WORLD: ASCENDANTS — input manager
 export class Input {
   constructor() {
     this.keys = new Set();

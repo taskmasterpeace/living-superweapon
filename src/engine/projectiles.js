@@ -1,4 +1,4 @@
-// Living Superweapon — projectiles, beam-hoses (wave cannon), and spirit-bomb lobs.
+// WAR WORLD: ASCENDANTS — projectiles, beam-hoses (wave cannon), and spirit-bomb lobs.
 import { domeBlocks } from './systems2.js';
 import * as THREE from 'three';
 import { clamp, rand, TAU } from '../core/util.js';

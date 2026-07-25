@@ -1,4 +1,4 @@
-// Living Superweapon — transient 3D effects: explosions, shockwaves, lightning, rings, flashes, scorch.
+// WAR WORLD: ASCENDANTS — transient 3D effects: explosions, shockwaves, lightning, rings, flashes, scorch.
 import * as THREE from 'three';
 import { rand, TAU, lerp } from '../core/util.js';
 

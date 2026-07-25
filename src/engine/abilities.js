@@ -1,4 +1,4 @@
-// Living Superweapon — ability engine. Data-driven power types dispatched per input slot.
+// WAR WORLD: ASCENDANTS — ability engine. Data-driven power types dispatched per input slot.
 import { spawnDuplicates, possess, setElastic, tkGrab, tkThrow, reshape, consumeSlot, mimicKit, summonMount, domeAt, setVisionMode } from './systems2.js';
 import { setSize, setInvisible, beginRegen, banish } from './systems.js';
 import { visOf } from '../data/visual.js';
