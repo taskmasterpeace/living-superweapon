@@ -846,6 +846,23 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   melee mixup >26 u/s prefers strike over the mixup roll. Turtle branch still wins — nobody
   feeds a raised guard. Difficulty buys judgment, never physics.
 
+## THE AIMED THROW (2026-07-24) — manual §11, spec Part Two
+- **The clinch is a STRUGGLE WINDOW now** (`melee.js`): `grabT = clamp(0.85/1.05back +
+  (strH−strV)·0.14, 0.45, 1.8)`; victim thrashes laterally (the tell); GRAB again = hurl
+  along aim3 on the props' parabola (orange preview in `updateThrowArc`, `_body` branch,
+  loft 0.22 — flatter than props); TIMEOUT = `_breakFree` (holder shoved+staggered, victim
+  0.4s invuln, NO auto-throw anymore). Escape-tech midpoint check rides `_clinchMax`.
+- **Authored throw velocity** — `v.vel` set DIRECTLY (never kb-scaled: the arc must not lie),
+  spd `(48|60back) + STR·4.6`, release dmg only 10/16 (strike-flagged → Overdrive/grabHeal,
+  hitstop 0). `launchT=1.35` (slam rules) + `_thrownT=1.35` + `_thrownBy` (credit).
+- **`game.updateThrownBodies`**: a thrown body >24 u/s passing another fighter (thrower's foe
+  side, |Δy|≤9) hits BOTH — struck takes `min(30, 8+spd·0.22)` + launch + own launchT (wall
+  chains), body takes 60%, both credited to thrower; raised guard BRACES (no launch);
+  `_thrownHit` dedupes. ⚠ thrown bodies use SLIDE-class drag (−1.3 not −6) while `_thrownT`
+  rides (entity drag line) — without it a 108 u/s hurl died to 33 in 0.25s and nothing bowled.
+- **Bots**: controlBot clinch branch aims at a second foe it `canSee`, hurls after a
+  reflex-paced beat, and does nothing else while holding (return). `_clinchAimT` resets off-clinch.
+
 ## THE SAMPLE BANK (2026-07-24) — real recordings for every discrete SFX
 - **`core/samples.js`** (`MANIFEST` + `SampleBank` + `HOT_SET`) + **254 Kenney CC0 oggs in
   `/public/audio`** (~6MB, offline-first; impact/sci-fi/interface/rpg/jingle packs). Every

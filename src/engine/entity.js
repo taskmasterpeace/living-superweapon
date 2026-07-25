@@ -468,6 +468,7 @@ export class Fighter {
     this._sprintThrough = false; this._sprintLightning = false;   // VOLT: run through cover, blue lightning wake
     // slam physics: launchT > 0 = recently knocked/thrown → wall/ground impacts hurt (dashing into walls doesn't)
     this.launchT = 0; this._slamCd = 0;
+    this._thrownT = 0; this._thrownBy = null;   // aimed-throw body-as-projectile window (manual §11)
     this.metal = !!def.metal;   // robot: sparks when hit, foot exhaust, sturdier vs knockback
     this.tier = 1;              // power tier (from level) — drives aura color + HUD meter size
     this.tentacles = null;      // built lazily on first update (needs the scene)
@@ -1118,8 +1119,9 @@ export class Fighter {
       } else this.gliding = false;
       }
     }
-    // horizontal drag (near-frictionless while sliding — RIME's ice skate etc.)
-    const dragF = Math.exp((this._slideT > 0 ? -1.3 : -6) * dt);
+    // horizontal drag (near-frictionless while sliding — RIME's ice skate — and while flying
+    // as a THROWN BODY: a tumbling projectile-person doesn't brake itself, manual §11)
+    const dragF = Math.exp((this._slideT > 0 || this._thrownT > 0 ? -1.3 : -6) * dt);
     this.vel.x *= dragF; this.vel.z *= dragF;
     this.vel.y = clamp(this.vel.y, -160, 70);       // never let launches/lift escape
 

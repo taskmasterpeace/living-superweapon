@@ -142,6 +142,7 @@ export class MeleeSystem {
   }
 
   grab(f) {
+    if (f.grabState === 'clinch' && f.grabbing) { this._throw(f); return; }   // second press = THE AIMED THROW (manual §11)
     if (!this.canAct(f) || f.grabbing || f.grabState || f.strikeActive > 0 || f.guarding) return;
     f.grabState = 'startup'; f.grabT = 0.14; f.state = 'cast'; f.stateT = 0;
     this.game.audio.zap(300);
@@ -158,15 +159,24 @@ export class MeleeSystem {
     const g = this.game, v = holder.grabbing;
     if (!v) { this.release(holder); return; }
     const back = holder.grabMode === 'back';
-    const dmg = (back ? 30 : 20) * holder.powerBuff;
-    const dir = holder.aim, spd = back ? 62 : 46;
+    const str = holder.def.strength ?? 5;
+    const dmg = (back ? 16 : 10) * holder.powerBuff;
+    const spd = (back ? 60 : 48) + str * 4.6;                     // STRENGTH scales the hurl
+    const dir = _v.copy(holder.aim3); if (dir.lengthSq() < 0.01) dir.set(holder.aim.x, 0, holder.aim.z);
+    dir.normalize();
     v.grabbedBy = null; holder.grabbing = null; holder.grabState = null; holder.grabT = 0;
     v.state = 'idle';
-    v.takeDamage(dmg, { src: holder, strike: true, unblockable: true, hitstop: 0.14, kb: { x: dir.x * spd, y: back ? 22 : 15, z: dir.z * spd } });   // strike-flagged → feeds Overdrive
+    v.takeDamage(dmg, { src: holder, strike: true, unblockable: true, hitstop: 0 });   // strike-flagged → feeds Overdrive; hitstop 0 so the body flies NOW
     if (holder.grabHeal) holder.heal(dmg * holder.grabHeal);
+    // AUTHORED velocity, not kb-scaled — the dotted preview integrates exactly this launch state,
+    // and the arc must never lie. launchT arms every slam rule; _thrownT arms the BODY-AS-PROJECTILE.
+    v.vel.set(dir.x * spd, (dir.y + 0.22) * spd, dir.z * spd);   // flatter loft than props — a body is a bowling ball, not a mortar shell
+    v.flying = false; v.flyHeld = false; v.gliding = false;
+    v.launchT = 1.35; v._thrownT = 1.35; v._thrownBy = holder; if (v._thrownHit) v._thrownHit.clear();
     holder.hitstop = Math.max(holder.hitstop, 0.08);
     g.vfx.impact(v.pos.clone().setY(5.6), { x: dir.x, z: dir.z }, { color: holder.def.colors.accent, power: back ? 1.9 : 1.4 });
     g.world.shake(back ? 1.7 : 1.2); g.world.punch(0.72); g.audio.impact(back ? 1.4 : 1.1, v.pos); g.audio.boom(0.4, v.pos);
+    g.heroYell(holder, 1.0);
     g.slowmo(0.1, 0.42); if (g.hud) g.hud.flashScreen('#fff', 0.14);
   }
 
@@ -222,7 +232,13 @@ export class MeleeSystem {
           f.grabMode = behind ? 'back' : 'front';
           f.grabbing = foe; foe.grabbedBy = f; foe.grabState = null; foe.strikeActive = 0; foe.guarding = false;
           foe.state = 'hit'; foe.stateT = 0;
-          f.grabState = 'clinch'; f.grabT = behind ? 0.3 : 0.36;
+          // THE AIMED THROW (manual §11): the clinch is a STRUGGLE WINDOW now — strength against
+          // strength decides how long you may aim before they tear free. Throw with grab again.
+          const strH = f.def.strength ?? 5, strV = foe.def.strength ?? 5;
+          f.grabState = 'clinch';
+          f.grabT = Math.min(1.8, Math.max(0.45, (behind ? 1.05 : 0.85) + (strH - strV) * 0.14));
+          f._clinchMax = f.grabT;
+          if (g.isHuman(f) && g.hud) g.hud.feed('CLINCH — aim, then G again to HURL them', '#ff8a3a');
           f._victimEscape = !behind && ((foe.teleEscape && foe.ki > 14) || foe.canPhase);
           g.audio.hit(150); g.world.shake(0.5);
           g.vfx.ring(foe.pos.clone().setY(5), { color: f.def.colors.accent, r0: 1, r1: 7, life: 0.3 });
@@ -232,16 +248,19 @@ export class MeleeSystem {
       const v = f.grabbing;
       if (!v || !v.alive) { this.release(f); return; }
       f.grabT -= dt;
-      // pin the victim in front of the holder
-      v.pos.x = f.pos.x + f.aim.x * 4.4; v.pos.z = f.pos.z + f.aim.z * 4.4; v.pos.y = f.pos.y;
+      // pin the victim in front of the holder — THRASHING laterally against the hold (the tell:
+      // the wobble is the visible struggle, and stronger victims visibly fight harder)
+      const wob = Math.sin(((f._clinchMax || 0.4) - f.grabT) * 11) * Math.min(1.5, 0.4 + (v.def.strength ?? 5) * 0.1);
+      v.pos.x = f.pos.x + f.aim.x * 4.4 - f.aim.z * wob; v.pos.z = f.pos.z + f.aim.z * 4.4 + f.aim.x * wob; v.pos.y = f.pos.y;
       v.vel.set(0, 0, 0); v.state = 'hit'; v.stateT = 0; v.faceDir(-f.aim.x, -f.aim.z);
+      if (Math.random() < dt * 7) g.particles.burst(v.pos.x, v.pos.y + 5.5, v.pos.z, { count: 2, speed: 9, life: 0.25, size: 1.6, color: ['#fff', v.def.colors.accent], drag: 2 });
       // thorns: being held hurts the holder
       if (v.thorns) {
         f.takeDamage(v.thorns * dt, { src: v, trueDamage: true });
         if (Math.random() < 0.35) g.particles.burst(f.pos.x, 5.5, f.pos.z, { count: 2, speed: 12, life: 0.3, size: 2.2, color: [v.def.colors.accent, '#fff'] });
       }
       // front-grab escape (teleport / phase) at the midpoint
-      if (f._victimEscape && f.grabT <= (f.grabMode === 'back' ? 0.3 : 0.36) * 0.5) {
+      if (f._victimEscape && f.grabT <= (f._clinchMax || 0.4) * 0.5) {
         f._victimEscape = false;
         if (v.teleEscape && v.ki > 14) { v.ki -= 14; g.afterimage(v); v.pos.x -= f.aim.x * 22; v.pos.z -= f.aim.z * 22; v.invuln = 0.35; g.audio.teleport(); }
         else { v.invuln = 0.4; }
@@ -249,7 +268,21 @@ export class MeleeSystem {
         v.grabbedBy = null; v.state = 'idle'; f.grabbing = null; f.grabState = null;
         return;
       }
-      if (f.grabT <= 0) this._throw(f);
+      if (f.grabT <= 0) this._breakFree(f);
     }
+  }
+
+  // The struggle window closed: the victim tears loose, shoves the holder off, and the moment is over.
+  _breakFree(holder) {
+    const g = this.game, v = holder.grabbing;
+    if (!v) { this.release(holder); return; }
+    this.release(holder);
+    const dx = holder.pos.x - v.pos.x, dz = holder.pos.z - v.pos.z, d = Math.hypot(dx, dz) || 1;
+    holder.vel.x += (dx / d) * 30; holder.vel.z += (dz / d) * 30;
+    holder.staggerT = Math.max(holder.staggerT, 0.32);
+    v.invuln = Math.max(v.invuln, 0.4); v.state = 'idle';
+    g.vfx.ring(v.pos.clone().setY(5.2), { color: '#ffffff', r0: 1, r1: 8, life: 0.28 });
+    g.audio.swing('fist', v.pos); g.audio.grunt(v.def.voicePitch || 1, v.pos);
+    if (g.hud && (g.isHuman(holder) || g.isHuman(v))) g.hud.damageNumber(v.pos, 'BROKE FREE', '#ffffff', true);
   }
 }

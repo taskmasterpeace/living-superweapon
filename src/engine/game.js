@@ -269,15 +269,19 @@ export class Game {
         if ((d.type === 'projectile' && d.grav > 0) && s.cd <= 0 && p.ki >= (d.cost || 0)) { def = d; break; }
       }
       if (!def && p._carry) def = { _prop: true };       // carrying a car/tree = also a throw
+      if (!def && p.grabState === 'clinch' && p.grabbing) def = { _body: true };   // clinch = aiming a PERSON (manual §11)
     }
     if (!def) { if (arc.visible) arc.visible = false; return; }
     arc.visible = true;
     // launch state: muzzle + the same velocity the ability would use
-    const spd = def._prop ? 74 : (def.speed || 58);
-    const grav = def._prop ? 62 : (def.grav || 11) * 6;   // projectile grav is scaled in flight
-    const m = p.muzzle(_v.clone(), 4, 6.4);
+    const spd = def._body ? ((p.grabMode === 'back' ? 60 : 48) + (p.def.strength ?? 5) * 4.6)
+      : def._prop ? 74 : (def.speed || 58);
+    const grav = (def._prop || def._body) ? 62 : (def.grav || 11) * 6;   // bodies and props fall at world gravity
+    const m = def._body ? _v.set(p.pos.x + p.aim.x * 4.4, p.pos.y + 5.2, p.pos.z + p.aim.z * 4.4).clone()
+      : p.muzzle(_v.clone(), 4, 6.4);
     const dir = p.aim3;
-    let vx = dir.x * spd, vy = (dir.y + 0.34) * spd, vz = dir.z * spd;   // thrown things get lofted
+    const loft = def._body ? 0.22 : 0.34;   // bodies fly flatter than lobbed props — preview matches _throw exactly
+    let vx = dir.x * spd, vy = (dir.y + loft) * spd, vz = dir.z * spd;   // thrown things get lofted
     let x = m.x, y = m.y, z = m.z, land = null;
     const step = 0.055;
     for (let i = 0; i < this._arcDots.length; i++) {
@@ -291,7 +295,7 @@ export class Game {
     }
     if (land) { this._arcRing.visible = true; this._arcRing.position.set(land.x, 0.3, land.z); }
     else this._arcRing.visible = false;
-    const col = p._carry ? '#ff8a3a' : '#ffd24a';
+    const col = (p._carry || p.grabState === 'clinch') ? '#ff8a3a' : '#ffd24a';
     if (this._arcCol !== col) { this._arcCol = col; for (const d of this._arcDots) d.material.color.set(col); this._arcRing.material.color.set(col); }
   }
 
@@ -374,6 +378,40 @@ export class Game {
       dispose: () => { this.scene.remove(mesh); },
     });
   }
+  // THE AIMED THROW's highest expression (manual §11): a hurled BODY that passes through another
+  // fighter hits them too — both take damage, both are launched, both credited to the thrower.
+  // A raised guard BRACES against the incoming body instead (blocked = no launch).
+  updateThrownBodies(dt) {
+    for (const v of this.entities) {
+      if (!(v._thrownT > 0)) continue;
+      v._thrownT -= dt;
+      if (v._thrownT <= 0 || !v.alive) { v._thrownBy = null; continue; }
+      const spd = Math.hypot(v.vel.x, v.vel.y, v.vel.z);
+      if (spd < 24) continue;
+      const by = v._thrownBy;
+      v._thrownHit = v._thrownHit || new Set();
+      for (const e of this.entities) {
+        if (e === v || e === by || !e.alive || v._thrownHit.has(e.id)) continue;
+        if (by && !this.isFoe(by, e)) continue;              // you bowl at the OTHER side
+        const dx = e.pos.x - v.pos.x, dz = e.pos.z - v.pos.z;
+        if (Math.hypot(dx, dz) > e.radius + v.radius + 1.4 || Math.abs(e.pos.y - v.pos.y) > 9) continue;
+        v._thrownHit.add(e.id);
+        const hit = Math.min(30, 8 + spd * 0.22);
+        const kx = v.vel.x / (spd || 1), kz = v.vel.z / (spd || 1);
+        e.takeDamage(hit, { src: by || v, slam: true, hitstop: 0.1, kb: { x: kx * spd * 0.55, y: 6, z: kz * spd * 0.55 }, launch: 10 });
+        if (!(e._blocked > 0)) e.launchT = Math.max(e.launchT, 1.0);   // struck clean → they chain into walls too
+        v.takeDamage(hit * 0.6, { src: by || v, slam: true, unblockable: true, hitstop: 0.1 });
+        v.vel.multiplyScalar(0.55);
+        const imp = e.pos.clone().setY(e.pos.y + 5.6);
+        this.vfx.impactStar(imp, 10, '#ffffff', 0.2);
+        this.vfx.ring(imp, { color: '#ff8a3a', r0: 1, r1: 10, life: 0.3 });
+        this.world.shake(1.3); this.audio.impact(1.25, imp); this.audio.boom(0.4, imp);
+        if (this.hud) this.hud.damageNumber(e.pos, 'BOWLED ' + Math.round(hit), '#ff8a3a', false);
+        this.noise(imp, 1.1, by || v);
+      }
+    }
+  }
+
   updateCarry(dt) {
     for (const f of this.entities) {
       const c = f._carry; if (!c) continue;
@@ -1675,6 +1713,27 @@ export class Game {
       }
     }
 
+    // CLINCH: the bot aims the throw — at a second foe it can SEE if one stands anywhere useful
+    // (throwing one enemy into another is the point of the move) — then hurls. Reflex paces it.
+    if (f.grabState === 'clinch' && f.grabbing) {
+      f._clinchAimT = (f._clinchAimT || 0) + dt;
+      const held = f.grabbing;
+      let best = null, bd = 90 * 90;
+      for (const e of this.entities) {
+        if (e === f || e === held || !e.alive || !this.isFoe(f, e)) continue;
+        const d2 = (e.pos.x - f.pos.x) ** 2 + (e.pos.z - f.pos.z) ** 2;
+        if (d2 < bd && this.canSee(f, e)) { bd = d2; best = e; }
+      }
+      if (best) {
+        f.faceDir(best.pos.x - f.pos.x, best.pos.z - f.pos.z);
+        f.aim3.set(best.pos.x - f.pos.x, (best.pos.y + 4.5) - (f.pos.y + 5.2), best.pos.z - f.pos.z).normalize();
+      }
+      if (f._clinchAimT > Math.max(0.28, (f.ai.reflex || 0.2) * 1.7)) { f._clinchAimT = 0; this.melee.grab(f); }
+      f.moveDir = { x: 0, z: 0 };
+      return;   // wrestling IS the turn — no other actions while holding a body
+    }
+    f._clinchAimT = 0;
+
     // close-range melee mixups (skip if committing to a counter-beam)
     if (!f._forceBeam && !f.grabbing && !f.grabState && !f.strikeActive) {
       const foe = this.nearestFoe(f, f.pos, 16);
@@ -1775,6 +1834,7 @@ export class Game {
     this.updatePlayerMark(dt);
     this.updateBlinkMark(dt);
     this.updateCarry(dt);
+    this.updateThrownBodies(dt);
     this.updateThrowArc();
     if (this.mode && !this.matchOver) { const over = this.mode.isOver(this); if (over) this.endMatch(over); }
 

@@ -337,3 +337,41 @@ speed IS the decision. Neither feeds a raised guard (the turtle branch still win
 
 Kit `melee`-TYPE abilities (Sky Smash, Rush Combo …) keep their authored numbers — momentum is
 the trifecta's law; ability slots price their own violence.
+
+## §11 · THE AIMED THROW (2026-07-24)
+
+**Grab a person, throw them into something.** The clinch is no longer a fixed beat that
+auto-throws — it is a held, aimed state:
+
+- **The struggle window.** On connect, `grabT = clamp((back ? 1.05 : 0.85) + (holderSTR −
+  victimSTR) × 0.14, 0.45, 1.8)` — strength against strength decides how long you may aim.
+  STR 10 holding STR 3 gets the full 1.8s; the reverse gets 0.45s. The victim THRASHES
+  laterally against the pin (the tell — stronger victims visibly fight harder), and the
+  teleport/phase escape still fires at the window's midpoint for front grabs.
+- **The throw is a decision.** Press GRAB again during the clinch to hurl the victim along
+  your aim. The dotted parabola — the props' arc, the arc that never lies — previews the
+  flight the whole time (orange, same integrator, flatter 0.22 loft: a body is a bowling
+  ball, not a mortar shell). Timeout without throwing = the victim **TEARS FREE**: holder
+  shoved back and staggered 0.32s, victim briefly invulnerable, nobody hurt.
+- **Authored velocity.** Release does small strike-flagged damage (10 front / 16 back —
+  feeds Overdrive, procs `grabHeal`) with `hitstop: 0` so the body flies NOW, then sets
+  `vel = dir3D × ((back ? 60 : 48) + STR × 4.6)` DIRECTLY — never kb-scaled, or the preview
+  would lie about strong victims. `launchT = 1.35` arms every slam rule (wall crunch, ground
+  crater, tower crack, thrower credit); `_thrownT = 1.35` arms the body-as-projectile.
+- **The body is a projectile** (`game.updateThrownBodies`): while `_thrownT` rides and the
+  body moves > 24 u/s, passing within reach of another fighter on the thrower's foe side
+  hits BOTH — the struck fighter takes `min(30, 8 + spd × 0.22)` slam damage + launch (and
+  chains into walls via their own `launchT`), the thrown body takes 60% of that, both
+  credited to the thrower. A raised guard **BRACES**: the block eats the hit and no launch
+  follows. One hit per victim per throw (`_thrownHit`).
+- **Thrown bodies keep slide-class drag** (−1.3/s, not the walking −6/s) while `_thrownT`
+  rides — a tumbling body doesn't brake itself. Measured: a STR-10 hurl leaves at 108 u/s
+  and reaches a fighter 24u downrange at ~78 u/s.
+- **Bots** aim the clinch: a held bot swings its aim onto a SECOND foe it can actually see
+  (`canSee` — the honesty law's own primitive) and hurls after a reflex-paced beat; with no
+  second foe it throws down its current facing. Wrestling is the whole turn — no other
+  actions while holding a body.
+
+Measured: bowling B through C = 31.2 to the body, 25.3 to the pin, both credited to the
+thrower, launch flag live at impact; throw into a wall at 38u = 44.2 total (16 release +
+slam), wall cracked, slam credited.
