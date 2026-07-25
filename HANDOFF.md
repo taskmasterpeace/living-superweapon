@@ -122,6 +122,11 @@ These are load-bearing. Every one of them was learned by breaking it.
 - **Terrain.** Relief + terracing; 58/58 towers sit exactly on their pads, worst tree float 0.000u.
 - **Size tiers.** 35 rungs across 14 types, every one builds clean.
 - **Performance.** 9×9 mountain+forest map with combat: 2.76 ms/frame sim.
+- **THE CIRCUIT — the single-player loop.** `data/career.js` + `engine/careerUI.js`: a
+  persistent career (weekly offer slates off the live Elo book, real cities, transit
+  cinematic between theaters, purses/renown/titles, clinic-or-rest medical decisions, the
+  world simming matches every week). The news screen routes back to the desk; the loop is
+  banner → desk → accept → travel → fight → news → desk. Verified end-to-end headlessly.
 
 ## WHAT IS HALF-BUILT
 

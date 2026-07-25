@@ -1068,6 +1068,42 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   ⚠ `runSlot(c, key, inp, g)` — fighter FIRST, game LAST (battery harness order).
   Ref lsw-weight-plane.jpeg.
 
+## THE CIRCUIT (2026-07-24) — the single-player game loop's connective tissue
+- **`data/career.js`** (pure logic, localStorage `threshold_career_v1`) + **`engine/careerUI.js`**
+  (THE DESK, treaty-office furniture): a persistent career — week counter, bank ($K), renown,
+  titles, a 24-line ledger — where EVERY offer derives from live systems: foes from
+  `snapshotTable` Elo neighbors, grudges from the hero's OWN book history (`recOf().hist` — the
+  first loss on file becomes rematch money), cities off `cityList()` with preference filters
+  (headliners want pop≥900K, defense contracts want crime≥55), purses from foe Elo.
+  Slates are DETERMINISTIC per (seed, week) via mulberry32 — close and reopen the desk, same offers.
+- **The loop**: title banner (`#circuitBar`, reads the save) → THE DESK (slate/medical/ledger)
+  → accept sets `hud.theater` + plays the §17 TRANSIT CINEMATIC when the city changes (the
+  loading screen IS the travel beat) → `enter(cfg)` with `cfg.career` stamped → fight → the
+  news screen's button becomes **CONTINUE ▸ THE CIRCUIT** → back to the desk, week turned.
+- **Booking is engine-hooked, not button-hooked**: `game.onMatchEnd` (new neutral hook in
+  `endMatch`, fired before the end screen) resolves the offer — purse (25% show money on a
+  loss), renown, ledger line, week++, slate cleared — so quitting to the menu can NEVER lose
+  a result. `offer._booked` guards the double-fire; `beginMatch` clears `_careerOffer` for
+  any non-career cfg.
+- **Offer kinds**: duel (headliner/crosstown) · grudge · **defense** (survival with a WAVES
+  TARGET — `o.waves` in survival setup; isOver returns "DISTRICT HELD" win when the contracted
+  wave count is cleared and the field is empty; no target = endless, unchanged) · rumble ·
+  **title** every 4th week (gated on RENOWN ≥ 60 — locked cards say why honestly; win →
+  `crownChampion` in the SAME book the cold open + codex read, so the menu reports your reign).
+- **The world moves without you**: `simWeek` books 3 Elo-weighted `matchElo(...,'sim')` bouts
+  between roster pairs every week turn — the board a career returns to is never the board it left.
+- **Money has exactly one honest sink**: PAY THE CLINIC ($80K, `payClinic`) heals the medical
+  ledger NOW; REST WEEK heals one bout free but costs the week. Rest is always on the slate.
+- ⚠ cityList() fresh-array law: offers store `{name, country}`, the accept resolves the index.
+  ⚠ Phantom-module law bit AGAIN during verification: a bare `import('/src/data/rankings.js')`
+  is a SECOND book when the page graph binds `rankings.js?t=STAMP` — probe
+  `performance.getEntriesByType('resource')` / fetch the transformed source for the page's
+  real specifier before asserting through a dynamic import.
+  Verified end-to-end: banner→desk→accept→transit→Semarang duel vs the offer's foe→win→
+  week 2 booked→CONTINUE ▸ THE CIRCUIT→desk; rest; clinic (200→120, cleared); title win
+  crowned SOL; sims moved the book; DISTRICT HELD at the contracted wave; reload restores
+  WEEK 9 · $120K · 🏆×2. Ref lsw-circuit-desk.jpeg.
+
 ## THE SAMPLE BANK (2026-07-24) — real recordings for every discrete SFX
 - **`core/samples.js`** (`MANIFEST` + `SampleBank` + `HOT_SET`) + **254 Kenney CC0 oggs in
   `/public/audio`** (~6MB, offline-first; impact/sci-fi/interface/rpg/jingle packs). Every

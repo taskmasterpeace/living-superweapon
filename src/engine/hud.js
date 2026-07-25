@@ -6,6 +6,7 @@ import { CSS, CODEX_MOBILE, PHONE_CSS, TABLET_CSS, DECK_CSS } from './hud.styles
 import { DTYPES, DTYPE_INFO, resistOf, bandOf } from './entity.js';
 import { glyph, padActive, padFaces } from '../core/glyphs.js';
 import { MODES } from '../data/modes.js';
+import { loadCareer, fmtMoney } from '../data/career.js';
 import { clamp, TAU } from '../core/util.js';
 import { ATTR_DEFS, TALENTS, deriveAttrs, heroTalents, rankName, rankColor, RANKS, bakeSheet } from '../data/ranks.js';
 import { SETTINGS, saveSettings, applySettings, KEYMAPS, keymap } from '../core/settings.js';
@@ -1586,9 +1587,9 @@ export class HUD {
       <div class="et" style="color:${result.win ? 'var(--good)' : 'var(--danger-2)'}">${result.title}</div>
       <div class="el">${(result.lines || []).join('<br/>')}</div>
       <div class="stats">${stats.map(s => `<div class="stat"><div class="sv">${s[1]}</div><div class="sl">${s[0]}</div></div>`).join('')}</div>
-      <div class="btns"><button id="eRematch">Rematch</button><button class="ghost" id="eMenu">Main Menu</button></div>`;
+      <div class="btns"><button id="eRematch">${g._careerOffer ? 'CONTINUE ▸ THE CIRCUIT' : 'Rematch'}</button><button class="ghost" id="eMenu">Main Menu</button></div>`;
     this.el.end.style.display = 'flex';
-    this.el.end.querySelector('#eRematch').onclick = () => { this.hideEndScreen(); if (this.onRematch) this.onRematch(); };
+    this.el.end.querySelector('#eRematch').onclick = () => { this.hideEndScreen(); if (g._careerOffer && this.onCareerContinue) this.onCareerContinue(); else if (this.onRematch) this.onRematch(); };
     this.el.end.querySelector('#eMenu').onclick = () => { this.hideEndScreen(); if (this.onMenu) this.onMenu(); };
   }
 
@@ -1639,7 +1640,7 @@ export class HUD {
           </div>
           <div class="tvcap" id="nTvCap">Field footage — KMK 9</div>
           <div class="ncrew">Desk: ${esc(titleCase(b.anchorName || 'KMK 9'))} · Field: ${esc(titleCase(rep.reporter))} · Camera: ${esc(rep.operator)}</div>
-          <div class="btns"><button id="eRematch">${g.modeId === 'tournament' ? 'CONTINUE ▸ BRACKET' : 'Rematch'}</button><button class="ghost" id="eMenu">Main Menu</button></div>
+          <div class="btns"><button id="eRematch">${g.modeId === 'tournament' ? 'CONTINUE ▸ BRACKET' : g._careerOffer ? 'CONTINUE ▸ THE CIRCUIT' : 'Rematch'}</button><button class="ghost" id="eMenu">Main Menu</button></div>
         </div>
         <div class="ncr">
           <div class="nkickrow">
@@ -1662,10 +1663,11 @@ export class HUD {
       <div class="nticker"><div class="tkbrand">KMK 9</div><div class="tkwrap"><div class="tkx">${tickerHtml}${tickerHtml}</div></div></div>
     </div>`;
     this.el.end.style.display = 'flex';
-    const tourn = g.modeId === 'tournament';
+    const tourn = g.modeId === 'tournament', circ = !!g._careerOffer;
     this.el.end.querySelector('#eRematch').onclick = () => {
       this.hideEndScreen();
       if (tourn && this.onBracketContinue) this.onBracketContinue();
+      else if (circ && this.onCareerContinue) this.onCareerContinue();
       else if (this.onRematch) this.onRematch();
     };
     this.el.end.querySelector('#eMenu').onclick = () => { this.hideEndScreen(); if (this.onMenu) this.onMenu(); };
@@ -2196,6 +2198,7 @@ export class HUD {
       <h1><span class="t1">WAR WORLD</span><span class="t2">ASCENDANTS</span></h1>
       <div class="clsbar"><span class="clschip">TOP SECRET // THRESHOLD</span><span class="clsline">THRESHOLD TREATY OFFICE — ASCENDANT REGISTRY · INDEX COPY 7 OF 9 · COSMIC-EYES ONLY</span><span class="clschip">WWA-INDEX</span></div>
       <div class="term">&gt; QUERY: ASCENDANT INDEX — <b id="termCount"></b> · THEATER: <span class="thchip" id="termTheater" title="Open the City Atlas">${(() => { try { const t = this.theater; if (!t || t.flagship) return 'THE WHITE CITY'; if (t.gallery) return 'PROVING GROUND'; const c = cityList()[t.cityId]; return c ? c.name.toUpperCase() : 'THE WHITE CITY'; } catch { return 'THE WHITE CITY'; } })()}</span><span class="tcur">▍</span></div>
+      <div id="circuitBar" style="display:flex;align-items:center;gap:10px;margin:2px 0 4px;padding:8px 12px;border:1px solid var(--line-gold,#6b5824);background:var(--surface,#12110ecc);cursor:pointer;border-radius:var(--r-1,4px)"></div>
       <div class="modes" id="modes"></div>
       <div class="selwrap">
         <div class="preview" id="pv"></div>
@@ -2208,6 +2211,17 @@ export class HUD {
         </div>
       </div>`;
     const modesEl = this.title.querySelector('#modes'), roster = this.title.querySelector('#roster'), pv = this.title.querySelector('#pv'), ptabs = this.title.querySelector('#ptabs'), hintEl = this.title.querySelector('#modehint');
+    // THE CIRCUIT banner — the single-player loop's front door. Reads the live save.
+    {
+      const circ = this.title.querySelector('#circuitBar');
+      let cc = null; try { cc = loadCareer(); } catch {}
+      const chero = cc && ROSTER.find(d => d.id === cc.heroId);
+      const mono = 'font-family:var(--f-mono,monospace);font-size:10px';
+      circ.innerHTML = cc && chero
+        ? `<span style="${mono};background:var(--stamp,#8a1d24);color:#fff;padding:2px 8px">THE CIRCUIT</span><b style="color:${chero.colors.accent};letter-spacing:0.05em">${chero.name}</b><span style="${mono};color:var(--text-5,#8b8577)">WEEK ${cc.week} · ${fmtMoney(cc.bank)} · RENOWN ${cc.renown}${cc.titles ? ' · 🏆×' + cc.titles : ''}</span><span style="${mono};margin-left:auto;color:var(--gold,#ffd24a)">CONTINUE ▸</span>`
+        : `<span style="${mono};background:var(--stamp,#8a1d24);color:#fff;padding:2px 8px">THE CIRCUIT</span><span style="${mono};color:var(--text-5,#8b8577)">A sanctioned career — weekly contracts, purses, grudges, the belt. Signs the selected weapon.</span><span style="${mono};margin-left:auto;color:var(--gold,#ffd24a)">START ▸</span>`;
+      circ.onclick = () => { if (this.onCircuit) this.onCircuit(); };
+    }
     const bar = (label, v, col, tip, ic) => `<div class="statrow"${tip ? ` title="${tip}"` : ''}><span class="sl">${ic ? icon(ic, 11) + ' ' : ''}${label}</span><span class="sb"><i style="width:${v * 10}%;background:${col}"></i></span><span class="sv">${v}</span></div>`;
     const renderPv = (c) => {
       const st = heroStats(c);

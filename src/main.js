@@ -17,6 +17,9 @@ import { Tournament } from './engine/tournament.js';
 import { TouchControls, isTouchDevice } from './core/touch.js';
 import { UINav } from './core/uinav.js';
 import { Soundscape } from './core/soundscape.js';
+import { loadCareer, saveCareer, clearCareer, newCareer, genSlate, acceptCfg, resolveOffer, restWeek, payClinic, fmtMoney } from './data/career.js';
+import { CareerUI } from './engine/careerUI.js';
+import { cityList } from './data/cities.js';
 
 const canvas = document.getElementById('game');
 const input = new Input(); input.bind(canvas);
@@ -131,6 +134,7 @@ function beginMatch(c) {
       hud.feed('Theater: ' + plan.name.toUpperCase() + (plan.country ? ' · ' + plan.country : ''), '#7fb0d0');
     }
   } catch (err) { console.error('theater', err); }
+  if (!c.career) game._careerOffer = null;   // the stamp belongs to career bouts only
   savePrefs(c);                // (3) remember this loadout for next launch
   // hand LAST match's footage to the opening director BEFORE startMode wipes it — the broadcast
   // opener replays your own previous coverage ("a previous news report with them in it")
@@ -174,6 +178,55 @@ game.onTravel = (city, cityId, planetId) => {
   finally { game._traveling = false; }
 };
 hud.onProvingGround = () => enter({ mode: 'training', p1: hud.selectedHero || 'sol' });
+// ---- THE CIRCUIT: the single-player career loop (data/career.js + engine/careerUI.js) ----
+const careerUI = new CareerUI(ROSTER);
+function openDesk() {
+  let C = loadCareer();
+  if (C && !ROSTER.find(d => d.id === C.heroId)) { /* orphaned custom — the desk offers retirement */ }
+  else if (!C) { C = newCareer(hud.selectedHero || (game._lastCfg && game._lastCfg.p1) || 'sol'); saveCareer(C); }
+  if (!C.slate) { C.slate = genSlate(C, ROSTER); saveCareer(C); }
+  hud.hideTitle(); hud.hideEndScreen();
+  careerUI.show(C, {
+    onAccept: (offer) => {
+      const cfg = acceptCfg(C, offer);
+      game._careerOffer = offer;
+      careerUI.hide();
+      const cur = game.world.plan || {};
+      const moving = offer.city && !(cur.name === offer.city.name && cur.country === offer.city.country);
+      if (offer.city) {
+        const idx = cityList().findIndex(x => x.name === offer.city.name && x.country === offer.city.country);
+        if (idx >= 0) {
+          hud.theater = { cityId: idx, name: offer.city.name, country: offer.city.country, seed: 1 + ((C.seed + C.week * 13) % 97) };
+          try { localStorage.setItem('threshold_theater_v1', JSON.stringify(hud.theater)); } catch (e) {}
+        }
+      }
+      if (moving) {
+        // the transit cinematic IS the loading screen between career theaters (manual §17)
+        game._traveling = true;
+        hud._playTransit(game, { name: cur.name || 'THE WHITE CITY', country: cur.country || 'USA' }, offer.city,
+          () => { try { enter(cfg); } finally { game._traveling = false; } });
+      } else enter(cfg);
+    },
+    onRest: () => { const h = restWeek(C, ROSTER); saveCareer(C); if (h && h.cleared) hud.feed('MEDICAL: ' + h.name + ' healed — cleared to fight', '#8fe08a'); careerUI.render(C); },
+    onClinic: () => { const h = payClinic(C); if (h) { saveCareer(C); hud.feed('THE CLINIC: ' + h.name + (h.cleared ? ' healed' : ' treated'), '#8fe08a'); } careerUI.render(C); },
+    onRetire: () => { clearCareer(); careerUI.hide(); openMenu(); },
+    onClose: () => { careerUI.hide(); openMenu(); },
+  });
+}
+hud.onCircuit = openDesk;
+hud.onCareerContinue = () => { soundscape.music('menu'); game.running = false; touch.show(false); document.body.classList.remove('playing'); openDesk(); };
+// a decided career bout books itself the moment the match ends — even if the player
+// goes straight to the main menu from the news screen, the week has turned
+game.onMatchEnd = (result) => {
+  const offer = game._careerOffer;
+  if (!offer || offer._booked) return;
+  offer._booked = true;
+  const C = loadCareer(); if (!C) return;
+  const out = resolveOffer(C, offer, !!result.win, ROSTER);
+  saveCareer(C);
+  hud.feed('THE CIRCUIT: ' + (result.win ? 'WIN' : 'LOSS') + ' booked — paid ' + fmtMoney(out.paid) + ' · renown +' + out.ren, '#ffd24a');
+  if (offer.kind === 'title' && result.win) hud.announce('NEW CHAMPION', 'The belt changes hands — the cold open will say your name', '#ffd24a');
+};
 function openMenu() { soundscape.music('menu'); game.running = false; touch.show(false); document.body.classList.remove('playing'); hud.hideEndScreen(); hud.buildTitle(enter); hud.showTitle(); }
 
 // ---- ORIGIN: install saved customs, wire the forge ----

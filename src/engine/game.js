@@ -45,13 +45,18 @@ const MODE_IMPL = {
     hud(g) { return { type: 'duel', a: g.ms.p1KO, b: g.ms.enemyKO, target: g.ms.target, aName: 'YOU', bName: g.ms.enemy ? g.ms.enemy.name : 'RIVAL' }; },
   },
   survival: {
-    setup(g) { g.ms = { wave: 0, score: 0, lives: 3, betweenT: 1.5 }; },
+    setup(g, o) { g.ms = { wave: 0, score: 0, lives: 3, betweenT: 1.5, target: (o && o.waves) || 0 }; },
     tick(g, dt) {
       const bots = g.entities.filter(e => e.ai && e.alive).length;
       if (bots === 0) { g.ms.betweenT -= dt; if (g.ms.betweenT <= 0) { g.ms.wave++; g._spawnWave(g.ms.wave); g.ms.betweenT = 3.6; if (g.hud) g.hud.announce('WAVE ' + g.ms.wave, g._waveCount(g.ms.wave) + ' rivals incoming', '#ffb03a'); } }
     },
     onKO(g, v) { if (v.ai) g.ms.score += 120 + g.ms.wave * 20; else if (g.isHuman(v)) { g.ms.lives--; if (g.hud) g.hud.announce(g.ms.lives > 0 ? 'DOWN!' : 'LAST BREATH', g.ms.lives + ' lives left', '#ff5a4a'); } },
-    isOver(g) { if (g.ms.lives <= 0 && g.humans.every(h => !h.fighter.alive)) return { win: false, title: 'OVERWHELMED', lines: ['Reached Wave ' + g.ms.wave, 'Score ' + g.ms.score] }; return null; },
+    isOver(g) {
+      if (g.ms.lives <= 0 && g.humans.every(h => !h.fighter.alive)) return { win: false, title: 'OVERWHELMED', lines: ['Reached Wave ' + g.ms.wave, 'Score ' + g.ms.score], wave: g.ms.wave };
+      // THE DEFENSE CONTRACT (career): clear the contracted wave count and the district holds
+      if (g.ms.target && g.ms.wave >= g.ms.target && !g.entities.some(e => e.ai && e.alive)) return { win: true, title: 'DISTRICT HELD', lines: [g.ms.target + ' waves repelled', 'Score ' + g.ms.score], wave: g.ms.wave };
+      return null;
+    },
     hud(g) { return { type: 'survival', wave: g.ms.wave, score: g.ms.score, lives: Math.max(0, g.ms.lives) }; },
   },
   rumble: {
@@ -947,6 +952,7 @@ export class Game {
         this.ms.T.reportPlayerMatch(this.ms.m, result.win, sc);
       }
     } catch (e) { console.error('rankings', e); }
+    if (this.onMatchEnd) { try { this.onMatchEnd(result); } catch (e) { console.error('onMatchEnd', e); } }
     if (this.hud) this.hud.showEndScreen(result, this);
   }
   // One elimination round of an Invitational match: full respawn of both sides in line formations.
