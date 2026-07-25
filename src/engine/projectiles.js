@@ -423,13 +423,13 @@ class Projectile {
       hit.add(best);
       const a = from, b = best, delay = 0.06 * (i + 1);          // SEQUENTIAL, not simultaneous
       const width = Math.max(0.25, 1 - i * 0.28);                 // each jump is thinner
-      setTimeout(() => {
+      // game.later, not setTimeout: a reset between arcs must retire the rest of the chain rather
+      // than land damage on a fighter belonging to the previous match (the deferred-callback law).
+      game.later(() => {
         if (!b.alive || !a) return;
-        try {
-          game.vfx.lightning(a.pos.clone().setY(a.pos.y + 4), { color: this.color || '#bfe9ff', count: 2 + (width > 0.6 ? 2 : 0), radius: Math.hypot(b.pos.x - a.pos.x, b.pos.z - a.pos.z) * 0.5, height: 6, to: b.pos });
-          b.takeDamage(dmg * this.caster.powerBuff, { src: this.caster, dtype: this.dtype || 'energy', shock: true, hitstop: 0.03, kb: { x: 0, y: 2, z: 0 } });
-          game.audio.zap(820 - i * 90, b.pos);
-        } catch (e) {}
+        game.vfx.lightning(a.pos.clone().setY(a.pos.y + 4), { color: this.color || '#bfe9ff', count: 2 + (width > 0.6 ? 2 : 0), radius: Math.hypot(b.pos.x - a.pos.x, b.pos.z - a.pos.z) * 0.5, height: 6, to: b.pos });
+        b.takeDamage(dmg * this.caster.powerBuff, { src: this.caster, dtype: this.dtype || 'energy', shock: true, hitstop: 0.03, kb: { x: 0, y: 2, z: 0 } });
+        game.audio.zap(820 - i * 90, b.pos);
       }, delay * 1000);
       from = best; dmg *= this.chain.falloff || 0.7;
     }

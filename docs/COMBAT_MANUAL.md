@@ -1253,3 +1253,87 @@ dev, print the calling site. A NaN position must never reach a BufferAttribute.
 
 Verified: the full combined run — 52×364 battery, 102 catalog powers, a 20-second rumble, and
 the async tail — reports **0 NaN warnings, 0 thrown errors, 0 orphaned loops**.
+
+---
+
+## §31 · THINGS THAT OUTLIVE THEIR MATCH (2026-07-25) — the crash/freeze pass
+
+A crash is loud and gets fixed. A freeze is quiet: something accumulates until a frame can no
+longer finish. This pass hunted accumulation, and the four laws below are what it produced.
+Three of them are the same idea wearing different clothes — **a thing must not outlive the match
+that made it** — and the fourth is about not making the symptom worse than the disease.
+
+### THE RESET LAW — one place clears the board
+
+There were three reset paths (`startMatch`, `startMode`, `_tourneyRound`) and each hand-listed
+what it cleared. That is fine on the day you write it and wrong forever after, because every
+system added later is silently exempt. Measured over ten restarts: spikes 0→20, decoys 0→10,
+domes 0→10, reshaped terrain 0→10, time fields 0→10, gravity zones 0→10, interactables 0→10,
+fires 0→4 — and, worst, **cover 17→48** with scene children 49→104 and geometries 279→628.
+
+Cover is not cosmetic. It drives physics, `canSee`, the AI's line of sight and the fog raster,
+so a cover list that grows every restart makes every one of those slower and wronger. That is
+the shape of a freeze.
+
+`game.clearTransients()` is now the single place that empties all of it, and all three reset
+paths call it as their first act. Verified: twelve restarts with every zone type fired on each,
+and the counters are flat — cover 18 → 18, and rounds 4 / 8 / 12 read 21 / 21 / 21.
+
+### THE DEFERRED-CALLBACK LAW — `game.later`, never bare `setTimeout`
+
+A `setTimeout` fires **outside the frame loop**, so `main.js`'s try/catch cannot see it. An
+exception in a deferred callback escapes every safety net the game has. Worse, the callback
+lands in whatever match is running when it fires — chain lightning arcs sequentially over
+0.06s per jump, so a reset between jumps had the rest of the chain damaging a fighter from the
+previous match.
+
+`game.later(fn, ms)` stamps the current match generation, refuses to run if the generation has
+moved, and swallows its own throw into `reportError`. `clearTransients` bumps the generation and
+clears every armed timer. Converted: chain lightning, the tier-up arcs, and the weather's
+thunder. Verified: a callback armed before a reset does not run, its timer is cleared, and a
+chain fired into a dying match lands no damage in the next one.
+
+### THE REVOKE LAW — free the resource *and* clear the slot
+
+The news crew's clip frames are object URLs, and the cold open and the end-screen TV hold the
+same clip objects. Revoking a URL while leaving the string in the array hands those screens a
+dangling handle; the `<img>` then fails with `ERR_FILE_NOT_FOUND`. One stress run logged **68**
+of them. The cold open's `onerror` caught each at the app level, which is why nothing visibly
+broke — but a use-after-free is a use-after-free, and console errors at volume are themselves a
+stall.
+
+`revokeFrames(frames)` revokes each URL **and nulls the slot**, and shed or reset clips are
+marked `_dead` so a viewer drops them rather than discovering them the hard way. This also
+props up the BROADCAST ENCODE LAW (CLAUDE.md): `revokeFrames` nulls the `'#enc…'` tokens too, so a reset
+landing between `arr.push(token)` and the async `toBlob` callback makes that `indexOf` miss, and
+the blob is dropped instead of becoming an object URL nobody will ever revoke. The two laws hold
+each other up; don't weaken either. Verified: the same yank-the-rug sequence now logs zero.
+
+### THE REPEATED-ERROR LAW — a caught error must not become the freeze
+
+`catch (err) { console.error(err) }` in the frame loop is correct — one bad frame must never
+stop the game — but if the error recurs it fires sixty times a second. Serialising a stack
+object at 60Hz is itself a freeze, and the player just sees a game that stopped moving with
+nothing said.
+
+`game.reportError(err, where)` logs each distinct error **once** in full, counts the rest, and
+at thirty occurrences says plainly on the feed that the frame is failing. The ledger is capped
+at 200 keys, because errors carrying a varying number ("NaN at index 42") are each a distinct
+key and the accounting must not become the leak. `window.error` and `unhandledrejection` route
+through the same throttle, so a broken timer or promise can't flood either. Verified: 500
+identical throws produce **2** console lines; five distinct throws produce five.
+
+### What the numbers say now
+
+A three-minute AI-vs-AI rumble with real rendering: **p50 4.2ms, p95 10.3ms, p99 15.0ms, zero
+frames over 50ms**. Entities, minions, clips, match log, feed lines, DOM nodes, sustained audio
+loops and armed timers all bounded; heap plateaus at 88MB; shader programs plateau at 50
+(45 → 48 → 48 → 48 → 50 → 50 → 50 across six matches), which is the light-count law still
+holding. The beam-on-a-raised-guard repro — the original "blocking completely freezes" report —
+runs at 4.29ms average with lights pinned 14 ↔ 14 and **zero frames over 20ms** once warm.
+
+**Two spikes are real and are not defects.** The first frame of a match costs ~47ms (it builds
+86 geometries and compiles 4 programs); the establishing card and the opening cinematic exist
+in front of exactly that. And one frame in a cold run costs ~90ms while allocating *nothing* —
+no geometry, no texture, no program — which is a garbage collection pause, not our code. Neither
+recurs once warm. Say so rather than chasing them.

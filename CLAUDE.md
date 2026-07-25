@@ -1281,6 +1281,46 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   lean fighters (3.84 vs 2.94), and `restore()` puts the framed proportions back exactly.
   364 slots across 52 heroes still fire, 8.4ms/frame, 0 errors.
 
+## THINGS THAT OUTLIVE THEIR MATCH (2026-07-25) — the crash/freeze pass, manual §31
+Four laws, three of them the same idea: **a thing must not outlive the match that made it.**
+- **THE RESET LAW** — `game.clearTransients()` is the ONE place that empties the board, called
+  first by all three reset paths (`startMatch`/`startMode`/`_tourneyRound`). Those three used to
+  hand-list what they cleared, so every system added later was silently exempt: ten restarts
+  leaked spikes 0→20, decoys/domes/reshaped/timeFields/gravZones/interactables 0→10 each, and
+  **cover 17→48** (scene children 49→104, geometries 279→628). Cover drives physics, `canSee`,
+  AI vision and the fog raster — that list growing is the shape of a freeze. ⚠ Add a new
+  transient system → add it to `clearTransients`, not to a reset path. Verified flat over 12
+  restarts (cover 18→18).
+- **THE DEFERRED-CALLBACK LAW** — `game.later(fn, ms)`, NEVER a bare `setTimeout`, for anything
+  touching the fight. A `setTimeout` fires OUTSIDE the frame loop, so main.js's try/catch cannot
+  see it, and it lands in whatever match is running when it fires (chain lightning arcs 0.06s
+  apart were damaging fighters from the PREVIOUS match). `later` stamps `game._gen`, refuses to
+  run across a reset, and routes its throw to `reportError`; `clearTransients` bumps the
+  generation and clears `game._timers`. Converted: chain lightning, tier-up arcs, weather thunder.
+- **THE REVOKE LAW** (`revokeFrames(frames)`, exported from newscrew.js) — free the object URL
+  **AND null the slot**. The cold open and the end-screen TV hold the same clip objects, so a
+  revoked URL left in the array is a dangling handle: one stress run logged **68**
+  `ERR_FILE_NOT_FOUND`. Shed/reset clips are also marked `_dead`. ⚠ This props up the BROADCAST
+  ENCODE LAW — nulling the `'#enc…'` tokens is what makes the async `toBlob` writeback's
+  `indexOf` miss after a reset, so the blob is dropped instead of becoming an object URL nobody
+  will ever revoke. The two hold each other up; don't weaken either.
+- **THE REPEATED-ERROR LAW** — `game.reportError(err, where)`, not `console.error`. A caught
+  frame error recurs at 60Hz, and serialising a stack object sixty times a second IS a freeze
+  while the player sees nothing. It logs each distinct error ONCE, counts the rest, and at 30
+  says on the feed that the frame is failing. Ledger capped at 200 keys (a message carrying a
+  varying index is a distinct key — the accounting must not become the leak). `window.error` +
+  `unhandledrejection` route through it too. Measured: 500 identical throws → 2 console lines.
+- **Health numbers** (3-min AI-vs-AI rumble, real rendering): p50 4.2ms · p95 10.3 · p99 15.0 ·
+  **0 frames over 50ms**; heap plateaus 88MB; programs plateau at 50 across six matches (the
+  light-count law holding). Beam-on-raised-guard — the original "blocking freezes" report — is
+  4.29ms avg, lights pinned 14↔14, 0 frames over 20ms once warm.
+  ⚠ Two spikes are REAL and are NOT defects: a match's first frame costs ~47ms (builds 86
+  geometries, compiles 4 programs — the establishing card and opening cinematic sit in front of
+  exactly that), and one cold-run frame costs ~90ms while allocating NOTHING (no geometry, no
+  texture, no program) = a GC pause. Neither recurs once warm. Report them, don't chase them.
+  ⚠ `renderer.info.render.calls === 1` in a hidden/backgrounded pane — render early-outs, so
+  only SIM timing is meaningful there (same family as the `_ema` reads-98ms artifact).
+
 ## Hard rules (do not break)
 - **`opts.hitstop ?? 0.04`, NEVER `||`** (`entity.takeDamage`). Sustained damage — beams, cones,
   lifedrain, DoT ticks — passes `hitstop: 0` deliberately. With `||`, that falsy zero became 0.04

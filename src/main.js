@@ -398,11 +398,18 @@ function frame(now) {
       }
     }
   }
-  catch (err) { console.error(err); }
+  // A bad frame must never stop the loop, and must never flood the console at 60Hz either —
+  // game.reportError dedupes, counts, and tells the player once. See the repeated-error law.
+  catch (err) { game.reportError(err, 'frame'); }
   input.endFrame();
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
+
+// Anything thrown OUTSIDE the frame (a timer, a promise, an event handler) never reaches the
+// catch above. Funnel those through the same throttle so one broken callback can't flood either.
+window.addEventListener('error', (e) => { if (e && e.error) game.reportError(e.error, 'window'); });
+window.addEventListener('unhandledrejection', (e) => game.reportError(e && e.reason, 'promise'));
 
 // expose for debugging + performance benchmarking
 window.LSW = { game, hud, ROSTER, runSlot, performEvade, input, tutorial, netplay, uinav, soundscape, SETTINGS, KEYMAPS, playOpening, creator: { ui: creator, freshPicks, buildDef, tally, validate, saveCustom, deleteCustom, loadCustoms } };

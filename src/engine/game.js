@@ -157,6 +157,8 @@ export class Game {
     this.humans = [];                // local players: [{ fighter, scheme:'kbm'|'pad' }]
     this.mode = null; this.modeId = null; this.ms = {}; this.matchOver = false; this.matchResult = null;
     this.entities = []; this.minions = []; this.constructs = [];
+    this._gen = 0; this._timers = new Set();   // the deferred-callback law — see later()
+    this._errSeen = new Map();                 // the repeated-error law — see reportError()
     // TIER THREE SYSTEMS (docs/POWERS_BRIEF.md Part Five) — engine layers, not abilities
     this.weather = new Weather(this);
     this.timeFields = new TimeFields(this);
@@ -1086,11 +1088,119 @@ export class Game {
     return f;
   }
 
+  // ⚠ EVERY TRANSIENT THE MATCH CREATED DIES WITH THE MATCH.
+  //
+  // The three reset paths (startMatch / startMode / _tourneyRound) each hand-listed what to
+  // clear, so every system added afterwards was silently exempt. Measured before this existed:
+  // ten match restarts left 20 ground spikes, 10 decoys, 10 domes, 10 raised walls, 10 time
+  // fields, 10 gravity zones and 10 interactables alive — cover 17 → 48, scene children
+  // 49 → 104, geometries 279 → 628. Cover count drives physics, LOS and the fog raster, so
+  // that is a slow march to a freeze, not a tidy-up nicety.
+  //
+  // ONE list, called from all three. A new zone system adds its line HERE and is covered
+  // everywhere, which is the whole point.
+  // THE DEFERRED-CALLBACK LAW: a setTimeout fires OUTSIDE the frame loop, so main.js's try/catch
+  // cannot see it — an exception there escapes every safety net the game has, and the callback can
+  // land in a match that no longer exists (chain lightning damaging a fighter from the last round).
+  // `later` is the one choke point: it stamps the match generation, refuses to run across a reset,
+  // and swallows its own throw. Never call setTimeout directly with anything that touches the fight.
+  later(fn, ms) {
+    const gen = this._gen | 0;
+    const id = setTimeout(() => {
+      this._timers.delete(id);
+      if ((this._gen | 0) !== gen) return;            // the match this belonged to is over
+      try { fn(); } catch (e) { if (this.reportError) this.reportError(e, 'later'); }
+    }, ms);
+    this._timers.add(id);
+    return id;
+  }
+
+  // THE REPEATED-ERROR LAW: a throw inside the frame loop is caught and the loop keeps going —
+  // but the SAME throw then fires 60×/second. Unthrottled `console.error` of a stack object at
+  // 60Hz is itself a freeze (devtools serialises every one), and the player just sees a game that
+  // stopped moving with nothing said. So: log each distinct error ONCE in full, count the rest,
+  // and tell the player on the feed that the frame is failing rather than leaving them guessing.
+  reportError(err, where) {
+    const msg = (err && err.message) || String(err);
+    const line = String((err && err.stack) || '').split('\n')[1] || '';
+    const key = (where || '') + '|' + msg + '|' + line.trim();
+    let rec = this._errSeen.get(key);
+    if (!rec) {
+      // errors whose message carries a varying number ("NaN at index 42") are all distinct keys,
+      // so the ledger itself would grow forever at 60Hz. Bound it — the accounting must not leak.
+      if (this._errSeen.size >= 200) this._errSeen.delete(this._errSeen.keys().next().value);
+      rec = { n: 0, told: false };
+      this._errSeen.set(key, rec);
+      console.error('[THRESHOLD]' + (where ? ' (' + where + ')' : ''), err);
+    }
+    rec.n++;
+    // a handful is a hiccup; a flood means the frame is genuinely broken and the player deserves to know
+    if (rec.n === 30 && !rec.told) {
+      rec.told = true;
+      console.error(`[THRESHOLD] the above error has now fired ${rec.n}× — the frame is failing repeatedly`);
+      if (this.hud && this.hud.feed) this.hud.feed('⚠ ENGINE FAULT — see console (' + msg.slice(0, 60) + ')', '#ff8a6a');
+    } else if (rec.n % 600 === 0) console.error(`[THRESHOLD] ${key.slice(0, 90)} ×${rec.n}`);
+    return rec.n;
+  }
+
+  clearTransients() {
+    this._gen = (this._gen | 0) + 1;                  // retire every in-flight deferred callback
+    if (!this._timers) this._timers = new Set();
+    for (const id of this._timers) clearTimeout(id);
+    this._timers.clear();
+    const W = this.world;
+    const killCover = (co) => {
+      if (!co) return;
+      if (co.mesh) {
+        this.scene.remove(co.mesh);
+        if (co.mesh.geometry) co.mesh.geometry.dispose();
+        if (co.mesh.material && !co.mesh.material._shared) co.mesh.material.dispose();
+      }
+      const a = W.cover.indexOf(co); if (a >= 0) W.cover.splice(a, 1);
+      const b = W.coverAll.indexOf(co); if (b >= 0) W.coverAll.splice(b, 1);
+    };
+    for (const co of (this._spikes || [])) killCover(co);         // ground spikes (brief T2.8)
+    for (const co of (this._reshaped || [])) killCover(co);       // raised walls (brief T3.11)
+    this._spikes = []; this._reshaped = [];
+
+    for (const d of (this._decoys || [])) {                       // holograms (brief T2.9)
+      if (!d.grp) continue;
+      this.scene.remove(d.grp);
+      d.grp.traverse(o => { if (o.material) o.material.dispose(); });
+    }
+    this._decoys = [];
+
+    for (const d of (this._domes || [])) {                        // shield bubbles (brief T3.15)
+      if (!d.mesh) continue;
+      this.scene.remove(d.mesh);
+      if (d.mesh.geometry) d.mesh.geometry.dispose();
+      if (d.mesh.material) d.mesh.material.dispose();
+    }
+    this._domes = [];
+
+    this._fires = []; this._sing = []; this._smoke = [];          // pure data zones
+    if (this.timeFields) this.timeFields.clear();                 // owns its own meshes
+    if (this.gravityZones) this.gravityZones.clear();
+    if (this.weather) { this.weather.clear(); this.weather.dispose(); }
+
+    // interactables registered by a MATCH go; city-owned ones belong to the city and are
+    // cleared by world._teardownCity instead (the documented teardown trap).
+    if (this.interactables) this.interactables = this.interactables.filter(h => h.cityOwned);
+    this._focus = null;
+
+    for (const d of (this._drops || [])) { if (d && d.mesh) { this.scene.remove(d.mesh); if (d.mesh.geometry) d.mesh.geometry.dispose(); } }
+    this._drops = [];
+
+    this._koCam = null; this._spectate = null;
+    if (W.refreshFogBoxes) W.refreshFogBoxes();
+  }
+
   startMatch(charId) {
     // F9 (altitude plan): a carry that survives a match start leaves an orphan mesh in the
     // scene and a fighter permanently slowed. Release every carry before anything else.
     for (const e of this.entities) if (e && e._carry) { try { this.scene.remove(e._carry.mesh); } catch (err) {} e._carry = null; e.speed = e.def.speed || 30; }
     // clear
+    this.clearTransients();   // every zone/prop the LAST match made (see the method)
     for (const e of this.entities) { this.scene.remove(e.obj); if (e.dispose) e.dispose(); }
     this.entities.length = 0;
     for (const m of this.minions) if (m._dispose) m._dispose(this);   // ghost drones haunted rematches
@@ -1190,6 +1300,7 @@ export class Game {
     return f;
   }
   startMode(id, o = {}) {
+    this.clearTransients();   // every zone/prop the LAST match made (see the method)
     for (const e of this.entities) { this.scene.remove(e.obj); if (e.dispose) e.dispose(); }
     this.entities.length = 0; this.humans.length = 0;
     for (const m of this.minions) if (m._dispose) m._dispose(this);
@@ -1250,6 +1361,7 @@ export class Game {
     const ms = this.ms, T = ms.T, m = ms.m; if (!m) return;
     // the tape is cumulative: lead fighters inherit their stat sheets across rounds
     const prevA = ms.aLeadF ? ms.aLeadF.stats : null, prevB = ms.bLeadF ? ms.bLeadF.stats : null;
+    this.clearTransients();   // every zone/prop the LAST match made (see the method)
     for (const e of this.entities) { this.scene.remove(e.obj); if (e.dispose) e.dispose(); }
     this.entities.length = 0; this.humans.length = 0;
     for (const m of this.minions) if (m._dispose) m._dispose(this);
@@ -1656,7 +1768,7 @@ export class Game {
         this.slowmo(0.3, 0.4);
         if (this.hud && (this.isHuman(f) || this.mode)) this.hud.announce('TIER ' + ['', 'I', 'II', 'III', 'MAX'][f.tier], f.name + ' ASCENDS', tc);
         // ASCENDING SPITS. Three arcs over half a second — the air can't hold it.
-        if (this.audio.arc) for (let i = 0; i < 3; i++) setTimeout(() => this.audio.arc(1.1 + f.tier * 0.2, f.pos), i * 140);
+        if (this.audio.arc) for (let i = 0; i < 3; i++) this.later(() => this.audio.arc(1.1 + f.tier * 0.2, f.pos), i * 140);
         if (this.news) this.news.highlight('tier', f.name + ' ASCENDS — POWER READINGS SPIKE', { dur: 2.4, priority: 2, focus: f.pos });
       } else {
         this.vfx.explode(f.pos.clone().setY(5), { color: f.def.colors.accent, color2: '#fff', radius: 11, power: 1.1, scorch: false });
@@ -2500,6 +2612,7 @@ export class Game {
 }
 
 export { ROSTER };
+
 
 
 

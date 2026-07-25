@@ -94,7 +94,7 @@ export class Weather {
         const pz = (this.g.player ? this.g.player.pos.z : 0) + (Math.random() * 2 - 1) * 120;
         this.g.hud && this.g.hud.flashScreen && this.g.hud.flashScreen('#c8d8ff', 0.09);
         this.g.vfx.lightning(new THREE.Vector3(px, 0, pz), { color: '#dfe9ff', count: 5, radius: 6, height: 120 });
-        setTimeout(() => { try { this.g.audio.boom(0.85, { x: px, y: 0, z: pz }); } catch (e) {} }, 220 + Math.random() * 500);
+        this.g.later(() => this.g.audio.boom(0.85, { x: px, y: 0, z: pz }), 220 + Math.random() * 500);   // thunder must not outlive its storm
         if (this.storm > 0.6 && this._src) this.g.areaDamage(this._src, new THREE.Vector3(px, 1, pz), 9, 26, 1.2, { dtype: 'energy', shock: true });
       }
     }

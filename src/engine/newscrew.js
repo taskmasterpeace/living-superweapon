@@ -23,6 +23,18 @@ const WALK = 13, HUSTLE = 24, SPRINT = 34;
 
 const _v = new THREE.Vector3(), _v2 = new THREE.Vector3(), _e = new THREE.Euler();
 
+// THE REVOKE LAW: never leave a revoked object URL sitting in a live array. The clip arrays are
+// shared with the cold open and the end-screen TV, and a dangling blob: handle loads as
+// ERR_FILE_NOT_FOUND on whatever screen finds it next. Free the resource AND clear the slot.
+export function revokeFrames(frames) {
+  if (!frames) return;
+  for (let i = 0; i < frames.length; i++) {
+    const u = frames[i];
+    if (u && u.startsWith && u.startsWith('blob:')) URL.revokeObjectURL(u);
+    frames[i] = null;
+  }
+}
+
 export class NewsCrew {
   constructor(game) {
     this.g = game;
@@ -142,8 +154,12 @@ export class NewsCrew {
 
   // ---------- lifecycle ----------
   reset(modeId) {
-    for (const c of this.clips || []) for (const u of c.frames || []) if (u && u.startsWith && u.startsWith('blob:')) URL.revokeObjectURL(u);
-    for (const u of this._preroll || []) if (u && u.startsWith && u.startsWith('blob:')) URL.revokeObjectURL(u);
+    // ⚠ USE-AFTER-REVOKE: the cold open and the end-screen TV hold these same clip objects. Revoking
+    // a URL but LEAVING the string in the array hands them a dangling handle — the <img> then fails
+    // with ERR_FILE_NOT_FOUND (68 of them in one stress run). Blank the slot as you revoke it, and
+    // mark the clip dead so a viewer drops it instead of discovering it the hard way.
+    for (const c of this.clips || []) { revokeFrames(c.frames); c._dead = true; }
+    revokeFrames(this._preroll);
     this._pool = this._pool || [];
     this._warmed = false;
     this.enabled = !!modeId && modeId !== 'training';
@@ -421,7 +437,7 @@ export class NewsCrew {
       for (let i = 0; i < this.clips.length; i++) { const c = this.clips[i]; if (c === lastKO) continue; if (c.priority < dp) { dp = c.priority; drop = i; } }
       if (drop < 0) break;
       total -= this.clips[drop].frames.length;
-      for (const u of this.clips[drop].frames) if (u && u.startsWith && u.startsWith('blob:')) URL.revokeObjectURL(u);
+      revokeFrames(this.clips[drop].frames); this.clips[drop]._dead = true;   // a shed clip may still be on someone's screen
       this.clips.splice(drop, 1);
     }
   }
@@ -473,6 +489,9 @@ export class NewsCrew {
     const token = '#enc' + (this._seq = (this._seq || 0) + 1);
     arr.push(token);
     pooled.toBlob((b) => {
+      // revokeFrames() nulls EVERY slot including these tokens, so a reset that lands between the
+      // push and the callback makes this indexOf miss — the blob is dropped instead of becoming an
+      // object URL nobody will ever revoke. The two laws hold each other up; don't weaken either.
       const i = arr.indexOf(token);
       if (b && i >= 0) arr[i] = URL.createObjectURL(b);
       else if (i >= 0) arr.splice(i, 1);          // encode failed — drop the slot cleanly

@@ -17,6 +17,7 @@ import { snapshotTable, championId, recentIncidents } from '../data/rankings.js'
 import { ladderGatesFor } from './police.js';
 import { ROSTER } from '../data/characters.js';
 import { heroStats } from './hud.js';
+import { revokeFrames } from './newscrew.js';   // the revoke law — free the URL AND blank the slot
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const flagOf = (code) => {
@@ -366,8 +367,9 @@ export function playOpening(game, hud, plan, opts = {}, onDone) {
     removeEventListener('keydown', onSkip, true); removeEventListener('pointerdown', onSkip, true);
     el.classList.add('opout');
     setTimeout(() => el.remove(), 480);
-    // hand the old footage back to the void — the director owned it after beginMatch's handoff
-    for (const c2 of (game._openingClips || [])) for (const u of (c2.frames || [])) if (u && u.startsWith && u.startsWith('blob:')) URL.revokeObjectURL(u);
+    // hand the old footage back to the void — the director owned it after beginMatch's handoff.
+    // revokeFrames blanks the slots too: the TV interval above may still hold this array (the revoke law).
+    for (const c2 of (game._openingClips || [])) { revokeFrames(c2.frames); c2._dead = true; }
     game._openingClips = null;
     game.mapCam = null;
     game.running = wasRunning;
