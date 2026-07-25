@@ -1022,6 +1022,26 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   siren gaps. `soundscape.tacticalState` exposed. ⚠ stubbing game.police in tests needs
   update/reset noops — stub ONLY heatOf on the real object.
 
+## ORIGIN HAS A HOMELAND (2026-07-24) — the creator picks country + hometown off the sheets
+- **creatorUI identity section**: the two free-text fields became SHEET-DRIVEN pickers —
+  country `<select>` (all 168 from countryList(), + UNDISCLOSED) → hometown `<select>`
+  (that country's cities from cityList(), pop-sorted, top 40, + "somewhere smaller…" which
+  reveals the free-text lane for off-registry towns). Both persist into the same
+  `picks.country/picks.city` keys, so saved customs are untouched.
+- **THE ORIGIN DOSSIER** (the create-a-hero genre beat — a homeland is a CHARACTER decision
+  with stated consequences): a live case-file card reading the REAL country row — flag +
+  demonym + motto, VIGILANTISM stance with its street meaning ("BANNED — an unregistered
+  hero is a criminal on sight"), LSW LAW (lswRegs + scene activity), THE LAW (enforcement
+  grade + flavor), HOMETOWN row (popType · compact POP · CRIME only when rated — many sheet
+  rows carry crime 0 = unrated; never print a lying zero).
+- **`flagFor(country)`** (identities.js): name→ISO2→regional-indicator emoji, ~150 nations
+  + off-world (Mars 🔴, Moon 🌙); `creator.buildDef` person.f rides it, so the registry
+  file number, codex §01 and news epithets all get the REAL flag (verified round-trip:
+  save → roster → codex shows Kampala · Uganda · 🇺🇬 → delete clean). ⚠ Windows renders
+  flag emoji as letter pairs (no color flag font) — correct everywhere else.
+- ⚠ `saveCustom(picks, def, roster)` takes three args — the def is built separately by
+  `buildDef(picks)`. Ref lsw-origin-homeland.jpeg.
+
 ## THE SAMPLE BANK (2026-07-24) — real recordings for every discrete SFX
 - **`core/samples.js`** (`MANIFEST` + `SampleBank` + `HOT_SET`) + **254 Kenney CC0 oggs in
   `/public/audio`** (~6MB, offline-first; impact/sci-fi/interface/rpg/jingle packs). Every

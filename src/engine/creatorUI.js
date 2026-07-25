@@ -2,6 +2,9 @@
 // the ranks.js sheet model. Ruling compliance (docs/DESIGN_DECISIONS.md): NOT named Foundry;
 // LIVE damage numbers beside every power pick; LeFevre threat auto-computed as you build.
 // Pure DOM in the house style (warm dark + gold). No purple.
+import { countryList } from '../data/countries.js';
+import { cityList } from '../data/cities.js';
+import { flagFor } from '../data/identities.js';
 import {
   BUDGETS, ATTR_COST, GIFTS, FLIGHT_TIERS, GUARD_TYPES, EVADE_KINDS, MELEE_TIERS,
   TALENT_COST, GADGETS, POWERS, PALETTES, SKINS, FRAMES, powerById,
@@ -185,9 +188,11 @@ export class CreatorUI {
           <div class="sh">Epithet</div><input type="text" id="oTitle" maxlength="26" placeholder="Living Superweapon" spellcheck="false">
           <div class="sh">Civilian Identity</div><input type="text" id="oReal" maxlength="34" placeholder="Real name" spellcheck="false">
           <div style="display:flex; gap:7px; margin-top:7px;">
-            <input type="text" id="oCity" maxlength="26" placeholder="Home city" spellcheck="false" style="flex:1">
-            <input type="text" id="oCountry" maxlength="22" placeholder="Country" spellcheck="false" style="flex:1">
+            <select id="oCountrySel" style="flex:1;background:var(--surface,#0d0f14);border:1px solid var(--line,#2a2d33);border-radius:8px;color:var(--text,#e8e2d4);padding:7px 8px;font-family:inherit;font-size:12px"></select>
+            <select id="oCitySel" style="flex:1;background:var(--surface,#0d0f14);border:1px solid var(--line,#2a2d33);border-radius:8px;color:var(--text,#e8e2d4);padding:7px 8px;font-family:inherit;font-size:12px"></select>
           </div>
+          <input type="text" id="oCity" maxlength="26" placeholder="Hometown (custom)" spellcheck="false" style="display:none;margin-top:6px">
+          <div id="oOrigin" style="margin-top:8px;padding:9px 11px;border:1px solid var(--line-gold,#6b5824);border-radius:10px;background:var(--surface,#0d0f14);font-family:var(--f-mono,monospace);font-size:10px;line-height:1.55;color:var(--text-3,#c9c2b4)"></div>
           <div class="sh">Colors</div><div class="swatches" id="oPal"></div>
           <div class="sh">Skin</div><div class="swatches" id="oSkin"></div>
           <div class="sh">Frame</div><div class="chips2" id="oFrame"></div>
@@ -206,10 +211,50 @@ export class CreatorUI {
     nm.oninput = () => { P.name = nm.value; this.renderSheet(); this.renderHeader(); };
     tt.oninput = () => { P.title = tt.value; this.renderSheet(); };
     vc.oninput = () => { P.voicePitch = parseFloat(vc.value); this.root.querySelector('#oVoiceV').textContent = P.voicePitch.toFixed(2); };
-    for (const [id, key] of [['#oReal', 'realName'], ['#oCity', 'city'], ['#oCountry', 'country']]) {
-      const el = this.root.querySelector(id); el.value = P[key] || '';
-      el.oninput = () => { P[key] = el.value; this.renderSheet(); };
+    {
+      const el = this.root.querySelector('#oReal'); el.value = P.realName || '';
+      el.oninput = () => { P.realName = el.value; this.renderSheet(); };
     }
+    // ---- ORIGIN: country + hometown off the REAL sheets (the create-a-hero ruling) ----------
+    // Picking a homeland is a CHARACTER decision with stated consequences: the dossier reads the
+    // live country sheet — how the law sees an unregistered weapon, whether LSWs are even legal,
+    // how fast the state answers — the same data the police and pedestrians actually run on.
+    const cSel = this.root.querySelector('#oCountrySel'), tSel = this.root.querySelector('#oCitySel');
+    const free = this.root.querySelector('#oCity'), dossier = this.root.querySelector('#oOrigin');
+    const CL = countryList().slice().sort((a, b) => a.name.localeCompare(b.name));
+    cSel.innerHTML = '<option value="">— UNDISCLOSED —</option>' + CL.map(c => `<option>${c.name}</option>`).join('');
+    cSel.value = CL.some(c => c.name === P.country) ? P.country : '';
+    const fillCities = () => {
+      const rows = P.country ? cityList().filter(c => c.country === P.country).sort((a, b) => (b.pop || 0) - (a.pop || 0)) : [];
+      tSel.innerHTML = '<option value="">— UNDISCLOSED —</option>'
+        + rows.slice(0, 40).map(c => `<option>${c.name}</option>`).join('')
+        + '<option value="__custom">— somewhere smaller… —</option>';
+      if (rows.some(c => c.name === P.city)) { tSel.value = P.city; free.style.display = 'none'; }
+      else if (P.city) { tSel.value = '__custom'; free.style.display = 'block'; free.value = P.city; }
+      else { tSel.value = ''; free.style.display = 'none'; }
+    };
+    const VIG_LINE = { Legal: 'LEGAL — clean wins get CHEERED here', Regulated: 'REGULATED — they film everything; drawn guns only up close', Banned: 'BANNED — an unregistered hero is a criminal on sight' };
+    const renderDossier = () => {
+      const co = CL.find(c => c.name === P.country);
+      if (!co) { dossier.innerHTML = '<span style="color:var(--text-5,#8b8577)">ORIGIN UNDISCLOSED — the registry files you under a neutral banner. Pick a homeland and the world will have OPINIONS.</span>'; return; }
+      const city = cityList().find(c => c.country === P.country && c.name === P.city);
+      const law = co.lawEnforcement >= 70 ? 'sharp and fast' : co.lawEnforcement >= 45 ? 'competent' : 'stretched thin';
+      dossier.innerHTML = `
+        <div style="font-size:13px;color:var(--text,#e8e2d4)">${flagFor(co.name)} <b>${co.name.toUpperCase()}</b><span style="color:var(--text-5,#8b8577)"> · ${(co.demonym || '').toUpperCase()}</span></div>
+        ${co.motto && co.motto !== 'None' ? `<div style="color:var(--text-5,#8b8577);font-style:italic">“${co.motto}”</div>` : ''}
+        <div style="margin-top:5px"><b style="color:var(--gold,#ffd24a)">VIGILANTISM</b> · ${VIG_LINE[co.vigilantism] || co.vigilantism}</div>
+        <div><b style="color:var(--gold,#ffd24a)">LSW LAW</b> · ${String(co.lswRegs || '?').toUpperCase()} · scene ${String(co.lswActivity || '?').toUpperCase()}</div>
+        <div><b style="color:var(--gold,#ffd24a)">THE LAW</b> · grade ${co.lawEnforcement}/100 — ${law}</div>
+        ${city ? `<div><b style="color:var(--gold,#ffd24a)">HOMETOWN</b> · ${city.name.toUpperCase()} — ${String(city.popType || '').toUpperCase()} · POP ${city.pop >= 1e6 ? (city.pop / 1e6).toFixed(2) + 'M' : city.pop >= 1e3 ? Math.round(city.pop / 1e3) + 'K' : city.pop}${city.crime > 0 ? ' · CRIME ' + city.crime : ''}</div>` : (P.city ? `<div><b style="color:var(--gold,#ffd24a)">HOMETOWN</b> · ${P.city.toUpperCase()} — off the registry's map</div>` : '')}`;
+    };
+    cSel.onchange = () => { P.country = cSel.value; P.city = ''; fillCities(); renderDossier(); this.renderSheet(); };
+    tSel.onchange = () => {
+      if (tSel.value === '__custom') { free.style.display = 'block'; free.focus(); P.city = free.value || ''; }
+      else { free.style.display = 'none'; P.city = tSel.value; }
+      renderDossier(); this.renderSheet();
+    };
+    free.oninput = () => { P.city = free.value; renderDossier(); this.renderSheet(); };
+    fillCities(); renderDossier();
   }
 
   renderAll() { this.renderIdentity(); this.renderBuild(); this.renderSheet(); this.renderHeader(); }

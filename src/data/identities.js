@@ -70,3 +70,43 @@ export function applyIdentities(roster) {
 export function identityOf(def) {
   return def.person || IDENTITIES[def.id] || { n: 'Identity sealed', c: 'Unknown', co: 'Unknown', f: '🏳' };
 }
+
+
+// The flag for ANY homeland the creator can pick — name → ISO2 → regional indicators.
+// Loose match (case-insensitive, 'the ' stripped). Unknown lands fly the neutral banner.
+const ISO2 = {
+  'afghanistan':'AF','albania':'AL','algeria':'DZ','andorra':'AD','angola':'AO','argentina':'AR','armenia':'AM',
+  'australia':'AU','austria':'AT','azerbaijan':'AZ','bahamas':'BS','bahrain':'BH','bangladesh':'BD','belarus':'BY',
+  'belgium':'BE','belize':'BZ','benin':'BJ','bolivia':'BO','bosnia and herzegovina':'BA','botswana':'BW','brazil':'BR',
+  'brunei':'BN','bulgaria':'BG','burkina faso':'BF','burundi':'BI','cambodia':'KH','cameroon':'CM','canada':'CA',
+  'central african republic':'CF','chad':'TD','chile':'CL','china':'CN','colombia':'CO','congo':'CG',
+  'republic of the congo':'CD','costa rica':'CR','croatia':'HR','cuba':'CU','czech republic':'CZ','denmark':'DK',
+  'djibouti':'DJ','dominican republic':'DO','ecuador':'EC','egypt':'EG','el salvador':'SV','equatorial guinea':'GQ',
+  'eritrea':'ER','estonia':'EE','eswatini':'SZ','ethiopia':'ET','faroe islands':'FO','fiji':'FJ','finland':'FI',
+  'france':'FR','gabon':'GA','georgia':'GE','germany':'DE','ghana':'GH','greece':'GR','guatemala':'GT','guinea':'GN',
+  'guinea-bissau':'GW','guyana':'GY','haiti':'HT','honduras':'HN','hong kong':'HK','hungary':'HU','iceland':'IS',
+  'india':'IN','indonesia':'ID','iran':'IR','iraq':'IQ','ireland':'IE','israel':'IL','italy':'IT','ivory coast':'CI',
+  'jamaica':'JM','japan':'JP','jordan':'JO','kazakhstan':'KZ','kenya':'KE','kuwait':'KW','kyrgyzstan':'KG','laos':'LA',
+  'latvia':'LV','lebanon':'LB','liberia':'LR','libya':'LY','lithuania':'LT','madagascar':'MG','malawi':'MW',
+  'malaysia':'MY','mali':'ML','mauritania':'MR','mexico':'MX','moldova':'MD','monaco':'MC','mongolia':'MN',
+  'montenegro':'ME','morocco':'MA','mozambique':'MZ','myanmar':'MM','namibia':'NA','nepal':'NP','netherlands':'NL',
+  'new zealand':'NZ','nicaragua':'NI','niger':'NE','nigeria':'NG','north korea':'KP','north macedonia':'MK',
+  'norway':'NO','oman':'OM','pakistan':'PK','palestine':'PS','panama':'PA','papua new guinea':'PG','paraguay':'PY',
+  'peru':'PE','philippines':'PH','poland':'PL','portugal':'PT','puerto rico':'PR','qatar':'QA','romania':'RO',
+  'russia':'RU','rwanda':'RW','são tomé and príncipe':'ST','saudi arabia':'SA','senegal':'SN','serbia':'RS',
+  'sierra leone':'SL','singapore':'SG','slovakia':'SK','slovenia':'SI','solomon islands':'SB','somalia':'SO',
+  'south africa':'ZA','south korea':'KR','south sudan':'SS','spain':'ES','sri lanka':'LK','sudan':'SD',
+  'suriname':'SR','sweden':'SE','switzerland':'CH','syria':'SY','taiwan':'TW','tajikistan':'TJ','tanzania':'TZ',
+  'thailand':'TH','togo':'TG','trinidad and tobago':'TT','tunisia':'TN','turkey':'TR','turkmenistan':'TM',
+  'uganda':'UG','ukraine':'UA','united arab emirates':'AE','united kingdom':'GB','united states':'US','usa':'US',
+  'uruguay':'UY','uzbekistan':'UZ','venezuela':'VE','vietnam':'VN','western sahara':'EH','yemen':'YE','zambia':'ZM',
+  'zimbabwe':'ZW','mars':'MARS','the moon':'MOON','pluto':'PLUTO',
+};
+export function flagFor(country) {
+  if (!country) return '🌐';
+  const k = String(country).toLowerCase().replace(/^the /, '').trim();
+  const iso = ISO2[k] || ISO2[k.replace(/^republic of /, '')];
+  if (!iso) return '🌐';
+  if (iso.length !== 2) return iso === 'MARS' ? '🔴' : iso === 'MOON' ? '🌙' : '❄';   // off-world homelands
+  return String.fromCodePoint(...[...iso].map(c => 0x1f1e6 + c.charCodeAt(0) - 65));
+}

@@ -1,3 +1,4 @@
+import { flagFor } from './identities.js';
 // THRESHOLD — ORIGIN, the character creator's rulebook. Point-buy D&D-for-superheroes:
 // attributes on the rank ladder with escalating costs, a catalog of engine-proven powers
 // (every ability config here is lifted from a shipped hero's kit — nothing unproven),
@@ -269,7 +270,7 @@ export function buildDef(picks, existingId) {
     person: {
       n: (picks.realName || '').trim() || 'Identity sealed',
       c: (picks.city || '').trim() || 'Undisclosed',
-      co: (picks.country || '').trim() || 'Unknown', f: '🌐',
+      co: (picks.country || '').trim() || 'Unknown', f: flagFor((picks.country || '').trim()),   // the registry flag rides the homeland
     },
     role: (DOCTRINE_NAMES[ai.style] || 'Bruiser') + ' / Origin',
     isCustom: true,
