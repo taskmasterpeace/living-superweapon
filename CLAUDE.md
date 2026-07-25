@@ -954,6 +954,21 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   end-to-end: VOLT clamped / SOL through at 373; depart offered 1×; map row → transit →
   **Tokyo, Japan live**. Refs lsw-orbit-transit.jpeg / lsw-travel-arrival.jpeg.
 
+## THE INJURY SYSTEM (2026-07-24) — manual §18
+- **Zoned wounds**: single hit ≥16% maxHp at the choke point → `addWound(zone)` (slash→arm,
+  slam/cold→leg, else torso; opts.zone overrides). Ladder 1-3 LIGHT/SERIOUS/CRITICAL;
+  decay `28s/ccRecover` per rung; respawn clears. Debuffs derived: leg −9%/lvl speed
+  (move), arm −8%/lvl jab+heavy (melee.js), torso −7%/lvl ki regen. Tells: dark-red
+  octahedron pips pinned per zone (grayscale law) + wound damage-numbers. AI: sees-branch
+  only, leg-wounded foe → pref ×0.75 (pressure the limp — honesty preserved).
+- **Medical ledger** (rankings.js `bookInjury/injuryOf/healBout`): booked KOs roll 30% →
+  ONE injury max (name from `_lastHitKind`), bouts:2, −5% capped. Spawn reads it via a lazy
+  first-frame `_medChecked` in game.update (covers all spawn paths); decided duels
+  healBout both sides; codex §03 renders § MEDICAL from `injuryOf` — the record is the API
+  for the tape/news passes later. ⚠ rankings BOOK memoizes per module instance — tests
+  must write through the PAGE's own call path (a phantom dynamic import books into a book
+  the game never reads).
+
 ## THE SAMPLE BANK (2026-07-24) — real recordings for every discrete SFX
 - **`core/samples.js`** (`MANIFEST` + `SampleBank` + `HOT_SET`) + **254 Kenney CC0 oggs in
   `/public/audio`** (~6MB, offline-first; impact/sci-fi/interface/rpg/jingle packs). Every

@@ -47,6 +47,38 @@ export function matchElo(winnerId, loserId, defs, how = 'duel') {
   return { d };
 }
 
+// THE MEDICAL LEDGER (manual §18): a booked KO can leave a REAL injury on the record —
+// ONE active injury max, a small capped debuff at spawn, healed by completing sanctioned
+// bouts. Every surface (codex §03, spawn feed, news) reads THIS one record.
+const INJURY_NAMES = {
+  strike: ['fractured orbital', 'broken jaw', 'cracked knuckles'],
+  slam:   ['fractured ribs', 'hairline spinal fracture', 'shattered collarbone'],
+  slash:  ['deep lacerations', 'a severed tendon'],
+  beam:   ['plasma burns', 'a flash-seared retina'],
+  blast:  ['concussive trauma', 'a ruptured eardrum'],
+  dot:    ['chemical burns', 'systemic toxin damage'],
+};
+export function bookInjury(victimId, kind, def) {
+  if (!victimId) return null;
+  const r = recOf(victimId, def);
+  if (r.injury) return null;                              // one body, one active injury
+  const pool = INJURY_NAMES[kind] || INJURY_NAMES.strike;
+  const name = pool[(r.kod + r.l) % pool.length];         // deterministic off the record itself
+  r.injury = { name, bouts: 2, debuff: 0.05 };            // heals in 2 sanctioned bouts, capped −5%
+  save();
+  return r.injury;
+}
+export function injuryOf(id) { const r = load().heroes[id]; return (r && r.injury) || null; }
+export function healBout(id) {
+  const r = load().heroes[id];
+  if (!r || !r.injury) return null;
+  r.injury.bouts--;
+  const name = r.injury.name, done = r.injury.bouts <= 0, left = Math.max(0, r.injury.bouts);
+  if (done) r.injury = null;
+  save();
+  return { name, cleared: done, left };
+}
+
 export function crownChampion(id) { const B = load(); B.champion = id; B.tournaments++; save(); }
 export function championId() { return load().champion; }
 export function tournamentNo() { return load().tournaments + 1; }

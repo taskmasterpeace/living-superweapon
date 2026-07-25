@@ -12,7 +12,7 @@ import { Pedestrians } from './pedestrians.js';
 import { NewsCrew } from './newscrew.js';
 import { PoliceSystem } from './police.js';
 import { buildReport } from '../data/news.js';
-import { koElo, matchElo } from '../data/rankings.js';
+import { bookInjury, injuryOf, healBout, koElo, matchElo } from '../data/rankings.js';
 import { SETTINGS, keymap } from '../core/settings.js';
 import { Gamepad } from '../core/gamepad.js';
 import { runSlot, performEvade } from './abilities.js';
@@ -893,7 +893,13 @@ export class Game {
     try {
       if (this.modeId === 'duel' && this.ms.p1 && this.ms.enemy && this.ms.enemy.def) {
         const w = result.win ? this.ms.p1 : this.ms.enemy, l = result.win ? this.ms.enemy : this.ms.p1;
-        if (w.def.id && l.def.id) matchElo(w.def.id, l.def.id, [w.def, l.def], 'duel');
+        if (w.def.id && l.def.id) {
+          matchElo(w.def.id, l.def.id, [w.def, l.def], 'duel');
+          for (const id of [w.def.id, l.def.id]) {            // a completed bout is medicine (manual §18)
+            const h = healBout(id);
+            if (h && h.cleared && this.hud) this.hud.feed(`MEDICAL: ${id.toUpperCase()} cleared to fight — ${h.name} healed`, '#8fe08a');
+          }
+        }
       }
       // an Invitational match reports to the bracket: books tournament Elo, sims the rest of the
       // round off-screen, and — if this was the final or the player's exit — crowns the champion
@@ -1212,7 +1218,14 @@ export class Game {
       // the ledger: every registered-weapon knockdown moves the power rankings (AI or human pilot
       // alike) — friendly-fire KOs shame the feed but never touch the book
       if (killer && killer.def && killer.def.id && victim.def.id && killer.team !== victim.team && !killer.def.police && !victim.def.police
-        && !killer._controlled && !victim._controlled && this.modeId !== 'training') koElo(killer.def.id, victim.def.id, [killer.def, victim.def]);   // a DOMINATED fighter's KOs are the controller's doing — the book stays honest
+        && !killer._controlled && !victim._controlled && this.modeId !== 'training') {
+        koElo(killer.def.id, victim.def.id, [killer.def, victim.def]);   // a DOMINATED fighter's KOs are the controller's doing — the book stays honest
+        // THE MEDICAL LEDGER (manual §18): some knockdowns leave a mark that outlives the match
+        if (Math.random() < 0.3) {
+          const inj = bookInjury(victim.def.id, victim._lastHitKind || 'strike', victim.def);
+          if (inj && this.hud) this.hud.feed(`MEDICAL: ${victim.name} — ${inj.name}, out ${inj.bouts} sanctioned bouts of form`, '#ff8a6a');
+        }
+      }
     }
     this.audio.cry(victim.def.voicePitch || 1, victim.pos);   // the falling wail
     this.noise(victim.pos, 2.2, null);                        // a death scream carries across the district
@@ -1980,6 +1993,19 @@ export class Game {
     for (const f of this.entities) { if (this.isHuman(f)) continue; if (f.remote) this.controlRemote(f, dt); else this.controlBot(f, dt); }
 
     for (const f of this.entities) {
+      if (!f._medChecked) {
+        f._medChecked = true;
+        // carry-over injuries from the book: small, capped, and announced (manual §18)
+        if (f.def && f.def.id && !f.def.police && !f.isDummy) {
+          const inj = injuryOf(f.def.id);
+          if (inj) {
+            f.maxHp = Math.round(f.maxHp * (1 - Math.min(0.08, inj.debuff || 0.05)));
+            f.hp = Math.min(f.hp, f.maxHp);
+            f._bookInjury = inj;
+            if (this.hud && this.isHuman(f)) this.hud.feed(`CARRYING: ${inj.name} — clears after ${inj.bouts} sanctioned bout${inj.bouts > 1 ? 's' : ''}`, '#ff8a6a');
+          }
+        }
+      }
       const wasAlive = f._wasAlive !== false;
       f.update(dt, this);
       if (wasAlive && f.state === 'ko') this.handleKO(f);

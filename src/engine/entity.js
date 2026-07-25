@@ -485,6 +485,7 @@ export class Fighter {
     this._bleed = 0; this._bleedStill = 0; this._bleedAcc = 0; this._bleedTick = 0; this._bleedSrc = null; this._suitHex = null;   // BLEEDING (manual §12)
     this.downedT = 0; this._swHold = 0; this._secondWindUsed = false;   // SECOND WIND (manual §13) — a player's drama, never a bot's
     this._disarmT = 0; this._gearHeld = null; this._gearMesh = null;    // THE GEAR SYSTEM (manual §16)
+    this._wounds = { arm: 0, leg: 0, torso: 0 }; this._woundT = { arm: 0, leg: 0, torso: 0 };   // ZONED WOUNDS (manual §18)
     this.sleepT = 0; this._sleepImmune = 0; this._sleepK = 0;   // SLEEP (manual §14): fold slowly, wake on ANY damage
     this.blindT = 0;                                            // BLIND (manual §14): smoke owns the eyes
     this.metal = !!def.metal;   // robot: sparks when hit, foot exhaust, sturdier vs knockback
@@ -584,6 +585,21 @@ export class Fighter {
       this._game.particles.burst(this.pos.x, this.pos.y + 5, this.pos.z, { count: 6, speed: 8, life: 0.4, size: 1.8, color: ['#c22a2a', '#7a1414'], up: -2, grav: 30, drag: 0.6 });
     }
   }
+  // ZONED WOUNDS (manual §18): one BIG hit marks the body part it landed on. LIGHT → SERIOUS
+  // → CRITICAL per zone; VIGOR (ccRecover) walks the ladder back down a rung at a time.
+  // Debuffs are the tells: a leg wound IS a limp (speed), an arm wound weakens the fists,
+  // a torso wound slows the tank. Cleared on respawn. Dummies measure; they don't bruise.
+  addWound(zone) {
+    const W = this._wounds; if (!W || W[zone] == null || W[zone] >= 3 || this.isDummy) return;
+    W[zone]++;
+    const rec = (this.sheet && this.sheet.ccRecover) || 1;
+    this._woundT[zone] = 28 / rec;
+    if (this._game && this._game.hud) {
+      const label = ['', 'LIGHT', 'SERIOUS', 'CRITICAL'][W[zone]];
+      this._game.hud.damageNumber(this.pos, `${zone.toUpperCase()} WOUND · ${label}`, '#c9564a', true);
+    }
+  }
+
   clotBleed(game, silent) {
     if (!(this._bleed > 0)) return;
     this._bleed = 0; this._bleedAcc = 0; this._bleedStill = 0; this._bleedTick = 0;
@@ -809,6 +825,10 @@ export class Fighter {
         && ((opts.dmgClass === 'slash' && amount >= 4) || (dtype === 'physical' && amount >= 18))) {
       this.addBleed(opts.src);
     }
+    // ---- ZONED WOUNDS (manual §18): a single hit ≥16% of max hp marks the zone it struck ----
+    if (amount >= this.maxHp * 0.16 && opts.src && opts.src !== this && !opts.bleed && this.state !== 'ko') {
+      this.addWound(opts.zone || (opts.dmgClass === 'slash' ? 'arm' : opts.slam ? 'leg' : dtype === 'cold' ? 'leg' : 'torso'));
+    }
     // ---- THE STUN (manual §9): a big enough beating in a short window scrambles anyone ----
     // Track burst damage over a rolling ~2s; crossing 24% of max hp = STUNNED (stars around the
     // head, no actions, and a flyer FALLS — "knocked out of the air"). ccRecover shortens it,
@@ -917,6 +937,12 @@ export class Fighter {
     }
     if (this._sleepImmune > 0) this._sleepImmune -= dt;
     if (this._disarmT > 0) this._disarmT -= dt;
+    if (this._wounds) for (const z of ['arm', 'leg', 'torso']) {
+      if (this._wounds[z] > 0 && (this._woundT[z] -= dt) <= 0) {
+        this._wounds[z]--;
+        if (this._wounds[z] > 0) this._woundT[z] = 28 / ((this.sheet && this.sheet.ccRecover) || 1);
+      }
+    }
     // ---- AFTERBURNER (manual §15): hold cruise 0.8s with a burner-class core → IGNITION ----
     {
       const AF = this.def.afterburner;
@@ -1120,7 +1146,7 @@ export class Fighter {
     else this._bigYelled = false;
     this._wasCharge = anyCharge;
     if (this.energyInfinite) this.ki = this.maxKi;                             // android core — the tank never moves
-    else this.ki = clamp(this.ki + (anyCharge ? 3 : 8) * this.sheet.kiRegenMult * dt, 0, this.maxKi);   // ki is a budget — RESOLVE refills it
+    else this.ki = clamp(this.ki + (anyCharge ? 3 : 8) * this.sheet.kiRegenMult * (1 - 0.07 * ((this._wounds && this._wounds.torso) || 0)) * dt, 0, this.maxKi);   // ki is a budget — RESOLVE refills it; a torso wound slows the tank (manual §18)
     // guard to recover ki — and THE POWER CHARGE (DBZ ruling 2026-07-24): hold the stance while
     // genuinely SAFE and it becomes the real thing — the scream, rising sparks, a white-hot state
     // ring, 40/s regen. A foe closing inside 55u drops you back to an honest block on its own;
@@ -1172,6 +1198,7 @@ export class Fighter {
       // put the figure hierarchy back exactly, then respawn
       if (this.ragdoll) { this.ragdoll.restore(); this.ragdoll = null; }
       this.hp = this.maxHp; this.ki = this.maxKi * 0.4;
+      this._wounds = { arm: 0, leg: 0, torso: 0 }; this._woundT = { arm: 0, leg: 0, torso: 0 };   // a fresh body (manual §18)
       for (const it of this.items) if (it.state !== 'deployed') { it.charges = it.def.charges ?? 1; it.state = 'ready'; it.cd = 0; }   // fresh pouch each life
       this.state = 'idle'; this.invuln = 1.4; this.vel.set(0, 0, 0);
       if (this.isDummy) this.pos.copy(this.spawn);
@@ -1441,6 +1468,7 @@ export class Fighter {
   move(dir, dt, sprint = 1) {
     if (this.state === 'ko' || this.hitstop > 0 || this.grabbedBy || this.grabState === 'clinch' || this.staggerT > 0 || this.frozenT > 0 || this.stunT > 0 || this.hanging) return;   // hanging: your feet have nowhere to be
     let s = this.speed * 1.08 * this.powerBuff * sprint;   // ground feel pass 2026-07-24: +8% across the board
+    if (this._wounds && this._wounds.leg) s *= 1 - 0.09 * this._wounds.leg;   // the LIMP is real (manual §18)
     if (this.sprintT > 0) s *= this.sprintMult;   // double-tap sprint surge
     if (this.meleeCharge > 0) s *= 0.4;           // winding up a haymaker roots you
     if (this.flying) {
@@ -1509,6 +1537,29 @@ export class Fighter {
         s.scale.setScalar(0.7 + rise * 0.5);
       }
     } else if (p.zzz && p.zzz[0].visible) { for (const s of p.zzz) s.visible = false; }
+    // WOUND PIPS (manual §18): a dark marker pinned at each wounded zone, scaled by severity —
+    // readable in grayscale (dark-on-suit), one glance says WHERE the body is broken.
+    {
+      const W = this._wounds;
+      const any = W && (W.arm || W.leg || W.torso);
+      if (any) {
+        if (!p.woundPips) {
+          p.woundPips = {};
+          for (const [z, x, y] of [['arm', 1.7, 6.3], ['leg', 0.8, 2.2], ['torso', 0, 5.2]]) {
+            const m = new THREE.Mesh(new THREE.OctahedronGeometry(0.34, 0), new THREE.MeshBasicMaterial({ color: '#7a1414', transparent: true, opacity: 0.92, depthWrite: false }));
+            m.position.set(x, y, 0.9);
+            this.obj.add(m); p.woundPips[z] = m;
+          }
+        }
+        for (const z of ['arm', 'leg', 'torso']) {
+          const m = p.woundPips[z], lv = W[z];
+          m.visible = lv > 0;
+          if (lv > 0) m.scale.setScalar(0.7 + lv * 0.45);
+        }
+      } else if (p.woundPips && (p.woundPips.arm.visible || p.woundPips.leg.visible || p.woundPips.torso.visible)) {
+        for (const z of ['arm', 'leg', 'torso']) p.woundPips[z].visible = false;
+      }
+    }
     // BLIND TELL (manual §14): the blocked-eye mark at the brow — targeting information, interrupted
     if (this.blindT > 0) {
       if (!p.eyeMark) {

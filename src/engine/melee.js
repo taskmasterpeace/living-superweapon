@@ -98,7 +98,8 @@ export class MeleeSystem {
       f._heavyT = 0;
       const str = f.def.strength ?? 5, hay = f._heavyHay, p = f._heavyP;
       const mom = momentumMult(f), dive = f._momDive && (f._momSpd || 0) > 20;
-      const dmg = (hay ? 20 + p * 14 : 13) * (0.85 + str * 0.03) * f.powerBuff * (hay ? 1 : ((f.sheet && f.sheet.jabMult) || 1));
+      const dmg = (hay ? 20 + p * 14 : 13) * (0.85 + str * 0.03) * f.powerBuff * (hay ? 1 : ((f.sheet && f.sheet.jabMult) || 1))
+        * (1 - 0.08 * ((f._wounds && f._wounds.arm) || 0));   // the cradled arm (manual §18)
       const blocked = foe.guarding && foe.staggerT <= 0 && (foe.def.guardType === 'barrier' || this._front(foe, f));
       const imp = foe.pos.clone().set((f.pos.x + foe.pos.x) / 2, 5.7, (f.pos.z + foe.pos.z) / 2);
       if (blocked && hay) {
@@ -199,7 +200,8 @@ export class MeleeSystem {
         const mom = momentumMult(f), dive = f._momDive && (f._momSpd || 0) > 20;
         const blocked = foe.guarding && foe.staggerT <= 0 && (foe.def.guardType === 'barrier' || this._front(foe, f));
         const kbs = blocked ? 1 : mom;
-        const dmg = (fin ? 17 : 8) * kbs * f.powerBuff * ((f.sheet && f.sheet.jabMult) || 1);   // FIGHTING + Martial Artist
+        const dmg = (fin ? 17 : 8) * kbs * f.powerBuff * ((f.sheet && f.sheet.jabMult) || 1)
+          * (1 - 0.08 * ((f._wounds && f._wounds.arm) || 0));   // a wounded arm hits softer (manual §18)
         const hs = fin ? 0.14 : 0.07;
         foe.takeDamage(dmg, { src: f, strike: true, hitstop: hs,
           dmgClass: this._swingKind(f) === 'blade' ? 'slash' : undefined,   // claw/blade kits jab with STEEL — wounds (manual §12)

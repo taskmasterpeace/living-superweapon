@@ -11,7 +11,7 @@ import { SETTINGS, saveSettings, applySettings, KEYMAPS, keymap } from '../core/
 import { identityOf } from '../data/identities.js';
 import { icon, ATTR_ICON, ICON_MEANING } from './icons.js';
 import { writeBroadcast, tapeRows, llmPunchUp, titleCase, money, causeLine, mulberry } from '../data/news.js';
-import { recOf, snapshotTable, rankingTable, recentIncidents, championId, tournamentNo } from '../data/rankings.js';
+import { injuryOf, recOf, snapshotTable, rankingTable, recentIncidents, championId, tournamentNo } from '../data/rankings.js';
 import { cityList } from '../data/cities.js';
 import { generatePlan, thresholdPlan, galleryPlan, TILE_INFO, VARIANTS, popLabel, CELL, CELL_RANGE, POP_TYPES, TILE_FOOT, TILE_SIZES, NO_RESCUE, applyPlanEdits, regionOf, ROAD, validatePlan } from '../data/cityplan.js';
 import { mountAtlas } from './atlasUI.js';
@@ -862,6 +862,7 @@ export class HUD {
             <div class="cfsh">§03 · SANCTIONED RECORD</div>
             <div class="cfrow"><span class="k">POWER INDEX</span><span class="v hot">${rec.elo} · RANK #${me.rank}/${snapAll.length}${champ ? ' · REIGNING CHAMPION' : ''}</span></div>
             <div class="cfrow"><span class="k">BOUT RECORD</span><span class="v">${rec.w}–${rec.l}${rec.w + rec.l ? '' : ' (UNTESTED)'} · ${rec.ko} KO / ${rec.kod} CONCEDED</span></div>
+            ${(() => { const inj = injuryOf(c.id); return inj ? `<div class="cfrow"><span class="k">§ MEDICAL</span><span class="v" style="color:var(--danger-2)">CARRYING ${esc(inj.name).toUpperCase()} — CLEARS IN ${inj.bouts} SANCTIONED BOUT${inj.bouts > 1 ? 'S' : ''} · −5% CERTIFIED OUTPUT</span></div>` : '<div class="cfrow"><span class="k">§ MEDICAL</span><span class="v">FIT TO FIGHT — NO ACTIVE INJURIES</span></div>'; })()}
             ${incid.length ? incid.map(x => `<div class="cfrow"><span class="k">${x.win ? '▲ VICTORY' : '▼ DEFEAT'}</span><span class="v" style="color:${x.win ? 'var(--good)' : 'var(--danger-2)'}">${x.win ? 'def.' : 'lost to'} ${esc(x.vs)} · ${x.how === 'tournament' ? 'INVITATIONAL' : x.how.toUpperCase()} · ${agoStr(x.t)}</span></div>`).join('') : '<div class="cfrow"><span class="k">HISTORY</span><span class="v">NO SANCTIONED BOUTS ON RECORD</span></div>'}
           </div>
           <div class="cfsec">

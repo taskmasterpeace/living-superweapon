@@ -183,6 +183,7 @@ export class AI {
     this.think -= dt; if (this.think <= 0) { this.think = rand(0.6, 1.5); this.strafe = chance(0.5) ? 1 : -1; }
     let mx = 0, mz = 0;
     let pref = this.range * (lowHp ? 1.5 : 1); if (this.aggro > 0.85 && !lowHp) pref *= 0.8;
+    if (real._wounds && real._wounds.leg > 0) pref *= 0.75;   // a visible LIMP invites pressure — sight-gated (we are in the sees branch; manual §18)
     if (d > pref + 8) { mx = dx / d; mz = dz / d; } else if (d < pref - 8) { mx = -dx / d; mz = -dz / d; }
     const sa = 0.4 + this.aggro * 0.3; mx += (-dz / d) * this.strafe * sa; mz += (dx / d) * this.strafe * sa;
     out.move = { x: mx, z: mz };

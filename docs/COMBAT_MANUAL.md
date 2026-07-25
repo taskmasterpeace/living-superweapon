@@ -595,3 +595,39 @@ Parked by the brief's own sequencing: the planet/system zoom stack, gravity/atmo
 world, and true interplanetary destinations — the model extends (a planet is a country row
 with its own plans) when that day comes. Refs: `lsw-orbit-transit.jpeg`,
 `lsw-travel-arrival.jpeg`.
+
+## §18 · THE INJURY SYSTEM (2026-07-24) — one record, every surface reads it
+
+### Zoned match wounds (the body remembers the fight)
+
+- **Opening**: any single hit ≥ **16% of max hp** at the choke point marks the ZONE it
+  struck — `slash → ARM`, `slam → LEG`, `cold → LEG`, else `TORSO` (callers may pass
+  `opts.zone`). Ladder per zone: **LIGHT → SERIOUS → CRITICAL** (1–3). Dummies exempt.
+- **The debuffs ARE the tells, and they are derived, never hand-authored**: LEG = a real
+  limp (−9%/level walk speed — measured 26.4 vs 32.2 u/s at SERIOUS); ARM = softer fists
+  (−8%/level on jabs and heavies — measured 6.85 vs 8.16); TORSO = a slower tank
+  (−7%/level ki regen). Plus **wound pips**: dark-red markers pinned at the wounded zone,
+  scaled by severity — dark-on-suit, grayscale-readable at a glance.
+- **Healing**: VIGOR walks the ladder down — each level clears after `28s / ccRecover` of
+  match time. **Respawn clears the body entirely.**
+- **The AI reads the limp it can SEE**: inside the sight branch only, a visibly leg-wounded
+  foe pulls the bot's preferred range in 25% — pressure the limp, honestly earned.
+- Parked, written down: the limp RUN-CYCLE animation and arm-cradle idle pose are visual
+  polish on top of the real mechanical tells; they ride a later animation pass.
+
+### The medical ledger (injuries that outlive the match)
+
+- **Booked KOs can wound the RECORD**: when a knockdown books Elo (same guards — both
+  registered, opposing teams, no police, no dominated minds, not training), a **30%** roll
+  writes ONE injury to the victim's book entry: name derived from the killing blow's kind
+  (fractured orbital, fractured ribs, plasma burns, deep lacerations…), **one active injury
+  max**, `heals in 2 sanctioned bouts`, debuff capped at **−5%**.
+- **Spawn reads it** (lazy first-frame check — covers every spawn path): the next body that
+  hero fields starts at ×0.95 max hp (measured 119/125), tagged `_bookInjury`, announced in
+  the feed for humans.
+- **Bouts heal it**: every DECIDED duel decrements both parties' `bouts`; at zero the injury
+  clears and the feed says so. Verified: booked → carried → healed over two bouts → gone.
+- **The surfaces read the ONE record** (`injuryOf` in rankings.js): the codex **§03 gains a
+  § MEDICAL row** ("CARRYING FRACTURED ORBITAL — CLEARS IN 2 SANCTIONED BOUTS · −5%
+  CERTIFIED OUTPUT" / "FIT TO FIGHT"). The opening tape and news desk read the same
+  function when their next content pass lands — the record is the API.
