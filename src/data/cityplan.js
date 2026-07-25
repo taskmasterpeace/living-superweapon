@@ -348,6 +348,51 @@ const WEIGHT = {
   residential: 2, educational: 2, temple: 2, seaport: 3, industrial: 3, military: 2,
   mining: 1, resort: 2, park: 1, plaza: 1, farmland: 0, forest: 0, mountain: 0, water: 0,
 };
+// ---- ⚠ REVIEW ITEM 3 · THE TILE REGISTRY -----------------------------------------------
+// A tile used to be a builder plus SEVEN parallel string-keyed tables — TILE_INFO, VARIANTS,
+// TILE_MAX_H, TILE_SIZES, NO_ROTATE, TILE_FOOT, PLACEMENT — each silently defaulting when a
+// new type missed one. That is exactly the failure mode `validateRoster` was written to kill
+// on the roster side: a thing that is quietly incomplete forever.
+//
+// The tables stay (they are readable, diffable, and every existing caller uses them), but they
+// are no longer the SOURCE OF TRUTH about whether a type is complete. `TILES` derives one row
+// per type, and `validateTiles()` reports every type that is missing a field it should have.
+export function tileRegistry() {
+  const types = new Set([
+    ...Object.keys(TILE_INFO), ...Object.keys(VARIANTS), ...Object.keys(TILE_MAX_H),
+    ...Object.keys(TILE_SIZES), ...Object.keys(TILE_FOOT), ...PLACEMENT.map(p => p.t),
+  ].filter(Boolean));
+  const out = {};
+  for (const t of types) {
+    out[t] = {
+      t,
+      info: TILE_INFO[t] || null,
+      variants: VARIANTS[t] ?? 1,
+      maxH: TILE_MAX_H[t] ?? null,
+      sizes: TILE_SIZES[t] || null,
+      foot: TILE_FOOT[t] || null,
+      noRotate: !!NO_ROTATE[t],
+      noRescue: !!NO_RESCUE[t],
+      placements: PLACEMENT.filter(p => p.t === t).length,
+    };
+  }
+  return out;
+}
+// Every type the planner can PLACE must declare a height (the layer contract) and a label
+// (every player surface reads it). Missing rows are reported, not silently defaulted.
+export function validateTiles() {
+  const R = tileRegistry(), problems = [];
+  for (const t of Object.keys(R)) {
+    const r = R[t];
+    if (r.placements > 0 || r.foot) {
+      if (!r.info) problems.push({ t, msg: 'no TILE_INFO label — player surfaces will show a raw id' });
+      if (r.maxH == null) problems.push({ t, msg: 'no TILE_MAX_H — the layer contract cannot bound it' });
+    }
+    if (r.sizes && !Array.isArray(r.sizes)) problems.push({ t, msg: 'TILE_SIZES is not a ladder array' });
+  }
+  return problems;
+}
+
 export const NO_RESCUE = { water: 1, forest: 1, mountain: 1, farmland: 1, park: 1, plaza: 1 };
 function buildRoads(plan, rng) {
   const N = plan.N, C = plan.cells, rural = !!plan.rural;
@@ -944,3 +989,4 @@ export function validatePlan(plan) {
   out.push({ bad: 0, t: `${structural} structural · ${N * N} cells · ${plan.arena * 2}u across` });
   return out;
 }
+
