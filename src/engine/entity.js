@@ -253,6 +253,15 @@ function figure(def) {
   // ring colour = altitude band · notch = WHICH WAY THEY'RE LOOKING · ring style = what they're doing.
   const bandRing = new THREE.Mesh(new THREE.RingGeometry(3.1, 3.7, 24), new THREE.MeshBasicMaterial({ color: '#8fe08a', transparent: true, opacity: 0.5, depthWrite: false, side: THREE.DoubleSide }));
   bandRing.rotation.x = -Math.PI / 2; bandRing.position.y = 0.07; bandRing.renderOrder = 1; g.add(bandRing);
+  // THE PLUMB LINE (altitude plan 2): a GRADUATED vertical tether from a flier down to their
+  // ground column. Dashes every 50u with a brighter tick at each band boundary, so you can
+  // COUNT RUNGS to a flier the way you count floors on a building — measurable, not merely
+  // present. Non-additive (only ki glows) and hidden unless the fighter is genuinely seen.
+  const tetherGeo = new THREE.BufferGeometry();
+  const TETHER_SEGS = 28;
+  tetherGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(TETHER_SEGS * 6), 3));
+  const tether = new THREE.LineSegments(tetherGeo, new THREE.LineBasicMaterial({ color: '#8fe08a', transparent: true, opacity: 0.5, depthWrite: false }));
+  tether.frustumCulled = false; tether.visible = false; tether.renderOrder = 1; g.add(tether);
   // the facing wedge: a bright arc at the FRONT of the ring, so you always know where they look
   const faceWedge = new THREE.Mesh(new THREE.RingGeometry(3.0, 4.5, 18, 1, -0.42, 0.84), new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.8, depthWrite: false, side: THREE.DoubleSide }));
   faceWedge.rotation.x = -Math.PI / 2; faceWedge.position.y = 0.09; faceWedge.renderOrder = 2; g.add(faceWedge);
@@ -419,7 +428,7 @@ function figure(def) {
   const ice = new THREE.Mesh(new THREE.IcosahedronGeometry(4.6, 1), new THREE.MeshStandardMaterial({ color: '#bfeaff', transparent: true, opacity: 0, roughness: 0.15, metalness: 0.1, emissive: '#4fb8e6', emissiveIntensity: 0.15 }));
   ice.position.y = 5.2; ice.scale.set(1, 1.5, 1); ice.visible = false; g.add(ice);
 
-  const P = { g, torso, head, pelvis, cowl, emblem, aura, cape, armL, armR, legL, legR, eyeL, eyeR, shadow, bandRing, faceWedge, stateRing, guardArc, ice, mats: { suit, suit2, glow } };
+  const P = { g, torso, head, pelvis, cowl, emblem, aura, cape, armL, armR, legL, legR, eyeL, eyeR, shadow, bandRing, faceWedge, stateRing, guardArc, ice, tether, mats: { suit, suit2, glow } };
   applyFrame(P, frameOf(def));   // ← the silhouette: proportions derived from who this fighter IS
   return P;
 }
@@ -568,6 +577,9 @@ export class Fighter {
   // Free all scene-level extras (tentacles, deployed items, planted mines). Call when the fighter leaves play.
   // (the grapnel line mesh rides along — see dispose body)
   dispose() {
+    // F9: releasing the fighter must release whatever they were holding, or the prop mesh
+    // outlives them in the scene and the world keeps a reference to a dead carrier.
+    if (this._carry) { try { if (this._game) this._game.scene.remove(this._carry.mesh); } catch (e) {} this._carry = null; }
     // THE FIGURE ITSELF must free its GPU objects — figure()/buildWeapon() allocate per-fighter
     // geometries and materials (suits, limbs, flair, weapons, the ice shell, the stun stars).
     // Every clear path calls dispose(); without this traverse each hero swap/respawn orphaned
@@ -1857,6 +1869,33 @@ export class Fighter {
       const b = bandOf(this.pos.y);
       if (b !== this._band) { this._band = b; p.bandRing.material.color.set(ALT_BANDS[b].c); }
       p.bandRing.material.opacity = b === 0 ? 0.28 : 0.6;   // louder when someone leaves the ground
+      // ---- THE PLUMB LINE ------------------------------------------------------------------
+      if (p.tether) {
+        const gy = this.groundY || 0, h = this.pos.y - gy;
+        // ⚠ THE HONESTY GATE. A tether visible through fog is a wallhack and would silently
+        // undo the entire AI-honesty effort. Only draw it for someone actually seen — or in
+        // the explicit spectator mode, which is an admin view, not the player HUD.
+        const seen = (this._vis === undefined ? 1 : this._vis) > 0.35 || (game && game.hud && game.hud.spectatorBands);
+        if (h > 14 && seen) {
+          p.tether.visible = true;
+          const arr = p.tether.geometry.attributes.position.array;
+          const scroll = (this.flying && Math.abs(this.vel.y) > 4) ? (game ? (game.time * 22) % 50 : 0) : 0;
+          let n = 0;
+          for (let d = 0; d < h && n < 28; d += 50) {
+            const y0 = Math.max(0, d - scroll), y1 = Math.min(h, y0 + 26);
+            if (y1 <= y0) continue;
+            const i = n * 6;
+            arr[i] = 0; arr[i + 1] = y0 - h; arr[i + 2] = 0;
+            arr[i + 3] = 0; arr[i + 4] = y1 - h; arr[i + 5] = 0;
+            n++;
+          }
+          for (let k = n; k < 28; k++) { const i = k * 6; arr[i] = arr[i + 1] = arr[i + 2] = arr[i + 3] = arr[i + 4] = arr[i + 5] = 0; }
+          p.tether.geometry.attributes.position.needsUpdate = true;
+          p.tether.geometry.setDrawRange(0, n * 2);
+          p.tether.material.color.set(ALT_BANDS[b].c);
+          p.tether.material.opacity = (game && game.hud && game.hud.spectatorBands) ? 0.85 : 0.28 + Math.min(0.3, h / 400);
+        } else p.tether.visible = false;
+      }
       // FACING: the wedge sits at the front of the ring and counter-rotates the body's smoothing,
       // so it always points exactly where this fighter is actually looking.
       if (p.faceWedge) {
@@ -1916,5 +1955,6 @@ export class Fighter {
 
   _sync() { /* obj.position is this.pos (same ref); nothing extra */ }
 }
+
 
 

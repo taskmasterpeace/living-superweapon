@@ -29,6 +29,9 @@ export class MeleeSystem {
   canAct(f) { return f.alive && f.hitstop <= 0 && f.staggerT <= 0 && f.stunT <= 0 && !f.grabbedBy && f.grabState !== 'clinch' && !f.hanging; }   // one hand on the wall = no trifecta
 
   strike(f) {
+    // 3c: CARRYING COSTS YOU YOUR HANDS (altitude plan 3). You cannot punch or block
+    // while holding a car — and that is what turns carrying into a decision.
+    if (f._carry) return;
     if (!this.canAct(f) || f.grabbing || f.guarding || f.strikeActive > 0 || f.meleeCharge > 0) return;
     if (f.strikeCd > 0 && f.comboWin <= 0) return;
     // THE FLASH PACE (def.meleePace — VOLT 1.5, the ORIGIN Speedster gift 1.35): a true speedster
@@ -135,6 +138,9 @@ export class MeleeSystem {
   }
 
   guard(f, on) {
+    // 3c: CARRYING COSTS YOU YOUR HANDS (altitude plan 3). You cannot punch or block
+    // while holding a car — and that is what turns carrying into a decision.
+    if (f._carry) return;
     if (f.hanging) on = false;                      // can't brace hanging off a ledge
     // Hitstop must NOT drop a held guard — every blocked hit applies hitstop to the blocker
     // (entity.takeDamage), so gating on canAct() made any fast combo strip the guard after the
@@ -296,3 +302,4 @@ export class MeleeSystem {
     if (g.hud && (g.isHuman(holder) || g.isHuman(v))) g.hud.damageNumber(v.pos, 'BROKE FREE', '#ffffff', true);
   }
 }
+

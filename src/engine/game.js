@@ -131,6 +131,7 @@ export class Game {
   constructor(canvas, input, audio) {
     this.input = input; this.audio = audio; this.pad = new Gamepad();
     this.world = new World(canvas);
+    this.world.game = this;   // the world needs a way back for teardown hooks (interactables)
     this.scene = this.world.scene;
     this.particles = new Particles3D(this.scene);
     this.vfx = new VFX(this.world, this.particles);
@@ -307,8 +308,87 @@ export class Game {
     }
     if (land) { this._arcRing.visible = true; this._arcRing.position.set(land.x, 0.3, land.z); }
     else this._arcRing.visible = false;
-    const col = (p._carry || p.grabState === 'clinch') ? '#ff8a3a' : '#ffd24a';
+    // ---- THE HONEST LIMIT (altitude plan 2) ------------------------------------------------
+    // A gravity throw CANNOT reach the BUILDING deck: a grenade peaks near 25u, a thrown car
+    // near 44u, and the deck is at 96. The plan is explicit — do NOT inflate gravity to "fix"
+    // this. Make it the rule, and SAY it: if the target you are aiming at is above the arc's
+    // apex, the preview turns red and the ring reads OUT OF REACH. The answer to a cloud
+    // camper is a beam, a homing shot, or climbing to meet them.
+    const apex = m.y + ((dir.y + loft) * spd) ** 2 / (2 * grav);
+    const lock = this.hardLock || this._lastLock;
+    const outOfReach = !!(lock && lock.alive && lock.pos.y > apex + 4);
+    if (this._arcOut !== outOfReach) {
+      this._arcOut = outOfReach;
+      if (this.hud) this.hud.throwReach(outOfReach ? 'OUT OF REACH' : '');
+    }
+    const col = outOfReach ? '#ff5a4a' : (p._carry || p.grabState === 'clinch') ? '#ff8a3a' : '#ffd24a';
     if (this._arcCol !== col) { this._arcCol = col; for (const d of this._arcDots) d.material.color.set(col); this._arcRing.material.color.set(col); }
+  }
+
+  // ---------- 3a · THE INTERACTABLE CONTRACT (altitude plan 3) ----------
+  // Nothing in this engine could be TALKED TO or USED — no prompt, no focus target, no
+  // registration list. This is that list. Anything can register: a city tile, a quest giver,
+  // a door, a piece of hardware. Focus is scored by distance AND FACING, because you interact
+  // with what you are looking at.
+  registerInteractable(o) {
+    const h = {
+      id: o.id || ('i' + (this._iSeq = (this._iSeq || 0) + 1)),
+      pos: o.pos, r: o.r ?? 9, band: o.band ?? 0, label: o.label || 'USE',
+      verb: o.verb || 'INTERACT', priority: o.priority || 0,
+      enabled: o.enabled || (() => true), onFocus: o.onFocus || null, onUse: o.onUse || null,
+      cityOwned: !!o.cityOwned, dead: false,
+    };
+    (this.interactables = this.interactables || []).push(h);
+    return h;
+  }
+  unregisterInteractable(h) {
+    const L = this.interactables; if (!L || !h) return;
+    const i = L.indexOf(h); if (i >= 0) L.splice(i, 1);
+  }
+  // ⚠ THE TEARDOWN TRAP: anything a city tile registered must go when the city does, or a
+  // rebuilt map inherits ghost prompts pointing at deleted geometry.
+  clearCityInteractables() {
+    if (!this.interactables) return;
+    this.interactables = this.interactables.filter(h => !h.cityOwned);
+  }
+  updateInteractFocus(dt) {
+    this._ifT = (this._ifT || 0) - dt;
+    if (this._ifT > 0) return;
+    this._ifT = 0.1;                                   // ~10 Hz is plenty for a prompt
+    const p = this.player;
+    const L = this.interactables;
+    if (!p || !p.alive || !L || !L.length || !this.running) { this._focus = null; return; }
+    let best = null, bs = -1e9;
+    for (const h of L) {
+      if (h.dead || !h.enabled(p)) continue;
+      const dx = h.pos.x - p.pos.x, dz = h.pos.z - p.pos.z;
+      const d = Math.hypot(dx, dz);
+      if (d > h.r) continue;
+      const facing = d < 0.001 ? 1 : (dx / d) * p.aim.x + (dz / d) * p.aim.z;   // FACING matters
+      if (facing < 0.1) continue;
+      const score = h.priority * 10 + facing * 6 - d * 0.25;
+      if (score > bs) { bs = score; best = h; }
+    }
+    if (best !== this._focus) {
+      this._focus = best;
+      if (best && best.onFocus) best.onFocus(p);
+    }
+    if (this.hud && this.hud.interactPrompt) this.hud.interactPrompt(best ? best : null, p);
+  }
+  // THE G-CHAIN, in priority order. Four behaviours on one key is only acceptable because the
+  // prompt says which one is armed — so the prompt is not optional, it is part of the feature.
+  interactVerb(f) {
+    if (this._focus && this._focus.enabled(f)) return 'interact';
+    if (f._carry) return 'throw';
+    if (f.grabState === 'clinch' && f.grabbing) return 'hurl';
+    if (this.propInReach(f)) return 'hoist';
+    return 'grab';
+  }
+  doInteract(f) {
+    const h = this._focus;
+    if (!h || !h.enabled(f)) return false;
+    if (h.onUse) h.onUse(f, this);
+    return true;
   }
 
   // ---------- CARRY & THROW: the city is ammunition ----------
@@ -804,6 +884,17 @@ export class Game {
       const half = Math.max(28, Math.hypot(sp.x - sp2.x, sp.y - sp2.y) + 22); // on-screen body size
       const d = Math.hypot(sp.x - cx, sp.y - cy);
       if (d < half && d < hoverD) { hoverD = d; hover = f; }               // cursor is over this character
+      // THE GROUND-COLUMN PASS (altitude plan 2): a flier is routinely off-frame while their
+      // ground ring is still on screen. Clicking the RING locks the fighter above it — the
+      // thing you can see is the thing you can click. No camera change, no new input.
+      if (f.pos.y - (f.groundY || 0) > 14) {
+        this.world.screenPosOf(f.pos.x, (f.groundY || 0) + 0.5, f.pos.z, sp2);
+        if (!sp2.behind) {
+          const gd = Math.hypot(sp2.x - cx, sp2.y - cy);
+          if (gd < 34 && gd < hoverD) { hoverD = gd; hover = f; }
+          if (gd < nearD) { nearD = gd; near = f; }
+        }
+      }
       let nd = d; if (f === this._lastLock) nd -= 40;                      // stickiness
       if (nd < nearD) { nearD = nd; near = f; }
     }
@@ -892,6 +983,9 @@ export class Game {
   }
 
   startMatch(charId) {
+    // F9 (altitude plan): a carry that survives a match start leaves an orphan mesh in the
+    // scene and a fighter permanently slowed. Release every carry before anything else.
+    for (const e of this.entities) if (e && e._carry) { try { this.scene.remove(e._carry.mesh); } catch (err) {} e._carry = null; e.speed = e.def.speed || 30; }
     // clear
     for (const e of this.entities) { this.scene.remove(e.obj); if (e.dispose) e.dispose(); }
     this.entities.length = 0;
@@ -1978,7 +2072,12 @@ export class Game {
     if (inp.released('KeyV') || pad.released('strike')) { this.melee.chargeRelease(p); if (np) np.queueMelee('cr'); }
     // G: carrying → THROW it · something heavy in reach → hoist it · otherwise the normal grab
     if (inp.pressed('KeyG') || pad.pressed('grab')) {
-      if (p._carry) this.throwProp(p);
+      // THE G-CHAIN (altitude plan 3), in priority order. Four behaviours on one key is only
+      // acceptable because the PROMPT shows which one is armed — see hud.interactPrompt.
+      //   focused interactable ? interact : carrying ? throw : gear underfoot ? pick up
+      //   : prop in reach ? hoist : melee grab
+      if (this.doInteract(p)) { /* the world answered */ }
+      else if (p._carry) this.throwProp(p);
       else if (this.pickupGear(p)) {}                      // a weapon on the ground beats a hoist (manual §16)
       else if (!this.grabProp(p)) { this.melee.grab(p); if (np) np.queueMelee('grab'); }
     }
@@ -2249,6 +2348,7 @@ export class Game {
     this.updateSmoke(dt);
     this.updateSingularity(dt);
     this.updateSpikes(dt);
+    this.updateInteractFocus(dt);
     this.updateDecoys(dt);
     this.weather.update(dt);
     this.timeFields.update(dt);
@@ -2291,6 +2391,8 @@ export class Game {
 }
 
 export { ROSTER };
+
+
 
 
 

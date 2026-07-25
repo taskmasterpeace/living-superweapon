@@ -545,6 +545,9 @@ export class World {
   // ---------------- PROCEDURAL CITIES (the world sheet) ----------------
   // Tear the current city down to bare terrain systems, then raise a new one from a plan.
   _teardownCity() {
+    // THE TEARDOWN TRAP (altitude plan 3a): interactables a city tile registered MUST go with
+    // the city, or a rebuilt map inherits ghost prompts pointing at deleted geometry.
+    if (this.game && this.game.clearCityInteractables) this.game.clearCityInteractables();
     this.planes = [];   // the airliners die with the arena group
     this.rocks = [];
     this.doors = [];
@@ -1810,3 +1813,4 @@ const _gcp = new THREE.Vector3(), _gcq = new THREE.Quaternion(), _gcs = new THRE
 const _ndc = new THREE.Vector2();
 const _ray = new THREE.Raycaster();
 const _groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+

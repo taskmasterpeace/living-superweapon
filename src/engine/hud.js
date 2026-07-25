@@ -748,6 +748,143 @@ export class HUD {
   }
 
   // Point at the fight. Bots can genuinely hide now, so an off-screen target gets an edge marker.
+  // THE HONEST LIMIT, said out loud (altitude plan 2): a lobbed weapon that physically cannot
+  // reach the locked target says so, instead of quietly falling short.
+  throwReach(text) {
+    let el = this.el.throwReach;
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'hThrowReach';
+      el.style.cssText = 'position:fixed;left:50%;top:57%;transform:translateX(-50%);font-family:var(--f-mono,monospace);font-size:11px;letter-spacing:.16em;color:var(--danger,#ff5a4a);text-shadow:0 2px 6px #000;pointer-events:none;z-index:22;display:none';
+      document.getElementById('hud').appendChild(el);
+      this.el.throwReach = el;
+    }
+    el.textContent = text || '';
+    el.style.display = text ? 'block' : 'none';
+  }
+
+  // SPECTATOR BANDS (altitude plan 2): an explicit ADMIN view — every tether at full opacity,
+  // every column chip drawn, radar band-coded. Deliberately NOT a change to the player HUD.
+  toggleSpectatorBands() {
+    this.spectatorBands = !this.spectatorBands;
+    this.feed(this.spectatorBands ? 'SPECTATOR BANDS on — all altitudes shown' : 'Spectator bands off', '#7fe6ff');
+    return this.spectatorBands;
+  }
+
+  // THE COLUMN CHIP: because a flier is routinely off-frame while their ground column is not,
+  // a chip rides above the column carrying band glyph + altitude in metres.
+  updateColumnChips(g) {
+    if (!this._colChips) this._colChips = [];
+    const p = g.player; if (!p || !g.running) { for (const c of this._colChips) c.style.display = 'none'; return; }
+    const show = [];
+    for (const e of g.entities) {
+      if (!e.alive || e === p || !g.isFoe(p, e)) continue;
+      const h = e.pos.y - (e.groundY || 0);
+      if (h < 40) continue;
+      if (!this.spectatorBands && g.fov && (e._vis || 0) < 0.4) continue;   // the honesty gate again
+      show.push(e);
+      if (show.length >= 4) break;
+    }
+    for (let i = 0; i < Math.max(show.length, this._colChips.length); i++) {
+      let c = this._colChips[i];
+      if (!c && i < show.length) {
+        c = document.createElement('div');
+        c.style.cssText = 'position:fixed;transform:translate(-50%,-100%);font-family:var(--f-mono,monospace);font-size:9.5px;letter-spacing:.1em;padding:2px 6px;border:1px solid var(--line-2,#3a3d43);background:rgba(10,12,18,.8);border-radius:4px;pointer-events:none;z-index:21;white-space:nowrap';
+        document.getElementById('hud').appendChild(c);
+        this._colChips[i] = c;
+      }
+      if (!c) continue;
+      const e = show[i];
+      if (!e) { c.style.display = 'none'; continue; }
+      const sp = { x: 0, y: 0, behind: false };
+      g.world.screenPosOf(e.pos.x, (e.groundY || 0) + 1, e.pos.z, sp);
+      if (sp.behind) { c.style.display = 'none'; continue; }
+      const b = e.pos.y > 260 ? 3 : e.pos.y > 150 ? 2 : 1;
+      const GL = ['GND', 'BLD', 'SKY', 'CLD'];
+      c.style.display = 'block';
+      c.style.left = sp.x + 'px';
+      c.style.top = Math.max(18, sp.y - 6) + 'px';
+      c.style.color = ['#8fe08a', '#ffd24a', '#7fe6ff', '#ffffff'][b];
+      c.textContent = `↑ ${GL[b]} · ${Math.round((e.pos.y - (e.groundY || 0)) * 0.19)}m · ${e.name}`;
+    }
+  }
+
+  // 3a · THE PROMPT. Four behaviours share the G key, and that is ONLY acceptable because
+  // this says which one is armed. Without it, the chain does not ship.
+  interactPrompt(h, f) {
+    let el = this.el.iPrompt;
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'hInteract';
+      el.style.cssText = 'position:fixed;left:50%;bottom:19%;transform:translateX(-50%);display:none;align-items:center;gap:9px;font-family:var(--f-mono,monospace);font-size:11px;letter-spacing:.12em;color:var(--text,#e8e2d4);background:rgba(10,12,18,.82);border:1px solid var(--line-gold,#6b5824);border-radius:var(--r-1,4px);padding:6px 12px;pointer-events:none;z-index:22';
+      document.getElementById('hud').appendChild(el);
+      this.el.iPrompt = el;
+    }
+    const g = this.game;
+    const verb = g && g.interactVerb && f ? g.interactVerb(f) : null;
+    const LABEL = { interact: h ? h.verb : 'INTERACT', throw: 'THROW', hurl: 'HURL THEM', hoist: 'HOIST', grab: 'GRAB' };
+    if (!f || !g || !g.running || !verb || (verb === 'grab' && !h)) { el.style.display = 'none'; return; }
+    el.style.display = 'flex';
+    el.innerHTML = `<b style="color:var(--gold,#ffd24a)">G</b><span>${(LABEL[verb] || verb).toUpperCase()}</span>` +
+      (h && verb === 'interact' ? `<span style="color:var(--text-5,#8b8577)">— ${String(h.label).toUpperCase()}</span>` : '');
+  }
+
+  // 3b · THE CHOICE SURFACE — a FIELD INTERCEPT TRANSCRIPT, not a JRPG box. Classification bar,
+  // mono speaker slug with the real district, typed body, numbered § option rows with
+  // consequence tags, ESC = WITHDRAW. LIVE by default: a street conversation that stopped the
+  // world would fight the police and heat systems that are still running.
+  showTranscript({ speaker, district, body, options, pause = false } = {}) {
+    let el = this.el.transcript;
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'hTranscript';
+      el.className = 'lswovl';
+      el.style.cssText = 'position:fixed;left:50%;bottom:8%;transform:translateX(-50%);width:min(620px,92vw);display:none;z-index:63;font-family:var(--f-display,Rajdhani,sans-serif)';
+      document.body.appendChild(el);
+      this.el.transcript = el;
+    }
+    const mono = 'font-family:var(--f-mono,monospace)';
+    el.innerHTML = `
+      <div style="border:1px solid var(--line-gold,#6b5824);background:var(--surface-solid,#12110e)">
+        <div style="display:flex;gap:8px;align-items:center;padding:5px 10px;border-bottom:1px solid var(--line,#2a2d33);${mono};font-size:9px;letter-spacing:.16em;color:var(--text-5,#8b8577)">
+          <span style="background:var(--stamp,#8a1d24);color:#fff;padding:1px 6px">FIELD INTERCEPT</span>
+          <span>${(district || '').toUpperCase()}</span><span style="margin-left:auto">ESC · WITHDRAW</span>
+        </div>
+        <div style="padding:11px 13px">
+          <div style="${mono};font-size:10px;color:var(--gold,#ffd24a);letter-spacing:.1em">${(speaker || 'UNKNOWN').toUpperCase()}</div>
+          <div id="tsBody" style="font-size:14px;line-height:1.5;color:var(--text-2,#c9c2b4);margin:5px 0 9px;min-height:2.6em"></div>
+          <div id="tsOpts" style="display:flex;flex-direction:column;gap:5px"></div>
+        </div>
+      </div>`;
+    el.style.display = 'block';
+    // typed body, in the same register as every other document surface in this game
+    const bEl = el.querySelector('#tsBody');
+    let i = 0; clearInterval(this._tsT);
+    this._tsT = setInterval(() => { bEl.textContent = String(body || '').slice(0, ++i); if (i >= (body || '').length) clearInterval(this._tsT); }, 16);
+    const oEl = el.querySelector('#tsOpts');
+    (options || []).forEach((o, n) => {
+      const b = document.createElement('button');
+      b.style.cssText = 'text-align:left;background:var(--surface-raised,#16150f);border:1px solid var(--line,#2a2d33);color:var(--text,#e8e2d4);padding:6px 10px;font-family:inherit;font-size:12.5px;cursor:pointer';
+      b.innerHTML = `<span style="${mono};font-size:10px;color:var(--gold,#ffd24a)">§${n + 1}</span> ${o.text}` +
+        (o.tag ? ` <span style="${mono};font-size:9px;color:var(--text-5,#8b8577)">— ${o.tag.toUpperCase()}</span>` : '');
+      b.onclick = () => { this.hideTranscript(); o.onPick && o.onPick(); };
+      oEl.appendChild(b);
+    });
+    // ⚠ if it ever pauses, it MUST join the overlay set or ESC pauses the game BEHIND it
+    this._tsPaused = !!pause;
+    if (pause && this.game) this.game.running = false;
+    this._tsEsc = (e) => { if (e.code === 'Escape') { e.stopPropagation(); this.hideTranscript(); } };
+    addEventListener('keydown', this._tsEsc, true);
+  }
+  hideTranscript() {
+    const el = this.el.transcript; if (!el) return;
+    clearInterval(this._tsT);
+    el.style.display = 'none';
+    if (this._tsPaused && this.game) { this.game.running = true; this._tsPaused = false; }
+    if (this._tsEsc) { removeEventListener('keydown', this._tsEsc, true); this._tsEsc = null; }
+  }
+  transcriptOpen() { return !!(this.el.transcript && this.el.transcript.style.display === 'block'); }
+
   updateFoeArrow(g) {
     const el = this.el.foeArrow; if (!el) return;
     const inMatch = !!(g.mode && g.running && !g.matchOver);
@@ -1468,7 +1605,18 @@ export class HUD {
     for (const e of g.entities) {
       if (e === P || !e.def || e.isDummy || !e.alive) continue;
       const vis = g.fov ? (e._vis || 0) : 1;
-      if (vis > 0.4) { const [ex, ey] = toXY(e.pos.x, e.pos.z); ctx.fillStyle = e.def.police ? 'var(--police)' : 'var(--danger)'; ctx.beginPath(); ctx.arc(ex, ey, 3.4, 0, TAU); ctx.fill(); ctx.strokeStyle = 'rgba(0,0,0,.5)'; ctx.lineWidth = 1; ctx.stroke(); }
+      if (vis > 0.4 || this.spectatorBands) {
+        const [ex, ey] = toXY(e.pos.x, e.pos.z);
+        // THE RADAR IS XZ-ONLY (altitude plan 2): a foe 300u overhead was a dot beside you.
+        // Band-COLOUR and band-SIZE the dot so height reads on the map. ⚠ Canvas 2D cannot
+        // resolve CSS tokens — these must be literals (the documented law).
+        const b = e.pos.y > 260 ? 3 : e.pos.y > 150 ? 2 : e.pos.y > 8 ? 1 : 0;
+        const BC = ['#ff5a4a', '#ffd24a', '#7fe6ff', '#ffffff'];
+        ctx.fillStyle = e.def.police ? '#7fb0d0' : BC[b];
+        ctx.beginPath(); ctx.arc(ex, ey, 3.4 + b * 0.9, 0, TAU); ctx.fill();
+        ctx.strokeStyle = 'rgba(0,0,0,.5)'; ctx.lineWidth = 1; ctx.stroke();
+        if (b > 0) { ctx.fillStyle = '#0b0906'; ctx.font = '700 7px monospace'; ctx.textAlign = 'center'; ctx.fillText(String(b), ex, ey + 2.5); }
+      }
       else if (e._lastKnown) { const [lx, ly] = toXY(e._lastKnown.x, e._lastKnown.z); ctx.fillStyle = 'rgba(255,90,74,.6)'; ctx.font = 'bold 11px Inter,sans-serif'; ctx.fillText('?', lx - 3, ly + 4); }
     }
     // deployed beacon — gold diamond so she always knows where home is
@@ -2008,6 +2156,7 @@ export class HUD {
     this.updateKitWidget(p);
     this.updateDpsMeters(g);
     this.updateFoeArrow(g);
+    this.updateColumnChips(g);
     this.updateTelemetry(g);
     this.updateAltitude(g, p);
     // radar (hidden at the title / while paused) + low-HP danger pulse
@@ -2418,3 +2567,4 @@ export class HUD {
   showTitle() { this.titleOpen = true; this._startColdOpen(); this.title.style.display = 'flex'; this.title.style.visibility = 'visible'; this.title.style.opacity = '1'; }
   hideTitle() { clearInterval(this._cdT); this._cdT = null; this.titleOpen = false; this.title.style.opacity = '0'; setTimeout(() => { this.title.style.display = 'none'; }, 250); this.title.style.transition = 'opacity .25s'; }
 }
+

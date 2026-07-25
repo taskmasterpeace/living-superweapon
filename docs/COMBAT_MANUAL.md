@@ -1090,3 +1090,54 @@ visual validators both at zero.
    `pos.y <= groundY || onBlock` and `!flying` — set those, never the result.
 4. **The telekinesis THROW was gated behind the grab's own cooldown**, so you could pick
    someone up and never put them down. **Letting go is not a cast.**
+
+## §27 · SEEING ACROSS LEVELS, AND TOUCHING THE WORLD (2026-07-25)
+
+`docs/PLAN_ALTITUDE_AND_INTERACTION.md` had three plans. Plan 1 (the four-deck ladder) shipped
+in July. Plans 2 and 3 are in now, and the plan's own findings F7 and F9 with them.
+
+### PLAN 2 — seeing and hitting across levels
+
+- **THE PLUMB LINE.** A graduated vertical tether from every airborne fighter down to their
+  ground column, built beside `bandRing` and coloured by band. A dash every 50u, so you can
+  **count rungs** to a flier the way you count floors on a building — measurable, not merely
+  present — and the dashes SCROLL while they are climbing.
+  ⚠ **It gates on `_vis > 0.35`.** A tether visible through fog is a wallhack and would
+  silently undo the entire AI-honesty effort. Verified: a flier outside the vision cone reads
+  `_vis 0` with **the tether hidden**; bring them into view and it draws (5 segments at 200u).
+- **THE GROUND-COLUMN PASS in `pickTarget`.** A flier is routinely off-frame while their ring
+  is still on screen, so clicking the RING locks the fighter above it. No camera change, no new
+  input. Verified: a foe at 181u locked from their ground ring.
+- **THE COLUMN CHIP** (`hud.updateColumnChips`) rides above the column with band glyph, height
+  in metres and name — same honesty gate.
+- **THE RADAR CARRIES HEIGHT.** It was XZ-only, so a foe 300u overhead was a dot beside you.
+  Dots are now band-coloured, band-sized, and numbered.
+- **`hud.spectatorBands`** is an explicit ADMIN view (all tethers at full opacity, all chips) —
+  deliberately not a change to the player HUD.
+- **THE HONEST LIMIT, SAID OUT LOUD.** A gravity throw cannot reach the BUILDING deck: a
+  grenade peaks near 25u, a car near 44u, the deck is at 96. The plan says do NOT inflate
+  gravity to fix this. So the arc turns **red** and the HUD reads **OUT OF REACH** when the
+  locked target is above the arc's apex. The answer to a cloud camper is a beam, a homing
+  shot, or climbing to meet them.
+
+### PLAN 3 — interaction, choice, and actually holding things
+
+- **THE INTERACTABLE CONTRACT.** `game.registerInteractable({pos, r, label, verb, priority,
+  enabled, onFocus, onUse})`. Focus is scanned at 10 Hz and scored by distance **and FACING** —
+  you interact with what you are looking at. Verified: focus acquired, `onUse` fired, and
+  turning away **drops** it.
+  ⚠ **The teardown trap:** anything a city tile registers is flagged `cityOwned` and spliced in
+  `world._teardownCity()`, or a rebuilt city inherits ghost prompts pointing at deleted
+  geometry. (This needed a `world.game` back-reference, which did not exist.)
+- **THE G-CHAIN — no new key.** `interact → throw → pick up gear → hoist → grab`, in priority
+  order. Four behaviours on one key is only acceptable **because the prompt shows which one is
+  armed**, so `hud.interactPrompt` is part of the feature, not decoration.
+- **THE CHOICE SURFACE** is a **FIELD INTERCEPT TRANSCRIPT**, not a JRPG box: classification
+  bar, mono speaker slug with the real district, typed body, numbered `§` option rows with
+  consequence tags, ESC to withdraw. **LIVE by default** — a street conversation that stopped
+  the world would fight the police and heat systems still running. Verified open with
+  `game.running === true`.
+- **CARRYING COSTS YOU YOUR HANDS.** You cannot strike or guard while holding a car. One line,
+  and it turns carrying into a decision. Verified: both refused while carrying.
+- **F9, both leaks:** `dispose()` and `startMatch` now release carries, so a prop can no longer
+  outlive its carrier or leave a fighter permanently slowed.
