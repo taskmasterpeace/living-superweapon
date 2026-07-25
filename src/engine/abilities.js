@@ -205,6 +205,39 @@ export const TYPES = {
         if (def.kiDrain) { const dr = def.kiDrain * inp.dt; f.ki = Math.max(0, f.ki - dr); c.ki = clamp(c.ki + dr * 0.6, 0, c.maxKi); }   // JAWAH: eats their sound/energy
         else { const pushr = (def.push || 40) * inp.dt * 8; f.vel.x += (dx / d) * pushr; f.vel.z += (dz / d) * pushr; if (def.lift) f.vel.y = Math.min(f.vel.y + def.lift * inp.dt * 24, 22); }
       }
+      // GROUND SPIKES (brief T2.8): cracks race forward along the ground, THEN the spikes come
+      // up in sequence — real, temporary cover you can hide behind, made of whatever the ground
+      // is. They are registered as destructible cover and swept when the duration ends.
+      if (def.spikes) {
+        st._spkT = (st._spkT || 0) - inp.dt;
+        if (st._spkT <= 0) {
+          st._spkT = def.spikes.interval || 0.12;
+          const step = (st._spkN = (st._spkN || 0) + 1);
+          const d0 = Math.min(range, 8 + step * (def.spikes.step || 7));
+          if (d0 <= range) {
+            const sx = c.pos.x + c.aim.x * d0, sz = c.pos.z + c.aim.z * d0;
+            g.raiseSpike(sx, sz, def.spikes, c);
+          } else st._spkN = 0;
+        }
+      }
+      // MAGNET PULL (brief T2.12): metal only. A wooden tree does not care about a magnet, and
+      // that contrast is the whole read — it is magnetism, not telekinesis.
+      if (def.magnet) {
+        const pull = (def.magnet.force || 60) * inp.dt;
+        for (const list of [g.world.cars || [], g.world.planes || []]) {
+          for (const o of list) {
+            if (o.dead || o.carried) continue;
+            const dx = c.pos.x - o.x, dz = c.pos.z - o.z, d = Math.hypot(dx, dz);
+            if (d > range || d < 3) continue;
+            const dot = (-dx / d) * c.aim.x + (-dz / d) * c.aim.z;
+            if (dot < Math.cos(arc)) continue;
+            o.x += (dx / d) * pull; o.z += (dz / d) * pull;
+            if (o.mesh) o.mesh.position.set(o.x, o.mesh.position.y, o.z);
+            else if (o.meshes) for (const mm of o.meshes) mm.position.x += (dx / d) * pull, mm.position.z += (dz / d) * pull;
+            if (Math.random() < 0.2) g.particles.spawn({ x: o.x, y: 3, z: o.z, vx: (dx / d) * 8, vy: 1, vz: (dz / d) * 8, life: 0.3, size: 1.4, color: ['#bfe9ff', '#8fb0d0'], drag: 0.6 });
+          }
+        }
+      }
       // mist particles — SONIC cones are TRANSPARENT PRESSURE instead (brief Tier1 #5): the force
       // is visible through compression rings and dragged street dust, never a glowing energy cone.
       if (def.sonic) {
@@ -304,9 +337,12 @@ export const TYPES = {
   },
 
   // Energy-intangibility: hold to phase through strikes & projectiles (drains ki)
+  // PHASE also carries PHASE WALK (brief T2.17): `def.walk` lets the intangible body cross
+  // INTERIOR walls, which ordinary phase does not — the body reads as glass, not smoke,
+  // because smoke is already Shadow Step's language.
   phase(c, def, st, g, inp) {
     if (inp.held && c.spendKi((def.kiPerSec || 16) * inp.dt)) {
-      if (!c.phase) { c.phase = true; g.audio.teleport(); g.vfx.ring(c.pos.clone().setY(5), { color: def.color || c.def.colors.accent, r0: 2, r1: 8, life: 0.3 });
+      if (!c.phase) { c.phase = true; c._phaseWalk = !!def.walk; g.audio.teleport(); g.vfx.ring(c.pos.clone().setY(5), { color: def.color || c.def.colors.accent, r0: 2, r1: 8, life: 0.3 });
         st._loop = g.audio.sustain ? g.audio.sustain('phase', c.pos) : null; }   // the otherworldly hum
       if (st._loop) st._loop.set(1, c.pos);
       if (Math.random() < 0.25) g.particles.burst(c.pos.x, c.pos.y + 5, c.pos.z, { count: 2, speed: 6, life: 0.4, size: 2.2, color: [def.color || c.def.colors.accent, '#fff'] });
@@ -328,7 +364,8 @@ export const TYPES = {
   summon(c, def, st, g, inp) {
     if (inp.pressed && ready(c, def, st)) {
       pay(c, def, st);
-      g.summon(c, def);
+      if (def.decoy) g.spawnDecoy(c, def.dur || 5);   // DECOY HOLOGRAM (brief T2.9)
+      else g.summon(c, def);
       g.vfx.flash(c.pos.clone().setY(5), def.color, 8, 0.3); g.audio.power(true);
       g.vfx.ring(c.pos.clone().setY(1), { color: def.color, r0: 2, r1: 18, life: 0.4, flat: true, y: 0.4 });
     }
@@ -345,9 +382,17 @@ export const TYPES = {
   },
 
   // Transform / power-up ("sunlight", "final flash" state, use-all-energy)
+  // BUFF also carries three Tier-2 lanes now, all as data on the same type:
+  //   · siphonAura {r, dps}  — VAMPIRIC AURA (T2.7): drains everyone near you, heals you
+  //   · hpPerSec             — ADRENALINE SURGE (T2.14): power bought with blood
+  //   · riposte {dmg}        — COUNTER STANCE (T2.18): the next melee hit is answered
   buff(c, def, st, g, inp) {
     if (inp.pressed && ready(c, def, st)) {
       pay(c, def, st);
+      // the three Tier-2 buff lanes ride the same activation
+      if (def.siphonAura) c._siphon = { r: def.siphonAura.r || 22, dps: def.siphonAura.dps || 9, t: def.dur || 6, color: def.color || '#8a1d24' };
+      if (def.hpPerSec) c._bloodBuff = { hps: def.hpPerSec, t: def.dur || 6 };
+      if (def.riposte) c._riposte = { t: def.riposte.window || def.dur || 2.2, dmg: def.riposte.dmg || 26, used: false };
       if (def.spendAll) { c.ki = 0; }
       if (def.reveal) c._revealT = def.dur || 8;   // Its Voice: every camera is her eye — fog hides nothing
       c.powerBuff = def.mult || 1.6; c.buffT = def.dur || 10;
@@ -491,8 +536,18 @@ export const TYPES = {
       //   pistol  · one accurate, heavy shot on a slow trigger
       //   rifle   · fast, small, tight (the default auto-fire)
       const cls = def.weapon || (def.interval && def.interval < 0.2 ? 'rifle' : 'pistol');
+      // SNIPER STANCE (brief T2.15): holding still locks the posture — slower trigger, far
+      // tighter group, longer reach. The strongest element is STILLNESS, so it only engages
+      // when the shooter has actually stopped moving.
+      const stance = def.stance && Math.hypot(c.vel.x, c.vel.z) < 6;
+      if (def.stance) {
+        c._sniperT = stance ? Math.min(1, (c._sniperT || 0) + inp.dt / (def.stance.settle || 0.5)) : 0;
+        if (stance && c._sniperT >= 1 && Math.random() < 0.04) g.vfx.flash(c.muzzle(_v.clone(), 4.4, 5.9), '#eaffff', 1.2, 0.1);   // the lens glint
+      }
+      const aimed = def.stance && c._sniperT >= 1;
       const SP = { shotgun: 0.17, pistol: 0.02, rifle: 0.045 };
-      const spread = (def.spread ?? SP[cls] ?? 0.045) * ((c.sheet && c.sheet.spreadMult) || 1);   // Marksman tightens the group
+      let spread = (def.spread ?? SP[cls] ?? 0.045) * ((c.sheet && c.sheet.spreadMult) || 1);   // Marksman tightens the group
+      if (aimed) spread *= def.stance.spreadMult ?? 0.18;
       const pellets = cls === 'shotgun' ? (def.pellets || 8) : 1;
       const base = Math.atan2(c.aim3.z, c.aim3.x);
       for (let i = 0; i < pellets; i++) {
@@ -500,10 +555,11 @@ export const TYPES = {
         g.projectiles.spawnProjectile(c, { vis: visOf(def),
           pos: m, vel: new THREE.Vector3(Math.cos(a), c.aim3.y + rand(-spread, spread) * 0.7, Math.sin(a)).setLength((def.speed || 170) * (cls === 'shotgun' ? rand(0.85, 1) : 1)),
           radius: def.radius || 0.55, damage: def.damage || 5, blast: def.blast || 2.2, power: 0.35,
-          color: def.color, color2: def.color2, life: cls === 'shotgun' ? 0.34 : 1.4,   // pellets die fast = real range falloff
+          color: def.color, color2: def.color2, life: (cls === 'shotgun' ? 0.34 : 1.4) * (aimed ? (def.stance.rangeMult ?? 1.8) : 1),   // pellets die fast = real range falloff
           bullet: true, ballistic: true, weapon: cls, bounces: def.bounces,
         });
       }
+      if (aimed) st.cd = (def.interval || 0.5) * (def.stance.rateMult ?? 2.4);   // a settled shot is a SLOW shot
       const kick = def.recoil ?? (cls === 'shotgun' ? 6.5 : cls === 'pistol' ? 3 : 1.6);
       c.vel.x -= c.aim.x * kick; c.vel.z -= c.aim.z * kick;
       g.audio.gunshot(cls === 'shotgun' ? 1.5 : cls === 'pistol' ? 1.25 : 0.8, c.pos);   // a CRACK, not a zap
@@ -592,7 +648,22 @@ export const TYPES = {
           g.vfx.shockwave(c.pos.clone().setY(Math.max(0.2, c.pos.y * 0.1)), { color: def.color || '#ff6a1a', radius: radius * 1.6, power: 1.5 + k });
           g.vfx.lightning(p, { color: '#fff', count: 6, radius: radius * 0.6, height: 16 });
         }
-        g.areaDamage(c, p, radius, dmg, 1.6 + k, { dtype: def.dtype, freeze: def.freeze, dot: def.dot });   // FROST NOVA: the ring ENCASES (manual §19)
+        // BLADE CYCLONE (brief T2.11) rides the same nova: slash class + a lingering cut, and
+        // the halo is serrated metal spiralling inward rather than an energy sphere.
+        g.areaDamage(c, p, radius, dmg, 1.6 + k, { dtype: def.dtype, freeze: def.freeze, dot: def.dot, dmgClass: def.dmgClass });   // FROST NOVA: the ring ENCASES (manual §19)
+        if (def.cyclone) {
+          for (const f of g.entities) {
+            if (!f.alive || f === c || !g.isFoe(c, f)) continue;
+            const dx = f.pos.x - p.x, dz = f.pos.z - p.z;
+            if (dx * dx + dz * dz > radius * radius) continue;
+            f.addDot({ dps: def.cyclone.dps || 9, dur: def.cyclone.dur || 1, color: '#ffdcdc', kind: 'slash', src: c });
+          }
+          for (let i = 0; i < 10; i++) {
+            const a2 = Math.random() * Math.PI * 2, rr = radius * (0.5 + Math.random() * 0.5);
+            g.particles.spawn({ x: p.x + Math.cos(a2) * rr, y: p.y + rand(0, 6), z: p.z + Math.sin(a2) * rr,
+              vx: -Math.cos(a2) * rr * 0.9, vy: 1, vz: -Math.sin(a2) * rr * 0.9, life: 0.3, size: 1.5, color: ['#dfe3e6', '#9aa0a8'], drag: 0.5 });
+          }
+        }
         c.ki = 0; if (g.onDrained) { c.drainedT = 0; g.onDrained(c); }  // the price: bone dry
         g.slowmo(0.22, 0.4); g.world.punch(0.6); g.world.shake(2.2 + k); g.audio.boom(1.4, c.pos);
         if (g.hud && g.isHuman(c)) g.hud.flashScreen(def.color || '#ff6a1a', 0.2);
@@ -632,7 +703,27 @@ export const TYPES = {
   // holds the wall, so only oneHand-flagged weapons fire (see runSlot); jump climbs off, descend
   // drops, a solid hit knocks you loose. Pressing again mid-line or mid-hang lets go. The reel
   // suspends the deck servo exactly like knockback does — the line owns the axis while it's taut.
+  // GRAPPLE also carries GRAPPLE SLAM (brief T2.19): with `def.reel`, the line hooks an
+  // ENEMY instead of a building and drags THEM to YOU — the inverse of the mantle, and a
+  // heavier cable so the two never read the same.
   grapple(c, def, st, g, inp) {
+    if (def.reel && inp.pressed && ready(c, def, st)) {
+      const foe = g.nearestFoe(c, c.pos, def.range || 90);
+      if (foe && foe.alive && !foe.isDecoy && g.canSee(c, foe)) {
+        pay(c, def, st);
+        const dx = c.pos.x - foe.pos.x, dz = c.pos.z - foe.pos.z, d = Math.hypot(dx, dz) || 1;
+        foe.vel.x = (dx / d) * (def.reel.speed || 78);
+        foe.vel.z = (dz / d) * (def.reel.speed || 78);
+        foe.vel.y = 14;
+        foe.burstT = Math.max(foe.burstT || 0, 0.5);
+        foe.launchT = 1.1; foe.lastHitBy = c; foe._lastHitT = g.time;
+        foe.takeDamage(def.reel.dmg || 12, { src: c, strike: true, dtype: 'physical', hitstop: 0.08 });
+        g.vfx.ring(foe.pos.clone().setY(4), { color: def.color || '#c9c2b4', r0: 5, r1: 1, life: 0.25 });
+        g.audio.swing('blunt', c.pos); g.audio.hit(240, foe.pos);
+        if (g.hud) g.hud.damageNumber(foe.pos, 'HOOKED', '#ffd24a', true);
+        return;
+      }
+    }
     if (!inp.pressed) return;
     if (c.hanging || c._grapple) { if (c.releaseHang) c.releaseHang(); return; }
     if (!ready(c, def, st)) return;

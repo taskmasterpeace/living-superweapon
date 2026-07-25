@@ -493,6 +493,7 @@ export class Fighter {
     // slam physics: launchT > 0 = recently knocked/thrown → wall/ground impacts hurt (dashing into walls doesn't)
     this.launchT = 0; this._slamCd = 0;
     this._thrownT = 0; this._thrownBy = null;   // aimed-throw body-as-projectile window (manual §11)
+    this._siphon = null; this._bloodBuff = null; this._riposte = null;   // Tier-2 buff lanes
     this._bleed = 0; this._bleedStill = 0; this._bleedAcc = 0; this._bleedTick = 0; this._bleedSrc = null; this._suitHex = null;   // BLEEDING (manual §12)
     this.downedT = 0; this._swHold = 0; this._secondWindUsed = false;   // SECOND WIND (manual §13) — a player's drama, never a bot's
     this._disarmT = 0; this._gearHeld = null; this._gearMesh = null;    // THE GEAR SYSTEM (manual §16)
@@ -707,6 +708,15 @@ export class Fighter {
     // 0.15s delivery grace, so a tranq dart's own blast can't wake the sleep it just delivered
     if (this.sleepT > 0 && amount > 0 && !(this._sleepGrace > 0)) this.wake();
     if (opts.src && opts.src.sheet && opts.src.sheet.predator && this.hp < this.maxHp * 0.3) amount *= 1.15;   // Predator talent finishes hunts
+    // AIR SUPERIORITY (brief T2.20): some fighters own the sky. A strike landed on a victim who
+    // is genuinely AIRBORNE hits harder and drives them DOWN — the vertical read the brief asks
+    // for. Data-driven off the attacker's def; nothing hard-codes a hero.
+    if (opts.strike && opts.src && opts.src.def && opts.src.def.airSuperiority && this.pos.y > 12 && !this.grounded) {
+      const AS = opts.src.def.airSuperiority;
+      amount *= (AS.mult || 1.45);
+      opts.launch = -(Math.abs(opts.launch || 0) + (AS.slam || 26));
+      if (this._game && this._game.hud && this._game.isHuman(opts.src)) this._game.hud.damageNumber(this.pos, 'AIR SUPERIORITY', '#7fe6ff', true);
+    }
     // EVERY hit has a type. Callers that don't declare one get the sane default for what they are,
     // so no damage source in the game is ever untyped and resistances can't be silently skipped.
     const dtype = opts.dtype || (opts.ballistic ? 'ballistic' : (opts.strike || opts.slam) ? 'physical' : 'energy');
@@ -1027,6 +1037,44 @@ export class Fighter {
     // shield pack, guard AND every resistance — a poison arrow ticked TITAN exactly as hard as
     // it ticked a civilian. Damage accumulates and lands as a DISCRETE tick so the number is
     // readable and the hit-flash doesn't strobe at 60Hz.
+    // ---- VAMPIRIC AURA (brief T2.7): a low crimson circle that drains everyone standing in
+    // it and feeds the caster. Veins of energy reach from each victim toward you, and your own
+    // shadow deepens as more of them are being drained.
+    if (this._siphon && this.alive) {
+      const S = this._siphon; S.t -= dt;
+      S._acc = (S._acc || 0) + dt;
+      if (S._acc >= 0.5) {
+        const tick = S._acc; S._acc = 0;
+        let drained = 0;
+        for (const f of game.entities) {
+          if (!f.alive || f === this || f.isDummy || !game.isFoe(this, f)) continue;
+          const dx = f.pos.x - this.pos.x, dz = f.pos.z - this.pos.z;
+          if (dx * dx + dz * dz > S.r * S.r) continue;
+          f.takeDamage(S.dps * tick, { src: this, dot: true, dtype: 'magic', hitstop: 0, dmgColor: S.color });
+          drained++;
+          game.particles.spawn({ x: f.pos.x, y: f.pos.y + 4, z: f.pos.z, vx: (this.pos.x - f.pos.x) * 1.6, vy: 2, vz: (this.pos.z - f.pos.z) * 1.6, life: 0.4, size: 1.5, color: [S.color, '#ff5a4a'], drag: 0.4 });
+        }
+        if (drained) { this.hp = Math.min(this.maxHp, this.hp + S.dps * tick * 0.6 * drained); this._siphonN = drained; }
+      }
+      if (game.vfx && Math.random() < dt * 14) game.vfx.ring(this.pos.clone().setY(0.4), { color: S.color, r0: S.r * 0.9, r1: S.r, life: 0.3, flat: true, y: 0.4 });
+      if (S.t <= 0) this._siphon = null;
+    }
+    // ---- ADRENALINE SURGE (brief T2.14): the power is bought with BLOOD. Each tick dims the
+    // glow — the body visibly paying for it — and it cannot kill you, only leave you at 1.
+    if (this._bloodBuff && this.alive) {
+      const B = this._bloodBuff; B.t -= dt;
+      B._acc = (B._acc || 0) + dt;
+      if (B._acc >= 0.5) {
+        const cost = B.hps * B._acc; B._acc = 0;
+        this.hp = Math.max(1, this.hp - cost);
+        if (game.hud && game.isHuman(this)) game.hud.damageNumber(this.pos, '-' + Math.round(cost), '#ff5a4a', true);
+        game.particles.burst(this.pos.x, this.pos.y + 6, this.pos.z, { count: 3, speed: 5, life: 0.4, size: 1.6, color: ['#ff5a4a', '#8a1d24'], up: 6, drag: 1.4 });
+      }
+      if (B.t <= 0) this._bloodBuff = null;
+    }
+    // ---- COUNTER STANCE (brief T2.18): a timing window, not a permanent parry ----
+    if (this._riposte) { this._riposte.t -= dt; if (this._riposte.t <= 0 || this._riposte.used) this._riposte = null; }
+
     // ---- BLEEDING (manual §12): the wound tears with MOVEMENT and clots with STILLNESS ----
     if (this._bleed > 0 && this.state !== 'ko') {
       const bspd = Math.hypot(this.vel.x, this.vel.z);
@@ -1443,7 +1491,11 @@ export class Fighter {
     // ENTERABLE INTERIORS — the building is standable on top and hollow inside: the wall
     // segments (with their door gaps) do the pushing, so you walk in through the door and
     // fight around corners. Spatially gated — cost exists only at the buildings you overlap.
-    if (!ghost) for (const it of (game.world.interiors || [])) {
+    // PHASE WALK (brief T2.17): an ordinary phase is intangible to ATTACKS but still bumps
+    // into the building. A phase WALKER passes through the wall itself — the surface ripples
+    // and closes behind them. Same gate as VOLT's sprint-through, one more way in.
+    const wallGhost = ghost || (this.phase && this._phaseWalk);
+    if (!wallGhost) for (const it of (game.world.interiors || [])) {
       const hx = it.hx + this.radius, hz = it.hz + this.radius;
       const dx = this.pos.x - it.x, dz = this.pos.z - it.z;
       if (Math.abs(dx) > hx || Math.abs(dz) > hz) continue;

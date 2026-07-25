@@ -1008,3 +1008,38 @@ never `ballistic`: only real bullets take the armour filter, and those declare i
 powers are all toxic, so against a synthetic her ranged kit does nothing. Her answer is her
 fists (physical) and her blind (a status, not damage) — bring the right tool, or get close.
 That is the manual's own counter rule working, not a bug.
+
+## §25 · TIER TWO, COMPLETE — all twenty lanes (2026-07-25)
+
+`docs/POWERS_BRIEF.md` Part Four asked for twenty powers that each need *"approximately one
+new flag, one new status, or one contained subsystem adjustment."* Five had shipped (sleeping
+arrows, smoke blindness, ricochet, frost nova, seekers). The remaining fifteen are in, every
+one as DATA on an existing type — no new `TYPES` entry was needed, which is the brief's own
+test that a lane was scoped right.
+
+| # | lane | how it is expressed | measured |
+|---|---|---|---|
+| 4 | **Sticky Bomb** | `stick:{fuse}` on any projectile — clamps to the victim, rides them, fuse accelerates | 24.3 dmg |
+| 5 | **Chain Lightning** | `chain:{targets,range,falloff}` — arcs **in sequence**, each jump thinner | 27.4 dmg |
+| 6 | **Black Hole Round** | `singularity:{r,dur,pull}` → `game.addSingularity` — debris curves in first, then it **implodes** | 20.3 dmg |
+| 7 | **Vampiric Aura** | `siphonAura:{r,dps}` on a buff — drains everyone near, heals you | 13.4 siphoned |
+| 8 | **Ground Spikes** | `spikes:{…}` on a cone → `raiseSpike()` — REAL temporary cover, rising in sequence | 5 cover pieces raised |
+| 9 | **Decoy Hologram** | `decoy:true` on a summon — an untargetable copy `nearestFoe` prefers | 1 decoy, AI retargets |
+| 10 | **Overwatch Turret** | `inherit:true` on a summon — adopts the owner's sheet multipliers | 13.6 dmg |
+| 11 | **Blade Cyclone** | `cyclone:{dps,dur}` + `dmgClass:'slash'` on a nova — a serrated halo that keeps cutting | 40.4 dmg |
+| 12 | **Magnet Pull** | `magnet:{force}` on a cone — **metal only**; a wooden tree ignores it | props dragged |
+| 14 | **Adrenaline Surge** | `hpPerSec` on a buff — power bought with blood, floored at 1 hp | −3.3 hp/s |
+| 15 | **Sniper Stance** | `stance:{settle,spreadMult,rateMult,rangeMult}` on a rifle — engages only when you STOP | 86.3 dmg |
+| 17 | **Phase Walk** | `walk:true` on phase — the intangible body crosses **interior walls** | wall pass |
+| 18 | **Counter Stance** | `riposte:{window,dmg}` on a buff — fires at the `onBlockedStrike` choke point, so it covers every melee source that exists | 30 dmg answer |
+| 19 | **Grapple Slam** | `reel:{speed,dmg}` on grapple — hooks a PERSON and drags them to you | 12 dmg + hooked |
+| 20 | **Air Superiority** | `def.airSuperiority` at the takeDamage choke point — bonus damage and a DOWNWARD launch on an airborne victim | ×1.45 + slam |
+
+All fourteen new lanes are in the ORIGIN catalog, so they are selectable, not just reachable
+from code. Verified: 52×364 battery clean, a 20-second six-fighter rumble clean, 0 NaN
+warnings, 0 orphaned audio loops, roster validation 0 problems, build green.
+
+⚠ **Harness note worth keeping:** the first pass of this verification reported four lanes at
+zero damage. They were all fine — the *bot walked out of range* while the test held its button.
+Freeze the target (`foe.ai = null`) and pin the distance when measuring an ability's output,
+or you will "fix" a power that was never broken.

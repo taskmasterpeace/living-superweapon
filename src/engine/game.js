@@ -458,11 +458,94 @@ export class Game {
   // BLIND SMOKE (manual §14): a dense, oily cloud. Anyone inside keeps a short blind refresh —
   // step out and your eyes clear in about half a second. The zone is the delivery; the STATUS
   // does the work (bots lose sight via ai.js, humans lose the lock and the aim magnet here).
+  // GROUND SPIKES (brief T2.8): a cone that RAISES cover. The spikes are real collision —
+  // registered like any other cover so physics, LOS, fog and projectiles all see them — but
+  // they are TEMPORARY, and they are made of whatever the ground here is (asphalt gives broken
+  // road, dirt gives stone). They sweep themselves up on expiry.
+  raiseSpike(x, z, cfg = {}, src = null) {
+    const w = this.world;
+    const gy = w.heightAt ? w.heightAt(x, z) : 0;
+    const h = cfg.h || 11, r = cfg.r || 2.6;
+    const rural = !!(w.plan && w.plan.rural);
+    const mat = new THREE.MeshStandardMaterial({ color: rural ? '#6b5f4a' : '#3a3b40', roughness: 0.95, flatShading: true });
+    const m = new THREE.Mesh(new THREE.ConeGeometry(r, h, 5), mat);
+    m.position.set(x, gy - h, z); m.castShadow = true; m.rotation.y = Math.random() * 6.28;
+    this.scene.add(m);
+    const co = { mesh: m, crack: null, x, z, r, hx: r, hz: r, top: gy + h * 0.5, h: gy + h,
+                 hp: cfg.hp || 40, maxHp: cfg.hp || 40, y0: gy + h * 0.5 - h / 2, w: r * 2, d: r * 2,
+                 destroyed: false, _spike: true, _t: cfg.dur || 6, _rise: 0, _gy: gy, _h: h };
+    w.cover.push(co); w.coverAll.push(co);
+    (this._spikes = this._spikes || []).push(co);
+    this.particles.burst(x, gy + 0.5, z, { count: 8, speed: 9, life: 0.5, size: 2.2, color: rural ? ['#6b5f4a', '#8a7a5a'] : ['#3a3b40', '#6a6f7a'], up: 7, drag: 1.2 });
+    this.audio.impact(0.5, { x, y: gy, z });
+    if (w.refreshFogBoxes) w.refreshFogBoxes();
+    return co;
+  }
+  updateSpikes(dt) {
+    const S = this._spikes; if (!S || !S.length) return;
+    const w = this.world;
+    for (let i = S.length - 1; i >= 0; i--) {
+      const co = S[i];
+      if (co._rise < 1) {                                  // they COME UP, sequentially — not popped
+        co._rise = Math.min(1, co._rise + dt * 5);
+        co.mesh.position.y = co._gy - co._h + co._rise * (co._h * 1.5);
+      }
+      co._t -= dt;
+      if (co._t <= 0 || co.destroyed) {
+        this.scene.remove(co.mesh);
+        if (co.mesh.geometry) co.mesh.geometry.dispose();
+        if (co.mesh.material) co.mesh.material.dispose();
+        const a = w.cover.indexOf(co); if (a >= 0) w.cover.splice(a, 1);
+        const b = w.coverAll.indexOf(co); if (b >= 0) w.coverAll.splice(b, 1);
+        S.splice(i, 1);
+        if (w.refreshFogBoxes) w.refreshFogBoxes();
+      }
+    }
+  }
   addSmoke(x, z, r, dur, src) {
     (this._smoke = this._smoke || []).push({ x, z, r, t: dur });
     this.particles.burst(x, 3, z, { count: 26, speed: 13, life: 1.3, size: 6, color: ['#2a2d33', '#3a3f47', '#23262c'], up: 5, drag: 1.5 });
     this.audio.boom(0.28, { x, y: 2, z });
     this.noise({ x, y: 2, z }, 0.7, src || null);
+  }
+  // BLACK HOLE ROUND (brief T2.6). The DEBRIS moves before the bodies do — that is the whole
+  // read: dust and smoke curve inward first, giving you the beat you need to leave. Then it
+  // implodes; there is no outward blast, which is what separates it from every other bomb.
+  addSingularity(pos, r, dur, pull, src, color) {
+    (this._sing = this._sing || []).push({ x: pos.x, y: pos.y, z: pos.z, r, t: dur, dur, pull, src, color: color || '#1a1020' });
+    this.audio.blast(120, 0.5, pos);
+    this.vfx.ring(pos.clone(), { color: color || '#7fb0d0', r0: r, r1: 1, life: 0.5 });
+  }
+  updateSingularity(dt) {
+    const S = this._sing; if (!S || !S.length) return;
+    for (let i = S.length - 1; i >= 0; i--) {
+      const s = S[i]; s.t -= dt;
+      const p = { x: s.x, y: s.y, z: s.z };
+      if (s.t <= 0) {
+        // THE IMPLOSION — inward, never a fireball
+        this.areaDamage(s.src, p, s.r * 0.55, 26, 1.2);
+        this.vfx.flash(new THREE.Vector3(s.x, s.y, s.z), '#0b0510', s.r * 0.5, 0.22);
+        this.vfx.ring(new THREE.Vector3(s.x, s.y, s.z), { color: '#9ab0d0', r0: s.r * 0.7, r1: 0.5, life: 0.35 });
+        this.world.shake(1.1); this.audio.boom(0.7, p);
+        S.splice(i, 1); continue;
+      }
+      // debris first
+      for (let k = 0; k < 2; k++) {
+        const a = Math.random() * Math.PI * 2, rr = s.r * (0.6 + Math.random() * 0.5);
+        this.particles.spawn({ x: s.x + Math.cos(a) * rr, y: s.y + (Math.random() * 2 - 1) * 4, z: s.z + Math.sin(a) * rr,
+          vx: -Math.cos(a) * rr * 1.6, vy: 0, vz: -Math.sin(a) * rr * 1.6, life: 0.5, size: 1.6 + Math.random() * 1.6,
+          color: ['#6a6f7a', '#3a3f47', '#9ab0d0'], drag: 0.2 });
+      }
+      // then the bodies — a real pull, lifted past the walk clamp like every other shove
+      for (const f of this.entities) {
+        if (!f.alive || f.isDummy || f === s.src) continue;
+        const dx = s.x - f.pos.x, dy = s.y - f.pos.y, dz = s.z - f.pos.z;
+        const d = Math.hypot(dx, dy, dz); if (d > s.r || d < 0.001) continue;
+        const k = (1 - d / s.r) * s.pull * dt * (1 - (f.def.strength ?? 5) * 0.05);
+        f.vel.x += (dx / d) * k; f.vel.y += (dy / d) * k * 0.6; f.vel.z += (dz / d) * k;
+        f.burstT = Math.max(f.burstT || 0, 0.12);
+      }
+    }
   }
   updateSmoke(dt) {
     const S = this._smoke; if (!S || !S.length) return;
@@ -1009,8 +1092,56 @@ export class Game {
     return b.team !== a.team || b.isDummy;
   }
 
+  // DECOY HOLOGRAM (brief T2.9): an untargetable copy that enemies RETARGET onto. It is not
+  // a fighter — it never takes damage, never blocks, casts no contact shadow — it is a lie the
+  // AI's own targeting believes, and it glitches instead of reacting when struck.
+  spawnDecoy(caster, dur = 5) {
+    const g = new THREE.Group();
+    const src = caster.obj;
+    const clone = src.clone(true);
+    clone.traverse(o => {
+      if (o.material) {
+        o.material = o.material.clone();
+        o.material.transparent = true; o.material.opacity = 0.62;
+        if (o.material.emissive) { o.material.emissive.set(caster.def.colors.accent); o.material.emissiveIntensity = 0.5; }
+      }
+      if (o.isMesh) o.castShadow = false;                   // no proper contact shadow — the tell
+    });
+    g.add(clone);
+    g.position.copy(caster.pos); g.rotation.y = caster.facing;
+    this.scene.add(g);
+    const d = { grp: g, t: dur, dur, owner: caster, pos: g.position, alive: true, isDecoy: true,
+                team: caster.team, def: caster.def, name: caster.name, radius: caster.radius || 3 };
+    (this._decoys = this._decoys || []).push(d);
+    this.vfx.ring(caster.pos.clone().setY(1), { color: caster.def.colors.accent, r0: 1, r1: 7, life: 0.3, flat: true, y: 0.5 });
+    this.audio.teleport(caster.pos);
+    return d;
+  }
+  updateDecoys(dt) {
+    const D = this._decoys; if (!D || !D.length) return;
+    for (let i = D.length - 1; i >= 0; i--) {
+      const d = D[i]; d.t -= dt;
+      // slight colour separation + occasional frame-skip: it reads as a projection, not a body
+      const skip = Math.random() < 0.03;
+      d.grp.visible = !skip;
+      d.grp.position.y = d.pos.y + Math.sin(this.time * 9) * 0.06;
+      if (d.t <= 0) {
+        this.scene.remove(d.grp);
+        d.grp.traverse(o => { if (o.material) o.material.dispose(); });
+        this.vfx.flash(d.pos.clone().setY(5), d.def.colors.accent, 6, 0.16);
+        D.splice(i, 1);
+      }
+    }
+  }
+  // a decoy is a legal TARGET but never a real one — nearestFoe is where bots decide
   nearestFoe(caster, pos, maxDist = 200) {
     let best = null, bd = maxDist * maxDist;
+    // a live decoy on the other team outranks the real body: that is the entire point of it
+    for (const d of (this._decoys || [])) {
+      if (!d.alive || d.team === caster.team) continue;
+      const dx = d.pos.x - pos.x, dz = d.pos.z - pos.z; const dd = dx * dx + dz * dz;
+      if (dd < bd) { bd = dd; best = d; }
+    }
     for (const f of this.entities) {
       if (!this.isFoe(caster, f)) continue;
       const dx = f.pos.x - pos.x, dz = f.pos.z - pos.z; const d = dx * dx + dz * dz;
@@ -1415,6 +1546,22 @@ export class Game {
   // off and eats a recovery stagger; a last-instant guard (<0.22s) is a PARRY: bigger bounce, longer
   // stagger, meter refund. This is the law that makes blocking actually stop melee spam.
   onBlockedStrike(att, blk, o = {}) {
+    // COUNTER STANCE (brief T2.18): if the blocker is in a riposte window, the block becomes
+    // an ANSWER. One use per window — a stance, not a permanent parry — and it rides the same
+    // choke point every blocked strike already goes through, so it covers every melee source.
+    if (blk && blk._riposte && !blk._riposte.used && att && att.alive) {
+      blk._riposte.used = true;
+      const dmg = blk._riposte.dmg * (blk.powerBuff || 1);
+      const dx = att.pos.x - blk.pos.x, dz = att.pos.z - blk.pos.z, d = Math.hypot(dx, dz) || 1;
+      att.takeDamage(dmg, { src: blk, strike: true, dtype: 'physical', hitstop: 0.12,
+        kb: { x: (dx / d) * 46, y: 8, z: (dz / d) * 46 }, launch: 10 });
+      att.staggerT = Math.max(att.staggerT, 0.55);
+      this.slowmo(0.12, 0.42);
+      this.vfx.impactStar(blk.pos.clone().setY(blk.pos.y + 5), 9, '#ffd24a', 0.22);
+      this.audio.impact(1.1, blk.pos);
+      if (this.hud) this.hud.damageNumber(blk.pos, 'COUNTER', '#ffd24a', true);
+      blk._poseHold = 0.22;                       // the short martial punctuation the brief asks for
+    }
     if (!att || !blk || !att.alive) return;
     if ((att._bounceCd || 0) > 0) return;                      // one rejection per exchange — no bounce-lock
     att._bounceCd = 0.3;
@@ -1731,6 +1878,9 @@ export class Game {
   }
 
   summon(caster, def) {
+    // OVERWATCH TURRET BUFF (brief T2.10): a summon flagged `inherit` adopts the OWNER's
+    // stat-sheet multipliers, so investing in yourself invests in your hardware too.
+    if (def.inherit && caster.sheet) def = { ...def, damage: (def.damage || 10) * (caster.sheet.blastMult || 1) * (caster.powerBuff || 1), _inherited: true };
     const n = def.count || 3;
     for (let i = 0; i < n; i++) this.minions.push(new Minion(this, caster, def, i));
     // cap
@@ -2089,6 +2239,9 @@ export class Game {
     this.updateCarry(dt);
     this.updateThrownBodies(dt);
     this.updateSmoke(dt);
+    this.updateSingularity(dt);
+    this.updateSpikes(dt);
+    this.updateDecoys(dt);
     this.updateDrops(dt);
     // LOW ORBIT DEPARTURE (manual §17): a burner-class flier that punches through the ceiling
     // and keeps the throttle open is LEAVING THE THEATER — offer the world map. Once per climb.

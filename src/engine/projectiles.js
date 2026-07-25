@@ -97,6 +97,10 @@ class Projectile {
     this.boomerang = !!o.boomerang; this._return = false; this._range = o.range || 55; this._flown = 0; this._rehitT = 0;
     this.power = o.power || 1;                     // scales fx / shake
     this.vis = o.vis || null;                      // the visual contract profile (Phase Zero)
+    this.stick = o.stick || null;                  // {fuse} — clamps on, then goes off (brief T2.4)
+    this.chain = o.chain || null;                  // {targets, range, falloff} — lightning (brief T2.5)
+    this.singularity = o.singularity || null;      // {pull, r, dur} — a black hole round (brief T2.6)
+    this._stuckTo = null; this._fuse = 0;
     this.grav = o.grav || 0;                       // >0 for lobs
     this.homing = o.homing || 0;
     this.life = o.life || 3;
@@ -234,6 +238,23 @@ class Projectile {
   }
 
   update(dt, game) {
+    // A STUCK BOMB rides its host (brief T2.4): it conforms to the body instead of floating
+    // beside it, and the fuse ACCELERATES so the blink rate is the warning.
+    if (this._stuckTo) {
+      const h = this._stuckTo;
+      if (!h.alive) { this._stuckTo = null; return this._impact(game, false); }
+      this.pos.set(h.pos.x + this._stickOff.x, h.pos.y + this._stickOff.y, h.pos.z + this._stickOff.z);
+      if (this.mesh) this.mesh.position.copy(this.pos);
+      this._fuse -= dt;
+      const k = Math.max(0.05, this._fuse / ((this.stick && this.stick.fuse) || 1.6));
+      if (this.mesh && this.mesh.children) {
+        const blink = ((game.time || 0) * (3 + (1 - k) * 22)) % 1 < 0.5;
+        for (const ch of this.mesh.children) if (ch.material && ch.material.emissiveIntensity !== undefined) ch.material.emissiveIntensity = blink ? 3 : 0.4;
+      }
+      if (this._fuse <= 0) return this._impact(game, false, h);
+      return true;
+    }
+
     if (this._armed) {
       this._armT -= dt;
       const k = 1 - Math.max(0, this._armT) / (this.armDelay || 1);
@@ -339,6 +360,16 @@ class Projectile {
         return true;
       }
       if (this.armDelay && !this._armed) { this._arm(game); return true; }   // she reaches you... and waits
+      // STICKY BOMB (brief T2.4): clamps to the victim and RIDES them. The fuse accelerates,
+      // so the tell is a blink rate, and the victim's own movement carries the threat.
+      if (this.stick && !this._stuckTo) {
+        this._stuckTo = foe;
+        this._fuse = this.stick.fuse || 1.6;
+        this._stickOff = new THREE.Vector3(this.pos.x - foe.pos.x, Math.max(1.5, this.pos.y - foe.pos.y), this.pos.z - foe.pos.z);
+        game.audio.hit(220, this.pos); game.vfx.ring(this.pos.clone(), { color: this.color, r0: 0.5, r1: 3, life: 0.2 });
+        if (game.hud && game.isHuman(foe)) game.hud.damageNumber(foe.pos, 'STUCK', '#ff8a3a', true);
+        return true;
+      }
       // DEFLECT guard: bullets/bolts bounce right back at whoever fired them
       if (foe.guarding && foe.staggerT <= 0 && foe.def.guardType === 'deflect' && !this._defl) {
         const ddx = this.pos.x - foe.pos.x, ddz = this.pos.z - foe.pos.z, dd = Math.hypot(ddx, ddz) || 1;
@@ -362,6 +393,7 @@ class Projectile {
       else if (this.payload === 'sleep') { foe.addSleep(2.6, this.caster); game.particles.burst(foe.pos.x, foe.pos.y + 6, foe.pos.z, { count: 7, speed: 6, life: 0.7, size: 2.2, color: ['#ffe9b0', '#fff'], up: 5, drag: 1.6 }); }
       else if (this.payload === 'gas') foe.addDot({ dps: 6, dur: 3, color: '#9a4ae0', kind: 'gas', src: this.caster });
       else if (this.payload === 'flame') { foe.addDot({ dps: 7, dur: 2.5, color: '#ff7a2a', kind: 'burn', src: this.caster }); game.particles.burst(foe.pos.x, foe.pos.y + 5, foe.pos.z, { count: 8, speed: 10, life: 0.5, size: 2.6, color: ['#ff7a2a', '#ffd24a'], up: 8, drag: 1.2 }); }
+      if (this.chain) this._arc(game, foe);
       if (this.pierce-- > 0) { game.vfx.flash(this.pos.clone(), this.color, this.radius * 2, 0.12); return true; }
       return this._impact(game, false, foe);
     }
@@ -369,8 +401,47 @@ class Projectile {
     return true;
   }
 
+  // CHAIN LIGHTNING (brief T2.5): the first arc is the thickest, each jump thinner and less
+  // stable, and targets flash IN SEQUENCE so the player can read the path it took. Never
+  // arcs back to someone it already hit, and never to the caster.
+  _arc(game, first) {
+    const hit = new Set([first]);
+    let from = first, dmg = this.damage * 0.65, n = this.chain.targets || 3;
+    const range = this.chain.range || 26;
+    for (let i = 0; i < n; i++) {
+      let best = null, bd = range * range;
+      for (const e of game.entities) {
+        if (!e.alive || hit.has(e) || e === this.caster || !game.isFoe(this.caster, e)) continue;
+        const dx = e.pos.x - from.pos.x, dy = e.pos.y - from.pos.y, dz = e.pos.z - from.pos.z;
+        const d = dx * dx + dy * dy + dz * dz;
+        if (d < bd) { bd = d; best = e; }
+      }
+      if (!best) break;
+      hit.add(best);
+      const a = from, b = best, delay = 0.06 * (i + 1);          // SEQUENTIAL, not simultaneous
+      const width = Math.max(0.25, 1 - i * 0.28);                 // each jump is thinner
+      setTimeout(() => {
+        if (!b.alive || !a) return;
+        try {
+          game.vfx.lightning(a.pos.clone().setY(a.pos.y + 4), { color: this.color || '#bfe9ff', count: 2 + (width > 0.6 ? 2 : 0), radius: Math.hypot(b.pos.x - a.pos.x, b.pos.z - a.pos.z) * 0.5, height: 6, to: b.pos });
+          b.takeDamage(dmg * this.caster.powerBuff, { src: this.caster, dtype: this.dtype || 'energy', shock: true, hitstop: 0.03, kb: { x: 0, y: 2, z: 0 } });
+          game.audio.zap(820 - i * 90, b.pos);
+        } catch (e) {}
+      }, delay * 1000);
+      from = best; dmg *= this.chain.falloff || 0.7;
+    }
+  }
+
+  // BLACK HOLE ROUND (brief T2.6): dust and debris curve inward BEFORE anyone moves, then it
+  // implodes rather than exploding outward.
+  _singularity(game) {
+    const S = this.singularity, p = this.pos.clone();
+    const r = S.r || 26, dur = S.dur || 1.1, pull = S.pull || 44;
+    game.addSingularity(p, r, dur, pull, this.caster, this.color);
+  }
   _impact(game, hitGround) {
     const p = this.pos.clone(); if (hitGround) p.y = 0.2;
+    if (this.singularity) this._singularity(game);   // it collapses INWARD (brief T2.6)
     if (this.blind) game.addSmoke(p.x, p.z, this.blind.r || 12, this.blind.dur || 2.6, this.caster);   // smoke owns this street corner
     // A BULLET IS NOT A BOMB: no fireball, no crater, no area damage — just a spark, a puff and
     // a very dead civilian if it found one. This is the scale that makes guns read as guns.
