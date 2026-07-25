@@ -1183,6 +1183,25 @@ export class Game {
     if (this.isHuman(f) && this.hud) this.hud.flashScreen('#ff8a5a', 0.12);
   }
 
+  // SECOND WIND (manual §13): hold any attack for one full second while downed → rise at a
+  // quarter health with the tank EMPTY and Overdrive's window live — drained fists refill ki.
+  secondWindHold(f, holding, dt) {
+    f._swHold = holding ? (f._swHold || 0) + dt : 0;
+    if (f._swHold >= 1) this.secondWindRise(f);
+  }
+  secondWindRise(f) {
+    f.downedT = 0; f._swHold = 0; f.staggerT = 0; f.state = 'idle';
+    f.hp = f.maxHp * 0.25;
+    f.ki = 0; f.drainedT = 5;                        // Overdrive's moment: the comeback attribute earns its keep
+    f.invuln = Math.max(f.invuln, 1.2);
+    this.vfx.shockwave(f.pos.clone().setY(0.3), { color: '#ffd24a', radius: 16, power: 1.1 });
+    this.vfx.ring(f.pos.clone().setY(5), { color: '#ffd24a', r0: 2, r1: 14, life: 0.4 });
+    this.world.shake(1.1); this.audio.boom(0.5, f.pos); this.heroYell(f, 1.2);
+    this.slowmo(0.25, 0.45);
+    if (this.hud) { this.hud.announce('SECOND WIND', 'overdrive burning — your fists refill the tank', '#ffd24a'); this.hud.flashScreen('#ffd24a', 0.2); }
+    if (this.audio.sample) this.audio.sample('sting.ko', { gain: 0.75 });
+  }
+
   // A KO'd body just hit the dirt (ragdoll core impact). Weight = strength: the heavies BREAK the ground.
   onRagdollImpact(f, spd, pos) {
     const str = f.strength ?? 5;
@@ -1558,6 +1577,15 @@ export class Game {
 
     // stunned while held or frozen solid — capable heroes auto-escape via the melee system
     if (p.grabbedBy || p.frozenT > 0) { p.moveDir = { x: 0, z: 0 }; return; }
+    // SECOND WIND (manual §13): downed is a held breath — the only input that matters is the rally
+    if (p.downedT > 0) {
+      p.moveDir = { x: 0, z: 0 };
+      const holding = m.left || m.right || inp.down('KeyV') || inp.down('KeyQ') || inp.down('KeyE')
+        || inp.down('KeyH') || inp.down('KeyR')
+        || pad.down('lmb') || pad.down('rmb') || pad.down('strike') || pad.down('q') || pad.down('e') || pad.down('r') || pad.down('f');
+      this.secondWindHold(p, holding, dt);
+      return;
+    }
 
     // --- move (iso-relative; analog on pad, digital on keys) ---
     let ix = 0, iz = 0;
@@ -1632,6 +1660,12 @@ export class Game {
     if (!f || !f.alive || this.matchOver) { if (f) f.moveDir = { x: 0, z: 0 }; return; }
     const pad = this.pad;
     if (f.grabbedBy || f.frozenT > 0) { f.moveDir = { x: 0, z: 0 }; return; }
+    if (f.downedT > 0) {
+      f.moveDir = { x: 0, z: 0 };
+      const holding = pad.down('lmb') || pad.down('rmb') || pad.down('strike') || pad.down('q') || pad.down('e') || pad.down('r') || pad.down('f');
+      this.secondWindHold(f, holding, dt);
+      return;
+    }
     let tgt;
     if (pad.aiming) {
       const ax = this.right.x * pad.rx + this.fwd.x * (-pad.ry), az = this.right.z * pad.rx + this.fwd.z * (-pad.ry);

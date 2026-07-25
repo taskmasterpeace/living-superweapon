@@ -875,6 +875,17 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   (`_suitHex` restore contract) + ground splat trail. Downward red is bleeding's ALONE.
 - Codex: DAMAGE CODEX gained THE WOUND LANGUAGE section. Ref lsw-bleeding.jpeg.
 
+## SECOND WIND (2026-07-24) — manual §13, spec Part Three
+- **Humans only, once per match** (`_secondWindUsed`, ctor-init): lethal blow intercepted
+  just before `_ko()` → hp pinned 1, `downedT 2.4`, slow-mo, STAY DOWN? announce. Bots/
+  dummies/remotes NEVER (isHuman gate). While downed: staggerT pinned each frame (one pin =
+  every existing action gate), `_landT` knee, chip/DoTs return 0 EARLY in takeDamage — only
+  a strike ≥15 or a slam FINISHES (immediate `_ko`, credited). Window expiry with hp≤1.01 →
+  the KO completes. controlPlayer/controlPad downed branch: `secondWindHold(f, holding, dt)`
+  — hold ANY attack 1s → `secondWindRise`: 25% hp, **ki=0 + drainedT=5 (Overdrive's moment
+  — measured +18.5 ki on the first jab)**, invuln 1.2, gold shockwave + announce.
+- ⚠ the slow-mo dilates the window: 2.4s downedT ≈ 3.2 real seconds. Tests must step ~5s.
+
 ## THE SAMPLE BANK (2026-07-24) — real recordings for every discrete SFX
 - **`core/samples.js`** (`MANIFEST` + `SampleBank` + `HOT_SET`) + **254 Kenney CC0 oggs in
   `/public/audio`** (~6MB, offline-first; impact/sci-fi/interface/rpg/jingle packs). Every

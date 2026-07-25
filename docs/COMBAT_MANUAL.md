@@ -406,3 +406,27 @@ that MOVEMENT MAKES IT WORSE.
   **downward red is bleeding's alone.** Also in the in-game DAMAGE CODEX (THE WOUND LANGUAGE).
 
 Ref: `lsw-bleeding.jpeg` — three-stack runner, tinted suit, mid-stride.
+
+## §13 · SECOND WIND (2026-07-24)
+
+**Once per match, a human player's lethal blow becomes a DOWNED knee instead of a knockout.**
+It is a player's drama, not a simulation rule — **bots never get it** (verified: a bot's
+lethal hit KOs straight through). Dummies and remote puppets are exempt too.
+
+- **Going down**: the first killing blow pins hp at 1, sets `downedT = 2.4`, drops flight,
+  guard, charges and grabs, slows time (`slowmo 1.2s × 0.35`), and asks the question:
+  **STAY DOWN?** — "hold any attack — invincible always gets up."
+- **While down**: every action gate is pinned through stagger, the knee-crouch holds
+  (`_landT`), and **chip is beneath the moment** — DoT ticks, bleeds, small hits all bounce
+  off (`return 0`). Only two things matter:
+- **The rally**: hold ANY attack input (LMB/RMB/Q/E/H/R/V, or the pad's triggers/face
+  buttons) for **one full second** → rise at **25% hp** with the tank EMPTY and `drainedT`
+  live — **Overdrive's moment**: drained fists refill ki (measured +18.5 ki from the first
+  jab after rising). Brief invulnerability (1.2s) covers the getting-up.
+- **The counterplay**: a **heavy strike (≥ 15) or a slam** on the downed body FINISHES it
+  for real — immediate KO, killer credited. (The blocked-strike law is irrelevant here; a
+  downed fighter has no guard.)
+- **The clock**: window expiry with no rally completes the knockout, still credited to the
+  killer. The second death of the match is always real (`_secondWindUsed`).
+
+The slow-mo is real time-dilation — the 2.4s window lasts ~3.2 real seconds under it.

@@ -471,6 +471,7 @@ export class Fighter {
     this.launchT = 0; this._slamCd = 0;
     this._thrownT = 0; this._thrownBy = null;   // aimed-throw body-as-projectile window (manual §11)
     this._bleed = 0; this._bleedStill = 0; this._bleedAcc = 0; this._bleedTick = 0; this._bleedSrc = null; this._suitHex = null;   // BLEEDING (manual §12)
+    this.downedT = 0; this._swHold = 0; this._secondWindUsed = false;   // SECOND WIND (manual §13) — a player's drama, never a bot's
     this.metal = !!def.metal;   // robot: sparks when hit, foot exhaust, sturdier vs knockback
     this.tier = 1;              // power tier (from level) — drives aura color + HUD meter size
     this.tentacles = null;      // built lazily on first update (needs the scene)
@@ -630,6 +631,14 @@ export class Fighter {
       return;
     }
     if (this.state === 'ko' || this.invuln > 0) return 0;
+    // ---- SECOND WIND, the counterplay (manual §13): a DOWNED body ignores chip — only a HEAVY
+    // STRIKE or a slam FINISHES it for real. Everything else is beneath the moment.
+    if (this.downedT > 0) {
+      if (!((opts.strike && amount >= 15) || opts.slam)) return 0;
+      this.downedT = 0;
+      if (this._game && this._game.hud) this._game.hud.damageNumber(this.pos, 'FINISHED', '#ff3b3b', true);
+      // fall through — the blow lands for real and the KO completes (the wind is already spent)
+    }
     if (opts.src && opts.src.sheet && opts.src.sheet.predator && this.hp < this.maxHp * 0.3) amount *= 1.15;   // Predator talent finishes hunts
     // EVERY hit has a type. Callers that don't declare one get the sane default for what they are,
     // so no damage source in the game is ever untyped and resistances can't be silently skipped.
@@ -775,6 +784,23 @@ export class Fighter {
       this._game.particles.burst(this.pos.x, this.pos.y + 5.5, this.pos.z, { count: 8, speed: 26, life: 0.4, size: 1.8, color: ['#ffd97a', '#fff', '#ff9a2a'], up: 4, grav: 26, drag: 1.2 });
     }
     this.state = 'hit'; this.stateT = 0;
+    // ---- SECOND WIND (manual §13): a human player's FIRST death this match becomes a DOWNED
+    // knee instead of a knockout. Time slows. STAY DOWN? Hold any attack to answer. Bots never
+    // get this — it is a player's drama, not a simulation rule.
+    if (this.hp <= 0 && !this._secondWindUsed && !this.isDummy && !this.remote
+        && this._game && this._game.isHuman(this)) {
+      this._secondWindUsed = true;
+      this.hp = 1; this.downedT = 2.4; this._swHold = 0;
+      this.stunT = 0; this.frozenT = 0; this.meleeCharge = 0; this.strikeActive = 0;
+      this.guarding = false; this.chargingKi = false;
+      this.flying = false; this.flyHeld = false; this.gliding = false;
+      if (this.grabbing) this._game.melee.release(this);
+      const g = this._game;
+      g.slowmo(1.2, 0.35);
+      if (g.hud) { g.hud.announce('STAY DOWN?', 'hold any attack — invincible always gets up', '#ff5a4a'); g.hud.flashScreen('#ff3b3b', 0.25); }
+      g.audio.grunt(this.def.voicePitch || 1, this.pos);
+      g.vfx.ring(this.pos.clone().setY(0.5), { color: '#ff5a4a', r0: 1, r1: 11, life: 0.5, flat: true, y: 0.5 });
+    }
     if (this.hp <= 0) this._ko();
     if (this._game) this._game.onHit(this, amount, opts, false);
     return amount;
@@ -840,6 +866,15 @@ export class Fighter {
     if (this._slideT > 0) this._slideT -= dt;
     if (this.burstT > 0) this.burstT -= dt;
     if (this.launchT > 0) this.launchT -= dt;
+    if (this.downedT > 0) {
+      this.downedT -= dt;
+      this.staggerT = Math.max(this.staggerT, 0.12);   // one pin — every action gate already reads stagger
+      this._landT = Math.max(this._landT, 0.22);       // the knee: he is DOWN
+      this.vel.x *= 0.85; this.vel.z *= 0.85;
+      if (this.downedT <= 0 && this.hp <= 1.01) {      // never rallied — the knockout completes
+        this.hp = 0; this._ko();
+      }
+    }
     if (this._slamCd > 0) this._slamCd -= dt;
     if (this.drainedT > 0) this.drainedT -= dt;
     if (this._noKiT > 0) this._noKiT -= dt;
