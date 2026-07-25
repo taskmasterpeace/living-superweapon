@@ -412,6 +412,30 @@ export class Game {
     }
   }
 
+  // BLIND SMOKE (manual §14): a dense, oily cloud. Anyone inside keeps a short blind refresh —
+  // step out and your eyes clear in about half a second. The zone is the delivery; the STATUS
+  // does the work (bots lose sight via ai.js, humans lose the lock and the aim magnet here).
+  addSmoke(x, z, r, dur, src) {
+    (this._smoke = this._smoke || []).push({ x, z, r, t: dur });
+    this.particles.burst(x, 3, z, { count: 26, speed: 13, life: 1.3, size: 6, color: ['#2a2d33', '#3a3f47', '#23262c'], up: 5, drag: 1.5 });
+    this.audio.boom(0.28, { x, y: 2, z });
+    this.noise({ x, y: 2, z }, 0.7, src || null);
+  }
+  updateSmoke(dt) {
+    const S = this._smoke; if (!S || !S.length) return;
+    for (let i = S.length - 1; i >= 0; i--) {
+      const s = S[i]; s.t -= dt;
+      if (s.t <= 0) { S.splice(i, 1); continue; }
+      if (Math.random() < dt * 30) this.particles.spawn({ x: s.x + (Math.random() * 2 - 1) * s.r * 0.8, y: 1 + Math.random() * 5.5, z: s.z + (Math.random() * 2 - 1) * s.r * 0.8, vx: (Math.random() * 2 - 1) * 2, vy: 1.4 + Math.random() * 2, vz: (Math.random() * 2 - 1) * 2, life: 1.5, size: 5 + Math.random() * 3.5, color: ['#2a2d33', '#3a3f47', '#23262c'], drag: 1.2 });
+      for (const f of this.entities) {
+        if (!f.alive || f.isDummy) continue;
+        const dx = f.pos.x - s.x, dz = f.pos.z - s.z;
+        if (dx * dx + dz * dz > s.r * s.r || f.pos.y > 16) continue;
+        f.blindT = Math.max(f.blindT, 0.55);
+      }
+    }
+  }
+
   updateCarry(dt) {
     for (const f of this.entities) {
       const c = f._carry; if (!c) continue;
@@ -483,7 +507,7 @@ export class Game {
   }
   _humanSees(p, e) {
     if (p._revealT > 0) return true;                 // The Ring Sees — the network is her retina
-    const vm = (p.sheet && p.sheet.visMult) || 1;    // AWARENESS extends the eye
+    const vm = ((p.sheet && p.sheet.visMult) || 1) * (p.blindT > 0 ? 0.28 : 1);   // AWARENESS extends the eye — smoke closes it (manual §14)
     const dx = e.pos.x - p.pos.x, dz = e.pos.z - p.pos.z, d = Math.hypot(dx, dz) || 1;
     if (d < this.visNear * vm) return true;
     if (d < this.visRange * vm && ((dx / d) * p.aim.x + (dz / d) * p.aim.z) > this.visCos) return this.canSee(p, e);
@@ -1556,10 +1580,10 @@ export class Game {
     let soft;
     if (pad.active && pad.aiming) {
       const ax = this.right.x * pad.rx + this.fwd.x * (-pad.ry), az = this.right.z * pad.rx + this.fwd.z * (-pad.ry);
-      soft = this.pickTargetDir(p, ax, az);
+      soft = p.blindT > 0 ? null : this.pickTargetDir(p, ax, az);
       if (soft) soft.center(a3); else a3.set(p.pos.x + ax * 50, 6, p.pos.z + az * 50);
     } else {
-      soft = this.pickTarget(p);                                   // foe under/near the cursor (gives height)
+      soft = p.blindT > 0 ? null : this.pickTarget(p);             // BLIND: the aim magnet lets go
       if (soft) soft.center(a3); else { this.world.screenToGround(m.clientX, m.clientY, a3); a3.y = 3; }
     }
     // hard lock ONLY on a direct click ON a character (LMB is also fire — the old "any attack
@@ -1568,6 +1592,7 @@ export class Game {
     else if (pad.active && pad.pressed('lmb') && soft) this.hardLock = soft;   // pads have no cursor — keep soft
     if (inp.pressed('KeyT')) this.hardLock = null;                          // T clears the lock
     if (this.hardLock && !this.hardLock.alive) this.hardLock = null;
+    if (p.blindT > 0) this.hardLock = null;                       // BLIND breaks the lock (manual §14)
     this.lockTarget = soft;
     this.aimPoint.copy(a3).setY(0);
     p.aim3.set(a3.x - p.pos.x, a3.y - (p.pos.y + 5.8), a3.z - p.pos.z).normalize();
@@ -1869,6 +1894,7 @@ export class Game {
     this.updateBlinkMark(dt);
     this.updateCarry(dt);
     this.updateThrownBodies(dt);
+    this.updateSmoke(dt);
     this.updateThrowArc();
     if (this.mode && !this.matchOver) { const over = this.mode.isOver(this); if (over) this.endMatch(over); }
 

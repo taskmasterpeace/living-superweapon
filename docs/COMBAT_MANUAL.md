@@ -430,3 +430,48 @@ lethal hit KOs straight through). Dummies and remote puppets are exempt too.
   killer. The second death of the match is always real (`_secondWindUsed`).
 
 The slow-mo is real time-dilation — the 2.4s window lasts ~3.2 real seconds under it.
+
+## §14 · SLEEP + BLIND — the payload lane, proven (2026-07-24)
+
+These two are the brief's Tier-2 gatekeepers: one new status field each, one tell each, one
+rule each — and they validate the whole payload pathway for everything the catalog wants.
+
+### SLEEP
+
+- **The rule**: `addSleep(dur, src)` → the victim FOLDS SLOWLY (`_sleepK` ramps the collapse
+  over ~0.7s — a fold, not a freeze), uncontrolled (stagger pin gates every action), a
+  sleeping flier falls, and they **wake INSTANTLY on any damage** — the one wake rule. The
+  single exception is the **0.15s delivery grace**: the dart's own blast can't wake the sleep
+  it just delivered (found the hard way — the tranq round's detonation was waking its own
+  target on the same frame).
+- **Duration** scales down with `ccRecover` (the tabletop attribute). **3s immunity** after
+  waking — no chain-sleeping. **Machines don't sleep** (it is a chemical); dummies measure.
+- **The tell** (status-language law): three ROUNDED pale-gold dots (`#ffe9b0`) drifting
+  slowly upward in a lazy circle + soft slow rings — deliberately rounded, slow and soft
+  where stun's stars are sharp, fast octahedra. Sleep SINKS; nothing else sinks.
+- **Carriers**: GALE — `sleep` joins the broadhead cycle (bow + quiver, arrow delivery);
+  SANDRA — Tracker Round carries `payload: 'sleep'` (homing dart — the Jackal takes them
+  ALIVE); ORIGIN catalog "Tranquilizer Dart". Two roster carriers, two delivery systems.
+- Measured: dart fired → target asleep at frame 10, 17.2 delivery damage, KO credit intact;
+  a 4-damage punch after grace woke instantly; immunity blocked a re-sleep.
+
+### BLIND
+
+- **The rule**: dense oily SMOKE ZONES (`game.addSmoke(x, z, r, dur)` → `_smoke` list).
+  Anyone inside keeps a rolling `blindT` refresh (~0.55s) — step out and the eyes clear in
+  half a second. While blind: **a bot gains NO new sight** (`ai.js` gates `sees` on
+  `blindT` — the honesty law does the rest: it hunts the belief it already had, which ages
+  and drifts — it believes wrongly, exactly as specified); **a human loses the hard lock**
+  (cleared in controlPlayer), **the aim magnet lets go** (pickTarget gated), and **their own
+  fog of war closes in** (`_humanSees` range ×0.28).
+- **The tell**: the blocked-eye mark — a slashed-eye sprite at the brow — plus the cloud
+  itself. No color collision: the smoke is charcoal, the mark is bone-and-red.
+- **Carriers**: KNIGHTFALL — Smoke Vanish leaves the cloud at the departure point (the
+  smoke bomb his exit always implied, `def.blind` on a teleport); KIVULI — Creeping Cloud
+  detonations blind (`def.blind` on a projectile; his blurb always said the gas blinds);
+  ORIGIN catalog "Smoke Bomb". Two roster carriers, two delivery systems (teleport exit +
+  lobbed canister), and any projectile can carry `blind: { r, dur }` from data alone.
+- Measured on a verified-LOS lane: bot with line of sight saw NOTHING for the full blind,
+  reacquired after clearing; human at 40u lost the foe while blind, saw it clear after.
+
+Both statuses live in the DAMAGE CODEX (THE WOUND LANGUAGE) beside bleeding.

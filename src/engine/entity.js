@@ -472,6 +472,8 @@ export class Fighter {
     this._thrownT = 0; this._thrownBy = null;   // aimed-throw body-as-projectile window (manual §11)
     this._bleed = 0; this._bleedStill = 0; this._bleedAcc = 0; this._bleedTick = 0; this._bleedSrc = null; this._suitHex = null;   // BLEEDING (manual §12)
     this.downedT = 0; this._swHold = 0; this._secondWindUsed = false;   // SECOND WIND (manual §13) — a player's drama, never a bot's
+    this.sleepT = 0; this._sleepImmune = 0; this._sleepK = 0;   // SLEEP (manual §14): fold slowly, wake on ANY damage
+    this.blindT = 0;                                            // BLIND (manual §14): smoke owns the eyes
     this.metal = !!def.metal;   // robot: sparks when hit, foot exhaust, sturdier vs knockback
     this.tier = 1;              // power tier (from level) — drives aura color + HUD meter size
     this.tentacles = null;      // built lazily on first update (needs the scene)
@@ -577,6 +579,27 @@ export class Fighter {
     if (!silent && game && game.hud && game.isHuman(this)) game.hud.damageNumber(this.pos, 'CLOTTED', '#e8e2d4', true);
   }
 
+  // SLEEP (manual §14): the payload lane's proving status. The victim FOLDS slowly to the
+  // ground, uncontrolled, and wakes INSTANTLY on any damage. Machines don't sleep (it is a
+  // chemical); dummies measure, they don't nap; 3s immunity after waking stops chain-sleep.
+  addSleep(dur, src) {
+    if (this.metal || this.isDummy || this.state === 'ko' || this._sleepImmune > 0 || this.frozenT > 0) return;
+    const rec = (this.sheet && this.sheet.ccRecover) || 1;
+    this.sleepT = Math.max(this.sleepT, dur / rec);
+    this._sleepGrace = 0.15;   // the delivery packet (direct hit + blast, same instant) never wakes its own sleep
+    if (src && src !== this) { this.lastHitBy = src; this.lastHitT = 0; }
+    this.guarding = false; this.chargingKi = false; this.meleeCharge = 0; this.strikeActive = 0;
+    this.flying = false; this.flyHeld = false; this.gliding = false;   // a sleeping flier falls
+    if (this.grabbing && this._game) this._game.melee.release(this);
+    if (this._game && this._game.hud) this._game.hud.damageNumber(this.pos, 'ASLEEP', '#ffe9b0', true);
+    if (this._game) this._game.audio.zap(170, this.pos);
+  }
+  wake(natural) {
+    if (!(this.sleepT > 0) && !natural) return;
+    this.sleepT = 0; this._sleepImmune = 3;
+    if (natural && this._game && this._game.hud) this._game.hud.damageNumber(this.pos, 'WOKE', '#ffe9b0', true);
+  }
+
   addDot(o) {
     if (this.state === 'ko' || this.invuln > 0) return;
     const kind = o.kind || 'poison';
@@ -639,6 +662,9 @@ export class Fighter {
       if (this._game && this._game.hud) this._game.hud.damageNumber(this.pos, 'FINISHED', '#ff3b3b', true);
       // fall through — the blow lands for real and the KO completes (the wind is already spent)
     }
+    // SLEEP (manual §14): any damage at all is the one wake rule — the only exception is the
+    // 0.15s delivery grace, so a tranq dart's own blast can't wake the sleep it just delivered
+    if (this.sleepT > 0 && amount > 0 && !(this._sleepGrace > 0)) this.wake();
     if (opts.src && opts.src.sheet && opts.src.sheet.predator && this.hp < this.maxHp * 0.3) amount *= 1.15;   // Predator talent finishes hunts
     // EVERY hit has a type. Callers that don't declare one get the sane default for what they are,
     // so no damage source in the game is ever untyped and resistances can't be silently skipped.
@@ -825,6 +851,7 @@ export class Fighter {
     this.guarding = false; this.phase = false; this.strikeActive = 0;
     this.frozenT = 0; this.frost = 0; this.stunT = 0; this._burst = 0; this._dots.length = 0; this.meleeCharge = 0; this._heavyT = 0;
     this.clotBleed(null, true);   // the dead stop bleeding (and the suit un-tints for the respawn)
+    this.sleepT = 0; this.blindT = 0; this._sleepK = 0; this.downedT = 0;
     if (this.parts.ice) this.parts.ice.visible = false;
     if (this._game && (this.grabbing || this.grabbedBy)) this._game.melee.release(this.grabbing ? this : this.grabbedBy);
     if (this._game) for (const e of this._game.entities) if (e.grabbedBy === this) { e.grabbedBy = null; if (e.state === 'hit') e.state = 'idle'; }   // tentacle holds die with the holder
@@ -875,6 +902,20 @@ export class Fighter {
         this.hp = 0; this._ko();
       }
     }
+    if (this._sleepImmune > 0) this._sleepImmune -= dt;
+    if (this._sleepGrace > 0) this._sleepGrace -= dt;
+    if (this.sleepT > 0) {
+      this.sleepT -= dt;
+      this.staggerT = Math.max(this.staggerT, 0.12);            // the one pin — no actions while folded
+      this._sleepK = Math.min(1, (this._sleepK || 0) + dt * 1.5);   // the SLOW fold, not an instant freeze
+      this._landT = Math.max(this._landT, 0.26 * this._sleepK);     // knees give out as the fold deepens
+      this.vel.x *= 0.8; this.vel.z *= 0.8;
+      if (this._game && Math.random() < dt * 1.4) {             // soft slow rings — stun's stars are sharp, this is a lullaby
+        this._game.vfx.ring(this.pos.clone().setY(this.pos.y + 9.4), { color: '#ffe9b0', r0: 0.6, r1: 3.4, life: 0.85 });
+      }
+      if (this.sleepT <= 0) this.wake(true);
+    } else if (this._sleepK > 0) this._sleepK = Math.max(0, this._sleepK - dt * 3);
+    if (this.blindT > 0) this.blindT -= dt;
     if (this._slamCd > 0) this._slamCd -= dt;
     if (this.drainedT > 0) this.drainedT -= dt;
     if (this._noKiT > 0) this._noKiT -= dt;
@@ -1399,6 +1440,43 @@ export class Fighter {
         st.rotation.y = a * 2;
       }
     } else if (p.stars && p.stars[0].visible) { for (const st of p.stars) st.visible = false; }
+    // SLEEP TELL (manual §14): three ROUNDED pale-gold dots drifting slowly upward — soft and
+    // slow where stun's stars are sharp and fast. Rounded shapes are sleep's silhouette.
+    if (this.sleepT > 0) {
+      if (!p.zzz) {
+        p.zzz = [];
+        for (let i = 0; i < 3; i++) {
+          const s = new THREE.Mesh(new THREE.SphereGeometry(0.34, 8, 6), new THREE.MeshBasicMaterial({ color: '#ffe9b0', transparent: true, opacity: 0.85, depthWrite: false }));
+          this.obj.add(s); p.zzz.push(s);
+        }
+      }
+      const t = (this._game ? this._game.time : 0) * 1.1;
+      for (let i = 0; i < 3; i++) {
+        const a = t + i * 2.094, s = p.zzz[i];
+        const rise = ((t * 0.55 + i * 0.333) % 1);
+        s.visible = true;
+        s.position.set(Math.cos(a) * 1.5, 9.8 + rise * 2.8, Math.sin(a) * 1.5);
+        s.material.opacity = 0.85 * (1 - rise);
+        s.scale.setScalar(0.7 + rise * 0.5);
+      }
+    } else if (p.zzz && p.zzz[0].visible) { for (const s of p.zzz) s.visible = false; }
+    // BLIND TELL (manual §14): the blocked-eye mark at the brow — targeting information, interrupted
+    if (this.blindT > 0) {
+      if (!p.eyeMark) {
+        const cv = document.createElement('canvas'); cv.width = cv.height = 64; const x = cv.getContext('2d');
+        x.fillStyle = 'rgba(20,22,28,0.78)'; x.strokeStyle = '#e8e2d4'; x.lineWidth = 4.5;
+        x.beginPath(); x.ellipse(32, 32, 22, 13, 0, 0, Math.PI * 2); x.fill(); x.stroke();
+        x.fillStyle = '#e8e2d4'; x.beginPath(); x.arc(32, 32, 6, 0, Math.PI * 2); x.fill();
+        x.strokeStyle = '#ff5a4a'; x.lineWidth = 6; x.lineCap = 'round';
+        x.beginPath(); x.moveTo(12, 52); x.lineTo(52, 12); x.stroke();
+        const tx = new THREE.CanvasTexture(cv);
+        p.eyeMark = new THREE.Sprite(new THREE.SpriteMaterial({ map: tx, transparent: true, depthTest: false, depthWrite: false }));
+        p.eyeMark.scale.set(3.2, 3.2, 3.2);
+        this.obj.add(p.eyeMark);
+      }
+      p.eyeMark.visible = true;
+      p.eyeMark.position.set(0, 11.8 + Math.sin((this._game ? this._game.time : 0) * 2.2) * 0.2, 0);
+    } else if (p.eyeMark && p.eyeMark.visible) p.eyeMark.visible = false;
     // face
     // shortest-path yaw damp — the naive damp spun the LONG way (~355°) whenever the aim
     // crossed the atan2 seam, reading as "he's facing the wrong way"

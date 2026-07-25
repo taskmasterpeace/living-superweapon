@@ -102,7 +102,7 @@ class Projectile {
     this.trailT = 0;
     this.dead = false;
 
-    this.arrow = !!o.arrow; this.payload = o.payload || null;
+    this.arrow = !!o.arrow; this.payload = o.payload || null; this.blind = o.blind;
     this.bullet = !!o.bullet;                      // real ballistics read as METAL, not energy
     this.ballistic = !!o.ballistic; this.weapon = o.weapon || null;   // drives the armour/toughness scale
     this.dtype = o.dtype || null; this.siphon = o.siphon;              // damage type rides the projectile
@@ -297,6 +297,7 @@ class Projectile {
       // ACID: corrodes the plate for 5s — the counter to the armour that stops bullets
       if (this.payload === 'acid') { foe.addDot({ dps: 6, dur: 5, color: '#c8e04a', kind: 'acid', corrode: 4, src: this.caster }); game.particles.burst(foe.pos.x, foe.pos.y + 5, foe.pos.z, { count: 9, speed: 11, life: 0.6, size: 2.8, color: ['#c8e04a', '#9ab030', '#e6f0a0'], up: 7, drag: 1.1 }); }
       else if (this.payload === 'poison') foe.addDot({ dps: 5, dur: 4, color: '#8fe08a', kind: 'poison', src: this.caster });
+      else if (this.payload === 'sleep') { foe.addSleep(2.6, this.caster); game.particles.burst(foe.pos.x, foe.pos.y + 6, foe.pos.z, { count: 7, speed: 6, life: 0.7, size: 2.2, color: ['#ffe9b0', '#fff'], up: 5, drag: 1.6 }); }
       else if (this.payload === 'gas') foe.addDot({ dps: 6, dur: 3, color: '#9a4ae0', kind: 'gas', src: this.caster });
       else if (this.payload === 'flame') { foe.addDot({ dps: 7, dur: 2.5, color: '#ff7a2a', kind: 'burn', src: this.caster }); game.particles.burst(foe.pos.x, foe.pos.y + 5, foe.pos.z, { count: 8, speed: 10, life: 0.5, size: 2.6, color: ['#ff7a2a', '#ffd24a'], up: 8, drag: 1.2 }); }
       if (this.pierce-- > 0) { game.vfx.flash(this.pos.clone(), this.color, this.radius * 2, 0.12); return true; }
@@ -308,6 +309,7 @@ class Projectile {
 
   _impact(game, hitGround) {
     const p = this.pos.clone(); if (hitGround) p.y = 0.2;
+    if (this.blind) game.addSmoke(p.x, p.z, this.blind.r || 12, this.blind.dur || 2.6, this.caster);   // smoke owns this street corner
     // A BULLET IS NOT A BOMB: no fireball, no crater, no area damage — just a spark, a puff and
     // a very dead civilian if it found one. This is the scale that makes guns read as guns.
     if (this.ballistic) {

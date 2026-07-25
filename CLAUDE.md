@@ -886,6 +886,22 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   — measured +18.5 ki on the first jab)**, invuln 1.2, gold shockwave + announce.
 - ⚠ the slow-mo dilates the window: 2.4s downedT ≈ 3.2 real seconds. Tests must step ~5s.
 
+## SLEEP + BLIND (2026-07-24) — manual §14, the payload lane proven
+- **SLEEP**: `addSleep(dur,src)`/`wake()` on Fighter — slow FOLD (`_sleepK`), stagger-pin
+  gates, sleeping flier falls, wake on ANY damage. ⚠ **0.15s `_sleepGrace`** — the dart's
+  own blast was waking the sleep it delivered same-frame. ccRecover shortens; 3s
+  `_sleepImmune`; metal/dummy exempt. Tell: 3 ROUNDED pale-gold dots + slow rings (soft/slow
+  where stun is sharp/fast). Carriers: GALE broadhead cycle + SANDRA Tracker Round
+  (payload:'sleep') + ORIGIN Tranquilizer Dart. `payload === 'sleep'` handler in
+  projectiles.js foe-hit branch.
+- **BLIND**: `game.addSmoke(x,z,r,dur)` zones (`_smoke`, ticked in updateSmoke) refresh
+  `f.blindT` 0.55s inside; ai.js gates `sees` on blindT (belief does the rest — no new
+  code); human: hardLock cleared in controlPlayer, pickTarget magnet gated, `_humanSees`
+  vm ×0.28. Tell: slashed-eye sprite (`parts.eyeMark`). Carriers: KNIGHTFALL Smoke Vanish
+  (def.blind on teleport — zone at DEPARTURE) + KIVULI Creeping Cloud (def.blind on
+  projectile — zone at `_impact`) + ORIGIN Smoke Bomb. `blind: {r,dur}` passes through both
+  projectile/volley spawns.
+
 ## THE SAMPLE BANK (2026-07-24) — real recordings for every discrete SFX
 - **`core/samples.js`** (`MANIFEST` + `SampleBank` + `HOT_SET`) + **254 Kenney CC0 oggs in
   `/public/audio`** (~6MB, offline-first; impact/sci-fi/interface/rpg/jingle packs). Every

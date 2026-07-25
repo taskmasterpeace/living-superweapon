@@ -343,7 +343,7 @@ export const ROSTER = [
       lmb: { type: 'cone', name: 'Choking Veil', kiPerSec: 17, range: 34, arc: 1.15, dps: 14, push: 6, gasDot: { dps: 7, dur: 2.6, color: '#9a4ae0', kind: 'gas' }, color: '#9a4ae0' },
       rmb: { type: 'construct', name: 'Solid Smoke', cost: 12, cd: 6, construct: 'wall', duration: 9, holdTrigger: true, color: '#9a4ae0' },
       q: { type: 'phase', name: 'Gas Form', kiPerSec: 17, color: '#b06aff' },
-      e: { type: 'projectile', name: 'Creeping Cloud', cost: 8, cd: 0.5, damage: 12, speed: 54, radius: 1.9, blast: 9, homing: 1.6, payload: 'gas', color: '#9a4ae0', color2: '#e8d0ff' },
+      e: { type: 'projectile', name: 'Creeping Cloud', cost: 8, cd: 0.5, damage: 12, speed: 54, radius: 1.9, blast: 9, homing: 1.6, payload: 'gas', blind: { r: 12, dur: 2.2 }, color: '#9a4ae0', color2: '#e8d0ff' },
       f: { type: 'buff', name: 'Second Wind', cost: 22, cd: 18, mult: 1.4, dur: 9, heal: 30, color: '#b06aff', color2: '#e8d0ff' },
       shift: { type: 'dash', name: 'Vapor Slip', cost: 5, cd: 0.55, power: 98, iframes: 0.26, color: '#b06aff' },
       r: { type: 'charge', name: 'Asphyxia', cost: 8, cd: 14, kiPerSec: 12, maxCharge: 2.3, minR: 1.8, maxR: 7, dmgMin: 22, dmgMax: 78, maxBlast: 36, speedMin: 32, speedMax: 56, chargePower: 3, color: '#9a4ae0', color2: '#e8d0ff' },
@@ -359,9 +359,9 @@ export const ROSTER = [
     blurb: 'No powers — a bow, a knife, and a quiver of nasty ideas. Draw deep and switch broadheads: poison bleeds, flame burns, explosive erases, acid eats armour.',
     sig: ['LMB Longshot (hold to draw)', 'Q Switch Broadheads (poison/flame/explosive)', 'R Arrow Storm', '2×TAP Vault'],
     abilities: {
-      lmb: { type: 'bow', name: 'Longshot', cost: 6, cd: 0.25, drawTime: 0.85, dmgMin: 8, dmgMax: 30, speedMax: 215, blast: 11, payloads: ['explosive', 'flame', 'poison', 'acid'], color: '#9fe06a' },
+      lmb: { type: 'bow', name: 'Longshot', cost: 6, cd: 0.25, drawTime: 0.85, dmgMin: 8, dmgMax: 30, speedMax: 215, blast: 11, payloads: ['explosive', 'flame', 'poison', 'acid', 'sleep'], color: '#9fe06a' },
       rmb: { type: 'projectile', name: 'Concussion Shot', cost: 8, cd: 0.7, damage: 16, speed: 130, radius: 0.8, blast: 7, arrow: true, shock: true, color: '#ffd24a', color2: '#fff' },
-      q: { type: 'quiver', name: 'Switch Broadheads', payloads: ['explosive', 'flame', 'poison', 'acid'], color: '#9fe06a' },
+      q: { type: 'quiver', name: 'Switch Broadheads', payloads: ['explosive', 'flame', 'poison', 'acid', 'sleep'], color: '#9fe06a' },
       e: { type: 'melee', name: 'Ranger Knife', cost: 8, cd: 0.8, damage: 20, range: 11, arc: 0.85, lunge: 38, knock: 40, launch: 8, dmgClass: 'slash', color: '#9fe06a' },
       f: { type: 'buff', name: 'Deadeye', cost: 18, cd: 16, mult: 1.5, dur: 8, color: '#9fe06a', color2: '#fff' },
       shift: { type: 'dash', name: 'Tumble', cost: 4, cd: 0.5, power: 94, iframes: 0.3, color: '#9fe06a' },
@@ -406,7 +406,7 @@ export const ROSTER = [
       rmb: { type: 'rifle', name: 'Suppressed SMG', cost: 2, interval: 0.07, damage: 4, speed: 175, radius: 0.5, blast: 2, spread: 0.06, recoil: 0.8, color: '#ffd97a', color2: '#fff' },
       q: { type: 'buff', name: 'The Ring Sees', cost: 16, cd: 15, mult: 1.15, dur: 8, reveal: true, color: '#ffb03a', color2: '#fff' },
       e: { type: 'melee', name: 'Pistol Whip', cost: 8, cd: 0.8, damage: 18, range: 11, arc: 0.85, lunge: 34, knock: 42, launch: 8, color: '#ffb03a' },
-      f: { type: 'projectile', name: 'Tracker Round', cost: 7, cd: 0.6, damage: 12, speed: 140, radius: 0.7, blast: 3, homing: 4, color: '#ffb03a', color2: '#fff' },
+      f: { type: 'projectile', name: 'Tracker Round', cost: 7, cd: 0.6, damage: 12, speed: 140, radius: 0.7, blast: 3, homing: 4, payload: 'sleep', color: '#ffb03a', color2: '#fff' },   // the Jackal takes them ALIVE
       shift: { type: 'dash', name: 'Slip the Frame', cost: 4, cd: 0.5, power: 96, iframes: 0.28, color: '#ffb03a' },
       r: { type: 'rush', name: 'Clean Extraction', cost: 18, cd: 12, range: 64, hits: 7, interval: 0.08, damage: 8, finisher: 34, color: '#ffb03a' },
     },
@@ -585,7 +585,7 @@ export const ROSTER = [
     abilities: {
       lmb: { type: 'volley', name: 'Batarang Fan', cost: 3, interval: 0.11, damage: 7, speed: 125, radius: 0.7, blast: 2.6, spread: 0.12, blade: true, oneHand: true, color: '#c9cfd9', color2: '#fff' },
       rmb: { type: 'melee', name: 'Cross Counter', cost: 9, cd: 0.7, damage: 24, range: 11, arc: 0.85, lunge: 40, knock: 44, launch: 8, color: '#ffd24a' },
-      q: { type: 'teleport', name: 'Smoke Vanish', cost: 10, cd: 1.4, range: 40, oneHand: true, color: '#8a8f99' },
+      q: { type: 'teleport', name: 'Smoke Vanish', cost: 10, cd: 1.4, range: 40, oneHand: true, blind: { r: 15, dur: 2.6 }, color: '#8a8f99' },
       e: { type: 'mine', name: 'Caustic Charges', cost: 10, cd: 1.1, max: 3, trigger: 7, damage: 24, blast: 12, armT: 0.6, duration: 20, range: 55, dtype: 'acid', dot: { dps: 6, dur: 5, kind: 'acid', corrode: 4, color: '#c8e04a' }, color: '#c8e04a' },
       f: { type: 'grapple', name: 'Grapnel Line', cost: 8, cd: 1.1, range: 95, oneHand: true, color: '#ffd24a' },
       shift: { type: 'dash', name: 'Cape Slip', cost: 4, cd: 0.5, power: 96, iframes: 0.3, color: '#c9cfd9' },

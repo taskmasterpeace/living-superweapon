@@ -104,7 +104,9 @@ export class AI {
     // --- vision ---
     const rdx = real.pos.x - b.pos.x, rdz = real.pos.z - b.pos.z, rd = Math.hypot(rdx, rdz) || 1;
     const inCone = rd < this.seeNear || (rd < this.seeRange && (rdx / rd) * b.aim.x + (rdz / rd) * b.aim.z > this.seeCos);
-    const sees = inCone && game.canSee(b, real);
+    // BLIND (manual §14): smoke owns the eyes. A blinded bot gains NO new sight — it hunts the
+    // belief it already had, which ages and drifts. It believes wrongly, exactly as specified.
+    const sees = b.blindT > 0 ? false : (inCone && game.canSee(b, real));
     this._sees = sees;
     if (sees) {
       this.remember(real.pos.x, real.pos.z, real.pos.y, 'sight');

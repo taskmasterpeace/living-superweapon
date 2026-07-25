@@ -120,6 +120,8 @@ export const POWERS = [
   { id: 'longbow',    name: 'Compound Bow',        cat: 'gear', cost: 18, ab: { type: 'bow', name: 'Compound Bow', cost: 6, cd: 0.25, drawTime: 0.85, dmgMin: 8, dmgMax: 30, speedMax: 215, blast: 11, payloads: ['explosive', 'flame', 'poison'], color: '#9fe06a' } },
   { id: 'quiver',     name: 'Arrow Select',  cat: 'gear', cost: 6, req: 'longbow', ab: { type: 'quiver', name: 'Arrow Select', payloads: ['explosive', 'flame', 'poison'], color: '#9fe06a' } },
   { id: 'mines',      name: 'Proximity Mines', cat: 'gear', cost: 16, ab: { type: 'mine', name: 'Proximity Mines', cost: 10, cd: 1.1, max: 3, trigger: 7, damage: 24, blast: 12, armT: 0.6, duration: 20, range: 55, color: '#ff5a4a' } },
+  { id: 'tranqdart',  name: 'Tranquilizer Dart', cat: 'gear', cost: 12, ab: { type: 'projectile', name: 'Tranquilizer Dart', cost: 7, cd: 0.9, damage: 6, speed: 150, radius: 0.6, blast: 2, homing: 2.5, payload: 'sleep', arrow: true, color: '#ffe9b0', color2: '#fff' } },
+  { id: 'smokebomb',  name: 'Smoke Bomb', cat: 'gear', cost: 8, ab: { type: 'projectile', name: 'Smoke Bomb', cost: 6, cd: 1.6, damage: 4, speed: 70, radius: 1.2, blast: 5, grav: 8, canister: true, blind: { r: 14, dur: 2.8 }, color: '#8a8f99', color2: '#c9cfd9' } },
   // command
   { id: 'drones',     name: 'Attack Drones',    cat: 'command', cost: 20, ab: { type: 'summon', name: 'Attack Drones', cost: 16, cd: 4, count: 3, max: 6, duration: 12, damage: 7, interval: 0.7, speed: 82, color: '#ffdf7a', color2: '#fff' } },
   { id: 'willfist',   name: 'Force Fist',       cat: 'command', cost: 18, ab: { type: 'construct', name: 'Force Fist', cost: 14, cd: 5, construct: 'fist', duration: 11, color: '#5fe07a' } },

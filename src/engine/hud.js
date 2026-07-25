@@ -1084,6 +1084,14 @@ export class HUD {
         shut on its own. Machines and energy bodies cannot bleed. The tell is red drips falling straight
         DOWN, a darkening patch on the suit, and a trail on the ground behind a runner — downward red
         belongs to bleeding alone: drain pulls inward, poison blooms green, fire flickers up.</div>
+      <div class="dgsub"><b>SLEEP</b> — a tranquilizer payload (arrows, darts). The victim folds SLOWLY to the
+        ground, uncontrolled, and wakes INSTANTLY on any damage — one wake rule, no exceptions. Machines
+        don't sleep. The tell is three rounded pale-gold dots drifting slowly overhead and soft slow rings —
+        rounded and gentle where stun's stars are sharp and fast. Three seconds of immunity after waking.</div>
+      <div class="dgsub"><b>BLIND</b> — dense oily smoke that owns the eyes. Inside the cloud a fighter gains
+        no new sight: bots hunt what they BELIEVE (and believe wrongly), your target lock breaks, the aim
+        magnet lets go, and your own fog of war closes in. The tell is the blocked-eye mark at the brow.
+        Step out and your eyes clear in about half a second.</div>
       <button class="odone oghost">Close</button>
     </div>`;
     el.querySelector('.oghost').onclick = () => { el.style.display = 'none'; };

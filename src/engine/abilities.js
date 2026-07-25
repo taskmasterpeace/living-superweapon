@@ -117,7 +117,7 @@ export const TYPES = {
         pos: m, vel: (def.grav ? c.aim.clone().setY(0.5) : c.aim3.clone()).setLength(def.speed || 70),
         radius: def.radius || 1.4, damage: def.damage || 14, blast: def.blast || 5, power: def.power || 1,
         homing: def.homing || 0, color: def.color, color2: def.color2, grav: def.grav || 0, shock: def.shock,
-        arrow: def.arrow, payload: def.payload, boomerang: def.boomerang, range: def.range,
+        arrow: def.arrow, payload: def.payload, blind: def.blind, boomerang: def.boomerang, range: def.range,
         blade: def.blade, canister: def.canister,      // thrown steel / shells read as objects, not orbs
         dtype: def.dtype, siphon: def.siphon,          // the damage TYPE rides the shot
       });
@@ -140,7 +140,7 @@ export const TYPES = {
       g.projectiles.spawnProjectile(c, {
         pos: m, vel: new THREE.Vector3(Math.cos(a), c.aim3.y, Math.sin(a)).setLength(def.speed || 105),
         radius: def.radius || 0.8, damage: def.damage || 6, blast: def.blast || 3.4, power: 0.5, color: def.color, color2: def.color2,
-        arrow: def.arrow, payload: def.payload, blade: def.blade,
+        arrow: def.arrow, payload: def.payload, blind: def.blind, blade: def.blade,
       });
       g.audio.blast(560 + rand(-40, 40), 0.08); g.muzzleFlash(c, def.color, 0.6, off);
     }
@@ -271,6 +271,7 @@ export const TYPES = {
     if (inp.pressed && ready(c, def, st)) {
       pay(c, def, st);
       g.afterimage(c); g.vfx.flash(c.pos.clone().setY(5), def.color || c.def.colors.accent, 6, 0.22); g.audio.teleport();
+      const ox = c.pos.x, oz = c.pos.z;   // SMOKE VANISH: the departure point IS the smoke bomb
       const range = def.range || 42; const target = g.aimPoint;
       const dx = target.x - c.pos.x, dz = target.z - c.pos.z; const d = Math.hypot(dx, dz) || 1;
       const dd = Math.min(range, d);
@@ -278,6 +279,7 @@ export const TYPES = {
       c.vel.multiplyScalar(0.2); c.invuln = 0.28; c.faceDir(dx, dz);
       g.afterimage(c); g.vfx.flash(c.pos.clone().setY(5), def.color || c.def.colors.accent, 7, 0.28);
       g.particles.burst(c.pos.x, 5, c.pos.z, { count: 18, speed: 24, life: 0.4, size: 2.6, color: ['#fff', def.color || c.def.colors.accent] });
+      if (def.blind && g.addSmoke) g.addSmoke(ox, oz, def.blind.r || 14, def.blind.dur || 2.6, c);
     }
   },
 
