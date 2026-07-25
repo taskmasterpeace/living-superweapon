@@ -1,5 +1,6 @@
 // WAR WORLD: ASCENDANTS — bootstrap.
 import { Input } from './core/input.js';
+import { DevConsole } from './engine/devconsole.js';
 import { AudioBus } from './core/audio.js';
 import { Game, ROSTER } from './engine/game.js';
 import { HUD } from './engine/hud.js';
@@ -32,6 +33,9 @@ const hud = new HUD(game);
 game.hud = hud;
 game.world.prewarm();   // compile lazy FX shaders up-front — no first-use hitches mid-fight
 loadSettings(); applySettings(game);   // player settings (volume/shake/quality/HUD) from localStorage
+// THE DEV CONSOLE — ` or the >_ button. Mounted at boot because the things worth debugging (a gate
+// that refuses silently, a band that doesn't match the buildings) happen before you'd think to ask.
+const dev = new DevConsole(game, hud);
 // GPU sanity — software WebGL turns the game into slow motion; say WHY, loudly
 try {
   const glc = game.world.renderer.getContext();
@@ -306,6 +310,10 @@ try { audio.muted = localStorage.getItem('threshold_muted') === '1'; } catch {}
 
 addEventListener('keydown', (e) => {
   if (e.code === 'Escape' && hud.overlayOpen()) { hud.closeOverlays(); return; }   // options/how-to first
+  // ⚠ THE CONSOLE EATS THE KEYBOARD WHILE IT IS FOCUSED. Without this, typing `hero sol` also
+  // throws a punch, guards, and cycles the roster — every letter is a binding somewhere.
+  if (dev && dev.open && document.activeElement === dev.in) return;
+  if (e.code === 'Backquote') { e.preventDefault(); dev && dev.toggle(); return; }
   if (e.code === 'F1') { e.preventDefault(); hud.toggleHint(); return; }           // controls, on demand
   if (e.code === 'F2') { e.preventDefault(); hud.toggleTelemetry(); return; }      // (5) telemetry in ANY mode
   // (6) END SCREEN KEYS — Enter takes the rematch, Esc goes to the menu. No mouse hunt.
@@ -430,7 +438,7 @@ window.addEventListener('error', (e) => { if (e && e.error) game.reportError(e.e
 window.addEventListener('unhandledrejection', (e) => game.reportError(e && e.reason, 'promise'));
 
 // expose for debugging + performance benchmarking
-window.LSW = { game, hud, ROSTER, runSlot, performEvade, input, tutorial, netplay, uinav, soundscape, SETTINGS, KEYMAPS, playOpening, creator: { ui: creator, freshPicks, buildDef, tally, validate, saveCustom, deleteCustom, loadCustoms } };
+window.LSW = { dev, game, hud, ROSTER, runSlot, performEvade, input, tutorial, netplay, uinav, soundscape, SETTINGS, KEYMAPS, playOpening, creator: { ui: creator, freshPicks, buildDef, tally, validate, saveCustom, deleteCustom, loadCustoms } };
 window.LSW.runBenchmark = (opts) => runBenchmark(game, hud, opts);
 if (location.search.includes('bench')) {
   addEventListener('load', () => setTimeout(async () => {

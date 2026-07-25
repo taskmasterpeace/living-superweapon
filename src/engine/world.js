@@ -291,6 +291,10 @@ export class World {
     this.scene.add(g);
     this.arena = g;
     this._buildCity(g);
+    // ⚠ AT THE END, NOT THE TOP. fitBands is a MEASUREMENT of the built city; called before the
+    // buildings exist it measures an empty scene, returns null, and quietly leaves the planner's
+    // guess in place — which looks exactly like working.
+    this.fitBands();
   }
 
   // ---- the city dressing: harbor, cars, streetlights, billboards, rooftop units ----
@@ -600,7 +604,7 @@ export class World {
     if (this._fades) this._fades.clear();   // cloned cutaway materials died with their meshes
   }
   rebuildCity(plan) {
-    setBands(plan && plan.bands);   // the layer contract follows the city
+    setBands(plan && plan.bands);   // the plan's estimate, replaced by a measurement below
     if (!plan) return;
     this._teardownCity();
     this.plan = plan;
@@ -613,6 +617,7 @@ export class World {
       this._buildGenCity(plan);
     }
     this._fitFog(plan);
+    this.fitBands();          // ⚠ AFTER the build — the bands are a measurement, not a prediction
     this.refreshFogBoxes();
     this.resize();
     // ⚠ ONE NOTIFICATION POINT for everything that is keyed to the old map. Re-gridding the
@@ -1464,6 +1469,51 @@ export class World {
     return out;
   }
 
+
+  // ---------------------------------------------------------------------------------------------
+  // THE BANDS FIT THE BUILDINGS (Robert, 2026-07-25: "building height should only be as high as
+  // standing/levitating on top of our tallest building… you can stand on. We need to establish
+  // that first — right now stuff seems too high").
+  //
+  // ⚠ computeBands NEVER MEASURED ANYTHING. It read TILE_MAX_H — a DECLARED ceiling per tile type,
+  // not a built one — added the relief amplitude and a flat +8, then hung SKY and CEILING off that
+  // at fixed +110 / +170. Measured on the flagship: the tallest surface you can stand on is 132u,
+  // BUILDING sat at 158 (26u of air above every roof), and CEILING at 328 — 196u, thirty-seven
+  // metres, of nothing, over a city 132u tall. The sky was 2.5× the city.
+  //
+  // A band is a claim about where the BUILDINGS are, so it has to be measured after they exist.
+  // This runs once per city build, reads the actual tops of the actual standable surfaces, and
+  // rescales the ladder around that. BAND_SHAPE holds the multipliers so they are one place to
+  // argue with, not three magic numbers buried in a planner.
+  // THE SHAPE OF THE SKY, as multiples of the tallest roof. These are the numbers to argue with —
+  // `bands sky 1.6` in the console changes them live so a ruling can be FLOWN before it is written.
+  //   sky 1.45 — the lane above the roofs is about half a city deep
+  //   ceiling 1.9 — and the lid is about one more city above that
+  // (was: a flat +110 and +170 on a band that itself floated 26u over every building)
+  static BAND_SHAPE = { sky: 1.45, ceiling: 1.9 };
+
+  fitBands() {
+    let top = 0;
+    for (const c of (this.coverAll || [])) { const t = c.top ?? c.h; if (t != null && t > top) top = t; }
+    for (const it of (this.interiors || [])) { const t = it.top ?? it.h; if (t != null && t > top) top = t; }
+    if (!(top > 0)) return null;                    // open country: keep whatever the plan said
+    const S = this.BAND_SHAPE || World.BAND_SHAPE;
+    const b = {
+      ground: 8,
+      // ⚠ "as high as STANDING on top of our tallest building" — a fighter on that roof has their
+      // feet at `top` and their head at top + 9.6. Ending the band exactly at the roof puts anyone
+      // standing on the tallest building in the SKY band while their boots are on concrete.
+      building: Math.round(top + 10),
+      sky: Math.round(top * S.sky),
+      ceiling: Math.round(top * S.ceiling),
+      shallows: (this.plan && this.plan.bands && this.plan.bands.shallows) ?? -10,
+      depths: (this.plan && this.plan.bands && this.plan.bands.depths) ?? -26,
+    };
+    this._measuredTop = top;
+    setBands(b);
+    if (this.plan) this.plan.bands = b;
+    return b;
+  }
 
   // ---------------------------------------------------------------------------------------------
   // THE FLICKER AUDIT — find z-fighting before a player does. See THE SURFACE-SEPARATION LAW in

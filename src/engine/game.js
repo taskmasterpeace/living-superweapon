@@ -2656,6 +2656,19 @@ export class Game {
         this._departing = true;
         this.onDepart(p);
       }
+      // ⚠ A GATE THAT REFUSES SILENTLY IS UNDEBUGGABLE. With `verbose on` in the console it names
+      // the FIRST condition it failed, once every half second — which is how "shift+space did
+      // nothing" stops being a mystery and starts being a sentence.
+      if (this.dev && this.dev.verbose && p && p.alive) {
+        const why = !p.def.afterburner ? p.def.id + ' is not burner-class'
+          : !p.flying ? 'not flying (press F)'
+          : !p.cruiseHeld ? 'cruise not held (SHIFT)'
+          : p.ki <= 1 ? 'tank dry — ki ' + Math.round(p.ki)
+          : (p._burnT || 0) <= 0.8 ? 'burner lighting… ' + (p._burnT || 0).toFixed(2) + 's / 0.80s'
+          : p.pos.y <= BANDS.ceiling + 44 ? 'climbing — ' + Math.round(p.pos.y) + 'u of ' + Math.round(BANDS.ceiling + 44) + 'u'
+          : this._departing ? 'already offered this climb' : null;
+        if (why) this.dev.trace('depart', why);
+      }
       if (p && p.pos.y < BANDS.ceiling - 40) this._departing = false;   // re-arm after a real descent
     }
     this.updateThrowArc();
