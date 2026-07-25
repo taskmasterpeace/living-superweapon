@@ -826,6 +826,7 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   22u no-stun · VEGA 16u · RAGE 2.8u standing · RAGE vs 20dps 0u (19 dmg) · flyer VOLT
   knocked out of the sky. **VEGA's Violet Lance**: radius 2.2→1.45 + `spiral: true` — 26
   instanced orbs wound 3.5 turns down the hose (built/updated/disposed with the beam).
+  Ref: `lsw-vega-spiral.jpeg`.
 
 ## MOMENTUM MELEE (2026-07-24) — manual §10, spec Part One
 - **Contact speed scales the trifecta**: `strike()`/`_heavy()` stamp `f._momSpd` (3D |vel|)
