@@ -336,6 +336,99 @@ export class Game {
     try { return h[event](...args); } catch (e) { console.error('ui:' + event, e); }
   }
 
+  // ROADMAP 18 · CAMERA DRAMA — THE KO CAM. A knockout used to be a banner and a slow-mo.
+  // Now the camera swings a short orbit around the body while the ragdoll settles, then hands
+  // control back. Purely presentational, and it never fights the map tool or a cinematic.
+  startKoCam(victim, dur = 1.2) {
+    if (!victim || this._koCam) return;
+    if (this.mapCam && !this._koCam) return;                 // a cinematic or the map tool owns the camera
+    if (!this.isHuman(victim) && !this.isHuman(victim.lastHitBy)) return;   // only OUR knockouts
+    this._koCam = { t: dur, dur, at: victim.pos.clone(), a0: this.world.orbitAngle || 0 };
+  }
+  updateKoCam(dt) {
+    const K = this._koCam; if (!K) return;
+    K.t -= dt;
+    const k = 1 - K.t / K.dur;
+    this.mapCam = { x: K.at.x, z: K.at.z, yaw: K.a0 + k * 1.1, pitch: 0.86, zoom: 62 + k * 16 };
+    if (K.t <= 0) { this._koCam = null; this.mapCam = null; }
+  }
+
+  // ROADMAP 12 · FIRES THAT SPREAD. A burning thing lights what is next to it — grass, trees,
+  // cars — so one explosion in the wrong street becomes a problem that grows. Capped, and it
+  // burns out on its own; this is drama, not a simulation of combustion.
+  ignite(x, z, r = 8, src = null) {
+    (this._fires = this._fires || []).push({ x, z, r, t: 6 + Math.random() * 4, spread: 2.2, src });
+    this.vfx.scorch && this.vfx.scorch({ x, y: 0.2, z }, r * 0.5, '#1a0d06');
+  }
+  updateFires(dt) {
+    const F = this._fires; if (!F || !F.length) return;
+    for (let i = F.length - 1; i >= 0; i--) {
+      const f = F[i]; f.t -= dt;
+      if (Math.random() < dt * 30) this.particles.spawn({ x: f.x + (Math.random() * 2 - 1) * f.r, y: 0.5, z: f.z + (Math.random() * 2 - 1) * f.r,
+        vx: 0, vy: 6 + Math.random() * 6, vz: 0, life: 0.55, size: 2.6, color: ['#ff7a2a', '#ffd24a', '#8a3d05'], drag: 0.9 });
+      // it burns what stands in it
+      for (const e of this.entities) {
+        if (!e.alive || e.isDummy) continue;
+        const dx = e.pos.x - f.x, dz = e.pos.z - f.z;
+        if (dx * dx + dz * dz > f.r * f.r || e.pos.y > 8) continue;
+        if (Math.random() < dt * 1.6) e.addDot({ dps: 5, dur: 2, color: '#ff7a2a', kind: 'burn', src: f.src });
+      }
+      // and it SPREADS to nearby fuel, once, with a hard cap so a city never fully ignites
+      f.spread -= dt;
+      if (f.spread <= 0 && F.length < 14) {
+        f.spread = 2.6;
+        for (const car of this.world.cars || []) {
+          if (car.dead || car._burning) continue;
+          const dx = car.x - f.x, dz = car.z - f.z;
+          if (dx * dx + dz * dz > (f.r + 14) ** 2) continue;
+          car._burning = true;
+          this.ignite(car.x, car.z, 7, f.src);
+          break;
+        }
+      }
+      if (f.t <= 0) F.splice(i, 1);
+    }
+  }
+
+  // BACKLOG · RING-OUT RULES (DBZ rules): leaving the arena is a loss, not a slap on the wrist.
+  // A mode opts in with `o.ringOut`, so nothing changes for the modes that do not.
+  checkRingOut(dt) {
+    if (!this.ms || !this.ms.ringOut) return;
+    const A = this.world.ARENA - 2, floor = this.ms.ringOutFloor ?? -40;
+    for (const e of this.entities) {
+      if (!e.alive || e.isDummy) continue;
+      const out = Math.abs(e.pos.x) > A || Math.abs(e.pos.z) > A || e.pos.y < floor;
+      if (!out) { e._ringT = 0; continue; }
+      e._ringT = (e._ringT || 0) + dt;
+      if (e._ringT > 0.35) {
+        e._ringT = 0;
+        if (this.hud) this.hud.announce('RING OUT', e.name + ' left the arena', '#ff5a4a');
+        e.lastHitBy = e.lastHitBy || null;
+        e.hp = 0; e._ko && e._ko(this);
+      }
+    }
+  }
+
+  // BACKLOG · SPECTATE — watch a fight you are not in. The camera follows a chosen fighter and
+  // the player's own input is ignored; TAB cycles who you are watching.
+  spectate(on, who = null) {
+    this._spectate = on ? { target: who || this.entities.find(e => e.alive && e !== this.player) } : null;
+    if (this.hud) this.hud.feed(on ? 'SPECTATING — TAB cycles, ESC exits' : 'Spectator off', '#7fe6ff');
+    return !!this._spectate;
+  }
+  cycleSpectate() {
+    if (!this._spectate) return;
+    const live = this.entities.filter(e => e.alive);
+    if (!live.length) return;
+    const i = live.indexOf(this._spectate.target);
+    this._spectate.target = live[(i + 1) % live.length];
+    if (this.hud) this.hud.feed('Watching ' + this._spectate.target.name, '#7fe6ff');
+  }
+  updateSpectate() {
+    const S = this._spectate; if (!S || !S.target || !S.target.alive) return;
+    this.mapCam = { x: S.target.pos.x, z: S.target.pos.z, yaw: this.world.orbitAngle || 0, pitch: 0.9, zoom: 78 };
+  }
+
   // ---------- 3a · THE INTERACTABLE CONTRACT (altitude plan 3) ----------
   // Nothing in this engine could be TALKED TO or USED — no prompt, no focus target, no
   // registration list. This is that list. Anything can register: a city tile, a quest giver,
@@ -1439,6 +1532,7 @@ export class Game {
   isHuman(f) { return this.humans.some(h => h.fighter === f); }
 
   handleKO(victim) {
+    try { this.startKoCam(victim); } catch (e) {}   // ROADMAP 18 · camera drama
     // THE DROP ECONOMY (manual §16): KO'd gear carriers leave a weapon on the street — 20s to
     // claim it. Held pickups fall too. Police sidearms join the economy the same way.
     if (!victim.isDummy) {
@@ -2360,6 +2454,10 @@ export class Game {
     this.updateSingularity(dt);
     this.updateSpikes(dt);
     this.updateInteractFocus(dt);
+    this.updateKoCam(dt);
+    this.updateFires(dt);
+    this.checkRingOut(dt);
+    this.updateSpectate();
     this.updateDecoys(dt);
     this.weather.update(dt);
     this.timeFields.update(dt);
@@ -2402,6 +2500,8 @@ export class Game {
 }
 
 export { ROSTER };
+
+
 
 
 

@@ -66,6 +66,8 @@ export class Weather {
       const cam = this.g.world.camera;
       for (let i = 0; i < arr.length; i += 3) {
         arr[i + 1] -= fall; arr[i] += wx; arr[i + 2] += wz;                 // RAIN BENDS WITH WIND
+        // the same law as the tether: a persistent buffer never takes a non-finite value
+        if (!Number.isFinite(arr[i]) || !Number.isFinite(arr[i + 1]) || !Number.isFinite(arr[i + 2])) { arr[i] = 0; arr[i + 1] = 200; arr[i + 2] = 0; }
         if (arr[i + 1] < 0) {
           arr[i + 1] = 200 + Math.random() * 30;
           arr[i] = cam.position.x + (Math.random() * 2 - 1) * 280;
@@ -364,3 +366,4 @@ export class GravityZones {
   }
   clear() { this.list.length = 0; }
 }
+

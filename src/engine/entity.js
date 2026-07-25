@@ -181,6 +181,12 @@ export class Fighter {
     // slam physics: launchT > 0 = recently knocked/thrown → wall/ground impacts hurt (dashing into walls doesn't)
     this.launchT = 0; this._slamCd = 0;
     this._thrownT = 0; this._thrownBy = null;   // aimed-throw body-as-projectile window (manual §11)
+    this._mvX = 0; this._mvZ = 0; this._mvT = 0;   // live move intent (directional descent)
+    this.shockT = 0; this._shockImmune = 0;                              // ROADMAP 5 · shock
+    // ROADMAP 4 · ARMOUR AS A THIRD BAR — a real pool, not just a flat subtraction. Derived
+    // from what the fighter IS, so nothing is hand-authored: plate is plate.
+    this.armorMax = (def.armor || 0) + (def.metal ? 26 : 0);
+    this.armor = this.armorMax; this._armorCalm = 0;
     this._siphon = null; this._bloodBuff = null; this._riposte = null;   // Tier-2 buff lanes
     this.sizeScale = 1; this._sizeT = 0; this._sizeMight = 1; this._sizeKb = 1; this._sizeLift = 0;
     this._invis = null; this._regen = null; this._regenReady = null; this._banished = null;   // Tier-3 states
@@ -320,6 +326,21 @@ export class Fighter {
   // SLEEP (manual §14): the payload lane's proving status. The victim FOLDS slowly to the
   // ground, uncontrolled, and wakes INSTANTLY on any damage. Machines don't sleep (it is a
   // chemical); dummies measure, they don't nap; 3s immunity after waking stops chain-sleep.
+  // ROADMAP 5 · SHOCK — the anti-machine status. Freeze, burn and poison all favour flesh;
+  // shock is the one that MACHINES cannot shrug off (a robot has no metabolism to resist it,
+  // but it does have circuits). Metal takes 1.6x duration; flesh resists it.
+  addShock(dur, src) {
+    if (this.isDummy || this._shockImmune > 0) return;
+    const machine = this.def.metal || this.body === 'metal';
+    const d = dur * (machine ? 1.6 : 0.55) / ((this.sheet && this.sheet.ccRecover) || 1);
+    this.shockT = Math.max(this.shockT || 0, d);
+    this._shockImmune = 3;
+    if (this._game) {
+      this._game.ui('damageNumber', this.pos, machine ? 'SYSTEMS DOWN' : 'SHOCKED', '#bfe9ff', true);
+      this._game.vfx.lightning(this.pos.clone().setY(this.pos.y + 4), { color: '#bfe9ff', count: 3, radius: 4, height: 8 });
+      this._game.audio.zap(880, this.pos);
+    }
+  }
   addSleep(dur, src) {
     if (this.metal || this.isDummy || this.state === 'ko' || this._sleepImmune > 0 || this.frozenT > 0) return;
     const rec = (this.sheet && this.sheet.ccRecover) || 1;
@@ -485,6 +506,15 @@ export class Fighter {
       }
     }
     // shield cell gadget: an ablative pool eats hits before anything else
+    // ROADMAP 4 · THE ARMOUR BAR eats the hit before HP does, and any hit resets the
+    // out-of-combat repair timer. Bypassed by trueDamage, like every other pool.
+    if (this.armor > 0 && !opts.trueDamage && amount > 0) {
+      this._armorCalm = 0;
+      const eaten = Math.min(this.armor, amount * 0.55);
+      this.armor -= eaten; amount -= eaten;
+      if (this._game && eaten > 1) this._game.vfx.flash(this.pos.clone().setY(this.pos.y + 5), '#cfe6ff', 2.2, 0.08);
+    }
+
     if (this._shieldHp > 0 && !opts.trueDamage) {
       const soak = Math.min(this._shieldHp, amount);
       this._shieldHp -= soak; amount -= soak;
@@ -746,6 +776,25 @@ export class Fighter {
     // shield pack, guard AND every resistance — a poison arrow ticked TITAN exactly as hard as
     // it ticked a civilian. Damage accumulates and lands as a DISCRETE tick so the number is
     // readable and the hit-flash doesn't strobe at 60Hz.
+    // ---- SHOCK (roadmap 5): actions locked, and a machine sparks while it lasts ----
+    if (this.shockT > 0) {
+      this.shockT -= dt;
+      this.staggerT = Math.max(this.staggerT, 0.05);          // one pin = every existing gate
+      if (Math.random() < dt * 26) {
+        const p = this.pos;
+        game.particles.spawn({ x: p.x + (Math.random() * 4 - 2), y: p.y + 3 + Math.random() * 6, z: p.z + (Math.random() * 4 - 2), vx: 0, vy: 2, vz: 0, life: 0.18, size: 1.1, color: ['#bfe9ff', '#fff'], drag: 1 });
+      }
+      if (this.flying && this.shockT > 0) this.flying = false;   // a shocked flier drops
+    }
+    if (this._shockImmune > 0) this._shockImmune -= dt;
+    if (this._mvT > 0) this._mvT -= dt;   // the move intent is a FRESHNESS window, not a latch
+    // ---- ARMOUR AS A THIRD BAR (roadmap 4): plate soaks hits and knits back together out of
+    // combat. Only armoured/metal fighters have one, so it reads as a property of the chassis.
+    if (this.armorMax > 0) {
+      this._armorCalm = (this._armorCalm || 0) + dt;
+      if (this._armorCalm > 5 && this.armor < this.armorMax) this.armor = Math.min(this.armorMax, this.armor + dt * (this.armorMax * 0.14));
+    }
+
     // ---- TIER THREE per-frame, part two ----
     updateDupes(this, dt, game);
     updatePossession(this, dt, game);
@@ -1096,6 +1145,16 @@ export class Fighter {
           this._deckSnap = -1;
         } else if (this.descendHeld) {
           this.vel.y = damp(this.vel.y, -FLY_SINK, 7, dt);                    // sink — the landing logic still lands you on roofs first
+          // ROADMAP 9 · DIRECTIONAL DESCENT: descending WITH a direction held is a POWER DIVE
+          // along your facing, not a lift going down. It trades height for speed, which is what
+          // makes the dive punch (manual §10) a real approach instead of a trick.
+          const dvx = (this._mvT > 0 ? this._mvX : 0) || 0, dvz = (this._mvT > 0 ? this._mvZ : 0) || 0;
+          if (Math.abs(dvx) > 0.2 || Math.abs(dvz) > 0.2) {
+            this.vel.x += dvx * 54 * dt; this.vel.z += dvz * 54 * dt;
+            this.vel.y = Math.min(this.vel.y, -FLY_SINK * 1.35);
+            this.burstT = Math.max(this.burstT || 0, 0.15);
+            this._diving = true;
+          } else this._diving = false;
           this._climbBand = bandAt2(this.pos.y); this._deckSnap = -1;
         } else if (this.flightTier <= 1) {
           this.vel.y = damp(this.vel.y, -7, 4, dt);                           // tier 1 can't hover — it sags
@@ -1192,9 +1251,15 @@ export class Fighter {
 
     // arena bounds — getting hurled into the border wall slams (and bounces)
     const b = (this._game && this._game.world ? this._game.world.ARENA : ARENA_FALLBACK) - 4;   // per-city bounds (generated maps vary)
-    if (Math.abs(this.pos.x) > b) { this._slam(game, Math.abs(this.vel.x), 'wall'); this.vel.x *= -0.4; }
-    if (Math.abs(this.pos.z) > b) { this._slam(game, Math.abs(this.vel.z), 'wall'); this.vel.z *= -0.4; }
-    this.pos.x = clamp(this.pos.x, -b, b); this.pos.z = clamp(this.pos.z, -b, b);
+    // RING-OUT RULES (backlog): normally the border is a WALL you bounce off. Under ring-out
+    // rules it stops holding you in — leaving the arena is how you lose, so the arena has to
+    // let you leave. game.checkRingOut then does the honours.
+    const ringOut = !!(game && game.ms && game.ms.ringOut);
+    if (!ringOut) {
+      if (Math.abs(this.pos.x) > b) { this._slam(game, Math.abs(this.vel.x), 'wall'); this.vel.x *= -0.4; }
+      if (Math.abs(this.pos.z) > b) { this._slam(game, Math.abs(this.vel.z), 'wall'); this.vel.z *= -0.4; }
+      this.pos.x = clamp(this.pos.x, -b, b); this.pos.z = clamp(this.pos.z, -b, b);
+    }
 
     // Box3 (AABB) collision vs cover — walls block you, and you can stand on their tops
     this.onBlock = false;
@@ -1277,6 +1342,8 @@ export class Fighter {
   }
 
   move(dir, dt, sprint = 1) {
+    // the live movement INTENT, stamped for the physics pass (directional descent reads it)
+    this._mvX = dir ? dir.x : 0; this._mvZ = dir ? dir.z : 0; this._mvT = 0.12;
     if (this.state === 'ko' || this.hitstop > 0 || this.grabbedBy || this.grabState === 'clinch' || this.staggerT > 0 || this.frozenT > 0 || this.stunT > 0 || this.hanging) return;   // hanging: your feet have nowhere to be
     let s = this.speed * 1.08 * this.powerBuff * sprint;   // ground feel pass 2026-07-24: +8% across the board
     if (this._wounds && this._wounds.leg) s *= 1 - 0.09 * this._wounds.leg;   // the LIMP is real (manual §18)
@@ -1553,7 +1620,11 @@ export class Fighter {
         // undo the entire AI-honesty effort. Only draw it for someone actually seen — or in
         // the explicit spectator mode, which is an admin view, not the player HUD.
         const seen = (this._vis === undefined ? 1 : this._vis) > 0.35 || (game && game.hud && game.hud.spectatorBands);
-        if (h > 14 && seen) {
+        // ⚠ NEVER WRITE A NON-FINITE VALUE INTO A PERSISTENT BUFFER. This attribute lives for
+        // the life of the fighter, so a single transient NaN position would stay in it forever
+        // and three.js would report a NaN bounding sphere long after the cause was gone. Guard
+        // the write, and ZERO the buffer when hiding rather than leaving stale values behind.
+        if (h > 14 && seen && Number.isFinite(h) && Number.isFinite(gy)) {
           p.tether.visible = true;
           const arr = p.tether.geometry.attributes.position.array;
           const scroll = (this.flying && Math.abs(this.vel.y) > 4) ? (game ? (game.time * 22) % 50 : 0) : 0;
@@ -1571,7 +1642,15 @@ export class Fighter {
           p.tether.geometry.setDrawRange(0, n * 2);
           p.tether.material.color.set(ALT_BANDS[b].c);
           p.tether.material.opacity = (game && game.hud && game.hud.spectatorBands) ? 0.85 : 0.28 + Math.min(0.3, h / 400);
-        } else p.tether.visible = false;
+        } else {
+          if (p.tether.visible) {                      // hide AND scrub, so nothing stale survives
+            const arr = p.tether.geometry.attributes.position.array;
+            for (let k = 0; k < arr.length; k++) arr[k] = 0;
+            p.tether.geometry.attributes.position.needsUpdate = true;
+            p.tether.geometry.setDrawRange(0, 0);
+          }
+          p.tether.visible = false;
+        }
       }
       // FACING: the wedge sits at the front of the ring and counter-rotates the body's smoothing,
       // so it always points exactly where this fighter is actually looking.
@@ -1632,6 +1711,10 @@ export class Fighter {
 
   _sync() { /* obj.position is this.pos (same ref); nothing extra */ }
 }
+
+
+
+
 
 
 

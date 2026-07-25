@@ -71,10 +71,13 @@ Existing classes: shotgun · pistol · rifle (`def.weapon` on a `rifle` ability)
 ## ROSTER
 - Characters still feel same-y. Needs real differentiation, not more of the same knobs.
 
-## MODES
-- **Spectate** — no way to WATCH a fight yet. Should be able to sit out a tournament match
-  and watch it (AI vs AI), and to enter a tournament without playing every match.
-- **Rule sets** — ring-out / "knock them off the stage" DBZ rules, plus other win conditions.
+## MODES — ✅ BOTH BUILT (2026-07-25)
+- ~~**Spectate**~~ **BUILT** — `game.spectate(on, who)` follows a fighter with the camera and
+  ignores your input; `cycleSpectate()` steps through the living. You can now sit out and watch.
+- ~~**Rule sets**~~ **BUILT** — `ms.ringOut` turns the arena border from a wall you bounce off
+  into the way you LOSE. ⚠ The border had to stop clamping for this to be possible at all:
+  under ring-out rules the arena lets you leave, and `checkRingOut` does the honours. Verified
+  both ways — ejected under the rule, still clamped without it.
 
 ## INDOORS
 - Interiors are ONE FLOOR.
@@ -92,9 +95,12 @@ vertical gate. ~~Ruled, designed, not built~~. **Plan 2 (seeing/hitting across l
 Plan 3 (interaction + real carrying) from the same doc are the parts still open** — see
 `docs/PLAN_ALTITUDE_AND_INTERACTION.md`.
 
-### INTERACTION + REAL GRABBING — designed, not built
-No interact system exists at all. No dialogue/choice surface. Carrying is currently levitation —
-the prop floats ~5u above the head with no arm pose. Design + code plan in the same doc.
+### INTERACTION + REAL GRABBING — ✅ BUILT (2026-07-25, PLAN 3 of the altitude doc, manual §27)
+`game.registerInteractable(...)` + a 10 Hz focus scan scored by distance AND FACING, the G-chain
+(interact → throw → pick up → hoist → grab) with the prompt that makes the chain legible, and the
+FIELD INTERCEPT TRANSCRIPT as the choice surface (live by default). Carrying now refuses strike
+and guard. Still open from that lane: the `poseCarry`/`carryAnchor` arm pose — carrying is still
+visually a float, though it now costs you your hands.
 
 ### MAP GENERATOR — remaining structural work (ordered) — ✅ 1–5 ALL DONE
 1. ~~Edge sockets~~ **DONE**
@@ -120,7 +126,7 @@ Still open from that lane: bots don't navigate doorways yet, and beams ignore in
   could drive neighbouring-city consistency; if it's scaffolding, ignore the column.
 - Roster size — "we might have too many fighters." Needs a differentiation pass, not a cull.
 
-### ~~OPEN — unreproduced~~ ✅ REPRODUCED AND FIXED (2026-07-25)
+### OPEN — ONE CAUSE FIXED, A SECOND STILL LIVE (2026-07-25)
 `THREE.BufferGeometry.computeBoundingSphere(): Computed radius is NaN` fired 48× during ONE
 synthetic stress run (spawning all 52 rivals with `_remove()` while also firing every slot of
 every kit). The old suspect — a verlet tentacle updated after its owner is spliced — was
@@ -137,5 +143,26 @@ Fixed by restating three laws the project already had, in the one place each was
 `samples.js` now coerces every AudioParam through `fin()` (the synth bodies always did; the
 sample layer was added later and never got it) · `bow` clamps its draw fraction at source
 (the same law `charge`'s `c01` learned) · `runSlot` floors `inp.dt` so no caller can inject
-NaN time. Verified: the identical dt-less battery over 52×364 now yields **0 NaN projectiles,
-0 bounding-sphere warnings, 0 errors**.
+NaN time. Verified for THAT cause: the identical dt-less battery over 52×364 yields **0 NaN
+projectiles and 0 bounding-sphere warnings** immediately after the fix.
+
+⚠ **BUT THE WARNING RETURNED** once the Tier-2/Tier-3 systems landed, so there is a
+SECOND source and it is **not fixed**. What is known, so the next person does not re-walk
+this ground:
+
+- It is a three.js **diagnostic**, not an exception. The full stress run — 52×364 slots,
+  all 102 catalog powers, a 15-second six-fighter rumble — completes with **0 thrown
+  errors, 0 orphaned audio loops** and all three validators at zero. Nothing is visibly wrong.
+- It fires only under the **combined** stress run (roster battery → catalog sweep → rumble),
+  3–4 times. Neither the rumble alone nor the catalog sweep alone reproduces it.
+- **Ruled out:** scanning every geometry in the scene after each catalog power finds no
+  persistent NaN; the same scan through a 12-second rumble finds none; no fighter ends a
+  run with a NaN position.
+- **Hardened anyway** (correct regardless of cause): the plumb-line tether now refuses to
+  write a non-finite value into its persistent buffer and SCRUBS the buffer when hiding, and
+  the rain buffer does the same. Neither was the culprit.
+- **Instrumentation that did NOT catch it:** patching `computeBoundingSphere` on the
+  prototype that owns it, then checking the position attribute on entry. The warning still
+  fired with the hook installed and caught nothing — which points at a geometry whose
+  owner is not in `game.scene` at the moment of the call (a detached or mid-dispose object),
+  or a second THREE module instance. **That is the thread to pull next.**

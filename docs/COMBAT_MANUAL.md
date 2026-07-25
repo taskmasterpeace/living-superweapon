@@ -1141,3 +1141,36 @@ in July. Plans 2 and 3 are in now, and the plan's own findings F7 and F9 with th
   and it turns carrying into a decision. Verified: both refused while carrying.
 - **F9, both leaks:** `dispose()` and `startMatch` now release carries, so a prop can no longer
   outlive its carrier or leave a fighter permanently slowed.
+
+## §28 · THE ROADMAP ITEMS THAT WERE STILL OPEN (2026-07-25)
+
+`docs/ENGINE_ROADMAP.md` was a twenty-item plan; most had quietly shipped inside other work.
+These are the ones that genuinely hadn't, plus the two mode rules the backlog wanted.
+
+- **SHOCK — the anti-machine status** (roadmap 5). Freeze, burn and poison all favour flesh.
+  Shock is the one a MACHINE cannot shrug off: metal takes **1.6×** duration, flesh **0.55×**.
+  It pins actions like every other CC, drops a flier out of the sky, and has a 3s immunity so
+  it cannot chain. Measured: TITAN 4.29s vs GALE 1.57s from the same 3s application.
+- **ARMOUR AS A THIRD BAR** (roadmap 4). `def.armor` was a flat subtraction; now plated and
+  metal chassis carry a real POOL that eats 55% of an incoming hit and knits back at 14%/s
+  after five calm seconds — so armour is something you can strip and something that recovers
+  if you disengage. Derived, so nothing is hand-authored: GALE has none, TITAN has 26.
+  Measured: 26 → 4 under fire, back to 18.6 after nine quiet seconds.
+- **DIRECTIONAL DESCENT** (roadmap 9). Descending WITH a direction held is a power dive along
+  your facing, not a lift going down — it trades height for speed. Measured **83 u/s**
+  horizontal off a 200u drop, which is exactly what makes the dive punch (§10) an approach
+  rather than a trick. ⚠ It needed the movement INTENT stamped in `move()`; the Fighter had no
+  field carrying "where the player is pushing".
+- **FIRES THAT SPREAD** (roadmap 12). A burning patch lights the next flammable thing near it —
+  capped at 14 so a city can never fully ignite, and each patch burns out on its own. Measured
+  1 → 2 patches in four seconds.
+- **THE KO CAM** (roadmap 18). A knockout you caused swings a short orbit around the body while
+  the ragdoll settles, then hands the camera back. It refuses to run if a cinematic or the map
+  tool already owns the camera.
+- **SPECTATE** (backlog). `game.spectate(on, who)` follows a fighter and ignores your input;
+  `cycleSpectate()` steps through the living. You can sit out a fight and watch it.
+- **RING-OUT RULES** (backlog). `ms.ringOut` turns the arena border from a wall you bounce off
+  into the way you LOSE. ⚠ **The border had to stop clamping for this to be possible at all** —
+  the physics clamp meant nobody could ever be outside the arena, so a ring-out check could
+  never fire. Under the rule the arena lets you leave; without it the wall still holds.
+  Verified both ways in the same session.

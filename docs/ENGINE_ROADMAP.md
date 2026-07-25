@@ -74,3 +74,33 @@ and the world reacts like it matters. Each item lists what it builds on (we ship
 ### Suggested order
 Foundry (14) → damage taxonomy (1) → training room (16) → city kit (10) → readability II (17) →
 altitude bands (7) → pedestrians (11) → parry (2) → stat screen (15) → LAN (19). Everything else rides on those.
+
+---
+
+## STATUS — 2026-07-25
+
+Landed since this roadmap was written (see `docs/COMBAT_MANUAL.md` for each):
+
+- **1 Damage taxonomy** ✅ — seven types + a derived resistance table (§3), and the visual
+  contract's MATERIAL trait now stamps the type so the table is no longer inert (§24).
+- **2 Counter/parry** ✅ — the parry window plus **Counter Stance** as a buff lane (§25).
+- **3 Clash** ✅ — beam clashes, the grab struggle window (§11), guard-crush.
+- **4 Armour as a third bar** ✅ — a real pool on plated/metal chassis that soaks 55% of a hit
+  and knits back at 14%/s after five calm seconds. Measured: TITAN 26 → 4 → 18.6.
+- **5 Status matrix** ✅ — freeze · burn · poison · **shock** (the anti-machine status: metal
+  takes 1.6× duration, flesh 0.55×) · sleep · blind · bleed · stun · drain.
+- **6 Mind control** ✅ — plus **Possession** (full control transfer) at Tier 3.
+- **7 Altitude bands** ✅ — the four-deck ladder, and now the plumb line to read it (§27).
+- **8 Movement archetypes** ✅ — grapnel, glider, flash pace, **wall-crawling**, mounts.
+- **9 Directional descent** ✅ — descending WITH a direction is a power dive: measured 83 u/s
+  horizontal off a 200u drop, which is what feeds the dive punch.
+- **10 City block kit** ✅ · **11 Pedestrians** ✅ · **13 Weather** ✅ (a real layer at Tier 3).
+- **12 Environment mileage** ✅ — **fires that SPREAD** between flammable things, capped at 14.
+- **14 Character Foundry** ✅ — `validateRoster()` is the schema check (§23).
+- **15 Skills & stat screen** ✅ — the Elo book, the medical ledger, THE CIRCUIT's career file.
+- **18 Camera drama** ✅ — the **KO cam** orbits the body for 1.2s on a knockout you caused.
+- **19 Netcode** — transport scaffold only; still the honest gap.
+- **20 THRESHOLD meta-shell** ✅ — the registry, the atlas, the world map and the system tier.
+
+Still open: **16 Scribblenauts training summon** (spawn anything by name), **17 readability
+pass II** (kick/punch pictograms), **19 netcode**, and the presentation items in `BACKLOG.md`.
