@@ -101,10 +101,13 @@ export class Wildlife {
     for (let f = 0; f < this.FL; f++) this._reflock(f);
     for (let i = 0; i < BIRDS; i++) {
       this.flock[i] = i % this.FL;
-      // ⚠ sized for READABILITY, not for zoology. At 1u ≈ 0.19m a true-scale gull is under a metre
-      // and disappears against a grey city from any useful camera; these read as birds at the
-      // isometric match camera AND from the map tool's wide shot, which is the whole point of them.
-      this.scale[i] = 2.4 + Math.random() * 1.6;
+      // ⚠ SIZE THEM AGAINST THE HERO, NOT AGAINST THE MAP TOOL. The first pass was true-scale and
+      // invisible in the atlas wide shot, so it was scaled up — which put the wingspan at 5.5-9.2u
+      // against a 9.6u hero. Birds the size of a man, reading as black debris all over the match
+      // camera. The wide shot is the wrong judge: it is a map tool, and a real city seen from that
+      // height genuinely has near-invisible birds. Wingspan is now 2.8-4.4u (~0.5-0.85m at
+      // 1u≈0.19m) — a big gull, about a third of the hero's height.
+      this.scale[i] = 1.2 + Math.random() * 0.7;
       this._launch(i, (Math.random() * 2 - 1) * A * 0.8, 60 + Math.random() * 90, (Math.random() * 2 - 1) * A * 0.8);
       if (Math.random() < 0.35) this._perch(i);
     }

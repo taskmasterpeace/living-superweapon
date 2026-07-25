@@ -1381,3 +1381,60 @@ the engine's own function." That was false, and instructively so: **calling the 
 not the same as calling it the same way.** A defaulted parameter is a second, silent
 implementation. Fixed at both sites; the row now reads RESISTS TITAN · MYSTWARD · CIRCUIT and WEAK
 across the res-5 cast, and the roster shows five distinct values from 0.82 to 1.10.
+
+---
+
+## §33 · THE WHITE ROOM (2026-07-25) — a chamber that measures
+
+Training mode is a sandbox in a real city. This is the other half: a sealed test chamber, an
+instrumented dummy, and a wall board that reports what your attacks actually did.
+
+### The measurement law
+
+Every number on the board is captured at **`game.onHit`** — the choke point every damage source in
+the game already routes through. Nothing in the room recomputes damage from an ability's data. It
+reports what the engine *applied*, after armour, resistance, guard, momentum and injury. A
+training readout that models its own damage is a readout that lies the first time someone edits
+the pipeline, and this project has already paid for that lesson twice on other surfaces.
+
+It also adds nothing to the combat hot path: the attack's name comes from `c._lastSlot`, which
+`runSlot` already writes for the mastery counter.
+
+### The burst rule
+
+A punch lands once for 8. A beam lands sixty times for 1. Filed as separate records the board
+ranks the punch above the beam, which is exactly backwards and makes the comparison table worse
+than no table. **Consecutive hits from the same attack inside 0.35s are one BURST**, and the
+burst's total is what gets compared. Measured on SOL: `Heat Ray 44.0 (66 ticks)` against
+`JAB 8.3` — the ordering a player would expect, and the truth.
+
+### The dummy is two things
+
+**Passive** — it stands on its mark and takes it, for measuring a clean number.
+**Sparring** (N) — it closes and fights back, for measuring the same attack against a moving
+target with a guard, which is a different number and the more useful one.
+
+⚠ It is **not** spawned with `dummy: true`. That flag makes a fighter untargetable — `game.isFoe`
+returns false for it, which is correct for a sim construct nobody should shoot at, and fatal here:
+the sparring AI could never find a foe and stood still for twelve seconds. It is a real fighter
+kept alive by pinning its health, which also means status effects land on it visibly.
+
+⚠ And pinning health is not immortality. The kill happens *inside* takeDamage, so restoring hp on
+the next frame resurrects nothing — one big enough ult left a corpse and an empty room. If the
+dummy does go down, the chamber projects a new one.
+
+### Two things the room taught about its own presentation
+
+**A white room cannot be white.** `#f2f0ea` walls under the scene lights *and* the bloom pass
+clipped completely, and both fighters read as pale ghosts against them. The walls sit at a light
+grey now so the subject is the brightest thing in frame — which is the entire job of a test
+chamber.
+
+**Hide the city, don't tear it down.** The first build put a white box inside a live Tokyo and
+photographed a wall with a skyline behind it. The room hides the world's meshes — the arena group,
+city bits, roads, parked cars, and the wildlife instances, which keep rendering even when their
+tick is disabled — and restores them on close, so leaving the room costs nothing and the theater
+you travelled to is still there.
+
+Entry: the WHITE ROOM mode card. **N** toggles the dummy. **Shift+R** clears the log.
+Ref `wwa-whiteroom.png`.

@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>THE POWER ENCYCLOPEDIA — pick the shots</title>
+<style>
+/* ---------------------------------------------------------------------------
+   NEOBRUTALIST, on purpose. This is the talkshowgo treatment (hard black
+   borders, 4px offset shadows with zero blur, Archivo-Black-weight display
+   type, one golden accent) applied to WAR WORLD's own content — so this page
+   is both the picker AND a working sample of that art direction on the game.
+   The accent is #ffd24a, which is the game's existing gold. No purple.
+--------------------------------------------------------------------------- */
+:root{
+  --ink:#12100c; --paper:#f7f4ec; --gold:#ffd24a; --gold-deep:#f5b21a;
+  --red:#ef4136; --green:#3fa34d; --blue:#3b9ae1; --line:#12100c;
+  --shadow:4px 4px 0 0 var(--line);
+  --shadow-lg:7px 7px 0 0 var(--line);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);
+  font-family:"Space Grotesk",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:14px;line-height:1.5;
+  background-image:radial-gradient(var(--line) 1px, transparent 1px);
+  background-size:22px 22px;background-position:-11px -11px;}
+h1,h2,h3,.disp{font-family:"Archivo Black","Arial Black",Impact,system-ui,sans-serif;
+  font-weight:900;letter-spacing:-.01em;text-transform:uppercase}
+
+header{position:sticky;top:0;z-index:20;background:var(--ink);color:var(--paper);
+  border-bottom:4px solid var(--line);padding:14px 18px}
+.hrow{display:flex;gap:14px;align-items:center;flex-wrap:wrap;max-width:1600px;margin:0 auto}
+h1{font-size:26px;margin:0;color:var(--gold)}
+h1 small{display:block;font-family:inherit;font-size:10px;letter-spacing:.22em;color:var(--paper);opacity:.7}
+.spacer{flex:1}
+input,select,button{font:inherit;font-weight:700;border:3px solid var(--line);
+  background:var(--paper);color:var(--ink);padding:7px 11px;box-shadow:var(--shadow);
+  border-radius:0;cursor:pointer}
+input{cursor:text;min-width:190px}
+input:focus,select:focus,button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+button:active{transform:translate(3px,3px);box-shadow:1px 1px 0 0 var(--line)}
+.count{font-family:"Archivo Black","Arial Black",sans-serif;color:var(--gold);font-size:15px}
+
+.wrap{max-width:1600px;margin:0 auto;padding:22px 18px 90px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(430px,1fr));gap:20px}
+
+.card{background:var(--paper);border:4px solid var(--line);box-shadow:var(--shadow-lg)}
+.card.picked{box-shadow:7px 7px 0 0 var(--gold-deep);border-color:var(--gold-deep)}
+.chead{border-bottom:4px solid var(--line);padding:10px 12px;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.chead h3{font-size:15px;margin:0;flex:1;min-width:0}
+.tag{font-family:"Archivo Black","Arial Black",sans-serif;font-size:9px;letter-spacing:.1em;
+  padding:3px 7px;border:2px solid var(--line);background:var(--gold);white-space:nowrap}
+.tag.cat{background:var(--blue);color:var(--paper)}
+.tag.who{background:var(--paper)}
+.shots{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0}
+.shot{position:relative;border-right:3px solid var(--line);cursor:pointer;background:#dcd7cc}
+.shot:last-child{border-right:0}
+.shot img{display:block;width:100%;aspect-ratio:16/10;object-fit:cover}
+.shot b{position:absolute;left:0;bottom:0;font-family:"Archivo Black",sans-serif;font-size:8.5px;
+  letter-spacing:.14em;background:var(--ink);color:var(--paper);padding:3px 6px}
+.shot.sel{outline:5px solid var(--gold-deep);outline-offset:-5px}
+.shot.sel b{background:var(--gold-deep);color:var(--ink)}
+.shot:hover img{filter:brightness(1.08)}
+
+.bar{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--ink);color:var(--paper);
+  border-top:4px solid var(--gold);padding:11px 18px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.bar .disp{font-size:14px;color:var(--gold)}
+.empty{border:4px dashed var(--line);padding:40px;text-align:center}
+.empty .disp{font-size:19px}
+code{font-family:ui-monospace,Consolas,monospace;background:var(--ink);color:var(--gold);padding:2px 6px;font-size:12px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hrow">
+    <h1>The Power Encyclopedia<small>WAR WORLD: ASCENDANTS · PICK THE HERO SHOT</small></h1>
+    <div class="spacer"></div>
+    <input id="q" type="search" placeholder="Search power or hero…" aria-label="Search" />
+    <select id="fType" aria-label="Filter by type"><option value="">All types</option></select>
+    <select id="fKind" aria-label="Filter by source">
+      <option value="">Roster + catalog</option>
+      <option value="roster">Roster only</option>
+      <option value="catalog">ORIGIN catalog only</option>
+    </select>
+    <select id="fPick" aria-label="Filter by picked">
+      <option value="">All</option><option value="picked">Picked</option><option value="unpicked">Not picked</option>
+    </select>
+    <span class="count" id="count">—</span>
+  </div>
+</header>
+
+<div class="wrap"><div id="grid" class="grid"></div></div>
+
+<div class="bar">
+  <span class="disp" id="tally">0 PICKED</span>
+  <span class="spacer"></span>
+  <button id="exp">EXPORT PICKS (JSON)</button>
+  <button id="clr">CLEAR ALL</button>
+</div>
+
+<script>
+const PICKS_KEY = 'wwa_encyclopedia_picks_v1';
+let DATA = [], picks = {};
+try { picks = JSON.parse(localStorage.getItem(PICKS_KEY) || '{}'); } catch (e) { picks = {}; }
+
+const el = (id) => document.getElementById(id);
+const keyOf = (p) => p.kind === 'roster' ? `${p.hero}.${p.key}` : `catalog.${p.id}`;
+const titleOf = (p) => p.name || (p.kind === 'roster' ? p.key.toUpperCase() : p.id);
+
+fetch('manifest.json').then(r => r.json()).then(d => { DATA = d; boot(); })
+  .catch(() => {
+    el('grid').innerHTML = '<div class="empty"><div class="disp">No manifest yet</div>' +
+      '<p>The capture sweep is still running, or it has not been run.<br>' +
+      'It writes <code>manifest.json</code> and <code>shots/</code> beside this file.</p></div>';
+  });
+
+function boot(){
+  const types = [...new Set(DATA.map(p => p.type))].sort();
+  for (const t of types) { const o = document.createElement('option'); o.value = o.textContent = t; el('fType').append(o); }
+  for (const c of ['q','fType','fKind','fPick']) el(c).addEventListener('input', render);
+  el('exp').onclick = exportPicks;
+  el('clr').onclick = () => { if (confirm('Clear every pick?')) { picks = {}; save(); render(); } };
+  render();
+}
+
+function save(){ try { localStorage.setItem(PICKS_KEY, JSON.stringify(picks)); } catch (e) {} }
+
+function render(){
+  const q = el('q').value.trim().toLowerCase();
+  const ft = el('fType').value, fk = el('fKind').value, fp = el('fPick').value;
+  const rows = DATA.filter(p => {
+    if (ft && p.type !== ft) return false;
+    if (fk && p.kind !== fk) return false;
+    const isPicked = !!picks[keyOf(p)];
+    if (fp === 'picked' && !isPicked) return false;
+    if (fp === 'unpicked' && isPicked) return false;
+    if (q) { const hay = (titleOf(p) + ' ' + (p.heroName || '') + ' ' + (p.hero || '') + ' ' + p.type).toLowerCase();
+             if (!hay.includes(q)) return false; }
+    return true;
+  });
+  el('count').textContent = `${rows.length} / ${DATA.length}`;
+  el('tally').textContent = `${Object.keys(picks).length} PICKED`;
+
+  const g = el('grid'); g.innerHTML = '';
+  const BEAT = ['CAST','ACTIVE','IMPACT'];
+  for (const p of rows) {
+    const k = keyOf(p), sel = picks[k];
+    const card = document.createElement('div');
+    card.className = 'card' + (sel ? ' picked' : '');
+    const who = p.kind === 'roster'
+      ? `<span class="tag who">${p.heroName || p.hero}</span>`
+      : `<span class="tag cat">ORIGIN</span>`;
+    card.innerHTML =
+      `<div class="chead"><h3>${titleOf(p)}</h3>${who}<span class="tag">${p.type}</span></div>` +
+      `<div class="shots">` + p.shots.map((s, i) =>
+        `<div class="shot${sel === i ? ' sel' : ''}" data-k="${k}" data-i="${i}">
+           <img loading="lazy" src="shots/${s}" alt="${titleOf(p)} ${BEAT[i]}">
+           <b>${BEAT[i]}</b>
+         </div>`).join('') + `</div>`;
+    g.append(card);
+  }
+  g.querySelectorAll('.shot').forEach(s => s.addEventListener('click', () => {
+    const k = s.dataset.k, i = +s.dataset.i;
+    if (picks[k] === i) delete picks[k]; else picks[k] = i;
+    save(); render();
+  }));
+}
+
+function exportPicks(){
+  const out = DATA.filter(p => picks[keyOf(p)] !== undefined).map(p => ({
+    ...p, pickedBeat: ['cast','active','impact'][picks[keyOf(p)]],
+    pickedShot: p.shots[picks[keyOf(p)]],
+  }));
+  const blob = new Blob([JSON.stringify(out, null, 1)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = 'encyclopedia-picks.json'; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+}
+</script>
+</body>
+</html>

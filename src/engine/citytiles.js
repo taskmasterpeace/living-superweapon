@@ -98,12 +98,18 @@ let CUR_M = 1;
 // tile-local offsets toward the cell centre so the whole tile lands inside its actual lot, and
 // `ctx.LOX/LOZ` re-centre it when the setbacks are asymmetric (a highway one side, nothing the
 // other). It rides the SAME five helpers as ctx.S, so no builder has to know it exists.
-// ⚠ ONE factor for both axes, deliberately. Squeezing X and Z by different amounts would change a
-// rotated building's apparent proportions; a uniform inset only ever makes a block correctly
-// smaller. And it is never applied to HEIGHT — the skyline is not the road's business.
+// ⚠ INSET THE OFFSETS HARD, THE SIZES GENTLY. What actually puts a wall in the carriageway is a
+// piece sitting too far from the cell centre, so pulling the OFFSET in is the fix. The first pass
+// also shrank every mesh by the same factor, which was a blanket squeeze: a tower standing in the
+// middle of its cell never overflowed and did not need shrinking, and taking 12-15% off its
+// footprint while leaving its height alone turned it into a needle (measured 22×22 at 240 tall).
+// Offsets take the full inset; sizes take its square root, so edge pieces still pull in and a
+// central tower keeps most of its girth.
+// ⚠ ONE factor for both axes, deliberately — squeezing X and Z differently would change a rotated
+// building's proportions. And never applied to HEIGHT: the skyline is not the road's business.
 const sx = (ctx, x) => ctx.cx + ((x - ctx.cx) * ctx.LI + ctx.LOX) * ctx.S;   // world X from a base-unit X
 const sz = (ctx, z) => ctx.cz + ((z - ctx.cz) * ctx.LI + ctx.LOZ) * ctx.S;   // world Z from a base-unit Z
-const planeS = (ctx) => ctx.S * ctx.LI;                    // horizontal scale: cell scale × lot inset
+const planeS = (ctx) => ctx.S * ctx.LS;                    // horizontal scale: cell scale × SIZE inset
 // THE GROUND A TILE STANDS ON. Flat maps return 0 and nothing changes; on a map with relief this
 // is the cell's levelled pad height, so a whole block sits together on its terrace instead of each
 // piece floating or burying itself independently.
@@ -144,8 +150,8 @@ function tower(ctx, x, z, w, h, d, winMat, roofMat, o = {}) {
 // ⚠ Position and extent come from the MESH, which mesh() has already scaled — the x/z arguments
 // are the caller's base-unit intent and would be wrong at any scale but 1.
 function reg(world, m, x, z, hx, hz, top, hp) {
-  // ⚠ the mesh no longer scales uniformly: X/Z carry the cell scale × the LOT INSET, Y carries the
-  // cell scale alone. Take the footprint from x and the height from y, or a lot-inset building
+  // ⚠ the mesh no longer scales uniformly: X/Z carry the cell scale × the lot SIZE inset, Y carries
+  // the cell scale alone. Take the footprint from x and the height from y, or a lot-inset building
   // registers a cover box shorter than the thing you can see.
   const S = m.scale.x || 1, SY = m.scale.y || S;
   hx *= S; hz *= S; top *= SY;
@@ -1322,7 +1328,7 @@ export function buildTiles(world, group, plan, rng) {
   CUR_M = M;                                             // boxUV/tower read it for the window bay
   const ctx = { world, g: group, rng, mats: M2, region, treeSpots: [], plan, M,
                 W: CELL, D: CELL, fw: 1, fh: 1, S, cell: cellSize, cx: 0, cz: 0, gy: 0,
-                LI: 1, LOX: 0, LOZ: 0 };            // the lot inset — set per cell just below
+                LI: 1, LS: 1, LOX: 0, LOZ: 0 };     // the lot inset — set per cell just below
   world._pendingCuts = world._pendingCuts || []; world._pendingPits = world._pendingPits || [];
   for (let r = 0; r < plan.N; r++) for (let c = 0; c < plan.N; c++) {
     const cell = plan.cells[r][c];
@@ -1338,7 +1344,8 @@ export function buildTiles(world, group, plan, rng) {
       const full = fw * CELL, fullD = fh * CELL;
       const L = lotFor(plan, r, c, fw, fh);
       const lw = Math.max(CELL * 0.25, full - L.w - L.e), ld = Math.max(CELL * 0.25, fullD - L.n - L.s);
-      ctx.LI = Math.min(1, lw / full, ld / fullD);      // uniform — never distorts, only shrinks
+      ctx.LI = Math.min(1, lw / full, ld / fullD);      // OFFSETS: full inset — this is what clears the road
+      ctx.LS = Math.sqrt(ctx.LI);                       // SIZES: gentler, so a central tower stays a tower
       ctx.LOX = (L.w - L.e) / 2; ctx.LOZ = (L.n - L.s) / 2;
       ctx.W = full * ctx.LI; ctx.D = fullD * ctx.LI;
     }

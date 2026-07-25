@@ -13,6 +13,7 @@ import { MeleeSystem } from './melee.js';
 import { Pedestrians } from './pedestrians.js';
 import { NewsCrew } from './newscrew.js';
 import { PoliceSystem } from './police.js';
+import { WhiteRoom } from './whiteroom.js';
 import { buildReport } from '../data/news.js';
 import { bookInjury, injuryOf, healBout, koElo, matchElo } from '../data/rankings.js';
 import { SETTINGS, keymap } from '../core/settings.js';
@@ -79,6 +80,23 @@ const MODE_IMPL = {
     setup() {},   // THE ROOM STARTS EMPTY (Robert's ruling): N orders a bot, B orders a rival
     tick() {}, onKO() {}, isOver() { return null; },
     hud() { return { type: 'training' }; },
+  },
+  // THE WHITE ROOM — the laboratory half of the Danger Room. No city, no crowd, no police: a white
+  // box, an instrumented dummy, and a wall board reporting what your attacks actually did. Every
+  // number is captured at onHit (the damage choke point), never re-derived from ability data.
+  lab: {
+    setup(g) {
+      g.ms = { lab: true };
+      g.lab = new WhiteRoom(g);
+      g.lab._AI = { AI };                       // the room spawns a sparring AI when toggled on
+      g.lab.open();
+      const p = g.humans[0] && g.humans[0].fighter;
+      // stand them side-on and forward of the board so the readout is in frame from the first moment
+      if (p) { p.pos.set(-12, 0, 18); p.aim.set(1, 0, 0); p.aim3.set(1, 0, 0); }
+    },
+    tick(g, dt) { if (g.lab) g.lab.update(dt); },
+    onKO() {}, isOver() { return null; },
+    hud() { return { type: 'lab' }; },
   },
   // THE INVITATIONAL — one bracket match: best-of-3 ELIMINATION rounds (last side standing takes
   // the round, nobody respawns mid-round), team damage LIVE. The Tournament object rides in o.tourney.
@@ -1154,6 +1172,7 @@ export class Game {
   // ONE list, called from all three. A new zone system adds its line HERE and is covered
   // everywhere, which is the whole point.
   clearTransients() {
+    if (this.lab) { try { this.lab.close(); } catch (e) {} this.lab = null; }   // the white room is a transient too
     this._gen = (this._gen | 0) + 1;                  // retire every in-flight deferred callback
     if (!this._timers) this._timers = new Set();
     for (const id of this._timers) clearTimeout(id);
@@ -1921,6 +1940,8 @@ export class Game {
   // Called by Fighter.takeDamage for EVERY hit — damage numbers, sparks, combo.
   onHit(target, amount, opts = {}, blocked = false) {
     const src = opts.src;
+    // THE WHITE ROOM reads the choke point rather than modelling damage itself — see whiteroom.js
+    if (this.lab) this.lab.capture(target, amount, opts, blocked);
     // OVERDRIVE (per-character attribute): when your tank is empty, your FISTS refill it.
     // spend big → go in swinging → recharge. Landing melee while drained/low converts damage to ki.
     if (src && !blocked && opts.strike && amount >= 2 && (src.drainedT > 0 || src.ki < src.maxKi * 0.25)) {

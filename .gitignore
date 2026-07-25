@@ -22,3 +22,5 @@ skills-lock.json
 Thumbs.db
 
 .vercel
+encyclopedia/shots/
+encyclopedia/manifest.json

@@ -332,6 +332,16 @@ addEventListener('keydown', (e) => {
     game.spawnDummy(p.pos.x + Math.cos(a) * 16, p.pos.z + Math.sin(a) * 16);
     hud.feed('Sim Construct deployed', '#7fe6ff');
   }
+  // THE WHITE ROOM — N is the dummy's temperament: a bag that stands still, or a partner that
+  // fights back. The same attack measures differently against a raised guard, which is the point.
+  if (e.code === 'KeyN' && game.modeId === 'lab' && game.lab) {
+    const on = game.lab.setAggressive(!game.lab.aggressive);
+    hud.feed(on ? 'DUMMY: SPARRING — it fights back' : 'DUMMY: PASSIVE — it stands and takes it',
+             on ? '#ff5a4a' : '#7fe6ff');
+  }
+  if (e.code === 'KeyR' && e.shiftKey && game.modeId === 'lab' && game.lab) {
+    game.lab.telemetry.reset(); hud.feed('Test log cleared', '#8fe08a');
+  }
   if (e.code === 'KeyM') { audio.muted = !audio.muted; try { localStorage.setItem('threshold_muted', audio.muted ? '1' : '0'); } catch {} hud.feed(audio.muted ? '🔇 Muted (M)' : '🔊 Sound on (M)', '#9fb2c9'); }
   // ⚠ REVIEW ITEM 13 — DIGIT PAGING. Number keys reached only 10 of 52 heroes, so 42 of them
   // were TAB-only forever. SHIFT pages the digit bank (1-10 / 11-20 / …), so every hero on the
