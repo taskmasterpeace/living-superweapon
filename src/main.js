@@ -151,7 +151,7 @@ function beginMatch(c) {
       const sim = (c.mode || 'training') === 'training';
       const C = countryOf(plan.country) || {};
       const kicker = c.mode === 'tournament' ? 'THE INVITATIONAL · THEATER' : 'THEATER OF OPERATIONS';
-      if (!sim && !c.tutorial && !c.net && SETTINGS.opening === 'full') {
+      if (!sim && !c.tutorial && !c.net && SETTINGS.opening === 'full' && !game._traveling) {
         playOpening(game, hud, plan, { kicker }, null);
       } else if (sim || SETTINGS.opening !== 'off') {
         hud.showEstablishing(plan, { sim, country: C, eta: game.police ? Math.round(game.police._responseDelay()) : null, kicker });
@@ -161,6 +161,16 @@ function beginMatch(c) {
   if (c.tutorial) tutorial.begin(); else tutorial.skip();
 }
 hud.onBracketContinue = () => { if (game._lastCfg) enter(game._lastCfg); };
+// LOW ORBIT TRAVEL (manual §17): the depart gate opens the world map; picking a city plays the
+// transit cinematic (the loading screen), swaps the theater, and re-enters the same mode there.
+game.onDepart = () => { game.running = false; hud.showDepart(game); };
+game.onTravel = (city, cityId) => {
+  hud.theater = { cityId, name: city.name, country: city.country, seed: 1 + ((Math.random() * 97) | 0) };
+  try { localStorage.setItem('threshold_theater_v1', JSON.stringify(hud.theater)); } catch (e) {}
+  game._departing = false; game._traveling = true;
+  try { enter(game._lastCfg || { mode: 'training', p1: game.player ? game.player.def.id : 'sol' }); }
+  finally { game._traveling = false; }
+};
 hud.onProvingGround = () => enter({ mode: 'training', p1: hud.selectedHero || 'sol' });
 function openMenu() { soundscape.music('menu'); game.running = false; touch.show(false); document.body.classList.remove('playing'); hud.hideEndScreen(); hud.buildTitle(enter); hud.showTitle(); }
 

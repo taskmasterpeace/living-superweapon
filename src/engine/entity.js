@@ -1345,7 +1345,13 @@ export class Fighter {
       }
       if (impact < -38) this._slam(game, -impact, 'ground');    // hurled into the floor — fall/slam damage
     }
-    if (this.pos.y > BANDS.ceiling) { this.pos.y = BANDS.ceiling; if (this.vel.y > 0) this.vel.y = 0; }  // ceiling above CLOUDS — per-city, from plan.bands
+    if (this.pos.y > BANDS.ceiling) {
+      // ORBIT (manual §17): only a LIT AFTERBURNER forces the upper atmosphere — everyone else
+      // meets the ceiling. Past +90 even the burner levels off; the DEPART offer fires below that.
+      if (this.def.afterburner && this._burnT > 0.8) {
+        if (this.pos.y > BANDS.ceiling + 90) { this.pos.y = BANDS.ceiling + 90; if (this.vel.y > 0) this.vel.y = 0; }
+      } else { this.pos.y = BANDS.ceiling; if (this.vel.y > 0) this.vel.y = 0; }
+    }
     // harbor splashes — churning through water kicks up spray
     if (game && this.pos.y < 1.5 && game.world.waterAt && game.world.waterAt(this.pos.x, this.pos.z) && Math.hypot(this.vel.x, this.vel.z) > 8 && Math.random() < dt * 10) {
       game.particles.spawn({ x: this.pos.x, y: 0.7, z: this.pos.z, vx: (Math.random() * 2 - 1) * 8, vy: 8 + Math.random() * 6, vz: (Math.random() * 2 - 1) * 8, life: 0.42, size: 2.8, color: ['#bfe6f2', '#7fb8d0', '#ffffff'], drag: 1.4, shrink: true });

@@ -17,7 +17,7 @@ import { SETTINGS, keymap } from '../core/settings.js';
 import { Gamepad } from '../core/gamepad.js';
 import { runSlot, performEvade } from './abilities.js';
 import { ROSTER } from '../data/characters.js';
-import { clamp, rand, TAU, damp } from '../core/util.js';
+import { BANDS, clamp, rand, TAU, damp } from '../core/util.js';
 import { tierOf, TIER_COLORS } from './entity.js';
 
 const _v = new THREE.Vector3();
@@ -2005,6 +2005,17 @@ export class Game {
     this.updateThrownBodies(dt);
     this.updateSmoke(dt);
     this.updateDrops(dt);
+    // LOW ORBIT DEPARTURE (manual §17): a burner-class flier that punches through the ceiling
+    // and keeps the throttle open is LEAVING THE THEATER — offer the world map. Once per climb.
+    {
+      const p = this.player;
+      if (this.running && this.mode && p && p.alive && p.def.afterburner && p._burnT > 0.8
+          && p.pos.y > BANDS.ceiling + 44 && !this._departing && this.onDepart) {
+        this._departing = true;
+        this.onDepart(p);
+      }
+      if (p && p.pos.y < BANDS.ceiling - 40) this._departing = false;   // re-arm after a real descent
+    }
     this.updateThrowArc();
     if (this.mode && !this.matchOver) { const over = this.mode.isOver(this); if (over) this.endMatch(over); }
 

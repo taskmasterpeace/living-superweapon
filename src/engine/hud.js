@@ -1,5 +1,6 @@
 // WAR WORLD: ASCENDANTS — DOM HUD + character-select screen.
 import { ROSTER, SLOT_ORDER } from '../data/characters.js';
+import { climateLine } from '../data/climate.js';
 import { CSS, CODEX_MOBILE, PHONE_CSS, TABLET_CSS, DECK_CSS } from './hud.styles.js';
 import { DTYPES, DTYPE_INFO, resistOf, bandOf } from './entity.js';
 import { glyph, padActive, padFaces } from '../core/glyphs.js';
@@ -984,6 +985,126 @@ export class HUD {
   // Every match opens on a title card the way a film opens on a city: the name, then the facts
   // underneath it, then the card lifts and you are standing in it. The Danger Room gets a
   // different one — it BOOTS rather than arrives, because it is a simulation and should say so.
+  // ---------- LOW ORBIT TRANSIT (manual §17): the world map + the loading-screen cinematic ----------
+  // Deterministic pseudo-geography: the sheet has no coordinates (HANDOFF documents the gap), so
+  // distances hash from country+city — STABLE, same-country cities cluster, and the transit time
+  // honestly orders near vs far until real coordinates exist in the sheet.
+  _cityLL(c) {
+    const h = (s) => { let x = 9; for (let i = 0; i < s.length; i++) x = (x * 31 + s.charCodeAt(i)) >>> 0; return x; };
+    const hc = h(c.country || '?'), hn = h((c.name || '?') + (c.country || ''));
+    return { lat: (hc % 1200) / 10 - 60 + ((hn % 60) / 10 - 3), lon: ((hc >>> 8) % 3400) / 10 - 170 + ((hn >>> 6) % 60) / 10 - 3 };
+  }
+  _transitSecs(from, to) {
+    const a = this._cityLL(from || { name: 'x', country: 'x' }), b = this._cityLL(to);
+    const d = Math.hypot(a.lat - b.lat, (a.lon - b.lon) * 0.7);
+    return Math.max(4, Math.min(13, 4 + d * 0.055));
+  }
+  showDepart(game) {
+    if (this._departEl) return;
+    const from = game.world.plan ? { name: game.world.plan.name, country: game.world.plan.country } : { name: 'THE WHITE CITY', country: '' };
+    const ov = document.createElement('div');
+    ov.className = 'lswovl';
+    ov.style.cssText = 'position:fixed;inset:0;z-index:64;display:flex;align-items:center;justify-content:center;background:rgba(6,8,12,0.86)';
+    const box = document.createElement('div');
+    box.style.cssText = 'width:min(680px,92vw);max-height:82vh;display:flex;flex-direction:column;gap:10px;background:var(--surface-solid,#14161c);border:1px solid var(--line-gold,#6b5824);border-radius:12px;padding:18px 20px;font-family:var(--f-mono,monospace)';
+    box.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:baseline">
+        <div style="font-family:var(--f-display,sans-serif);font-size:20px;letter-spacing:0.06em;color:var(--gold,#ffd24a)">LOW ORBIT — DEPART</div>
+        <div style="font-size:10px;color:var(--text-5,#8b8577)">THE WORLD MAP · GPS STAYS ON THE STREET</div>
+      </div>
+      <div style="font-size:11px;color:var(--text-3,#c9c2b4)">Holding the burner above the ceiling. Pick a theater — transit time is distance over an open throttle.</div>
+      <input id="dptQ" placeholder="search 1,050 cities…" style="background:var(--surface,#0d0f14);border:1px solid var(--line,#2a2d33);border-radius:8px;color:var(--text,#e8e2d4);padding:8px 10px;font-family:inherit;font-size:12px;outline:none">
+      <div id="dptList" style="overflow-y:auto;min-height:120px;max-height:46vh;display:flex;flex-direction:column;gap:4px"></div>
+      <button id="dptStay" style="align-self:flex-end;background:none;border:1px solid var(--line-2,#3a3f47);border-radius:8px;color:var(--text-3,#c9c2b4);padding:6px 14px;font-family:inherit;font-size:11px;cursor:pointer">STAY — descend</button>`;
+    ov.appendChild(box); document.body.appendChild(ov);
+    this._departEl = ov;
+    const list = box.querySelector('#dptList'), q = box.querySelector('#dptQ');
+    const render = (filter) => {
+      const F = (filter || '').toLowerCase();
+      const rows = cityList().filter(c => !F || c.name.toLowerCase().includes(F) || (c.country || '').toLowerCase().includes(F)).slice(0, 40);
+      list.innerHTML = rows.map((c, i) => {
+        const t = this._transitSecs(from, c).toFixed(0);
+        let cl = ''; try { cl = climateLine ? (climateLine(c) || '') : ''; } catch (e) {}
+        return `<div class="dptRow" data-i="${i}" style="display:flex;justify-content:space-between;gap:10px;padding:7px 10px;border:1px solid var(--line,#2a2d33);border-radius:8px;cursor:pointer">
+          <div><b style="color:var(--text,#e8e2d4);font-size:12px">${c.name.toUpperCase()}</b>
+            <span style="color:var(--text-5,#8b8577);font-size:10px"> · ${(c.country || '').toUpperCase()} · POP ${c.popLabel || c.popType || ''}</span>
+            <div style="color:var(--text-5,#8b8577);font-size:9.5px">${cl}</div></div>
+          <div style="color:var(--gold,#ffd24a);font-size:11px;white-space:nowrap">TRANSIT ~${t}s</div>
+        </div>`;
+      }).join('') || '<div style="color:var(--text-5)">no matches</div>';
+      list.querySelectorAll('.dptRow').forEach((el) => {
+        el.onmouseenter = () => el.style.borderColor = 'var(--gold,#ffd24a)';
+        el.onmouseleave = () => el.style.borderColor = 'var(--line,#2a2d33)';
+        el.onclick = () => {
+          const c = rows[+el.dataset.i];
+          this.hideDepart();
+          this._playTransit(game, from, c, () => { if (game.onTravel) game.onTravel(c, cityList().findIndex(x => x.name === c.name && x.country === c.country)); });   // cityList() is a fresh array per call - identity indexOf is always -1
+        };
+      });
+    };
+    render('');
+    q.oninput = () => render(q.value);
+    setTimeout(() => q.focus(), 30);
+    box.querySelector('#dptStay').onclick = () => { this.hideDepart(); game.running = true; if (game.player) game.player.vel.y = -20; };
+  }
+  hideDepart() { if (this._departEl) { this._departEl.remove(); this._departEl = null; } }
+  // The transit cinematic — the 11th member of the cold-open family, doubling as the loading
+  // screen. Stars, the planet's limb, the route drawn in the traveler's own WAKE identity.
+  _playTransit(game, from, to, onDone) {
+    const hero = game.player ? game.player.def : null;
+    const wake = (hero && hero.afterburner && hero.afterburner.wake) || ['#ffffff', '#ffd24a'];
+    const secs = Math.max(3.2, this._transitSecs(from, to) * 0.55);
+    const ov = document.createElement('div');
+    ov.className = 'lswovl';
+    ov.style.cssText = 'display:block;position:fixed;inset:0;z-index:66;background:#04050a;overflow:hidden;font-family:var(--f-mono,monospace)';   // .lswovl defaults display:none — inline display wins
+    ov.innerHTML = `
+      <canvas id="trvStars" style="position:absolute;inset:0;width:100%;height:100%"></canvas>
+      <div style="position:absolute;left:0;right:0;bottom:-42vh;height:80vh;border-radius:50% 50% 0 0;background:#070a12;box-shadow:0 -6px 60px 8px rgba(127,190,255,0.28), inset 0 30px 80px rgba(10,20,40,0.9)"></div>
+      <div id="trvKick" style="position:absolute;top:9vh;left:50%;transform:translateX(-50%);color:var(--gold,#ffd24a);font-size:13px;letter-spacing:0.22em;white-space:nowrap"></div>
+      <svg id="trvArc" viewBox="0 0 1000 500" style="position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);width:min(860px,92vw);height:auto">
+        <path id="trvPath" d="M 120 380 Q 500 60 880 380" fill="none" stroke="${wake[1]}" stroke-width="2.5" stroke-dasharray="7 9" opacity="0.85"/>
+        <circle id="trvDot" r="7" fill="${wake[0]}" style="filter:drop-shadow(0 0 8px ${wake[0]})"/>
+      </svg>
+      <div style="position:absolute;left:6vw;bottom:16vh;color:var(--text-3,#c9c2b4);font-size:12px">
+        <div style="color:var(--text-5,#8b8577);font-size:9px">DEPARTED</div><b style="font-size:15px;color:var(--text,#e8e2d4)">${(from.name || '').toUpperCase()}</b>
+        <div style="font-size:10px;color:var(--text-5,#8b8577)">${(from.country || '').toUpperCase()}</div></div>
+      <div style="position:absolute;right:6vw;bottom:16vh;text-align:right;color:var(--text-3,#c9c2b4);font-size:12px">
+        <div style="color:var(--text-5,#8b8577);font-size:9px">ON APPROACH</div><b style="font-size:15px;color:var(--gold,#ffd24a)">${to.name.toUpperCase()}</b>
+        <div style="font-size:10px;color:var(--text-5,#8b8577)">${(to.country || '').toUpperCase()}</div></div>
+      <div style="position:absolute;bottom:7vh;left:50%;transform:translateX(-50%);color:var(--text-6,#6a655a);font-size:9.5px;letter-spacing:0.2em">ANY KEY — SKIP TRANSIT</div>`;
+    document.body.appendChild(ov);
+    const cv = ov.querySelector('#trvStars'), ctx = cv.getContext('2d');
+    cv.width = innerWidth; cv.height = innerHeight;
+    ctx.fillStyle = '#fff';
+    for (let i = 0; i < 230; i++) { ctx.globalAlpha = 0.25 + Math.random() * 0.75; ctx.fillRect(Math.random() * cv.width, Math.random() * cv.height * 0.72, Math.random() < 0.08 ? 2 : 1, 1); }
+    ctx.globalAlpha = 1;
+    const kick = ov.querySelector('#trvKick');
+    const kickTxt = `LOW ORBIT TRANSIT — ${hero ? hero.name : 'ASCENDANT'} DEPARTS ${(from.name || '').toUpperCase()}`;
+    let ki = 0;
+    const kt = setInterval(() => { kick.textContent = kickTxt.slice(0, ++ki); if (ki >= kickTxt.length) clearInterval(kt); }, 26);
+    const path = ov.querySelector('#trvPath'), dot = ov.querySelector('#trvDot');
+    const plen = path.getTotalLength();
+    const t0 = performance.now();
+    let done = false;
+    let tick = 0;
+    const finish = () => {
+      if (done) return; done = true;
+      clearInterval(kt); clearInterval(tick);
+      window.removeEventListener('keydown', skip, true); ov.removeEventListener('pointerdown', skip, true);
+      ov.remove(); this._transitEl = null;
+      onDone && onDone();
+    };
+    const skip = (e) => { if (e && e.key === 'F12') return; finish(); };
+    window.addEventListener('keydown', skip, true); ov.addEventListener('pointerdown', skip, true);
+    tick = setInterval(() => {
+      const k = Math.min(1, (performance.now() - t0) / (secs * 1000));
+      const pt = path.getPointAtLength(plen * k);
+      dot.setAttribute('cx', pt.x); dot.setAttribute('cy', pt.y);
+      if (k >= 1) finish();
+    }, 33);
+    this._transitEl = ov;
+  }
+
   showEstablishing(plan, opts = {}) {
     const el = this.establishEl;
     clearTimeout(this._estT1); clearTimeout(this._estT2);

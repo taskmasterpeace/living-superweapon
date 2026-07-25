@@ -560,3 +560,38 @@ Robert's ruling, implemented whole: no grid, no menus — **one pair of hands pl
 - **Deliberately parked, written down**: bots don't scavenge yet (player-tech, like the
   grapnel); pedestrians don't pick up dropped guns yet — when they do, vigilantism law
   already decides who dares. Netcode ownership of ground items is a one-line TODO.
+
+## §17 · LOW ORBIT + CITY-TO-CITY TRAVEL (2026-07-24) — brief Parts Six–Eight, Robert's scope
+
+**Low orbit IS the travel layer.** For now, this tier of character travels between cities by
+punching through the sky — the map does the miles, and the cinematic is the loading screen.
+
+- **The ceiling opens for the burner**: only a fighter with `def.afterburner` and the burner
+  LIT (`_burnT > 0.8`) can pass `BANDS.ceiling`; everyone else meets the lid as before.
+  Verified: VOLT clamped at the ceiling, SOL punched through to +45 and beyond (hard stop at
+  ceiling +90 — the offer happens well before it).
+- **The DEPART gate** (`game.onDepart`): climbing past ceiling +44 with the throttle open
+  offers the world map, once per climb (`_departing` re-arms after a real descent below
+  ceiling −40). Verified: offered exactly once at altitude 373 over a 328 ceiling.
+- **The world map** (`hud.showDepart`): search all 1,050 ATLAS cities, each row showing
+  country, population, climate line and a TRANSIT time. STAY descends. **The GPS and the
+  world map remain separate tools** — the radar never leaves the street.
+- **Pseudo-geography, honestly labeled**: the sheet has no coordinates (HANDOFF documents
+  the gap), so distances hash deterministically from country+city — stable, same-country
+  cities cluster, near-vs-far ordering holds. When the sheet gains real coordinates, only
+  `_cityLL` changes.
+- **THE TRANSIT CINEMATIC** (`hud._playTransit` — the 11th member of the cold-open family,
+  and the loading screen): starfield, the planet's limb with its atmosphere rim, a typed
+  kicker ("LOW ORBIT TRANSIT — TORCH DEPARTS TOKYO"), DEPARTED/ON APPROACH city cards, and
+  the route arc drawn in the traveler's OWN afterburner wake colors with the burn-dot
+  riding it. Any key skips. Transit length scales with distance (~3–7s real).
+- **Arrival**: `game.onTravel` swaps the theater (`hud.theater.cityId` — ⚠ `cityList()`
+  builds a FRESH array per call; index by name+country, never `indexOf` an old object),
+  persists it, and re-enters the same mode config; the standard establishing card plays as
+  the arrival beat (the full opening director is suppressed for travel). Verified live:
+  world map → Tokyo → transit → **fighting in Tokyo, Japan**, match running.
+
+Parked by the brief's own sequencing: the planet/system zoom stack, gravity/atmosphere per
+world, and true interplanetary destinations — the model extends (a planet is a country row
+with its own plans) when that day comes. Refs: `lsw-orbit-transit.jpeg`,
+`lsw-travel-arrival.jpeg`.

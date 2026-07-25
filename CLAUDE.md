@@ -940,6 +940,20 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
 - Parked + written: bot scavenging, ped gun pickups (vigilantism laws ready), net item
   ownership.
 
+## LOW ORBIT TRAVEL (2026-07-24) — manual §17
+- **Ceiling opens for a LIT burner only** (entity ceiling clamp branch; hard stop +90);
+  climbing past ceiling+44 fires `game.onDepart` once per climb (re-arms below ceiling−40).
+- **`hud.showDepart`** = the world map (1,050 cities, search, climate line, transit time);
+  **`hud._playTransit`** = the loading-screen cinematic (starfield + planet limb + typed
+  kicker + route arc in the hero's afterburner WAKE colors). ⚠ `.lswovl` defaults
+  display:none — inline `display:block` required. ⚠ `cityList()` is a FRESH array per call:
+  `indexOf(oldObject)` is always −1; match by name+country (`findIndex`). Theater rides
+  `hud.theater.cityId` + seed → main `game.onTravel` re-enters `_lastCfg`; `game._traveling`
+  suppresses the full opening so the establishing card IS the arrival beat.
+- Pseudo-geography: `_cityLL` hashes country+city (sheet has no coords — HANDOFF). Verified
+  end-to-end: VOLT clamped / SOL through at 373; depart offered 1×; map row → transit →
+  **Tokyo, Japan live**. Refs lsw-orbit-transit.jpeg / lsw-travel-arrival.jpeg.
+
 ## THE SAMPLE BANK (2026-07-24) — real recordings for every discrete SFX
 - **`core/samples.js`** (`MANIFEST` + `SampleBank` + `HOT_SET`) + **254 Kenney CC0 oggs in
   `/public/audio`** (~6MB, offline-first; impact/sci-fi/interface/rpg/jingle packs). Every
