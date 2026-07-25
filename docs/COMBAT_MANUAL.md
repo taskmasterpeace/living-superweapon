@@ -55,26 +55,31 @@ through TITAN's plate.
 
 ---
 
-## 2. THE PROBLEM THIS MANUAL FOUND
+## 2. THE PROBLEM THIS MANUAL FOUND — ✅ FIXED 2026-07-23
+
+> **Status: closed.** This section is kept as the worked example of what skipping the choke
+> point costs. The bug described below is **no longer live** — do not go hunting it.
 
 **Damage-over-time never went through `takeDamage`.**
 
-The DoT tick subtracts HP directly:
+The DoT tick used to subtract HP directly:
 
 ```js
-this.hp = clamp(this.hp - d.dps * dt, 0, this.maxHp);
+this.hp = clamp(this.hp - d.dps * dt, 0, this.maxHp);   // ← the OLD, broken tick
 ```
 
-So every poison, burn and gas stack in the game currently ignores:
+So every poison, burn and gas stack ignored:
 
-- armour and toughness — **a poison arrow ticks TITAN exactly as hard as it ticks a civilian**
-- `phase` intangibility — you can poison a ghost
+- armour and toughness — **a poison arrow ticked TITAN exactly as hard as it ticked a civilian**
+- `phase` intangibility — you could poison a ghost
 - the shield pack
-- guard — the 50% DoT block in `takeDamage` never applies, because ticks don't go there
+- guard — the 50% DoT block in `takeDamage` never applied, because ticks didn't go there
 - every resistance, including `frostResist`
 
-That is the honest answer to "acid causes damage — but to what?" **Today the answer is
-'everything, equally,' and that's wrong.** A robot should not be poisoned. That's what §3 fixes.
+**The fix** (entity.js, the `addDot` tick): ticks now ACCUMULATE (`d._acc += d.dps * dt`) and
+land discretely every 0.5s through `takeDamage` with `{ dot: true, trueDamage: false }`. That
+buys readable numbers instead of a 60 Hz strobe, and every defence in §1 gets its vote. The
+rule that came out of it is absolute: **never subtract `hp` outside the choke point.**
 
 ---
 
@@ -896,3 +901,53 @@ Verified: all five new sounds measurably sound (squelch 0.0016 · hailer 0.0049 
 0.024 · radio voice 0.0074 · command shout 0.0124 RMS); a live ★★ response dispatched 2
 cruisers with 2 live sirens, armed the shots-fired call, jumped heat 123 → 190 on an
 officer down, then stood down to 0 live sirens and 0 orphaned loops.
+
+## §23 · THE TYPE REGISTRY, THE VALIDATOR, AND THE NaN THAT HID FOR TWO DAYS (2026-07-25)
+
+Three code-review items and one "unreproduced" backlog ghost, closed together — they turned
+out to be the same story: **a thing that fails silently keeps failing.**
+
+### TYPE_META — one registration point per power type (`engine/abilityMeta.js`)
+
+Adding a power type used to touch six sites: the `TYPES` function, `describeAbility`, the
+creator's `powerNumbers`, the AI's `HOLD` set, the AI's `holdTime` ladder, and the creator
+catalog. Several failed silently — a type missing from `HOLD` simply never got held by a bot,
+forever, with no error. Everything a consumer needs now hangs on `TYPE_META[type]`:
+`family` · `hold` · `holdT` · `req` (the numeric fields the type cannot work without) ·
+`sustained`. `ai.js` derives `HOLD_TYPES` and `holdTimeFor` from it — the hand-maintained Set
+and the chained ternary are gone. Verified: the derived hold set is byte-identical to the old
+hand-written one (11 types), and all 26 registered types have metadata.
+
+### validateRoster() — the silent dead slot, caught at boot
+
+A typo'd ability type (`projektile`) is a slot that does nothing for the life of the project:
+`runSlot` looks it up, finds nothing, returns. Nothing throws. `validateRoster(ROSTER, TYPES)`
+runs at dev boot over every hero **including installed customs** and reports every problem at
+once: unknown type · non-finite numeric · missing per-type required field · missing name.
+Live roster: **0 problems, 52 weapons, 364 slots**. Verified against four synthetic failures —
+all four caught with the exact reason.
+
+### The NaN that hid for two days
+
+The backlog carried `computeBoundingSphere(): Computed radius is NaN`, 48× in one stress run,
+"suspect a tentacle chain". That was wrong. The real chain:
+
+```
+caller omits inp.dt  →  bow: drawT + undefined/drawTime = NaN
+                     →  setLength(lerp(90, speedMax, NaN))  →  arrow at a NaN POSITION
+                     →  three.js bounding sphere = NaN            (the 48 warnings)
+                     →  impact → audio.boom → sample bank → non-finite AudioParam
+                     →  THROW, inside the frame loop
+```
+
+One missing default cost a rendering warning, a dead frame, and two days of mystery. The fix
+is three laws this project already had, applied where each was missing:
+
+1. **Audio must never throw** — `samples.js` coerces every AudioParam through `fin()`. The
+   synth bodies always did; the sample layer was added later and never inherited it.
+2. **Clamp a charge fraction at source** — the law `charge`'s `c01` learned now covers `bow`.
+3. **Time is never undefined** — `runSlot` floors `inp.dt` so no caller (harness, replay, net
+   frame) can inject NaN time into a dozen accumulators.
+
+Verified: the identical dt-less 52×364 battery now yields **0 NaN projectiles, 0 bounding-sphere
+warnings, 0 errors, 0 orphaned audio loops**.

@@ -36,13 +36,13 @@ Still open, in the brief's own order — each now sits on machinery that exists:
 - Show the city name bottom-LEFT (currently a centred nameplate at the bottom).
 - Take the procedural generation to the next level generally. Open design interview.
 
-## POLICE — a real escalation ladder
-Today: heat ≥35 → WANTED ★☆☆–★★★, cruisers → officers → SWAT at ★★★.
-Wanted:
-- **Beat cops first.** Two on foot, not a tactical response.
-- **Attacking the police escalates HARD** — hurting a badge should jump the ladder, not tick it.
-- Ladder runs BEAT COP → PATROL → TACTICAL → NATIONAL GUARD → MILITARY.
-- The player probably won't fight cops unprompted; the ladder is for when they do.
+## POLICE — a real escalation ladder ✅ SHIPPED (2026-07-24, manual §22 for the audio)
+~~Beat cops first~~ · ~~attacking police escalates HARD~~ · ~~the full ladder~~ — all built.
+The ladder runs SIX rungs: ★ beat cops (35) → ★★ patrol (90) → ★★★ SWAT (160) → ★★★★ FEDS
+(240) → ★★★★★ MILITARY (340) → ★★★★★★ a SANCTIONED LSW (460), each gated on the country
+sheet so a failed state tops out where its institutions run out. `onCopDown` jumps rungs
+rather than ticking. Police audio (sirens, radio, hailer) landed 2026-07-25.
+Still open here: nothing.
 
 ## WEAPONS — real firearms, not one "pistol" class
 - REVOLVER (slow, heavy, six)
@@ -86,18 +86,20 @@ Existing classes: shotgun · pistol · rifle (`def.weapon` on a `rifle` ability)
 
 ## ADDED 2026-07-23 (session 2)
 
-### THE FOUR-LEVEL LADDER — ruled, designed, not built
-Four discrete decks; you can only be BETWEEN levels while travelling. Ground is the exception
-(free levitation). Needs a ceiling, and a character in the clouds must stay visible and aimable
-from the street. Full design: `docs/PLAN_ALTITUDE_AND_INTERACTION.md`.
+### THE FOUR-LEVEL LADDER — ✅ BUILT (2026-07-24, PLAN 1 of the altitude doc)
+Four decks with a docking servo, per-city `BANDS.ceiling`, `def.maxBand`, and the melee
+vertical gate. ~~Ruled, designed, not built~~. **Plan 2 (seeing/hitting across levels) and
+Plan 3 (interaction + real carrying) from the same doc are the parts still open** — see
+`docs/PLAN_ALTITUDE_AND_INTERACTION.md`.
 
 ### INTERACTION + REAL GRABBING — designed, not built
 No interact system exists at all. No dialogue/choice surface. Carrying is currently levitation —
 the prop floats ~5u above the head with no arm pose. Design + code plan in the same doc.
 
-### MAP GENERATOR — remaining structural work (ordered)
+### MAP GENERATOR — remaining structural work (ordered) — ✅ 1–5 ALL DONE
 1. ~~Edge sockets~~ **DONE**
-2. **Road graph** — roads are a ground texture; no T-junctions, no dirt roads, no connection
+2. ~~**Road graph**~~ **DONE** (2026-07-23) — roads are DATA: node lattice, four classes,
+   junction grammar, dead ends, meandering tracks, roundabouts by planner decision
 3. **Multi-cell footprints** — anchor + `ref` cells; airports, rail yards, real stadiums
 4. **Placement as a data table** — `{when, min, max, weight, score, footprint}`; rarity + landmarks
 5. **The editor** — paint + LOCK authored cells + undo + plan JSON in/out + live 3D preview
@@ -106,19 +108,34 @@ the prop floats ~5u above the head with no arm pose. Design + code plan in the s
 ### UNUSED DATA ALREADY PAID FOR
 `cultureCode` (14 architectural regions), `sector` (527 rows), `hvt` — parsed, read by nothing.
 
-### PARKED BY RULING
-**Interiors / procedural rooms.** Research flagged them lowest-value for this game (at 1:1 scale
-most interiors would never be entered). Robert: "we're not there yet, we just talking about the
-map maker." Revisit after the map generator work above.
+### ~~PARKED BY RULING~~ — UNPARKED AND SHIPPED (interiors v1, 2026-07-24)
+**Interiors / procedural rooms.** Was parked as lowest-value; revisited after the map generator
+work and shipped as ATLAS v1 task 9: `floorplan()` (pure BSP, every room reachable by
+construction) + enterable bungalows, walls in `world.interiors` consulted by physics, `canSee`,
+the fog raster, projectiles, ragdolls and the interior cutaway.
+Still open from that lane: bots don't navigate doorways yet, and beams ignore interior walls.
 
 ### OPEN QUESTIONS
 - What is `Sector`? 223 codes like `LJ5`, half the rows blank. If it's a world-grid reference it
   could drive neighbouring-city consistency; if it's scaffolding, ignore the column.
 - Roster size — "we might have too many fighters." Needs a differentiation pass, not a cull.
 
-### OPEN — unreproduced
+### ~~OPEN — unreproduced~~ ✅ REPRODUCED AND FIXED (2026-07-25)
 `THREE.BufferGeometry.computeBoundingSphere(): Computed radius is NaN` fired 48× during ONE
 synthetic stress run (spawning all 52 rivals with `_remove()` while also firing every slot of
-every kit). It did NOT reproduce in normal rumble play, nor when the spawn/remove pattern was
-run in isolation. Suspect a tentacle chain (verlet, world-space) being updated after its owner
-is spliced. Not fixed, not claimed fixed — reproduce before chasing.
+every kit). The old suspect — a verlet tentacle updated after its owner is spliced — was
+**wrong**. The real chain, found by re-running that exact battery:
+
+1. a caller fires a slot without `inp.dt` (a test harness, and any future replay/net frame),
+2. `bow` integrates the draw as `st.drawT + inp.dt / drawTime` → **NaN**,
+3. release does `setLength(lerp(90, speedMax, NaN))` → an arrow with a **NaN position**,
+4. three.js computes that mesh's bounding sphere → the warning, 48 times,
+5. and the arrow's impact reached `audio.boom` → the sample bank → a **non-finite AudioParam,
+   which THROWS inside the frame loop**.
+
+Fixed by restating three laws the project already had, in the one place each was missing:
+`samples.js` now coerces every AudioParam through `fin()` (the synth bodies always did; the
+sample layer was added later and never got it) · `bow` clamps its draw fraction at source
+(the same law `charge`'s `c01` learned) · `runSlot` floors `inp.dt` so no caller can inject
+NaN time. Verified: the identical dt-less battery over 52×364 now yields **0 NaN projectiles,
+0 bounding-sphere warnings, 0 errors**.

@@ -43,6 +43,8 @@ function releaseMind(st, g) {
 function drained(c, g) { if (g && g.onDrained) g.onDrained(c); }
 
 // Each type: run(c, def, st, g, inp)  — inp = { pressed, held, released, dt }
+const clamp01 = (v) => (Number.isFinite(v) ? Math.max(0, Math.min(1, v)) : 0);
+
 export const TYPES = {
 
   // Rushing fist — "flies fist forward"
@@ -433,7 +435,10 @@ export const TYPES = {
     if (inp.pressed && ready(c, def, st) && !st.drawing) { st.drawing = true; st.drawT = 0; }
     if (st.drawing) {
       if (inp.held) {
-        st.drawT = Math.min(1, st.drawT + inp.dt / (def.drawTime || 0.85));
+        // ⚠ CLAMP THE FRACTION AT SOURCE (the same law charge's `c01` learned): a release with
+        // no accumulated draw, or a caller that forgot `dt`, must never produce NaN — a NaN
+        // draw becomes setLength(NaN), an arrow at a NaN position, and a dead frame.
+        st.drawT = clamp01(st.drawT + (Number.isFinite(inp.dt) ? inp.dt : 0) / (def.drawTime || 0.85));
         c._bowDrawT = st.drawT;                       // drives the draw pose (bow arm out, hand to cheek)
         c.state = 'charge'; c.stateT = 0;
         c.vel.x *= 0.8; c.vel.z *= 0.8;
@@ -442,7 +447,7 @@ export const TYPES = {
         if (Math.random() < 0.15) g.particles.spawn({ x: c.pos.x, y: c.pos.y + 5.8, z: c.pos.z, vx: 0, vy: 2, vz: 0, life: 0.2, size: 1.2, color: '#fff', drag: 2, shrink: true });
       }
       if (inp.released || (!inp.held && st.drawT > 0)) {
-        const t = st.drawT; st.drawing = false; c._bowDrawT = 0;
+        const t = clamp01(st.drawT); st.drawing = false; c._bowDrawT = 0;
         pay(c, def, st);
         const payloads = def.payloads || ['explosive', 'flame', 'poison'];
         const payload = payloads[c._quiverIdx % payloads.length];
@@ -767,6 +772,9 @@ export const TYPES = {
 
 export function runSlot(c, key, inp, g) {
   const st = c.slots[key]; if (!st) return;
+  // TIME IS NEVER UNDEFINED. Every held/charged type integrates `inp.dt`; a caller that omits
+  // it (a test harness, a replay, a net frame) would inject NaN into a dozen accumulators.
+  if (!Number.isFinite(inp.dt)) inp.dt = (g && g.dt) || 1 / 60;
   // LEDGE-HANG: one hand is holding the building — only oneHand-flagged abilities fire up there.
   if (c.hanging && !st.def.oneHand) {
     if (inp.pressed && g && g.isHuman(c) && g.hud) g.hud.feed('One hand on the wall — that needs both', '#8b8577');

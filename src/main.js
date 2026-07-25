@@ -17,6 +17,8 @@ import { Tournament } from './engine/tournament.js';
 import { TouchControls, isTouchDevice } from './core/touch.js';
 import { UINav } from './core/uinav.js';
 import { Soundscape } from './core/soundscape.js';
+import { validateRoster } from './engine/abilityMeta.js';
+import { TYPES } from './engine/abilities.js';
 import { loadCareer, saveCareer, clearCareer, newCareer, genSlate, acceptCfg, resolveOffer, restWeek, payClinic, fmtMoney } from './data/career.js';
 import { CareerUI } from './engine/careerUI.js';
 import { cityList } from './data/cities.js';
@@ -247,6 +249,19 @@ hud.onEditCustom = (def) => {
   const rec = loadCustoms().find(c => c.def.id === def.id); if (!rec) return;
   hud.hideTitle(); creator.show({ edit: rec, onDone: afterForge, onCancel: () => hud.showTitle() });
 };
+
+// THE ROSTER VALIDATOR (code review item 1): a typo'd ability type is a silent dead slot
+// forever. Check the whole roster — customs included — once at boot, and SAY so.
+try {
+  const problems = validateRoster(ROSTER, TYPES);
+  if (problems.length) {
+    console.error('[THRESHOLD] ROSTER VALIDATION — %d problem(s):', problems.length);
+    for (const p of problems) console.error(`  ${p.id}.${p.slot}: ${p.msg}`);
+    setTimeout(() => hud.feed(`⚠ ROSTER: ${problems.length} ability problem(s) — see console`, '#ff8a6a'), 1500);
+  } else console.log('[THRESHOLD] roster OK —', ROSTER.length, 'weapons,',
+    ROSTER.reduce((n, d) => n + Object.keys(d.abilities || {}).length, 0), 'slots validated');
+  window.LSW_validate = () => validateRoster(ROSTER, TYPES);
+} catch (e) { console.error('roster validation', e); }
 
 hud.buildTitle(enter);
 hud.showTitle();

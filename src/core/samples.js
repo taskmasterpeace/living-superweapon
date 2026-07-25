@@ -1,3 +1,10 @@
+
+// THE AUDIO LAW (audio.js): WebAudio throws on a non-finite AudioParam, and an exception
+// inside a setter is an exception inside the FRAME LOOP. Every value that reaches an
+// AudioParam here is coerced first — the synth bodies have always done this; the sample
+// layer was added later and never got it, which is how a NaN distance-gain took the game
+// down from a projectile impact.
+const fin = (v, d = 1) => (Number.isFinite(v) ? v : d);
 // THE SAMPLE BANK — real recorded audio for every discrete sound effect (Robert's ruling
 // 2026-07-24: "get audio for ALL sound effects and powers — no more generated stuff").
 // Source: Kenney CC0 packs (impact-sounds, sci-fi-sounds, interface-sounds, rpg-audio,
@@ -131,8 +138,8 @@ export class SampleBank {
     const b = this._pick(m); if (!b) return false;
     const src = a.ctx.createBufferSource(); src.buffer = b;
     const rj = m.rj ?? 0.05;
-    src.playbackRate.value = Math.max(0.25, rate * (1 + (Math.random() * 2 - 1) * rj));
-    const g = a.ctx.createGain(); g.gain.value = Math.max(0, gain * (m.g ?? 1) * pg);
+    src.playbackRate.value = Math.max(0.25, fin(rate, 1) * (1 + (Math.random() * 2 - 1) * rj));
+    const g = a.ctx.createGain(); g.gain.value = Math.max(0, fin(gain, 1) * (m.g ?? 1) * fin(pg, 1));
     src.connect(g); g.connect((a.bus && a.bus[bus]) || a.master);
     src.start();
     return true;

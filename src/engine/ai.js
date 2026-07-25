@@ -1,9 +1,11 @@
 // Living Superweapon — character-authentic AI. Each hero fights in the style of its counterpart:
 // beamers zone, rushers blitz, artillery kites, zoners wall up, tricksters teleport/phase, grapplers grab, summoners hide behind minions.
+import { HOLD_TYPES, holdTimeFor } from './abilityMeta.js';
 import { rand, chance, pick } from '../core/util.js';
 
-const HOLD = new Set(['beam', 'charge', 'growingorb', 'cone', 'volley', 'phase', 'rifle', 'bow', 'facebomb', 'lifedrain', 'nova']);
-const holdTime = (t) => t === 'charge' ? rand(0.9, 1.9) : t === 'growingorb' ? rand(1.1, 2.2) : t === 'beam' ? rand(0.9, 1.8) : t === 'phase' ? rand(0.5, 1.2) : t === 'rifle' ? rand(0.6, 1.5) : t === 'bow' ? rand(0.4, 0.95) : t === 'facebomb' ? rand(1.2, 2.2) : t === 'lifedrain' ? rand(0.8, 1.6) : t === 'nova' ? rand(1.4, 2.4) : rand(0.4, 1.1);
+// HOLD + holdTime derive from TYPE_META — ONE registration point per type (review item 2).
+const HOLD = HOLD_TYPES;
+const holdTime = (t) => holdTimeFor(t, rand);
 
 function deriveStyle(def) {
   const types = Object.values(def.abilities || {}).map(a => a.type);
