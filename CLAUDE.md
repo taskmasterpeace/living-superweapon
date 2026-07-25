@@ -333,6 +333,13 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
 - **The DAMAGE CODEX** (`hud.showDamage()`, overlay `hDamage`, entry from the HOW-TO screen) renders
   every type's immune/resists/weak lists by running `resistOf` over the live ROSTER — the screen
   physically cannot drift from the engine. Ref: `lsw-damage-codex.jpeg`.
+  ⚠ **`resistOf(def, sheet)` TAKES TWO ARGUMENTS AND BOTH MATTER** (2026-07-25). MAGIC resistance
+  derives from RESOLVE via the sheet; called as `resistOf(def)` it silently falls back to the res-6
+  default, so **every hero reports a flat ×1.03**. The Fighter ctor passed the sheet, both codex
+  surfaces did not — so the MAGIC row rendered IMMUNE—/RESISTS—/WEAK— and the per-hero chip showed
+  the same number 52 times, hiding the whole rule. "Derived from the engine" is only true if you
+  call it the way the engine does; a shared default argument is exactly how a can't-drift surface
+  drifts. Fixed at both sites; now 5 distinct values (0.82 TITAN → 1.10 the res-5 cast).
 
 ## THE GROUND IS REAL — terrain height, the metro, and the countryside (2026-07-23)
 - **`world.heightAt(x, z)`** bilinear-samples the terrain heightfield; `entity._physics` caches it as
@@ -1297,6 +1304,11 @@ Four laws, three of them the same idea: **a thing must not outlive the match tha
   apart were damaging fighters from the PREVIOUS match). `later` stamps `game._gen`, refuses to
   run across a reset, and routes its throw to `reportError`; `clearTransients` bumps the
   generation and clears `game._timers`. Converted: chain lightning, tier-up arcs, weather thunder.
+  ⚠ The CINEMATIC layer needed its own (`dLater` in opening.js, retired by `finish()`): beats that
+  stagger reveals with `setTimeout` kept firing after a SKIP — measured **up to six stray zaps in
+  the first three seconds of the live match** off the ladder and satellite cold-opens. Now 0.
+  The combat path is swept clean: the only `setTimeout` left in any combat file is the one inside
+  `later()` itself.
 - **THE REVOKE LAW** (`revokeFrames(frames)`, exported from newscrew.js) — free the object URL
   **AND null the slot**. The cold open and the end-screen TV hold the same clip objects, so a
   revoked URL left in the array is a dangling handle: one stress run logged **68**

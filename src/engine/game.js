@@ -1088,29 +1088,23 @@ export class Game {
     return f;
   }
 
-  // ⚠ EVERY TRANSIENT THE MATCH CREATED DIES WITH THE MATCH.
-  //
-  // The three reset paths (startMatch / startMode / _tourneyRound) each hand-listed what to
-  // clear, so every system added afterwards was silently exempt. Measured before this existed:
-  // ten match restarts left 20 ground spikes, 10 decoys, 10 domes, 10 raised walls, 10 time
-  // fields, 10 gravity zones and 10 interactables alive — cover 17 → 48, scene children
-  // 49 → 104, geometries 279 → 628. Cover count drives physics, LOS and the fog raster, so
-  // that is a slow march to a freeze, not a tidy-up nicety.
-  //
-  // ONE list, called from all three. A new zone system adds its line HERE and is covered
-  // everywhere, which is the whole point.
   // THE DEFERRED-CALLBACK LAW: a setTimeout fires OUTSIDE the frame loop, so main.js's try/catch
   // cannot see it — an exception there escapes every safety net the game has, and the callback can
   // land in a match that no longer exists (chain lightning damaging a fighter from the last round).
   // `later` is the one choke point: it stamps the match generation, refuses to run across a reset,
   // and swallows its own throw. Never call setTimeout directly with anything that touches the fight.
+  // ⚠ the try covers the WHOLE body, not just fn() — a throw from the bookkeeping would escape into
+  // the void exactly like the throw this method exists to contain.
   later(fn, ms) {
     const gen = this._gen | 0;
     const id = setTimeout(() => {
-      this._timers.delete(id);
-      if ((this._gen | 0) !== gen) return;            // the match this belonged to is over
-      try { fn(); } catch (e) { if (this.reportError) this.reportError(e, 'later'); }
+      try {
+        if (this._timers) this._timers.delete(id);
+        if ((this._gen | 0) !== gen) return;          // the match this belonged to is over
+        fn();
+      } catch (e) { try { this.reportError(e, 'later'); } catch (e2) {} }
     }, ms);
+    if (!this._timers) this._timers = new Set();
     this._timers.add(id);
     return id;
   }
@@ -1134,15 +1128,28 @@ export class Game {
       console.error('[THRESHOLD]' + (where ? ' (' + where + ')' : ''), err);
     }
     rec.n++;
-    // a handful is a hiccup; a flood means the frame is genuinely broken and the player deserves to know
+    // a handful is a hiccup; a flood means the frame is genuinely broken and the player deserves to know.
+    // ⚠ the feed call is wrapped: this method runs FROM the frame's catch and from window.onerror, so
+    // an error handler that can itself throw is the one thing worse than the error it was reporting.
     if (rec.n === 30 && !rec.told) {
       rec.told = true;
       console.error(`[THRESHOLD] the above error has now fired ${rec.n}× — the frame is failing repeatedly`);
-      if (this.hud && this.hud.feed) this.hud.feed('⚠ ENGINE FAULT — see console (' + msg.slice(0, 60) + ')', '#ff8a6a');
+      try { if (this.hud && this.hud.feed) this.hud.feed('⚠ ENGINE FAULT — see console (' + msg.slice(0, 60) + ')', '#ff8a6a'); } catch (e) {}
     } else if (rec.n % 600 === 0) console.error(`[THRESHOLD] ${key.slice(0, 90)} ×${rec.n}`);
     return rec.n;
   }
 
+  // ⚠ EVERY TRANSIENT THE MATCH CREATED DIES WITH THE MATCH.
+  //
+  // The three reset paths (startMatch / startMode / _tourneyRound) each hand-listed what to
+  // clear, so every system added afterwards was silently exempt. Measured before this existed:
+  // ten match restarts left 20 ground spikes, 10 decoys, 10 domes, 10 raised walls, 10 time
+  // fields, 10 gravity zones and 10 interactables alive — cover 17 → 48, scene children
+  // 49 → 104, geometries 279 → 628. Cover count drives physics, LOS and the fog raster, so
+  // that is a slow march to a freeze, not a tidy-up nicety.
+  //
+  // ONE list, called from all three. A new zone system adds its line HERE and is covered
+  // everywhere, which is the whole point.
   clearTransients() {
     this._gen = (this._gen | 0) + 1;                  // retire every in-flight deferred callback
     if (!this._timers) this._timers = new Set();

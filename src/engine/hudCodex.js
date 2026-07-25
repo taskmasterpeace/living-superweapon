@@ -8,7 +8,7 @@
 import { CF_BUILD, agoStr, cfAbilityRows, cfCounterNotes, esc, fileDate, fileNoOf, isSynthDef } from './hudUtil.js';
 import { ROSTER } from '../data/characters.js';
 import { DTYPES, DTYPE_INFO, resistOf } from './entity.js';
-import { ATTR_DEFS, TALENTS, deriveAttrs, heroTalents, rankColor, rankName } from '../data/ranks.js';
+import { ATTR_DEFS, TALENTS, bakeSheet, deriveAttrs, heroTalents, rankColor, rankName } from '../data/ranks.js';
 import { identityOf } from '../data/identities.js';
 import { causeLine, mulberry } from '../data/news.js';
 import { championId, injuryOf, recOf, recentIncidents, snapshotTable } from '../data/rankings.js';
@@ -28,7 +28,10 @@ export const CodexMixin = {
       const counters = cfCounterNotes(c);
       const ai = c.ai || {};
       const at = deriveAttrs(c), tl = heroTalents(c);
-      const rez = resistOf(c);
+      // ⚠ the SHEET argument is load-bearing: magic resistance derives from RESOLVE, so calling
+      // resistOf(def) alone hands back the res-6 default for everyone and the chips show a flat
+      // 1.03 across the whole roster — the codex would be hiding the rule it exists to display.
+      const rez = resistOf(c, bakeSheet(c));
       let h = 0; for (const ch of String(c.id)) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
       const rng = mulberry(h);
       const domKind = Object.values(c.abilities || {}).some(a => a.type === 'beam') ? 'beam'
@@ -138,8 +141,10 @@ export const CodexMixin = {
   showDamage() {
     const el = this.damageEl;
     const R = ROSTER;
-    // who resists / is weak to each type — computed from the same function combat uses
-    const tables = R.map(d => ({ d, r: resistOf(d) }));
+    // who resists / is weak to each type — computed from the same function combat uses, WITH the
+    // same second argument the Fighter ctor passes. Without the sheet every hero reports the
+    // res-6 default for magic and the MAGIC row comes out empty — see the note in showCodex.
+    const tables = R.map(d => ({ d, r: resistOf(d, bakeSheet(d)) }));
     const nameOf = (x) => x.d.name;
     const rows = DTYPES.map(t => {
       const info = DTYPE_INFO[t];

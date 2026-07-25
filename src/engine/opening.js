@@ -53,6 +53,21 @@ export function playOpening(game, hud, plan, opts = {}, onDone) {
   const cam = { yaw: Math.random() * 6.28, pitch: 0.92, zoom: A * 0.95, x: 0, z: 0 };
   game.mapCam = cam;
 
+  // THE DEFERRED-CALLBACK LAW, cinematic edition (game.later is the fight's version). A beat that
+  // staggers its reveals with setTimeout keeps firing after a SKIP — measured: skipping the ladder
+  // or satellite cold-open played up to six stray zaps into the first three seconds of the live
+  // match. Every deferred beat effect goes through here so finish() can retire the lot.
+  const dTimers = new Set();
+  const dLater = (fn, ms) => {
+    const id = setTimeout(() => {
+      dTimers.delete(id);
+      if (finished) return;                 // the cold open is over; this belongs to nobody
+      try { fn(); } catch (e) {}
+    }, ms);
+    dTimers.add(id);
+    return id;
+  };
+
   // ---- typing helper (the case-file sound Robert described: "you hear some typing…") ----
   const typers = [];
   const typeInto = (span, text, cps = 34, quiet = false) => {
@@ -198,7 +213,7 @@ export function playOpening(game, hud, plan, opts = {}, onDone) {
           lines.forEach((ln, i) => {
             const row = document.createElement('div'); row.className = 'optermline';
             const span = document.createElement('span'); row.append(span); box.append(row);
-            setTimeout(() => typeInto(span, ln, 46), i * 620);
+            dLater(() => typeInto(span, ln, 46), i * 620);
           });
         },
         html: `<div class="opterm" id="opTele"><div class="optermline dim">THRESHOLD TREATY OFFICE — EYES ONLY</div></div>`,
@@ -219,7 +234,7 @@ export function playOpening(game, hud, plan, opts = {}, onDone) {
       beats.push({
         dur: 4.8,
         on: () => {
-          rows.forEach((r, i) => setTimeout(() => {
+          rows.forEach((r, i) => dLater(() => {
             const box = stage.querySelector('#opLad'); if (!box) return;
             const d = document.createElement('div'); d.className = 'opladrow' + (r[3] ? '' : ' dead');
             d.innerHTML = `<b>${r[0]}</b><span>${esc(r[1])}</span><em>${esc(r[2])}</em>`;
@@ -236,7 +251,7 @@ export function playOpening(game, hud, plan, opts = {}, onDone) {
     satellite() {
       beats.push({
         dur: 4.6,
-        on: () => { try { audio.zap(760); setTimeout(() => audio.zap(760), 900); } catch (e) {} },
+        on: () => { try { audio.zap(760); } catch (e) {} dLater(() => audio.zap(760), 900); },
         html: `<div class="opsat">
           <div class="opsatgrid"></div><div class="opsatcross">+</div>
           <div class="opsathud">
@@ -363,6 +378,8 @@ export function playOpening(game, hud, plan, opts = {}, onDone) {
   const finish = () => {
     if (finished) return;
     finished = true;
+    for (const id of dTimers) clearTimeout(id);   // staggered beat effects must not outlive a SKIP
+    dTimers.clear();
     clearInterval(el._tvT);
     removeEventListener('keydown', onSkip, true); removeEventListener('pointerdown', onSkip, true);
     el.classList.add('opout');

@@ -1337,3 +1337,47 @@ runs at 4.29ms average with lights pinned 14 ↔ 14 and **zero frames over 20ms*
 in front of exactly that. And one frame in a cold run costs ~90ms while allocating *nothing* —
 no geometry, no texture, no program — which is a garbage collection pause, not our code. Neither
 recurs once warm. Say so rather than chasing them.
+
+---
+
+## §32 · THE AUDIT OF §31 (2026-07-25) — three defects in the fix itself
+
+A hardening pass is code, and code has bugs. Re-reading §31's own work found three, plus one
+older defect that the same discipline should have caught long ago.
+
+**`later()` only protected half of itself.** The `try` wrapped the callback but not the bookkeeping
+line above it, so a throw from the timer accounting would escape into exactly the void the method
+exists to seal. The try now covers the whole body, and the `reportError` call inside the catch is
+itself wrapped — the failure handler of the failure handler.
+
+**`reportError` could throw from inside an error handler.** It calls `hud.feed` to tell the player
+the frame is failing. If the HUD is the thing that broke, that call throws — from a method invoked
+by the frame's `catch` *and* by `window.onerror`. An error handler that can itself throw is worse
+than the error. Wrapped, and verified against a deliberately hostile HUD.
+
+**The comment block ended up on the wrong function.** Inserting `later()` above `clearTransients`
+left the transient-clearing rationale — the measured 17→48 cover leak, the whole reason the method
+exists — sitting above `later()`. In a codebase where the comments carry the reasoning, a
+misfiled explanation is a real defect. Moved back.
+
+### The cinematic needed the same law
+
+`game.later` covers the fight. The opening director stagger-schedules its reveals with plain
+`setTimeout`, and those kept firing after a SKIP: measured **up to six stray zaps in the first
+three seconds of the live match** from the ladder and satellite cold-opens. `dLater` records every
+deferred beat effect and `finish()` retires the set. Verified 0 stray sounds after a skip, all ten
+variants clean, and the DOM flat across eight consecutive openings (1392 nodes before and after).
+
+### And the older one: a can't-drift surface that drifted
+
+`resistOf(def, sheet)` takes two arguments. MAGIC resistance derives from RESOLVE through the
+sheet; called as `resistOf(def)` it quietly uses the res-6 default, which returns **×1.03 for
+everybody**. The Fighter constructor passed the sheet. Both codex surfaces did not — so the
+DAMAGE CODEX printed `IMMUNE— RESISTS— WEAK—` on the MAGIC row and every hero's defence chip read
+the same number, concealing the entire rule the screen exists to display.
+
+The claim in the docs was that the codex "physically cannot drift from the engine because it runs
+the engine's own function." That was false, and instructively so: **calling the same function is
+not the same as calling it the same way.** A defaulted parameter is a second, silent
+implementation. Fixed at both sites; the row now reads RESISTS TITAN · MYSTWARD · CIRCUIT and WEAK
+across the res-5 cast, and the roster shows five distinct values from 0.82 to 1.10.
