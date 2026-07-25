@@ -1043,3 +1043,50 @@ warnings, 0 orphaned audio loops, roster validation 0 problems, build green.
 zero damage. They were all fine — the *bot walked out of range* while the test held its button.
 Freeze the target (`foe.ai = null`) and pin the distance when measuring an ability's output,
 or you will "fix" a power that was never broken.
+
+## §26 · TIER THREE, COMPLETE — all twenty systems (2026-07-25)
+
+`docs/POWERS_BRIEF.md` Part Five: *"Each of these requires a new engine system. Each system
+should unlock an entire family of future kits rather than serving only one character."* Two
+had shipped (Portal Pairs, Interplanetary Flight). The other **eighteen** are in, living in
+`engine/systems.js` and `engine/systems2.js` as SYSTEMS WITH PUBLIC VERBS — `abilities.js`
+only calls in, so the police, the career, a cutscene or a hero written next year can use them
+without touching a power.
+
+| # | system | the thing that makes it real | measured |
+|---|---|---|---|
+| 1 | **Weather Command** | rain BENDS with wind; lightning lights the skyline; builds gradually, never switches | rain 0→0.67 over 2.5s |
+| 2 | **Size Change** | one number moves mass, reach, speed and impact; reshapes MESHES not the group (the ragdoll law) | ×2.2 → radius 4.8, speed 22.1, damage ×2.08, kb-resist 0.41 |
+| 3 | **Time Dilation Field** | a spatial bubble; the caster is exempt | foes 0.3×, caster 1.0× |
+| 4 | **Duplicates** | ONE shared health pool — hurt a copy, the original bleeds, every copy pulses | 30 damage to a copy = 30 off the original |
+| 5 | **Possession** | the PLAYER moves bodies (`game.humans` slot swaps); the abandoned body is left inert and visible-to-nobody | player became the victim; body hidden |
+| 6 | **Elasticity** | volume-preserving stretch (thins as it lengthens) + a real melee reach bonus | +9.8u reach on the swing |
+| 7 | **Invisibility** | a perception SCORE, not a boolean — movement and attacking give you away | still 0.05, moving 0.69 |
+| 8 | **Wall-Crawling** | posture aligns to the SURFACE; falls off with no wall in reach | clings, climbs |
+| 9 | **Telekinesis** | grabs a BODY first, then any liftable prop (the weight ladder still rules) | lifted to 9.4u, hurled at 95.8 u/s |
+| 11 | **Terrain Reshaping** | a raised wall is REAL cover — physics, LOS, fog and projectiles all see it | +1 cover piece, rises in layers |
+| 12 | **Symbiote Consume** | steals ONE slot into your own kit for the match | took "Wave Cannon (STOLEN)" |
+| 13 | **Power Mimicry** | copies the whole kit temporarily, with a clean scanning grammar (not tendrils) | lmb became the target's |
+| 14 | **Summon Rideable** | a mount with its own speed, entrance and wake | speed 30 → 95 |
+| 15 | **Energy Shield Bubble** | hostile fire flattens on it, ALLIED fire leaves | dome intercepts at the projectile choke point |
+| 16 | **X-Ray / Thermal** | two different grammars: heat silhouettes + trails vs structural transparency | both modes engage |
+| 17 | **Regeneration Factor** | a knockdown becomes a downed window with a finisher window | built on Second Wind |
+| 18 | **Banishment** | the victim LEAVES the field (hidden, untouchable) and returns to a scar | gone → back |
+| 19 | **Gravity Inversion** | debris reacts first as a warning, THEN bodies lift | 0 → 11.9 → 34 → 66 → 101 → 135 over 3s |
+
+All nineteen new catalog rows are selectable in ORIGIN. **102/102 catalog powers fire clean**,
+the 52×364 roster battery is clean, a 20-second rumble is clean, 0 orphaned loops, roster and
+visual validators both at zero.
+
+### Four bugs the verification caught (each a law restated)
+
+1. **The vision pass re-showed hidden fighters every frame.** Banished and possessed-away
+   bodies were being made visible again by `updateVision`. Anything that removes a fighter
+   from the field must be checked THERE, because that loop owns `obj.visible`.
+2. **Inverted gravity could not lift a grounded fighter** — the floor clamp pins them, so a
+   sign flip alone does nothing. The zone now lets go of the deck first. And the multiplier
+   must be applied to the line that actually pulls bodies down, not a flight branch.
+3. **`grounded` is a GETTER.** Wall-crawling assigned it and threw. It derives from
+   `pos.y <= groundY || onBlock` and `!flying` — set those, never the result.
+4. **The telekinesis THROW was gated behind the grab's own cooldown**, so you could pick
+   someone up and never put them down. **Letting go is not a cast.**

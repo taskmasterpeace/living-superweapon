@@ -1,4 +1,5 @@
 // Living Superweapon — projectiles, beam-hoses (wave cannon), and spirit-bomb lobs.
+import { domeBlocks } from './systems2.js';
 import * as THREE from 'three';
 import { clamp, rand, TAU } from '../core/util.js';
 
@@ -348,6 +349,8 @@ class Projectile {
       else if (this.armDelay && !this._armed) { this._arm(game); return true; }
       else return this._impact(game, true);
     }
+    // ENERGY SHIELD BUBBLE (brief T3.15): hostile fire flattens on the dome; allied fire leaves.
+    if (game._domes && game._domes.length && domeBlocks(game, this)) return this._impact(game, false);
     const foe = game.overlapFoe(this.caster, this.pos, this.radius + 1.5);
     if (foe) {
       if (this.boomerang) {   // clip them and keep flying — both passes hurt
@@ -762,3 +765,4 @@ export class Projectiles {
     loser.end(); loser.clashLen = null; loser._clashOther = null; winner._clashOther = null;
   }
 }
+

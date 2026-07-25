@@ -1,4 +1,5 @@
 // Living Superweapon — ability engine. Data-driven power types dispatched per input slot.
+import { spawnDuplicates, possess, setElastic, tkGrab, tkThrow, reshape, consumeSlot, mimicKit, summonMount, domeAt, setVisionMode } from './systems2.js';
 import { setSize, setInvisible, beginRegen, banish } from './systems.js';
 import { visOf } from '../data/visual.js';
 import * as THREE from 'three';
@@ -575,6 +576,83 @@ export const TYPES = {
     }
   },
 
+  // 4 · DUPLICATES — real AI copies on ONE shared health pool
+  duplicate(c, def, st, g, inp) {
+    if (inp.pressed && ready(c, def, st)) { pay(c, def, st); spawnDuplicates(c, def.count || 2, def.dur || 12, g); }
+  },
+
+  // 5 · POSSESSION — control transfer into another body (never a human, never a badge)
+  possess(c, def, st, g, inp) {
+    if (inp.pressed && ready(c, def, st)) {
+      const foe = g.nearestFoe(c, c.pos, def.range || 40);
+      if (foe && possess(c, foe, def.dur || 10, g)) pay(c, def, st);
+    }
+  },
+
+  // 6 · ELASTICITY — stretch: reach grows while you swing, and snaps back after
+  elastic(c, def, st, g, inp) {
+    if (inp.pressed && ready(c, def, st)) { pay(c, def, st); setElastic(c, def.reach || 2.2, def.dur || 10, g); }
+  },
+
+  // 9 · TELEKINESIS — grab anything (a body first, then a prop), hold it, throw it
+  telekinesis(c, def, st, g, inp) {
+    // ⚠ THE RELEASE IS NOT A CAST. Gating the throw behind `ready()` meant the grab's own
+    // cooldown locked you into holding the body forever — you could pick someone up and never
+    // put them down. Letting go is always allowed.
+    if (inp.pressed && c._tk) { tkThrow(c, g, def.power || 96); return; }
+    if (inp.pressed && ready(c, def, st) && tkGrab(c, g, def.range || 70)) pay(c, def, st);
+  },
+
+  // 11 · TERRAIN RESHAPING — raise a wall, cut a trench, push up a ramp
+  reshape(c, def, st, g, inp) {
+    if (inp.pressed && ready(c, def, st)) {
+      pay(c, def, st);
+      const p = c.pos.clone().add(c.aim3.clone().setLength(def.range || 22));
+      reshape(g, def.shape || 'wall', p, c.aim3.clone(), def);
+    }
+  },
+
+  // 12 · SYMBIOTE CONSUME — steal ONE slot for the rest of the match
+  consume(c, def, st, g, inp) {
+    if (inp.pressed && ready(c, def, st)) {
+      const foe = g.nearestFoe(c, c.pos, def.range || 26);
+      if (foe && foe.alive && !foe.isDecoy) { pay(c, def, st); consumeSlot(c, foe, g); }
+    }
+  },
+
+  // 13 · POWER MIMICRY — copy the whole kit, temporarily
+  mimic(c, def, st, g, inp) {
+    if (inp.pressed && ready(c, def, st)) {
+      const foe = g.nearestFoe(c, c.pos, def.range || 60);
+      if (foe && foe.alive && !foe.isDecoy) { pay(c, def, st); mimicKit(c, foe, def.dur || 14, g); }
+    }
+  },
+
+  // 14 · SUMMON RIDEABLE — a mount with its own speed and entrance
+  mount(c, def, st, g, inp) {
+    if (inp.pressed && ready(c, def, st)) { pay(c, def, st); summonMount(c, def, g); }
+  },
+
+  // 15 · ENERGY SHIELD BUBBLE — hostile fire flattens, allied fire leaves
+  dome(c, def, st, g, inp) {
+    if (inp.pressed && ready(c, def, st)) {
+      pay(c, def, st);
+      domeAt(g, c.pos.clone().setY(c.pos.y + 2), def.radius || 22, def.dur || 8, c);
+    }
+  },
+
+  // 16 · X-RAY / THERMAL SENSE — two modes, two visual grammars
+  vision(c, def, st, g, inp) {
+    if (inp.pressed && ready(c, def, st)) { pay(c, def, st); setVisionMode(c, def.mode || 'thermal', def.dur || 10, g); }
+  },
+
+  // 8 · WALL-CRAWLING is a STATE, not a cast — `def.wallCrawl` on the hero drives it, and this
+  // slot simply toggles the climb intent so a player can choose to go up.
+  wallcrawl(c, def, st, g, inp) {
+    if (inp.pressed && ready(c, def, st)) { pay(c, def, st); c.def.wallCrawl = true; c._climb = 1; }
+    if (inp.released) c._climb = 0;
+  },
+
   // Quiver — cycle the arrow payload. Free, instant; the kit widget shows what's nocked.
   quiver(c, def, st, g, inp) {
     if (inp.pressed && st.cd <= 0) {
@@ -1008,4 +1086,6 @@ export function performEvade(c, dir, g) {
 }
 
 export function abilityLabel(def) { return def.name; }
+
+
 

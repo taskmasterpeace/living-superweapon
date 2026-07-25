@@ -1,4 +1,5 @@
 // Living Superweapon — Fighter: articulated figure, stats, physics, flight, combat, ability state.
+import { updateDupes, updatePossession, updateElastic, updateWallCrawl, updateTk, updateMimic, updateMount, updateVisionMode, pulseDupes, dupePool } from './systems2.js';
 import { updateSize, updateInvisible, updateRegen, updateBanish, beginRegen } from './systems.js';
 import * as THREE from 'three';
 import { clamp, damp, TAU, lerp, BANDS, bandOf } from '../core/util.js';
@@ -497,6 +498,9 @@ export class Fighter {
     this._siphon = null; this._bloodBuff = null; this._riposte = null;   // Tier-2 buff lanes
     this.sizeScale = 1; this._sizeT = 0; this._sizeMight = 1; this._sizeKb = 1; this._sizeLift = 0;
     this._invis = null; this._regen = null; this._regenReady = null; this._banished = null;   // Tier-3 states
+    this._dupes = null; this._dupeOf = null; this._possessing = null; this._elastic = null;
+    this._tk = null; this._mimic = null; this._mount = null; this._visionMode = null;
+    this._onWall = null; this._climb = 0; this._reachBonus = 0; this._inert = false;
     this._bleed = 0; this._bleedStill = 0; this._bleedAcc = 0; this._bleedTick = 0; this._bleedSrc = null; this._suitHex = null;   // BLEEDING (manual §12)
     this.downedT = 0; this._swHold = 0; this._secondWindUsed = false;   // SECOND WIND (manual §13) — a player's drama, never a bot's
     this._disarmT = 0; this._gearHeld = null; this._gearMesh = null;    // THE GEAR SYSTEM (manual §16)
@@ -691,6 +695,16 @@ export class Fighter {
   }
 
   takeDamage(amount, opts = {}) {
+    // DUPLICATES (brief T3.4) share ONE health pool: damage to any copy is damage to the
+    // original, and a pulse travels through every active duplicate so the link is visible.
+    if (this._dupeOf && this._dupeOf.alive) {
+      const dealt = this._dupeOf.takeDamage(amount, opts);
+      this.hp = this._dupeOf.hp; this.maxHp = this._dupeOf.maxHp;
+      if (this._game) pulseDupes(this, this._game);
+      if (this.hp <= 0) { this.noRespawn = true; this._remove = true; }
+      return dealt;
+    }
+
     if (this.remote) {
       // victim-authoritative netcode: their machine owns their hp — we just spark and
       // remember who hit them so the KO credit lands when their death streams back
@@ -1043,6 +1057,16 @@ export class Fighter {
     // shield pack, guard AND every resistance — a poison arrow ticked TITAN exactly as hard as
     // it ticked a civilian. Damage accumulates and lands as a DISCRETE tick so the number is
     // readable and the hit-flash doesn't strobe at 60Hz.
+    // ---- TIER THREE per-frame, part two ----
+    updateDupes(this, dt, game);
+    updatePossession(this, dt, game);
+    updateElastic(this, dt, game);
+    updateWallCrawl(this, dt, game);
+    updateTk(this, dt, game);
+    updateMimic(this, dt, game);
+    updateMount(this, dt, game);
+    updateVisionMode(this, dt, game);
+
     // ---- TIER THREE per-frame: size, invisibility, regeneration, banishment ----
     updateSize(this, dt, game);
     updateInvisible(this, dt, game);
@@ -1892,4 +1916,5 @@ export class Fighter {
 
   _sync() { /* obj.position is this.pos (same ref); nothing extra */ }
 }
+
 

@@ -161,6 +161,26 @@ export const POWERS = [
   { id: 'overwatch',  name: 'Overwatch Turret',    cat: 'summon', cost: 26, ab: { type: 'summon', name: 'Overwatch Turret', cost: 10, cd: 16, count: 1, max: 2, damage: 10, inherit: true, kind: 'turret', color: '#ffd24a' } },
   { id: 'phasewalk',  name: 'Phase Walk',          cat: 'move',  cost: 22, ab: { type: 'phase', name: 'Phase Walk', kiPerSec: 15, walk: true, color: '#cfe6ff' } },
   { id: 'grapslam',   name: 'Grapple Slam',        cat: 'move',  cost: 24, ab: { type: 'grapple', name: 'Grapple Slam', cost: 6, cd: 6, range: 90, reel: { speed: 80, dmg: 12 }, color: '#c9c2b4' } },
+  // ---- TIER THREE: engine systems (docs/POWERS_BRIEF.md Part Five) ----------------------
+  { id: 'weathercmd', name: 'Weather Command',    cat: 'command', cost: 34, ab: { type: 'weather', name: 'Weather Command', cost: 14, cd: 26, rain: 0.85, wind: 0.6, cloud: 0.7, storm: 0.55, dur: 16, color: '#9fd0ff' } },
+  { id: 'sizechange', name: 'Size Change',        cat: 'buff',    cost: 32, ab: { type: 'size', name: 'Size Change', cost: 10, cd: 16, scale: 2.1, dur: 12, color: '#ffd24a' } },
+  { id: 'timefield',  name: 'Time Dilation Field',cat: 'command', cost: 36, ab: { type: 'timefield', name: 'Time Dilation Field', cost: 14, cd: 24, radius: 24, dur: 6, scale: 0.35, range: 26, color: '#9fd0ff' } },
+  { id: 'duplicates', name: 'Duplicates',         cat: 'summon',  cost: 32, ab: { type: 'duplicate', name: 'Duplicates', cost: 12, cd: 22, count: 2, dur: 14, color: '#cfe6ff' } },
+  { id: 'possession', name: 'Possession',         cat: 'command', cost: 34, ab: { type: 'possess', name: 'Possession', cost: 16, cd: 30, range: 38, dur: 9, color: '#9fd0ff' } },
+  { id: 'elasticity', name: 'Elasticity',         cat: 'melee',   cost: 26, ab: { type: 'elastic', name: 'Elasticity', cost: 7, cd: 14, reach: 2.3, dur: 12, color: '#e0a43a' } },
+  { id: 'invisible',  name: 'Invisibility',       cat: 'move',    cost: 30, ab: { type: 'invisible', name: 'Invisibility', cost: 10, cd: 20, dur: 9, color: '#cfe6ff' } },
+  { id: 'wallcrawl',  name: 'Wall-Crawling',      cat: 'move',    cost: 22, ab: { type: 'wallcrawl', name: 'Wall-Crawling', cost: 3, cd: 2, color: '#cfe6ff' } },
+  { id: 'telekin',    name: 'Telekinesis',        cat: 'command', cost: 34, ab: { type: 'telekinesis', name: 'Telekinesis', cost: 9, cd: 5, range: 70, power: 98, color: '#cfe6ff' } },
+  { id: 'reshape',    name: 'Terrain Reshaping',  cat: 'command', cost: 30, ab: { type: 'reshape', name: 'Terrain Reshaping', cost: 11, cd: 12, shape: 'wall', range: 22, len: 26, h: 14, dur: 14, color: '#8a7a5a' } },
+  { id: 'symbiote',   name: 'Symbiote Consume',   cat: 'command', cost: 34, ab: { type: 'consume', name: 'Symbiote Consume', cost: 14, cd: 26, range: 26, color: '#3a2f38' } },
+  { id: 'mimicry',    name: 'Power Mimicry',      cat: 'command', cost: 36, ab: { type: 'mimic', name: 'Power Mimicry', cost: 15, cd: 30, range: 60, dur: 14, color: '#7fe6ff' } },
+  { id: 'rideable',   name: 'Summon Rideable',    cat: 'move',    cost: 28, ab: { type: 'mount', name: 'Summon Rideable', cost: 12, cd: 24, speed: 96, dur: 26, color: '#1a1a1e', color2: '#ff6a1a' } },
+  { id: 'shielddome', name: 'Energy Shield Bubble', cat: 'buff',  cost: 30, ab: { type: 'dome', name: 'Energy Shield Bubble', cost: 13, cd: 20, radius: 22, dur: 9, color: '#7fe6ff' } },
+  { id: 'thermal',    name: 'Thermal Sense',      cat: 'buff',    cost: 20, ab: { type: 'vision', name: 'Thermal Sense', cost: 6, cd: 16, mode: 'thermal', dur: 10, color: '#ff8a3a' } },
+  { id: 'xray',       name: 'X-Ray Sense',        cat: 'buff',    cost: 20, ab: { type: 'vision', name: 'X-Ray Sense', cost: 6, cd: 16, mode: 'xray', dur: 10, color: '#cfe6ff' } },
+  { id: 'regenfac',   name: 'Regeneration Factor',cat: 'buff',    cost: 32, ab: { type: 'regen', name: 'Regeneration Factor', cost: 8, cd: 40, window: 4, hp: 0.45, color: '#8fe08a' } },
+  { id: 'banishment', name: 'Banishment',         cat: 'command', cost: 34, ab: { type: 'banish', name: 'Banishment', cost: 16, cd: 28, range: 55, dur: 5, color: '#8b7aa0' } },
+  { id: 'gravinvert', name: 'Gravity Inversion',  cat: 'command', cost: 32, ab: { type: 'gravity', name: 'Gravity Inversion', cost: 13, cd: 22, radius: 30, dur: 7, mult: -0.6, range: 28, color: '#9fd0ff' } },
   // command
   { id: 'drones',     name: 'Attack Drones',    cat: 'command', cost: 20, ab: { type: 'summon', name: 'Attack Drones', cost: 16, cd: 4, count: 3, max: 6, duration: 12, damage: 7, interval: 0.7, speed: 82, color: '#ffdf7a', color2: '#fff' } },
   { id: 'willfist',   name: 'Force Fist',       cat: 'command', cost: 18, ab: { type: 'construct', name: 'Force Fist', cost: 14, cd: 5, construct: 'fist', duration: 11, color: '#5fe07a' } },
@@ -347,3 +367,4 @@ export function installCustoms(roster) {
     catch { /* one bad save never blocks boot */ }
   }
 }
+

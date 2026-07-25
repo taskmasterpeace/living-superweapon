@@ -1,4 +1,5 @@
 // Living Superweapon — game orchestrator: entities, control, combat helpers, main update.
+import { updateDomes, updateReshaped, domeBlocks, releasePossession } from './systems2.js';
 import { Weather, TimeFields, GravityZones, setSize, banish } from './systems.js';
 import * as THREE from 'three';
 import { World } from './world.js';
@@ -722,6 +723,7 @@ export class Game {
     this.world.updateFog(p.pos.x, p.pos.z, p.aim.x, p.aim.z, p.def.colors.accent, (h2 && h2.alive) ? h2.pos : null);
     for (const e of this.entities) {
       if (e._banished) { e.obj.visible = false; continue; }   // BANISHED: they are not on this field at all
+      if (e._inert) { e.obj.visible = false; continue; }      // POSSESSED AWAY: the body is left behind, not here
       if (this.isHuman(e) || e.team === p.team) { e._vis = 1; e.obj.visible = true; continue; }   // your own side is always visible (incl. AI partners)
       let see = this._humanSees(p, e) || (h2 && h2.alive && this._humanSees(h2, e));
       if (!see) { const d = Math.hypot(e.pos.x - p.pos.x, e.pos.z - p.pos.z); if (d < this.visReveal && this._bright(e)) see = true; }
@@ -2251,6 +2253,8 @@ export class Game {
     this.weather.update(dt);
     this.timeFields.update(dt);
     this.gravityZones.update(dt);
+    updateDomes(this, dt);
+    updateReshaped(this, dt);
     this.updateDrops(dt);
     // LOW ORBIT DEPARTURE (manual §17): a burner-class flier that punches through the ceiling
     // and keeps the throttle open is LEAVING THE THEATER — offer the world map. Once per climb.
@@ -2287,4 +2291,6 @@ export class Game {
 }
 
 export { ROSTER };
+
+
 

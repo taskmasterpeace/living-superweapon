@@ -48,6 +48,17 @@ export const TYPE_META = {
   regen:       { family: 'defense',   req: [],                           hold: false },
   banish:      { family: 'control',   req: ['range', 'dur'],             hold: false },
   gravity:     { family: 'world',     req: ['radius', 'dur'],            hold: false },
+  duplicate:   { family: 'summon',    req: ['dur'],                      hold: false },
+  possess:     { family: 'control',   req: ['range', 'dur'],             hold: false },
+  elastic:     { family: 'transform', req: ['dur'],                      hold: false },
+  telekinesis: { family: 'grapple',   req: ['range'],                    hold: false },
+  reshape:     { family: 'world',     req: [],                           hold: false },
+  consume:     { family: 'control',   req: ['range'],                    hold: false },
+  mimic:       { family: 'control',   req: ['range', 'dur'],             hold: false },
+  mount:       { family: 'movement',  req: [],                           hold: false },
+  dome:        { family: 'defense',   req: ['radius', 'dur'],            hold: false },
+  vision:      { family: 'utility',   req: ['dur'],                      hold: false },
+  wallcrawl:   { family: 'movement',  req: [],                           hold: false },
 };
 
 // The AI's two derived views. These used to be a hand-maintained Set and a chained ternary.
@@ -106,4 +117,5 @@ export function validateRoster(roster, TYPES) {
   }
   return problems;
 }
+
 
