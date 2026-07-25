@@ -3,6 +3,33 @@
 Everything Robert called out in one pass, so nothing gets lost between goals. Not a plan —
 a ledger. Items move OUT of here into a goal when they get built.
 
+## THE POWERS BRIEF — remaining lanes (ledgered 2026-07-24, after the combat program)
+Landed that day: momentum melee · aimed throw · bleeding · second wind · sleep+blind ·
+ALL 20 Tier-1 catalog powers + 7 kit treatments · afterburners ×6 · the gear system
+(drops/pickups/proficiency/disarm) · zoned wounds + the medical ledger · low-orbit travel
+with the transit cinematic · Tier-2 frost nova / seeker volleys / ricochet rounds.
+Still open, in the brief's own order — each now sits on machinery that exists:
+- **Chain Lightning** — needs chained target selection on hit (first arc thickest, sequential flashes).
+- **Sticky Bombs** — an attach-to-victim/surface state before detonation (clamps + accelerating fuse).
+- **Vampiric aura** (buff aura + siphon ticks) · **Ground Spikes** (temporary cover colliders —
+  the construct system is the donor) · **Decoy Hologram** (untargetable copy + bot retarget via
+  belief — flashbang's wipe is the donor) · **Turret stat-inheritance** · **Blade Cyclone**
+  (nova + slash tick) · **Magnet Pull** (metal-only prop attraction — carry/throw is the donor) ·
+  **Adrenaline Surge** (buff + hp drain/s) · **Sniper Stance** (rifle zoom state) · **Phase Walk**
+  (phase through interior walls) · **Counter Stance** (riposte window off the parry machinery) ·
+  **Grapple Slam** (grapnel-onto-enemy reel — grapple + throw are the donors) · **Air
+  Superiority** (bonus melee vs airborne — one takeDamage-adjacent check).
+- **Phase Zero visual contract** — the 7-trait `vis:` profile field sweep over every ability
+  def + a codex surface + the no-more-than-3-shared-traits validator. High-leverage, big
+  data pass; the five readability tests already gate every visual landed today.
+- **Tier 3 after interplanetary**: portal pairs EXIST; telekinesis next (carry/throw+lock
+  donors), invisibility after blind touched AI perception. The brief itself parks size
+  change / elasticity / terrain reshaping / gravity inversion at the back.
+- **Gear follow-through**: bot scavenging doctrine, pedestrian gun pickups (vigilantism
+  laws already decide who dares), ammo COUNTS for discrete weapons, net item ownership.
+- **Injury polish**: limp run-cycle animation + arm-cradle idle pose (mechanical tells are
+  live; these are the animation layer), news-desk/opening-tape lines reading `injuryOf`.
+
 ## THE CITY GENERATOR (top priority — "probably the greatest thing we've put together")
 - It must carry the CITY TYPES properly. There is a missing tile ("I don't even know what to
   call it") — see the interview.

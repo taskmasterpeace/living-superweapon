@@ -118,7 +118,7 @@ export const TYPES = {
         radius: def.radius || 1.4, damage: def.damage || 14, blast: def.blast || 5, power: def.power || 1,
         homing: def.homing || 0, color: def.color, color2: def.color2, grav: def.grav || 0, shock: def.shock,
         arrow: def.arrow, payload: def.payload, blind: def.blind, boomerang: def.boomerang, range: def.range,
-        card: def.card, disc: def.disc,
+        card: def.card, disc: def.disc, bounces: def.bounces,
         blade: def.blade, canister: def.canister,      // thrown steel / shells read as objects, not orbs
         dtype: def.dtype, siphon: def.siphon,          // the damage TYPE rides the shot
       });
@@ -143,6 +143,7 @@ export const TYPES = {
         radius: def.radius || 0.8, damage: def.damage || 6, blast: def.blast || 3.4, power: 0.5, color: def.color, color2: def.color2,
         arrow: def.arrow, payload: def.payload, blind: def.blind, blade: def.blade,
         grav: def.grav, card: def.card, ground: def.grav > 0,
+        homing: def.homing, bounces: def.bounces,
       });
       g.audio.blast(560 + rand(-40, 40), 0.08); g.muzzleFlash(c, def.color, 0.6, off);
     }
@@ -494,7 +495,7 @@ export const TYPES = {
           pos: m, vel: new THREE.Vector3(Math.cos(a), c.aim3.y + rand(-spread, spread) * 0.7, Math.sin(a)).setLength((def.speed || 170) * (cls === 'shotgun' ? rand(0.85, 1) : 1)),
           radius: def.radius || 0.55, damage: def.damage || 5, blast: def.blast || 2.2, power: 0.35,
           color: def.color, color2: def.color2, life: cls === 'shotgun' ? 0.34 : 1.4,   // pellets die fast = real range falloff
-          bullet: true, ballistic: true, weapon: cls,
+          bullet: true, ballistic: true, weapon: cls, bounces: def.bounces,
         });
       }
       const kick = def.recoil ?? (cls === 'shotgun' ? 6.5 : cls === 'pistol' ? 3 : 1.6);
@@ -585,7 +586,7 @@ export const TYPES = {
           g.vfx.shockwave(c.pos.clone().setY(Math.max(0.2, c.pos.y * 0.1)), { color: def.color || '#ff6a1a', radius: radius * 1.6, power: 1.5 + k });
           g.vfx.lightning(p, { color: '#fff', count: 6, radius: radius * 0.6, height: 16 });
         }
-        g.areaDamage(c, p, radius, dmg, 1.6 + k);
+        g.areaDamage(c, p, radius, dmg, 1.6 + k, { dtype: def.dtype, freeze: def.freeze, dot: def.dot });   // FROST NOVA: the ring ENCASES (manual §19)
         c.ki = 0; if (g.onDrained) { c.drainedT = 0; g.onDrained(c); }  // the price: bone dry
         g.slowmo(0.22, 0.4); g.world.punch(0.6); g.world.shake(2.2 + k); g.audio.boom(1.4, c.pos);
         if (g.hud && g.isHuman(c)) g.hud.flashScreen(def.color || '#ff6a1a', 0.2);

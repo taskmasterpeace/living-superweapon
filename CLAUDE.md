@@ -969,6 +969,14 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   must write through the PAGE's own call path (a phantom dynamic import books into a book
   the game never reads).
 
+## TIER 2 LANES v1 (2026-07-24) — manual §19
+- **Frost Nova**: novas pass `{dtype, freeze, dot}` into areaDamage — any nova carries any
+  payload from data (36.3 dmg + frozenT 2.04 measured). **Seekers**: `homing` passes
+  through volley spawns. **Ricochet**: `bounces: N` on any projectile/rifle — cover hits
+  reflect off the radial face, spark, spend a bounce, extend life (straight segments,
+  never curves; spawned 3 → kinked → 2 left measured). Catalog rows: frostnova / seekers /
+  ricochet. Remaining Part-Four lanes parked in docs/BACKLOG.md with reasons.
+
 ## THE SAMPLE BANK (2026-07-24) — real recordings for every discrete SFX
 - **`core/samples.js`** (`MANIFEST` + `SampleBank` + `HOT_SET`) + **254 Kenney CC0 oggs in
   `/public/audio`** (~6MB, offline-first; impact/sci-fi/interface/rpg/jingle packs). Every

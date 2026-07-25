@@ -111,6 +111,7 @@ class Projectile {
     this.ballistic = !!o.ballistic; this.weapon = o.weapon || null;   // drives the armour/toughness scale
     this.dtype = o.dtype || null; this.siphon = o.siphon;              // damage type rides the projectile
     this.blade = !!o.blade; this.canister = !!o.canister; this.card = !!o.card; this.disc = !!o.disc;
+    this.bounces = o.bounces || 0;   // RICOCHET ROUNDS (manual §19): reflections left before this shot is spent
     this.face = !!o.face; this.armDelay = o.armDelay || 0; this._armed = false; this._armT = 0;
     if (this.face) {
       // THE MARLETTA: a billboarded serene face wrapped in glow — she drifts, arrives, lingers, detonates
@@ -289,6 +290,20 @@ class Projectile {
       if (Math.hypot(this.pos.x - c.x, this.pos.z - c.z) < c.r + this.radius && this.pos.y < c.h) {
         if (this.boomerang) { this._return = true; break; }
         if (this.armDelay && !this._armed) { this._arm(game); return true; }
+        // RICOCHET (manual §19): reflect off the face, spend a bounce, leave a spark and a
+        // visible directional KINK — straight segments, never a curve.
+        if (this.bounces > 0) {
+          this.bounces--;
+          const nx = this.pos.x - c.x, nz = this.pos.z - c.z, nl = Math.hypot(nx, nz) || 1;
+          const dot2 = (this.vel.x * nx + this.vel.z * nz) / nl;
+          this.vel.x -= 2 * dot2 * (nx / nl); this.vel.z -= 2 * dot2 * (nz / nl);
+          this.pos.x = c.x + (nx / nl) * (c.r + this.radius + 0.4);
+          this.pos.z = c.z + (nz / nl) * (c.r + this.radius + 0.4);
+          this.life = Math.max(this.life, 0.9);
+          game.particles.burst(this.pos.x, this.pos.y, this.pos.z, { count: 4, speed: 16, life: 0.2, size: 1.1, color: ['#ffd97a', '#fff'], drag: 2.5 });
+          game.audio.zap(700 + this.bounces * 120, this.pos);
+          return true;
+        }
         return this._impact(game, true);
       }
     }

@@ -631,3 +631,28 @@ with its own plans) when that day comes. Refs: `lsw-orbit-transit.jpeg`,
   § MEDICAL row** ("CARRYING FRACTURED ORBITAL — CLEARS IN 2 SANCTIONED BOUTS · −5%
   CERTIFIED OUTPUT" / "FIT TO FIGHT"). The opening tape and news desk read the same
   function when their next content pass lands — the record is the API.
+
+## §19 · TIER 2, THE FIRST THREE LANES (2026-07-24)
+
+The brief's own recommended order, after sleep and blind proved the payload pathway:
+
+- **FROST NOVA** (catalog `frostnova`): a nova whose blast carries `freeze` — the ring races
+  out and ENCASES through the existing frost system (novas now pass `{dtype, freeze, dot}`
+  into their `areaDamage`, so any nova can carry any payload from data alone). Measured:
+  36.3 damage and the target frozen solid (frozenT 2.04) from one ring. Fixed radial
+  symmetry by construction — deliberately unlike the Ice Slick's creeping spread.
+- **SEEKER MICRO-MISSILES** (catalog `seekers`): `homing` now passes through VOLLEY spawns —
+  a wide-spread cluster that separates and converges on the target. Measured homing onto a
+  laterally offset target. The launch spread (0.34) IS the pod-opening visual.
+- **RICOCHET ROUNDS** (catalog `ricochet`, and `bounces: N` available to every projectile
+  and rifle from data): a shot that meets cover REFLECTS off the face, spends a bounce,
+  sparks, and continues in a visibly kinked straight segment — never a curve. Measured:
+  spawned with 3, reflected with a real direction flip, 2 remaining. Rides the ballistic
+  scale like every bullet.
+
+Still open from Part Four, parked in `docs/BACKLOG.md` with reasons: chain lightning
+(chained target selection), sticky bombs (attach state), vampiric aura, ground spikes
+(temporary cover colliders), decoy hologram (AI retarget), turret stat-inheritance, blade
+cyclone, magnet pull, adrenaline surge, sniper stance, phase-walk-through-interiors,
+counter stance, grapple slam, air superiority — plus the Phase Zero visual-profile field
+sweep. Each is a contained lane on machinery that now exists.

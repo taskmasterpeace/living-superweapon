@@ -141,6 +141,10 @@ export const POWERS = [
   { id: 'leechtouch', name: 'Life Leech Touch',   cat: 'cone', cost: 22, ab: { type: 'lifedrain', name: 'Life Leech Touch', kiPerSec: 15, range: 18, arc: 0.8, dps: 30, ratio: 0.85, color: '#9dff5a' } },
   { id: 'forcewall',  name: 'Force Wall',         cat: 'command', cost: 16, ab: { type: 'construct', name: 'Force Wall', cost: 12, cd: 6, construct: 'wall', duration: 10, color: '#bfe0ff' } },
   { id: 'berserkrush', name: 'Berserker Rush',    cat: 'martial', cost: 20, ab: { type: 'rush', name: 'Berserker Rush', cost: 14, cd: 1.9, range: 60, hits: 8, interval: 0.07, damage: 9, finisher: 22, dmgClass: 'slash', color: '#c9cfd9' } },
+  // ---- TIER 2 lanes (POWERS_BRIEF Part Four, in its own recommended order) ----
+  { id: 'frostnova',  name: 'Frost Nova',         cat: 'cone', cost: 24, ab: { type: 'nova', name: 'Frost Nova', cost: 8, cd: 15, feedRate: 55, maxFeed: 85, minRadius: 12, maxRadius: 26, dmgMin: 16, dmgMax: 44, freeze: 1.1, dtype: 'cold', color: '#bfeaff', color2: '#eaffff' } },
+  { id: 'seekers',    name: 'Seeker Micro-Missiles', cat: 'blast', cost: 20, ab: { type: 'volley', name: 'Seeker Micro-Missiles', cost: 4, interval: 0.1, damage: 7, speed: 96, radius: 0.7, blast: 4, spread: 0.34, homing: 4.5, color: '#ffd97a', color2: '#fff' } },
+  { id: 'ricochet',   name: 'Ricochet Rounds',    cat: 'gear', cost: 14, ab: { type: 'rifle', name: 'Ricochet Rounds', gear: true, cost: 3, interval: 0.2, damage: 9, speed: 150, radius: 0.6, blast: 2.6, spread: 0.03, recoil: 1.6, bounces: 3, color: '#ffd97a', color2: '#fff' } },
   // command
   { id: 'drones',     name: 'Attack Drones',    cat: 'command', cost: 20, ab: { type: 'summon', name: 'Attack Drones', cost: 16, cd: 4, count: 3, max: 6, duration: 12, damage: 7, interval: 0.7, speed: 82, color: '#ffdf7a', color2: '#fff' } },
   { id: 'willfist',   name: 'Force Fist',       cat: 'command', cost: 18, ab: { type: 'construct', name: 'Force Fist', cost: 14, cd: 5, construct: 'fist', duration: 11, color: '#5fe07a' } },
