@@ -46,6 +46,20 @@ parallel registries that fail silently as content grows.
 - **Stale headers** — characters.js no longer claims "10 characters"; CODEX.md's TYPES count
   corrected to 26. creatorUI's construct-once listener documented as such.
 
+## THE ROADMAP — ✅ ALL 13 CLOSED (2026-07-25)
+
+Every item below is done. See COMBAT_MANUAL §23 (TYPE_META + validateRoster), §28 (the
+contained items and the figure extract) and §29 (the world and HUD splits) for the detail and
+the measurements.
+
+1 validateRoster ✅ · 2 TYPE_META ✅ · 3 tile registry + validateTiles ✅ · 4 hud.js split
+(hudUtil/hudCodex/hudBroadcast/hudTitle) ✅ · 5 engine/figure.js ✅ · 6 game.ui() sim→UI
+channel ✅ · 7 ARENA_FALLBACK ✅ · 8 world.js split (fog.js/roads.js) ✅ · 9 ALT_BANDS derives
+from BANDS ✅ · 10 product-name normalisation ✅ · 11 minion damage contract ✅ · 12 frameOf
+archetype tag ✅ · 13 digit paging ✅
+
+### The original list, for the record
+
 ## THE ROADMAP (medium/high effort, prioritized)
 
 1. **[MED] `validateRoster()` at dev boot** — the growth judge's top item: no schema check
