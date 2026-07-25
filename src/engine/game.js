@@ -1223,7 +1223,10 @@ export class Game {
         // THE MEDICAL LEDGER (manual §18): some knockdowns leave a mark that outlives the match
         if (Math.random() < 0.3) {
           const inj = bookInjury(victim.def.id, victim._lastHitKind || 'strike', victim.def);
-          if (inj && this.hud) this.hud.feed(`MEDICAL: ${victim.name} — ${inj.name}, out ${inj.bouts} sanctioned bouts of form`, '#ff8a6a');
+          if (inj) {
+            if (this.hud) this.hud.feed(`MEDICAL: ${victim.name} — ${inj.name}, out ${inj.bouts} sanctioned bouts of form`, '#ff8a6a');
+            (this._medNews = this._medNews || []).push({ name: victim.name, injury: inj.name, bouts: inj.bouts });   // the news desk reads the same record
+          }
         }
       }
     }
@@ -1946,6 +1949,11 @@ export class Game {
       }
     }
     f._guardT = (f._guardT || 0) - dt;
+    // GUARD THE WOUNDED ARM (manual §18): a bot carrying a serious arm wound covers up in
+    // stray moments — doctrine, not physics, and it reads as protecting the injury.
+    if (f._wounds && f._wounds.arm >= 2 && f.staggerT <= 0 && !f.grabState && Math.random() < 0.012) {
+      f._guardT = Math.max(f._guardT, 0.45);
+    }
     this.melee.guard(f, f._guardT > 0);
 
     const busy = f.guarding || f.strikeActive > 0 || f.grabState || f.grabbing || f.meleeCharge > 0 || f.staggerT > 0;

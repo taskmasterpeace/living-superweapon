@@ -11,6 +11,7 @@
 // touches rAF — the verifier steps it by hand. The camera rides game.mapCam (honoured by
 // game.update while !running), the same channel the map maker's live mode uses.
 import { countryOf } from '../data/countries.js';
+import { injuryOf } from '../data/rankings.js';
 import { climateLine } from '../data/climate.js';
 import { snapshotTable, championId, recentIncidents } from '../data/rankings.js';
 import { ladderGatesFor } from './police.js';
@@ -265,6 +266,7 @@ export function playOpening(game, hud, plan, opts = {}, onDone) {
           ${row('POWER', st.power + '/10', s2.power + '/10')}
           ${row('MOBILITY', st.mobility + '/10', s2.mobility + '/10')}
           ${row('DEFENSE', st.defense + '/10', s2.defense + '/10')}
+          ${(() => { const a = injuryOf(def.id), b = injuryOf(foe.def.id); return (a || b) ? row('MEDICAL', a ? esc(a.name).toUpperCase() : 'FIT', b ? esc(b.name).toUpperCase() : 'FIT') : ''; })()}
         </div>`,
         cam: (t) => { cam.yaw += t * 0.001; },
       });

@@ -110,7 +110,7 @@ class Projectile {
     this.bullet = !!o.bullet;                      // real ballistics read as METAL, not energy
     this.ballistic = !!o.ballistic; this.weapon = o.weapon || null;   // drives the armour/toughness scale
     this.dtype = o.dtype || null; this.siphon = o.siphon;              // damage type rides the projectile
-    this.blade = !!o.blade; this.canister = !!o.canister; this.card = !!o.card; this.disc = !!o.disc;
+    this.blade = !!o.blade; this.canister = !!o.canister; this.card = !!o.card; this.disc = !!o.disc; this.pumpkin = !!o.pumpkin;
     this.bounces = o.bounces || 0;   // RICOCHET ROUNDS (manual §19): reflections left before this shot is spent
     this.face = !!o.face; this.armDelay = o.armDelay || 0; this._armed = false; this._armT = 0;
     if (this.face) {
@@ -180,10 +180,23 @@ class Projectile {
     } else if (this.canister) {
       // A GRENADE IS A SHELL, not a ki orb: drab body tumbling through the lob, blinking fuse LED
       // in the payload's colour — the one honest tell of what it will do when it lands.
-      const body = new THREE.Mesh(GEO_CAN, MAT_CAN);
-      const fuse = new THREE.Mesh(GEO_CAN_FUSE, glowMat(this.color, 0.9)); fuse.position.y = 0.75;
+      // THE PUMPKIN (brief Tier1 #4): same shell physics, but the body is a carved orange gourd —
+      // a READABLE FACE whose eyes blink with the fuse, tumbling heavily, never a missile.
+      const body = new THREE.Mesh(GEO_CAN, this.pumpkin ? new THREE.MeshStandardMaterial({ color: '#ff8a3d', roughness: 0.7, metalness: 0.05 }) : MAT_CAN);
+      const fuse = new THREE.Mesh(GEO_CAN_FUSE, glowMat(this.pumpkin ? '#8fe08a' : this.color, 0.9)); fuse.position.y = 0.75;
       this.obj = new THREE.Group(); this.obj.add(body, fuse); this._fuse = fuse;
       this._ownMats = [fuse.material];                 // the payload-coloured fuse is per-shell
+      if (this.pumpkin) {
+        const cv = document.createElement('canvas'); cv.width = cv.height = 64; const x = cv.getContext('2d');
+        x.fillStyle = '#1a0d04';
+        x.beginPath(); x.moveTo(14, 26); x.lineTo(28, 20); x.lineTo(28, 30); x.closePath(); x.fill();   // carved eye
+        x.beginPath(); x.moveTo(50, 26); x.lineTo(36, 20); x.lineTo(36, 30); x.closePath(); x.fill();   // carved eye
+        x.beginPath(); x.moveTo(12, 42); for (let i = 0; i <= 8; i++) x.lineTo(12 + i * 5, 42 + (i % 2 ? 8 : 0)); x.lineTo(52, 50); x.lineTo(12, 50); x.closePath(); x.fill();   // jagged grin
+        const spr = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(cv), transparent: true, depthWrite: false }));
+        spr.scale.setScalar(1.7); spr.position.y = 0.1;
+        this.obj.add(spr); this._pface = spr;
+        this._ownMats.push(body.material, spr.material);
+      }
       this.obj.scale.setScalar(Math.max(0.6, this.radius * 0.7));
       this.obj.position.copy(this.pos); game.scene.add(this.obj);
       this.light = null;
@@ -256,7 +269,7 @@ class Projectile {
     else if (this.blade) { _v.copy(this.vel).normalize(); this.obj.quaternion.setFromUnitVectors(_AZ, _v); this._spin.rotation.x += dt * 24; }   // steel tumbles end-over-end along its path
     else if (this.card) { _v.copy(this.vel).normalize(); this.obj.quaternion.setFromUnitVectors(_AZ, _v); this._spin.rotation.x += dt * 20; this._spin.rotation.z += dt * 8; }   // cards TUMBLE, corners catching the light
     else if (this.disc) { this._spin.rotation.y += dt * 15; }   // the shield spins FLAT — painted face flashing front/back
-    else if (this.canister) { this.obj.rotation.x += dt * 7.5; this.obj.rotation.z += dt * 2.1; if (this._fuse) this._fuse.material.opacity = (Math.sin(this.life * 22) > 0) ? 0.9 : 0.25; }   // shell tumbles, fuse blinks
+    else if (this.canister) { this.obj.rotation.x += dt * 7.5; this.obj.rotation.z += dt * 2.1; if (this._fuse) this._fuse.material.opacity = (Math.sin(this.life * 22) > 0) ? 0.9 : 0.25; if (this._pface) this._pface.material.opacity = (Math.sin(this.life * 22) > 0) ? 1 : 0.55; }   // shell tumbles, fuse blinks — pumpkin eyes blink WITH it
     else this.obj.rotation.y += dt * 6;
     // trail (arrows leave only a whisper; bullets leave a thin wisp of smoke, never a plasma tail)
     this.trailT += dt;

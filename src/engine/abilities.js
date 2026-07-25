@@ -118,7 +118,7 @@ export const TYPES = {
         radius: def.radius || 1.4, damage: def.damage || 14, blast: def.blast || 5, power: def.power || 1,
         homing: def.homing || 0, color: def.color, color2: def.color2, grav: def.grav || 0, shock: def.shock,
         arrow: def.arrow, payload: def.payload, blind: def.blind, boomerang: def.boomerang, range: def.range,
-        card: def.card, disc: def.disc, bounces: def.bounces,
+        card: def.card, disc: def.disc, bounces: def.bounces, pumpkin: def.pumpkin,
         blade: def.blade, canister: def.canister,      // thrown steel / shells read as objects, not orbs
         dtype: def.dtype, siphon: def.siphon,          // the damage TYPE rides the shot
       });

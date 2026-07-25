@@ -292,6 +292,7 @@ export class HUD {
       <div class="panel pl">
         <div class="nm" id="plName">—</div>
         <div class="wantedrow" id="plWanted" style="display:none"></div>
+        <div class="wantedrow" id="plWounds" style="display:none;color:#c9564a"></div>
         <div class="rl" id="plRole">—</div>
         <div class="lab">HEALTH</div><div class="bar"><i class="hpF" id="plHp"></i></div>
         <div class="lab">KI / ENERGY<span class="kistate" id="kiState">DRAINED</span><span class="kiover" id="kiOver">⚡ OVERDRIVE — FISTS REFILL</span></div><div class="bar" id="kiBar"><i class="kiF" id="plKi"></i></div>
@@ -1718,6 +1719,16 @@ export class HUD {
     }
     this.el.gd.style.width = clamp(p.guardMeter * 100, 0, 100) + '%';
     this.el.gd.classList.toggle('stagger', p.staggerT > 0);
+    // THE WOUND CHIP (manual §18): one row, grayscale-readable — zone · roman severity
+    {
+      const wEl = document.getElementById('plWounds');
+      if (wEl) {
+        const W = p._wounds, parts = [];
+        if (W) for (const z of ['arm', 'leg', 'torso']) if (W[z] > 0) parts.push(`${z.toUpperCase()} ${['', 'I', 'II', 'III'][W[z]]}`);
+        const txt = parts.length ? '⚕ ' + parts.join(' · ') : '';
+        if (wEl._t !== txt) { wEl._t = txt; wEl.textContent = txt; wEl.style.display = txt ? 'block' : 'none'; }
+      }
+    }
     this.el.lvl.textContent = p.level;
     this.el.xp.style.width = clamp(p.level >= 10 ? 100 : p.xp / p.xpNext * 100, 0, 100) + '%';
     // power tier: badge changes + the whole meter panel physically WIDENS — a tier-3 bar is visibly bigger than tier-1

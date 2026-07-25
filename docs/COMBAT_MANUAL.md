@@ -612,8 +612,18 @@ with its own plans) when that day comes. Refs: `lsw-orbit-transit.jpeg`,
   match time. **Respawn clears the body entirely.**
 - **The AI reads the limp it can SEE**: inside the sight branch only, a visibly leg-wounded
   foe pulls the bot's preferred range in 25% — pressure the limp, honestly earned.
-- Parked, written down: the limp RUN-CYCLE animation and arm-cradle idle pose are visual
-  polish on top of the real mechanical tells; they ride a later animation pass.
+- **The wound has a NAME now, derived from the blow** (same rule, richer read): fire →
+  BURN · slam/heavy strike → FRACTURE · slash → LACERATION · cold → FROST-SCAR · acid on a
+  metal frame → CORROSION · else CONTUSION. The number says "ARM · LACERATION · SERIOUS"
+  (verified: fire/slam/slash produced BURN/FRACTURE/LACERATION on torso/leg/arm).
+- **The LIMP is in the run cycle now**: a leg-wounded runner's right knee drags stiff-bent,
+  worse per severity — the asymmetry is the read, on top of the real speed loss.
+- **One HUD chip**: `⚕ ARM II · LEG I` on the player panel (the wanted-row pattern), shown
+  only while wounded, roman severity, grayscale-clean.
+- **Bots guard the wounded arm**: a SERIOUS arm wound makes a bot cover up in stray moments
+  (~0.7/s chance of a short guard) — doctrine, not physics; it reads as protecting the arm.
+- Parked, written down: the arm-cradle IDLE pose rides a later animation pass (the guard
+  habit + pip + softened fists are the live arm tells).
 
 ### The medical ledger (injuries that outlive the match)
 
@@ -627,10 +637,13 @@ with its own plans) when that day comes. Refs: `lsw-orbit-transit.jpeg`,
   the feed for humans.
 - **Bouts heal it**: every DECIDED duel decrements both parties' `bouts`; at zero the injury
   clears and the feed says so. Verified: booked → carried → healed over two bouts → gone.
-- **The surfaces read the ONE record** (`injuryOf` in rankings.js): the codex **§03 gains a
+- **Every surface reads the ONE record** (`injuryOf` in rankings.js): the codex **§03
   § MEDICAL row** ("CARRYING FRACTURED ORBITAL — CLEARS IN 2 SANCTIONED BOUTS · −5%
-  CERTIFIED OUTPUT" / "FIT TO FIGHT"). The opening tape and news desk read the same
-  function when their next content pass lands — the record is the API.
+  CERTIFIED OUTPUT" / "FIT TO FIGHT" — this is the FASERIP sheet's WOUNDS row; the codex IS
+  the sheet), the **opening TALE OF THE TAPE** (a MEDICAL row appears when either fighter
+  carries — verified manual-stepped clean), and the **news desk** ("The medical desk
+  confirms {name} leaves with {injury} — cleared to return after N sanctioned bouts",
+  riding `rep.medical` from `game._medNews`, verified in a generated broadcast script).
 
 ## §19 · TIER 2, THE FIRST THREE LANES (2026-07-24)
 

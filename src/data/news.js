@@ -65,6 +65,10 @@ function snap(g, f) {
   };
 }
 export function buildReport(g, result) {
+  // the medical desk rides the report: injuries booked THIS match, from the one ledger
+  const _medical = (g._medNews || []).slice(0, 3);
+  g._medNews = [];
+
   const md = g.modeId, log = g.matchLog || [], city = g.cityStats || { civs: 0, cars: 0, blocks: 0, craters: 0 };
   const rep = {
     mode: md, win: !!result.win, title: result.title, clock: g.matchT || 0,
@@ -128,6 +132,7 @@ export function buildReport(g, result) {
     rep.winner = ranked[0] || null; rep.loser = ranked[ranked.length - 1] || null;
     rep.timeout = /TIME/.test(result.title || '');
   }
+  rep.medical = _medical;   // the medical desk reads the one ledger (manual §18)
   return rep;
 }
 
@@ -275,6 +280,7 @@ export function writeBroadcast(rep) {
       : `The final tally: ${rep.winKO} knockdowns to ${rep.loseKO}. ${lastKO ? `It ended ${fmtClock(lastKO.t)} into the engagement — with ${finishing}.` : ''}`);
     if (rep.invitational && rep.allyNames && rep.allyNames.length) anchor(`Team rules were in effect — ${rep.winner.name} shared the floor with ${rep.allyNames.join(' and ')}, and yes: under Invitational law, splash damage counts for BOTH sides. Ask the medics.`);
     if (rep.invitational && rep.invitational.champion) anchor(`That makes ${epithet(rng, W)} the Invitational champion — the belt, the book, and the skyline. The sports desk's power board has a new #1 conversation.`);
+    if (rep.medical && rep.medical.length) for (const mrow of rep.medical) anchor(`The medical desk confirms ${mrow.name} leaves with ${mrow.injury} — cleared to return after ${mrow.bouts} sanctioned bout${mrow.bouts > 1 ? 's' : ''}.`);
     if (rep.comeback) anchor(`${W.name} trailed on knockdowns mid-fight before ${pick(rng, ['turning it around', 'finding another gear', 'refusing to stay down'])} — the crowd on ${dc.replace('the ', '')} corners knew it was over before the Treaty observers did.`);
     field(`${pick(rng, ['The scene here is', 'What\'s left here is', 'I\'m standing in'])} ${pick(rng, ['glass, craters, and car alarms', 'a street the city will be re-paving by Friday', 'what used to be very orderly civic planning'])}. ${pick(rng, ['Cleanup crews are already staging behind me.', 'The Treaty\'s assessors are out here counting windows.', 'Residents are filming everything — some of them never stopped.'])}`);
     if (L.person && !isSynthetic(L.person)) field(`No word yet on the condition of ${L.name}${rng() < 0.6 ? ` — the registry lists ${L.person.n} of ${L.person.c} — ` : ' '}though Treaty medics were seen on scene. ${pick(rng, ['Recovery is expected.', 'They were reportedly conscious and, quote, "annoyed."', 'Their people say a rematch is, quote, "inevitable."'])}`);

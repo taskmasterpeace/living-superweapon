@@ -954,6 +954,18 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   end-to-end: VOLT clamped / SOL through at 373; depart offered 1×; map row → transit →
   **Tokyo, Japan live**. Refs lsw-orbit-transit.jpeg / lsw-travel-arrival.jpeg.
 
+## THE LETTER PASS (2026-07-24, second /goal audit) — gaps closed, same day
+- **Pumpkin Bomb face** (`pumpkin: true` on canister projectiles): orange gourd body +
+  carved-face canvas sprite whose eyes blink WITH the fuse. **Wound KINDS** derived at the
+  choke point (fire→BURN, slam/heavy→FRACTURE, slash→LACERATION, cold→FROST-SCAR,
+  acid-on-metal→CORROSION) shown in the number + stored `_woundKind`. **Limp run cycle**:
+  leg-wounded runners drag a stiff right knee (anchored at the landing-crouch knee line).
+  **HUD chip** `#plWounds` ("⚕ ARM II · LEG I", wanted-row pattern, hud.update). **Bots
+  guard the wounded arm** (controlBot stray-guard bias at arm≥2). **Tape + news read the
+  ledger**: opening tape MEDICAL row via injuryOf; `game._medNews` → `rep.medical`
+  (buildReport) → "the medical desk confirms…" anchor line. ⚠ buildReport builds `rep`
+  then `return rep;` — a `return {` regex lands in pickCrew (paid for once).
+
 ## THE INJURY SYSTEM (2026-07-24) — manual §18
 - **Zoned wounds**: single hit ≥16% maxHp at the choke point → `addWound(zone)` (slash→arm,
   slam/cold→leg, else torso; opts.zone overrides). Ladder 1-3 LIGHT/SERIOUS/CRITICAL;

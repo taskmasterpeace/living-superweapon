@@ -589,14 +589,15 @@ export class Fighter {
   // → CRITICAL per zone; VIGOR (ccRecover) walks the ladder back down a rung at a time.
   // Debuffs are the tells: a leg wound IS a limp (speed), an arm wound weakens the fists,
   // a torso wound slows the tank. Cleared on respawn. Dummies measure; they don't bruise.
-  addWound(zone) {
+  addWound(zone, kind) {
     const W = this._wounds; if (!W || W[zone] == null || W[zone] >= 3 || this.isDummy) return;
     W[zone]++;
+    (this._woundKind = this._woundKind || {})[zone] = kind || 'CONTUSION';
     const rec = (this.sheet && this.sheet.ccRecover) || 1;
     this._woundT[zone] = 28 / rec;
     if (this._game && this._game.hud) {
       const label = ['', 'LIGHT', 'SERIOUS', 'CRITICAL'][W[zone]];
-      this._game.hud.damageNumber(this.pos, `${zone.toUpperCase()} WOUND · ${label}`, '#c9564a', true);
+      this._game.hud.damageNumber(this.pos, `${zone.toUpperCase()} · ${kind || 'CONTUSION'} · ${label}`, '#c9564a', true);
     }
   }
 
@@ -825,9 +826,13 @@ export class Fighter {
         && ((opts.dmgClass === 'slash' && amount >= 4) || (dtype === 'physical' && amount >= 18))) {
       this.addBleed(opts.src);
     }
-    // ---- ZONED WOUNDS (manual §18): a single hit ≥16% of max hp marks the zone it struck ----
+    // ---- ZONED WOUNDS (manual §18): a single hit ≥16% of max hp marks the zone it struck,
+    // and dtype+kind DERIVE the injury type — fire burns, slams fracture, slashes lacerate,
+    // cold scars, acid on a metal frame corrodes. No hand-authoring, ever.
     if (amount >= this.maxHp * 0.16 && opts.src && opts.src !== this && !opts.bleed && this.state !== 'ko') {
-      this.addWound(opts.zone || (opts.dmgClass === 'slash' ? 'arm' : opts.slam ? 'leg' : dtype === 'cold' ? 'leg' : 'torso'));
+      const wkind = dtype === 'fire' ? 'BURN' : opts.slam ? 'FRACTURE' : opts.dmgClass === 'slash' ? 'LACERATION'
+        : dtype === 'cold' ? 'FROST-SCAR' : (dtype === 'acid' && this.metal) ? 'CORROSION' : opts.strike ? 'FRACTURE' : 'CONTUSION';
+      this.addWound(opts.zone || (opts.dmgClass === 'slash' ? 'arm' : opts.slam ? 'leg' : dtype === 'cold' ? 'leg' : 'torso'), wkind);
     }
     // ---- THE STUN (manual §9): a big enough beating in a short window scrambles anyone ----
     // Track burst damage over a rolling ~2s; crossing 24% of max hp = STUNNED (stars around the
@@ -1608,6 +1613,9 @@ export class Fighter {
     kneeL = lerp(kneeL, 1.35, hov); kneeR = lerp(kneeR, 0.22, hov);
     hipL = lerp(hipL, 0.55, hov); hipR = lerp(hipR, -0.12, hov);
     kneeL += land * 0.9; kneeR += land * 0.9;                    // landing crouch
+    if (this._wounds && this._wounds.leg > 0 && moving) {        // THE LIMP (manual §18): one knee drags stiff — asymmetry IS the read
+      kneeR += 0.3 + Math.max(0, Math.sin(this.animT * 12)) * 0.4 * this._wounds.leg;
+    }
     hipL -= land * 0.5; hipR -= land * 0.5;
     p.legL.rotation.x = hipL; p.legR.rotation.x = hipR;
     p.legL.userData.knee.rotation.x = kneeL; p.legR.userData.knee.rotation.x = kneeR;
