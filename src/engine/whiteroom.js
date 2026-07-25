@@ -260,6 +260,7 @@ export class WhiteRoom {
       if (this._boardTex) this._boardTex.dispose();
       this.group = null; this._board = null; this._boardTex = null; this._boardCv = null;
     }
+    if (this._mirrorEl) { this._mirrorEl.remove(); this._mirrorEl = null; this._mirrorHidden = undefined; }
     for (const m of (this._hidden || [])) if (m) m.visible = true;
     this._hidden = null;
     if (this._prevVision) { g.updateVision = this._prevVision; this._prevVision = null; }
@@ -413,6 +414,33 @@ export class WhiteRoom {
 
     this._boardT -= dt;
     if (this._boardT <= 0) { this._boardT = 0.2; this._drawBoard(); }
+    this._updateMirror(p);
+  }
+
+  // THE MIRROR (Robert's call). The board lives on the north wall, which means it is only readable
+  // when you happen to be facing that way — and a readout you have to turn around for is a readout
+  // you stop using. So: face the wall and the wall board IS the display; turn away and the same
+  // canvas appears as a small panel in the screen corner. One canvas, two surfaces, never both
+  // competing for your attention.
+  _updateMirror(p) {
+    if (!p || !this._boardCv) return;
+    // are we looking at the north wall? the board sits at -Z, so aiming -Z means facing it
+    const facing = (-p.aim3.z) > 0.25;
+    if (facing === this._mirrorHidden) return;               // only touch the DOM on a change
+    this._mirrorHidden = facing;
+    let el = this._mirrorEl;
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'labMirror';
+      el.style.cssText = 'position:fixed;right:14px;top:190px;width:300px;z-index:19;' +
+        'border:2px solid rgba(255,210,74,.55);border-radius:4px;overflow:hidden;' +
+        'box-shadow:0 6px 20px rgba(0,0,0,.55);pointer-events:none;transition:opacity .18s';
+      this._boardCv.style.cssText = 'display:block;width:100%;height:auto';
+      el.appendChild(this._boardCv);                          // the SAME canvas the wall samples
+      document.body.appendChild(el);
+      this._mirrorEl = el;
+    }
+    el.style.opacity = facing ? '0' : '1';
   }
 
   _tickSleds(dt) {

@@ -1590,6 +1590,13 @@ export class Fighter {
     }
     p.g.rotation.x = damp(p.g.rotation.x, pitchT, 7, dt);
     p.g.rotation.z = damp(p.g.rotation.z, rollT, 7, dt);
+    // ⚠ THE GROUND RIG CANCELS THE FLIGHT POSE. The two lines above write pitch and roll onto the
+    // same group the ground markers hang from, so at prone cruise the markers' local "down" swung
+    // nearly horizontal and the shadow and rings slid out from under the fighter — precisely when
+    // you are airborne and the marker is the only thing telling you where you are. Order 'ZXY'
+    // with y=0 composes Rz(-roll)*Rx(-pitch), which is the exact inverse of the parent's pitch and
+    // roll while LEAVING YAW ALONE (the facing wedge still wants the body's yaw).
+    if (p.groundRig) { p.groundRig.rotation.x = -p.g.rotation.x; p.groundRig.rotation.z = -p.g.rotation.z; }
     // cape sway
     if (p.cape) { p.cape.rotation.x = -0.3 + Math.sin(this.animT * 4) * 0.1 - Math.min(0.6, Math.hypot(this.vel.x, this.vel.z) * 0.02); }
     // aura from ki%/charge/buff — and POWER TIER: higher tiers burn brighter in gold → white-hot
@@ -1602,14 +1609,14 @@ export class Fighter {
     // contact shadow — pinned to the ground, shrinks & fades as the fighter climbs
     if (p.shadow) {
       const gy = this.groundY || 0, aly = this.pos.y - gy;   // height ABOVE the terrain, not sea level
-      p.shadow.position.set(0, 0.06 - aly, 0);
+      p.shadow.position.set(0, 0.05 - aly, 0);
       const alt = clamp(1 - aly / 42, 0.08, 1);
       p.shadow.material.opacity = 0.36 * alt;
       p.shadow.scale.setScalar(clamp(1 - aly * 0.006, 0.4, 1));
     }
     // altitude-band ring: color = which of the four bands you're in (ground-pinned like the shadow)
     if (p.bandRing) {
-      p.bandRing.position.set(0, 0.08 - this.pos.y + (this.groundY || 0), 0);
+      p.bandRing.position.set(0, 0.55 - this.pos.y + (this.groundY || 0), 0);
       const b = bandOf(this.pos.y);
       if (b !== this._band) { this._band = b; p.bandRing.material.color.set(ALT_BANDS[b].c); }
       p.bandRing.material.opacity = b === 0 ? 0.28 : 0.6;   // louder when someone leaves the ground
@@ -1664,7 +1671,7 @@ export class Fighter {
       // FACING: the wedge sits at the front of the ring and counter-rotates the body's smoothing,
       // so it always points exactly where this fighter is actually looking.
       if (p.faceWedge) {
-        p.faceWedge.position.set(0, 0.1 - this.pos.y + (this.groundY || 0), 0);
+        p.faceWedge.position.set(0, 0.75 - this.pos.y + (this.groundY || 0), 0);
         p.faceWedge.rotation.z = -(this.facing - this.obj.rotation.y);   // group already carries body yaw
         const fm = p.faceWedge.material;
         fm.color.set(ALT_BANDS[b].c);
@@ -1689,7 +1696,7 @@ export class Fighter {
         this._grapLine.visible = true;
       } else if (this._grapLine && this._grapLine.visible) this._grapLine.visible = false;
       if (p.stateRing) {
-        p.stateRing.position.set(0, 0.09 - this.pos.y + (this.groundY || 0), 0);
+        p.stateRing.position.set(0, 0.35 - this.pos.y + (this.groundY || 0), 0);
         const sm = p.stateRing.material;
         let col = null, op = 0, sc = 1;
         if (this._controlled) { col = '#7fd4ff'; op = 0.55 + Math.sin(this.animT * 6) * 0.2; sc = 1.04; }  // DOMINATED — not their own will

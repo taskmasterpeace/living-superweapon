@@ -2296,9 +2296,26 @@ export class Game {
       if (inp.down('KeyA') || inp.down('ArrowLeft')) ix -= 1;
       if (inp.down('KeyD') || inp.down('ArrowRight')) ix += 1;
     }
-    const dir = _v.set(0, 0, 0).addScaledVector(this.fwd, iz).addScaledVector(this.right, ix);
-    if (dir.lengthSq() > 1) dir.normalize();     // keep analog magnitude, cap at 1
-    p.moveDir = { x: dir.x, z: dir.z };
+    // ⚠ MOVEMENT FOLLOWS THE MOUSE, NOT THE CAMERA (Robert, 2026-07-25: "you face one way and press
+    // W and it moves weird — it's supposed to go the way you face").
+    //
+    // This used to build the move basis from the fixed isometric camera axes, so W always went
+    // up-screen no matter where you were looking: aim left, press W, and your character walked
+    // sideways relative to their own body. Forward is now the direction you are AIMING, flattened,
+    // with A/D strafing across it — the character-relative scheme a twin-stick action game wants.
+    // `right` is fwd × up = (-fz, 0, fx), which keeps A/D from inverting when you face south.
+    let fx = p.aim3.x, fz = p.aim3.z;
+    const fl = Math.hypot(fx, fz);
+    if (fl > 0.001 && SETTINGS.moveRelative !== 'camera') {
+      fx /= fl; fz /= fl;
+      const dir = _v.set(fx * iz - fz * ix, 0, fz * iz + fx * ix);
+      if (dir.lengthSq() > 1) dir.normalize();
+      p.moveDir = { x: dir.x, z: dir.z };
+    } else {
+      const dir = _v.set(0, 0, 0).addScaledVector(this.fwd, iz).addScaledVector(this.right, ix);
+      if (dir.lengthSq() > 1) dir.normalize();   // keep analog magnitude, cap at 1
+      p.moveDir = { x: dir.x, z: dir.z };
+    }
     // double-tap a move key → this hero's evade tech (dash / blink / sprint / slide / phase — data-driven)
     if (!this._tapT) this._tapT = {};
     for (const [k1, k2, tx, tz] of TAP_DIRS) {

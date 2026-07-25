@@ -48,6 +48,9 @@ export const SETTINGS = {
   hints: true,      // bottom-right controls hint panel
   scheme: 'classic',// control layout: classic | pilot | southpaw (see KEYMAPS in hud.js)
   aimAssist: true,  // magnet targeting near the cursor (facing + attacks steer to the pick)
+  // 'aim'    — W goes where the MOUSE points, A/D strafe across it (character-relative; the default)
+  // 'camera' — W always goes up-screen regardless of facing (the old fixed-isometric basis)
+  moveRelative: 'aim',
   quality: 'auto',  // 'auto' | 2 (high) | 1 (balanced) | 0 (low) — locks the adaptive tier
   opening: 'full',
   heroVoice: false, // DBZ yell/grunt/KO-wail synths — OFF by ruling ('no LSW talking')  // match cold-open: 'full' (cinematic, 1 of 10) | 'quick' (the card) | 'off'

@@ -123,15 +123,34 @@ export function figure(def) {
   const armor = new THREE.MeshStandardMaterial({ color: c.secondary, roughness: 0.34, metalness: 0.62 });
   const visorMat = new THREE.MeshStandardMaterial({ color: c.accent, emissive: c.accent, emissiveIntensity: 2.0, roughness: 0.3, metalness: 0.2 });
 
+  // ⚠ THE GROUND RIG. Every ground marker hangs off THIS, not off `g` directly, and `_animate`
+  // counter-rotates it against the body's flight pitch and roll.
+  //
+  // The bug it fixes: the flight pose writes pitch and roll onto `p.g` — the very group the markers
+  // were children of — so a fighter at prone cruise (~87 degrees) rotated the markers' local "down"
+  // offset almost to horizontal, and the shadow and rings swung out sideways instead of staying
+  // beneath the feet. The one thing a ground marker exists to do is say WHERE ON THE GROUND YOU
+  // ARE, and it stopped doing it exactly when you were airborne and needed it most.
+  //
+  // Order 'ZXY' is deliberate: the parent composes Ry*Rx*Rz, so cancelling pitch and roll while
+  // KEEPING yaw needs Rz(-roll)*Rx(-pitch), which is what 'ZXY' with y=0 produces.
+  const groundRig = new THREE.Group();
+  groundRig.rotation.order = 'ZXY';
+  g.add(groundRig);
+
+  // ⚠ AND THEY MUST NOT SHARE A PLANE. These four discs sat at y = 0.06 / 0.08 / 0.09 / 0.10 — one
+  // to two HUNDREDTHS of a unit apart, which at 1:1 scale is inside depth-buffer precision. They
+  // z-fought and the ground under every fighter flickered. They are spread an order of magnitude
+  // further apart now; 0.75u is still 14cm at this scale, so nothing reads as floating.
   // soft contact shadow (grounds the figure; repositioned every frame)
   const shadow = new THREE.Mesh(new THREE.CircleGeometry(3.0, 24), new THREE.MeshBasicMaterial({ color: '#000', transparent: true, opacity: 0.34, depthWrite: false }));
-  shadow.rotation.x = -Math.PI / 2; shadow.position.y = 0.05; shadow.renderOrder = 1; g.add(shadow);
+  shadow.rotation.x = -Math.PI / 2; shadow.position.y = 0.05; shadow.renderOrder = 1; groundRig.add(shadow);
   // altitude-band ring (the ruled four bands): ground-pinned, colored by the fighter's CURRENT
   // band — readable from across the map so you can climb to someone's level
   // THE GROUND MARKER — the fighter's whole state, read from directly under them:
   // ring colour = altitude band · notch = WHICH WAY THEY'RE LOOKING · ring style = what they're doing.
   const bandRing = new THREE.Mesh(new THREE.RingGeometry(3.1, 3.7, 24), new THREE.MeshBasicMaterial({ color: '#8fe08a', transparent: true, opacity: 0.5, depthWrite: false, side: THREE.DoubleSide }));
-  bandRing.rotation.x = -Math.PI / 2; bandRing.position.y = 0.07; bandRing.renderOrder = 1; g.add(bandRing);
+  bandRing.rotation.x = -Math.PI / 2; bandRing.position.y = 0.55; bandRing.renderOrder = 1; groundRig.add(bandRing);
   // THE PLUMB LINE (altitude plan 2): a GRADUATED vertical tether from a flier down to their
   // ground column. Dashes every 50u with a brighter tick at each band boundary, so you can
   // COUNT RUNGS to a flier the way you count floors on a building — measurable, not merely
@@ -140,13 +159,13 @@ export function figure(def) {
   const TETHER_SEGS = 28;
   tetherGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(TETHER_SEGS * 6), 3));
   const tether = new THREE.LineSegments(tetherGeo, new THREE.LineBasicMaterial({ color: '#8fe08a', transparent: true, opacity: 0.5, depthWrite: false }));
-  tether.frustumCulled = false; tether.visible = false; tether.renderOrder = 1; g.add(tether);
+  tether.frustumCulled = false; tether.visible = false; tether.renderOrder = 1; groundRig.add(tether);
   // the facing wedge: a bright arc at the FRONT of the ring, so you always know where they look
   const faceWedge = new THREE.Mesh(new THREE.RingGeometry(3.0, 4.5, 18, 1, -0.42, 0.84), new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.8, depthWrite: false, side: THREE.DoubleSide }));
-  faceWedge.rotation.x = -Math.PI / 2; faceWedge.position.y = 0.09; faceWedge.renderOrder = 2; g.add(faceWedge);
+  faceWedge.rotation.x = -Math.PI / 2; faceWedge.position.y = 0.75; faceWedge.renderOrder = 2; groundRig.add(faceWedge);
   // the state ring: flares and recolours for guard / grab / strike (blue shield, green grip, white hit)
   const stateRing = new THREE.Mesh(new THREE.RingGeometry(4.0, 4.9, 28), new THREE.MeshBasicMaterial({ color: '#9fd0ff', transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide }));
-  stateRing.rotation.x = -Math.PI / 2; stateRing.position.y = 0.08; stateRing.renderOrder = 2; g.add(stateRing);
+  stateRing.rotation.x = -Math.PI / 2; stateRing.position.y = 0.35; stateRing.renderOrder = 2; groundRig.add(stateRing);
 
   // torso (chest taper) + neck + collar
   const torso = new THREE.Mesh(new THREE.CapsuleGeometry(1.5, 2.2, 6, 12), suit);
@@ -307,7 +326,7 @@ export function figure(def) {
   const ice = new THREE.Mesh(new THREE.IcosahedronGeometry(4.6, 1), new THREE.MeshStandardMaterial({ color: '#bfeaff', transparent: true, opacity: 0, roughness: 0.15, metalness: 0.1, emissive: '#4fb8e6', emissiveIntensity: 0.15 }));
   ice.position.y = 5.2; ice.scale.set(1, 1.5, 1); ice.visible = false; g.add(ice);
 
-  const P = { g, torso, head, pelvis, cowl, emblem, aura, cape, armL, armR, legL, legR, eyeL, eyeR, shadow, bandRing, faceWedge, stateRing, guardArc, ice, tether, mats: { suit, suit2, glow } };
+  const P = { g, groundRig, torso, head, pelvis, cowl, emblem, aura, cape, armL, armR, legL, legR, eyeL, eyeR, shadow, bandRing, faceWedge, stateRing, guardArc, ice, tether, mats: { suit, suit2, glow } };
   applyFrame(P, frameOf(def));   // ← the silhouette: proportions derived from who this fighter IS
   return P;
 }
