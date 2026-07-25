@@ -1174,3 +1174,47 @@ These are the ones that genuinely hadn't, plus the two mode rules the backlog wa
   the physics clamp meant nobody could ever be outside the arena, so a ring-out check could
   never fire. Under the rule the arena lets you leave; without it the wall still holds.
   Verified both ways in the same session.
+
+## §29 · THE TWO FILE SPLITS (2026-07-25) — code review items 4 and 8
+
+The last two roadmap items. Both are "a big file was carrying unrelated jobs", and both are
+done the same way: **methods move to their own module as a MIXIN, installed onto the class
+prototype**, so `this` still means what it meant and **not one call site changed**.
+
+```js
+Object.assign(World.prototype, FogMixin, RoadMixin);
+Object.assign(HUD.prototype, CodexMixin, BroadcastMixin, TitleMixin);
+```
+
+| file | was | now |
+|---|---|---|
+| `world.js` | 1816 | **1524** + `fog.js` 123 + `roads.js` 228 |
+| `hud.js` | 2570 | **1737** + `hudUtil.js` 149 + `hudCodex.js` 195 + `hudBroadcast.js` 219 + `hudTitle.js` 374 |
+
+**The shared helpers came out FIRST** (`hudUtil.js` — escaping, the registry paperwork, the
+case-file row builders, the ability describers), exactly as the review specified. That is what
+makes the screen splits acyclic: the screens import from `hudUtil`, never from each other.
+
+### What this cost, and the four traps it walked into
+
+The first attempt at this was abandoned mid-session because a hand-rolled text slice produced
+invalid object literals twice. The second attempt used a real **indent-aware method extractor**
+(the 2-space `^  }` line IS the method boundary in these classes), so the text that moved is
+byte-identical to the text removed. The traps, all of which bit:
+
+1. **A class body takes no commas between methods; an object literal requires them.** Moving a
+   method from `class X {}` into `export const Mixin = {}` means joining with `,\n\n`.
+2. **Module-level constants stay behind.** `FOG_RES/FOG_EXT/FOG_STEPS` were declared in
+   world.js; they moved WITH the fog because nothing else read them. Check every free identifier.
+3. **Imported symbols are free identifiers too.** `ROAD`, `CELL`, `junctionAt` and
+   `mergeGeometries` were imports of world.js, not declarations — a "which locals does this
+   need" sweep misses them entirely.
+4. **A non-exported helper of a helper.** `flagCC` was used only by `fileNoOf`; moving
+   `fileNoOf` to `hudUtil` left `flagCC` behind in hud.js and the title screen died at boot.
+
+Verified after the split: every method is on the prototype (10 world, 9 HUD), Tokyo builds with
+live fog and roads and Kabul rebuilds over it, the title screen renders 53 cards and the cold
+open, the codex renders all seven sections including its `SEEN AS` visual line, the damage
+codex renders every type, and a real match produces the full KMK 9 broadcast with the tale of
+the tape. Battery 52×364 + 102 catalog powers + a 15-second rumble: **0 errors, 0 orphaned
+loops, roster/tile/visual validators all zero.**
