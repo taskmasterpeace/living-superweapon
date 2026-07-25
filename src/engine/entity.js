@@ -1,4 +1,5 @@
 // Living Superweapon — Fighter: articulated figure, stats, physics, flight, combat, ability state.
+import { updateSize, updateInvisible, updateRegen, updateBanish, beginRegen } from './systems.js';
 import * as THREE from 'three';
 import { clamp, damp, TAU, lerp, BANDS, bandOf } from '../core/util.js';
 export { BANDS, bandOf, setBands } from '../core/util.js';
@@ -494,6 +495,8 @@ export class Fighter {
     this.launchT = 0; this._slamCd = 0;
     this._thrownT = 0; this._thrownBy = null;   // aimed-throw body-as-projectile window (manual §11)
     this._siphon = null; this._bloodBuff = null; this._riposte = null;   // Tier-2 buff lanes
+    this.sizeScale = 1; this._sizeT = 0; this._sizeMight = 1; this._sizeKb = 1; this._sizeLift = 0;
+    this._invis = null; this._regen = null; this._regenReady = null; this._banished = null;   // Tier-3 states
     this._bleed = 0; this._bleedStill = 0; this._bleedAcc = 0; this._bleedTick = 0; this._bleedSrc = null; this._suitHex = null;   // BLEEDING (manual §12)
     this.downedT = 0; this._swHold = 0; this._secondWindUsed = false;   // SECOND WIND (manual §13) — a player's drama, never a bot's
     this._disarmT = 0; this._gearHeld = null; this._gearMesh = null;    // THE GEAR SYSTEM (manual §16)
@@ -708,6 +711,9 @@ export class Fighter {
     // 0.15s delivery grace, so a tranq dart's own blast can't wake the sleep it just delivered
     if (this.sleepT > 0 && amount > 0 && !(this._sleepGrace > 0)) this.wake();
     if (opts.src && opts.src.sheet && opts.src.sheet.predator && this.hp < this.maxHp * 0.3) amount *= 1.15;   // Predator talent finishes hunts
+    // SIZE CHANGE (brief T3.2): a giant hits harder and is harder to move; a shrunken fighter
+    // is the reverse. One number drives both sides of the exchange.
+    if (opts.src && opts.src._sizeMight && opts.src._sizeMight !== 1) amount *= opts.src._sizeMight;
     // AIR SUPERIORITY (brief T2.20): some fighters own the sky. A strike landed on a victim who
     // is genuinely AIRBORNE hits harder and drives them DOWN — the vertical read the brief asks
     // for. Data-driven off the attacker's def; nothing hard-codes a hero.
@@ -1037,6 +1043,12 @@ export class Fighter {
     // shield pack, guard AND every resistance — a poison arrow ticked TITAN exactly as hard as
     // it ticked a civilian. Damage accumulates and lands as a DISCRETE tick so the number is
     // readable and the hit-flash doesn't strobe at 60Hz.
+    // ---- TIER THREE per-frame: size, invisibility, regeneration, banishment ----
+    updateSize(this, dt, game);
+    updateInvisible(this, dt, game);
+    updateRegen(this, dt, game);
+    updateBanish(this, dt, game);
+
     // ---- VAMPIRIC AURA (brief T2.7): a low crimson circle that drains everyone standing in
     // it and feeds the caster. Veins of energy reach from each victim toward you, and your own
     // shadow deepens as more of them are being drained.
@@ -1351,7 +1363,9 @@ export class Fighter {
         if (this.launchT > 0) {
           // knockback owns the axis — a servo here would eat the hit and make heavies weightless.
           // When it expires your band is wherever you ended up. No snap-back tether.
-          this.vel.y -= 34 * dt;
+          // GRAVITY INVERSION (brief T3.19): the zone flips the sign, so a ceiling becomes a floor.
+          const _gz = game.gravityZones ? game.gravityZones.gravityFor(this) : 1;
+          this.vel.y -= 34 * dt * _gz;
           this._deckSnap = -1;
         } else if (this.flyHeld) {
           const cb = bandAt2(this.pos.y);
@@ -1404,7 +1418,9 @@ export class Fighter {
           this.vel.y = Math.max(this.vel.y - 60 * dt, -8);
         } else {
           this.gliding = false;
-          this.vel.y -= 60 * dt;                             // gravity — jumps & knockback arcs
+          // GRAVITY INVERSION (brief T3.19): the zone flips the sign of the ONE line that
+          // actually pulls bodies down, so a ceiling really can become a floor.
+          this.vel.y -= 60 * dt * (game.gravityZones ? game.gravityZones.gravityFor(this) : 1);
         }
       } else this.gliding = false;
       }
@@ -1876,3 +1892,4 @@ export class Fighter {
 
   _sync() { /* obj.position is this.pos (same ref); nothing extra */ }
 }
+

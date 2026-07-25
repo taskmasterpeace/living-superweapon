@@ -1,4 +1,5 @@
 // Living Superweapon — game orchestrator: entities, control, combat helpers, main update.
+import { Weather, TimeFields, GravityZones, setSize, banish } from './systems.js';
 import * as THREE from 'three';
 import { World } from './world.js';
 import { Particles3D } from './particles3d.js';
@@ -154,6 +155,10 @@ export class Game {
     this.humans = [];                // local players: [{ fighter, scheme:'kbm'|'pad' }]
     this.mode = null; this.modeId = null; this.ms = {}; this.matchOver = false; this.matchResult = null;
     this.entities = []; this.minions = []; this.constructs = [];
+    // TIER THREE SYSTEMS (docs/POWERS_BRIEF.md Part Five) — engine layers, not abilities
+    this.weather = new Weather(this);
+    this.timeFields = new TimeFields(this);
+    this.gravityZones = new GravityZones(this);
     this.portals = []; this._openPair = null;   // dimensional door pairs (RIFT)
     this.aimPoint = new THREE.Vector3(20, 0, 0);
     this.time = 0; this.running = false; this.player = null;
@@ -716,6 +721,7 @@ export class Game {
     const h2 = this.humans[1] && this.humans[1].fighter;
     this.world.updateFog(p.pos.x, p.pos.z, p.aim.x, p.aim.z, p.def.colors.accent, (h2 && h2.alive) ? h2.pos : null);
     for (const e of this.entities) {
+      if (e._banished) { e.obj.visible = false; continue; }   // BANISHED: they are not on this field at all
       if (this.isHuman(e) || e.team === p.team) { e._vis = 1; e.obj.visible = true; continue; }   // your own side is always visible (incl. AI partners)
       let see = this._humanSees(p, e) || (h2 && h2.alive && this._humanSees(h2, e));
       if (!see) { const d = Math.hypot(e.pos.x - p.pos.x, e.pos.z - p.pos.z); if (d < this.visReveal && this._bright(e)) see = true; }
@@ -2242,6 +2248,9 @@ export class Game {
     this.updateSingularity(dt);
     this.updateSpikes(dt);
     this.updateDecoys(dt);
+    this.weather.update(dt);
+    this.timeFields.update(dt);
+    this.gravityZones.update(dt);
     this.updateDrops(dt);
     // LOW ORBIT DEPARTURE (manual §17): a burner-class flier that punches through the ceiling
     // and keeps the throttle open is LEAVING THE THEATER — offer the world map. Once per climb.
@@ -2278,3 +2287,4 @@ export class Game {
 }
 
 export { ROSTER };
+

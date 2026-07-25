@@ -40,6 +40,14 @@ export const TYPE_META = {
   mine:        { family: 'trap',      req: ['damage', 'blast'],          hold: false },
   lifedrain:   { family: 'beam',      req: ['dps', 'range'],             hold: true,  holdT: [0.8, 1.6], sustained: true },
   meteor:      { family: 'nova',      req: ['damage', 'count'],          hold: false },
+  // ---- TIER THREE: each drives an engine SYSTEM (docs/POWERS_BRIEF.md Part Five) ----
+  weather:     { family: 'world',     req: [],                           hold: false },
+  size:        { family: 'transform', req: [],                           hold: false },
+  timefield:   { family: 'world',     req: ['radius', 'dur'],            hold: false },
+  invisible:   { family: 'defense',   req: ['dur'],                      hold: false },
+  regen:       { family: 'defense',   req: [],                           hold: false },
+  banish:      { family: 'control',   req: ['range', 'dur'],             hold: false },
+  gravity:     { family: 'world',     req: ['radius', 'dur'],            hold: false },
 };
 
 // The AI's two derived views. These used to be a hand-maintained Set and a chained ternary.
@@ -98,3 +106,4 @@ export function validateRoster(roster, TYPES) {
   }
   return problems;
 }
+

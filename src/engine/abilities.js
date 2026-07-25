@@ -1,4 +1,5 @@
 // Living Superweapon — ability engine. Data-driven power types dispatched per input slot.
+import { setSize, setInvisible, beginRegen, banish } from './systems.js';
 import { visOf } from '../data/visual.js';
 import * as THREE from 'three';
 import { clamp, rand, TAU, lerp } from '../core/util.js';
@@ -510,6 +511,70 @@ export const TYPES = {
     }
   },
 
+  // ---- TIER THREE (docs/POWERS_BRIEF.md Part Five): each type drives an ENGINE SYSTEM, so
+  // one registration here unlocks the whole family for every future kit.
+
+  // 1 · WEATHER COMMAND — rain, wind, cloud and lightning, arriving GRADUALLY
+  weather(c, def, st, g, inp) {
+    if (inp.pressed && ready(c, def, st)) {
+      pay(c, def, st);
+      g.weather.command({ rain: def.rain ?? 0.8, wind: def.wind ?? 0.6, cloud: def.cloud ?? 0.7, storm: def.storm ?? 0.5, dur: def.dur || 14, src: c });
+      g.vfx.ring(c.pos.clone().setY(9), { color: def.color || '#9fd0ff', r0: 2, r1: 22, life: 0.6 });
+      g.audio.blast(140, 0.5, c.pos);
+      if (g.hud) g.hud.announce('WEATHER', 'the sky answers', def.color || '#9fd0ff');
+    }
+  },
+
+  // 2 · SIZE CHANGE — grow or shrink; mass, reach, speed and impact all move together
+  size(c, def, st, g, inp) {
+    if (inp.pressed && ready(c, def, st)) {
+      pay(c, def, st);
+      const to = c.sizeScale && Math.abs(c.sizeScale - (def.scale || 1.9)) < 0.01 ? 1 : (def.scale || 1.9);
+      setSize(c, to, to === 1 ? 0 : (def.dur || 10), g);
+    }
+  },
+
+  // 3 · TIME DILATION FIELD — a local time-scale bubble; the caster is exempt
+  timefield(c, def, st, g, inp) {
+    if (inp.pressed && ready(c, def, st)) {
+      pay(c, def, st);
+      const p = c.pos.clone().add(c.aim3.clone().setLength(def.range || 26));
+      g.timeFields.add(p, def.radius || 22, def.dur || 5, def.scale || 0.35, c);
+    }
+  },
+
+  // 7 · INVISIBILITY — a render state AND a perception layer (movement gives you away)
+  invisible(c, def, st, g, inp) {
+    if (inp.pressed && ready(c, def, st)) { pay(c, def, st); setInvisible(c, def.dur || 8, g); }
+  },
+
+  // 17 · REGENERATION FACTOR — a KO becomes a downed window unless they finish you
+  regen(c, def, st, g, inp) {
+    if (inp.pressed && ready(c, def, st)) {
+      pay(c, def, st);
+      c._regenReady = { window: def.window || 4, hp: def.hp || 0.45 };
+      g.vfx.ring(c.pos.clone().setY(1), { color: '#8fe08a', r0: 1, r1: 8, life: 0.4, flat: true, y: 0.5 });
+      if (g.hud && g.isHuman(c)) g.hud.feed('REGENERATION primed — a knockdown is not the end', '#8fe08a');
+    }
+  },
+
+  // 18 · BANISHMENT — a pocket dimension for a fixed period, with a return scar
+  banish(c, def, st, g, inp) {
+    if (inp.pressed && ready(c, def, st)) {
+      const foe = g.nearestFoe(c, c.pos, def.range || 60);
+      if (foe && foe.alive && !foe.isDecoy) { pay(c, def, st); banish(foe, def.dur || 5, g, c); }
+    }
+  },
+
+  // 19 · GRAVITY INVERSION ZONE — the ceiling becomes the floor
+  gravity(c, def, st, g, inp) {
+    if (inp.pressed && ready(c, def, st)) {
+      pay(c, def, st);
+      const p = c.pos.clone().add(c.aim3.clone().setLength(def.range || 30));
+      g.gravityZones.add(p, def.radius || 26, def.dur || 6, def.mult ?? -0.55, c);
+    }
+  },
+
   // Quiver — cycle the arrow payload. Free, instant; the kit widget shows what's nocked.
   quiver(c, def, st, g, inp) {
     if (inp.pressed && st.cd <= 0) {
@@ -943,3 +1008,4 @@ export function performEvade(c, dir, g) {
 }
 
 export function abilityLabel(def) { return def.name; }
+

@@ -69,6 +69,10 @@ function sourceOf(a) {
     case 'buff': return 'aura';
     case 'summon': case 'construct': return 'ground';
     case 'portal': case 'teleport': return 'world';
+    case 'weather': return 'sky';
+    case 'timefield': case 'gravity': return 'world';
+    case 'size': case 'invisible': case 'regen': return 'body';
+    case 'banish': return 'world';
     case 'tentacle': case 'grapple': return 'body';
     default: return 'hand';
   }
@@ -90,7 +94,9 @@ function shapeOf(a) {
     case 'teleport': case 'dash': return 'arc';
     case 'tentacle': case 'grapple': return 'chain';
     case 'summon': case 'construct': return 'field';
-    case 'mindcontrol': return 'arc';
+    case 'mindcontrol': case 'banish': return 'arc';
+    case 'weather': case 'timefield': case 'gravity': return 'field';
+    case 'size': case 'invisible': case 'regen': return 'field';
     default: return 'bolt';
   }
 }
@@ -232,3 +238,4 @@ export function validateVis(roster) {
   }
   return problems;
 }
+
