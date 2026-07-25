@@ -26,6 +26,20 @@ resistances, flight tiers, a tabletop attribute layer, and ORIGIN — a point-bu
 whose output is a full roster citizen. **Contract: `docs/COMBAT_MANUAL.md`. If you change combat,
 change the manual in the same commit.**
 
+**2026-07-24, the combat program** (manual §10–§19, one commit per phase, each headlessly
+measured): momentum melee (contact speed scales the punch, ×2.5 at cruise; dive-punch
+launcher) · the aimed throw (clinch = struggle window, bodies are projectiles, slide-class
+drag while thrown) · bleeding (movement tears, stillness clots, downward-red is its alone) ·
+second wind (humans only, once per match, Overdrive's moment) · sleep + blind (the payload
+lane, proven — belief system does blind for free) · ALL 20 Tier-1 brief powers in the ORIGIN
+catalog + 7 roster kit treatments + afterburners ×6 with per-hero wakes · THE GEAR SYSTEM
+(KO drops, carry-hand pickups, derived proficiency, disarm-by-grab — powers are what you
+ARE, gear is what you HOLD) · zoned wounds + the persistent medical ledger in the rankings
+book · LOW-ORBIT CITY-TO-CITY TRAVEL (burner through the ceiling → world map → wake-identity
+transit cinematic → arrival) · Tier-2 frost nova / seekers / ricochet. The recovered
+companion catalog is `docs/POWERS_BRIEF.md`; the remaining lanes are ledgered in
+`docs/BACKLOG.md` with their donors named.
+
 ### 2. The world
 1,050 real cities off Robert's world sheet, 168 countries, procedurally built from a plan.
 Police that respond to whoever hurts civilians, a broadcast layer (KMK 9) that films the fight and
