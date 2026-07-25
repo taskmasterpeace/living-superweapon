@@ -164,8 +164,10 @@ hud.onBracketContinue = () => { if (game._lastCfg) enter(game._lastCfg); };
 // LOW ORBIT TRAVEL (manual §17): the depart gate opens the world map; picking a city plays the
 // transit cinematic (the loading screen), swaps the theater, and re-enters the same mode there.
 game.onDepart = () => { game.running = false; hud.showDepart(game); };
-game.onTravel = (city, cityId) => {
-  hud.theater = { cityId, name: city.name, country: city.country, seed: 1 + ((Math.random() * 97) | 0) };
+game.onTravel = (city, cityId, planetId) => {
+  hud.theater = planetId
+    ? { planet: planetId, name: city.name, country: city.country, seed: 1 + ((Math.random() * 97) | 0) }
+    : { cityId, name: city.name, country: city.country, seed: 1 + ((Math.random() * 97) | 0) };
   try { localStorage.setItem('threshold_theater_v1', JSON.stringify(hud.theater)); } catch (e) {}
   game._departing = false; game._traveling = true;
   try { enter(game._lastCfg || { mode: 'training', p1: game.player ? game.player.def.id : 'sol' }); }

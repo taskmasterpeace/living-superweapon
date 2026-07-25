@@ -591,10 +591,45 @@ punching through the sky — the map does the miles, and the cinematic is the lo
   the arrival beat (the full opening director is suppressed for travel). Verified live:
   world map → Tokyo → transit → **fighting in Tokyo, Japan**, match running.
 
-Parked by the brief's own sequencing: the planet/system zoom stack, gravity/atmosphere per
-world, and true interplanetary destinations — the model extends (a planet is a country row
-with its own plans) when that day comes. Refs: `lsw-orbit-transit.jpeg`,
-`lsw-travel-arrival.jpeg`.
+### THE SYSTEM TIER (same day — the zoom stack's next level, Robert's ruling)
+
+The depart map now stacks **EARTH ↔ THE SYSTEM** (`data/planets.js` — the planets as DATA,
+exactly like the cities):
+
+- **Ten worlds, honest labels**: real AU and million-km distances on every row. Landable
+  worlds carry a settlement; the rest REFUSE with a reason ("VENUS — NO LANDING, the
+  surface melts lead"; "JUPITER — NO SURFACE"). A grayed row with a reason beats a control
+  that lies.
+- **Settlements are city rows through the SAME planner** (`resolveTheaterPlan` planet
+  branch → `generatePlan(row, seed, { popType, relief, biome })`): THE MOON → TRANQUILITY
+  REACH (Small Town, flat, tundra) · MARS → ARES LANDING (Town, plateau, desert) · PLUTO →
+  PERIMETER STATION (Village, mountains, tundra). Verified: a live match in ARES LANDING,
+  Mars — desert biome, plateau relief — and a 12s AI rumble there at 2.53 ms/frame. Mars
+  is authored like Miami, as the brief promised; the difference is environmental data.
+- **Transit** rides the same wake-identity cinematic with distance-honest legs
+  (`transitSecsFor`: Moon ~6s · Mars ~7s · Pluto ~14s).
+
+### THE HELIOPAUSE CROSSING (`hud._playHeliopause`) — leaving the system, at true scale
+
+The system map's last row is **⬆ LEAVE THE SYSTEM**. Three acts, one canvas, skippable:
+
+1. **The run out** — log-scaled orbit map, the traveler's wake-dot accelerating past every
+   labeled world, MERCURY to NEPTUNE.
+2. **The boundary** — **the character is SEEN**: a figure drawn in the hero's own primary
+   with their afterburner wake streaming, name-tagged, crossing the luminous heliopause
+   wall (123 AU) with the termination shock (94 AU) behind — "the solar wind stops here —
+   Voyager 1 crossed in 2012, at 121.6 AU."
+3. **THE TRUE SCALE** — powers of ten (the honest method for astronomical scale): 100 →
+   1,000 → 10,000 → 100,000 AU, a live scale bar under every frame ("BAR ≈ 41,335 AU"),
+   the Oort cloud named, until the entire heliosphere is a circled dot — "THE ENTIRE
+   SYSTEM — everything you have ever fought over" — and the nearest stars appear at their
+   real light-year distances (Proxima 4.25 · Alpha Centauri 4.37 · Barnard's 5.96 ·
+   Sirius 8.6). Closing line: "INTERSTELLAR SPACE — NO CHARTED THEATERS BEYOND THIS LINE.
+   YET." Return drops you back on the system map.
+
+Refs: `lsw-orbit-transit.jpeg`, `lsw-travel-arrival.jpeg`, `lsw-system-map.jpeg`,
+`lsw-heliopause-crossing.jpeg` (act II — the character at the wall), `lsw-heliopause.jpeg`
+(act III — the system as a dot).
 
 ## §18 · THE INJURY SYSTEM (2026-07-24) — one record, every surface reads it
 

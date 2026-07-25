@@ -940,6 +940,23 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
 - Parked + written: bot scavenging, ped gun pickups (vigilantism laws ready), net item
   ownership.
 
+## THE SYSTEM TIER + THE HELIOPAUSE (2026-07-24) — manual §17 amendment
+- **`data/planets.js`**: PLANETS (10 worlds, real AU/km; landable moon/mars/pluto carry
+  settlement rows — popType/types/crime/safety/relief/biome), HELIOPAUSE_AU 123,
+  TERMINATION_SHOCK_AU 94, SCALE_LADDER (powers of ten), NEAR_STARS (real ly),
+  transitSecsFor (log-AU legs). No-surface worlds carry a `reason` — grayed rows say WHY.
+- **showDepart zoom stack**: EARTH ↔ THE SYSTEM toggle (`_departView` persists across
+  reopen); system rows land via `game.onTravel(row, -1, planetId)` → theater
+  `{planet, seed}` → `resolveTheaterPlan` planet branch = `generatePlan(settlementRow,
+  seed, {popType, relief, biome})` — Mars IS authored like Miami (ARES LANDING verified
+  live, desert/plateau, 12s rumble 2.53ms/f). `_playTransit` gained `opts.secs`.
+- **`hud._playHeliopause`**: 3 acts on one canvas — log-orbit run-out · the CHARACTER
+  drawn in hero primary + wake crossing the 123 AU wall (Voyager line) · powers-of-ten to
+  NEAR_STARS at real ly with a live scale bar. Skip = jump to the final frame (the scale
+  IS the point), then finish → reopens the map at the system tier. ⚠ the cinematic clock
+  clamps dt at 0.05/frame — headless posing must step ~2× the wall-time frames. Refs
+  lsw-system-map / lsw-heliopause-crossing / lsw-heliopause.
+
 ## LOW ORBIT TRAVEL (2026-07-24) — manual §17
 - **Ceiling opens for a LIT burner only** (entity ceiling clamp branch; hard stop +90);
   climbing past ceiling+44 fires `game.onDepart` once per climb (re-arms below ceiling−40).

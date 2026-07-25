@@ -1,6 +1,7 @@
 // WAR WORLD: ASCENDANTS — DOM HUD + character-select screen.
 import { ROSTER, SLOT_ORDER } from '../data/characters.js';
 import { climateLine } from '../data/climate.js';
+import { PLANETS, AU_KM, HELIOPAUSE_AU, TERMINATION_SHOCK_AU, SCALE_LADDER, NEAR_STARS, transitSecsFor } from '../data/planets.js';
 import { CSS, CODEX_MOBILE, PHONE_CSS, TABLET_CSS, DECK_CSS } from './hud.styles.js';
 import { DTYPES, DTYPE_INFO, resistOf, bandOf } from './entity.js';
 import { glyph, padActive, padFaces } from '../core/glyphs.js';
@@ -412,6 +413,16 @@ export class HUD {
   resolveTheaterPlan() {
     const t = this.theater || { flagship: true };
     if (t.gallery) return galleryPlan();
+    // OFF-WORLD THEATERS (manual §17): a planet is a settlement row through the SAME planner —
+    // the difference is environmental data (relief/biome), never a second map architecture.
+    if (t.planet) {
+      const P = PLANETS.find(p => p.id === t.planet);
+      if (P && P.settlement) {
+        const S = P.settlement;
+        const row = { name: S.name, country: P.name, pop: S.pop, popType: S.popType, popLabel: S.popLabel, types: S.types || [], crime: S.crime ?? 20, safety: S.safety ?? 60 };
+        return generatePlan(row, t.seed || 1, { popType: S.popType, relief: S.relief, biome: S.biome });
+      }
+    }
     if (t.flagship || t.cityId == null) return thresholdPlan();
     const city = cityList()[t.cityId];
     if (!city) return thresholdPlan();
@@ -1021,7 +1032,56 @@ export class HUD {
     ov.appendChild(box); document.body.appendChild(ov);
     this._departEl = ov;
     const list = box.querySelector('#dptList'), q = box.querySelector('#dptQ');
+    // THE ZOOM STACK (manual §17): city → SYSTEM. Same map, one level out — the GPS never leaves
+    // the street, this screen never leaves the traveler.
+    let view = this._departView || 'earth';
+    const bar = document.createElement('div');
+    bar.style.cssText = 'display:flex;gap:8px';
+    bar.innerHTML = `
+      <button id="dptEarth" style="flex:1;border-radius:8px;padding:6px;font-family:inherit;font-size:11px;cursor:pointer">🌍 EARTH — 1,050 THEATERS</button>
+      <button id="dptSys" style="flex:1;border-radius:8px;padding:6px;font-family:inherit;font-size:11px;cursor:pointer">☉ THE SYSTEM — 10 WORLDS</button>`;
+    box.insertBefore(bar, q);
+    const setView = (v) => {
+      view = v; this._departView = v;
+      const on = 'background:var(--surface-hi,#1a1d24);border:1px solid var(--gold,#ffd24a);color:var(--gold,#ffd24a)';
+      const off = 'background:none;border:1px solid var(--line-2,#3a3f47);color:var(--text-3,#c9c2b4)';
+      bar.querySelector('#dptEarth').style.cssText = 'flex:1;border-radius:8px;padding:6px;font-family:inherit;font-size:11px;cursor:pointer;' + (v === 'earth' ? on : off);
+      bar.querySelector('#dptSys').style.cssText = 'flex:1;border-radius:8px;padding:6px;font-family:inherit;font-size:11px;cursor:pointer;' + (v === 'system' ? on : off);
+      q.style.display = v === 'earth' ? 'block' : 'none';
+      render(q.value || '');
+    };
+    bar.querySelector('#dptEarth').onclick = () => setView('earth');
+    bar.querySelector('#dptSys').onclick = () => setView('system');
+    const renderSystem = () => {
+      list.innerHTML = PLANETS.map((P, i) => {
+        const km = Math.round(P.au * AU_KM / 1e6);
+        const ok = P.landable && !P.home;
+        const right = P.home ? 'YOU ARE HERE' : ok ? `TRANSIT ~${transitSecsFor(P).toFixed(0)}s` : (P.reason || 'NO LANDING');
+        return `<div class="dptRow sysRow" data-i="${i}" style="display:flex;justify-content:space-between;gap:10px;padding:7px 10px;border:1px solid var(--line,#2a2d33);border-radius:8px;${ok ? 'cursor:pointer' : 'opacity:0.55'}">
+          <div><b style="color:${ok ? 'var(--text,#e8e2d4)' : 'var(--text-4,#9a958a)'};font-size:12px">${P.name.toUpperCase()}</b>
+            <span style="color:var(--text-5,#8b8577);font-size:10px"> · ${P.au} AU · ${km}M KM${P.settlement ? ' · ' + P.settlement.name : ''}</span></div>
+          <div style="color:${ok ? 'var(--gold,#ffd24a)' : 'var(--text-6,#6a655a)'};font-size:10.5px;white-space:nowrap;text-align:right">${right}</div>
+        </div>`;
+      }).join('') + `<div class="dptRow" id="dptHelio" style="display:flex;justify-content:space-between;gap:10px;padding:9px 10px;border:1px dashed var(--line-gold,#6b5824);border-radius:8px;cursor:pointer;margin-top:6px">
+        <div><b style="color:var(--gold,#ffd24a);font-size:12px">⬆ LEAVE THE SYSTEM</b>
+          <span style="color:var(--text-5,#8b8577);font-size:10px"> · cross the heliopause · see the true scale</span></div>
+        <div style="color:var(--gold,#ffd24a);font-size:10.5px">${HELIOPAUSE_AU} AU →</div></div>`;
+      list.querySelectorAll('.sysRow').forEach((el) => {
+        const P = PLANETS[+el.dataset.i];
+        if (!(P.landable && !P.home)) return;
+        el.onmouseenter = () => el.style.borderColor = 'var(--gold,#ffd24a)';
+        el.onmouseleave = () => el.style.borderColor = 'var(--line,#2a2d33)';
+        el.onclick = () => {
+          this.hideDepart();
+          this._playTransit(game, from, { name: P.settlement.name, country: P.name },
+            () => { if (game.onTravel) game.onTravel({ name: P.settlement.name, country: P.name }, -1, P.id); },
+            { secs: transitSecsFor(P) });
+        };
+      });
+      list.querySelector('#dptHelio').onclick = () => { this.hideDepart(); this._playHeliopause(game); };
+    };
     const render = (filter) => {
+      if (view === 'system') return renderSystem();
       const F = (filter || '').toLowerCase();
       const rows = cityList().filter(c => !F || c.name.toLowerCase().includes(F) || (c.country || '').toLowerCase().includes(F)).slice(0, 40);
       list.innerHTML = rows.map((c, i) => {
@@ -1044,7 +1104,7 @@ export class HUD {
         };
       });
     };
-    render('');
+    setView(view);
     q.oninput = () => render(q.value);
     setTimeout(() => q.focus(), 30);
     box.querySelector('#dptStay').onclick = () => { this.hideDepart(); game.running = true; if (game.player) game.player.vel.y = -20; };
@@ -1052,10 +1112,10 @@ export class HUD {
   hideDepart() { if (this._departEl) { this._departEl.remove(); this._departEl = null; } }
   // The transit cinematic — the 11th member of the cold-open family, doubling as the loading
   // screen. Stars, the planet's limb, the route drawn in the traveler's own WAKE identity.
-  _playTransit(game, from, to, onDone) {
+  _playTransit(game, from, to, onDone, opts = {}) {
     const hero = game.player ? game.player.def : null;
     const wake = (hero && hero.afterburner && hero.afterburner.wake) || ['#ffffff', '#ffd24a'];
-    const secs = Math.max(3.2, this._transitSecs(from, to) * 0.55);
+    const secs = Math.max(3.2, (opts.secs || this._transitSecs(from, to)) * 0.55);
     const ov = document.createElement('div');
     ov.className = 'lswovl';
     ov.style.cssText = 'display:block;position:fixed;inset:0;z-index:66;background:#04050a;overflow:hidden;font-family:var(--f-mono,monospace)';   // .lswovl defaults display:none — inline display wins
@@ -1105,6 +1165,147 @@ export class HUD {
       if (k >= 1) finish();
     }, 33);
     this._transitEl = ov;
+  }
+
+  _playHeliopause(game) {
+    const hero = game.player ? game.player.def : null;
+    const wake = (hero && hero.afterburner && hero.afterburner.wake) || ['#ffffff', '#ffd24a'];
+    const prim = (hero && hero.colors && hero.colors.primary) || '#e8e2d4';
+    const name = hero ? hero.name : 'ASCENDANT';
+    const ov = document.createElement('div');
+    ov.className = 'lswovl';
+    ov.style.cssText = 'display:block;position:fixed;inset:0;z-index:66;background:#03040a;overflow:hidden;font-family:var(--f-mono,monospace)';
+    ov.innerHTML = `
+      <canvas id="hpCv" style="position:absolute;inset:0;width:100%;height:100%"></canvas>
+      <div id="hpTitle" style="position:absolute;top:8vh;left:50%;transform:translateX(-50%);color:var(--gold,#ffd24a);font-size:13px;letter-spacing:0.22em;white-space:nowrap"></div>
+      <div id="hpSub" style="position:absolute;top:8vh;left:50%;transform:translate(-50%,22px);color:var(--text-3,#c9c2b4);font-size:10.5px;letter-spacing:0.08em;white-space:nowrap"></div>
+      <div id="hpNote" style="position:absolute;bottom:14vh;left:50%;transform:translateX(-50%);color:var(--text-4,#9a958a);font-size:10.5px;letter-spacing:0.06em;white-space:nowrap"></div>
+      <div id="hpBarWrap" style="position:absolute;bottom:8.5vh;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;color:var(--text-5,#8b8577);font-size:9.5px">
+        <span id="hpBar" style="display:inline-block;width:160px;height:2px;background:var(--text-4,#9a958a)"></span><span id="hpBarLab"></span></div>
+      <button id="hpReturn" style="position:absolute;bottom:5vh;right:6vw;display:none;background:none;border:1px solid var(--gold,#ffd24a);border-radius:8px;color:var(--gold,#ffd24a);padding:8px 18px;font-family:inherit;font-size:11px;cursor:pointer;letter-spacing:0.1em">RETURN TO THE MAP</button>
+      <div id="hpSkip" style="position:absolute;bottom:5vh;left:50%;transform:translateX(-50%);color:var(--text-6,#6a655a);font-size:9.5px;letter-spacing:0.2em">ANY KEY — SKIP AHEAD</div>`;
+    document.body.appendChild(ov);
+    this._helioEl = ov;
+    const cv = ov.querySelector('#hpCv'), ctx = cv.getContext('2d');
+    cv.width = innerWidth; cv.height = innerHeight;
+    const W = cv.width, Hh = cv.height, cx = W / 2, cy = Hh / 2;
+    const stars = [];
+    for (let i = 0; i < 260; i++) stars.push([Math.random() * W, Math.random() * Hh, 0.2 + Math.random() * 0.8]);
+    const $ = (id) => ov.querySelector('#' + id);
+    const T1 = 5.2, T2 = 4.6, STEP = 1.6, T3 = SCALE_LADDER.length * STEP + 1.4;
+    let t = 0, done = false, raf = 0, last = performance.now();
+    const figure = (x, y, s) => {           // the character, SEEN — head, body, trailing wake
+      ctx.strokeStyle = prim; ctx.lineWidth = Math.max(1.5, s * 0.16); ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.arc(x, y - s * 0.75, s * 0.28, 0, Math.PI * 2); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x, y - s * 0.45); ctx.lineTo(x, y + s * 0.35); ctx.stroke();      // spine
+      ctx.beginPath(); ctx.moveTo(x - s * 0.55, y - s * 0.15); ctx.lineTo(x + s * 0.62, y - s * 0.3); ctx.stroke();  // arms — lead fist out
+      ctx.beginPath(); ctx.moveTo(x, y + s * 0.35); ctx.lineTo(x - s * 0.7, y + s * 0.62); ctx.stroke();             // legs trail
+      ctx.beginPath(); ctx.moveTo(x, y + s * 0.35); ctx.lineTo(x - s * 0.5, y + s * 0.78); ctx.stroke();
+      const g = ctx.createLinearGradient(x - s * 4.5, y, x, y);
+      g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, wake[0]);
+      ctx.strokeStyle = g; ctx.lineWidth = Math.max(2, s * 0.22);
+      ctx.beginPath(); ctx.moveTo(x - s * 4.5, y + s * 0.1); ctx.lineTo(x - s * 0.6, y); ctx.stroke();
+    };
+    const drawStars = (dim) => { ctx.fillStyle = '#fff'; for (const [sx, sy, sa] of stars) { ctx.globalAlpha = sa * dim; ctx.fillRect(sx, sy, 1, 1); } ctx.globalAlpha = 1; };
+    const orbitR = (au) => 30 + Math.log10(au * 12 + 1) * (Math.min(W, Hh) * 0.155);
+    const draw = () => {
+      ctx.fillStyle = '#03040a'; ctx.fillRect(0, 0, W, Hh);
+      if (t < T1) {
+        // ACT I — the run out: log-scaled orbits, the dot accelerating past every world
+        drawStars(0.8);
+        ctx.fillStyle = '#ffd97a'; ctx.beginPath(); ctx.arc(cx * 0.5, cy, 5, 0, Math.PI * 2); ctx.fill();
+        for (const P of PLANETS) {
+          const r = orbitR(P.au);
+          ctx.strokeStyle = 'rgba(140,150,170,0.22)'; ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.arc(cx * 0.5, cy, r, 0, Math.PI * 2); ctx.stroke();
+          ctx.fillStyle = '#9aa4b0'; ctx.font = '9px monospace';
+          ctx.fillText(P.name.toUpperCase(), cx * 0.5 + r + 3, cy - 4);
+          ctx.beginPath(); ctx.arc(cx * 0.5 + r, cy, P.kind === 'gas' ? 3 : 1.6, 0, Math.PI * 2); ctx.fill();
+        }
+        const k = t / T1, ease = k * k;
+        const R = orbitR(0.3) + ease * (orbitR(60) - orbitR(0.3));
+        const px = cx * 0.5 + R;
+        ctx.fillStyle = wake[0]; ctx.shadowColor = wake[0]; ctx.shadowBlur = 12;
+        ctx.beginPath(); ctx.arc(px, cy, 4, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
+        const passed = [...PLANETS].reverse().find(P => orbitR(P.au) < R);
+        $('hpTitle').textContent = 'LEAVING THE SYSTEM — ' + name;
+        $('hpSub').textContent = passed ? `PASSING ${passed.name.toUpperCase()} · ${passed.au} AU` : 'FULL BURN';
+        $('hpNote').textContent = 'the map does the miles — the burner does the leaving';
+        $('hpBarLab').textContent = '≈ 60 AU ACROSS';
+      } else if (t < T1 + T2) {
+        // ACT II — THE BOUNDARY: the character is SEEN crossing the heliopause
+        const k = (t - T1) / T2;
+        drawStars(1);
+        const wallX = cx + Math.min(W, Hh) * 0.12;
+        ctx.strokeStyle = 'rgba(120,160,220,0.32)'; ctx.lineWidth = 26;
+        ctx.beginPath(); ctx.arc(wallX + Hh * 2.1, cy, Hh * 2.16, Math.PI * 0.86, Math.PI * 1.14); ctx.stroke();
+        ctx.strokeStyle = 'rgba(160,200,255,0.75)'; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.arc(wallX + Hh * 2.1, cy, Hh * 2.1, Math.PI * 0.85, Math.PI * 1.15); ctx.stroke();
+        ctx.strokeStyle = 'rgba(255,190,120,0.2)'; ctx.lineWidth = 14;
+        ctx.beginPath(); ctx.arc(wallX + Hh * 2.1, cy, Hh * 2.34, Math.PI * 0.88, Math.PI * 1.12); ctx.stroke();
+        const fx = cx - W * 0.28 + k * W * 0.5;
+        figure(fx, cy, 26);
+        ctx.fillStyle = 'var(--gold)'; ctx.fillStyle = '#ffd24a'; ctx.font = '10px monospace';
+        ctx.fillText(name.toUpperCase(), fx - 14, cy + 34);
+        $('hpTitle').textContent = 'THE HELIOPAUSE · ' + HELIOPAUSE_AU + ' AU';
+        $('hpSub').textContent = 'the solar wind stops here — Voyager 1 crossed in 2012, at 121.6 AU';
+        $('hpNote').textContent = fx > wallX ? name + ' IS OUTSIDE THE SOLAR SYSTEM' : `termination shock behind · ${TERMINATION_SHOCK_AU} AU`;
+        $('hpBarLab').textContent = '≈ 40 AU ACROSS';
+      } else {
+        // ACT III — PROPER SCALE: powers of ten until the whole system is a dot among the stars
+        const k3 = t - T1 - T2;
+        const step = Math.min(SCALE_LADDER.length - 1, Math.floor(k3 / STEP));
+        const L = SCALE_LADDER[step];
+        drawStars(1);
+        const span = L.au * 2.4;                        // AU across the frame
+        const pxPerAU = W / span;
+        const hpR = Math.max(0.7, HELIOPAUSE_AU * pxPerAU);
+        ctx.strokeStyle = 'rgba(160,200,255,0.6)'; ctx.lineWidth = Math.max(1, Math.min(3, hpR * 0.02));
+        ctx.beginPath(); ctx.arc(cx, cy, hpR, 0, Math.PI * 2); ctx.stroke();
+        ctx.fillStyle = '#ffd97a'; ctx.beginPath(); ctx.arc(cx, cy, Math.max(0.8, 1 * pxPerAU), 0, Math.PI * 2); ctx.fill();
+        if (hpR > 8) { ctx.fillStyle = '#9aa4b0'; ctx.font = '9px monospace'; ctx.fillText('THE HELIOSPHERE', cx + hpR + 5, cy); }
+        else { ctx.strokeStyle = '#8b8577'; ctx.beginPath(); ctx.moveTo(cx + 26, cy - 26); ctx.lineTo(cx + 3, cy - 3); ctx.stroke(); ctx.fillStyle = '#c9c2b4'; ctx.font = '10px monospace'; ctx.fillText('THE ENTIRE SYSTEM — everything you have ever fought over', cx + 30, cy - 30); }
+        if (L.au >= 100000) {
+          for (let i = 0; i < NEAR_STARS.length; i++) {
+            const S = NEAR_STARS[i], au = S.ly * 63241;
+            const a = S.a, sx2 = cx + Math.cos(a) * au * pxPerAU, sy2 = cy + Math.sin(a) * au * pxPerAU * 0.6;
+            if (sx2 > -50 && sx2 < W + 50 && sy2 > -50 && sy2 < Hh + 50) {
+              ctx.fillStyle = '#fff'; ctx.shadowColor = '#fff'; ctx.shadowBlur = 8;
+              ctx.beginPath(); ctx.arc(sx2, sy2, 2.4, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
+              ctx.fillStyle = '#c9c2b4'; ctx.font = '9.5px monospace';
+              ctx.fillText(`${S.name} · ${S.ly} LY`, sx2 + 7, sy2 + 3);
+            }
+          }
+        }
+        $('hpTitle').textContent = 'THE TRUE SCALE';
+        $('hpSub').textContent = L.note.toUpperCase();
+        $('hpNote').textContent = 'INTERSTELLAR SPACE — NO CHARTED THEATERS BEYOND THIS LINE. YET.';
+        const barAU = 160 / pxPerAU;
+        $('hpBarLab').textContent = 'BAR ≈ ' + (barAU >= 63241 ? (barAU / 63241).toFixed(1) + ' LIGHT-YEARS' : Math.round(barAU).toLocaleString() + ' AU');
+        if (t > T1 + T2 + T3 - 0.2) { $('hpReturn').style.display = 'block'; $('hpSkip').style.display = 'none'; }
+      }
+    };
+    const finish = () => {
+      if (done) return; done = true;
+      cancelAnimationFrame(raf);
+      window.removeEventListener('keydown', skip, true);
+      ov.remove(); this._helioEl = null;
+      this._departView = 'system';
+      this.showDepart(game);                             // back to the map, still at the system tier
+    };
+    const skip = (e) => {
+      if (e && e.key === 'F12') return;
+      if (t < T1 + T2 + T3 - 0.3) { t = T1 + T2 + T3 - 0.25; }   // jump to the final frame — the scale is the point
+      else finish();
+    };
+    window.addEventListener('keydown', skip, true);
+    ov.querySelector('#hpReturn').onclick = finish;
+    const loop = () => {
+      const now = performance.now(); t += Math.min(0.05, (now - last) / 1000); last = now;
+      draw();
+      if (!done) raf = requestAnimationFrame(loop);
+    };
+    raf = requestAnimationFrame(loop);
   }
 
   showEstablishing(plan, opts = {}) {
