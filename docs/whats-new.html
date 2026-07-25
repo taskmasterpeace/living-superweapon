@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WAR WORLD: ASCENDANTS — What's New</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  /* ============================ THEME TOKENS ============================ */
+  :root{
+    /* WAR WORLD: ASCENDANTS — values from src/styles/tokens.css. One gold accent, no purple. */
+    --bg:#0a0b10; --bg-2:#0c0e14; --surface:#0e1018; --surface-2:#12151f;
+    --border:#232630; --border-soft:#1a1c24;
+    --text:#c9c2b4; --muted:#8b8577; --heading:#f4efe6;
+    --brand:#ffd24a;            /* --gold — links, spine, glow */
+    --accent:#f5921a;           /* --gold-warm — momentum numbers */
+    --new:#8fe08a; --improved:#7fb0d0; --fixed:#ffd24a; --security:#ff5a4a;
+    --grid:rgba(245,178,26,.03);     /* faint gold blueprint lines */
+    --font-display:"Rajdhani","Inter",ui-sans-serif,system-ui,sans-serif;
+    --font-body:"Rajdhani","Inter",ui-sans-serif,system-ui,sans-serif;
+    --font-mono:"Cascadia Mono",Consolas,"JetBrains Mono",ui-monospace,monospace;
+    --radius:12px; --maxw:52rem;
+  }
+  /* Example brand override — set these on :root for a MyFieldTime render:
+     --bg:#0a0a0f; --bg-2:#0a0c14; --surface:#10131c; --surface-2:#141826;
+     --border:#1d2740; --brand:#0056D2; --accent:#FFDD00;
+     --grid:rgba(0,86,210,.06);                                        */
+
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0; color:var(--text); background:var(--bg);
+    font-family:var(--font-body); font-size:16px; line-height:1.6;
+    -webkit-font-smoothing:antialiased; letter-spacing:-0.006em;
+    background-image:
+      radial-gradient(120% 70% at 50% -8%, color-mix(in oklab, var(--brand) 16%, transparent), transparent 62%),
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size:auto, 34px 34px, 34px 34px;
+    background-attachment:scroll;
+    min-height:100vh;
+  }
+
+  /* hidden filter state (drives CSS-only filtering) */
+  .filter-state{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+
+  .wrap{position:relative;z-index:1;max-width:var(--maxw);margin:0 auto;padding:clamp(2.2rem,6vw,4.5rem) 1.35rem 4rem}
+
+  /* ============================ MASTHEAD ============================ */
+  .eyebrow{display:inline-flex;align-items:center;gap:.5rem;font-family:var(--font-mono);
+    font-size:.72rem;font-weight:600;letter-spacing:.22em;text-transform:uppercase;color:var(--brand)}
+  .eyebrow::before{content:"";width:1.6rem;height:1px;background:var(--brand);opacity:.7}
+  .title{font-family:var(--font-display);font-weight:700;color:var(--heading);
+    font-size:clamp(2.1rem,6vw,3.4rem);line-height:1.02;letter-spacing:-0.03em;margin:.7rem 0 .5rem}
+  .title em{font-style:normal;color:var(--brand)}
+  .tagline{color:var(--muted);font-size:1.06rem;margin:0;max-width:34rem}
+
+  /* momentum band */
+  .momentum{display:flex;flex-wrap:wrap;gap:0;margin:2rem 0 .5rem;
+    border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);overflow:hidden}
+  .stat{flex:1 1 8rem;padding:1.05rem 1.25rem;border-right:1px solid var(--border-soft)}
+  .stat:last-child{border-right:0}
+  .stat .n{font-family:var(--font-mono);font-weight:600;font-size:1.5rem;color:var(--accent);line-height:1}
+  .stat .l{display:block;margin-top:.35rem;font-size:.74rem;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+
+  /* ============================ FILTER CHIPS ============================ */
+  .filters{display:flex;flex-wrap:wrap;gap:.5rem;margin:2.4rem 0 2rem;position:sticky;top:0;
+    padding:.85rem 0;z-index:5;background:linear-gradient(var(--bg) 72%,transparent)}
+  .chip{display:inline-flex;align-items:center;gap:.45rem;cursor:pointer;user-select:none;
+    font-size:.85rem;font-weight:600;color:var(--muted);padding:.4rem .8rem;border-radius:999px;
+    border:1px solid var(--border);background:var(--surface);transition:all .18s ease}
+  .chip:hover{color:var(--text);border-color:color-mix(in oklab,var(--brand) 40%,var(--border))}
+  .chip .ct{font-family:var(--font-mono);font-size:.72rem;color:var(--muted);
+    background:var(--bg-2);border-radius:999px;padding:.05rem .4rem;min-width:1.5rem;text-align:center}
+  .chip .dot{width:.5rem;height:.5rem;border-radius:50%}
+  .dot.new{background:var(--new)} .dot.improved{background:var(--improved)}
+  .dot.fixed{background:var(--fixed)} .dot.security{background:var(--security)}
+  /* active chip — driven by which radio is checked */
+  #cat-all:checked      ~ .wrap .chip[for=cat-all],
+  #cat-new:checked      ~ .wrap .chip[for=cat-new],
+  #cat-improved:checked ~ .wrap .chip[for=cat-improved],
+  #cat-fixed:checked    ~ .wrap .chip[for=cat-fixed],
+  #cat-security:checked ~ .wrap .chip[for=cat-security]{
+    color:var(--heading);border-color:var(--brand);
+    background:color-mix(in oklab,var(--brand) 16%, var(--surface));box-shadow:0 0 0 1px color-mix(in oklab,var(--brand) 30%,transparent)}
+
+  /* ============================ TIMELINE ============================ */
+  .timeline{position:relative;padding-left:1.9rem}
+  .timeline::before{content:"";position:absolute;left:.42rem;top:.4rem;bottom:.4rem;width:2px;
+    background:linear-gradient(var(--brand),color-mix(in oklab,var(--brand) 8%,transparent))}
+  .release{position:relative;margin-bottom:2.6rem;animation:rise .6s cubic-bezier(.2,.7,.3,1) both;
+    animation-delay:calc(var(--i,0) * 80ms)}
+  .release::before{content:"";position:absolute;left:-1.66rem;top:.5rem;width:.85rem;height:.85rem;border-radius:50%;
+    background:var(--bg);border:2px solid var(--brand);box-shadow:0 0 0 4px color-mix(in oklab,var(--brand) 14%,transparent)}
+  .rel-head{display:flex;align-items:center;flex-wrap:wrap;gap:.6rem .75rem;margin-bottom:.2rem}
+  .vtag{font-family:var(--font-mono);font-weight:600;font-size:.86rem;color:var(--brand);
+    border:1px solid color-mix(in oklab,var(--brand) 45%,var(--border));border-radius:7px;padding:.12rem .5rem;
+    background:color-mix(in oklab,var(--brand) 10%,transparent)}
+  .rel-head time{font-family:var(--font-mono);font-size:.78rem;color:var(--muted)}
+  .rel-name{font-family:var(--font-display);font-weight:600;color:var(--heading);font-size:1.18rem;letter-spacing:-0.02em}
+  .rel-theme{color:var(--muted);font-style:italic;margin:.1rem 0 1rem;font-size:.96rem}
+
+  .changes{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:.6rem}
+  .change{display:grid;grid-template-columns:auto 1fr;gap:.85rem;align-items:start;
+    background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--c);border-radius:11px;
+    padding:.85rem 1rem;transition:transform .18s ease,border-color .18s ease,background .18s ease}
+  .change:hover{transform:translateX(3px);background:var(--surface-2);
+    border-color:color-mix(in oklab,var(--c) 55%,var(--border))}
+  .change--new{--c:var(--new)} .change--improved{--c:var(--improved)}
+  .change--fixed{--c:var(--fixed)} .change--security{--c:var(--security)}
+  .badge{font-family:var(--font-mono);font-size:.64rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
+    color:var(--c);background:color-mix(in oklab,var(--c) 16%,transparent);
+    border:1px solid color-mix(in oklab,var(--c) 35%,transparent);border-radius:6px;padding:.2rem .42rem;margin-top:.12rem;white-space:nowrap}
+  .change h3{margin:0;font-size:.99rem;font-weight:700;color:var(--heading);letter-spacing:-0.01em}
+  .change p{margin:.2rem 0 0;font-size:.92rem;color:var(--muted)}
+
+  /* CSS-only filtering: hide non-matching changes + now-empty releases */
+  #cat-new:checked      ~ .wrap .change:not(.change--new),
+  #cat-improved:checked ~ .wrap .change:not(.change--improved),
+  #cat-fixed:checked    ~ .wrap .change:not(.change--fixed),
+  #cat-security:checked ~ .wrap .change:not(.change--security){display:none}
+  #cat-new:checked      ~ .wrap .release:not(:has(.change--new)),
+  #cat-improved:checked ~ .wrap .release:not(:has(.change--improved)),
+  #cat-fixed:checked    ~ .wrap .release:not(:has(.change--fixed)),
+  #cat-security:checked ~ .wrap .release:not(:has(.change--security)){display:none}
+
+  /* ============================ FOOTER ============================ */
+  .foot{margin-top:1rem;padding-top:1.6rem;border-top:1px solid var(--border-soft);
+    display:flex;flex-wrap:wrap;justify-content:space-between;gap:.5rem;color:var(--muted);font-size:.85rem}
+  .foot a{color:var(--brand);text-decoration:none}
+  .foot a:hover{text-decoration:underline}
+  .foot .mono{font-family:var(--font-mono)}
+
+  @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion:reduce){.release{animation:none}*{scroll-behavior:auto}}
+  @media (max-width:480px){.stat{flex-basis:50%;border-bottom:1px solid var(--border-soft)}}
+</style>
+</head>
+<body>
+  <!-- CSS-only filter state. Keep these as the first children of <body>. -->
+  <input class="filter-state" type="radio" name="cat" id="cat-all" checked>
+  <input class="filter-state" type="radio" name="cat" id="cat-new">
+  <input class="filter-state" type="radio" name="cat" id="cat-improved">
+  <input class="filter-state" type="radio" name="cat" id="cat-fixed">
+  <input class="filter-state" type="radio" name="cat" id="cat-security">
+
+  <main class="wrap">
+    <header class="masthead">
+      <span class="eyebrow">Shipping Log</span>
+      <h1 class="title">What's new in <em>WAR WORLD: ASCENDANTS</em></h1>
+      <p class="tagline">An isometric superhero fighting game where the world fights back: 52 fighters, 1,050 real cities, a police force that decides you&rsquo;re the villain, and a news crew that films all of it.</p>
+
+      <!-- MOMENTUM: replace numbers with real, honest stats -->
+      <div class="momentum">
+        <div class="stat"><span class="n">8</span><span class="l">Releases</span></div>
+        <div class="stat"><span class="n">119</span><span class="l">Updates shipped</span></div>
+        <div class="stat"><span class="n">4</span><span class="l">Days of shipping</span></div>
+        <div class="stat"><span class="n">Today</span><span class="l">Last shipped</span></div>
+      </div>
+    </header>
+
+    <!-- FILTER CHIPS: update the .ct counts to match real totals -->
+    <nav class="filters" aria-label="Filter by category">
+      <label class="chip" for="cat-all">All <span class="ct">36</span></label>
+      <label class="chip" for="cat-new"><span class="dot new"></span>New <span class="ct">30</span></label>
+      <label class="chip" for="cat-improved"><span class="dot improved"></span>Improved <span class="ct">5</span></label>
+      <label class="chip" for="cat-fixed"><span class="dot fixed"></span>Fixed <span class="ct">1</span></label>
+    </nav>
+
+    <section class="timeline">
+      <!-- RELEASES:START — newest first -->
+      <article class="release" style="--i:0">
+        <div class="rel-head">
+          <span class="vtag">v0.8.0</span>
+          <time datetime="2026-07-25">2026-07-25</time>
+          <span class="rel-name">The voice of the law</span>
+        </div>
+        <p class="rel-theme">The law you can hear before you can see it.</p>
+        <ul class="changes">
+          <li class="change change--new"><span class="badge">New</span>
+            <div><h3>Police finally sound like police.</h3>
+            <p>Every responding vehicle wails continuously instead of chirping once, dispatch calls go out over the radio, and the first officers on scene shout you down through a loudhailer.</p></div></li>
+          <li class="change change--new"><span class="badge">New</span>
+            <div><h3>&ldquo;Officer down&rdquo; lands twice.</h3>
+            <p>The urgent call over the air, and the shout from the man standing right next to him.</p></div></li>
+          <li class="change change--improved"><span class="badge">Improved</span>
+            <div><h3>In a corrupt city, you hear the call go nowhere.</h3>
+            <p>The radio opens, closes, and nobody says a word. The silence is the answer.</p></div></li>
+        </ul>
+      </article>
+
+      <article class="release" style="--i:1">
+        <div class="rel-head">
+          <span class="vtag">v0.7.0</span>
+          <time datetime="2026-07-24">2026-07-24</time>
+          <span class="rel-name">The Circuit</span>
+        </div>
+        <p class="rel-theme">A career, not a match list.</p>
+        <ul class="changes">
+          <li class="change change--new"><span class="badge">New</span>
+            <div><h3>A persistent single-player career.</h3>
+            <p>Take weekly contracts, travel to real cities, bank purses, build renown and chase the belt. Your record, injuries and ranking carry from one fight to the next.</p></div></li>
+          <li class="change change--new"><span class="badge">New</span>
+            <div><h3>Every offer is a real decision.</h3>
+            <p>Fight up the rankings for a fatter purse and a genuinely sharper opponent, gamble it all on double-or-nothing, or sit the week out and heal. Win streaks raise your price; a loss resets it.</p></div></li>
+          <li class="change change--new"><span class="badge">New</span>
+            <div><h3>The world fights without you.</h3>
+            <p>Other fighters trade wins every week, so the rankings you come back to are never the ones you left.</p></div></li>
+          <li class="change change--new"><span class="badge">New</span>
+            <div><h3>Everything has weight.</h3>
+            <p>Rocks, lamp posts, street trees, cars &mdash; and a 24-ton airliner that exactly one strength rank can lift. Throwing a person pits your strength against their body weight.</p></div></li>
+          <li class="change change--new"><span class="badge">New</span>
+            <div><h3>Your character has a homeland.</h3>
+            <p>Pick a country and hometown in the creator, and the law, the street and the press all treat you differently for it.</p></div></li>
+        </ul>
+      </article>
+
+      <article class="release" style="--i:2">
+        <div class="rel-head">
+          <span class="vtag">v0.6.0</span>
+          <time datetime="2026-07-24">2026-07-24</time>
+          <span class="rel-name">Low orbit</span>
+        </div>
+        <p class="rel-theme">Leave the city. Then leave the planet.</p>
+        <ul class="changes">
+          <li class="change change--new"><span class="badge">New</span>
+            <div><h3>Fly high enough and you can leave.</h3>
+            <p>A world map of 1,050 real cities, with the trip itself playing as the loading screen.</p></div></li>
+          <li class="change change--new"><span class="badge">New</span>
+            <div><h3>Ten worlds in the solar system.</h3>
+            <p>Three of them landable, built by the same city engine that makes Earth.</p></div></li>
+          <li class="change change--new"><span class="badge">New</span>
+            <div><h3>Cross the edge of the solar system.</h3>
+            <p>The view changes to show you the scale of it &mdash; your fighter passing the heliopause, then the real distance to the nearest stars.</p></div></li>
+        </ul>
+      </article>
+
+      <article class="release" style="--i:3">
+        <div class="rel-head">
+          <span class="vtag">v0.5.0</span>
+          <time datetime="2026-07-24">2026-07-24</time>
+          <span class="rel-name">Combat &amp; consequence</span>
+        </div>
+        <p class="rel-theme">The fight got a body.</p>
+        <ul class="changes">
+          <li class="change change--new"><span class="badge">New</span>
+            <div><h3>Speed is part of the punch.</h3>
+            <p>Arriving at a sprint or dropping out of a dive multiplies damage and knockback &mdash; and a dive punch drives your target into the ground.</p></div></li>
+          <li class="change change--new"><span class="badge">New</span>
+            <div><h3>Grab someone and throw them at someone else.</h3>
+            <p>Both of them take it.</p></div></li>
+          <li class="change change--new"><span class="badge">New</span>
+            <div><h3>Wounds that behave like wounds.</h3>
+            <p>Bleeding that worsens the more you move, injuries that persist between fights, a once-per-match second wind, plus sleep darts and smoke that genuinely blinds.</p></div></li>
+          <li class="change change--new"><span class="badge">New</span>
+            <div><h3>Gear is separate from what you are.</h3>
+            <p>Drop it, pick up a fallen enemy&rsquo;s weapon, and use it only as well as your training allows &mdash; the same carbine is lethal for a soldier and clumsy for a bruiser.</p></div></li>
+          <li class="change change--new"><span class="badge">New</span>
+            <div><h3>Twenty new powers and afterburners.</h3>
+            <p>Seven signature upgrades across the roster, and a burner that roughly doubles top flight speed for a fuel cost.</p></div></li>
+          <li class="change change--improved"><span class="badge">Improved</span>
+            <div><h3>Plays on phone, tablet and Steam Deck.</h3>
+            <p>Each gets its own layout rather than a shrunken desktop HUD.</p></div></li>
+          <li class="change change--improved"><span class="badge">Improved</span>
+            <div><h3>A rebuilt tutorial covers a real first hour.</h3>
+            <p>Including getting flagged by the police and living through it.</p></div></li>
+          <li class="change change--fixed"><span class="badge">Fixed</span>
+            <div><h3>Blocking a beam no longer freezes the game.</h3>
+            <p>Two separate causes, both found and fixed.</p></div></li>
+        </ul>
+      </article>
+
+      <article class="release" style="--i:4">
+        <div class="rel-head">
+          <span class="vtag">v0.4.0</span>
+          <time datetime="2026-07-24">2026-07-24</time>
+          <span class="rel-name">ATLAS v1</span>
+        </div>
+        <p class="rel-theme">The map tool became a product.</p>
+        <ul class="changes">
+          <li class="change change--new"><span class="badge">New</span>
+            <div><h3>The city builder runs as its own page.</h3>
+            <p>Paint districts, resize the grid, move the coastline, lock what you like, save named layouts, export and import.</p></div></li>
+          <li class="change change--new"><span class="badge">New</span>
+            <div><h3>Houses you can go inside.</h3>
+            <p>Fight through them room by room.</p></div></li>
+          <li class="change change--new"><span class="badge">New</span>
+            <div><h3>Water has real depth and forests kill sightlines.</h3>
+            <p>And the funfair&rsquo;s wheel actually turns.</p></div></li>
+        </ul>
+      </article>
+
+      <article class="release" style="--i:5">
+        <div class="rel-head">
+          <span class="vtag">v0.3.0</span>
+          <time datetime="2026-07-23">2026-07-23</time>
+          <span class="rel-name">The world layer</span>
+        </div>
+        <p class="rel-theme">A world worth fighting in.</p>
+        <ul class="changes">
+          <li class="change change--new"><span class="badge">New</span>
+            <div><h3>Roads are real.</h3>
+            <p>Junctions with crosswalks, dead ends with turning circles, meandering dirt tracks and the occasional roundabout &mdash; over terrain with hills, valleys and quarries you can fall into.</p></div></li>
+          <li class="change change--new"><span class="badge">New</span>
+            <div><h3>Every city gets the landmarks it&rsquo;s known for.</h3>
+            <p>Sized to its population and named after it.</p></div></li>
+          <li class="change change--new"><span class="badge">New</span>
+            <div><h3>All 52 fighters have distinct bodies.</h3>
+            <p>Measured at 2.4&times; spread in width, instead of one build in 52 colours.</p></div></li>
+          <li class="change change--new"><span class="badge">New</span>
+            <div><h3>A full sound engine.</h3>
+            <p>City ambience that shifts by district and time of day, synthesized civilian voices, and separate music, effects and voice faders.</p></div></li>
+          <li class="change change--improved"><span class="badge">Improved</span>
+            <div><h3>One visual language across every screen.</h3>
+            <p>Colours, spacing and type all drawn from a single system.</p></div></li>
+        </ul>
+      </article>
+
+      <article class="release" style="--i:6">
+        <div class="rel-head">
+          <span class="vtag">v0.2.0</span>
+          <time datetime="2026-07-23">2026-07-23</time>
+          <span class="rel-name">The broadcast update</span>
+        </div>
+        <p class="rel-theme">Somebody is filming.</p>
+        <ul class="changes">
+          <li class="change change--new"><span class="badge">New</span>
+            <div><h3>A news crew films your fights.</h3>
+            <p>A camera operator and reporter chase the action for real, and the post-match broadcast replays their actual footage with an anchor script about what you did and what it cost the city.</p></div></li>
+          <li class="change change--new"><span class="badge">New</span>
+            <div><h3>The Invitational.</h3>
+            <p>An eight-seed tournament seeded off the live power rankings, in 1v1, 2v2 or underdog formats.</p></div></li>
+          <li class="change change--new"><span class="badge">New</span>
+            <div><h3>1,050 real cities.</h3>
+            <p>Each generated from its own population, crime and safety figures.</p></div></li>
+          <li class="change change--new"><span class="badge">New</span>
+            <div><h3>Police decide the villain is whoever hurts civilians.</h3>
+            <p>They escalate through six rungs &mdash; beat cops, patrol, tactical, federal agents, the military, and finally one of your own kind.</p></div></li>
+          <li class="change change--improved"><span class="badge">Improved</span>
+            <div><h3>Enemies only act on what they&rsquo;ve seen or heard.</h3>
+            <p>Break line of sight and you can genuinely lose them.</p></div></li>
+        </ul>
+      </article>
+
+      <article class="release" style="--i:7">
+        <div class="rel-head">
+          <span class="vtag">v0.1.0</span>
+          <time datetime="2026-07-22">2026-07-22</time>
+          <span class="rel-name">The engine</span>
+        </div>
+        <ul class="changes">
+          <li class="change change--new"><span class="badge">New</span>
+            <div><h3>52 playable fighters and a point-buy creator.</h3>
+            <p>ORIGIN shows you live damage numbers as you spend.</p></div></li>
+          <li class="change change--new"><span class="badge">New</span>
+            <div><h3>A tabletop layer under everything.</h3>
+            <p>Ranked attributes, talents and carried gear drive the real combat numbers, not just flavour text.</p></div></li>
+          <li class="change change--new"><span class="badge">New</span>
+            <div><h3>Online room-code duels and local two-player.</h3>
+            <p>Plus an interactive tutorial that watches your real inputs.</p></div></li>
+          <li class="change change--new"><span class="badge">New</span>
+            <div><h3>A city at true human scale.</h3>
+            <p>A hero is 1.8m against real buildings.</p></div></li>
+        </ul>
+      </article>
+      <!-- RELEASES:END -->
+    </section>
+
+    <footer class="foot">
+      <span>Built in public · <span class="mono">v0.8.0</span> · updated 25 July 2026</span>
+      <a href="SHIPPING-LOG.md">View the full log →</a>
+    </footer>
+  </main>
+</body>
+</html>
