@@ -93,7 +93,7 @@ export const TYPES = {
           g.onBlockedStrike(c, f, { stagger: 0.55, push: 46 });
         } else {
           const last = st.combo === 1;
-          f.takeDamage((last ? (def.finisher || 30) : (def.damage || 9)) * c.powerBuff, { src: c, strike: true, kb: _v.copy(c.aim).setLength(last ? 60 : 6).setY(0), launch: last ? 20 : 2, hitstop: last ? 0.1 : 0.03 });
+          f.takeDamage((last ? (def.finisher || 30) : (def.damage || 9)) * c.powerBuff, { src: c, strike: true, dmgClass: def.dmgClass, kb: _v.copy(c.aim).setLength(last ? 60 : 6).setY(0), launch: last ? 20 : 2, hitstop: last ? 0.1 : 0.03 });
           g.vfx.flash(f.pos.clone().setY(5.5), def.color || c.def.colors.accent, last ? 8 : 4, 0.12);
           g.trail(c, def.color || c.def.colors.accent); g.audio.hit(260 + st.combo * 20);
           if (last) { g.world.shake(1.2); g.world.punch(0.8); g.vfx.shockwave(f.pos.clone().setY(0.2), { color: def.color, radius: 26, power: 1.2 }); }
@@ -118,6 +118,7 @@ export const TYPES = {
         radius: def.radius || 1.4, damage: def.damage || 14, blast: def.blast || 5, power: def.power || 1,
         homing: def.homing || 0, color: def.color, color2: def.color2, grav: def.grav || 0, shock: def.shock,
         arrow: def.arrow, payload: def.payload, blind: def.blind, boomerang: def.boomerang, range: def.range,
+        card: def.card, disc: def.disc,
         blade: def.blade, canister: def.canister,      // thrown steel / shells read as objects, not orbs
         dtype: def.dtype, siphon: def.siphon,          // the damage TYPE rides the shot
       });
@@ -141,6 +142,7 @@ export const TYPES = {
         pos: m, vel: new THREE.Vector3(Math.cos(a), c.aim3.y, Math.sin(a)).setLength(def.speed || 105),
         radius: def.radius || 0.8, damage: def.damage || 6, blast: def.blast || 3.4, power: 0.5, color: def.color, color2: def.color2,
         arrow: def.arrow, payload: def.payload, blind: def.blind, blade: def.blade,
+        grav: def.grav, card: def.card, ground: def.grav > 0,
       });
       g.audio.blast(560 + rand(-40, 40), 0.08); g.muzzleFlash(c, def.color, 0.6, off);
     }
@@ -199,8 +201,21 @@ export const TYPES = {
         if (def.kiDrain) { const dr = def.kiDrain * inp.dt; f.ki = Math.max(0, f.ki - dr); c.ki = clamp(c.ki + dr * 0.6, 0, c.maxKi); }   // JAWAH: eats their sound/energy
         else { const pushr = (def.push || 40) * inp.dt * 8; f.vel.x += (dx / d) * pushr; f.vel.z += (dz / d) * pushr; if (def.lift) f.vel.y = Math.min(f.vel.y + def.lift * inp.dt * 24, 22); }
       }
-      // mist particles
-      for (let i = 0; i < 4; i++) {
+      // mist particles — SONIC cones are TRANSPARENT PRESSURE instead (brief Tier1 #5): the force
+      // is visible through compression rings and dragged street dust, never a glowing energy cone.
+      if (def.sonic) {
+        st._ringT = (st._ringT || 0) - inp.dt;
+        if (st._ringT <= 0) {
+          st._ringT = 0.09;
+          const rd = 6 + Math.random() * (range - 8);
+          g.vfx.ring(new THREE.Vector3(c.pos.x + c.aim.x * rd, m.y + rand(-1.5, 1.5), c.pos.z + c.aim.z * rd),
+            { color: '#e8e2d4', r0: 1 + rd * 0.05, r1: 2.8 + rd * 0.14, life: 0.22 });
+        }
+        for (let i = 0; i < 2; i++) {
+          const a2 = Math.atan2(c.aim.z, c.aim.x) + rand(-arc, arc);
+          g.particles.spawn({ x: c.pos.x + Math.cos(a2) * rand(4, range * 0.8), y: 0.6 + Math.random() * 2.2, z: c.pos.z + Math.sin(a2) * rand(4, range * 0.8), vx: Math.cos(a2) * 26, vz: Math.sin(a2) * 26, vy: rand(1, 4), life: 0.4, size: 2.6, color: ['#8a8577', '#6a655a'], drag: 1.6, shrink: true });
+        }
+      } else for (let i = 0; i < 4; i++) {
         const a = Math.atan2(c.aim.z, c.aim.x) + rand(-arc, arc);
         g.particles.spawn({ x: m.x, y: m.y + rand(-1, 1), z: m.z, vx: Math.cos(a) * range * 1.6, vz: Math.sin(a) * range * 1.6, vy: rand(-2, 2), life: 0.5, size: def.cold ? 5 : 4, color: def.color, drag: 1.4, shrink: true });
       }
@@ -224,7 +239,8 @@ export const TYPES = {
         st.chargeT = Math.min(def.maxCharge || 2.2, st.chargeT + inp.dt); c.state = 'charge';
         c.vel.x *= 0.85; c.vel.z *= 0.85;
         const c01 = st.chargeT / (def.maxCharge || 2.2);
-        const orb = chargeOrb(c, st, def.color); const m = c.muzzle(_v.clone(), 3.4 + c01 * 2, 5.8);
+        const orb = chargeOrb(c, st, def.color); const m = c.muzzle(_v.clone(), def.chest ? 1.2 : 3.4 + c01 * 2, def.chest ? 5.4 : 5.8);
+        if (def.chest && Math.random() < 0.3) g.vfx.ring(m.clone(), { color: def.color2 || '#fff', r0: 0.4, r1: 1.8 + c01 * 2.4, life: 0.2 });
         orb.position.copy(m); orb.scale.setScalar((def.minR || 1.3) + c01 * ((def.maxR || 5) - (def.minR || 1.3)));
         if (st.sfx) st.sfx.ramp(c01);
         g.chargeGather(c, def.color, m, 0.6 + c01 * 1.6);
@@ -556,9 +572,19 @@ export const TYPES = {
         const p = c.pos.clone().setY(c.pos.y + 5);
         const radius = (def.minRadius || 16) + k * ((def.maxRadius || 44) - (def.minRadius || 16));
         const dmg = (def.dmgMin || 30) + k * ((def.dmgMax || 95) - (def.dmgMin || 30));
-        g.vfx.explode(p, { color: def.color || '#ff6a1a', color2: '#ffffff', radius: radius * 0.7, power: 1.6 + k * 1.4, scorch: c.pos.y < 4 });
-        g.vfx.shockwave(c.pos.clone().setY(Math.max(0.2, c.pos.y * 0.1)), { color: def.color || '#ff6a1a', radius: radius * 1.6, power: 1.5 + k });
-        g.vfx.lightning(p, { color: '#fff', count: 6, radius: radius * 0.6, height: 16 });
+        if (def.groundslam) {
+          // GROUND SLAM (brief Tier1 #6): the body hitting the ground IS the center — cracks race,
+          // heavy debris lifts, dust expands, and the final visual is a CRATER, not a glowing circle.
+          if (c.pos.y > 3) c.vel.y = Math.min(c.vel.y, -50);   // airborne cast drives the body DOWN
+          const gy = Math.max(0.2, (c.groundY || 0) + 0.2);
+          g.world.crater(c.pos.x, c.pos.z, 5 + k * 6, 1 + k * 1.3);
+          g.vfx.shockwave(c.pos.clone().setY(gy), { color: '#c9bfa9', radius: radius * 1.5, power: 1.4 + k });
+          g.particles.burst(c.pos.x, 1.2, c.pos.z, { count: 26 + Math.round(k * 22), speed: 22 + k * 18, life: 0.8, size: 3.6, color: ['#6a655a', '#8a8577', '#3a3f47'], up: 14 + k * 10, grav: 26, drag: 1.3 });
+        } else {
+          g.vfx.explode(p, { color: def.color || '#ff6a1a', color2: '#ffffff', radius: radius * 0.7, power: 1.6 + k * 1.4, scorch: c.pos.y < 4 });
+          g.vfx.shockwave(c.pos.clone().setY(Math.max(0.2, c.pos.y * 0.1)), { color: def.color || '#ff6a1a', radius: radius * 1.6, power: 1.5 + k });
+          g.vfx.lightning(p, { color: '#fff', count: 6, radius: radius * 0.6, height: 16 });
+        }
         g.areaDamage(c, p, radius, dmg, 1.6 + k);
         c.ki = 0; if (g.onDrained) { c.drainedT = 0; g.onDrained(c); }  // the price: bone dry
         g.slowmo(0.22, 0.4); g.world.punch(0.6); g.world.shake(2.2 + k); g.audio.boom(1.4, c.pos);
@@ -653,7 +679,7 @@ export const TYPES = {
       if (foe || m.life <= 0) {
         if (foe) {
           g.vfx.explode(m.pos.clone().setY(0.6), { color: def.color || '#ff5a4a', color2: '#ffd97a', radius: def.blast || 12, power: 1.3 });
-          g.areaDamage(c, m.pos.clone().setY(1), (def.blast || 12) * ((c.sheet && c.sheet.blastMult) || 1), def.damage || 24, 1.3, { dtype: def.dtype, dot: def.dot });
+          g.areaDamage(c, m.pos.clone().setY(1), (def.blast || 12) * ((c.sheet && c.sheet.blastMult) || 1), def.damage || 24, 1.3, { dtype: def.dtype, dot: def.dot, freeze: def.freeze });
           g.audio.boom(0.8, m.pos);
         } else g.vfx.flash(m.pos.clone().setY(1), def.color || '#ff5a4a', 3, 0.2);   // timed out — fizzle
         g.scene.remove(m.mesh); m.mesh.traverse(o => { if (o.material) o.material.dispose(); if (o.geometry) o.geometry.dispose(); });

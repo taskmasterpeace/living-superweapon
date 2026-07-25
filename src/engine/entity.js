@@ -903,6 +903,31 @@ export class Fighter {
       }
     }
     if (this._sleepImmune > 0) this._sleepImmune -= dt;
+    // ---- AFTERBURNER (manual §15): hold cruise 0.8s with a burner-class core → IGNITION ----
+    {
+      const AF = this.def.afterburner;
+      if (AF && this.flying && this.cruiseHeld && this.ki > 1) {
+        const was = this._burnT || 0;
+        this._burnT = was + dt;
+        if (was < 0.8 && this._burnT >= 0.8 && this._game) {   // ignition: one compression ring, then the wake
+          this._game.vfx.ring(this.pos.clone().setY(this.pos.y + 5), { color: (AF.wake && AF.wake[0]) || '#fff', r0: 6, r1: 1, life: 0.25 });
+          this._game.audio.boom(0.35, this.pos);
+        }
+        if (this._burnT > 0.8) {
+          this.ki = Math.max(0, this.ki - ((AF.kiPerSec || 6) - 2.6) * dt);   // cruise already bills 2.6/s
+          if (this._game && Math.random() < 0.85) {                          // the wake carries the IDENTITY
+            const w = AF.wake || ['#ffffff', '#ffd24a'];
+            this._game.particles.spawn({ x: this.pos.x - this.vel.x * 0.045, y: this.pos.y + 4 - this.vel.y * 0.045, z: this.pos.z - this.vel.z * 0.045,
+              vx: -this.vel.x * 0.16 + (Math.random() * 6 - 3), vy: -this.vel.y * 0.16 + (Math.random() * 6 - 3), vz: -this.vel.z * 0.16 + (Math.random() * 6 - 3),
+              life: 0.5, size: 3 + Math.random() * 2, color: w, drag: 0.8, shrink: true });
+          }
+        }
+      } else if ((this._burnT || 0) > 0.8 && this._game) {                   // tank dry / throttle closed: the wake BREAKS APART
+        const AFW = (AF && AF.wake) || ['#ffffff', '#ffd24a'];
+        this._game.particles.burst(this.pos.x, this.pos.y + 4, this.pos.z, { count: 12, speed: 18, life: 0.5, size: 2.6, color: AFW, drag: 1.2 });
+        this._burnT = 0;
+      } else this._burnT = 0;
+    }
     if (this._sleepGrace > 0) this._sleepGrace -= dt;
     if (this.sleepT > 0) {
       this.sleepT -= dt;
@@ -1401,7 +1426,11 @@ export class Fighter {
     if (this.flying) {
       s *= this.flightTier >= 3 ? this.flySpeed * 1.2 : this.flightTier === 2 ? 0.78 : 0.95;   // air feel pass 2026-07-24: fliers +20%, levitators 0.62→0.78, clumsy 0.85→0.95
       // SHIFT held in the air = sustained CRUISE (not the burst dash) — costs a trickle of ki
-      if (this.cruiseHeld && this.ki > 1) { s *= 1.5; this.ki = Math.max(0, this.ki - 2.6 * dt); }
+      if (this.cruiseHeld && this.ki > 1) {
+        s *= 1.5; this.ki = Math.max(0, this.ki - 2.6 * dt);
+        // AFTERBURNER (brief Part Six, manual §15): past ignition the throttle opens all the way
+        if (this.def.afterburner && this._burnT > 0.8) s *= (this.def.afterburner.mult || 2.1) / 1.5;
+      }
     }
     // the harbor: shallow water slows, deep water is a swim (flight lifts you out)
     if (!this.flying && this.pos.y < 2 && this._game && this._game.world.waterAt) {

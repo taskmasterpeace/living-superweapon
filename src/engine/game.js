@@ -935,6 +935,7 @@ export class Game {
       // src attribution: explosions now CREDIT the blaster (artillery kills used to score nobody)
       const dealt = f.takeDamage(damage * fall * caster.powerBuff * (ff ? 0.5 : 1), { src: caster, kb, launch: (6 + power * 6) * fall, hitstop: 0.05, dtype: o.dtype });
       if (o.dot && dealt > 0) f.addDot({ ...o.dot, src: caster });   // caustic/incendiary payloads ride the blast
+      if (o.freeze && dealt > 0 && f.addFrost) f.addFrost(o.freeze, caster);   // ice-slick traps ENCASE (brief Tier1 #9)
       if (ff && dealt >= 3 && this.hud && (this._ffFeedT || 0) <= this.time - 2.5) {
         this._ffFeedT = this.time;
         this.hud.feed(`⚠ FRIENDLY FIRE — ${caster.name} clipped ${f.name}`, '#ffb03a');
@@ -1531,7 +1532,7 @@ export class Game {
       dps: (def.dps || 60) * p, kiPerSec: def.kiPerSec || 22,
       color: def.color, color2: def.color2, power: (def.power || 1) * p, steer: def.steer,
       might: (def.might || (def.dps || 60) / 50) * p * (caster.def.beamMight || 1),   // char treats the budget differently
-      dtype: def.dtype, siphon: def.siphon, spiral: def.spiral,                         // arcane beams drink ki; VEGA spirals
+      dtype: def.dtype, siphon: def.siphon, spiral: def.spiral, faceOrigin: def.faceOrigin,   // arcane beams drink ki; VEGA spirals; optic blasts fire from the FACE
     });
   }
 

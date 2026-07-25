@@ -902,6 +902,28 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   projectile — zone at `_impact`) + ORIGIN Smoke Bomb. `blind: {r,dur}` passes through both
   projectile/volley spawns.
 
+## TIER ONE + AFTERBURNERS (2026-07-24) — manual §15, POWERS_BRIEF Part Three/Six
+- **All 20 Tier-1 brief powers live in the ORIGIN catalog** (18 new rows + existing
+  twinpistols/drones; every row verified firing). New data-driven flags: `faceOrigin`
+  (beam spawns at the FACE — BeamHose stores it, spawnBeamFor passes it), `sonic` (cone →
+  transparent pressure rings + dust, no glow), `groundslam` (nova → crater+debris+launch,
+  airborne caster driven DOWN, never a glow circle), `chest` (charge orb at chest aperture
+  + opening rings), `card`/`disc` projectile meshes (tumbling card, flat-spinning shield —
+  _ownMats law respected), `freeze` on areaDamage+mines (→ addFrost ENCASE), `grav`/`card`
+  pass through volley, `dmgClass` passes through rush (slash rushes WOUND).
+- **7 roster treatments**: SOL+VANGUARD face-origin thin ruby beams · DECIBEL sonic cones ·
+  RAGE WORLD BREAKER = groundslam nova (buff→nova ult swap) · FERAL NO CAGES slash rush,
+  light finisher · TITAN Reactor Burst chest unibeam (beam-speed orb 110-150) · CHAINFIRE
+  already canon #10.
+- **AFTERBURNER**: `def.afterburner {mult 2.1, kiPerSec 14, wake:[c1,c2]}` × 6 (sol,
+  majesty, torch, nova, apex, olympus). Hold cruise 0.8s → ignition ring → ×2.1 base
+  flight (measured 71.8→100.5). 14 ki/s TOTAL (⚠ must exceed the 9/s regen or it's free —
+  6/s was free). Dry/closed → wake BURSTS apart, `_burnT` 0. Wake colors are per-hero
+  identity; MAJESTY is silver-ice NOT violet (no-purple law beats the brief's wording).
+- **gear: true** tags: 24 roster abilities + 13 ORIGIN gear rows (what you HOLD, not ARE).
+  TITAN's integrated cannons deliberately untagged. The gear SYSTEM (drops/pickups/
+  proficiency/disarm) is the next phase.
+
 ## THE SAMPLE BANK (2026-07-24) — real recordings for every discrete SFX
 - **`core/samples.js`** (`MANIFEST` + `SampleBank` + `HOT_SET`) + **254 Kenney CC0 oggs in
   `/public/audio`** (~6MB, offline-first; impact/sci-fi/interface/rpg/jingle packs). Every

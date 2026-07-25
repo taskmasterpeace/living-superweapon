@@ -475,3 +475,54 @@ rule each — and they validate the whole payload pathway for everything the cat
   reacquired after clearing; human at 40u lost the foe while blind, saw it clear after.
 
 Both statuses live in the DAMAGE CODEX (THE WOUND LANGUAGE) beside bleeding.
+
+## §15 · TIER ONE + THE AFTERBURNER (2026-07-24) — docs/POWERS_BRIEF.md made real
+
+**All twenty Tier-1 powers from the brief exist as pure data** — 18 new ORIGIN catalog rows
+(Web Line, Optic Blast, Card Barrage, Pumpkin Bomb, Sonic Scream, Ground Slam, Chest
+Unibeam, Returning Shield, Ice Slick Trap, Hellfire Chain, Poison Dart Fan, Kinetic
+Absorption, Shadow Step, Stone Volley, Orbital Lance, Life Leech Touch, Force Wall,
+Berserker Rush) joining the existing Twin Pistols and Attack Drones. Verified: every new
+row fires from a live fighter without error (18/18).
+
+**Seven roster kits carry the brief's written visual treatments:**
+- **SOL Heat Ray + VANGUARD Eye Beam** → `faceOrigin: true` (the beam spawns at the FACE,
+  y 8.3, verified), razor-thin radius 0.55, ruby shell / white-hot core. No charge orb.
+- **DECIBEL** (both cones) → `sonic: true`: the cone renders as TRANSPARENT COMPRESSION
+  RINGS marching down the axis plus dragged street dust — force made visible, zero glow.
+- **RAGE WORLD BREAKER** → `nova` + `groundslam: true`: the body is the epicenter — an
+  airborne cast drives him DOWN, cracks and debris, a real CRATER, victims launched
+  (measured 62 damage, launch flag live, caster bone dry per the nova law).
+- **FERAL NO CAGES** → `dmgClass: 'slash'` on the rush (rush hits carry damage class now —
+  claw rushes open WOUNDS) with the deliberately light finisher; the rhythm is the read.
+- **TITAN Reactor Burst** → `chest: true`: the orb builds at the chest aperture with
+  concentric opening rings, and flies at beam speed (110–150).
+- **CHAINFIRE Hellfire Chain** was already the brief's #10 — fire-palette tentacle drag-in.
+
+**Engine flags added (all data-driven, §5 protocol):** `faceOrigin` (beams), `sonic`
+(cones), `groundslam` (novas), `chest` (charges), `card`/`disc` projectile meshes (tumbling
+playing card with rose back; flat-spinning painted shield — both with slow trails, no
+lights), `freeze` on areaDamage/mines (Ice Slick ENCASES via `addFrost`), `grav` passes to
+volleys (Stone Volley's dusty ballistic arcs), `dmgClass` passes through rush.
+
+### THE AFTERBURNER (brief Part Six)
+
+`def.afterburner = { mult: 2.1, kiPerSec: 14, wake: [c1, c2] }` on **six carriers**: SOL,
+MAJESTY, TORCH, NOVA, APEX, OLYMPUS.
+
+- **Ignition**: hold cruise (SHIFT airborne) for **0.8s** → compression ring + boom, then
+  the throttle opens from cruise ×1.5 to **×2.1 of base flight** (measured: cruise 71.8 →
+  burner 100.5 u/s — the 2.1 multiple exactly).
+- **The price**: 14 ki/s total while burning (base regen is 9/s — the burner OUT-DRINKS the
+  tank by design; measured 120→101 over ~3.2s). Tank dry or throttle closed → the wake
+  **breaks apart** (a burst, not a fade) and `_burnT` resets.
+- **The wake carries the identity** (no generic blue trail): SOL gold corona on white ·
+  MAJESTY silver-ice shock trail (the brief said violet; violet is banned in this house —
+  KIVULI only) · TORCH turbulent fire and embers · NOVA stellar white-cyan star-drag ·
+  APEX gold-orange · OLYMPUS white-and-temple-gold.
+- The spear posture comes free: the flight pose's speed-driven prone engagement.
+
+**GEAR TAGS** (Robert's ruling — the gear system lands next): `gear: true` now marks what a
+fighter HOLDS rather than IS — 24 roster abilities (SARGE's arsenal, SANDRA's guns, GALE's
+bow and knife, KNIGHTFALL's thrown steel and charges, the god-forged blades, the axes,
+KIVULI's canister…) and all 13 ORIGIN gear rows. TITAN's cannons are his body — not gear.

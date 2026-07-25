@@ -13,6 +13,10 @@ const _v = new THREE.Vector3(), _v2 = new THREE.Vector3(), _q = new THREE.Quater
 // city read as a near-invisible black speck (Robert's note). Now it's a pale slug pulling a
 // visible warm streak, so you can actually track the shot.
 const GEO_BULLET = new THREE.CylinderGeometry(0.34, 0.24, 2.0, 6); GEO_BULLET.rotateX(Math.PI / 2);
+const GEO_CARD = new THREE.BoxGeometry(1.5, 2.1, 0.05);                       // a PLAYING CARD stays a playing card
+const GEO_DISC = new THREE.CylinderGeometry(1.6, 1.6, 0.16, 18);              // the shield's rim
+const GEO_DISC_RING = new THREE.TorusGeometry(1.02, 0.13, 6, 18);
+const GEO_DISC_BOSS = new THREE.CylinderGeometry(0.5, 0.5, 0.2, 12);
 const GEO_TRACER = new THREE.CylinderGeometry(0.42, 0.02, 9.0, 6); GEO_TRACER.rotateX(Math.PI / 2);
 // ⚠ NOT ENERGY: a bullet is machined brass, not a spell. No emissive, no additive blending —
 // bloom is reserved for ki. The slug reads as PALE metal catching the light (lighter + less
@@ -106,7 +110,7 @@ class Projectile {
     this.bullet = !!o.bullet;                      // real ballistics read as METAL, not energy
     this.ballistic = !!o.ballistic; this.weapon = o.weapon || null;   // drives the armour/toughness scale
     this.dtype = o.dtype || null; this.siphon = o.siphon;              // damage type rides the projectile
-    this.blade = !!o.blade; this.canister = !!o.canister;
+    this.blade = !!o.blade; this.canister = !!o.canister; this.card = !!o.card; this.disc = !!o.disc;
     this.face = !!o.face; this.armDelay = o.armDelay || 0; this._armed = false; this._armT = 0;
     if (this.face) {
       // THE MARLETTA: a billboarded serene face wrapped in glow — she drifts, arrives, lingers, detonates
@@ -145,6 +149,31 @@ class Projectile {
       this.obj = new THREE.Group(); this.obj.add(spin); this._spin = spin;
       this._ownMats = [];                              // steel is one shared material
       this.obj.scale.setScalar(Math.max(0.5, this.radius * 0.8));
+      this.obj.position.copy(this.pos); game.scene.add(this.obj);
+      this.light = null;
+    } else if (this.card) {
+      // CARD BARRAGE (brief Tier1 #3): thin white face, rose back, TUMBLING with sharp corners
+      // catching the light. No halo, no pooled light — the ribbon trail does the talking.
+      const face = new THREE.Mesh(GEO_CARD, new THREE.MeshStandardMaterial({ color: '#f2ede2', roughness: 0.5, metalness: 0.05 }));
+      const back = new THREE.Mesh(GEO_CARD, new THREE.MeshStandardMaterial({ color: this.color, roughness: 0.5, metalness: 0.05 }));
+      back.position.z = -0.028;
+      const spin = new THREE.Group(); spin.add(face, back);
+      this.obj = new THREE.Group(); this.obj.add(spin); this._spin = spin;
+      this._ownMats = [face.material, back.material];
+      this.obj.position.copy(this.pos); game.scene.add(this.obj);
+      this.light = null;
+    } else if (this.disc) {
+      // RETURNING SHIELD (brief Tier1 #8): painted face readable while it spins — the front/back
+      // alternation IS the flashing rhythm; metallic crescent trail; the catch ends the return.
+      const rim = new THREE.Mesh(GEO_DISC, new THREE.MeshStandardMaterial({ color: '#c9cfd9', roughness: 0.35, metalness: 0.8 }));
+      const ring = new THREE.Mesh(GEO_DISC_RING, new THREE.MeshStandardMaterial({ color: this.color2 || '#ff5a4a', roughness: 0.5, metalness: 0.3 }));
+      ring.rotation.x = Math.PI / 2; ring.position.y = 0.09;
+      const boss = new THREE.Mesh(GEO_DISC_BOSS, new THREE.MeshStandardMaterial({ color: this.color2 || '#ff5a4a', roughness: 0.45, metalness: 0.4 }));
+      boss.position.y = 0.1;
+      const spin = new THREE.Group(); spin.add(rim, ring, boss);
+      this.obj = new THREE.Group(); this.obj.add(spin); this._spin = spin;
+      this._ownMats = [rim.material, ring.material, boss.material];
+      this.obj.scale.setScalar(Math.max(0.6, this.radius * 0.9));
       this.obj.position.copy(this.pos); game.scene.add(this.obj);
       this.light = null;
     } else if (this.canister) {
@@ -224,14 +253,18 @@ class Projectile {
     if (this.arrow) { _v.copy(this.vel).normalize(); this.obj.quaternion.setFromUnitVectors(_AY, _v); }   // nose into the flight path
     else if (this.bullet) { _v.copy(this.vel).normalize(); this.obj.quaternion.setFromUnitVectors(_AZ, _v); }   // slug + tracer align to travel
     else if (this.blade) { _v.copy(this.vel).normalize(); this.obj.quaternion.setFromUnitVectors(_AZ, _v); this._spin.rotation.x += dt * 24; }   // steel tumbles end-over-end along its path
+    else if (this.card) { _v.copy(this.vel).normalize(); this.obj.quaternion.setFromUnitVectors(_AZ, _v); this._spin.rotation.x += dt * 20; this._spin.rotation.z += dt * 8; }   // cards TUMBLE, corners catching the light
+    else if (this.disc) { this._spin.rotation.y += dt * 15; }   // the shield spins FLAT — painted face flashing front/back
     else if (this.canister) { this.obj.rotation.x += dt * 7.5; this.obj.rotation.z += dt * 2.1; if (this._fuse) this._fuse.material.opacity = (Math.sin(this.life * 22) > 0) ? 0.9 : 0.25; }   // shell tumbles, fuse blinks
     else this.obj.rotation.y += dt * 6;
     // trail (arrows leave only a whisper; bullets leave a thin wisp of smoke, never a plasma tail)
     this.trailT += dt;
-    if (this.trailT > (this.arrow || this.bullet || this.blade || this.canister ? 0.05 : 0.016)) {
+    if (this.trailT > (this.arrow || this.bullet || this.blade || this.canister || this.card || this.disc ? 0.05 : 0.016)) {
       this.trailT = 0;
       if (this.bullet || this.canister) game.particles.spawn({ x: this.pos.x, y: this.pos.y, z: this.pos.z, vx: rand(-1, 1), vy: rand(0, 2), vz: rand(-1, 1), life: 0.22, size: 0.8, color: ['#c9c2b4', '#8b8577'], drag: 4, shrink: true });
       else if (this.blade) game.particles.spawn({ x: this.pos.x, y: this.pos.y, z: this.pos.z, vx: rand(-1.5, 1.5), vy: rand(-1, 1), vz: rand(-1.5, 1.5), life: 0.16, size: 0.9, color: ['#dfe6ee', '#9aa4b0'], drag: 4, shrink: true });
+      else if (this.card) game.particles.spawn({ x: this.pos.x, y: this.pos.y, z: this.pos.z, vx: rand(-1, 1), vy: rand(-1, 1), vz: rand(-1, 1), life: 0.2, size: 0.8, color: [this.color, '#ffdcdc'], drag: 4, shrink: true });   // narrow rose ribbon
+      else if (this.disc) game.particles.spawn({ x: this.pos.x, y: this.pos.y, z: this.pos.z, vx: rand(-1.2, 1.2), vy: rand(-0.6, 0.6), vz: rand(-1.2, 1.2), life: 0.18, size: 0.9, color: ['#c9cfd9', '#eaf2ff'], drag: 4, shrink: true });   // metallic crescent
       else game.particles.spawn({ x: this.pos.x, y: this.pos.y, z: this.pos.z, vx: rand(-2, 2), vy: rand(-2, 2), vz: rand(-2, 2), life: this.arrow ? 0.2 : 0.35, size: this.arrow ? 1 : this.radius * 2.2, color: this.arrow ? this.color : [this.color, this.color2, '#ffffff'], drag: 3, shrink: true });
     }
     // Pedestrians aren't entities (they're one instanced mesh), so nothing ever collided with
@@ -387,7 +420,8 @@ class BeamHose {
       this._sm = new THREE.Matrix4(); this._sv = new THREE.Vector3();
     }
     this.light = game.vfx.borrowLight(this.color, 5 * this.power, 60);
-    caster.muzzle(this.muzzle);
+    this.faceOrigin = !!o.faceOrigin;   // OPTIC BLAST (brief Tier1 #2): eyes, not hands
+    caster.muzzle(this.muzzle, this.faceOrigin ? 1.1 : undefined, this.faceOrigin ? 8.3 : undefined);
   }
 
   end() { this.sustaining = false; }
@@ -401,7 +435,7 @@ class BeamHose {
     if (this.sustaining && c.alive && this.kiPerSec * dt > c.ki) { if (game.onDrained) game.onDrained(c); this.sustaining = false; }
     if (this.sustaining && c.alive && c.spendKi(this.kiPerSec * dt)) {
       c.state = 'cast'; c.stateT = 0;
-      c.muzzle(this.muzzle);
+      c.muzzle(this.muzzle, this.faceOrigin ? 1.1 : undefined, this.faceOrigin ? 8.3 : undefined);
       // steer beam toward the caster's 3D aim (eases up/down toward flyers or grounded targets)
       this.dir.lerp(c.aim3, clamp(this.steer * dt, 0, 1)).normalize();
       // slight vertical toward aim height not modeled; keep flat + muzzle height

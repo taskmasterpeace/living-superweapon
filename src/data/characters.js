@@ -5,13 +5,13 @@ export const ROSTER = [
   {
     id: 'sol', name: 'SOL', title: 'Man of Sunlight', role: 'Bruiser / Beam',
     colors: { primary: '#ef652e', secondary: '#0a27ff', accent: '#ffd557', skin: '#e8c39a', cape: '#dd4309' },
-    hp: 130, ki: 120, speed: 34, beamMight: 1.2, strength: 8, overdrive: 1.3, threat: 'Very High', frostResist: true, flightTier: 3, yells: true, voicePitch: 0.9,
+    hp: 130, ki: 120, speed: 34, beamMight: 1.2, strength: 8, overdrive: 1.3, threat: 'Very High', frostResist: true, flightTier: 3, afterburner: { mult: 2.1, kiPerSec: 14, wake: ['#ffffff', '#ffd24a'] }, yells: true, voicePitch: 0.9,
     ai: { style: 'bruiser', range: 30, aggro: 0.8, fly: 0.55 },
     evade: { kind: 'dash', name: 'Solar Step' },
     blurb: 'A living solar reactor. Thin heat-ray, wide freezing breath, and a flight-fist that ends arguments.',
     sig: ['LMB Heat Ray (thin beam)', 'RMB Arctic Breath (wide cold)', 'Q Sky Smash (flying fist)', 'R Solar Overload'],
     abilities: {
-      lmb: { type: 'beam', name: 'Heat Ray', cost: 4, cd: 0.3, radius: 1.0, tipSpeed: 230, maxLen: 140, dps: 58, kiPerSec: 16, steer: 13, color: '#ff5a2a', color2: '#ffe08a' },
+      lmb: { type: 'beam', name: 'Heat Ray', cost: 4, cd: 0.25, radius: 0.55, tipSpeed: 250, maxLen: 145, dps: 60, kiPerSec: 16, steer: 13, faceOrigin: true, color: '#e01a2e', color2: '#ffffff' },   // brief Tier1 #2: eyes only, razor-thin ruby, white-hot core
       rmb: { type: 'cone', name: 'Arctic Breath', kiPerSec: 20, range: 38, arc: 1.15, dps: 26, cold: true, color: '#bfe9ff' },
       q: { type: 'melee', name: 'Sky Smash', cost: 14, cd: 1.1, damage: 30, range: 13, arc: 0.75, lunge: 64, knock: 58, launch: 18, fly: true, color: '#ffd24a' },
       e: { type: 'projectile', name: 'Solar Flare', cost: 8, cd: 0.5, damage: 18, speed: 78, radius: 1.5, blast: 7, homing: 2.4, color: '#ff8a3d', color2: '#ffd24a' },
@@ -77,7 +77,7 @@ export const ROSTER = [
   {
     id: 'nova', name: 'NOVA', title: 'Star Sovereign', role: 'Sky Artillery',
     colors: { primary: '#ff9149', secondary: '#613419', accent: '#ffd557', skin: '#e8c39a', cape: '#fa6006' },
-    hp: 110, ki: 130, speed: 33, beamMight: 1.25, strength: 5, overdrive: 0.9, threat: 'Extreme', yells: true, voicePitch: 0.95,
+    hp: 110, ki: 130, speed: 33, beamMight: 1.25, strength: 5, overdrive: 0.9, threat: 'Extreme', afterburner: { mult: 2.1, kiPerSec: 14, wake: ['#ffffff', '#7fe6ff'] }, yells: true, voicePitch: 0.95,
     ai: { style: 'artillery', range: 62, aggro: 0.55, fly: 0.45 },
     evade: { kind: 'dash', name: 'Star Step' },
     blurb: 'Rains stars from orbit. A precision Star Lance, a swelling Nova Core, and a sky-wide Meteor Storm.',
@@ -185,7 +185,7 @@ export const ROSTER = [
   {
     id: 'torch', name: 'TORCH', title: 'The Human Flame', role: 'Fire Flyer / Air',
     colors: { primary: '#ffb02d', secondary: '#b26300', accent: '#ffd557', skin: '#e8b98a' },
-    hp: 105, ki: 130, speed: 40, thorns: 9, strength: 4, overdrive: 1.3, threat: 'High', frostResist: true, flightTier: 3, flyStyle: 'fire', yells: true, voicePitch: 1.1,
+    hp: 105, ki: 130, speed: 40, thorns: 9, strength: 4, overdrive: 1.3, threat: 'High', frostResist: true, flightTier: 3, flyStyle: 'fire', afterburner: { mult: 2.1, kiPerSec: 14, wake: ['#ff6a1a', '#ffd24a'] }, yells: true, voicePitch: 1.1,
     ai: { style: 'rusher', range: 30, aggro: 0.82, fly: 0.75 },
     evade: { kind: 'sprint', name: 'Jet Sprint', mult: 1.7, dur: 1.6 },
     blurb: 'Flame on. A fast flyer wrapped in fire — grab him and you burn. Jets, homing fireballs, and a supernova.',
@@ -203,7 +203,7 @@ export const ROSTER = [
   {
     id: 'apex', name: 'APEX', title: 'The Perfect Being', role: 'Absorb / Regen',
     colors: { primary: '#25ca61', secondary: '#1c6b35', accent: '#c3ff73', skin: '#6fae7a' },
-    hp: 145, ki: 120, speed: 32, grabHeal: 0.6, beamMight: 1.4, strength: 8, overdrive: 1.4, threat: 'Extreme', yells: true, voicePitch: 0.8,
+    hp: 145, ki: 120, speed: 32, grabHeal: 0.6, beamMight: 1.4, strength: 8, overdrive: 1.4, threat: 'Extreme', afterburner: { mult: 2.1, kiPerSec: 14, wake: ['#ffe066', '#ff9a2a'] }, yells: true, voicePitch: 0.8,
     ai: { style: 'grappler', range: 30, aggro: 0.78, fly: 0.4 },
     evade: { kind: 'blink', name: 'Afterimage', range: 22 },
     blurb: 'A bio-engineered predator. His throws drain your life to heal him, he regenerates, and charges a perfect wave.',
@@ -245,7 +245,7 @@ export const ROSTER = [
     blurb: 'Bulletproof and airborne. Tackles across the sky, laser-visions from range, and turns briefly untouchable.',
     sig: ['RMB Flying Tackle (air ram)', 'E Sky Combo (aerial rush)', 'F Invincible (i-frames)', 'LMB Eye Beam'],
     abilities: {
-      lmb: { type: 'beam', name: 'Eye Beam', cost: 4, cd: 0.3, radius: 1.0, tipSpeed: 240, maxLen: 150, dps: 56, kiPerSec: 16, steer: 13, color: '#ff4a4a', color2: '#ffd24a' },
+      lmb: { type: 'beam', name: 'Eye Beam', cost: 4, cd: 0.28, radius: 0.55, tipSpeed: 250, maxLen: 150, dps: 56, kiPerSec: 16, steer: 13, faceOrigin: true, color: '#ff4a4a', color2: '#ffffff' },
       rmb: { type: 'melee', name: 'Flying Tackle', cost: 14, cd: 1.1, damage: 28, range: 13, arc: 0.7, lunge: 74, knock: 64, launch: 16, fly: true, color: '#ffd24a' },
       q: { type: 'cone', name: 'Thunderclap', kiPerSec: 16, range: 30, arc: 1.2, dps: 16, push: 56, lift: 5, color: '#bfe0ff' },
       e: { type: 'rush', name: 'Sky Combo', cost: 16, cd: 2.0, range: 72, hits: 8, interval: 0.08, damage: 9, finisher: 32, color: '#ffd24a' },
@@ -303,7 +303,7 @@ export const ROSTER = [
     abilities: {
       lmb: { type: 'beam', name: 'Twin Cannon', cost: 8, cd: 0.6, radius: 2.6, tipSpeed: 130, maxLen: 150, dps: 82, kiPerSec: 22, charge: true, maxCharge: 1.5, kiChargePerSec: 14, chargePower: 1.6, chargeWidth: true, steer: 8, color: '#ff9a2a', color2: '#ffe0b0' },
       rmb: { type: 'rifle', name: 'Pulse Rifle', cost: 2, interval: 0.09, damage: 7, speed: 175, radius: 0.55, blast: 2.4, spread: 0.04, recoil: 1.2, color: '#ffd97a', color2: '#fff' },
-      q: { type: 'charge', name: 'Reactor Burst', cost: 6, cd: 1.0, kiPerSec: 12, maxCharge: 2.2, minR: 1.5, maxR: 6.4, dmgMin: 24, dmgMax: 80, maxBlast: 33, speedMin: 40, speedMax: 68, chargePower: 3, color: '#ff9a2a', color2: '#ffe0b0' },
+      q: { type: 'charge', name: 'Reactor Burst', cost: 6, cd: 1.0, kiPerSec: 12, maxCharge: 2.2, minR: 1.5, maxR: 6.4, dmgMin: 24, dmgMax: 80, maxBlast: 33, speedMin: 110, speedMax: 150, chargePower: 3, chest: true, color: '#ffd97a', color2: '#ffffff' },   // brief Tier1 #7: chest aperture, beam-speed orb, white core in a gold shell
       e: { type: 'cone', name: 'Vent Blast', kiPerSec: 16, range: 30, arc: 1.2, dps: 18, push: 50, lift: 4, color: '#c9cfd9' },
       f: { type: 'buff', name: 'Overdrive Core', cost: 26, cd: 20, mult: 1.6, dur: 11, heal: 30, color: '#ff9a2a', color2: '#fff' },
       shift: { type: 'dash', name: 'Thruster Dash', cost: 6, cd: 0.7, power: 96, iframes: 0.22, color: '#ff9a2a' },
@@ -320,10 +320,10 @@ export const ROSTER = [
     blurb: 'No powers. Just a pulse carbine, a plasma blade, a riot shield, grenades, and legs that clear a building. Somehow still terrifying.',
     sig: ['LMB Pulse Carbine (auto)', 'Q Plasma Blade (slash)', 'RMB Frag Grenade', '2×TAP Combat Leap · shield guard'],
     abilities: {
-      lmb: { type: 'rifle', weapon: 'rifle', name: 'Service Carbine', cost: 2, interval: 0.08, damage: 5, speed: 180, radius: 0.5, blast: 2, recoil: 1.6, color: '#ffe08a', color2: '#fff' },
-      rmb: { type: 'projectile', name: 'Frag Grenade', cost: 9, cd: 0.8, damage: 24, speed: 58, radius: 1.3, blast: 13, grav: 11, shock: true, canister: true, color: '#8a915a', color2: '#ffd24a' },
-      q: { type: 'melee', name: 'Plasma Blade', cost: 10, cd: 0.9, damage: 26, range: 12, arc: 0.9, lunge: 40, knock: 50, launch: 12, dmgClass: 'slash', color: '#7fd4ff' },
-      e: { type: 'rifle', weapon: 'shotgun', name: 'Breaching Shotgun', cost: 7, interval: 0.62, damage: 9, pellets: 8, speed: 150, radius: 0.7, blast: 2.4, color: '#ffd24a', color2: '#fff' },
+      lmb: { type: 'rifle', weapon: 'rifle', name: 'Service Carbine', gear: true, cost: 2, interval: 0.08, damage: 5, speed: 180, radius: 0.5, blast: 2, recoil: 1.6, color: '#ffe08a', color2: '#fff' },
+      rmb: { type: 'projectile', name: 'Frag Grenade', gear: true, cost: 9, cd: 0.8, damage: 24, speed: 58, radius: 1.3, blast: 13, grav: 11, shock: true, canister: true, color: '#8a915a', color2: '#ffd24a' },
+      q: { type: 'melee', name: 'Plasma Blade', gear: true, cost: 10, cd: 0.9, damage: 26, range: 12, arc: 0.9, lunge: 40, knock: 50, launch: 12, dmgClass: 'slash', color: '#7fd4ff' },
+      e: { type: 'rifle', weapon: 'shotgun', name: 'Breaching Shotgun', gear: true, cost: 7, interval: 0.62, damage: 9, pellets: 8, speed: 150, radius: 0.7, blast: 2.4, color: '#ffd24a', color2: '#fff' },
       f: { type: 'buff', name: 'Stim Shot', cost: 18, cd: 16, mult: 1.35, dur: 8, heal: 34, color: '#8fe08a', color2: '#fff' },
       shift: { type: 'dash', name: 'Combat Roll', cost: 4, cd: 0.55, power: 92, iframes: 0.3, color: '#ffd24a' },
       r: { type: 'meteor', name: 'Airstrike', cost: 32, cd: 18, count: 12, interval: 0.16, spread: 24, radius: 3, damage: 32, blast: 17, color: '#ff8a3d', color2: '#ffd24a' },
@@ -359,13 +359,13 @@ export const ROSTER = [
     blurb: 'No powers — a bow, a knife, and a quiver of nasty ideas. Draw deep and switch broadheads: poison bleeds, flame burns, explosive erases, acid eats armour.',
     sig: ['LMB Longshot (hold to draw)', 'Q Switch Broadheads (poison/flame/explosive)', 'R Arrow Storm', '2×TAP Vault'],
     abilities: {
-      lmb: { type: 'bow', name: 'Longshot', cost: 6, cd: 0.25, drawTime: 0.85, dmgMin: 8, dmgMax: 30, speedMax: 215, blast: 11, payloads: ['explosive', 'flame', 'poison', 'acid', 'sleep'], color: '#9fe06a' },
-      rmb: { type: 'projectile', name: 'Concussion Shot', cost: 8, cd: 0.7, damage: 16, speed: 130, radius: 0.8, blast: 7, arrow: true, shock: true, color: '#ffd24a', color2: '#fff' },
-      q: { type: 'quiver', name: 'Switch Broadheads', payloads: ['explosive', 'flame', 'poison', 'acid', 'sleep'], color: '#9fe06a' },
-      e: { type: 'melee', name: 'Ranger Knife', cost: 8, cd: 0.8, damage: 20, range: 11, arc: 0.85, lunge: 38, knock: 40, launch: 8, dmgClass: 'slash', color: '#9fe06a' },
+      lmb: { type: 'bow', name: 'Longshot', gear: true, cost: 6, cd: 0.25, drawTime: 0.85, dmgMin: 8, dmgMax: 30, speedMax: 215, blast: 11, payloads: ['explosive', 'flame', 'poison', 'acid', 'sleep'], color: '#9fe06a' },
+      rmb: { type: 'projectile', name: 'Concussion Shot', gear: true, cost: 8, cd: 0.7, damage: 16, speed: 130, radius: 0.8, blast: 7, arrow: true, shock: true, color: '#ffd24a', color2: '#fff' },
+      q: { type: 'quiver', name: 'Switch Broadheads', gear: true, payloads: ['explosive', 'flame', 'poison', 'acid', 'sleep'], color: '#9fe06a' },
+      e: { type: 'melee', name: 'Ranger Knife', gear: true, cost: 8, cd: 0.8, damage: 20, range: 11, arc: 0.85, lunge: 38, knock: 40, launch: 8, dmgClass: 'slash', color: '#9fe06a' },
       f: { type: 'buff', name: 'Deadeye', cost: 18, cd: 16, mult: 1.5, dur: 8, color: '#9fe06a', color2: '#fff' },
       shift: { type: 'dash', name: 'Tumble', cost: 4, cd: 0.5, power: 94, iframes: 0.3, color: '#9fe06a' },
-      r: { type: 'volley', name: 'Arrow Storm', cost: 4, interval: 0.07, damage: 8, speed: 150, radius: 0.6, blast: 3, spread: 0.12, arrow: true, color: '#9fe06a', color2: '#fff' },
+      r: { type: 'volley', name: 'Arrow Storm', gear: true, cost: 4, interval: 0.07, damage: 8, speed: 150, radius: 0.6, blast: 3, spread: 0.12, arrow: true, color: '#9fe06a', color2: '#fff' },
     },
   },
   {
@@ -402,11 +402,11 @@ export const ROSTER = [
     blurb: 'The first Jackal. Hunts living superweapons for a living — twin pistols, a ring that sees through every camera on Earth, and a beacon she plants BEFORE the fight starts.',
     sig: ['X Extraction Beacon (plant → recall to it)', 'LMB Twin Pistols', 'Q The Ring Sees (wallhack)', 'R Clean Extraction'],
     abilities: {
-      lmb: { type: 'rifle', name: 'Twin Pistols', cost: 3, interval: 0.16, damage: 10, speed: 165, radius: 0.6, blast: 2.6, spread: 0.03, recoil: 1.2, color: '#ffb03a', color2: '#fff' },
-      rmb: { type: 'rifle', name: 'Suppressed SMG', cost: 2, interval: 0.07, damage: 4, speed: 175, radius: 0.5, blast: 2, spread: 0.06, recoil: 0.8, color: '#ffd97a', color2: '#fff' },
+      lmb: { type: 'rifle', name: 'Twin Pistols', gear: true, cost: 3, interval: 0.16, damage: 10, speed: 165, radius: 0.6, blast: 2.6, spread: 0.03, recoil: 1.2, color: '#ffb03a', color2: '#fff' },
+      rmb: { type: 'rifle', name: 'Suppressed SMG', gear: true, cost: 2, interval: 0.07, damage: 4, speed: 175, radius: 0.5, blast: 2, spread: 0.06, recoil: 0.8, color: '#ffd97a', color2: '#fff' },
       q: { type: 'buff', name: 'The Ring Sees', cost: 16, cd: 15, mult: 1.15, dur: 8, reveal: true, color: '#ffb03a', color2: '#fff' },
-      e: { type: 'melee', name: 'Pistol Whip', cost: 8, cd: 0.8, damage: 18, range: 11, arc: 0.85, lunge: 34, knock: 42, launch: 8, color: '#ffb03a' },
-      f: { type: 'projectile', name: 'Tracker Round', cost: 7, cd: 0.6, damage: 12, speed: 140, radius: 0.7, blast: 3, homing: 4, payload: 'sleep', color: '#ffb03a', color2: '#fff' },   // the Jackal takes them ALIVE
+      e: { type: 'melee', name: 'Pistol Whip', gear: true, cost: 8, cd: 0.8, damage: 18, range: 11, arc: 0.85, lunge: 34, knock: 42, launch: 8, color: '#ffb03a' },
+      f: { type: 'projectile', name: 'Tracker Round', gear: true, cost: 7, cd: 0.6, damage: 12, speed: 140, radius: 0.7, blast: 3, homing: 4, payload: 'sleep', color: '#ffb03a', color2: '#fff' },   // the Jackal takes them ALIVE
       shift: { type: 'dash', name: 'Slip the Frame', cost: 4, cd: 0.5, power: 96, iframes: 0.28, color: '#ffb03a' },
       r: { type: 'rush', name: 'Clean Extraction', cost: 18, cd: 12, range: 64, hits: 7, interval: 0.08, damage: 8, finisher: 34, color: '#ffb03a' },
     },
@@ -441,7 +441,7 @@ export const ROSTER = [
       e: { type: 'rush', name: 'Rampage', cost: 14, cd: 2, range: 56, hits: 6, interval: 0.1, damage: 10, finisher: 36, color: '#8fe08a' },
       f: { type: 'buff', name: 'Fury Rising', cost: 20, cd: 16, mult: 1.5, dur: 9, heal: 40, color: '#8fe08a', color2: '#fff' },
       shift: { type: 'dash', name: 'Bull Charge', cost: 5, cd: 0.6, power: 104, iframes: 0.2, color: '#8fe08a' },
-      r: { type: 'buff', name: 'WORLD BREAKER', cost: 30, cd: 22, mult: 1.95, dur: 10, heal: 30, color: '#8fe08a', color2: '#ffffff' },
+      r: { type: 'nova', name: 'WORLD BREAKER', cost: 8, cd: 16, feedRate: 60, maxFeed: 88, minRadius: 14, maxRadius: 34, dmgMin: 26, dmgMax: 82, groundslam: true, color: '#8fe08a', color2: '#c9bfa9' },   // brief Tier1 #6: cracks race, debris lifts, a CRATER
     },
   },
   {
@@ -451,8 +451,8 @@ export const ROSTER = [
     ai: { style: 'bruiser', range: 28, aggro: 0.8, fly: 0.5 }, evade: { kind: 'dash', name: 'Storm Step' },
     blurb: 'An axe that remembers lightning. Skies answer when he shouts.',
     abilities: {
-      lmb: { type: 'melee', name: 'Axe Cleave', cost: 11, cd: 0.9, damage: 30, range: 13, arc: 0.9, lunge: 42, knock: 56, launch: 16, dmgClass: 'slash', color: '#7fd4ff' },
-      rmb: { type: 'projectile', name: 'Hurled Axe', cost: 10, cd: 0.9, damage: 22, speed: 110, radius: 1.3, blast: 6, boomerang: true, blade: true, range: 62, color: '#7fd4ff', color2: '#fff' },
+      lmb: { type: 'melee', name: 'Axe Cleave', gear: true, cost: 11, cd: 0.9, damage: 30, range: 13, arc: 0.9, lunge: 42, knock: 56, launch: 16, dmgClass: 'slash', color: '#7fd4ff' },
+      rmb: { type: 'projectile', name: 'Hurled Axe', gear: true, cost: 10, cd: 0.9, damage: 22, speed: 110, radius: 1.3, blast: 6, boomerang: true, blade: true, range: 62, color: '#7fd4ff', color2: '#fff' },
       q: { type: 'charge', name: 'Godblast', cost: 6, cd: 1, kiPerSec: 12, maxCharge: 2.2, minR: 1.5, maxR: 6.2, dmgMin: 24, dmgMax: 80, maxBlast: 32, speedMin: 42, speedMax: 70, chargePower: 2.9, color: '#7fd4ff', color2: '#eaffff' },
       e: { type: 'cone', name: 'Tempest Breath', kiPerSec: 16, range: 32, arc: 1.15, dps: 18, push: 50, lift: 5, color: '#bfeaff' },
       f: { type: 'buff', name: 'Wrath of the Sky', cost: 26, cd: 20, mult: 1.6, dur: 11, color: '#7fd4ff', color2: '#fff' },
@@ -497,7 +497,7 @@ export const ROSTER = [
   {
     id: 'majesty', name: 'MAJESTY', title: 'Higher. Further. Faster.', role: 'Cosmic Powerhouse',
     colors: { primary: '#e6060f', secondary: '#1544a0', accent: '#ffd557', skin: '#e8c39a' },
-    hp: 130, ki: 145, speed: 34, beamMight: 1.3, strength: 8, overdrive: 1.0, threat: 'Extreme', flightTier: 3, yells: true, voicePitch: 0.95,
+    hp: 130, ki: 145, speed: 34, beamMight: 1.3, strength: 8, overdrive: 1.0, threat: 'Extreme', flightTier: 3, afterburner: { mult: 2.1, kiPerSec: 14, wake: ['#eaf2ff', '#c9d9ff'] }, yells: true, voicePitch: 0.95,
     ai: { style: 'beamer', range: 42, aggro: 0.8, fly: 0.6 }, evade: { kind: 'dash', name: 'Photon Slip' },
     blurb: 'A star wearing a person. When she goes binary, look away.',
     abilities: {
@@ -583,11 +583,11 @@ export const ROSTER = [
     ai: { style: 'zoner', range: 34, aggro: 0.7, fly: 0 }, evade: { kind: 'leap', name: 'Grapnel Vault', up: 44, fwd: 64 },
     blurb: 'No powers. A plan for yours, though. Grapnel to the roofline, cape-glide off it, and he is suddenly somewhere above you.',
     abilities: {
-      lmb: { type: 'volley', name: 'Batarang Fan', cost: 3, interval: 0.11, damage: 7, speed: 125, radius: 0.7, blast: 2.6, spread: 0.12, blade: true, oneHand: true, color: '#c9cfd9', color2: '#fff' },
+      lmb: { type: 'volley', name: 'Batarang Fan', gear: true, cost: 3, interval: 0.11, damage: 7, speed: 125, radius: 0.7, blast: 2.6, spread: 0.12, blade: true, oneHand: true, color: '#c9cfd9', color2: '#fff' },
       rmb: { type: 'melee', name: 'Cross Counter', cost: 9, cd: 0.7, damage: 24, range: 11, arc: 0.85, lunge: 40, knock: 44, launch: 8, color: '#ffd24a' },
       q: { type: 'teleport', name: 'Smoke Vanish', cost: 10, cd: 1.4, range: 40, oneHand: true, blind: { r: 15, dur: 2.6 }, color: '#8a8f99' },
-      e: { type: 'mine', name: 'Caustic Charges', cost: 10, cd: 1.1, max: 3, trigger: 7, damage: 24, blast: 12, armT: 0.6, duration: 20, range: 55, dtype: 'acid', dot: { dps: 6, dur: 5, kind: 'acid', corrode: 4, color: '#c8e04a' }, color: '#c8e04a' },
-      f: { type: 'grapple', name: 'Grapnel Line', cost: 8, cd: 1.1, range: 95, oneHand: true, color: '#ffd24a' },
+      e: { type: 'mine', name: 'Caustic Charges', gear: true, cost: 10, cd: 1.1, max: 3, trigger: 7, damage: 24, blast: 12, armT: 0.6, duration: 20, range: 55, dtype: 'acid', dot: { dps: 6, dur: 5, kind: 'acid', corrode: 4, color: '#c8e04a' }, color: '#c8e04a' },
+      f: { type: 'grapple', name: 'Grapnel Line', gear: true, cost: 8, cd: 1.1, range: 95, oneHand: true, color: '#ffd24a' },
       shift: { type: 'dash', name: 'Cape Slip', cost: 4, cd: 0.5, power: 96, iframes: 0.3, color: '#c9cfd9' },
       r: { type: 'construct', name: 'Wing Support', cost: 18, cd: 9, construct: 'turret', duration: 12, color: '#ffd24a' },
     },
@@ -599,7 +599,7 @@ export const ROSTER = [
     ai: { style: 'bruiser', range: 22, aggro: 0.85, fly: 0.3 }, evade: { kind: 'dash', name: 'Amazon Step' },
     blurb: 'Bracelets that hand bullets back and a golden lasso that ends arguments against the nearest wall.',
     abilities: {
-      lmb: { type: 'melee', name: 'God-Forged Blade', cost: 10, cd: 0.7, damage: 27, range: 12, arc: 0.9, lunge: 42, knock: 50, launch: 12, dmgClass: 'slash', color: '#ffd24a' },
+      lmb: { type: 'melee', name: 'God-Forged Blade', gear: true, cost: 10, cd: 0.7, damage: 27, range: 12, arc: 0.9, lunge: 42, knock: 50, launch: 12, dmgClass: 'slash', color: '#ffd24a' },
       rmb: { type: 'tentacle', name: 'Golden Lasso', cost: 17, cd: 4.5, range: 36, holdT: 0.55, damage: 15, throwSpeed: 92, color: '#ffd24a' },
       q: { type: 'charge', name: 'Aegis Wave', cost: 6, cd: 1, kiPerSec: 12, maxCharge: 2.2, minR: 1.4, maxR: 6, dmgMin: 22, dmgMax: 76, maxBlast: 30, speedMin: 42, speedMax: 70, chargePower: 2.8, color: '#ffd24a', color2: '#fff2c0' },
       e: { type: 'cone', name: 'Shield Shout', kiPerSec: 15, range: 28, arc: 1.2, dps: 15, push: 50, color: '#ffd24a' },
@@ -611,7 +611,7 @@ export const ROSTER = [
   {
     id: 'olympus', name: 'OLYMPUS', title: 'The Word Made Lightning', role: 'Divine Champion',
     colors: { primary: '#f63705', secondary: '#e6e2ce', accent: '#ffe270', skin: '#e8c39a', cape: '#e6e2ce' },
-    hp: 150, ki: 130, speed: 33, strength: 8, overdrive: 1.2, threat: 'Very High', flightTier: 3, yells: true, voicePitch: 1.0,
+    hp: 150, ki: 130, speed: 33, strength: 8, overdrive: 1.2, threat: 'Very High', flightTier: 3, afterburner: { mult: 2.1, kiPerSec: 14, wake: ['#ffffff', '#ffe9b0'] }, yells: true, voicePitch: 1.0,
     ai: { style: 'bruiser', range: 26, aggro: 0.8, fly: 0.5 }, evade: { kind: 'dash', name: 'Bolt Step' },
     blurb: 'Say the word and the sky says it back. A kid\'s grin wearing a god\'s wattage.',
     abilities: {
@@ -663,7 +663,7 @@ export const ROSTER = [
     ai: { style: 'summoner', range: 34, aggro: 0.7, fly: 0 }, evade: { kind: 'slide', name: 'Tidal Rush', slideT: 0.65, power: 128 },
     blurb: 'A trident, a temper, and a court of things with too many teeth that answer when he whistles.',
     abilities: {
-      lmb: { type: 'melee', name: 'Trident Pierce', cost: 10, cd: 0.7, damage: 26, range: 14, arc: 0.7, lunge: 44, knock: 48, launch: 12, dmgClass: 'slash', color: '#7fe6ff' },
+      lmb: { type: 'melee', name: 'Trident Pierce', gear: true, cost: 10, cd: 0.7, damage: 26, range: 14, arc: 0.7, lunge: 44, knock: 48, launch: 12, dmgClass: 'slash', color: '#7fe6ff' },
       rmb: { type: 'summon', name: 'The Drowned Court', cost: 18, cd: 5, count: 3, max: 6, duration: 12, damage: 8, interval: 0.65, speed: 84, color: '#0f9f8f', color2: '#eaffff' },
       q: { type: 'cone', name: 'Riptide', kiPerSec: 16, range: 32, arc: 1.15, dps: 16, push: 54, color: '#7fe6ff' },
       e: { type: 'projectile', name: 'Harpoon Throw', cost: 8, cd: 0.5, damage: 20, speed: 115, radius: 1, blast: 5, color: '#7fe6ff', color2: '#fff' },
@@ -679,13 +679,13 @@ export const ROSTER = [
     ai: { style: 'bruiser', range: 22, aggro: 0.8, fly: 0 }, evade: { kind: 'dash', name: 'Offbeat' },
     blurb: 'Trained fists and a voice that files buildings under rubble. You\'ll hear her before you see her. Everyone does.',
     abilities: {
-      lmb: { type: 'cone', name: 'Siren Scream', kiPerSec: 18, range: 36, arc: 1.05, dps: 22, push: 62, lift: 4, color: '#ffe066' },
+      lmb: { type: 'cone', name: 'Siren Scream', kiPerSec: 18, range: 36, arc: 1.05, dps: 22, push: 62, lift: 4, sonic: true, color: '#ffe066' },   // brief Tier1 #5: transparent pressure, rings + dust
       rmb: { type: 'rush', name: 'Combat Cadence', cost: 14, cd: 1.9, range: 56, hits: 7, interval: 0.08, damage: 8, finisher: 30, color: '#ffe066' },
       q: { type: 'melee', name: 'Heel Turn', cost: 9, cd: 0.7, damage: 22, range: 11, arc: 0.9, lunge: 40, knock: 44, launch: 10, color: '#ffe066' },
       e: { type: 'projectile', name: 'Focused Note', cost: 7, cd: 0.4, damage: 16, speed: 130, radius: 0.9, blast: 5, color: '#ffe066', color2: '#fff' },
       f: { type: 'buff', name: 'Crescendo', cost: 22, cd: 16, mult: 1.5, dur: 9, color: '#ffe066', color2: '#fff' },
       shift: { type: 'dash', name: 'Staccato Step', cost: 4, cd: 0.5, power: 98, iframes: 0.28, color: '#ffe066' },
-      r: { type: 'cone', name: 'THE CANARY CRY', kiPerSec: 34, range: 52, arc: 0.9, dps: 44, push: 90, lift: 8, color: '#ffe066' },
+      r: { type: 'cone', name: 'THE CANARY CRY', kiPerSec: 34, range: 52, arc: 0.9, dps: 44, push: 90, lift: 8, sonic: true, color: '#ffe066' },
     },
   },
   {
@@ -728,10 +728,10 @@ export const ROSTER = [
     ai: { style: 'rusher', range: 16, aggro: 0.85, fly: 0 }, evade: { kind: 'leap', name: 'Quadruple Somersault', up: 44, fwd: 66 },
     blurb: 'Raised in a circus, trained by the night. Two sticks, zero fear, unreasonable hang-time.',
     abilities: {
-      lmb: { type: 'melee', name: 'Escrima Cross', cost: 8, cd: 0.55, damage: 18, range: 11, arc: 0.9, lunge: 42, knock: 36, launch: 8, color: '#37c7ff' },
+      lmb: { type: 'melee', name: 'Escrima Cross', gear: true, cost: 8, cd: 0.55, damage: 18, range: 11, arc: 0.9, lunge: 42, knock: 36, launch: 8, color: '#37c7ff' },
       rmb: { type: 'rush', name: 'Flying Grayson', cost: 14, cd: 1.8, range: 58, hits: 7, interval: 0.08, damage: 8, finisher: 30, color: '#37c7ff' },
       q: { type: 'volley', name: 'Wing-Ding Fan', cost: 3, interval: 0.1, damage: 6, speed: 125, radius: 0.7, blast: 2.6, spread: 0.11, arrow: true, color: '#37c7ff', color2: '#fff' },
-      e: { type: 'melee', name: 'Staff Sweep', cost: 10, cd: 0.8, damage: 24, range: 13, arc: 1.15, lunge: 30, knock: 46, launch: 12, color: '#37c7ff' },
+      e: { type: 'melee', name: 'Staff Sweep', gear: true, cost: 10, cd: 0.8, damage: 24, range: 13, arc: 1.15, lunge: 30, knock: 46, launch: 12, color: '#37c7ff' },
       f: { type: 'buff', name: 'Flow State', cost: 20, cd: 16, mult: 1.45, dur: 9, color: '#37c7ff', color2: '#fff' },
       shift: { type: 'dash', name: 'Tumbler', cost: 4, cd: 0.45, power: 102, iframes: 0.3, color: '#37c7ff' },
       r: { type: 'rush', name: 'Finale Routine', cost: 18, cd: 12, range: 66, hits: 9, interval: 0.07, damage: 8, finisher: 34, color: '#37c7ff' },
@@ -796,8 +796,8 @@ export const ROSTER = [
     abilities: {
       lmb: { type: 'rifle', name: 'Riot Scattergun', cost: 6, interval: 0.55, damage: 26, speed: 140, radius: 1.1, blast: 6, spread: 0.06, recoil: 4.5, color: '#ff5a4a', color2: '#fff' },
       rmb: { type: 'rifle', name: 'Service Revolver', cost: 4, interval: 0.3, damage: 14, speed: 155, radius: 0.7, blast: 3, spread: 0.015, recoil: 2, color: '#ffd97a', color2: '#fff' },
-      q: { type: 'melee', name: 'Nightstick', cost: 9, cd: 0.7, damage: 24, range: 11, arc: 0.9, lunge: 36, knock: 46, launch: 8, color: '#ff5a4a' },
-      e: { type: 'projectile', name: 'Gas Canister', cost: 9, cd: 0.8, damage: 12, speed: 62, radius: 1.4, blast: 10, grav: 10, payload: 'gas', canister: true, color: '#8a8f99', color2: '#e8e4da' },
+      q: { type: 'melee', name: 'Nightstick', gear: true, cost: 9, cd: 0.7, damage: 24, range: 11, arc: 0.9, lunge: 36, knock: 46, launch: 8, color: '#ff5a4a' },
+      e: { type: 'projectile', name: 'Gas Canister', gear: true, cost: 9, cd: 0.8, damage: 12, speed: 62, radius: 1.4, blast: 10, grav: 10, payload: 'gas', canister: true, color: '#8a8f99', color2: '#e8e4da' },
       f: { type: 'buff', name: 'My Son Goes Home', cost: 20, cd: 18, mult: 1.5, dur: 10, heal: 35, color: '#ff5a4a', color2: '#fff' },
       shift: { type: 'dash', name: 'Duck & Cover', cost: 4, cd: 0.55, power: 92, iframes: 0.28, color: '#ff5a4a' },
       r: { type: 'summon', name: 'Backup Called', cost: 26, cd: 16, count: 3, max: 6, duration: 13, damage: 8, interval: 0.6, speed: 86, color: '#2a5ad8', color2: '#ff5a4a' },
@@ -898,7 +898,7 @@ export const ROSTER = [
       e: { type: 'melee', name: 'Savage Lunge', cost: 12, cd: 1, damage: 27, range: 13, arc: 0.75, lunge: 64, knock: 50, launch: 14, fly: true, dmgClass: 'slash', color: '#ffb03a' },
       f: { type: 'buff', name: 'Blood Frenzy', cost: 22, cd: 16, mult: 1.6, dur: 9, heal: 20, color: '#ffb03a', color2: '#fff' },
       shift: { type: 'dash', name: 'Predator Weave', cost: 4, cd: 0.45, power: 106, iframes: 0.26, color: '#ffb03a' },
-      r: { type: 'rush', name: 'NO CAGES', cost: 18, cd: 12, range: 66, hits: 10, interval: 0.06, damage: 8, finisher: 36, color: '#ffb03a' },
+      r: { type: 'rush', name: 'NO CAGES', cost: 18, cd: 12, range: 66, hits: 10, interval: 0.06, damage: 8, finisher: 24, dmgClass: 'slash', color: '#ffb03a' },   // brief Tier1 #20: the repeated hits are the rhythm; the finisher is deliberately light
     },
   },
 ];
