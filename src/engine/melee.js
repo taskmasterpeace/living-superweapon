@@ -6,6 +6,14 @@ import * as THREE from 'three';
 
 const _v = new THREE.Vector3();
 
+// MOMENTUM MELEE (manual §10): below 12 u/s a jab is a jab; above, damage and knockback climb
+// together on an ease-in curve to ×2.5 at ~58 u/s (full tier-3 cruise). One number, read once,
+// sampled BEFORE the lunge impulse so the engine's own forward hop can never fake momentum.
+export function momentumMult(f) {
+  const k = Math.min(1, Math.max(0, ((f._momSpd || 0) - 12) / 46));
+  return 1 + 1.5 * k * k;
+}
+
 export class MeleeSystem {
   _swingKind(f) {
     if (f._swingK) return f._swingK;                      // cached per fighter
@@ -31,6 +39,9 @@ export class MeleeSystem {
     f.strikeActive = 0.2 / pace; f.strikeHit = new Set(); f.comboWin = 0;
     f.strikeCd = (f.strikeIdx === 2 ? 0.5 : 0.3) / pace;
     f.state = 'cast'; f.stateT = 0;
+    // MOMENTUM (manual §10): read the speed you BROUGHT to the punch — before the lunge fakes one
+    f._momSpd = Math.hypot(f.vel.x, f.vel.y, f.vel.z);
+    f._momDive = !!(f.flying && (f.descendHeld || f.vel.y < -14));
     const lunge = f.strikeIdx === 2 ? 26 : 16;
     f.vel.x += f.aim.x * lunge; f.vel.z += f.aim.z * lunge;
     this.game.audio.swing(this._swingKind(f), f.pos);
@@ -68,6 +79,8 @@ export class MeleeSystem {
     const str = f.def.strength ?? 5;
     f.strikeActive = 0; f.state = 'cast'; f.stateT = 0; f.punchPose = 1;
     f.strikeCd = haymaker ? 0.7 : 0.45;
+    f._momSpd = Math.hypot(f.vel.x, f.vel.y, f.vel.z);   // momentum read BEFORE the lunge (manual §10)
+    f._momDive = !!(f.flying && (f.descendHeld || f.vel.y < -14));
     const lunge = haymaker ? 40 : 26;
     f.vel.x += f.aim.x * lunge; f.vel.z += f.aim.z * lunge;
     f.invuln = Math.max(f.invuln, haymaker ? 0.1 : 0.05);
@@ -84,6 +97,7 @@ export class MeleeSystem {
     if (foe) {
       f._heavyT = 0;
       const str = f.def.strength ?? 5, hay = f._heavyHay, p = f._heavyP;
+      const mom = momentumMult(f), dive = f._momDive && (f._momSpd || 0) > 20;
       const dmg = (hay ? 20 + p * 14 : 13) * (0.85 + str * 0.03) * f.powerBuff * (hay ? 1 : ((f.sheet && f.sheet.jabMult) || 1));
       const blocked = foe.guarding && foe.staggerT <= 0 && (foe.def.guardType === 'barrier' || this._front(foe, f));
       const imp = foe.pos.clone().set((f.pos.x + foe.pos.x) / 2, 5.7, (f.pos.z + foe.pos.z) / 2);
@@ -100,11 +114,15 @@ export class MeleeSystem {
         f.strikeCd = Math.max(f.strikeCd, 0.5); f.hitstop = Math.max(f.hitstop, 0.1);   // punishable — counter window
         g.vfx.impactStar(imp, 7, '#bfe0ff', 0.16); g.audio.zap(520);
       } else {
-        foe.takeDamage(dmg, { src: f, strike: true, hitstop: hay ? 0.16 : 0.1, kb: { x: f.aim.x * (hay ? 54 : 26), y: hay ? 6 : 3, z: f.aim.z * (hay ? 54 : 26) }, launch: hay ? 16 : 6 });
+        const fp = 0.6 + 0.4 * mom;   // star + sound ride the same momentum number
+        foe.takeDamage(dmg * mom, { src: f, strike: true, hitstop: hay ? 0.16 : 0.1,
+          kb: { x: f.aim.x * (hay ? 54 : 26) * mom, y: (hay ? 6 : 3) * mom, z: f.aim.z * (hay ? 54 : 26) * mom },
+          launch: dive ? -(36 + (f._momSpd || 0) * 0.45) : (hay ? 16 : 6) * mom });   // dive haymaker = meteor drop
         f.hitstop = Math.max(f.hitstop, hay ? 0.12 : 0.07);
-        g.vfx.impact(imp, { x: f.aim.x, z: f.aim.z }, { color: f.def.colors.accent, power: hay ? 2 : 1.1 });
-        g.world.shake(hay ? 1.8 : 0.9); g.audio.impact(hay ? 1.5 : 0.9, imp);
-        if (hay) { g.world.punch(0.68); g.slowmo(0.13, 0.4); if (g.hud) g.hud.flashScreen('#fff', 0.15); g.audio.boom(0.5); }
+        g.vfx.impact(imp, { x: f.aim.x, z: f.aim.z }, { color: f.def.colors.accent, power: (hay ? 2 : 1.1) * fp });
+        g.world.shake((hay ? 1.8 : 0.9) * fp); g.audio.impact((hay ? 1.5 : 0.9) * fp, imp);
+        if (hay || mom > 1.55) { g.world.punch(0.68); g.slowmo(0.13, 0.4); if (g.hud) g.hud.flashScreen('#fff', 0.15); g.audio.boom(0.5); }
+        if (dive) { g.vfx.ring(foe.pos.clone().setY(Math.max(0.4, foe.pos.y - 4)), { color: '#ffffff', r0: 1, r1: 10, life: 0.3, flat: true, y: 0.4 }); g.audio.boom(0.5, imp); }
       }
     }
   }
@@ -165,17 +183,28 @@ export class MeleeSystem {
       if (foe && f.strikeHit && !f.strikeHit.has(foe.id)) {
         f.strikeHit.add(foe.id);
         const fin = f.strikeIdx === 2;
-        const dmg = (fin ? 17 : 8) * f.powerBuff * ((f.sheet && f.sheet.jabMult) || 1);   // FIGHTING + Martial Artist
+        // MOMENTUM: an arriving punch is a different animal from a standing one. BLOCKED hits stay
+        // at BASE numbers — momentum raises the reward, never what a raised guard has to eat.
+        const mom = momentumMult(f), dive = f._momDive && (f._momSpd || 0) > 20;
+        const blocked = foe.guarding && foe.staggerT <= 0 && (foe.def.guardType === 'barrier' || this._front(foe, f));
+        const kbs = blocked ? 1 : mom;
+        const dmg = (fin ? 17 : 8) * kbs * f.powerBuff * ((f.sheet && f.sheet.jabMult) || 1);   // FIGHTING + Martial Artist
         const hs = fin ? 0.14 : 0.07;
-        const blocked = foe.guarding && foe.staggerT <= 0;
-        foe.takeDamage(dmg, { src: f, strike: true, hitstop: hs, kb: { x: f.aim.x * (fin ? 14 : 8), y: fin ? 30 : 2, z: f.aim.z * (fin ? 14 : 8) } });
+        foe.takeDamage(dmg, { src: f, strike: true, hitstop: hs,
+          kb: { x: f.aim.x * (fin ? 14 : 8) * kbs, y: (fin ? 30 : 2) * kbs, z: f.aim.z * (fin ? 14 : 8) * kbs },
+          launch: dive && !blocked ? -(34 + (f._momSpd || 0) * 0.45) : 0 });   // DIVE PUNCH: down-force sized to survive kb resistance and cross the -38 ground-slam gate
         f.hitstop = Math.max(f.hitstop, hs * (fin ? 0.9 : 0.6));      // attacker freezes too — meaty impact
         const imp = foe.pos.clone().set((f.pos.x + foe.pos.x) / 2, 5.7, (f.pos.z + foe.pos.z) / 2);
         if (blocked) { g.vfx.impactStar(imp, 7, '#bfe0ff', 0.16); g.world.shake(0.35); g.audio.zap(520, imp); f.strikeCd = Math.max(f.strikeCd, 0.5); f.hitstop = Math.max(f.hitstop, 0.09); }   // jab blocked → punishable
         else {
-          g.vfx.impact(imp, { x: f.aim.x, z: f.aim.z }, { color: f.def.colors.accent, power: fin ? 1.7 : 0.65 });
-          g.world.shake(fin ? 1.5 : 0.6); g.audio.impact(fin ? 1.3 : 0.65, imp);
-          if (fin) { g.world.punch(0.7); g.slowmo(0.12, 0.4); if (g.hud) g.hud.flashScreen('#fff', 0.16); g.audio.boom(0.4); }
+          const fp = 0.6 + 0.4 * mom;   // the impact star and the hit sound ride the SAME number
+          g.vfx.impact(imp, { x: f.aim.x, z: f.aim.z }, { color: f.def.colors.accent, power: (fin ? 1.7 : 0.65) * fp });
+          g.world.shake((fin ? 1.5 : 0.6) * fp); g.audio.impact((fin ? 1.3 : 0.65) * fp, imp);
+          if (fin || mom > 1.55) { g.world.punch(0.7); g.slowmo(0.12, 0.4); if (g.hud) g.hud.flashScreen('#fff', 0.16); g.audio.boom(0.4); }
+          if (dive) {   // the launcher lands: arrival ring under the victim — the ground finishes the sentence
+            g.vfx.ring(foe.pos.clone().setY(Math.max(0.4, foe.pos.y - 4)), { color: '#ffffff', r0: 1, r1: 9, life: 0.3, flat: true, y: 0.4 });
+            g.audio.boom(0.45, imp);
+          }
         }
         if (!fin) f.comboWin = 0.42;
       }

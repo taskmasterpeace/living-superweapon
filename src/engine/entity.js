@@ -726,7 +726,7 @@ export class Fighter {
     // launched hard enough → walls and the ground become weapons for ~1.1s (slam damage in _physics)
     if (!opts.slam) {
       const kmag = opts.kb ? Math.hypot(opts.kb.x || 0, opts.kb.z || 0) : 0;
-      if (kmag > 30 || (opts.launch || 0) > 12) this.launchT = 1.1;
+      if (kmag > 30 || Math.abs(opts.launch || 0) > 12) this.launchT = 1.1;   // |launch|: a dive-punch DOWN-force arms slam physics too (manual §10)
       if ((kmag > 14 || (opts.launch || 0) > 6) && (this.hanging || this._grapple)) this.releaseHang();   // knocked off the wall
     }
     // ---- THE STUN (manual §9): a big enough beating in a short window scrambles anyone ----

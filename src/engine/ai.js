@@ -52,6 +52,7 @@ export class AI {
     this._errA = 0; this._errT = 0; this._errTo = 0;
     this._acq = 0;                                 // acquisition timer — can't shoot the instant you appear
     this._lastSeen = false;
+    this._opener = 0;                              // cruise-punch approach timer (momentum melee, manual §10)
   }
 
   // The hand wobble: a slow random walk, not per-frame noise (per-frame reads as a laser with static).
@@ -161,7 +162,15 @@ export class AI {
     out.aimAt = { x: ax - aimed.z * spread, y: ty + rand(-1.4, 1.4), z: az + aimed.x * spread };
     out.target = real;
     // ACQUISITION: eyes-on doesn't mean trigger-ready — a beat to register and commit
-    if (!this._lastSeen) this._acq = this.reflex * rand(0.8, 1.5);
+    if (!this._lastSeen) {
+      this._acq = this.reflex * rand(0.8, 1.5);
+      // THE CRUISE-PUNCH OPENER (momentum melee, manual §10): a confident flier OPENS the
+      // engagement by throttling straight in and arriving fist-first. Doctrine (flyTend) picks
+      // WHO does it; difficulty buys the judgment to use it — never extra physics.
+      if (this.flyTend > 0.55 && b.flightTier >= 2 && d > 42 && d < 150
+          && b.hp > b.maxHp * 0.5 && chance(0.18 + 0.3 * Math.min(2, this.level)))
+        this._opener = Math.min(3.2, d / 34);
+    }
     this._lastSeen = true;
     if (this._acq > 0) this._acq -= dt;
     const ready = this._acq <= 0 && aimed.onTarget;                 // must actually be FACING you to fire
@@ -175,6 +184,13 @@ export class AI {
     if (d > pref + 8) { mx = dx / d; mz = dz / d; } else if (d < pref - 8) { mx = -dx / d; mz = -dz / d; }
     const sa = 0.4 + this.aggro * 0.3; mx += (-dz / d) * this.strafe * sa; mz += (dx / d) * this.strafe * sa;
     out.move = { x: mx, z: mz };
+    // opener: full commit straight at the foe under throttle; arriving overhead = drop into a dive punch
+    if (this._opener > 0) {
+      this._opener -= dt;
+      if (d < 13) this._opener = 0;                          // arrived — the melee layer throws the punch
+      else out.move = { x: dx / d, z: dz / d };              // the run-up IS the attack
+      out.fly = d > 24 || dh > -6;                           // close + above the foe = descend onto them
+    }
 
     // --- abilities (only when the target is actually in view) ---
     if (this.action) {

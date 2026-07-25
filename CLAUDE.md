@@ -827,6 +827,25 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   knocked out of the sky. **VEGA's Violet Lance**: radius 2.2→1.45 + `spiral: true` — 26
   instanced orbs wound 3.5 turns down the hose (built/updated/disposed with the beam).
 
+## MOMENTUM MELEE (2026-07-24) — manual §10, spec Part One
+- **Contact speed scales the trifecta**: `strike()`/`_heavy()` stamp `f._momSpd` (3D |vel|)
+  **BEFORE the lunge impulse** (the lunge would fake momentum otherwise); `momentumMult(f)`
+  (exported from melee.js) = `1 + 1.5·k²`, `k=(spd−12)/46` → ×1 standing, ~×1.3 run-up,
+  ~×1.8 tier-3 flight, ×2.5 at ~58 u/s full cruise. Damage, kb, impact star, shake and hit
+  audio all ride the SAME number. **Blocked hits stay at BASE** — momentum never raises what
+  a guard eats, and `onBlockedStrike` bounces exactly as before (the block law is untouched).
+  Jab blocked-check is arc-aware now (matches heavy/takeDamage — behind-guard jabs no longer
+  self-punish). Kit `melee`-TYPE abilities keep authored numbers.
+- **DIVE PUNCH**: flying + descending at swing start = launcher — the hit trades its up-pop
+  for `launch: -(34+spd·0.45)` down-force (sized to beat STRENGTH kb-resistance to the −38
+  ground gate; metal still plants through it); `takeDamage` arms `launchT` on **|launch|>12**
+  (magnitude — no caller ever passed negative) so the ground arrival is a real slam (crater +
+  shockwave + damage credited to the puncher). Attacker's hard landing plays the knee-crouch.
+- **Bots**: `ai._opener` (set on acquisition, flyTend>0.55 + tier≥2, chance rides ai.level) =
+  full-commit cruise approach, dropping onto an overhead arrival; and ANY bot arriving at the
+  melee mixup >26 u/s prefers strike over the mixup roll. Turtle branch still wins — nobody
+  feeds a raised guard. Difficulty buys judgment, never physics.
+
 ## THE SAMPLE BANK (2026-07-24) — real recordings for every discrete SFX
 - **`core/samples.js`** (`MANIFEST` + `SampleBank` + `HOT_SET`) + **254 Kenney CC0 oggs in
   `/public/audio`** (~6MB, offline-first; impact/sci-fi/interface/rpg/jingle packs). Every

@@ -298,3 +298,42 @@ is a real answer.
 
 **The Danger Room starts EMPTY** (same date): no bots, no rival, until you order them —
 **N** deploys a Sim Construct, **B** orders a rival. The tutorial orders its own targets.
+
+## §10 · MOMENTUM MELEE (2026-07-24)
+
+**The speed you arrive with is part of the punch.** Every trifecta strike (jab, straight,
+HAYMAKER) reads the attacker's velocity ONCE, at the moment the swing starts — deliberately
+BEFORE the lunge impulse, so the engine's own forward hop can never fake momentum:
+
+- `f._momSpd = |vel|` (full 3D — a dive counts), stamped in `strike()` / `_heavy()` (melee.js).
+- `momentumMult(f)` (exported, melee.js): below **12 u/s** nothing changes; ease-in curve
+  `1 + 1.5·k²` with `k = (spd−12)/46`, capped at **×2.5** at ~58 u/s (full tier-3 cruise).
+  Ladder: standing jab ×1.0 · run-up ~×1.3 · tier-3 flight ~×1.8 · full cruise ×2.5.
+- Damage AND knockback scale by the same multiplier, and the impact star, screen shake and
+  hit audio ride the same number — you HEAR a cruise punch before any number renders.
+
+**THE DIVE PUNCH.** Flying + descending (descend held, or sinking faster than 14 u/s) at swing
+start = a LAUNCHER: the hit trades its up-pop for DOWN-FORCE (`launch: -(34 + spd·0.45)` —
+sized to survive the victim's STRENGTH kb-resistance and still cross the −38 ground-slam gate;
+metal frames can still plant through it, which is honest), and `takeDamage` arms `launchT` on
+**|launch| > 12** — the check is a magnitude now; no pre-existing caller passed a negative
+launch — so the victim's ground arrival is a real slam: crater,
+shockwave, slam damage, credited to the puncher via `lastHitBy`. The attacker's own hard landing
+plays the existing knee-crouch and body-typed land audio. A dive HAYMAKER swaps its 16-launch
+pop for the down-force — a meteor drop.
+
+**The law that does not move:** a BLOCKED momentum strike does base damage and base knockback —
+the guard chip never grows with speed, and `onBlockedStrike` bounces the attacker exactly as
+before. Momentum raises the reward, never the safety. (The jab path's blocked check is now
+arc-aware like the heavy path already was — striking a guard from BEHIND no longer self-punishes
+the attacker for a hit that actually landed.)
+
+**Bots:** high-`flyTend` fliers may open an engagement with a CRUISE-PUNCH approach
+(`ai._opener`, set on acquisition, chance scales with `ai.level`) — a full-commit straight-line
+closing run under throttle that drops onto you if the bot arrives overhead. Difficulty buys how
+reliably they judge the moment; the physics is the same one players get. Independently, any bot
+arriving at the melee mixup above 26 u/s prefers the strike over the mixup roll — arriving at
+speed IS the decision. Neither feeds a raised guard (the turtle branch still wins).
+
+Kit `melee`-TYPE abilities (Sky Smash, Rush Combo …) keep their authored numbers — momentum is
+the trifecta's law; ability slots price their own violence.

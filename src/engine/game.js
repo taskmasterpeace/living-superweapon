@@ -1693,6 +1693,9 @@ export class Game {
           else if (!f._aiCharge && (f.def.meleeTiers ?? 3) >= 2) { this.melee.chargeStart(f); f._aiCharge = 0.6 + Math.random() * 0.5; f._meleeCd = 1.1; }   // or CRUSH it
           else this.melee.grab(f);
         }
+        // ARRIVING AT SPEED = PUNCH (momentum melee, manual §10): a bot that closed under cruise
+        // cashes the approach in rather than rolling the normal mixup. Never into a raised guard.
+        else if (Math.hypot(f.vel.x, f.vel.y, f.vel.z) > 26) { this.melee.strike(f); f._meleeCd = 0.55 + Math.random() * 0.4; }
         else if (style === 'grappler' && r < 0.55) this.melee.grab(f);         // Cell seeks grabs to absorb/heal
         else if (r < (style === 'rusher' ? 0.72 : 0.5)) this.melee.strike(f);
         else if (r < 0.68) this.melee.grab(f);
