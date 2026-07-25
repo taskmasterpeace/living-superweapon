@@ -1132,7 +1132,15 @@ export class Fighter {
         } else if (this.flyHeld) {
           const cb = bandAt2(this.pos.y);
           const lid = deckOf(Math.min(cb, maxBand));
-          if (cb >= maxBand && lid != null && this.pos.y >= lid - 0.6) {
+          // ⚠ A LIT AFTERBURNER IS HOW YOU EARN THE BAND ABOVE. The deck servo and LOW ORBIT
+          // (manual §15 and §17) shipped the same day and contradicted each other: the servo pins
+          // a tier-3 flier at sky + (ceiling − sky)·0.55 — 301 on the flagship — while departure
+          // needs ceiling + 44 = 372. So the whole leave-the-planet route was unreachable through
+          // the flight controls, and the only reason it ever tested green was that the test set
+          // the altitude directly. The ceiling clamp below already makes exactly this exception;
+          // the servo has to make it too, or the two rules disagree about the same fighter.
+          const burning = !!(this.def.afterburner && this._burnT > 0.8);
+          if (!burning && cb >= maxBand && lid != null && this.pos.y >= lid - 0.6) {
             // your ceiling deck — the servo holds you there instead of letting you drift into a band you haven't earned
             this.vel.y = damp(this.vel.y, clamp((lid - this.pos.y) * 2.6, -FLY_SINK, FLY_SINK * 0.9), 6, dt);
           } else {

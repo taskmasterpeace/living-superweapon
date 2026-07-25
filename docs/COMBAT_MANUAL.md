@@ -577,7 +577,26 @@ punching through the sky — the map does the miles, and the cinematic is the lo
   ceiling +90 — the offer happens well before it).
 - **The DEPART gate** (`game.onDepart`): climbing past ceiling +44 with the throttle open
   offers the world map, once per climb (`_departing` re-arms after a real descent below
-  ceiling −40). Verified: offered exactly once at altitude 373 over a 328 ceiling.
+  ceiling −40).
+
+**⚠ AMENDMENT 2026-07-25 — THE SERVO AND THE CEILING DISAGREED, AND THE TEST DIDN'T NOTICE.**
+This section and §15's four-deck ladder shipped on the same day and contradicted each other. The
+servo pins a tier-3 flier at its top deck, `sky + (ceiling − sky) · 0.55` — **301** on the
+flagship — while this gate needs ceiling + 44 = **372**. Flown through the actual controls, SOL
+lit the burner and held ascend for fifteen seconds without ever leaving 301. Low orbit, planetary
+travel and the whole heliopause sequence were unreachable by any player.
+
+The 2026-07-24 verification above recorded "offered exactly once at altitude 373" because it
+**set the altitude** rather than flying to it. That is the failure worth remembering: a gated
+feature can pass a test, be documented as working, and still be impossible to reach.
+
+> **If you test a gated route, drive the GATE.** Anything that writes the gated value directly is
+> testing your arithmetic, not the player's path.
+
+The fix is one condition, not a new rule: the servo now yields to `def.afterburner && _burnT >
+0.8` — the SAME exception the ceiling clamp already makes. Two rules about one fighter have to
+agree about that fighter. Releasing cruise kills `_burnT`, so docking on the clouds deck behaves
+exactly as before for everyone, burner-class included.
 - **The world map** (`hud.showDepart`): search all 1,050 ATLAS cities, each row showing
   country, population, climate line and a TRANSIT time. STAY descends. **The GPS and the
   world map remain separate tools** — the radar never leaves the street.

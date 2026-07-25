@@ -1393,7 +1393,8 @@ export class HUD {
   updateModeBar(g) {
     const el = this.el.mode; if (!g.mode) { el.style.display = 'none'; return; }
     const h = g.mode.hud(g);
-    if (h.type === 'training') { el.style.display = 'none'; return; }
+    // no score, no clock, no target — free roam and the Danger Room both have nothing to report
+    if (h.type === 'training' || h.type === 'freeroam') { el.style.display = 'none'; return; }
     el.style.display = 'flex';
     let html = '';
     if (h.type === 'duel') html = `<div class="seg"><div class="mv" style="color:var(--good)">${h.a}</div><div class="ml">${h.aName}</div></div><div class="vs">${h.a}–${h.b} · first to ${h.target}</div><div class="seg"><div class="mv" style="color:var(--danger-2)">${h.b}</div><div class="ml">${h.bName}</div></div>`;

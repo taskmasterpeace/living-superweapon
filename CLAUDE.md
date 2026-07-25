@@ -1017,6 +1017,17 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
 ## LOW ORBIT TRAVEL (2026-07-24) — manual §17
 - **Ceiling opens for a LIT burner only** (entity ceiling clamp branch; hard stop +90);
   climbing past ceiling+44 fires `game.onDepart` once per climb (re-arms below ceiling−40).
+- ⚠ **THE DECK SERVO MADE THIS UNREACHABLE, AND THE ORIGINAL TEST DIDN'T CATCH IT** (found
+  2026-07-25). The four-deck ladder and LOW ORBIT shipped the SAME DAY and contradicted each
+  other: the servo pins a tier-3 flier at `sky + (ceiling − sky)·0.55` — **301** on the flagship —
+  while departure needs ceiling+44 = **372**. Flying the real controls, SOL held SPACE+SHIFT with
+  the burner lit for fifteen seconds and never moved off 301. The 2026-07-24 line below
+  ("SOL through at 373") was measured by setting the altitude, not by flying — which is exactly
+  how a feature can be verified green and still be unreachable by a player.
+  The servo now yields to `def.afterburner && _burnT > 0.8`, the SAME exception the ceiling clamp
+  already makes. Two rules about one fighter have to agree.
+  **⚠ If you test a gated route, drive the GATE — anything that writes the gated value directly is
+  testing your arithmetic, not the player's path.**
 - **`hud.showDepart`** = the world map (1,050 cities, search, climate line, transit time);
   **`hud._playTransit`** = the loading-screen cinematic (starfield + planet limb + typed
   kicker + route arc in the hero's afterburner WAKE colors). ⚠ `.lswovl` defaults
@@ -1381,6 +1392,19 @@ Four laws, three of them the same idea: **a thing must not outlive the match tha
   texture, no program) = a GC pause. Neither recurs once warm. Report them, don't chase them.
   ⚠ `renderer.info.render.calls === 1` in a hidden/backgrounded pane — render early-outs, so
   only SIM timing is meaningful there (same family as the `_ema` reads-98ms artifact).
+
+## FREE ROAM (2026-07-25) — the living city with nothing asked of you
+- **`freeroam` replaced the TRAINING card.** Training is the HALL now (blue/white rooms); the
+  city sandbox became free roam. ⚠ It is deliberately NOT the `training` id: that id puts the
+  world into SIM mode (`world.setSim(id === 'training')`, which FABRICATES a Danger Room instead
+  of building the real city) and switches OFF both the police (`police.active`) and the news crew
+  (`newscrew.enabled`). Free roam wants all three on — the whole point is that the city behaves.
+- Nothing spawns to fight you. **B** orders a rival, **N** a sim construct. Endless (`isOver`
+  returns null), no mode bar (`hud.updateModeBar` hides `freeroam` alongside `training`).
+- KOs here **do** book Elo — free roam is a real theater, not a fabricated one, which is exactly
+  the distinction the existing `modeId !== 'training'` guard already draws.
+- `training` survives as an INTERNAL mode with no card: the tutorial (`hud.onTutorial`) and the
+  atlas tile proving ground (`hud.onProvingGround`) both still enter it.
 
 ## SURFACES — THE FLICKER LAW (2026-07-25) — read `docs/THE_MAP_MAKER.md` §SURFACES
 - **Z-fighting is a SCALE trap, not a maths one.** A depth buffer has finite precision that gets

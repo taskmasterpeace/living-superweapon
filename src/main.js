@@ -332,7 +332,7 @@ addEventListener('keydown', (e) => {
     else { const b = game.spawnRival(); hud.feed('A rival ' + b.name + ' enters the arena!', b.def.colors.accent); }
   }
   // ORDER A TRAINING BOT — the Danger Room starts empty now; targets appear on command
-  if (e.code === 'KeyN' && game.modeId === 'training' && game.player) {
+  if (e.code === 'KeyN' && (game.modeId === 'training' || game.modeId === 'freeroam') && game.player) {
     const p = game.player, a = Math.random() * Math.PI * 2;
     game.spawnDummy(p.pos.x + Math.cos(a) * 16, p.pos.z + Math.sin(a) * 16);
     hud.feed('Sim Construct deployed', '#7fe6ff');

@@ -81,6 +81,21 @@ const MODE_IMPL = {
     tick() {}, onKO() {}, isOver() { return null; },
     hud() { return { type: 'training' }; },
   },
+  // FREE ROAM — the living city with nothing asked of you. This is the DEFAULT way to be in the
+  // world: everything the theatre already simulates (traffic, pedestrians, wildlife, weather, the
+  // day/night clock, the police ladder, the news crew) runs exactly as it does in a match, and
+  // nothing spawns to fight you. ⚠ It is deliberately NOT `training`: that id puts the world into
+  // SIM mode (world.setSim), which fabricates a Danger Room instead of building the real city, and
+  // it also switches OFF the police and the news crew. Free roam wants all three on — the whole
+  // point is that the city behaves.
+  freeroam: {
+    setup(g) {
+      g.ms = { roam: true };
+      // the departure gate is ceiling-based and needs no wiring; a burner-class flier can just go.
+    },
+    tick() {}, onKO() {}, isOver() { return null; },
+    hud() { return { type: 'freeroam' }; },
+  },
   // THE WHITE ROOM — the laboratory half of the Danger Room. No city, no crowd, no police: a white
   // box, an instrumented dummy, and a wall board reporting what your attacks actually did. Every
   // number is captured at onHit (the damage choke point), never re-derived from ability data.
