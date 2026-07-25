@@ -116,6 +116,7 @@ export class MeleeSystem {
       } else {
         const fp = 0.6 + 0.4 * mom;   // star + sound ride the same momentum number
         foe.takeDamage(dmg * mom, { src: f, strike: true, hitstop: hay ? 0.16 : 0.1,
+          dmgClass: this._swingKind(f) === 'blade' ? 'slash' : undefined,
           kb: { x: f.aim.x * (hay ? 54 : 26) * mom, y: (hay ? 6 : 3) * mom, z: f.aim.z * (hay ? 54 : 26) * mom },
           launch: dive ? -(36 + (f._momSpd || 0) * 0.45) : (hay ? 16 : 6) * mom });   // dive haymaker = meteor drop
         f.hitstop = Math.max(f.hitstop, hay ? 0.12 : 0.07);
@@ -201,6 +202,7 @@ export class MeleeSystem {
         const dmg = (fin ? 17 : 8) * kbs * f.powerBuff * ((f.sheet && f.sheet.jabMult) || 1);   // FIGHTING + Martial Artist
         const hs = fin ? 0.14 : 0.07;
         foe.takeDamage(dmg, { src: f, strike: true, hitstop: hs,
+          dmgClass: this._swingKind(f) === 'blade' ? 'slash' : undefined,   // claw/blade kits jab with STEEL — wounds (manual §12)
           kb: { x: f.aim.x * (fin ? 14 : 8) * kbs, y: (fin ? 30 : 2) * kbs, z: f.aim.z * (fin ? 14 : 8) * kbs },
           launch: dive && !blocked ? -(34 + (f._momSpd || 0) * 0.45) : 0 });   // DIVE PUNCH: down-force sized to survive kb resistance and cross the -38 ground-slam gate
         f.hitstop = Math.max(f.hitstop, hs * (fin ? 0.9 : 0.6));      // attacker freezes too — meaty impact

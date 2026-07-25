@@ -375,3 +375,34 @@ auto-throws — it is a held, aimed state:
 Measured: bowling B through C = 31.2 to the body, 25.3 to the pin, both credited to the
 thrower, launch flag live at impact; throw into a wall at 38u = 44.2 total (16 release +
 slam), wall cracked, slam credited.
+
+## §12 · BLEEDING (2026-07-24)
+
+**Heavy trauma and every slash-class weapon can OPEN A WOUND** — and the wound's identity is
+that MOVEMENT MAKES IT WORSE.
+
+- **Opening a wound** (the choke point, after the guard branch — blocked hits never wound):
+  `dmgClass: 'slash'` landing ≥ 4, or any `physical` hit landing ≥ 18 (haymakers, slams,
+  thrown cars). Each wound adds a stack, cap 3 (`addBleed`). **Machines (`metal`) and energy
+  bodies cannot bleed**; dummies are exempt. Bleed ticks themselves can never re-wound.
+- **Carriers** (the §5 protocol): every kit ability with `dmgClass: 'slash'` (FERAL's claws,
+  GALE's knife, SARGE's plasma blade, STORMCALL's axe …), every **blade projectile**
+  (batarangs, the hurled axe — projectiles.js passes `slash`), the trifecta jabs/heavies of
+  any BLADED kit (`_swingKind === 'blade'` → the claws are the fists), and heavy blunt
+  trauma from anyone. Three-plus delivery systems by construction.
+- **The tick**: while moving, `1.1 × stacks × mv` hp/s, where `mv` = 1 walking (> 8 u/s) and
+  **2.1 sprinting (> 26 u/s)** — measured 5.68 vs 11.94 over 3s at 2 stacks. Ticks land
+  every 0.5s **through `takeDamage`** (`dot`, `trueDamage` — the wound is already inside;
+  armour and shields don't stop what's already bleeding), credited to the wounder — a
+  bleed-out KO books to whoever opened the wound (verified).
+- **The clot**: stand STILL (< 8 u/s) for **4 continuous seconds** and the wound closes
+  itself — zero damage while still, suit un-tints, CLOTTED confirmation. Moving resets the
+  clock. This is the counter, and it is a positioning decision: keep running and win the
+  chase, or stop and mend in the open.
+- **The tell** (the status-language law — no other status may use downward red):
+  red drips falling straight DOWN from the wound, a darkening blood patch on the suit
+  (suit colour lerps toward `#3a0d0d` with stacks, restored on clot/KO), and a splat trail
+  on the ground behind a runner. Drain pulls inward, poison blooms green, fire flickers up —
+  **downward red is bleeding's alone.** Also in the in-game DAMAGE CODEX (THE WOUND LANGUAGE).
+
+Ref: `lsw-bleeding.jpeg` — three-stack runner, tinted suit, mid-stride.

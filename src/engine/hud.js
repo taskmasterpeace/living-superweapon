@@ -1078,6 +1078,12 @@ export class HUD {
       <div class="dgsub"><b>IMMUNE</b> means exactly that — a machine cannot be poisoned, and the number will say so.
         <b>ACID</b> is the answer to armour: it corrodes plate for five seconds, and a chassis that was
         shrugging off bullets starts taking them. Against bare flesh it is the wrong tool.</div>
+      <div class="dgsec">THE WOUND LANGUAGE</div>
+      <div class="dgsub"><b>BLEEDING</b> — heavy physical trauma and every slash-class weapon can open a wound.
+        The wound ticks while you MOVE and tears wide open at a sprint; stand still ~4 seconds and it clots
+        shut on its own. Machines and energy bodies cannot bleed. The tell is red drips falling straight
+        DOWN, a darkening patch on the suit, and a trail on the ground behind a runner — downward red
+        belongs to bleeding alone: drain pulls inward, poison blooms green, fire flickers up.</div>
       <button class="odone oghost">Close</button>
     </div>`;
     el.querySelector('.oghost').onclick = () => { el.style.display = 'none'; };

@@ -87,6 +87,7 @@ export const ALT_BANDS = [   // the ruled four altitude bands — shown as a rin
 // Every damage event carries a `dtype`. Every fighter carries a resistance table. ONE multiplier,
 // applied at the takeDamage choke point, so a defence can never be bypassed by a new ability
 // forgetting about it. Missing entry = 1.0 = full damage.
+const _BLOOD = new THREE.Color('#3a0d0d');   // the suit-darkening target — bleeding's palette, nobody else's
 export const DTYPES = ['physical', 'ballistic', 'energy', 'fire', 'cold', 'toxic', 'acid', 'magic'];
 export const DTYPE_INFO = {
   physical:  { label: 'PHYSICAL',  c: '#e8e2d4', note: 'Fists, slams, thrown cars. The baseline — almost nothing resists it.' },
@@ -469,6 +470,7 @@ export class Fighter {
     // slam physics: launchT > 0 = recently knocked/thrown → wall/ground impacts hurt (dashing into walls doesn't)
     this.launchT = 0; this._slamCd = 0;
     this._thrownT = 0; this._thrownBy = null;   // aimed-throw body-as-projectile window (manual §11)
+    this._bleed = 0; this._bleedStill = 0; this._bleedAcc = 0; this._bleedTick = 0; this._bleedSrc = null; this._suitHex = null;   // BLEEDING (manual §12)
     this.metal = !!def.metal;   // robot: sparks when hit, foot exhaust, sturdier vs knockback
     this.tier = 1;              // power tier (from level) — drives aura color + HUD meter size
     this.tentacles = null;      // built lazily on first update (needs the scene)
@@ -551,6 +553,29 @@ export class Fighter {
   }
 
   // ---- status: damage-over-time (poison/burn/gas arrows & clouds) ----
+  // BLEEDING (manual §12): heavy trauma and slash-class weapons open a WOUND. Movement tears
+  // it wider; stillness clots it shut. Machines and energy bodies cannot bleed. The tell —
+  // red drips falling DOWNWARD — belongs to bleeding alone (the status-language law).
+  addBleed(src) {
+    if (this.metal || this.body === 'energy' || this.isDummy || this.state === 'ko') return;
+    const was = this._bleed || 0;
+    this._bleed = Math.min(3, was + 1);
+    if (src) this._bleedSrc = src;
+    this._bleedStill = 0;
+    if (this._suitHex == null && this.parts && this.parts.mats && this.parts.mats.suit) this._suitHex = this.parts.mats.suit.color.getHex();
+    if (this._game) {
+      if (this._game.hud && was === 0) this._game.hud.damageNumber(this.pos, 'BLEEDING', '#ff4a3a', true);
+      this._game.particles.burst(this.pos.x, this.pos.y + 5, this.pos.z, { count: 6, speed: 8, life: 0.4, size: 1.8, color: ['#c22a2a', '#7a1414'], up: -2, grav: 30, drag: 0.6 });
+    }
+  }
+  clotBleed(game, silent) {
+    if (!(this._bleed > 0)) return;
+    this._bleed = 0; this._bleedAcc = 0; this._bleedStill = 0; this._bleedTick = 0;
+    const mats = this.parts && this.parts.mats;
+    if (mats && mats.suit && this._suitHex != null) mats.suit.color.setHex(this._suitHex);
+    if (!silent && game && game.hud && game.isHuman(this)) game.hud.damageNumber(this.pos, 'CLOTTED', '#e8e2d4', true);
+  }
+
   addDot(o) {
     if (this.state === 'ko' || this.invuln > 0) return;
     const kind = o.kind || 'poison';
@@ -730,6 +755,12 @@ export class Fighter {
       if (kmag > 30 || Math.abs(opts.launch || 0) > 12) this.launchT = 1.1;   // |launch|: a dive-punch DOWN-force arms slam physics too (manual §10)
       if ((kmag > 14 || (opts.launch || 0) > 6) && (this.hanging || this._grapple)) this.releaseHang();   // knocked off the wall
     }
+    // ---- BLEEDING (manual §12): heavy physical trauma and every slash-class weapon OPENS A WOUND.
+    // After the guard branch on purpose: blocked hits never wound. Bleed ticks can't re-wound.
+    if (amount > 0 && opts.src && opts.src !== this && !opts.bleed
+        && ((opts.dmgClass === 'slash' && amount >= 4) || (dtype === 'physical' && amount >= 18))) {
+      this.addBleed(opts.src);
+    }
     // ---- THE STUN (manual §9): a big enough beating in a short window scrambles anyone ----
     // Track burst damage over a rolling ~2s; crossing 24% of max hp = STUNNED (stars around the
     // head, no actions, and a flyer FALLS — "knocked out of the air"). ccRecover shortens it,
@@ -767,6 +798,7 @@ export class Fighter {
     this.state = 'ko'; this.koT = 0; this.flyHeld = false; this.flying = false; this.descendHeld = false;
     this.guarding = false; this.phase = false; this.strikeActive = 0;
     this.frozenT = 0; this.frost = 0; this.stunT = 0; this._burst = 0; this._dots.length = 0; this.meleeCharge = 0; this._heavyT = 0;
+    this.clotBleed(null, true);   // the dead stop bleeding (and the suit un-tints for the respawn)
     if (this.parts.ice) this.parts.ice.visible = false;
     if (this._game && (this.grabbing || this.grabbedBy)) this._game.melee.release(this.grabbing ? this : this.grabbedBy);
     if (this._game) for (const e of this._game.entities) if (e.grabbedBy === this) { e.grabbedBy = null; if (e.state === 'hit') e.state = 'idle'; }   // tentacle holds die with the holder
@@ -828,6 +860,45 @@ export class Fighter {
     // shield pack, guard AND every resistance — a poison arrow ticked TITAN exactly as hard as
     // it ticked a civilian. Damage accumulates and lands as a DISCRETE tick so the number is
     // readable and the hit-flash doesn't strobe at 60Hz.
+    // ---- BLEEDING (manual §12): the wound tears with MOVEMENT and clots with STILLNESS ----
+    if (this._bleed > 0 && this.state !== 'ko') {
+      const bspd = Math.hypot(this.vel.x, this.vel.z);
+      const mv = bspd > 26 ? 2.1 : bspd > 8 ? 1 : 0;   // sprint tears the wound wide open
+      if (mv === 0) { this._bleedStill += dt; if (this._bleedStill >= 4) this.clotBleed(game); }
+      else this._bleedStill = 0;
+      if (this._bleed > 0 && mv > 0) {
+        this._bleedAcc += this._bleed * 1.1 * mv * dt;
+        this._bleedTick += dt;
+        if (this._bleedTick >= 0.5) {
+          this._bleedTick = 0;
+          if (this._bleedAcc >= 0.4) {
+            const a = this._bleedAcc; this._bleedAcc = 0;
+            // through the choke point like every DoT — trueDamage: the wound is already inside
+            this.takeDamage(a, { src: this._bleedSrc, dot: true, bleed: true, unblockable: true, trueDamage: true, dtype: 'physical', hitstop: 0, dmgColor: '#ff4a3a' });
+          }
+        }
+      }
+      if (this._bleed > 0 && game) {
+        // the tell: red drips falling straight DOWN — downward red is bleeding's alone
+        if (Math.random() < dt * (mv > 0 ? 9 : 2.5) * this._bleed) {
+          game.particles.spawn({ x: this.pos.x + (Math.random() * 2 - 1) * 1.6, y: this.pos.y + 4.2 + Math.random() * 1.6, z: this.pos.z + (Math.random() * 2 - 1) * 1.6,
+            vx: this.vel.x * 0.12, vy: -13, vz: this.vel.z * 0.12, life: 0.5, size: 1.5, color: ['#c22a2a', '#7a1414'], grav: 30, drag: 0.3, shrink: true });
+        }
+        // the trail a runner leaves
+        if (mv > 0) {
+          this._bleedTrailT = (this._bleedTrailT || 0) - dt;
+          if (this._bleedTrailT <= 0) {
+            this._bleedTrailT = 0.16;
+            game.particles.spawn({ x: this.pos.x - this.vel.x * 0.05, y: (this.groundY || 0) + 0.5, z: this.pos.z - this.vel.z * 0.05, vx: 0, vy: -1, vz: 0, life: 1.0, size: 2.0, color: ['#8a1a1a', '#5a0e0e'], grav: 2, drag: 3 });
+          }
+        }
+        // the darkening patch on the suit
+        const mats = this.parts && this.parts.mats;
+        if (mats && mats.suit && this._suitHex != null) {
+          mats.suit.color.setHex(this._suitHex).lerp(_BLOOD, Math.min(0.5, this._bleed * 0.17));
+        }
+      }
+    }
     for (let i = this._dots.length - 1; i >= 0; i--) {
       const d = this._dots[i]; d.t -= dt;
       if (this.state !== 'ko' && this.invuln <= 0) {

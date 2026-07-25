@@ -863,6 +863,18 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
 - **Bots**: controlBot clinch branch aims at a second foe it `canSee`, hurls after a
   reflex-paced beat, and does nothing else while holding (return). `_clinchAimT` resets off-clinch.
 
+## BLEEDING (2026-07-24) — manual §12, spec Part Three
+- **`addBleed(src)`/`clotBleed()`** on Fighter; wound opens at the takeDamage choke point
+  AFTER the guard branch (blocked never wounds): slash ≥4 or physical ≥18, stacks cap 3;
+  `metal`/energy-body/dummy exempt; `!opts.bleed` guard stops tick re-wounding. Bladed kits'
+  trifecta jabs pass `dmgClass:'slash'` via `_swingKind` (claws ARE the fists).
+- **Movement tears it** (`update` block): 1.1×stacks×mv hp/s, mv 0 still / 1 walk / 2.1
+  sprint (>26 u/s); ticks land every 0.5s through takeDamage (dot+trueDamage, credited to
+  the wounder — bleed-out KOs book correctly). **4s continuous stillness = clot** (zero dmg
+  while still, suit restored). Tell: downward red drips + suit lerp toward #3a0d0d
+  (`_suitHex` restore contract) + ground splat trail. Downward red is bleeding's ALONE.
+- Codex: DAMAGE CODEX gained THE WOUND LANGUAGE section. Ref lsw-bleeding.jpeg.
+
 ## THE SAMPLE BANK (2026-07-24) — real recordings for every discrete SFX
 - **`core/samples.js`** (`MANIFEST` + `SampleBank` + `HOT_SET`) + **254 Kenney CC0 oggs in
   `/public/audio`** (~6MB, offline-first; impact/sci-fi/interface/rpg/jingle packs). Every
