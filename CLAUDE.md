@@ -1042,6 +1042,30 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
 - ⚠ `saveCustom(picks, def, roster)` takes three args — the def is built separately by
   `buildDef(picks)`. Ref lsw-origin-homeland.jpeg.
 
+## THE WEIGHT LADDER (2026-07-24) — manual §21, everything throwable, none equally
+- **`PROP_WEIGHT` tons (lamp 0.3 · rock 0.5 · tree 1.1 · car 1.9 · plane 24) +
+  `liftCapacity(str)`** (entity.js): human linear `0.22·STR` to 5, superhuman
+  `1.1·2.05^(STR−5)` past it — STR5 = one tree, STR6 = first car (2.25t), STR10 = the
+  only airliner rank (39.8t). **`bodyWeight(def)`** = 0.08 + STR·0.014 + 0.42 metal +
+  hp-over-100 (GALE 0.126 · RAGE 0.316 · TITAN 0.678).
+- **`propInReach` is capacity-gated** (the `s >= 6` car check is gone) and stashes the
+  nearest refusal on `f._tooHeavyProp` so grabProp can feed the two numbers
+  ("TOO HEAVY — the car is ~1.9t; you lift ~0.9t"). Carry slowdown
+  `1 − 0.45/max(0.9, ratio)` (clamp 0.42–0.93); hurl speed `74 × clamp(0.5 +
+  0.16·log2(ratio), 0.5–1.25)` computed ONCE at grab, stored `f._carry.spd`, and
+  **updateThrowArc reads the stored number** — the preview can't promise what the arm
+  can't deliver. Impact damage rides `0.75 + 0.25·ratio` (cap 1.6).
+- **PLANES are props**: `citytiles.plane()` registers meshes in `ctx.planeProps` →
+  `buildTiles` returns them → `world.planes` (cleared in `_teardownCity`; flagship
+  none). Grab hides the real meshes, carried silhouette rides high (h 17); the throw
+  lands as a disaster (blast 22, power 2.4, crater, `world.punch`, slowmo).
+- **Person-vs-person battles weight** (melee `_throw` + the clinch arc preview):
+  hurl × `clamp(0.75 + 0.15·log2(liftCapacity(holder)/bodyWeight(victim)), 0.45–1.2)`.
+  Measured: RAGE→GALE 115 u/s · GALE→RAGE 57 · GALE→TITAN 47 (the plate resists).
+- ⚠ melee.js now imports from entity.js (safe — entity never imports melee).
+  ⚠ `runSlot(c, key, inp, g)` — fighter FIRST, game LAST (battery harness order).
+  Rocks stay ledgered in BACKLOG (boulders are cover). Ref lsw-weight-plane.jpeg.
+
 ## THE SAMPLE BANK (2026-07-24) — real recordings for every discrete SFX
 - **`core/samples.js`** (`MANIFEST` + `SampleBank` + `HOT_SET`) + **254 Kenney CC0 oggs in
   `/public/audio`** (~6MB, offline-first; impact/sci-fi/interface/rpg/jingle packs). Every

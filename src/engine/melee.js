@@ -2,6 +2,7 @@
 // Per-character variants: teleport-escape & energy-intangibility break front grabs; thorns hurt the holder;
 // grabHeal lifesteals throws. Back-grabs (from behind) are guaranteed and hit harder.
 // Charged melee: hold strike to wind up — tap jab · straight · HAYMAKER (crushes guards, see chargeRelease).
+import { liftCapacity, bodyWeight } from './entity.js';
 import * as THREE from 'three';
 
 const _v = new THREE.Vector3();
@@ -163,7 +164,11 @@ export class MeleeSystem {
     const back = holder.grabMode === 'back';
     const str = holder.def.strength ?? 5;
     const dmg = (back ? 16 : 10) * holder.powerBuff;
-    const spd = (back ? 60 : 48) + str * 4.6;                     // STRENGTH scales the hurl
+    // PERSON VS PERSON BATTLES WEIGHT (manual §21): the hurl is strength against the victim's
+    // body weight — a titan yeets a gunman across the block; the gunman can barely shove the
+    // titan off his feet. Ratio-logged so the extremes stay playable at both ends.
+    const wr = Math.max(0.45, Math.min(1.2, 0.75 + 0.15 * Math.log2(liftCapacity(str) / Math.max(0.05, bodyWeight(v.def)))));
+    const spd = ((back ? 60 : 48) + str * 4.6) * wr;              // STRENGTH scales the hurl, WEIGHT resists it
     const dir = _v.copy(holder.aim3); if (dir.lengthSq() < 0.01) dir.set(holder.aim.x, 0, holder.aim.z);
     dir.normalize();
     v.grabbedBy = null; holder.grabbing = null; holder.grabState = null; holder.grabT = 0;

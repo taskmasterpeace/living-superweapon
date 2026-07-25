@@ -22,6 +22,17 @@ const FLY_RISE = 46, FLY_SINK = 26, FLY_TAKEOFF = 19, FLY_HOVER_BOB = 3.2;   // 
 // GEAR PROFICIENCY (manual §16): ANYONE can pick up the SMG — soldiers are just better with
 // it. Derived like resistOf so no hero is hand-authored; `def.gearProf` always wins. Word
 // boundaries are load-bearing (the frameOf lesson — 'imp' once matched 'simpler').
+// THE WEIGHT LADDER (manual §21): everything liftable has TONNAGE, and STRENGTH is a lift
+// CAPACITY curve — human below six, superhuman past it (STR6 ≈ a sedan, STR8 ≈ a truck,
+// STR10 ≈ an airliner). Derived, never hand-authored; the ratio capacity/weight drives
+// carry speed, throw speed and impact — all throwable, none equally.
+export const PROP_WEIGHT = { lamp: 0.3, rock: 0.5, tree: 1.1, car: 1.9, plane: 24 };
+export function liftCapacity(str) { const s = str ?? 5; return s <= 5 ? 0.22 * s : 1.1 * Math.pow(2.05, s - 5); }
+// People have weight too — the person-vs-person battle. Frame, plate and bulk all count.
+export function bodyWeight(def) {
+  return +(0.08 + ((def && def.strength) ?? 5) * 0.014 + (def && def.metal ? 0.42 : 0) + Math.max(0, (((def && def.hp) || 100) - 100)) * 0.0008).toFixed(3);
+}
+
 export function weaponProficiency(def) {
   if (def.gearProf) return def.gearProf;
   const txt = `${def.role || ''} ${def.title || ''} ${def.blurb || ''}`.toLowerCase();

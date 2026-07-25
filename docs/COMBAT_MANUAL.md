@@ -754,3 +754,72 @@ Still open from Part Four, parked in `docs/BACKLOG.md` with reasons: chain light
 cyclone, magnet pull, adrenaline surge, sniper stance, phase-walk-through-interiors,
 counter stance, grapple slam, air superiority — plus the Phase Zero visual-profile field
 sweep. Each is a contained lane on machinery that now exists.
+
+## §21 · THE WEIGHT LADDER (2026-07-24) — everything throwable, none equally
+
+The world's objects have TONNAGE and a fighter's STRENGTH is a lift-capacity curve.
+The same number decides what your hands can take, how fast you walk under it, how hard
+you can hurl it — and, in a clinch, how far a BODY flies. Hulk yeets the gunman across
+the block; the gunman can barely shove Hulk off his feet.
+
+### The tonnage table and the capacity curve (`entity.js`)
+
+- `PROP_WEIGHT` (metric tons): lamp **0.3** · rock **0.5** · tree **1.1** · car **1.9** ·
+  plane **24**. (Rocks are ledgered in `docs/BACKLOG.md` — boulders are structural cover
+  today; RAGE's Boulder projectile carries the fantasy until loose rocks exist.)
+- `liftCapacity(str)`: human below six — `0.22 × STR` (STR 1 lifts 0.22t, STR 5 exactly
+  one street tree at 1.1t); superhuman past it — `1.1 × 2.05^(STR−5)`. Measured ladder:
+  STR 6 **2.25t** (first car), 7 **4.62**, 8 **9.48**, 9 **19.4**, 10 **39.8t** (the only
+  rank that lifts an airliner). The knee at 5 is deliberate: 1–5 is the human range where
+  a rank buys ~220kg; 6+ each rank DOUBLES you.
+- `bodyWeight(def)`: people have weight too — `0.08 + STR×0.014 + 0.42 if metal +
+  0.0008/hp over 100`. GALE 0.126t · RAGE 0.316t · TITAN **0.678t** (the plate is real).
+
+### What the number gates (`game.propInReach` / `grabProp` / `throwProp`)
+
+- **The hoist is capacity, not a hard-coded STR check.** The old `s >= 6` car gate is
+  gone; `propInReach` compares `liftCapacity` against each candidate's tonnage — cars,
+  street trees, and now PLANES all through the same gate. The nearest thing you CANNOT
+  lift is remembered (`f._tooHeavyProp`) so a human's refused press explains itself:
+  *"TOO HEAVY — the car is ~1.9t; you lift ~0.9t."* A refusal that states the two
+  numbers is a rule the player can learn; a silent one is a bug report.
+- **Carry slowdown rides the ratio**: `speed × clamp(1 − 0.45/max(0.9, cap/w), 0.42..0.93)`.
+  KANO (STR 6) hauls a car at 22.4 of his 36; RAGE barely notices (27.9 of 30) but an
+  airliner still drags even him to 21.9.
+- **Throw speed rides the ratio**: `74 × clamp(0.5 + 0.16·log2(cap/w), 0.5..1.25)` —
+  computed ONCE at grab and stored on `f._carry.spd`, and `updateThrowArc` reads that
+  stored number, so **the preview physically cannot promise a throw the arm can't
+  deliver**. Measured: KANO lobs the car at 39.9 u/s (a strain); RAGE fastballs it at
+  89. Impact damage scales the same way (`× 0.75 + 0.25·ratio`, cap 1.6).
+
+### The airliner (`citytiles.plane` → `world.planes`)
+
+Parked airliners register as props: `plane()` collects its five meshes into
+`ctx.planeProps`, `buildTiles` returns them, and `rebuildCity` stores `world.planes`
+(cleared in `_teardownCity`; the flagship has none). Grabbing one hides the real meshes
+and hands you a simplified carried silhouette riding higher than a car (h 17). The
+impact is a DISASTER, not a fender-bender: blast radius 22, explosion power 2.4, a real
+crater, a camera punch and slow-mo. STR 8 gets the too-heavy refusal at the fence;
+only STR 10 walks onto the apron and leaves with the plane.
+
+### Person vs person battles weight (`melee._throw`)
+
+The clinch hurl multiplies by `wr = clamp(0.75 + 0.15·log2(liftCapacity(holder) /
+bodyWeight(victim)), 0.45..1.2)`. Measured, launch speed of the thrown body:
+- RAGE throws GALE: **115 u/s** (wr at the 1.2 cap — strength over a featherweight)
+- GALE throws RAGE: **57 u/s** (wr 0.91 — the throw still works, the physics resist)
+- GALE throws TITAN: **47 u/s** (wr 0.74 — 680kg of plate is the counter-pick)
+The aimed-throw arc preview applies the SAME `wr` while you hold the clinch, so the
+parabola you see is the parabola the body flies.
+
+### The laws it keeps
+
+Slam damage still credits through `launchT`/`lastHitBy` (nothing new touches hp
+outside `takeDamage`); the tell is the hoist itself plus the slowed walk (freeze-frame
+readable); the counter is the weight class you bring. No `def.id ===` anywhere — a
+custom ORIGIN bruiser at STR 10 lifts the plane the day he's saved.
+
+Verified headless: capacity ladder measured 1–10; SARGE refused the car WITH the feed
+line; KANO/RAGE car ratios exact to the formula; SOL refused the plane, RAGE hoisted
+and threw it (boom 1.2, craters, carry cleared); person-throw asymmetry measured both
+directions; 52 heroes × 364 slots, 0 errors, 0 orphaned audio loops.

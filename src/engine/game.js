@@ -4,7 +4,7 @@ import { World } from './world.js';
 import { Particles3D } from './particles3d.js';
 import { VFX } from './vfx.js';
 import { Projectiles } from './projectiles.js';
-import { buildWeapon, weaponProficiency, Fighter } from './entity.js';
+import { buildWeapon, weaponProficiency, PROP_WEIGHT, liftCapacity, bodyWeight, Fighter } from './entity.js';
 import { AI } from './ai.js';
 import { Minion, Construct } from './summons.js';
 import { MeleeSystem } from './melee.js';
@@ -274,8 +274,9 @@ export class Game {
     if (!def) { if (arc.visible) arc.visible = false; return; }
     arc.visible = true;
     // launch state: muzzle + the same velocity the ability would use
-    const spd = def._body ? ((p.grabMode === 'back' ? 60 : 48) + (p.def.strength ?? 5) * 4.6)
-      : def._prop ? 74 : (def.speed || 58);
+    const spd = def._body ? (((p.grabMode === 'back' ? 60 : 48) + (p.def.strength ?? 5) * 4.6)
+        * (p.grabbing ? Math.max(0.45, Math.min(1.2, 0.75 + 0.15 * Math.log2(liftCapacity(p.def.strength) / Math.max(0.05, bodyWeight(p.grabbing.def))))) : 1))
+      : def._prop ? ((p._carry && p._carry.spd) || 74) : (def.speed || 58);   // the preview promises what the throw delivers (manual §21)
     const grav = (def._prop || def._body) ? 62 : (def.grav || 11) * 6;   // bodies and props fall at world gravity
     const m = def._body ? _v.set(p.pos.x + p.aim.x * 4.4, p.pos.y + 5.2, p.pos.z + p.aim.z * 4.4).clone()
       : p.muzzle(_v.clone(), 4, 6.4);
@@ -303,29 +304,54 @@ export class Game {
   // Cars, street trees and lightpoles can be torn up and hurled. Strength gates what you can
   // lift (a car needs real muscle), and the thrown prop hurts whatever it lands on.
   propInReach(f) {
-    const R = 22, s = f.strength ?? 5;
+    // THE WEIGHT LADDER (manual §21): capacity — not a hard-coded STR gate — decides what your
+    // hands can take. The nearest thing you CAN'T lift is remembered so the feed can say why.
+    const R = 22, cap = liftCapacity(f.def.strength);
     let best = null, bd = R * R;
-    if (s >= 6) for (const car of this.world.cars || []) {          // cars need muscle
+    f._tooHeavyProp = null;
+    const consider = (d, rec) => {
+      if (d >= bd) return;
+      if (cap >= rec.w) { bd = d; best = rec; }
+      else if (!f._tooHeavyProp || d < f._tooHeavyProp._d) f._tooHeavyProp = { kind: rec.kind, w: rec.w, _d: d };
+    };
+    for (const car of this.world.cars || []) {
       if (car.dead || car.carried) continue;
-      const dx = car.x - f.pos.x, dz = car.z - f.pos.z, d = dx * dx + dz * dz;
-      if (d < bd) { bd = d; best = { kind: 'car', ref: car, x: car.x, z: car.z }; }
+      const dx = car.x - f.pos.x, dz = car.z - f.pos.z;
+      consider(dx * dx + dz * dz, { kind: 'car', ref: car, x: car.x, z: car.z, w: PROP_WEIGHT.car });
+    }
+    for (const pl of this.world.planes || []) {                     // 24 tons of airliner
+      if (pl.dead || pl.carried) continue;
+      const dx = pl.x - f.pos.x, dz = pl.z - f.pos.z;
+      consider(dx * dx + dz * dz, { kind: 'plane', ref: pl, x: pl.x, z: pl.z, w: PROP_WEIGHT.plane });
     }
     const G = this.world.grass;                                     // street trees (instanced)
     if (G && this.world._gPos) for (let i = 0; i < G.count; i++) {
       if (!this.world._gOn[i]) continue;
       const gx = this.world._gPos[i * 2], gz = this.world._gPos[i * 2 + 1];
-      const dx = gx - f.pos.x, dz = gz - f.pos.z, d = dx * dx + dz * dz;
-      if (d < bd) { bd = d; best = { kind: 'tree', idx: i, x: gx, z: gz }; }
+      const dx = gx - f.pos.x, dz = gz - f.pos.z;
+      consider(dx * dx + dz * dz, { kind: 'tree', idx: i, x: gx, z: gz, w: PROP_WEIGHT.tree });
     }
     return best;
   }
   grabProp(f) {
     if (f._carry || f.grabbing || f.grabbedBy) return false;
-    const t = this.propInReach(f); if (!t) return false;
+    const t = this.propInReach(f);
+    if (!t) {
+      const th = f._tooHeavyProp;
+      if (th && this.isHuman(f) && this.hud) this.hud.feed(`TOO HEAVY — the ${th.kind} is ~${th.w}t; you lift ~${liftCapacity(f.def.strength).toFixed(1)}t`, '#8b8577');
+      return false;
+    }
+    const cap = liftCapacity(f.def.strength), ratio = cap / t.w;
     let mesh = null;
     if (t.kind === 'car') {
       t.ref.carried = true; t.ref.mesh.visible = false;
       mesh = new THREE.Mesh(this.world._carGeo, t.ref.paint);
+    } else if (t.kind === 'plane') {
+      t.ref.carried = true; for (const m of t.ref.meshes) m.visible = false;
+      const fus = new THREE.Mesh(new THREE.CylinderGeometry(3.2, 2.5, 38, 8), new THREE.MeshStandardMaterial({ color: '#dfe3e6', roughness: 0.4, metalness: 0.35 }));
+      fus.rotation.z = Math.PI / 2;
+      const wing = new THREE.Mesh(new THREE.BoxGeometry(4, 0.9, 36), new THREE.MeshStandardMaterial({ color: '#c9ced4', roughness: 0.5, metalness: 0.3 }));
+      mesh = new THREE.Group(); mesh.add(fus, wing);
     } else {
       this.world.flattenGrass(t.x, t.z, 0.5);                        // pull it out of the ground
       const trunk = new THREE.Mesh(new THREE.CylinderGeometry(1.0, 1.5, 14, 6), new THREE.MeshStandardMaterial({ color: '#5a4630', roughness: 0.9, flatShading: true }));
@@ -333,20 +359,23 @@ export class Game {
       crown.position.y = 12; mesh = new THREE.Group(); mesh.add(trunk, crown);
     }
     mesh.castShadow = true; this.scene.add(mesh);
-    f._carry = { kind: t.kind, mesh, t: 0 };
-    f.speed = (f.def.speed || 30) * 0.72;                            // hauling it slows you down
-    this.audio.impact(0.7, f.pos); this.world.shake(0.5);
-    if (this.isHuman(f) && this.hud) this.hud.feed(`Hoisted a ${t.kind} — press G again to THROW`, '#ff8a3a');
+    // the hurl the arc will preview — computed ONCE here so the preview can never lie
+    const spd = 74 * Math.max(0.5, Math.min(1.25, 0.5 + 0.16 * Math.log2(Math.max(0.6, ratio))));
+    f._carry = { kind: t.kind, mesh, t: 0, w: t.w, spd, ratio };
+    f.speed = (f.def.speed || 30) * Math.max(0.42, Math.min(0.93, 1 - 0.45 / Math.max(0.9, ratio)));   // weight on your back is speed off your feet
+    this.audio.impact(t.kind === 'plane' ? 1.1 : 0.7, f.pos); this.world.shake(t.kind === 'plane' ? 1.1 : 0.5);
+    if (this.isHuman(f) && this.hud) this.hud.feed(`Hoisted a ${t.kind} (~${t.w}t) — press G again to THROW`, '#ff8a3a');
     return true;
   }
   throwProp(f) {
     const c = f._carry; if (!c) return;
     f._carry = null; f.speed = f.def.speed || 30;
-    const spd = 74, dir = f.aim3;
+    const spd = c.spd || 74, dir = f.aim3;   // the speed the arc promised (weight ratio, manual §21)
     const vel = new THREE.Vector3(dir.x * spd, (dir.y + 0.34) * spd, dir.z * spd);
     const pos = f.muzzle(new THREE.Vector3(), 5, 6.4);
     const mesh = c.mesh; mesh.position.copy(pos);
-    const str = f.strength ?? 5, dmg = (c.kind === 'car' ? 34 : 22) + str * 3;
+    const str = f.strength ?? 5;
+    const dmg = ((c.kind === 'plane' ? 60 : c.kind === 'car' ? 34 : 22) + str * 3) * Math.min(1.6, 0.75 + 0.25 * Math.min(3, c.ratio || 1));
     let spin = rand(-5, 5), t = 0;
     this.audio.boom(0.4, f.pos); this.heroYell(f, 1.1);
     this.vfx._add({
@@ -356,7 +385,7 @@ export class Game {
         mesh.rotation.z += spin * dt; mesh.rotation.x += spin * 0.5 * dt;
         // a car is 24u long and a tree is 20u tall — they need a hitbox to match, and a tall one:
         // `overlapFoe`'s ±9u vertical window let a lobbed car sail clean over someone's head.
-        const R = c.kind === 'car' ? 13 : 10, RV = c.kind === 'car' ? 16 : 14;
+        const R = c.kind === 'plane' ? 22 : c.kind === 'car' ? 13 : 10, RV = c.kind === 'plane' ? 20 : c.kind === 'car' ? 16 : 14;
         let foe = null;
         for (const e of this.entities) {
           if (!this.isFoe(f, e)) continue;
@@ -367,8 +396,9 @@ export class Game {
         if (foe || grounded || t > 4) {
           const p = mesh.position.clone(); p.y = Math.max(0.4, p.y);
           if (foe) foe.takeDamage(dmg, { src: f, kb: vel.clone().setY(0).setLength(dmg * 0.7), launch: 14, hitstop: 0.12 });
-          this.areaDamage(f, p, c.kind === 'car' ? 13 : 9, dmg * 0.5, 1.5);
-          if (c.kind === 'car') { this.vfx.explode(p, { color: '#ff8a3d', color2: '#ffd24a', radius: 12, power: 1.6 }); this.audio.boom(0.6, p); }
+          this.areaDamage(f, p, c.kind === 'plane' ? 22 : c.kind === 'car' ? 13 : 9, dmg * 0.5, c.kind === 'plane' ? 2 : 1.5);
+          if (c.kind === 'plane') { this.vfx.explode(p, { color: '#ff8a3d', color2: '#ffffff', radius: 22, power: 2.4 }); this.audio.boom(1.2, p); this.world.crater(p.x, p.z, 9, 1.6); this.world.punch(0.8); this.slowmo(0.15, 0.45); }
+          else if (c.kind === 'car') { this.vfx.explode(p, { color: '#ff8a3d', color2: '#ffd24a', radius: 12, power: 1.6 }); this.audio.boom(0.6, p); }
           else { this.particles.burst(p.x, p.y, p.z, { count: 14, speed: 16, life: 0.6, size: 3, color: ['#5a4630', '#4a6a3a'], up: 6, grav: 12, drag: 1.4 }); this.audio.impact(1.1, p); }
           this.world.shake(1.3);
           return true;
@@ -537,7 +567,7 @@ export class Game {
       const c = f._carry; if (!c) continue;
       if (!f.alive) { this.scene.remove(c.mesh); f._carry = null; f.speed = f.def.speed || 30; continue; }
       c.t += dt;
-      const h = c.kind === 'car' ? 13 : 15;
+      const h = c.kind === 'plane' ? 17 : c.kind === 'car' ? 13 : 15;
       c.mesh.position.set(f.pos.x - f.aim.x * 1.5, f.pos.y + h + Math.sin(c.t * 3) * 0.3, f.pos.z - f.aim.z * 1.5);
       c.mesh.rotation.y = f.facing + Math.PI / 2;
       c.mesh.rotation.z = Math.sin(c.t * 2.2) * 0.05;

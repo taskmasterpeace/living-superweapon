@@ -154,14 +154,18 @@ function tractor(ctx, x, z, yaw) {
     mesh(ctx, new THREE.CylinderGeometry(r, r, 1.8, 10), M2.tyre,
       x + d * Math.cos(yaw) - s * 3 * Math.sin(yaw), r, z + d * Math.sin(yaw) + s * 3 * Math.cos(yaw), { rz: Math.PI / 2, ry: yaw });
 }
-// a parked airliner — decor, not cover; it exists so the apron reads as a working field
+// a parked airliner — decor, not cover… and 24 TONS of throwable, if you are the one
+// weapon on the roster who can lift it (manual §21). Registered via ctx.planeProps.
 function plane(ctx, x, z, yaw) {
   const M2 = ctx.mats;
+  const parts = [];
   const body = mesh(ctx, new THREE.CylinderGeometry(3.4, 2.6, 40, 10), M2.fuselage, x, 5.6, z, { rz: Math.PI / 2, ry: yaw, cast: true });
   body.rotation.set(0, yaw, Math.PI / 2);
-  mesh(ctx, new THREE.BoxGeometry(4, 0.9, 38), M2.fuselage, x, 5.2, z, { ry: yaw, cast: true });        // wings
-  mesh(ctx, new THREE.BoxGeometry(7, 9, 0.8), M2.livery, x - 17 * Math.cos(yaw), 10, z - 17 * Math.sin(yaw), { ry: yaw, cast: true });   // tail
-  for (const s of [-1, 1]) mesh(ctx, new THREE.CylinderGeometry(2, 2, 7, 8), M2.livery, x + s * 4 * Math.sin(-yaw), 3.4, z + s * 11 * Math.cos(yaw), { rz: Math.PI / 2, ry: yaw });
+  parts.push(body);
+  parts.push(mesh(ctx, new THREE.BoxGeometry(4, 0.9, 38), M2.fuselage, x, 5.2, z, { ry: yaw, cast: true }));        // wings
+  parts.push(mesh(ctx, new THREE.BoxGeometry(7, 9, 0.8), M2.livery, x - 17 * Math.cos(yaw), 10, z - 17 * Math.sin(yaw), { ry: yaw, cast: true }));   // tail
+  for (const s of [-1, 1]) parts.push(mesh(ctx, new THREE.CylinderGeometry(2, 2, 7, 8), M2.livery, x + s * 4 * Math.sin(-yaw), 3.4, z + s * 11 * Math.cos(yaw), { rz: Math.PI / 2, ry: yaw }));
+  (ctx.planeProps = ctx.planeProps || []).push({ x: body.position.x, z: body.position.z, yaw, meshes: parts, carried: false, dead: false });
 }
 function palm(ctx, x, z, s = 1) {
   const M2 = ctx.mats;
@@ -1319,5 +1323,5 @@ export function buildTiles(world, group, plan, rng) {
       for (let i = p0; i < world._pendingPits.length; i++) { const p = world._pendingPits[i]; p[0] = sx(ctx, p[0]); p[1] = sz(ctx, p[1]); p[2] *= S; p[3] *= S; }
     }
   }
-  return { treeSpots: ctx.treeSpots };
+  return { planeProps: ctx.planeProps || [], treeSpots: ctx.treeSpots };
 }
