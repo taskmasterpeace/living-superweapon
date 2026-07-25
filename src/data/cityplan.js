@@ -562,6 +562,24 @@ function buildRoads(plan, rng) {
 
 // Where is there a road at this world point, and of what class? The single query every consumer
 // (pedestrians, traffic, police approach, the news chopper) should use instead of re-deriving a grid.
+// ⚠ THE KEEP-CLEAR (Robert, 2026-07-25: "streets should be unobstructed… no trees no nothing").
+// `roadAt` answers "is this point ON the carriageway" — which is the wrong question for a TREE,
+// because a tree is not a point: it has a trunk, a 9.5u canopy, and a shadow, and the thing that
+// blocks a street is the canopy hanging over it. Every decorative placer in the game asked the
+// point question (or, mostly, asked nothing at all and only checked cover boxes), which is why
+// trees stood in the carriageway and lawns ran across it.
+//
+// `roadClear(plan, x, z, radius)` is the question a placer actually has: would an object of this
+// size intrude on any road? It tests the point plus the four cardinal extremes of its footprint,
+// which is exact for the axis-aligned lattice the roads are built on.
+export function roadClear(plan, x, z, radius = 0) {
+  if (!plan || !plan.roads) return true;
+  if (roadAt(plan, x, z)) return false;
+  if (radius <= 0) return true;
+  return !roadAt(plan, x + radius, z) && !roadAt(plan, x - radius, z)
+      && !roadAt(plan, x, z + radius) && !roadAt(plan, x, z - radius);
+}
+
 export function roadAt(plan, x, z) {
   if (!plan || !plan.roads) return 0;
   const N = plan.N, A = plan.arena, R = plan.roads, K = plan.cell || CELL, S = plan.scale || 1;

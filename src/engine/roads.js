@@ -86,7 +86,7 @@ export const RoadMixin = {
     const flat = (geo) => { geo.rotateX(-Math.PI / 2); geo.translate(px, 0, pz); return geo; };
 
     // A DEAD END is a turning head, not a stub.
-    if (j.deg === 1) { add(cid, flat(new THREE.CircleGeometry(w * 0.78, 14))); return 'end'; }
+    if (j.deg === 1) { add(cid, flat(new THREE.CircleGeometry(w * 0.78, 14, 0, Math.PI * 2))); return 'end'; }
 
     // A ROUNDABOUT, but only where the PLANNER said so — see plan.roundabouts. The island is real
     // cover you can break line of sight behind, which is the whole reason to build one rather than
@@ -104,7 +104,9 @@ export const RoadMixin = {
       return 'roundabout';
     }
 
-    add(cid, flat(new THREE.PlaneGeometry(w, w, 2, 2)));
+    // the junction patch drapes too, and a 2×2 grid over a 38u crossing has the same problem the
+    // ribbon had — the ground rises through the middle of the intersection.
+    add(cid, flat(new THREE.PlaneGeometry(w, w, Math.max(2, Math.round(w / (5 * S))), Math.max(2, Math.round(w / (5 * S))))));
     // CORNER FILLETS — a quarter disc tucked into each corner between two adjacent arms, so the
     // kerb line turns instead of stopping dead. This is the single detail that makes a junction
     // stop looking like two ribbons crossing.
@@ -165,8 +167,14 @@ export const RoadMixin = {
       }
       const w = ROAD[cid].width * S, dx = x1 - x0, dz = z1 - z0, len = Math.hypot(dx, dz);
       if (len < 0.5) return;
+      // ⚠ THREE VERTICES ACROSS A 38-UNIT HIGHWAY. The ribbon was subdivided finely ALONG its run
+      // and barely at all ACROSS it, so the surface only met the terrain at its two kerbs and its
+      // centreline. Between those samples the road is a flat interpolation while the ground is
+      // not — and sitting only 0.12u (2.3cm) proud, every bump in between came straight THROUGH
+      // the tarmac. Those grey shards scattered over the streets were the ground itself.
       const rows = Math.max(2, Math.round(len / (7 * S)));
-      const geo = new THREE.PlaneGeometry(w, len, 2, rows);
+      const cols = Math.max(2, Math.round(w / (5 * S)));
+      const geo = new THREE.PlaneGeometry(w, len, cols, rows);
       const uv = geo.attributes.uv, reps = Math.max(1, Math.round(len / (24 * S)));
       for (let i = 0; i < uv.count; i++) uv.setY(i, uv.getY(i) * reps);   // tile the section along the run
       // ⚠ A DIRT TRACK MEANDERS. A metalled road is surveyed and runs straight between its
@@ -174,10 +182,10 @@ export const RoadMixin = {
       // local X before it is rotated into place costs nothing and is the single thing that makes
       // the countryside and the forest stop looking like a street grid with the paint scraped off.
       if (cid === 1) {
-        const pos = geo.attributes.position, cols = 3;
+        const pos = geo.attributes.position, vpr = cols + 1;   // ⚠ derived — this was hard-coded 3
         const ph = (Math.abs(x0 * 0.07 + z0 * 0.13) % 6.283), amp = w * 0.9;
         for (let i = 0; i < pos.count; i++) {
-          const row = (i / cols) | 0, t = row / rows;
+          const row = (i / vpr) | 0, t = row / rows;
           pos.setX(i, pos.getX(i) + Math.sin(ph + t * 3.4) * amp * Math.sin(t * Math.PI));
         }
         pos.needsUpdate = true;
@@ -219,7 +227,9 @@ export const RoadMixin = {
       const merged = mergeGeometries(byClass[cid]);
       byClass[cid].forEach(gg => gg.dispose());
       if (!merged) continue;
-      drape(merged, 0.12);
+      // 0.12u is 2.3cm — inside both the terrain's own sampling error and the depth buffer's
+      // precision at camera range. DECAL_LIFT is the smallest separation that survives (util.js).
+      drape(merged, 0.4);
       const m = new THREE.Mesh(merged, this._roadMat(cid | 0));
       m.receiveShadow = true; m.renderOrder = 1;
       group.add(m); this._roadMeshes.push(m); meshes++;
@@ -228,7 +238,7 @@ export const RoadMixin = {
       const mg = mergeGeometries(marks);
       marks.forEach(g => g.dispose());
       if (mg) {
-        drape(mg, 0.24);
+        drape(mg, 0.62);          // paint rides above the carriageway it is painted on
         const m = new THREE.Mesh(mg, this._roadPaintMat());
         m.renderOrder = 2; group.add(m); this._roadMeshes.push(m);
       }

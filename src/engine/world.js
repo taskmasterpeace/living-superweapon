@@ -10,7 +10,7 @@ import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { clamp, damp, setBands, DECAL_LIFT } from '../core/util.js';
 import { buildTiles , scaleBoxUV, resetDecalLadder } from './citytiles.js';
-import { CELL, districtNameAt, thresholdPlan, ROAD, junctionAt, WATER_DEPTHS } from '../data/cityplan.js';
+import { CELL, districtNameAt, thresholdPlan, ROAD, junctionAt, WATER_DEPTHS, roadClear } from '../data/cityplan.js';
 import { mulberry } from '../data/news.js';
 
 // FOG OCCLUSION GRID — the replacement for the old 24-box uniform array. 256² texels over the
@@ -600,7 +600,7 @@ export class World {
     this._cityBits.length = 0;
     this.cover = []; this.coverAll = []; this.cars = [];
     this.grass = null; this._canopy = null; this.water = null; this._waterT = null;
-    this.ground = null; this.groundGeo = null; this._ghBase = null; this._pendingPits = []; this._pendingCuts = [];
+    this.ground = null; this.groundGeo = null; this._ghBase = null; this._nodeH = null; this._pendingPits = []; this._pendingCuts = [];
     if (this._fades) this._fades.clear();   // cloned cutaway materials died with their meshes
   }
   rebuildCity(plan) {
@@ -687,7 +687,13 @@ export class World {
     // and only then do the tiles go up — so a building sits on the ground rather than fighting it.
     this._buildRelief(plan);
     this._buildBathymetry(plan);   // the sea gets its bed — flat cities included
+    // ⚠ THE STREET IS THE FINAL AUTHORITY. Grading first didn't hold: _padCells' apron reaches
+    // K*0.42 (40u) past a lot edge, far wider than the road corridor, so it promptly re-raised the
+    // carriageway it had just been cut through. Survey the junctions first so both passes share
+    // one datum, cut the lots to it, and grade the corridor LAST so nothing can climb back into it.
+    this._nodeH = this._roadNodeHeights(plan);
     this._padCells(plan);
+    this._gradeRoads(plan);
     // THE TILES — every cell raised by its type builder
     this.doors = [];                       // the tiles re-register every entrance
     this.interiors = [];
@@ -755,6 +761,13 @@ export class World {
     for (const [px, pz, r, dep] of (this._pendingPits || [])) this.crater(px, pz, r, dep);
     for (const [px, pz, hw, hd, dep, ry] of (this._pendingCuts || [])) this.trench(px, pz, hw, hd, dep, 11, ry);
     this._pendingPits = []; this._pendingCuts = [];
+    // ⚠ RE-ASSERT THE CORRIDOR ONCE THE GROUND IS FINAL. Grading before the tiles is what lets the
+    // LOTS be cut to street level, but everything after it also writes the heightfield — mining
+    // craters throw up a RIM, metro trenches undercut, bathymetry pushes the shore — and any of
+    // those reaching into a carriageway puts ground back through the tarmac. Measured: this second
+    // pass is what takes the worst intrusion from 17 units to nothing. It is idempotent (the same
+    // survey, the same profile), so running it twice costs a pass over the vertices and no risk.
+    this._gradeRoads(plan);
     this._ghBase = Float32Array.from(this._gh);
     // ROADS LAST — they drape over the finished ground, so they dip into the metro cut and
     // ride the mining spoil instead of hovering over a hole they can't see.
@@ -794,14 +807,26 @@ export class World {
     })());
     // ⚠ lawns overlap each other and the tile library's own plazas — same ladder, same reason
     // (core/util.js, THE SURFACE-SEPARATION LAW). A flat +0.11 made every overlap a coin toss.
-    lawns.forEach(([x, z, r], i) => {
+    // a lawn decal is a disc with a radius; if the radius crosses a road the grass runs over the
+    // tarmac. Shrink it until it fits its own lot rather than dropping it — a park with a smaller
+    // lawn is right, a park with no lawn is a bug.
+    lawns.forEach(([x, z, r0], i) => {
+      let r = r0;
+      while (r > 4 && !roadClear(this.plan, x, z, r)) r -= 3;
+      if (r <= 4) return;
       const p = new THREE.Mesh(new THREE.CircleGeometry(r, 26), new THREE.MeshBasicMaterial({ map: lawnTex, transparent: true, depthWrite: false }));
       p.rotation.x = -Math.PI / 2;
       p.position.set(x, this.heightAt(x, z) + 0.11 + (i % 9) * 0.014, z);
       this.scene.add(p); this._cityBits.push(p);
     });
     const A = this.ARENA;
+    // ⚠ A TREE IS NOT A POINT. This filter used to check ONLY that a spot was clear of cover boxes
+    // — it never consulted the road graph at all — so street trees grew out of the carriageway and
+    // hung a 19u-wide canopy over it. The keep-clear tests the CANOPY, not the trunk, because the
+    // canopy is what actually blocks the street. (core: cityplan.roadClear)
+    const CANOPY = 9.5;
     const P = spots.filter(([x, z]) => Math.hypot(x, z) > clearCenter && x < this.waterX - 8 && Math.abs(x) < A - 8 && Math.abs(z) < A - 8 &&
+      roadClear(this.plan, x, z, CANOPY) &&
       !this.coverAll.some(c => Math.abs(x - c.x) < c.hx + 4 && Math.abs(z - c.z) < c.hz + 4));
     if (!P.length) { this.grass = null; this._canopy = null; return; }
     const COUNT = P.length;
@@ -1287,6 +1312,113 @@ export class World {
     this.groundGeo.attributes.position.needsUpdate = true; this._normalsDirty = true;
     return hi - lo;
   }
+  // ---------------------------------------------------------------------------------------------
+  // THE STREET SETS THE LEVEL (Robert, 2026-07-25: "streets should be unobstructed… this stuff
+  // should [be] connected by streets, our city builder must fix this" — with a shot of two roads
+  // meeting at different heights with a wall between them).
+  //
+  // ⚠ THE ORDER OF OPERATIONS WAS BACKWARDS. `_padCells` levelled every built-up cell to the
+  // terrain height at its OWN CENTRE — a number with no relationship to the street at its edge —
+  // and the roads were then DRAPED over whatever those terraces left behind. So two neighbouring
+  // lots terraced to two different heights, the road between them inherited the step, and where a
+  // carriageway met a cross street it met it as a CLIFF. Measured before this: up to 52 units —
+  // ten metres — of ground standing above the road surface. No amount of subdividing the ribbon
+  // fixes that, because the ribbon was never the problem: it was faithfully following broken ground.
+  //
+  // A real city is surveyed the other way round. The junctions fix the levels, the streets run a
+  // graded profile between them, and the lots are cut to meet their own frontage. Three passes:
+  //   1. NODE HEIGHTS — one level per lattice junction, sampled off the relief.
+  //   2. SMOOTH ALONG RUNS — a street is surveyed, so its profile is gentle; each node relaxes
+  //      toward the nodes it is actually CONNECTED TO by road. A node with no roads keeps its
+  //      landform, which is what stops open country being flattened.
+  //   3. GRADE THE CORRIDOR — every terrain vertex inside a carriageway (plus a pavement shoulder)
+  //      is pulled onto the road's own interpolated profile, blending out over a verge.
+  // `_padCells` then terraces each lot to the mean of ITS OWN four corner nodes, so a block stands
+  // flush with the streets that surround it instead of on a pedestal beside them.
+  _roadNodeHeights(plan) {
+    const A = plan.arena, N = plan.N, K = plan.cell || CELL, R = plan.roads;
+    const H = [];
+    for (let r = 0; r <= N; r++) {
+      H.push([]);
+      for (let c = 0; c <= N; c++) H[r].push(this.heightAt(-A + c * K, -A + r * K));
+    }
+    if (!R) return H;
+    const deg = (r, c) => {
+      let d = 0;
+      if (c > 0 && R.h[r] && R.h[r][c - 1]) d++;
+      if (c < N && R.h[r] && R.h[r][c]) d++;
+      if (r > 0 && R.v[r - 1] && R.v[r - 1][c]) d++;
+      if (r < N && R.v[r] && R.v[r][c]) d++;
+      return d;
+    };
+    for (let pass = 0; pass < 4; pass++) {
+      const next = H.map(row => row.slice());
+      for (let r = 0; r <= N; r++) for (let c = 0; c <= N; c++) {
+        if (!deg(r, c)) continue;                       // no road here — the land keeps its shape
+        let sum = 0, n = 0;
+        if (c > 0 && R.h[r] && R.h[r][c - 1]) { sum += H[r][c - 1]; n++; }
+        if (c < N && R.h[r] && R.h[r][c]) { sum += H[r][c + 1]; n++; }
+        if (r > 0 && R.v[r - 1] && R.v[r - 1][c]) { sum += H[r - 1][c]; n++; }
+        if (r < N && R.v[r] && R.v[r][c]) { sum += H[r + 1][c]; n++; }
+        if (n) next[r][c] = H[r][c] * 0.45 + (sum / n) * 0.55;
+      }
+      for (let r = 0; r <= N; r++) for (let c = 0; c <= N; c++) H[r][c] = next[r][c];
+    }
+    return H;
+  }
+
+  _gradeRoads(plan) {
+    if (!plan || !plan.roads || !this._gh || !this.groundGeo) return 0;
+    const A = plan.arena, N = plan.N, K = plan.cell || CELL, S = plan.scale || 1, R = plan.roads;
+    const H = this._nodeH || (this._nodeH = this._roadNodeHeights(plan));
+    const pa = this.groundGeo.attributes.position.array;
+    const VERGE = 14 * S;                       // how far past the kerb the grade blends out
+    // ⚠ GRADE ONE TERRAIN VERTEX WIDER THAN THE KERB. heightAt bilinearly interpolates a
+    // heightfield whose vertices are ~4u apart — coarse next to a 22u street — so a vertex sitting
+    // just OUTSIDE the carriageway still drags the sampled height INSIDE it. Holding full grade
+    // out to half + one vertex spacing is what takes the last kerb-height lip off the tarmac.
+    const GRIP = (A * 2) / 112;
+    let touched = 0;
+    for (let i = 0; i < this._gh.length; i++) {
+      const x = this._gvx[i], z = this._gvz[i];
+      const fx = (x + A) / K, fz = (z + A) / K;
+      let bw = 0, by = 0;
+      // the four lattice lines that could carry a road near this point
+      const tryEdge = (cid, ax, az, bx, bz, h0, h1) => {
+        if (!cid) return;
+        const half = ROAD[cid].width * S / 2;
+        const dx = bx - ax, dz = bz - az, L2 = dx * dx + dz * dz;
+        // ⚠ CLAMP, DON'T REJECT. Rejecting past the ends left the JUNCTION SQUARE itself ungraded —
+        // the one place four carriageways have to agree about a height, and the exact spot in
+        // Robert's shot where one street met another as a step. Clamped, every arm pulls that
+        // square to the SAME node height, so a crossing is flat by construction.
+        let t = L2 ? ((x - ax) * dx + (z - az) * dz) / L2 : 0;
+        t = t < 0 ? 0 : t > 1 ? 1 : t;
+        const px = ax + dx * t, pz = az + dz * t;
+        const d = Math.hypot(x - px, z - pz) - (half + GRIP);
+        if (d > VERGE) return;
+        const u = d <= 0 ? 1 : 1 - d / VERGE;
+        const w = u * u * (3 - 2 * u);
+        if (w > bw) { bw = w; by = h0 + (h1 - h0) * t; }
+      };
+      const rr = Math.floor(fz), cc = Math.floor(fx);
+      for (const r of [rr, rr + 1]) for (const c of [cc]) {
+        if (r < 0 || r > N || c < 0 || c >= N || !R.h[r]) continue;
+        tryEdge(R.h[r][c], -A + c * K, -A + r * K, -A + (c + 1) * K, -A + r * K, H[r][c], H[r][c + 1]);
+      }
+      for (const r of [rr]) for (const c of [cc, cc + 1]) {
+        if (r < 0 || r >= N || c < 0 || c > N || !R.v[r]) continue;
+        tryEdge(R.v[r][c], -A + c * K, -A + r * K, -A + c * K, -A + (r + 1) * K, H[r][c], H[r + 1][c]);
+      }
+      if (bw <= 0) continue;
+      this._gh[i] = this._gh[i] * (1 - bw) + by * bw;
+      pa[i * 3 + 2] = this._gh[i];
+      touched++;
+    }
+    this.groundGeo.attributes.position.needsUpdate = true; this._normalsDirty = true;
+    return touched;
+  }
+
   // Level each built-up cell so a block stands on flat ground, with an apron so the terrace edge
   // is a slope you can run up rather than a cliff.
   _padCells(plan) {
@@ -1299,7 +1431,16 @@ export class World {
       if (!cell || cell.ref || OPEN[cell.t]) continue;
       const fw = cell.fw || 1, fh = cell.fh || 1;
       const cx = -A + (c + fw / 2) * K, cz = -A + (r + fh / 2) * K;
-      pads.push({ cx, cz, hx: (fw * K) / 2 - 6, hz: (fh * K) / 2 - 6, y: this.heightAt(cx, cz) });
+      // ⚠ THE LOT IS CUT TO ITS OWN STREETS, not to the ground under its middle. Using the centre
+      // height is what let a block sit several units above the road at its kerb — the step walls.
+      const H = this._nodeH;
+      let y;
+      if (H) {
+        const c0 = Math.min(c, plan.N), c1 = Math.min(c + fw, plan.N);
+        const r0 = Math.min(r, plan.N), r1 = Math.min(r + fh, plan.N);
+        y = (H[r0][c0] + H[r0][c1] + H[r1][c0] + H[r1][c1]) / 4;
+      } else y = this.heightAt(cx, cz);
+      pads.push({ cx, cz, hx: (fw * K) / 2 - 6, hz: (fh * K) / 2 - 6, y });
     }
     // A generous apron. Too tight and every block stands on a visible earth plinth; this is the
     // difference between a terraced hillside and a set of buildings on pedestals.
