@@ -188,6 +188,13 @@ export class VFX {
   }
 
   // Dark scorch decal on the ground that lingers then fades.
+  // RESIDUE (visual contract): what the world KEEPS after an effect. The decal tint is the
+  // ability's own material, not a global black — an ice burst leaves frost, acid leaves sludge.
+  residue(pos, kind = 'scorch', radius = 8) {
+    if (kind === 'none') return;
+    const TINT = { scorch: '#0b0906', frost: '#cfeaff', sludge: '#7f8f28', debris: '#4a443c', crater: '#0b0906', cloud: '#2a2a2e' };
+    this.scorch(pos, radius, TINT[kind] || '#0b0906');
+  }
   scorch(pos, radius = 8, tint = '#000') {
     const mat = new THREE.MeshBasicMaterial({ color: tint, transparent: true, opacity: 0.55, depthWrite: false });
     mat.color.multiplyScalar(0.2);

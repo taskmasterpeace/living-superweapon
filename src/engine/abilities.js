@@ -1,4 +1,5 @@
 // Living Superweapon — ability engine. Data-driven power types dispatched per input slot.
+import { visOf } from '../data/visual.js';
 import * as THREE from 'three';
 import { clamp, rand, TAU, lerp } from '../core/util.js';
 
@@ -115,7 +116,7 @@ export const TYPES = {
     if (inp.pressed && ready(c, def, st)) {
       pay(c, def, st); c.punchPose = 1; c.state = 'cast'; c.stateT = 0;
       const m = c.muzzle(_v.clone(), 3.6, 5.8);
-      g.projectiles.spawnProjectile(c, {
+      g.projectiles.spawnProjectile(c, { vis: visOf(def),
         pos: m, vel: (def.grav ? c.aim.clone().setY(0.5) : c.aim3.clone()).setLength(def.speed || 70),
         radius: def.radius || 1.4, damage: def.damage || 14, blast: def.blast || 5, power: def.power || 1,
         homing: def.homing || 0, color: def.color, color2: def.color2, grav: def.grav || 0, shock: def.shock,
@@ -140,7 +141,7 @@ export const TYPES = {
       const m = c.muzzle(new THREE.Vector3(), 3.4, 5.8).add(off);
       const spread = (def.spread || 0.09) * ((c.sheet && c.sheet.spreadMult) || 1);
       const a = Math.atan2(c.aim3.z, c.aim3.x) + rand(-spread, spread);
-      g.projectiles.spawnProjectile(c, {
+      g.projectiles.spawnProjectile(c, { vis: visOf(def),
         pos: m, vel: new THREE.Vector3(Math.cos(a), c.aim3.y, Math.sin(a)).setLength(def.speed || 105),
         radius: def.radius || 0.8, damage: def.damage || 6, blast: def.blast || 3.4, power: 0.5, color: def.color, color2: def.color2,
         arrow: def.arrow, payload: def.payload, blind: def.blind, blade: def.blade,
@@ -261,7 +262,7 @@ export const TYPES = {
         if (c01 < 0.12) { st.cd = 0.2; return; } // fizzle, refund
         pay(c, def, st);
         const power = 1 + c01 * (def.chargePower || 3);
-        g.projectiles.spawnProjectile(c, {
+        g.projectiles.spawnProjectile(c, { vis: visOf(def),
           pos: orbPos, vel: c.aim3.clone().setLength(lerp(def.speedMax || 70, def.speedMin || 42, c01)),
           radius: lerp(def.minR || 1.3, def.maxR || 5, c01), damage: lerp(def.dmgMin || 20, def.dmgMax || 70, c01),
           blast: lerp(8, def.maxBlast || 26, c01), power, color: def.color, color2: def.color2, shock: true, ground: true,
@@ -452,7 +453,7 @@ export const TYPES = {
         const payloads = def.payloads || ['explosive', 'flame', 'poison'];
         const payload = payloads[c._quiverIdx % payloads.length];
         const m = c.muzzle(_v.clone(), 3.8, 5.9);
-        g.projectiles.spawnProjectile(c, {
+        g.projectiles.spawnProjectile(c, { vis: visOf(def),
           pos: m, vel: c.aim3.clone().setLength(lerp(90, def.speedMax || 210, t)),
           radius: 0.7, damage: lerp(def.dmgMin || 7, def.dmgMax || 26, t), blast: payload === 'explosive' ? (def.blast || 11) : 1.2,
           power: payload === 'explosive' ? 1.1 : 0.4, arrow: true, payload, life: 2.2,
@@ -496,7 +497,7 @@ export const TYPES = {
       const base = Math.atan2(c.aim3.z, c.aim3.x);
       for (let i = 0; i < pellets; i++) {
         const a = base + rand(-spread, spread);
-        g.projectiles.spawnProjectile(c, {
+        g.projectiles.spawnProjectile(c, { vis: visOf(def),
           pos: m, vel: new THREE.Vector3(Math.cos(a), c.aim3.y + rand(-spread, spread) * 0.7, Math.sin(a)).setLength((def.speed || 170) * (cls === 'shotgun' ? rand(0.85, 1) : 1)),
           radius: def.radius || 0.55, damage: def.damage || 5, blast: def.blast || 2.2, power: 0.35,
           color: def.color, color2: def.color2, life: cls === 'shotgun' ? 0.34 : 1.4,   // pellets die fast = real range falloff
@@ -533,7 +534,7 @@ export const TYPES = {
         killOrb(c, st);
         if (c01 < 0.1) { st.cd = 0.3; return; }        // barely formed — she fades
         pay(c, def, st);
-        g.projectiles.spawnProjectile(c, {
+        g.projectiles.spawnProjectile(c, { vis: visOf(def),
           pos: from, vel: c.aim3.clone().setLength(def.speed || 34),
           radius: (def.minR || 2) + c01 * ((def.maxR || 5.5) - (def.minR || 2)),
           damage: (def.dmgMin || 28) + c01 * ((def.dmgMax || 80) - (def.dmgMin || 28)),
@@ -753,7 +754,7 @@ export const TYPES = {
       if (st.timer <= 0) {
         st.timer = def.interval || 0.22; st.count--;
         const tx = st.tx + rand(-(def.spread || 26), def.spread || 26), tz = st.tz + rand(-(def.spread || 26), def.spread || 26);
-        g.projectiles.spawnProjectile(c, {
+        g.projectiles.spawnProjectile(c, { vis: visOf(def),
           pos: new THREE.Vector3(tx + rand(-6, 6), 90, tz + rand(-6, 6)),
           vel: new THREE.Vector3(rand(-4, 4), -60, rand(-4, 4)), grav: 40,
           radius: def.radius || 3, damage: def.damage || 34, blast: def.blast || 18, power: 1.5,

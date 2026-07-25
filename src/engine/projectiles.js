@@ -96,6 +96,7 @@ class Projectile {
     this.blast = (o.blast || this.radius * 2.4) * ((caster.sheet && caster.sheet.blastMult) || 1);   // Demolitionist widens it
     this.boomerang = !!o.boomerang; this._return = false; this._range = o.range || 55; this._flown = 0; this._rehitT = 0;
     this.power = o.power || 1;                     // scales fx / shake
+    this.vis = o.vis || null;                      // the visual contract profile (Phase Zero)
     this.grav = o.grav || 0;                       // >0 for lobs
     this.homing = o.homing || 0;
     this.life = o.life || 3;
@@ -386,7 +387,9 @@ class Projectile {
       game.noise(p, 0.8, this.caster);
       return false;
     }
-    game.vfx.explode(p, { color: this.color, color2: this.color2, radius: this.blast, power: this.power, scorch: hitGround });
+    game.vfx.explode(p, { color: this.color, color2: this.color2, radius: this.blast, power: this.power, scorch: hitGround && !(this.vis && this.vis.residue !== 'scorch') });
+    // the profile decides what the ground KEEPS — frost, sludge, debris, nothing
+    if (hitGround && this.vis && this.vis.residue !== 'scorch') game.vfx.residue(p, this.vis.residue, this.blast * 0.6);
     game.areaDamage(this.caster, p, this.blast, this.damage * 0.8, this.power);
     if (this.shock && hitGround) game.vfx.shockwave(p, { color: this.color, radius: this.blast * 2.2, power: this.power });
     if (this.face) {   // the Marletta goes off — a grief-shaped crater

@@ -951,3 +951,60 @@ is three laws this project already had, applied where each was missing:
 
 Verified: the identical dt-less 52×364 battery now yields **0 NaN projectiles, 0 bounding-sphere
 warnings, 0 errors, 0 orphaned audio loops**.
+
+## §24 · THE VISUAL CONTRACT — and the inert damage table it exposed (2026-07-25)
+
+Phase Zero of `docs/POWERS_BRIEF.md`: *"Before producing dozens of effects, add a data-driven
+visual profile to every ability… Without it, the visual system will become a collection of
+one-off exceptions."*
+
+### The seven traits (`data/visual.js`)
+
+Every ability resolves a profile — **source · shape · trail · impact · residue · material ·
+tell** — DERIVED from what it already is (type, dtype, flags), with `def.vis` as the override.
+Each trait has a CLOSED vocabulary; a value outside it is a typo, not a new look, and the boot
+validator says so. The traits map onto the brief's five readability tests deliberately:
+
+| trait | the test it serves |
+|---|---|
+| **shape** + **source** | the GRAYSCALE test — silhouette and origin survive with colour removed |
+| **trail** | the HALF-SECOND test — what you see before the impact |
+| **tell** | the STATUS test — what the victim is now |
+| impact · residue · material | the freeze-frame and combat-chaos tests |
+
+Measured over the live roster: **364/364 abilities profiled, 0 vocabulary violations**, with
+real spread (9 sources · 12 shapes · 8 trails · 8 impacts · 7 residues · 7 materials · 9 tells).
+The engine USES it — `vfx.residue(pos, kind, r)` picks what the ground keeps, so an ice burst
+leaves frost and acid leaves sludge instead of everything leaving the same black scorch — and
+the codex prints the profile as a `SEEN AS:` line, so the look cannot drift from the data.
+
+### What it found: the damage table was inert
+
+The contract's **material** trait answers "what is this made of". Which meant it could be
+checked against the damage type — and **only 5 of 364 abilities had ever declared a `dtype`**.
+Manual §3 promises every hit carries a type and every fighter has a resistance table. The
+table was real. The data wasn't. So:
+
+- every "cold" cone dealt **energy** — `frostResist` did nothing against frost
+- every flame breath dealt **energy** — metal's fire resistance never applied
+- a gas cloud dealt **energy** — **a robot could be poisoned**, which §3 explicitly forbids
+
+`applyDtypes(ROSTER)` (boot, next to `applyIdentities`) now stamps the derived type from
+MATERIAL onto any ability that doesn't declare one, and 31 elementally-flavoured powers had
+their element AUTHORED in `characters.js` — by hand, in the data, because runtime prose-
+sniffing is banned here (the "imp in simpler" incident). `steel`/`stone` map to **physical**,
+never `ballistic`: only real bullets take the armour filter, and those declare it at the call site.
+
+**Measured, before → after, on a 50-damage hit:**
+
+| matchup | was | now |
+|---|---|---|
+| KIVULI's gas → TITAN (metal, toxic 0) | 50 | **0** — the promise kept |
+| RIME's frost breath → TORCH (frostResist) | 50 | **22.5** |
+| acid → TITAN | — | **160** (×1.6, plate corrodes) |
+| fire → TITAN | — | **60** (×0.6) |
+
+⚠ **A ruled consequence, written down rather than patched away:** KIVULI's three damaging
+powers are all toxic, so against a synthetic her ranged kit does nothing. Her answer is her
+fists (physical) and her blind (a status, not damage) — bring the right tool, or get close.
+That is the manual's own counter rule working, not a bug.

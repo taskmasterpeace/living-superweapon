@@ -6,6 +6,7 @@ import { CSS, CODEX_MOBILE, PHONE_CSS, TABLET_CSS, DECK_CSS } from './hud.styles
 import { DTYPES, DTYPE_INFO, resistOf, bandOf } from './entity.js';
 import { glyph, padActive, padFaces } from '../core/glyphs.js';
 import { MODES } from '../data/modes.js';
+import { visOf, visLine } from '../data/visual.js';
 import { loadCareer, fmtMoney } from '../data/career.js';
 import { clamp, TAU } from '../core/util.js';
 import { ATTR_DEFS, TALENTS, deriveAttrs, heroTalents, rankName, rankColor, RANKS, bakeSheet } from '../data/ranks.js';
@@ -67,7 +68,11 @@ function cfAbilityRows(def) {
     if (a.boomerang) notes.push('RETURNS');
     if (a.type === 'nova') notes.push(`FEEDS THE WHOLE TANK · r ${a.minRadius || 16}→${a.maxRadius || 44}u · CASTER LEFT DRY`);
     if (a.type === 'mindcontrol') notes.push(`DOMINATES ${a.dur || 6}s — MINDS ONLY, NEVER BADGES`);
-    return { slot: s.label, name: a.name, kind: a.type.toUpperCase(), dmg, cost, cd, reach, notes: notes.join(' · '), ult: s.k === 'r' };
+    // THE VISUAL CONTRACT (Phase Zero): the seven traits, derived — what a witness would
+    // actually be able to describe. It rides the case file so the look can't drift from the data.
+    const vp = visOf(a);
+    if (vp) notes.push('SEEN AS: ' + visLine(vp).toUpperCase());
+    return { slot: s.label, name: a.name, kind: a.type.toUpperCase(), dmg, cost, cd, reach, notes: notes.join(' · '), ult: s.k === 'r', vis: vp };
   });
 }
 // countermeasure doctrine — what the Treaty would actually brief a responder

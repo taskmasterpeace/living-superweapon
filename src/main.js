@@ -18,6 +18,7 @@ import { TouchControls, isTouchDevice } from './core/touch.js';
 import { UINav } from './core/uinav.js';
 import { Soundscape } from './core/soundscape.js';
 import { validateRoster } from './engine/abilityMeta.js';
+import { validateVis, applyDtypes } from './data/visual.js';
 import { TYPES } from './engine/abilities.js';
 import { loadCareer, saveCareer, clearCareer, newCareer, genSlate, acceptCfg, resolveOffer, restWeek, payClinic, fmtMoney } from './data/career.js';
 import { CareerUI } from './engine/careerUI.js';
@@ -238,6 +239,10 @@ function openMenu() { soundscape.music('menu'); game.running = false; touch.show
 // ---- ORIGIN: install saved customs, wire the forge ----
 installCustoms(ROSTER);
 applyIdentities(ROSTER);   // every weapon is a PERSON from a real place (def.person)
+// THE VISUAL CONTRACT closes the damage-type loop (manual §3 + §24): only five abilities in
+// the roster ever declared a `dtype`, so cold cones dealt ENERGY and frostResist did nothing.
+// MATERIAL already knows what a power is made of — stamp the type from it, once, at boot.
+console.log('[THRESHOLD] damage types derived for', applyDtypes(ROSTER), 'abilities');
 const creator = new CreatorUI(ROSTER);
 function afterForge(def, { test } = {}) {
   hud.buildTitle(enter);                                  // rebuild so the new card exists
@@ -253,7 +258,7 @@ hud.onEditCustom = (def) => {
 // THE ROSTER VALIDATOR (code review item 1): a typo'd ability type is a silent dead slot
 // forever. Check the whole roster — customs included — once at boot, and SAY so.
 try {
-  const problems = validateRoster(ROSTER, TYPES);
+  const problems = validateRoster(ROSTER, TYPES).concat(validateVis(ROSTER));
   if (problems.length) {
     console.error('[THRESHOLD] ROSTER VALIDATION — %d problem(s):', problems.length);
     for (const p of problems) console.error(`  ${p.id}.${p.slot}: ${p.msg}`);
