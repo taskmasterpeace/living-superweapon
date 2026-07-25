@@ -4,7 +4,7 @@ import { World } from './world.js';
 import { Particles3D } from './particles3d.js';
 import { VFX } from './vfx.js';
 import { Projectiles } from './projectiles.js';
-import { Fighter } from './entity.js';
+import { buildWeapon, weaponProficiency, Fighter } from './entity.js';
 import { AI } from './ai.js';
 import { Minion, Construct } from './summons.js';
 import { MeleeSystem } from './melee.js';
@@ -434,6 +434,102 @@ export class Game {
         f.blindT = Math.max(f.blindT, 0.55);
       }
     }
+  }
+
+  // ---------- THE GEAR SYSTEM (manual §16): powers are what you ARE, gear is what you HOLD ----------
+  _gearKind(ab) {
+    const n = (ab.name || '').toLowerCase();
+    if (ab.type === 'bow' || ab.type === 'quiver') return 'bow';
+    if (/shotgun/.test(n)) return 'shotgun';
+    if (/pistol|sidearm|smg/.test(n)) return 'pistol';
+    if (ab.type === 'rifle') return 'rifle';
+    if (/knife|dagger/.test(n)) return 'knife';
+    if (/axe/.test(n)) return 'axe';
+    if (/spear|trident/.test(n)) return 'spear';
+    if (ab.dmgClass === 'slash' || /blade|sword/.test(n)) return 'sword';
+    return 'rifle';
+  }
+  spawnGearDrop(ab, x, z) {
+    const mats = { armor: new THREE.MeshStandardMaterial({ color: '#565c66', roughness: 0.45, metalness: 0.7 }) };
+    const mesh = buildWeapon(this._gearKind(ab), mats);
+    mesh.rotation.z = Math.PI / 2.2; mesh.rotation.y = Math.random() * Math.PI * 2;
+    mesh.scale.setScalar(1.6);
+    const gy = this.world.heightAt ? this.world.heightAt(x, z) : 0;
+    mesh.position.set(x, gy + 0.8, z);
+    this.scene.add(mesh);
+    (this._drops = this._drops || []).push({ ab, mesh, x, z, t: 20, y0: gy + 0.8 });
+  }
+  updateDrops(dt) {
+    const D = this._drops; if (!D || !D.length) return;
+    for (let i = D.length - 1; i >= 0; i--) {
+      const d = D[i]; d.t -= dt;
+      d.mesh.rotation.y += dt * 0.9;
+      d.mesh.position.y = d.y0 + Math.sin(this.time * 2.2 + i) * 0.25;
+      if (d.t <= 0) {
+        this.scene.remove(d.mesh);
+        d.mesh.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material) o.material.dispose(); });
+        D.splice(i, 1);
+      }
+    }
+  }
+  // G near a dropped weapon = take it into the CARRY HAND (never hides a kit slot; X fires it)
+  pickupGear(f) {
+    const D = this._drops; if (!D || !D.length) return false;
+    let best = null, bd = 8 * 8;
+    for (const d of D) {
+      const q = (d.mesh.position.x - f.pos.x) ** 2 + (d.mesh.position.z - f.pos.z) ** 2;
+      if (q < bd) { bd = q; best = d; }
+    }
+    if (!best) return false;
+    if (f._gearHeld) this.dropGear(f, false);              // hands are a slot: swap, don't stack
+    const prof = weaponProficiency(f.def);
+    const ab = best.ab;
+    const eff = { ...ab, gear: true,
+      damage: ab.damage != null ? +(ab.damage * prof).toFixed(2) : ab.damage,
+      dmgMin: ab.dmgMin != null ? +(ab.dmgMin * prof).toFixed(2) : ab.dmgMin,
+      dmgMax: ab.dmgMax != null ? +(ab.dmgMax * prof).toFixed(2) : ab.dmgMax,
+      spread: ab.spread != null ? +(ab.spread / prof).toFixed(4) : ab.spread };   // proficiency shows in the HANDS
+    f._gearHeld = { ab: eff, base: ab, t: 12, prof };
+    f.slots._gear = { def: eff, cd: 0, chargeT: 0, sustainT: 0 };
+    const hand = buildWeapon(this._gearKind(ab), { armor: new THREE.MeshStandardMaterial({ color: '#565c66', roughness: 0.45, metalness: 0.7 }) });
+    hand.position.set(1.55, 4.6, 1.1); hand.rotation.x = -0.5;
+    f.obj.add(hand); f._gearMesh = hand;
+    this.scene.remove(best.mesh);
+    best.mesh.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material) o.material.dispose(); });
+    this._drops.splice(this._drops.indexOf(best), 1);
+    this.audio.impact(0.5, f.pos);
+    if (this.isHuman(f) && this.hud) this.hud.feed(`SCAVENGED: ${ab.name} ×${prof.toFixed(2)} — X fires it, ~12s of trigger time`, '#ffd24a');
+    return true;
+  }
+  dropGear(f, spawnDrop = true) {
+    if (!f._gearHeld) return;
+    if (spawnDrop) this.spawnGearDrop(f._gearHeld.base, f.pos.x + (Math.random() * 4 - 2), f.pos.z + (Math.random() * 4 - 2));
+    if (f._gearMesh) {
+      f.obj.remove(f._gearMesh);
+      f._gearMesh.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material) o.material.dispose(); });
+      f._gearMesh = null;
+    }
+    delete f.slots._gear;
+    f._gearHeld = null;
+  }
+  drainGear(f, dt) {
+    const H = f._gearHeld; if (!H) return;
+    H.t -= dt;
+    if (H.t <= 0) {
+      this.dropGear(f, false);                             // dry — the leash: a pickup never becomes kit
+      if (this.isHuman(f) && this.hud) this.hud.feed('DRY — tossed it', '#8b8577');
+      this.audio.zap(160, f.pos);
+    }
+  }
+  // A landed grab STRIPS the weapon: the held pickup hits the pavement, and the victim's own
+  // gear-tagged kit slots go dead for the window (runSlot gate). Powers keep firing — you can
+  // take the man's gun, never his fire.
+  disarm(v, by) {
+    let any = false;
+    if (v._gearHeld) { this.dropGear(v, true); any = true; }
+    if (Object.values(v.slots).some(s => s && s.def && s.def.gear)) { v._disarmT = 6; any = true; }
+    if (any && this.hud) this.hud.damageNumber(v.pos, 'DISARMED', '#ffd24a', true);
+    if (any) this.audio.zap(300, v.pos);
   }
 
   updateCarry(dt) {
@@ -1048,6 +1144,13 @@ export class Game {
   isHuman(f) { return this.humans.some(h => h.fighter === f); }
 
   handleKO(victim) {
+    // THE DROP ECONOMY (manual §16): KO'd gear carriers leave a weapon on the street — 20s to
+    // claim it. Held pickups fall too. Police sidearms join the economy the same way.
+    if (!victim.isDummy) {
+      if (victim._gearHeld) this.dropGear(victim, true);
+      const gearAb = Object.values(victim.slots).map(s => s && s.def).find(d => d && d.gear);
+      if (gearAb && (this._drops || []).length < 10) this.spawnGearDrop(gearAb, victim.pos.x + (Math.random() * 5 - 2.5), victim.pos.z + (Math.random() * 5 - 2.5));
+    }
     const src = victim.lastHitBy;
     const killer = (src && victim.lastHitT < 4 && src !== victim && src.def) ? src : null;
     if (killer) {
@@ -1651,10 +1754,15 @@ export class Game {
     // G: carrying → THROW it · something heavy in reach → hoist it · otherwise the normal grab
     if (inp.pressed('KeyG') || pad.pressed('grab')) {
       if (p._carry) this.throwProp(p);
+      else if (this.pickupGear(p)) {}                      // a weapon on the ground beats a hoist (manual §16)
       else if (!this.grabProp(p)) { this.melee.grab(p); if (np) np.queueMelee('grab'); }
     }
     this.melee.guard(p, inp.down(KM.guard) || inp.mouse.b3 || inp.mouse.b4 || pad.down('guard'));
-    if (inp.pressed(KM.item) && p.items.length) this.useItem(p);   // the carried item (beacon: plant / recall)
+    if (p._gearHeld) {                                  // the HELD weapon owns X while you carry it
+      const gi = { pressed: inp.pressed(KM.item), held: inp.down(KM.item), released: inp.released(KM.item), dt };
+      if (gi.pressed || gi.held || gi.released) runSlot(p, '_gear', gi, this);
+      if (gi.held) this.drainGear(p, dt);
+    } else if (inp.pressed(KM.item) && p.items.length) this.useItem(p);   // the carried item (beacon: plant / recall)
 
     // --- powers (keyboard/mouse OR gamepad) ---
     const busy = p.guarding || p.strikeActive > 0 || p.grabState || p.grabbing || p.meleeCharge > 0 || p.staggerT > 0;
@@ -1896,6 +2004,7 @@ export class Game {
     this.updateCarry(dt);
     this.updateThrownBodies(dt);
     this.updateSmoke(dt);
+    this.updateDrops(dt);
     this.updateThrowArc();
     if (this.mode && !this.matchOver) { const over = this.mode.isOver(this); if (over) this.endMatch(over); }
 

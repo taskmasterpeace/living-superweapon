@@ -238,6 +238,7 @@ export class MeleeSystem {
           // strength decides how long you may aim before they tear free. Throw with grab again.
           const strH = f.def.strength ?? 5, strV = foe.def.strength ?? 5;
           f.grabState = 'clinch';
+          if (g.disarm) g.disarm(foe, f);   // GEAR (manual §16): a landed grab STRIPS the weapon
           f.grabT = Math.min(1.8, Math.max(0.45, (behind ? 1.05 : 0.85) + (strH - strV) * 0.14));
           f._clinchMax = f.grabT;
           if (g.isHuman(f) && g.hud) g.hud.feed('CLINCH — aim, then G again to HURL them', '#ff8a3a');

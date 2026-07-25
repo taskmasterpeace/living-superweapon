@@ -924,6 +924,22 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   TITAN's integrated cannons deliberately untagged. The gear SYSTEM (drops/pickups/
   proficiency/disarm) is the next phase.
 
+## THE GEAR SYSTEM (2026-07-24) — manual §16
+- **Drops**: `handleKO` spawns the victim's first gear-tagged ability as a street drop
+  (buildWeapon mesh — now EXPORTED from entity.js — 20s despawn, ≤10 live); held pickups
+  fall too; police sidearms tagged (5 defs in police.js). `game._drops`/`updateDrops`.
+- **Pickup**: G ≤8u (priority clinch>carry>PICKUP>hoist>grab) → `_gearHeld {ab,base,t:12s,
+  prof}` + synthetic `f.slots._gear` fired by X through runSlot (kit slots never hidden);
+  trigger-time ammo drains only while firing (`drainGear`); dry = tossed, never kit.
+- **`weaponProficiency(def)`** (entity.js, exported; gearProf overrides): soldier-word
+  archetypes 1.25 / trained 1.05 / base 1.0 / STR≥9 0.7 — damage × prof, spread ÷ prof.
+  Measured 75 dmg to flesh vs 0 through TITAN from the same carbine (ballistic gate =
+  the Punisher-vs-Hulk law, free).
+- **Disarm-by-grab**: clinch connect calls `game.disarm(victim)` — held pickup drops +
+  `_disarmT 6` kills gear-tagged KIT slots via a runSlot gate (powers untouched).
+- Parked + written: bot scavenging, ped gun pickups (vigilantism laws ready), net item
+  ownership.
+
 ## THE SAMPLE BANK (2026-07-24) — real recordings for every discrete SFX
 - **`core/samples.js`** (`MANIFEST` + `SampleBank` + `HOT_SET`) + **254 Kenney CC0 oggs in
   `/public/audio`** (~6MB, offline-first; impact/sci-fi/interface/rpg/jingle packs). Every

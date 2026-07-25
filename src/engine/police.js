@@ -20,7 +20,7 @@ export const COP_DEF = {
   ai: { style: 'zoner', range: 36, aggro: 0.6, fly: 0 },
   evade: { kind: 'dash', name: 'Take Cover' },
   abilities: {
-    lmb: { type: 'rifle', name: 'Service Pistol', cost: 1.5, interval: 0.46, damage: 5, speed: 130, radius: 0.6, oneHand: true, color: '#cfe0ff' },
+    lmb: { type: 'rifle', name: 'Service Pistol', gear: true, cost: 1.5, interval: 0.46, damage: 5, speed: 130, radius: 0.6, oneHand: true, color: '#cfe0ff' },
     shift: { type: 'dash', name: 'Sprint', cost: 4, cd: 0.9, power: 70, iframes: 0.1, color: '#5aa0ff' },
   },
 };
@@ -29,7 +29,7 @@ export const SWAT_DEF = {
   colors: { primary: '#16181e', secondary: '#0e1013', accent: '#5aa0ff', skin: '#caa27a' },
   hp: 95, speed: 28, strength: 5, meleeTiers: 3,
   abilities: {
-    lmb: { type: 'rifle', name: 'Tactical Carbine', cost: 1.5, interval: 0.16, damage: 4, speed: 150, radius: 0.55, color: '#cfe0ff' },
+    lmb: { type: 'rifle', name: 'Tactical Carbine', gear: true, cost: 1.5, interval: 0.16, damage: 4, speed: 150, radius: 0.55, color: '#cfe0ff' },
     shift: { type: 'dash', name: 'Breach Sprint', cost: 4, cd: 0.8, power: 80, iframes: 0.12, color: '#5aa0ff' },
   },
 };
@@ -41,7 +41,7 @@ export const FED_DEF = {
   hp: 110, ki: 70, speed: 29, strength: 5, meleeTiers: 3, armor: 4,
   evade: { kind: 'dash', name: 'Break Contact' },
   abilities: {
-    lmb: { type: 'rifle', name: 'Automatic Rifle', cost: 1.3, interval: 0.11, damage: 4.5, speed: 165, radius: 0.55, color: '#e4ecff' },
+    lmb: { type: 'rifle', name: 'Automatic Rifle', gear: true, cost: 1.3, interval: 0.11, damage: 4.5, speed: 165, radius: 0.55, color: '#e4ecff' },
     rmb: { type: 'rifle', weapon: 'pistol', name: 'Sidearm', cost: 1.5, interval: 0.5, damage: 7, speed: 140, radius: 0.6, oneHand: true, color: '#cfe0ff' },
     shift: { type: 'dash', name: 'Break Contact', cost: 4, cd: 0.85, power: 78, iframes: 0.12, color: '#cfd6e4' },
   },
@@ -55,8 +55,8 @@ export const GUARD_DEF = {
   colors: { primary: '#3a4a2c', secondary: '#232a1a', accent: '#9bd07a', skin: '#caa27a' },
   hp: 145, ki: 90, speed: 27, strength: 6, meleeTiers: 3, armor: 8, body: 'metal',
   abilities: {
-    lmb: { type: 'rifle', name: 'Assault Rifle', cost: 1.2, interval: 0.12, damage: 5, speed: 168, radius: 0.55, color: '#e6ffcf' },
-    rmb: { type: 'projectile', name: 'Rifle Grenade', cost: 10, cd: 3.6, damage: 20, speed: 96, radius: 1.2, blast: 11, grav: 5, shock: true, color: '#ffd24a', color2: '#fff' },
+    lmb: { type: 'rifle', name: 'Assault Rifle', gear: true, cost: 1.2, interval: 0.12, damage: 5, speed: 168, radius: 0.55, color: '#e6ffcf' },
+    rmb: { type: 'projectile', name: 'Rifle Grenade', gear: true, cost: 10, cd: 3.6, damage: 20, speed: 96, radius: 1.2, blast: 11, grav: 5, shock: true, color: '#ffd24a', color2: '#fff' },
     shift: { type: 'dash', name: 'Combat Roll', cost: 4, cd: 0.9, power: 82, iframes: 0.14, color: '#9bd07a' },
   },
 };

@@ -19,7 +19,19 @@ const FLY_RISE = 46, FLY_SINK = 26, FLY_TAKEOFF = 19, FLY_HOVER_BOB = 3.2;   // 
 
 // ---- weapon models — one registry, every archetype: mounts on the DRIVEN fist meshes so
 // poses and the ragdoll carry them. Built along the arm's -Y axis (same convention as the rifle).
-function buildWeapon(kind, m) {
+// GEAR PROFICIENCY (manual §16): ANYONE can pick up the SMG — soldiers are just better with
+// it. Derived like resistOf so no hero is hand-authored; `def.gearProf` always wins. Word
+// boundaries are load-bearing (the frameOf lesson — 'imp' once matched 'simpler').
+export function weaponProficiency(def) {
+  if (def.gearProf) return def.gearProf;
+  const txt = `${def.role || ''} ${def.title || ''} ${def.blurb || ''}`.toLowerCase();
+  if (/\b(soldier|arsenal|ranger|marksman|sniper|operator|tactical|hunter|agent|jackal|sharpshooter)\b/.test(txt)) return 1.25;
+  if ((def.strength ?? 5) >= 9) return 0.7;            // a monster never learned to aim — why would he
+  if (def.meleeTiers === 3 || /\b(martial|trained|detective|vigilante)\b/.test(txt)) return 1.05;
+  return 1.0;
+}
+
+export function buildWeapon(kind, m) {
   const g = new THREE.Group();
   const add = (mesh, x, y, z, rx = 0, rz = 0) => { mesh.position.set(x, y, z); mesh.rotation.x = rx; mesh.rotation.z = rz; g.add(mesh); return mesh; };
   switch (kind) {
@@ -472,6 +484,7 @@ export class Fighter {
     this._thrownT = 0; this._thrownBy = null;   // aimed-throw body-as-projectile window (manual §11)
     this._bleed = 0; this._bleedStill = 0; this._bleedAcc = 0; this._bleedTick = 0; this._bleedSrc = null; this._suitHex = null;   // BLEEDING (manual §12)
     this.downedT = 0; this._swHold = 0; this._secondWindUsed = false;   // SECOND WIND (manual §13) — a player's drama, never a bot's
+    this._disarmT = 0; this._gearHeld = null; this._gearMesh = null;    // THE GEAR SYSTEM (manual §16)
     this.sleepT = 0; this._sleepImmune = 0; this._sleepK = 0;   // SLEEP (manual §14): fold slowly, wake on ANY damage
     this.blindT = 0;                                            // BLIND (manual §14): smoke owns the eyes
     this.metal = !!def.metal;   // robot: sparks when hit, foot exhaust, sturdier vs knockback
@@ -903,6 +916,7 @@ export class Fighter {
       }
     }
     if (this._sleepImmune > 0) this._sleepImmune -= dt;
+    if (this._disarmT > 0) this._disarmT -= dt;
     // ---- AFTERBURNER (manual §15): hold cruise 0.8s with a burner-class core → IGNITION ----
     {
       const AF = this.def.afterburner;

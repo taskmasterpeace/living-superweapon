@@ -526,3 +526,37 @@ MAJESTY, TORCH, NOVA, APEX, OLYMPUS.
 fighter HOLDS rather than IS — 24 roster abilities (SARGE's arsenal, SANDRA's guns, GALE's
 bow and knife, KNIGHTFALL's thrown steel and charges, the god-forged blades, the axes,
 KIVULI's canister…) and all 13 ORIGIN gear rows. TITAN's cannons are his body — not gear.
+
+## §16 · THE GEAR SYSTEM (2026-07-24) — powers are what you ARE, gear is what you HOLD
+
+Robert's ruling, implemented whole: no grid, no menus — **one pair of hands plus the belt**.
+
+- **The drop economy**: a KO'd fighter whose kit carries `gear: true` leaves their primary
+  weapon on the street (`handleKO` → `spawnGearDrop`, real `buildWeapon` mesh, bobbing,
+  **20s despawn**, ≤10 concurrent). A held pickup falls too. **Police sidearms are tagged**
+  (Service Pistol, Tactical Carbine, Automatic Rifle, Assault Rifle, Rifle Grenade) — beat
+  cops feed the same economy. Verified: drops appear organically in AI rumbles.
+- **Pickup**: **G** within 8u of a drop takes it into the CARRY HAND — a kit slot is never
+  hidden. G priority: clinch-throw › carry-throw › **weapon pickup** › prop hoist › grab.
+  Holding a weapon while grabbing another swaps (hands are a slot).
+- **X fires it** (the gadget button — the hand). The pickup becomes a synthetic `_gear`
+  slot through the ordinary `runSlot` machinery, so every ability rule applies unchanged.
+- **Ammo is a leash**: **~12 seconds of trigger time**, drained only while firing. Dry =
+  the weapon is tossed (feed says so) — a pickup never becomes permanent kit.
+- **Proficiency, not permission** (`weaponProficiency(def)`, derived like `resistOf`,
+  `def.gearProf` overrides): soldier/hunter/marksman archetypes **×1.25**, trained
+  **×1.05**, baseline **×1.0**, STR ≥ 9 **×0.7** (why would he ever aim). Damage scales up,
+  spread scales DOWN — proficiency shows in the hands. Measured: SARGE/SANDRA/KNIGHTFALL/
+  GALE 1.25 · SOL 1.0 · RAGE 0.7.
+- **The tier gate is already law**: dropped guns fire `ballistic`, so the scale does the
+  Punisher-vs-Hulk work for free — measured **75 damage to flesh, 0 through TITAN's
+  plate** from the same scavenged carbine. Asymptotic by ruling, never a spectator switch:
+  the human-tier answer to armour is explosives, acid, and thrown buses.
+- **DISARM-BY-GRAB** (the trifecta earning its keep): a landed grab STRIPS the victim —
+  their held pickup hits the pavement AND their own gear-tagged kit slots go DEAD for
+  **6s** (`_disarmT`, gated in `runSlot` with a DISARMED feed). Powers keep firing — you
+  can take the man's gun, never his fire. Verified: batarangs refused mid-window, the
+  non-gear ult cast fine.
+- **Deliberately parked, written down**: bots don't scavenge yet (player-tech, like the
+  grapnel); pedestrians don't pick up dropped guns yet — when they do, vigilantism law
+  already decides who dares. Netcode ownership of ground items is a one-line TODO.

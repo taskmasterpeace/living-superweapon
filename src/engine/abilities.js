@@ -770,6 +770,12 @@ export function runSlot(c, key, inp, g) {
     if (inp.pressed && g && g.isHuman(c) && g.hud) g.hud.feed('One hand on the wall — that needs both', '#8b8577');
     return;
   }
+  // DISARMED (manual §16): a landed grab strips the hands — gear-tagged slots are DEAD for the
+  // window. Powers are what you ARE; those keep firing. The trifecta earns its keep.
+  if (c._disarmT > 0 && st.def.gear) {
+    if (inp.pressed && g && g.isHuman(c) && g.hud) { g.hud.feed('DISARMED — your hands are empty', '#ff8a6a'); if (g.hud.kiDenied) g.hud.kiDenied(key); }
+    return;
+  }
   // pressing an ability you can't afford → tell the player WHY nothing happened
   if (inp.pressed && (st.def.cost || 0) > c.ki && st.cd <= 0 && g.onNoKi) g.onNoKi(c, key);
   // stamp real input on the slot — held types (cones/phase/lifedrain) leave no cd/sustain
