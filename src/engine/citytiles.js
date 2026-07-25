@@ -1082,6 +1082,14 @@ const T = {
       log.rotation.set(0, a, Math.PI / 2);
       reg(W, log, x, z, L * 0.4, 3.2, 5.5, 90);
     }
+    for (let i = 0; i < 3; i++) {                                     // loose stones on the forest floor (weight ladder)
+      const x = cx + (rng() * 2 - 1) * HW * 0.85, z = cz + (rng() * 2 - 1) * HD * 0.85;
+      if (near(x, z)) continue;
+      const s = 2.4 + rng() * 1.6;
+      const st = mesh(ctx, new THREE.DodecahedronGeometry(s, 0), M2.rock, x, s * 0.5, z);
+      st.rotation.set(rng(), rng(), rng());
+      (ctx.rockProps = ctx.rockProps || []).push({ x: st.position.x, z: st.position.z, mesh: st, carried: false, dead: false });
+    }
     if (jungle) for (let i = 0; i < 20; i++) {                       // undergrowth WALLS: waist-high, hides feet and bodies
       const x = cx + (rng() * 2 - 1) * HW * 0.9, z = cz + (rng() * 2 - 1) * HD * 0.9;
       if (near(x, z)) continue;
@@ -1110,6 +1118,8 @@ const T = {
       const x = cx + (rng() * 2 - 1) * HW, z = cz + (rng() * 2 - 1) * HD, s = 1.6 + rng() * 2.6;
       const r2 = mesh(ctx, new THREE.DodecahedronGeometry(s, 0), M2.rock, x, s * 0.5, z);
       r2.rotation.set(rng(), rng(), rng());
+      // the man-sized ones are LOOSE ROCKS on the weight ladder (manual §21) — 0.5t, liftable
+      if (s > 2.3) (ctx.rockProps = ctx.rockProps || []).push({ x: r2.position.x, z: r2.position.z, mesh: r2, carried: false, dead: false });
     }
     if (v === 1) for (let i = 0; i < 6; i++)                         // a stand of hardy pines
       ctx.treeSpots.push([cx + (rng() * 2 - 1) * HW * 0.7, cz + (rng() * 2 - 1) * HD * 0.7]);
@@ -1323,5 +1333,5 @@ export function buildTiles(world, group, plan, rng) {
       for (let i = p0; i < world._pendingPits.length; i++) { const p = world._pendingPits[i]; p[0] = sx(ctx, p[0]); p[1] = sz(ctx, p[1]); p[2] *= S; p[3] *= S; }
     }
   }
-  return { planeProps: ctx.planeProps || [], treeSpots: ctx.treeSpots };
+  return { rockProps: ctx.rockProps || [], planeProps: ctx.planeProps || [], treeSpots: ctx.treeSpots };
 }

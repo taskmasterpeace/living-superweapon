@@ -765,8 +765,10 @@ the block; the gunman can barely shove Hulk off his feet.
 ### The tonnage table and the capacity curve (`entity.js`)
 
 - `PROP_WEIGHT` (metric tons): lamp **0.3** · rock **0.5** · tree **1.1** · car **1.9** ·
-  plane **24**. (Rocks are ledgered in `docs/BACKLOG.md` — boulders are structural cover
-  today; RAGE's Boulder projectile carries the fantasy until loose rocks exist.)
+  plane **24**. Loose rocks are REAL: the man-sized mountain scree (s > 2.3) and three
+  stones per forest floor register as `world.rocks` — 0.5t puts them in STR 3 territory,
+  the first rung anyone superhuman-adjacent can actually use. The big outcrop boulders
+  stay structural cover; a rock you can hide behind is not a rock you pocket.
 - `liftCapacity(str)`: human below six — `0.22 × STR` (STR 1 lifts 0.22t, STR 5 exactly
   one street tree at 1.1t); superhuman past it — `1.1 × 2.05^(STR−5)`. Measured ladder:
   STR 6 **2.25t** (first car), 7 **4.62**, 8 **9.48**, 9 **19.4**, 10 **39.8t** (the only

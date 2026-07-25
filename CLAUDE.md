@@ -1062,9 +1062,11 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
 - **Person-vs-person battles weight** (melee `_throw` + the clinch arc preview):
   hurl × `clamp(0.75 + 0.15·log2(liftCapacity(holder)/bodyWeight(victim)), 0.45–1.2)`.
   Measured: RAGE→GALE 115 u/s · GALE→RAGE 57 · GALE→TITAN 47 (the plate resists).
+- **LOOSE ROCKS** (`world.rocks` via `ctx.rockProps`): mountain scree s>2.3 + 3 forest
+  stones per tile register as 0.5t liftables (STR 3+); outcrop boulders STAY cover.
 - ⚠ melee.js now imports from entity.js (safe — entity never imports melee).
   ⚠ `runSlot(c, key, inp, g)` — fighter FIRST, game LAST (battery harness order).
-  Rocks stay ledgered in BACKLOG (boulders are cover). Ref lsw-weight-plane.jpeg.
+  Ref lsw-weight-plane.jpeg.
 
 ## THE SAMPLE BANK (2026-07-24) — real recordings for every discrete SFX
 - **`core/samples.js`** (`MANIFEST` + `SampleBank` + `HOT_SET`) + **254 Kenney CC0 oggs in

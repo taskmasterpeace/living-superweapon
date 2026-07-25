@@ -324,6 +324,11 @@ export class Game {
       const dx = pl.x - f.pos.x, dz = pl.z - f.pos.z;
       consider(dx * dx + dz * dz, { kind: 'plane', ref: pl, x: pl.x, z: pl.z, w: PROP_WEIGHT.plane });
     }
+    for (const rk of this.world.rocks || []) {                      // loose stones (0.5t — STR 3 territory)
+      if (rk.dead || rk.carried) continue;
+      const dx = rk.x - f.pos.x, dz = rk.z - f.pos.z;
+      consider(dx * dx + dz * dz, { kind: 'rock', ref: rk, x: rk.x, z: rk.z, w: PROP_WEIGHT.rock });
+    }
     const G = this.world.grass;                                     // street trees (instanced)
     if (G && this.world._gPos) for (let i = 0; i < G.count; i++) {
       if (!this.world._gOn[i]) continue;
@@ -346,6 +351,9 @@ export class Game {
     if (t.kind === 'car') {
       t.ref.carried = true; t.ref.mesh.visible = false;
       mesh = new THREE.Mesh(this.world._carGeo, t.ref.paint);
+    } else if (t.kind === 'rock') {
+      t.ref.carried = true; t.ref.mesh.visible = false;
+      mesh = new THREE.Mesh(new THREE.DodecahedronGeometry(2.8, 0), new THREE.MeshStandardMaterial({ color: '#8d8577', roughness: 0.95, flatShading: true }));
     } else if (t.kind === 'plane') {
       t.ref.carried = true; for (const m of t.ref.meshes) m.visible = false;
       const fus = new THREE.Mesh(new THREE.CylinderGeometry(3.2, 2.5, 38, 8), new THREE.MeshStandardMaterial({ color: '#dfe3e6', roughness: 0.4, metalness: 0.35 }));
@@ -375,7 +383,7 @@ export class Game {
     const pos = f.muzzle(new THREE.Vector3(), 5, 6.4);
     const mesh = c.mesh; mesh.position.copy(pos);
     const str = f.strength ?? 5;
-    const dmg = ((c.kind === 'plane' ? 60 : c.kind === 'car' ? 34 : 22) + str * 3) * Math.min(1.6, 0.75 + 0.25 * Math.min(3, c.ratio || 1));
+    const dmg = ((c.kind === 'plane' ? 60 : c.kind === 'car' ? 34 : c.kind === 'rock' ? 14 : 22) + str * 3) * Math.min(1.6, 0.75 + 0.25 * Math.min(3, c.ratio || 1));
     let spin = rand(-5, 5), t = 0;
     this.audio.boom(0.4, f.pos); this.heroYell(f, 1.1);
     this.vfx._add({
@@ -385,7 +393,7 @@ export class Game {
         mesh.rotation.z += spin * dt; mesh.rotation.x += spin * 0.5 * dt;
         // a car is 24u long and a tree is 20u tall — they need a hitbox to match, and a tall one:
         // `overlapFoe`'s ±9u vertical window let a lobbed car sail clean over someone's head.
-        const R = c.kind === 'plane' ? 22 : c.kind === 'car' ? 13 : 10, RV = c.kind === 'plane' ? 20 : c.kind === 'car' ? 16 : 14;
+        const R = c.kind === 'plane' ? 22 : c.kind === 'car' ? 13 : c.kind === 'rock' ? 7 : 10, RV = c.kind === 'plane' ? 20 : c.kind === 'car' ? 16 : c.kind === 'rock' ? 10 : 14;
         let foe = null;
         for (const e of this.entities) {
           if (!this.isFoe(f, e)) continue;
@@ -567,7 +575,7 @@ export class Game {
       const c = f._carry; if (!c) continue;
       if (!f.alive) { this.scene.remove(c.mesh); f._carry = null; f.speed = f.def.speed || 30; continue; }
       c.t += dt;
-      const h = c.kind === 'plane' ? 17 : c.kind === 'car' ? 13 : 15;
+      const h = c.kind === 'plane' ? 17 : c.kind === 'car' ? 13 : c.kind === 'rock' ? 11.5 : 15;
       c.mesh.position.set(f.pos.x - f.aim.x * 1.5, f.pos.y + h + Math.sin(c.t * 3) * 0.3, f.pos.z - f.aim.z * 1.5);
       c.mesh.rotation.y = f.facing + Math.PI / 2;
       c.mesh.rotation.z = Math.sin(c.t * 2.2) * 0.05;

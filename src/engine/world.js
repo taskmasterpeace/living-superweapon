@@ -546,6 +546,7 @@ export class World {
   // Tear the current city down to bare terrain systems, then raise a new one from a plan.
   _teardownCity() {
     this.planes = [];   // the airliners die with the arena group
+    this.rocks = [];
     this.doors = [];
     this._wGrid = null;
     this._spinners = [];
@@ -669,8 +670,9 @@ export class World {
     // THE TILES — every cell raised by its type builder
     this.doors = [];                       // the tiles re-register every entrance
     this.interiors = [];
-    const { treeSpots, planeProps } = buildTiles(this, g, plan, rng);
+    const { treeSpots, planeProps, rockProps } = buildTiles(this, g, plan, rng);
     this.planes = planeProps || [];   // 24-ton props for whoever can lift them (manual §21)
+    this.rocks = rockProps || [];     // loose 0.5t stones — the bottom of the same ladder
     const M = ((plan.metric && plan.metric.humanH) || 9.6) / 9.6;   // the METRIC — people size, not map size
     // STREETLIGHTS FOLLOW THE ROAD GRAPH. They used to be stamped at every interior lattice point
     // regardless of whether a road was there — which is how a village ended up with lamp posts
