@@ -37,7 +37,7 @@ const MODE_IMPL = {
     setup(g, o) {
       g.ms = { p1KO: 0, enemyKO: 0, target: 3 };
       g.ms.p1 = g.humans[0].fighter;
-      g.ms.enemy = o.twoPlayer ? g.humans[1].fighter : (o.net ? null : g.spawnEnemy(o.enemy, { x: 0, z: -42, aiLevel: 1.25 }));   // netplay assigns the remote right after
+      g.ms.enemy = o.twoPlayer ? g.humans[1].fighter : (o.net ? null : g.spawnEnemy(o.enemy, { x: 0, z: -42, aiLevel: o.aiLevel || 1.25 }));   // career bouts scale the bot with the Elo gap
     },
     tick() {},
     onKO(g, v) { if (v === g.ms.p1) g.ms.enemyKO++; else if (v === g.ms.enemy) g.ms.p1KO++; },

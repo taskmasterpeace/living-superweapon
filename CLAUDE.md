@@ -1094,6 +1094,22 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   between roster pairs every week turn — the board a career returns to is never the board it left.
 - **Money has exactly one honest sink**: PAY THE CLINIC ($80K, `payClinic`) heals the medical
   ledger NOW; REST WEEK heals one bout free but costs the week. Rest is always on the slate.
+- **THE FUN PASS (same day)** — texture, momentum, risk, ceremony, all derived:
+  · **STREAK HEAT** `heatMult(streak)` = 1+0.08·min(5,W) multiplies duel/grudge/title purses;
+  slate header shows "W3 STREAK · PROMOTER HEAT ×1.24"; a loss resets it.
+  · **UNDERDOG + SCALED BOT**: fighting UP the board fattens the purse (`underdogMult`, cap
+  +60%) AND sharpens the bot — `offer.aiLevel = gapAi(myElo, foeElo)` 0.85–1.75 rides
+  `acceptCfg` → duel setup `aiLevel: o.aiLevel || 1.25` (difficulty buys judgment, never physics).
+  · **DOUBLE OR NOTHING** (`offer.stake`, desk checkbox, persisted): win = purse ×2 · loss =
+  paid NOTHING + renown −4 (renown floors at 0). The one clean risk decision per card.
+  · **🩸 RIVALRY**: same foe ≥2× in the last 5 ledger lines → renown ×1.5 + the chip.
+  · **INTEL LINES** (`intelFor`): each card surfaces what the sheets already make TRUE in-match
+  — vigilantism stance, police ETA off city SAFETY (⚠ pickCity must carry `safety`; it silently
+  defaulted every city to ~16s until it did), crime ≥70 armed-street warning.
+  · **THE WEEK REPORT** (`career.lastReport`, rendered atop the desk): result, paid, renown,
+  **the rank arrow** (#41 ▲ #37 — `rankAtAccept` stamped on the offer at deal time vs
+  snapshotTable after), streak, DOUBLE-OR-NOTHING tag, belt line, and the sim headline
+  ("Elsewhere: MAJESTY over TORCH") — simWeek returns its first result as the line.
 - ⚠ cityList() fresh-array law: offers store `{name, country}`, the accept resolves the index.
   ⚠ Phantom-module law bit AGAIN during verification: a bare `import('/src/data/rankings.js')`
   is a SECOND book when the page graph binds `rankings.js?t=STAMP` — probe

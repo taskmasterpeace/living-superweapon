@@ -207,6 +207,7 @@ function openDesk() {
           () => { try { enter(cfg); } finally { game._traveling = false; } });
       } else enter(cfg);
     },
+    onStakeToggle: () => saveCareer(C),
     onRest: () => { const h = restWeek(C, ROSTER); saveCareer(C); if (h && h.cleared) hud.feed('MEDICAL: ' + h.name + ' healed — cleared to fight', '#8fe08a'); careerUI.render(C); },
     onClinic: () => { const h = payClinic(C); if (h) { saveCareer(C); hud.feed('THE CLINIC: ' + h.name + (h.cleared ? ' healed' : ' treated'), '#8fe08a'); } careerUI.render(C); },
     onRetire: () => { clearCareer(); careerUI.hide(); openMenu(); },

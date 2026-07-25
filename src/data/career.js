@@ -6,6 +6,7 @@
 // DOM, zero Three.js. localStorage `threshold_career_v1`.
 
 import { cityList } from './cities.js';
+import { countryOf } from './countries.js';
 import { snapshotTable, championId, crownChampion, injuryOf, healBout, matchElo, recOf } from './rankings.js';
 
 const KEY = 'threshold_career_v1';
@@ -32,7 +33,7 @@ export function clearCareer() { try { localStorage.removeItem(KEY); } catch {} }
 
 export function newCareer(heroId) {
   return {
-    v: 1, heroId, week: 1, bank: 0, renown: 0, titles: 0,
+    v: 1, heroId, week: 1, bank: 0, renown: 0, titles: 0, streak: 0, lastReport: null,
     seed: 1 + ((Math.random() * 1e6) | 0),
     history: [],                       // [{week, kind, foe, city, result:'W'|'L'|'REST', paid}]
     slate: null,                       // dealt lazily by genSlate — null after every week turn
@@ -48,10 +49,29 @@ function pickCity(R, pred) {
   const all = cityList();
   const pool = pred ? all.filter(pred) : all;
   const c = pick(R, pool.length ? pool : all);
-  return { name: c.name, country: c.country, crime: c.crime, pop: c.pop, popType: c.popType };
+  return { name: c.name, country: c.country, crime: c.crime, safety: c.safety, pop: c.pop, popType: c.popType };
 }
 
 const duelPurse = (foeElo) => Math.max(30, Math.round((40 + Math.max(0, foeElo - 1100) * 0.25) / 5) * 5);
+export const heatMult = (streak) => 1 + 0.08 * Math.min(5, streak || 0);   // promoters chase a run
+
+// what the country sheet already makes TRUE in-match, surfaced on the card — an offer in
+// Tokyo and an offer in Mogadishu are different FIGHTS, and the desk should say so.
+function intelFor(city) {
+  if (!city) return [];
+  const co = countryOf(city.country), lines = [];
+  if (co) {
+    if (co.vigilantism === 'Banned') lines.push('VIGILANTISM BANNED — you are a criminal on sight; the street draws early');
+    else if (co.vigilantism === 'Legal') lines.push('VIGILANTISM LEGAL — clean wins get CHEERED here');
+    const eta = Math.max(5, Math.min(24, 26 - (city.safety || 40) * 0.25));
+    lines.push('POLICE RESPONSE ~' + Math.round(eta) + 's — ' + (eta <= 9 ? 'collateral gets answered FAST' : eta >= 18 ? 'the law is a rumor out here' : 'standard dispatch'));
+  }
+  if ((city.crime || 0) >= 70) lines.push('CRIME ' + city.crime + ' — an armed street; corpses embolden nobody');
+  return lines.slice(0, 3);
+}
+// fighting UP the board is a harder bot and a fatter purse; squashing down is neither
+const gapAi = (myElo, foeElo) => +Math.max(0.85, Math.min(1.75, 1.02 + (foeElo - myElo) / 400 * 0.55)).toFixed(2);
+const underdogMult = (myElo, foeElo) => 1 + Math.min(0.6, Math.max(0, (foeElo - myElo) / 400) * 0.5);
 
 // THE SLATE — this week's offers, dealt from the live world. Deterministic per (seed, week).
 export function genSlate(career, roster) {
@@ -71,16 +91,30 @@ export function genSlate(career, roster) {
   };
 
   // 1 · THE HEADLINER — a ranked duel against a neighbor on the board.
+  const heat = heatMult(career.streak);
+  const rivalryWith = (foeName) => career.history.slice(0, 5).filter(x => x.foe === foeName).length >= 2;
+  const dress = (o, foeRow) => {                    // heat + underdog + rivalry + intel, uniformly
+    if (foeRow && me) {
+      o.aiLevel = gapAi(me.elo, foeRow.elo);
+      const um = underdogMult(me.elo, foeRow.elo);
+      if (um > 1.05) { o.underdog = true; o.purse = Math.round(o.purse * um / 5) * 5; }
+    }
+    if (heat > 1.001) { o.heat = +heat.toFixed(2); o.purse = Math.round(o.purse * heat / 5) * 5; }
+    if (o.foeName && rivalryWith(o.foeName)) { o.rivalry = true; o.renown = Math.round(o.renown * 1.5); }
+    o.intel = intelFor(o.city);
+    o.rankAtAccept = me ? me.rank : null;           // the WEEK REPORT's rank arrow starts here
+    return o;
+  };
   const h = neighbor(4) || neighbor(10) || neighbor(52);
   if (h) {
     usedFoes.add(h.id);
     const foe = defOf(h.id);
-    offers.push({
+    offers.push(dress({
       id: 'w' + career.week + '-headliner', kind: 'duel', icon: '⚔', label: 'THE HEADLINER',
       foe: h.id, foeName: foe.name, city: pickCity(R, c => c.pop >= 900000),
       purse: duelPurse(h.elo), renown: 8 + Math.max(0, (me ? me.rank : 99) - h.rank),
       blurb: `A ranked bout. ${foe.name} sits #${h.rank} on the board (${h.w}–${h.l}). Win and the book moves.`,
-    });
+    }, h));
   }
 
   // 2 · THE GRUDGE — your own record remembers who beat you. The book IS the memory.
@@ -89,42 +123,42 @@ export function genSlate(career, roster) {
   if (lastLoss) {
     usedFoes.add(lastLoss.vs);
     const foe = defOf(lastLoss.vs), row = table.find(r => r.id === lastLoss.vs);
-    offers.push({
+    offers.push(dress({
       id: 'w' + career.week + '-grudge', kind: 'grudge', icon: '🔥', label: 'THE GRUDGE',
       foe: lastLoss.vs, foeName: foe.name, city: pickCity(R, c => c.pop >= 250000),
       purse: Math.round(duelPurse(row ? row.elo : 1225) * 1.5 / 5) * 5, renown: 14,
       blurb: `${foe.name} beat you. The promoters know a story when they see one — rematch money is real money.`,
-    });
+    }, row));
   } else {
     const x = neighbor(8);
     if (x) {
       usedFoes.add(x.id);
       const foe = defOf(x.id);
-      offers.push({
+      offers.push(dress({
         id: 'w' + career.week + '-crosstown', kind: 'duel', icon: '⚔', label: 'CROSSTOWN',
         foe: x.id, foeName: foe.name, city: pickCity(R, c => c.pop < 900000 && c.pop > 60000),
         purse: duelPurse(x.elo), renown: 7,
         blurb: `${foe.name} wants a sanctioned bout on neutral ground. Smaller lights, same book.`,
-      });
+      }, x));
     }
   }
 
   // 3 · THE DEFENSE CONTRACT — a high-crime city pays a weapon to hold the street.
   const waves = 3 + (((R() * 3) | 0));
-  offers.push({
+  offers.push(dress({
     id: 'w' + career.week + '-contract', kind: 'defense', icon: '🛡', label: 'DEFENSE CONTRACT',
     foe: null, foeName: null, city: pickCity(R, c => c.crime >= 55),
     purse: 35 + waves * 15, renown: 10, waves,
     blurb: `Hold the district through ${waves} waves. The city pays because its own response can't.`,
-  });
+  }, null));
 
   // 4 · THE EXHIBITION — rumble money. Low stakes, quick cash.
-  offers.push({
+  offers.push(dress({
     id: 'w' + career.week + '-exhibition', kind: 'rumble', icon: '💥', label: 'EXHIBITION',
     foe: null, foeName: null, city: pickCity(R, c => c.popType === 'City' || c.popType === 'Large City'),
     purse: 60, renown: 6,
     blurb: 'A four-way show fight, first to 12. The crowd pays for chaos; the book barely watches.',
-  });
+  }, null));
 
   // 5 · every 4th week: THE TITLE SHOT — the champion (or #1) defends against the earned.
   if (career.week % 4 === 0) {
@@ -134,14 +168,14 @@ export function genSlate(career, roster) {
     if (foe) {
       const row = table.find(r => r.id === champ);
       const locked = career.renown < TITLE_RENOWN;
-      offers.unshift({
+      offers.unshift(dress({
         id: 'w' + career.week + '-title', kind: 'title', icon: '🏆', label: 'THE TITLE SHOT',
         foe: champ, foeName: foe.name, city: pickCity(R, c => c.pop >= 2000000),
         purse: duelPurse(row ? row.elo : 1400) * 3, renown: 40, locked,
         blurb: locked
           ? `The belt is earned. RENOWN ${career.renown}/${TITLE_RENOWN} — keep fighting; the office will call.`
           : `${foe.name} holds the crown. One bout, everything on the book. Win it and the cold open says your name.`,
-      });
+      }, row));
     }
   }
 
@@ -160,12 +194,13 @@ export function genSlate(career, roster) {
 export function acceptCfg(career, offer) {
   if (offer.kind === 'defense') return { mode: 'survival', p1: career.heroId, waves: offer.waves, career: offer.id };
   if (offer.kind === 'rumble') return { mode: 'rumble', p1: career.heroId, career: offer.id };
-  return { mode: 'duel', p1: career.heroId, enemy: offer.foe, career: offer.id };   // duel / grudge / title
+  return { mode: 'duel', p1: career.heroId, enemy: offer.foe, aiLevel: offer.aiLevel, career: offer.id };   // duel / grudge / title — the bot scales with the Elo gap
 }
 
 // the world does not wait for you — three simulated bouts a week keep the board alive
 function simWeek(career, roster, R) {
   const pool = roster.filter(d => !d.isDummy && !d.police && d.id !== career.heroId);
+  let line = null;
   for (let i = 0; i < 3 && pool.length > 3; i++) {
     const a = pick(R, pool); let b = pick(R, pool);
     if (a === b) continue;
@@ -173,21 +208,36 @@ function simWeek(career, roster, R) {
     const pA = 1 / (1 + Math.pow(10, (rb.elo - ra.elo) / 400));   // Elo-weighted coin, like the bracket sims
     const aWins = R() < pA;
     matchElo(aWins ? a.id : b.id, aWins ? b.id : a.id, aWins ? [a, b] : [b, a], 'sim');
+    if (!line) line = (aWins ? a.name + ' over ' + b.name : b.name + ' over ' + a.name);
   }
+  return line;
 }
 
 // book a fought offer: purse (win) or the show-money cut (loss), renown, the ledger line,
 // the week turn, the world sim. Title wins crown the champion in the SAME book the cold
 // open and codex already read — the career cannot tell a different story than the game.
 export function resolveOffer(career, offer, win, roster) {
-  const paid = win ? offer.purse : Math.round(offer.purse * 0.25);
-  const ren = win ? offer.renown : 2;
-  career.bank += paid; career.renown += ren;
+  // DOUBLE OR NOTHING (offer.stake): the purse doubles on a win; a loss pays NOTHING and
+  // costs renown — the show-money floor is exactly what you wagered away.
+  let paid = win ? offer.purse : Math.round(offer.purse * 0.25);
+  let ren = win ? offer.renown : 2;
+  if (offer.stake) { paid = win ? offer.purse * 2 : 0; ren = win ? offer.renown : -4; }
+  career.bank += paid; career.renown = Math.max(0, career.renown + ren);
+  career.streak = win ? (career.streak || 0) + 1 : 0;
   if (offer.kind === 'title' && win) { crownChampion(career.heroId); career.titles = (career.titles || 0) + 1; }
   career.history.unshift({ week: career.week, kind: offer.kind, foe: offer.foeName || offer.label, city: offer.city ? offer.city.name : '—', result: win ? 'W' : 'L', paid });
   if (career.history.length > 24) career.history.length = 24;
+  const bookedWeek = career.week;
   career.week++; career.slate = null;
-  simWeek(career, roster, mulberry(career.seed * 31 + career.week));
+  const simLine = simWeek(career, roster, mulberry(career.seed * 31 + career.week));
+  const table = snapshotTable(roster);
+  const now = table.find(r => r.id === career.heroId);
+  career.lastReport = {
+    week: bookedWeek, result: win ? 'W' : 'L', paid, ren, label: offer.foeName || offer.label,
+    stake: !!offer.stake, streak: career.streak,
+    rankFrom: offer.rankAtAccept ?? null, rankTo: now ? now.rank : null,
+    simLine, title: offer.kind === 'title' && win,
+  };
   return { paid, ren };
 }
 
@@ -195,8 +245,10 @@ export function restWeek(career, roster) {
   const healed = healBout(career.heroId);   // resting knits ONE bout; the clinic buys them all
   career.history.unshift({ week: career.week, kind: 'rest', foe: '—', city: '—', result: 'REST', paid: 0 });
   if (career.history.length > 24) career.history.length = 24;
+  const bookedWeek = career.week;
   career.week++; career.slate = null;
-  simWeek(career, roster, mulberry(career.seed * 31 + career.week));
+  const simLine = simWeek(career, roster, mulberry(career.seed * 31 + career.week));
+  career.lastReport = { week: bookedWeek, rest: true, healed: healed && healed.name, cleared: healed && healed.cleared, simLine, streak: career.streak };
   return healed;
 }
 
