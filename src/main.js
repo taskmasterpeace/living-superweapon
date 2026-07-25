@@ -154,7 +154,10 @@ function beginMatch(c) {
     if (plan) {
       const sim = (c.mode || 'training') === 'training';
       const C = countryOf(plan.country) || {};
-      const kicker = c.mode === 'tournament' ? 'THE INVITATIONAL · THEATER' : 'THEATER OF OPERATIONS';
+      const co = c.career && game._careerOffer;   // the fight carries the career fiction
+      const kicker = c.mode === 'tournament' ? 'THE INVITATIONAL · THEATER'
+        : co ? 'THE CIRCUIT · ' + co.label + ' · PURSE ' + fmtMoney(co.stake ? co.purse * 2 : co.purse) + (co.stake ? ' — DOUBLE OR NOTHING' : '')
+        : 'THEATER OF OPERATIONS';
       if (!sim && !c.tutorial && !c.net && SETTINGS.opening === 'full' && !game._traveling) {
         playOpening(game, hud, plan, { kicker }, null);
       } else if (sim || SETTINGS.opening !== 'off') {
