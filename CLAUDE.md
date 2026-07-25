@@ -443,6 +443,35 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   run before it, so a plaza'd cell kept the neighbour data of the tower it used to be.
   Refs: `wwa-mapmaker.jpeg`, `wwa-airport.jpeg`, `wwa-region-kabul.jpeg`, `wwa-region-tokyo.jpeg`.
 
+## THE STREETS (2026-07-25) — "the streets are a mess", fixed (docs/THE_MAP_MAKER.md)
+- **⚠ THE LOT IS NOT THE CELL.** Roads are CENTRED on cell boundaries, so a 22u street takes 11u
+  out of the cell each side — but `buildTiles` handed builders the WHOLE cell, so a tile that used
+  its space put its wall in the carriageway. Measured: **29.5% of every cover box in the game stood
+  in a road**, worst 22u, across **19 tile types** (market/park/seaport 100%). One missing number,
+  not nineteen bad builders. `lotFor(plan,r,c,fw,fh)` (cityplan) returns the per-side setback;
+  buildTiles folds it into `ctx.LI` (uniform inset) + `ctx.LOX/LOZ` (re-centring) at the SAME five
+  helpers that apply `ctx.S`, so no builder changed. `ctx.W`/`ctx.D` are the BUILDABLE frontage now.
+  → **29.5% → 5.5%** over 60 plans; the rest is linear infra (metro/railyard) that runs its length.
+  ⚠ ONE factor for both axes — per-axis squeeze would distort rotated buildings. NEVER height.
+  ⚠ `reg()` now takes the footprint from `scale.x` and the height from `scale.y` (the mesh is no
+  longer uniformly scaled). Verified 43/45 boxes closer to the visible mesh, 0 worse, 5.92u→1.76u.
+- **A street keeps its class down the block.** `classFor` decides each edge independently, so a run
+  changed class wherever the neighbouring district's weight changed (9 mid-run changes on one Tokyo
+  plan = the brown/grey patchwork). `smoothRoadRuns` de-spikes each lattice line — a span that
+  disagrees with BOTH neighbours takes the heavier of the two. A GAP is never smoothed (a dead end
+  is real data). → 3.3 per plan.
+- **⚠ NO ROAD CROSSES A RAIL CUT.** Adjacent metro cells form ONE continuous trench; a street on the
+  shared edge dropped a carriageway into the excavation (59% of metro boxes read as in-road). Two
+  stations are one structure, like a footprint. A crossing needs a BRIDGE and there is none.
+- **Asphalt reads as asphalt.** The old `#c3bcac` shoulder + `#6e6a61` carriageway × a warm
+  `#b9b1a2` material tint came out light tan with almost no separation from the lot. Value is now
+  decided in the texture alone (material untinted): carriageway luminance **59** vs lot **200**.
+- **Crossings are not confetti.** Striping all four arms of all 74 junctions made **970** white
+  quads on one plan. Now needs junction degree ≥3 AND an arterial+ arm — a quiet corner gets clean
+  asphalt, which is what makes a striped junction read as important. → 970→222 (82 avg).
+- Verified: 60 plans, 0 validator failures, 0 errors, village/gallery/editor-repaint all build,
+  flagship untouched (no road graph → inset is a no-op). Refs `wwa-streets-before/after.png`.
+
 ## THE MAP MAKER AS A DEV TOOL (2026-07-23) — scale, the countryside, live 3D
 - **THE SCALE CONTRACT** (`plan.cell`, default `CELL` 96; `plan.scale = cell/96`; `CELL_RANGE`
   32–240). A tile builder is authored in BASE units and never thinks about scale. `ctx.S` is applied

@@ -14,9 +14,23 @@ ui.open();                           // solo mounts go live immediately — the 
 
 // The render loop: the panel owns the camera state; we just honour it every frame.
 // ⚠ try/catch like main.js — one throw (e.g. a zero-size window while the pane is hidden)
-// must not kill the loop forever.
+// must not kill the loop forever. But a bare console.error here fires 60×/second: serialising a
+// stack object at that rate is itself a freeze, and it buries every other message. Same throttle
+// as the game's repeated-error law — log each distinct fault once, then count it.
+const _seen = new Map();
+function report(err) {
+  const key = String((err && err.message) || err) + '|' + String((err && err.stack) || '').split('\n')[1];
+  let n = _seen.get(key);
+  if (n === undefined) {
+    if (_seen.size >= 100) _seen.delete(_seen.keys().next().value);   // the ledger must not leak either
+    _seen.set(key, 1); console.error('[ATLAS]', err);
+  } else {
+    _seen.set(key, ++n);
+    if (n === 30) console.error(`[ATLAS] the above has now fired ${n}× — the view is failing every frame`);
+  }
+}
 function frame() {
-  try { world.orbit(ui.cam); world.render(); } catch (err) { console.error(err); }
+  try { if (ui.cam) world.orbit(ui.cam); world.render(); } catch (err) { report(err); }
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);

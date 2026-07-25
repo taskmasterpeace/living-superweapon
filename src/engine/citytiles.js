@@ -5,7 +5,7 @@
 // fog boxes, collision); flavor props are decor the fights smash through visually.
 // House rules apply: NO purple anywhere, warm-neutral + gold, per-district accent temperature.
 import * as THREE from 'three';
-import { CELL, regionOf, TILE_MAX_H, floorplan } from '../data/cityplan.js';
+import { CELL, regionOf, TILE_MAX_H, floorplan, lotFor } from '../data/cityplan.js';
 
 // ---- REGION SKINS ---------------------------------------------------------------------------
 // Every city carries a `cultureCode` (14 architectural regions) and until now NOTHING read it, so
@@ -93,15 +93,25 @@ function mats(world, region) {
 // THE METRIC — how tall the people are, as a multiplier (plan.metric.humanH / 9.6). Set once per
 // build by buildTiles; door sizes and window-bay storey heights ride it. NEVER the cell dial.
 let CUR_M = 1;
-const sx = (ctx, x) => ctx.cx + (x - ctx.cx) * ctx.S;      // world X from a base-unit X
-const sz = (ctx, z) => ctx.cz + (z - ctx.cz) * ctx.S;      // world Z from a base-unit Z
+// THE LOT INSET (see lotFor in cityplan.js). A tile is authored against the full CELL, but the
+// roads are centred on the cell boundaries and take half their width out of it. `ctx.LI` squeezes
+// tile-local offsets toward the cell centre so the whole tile lands inside its actual lot, and
+// `ctx.LOX/LOZ` re-centre it when the setbacks are asymmetric (a highway one side, nothing the
+// other). It rides the SAME five helpers as ctx.S, so no builder has to know it exists.
+// ⚠ ONE factor for both axes, deliberately. Squeezing X and Z by different amounts would change a
+// rotated building's apparent proportions; a uniform inset only ever makes a block correctly
+// smaller. And it is never applied to HEIGHT — the skyline is not the road's business.
+const sx = (ctx, x) => ctx.cx + ((x - ctx.cx) * ctx.LI + ctx.LOX) * ctx.S;   // world X from a base-unit X
+const sz = (ctx, z) => ctx.cz + ((z - ctx.cz) * ctx.LI + ctx.LOZ) * ctx.S;   // world Z from a base-unit Z
+const planeS = (ctx) => ctx.S * ctx.LI;                    // horizontal scale: cell scale × lot inset
 // THE GROUND A TILE STANDS ON. Flat maps return 0 and nothing changes; on a map with relief this
 // is the cell's levelled pad height, so a whole block sits together on its terrace instead of each
 // piece floating or burying itself independently.
 function mesh(ctx, geo, mat, x, y, z, o = {}) {
   const m = new THREE.Mesh(geo, mat);
   m.position.set(sx(ctx, x), y * ctx.S + ctx.gy, sz(ctx, z));
-  if (ctx.S !== 1) m.scale.setScalar(ctx.S);
+  const ps = planeS(ctx);
+  if (ps !== 1 || ctx.S !== 1) m.scale.set(ps, ctx.S, ps);   // plan squeezed to the lot, height untouched
   if (o.ry) m.rotation.y = o.ry; if (o.rx) m.rotation.x = o.rx; if (o.rz) m.rotation.z = o.rz;
   m.castShadow = !!o.cast; m.receiveShadow = o.recv !== false;
   m.userData.gy = ctx.gy;                          // reg() needs it to make `top` absolute
@@ -113,9 +123,10 @@ function tower(ctx, x, z, w, h, d, winMat, roofMat, o = {}) {
   h = Math.min(h, ctx.maxH || Infinity);           // THE LAYER CONTRACT — never above the declared max
   const geo = new THREE.BoxGeometry(w, h, d); scaleBoxUV(geo, w, h, d, ((winMat && winMat.userData.bay) || 17) * CUR_M);
   const m = new THREE.Mesh(geo, winMat);
-  const wx = sx(ctx, x), wz = sz(ctx, z), W = w * S, H = h * S, D = d * S, gy = ctx.gy;
+  const ps = planeS(ctx);                          // footprint rides the lot inset, height does not
+  const wx = sx(ctx, x), wz = sz(ctx, z), W = w * ps, H = h * S, D = d * ps, gy = ctx.gy;
   m.position.set(wx, gy + H / 2, wz); m.castShadow = H >= 44; m.receiveShadow = true;
-  if (S !== 1) m.scale.setScalar(S);
+  if (ps !== 1 || S !== 1) m.scale.set(ps, S, ps);
   ctx.g.add(m);
   if (roofMat) { const roof = new THREE.Mesh(new THREE.PlaneGeometry(w, d), roofMat); roof.rotation.x = -Math.PI / 2; roof.position.y = h / 2 + 0.05; roof.receiveShadow = true; m.add(roof); }
   const crack = new THREE.Mesh(new THREE.BoxGeometry(w * 1.015, h * 1.006, d * 1.015), new THREE.MeshBasicMaterial({ map: world._crackTex, transparent: true, opacity: 0, depthWrite: false }));
@@ -133,8 +144,11 @@ function tower(ctx, x, z, w, h, d, winMat, roofMat, o = {}) {
 // ⚠ Position and extent come from the MESH, which mesh() has already scaled — the x/z arguments
 // are the caller's base-unit intent and would be wrong at any scale but 1.
 function reg(world, m, x, z, hx, hz, top, hp) {
-  const S = m.scale.x || 1;
-  hx *= S; hz *= S; top *= S;
+  // ⚠ the mesh no longer scales uniformly: X/Z carry the cell scale × the LOT INSET, Y carries the
+  // cell scale alone. Take the footprint from x and the height from y, or a lot-inset building
+  // registers a cover box shorter than the thing you can see.
+  const S = m.scale.x || 1, SY = m.scale.y || S;
+  hx *= S; hz *= S; top *= SY;
   top += (m.userData.gy || 0);                     // stand on the terrace, not on y=0
   const co = { mesh: m, crack: null, x: m.position.x, z: m.position.z, r: Math.max(hx, hz), h: top, hx, hz, top,
                hp, maxHp: hp, y0: m.position.y, w: hx * 2, d: hz * 2, destroyed: false };
@@ -1307,7 +1321,8 @@ export function buildTiles(world, group, plan, rng) {
   const M = ((plan.metric && plan.metric.humanH) || 9.6) / 9.6;
   CUR_M = M;                                             // boxUV/tower read it for the window bay
   const ctx = { world, g: group, rng, mats: M2, region, treeSpots: [], plan, M,
-                W: CELL, D: CELL, fw: 1, fh: 1, S, cell: cellSize, cx: 0, cz: 0, gy: 0 };
+                W: CELL, D: CELL, fw: 1, fh: 1, S, cell: cellSize, cx: 0, cz: 0, gy: 0,
+                LI: 1, LOX: 0, LOZ: 0 };            // the lot inset — set per cell just below
   world._pendingCuts = world._pendingCuts || []; world._pendingPits = world._pendingPits || [];
   for (let r = 0; r < plan.N; r++) for (let c = 0; c < plan.N; c++) {
     const cell = plan.cells[r][c];
@@ -1316,7 +1331,17 @@ export function buildTiles(world, group, plan, rng) {
     if (!cell || cell.t === 'water' || cell.ref) continue;
     const fw = cell.fw || 1, fh = cell.fh || 1;
     ctx.fw = fw; ctx.fh = fh;
-    ctx.W = fw * CELL; ctx.D = fh * CELL;                                  // BASE units — helpers scale
+    // THE LOT: the cell minus whatever the roads on its edges take. ctx.W/D are the BUILDABLE
+    // frontage now, not the raw cell, so the footprint-aware builders size themselves correctly;
+    // ctx.LI/LOX/LOZ squeeze everything else into the same rectangle at the helpers.
+    {
+      const full = fw * CELL, fullD = fh * CELL;
+      const L = lotFor(plan, r, c, fw, fh);
+      const lw = Math.max(CELL * 0.25, full - L.w - L.e), ld = Math.max(CELL * 0.25, fullD - L.n - L.s);
+      ctx.LI = Math.min(1, lw / full, ld / fullD);      // uniform — never distorts, only shrinks
+      ctx.LOX = (L.w - L.e) / 2; ctx.LOZ = (L.n - L.s) / 2;
+      ctx.W = full * ctx.LI; ctx.D = fullD * ctx.LI;
+    }
     ctx.cx = -A + (c + fw / 2) * cellSize; ctx.cz = -A + (r + fh / 2) * cellSize;
     ctx.gy = world.heightAt ? world.heightAt(ctx.cx, ctx.cz) : 0;   // the terrace this block sits on
     const builder = T[cell.t];

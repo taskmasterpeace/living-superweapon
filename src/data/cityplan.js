@@ -342,6 +342,54 @@ export const ROAD = [
 ];
 export const R_NONE = 0, R_TRACK = 1, R_STREET = 2, R_ARTERIAL = 3, R_HIGHWAY = 4;
 
+// ⚠ THE LOT IS NOT THE CELL. Roads are CENTRED on the cell boundaries, so a 22u street takes 11u
+// out of the cell on each side of it. A builder handed the full cell will therefore always put its
+// outer wall in the carriageway — measured across 16 city generations, 29.5% of every cover box in
+// the game stood in a road, across 19 different tile types (market, park and seaport at 100%).
+// That is not nineteen buggy builders, it is one missing number, so it lives here with the rest of
+// the road data and is applied once at the tile helpers.
+//
+// Returns the SETBACK on each side in BASE units (the same units tile builders author in).
+// A footprint takes the widest road along each of its outer edges.
+export function lotFor(plan, r, c, fw = 1, fh = 1) {
+  const out = { n: 0, e: 0, s: 0, w: 0 };
+  const RD = plan && plan.roads;
+  if (!RD) return out;
+  const N = plan.N;
+  const halfOf = (cid) => (cid ? ROAD[cid].width / 2 : 0);
+  const H = (rr, cc) => (RD.h[rr] && cc >= 0 && cc < N ? RD.h[rr][cc] : 0);
+  const V = (rr, cc) => (RD.v[rr] && rr >= 0 && rr < N ? RD.v[rr][cc] : 0);
+  for (let i = 0; i < fw; i++) {
+    out.n = Math.max(out.n, halfOf(H(r, c + i)));
+    out.s = Math.max(out.s, halfOf(H(r + fh, c + i)));
+  }
+  for (let j = 0; j < fh; j++) {
+    out.w = Math.max(out.w, halfOf(V(r + j, c)));
+    out.e = Math.max(out.e, halfOf(V(r + j, c + fw)));
+  }
+  return out;
+}
+
+// A STREET KEEPS ITS NAME DOWN THE BLOCK. `classFor` decides each edge independently from the two
+// cells it separates, so a single straight run changed class every time the district beside it
+// changed weight — measured 9 mid-run changes on one Tokyo plan, which is what makes the map read
+// as brown-and-grey patchwork rather than as streets. This de-spikes each lattice line: a span
+// that disagrees with BOTH its neighbours is a stutter, not a junction, and takes the heavier of
+// the two. Genuine transitions (where a road really does become an arterial and stay one) survive.
+function smoothRoadRuns(h, v, N) {
+  let fixed = 0;
+  const pass = (get, set, len) => {
+    for (let i = 1; i < len - 1; i++) {
+      const a = get(i - 1), b = get(i), d = get(i + 1);
+      if (!b || !a || !d) continue;                 // a gap is a real dead end, never smoothed away
+      if (b !== a && b !== d) { set(i, Math.max(a, d)); fixed++; }
+    }
+  };
+  for (let r = 0; r <= N; r++) pass((i) => h[r][i], (i, val) => { h[r][i] = val; }, N);
+  for (let c = 0; c <= N; c++) pass((i) => v[i][c], (i, val) => { v[i][c] = val; }, N);
+  return fixed;
+}
+
 // How important is the traffic between these two districts? That decides the road class.
 const WEIGHT = {
   company: 5, political: 5, commercial: 4, market: 4, metro: 4, stadium: 3, hospital: 3,
@@ -413,6 +461,12 @@ function buildRoads(plan, rng) {
     // airport read as one field instead of six blocks with taxiways painted over the streets.
     const oa = ownerOf(a[0], a[1]);
     if (oa != null && oa === ownerOf(b[0], b[1])) return R_NONE;
+    // ⚠ NOR ACROSS A RAIL CUT. The planner lays metro stations in a ROW so consecutive cells join
+    // into one continuous open trench; putting a street on the shared edge drops a carriageway
+    // into the excavation, and the platforms then read as standing in the road (measured: 59% of
+    // metro cover boxes). Two adjacent stations are one piece of infrastructure, like a footprint.
+    // A crossing here would need a BRIDGE, and there is no bridge geometry — so there is no road.
+    if (tAt(a[0], a[1]) === 'metro' && tAt(b[0], b[1]) === 'metro') return R_NONE;
     if (wa < 0 && wb < 0) return R_NONE;
     if (tAt(a[0], a[1]) === 'water' || tAt(b[0], b[1]) === 'water') return R_NONE;   // no road into the sea
     const w = Math.max(wa, wb);
@@ -435,6 +489,9 @@ function buildRoads(plan, rng) {
     v.push(new Uint8Array(N + 1));
     for (let c = 0; c <= N; c++) v[r][c] = classFor([r, c - 1], [r, c]);
   }
+  // Straighten out the per-edge stutter BEFORE the ring is drawn — the ring and the cross spine
+  // are promoted as whole lines and are continuous by construction, so they need no smoothing.
+  plan.roadSmoothed = smoothRoadRuns(h, v, N);
   // ONE RING ROAD: promote a full row and column to highway on cities big enough to warrant it.
   // This is the linear structure the concentric-square placement never had.
   if (N >= 5 && !rural) {

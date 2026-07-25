@@ -524,3 +524,77 @@ COMBAT-facing notes in CLAUDE.md).
 Where it stops, honestly: bots don't navigate doorways yet (interiors store their `doorways` for
 that session); beams pass through interior walls; weather is data-only (games render it); upper
 floors and roofed voids still need the roofed-volume system.
+
+---
+
+## THE STREETS (2026-07-25) — "the streets are a mess", diagnosed and fixed
+
+Three faults, found by measuring rather than by looking, and each fixed in one place.
+
+### 1. A fifth of the city stood in the road
+
+Roads are CENTRED on the cell boundaries, so a 22u street takes 11u out of the cell on each side
+of it — but `buildTiles` handed every builder `ctx.W = fw * CELL`, the **whole** cell. A tile that
+used the space it was given therefore put its outer wall in the carriageway, every time.
+
+Measured across 16 generations before the fix: **29.5% of every cover box in the game intruded
+into a road**, worst case 22u — an entire street width — and on a 38u highway a building covered
+half the carriageway. It was spread across **19 tile types** (market, park and seaport at 100%),
+which is the tell: not nineteen buggy builders, one missing number.
+
+`lotFor(plan, r, c, fw, fh)` (cityplan.js) returns the setback on each side from the actual
+adjacent road classes. `buildTiles` turns that into `ctx.LI` (a uniform inset factor) plus
+`ctx.LOX/LOZ` (a re-centring shift for asymmetric setbacks), and folds them into the same five
+helpers that already apply `ctx.S`. No builder changed. `ctx.W`/`ctx.D` are the BUILDABLE frontage
+now, so the footprint-aware builders get it right for free.
+
+⚠ **One factor for both axes, deliberately.** Squeezing X and Z differently would change a rotated
+building's apparent proportions; a uniform inset only ever makes a block correctly smaller. And it
+is never applied to HEIGHT — the skyline is not the road's business.
+
+⚠ **`reg()` had to learn the difference.** The mesh no longer scales uniformly (X/Z carry the
+inset, Y does not), so it takes the footprint from `scale.x` and the height from `scale.y`.
+Measured against the visible mesh afterwards: 43 of 45 registered boxes are CLOSER than under the
+old formula, 0 are worse, mean error 5.92u → 1.76u.
+
+Result: **29.5% → 5.5%** over 60 plans. What remains is linear infrastructure (metro platforms,
+rail yards) whose geometry deliberately runs the length of its footprint.
+
+### 2. Streets changed their mind halfway down the block
+
+`classFor` decides each edge independently from the two cells it separates, so a single straight
+run changed class every time the district beside it changed weight — 9 mid-run changes on one
+Tokyo plan. That is what made the map read as brown-and-grey patchwork instead of as streets.
+
+`smoothRoadRuns` de-spikes each lattice line: a span that disagrees with BOTH its neighbours is a
+stutter, not a junction, and takes the heavier of the two. Genuine transitions survive. A gap is
+never smoothed away — a dead end is real data. Measured 3.3 mid-run changes per plan, from 9 on
+the worst single map.
+
+⚠ **And no road crosses a rail cut.** The planner lays metro stations in a row so consecutive
+cells join into one continuous trench; a street on the shared edge dropped a carriageway into the
+excavation, which is why 59% of metro cover boxes read as standing in the road. Two adjacent
+stations are one piece of infrastructure, like a footprint. A crossing there would need a BRIDGE,
+and there is no bridge geometry — so there is no road.
+
+### 3. It didn't look like a road, and it was covered in confetti
+
+**The asphalt was tan.** A `#c3bcac` shoulder under a `#6e6a61` carriageway, multiplied by a warm
+`#b9b1a2` material tint, came out under sun and ACES as a light warm grey with almost no value
+separation from the lot beside it. The carriageway is now genuinely dark and neutral, the pavement
+is a distinct cool stone, and the material no longer tints — value is decided in the texture, in
+one place. Measured: carriageway luminance **59** against lot **200**, where the two had been
+nearly equal.
+
+**Every corner was striped.** Crosswalks on all four arms of all 74 junctions produced **970**
+separate white quads on one plan; at any distance that is not a road network, it is litter. Real
+cities paint a crossing where the traffic warrants one, so striping now needs a junction of degree
+3+ AND an arm carrying an arterial or better. A quiet residential corner gets clean asphalt —
+which is also what makes the striped junctions read as important. **970 → 222** on that plan, 82
+on average.
+
+Refs: `wwa-streets-before.png`, `wwa-streets-after.png`.
+
+⚠ The ATLAS render loop caught its exceptions with a bare `console.error`, which at 60fps is the
+same freeze the game's repeated-error law exists to prevent. It throttles now, and `world.orbit`
+is guarded against a null camera.

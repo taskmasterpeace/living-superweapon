@@ -27,20 +27,29 @@ export const RoadMixin = {
       for (let i = 0; i < 260; i++) x.fillRect((i * 61) % 128, (i * 37) % 128, 2, 2);                 // gravel (deterministic)
       x.fillStyle = 'rgba(126,132,86,0.35)'; x.fillRect(60, 0, 8, 128);                               // grass down the crown
     } else {
-      x.fillStyle = '#c3bcac'; x.fillRect(0, 0, 128, 128);                                            // sidewalk shoulder
-      x.strokeStyle = 'rgba(120,112,96,0.16)'; x.lineWidth = 1;
-      for (let i = 0; i < 128; i += 11) { x.beginPath(); x.moveTo(0, i + .5); x.lineTo(128, i + .5); x.stroke(); }
-      x.fillStyle = '#6e6a61'; x.fillRect(11, 0, 106, 128);                                           // carriageway
-      x.fillStyle = 'rgba(40,38,33,0.30)'; x.fillRect(11, 0, 7, 128); x.fillRect(110, 0, 7, 128);      // gutter shadow
-      x.fillStyle = 'rgba(246,241,228,0.95)'; x.fillRect(9, 0, 3, 128); x.fillRect(116, 0, 3, 128);    // kerb
-      x.fillStyle = 'rgba(245,178,26,0.62)';
+      // ⚠ ASPHALT MUST READ AS ASPHALT. The first pass painted a #c3bcac shoulder under a #6e6a61
+      // carriageway and multiplied the whole thing by a warm #b9b1a2 material tint; under the sun
+      // and ACES that came out a light warm tan, so from above a street had almost no value
+      // separation from the lot beside it and the city read as one grey mush with dashes on it.
+      // The carriageway is now genuinely DARK and neutral, the pavement is a distinct cool stone,
+      // and the material no longer tints — value is decided here, in one place.
+      x.fillStyle = '#8d887e'; x.fillRect(0, 0, 128, 128);                                            // pavement
+      x.strokeStyle = 'rgba(70,66,58,0.20)'; x.lineWidth = 1;                                         // paving joints
+      for (let i = 0; i < 128; i += 16) { x.beginPath(); x.moveTo(0, i + .5); x.lineTo(128, i + .5); x.stroke(); }
+      x.fillStyle = '#3d3b38'; x.fillRect(10, 0, 108, 128);                                           // carriageway
+      // a little tonal noise so a big road isn't a flat slab
+      x.fillStyle = 'rgba(255,255,255,0.030)';
+      for (let i = 0; i < 300; i++) x.fillRect(10 + (i * 47) % 108, (i * 29) % 128, 3, 2);
+      x.fillStyle = 'rgba(20,19,17,0.40)'; x.fillRect(10, 0, 6, 128); x.fillRect(112, 0, 6, 128);      // gutter shadow
+      x.fillStyle = 'rgba(226,221,209,0.92)'; x.fillRect(8, 0, 2.5, 128); x.fillRect(117.5, 0, 2.5, 128); // kerb
+      x.fillStyle = 'rgba(240,206,110,0.85)';
       if (R.markings === 'dash') { for (let y = 0; y < 128; y += 30) x.fillRect(62, y, 4, 16); }
       else if (R.markings === 'double') { x.fillRect(57, 0, 3, 128); x.fillRect(68, 0, 3, 128); }
       else if (R.markings === 'divided') {
-        x.fillStyle = 'rgba(150,150,132,0.55)'; x.fillRect(56, 0, 16, 128);                            // median
-        x.fillStyle = 'rgba(245,178,26,0.6)'; x.fillRect(54, 0, 3, 128); x.fillRect(71, 0, 3, 128);
-        x.fillStyle = 'rgba(240,238,230,0.5)';
-        for (let y = 0; y < 128; y += 26) { x.fillRect(34, y, 3, 12); x.fillRect(91, y, 3, 12); }      // lane lines
+        x.fillStyle = 'rgba(120,124,110,0.75)'; x.fillRect(56, 0, 16, 128);                            // median
+        x.fillStyle = 'rgba(240,206,110,0.8)'; x.fillRect(54, 0, 3, 128); x.fillRect(71, 0, 3, 128);
+        x.fillStyle = 'rgba(236,233,224,0.55)';
+        for (let y = 0; y < 128; y += 26) { x.fillRect(33, y, 3, 12); x.fillRect(92, y, 3, 12); }      // lane lines
       }
     }
     const tx = new THREE.CanvasTexture(c);
@@ -52,7 +61,8 @@ export const RoadMixin = {
   _roadMat(classId) {
     this._roadMats = this._roadMats || {};
     if (!this._roadMats[classId]) {
-      const m = new THREE.MeshStandardMaterial({ map: this._roadTex(classId), roughness: 0.95, metalness: 0, color: '#b9b1a2' });
+      // no tint: the texture above already decides the value (see the note in _roadTex)
+      const m = new THREE.MeshStandardMaterial({ map: this._roadTex(classId), roughness: 0.96, metalness: 0, color: '#ffffff' });
       m.userData._shared = true;             // cached across cities — _teardownCity must not kill it
       this._roadMats[classId] = m;
     }
@@ -109,14 +119,20 @@ export const RoadMixin = {
       g.translate(px + sx * w / 2, 0.005, pz + sz * w / 2);
       add(cid, g);
     }
-    // CROSSWALKS + STOP LINE on every metalled arm, laid ACROSS the carriageway at the mouth of
-    // the junction. The bars must be wide and close together — the first pass used thin bars with
-    // big gaps and they read as litter scattered down the road rather than as a crossing.
-    for (const [, ac, dx, dz] of arms) {
-      if (ac < 2) continue;                                        // you don't stripe a dirt track
-      const aw = ROAD[ac].width * S, half = aw * 0.34;             // stripes span the carriageway only
-      const off = w / 2 + 5 * S;
-      const bar = 3.4 * S, gap = 5.6 * S, depth = 7 * S;
+    // CROSSWALKS + STOP LINE, laid ACROSS the carriageway at the mouth of the junction.
+    //
+    // ⚠ NOT AT EVERY CORNER. Striping all four arms of all 74 junctions produced 970 separate
+    // white quads on one Tokyo plan; from any distance that is not a road network, it is confetti.
+    // A real city paints a crossing where the traffic warrants one. So: only on a junction that is
+    // actually a crossroads or a tee, and only on arms carrying an ARTERIAL or better — a quiet
+    // residential corner gets clean asphalt, which is also what makes the striped junctions read
+    // as important.
+    const major = arms.filter(a => a[1] >= 3);
+    const stripe = (j.deg >= 3) ? major : [];
+    for (const [, ac, dx, dz] of stripe) {
+      const aw = ROAD[ac].width * S, half = aw * 0.40;             // span the carriageway properly
+      const off = w / 2 + 4.5 * S;
+      const bar = 4.2 * S, gap = 6.6 * S, depth = 8 * S;
       for (let t = -half; t <= half + 0.01; t += gap) {
         const g = new THREE.PlaneGeometry(dx ? depth : bar, dx ? bar : depth);
         g.rotateX(-Math.PI / 2);
