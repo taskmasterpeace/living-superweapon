@@ -5,6 +5,7 @@
 // fog boxes, collision); flavor props are decor the fights smash through visually.
 // House rules apply: NO purple anywhere, warm-neutral + gold, per-district accent temperature.
 import * as THREE from 'three';
+import { DECAL_LIFT } from '../core/util.js';
 import { CELL, regionOf, TILE_MAX_H, floorplan, lotFor } from '../data/cityplan.js';
 
 // ---- REGION SKINS ---------------------------------------------------------------------------
@@ -134,7 +135,12 @@ function tower(ctx, x, z, w, h, d, winMat, roofMat, o = {}) {
   m.position.set(wx, gy + H / 2, wz); m.castShadow = H >= 44; m.receiveShadow = true;
   if (ps !== 1 || S !== 1) m.scale.set(ps, S, ps);
   ctx.g.add(m);
-  if (roofMat) { const roof = new THREE.Mesh(new THREE.PlaneGeometry(w, d), roofMat); roof.rotation.x = -Math.PI / 2; roof.position.y = h / 2 + 0.05; roof.receiveShadow = true; m.add(roof); }
+  // ⚠ THE ROOF OF EVERY BUILDING IN THE GAME. This plane sat at +0.05 above the box's own top
+  // face — NINE MILLIMETRES at 1:1 scale — so every rooftop in every city was a depth-buffer coin
+  // toss, and rooftops are ground you fight on. DECAL_LIFT is the smallest gap that survives at
+  // match-camera range (core/util.js). The physics top stays `h`, so you now stand 6.6cm under the
+  // visible surface, which nobody will ever see and the depth test can always resolve.
+  if (roofMat) { const roof = new THREE.Mesh(new THREE.PlaneGeometry(w, d), roofMat); roof.rotation.x = -Math.PI / 2; roof.position.y = h / 2 + DECAL_LIFT; roof.receiveShadow = true; m.add(roof); }
   const crack = new THREE.Mesh(new THREE.BoxGeometry(w * 1.015, h * 1.006, d * 1.015), new THREE.MeshBasicMaterial({ map: world._crackTex, transparent: true, opacity: 0, depthWrite: false }));
   crack.position.copy(m.position); crack.scale.copy(m.scale); crack.visible = false; ctx.g.add(crack);
   const hp = Math.round(70 + W * H * D * 0.0075);
@@ -161,10 +167,21 @@ function reg(world, m, x, z, hx, hz, top, hp) {
   world.cover.push(co); world.coverAll.push(co);
   return co;
 }
-const disc = (ctx, mat, x, z, r, y = 0.1, seg = 26) => { const p = mesh(ctx, new THREE.CircleGeometry(r, seg), mat, x, y, z, { recv: false }); p.rotation.x = -Math.PI / 2; return p; };
+// ⚠ TWO DECALS MAY NEVER SHARE A PLANE. Every lawn and plaza in the game was authored at a flat
+// y = 0.09 — so wherever two of them overlapped (a park lawn under a plaza apron, a campus quad
+// against its own courtyard) the depth buffer had a perfect tie and both surfaces tore. At 1:1
+// scale they were also only 4cm above a fighter's contact shadow, which is what made the ground
+// crawl underfoot. See THE SURFACE-SEPARATION LAW in core/util.js.
+// The rule is enforced HERE, at the one helper every ground decal in the library goes through,
+// rather than by asking 40 call sites to each pick a unique number: each decal drawn takes the
+// next rung on a fine ladder. 14mm apart is invisible to the eye and decisive to the depth test.
+let _decalSeq = 0;
+export const resetDecalLadder = () => { _decalSeq = 0; };
+const decalY = (y) => (y < 1 ? y + ((_decalSeq++ % 26) * 0.014) : y);
+const disc = (ctx, mat, x, z, r, y = 0.1, seg = 26) => { const p = mesh(ctx, new THREE.CircleGeometry(r, seg), mat, x, decalY(y), z, { recv: false }); p.rotation.x = -Math.PI / 2; return p; };
 // a box with the facade UVs already scaled — for the structures that aren't tower()s
 const boxUV = (w, h, d, mat) => { const g = new THREE.BoxGeometry(w, h, d); scaleBoxUV(g, w, h, d, ((mat && mat.userData && mat.userData.bay) || 17) * CUR_M); return g; };
-const slab = (ctx, mat, x, z, w, d, y = 0.14) => { const p = mesh(ctx, new THREE.PlaneGeometry(w, d), mat, x, y, z, { recv: false }); p.rotation.x = -Math.PI / 2; return p; };
+const slab = (ctx, mat, x, z, w, d, y = 0.14) => { const p = mesh(ctx, new THREE.PlaneGeometry(w, d), mat, x, decalY(y), z, { recv: false }); p.rotation.x = -Math.PI / 2; return p; };
 // a parked tractor — the one piece of machinery that tells you which century the farm is in
 function tractor(ctx, x, z, yaw) {
   const M2 = ctx.mats;

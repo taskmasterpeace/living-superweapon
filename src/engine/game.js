@@ -20,7 +20,7 @@ import { SETTINGS, keymap } from '../core/settings.js';
 import { Gamepad } from '../core/gamepad.js';
 import { runSlot, performEvade } from './abilities.js';
 import { ROSTER } from '../data/characters.js';
-import { BANDS, clamp, rand, TAU, damp } from '../core/util.js';
+import { BANDS, clamp, rand, TAU, damp, GROUND_LAYER} from '../core/util.js';
 import { tierOf, TIER_COLORS } from './entity.js';
 
 const _v = new THREE.Vector3();
@@ -263,7 +263,10 @@ export class Game {
     const show = !!(p && p.alive && this.mode && this.running);
     if (m.visible !== show) m.visible = show;
     if (!show) return;
-    m.position.set(p.pos.x, 0.16, p.pos.z);
+    // ⚠ 0.16 was an invented number that landed 11cm above the contact shadow (0.05) and tied with
+    // the city's ground decals — the "you are here" ring was itself part of the crawl underfoot.
+    // GROUND_LAYER declares the rungs so two systems can never pick the same one (core/util.js).
+    m.position.set(p.pos.x, (p.groundY || 0) + GROUND_LAYER.mark, p.pos.z);
     const pulse = 0.42 + Math.sin(this.time * 3.1) * 0.12;
     this._pmRing.material.opacity = pulse;
     this._pmGlow.material.opacity = 0.07 + Math.sin(this.time * 3.1) * 0.03;

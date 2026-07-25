@@ -1382,6 +1382,70 @@ Four laws, three of them the same idea: **a thing must not outlive the match tha
   ⚠ `renderer.info.render.calls === 1` in a hidden/backgrounded pane — render early-outs, so
   only SIM timing is meaningful there (same family as the `_ema` reads-98ms artifact).
 
+## SURFACES — THE FLICKER LAW (2026-07-25) — read `docs/THE_MAP_MAKER.md` §SURFACES
+- **Z-fighting is a SCALE trap, not a maths one.** A depth buffer has finite precision that gets
+  coarser with distance; two surfaces closer together than that precision tear. Offsets written
+  before the 1:1 rescale (`0.05` / `0.06` / `0.09`) are **1–6 CENTIMETRES** at 1u ≈ 0.19m with the
+  camera 200u out. Five systems had each independently picked a "small number" and collided:
+  the hall floor + its GridHelper + the contact shadow; the hall's wall coping (top face at
+  **exactly** the wall top, 260u long); **every lawn and plaza in the game** hard-coded to `y=0.09`;
+  **every rooftop in every city** (`tower()` AND the flagship's own copy, roof plane at `+0.05` =
+  9.5mm — and rooftops are ground you fight on); the player mark's invented `0.16`.
+  Nobody authored anything unreasonable. The defect was the ABSENCE OF A SHARED LADDER.
+- **The rule lives in `core/util.js`**, in order of preference: (1) **don't stack** — paint the
+  second surface into the first one's texture (`world._gridTexture`, the hall's calibration grid);
+  (2) separate by **`DECAL_LIFT` (0.35u ≈ 6.6cm)** and take a rung from **`GROUND_LAYER`**
+  (`shadow 0.05 · stateRing 0.35 · bandRing 0.55 · faceWedge 0.75 · mark 0.95`) — a system that
+  invents its own number IS the failure mode; (3) if they must be coplanar, **`sinkSurface(host)`**
+  (polygonOffset) so the host loses every tie by rule, or `depthWrite:false` to opt out entirely;
+  (4) for many decals of one kind, **ladder at the HELPER** — `citytiles.disc`/`slab` hand each
+  decal the next 14mm rung via `decalY()`, reset per city by `resetDecalLadder()`. Forty call sites
+  can't each be trusted with a unique number; one helper can.
+- ⚠ **INTERIORS ARE FULL OF THIS.** A structure is horizontal surfaces at deliberate heights.
+  A floor slab is a surface and so is anything laid on it (rug/hatch/marking/stair nosing).
+  A storey's ceiling and the floor above it are **two faces of ONE box with thickness**, never two
+  planes at the same height.
+- **`world.auditSurfaces()`** walks the LIVE scene and reports any pair overlapping in XZ closer
+  than `DECAL_LIFT` in Y. It reads the BUILT scene, so a builder that looks right and computes a
+  bad number can't hide. Run after any interior/tile/decal work. Two documented blind spots (it
+  OVER-reports, never under): merged/instanced meshes have map-wide AABBs, and interpenetrating
+  solids are reported though the depth test resolves them. Measured after this pass: training hall
+  **0** (was 15), flagship **3**, generated Tokyo **2** — all blind-spot pairs.
+
+## THE TRAINING HALL — blue room / white room (2026-07-25)
+- **Two rooms, one shell** (`engine/whiteroom.js`, mode `lab`, card "THE TRAINING HALL"). Robert's
+  ruling: *"don't add any enemies, I can't even train — they just start attacking me and I die
+  because I don't have the controls right."* A training space whose first act is to kill you
+  teaches nothing.
+  · **BLUE ROOM** — the default entry. No AI, no turrets, no drills, no way to lose. The wall board
+    stops being a damage table and becomes a **control primer read off the LIVE keymap**
+    (`_keys()` → `keymap(SETTINGS.scheme)`, so it can't print a key your scheme doesn't use).
+  · **WHITE ROOM** — opt IN via the console: the five drills, the machinery, the sparring partner.
+    The drill cycle's last rung **returns to blue** — a safe room you can only reach by restarting
+    is not somewhere anyone retreats to.
+- ⚠ **RESTORING HEALTH IS NOT IMMORTALITY.** The first version pinned `hp` back to full each frame;
+  a single hit bigger than the bar still KO'd, because the kill happens INSIDE `takeDamage` before
+  any per-frame repair. It holds `invuln` down instead — the engine's own switch, checked at the
+  top of `takeDamage`, the same one respawn and teleport-escape use. Verified: 40 × 500 damage,
+  still standing.
+- **The dummy looks like a dummy.** A cyan humanoid read as an opponent. Passive = **the BAG**
+  (weighted base, sprung post, padded body, banded, wooden arms); sparring = the holo partner. It
+  is a SKIN on the same Fighter (`_dummySkin`), so every board number still comes from real combat.
+  Hidden by "everything under the figure group except `groundRig` and the rig" — the markers are
+  the state display and must survive.
+- **The first building in the game with TWO FLOORS.** A mezzanine over the north half only, so the
+  fixed isometric camera looks down onto the ground floor through the open south half — the
+  "take the roof off" cutaway applied to a storey. It works here and nowhere else yet because a
+  ROOM is a box; the terrain heightfield still cannot fold over itself.
+  ⚠ **STAIRS, NOT A RAMP**: a rotated slab has no honest AABB collider and registered nothing, so
+  it was scenery you fell through. The stand-on-top test only catches within **2.5u**, so a riser
+  taller than that is a wall. Ten 2.4u risers → a GROUNDED hero (SARGE, flightTier 0) reaches the
+  second floor on foot. Placement is set by two clearances: clear of the west gantry (x −117…−67,
+  z ±15 — the first run climbed three steps and stopped dead against it) and the top step must
+  OVERLAP the mezzanine's south edge or there is a gap with nothing under it.
+- **Nothing spawns a rival into the blue room** — `KeyB` and the `KeyN` sparring toggle both refuse
+  and say where to go instead. `clearTransients` already closes the hall (the reset law).
+
 ## Hard rules (do not break)
 - **`opts.hitstop ?? 0.04`, NEVER `||`** (`entity.takeDamage`). Sustained damage — beams, cones,
   lifedrain, DoT ticks — passes `hitstop: 0` deliberately. With `||`, that falsy zero became 0.04

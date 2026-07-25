@@ -325,7 +325,12 @@ addEventListener('keydown', (e) => {
     if (e.code === 'BracketRight') { cycleHero(1); return; }
     if (e.code === 'BracketLeft') { cycleHero(-1); return; }
   }
-  if (e.code === 'KeyB') { const b = game.spawnRival(); hud.feed('A rival ' + b.name + ' enters the arena!', b.def.colors.accent); }
+  // ⚠ NOT IN THE BLUE ROOM. Its entire promise is that nothing in it will attack you; a hotkey that
+  // drops a rival on top of a player still learning to walk would break that on the first mistyped key.
+  if (e.code === 'KeyB') {
+    if (game.lab && game.lab.room === 'blue') hud.feed('Not in the blue room — the console opens the white room next door.', '#7fe6ff');
+    else { const b = game.spawnRival(); hud.feed('A rival ' + b.name + ' enters the arena!', b.def.colors.accent); }
+  }
   // ORDER A TRAINING BOT — the Danger Room starts empty now; targets appear on command
   if (e.code === 'KeyN' && game.modeId === 'training' && game.player) {
     const p = game.player, a = Math.random() * Math.PI * 2;
@@ -335,9 +340,12 @@ addEventListener('keydown', (e) => {
   // THE WHITE ROOM — N is the dummy's temperament: a bag that stands still, or a partner that
   // fights back. The same attack measures differently against a raised guard, which is the point.
   if (e.code === 'KeyN' && game.modeId === 'lab' && game.lab) {
-    const on = game.lab.setAggressive(!game.lab.aggressive);
-    hud.feed(on ? 'DUMMY: SPARRING — it fights back' : 'DUMMY: PASSIVE — it stands and takes it',
-             on ? '#ff5a4a' : '#7fe6ff');
+    if (game.lab.room === 'blue') hud.feed('The blue room keeps a passive bag. Use the console for the white room.', '#7fe6ff');
+    else {
+      const on = game.lab.setAggressive(!game.lab.aggressive);
+      hud.feed(on ? 'DUMMY: SPARRING — it fights back' : 'DUMMY: PASSIVE — it stands and takes it',
+               on ? '#ff5a4a' : '#7fe6ff');
+    }
   }
   if (e.code === 'KeyR' && e.shiftKey && game.modeId === 'lab' && game.lab) {
     game.lab.telemetry.reset(); hud.feed('Test log cleared', '#8fe08a');

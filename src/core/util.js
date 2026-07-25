@@ -62,3 +62,38 @@ export function mulberry(seed) {
   let a = seed >>> 0;
   return () => { a |= 0; a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
 }
+
+// ---------------------------------------------------------------------------------------------
+// THE SURFACE-SEPARATION LAW — why things flicker, and the one number that stops it.
+//
+// A GPU decides what is in front using a DEPTH BUFFER of finite precision, and that precision
+// gets coarser the further a surface is from the camera. When two surfaces are closer together
+// than the precision available at that distance, the hardware genuinely cannot tell which wins:
+// it picks differently per pixel and per frame, and you see a torn, crawling edge. That is
+// z-fighting, and at match-camera range (200+ units out) it is NOT a rare edge case.
+//
+// ⚠ THE TRAP IS THE SCALE, NOT THE MATHS. Offsets like 0.05 / 0.06 / 0.09 were written when the
+// world was much larger relative to a hero. At TRUE 1:1 (1u ≈ 0.19m) those are ONE, THREE and
+// SIX CENTIMETRES — and the training hall stacked exactly those three on the floor, which is why
+// every fighter's contact shadow came out with a ragged, boiling edge.
+//
+// THE RULE, in order of preference:
+//   1. DON'T STACK. Two things on the floor should be ONE surface — paint the second into the
+//      first one's texture. This is what world._gridTexture does for the city ground, and it is
+//      always the cheapest answer as well as the safest.
+//   2. If they must be separate, separate them by DECAL_LIFT (below) — a real distance, not a
+//      nominal one — and give each layer its own rung.
+//   3. If they must be COPLANAR (a decal that has to sit exactly on its host), don't fight at
+//      all: call sinkSurface() on the HOST so it loses every depth tie by rule instead of by luck.
+// Interiors make this sharper, not softer: floors, slabs, landings and roofs are all horizontal
+// surfaces at deliberate heights, so an interior is a building full of chances to get this wrong.
+export const DECAL_LIFT = 0.35;                       // ≈ 6.6cm — the smallest gap that survives
+// the layer ladder for anything pinned to the ground, so two systems never pick the same rung
+export const GROUND_LAYER = { shadow: 0.05, stateRing: 0.35, bandRing: 0.55, faceWedge: 0.75, mark: 0.95 };
+// push a HOST surface back in depth so anything drawn at its level wins the tie deterministically
+export function sinkSurface(mat, amount = 1.4) {
+  if (!mat) return mat;
+  const list = Array.isArray(mat) ? mat : [mat];
+  for (const m of list) { m.polygonOffset = true; m.polygonOffsetFactor = amount; m.polygonOffsetUnits = amount; }
+  return mat;
+}

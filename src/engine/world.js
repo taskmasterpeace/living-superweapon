@@ -8,8 +8,8 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import { clamp, damp, setBands } from '../core/util.js';
-import { buildTiles , scaleBoxUV} from './citytiles.js';
+import { clamp, damp, setBands, DECAL_LIFT } from '../core/util.js';
+import { buildTiles , scaleBoxUV, resetDecalLadder } from './citytiles.js';
 import { CELL, districtNameAt, thresholdPlan, ROAD, junctionAt, WATER_DEPTHS } from '../data/cityplan.js';
 import { mulberry } from '../data/news.js';
 
@@ -267,7 +267,9 @@ export class World {
       m.position.set(x, h / 2, z); m.castShadow = h >= 44; m.receiveShadow = true;   // only true towers pay the shadow pass
       if (!isBridge) {
         const roof = new THREE.Mesh(new THREE.PlaneGeometry(w, d), roofMats[Math.min(style, 4)]);
-        roof.rotation.x = -Math.PI / 2; roof.position.y = h / 2 + 0.05;
+        // ⚠ same nine-millimetre roof as citytiles' tower() — the flagship keeps its own bespoke
+        // builder, so the fix has to be made in BOTH copies or half the game still flickers.
+        roof.rotation.x = -Math.PI / 2; roof.position.y = h / 2 + DECAL_LIFT;
         roof.receiveShadow = true;
         m.add(roof);
       } else {
@@ -423,9 +425,12 @@ export class World {
     heli.rotation.x = -Math.PI / 2; heli.position.set(-144, 0.12, 205); g.add(heli);
 
     // DISTRICT WASHES — faint color fields so the sections read from the sky (+ the radar labels)
+    // ⚠ the washes overlap each other by design (they are broad district fields), so they need the
+    // same no-two-decals-share-a-plane ladder the tile library uses — see core/util.js.
+    let washN = 0;
     const wash = (wd, dp, x, z, col, op) => {
       const p = new THREE.Mesh(new THREE.PlaneGeometry(wd, dp), new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: op, depthWrite: false }));
-      p.rotation.x = -Math.PI / 2; p.position.set(x, 0.09, z); g.add(p);
+      p.rotation.x = -Math.PI / 2; p.position.set(x, 0.09 + (washN++) * 0.014, z); g.add(p);
     };
     wash(288, 192, -96, -144, '#7fb0ff', 0.07);   // commercial — cool
     wash(288, 192, 0, 144, '#ff9a3a', 0.07);      // residential — warm
@@ -681,6 +686,7 @@ export class World {
     // THE TILES — every cell raised by its type builder
     this.doors = [];                       // the tiles re-register every entrance
     this.interiors = [];
+    resetDecalLadder();          // the rung counter is per-CITY, so a long session can't drift it up
     const { treeSpots, planeProps, rockProps } = buildTiles(this, g, plan, rng);
     this.planes = planeProps || [];   // 24-ton props for whoever can lift them (manual §21)
     this.rocks = rockProps || [];     // loose 0.5t stones — the bottom of the same ladder
@@ -781,10 +787,14 @@ export class World {
       for (let i = 0; i < 260; i++) x.fillRect(Math.random() * 128, Math.random() * 128, 2, 2);
       return new THREE.CanvasTexture(c);
     })());
-    for (const [x, z, r] of lawns) {
+    // ⚠ lawns overlap each other and the tile library's own plazas — same ladder, same reason
+    // (core/util.js, THE SURFACE-SEPARATION LAW). A flat +0.11 made every overlap a coin toss.
+    lawns.forEach(([x, z, r], i) => {
       const p = new THREE.Mesh(new THREE.CircleGeometry(r, 26), new THREE.MeshBasicMaterial({ map: lawnTex, transparent: true, depthWrite: false }));
-      p.rotation.x = -Math.PI / 2; p.position.set(x, this.heightAt(x, z) + 0.11, z); this.scene.add(p); this._cityBits.push(p);
-    }
+      p.rotation.x = -Math.PI / 2;
+      p.position.set(x, this.heightAt(x, z) + 0.11 + (i % 9) * 0.014, z);
+      this.scene.add(p); this._cityBits.push(p);
+    });
     const A = this.ARENA;
     const P = spots.filter(([x, z]) => Math.hypot(x, z) > clearCenter && x < this.waterX - 8 && Math.abs(x) < A - 8 && Math.abs(z) < A - 8 &&
       !this.coverAll.some(c => Math.abs(x - c.x) < c.hx + 4 && Math.abs(z - c.z) < c.hz + 4));
@@ -1452,6 +1462,77 @@ export class World {
     out.y = (-_proj.y * 0.5 + 0.5) * innerHeight;
     out.behind = _proj.z > 1;
     return out;
+  }
+
+
+  // ---------------------------------------------------------------------------------------------
+  // THE FLICKER AUDIT — find z-fighting before a player does. See THE SURFACE-SEPARATION LAW in
+  // core/util.js for why this exists. It walks the LIVE scene, takes the top face of every visible
+  // mesh, and reports any pair that overlaps in XZ while sitting closer together in Y than
+  // DECAL_LIFT. That is exactly the condition the depth buffer cannot resolve at camera range.
+  //
+  // ⚠ It reads the BUILT scene, not the source, so it cannot be fooled by a builder that looks
+  // correct and computes a bad number — which is the only kind of mistake that has actually
+  // shipped here. Run it after any interior, tile or decal work:  LSW.game.world.auditSurfaces()
+  auditSurfaces(opts = {}) {
+    const minSep = opts.minSep ?? DECAL_LIFT, minArea = opts.minArea ?? 6;
+    const box = new THREE.Box3(), items = [];
+    this.scene.updateMatrixWorld(true);
+    this.scene.traverse(o => {
+      if (!o.isMesh || !o.visible || !o.geometry) return;
+      for (let p = o.parent; p; p = p.parent) if (!p.visible) return;   // hidden branch
+      // ⚠ a surface faded to nothing cannot flicker. Crack overlays sit at +0.05 on every building
+      // face and live at opacity 0 until something hits them, so counting them would bury the real
+      // findings under one false positive per destructible block in the city.
+      const mm = Array.isArray(o.material) ? o.material : [o.material];
+      if (mm.every(m => m && m.transparent && (m.opacity ?? 1) < 0.02)) return;
+      // ⚠ `depthWrite: false` is a surface DECLARING that it will not take part in the depth test —
+      // additive glows, rings, washes, tracers. It cannot z-fight by construction, so counting it
+      // buries the surfaces that can. This is the difference between an audit and a noise generator.
+      if (mm.every(m => m && m.depthWrite === false)) return;
+      // ⚠ THE BOX MUST BE THIS MESH ALONE. Box3.setFromObject walks DESCENDANTS, and a building
+      // carries its own roof plane as a child — so every tower in the city was reported as
+      // z-fighting with its own roof at a gap of exactly 0, which is both a lie and a very
+      // convincing one. Take the geometry's own bounds through the world matrix instead.
+      if (!o.geometry.boundingBox) o.geometry.computeBoundingBox();
+      box.copy(o.geometry.boundingBox).applyMatrix4(o.matrixWorld);
+      if (!isFinite(box.min.x) || !isFinite(box.max.y)) return;
+      const w = box.max.x - box.min.x, d = box.max.z - box.min.z;
+      if (w * d < minArea) return;                                     // too small to read as a plane
+      items.push({ o, y: box.max.y, x0: box.min.x, x1: box.max.x, z0: box.min.z, z1: box.max.z, w, d });
+    });
+    items.sort((a, b) => a.y - b.y);
+    const hits = [];
+    for (let i = 0; i < items.length; i++) {
+      const a = items[i];
+      for (let j = i + 1; j < items.length; j++) {
+        const b = items[j];
+        const dy = b.y - a.y;
+        if (dy >= minSep - 1e-4) break;   // sorted — nothing further can match. The epsilon matters:
+        // a surface deliberately placed at exactly DECAL_LIFT is CORRECT, and without it every
+        // rooftop in the game reports itself as a problem for obeying the rule.
+        if (b.x0 >= a.x1 || b.x1 <= a.x0 || b.z0 >= a.z1 || b.z1 <= a.z0) continue;
+        // an honest overlap must be big enough to actually be seen tearing
+        const ox = Math.min(a.x1, b.x1) - Math.max(a.x0, b.x0);
+        const oz = Math.min(a.z1, b.z1) - Math.max(a.z0, b.z0);
+        if (ox * oz < minArea) continue;
+        // a surface deliberately sunk in depth has already declared a winner — not a fight
+        const sunk = (m) => { const l = Array.isArray(m) ? m : [m]; return l.some(x => x && x.polygonOffset); };
+        if (sunk(a.o.material) || sunk(b.o.material)) continue;
+        const tag = (m) => m.o.name || (m.o.parent && m.o.parent.name) || m.o.geometry.type;
+        hits.push({ gap: +dy.toFixed(4), y: +a.y.toFixed(2), area: Math.round(ox * oz),
+                    a: tag(a), b: tag(b), size: `${Math.round(a.w)}x${Math.round(a.d)}` });
+      }
+    }
+    hits.sort((p2, q) => (p2.gap - q.gap) || (q.area - p2.area));
+    // ⚠ TWO KNOWN BLIND SPOTS, both inherent to testing axis-aligned boxes:
+    //   · A MERGED or INSTANCED mesh spanning the whole map (the road classes, the grass) has a
+    //     map-wide bounding box, so two of them always "overlap" even when their ribbons never
+    //     touch. Expect a standing pair at road height; it is not a defect.
+    //   · Two SOLIDS that interpenetrate (a head inside a torso) are reported, but a solid
+    //     intersection is resolved correctly by the depth test — only near-COPLANAR surfaces tear.
+    // Both over-report. Neither can hide a real fight, which is the trade worth making.
+    return { surfaces: items.length, problems: hits.length, worst: hits.slice(0, 12) };
   }
 
   render() {

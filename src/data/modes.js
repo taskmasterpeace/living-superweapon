@@ -8,8 +8,8 @@ export const MODES = [
     desc: 'Four-way chaos. You (and a friend) versus a pack of rivals. First to 12 KOs — or the top score when the clock runs out.' },
   { id: 'training', name: 'TRAINING', tag: 'Sandbox', icon: '🎯', accent: '#8fe08a',
     desc: 'Punching bags and a sparring partner. Test every power, learn the trifecta, no pressure. Endless.' },
-  { id: 'lab', name: 'THE WHITE ROOM', tag: 'Impact test', icon: '📐', accent: '#e8e2d6',
-    desc: 'A clean test chamber and an instrumented dummy. Every attack you land is measured at the damage choke point and compared on the wall board — damage, type, knockback, contact speed, energy. N toggles the dummy between a passive bag and a sparring partner.' },
+  { id: 'lab', name: 'THE TRAINING HALL', tag: 'Blue room · white room', icon: '📐', accent: '#e8e2d6',
+    desc: 'A two-storey indoor hall with two rooms. You arrive in the BLUE ROOM: a bag, a ramp to the upper floor, and nothing that can hurt you — learn the controls at your own pace. The console opens the WHITE ROOM next door, where the machinery lives: moving targets on rails, wall turrets that shoot back, a flight course, a sparring partner, and a wall board measuring every attack you land at the damage choke point.' },
   { id: 'tournament', name: 'TOURNAMENT', tag: 'The Invitational', icon: '🏆', accent: '#ffd24a',
     desc: 'Eight seeds off the power rankings, single elimination. Matches are best-of-3 ELIMINATION rounds — last side standing, nobody respawns. Formats: 1v1, 2v2 duos, underdog 1v2. Team damage is ON.' },
 ];

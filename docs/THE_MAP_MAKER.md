@@ -651,3 +651,89 @@ as birds from both the isometric match view and the map tool's wide shot, which 
 to draw them at all.
 
 Ref: `wwa-streets-birds.png`.
+
+---
+
+## §  SURFACES — why things flicker, and the rule that stops it (2026-07-25)
+
+Robert, looking at the training hall: *"flickering is still going on… how did that happen? How can
+we prevent that from happening when we build inside structures and stuff?"* The second question is
+the important one, so this section answers it as a rule rather than as a fix.
+
+### What flickering is
+
+A GPU decides which surface is in front using a **depth buffer** of finite precision, and that
+precision gets **coarser the further a surface is from the camera**. When two surfaces sit closer
+together than the precision available at that distance, the hardware genuinely cannot tell which
+wins. It picks differently per pixel and per frame, and you see a torn, crawling edge. That is
+**z-fighting**. It is not a bug in any one builder; it is a property of the hardware, and the only
+defence is to never create the condition.
+
+### Why it bit us
+
+**The trap is the SCALE, not the maths.** Offsets like `0.05`, `0.06`, `0.09` were written when the
+world was much larger relative to a hero. At TRUE 1:1 (1u ≈ 0.19m) those are **one, three and six
+centimetres**, with the match camera 200+ units away. Four separate systems had each independently
+picked a "small number" and landed on the same few millimetres:
+
+| Where | What was there | Real gap |
+|---|---|---|
+| `whiteroom.js` floor | floor `0.06` + GridHelper `0.09` + contact shadow `0.05` | 10mm / 30mm |
+| `whiteroom.js` walls | capping band centred at `h − 0.8`, so its top face was **exactly** `h` | 0mm, over 260u |
+| `citytiles.js` `disc`/`slab` | **every** lawn and plaza in the game authored at `y = 0.09` | 0mm wherever two overlapped |
+| `citytiles.js tower()` + `world._buildArena` | roof plane at `h/2 + 0.05` — **every rooftop in every city** | 9.5mm |
+| `game.js` player mark | invented its own `0.16`, colliding with both the shadow and the decals | 11mm |
+
+Note the shape of that table: no single author did anything unreasonable. Each picked a small
+number in isolation. The failure is **the absence of a shared ladder**, which is why the fix is one.
+
+### The rule, in order of preference
+
+Defined in `core/util.js`:
+
+1. **DON'T STACK.** Two things on the floor should be **one surface** — paint the second into the
+   first one's texture. `world._gridTexture` already does this for the city ground; the training
+   hall's calibration grid now does too. Cheapest *and* safest.
+2. **If they must be separate, separate them by `DECAL_LIFT` (0.35u ≈ 6.6cm)** — a real distance,
+   not a nominal one — and take a rung from `GROUND_LAYER`, which declares who owns what height
+   (`shadow 0.05 · stateRing 0.35 · bandRing 0.55 · faceWedge 0.75 · mark 0.95`). A system that
+   invents its own number is the failure mode above, repeating.
+3. **If they must be genuinely coplanar**, don't fight: call `sinkSurface(hostMaterial)` so the host
+   loses every depth tie **by rule instead of by luck** (that is `polygonOffset`, a depth bias).
+   Or declare `depthWrite: false`, which opts a surface out of the depth test entirely — correct for
+   additive glows, rings and washes.
+4. **Where many decals of one kind are drawn, put them on a ladder at the helper**, not at the call
+   sites. `citytiles.disc`/`slab` now give each decal the next rung of a 14mm ladder via `decalY()`,
+   reset per city by `resetDecalLadder()`. Forty call sites cannot each be trusted to pick a unique
+   number; one helper can.
+
+### Interiors make this sharper, not softer
+
+An interior is a building **full of horizontal surfaces at deliberate heights** — floors, landings,
+slabs, roofs, thresholds — and they are all candidates. Two rules specific to structures:
+
+- **A floor slab is a surface, and so is anything laid on it.** A rug, a hatch, a painted marking,
+  a stair nosing: rung it or paint it into the floor texture.
+- **A storey's ceiling and the floor above it are two faces of one slab.** Build them as one box
+  with thickness, never as two planes at the same height.
+
+### The audit
+
+`world.auditSurfaces()` walks the **live scene**, takes the top face of every visible mesh, and
+reports any pair overlapping in XZ while sitting closer in Y than `DECAL_LIFT`. Because it reads the
+BUILT scene and not the source, it cannot be fooled by a builder that looks correct and computes a
+bad number — which is the only kind of mistake that has actually shipped here. Run it after any
+interior, tile or decal work:
+
+```
+LSW.game.world.auditSurfaces()
+```
+
+Two known blind spots, both inherent to testing axis-aligned boxes, both documented in the code:
+a **merged or instanced** mesh spanning the map (road classes, grass) has a map-wide bounding box,
+so two of them always "overlap" even when their triangles never meet; and two **interpenetrating
+solids** (a head inside a torso) are reported although the depth test resolves them correctly. Both
+over-report. Neither can hide a real fight — the trade worth making.
+
+Measured after this pass: **training hall 0 problems** (was 15), flagship city **3** and a generated
+Tokyo **2**, all of which are the merged-geometry blind spot plus one pair of intersecting spheres.
