@@ -15,6 +15,7 @@
 //     cover boxes — rather than recomputing what the planner intended. A ruler that agrees with the
 //     source instead of the world is how a wrong number survives being checked.
 import { BANDS } from '../core/util.js';
+import { playSpaceFlight } from './spaceflight.js';
 
 const U_PER_M = 1 / 0.19;              // TRUE 1:1 SCALE: 1 unit ≈ 0.19m
 const HERO_U = 9.6;                    // a hero is 9.6u ≈ 1.8m — the only ruler that means anything
@@ -259,6 +260,27 @@ export class DevConsole {
       c.print('  ' + 'mean move per junction'.padEnd(22) + String(SV.cutFill.meanMove).padStart(6) + 'u  (' + m(SV.cutFill.meanMove) + ')');
       c.print('  relief: ' + ((plan.relief && plan.relief.kind) || '?') + '  amp ' + ((plan.relief && plan.relief.amp) || 0));
       c.print('  the survey follows the land as closely as the grade limit allows, and no closer.');
+    });
+    // FLY ANY CROSSING ON DEMAND, with any party. This is the customizability made reachable:
+    //   space mars              — you, to Mars
+    //   space pluto 4           — a flight of four
+    //   space pluto 2 freighter — two flyers escorting a freighter
+    //   space deep 1 scout      — out to the heliopause with an alien scout in company
+    this.cmd('space', 'space <target|deep> [flyers] [ship] — fly a crossing', (a, c) => {
+      const g = G(), R = window.LSW && window.LSW.ROSTER;
+      const target = (a[0] || 'mars').toLowerCase();
+      const n = Math.max(1, Math.min(8, parseInt(a[1], 10) || 1));
+      const ship = a[2];
+      const pool = (R || []).filter(d => d && d.id);
+      const heroes = [];
+      for (let i = 0; i < n; i++) heroes.push((g.player && i === 0 && g.player.def) || pool[(i * 7) % Math.max(1, pool.length)] || null);
+      const spec = { heroes: heroes.filter(Boolean) };
+      if (ship) { if (['scout', 'hauler'].includes(ship)) { spec.alien = ship; spec.alienCount = 1; } else spec.ship = ship; }
+      const opts = target === 'deep'
+        ? { from: 'earth', to: { au: 123 }, deep: true, secs: 22, partySpec: spec }
+        : { from: 'earth', to: target, secs: 16, partySpec: spec };
+      c.ok('flying ' + target + ' with ' + (spec.heroes.length) + ' flyer(s)' + (ship ? ' + ' + ship : ''));
+      playSpaceFlight(g, opts, () => c.ok('arrived'));
     });
     this.cmd('surfaces', 'run the z-fighting audit on the live scene', (a, c) => {
       const r = G().world.auditSurfaces();

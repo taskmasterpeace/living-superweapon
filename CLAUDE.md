@@ -1406,6 +1406,33 @@ Four laws, three of them the same idea: **a thing must not outlive the match tha
 - `training` survives as an INTERNAL mode with no card: the tutorial (`hud.onTutorial`) and the
   atlas tile proving ground (`hud.onProvingGround`) both still enter it.
 
+## THE SPACE LAYER (2026-07-25) — manual §35, `engine/spaceflight.js` + `data/vessels.js`
+- **Renders through the game's OWN composer** — its scene is swapped into the existing RenderPass,
+  so the crossing inherits the exact bloom/exposure/ACES the street has. Art-style match is not
+  maintained, it is structural. Restored in `finish()` including on a skip.
+- **The traveller is a PARTY, never a hero** (`makeParty`): one flyer · six flyers · a flyer and a
+  ship · a convoy with escorts · an alien tail. The formation is a FUNCTION of the index
+  (solo/vee/echelon/line/escort/swarm, chosen by `formationFor` from what the party IS), so every
+  party size is one code path. A flyer's wake comes from its own `def.afterburner` — ORIGIN customs
+  arrive wearing their own colours with no wiring.
+- **A ship is a PARTS LIST** (`VESSELS`): primitives + a material role + a palette. Adding a craft
+  is adding a row — no mesh files, no loader, no second art pipeline. 5 shipped.
+- **The ROUTE decides the beats** (`buildRoute` in planets.js): the bodies a crossing actually
+  sweeps past, and when. Earth→Pluto gets 6 flybys in order; >30 AU is `deep` and earns the
+  heliopause + Oort acts. `{au: N}` with no id is a DEEP target — it gets no atmospheric entry.
+- ⚠ **THE PARTY AND THE PLANETS WERE ON TWO DIFFERENT CLOCKS** — bodies placed by route fraction,
+  party flying the beat clock, so a "flyby" framed empty space. A flyby is a COINCIDENCE IN TIME;
+  `_placeFromBeats` parks each body where the party will be during its own beat.
+- ⚠ **EVERY SHOT IS AN OFFSET FROM THE PARTY** + a blend toward what the beat is about. Aiming at
+  the BODY put the subject off-camera. ⚠ The DEPARTURE camera must stand off the BOW looking back —
+  behind-and-forward put the party behind the lens and Earth outside the cone.
+- ⚠ **`_lane` is SMOOTHERSTEP** — slow at both ends. A constant rate left Mars a marble during its
+  own atmospheric entry. ⚠ The match HUD hides for the duration, restored EXACTLY as found.
+  ⚠ The heliopause shell is 0.04 opacity — a backside sphere you're inside tints every pixel and
+  drowns the stars; the BOW SHOCK carries the act.
+- Console: `space <target|deep> [flyers] [ship]`. Testable via `{manual:true}` (no rAF).
+  Refs `wwa-space-depart/flyby/helio/entry.png`.
+
 ## THE SURVEY (2026-07-25) — the street sets the level, the lots meet it
 - **`surveyCity(plan, sampleH)` in `data/cityplan.js`** (engine-agnostic; `plan.survey` carries
   `node`/`cell`/`onRoad`/grades/cut-fill). ⚠ Levels used to be decided INSIDE the world builder as

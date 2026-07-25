@@ -1513,3 +1513,86 @@ Scores are the same events the rest of the game already fires: a target down is 
 taken in EVASION is `onHit` seen from the other side.
 
 Ref `wwa-training-hall.png`.
+
+
+---
+
+## §35 · THE SPACE LAYER (2026-07-25) — the crossing, as a cinematic you can steer
+
+Robert: *"show flybys of the planets when travelling past them, and each planet's atmosphere
+entering… keep the same art style and scale and feel cinematic… we should see stars… keep the
+process open so when we add vehicles, characters can travel with ships, space ships and alien ships
+and all."* Then, as a goal: *"prioritise customizability, and make sure it's dynamic enough to have
+groups of flyers, a flyer and a ship, and more."*
+
+### Three decisions the rest falls out of
+
+**1. It renders through the game's own composer.** `engine/spaceflight.js` builds its own
+`THREE.Scene` and swaps it into the existing `RenderPass` — one line each way — so the crossing
+inherits the exact bloom, exposure and ACES tone-map the street does. "Matching the art style" is
+then not something anyone has to maintain; it is the same pipeline and it cannot drift. Restored in
+`finish()`, including on a skip.
+
+**2. The traveller is a PARTY, never a hero.** Everything flies a list from `data/vessels.js`:
+
+```
+makeParty({ hero })                                     one flyer
+makeParty({ heroes: [a,b,c,d,e,f] })                    a flight of six
+makeParty({ hero, ship: 'shuttle' })                    a flyer and a ship
+makeParty({ heroes, ship: 'freighter', escort: 'interceptor', escortCount: 2 })
+makeParty({ hero, alien: 'scout', alienCount: 2 })      shadowed by something else
+```
+
+The formation is a **function of the index**, not a table, so six flyers and one flyer take the same
+code path; `formationFor` picks solo / vee / echelon / line / escort / swarm from what the party
+actually *is*. A flyer's wake colours come from its own `def.afterburner` row, so an ORIGIN custom
+arrives in space wearing its own colours with nobody wiring it up.
+
+**3. The route decides the beats.** `buildRoute` (data/planets.js) returns the bodies a crossing
+sweeps past and *when*. Fly to Pluto and you get the Moon, Mars, Jupiter, Saturn, Uranus and Neptune
+in order, because they are genuinely between you and it. Anything past 30 AU is `deep` and earns the
+heliopause and Oort acts. Nothing hard-codes a journey.
+
+### A ship is a parts list
+
+`VESSELS` rows are arrays of primitives with a material role (`hull/trim/glass/engine/dark`) and a
+palette. Adding a craft is adding a row — no mesh files, no loader, no second art pipeline, and the
+flat-shaded look is guaranteed because every part is built from the same five geometries the rest of
+the game uses. Shipped: ORBITAL SHUTTLE · BULK FREIGHTER · INTERCEPTOR · XENO SCOUT · ARK HAULER.
+
+### Four things that were wrong and are worth remembering
+
+- **⚠ THE PARTY AND THE PLANETS WERE ON TWO DIFFERENT CLOCKS.** Bodies were laid out by their route
+  fraction (where they sit in AU) while the party flew the beat clock (how long each beat lasts), so
+  during "the Moon flyby" the travellers were somewhere else on the lane entirely and the shot
+  framed empty space with a planet in it. **A flyby is a coincidence in time**, so `_placeFromBeats`
+  parks each body where the party will actually be when its own beat plays.
+- **⚠ EVERY SHOT IS AN OFFSET FROM THE PARTY.** The first camera positioned and aimed at the *body*
+  during a flyby and the travellers — the entire subject — left frame. Framing as *party plus a
+  blend toward whatever the beat is about* makes that impossible, and works identically for one
+  flyer and a convoy because offsets are in party-spreads.
+- **⚠ SPACE IS EMPTY AND THAT IS NOT A SHOT.** Flown at a constant rate the last beats played
+  thousands of units out and Mars was a marble during its own atmospheric entry. `_lane` is
+  **smootherstep**: slow at both ends, fast through the empty middle — you leave a world you can
+  still see and arrive at one that fills the frame.
+- **⚠ THE DEPARTURE CAMERA WAS BEHIND THE PARTY LOOKING FORWARD AT EARTH,** which is also forward —
+  so the travellers were behind the lens and the planet outside the cone, and the one beat asked for
+  by name rendered as an empty starfield. It stands off the bow and looks back now.
+
+Also: the match HUD is hidden for the duration and restored *exactly as found* (an element already
+hidden must stay hidden — the tutorial and the phone layout both hide things for reasons); the
+heliopause shell is a hint at 0.04 opacity and the **bow shock** carries the act, because a backside
+sphere you are inside tints every pixel and drowns the stars.
+
+### Verified
+
+Six party shapes flown headlessly (`{ manual: true }` never touches rAF — step it and assert, the
+same contract the opening director uses): solo, six-flyer echelon, flyer + shuttle, a six-strong
+convoy with a freighter and two interceptors, an alien pair, and a deep run to the heliopause with
+an Ark Hauler. Beats assemble correctly from each route, Jupiter correctly gets **no** atmospheric
+entry (no surface), a Moon hop correctly gets **no** flybys, the deep crossing gets helio + Oort and
+no entry, and scene, camera and `running` are restored with the overlay removed on every run
+including a live real-time skip. 0 console errors.
+
+Console: `space <target|deep> [flyers] [ship]` — e.g. `space pluto 3 freighter`.
+Refs: `wwa-space-depart.png`, `wwa-space-flyby.png`, `wwa-space-helio.png`, `wwa-space-entry.png`.

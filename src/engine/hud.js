@@ -1,5 +1,6 @@
 // WAR WORLD: ASCENDANTS — DOM HUD + character-select screen.
 import { CodexMixin } from './hudCodex.js';
+import { playSpaceFlight } from './spaceflight.js';
 import { BroadcastMixin } from './hudBroadcast.js';
 import { TitleMixin } from './hudTitle.js';
 import { esc, fileNoOf, fileDate, agoStr, isSynthDef, cfAbilityRows, cfCounterNotes, CF_BUILD, describeEvade, describeAbility } from './hudUtil.js';
@@ -976,12 +977,22 @@ export class HUD {
         el.onmouseleave = () => el.style.borderColor = 'var(--line,#2a2d33)';
         el.onclick = () => {
           this.hideDepart();
-          this._playTransit(game, from, { name: P.settlement.name, country: P.name },
-            () => { if (game.onTravel) game.onTravel({ name: P.settlement.name, country: P.name }, -1, P.id); },
-            { secs: transitSecsFor(P) });
+          // ⚠ A PLANET CROSSING IS A FLIGHT, NOT A LOADING CARD. The 2D transit card stays for
+          // city-to-city hops (a suborbital hop past nothing); going to another WORLD runs the
+          // real space layer, which flies the route's actual flybys in the game's own renderer.
+          this._playSpace(game, {
+            from: (game.hud && game.hud.theater && game.hud.theater.planet) || 'earth',
+            to: P.id, secs: transitSecsFor(P) * 1.6,
+          }, () => { if (game.onTravel) game.onTravel({ name: P.settlement.name, country: P.name }, -1, P.id); });
         };
       });
-      list.querySelector('#dptHelio').onclick = () => { this.hideDepart(); this._playHeliopause(game); };
+      // THE DEEP CROSSING — out past Neptune, through the heliopause and into the Oort cloud. The
+      // route model marks anything beyond 30 AU `deep`, which is what earns those two acts.
+      list.querySelector('#dptHelio').onclick = () => {
+        this.hideDepart();
+        this._playSpace(game, { from: 'earth', to: { au: HELIOPAUSE_AU }, deep: true, secs: 24 },
+          () => this._playHeliopause(game));
+      };
     };
     const render = (filter) => {
       if (view === 'system') return renderSystem();
@@ -1015,6 +1026,15 @@ export class HUD {
   hideDepart() { if (this._departEl) { this._departEl.remove(); this._departEl = null; } }
   // The transit cinematic — the 11th member of the cold-open family, doubling as the loading
   // screen. Stars, the planet's limb, the route drawn in the traveler's own WAKE identity.
+  // THE SPACE LAYER LAUNCHER. The PARTY is assembled from live state, never named: whoever is
+  // piloting plus anyone else on the roster who is coming, plus a ship if one is booked. That is
+  // the seam vehicles arrive through — `partySpec` is data, so "a flyer", "a flyer and a shuttle"
+  // and "four flyers escorting a freighter" are all callers, not code paths.
+  _playSpace(game, opts, onDone) {
+    const spec = opts.partySpec || (game.travelParty) || { hero: game.player && game.player.def };
+    return playSpaceFlight(game, { ...opts, partySpec: spec }, () => { if (onDone) onDone(); });
+  }
+
   _playTransit(game, from, to, onDone, opts = {}) {
     const hero = game.player ? game.player.def : null;
     const wake = (hero && hero.afterburner && hero.afterburner.wake) || ['#ffffff', '#ffd24a'];

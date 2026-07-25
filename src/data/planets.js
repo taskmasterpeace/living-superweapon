@@ -55,3 +55,76 @@ export const NEAR_STARS = [                // honest neighbours for the final fr
 export function transitSecsFor(p) {        // distance over an open throttle, game-honest
   return Math.max(5, Math.min(14, 4 + Math.log10((p.au || 1) + 1) * 6.5));
 }
+
+
+// =================================================================================================
+// THE LOOK — how each world is painted, so a flyby is in the SAME art style as the street below.
+//
+// Robert: "space earth view should fit our art style… keep the same art style and scale."
+// Flat-shaded low-poly, a warm-neutral palette and one accent, exactly like the city. So every
+// world here is a FEW FLAT COLOURS and a band count — no photographs, no gradients, no normal maps.
+// `atmo` is the shell colour (and what an entry burns); `bands` paints latitude stripes on the gas
+// and ice giants; `ring` is drawn as flat concentric discs, which is the only honest way to do a
+// ring in a style with no transparency tricks.
+// ⚠ NO PURPLE, including here: Neptune and Uranus go to deep teal and ice-blue, never violet.
+export const PLANET_LOOK = {
+  mercury: { base: '#8b8577', bands: ['#9a927f', '#6f6a5e'], atmo: null,      r: 0.38 },
+  venus:   { base: '#e0c489', bands: ['#f0d9a6', '#c9a86a'], atmo: '#ffe6b0', r: 0.95 },
+  earth:   { base: '#3f7a56', bands: ['#2f5f86', '#4d8a5f'], atmo: '#7fc4ff', r: 1.0, sea: '#2f5f86', land: '#4d8a5f', ice: '#eaf2ff' },
+  moon:    { base: '#a8a49b', bands: ['#b8b4aa', '#8b8577'], atmo: null,      r: 0.27 },
+  mars:    { base: '#b4532f', bands: ['#c96a3a', '#8e3f24'], atmo: '#e08a5a', r: 0.53, ice: '#f2efe6' },
+  jupiter: { base: '#c9a06a', bands: ['#e0c08a', '#a87a4a', '#d8b07a', '#8e6238'], atmo: '#f0d8a8', r: 11.2, spot: '#c9482f' },
+  saturn:  { base: '#d8c08a', bands: ['#e8d4a2', '#bfa06a'], atmo: '#f0e0b0', r: 9.4, ring: ['#cfc3a0', '#9a8f7c', '#e0d6b8'] },
+  uranus:  { base: '#7fc4c4', bands: ['#96d4d2', '#5f9fa4'], atmo: '#aee4e4', r: 4.0, tilt: 1.7 },
+  neptune: { base: '#2f6f96', bands: ['#3f86ac', '#245a7c'], atmo: '#7fb8d8', r: 3.9 },
+  pluto:   { base: '#b8ab96', bands: ['#c9bda8', '#8e8272'], atmo: null,      r: 0.19 },
+  sun:     { base: '#ffd24a', bands: ['#ffe9a0', '#ff9a2a'], atmo: '#ffb03a', r: 109, star: true },
+};
+
+export const lookOf = (id) => PLANET_LOOK[id] || PLANET_LOOK.mercury;
+
+// =================================================================================================
+// THE ROUTE — what a journey actually passes, computed from the real AU ladder.
+//
+// A crossing from Earth to Pluto goes BY Mars, Jupiter, Saturn, Uranus and Neptune, and the
+// cinematic should say so. This is the only place that decides it, so the flyby beats, the map's
+// route line and any future in-flight event all read the same list.
+//
+//   from / to  — planet ids (or {au} for an arbitrary point, e.g. the heliopause)
+//   returns    — { from, to, legs, outbound, passes[], au, deep }
+//   passes[]   — every body the route sweeps past, in order, each with the fraction of the trip
+//                at which it happens, so a director can key a beat to t.
+//
+// ⚠ It is a RADIAL model, not an orbital one: bodies are treated as sitting at their mean radius
+// on one line out from the sun. That is a deliberate simplification and it is written down rather
+// than hidden — real ephemerides would make a Mars flyby depend on the date, which is a promise
+// this game has no reason to keep. What it DOES get right is the ORDER and the SPACING, which is
+// everything the cinematic is trying to say.
+export function buildRoute(fromId, toId, opts = {}) {
+  const byId = (id) => PLANETS.find(p => p.id === id);
+  const a = byId(fromId) || byId('earth');
+  // ⚠ AN ARBITRARY POINT IS NOT A DESTINATION YOU CAN LAND ON. `{au: 123}` means "out to the
+  // heliopause", and without an id it fell through as an ordinary target — so a crossing into
+  // empty space was handed an ATMOSPHERIC ENTRY beat for a world that isn't there.
+  let b = typeof toId === 'object' ? toId : byId(toId);
+  if (b && b.id == null) b = { id: 'deep', name: b.name || 'THE DARK', au: b.au, kind: 'void', landable: false };
+  const auA = a.au, auB = (b && b.au) != null ? b.au : (opts.au || HELIOPAUSE_AU);
+  const outbound = auB >= auA;
+  const lo = Math.min(auA, auB), hi = Math.max(auA, auB);
+  const span = Math.max(1e-6, hi - lo);
+  const passes = [];
+  for (const p of PLANETS) {
+    if (p.id === a.id || (b && p.id === b.id)) continue;
+    if (p.au < lo - 1e-9 || p.au > hi + 1e-9) continue;
+    const t = (p.au - lo) / span;
+    passes.push({ id: p.id, name: p.name, au: p.au, t: outbound ? t : 1 - t, kind: p.kind });
+  }
+  passes.sort((x, y) => x.t - y.t);
+  // a run past the giants is a DEEP crossing — the director earns its heliosphere act
+  const deep = auB > 30 || opts.deep === true;
+  return {
+    from: a, to: b || { id: 'deep', name: 'THE DARK', au: auB, kind: 'void' },
+    outbound, au: Math.abs(auB - auA), passes, deep,
+    secs: opts.secs || transitSecsFor({ au: Math.abs(auB - auA) }),
+  };
+}
