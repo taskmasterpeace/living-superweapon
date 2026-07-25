@@ -110,6 +110,13 @@ export class Soundscape {
     layer('machine', 'bandpass', 180, 4.5, 0.34);
     // SURF — the docks and the shore. Slow, wide band.
     layer('surf', 'bandpass', 460, 0.6, 0.36);
+    // THE DIRECTOR's layers (manual §20): tension = sub-bass unease · rotor = the law's helicopter
+    layer('tension', 'lowpass', 88, 0.9, 0.5);
+    const rot = layer('rotor', 'bandpass', 118, 3.4, 0.4);
+    this.layers.tension.g.gain.value = 0; this.layers.rotor.g.gain.value = 0;
+    const rlfo = this.a.ctx.createOscillator(); rlfo.frequency.value = 11.5;   // blade rate
+    const rlg = this.a.ctx.createGain(); rlg.gain.value = 0.22;
+    rlfo.connect(rlg); rlg.connect(rot.g.gain); rlfo.start();
 
     // A slow LFO swells the traffic and wind so the bed breathes instead of sitting flat.
     const lfo = ctx.createOscillator(); lfo.frequency.value = 0.07;
@@ -177,6 +184,14 @@ export class Soundscape {
     traffic *= 1 - high * 0.9; crowd *= 1 - high * 0.95; machine *= 1 - high * 0.8; surf *= 1 - high * 0.5;
     wind = Math.min(1.2, wind + high * 0.95);
 
+    // --- THE AMBIENCE DIRECTOR (manual §20): a five-state tactical read with hysteresis —
+    // QUIET · STALKED · ENGAGED · AFTERMATH · HUNTED. Escalation is INSTANT, de-escalation
+    // needs proof (dwell + decay) — that asymmetry is the intelligence. The street reacts:
+    // crowds thin when the fight starts, alarms and dogs own the silence after, and past
+    // two stars the rotor thrum says the sirens are for YOU.
+    const tac = this._direct(dt, game);
+    traffic *= tac.duck; crowd *= tac.crowdDuck; nature *= tac.natureDuck;
+
     // --- EASE toward the targets. Slow, so walking a block is a crossfade, not a cut.
     const k = 1 - Math.exp(-dt * 0.9);
     const L = this.layers, M = this.mix;
@@ -187,6 +202,12 @@ export class Soundscape {
     if (L.wind) { L.wind.g.gain.value = M.wind * L.wind.base; L.wind.f.frequency.value = 520 + high * 900; }
     if (L.machine) L.machine.g.gain.value = M.machine * L.machine.base;
     if (L.surf) L.surf.g.gain.value = M.surf * L.surf.base;
+    // director layers: fear arrives fast, leaves slowly
+    M.tension = M.tension || 0; M.rotor = M.rotor || 0;
+    M.tension += (tac.tension - M.tension) * Math.min(1, dt * (tac.tension > M.tension ? 2.6 : 0.5));
+    M.rotor += (tac.rotor - M.rotor) * Math.min(1, dt * (tac.rotor > M.rotor ? 1.8 : 0.4));
+    if (L.tension) L.tension.g.gain.value = M.tension * L.tension.base;
+    if (L.rotor) L.rotor.g.gain.value = M.rotor * L.rotor.base;
     for (const g of this._murmur) g.gain.value = M.crowd * 0.016;
 
     // --- ONE-SHOTS layered on top: the details that sell a place -----------------------------
@@ -195,6 +216,14 @@ export class Soundscape {
 
   _detail(dt, M, night, game) {
     const a = this.a;
+    // the director's one-shots: the silence AFTER a fight has its own furniture
+    const st = this.tacticalState;
+    if (st === 'AFTERMATH') {
+      if (Math.random() < dt * 0.5) this._alarm();                    // a car alarm someone's blast set off
+      if (Math.random() < dt * 0.22) this._dog();                     // the dogs know something happened
+    }
+    if (st === 'HUNTED' && this._sirenT > 8) this._sirenT = rnd(3, 8); // the sirens are FOR YOU now
+    if (st === 'ENGAGED' && Math.random() < dt * 0.1) this._alarm();
     // birdsong / insects in green places — birds by day, crickets by night
     if (M.nature > 0.25 && Math.random() < dt * M.nature * 0.9) {
       if (night > 0.6) this._chirp(rnd(3200, 4600), 0.06, 0.02, 3);
@@ -218,6 +247,59 @@ export class Soundscape {
     if (M.crowd > 0.35 && Math.random() < dt * M.crowd * 0.55) {
       this.say(null, 'chatter', { gain: rnd(0.1, 0.24) });
     }
+  }
+
+  // The tactical read. Presentation-layer only: it may read the truth (it is a film mixer,
+  // not a combatant) — visibility still comes from the PLAYER's own vision (_vis).
+  heard(loud, pos, player) {
+    if (!player || !pos) { this._violence = Math.min(6, (this._violence || 0) + (loud || 0.5) * 0.4); return; }
+    const d = Math.hypot((pos.x || 0) - player.pos.x, (pos.z || 0) - player.pos.z);
+    if (d < 160) this._violence = Math.min(6, (this._violence || 0) + (loud || 0.5) * (1 - d / 180));
+  }
+  _direct(dt, game) {
+    const P = game.player;
+    const out = { tension: 0, rotor: 0, duck: 1, crowdDuck: 1, natureDuck: 1 };
+    if (!P || !game.entities) { this.tacticalState = 'QUIET'; return out; }
+    this._violence = Math.max(0, (this._violence || 0) - dt * 0.55);
+    let nearFoe = 1e9, visFoe = 1e9;
+    for (const e of game.entities) {
+      if (!e.alive || !e.def || e === P || (game.isFoe && !game.isFoe(P, e))) continue;
+      const d = Math.hypot(e.pos.x - P.pos.x, e.pos.z - P.pos.z);
+      if (d < nearFoe) nearFoe = d;
+      if ((e._vis || 0) > 0.4 && d < visFoe) visFoe = d;
+    }
+    const heat = (game.police && game.police.heatOf) ? (game.police.heatOf(P) || 0) : 0;
+    const V = this._violence || 0;
+    const S = this._tac || (this._tac = { state: 'QUIET', cand: null, candT: 0, after: 0 });
+    if (S.after > 0) S.after -= dt;
+    let want;
+    if (heat >= 90) want = 'HUNTED';
+    else if (V > 0.8 || visFoe < 46) { want = 'ENGAGED'; S.after = 10; }
+    else if (S.after > 0) want = 'AFTERMATH';
+    else if (visFoe < 120 || nearFoe < 70) want = 'STALKED';
+    else want = 'QUIET';
+    if (want !== S.state) {
+      S.candT = want === S.cand ? S.candT + dt : dt; S.cand = want;
+      if (want === 'ENGAGED' || want === 'HUNTED' || S.candT > 0.45) { S.state = want; S.candT = 0; }
+    } else { S.cand = null; S.candT = 0; }
+    const st = S.state;
+    if (st === 'STALKED') out.tension = 0.45;
+    else if (st === 'ENGAGED') { out.tension = 0.9; out.crowdDuck = 0.3; out.duck = 0.55; out.natureDuck = 0.4; }
+    else if (st === 'AFTERMATH') { out.tension = 0.22; out.crowdDuck = 0.45; }
+    if (st === 'HUNTED') { out.rotor = Math.min(1, 0.5 + heat / 400); out.tension = Math.max(out.tension, 0.5); out.crowdDuck = Math.min(out.crowdDuck, 0.35); }
+    this.tacticalState = st;
+    return out;
+  }
+  _alarm() {
+    const a = this.a, ctx = a.ctx; if (!ctx) return;
+    const o = ctx.createOscillator(); o.type = 'square';
+    const g = ctx.createGain();
+    const t0 = a.t;
+    for (let i = 0; i < 6; i++) o.frequency.setValueAtTime(i % 2 ? 715 : 535, t0 + i * 0.18);
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.linearRampToValueAtTime(0.013, t0 + 0.05);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + 1.15);
+    o.connect(g); g.connect(a.bus.ambient); o.start(t0); o.stop(t0 + 1.25);
   }
 
   _chirp(f, dur, gain, n) {

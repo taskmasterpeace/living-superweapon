@@ -896,6 +896,8 @@ export class Fighter {
     clearSlotFx(this);   // silence charge hums + remove orbs FIRST — clearing `charging` below orphans them otherwise (the stuck-tone bug)
     for (const k in this.slots) { const s = this.slots[k]; s.charging = false; s.active = null; s.chargeT = 0; s.sustainT = 0; }   // dying mid-generation leaves nothing armed
     this.cruiseHeld = false;
+    if (this._burnLoop) { this._burnLoop.stop(); this._burnLoop = null; }   // the dead don't burn (manual §20)
+    if (this._grapLoop) { this._grapLoop.stop(); this._grapLoop = null; }
     if (this._held) this._held.clear();   // netplay: no ghost-held beams from a dead puppet
     // become a ragdoll — carry the killing blow's knockback (+ a small pop) into the sim as launch
     if (this.canPhase) { for (const m of [this.parts.mats.suit, this.parts.mats.suit2]) { m.transparent = false; m.opacity = 1; } }
@@ -957,9 +959,13 @@ export class Fighter {
         if (was < 0.8 && this._burnT >= 0.8 && this._game) {   // ignition: one compression ring, then the wake
           this._game.vfx.ring(this.pos.clone().setY(this.pos.y + 5), { color: (AF.wake && AF.wake[0]) || '#fff', r0: 6, r1: 1, life: 0.25 });
           this._game.audio.boom(0.35, this.pos);
+          // the LOOP LAW (manual §20): ignition is the one-shot, the BURN is a sustained voice —
+          // created fading in, driven every live frame, faded on cut, reaped by the watchdog
+          if (!this._burnLoop && this._game.audio.sustain) this._burnLoop = this._game.audio.sustain('fire', this.pos);
         }
         if (this._burnT > 0.8) {
           this.ki = Math.max(0, this.ki - ((AF.kiPerSec || 6) - 2.6) * dt);   // cruise already bills 2.6/s
+          if (this._burnLoop) this._burnLoop.set(0.5 + Math.min(0.6, Math.hypot(this.vel.x, this.vel.y, this.vel.z) / 170), this.pos);
           if (this._game && Math.random() < 0.85) {                          // the wake carries the IDENTITY
             const w = AF.wake || ['#ffffff', '#ffd24a'];
             this._game.particles.spawn({ x: this.pos.x - this.vel.x * 0.045, y: this.pos.y + 4 - this.vel.y * 0.045, z: this.pos.z - this.vel.z * 0.045,
@@ -971,7 +977,11 @@ export class Fighter {
         const AFW = (AF && AF.wake) || ['#ffffff', '#ffd24a'];
         this._game.particles.burst(this.pos.x, this.pos.y + 4, this.pos.z, { count: 12, speed: 18, life: 0.5, size: 2.6, color: AFW, drag: 1.2 });
         this._burnT = 0;
-      } else this._burnT = 0;
+        if (this._burnLoop) { this._burnLoop.stop(); this._burnLoop = null; }
+      } else {
+        this._burnT = 0;
+        if (this._burnLoop) { this._burnLoop.stop(); this._burnLoop = null; }
+      }
     }
     if (this._sleepGrace > 0) this._sleepGrace -= dt;
     if (this.sleepT > 0) {
@@ -1220,6 +1230,9 @@ export class Fighter {
       // gravity all yield while the line is taut (same contract as launchT for knockback).
       if (this._grapple) {
         const G = this._grapple; G.t += dt;
+        // the LINE CREAKS while taut (loop law, manual §20) — the bow's tension voice, repurposed
+        if (!this._grapLoop && this._game && this._game.audio.sustain) this._grapLoop = this._game.audio.sustain('bow', this.pos);
+        if (this._grapLoop) this._grapLoop.set(G.mantle ? 0.85 : 0.55, this.pos);
         const dx = G.x - this.pos.x, dy = G.y - (this.pos.y + 5.2), dz = G.z - this.pos.z;
         const d = Math.hypot(dx, dy, dz);
         if (G.t > 2.6 || this.staggerT > 0.25) { this._grapple = null; }
@@ -1447,6 +1460,7 @@ export class Fighter {
   releaseHang() {
     this.hanging = null; this._grapple = null;
     if (this._grapLine) this._grapLine.visible = false;
+    if (this._grapLoop) { this._grapLoop.stop(); this._grapLoop = null; }   // the line goes quiet with the tension
   }
 
   // The highest roof (cover top or enterable-building top) under this fighter's feet — the

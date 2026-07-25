@@ -1006,6 +1006,22 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   never curves; spawned 3 → kinked → 2 left measured). Catalog rows: frostnova / seekers /
   ricochet. Remaining Part-Four lanes parked in docs/BACKLOG.md with reasons.
 
+## EVERY POWER SPEAKS + THE AMBIENCE DIRECTOR (2026-07-24) — manual §20
+- **Loop-law completions**: afterburner burn = `f._burnLoop` sustain('fire') (create at
+  ignition, set-by-airspeed while lit, stop on cut/dry/KO) · grapnel creak = `f._grapLoop`
+  sustain('bow') (stop in releaseHang — the one path) · portal pairs pulse (two soft
+  positional zaps/1.35s while open) · meteors hiss in (thin blast per lance) · sonic cones
+  key to 'ice' (air, not element roar). Battery + sweep = 0 orphans.
+- **`soundscape._direct(dt, game)`** — the AMBIENCE DIRECTOR: 5-state machine QUIET/
+  STALKED/ENGAGED/AFTERMATH/HUNTED; inputs = nearest foe, player-visible foe (_vis — never
+  a wallhack), decaying `_violence` fed by `soundscape.heard` hooked in `game.noise`
+  (`game.soundscape` wired in main), police heatOf. **Escalate instantly, de-escalate on
+  proof** (dwell 0.45s, AFTERMATH 10s, rise ×2.6/fall ×0.5 easing). New layers: 'tension'
+  (88Hz sub drone) + 'rotor' (118Hz, 11.5Hz blade LFO, heat-scaled at ≥90); ENGAGED ducks
+  crowd 0.3/traffic 0.55; AFTERMATH = `_alarm()` warbles + dogs; HUNTED shortens ambient
+  siren gaps. `soundscape.tacticalState` exposed. ⚠ stubbing game.police in tests needs
+  update/reset noops — stub ONLY heatOf on the real object.
+
 ## THE SAMPLE BANK (2026-07-24) — real recordings for every discrete SFX
 - **`core/samples.js`** (`MANIFEST` + `SampleBank` + `HOT_SET`) + **254 Kenney CC0 oggs in
   `/public/audio`** (~6MB, offline-first; impact/sci-fi/interface/rpg/jingle packs). Every

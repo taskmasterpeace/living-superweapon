@@ -700,6 +700,7 @@ export class Game {
   // with distance-scaled FUZZ — meaning a loud fighter draws a crowd and a quiet one can slip
   // a block over and vanish. `loud` ≈ 1 is a solid punch, 2+ is a detonation.
   noise(pos, loud = 1, src = null) {
+    if (this.soundscape && this.soundscape.heard) this.soundscape.heard(loud, pos, this.player);   // the ambience DIRECTOR hears everything the bots do (manual §20)
     if (!this.entities.length) return;
     for (const e of this.entities) {
       if (!e.ai || !e.alive || e === src) continue;
@@ -1520,6 +1521,12 @@ export class Game {
       const pr = this.portals[i];
       pr.life -= dt;
       if (pr.life <= 0 || !pr.owner.alive && !pr.b) { this._closePair(pr); continue; }
+      pr._humT = (pr._humT || 0) - dt;
+      if (pr._humT <= 0 && pr.b) {                     // an OPEN doorway hums — a soft positional pulse per side (manual §20)
+        pr._humT = 1.35;
+        this.audio.zap(190, { x: pr.a.x, y: 6, z: pr.a.z });
+        this.audio.zap(238, { x: pr.b.x, y: 6, z: pr.b.z });
+      }
       for (const side of [pr.a, pr.b]) if (side) {
         side.grp.rotation.y += dt * 1.4; side.ring.rotation.z += dt * 2.2;
         if (Math.random() < 0.2) this.particles.spawn({ x: side.x + rand(-3, 3), y: 6 + rand(-3, 3), z: side.z + rand(-3, 3), vx: 0, vy: rand(2, 6), vz: 0, life: 0.5, size: 1.8, color: [side.color, '#fff'], drag: 1, shrink: true });

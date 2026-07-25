@@ -223,7 +223,7 @@ export const TYPES = {
       // THE CONE VOICE — a sustained loop keyed to the element, started on the first held frame and
       // faded on release (not cut). fire ROARS, gas HISSES, cold CRACKLES, acid SIZZLES.
       if (!st._loop) {
-        const kind = def.cold ? 'ice' : def.gasDot ? 'gas' : (def.dtype === 'acid') ? 'acid' : def.kiDrain ? 'gas' : 'fire';
+        const kind = def.sonic ? 'ice' : def.cold ? 'ice' : def.gasDot ? 'gas' : (def.dtype === 'acid') ? 'acid' : def.kiDrain ? 'gas' : 'fire';   // SONIC = rushing air, not element roar (manual §20)
         st._loop = g.audio.sustain ? g.audio.sustain(kind, c.pos) : null;
       }
       if (st._loop) st._loop.set(0.7 + (def.dps || 26) / 60, c.pos);
@@ -754,6 +754,7 @@ export const TYPES = {
           radius: def.radius || 3, damage: def.damage || 34, blast: def.blast || 18, power: 1.5,
           color: def.color, color2: def.color2, shock: true, ground: true,
         });
+        g.audio.blast(1500 + rand(-150, 150), 0.05);   // the thin incoming hiss — you hear the sky falling (manual §20)
       }
     }
     if (inp.pressed && ready(c, def, st)) {

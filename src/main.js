@@ -93,7 +93,7 @@ game.peds.soundscape = soundscape;
 const tutorial = new Tutorial(game, hud);
 // ---- ONLINE: rooms + netcode (Supabase Realtime transport) ----
 const netplay = new Netplay(game, hud);
-game.netplay = netplay; hud.netplay = netplay;
+game.netplay = netplay; hud.netplay = netplay; game.soundscape = soundscape;   // the ambience director reads the fight (manual §20)
 netplay.onMatchStart = (cfg) => enter(cfg);
 netplay.onMatchEnd = () => openMenu();
 netplay.onLobby = () => { if (hud.onlineEl.style.display === 'flex') hud.renderOnline(); };

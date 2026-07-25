@@ -698,6 +698,56 @@ The brief's own recommended order, after sleep and blind proved the payload path
   spawned with 3, reflected with a real direction flip, 2 remaining. Rides the ballistic
   scale like every bullet.
 
+## §20 · EVERY POWER SPEAKS + THE AMBIENCE DIRECTOR (2026-07-24)
+
+### The loop law, finished across the board
+
+**Sustained sources LOOP and FADE (created fading in, `set(I,pos)` every live frame,
+`stop()` fades out, the `_sus` watchdog reaps misses); discrete sources are one-shots.**
+The audit: every ability type now has its voice, and the loop/one-shot split is correct —
+
+- Already lawful: beams (`beamVoice`), cones (element-keyed `sustain` — fire roars, gas
+  hisses, cold crackles, acid sizzles), lifedrain (`drain`), phase (`phase` hum), bow
+  (`bow` creak), charges/growing orbs (`charge` ramp + `kiRelease`), rifles (`gunshot`),
+  bows (`bowLoose`), volleys/projectiles (`blast`), melee kits (swing/impact), teleports,
+  evades, mines (plant zap + boom), nova (charge + boom), mind control, the Marletta's
+  arming tremble (zap pair at `_arm`).
+- **NEW — the AFTERBURNER burns aloud**: ignition stays the one-shot boom; the burn itself
+  is a `sustain('fire')` roar driven by airspeed every lit frame, stopped when the
+  throttle closes or the tank dies, cleared on KO. Verified: no loop before ignition,
+  live+registered while burning, gone on cut.
+- **NEW — the GRAPNEL LINE creaks while taut** (`sustain('bow')` on the fighter, louder on
+  a mantle reel), stopped in `releaseHang` — the ONE release path. Verified taut→release.
+- **NEW — open PORTALS pulse**: a soft positional two-note hum per side every 1.35s while
+  a pair stands. A persistent world object is never silent.
+- **NEW — METEORS whistle in**: a thin high hiss per spawned lance — you hear the sky
+  falling before it lands.
+- **SONIC cones voice as rushing AIR** (`'ice'` airy body), not an element roar — the
+  scream's pressure identity, not fire's.
+- Verified: the full 364-slot battery with every voice live, then `audio.sweep()` —
+  **zero orphaned loops**.
+
+### The ambience director — layers on an intelligence strategy
+
+`soundscape._direct` runs a **five-state tactical read with hysteresis** every frame:
+**QUIET · STALKED · ENGAGED · AFTERMATH · HUNTED.**
+
+- **Inputs**: nearest foe distance, nearest PLAYER-VISIBLE foe (`_vis` — the player's own
+  vision, not a wallhack; the director is a film mixer, not a combatant), a decaying
+  VIOLENCE accumulator fed by `game.noise` (every explosion, heavy hit and KO the bots
+  can hear, the mixer hears too), and police HEAT.
+- **The intelligence is the asymmetry**: escalation is INSTANT (ENGAGED/HUNTED switch on
+  the frame), de-escalation needs proof (0.45s dwell, 10s AFTERMATH breath, slow decay).
+  Fear arrives fast and leaves slowly — the layer easing does the same (rise ×2.6, fall
+  ×0.5).
+- **The street reacts**: STALKED = a sub-bass tension drone (88 Hz). ENGAGED = tension
+  full, crowds thin to 30%, traffic to 55% (the block empties), stray car alarms.
+  AFTERMATH = alarms warble, dogs answer, the crowd stays away, the tension exhales.
+  HUNTED (heat ≥ 90) = the ROTOR — a blade-rate (11.5 Hz) helicopter thrum scaled by
+  heat — and the ambient sirens come every few seconds, because they are for YOU now.
+- Verified staged: QUIET 0.00 → STALKED 0.38 → ENGAGED instant/0.87 → AFTERMATH →
+  HUNTED rotor 0.70 → settles to QUIET; and ENGAGED arose organically in a live rumble.
+
 Still open from Part Four, parked in `docs/BACKLOG.md` with reasons: chain lightning
 (chained target selection), sticky bombs (attach state), vampiric aura, ground spikes
 (temporary cover colliders), decoy hologram (AI retarget), turret stat-inheritance, blade
