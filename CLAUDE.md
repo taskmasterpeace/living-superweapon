@@ -443,6 +443,26 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   run before it, so a plaza'd cell kept the neighbour data of the tower it used to be.
   Refs: `wwa-mapmaker.jpeg`, `wwa-airport.jpeg`, `wwa-region-kabul.jpeg`, `wwa-region-tokyo.jpeg`.
 
+## THE LIVING STREET (2026-07-25) — `engine/wildlife.js`, birds + blown litter
+- **TWO instanced draws, allocated ONCE in the World ctor, only ever RE-SEEDED.** 64 birds + 40
+  litter pieces on fixed-size typed arrays; `setCity(arena, cover, world)` refills perch points and
+  positions without a single allocation, so a city rebuild costs nothing. Measured **0.047ms/tick
+  = 0.9% of a frame**; a 45s AI-vs-AI fight ran p50 5.2ms / p99 15.1 / 0 frames over 50ms.
+- **⚠ Ticked from `world.render()`, NOT `game.update`** — the ATLAS tool is a World with no Game,
+  and the streets should be alive in the tool too. It therefore needs no wiring on either page.
+- **They are not decoration.** `game.noise()` (the same broadcast the AI hears) calls
+  `wildlife.scare(x,z,r)`, so explosions, heavy hits and KOs break the flock for the sky — a
+  measured 85 scare calls and a peak of 38/64 fleeing in one fight. A flock coming off a roof two
+  blocks away is a real tell that a fight has started.
+- **Perches are REAL rooftops** taken from the city's own cover boxes (`top >= 14`, capped at 240
+  points). Coordinates are copied as numbers, so a torn-down city leaves no stale references.
+- **They ROOST.** `world.dayT` drives it: measured 55/64 perched at night vs 10/64 by day.
+- **Wingbeat is free** — the geometry is two swept triangles and the beat is the instance's Y
+  scale, so a wing flap costs nothing beyond the matrix that was already being written.
+- `setQuality(tier)` trims the flock FIRST (18 birds / no litter at tier 0) — atmosphere yields
+  before anything the player is aiming at. Sized for READABILITY not zoology (a true-scale gull is
+  under a metre at 1u≈0.19m and vanishes against a grey city). Ref `wwa-streets-birds.png`.
+
 ## THE STREETS (2026-07-25) — "the streets are a mess", fixed (docs/THE_MAP_MAKER.md)
 - **⚠ THE LOT IS NOT THE CELL.** Roads are CENTRED on cell boundaries, so a 22u street takes 11u
   out of the cell each side — but `buildTiles` handed builders the WHOLE cell, so a tile that used

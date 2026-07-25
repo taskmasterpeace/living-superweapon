@@ -598,3 +598,56 @@ Refs: `wwa-streets-before.png`, `wwa-streets-after.png`.
 ⚠ The ATLAS render loop caught its exceptions with a bare `console.error`, which at 60fps is the
 same freeze the game's repeated-error law exists to prevent. It throttles now, and `world.orbit`
 is guarded against a null camera.
+
+---
+
+## THE LIVING STREET (2026-07-25) — birds, and what makes them worth their cost
+
+A city that generates perfectly and then sits there is still a diorama. `engine/wildlife.js` adds
+the two cheapest things that read as *inhabited* from any camera: birds over the rooftops, and
+litter blowing along the kerb.
+
+### The optimisation is the architecture, not a trick
+
+Two `InstancedMesh`es and two fixed-size pools of typed arrays, **allocated once in the World
+constructor and never again**. A city rebuild calls `setCity(arena, cover, world)`, which refills
+the perch list and re-seeds positions in place — no allocation, no disposal, no churn. Verified
+across ten consecutive city rebuilds: still exactly one bird mesh and one litter mesh on the
+scene, and scene children and geometry counts do not grow.
+
+Measured cost: **0.047ms per tick, 0.9% of a rendered frame.** A 45-second AI-vs-AI fight in a
+generated city ran p50 5.2ms, p99 15.1ms, **0 frames over 50ms**.
+
+The wingbeat is the part worth stealing: the bird is two swept triangles lying flat, and the beat
+is the instance's **Y scale**. Squashing it drops the wingtips, which reads as a flap from any
+real distance — and it costs nothing, because the matrix was being written anyway.
+
+⚠ It is ticked from `world.render()`, not from `game.update`. The ATLAS tool is a World with no
+Game, and the streets should be alive in the tool as well as in a match. That one decision is why
+neither page needed any wiring.
+
+### Why they aren't decoration
+
+`game.noise()` — the same broadcast the AI hears for explosions, solid hits and KOs — calls
+`wildlife.scare(x, z, r)`. Perched birds bolt, flying ones bank away and climb. Measured in one
+fight: **85 scare calls, peaking at 38 of 64 birds fleeing at once.** A flock coming off a roof
+two blocks away is a genuine tell that something has started over there, produced by the same
+event that makes a bot turn its head.
+
+They perch on **real rooftops** taken from the city's own cover boxes (anything with a `top` of 14
+or more, capped at 240 candidates so the pick stays cheap). Coordinates are copied out as plain
+numbers, so a torn-down city can never leave a stale reference behind. And they **roost**:
+`world.dayT` drives it, measured at 55 of 64 perched at night against 10 by day.
+
+### Two rulings worth writing down
+
+**Atmosphere yields first.** `setQuality(tier)` trims the flock to 18 birds and no litter at tier
+0. The adaptive renderer should never drop a shadow the player is reading before it drops a bird
+they are not.
+
+**Sized for readability, not for zoology.** At 1u ≈ 0.19m a true-scale gull is under a metre and
+simply disappears against a grey city from the match camera. These are scaled up until they read
+as birds from both the isometric match view and the map tool's wide shot, which is the only reason
+to draw them at all.
+
+Ref: `wwa-streets-birds.png`.

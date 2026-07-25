@@ -1032,6 +1032,9 @@ export class Game {
   // a block over and vanish. `loud` ≈ 1 is a solid punch, 2+ is a detonation.
   noise(pos, loud = 1, src = null) {
     if (this.soundscape && this.soundscape.heard) this.soundscape.heard(loud, pos, this.player);   // the ambience DIRECTOR hears everything the bots do (manual §20)
+    // THE BIRDS HEAR IT TOO. Same broadcast, so a flock breaking off a roof two blocks away is a
+    // real tell that a fight has started — not an animation someone remembered to trigger.
+    if (this.world.wildlife) this.world.wildlife.scare(pos.x, pos.z, 70 + loud * 60);
     if (!this.entities.length) return;
     for (const e of this.entities) {
       if (!e.ai || !e.alive || e === src) continue;

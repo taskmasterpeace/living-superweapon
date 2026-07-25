@@ -1,6 +1,7 @@
 // WAR WORLD: ASCENDANTS — 3D world: renderer, scene, iso camera, lights, arena, bloom.
 import { FogMixin } from './fog.js';
 import { RoadMixin } from './roads.js';
+import { Wildlife } from './wildlife.js';
 import * as THREE from 'three';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
@@ -64,6 +65,11 @@ export class World {
     this._buildGrass();
     this._buildFogOfWar();
     this._buildComposer();
+    // THE LIVING STREET — birds and blown litter. Allocated ONCE here and only ever re-seeded, so
+    // a city rebuild costs nothing. Ticked in render(), which is why the ATLAS tool (a World with
+    // no Game) gets a sky full of birds without any wiring of its own.
+    this.wildlife = new Wildlife(this.scene);
+    this.wildlife.setCity(this.ARENA, this.cover, this);
 
     addEventListener('resize', () => this.resize());
     this.resize();
@@ -745,6 +751,8 @@ export class World {
     this.groundGeo.computeVertexNormals(); this._normalsDirty = false;
     // greenery from what the tiles asked for
     this._buildGreenery([], treeSpots, 0);
+    // re-seed the birds onto THIS city's rooftops (no allocation — see wildlife.js)
+    if (this.wildlife) this.wildlife.setCity(this.ARENA, this.cover, this);
   }
 
   // --- the GREEN layer: real TREES in ORGANIZED rows (trunks + canopies, two instanced
@@ -1451,10 +1459,11 @@ export class World {
     if (this._normalsDirty) { this._normalsDirty = false; this.groundGeo.computeVertexNormals(); }   // one recompute per frame, no matter how many craters landed
     if (this._grassTime) this._grassTime.value = now / 1000;   // wind
     if (this._waterT) this._waterT.value = now / 1000;         // harbor swell
+    const sdt = Math.min((now - (this._lastRender || now)) / 1000, 0.1);
     if (this._spinners.length) {
-      const sdt = Math.min((now - (this._lastRender || now)) / 1000, 0.1);
       for (let i = 0; i < this._spinners.length; i++) this._spinners[i].obj.rotation.z += this._spinners[i].rate * sdt;
     }
+    if (this.wildlife) this.wildlife.update(sdt);   // birds + litter — see wildlife.js
     if (this._lastRender) {
       const d = Math.min(now - this._lastRender, 100);
       this._ema = this._ema * 0.9 + d * 0.1;
@@ -1484,6 +1493,7 @@ export class World {
     this.bloom.strength = t === 2 ? 0.66 : t === 1 ? 0.55 : 0.42;
     this.bloom.enabled = t > 0;                       // potato tier: drop the whole bloom chain
     if (this.sun) this.sun.castShadow = t > 0;        // ...and the shadow pass
+    if (this.wildlife) this.wildlife.setQuality(t);   // trim the flock before anything you aim at
   }
   get fps() { return this._ema ? Math.round(1000 / this._ema) : 60; }
 
