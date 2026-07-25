@@ -101,6 +101,10 @@ export class WhiteRoom {
     this.M = { wall, floor, trim, steel, gold, live };
 
     const add = (m) => { grp.add(m); return m; };
+    // structure the blue room does without: `_cover` carries the pieces that are also COLLIDERS,
+    // `_extra` the purely decorative ones. Declared here because the roof beams are built before
+    // the pillars are — an empty list is cheaper than remembering the build order.
+    this._cover = []; this._extra = [];
     // ⚠ THE FLICKER WAS THREE FLAT SURFACES FIGHTING FOR THE SAME MILLIMETRE. The floor sat at
     // y=0.06 and a GridHelper at y=0.09 — while every fighter's contact shadow is pinned at
     // groundY+0.05. At 1:1 scale (1u ≈ 0.19m) those are 10 and 30 MILLIMETRES apart, far inside
@@ -112,7 +116,10 @@ export class WhiteRoom {
     // tie on purpose — anything drawn AT floor level wins, by rule rather than by luck.
     floor.map = this._floorTexture();
     sinkSurface(floor);           // see THE SURFACE-SEPARATION LAW in core/util.js
-    const fl = add(new THREE.Mesh(new THREE.PlaneGeometry(ROOM * 2, ROOM * 2), floor));
+    // ⚠ the floor runs WELL past the walls. The camera-side walls are deliberately low so you can
+    // see in — which means you see over them too, and with the city hidden what was out there was
+    // pure black void. The room read as a slab floating in nothing.
+    const fl = add(new THREE.Mesh(new THREE.PlaneGeometry(ROOM * 5, ROOM * 5), floor));
     fl.rotation.x = -Math.PI / 2; fl.position.y = 0; fl.receiveShadow = true;
 
     // ⚠ THE ISOMETRIC INTERIOR PROBLEM. An indoor room in a fixed isometric game has two surfaces
@@ -146,11 +153,10 @@ export class WhiteRoom {
     // peripheral vision, and nothing you have to look past.
     for (let i = -1; i <= 1; i++) {
       const b = add(new THREE.Mesh(new THREE.BoxGeometry(ROOM * 2, 0.7, 1.4), steel));
-      b.position.set(0, CEIL + 3, i * 78); b.castShadow = false;
+      b.position.set(0, CEIL + 3, i * 78); b.castShadow = false; this._extra.push(b);
     }
 
     // PILLARS — real cover, so line of sight and dodging mean something indoors
-    this._cover = [];
     for (const [px, pz] of [[-58, -46], [58, -46], [-58, 46], [58, 46], [0, -74], [0, 74]]) {
       const p = add(new THREE.Mesh(new THREE.BoxGeometry(13, WALL_H, 13), wall));
       p.position.set(px, WALL_H / 2, pz); p.castShadow = true; p.receiveShadow = true;
@@ -167,7 +173,7 @@ export class WhiteRoom {
                    hp: 1e9, maxHp: 1e9, y0: gy, w: 46, d: 26, destroyed: false, _lab: true };
       W.cover.push(co); W.coverAll.push(co); this._cover.push(co);
       const rail = add(new THREE.Mesh(new THREE.BoxGeometry(46, 4, 0.8), trim));
-      rail.position.set(s * 92, gy + 3.4, s > 0 ? -13 : 13);
+      rail.position.set(s * 92, gy + 3.4, s > 0 ? -13 : 13); this._extra.push(rail);
     }
 
     // ⚠ EVERYTHING BELOW THIS LINE IS DRILL APPARATUS, and it is SWITCHED OFF in the blue room.
@@ -195,7 +201,7 @@ export class WhiteRoom {
       W.cover.push(co); W.coverAll.push(co); this._cover.push(co);
     }
     const lip = add(new THREE.Mesh(new THREE.BoxGeometry(ROOM * 2 - 6, 3.2, 0.9), trim));
-    lip.position.set(0, F2 + 2.6, -14.5);
+    lip.position.set(0, F2 + 2.6, -14.5); this._extra.push(lip);
     // ⚠ STAIRS, NOT A RAMP. The first version drew a tilted slab and registered nothing, so it was
     // scenery you fell straight through. Physics is AABB — a rotated box has no honest collider —
     // and the stand-on-top test only catches you when you are already within 2.5u of the surface,
@@ -296,8 +302,12 @@ export class WhiteRoom {
     // have handed the player a car they could not see. Same lesson as the ambulance that survived
     // the hide list: the room must take the DATA away, not just the pixels. Stashed, and put back
     // in close() exactly as found so the theater you travelled to is untouched.
-    this._props = { cars: W.cars, planes: W.planes, rocks: W.rocks };
+    // ⚠ AND THE TREES. propInReach walks four sources, not three: cars, planes, rocks, and the
+    // instanced street trees via `_gOn`. Clearing the first three still left the hall offering
+    // "G HOIST" for a tree standing in a hidden street. Every source, or the bug just moves.
+    this._props = { cars: W.cars, planes: W.planes, rocks: W.rocks, gOn: W._gOn };
     W.cars = []; W.planes = []; W.rocks = [];
+    if (W._gOn) W._gOn = new W._gOn.constructor(W._gOn.length);   // same type, all zeroes
 
     // ⚠ NOTHING IS HIDDEN IN A TRAINING HALL. The vision system runs even with fog off, and the
     // pillars are real cover — so targets standing in plain sight behind a column picked up "last
@@ -341,7 +351,11 @@ export class WhiteRoom {
     if (this._mirrorEl) { this._mirrorEl.remove(); this._mirrorEl = null; this._mirrorHidden = undefined; }
     for (const m of (this._hidden || [])) if (m) m.visible = true;
     this._hidden = null;
-    if (this._props) { W.cars = this._props.cars; W.planes = this._props.planes; W.rocks = this._props.rocks; this._props = null; }
+    if (this._props) {
+      W.cars = this._props.cars; W.planes = this._props.planes; W.rocks = this._props.rocks;
+      if (this._props.gOn) W._gOn = this._props.gOn;
+      this._props = null;
+    }
     if (this._prevVision) { g.updateVision = this._prevVision; this._prevVision = null; }
     if (this._prevFog != null) W.setFogEnabled(this._prevFog);
     if (W.wildlife) W.wildlife.enabled = true;
@@ -488,10 +502,24 @@ export class WhiteRoom {
   // machinery is physically absent from the blue room, not merely idle
   _paintShell() {
     if (!this.M) return;
+    const W = this.g.world;
     const blue = this.room === 'blue';
     this.M.wall.color.set(blue ? '#b9c6cf' : '#cfcbc2');
     this.M.floor.color.set(blue ? '#a9b6c0' : '#c2beb5');
     for (const m of (this._apparatus || [])) m.visible = !blue;
+    for (const m of (this._extra || [])) m.visible = !blue;
+    // ⚠ AN EMPTY ROOM MEANS EMPTY (Robert: "no this is messed up… just make an empty room").
+    // Pillars, gantries, the mezzanine, the staircase and the roof beams are WHITE-ROOM structure.
+    // ⚠ COVER MUST FOLLOW VISIBILITY — a hidden mesh whose record is still in world.cover is an
+    // INVISIBLE WALL, the same class of bug as the city props the room used to leave lying around.
+    // Both move together here, which is the only reason this can't drift.
+    for (const co of (this._cover || [])) {
+      if (co.mesh) co.mesh.visible = !blue;
+      const i = W.cover.indexOf(co);
+      if (blue) { if (i >= 0) W.cover.splice(i, 1); }
+      else if (i < 0) W.cover.push(co);
+    }
+    if (W.refreshFogBoxes) W.refreshFogBoxes();
     if (blue) for (const s of this.sleds) if (s.f) { this._killFighter(s.f); s.f = null; }
   }
 
