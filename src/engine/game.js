@@ -8,6 +8,7 @@ import { VFX } from './vfx.js';
 import { Projectiles } from './projectiles.js';
 import { buildWeapon, weaponProficiency, PROP_WEIGHT, liftCapacityOf, bodyWeight, Fighter } from './entity.js';
 import { AI } from './ai.js';
+import { BaseRoom } from './baseroom.js';
 import { Minion, Construct } from './summons.js';
 import { MeleeSystem } from './melee.js';
 import { Pedestrians } from './pedestrians.js';
@@ -113,6 +114,18 @@ const MODE_IMPL = {
     tick(g, dt) { if (g.lab) g.lab.update(dt); },
     onKO() {}, isOver() { return null; },
     hud() { return { type: 'lab' }; },
+  },
+  // THE BASE — your own HQ, walkable. Indoor, non-destructible, and every wall is a consequence
+  // of the facility grid in data/base.js: a room exists because a slot is dug, a doorway exists
+  // because two dug rooms touch. Nobody in here is hostile — it is a place, not an arena.
+  base: {
+    setup(g) {
+      g.ms = { base: true };
+      g.baseRoom = new BaseRoom(g);
+    },
+    tick(g, dt) { if (g.baseRoom) g.baseRoom.update(dt); },
+    onKO() {}, isOver() { return null; },
+    hud() { return { type: 'base' }; },
   },
   // THE INVITATIONAL — one bracket match: best-of-3 ELIMINATION rounds (last side standing takes
   // the round, nobody respawns mid-round), team damage LIVE. The Tournament object rides in o.tourney.
@@ -1291,6 +1304,7 @@ export class Game {
   // everywhere, which is the whole point.
   clearTransients() {
     if (this.lab) { try { this.lab.close(); } catch (e) {} this.lab = null; }   // the white room is a transient too
+    if (this.baseRoom) { try { this.baseRoom.close(); } catch (e) {} this.baseRoom = null; }   // ⚠ and so is the BASE — its walls are real cover records; leaving them behind is the invisible-wall bug
     if (this.comic) { try { this.comic.clear(); } catch (e) {} }              // captions must not outlive their match
     this._gen = (this._gen | 0) + 1;                  // retire every in-flight deferred callback
     if (!this._timers) this._timers = new Set();
