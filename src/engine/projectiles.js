@@ -1025,16 +1025,32 @@ export class Projectiles {
       if (a.team === b.team) continue;
       const D = a.muzzle.distanceTo(b.muzzle);
       if (D > (a.maxLen + b.maxLen) * 0.95 || D < 10) continue;
+      // ⚠ THE CLASH WAS 2D AND `D` WAS 3D, WHICH SILENTLY KILLED IT IN THE AIR. The horizontal
+      // deltas were divided by the THREE-dimensional distance, so `(abx, abz)` was not a unit
+      // vector — it was foreshortened by cos(elevation) — and the facing dot then threw `dir.y`
+      // away as well. The tested value was therefore ≈cos²(elev) against a 0.4 gate: **two beams
+      // more than ~51° of elevation apart could not clash at all, and nothing said so.** A flier
+      // duelling someone on the ground is the ordinary case, not an exotic one.
+      const aby = (b.muzzle.y - a.muzzle.y) / D;
       const abx = (b.muzzle.x - a.muzzle.x) / D, abz = (b.muzzle.z - a.muzzle.z) / D;
-      if (a.dir.x * abx + a.dir.z * abz < 0.4) continue;          // a must aim at b
-      if (b.dir.x * -abx + b.dir.z * -abz < 0.4) continue;        // b must aim at a
+      if (a.dir.x * abx + a.dir.y * aby + a.dir.z * abz < 0.4) continue;      // a must aim at b
+      if (b.dir.x * -abx + b.dir.y * -aby + b.dir.z * -abz < 0.4) continue;   // b must aim at a
       if (a._clashOther !== b) { a._clashT = 0.5; a._clashOther = b; b._clashOther = a; }
       const pa = a.clashPower(), pb = b.clashPower(), tot = pa + pb || 1;
       a._clashT = clamp(a._clashT + ((pa - pb) / tot) * 0.85 * dt, 0, 1);
       const t = a._clashT;
-      const cx = a.muzzle.x + (b.muzzle.x - a.muzzle.x) * t, cy = (a.muzzle.y + b.muzzle.y) * 0.5, cz = a.muzzle.z + (b.muzzle.z - a.muzzle.z) * t;
+      // ⚠ AND THE STRUGGLE POINT HAS TO RIDE THE SAME AXIS. `cy` was the MIDPOINT of the two
+      // muzzles regardless of where the struggle actually sat, so a clash that a stronger fighter
+      // was pushing uphill drew its collision flare at the wrong height. It interpolates by `t`
+      // now, exactly like x and z.
+      const cx = a.muzzle.x + (b.muzzle.x - a.muzzle.x) * t,
+            cy = a.muzzle.y + (b.muzzle.y - a.muzzle.y) * t,
+            cz = a.muzzle.z + (b.muzzle.z - a.muzzle.z) * t;
       a.clashLen = D * t; b.clashLen = D * (1 - t); a.clashing = b.clashing = true;
-      a.dir.set(abx, 0, abz); b.dir.set(-abx, 0, -abz);
+      // ⚠ FLATTENING BOTH BEAMS TO y=0 was the other half of the same bug: even when a clash did
+      // form between fighters at different heights, both beams snapped horizontal and no longer
+      // pointed at each other or at their own struggle point. Aim them along the real 3D axis.
+      a.dir.set(abx, aby, abz).normalize(); b.dir.set(-abx, -aby, -abz).normalize();
       a.caster.ki = Math.max(0, a.caster.ki - 8 * dt); b.caster.ki = Math.max(0, b.caster.ki - 8 * dt);
       const rad = 2.5 + Math.min(pa, pb) * 0.5;
       game.particles.burst(cx, cy, cz, { count: 5, speed: 26, life: 0.32, size: 3.2, color: ['#fff', a.color, b.color], drag: 2, up: 3 });

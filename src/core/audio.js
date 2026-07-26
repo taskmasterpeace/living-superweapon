@@ -21,6 +21,25 @@ const rand2 = (a, b) => a + Math.random() * (b - a);
 import { SampleBank, HOT_SET } from './samples.js';
 
 const fin = (v, d = 1) => (Number.isFinite(v) ? v : d);
+
+/**
+ * ⚠ TWO SUSTAIN CONTRACTS EXISTED AND CALLERS COULD NOT TELL WHICH ONE THEY HAD. The synthesised
+ * `charge()` / `beamVoice()` handles answer to **`ramp(level)`**; a recorded `sampleLoop` handle
+ * answers to **`set(level, pos)`**. `charge()`'s own comment claims both in the space of three lines.
+ * `abilities.js` calls `st.sfx.ramp(...)` every frame of a held charge, so the moment the recording
+ * won the race the beam threw `st.sfx.ramp is not a function` **into the frame loop** — breaking the
+ * one audio law this project holds absolutely: audio must never throw into the game loop.
+ *
+ * It was latent only because the buffers were not decoded at boot; putting them in `HOT_SET` (which
+ * the "every attack is a recording" ruling requires) made it fire on the FIRST charge of every match.
+ * One adapter, at the two places a recorded loop is handed out, so a caller may use either name.
+ */
+function adaptLoop(rec) {
+  if (!rec) return rec;
+  if (typeof rec.ramp !== 'function' && typeof rec.set === 'function') rec.ramp = (v, pos) => rec.set(v, pos);
+  if (typeof rec.set !== 'function' && typeof rec.ramp === 'function') rec.set = (v, pos) => rec.ramp(v, pos);
+  return rec;
+}
 const BUS_DEFAULT = { music: 0.34, sfx: 1.0, voice: 0.92, ambient: 0.52, ui: 0.7 };
 
 export class AudioBus {
@@ -342,7 +361,7 @@ export class AudioBus {
     // Passing `null` defeats the `= {}` default and the destructure throws, which is precisely the
     // "audio must never throw into the game loop" law. Caught by the analyser test, not by reading.
     const rec = this.sampleLoop && this.sampleLoop('engine.charge', {});
-    if (rec) return rec;
+    if (rec) return adaptLoop(rec);
     if (!this.ok || this.muted) return null;
     const t = this.t;
     const g = this.ctx.createGain();
@@ -456,7 +475,7 @@ export class AudioBus {
     // ⚠ A RECORDED BEAM. Same handle contract as charge — `set(intensity, pos)` / `stop()` — so a
     // beam losing a clash still audibly strains. `spaceEngineLow` is a real sustained recording.
     const rec = this.sampleLoop && this.sampleLoop('engine.low', { pos });
-    if (rec) return rec;
+    if (rec) return adaptLoop(rec);
     const t = this.t;
     const g = this.ctx.createGain();
     g.gain.setValueAtTime(0.0001, t);
