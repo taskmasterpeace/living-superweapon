@@ -86,6 +86,27 @@ export const MANIFEST = {
   'scratch': { f: ['scratch_001', 'scratch_002', 'scratch_003'], g: 0.5 },
 
   // ---- stingers (music bus, used sparingly) ----
+  // ---- REAL RECORDINGS FOR THE ATTACK PATHS (2026-07-26) -----------------------------------
+  // Robert: "100% should be wav/mp3, no coded sound effects for any attacks." These are the
+  // families that replace the last synthesised attack voices. CC0 throughout: the RPG Sound Pack
+  // (OpenGameArt) for swings, casting and water, and 80 CC0 Creature SFX for the human reactions.
+  'swing.air':    { f: ['sw_air1', 'sw_air2', 'sw_air3'], g: 0.62, reach: 95, rj: 0.1 },
+  'blade.draw':   { f: ['sw_draw1', 'sw_draw2', 'sw_draw3'], g: 0.55, reach: 90 },
+  'blade.ring':   { f: ['blade_ring'], g: 0.5, reach: 110 },
+  'cast.magic':   { f: ['cast_magic'], g: 0.8, reach: 170 },
+  'cast.spell':   { f: ['cast_spell'], g: 0.8, reach: 180 },
+  'water.splash': { f: ['water1', 'water2', 'water3'], g: 0.75, reach: 130 },
+  'armor.shift':  { f: ['armor1', 'armor2'], g: 0.5, reach: 70 },
+  // human reactions — pain, effort, and the street
+  'v.pain':       { f: ['pain_01', 'pain_02', 'pain_03', 'pain_04', 'pain_05'], g: 0.75, reach: 150 },
+  'v.exert':      { f: ['exert_01', 'exert_02', 'exert_03', 'exert_04', 'exert_05'], g: 0.7, reach: 130 },
+  'v.roar':       { f: ['roar_01', 'roar_02', 'roar_03'], g: 0.9, reach: 200 },
+  'v.howl':       { f: ['howl_01'], g: 0.85, reach: 210 },
+  'v.beast':      { f: ['beast_01', 'beast_02', 'beast_03', 'beast_04', 'beast_05', 'beast_06', 'beast_07'], g: 0.8, reach: 180 },
+  'ped.scream':   { f: ['ped_scream_01', 'ped_scream_02'], g: 0.85, reach: 190 },
+  'ped.gasp':     { f: ['ped_gasp_01'], g: 0.6, reach: 110 },
+  'ped.cough':    { f: ['cough_01', 'cough_02', 'cough_03'], g: 0.65, reach: 100 },
+  'ped.breath':   { f: ['breath_01'], g: 0.5, reach: 80 },
   'sting.wanted': { f: ['jingles_STEEL00', 'jingles_STEEL01', 'jingles_STEEL02', 'jingles_STEEL03', 'jingles_STEEL04'], g: 0.5 },
   'sting.clear': { f: ['jingles_STEEL13'], g: 0.45 },
   'sting.victory': { f: ['jingles_STEEL14', 'jingles_STEEL15', 'jingles_STEEL16'], g: 0.55 },
@@ -97,6 +118,7 @@ export const HOT_SET = [
   'punch.med', 'punch.heavy', 'hit.soft', 'land.flesh', 'land.metal', 'land.soft', 'boom',
   'ki.blast', 'ki.zap', 'ki.release', 'swing.fist', 'swing.blade', 'gun.crack', 'boom.deep',
   'ui.click', 'ui.select', 'ui.error', 'ui.key', 'ui.confirm', 'ui.toggle', 'fx.glitch',
+  'swing.air', 'v.pain', 'v.exert', 'ped.scream', 'water.splash',
   'step.concrete', 'step.grass', 'rubble', 'glass.break', 'fire.roar', 'sting.wanted',
   'sting.clear', 'sting.ko', 'sting.victory', 'book.open', 'book.flip', 'book.close', 'parry',
 ];
@@ -111,7 +133,10 @@ export class SampleBank {
   load(file) {
     if (this.buf.has(file)) return Promise.resolve(this.buf.get(file));
     if (this.pend.has(file)) return this.pend.get(file);
-    const p = fetch(this.base + file + '.ogg')
+    // ⚠ MP3, NOT OGG (2026-07-26). Robert: "100% should be wav/mp3." The library was 258 .ogg
+    // files; it is 300 .mp3 files now, converted with ffmpeg at 96k mono. Same bytes on the wire,
+    // one format everywhere, and it plays in Safari — which .ogg does not, on older versions.
+    const p = fetch(this.base + file + '.mp3')
       .then((r) => { if (!r.ok) throw new Error(String(r.status)); return r.arrayBuffer(); })
       .then((ab) => this.a.ctx.decodeAudioData(ab))
       .then((b) => { this.buf.set(file, b); this.pend.delete(file); return b; })

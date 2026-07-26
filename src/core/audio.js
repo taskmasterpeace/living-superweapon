@@ -168,6 +168,10 @@ export class AudioBus {
   // water taking a body or a blast: a low whump swallowed by a downward-swept noise wash,
   // then two or three droplet blips. Discrete one-shot — never loops (the loop-vs-one-shot rule).
   splash(power = 1, pos = null) {
+    // ⚠ REAL WATER (2026-07-26). This was filtered noise; it is a recording now — CC0 RPG Sound
+    // Pack. The synth stays underneath ONLY as the cold-cache fallback, exactly like every other
+    // discrete sound: `sample()` returns true when it HANDLED the call, so we return early.
+    if (this.sample('water.splash', { pos, gain: Math.min(1.1, 0.5 + (power || 1) * 0.5), rate: 0.85 + Math.random() * 0.3 })) return;
     if (!this.ok || this.muted) return;
     const pg = this._pg(pos, 190); if (!pg) return;
     const o = this.ctx.createOscillator(); o.type = 'sine';
@@ -236,6 +240,9 @@ export class AudioBus {
   }
   // grunt: short pain bark (slams, hard hits)
   grunt(pitch = 1, pos = null) {
+    // ⚠ REAL PAIN. The formant synth stays for SPEECH (no sample library can improvise a sentence),
+    // but a hurt bark is a recording now — 80 CC0 Creature SFX.
+    if (this.sample('v.pain', { pos, gain: 0.8, rate: 0.8 + (fin(pitch, 1) - 1) * 0.5 + Math.random() * 0.12 })) return;
     if (!this.heroVoice) return;
     if (!this.ok || this.muted) return;
     const pg = this._pg(pos, 120); if (!pg) return;
@@ -247,6 +254,8 @@ export class AudioBus {
   }
   // cry: the KO wail — falls away like the fighter does
   cry(pitch = 1, pos = null) {
+    // the KO wail — a real recording, pitched by the character's voice register
+    if (this.sample('v.roar', { pos, gain: 0.85, rate: 0.72 + (fin(pitch, 1) - 1) * 0.45 })) return;
     if (!this.heroVoice) return;
     if (!this.ok || this.muted) return;
     const pg = this._pg(pos, 170); if (!pg) return;
@@ -307,6 +316,18 @@ export class AudioBus {
   // shimmer that grows brighter AND less stable as it fills, and arcing that speeds up.
   // Keeps the {ramp, stop, last} handle contract, so every existing caller is unchanged.
   charge() {
+    // ⚠ A REAL SPOOL-UP, AND IT MUST RETURN THE SAME HANDLE. `charge()` hands back
+    // `{ set(level, pos), stop() }` and callers drive it every frame — so the recorded version has
+    // to honour that contract exactly, not just make a noise. `sampleLoop` already returns that
+    // shape and is registered with the sustain watchdog, so it can be handed straight back.
+    // ⚠ This method takes NO ARGUMENTS. An earlier version of this insert referenced `pos` and
+    // `level` here and would have thrown a ReferenceError into the frame loop on the first charge —
+    // audio must never throw into the game loop.
+    // ⚠ `sampleLoop(name, OPTIONS)` — the second argument is an options OBJECT, not a position.
+    // Passing `null` defeats the `= {}` default and the destructure throws, which is precisely the
+    // "audio must never throw into the game loop" law. Caught by the analyser test, not by reading.
+    const rec = this.sampleLoop && this.sampleLoop('engine.charge', {});
+    if (rec) return rec;
     if (!this.ok || this.muted) return null;
     const t = this.t;
     const g = this.ctx.createGain();
@@ -417,6 +438,10 @@ export class AudioBus {
   // clash audibly strains.
   beamVoice(pos = null) {
     if (!this.ok || this.muted) return null;
+    // ⚠ A RECORDED BEAM. Same handle contract as charge — `set(intensity, pos)` / `stop()` — so a
+    // beam losing a clash still audibly strains. `spaceEngineLow` is a real sustained recording.
+    const rec = this.sampleLoop && this.sampleLoop('engine.low', { pos });
+    if (rec) return rec;
     const t = this.t;
     const g = this.ctx.createGain();
     g.gain.setValueAtTime(0.0001, t);
@@ -474,6 +499,10 @@ export class AudioBus {
 
   // A short electrical ARC — auras, tier-ups, lightning, anything that should spit.
   arc(power = 1, pos = null) {
+    // ⚠ RECORDED ARC. Electricity was synthesised; `fx.glitch` and `fx.forcefield` are real
+    // recordings and read far better as a discharge than a noise burst does.
+    if (this.sample(Math.random() < 0.5 ? 'fx.glitch' : 'fx.forcefield',
+                    { pos, gain: 0.55 * fin(power, 1), rate: 0.85 + Math.random() * 0.5 })) return;
     power = fin(power, 1);
     if (!this.ok || this.muted) return;
     const pg = this._pg(pos, 170); if (!pg) return;
@@ -684,6 +713,8 @@ export class AudioBus {
     }
   }
   power(up = true) {
+    // ⚠ a real cast, not a swept oscillator
+    if (this.sample(up ? 'cast.spell' : 'cast.magic', { gain: 0.7, rate: up ? 1 : 0.8 })) return;
     if (!this.ok || this.muted) return;
     const o = this.ctx.createOscillator(); o.type = 'sawtooth';
     o.frequency.setValueAtTime(up ? 200 : 600, this.t);

@@ -92,8 +92,11 @@ export class Pedestrians {
     this.mesh.setMatrixAt(i, _m4); this.head.setMatrixAt(i, _m4);
   }
 
-  // the soundscape handle, set by game so blast()/scare() can speak without a game reference
+  // the soundscape AND audio handles, set by game so blast()/scare() can speak without a game ref
   set soundscape(v) { this._ss = v; }
+  // ⚠ the sample bank lives on `audio`, and the module needs it directly — the recorded scream and
+  // gasp below are played by the pedestrian layer itself, not routed through the speech synth.
+  set audio(v) { this._audio = v; }
   scare(x, z, r) {
     const r2 = r * r;
     for (let i = 0; i < COUNT; i++) {
@@ -102,7 +105,10 @@ export class Pedestrians {
       if (dx * dx + dz * dz > r2) continue;
       this.state[i] = FLEE; this.t[i] = 2.2 + Math.random() * 1.6;
       this.dir[i] = Math.atan2(dx, dz) + (Math.random() - 0.5) * 0.5;
-      if (this._ss && Math.random() < 0.35) this._ss.say({ x: this.px[i], z: this.pz[i] }, 'fear', { urgent: true });
+      // a recorded gasp on the turn — the moment a block notices
+      const _q = { x: this.px[i], z: this.pz[i] };
+      if (Math.random() < 0.35 && !(this._audio && this._audio.sample && this._audio.sample('ped.gasp', { pos: _q, gain: 0.6, rate: 0.85 + Math.random() * 0.4 })))
+        { if (this._ss) this._ss.say(_q, 'fear', { urgent: true }); }
     }
   }
   // THE HERO SIDE. In a country where vigilantism is LEGAL, a clean takedown — a rival dropped with
@@ -129,7 +135,12 @@ export class Pedestrians {
       const wasArmed = this.state[i] === ARMED;
       this.state[i] = DOWN; this.t[i] = 4.5; this._write(i); downed++;
       // A PERSON GOING DOWN SCREAMS. This is the sound that should make you feel it.
-      if (this._ss && downed <= 3) this._ss.say({ x: this.px[i], z: this.pz[i] }, 'scream', { urgent: true, gain: 0.5 });
+      // ⚠ A REAL SCREAM (2026-07-26). The formant synth improvises SPEECH, which no sample library
+      // can do — but a scream is not speech, it is a sound, and a recording of one is simply better.
+      // CC0, 80 Creature SFX. The synthesised bark stays as the fallback when the bank is cold.
+      const _p = { x: this.px[i], z: this.pz[i] };
+      if (downed <= 3 && !(this._audio && this._audio.sample && this._audio.sample('ped.scream', { pos: _p, gain: 0.9, rate: 0.9 + Math.random() * 0.3 })))
+        { if (this._ss) this._ss.say(_p, 'scream', { urgent: true, gain: 0.5 }); }
       // A FRESH CORPSE BREAKS NERVE. Seeing one of their own fall — especially one who dared to
       // draw — scatters the crowd: panic spikes, the mob's bravado collapses.
       this._panic = Math.max(this._panic, wasArmed ? 4.5 : 3);

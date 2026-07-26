@@ -106,6 +106,7 @@ game.uinav = uinav;
 const soundscape = new Soundscape(audio);
 game.soundscape = soundscape;
 game.peds.soundscape = soundscape;
+game.peds.audio = game.audio;          // the sample bank, for recorded screams and gasps
 
 const tutorial = new Tutorial(game, hud);
 // ---- ONLINE: rooms + netcode (Supabase Realtime transport) ----
