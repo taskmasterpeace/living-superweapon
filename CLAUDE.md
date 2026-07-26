@@ -1406,6 +1406,45 @@ Four laws, three of them the same idea: **a thing must not outlive the match tha
 - `training` survives as an INTERNAL mode with no card: the tutorial (`hud.onTutorial`) and the
   atlas tile proving ground (`hud.onProvingGround`) both still enter it.
 
+## AUDIO: EVERY ATTACK IS A RECORDING (2026-07-26)
+- **Robert reversed the "synthesised by design" ruling**: *"100% should be wav/mp3, no coded sound
+  effects for any attacks."* That earlier note was my reasoning, not a constraint.
+- **THE LIBRARY IS 100% MP3** — 300 files, converted with ffmpeg at 96k mono, and it came out
+  **SMALLER than the .ogg it replaced (6MB → 4MB)**. One format everywhere, and it plays in Safari,
+  which .ogg does not on older versions. `SampleBank` fetches `.mp3` now.
+- **DOWNLOADED, all CC0, all verified before use**: *80 CC0 Creature SFX* (OpenGameArt) for the human
+  reactions the library never had — scream, hurt, grunt, cough, breath, roar — and the *RPG Sound
+  Pack* (CC0) for real recorded swings, casting and water. ⚠ Kenney's Voiceover Pack and Sci-Fi
+  Sounds were fetched and **REJECTED**: the voiceover pack is game-show announcer words and the
+  sci-fi pack was already present. Downloading something is not the same as it being useful.
+- **SIX ATTACK PATHS WERE STILL CODE-GENERATED** and are now sample-first: the ki charge, the beam
+  voice, the electric arc, water splash, power up/down, and the pain grunt / KO cry. The synth
+  survives ONLY as the cold-cache fallback — `sample()` returns true when it HANDLED the call.
+- **Measured through an analyser on the master bus: all 16 attack sounds play FROM A FILE**, 72/72
+  manifest families decode, 0 audio 404s.
+- **PEDESTRIANS SCREAM FOR REAL.** The formant synth stays for SPEECH (no sample library improvises
+  a sentence, and that engine is why the street talks at all) — but a scream is a sound, not speech.
+  `peds.audio` is wired in main.js so the layer plays recordings directly.
+- ⚠ **`sampleLoop(name, OPTIONS)` TAKES AN OPTIONS OBJECT.** Passing `null` defeats the `= {}`
+  default and the destructure THROWS — breaking the "audio must never throw into the game loop" law
+  in the very commit meant to honour it. Both `charge()` and `beamVoice()` had it; caught by the
+  analyser test, not by re-reading.
+- **Still synthesised, deliberately, and none are attacks**: the two-tone siren, the radio filter
+  chain (a FILTER, not a sound), squelch, the PA hailer, the KMK 9 sting, and the formant speech.
+
+## THE DIRECTION TRIANGLE (2026-07-26)
+- A small solid triangle on the you-are-here ring (`game._pmTri`), brightening with speed.
+  ⚠ Distinct from `faceWedge`, which is a wide arc on the FIGURE's ground rig showing body yaw —
+  this is the PLAYER's heading on the mark, readable where a 1.4u arc is a smudge. The mark is in
+  WORLD space, so the heading applies directly with no counter-rotation.
+- ⚠ **FOUR TEST VERSIONS WERE WRONG BEFORE THE FEATURE EVER WAS.** Writing `facing`, then `aim`,
+  then overriding `controlPlayer` were all silently overwritten further down the frame (`facing` is
+  a damped yaw chasing the aim; the aim is rewritten from the mouse every frame). Each run printed
+  the same value four times and read exactly like a broken triangle. **Assert the INVARIANT** —
+  wherever the player faces, the triangle points there — sampled over a live fight: worst error
+  0.00° over 24 samples. Same lesson as the orbit ceiling: drive the gate, or assert the
+  relationship rather than the value.
+
 ## THE UNSEEN THINGS, THE PSYCHOLOGIST, AND THE FIRM (2026-07-26)
 - **`data/medical.js` · `data/org.js` · `data/names.js`.** Console: `team` (found / market / week /
   chart / examine / couch).
