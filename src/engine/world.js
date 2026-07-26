@@ -54,9 +54,17 @@ export class World {
     this.camDir = new THREE.Vector3(0.86, 0.92, 0.86).normalize(); // iso-ish angle
     this.camDist = 260;
     const asp = innerWidth / innerHeight;
-    this.camera = new THREE.OrthographicCamera(
+    // ⚠ `this.camera` IS A POINTER TO THE ACTIVE CAMERA, and that is the whole architecture of the
+    // POWERWORLD chase view. Eight places read `world.camera` (projection, the composer's RenderPass,
+    // the print pass's uniforms, screenToGround, the occlusion corridor…) and every one of them stays
+    // correct with no edit as long as the pointer is what moves. The alternative — teaching each
+    // reader which camera to use — is eight chances to miss one.
+    this.camOrtho = new THREE.OrthographicCamera(
       -this.frustum * asp, this.frustum * asp, this.frustum, -this.frustum, 1, 1400
     );
+    this.camChase = null;                 // built on first use — a city session never pays for it
+    this.camera = this.camOrtho;
+    this.camMode = 'iso';
     this._shake = 0; this.shakeV = new THREE.Vector3();
 
     this._buildLights();
@@ -1211,9 +1219,10 @@ export class World {
     this.composer.setSize(w, h);
     if (this.print) this.print.setSize(w * this.renderer.getPixelRatio(), h * this.renderer.getPixelRatio());
     this.bloom.setSize(w * 0.5, h * 0.5);
-    this.camera.left = -this.frustum * asp; this.camera.right = this.frustum * asp;
-    this.camera.top = this.frustum; this.camera.bottom = -this.frustum;
-    this.camera.updateProjectionMatrix();
+    // ⚠ ONE PLACE, because these four properties exist only on an orthographic camera and the chase
+    // view swaps a perspective one in — writing `left/right/top/bottom` onto it is silently ignored
+    // and the aspect never updates. `_applyProj()` asks which camera it is holding.
+    this._applyProj();
     if (this.bloom) this._applyQuality();   // re-derive the pixel cap for the new window size
   }
 
@@ -1227,14 +1236,16 @@ export class World {
   // tool so you can get under a bridge or look along a runway. Same orthographic camera — only
   // `camDir` and the frustum change, so nothing else in the pipeline has to know about it.
   orbit(cam) {
+    this.setCameraMode('iso');   // the map tool and every cinematic are isometric — see follow()
     const p = Math.max(0.12, Math.min(1.52, cam.pitch));
     this.camDir.set(Math.sin(cam.yaw) * Math.cos(p), Math.sin(p), Math.cos(cam.yaw) * Math.cos(p)).normalize();
     this.camTarget.set(cam.x || 0, 0, cam.z || 0);
     this.frustum = this.frustumTarget = this._baseFrustum = cam.zoom;
     const asp = innerWidth / innerHeight;
-    this.camera.left = -this.frustum * asp; this.camera.right = this.frustum * asp;
-    this.camera.top = this.frustum; this.camera.bottom = -this.frustum;
-    this.camera.updateProjectionMatrix();
+    // ⚠ ONE PLACE, because these four properties exist only on an orthographic camera and the chase
+    // view swaps a perspective one in — writing `left/right/top/bottom` onto it is silently ignored
+    // and the aspect never updates. `_applyProj()` asks which camera it is holding.
+    this._applyProj();
     this.camPos.copy(this.camDir).multiplyScalar(this.camDist).add(this.camTarget);
     this.camera.position.copy(this.camPos);
     this.camera.lookAt(this.camTarget);
@@ -1244,6 +1255,10 @@ export class World {
   }
 
   follow(target, dt) {
+    // ⚠ THE DRIVE FUNCTION CLAIMS ITS OWN CAMERA. `follow` IS the isometric view, so whichever
+    // function runs decides the mode — no separate mode flag to keep in sync, and leaving a
+    // dimension cannot strand the chase camera on a city fight.
+    this.setCameraMode('iso');
     // target: Vector3 (player world pos). Ease camera focus toward it.
     this.camTarget.x = damp(this.camTarget.x, target.x, 8, dt);
     this.camTarget.y = damp(this.camTarget.y, 6 + target.y * 0.4, 6, dt);
@@ -1254,9 +1269,10 @@ export class World {
     this.frustumTarget = damp(this.frustumTarget, this._baseFrustum || 78, 3.5, dt);
     this.frustum = damp(this.frustum, this.frustumTarget, 10, dt);
     const asp = innerWidth / innerHeight;
-    this.camera.left = -this.frustum * asp; this.camera.right = this.frustum * asp;
-    this.camera.top = this.frustum; this.camera.bottom = -this.frustum;
-    this.camera.updateProjectionMatrix();
+    // ⚠ ONE PLACE, because these four properties exist only on an orthographic camera and the chase
+    // view swaps a perspective one in — writing `left/right/top/bottom` onto it is silently ignored
+    // and the aspect never updates. `_applyProj()` asks which camera it is holding.
+    this._applyProj();
 
     this.shakeV.set((Math.random() * 2 - 1), (Math.random() * 2 - 1), (Math.random() * 2 - 1)).multiplyScalar(this._shake);
     this.camPos.copy(this.camDir).multiplyScalar(this.camDist).add(this.camTarget);
@@ -1959,6 +1975,141 @@ export class World {
       else if (this._ema < R * 1.08 && this._qTier < 2) { this._qTier++; this._applyQuality(); this._qCool = 4; }
     }
   }
+  /**
+   * THE PROJECTION, for whichever camera is active. One place, because an orthographic camera is
+   * sized by `left/right/top/bottom` and a perspective one by `fov/aspect` — and three separate
+   * sites in this file were writing the ortho four by hand.
+   */
+  _applyProj() {
+    const asp = innerWidth / innerHeight, c = this.camera;
+    if (c.isOrthographicCamera) {
+      c.left = -this.frustum * asp; c.right = this.frustum * asp;
+      c.top = this.frustum; c.bottom = -this.frustum;
+    } else {
+      c.aspect = asp; c.fov = this._chaseFov || 58;
+    }
+    c.updateProjectionMatrix();
+  }
+
+  /**
+   * SWAP THE ACTIVE CAMERA. Verified live before any of this was written: the existing
+   * `EffectComposer` renders a `PerspectiveCamera` through the identical chain — bloom, ACES tone
+   * mapping and the print pass all simply work — for 0.65ms and **zero new shader programs**. The
+   * swap really is one assignment on the RenderPass; `spaceflight.js` already does the same trick on
+   * the other axis by swapping a whole SCENE into that pass.
+   */
+  setCameraMode(mode) {
+    if (mode === this.camMode) return this.camera;
+    if (mode === 'chase' && !this.camChase) {
+      this.camChase = new THREE.PerspectiveCamera(58, innerWidth / innerHeight, 0.6, 4200);
+      this._chaseFov = 58;
+    }
+    this.camera = mode === 'chase' ? this.camChase : this.camOrtho;
+    this.camMode = mode;
+    // ⚠ the RenderPass holds its OWN reference, so moving the pointer is not enough
+    for (const p of (this.composer ? this.composer.passes : [])) if (p.camera) p.camera = this.camera;
+    this._applyProj();
+    return this.camera;
+  }
+
+  /**
+   * THE LOCK-ON CHASE CAMERA (docs/POWERWORLD.md §9). Sits behind `subject` on the subject→target
+   * axis and frames BOTH bodies, because the whole readability model of this genre is that you can
+   * see the other fighter.
+   *
+   * ⚠ THE TARGET IS PINNED OFF-CENTRE, NOT CENTRED. Centring the opponent puts your own fighter
+   * behind them at range and hides your own wind-up; the offset is what keeps two bodies legible.
+   * ⚠ AND THE OFFSET IS CONVERTED THROUGH `tan(fov/2)`, or it is not a constant offset ON SCREEN —
+   * it would drift every time the FOV widened with speed, which is exactly when you need it stable.
+   * ⚠ ESF's own changelog says it forced FIRST person during melee "so the screen doesn't fuck up"
+   * — the benchmark gave up on this case rather than solve it. There is no reference to copy here.
+   */
+  chase(subject, target, dt) {
+    const c = this.setCameraMode('chase');
+    const S = subject.pos, spd = Math.hypot(subject.vel.x, subject.vel.y, subject.vel.z);
+    // ---- FOV rides speed. BFP exposes FOV as a player dial and the reason is that it is the single
+    // cheapest sensation of pace in the genre: the frame widens as you commit.
+    const k = clamp((spd - 14) / 96, 0, 1);
+    this._chaseFov = damp(this._chaseFov ?? 58, 58 + k * 16, 4, dt);
+    // ---- the axis toward what we are looking at (the foe if there is one, else where we are going)
+    let ax = 0, ay = 0, az = 1;
+    if (target) { ax = target.pos.x - S.x; ay = (target.pos.y + 5) - (S.y + 5); az = target.pos.z - S.z; }
+    else if (spd > 6) { ax = subject.vel.x; ay = subject.vel.y * 0.4; az = subject.vel.z; }
+    else { ax = Math.sin(subject.facing); az = Math.cos(subject.facing); }
+    let L = Math.hypot(ax, ay, az) || 1; ax /= L; ay /= L; az /= L;
+    // ⚠ CLAMP THE PITCH. Full-sphere means the target can be directly overhead, and a camera that
+    // rolls to follow that is nausea. The vertical component is damped, not obeyed.
+    ay = clamp(ay * 0.55, -0.82, 0.82);
+    // ⚠ AND THE DEGENERATE CASE HAS TO BE HANDLED EXPLICITLY. With the target straight up, `ax` and
+    // `az` both go to zero — the axis has no horizontal part to sit behind, the perpendicular is
+    // undefined, and the eye placement collapses. Measured before this fix: with a foe 46u directly
+    // overhead the subject spanned **94.6% of the frame** and sat at y = −2.17, i.e. the camera was
+    // effectively inside him. The screenshot matrix found this; no single-framing test could.
+    // The fix is to borrow the horizontal direction from the subject's own FACING, which always has
+    // one, and blend it in as the axis approaches vertical.
+    const horiz = Math.hypot(ax, az);
+    if (horiz < 0.35) {
+      const w = 1 - horiz / 0.35;
+      ax += Math.sin(subject.facing) * w; az += Math.cos(subject.facing) * w;
+    }
+    L = Math.hypot(ax, ay, az) || 1; ax /= L; ay /= L; az /= L;
+    // ---- DISTANCE, and it is DERIVED, not chosen. A perspective camera at FOV f sees a vertical
+    // extent of `2·D·tan(f/2)` — at 58° that is 1.11·D. To hold two 9.6u fighters AND the gap
+    // between them the frame has to be at least `gap + 2 fighters` tall, so `D ≥ (gap + 20) / 1.11`.
+    // ⚠ THE FIRST VERSION WAS 21 + gap·0.24, WHICH IS 28u AT A 29u GAP — and the screenshot showed
+    // exactly what the arithmetic predicts: the player filling the bottom corner, cropped, reading
+    // as a cutscene rather than a fight. Ten green assertions had said the framing was fine, because
+    // "both bodies are within the frustum" is not the same question as "can you read the fight".
+    // This project has now made that mistake three times (the ring 4× too big, the venue's audience
+    // built outside the frame, and this).
+    const gap = target ? Math.hypot(target.pos.x - S.x, target.pos.y - S.y, target.pos.z - S.z) : 40;
+    // ⚠ AND IT STOPS TRYING PAST A POINT. Framing a 100u gap means pulling back until both fighters
+    // are specks — measured, the foe still left frame at x = −0.93 while the subject shrank. Beyond
+    // FRAME_MAX the camera frames YOU and the HUD's off-screen foe arrow does its job, which is what
+    // that arrow already exists for. Chasing an unwinnable framing costs readability at every range.
+    const FRAME_MAX = 52;
+    const fit = (Math.min(gap, FRAME_MAX) + 20) / (2 * Math.tan((this._chaseFov * Math.PI / 180) / 2));
+    const want = clamp(Math.max(24, fit * 1.15) + k * 16, 24, 86);   // 15% margin so nobody rides the edge
+    this._chaseDist = damp(this._chaseDist ?? want, want, 3.2, dt);
+    // ---- the look point: biased toward the target so both bodies sit in frame
+    const bias = target ? clamp(gap * 0.012, 0.16, 0.42) : 0.2;
+    const lx = S.x + ax * gap * bias, ly = S.y + 5.4 + ay * gap * bias, lz = S.z + az * gap * bias;
+    this.camTarget.x = damp(this.camTarget.x, lx, 9, dt);
+    this.camTarget.y = damp(this.camTarget.y, ly, 7, dt);
+    this.camTarget.z = damp(this.camTarget.z, lz, 9, dt);
+    // ---- and the eye, behind the subject along that axis, lifted
+    const d = this._chaseDist;
+    // ⚠ AND IT LOOKS SLIGHTLY DOWN, not up. The first version lifted the eye by `d·0.20` and pulled
+    // it down again by `ay·d·0.35`, so against a target above you the camera ended up UNDERNEATH the
+    // pair looking up — which is where the screenshot's "staring up at a giant" framing came from.
+    // ⚠ AND IT STANDS OFF THE SHOULDER, because sitting exactly ON the subject→target axis stacks the
+    // two bodies at the same screen x — measured (0.00, −0.14) and (−0.00, 0.17) — so your own
+    // fighter can eclipse the one you are fighting, and your own wind-up is the thing you most need
+    // to see. The offset is a fraction of the DISTANCE, so it is a constant offset on screen at any
+    // range. (ESF shipped centred-behind and a player's objection to an offset was that it "shrinks
+    // your right side view angle" — a real 360°-threat point, which is why this is 0.17 and not 0.5.)
+    const px = az / Math.hypot(ax, az || 1e-6), pz = -ax / Math.hypot(ax, az || 1e-6);   // perpendicular, level
+    const off = d * 0.17;
+    const ex = S.x - ax * d + px * off, ey = S.y + 5.4 - ay * d * 0.18 + d * 0.30, ez = S.z - az * d + pz * off;
+    this.camPos.x = damp(this.camPos.x, ex, 8, dt);
+    this.camPos.y = damp(this.camPos.y, ey, 6, dt);
+    this.camPos.z = damp(this.camPos.z, ez, 8, dt);
+    // ⚠ ANGULAR SHAKE, NEVER THE WORLD-SPACE ONE. `follow()` adds a metres-long random vector to both
+    // the eye and the look point; at ortho that is ~1.8° of jitter, but at a 21u chase distance the
+    // same 8u clamp is **29.7°** and 8u is a third of the way to the subject — the camera would pass
+    // through the fighter. Here the shake is an ANGLE, capped at 1.6°, applied to the look point only.
+    this._shake *= Math.exp(-7 * dt);
+    const jit = Math.min(0.028, this._shake * 0.011) * d;
+    const jx = (Math.random() * 2 - 1) * jit, jy = (Math.random() * 2 - 1) * jit, jz = (Math.random() * 2 - 1) * jit;
+    this._applyProj();
+    c.position.set(this.camPos.x, this.camPos.y, this.camPos.z);
+    c.lookAt(this.camTarget.x + jx, this.camTarget.y + jy, this.camTarget.z + jz);
+    // the sun's tight shadow frustum still has to follow the view
+    const sx = Math.round(this.camTarget.x), sz = Math.round(this.camTarget.z);
+    this.sun.position.set(sx + 120, 200, sz + 80);
+    this.sun.target.position.set(sx, 0, sz);
+  }
+
   // clamp total shaded pixels: a 4K dpr-2 fullscreen was 10-30× the pixel load of a small pane —
   // the #1 "fast in the pane, slow in my browser" multiplier.
   //

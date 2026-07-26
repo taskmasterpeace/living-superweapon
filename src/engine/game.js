@@ -176,12 +176,22 @@ const MODE_IMPL = {
   // very expensive way to find out it isn't.
   powerworld: {
     setup(g, o = {}) {
-      g.ms = { powerworld: true };
+      g.ms = { powerworld: true, chaseCam: true };   // the third-person lock-on view (world.chase)
       // ⚠ NOBODY LIVES HERE. `police.active` is a GETTER and `news.enabled` is set from the mode id,
       // so neither can be switched off from out here — the honest fix was to give "does this theatre
       // have a civil society" one definition (`hasCivilians` in data/modes.js) that both already read.
       // POWERWORLD is in that set, so the law and the press stand down by construction.
       if (g.peds && g.peds.mesh) g.peds.mesh.visible = false;
+      // ⚠ NO FOG OF WAR, AND THIS IS NOT AN OPTIMISATION — IT IS A CORRECTNESS FIX. The vision layer
+      // culls an entity's mesh below `_vis 0.35`, and the fog plane is a flat ground quad that cannot
+      // conceal a fight happening in the sky anyway. The first screenshot of the chase camera showed
+      // exactly ONE fighter while the projection maths insisted both were in frame: the camera was
+      // framing an opponent the vision layer had made invisible. There is nothing to hide behind in an
+      // open sky, so `fov` goes off and every fighter is drawn.
+      // ⚠ The AI honesty law is untouched — `canSee`/`_vis` are what the BOTS read, and they are still
+      // computed. This turns off the PLAYER's concealment rendering, not anyone's knowledge.
+      g.fov = false;
+      g.world.setFogEnabled && g.world.setFogEnabled(false);
       // THE OPEN SKY. `fitBands` sizes the ceiling from the tallest thing built, and the deck servo
       // eases a flier onto a band's deck the moment they stop climbing — both correct for a city
       // fight over rooftops, both wrong for a dimension whose premise is that altitude is yours.
@@ -3220,10 +3230,35 @@ export class Game {
     this.updateThrowArc();
     if (this.mode && !this.matchOver) { const over = this.mode.isOver(this); if (over) this.endMatch(over); }
 
-    this.followHumans(dt);
+    this.cameraDrive(dt);   // ⚠ the ONE arbiter — cinematic > chase view > the two-player fit
     if (this.player) this.world.updateOcclusion(this.player.pos, dt);   // towers between lens and player go glassy
     if (this.news) this.news.update(dt);   // the crew shoots BEFORE the main pass — their POV render hides under it
     this.world.render();
+  }
+
+  /**
+   * ⚠ ONE ARBITER FOR THE CAMERA. `mapCam` was already meant to be the "someone else is driving"
+   * channel, but it was only ever READ inside `if (!this.running)` — so `updateKoCam` and
+   * `updateSpectate`, which both set it during a LIVE match, were writing to nothing while
+   * `followHumans` overwrote the view unconditionally every frame. Both features looked dead.
+   * (`world.orbitAngle`, which `updateSpectate` reads, is never assigned anywhere in the repo either.)
+   *
+   * Priority, highest first: a cinematic or the map tool → the POWERWORLD chase view → the fit.
+   */
+  cameraDrive(dt) {
+    if (this.mapCam) { this.world.orbit(this.mapCam); return; }
+    if (this.ms && this.ms.chaseCam && this.player && this.player.alive) {
+      // the subject we frame against: the hard lock, else whatever is visibly nearest — and NEVER a
+      // foe the honesty layer says we cannot see, or the camera becomes the wallhack the AI is
+      // forbidden from having.
+      let foe = this.hardLock && this.hardLock.alive ? this.hardLock : this.lockTarget;
+      if (foe && this.fov && (foe._vis ?? 1) < 0.4) foe = null;
+      if (!foe) foe = this.nearestFoe(this.player, this.player.pos, 220);
+      if (foe && this.fov && (foe._vis ?? 1) < 0.4) foe = null;
+      this.world.chase(this.player, foe, dt);
+      return;
+    }
+    this.followHumans(dt);
   }
 
   followHumans(dt) {
