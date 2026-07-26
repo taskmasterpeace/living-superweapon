@@ -265,11 +265,101 @@ thrower).
 
 ---
 
-*Sections 9 onward — the camera spec, the control scheme, limb segmentation, impact discipline, the
-world layer and door, combat tuning, ESF/BFP mechanics research, the platform budget and the visual
-identity split — are being written from a nine-agent research pass and land here as they are
-verified.*
+## 9. THE RESEARCH — where the detail lives
 
-⚠ **Correction, noted for the record:** BFP is a **Quake III Arena** mod; ESF is the Half-Life one.
-An earlier brief in this session called both Half-Life mods. It matters only insofar as their
-engines gave them different movement feels, which the mechanics research section addresses.
+A nine-agent pass read the systems this dimension has to route through. The full reports are in
+**`docs/powerworld/`** (~6,600 lines, every claim carrying a `file:line`), because a scratch
+directory is not a plan:
+
+| file | what it settles |
+|---|---|
+| `pw-camera.md` | 27 systems that assume the iso camera, each with a verdict; the chase-camera spec with flight speeds looked up rather than guessed; keep-two-cameras architecture |
+| `pw-controls.md` | why a POWERWORLD scheme cannot be expressed in `KEYMAPS` today; third-person aiming; the full Steam Deck layout; the collision table |
+| `pw-limbs.md` | the arm is the mannequin, not the leg; the segmentation plan; measured mesh counts |
+| `pw-impact.md` | the 10.7× frame-height ratio; nine of fourteen effects larger than the whole frame; why `world.shake()` cannot be ported |
+| `pw-world.md` | six named stages from existing knobs; `fitBands` capping a rocky arena at ~170u; the research route is dead code |
+| `pw-combat.md` | the chase-loop drag constant; the vertical gate quantified; teleport-intercept designed end to end |
+| `pw-visual.md` | what must not fork; a PowerWorld sky with no sun and a real bottom; the ARENA look preset |
+| `pw-platform.md` | Deck and iPad budgets; why PowerWorld is cheaper on CPU and shadows but not automatically on fill |
+| `pw-bfp-map.md` | Ultra BFP's feature list measured against ours |
+
+⚠ **Correction for the record:** BFP is a **Quake III Arena** mod; ESF is the Half-Life one. An
+earlier brief in this session called both Half-Life. The ESF/BFP mechanics deep-dive is still
+running and lands in `pw-esf-research.md`.
+
+---
+
+## 10. THE DEFECT LEDGER
+
+The research pass was not a bug hunt. These fell out of reading the exact code the dimension has to
+use, and **every one of them is live in the shipped game today**, independent of PowerWorld.
+
+### Fixed and verified in this session
+
+| what | why it mattered | verified |
+|---|---|---|
+| **`_pixelCap` clobbered by the device ladder** — `Math.min(fn ‖ 2.6e6, …)` → `NaN` | **the game did not boot on a phone** (throw at module top level killed the rAF loop); on iPad the quality governor was pinned at tier 2 forever and the tablet cap never applied | boot + ladder + clamp, live |
+| **The governor inverts at 40 Hz** | the Deck guide *recommends* locking 40 Hz; the tier fell to 0 in ~5s and could never return | 6 cadences simulated against the real rule |
+| **`viewport-fit=cover` missing** | all twelve `env(safe-area-inset-*)` sites resolved to 0px on the only devices they exist for | live |
+| **No `item` binding on pad or touch** | every gadget and every scavenged weapon was **keyboard-only** — unusable on Deck and iPad | live, both surfaces |
+| **`PAD_ACTION.item = 'square'`** | told pad players the punch button was the gadget button | live |
+| **BRAWLER: `KeyF` punched *and* took off** | violated `KEYMAPS`' own no-collision law, which was unenforceable because the binding lived outside the table | 0 collisions across 4 schemes |
+| **The help panel printed `V`/`G` regardless of scheme** | the one scheme that exists *because* the melee keys moved was the one it lied about | live, 2 schemes |
+| **`kneeCap` stranded at the corpse origin** | a kneecap on the floor under every dead body | 400 ragdoll steps + exact `restore()` |
+| **First KO cry / first ki charge were synths** | `HOT_SET` omitted them, and a sample that decodes on first use is a synth on first use | manifest + call sites |
+| **`charge()`/`beamVoice()` threw `st.sfx.ramp is not a function`** | two sustain contracts (`ramp` vs `set`); breaking the one audio law — never throw into the frame loop | live, clean |
+| **Beam struggle could not happen in the air** | a 3D distance dividing 2D deltas plus a dropped `dir.y` made the gate `cos²(elevation)`: **no clash past ~51°**, silently | geometry proven numerically |
+
+### Found, measured, NOT yet fixed — these need a ruling
+
+| what | the measurement | the decision |
+|---|---|---|
+| **`launchT` is not in the slide-class drag exception** | a 101 u/s knockback travels **16.1u** and loses half its speed in **0.18s**; with the exception it travels **63.5u** over 0.59s | **this is the ESF chase loop.** 4× further is a real change to the city game's feel too — global, or PowerWorld-only? |
+| **The melee vertical gate is 10u** — 1.04 fighter heights | while the four flight decks are 82–115u apart. Gates every jab, cross, haymaker, grab and cone. `overlapFoe` ±9, `updateThrownBodies` ±9, `resolveBodies` ±7 | probably the highest-leverage single constant in the design. Also what makes grounded-vs-flier possible |
+| **The four-deck servo drags a flier off any held altitude** | measured: a tier-3 flier pinned at y=64 was walked back to 48 | it already yields to `launchT` and a lit burner — a third exception, not a fork |
+| **Half the roster cannot fly** (`flightTier 0`) | RAGE staged at y=71 fell to 13 | §8 argues grounded should be a *style* with anti-air, not an exclusion |
+| **`fitBands` caps a rocky arena at ~170u** | it measures the tallest cover box and sets the ceiling to 1.9× it; the flagship city gets 328 | one early return on a `bandsLocked` flag |
+| **`applyWorldGrade` has zero callers** | the per-world colour grade is dead code, and its fallback reads a `_dnc.sky` key that does not exist | free win for two visually distinct dimensions |
+| **`chargingKi` has no HUD surface at all** | the DBZ power-up state — held guard, 40/s regen, defenceless — is invisible on screen | BFP's `.` powerup already exists mechanically and cannot be seen |
+| **KO cam and spectator camera are dead in a live match** | `mapCam` is read only inside `if (!this.running)`, `followHumans` overwrites unconditionally, and `world.orbitAngle` is **never assigned anywhere in the repo** | finishing the `mapCam` channel is step 0 of the camera anyway |
+| **Lifting the aim thumb snaps aim to (0,0)** | `Input` has no touch handlers, so `m.clientX/Y` never leave their initialiser | iPad-critical |
+| **On the Deck, tiers 2 and 1 render at identical resolution** | `_maxPR` is 1, so a three-position ladder has two positions | |
+| **`body.deck` probably never activates in the packaged build** | needs Valve's UA token (Electron's is not) or a pad at boot, and nothing re-runs the ladder on `gamepadconnected` | |
+| **`pickTargetDir` has no `_vis` gate** | the gamepad targeting path can acquire through fog where the mouse path cannot — an honesty-law hole | |
+| **`hardLock` tracks a target through walls** | only the triangle hides; `faceDir` keeps following the live body | |
+| **No `webglcontextlost` handler** | the desktop build reloads on `render-process-gone`; the browser build has nothing | iPad drops contexts |
+
+### The one that changes the plan
+
+**The research route into PowerWorld does not exist as code.** `portalanchor` and `dimgate` are prose
+strings, the `RESEARCH` schema has **no prerequisite field at all**, and `applyResearch`,
+`researchOptions`, `org.hire`, `base.startBuild` and `base.tickWeeks` have **zero callers** between
+them. Nobody can spend a week on research today.
+
+So the door ships in two slices: **a mode card first**, and the researched gate second — otherwise
+PowerWorld would be locked behind a system that cannot be operated.
+
+---
+
+## 11. THE REVISED BUILD ORDER
+
+What the research changed: step 1 got cheaper and better-specified, and two prerequisites appeared
+in front of step 2.
+
+0. **Finish the `mapCam` channel** — one `cameraDrive(dt)` arbiter. It is the seam the chase camera
+   needs *and* it revives the KO cam and the spectator camera, which are currently dead. Small.
+1. **TELEPORT-INTERCEPT + the chase-loop drag**, in the current isometric camera. The intercept needs
+   no new key, no new system and no new state field: `launchT` is the eligibility signal, `lastHitBy`
+   the ownership check, `burstT` the mandatory clamp-lift, and `updateBlinkMark` already draws the
+   destination. Two carriers, two delivery systems: **KANO** on the `teleport` TYPE, **APEX** on the
+   `blink` evade lane. ⚠ Arrival must be at **exactly `foe.pos.y`**, or the 10u vertical gate refuses
+   the punch you teleported to make.
+2. **The chase camera, in one flat empty arena.** ⚠ The kill test is a **screenshot matrix, not an
+   assertion suite** — this project's own record is unambiguous: the boxing ring shipped four times
+   too big with six green assertions, and the venue's audience was built entirely outside the frame.
+3. **Impact discipline**, with step 2, because the camera is what exposes it. `world.shake()` must
+   become angular before anything else — at a 14u camera distance the current world-space jitter is
+   **29.7°** and passes the camera through the fighter.
+4. **Limb segmentation** — and it is the **arm**, not the leg. The leg already has a driven knee; the
+   arm's upper/fore/fist are flat siblings that only ever bend when the fighter is dead.
+5. **Stages and the door** — six stages come from existing knobs; **THE NEEDLES needs zero new tiles.**
