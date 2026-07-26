@@ -997,6 +997,31 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
 - Codex §01 carries an AGE row (DOES NOT AGE for the 10 synthetics). Live roster: PYRE 21 PRIME
   · RIPCLAW 42 VETERAN, four distinct age profiles across the 42 who age.
 
+## PROSE IS NOT A FIELD (2026-07-26) — the research rows got real effects
+- **The disease, named.** All sixty rows in `data/education.js` described their effect in a `d:`
+  STRING — `d: 'clears bleed stacks instantly'`, while `clotBleed()` had existed on Fighter for two
+  days and nothing could reach it. **Prose instead of a field is unreachable content by
+  construction**, and it is the whole reason that module read 45% with one importer.
+- **The cure is a small VOCABULARY OF VERBS THE ENGINE ALREADY HAS** (`EFFECT_VERBS`, 7 of them:
+  heal_injury · clot · clear_dot · resist · shield · sheet · stat), declared as data on the row
+  (`fx: [{v,…}]`), with ONE application path (`applyResearch(f, owned, game)`) so a research item
+  cannot reach the fight by a route the codex and the tests do not also see.
+- ⚠ **ONLY 13 OF THE 60 ARE TAGGED, AND THAT IS THE POINT.** The other 47 name systems that are not
+  built (orbital bases, interstellar travel, the rewind, city-wide suppression) and are listed in
+  `docs/BACKLOG.md` with four grouped reasons. **A faked verb is worse than prose** — prose at least
+  admits it is a description. `REACHABLE_RESEARCH()` makes the split queryable so the list cannot go
+  stale by hand.
+- ⚠ **`clotBleed()` HAD NO SIBLING.** Bleeding could be stopped and a poison or a burn could not —
+  which is precisely why two finished rows ("clears toxic damage over time", "clears burn damage over
+  time") had to be prose: there was no verb to point at. `Fighter.clearDot(kind, game)` is it; one
+  kind, or all.
+- ⚠ **Three rows land for FREE the day the dead ability types get carriers** (`nanite`→`regen`,
+  `droneswarm`→`vision`, `shieldproj`→`dome`). Tag them then.
+- Verified against a LIVE fighter, not a stub: a real wound closes, a real poison dot is purged,
+  rebreather makes 30 toxic damage do **0.0** through `takeDamage`, the ablative pool eats 20 while
+  the hull takes 0, gauntlets trade speed 33.0→30.4 for jab 1.02→1.20, and owning an unbuilt row
+  is silent rather than a throw. 10/10, 0 console errors.
+
 ## HANDOFF
 - **`HANDOFF.md` at the repo root** is the orientation document: architecture, the ten rules that
   are load-bearing, what is solid, what is half-built, what to do next, and the headless

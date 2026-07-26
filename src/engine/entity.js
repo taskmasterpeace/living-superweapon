@@ -416,6 +416,19 @@ export class Fighter {
     if (!silent && game && game.hud && game.isHuman(this)) game.hud.damageNumber(this.pos, 'CLOTTED', '#e8e2d4', true);
   }
 
+  // ⚠ `clotBleed` had no sibling. Bleeding could be stopped and a poison or a burn could not,
+  // which is why two finished research rows ("clears toxic damage over time", "clears burn damage
+  // over time") described their effect in PROSE — there was no verb to point at. One kind, or all.
+  clearDot(kind, game) {
+    if (!this._dots.length) return 0;
+    const before = this._dots.length;
+    if (kind) { const i = this._dots.findIndex(d => d.kind === kind); if (i >= 0) this._dots.splice(i, 1); }
+    else this._dots.length = 0;
+    const n = before - this._dots.length;
+    if (n && game && game.hud && game.isHuman(this)) game.hud.damageNumber(this.pos, 'PURGED', '#e8e2d4', true);
+    return n;
+  }
+
   // SLEEP (manual §14): the payload lane's proving status. The victim FOLDS slowly to the
   // ground, uncontrolled, and wakes INSTANTLY on any damage. Machines don't sleep (it is a
   // chemical); dummies measure, they don't nap; 3s immunity after waking stops chain-sleep.

@@ -88,7 +88,7 @@ measured audio signature (manual §38).
   ⚠ The override field is `def.age` (a number) or `def.born = {y,m,d}`. A STRING `born` silently
   falls through to the id hash, which is how my first test read as a broken wire.
 
-## 6 · Education's 59 research rows describe their effects in PROSE  ·  ~2 h  ·  ☐
+## 6 · Education's 59 research rows describe their effects in PROSE  ·  ~2 h  ·  ☑ DONE 2026-07-26
 
 `d: 'clears bleed stacks instantly'` — and `clotBleed()` exists, and nothing can reach it.
 
@@ -98,6 +98,15 @@ measured audio signature (manual §38).
   batches by lane (medical → `clotBleed`/`healBout`, combat → talents, city → police/response).
 - Convert only the rows whose verb already exists in the engine. Any row with no reachable verb goes
   in `docs/BACKLOG.md` with the reason, rather than being faked.
+- **DONE:** `EFFECT_VERBS` (7 verbs, every one a hook the engine already had) · `fx` on **13 of 60**
+  rows · one `applyResearch(f, owned, game)` path · `REACHABLE_RESEARCH()` makes the split queryable
+  · the other 47 are listed in `docs/BACKLOG.md` with four grouped reasons.
+- ⚠ `clotBleed()` had **no sibling** — bleeding could be stopped and a poison or a burn could not,
+  which is exactly why two finished rows had to describe themselves in prose. `Fighter.clearDot(kind)`
+  is the missing verb.
+- Verified against a LIVE fighter (not a stub): a real wound closes, a real poison dot is purged,
+  rebreather makes 30 toxic damage do **0.0** through `takeDamage`, the ablative pool eats 20 and the
+  hull takes 0, and owning an unbuilt row (`orbital`) is silent rather than a throw.
 
 ## 7 · 18 dead ability types  ·  program, not an hour  ·  ☐
 
@@ -152,11 +161,14 @@ Re-run `node src/bench/orphans.mjs` after each; a finished item should leave the
 
 ## STATE AT 2026-07-26 END OF SESSION
 
-Landed: **1, 2, 3, 5** complete · **4** half (police armed, roster humans open).
-Open: **4** (roster humans, blades, gear) · **6** the research-prose conversion ·
-**7** dead ability types · **8** the doors · **9** the clinch wheel · **10** the road graph.
+Landed: **1, 2, 3, 5, 6** complete · **4** half (police armed, roster humans open).
+Open: **4** (roster humans, blades, gear) · **7** dead ability types · **8** the doors ·
+**9** the clinch wheel · **10** the road graph. All four remaining are FEATURES, not wires —
+each should go through `wwa-ship-mechanic`.
 
 Audit moved: `ARMORY 33 → 28 on no fighter`. Everything else unchanged, which is the honest
 reading — items 5–10 are untouched.
 
-Each remaining row above is self-contained. Start at 6.
+Each remaining row above is self-contained. Start at 7 — and note that 7 unlocks three of
+the untagged research rows in item 6 for free (`nanite`/`regen`, `droneswarm`/`vision`,
+`shieldproj`/`dome`).

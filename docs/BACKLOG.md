@@ -169,3 +169,30 @@ a dev warning that names the calling site; plus the same output-validation on th
 Verified: the full combined stress run — 52×364 roster battery, all 102 catalog powers, a
 20-second six-fighter rumble, plus the async tail — now reports **0 NaN warnings, 0 thrown
 errors, 0 orphaned audio loops**, and the game clock never goes non-finite.
+
+---
+
+## THE 47 UNTAGGED RESEARCH ROWS (2026-07-26, wire queue item 6)
+
+`data/education.js` describes all sixty research effects in a `d:` prose string. Thirteen now carry
+a real `fx` field built from verbs the engine already has (`EFFECT_VERBS`). **The other forty-seven
+are deliberately still prose**, because a faked verb is worse than a description - prose at least
+admits it is a description.
+
+They group into four reasons:
+
+- **The system is not built** (the large majority): orbital bases, interstellar travel, the rewind
+  and its memory recovery, city-wide power suppression, terraforming, cloning lines, power
+  transplant, the learning sparring robot, a foundry without a supply chain, weather as
+  infrastructure, harvestable trench. Each of these is a feature, not a field.
+- **The verb exists but is a DEAD ability type** (audit class 1): `nanite` wants `regen`,
+  `droneswarm` wants `vision`, `shieldproj` wants `dome`. These land for free the day wire-queue
+  item 7 gives those types carriers - tag them then, not now.
+- **The hook is one line away but is a real design decision**: `jammer` (delay the police response -
+  police ETA has no external modifier), `presscred` (news-crew priority), `navbeacon` (transit
+  time), `cuffs` and the detention cells in `data/base.js` that still have no way to receive
+  anybody (that is wire-queue item 9's tail).
+- **It needs a new mission kind**: `vaccine`, `forensickit`, `surgerybay`.
+
+WARNING: the tagged/untagged split is queryable - `REACHABLE_RESEARCH()` - so this list cannot
+silently go stale the way a hand-written one would.

@@ -335,29 +335,29 @@ export function cloneAtlas() {
 // the manufacture stage has to know which one it is building.
 export const RESEARCH = [
   // ---- TIER 1 — data entries and small hooks on the gear system that already exists
-  { id: 'traumakit',    n: 'Trauma Kit',          major: 'medicine',    t: 1, w: 3,  d: 'heals a persistent injury one rung between bouts' },
-  { id: 'coagulant',    n: 'Coagulant Injector',  major: 'medicine',    t: 1, w: 2,  d: 'clears bleed stacks instantly' },
-  { id: 'antitoxin',    n: 'Antitoxin Shot',      major: 'chemistry',   t: 1, w: 2,  d: 'clears toxic damage over time' },
-  { id: 'thermalgel',   n: 'Thermal Gel',         major: 'medicine',    t: 1, w: 2,  d: 'clears burn damage over time' },
+  { id: 'traumakit',    n: 'Trauma Kit',          major: 'medicine',    t: 1, w: 3,  d: 'heals a persistent injury one rung between bouts', fx: [{ v: 'heal_injury' }] },
+  { id: 'coagulant',    n: 'Coagulant Injector',  major: 'medicine',    t: 1, w: 2,  d: 'clears bleed stacks instantly', fx: [{ v: 'clot' }] },
+  { id: 'antitoxin',    n: 'Antitoxin Shot',      major: 'chemistry',   t: 1, w: 2,  d: 'clears toxic damage over time', fx: [{ v: 'clear_dot', kind: 'poison' }] },
+  { id: 'thermalgel',   n: 'Thermal Gel',         major: 'medicine',    t: 1, w: 2,  d: 'clears burn damage over time', fx: [{ v: 'clear_dot', kind: 'burn' }] },
   { id: 'stimshot',     n: 'Stim Shot',           major: 'chemistry',   t: 1, w: 4,  d: 'a short attribute surge, then a crash' },
-  { id: 'frostsheath',  n: 'Frost Sheath',        major: 'materials',   t: 1, w: 3,  d: 'cold resistance for one bout' },
-  { id: 'ablative',     n: 'Ablative Plate',      major: 'materials',   t: 1, w: 3,  d: 'flat armour, consumed on use' },
-  { id: 'acidcoat',     n: 'Acid Coating',        major: 'materials',   t: 1, w: 4,  d: 'cancels the metal chassis acid weakness' },
+  { id: 'frostsheath',  n: 'Frost Sheath',        major: 'materials',   t: 1, w: 3,  d: 'cold resistance for one bout', fx: [{ v: 'resist', dtype: 'cold', mult: 0.55 }] },
+  { id: 'ablative',     n: 'Ablative Plate',      major: 'materials',   t: 1, w: 3,  d: 'flat armour, consumed on use', fx: [{ v: 'shield', hp: 35 }] },
+  { id: 'acidcoat',     n: 'Acid Coating',        major: 'materials',   t: 1, w: 4,  d: 'cancels the metal chassis acid weakness', fx: [{ v: 'resist', dtype: 'acid', mult: 1 }] },
   { id: 'dampener',     n: 'Kinetic Dampener',    major: 'physics',     t: 1, w: 4,  d: 'knockback resistance' },
   { id: 'grapnel2',     n: 'Grapnel Mk II',       major: 'robotics',    t: 1, w: 4,  d: 'longer reach, faster reel' },
   { id: 'jammer',       n: 'Signal Jammer',       major: 'compsci',     t: 1, w: 5,  d: 'delays the police response' },
   { id: 'scrubber',     n: 'Evidence Scrubber',   major: 'law',         t: 1, w: 4,  d: 'sheds heat after a fight' },
   { id: 'presscred',    n: 'Press Credential',    major: 'media',       t: 1, w: 3,  d: 'the news crew prioritises you' },
-  { id: 'fieldstim',    n: 'Field Stim',          major: 'kinesiology', t: 1, w: 3,  d: 'faster energy recovery' },
-  { id: 'gauntlets',    n: 'Weighted Gauntlets',  major: 'kinesiology', t: 1, w: 3,  d: 'more melee, less speed — a training item' },
-  { id: 'monocle',      n: 'Targeting Monocle',   major: 'compsci',     t: 1, w: 4,  d: 'tighter spread' },
-  { id: 'recoilcomp',   n: 'Recoil Compensator',  major: 'materials',   t: 1, w: 3,  d: 'ballistic accuracy' },
+  { id: 'fieldstim',    n: 'Field Stim',          major: 'kinesiology', t: 1, w: 3,  d: 'faster energy recovery', fx: [{ v: 'sheet', k: 'kiRegenMult', mult: 1.35 }] },
+  { id: 'gauntlets',    n: 'Weighted Gauntlets',  major: 'kinesiology', t: 1, w: 3,  d: 'more melee, less speed — a training item', fx: [{ v: 'sheet', k: 'jabMult', mult: 1.18 }, { v: 'stat', k: 'speed', mult: 0.92 }] },
+  { id: 'monocle',      n: 'Targeting Monocle',   major: 'compsci',     t: 1, w: 4,  d: 'tighter spread', fx: [{ v: 'sheet', k: 'spreadMult', mult: 0.62 }] },
+  { id: 'recoilcomp',   n: 'Recoil Compensator',  major: 'materials',   t: 1, w: 3,  d: 'ballistic accuracy', fx: [{ v: 'sheet', k: 'spreadMult', mult: 0.78 }] },
   { id: 'insulboots',   n: 'Insulated Boots',     major: 'robotics',    t: 1, w: 3,  d: 'shock immunity' },
-  { id: 'rebreather',   n: 'Rebreather',          major: 'medicine',    t: 1, w: 3,  d: 'gas immunity' },
+  { id: 'rebreather',   n: 'Rebreather',          major: 'medicine',    t: 1, w: 3,  d: 'gas immunity', fx: [{ v: 'resist', dtype: 'toxic', mult: 0 }] },
   { id: 'navbeacon',    n: 'Nav Beacon',          major: 'aerospace',   t: 1, w: 5,  d: 'cuts travel time between cities' },
   // ---- TIER 2 — a new mechanic, riding systems that exist
   { id: 'prosthetic',   n: 'Prosthetic Arm',      major: 'robotics',    t: 2, w: 10, d: 'an injury that resolved as hardware — it changes strength' },
-  { id: 'neurallace',   n: 'Neural Lace',         major: 'robotics',    t: 2, w: 12, d: 'cooldown reduction, with feedback risk' },
+  { id: 'neurallace',   n: 'Neural Lace',         major: 'robotics',    t: 2, w: 12, d: 'cooldown reduction, with feedback risk', fx: [{ v: 'sheet', k: 'cdMult', mult: 0.85 }] },
   { id: 'clonevat',     n: 'Cloning Vat',         major: 'genetics',    t: 2, w: 16, d: 'return a dead hero — degraded', base: true, lawful: 'cloning' },
   { id: 'genestab',     n: 'Gene Stabiliser',     major: 'genetics',    t: 2, w: 12, d: 'halts power instability' },
   { id: 'vaccine',      n: 'Vaccine Batch',       major: 'medicine',    t: 2, w: 9,  d: 'cures a city outbreak — a mission type' },
@@ -444,3 +444,48 @@ export const DESIGN_AXES = {
   feed:   { n: 'CHARGES OR SUSTAINED', d: 'discrete hits or a tick stream — the burst window measures these differently.' },
   grade:  { n: 'MATERIAL GRADE',       d: 'cheap and common, or exotic and one of one.' },
 };
+
+// ---- THE EFFECT VOCABULARY — why this exists ----
+// ⚠ EVERY ONE OF THESE SIXTY ROWS DESCRIBED ITS EFFECT IN PROSE. `d: 'clears bleed stacks
+// instantly'` — while `clotBleed()` has existed on Fighter for two days and nothing could reach it.
+// **Prose instead of a field is unreachable content by construction**, and it is the reason this
+// module read 45% with one importer. The cure is a small vocabulary of verbs the engine ALREADY
+// HAS, declared as data on the row.
+//
+// ⚠ ONLY ROWS WHOSE VERB ALREADY EXISTS ARE TAGGED. Thirteen of the sixty. The other forty-seven
+// name systems that are not built (orbital bases, interstellar travel, the rewind, city-wide
+// suppression) and are listed in docs/BACKLOG.md with the reason. A faked verb would be worse than
+// prose, because prose at least admits it is a description.
+export const EFFECT_VERBS = {
+  heal_injury: 'knits one persistent injury on the medical ledger (rankings.healBout)',
+  clot:        'stops an open bleed (Fighter.clotBleed)',
+  clear_dot:   'purges one damage-over-time kind, or all of them (Fighter.clearDot)',
+  resist:      'overwrites one entry of f.resist — the damage-type table',
+  shield:      'adds to the ablative pool f._shieldHp',
+  sheet:       'multiplies one baked sheet multiplier (cdMult, jabMult, spreadMult, kiRegenMult…)',
+  stat:        'multiplies one live stat the engine reads every frame (speed)',
+};
+
+export const researchEffects = (id) => (RESEARCH.find(r => r.id === id) || {}).fx || null;
+export const REACHABLE_RESEARCH = () => RESEARCH.filter(r => r.fx);
+
+// ⚠ ONE APPLICATION PATH, so a research item cannot reach the fight by any route the codex and
+// the tests do not also see. `owned` is a list of ids; unknown ids and untagged rows are skipped
+// silently, because owning a row whose system is not built yet is legal and must not throw.
+export function applyResearch(f, owned, game) {
+  const done = [];
+  for (const id of owned || []) {
+    for (const e of researchEffects(id) || []) {
+      if (e.v === 'clot') { f.clotBleed && f.clotBleed(game); }
+      else if (e.v === 'clear_dot') { f.clearDot && f.clearDot(e.kind, game); }
+      else if (e.v === 'resist') { if (f.resist) f.resist[e.dtype] = e.mult; }
+      else if (e.v === 'shield') { f._shieldHp = (f._shieldHp || 0) + e.hp; }
+      else if (e.v === 'sheet') { if (f.sheet && f.sheet[e.k] != null) f.sheet[e.k] *= e.mult; }
+      else if (e.v === 'stat') { if (f[e.k] != null) f[e.k] *= e.mult; }
+      else if (e.v === 'heal_injury') { /* booked on the ledger by the career, not on a fighter */ }
+      else continue;
+      done.push(id + ':' + e.v);
+    }
+  }
+  return done;
+}
