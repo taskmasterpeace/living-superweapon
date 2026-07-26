@@ -871,6 +871,11 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   wallcrawl, telekinesis, reshape, consume, mimic, mount, dome, vision, regen, banish, gravity).
 - ⚠ `CodexMixin` in hudCodex.js is an **object literal, not a class** — a new method needs a
   trailing COMMA. Same shape as `roads.js`.
+- ⚠ **THE LAST-KNOWN GHOST STACKED.** `_lastKnown` is edge-triggered (seen → unseen), which sounds
+  like once — but `see` is recomputed from LOS every frame, so a foe at the edge of a wall or the
+  vision cone FLICKERS, and every flicker spawned a whole ghost: a mesh, two materials, and another
+  '?' sprite on top of the last one. Measured **40 live ghosts** in one 90s fight once the police
+  arrived. Debounced to one per fighter per 1.2s → 2. Edge-triggered is not the same as once.
 
 ## HANDOFF
 - **`HANDOFF.md` at the repo root** is the orientation document: architecture, the ten rules that

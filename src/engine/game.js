@@ -1133,7 +1133,13 @@ export class Game {
       if (!see) { const d = Math.hypot(e.pos.x - p.pos.x, e.pos.z - p.pos.z); if (d < this.visReveal && this._bright(e)) see = true; }
       e._vis = damp(e._vis == null ? (see ? 1 : 0) : e._vis, see ? 1 : 0, 12, dt);
       if (see && !e._seen) this._revealFx(e);
-      if (!see && e._seen) this._lastKnown(e);
+      // ⚠ ONE GHOST PER FIGHTER, AND NOT EVERY FRAME. The trigger is edge-based (seen -> unseen),
+      // which sounds like it fires once — but `see` is recomputed from line-of-sight every frame,
+      // so a foe standing at the edge of a wall or the vision cone flickers, and EVERY flicker
+      // used to spawn a full ghost: a new mesh and two new materials, and a second '?' sprite
+      // stacked on top of the first. Measured 40 live ghosts in one 90-second fight once the
+      // police turned up. The marker is meant to say "they were here" once, not pile up.
+      if (!see && e._seen && this.time - (e._ghostT || -9) > 1.2) { e._ghostT = this.time; this._lastKnown(e); }
       e._seen = see;
       const show = e._vis > 0.35;
       if (e.obj.visible !== show) e.obj.visible = show;
