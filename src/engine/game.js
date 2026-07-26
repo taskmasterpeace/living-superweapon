@@ -1,5 +1,6 @@
 // WAR WORLD: ASCENDANTS — game orchestrator: entities, control, combat helpers, main update.
 import { updateDomes, updateReshaped, domeBlocks, releasePossession } from './systems2.js';
+import { traumatise, inflict } from '../data/medical.js';
 import { setVisionMode } from './systems2.js';
 import { Weather, TimeFields, GravityZones, setSize, banish } from './systems.js';
 import * as THREE from 'three';
@@ -1819,6 +1820,23 @@ export class Game {
     const src = victim.lastHitBy;
     const killer = (src && victim.lastHitT < 4 && src !== victim && src.def) ? src : null;
 
+    // ⚠ TRAUMA IS BOOKED FROM WHAT PEOPLE ACTUALLY WITNESSED, not from a menu. Robert: "seeing a
+    // friend die in front of them may require some help." So it is gated on LINE OF SIGHT — the
+    // same `canSee` the AI honesty law uses. Somebody two blocks away behind a building did not
+    // watch anyone die, and booking them grief would be the system lying about its own premise.
+    try {
+      for (const w of this.entities) {
+        if (!w.alive || w === victim || !w.def || w.dummy) continue;
+        if (!this.canSee(w, victim)) continue;
+        const ally = w.team === victim.team;
+        const dist = Math.hypot(w.pos.x - victim.pos.x, w.pos.z - victim.pos.z);
+        if (dist > 220) continue;
+        const near = Math.max(0.35, 1 - dist / 220);
+        if (ally) traumatise(w.id, 'allyKilled', near);
+        else if (w === killer) traumatise(w.id, 'killed', near);
+      }
+    } catch (e) { this.reportError(e, 'trauma'); }
+
     // ⚠ BOTH OF THESE MUST LIVE BELOW `const killer`. Placed at the top of handleKO they sat in the
     // temporal dead zone and EVERY KNOCKOUT THREW — a crash on the most common event in the game,
     // introduced twice (the comic panel and the psyche trigger) and invisible until something died.
@@ -2016,7 +2034,13 @@ export class Game {
     if (f._swHold >= 1) this.secondWindRise(f);
   }
   secondWindRise(f) {
-    f.downedT = 0; f._swHold = 0; f.staggerT = 0; f.state = 'idle';
+    // ⚠ SURVIVING SOMETHING YOU SHOULD NOT HAVE IS AN EVENT. Second wind is the engine's own
+    // "should be dead" moment, so it is exactly where nearDeath belongs — and it can also leave a
+    // physical mark nobody sees until a physician looks: cardiac strain from being run past the line.
+    try {
+      traumatise(f.id, 'nearDeath', 1);
+      if (Math.random() < 0.45) inflict(f.id, 'cardiac', 1, 'second wind');
+    } catch (e) { this.reportError(e, 'trauma'); }    f.downedT = 0; f._swHold = 0; f.staggerT = 0; f.state = 'idle';
     f.hp = f.maxHp * 0.25;
     f.ki = 0; f.drainedT = 5;                        // Overdrive's moment: the comeback attribute earns its keep
     f.invuln = Math.max(f.invuln, 1.2);

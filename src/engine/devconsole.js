@@ -15,6 +15,9 @@
 //     cover boxes — rather than recomputing what the planner intended. A ruler that agrees with the
 //     source instead of the world is how a wrong number survives being checked.
 import { BANDS } from '../core/util.js';
+import { ROSTER } from '../data/characters.js';
+import * as ORG from '../data/org.js';
+import * as MED from '../data/medical.js';
 import * as BASE from '../data/base.js';
 import * as CITIES from '../data/cities.js';
 import * as COUNTRIES from '../data/countries.js';
@@ -444,6 +447,54 @@ export class DevConsole {
     });
 
     // ---- the wheel, live
+    // THE TEAM AND THE CHART. `team` is the manager's view; `chart <id>` is the physician's.
+    this.cmd('team', 'team [hire|market|week|chart <id>|examine <id>|couch <id>] — your firm', (a, c) => {
+      const sub = (a[0] || 'list').toLowerCase();
+      const o = ORG.org();
+      if (!o.founded && sub !== 'found') return c.err('no firm — try:  team found <country> <city> [name]');
+      if (sub === 'found') {
+        const res = ORG.found(a[1], a[2], a.slice(3).join(' '));
+        if (!res.ok) return c.err(res.why);
+        c.log(res.firm + (res.stateNamed ? '   (THE STATE NAMED IT)' : ''));
+        c.log('  ' + res.why);
+        return c.log('  $' + res.capital.cash + 'K · site ' + res.site.n + '×' + res.site.n + ' · ' + res.capital.note);
+      }
+      if (sub === 'market') {
+        const mk = ORG.market(ROSTER, 5);
+        for (const k of Object.keys(mk)) {
+          c.log(ORG.ROLES[k].n);
+          for (const p2 of mk[k]) c.log('   ' + p2.name.padEnd(24) + '$' + String(p2.salary).padStart(4) + 'K/wk  sign $' + p2.sign + 'K' + (p2.band ? '   ' + p2.band : ''));
+        }
+        return;
+      }
+      if (sub === 'week') { const w = ORG.weekTurn(); return c.log('payroll $' + w.paid + 'K · $' + w.cash + 'K left' + (w.broke ? '   ARREARS — MORALE FALLING' : '')); }
+      if (sub === 'chart' || sub === 'examine' || sub === 'couch') {
+        const id = a[1];
+        if (!id) return c.err('who?');
+        if (sub === 'examine') {
+          const q = parseFloat(a[2]) || 0.6;
+          const r2 = MED.examine(id, q);
+          if (!r2.found.length) return c.log('examination at quality ' + q + ' found nothing.');
+          for (const x of r2.found) c.log('  FOUND  ' + x.def.n + '  (severity ' + x.sev + ')   ' + x.def.d);
+          return;
+        }
+        if (sub === 'couch') {
+          const r2 = MED.session(id, a[2], 1);
+          return r2.ok ? c.log(r2.cleared ? r2.n + ' — CLEARED' : r2.n + ' — ' + r2.left + ' session(s) to go') : c.err(r2.why);
+        }
+        const rep = MED.chartReport(id);
+        c.log('CHART · ' + id + (rep.seen ? '' : '   (NEVER EXAMINED)'));
+        for (const x of rep.physical) c.log('  PHYS   ' + x.def.n.padEnd(20) + 'sev ' + x.sev + '   ' + x.def.d);
+        for (const x of rep.psychological) c.log('  PSYCH  ' + x.def.n.padEnd(20) + 'sev ' + x.sev + '   ' + x.def.d);
+        if (!rep.physical.length && !rep.psychological.length) c.log('  nothing on file');
+        if (rep.concern) c.log('  ⚠ ' + rep.concern);
+        return;
+      }
+      c.log(ORG.orgLine());
+      for (const p2 of ORG.teamReport())
+        c.log('  ' + p2.name.padEnd(24) + p2.role.padEnd(13) + '$' + String(p2.salary).padStart(4) + 'K  ' + p2.health.word);
+    });
+
     // THE BASE — the site survey, the grid, the pipeline and the cells, all readable from here.
     this.cmd('base', 'base [survey|grid|pipe|cells|study <major>] — your HQ', (a, c) => {
       const g = G(), sub = (a[0] || 'grid').toLowerCase();

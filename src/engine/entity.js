@@ -1,5 +1,6 @@
 // WAR WORLD: ASCENDANTS — Fighter: articulated figure, stats, physics, flight, combat, ability state.
 import { moodMult } from './psyche.js';
+import { inflict } from '../data/medical.js';
 import { BUILDS, frameOf, applyFrame, figure, buildWeapon } from './figure.js';
 export { BUILDS, frameOf, applyFrame, figure, buildWeapon };   // re-exported: existing importers are unaffected
 import { updateDupes, updatePossession, updateElastic, updateWallCrawl, updateTk, updateMimic, updateMount, updateVisionMode, pulseDupes, dupePool } from './systems2.js';
@@ -389,6 +390,18 @@ export class Fighter {
     (this._woundKind = this._woundKind || {})[zone] = kind || 'CONTUSION';
     const rec = (this.sheet && this.sheet.ccRecover) || 1;
     this._woundT[zone] = 28 / rec;
+    // ⚠ A VISIBLE WOUND CAN LEAVE SOMETHING INVISIBLE BEHIND. This is the join between the injury
+    // system (which the player sees, on the HUD, immediately) and the medical chart (which they do
+    // not). A serious wound sometimes writes a HIDDEN condition — internal bleeding under a torso
+    // hit, a hairline fracture under an arm hit, a concussion under a head one — and it is already
+    // costing them from that moment. Nobody is told. That gap is the whole feature.
+    if (W[zone] >= 2 && this.def && !this.def.police) {
+      const roll = Math.random();
+      const cond = zone === 'torso' ? (roll < 0.34 ? 'internal' : roll < 0.5 ? 'cardiac' : null)
+                 : zone === 'arm'   ? (roll < 0.30 ? 'hairline' : roll < 0.42 ? 'nerve' : null)
+                 : /* leg */          (roll < 0.28 ? 'hairline' : roll < 0.4 ? 'scarring' : null);
+      if (cond) { try { inflict(this.id, cond, W[zone] - 1, zone + ' wound'); } catch (e) {} }
+    }
     if (this._game && this._game.hud) {
       const label = ['', 'LIGHT', 'SERIOUS', 'CRITICAL'][W[zone]];
       this._game.ui('damageNumber', this.pos, `${zone.toUpperCase()} · ${kind || 'CONTUSION'} · ${label}`, '#c9564a', true);
