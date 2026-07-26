@@ -196,3 +196,32 @@ They group into four reasons:
 
 WARNING: the tagged/untagged split is queryable - `REACHABLE_RESEARCH()` - so this list cannot
 silently go stale the way a hand-written one would.
+
+---
+
+## COMPANIONS — WAIVED GATE ITEMS (2026-07-26)
+
+`data/companions.js` ships the data layer and meets gate items 1 (a type, not a special case),
+6 (numbers from the distribution), 7 (manual, same commit) and 8 (headless assertions,
+`src/bench/companions.mjs`, 8/8).
+
+**Items 2–5 are waived for this commit, in writing, because the engine layer is not built:**
+
+- **2 · ONE CHOKE POINT** — the kennel store is the persistence choke point and exists. The COMBAT
+  choke point does not apply yet: nothing bites, so nothing calls `takeDamage`.
+- **3 · TWO CARRIERS × TWO SYSTEMS** — five breeds exist as data and zero of them exist as an
+  entity. The intended delivery systems are melee bite (`takeDamage`), detection (feeding
+  `game.noise` → the handler's `belief`, ⚠ with `src:'radio'` and **never** `'sight'`, or a dog
+  launders knowledge past the AI honesty law), and psyche (`steadyEffect` into volatility).
+- **4 · A COUNTER** — designed, not built: a dog can be hurt, and a loud enough `game.noise` should
+  break its nerve. It has no ranged answer, so distance is the positioning counter.
+- **5 · READABLE** — nothing renders. This one is bigger than the companion: `hud.js` shows only the
+  PLAYER's own mood (`g.player._psyche`) and nothing in the game displays anyone else's emotion. A
+  companion whose emotional state matters needs that surface first.
+
+Also still open and named by Robert in the same conversation: a **person-to-person relationship**
+tie (we have the 168×168 COUNTRY matrix and no personal one, so `TRAUMA_EVENTS.allyKilled` cannot
+tell a colleague from someone you loved), **city familiarity**, and **investigations** — which two
+data files already reference in prose (`education.js` compsci hooks, the `forensickit` research row)
+while the system does not exist.
+

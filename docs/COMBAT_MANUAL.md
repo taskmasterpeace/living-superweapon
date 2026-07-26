@@ -2383,3 +2383,84 @@ exactly like a broken shader. Borrow the news crew's POV camera, which is the pe
 buffer with `toDataURL` in the SAME task as the render, or a WebGL canvas without
 `preserveDrawingBuffer` is blank by the time a later call asks for it.
 
+---
+
+## §44 · COMPANIONS — A BREED IS APTITUDES, NOT A CLASS (2026-07-26)
+
+Robert settled the design question himself: *"should all dogs be able to do all things to a certain
+degree, like a pitbull vs an aussiedoodle — dogs can bite and hear/smell much better than humans."*
+
+Yes, and it is the difference between a data model and five special cases. Every dog in
+`data/companions.js` can bite, scent, hear, guard, steady its handler and be trained. The SPECIES
+sets the baseline — and the dog baseline is already far past a human on the senses — and the BREED
+shifts the curve. Nothing is exclusive to anything.
+
+### The seven axes
+
+`bite · scent · hearing · guard · steady · stamina · biddable`. One row per breed, seven multipliers.
+Adding a sixth dog is a row; a Malinois that is 90% of a Dutch Shepherd is a row with different
+numbers. ⚠ There is no `if (breed === ...)` anywhere in the file, which is the one place it would
+have been most tempting — five dogs, five jobs, five branches.
+
+⚠ **HUMAN IS IN THE SPECIES TABLE ON PURPOSE.** "Dogs smell better than humans" has to be a MEASURED
+relationship in the data rather than a claim in a comment, or nobody can check it and the first
+person to tune scent flattens it by accident. Measured: a bloodhound outsmells a person by **×76**,
+and even the labradoodle is **×44**.
+
+### The ladder is ranked against the population
+
+⚠ The hand-picked-rung mistake has been made at least three times in this project (university
+standing, the rank ladder's top end, the site survey — four passes on that one). `aptRank()` ranks a
+breed against every other breed on that axis and returns the percentile, so POOR / FAIR / CAPABLE /
+STRONG / EXCEPTIONAL are occupied by construction and re-sort themselves when a breed is added.
+
+| | BITE | SCENT | HEARING | GUARD | STEADY | STAMINA | BIDDABLE |
+|---|---|---|---|---|---|---|---|
+| DUTCH SHEPHERD | STRONG | CAPABLE | STRONG | **EXCEPTIONAL** | POOR | STRONG | STRONG |
+| BLOODHOUND | FAIR | **EXCEPTIONAL** | CAPABLE | FAIR | STRONG | CAPABLE | POOR |
+| PIT BULL | **EXCEPTIONAL** | POOR | POOR | STRONG | CAPABLE | FAIR | FAIR |
+| AUSTRALIAN LABRADOODLE | POOR | CAPABLE | FAIR | POOR | **EXCEPTIONAL** | POOR | CAPABLE |
+| BORDER COLLIE | CAPABLE | FAIR | **EXCEPTIONAL** | CAPABLE | FAIR | **EXCEPTIONAL** | **EXCEPTIONAL** |
+
+⚠ **THE REPUTATION IS NOT THE DATA.** Making the pit bull the "vicious" one would be authoring a
+stereotype into a table that claims to be derived — temperament testing puts the breed *above* the
+average dog on human sociability. High bite, high steadiness, LOW guard: it is a poor watchdog
+precisely because it likes people.
+
+### Training is anchored to time, and aptitude is a ceiling
+
+⚠ **APTITUDE IS A CEILING, BIDDABILITY IS A RATE, AND CONFLATING THEM IS THE WHOLE TRAP.** Measured
+over forty career weeks of bite work:
+
+| | week 1 gain | after 40 weeks | its ceiling |
+|---|---|---|---|
+| BORDER COLLIE | +0.099 | 0.33 | 0.33 |
+| DUTCH SHEPHERD | +0.085 | 0.92 | 0.94 |
+| BLOODHOUND | +0.041 | 0.30 | 0.31 |
+
+The collie learns bite **faster** than the shepherd and ends up biting for 1.49 against the
+shepherd's 5.38. That is "all dogs to a certain degree" expressed mechanically: nothing is
+forbidden, everything is bounded by what the animal is.
+
+⚠ Time is the CAREER WEEK, which is seven real days only since 2026-07-26 — before that a week moved
+a counter and the calendar never advanced, so anything anchored to time would have silently never
+progressed.
+
+### Emotional support changes the appraisal, not the mood
+
+⚠ **NOT "+2 HAPPY".** `psyche.js` runs event → drives → emotion, and trauma already works by moving
+the RESTING temperament and the VOLATILITY. A support animal moves the same two dials the other way,
+so it helps an anxious personality enormously and a zealot barely, straight out of `DRIVE_WEIGHTS`,
+with **no per-personality compatibility table anywhere**. Measured: labradoodle NEW volatility ×0.69
+→ INSEPARABLE ×0.62; the Dutch shepherd at the same bond only reaches ×0.73.
+
+**The bond is the persistence.** Weeks together, fights survived, and times it was hurt working for
+you. A dog that resets every match is a gadget with fur.
+
+### Gate status
+
+Items 1, 6, 7 and 8 are met. **Items 2–5 are deliberately NOT met and are waived in
+`docs/BACKLOG.md`** — the engine layer (an entity, the bite through `takeDamage`, the scent feeding
+`game.noise`, the tells, the emotion display) is the next slice. The data layer is shipped and
+self-checking; nothing in the fight can reach it yet.
+

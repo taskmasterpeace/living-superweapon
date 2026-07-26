@@ -1333,6 +1333,33 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   pass. The spec's build order puts the column first and it is the right next slice — one system,
   six users.
 
+## COMPANIONS: A BREED IS APTITUDES, NOT A CLASS (2026-07-26) — manual §44
+- Robert settled the design question himself — *"should all dogs be able to do all things to a
+  certain degree, pitbull vs aussiedoodle... dogs can bite and hear/smell much better than humans"* —
+  and it is the difference between a data model and five special cases. **Seven axes** (bite · scent
+  · hearing · guard · steady · stamina · biddable), one row per breed, **no `if (breed === ...)`
+  anywhere** — the one file where that would have been most tempting.
+- ⚠ **HUMAN IS IN THE SPECIES TABLE ON PURPOSE.** "Dogs smell better than humans" must be a MEASURED
+  relationship, not a claim in a comment, or the first person to tune scent flattens it by accident.
+  Bloodhound **×76** a person; even the labradoodle **×44**.
+- ⚠ **APTITUDE IS A CEILING, BIDDABILITY IS A RATE, AND CONFLATING THEM IS THE TRAP.** Over 40 career
+  weeks of bite work the collie gains **+0.099/wk** to the shepherd's +0.085 — and ends up biting
+  **1.49 against 5.38**. Learns faster, never gets there. That is "all dogs to a degree" made
+  mechanical: nothing forbidden, everything bounded by what the animal is.
+- ⚠ **EMOTIONAL SUPPORT CHANGES THE APPRAISAL, NOT THE MOOD.** Not "+2 happy" — it moves the same
+  RESTING temperament and VOLATILITY dials trauma already moves, in the other direction. So it helps
+  an anxious personality enormously and a zealot barely, straight out of `DRIVE_WEIGHTS`, with **no
+  per-personality compatibility table**. Measured ×0.69 new → ×0.62 inseparable; the war dog at the
+  same bond only reaches ×0.73.
+- ⚠ **THE REPUTATION IS NOT THE DATA.** Making the pit bull the vicious one would author a stereotype
+  into a table claiming to be derived — temperament testing puts the breed above average on human
+  sociability. High bite, high steadiness, LOW guard: a poor watchdog because it likes people.
+- **The ladder is ranked against the population** (`aptRank`), so POOR→EXCEPTIONAL are occupied by
+  construction and re-sort when a breed is added. Fourth time this law has been applied.
+- ⚠ **GATE ITEMS 2–5 ARE WAIVED IN WRITING** (`docs/BACKLOG.md`): five breeds exist as DATA and zero
+  as an entity. Nothing bites, nothing renders, and `hud.js` still shows only the player's own mood —
+  which is the bigger missing piece. Verified 8/8 (`src/bench/companions.mjs`).
+
 ## HANDOFF
 - **`HANDOFF.md` at the repo root** is the orientation document: architecture, the ten rules that
   are load-bearing, what is solid, what is half-built, what to do next, and the headless
