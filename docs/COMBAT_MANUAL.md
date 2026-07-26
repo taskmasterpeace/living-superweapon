@@ -2088,3 +2088,113 @@ inside the middle. **Measured peak 6,858 units/s against a 2,576 average: the mi
 is 2.7x the old constant rate.**
 
 Refs `wwa-earth.png`, `wwa-flight-003.png` (breaking orbit), `wwa-flight-026.png` (in transit).
+
+
+---
+
+## §41 · THE WORLD HAS COORDINATES NOW (2026-07-26)
+
+Robert: *"get countries on a globe with borders and elevated... don't stop until you have
+coordinates for all the cities and use that for the borders. use subagents to look for open source
+stuff, think outside the box, be obsessive... seeing the globe, and getting closer and seeing the
+borders of countries and then getting closer and seeing the cities that we have."*
+
+### What was missing
+
+Everything. `_cityLL` in hud.js **hashed** country+city into a plausible-looking lat/lon and said so
+in its own comment; `data/earth.js` said the same in its header; `countries.js` has 25 fields and
+not one of them is geographic. Tokyo hashed to lat −1.2, lon 165.1.
+
+### The data, and where it came from
+
+Two agents went looking for open sources. What came back, verified by fetch:
+
+| | source | licence | size |
+|---|---|---|---|
+| borders | Natural Earth via `world-atlas@2.0.2/countries-50m` | **public domain** | 756 KB TopoJSON |
+| cities | **GeoNames** `cities1000` | **CC BY 4.0 — attribution required** | 31 MB, 500k+ places |
+
+⚠ **THE SOURCES ARE NOT COMMITTED; THE BAKE IS.** Both are downloaded once at build time and
+turned into two modules. Runtime cost: **281 KB of borders + 22 KB of coordinates**, no CDN, no
+decoder to carry, nothing fetched when the game runs.
+
+⚠ **THE ATTRIBUTION IS A LICENCE CONDITION, NOT A COURTESY**, and it ships on the options screen.
+Natural Earth is public domain and is credited by choice.
+
+### 1,050 of 1,050
+
+| | |
+|---|---|
+| matched by name in the right country | **1,042** |
+| resolved by a fuzzy pass | 5 |
+| country centroid (and flagged as such) | 3 |
+| unresolved | **0** |
+
+**99.7% resolve to a real named place.** Getting there needed four things:
+
+1. **Fold the EXTERNAL side.** Our sheet is already diacritic-stripped ASCII — `Sao Paulo`, `Lodz`
+   — so the mismatch runs outward: GeoNames holds `São Paulo` and `Łódź`. And the stripping
+   convention is inconsistent (`Duesseldorf` expands the umlaut, `Zurich` drops it), so one folding
+   rule provably cannot reproduce both and a second key exists for the German expansion.
+2. **Tiebreak on population.** Nine names collide across countries. Taking the first row would
+   silently put London in Ontario and Hyderabad in Pakistan.
+3. **Search the alternate names.** Chittagong is filed under `Chattogram`.
+4. **Thirty-one rows are not cities**, and each is an authored decision rather than a fuzzy guess:
+   metro areas (`Grande Vitoria` → Vitória, `Vale do Aco` → Ipatinga, `Ekurhuleni` → Germiston),
+   an English county (`West Yorkshire` → Leeds), an island (`Bali` → Denpasar), a mountain range
+   (`Da Hinggan Ling` → Jagdaqi), eight Chinese autonomous prefectures resolved to their
+   administrative seats, transliteration variants (`Suweon` → Suwon, `Al-Raqqa` → Ar Raqqah), and
+   the sheet's own typo (`Charleson` → Charleston).
+
+### A coastline and a border are different things, and TopoJSON already knows which
+
+This is the insight the whole reveal depends on. TopoJSON exists so neighbouring countries do not
+each carry their own copy of the line between them — they **share one arc by index**. So an arc
+referenced by exactly one country is a **coast**, and an arc referenced by two is a **border**.
+
+- **1,597 coast arcs** — the shape of the planet. Painted into the day map. Always there.
+- **362 political border arcs** — an opinion humans drew on top. Fades up on approach.
+
+⚠ The first pass decoded per-ring and threw the distinction away, which stroked every country into
+the texture. The borders were then permanently baked into the map and **the zoom reveal was
+impossible** — I could not work out why the ladder did nothing.
+
+### Elevated means a wall
+
+A border drawn as a line on a sphere is a map. His reference shows land standing **above** the water
+with a lit crest and a dark face — so every ring is built twice, on the surface and at `1 + rise`,
+and stitched into a ribbon. Dark at the foot, warm at the crest: that gradient *is* the elevation.
+15,650 coast segments and 3,517 border segments, one draw call each.
+
+### The ladder is a sequence, not a switch
+
+Measured at 8 / 2.8 / 1.3 radii:
+
+| layer | 8 | 2.8 | 1.3 |
+|---|---|---|---|
+| border hairline | 0.00 | 0.88 | 1.00 |
+| border walls | 0.00 | 0.15 | 1.00 |
+| cities | 0.00 | 0.00 | 0.98 |
+
+From orbit it is a **planet** — political lines at that distance are a diagram and they destroy the
+illusion of a real body. Closing, the hairline arrives, then the walls once they are big enough to
+read, and the cities last, when they mean something.
+
+### Three bugs worth keeping
+
+- ⚠ **THE PROJECTION SHIPPED WRONG.** `setSun` rolled its own spherical conversion and put lon 0 on
+  **+Z**, while the `SphereGeometry` the texture is painted on puts it on **+X**. Ninety degrees
+  out — the terminator looked completely convincing and fell in the wrong place. There is now one
+  `llToVec3`, derived from the geometry's own UV layout, and the sun, the borders and the city
+  markers all go through it.
+- ⚠ **THE HORIZON LEAK.** Everything drawn on the globe sits slightly above radius 1, so near the
+  limb the **far hemisphere** pokes outside the sphere's silhouette and rings the planet. It read as
+  a smooth ribbon over the Arctic. I twice checked every segment in the dataset for excessive length
+  — found exactly one, the real US–Canada 49th parallel — and concluded the data was clean. It was.
+  The fix is exact: for a unit sphere at distance `d` the horizon is where `dot(n, eye) = 1/d`.
+- ⚠ **THE ICE READ AS A DECAL.** A hard-edged latitude band foreshortens near the limb into a
+  crescent with a suspiciously perfect inner edge, and it looks so much like an artefact that I went
+  hunting for a geometry bug twice before recognising it as the ice cap. Sea ice has a ragged
+  margin.
+
+Refs `wwa-globe-far.png`, `wwa-globe-borders.png`, `wwa-globe-cities.png`, `wwa-globe-close.png`.

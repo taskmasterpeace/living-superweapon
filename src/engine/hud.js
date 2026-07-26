@@ -9,6 +9,7 @@ import { ROSTER, SLOT_ORDER } from '../data/characters.js';
 import { climateLine } from '../data/climate.js';
 import { PLANETS, AU_KM, HELIOPAUSE_AU, TERMINATION_SHOCK_AU, SCALE_LADDER, NEAR_STARS, transitSecsFor, worldEnv } from '../data/planets.js';
 import { clockStr } from '../data/news.js';
+import { GEO_ATTRIBUTION } from '../data/citycoords.js';
 import { gameDate, dateStr } from '../data/orbits.js';
 import { CSS, CODEX_MOBILE, PHONE_CSS, TABLET_CSS, DECK_CSS } from './hud.styles.js';
 import { DTYPES, DTYPE_INFO, resistOf, bandOf } from './entity.js';
@@ -851,6 +852,9 @@ export class HUD {
       ${toggle('aimAssist', 'Aim Assist · magnet targeting')}
       ${toggle('spacingRings', 'Spacing Rings · draw your strike reach on the ground')}
       ${toggle('sundial', 'Sundial · the hanging dial, sun and moon, day and time')}
+      <div class="dgsec">DATA</div>
+      <div class="oline2" style="line-height:1.5">${esc(GEO_ATTRIBUTION)}</div>
+      <div class="oline2" style="opacity:.7">Everything ships offline. Nothing here is fetched at runtime.</div>
       ${toggle('heroVoice', 'Hero Voices · DBZ yells (off: fighters fight in silence)')}
       <div class="orow"><span class="ol">Control Scheme</span><div class="chips3">
         ${Object.entries(KEYMAPS).map(([k, m]) => `<span class="c3${keymap(S.scheme) === m ? ' on' : ''}" data-scheme="${k}">${m.name}</span>`).join('')}

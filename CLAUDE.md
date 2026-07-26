@@ -911,6 +911,42 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   against a 2,576 average, 2.7x the old constant rate.** Refs `wwa-earth.png`,
   `wwa-flight-003.png`, `wwa-flight-026.png`.
 
+## THE WORLD HAS COORDINATES (2026-07-26) — `data/borders.js` + `data/citycoords.js`, manual §41
+- **1,050 of 1,050 cities now have real lat/lon.** 1,042 matched by name in the right country, 5
+  fuzzy, 3 country-centroid (FLAGGED as such), 0 unresolved — **99.7% to a real named place**.
+  `_cityLL`'s hash is superseded (Tokyo used to hash to lat −1.2, lon 165.1).
+- **SOURCES, verified by two research agents**: borders = Natural Earth via `world-atlas@2.0.2
+  countries-50m` (**public domain**); cities = **GeoNames cities1000 (CC BY 4.0 — ATTRIBUTION IS A
+  LICENCE CONDITION** and ships on the options screen). ⚠ Neither source is committed — downloaded
+  once at build time, baked to **281KB borders + 22KB coords**, nothing fetched at runtime.
+- ⚠ **FOLD THE EXTERNAL SIDE.** Our sheet is already diacritic-stripped ASCII (`Sao Paulo`, `Lodz`),
+  so the mismatch runs outward. And the convention is inconsistent — `Duesseldorf` expands the
+  umlaut while `Zurich` drops it — so ONE folding rule cannot reproduce both; there is a second key.
+  ⚠ **Tiebreak on POPULATION** or London lands in Ontario. ⚠ Search ALTERNATE names (Chittagong is
+  filed as Chattogram). ⚠ **31 rows are not cities** and are hand-aliased, each an authored
+  decision: metro areas, an English county, an island, a mountain range, 8 Chinese autonomous
+  prefectures → their seats, transliterations, and the sheet's own typo `Charleson`.
+- **A COASTLINE AND A BORDER ARE DIFFERENT THINGS, AND TOPOJSON ALREADY KNOWS WHICH.** Neighbours
+  SHARE one arc by index, so an arc used ONCE is a coast (1,597) and an arc used TWICE is a border
+  (362). ⚠ The first pass decoded per-ring, threw the distinction away, stroked every country into
+  the texture — borders were permanently baked into the map and **the zoom reveal was impossible**.
+- **ELEVATED MEANS A WALL**: every ring built twice (surface + `1+rise`) and stitched into a ribbon,
+  dark at the foot and warm at the crest. That gradient IS the elevation. 15,650 coast + 3,517
+  border segments, one draw call each.
+- **THE LADDER IS A SEQUENCE, NOT A SWITCH** (measured at 8 / 2.8 / 1.3 radii): hairline
+  0.00/0.88/1.00 · walls 0.00/0.15/1.00 · cities 0.00/0.00/0.98. From orbit it is a PLANET —
+  political lines at that range are a diagram and destroy the illusion of a real body.
+- ⚠ **THE PROJECTION SHIPPED WRONG EARLIER TODAY**: `setSun` rolled its own spherical and put lon 0
+  on **+Z** while `SphereGeometry` puts it on **+X** — 90 degrees out, a terminator that looked
+  convincing and fell in the wrong place. ONE `llToVec3` now, derived from the geometry's own UVs.
+- ⚠ **THE HORIZON LEAK**: anything above radius 1 pokes outside the silhouette near the limb, so the
+  FAR hemisphere rings the planet. Read as a ribbon over the Arctic; I checked every segment for
+  excessive length twice and the data was clean each time. Exact fix: for a unit sphere at distance
+  d the horizon is `dot(n, eye) = 1/d`.
+- ⚠ **A hard-edged ice band reads as a DECAL** — foreshortened at the limb it looks so much like a
+  rendering artefact that I hunted a geometry bug twice. Sea ice needs a ragged margin.
+- ⚠ Backticks in comment prose inside a JS template literal terminate the string (bit me again).
+
 ## HANDOFF
 - **`HANDOFF.md` at the repo root** is the orientation document: architecture, the ten rules that
   are load-bearing, what is solid, what is half-built, what to do next, and the headless

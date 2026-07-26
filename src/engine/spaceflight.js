@@ -806,7 +806,13 @@ export class SpaceFlight {
     this._along = along;
     this.partyGroup.position.set(0, 0, along);
     this._stepWarp(dt, speed);
-    if (this._earth) this._earth.spin(dt, 1);
+    if (this._earth) {
+      this._earth.spin(dt, 1);
+      // ⚠ THE LADDER IS PER-FRAME OR IT IS NOTHING. Borders and cities fade in on APPROACH, which
+      // means the globe has to be told where the camera is every frame — a reveal driven once at
+      // build time is just a static setting.
+      this._earth.setZoomFromCamera(this.cam);
+    }
 
     // formation + life: a gentle roll and bob per craft so a group never reads as a rigid prop
     this.craft.forEach((c, i) => {
