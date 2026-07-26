@@ -233,14 +233,6 @@ export class HUD {
         <span class="simc c1"></span><span class="simc c2"></span><span class="simc c3"></span><span class="simc c4"></span>
         <div class="simtag"><i></i>THRESHOLD SIMULATION — DANGER ROOM · SUBJECT IS LIVE, ALL ELSE PROJECTED</div></div>
       <div class="telem" id="hTelem"></div>
-      <div class="panel alt" id="hAlt" style="display:none">
-        <div class="aval" id="hAltV">0m</div>
-        <div class="arung" data-b="0"><b>GND</b></div>
-        <div class="arung" data-b="1"><b>BLD</b></div>
-        <div class="arung" data-b="2"><b>SKY</b></div>
-        <div class="arung" data-b="3"><b>CLD</b></div>
-        <div class="alab">ALT</div>
-      </div>
       <div class="kobanner" id="hKO"><div class="kob" id="hKOt">K.O.</div><div class="kos" id="hKOs"></div></div>
     </div>`;
     this.el = {
@@ -261,8 +253,6 @@ export class HUD {
       radar: this.root.querySelector('#hRadar'), radarC: this.root.querySelector('#hRadarC'),
       pip: this.root.querySelector('#hPip'),
       city: this.root.querySelector('#hCity'), telem: this.root.querySelector('#hTelem'),
-      alt: this.root.querySelector('#hAlt'), altV: this.root.querySelector('#hAltV'),
-      altRungs: [...this.root.querySelectorAll('#hAlt .arung')],
       wanted: this.root.querySelector('#plWanted'),
       hits: this.root.querySelector('#hHits'), danger: this.root.querySelector('#hDanger'),
       ko: this.root.querySelector('#hKO'), koT: this.root.querySelector('#hKOt'), koS: this.root.querySelector('#hKOs'),
@@ -535,33 +525,11 @@ export class HUD {
   // The height meter: four rungs (GROUND / BUILDING / SKY / CLOUDS) with the live one lit in your
   // hero's colour, plus the raw altitude. Crossing a band lights the next rung — you can watch
   // yourself climb or drop a level.
-  updateAltitude(g, p) {
-    const el = this.el.alt; if (!el) return;
-    const show = !!(g.mode && g.running && p && p.alive);
-    if (show !== this._altOn) { this._altOn = show; el.style.display = show ? 'flex' : 'none'; }
-    if (!show) return;
-    const y = Math.max(0, p.pos.y);
-    const band = bandOf(y);                      // ONE rule, imported — never hand-copy the thresholds
-    const acc = p.def.colors.accent;
-    if (band !== this._altBand) {
-      const up = this._altBand != null && band > this._altBand;
-      this._altBand = band;
-      this.el.altRungs.forEach((r, i) => {
-        const on = i === band;
-        r.classList.toggle('on', on);
-        r.style.background = on ? acc : '';
-        r.style.borderColor = on ? acc : '';
-      });
-      if (this._altBand != null && band > 0) {   // a band change is worth a beat of feedback
-        el.style.transform = `translateY(${up ? 3 : -3}px)`;
-        clearTimeout(this._altT); this._altT = setTimeout(() => { el.style.transform = ''; }, 130);
-      }
-    }
-    const m = Math.round(y * 0.19);   // 1u ≈ 0.19m at true scale — report in metres, like a real altimeter
-    const txt = m > 0 ? m + 'm' : '<i>GROUND</i>';
-    if (txt !== this._altTxt) { this._altTxt = txt; this.el.altV.innerHTML = txt; }
-  }
-
+  // THE ALTIMETER MOVED INTO THE WORLD (2026-07-25). This used to be a four-rung ALT ladder
+  // docked to the side of the screen — a number you had to look AWAY from your character to read,
+  // while flying, which is exactly when you cannot afford to. It now lives on the marker under the
+  // flyer: the ring rises off its own contact shadow so the GAP is the altitude, and a small tag
+  // rides it with the band name and the height in metres. See entity._animate / _altTag.
   // ===== THE TEST HARNESS =====
   // In the Danger Room we surface everything the engine knows: frame cost, live entity/FX
   // counts, the player's exact combat state, per-dummy DPS, and — critically — each bot's
@@ -1723,7 +1691,6 @@ export class HUD {
     if (g.comic) { try { g.comic.update(this._dt || 0.016); } catch (e) { g.reportError && g.reportError(e, 'comic'); } }
     this.updateColumnChips(g);
     this.updateTelemetry(g);
-    this.updateAltitude(g, p);
     // radar (hidden at the title / while paused) + low-HP danger pulse
     const inMatch = !!(g.mode && g.running);
     this.el.radar.style.display = inMatch ? 'block' : 'none';

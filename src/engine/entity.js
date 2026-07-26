@@ -304,6 +304,38 @@ export class Fighter {
 
   // Free all scene-level extras (tentacles, deployed items, planted mines). Call when the fighter leaves play.
   // (the grapnel line mesh rides along — see dispose body)
+  // The in-world altitude tag: band name + metres, drawn small on the marker ring. Built LAZILY on
+  // first liftoff — a grounded fighter never allocates one — and torn down with the fighter.
+  _altTag(p, band, h, lift) {
+    const show = h > 3;
+    if (!show) { if (p.altTag) p.altTag.visible = false; return; }
+    if (!p.altTag) {
+      const c = document.createElement('canvas'); c.width = 256; c.height = 64;
+      const tex = new THREE.CanvasTexture(c);
+      const spr = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false, depthWrite: false }));
+      spr.scale.set(9.5, 2.4, 1); spr.renderOrder = 3;
+      spr.userData.cv = c; spr.userData.tex = tex;
+      p.groundRig.add(spr); p.altTag = spr;
+    }
+    const spr = p.altTag; spr.visible = true;
+    spr.position.set(0, 0.55 - this.pos.y + (this.groundY || 0) + lift + 2.6, 0);
+    const m = Math.round(h * 0.19);                        // 1u ≈ 0.19m — report in metres
+    const key = band + '|' + m;
+    if (key !== spr.userData.key) {
+      spr.userData.key = key;
+      const c = spr.userData.cv, x = c.getContext('2d');
+      x.clearRect(0, 0, 256, 64);
+      // ⚠ canvas 2d cannot read CSS tokens — literals only (the map-maker lesson).
+      const col = ALT_BANDS[band].c;
+      x.font = 'bold 30px Rajdhani, system-ui, sans-serif';
+      x.textAlign = 'center'; x.textBaseline = 'middle';
+      x.lineWidth = 5; x.strokeStyle = 'rgba(8,7,6,0.92)';
+      const txt = ALT_BANDS[band].name + '  ' + m + 'm';
+      x.strokeText(txt, 128, 34); x.fillStyle = col; x.fillText(txt, 128, 34);
+      spr.userData.tex.needsUpdate = true;
+    }
+  }
+
   dispose() {
     // F9: releasing the fighter must release whatever they were holding, or the prop mesh
     // outlives them in the scene and the world keeps a reference to a dead carrier.
@@ -313,6 +345,9 @@ export class Fighter {
     // Every clear path calls dispose(); without this traverse each hero swap/respawn orphaned
     // dozens of GPU objects (the 2026-07-24 code review's headline finding). Shared textures
     // are NOT disposed here (material.dispose never touches .map).
+    // ⚠ the alt tag's CanvasTexture is PER-FIGHTER, and the traverse below disposes materials
+    // but never their .map — so it has to be freed by name or every liftoff leaks a texture.
+    if (this.parts && this.parts.altTag) { const u = this.parts.altTag.userData; if (u.tex) u.tex.dispose(); }
     if (this.obj) this.obj.traverse((o) => { if (o.geometry) o.geometry.dispose(); if (o.material && o.material.dispose) o.material.dispose(); });
     if (this._grapLine) { this._grapLine.geometry.dispose(); this._grapLine.material.dispose(); if (this._game) this._game.scene.remove(this._grapLine); this._grapLine = null; }
     if (this.tentacles) { for (const t of this.tentacles) t.dispose(); this.tentacles = null; }
@@ -1681,19 +1716,50 @@ export class Fighter {
       p.shadow.material.opacity = 0.36 * alt;
       p.shadow.scale.setScalar(clamp(1 - aly * 0.006, 0.4, 1));
     }
-    // altitude-band ring: color = which of the four bands you're in (ground-pinned like the shadow)
+    // ---- THE ALTIMETER IS THE MARKER UNDER YOU (2026-07-25) -------------------------------------
+    // Robert: "add flight level to the line under the flyer, remove it from the side panel — put
+    // it in the circle that indicates what level you are on, small, and have it slowly float up
+    // indicating how high your character is."
+    //
+    // The ring used to be pinned to the ground exactly like the contact shadow, which meant the
+    // two markers sat on top of each other and neither said anything about HEIGHT. Now the SHADOW
+    // stays on the ground and the RING rises off it, so the GAP between them is the altitude —
+    // readable without a number, from any camera angle, for every fighter at once. It is damped
+    // rather than tracked so it FLOATS up rather than snapping, and it is capped well below the
+    // body so it can never reach your feet and start reading as zero again.
     if (p.bandRing) {
-      p.bandRing.position.set(0, 0.55 - this.pos.y + (this.groundY || 0), 0);
+      const gy0 = this.groundY || 0, hAbove = Math.max(0, this.pos.y - gy0);
+      // ⚠ LOGARITHMIC, NOT LINEAR-WITH-A-CAP. The first version was `min(h * 0.34, 16)`, which
+      // saturates at roughly 47 units — measured: the gap was pinned at 16.5u from h=52 all the
+      // way to h=224, so the indicator said the same thing for the entire useful flight range and
+      // only worked while you were barely off the ground. A log curve keeps climbing to the
+      // ceiling while staying bounded, and gives each altitude band about the same visual space.
+      const want = Math.min(6.2 * Math.log(1 + hAbove / 11), 24);
+      this._ringLift = this._ringLift === undefined ? want : damp(this._ringLift, want, 3.2, dt);
+      const lift = Number.isFinite(this._ringLift) ? this._ringLift : 0;
+      p.bandRing.position.set(0, 0.55 - this.pos.y + gy0 + lift, 0);
       const b = bandOf(this.pos.y);
       if (b !== this._band) { this._band = b; p.bandRing.material.color.set(ALT_BANDS[b].c); }
       p.bandRing.material.opacity = b === 0 ? 0.28 : 0.6;   // louder when someone leaves the ground
+      // THE TAG rides the ring. Numbers only for a HUMAN — a metre readout floating over every
+      // enemy is clutter at best and, for a foe you have only half-seen, an information leak.
+      // Their ring still rises, so you read THEIR height as a shape and YOUR height as a figure.
+      // ⚠ `this._game`, NEVER a bare `game`. This whole block — the tag AND the plumb line below
+      // — used to read an undeclared `game` identifier that resolves to an INCIDENTAL GLOBAL
+      // nothing in src/ ever assigns. Measured: `window.game !== theCurrentGame`, so the tether's
+      // honesty gate and its scroll clock were consulting a different object entirely, and the
+      // new tag silently never built. It failed safe rather than loudly, which is why it lasted.
+      // The class already holds the real reference; there is no reason to reach for a global.
+      const G = this._game;
+      if (G && G.isHuman && G.isHuman(this)) this._altTag(p, b, hAbove, lift);
+      else if (p.altTag) p.altTag.visible = false;
       // ---- THE PLUMB LINE ------------------------------------------------------------------
       if (p.tether) {
         const gy = this.groundY || 0, h = this.pos.y - gy;
         // ⚠ THE HONESTY GATE. A tether visible through fog is a wallhack and would silently
         // undo the entire AI-honesty effort. Only draw it for someone actually seen — or in
         // the explicit spectator mode, which is an admin view, not the player HUD.
-        const seen = (this._vis === undefined ? 1 : this._vis) > 0.35 || (game && game.hud && game.hud.spectatorBands);
+        const seen = (this._vis === undefined ? 1 : this._vis) > 0.35 || (G && G.hud && G.hud.spectatorBands);
         // ⚠ NEVER WRITE A NON-FINITE VALUE INTO A PERSISTENT BUFFER. This attribute lives for
         // the life of the fighter, so a single transient NaN position would stay in it forever
         // and three.js would report a NaN bounding sphere long after the cause was gone. Guard
@@ -1707,7 +1773,7 @@ export class Fighter {
           // `if (y1 <= y0) continue` — does NOT fire, because **NaN <= NaN is false**. A NaN
           // sails straight past a comparison-based skip and lands in a buffer that lives for the
           // life of the fighter. Checking the inputs is not enough; check the OUTPUT.
-          const sc = (this.flying && Math.abs(this.vel.y) > 4 && game && Number.isFinite(game.time)) ? (game.time * 22) % 50 : 0;
+          const sc = (this.flying && Math.abs(this.vel.y) > 4 && G && Number.isFinite(G.time)) ? (G.time * 22) % 50 : 0;
           const scroll = Number.isFinite(sc) ? sc : 0;
           let n = 0;
           for (let d = 0; d < h && n < 28; d += 50) {
@@ -1724,7 +1790,7 @@ export class Fighter {
           p.tether.geometry.attributes.position.needsUpdate = true;
           p.tether.geometry.setDrawRange(0, n * 2);
           p.tether.material.color.set(ALT_BANDS[b].c);
-          p.tether.material.opacity = (game && game.hud && game.hud.spectatorBands) ? 0.85 : 0.28 + Math.min(0.3, h / 400);
+          p.tether.material.opacity = (G && G.hud && G.hud.spectatorBands) ? 0.85 : 0.28 + Math.min(0.3, h / 400);
         } else {
           if (p.tether.visible) {                      // hide AND scrub, so nothing stale survives
             const arr = p.tether.geometry.attributes.position.array;

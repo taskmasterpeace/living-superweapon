@@ -533,14 +533,6 @@ export const CSS = `
 #hud .telem .tv.hot{ color:var(--gold); } #hud .telem .tv.bad{ color:var(--danger); } #hud .telem .tv.ok{ color:var(--good); }
 #hud .telem .subj{ color:var(--info); font-weight:700; }
 /* ---- ALTITUDE LADDER: which of the four bands you're in, and which way you're moving ---- */
-#hud .alt{ position:absolute; right:18px; top:196px; width:58px; display:flex; flex-direction:column-reverse; gap:3px; padding:8px 7px; align-items:stretch; }
-#hud .alt .arung{ position:relative; height:24px; border-radius:var(--r-1); background:var(--surface-hi); border:1px solid var(--line); display:flex; align-items:center; justify-content:center; transition:background .18s, border-color .18s, transform .18s; }
-#hud .alt .arung b{ font-family:var(--f-mono); font-size:var(--t-micro); letter-spacing:var(--tr); color:var(--text-6); font-weight:700; }
-#hud .alt .arung.on{ transform:scaleX(1.12); }
-#hud .alt .arung.on b{ color:var(--on-gold); }
-#hud .alt .alab{ font-family:var(--f-mono); font-size:var(--t-micro); letter-spacing:var(--tr-wide); color:var(--text-5); text-align:center; padding-bottom:3px; }
-#hud .alt .aval{ font-family:var(--f-mono); font-size:var(--t-tiny); color:var(--gold-pale); text-align:center; padding-top:4px; }
-#hud .alt .aval i{ font-style:normal; color:var(--text-5); }
 #hud .wantedrow{ font-size:var(--t-sm); font-weight:800; letter-spacing:.16em; color:var(--police); margin:1px 0 2px; text-shadow:0 0 10px rgba(90,160,255,.6); animation:pipblink 1.2s steps(2,start) infinite; }
 #hud .wantedrow.lvlup{ animation:wantedPop .55s cubic-bezier(.2,1.6,.4,1), pipblink 1.2s steps(2,start) infinite; }
 @keyframes wantedPop{ 0%{ transform:scale(1.7); filter:brightness(2) } 100%{ transform:scale(1); filter:none } }
@@ -671,7 +663,6 @@ export const CSS = `
     #hud .hint{ display:none; }
     #hud .radar{ width:104px; height:104px; top:calc(8px + env(safe-area-inset-top)); right:8px; }
     #hud .radar canvas{ width:104px; height:104px; }
-    #hud .alt{ top:calc(120px + env(safe-area-inset-top)); right:8px; width:44px; padding:5px; }
     #hud .pip{ display:none; }
     #hud .pl{ left:8px; bottom:calc(8px + env(safe-area-inset-bottom)); min-width:150px; padding:8px 10px; transform:scale(.9); transform-origin:bottom left; }
     #hud .kit{ left:8px; bottom:calc(150px + env(safe-area-inset-bottom)); transform:scale(.85); transform-origin:bottom left; }
@@ -723,7 +714,6 @@ body.phone #hud .kit{ display:none !important; }               /* kit chips are 
 body.phone #hud .pip{ display:none !important; }               /* no room for the news monitor */
 body.phone #hud .cityplate{ display:none !important; }
 body.phone #hud .modebar{ top:4px; font-size:var(--t-micro); padding:3px 8px; }
-body.phone #hud .alt{ transform:scale(.72); transform-origin:right center; }
 body.phone #hud .feed{ max-width:38vw; font-size:var(--t-micro); line-height:1.35; opacity:.85; }
 body.phone #hud .feed div:nth-child(n+3){ display:none; }      /* two lines of feed, no more */
 /* the player panel becomes a compact strip pinned TOP-left — the bottom-left corner is the stick */
