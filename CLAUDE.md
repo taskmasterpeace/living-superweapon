@@ -1584,6 +1584,24 @@ files in `docs/powerworld/` (~8,100 lines on ESF/BFP mechanics, platform limits,
   that changes what happens when you RELEASE a button belongs where the release is handled, not in
   front of the button.** Tiers still decide speed and hover quality: a grounded fighter can fly here,
   they are simply not good at it.
+- **THE LOOK — five faults, and a SCREENSHOT found every one** (the stage was verified, described as
+  having "its own sky", and rendered a **black void over a flat brown plane**): it was NIGHT, because
+  the stage let Earth's 240s clock run — `world.dayFixed` pins it now, since **a dimension is not a
+  rotating planet** · there was NO SKY, because `_hideTheatre`'s "hide every child that isn't a light"
+  took the sky dome with the city (only `skyMat` was stored, so nothing could exempt the mesh —
+  `world.skyMesh` now, scaled ×3.4 because its radius is 900 and so is the play radius) · the spires
+  were BLACK CARDBOARD, because rock and ground were both mid-brown AND the sun sits 54° up, which
+  gives a vertical surface almost nothing (33° now: sides take 0.83, the floor 0.55 — the floor loses a
+  little and the silhouettes gain everything) · a RAZOR HORIZON (18 mesas beyond the play radius, never
+  cover) · and NO SENSE OF HEIGHT on a 456u climb (a 16-quad cloud deck, one draw call).
+  ⚠ **`world.sunOff` is the sun's direction and the only copy** — `sun.position` is rewritten every
+  frame as `camTarget + offset` to drag the shadow frustum along, so writing a POSITION writes to
+  something overwritten before it renders. It was the literal `(120,200,80)` at three call sites.
+  ⚠ **Far and low beats near and tall**: mesas at r1150–1950/h430 LOOMED — the thing meant to say "the
+  world continues" said "you are in a bowl". ⚠ **A cloud deck at fight altitude is a smear** — a flat
+  billboard only reads from below, so it lives at 260–430.
+  ⚠ Aerial perspective is AUTHORED (rock lerped 0.28 toward the sky's own horizon colour): stage fog at
+  1,500u is under 1%, so distant rock comes back hard-edged and reads as near. At 0.55 it reads as paper.
 - **THE CHASE LOOP**: `_chaseKb` adds `launchT` to the slide-class drag exception, so a 101 u/s
   knockback travels **61.3u** here against **16.1u** in the city. That plus `game.intercept(f)`
   (teleport to a body you launched, refused past `CATCH_SPD 132`) is the ESF loop.

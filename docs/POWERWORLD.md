@@ -504,12 +504,42 @@ publishes ESF's numeric ki costs**, so any ki economy we build is ours to calibr
 | **The chase loop** | ✅ a 101 u/s knockback travels **61.3u** here against **16.1u** in the city |
 | **The open sky** | ✅ **verified under the real keys.** One flag, four rules (manual §46): no deck servo · no `maxBand` cap · **every character flies, including `flightTier 0`** · no ceiling clamp at all. A flier and a grounded bruiser both climb **456u and are still rising**; hold drifts 1.6u over 4s; descent saturates `FLY_SINK`. ⚠ Shipped broken once — the flag was the FIRST test in the flight chain and ate `flyHeld`/`descendHeld` ("only able to fly straight"); it now replaces only the dock |
 | **The city's own sky** | ✅ a pre-existing collapse found on the way: `fitBands` derived the lid from the tallest building, so Robert's saved theatre (a Moon village) had a **42u flight ceiling**. Floored at `MIN_CEIL 260` / `MIN_SKY 150` — that village now gives 215u, and PowerWorld is still 2.1× higher |
-| **The stage** | ✅ 900u rock arena, 15 spires + 22 boulders as real cover, its own sky, no city |
+| **The stage** | ✅ 900u rock arena, 15 spires + 22 boulders as real cover, no city |
+| **The look** | ✅ **it reads as BFP now** (`wwa-powerworld-bfp.png`). Bright pinned daylight, saturated cyan-blue sky, pale sunlit rock, ochre desert floor, a cloud deck overhead and 18 mesas on the horizon. ⚠ Every one of the five faults was found by a SCREENSHOT, not by an assertion — see below |
 | **No witnesses** | ✅ no pedestrians, police or press — via `hasCivilians()`, one definition |
 | **The HUD** | ✅ the city nameplate, wanted stars and KMK 9 monitor are gone; the panel, hands row and radar stay |
 | **Beam struggle in the air** | ✅ fixed (was silently impossible past ~51° of elevation) |
 | **Steam Deck** | ✅ boot fixed · the 40 Hz governor inversion fixed · **the quality ladder now has three real rungs** (tiers 2 and 1 rendered identically before, because `_maxPR` is 1 there) · the chase view drops the whole directional-shadow pass · the packaged path already existed. ⚠ **no GPU timings** — see below |
 | **iPad** | ✅ boot no longer dies · safe areas resolve (`viewport-fit=cover`) · the item button exists on the touch layer · **lifting the aim thumb no longer aims at the corner of the world**. ⚠ **no GPU timings** |
+
+### THE LOOK PASS — five faults, and a screenshot found every one
+
+Robert asked for maps that look like Bid for Power. The stage had been built, verified and described as
+having "its own sky", and one screenshot showed a **black void over a flat brown plane**. No assertion
+was wrong; they were all about things other than what the frame looked like.
+
+| what the picture showed | the cause | the fix |
+|---|---|---|
+| **it was NIGHT — 9:11 PM** | the stage deliberately let Earth's clock run: *"the sun still crosses, dusk still happens, it simply crosses a different sky."* A full cycle is 240s, so a four-minute round walks noon to midnight. **BFP is never night** | `world.dayFixed` pins it. A dimension is not a rotating planet, so a locked sky is the honest model rather than a dodge |
+| **no sky at all** — the palette work was invisible | `_hideTheatre`'s "hide every child that isn't a light" took the **sky dome** with the city. Only `skyMat` was stored on the world, so nothing could exempt the mesh | `world.skyMesh` + `keep.add`. Also scaled ×3.4: its radius is 900 and so is the play radius, so a fighter at the rim and at altitude was outside their own sky |
+| **the spires were black cardboard** while a boulder ten feet away read as pale rock | two causes. `rock` and `ground` were both mid-brown, and the sun sits **54°** up — a high sun gives a VERTICAL surface almost nothing, and this stage is fifteen vertical spires | rock lighter than ground; `rockDark` promoted from half the rock to a quarter; and the sun aimed to **33°**, where sides take 0.83 of the light and the floor 0.55. The floor loses a little and the silhouettes gain everything |
+| **a razor horizon** with nothing past it | nothing existed beyond the floor disc | 18 mesas, outside the play radius, never cover. ⚠ First tried at r 1150–1950 and heights to 430, where they **loomed** — the thing meant to say "the world continues" said "you are in a bowl". Further out and shorter reads as bigger country, which is the opposite of the instinct |
+| **no sense of height** on a 456u climb | empty air is empty air | a 16-quad cloud deck in ONE draw call. ⚠ First at 150–250u, i.e. *at fight altitude*, where a flat billboard is a smear across the horizon. Overhead at 260–430 the same quad reads correctly and a full climb punches through it |
+
+⚠ **THE SUN'S DIRECTION WAS A MAGIC NUMBER AT THREE CALL SITES.** `sun.position` is rewritten every
+frame as `camTarget + (120, 200, 80)` to drag the tight shadow frustum along with the view — so the
+stage's careful `sun.position.set(...)` was overwritten before it was ever rendered, and the probe that
+caught it read back a position I had never written. It is `world.sunOff` now, one copy, three readers.
+
+⚠ Aerial perspective on the mesas is **authored, not left to fog**: stage fog at 1,500u is under 1%, so
+they would have come back as hard-edged rock, which reads as *near* however far away it is. The colour
+is the rock lerped toward the sky's own horizon value — derived from the palette, so it cannot drift
+(manual §43, the same reasoning as the Earth limb). ⚠ At 0.55 they read as pale grey **paper**; 0.28.
+
+Restore verified 10/10, 0 errors: the dome survives and is scaled, the light is pinned, **the visible
+light count never changes** (19 → 19 — the light-count law), the city is gone and comes back
+identically, the clock resumes where it was left (time in another dimension does not advance the clock
+at home — a ruling), and five round trips move geometries 255 → 258 with textures flat.
 
 ### MEASURED — POWERWORLD IS CHEAPER THAN A CITY FIGHT, AND STEADIER
 

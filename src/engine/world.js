@@ -95,7 +95,13 @@ export class World {
     this.amb = new THREE.AmbientLight('#6a7890', 0.5);
     this.scene.add(this.amb);
     const sun = new THREE.DirectionalLight('#fff2dc', 1.8);
-    sun.position.set(120, 200, 80);
+    // ⚠ THE SUN'S DIRECTION IS THIS OFFSET, AND IT IS THE ONLY COPY. `sun.position` is rewritten every
+    // frame as `camTarget + offset` to drag the tight shadow frustum along with the view, so writing a
+    // position is writing to something that is overwritten before it is ever rendered — a venue that
+    // wants different light has to change the OFFSET. It was the literal `(120, 200, 80)` at THREE call
+    // sites, which is both a duplicated magic number and the reason PowerWorld could not aim it.
+    this.sunOff = new THREE.Vector3(120, 200, 80);   // 54° elevation — right for an isometric city
+    sun.position.copy(this.sunOff);
     sun.castShadow = true;
     sun.shadow.mapSize.set(1536, 1536);   // 55% of 2048²'s pixels — visually identical at iso zoom
     // tight frustum that FOLLOWS the camera target (see follow()) — the visible area is ~160 units,
@@ -135,9 +141,16 @@ export class World {
     });
     const sky = new THREE.Mesh(new THREE.SphereGeometry(900, 24, 16), mat);
     sky.renderOrder = -1; this.scene.add(sky);
+    // ⚠ KEEP THE HANDLE, NOT JUST THE MATERIAL. Only `skyMat` was stored, so nothing could exempt the
+    // dome from a venue's "hide every child" pass — and PowerWorld hid it along with the city, which
+    // is why another dimension rendered as a BLACK VOID with a carefully skinned sky nobody could see.
+    // The radius also matters to a venue: 900 is generous inside a 240u city and exactly the play
+    // radius in PowerWorld, so a fighter at the far edge and at altitude is OUTSIDE their own sky.
+    sky.name = 'sky'; this.skyMesh = sky;
     this.skyMat = mat;
     // ---- day/night state (ruled: a 2-minute match ≈ 12 in-game hours → 240s full day) ----
     this.dayT = 0.3;                       // start late morning
+    this.dayFixed = null;                  // a world that does not turn pins its own light (see updateDayNight)
     this._dnc = {                          // preallocated palette — alloc-free per-frame lerps
       work: new THREE.Color(), work2: new THREE.Color(),
       sunDay: new THREE.Color('#fff2dc'), sunGold: new THREE.Color('#ffbe72'), sunNight: new THREE.Color('#8fa5d8'),
@@ -223,7 +236,12 @@ export class World {
   // Advance the day and push it into the lights, sky, and building windows. dl: 1 = noon,
   // 0 = midnight; night NEVER drops below the original arena look (Robert's rule: keep it bright).
   updateDayNight(dts) {
-    this.dayT = (this.dayT + dts / 240) % 1;
+    // ⚠ A DIMENSION IS NOT A ROTATING PLANET. `dayT` is a fact about a world turning under its star,
+    // and a full cycle here is 240s — so in a place that has no star the sky walked from noon to
+    // midnight inside one four-minute fight. `dayFixed` pins it. This is not "stopping the clock" as a
+    // dodge: a locked sky is the honest model for somewhere that does not orbit anything.
+    if (this.dayFixed != null) this.dayT = this.dayFixed;
+    else this.dayT = (this.dayT + dts / 240) % 1;
     const P = this._dnc; if (!P) return;
     const dl = 0.5 + 0.5 * Math.cos((this.dayT - 0.25) * Math.PI * 2);
     const gold = Math.exp(-((dl - 0.5) ** 2) / 0.02);                     // sunrise / sunset bell
@@ -1250,7 +1268,8 @@ export class World {
     this.camera.position.copy(this.camPos);
     this.camera.lookAt(this.camTarget);
     const sx = Math.round(this.camTarget.x), sz = Math.round(this.camTarget.z);
-    this.sun.position.set(sx + 120, 200, sz + 80);
+    const so = this.sunOff;
+    this.sun.position.set(sx + so.x, so.y, sz + so.z);
     this.sun.target.position.set(sx, 0, sz);
   }
 
@@ -1280,7 +1299,8 @@ export class World {
     this.camera.lookAt(this.camTarget.x + this.shakeV.x, this.camTarget.y + this.shakeV.y, this.camTarget.z + this.shakeV.z);
     // drag the sun's tight shadow frustum along with the view (snapped to whole units so texels don't swim)
     const sx = Math.round(this.camTarget.x), sz = Math.round(this.camTarget.z);
-    this.sun.position.set(sx + 120, 200, sz + 80);
+    const so = this.sunOff;
+    this.sun.position.set(sx + so.x, so.y, sz + so.z);
     this.sun.target.position.set(sx, 0, sz);
   }
 
@@ -2117,7 +2137,8 @@ export class World {
     c.lookAt(this.camTarget.x + jx, this.camTarget.y + jy, this.camTarget.z + jz);
     // the sun's tight shadow frustum still has to follow the view
     const sx = Math.round(this.camTarget.x), sz = Math.round(this.camTarget.z);
-    this.sun.position.set(sx + 120, 200, sz + 80);
+    const so = this.sunOff;
+    this.sun.position.set(sx + so.x, so.y, sz + so.z);
     this.sun.target.position.set(sx, 0, sz);
   }
 
