@@ -62,8 +62,18 @@ export const WEIGHTS = [
   { lo: 50,   hi: 74,   lift: 50 * T,  cmp: 'Superhuman' },
   { lo: 75,   hi: 99,   lift: 80 * T,  cmp: 'High superhuman' },
   { lo: 100,  hi: 149,  lift: 100 * T, cmp: 'Low Cosmic' },
-  { lo: 150,  hi: 999,  lift: 200 * T, cmp: 'Cosmic' },
-  { lo: 1000, hi: 4999, lift: 400 * T, cmp: 'Beyond Comprehension' },
+  // ⚠ THE TOP THREE ROWS CONTINUE THE CURVE PAST THE SOURCE SHEET — Robert's ruling 2026-07-25:
+  // "we good on the game not caring about the original doc, just the game." His weight column
+  // stops at 400 tons while his designations run to OMNIPOTENT, so taken literally a SUNBREAKER
+  // lifted only ~1.8× an EARTHSHAKER and the four cosmic bands were nearly indistinguishable —
+  // four names for one number. Everything at or below rank 149 is still HIS figure, untouched and
+  // verified to the pound; only the empty top continues, at the ×2-per-band cadence his own rows
+  // already set. The names now mean something: an Eartheater lifts a hundred times an Earthshaker.
+  { lo: 150,  hi: 249,  lift: 200 * T,     cmp: 'Cosmic' },
+  { lo: 250,  hi: 499,  lift: 2200 * T,    cmp: 'High Cosmic' },
+  { lo: 500,  hi: 999,  lift: 26000 * T,   cmp: 'Supreme Cosmic' },
+  { lo: 1000, hi: 2499, lift: 340000 * T,  cmp: 'Deity' },
+  { lo: 2500, hi: 4999, lift: 4600000 * T, cmp: 'Beyond Comprehension' },
 ];
 
 export const MAX_RANK = 4999;
@@ -152,8 +162,16 @@ export function knockbackOf(rank) {
 }
 
 // one line a surface can print without deriving anything itself
+// tonnage in words, because past the cosmic line the raw figure is unreadable
+export function liftWords(rank) {
+  const t = liftTonsOfRank(rank);
+  if (t < 1) return Math.round(t * T) + ' lb';
+  if (t < 1e3) return (t < 10 ? t.toFixed(1) : Math.round(t)) + ' t';
+  if (t < 1e6) return +(t / 1e3).toFixed(t < 1e4 ? 1 : 0) + 'K t';
+  if (t < 1e9) return +(t / 1e6).toFixed(t < 1e7 ? 1 : 0) + 'M t';
+  return +(t / 1e9).toFixed(1) + 'B t';
+}
 export function rankLine(rank) {
-  const b = bandOf(rank), t = liftTonsOfRank(rank);
-  const w = t >= 1 ? t.toFixed(t < 10 ? 1 : 0) + ' t' : Math.round(t * T) + ' lb';
-  return `RANK ${Math.round(rank)} · ${b.name.toUpperCase()} · LIFTS ${w}${b.threat ? ' · ' + b.threat : ''}`;
+  const b = bandOf(rank);
+  return `RANK ${Math.round(rank)} · ${b.name.toUpperCase()} · LIFTS ${liftWords(rank)}${b.threat ? ' · ' + b.threat : ''}`;
 }

@@ -15,7 +15,7 @@ import { championId, injuryOf, recOf, recentIncidents, snapshotTable } from '../
 
 import { heroStats } from './hud.js';
 import { THREAT_COLORS, recoveryTier } from './hud.js';
-import { rankOf, rankBandOf, comparisonOf, csOf, liftTonsOfRank, knockbackOf, LB_PER_TON } from '../data/scale.js';
+import { rankOf, rankBandOf, comparisonOf, csOf, liftTonsOfRank, liftWords, knockbackOf, LB_PER_TON } from '../data/scale.js';
 export const CodexMixin = {
   showCodex(def) {
     const render = (c) => {
@@ -81,7 +81,7 @@ export const CodexMixin = {
             <div class="cfrow"><span class="k">HULL</span><span class="v">${c.hp} HP · GUARD ${(c.guardType || 'BLOCK').toUpperCase()}</span></div>
             <div class="cfrow"><span class="k">POWER CORE</span><span class="v ${c.energyInfinite ? 'syn' : ''}">${c.energyInfinite ? '∞ CORE — TIER-CAPPED II' : `RESERVE ${c.ki} · ${recoveryTier(c)} RECOVERY`}</span></div>
             <div class="cfrow"><span class="k">STRENGTH RANK</span><span class="v hot">${rk} · ${esc(rkb.name.toUpperCase())}${rkb.cs ? ' · ' + rkb.cs + 'CS' : ''}</span></div>
-            <div class="cfrow"><span class="k">LIFT</span><span class="v">${rkt >= 1 ? (rkt < 10 ? rkt.toFixed(1) : Math.round(rkt)) + ' TONS' : Math.round(rkt * LB_PER_TON) + ' LB'} · ${esc(comparisonOf(rk).toUpperCase())}</span></div>
+            <div class="cfrow"><span class="k">LIFT</span><span class="v">${esc(liftWords(rk).toUpperCase())} · ${esc(comparisonOf(rk).toUpperCase())}</span></div>
             <div class="cfrow"><span class="k">MIGHT</span><span class="v">${(c.meleeTiers ?? 3) >= 3 ? 'FULL STRIKE CHAIN' : 'HEAVY HANDS'} · KNOCKBACK ${rkk.spaces} SPACES${rkk.throughWall ? ' · THROUGH THE WALL' : ''}</span></div>
             <div class="cfrow"><span class="k">FLIGHT</span><span class="v">${['GROUNDED', 'CLASS I — UNSTABLE', 'CLASS II — LEVITATOR', 'CLASS III — FULL FLIGHT'][ft]}</span></div>
             <div class="cfrow"><span class="k">ESCAPE</span><span class="v">${(ev.name || ev.kind || 'DASH').toUpperCase()}</span></div>
