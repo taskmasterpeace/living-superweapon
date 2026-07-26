@@ -1814,3 +1814,99 @@ his weight column stops at 400 tons, so a Sunbreaker lifts only ~1.8× what an E
 Past the cosmic line, lifting power and destructive power stop being the same axis — a Sunbreaker
 is not defined by tonnage. His numbers are used exactly as written; if the top end should climb,
 that is a decision for the sheet, not for the code.
+
+## §38 · THE ARMORY (2026-07-26) — real weapons, real gear, and a voice each
+
+Robert: *"Make standard weapons — 2 sniper rifles, 2 rifles, AK and M-16, pistols — and get sounds
+for them all. Night vision and motion detector. All items they have in military or special ops
+missions: tear gas, mustard gas, military, spec ops, police. And superhero weapons — katana, claws."*
+
+`data/armory.js` is the catalogue: **13 firearms, 6 blades, 16 gear, 9 loadouts.**
+
+### Everything is an existing type
+
+⚠ **NOT ONE ROW NEEDED A NEW BRANCH IN THE COMBAT PIPELINE.** A firearm is a `rifle` ability with a
+`weapon` class. A blade is a `melee` ability with `dmgClass: 'slash'` — which is what makes it open
+WOUNDS (§12) and what makes the swing audio pick the metallic shing instead of the airy whoosh. Gas
+is a `payload`. A sight is an item. That is the test of whether a weapon system is data or a pile of
+special cases, and it is the reason the ballistic scale (§3) already makes an AK lethal to a person
+and an annoyance to TITAN without anybody writing that rule.
+
+### Every firearm has its own voice, and it has to
+
+The CC0 sample library contains **no true gunfire** — documented when the sample bank landed. A
+single shared `bang` across twelve weapons would make them indistinct, which is *worse* than the
+synth, because the entire point of carrying twelve weapons is being able to hear which one is
+shooting at you.
+
+`VOICES` gives each weapon a **crack** (supersonic transient), **body** (chest thump in Hz), **tail**
+(room slap) and **mech** (bolt, blowback, cylinder, pump). `audio.gunshot(power, pos, voice)` builds
+the report from the profile; the recorded plate-crack stays as the transient, *pitched by calibre*.
+On a suppressed weapon the **action is the loudest layer**, which is what a suppressor actually
+sounds like.
+
+Measured through an analyser on the master bus: **13/13 audible, 13/13 distinct spectral
+signatures**, body frequencies from 58 Hz (the .50) to 190 Hz (the suppressed PDW).
+
+⚠ **MEASURE WITH rAF, NOT `setTimeout`.** A gunshot transient is ~40 ms. The first harness polled on
+throttled timers and caught the peak for only **3 of 13** weapons — and gave two weapons that share
+ONE voice profile completely different numbers, which is the tell that the *measurement* was racing
+rather than the synth being silent. Frame-locked polling: the same two weapons now read 985.67 and
+957.
+
+### Every shot is heard, and suppressed ones are heard less
+
+⚠ Writing this as `if (def.quiet) g.noise(...)` was **backwards and nearly shipped**. Gunfire did not
+broadcast to the AI at all before this — only the HIT did (§the honesty law) — so gating the
+broadcast on `quiet` would have made the suppressed PDW the only weapon in the game a bot could hear
+being fired. The broadcast runs for everything now, scaled by the report.
+
+### Vision is a device you carry
+
+Night vision, the motion tracker and the thermal scope all route through the ONE `_visionMode`
+system that already existed, so nothing new has to know they were added.
+
+⚠ **THE VISION PARAMS LIVE ON THE GAME** (`game.visNear` / `visRange` / `visCos`), not on the
+fighter. Writing them onto `f` compiles, runs, and does absolutely nothing.
+
+⚠ **`setVisionMode` MUST CLEAR BEFORE IT SETS.** Using night vision twice saved the *already
+multiplied* values as the "original", so the restore handed back a permanently widened cone — a
+stacking wallhack that outlives the goggles. Switching from night to thermal mid-use stranded the
+save entirely and night vision never came off at all. Verified: no stacking, and switching restores.
+
+**Night vision AMPLIFIES, it does not reveal.** It widens and lengthens the real cone and lifts
+renderer exposure toward phosphor green — the dark stops being cover, which is a different and more
+interesting thing than seeing through walls.
+
+**The motion tracker pings only what MOVES**, through walls, on a 0.85 s sweep. Stand still and it
+never sees you — that trade is what stops it being a wallhack with extra steps, and it also means it
+never finds a sniper holding a lane.
+
+### Two gases, two different weapons
+
+**CS gas** is a CONTROL tool: it blinds, it doubles you over (`staggerT`), and it does almost no
+damage. That is precisely what makes it police equipment rather than a weapon. **Mustard** is a
+blister agent: slow, no blinding, and it **corrodes** — which makes it the one thing an armoured
+chassis actually fears. Both ride the DoT and corrode lanes that already exist.
+
+⚠ A gas cloud KEEPS WORKING after it lands, and it reschedules itself with **`game.later`, never a
+bare `setTimeout`** — a cloud must not outlive the match that made it (§31, the deferred-callback law).
+
+### The jammer cuts the radio, not their eyes
+
+⚠ It sets `ai._jammedT`, and **`_callOut` had to be taught to read it** or the item was a particle
+effect. A jammed bot still sees perfectly with its own eyes; it just stops being told what everyone
+else can see. A real tactical effect that never makes anyone blind or stupid.
+
+### Silhouettes
+
+`buildWeapon` gained **katana** (blade, tsuba, wrapped hilt), **claws** (three blades PAST the
+knuckles — not a held object), **smg**, **sniper** (long barrel, scope, stock) and **baton**. All
+built along the arm's −Y axis like every other weapon here, so the poses and the ragdoll carry them
+for free.
+
+### Reachable
+
+`arm` in the dev console lists and equips anything: `arm ak`, `arm m107 rmb`, `arm specops`,
+`arm mustard`. The police keep their own tuned kit deliberately — rewiring their balance was not
+part of this pass.
