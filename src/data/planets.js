@@ -4,6 +4,8 @@
 // Ares Landing — the difference is environmental data, never a second map architecture.
 // No-surface worlds say WHY they refuse (a grayed row with a reason beats a control that lies).
 
+import { separationAU, positionAt, gameDate, dateStr, moonsOf, moonDistanceInRadii } from './orbits.js';
+
 export const AU_KM = 149597870.7;
 
 export const PLANETS = [
@@ -109,6 +111,12 @@ export function buildRoute(fromId, toId, opts = {}) {
   let b = typeof toId === 'object' ? toId : byId(toId);
   if (b && b.id == null) b = { id: 'deep', name: b.name || 'THE DARK', au: b.au, kind: 'void', landable: false };
   const auA = a.au, auB = (b && b.au) != null ? b.au : (opts.au || HELIOPAUSE_AU);
+  // ⚠ THE TRIP IS A DIFFERENT LENGTH IN APRIL THAN IN OCTOBER, and that is the whole point of
+  // having orbits at all. `au` used to be |a.au − b.au| — the difference of two orbital RADII,
+  // which is the distance only on the day the two worlds happen to be lined up on the same side of
+  // the sun. The real separation is the chord between where they actually are today: Earth→Mars
+  // ranges from 0.52 AU to 2.51 AU across a single year, nearly a five-fold swing.
+  const date = opts.date || gameDate();
   const outbound = auB >= auA;
   const lo = Math.min(auA, auB), hi = Math.max(auA, auB);
   const span = Math.max(1e-6, hi - lo);
@@ -122,9 +130,15 @@ export function buildRoute(fromId, toId, opts = {}) {
   passes.sort((x, y) => x.t - y.t);
   // a run past the giants is a DEEP crossing — the director earns its heliosphere act
   const deep = auB > 30 || opts.deep === true;
+  // the true separation when both ends are real worlds; the radial gap when one is a bare AU mark
+  const trueAu = (b && b.id && positionAt(a.id, date).au != null && positionAt(b.id, date).au != null)
+    ? separationAU(a.id, b.id, date) : Math.abs(auB - auA);
   return {
     from: a, to: b || { id: 'deep', name: 'THE DARK', au: auB, kind: 'void' },
-    outbound, au: Math.abs(auB - auA), passes, deep,
-    secs: opts.secs || transitSecsFor({ au: Math.abs(auB - auA) }),
+    outbound, au: trueAu, radialAu: Math.abs(auB - auA), passes, deep,
+    date, dateLabel: dateStr(date),
+    lonFrom: positionAt(a.id, date).lon,
+    lonTo: b && b.id ? positionAt(b.id, date).lon : null,
+    secs: opts.secs || transitSecsFor({ au: trueAu }),
   };
 }

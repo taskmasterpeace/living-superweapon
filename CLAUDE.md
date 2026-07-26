@@ -1406,6 +1406,36 @@ Four laws, three of them the same idea: **a thing must not outlive the match tha
 - `training` survives as an INTERNAL mode with no card: the tutorial (`hud.onTutorial`) and the
   atlas tile proving ground (`hud.onProvingGround`) both still enter it.
 
+## THE ALMANAC (2026-07-25) — manual §36, `data/orbits.js` + `data/environments.js`
+- **A DATE IN, POSITIONS OUT.** Nothing stores where a planet is — it asks. `gameDate()` is the
+  in-game calendar (persisted, advanced by the career); `positionAt/separationAU` do the rest.
+- **THE SYZYGY IS A CONSEQUENCE, NOT A SPECIAL CASE.** Every mean longitude is 0 at the epoch
+  (12 FEB 2026), so they line up once; the periods are mutually irrational so they never all return
+  to 0 together. NO CODE ENFORCES IT. Measured: epoch **0.0000°**, ±1 day 2.09°, +1 week 14.5°,
+  +1 month 55.4°, +1 year 27.2°; scanning all 146,000 days 1900–2300 the best is that exact date.
+- ⚠ **`buildRoute` used `|a.au − b.au|`** — the difference of two orbital RADII, true only when
+  both worlds happen to line up. It uses the real chord now: **Earth→Mars swings 0.52 → 2.51 AU
+  across one year**, and the transit time moves with it.
+- **20 MOONS, real orbital radii.** ⚠ The number that matters is distance in PARENT RADII, because
+  a moon drawn "a few planet-widths out" is a diagram: Luna **60.3×**, Iapetus 61.1×, Phobos 2.8×.
+  Sizes are compressed like the planets'; DISTANCE never is.
+- **THE SKY IS A FACT ABOUT AN ATMOSPHERE** (`world.setSkyWorld`): Mars butterscotch day + BLUE
+  sunset (the inverse of Earth, same physics), the Moon black at noon with stars up, Titan an
+  orange ceiling, Pluto's sun 0.014° — a STAR with no disc. ⚠ Light drops by INVERSE SQUARE of the
+  sun's apparent size (floored 0.34 so it stays playable) — an outer-system noon is genuinely dark,
+  not colour-graded. ⚠ `{...this._dnc}` copies COLOR REFERENCES — the backup was the same object and
+  Earth→Pluto→Earth came home to Pluto's sky. Clone colours.
+- **THE HAZARD MODEL**: a world attacks on CHANNELS (anoxia · vacuum · cold · heat · crush · toxic ·
+  radiation · gravity), a fighter answers with what they ARE or WEAR. No `def.id ===` anywhere.
+  ⚠ **ANOXIA was missing** in v1 — so the model couldn't say the obvious thing (you suit up on Titan
+  because there is nothing to breathe) and every world needed the same heavy suit for the wrong
+  reason. ⚠ The pressure suit had cold 2 while every cold world was cold 3, so the lightest rung
+  protected nobody: calibrated against reality now — men walked on the Moon in a SOFT suit.
+  ⚠ **WHAT YOU THROW IS WHAT YOU SURVIVE** — traits alone said the ICE hero freezes on Titan
+  (`frostResist` is a FIRE-hero flag); the kit's damage types are scanned now, so RIME answers cold
+  and TORCH answers heat, derived. Venus and Jupiter are LETHAL to everyone (no suit closes crush 3).
+- Console: `date` · `almanac` · `moons <planet>` · `survive <world> [hero]`.
+
 ## THE SPACE LAYER (2026-07-25) — manual §35, `engine/spaceflight.js` + `data/vessels.js`
 - **Renders through the game's OWN composer** — its scene is swapped into the existing RenderPass,
   so the crossing inherits the exact bloom/exposure/ACES the street has. Art-style match is not

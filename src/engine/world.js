@@ -9,6 +9,7 @@ import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPa
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { clamp, damp, setBands, DECAL_LIFT } from '../core/util.js';
+import { skyFor, worldOf } from '../data/environments.js';
 import { buildTiles , scaleBoxUV, resetDecalLadder } from './citytiles.js';
 import { CELL, districtNameAt, thresholdPlan, ROAD, junctionAt, WATER_DEPTHS, roadClear, surveyCity, surveyAt } from '../data/cityplan.js';
 import { mulberry } from '../data/news.js';
@@ -133,6 +134,51 @@ export class World {
       horDay: new THREE.Color(0.50, 0.44, 0.34), horNight: new THREE.Color(0.075, 0.07, 0.10),
       glowTint: new THREE.Color(1.0, 0.45, 0.12),
     };
+    // ⚠ CLONE THE COLOURS, don't spread the object. `{...this._dnc}` copies REFERENCES to the same
+    // THREE.Color instances, so mutating the live palette mutated the "saved" one too — the backup
+    // was the same object. Flying Earth → Pluto → Earth came home to Pluto's sky.
+    this._dncEarth = {};
+    for (const k in this._dnc) {
+      const v = this._dnc[k];
+      this._dncEarth[k] = (v && v.isColor) ? v.clone() : v;
+    }
+  }
+
+  // ---------------------------------------------------------------------------------------------
+  // THE SKY IS A FACT ABOUT AN ATMOSPHERE (data/environments.js). Air is what makes a sky, so the
+  // dome over a match is decided by WHERE the match is, not by a texture choice:
+  //   · MARS has a butterscotch day and a BLUE sunset — the exact inverse of Earth, for the exact
+  //     same reason (fine dust scatters red forward where our air scatters blue).
+  //   · THE MOON has no sky at all. Black at noon, with the sun up and the stars still out.
+  //   · TITAN is a dim orange ceiling you cannot see through.
+  //   · At PLUTO the sun is a fiftieth of a degree wide — a very bright star with no disc — and
+  //     noon is about as bright as our dusk, so the whole world is lit at 2% strength.
+  // ⚠ The LIGHT drops with the square of the sun's apparent size, which is the part that makes an
+  // outer-system match actually feel like one: it is not a colour grade, it is less light.
+  setSkyWorld(id) {
+    const sky = id && id !== 'earth' ? skyFor(id) : null;
+    const env = id ? worldOf(id) : null;
+    this.skyWorld = sky ? id : null;
+    const P = this._dnc, E = this._dncEarth;
+    if (!sky) {                                   // home: put every colour back exactly as found
+      for (const k of ['topDay', 'topNight', 'horDay', 'horNight', 'glowTint', 'sunDay', 'sunGold', 'hemiDay', 'hemiNight'])
+        if (P[k] && E[k]) P[k].copy(E[k]);
+      this.skyLightMult = 1; this.skyStarsByDay = false;
+      return null;
+    }
+    P.topDay.set(sky.day);
+    P.topNight.set(sky.night);
+    P.horDay.set(sky.horizon);
+    P.horNight.set(sky.night);
+    P.glowTint.set(sky.sunset);                   // the sunset colour IS the low-sun glow
+    P.sunGold.set(sky.sunset);
+    P.sunDay.set(sky.airless ? '#ffffff' : sky.day);
+    P.hemiDay.set(sky.horizon);
+    P.hemiNight.set(sky.night);
+    this.skyLightMult = sky.lightMult;
+    this.skyStarsByDay = !!sky.starsByDay;
+    this.skyEnv = env;
+    return sky;
   }
 
   // Advance the day and push it into the lights, sky, and building windows. dl: 1 = noon,
@@ -155,6 +201,11 @@ export class World {
     if (this.amb) this.amb.intensity = 0.34 + dl * 0.18;
     if (this.rim) this.rim.intensity = 0.6 + (1 - dl) * 0.35;
     const u = this.skyMat.uniforms;
+    // ⚠ AN OUTER-SYSTEM NOON IS GENUINELY DARK. Sunlight falls off as the square of distance, so
+    // this is the difference between a colour grade and a place: at Saturn the sun delivers 1% of
+    // what it does here. Floored so a match never becomes unplayable — honest, not punishing.
+    const lm = this.skyLightMult == null ? 1 : Math.max(0.34, this.skyLightMult);
+    if (this.sun) this.sun.intensity = this._sunI0 == null ? (this._sunI0 = this.sun.intensity) * lm : this._sunI0 * lm;
     u.uTop.value.lerpColors(P.topNight, P.topDay, dl);
     u.uHor.value.lerpColors(P.horNight, P.horDay, dl);
     u.uGlow.value.copy(P.glowTint).multiplyScalar(0.06 + gold * 0.22);

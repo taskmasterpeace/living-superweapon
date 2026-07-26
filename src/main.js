@@ -188,6 +188,14 @@ game.onTravel = (city, cityId, planetId) => {
   finally { game._traveling = false; }
 };
 hud.onProvingGround = () => enter({ mode: 'training', p1: hud.selectedHero || 'sol' });
+// THE SKY FOLLOWS THE THEATRE. One notification point — the world tells us it rebuilt, we tell it
+// which world it is standing on, so a Mars match gets Mars' sky and a return trip gets Earth's back.
+const _prevRebuilt = game.world.onRebuilt;
+game.world.onRebuilt = (plan) => {
+  if (_prevRebuilt) _prevRebuilt(plan);
+  const t = hud.theater;
+  game.world.setSkyWorld((t && t.planet) || 'earth');
+};
 // ---- THE CIRCUIT: the single-player career loop (data/career.js + engine/careerUI.js) ----
 const careerUI = new CareerUI(ROSTER);
 function openDesk() {

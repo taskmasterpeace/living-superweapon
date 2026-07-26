@@ -16,6 +16,10 @@
 //     source instead of the world is how a wrong number survives being checked.
 import { BANDS } from '../core/util.js';
 import { playSpaceFlight } from './spaceflight.js';
+import { ORBITS, MOONS, moonsOf, moonDistanceInRadii, positionAt, separationAU,
+         alignmentSpread, bestAlignmentIn, gameDate, setGameDate, advanceDays,
+         dateStr, seasonOf, ALIGN_DATE } from '../data/orbits.js';
+import { WORLDS, worldOf, survivalFor, skyFor, SUITS } from '../data/environments.js';
 
 const U_PER_M = 1 / 0.19;              // TRUE 1:1 SCALE: 1 unit ≈ 0.19m
 const HERO_U = 9.6;                    // a hero is 9.6u ≈ 1.8m — the only ruler that means anything
@@ -282,6 +286,84 @@ export class DevConsole {
       c.ok('flying ' + target + ' with ' + (spec.heroes.length) + ' flyer(s)' + (ship ? ' + ' + ship : ''));
       playSpaceFlight(g, opts, () => c.ok('arrived'));
     });
+    // ---- THE CALENDAR. Where everything is depends on the day, so the day has to be visible and
+    // settable, or "the time of year matters" is a claim nobody can check.
+    this.cmd('date', 'date | date <y> <m> <d> | date +<days> — the in-game date', (a, c) => {
+      if (a[0] && a[0][0] === '+') advanceDays(parseInt(a[0].slice(1), 10) || 1);
+      else if (a.length >= 3) setGameDate({ y: +a[0], m: +a[1], d: +a[2] });
+      const d = gameDate();
+      c.ok(dateStr(d) + '   ·   ' + seasonOf(d) + ' in the north');
+      c.print('  system alignment ' + alignmentSpread(d).toFixed(2) + '\u00b0 spread' +
+        (alignmentSpread(d) < 0.01 ? '   ← PERFECT SYZYGY' : ''));
+    });
+
+    // ---- THE ALMANAC. Every world, where it is today, and how far the crossing would be.
+    this.cmd('almanac', 'where every world is today, and what it costs to get there', (a, c) => {
+      const d = gameDate();
+      c.print('THE ALMANAC   ' + dateStr(d));
+      c.print('  alignment spread ' + alignmentSpread(d).toFixed(2) + '\u00b0' +
+        (alignmentSpread(d) < 0.01 ? '   PERFECT — every world on one line from the sun' : ''));
+      c.print('');
+      c.print('  ' + 'WORLD'.padEnd(10) + 'ORBIT'.padStart(7) + '  ' + 'LONGITUDE'.padStart(10) + '  ' +
+              'FROM EARTH'.padStart(11) + '   MOONS');
+      for (const id of Object.keys(ORBITS)) {
+        const o = ORBITS[id], pos = positionAt(id, d);
+        const sep = id === 'earth' ? 0 : separationAU('earth', id, d);
+        const mo = moonsOf(id).map(m => m.name).join(', ') || '\u2014';
+        c.print('  ' + id.toUpperCase().padEnd(10) + (o.a.toFixed(2) + ' AU').padStart(7) + '  ' +
+                (pos.lon.toFixed(1) + '\u00b0').padStart(10) + '  ' +
+                (id === 'earth' ? '\u2014' : sep.toFixed(2) + ' AU').padStart(11) + '   ' + mo);
+      }
+      c.print('');
+      c.print('  the periods do not divide into one another, so the line never comes back:');
+      c.print('  best alignment in four centuries \u2192 ' + JSON.stringify(bestAlignmentIn(1900, 2300).date));
+    });
+
+    // ---- THE MOONS, at the distance nobody believes.
+    this.cmd('moons', 'moons <planet> — the interesting ones, and how far out they really are', (a, c) => {
+      const id = (a[0] || 'earth').toLowerCase();
+      const list = moonsOf(id);
+      if (!list.length) return c.warn('no moons on file for ' + id);
+      const par = ORBITS[id];
+      c.print(id.toUpperCase() + '  (radius ' + par.radiusKm.toLocaleString() + ' km)');
+      for (const m of list) {
+        c.print('  ' + m.name.padEnd(11) + (m.a.toLocaleString() + ' km').padStart(13) + '  = ' +
+                moonDistanceInRadii(id, m).toFixed(1).padStart(5) + '\u00d7 the planet\'s radius' +
+                '   ' + Math.abs(m.T).toFixed(2) + 'd');
+        c.print('             ' + m.note);
+      }
+    });
+
+    // ---- COULD I STAND THERE? The question the whole environment model exists to answer.
+    this.cmd('survive', 'survive <world> [hero] — what it takes to stand there', (a, c) => {
+      const id = (a[0] || 'mars').toLowerCase();
+      const w = worldOf(id);
+      if (!w) return c.err('no environment on file for ' + id + '   (' + Object.keys(WORLDS).join(' ') + ')');
+      const R = window.LSW && window.LSW.ROSTER;
+      const g = G();
+      const def = (a[1] && R && R.find(x => x.id === a[1].toLowerCase())) || (g.player && g.player.def);
+      const s2 = survivalFor(def, id, g.player && g.player.sheet);
+      const sky = skyFor(id);
+      c.print(w.name.toUpperCase() + '   ' + w.air);
+      c.print('  ' + w.note);
+      c.print('');
+      c.print('  ' + ((def && def.name) || 'YOU') + ':  ' + s2.verdict +
+        (s2.suit && s2.suit.id !== 'none' ? '   \u2014 ' + s2.suit.blurb : ''));
+      if (s2.bare.length) {
+        c.print('  unprotected: ' + (s2.unsuitedSecs === Infinity ? 'survivable' : s2.unsuitedSecs + ' seconds'), '#ff5a4a');
+        c.print('  it attacks on: ' + s2.bare.map(m => m.ch + ' ' + m.need + (m.have ? ' (you answer ' + m.have + ')' : '')).join(' \u00b7 '));
+      } else c.ok('  nothing here can touch you.');
+      if (s2.missing.length) c.err('  NO SUIT CLOSES: ' + s2.missing.map(m => m.ch).join(', '));
+      c.print('  ' + s2.gravity);
+      c.print('');
+      c.print('  SKY   noon ' + sky.day + '   sunset ' + sky.sunset +
+        (sky.starsByDay ? '   stars visible at noon' : ''));
+      c.print('        the sun is ' + sky.sunArcDeg.toFixed(3) + '\u00b0 across' +
+        (sky.sunIsPoint ? ' \u2014 a very bright STAR, with no disc' : '') +
+        ', light \u00d7' + sky.lightMult.toFixed(3));
+      c.print('        overhead: ' + sky.inSky);
+    });
+
     this.cmd('surfaces', 'run the z-fighting audit on the live scene', (a, c) => {
       const r = G().world.auditSurfaces();
       c.print(r.problems ? r.problems + ' problem(s) of ' + r.surfaces + ' surfaces' : 'clean — ' + r.surfaces + ' surfaces, 0 problems');

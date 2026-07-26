@@ -31,6 +31,7 @@
 import * as THREE from 'three';
 import { PLANETS, PLANET_LOOK, lookOf, buildRoute, HELIOPAUSE_AU } from '../data/planets.js';
 import { makeParty, FORMATIONS, formationFor } from '../data/vessels.js';
+import { moonsOf, moonDistanceInRadii, ORBITS } from '../data/orbits.js';
 import { figure } from './figure.js';
 
 const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
@@ -378,6 +379,35 @@ export class SpaceFlight {
     return grp;
   }
 
+  // ⚠ A MOON DRAWN "A FEW PLANET-WIDTHS OUT" IS A DIAGRAM. Our own Moon is SIXTY Earth-radii away,
+  // and Iapetus is sixty-one Saturns — that emptiness is the single most surprising true fact about
+  // a planetary system, so the distance is taken straight from orbits.js in units of the parent's
+  // radius and never eyeballed. (Sizes ARE compressed the same way the planets' are, so a 6km
+  // Deimos is still visible; distance is the thing that must not be fudged, because distance is
+  // what nobody believes.)
+  _addMoons(grp, planetId, planetRadius) {
+    const list = moonsOf(planetId);
+    if (!list.length) return [];
+    const par = ORBITS[planetId];
+    const out = [];
+    list.forEach((m, i) => {
+      const dist = moonDistanceInRadii(planetId, m) * planetRadius;
+      const rel = par ? m.radiusKm / par.radiusKm : 0.2;
+      const rad = Math.max(planetRadius * 0.035, planetRadius * Math.pow(rel, 0.55));
+      const mesh = new THREE.Mesh(
+        this._geo(new THREE.IcosahedronGeometry(rad, 2)),
+        this._mat({ color: i % 2 ? '#b8b0a2' : '#8f8778', roughness: 0.98, metalness: 0, flatShading: true }));
+      // spread them around their orbits so a system reads as a system, not a row of beads
+      const a2 = (i * 2.399963 + planetId.length) % (Math.PI * 2);
+      mesh.position.set(Math.cos(a2) * dist, Math.sin(a2 * 0.6) * dist * 0.12, Math.sin(a2) * dist);
+      mesh.userData.moon = m; mesh.userData.orbit = dist; mesh.userData.ang = a2;
+      grp.add(mesh);
+      out.push(mesh);
+    });
+    grp.userData.moons = out;
+    return out;
+  }
+
   // The bodies this route actually passes, laid out along −Z at the fraction of the trip they
   // happen — so the camera flying forward meets them in the right order with the right gaps.
   _buildBodies() {
@@ -398,6 +428,7 @@ export class SpaceFlight {
       const off = (side || 1) * (rad * 2.3 + 80);
       m.position.set(off, (side || 1) * rad * 0.22, -t * LANE);
       m.userData.rad = rad; m.userData.id = id; m.userData.t = t;
+      this._addMoons(m, id, rad);
       this.scene.add(m);
       this.bodies.push(m);
       return m;
@@ -691,6 +722,8 @@ export class SpaceFlight {
       else if (b.kind === 'entry') this._say(b.look.kicker, (R.to.name || '').toUpperCase(), 'INTERFACE');
       else if (b.kind === 'arrival') this._say(b.look.kicker, (R.to.name || '').toUpperCase(), (R.to.settlement && R.to.settlement.name) || '');
       else this._say(b.look.kicker, (R.to.name || '').toUpperCase(), this._cruiseLine());
+      const sub = this.el.querySelector('#sfParty');
+      if (sub && !sub._dated) { sub._dated = 1; sub.textContent += '   ·   ' + (this.route.dateLabel || ''); }
     }
     this._apply();
   }
@@ -773,7 +806,14 @@ export class SpaceFlight {
       const heat = ease(lt);
       for (const c of this.craft) for (const burn of c.burns) burn.material.color.setStyle(heat > 0.5 ? '#ff6a1a' : c.wake[0]);
     }
-    for (const b2 of this.bodies) if (b2.userData.body) b2.rotation.y += 0.06 * (b2 === this.sun ? 0.1 : 1) * 0.016;
+    for (const b2 of this.bodies) {
+      if (b2.userData.body) b2.rotation.y += 0.06 * (b2 === this.sun ? 0.1 : 1) * 0.016;
+      for (const mo of (b2.userData.moons || [])) {   // visible motion: a system that is running
+        mo.userData.ang += 0.22 * 0.016 / Math.max(0.4, mo.userData.orbit / (b2.userData.rad * 8));
+        const d = mo.userData.orbit, a3 = mo.userData.ang;
+        mo.position.set(Math.cos(a3) * d, Math.sin(a3 * 0.6) * d * 0.12, Math.sin(a3) * d);
+      }
+    }
     // the sky is infinitely far away, so it rides with the camera — otherwise a 34,000-unit lane
     // walks straight out of a 26,000-unit sphere and the stars simply stop
     const pz = this.partyGroup.position.z;

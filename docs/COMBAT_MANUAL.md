@@ -1596,3 +1596,101 @@ including a live real-time skip. 0 console errors.
 
 Console: `space <target|deep> [flyers] [ship]` — e.g. `space pluto 3 freighter`.
 Refs: `wwa-space-depart.png`, `wwa-space-flyby.png`, `wwa-space-helio.png`, `wwa-space-entry.png`.
+
+
+---
+
+## §36 · THE ALMANAC — orbits, the syzygy, the moons, and what it takes to stand there (2026-07-25)
+
+Robert: *"make sure the planets rotate around the sun; where the planets are depends on the time of
+year in this game; make sure they only perfectly align on Feb 12th; make sure the distance to the
+moon scales; give the planets all their more interesting moons; obsess over the skies where it
+matters; then I want the environments to be fit for our game — we will have space suits of some
+kind, but what would it take for Ascendants to survive on these respective environments?"*
+
+### `data/orbits.js` — a date in, positions out
+
+Nothing in the game stores where a planet is. It **asks**. That is what makes "the time of year"
+real rather than decorative: the route you fly to Mars is a different length in April than in
+October, because Mars is somewhere else.
+
+**The syzygy is a consequence, not a special case.** Every body's mean longitude is zero at the
+epoch, so on 12 February 2026 they are strung out along one line from the sun. After that they
+separate at their own rates, and because the orbital periods are mutually irrational they never all
+return to zero together again. *No code enforces that.* `alignmentSpread` measures it:
+
+| date | spread |
+|---|---|
+| **12 Feb 2026** | **0.0000°** |
+| 11 or 13 Feb 2026 | 2.09° |
+| 19 Feb 2026 | 14.47° |
+| 12 Mar 2026 | 55.36° |
+| 12 Feb 2027 | 27.21° |
+
+Scanning **every one of the 146,000 days from 1900 to 2300**, the best alignment found is that exact
+date. The claim is demonstrable from inside the game: `almanac` prints it.
+
+Consequence, measured: **Earth→Mars ranges 0.524 AU to 2.511 AU across a single year** — nearly
+five-fold. `buildRoute` used to use `|a.au − b.au|`, the difference of two orbital *radii*, which is
+the true distance only on the day the two worlds happen to line up. It uses the real chord now, and
+the transit time moves with it.
+
+Circular coplanar orbits, stated plainly rather than hidden: real orbits are ellipses in slightly
+different planes, and modelling that would change a flyby by a few percent while making every number
+in the game unexplainable. What this gets right is the thing the game leans on — the **angle**
+between two worlds on a given day.
+
+### The moons, at the distance nobody believes
+
+Twenty moons across seven planets, each with its real orbital radius. The number that matters is
+distance in units of the **parent's radius**, because a moon drawn "a few planet-widths out" is a
+diagram, not a place:
+
+| | in parent radii |
+|---|---|
+| Iapetus (Saturn) | **61.1×** |
+| **Luna (Earth)** | **60.3×** |
+| Callisto (Jupiter) | 26.9× |
+| Titan (Saturn) | 21.0× |
+| Phobos (Mars) | 2.8× |
+
+Sizes are compressed in the cinematic the same way the planets' are, so a 6 km Deimos stays visible.
+**Distance is never fudged**, because distance is the part nobody believes.
+
+### `data/environments.js` — the sky and the hazard model answer each other
+
+Air is what makes a sky, so a sky is a fact about an atmosphere. Mars' day is butterscotch and its
+**sunset is blue** — the exact inverse of Earth's, for the exact same reason. The Moon's sky is black
+at noon with the sun up. At Pluto the sun is 0.014° across: a very bright **star**, with no disc, and
+noon is lit at 2%. That last one is not a colour grade — `world.setSkyWorld` drops the actual sun
+intensity by the inverse square, floored so a match stays playable.
+
+A world attacks along **channels** — anoxia, vacuum, cold, heat, crush, toxic, radiation, gravity —
+and a fighter answers each with something they **are** or something they **wear**. No `def.id ===`
+anywhere: a custom built in ORIGIN this afternoon gets a correct answer for Titan with nobody adding
+a row.
+
+**Two faults worth remembering.** The first model had **no anoxia channel**, so it could not say the
+obvious thing — the reason you suit up on Titan is that there is nothing to breathe, not that it is
+cold — and every world came out needing the same heavy suit for the wrong reason. And the suit ladder
+gave the pressure suit `cold 2` while every cold world was `cold 3`, so the lightest rung protected
+nobody anywhere. Calibrated against reality: men walked on the Moon in a **soft** suit, so the Moon
+is a pressure-suit world; what the heavy rungs buy is radiation and pressure.
+
+**And what you throw is what you survive.** Traits alone said the ICE fighter would freeze on Titan,
+which is absurd on its face — `frostResist` is a flag carried by *fire* heroes. A fighter's own kit
+is the evidence now, so RIME answers cold on Pluto and TORCH answers heat on Io, derived.
+
+| | Moon | Mars | Titan | Pluto | Europa | Io | Venus | Jupiter |
+|---|---|---|---|---|---|---|---|---|
+| most of the roster | pressure | pressure | pressure | pressure | deep | deep | **lethal** | **lethal** |
+| TITAN (a machine) | pressure | pressure | pressure | pressure | **pressure** | deep | lethal | lethal |
+
+Venus and Jupiter kill everyone: no suit closes crush 3. Unprotected clocks are honest numbers —
+15 seconds in vacuum, 60 on Titan.
+
+### Reachable from inside the game
+
+`date`, `almanac`, `moons <planet>`, `survive <world> [hero]` in the dev console.
+⚠ `_dncEarth = {...this._dnc}` copies *references* to the same `THREE.Color` instances — the backup
+was the same object, and Earth → Pluto → Earth came home to Pluto's sky. Clone colours.
