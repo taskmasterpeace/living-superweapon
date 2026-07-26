@@ -363,3 +363,39 @@ in front of step 2.
 4. **Limb segmentation** — and it is the **arm**, not the leg. The leg already has a driven knee; the
    arm's upper/fore/fist are flat siblings that only ever bend when the fighter is dead.
 5. **Stages and the door** — six stages come from existing knobs; **THE NEEDLES needs zero new tiles.**
+
+---
+
+## 12. WHAT SHIPPED FIRST — the mode, before the camera
+
+`powerworld` is a real mode card now, deliberately ahead of the camera, because the build order above
+says the chase loop has to be fun in the view we already have. It is the rule set only:
+
+| rule | how | verified |
+|---|---|---|
+| **A knockback CARRIES** | `_chaseKb` puts a launched body on the slide-class drag the thrown body already uses | ✅ **101.3 u/s → 61.3u travelled**, against **16.1u** in the city |
+| **The sky does not dock you** | `_noDeckServo`, a third exception on the rule that already yields to `launchT` and a lit burner | ✅ held at 300, released ascend, still at 300 |
+| **Nobody lives here** | `hasCivilians()` in `data/modes.js` — one definition, replacing the magic string `!== 'training'` that `police.js` and `newscrew.js` each carried separately | ✅ law and press both stand down, and both return on leaving |
+| **No empty mode bar** | joins `training`/`freeroam` in the nothing-to-report list | ✅ |
+| **Nothing leaks out** | band restore runs in `clearTransients` — the one place that empties the board | ✅ ceiling, police, press and per-fighter flags all restored |
+
+### ⚠ Owed, and not claimed
+
+**The raised flight ceiling is NOT verified.** `BANDS.ceiling` is set to 900 in setup and re-asserted
+each tick, because `world.fitBands()` runs *after* the mode's setup and rewrites the band table from
+the tallest thing it just built. Two harness attempts failed to confirm a player can actually climb
+into it:
+
+- reading `BANDS` via a console `import('/src/core/util.js')` returns a **phantom second module
+  instance** under Vite's version stamping — the documented trap, so the `320` it reported proves
+  nothing either way;
+- and the flight test could not get airborne: writing `flyHeld` is overwritten by `controlPlayer`
+  every frame, and driving the real key did not toggle `flying` in the harness.
+
+So the ceiling is **written but unproven**, and the structurally correct fix is still the one the
+world research recommends — a `plan.bandsLocked` early return inside `fitBands` rather than a
+re-assertion racing it. That is owed, and it belongs with the stage slice.
+
+What is proven is the part that matters most for the direction: **the chase loop is real and it is
+four times the reach it had.** Whether it is *fun* is Robert's call, in the isometric camera, which
+is exactly where his own build order wanted that question asked.

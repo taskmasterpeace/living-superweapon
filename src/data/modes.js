@@ -12,6 +12,23 @@ export const MODES = [
     desc: 'A two-storey indoor hall with two rooms. You arrive in the BLUE ROOM: a bag, a ramp to the upper floor, and nothing that can hurt you — learn the controls at your own pace. The console opens the WHITE ROOM next door, where the machinery lives: moving targets on rails, wall turrets that shoot back, a flight course, a sparring partner, and a wall board measuring every attack you land at the damage choke point.' },
   { id: 'boxing', name: 'THE RING', tag: 'Real rules', icon: '🥊', accent: '#c9564a',
     desc: 'A boxing ring, and inside it the ring’s rules win. NO FLYING — feet on the canvas. The ropes give back most of your speed, so being knocked into them returns you to the middle at pace, and momentum melee turns that into damage. Three rounds, a real ten-count when you go down, three knockdowns ends it, and a ten-point-must card if it goes the distance. The board over the ring reads the fight live: landed, thrown, accuracy, knockdowns, points.' },
+  // POWERWORLD — the second dimension (docs/POWERWORLD.md). ⚠ This is the PROVING GROUND for the
+  // chase loop, deliberately shipped BEFORE the third-person camera: Robert's own build order says
+  // prove it in the isometric view first, because if it is not fun there the camera will not fix it.
+  { id: 'powerworld', name: 'POWERWORLD', tag: 'The chase loop', icon: '🌀', accent: '#7fd8ff',
+    desc: 'Another dimension, and its rules are not the city’s. The sky is open — no ceiling to dock against, no deck to be eased onto. A knockback CARRIES: hit someone hard and they travel, which turns a trade into a chase you have to fly down. Nobody lives here, so nobody films you and nobody answers a call. The camera and the stages come later; this is where the fight itself gets proven.' },
   { id: 'tournament', name: 'TOURNAMENT', tag: 'The Invitational', icon: '🏆', accent: '#ffd24a',
     desc: 'Eight seeds off the power rankings, single elimination. Matches are best-of-3 ELIMINATION rounds — last side standing, nobody respawns. Formats: 1v1, 2v2 duos, underdog 1v2. Team damage is ON.' },
 ];
+
+/**
+ * DOES THIS THEATRE HAVE A CIVIL SOCIETY?
+ *
+ * ⚠ ONE DEFINITION, because it was being asked as a magic string in two unrelated files: the police
+ * getter (`police.js` — `modeId !== 'training'`) and the news crew (`newscrew.js` — the same test
+ * again). Both mean "are there civilians here to protect, and a press to report it", and both would
+ * have had to be edited by hand for every new dimension. POWERWORLD has nobody living in it, so
+ * there is no one to hurt, no call to answer and no broadcast to make.
+ */
+const NO_CIVIL = new Set(['training', 'powerworld']);
+export const hasCivilians = (modeId) => !!modeId && !NO_CIVIL.has(modeId);

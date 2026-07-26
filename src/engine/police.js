@@ -6,6 +6,7 @@
 // it never see a badge. KO'ing an officer is villainy squared. Heat decays; the news covers all
 // of it. Police are real Fighters (AI, ragdolls, the crew films them) but never enter the Elo book.
 import * as THREE from 'three';
+import { hasCivilians } from '../data/modes.js';
 import { AI } from './ai.js';
 import { clamp } from '../core/util.js';
 import { countryOf } from '../data/countries.js';
@@ -109,7 +110,10 @@ export class PoliceSystem {
     this.cops.length = 0;           // the fighters themselves are cleared by startMode
     this._respT = -1; this._reinforceT = 0; this._announced = false; this._lastHarmT = -99; this._lswSent = false; this._cCache = undefined;
   }
-  get active() { return !!(this.g.mode && (this._forced || this.g.modeId !== 'training') && !(this.g.netplay && this.g.netplay.active)); }
+  // ⚠ "is there a civil society here" is ONE question with one home (data/modes.js). It used to be
+  // the magic string `!== 'training'` here and again in newscrew.js, so every new dimension needed
+  // both edited by hand — and a dimension with nobody in it would otherwise still dispatch police.
+  get active() { return !!(this.g.mode && (this._forced || hasCivilians(this.g.modeId)) && !(this.g.netplay && this.g.netplay.active)); }
 
   heatOf(f) { return this.heat.get(f) || 0; }
 

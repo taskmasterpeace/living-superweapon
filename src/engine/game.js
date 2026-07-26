@@ -170,6 +170,53 @@ const MODE_IMPL = {
       };
     },
   },
+  // POWERWORLD — the second dimension. See docs/POWERWORLD.md. This is the rule set only: the
+  // third-person camera, the stages and the door are later slices, and shipping the RULES first is
+  // deliberate — the chase loop has to be fun in the camera we already have or the camera is a
+  // very expensive way to find out it isn't.
+  powerworld: {
+    setup(g, o = {}) {
+      g.ms = { powerworld: true };
+      // ⚠ NOBODY LIVES HERE. `police.active` is a GETTER and `news.enabled` is set from the mode id,
+      // so neither can be switched off from out here — the honest fix was to give "does this theatre
+      // have a civil society" one definition (`hasCivilians` in data/modes.js) that both already read.
+      // POWERWORLD is in that set, so the law and the press stand down by construction.
+      if (g.peds && g.peds.mesh) g.peds.mesh.visible = false;
+      // THE OPEN SKY. `fitBands` sizes the ceiling from the tallest thing built, and the deck servo
+      // eases a flier onto a band's deck the moment they stop climbing — both correct for a city
+      // fight over rooftops, both wrong for a dimension whose premise is that altitude is yours.
+      // ⚠ `BANDS` IS A MODULE OBJECT IN core/util.js, NOT A WORLD PROPERTY. Reaching for
+      // `world.BANDS` reads undefined, and the `if` guard I first wrote around it meant the open sky
+      // silently did nothing — a guard turning a wrong reference into a no-op instead of an error.
+      // ⚠ Stashed on the GAME, because `clearTransients` is the one place that puts it back and a
+      // mode object is not something a reset path can see.
+      g._bands0 = { ...BANDS };
+      BANDS.ceiling = Math.max(BANDS.ceiling, 900);
+      BANDS.sky = Math.max(BANDS.sky, 420);
+      const hs = g.humans.map(h => h.fighter).filter(Boolean);
+      g.ms.enemy = o && o.twoPlayer ? hs[1]
+        : g.spawnEnemy((o && (o.enemy || o.p2)) || null, { x: 40, z: 40, aiLevel: (o && o.aiLevel) || 1.25 });
+      for (const e of g.entities) if (e.def && !e.isDummy) {
+        e._chaseKb = true;              // a knockback CARRIES here — see entity._physics
+        e._noDeckServo = true;          // and the sky does not dock you
+        if (e.ai) e.ai.flyTend = Math.max(e.ai.flyTend || 0, 0.8);   // the fight belongs in the air
+      }
+      if (hs[0]) hs[0].pos.set(-40, 0, -40);
+    },
+    tick(g, dt) {
+      // late arrivals (a rival ordered with B, a respawn) inherit the dimension's rules
+      for (const e of g.entities) if (e.def && !e.isDummy && !e._chaseKb) { e._chaseKb = true; e._noDeckServo = true; }
+      // ⚠ RE-ASSERTED, because `world.fitBands()` runs AFTER the mode's setup and rewrites the band
+      // table from the tallest thing it just built — measured: the ceiling I raised in setup was back
+      // to 320 by the first frame. Re-asserting here is idempotent and cannot be out-ordered.
+      // (The structurally better fix is a `plan.bandsLocked` early return inside fitBands, which
+      // belongs with the stage work — noted in docs/POWERWORLD.md.)
+      if (BANDS.ceiling < 900) { BANDS.ceiling = 900; BANDS.sky = Math.max(BANDS.sky, 420); }
+    },
+    onKO() {},
+    isOver() { return null; },          // a proving ground, like free roam — you leave when you like
+    hud: (g) => ({ type: 'powerworld' }),
+  },
   lab: {
     setup(g) {
       g.ms = { lab: true };
@@ -1479,6 +1526,11 @@ export class Game {
   clearTransients() {
     // the weather goes home with everything else that must not outlive a match (the reset law)
     if (this.weather && this.weather.reset) this.weather.reset();
+    // ⚠ AND SO DOES POWERWORLD'S OPEN SKY. The dimension raises `BANDS.ceiling`/`.sky` on the shared
+    // band object, and a raised ceiling leaking into a city fight would let a flier climb out of the
+    // theatre. `MODE_IMPL` has no teardown hook, and inventing one would be a second reset path —
+    // this is the one place that empties the board, so the restore belongs here.
+    if (this._bands0) { Object.assign(BANDS, this._bands0); this._bands0 = null; }
     if (this._ring) this._ring.close();
     if (this.lab) { try { this.lab.close(); } catch (e) {} this.lab = null; }   // the white room is a transient too
     if (this.baseRoom) { try { this.baseRoom.close(); } catch (e) {} this.baseRoom = null; }   // ⚠ and so is the BASE — its walls are real cover records; leaving them behind is the invisible-wall bug

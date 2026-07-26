@@ -1251,7 +1251,15 @@ export class Fighter {
           if (b === 2) return BANDS.building + (BANDS.sky - BANDS.building) * 0.5;
           return BANDS.sky + (BANDS.ceiling - BANDS.sky) * 0.55;
         };
-        if (this.launchT > 0) {
+        // ⚠ POWERWORLD HAS NO DECKS. The servo easing you onto a band is right for a city fought
+        // over rooftops and wrong for a dimension whose premise is that the altitude is yours: a
+        // tier-3 flier held at y=64 was measured being walked back down to 48. It already yields to
+        // `launchT` and to a lit afterburner, so this is a third exception on the same rule, not a
+        // fork — and with it off, releasing ascend simply leaves you where you stopped.
+        if (this._noDeckServo && this.launchT <= 0) {
+          this.vel.y *= Math.exp(-2.2 * dt);            // bleed off, then hold: no dock, no sag
+          this._deckSnap = -1;
+        } else if (this.launchT > 0) {
           // knockback owns the axis — a servo here would eat the hit and make heavies weightless.
           // When it expires your band is wherever you ended up. No snap-back tether.
           // GRAVITY INVERSION (brief T3.19): the zone flips the sign, so a ceiling becomes a floor.
@@ -1336,7 +1344,17 @@ export class Fighter {
     }
     // horizontal drag (near-frictionless while sliding — RIME's ice skate — and while flying
     // as a THROWN BODY: a tumbling projectile-person doesn't brake itself, manual §11)
-    const dragF = Math.exp((this._slideT > 0 || this._thrownT > 0 ? -1.3 : -6) * dt);
+    // ⚠ THE CHASE LOOP IS ONE DRAG COEFFICIENT. A body that was LAUNCHED brakes itself on the
+    // walking coefficient (−6/s), while a body that was THROWN gets the slide class (−1.3/s) —
+    // "a tumbling projectile-person doesn't brake itself" (manual §11). Measured on a 101 u/s
+    // knockback: **16.1u travelled and half the speed gone in 0.18 seconds** on −6, against 63.5u
+    // over 0.59s on the slide class. Sixteen units is under two body lengths, which is why there is
+    // nothing to chase — you knock someone away and they are still standing in front of you.
+    // ⚠ SCOPED, NOT GLOBAL. `_chaseKb` is set by the POWERWORLD rule set, so the city keeps the feel
+    // it was tuned with (the ropes, the ring-out rule and every wall slam are calibrated against
+    // the short knockback). Whether the long one should become global is a feel call, not mine.
+    const launched = this._chaseKb && this.launchT > 0;
+    const dragF = Math.exp((this._slideT > 0 || this._thrownT > 0 || launched ? -1.3 : -6) * dt);
     this.vel.x *= dragF; this.vel.z *= dragF;
     this.vel.y = clamp(this.vel.y, -160, 70);       // never let launches/lift escape
 

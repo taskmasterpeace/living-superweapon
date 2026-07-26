@@ -15,6 +15,7 @@
 import * as THREE from 'three';
 import { clamp, damp, TAU } from '../core/util.js';
 import { clockStr, pickCrew, fmtClock } from '../data/news.js';
+import { hasCivilians } from '../data/modes.js';   // one definition of "is there a press here"
 
 const W = 320, H = 180;                       // broadcast frame (16:9)
 const PREROLL_MAX = 4, PREROLL_INT = 0.24;    // rolling ~1s memory before every event
@@ -162,7 +163,7 @@ export class NewsCrew {
     revokeFrames(this._preroll);
     this._pool = this._pool || [];
     this._warmed = false;
-    this.enabled = !!modeId && modeId !== 'training';
+    this.enabled = hasCivilians(modeId);   // one definition, in data/modes.js — see police.js
     this.grp.visible = this.enabled;
     this.clips = []; this._preroll = []; this.rec = null; this._onAirT = 0;
     this._standupClips = 0; this._standupCd = 9; this.standupT = 0;
