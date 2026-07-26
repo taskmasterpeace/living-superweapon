@@ -10,6 +10,7 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { CELL, ROAD, junctionAt } from '../data/cityplan.js';
+import { ROAD_LIFT, sinkSurface } from '../core/util.js';
 
 
 export const RoadMixin = {
@@ -63,6 +64,15 @@ export const RoadMixin = {
     if (!this._roadMats[classId]) {
       // no tint: the texture above already decides the value (see the note in _roadTex)
       const m = new THREE.MeshStandardMaterial({ map: this._roadTex(classId), roughness: 0.96, metalness: 0, color: '#ffffff' });
+      // ⚠ ALL FOUR CLASSES ARE DRAPED TO THE SAME HEIGHT, AND THAT IS CORRECT — a road surface is
+      // one surface, and lifting an arterial above the street it crosses would put a visible step
+      // in the tarmac. But coplanar-by-design means the depth test decides the junction by luck,
+      // and it flickers. This is case 3 of THE FLICKER LAW (core/util.js): if they must be
+      // coplanar, break the tie by RULE. The heavier class is pulled toward the camera, so an
+      // arterial runs continuously THROUGH the street that meets it, every time, deterministically.
+      // It also makes `auditSurfaces` honest — it skips polygonOffset pairs precisely because they
+      // have already declared a winner.
+      sinkSurface(m, -0.6 * (classId | 0));
       m.userData._shared = true;             // cached across cities — _teardownCity must not kill it
       this._roadMats[classId] = m;
     }
@@ -227,10 +237,16 @@ export const RoadMixin = {
       const merged = mergeGeometries(byClass[cid]);
       byClass[cid].forEach(gg => gg.dispose());
       if (!merged) continue;
-      // 0.12u is 2.3cm — inside both the terrain's own sampling error and the depth buffer's
-      // precision at camera range. DECAL_LIFT is the smallest separation that survives (util.js).
-      drape(merged, 0.4);
+      // ⚠ THE COMMENT USED TO SAY 0.12u AND THE CODE SAID 0.4 — the number was tuned and the note
+      // was not. 0.4u is 7.6cm, just above DECAL_LIFT (0.35), which is the smallest separation the
+      // depth buffer survives at camera range. It clears the LOT surface underneath; the classes
+      // clear EACH OTHER by polygon offset, not by height (see _roadMat).
+      drape(merged, ROAD_LIFT);
       const m = new THREE.Mesh(merged, this._roadMat(cid | 0));
+      // ⚠ NAME IT. `auditSurfaces` reports `o.name || parent.name || geometry.type`, and every road
+      // mesh was anonymous — so a real road-on-road conflict came back as "BufferGeometry vs
+      // BufferGeometry" and told you nothing. An audit that cannot name the thing is half an audit.
+      m.name = 'road:' + (['none', 'track', 'street', 'arterial', 'highway'][cid | 0] || cid);
       m.receiveShadow = true; m.renderOrder = 1;
       group.add(m); this._roadMeshes.push(m); meshes++;
     }
@@ -238,8 +254,10 @@ export const RoadMixin = {
       const mg = mergeGeometries(marks);
       marks.forEach(g => g.dispose());
       if (mg) {
-        drape(mg, 0.62);          // paint rides above the carriageway it is painted on
+        drape(mg, ROAD_LIFT + 0.22);   // paint rides above the carriageway it is painted on
+        // (paint is depthWrite:false — it opts out of the depth test entirely, case 3 again)
         const m = new THREE.Mesh(mg, this._roadPaintMat());
+        m.name = 'road:paint';
         m.renderOrder = 2; group.add(m); this._roadMeshes.push(m);
       }
     }

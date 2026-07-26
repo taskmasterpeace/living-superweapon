@@ -471,6 +471,14 @@ class Projectile {
         }
       }
       game.noise(p, 0.8, this.caster);
+      // ⚠ AND THE SLUG HAS TO GO. This branch exists so a bullet does not explode — it was written
+      // as an early `return false`, which skips the `_dispose(game)` at the bottom of the function
+      // that every other impact path reaches. The projectile was spliced out of the list (it
+      // returned false) while its mesh stayed in the scene FOREVER, frozen at head height where it
+      // died. Robert: "the bullets look like they never disappear, they just get shot and they
+      // just lay on the ground." Measured before this line: 177 orphaned slug+tracer pairs after
+      // 105 seconds of one gunfight, growing about 1.7 a second and never coming back.
+      this._dispose(game);
       return false;
     }
     game.vfx.explode(p, { color: this.color, color2: this.color2, radius: this.blast, power: this.power, scorch: hitGround && !(this.vis && this.vis.residue !== 'scorch') });

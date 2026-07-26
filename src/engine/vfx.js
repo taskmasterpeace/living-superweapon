@@ -1,6 +1,6 @@
 // WAR WORLD: ASCENDANTS — transient 3D effects: explosions, shockwaves, lightning, rings, flashes, scorch.
 import * as THREE from 'three';
-import { rand, TAU, lerp } from '../core/util.js';
+import { rand, TAU, lerp, GROUND_LAYER } from '../core/util.js';
 
 const addMat = (color, opacity = 1) => new THREE.MeshBasicMaterial({ color, transparent: true, opacity, blending: THREE.AdditiveBlending, depthWrite: false });
 
@@ -229,7 +229,16 @@ export class VFX {
     const mat = new THREE.MeshBasicMaterial({ color: tint, transparent: true, opacity: 0.55, depthWrite: false });
     mat.color.multiplyScalar(0.2);
     const m = new THREE.Mesh(this._decalGeo, mat);
-    m.rotation.x = -Math.PI / 2; m.position.set(pos.x, 0.06 + this.scorches.length * 0.002, pos.z); m.scale.setScalar(radius);
+    // ⚠ TWO DEFECTS IN THE LINE THIS REPLACES. (1) It invented its own ladder — `0.06 + n*0.002`,
+    // a 0.4cm step — instead of taking a rung from GROUND_LAYER, which is exactly the failure mode
+    // THE FLICKER LAW names. (2) The index was `scorches.length`, and the pool is CAPPED at 40:
+    // once you hit the cap the length stops growing, so every scorch after the fortieth landed at
+    // the identical height and z-fought with the one before it. A long fight is precisely when you
+    // have the most scorch marks. A monotonic counter can't stall; the rung comes off the ladder.
+    this._scorchN = (this._scorchN || 0) + 1;
+    m.rotation.x = -Math.PI / 2;
+    m.position.set(pos.x, GROUND_LAYER.shadow + 0.01 + (this._scorchN % 24) * 0.004, pos.z);
+    m.scale.setScalar(radius);
     this.scene.add(m); this.scorches.push(m);
     if (this.world.flattenGrass) this.world.flattenGrass(pos.x, pos.z, radius);   // burned ground = burned grass
     if (this.scorches.length > 40) { const old = this.scorches.shift(); this.scene.remove(old); old.material.dispose(); }

@@ -1711,7 +1711,7 @@ export class World {
   // shipped here. Run it after any interior, tile or decal work:  LSW.game.world.auditSurfaces()
   auditSurfaces(opts = {}) {
     const minSep = opts.minSep ?? DECAL_LIFT, minArea = opts.minArea ?? 6;
-    const box = new THREE.Box3(), items = [];
+    const box = new THREE.Box3(), items = [], skipped = [];
     this.scene.updateMatrixWorld(true);
     this.scene.traverse(o => {
       if (!o.isMesh || !o.visible || !o.geometry) return;
@@ -1737,6 +1737,16 @@ export class World {
       if (!isFinite(box.min.x) || !isFinite(box.max.y)) return;
       const w = box.max.x - box.min.x, d = box.max.z - box.min.z;
       if (w * d < minArea) return;                                     // too small to read as a plane
+      // ⚠ THE SPARSE-MESH BLIND SPOT, now declared instead of silently crying wolf. An AABB test
+      // assumes a mesh FILLS its box. A hollow ring of four border walls is 96 vertices spanning
+      // 483x483, so its box covers the entire city and it "overlaps" every prop in it — that one
+      // mesh accounted for 95 of 98 reported problems on a real city, all of them false. Same for
+      // any merged sparse set. Vertices per unit of footprint separates a real surface (a road
+      // ribbon is 3,098 verts over its span) from a frame around empty air. Untestable pairs are
+      // COUNTED AND NAMED in `skipped` — an audit that hides what it could not check is worse than
+      // one that cries wolf, because you stop looking.
+      const density = o.geometry.attributes.position.count / (w * d);
+      if (w * d > 20000 && density < 0.004) { skipped.push(o.name || o.geometry.type); return; }
       items.push({ o, y: box.max.y, x0: box.min.x, x1: box.max.x, z0: box.min.z, z1: box.max.z, w, d });
     });
     items.sort((a, b) => a.y - b.y);
@@ -1770,7 +1780,8 @@ export class World {
     //   · Two SOLIDS that interpenetrate (a head inside a torso) are reported, but a solid
     //     intersection is resolved correctly by the depth test — only near-COPLANAR surfaces tear.
     // Both over-report. Neither can hide a real fight, which is the trade worth making.
-    return { surfaces: items.length, problems: hits.length, worst: hits.slice(0, 12) };
+    return { surfaces: items.length, problems: hits.length, worst: hits.slice(0, 12),
+             untestable: skipped.length, untestableNames: [...new Set(skipped)] };
   }
 
   render() {
