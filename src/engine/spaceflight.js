@@ -545,11 +545,8 @@ export class SpaceFlight {
       // ⚠ RELATIVE TO EARTH, NOT TO THE ORIGIN. On a return leg Earth is the DESTINATION, and
       // hanging the star off wherever you happened to launch from puts the visible sun in one
       // place and the sunrise in another — the exact failure this block exists to prevent.
-      const home = this.bodies.find(x => x.userData.id === 'earth') || this.origin;
-      const d = this._earth.uniforms.uSun.value.clone().normalize();
-      const dist = this.sun.position.length();
-      this.sun.position.copy(home.position).addScaledVector(d, dist);
-      if (this.sunLight) this.sunLight.position.copy(this.sun.position);   // the vessels are lit by the same star
+      this._sunDist = this.sun.position.length();
+      this._aimStar();
     }
     this.scene.add(this.sun);
     // A STAR IS A GLARE, NOT A DISC. The corona is what stops it reading as a gold ball, and the
@@ -791,6 +788,19 @@ export class SpaceFlight {
   // ONE STEP. Everything the camera does is derived from the current beat and its local t, so the
   // whole cinematic is a pure function of the clock — which is what makes `manual` stepping give
   // byte-identical results to a real-time run.
+  // ⚠ ONE STAR, ONE SHADOW. The globe's terminator and the scene's visible sun are the same fact,
+  // so they are placed from the same vector — and RELATIVE TO EARTH, never to the origin, because
+  // on a return leg Earth is the destination and hanging the star off the launch point puts the sun
+  // on one side of frame and the sunrise on the other.
+  _aimStar() {
+    if (!this._earth || !this.sun) return;
+    const home = (this.bodies || []).find(x => x.userData && x.userData.id === 'earth') || this.origin;
+    if (!home) return;
+    const d = this._earth.uniforms.uSun.value.clone().normalize();
+    this.sun.position.copy(home.position).addScaledVector(d, this._sunDist || this.sun.position.length());
+    if (this.sunLight) this.sunLight.position.copy(this.sun.position);
+  }
+
   step(dt) {
     if (this.done) return;
     this.clock += dt;
@@ -812,6 +822,12 @@ export class SpaceFlight {
       // means the globe has to be told where the camera is every frame — a reveal driven once at
       // build time is just a static setting.
       this._earth.setZoomFromCamera(this.cam);
+      // ⚠ AND SO IS THE CLOCK. The subsolar point was computed ONCE at build, so a crossing left
+      // Earth frozen at whatever time it was when the scene was assembled — leave at dawn and you
+      // were still looking at dawn a minute later. One `subsolar` call a frame is nothing, and it is
+      // what makes the terminator belong to `world.dayT` rather than to a snapshot of it.
+      this._earth.setSun(gameDate(), this.g && this.g.world ? this.g.world.dayT : undefined);
+      this._aimStar();
     }
 
     // formation + life: a gentle roll and bob per craft so a group never reads as a rigid prop

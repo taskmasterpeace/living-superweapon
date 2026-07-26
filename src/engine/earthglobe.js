@@ -264,13 +264,30 @@ function nightTexture(W = 2048) {
 
 // ---------------------------------------------------------------------------------------------
 const VERT = `
-varying vec3 vN; varying vec2 vUv; varying vec3 vView;
+varying vec3 vN; varying vec2 vUv; varying vec3 vView; varying vec3 vWP;
 void main(){
   vN = normalize(mat3(modelMatrix) * normal);
   vUv = uv;
   vec4 wp = modelMatrix * vec4(position, 1.0);
+  vWP = wp.xyz;
   vView = normalize(cameraPosition - wp.xyz);
   gl_Position = projectionMatrix * viewMatrix * wp;
+}`;
+
+// ⚠ THE AIR IS A COLOUR THAT DEPENDS ON THE SUN, NOT A BLUE TINT. Sunlit air is blue because it
+// scatters short wavelengths; air at a grazing angle to the sun has had the blue scattered OUT of
+// it and comes out amber; unlit air is nearly nothing at all, with only a trace of airglow. So the
+// haze reads its colour off the SAME `dot(n, sun)` the terminator does, and therefore off
+// `world.dayT` — the sky over a city cannot disagree with the time of day in that city.
+// Returned as GLSL so the surface pass and the shell pass cannot drift apart.
+const AIR_COLOR_FN = `
+uniform vec3 uAtmo; uniform vec3 uAtmoDusk; uniform vec3 uAtmoNight;
+vec3 airColor(float d){
+  // d = dot(surface normal, sun). -1 midnight · 0 the terminator · +1 noon.
+  float lit  = smoothstep(-0.28, 0.30, d);
+  float band = 1.0 - smoothstep(0.0, 0.34, abs(d + 0.02));   // the sunset ring, wider than the
+  vec3 c = mix(uAtmoNight, uAtmo, lit);                      // terminator itself — air is deep
+  return mix(c, uAtmoDusk, band * 0.78);
 }`;
 
 // ⚠ UNLIT AND SELF-CONTAINED. The space scene has its own light rig for the vessels, and letting a
@@ -279,8 +296,9 @@ void main(){
 // in one shader also means the terminator is exactly `dot(n, sun)` and cannot be tuned into a lie.
 const FRAG = `
 uniform sampler2D uDay; uniform sampler2D uNight; uniform vec3 uSun;
-uniform float uNightMix; uniform vec3 uDusk; uniform vec3 uAtmo;
-varying vec3 vN; varying vec2 vUv; varying vec3 vView;
+uniform float uNightMix; uniform vec3 uDusk; uniform float uAir;
+varying vec3 vN; varying vec2 vUv; varying vec3 vView; varying vec3 vWP;
+${AIR_COLOR_FN}
 void main(){
   vec3 n = normalize(vN);
   vec3 s = normalize(uSun);
@@ -299,26 +317,75 @@ void main(){
   vec3 h = normalize(s + vView);
   float spec = pow(max(dot(n, h), 0.0), 160.0) * sea * lit;
   col += vec3(0.85, 0.95, 1.0) * spec * 0.32;
-  // limb: air piles up at a grazing angle, and it is BRIGHTEST where the air is sunlit
-  float fres = pow(1.0 - max(dot(n, normalize(vView)), 0.0), 2.6);
-  col += uAtmo * fres * (0.10 + 0.90 * smoothstep(-0.35, 0.4, d)) * 1.35;
+  // ⚠ AERIAL PERSPECTIVE — THE SINGLE BIGGEST "THIS IS A REAL ATMOSPHERE" CUE, and the first pass
+  // did not have it. Looking at the limb you are looking through hundreds of kilometres of air, so
+  // the ground there does not just get a blue glow ADDED to it: it is progressively REPLACED by the
+  // air in front of it. Coastlines must dissolve into haze as they approach the edge of the disc.
+  // Adding light alone made the limb brighter without ever making it hazy, which is why it read as
+  // a rim light on a ball.
+  // ⚠ THE HAZE MUST HUG THE LIMB. At power 2.2 and 0.88 strength the wash reached the middle of the
+  // disc and the composer's bloom smeared the bright edge back over the rest — the planet came out
+  // as a pale over-exposed ball. Air is only thick when you are looking THROUGH a lot of it, which
+  // is the last few degrees before the horizon, so the exponent is what carries this and not the
+  // amplitude. Anything that adds light here is fighting the bloom pass downstream of it.
+  float graze = pow(1.0 - max(dot(n, normalize(vView)), 0.0), 3.0);
+  vec3 haze = airColor(d);
+  col = mix(col, haze, clamp(graze * 0.52 * uAir, 0.0, 0.72));
+  // and the air itself still glows on top, brightest where it is sunlit
+  col += haze * graze * (0.10 + 0.90 * smoothstep(-0.35, 0.4, d)) * 0.40 * uAir;
   gl_FragColor = vec4(col, 1.0);
   #include <tonemapping_fragment>
   #include <colorspace_fragment>
 }`;
 
 const AIR_VERT = VERT;
+
+// ⚠ THE LIMB IS AN OPTICAL DEPTH, NOT A FRESNEL. The first version faded the shell by
+// `pow(1 - |dot(n, view)|, 2.4)`, which peaks in a BAND somewhere on the shell and has no idea
+// where the ground is — so the haze was equally thick a thousand kilometres up as it was at sea
+// level, and the limb had no bottom edge. What a real atmosphere looks like from orbit is a bright
+// line pressed against the horizon fading to nothing above it, and the number that produces that is
+// how CLOSE THE LINE OF SIGHT PASSES TO THE PLANET: the ray's impact parameter.
+//
+// For each fragment: shoot the eye ray, find its closest approach to the planet's centre, and take
+// the height of that point above the surface. `exp(-h/H)` is then the column of air the ray went
+// through. It costs one dot product and a length, and it is the difference between a glow and an
+// atmosphere.
+//
+// ⚠ WORLD SPACE, using the built-in `cameraPosition` plus the globe's own centre and radius — NOT
+// local space. The globe sits at Earth's position along a route, not at the origin, and inverting
+// the model matrix in GLSL to get a local eye is both ugly and one more thing to keep in sync.
 const AIR_FRAG = `
-uniform vec3 uSun; uniform vec3 uAtmo; uniform float uPower;
-varying vec3 vN; varying vec2 vUv; varying vec3 vView;
+uniform vec3 uSun; uniform float uPower; uniform float uAir;
+uniform vec3 uCenter; uniform float uRadius; uniform float uScaleH;
+varying vec3 vN; varying vec2 vUv; varying vec3 vView; varying vec3 vWP;
+${AIR_COLOR_FN}
 void main(){
   vec3 n = normalize(vN);
-  float d = dot(n, normalize(uSun));
-  // seen from OUTSIDE a back-faced shell, the rim is where the normal turns away from the eye
-  float rim = pow(1.0 - abs(dot(n, normalize(vView))), 2.4);
-  float sun = smoothstep(-0.5, 0.45, d);
-  float a = rim * (0.06 + 0.94 * sun) * uPower * 1.5;
-  gl_FragColor = vec4(uAtmo * (0.7 + 0.6 * sun), a);
+  vec3 s = normalize(uSun);
+  vec3 ray = normalize(vWP - cameraPosition);
+  vec3 toC = uCenter - cameraPosition;
+  // closest approach of the line of sight to the centre, in RADII
+  float t = dot(toC, ray);
+  float b = length(toC - ray * t) / max(0.0001, uRadius);
+  float h = max(0.0, b - 1.0);                     // height of that point above the surface
+  float dens = exp(-h / max(0.0005, uScaleH));     // the column of air the ray passed through
+  // ⚠ a ray that MISSES the planet passes through twice as much air as one that stops in the
+  // ground, which is exactly why the limb outside the disc is the brightest part of the picture.
+  float thru = b > 1.0 ? 1.0 : 0.55;
+  // FORWARD SCATTERING. Air throws light forward, so looking sunward THROUGH it blazes — this is
+  // what makes a crescent Earth ring with light instead of just being half lit.
+  float mu = dot(ray, -s);
+  float g = 0.62;
+  float hg = (1.0 - g * g) / pow(max(0.02, 1.0 + g * g - 2.0 * g * mu), 1.5);
+  float sun = smoothstep(-0.55, 0.42, dot(n, s));
+  float a = dens * thru * (0.05 + 0.95 * sun) * (0.55 + 0.45 * hg) * uPower * uAir;
+  // ⚠ CLAMP THE COLOUR, NOT JUST THE ALPHA. This is an ADDITIVE layer feeding a bloom pass: a
+  // multiplier that reaches 1.4 does not read as "brighter air", it reads as a blown white halo
+  // with the planet lost inside it. The limb is allowed to be the brightest thing in frame; it is
+  // not allowed to be the only thing.
+  vec3 col = airColor(dot(n, s)) * min(1.05, 0.62 + 0.34 * sun + 0.16 * hg);
+  gl_FragColor = vec4(col, clamp(a, 0.0, 1.0));
   #include <tonemapping_fragment>
   #include <colorspace_fragment>
 }`;
@@ -503,25 +570,40 @@ export function buildEarth(radius = 100, opts = {}) {
   const detail = opts.detail || 4096;   // built once; this is the hero asset of the whole game
   const day = dayTexture(detail);
   const night = nightTexture(Math.max(1024, detail));
-  const atmo = new THREE.Color(opts.atmo || '#7fc4ff');
-  const dusk = new THREE.Color(opts.dusk || '#ffb277');
+  // ⚠ THE PALETTE IS OURS, AND THE ONE THING IT MAY NOT DO IS INVENT AN EARTH. Sunlit air is blue
+  // and there is no artistic licence available on that — but the DUSK RING and the political
+  // furniture are ours, and they go to the house gold, which is what makes this globe read as
+  // belonging to the same game as the case files and the broadcast. Night air is deep SLATE BLUE:
+  // it must never drift toward indigo (the no-purple law is absolute, and a night limb is exactly
+  // where a lazy "dark blue" becomes violet).
+  const atmo = new THREE.Color(opts.atmo || '#6fbcff');
+  const dusk = new THREE.Color(opts.dusk || '#ffa653');
+  const nightAir = new THREE.Color(opts.nightAir || '#12304a');
 
+  const air3 = { uAtmo: { value: atmo }, uAtmoDusk: { value: dusk }, uAtmoNight: { value: nightAir } };
   const uni = {
     uDay: { value: day }, uNight: { value: night },
     uSun: { value: new THREE.Vector3(1, 0, 0) },
     uNightMix: { value: opts.nightMix == null ? 1.0 : opts.nightMix },
-    uDusk: { value: dusk }, uAtmo: { value: atmo },
+    uDusk: { value: dusk }, uAir: { value: 1 }, ...air3,
   };
   const mat = new THREE.ShaderMaterial({ vertexShader: VERT, fragmentShader: FRAG, uniforms: uni });
   // ⚠ 96 segments, not 32. The silhouette of a planet is a CIRCLE, and a faceted limb is the one
   // artefact that instantly reads as "low-poly ball" no matter how good the surface is.
   const globe = new THREE.Mesh(new THREE.SphereGeometry(1, 96, 64), mat);
 
-  const airUni = { uSun: uni.uSun, uAtmo: { value: atmo }, uPower: { value: opts.airPower || 1.0 } };
+  // ⚠ THE SHELL HAS TO BE TALLER THAN THE HAZE IT DRAWS. At 1.028 there was nowhere for an
+  // exponential falloff to fall off IN — the shell ended while the air was still bright, giving the
+  // limb a hard outer edge (the same class of mistake as the hard-edged ice band reading as a
+  // decal). 1.10 is ~7 scale heights of headroom, so the haze reaches zero on its own terms.
+  const airUni = { uSun: uni.uSun, ...air3, uAir: uni.uAir,
+    uPower: { value: opts.airPower == null ? 0.62 : opts.airPower },
+    uCenter: { value: new THREE.Vector3() }, uRadius: { value: radius },
+    uScaleH: { value: opts.scaleH == null ? 0.016 : opts.scaleH } };
   const airMat = new THREE.ShaderMaterial({ vertexShader: AIR_VERT, fragmentShader: AIR_FRAG,
     uniforms: airUni, transparent: true, side: THREE.BackSide, depthWrite: false,
     blending: THREE.AdditiveBlending });
-  const air = new THREE.Mesh(new THREE.SphereGeometry(1.028, 64, 40), airMat);
+  const air = new THREE.Mesh(new THREE.SphereGeometry(1.10, 80, 48), airMat);
 
   // --- THE LAND, STANDING ABOVE THE WATER, and THE POLITICAL WORLD. Two layers, because they are
   // two different facts. The coast is the shape of the planet and is always there, low and warm,
@@ -586,6 +668,23 @@ export function buildEarth(radius = 100, opts = {}) {
     setSunDir(v) { uni.uSun.value.copy(v).normalize(); },
     coastShell, borderShell, borderLines, cities,
 
+    // ⚠ "FROM BLUE TO SPACE" IS ONE NUMBER, AND IT IS DERIVED FROM THE CAMERA. Robert asked for the
+    // colours to change with speed, blue to space — and the honest reading of that is not a colour
+    // grade bolted onto the ascent, it is the fact that AIR RUNS OUT. Standing on a street you are
+    // at the bottom of the column and everything is washed blue; from orbit the same air is a line
+    // on the horizon; from the Moon it is a thread. So the density rides the distance the zoom
+    // ladder already computes, and every layer of the atmosphere thins together, in step, off the
+    // same figure the borders and the cities fade on. Nothing can disagree with anything else.
+    //
+    // `bias` is the ascent's only lever (a burner climb can thicken the wash while the ground still
+    // fills the frame), and it MULTIPLIES rather than replaces, so it can never lie about altitude.
+    setAir(density, bias) {
+      const v = Math.max(0, Math.min(1.6, density * (bias == null ? 1 : bias)));
+      uni.uAir.value = v;
+      api.air$ = v;
+      return v;
+    },
+
     // ⚠ THE ZOOM LADDER IS THE WHOLE FEATURE, and it is a sequence, not a switch. From far out you
     // see a PLANET — borders at that distance would be a diagram and would destroy the illusion
     // that this is a real body. As you close, the political world fades up: first the hairline,
@@ -609,7 +708,10 @@ export function buildEarth(radius = 100, opts = {}) {
       cities.visible = city > 0.004;
       // the point sprite must not swell without limit as you approach or a city becomes a blob
       cityMat.uniforms.uScale.value = Math.min(2.6, 0.5 + (3.2 - Math.min(3.2, d)) * 0.9) * radius / 100;
-      api.zoom = { d, line, wall, city };
+      // the air thins as you leave: a full wash on approach, a thread from deep space
+      const air = 0.42 + 0.58 * k(11.0, 1.05);
+      api.setAir(air, api.airBias);
+      api.zoom = { d, line, wall, city, air: api.air$ };
       return api.zoom;
     },
     /** Convenience: drive the ladder straight off a camera. */
@@ -621,6 +723,11 @@ export function buildEarth(radius = 100, opts = {}) {
       group.updateMatrixWorld();
       eye.value.copy(c);
       group.worldToLocal(eye.value);
+      // ⚠ THE AIR SHADER WORKS IN WORLD SPACE, so it needs the globe's world centre every frame —
+      // the planet is at Earth's position along a route, never at the origin, and a stale centre
+      // puts the impact parameter (and therefore the whole limb) around the wrong point.
+      airUni.uCenter.value.copy(o);
+      airUni.uRadius.value = group.scale.x;   // the group IS scaled to the radius, so read it back
       return api.setZoom(c.distanceTo(o) / (radius || 1));
     },
     /** Where a city is, in world space — for pinning a label or flying to it. */
@@ -633,7 +740,7 @@ export function buildEarth(radius = 100, opts = {}) {
              borderSegments: shell.segments, cities: CITY_LATLON.length },
     /** Real rate is one turn a day; callers usually want it faster so a shot can show it. */
     spin(dt, rate = 1) { globe.rotation.y += dt * rate * (TAU / 86400) * 900; air.rotation.y = globe.rotation.y; },
-    setRadius(r) { group.scale.setScalar(r); },
+    setRadius(r) { group.scale.setScalar(r); airUni.uRadius.value = r; },
     dispose() {
       globe.geometry.dispose(); air.geometry.dispose();
       coast.geo.dispose(); shell.geo.dispose(); borderLines.geometry.dispose(); cities.geometry.dispose();

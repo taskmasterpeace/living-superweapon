@@ -1022,6 +1022,45 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   the hull takes 0, gauntlets trade speed 33.0→30.4 for jab 1.02→1.20, and owning an unbuilt row
   is silent rather than a throw. 10/10, 0 console errors.
 
+## THE AIR AROUND THE EARTH (2026-07-26) — manual §43
+- **THE LIMB IS AN OPTICAL DEPTH, NOT A FRESNEL.** The old shell faded by
+  `pow(1-|dot(n,view)|, 2.4)`, which peaks in a BAND and knows nothing about altitude — so the haze
+  was as thick a thousand km up as at sea level and the limb had no bottom edge. Now: shoot the eye
+  ray, find its closest approach to the planet centre, and `exp(-h/H)` is the column of air it went
+  through. One dot product and one length. A ray that MISSES the planet passes through ~2× the air of
+  one that stops in the ground, which is why the arc outside the disc is the brightest thing in frame.
+  ⚠ **The shell must be taller than the haze it draws** — at 1.028 there was nowhere for an
+  exponential to fall off IN, so the limb had a hard outer edge (the ice-band-reads-as-a-decal
+  family). 1.10 now. ⚠ **World space**, using built-in `cameraPosition` + the globe's own centre and
+  radius as uniforms — the planet is at Earth's position along a route, never the origin, and the
+  centre must be refreshed every frame or the limb is computed around the wrong point.
+- **AERIAL PERSPECTIVE WAS THE MISSING CUE.** Adding light makes a limb brighter, never HAZY. Ground
+  near the edge of the disc is progressively REPLACED by the air in front of it — coastlines have to
+  dissolve. ⚠ It must HUG the limb: at exponent 2.2 / strength 0.88 the wash reached mid-disc and the
+  bloom pass smeared it back over everything (a pale over-exposed marble). The EXPONENT carries this,
+  not the amplitude. ⚠ **Clamp the colour, not just the alpha** — additive layer into a bloom pass.
+- **THE HAZE READS THE CLOCK BECAUSE IT READS THE SUN.** `airColor(dot(n,sun))` is ONE function
+  shared by the surface and the shell so they cannot drift: blue sunlit · amber at a grazing angle ·
+  near-nothing unlit. Same `dot(n,sun)` as the terminator, whose sun is the subsolar point off
+  `world.dayT` — so the sky over a city cannot disagree with the time of day there.
+  ⚠ **The subsolar point was computed ONCE at build** — a crossing left Earth frozen at the time the
+  scene was assembled (leave at dawn, still dawn a minute later). Per frame now, and `_aimStar()` was
+  extracted so the visible sun moves with it (one star, one shadow).
+- **FORWARD SCATTERING** (Henyey-Greenstein on `dot(ray,-sun)`) is what turns a half-lit ball into a
+  planet with a rim of fire on the sunward side.
+- **"FROM BLUE TO SPACE" IS ONE DERIVED NUMBER.** Not a colour grade on the ascent — **air runs out**.
+  Density rides the distance the zoom ladder already computes, so every layer thins in step off the
+  same figure the borders and cities fade on. Measured: 1.25 radii → 0.99 · 2.0 → 0.95 · 4.5 → 0.80
+  · 11.0 → 0.42. `airBias` MULTIPLIES so it can never lie about altitude.
+- ⚠ Sunlit air is blue and there is no licence available on that; the DUSK RING and the political
+  furniture are ours and go to house gold. **Night air is deep SLATE BLUE** — a night limb is exactly
+  where a lazy "dark blue" becomes violet.
+- ⚠ **THE GAME CAMERA IS ORTHOGRAPHIC** (isometric game). Cloning `world.camera.constructor` with
+  perspective args builds a degenerate frustum and renders the planet into a six-pixel strip that
+  looks exactly like a broken shader — borrow the news crew's POV camera. ⚠ A page screenshot
+  captures the DOM (the title sits over the canvas): read the drawing buffer with `toDataURL` in the
+  SAME task as the render.
+
 ## HANDOFF
 - **`HANDOFF.md` at the repo root** is the orientation document: architecture, the ten rules that
   are load-bearing, what is solid, what is half-built, what to do next, and the headless

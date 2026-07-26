@@ -2281,3 +2281,105 @@ on by then — the foe has to be held on the curve for the frames being measured
 renderer.** Its POV renders at 320x180 scissored into the canvas corner, and a manual `world.render()`
 outside the normal frame loop inherits that rect — a posed shot comes back black except for one
 small corner. Clear the scissor and the viewport before posing.
+
+---
+
+## §43 · THE AIR AROUND THE EARTH (2026-07-26)
+
+Robert: *"improve earth, add atmospheric haze, should follow what I gave initially. colors change,
+speed, from blue to space... make sure it follows the game's day night cycle. and make it look like
+our art style."*
+
+Four separate asks, and each one turned out to name a real defect.
+
+### The limb was a fresnel, and a fresnel does not know where the ground is
+
+The first atmosphere faded the shell by `pow(1 - |dot(n, view)|, 2.4)`. That peaks in a BAND
+somewhere on the shell and carries no information about altitude, so the haze was as thick a
+thousand kilometres up as it was at sea level and the limb had no bottom edge. What an atmosphere
+actually looks like from orbit is a bright line pressed against the horizon fading to nothing above
+it, and the quantity that produces that is **how close the line of sight passes to the planet** —
+the ray's impact parameter.
+
+Per fragment: shoot the eye ray, find its closest approach to the planet centre, take the height of
+that point above the surface, and `exp(-h/H)` is the column of air the ray went through. One dot
+product and one length. A ray that MISSES the planet passes through roughly twice as much air as one
+that stops in the ground, which is exactly why the arc outside the disc is the brightest part of the
+picture.
+
+⚠ **The shell has to be taller than the haze it draws.** At radius 1.028 there was nowhere for an
+exponential to fall off in — the shell ended while the air was still bright, giving the limb a hard
+outer edge. It is 1.10 now, about seven scale heights of headroom, so the haze reaches zero on its
+own terms. (Same family as the hard-edged ice band that read as a decal.)
+
+⚠ **World space, not local.** The globe sits at Earth's position along a route, never at the origin,
+so the shader takes the built-in `cameraPosition` plus the globe's own centre and radius as uniforms.
+Inverting the model matrix in GLSL to recover a local eye is both ugly and one more thing to keep in
+sync — and the centre must be refreshed every frame or the whole limb is computed around the wrong
+point.
+
+### Aerial perspective is the cue that was missing
+
+Adding light at the limb makes it brighter. It never makes it HAZY. Looking at the edge of the disc
+you are looking through hundreds of kilometres of air, so the ground there is progressively
+**REPLACED** by the air in front of it — coastlines have to dissolve into haze as they approach the
+edge. That single `mix()` is the difference between an atmosphere and a rim light on a ball.
+
+⚠ **It must hug the limb.** At exponent 2.2 and strength 0.88 the wash reached the middle of the disc
+and the composer's bloom pass smeared the bright edge back over everything, and the planet came out
+as a pale over-exposed marble. The EXPONENT carries this effect, not the amplitude — 3.0 and 0.52.
+⚠ And **clamp the colour, not just the alpha**: this is an additive layer feeding a bloom pass, so a
+multiplier reaching 1.4 does not read as brighter air, it reads as a white halo with the planet lost
+inside it.
+
+### The haze reads the clock, because it reads the sun
+
+`airColor(dot(n, sun))` is one function shared by the surface pass and the shell pass, so they cannot
+drift apart. Sunlit air is blue; air at a grazing angle to the sun has had the blue scattered out of
+it and comes out amber; unlit air is nearly nothing with a trace of airglow. Since the argument is
+the same `dot(n, sun)` the terminator uses, and the sun direction is the subsolar point computed from
+`world.dayT`, **the sky over a city cannot disagree with the time of day in that city.**
+
+⚠ **The subsolar point was computed ONCE at build.** A crossing therefore left Earth frozen at
+whatever time it was when the scene was assembled — leave at dawn and you were still looking at dawn
+a minute later. `setSun` is called per frame now. And by the one-star-one-shadow law that forced
+`_aimStar()` out into its own method: the globe's terminator and the scene's visible sun are the same
+fact, so they are placed from the same vector, every frame, relative to EARTH and never to the
+origin.
+
+### Forward scattering is what makes a crescent ring
+
+Air throws light forward, so looking sunward THROUGH it blazes. A Henyey-Greenstein term on
+`dot(ray, -sun)` is what turns a half-lit ball into a planet with a rim of fire on the sunward side.
+
+### "From blue to space" is one number, and it is derived
+
+The honest reading of *colours change with speed, blue to space* is not a colour grade bolted onto
+the ascent. It is that **air runs out**. On a street you are at the bottom of the column and
+everything is washed blue; from orbit the same air is a line on the horizon; from the Moon it is a
+thread. So the density rides the distance the zoom ladder already computes — every layer thins
+together, in step, off the same figure the borders and the cities fade on, and nothing can disagree
+with anything else. `airBias` is the ascent's only lever and it MULTIPLIES, so it can never lie about
+altitude.
+
+Measured, same globe, camera distance in radii → air density: **1.25 → 0.99 · 2.0 → 0.95 ·
+4.5 → 0.80 · 11.0 → 0.42.**
+
+### The palette is ours; the one thing it may not do is invent an Earth
+
+Sunlit air is blue and there is no artistic licence available on that. The DUSK RING and the
+political furniture are ours and they go to the house gold, which is what makes this globe read as
+belonging to the same game as the case files and the broadcast. ⚠ Night air is deep SLATE BLUE and
+must never drift toward indigo — a night limb is exactly where a lazy "dark blue" becomes violet,
+and the no-purple law is absolute.
+
+### A harness lesson worth the cost
+
+⚠ **THE GAME CAMERA IS ORTHOGRAPHIC.** It is an isometric game. Cloning `world.camera.constructor`
+and passing perspective arguments builds a DEGENERATE FRUSTUM — left 46, right 1.78, top 0.1, bottom
+60000 — which renders the whole planet into a six-pixel strip at the top of the frame and looks
+exactly like a broken shader. Borrow the news crew's POV camera, which is the perspective one.
+⚠ And a page screenshot captures the DOM (the title screen sits over the canvas). Read the drawing
+buffer with `toDataURL` in the SAME task as the render, or a WebGL canvas without
+`preserveDrawingBuffer` is blank by the time a later call asks for it.
+
