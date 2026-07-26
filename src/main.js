@@ -180,6 +180,13 @@ function beginMatch(c) {
       }
     }
   } catch (err) { console.error('opening', err); }
+  // THE DENIABLE OPERATION (data/career.js POSTURES): you are in a country your own state has no
+  // standing in, so the law is looking for you from the opening bell rather than after the first
+  // civilian goes down. Booked through the police system's own heat map — no second mechanism.
+  if (c.govFlagged && game.police && game.player) {
+    try { game.police.heat.set(game.player, 40); hud.feed('NO COVER — local services are not expecting you', '#c9503a'); }
+    catch (err) { game.reportError(err, 'govFlagged'); }
+  }
   if (c.tutorial) tutorial.begin(); else tutorial.skip();
 }
 hud.onBracketContinue = () => { if (game._lastCfg) enter(game._lastCfg); };
@@ -209,7 +216,14 @@ const careerUI = new CareerUI(ROSTER);
 function openDesk() {
   let C = loadCareer();
   if (C && !ROSTER.find(d => d.id === C.heroId)) { /* orphaned custom — the desk offers retirement */ }
-  else if (!C) { C = newCareer(hud.selectedHero || (game._lastCfg && game._lastCfg.p1) || 'sol'); saveCareer(C); }
+  else if (!C) {
+    // THE STATE YOU ANSWER TO. A firm's country if one has been founded, otherwise the fighter's
+    // own homeland — every hero has one (data/identities.js), so government contracts work from
+    // week one without waiting on the founding flow.
+    const hid = hud.selectedHero || (game._lastCfg && game._lastCfg.p1) || 'sol';
+    const hd = ROSTER.find(r => r.id === hid);
+    C = newCareer(hid, (hd && hd.person && hd.person.co) || null); saveCareer(C);   // `co`, not `country`
+  }
   if (!C.slate) { C.slate = genSlate(C, ROSTER); saveCareer(C); }
   hud.hideTitle(); hud.hideEndScreen();
   careerUI.show(C, {

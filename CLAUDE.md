@@ -787,6 +787,49 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   Ref `wwa-moon-after.png`. ⚠ Still Earth-flavoured and deliberately left: the ambulance and the
   market stalls — props, not biology, and they want their own pass.
 
+## THE CLIMATE OF THE WORLD (2026-07-26) — `data/relations.js`, docs/THE_CLIMATE.md
+- Robert's 168x168 matrix, baked. Three sheets stack now: cities = WHERE a fight happens ·
+  countries = WHAT THE STATE IS LIKE · **relations = WHO THAT STATE CAN STAND**.
+- **Verified, not assumed**: 0 asymmetric pairs, diagonal blank, all values 1-5, and it joins the
+  country sheet **168 of 168** — the only sheet here needing no fallback (`relationOf` still returns
+  null for an unknown name). Encoding = one 168-char digit string per country; a lookup is two map
+  hits and a charCodeAt. Stored WHOLE despite the symmetry — triangle indexing is a bug farm.
+- **THE SPLIT IS DERIVED**: `factionSplit()` counts the rows → **United Front 88 / Collective 80**,
+  exactly his numbers, and it can never drift from the matrix it sits beside.
+- **Exactly ELEVEN pairs at 5 in the world** (US+Canada/UK/Japan/South Korea/Australia,
+  China+Russia/Iran/Pakistan/Brazil, Belarus+Russia, France+Germany). That scarcity is the point.
+- ⚠ **THE JOIN GAP IT EXPOSED**, now fixed by `COUNTRY_ALIAS`/`canonCountry` in **countries.js**
+  (the base layer — put new aliases THERE, never in a caller): `USA` on 20-odd hero identities ·
+  **`DR Congo` on the cities sheet, so KINSHASA (17M people) had NO country row at all** — no police
+  competence, no vigilantism law, no integrity, and that one PREDATES this work · `Faroe Islands`.
+- ⚠ **The identity field is `co`, not `country`** (`{n, c, co, f}`; `c` is the CITY). Reading
+  `person.country` compiles, runs, and gives undefined — every career silently had no homeland and
+  received zero government contracts. My test had the same bug, which is why it read as a code fault.
+- **THE GOVERNMENT CONTRACT** (career.js `POSTURES`) — the payoff he named. Home = the firm's country
+  else the fighter's own. The standing picks the job: 1 DENIABLE OPERATION (purse ×2.15, renown ×0.35,
+  `govFlagged` preloads police heat so you START wanted) · 2 INTERDICTION · 3 OBSERVATION ·
+  4 JOINT OPERATION · 5 MUTUAL DEFENSE. The pay curve is **V-shaped** on purpose — a state pays most
+  to send you where it cannot officially go — so money and safety pull opposite ways.
+- ⚠ **ROULETTE, NOT "TAKE THE MOST EXTREME."** Sorting candidates by distance-from-neutral and
+  picking the top 3 made **33 of 48** contracts DENIABLE — the rung with the most to say became the
+  default, which is how you make it mean nothing. Weighted sampling (`1 + |3-v|`) gives the measured
+  spread over 200 career-weeks: deniable 30% · interdiction 29% · observation 21% · defense 14% ·
+  joint 7%. Console: `relations` · `relations Uganda` · `relations Israel / Iran`.
+
+## THE SUNDIAL (2026-07-26) — the hanging dial
+- His brief: *"a upside down needle that points to sun and moon and Noon/Midnight, and it should
+  show the days and time."* An INVERTED dial — the gnomon hangs off the top edge, the hours arc
+  below it. Needle = `world.dayT` (the same clock the sky/news bug/peds run on), date = `gameDate()`
+  (the calendar the planets orbit on), moon exactly opposite the sun and dimmed when under. Nothing
+  keeps its own time, so the dial and the sky cannot disagree. Options → Sundial.
+- ⚠ Built ONCE; the frame loop writes three transforms and two opacities, and the text only
+  rewrites when the displayed MINUTE turns. Never innerHTML in the frame path.
+- ⚠ **An unscoped rule at the top of `PHONE_CSS` hid it on every device** — check what a stylesheet
+  block is SCOPED to (`body.phone`), not just which file it is in. Same family as the DECK_CSS bug.
+- ⚠ **The font family is `ComicSFX`, not `Bangers`** — comic.css declares faces under ROLE names
+  (ComicLetter/ComicSFX/ComicHeavy), so `'Bangers'` fell back to Rajdhani and looked almost right.
+- ⚠ The top centre was already the score bar's; the bar yields (`#hud.hassun`). Ref `wwa-sundial.png`.
+
 ## HANDOFF
 - **`HANDOFF.md` at the repo root** is the orientation document: architecture, the ten rules that
   are load-bearing, what is solid, what is half-built, what to do next, and the headless

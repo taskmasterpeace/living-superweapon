@@ -57,13 +57,21 @@ export class CareerUI {
     const card = (o) => {
       const foe = o.foe ? this.roster.find(d => d.id === o.foe) : null;
       const fr = o.foe ? rowOf(o.foe) : null;
-      const acc = o.kind === 'title' ? 'var(--gold,#ffd24a)' : o.kind === 'grudge' ? 'var(--danger,#ff5a4a)' : o.kind === 'defense' ? 'var(--police,#7fb0d0)' : 'var(--text-3,#c9c2b4)';
+      const acc = o.kind === 'title' ? 'var(--gold,#ffd24a)' : o.kind === 'grudge' ? 'var(--danger,#ff5a4a)' : o.kind === 'defense' ? 'var(--police,#7fb0d0)' : o.kind === 'govt' ? (o.relColor || 'var(--police,#7fb0d0)') : 'var(--text-3,#c9c2b4)';
       const canStake = !o.locked && (o.kind === 'duel' || o.kind === 'grudge' || o.kind === 'title');
       const chips = [
         o.heat ? chip('HEAT ×' + o.heat, 'var(--gold,#ffd24a)') : '',
         o.underdog ? chip('UNDERDOG — purse rides the gap', 'var(--danger-2,#e0a43a)') : '',
         o.rivalry ? chip('🩸 RIVALRY — renown ×1.5', 'var(--danger,#ff5a4a)') : '',
         o.aiLevel && o.aiLevel >= 1.35 ? chip('THEY ARE SHARP — AI ' + o.aiLevel, 'var(--police,#7fb0d0)') : '',
+        // THE STANDING. The whole point of the relationship matrix on one chip: what YOUR state
+        // thinks of the one you are being sent to, in that rung's own colour.
+        o.kind === 'govt' ? chip(esc(String(o.home || '').toUpperCase()) + ' → ' + esc(String(o.targetCountry || '').toUpperCase()) + ' · ' + o.relWord, o.relColor) : '',
+        o.kind === 'govt' ? chip(o.postureLabel, o.relColor) : '',
+        o.kind === 'govt' && o.sameBloc ? chip('SAME BLOC · ' + esc(String(o.bloc || '').toUpperCase()), '#5f8fb0') : '',
+        o.kind === 'govt' && o.bloc && !o.sameBloc ? chip('ACROSS THE LINE · ' + esc(String(o.bloc || '').toUpperCase()), '#c9743a') : '',
+        o.kind === 'govt' && o.flagged ? chip('NO COVER — the law starts looking for you', 'var(--danger,#ff5a4a)') : '',
+        o.kind === 'govt' && o.support ? chip('LOCAL SUPPORT', 'var(--good,#8fe08a)') : '',
       ].filter(Boolean).join(' ');
       return `<div class="ccOffer" data-o="${esc(o.id)}" style="border:1px solid ${o.locked ? 'var(--line,#2a2d33)' : 'var(--line-2,#3a3d43)'};background:var(--surface-raised,#16150f);padding:12px 14px;display:flex;flex-direction:column;gap:7px;${o.locked ? 'opacity:0.55' : ''}">
         <div style="display:flex;align-items:baseline;gap:9px">
@@ -79,6 +87,7 @@ export class CareerUI {
         </div>` : ''}
         ${o.city ? `<div style="${mono};font-size:10px;color:var(--text-4,#a8a294)">📍 ${esc(o.city.name.toUpperCase())} · ${esc((o.city.country || '').toUpperCase())}${o.city.crime ? ' · CRIME ' + o.city.crime : ''}${o.waves ? ' · ' + o.waves + ' WAVES' : ''}</div>` : ''}
         ${(o.intel || []).map(l => `<div style="${mono};font-size:9.5px;color:var(--text-5,#8b8577)">▸ ${esc(l)}</div>`).join('')}
+        ${o.why ? `<div style="${mono};font-size:9.5px;color:var(--text-5,#8b8577)">▸ ${esc(o.why)}</div>` : ''}
         <div style="font-size:12px;color:var(--text-3,#c9c2b4);line-height:1.45">${esc(o.blurb)}</div>
         <div style="display:flex;align-items:center;gap:12px;margin-top:2px">
           <button class="ccGo" data-o="${esc(o.id)}" ${o.locked ? 'disabled' : ''} style="padding:6px 18px;${o.locked ? 'opacity:0.5;cursor:default' : ''}">${o.kind === 'rest' ? 'REST ▸' : o.locked ? 'LOCKED' : 'ACCEPT ▸'}</button>

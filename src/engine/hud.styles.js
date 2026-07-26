@@ -496,6 +496,27 @@ export const CSS = `
 .lswovl .bchamp .cl{ font-size:var(--t-micro); letter-spacing:.3em; color:var(--text-5); text-transform:uppercase; margin-top:3px; }
 .lswovl .bchamp.tbd{ opacity:.55; }
 /* ---- the THEATER: in-match city nameplate + the CITY ATLAS ---- */
+/* THE SUNDIAL — hangs from the TOP EDGE, which is the whole idea: the gnomon is inverted and the
+   hours swing below it. Pointer-events off; it is a readout, never a control. The numerals use
+   BANGERS (public/fonts, bundled offline with the comic layer) because Robert asked for "our new
+   font we liked" — the labels stay on the HUD's own mono so the widget still belongs to the HUD. */
+/* ⚠ THE TOP CENTRE IS ALREADY OCCUPIED. The score/mode bar lives here too, and the dial landed
+   straight on top of it. The bar yields — the dial is anchored to the very top edge by design and
+   cannot move down without stopping being a hanging dial. */
+#hud.hassun .modebar, #hud.hassun #hMode{ top:126px; }
+#hud .sundial{ position:absolute; left:50%; top:0; transform:translateX(-50%); width:246px;
+  pointer-events:none; text-align:center; filter:drop-shadow(0 2px 6px rgba(0,0,0,.55)); }
+#hud .sundial svg{ display:block; overflow:visible; }
+#hud .sundial .sdlab{ font-family:'Cascadia Mono',Consolas,monospace; font-size:7.5px;
+  letter-spacing:.18em; fill:var(--text-5); }
+#hud .sundial .sdread{ margin-top:-2px; line-height:1; }
+/* ⚠ THE FAMILY IS 'ComicSFX', NOT 'Bangers'. comic.css declares the @font-face under a ROLE name
+   (ComicLetter / ComicSFX / ComicHeavy) rather than the foundry name, so asking for 'Bangers'
+   silently fell back to Rajdhani and looked almost right — which is the worst kind of wrong. */
+#hud .sundial .sdread b{ display:block; font-family:'ComicSFX','Rajdhani',sans-serif;
+  font-size:19px; letter-spacing:.05em; color:var(--gold); text-shadow:0 1px 0 var(--gold-shadow); }
+#hud .sundial .sdread span{ display:block; font-family:'Cascadia Mono',Consolas,monospace;
+  font-size:8px; letter-spacing:.2em; color:var(--text-5); margin-top:1px; }
 #hud .cityplate{ position:absolute; left:50%; transform:translateX(-50%); bottom:108px; font-family:'Cascadia Mono',Consolas,monospace; font-size:var(--t-label); letter-spacing:.14em; color:var(--text-4); background:rgba(8,10,16,.5); border:1px solid rgba(255,255,255,.08); border-radius:var(--r-2); padding:4px 12px; pointer-events:none; }
 #hud .cityplate b{ color:var(--gold-pale); font-weight:700; }
 /* ===== THE DANGER ROOM — a simulated environment + the engine's test harness =====
@@ -698,6 +719,8 @@ export const CSS = `
     #hud .kit{ left:8px; bottom:calc(150px + env(safe-area-inset-bottom)); transform:scale(.85); transform-origin:bottom left; }
     #hud .slots{ display:none; }              /* the touch rail replaces them */
     #hud .cityplate{ bottom:auto; top:calc(8px + env(safe-area-inset-top)); left:8px; transform:none; font-size:8.5px; max-width:52vw; }
+    /* the top edge belongs to the fight on a phone */
+    #hud .sundial{ display:none !important; }
     #hud .modebar{ top:calc(4px + env(safe-area-inset-top)); transform:translateX(-50%) scale(.85); }
     #hud .endscr .btns{ flex-direction:column; width:100%; }
     #hud .endscr button{ width:100%; }

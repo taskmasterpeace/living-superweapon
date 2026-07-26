@@ -15,10 +15,30 @@ export const COUNTRY_FIELDS = 'code,name,demonym,pop,popRating,motto,govType,gov
 export const countryList = () => COUNTRY_ROWS.map(r => {
   const o = {}; COUNTRY_FIELDS.forEach((k, i) => { o[k] = r[i]; }); return o;
 });
+// ⚠ THE JOIN GAP. Three names in this project do not spell their country the way the sheet does,
+// and until this table existed every one of them silently returned null and took the caller's
+// fallback: `USA` on 20-odd hero identities, `DR Congo` on the cities sheet (so KINSHASA — a
+// 17-million-person city — had NO country row at all, meaning no police competence, no vigilantism
+// law, no integrity), and `Faroe Islands`, which is not a sovereign state and resolves to its.
+// Keys are lower-case; the lookup is already case- and whitespace-tolerant.
+export const COUNTRY_ALIAS = {
+  'usa': 'United States', 'u.s.': 'United States', 'u.s.a.': 'United States',
+  'united states of america': 'United States', 'america': 'United States',
+  'dr congo': 'Congo', 'democratic republic of the congo': 'Congo', 'drc': 'Congo',
+  'faroe islands': 'Denmark', 'greenland': 'Denmark',
+  'uk': 'United Kingdom', 'great britain': 'United Kingdom', 'england': 'United Kingdom',
+  'south korea': 'South Korea', 'republic of korea': 'South Korea',
+  'uae': 'United Arab Emirates', 'ivory coast': 'Ivory Coast',
+};
+export const canonCountry = (n) => {
+  const k = String(n || '').trim().toLowerCase();
+  return COUNTRY_ALIAS[k] || String(n || '').trim();
+};
+
 let _byName = null;
 // Join a city row to its nation. Case/whitespace tolerant; returns null when the sheet has no
 // entry (the cities sheet has countries the country sheet does not) - callers MUST fall back.
 export function countryOf(name) {
   if (!_byName) { _byName = new Map(); for (const c of countryList()) _byName.set(c.name.trim().toLowerCase(), c); }
-  return _byName.get(String(name || '').trim().toLowerCase()) || null;
+  return _byName.get(canonCountry(name).toLowerCase()) || null;
 }

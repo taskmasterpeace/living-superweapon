@@ -7,6 +7,7 @@
 
 import { cityList } from './cities.js';
 import { countryOf } from './countries.js';
+import { relationOf, factionOf, sameBloc, rationaleOf, FACTION_LOOK } from './relations.js';
 import { snapshotTable, championId, crownChampion, injuryOf, healBout, matchElo, recOf } from './rankings.js';
 import { recoveryPlan, deriveOrigin } from './origins.js';
 import { advanceDays } from './orbits.js';
@@ -33,13 +34,51 @@ export function loadCareer() {
 export function saveCareer(c) { try { localStorage.setItem(KEY, JSON.stringify(c)); } catch {} }
 export function clearCareer() { try { localStorage.removeItem(KEY); } catch {} }
 
-export function newCareer(heroId) {
+export function newCareer(heroId, home) {
   return {
     v: 1, heroId, week: 1, bank: 0, renown: 0, titles: 0, streak: 0, lastReport: null,
+    home: home || null,                // the state you answer to — see homeOf()
     seed: 1 + ((Math.random() * 1e6) | 0),
     history: [],                       // [{week, kind, foe, city, result:'W'|'L'|'REST', paid}]
     slate: null,                       // dealt lazily by genSlate — null after every week turn
   };
+}
+
+
+// -------------------------------------------------------------------------------------------
+// THE GOVERNMENT CONTRACT — what the 168x168 relationship matrix is FOR.
+// Robert, handing the sheet over: "this is the climate of our game... determines your govnmt
+// assigned missions". So the state you answer to reads its own file on the country you are being
+// sent to, and that ONE number decides what kind of job it is.
+//
+// Every rung is a different fight, not a different purse on the same fight: the far end is
+// deniable and the near end is a parade. The pay curve is deliberately V-SHAPED — a state pays
+// most to send you somewhere it cannot officially go, and pays least for a favour to a friend —
+// so the money and the safety pull in opposite directions and the card is a real decision.
+export const POSTURES = {
+  1: { key: 'deniable', label: 'DENIABLE OPERATION', icon: '\u2620',
+       d: 'No cover, no extraction, no acknowledgement. If it goes wrong you were never sent.',
+       purse: 2.15, renown: 0.35, support: false, flagged: true },
+  2: { key: 'interdiction', label: 'INTERDICTION', icon: '\u26a0',
+       d: 'A cold posting. You are tolerated, watched, and on your own if it turns.',
+       purse: 1.55, renown: 0.7, support: false, flagged: false },
+  3: { key: 'observation', label: 'OBSERVATION DUTY', icon: '\u25ce',
+       d: 'Nobody here has an opinion about you. Show the flag and come home.',
+       purse: 0.8, renown: 0.9, support: false, flagged: false },
+  4: { key: 'joint', label: 'JOINT OPERATION', icon: '\u2694',
+       d: 'A partner service works alongside you. The locals will not get in your way.',
+       purse: 1.0, renown: 1.25, support: true, flagged: false },
+  5: { key: 'defense', label: 'MUTUAL DEFENSE', icon: '\u2605',
+       d: 'A treaty obligation. Their state opens every door you need.',
+       purse: 1.15, renown: 1.6, support: true, flagged: false },
+};
+
+// The country a career answers to: the FIRM's, if one has been founded, otherwise the fighter's
+// own. A hero always has a homeland (data/identities.js), so the system works from week one
+// without waiting on the founding flow.
+export function homeOf(career, def) {
+  // ⚠ the identity field is `co` (data/identities.js: {n, c, co, f}) — `country` is undefined
+  return (career && career.home) || (def && def.person && def.person.co) || null;
 }
 
 const pick = (R, arr) => arr[(R() * arr.length) | 0];
@@ -182,6 +221,53 @@ export function genSlate(career, roster) {
   }
 
   // always: REST — the free week. The body heals one bout; the world keeps moving.
+
+  // 5 · THE GOVERNMENT CONTRACT — the relationship matrix, made into a job.
+  // The target is chosen for how INTERESTING the standing is, not at random: a slate of neutral
+  // postings would never show the player that the system exists. Ties break toward hostility,
+  // because that is the rung with something to say.
+  const home = career.home || null;
+  if (home && relationOf(home, home)) {
+    const cand = [];
+    for (let k = 0; k < 26; k++) {
+      const c = pickCity(R, null);
+      if (!c.country || c.country === home) continue;
+      const rel = relationOf(home, c.country);
+      if (!rel) continue;                        // the matrix does not carry it — never invent one
+      cand.push({ c, rel, weight: 1 + Math.abs(3 - rel.v) });
+    }
+    // ⚠ ROULETTE, NOT "TAKE THE MOST EXTREME". Sorting by weight and picking from the top three
+    // made 33 of 48 contracts DENIABLE OPERATIONS — the rung with the most to say became the
+    // default, which is the fastest way to make it mean nothing. A mild bias toward the ends
+    // (weight 1 + |3-v|) lets the world's own distribution through: most of the map is strained
+    // or indifferent, so most weeks are ordinary and a black posting is an event.
+    let total = 0; for (const x of cand) total += x.weight;
+    let roll = R() * total, chosen = null;
+    for (const x of cand) { roll -= x.weight; if (roll <= 0) { chosen = x; break; } }
+    if (!chosen && cand.length) chosen = cand[cand.length - 1];
+    if (chosen) {
+      const P = POSTURES[chosen.rel.v];
+      const foeRow = neighbor(8) || neighbor(52);
+      const foe = foeRow ? defOf(foeRow.id) : null;
+      if (foe) usedFoes.add(foeRow.id);
+      const bloc = factionOf(chosen.c.country), myBloc = factionOf(home);
+      const o = dress({
+        id: 'w' + career.week + '-govt', kind: 'govt', icon: P.icon,
+        label: 'GOVERNMENT CONTRACT',
+        posture: P.key, postureLabel: P.label, rel: chosen.rel.v, relWord: chosen.rel.word,
+        relColor: chosen.rel.color, home, targetCountry: chosen.c.country,
+        bloc, sameBloc: !!myBloc && myBloc === bloc, flagged: !!P.flagged, support: !!P.support,
+        foe: foe ? foe.id : null, foeName: foe ? foe.name : null,
+        city: chosen.c,
+        purse: Math.max(20, Math.round(duelPurse(foeRow ? foeRow.elo : 1100) * P.purse / 5) * 5),
+        renown: Math.max(2, Math.round(9 * P.renown)),
+        blurb: P.d,
+      }, foeRow);
+      o.why = rationaleOf(chosen.c.country);
+      offers.push(o);
+    }
+  }
+
   offers.push({
     id: 'w' + career.week + '-rest', kind: 'rest', icon: '🛏', label: 'REST WEEK',
     foe: null, foeName: null, city: null, purse: 0, renown: 0,
@@ -196,6 +282,11 @@ export function genSlate(career, roster) {
 export function acceptCfg(career, offer) {
   if (offer.kind === 'defense') return { mode: 'survival', p1: career.heroId, waves: offer.waves, career: offer.id };
   if (offer.kind === 'rumble') return { mode: 'rumble', p1: career.heroId, career: offer.id };
+  // A DENIABLE OPERATION IS A DIFFERENT FIGHT, not a bigger cheque. `govFlagged` preloads police
+  // heat: in a country your state cannot officially be in, the law is already looking for you
+  // before the first punch. Every other posture runs as an ordinary bout.
+  if (offer.kind === 'govt') return { mode: 'duel', p1: career.heroId, enemy: offer.foe,
+    aiLevel: offer.aiLevel, career: offer.id, govFlagged: !!offer.flagged };
   return { mode: 'duel', p1: career.heroId, enemy: offer.foe, aiLevel: offer.aiLevel, career: offer.id };   // duel / grudge / title — the bot scales with the Elo gap
 }
 

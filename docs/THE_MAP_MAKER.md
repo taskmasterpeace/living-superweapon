@@ -866,3 +866,36 @@ sky. Ref `wwa-moon-after.png`.
 
 ⚠ Still Earth-flavoured on the Moon and deliberately left: the ambulance and the market stalls.
 Those are props, not biology, and want their own pass.
+
+## THE SUNDIAL (2026-07-26)
+
+Robert's brief, in his words: *"a upside down needle that points to sun and moon and Noon/Midnight,
+and it should show the days and time."*
+
+So it is an **inverted dial**: the gnomon hangs from the top edge of the screen and the hours are
+the arc swinging below it. That is the one arrangement that reads instantly at the top of a HUD and
+does not fight the isometric camera the way a flat dial on the ground would.
+
+Every value is live. The needle is `world.dayT` — the same clock the sky, the news bug and the
+pedestrians already run on — the date is `gameDate()`, the same calendar the planets orbit on and
+the career advances, and the **moon rides exactly opposite the sun**, dimming when it is under.
+Nothing here keeps its own time, so the dial and the sky cannot disagree.
+
+⚠ **Built once, transformed thereafter.** The SVG is created on first show; the frame loop writes
+three `rotate()` transforms and two opacities, and the text only rewrites when the displayed MINUTE
+turns. No `innerHTML` in the frame path.
+
+Three things went wrong and are worth keeping:
+
+- ⚠ **The phone rule was unscoped.** `#hud .sundial{ display:none !important }` went in at the top
+  of `PHONE_CSS`, outside the `body.phone` block, so it hid the dial on every device. Same family
+  as the earlier "CSS landed in DECK_CSS" bug: check what a stylesheet block is *scoped to*, not
+  just which file it is in.
+- ⚠ **The font family is `ComicSFX`, not `Bangers`.** `comic.css` declares its faces under ROLE
+  names (ComicLetter / ComicSFX / ComicHeavy), so asking for `'Bangers'` silently fell back to
+  Rajdhani and looked *almost* right — the worst kind of wrong.
+- ⚠ **The top centre was already occupied** by the score bar. The bar yields (`#hud.hassun`); the
+  dial is anchored to the very top edge by design and cannot move down without ceasing to be a
+  hanging dial.
+
+Options → Sundial. Ref `wwa-sundial.png`.

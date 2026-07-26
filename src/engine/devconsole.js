@@ -15,6 +15,8 @@
 //     cover boxes — rather than recomputing what the planner intended. A ruler that agrees with the
 //     source instead of the world is how a wrong number survives being checked.
 import { BANDS } from '../core/util.js';
+import { relationOf, factionOf, theaterOf, rationaleOf, alliesOf, rivalsOf, sameBloc,
+         factionSplit, relationCount, FACTION_LOOK } from '../data/relations.js';
 import { ROSTER } from '../data/characters.js';
 import * as ORG from '../data/org.js';
 import * as MED from '../data/medical.js';
@@ -330,6 +332,38 @@ export class DevConsole {
     });
 
     // ---- THE MOONS, at the distance nobody believes.
+    this.cmd('relations', 'relations <country> [other] \u2014 the bloc, the allies, the enemies, the standing', (a, c) => {
+      const A = a.join(' ').trim();
+      if (!A) {
+        const sp = factionSplit();
+        c.print('THE CLIMATE OF THE WORLD \u2014 ' + relationCount() + ' states');
+        for (const [k, n] of Object.entries(sp)) {
+          const L = FACTION_LOOK[k] || {};
+          c.print('  ' + k.toUpperCase().padEnd(14) + String(n).padStart(3) + '   ' + (L.d || ''));
+        }
+        return c.print('  relations <country> for one state, or relations <a> / <b> for a pair');
+      }
+      // "relations a / b" reads as a PAIR; anything else is one country's whole file
+      const slash = A.indexOf('/');
+      if (slash > 0) {
+        const x = A.slice(0, slash).trim(), y = A.slice(slash + 1).trim();
+        const r = relationOf(x, y);
+        if (!r) return c.warn('the matrix does not carry one of those \u2014 ' + x + ' / ' + y);
+        return c.print(x.toUpperCase() + '  \u2194  ' + y.toUpperCase() + '   ' + r.v + '/5  ' + r.word +
+                       (sameBloc(x, y) ? '   (same bloc)' : '   (across the line)'));
+      }
+      const f = factionOf(A);
+      if (!f) return c.warn('not on the sheet: ' + A);
+      c.print(A.toUpperCase() + '   ' + f.toUpperCase() + '   ' + theaterOf(A));
+      c.print('  ' + (rationaleOf(A) || ''));
+      const al = alliesOf(A, 4), rv = rivalsOf(A, 2);
+      const five = al.filter(x => x.v === 5).map(x => x.name);
+      if (five.length) c.print('  TREATY (5): ' + five.join(', '));
+      c.print('  FRIENDLY (4): ' + al.filter(x => x.v === 4).map(x => x.name).slice(0, 12).join(', '));
+      c.print('  HOSTILE (1):  ' + (rv.filter(x => x.v === 1).map(x => x.name).join(', ') || 'nobody'));
+      c.print('  strained with ' + rv.filter(x => x.v === 2).length + ' \u00b7 indifferent to ' +
+              (relationCount() - 1 - al.length - rv.length));
+    });
     this.cmd('moons', 'moons <planet> — the interesting ones, and how far out they really are', (a, c) => {
       const id = (a[0] || 'earth').toLowerCase();
       const list = moonsOf(id);

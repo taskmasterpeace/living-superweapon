@@ -8,6 +8,8 @@ import { esc, fileNoOf, fileDate, agoStr, isSynthDef, cfAbilityRows, cfCounterNo
 import { ROSTER, SLOT_ORDER } from '../data/characters.js';
 import { climateLine } from '../data/climate.js';
 import { PLANETS, AU_KM, HELIOPAUSE_AU, TERMINATION_SHOCK_AU, SCALE_LADDER, NEAR_STARS, transitSecsFor, worldEnv } from '../data/planets.js';
+import { clockStr } from '../data/news.js';
+import { gameDate, dateStr } from '../data/orbits.js';
 import { CSS, CODEX_MOBILE, PHONE_CSS, TABLET_CSS, DECK_CSS } from './hud.styles.js';
 import { DTYPES, DTYPE_INFO, resistOf, bandOf } from './entity.js';
 import { glyph, padActive, padFaces } from '../core/glyphs.js';
@@ -229,6 +231,7 @@ export class HUD {
       <div class="panel radar" id="hRadar"><div class="rlab">Radar</div><canvas id="hRadarC" width="152" height="152"></canvas></div>
       <div class="panel pip" id="hPip" style="display:none"><div class="pipcap"><span class="pipdot"></span><span>ON AIR — KMK 9</span></div></div>
       <div class="cityplate" id="hCity" style="display:none"></div>
+      <div class="sundial" id="hSun" style="display:none"></div>
       <div class="simfx"><div class="simgrid"></div><div class="simscan"></div><div class="simsweep"></div>
         <span class="simc c1"></span><span class="simc c2"></span><span class="simc c3"></span><span class="simc c4"></span>
         <div class="simtag"><i></i>THRESHOLD SIMULATION — DANGER ROOM · SUBJECT IS LIVE, ALL ELSE PROJECTED</div></div>
@@ -253,6 +256,7 @@ export class HUD {
       radar: this.root.querySelector('#hRadar'), radarC: this.root.querySelector('#hRadarC'),
       pip: this.root.querySelector('#hPip'),
       city: this.root.querySelector('#hCity'), telem: this.root.querySelector('#hTelem'),
+      sundial: this.root.querySelector('#hSun'),
       wanted: this.root.querySelector('#plWanted'),
       hits: this.root.querySelector('#hHits'), danger: this.root.querySelector('#hDanger'),
       ko: this.root.querySelector('#hKO'), koT: this.root.querySelector('#hKOt'), koS: this.root.querySelector('#hKOs'),
@@ -846,6 +850,7 @@ export class HUD {
       ${toggle('hints', 'Controls Hint Panel')}
       ${toggle('aimAssist', 'Aim Assist · magnet targeting')}
       ${toggle('spacingRings', 'Spacing Rings · draw your strike reach on the ground')}
+      ${toggle('sundial', 'Sundial · the hanging dial, sun and moon, day and time')}
       ${toggle('heroVoice', 'Hero Voices · DBZ yells (off: fighters fight in silence)')}
       <div class="orow"><span class="ol">Control Scheme</span><div class="chips3">
         ${Object.entries(KEYMAPS).map(([k, m]) => `<span class="c3${keymap(S.scheme) === m ? ' on' : ''}" data-scheme="${k}">${m.name}</span>`).join('')}
@@ -1306,6 +1311,91 @@ export class HUD {
   // the previous colour is kept — it is not an error, it just draws the wrong thing. Anything
   // painted into a <canvas> must use these literals. Keep them in sync with :root in index.html.
   // ---- combat UI: radar, hit direction, KO banner ----
+  // -------------------------------------------------------------------------------------------
+  // THE SUNDIAL. Robert's brief, in his words: "a upside down needle that points to sun and moon
+  // and Noon/Midnight, and it should show the days and time."
+  //
+  // So it is an INVERTED dial: the gnomon HANGS from the top edge of the screen and the hours are
+  // the arc swinging below it, which is the one arrangement that reads instantly at the top of a
+  // HUD and does not fight the isometric camera the way a flat-on-the-ground dial would.
+  //
+  // Every value is live: the needle is `world.dayT` (the same clock the sky, the news bug and the
+  // pedestrians already run on), the date is `gameDate()` (the same calendar the planets orbit on,
+  // advanced by the career), and the MOON rides exactly opposite the sun. Nothing here keeps its
+  // own time, so the dial and the sky can never disagree.
+  //
+  // ⚠ ONE-TIME BUILD, TRANSFORM-ONLY UPDATE. The SVG is created once and the frame loop writes
+  // three transforms and two strings — no innerHTML in the frame path, and the text only rewrites
+  // when the displayed MINUTE changes (the dirty-check pattern the rest of the HUD widgets use).
+  _buildSundial() {
+    const W = 246, H = 96, CX = W / 2, CY = 4, R = 74;      // the pivot hangs off the TOP edge
+    const pol = (deg, r) => {                                // 0deg = straight down from the pivot
+      const a = (deg - 90) * Math.PI / 180;
+      return [CX + Math.cos(a) * r, CY + Math.sin(a) * r];
+    };
+    let ticks = '';
+    for (let h = 0; h < 24; h++) {
+      const deg = -90 + h * 15;                              // 24 hours across the 360, half visible
+      if (deg < -84 || deg > 84) continue;
+      const big = h % 6 === 0;
+      const [x1, y1] = pol(deg, R - (big ? 11 : 5)), [x2, y2] = pol(deg, R);
+      ticks += `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${big ? 'var(--gold-deep,#b8801a)' : 'var(--line-2,#3a3d43)'}" stroke-width="${big ? 1.6 : 1}"/>`;
+    }
+    const [ax, ay] = pol(-84, R), [bx, by] = pol(84, R);
+    this.el.sundial.innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" aria-hidden="true">
+      <path d="M ${ax.toFixed(1)} ${ay.toFixed(1)} A ${R} ${R} 0 0 1 ${bx.toFixed(1)} ${by.toFixed(1)}"
+            fill="none" stroke="var(--line-2,#3a3d43)" stroke-width="1.2"/>
+      ${ticks}
+      <text class="sdlab" x="${CX}" y="${(CY + R - 15).toFixed(1)}" text-anchor="middle">NOON</text>
+      <text class="sdlab" x="7" y="${(CY + 20).toFixed(1)}">MID</text>
+      <text class="sdlab" x="${W - 7}" y="${(CY + 20).toFixed(1)}" text-anchor="end">NIGHT</text>
+      <g id="sdMoon"><circle cx="${CX}" cy="${CY + R - 30}" r="5.5" fill="#cfd6e0"/>
+        <circle id="sdMoonShade" cx="${CX - 2.6}" cy="${CY + R - 30}" r="5.5" fill="var(--ink,#0e0d0a)"/></g>
+      <g id="sdSun"><circle cx="${CX}" cy="${CY + R - 30}" r="7" fill="var(--gold,#ffd24a)"/>
+        <circle cx="${CX}" cy="${CY + R - 30}" r="11" fill="var(--gold,#ffd24a)" opacity="0.16"/></g>
+      <g id="sdNeedle">
+        <line x1="${CX}" y1="${CY}" x2="${CX}" y2="${CY + R - 7}" stroke="var(--bone,#f2ead9)" stroke-width="1.6"/>
+        <polygon points="${CX - 4},${CY + R - 16} ${CX + 4},${CY + R - 16} ${CX},${CY + R - 4}" fill="var(--bone,#f2ead9)"/>
+      </g>
+      <circle cx="${CX}" cy="${CY}" r="3.4" fill="var(--gold,#ffd24a)"/>
+    </svg>
+    <div class="sdread"><b id="sdTime">--:--</b><span id="sdDate"></span></div>`;
+    this._sd = {
+      needle: this.el.sundial.querySelector('#sdNeedle'),
+      sun: this.el.sundial.querySelector('#sdSun'),
+      moon: this.el.sundial.querySelector('#sdMoon'),
+      shade: this.el.sundial.querySelector('#sdMoonShade'),
+      time: this.el.sundial.querySelector('#sdTime'),
+      date: this.el.sundial.querySelector('#sdDate'),
+      CX, CY, last: '', lastDate: '',
+    };
+  }
+
+  updateSundial() {
+    const el = this.el.sundial, g = this.game;
+    const show = !!(SETTINGS.sundial && g && g.mode && g.running && g.world);
+    if (this.root.classList.contains('hassun') !== show) this.root.classList.toggle('hassun', show);
+    if (!show) { if (el.style.display !== 'none') el.style.display = 'none'; return; }
+    if (el.style.display === 'none') { el.style.display = ''; if (!this._sd) this._buildSundial(); }
+    const sd = this._sd, t = g.world.dayT;
+    // dayT 0.25 = noon, 0.75 = midnight (data/news.js). The needle points DOWN at noon and swings
+    // a full turn across the day; the sun rides with it and the moon sits exactly opposite.
+    const deg = (t - 0.25) * 360;
+    sd.needle.setAttribute('transform', `rotate(${deg.toFixed(2)} ${sd.CX} ${sd.CY})`);
+    sd.sun.setAttribute('transform', `rotate(${deg.toFixed(2)} ${sd.CX} ${sd.CY})`);
+    sd.moon.setAttribute('transform', `rotate(${(deg + 180).toFixed(2)} ${sd.CX} ${sd.CY})`);
+    // a body below the horizon line fades — you should be able to SEE which one is up
+    const up = Math.cos(deg * Math.PI / 180);
+    sd.sun.style.opacity = up > -0.1 ? '1' : '0.16';
+    sd.moon.style.opacity = up < 0.1 ? '1' : '0.16';
+    const now = clockStr(t);
+    if (now !== sd.last) {                                   // text only when the minute turns
+      sd.last = now; sd.time.textContent = now;
+      const d = gameDate(), ds = dateStr(d);
+      if (ds !== sd.lastDate) { sd.lastDate = ds; sd.date.textContent = ds; }
+    }
+  }
+
   updateRadar(g) {
     const ctx = this._radarCtx; if (!ctx || this.el.radar.style.display === 'none') return;
     const now = performance.now();                                   // ~25 Hz is plenty for a minimap
@@ -1701,6 +1791,7 @@ export class HUD {
     const inMatch = !!(g.mode && g.running);
     this.el.radar.style.display = inMatch ? 'block' : 'none';
     this.updateRadar(g);
+    this.updateSundial();
     // the theater nameplate — where in the world this fight is happening
     const plan = g.world && g.world.plan;
     const plateKey = inMatch && plan ? plan.name + plan.seed : '';
