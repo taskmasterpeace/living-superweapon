@@ -169,3 +169,141 @@ export function makeParty(spec = {}) {
   out.formation = spec.formation || formationFor(out);
   return out;
 }
+
+// -------------------------------------------------------------------------------------------------
+// ATMOSPHERIC AIRCRAFT — at TRUE 1:1 scale, which is the entire point of the exercise.
+//
+// Robert: "considering the size of people and cars and such, show me what a jet, a quinjet and a
+// helicopter would look like in this world."
+//
+// ⚠ EVERY LENGTH HERE IS THE REAL AIRCRAFT, converted once. The world is 1u ≈ 0.19 m, so
+// `u = metres × 5.263`. A hero is 9.6u (1.8 m) and a street car is 24u (4.5 m) — those two numbers
+// are the yardstick, and they are what make these things frightening. A utility helicopter is not
+// "a big prop": it is 104u, which is TEN AND A HALF PEOPLE laid end to end, and its rotor disc is
+// wider than three cars parked nose to tail.
+//
+// ⚠ THIS IS WHY AIRCRAFT CANNOT BE STREET SCENERY. A street is 22u wide. A heavy transport spans
+// 272u — TWELVE lanes. Anything past the gunship belongs to the airport tile, the sky, or a
+// cutscene; it cannot set down between two buildings, and pretending otherwise is exactly how a
+// scale system becomes a lie.
+export const M2U = 1 / 0.19;                    // metres → world units (5.263)
+export const REF = { hero: 9.6, car: 24, bus: 63, street: 22, tower: 150 };
+
+export const AIRCRAFT = [
+  {
+    id: 'lightheli', name: 'LIGHT HELICOPTER', real: 'news / police ship', kind: 'heli',
+    lengthM: 12.9, spanM: 11.0, crew: 4,
+    blurb: 'The one already circling your fight. Small enough to put down in a plaza.',
+    palette: { hull: '#2e3540', trim: '#8b8577', glass: '#1d2a33', engine: '#ffb03a', dark: '#14120e' },
+    rotor: { r: 11.0, at: [0, 3.2, -1] },
+    parts: [
+      { g: 'box',  s: [3.4, 3.2, 9], at: [0, 0, 0], m: 'hull' },
+      { g: 'box',  s: [2.6, 2.2, 3], at: [0, 0.3, -5.2], m: 'glass' },
+      { g: 'box',  s: [1.1, 1.1, 7], at: [0, 1.1, 6.4], m: 'hull' },
+      { g: 'plate', s: [0.5, 3.4, 2], at: [0, 2.6, 9.4], m: 'trim' },
+      { g: 'cyl',  s: [0.3, 0.3, 5], at: [-1.5, -2, 0], rot: [Math.PI / 2, 0, 0], m: 'trim' },
+      { g: 'cyl',  s: [0.3, 0.3, 5], at: [1.5, -2, 0], rot: [Math.PI / 2, 0, 0], m: 'trim' },
+    ],
+  },
+  {
+    id: 'blackhawk', name: 'UTILITY HELICOPTER', real: 'UH-60 class', kind: 'heli',
+    lengthM: 19.76, spanM: 16.36, crew: 11,
+    blurb: 'Eleven seats and a door gun. What a state sends when it stops asking.',
+    palette: { hull: '#3a4038', trim: '#6b6f60', glass: '#1d2a33', engine: '#ffb03a', dark: '#14120e' },
+    rotor: { r: 16.36, at: [0, 4.4, -2] },
+    parts: [
+      { g: 'box',  s: [5, 4.4, 14], at: [0, 0, 0], m: 'hull' },
+      { g: 'box',  s: [4.2, 3, 4], at: [0, 0.6, -8], m: 'glass' },
+      { g: 'box',  s: [1.6, 1.6, 9], at: [0, 1.4, 10], m: 'hull' },
+      { g: 'plate', s: [0.6, 5, 2.6], at: [0, 3.6, 14], m: 'trim' },
+      { g: 'box',  s: [1.2, 0.6, 5], at: [-3.4, 0.6, 0], m: 'trim' },
+      { g: 'box',  s: [1.2, 0.6, 5], at: [3.4, 0.6, 0], m: 'trim' },
+      { g: 'cyl',  s: [0.4, 0.4, 6], at: [-2, -2.8, 0], rot: [Math.PI / 2, 0, 0], m: 'dark' },
+      { g: 'cyl',  s: [0.4, 0.4, 6], at: [2, -2.8, 0], rot: [Math.PI / 2, 0, 0], m: 'dark' },
+    ],
+  },
+  {
+    id: 'gunship', name: 'ATTACK HELICOPTER', real: 'AH-64 class', kind: 'heli',
+    lengthM: 17.73, spanM: 14.63, crew: 2,
+    blurb: 'Two seats, no cargo, and a chin gun slaved to where the gunner is looking.',
+    palette: { hull: '#2f3730', trim: '#585d4e', glass: '#14202a', engine: '#ffb03a', dark: '#101410' },
+    rotor: { r: 14.63, at: [0, 3.9, -1] },
+    parts: [
+      { g: 'box',  s: [2.6, 3.4, 15], at: [0, 0, 0], m: 'hull' },
+      { g: 'box',  s: [2.2, 1.8, 3.4], at: [0, 1.2, -6.4], m: 'glass' },
+      { g: 'box',  s: [2.2, 1.8, 3], at: [0, 2.6, -3.2], m: 'glass' },
+      { g: 'cyl',  s: [0.5, 0.5, 2.4], at: [0, -2, -7.4], rot: [Math.PI / 2, 0, 0], m: 'dark' },
+      { g: 'box',  s: [11, 0.5, 2.2], at: [0, -0.4, 1], m: 'trim' },
+      { g: 'box',  s: [1.6, 1, 3], at: [-4.6, -1.2, 1], m: 'dark' },
+      { g: 'box',  s: [1.6, 1, 3], at: [4.6, -1.2, 1], m: 'dark' },
+      { g: 'plate', s: [0.5, 3.6, 2.2], at: [0, 3, 8.4], m: 'trim' },
+    ],
+  },
+  {
+    id: 'quinjet', name: 'QUINJET', real: 'tiltrotor VTOL', kind: 'vtol',
+    lengthM: 20.0, spanM: 18.0, crew: 8,
+    blurb: 'Vertical off a rooftop, supersonic in a straight line, eight aboard with gear.',
+    palette: { hull: '#3b3f46', trim: '#9aa0a8', glass: '#16242c', engine: '#7fe6ff', dark: '#141619' },
+    parts: [
+      { g: 'box',  s: [6, 4, 15], at: [0, 0, 0], m: 'hull' },
+      { g: 'cone', s: [3, 5, 3], at: [0, 0.2, -9.5], rot: [-Math.PI / 2, 0, 0], m: 'hull' },
+      { g: 'box',  s: [4.4, 2.2, 4], at: [0, 1.4, -5.6], m: 'glass' },
+      { g: 'plate', s: [17, 0.8, 6], at: [0, -0.2, 1.5], m: 'trim' },
+      { g: 'box',  s: [0.6, 5, 4], at: [-2.6, 2.6, 6.4], rot: [0, 0, -0.32], m: 'trim' },
+      { g: 'box',  s: [0.6, 5, 4], at: [2.6, 2.6, 6.4], rot: [0, 0, 0.32], m: 'trim' },
+      { g: 'cyl',  s: [1.7, 1.7, 5], at: [-6.4, -0.2, 2], rot: [Math.PI / 2, 0, 0], m: 'engine' },
+      { g: 'cyl',  s: [1.7, 1.7, 5], at: [6.4, -0.2, 2], rot: [Math.PI / 2, 0, 0], m: 'engine' },
+      { g: 'cyl',  s: [1.3, 1.3, 4], at: [0, -1.4, 7], rot: [Math.PI / 2, 0, 0], m: 'engine' },
+    ],
+    exhaust: [[-6.4, -0.2, 5], [6.4, -0.2, 5], [0, -1.4, 9.5]],
+  },
+  {
+    id: 'fighter', name: 'AIR SUPERIORITY FIGHTER', real: 'F-22 class', kind: 'jet',
+    lengthM: 18.92, spanM: 13.56, crew: 1,
+    blurb: 'One seat. Not here to fight you — here to be somewhere else very quickly.',
+    palette: { hull: '#4a5058', trim: '#767d86', glass: '#1a2830', engine: '#ffb03a', dark: '#14161a' },
+    parts: [
+      { g: 'box',  s: [3.4, 2.4, 16], at: [0, 0, 0], m: 'hull' },
+      { g: 'cone', s: [2, 5, 2], at: [0, 0.1, -10.4], rot: [-Math.PI / 2, 0, 0], m: 'hull' },
+      { g: 'box',  s: [2.2, 1.4, 3.6], at: [0, 1.5, -4.6], m: 'glass' },
+      { g: 'plate', s: [13, 0.5, 7], at: [0, -0.3, 2], m: 'hull' },
+      { g: 'plate', s: [6, 0.5, 3.4], at: [0, -0.3, 7.4], m: 'trim' },
+      { g: 'box',  s: [0.5, 4, 3.4], at: [-1.6, 2.2, 6.6], rot: [0, 0, -0.28], m: 'trim' },
+      { g: 'box',  s: [0.5, 4, 3.4], at: [1.6, 2.2, 6.6], rot: [0, 0, 0.28], m: 'trim' },
+      { g: 'cyl',  s: [1.2, 1.2, 3.4], at: [-1.2, -0.2, 8.4], rot: [Math.PI / 2, 0, 0], m: 'engine' },
+      { g: 'cyl',  s: [1.2, 1.2, 3.4], at: [1.2, -0.2, 8.4], rot: [Math.PI / 2, 0, 0], m: 'engine' },
+    ],
+    exhaust: [[-1.2, -0.2, 10.4], [1.2, -0.2, 10.4]],
+  },
+  {
+    id: 'transport', name: 'HEAVY TRANSPORT', real: 'C-17 class', kind: 'jet',
+    lengthM: 53.0, spanM: 51.75, crew: 3,
+    blurb: 'It does not land in your city. It lands at the airport and the city comes to it.',
+    palette: { hull: '#5c6158', trim: '#8b8f82', glass: '#1a2830', engine: '#ffb03a', dark: '#161814' },
+    parts: [
+      { g: 'cyl',  s: [4.4, 4.4, 46], at: [0, 0, 0], rot: [Math.PI / 2, 0, 0], m: 'hull' },
+      { g: 'cone', s: [4.2, 7, 4.2], at: [0, 0, -25], rot: [-Math.PI / 2, 0, 0], m: 'hull' },
+      { g: 'box',  s: [5, 2.6, 5], at: [0, 2.6, -18], m: 'glass' },
+      { g: 'plate', s: [49, 1.2, 11], at: [0, 2.4, -1], m: 'hull' },
+      { g: 'box',  s: [1.2, 15, 11], at: [0, 9, 20], m: 'trim' },
+      { g: 'plate', s: [19, 0.9, 5], at: [0, 15.5, 21.5], m: 'trim' },
+      { g: 'cyl',  s: [2.6, 2.6, 7], at: [-11, 0.4, -2], rot: [Math.PI / 2, 0, 0], m: 'dark' },
+      { g: 'cyl',  s: [2.6, 2.6, 7], at: [11, 0.4, -2], rot: [Math.PI / 2, 0, 0], m: 'dark' },
+      { g: 'cyl',  s: [2.6, 2.6, 7], at: [-19, 1.2, 1], rot: [Math.PI / 2, 0, 0], m: 'dark' },
+      { g: 'cyl',  s: [2.6, 2.6, 7], at: [19, 1.2, 1], rot: [Math.PI / 2, 0, 0], m: 'dark' },
+    ],
+  },
+];
+
+export const aircraftById = (id) => AIRCRAFT.find((a) => a.id === id) || null;
+
+// the real numbers, expressed in the units the game actually thinks in
+export function aircraftScale(a) {
+  const L = a.lengthM * M2U, S = a.spanM * M2U;
+  return {
+    lengthU: +L.toFixed(1), spanU: +S.toFixed(1),
+    heroes: +(L / REF.hero).toFixed(1), cars: +(L / REF.car).toFixed(1),
+    streets: +(S / REF.street).toFixed(1),
+    fitsInAStreet: S <= REF.street,
+  };
+}
