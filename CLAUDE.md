@@ -1406,6 +1406,70 @@ Four laws, three of them the same idea: **a thing must not outlive the match tha
 - `training` survives as an INTERNAL mode with no card: the tutorial (`hud.onTutorial`) and the
   atlas tile proving ground (`hud.onProvingGround`) both still enter it.
 
+## THE BASE — A 9×9 SITE THE WORLD DECIDES (2026-07-26)
+- **`data/base.js`**: 9×9 grid on **two floors** (slot = `floor*81 + r*9 + c`), 57 facilities, six
+  containment tiers. **`engine/baseroom.js`** raises it; mode `base` walks it.
+- **⚠ THE SITE IS DERIVED, NOT CHOSEN.** `siteSurvey(city, country)` reads **eleven sheet fields** —
+  gdpPerCapita, city pop, lswRegs, integrity, science, healthcare, mediaFreedom, lawBudget,
+  intelBudget, hvt, crime, safety, terrain, city types — and returns the permitted footprint.
+  Kabul and Mogadishu = **1×1 A SINGLE ROOM**; Tokyo/NYC/Stockholm = 9×9.
+  ⚠ **INTEGRITY CUTS BACKWARDS** — a clean state enforces its zoning, so a bought one lets you build
+  BIGGER. ⚠ **MEDIA FREEDOM IS THE SURVEILLANCE SIGNAL**: without it Pyongyang surveyed as a 9×9
+  national-scale site, because North Korea's law/intel BUDGETS are small on the sheet.
+- **⚠ FOUR PASSES, ALL THE SAME MISTAKE.** A weighted SUM of eleven 0–1 terms regresses to the mean
+  (nothing below 4×4 over 1,050 cities). Multiplying the hard gates fixed the ordering but left a
+  hole at 4×4. Min/max normalisation still piled everyone in the middle because the scores are
+  CLUSTERED (ceiling 7×7, no 1×1). **The rung is a PERCENTILE against every real city**,
+  smoothstepped so extremes stay rare — all nine occupied by construction.
+  ⚠ **THIS IS THE THIRD TIME** (university standing, the rank ladder's top end, now the site survey):
+  a ladder's rungs must be derived from the DISTRIBUTION, never from hand-picked constants. A rung
+  nobody can reach is a rung that does not exist.
+- **⚠ CONTAINMENT IS PRICED BY WHAT IT HOLDS**, on the SAME rank ladder the fighters use: drunk tank
+  (rank ≤19, $25K) → secure → dampened → containment vault → deep vault → **omega vault (Low
+  Cosmic, $4.2M, 34 weeks)**. `jail()` uses the WEAKEST cell that will hold them and refuses with the
+  reason ("NOTHING YOU HAVE BUILT IS RATED TO HOLD A LOW COSMIC").
+- **TWO FLOORS, JOINED ONLY BY A STAIRWELL.** `reachable()` walks orthogonally on a floor and
+  vertically ONLY through a built stairwell at the same (col,row); it cannot be demolished out from
+  under the rooms above it.
+- ⚠ **THE ARENA HAS TO FIT THE BASE.** A 9×9 spans ±333u but entity physics clamps to `world.ARENA`
+  — the player was TELEPORTED 82u on the first frame from the lift into the next room. Fitted on
+  entry, restored on close.
+- Nothing is destructible (`hp: 1e9`); the city is HIDDEN and its prop ARRAYS stashed; the base is a
+  transient closed by `clearTransients`; an indoor room makes its own light.
+
+## THE ARMORY (2026-07-26) — real weapons, real gear, a voice each, manual §38
+- **`data/armory.js`**: 13 firearms · 6 blades · 16 gear · 9 loadouts.
+  ⚠ **EVERY ROW IS AN EXISTING ENGINE TYPE.** A firearm is a `rifle` ability with a `weapon` class;
+  a blade is `melee` with `dmgClass:'slash'`; gas is a `payload`; a sight is an item. Nothing needed
+  a new branch in the combat pipeline — that is the test of whether a weapon system is data.
+- **Two snipers** (M24 bolt / M107 anti-materiel with `pierce`), **AK and M16 by name**, battle
+  rifle, SAW, MP5, suppressed PDW, pump + auto 12ga, 9mm, .44, machine pistol.
+- ⚠ **EVERY FIREARM HAS ITS OWN VOICE.** The CC0 library has no true gunfire, so a shared bang
+  across twelve weapons would make them indistinct — worse than the synth, because the point of
+  carrying twelve is hearing which one is shooting at you. `VOICES` gives each a crack/body/tail/mech
+  profile; `audio.gunshot(power, pos, voice)` builds the report; the recorded plate-crack stays as
+  the TRANSIENT, pitched by calibre. On a suppressed weapon the ACTION is the loudest layer.
+  Measured on the master bus: **13/13 audible, 13/13 distinct signatures**; the two weapons sharing
+  the `shotgun12` profile read 985.67 vs 957, which is what proves the harness honest.
+  ⚠ **MEASURE WITH rAF, NOT `setTimeout`** — a transient is ~40ms; the throttled harness caught only
+  3/13 and gave two same-voice weapons different numbers.
+- ⚠ **EVERY SHOT IS HEARD, suppressed ones LESS.** `if (def.quiet) g.noise(...)` was backwards and
+  nearly shipped: gunfire did not broadcast at all before (only the HIT did), so gating on `quiet`
+  would have made the suppressed PDW the only weapon a bot could hear being fired.
+- **NIGHT VISION · MOTION TRACKER · THERMAL** all ride the ONE `_visionMode` system.
+  ⚠ The vision params live on the **GAME** (`game.visNear/visRange/visCos`), not the fighter —
+  writing them onto `f` compiles, runs, and does nothing.
+  ⚠ `setVisionMode` **clears before it sets**: using night vision twice saved the ALREADY-multiplied
+  values as the "original" (a permanently widened cone), and switching goggles stranded the save so
+  it never came off. The tracker pings only what MOVES — stand still and it never sees you.
+- **TWO GASES, TWO WEAPONS.** CS blinds + staggers + barely scratches (police equipment); MUSTARD is
+  slow, does not blind, and **corrodes** — the one thing an armoured chassis fears. A cloud keeps
+  working via `game.later`, never a bare `setTimeout`.
+- **The jammer cuts SQUAD RADIO only.** ⚠ It sets `ai._jammedT` and `_callOut` had to be taught to
+  READ it, or the item was a particle effect.
+- New `buildWeapon` silhouettes: katana · claws · smg · sniper · baton.
+- **Reachable**: `arm` in the dev console (`arm ak`, `arm m107 rmb`, `arm specops`).
+
 ## THE RANK LADDER (2026-07-25) — 1-10 became 1-4999, manual §37
 - **`data/scale.js` is the one table** — Robert's designation ladder (15 bands, CS shifts, threat
   designations Alpha → OMNIPOTENT) + his weight ladder (rank → lift → comparison) over ONE rank
