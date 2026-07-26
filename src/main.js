@@ -28,7 +28,7 @@ import { cityList } from './data/cities.js';
 import { org as loadOrg } from './data/org.js';
 import { openHQGlobe } from './engine/hqglobe.js';
 import { openArmory } from './engine/armoryUI.js';
-import { selectHand, cycleHand, handLabel } from './engine/hands.js';
+import { selectHand, cycleHand, handLabel, handsOf } from './engine/hands.js';
 
 const canvas = document.getElementById('game');
 const input = new Input(); input.bind(canvas);
@@ -507,7 +507,7 @@ window.addEventListener('error', (e) => { if (e && e.error) game.reportError(e.e
 window.addEventListener('unhandledrejection', (e) => game.reportError(e && e.reason, 'promise'));
 
 // expose for debugging + performance benchmarking
-window.LSW = { dev, comic, game, hud, ROSTER, runSlot, performEvade, input, tutorial, netplay, uinav, soundscape, SETTINGS, KEYMAPS, playOpening, creator: { ui: creator, freshPicks, buildDef, tally, validate, saveCustom, deleteCustom, loadCustoms } };
+window.LSW = { dev, comic, game, hud, ROSTER, runSlot, performEvade, input, tutorial, netplay, uinav, soundscape, SETTINGS, KEYMAPS, playOpening, hands: { handsOf, selectHand, cycleHand, handLabel }, creator: { ui: creator, freshPicks, buildDef, tally, validate, saveCustom, deleteCustom, loadCustoms } };
 window.LSW.runBenchmark = (opts) => runBenchmark(game, hud, opts);
 if (location.search.includes('bench')) {
   addEventListener('load', () => setTimeout(async () => {

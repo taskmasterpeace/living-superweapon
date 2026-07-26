@@ -13,6 +13,7 @@ import { GEO_ATTRIBUTION, cityLatLon } from '../data/citycoords.js';
 import { gameDate, dateStr } from '../data/orbits.js';
 import { CSS, CODEX_MOBILE, PHONE_CSS, TABLET_CSS, DECK_CSS } from './hud.styles.js';
 import { DTYPES, DTYPE_INFO, resistOf, bandOf } from './entity.js';
+import { handLabel } from './hands.js';
 import { glyph, padActive, padFaces } from '../core/glyphs.js';
 import { MODES } from '../data/modes.js';
 import { visOf, visLine } from '../data/visual.js';
@@ -201,6 +202,7 @@ export class HUD {
       <div class="panel charge" id="hCharge"><i style="width:0%"></i></div>
       <div class="combo" id="hCombo"><div class="n" id="hComboN">0</div><div class="l">Hits</div></div>
       <div class="dmgwrap" id="hDmg"></div>
+      <div class="panel hands" id="hHands" style="display:none"><div class="hhl">HANDS</div><div class="hrow" id="hHandsRow"></div></div>
       <div class="panel slots" id="hSlots"></div>
       <div class="foearrow" id="hFoeArrow"><i></i><u></u><span></span></div>
       <div class="rotate" id="hRotate"><div><div class="ri riphone"></div><div style="font-size:18px;font-weight:800;letter-spacing:.1em;color:var(--gold)">ROTATE YOUR DEVICE</div><div style="font-size:13px;color:var(--text-3);margin-top:6px">The arena plays in landscape.</div></div></div>
@@ -254,6 +256,7 @@ export class HUD {
       plPanel: this.root.querySelector('.pl'),
       mode: this.root.querySelector('#hMode'), ann: this.root.querySelector('#hAnn'), annT: this.root.querySelector('#hAnnT'), annS: this.root.querySelector('#hAnnS'),
       kit: this.root.querySelector('#hKit'), kitChips: this.root.querySelector('#hKitChips'), end: this.root.querySelector('#hEnd'),
+      hands: this.root.querySelector('#hHands'), handsRow: this.root.querySelector('#hHandsRow'),
       radar: this.root.querySelector('#hRadar'), radarC: this.root.querySelector('#hRadarC'),
       pip: this.root.querySelector('#hPip'),
       city: this.root.querySelector('#hCity'), telem: this.root.querySelector('#hTelem'),
@@ -1620,6 +1623,68 @@ export class HUD {
     if (html !== this._kitHtml) { this._kitHtml = html; this.el.kitChips.innerHTML = html; }   // dirty-check
   }
 
+  /**
+   * THE HANDS ROW (engine/hands.js, docs/THE_HANDS.md) — what your fists are wrapped around, and
+   * what else you could reach for. The mesh is real and the poses carry it, but on a fixed isometric
+   * camera a rifle at 9.6u tall is a few pixels: **the object being visible in the world is not the
+   * same as it being readable**, which is why item 5 of the gate was only half met without this.
+   *
+   * ⚠ IT REPORTS THE ENGINE, NOT THE SELECTOR. `_hand` is an INTENT and `_gearHeld` is the TRUTH,
+   * and the two legitimately disagree: a weapon scavenged off the street lands in your hands without
+   * ever touching the selector. A row that rendered the intent would cheerfully name a rifle you are
+   * not holding — the same class of lie as a control that lies about its own label.
+   *
+   * ⚠ IT NEVER PRINTS A KEY THE SCHEME HAS NOT GIVEN IT. `KEYMAPS.digitsSwap` already decides who
+   * owns 1–0; under CLASSIC the digits swap HERO, so the row drops to a read-only status of what is
+   * in your hands rather than listing four choices you cannot pick. Offering an unbound control is
+   * worse than offering none.
+   */
+  updateHands(p) {
+    const el = this.el.hands; if (!el) return;
+    const g = this.game;
+    const hide = () => { if (el.style.display !== 'none') { el.style.display = 'none'; this._handsHtml = null; } };
+    if (!p || !p.alive || !(g.mode && g.running)) return hide();
+    let H; try { H = handLabel(p); } catch (e) { return hide(); }
+    const held = p._gearHeld;
+    // A pickup is SCAVENGED; something taken from the armory is CHOSEN. One field apart, and the row
+    // has to tell them apart because only one of them has a leash on it.
+    const scav = !!(held && !held.chosen);
+    // ⚠ ONE SLOT IS NO CHOICE. A fighter who has never been to the armory has FISTS and nothing else,
+    // so the control disappears for them — the "most of the roster never sees this button" property
+    // falling out of the loadout instead of a hard gate. A scavenged weapon overrides that: you are
+    // holding something now whether you chose it or not, and the row must say so.
+    if (H.list.length < 2 && !scav) return hide();
+
+    const keyed = !keymap(SETTINGS.scheme).digitsSwap;
+    const acc = p.def && p.def.colors ? p.def.colors.accent : 'var(--gold)';
+    const drawing = (p._handT || 0) > 0;
+    const chips = [];
+    // Under CLASSIC the row is a readout, so it shows the one hand you are actually on.
+    for (const s of (keyed ? H.list : [H.cur])) {
+      const on = s.i === H.cur.i && !scav;
+      chips.push(`<span class="hchip${on ? ' on' : ''}${on && drawing ? ' draw' : ''}"${on ? ` style="border-color:${acc};background:${acc}1f;color:${acc}"` : ''}>`
+        + (keyed ? `<b>${s.i}</b>` : '')
+        + esc(s.n) + (s.two ? '<u>2H</u>' : '') + '</span>');
+    }
+    // The truth, when it disagrees with the selector — and the leash, because a scavenged weapon
+    // going dry mid-fight should never be a surprise.
+    if (scav) {
+      const t = held.t;
+      chips.push(`<span class="hchip scav">◆ ${esc(held.base && held.base.name ? held.base.name : 'SCAVENGED')}`
+        + `<u>${t > 0 && t < 900 ? Math.ceil(t) + 's' : 'SCAVENGED'}</u></span>`);
+    }
+    // What it COSTS you. Two-handed is a real constraint (`oneHand` on the armory row decides it),
+    // and the cost is the reason picking a slot is a decision instead of a free upgrade.
+    const twoNow = scav ? !(held.base && held.base.oneHand) : H.two;
+    if (twoNow) chips.push('<span class="hnote">BOTH HANDS — NO GRAB</span>');
+    if (drawing) chips.push('<span class="hnote draw">DRAWING…</span>');
+    else if (p._disarmT > 0) chips.push(`<span class="hnote bad">DISARMED ${Math.ceil(p._disarmT)}s</span>`);
+
+    const html = chips.join('');
+    if (html !== this._handsHtml) { this._handsHtml = html; this.el.handsRow.innerHTML = html; }   // dirty-check
+    if (el.style.display !== 'flex') el.style.display = 'flex';
+  }
+
 
   // ---- the KMK 9 ACTION NEWS post-fight broadcast: TV replaying the crew's REAL footage,
   // a typed anchor script about who won and how, the tale of the tape, and the city desk ----
@@ -1854,6 +1919,10 @@ export class HUD {
     }
     this.updateModeBar(g);
     this.updateKitWidget(p);
+    // ⚠ EVERY FRAME, NOT ONLY ON THE KEYPRESS. A pickup, a dry toss, a disarm and a KO all change
+    // what is in your hands without the selector being touched, so a row driven by the key alone
+    // would be correct exactly until something happened to you.
+    this.updateHands(p);
     this.updateDpsMeters(g);
     this.updateMood(g);
     this.updateFoeArrow(g);

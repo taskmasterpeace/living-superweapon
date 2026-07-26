@@ -286,16 +286,19 @@ the rest is listed here rather than implied to be finished.
 
 ## THE HANDS — WHAT IS NOT DONE (2026-07-26)
 
-`engine/hands.js` ships the selector and the rules. Gate items 1, 2, 3, 4, 6 and 8 are met.
+`engine/hands.js` ships the selector and the rules. **Gate items 1–4, 6 and 8 met; item 5 (READABLE)
+closed 2026-07-26 by `hud.updateHands`.** What is left:
 
-- **ITEM 5 · READABLE is HALF met and that is the gap.** `hud.updateHands(p)` is called from main.js
-  and **does not exist** — so the weapon is visible in the fighter's hands (the mesh) but there is no
-  HUD row telling you which slot you are on or what the others are. On an isometric camera the mesh
-  alone is not enough. This is the next thing to build.
 - **The pad binding.** ⚠ The D-pad is already mapped to Q / E / F and hero swap in `core/gamepad.js`.
   Left/right must move to hands and those abilities to the face buttons, or the control fights
   itself. Written up in `docs/THE_HANDS.md`.
-- **The mobile chip strip** — phone mode hides the slot row entirely (`PHONE_CSS`), so if the hands
-  row is the one thing a phone shows it must be the only thing added back, above the fire thumb.
-- **The wheel** is not bound to `cycleHand` yet in the ability-wheel schemes.
+- **The wheel** is not bound to `cycleHand`. ⚠ **`docs/THE_HANDS.md` contradicted itself here** and
+  that is why it is still unbound rather than guessed at: the mapping table gives hands the wheel in
+  schemes where the wheel is not picking abilities, and the note below gives them the wheel under
+  CLASSIC — but CLASSIC's wheel is hero swap. **CLASSIC has no free binding for hands.** The honest
+  options are SHIFT+wheel, a dedicated key, or CLASSIC keeping the readout without the selector
+  (which is what ships). It needs a decision, not an implementation.
+- **The phone strip is CSS-placed, not thumb-tested.** `PHONE_CSS` moves the row to the top-right
+  (the only quiet corner once the stick and fire button are placed) and drops the label and the
+  consequence line. Verified as geometry on a desktop viewport; never held in a hand.
 

@@ -243,6 +243,7 @@ export class Fighter {
     this._bleed = 0; this._bleedStill = 0; this._bleedAcc = 0; this._bleedTick = 0; this._bleedSrc = null; this._suitHex = null;   // BLEEDING (manual §12)
     this.downedT = 0; this._swHold = 0; this._secondWindUsed = false;   // SECOND WIND (manual §13) — a player's drama, never a bot's
     this._disarmT = 0; this._gearHeld = null; this._gearMesh = null;    // THE GEAR SYSTEM (manual §16)
+    this._hand = 1; this._handT = 0;                                    // THE HANDS (engine/hands.js) — slot 1 is always fists
     this._wounds = { arm: 0, leg: 0, torso: 0 }; this._woundT = { arm: 0, leg: 0, torso: 0 };   // ZONED WOUNDS (manual §18)
     this.sleepT = 0; this._sleepImmune = 0; this._sleepK = 0;   // SLEEP (manual §14): fold slowly, wake on ANY damage
     this.blindT = 0;                                            // BLIND (manual §14): smoke owns the eyes
@@ -828,6 +829,10 @@ export class Fighter {
     }
     if (this._sleepImmune > 0) this._sleepImmune -= dt;
     if (this._disarmT > 0) this._disarmT -= dt;
+    // THE DRAW (engine/hands.js). ⚠ `_handT` was SET at every hand swap and decremented by nothing,
+    // so it read 0.35 forever — any surface asking "am I drawing?" would have answered yes for the
+    // rest of the match. A timer nobody ticks is not a timer, it is a constant with a misleading name.
+    if (this._handT > 0) this._handT -= dt;
     if (this._wounds) for (const z of ['arm', 'leg', 'torso']) {
       if (this._wounds[z] > 0 && (this._woundT[z] -= dt) <= 0) {
         this._wounds[z]--;

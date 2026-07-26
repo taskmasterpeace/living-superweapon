@@ -84,6 +84,51 @@ phone shows, it must be the *only* thing added back, thumb-reachable, above the 
 
 ---
 
+## THE ROW — and why the mesh alone was not enough (2026-07-26)
+
+`hud.updateHands(p)`, bottom-centre, directly above the powers row. The two are one control block on
+purpose: *what am I holding* over *what can I throw*, read in a single glance.
+
+```
+                       HANDS
+      [1 FISTS] [2 9MM SIDEARM] [3 M16 RIFLE 2H] [4 FLASHBANG]
+                                     ↑ lit          BOTH HANDS — NO GRAB
+```
+
+⚠ **A VISIBLE OBJECT IS NOT A READABLE ONE.** The whole argument for hands-over-stance is that an
+object can be seen — and that is true, but a 9.6u fighter's rifle on a fixed isometric camera at 1:1
+scale is a few pixels. The mesh answers *is there something in my hands*; only the row answers
+*which one, and what is it costing me*.
+
+⚠ **THE ROW REPORTS THE ENGINE, NOT THE SELECTOR.** `_hand` is an INTENT; `_gearHeld` is the TRUTH,
+and they legitimately disagree — a weapon scavenged off the street lands in your hands without ever
+touching the selector. The row renders `_gearHeld` when the two differ, with its 12s leash, and lights
+no chip at all: you are not on a chosen slot. A row that rendered the intent would cheerfully name a
+rifle you are not holding.
+
+⚠ **IT NEVER PRINTS A KEY THE SCHEME HAS NOT GIVEN IT.** Under CLASSIC the digits swap HERO, so the
+row collapses to a read-only status of the one hand you are on. Offering four choices you cannot pick
+is worse than offering none.
+
+⚠ **AND THIS DOCUMENT CONTRADICTED ITSELF**, which is why the wheel is still unbound. The mapping
+table says hands cycle on "the mouse wheel (schemes where the wheel is not picking abilities)" and
+the note below says CLASSIC is where "hands live on the wheel alone" — but CLASSIC's wheel is hero
+swap. Both cannot be true. **CLASSIC has no free binding for hands**, and the honest options are
+SHIFT+wheel, a dedicated key, or accepting that CLASSIC gets the readout without the selector (what
+ships today). Decide it before binding anything.
+
+### Three defects the row exposed, all fixed in the same commit
+
+- **`_handT` was set at every swap and decremented by nothing** — a constant with a timer's name. Any
+  surface asking "am I drawing?" would have answered yes for the rest of the match. Ticked in
+  `Fighter.update` beside `_disarmT` now, and initialised in the ctor like every other reaction field.
+- **The selector kept claiming a weapon after the hands were emptied.** A disarm, a dry pickup or a
+  scavenge left `_hand = 3` with nothing in hand — and because `selectHand` returns early when you
+  re-press the slot you are already on, **pressing 3 then did nothing, forever**. `dropGear` is the one
+  path out of holding something, so that is where the intent is released.
+- **`game.js` imported `selectHand`, `cycleHand` and `handLabel` and used none of them** — a dead
+  import that looked exactly like a wire.
+
 ## Switching costs something, or it is free and therefore meaningless
 
 - a swap takes **~0.35s** with a visible draw animation;

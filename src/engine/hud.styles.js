@@ -59,6 +59,28 @@ export const CSS = `
 #hud .slot.dim{ opacity:.4; }
 #hud .slot.on{ border-color:var(--gold); box-shadow:0 0 16px rgba(255,210,74,.5); }
 #hud .slot.sel{ outline:2px solid var(--info); outline-offset:2px; }   /* wheel-selected power */
+/* ---- THE HANDS ROW — what your fists are wrapped around, directly above the powers.
+   The two rows are one control block on purpose: "what am I holding" over "what can I throw",
+   read in a single glance. It sits at 112 to clear the charge bar (96..106) so a charging power
+   never covers it. Slots occupy 16..102. */
+#hud .hands{ left:50%; transform:translateX(-50%); bottom:112px; padding:5px 10px 6px; display:none; flex-direction:column; align-items:center; gap:3px; }
+#hud .hands .hhl{ font-size:var(--t-micro); letter-spacing:.22em; color:var(--text-5); text-transform:uppercase; }
+#hud .hands .hrow{ display:flex; gap:6px; align-items:center; flex-wrap:wrap; justify-content:center; }
+#hud .hchip{ display:inline-flex; align-items:center; gap:5px; font-size:var(--t-sm); font-weight:700; letter-spacing:.05em;
+  padding:3px 9px; border-radius:var(--r-4); background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.10); color:var(--text-4); white-space:nowrap; }
+#hud .hchip b{ font-family:var(--f-mono); font-size:var(--t-label); font-weight:700; color:var(--gold); opacity:.9; }
+/* 2H is DATA, not decoration — geometry at 9px, never an emoji at the mercy of the platform font */
+#hud .hchip u{ font-family:var(--f-mono); font-size:var(--t-micro); text-decoration:none; letter-spacing:.08em;
+  padding:1px 4px; border-radius:var(--r-1); background:rgba(0,0,0,.35); color:var(--text-5); }
+#hud .hchip.on{ font-weight:800; box-shadow:0 0 14px rgba(255,210,74,.18); }
+#hud .hchip.on b{ color:inherit; opacity:1; }
+#hud .hchip.on u{ color:inherit; opacity:.85; }
+#hud .hchip.draw{ animation:handDraw .35s ease-out; }
+#hud .hchip.scav{ border-color:rgba(255,210,74,.55); background:rgba(255,210,74,.10); color:var(--gold-pale); }
+@keyframes handDraw{ 0%{ transform:translateY(4px) scale(.92); filter:brightness(1.9) } 100%{ transform:none; filter:none } }
+#hud .hnote{ font-size:var(--t-micro); font-weight:700; letter-spacing:.14em; color:var(--text-5); text-transform:uppercase; }
+#hud .hnote.draw{ color:var(--gold); }
+#hud .hnote.bad{ color:var(--danger); }
 #hud .foe{ left:50%; transform:translateX(-50%); top:16px; width:min(520px,60vw); padding:8px 12px; text-align:center; }
 #hud .foe .fn{ font-weight:700; letter-spacing:.06em; font-size:var(--t-md); }
 #hud .foe .bar{ height:9px; }
@@ -871,6 +893,14 @@ body.phone #hud .pl .lab{ display:none; }                      /* the bars speak
 body.phone #hud .pl .bar{ height:6px; margin:3px 0; }
 body.phone #hud .pl .xpwrap{ transform:scale(.8); transform-origin:left center; }
 body.phone #hud .slots{ display:none !important; }             /* the touch buttons ARE the slots */
+/* ⚠ THE HANDS ROW IS THE ONE THING ADDED BACK. Everything else in the bottom band is hidden on a
+   phone because the thumbs own it — but what you are holding is not chrome, it is the answer to
+   "why did my punch do nothing". It moves out of the centre (that is the fire thumb) and rides the
+   top-right, which is the only quiet corner left once the stick and the buttons are placed. */
+body.phone #hud .hands{ left:auto; right:8px; top:calc(6px + env(safe-area-inset-top)); bottom:auto;
+  transform:scale(.8); transform-origin:top right; max-width:56vw; }
+body.phone #hud .hands .hhl{ display:none; }                   /* the chips say what they are */
+body.phone #hud .hnote{ display:none; }                        /* no room for the consequence line */
 body.phone #hud .foe{ top:6px; width:min(300px,44vw); padding:4px 8px; }
 body.phone #hud .foe .fn{ font-size:var(--t-sm); }
 body.phone #hud .charge{ bottom:44vh; }
@@ -887,6 +917,8 @@ export const TABLET_CSS = `
    player panel lifted clear of the left stick zone. */
 body.tablet #hud .hint{ display:none !important; }
 body.tablet #hud .slots{ display:none !important; }
+/* an iPad has room: keep the row where it is, lifted clear of the touch buttons and thumb-sized */
+body.tablet #hud .hands{ bottom:180px; transform:translateX(-50%) scale(1.1); }
 body.tablet #hud .radar{ transform:scale(.82); transform-origin:top right; }
 body.tablet #hud .pl{ bottom:190px; }                       /* the stick owns the corner below */
 body.tablet #hud .kit{ bottom:150px; transform:scale(.92); transform-origin:bottom left; }

@@ -21,8 +21,7 @@ import { WhiteRoom } from './whiteroom.js';
 import { buildReport } from '../data/news.js';
 import { bookInjury, injuryOf, healBout, koElo, matchElo } from '../data/rankings.js';
 import { SETTINGS, keymap } from '../core/settings.js';
-import { BoxingRing, BOXING } from './boxingring.js';
-import { selectHand, cycleHand, handLabel } from './hands.js';
+import { BoxingRing } from './boxingring.js';
 import { STRIKES } from '../data/martial.js';
 import { beamBuildOf, beamTemperOf } from '../data/visual.js';
 import { Gamepad } from '../core/gamepad.js';
@@ -1101,6 +1100,13 @@ export class Game {
     }
     delete f.slots._gear;
     f._gearHeld = null;
+    // ⚠ THE SELECTOR IS AN INTENT, AND AN EMPTY HAND MUST NOT KEEP CLAIMING A WEAPON. This is the ONE
+    // path out of holding something, so it is the one place that can honestly say "you are on your
+    // fists now" — and without it `_hand` still read 3 while the hands were empty, which is worse
+    // than cosmetic: `selectHand` returns early when you re-press the slot you are already on, so
+    // pressing 3 after a disarm or a dry pickup did NOTHING, forever. Every caller that legitimately
+    // re-arms (selectHand, equipFrom) sets `_hand` immediately after this returns.
+    if (f._hand > 1) f._hand = 1;
   }
   drainGear(f, dt) {
     const H = f._gearHeld; if (!H) return;
