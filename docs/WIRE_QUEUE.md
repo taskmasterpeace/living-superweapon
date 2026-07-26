@@ -177,3 +177,62 @@ reading — items 5–10 are untouched.
 Each remaining row above is self-contained. Start at 7 — and note that 7 unlocks three of
 the untagged research rows in item 6 for free (`nanite`/`regen`, `droneswarm`/`vision`,
 `shieldproj`/`dome`).
+---
+
+## RE-AUDITED 2026-07-26 (second pass) — the queue after 1/2/3/5/6 landed
+
+```
+TYPES     44 declared · 26 carried · 18 DEAD   (17 of the 18 now NAMED in data/taxonomy.js)
+ORIGIN    102 catalog powers · 92 carried by NO roster hero
+ARMORY    35 weapons/gear · 28 on no fighter
+DOORS     no card for `base`; no armory, education or firm-desk overlay
+LEAF      roadAt · doorways · riskOver · REACHABLE_RESEARCH · (taxonomy.js: 0 importers)
+```
+
+### A · TWO CONDITION TABLES THAT DO NOT KNOW ABOUT EACH OTHER  ·  ~45 min  ·  ☐  **CHEAPEST**
+`age.js` declares its own `CONDITIONS` (arthritis · als · cancer · alzheimers) and `riskOver()` rolls
+them per band — **and nothing calls it**. `medical.js` declares a DIFFERENT `CONDITIONS` (internal ·
+hairline · concussion · cardiac · nerve · toxicity · scarring) with the chart, the hidden/found split
+and `inflict`. Zero overlap between the two tables.
+- **Wire:** register age's four into the medical registry (ONE table, one chart — the same law as one
+  ladder with two front doors), then roll `riskOver` inside `turnWeek`, which already exists and
+  already advances seven days.
+- **Player feels:** a fighter you have run for two seasons starts breaking down, and because medical
+  conditions are hidden until someone examines them, you find out because the numbers stop adding up.
+  Today that can never happen at any age.
+
+### B · MY OWN TWO ORPHANS FROM TODAY  ·  ~20 min  ·  ☐
+`data/taxonomy.js` has **0 importers** and `REACHABLE_RESEARCH()` has none outside its own file — both
+written today to stop content being unreachable, both currently unreachable.
+- **Wire:** the VISUAL LANGUAGE screen already reports "what nobody carries". Point it at the taxonomy
+  for the NAMES and at `REACHABLE_RESEARCH` for the research split.
+- **Player feels:** the screen stops saying `dome` and says *Psionic Force Field — nobody carries this*.
+
+### C · NO DOOR FOR THE BASE  ·  ~1 h  ·  ☐
+`MODE_IMPL.base` exists, `baseroom.js` raises a walkable two-floor HQ, containment is priced on the
+rank ladder — and `data/modes.js` has no card.
+- **Player feels:** you can walk into your own headquarters. Right now it can only be entered by
+  typing into the dev console.
+
+### D · 28 ARMORY ROWS STILL ON NOBODY  ·  ~1 h  ·  ☐  (police half done)
+- **Player feels:** SARGE carries an M16 by name, and it sounds different from a suppressed PDW.
+  Smaller felt gain than it was — the police ladder already banked the audible-escalation payoff.
+
+### E · THE DEAD TYPES, NOW THAT THERE IS A MAP  ·  each a `wwa-ship-mechanic`  ·  ☐
+`data/taxonomy.js` names the archetype for 17 of the 18. Cheapest three by fit: `regen` (Super
+Healing), `dome` (Psionic Force Field), `vision` (Echolocation / Night Vision) — and those three also
+un-park three research rows for free.
+- **Player feels:** fighters stop being 52 variations on punch-and-beam.
+
+### F · BOTS CANNOT WALK THROUGH A DOORWAY  ·  M  ·  ☐
+`doorways` points are produced by `citytiles.js` and read by nobody. Listed in BACKLOG as the known
+open half of interiors v1.
+- **Player feels:** an enemy follows you into a house instead of standing in the street.
+
+### G · NOTHING DRIVES ON THE ROAD GRAPH  ·  L  ·  ☐
+Unchanged; still the largest single opportunity and still days rather than hours.
+- **Player feels:** the city has traffic, and a road is somewhere things happen rather than a texture.
+
+**Excluded as deliberate** (BACKLOG): Cosmic+ rank headroom · `geography.js`/`climate.js` low reach
+(authored joins by design) · `sector` (open question whether the column means anything) ·
+`vessels.js` (space-layer only).
