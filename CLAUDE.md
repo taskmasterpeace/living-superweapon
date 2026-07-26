@@ -1167,6 +1167,41 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   the rest are passives already carried by attributes, talents already in `HERO_TALENTS`, or firm
   roles rather than combat slots.
 
+## THE ARMORY SCREEN (2026-07-26) — `engine/armoryUI.js`, and NOTHING is armed by it
+- Robert: *"build an armory to allow users to select what they want from various categories, should
+  have comparisons and filters and stuff"* — and, explicitly, **do not arm the weapons on people
+  yet**. So the screen selects and PERSISTS a loadout (`threshold_loadout_v1`) and does not touch
+  `characters.js` or issue anything to a fighter. ⚠ **The screen says which state it is in** —
+  *SAVED — NOT YET ISSUED* — rather than implying an effect it does not have. A selection that
+  silently does nothing is the same class of lie as a control that lies about its own label.
+- **The door**: ⚔ ARMORY in the title top bar beside Atlas and Rankings. 35 rows of real weapons and
+  gear existed with their own measured audio signatures and the only way to see any of it was
+  `arm <id>` in the dev console.
+- **Four categories** — 13 firearms · 6 blades · 16 gear · 9 preset loadouts (take a preset and it
+  fills every slot at once). **Filters**: class chips (sniper/rifle/lmg/smg/shotgun/pistol),
+  DERIVED trait chips (suppressed · armour-piercing · buckshot · one-handed · automatic), free text,
+  and a sort over every axis. ⚠ The traits are PREDICATES over the data, not a hand-kept list, so a
+  new armoury row filters itself.
+- ⚠ **EVERY NUMBER IS DERIVED FROM THE `ab` BLOCK THE ENGINE FIRES WITH.** DPS, rate, accuracy and
+  reach are computed from `damage`/`pellets`/`interval`/`spread`/`speed`/`life` — so the comparison
+  cannot flatter a weapon the engine treats differently. Asserted: the screen's DPS ranking and a raw
+  sort of the source agree on the same weapon.
+- ⚠ **THE BARS NORMALISE WITHIN A CATEGORY, AND AGAINST THE WHOLE CATEGORY — never the filtered
+  view.** Otherwise filtering to two pistols redraws one of them as the best weapon in the game.
+- ⚠ **`hi: false` MEANS LOWER IS BETTER.** Recoil and energy cost run the other way, and a compare
+  table that does not know that cheerfully congratulates the weapon with the worst kick. Asserted
+  directly: M107 6.5 vs 9mm 1.3 marks **1.3**.
+- ⚠ **SHORT LABELS ARE AUTHORED, NOT TRUNCATED.** Taking the first word of "Damage / shot" and
+  "Damage / second" labelled two different bars DAMAGE — a comparison surface that repeats a label
+  is lying about what it is showing. Each axis carries an explicit `s`.
+- **▶ HEAR IT** is the thing a table cannot do: manual §38 gave all 13 firearms their own
+  crack/body/tail/mech profile so twelve weapons are twelve weapons, and until now that was only
+  audible by being shot at. The button plays `audio.gunshot(1, null, voice)`.
+- Verified through the real UI paths (clicks, not internals): **17/17, 0 console errors** — door,
+  four categories, class/trait/text filters, sort by four axes, three-way compare with per-row
+  winners, lower-is-better, the loadout persisting to localStorage, and a preset filling the slots.
+  Ref `wwa-armory.png`.
+
 ## HANDOFF
 - **`HANDOFF.md` at the repo root** is the orientation document: architecture, the ten rules that
   are load-bearing, what is solid, what is half-built, what to do next, and the headless

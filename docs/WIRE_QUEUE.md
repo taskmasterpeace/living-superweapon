@@ -208,15 +208,21 @@ written today to stop content being unreachable, both currently unreachable.
   for the NAMES and at `REACHABLE_RESEARCH` for the research split.
 - **Player feels:** the screen stops saying `dome` and says *Psionic Force Field — nobody carries this*.
 
-### C · NO DOOR FOR THE BASE  ·  ~1 h  ·  ☐
+### C · NO DOOR FOR THE BASE  ·  ~1 h  ·  ☐   (the armory's door is now built; the base still has none)
 `MODE_IMPL.base` exists, `baseroom.js` raises a walkable two-floor HQ, containment is priced on the
 rank ladder — and `data/modes.js` has no card.
 - **Player feels:** you can walk into your own headquarters. Right now it can only be entered by
   typing into the dev console.
 
-### D · 28 ARMORY ROWS STILL ON NOBODY  ·  ~1 h  ·  ☐  (police half done)
+### D · 28 ARMORY ROWS STILL ON NOBODY  ·  ~1 h  ·  ◐ THE SCREEN IS BUILT; ARMING IS DELIBERATELY NOT DONE
 - **Player feels:** SARGE carries an M16 by name, and it sounds different from a suppressed PDW.
   Smaller felt gain than it was — the police ladder already banked the audible-escalation payoff.
+- **DONE:** `engine/armoryUI.js` — the ⚔ ARMORY screen. Four categories, derived trait filters,
+  sort over every axis, three-way side-by-side compare with per-row winners (and lower-is-better
+  handled), ▶ HEAR IT per firearm, and a persisted loadout.
+- ⚠ **ARMING IS DELIBERATELY NOT DONE, by instruction.** The loadout is saved and the screen says
+  *SAVED — NOT YET ISSUED*. Wiring it to the human player at match start is the next step and is one
+  hook; putting named weapons on roster heroes in `characters.js` is the separate half.
 
 ### E · THE DEAD TYPES, NOW THAT THERE IS A MAP  ·  each a `wwa-ship-mechanic`  ·  ☐
 `data/taxonomy.js` names the archetype for 17 of the 18. Cheapest three by fit: `regen` (Super

@@ -27,6 +27,7 @@ import { CareerUI } from './engine/careerUI.js';
 import { cityList } from './data/cities.js';
 import { org as loadOrg } from './data/org.js';
 import { openHQGlobe } from './engine/hqglobe.js';
+import { openArmory } from './engine/armoryUI.js';
 
 const canvas = document.getElementById('game');
 const input = new Input(); input.bind(canvas);
@@ -263,6 +264,10 @@ hud.onCircuit = openDesk;
 // happens ON THE GLOBE, because two dropdowns make it an administrative step and a planet makes it
 // a geopolitical one: you can see that choosing Zurich over Mogadishu is choosing a set of
 // neighbours. Already founded → the same globe, framed on your own headquarters.
+// THE ARMORY's door. 35 rows of real weapons and gear with their own measured audio signatures, and
+// until now the only way to see any of it was `arm <id>` in the dev console.
+hud.onArmory = () => openArmory(game, hud);
+
 hud.onFirm = () => {
   const g = openHQGlobe(game, hud, (res) => {
     if (res && res.ok) {

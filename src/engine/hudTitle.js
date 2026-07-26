@@ -27,7 +27,7 @@ export const TitleMixin = {
     let selP2 = ROSTER[2], two = !!PF.two;
     if (PF.format) this._tFormat = PF.format;
     this.title.innerHTML = `
-      <div class="topbar"><button id="tAtlas">🗺 Atlas</button><button id="tRank">📊 Rankings</button><button id="tNet">🌐 Online</button><button id="tTut">🎓 Tutorial</button><button id="tOpt">⚙ Options</button><button id="tHow">❓ How to Play</button></div>
+      <div class="topbar"><button id="tAtlas">🗺 Atlas</button><button id="tRank">📊 Rankings</button><button id="tArm">⚔ Armory</button><button id="tNet">🌐 Online</button><button id="tTut">🎓 Tutorial</button><button id="tOpt">⚙ Options</button><button id="tHow">❓ How to Play</button></div>
       <div class="tag">Machine King Labs</div>
       <div class="thead"><div class="tleft">
       <h1><span class="t1">WAR WORLD</span><span class="t2">ASCENDANTS</span></h1>
@@ -294,6 +294,7 @@ export const TitleMixin = {
     };
     addEventListener('keydown', this._titleNavBound);
     // top bar
+    this.title.querySelector('#tArm').onclick = () => { if (this.onArmory) this.onArmory(); };
     this.title.querySelector('#tOpt').onclick = () => this.showOptions();
     this.title.querySelector('#tHow').onclick = () => this.showHowto();
     this.title.querySelector('#tTut').onclick = () => this.onTutorial && this.onTutorial();
