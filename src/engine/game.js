@@ -254,8 +254,21 @@ export class Game {
     ring.rotation.x = -Math.PI / 2; g.add(ring);
     const glow = new THREE.Mesh(new THREE.CircleGeometry(5.2, 32), new THREE.MeshBasicMaterial({ color: '#ffd24a', transparent: true, opacity: 0.1, blending: THREE.AdditiveBlending, depthWrite: false }));
     glow.rotation.x = -Math.PI / 2; g.add(glow);
+    // ⚠ A TRIANGLE ON THE RING, NOT ANOTHER ONE UNDER IT. There is already a `faceWedge` — a wide
+    // arc on the figure's own ground rig showing where the BODY is turned. This is a different
+    // question: which way is the PLAYER pointed, on the you-are-here mark, readable from the far
+    // camera where a 1.4u-wide arc is a smudge. A small solid triangle riding the ring's edge is
+    // the smallest shape that answers it, and it sits on the mark rather than beside it.
+    const tri = new THREE.Mesh(new THREE.CircleGeometry(1.5, 3), new THREE.MeshBasicMaterial({
+      color: '#ffd24a', transparent: true, opacity: 0.9,
+      blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+    tri.rotation.x = -Math.PI / 2;
+    // CircleGeometry(r, 3) has its first vertex at +X, so the shape already points along +X;
+    // spinning the whole group by the heading is then all that is needed.
+    tri.position.set(4.8, 0.02, 0);
+    g.add(tri);
     g.visible = false; this.scene.add(g);
-    this.playerMark = g; this._pmRing = ring; this._pmGlow = glow;
+    this.playerMark = g; this._pmRing = ring; this._pmGlow = glow; this._pmTri = tri;
   }
   // TELEPORT TARGETING — the blink always went to your aim point, but with nothing drawn there
   // you were guessing. This puts a ring exactly where you WILL land (range-clamped, so it stops
@@ -301,6 +314,17 @@ export class Game {
     const pulse = 0.42 + Math.sin(this.time * 3.1) * 0.12;
     this._pmRing.material.opacity = pulse;
     this._pmGlow.material.opacity = 0.07 + Math.sin(this.time * 3.1) * 0.03;
+    // ⚠ THE MARK IS IN WORLD SPACE, so the heading goes straight on without the counter-rotation
+    // the faceWedge needs (that one is parented to the figure group, which already carries the
+    // damped body yaw — subtracting it there is why it does not lag). Here there is nothing to
+    // subtract. `facing` is the damped heading, so the triangle follows the turn rather than
+    // snapping, and it reads the AIM the moment the player starts turning.
+    if (this._pmTri) {
+      m.rotation.y = -p.facing;
+      // brighter while actually moving — at rest it is a hint, in motion it is a direction
+      const spd = Math.hypot(p.vel.x, p.vel.z);
+      this._pmTri.material.opacity = 0.55 + Math.min(0.4, spd / 60) + Math.sin(this.time * 3.1) * 0.06;
+    }
     const s = 1 + Math.sin(this.time * 3.1) * 0.04;
     m.scale.set(s, 1, s);
     if (this._pmColor !== p.def.colors.accent) {   // wears your hero's colour
