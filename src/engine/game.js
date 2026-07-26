@@ -21,6 +21,7 @@ import { WhiteRoom } from './whiteroom.js';
 import { buildReport } from '../data/news.js';
 import { bookInjury, injuryOf, healBout, koElo, matchElo } from '../data/rankings.js';
 import { SETTINGS, keymap } from '../core/settings.js';
+import { BoxingRing, BOXING } from './boxingring.js';
 import { STRIKES } from '../data/martial.js';
 import { beamBuildOf, beamTemperOf } from '../data/visual.js';
 import { Gamepad } from '../core/gamepad.js';
@@ -105,6 +106,31 @@ const MODE_IMPL = {
   // THE WHITE ROOM — the laboratory half of the Danger Room. No city, no crowd, no police: a white
   // box, an instrumented dummy, and a wall board reporting what your attacks actually did. Every
   // number is captured at onHit (the damage choke point), never re-derived from ability data.
+  // THE RING — a WORLD rule set, not a prop. See engine/boxingring.js.
+  boxing: {
+    setup(g, o = {}) {
+      g.ms = { boxing: true, noRespawn: true };
+      g.ring = new BoxingRing(g);
+      g.ring.open();
+      const hs = g.humans.map(h => h.fighter).filter(Boolean);
+      // ⚠ A BOXING MATCH NEEDS TWO BOXERS, and the first version shipped with one. `setup` built the
+      // ring and never spawned the opponent — every rule downstream (the card, the ten-count, the
+      // decision) had nothing to score, and the headless suite said so in one line: `no foe`.
+      // A mode's setup owns its spawns; `duel` does exactly this and I did not copy it.
+      g.ms.enemy = o && o.twoPlayer ? hs[1]
+        : g.spawnEnemy(o && o.enemy, { x: 13, z: 13, aiLevel: (o && o.aiLevel) || 1.2 });
+      // red corner and blue corner, facing each other, exactly as they start a real fight
+      if (hs[0]) { hs[0].pos.set(-13, 0, -13); hs[0].aim.set(1, 0, 0); if (hs[0].aim3) hs[0].aim3.set(1, 0, 0); }
+      for (const e of g.entities) if (e.def) g.ring.card(e);
+    },
+    tick(g, dt) { if (g.ring) g.ring.update(dt, g); },
+    onKO(g, f) { if (g.ring) g.ring.down(f); },
+    isOver(g) {
+      const o = g.ring && g.ring.over;
+      return o ? { win: !!(o.winner && g.humans.some(h => h.fighter === o.winner)), text: o.why } : null;
+    },
+    hud: 'boxing',
+  },
   lab: {
     setup(g) {
       g.ms = { lab: true };
@@ -1380,6 +1406,7 @@ export class Game {
   clearTransients() {
     // the weather goes home with everything else that must not outlive a match (the reset law)
     if (this.weather && this.weather.reset) this.weather.reset();
+    if (this._ring) this._ring.close();
     if (this.lab) { try { this.lab.close(); } catch (e) {} this.lab = null; }   // the white room is a transient too
     if (this.baseRoom) { try { this.baseRoom.close(); } catch (e) {} this.baseRoom = null; }   // ⚠ and so is the BASE — its walls are real cover records; leaving them behind is the invisible-wall bug
     if (this.comic) { try { this.comic.clear(); } catch (e) {} }              // captions must not outlive their match
@@ -2250,6 +2277,8 @@ export class Game {
     // committed punch in the game printed nothing when it landed on a heavyweight — the hit that
     // most deserves the loudest tell was the one most likely to be under the threshold. The word is
     // the comic layer's whole job; spend it on intent, not on arithmetic.
+    // the ring scores off the choke point rather than watching the fight itself
+    if (this._ring) this._ring.onHit(target, amount, opts, blocked);
     if (this.comic && (amount >= 14 || opts.haymaker) && !blocked && !opts.dot && target && target.pos) {
       const pl = this.player;
       const near = !pl || (Math.abs(pl.pos.x - target.pos.x) < 260 && Math.abs(pl.pos.z - target.pos.z) < 260);

@@ -10,6 +10,8 @@ export const MODES = [
     desc: 'No objective, no clock, no opponent — a real city, running. Traffic, pedestrians, birds, weather and the day/night cycle, with the police response live: hurt civilians and the theatre answers. B orders a rival if you want one, N a sparring construct. Fly high enough on a lit afterburner and you can leave for another city — or another planet.' },
   { id: 'lab', name: 'THE TRAINING HALL', tag: 'Blue room · white room', icon: '📐', accent: '#e8e2d6',
     desc: 'A two-storey indoor hall with two rooms. You arrive in the BLUE ROOM: a bag, a ramp to the upper floor, and nothing that can hurt you — learn the controls at your own pace. The console opens the WHITE ROOM next door, where the machinery lives: moving targets on rails, wall turrets that shoot back, a flight course, a sparring partner, and a wall board measuring every attack you land at the damage choke point.' },
+  { id: 'boxing', name: 'THE RING', tag: 'Real rules', icon: '🥊', accent: '#c9564a',
+    desc: 'A boxing ring, and inside it the ring’s rules win. NO FLYING — feet on the canvas. The ropes give back most of your speed, so being knocked into them returns you to the middle at pace, and momentum melee turns that into damage. Three rounds, a real ten-count when you go down, three knockdowns ends it, and a ten-point-must card if it goes the distance. The board over the ring reads the fight live: landed, thrown, accuracy, knockdowns, points.' },
   { id: 'tournament', name: 'TOURNAMENT', tag: 'The Invitational', icon: '🏆', accent: '#ffd24a',
     desc: 'Eight seeds off the power rankings, single elimination. Matches are best-of-3 ELIMINATION rounds — last side standing, nobody respawns. Formats: 1v1, 2v2 duos, underdog 1v2. Team damage is ON.' },
 ];

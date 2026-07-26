@@ -1416,6 +1416,35 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
 - **Not verified end-to-end through the input path** — the wire and the opts are proven, the
   keyboard-to-fist route is not. Next slice of the melee spec (BACKLOG) is the strike grammar.
 
+## THE RING (2026-07-26) — real boxing rules as a WORLD rule set
+- Robert: *"build a boxing ring... it should bounce the person off the ring ropes... a monitor that
+  reads NO FLYING... apply REAL boxing rules, we should be able to play it like a boxing game."*
+- ⚠ **THE RING IS A RULE SET, NOT A PROP.** A square of rope you can fly out of is scenery. Three
+  rules make it a boxing game and every one is answered by a system that already exists: the ropes
+  push back (`vel` + `burstT`), the ceiling is closed by REFUSING the `flying` state — never by
+  clamping altitude, which leaves you hovering at the lid looking broken — and the fight is scored at
+  `game.onHit`, the choke point every hit already routes through.
+- **Real numbers, not invented ones**: three rounds, a ten-count, three knockdowns ends it,
+  saved-by-the-bell in the final round only, a ten-point-must card. ⚠ A real round is 180s and that is
+  a twelve-minute match, so the scale is declared ONCE in `BOXING` and the round:rest ratio is kept
+  honest at 3:1 rather than quietly fudged.
+- ⚠ **A BOXING MATCH NEEDS TWO BOXERS AND THE FIRST VERSION SHIPPED WITH ONE.** `setup` built the ring
+  and never spawned the opponent, so the card, the ten-count and the decision all had nothing to
+  score. The headless suite said it in one line — `no foe` — and `duel` does the spawn I failed to
+  copy. A mode's setup owns its spawns.
+- ⚠ **THE SCREENSHOT CAUGHT WHAT SIX GREEN ASSERTIONS COULD NOT: THE RING WAS FOUR TIMES TOO BIG.**
+  128u against a real 20ft ring, which at 1u ≈ 0.19m is 32u. Two 9.6u fighters at opposite corners
+  were specks with a car's length of empty canvas between them. **Boxing is close quarters — the ring
+  being small IS the sport.** Now 46u. Tests can prove a rule fires; only the picture shows scale.
+- ⚠ **26% OF THE SPEED SURVIVED THE BOUNCE** at `ropeBounce 0.72` — the reflect was correct and drag
+  ate it over the following ten frames, which is a bounce that is real and unfeelable. The lever was
+  `burstT` (0.25s covered the impulse, not the journey), not the coefficient.
+- ⚠ `setup(g)` used `o` without declaring it — `o is not defined` at mode start. The signature is
+  `setup(g, o)` and `duel` has always had it.
+- **Not done, written down** (`docs/BACKLOG.md`): the venue is still whatever city you were in, so
+  trees stand inside the ropes; the monitor is built behind the isometric camera; no clinch break, no
+  referee, no rest round; `hud: 'boxing'` names a mode-bar type that does not exist.
+
 ## HANDOFF
 - **`HANDOFF.md` at the repo root** is the orientation document: architecture, the ten rules that
   are load-bearing, what is solid, what is half-built, what to do next, and the headless

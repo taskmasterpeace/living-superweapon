@@ -264,3 +264,21 @@ of the fight continues; a second enemy can punish an ambitious hold.
 
 His own definition of done: *"the system is not ready if players can win but cannot answer why."*
 
+---
+
+## THE RING — WHAT IS NOT DONE (2026-07-26)
+
+`engine/boxingring.js` + the `boxing` mode ship the RULES. Gate items 1, 2, 3, 4, 6 and 8 are met;
+the rest is listed here rather than implied to be finished.
+
+- **THE VENUE.** The ring is built wherever the match already is — the first screenshot has city
+  trees and a parked car inside the ropes. A boxing mode should raise a clean venue, or clear the
+  cover inside the ring footprint, the way `whiteroom.js` builds its own hall.
+- **THE MONITOR IS BEHIND THE CAMERA.** Built at `z = -(size/2) - 40`, which on the fixed isometric
+  view is out of frame. It needs the camera-facing side, or billboarding, or a HUD mirror.
+- **THE CLINCH.** Real boxing breaks a clinch after a beat; ours lets you hold. Still the general grab.
+- **NO REFEREE, NO CORNER, NO REST ROUND** — `restSecs` is in the rule book and unused.
+- **`hud: 'boxing'`** names a mode-bar type `hud.updateModeBar` does not implement, so the bar is blank.
+- **Rope bounce returns 39% of entry speed** after drag, up from 26%. It reads as a bounce and not
+  yet as a slingshot; the lever is `burstT` duration rather than `ropeBounce`.
+
