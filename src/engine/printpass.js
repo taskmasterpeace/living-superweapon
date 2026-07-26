@@ -46,6 +46,8 @@ export const PRINT_DEFAULTS = {
   dither: 0.35,
   speed: 0.0,         // speed lines — driven per-hit, not a setting
   grade: 1.0,         // per-world grading strength
+  vibrance: 0.0,      // lifts DULL colours only — the one that makes things pop
+  saturation: 0.0,    // the blunt instrument, for pulling a whole frame toward ink
 };
 
 const VERT = /* glsl */`
@@ -57,12 +59,13 @@ uniform sampler2D tDiffuse;
 uniform vec2  uTexel;        // 1 / render size, in device pixels
 uniform vec2  uRes;
 uniform float uInk, uHalf, uHalfScale, uLevels, uGrain, uTilt, uTiltFocus, uTiltWidth;
-uniform float uDither, uSpeed, uTime, uInvert, uGrade;
+uniform float uDither, uSpeed, uTime, uInvert, uGrade, uVib, uSat;
 uniform vec3  uInkCol, uLift, uGain;
 uniform vec2  uSpeedC;
 varying vec2 vUv;
 
 float luma(vec3 c){ return dot(c, vec3(0.2126, 0.7152, 0.0722)); }
+float abs1(float x){ return x < 0.0 ? -x : x; }
 
 // ⚠ THE BAYER MATRIX IS THE POINT OF ORDERED DITHER. Random noise in a gradient reads as film
 // grain; an ORDERED threshold reads as print, because it is what a press actually does.
@@ -183,6 +186,22 @@ void main(){
     c *= 1.0 - (g - 0.5) * 0.20 * uGrain;
   }
 
+  // ---- 8a. VIBRANCE, and it is NOT saturation. Robert asked to "turn the saturation down a tad so
+  // the colours pop" — those pull opposite ways, and the thing that does what he described is
+  // VIBRANCE: raise the chroma of the DULL colours and leave the already-saturated ones alone.
+  // Plain saturation multiplies everything equally, so it drives the reds and the hero accents
+  // straight into clipping — which reads as LESS pop, because a clipped colour has no shape left.
+  // The weight is (1 - existing saturation): grey concrete gains a lot, a gold aura gains nothing.
+  if (abs1(uVib) > 0.001) {
+    float mx = max(c.r, max(c.g, c.b));
+    float mn = min(c.r, min(c.g, c.b));
+    float sat = mx - mn;                          // cheap chroma proxy, and the right one here
+    float g = luma(c);
+    c = mix(vec3(g), c, 1.0 + uVib * (1.0 - sat) * 1.4);
+  }
+  // plain saturation stays available as its own dial — for pulling the whole frame back toward ink
+  if (abs1(uSat) > 0.001) c = mix(vec3(luma(c)), c, 1.0 + uSat);
+
   // ---- 8. THE WORLD'S GRADE. Lift and gain per world, derived from the planet's own look.
   // ⚠ Not a 3D LUT texture: two vec3s of arithmetic do the same job for a fraction of the cost, and
   // they can be DERIVED from PLANET_LOOK rather than authored as an asset nobody can audit.
@@ -211,7 +230,8 @@ export class PrintPass extends ShaderPass {
         uTiltWidth: { value: PRINT_DEFAULTS.tiltWidth },
         uDither: { value: 0 }, uSpeed: { value: 0 }, uSpeedC: { value: new THREE.Vector2(0.5, 0.5) },
         uTime: { value: 0 }, uInvert: { value: 0 },
-        uGrade: { value: 0 }, uLift: { value: new THREE.Vector3(0, 0, 0) },
+        uGrade: { value: 0 }, uVib: { value: 0 }, uSat: { value: 0 },
+        uLift: { value: new THREE.Vector3(0, 0, 0) },
         uGain: { value: new THREE.Vector3(1, 1, 1) },
       },
       vertexShader: VERT,
@@ -234,10 +254,11 @@ export class PrintPass extends ShaderPass {
     u.uLevels.value = S.levels; u.uGrain.value = S.grain;
     u.uTilt.value = S.tilt; u.uTiltFocus.value = S.tiltFocus; u.uTiltWidth.value = S.tiltWidth;
     u.uDither.value = S.dither; u.uGrade.value = S.grade;
+    u.uVib.value = S.vibrance; u.uSat.value = S.saturation;
     if (S.inkColor) u.uInkCol.value.set(S.inkColor);
     // the pass is only worth running at all if SOMETHING is on
     this.enabled = !!(S.ink || S.halftone || S.levels > 1 || S.grain || S.tilt || S.dither ||
-      S.grade || this._speedT > 0 || this._invT > 0);
+      S.grade || S.vibrance || S.saturation || this._speedT > 0 || this._invT > 0);
     return S;
   }
 

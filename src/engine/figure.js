@@ -109,6 +109,50 @@ export function applyFrame(P, F) {
   for (const m of [P.aura, P.guardArc, P.ice, P.cape]) if (m) m.position.y *= (1 + (S - 1) * 0.7);
 }
 
+// =================================================================================================
+// THE RIM LIGHT — material-level, not a post-process, because it must know what a FIGHTER is.
+//
+// A full-screen rim would light every silhouette in the city; the point of this one is that the 52
+// things that matter separate from a grey street. It is the cheapest identity effect on the list
+// (~0.1ms) precisely because it is four lines of ALU inside a shader that is already running.
+//
+// ⚠ INJECTED ALWAYS, DRIVEN BY A UNIFORM — never toggled by re-injecting. `onBeforeCompile` changes
+// the program, and swapping it at runtime recompiles every material that uses it. That is the same
+// class of stall as the light-count law (a beam on a raised guard recompiling the city, +152
+// programs in 4s). Compile once with the rim in it; turn it off by setting the strength to zero.
+//
+// ⚠ AND IT NEEDS A CACHE KEY. Without `customProgramCacheKey` three.js may hand a rim-injected
+// material a program compiled for an un-injected one with identical parameters, and the rim silently
+// does not appear on some fighters and does on others.
+export function applyRim(mat, color, strength = 1, power = 2.6) {
+  if (!mat || mat._rimU) return mat;
+  const u = { uRimCol: { value: new THREE.Color(color || '#bcd8ff') },
+              uRimK: { value: strength }, uRimP: { value: power } };
+  mat._rimU = u;
+  mat.customProgramCacheKey = () => 'wwa-rim';
+  mat.onBeforeCompile = (sh) => {
+    Object.assign(sh.uniforms, u);
+    sh.fragmentShader = 'uniform vec3 uRimCol;\nuniform float uRimK;\nuniform float uRimP;\n' + sh.fragmentShader;
+    // ⚠ AFTER the lighting has resolved, before tone mapping — a rim is light arriving at a grazing
+    // angle, so it ADDS to the lit result rather than tinting the albedo.
+    sh.fragmentShader = sh.fragmentShader.replace('#include <opaque_fragment>',
+      [
+        '{',
+        '  float rim = 1.0 - max(dot(normalize(vNormal), normalize(vViewPosition)), 0.0);',
+        '  outgoingLight += uRimCol * pow(rim, uRimP) * uRimK;',
+        '}',
+        '#include <opaque_fragment>',
+      ].join('\n'));
+  };
+  return mat;
+}
+
+export function setRim(parts, strength) {
+  if (!parts || !parts.mats) return;
+  for (const m of Object.values(parts.mats)) if (m && m._rimU) m._rimU.uRimK.value = strength;
+  if (parts._rimExtra) for (const m of parts._rimExtra) if (m && m._rimU) m._rimU.uRimK.value = strength;
+}
+
 export function figure(def) {
   const c = def.colors || def;
   const b = def.build || BUILDS[def.id] || {};   // ORIGIN customs carry their own frame
@@ -326,7 +370,10 @@ export function figure(def) {
   const ice = new THREE.Mesh(new THREE.IcosahedronGeometry(4.6, 1), new THREE.MeshStandardMaterial({ color: '#bfeaff', transparent: true, opacity: 0, roughness: 0.15, metalness: 0.1, emissive: '#4fb8e6', emissiveIntensity: 0.15 }));
   ice.position.y = 5.2; ice.scale.set(1, 1.5, 1); ice.visible = false; g.add(ice);
 
-  const P = { g, groundRig, torso, head, pelvis, cowl, emblem, aura, cape, armL, armR, legL, legR, eyeL, eyeR, shadow, bandRing, faceWedge, stateRing, guardArc, ice, tether, mats: { suit, suit2, glow } };
+  // the rim rides the hero's OWN accent, cooled toward the scene's back light — a fighter separates
+  // from the street in their own colour, not in a generic blue
+  for (const m of [suit, suit2, skinMat, armor]) applyRim(m, new THREE.Color(c.accent).lerp(new THREE.Color('#bcd8ff'), 0.55), 0);
+  const P = { g, groundRig, torso, head, pelvis, cowl, emblem, aura, cape, armL, armR, legL, legR, eyeL, eyeR, shadow, bandRing, faceWedge, stateRing, guardArc, ice, tether, mats: { suit, suit2, glow, skin: skinMat, armor } };
   applyFrame(P, frameOf(def));   // ← the silhouette: proportions derived from who this fighter IS
   return P;
 }

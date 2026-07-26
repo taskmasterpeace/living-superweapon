@@ -663,6 +663,9 @@ export class World {
   // ---------------- PROCEDURAL CITIES (the world sheet) ----------------
   // Tear the current city down to bare terrain systems, then raise a new one from a plan.
   _teardownCity() {
+    // ⚠ the AO material clones are PER-CITY, like the crack overlays — the shared caches
+    // (_tileMats, _winMats, _lampMat, _carPaints) are explicitly preserved, these are not.
+    if (this._aoMats) { for (const m of this._aoMats.values()) m.dispose(); this._aoMats.clear(); }
     // THE TEARDOWN TRAP (altitude plan 3a): interactables a city tile registered MUST go with
     // the city, or a rebuilt map inherits ghost prompts pointing at deleted geometry.
     if (this.game && this.game.clearCityInteractables) this.game.clearCityInteractables();

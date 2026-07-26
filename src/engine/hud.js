@@ -19,7 +19,7 @@ import { visOf, visLine } from '../data/visual.js';
 import { loadCareer, fmtMoney } from '../data/career.js';
 import { clamp, TAU } from '../core/util.js';
 import { ATTR_DEFS, TALENTS, deriveAttrs, heroTalents, rankName, rankColor, RANKS, bakeSheet } from '../data/ranks.js';
-import { SETTINGS, saveSettings, applySettings, KEYMAPS, keymap } from '../core/settings.js';
+import { LOOK_PRESETS, SETTINGS, saveSettings, applySettings, KEYMAPS, keymap } from '../core/settings.js';
 import { identityOf } from '../data/identities.js';
 import { icon, ATTR_ICON, ICON_MEANING } from './icons.js';
 import { writeBroadcast, tapeRows, llmPunchUp, titleCase, money, causeLine, mulberry } from '../data/news.js';
@@ -870,15 +870,19 @@ export class HUD {
 
       <div class="dgsec">THE LOOK</div>
       <div class="orow"><span class="ol">Print Treatment</span><div class="chips3">
-        ${[['off', 'OFF'], ['clean', 'CLEAN'], ['print', 'COMIC PRINT'], ['inked', 'HEAVY INK'], ['diorama', 'DIORAMA'], ['custom', 'CUSTOM']].map(([v, n]) => `<span class="c3${S.look === v ? ' on' : ''}" data-look="${v}">${n}</span>`).join('')}
+        ${Object.entries(LOOK_PRESETS).map(([v, P]) => `<span class="c3${S.look === v ? ' on' : ''}" data-look="${v}">${P._n}</span>`).join('')}
       </div></div>
-      <div class="oline2">COMIC PRINT is halftone in the shadows, ink on the silhouettes and paper grain over everything — the treatment the speech balloons already belong to. DIORAMA adds tilt-shift and makes the city read as a model. Every dial below is live; touching one switches you to CUSTOM.</div>
+      <div class="oline2">${esc((LOOK_PRESETS[S.look] || {})._d || 'Your own numbers.')}</div>
+      <div class="oline2" style="opacity:.72">Named for what they are FOR, not LOW / MEDIUM / HIGH. Measured on an RTX 4090 the whole stack fits inside 0.25ms even at 4K, so the ladder is built on texture fetches per pixel — ink and tilt-shift cost 8 each, everything else is free. If the frame-rate governor drops you to the lowest quality tier those two switch off automatically and come back when it recovers; your choice here is never overwritten.</div>
       ${slider('fxInk', 'Ink outlines', 1.5, 0.05)}
       ${slider('fxHalftone', 'Halftone (shadows only)', 1.5, 0.05)}
       ${slider('fxGrain', 'Paper grain', 1.5, 0.05)}
       ${slider('fxTilt', 'Tilt-shift', 1.5, 0.05)}
       ${slider('fxDither', 'Ordered dither', 1.5, 0.05)}
       ${slider('fxGrade', 'World grading', 1.5, 0.05)}
+      ${slider('fxVibrance', 'Vibrance · lifts the DULL colours only', 1, 0.05)}
+      ${slider('fxSaturation', 'Saturation · the blunt one', 1, 0.05)}
+      ${slider('fxRim', 'Rim light on fighters', 1.5, 0.05)}
       <div class="orow"><span class="ol">Palette</span><div class="chips3">
         ${[['0', 'FULL'], ['9', '9 TONES'], ['7', '7 TONES'], ['5', '5 TONES']].map(([v, n]) => `<span class="c3${String(S.fxLevels) === v ? ' on' : ''}" data-lv="${v}">${n}</span>`).join('')}
       </div></div>

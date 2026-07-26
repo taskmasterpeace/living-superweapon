@@ -14,6 +14,7 @@ import { ARENA as ARENA_FALLBACK } from './world.js';   // ⚠ review item 7: th
 import { Ragdoll } from './ragdoll.js';
 import { buildTentacles } from './tentacles.js';
 import { bakeSheet } from '../data/ranks.js';
+import { setRim } from './figure.js';
 import { clearSlotFx } from './abilities.js';
 
 // power tiers (Super-Saiyan-style): level 1–3 = I, 4–6 = II, 7–9 = III, 10 = MAX
@@ -253,6 +254,9 @@ export class Fighter {
     // the SHEET — seven ranked attributes + talents baked to flat multipliers (data/ranks.js).
     // This is the D&D layer: FGT/AGL/MGT/VIG/INT/AWR/RES all do real engine work.
     this.sheet = bakeSheet(def);
+    // ⚠ the rim is injected at construction and driven by a uniform (figure.js) — set the strength
+    // from the live setting HERE rather than re-injecting, which would recompile every material.
+    if (this.parts && game && game.world) setRim(this.parts, game.world._rimK == null ? 0.8 : game.world._rimK);
     this.resist = resistOf(def, this.sheet);
     // WHAT ARE YOU MADE OF — drives landing/impact sound. Derived, with def.body as the override.
     this.body = def.body || (def.metal ? 'metal' : def.phase ? 'energy' : def.tentacles ? 'insect' : 'flesh');       // damage-type resistances, derived + def overrides (manual §3)

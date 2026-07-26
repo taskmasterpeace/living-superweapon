@@ -1248,6 +1248,44 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   the harness, and a hidden pane early-outs (the documented `_ema` artefact). Measure it in a
   foregrounded tab. Refs `wwa-print-off.png`, `wwa-print-comic.png`, `wwa-print-inked.png`.
 
+## THE LOOK LADDER, RIM LIGHT AND VERTEX AO (2026-07-26) — benchmarked, then named
+- ⚠ **THE BENCHMARK'S REAL RESULT WAS "TOO FAST TO MEASURE", AND THAT CHANGED THE DESIGN.** Timed with
+  `EXT_disjoint_timer_query_webgl2` on an RTX 4090: at 1280x720 **every effect came back with a
+  NEGATIVE delta** — impossible, so the work is real and simply smaller than frame-to-frame variance.
+  Re-run at 3840x2160 so fragment cost dominates: baseline 2.08ms, and the whole stack still fits
+  inside 0.25ms (CLEAN +0.018 · COMIC PRINT −0.051 · HEAVY INK +0.120 · DIORAMA +0.237).
+  ⚠ Two earlier attempts were worthless and both are worth remembering: CPU timing around `render()`
+  measures SUBMISSION (it reported tilt-shift as faster than everything off), and `readPixels` does
+  force a flush but costs ~3ms of round trip, which buries a 0.05ms signal completely.
+- **So the ladder is built on TEXTURE FETCHES PER PIXEL, which is countable from the source** — ink 8,
+  tilt-shift 8, everything else 0 (pure ALU). That is the thing that predicts weak hardware, which is
+  the only hardware a quality tier exists for. `FETCH_BUDGET = [0, 8, 16]` per quality tier and
+  `budgetLook()` spends it, dropping tilt-shift first and ink second. ⚠ It clamps what the SHADER
+  does and never overwrites `SETTINGS.look`, so the player gets their choice back when the GPU does.
+- **NAMED FOR WHAT THEY ARE FOR, not LOW/MEDIUM/HIGH**: OFF · STREET · FIELD · BROADCAST · SPLASH
+  PAGE · DIORAMA · CUSTOM. A player choosing between "medium" and "high" is guessing; between FIELD
+  and SPLASH PAGE they know which is for playing and which is for the screenshot. Same law as the
+  LeFevre threat words and the recovery tiers. The Options chips are generated FROM the table, so a
+  new preset appears in the UI for free.
+- **VIBRANCE IS NOT SATURATION, and the difference is the thing Robert actually asked for** ("turn the
+  saturation down a tad so the colours pop" — those pull opposite ways). Vibrance weights the boost by
+  `(1 − existing saturation)`: grey concrete gains a lot, a gold aura gains nothing. Plain saturation
+  multiplies everything equally and drives the reds and the hero accents into clipping, which reads as
+  LESS pop because a clipped colour has no shape left. Both dials shipped; vibrance is the default.
+- **RIM LIGHT is material-level** (`applyRim`/`setRim` in figure.js) so it knows what a FIGHTER is — a
+  full-screen rim would light every kerb in the city. It rides each hero's own accent cooled toward
+  the back light. ⚠ **Injected ALWAYS, driven by a uniform, never toggled by re-injecting** —
+  `onBeforeCompile` changes the program and swapping it recompiles, the same class of stall as the
+  light-count law. ⚠ And it needs `customProgramCacheKey`, or three.js hands a rim material a program
+  compiled without it and the rim appears on some fighters and not others.
+- **VERTEX AO is the only item that is literally free at runtime** — baked into every `tower()`
+  geometry at city build. ⚠ It does NOT touch the shared material cache: `mats()` hands out one
+  material per role per region and flipping `vertexColors` there would break every geometry without a
+  colour attribute (including the flagship, which builds through its own path). Each source material
+  gets ONE cached AO clone (4 per region), disposed with the other per-city materials.
+  ⚠ Measured 48/48 buildings on a generated Tokyo — and **0 on the flagship**, which has its own
+  bespoke builder and never calls `tower()`. Known and deliberate; the flagship needs its own pass.
+
 ## HANDOFF
 - **`HANDOFF.md` at the repo root** is the orientation document: architecture, the ten rules that
   are load-bearing, what is solid, what is half-built, what to do next, and the headless

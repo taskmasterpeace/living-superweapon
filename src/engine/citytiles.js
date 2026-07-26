@@ -124,12 +124,50 @@ function mesh(ctx, geo, mat, x, y, z, o = {}) {
   m.userData.gy = ctx.gy;                          // reg() needs it to make `top` absolute
   ctx.g.add(m); return m;
 }
+// =================================================================================================
+// VERTEX-BAKED CONTACT AO — the only item on the effects list that costs literally nothing at
+// runtime, because it is computed once when the city is built and then never touched again.
+//
+// What it buys: buildings currently meet the ground with a hard seam, because a directional sun and
+// one shadow map cannot produce the darkening that happens where two surfaces approach each other.
+// Baking a gradient into the bottom of every box gives every structure a foot.
+//
+// ⚠ IT DOES NOT TOUCH THE SHARED MATERIAL CACHE. `mats()` hands out ONE material per role per
+// region and the whole city shares it; flipping `vertexColors` on that would make every geometry
+// WITHOUT a colour attribute render as garbage — including the flagship, which builds through its
+// own local path. So each source material gets ONE cached AO-enabled clone (four or five per
+// region), and they are disposed with the rest of the per-city materials.
+function aoMat(world, src) {
+  if (!src) return src;
+  const cache = world._aoMats || (world._aoMats = new Map());
+  let m = cache.get(src.uuid);
+  if (!m) { m = src.clone(); m.vertexColors = true; cache.set(src.uuid, m); }
+  return m;
+}
+// ⚠ HEIGHT IS MEASURED IN WORLD UNITS, NOT AS A FRACTION OF THE BUILDING. A 150u tower and a 12u
+// bungalow both meet the pavement the same way; scaling the gradient to the box would put a
+// twenty-metre smudge up the side of a skyscraper and nothing at all on a shed.
+function bakeContactAO(geo, h, strength = 0.55, reach = 9) {
+  const pos = geo.attributes.position;
+  const col = new Float32Array(pos.count * 3);
+  for (let i = 0; i < pos.count; i++) {
+    const yFromFoot = pos.getY(i) + h / 2;                 // BoxGeometry is centred on its own origin
+    const k = 1 - Math.min(1, Math.max(0, yFromFoot / reach));
+    const v = 1 - k * k * strength;                        // squared: tight at the foot, gone by the reach
+    col[i * 3] = col[i * 3 + 1] = col[i * 3 + 2] = v;
+  }
+  geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  return geo;
+}
+
 // a structural, destructible building with a windowed facade + roof slab + crack overlay
 function tower(ctx, x, z, w, h, d, winMat, roofMat, o = {}) {
   const world = ctx.world, S = ctx.S;
   h = Math.min(h, ctx.maxH || Infinity);           // THE LAYER CONTRACT — never above the declared max
   const geo = new THREE.BoxGeometry(w, h, d); scaleBoxUV(geo, w, h, d, ((winMat && winMat.userData.bay) || 17) * CUR_M);
-  const m = new THREE.Mesh(geo, winMat);
+  const useAO = ctx.world && ctx.world.aoBake !== false;
+  if (useAO) bakeContactAO(geo, h);
+  const m = new THREE.Mesh(geo, useAO ? aoMat(ctx.world, winMat) : winMat);
   const ps = planeS(ctx);                          // footprint rides the lot inset, height does not
   const wx = sx(ctx, x), wz = sz(ctx, z), W = w * ps, H = h * S, D = d * ps, gy = ctx.gy;
   m.position.set(wx, gy + H / 2, wz); m.castShadow = H >= 44; m.receiveShadow = true;
