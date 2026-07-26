@@ -22,6 +22,7 @@ import { buildReport } from '../data/news.js';
 import { bookInjury, injuryOf, healBout, koElo, matchElo } from '../data/rankings.js';
 import { SETTINGS, keymap } from '../core/settings.js';
 import { STRIKES } from '../data/martial.js';
+import { beamBuildOf, beamTemperOf } from '../data/visual.js';
 import { Gamepad } from '../core/gamepad.js';
 import { runSlot, performEvade } from './abilities.js';
 import { ROSTER } from '../data/characters.js';
@@ -2546,6 +2547,9 @@ export class Game {
       color: def.color, color2: def.color2, power: (def.power || 1) * p, steer: def.steer,
       might: (def.might || (def.dps || 60) / 50) * p * (caster.def.beamMight || 1),   // char treats the budget differently
       dtype: def.dtype, siphon: def.siphon, spiral: def.spiral, faceOrigin: def.faceOrigin,   // arcane beams drink ki; VEGA spirals; optic blasts fire from the FACE
+      // THE BEAM ANATOMY (data/visual.js): BUILD is how much of it there is, TEMPER is what it is
+      // doing inside. Both derived from the ability's own radius and material, both overridable.
+      build: beamBuildOf(def), temper: beamTemperOf(def),
     });
   }
 

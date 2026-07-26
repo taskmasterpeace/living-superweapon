@@ -1,5 +1,6 @@
 // WAR WORLD: ASCENDANTS — projectiles, beam-hoses (wave cannon), and spirit-bomb lobs.
 import { domeBlocks } from './systems2.js';
+import { BUILD_LOOK, TEMPER_LOOK } from '../data/visual.js';
 import * as THREE from 'three';
 import { clamp, rand, TAU } from '../core/util.js';
 
@@ -511,7 +512,13 @@ class BeamHose {
     this.game = game; this.caster = caster; this.team = caster.team;
     this.radius = o.radius || 1.6;             // beam thickness
     this.tipSpeed = o.tipSpeed || 150;         // how fast the tip races out (waterhose, not instant)
-    this.spiralOn = !!o.spiral;                // VEGA's signature: a helix riding the hose
+    // THE BEAM ANATOMY (data/visual.js). Two axes, and the engine holds no opinion about any
+    // individual weapon: BUILD decides the silhouette (sheath opacity, core thickness, tip, flare)
+    // and TEMPER decides what the instanced DETAIL layer is doing. Twenty-five beams used to be
+    // one beam in twenty-five colours; VEGA's helix was the only form in the game.
+    this.build = BUILD_LOOK[o.build] || BUILD_LOOK.hose;
+    this.temper = TEMPER_LOOK[o.temper] || TEMPER_LOOK.steady;
+    this.temperName = o.temper || 'steady';
     this.maxLen = o.maxLen || 120;
     this.dps = o.dps || 60; this.dtype = o.dtype || null; this.siphon = o.siphon;   // an arcane beam SIPHONS
     this.kiPerSec = o.kiPerSec || 22;
@@ -536,12 +543,13 @@ class BeamHose {
     this.core = new THREE.Mesh(GEO_CYL, beamMat(this.color2, 0.8));
     this.tip = new THREE.Mesh(GEO_ORB, glowMat(this.color2, 0.85));
     this.grp = new THREE.Group(); this.grp.add(this.glow, this.core, this.tip); game.scene.add(this.grp);
-    if (this.spiralOn) {
-      // 26 tiny orbs laid on a helix around the core — cheap (one InstancedMesh), and it reads
-      // as a DRILL rather than a hose, which is the whole point of the signature
-      this.spiral = new THREE.InstancedMesh(GEO_ORB, glowMat(this.color2, 0.9), 26);
-      this.spiral.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-      this.grp.add(this.spiral);
+    // ⚠ ONE INSTANCED DETAIL LAYER, SHARED BY EVERY TEMPER. This started life as VEGA's
+    // hard-coded 26-orb helix; generalising it was almost free and it is what lets seven tempers
+    // exist for the cost of one draw call. A temper that says `n: 0` builds nothing at all.
+    if (this.temper.n > 0) {
+      this.detail = new THREE.InstancedMesh(GEO_ORB, glowMat(this.color2, 0.9), this.temper.n);
+      this.detail.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+      this.grp.add(this.detail);
       this._sm = new THREE.Matrix4(); this._sv = new THREE.Vector3();
     }
     this.light = game.vfx.borrowLight(this.color, 5 * this.power, 60);
@@ -606,27 +614,60 @@ class BeamHose {
     const mid = _v2.copy(this.muzzle).addScaledVector(this.dir, len * 0.5);
     const fade = this.sustaining ? 1 : Math.max(0, 1 - this.endT / 0.18);
     for (const m of [this.glow, this.core]) { m.position.copy(mid); m.quaternion.copy(_q); }
-    this.core.scale.set(this.radius * 0.55, len, this.radius * 0.55);
-    this.glow.scale.set(this.radius * 1.5 * (0.9 + Math.sin(game.time * 40) * 0.1), len, this.radius * 1.5);
-    this.core.material.opacity = 0.95 * fade; this.glow.material.opacity = 0.42 * fade;
-    this.tip.position.copy(tipPos); this.tip.scale.setScalar(this.radius * 1.8 * fade);
-    if (this.spiral) {
-      // helix in world space: two perpendiculars off the beam dir, orbs wound 3.5 turns down the length
+    const B = this.build;
+    this.core.scale.set(this.radius * B.coreR, len, this.radius * B.coreR);
+    // FLARE: a torrent and a roiling jet widen toward the far end. The cylinder is one mesh, so
+    // the widening is carried by the sheath's average radius rather than a tapered geometry —
+    // at this camera distance the read is identical and it costs nothing.
+    const flare = 1 + (B.flare - 1) * 0.5;
+    this.glow.scale.set(this.radius * 1.5 * flare * (0.9 + Math.sin(game.time * 40) * 0.1), len, this.radius * 1.5 * flare);
+    this.core.material.opacity = 0.95 * fade; this.glow.material.opacity = B.sheath * fade;
+    this.tip.position.copy(tipPos); this.tip.scale.setScalar(this.radius * 1.8 * B.tip * fade);
+    if (this.detail) {
+      // THE DETAIL LAYER, in WORLD space: two perpendiculars off the beam direction, then each
+      // temper decides where along and around the beam its elements sit and how big they are.
+      // Everything below is (t along the beam, ca/sa across it, scale) — seven behaviours, one loop.
       const d = this.dir, ax = Math.abs(d.y) > 0.9 ? _v2.set(1, 0, 0) : _v2.set(0, 1, 0);
       const p1 = this._sv.copy(d).cross(ax).normalize();
       const p2x = d.y * p1.z - d.z * p1.y, p2y = d.z * p1.x - d.x * p1.z, p2z = d.x * p1.y - d.y * p1.x;
-      const R = this.radius * 2.1, len2 = this.tipDist, spin = game.time * 9;
-      for (let i = 0; i < 26; i++) {
-        const t2 = i / 25, a2 = t2 * Math.PI * 7 + spin;
-        const ca = Math.cos(a2) * R, sa = Math.sin(a2) * R;
-        this._sm.makeScale(0.42, 0.42, 0.42);
+      const T = this.temper, N = T.n, R = this.radius * 2.1 * T.amp, L = this.tipDist;
+      const clock = game.time * T.rate, kind = T.detail;
+      for (let i = 0; i < N; i++) {
+        const t2 = N > 1 ? i / (N - 1) : 0;
+        let ca = 0, sa = 0, sc = 0.42, along = t2;
+        if (kind === 'helix') {                       // wound 3.5 turns down the length — it BORES
+          const a2 = t2 * Math.PI * 7 + clock; ca = Math.cos(a2) * R; sa = Math.sin(a2) * R;
+        } else if (kind === 'kink') {                 // electricity: a jagged path re-cut every frame
+          const j = Math.sin(i * 12.9898 + Math.floor(clock)) * 43758.5453;
+          const a2 = (j - Math.floor(j)) * 6.2831;
+          const w = R * (0.35 + (i % 3) * 0.33);
+          ca = Math.cos(a2) * w; sa = Math.sin(a2) * w; sc = 0.5;
+        } else if (kind === 'wave') {                 // sorcery: one travelling lateral wave
+          const ph = t2 * 5.4 - clock; ca = Math.sin(ph) * R; sa = Math.cos(ph * 0.5) * R * 0.28; sc = 0.46;
+        } else if (kind === 'roil') {                 // fire: licks outward, widest at the far end
+          const a2 = i * 2.399 + clock; const w = R * (0.25 + t2 * 0.95);
+          ca = Math.cos(a2) * w; sa = Math.sin(a2) * w; sc = 0.36 + t2 * 0.5;
+        } else if (kind === 'crystal') {              // ice: facets SNAP between positions
+          const step = Math.floor(clock) * 0.7;
+          const a2 = i * 1.7 + step; ca = Math.cos(a2) * R * 0.8; sa = Math.sin(a2) * R * 0.8; sc = 0.62;
+        } else if (kind === 'surge') {                // light: bright pulses running out
+          along = (t2 + clock * 0.22) % 1;
+          const pulse = 0.5 + 0.5 * Math.cos((along * 3 - clock * 0.5) * 6.2831);
+          sc = 0.3 + pulse * 0.85;
+        } else if (kind === 'ring') {                 // pressure: compressed rings rolling down it
+          along = (t2 + clock * 0.16) % 1;
+          const a2 = i * 2.0944; ca = Math.cos(a2) * R * 0.9; sa = Math.sin(a2) * R * 0.9;
+          sc = 0.5 + Math.sin(along * 6.2831) * 0.22;
+        }
+        this._sm.makeScale(sc, sc, sc);
         this._sm.setPosition(
-          this.muzzle.x + d.x * t2 * len2 + p1.x * ca + p2x * sa,
-          this.muzzle.y + d.y * t2 * len2 + p1.y * ca + p2y * sa,
-          this.muzzle.z + d.z * t2 * len2 + p1.z * ca + p2z * sa);
-        this.spiral.setMatrixAt(i, this._sm);
+          this.muzzle.x + d.x * along * L + p1.x * ca + p2x * sa,
+          this.muzzle.y + d.y * along * L + p1.y * ca + p2y * sa,
+          this.muzzle.z + d.z * along * L + p1.z * ca + p2z * sa);
+        this.detail.setMatrixAt(i, this._sm);
       }
-      this.spiral.instanceMatrix.needsUpdate = true;
+      this.detail.instanceMatrix.needsUpdate = true;
+      this.detail.material.opacity = 0.9 * fade;
     }
     this.tip.material.opacity = 0.82 * fade;
     this.light.position.copy(tipPos); this.light.intensity = 5 * this.power * fade;
@@ -678,7 +719,7 @@ class BeamHose {
     if (!this.sustaining && this.endT >= 0.18) { this._dispose(game); return false; }
     return true;
   }
-  _dispose(game) { if (this.dead) return; this.dead = true; if (this._voice) { this._voice.stop(); this._voice = null; } game.scene.remove(this.grp); [this.glow, this.core, this.tip].forEach(m => m.material.dispose()); if (this.spiral) this.spiral.material.dispose(); game.vfx.returnLight(this.light); }   // geometry is shared; the light STAYS in the scene (light-count law)
+  _dispose(game) { if (this.dead) return; this.dead = true; if (this._voice) { this._voice.stop(); this._voice = null; } game.scene.remove(this.grp); [this.glow, this.core, this.tip].forEach(m => m.material.dispose()); if (this.detail) this.detail.material.dispose(); game.vfx.returnLight(this.light); }   // geometry is shared; the light STAYS in the scene (light-count law)
 }
 
 // ---- Star Sphere: grow a giant orb overhead, then hurl it ----

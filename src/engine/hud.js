@@ -286,7 +286,7 @@ export class HUD {
   // ---- options + how-to-play overlays (on <body> so they stack above the title screen) ----
   _buildOverlays() {
     const mk = (id) => { const d = document.createElement('div'); d.id = id; d.className = 'lswovl'; document.body.appendChild(d); return d; };
-    this.optionsEl = mk('hOptions'); this.howtoEl = mk('hHowto'); this.onlineEl = mk('hOnline'); this.damageEl = mk('hDamage');
+    this.optionsEl = mk('hOptions'); this.howtoEl = mk('hHowto'); this.onlineEl = mk('hOnline'); this.damageEl = mk('hDamage'); this.visualEl = mk('hVisual');
     this.establishEl = document.createElement('div'); this.establishEl.id = 'hEstablish'; this.establishEl.className = 'establish';
     this.establishEl.style.display = 'none'; document.body.appendChild(this.establishEl);
     this.rankingsEl = mk('hRankings'); this.bracketEl = mk('hBracket'); this.atlasEl = null;   // created by mountAtlas on first open
@@ -903,12 +903,15 @@ export class HUD {
       <div class="hsec"><div class="ht">The Golden Rule</div><div class="hb">The LeFevre threat scale is real — a Street-tier human <em>should</em> lose to a Cosmic superweapon. Lopsided is honest. Pick your fights, or forge your own weapon in <b>ORIGIN</b>.</div></div>
       <div class="hsec"><div class="ht">Damage Types</div><div class="hb">Every hit has a <em>type</em> — physical, ballistic, energy, fire, cold, toxic, acid — and every fighter resists them differently. A machine <em>cannot</em> be poisoned; <b>ACID</b> eats the armour that stops bullets. Open the codex for the full table.</div></div>
       <button class="odone" id="howtoDmg">☣ Open the Damage Codex</button>
+      <button class="odone" id="howtoVis">◈ Open the Visual Language</button>
       <button class="odone" id="howtoTut">🎓 Play the Tutorial — learn by doing</button>
       <button class="odone oghost">Got It — Let's Fight</button>
     </div>`;
     const seen = () => { try { localStorage.setItem('threshold_howto_seen', '1'); } catch {} this.howtoEl.style.display = 'none'; };
     this.howtoEl.querySelector('.oghost').onclick = seen;
     this.howtoEl.querySelector('#howtoDmg').onclick = () => this.showDamage();
+    const vb = this.howtoEl.querySelector('#howtoVis');
+    if (vb) vb.onclick = () => this.showVisual();
     this.howtoEl.querySelector('#howtoTut').onclick = () => { seen(); this.onTutorial && this.onTutorial(); };
     this.howtoEl.style.display = 'flex';
   }

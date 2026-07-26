@@ -504,6 +504,36 @@ export const CSS = `
    straight on top of it. The bar yields — the dial is anchored to the very top edge by design and
    cannot move down without stopping being a hanging dial. */
 #hud.hassun .modebar, #hud.hassun #hMode{ top:126px; }
+/* THE VISUAL LANGUAGE screen — same document furniture as the damage codex it sits beside. */
+#hVisual .vlaxis{ border:1px solid var(--line); border-radius:var(--r-2); padding:9px 12px; margin:7px 0; background:var(--surface-raised); }
+#hVisual .vlname{ font-family:var(--f-mono); font-size:var(--t-label); letter-spacing:.2em; color:var(--gold); }
+#hVisual .vlwhy{ font-size:var(--t-sm); color:var(--text-3); margin:2px 0 6px; }
+#hVisual .vlchips{ display:flex; flex-wrap:wrap; gap:4px; }
+#hVisual .vlchip{ font-family:var(--f-mono); font-size:var(--t-micro); letter-spacing:.1em; text-transform:uppercase;
+  border:1px solid var(--line-2); border-radius:var(--r-1); padding:2px 6px; color:var(--text-2); }
+#hVisual .vlchip i{ font-style:normal; color:var(--gold); margin-left:5px; }
+/* a vocabulary word nothing in the game uses is a GAP, and it should look like one */
+#hVisual .vlchip.vlz{ opacity:.34; border-style:dashed; }
+#hVisual .vlmean{ font-size:var(--t-sm); color:var(--text-4); margin-top:3px; }
+#hVisual .vlmean b{ display:inline-block; min-width:66px; color:var(--text-2); font-family:var(--f-mono); font-size:var(--t-micro); letter-spacing:.12em; text-transform:uppercase; }
+#hVisual .vlhero{ margin:9px 0; border:1px solid var(--line); border-radius:var(--r-2); overflow:hidden; }
+#hVisual .vlh{ display:flex; align-items:center; gap:8px; padding:6px 11px; background:var(--surface-hi);
+  font-family:var(--f-display); letter-spacing:.06em; }
+#hVisual .vlh i{ width:9px; height:9px; border-radius:50%; display:inline-block; }
+#hVisual .vlh span{ margin-left:auto; font-family:var(--f-mono); font-size:var(--t-micro); color:var(--text-5); letter-spacing:.14em; }
+#hVisual .vlrow, #hud .vlkey, #hVisual .vlkey{ display:grid; grid-template-columns:46px 1.5fr repeat(6, 1fr) 1.2fr; gap:6px; align-items:center;
+  padding:3px 11px; border-top:1px dashed var(--line); font-family:var(--f-mono); font-size:var(--t-micro); }
+#hVisual .vlkey{ border-top:none; color:var(--text-5); letter-spacing:.14em; text-transform:uppercase; padding-top:8px; }
+#hVisual .vlrow b{ color:var(--gold); }
+#hVisual .vlab{ font-family:var(--f-display); font-size:var(--t-sm); color:var(--text-2); letter-spacing:.02em; }
+#hVisual .vlt{ color:var(--text-3); text-transform:uppercase; letter-spacing:.08em; }
+#hVisual .vlt.vlz{ opacity:.3; }
+#hVisual .vlt.vlbeam{ color:var(--gold-pale); }
+#hVisual .vlgap{ font-size:var(--t-sm); color:var(--text-2); padding:4px 0; }
+#hVisual .vlgap b{ color:var(--danger-2); font-family:var(--f-mono); }
+#hVisual .vlz2{ color:var(--text-5); font-family:var(--f-mono); font-size:var(--t-micro); }
+@media (max-width:900px){ #hVisual .vlrow, #hVisual .vlkey{ grid-template-columns:40px 1.2fr repeat(3,1fr); }
+  #hVisual .vlrow span:nth-child(n+6){ display:none; } }
 #hud .sundial{ position:absolute; left:50%; top:0; transform:translateX(-50%); width:246px;
   pointer-events:none; text-align:center; filter:drop-shadow(0 2px 6px rgba(0,0,0,.55)); }
 #hud .sundial svg{ display:block; overflow:visible; }

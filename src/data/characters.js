@@ -29,7 +29,7 @@ export const ROSTER = [
     blurb: 'Charge the Wave Cannon like a firehose of light. Blink behind them. Then drop a sky-sized Star Sphere.',
     sig: ['LMB Wave Cannon (charge beam)', 'RMB Comet Rush', 'E Snap Transit', 'R Star Sphere'],
     abilities: {
-      lmb: { type: 'beam', name: 'Wave Cannon', cost: 8, cd: 0.6, radius: 2.6, tipSpeed: 120, maxLen: 150, dps: 88, kiPerSec: 22, charge: true, maxCharge: 1.6, kiChargePerSec: 14, chargePower: 1.7, chargeWidth: true, steer: 9, color: '#7fd4ff', color2: '#eaffff' },
+      lmb: { type: 'beam', material: 'air', name: 'Wave Cannon', cost: 8, cd: 0.6, radius: 2.6, tipSpeed: 120, maxLen: 150, dps: 88, kiPerSec: 22, charge: true, maxCharge: 1.6, kiChargePerSec: 14, chargePower: 1.7, chargeWidth: true, steer: 9, color: '#7fd4ff', color2: '#eaffff' },
       rmb: { type: 'rush', name: 'Comet Rush', cost: 16, cd: 2.2, range: 72, hits: 7, interval: 0.09, damage: 9, finisher: 34, color: '#eaffff' },
       q: { type: 'projectile', name: 'Ki Blast', cost: 6, cd: 0.28, damage: 12, speed: 92, radius: 1.1, blast: 4.5, homing: 2, color: '#7fd4ff', color2: '#eaffff' },
       e: { type: 'teleport', name: 'Snap Transit', cost: 12, cd: 1.4, range: 58, color: '#eaffff' },
@@ -53,7 +53,7 @@ export const ROSTER = [
       e: { type: 'melee', name: 'Rush Combo', cost: 12, cd: 1.2, damage: 24, range: 12, arc: 0.8, lunge: 52, knock: 46, launch: 12, color: '#6ea0ff' },
       f: { type: 'buff', name: 'Prince’s Pride', cost: 24, cd: 20, mult: 1.7, dur: 11, color: '#f5b21a', color2: '#fff' },
       shift: { type: 'dash', name: 'Burst Dash', cost: 5, cd: 0.55, power: 98, iframes: 0.24, color: '#6ea0ff' },
-      r: { type: 'beam', name: 'Final Arc', cost: 24, cd: 14, radius: 3.4, tipSpeed: 150, maxLen: 170, dps: 130, kiPerSec: 30, charge: true, maxCharge: 2.0, kiChargePerSec: 20, chargePower: 2, chargeWidth: true, steer: 6, color: '#eaffa0', color2: '#ffffff' },
+      r: { type: 'beam', material: 'air', name: 'Final Arc', cost: 24, cd: 14, radius: 3.4, tipSpeed: 150, maxLen: 170, dps: 130, kiPerSec: 30, charge: true, maxCharge: 2.0, kiChargePerSec: 20, chargePower: 2, chargeWidth: true, steer: 6, color: '#eaffa0', color2: '#ffffff' },
     },
   },
   {
@@ -83,7 +83,7 @@ export const ROSTER = [
     blurb: 'Rains stars from orbit. A precision Star Lance, a swelling Nova Core, and a sky-wide Meteor Storm.',
     sig: ['LMB Star Lance (beam)', 'RMB Nova Core (charge)', 'E Solar Wind (push)', 'R Meteor Storm'],
     abilities: {
-      lmb: { type: 'beam', name: 'Star Lance', cost: 4, cd: 0.3, radius: 1.1, tipSpeed: 210, maxLen: 150, dps: 60, kiPerSec: 16, steer: 12, color: '#ffd24a', color2: '#fff2c0' },
+      lmb: { type: 'beam', material: 'light', name: 'Star Lance', cost: 4, cd: 0.3, radius: 1.1, tipSpeed: 210, maxLen: 150, dps: 60, kiPerSec: 16, steer: 12, color: '#ffd24a', color2: '#fff2c0' },
       rmb: { type: 'charge', name: 'Nova Core', cost: 6, cd: 1.0, kiPerSec: 12, maxCharge: 2.2, minR: 1.4, maxR: 5.8, dmgMin: 22, dmgMax: 76, maxBlast: 30, speedMin: 42, speedMax: 74, chargePower: 2.8, color: '#ff8a3d', color2: '#ffe08a' },
       q: { type: 'projectile', name: 'Plasma Orb', cost: 8, cd: 0.5, damage: 20, speed: 60, radius: 1.8, blast: 10, grav: 10, shock: true, color: '#ff8a3d', color2: '#ffd24a' },
       e: { type: 'cone', name: 'Solar Wind', kiPerSec: 16, range: 34, arc: 1.0, dps: 18, push: 46, lift: 4, color: '#ffd24a', dtype: 'fire' },
@@ -119,10 +119,10 @@ export const ROSTER = [
     blurb: 'Faster than you can track. Grab him and the current bites back. Lightning flurries, arc-beams, and Overclock.',
     sig: ['LMB Lightning Flurry', 'RMB Arc Beam', 'SHIFT Blink', 'R Overclock'],
     abilities: {
-      lmb: { type: 'rush', name: 'Lightning Flurry', cost: 10, cd: 1.1, range: 60, hits: 12, interval: 0.05, damage: 6, finisher: 30, color: '#eaffff' },
-      rmb: { type: 'beam', name: 'Arc Beam', cost: 4, cd: 0.3, radius: 1.0, tipSpeed: 250, maxLen: 140, dps: 58, kiPerSec: 16, steer: 15, color: '#eaffff', color2: '#ffe066' },
-      q: { type: 'projectile', name: 'Chain Bolt', cost: 6, cd: 0.35, damage: 14, speed: 120, radius: 1.0, blast: 5, homing: 3.4, color: '#ffe066', color2: '#eaffff' },
-      e: { type: 'cone', name: 'Static Field', kiPerSec: 16, range: 28, arc: 1.3, dps: 20, push: 40, color: '#ffe066' },
+      lmb: { type: 'rush', material: 'shock', name: 'Lightning Flurry', cost: 10, cd: 1.1, range: 60, hits: 12, interval: 0.05, damage: 6, finisher: 30, color: '#eaffff' },
+      rmb: { type: 'beam', material: 'shock', name: 'Arc Beam', cost: 4, cd: 0.3, radius: 1.0, tipSpeed: 250, maxLen: 140, dps: 58, kiPerSec: 16, steer: 15, color: '#eaffff', color2: '#ffe066' },
+      q: { type: 'projectile', material: 'shock', name: 'Chain Bolt', cost: 6, cd: 0.35, damage: 14, speed: 120, radius: 1.0, blast: 5, homing: 3.4, color: '#ffe066', color2: '#eaffff' },
+      e: { type: 'cone', material: 'shock', name: 'Static Field', kiPerSec: 16, range: 28, arc: 1.3, dps: 20, push: 40, color: '#ffe066' },
       f: { type: 'teleport', name: 'Zap Step', cost: 8, cd: 0.8, range: 44, color: '#eaffff' },
       shift: { type: 'dash', name: 'Blink', cost: 3, cd: 0.35, power: 130, iframes: 0.28, color: '#eaffff' },
       r: { type: 'buff', name: 'Overclock', cost: 26, cd: 18, mult: 1.8, dur: 9, color: '#ffd21a', color2: '#fff' },
@@ -191,7 +191,7 @@ export const ROSTER = [
     blurb: 'Flame on. A fast flyer wrapped in fire — grab him and you burn. Jets, homing fireballs, and a supernova.',
     sig: ['LMB Flame Jet (fire beam)', 'R SUPERNOVA (the whole tank, one blast)', 'E Flaming Fist (fly-in)', 'Thorns: burns grabbers'],
     abilities: {
-      lmb: { type: 'beam', name: 'Flame Jet', cost: 4, cd: 0.3, radius: 1.4, tipSpeed: 190, maxLen: 120, dps: 56, kiPerSec: 16, steer: 12, color: '#ff6a1a', color2: '#ffd24a', dtype: 'fire' },
+      lmb: { type: 'beam', material: 'fire', name: 'Flame Jet', cost: 4, cd: 0.3, radius: 1.4, tipSpeed: 190, maxLen: 120, dps: 56, kiPerSec: 16, steer: 12, color: '#ff6a1a', color2: '#ffd24a', dtype: 'fire' },
       rmb: { type: 'cone', name: 'Fire Blast', kiPerSec: 18, range: 34, arc: 1.05, dps: 30, push: 20, color: '#ff6a1a', dtype: 'fire' },
       q: { type: 'projectile', name: 'Fireball', cost: 7, cd: 0.4, damage: 16, speed: 80, radius: 1.5, blast: 8, homing: 2.4, color: '#ff5a1a', color2: '#ffd24a', dtype: 'fire' },
       e: { type: 'melee', name: 'Flaming Fist', cost: 12, cd: 1.0, damage: 24, range: 12, arc: 0.8, lunge: 60, knock: 48, launch: 14, fly: true, color: '#ffd24a' },
@@ -209,13 +209,13 @@ export const ROSTER = [
     blurb: 'A bio-engineered predator. His throws drain your life to heal him, he regenerates, and charges a perfect wave.',
     sig: ['LMB Wave Cannon (charge)', 'G Absorbing throw (heals him)', 'F Regenerate', 'E Afterimage (blink)'],
     abilities: {
-      lmb: { type: 'beam', name: 'Wave Cannon', cost: 8, cd: 0.6, radius: 2.4, tipSpeed: 125, maxLen: 150, dps: 84, kiPerSec: 22, charge: true, maxCharge: 1.6, kiChargePerSec: 14, chargePower: 1.6, chargeWidth: true, steer: 9, color: '#9dff5a', color2: '#eaffea' },
+      lmb: { type: 'beam', material: 'air', name: 'Wave Cannon', cost: 8, cd: 0.6, radius: 2.4, tipSpeed: 125, maxLen: 150, dps: 84, kiPerSec: 22, charge: true, maxCharge: 1.6, kiChargePerSec: 14, chargePower: 1.6, chargeWidth: true, steer: 9, color: '#9dff5a', color2: '#eaffea' },
       rmb: { type: 'melee', name: 'Tail Sweep', cost: 12, cd: 1.0, damage: 22, range: 14, arc: 1.1, lunge: 36, knock: 52, launch: 16, color: '#bfff6a' },
       q: { type: 'lifedrain', name: 'Consume', kiPerSec: 14, range: 26, arc: 0.9, dps: 22, ratio: 0.6, color: '#9dff5a' },
       e: { type: 'teleport', name: 'Afterimage', cost: 12, cd: 1.4, range: 52, color: '#bfff6a' },
       f: { type: 'buff', name: 'Regenerate', cost: 20, cd: 16, mult: 1.3, dur: 8, heal: 46, color: '#9dff5a', color2: '#eaffea' },
       shift: { type: 'dash', name: 'Burst Step', cost: 5, cd: 0.5, power: 98, iframes: 0.24, color: '#bfff6a' },
-      r: { type: 'beam', name: 'Perfect Wave', cost: 24, cd: 14, radius: 3.4, tipSpeed: 150, maxLen: 170, dps: 128, kiPerSec: 30, charge: true, maxCharge: 2.0, kiChargePerSec: 20, chargePower: 2, chargeWidth: true, steer: 6, color: '#9dff5a', color2: '#ffffff' },
+      r: { type: 'beam', material: 'air', name: 'Perfect Wave', cost: 24, cd: 14, radius: 3.4, tipSpeed: 150, maxLen: 170, dps: 128, kiPerSec: 30, charge: true, maxCharge: 2.0, kiChargePerSec: 20, chargePower: 2, chargeWidth: true, steer: 6, color: '#9dff5a', color2: '#ffffff' },
     },
   },
   {
@@ -227,7 +227,7 @@ export const ROSTER = [
     blurb: 'Controls his own density. Phase through everything with energy, or turn diamond-hard to hit like a truck.',
     sig: ['LMB Solar Beam (forehead)', 'Q Intangibility (phase)', 'RMB Density Punch', 'F Max Density'],
     abilities: {
-      lmb: { type: 'beam', name: 'Solar Beam', cost: 4, cd: 0.3, radius: 1.0, tipSpeed: 230, maxLen: 150, dps: 58, kiPerSec: 16, steer: 13, color: '#ffe066', color2: '#fff6c0', dtype: 'fire' },
+      lmb: { type: 'beam', material: 'light', name: 'Solar Beam', cost: 4, cd: 0.3, radius: 1.0, tipSpeed: 230, maxLen: 150, dps: 58, kiPerSec: 16, steer: 13, color: '#ffe066', color2: '#fff6c0', dtype: 'fire' },
       rmb: { type: 'melee', name: 'Density Punch', cost: 14, cd: 1.1, damage: 30, range: 12, arc: 0.75, lunge: 44, knock: 60, launch: 20, color: '#ffe066' },
       q: { type: 'phase', name: 'Intangibility', kiPerSec: 18, color: '#bfeaff' },
       e: { type: 'projectile', name: 'Stone Bolt', cost: 8, cd: 0.5, damage: 18, speed: 78, radius: 1.4, blast: 7, homing: 2, color: '#ffe066', color2: '#fff6c0' },
@@ -247,7 +247,7 @@ export const ROSTER = [
     abilities: {
       lmb: { type: 'beam', name: 'Eye Beam', cost: 4, cd: 0.28, radius: 0.55, tipSpeed: 250, maxLen: 150, dps: 56, kiPerSec: 16, steer: 13, faceOrigin: true, color: '#ff4a4a', color2: '#ffffff' },
       rmb: { type: 'melee', name: 'Flying Tackle', cost: 14, cd: 1.1, damage: 28, range: 13, arc: 0.7, lunge: 74, knock: 64, launch: 16, fly: true, color: '#ffd24a' },
-      q: { type: 'cone', name: 'Thunderclap', kiPerSec: 16, range: 30, arc: 1.2, dps: 16, push: 56, lift: 5, color: '#bfe0ff' },
+      q: { type: 'cone', material: 'shock', name: 'Thunderclap', kiPerSec: 16, range: 30, arc: 1.2, dps: 16, push: 56, lift: 5, color: '#bfe0ff' },
       e: { type: 'rush', name: 'Sky Combo', cost: 16, cd: 2.0, range: 72, hits: 8, interval: 0.08, damage: 9, finisher: 32, color: '#ffd24a' },
       f: { type: 'buff', name: 'Invincible', cost: 22, cd: 18, mult: 1.4, dur: 4, invuln: 2.5, color: '#ffd24a', color2: '#fff' },
       shift: { type: 'dash', name: 'Blitz', cost: 4, cd: 0.4, power: 126, iframes: 0.28, color: '#ffd24a' },
@@ -283,7 +283,7 @@ export const ROSTER = [
     blurb: 'Opens doors in the world itself. Orange in, blue out — fighters, fireballs, everything goes through. Geometry is a suggestion.',
     sig: ['RMB Dimensional Door (place orange, then blue)', 'LMB Rift Ray', 'E Step Through (blink)', 'R Event Horizon'],
     abilities: {
-      lmb: { type: 'beam', name: 'Rift Ray', cost: 4, cd: 0.3, radius: 1.0, tipSpeed: 220, maxLen: 145, dps: 56, kiPerSec: 16, steer: 13, color: '#ff8a2a', color2: '#ffd9b0' },
+      lmb: { type: 'beam', material: 'arcane', name: 'Rift Ray', cost: 4, cd: 0.3, radius: 1.0, tipSpeed: 220, maxLen: 145, dps: 56, kiPerSec: 16, steer: 13, color: '#ff8a2a', color2: '#ffd9b0' },
       rmb: { type: 'portal', name: 'Dimensional Door', cost: 14, cd: 1.2, range: 85, dur: 14, colorA: '#ff8a2a', colorB: '#37c7ff' },
       q: { type: 'projectile', name: 'Fracture Bolt', cost: 7, cd: 0.4, damage: 17, speed: 88, radius: 1.3, blast: 6, color: '#ff8a2a', color2: '#fff' },
       e: { type: 'teleport', name: 'Step Through', cost: 11, cd: 1.3, range: 52, color: '#37c7ff' },
@@ -301,13 +301,13 @@ export const ROSTER = [
     blurb: 'Not a man — a machine of war. Battery-fed twin cannons, a pulse rifle, thruster exhaust, and armor that showers sparks instead of blood.',
     sig: ['LMB Twin Cannon (wide beam)', 'RMB Pulse Rifle (auto)', 'Q Reactor Burst (charge)', 'Metal: armored, sparks when hit'],
     abilities: {
-      lmb: { type: 'beam', name: 'Twin Cannon', cost: 8, cd: 0.6, radius: 2.6, tipSpeed: 130, maxLen: 150, dps: 82, kiPerSec: 22, charge: true, maxCharge: 1.5, kiChargePerSec: 14, chargePower: 1.6, chargeWidth: true, steer: 8, color: '#ff9a2a', color2: '#ffe0b0' },
+      lmb: { type: 'beam', material: 'energy', name: 'Twin Cannon', cost: 8, cd: 0.6, radius: 2.6, tipSpeed: 130, maxLen: 150, dps: 82, kiPerSec: 22, charge: true, maxCharge: 1.5, kiChargePerSec: 14, chargePower: 1.6, chargeWidth: true, steer: 8, color: '#ff9a2a', color2: '#ffe0b0' },
       rmb: { type: 'rifle', name: 'Pulse Rifle', cost: 2, interval: 0.09, damage: 7, speed: 175, radius: 0.55, blast: 2.4, spread: 0.04, recoil: 1.2, color: '#ffd97a', color2: '#fff' },
       q: { type: 'charge', name: 'Reactor Burst', cost: 6, cd: 1.0, kiPerSec: 12, maxCharge: 2.2, minR: 1.5, maxR: 6.4, dmgMin: 24, dmgMax: 80, maxBlast: 33, speedMin: 110, speedMax: 150, chargePower: 3, chest: true, color: '#ffd97a', color2: '#ffffff' },   // brief Tier1 #7: chest aperture, beam-speed orb, white core in a gold shell
       e: { type: 'cone', name: 'Vent Blast', kiPerSec: 16, range: 30, arc: 1.2, dps: 18, push: 50, lift: 4, color: '#c9cfd9' },
       f: { type: 'buff', name: 'Overdrive Core', cost: 26, cd: 20, mult: 1.6, dur: 11, heal: 30, color: '#ff9a2a', color2: '#fff' },
       shift: { type: 'dash', name: 'Thruster Dash', cost: 6, cd: 0.7, power: 96, iframes: 0.22, color: '#ff9a2a' },
-      r: { type: 'beam', name: 'Annihilator Array', cost: 24, cd: 14, radius: 3.4, tipSpeed: 145, maxLen: 170, dps: 126, kiPerSec: 30, charge: true, maxCharge: 2.0, kiChargePerSec: 20, chargePower: 2, chargeWidth: true, steer: 6, color: '#ffb03a', color2: '#ffffff' },
+      r: { type: 'beam', material: 'energy', name: 'Annihilator Array', cost: 24, cd: 14, radius: 3.4, tipSpeed: 145, maxLen: 170, dps: 126, kiPerSec: 30, charge: true, maxCharge: 2.0, kiChargePerSec: 20, chargePower: 2, chargeWidth: true, steer: 6, color: '#ffb03a', color2: '#ffffff' },
     },
   },
   {
@@ -420,7 +420,7 @@ export const ROSTER = [
     blurb: 'A genius in a furnace-gold shell. Repulsors, a chest unibeam, and enough thrust to argue with gravity.',
     abilities: {
       lmb: { type: 'rifle', name: 'Repulsor Bolts', cost: 2, interval: 0.11, damage: 7, speed: 170, radius: 0.6, blast: 2.6, spread: 0.03, recoil: 1, color: '#ffd97a', color2: '#fff' },
-      rmb: { type: 'beam', name: 'Unibeam', cost: 8, cd: 0.6, radius: 2.4, tipSpeed: 135, maxLen: 150, dps: 78, kiPerSec: 22, charge: true, maxCharge: 1.5, kiChargePerSec: 14, chargePower: 1.5, chargeWidth: true, steer: 8, color: '#ffd97a', color2: '#fff' },
+      rmb: { type: 'beam', material: 'energy', name: 'Unibeam', cost: 8, cd: 0.6, radius: 2.4, tipSpeed: 135, maxLen: 150, dps: 78, kiPerSec: 22, charge: true, maxCharge: 1.5, kiChargePerSec: 14, chargePower: 1.5, chargeWidth: true, steer: 8, color: '#ffd97a', color2: '#fff' },
       q: { type: 'projectile', name: 'Micro-Missiles', cost: 7, cd: 0.4, damage: 15, speed: 100, radius: 1, blast: 7, homing: 3, color: '#ff7a2a', color2: '#ffd97a' },
       e: { type: 'cone', name: 'Flare Vent', kiPerSec: 16, range: 28, arc: 1.2, dps: 18, push: 44, color: '#ffd97a' },
       f: { type: 'buff', name: 'Overpower', cost: 24, cd: 18, mult: 1.55, dur: 10, color: '#ffd97a', color2: '#fff' },
@@ -501,13 +501,13 @@ export const ROSTER = [
     ai: { style: 'beamer', range: 42, aggro: 0.8, fly: 0.6 }, evade: { kind: 'dash', name: 'Photon Slip' },
     blurb: 'A star wearing a person. When she goes binary, look away.',
     abilities: {
-      lmb: { type: 'beam', name: 'Photon Stream', cost: 4, cd: 0.3, radius: 1.2, tipSpeed: 210, maxLen: 150, dps: 62, kiPerSec: 16, steer: 12, color: '#ffd24a', color2: '#fff2c0' },
+      lmb: { type: 'beam', material: 'light', name: 'Photon Stream', cost: 4, cd: 0.3, radius: 1.2, tipSpeed: 210, maxLen: 150, dps: 62, kiPerSec: 16, steer: 12, color: '#ffd24a', color2: '#fff2c0' },
       rmb: { type: 'volley', name: 'Star Barrage', cost: 3, interval: 0.08, damage: 6, speed: 112, radius: 0.85, blast: 3.6, spread: 0.11, color: '#ffd24a', color2: '#fff' },
       q: { type: 'charge', name: 'Nova Fist', cost: 6, cd: 1, kiPerSec: 12, maxCharge: 2.2, minR: 1.4, maxR: 6, dmgMin: 24, dmgMax: 78, maxBlast: 31, speedMin: 42, speedMax: 72, chargePower: 2.8, color: '#ffd24a', color2: '#fff2c0' },
       e: { type: 'melee', name: 'Comet Punch', cost: 12, cd: 1, damage: 26, range: 12, arc: 0.8, lunge: 58, knock: 52, launch: 16, fly: true, color: '#ffd24a' },
       f: { type: 'buff', name: 'BINARY', cost: 28, cd: 20, mult: 1.8, dur: 10, color: '#ffd24a', color2: '#ffffff' },
       shift: { type: 'dash', name: 'Light Speed', cost: 5, cd: 0.5, power: 108, iframes: 0.26, color: '#ffd24a' },
-      r: { type: 'beam', name: 'Supernova Lance', cost: 24, cd: 14, radius: 3.4, tipSpeed: 150, maxLen: 170, dps: 128, kiPerSec: 30, charge: true, maxCharge: 2, kiChargePerSec: 20, chargePower: 2, chargeWidth: true, steer: 6, color: '#ffe8c0', color2: '#ffffff' },
+      r: { type: 'beam', material: 'light', name: 'Supernova Lance', cost: 24, cd: 14, radius: 3.4, tipSpeed: 150, maxLen: 170, dps: 128, kiPerSec: 30, charge: true, maxCharge: 2, kiChargePerSec: 20, chargePower: 2, chargeWidth: true, steer: 6, color: '#ffe8c0', color2: '#ffffff' },
     },
   },
   {
@@ -520,7 +520,7 @@ export const ROSTER = [
       lmb: { type: 'projectile', name: 'Crimson Bands', cost: 6, cd: 0.35, damage: 13, speed: 96, radius: 1, blast: 4.5, homing: 2.6, dtype: 'magic', color: '#ff7a5a', color2: '#ffd9b0' },
       rmb: { type: 'construct', name: 'Seraphim Shield', cost: 12, cd: 6, construct: 'wall', duration: 9, holdTrigger: true, color: '#ffb03a' },
       q: { type: 'teleport', name: 'Fold Space', cost: 11, cd: 1.3, range: 54, color: '#ffb03a' },
-      e: { type: 'beam', name: 'Eldritch Whip', cost: 4, cd: 0.3, radius: 1, tipSpeed: 220, maxLen: 140, dps: 56, kiPerSec: 16, steer: 13, dtype: 'magic', siphon: 1.1, color: '#ffb03a', color2: '#ffd9b0' },
+      e: { type: 'beam', material: 'arcane', name: 'Eldritch Whip', cost: 4, cd: 0.3, radius: 1, tipSpeed: 220, maxLen: 140, dps: 56, kiPerSec: 16, steer: 13, dtype: 'magic', siphon: 1.1, color: '#ffb03a', color2: '#ffd9b0' },
       f: { type: 'buff', name: 'Vishanti Ward', cost: 22, cd: 18, mult: 1.4, dur: 9, invuln: 1, color: '#ffb03a', color2: '#fff' },
       shift: { type: 'dash', name: 'Cloak Drift', cost: 5, cd: 0.55, power: 96, iframes: 0.28, color: '#ffb03a' },
       r: { type: 'meteor', name: 'Sigil Rain', cost: 32, cd: 18, count: 12, interval: 0.18, spread: 26, radius: 3, damage: 32, blast: 17, color: '#ffb03a', color2: '#ffd9b0' },
@@ -565,7 +565,7 @@ export const ROSTER = [
     ai: { style: 'artillery', range: 52, aggro: 0.55, fly: 0.6 }, evade: { kind: 'dash', name: 'Wind Shear' },
     blurb: 'The forecast answers to her. Hail, gale, and lightning filed under mood.',
     abilities: {
-      lmb: { type: 'beam', name: 'Chain Lightning', cost: 4, cd: 0.3, radius: 1, tipSpeed: 240, maxLen: 145, dps: 58, kiPerSec: 16, steer: 14, color: '#bfeaff', color2: '#fff' },
+      lmb: { type: 'beam', material: 'shock', name: 'Chain Lightning', cost: 4, cd: 0.3, radius: 1, tipSpeed: 240, maxLen: 145, dps: 58, kiPerSec: 16, steer: 14, color: '#bfeaff', color2: '#fff' },
       rmb: { type: 'cone', name: 'Gale Force', kiPerSec: 16, range: 34, arc: 1.2, dps: 14, push: 58, lift: 7, color: '#bfeaff' },
       q: { type: 'volley', name: 'Hail Volley', cost: 3, interval: 0.09, damage: 6, speed: 118, radius: 0.8, blast: 3, spread: 0.1, color: '#bfeaff', color2: '#eaffff' },
       e: { type: 'cone', name: 'Flash Freeze', kiPerSec: 19, range: 30, arc: 1.1, dps: 18, cold: true, frost: 0.55, color: '#bfeaff' },
@@ -615,7 +615,7 @@ export const ROSTER = [
     ai: { style: 'bruiser', range: 26, aggro: 0.8, fly: 0.5 }, evade: { kind: 'dash', name: 'Bolt Step' },
     blurb: 'Say the word and the sky says it back. A kid\'s grin wearing a god\'s wattage.',
     abilities: {
-      lmb: { type: 'beam', name: 'Living Lightning', cost: 4, cd: 0.3, radius: 1.1, tipSpeed: 230, maxLen: 145, dps: 60, kiPerSec: 16, steer: 13, color: '#ffe066', color2: '#fff' },
+      lmb: { type: 'beam', material: 'shock', name: 'Living Lightning', cost: 4, cd: 0.3, radius: 1.1, tipSpeed: 230, maxLen: 145, dps: 60, kiPerSec: 16, steer: 13, color: '#ffe066', color2: '#fff' },
       rmb: { type: 'melee', name: 'Thunder Fist', cost: 12, cd: 1, damage: 28, range: 12, arc: 0.8, lunge: 52, knock: 54, launch: 16, color: '#ffe066' },
       q: { type: 'charge', name: 'Thunderbolt', cost: 6, cd: 1, kiPerSec: 12, maxCharge: 2.2, minR: 1.5, maxR: 6.2, dmgMin: 24, dmgMax: 80, maxBlast: 32, speedMin: 42, speedMax: 70, chargePower: 2.9, color: '#ffe066', color2: '#fff' },
       e: { type: 'volley', name: 'Static Storm', cost: 3, interval: 0.08, damage: 6, speed: 112, radius: 0.85, blast: 3.4, spread: 0.12, color: '#ffe066', color2: '#fff' },
@@ -631,7 +631,7 @@ export const ROSTER = [
     ai: { style: 'trickster', range: 34, aggro: 0.7, fly: 0.5 }, evade: { kind: 'phase', name: 'Ghost Drift' },
     blurb: 'Walks through walls, reads the room literally, hits like a freight train from a world that no longer exists.',
     abilities: {
-      lmb: { type: 'beam', name: 'Alien Vision', cost: 4, cd: 0.3, radius: 1, tipSpeed: 235, maxLen: 150, dps: 58, kiPerSec: 16, steer: 13, dtype: 'magic', siphon: 0.7, color: '#ff4a4a', color2: '#ffd24a' },
+      lmb: { type: 'beam', material: 'arcane', name: 'Alien Vision', cost: 4, cd: 0.3, radius: 1, tipSpeed: 235, maxLen: 150, dps: 58, kiPerSec: 16, steer: 13, dtype: 'magic', siphon: 0.7, color: '#ff4a4a', color2: '#ffd24a' },
       rmb: { type: 'melee', name: 'Density Hammer', cost: 13, cd: 1, damage: 30, range: 12, arc: 0.75, lunge: 46, knock: 58, launch: 18, color: '#7fd4ff' },
       q: { type: 'phase', name: 'Ghost Body', kiPerSec: 17, color: '#7fd4ff' },
       e: { type: 'teleport', name: 'Mind Skip', cost: 12, cd: 1.4, range: 52, color: '#7fd4ff' },
@@ -648,12 +648,12 @@ export const ROSTER = [
     blurb: 'The accident left him half machine — the machine half never runs dry. BOOYAH is a technical term.',
     abilities: {
       lmb: { type: 'rifle', name: 'Sonic Cannon', cost: 3, interval: 0.14, damage: 11, speed: 165, radius: 0.7, blast: 3.4, spread: 0.03, recoil: 1.6, color: '#7fe6ff', color2: '#fff' },
-      rmb: { type: 'beam', name: 'White Noise Beam', cost: 8, cd: 0.6, radius: 2.2, tipSpeed: 140, maxLen: 150, dps: 76, kiPerSec: 22, charge: true, maxCharge: 1.5, kiChargePerSec: 14, chargePower: 1.5, chargeWidth: true, steer: 8, color: '#7fe6ff', color2: '#eaffff' },
+      rmb: { type: 'beam', material: 'air', name: 'White Noise Beam', cost: 8, cd: 0.6, radius: 2.2, tipSpeed: 140, maxLen: 150, dps: 76, kiPerSec: 22, charge: true, maxCharge: 1.5, kiChargePerSec: 14, chargePower: 1.5, chargeWidth: true, steer: 8, color: '#7fe6ff', color2: '#eaffff' },
       q: { type: 'projectile', name: 'Shock Grapple', cost: 8, cd: 0.5, damage: 16, speed: 110, radius: 1, blast: 6, homing: 2.6, color: '#7fe6ff', color2: '#fff' },
       e: { type: 'cone', name: 'Overload Vent', kiPerSec: 16, range: 28, arc: 1.2, dps: 17, push: 46, color: '#7fe6ff' },
       f: { type: 'buff', name: 'System Surge', cost: 26, cd: 20, mult: 1.55, dur: 10, heal: 25, color: '#7fe6ff', color2: '#fff' },
       shift: { type: 'dash', name: 'Servo Burst', cost: 6, cd: 0.6, power: 96, iframes: 0.22, color: '#7fe6ff' },
-      r: { type: 'beam', name: 'BOOYAH Cannon', cost: 24, cd: 14, radius: 3.2, tipSpeed: 145, maxLen: 165, dps: 120, kiPerSec: 30, charge: true, maxCharge: 2, kiChargePerSec: 20, chargePower: 2, chargeWidth: true, steer: 6, color: '#7fe6ff', color2: '#ffffff' },
+      r: { type: 'beam', material: 'air', name: 'BOOYAH Cannon', cost: 24, cd: 14, radius: 3.2, tipSpeed: 145, maxLen: 165, dps: 120, kiPerSec: 30, charge: true, maxCharge: 2, kiChargePerSec: 20, chargePower: 2, chargeWidth: true, steer: 6, color: '#7fe6ff', color2: '#ffffff' },
     },
   },
   {

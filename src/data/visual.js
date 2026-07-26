@@ -20,7 +20,7 @@ export const VIS_SHAPE = ['fist', 'bolt', 'orb', 'hose', 'cone', 'burst', 'blade
 export const VIS_TRAIL = ['none', 'tracer', 'wake', 'smoke', 'sparks', 'spiral', 'ribbon', 'motes'];
 export const VIS_IMPACT = ['strike', 'burst', 'pierce', 'crack', 'splash', 'bloom', 'crush', 'none'];
 export const VIS_RESIDUE = ['none', 'scorch', 'frost', 'sludge', 'crater', 'debris', 'cloud'];
-export const VIS_MATERIAL = ['energy', 'fire', 'ice', 'toxic', 'acid', 'steel', 'stone', 'arcane', 'shadow', 'light', 'air'];
+export const VIS_MATERIAL = ['energy', 'fire', 'ice', 'toxic', 'acid', 'steel', 'stone', 'arcane', 'shadow', 'light', 'air', 'shock'];
 export const VIS_TELL = ['none', 'freeze', 'burn', 'poison', 'sleep', 'blind', 'stun', 'bleed', 'drain', 'shock', 'root', 'dominate'];
 
 // what each trait is FOR — rendered on the codex so the language stays shared
@@ -175,6 +175,104 @@ function tellOf(a) {
 }
 
 // THE PROFILE. `def.vis = {...}` overrides any trait; everything else is derived.
+// ================================================================================================
+// THE BEAM ANATOMY — two axes, and it only applies to beams.
+//
+// Robert: *"I'm especially concerned about adding more variety to our beams... I once asked for
+// spirals to be put around Vega's beam attack, and I thought the colours were described where the
+// inside was one colour and the outside was another."*
+//
+// BOTH of those are real and both were already here — a beam is an outer SHEATH in `color` around
+// a brighter inner CORE in `color2`, and VEGA's helix has ridden her lance since it was asked for.
+// What was missing is everything else: **25 beams in the roster and exactly one of them had a
+// form.** SOL's Heat Ray and VANGUARD's Eye Beam were the same beam in two colours; six different
+// characters' ultimates were all a radius-3.4 white-cored hose. Colour cannot carry 25 weapons.
+//
+// The language is TWO ORTHOGONAL AXES, because seven hand-picked buckets put eleven of the
+// twenty-five beams in the same one — the same "a ladder must come from the distribution" mistake
+// this project has now made four times. Two axes multiply instead of collide:
+//
+//   BUILD  — how much of it there is. From the RADIUS the author already wrote.
+//              ray      thin, hard-edged, almost no sheath. A cutting instrument.
+//              hose     the honest middle: soft sheath, bright core, round tip.
+//              torrent  a wall of it: thick, heavy bloom, flaring slightly as it goes.
+//
+//   TEMPER — what it is DOING inside that build. From the MATERIAL, which the contract above
+//            already derives from the ability's own damage type and flags.
+//              steady   an even column. Raw energy has nothing to say.
+//              helix    a spiral winds down the core — it BORES rather than washes.
+//              kink     never a straight line; re-forms in jagged segments every frame.
+//              roil     turbulent, licking outward, widest at the far end.
+//              crystal  hard facets riding the beam, snapping into place rather than flowing.
+//              sinuous  a travelling lateral wave. Sorcery does not point straight.
+//              surge    bright pulses running out along its length.
+//
+// So VEGA is a HOSE that HELIXES, SOL is a RAY that ROILS, TITAN's ultimate is a TORRENT running
+// STEADY, RIME is a HOSE of CRYSTAL. Three builds x seven tempers = 21 readable combinations off
+// two numbers the data already carries, and both axes survive the grayscale test on their own.
+//
+// ⚠ DERIVED, with `a.build` / `a.temper` as overrides — the same law as every other trait here.
+// Nothing keys on a character id.
+export const BEAM_BUILDS = ['ray', 'hose', 'torrent'];
+export const BEAM_TEMPERS = ['steady', 'helix', 'kink', 'roil', 'crystal', 'sinuous', 'surge', 'churn'];
+
+export const BUILD_MEANING = {
+  ray:     'thin and hard-edged, almost no sheath — a cutting instrument',
+  hose:    'soft sheath over a bright core — the honest middle',
+  torrent: 'a wall of it: thick, heavy bloom, flaring as it travels',
+};
+export const TEMPER_MEANING = {
+  steady:  'an even column — raw energy has nothing to say',
+  helix:   'a spiral winds down the core — it BORES rather than washes',
+  kink:    'never a straight line; re-forms in jagged segments every frame',
+  roil:    'turbulent, licking outward, widest at the far end',
+  crystal: 'hard facets riding the beam, snapping rather than flowing',
+  sinuous: 'a travelling lateral wave — sorcery does not point straight',
+  surge:   'bright pulses running out along its length',
+  churn:   'compressed rings rolling down it — pressure, not light',
+};
+
+export function beamBuildOf(a) {
+  if (a && a.build && BEAM_BUILDS.includes(a.build)) return a.build;
+  const r = (a && a.radius) || 1.2;
+  return r <= 0.8 ? 'ray' : r >= 2.2 ? 'torrent' : 'hose';
+}
+
+const TEMPER_FOR_MATERIAL = {
+  shock: 'kink', fire: 'roil', ice: 'crystal', arcane: 'sinuous', shadow: 'sinuous',
+  light: 'surge', toxic: 'roil', acid: 'roil',
+  // ⚠ air had to stop sharing SURGE with light. A wave cannon and a photon stream are not
+  // doing the same thing — one is compressed pressure and one is radiance — and lumping
+  // them put ten of twenty-five beams in one bucket.
+  air: 'churn',
+};
+export function beamTemperOf(a) {
+  if (a && a.temper && BEAM_TEMPERS.includes(a.temper)) return a.temper;
+  if (a && a.spiral) return 'helix';                       // an explicit helix IS the drill
+  const src = { ...(a || {}), ...((a && a.vis) || {}) };
+  return TEMPER_FOR_MATERIAL[materialOf(src)] || 'steady';
+}
+
+// How each axis renders. Two tables, read by the beam at construction, so the engine holds no
+// opinion about any individual weapon.
+//   BUILD:  sheath opacity · core radius as a fraction of the beam · tip scale · flare toward the tip
+//   TEMPER: what the instanced DETAIL layer does, how many elements, and how hard it moves
+export const BUILD_LOOK = {
+  ray:     { sheath: 0.16, coreR: 0.42, tip: 0.65, flare: 1.00 },
+  hose:    { sheath: 0.42, coreR: 0.62, tip: 1.00, flare: 1.06 },
+  torrent: { sheath: 0.50, coreR: 0.70, tip: 1.45, flare: 1.18 },
+};
+export const TEMPER_LOOK = {
+  steady:  { detail: 'none',    n: 0,  amp: 0,    rate: 0 },
+  helix:   { detail: 'helix',   n: 26, amp: 1.00, rate: 3.2 },
+  kink:    { detail: 'kink',    n: 16, amp: 0.85, rate: 26 },
+  roil:    { detail: 'roil',    n: 20, amp: 0.75, rate: 5.5 },
+  crystal: { detail: 'crystal', n: 14, amp: 0.60, rate: 1.6 },
+  sinuous: { detail: 'wave',    n: 22, amp: 1.30, rate: 2.4 },
+  surge:   { detail: 'surge',   n: 18, amp: 0.45, rate: 7.0 },
+  churn:   { detail: 'ring',    n: 12, amp: 1.15, rate: 3.0 },
+};
+
 export function visOf(a) {
   if (!a || typeof a !== 'object') return null;
   const src = { ...a, ...(a.vis || {}) };
@@ -186,6 +284,8 @@ export function visOf(a) {
     residue: residueOf(src),
     material: materialOf(src),
     tell: tellOf(src),
+    build: a.type === 'beam' ? beamBuildOf(a) : null,     // beams only: how much of it there is
+    temper: a.type === 'beam' ? beamTemperOf(a) : null,   // beams only: what it is doing inside
   };
 }
 
@@ -201,6 +301,7 @@ export function visOf(a) {
 // PHYSICAL, never to `ballistic`: only real bullets take the armour/toughness filter, and
 // those already declare `ballistic: true` at the call site.
 export const DTYPE_FOR_MATERIAL = {
+  shock: 'energy',
   fire: 'fire', ice: 'cold', toxic: 'toxic', acid: 'acid', arcane: 'magic',
   steel: 'physical', stone: 'physical', air: 'physical',
   energy: 'energy', shadow: 'energy', light: 'energy',

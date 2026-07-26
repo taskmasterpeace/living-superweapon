@@ -1910,3 +1910,107 @@ for free.
 `arm` in the dev console lists and equips anything: `arm ak`, `arm m107 rmb`, `arm specops`,
 `arm mustard`. The police keep their own tuned kit deliberately — rewiring their balance was not
 part of this pass.
+
+---
+
+## §39 · THE BEAM ANATOMY, AND THE BULLETS THAT NEVER LEFT (2026-07-26)
+
+### The bullets
+
+Robert, after watching five fights: *"the bullets look like they never disappear, they just get
+shot and they just lay on the ground."*
+
+He was right and it was one line. `Projectile._impact()` has a branch that exists so a bullet does
+not explode — no fireball, no crater, just a spark and a very dead civilian if it found one. It was
+written as an early `return false`, which skips the `this._dispose(game)` at the bottom of the
+function that every other impact path reaches. The projectile was spliced out of the update list
+(it returned false) while its mesh stayed in the scene **forever**, frozen at head height where it
+died.
+
+Measured before the fix: **177 orphaned slug-and-tracer pairs after 105 seconds of one gunfight**,
+growing about 1.7 a second, owned by no collection. Scene children after 105s went 262 → 86.
+
+⚠ **An early return inside a disposal path is a leak waiting to happen.** Verified afterwards
+across five 90-second fights that nothing is spliced out of the projectile list without its `dead`
+flag set — that assertion is the guard against this recurring.
+
+### The roads
+
+All four road classes were draped to the same height, so wherever two met at a junction they were
+coplanar at a gap of exactly zero and the depth buffer decided the tarmac by luck. They **stay**
+coplanar — a road surface is one surface, and lifting an arterial above the street it crosses would
+put a visible step in the junction — but the tie is broken by RULE now: case 3 of the flicker law.
+The heavier class is pulled toward the camera with `sinkSurface`, so an arterial runs continuously
+through the street that meets it, deterministically, every time.
+
+Two more from the same sweep: the scorch decal invented its own 0.4cm height ladder instead of
+taking a rung from `GROUND_LAYER`, and indexed it on `scorches.length` — a pool **capped at 40**, so
+every scorch after the fortieth landed at an identical height and z-fought with the one before it.
+A long fight is exactly when you have the most scorch marks.
+
+`auditSurfaces` now declares its sparse-mesh blind spot rather than crying wolf: the arena border is
+96 vertices spanning 483×483, and that one bounding box accounted for **95 of 98** reported problems
+on a real city. Untestable meshes are counted and named. Real problems: 103 → 79.
+
+### The beam anatomy — two axes
+
+Robert: *"I'm especially concerned about adding more variety to our beams... I once asked for
+spirals to be put around Vega's beam attack, and I thought the colours were described where the
+inside was one colour and the outside was another."*
+
+**Both of those were already true.** A beam is an outer SHEATH in `color` around a brighter inner
+CORE in `color2`, and VEGA's helix has ridden her lance since it was asked for. What was missing was
+everything else: **25 beams in the roster and exactly one of them had a form.** SOL's Heat Ray and
+VANGUARD's Eye Beam were the same beam in two colours; six characters' ultimates were all a
+radius-3.4 white-cored hose.
+
+The language is **two orthogonal axes**, because seven hand-picked buckets put eleven of the
+twenty-five beams in the same one — the same "a ladder must come from the distribution, not from
+constants" mistake this project has now made four times.
+
+| BUILD — how much of it there is (from radius) | |
+|---|---|
+| `ray` | thin, hard-edged, almost no sheath — a cutting instrument |
+| `hose` | soft sheath over a bright core — the honest middle |
+| `torrent` | a wall of it: thick, heavy bloom, flaring as it travels |
+
+| TEMPER — what it is doing inside (from material) | |
+|---|---|
+| `steady` | an even column — raw energy has nothing to say |
+| `helix` | a spiral winds down the core — it BORES rather than washes |
+| `kink` | never a straight line; re-forms in jagged segments every frame |
+| `roil` | turbulent, licking outward, widest at the far end |
+| `crystal` | hard facets riding the beam, snapping rather than flowing |
+| `sinuous` | a travelling lateral wave — sorcery does not point straight |
+| `surge` | bright pulses running out along its length |
+| `churn` | compressed rings rolling down it — pressure, not light |
+
+Three builds × eight tempers = 24 readable combinations off two numbers the data already carries,
+and **both axes survive the grayscale test on their own**. Measured across the roster: 11 distinct
+combinations in use, largest bucket 6.
+
+⚠ **ONE INSTANCED DETAIL LAYER SERVES EVERY TEMPER.** This began as VEGA's hard-coded 26-orb helix;
+generalising it was almost free and is what lets eight tempers exist for the cost of one draw call.
+A temper declaring `n: 0` builds nothing at all.
+
+⚠ `air` had to stop sharing a temper with `light`. A wave cannon and a photon stream are not doing
+the same thing — one is compressed pressure and one is radiance — and lumping them put ten of the
+twenty-five beams in one bucket.
+
+### THE VISUAL LANGUAGE screen
+
+`hud.showVisual()` (How-to → ◈ Open the Visual Language). It leads with **the categories**, names
+each one and says what it is for, then writes all 52 kits — 364 abilities — in those terms, so two
+powers that look alike say so. A vocabulary word nothing in the game uses renders dashed and dim;
+three currently do (`stone`, `stun`, `root`).
+
+It also answers a question Robert asked directly — *"we have a lot of powers and items that don't
+have a character assigned to them, I wanna know that as well"*:
+
+- **92 of 102** ORIGIN catalog powers are carried by no roster hero
+- **35 of 35** armory weapons and items are carried by no roster hero
+- **18 ability types the engine fully implements that no hero uses**: weather · size · timefield ·
+  duplicate · possess · elastic · invisible · wallcrawl · telekinesis · reshape · consume · mimic ·
+  mount · dome · vision · regen · banish · gravity
+
+The list is generated, so it shrinks the moment somebody picks something up.

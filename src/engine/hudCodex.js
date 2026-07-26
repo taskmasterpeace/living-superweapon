@@ -8,6 +8,10 @@
 import { CF_BUILD, agoStr, cfAbilityRows, cfCounterNotes, esc, fileDate, fileNoOf, isSynthDef } from './hudUtil.js';
 import { ROSTER } from '../data/characters.js';
 import { DTYPES, DTYPE_INFO, resistOf } from './entity.js';
+import { VIS_MEANING, VIS_SOURCE, VIS_SHAPE, VIS_TRAIL, VIS_IMPACT, VIS_RESIDUE, VIS_MATERIAL, VIS_TELL,
+         BEAM_BUILDS, BEAM_TEMPERS, BUILD_MEANING, TEMPER_MEANING, visOf, beamBuildOf, beamTemperOf } from '../data/visual.js';
+import { POWERS as CATALOG_POWERS } from '../data/creator.js';
+import { FIREARMS, BLADES, GEAR } from '../data/armory.js';
 import { ATTR_DEFS, TALENTS, bakeSheet, deriveAttrs, heroTalents, rankColor, rankName } from '../data/ranks.js';
 import { identityOf } from '../data/identities.js';
 import { causeLine, mulberry } from '../data/news.js';
@@ -175,6 +179,109 @@ export const CodexMixin = {
     };
     render(def);
     this.codexEl.style.display = 'flex';
+  },
+
+  // ==============================================================================================
+  // THE VISUAL LANGUAGE — Robert: "I want to understand the language of all of our attack types...
+  // I feel like the codex that we have is not well designed, where you can see the characters and
+  // where you can see the — I don't even know what the categories are."
+  //
+  // So this screen leads with THE CATEGORIES, names them, says what each one is FOR, and then
+  // shows every character's kit written in them. Every value is resolved by the same `visOf` the
+  // renderer calls, so the page cannot describe an effect the game does not draw.
+  showVisual() {
+    const el = this.visualEl;
+    const R = ROSTER;
+    const AXES = [
+      ['SOURCE', VIS_SOURCE, VIS_MEANING.source], ['SHAPE', VIS_SHAPE, VIS_MEANING.shape],
+      ['TRAIL', VIS_TRAIL, VIS_MEANING.trail], ['IMPACT', VIS_IMPACT, VIS_MEANING.impact],
+      ['RESIDUE', VIS_RESIDUE, VIS_MEANING.residue], ['MATERIAL', VIS_MATERIAL, VIS_MEANING.material],
+      ['TELL', VIS_TELL, VIS_MEANING.tell],
+    ];
+    // how often each value actually occurs — a vocabulary word nothing uses is a gap, and the
+    // screen should say so rather than list it as if the game were full of them
+    const count = {};
+    const kits = [];
+    for (const d of R) {
+      const rows = [];
+      for (const [slot, a] of Object.entries(d.abilities || {})) {
+        const v = visOf(a); if (!v) continue;
+        for (const k of ['source', 'shape', 'trail', 'impact', 'residue', 'material', 'tell']) {
+          count[k] = count[k] || {}; count[k][v[k]] = (count[k][v[k]] || 0) + 1;
+        }
+        rows.push({ slot, a, v });
+      }
+      kits.push({ d, rows });
+    }
+    const axisBlock = AXES.map(([name, vocab, why]) => {
+      const key = name.toLowerCase();
+      const chips = vocab.map(w => {
+        const n = (count[key] || {})[w] || 0;
+        return `<span class="vlchip${n ? '' : ' vlz'}">${esc(w)}${n ? `<i>${n}</i>` : ''}</span>`;
+      }).join('');
+      return `<div class="vlaxis"><div class="vlname">${name}</div>
+        <div class="vlwhy">${esc(why)}</div><div class="vlchips">${chips}</div></div>`;
+    }).join('');
+
+    const beamBlock = `<div class="vlaxis"><div class="vlname">BEAM · BUILD</div>
+        <div class="vlwhy">how much of it there is — from the radius the weapon already declares</div>
+        <div class="vlchips">${BEAM_BUILDS.map(x => `<span class="vlchip">${x}<i>${R.reduce((n, d) => n + Object.values(d.abilities || {}).filter(a => a.type === 'beam' && beamBuildOf(a) === x).length, 0)}</i></span>`).join('')}</div>
+        ${BEAM_BUILDS.map(x => `<div class="vlmean"><b>${x}</b>${esc(BUILD_MEANING[x])}</div>`).join('')}</div>
+      <div class="vlaxis"><div class="vlname">BEAM · TEMPER</div>
+        <div class="vlwhy">what it is doing inside that build — from what it is made of</div>
+        <div class="vlchips">${BEAM_TEMPERS.map(x => `<span class="vlchip">${x}<i>${R.reduce((n, d) => n + Object.values(d.abilities || {}).filter(a => a.type === 'beam' && beamTemperOf(a) === x).length, 0)}</i></span>`).join('')}</div>
+        ${BEAM_TEMPERS.map(x => `<div class="vlmean"><b>${x}</b>${esc(TEMPER_MEANING[x])}</div>`).join('')}</div>`;
+
+    const kitBlock = kits.map(({ d, rows }) => `<div class="vlhero">
+      <div class="vlh"><i style="background:${d.colors.accent}"></i>${esc(d.name)}
+        <span>${rows.length} in the kit</span></div>
+      <div class="vltab">${rows.map(r => `<div class="vlrow">
+        <b>${esc(r.slot.toUpperCase())}</b>
+        <span class="vlab">${esc(r.a.name)}</span>
+        <span class="vlt">${esc(r.v.material)}</span>
+        <span class="vlt">${esc(r.v.shape)}</span>
+        <span class="vlt">${esc(r.v.source)}</span>
+        <span class="vlt">${esc(r.v.trail)}</span>
+        <span class="vlt">${esc(r.v.impact)}</span>
+        <span class="vlt${r.v.tell === 'none' ? ' vlz' : ''}">${esc(r.v.tell)}</span>
+        ${r.v.build ? `<span class="vlt vlbeam">${esc(r.v.build)} ${esc(r.v.temper)}</span>` : ''}
+      </div>`).join('')}</div></div>`).join('');
+
+    // ---- WHAT NOBODY CARRIES. He asked for this directly: "we have a lot of powers and a lot of
+    // items that don't have a character assigned to them — I wanna know that as well."
+    const heroNames = new Set(), heroTypes = new Set();
+    for (const d of R) for (const a of Object.values(d.abilities || {})) { heroNames.add(a.name); heroTypes.add(a.type); }
+    const catOrphan = CATALOG_POWERS.filter(p => p.ab && p.ab.name && !heroNames.has(p.ab.name));
+    const typeOrphan = [...new Set(CATALOG_POWERS.map(p => p.ab && p.ab.type).filter(t => t && !heroTypes.has(t)))];
+    const arm = [...(FIREARMS || []), ...(BLADES || []), ...(GEAR || [])];
+    const armOrphan = arm.filter(x => !heroNames.has(x.n || x.name));
+    const gapBlock = `<div class="dgsec">WHAT NOBODY CARRIES</div>
+      <div class="dgsub">Everything below is built, tested and reachable — and no fighter on the
+      roster uses it. This list is generated, so it shrinks the moment somebody picks something up.</div>
+      <div class="vlgap"><b>${catOrphan.length}</b> of ${CATALOG_POWERS.length} ORIGIN catalog powers are carried by no roster hero</div>
+      <div class="vlgap"><b>${armOrphan.length}</b> of ${arm.length} armory weapons and items are carried by no roster hero</div>
+      <div class="vlgap"><b>${typeOrphan.length}</b> ability TYPES the engine fully implements that no hero uses:
+        <span class="vlz2">${esc(typeOrphan.join(' · '))}</span></div>`;
+
+    el.innerHTML = `<div class="obox dgbox">
+      <div class="oh">The Visual Language</div>
+      <div class="dgsub">Every attack in the game resolves the same set of traits, and the renderer
+        reads exactly these. The categories are below; under them is every fighter's kit written in
+        them, so two powers that look alike will say so.</div>
+      <div class="dgsec">THE CATEGORIES</div>
+      ${axisBlock}
+      <div class="dgsec">BEAMS GET TWO MORE</div>
+      <div class="dgsub">A beam is an outer <b>sheath</b> around a brighter inner <b>core</b> — that
+        part was always true. What it did not have was a form: 25 beams and only VEGA's helix. Two
+        axes now multiply into the variety, rather than one list of hand-picked shapes.</div>
+      ${beamBlock}
+      ${gapBlock}
+      <div class="dgsec">EVERY KIT, IN THE LANGUAGE</div>
+      <div class="vlkey"><b>slot</b><span>name</span><span>material</span><span>shape</span><span>source</span><span>trail</span><span>impact</span><span>tell</span></div>
+      ${kitBlock}
+      <button class="ok" id="vlClose">Close</button></div>`;
+    el.style.display = 'block';
+    el.querySelector('#vlClose').onclick = () => { el.style.display = 'none'; };
   },
 
   showDamage() {

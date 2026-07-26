@@ -830,6 +830,48 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   (ComicLetter/ComicSFX/ComicHeavy), so `'Bangers'` fell back to Rajdhani and looked almost right.
 - ⚠ The top centre was already the score bar's; the bar yields (`#hud.hassun`). Ref `wwa-sundial.png`.
 
+## THE BEAM ANATOMY + THE VISUAL BUG SWEEP (2026-07-26) — manual §39
+- **THE BULLETS NEVER DISAPPEARED**, and it was one line. `Projectile._impact()`'s ballistic branch
+  (the one that stops a bullet exploding) was an early `return false`, which skips the
+  `_dispose(game)` at the bottom that every other impact path reaches. Spliced out of the update
+  list, mesh left in the scene FOREVER, frozen at head height. Measured **177 orphaned slug+tracer
+  pairs after 105s of one gunfight**; scene children 262 → 86. ⚠ An early return inside a disposal
+  path is a leak waiting to happen — the regression guard asserts nothing leaves the projectile
+  list with `dead` still false.
+- **THE ROADS**: all four classes draped to the SAME height → coplanar at gap 0 at every junction,
+  depth decided by luck. They stay coplanar (a step in the junction would be worse); the tie is
+  broken by RULE — `sinkSurface` by class, so the heavier road runs continuously through the
+  lighter one. Road meshes are NAMED now (an audit reporting "BufferGeometry vs BufferGeometry" is
+  half an audit).
+- ⚠ **The scorch decal had two defects in one line**: it invented its own 0.4cm ladder instead of a
+  `GROUND_LAYER` rung, and indexed on `scorches.length` — a pool CAPPED at 40, so every scorch past
+  the fortieth landed at an identical height and z-fought. A long fight is when you have the most.
+- **`auditSurfaces` declares its blind spot** instead of crying wolf: the arena border is 96 verts
+  spanning 483×483 and that one bounding box was **95 of 98** reported problems. Untestable meshes
+  are counted and named. Real problems on a generated city 103 → 79 (rest = interpenetrating tree
+  canopies, the documented second blind spot).
+- **THE BEAM ANATOMY — two axes.** His memory was right on both counts: a beam IS an outer sheath
+  (`color`) around a bright inner core (`color2`), and VEGA's spiral has always been there. What was
+  missing: **25 beams, one form.** SOL's Heat Ray and VANGUARD's Eye Beam were the same beam in two
+  colours; six ultimates were all a radius-3.4 white-cored hose.
+  **BUILD** (from radius) `ray · hose · torrent` × **TEMPER** (from material) `steady · helix ·
+  kink · roil · crystal · sinuous · surge · churn`. 11 combinations in use, largest bucket 6.
+  ⚠ Seven hand-picked buckets first put 11 of 25 in one — the ladder-from-the-distribution law
+  again (fifth time). Two multiplying axes beat one list of shapes.
+  ⚠ **ONE instanced detail layer serves every temper** — generalised from VEGA's hard-coded 26-orb
+  helix, so eight behaviours cost one draw call; `n: 0` builds nothing.
+  ⚠ `air` had to stop sharing SURGE with `light` — a wave cannon and a photon stream are not doing
+  the same thing, and lumping them put 10 of 25 in one bucket. Ref `wwa-beam-language.png`.
+- **THE VISUAL LANGUAGE screen** (`hud.showVisual()`, How-to → ◈): leads with THE CATEGORIES, says
+  what each is for, then writes all 52 kits (364 abilities) in them. A vocabulary word nothing uses
+  renders dashed and dim (3 currently: stone, stun, root). Ref `wwa-visual-language.png`.
+- **WHAT NOBODY CARRIES** (he asked directly, and the screen reports it live): **92 of 102** ORIGIN
+  catalog powers · **35 of 35** armory weapons and items · **18 ability TYPES the engine fully
+  implements that no hero uses** (weather, size, timefield, duplicate, possess, elastic, invisible,
+  wallcrawl, telekinesis, reshape, consume, mimic, mount, dome, vision, regen, banish, gravity).
+- ⚠ `CodexMixin` in hudCodex.js is an **object literal, not a class** — a new method needs a
+  trailing COMMA. Same shape as `roads.js`.
+
 ## HANDOFF
 - **`HANDOFF.md` at the repo root** is the orientation document: architecture, the ten rules that
   are load-bearing, what is solid, what is half-built, what to do next, and the headless
