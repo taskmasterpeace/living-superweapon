@@ -1710,6 +1710,24 @@ plane sits at ~0.31u instead of 0.35u. Still ~6 cm and far above the tearing flo
 to counter-scale the roof, which costs a per-frame write on every damaged building for a gap nobody
 can see close. Recorded so the next audit knows it is a known reading, not a new defect.
 
+### An intermittent surface pair, recorded rather than claimed fixed (2026-07-26)
+
+One sweep out of four reported a genuine sub-threshold pair — `BoxGeometry / PlaneGeometry` at
+**0.117u (2.2 cm)**, area over 40 — after a 30-second four-way rumble. Three later sweeps, and a
+dedicated probe that re-derived the pair with mesh names, parents, colours and userData, found
+nothing. It is **combat-dependent**: it exists only for certain landings of craters, scorches and
+shattered blocks, so it does not reproduce on demand.
+
+The likely source is the `decalY()` ladder: `citytiles.disc`/`slab` hand each ground decal the next
+**14 mm** rung, which is deliberately far below `DECAL_LIFT`. The ladder exists so many decals of
+one KIND do not collide with each other, and it works because they are ordered — but a decal that
+does not opt out with `depthWrite: false` can still meet an ordinary surface inside the floor.
+
+⚠ Not chased, and deliberately not claimed fixed. Reproducing it needs a seeded combat run, which
+the engine does not currently offer (`Math.random` drives crater placement). Recorded here so the
+next audit recognises it as a known intermittent rather than a new regression, and so that anyone
+adding a seeded-combat harness knows there is a real finding waiting for it.
+
 ## §37 · THE RANK LADDER (2026-07-25) — one scale, from a child to a supreme being
 
 Robert: *"I think 1-10 on strength isn't good enough… think about all the heroes… is that good
