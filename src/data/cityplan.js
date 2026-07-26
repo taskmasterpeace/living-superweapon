@@ -634,7 +634,39 @@ export function generatePlan(city, seed = 1, opts = {}) {
   // so a game with taller or shorter characters gets architecture proportioned to THEM.
   const humanH = Math.max(4.8, Math.min(19.2, opts.humanH || 9.6));
   const roomScale = Math.max(0.7, Math.min(1.6, opts.roomScale || 1));
-  const rng = mulberry((seed * 7919 + city.pop % 997 + city.name.length * 31) | 0);
+  // ⚠ ONE RNG STREAM FOR THE WHOLE PLANNER WAS A REAL DEFECT, and it was measurable: moving the
+  // coastline by a single column changed **62 of 64 cells**. Nothing about the far side of the map
+  // depends on where the water is — but every stage drew from one sequence, so any change to how
+  // many numbers an EARLIER stage consumed shifted every later draw. That is why nudging one dial in
+  // the map editor rebuilt the entire city, and why REROLL and a small edit felt like the same
+  // operation.
+  //
+  // Two fixes, and they are different fixes:
+  //   1. NAMED STREAMS per stage, so the placement table cannot perturb the metro or the roads.
+  //   2. POSITION-SEEDED rolls for anything that loops over cells, so a change in one cell cannot
+  //      shift another. A stream still couples cells to each other by ORDER; a hash of (r, c) does
+  //      not, which is what makes an edit LOCAL.
+  const seedBase = (seed * 7919 + city.pop % 997 + city.name.length * 31) | 0;
+  const stream = (tag) => mulberry((seedBase ^ Math.imul(tag, 0x9e3779b1)) | 0);
+  const rPlace = stream(1);      // the PLACEMENT table: chances, score jitter, variants
+  const rMetro = stream(2);      // the transit spine
+  const rRoads = stream(3);      // roundabouts and road-class decisions
+  const rng = rPlace;            // the general stream — placement is the biggest consumer
+  // ⚠ A PURE HASH, NOT A GENERATOR PER CELL. `salt` separates the several rolls a single cell needs
+  // (type · variant · rural guard · patchwork offset) so each is independently stable.
+  // ⚠ AND THE PLACEMENT TABLE HAS TO BE ORDER-INDEPENDENT TOO. Splitting streams stopped the metro
+  // and the roads perturbing each other, but inside the table every row still drew from one sequence
+  // — so a row that got skipped, or a candidate cell that became water, shifted every row after it.
+  // Keying each roll on WHAT it is (the type) and WHERE it is (the cell) removes the last coupling:
+  // adding a water column now changes the cells the water touches and the rows that genuinely score
+  // on `nearWater`, and leaves the rest of the map exactly where it was.
+  const tagOf = (t) => { let h = 0; for (let i = 0; i < String(t).length; i++) h = (Math.imul(h, 31) + String(t).charCodeAt(i)) | 0; return h; };
+  const cellRoll = (r, c, salt) => {
+    let h = (seedBase ^ Math.imul(r + 1, 0x85ebca6b) ^ Math.imul(c + 1, 0xc2b2ae35) ^ Math.imul(salt, 0x27d4eb2f)) | 0;
+    h = Math.imul(h ^ (h >>> 15), 0x2c1b3c6d); h ^= h >>> 12;
+    h = Math.imul(h ^ (h >>> 13), 0x297a2d39); h ^= h >>> 15;
+    return (h >>> 0) / 4294967296;
+  };
   const popType = opts.popType || city.popType;
   const N = Math.max(2, Math.min(9, opts.N || GRID_BY_POP[popType] || 5));
   const cell = Math.max(CELL_RANGE[0], Math.min(CELL_RANGE[1], opts.cell || CELL));
@@ -682,17 +714,17 @@ export function generatePlan(city, seed = 1, opts = {}) {
       for (const [pr, pc] of placed[t]) best = Math.min(best, Math.abs(r - pr) + Math.abs(c - pc));
       s += -best * S.cluster;
     }
-    if (S.jitter) s += (rng() - 0.5) * S.jitter;
+    if (S.jitter) s += (cellRoll(r | 0, c | 0, 0x11 ^ tagOf(t)) - 0.5) * S.jitter;
     return s;
   };
   // STAMP a footprint: the anchor carries the structure and its size, the covered cells carry a
   // ref. Nothing downstream has to guess — roads, districts and the editor all read the same shape.
   const stamp = (r, c, fh, fw, t, landmark, sname, si) => {
-    let v = (rng() * (VARIANTS[t] || 1)) | 0;
+    let v = (cellRoll(r, c, 0x44 ^ tagOf(t)) * (VARIANTS[t] || 1)) | 0;
     // ⚠ residential variant 2 is TOWERS-IN-THE-PARK. The base fill already guards against putting
     // apartment blocks in a hamlet; the PLACEMENT table has to guard too, or the village CORE —
     // the one cell that is definitely houses — comes out as a tower.
-    if (rural && t === 'residential' && v === 2) v = rng() < 0.5 ? 0 : 1;
+    if (rural && t === 'residential' && v === 2) v = cellRoll(r, c, 0x55) < 0.5 ? 0 : 1;
     C[r][c] = { t, v, fh, fw, landmark: !!landmark, sname: sname || null, sz: si || 0 };
     for (let i = 0; i < fh; i++) for (let j = 0; j < fw; j++) {
       if (i || j) C[r + i][c + j] = { t, v, ref: [r, c] };
@@ -726,7 +758,7 @@ export function generatePlan(city, seed = 1, opts = {}) {
           let ok = true;
           for (let i = 0; i < fh && ok; i++) for (let j = 0; j < fw; j++) if (!freeAt(r + i, c + j)) { ok = false; break; }
           if (!ok) continue;
-          const s = scoreAt(row.score || {}, row.t, r + (fh - 1) / 2, c + (fw - 1) / 2) + rng() * 0.3;
+          const s = scoreAt(row.score || {}, row.t, r + (fh - 1) / 2, c + (fw - 1) / 2) + cellRoll(r, c, 0x22 ^ tagOf(row.t)) * 0.3;
           if (s > bs) { bs = s; best = [r, c, fh, fw]; }
         }
       }
@@ -756,7 +788,7 @@ export function generatePlan(city, seed = 1, opts = {}) {
     // `rural: 'ok'` = a row that belongs in the country too. A coastal village IS a fishing
     // village; without this the rural gate silently denied it the one thing it is defined by.
     if (rural && row.rural !== 'only' && row.rural !== 'ok' && row.t !== 'park') continue;
-    if (row.chance != null && rng() > row.chance) continue;
+    if (row.chance != null && cellRoll(0, 0, 0x33 ^ tagOf(row.t + ':' + (row.n || ''))) > row.chance) continue;
     place(row);
   }
   // --- per-city LANDMARKS: pinned structures the generator must honour (editor / sheet driven) ---
@@ -775,13 +807,13 @@ export function generatePlan(city, seed = 1, opts = {}) {
   // overshoot their cells so consecutive stations join into one continuous 13u-deep trench you
   // can be knocked into. Towns and up: a real transit city needs the population to justify it.
   if (!rural && N >= 4) {
-    const row = 1 + ((rng() * (N - 2)) | 0);                       // never the outermost row
+    const row = 1 + ((rMetro() * (N - 2)) | 0);                     // never the outermost row
     const span = N >= 6 ? 3 : 2;
-    const start = Math.max(0, Math.min(N - span - waterCols, 1 + ((rng() * (N - span)) | 0)));
+    const start = Math.max(0, Math.min(N - span - waterCols, 1 + ((rMetro() * (N - span)) | 0)));
     plan.metroRow = row;
     for (let i = 0; i < span; i++) {
       const c = start + i;
-      if (freeAt(row, c)) C[row][c] = { t: 'metro', v: i === 0 ? 0 : (rng() < 0.45 ? 0 : 1) };
+      if (freeAt(row, c)) C[row][c] = { t: 'metro', v: i === 0 ? 0 : (rMetro() < 0.45 ? 0 : 1) };
     }
   }
   // --- the base fill: whatever the table left open becomes the fabric of the city ---
@@ -791,16 +823,16 @@ export function generatePlan(city, seed = 1, opts = {}) {
     // blocks, so a hamlet in the hills read as a downtown with fewer buildings. They now fill
     // with FARMLAND — a hard core of homes at the centre, open country everywhere else.
     const t = rural
-      ? (edge(r, c) === 0 ? 'residential' : rng() < 0.82 ? 'farmland' : 'residential')
-      : (edge(r, c) <= mid * 0.55 ? 'commercial' : rng() < 0.62 ? 'residential' : 'commercial');
+      ? (edge(r, c) === 0 ? 'residential' : cellRoll(r, c, 1) < 0.82 ? 'farmland' : 'residential')
+      : (edge(r, c) <= mid * 0.55 ? 'commercial' : cellRoll(r, c, 1) < 0.62 ? 'residential' : 'commercial');
     // ⚠ residential variant 2 is TOWERS-IN-THE-PARK — four-storey walk-ups. A village was getting
     // apartment blocks, which is the single loudest thing wrong with the countryside.
-    let v = (rng() * (VARIANTS[t] || 1)) | 0;
-    if (rural && t === 'residential' && v === 2) v = rng() < 0.5 ? 0 : 1;
+    let v = (cellRoll(r, c, 2) * (VARIANTS[t] || 1)) | 0;
+    if (rural && t === 'residential' && v === 2) v = cellRoll(r, c, 3) < 0.5 ? 0 : 1;
     // ⚠ Farmland variants are a PATCHWORK, not a dice roll. Rolled independently, three of four
     // fields in a hamlet came up as orchards and the whole village was one crop. Offsetting by
     // position guarantees adjacent fields differ — which is also what real farmland looks like.
-    if (t === 'farmland') v = (r * 2 + c + ((rng() * 3) | 0)) % VARIANTS.farmland;
+    if (t === 'farmland') v = (r * 2 + c + ((cellRoll(r, c, 4) * 3) | 0)) % VARIANTS.farmland;
     C[r][c] = { t, v };
   }
   plan.rural = rural;
@@ -818,7 +850,10 @@ export function generatePlan(city, seed = 1, opts = {}) {
   }
   structural.sort((a, b) => a[2] - b[2]);
   const cap = structCap(N);
-  for (let i = cap; i < structural.length; i++) C[structural[i][0]][structural[i][1]] = { t: 'plaza', v: (rng() * 2) | 0 };
+  for (let i = cap; i < structural.length; i++) {
+    const [pr, pc] = structural[i];
+    C[pr][pc] = { t: 'plaza', v: (cellRoll(pr, pc, 5) * 2) | 0 };
+  }
   // ⚠ sockets are derived LAST, after the density budget has demoted whatever it is going to
   // demote. They used to run before it, so a cell plaza'd by the budget kept the neighbour data
   // of the tower it used to be, and its neighbours kept fences facing a district that was gone.
@@ -828,13 +863,13 @@ export function generatePlan(city, seed = 1, opts = {}) {
   if (plan.biosphere === false) {
     for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
       const cell = C[r][c];
-      if (cell && !cell.ref && NO_LIFE_TILES[cell.t]) C[r][c] = { t: 'plaza', v: (rng() * 2) | 0 };
+      if (cell && !cell.ref && NO_LIFE_TILES[cell.t]) C[r][c] = { t: 'plaza', v: (cellRoll(r, c, 6) * 2) | 0 };
     }
     plan.rural = false;    // there is no countryside without a country
   }
   computeSockets(plan);
   plan.bands = computeBands(plan);
-  buildRoads(plan, rng);
+  buildRoads(plan, rRoads);   // its own stream: a road decision must not shift the zoning
   return plan;
 }
 

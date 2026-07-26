@@ -1110,6 +1110,63 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   cities' panels → clock drives the sun → INCORPORATE writes the save → the banner reports the firm.
   12/12, 0 console errors. Ref `wwa-hq-globe.png`.
 
+## ONE RNG STREAM WAS A BUG (2026-07-26) — an edit has to be LOCAL
+- Found by reading Jon Kantner's *Voxel City Generator*, which runs a second generator purely so
+  window rolls cannot relayout the city: *"Separate stream, so window rolls never perturb the city
+  layout."* We had **one** `mulberry32` for the whole planner, and the cost was measurable:
+  **moving the coastline one column changed 62 of 64 cells.** Nothing about the far side of the map
+  depends on where the water is — but every stage drew from one sequence, so any change to how many
+  numbers an EARLIER stage consumed shifted every later draw. That is why nudging one dial in the map
+  editor rebuilt the whole city, and why a REROLL and a small edit felt like the same operation.
+- **TWO fixes, and they are different fixes.** (1) **NAMED STREAMS** per stage — `rPlace` · `rMetro`
+  · `rRoads` — so the placement table cannot perturb the transit spine or the road classes.
+  (2) **POSITION-SEEDED ROLLS** for anything that loops over cells. A stream still couples cells to
+  each other by ORDER; a hash of `(r, c, salt)` does not, and that is what actually makes an edit
+  local. `salt` separates the several rolls one cell needs (type · variant · rural guard · patchwork
+  offset) so each is independently stable.
+- ⚠ **THE PLACEMENT TABLE NEEDED IT TOO, and splitting streams alone did not catch that.** Inside the
+  table every row still drew from one sequence, so a row that got skipped or a candidate cell that
+  became water shifted every row after it. Each roll is now keyed on WHAT it is (`tagOf(type)`) and
+  WHERE it is (the cell): the score jitter, the tie-break, the appear-at-all chance, and the stamped
+  variant.
+- **Measured, Tokyo, seed 7:** coastline +1 col **62 → 36** · biome → desert **27 → 3** ·
+  `cell` 96→120 **0** · `humanH` **0** · relief **0**. A SEED change still reshuffles fully (59/64),
+  which is correct — a reroll is supposed to be a different city.
+- ⚠ **The residual is causal, and it was worth checking rather than assuming.** Of 74 changed cells
+  across five cities, **52 sit within three columns of the new shore**; the other 22 are the density
+  budget honestly recomputing because eight buildable cells became water. Locality is the test of
+  whether what is left is consequence or noise.
+- Verified: **1,050 plans · 0 validator problems · 0 errors**; four generated cities and the editor's
+  repaint path build in-engine with 0 console errors. ⚠ This DOES change what every seed generates —
+  that is inherent to fixing the draw order, and plans are regenerated from the seed anyway.
+
+## THE CANONICAL POWER TAXONOMY (2026-07-26) — `data/taxonomy.js`
+- Robert sent a full classification of the superpower poster and refused to let it stay flat: *"The
+  original poster is not a clean taxonomy. It places six different things at the same level."*
+  153 nodes, ten domains, every concept given ONE primary domain, with powers · families ·
+  variations · animal templates · learned skills · devices · armour · vehicles · artifacts separated
+  by a `node_type` field. `verify()` reproduces his own audit exactly — **153/153, per-domain
+  42/20/11/16/8/3/14/9/13/17, 0 problems.**
+- ⚠ **IT IS A FILE, NOT A DOCUMENT**, for the reason already paid for once: `data/education.js`
+  described sixty effects in a prose string and every one was unreachable by construction (item 6).
+  A taxonomy in Markdown cannot be queried or audited and drifts the day someone adds a hero.
+- **THE FINDING THAT MATTERS.** The orphan audit says 18 ability types are DEAD — implemented and
+  carried by nobody. Mapped against this taxonomy, **17 of the 18 are named in it**. They are not a
+  leftover list; they are the missing branches of a real classification, and this file is the map of
+  which archetype should carry each. The only dead type with no node is `timefield` — the poster has
+  no time powers at all.
+- `coverage(roster, deadTypes)` reports the split live: **50 carried · 31 engine-exists-but-uncarried
+  · 53 not built · 19 family headings**. ⚠ `e` means "a def could declare this TODAY" and nothing
+  weaker; where a node needs an unbuilt system `e` is null and `why` says so in one line. A faked
+  mapping is worse than an honest gap, same law as a faked effect verb.
+- The gameplay tag vocabularies (delivery · role · activation · target · source) are stored SEPARATE
+  from the taxonomy — his rule, and the one `data/visual.js` already follows: what a power IS and how
+  it is DELIVERED are two axes.
+- The big unbuilt groups are honest and grouped: **12 animal physiology templates** and **3 artifact
+  grants** both want a PACKAGE layer (one row granting several abilities), which does not exist;
+  the rest are passives already carried by attributes, talents already in `HERO_TALENTS`, or firm
+  roles rather than combat slots.
+
 ## HANDOFF
 - **`HANDOFF.md` at the repo root** is the orientation document: architecture, the ten rules that
   are load-bearing, what is solid, what is half-built, what to do next, and the headless
