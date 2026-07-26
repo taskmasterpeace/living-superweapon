@@ -28,6 +28,40 @@
 const TAU = Math.PI * 2;
 const R2 = Math.SQRT2;
 
+// ⚠ A TRUE ELLIPSE WASTES ENORMOUS SPACE, which is why the first balloons read as mostly empty.
+// To circumscribe a w×h box an ellipse needs semi-axes w/√2 — 41% inflation — and that surplus all
+// arrives as white space in the corners, above and below the words. A SUPERELLIPSE
+// (|x/a|^n + |y/b|^n = 1) with a squarer exponent hugs a rectangle far more closely: the inflation
+// is 2^(1/n), so n=3 needs only 26% against the ellipse's 41%. It also happens to be the shape real
+// balloons ARE — a letterer draws a rounded box, not a true oval.
+const SUPER_N = 3;
+const SUPER_K = Math.pow(2, 1 / SUPER_N);        // 1.26
+
+// sample a superellipse and emit it as a closed cubic spline — smooth at any size, no arc maths
+function superPath(cx, cy, a, b, n = SUPER_N, steps = 44) {
+  const pts = [];
+  for (let i = 0; i < steps; i++) {
+    const t = (i / steps) * TAU;
+    const ct = Math.cos(t), st = Math.sin(t);
+    pts.push([cx + Math.sign(ct) * Math.pow(Math.abs(ct), 2 / n) * a,
+              cy + Math.sign(st) * Math.pow(Math.abs(st), 2 / n) * b]);
+  }
+  return splinePath(pts);
+}
+
+// closed Catmull-Rom through the points, emitted as cubics
+function splinePath(pts) {
+  const n = pts.length;
+  let d = `M${pts[0][0].toFixed(1)},${pts[0][1].toFixed(1)}`;
+  for (let i = 0; i < n; i++) {
+    const p0 = pts[(i - 1 + n) % n], p1 = pts[i], p2 = pts[(i + 1) % n], p3 = pts[(i + 2) % n];
+    const c1 = [p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6];
+    const c2 = [p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6];
+    d += `C${c1[0].toFixed(1)},${c1[1].toFixed(1)} ${c2[0].toFixed(1)},${c2[1].toFixed(1)} ${p2[0].toFixed(1)},${p2[1].toFixed(1)}`;
+  }
+  return d + 'Z';
+}
+
 // A cubic-Bézier ellipse. k is the classic circle-to-Bézier constant.
 const K = 0.5522847498;
 function ellipsePath(cx, cy, rx, ry) {
@@ -47,7 +81,10 @@ function rng(seed) { let a = seed >>> 0 || 1; return () => (a = (a * 1664525 + 1
 // lettering keeps balloons near 2:1, and every decoration in this file (spikes, scallops, bumps,
 // wobble) is unreadable stretched along a pancake. Growing the SHORT axis is the only correction
 // that cannot push text outside the shape.
-const MAX_ASPECT = 2.15;
+// ⚠ RELAXED from 2.15. Forcing a balloon rounder grows the SHORT axis, and every unit of that is
+// pure white space above and below the words — the correction that fixed pancakes was also the
+// biggest single source of empty balloon. 2.8 keeps decorations legible without padding the box.
+const MAX_ASPECT = 2.8;
 function round(rx, ry) {
   if (rx > ry * MAX_ASPECT) ry = rx / MAX_ASPECT;
   else if (ry > rx * MAX_ASPECT) rx = ry / MAX_ASPECT;
@@ -60,9 +97,9 @@ function round(rx, ry) {
 export const SHAPES = {
   // TALK — the classic oval. 41% inflation, from the circumscribed-ellipse identity.
   talk(tw, th) {
-    let [rx, ry] = round(Math.max(26, (tw / R2) + 12), Math.max(18, (th / R2) + 10));
+    let [rx, ry] = round(Math.max(24, (tw / 2) * SUPER_K + 9), Math.max(17, (th / 2) * SUPER_K + 8));
     const w = rx * 2, h = ry * 2;
-    return { path: ellipsePath(rx, ry, rx - 2, ry - 2), w, h };
+    return { path: superPath(rx, ry, rx - 2, ry - 2), w, h };
   },
 
   // WHISPER — the same oval; the DASHED outline is what says it, not the shape.
@@ -72,7 +109,7 @@ export const SHAPES = {
   // top of the ellipse margin, and the shape ends up considerably bigger than a talk balloon.
   // That is correct: a shout takes up more room on the page.
   yell(tw, th, seed = 7) {
-    let [inx, iny] = round((tw / R2) + 10, (th / R2) + 8);   // inner radius must contain the text
+    let [inx, iny] = round((tw / 2) * SUPER_K + 8, (th / 2) * SUPER_K + 7);   // must contain the text
     const spike = Math.max(13, Math.min(26, (inx + iny) * 0.17));
     const rx = inx + spike, ry = iny + spike;
     const w = rx * 2, h = ry * 2, cx = rx, cy = ry;
@@ -95,7 +132,7 @@ export const SHAPES = {
 
   // THINK — a cloud: a core ellipse the text clears, ringed by bumps that bulge outward.
   think(tw, th, seed = 11) {
-    let [rx, ry] = round((tw / R2) + 8, (th / R2) + 6);
+    let [rx, ry] = round((tw / 2) * SUPER_K + 5, (th / 2) * SUPER_K + 4);
     const bump = Math.max(11, Math.min(20, (rx + ry) * 0.13));
     const w = (rx + bump) * 2, h = (ry + bump) * 2, cx = w / 2, cy = h / 2;
     const n = Math.max(8, Math.min(13, Math.round((rx + ry) * 0.07)));
@@ -115,7 +152,7 @@ export const SHAPES = {
   // ROBOT — no curves at all. A machine speaks in a box with its corners cut off, and the notched
   // step down one side reads as a signal rather than a voice.
   robot(tw, th) {
-    const px = 16, py = 11, c = 12;
+    const px = 13, py = 9, c = 11;
     const w = tw + px * 2, h = th + py * 2;
     const s = Math.min(9, h * 0.16);
     return { path:
@@ -127,7 +164,7 @@ export const SHAPES = {
   // ALIEN — an organic wobble. Not a burst (that is anger) and not a cloud (that is thought):
   // a smooth outline that is subtly WRONG, which is the only way a shape says "not from here".
   alien(tw, th, seed = 23) {
-    let [rx, ry] = round((tw / R2) + 13, (th / R2) + 11);
+    let [rx, ry] = round((tw / 2) * SUPER_K + 11, (th / 2) * SUPER_K + 10);
     const w = rx * 2, h = ry * 2, cx = rx, cy = ry;
     const n = 12, r = rng(seed);
     const pts = [];
@@ -151,7 +188,7 @@ export const SHAPES = {
   // ANNOUNCE — the many-pointed star. A burst is one person shouting; an announcement is a PA, a
   // broadcast, a god. More points, shallower, and regular rather than jagged.
   announce(tw, th) {
-    let [inx, iny] = round((tw / R2) + 12, (th / R2) + 10);
+    let [inx, iny] = round((tw / 2) * SUPER_K + 10, (th / 2) * SUPER_K + 9);
     const spike = Math.max(16, Math.min(34, (inx + iny) * 0.22));
     const rx = inx + spike, ry = iny + spike;
     const w = rx * 2, h = ry * 2, cx = rx, cy = ry;
@@ -168,7 +205,7 @@ export const SHAPES = {
 
   // WEAK — fading, hurt, barely audible. A soft scalloped wobble, drawn thin.
   weak(tw, th, seed = 5) {
-    let [rx, ry] = round((tw / R2) + 11, (th / R2) + 10);
+    let [rx, ry] = round((tw / 2) * SUPER_K + 9, (th / 2) * SUPER_K + 8);
     const w = rx * 2, h = ry * 2, cx = rx, cy = ry;
     const n = 18, r = rng(seed);
     let d = '';
@@ -185,7 +222,7 @@ export const SHAPES = {
 
   // NARRATION — a plain rounded box. Not a voice: the story talking.
   narrate(tw, th) {
-    const px = 15, py = 10, c = 10;
+    const px = 13, py = 9, c = 10;
     const w = tw + px * 2, h = th + py * 2;
     return { path:
       `M${c + 2},2 H${w - c - 2} Q${w - 2},2 ${w - 2},${c + 2} V${h - c - 2} Q${w - 2},${h - 2} ${w - c - 2},${h - 2} ` +

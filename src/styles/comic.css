@@ -54,10 +54,16 @@
   fill: var(--cm-paper); stroke: var(--cm-ink); stroke-width: var(--cm-line);
   stroke-linejoin: round; paint-order: stroke fill;
 }
+/* ⚠ LETTERING IS SIZED FOR THE SCREEN, NOT THE PAGE. 17px is a print measure; on a monitor at
+ * playing distance, over a moving isometric city, it reads as fine print. And a fixed pixel size is
+ * wrong twice over — it is small on a 1440p panel and enormous on a phone. These scale with the
+ * VIEWPORT HEIGHT and clamp at both ends, so the balloon is the same size relative to the fight on
+ * every display. Because the shape is generated FROM the measured text, every balloon grows to
+ * match with nothing else to change — which is the payoff of building it that way round. */
 .cmb .cmtext {
   position: absolute;
   font-family: 'ComicLetter', 'Comic Sans MS', cursive; font-weight: 700;
-  font-size: 17px; line-height: 1.14; letter-spacing: .015em;
+  font-size: clamp(19px, 2.6vh, 34px); line-height: 1.14; letter-spacing: .015em;
   text-transform: uppercase; text-align: center; color: var(--cm-ink);
   white-space: pre; pointer-events: none;
 }
@@ -65,19 +71,36 @@
 .cmb.out { animation: cmOut .16s ease-in forwards; }
 @keyframes cmOut { to { transform: scale(.92); opacity: 0 } }
 
-/* a word the letterer would have bolded — comics emphasise INSIDE the balloon, always */
-.cmb b { font-size: 1.13em; letter-spacing: .03em; }
-.cmb .shoutword { color: var(--cm-red); font-size: 1.18em; }
+/* ⚠ EMPHASIS IS BOLD *ITALIC*. Plain bold is a typesetting habit; a letterer leans the stressed
+ * word as well as thickening it, which is what makes comic emphasis read as a raised voice rather
+ * than a heading. (Blambot, "Comic Book Grammar & Tradition".) */
+.cmb b { font-style: italic; font-size: 1.1em; letter-spacing: .03em; }
+.cmb .shoutword { color: var(--cm-red); font-style: italic; font-size: 1.16em; }
+
+/* THE CROSSBAR I — serifs top and bottom, for the personal pronoun only, never inside a word.
+ * The single most recognisable rule in the craft. Our font has one I glyph, so the bars are drawn
+ * and sized off the current font, which keeps them correct at every clamp step. */
+.cmb .crossI { position: relative; padding: 0 .1em; }
+.cmb .crossI::before, .cmb .crossI::after {
+  content: ''; position: absolute; left: -.02em; right: -.02em; height: .085em;
+  background: currentColor; border-radius: .04em;
+}
+.cmb .crossI::before { top: .06em; }
+.cmb .crossI::after  { bottom: .18em; }
+
+/* ⚠ ELECTRONIC SPEECH IS ITALICISED inside the balloon — the convention for a voice arriving
+ * through a device rather than through the air. */
+.cmb.t-robot .cmtext, .cmb.t-announce .cmtext { font-style: italic; }
 
 /* --- YELL. The burst is in the PATH; all that changes here is the weight of the voice. */
-.cmb.t-yell .cmtext { font-size: 19px; }
+.cmb.t-yell .cmtext { font-size: clamp(22px, 3.1vh, 40px); }
 .cmb.t-yell .cmbody, .cmb.t-yell .cmtail { stroke-width: 3.4px; }
 
 /* --- WHISPER. A dashed outline is the century-old convention and still reads instantly. */
 /* ⚠ the dash has to be COARSE. At 7/5 on a 3px stroke it read as a solid line at gameplay size. */
 .cmb.t-whisper .cmbody { stroke-dasharray: 11 8; stroke-width: 2.6px; }
 .cmb.t-whisper .cmtail { stroke-dasharray: 11 8; stroke-width: 2.6px; }
-.cmb.t-whisper .cmtext { font-size: 14px; color: #4a453c; }
+.cmb.t-whisper .cmtext { font-size: clamp(16px, 2.1vh, 27px); color: #4a453c; }
 
 /* --- THINK. The cloud and its trailing circles are both path work. */
 .cmb.t-think .cmtext { font-style: italic; }
@@ -86,7 +109,7 @@
 .cmb.t-robot .cmbody, .cmb.t-robot .cmtail { fill: #eaf2f6; stroke: var(--cm-blue); }
 .cmb.t-robot .cmtext {
   font-family: var(--f-mono, 'Cascadia Code', ui-monospace, monospace);
-  font-size: 13px; letter-spacing: .1em; color: #16303f;
+  font-size: clamp(14px, 1.9vh, 24px); letter-spacing: .1em; color: #16303f;
 }
 
 /* --- ALIEN. Sickly green, and the letters lean where they should not. */
@@ -94,11 +117,11 @@
 .cmb.t-alien .cmtext { color: #2c3d1a; font-style: italic; letter-spacing: .09em; }
 
 /* --- ANNOUNCE. A PA, a broadcast, a god — the many-pointed star from the reference sheet. */
-.cmb.t-announce .cmtext { font-size: 18px; letter-spacing: .05em; }
+.cmb.t-announce .cmtext { font-size: clamp(21px, 2.9vh, 38px); letter-spacing: .05em; }
 
 /* --- WEAK / FADING. Thin line, grey ink, small letters: a voice running out. */
 .cmb.t-weak .cmbody, .cmb.t-weak .cmtail { stroke-width: 1.8px; stroke: #6a6459; }
-.cmb.t-weak .cmtext { font-size: 14px; color: #6a6459; }
+.cmb.t-weak .cmtext { font-size: clamp(16px, 2.1vh, 27px); color: #6a6459; }
 
 /* --- NARRATION. The story talking, not a person. No tail is drawn for it. */
 .cmb.t-narrate .cmbody { fill: var(--cm-yellow); }
@@ -114,7 +137,7 @@
 .cmcap {
   position: absolute;
   font-family: 'ComicLetter', 'Comic Sans MS', cursive; font-weight: 700; font-style: italic;
-  font-size: 21px; line-height: 1.06; letter-spacing: .012em; text-transform: uppercase;
+  font-size: clamp(20px, 2.7vh, 35px); line-height: 1.06; letter-spacing: .012em; text-transform: uppercase;
   color: var(--cm-ink); background: var(--cm-yellow);
   border: var(--cm-line) solid var(--cm-ink);
   box-shadow: 5px 5px 0 0 var(--cm-ink);
@@ -147,7 +170,7 @@
 .cmcap.red   { background: var(--cm-red); color: #fff; }
 .cmcap.red .drop { color: var(--cm-yellow); }
 .cmcap.paper { background: var(--cm-paper); }
-.cmcap.big   { font-size: 30px; padding: 10px 20px 11px; }
+.cmcap.big   { font-size: clamp(27px, 3.7vh, 48px); padding: 10px 20px 11px; }
 .cmcap.tr    { transform: rotate(1.4deg); }
 @keyframes cmSlamR { from { transform: rotate(1.4deg) scale(1.22) translateY(-10px); opacity: 0 }
                      to   { transform: rotate(1.4deg) scale(1) translateY(0); opacity: 1 } }
@@ -186,6 +209,9 @@
 }
 
 /* phones: everything one step down, and balloons must never own the whole screen */
-body.phone .cmb   { font-size: 14px; max-width: 190px; padding: 6px 10px 7px; }
+/* ⚠ a phone is held at arm's length, not across a room — the vh clamp would make these enormous */
+body.phone .cmb .cmtext          { font-size: 15px !important; }
+body.phone .cmb.t-yell .cmtext   { font-size: 17px !important; }
+body.phone .cmb.t-robot .cmtext  { font-size: 12px !important; }
 body.phone .cmcap { font-size: 16px; padding: 5px 11px 6px; box-shadow: 4px 4px 0 0 var(--cm-ink); }
 body.phone .cmsfx { font-size: 36px; -webkit-text-stroke: 3px var(--cm-ink); }

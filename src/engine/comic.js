@@ -54,12 +54,32 @@ export function balance(text, maxChars = 26) {
   return (best || [words.join(' ')]).join('\n');
 }
 
-// `*word*` is the letterer's bold; `**word**` is the one they'd also colour.
+// ---------------------------------------------------------------------------------------------
+// THE CONVENTIONS OF COMIC LETTERING, which are not the conventions of typesetting. Sources:
+// Blambot's "Comic Book Grammar & Tradition", and the lettering guides at comicory / comicpad.
+//
+//   · EMPHASIS IS BOLD ITALIC, not bold. Plain bold is a typesetting habit; a letterer leans the
+//     stressed word as well as thickening it, and that is why comic emphasis reads as a VOICE
+//     raising rather than a heading.
+//   · IT IS SURGICAL. "Bold every other word looks panicked; bold one word every couple of panels
+//     lands the emphasis." So `*` is deliberate and there is no auto-bolding anywhere in here.
+//   · THE CROSSBAR I. The letter I is drawn with serifs top and bottom ONLY for the personal
+//     pronoun — never inside a word. It is the single most recognisable rule in the craft and the
+//     fastest way to spot lettering done by someone who did not look it up. Our font has one glyph
+//     for I, so the bars are drawn: a span with two rules, sized off the current font.
+//   · DOUBLE DASHES replace em dashes.
+//   · ELECTRONIC SPEECH IS ITALICISED inside the balloon (handled in the CSS, per tone).
 function markup(s) {
   return String(s)
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
     .replace(/\*\*(.+?)\*\*/g, '<b class="shoutword">$1</b>')
-    .replace(/\*(.+?)\*/g, '<b>$1</b>');
+    .replace(/\*(.+?)\*/g, '<b>$1</b>')
+    .replace(/\u2014/g, '--')                                   // em dash -> the letterer's double dash
+    // the crossbar I: standalone pronoun only, and not inside a tag we just wrote
+    // \u26a0 EITHER CASE. Balloons are text-transformed to caps, so a script written in ordinary
+    // sentence case ("i can't hold it") still renders an uppercase pronoun \u2014 and it must get its
+    // crossbars like any other. Matching only `I` in the source silently skipped half of them.
+    .replace(/(^|[\s(\u201c"'>])[Ii](?=$|[\s.,!?;:)\u201d"'<])/g, '$1<span class="crossI">I</span>');
 }
 
 export class Comic {
