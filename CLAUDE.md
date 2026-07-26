@@ -1443,6 +1443,45 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   `setup(g, o)` and `duel` has always had it.
 - **Not done, written down** (`docs/BACKLOG.md`): no clinch break, no referee, no rest round.
 
+## PURE BOXING + TWO GAME-WIDE MELEE BUGS (2026-07-26) — manual §45
+- Robert: *"I can't even walk around the ring, and the other person can't get to me. We need a no
+  powers, no guns, no gadgets, pure boxing match."* **Four causes, and only one was about boxing.**
+- **`BOXING.pure` sets `f.noPowers`** — ONE flag read at the choke points that already exist:
+  `runSlot` (the single door all 22 ability types go through) · `useItem` · `handsOf` (collapses to
+  FISTS, so the selector disappears by the same route a fighter with no loadout uses) · `ai.pick`
+  (returns null, dropping the bot to the melee layer) · the HUD powers row (hidden — seven lit chips
+  you cannot press is a control that lies about itself). ⚠ The melee trifecta is untouched **because
+  it never went through any of them**, which is what makes fists-only a subtraction not a new mode.
+- ⚠ **A NEGATIVE TIMER IS TRUTHY, AND IT COST MELEE ITS ENTIRE AI.** `controlBot`'s mixup was gated
+  on `!f.strikeActive`; the field counts down past zero and settles at **-0.01**, so after a bot's
+  FIRST swing the block was dead for the rest of the match — and `_meleeCd`, decremented inside it,
+  froze too. **Every bot in the game threw exactly one melee strike per fight.** Measured: two
+  fighters, clean state, 8u apart, **1 swing in 20s** → after the fix **46 swings in 30s** with grabs
+  and haymakers. All twelve other reads of the field already said `> 0`; `strikeActive` is clamped at
+  zero in melee.js now so the trap cannot be stepped on again. This is the whole of "melee is
+  non-existent" from the feel pass.
+- ⚠ **THE AI APPROACH DEADBAND MUST SCALE WITH THE RANGE.** A flat `±8` suits a beamer at 40u and is
+  fatal close in: a boxer holding 7u stops approaching at **15u** and strafes there forever; a
+  `bruiser` (18) idles out to 26u, well past the 11u jab. Now `max(2.5, pref * 0.35)`. Verified the
+  doctrines stay distinct: ranged pair 80.6u average, close pair 21u.
+- ⚠ **THE ROPES FIRED BELOW WALKING SPEED.** `ropeMin` 18 vs a measured walk of **27.3** — stepping to
+  the edge flung you back across the ring at 105% with a `burstT` that lifts the walk clamp, so you
+  could not stand at the ropes or work along them, which is most of boxing. Now 42, plus an
+  unconditional bounce on **`launchT`** (the existing "you did not arrive under your own power"
+  signal the slam rules use). A boxer leans; a thrown man comes off. Verified a full lap, 87u.
+- ⚠ **`world.interiors` IS NOT `world.cover`.** The venue cleared both cover arrays and left **eight
+  bungalow walls standing invisibly inside the ropes** — physics consults interiors spatially and
+  separately. A fighter walking from the centre stopped dead after 2.4u against nothing. That was
+  "I can't even walk around the ring", literally.
+- ⚠ **A `const` READ 49 LINES BEFORE ITS DECLARATION.** `controlPlayer` read `KM.strike` in the SECOND
+  WIND branch while `const KM` sat further down the same function — the temporal dead zone, so
+  **every frame spent downed threw a ReferenceError and the rally input was never evaluated: you
+  could not get up.** 1,800 throws in one duel, invisible behind the frame try/catch and the
+  repeated-error ledger. ⚠ Both this and `hud: 'boxing'` were found the same way — *look at the
+  console after the feature tests pass*, not just at the assertions.
+- ⚠ **`o.p2` is what every other mode calls the opponent** and boxing read only `o.enemy`, so asking
+  for a specific fighter silently got you a random one. Ref `wwa-pure-boxing.png`.
+
 ## THE VENUE (2026-07-26) — the hall the ring stands in, `VENUE` in boxingring.js
 - **THE DARK IS THE VENUE.** The recognisable thing about a fight hall is not the seating, it is that
   **the ring is an island of light in a black room** — the rig hangs over the canvas and everything

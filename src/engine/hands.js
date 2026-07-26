@@ -24,6 +24,9 @@ import { weaponById, gearById } from '../data/armory.js';
 // of a hard gate.
 export function handsOf(f) {
   const out = [{ i: 1, id: null, n: 'FISTS', kind: 'fists', two: false }];
+  // PURE BOXING: one slot, so the selector disappears by exactly the same route as a fighter who
+  // has never been to the armory — no second gate, no special case in the HUD.
+  if (f && f.noPowers) return out;
   let L = null;
   try { L = loadLoadout(); } catch (e) { L = null; }
   if (!L) return out;

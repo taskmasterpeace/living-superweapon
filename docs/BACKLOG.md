@@ -283,6 +283,12 @@ Still open:
 
 - **THE CLINCH.** Real boxing breaks a clinch after a beat; ours lets you hold. Still the general grab.
 - **NO REFEREE, NO CORNER, NO REST ROUND** — `restSecs` is in the rule book and unused.
+- **PURE BOXING has no door on the mode card.** `BOXING.pure` is on by default and `{powers:true}`
+  turns it off, but nothing in the UI offers the choice — a powers-on ring match is reachable only
+  from code. It wants a toggle on the mode card.
+- **The boxing AI doctrine is applied in `setup`, not authored.** `ai.range = 7` / `aggro = 1` is
+  written onto whoever spawned; a real boxing doctrine (work the body, cut the ring off, cover up
+  when hurt) would be a `martial.js` style, not three assignments.
 - **THE CROWD.** The venue has 12 rows of seating and nobody in them: `_hideWorld` hides the
   pedestrian layer rather than seating it. The peds already carry the reactions this wants —
   `cheer`, `_panic`, `_embolden`, real line-of-sight — so this is a placement problem, not a new

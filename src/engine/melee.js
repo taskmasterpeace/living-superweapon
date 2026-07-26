@@ -230,7 +230,11 @@ export class MeleeSystem {
 
     // --- strike active window ---
     if (f.strikeActive > 0) {
-      f.strikeActive -= dt;
+      // ⚠ CLAMP AT ZERO. Left to run negative this settles around -0.01 and stays there — and a
+      // negative number is TRUTHY, so any caller testing `!f.strikeActive` instead of
+      // `f.strikeActive > 0` is silently disabled for the rest of the match. That trap cost the bot
+      // melee mixup its entire existence (game.js). Zero means "not swinging"; make it mean that.
+      f.strikeActive = Math.max(0, f.strikeActive - dt);
       // the third beat of the combo is the CROSS — shorter than the jabs that set it up
       const foe = g.coneFoe(f, f.strikeIdx === 2 ? STRIKES.cross.reach : STRIKES.jab.reach, 0.75);
       if (foe && f.strikeHit && !f.strikeHit.has(foe.id)) {

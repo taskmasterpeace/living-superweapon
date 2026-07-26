@@ -1018,6 +1018,15 @@ export const TYPES = {
 
 export function runSlot(c, key, inp, g) {
   const st = c.slots[key]; if (!st) return;
+  // PURE BOXING (engine/boxingring.js): no powers, no guns, no gadgets — fists and the trifecta,
+  // which is the one thing that does NOT come through here. ⚠ It is a flag on the FIGHTER, not a
+  // check on the mode, so nothing in the ability layer has to know a boxing ring exists and any
+  // future rule set can borrow it. The gate is here because this is the single door every ability
+  // in the game goes through — a per-ability check would be 22 places to forget one.
+  if (c.noPowers) {
+    if (inp.pressed && g && g.isHuman(c) && g.hud) { g.hud.feed('PURE BOXING — fists only', '#8b8577'); if (g.hud.kiDenied) g.hud.kiDenied(key); }
+    return;
+  }
   // TIME IS NEVER UNDEFINED. Every held/charged type integrates `inp.dt`; a caller that omits
   // it (a test harness, a replay, a net frame) would inject NaN into a dozen accumulators.
   if (!Number.isFinite(inp.dt)) inp.dt = (g && g.dt) || 1 / 60;

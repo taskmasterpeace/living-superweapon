@@ -35,7 +35,13 @@ export const BOXING = {
   // frames of drag — the bounce was real and unfeelable, which is the worst of both. The rope now
   // returns more than it takes AND holds `burstT` long enough for the return trip to happen.
   ropeBounce: 1.05,          // how much of your speed the ropes give back
-  ropeMin: 18,               // below this you lean on them; above it you come off
+  // ⚠ 42, NOT 18 — AND A WALK MEASURES 27.3. At 18 the threshold sat BELOW ordinary walking speed,
+  // so simply stepping to the edge of the ring flung you back across it at 105% with a 0.65s burst
+  // that lifts the walk-speed clamp. You could not stand at the ropes, work along them, or cut off
+  // the ring — which is most of boxing. A boxer LEANS on the ropes; only arriving under real speed
+  // comes off them.
+  ropeMin: 42,               // below this you lean on them; above it you come off
+  pure: true,                // NO POWERS, NO GUNS, NO GADGETS — see PURE BOXING in game.js
   // ⚠ A REAL RING IS 16–20 FEET AND I BUILT 128u, WHICH IS FOUR TIMES TOO BIG. At 1u ≈ 0.19m a
   // 20ft ring is 32u — and the SCREENSHOT is what caught it, after six green assertions did not:
   // two 9.6u fighters at opposite corners of a 128u square are specks with a car's length of empty
@@ -187,6 +193,12 @@ export class BoxingRing {
     // invisible walls inside the ropes and cannot see each other across the canvas.
     this._cover0 = W.cover; this._coverAll0 = W.coverAll;
     W.cover = []; W.coverAll = [];
+    // ⚠ AND `world.interiors`, WHICH IS A SEPARATE LIST AND IS NOT COVER. This was the "I can't even
+    // walk around the ring" bug: entity physics consults interior walls SPATIALLY and independently
+    // of `cover`, so clearing cover left eight bungalow walls from the city standing invisibly
+    // inside the ropes. Measured: a fighter walking from the centre stopped dead after 2.4u against
+    // nothing. Anything the venue hides has to be hidden in every list that any system reads.
+    this._int0 = W.interiors; W.interiors = [];
     W.refreshFogBoxes && W.refreshFogBoxes();
     W.setFogEnabled && W.setFogEnabled(false);         // there is no fog of war in a lit ring
     // the crowd is not a crowd yet — hide the street population rather than have it walk a city
@@ -390,7 +402,12 @@ export class BoxingRing {
     else if (f.pos.z < -h) { hit = Math.max(hit, -h - f.pos.z); nz = 1; f.pos.z = -h; }
     if (!hit) return;
     const spd = Math.hypot(f.vel.x, f.vel.z);
-    if (spd < BOXING.ropeMin) {                       // leaning on the ropes, not hitting them
+    // ⚠ BEING THROWN INTO THE ROPES IS THE CASE THAT MUST ALWAYS BOUNCE, whatever the raw speed —
+    // `launchT` is the engine's existing "you did not arrive here under your own power" signal (the
+    // same one the slam rules gate on), so a knockback or a hurl comes off the ropes even if drag
+    // has already eaten it below the threshold. Walking is your own power; being hit is not.
+    const thrown = (f.launchT || 0) > 0;
+    if (spd < BOXING.ropeMin && !thrown) {            // leaning on the ropes, not hitting them
       if (nx) f.vel.x *= 0.4;
       if (nz) f.vel.z *= 0.4;
       return;
@@ -512,6 +529,7 @@ export class BoxingRing {
     if (this._arena0 != null) { W.ARENA = this._arena0; this._arena0 = null; }
     if (this._props) { W.cars = this._props.cars; W.planes = this._props.planes; W.rocks = this._props.rocks; W.treeSpots = this._props.trees; this._props = null; }
     if (this._cover0) { W.cover = this._cover0; W.coverAll = this._coverAll0; this._cover0 = this._coverAll0 = null; W.refreshFogBoxes && W.refreshFogBoxes(); }
+    if (this._int0) { W.interiors = this._int0; this._int0 = null; }
     for (const m of this._hidden) m.visible = true;
     this._hidden = [];
     if (this.g.peds && this.g.peds.mesh && this._peds0 != null) { this.g.peds.mesh.visible = this._peds0; this._peds0 = null; }

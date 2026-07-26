@@ -209,7 +209,14 @@ export class AI {
     pref = Math.max(6, pref);
     if (ag > 0.85 && !lowHp) pref *= 0.8;
     if (real._wounds && real._wounds.leg > 0) pref *= 0.75;   // a visible LIMP invites pressure — sight-gated (we are in the sees branch; manual §18)
-    if (d > pref + 8) { mx = dx / d; mz = dz / d; } else if (d < pref - 8) { mx = -dx / d; mz = -dz / d; }
+    // ⚠ THE DEADBAND HAS TO SCALE WITH THE RANGE, and a flat ±8 is why a melee bot never arrives.
+    // A beamer holding 40u wants a generous band; a boxer holding 7u does NOT, because ±8 is wider
+    // than the entire useful distance — it stops approaching at 15u, strafes there forever, and
+    // never throws a punch. Measured before this: two fists-only fighters spent 25 seconds circling
+    // at 11.1u and landed ZERO strikes. This is not a boxing bug, it is every close-range doctrine
+    // in the game: `bruiser` (18) idles out to 26u, well past the 11u jab.
+    const band = Math.max(2.5, pref * 0.35);
+    if (d > pref + band) { mx = dx / d; mz = dz / d; } else if (d < pref - band) { mx = -dx / d; mz = -dz / d; }
     let sa = 0.4 + ag * 0.3;
     if (this.erratic) sa *= 2.2;                      // panic: the strafe stops being a plan
     mx += (-dz / d) * this.strafe * sa; mz += (dx / d) * this.strafe * sa;
@@ -291,6 +298,10 @@ export class AI {
 
   pick(d, dh, lowHp, tgt) {
     const b = this.bot, T = this.byType;
+    // PURE BOXING: the slots are gated at `runSlot`, so without this the bot would spend the whole
+    // fight pressing dead buttons and standing still instead of throwing hands. Returning null here
+    // drops it straight to the melee layer, which is the correct doctrine for a boxer anyway.
+    if (b.noPowers) return null;
     const ok = (k) => b.slots[k].cd <= 0 && b.ki >= (b.slots[k].def.cost || 0);
     const one = (arr) => { const e = (arr || []).filter(ok); return e.length ? pick(e) : null; };
     const close = d < 14, far = d >= 44;

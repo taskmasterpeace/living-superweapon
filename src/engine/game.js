@@ -117,10 +117,30 @@ const MODE_IMPL = {
       // ring and never spawned the opponent — every rule downstream (the card, the ten-count, the
       // decision) had nothing to score, and the headless suite said so in one line: `no foe`.
       // A mode's setup owns its spawns; `duel` does exactly this and I did not copy it.
+      // ⚠ `o.p2` IS WHAT EVERY OTHER MODE AND THE CHARACTER SELECT CALL THE OPPONENT, and this read
+      // only `o.enemy` — so asking for a specific fighter silently got you a random one off the
+      // roster. A title fight against whoever turned up is not a title fight.
       g.ms.enemy = o && o.twoPlayer ? hs[1]
-        : g.spawnEnemy(o && o.enemy, { x: 13, z: 13, aiLevel: (o && o.aiLevel) || 1.2 });
+        : g.spawnEnemy((o && (o.enemy || o.p2)) || null, { x: 13, z: 13, aiLevel: (o && o.aiLevel) || 1.2 });
       // red corner and blue corner, facing each other, exactly as they start a real fight
       if (hs[0]) { hs[0].pos.set(-13, 0, -13); hs[0].aim.set(1, 0, 0); if (hs[0].aim3) hs[0].aim3.set(1, 0, 0); }
+      // ---- PURE BOXING. Robert: *"no powers, no guns, no gadgets and allow pure boxing matches."*
+      // ⚠ ONE FLAG ON THE FIGHTER, read at the choke points that already exist — `runSlot` (every
+      // ability in the game goes through that one door), `useItem`, `ai.pick` and `handsOf`. The
+      // melee trifecta is untouched because it never went through any of them, which is exactly why
+      // "fists only" is a subtraction rather than a new combat mode.
+      if (BOXING.pure && !(o && o.powers)) {
+        for (const e of g.entities) if (e.def && !e.isDummy) {
+          e.noPowers = true;
+          if (e._gearHeld) g.dropGear(e, false);          // whatever was in the hands is out of them
+          e._hand = 1;
+          // ⚠ AND THE BOT HAS TO WANT TO BOX. `ai.range` is the distance it HOLDS, and it actively
+          // backs off inside `pref - 8` — a bruiser sits at 18 while a jab reaches 11, so it could
+          // never land and retreated whenever you closed. That is "the other person can't get to
+          // me", and it is doctrine, not pathing. A boxer wants to be in punching range.
+          if (e.ai) { e.ai.range = 7; e.ai.aggro = Math.max(e.ai.aggro || 0, 1.0); e.ai.flyTend = 0; }
+        }
+      }
       for (const e of g.entities) if (e.def) g.ring.card(e);
     },
     tick(g, dt) { if (g.ring) g.ring.update(dt, g); },
@@ -2502,6 +2522,7 @@ export class Game {
   // Teleport beacon: press once to PLANT it where you stand, press again — from anywhere — to
   // snap back to it. Bait-and-swap: plant, push in shooting, then vanish back to your spot.
   useItem(f) {
+    if (f.noPowers) { if (this.isHuman(f) && this.hud) this.hud.feed('PURE BOXING — no gadgets', '#8b8577'); return; }
     const it = f.items && f.items[0]; if (!it) return;
     const acc = f.def.colors.accent;
     if (it.state === 'cooldown' || it.state === 'spent') { if (this.isHuman(f) && this.hud) this.hud.feed(it.state === 'spent' ? 'No charges left' : 'Recharging…', '#8b8577'); return; }
@@ -2733,6 +2754,13 @@ export class Game {
     if (this.hardLock && this.hardLock.alive) p.faceDir(this.hardLock.pos.x - p.pos.x, this.hardLock.pos.z - p.pos.z);
     else p.faceDir(p.aim3.x, p.aim3.z);
 
+    // ⚠ THE KEYMAP IS READ 49 LINES BEFORE IT USED TO BE DECLARED. `const KM` sat further down this
+    // same function while the SECOND WIND branch below already read `KM.strike` — and a `const` is
+    // in the temporal dead zone until its declaration, so **every frame you spent downed threw a
+    // ReferenceError**: the rally input was never evaluated, you could not get up, and the frame
+    // failed at 60Hz behind the try/catch. Measured 1,800 throws in one duel. Declared once, here,
+    // above every use.
+    const KM = keymap(SETTINGS.scheme);
     // stunned while held or frozen solid — capable heroes auto-escape via the melee system
     if (p.grabbedBy || p.frozenT > 0) { p.moveDir = { x: 0, z: 0 }; return; }
     // SECOND WIND (manual §13): downed is a held breath — the only input that matters is the rally
@@ -2787,7 +2815,6 @@ export class Game {
       }
     }
     // flight + guard keys come from the active control scheme (Options → Control Scheme)
-    const KM = keymap(SETTINGS.scheme);
     p.flyHeld = inp.down(KM.up) || pad.down('fly');
     p.descendHeld = inp.down(KM.down) || inp.down('ControlLeft') || inp.down('ControlRight') || pad.down('descend');
     p.cruiseHeld = p.flying && (inp.down('ShiftLeft') || inp.down('ShiftRight'));   // held SHIFT in the air = sustained cruise
@@ -2967,7 +2994,15 @@ export class Game {
     f._clinchAimT = 0;
 
     // close-range melee mixups (skip if committing to a counter-beam)
-    if (!f._forceBeam && !f.grabbing && !f.grabState && !f.strikeActive) {
+    // ⚠ `!f.strikeActive` — AND A SPENT TIMER IS NEGATIVE, WHICH IS TRUTHY. `strikeActive` counts
+    // down past zero and settles at about -0.01, so after a bot's FIRST swing this condition was
+    // false for the rest of the match: the mixup never ran again AND `_meleeCd` (decremented inside
+    // this block) froze forever. Measured: two fists-only fighters standing 8u apart with clean
+    // state threw ONE punch in twenty seconds. **Every bot in the game has been throwing exactly
+    // one melee strike per fight**, which is the whole of "melee is non-existent" and "the other
+    // person can't get to me". Every one of the other twelve reads of this field in the codebase
+    // already says `> 0`; this single site was the odd one out.
+    if (!f._forceBeam && !f.grabbing && !f.grabState && !(f.strikeActive > 0)) {
       const foe = this.nearestFoe(f, f.pos, 16);
       const d = foe ? Math.hypot(foe.pos.x - f.pos.x, foe.pos.z - f.pos.z) : 99;
       f._meleeCd = (f._meleeCd || 0) - dt;

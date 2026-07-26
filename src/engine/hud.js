@@ -1940,6 +1940,13 @@ export class HUD {
     // what is in your hands without the selector being touched, so a row driven by the key alone
     // would be correct exactly until something happened to you.
     this.updateHands(p);
+    // PURE BOXING: the powers are gated at `runSlot`, so leaving seven lit ability chips on screen
+    // is a control that lies about itself — the same law the armory screen keeps when it says
+    // "SAVED — NOT YET ISSUED". No powers, no powers row.
+    if (this.el.slots) {
+      const noPow = !!(p && p.noPowers);
+      if (this._noPow !== noPow) { this._noPow = noPow; this.el.slots.style.display = noPow ? 'none' : ''; }
+    }
     this.updateDpsMeters(g);
     this.updateMood(g);
     this.updateFoeArrow(g);

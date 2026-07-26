@@ -2464,3 +2464,70 @@ Items 1, 6, 7 and 8 are met. **Items 2–5 are deliberately NOT met and are waiv
 `game.noise`, the tells, the emotion display) is the next slice. The data layer is shipped and
 self-checking; nothing in the fight can reach it yet.
 
+
+---
+
+## §45 · PURE BOXING — and two bugs that had been eating melee game-wide (2026-07-26)
+
+Robert: *"I can't even walk around the ring, and the other person can't get to me. We need a no
+powers, no guns, no gadgets, pure boxing match."* Four causes, and only one of them was boxing.
+
+### The rule set
+
+`BOXING.pure` sets **`f.noPowers`** on every fighter in the mode. That one flag is read at the choke
+points that already exist and nowhere else:
+
+| gate | file | what it refuses |
+|---|---|---|
+| `runSlot` | `abilities.js` | every ability in the game — the single door all 22 types go through |
+| `useItem` | `game.js` | gadgets |
+| `handsOf` | `hands.js` | collapses the hands to FISTS, so the selector disappears by the same route a fighter with no loadout uses |
+| `ai.pick` | `ai.js` | returns null, dropping the bot straight to the melee layer |
+| the powers row | `hud.js` | hidden — seven lit chips you cannot press is a control that lies |
+
+⚠ **The melee trifecta is untouched because it never went through any of them.** That is what makes
+"fists only" a subtraction rather than a second combat mode.
+
+### ⚠ A NEGATIVE TIMER IS TRUTHY, AND IT COST MELEE ITS ENTIRE AI
+
+`controlBot`'s mixup was gated on `!f.strikeActive`. `strikeActive` counts down past zero and settles
+around **-0.01**, which is truthy — so after a bot's **first swing** the condition was false for the
+rest of the match, and `_meleeCd` (decremented inside that same block) froze with it.
+
+**Every bot in the game was throwing exactly one melee strike per fight.** Measured: two fists-only
+fighters, clean state, standing 8u apart — **1 swing in 20 seconds**. After the fix, 46 swings in 30s
+across the pair, with grabs and haymakers. This is the whole of "melee is non-existent".
+
+Every one of the other twelve reads of the field already said `> 0`. `strikeActive` is now clamped at
+zero in `melee.js` so the trap cannot be stepped on again.
+
+### ⚠ THE APPROACH DEADBAND HAS TO SCALE WITH THE RANGE
+
+`if (d > pref + 8) approach; else if (d < pref - 8) back off`. A flat ±8 is fine for a beamer holding
+40u and fatal for anything close-range: a boxer holding 7u stops approaching at **15u**, strafes
+there forever, and never reaches. `bruiser` (18) idles out to 26u, well past the 11u jab. The band is
+`max(2.5, pref * 0.35)` now. Verified the doctrines stay distinct afterwards: a ranged pair still
+fights at **80.6u** average, a close pair at **21u**.
+
+### ⚠ THE ROPES WERE FIRING BELOW WALKING SPEED
+
+`ropeMin` was 18 and a walk measures **27.3**. Stepping to the edge of the ring flung you back across
+it at 105% with a 0.65s `burstT` that lifts the walk-speed clamp — you could not stand at the ropes,
+work along them, or cut off the ring, which is most of boxing. `ropeMin` is 42, and the bounce also
+fires unconditionally on **`launchT`** (the engine's existing "you did not arrive under your own
+power" signal, the same one the slam rules use). A boxer leans on the ropes; a thrown man comes off
+them. Verified: a full lap of the ring, 87u of travel, staying at ±20 without being flung.
+
+### ⚠ AND `world.interiors` IS NOT `world.cover`
+
+The venue cleared `cover`/`coverAll` and left **eight bungalow walls from the city standing invisibly
+inside the ropes** — entity physics consults interiors spatially and separately. A fighter walking
+from the centre stopped dead after 2.4u against nothing. Anything a venue hides must be hidden in
+every list a system reads.
+
+### ⚠ A `const` READ 49 LINES BEFORE ITS DECLARATION
+
+`controlPlayer` read `KM.strike` in the SECOND WIND branch while `const KM` was declared further down
+the same function — the temporal dead zone, so **every frame spent downed threw a ReferenceError**.
+The rally input was never evaluated: you could not get up. Measured 1,800 throws in one duel, all
+invisible behind the frame try/catch and the repeated-error ledger. Declared once, above every use.
