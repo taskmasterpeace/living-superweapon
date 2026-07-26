@@ -102,6 +102,13 @@ is worse than no map. If you add a system, add a row.
 
 ---
 
+## SHIPPING
+
+There is ONE door: **`wwa-ship`**. It classifies the work itself — COMBAT · WORLD · DATA · SURFACE —
+and runs the right gate. ⚠ Nobody should ever be asked which gate applies, and "this gate does not
+fit" is never an acceptable answer: the eight items are the same for every profile, only their
+MEANING changes. If three items need waiving, two profiles have been merged into one commit.
+
 ## HOW TO USE THIS WHEN ROUTING
 
 1. Find the **nouns** in the request. "Characters speak when they react to the environment" →
