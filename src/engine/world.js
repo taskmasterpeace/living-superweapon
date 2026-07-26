@@ -332,7 +332,13 @@ export class World {
       }
       g.add(m);
       // crack overlay — fades in as the block takes damage
-      const crack = new THREE.Mesh(new THREE.BoxGeometry(w * 1.015, h * 1.006, d * 1.015), new THREE.MeshBasicMaterial({ map: crackTex, transparent: true, opacity: 0, depthWrite: false }));
+      // ⚠ AN ABSOLUTE OFFSET, NOT A PERCENTAGE. This shell used to be `w * 1.015`, which makes the
+      // gap PROPORTIONAL to the building — 0.33u on a 44u block but 0.075u (1.4 cm) on a 10u one,
+      // far under the depth buffer's floor at camera range. Everything narrower than 47u tore. It
+      // survived the 2026-07-25 flicker sweep because a crack overlay is only visible on a DAMAGED
+      // building, so a still scene never showed it. Same lesson as that sweep: a "small number"
+      // chosen per-system is the failure mode — take the rung from GROUND_LAYER/DECAL_LIFT.
+      const crack = new THREE.Mesh(new THREE.BoxGeometry(w + DECAL_LIFT * 2, h + DECAL_LIFT * 2, d + DECAL_LIFT * 2), new THREE.MeshBasicMaterial({ map: crackTex, transparent: true, opacity: 0, depthWrite: false }));
       crack.position.copy(m.position); crack.visible = false; g.add(crack);   // hidden until damaged — 16 fewer transparent draws
 
       const hp = Math.round(70 + w * h * d * 0.0075);   // destructible, but tough — bigger = tougher (rescaled for 1:1 heights)

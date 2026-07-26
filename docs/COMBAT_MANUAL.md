@@ -1695,6 +1695,21 @@ Venus and Jupiter kill everyone: no suit closes crush 3. Unprotected clocks are 
 ⚠ `_dncEarth = {...this._dnc}` copies *references* to the same `THREE.Color` instances — the backup
 was the same object, and Earth → Pluto → Earth came home to Pluto's sky. Clone colours.
 
+### The crack shell (found 2026-07-25 by the surface audit)
+
+⚠ **A PERCENTAGE IS NOT AN OFFSET.** The battle-damage crack overlay was sized `w * 1.015`, which
+makes its gap from the building face PROPORTIONAL: 0.33u on a 44u block, but **0.075u — 1.4 cm —
+on a 10u one**. Everything narrower than 47u was below the depth buffer's floor at camera range.
+It survived the flicker sweep because a crack overlay is only visible on a DAMAGED building, so a
+still scene never showed it. Both copies (world.js and citytiles.js) now add `DECAL_LIFT * 2` to the
+box, giving a constant shell at any building size. Measured: post-combat audit 7 problems → 5.
+
+⚠ **Known and deliberately not chased:** a damaged building scales (`scale.y = 1 - dmg * 0.12`), and
+a scaled parent shrinks its child's `DECAL_LIFT` offset with it — so a heavily damaged tower's roof
+plane sits at ~0.31u instead of 0.35u. Still ~6 cm and far above the tearing floor; the fix would be
+to counter-scale the roof, which costs a per-frame write on every damaged building for a gap nobody
+can see close. Recorded so the next audit knows it is a known reading, not a new defect.
+
 ## §37 · THE RANK LADDER (2026-07-25) — one scale, from a child to a supreme being
 
 Robert: *"I think 1-10 on strength isn't good enough… think about all the heroes… is that good
