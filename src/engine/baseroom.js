@@ -17,14 +17,17 @@
 // THROUGH a ceiling at a shallow angle, so anything up there is drawn across the whole frame).
 
 import * as THREE from 'three';
-import { COLS, ROWS, SLOTS, ENTRANCE, idx, colOf, rowOf, baseState, facilityById, staffed } from '../data/base.js';
+import { GRID, FLOORS, SLOTS, ENTRANCE, idx, colOf, rowOf, floorOf, baseState, facilityById, staffed, permitted } from '../data/base.js';
 
 const ROOM = 58, CORR = 18, PITCH = ROOM + CORR;
 const WALL_H = 30, WALL_T = 3, CEIL = 34;
+// ⚠ THE UPPER FLOOR IS A REAL STOREY, not a second grid drawn beside the first. It sits a full
+// storey above, which is the only reason a stairwell means anything.
+const STOREY = CEIL + 12;
 
 // floor accent by what the room is FOR — one hue family per kind, so you read the base's shape
 // from the floor at a glance rather than by reading every sign.
-const KIND_COLOR = { core: '#f5b21a', life: '#5fbf7a', work: '#6aa8e8', built: '#e0803a' };
+const KIND_COLOR = { core: '#f5b21a', life: '#5fbf7a', work: '#6aa8e8', sec: '#e06a4a', hold: '#c8b84a', built: '#e0803a' };
 
 export class BaseRoom {
   constructor(game) {
@@ -47,7 +50,9 @@ export class BaseRoom {
   }
 
   centreOf(slot) {
-    return { x: (colOf(slot) - (COLS - 1) / 2) * PITCH, z: (rowOf(slot) - (ROWS - 1) / 2) * PITCH };
+    return { x: (colOf(slot) - (GRID - 1) / 2) * PITCH,
+             z: (rowOf(slot) - (GRID - 1) / 2) * PITCH,
+             y: floorOf(slot) * STOREY };
   }
 
   open() {
@@ -59,6 +64,14 @@ export class BaseRoom {
     // every scene child that is not ours, a light, a camera, or a live system, and put every one of
     // them back in close() exactly as found. Hiding, not removing — the theater you travelled to
     // must be untouched when you leave.
+    // ⚠ THE ARENA BOUNDS HAVE TO FIT THE BASE. Entity physics clamps every fighter to
+    // `world.ARENA`, and a full 9×9 site spans ±333u — far outside the sim world's default box. The
+    // symptom was the player being TELEPORTED 82u on the first frame, from the access lift into the
+    // next room along, together with everyone else standing near the edge. A base that is bigger
+    // than the world it is built in is not a base.
+    this._arena0 = W.ARENA;
+    W.ARENA = Math.max(W.ARENA || 0, GRID * PITCH * 0.5 + ROOM * 1.5);
+
     this._hidden = [];
     const hide = (m) => { if (m && m.visible) { this._hidden.push(m); m.visible = false; } };
     const keep = new Set();
@@ -95,14 +108,14 @@ export class BaseRoom {
 
     // THE BEDROCK the base is cut into — one slab under everything, so unbuilt slots read as
     // undug rock rather than as a hole you can fall through.
-    const bw = COLS * PITCH + 60, bd = ROWS * PITCH + 60;
+    const bw = GRID * PITCH + 60, bd = GRID * PITCH + 60;
     const rock = this._add(new THREE.Mesh(this._geo(new THREE.BoxGeometry(bw, 8, bd)), rockM));
     rock.position.set(0, -4, 0); rock.receiveShadow = true;
 
     for (let s = 0; s < SLOTS; s++) {
       const rm = b.rooms[s];
       if (!rm) continue;                              // undug: bedrock, nothing to build
-      const { x, z } = this.centreOf(s);
+      const { x, z, y } = this.centreOf(s);
       const f = facilityById(rm.fid) || { n: '?', kind: 'core' };
       const lit = rm.built && staffed(s, b);
 
@@ -110,7 +123,7 @@ export class BaseRoom {
       // the inlay is a SEPARATE, SMALLER slab sitting in a recess, not a decal laid on the floor:
       // the floor slab is ROOM wide and the inlay is ROOM-16, so they never share a plane.
       const fl = this._add(new THREE.Mesh(this._geo(new THREE.BoxGeometry(ROOM, 2, ROOM)), floorM));
-      fl.position.set(x, -1, z); fl.receiveShadow = true;
+      fl.position.set(x, y - 1, z); fl.receiveShadow = true;
       const accent = this._mat({ color: KIND_COLOR[f.kind] || '#f5b21a',
         roughness: 0.7, emissive: KIND_COLOR[f.kind] || '#f5b21a',
         // ⚠ TONED DOWN AFTER LOOKING AT IT. At 0.85 the gold core accent bloomed through the
@@ -118,7 +131,7 @@ export class BaseRoom {
         // FLOOR, not a light source. No assertion catches a blowout; only the screenshot does.
         emissiveIntensity: rm.built ? (lit ? 0.34 : 0.12) : 0.06 });
       const in2 = this._add(new THREE.Mesh(this._geo(new THREE.BoxGeometry(ROOM - 16, 2.4, ROOM - 16)), accent));
-      in2.position.set(x, -0.6, z);
+      in2.position.set(x, y - 0.6, z);
 
       // WALLS, with a DOORWAY toward every dug neighbour. This is the whole "layout is the data"
       // idea in one loop: you cannot build a door, you build a room next door and the door appears.
@@ -126,15 +139,15 @@ export class BaseRoom {
       const sides = [[1, 0], [-1, 0], [0, 1], [0, -1]];
       for (const [dc, dr] of sides) {
         const c2 = c + dc, r2 = r + dr;
-        const inside = c2 >= 0 && c2 < COLS && r2 >= 0 && r2 < ROWS;
-        const open = inside && !!b.rooms[idx(c2, r2)];
+        const inside = c2 >= 0 && c2 < GRID && r2 >= 0 && r2 < GRID;
+        const open = inside && !!b.rooms[idx(c2, r2, floorOf(s))];
         const wx = x + dc * (ROOM / 2), wz = z + dr * (ROOM / 2);
         const along = dc ? 'z' : 'x';
         if (!open) {                                   // a solid wall
           const w2 = dc ? WALL_T : ROOM + WALL_T, d2 = dc ? ROOM + WALL_T : WALL_T;
           const m = this._add(new THREE.Mesh(this._geo(new THREE.BoxGeometry(w2, WALL_H, d2)), wallM));
-          m.position.set(wx, WALL_H / 2, wz); m.castShadow = true; m.receiveShadow = true;
-          this._solid(m, wx, wz, w2, d2, WALL_H);
+          m.position.set(wx, y + WALL_H / 2, wz); m.castShadow = true; m.receiveShadow = true;
+          this._solid(m, wx, wz, w2, d2, WALL_H, y + WALL_H);
         } else {                                       // two stubs and a gap = a doorway
           const gap = 20;
           for (const sgn of [-1, 1]) {
@@ -142,20 +155,20 @@ export class BaseRoom {
             const w2 = dc ? WALL_T : len, d2 = dc ? len : WALL_T;
             const px = wx + (along === 'x' ? off : 0), pz = wz + (along === 'z' ? off : 0);
             const m = this._add(new THREE.Mesh(this._geo(new THREE.BoxGeometry(w2, WALL_H, d2)), wallM));
-            m.position.set(px, WALL_H / 2, pz); m.castShadow = true; m.receiveShadow = true;
-            this._solid(m, px, pz, w2, d2, WALL_H);
+            m.position.set(px, y + WALL_H / 2, pz); m.castShadow = true; m.receiveShadow = true;
+            this._solid(m, px, pz, w2, d2, WALL_H, y + WALL_H);
           }
           // a lintel over the opening, so a doorway reads as a doorway and not a missing wall
           const lw = dc ? WALL_T : gap, ld = dc ? gap : WALL_T;
           const lin = this._add(new THREE.Mesh(this._geo(new THREE.BoxGeometry(lw, 5, ld)), steelM));
-          lin.position.set(wx, WALL_H - 2.5, wz);
+          lin.position.set(wx, y + WALL_H - 2.5, wz);
         }
       }
 
       // THE SIGN — the room says what it is, and an unfinished room says how long is left.
       const label = rm.built ? f.n : f.n + '  ·  ' + rm.weeksLeft + 'w';
       const sign = this._signMesh(label, rm.built ? (lit ? '#ffd24a' : '#8b8577') : '#e0803a');
-      sign.position.set(x, 17, z - ROOM / 2 + 3.2);
+      sign.position.set(x, y + 17, z - ROOM / 2 + 3.2);
       this._add(sign);
 
       // ⚠ THE CEILING IS THREE THIN BEAMS, not a slab — the training hall's lesson. An isometric
@@ -163,7 +176,7 @@ export class BaseRoom {
       // entire frame and reads as a lid over the game rather than as a roof over the room.
       for (let i = -1; i <= 1; i++) {
         const bm = this._add(new THREE.Mesh(this._geo(new THREE.BoxGeometry(ROOM, 1.6, 3)), steelM));
-        bm.position.set(x, CEIL, z + i * (ROOM / 3)); bm.castShadow = false;
+        bm.position.set(x, y + CEIL, z + i * (ROOM / 3)); bm.castShadow = false;
       }
     }
 
@@ -171,12 +184,13 @@ export class BaseRoom {
     for (let s = 0; s < SLOTS; s++) {
       if (!b.rooms[s]) continue;
       const c = colOf(s), r = rowOf(s);
+      const fl0 = floorOf(s);
       for (const [dc, dr] of [[1, 0], [0, 1]]) {
         const c2 = c + dc, r2 = r + dr;
-        if (c2 >= COLS || r2 >= ROWS || !b.rooms[idx(c2, r2)]) continue;
-        const { x: x1, z: z1 } = this.centreOf(s), { x: x2, z: z2 } = this.centreOf(idx(c2, r2));
+        if (c2 >= GRID || r2 >= GRID || !b.rooms[idx(c2, r2, fl0)]) continue;
+        const A = this.centreOf(s), B2 = this.centreOf(idx(c2, r2, fl0));
         const fl = this._add(new THREE.Mesh(this._geo(new THREE.BoxGeometry(dc ? CORR + 4 : 22, 2, dc ? 22 : CORR + 4)), floorM));
-        fl.position.set((x1 + x2) / 2, -1, (z1 + z2) / 2); fl.receiveShadow = true;
+        fl.position.set((A.x + B2.x) / 2, A.y - 1, (A.z + B2.z) / 2); fl.receiveShadow = true;
       }
     }
     this._populate();
@@ -209,7 +223,7 @@ export class BaseRoom {
     for (let s = 0; s < SLOTS; s++) {
       const rm = b.rooms[s];
       if (!rm || !rm.built) continue;
-      const { x, z } = this.centreOf(s);
+      const { x, z, y } = this.centreOf(s);
       const crew = (rm.staff || []).length;
       const n = Math.min(3, crew || (s === ENTRANCE ? 1 : 0));
       for (let i = 0; i < n; i++) {
@@ -220,6 +234,7 @@ export class BaseRoom {
         // occupant on the wrong team is an ambush in your own kitchen.
         const team = (g.player && g.player.team != null) ? g.player.team : 0;
         const f = g.addFighter(def, { team, x: x + (i - 1) * 12, z: z + (i % 2 ? 8 : -8) });
+        if (f && y) f.pos.y = y;
         if (!f) continue;
         f.ai = null;                                  // no AI: an occupant, not a combatant
         f._baseOccupant = true;
@@ -229,18 +244,22 @@ export class BaseRoom {
     this._occupants = placed;
     // the player arrives at the lift
     const p = g.humans[0] && g.humans[0].fighter;
-    if (p) { const c = this.centreOf(ENTRANCE); p.pos.set(c.x, 0, c.z + 14); p.aim.set(0, 0, -1); p.aim3.set(0, 0, -1); }
+    if (p) { const c = this.centreOf(ENTRANCE); p.pos.set(c.x, c.y, c.z + 14); p.aim.set(0, 0, -1); p.aim3.set(0, 0, -1); }
   }
 
   update(dt) {
     // the ceiling is a hard lid — you cannot fly out of your own basement
-    for (const e of this.game.entities) if (e.pos && e.pos.y > CEIL - 6) {
-      e.pos.y = CEIL - 6; if (e.vel && e.vel.y > 0) e.vel.y = 0;
+    // ⚠ the lid is the TOP built floor's ceiling, not the ground floor's — otherwise a two-storey
+    // base clamps you into the basement and the upper floor is unreachable by anything that flies.
+    const top = (permitted(this.b).floors - 1) * STOREY + CEIL - 6;
+    for (const e of this.game.entities) if (e.pos && e.pos.y > top) {
+      e.pos.y = top; if (e.vel && e.vel.y > 0) e.vel.y = 0;
     }
   }
 
   close() {
     const W = this.world;
+    if (this._arena0 != null) { W.ARENA = this._arena0; this._arena0 = null; }   // the world's own bounds back
     for (const m of this._hidden || []) m.visible = true;      // put the world back exactly as found
     this._hidden = [];
     if (this._props) { W.cars = this._props.cars; W.planes = this._props.planes;
