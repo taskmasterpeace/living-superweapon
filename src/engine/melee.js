@@ -127,17 +127,34 @@ export class MeleeSystem {
       } else if (blocked) {
         foe.takeDamage(dmg, { src: f, strike: true, hitstop: 0.07 });     // straights get blocked like strikes
         f.strikeCd = Math.max(f.strikeCd, 0.5); f.hitstop = Math.max(f.hitstop, 0.1);   // punishable — counter window
-        g.vfx.impactStar(imp, 7, '#bfe0ff', 0.16); g.audio.zap(520);
+        g.vfx.impactStar(imp, 8, '#bfe0ff', 0.18);
+        // ⚠ A BLOCKED PUNCH IS NOT A ZAP. `audio.zap` is the KI sound — a blocked fist should be a
+        // recorded body impact off the sample bank, which is the difference between "an effect went
+        // off" and "that hurt his arms".
+        g.audio.impact(0.7, imp); g.world.shake(0.5);
       } else {
         const fp = 0.6 + 0.4 * mom;   // star + sound ride the same momentum number
-        foe.takeDamage(dmg * mom, { src: f, strike: true, hitstop: hay ? 0.16 : 0.1,
+        // ⚠ `haymaker` IS WHAT REACHES THE IMPACT FRAME. `game.onHit` fires the one-frame invert and
+        // the speed lines on `opts.heavy || opts.haymaker || amount >= 14% maxHp` — and melee only
+        // ever passed `strike: true`, so the whole feel layer built for this never fired on the one
+        // punch it was built for. Against a heavyweight 14% is a number a fist does not reach.
+        foe.takeDamage(dmg * mom, { src: f, strike: true, heavy: hay, haymaker: hay,
+          hitstop: hay ? 0.20 : 0.12,
           dmgClass: this._swingKind(f) === 'blade' ? 'slash' : undefined,
           kb: { x: f.aim.x * (hay ? 54 : 26) * mom, y: (hay ? 6 : 3) * mom, z: f.aim.z * (hay ? 54 : 26) * mom },
           launch: dive ? -(36 + (f._momSpd || 0) * 0.45) : (hay ? 16 : 6) * mom });   // dive haymaker = meteor drop
-        f.hitstop = Math.max(f.hitstop, hay ? 0.12 : 0.07);
+        // ⚠ THE ATTACKER'S OWN HITSTOP IS THE WHOLE FEELING. A hit that stops the VICTIM reads as
+        // damage; a hit that stops YOUR OWN HAND reads as force. It was 0.12 on a full haymaker,
+        // which is under two frames of a held pose — the animation flowed straight through the blow.
+        f.hitstop = Math.max(f.hitstop, hay ? 0.19 : 0.10);
         g.vfx.impact(imp, { x: f.aim.x, z: f.aim.z }, { color: f.def.colors.accent, power: (hay ? 2 : 1.1) * fp });
-        g.world.shake((hay ? 1.8 : 0.9) * fp); g.audio.impact((hay ? 1.5 : 0.9) * fp, imp);
-        if (hay || mom > 1.55) { g.world.punch(0.68); g.slowmo(0.13, 0.4); if (g.hud) g.hud.flashScreen('#fff', 0.15); g.audio.boom(0.5); }
+        g.world.shake((hay ? 2.6 : 1.15) * fp); g.audio.impact((hay ? 1.8 : 1.0) * fp, imp);
+        if (hay || mom > 1.55) {
+          // ⚠ THE FLASH IS THE PRINT PASS'S ONE INVERTED FRAME NOW, not a white wash over the whole
+          // screen. A wash hides the thing you just did; an inverted frame IS the drawing changing,
+          // which is the trick fighting games have run on for thirty years.
+          g.world.punch(0.9); g.slowmo(0.16, 0.34); g.audio.boom(0.62);
+        }
         if (dive) { g.vfx.ring(foe.pos.clone().setY(Math.max(0.4, foe.pos.y - 4)), { color: '#ffffff', r0: 1, r1: 10, life: 0.3, flat: true, y: 0.4 }); g.audio.boom(0.5, imp); }
       }
     }

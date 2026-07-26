@@ -1383,6 +1383,39 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
 - ⚠ CSS appended to `hud.styles.js` must go INSIDE the template literal — pasted after the closing
   backtick it is a syntax error, and the build message points at the line, not the cause.
 
+## THE MELEE FEEL PASS (2026-07-26) — "don't stop until it feels violent"
+- Robert: *"melee is like non-existent, it doesn't feel powerful."* The numbers were never the
+  problem — momentum melee already scales a running punch ~1.3× and a flying one ~1.8×. **The feel
+  layer built for exactly this was not connected.**
+- ⚠ **THE HAYMAKER NEVER REACHED THE IMPACT FRAME, AND IT WAS MY OWN LOOSE WIRE.** `game.onHit`
+  fires the one-frame invert and the speed lines on `opts.heavy || opts.haymaker || amount >= 14% of
+  maxHp` — and `melee.js` only ever passed `strike: true`. So the most committed punch in the game
+  fired the feel layer **only when it happened to do 14% of a health bar**, which a fist does not do
+  to a heavyweight. Verified: `melee.js:141` now sends `heavy: hay, haymaker: hay`, and those opts
+  fire the invert, the speed lines and the lettering ("POW!") at 11.4% of max hp — under the damage
+  gate, so the old call had no route to any of them.
+- ⚠ **THE ATTACKER'S OWN HITSTOP IS THE WHOLE FEELING.** A hit that stops the VICTIM reads as
+  damage; a hit that stops YOUR OWN HAND reads as force. It was 0.12s on a full haymaker — under two
+  frames of held pose, so the animation flowed straight through the blow. Now 0.19s, and the
+  victim's 0.16 → 0.20.
+- ⚠ **A BLOCKED PUNCH WAS PLAYING `audio.zap(520)` — THE KI SOUND.** A fist on a guard is a recorded
+  body impact off the sample bank, which is the difference between "an effect went off" and "that
+  hurt his arms". Now `audio.impact` + a 0.5 shake.
+- ⚠ **A HAYMAKER ALWAYS LETTERS NOW, WHATEVER THE NUMBER.** The comic gate was damage-only, so the
+  punch that most deserves the loudest tell was the one most likely to fall under the threshold —
+  and the 0.42s rate limit could let a jab eat its word. A committed blow always gets through, at
+  full weight, in red.
+- **The white screen flash is gone**, replaced by the print pass's single inverted frame. A wash
+  hides the thing you just did; an inverted frame IS the drawing changing.
+- Shake 1.8 → 2.6 on a haymaker, punch 0.68 → 0.9, slow-mo 0.13/0.4 → 0.16/0.34.
+- ⚠ **HARNESS, TWICE, AND BOTH ARE WORTH KEEPING.** (1) A stubbed `controlPlayer` kills the HELD
+  input, so `meleeCharge` never accumulates and `chargeStart`/`chargeUpdate`/`chargeRelease` land a
+  charge of 0 — three runs produced no punch at all before I saw it. (2) Wrapping a spy around an
+  ALREADY-WRAPPED function makes the second call increment both counters, which reported the OLD
+  call as firing the new effects. An A/B harness has to install its probes once.
+- **Not verified end-to-end through the input path** — the wire and the opts are proven, the
+  keyboard-to-fist route is not. Next slice of the melee spec (BACKLOG) is the strike grammar.
+
 ## HANDOFF
 - **`HANDOFF.md` at the repo root** is the orientation document: architecture, the ten rules that
   are load-bearing, what is solid, what is half-built, what to do next, and the headless

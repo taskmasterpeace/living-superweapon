@@ -2246,14 +2246,21 @@ export class Game {
         this.world.print.speedLines(p ? p.x : 0.5, p ? p.y : 0.5, Math.min(1, 0.45 + amount / 200), 0.2);
       }
     }
-    if (this.comic && amount >= 14 && !blocked && !opts.dot && target && target.pos) {
+    // ⚠ A HAYMAKER ALWAYS LETTERS, WHATEVER THE NUMBER. The gate was damage-only, so the single most
+    // committed punch in the game printed nothing when it landed on a heavyweight — the hit that
+    // most deserves the loudest tell was the one most likely to be under the threshold. The word is
+    // the comic layer's whole job; spend it on intent, not on arithmetic.
+    if (this.comic && (amount >= 14 || opts.haymaker) && !blocked && !opts.dot && target && target.pos) {
       const pl = this.player;
       const near = !pl || (Math.abs(pl.pos.x - target.pos.x) < 260 && Math.abs(pl.pos.z - target.pos.z) < 260);
       const t = this.time || 0;
-      if (near && t - (this._sfxT || -9) > 0.42) {
+      // ⚠ the rate limit exists so a beam is not confetti — but it must not let a JAB eat the
+      // haymaker's word 0.3s later. A committed blow always gets through.
+      if (near && (opts.haymaker || t - (this._sfxT || -9) > 0.42)) {
         this._sfxT = t;
         this.comic.sfx(this._sfxWord(amount, opts), target.pos,
-          { power: Math.min(1, amount / 60), red: !!(opts.slam || amount > 48) });
+          { power: opts.haymaker ? 1 : Math.min(1, amount / 60),
+            red: !!(opts.slam || opts.haymaker || amount > 48) });
       }
     }
     if (this.lab) {
