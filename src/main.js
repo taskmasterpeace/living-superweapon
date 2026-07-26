@@ -1,6 +1,7 @@
 // WAR WORLD: ASCENDANTS — bootstrap.
 import { Input } from './core/input.js';
 import { DevConsole } from './engine/devconsole.js';
+import { Comic } from './engine/comic.js';
 import { AudioBus } from './core/audio.js';
 import { Game, ROSTER } from './engine/game.js';
 import { HUD } from './engine/hud.js';
@@ -35,6 +36,12 @@ game.world.prewarm();   // compile lazy FX shaders up-front — no first-use hit
 loadSettings(); applySettings(game);   // player settings (volume/shake/quality/HUD) from localStorage
 // THE DEV CONSOLE — ` or the >_ button. Mounted at boot because the things worth debugging (a gate
 // that refuses silently, a band that doesn't match the buildings) happen before you'd think to ask.
+// THE COMIC LAYER — captions, balloons and SFX. Ticked from the HUD's own frame rather than the
+// sim, so a caption can never reach the game loop; `clearTransients` empties it with everything
+// else that must not outlive a match (the reset law).
+const comic = new Comic(game);
+game.comic = comic;
+
 const dev = new DevConsole(game, hud);
 // GPU sanity — software WebGL turns the game into slow motion; say WHY, loudly
 try {
@@ -446,7 +453,7 @@ window.addEventListener('error', (e) => { if (e && e.error) game.reportError(e.e
 window.addEventListener('unhandledrejection', (e) => game.reportError(e && e.reason, 'promise'));
 
 // expose for debugging + performance benchmarking
-window.LSW = { dev, game, hud, ROSTER, runSlot, performEvade, input, tutorial, netplay, uinav, soundscape, SETTINGS, KEYMAPS, playOpening, creator: { ui: creator, freshPicks, buildDef, tally, validate, saveCustom, deleteCustom, loadCustoms } };
+window.LSW = { dev, comic, game, hud, ROSTER, runSlot, performEvade, input, tutorial, netplay, uinav, soundscape, SETTINGS, KEYMAPS, playOpening, creator: { ui: creator, freshPicks, buildDef, tally, validate, saveCustom, deleteCustom, loadCustoms } };
 window.LSW.runBenchmark = (opts) => runBenchmark(game, hud, opts);
 if (location.search.includes('bench')) {
   addEventListener('load', () => setTimeout(async () => {

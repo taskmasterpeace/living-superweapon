@@ -1191,6 +1191,7 @@ export class Game {
   // everywhere, which is the whole point.
   clearTransients() {
     if (this.lab) { try { this.lab.close(); } catch (e) {} this.lab = null; }   // the white room is a transient too
+    if (this.comic) { try { this.comic.clear(); } catch (e) {} }              // captions must not outlive their match
     this._gen = (this._gen | 0) + 1;                  // retire every in-flight deferred callback
     if (!this._timers) this._timers = new Set();
     for (const id of this._timers) clearTimeout(id);
@@ -1691,6 +1692,17 @@ export class Game {
   isHuman(f) { return this.humans.some(h => h.fighter === f); }
 
   handleKO(victim) {
+    // THE KO IS THE PANEL EVERY COMIC ENDS ON. One caption, one sound effect, and nothing else —
+    // the layer earns its keep by being rare.
+    if (this.comic && victim && victim.pos) {
+      try {
+        this.comic.sfx(killer ? 'K.O.!' : 'DOWN!', victim.pos, { power: 1, red: true, size: 42, life: 1.3 });
+        if (this.isHuman(killer) || this.isHuman(victim)) {
+          this.comic.caption((victim.name || 'THEY') + ' is down!', { where: 'top', red: !this.isHuman(killer), life: 2.4 });
+        }
+      } catch (e) { this.reportError && this.reportError(e, 'comic.ko'); }
+    }
+
     try { this.startKoCam(victim); } catch (e) {}   // ROADMAP 18 · camera drama
     // THE DROP ECONOMY (manual §16): KO'd gear carriers leave a weapon on the street — 20s to
     // claim it. Held pickups fall too. Police sidearms join the economy the same way.
@@ -1956,10 +1968,38 @@ export class Game {
   }
 
   // Called by Fighter.takeDamage for EVERY hit — damage numbers, sparks, combo.
+  // THE ONOMATOPOEIA TABLE. A comic never writes "hit" — the WORD is the sound, and which word
+  // depends on what landed. It lives beside onHit because that is the one place that knows.
+  _sfxWord(amount, opts) {
+    const dc = (opts && opts.dmgClass) || '', dt = (opts && opts.dtype) || '';
+    const big = amount > 26, huge = amount > 48;
+    if (opts && opts.slam) return huge ? 'KRA-THOOM!' : big ? 'WHAAM!' : 'THUD!';
+    if (dc === 'slash') return big ? 'SHKKT!' : 'SHINK!';
+    if (dt === 'ballistic') return 'BLAM!';
+    if (dt === 'fire') return big ? 'FWOOSH!' : 'FWIP!';
+    if (dt === 'cold') return 'KRIK-KRAK!';
+    if (dt === 'energy') return huge ? 'KRAKA-DOOM!' : big ? 'ZAAK!' : 'ZAP!';
+    if (opts && opts.strike) return huge ? 'KRAKKO!' : big ? 'THWAKK!' : 'POW!';
+    return big ? 'WHUMP!' : 'BAP!';
+  }
+
   onHit(target, amount, opts = {}, blocked = false) {
     const src = opts.src;
     // THE WHITE ROOM reads the choke point rather than modelling damage itself — see whiteroom.js.
     // The evasion drill's score is the same event seen from the other side: a hit that lands on YOU.
+    // ⚠ ONLY THE BIG ONES, AND ONLY NEAR THE PLAYER. A sound effect per beam tick is confetti;
+    // this rate limit is what keeps the layer reading as a comic panel and not as a damage log.
+    // Sustained sources (dot) never letter at all.
+    if (this.comic && amount >= 14 && !blocked && !opts.dot && target && target.pos) {
+      const pl = this.player;
+      const near = !pl || (Math.abs(pl.pos.x - target.pos.x) < 260 && Math.abs(pl.pos.z - target.pos.z) < 260);
+      const t = this.time || 0;
+      if (near && t - (this._sfxT || -9) > 0.42) {
+        this._sfxT = t;
+        this.comic.sfx(this._sfxWord(amount, opts), target.pos,
+          { power: Math.min(1, amount / 60), red: !!(opts.slam || amount > 48) });
+      }
+    }
     if (this.lab) {
       this.lab.capture(target, amount, opts, blocked);
       if (target === this.player && amount > 0 && !blocked) this.lab.noteHitTaken();

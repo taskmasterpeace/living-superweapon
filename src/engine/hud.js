@@ -1681,6 +1681,9 @@ export class HUD {
     this.updateKitWidget(p);
     this.updateDpsMeters(g);
     this.updateFoeArrow(g);
+    // the comic layer rides the HUD's frame — it is presentation, and it must never be able to
+    // throw into the sim
+    if (g.comic) { try { g.comic.update(this._dt || 0.016); } catch (e) { g.reportError && g.reportError(e, 'comic'); } }
     this.updateColumnChips(g);
     this.updateTelemetry(g);
     this.updateAltitude(g, p);

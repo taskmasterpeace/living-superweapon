@@ -1406,6 +1406,42 @@ Four laws, three of them the same idea: **a thing must not outlive the match tha
 - `training` survives as an INTERNAL mode with no card: the tutorial (`hud.onTutorial`) and the
   atlas tile proving ground (`hud.onProvingGround`) both still enter it.
 
+## THE COMIC LAYER (2026-07-25) — `styles/comic.css` + `engine/comic.js`
+- **THE FONTS WERE CHOSEN BY SPECIMEN, NOT BY NAME.** Eleven candidates rendered inside a real
+  balloon, a real caption box and at real SFX size, judged IN CONTEXT:
+  · **DIALOGUE -> Comic Neue Bold** — the only one that reads as LETTERING, not a novelty face
+  · **CAPTIONS -> Comic Neue Bold ITALIC** — a near-exact match for Robert's reference sheet
+  · **SFX -> Bangers**, heavy alt Luckiest Guy — both keep their counters open under a 3px stroke
+  where Titan One and Chewy fill in. Four woff2 in `/public/fonts` (79KB).
+  ⚠ NEVER a CDN link (offline law). ⚠ `font-display:block` not swap — a balloon in Arial for 200ms
+  that then reflows is worse than one that arrives 200ms late.
+- **FOUR THINGS A LETTERER DOES that software usually doesn't**, all implemented:
+  1. **BALANCED LINES** (`balance()`): every line count tried, scored on raggedness + width +
+     height. Greedy wrapping gives a long first line and a stub last one.
+  2. **THE TAIL POINTS AT THE MOUTH** — head height, not feet or centre — slides along the balloon
+     edge to stay under the speaker and flips above/below when there is no room. Two stacked
+     triangles so the outline is one continuous inked line, not a web-app chat bubble.
+  3. **EMPHASIS INSIDE THE BALLOON** — `*word*` bolds, `**word**` bolds and reddens.
+  4. **NOTHING OVERLAPS** — balloons AND sfx share one occupancy list.
+- **TONES**: talk · **shout** (burst clip-path, keeps its tail) · **whisper** (dashed) ·
+  **think** (cloud + trailing dots) · **radio** (square, zigzag edge). Captions get a red **drop
+  cap** breaking the box's top edge, a **Ben-Day halftone** of two offset dot grids (one alone
+  reads as a screen door), and **1.2 degrees of rotation** — at exactly 0 a caption reads as a UI panel.
+- ⚠ **THE SAFE AREA.** Balloons under the controls rail are unreadable and no z-index fixes it —
+  the HUD is information the player also needs. `_safe()` is the rails the HUD owns; balloons,
+  captions and sfx all clamp to it.
+- ⚠ **offsetWidth, NOT getBoundingClientRect** for placement. The rect reports the TRANSFORMED box,
+  so while the pop animation scales a balloon from 0.6 it measures small — and the clamp meant to
+  keep it out of the HUD rail lets an under-measured one straight through.
+- ⚠ **A BURST IS A BACKING, NOT A BILLBOARD.** At 190% of a wide word the SFX star was ~2000px and
+  swallowed the balloon behind it. Height leads (SFX are short and wide, so one % on both axes
+  explodes horizontally); base size 32, because a sound effect must sit BESIDE a balloon.
+- **Live triggers**: `onHit` letters a sound effect for hits >= 14 near the player, rate-limited to
+  ~1 per 0.42s, never for DoT ticks (a word per beam tick is confetti); `handleKO` gets the panel
+  every comic ends on. ⚠ Ticked from the HUD frame, never the sim; cleared by `clearTransients`
+  (the reset law); keeps its OWN clock because `hud.update()` takes no dt.
+- Console: `comic [say|shout|whisper|think|radio|cap|sfx|demo] <text>`. Ref `wwa-comic.png`.
+
 ## ORIGINS · HOSPITALS · THE PSYCHE (2026-07-25) — from Robert's Combat Compendium + Emotions sheet
 - **`data/origins.js`** — the NINE origins and the hospital table, transcribed not reinvented:
   skilled 100%/12h · altered 100%/24h · tech 80%/48h · mutated 80%/48h · spiritual 30%/72h ·

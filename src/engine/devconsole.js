@@ -386,6 +386,7 @@ export class DevConsole {
                 'CS → ' + p2.effectiveLabel + '   (' + Math.round(p2.perStay * 100) + '% per stay)');
         c.print('             one stay every ' + p2.hours + 'h · ' + p2.stays + ' stays · ' + p2.totalHours + 'h total');
         c.print('             100% requires: ' + p2.requires);
+        if (p2.afterCare) c.print('             after the cap: ' + p2.afterCare, '#8b8577');
         if (p2.table.intensityNote) c.warn('             ⚠ ' + p2.table.intensityNote);
       }
       c.print('');
@@ -405,6 +406,27 @@ export class DevConsole {
           (H.canAdmit ? Math.round(H.healMax * 100) + '% cap · every ' + H.hours + 'h' : 'cannot be admitted'));
         c.print('   ' + list.join(', '), '#8b8577');
       }
+    });
+
+    // ---- the comic layer, on demand
+    this.cmd('comic', 'comic [say|shout|whisper|think|radio|cap|sfx|demo] <text>', (a, c) => {
+      const g = G(), C = g.comic, p = P();
+      if (!C) return c.err('no comic layer');
+      const what = (a[0] || 'demo').toLowerCase();
+      const text = a.slice(1).join(' ');
+      if (what === 'demo') {
+        C.caption('Meanwhile, across town...', { where: 'tl' });
+        C.caption('Just at that moment!', { where: 'tr', halftone: true, tilt: 'r' });
+        if (p) C.say(p, 'You picked the *wrong* city, pal!');
+        const foe = g.entities.find(e => e.alive && e.def && e !== p && g.isFoe && g.isFoe(p, e));
+        if (foe) C.say(foe, 'I will tear you **apart**!', { tone: 'shout' });
+        if (p) C.sfx('THWAKK!', p.pos, { power: 0.8 });
+        return c.ok('lettered');
+      }
+      if (what === 'cap') { C.caption(text || 'Meanwhile...', { where: 'tl' }); return; }
+      if (what === 'sfx') { if (p) C.sfx(text || 'KRAKOOM!', p.pos, { power: 0.9 }); return; }
+      if (!p) return c.err('no player to speak');
+      C.say(p, text || 'Say something.', { tone: what === 'say' ? 'talk' : what });
     });
 
     this.cmd('surfaces', 'run the z-fighting audit on the live scene', (a, c) => {

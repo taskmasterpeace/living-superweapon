@@ -50,7 +50,10 @@ export const ORIGINS = [
     detail: 'Hospitals barely help. What is hurt is not entirely the body.' },
   { n: 6, id: 'robotic',   name: 'ROBOTIC',
     blurb: 'A machine, whatever else it also is.',
-    detail: 'A ward is the wrong building. It needs a workshop, and parts.' },
+    // ⚠ THEY ARE ADMITTED LIKE ANYONE ELSE — the low ceiling is not a refusal. A hospital stabilises
+    // the frame, seals the housing and gets them upright; what it CANNOT do is fabricate the parts,
+    // which is why the last 80% waits on engineering. (The 20% is Robert's own sheet — one number.)
+    detail: 'A hospital will take them and get them running. Only a workshop can finish the job.' },
   { n: 7, id: 'symbiotic', name: 'SYMBIOTIC',
     blurb: 'Two things sharing one body.',
     detail: 'Treat the host and you may be fighting the passenger.' },
@@ -130,10 +133,16 @@ export function recoveryPlan(def, sheet, injury) {
     totalHours: H.canAdmit ? Math.max(1, Math.ceil(H.healMax / Math.max(0.01, perStay))) * hours : 0,
     injury: injury || null,
     // what an origin that CANNOT be admitted does instead — the interesting half of the table
+    // what an origin that CANNOT be admitted does instead. ⚠ ROBOTIC IS NOT ON THIS LIST — they
+    // are admitted like anyone else; they just leave with the frame sound and the rest pending.
     alternative: H.canAdmit ? null
-      : (o.id === 'robotic' ? 'a workshop and parts, not a ward'
-        : o.id === 'alien' ? 'time, and whatever they do in private'
-        : 'nobody knows yet'),
+      : (o.id === 'alien' ? 'time, and whatever they do in private' : 'nobody knows yet'),
+    afterCare: H.canAdmit && H.healMax < 1
+      ? (o.id === 'robotic' ? 'the balance needs a workshop and fabricated parts'
+        : o.id === 'tech' ? 'the balance needs an engineer, not a surgeon'
+        : o.id === 'spiritual' ? 'the balance is not entirely a body problem'
+        : o.id === 'symbiotic' ? 'the balance depends on what the passenger wants'
+        : 'the balance needs research on this specific biology') : null,
   };
 }
 
