@@ -948,3 +948,16 @@ body.deck .rcard, body.deck .mcard{ outline-offset:3px; }   /* stick-focus reads
   letter-spacing:.14em; color:var(--text-5,#7d776b); margin-top:1px; white-space:nowrap; }
 .slot .sfx b{ color:var(--gold-pale,#e8cf92); font-weight:400; margin-right:4px; font-size:11px; }
 `;
+
+/* ============ POWERWORLD — the chrome that is only true in a city ============
+   ⚠ The tokens, the fonts, the gold accent and every hero colour are IDENTICAL here. Sameness in the
+   chrome is what keeps two dimensions one game; what changes is that a few readouts stop being TRUE.
+   The city nameplate names a city. The wanted stars need a state with police in it. The KMK 9 monitor
+   needs a press. None of those exist in PowerWorld, so they go — and a surface that cannot be true
+   should never be on screen, which is the same rule the armory keeps when it says NOT YET ISSUED. */
+export const POWERWORLD_CSS = `
+body.powerworld #hud .cityplate{ display:none !important; }   /* names a city; there isn't one */
+body.powerworld #hud .wantedrow{ display:none !important; }    /* no police to be wanted by */
+body.powerworld #hud .pip{ display:none !important; }          /* no press, so no monitor */
+body.powerworld #hud .radar .rlab{ color:var(--text-5); }
+`;

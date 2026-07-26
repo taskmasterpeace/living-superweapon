@@ -11,7 +11,7 @@ import { PLANETS, AU_KM, HELIOPAUSE_AU, TERMINATION_SHOCK_AU, SCALE_LADDER, NEAR
 import { clockStr } from '../data/news.js';
 import { GEO_ATTRIBUTION, cityLatLon } from '../data/citycoords.js';
 import { gameDate, dateStr } from '../data/orbits.js';
-import { CSS, CODEX_MOBILE, PHONE_CSS, TABLET_CSS, DECK_CSS } from './hud.styles.js';
+import { CSS, CODEX_MOBILE, PHONE_CSS, TABLET_CSS, DECK_CSS, POWERWORLD_CSS } from './hud.styles.js';
 import { DTYPES, DTYPE_INFO, resistOf, bandOf } from './entity.js';
 import { handLabel } from './hands.js';
 import { glyph, padActive, padFaces } from '../core/glyphs.js';
@@ -169,7 +169,7 @@ export class HUD {
     // a 148px label column, the armament table scrolls sideways instead of clipping, and the
     // pager/close controls grow to thumb size. Steam Deck (1280×800) uses the desktop layout.
     
-    const s = document.createElement('style'); s.textContent = CSS + CODEX_MOBILE + PHONE_CSS + TABLET_CSS + DECK_CSS; document.head.appendChild(s);
+    const s = document.createElement('style'); s.textContent = CSS + CODEX_MOBILE + PHONE_CSS + TABLET_CSS + DECK_CSS + POWERWORLD_CSS; document.head.appendChild(s);
     this.root = document.getElementById('hud');
     this.title = document.getElementById('title');
     this.feedLines = [];

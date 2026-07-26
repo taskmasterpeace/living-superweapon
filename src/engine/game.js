@@ -22,6 +22,7 @@ import { buildReport } from '../data/news.js';
 import { bookInjury, injuryOf, healBout, koElo, matchElo } from '../data/rankings.js';
 import { SETTINGS, keymap } from '../core/settings.js';
 import { BoxingRing, BOXING } from './boxingring.js';
+import { PowerWorldStage } from './powerworld.js';
 import { STRIKES } from '../data/martial.js';
 import { beamBuildOf, beamTemperOf } from '../data/visual.js';
 import { Gamepad } from '../core/gamepad.js';
@@ -177,6 +178,12 @@ const MODE_IMPL = {
   powerworld: {
     setup(g, o = {}) {
       g.ms = { powerworld: true, chaseCam: true };   // the third-person lock-on view (world.chase)
+      g.pwStage = new PowerWorldStage(g); g.pwStage.open();   // the stage — see engine/powerworld.js
+      // ⚠ THE CITY HUD LIES IN ANOTHER DIMENSION. The nameplate read "TRANQUILITY REACH · THE MOON ·
+      // POP 8K · CRIME 8" while standing on a rock spire in PowerWorld — a surface stating a fact
+      // that is not true of where you are. One body class, and the stylesheet does the rest; the
+      // player panel, the hands row and the radar all stay, because those are still true.
+      document.body.classList.add('powerworld');
       // ⚠ NOBODY LIVES HERE. `police.active` is a GETTER and `news.enabled` is set from the mode id,
       // so neither can be switched off from out here — the honest fix was to give "does this theatre
       // have a civil society" one definition (`hasCivilians` in data/modes.js) that both already read.
@@ -190,6 +197,10 @@ const MODE_IMPL = {
       // open sky, so `fov` goes off and every fighter is drawn.
       // ⚠ The AI honesty law is untouched — `canSee`/`_vis` are what the BOTS read, and they are still
       // computed. This turns off the PLAYER's concealment rendering, not anyone's knowledge.
+      // ⚠ STASHED, because `fov` is a GAME field and would otherwise leak into the next match —
+      // measured: after one visit the city had no fog of war at all and its fog plane stayed hidden.
+      // Restored in `clearTransients`, the one place that empties the board.
+      g._fov0 = g.fov;
       g.fov = false;
       g.world.setFogEnabled && g.world.setFogEnabled(false);
       // THE OPEN SKY. `fitBands` sizes the ceiling from the tallest thing built, and the deck servo
@@ -1542,6 +1553,9 @@ export class Game {
     // this is the one place that empties the board, so the restore belongs here.
     if (this._bands0) { Object.assign(BANDS, this._bands0); this._bands0 = null; }
     if (this._ring) this._ring.close();
+    if (this._pwStage) this._pwStage.close();   // POWERWORLD's stage is a transient like any other
+    document.body.classList.remove('powerworld');   // and the class goes home with it (the reset law)
+    if (this._fov0 != null) { this.fov = this._fov0; this._fov0 = null; }   // and so is a suspended fog of war
     if (this.lab) { try { this.lab.close(); } catch (e) {} this.lab = null; }   // the white room is a transient too
     if (this.baseRoom) { try { this.baseRoom.close(); } catch (e) {} this.baseRoom = null; }   // ⚠ and so is the BASE — its walls are real cover records; leaving them behind is the invisible-wall bug
     if (this.comic) { try { this.comic.clear(); } catch (e) {} }              // captions must not outlive their match
