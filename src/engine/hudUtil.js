@@ -146,4 +146,69 @@ export function describeAbility(a) {
   }
 }
 
+// =================================================================================================
+// SLOT FACTS — what an ability IS, before you fire it.
+//
+// Robert: *"selecting attacks is tough, and I can't tell what an attack does until I use it. The
+// names of many attacks don't really say what it does — don't know if it's a projectile or something
+// different."*
+//
+// He is right and the fix costs nothing, because the answer is already in the data: `visOf` resolves
+// a delivery SHAPE for every ability in the game and `describeAbility` already writes the sentence.
+// The slot chip was showing the name and throwing both away.
+//
+// ⚠ ONE FUNCTION, so the chip, the tooltip and any future surface cannot disagree about what a power
+// is. Same law as the damage codex: a surface is only "derived from the engine" if it reads what the
+// engine reads.
+// ⚠ GLYPHS ARE GEOMETRY, NOT EMOJI. These render at 9px inside a chip; an emoji is a colour image at
+// the mercy of the platform font (Windows draws flag emoji as letter pairs — already paid for once).
+const SHAPE_GLYPH = {
+  hose: '═', ray: '═', torrent: '═',            // a beam is a line you hold
+  bolt: '◆', orb: '◆', card: '◆', blade: '◆',   // a thing that flies
+  cone: '◣', burst: '◉', field: '▦', dome: '◠',
+  fist: '✕', claw: '✕',                          // contact
+  mine: '◇', trap: '◇',
+  drone: '❖', construct: '❖',
+  self: '◎', aura: '◎',
+};
+const TYPE_GLYPH = {
+  beam: '═', projectile: '◆', volley: '◆', charge: '◆', growingorb: '◆', meteor: '◆', facebomb: '◆',
+  rifle: '▪', bow: '▪', quiver: '▪',
+  cone: '◣', nova: '◉',
+  melee: '✕', rush: '✕', tentacle: '✕', grapple: '✕',
+  mine: '◇', portal: '◇',
+  summon: '❖', construct: '❖',
+  buff: '◎', phase: '◎', teleport: '»', dash: '»',
+};
+const KIND_WORD = {
+  '═': 'BEAM', '◆': 'PROJECTILE', '▪': 'FIREARM', '◣': 'CONE', '◉': 'BLAST',
+  '✕': 'MELEE', '◇': 'TRAP', '❖': 'SUMMON', '◎': 'SELF', '▦': 'FIELD', '◠': 'BARRIER', '»': 'MOVE',
+};
 
+/** Reach in world units, from whatever field the ability actually uses. */
+function reachOf(a) {
+  if (a.reach) return a.reach;                                  // melee
+  if (a.range) return a.range;                                  // grapple, mindcontrol
+  if (a.maxLen) return a.maxLen;                                // beam
+  if (a.speed) return a.speed * (a.life != null ? a.life : 1.2); // anything that flies
+  if (a.radius) return a.radius;
+  return 0;
+}
+// ⚠ A WORD, NOT A NUMBER — the house rule. "FAR" is a decision; "228u" is arithmetic the player has
+// to do mid-fight. The edges are the same altitude/reach bands the rest of the game already uses.
+const rangeWord = (u) => u <= 0 ? 'SELF' : u < 20 ? 'CLOSE' : u < 70 ? 'MID' : u < 180 ? 'LONG' : 'FAR';
+
+export function slotFacts(a, visOf) {
+  if (!a) return null;
+  const v = (typeof visOf === 'function' && visOf(a)) || null;
+  const glyph = (v && SHAPE_GLYPH[v.shape]) || TYPE_GLYPH[a.type] || '◆';
+  const u = reachOf(a);
+  return {
+    glyph,
+    kind: KIND_WORD[glyph] || 'POWER',
+    range: rangeWord(u),
+    units: Math.round(u),
+    hold: !!(a.charge || a.kiPerSec || a.sustain),
+    tip: null,     // filled by the caller, which has describeAbility in scope
+  };
+}

@@ -909,4 +909,10 @@ body.deck{ --t-micro:10px; --t-tiny:11px; --t-label:12px; --t-sm:13px; --t-body:
 body.deck .obox button, body.deck .odone{ min-height:42px; }
 body.deck #hud .hint{ max-width:320px; }
 body.deck .rcard, body.deck .mcard{ outline-offset:3px; }   /* stick-focus reads at couch distance */
+/* ⚠ THE SLOT NOW CARRIES A GLYPH AND A RANGE WORD. Tiny, mono, dim — it must never compete with the
+   ability NAME, which is still the thing you read first. The glyph is geometry so it renders at 9px
+   on every platform; an emoji here would be a colour image at the mercy of the system font. */
+.slot .sfx{ font-family:var(--f-mono,"Cascadia Code",monospace); font-size:var(--t-micro,8.5px);
+  letter-spacing:.14em; color:var(--text-5,#7d776b); margin-top:1px; white-space:nowrap; }
+.slot .sfx b{ color:var(--gold-pale,#e8cf92); font-weight:400; margin-right:4px; font-size:11px; }
 `;

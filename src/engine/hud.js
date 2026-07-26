@@ -4,7 +4,7 @@ import { rankOf, rankBandOf } from '../data/scale.js';
 import { playSpaceFlight } from './spaceflight.js';
 import { BroadcastMixin } from './hudBroadcast.js';
 import { TitleMixin } from './hudTitle.js';
-import { esc, fileNoOf, fileDate, agoStr, isSynthDef, cfAbilityRows, cfCounterNotes, CF_BUILD, describeEvade, describeAbility } from './hudUtil.js';
+import { esc, fileNoOf, fileDate, agoStr, isSynthDef, cfAbilityRows, cfCounterNotes, CF_BUILD, describeEvade, describeAbility, slotFacts } from './hudUtil.js';
 import { ROSTER, SLOT_ORDER } from '../data/characters.js';
 import { climateLine } from '../data/climate.js';
 import { PLANETS, AU_KM, HELIOPAUSE_AU, TERMINATION_SHOCK_AU, SCALE_LADDER, NEAR_STARS, transitSecsFor, worldEnv } from '../data/planets.js';
@@ -1725,7 +1725,19 @@ export class HUD {
       const a = def.abilities[k]; if (!a) continue;
       const d = document.createElement('div');
       d.className = 'slot' + (k === 'r' ? ' ult' : '');
-      d.innerHTML = `<div class="key">${label}</div><div class="cost">${a.cost ? a.cost : a.kiPerSec ? a.kiPerSec + '/s' : ''}</div><div class="an">${a.name}</div><div class="cd" style="height:0%"></div><div class="cdn"></div>`;
+      // ⚠ THE CHIP NOW SAYS WHAT IT IS. A name alone ("Heat Ray", "Prince's Pride") does not tell you
+      // whether it is a beam, a thrown thing or something that happens to you — and you were finding
+      // out by firing it. The glyph and the range word are DERIVED (visOf + the ability's own reach
+      // field), so they cannot drift from what the power actually does, and the tooltip is the
+      // sentence `describeAbility` was already writing and nothing was showing.
+      const F = slotFacts(a, visOf);
+      d.title = a.name + ' — ' + describeAbility(a) + '\n' + F.kind + ' · ' + F.range +
+        (F.units ? ' (' + F.units + 'u)' : '') + (F.hold ? ' · HOLD TO CHARGE' : '') +
+        (a.cost ? ' · ' + a.cost + ' ki' : a.kiPerSec ? ' · ' + a.kiPerSec + ' ki/s' : '');
+      d.innerHTML = `<div class="key">${label}</div><div class="cost">${a.cost ? a.cost : a.kiPerSec ? a.kiPerSec + '/s' : ''}</div>` +
+        `<div class="an">${a.name}</div>` +
+        `<div class="sfx"><b>${F.glyph}</b>${F.range}${F.hold ? ' ⏱' : ''}</div>` +
+        `<div class="cd" style="height:0%"></div><div class="cdn"></div>`;
       this.el.slots.appendChild(d);
       this.slotEls[k] = { root: d, cd: d.querySelector('.cd'), cost: d.querySelector('.cost'), cdn: d.querySelector('.cdn') };
     }

@@ -225,3 +225,42 @@ tell a colleague from someone you loved), **city familiarity**, and **investigat
 data files already reference in prose (`education.js` compsci hooks, the `forensickit` research row)
 while the system does not exist.
 
+---
+
+## MELEE + WRESTLING OVERHAUL — the consultant spec (2026-07-26)
+
+Robert supplied a full design spec after saying **"melee is like non-existent, it doesn't feel
+powerful."** It is the next big piece of work. Six slices, in his order:
+
+1. **SPACING TRUTH** — authored move definitions, root steps, intent volumes, vulnerability states,
+   and a developer range/timing overlay. Outcomes unchanged. *(Partly done: the reach inversion and
+   the spacing rings shipped 2026-07-26; `data/martial.js` is the table.)*
+2. **STRIKE GRAMMAR** — tap = quick, hold = fierce, plus input buffering (~120ms) and the first
+   three style chains. Three buttons only: Punch, Block, Grab. **Never a fourth attack button.**
+3. **THE WRESTLING CIRCLE** — a successful grab opens four world-space wedges with a draining
+   perimeter timer (~0.80s, range 0.60–1.10). Direction meanings are FIXED across every style:
+   Up = Control · Right = Force · Down = Ground · Left = Utility. A martial art changes the move in
+   the wedge, never the wedge's meaning, so the player learns one wheel for the whole roster.
+4. **STRENGTH-AWARE THROWS** — a new **Stability** 0–100 resource (footing, posture, breath).
+   ⚠ **Condition opens the throw; strength changes the result.** Planted 70–100 · Shaken 35–69 ·
+   Broken 0–34. Any trained fighter can trip a Shaken opponent; strength decides distance, height
+   and impact. Four classes: shove/wall-drive · trip/topple · leverage throw · lift/launch.
+5. **MARTIAL-ART PACKAGES** — Street Fighting, Boxing, Wrestling, Judo, Submission Grappling,
+   Superhuman Brawling. Six complete styles, not twenty shallow ones.
+6. **AI + CERTIFICATION** — bots use the same move data; difficulty changes reaction and planning,
+   never reach.
+
+⚠ **The short-arm answer is NOT longer arms.** Reach comes from authored intent volumes measured
+from the chest, a collision-checked root step during startup, and soft facing assistance inside a
+12–15° cone. This is the same law the project already keeps for the AI: assistance may never turn a
+character around, bend around cover, or drag them after active frames begin.
+
+⚠ **No hidden percentages.** Outcomes are deterministic from known state; a difficult technique is a
+timed or positional demand, not a dice roll. An unavailable wedge is dimmed WITH THE REASON before
+the player commits — never a silent failure.
+
+⚠ **Never globally slow or pause in multiplayer.** The wrestling selector is real-time and the rest
+of the fight continues; a second enemy can punish an ambitious hold.
+
+His own definition of done: *"the system is not ready if players can win but cannot answer why."*
+

@@ -1360,6 +1360,29 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   as an entity. Nothing bites, nothing renders, and `hud.js` still shows only the player's own mood —
   which is the bigger missing piece. Verified 8/8 (`src/bench/companions.mjs`).
 
+## THE SLOT SAYS WHAT IT IS (2026-07-26)
+- Robert: *"selecting attacks is tough, and I can't tell what an attack does until I use it. The
+  names of many attacks don't really say what it does — don't know if it's a projectile or something
+  different."* He was right, and the fix cost nothing because **the answer was already in the data**:
+  `visOf` resolves a delivery SHAPE for every ability and `describeAbility` already wrote the
+  sentence. The slot chip showed the name and threw both away.
+- Each chip now carries a **glyph + a range word** (`═ LONG`, `◆ MID`, `✕ CLOSE`, `» SELF`) and a
+  hover line: *"Heat Ray — steerable energy beam (thin) | BEAM · LONG (145u) · HOLD TO CHARGE · 4 ki"*.
+  Measured across the roster: **364 abilities, 0 blanks** — PROJECTILE 92 · FIELD 71 · MELEE 64 ·
+  MOVE 62 · CONE 36 · BEAM 26 · BLAST 12 · TRAP 1.
+- ⚠ **ONE FUNCTION** (`slotFacts` in hudUtil.js) so the chip, the tooltip and any future surface
+  cannot disagree about what a power is — the damage-codex law again.
+- ⚠ **A WORD, NOT A NUMBER**, on the chip. "FAR" is a decision; "228u" is arithmetic mid-fight.
+- ⚠ **GLYPHS ARE GEOMETRY, NOT EMOJI** — they render at 9px inside a chip, and an emoji is a colour
+  image at the mercy of the platform font (Windows draws flag emoji as letter pairs; already paid
+  for once in identities.js).
+- ⚠ **A VACUOUS PASS ALMOST SHIPPED.** The first suite asserted `chips.every(...)` on a list that was
+  EMPTY — and `[].every()` is true, so two assertions went green while nothing rendered. The suite
+  now proves itself first (`chips.length > 0`) before asserting anything about them. This is the
+  wwa-verify law and it caught itself in the act.
+- ⚠ CSS appended to `hud.styles.js` must go INSIDE the template literal — pasted after the closing
+  backtick it is a syntax error, and the build message points at the line, not the cause.
+
 ## HANDOFF
 - **`HANDOFF.md` at the repo root** is the orientation document: architecture, the ten rules that
   are load-bearing, what is solid, what is half-built, what to do next, and the headless
