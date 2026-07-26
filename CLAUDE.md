@@ -947,6 +947,35 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   rendering artefact that I hunted a geometry bug twice. Sea ice needs a ragged margin.
 - ⚠ Backticks in comment prose inside a JS template literal terminate the string (bit me again).
 
+## THE BEAM IS A STREAM, NOT A LASER (2026-07-26) — manual §42
+- Robert, with two frames of Trunks firing then turning: *"our beams are all like laser beams...
+  in ours all beams would have been straight even after he shot it and turned."* He was right.
+  `BeamHose` built ONE CYLINDER oriented to `this.dir` and rebuilt it from the caster's current aim
+  every frame. A cylinder cannot bend; the only motion available was pivoting about the hand.
+- ⚠ **ENERGY THAT HAS ALREADY LEFT THE HAND DOES NOT KNOW YOU TURNED.** Each frame emits a packet at
+  the muzzle carrying the direction it was FIRED with; from then on it just travels. The beam is the
+  trail of those packets, so turning bends it as a CONSEQUENCE of the simulation, not as an effect.
+  Measured: held beam **5.7°** of bend · after a 100° sweep **122.1°** · head vs current aim **88°**.
+  A laser reads ~0 on all three.
+- **Fixed 44-node buffer allocated once**, written in place — no beam allocates during a fight. The
+  two bodies are TUBES swept along the path (8 radial, indexed once).
+  ⚠ **PARALLEL TRANSPORT, not a fresh perpendicular per node** — independent frames make the tube
+  visibly TWIST through a bend, which reads as the beam rolling about its own axis.
+  ⚠ **The head is at the FAR end** (node 0 is the hand), so the bulge belongs at high index — a DBZ
+  beam is a spearhead with a thinner shaft. Release keeps flying: the stream eats itself from the
+  hand end and travels away instead of vanishing.
+- **Three things had to follow the CURVE, not the aim**: blocking per segment (a bent beam can pass
+  a wall its root is behind) · range as ARC LENGTH (a swung beam covers more ground and must not
+  out-range itself) · the hitbox as closest-point-on-polyline (verified: a foe on the curved section
+  takes damage). The §39 detail layer moved onto the path too — it was `muzzle + dir*t*len`, a
+  straight line, so a bent beam had its helix hanging in the air beside it.
+- ⚠ **A BEAM IS LEGITIMATELY CURVED WHILE IT STEERS ONTO TARGET** for `maxLen/tipSpeed` seconds. I
+  measured at 26 frames, read **151° on a "straight" beam**, and nearly went hunting a simulation
+  bug. ⚠ **The bend is TRANSIENT** — parking a foe on it then stepping 10 frames tests nothing.
+- ⚠ **THE NEWS CAMERA LEAVES A SCISSOR RECT ON THE RENDERER** (its POV is 320x180 scissored into the
+  canvas corner). A manual `world.render()` outside the frame loop inherits it and a posed shot comes
+  back black except one corner. Clear scissor + viewport before posing.
+
 ## HANDOFF
 - **`HANDOFF.md` at the repo root** is the orientation document: architecture, the ten rules that
   are load-bearing, what is solid, what is half-built, what to do next, and the headless

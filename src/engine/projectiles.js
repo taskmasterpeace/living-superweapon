@@ -537,10 +537,40 @@ class BeamHose {
     this.endT = 0; this.dead = false;
     this.blocked = false;
 
-    // meshes: outer glow + bright core + tip (shared unit geometry, per-instance cloned materials)
+    // ==========================================================================================
+    // THE STREAM. Robert, with two frames of Trunks firing and then turning: *"our beams are all
+    // like laser beams. their beams are better — when they turn, the wave turns with it. it
+    // shouldn't be like that. a Dragon Ball Z beam is different. in ours all beams would have been
+    // straight even after he shot it and turned."*
+    //
+    // He is describing the single most important thing about a ki beam and we had it wrong. The
+    // beam WAS one cylinder, rebuilt every frame from the caster's current aim — so it could only
+    // ever be a rigid straight line pivoting about the hand. A turret laser.
+    //
+    // ⚠ ENERGY THAT HAS ALREADY LEFT THE HAND DOES NOT KNOW YOU TURNED. Each frame emits a packet
+    // at the muzzle carrying the direction it was fired with, and from then on that packet just
+    // travels. The beam is the TRAIL of those packets. Turn while firing and the root swings with
+    // your hand while the far end keeps going where it was sent — the beam BENDS, exactly as in his
+    // reference, and it does so as a consequence of how it is simulated rather than as an effect.
+    //
+    // The path is a fixed-size buffer allocated once and only ever written in place; no beam
+    // allocates during a fight.
+    this.NODES = 44;
+    this.path = new Float32Array(this.NODES * 3);      // node 0 = at the muzzle, rising index = older
+    this.pvel = new Float32Array(this.NODES * 3);
+    this.pn = 0;
+    this._tmp = new THREE.Vector3(); this._tan = new THREE.Vector3();
+    this._pa = new THREE.Vector3(); this._pb = new THREE.Vector3();
+
+    // meshes: outer glow + bright core + tip. The two bodies are TUBES swept along the path now,
+    // not cylinders — a cylinder cannot be bent.
     const beamMat = (color, opacity) => { const m = MAT_BEAM_PROTO.clone(); m.color.set(color); m.opacity = opacity; return m; };
-    this.glow = new THREE.Mesh(GEO_CYL, beamMat(this.color, 0.42));
-    this.core = new THREE.Mesh(GEO_CYL, beamMat(this.color2, 0.8));
+    this.RADIAL = 8;
+    this._glowGeo = this._tubeGeo(this.NODES, this.RADIAL);
+    this._coreGeo = this._tubeGeo(this.NODES, this.RADIAL);
+    this.glow = new THREE.Mesh(this._glowGeo, beamMat(this.color, 0.42));
+    this.core = new THREE.Mesh(this._coreGeo, beamMat(this.color2, 0.8));
+    this.glow.frustumCulled = false; this.core.frustumCulled = false;
     this.tip = new THREE.Mesh(GEO_ORB, glowMat(this.color2, 0.85));
     this.grp = new THREE.Group(); this.grp.add(this.glow, this.core, this.tip); game.scene.add(this.grp);
     // ⚠ ONE INSTANCED DETAIL LAYER, SHARED BY EVERY TEMPER. This started life as VEGA's
@@ -555,6 +585,83 @@ class BeamHose {
     this.light = game.vfx.borrowLight(this.color, 5 * this.power, 60);
     this.faceOrigin = !!o.faceOrigin;   // OPTIC BLAST (brief Tier1 #2): eyes, not hands
     caster.muzzle(this.muzzle, this.faceOrigin ? 1.1 : undefined, this.faceOrigin ? 8.3 : undefined);
+  }
+
+  // A tube of (nodes x radial) vertices, indexed once. Positions are rewritten every frame; the
+  // index buffer never changes, so a bending beam costs one buffer upload.
+  _tubeGeo(nodes, radial) {
+    const pos = new Float32Array(nodes * radial * 3);
+    const idx = new Uint16Array((nodes - 1) * radial * 6);
+    let k = 0;
+    for (let sg = 0; sg < nodes - 1; sg++) {
+      for (let r = 0; r < radial; r++) {
+        const r2 = (r + 1) % radial;
+        const a = sg * radial + r, b = sg * radial + r2;
+        const c = (sg + 1) * radial + r, d = (sg + 1) * radial + r2;
+        idx[k++] = a; idx[k++] = c; idx[k++] = b;
+        idx[k++] = b; idx[k++] = c; idx[k++] = d;
+      }
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    g.setIndex(new THREE.BufferAttribute(idx, 1));
+    return g;
+  }
+
+  // Sweep a tube along the live path. ⚠ PARALLEL TRANSPORT, not a fresh perpendicular per node:
+  // recomputing the frame independently makes the tube TWIST visibly wherever the path bends, which
+  // on a beam reads as the thing rotating about its own axis. Carrying the previous perpendicular
+  // forward and re-orthogonalising it keeps the surface calm through a curve.
+  _sweep(geo, baseR, flare) {
+    const pos = geo.attributes.position.array;
+    const N = this.NODES, R = this.RADIAL, pn = Math.max(2, this.pn);
+    const up = this._pa.set(0, 1, 0);
+    let ex = 0, ey = 0, ez = 0, first = true;
+    for (let i = 0; i < N; i++) {
+      const li = Math.min(i, pn - 1);                       // dead nodes collapse onto the last live one
+      const o = li * 3;
+      const px = this.path[o], py = this.path[o + 1], pz = this.path[o + 2];
+      // tangent from the neighbouring live nodes
+      const ia = Math.max(0, li - 1) * 3, ib = Math.min(pn - 1, li + 1) * 3;
+      let tx = this.path[ib] - this.path[ia], ty = this.path[ib + 1] - this.path[ia + 1], tz = this.path[ib + 2] - this.path[ia + 2];
+      let tl = Math.hypot(tx, ty, tz) || 1; tx /= tl; ty /= tl; tz /= tl;
+      if (first) {
+        // any perpendicular will do for the first ring
+        let ax = 0, ay = 1, az = 0;
+        if (Math.abs(ty) > 0.9) { ax = 1; ay = 0; }
+        ex = ay * tz - az * ty; ey = az * tx - ax * tz; ez = ax * ty - ay * tx;
+        const el = Math.hypot(ex, ey, ez) || 1; ex /= el; ey /= el; ez /= el;
+        first = false;
+      } else {
+        // re-orthogonalise the carried perpendicular against the new tangent
+        const d = ex * tx + ey * ty + ez * tz;
+        ex -= tx * d; ey -= ty * d; ez -= tz * d;
+        const el = Math.hypot(ex, ey, ez) || 1; ex /= el; ey /= el; ez /= el;
+      }
+      const fx = ty * ez - tz * ey, fy = tz * ex - tx * ez, fz = tx * ey - ty * ex;
+      // ⚠ THE HEAD IS AT THE FAR END. Node 0 is at the hand and the oldest node is the tip, so the
+      // bulge belongs at HIGH index — a DBZ beam is a spearhead with a thin shaft behind it.
+      const t = pn > 1 ? li / (pn - 1) : 0;
+      const rad = baseR * (0.78 + 0.55 * t * t) * flare;
+      for (let r = 0; r < R; r++) {
+        const a = (r / R) * Math.PI * 2, ca = Math.cos(a) * rad, sa = Math.sin(a) * rad;
+        const w = (i * R + r) * 3;
+        pos[w] = px + ex * ca + fx * sa;
+        pos[w + 1] = py + ey * ca + fy * sa;
+        pos[w + 2] = pz + ez * ca + fz * sa;
+      }
+    }
+    geo.attributes.position.needsUpdate = true;
+  }
+
+  /** Total arc length of the live path, and the point at a given arc distance. */
+  _arcLen() {
+    let L = 0;
+    for (let i = 1; i < this.pn; i++) {
+      const a = (i - 1) * 3, b = i * 3;
+      L += Math.hypot(this.path[b] - this.path[a], this.path[b + 1] - this.path[a + 1], this.path[b + 2] - this.path[a + 2]);
+    }
+    return L;
   }
 
   end() { this.sustaining = false; }
@@ -588,19 +695,90 @@ class BeamHose {
       if (this._voice) this._voice.set(0.08, c.pos);
     }
 
-    // resolve blocked length against cover/ground
-    let len = this.tipDist;
-    this.blocked = false; let blockedCov = null;
-    const tipPos = _v.copy(this.muzzle).addScaledVector(this.dir, len);
-    for (const cov of game.world.cover) {
-      if (this.muzzle.y >= cov.h) continue;              // beam passes over low cover
-      const t = clamp((cov.x - this.muzzle.x) * this.dir.x + (cov.z - this.muzzle.z) * this.dir.z, 0, len);
-      const px = this.muzzle.x + this.dir.x * t, pz = this.muzzle.z + this.dir.z * t;
-      if (Math.hypot(px - cov.x, pz - cov.z) < cov.r + this.radius && t < len) { len = t; this.blocked = true; blockedCov = cov; }
+    // ---- ADVANCE THE STREAM. Every emitted packet keeps travelling along the direction it was
+    // born with; nothing already in flight is re-aimed. This loop is the whole feature.
+    for (let i = 0; i < this.pn; i++) {
+      const o = i * 3;
+      this.path[o] += this.pvel[o] * dt;
+      this.path[o + 1] += this.pvel[o + 1] * dt;
+      this.path[o + 2] += this.pvel[o + 2] * dt;
     }
-    if (this.clashLen != null) len = this.clashLen;   // beam-clash pins the tip at the struggle point
+    // ---- EMIT at the hand, carrying the CURRENT aim. Shift the buffer down one and write node 0.
+    if (this.sustaining) {
+      const N = this.NODES;
+      if (this.pn < N) this.pn++;
+      for (let i = this.pn - 1; i > 0; i--) {
+        const d0 = i * 3, s0 = (i - 1) * 3;
+        this.path[d0] = this.path[s0]; this.path[d0 + 1] = this.path[s0 + 1]; this.path[d0 + 2] = this.path[s0 + 2];
+        this.pvel[d0] = this.pvel[s0]; this.pvel[d0 + 1] = this.pvel[s0 + 1]; this.pvel[d0 + 2] = this.pvel[s0 + 2];
+      }
+      this.path[0] = this.muzzle.x; this.path[1] = this.muzzle.y; this.path[2] = this.muzzle.z;
+      this.pvel[0] = this.dir.x * this.tipSpeed;
+      this.pvel[1] = this.dir.y * this.tipSpeed;
+      this.pvel[2] = this.dir.z * this.tipSpeed;
+    } else if (this.pn > 2) {
+      // released: the stream keeps flying and eats itself from the hand end, so a beam you stop
+      // firing travels away instead of vanishing
+      for (let i = 0; i < this.pn - 1; i++) {
+        const d0 = i * 3, s0 = (i + 1) * 3;
+        this.path[d0] = this.path[s0]; this.path[d0 + 1] = this.path[s0 + 1]; this.path[d0 + 2] = this.path[s0 + 2];
+        this.pvel[d0] = this.pvel[s0]; this.pvel[d0 + 1] = this.pvel[s0 + 1]; this.pvel[d0 + 2] = this.pvel[s0 + 2];
+      }
+      this.pn--;
+    }
+    if (this.pn === 0) {                                  // first frame: seed a two-node stub
+      this.path[0] = this.muzzle.x; this.path[1] = this.muzzle.y; this.path[2] = this.muzzle.z;
+      this.pvel[0] = this.dir.x * this.tipSpeed; this.pvel[1] = this.dir.y * this.tipSpeed; this.pvel[2] = this.dir.z * this.tipSpeed;
+      this.pn = 1;
+    }
+
+    // ---- trim to the weapon's reach, measured along the ACTUAL path. A curved beam that has been
+    // swung around covers more ground than a straight one and must not out-range itself.
+    let arc = 0, keep = this.pn;
+    for (let i = 1; i < this.pn; i++) {
+      const a0 = (i - 1) * 3, b0 = i * 3;
+      arc += Math.hypot(this.path[b0] - this.path[a0], this.path[b0 + 1] - this.path[a0 + 1], this.path[b0 + 2] - this.path[a0 + 2]);
+      if (arc > this.maxLen) { keep = i; break; }
+    }
+    this.pn = Math.max(2, keep);
+
+    // ---- resolve blocking PER SEGMENT along the path. ⚠ This replaces a single ray from the
+    // muzzle: a bent beam can pass a wall its own root is behind, and testing only the emission
+    // direction would let it clip through geometry it visibly curves around.
+    this.blocked = false; let blockedCov = null;
+    for (let i = 1; i < this.pn && !this.blocked; i++) {
+      const a0 = (i - 1) * 3, b0 = i * 3;
+      const ax = this.path[a0], ay = this.path[a0 + 1], az = this.path[a0 + 2];
+      const bx = this.path[b0], by = this.path[b0 + 1], bz = this.path[b0 + 2];
+      const sx = bx - ax, sz = bz - az, sl2 = sx * sx + sz * sz || 1;
+      for (const cov of game.world.cover) {
+        if (Math.min(ay, by) >= cov.h) continue;          // the beam passes over low cover
+        let t = ((cov.x - ax) * sx + (cov.z - az) * sz) / sl2;
+        t = t < 0 ? 0 : t > 1 ? 1 : t;
+        const px = ax + sx * t, pz = az + sz * t;
+        if (Math.hypot(px - cov.x, pz - cov.z) < cov.r + this.radius) {
+          this.pn = i; this.blocked = true; blockedCov = cov; break;
+        }
+      }
+    }
+    this.pn = Math.max(2, this.pn);
+    const tipI = (this.pn - 1) * 3;
+    const tipPos = _v.set(this.path[tipI], this.path[tipI + 1], this.path[tipI + 2]);
+    let len = this._arcLen();
+    // beam-clash pins the struggle point: trim the path to that arc length rather than to a ray
+    if (this.clashLen != null) {
+      let a2 = 0, cut = this.pn;
+      for (let i = 1; i < this.pn; i++) {
+        const p0 = (i - 1) * 3, p1 = i * 3;
+        a2 += Math.hypot(this.path[p1] - this.path[p0], this.path[p1 + 1] - this.path[p0 + 1], this.path[p1 + 2] - this.path[p0 + 2]);
+        if (a2 >= this.clashLen) { cut = i + 1; break; }
+      }
+      this.pn = Math.max(2, Math.min(this.pn, cut));
+      const ti = (this.pn - 1) * 3;
+      tipPos.set(this.path[ti], this.path[ti + 1], this.path[ti + 2]);
+      len = this.clashLen;
+    }
     len = Math.max(0.1, len);
-    tipPos.copy(this.muzzle).addScaledVector(this.dir, len);
     // sustained beams carve through cover
     if (this.sustaining && blockedCov && blockedCov.hp > 0) {
       blockedCov.hp -= this.dps * 2 * dt;
@@ -609,29 +787,37 @@ class BeamHose {
       if (blockedCov.hp <= 0) game.shatterBlock(blockedCov);
     }
 
-    // orient beam mesh (cylinder along Y -> align to dir)
-    _q.setFromUnitVectors(UP, this.dir);
-    const mid = _v2.copy(this.muzzle).addScaledVector(this.dir, len * 0.5);
+    // SWEEP the two tubes along the path. No orientation, no scale — the shape IS the path, which
+    // is the point: a beam that has been swung has a bend in it and both layers carry it.
     const fade = this.sustaining ? 1 : Math.max(0, 1 - this.endT / 0.18);
-    for (const m of [this.glow, this.core]) { m.position.copy(mid); m.quaternion.copy(_q); }
     const B = this.build;
-    this.core.scale.set(this.radius * B.coreR, len, this.radius * B.coreR);
-    // FLARE: a torrent and a roiling jet widen toward the far end. The cylinder is one mesh, so
-    // the widening is carried by the sheath's average radius rather than a tapered geometry —
-    // at this camera distance the read is identical and it costs nothing.
-    const flare = 1 + (B.flare - 1) * 0.5;
-    this.glow.scale.set(this.radius * 1.5 * flare * (0.9 + Math.sin(game.time * 40) * 0.1), len, this.radius * 1.5 * flare);
+    this._sweep(this._coreGeo, this.radius * B.coreR, 1);
+    this._sweep(this._glowGeo, this.radius * 1.5 * (0.9 + Math.sin(game.time * 40) * 0.1), B.flare);
     this.core.material.opacity = 0.95 * fade; this.glow.material.opacity = B.sheath * fade;
     this.tip.position.copy(tipPos); this.tip.scale.setScalar(this.radius * 1.8 * B.tip * fade);
     if (this.detail) {
       // THE DETAIL LAYER, in WORLD space: two perpendiculars off the beam direction, then each
       // temper decides where along and around the beam its elements sit and how big they are.
       // Everything below is (t along the beam, ca/sa across it, scale) — seven behaviours, one loop.
-      const d = this.dir, ax = Math.abs(d.y) > 0.9 ? _v2.set(1, 0, 0) : _v2.set(0, 1, 0);
-      const p1 = this._sv.copy(d).cross(ax).normalize();
-      const p2x = d.y * p1.z - d.z * p1.y, p2y = d.z * p1.x - d.x * p1.z, p2z = d.x * p1.y - d.y * p1.x;
-      const T = this.temper, N = T.n, R = this.radius * 2.1 * T.amp, L = this.tipDist;
+      // ⚠ THE DETAIL RIDES THE PATH, NOT THE AIM. It used to be placed as (muzzle + dir * t * L),
+      // which is a straight line — so a bent beam had its helix, its kinks and its pressure rings
+      // hanging in the air beside it. `along` is now an index into the live path.
+      const T = this.temper, N = T.n, R = this.radius * 2.1 * T.amp;
       const clock = game.time * T.rate, kind = T.detail;
+      const pathAt = (u) => {
+        const f = Math.max(0, Math.min(1, u)) * (this.pn - 1);
+        const i0 = Math.floor(f), i1 = Math.min(this.pn - 1, i0 + 1), k = f - i0;
+        const a0 = i0 * 3, b0 = i1 * 3;
+        this._pb.set(
+          this.path[a0] + (this.path[b0] - this.path[a0]) * k,
+          this.path[a0 + 1] + (this.path[b0 + 1] - this.path[a0 + 1]) * k,
+          this.path[a0 + 2] + (this.path[b0 + 2] - this.path[a0 + 2]) * k);
+        // local tangent, for the cross-section offsets
+        this._tan.set(this.path[b0] - this.path[a0], this.path[b0 + 1] - this.path[a0 + 1], this.path[b0 + 2] - this.path[a0 + 2]);
+        if (this._tan.lengthSq() < 1e-8) this._tan.copy(this.dir);
+        this._tan.normalize();
+        return this._pb;
+      };
       for (let i = 0; i < N; i++) {
         const t2 = N > 1 ? i / (N - 1) : 0;
         let ca = 0, sa = 0, sc = 0.42, along = t2;
@@ -659,11 +845,17 @@ class BeamHose {
           const a2 = i * 2.0944; ca = Math.cos(a2) * R * 0.9; sa = Math.sin(a2) * R * 0.9;
           sc = 0.5 + Math.sin(along * 6.2831) * 0.22;
         }
+        const P = pathAt(along);
+        const d = this._tan;
+        const axx = Math.abs(d.y) > 0.9 ? 1 : 0, axy = Math.abs(d.y) > 0.9 ? 0 : 1;
+        let e1x = axy * d.z - 0 * d.y, e1y = 0 * d.x - axx * d.z, e1z = axx * d.y - axy * d.x;
+        const e1l = Math.hypot(e1x, e1y, e1z) || 1; e1x /= e1l; e1y /= e1l; e1z /= e1l;
+        const e2x = d.y * e1z - d.z * e1y, e2y = d.z * e1x - d.x * e1z, e2z = d.x * e1y - d.y * e1x;
         this._sm.makeScale(sc, sc, sc);
         this._sm.setPosition(
-          this.muzzle.x + d.x * along * L + p1.x * ca + p2x * sa,
-          this.muzzle.y + d.y * along * L + p1.y * ca + p2y * sa,
-          this.muzzle.z + d.z * along * L + p1.z * ca + p2z * sa);
+          P.x + e1x * ca + e2x * sa,
+          P.y + e1y * ca + e2y * sa,
+          P.z + e1z * ca + e2z * sa);
         this.detail.setMatrixAt(i, this._sm);
       }
       this.detail.instanceMatrix.needsUpdate = true;
@@ -676,11 +868,22 @@ class BeamHose {
       // damage along the beam
       for (const f of game.entities) {
         if (!game.isFoe(c, f)) continue;
-        // closest point on the 3D beam segment to the target's body centre (handles up/down)
-        const cx = f.pos.x - this.muzzle.x, cy = (f.pos.y + 5.2) - this.muzzle.y, cz = f.pos.z - this.muzzle.z;
-        const t = clamp(cx * this.dir.x + cy * this.dir.y + cz * this.dir.z, 0, len);
-        const px = this.muzzle.x + this.dir.x * t, py = this.muzzle.y + this.dir.y * t, pz = this.muzzle.z + this.dir.z * t;
-        const dd = Math.hypot(f.pos.x - px, (f.pos.y + 5.2) - py, f.pos.z - pz);
+        // ⚠ CLOSEST POINT ON THE WHOLE POLYLINE, not on one ray from the hand. The beam bends, so
+        // the hitbox has to bend with it or the damage and the picture disagree — and the picture
+        // is what the player is reading.
+        const fy = f.pos.y + 5.2;
+        let dd = 1e9, hx = 0, hy = 0, hz = 0;
+        for (let i = 1; i < this.pn; i++) {
+          const a0 = (i - 1) * 3, b0 = i * 3;
+          const ax = this.path[a0], ay = this.path[a0 + 1], az = this.path[a0 + 2];
+          const sx = this.path[b0] - ax, sy = this.path[b0 + 1] - ay, sz = this.path[b0 + 2] - az;
+          const sl2 = sx * sx + sy * sy + sz * sz || 1;
+          let t = ((f.pos.x - ax) * sx + (fy - ay) * sy + (f.pos.z - az) * sz) / sl2;
+          t = t < 0 ? 0 : t > 1 ? 1 : t;
+          const px = ax + sx * t, py = ay + sy * t, pz = az + sz * t;
+          const d2 = Math.hypot(f.pos.x - px, fy - py, f.pos.z - pz);
+          if (d2 < dd) { dd = d2; hx = px; hy = py; hz = pz; }
+        }
         if (dd < this.radius + f.radius + 1) {
           // src+dot so GUARD can block beams (drains guard over time)
           f.takeDamage(this.dps * c.powerBuff * dt, { src: c, dot: true, dtype: this.dtype, siphon: this.siphon, hitstop: 0 });
@@ -705,7 +908,9 @@ class BeamHose {
               }
             } else f._beamPressT = 0;
           }
-          game.particles.burst(px, py, pz, { count: 2, speed: 12, life: 0.3, size: 2, color: ['#fff', this.color], dir: { x: this.dir.x, z: this.dir.z }, spread: 1.4 });
+          // the contact spark belongs at the CLOSEST POINT ON THE CURVE (hx/hy/hz), which is what
+          // the per-segment search above returns — `px` was the old single-ray local and is gone.
+          game.particles.burst(hx, hy, hz, { count: 2, speed: 12, life: 0.3, size: 2, color: ['#fff', this.color], dir: { x: this.dir.x, z: this.dir.z }, spread: 1.4 });
         }
       }
       // tip fx + muzzle fx  (read tip from mesh — the damage loop reused the _v temp)
@@ -719,7 +924,7 @@ class BeamHose {
     if (!this.sustaining && this.endT >= 0.18) { this._dispose(game); return false; }
     return true;
   }
-  _dispose(game) { if (this.dead) return; this.dead = true; if (this._voice) { this._voice.stop(); this._voice = null; } game.scene.remove(this.grp); [this.glow, this.core, this.tip].forEach(m => m.material.dispose()); if (this.detail) this.detail.material.dispose(); game.vfx.returnLight(this.light); }   // geometry is shared; the light STAYS in the scene (light-count law)
+  _dispose(game) { if (this.dead) return; this.dead = true; if (this._voice) { this._voice.stop(); this._voice = null; } game.scene.remove(this.grp); [this.glow, this.core, this.tip].forEach(m => m.material.dispose()); if (this.detail) this.detail.material.dispose(); if (this._glowGeo) this._glowGeo.dispose(); if (this._coreGeo) this._coreGeo.dispose(); game.vfx.returnLight(this.light); }   // the tubes are PER-BEAM geometry (the path is unique) and must be disposed; the orb/tip geo is shared   // geometry is shared; the light STAYS in the scene (light-count law)
 }
 
 // ---- Star Sphere: grow a giant orb overhead, then hurl it ----

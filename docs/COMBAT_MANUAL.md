@@ -2198,3 +2198,86 @@ read, and the cities last, when they mean something.
   margin.
 
 Refs `wwa-globe-far.png`, `wwa-globe-borders.png`, `wwa-globe-cities.png`, `wwa-globe-close.png`.
+
+
+---
+
+## §42 · THE BEAM IS A STREAM, NOT A LASER (2026-07-26)
+
+Robert, with two frames of Trunks firing and then turning: *"our beams are all like laser beams.
+their beams are better — when they turn, the wave turns with it. it shouldn't be like that. a Dragon
+Ball Z beam is different. in ours all beams would have been straight even after he shot it and
+turned."*
+
+He is describing the single most important thing about a ki beam, and we had it wrong.
+
+### What was wrong
+
+`BeamHose` built **one cylinder**, positioned at the midpoint between the muzzle and the tip and
+oriented to `this.dir`, rebuilt from the caster's current aim every frame. A cylinder cannot bend.
+The only motion available to it was pivoting about the hand — a turret laser. Turn while firing and
+the entire beam, including the part that left your hand a second ago, snapped round with you.
+
+### What it is now
+
+⚠ **ENERGY THAT HAS ALREADY LEFT THE HAND DOES NOT KNOW YOU TURNED.** Each frame emits a packet at
+the muzzle carrying the direction it was fired with, and from then on that packet simply travels.
+The beam is the **trail of those packets**. Turn while firing and the root swings with your hand
+while the far end keeps going where it was sent, so the beam bends — as a consequence of how it is
+simulated, not as an effect layered on top.
+
+Measured, by holding a beam until it settled and then sweeping the aim through 100 degrees:
+
+| | |
+|---|---|
+| bend of a held beam (root segment vs tip segment) | **5.7 degrees** |
+| bend after a 100-degree sweep | **122.1 degrees** |
+| angle between the beam's head and the caster's current aim | **88 degrees** |
+
+A laser reads ~0 in all three.
+
+### How it is built
+
+- The path is a **fixed-size buffer allocated once** (44 nodes, position + velocity) and only ever
+  written in place. No beam allocates during a fight.
+- The two bodies are **tubes swept along the path**, not cylinders — 8 radial segments, indexed once,
+  positions rewritten per frame. One buffer upload for a bending beam.
+- ⚠ **PARALLEL TRANSPORT, not a fresh perpendicular per node.** Recomputing the frame independently
+  makes the tube visibly TWIST wherever the path bends, which on a beam reads as the thing rotating
+  about its own axis. Carrying the previous perpendicular forward and re-orthogonalising it keeps
+  the surface calm through a curve.
+- ⚠ **THE HEAD IS AT THE FAR END.** Node 0 is at the hand and the oldest node is the tip, so the
+  radius bulge belongs at HIGH index — a DBZ beam is a spearhead with a thinner shaft behind it.
+- **Release keeps flying.** Stop firing and the stream eats itself from the hand end and travels
+  away, instead of the whole beam vanishing.
+
+### Three things had to follow the curve, not the aim
+
+1. **Blocking**, per segment. A bent beam can pass a wall its own root is behind; testing a single
+   ray from the muzzle would let it clip through geometry it visibly curves around.
+2. **Range**, measured as arc length along the actual path. A beam that has been swung covers more
+   ground than a straight one and must not out-range itself.
+3. **The hitbox**, as the closest point on the whole polyline. The beam bends, so the damage volume
+   has to bend with it or the damage and the picture disagree — and the picture is what the player
+   is reading. Verified: a foe held on the *curved* section takes damage.
+
+The **detail layer** (the helix, the kinks, the pressure rings from manual §39) also had to move
+onto the path. It was placed as `muzzle + dir * t * len`, which is a straight line — so a bent beam
+had its helix hanging in the air beside it.
+
+### Two harness lessons, both mine
+
+⚠ **A BEAM IS LEGITIMATELY CURVED WHILE IT STEERS ONTO TARGET.** It is born pointing wherever the
+caster's aim was and steers onto the new one, so for the first `maxLen / tipSpeed` seconds the
+oldest nodes correctly carry the older direction. I measured at 26 frames, read **151 degrees of
+bend on a beam that was supposed to be straight**, and nearly went looking for a bug in the
+simulation. Wait longer than the fill time before calling anything straight.
+
+⚠ **THE BEND IS TRANSIENT, WHICH IS THE POINT.** The bent section keeps travelling and eventually
+leaves. Parking a foe on it and then stepping ten frames tests nothing, because the curve has moved
+on by then — the foe has to be held on the curve for the frames being measured.
+
+⚠ And one for the screenshot pipeline: **the KMK 9 news camera leaves a scissor rect on the
+renderer.** Its POV renders at 320x180 scissored into the canvas corner, and a manual `world.render()`
+outside the normal frame loop inherits that rect — a posed shot comes back black except for one
+small corner. Clear the scissor and the viewport before posing.
