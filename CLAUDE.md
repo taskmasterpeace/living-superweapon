@@ -1406,6 +1406,34 @@ Four laws, three of them the same idea: **a thing must not outlive the match tha
 - `training` survives as an INTERNAL mode with no card: the tutorial (`hud.onTutorial`) and the
   atlas tile proving ground (`hud.onProvingGround`) both still enter it.
 
+## ORIGINS · HOSPITALS · THE PSYCHE (2026-07-25) — from Robert's Combat Compendium + Emotions sheet
+- **`data/origins.js`** — the NINE origins and the hospital table, transcribed not reinvented:
+  skilled 100%/12h · altered 100%/24h · tech 80%/48h · mutated 80%/48h · spiritual 30%/72h ·
+  robotic 20%/72h · symbiotic 50%/48h · **alien CANNOT BE ADMITTED** · unknown reserved.
+  ⚠ **ONE SHEET AMBIGUITY LEFT VISIBLE**: the intensity row and the "+4CS/+2CS/+3CS" row don't line
+  up against origins 2–4. The chosen reading rides in `HOSPITAL[n].intensityNote` rather than being
+  silently picked.
+- **CS = a COLUMN SHIFT on the rank ladder we already have** (`data/ranks.js`). One idea, one impl.
+- **ALL 52 HEROES CARRY AN EXPLICIT `origin:`.** ⚠ The derivation alone swept **27 of 52** into the
+  ALTERED catch-all and put the ARCHER in a powered exoskeleton — a regex over flavour text cannot
+  do this job (same lesson as the `frameOf` word-boundary bug). `deriveOrigin` remains as the
+  fallback so ORIGIN customs are covered; the roster is data.
+- **THE HOSPITAL IS A DECISION, NOT A BUTTON** (`career.admitToHospital`): the flat $80K wipe is
+  gone. What medicine can do depends on WHAT YOU ARE — SARGE is whole in 36h, MYSTWARD patches to
+  30% over six days, TITAN tops out at 20%, VEGA is turned away at the door. ⚠ **It costs TIME**,
+  and time is real now: `advanceDays` moves the same calendar the planets orbit on.
+- **`data/psyche.js`** — the emotion wheel (7 primaries, ~40 shades, value 1–10, main emotion, decay,
+  overflow) and the 20 personality types with their targeting rules, both from the sheets.
+  ⚠ **THE SHEETS ARE TURN-BASED AND THIS GAME IS NOT** — Robert ruled on that directly. Every d100
+  effect is TRANSLATED with the reading written beside it ("skips next turn" → a real stagger in
+  seconds; "+20 initiative" → a cooldown multiplier), and a band with no honest real-time reading is
+  dropped and said so rather than faked.
+  ⚠ Personality NUMBERS are the identity (the sheet gives numbers, not names); `name`/`blurb` are
+  provisional working labels, one string each to change.
+- Console: `origin [hero]` · `origins` (the whole roster by origin).
+- **Comic caption fonts are bundled** at `public/fonts/` (bangers · luckiestguy · comicneue-bolditalic,
+  61KB total, offline — never a CDN link).
+
 ## THE ALMANAC (2026-07-25) — manual §36, `data/orbits.js` + `data/environments.js`
 - **A DATE IN, POSITIONS OUT.** Nothing stores where a planet is — it asks. `gameDate()` is the
   in-game calendar (persisted, advanced by the career); `positionAt/separationAU` do the rest.

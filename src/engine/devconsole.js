@@ -20,6 +20,8 @@ import { ORBITS, MOONS, moonsOf, moonDistanceInRadii, positionAt, separationAU,
          alignmentSpread, bestAlignmentIn, gameDate, setGameDate, advanceDays,
          dateStr, seasonOf, ALIGN_DATE } from '../data/orbits.js';
 import { WORLDS, worldOf, survivalFor, skyFor, SUITS } from '../data/environments.js';
+import { ORIGINS, deriveOrigin, recoveryPlan, HOSPITAL } from '../data/origins.js';
+import { WHEEL, shadeOf, derivePersonality, TARGET_RULES } from '../data/psyche.js';
 
 const U_PER_M = 1 / 0.19;              // TRUE 1:1 SCALE: 1 unit ≈ 0.19m
 const HERO_U = 9.6;                    // a hero is 9.6u ≈ 1.8m — the only ruler that means anything
@@ -362,6 +364,47 @@ export class DevConsole {
         (sky.sunIsPoint ? ' \u2014 a very bright STAR, with no disc' : '') +
         ', light \u00d7' + sky.lightMult.toFixed(3));
       c.print('        overhead: ' + sky.inSky);
+    });
+
+    // ---- WHO SOMEBODY IS, and what medicine can do about it (Combat Compendium).
+    this.cmd('origin', 'origin [hero] — origin, hospital plan and personality', (a, c) => {
+      const R = window.LSW && window.LSW.ROSTER, g = G();
+      const def = (a[0] && R && R.find(x => x.id === a[0].toLowerCase())) || (g.player && g.player.def);
+      if (!def) return c.err('no hero');
+      const sheet = g.player && g.player.def === def ? g.player.sheet : null;
+      const p2 = recoveryPlan(def, sheet, null), P = derivePersonality(def);
+      c.print((def.name || def.id) + '   ' + p2.origin.name);
+      c.print('  ' + p2.origin.blurb);
+      c.print('  ' + p2.origin.detail);
+      c.print('');
+      if (!p2.canAdmit) {
+        c.err('  NO HOSPITAL WILL ADMIT THEM — ' + p2.why);
+        c.print('  instead: ' + p2.alternative);
+      } else {
+        c.print('  HOSPITAL   heals to ' + Math.round(p2.healMax * 100) + '% at most');
+        c.print('             stamina ' + p2.stamina + ' ' + (p2.staminaShift > 0 ? '+' : '') + p2.staminaShift +
+                'CS → ' + p2.effectiveLabel + '   (' + Math.round(p2.perStay * 100) + '% per stay)');
+        c.print('             one stay every ' + p2.hours + 'h · ' + p2.stays + ' stays · ' + p2.totalHours + 'h total');
+        c.print('             100% requires: ' + p2.requires);
+        if (p2.table.intensityNote) c.warn('             ⚠ ' + p2.table.intensityNote);
+      }
+      c.print('');
+      c.print('  PERSONALITY  #' + P.n + '  ' + P.name);
+      c.print('               ' + P.blurb);
+      c.print('               targets ' + TARGET_RULES[P.target].label + ' — ' + TARGET_RULES[P.target].desc);
+    });
+
+    // ---- the roster, by origin — the whole assignment at a glance
+    this.cmd('origins', 'the whole roster, by origin', (a, c) => {
+      const R = (window.LSW && window.LSW.ROSTER) || [];
+      for (const o of ORIGINS) {
+        const list = R.filter(d => deriveOrigin(d).id === o.id).map(d => d.name || d.id);
+        if (!list.length) continue;
+        const H = HOSPITAL[o.id];
+        c.print(o.name.padEnd(23) + String(list.length).padStart(2) + '   ' +
+          (H.canAdmit ? Math.round(H.healMax * 100) + '% cap · every ' + H.hours + 'h' : 'cannot be admitted'));
+        c.print('   ' + list.join(', '), '#8b8577');
+      }
     });
 
     this.cmd('surfaces', 'run the z-fighting audit on the live scene', (a, c) => {

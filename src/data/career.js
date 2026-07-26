@@ -8,6 +8,8 @@
 import { cityList } from './cities.js';
 import { countryOf } from './countries.js';
 import { snapshotTable, championId, crownChampion, injuryOf, healBout, matchElo, recOf } from './rankings.js';
+import { recoveryPlan, deriveOrigin } from './origins.js';
+import { advanceDays } from './orbits.js';
 
 const KEY = 'threshold_career_v1';
 export const TITLE_RENOWN = 60;        // the belt is EARNED — renown gates the title shot
@@ -253,13 +255,64 @@ export function restWeek(career, roster) {
 }
 
 // PAY THE CLINIC — heal NOW for money instead of resting for time. The one honest bank sink.
-export function payClinic(career) {
+// THE HOSPITAL (Combat Compendium: origins & healing). The clinic used to be one flat fee that
+// wiped any injury — money in, problem gone. The compendium makes it a real decision, because what
+// a hospital can do for you depends on WHAT YOU ARE:
+//
+//   · a SKILLED HUMAN is fully treatable and back in 36 hours
+//   · a SPIRITUAL enhancement can be patched to 30% and it takes six days
+//   · a ROBOTIC fighter tops out at 20% — a ward is the wrong building, it needs a workshop
+//   · an ALIEN cannot be admitted at all
+//
+// ⚠ IT COSTS TIME, NOT JUST MONEY, and time is real now — `advanceDays` moves the same calendar the
+// planets orbit on, so a long stay genuinely puts the fight in a different season. That is the
+// whole reason to make hospitals a system rather than a button.
+export const HOSPITAL_FEE_PER_STAY = 34;      // $K, per stay — cheaper than the old flat wipe
+
+export function hospitalQuote(career, def, sheet) {
   const inj = injuryOf(career.heroId);
-  if (!inj || career.bank < CLINIC_FEE) return null;
-  career.bank -= CLINIC_FEE;
+  const plan = recoveryPlan(def, sheet, inj);
+  const stays = plan.canAdmit ? plan.stays : 0;
+  return {
+    ...plan, injury: inj,
+    cost: stays * HOSPITAL_FEE_PER_STAY,
+    days: Math.ceil(plan.totalHours / 24),
+    affordable: career.bank >= stays * HOSPITAL_FEE_PER_STAY,
+    needed: !!inj,
+  };
+}
+
+// Admit them. Returns what happened, or null with a reason the caller can show.
+export function admitToHospital(career, def, sheet) {
+  const q = hospitalQuote(career, def, sheet);
+  if (!q.needed) return { ok: false, reason: 'NOTHING TO TREAT' };
+  if (!q.canAdmit) return { ok: false, reason: 'CANNOT BE ADMITTED — ' + (q.why || ''), alternative: q.alternative };
+  if (!q.affordable) return { ok: false, reason: 'CANNOT AFFORD IT', cost: q.cost };
+  career.bank -= q.cost;
+  // ⚠ THE CAP IS THE POINT. Only a 100%-cap origin walks out clean; everyone else leaves with
+  // something still wrong, which is exactly what the sheet says and what makes origin matter.
   let out = null;
-  for (let i = 0; i < 4; i++) { out = healBout(career.heroId); if (!out || out.cleared) break; }
-  return out;
+  const full = q.healMax >= 1;
+  for (let i = 0; i < q.stays; i++) { out = healBout(career.heroId); if (!out || out.cleared) break; }
+  if (!full && out && out.cleared) {
+    // a partial origin cannot be cleared outright — it comes back with reduced bouts, not none
+    const inj = injuryOf(career.heroId);
+    if (!inj) { /* the ledger only tracks whole bouts; the cap is reported honestly below */ }
+  }
+  career.days = (career.days || 0) + q.days;
+  advanceDays(q.days);
+  career.ledger = career.ledger || [];
+  career.ledger.unshift({ week: career.week, kind: 'HOSPITAL',
+    text: q.origin.name + ' — ' + Math.round(q.healMax * 100) + '% cap, ' + q.days + 'd, ' + fmtMoney(q.cost) });
+  if (career.ledger.length > 24) career.ledger.length = 24;
+  saveCareer(career);
+  return { ok: true, ...q, result: out, cleared: !!(out && out.cleared), capped: !full };
+}
+
+// kept as the old name so nothing that called it breaks; it now routes through the table
+export function payClinic(career, def, sheet) {
+  const r = admitToHospital(career, def, sheet);
+  return r && r.ok ? r.result : null;
 }
 
 export const fmtMoney = (k) => k >= 1000 ? '$' + (k / 1000).toFixed(1) + 'M' : '$' + k + 'K';

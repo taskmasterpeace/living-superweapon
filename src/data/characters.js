@@ -3,7 +3,7 @@
 
 export const ROSTER = [
   {
-    id: 'sol', name: 'SOL', title: 'Man of Sunlight', role: 'Bruiser / Beam',
+    id: 'sol', origin: 'altered', name: 'SOL', title: 'Man of Sunlight', role: 'Bruiser / Beam',
     colors: { primary: '#ef652e', secondary: '#0a27ff', accent: '#ffd557', skin: '#e8c39a', cape: '#dd4309' },
     hp: 130, ki: 120, speed: 34, beamMight: 1.2, strength: 8, overdrive: 1.3, threat: 'Very High', frostResist: true, flightTier: 3, afterburner: { mult: 2.1, kiPerSec: 14, wake: ['#ffffff', '#ffd24a'] }, yells: true, voicePitch: 0.9,
     ai: { style: 'bruiser', range: 30, aggro: 0.8, fly: 0.55 },
@@ -21,7 +21,7 @@ export const ROSTER = [
     },
   },
   {
-    id: 'kano', name: 'KANO', title: 'Spirit Warrior', role: 'All-Rounder',
+    id: 'kano', origin: 'spiritual', name: 'KANO', title: 'Spirit Warrior', role: 'All-Rounder',
     colors: { primary: '#ff5d2d', secondary: '#109bf5', accent: '#e4ffff', skin: '#e8c39a' },
     hp: 115, ki: 130, speed: 36, beamMight: 1.4, strength: 6, overdrive: 1.3, threat: 'Very High', yells: true, voicePitch: 1.05,
     ai: { style: 'trickster', range: 42, aggro: 0.72, fly: 0.45 },
@@ -39,7 +39,7 @@ export const ROSTER = [
     },
   },
   {
-    id: 'vega', name: 'VEGA', title: 'Fallen Prince', role: 'Charge Artillery',
+    id: 'vega', origin: 'alien', name: 'VEGA', title: 'Fallen Prince', role: 'Charge Artillery',
     colors: { primary: '#602af0', secondary: '#d3d9bc', accent: '#ffbc24', skin: '#e8c39a' },
     hp: 120, ki: 130, speed: 33, beamMight: 1.25, strength: 7, overdrive: 1.2, threat: 'Very High', yells: true, voicePitch: 0.95,
     ai: { style: 'beamer', range: 40, aggro: 0.9, fly: 0.4 },
@@ -57,7 +57,7 @@ export const ROSTER = [
     },
   },
   {
-    id: 'aurum', name: 'AURUM', title: 'The Willbearer', role: 'Constructs',
+    id: 'aurum', origin: 'tech', name: 'AURUM', title: 'The Willbearer', role: 'Constructs',
     colors: { primary: '#05da54', secondary: '#087d43', accent: '#84ffa3', skin: '#caa27a' },
     hp: 125, ki: 120, speed: 32, strength: 5, overdrive: 0.9, threat: 'High', guardType: 'barrier',
     ai: { style: 'zoner', range: 40, aggro: 0.55, fly: 0.2 },
@@ -75,7 +75,7 @@ export const ROSTER = [
     },
   },
   {
-    id: 'nova', name: 'NOVA', title: 'Star Sovereign', role: 'Sky Artillery',
+    id: 'nova', origin: 'alien', name: 'NOVA', title: 'Star Sovereign', role: 'Sky Artillery',
     colors: { primary: '#ff9149', secondary: '#613419', accent: '#ffd557', skin: '#e8c39a', cape: '#fa6006' },
     hp: 110, ki: 130, speed: 33, beamMight: 1.25, strength: 5, overdrive: 0.9, threat: 'Extreme', afterburner: { mult: 2.1, kiPerSec: 14, wake: ['#ffffff', '#7fe6ff'] }, yells: true, voicePitch: 0.95,
     ai: { style: 'artillery', range: 62, aggro: 0.55, fly: 0.45 },
@@ -93,7 +93,7 @@ export const ROSTER = [
     },
   },
   {
-    id: 'rime', name: 'RIME', title: 'The Deep Cold', role: 'Cryo Control',
+    id: 'rime', origin: 'mutated', name: 'RIME', title: 'The Deep Cold', role: 'Cryo Control',
     colors: { primary: '#49c4fa', secondary: '#cbf0ff', accent: '#e4ffff', skin: '#cfe6f0' },
     hp: 115, ki: 120, speed: 31, strength: 4, overdrive: 0.8, threat: 'High', guardType: 'barrier', flightTier: 2, flyStyle: 'ice',
     ai: { style: 'zoner', range: 44, aggro: 0.5, fly: 0.2 },
@@ -111,7 +111,7 @@ export const ROSTER = [
     },
   },
   {
-    id: 'volt', name: 'VOLT', title: 'The Overclock', role: 'Speed / Lightning',
+    id: 'volt', origin: 'altered', name: 'VOLT', title: 'The Overclock', role: 'Speed / Lightning',
     colors: { primary: '#ebff2d', secondary: '#38314a', accent: '#e4ffff', skin: '#e8c39a' },
     hp: 100, ki: 120, speed: 44, thorns: 7, strength: 3, overdrive: 1.6, threat: 'Moderate', flightTier: 1, yells: true, voicePitch: 1.15, meleePace: 1.5,
     ai: { style: 'rusher', range: 18, aggro: 0.95, fly: 0.35 },
@@ -129,7 +129,7 @@ export const ROSTER = [
     },
   },
   {
-    id: 'warden', name: 'WARDEN', title: 'Gravity Anchor', role: 'Control / Slam',
+    id: 'warden', origin: 'mutated', name: 'WARDEN', title: 'Gravity Anchor', role: 'Control / Slam',
     colors: { primary: '#2c91ab', secondary: '#1a4560', accent: '#86e7ff', skin: '#b9c6cc' },
     hp: 140, ki: 120, speed: 30, strength: 8, overdrive: 1.1, threat: 'High', meleeTiers: 2, flightTier: 2, yells: true, voicePitch: 0.72,
     ai: { style: 'bruiser', range: 30, aggro: 0.72, fly: 0.2 },
@@ -147,7 +147,7 @@ export const ROSTER = [
     },
   },
   {
-    id: 'hive', name: 'HIVE', title: 'The Conclave', role: 'Summoner',
+    id: 'hive', origin: 'tech', name: 'HIVE', title: 'The Conclave', role: 'Summoner',
     colors: { primary: '#e1a33b', secondary: '#60491a', accent: '#ffe181', skin: '#d8b98a' },
     hp: 105, ki: 130, speed: 32, strength: 3, overdrive: 0.7, threat: 'Moderate', flightTier: 1,
     ai: { style: 'summoner', range: 56, aggro: 0.42, fly: 0.2 },
@@ -165,7 +165,7 @@ export const ROSTER = [
     },
   },
   {
-    id: 'pyre', name: 'PYRE', title: 'Living Wildfire', role: 'Fire Bruiser',
+    id: 'pyre', origin: 'mutated', name: 'PYRE', title: 'Living Wildfire', role: 'Fire Bruiser',
     colors: { primary: '#ff742d', secondary: '#6e2c03', accent: '#ffb649', skin: '#e0a878' },
     hp: 135, ki: 120, speed: 32, strength: 7, overdrive: 1.2, threat: 'Very High', frostResist: true, flightTier: 2, flyStyle: 'fire', yells: true, voicePitch: 0.85,
     ai: { style: 'artillery', range: 44, aggro: 0.78, fly: 0.3 },
@@ -183,7 +183,7 @@ export const ROSTER = [
     },
   },
   {
-    id: 'torch', name: 'TORCH', title: 'The Human Flame', role: 'Fire Flyer / Air',
+    id: 'torch', origin: 'altered', name: 'TORCH', title: 'The Human Flame', role: 'Fire Flyer / Air',
     colors: { primary: '#ffb02d', secondary: '#b26300', accent: '#ffd557', skin: '#e8b98a' },
     hp: 105, ki: 130, speed: 40, thorns: 9, strength: 4, overdrive: 1.3, threat: 'High', frostResist: true, flightTier: 3, flyStyle: 'fire', afterburner: { mult: 2.1, kiPerSec: 14, wake: ['#ff6a1a', '#ffd24a'] }, yells: true, voicePitch: 1.1,
     ai: { style: 'rusher', range: 30, aggro: 0.82, fly: 0.75 },
@@ -201,7 +201,7 @@ export const ROSTER = [
     },
   },
   {
-    id: 'apex', name: 'APEX', title: 'The Perfect Being', role: 'Absorb / Regen',
+    id: 'apex', origin: 'altered', name: 'APEX', title: 'The Perfect Being', role: 'Absorb / Regen',
     colors: { primary: '#25ca61', secondary: '#1c6b35', accent: '#c3ff73', skin: '#6fae7a' },
     hp: 145, ki: 120, speed: 32, grabHeal: 0.6, beamMight: 1.4, strength: 8, overdrive: 1.4, threat: 'Extreme', afterburner: { mult: 2.1, kiPerSec: 14, wake: ['#ffe066', '#ff9a2a'] }, yells: true, voicePitch: 0.8,
     ai: { style: 'grappler', range: 30, aggro: 0.78, fly: 0.4 },
@@ -219,7 +219,7 @@ export const ROSTER = [
     },
   },
   {
-    id: 'specter', name: 'SPECTER', title: 'The Synthezoid', role: 'Phase / Flight',
+    id: 'specter', origin: 'robotic', name: 'SPECTER', title: 'The Synthezoid', role: 'Phase / Flight',
     colors: { primary: '#28bb83', secondary: '#e0331b', accent: '#ffe270', skin: '#b9c6cc' },
     hp: 120, ki: 130, speed: 34, phase: true, strength: 6, overdrive: 1.0, threat: 'High',
     ai: { style: 'trickster', range: 38, aggro: 0.68, fly: 0.5 },
@@ -237,7 +237,7 @@ export const ROSTER = [
     },
   },
   {
-    id: 'vanguard', name: 'VANGUARD', title: 'The Invincible', role: 'Air Combat / Invuln',
+    id: 'vanguard', origin: 'alien', name: 'VANGUARD', title: 'The Invincible', role: 'Air Combat / Invuln',
     colors: { primary: '#190aff', secondary: '#d4d9bc', accent: '#ffd557', skin: '#e8c39a', cape: '#dd6909' },
     hp: 150, ki: 110, speed: 42, strength: 9, overdrive: 1.5, threat: 'Very High', guardType: 'deflect', meleeTiers: 2, yells: true, voicePitch: 0.85,
     ai: { style: 'rusher', range: 24, aggro: 0.92, fly: 0.8 },
@@ -255,7 +255,7 @@ export const ROSTER = [
     },
   },
   {
-    id: 'kraken', name: 'KRAKEN', title: 'The Abyss Given Form', role: 'Tentacle Grappler',
+    id: 'kraken', origin: 'symbiotic', name: 'KRAKEN', title: 'The Abyss Given Form', role: 'Tentacle Grappler',
     colors: { primary: '#01a1bc', secondary: '#026575', accent: '#57ffd7', skin: '#7fb8ac' },
     hp: 140, ki: 125, speed: 29, grabHeal: 0.4, strength: 8, overdrive: 1.4, threat: 'Very High', meleeTiers: 2, flightTier: 1, yells: true, voicePitch: 0.65,
     tentacles: { count: 4, segs: 9, segLen: 1.7, radius: 0.55, color: '#0b4a54', color2: '#4affd4' },
@@ -275,7 +275,7 @@ export const ROSTER = [
     },
   },
   {
-    id: 'rift', name: 'RIFT', title: 'The Doorbreaker', role: 'Portal Tactician',
+    id: 'rift', origin: 'mutated', name: 'RIFT', title: 'The Doorbreaker', role: 'Portal Tactician',
     colors: { primary: '#3e445d', secondary: '#c0c7d9', accent: '#ff933b', skin: '#d8b98a' },
     hp: 110, ki: 135, speed: 34, strength: 3, overdrive: 0.8, threat: 'High', flightTier: 2,
     ai: { style: 'trickster', range: 40, aggro: 0.65, fly: 0.35 },
@@ -293,7 +293,7 @@ export const ROSTER = [
     },
   },
   {
-    id: 'titan', name: 'TITAN', title: 'The War Engine', role: 'Armored Juggernaut',
+    id: 'titan', origin: 'robotic', name: 'TITAN', title: 'The War Engine', role: 'Armored Juggernaut',
     colors: { primary: '#62658b', secondary: '#3e3d5d', accent: '#ffa23b', skin: '#8a919c' },
     hp: 165, ki: 140, speed: 29, metal: true, beamMight: 1.3, strength: 9, overdrive: 0.6, threat: 'High', guardType: 'deflect', meleeTiers: 2, flightTier: 2, energyInfinite: true,
     ai: { style: 'beamer', range: 44, aggro: 0.75, fly: 0.35 },
@@ -311,7 +311,7 @@ export const ROSTER = [
     },
   },
   {
-    id: 'sarge', name: 'SARGE', title: 'The Last Soldier', role: 'Human Arsenal',
+    id: 'sarge', origin: 'skilled', name: 'SARGE', title: 'The Last Soldier', role: 'Human Arsenal',
     colors: { primary: '#75903f', secondary: '#4d5d31', accent: '#ffd557', skin: '#c9915a' },
     hp: 125, ki: 100, speed: 33, guardStrong: true, strength: 4, overdrive: 1.0, threat: 'Low', flightTier: 0,
     items: [{ kind: 'jetcell', name: 'Jump Jets', cd: 14, dur: 6, charges: 2 }],
@@ -332,7 +332,7 @@ export const ROSTER = [
   {
     // PURPLE OVERRIDE — creator ruling 2026-07-22: "we need to break the no-purple rule for my
     // Ugandan dude." KIVULI is the ONE sanctioned purple in the project. Everything else stays banned.
-    id: 'kivuli', name: 'KIVULI', title: 'The Breath of Kampala', role: 'Gas Controller',
+    id: 'kivuli', origin: 'mutated', name: 'KIVULI', title: 'The Breath of Kampala', role: 'Gas Controller',
     colors: { primary: '#4a2a80', secondary: '#1e1038', accent: '#b06aff', skin: '#6a4a3a' },
     hp: 115, ki: 135, speed: 33, strength: 4, overdrive: 0.9, threat: 'High', flightTier: 2,
     ai: { style: 'trickster', range: 34, aggro: 0.6, fly: 0.3 },
@@ -350,7 +350,7 @@ export const ROSTER = [
     },
   },
   {
-    id: 'gale', name: 'GALE', title: 'The Last Ranger', role: 'Archer / Trick Arrows',
+    id: 'gale', origin: 'skilled', name: 'GALE', title: 'The Last Ranger', role: 'Archer / Trick Arrows',
     colors: { primary: '#3d7335', secondary: '#32561c', accent: '#a5e86f', skin: '#d8a878' },
     hp: 105, ki: 100, speed: 36, strength: 3, overdrive: 1.1, threat: 'Low', flightTier: 0,
     items: [{ kind: 'medkit', name: 'Field Kit', cd: 9, heal: 40, charges: 2 }],
@@ -372,7 +372,7 @@ export const ROSTER = [
     // COF canon: Alexandr Stefanos, President of Greece — the First Celebrity Superweapon.
     // Explosive energy that FORMS, then fires or propels. His wife Marletta was murdered by the
     // Jackal Sandra; THE MARLETTA is her face — it drifts to you, lingers a heartbeat, and detonates.
-    id: 'stefanos', name: 'KING STEFANOS', title: 'The First Celebrity Superweapon', role: 'Formed Explosives',
+    id: 'stefanos', origin: 'altered', name: 'KING STEFANOS', title: 'The First Celebrity Superweapon', role: 'Formed Explosives',
     colors: { primary: '#2a35f0', secondary: '#e6e4ce', accent: '#ffd557', skin: '#d8b088' },
     hp: 120, ki: 140, speed: 33, strength: 5, overdrive: 0.9, threat: 'Very High', flightTier: 3, yells: true, voicePitch: 0.9,
     ai: { style: 'artillery', range: 50, aggro: 0.62, fly: 0.55 },
@@ -393,7 +393,7 @@ export const ROSTER = [
     // COF canon: SANDRA — "Its Voice" / the L.A. Jackal. ✅ A Black woman, THE FIRST JACKAL
     // (LSW blood-hunter). Her ring is a node of a sentient alien data-lifeform: every networked
     // camera its eye. Clean extractions — the victim survives. She killed Marletta.
-    id: 'sandra', name: 'SANDRA', title: 'The First Jackal', role: 'LSW Hunter',
+    id: 'sandra', origin: 'skilled', name: 'SANDRA', title: 'The First Jackal', role: 'LSW Hunter',
     colors: { primary: '#31344a', secondary: '#6b5824', accent: '#ffb649', skin: '#7a5238' },
     hp: 115, ki: 105, speed: 37, strength: 4, overdrive: 1.1, threat: 'High', flightTier: 0, grabHeal: 0.35, meleeTiers: 3,
     items: [{ kind: 'beacon', name: 'Extraction Beacon', cd: 3.5 }],
@@ -413,7 +413,7 @@ export const ROSTER = [
   },
   // ═══════════════ MARVEL-INSPIRED TEN ═══════════════
   {
-    id: 'ironclad', name: 'IRONCLAD', title: 'The Suit', role: 'Powered Armor',
+    id: 'ironclad', origin: 'tech', name: 'IRONCLAD', title: 'The Suit', role: 'Powered Armor',
     colors: { primary: '#e60642', secondary: '#f7691b', accent: '#ffdb81', skin: '#8a919c' },
     hp: 135, ki: 140, speed: 30, metal: true, strength: 7, overdrive: 0.7, threat: 'High', flightTier: 3,
     ai: { style: 'beamer', range: 46, aggro: 0.7, fly: 0.6 }, evade: { kind: 'dash', name: 'Thruster Slip' },
@@ -429,7 +429,7 @@ export const ROSTER = [
     },
   },
   {
-    id: 'rage', name: 'RAGE', title: 'The Monster in the Man', role: 'Pure Strength',
+    id: 'rage', origin: 'altered', name: 'RAGE', title: 'The Monster in the Man', role: 'Pure Strength',
     colors: { primary: '#28bb39', secondary: '#3d485d', accent: '#92e68d', skin: '#5faf6a' },
     hp: 220, ki: 90, speed: 30, strength: 10, overdrive: 1.5, threat: 'Very High', flightTier: 0, meleeTiers: 2, yells: true, voicePitch: 0.55,
     ai: { style: 'bruiser', range: 16, aggro: 0.95, fly: 0 }, evade: { kind: 'leap', name: 'Rage Leap', up: 52, fwd: 74 },
@@ -445,7 +445,7 @@ export const ROSTER = [
     },
   },
   {
-    id: 'stormcall', name: 'STORMCALL', title: 'Heir of Thunder', role: 'Storm God',
+    id: 'stormcall', origin: 'spiritual', name: 'STORMCALL', title: 'Heir of Thunder', role: 'Storm God',
     colors: { primary: '#3f4390', secondary: '#c0400f', accent: '#86d6ff', skin: '#e8c39a', cape: '#c0400f' },
     hp: 160, ki: 130, speed: 31, strength: 9, overdrive: 1.2, threat: 'Very High', flightTier: 3, yells: true, voicePitch: 0.8,
     ai: { style: 'bruiser', range: 28, aggro: 0.8, fly: 0.5 }, evade: { kind: 'dash', name: 'Storm Step' },
@@ -461,7 +461,7 @@ export const ROSTER = [
     },
   },
   {
-    id: 'webline', name: 'WEBLINE', title: 'The Neighborhood Ghost', role: 'Web Acrobat',
+    id: 'webline', origin: 'altered', name: 'WEBLINE', title: 'The Neighborhood Ghost', role: 'Web Acrobat',
     colors: { primary: '#f68005', secondary: '#3015a0', accent: '#e4ffff', skin: '#e8c39a' },
     hp: 100, ki: 110, speed: 42, strength: 6, overdrive: 1.3, threat: 'High', flightTier: 0,
     ai: { style: 'rusher', range: 20, aggro: 0.85, fly: 0 }, evade: { kind: 'leap', name: 'Web Vault', up: 46, fwd: 70 },
@@ -479,7 +479,7 @@ export const ROSTER = [
     },
   },
   {
-    id: 'ripclaw', name: 'RIPCLAW', title: 'The Best At What He Does', role: 'Regenerating Slasher',
+    id: 'ripclaw', origin: 'mutated', name: 'RIPCLAW', title: 'The Best At What He Does', role: 'Regenerating Slasher',
     colors: { primary: '#f7b41b', secondary: '#3d485d', accent: '#ffe270', skin: '#e8c39a' },
     hp: 155, ki: 105, speed: 35, strength: 6, overdrive: 1.4, threat: 'High', flightTier: 0,
     ai: { style: 'rusher', range: 14, aggro: 0.95, fly: 0 }, evade: { kind: 'dash', name: 'Feral Weave' },
@@ -495,7 +495,7 @@ export const ROSTER = [
     },
   },
   {
-    id: 'majesty', name: 'MAJESTY', title: 'Higher. Further. Faster.', role: 'Cosmic Powerhouse',
+    id: 'majesty', origin: 'altered', name: 'MAJESTY', title: 'Higher. Further. Faster.', role: 'Cosmic Powerhouse',
     colors: { primary: '#e6060f', secondary: '#1544a0', accent: '#ffd557', skin: '#e8c39a' },
     hp: 130, ki: 145, speed: 34, beamMight: 1.3, strength: 8, overdrive: 1.0, threat: 'Extreme', flightTier: 3, afterburner: { mult: 2.1, kiPerSec: 14, wake: ['#eaf2ff', '#c9d9ff'] }, yells: true, voicePitch: 0.95,
     ai: { style: 'beamer', range: 42, aggro: 0.8, fly: 0.6 }, evade: { kind: 'dash', name: 'Photon Slip' },
@@ -511,7 +511,7 @@ export const ROSTER = [
     },
   },
   {
-    id: 'mystward', name: 'MYSTWARD', title: 'Keeper of the Seals', role: 'Mystic Defender',
+    id: 'mystward', origin: 'spiritual', name: 'MYSTWARD', title: 'Keeper of the Seals', role: 'Mystic Defender',
     colors: { primary: '#c00f0f', secondary: '#3d485d', accent: '#ffb649', skin: '#d8b088' },
     hp: 115, ki: 140, speed: 31, strength: 4, overdrive: 0.8, threat: 'Very High', flightTier: 2, guardType: 'barrier',
     ai: { style: 'zoner', range: 44, aggro: 0.55, fly: 0.4 }, evade: { kind: 'blink', name: 'Fold Step', range: 24 },
@@ -527,7 +527,7 @@ export const ROSTER = [
     },
   },
   {
-    id: 'onyx', name: 'ONYX', title: 'The Kinetic King', role: 'Vibranium Duelist',
+    id: 'onyx', origin: 'tech', name: 'ONYX', title: 'The Kinetic King', role: 'Vibranium Duelist',
     colors: { primary: '#2b3247', secondary: '#3d485d', accent: '#cad0db', skin: '#5a3a28' },
     hp: 135, ki: 115, speed: 38, strength: 7, overdrive: 1.2, threat: 'High', flightTier: 0, guardType: 'deflect',
     ai: { style: 'rusher', range: 16, aggro: 0.85, fly: 0 }, evade: { kind: 'leap', name: 'Panther Pounce', up: 42, fwd: 66 },
@@ -543,7 +543,7 @@ export const ROSTER = [
     },
   },
   {
-    id: 'chainfire', name: 'CHAINFIRE', title: 'The Debt Collector', role: 'Hellfire Chains',
+    id: 'chainfire', origin: 'spiritual', name: 'CHAINFIRE', title: 'The Debt Collector', role: 'Hellfire Chains',
     colors: { primary: '#31434a', secondary: '#6b2c24', accent: '#ff853b', skin: '#c9bfa9' },
     hp: 140, ki: 120, speed: 31, strength: 7, overdrive: 1.1, threat: 'Very High', flightTier: 1, flyStyle: 'fire', frostResist: true, yells: true, voicePitch: 0.75,
     ai: { style: 'grappler', range: 28, aggro: 0.8, fly: 0.2 }, evade: { kind: 'dash', name: 'Burnout', dtype: 'fire' },
@@ -559,7 +559,7 @@ export const ROSTER = [
     },
   },
   {
-    id: 'tempest', name: 'TEMPEST', title: 'Weather Sovereign', role: 'Weather Control',
+    id: 'tempest', origin: 'mutated', name: 'TEMPEST', title: 'Weather Sovereign', role: 'Weather Control',
     colors: { primary: '#e6e1ce', secondary: '#3d455d', accent: '#beeaff', skin: '#6a4a3a' },
     hp: 115, ki: 135, speed: 32, strength: 4, overdrive: 0.8, threat: 'Very High', flightTier: 3,
     ai: { style: 'artillery', range: 52, aggro: 0.55, fly: 0.6 }, evade: { kind: 'dash', name: 'Wind Shear' },
@@ -576,7 +576,7 @@ export const ROSTER = [
   },
   // ═══════════════ DC-INSPIRED TEN ═══════════════
   {
-    id: 'knightfall', name: 'KNIGHTFALL', title: 'The Night Itself', role: 'Tactical Vigilante',
+    id: 'knightfall', origin: 'skilled', name: 'KNIGHTFALL', title: 'The Night Itself', role: 'Tactical Vigilante',
     colors: { primary: '#2b3447', secondary: '#3d4a5d', accent: '#ffd557', skin: '#e8c39a', cape: '#212c44' },
     hp: 125, ki: 105, speed: 37, strength: 5, overdrive: 1.2, threat: 'Moderate', flightTier: 0, guardStrong: true, meleeTiers: 3, glider: true,
     items: [{ kind: 'beacon', name: 'Line Beacon', cd: 3 }],
@@ -593,7 +593,7 @@ export const ROSTER = [
     },
   },
   {
-    id: 'aegis', name: 'AEGIS', title: 'Daughter of War', role: 'Warrior Princess',
+    id: 'aegis', origin: 'spiritual', name: 'AEGIS', title: 'Daughter of War', role: 'Warrior Princess',
     colors: { primary: '#e60653', secondary: '#156ea0', accent: '#ffd557', skin: '#d8b088' },
     hp: 155, ki: 125, speed: 35, strength: 9, overdrive: 1.3, threat: 'Very High', flightTier: 2, guardType: 'deflect', yells: true, voicePitch: 0.95,
     ai: { style: 'bruiser', range: 22, aggro: 0.85, fly: 0.3 }, evade: { kind: 'dash', name: 'Amazon Step' },
@@ -609,7 +609,7 @@ export const ROSTER = [
     },
   },
   {
-    id: 'olympus', name: 'OLYMPUS', title: 'The Word Made Lightning', role: 'Divine Champion',
+    id: 'olympus', origin: 'spiritual', name: 'OLYMPUS', title: 'The Word Made Lightning', role: 'Divine Champion',
     colors: { primary: '#f63705', secondary: '#e6e2ce', accent: '#ffe270', skin: '#e8c39a', cape: '#e6e2ce' },
     hp: 150, ki: 130, speed: 33, strength: 8, overdrive: 1.2, threat: 'Very High', flightTier: 3, afterburner: { mult: 2.1, kiPerSec: 14, wake: ['#ffffff', '#ffe9b0'] }, yells: true, voicePitch: 1.0,
     ai: { style: 'bruiser', range: 26, aggro: 0.8, fly: 0.5 }, evade: { kind: 'dash', name: 'Bolt Step' },
@@ -625,7 +625,7 @@ export const ROSTER = [
     },
   },
   {
-    id: 'marshal', name: 'MARSHAL', title: 'The Last Son of a Dead World', role: 'Phasing Telepath',
+    id: 'marshal', origin: 'alien', name: 'MARSHAL', title: 'The Last Son of a Dead World', role: 'Phasing Telepath',
     colors: { primary: '#28bb39', secondary: '#31384a', accent: '#86d6ff', skin: '#5faf6a', cape: '#1534a0' },
     hp: 140, ki: 130, speed: 33, strength: 8, overdrive: 1.0, threat: 'Very High', flightTier: 3, phase: true,
     ai: { style: 'trickster', range: 34, aggro: 0.7, fly: 0.5 }, evade: { kind: 'phase', name: 'Ghost Drift' },
@@ -641,7 +641,7 @@ export const ROSTER = [
     },
   },
   {
-    id: 'circuit', name: 'CIRCUIT', title: 'Half Man, All Machine', role: 'Cybernetic Arsenal',
+    id: 'circuit', origin: 'tech', name: 'CIRCUIT', title: 'Half Man, All Machine', role: 'Cybernetic Arsenal',
     colors: { primary: '#8da3a9', secondary: '#31424a', accent: '#86e7ff', skin: '#5a3a28' },
     hp: 155, ki: 130, speed: 28, metal: true, energyInfinite: true, strength: 8, overdrive: 0.6, threat: 'High', flightTier: 2, guardType: 'deflect', meleeTiers: 2,
     ai: { style: 'beamer', range: 44, aggro: 0.7, fly: 0.35 }, evade: { kind: 'dash', name: 'Boost Vector' },
@@ -657,7 +657,7 @@ export const ROSTER = [
     },
   },
   {
-    id: 'trench', name: 'TRENCH', title: 'King of the Drowned Court', role: 'Ocean Sovereign',
+    id: 'trench', origin: 'mutated', name: 'TRENCH', title: 'King of the Drowned Court', role: 'Ocean Sovereign',
     colors: { primary: '#f7df1b', secondary: '#017dbc', accent: '#86e7ff', skin: '#d8b088' },
     hp: 160, ki: 120, speed: 33, strength: 8, overdrive: 1.2, threat: 'High', flightTier: 0,
     ai: { style: 'summoner', range: 34, aggro: 0.7, fly: 0 }, evade: { kind: 'slide', name: 'Tidal Rush', slideT: 0.65, power: 128 },
@@ -673,7 +673,7 @@ export const ROSTER = [
     },
   },
   {
-    id: 'decibel', name: 'DECIBEL', title: 'The Cry That Levels Blocks', role: 'Sonic Screamer',
+    id: 'decibel', origin: 'altered', name: 'DECIBEL', title: 'The Cry That Levels Blocks', role: 'Sonic Screamer',
     colors: { primary: '#313f4a', secondary: '#6b3824', accent: '#ffe270', skin: '#e8c39a' },
     hp: 110, ki: 120, speed: 37, strength: 4, overdrive: 1.2, threat: 'Moderate', flightTier: 0, meleeTiers: 3, yells: true, voicePitch: 1.3,
     ai: { style: 'bruiser', range: 22, aggro: 0.8, fly: 0 }, evade: { kind: 'dash', name: 'Offbeat' },
@@ -689,7 +689,7 @@ export const ROSTER = [
     },
   },
   {
-    id: 'coldsnap', name: 'COLDSNAP', title: 'The Absolute Zero Rule', role: 'Cryo Gunslinger',
+    id: 'coldsnap', origin: 'tech', name: 'COLDSNAP', title: 'The Absolute Zero Rule', role: 'Cryo Gunslinger',
     colors: { primary: '#2aa3f0', secondary: '#e6d7ce', accent: '#beeaff', skin: '#e8c39a' },
     hp: 115, ki: 115, speed: 32, strength: 3, overdrive: 0.9, threat: 'Moderate', flightTier: 0,
     ai: { style: 'zoner', range: 46, aggro: 0.6, fly: 0 }, evade: { kind: 'slide', name: 'Ice Slide', slideT: 0.6, power: 122 },
@@ -705,7 +705,7 @@ export const ROSTER = [
     },
   },
   {
-    id: 'foundry', name: 'FOUNDRY', title: 'The Self-Made Man of Steel', role: 'Hammer Engineer',
+    id: 'foundry', origin: 'tech', name: 'FOUNDRY', title: 'The Self-Made Man of Steel', role: 'Hammer Engineer',
     colors: { primary: '#627e8b', secondary: '#c00f36', accent: '#cad0db', skin: '#5a3a28' },
     hp: 165, ki: 115, speed: 27, metal: true, strength: 9, overdrive: 1.0, threat: 'High', flightTier: 1, meleeTiers: 2,
     ai: { style: 'bruiser', range: 24, aggro: 0.75, fly: 0.2 }, evade: { kind: 'leap', name: 'Rocket Boots', up: 46, fwd: 62 },
@@ -721,7 +721,7 @@ export const ROSTER = [
     },
   },
   {
-    id: 'talon', name: 'TALON', title: 'The First Sidekick to Outgrow the Shadow', role: 'Acrobat Duelist',
+    id: 'talon', origin: 'skilled', name: 'TALON', title: 'The First Sidekick to Outgrow the Shadow', role: 'Acrobat Duelist',
     colors: { primary: '#2d2b47', secondary: '#2415a0', accent: '#46cbff', skin: '#e8c39a' },
     hp: 115, ki: 110, speed: 40, strength: 5, overdrive: 1.3, threat: 'Low', flightTier: 0, meleeTiers: 3,
     items: [{ kind: 'medkit', name: 'Circus Kit', cd: 9, heal: 36, charges: 2 }],
@@ -739,7 +739,7 @@ export const ROSTER = [
   },
   // ═══════════════ THE ORIGINAL TEN (Consequences of Failure) ═══════════════
   {
-    id: 'abeo', name: 'ABEO', title: 'Shield of the Hand', role: 'Metal Bodyguard',
+    id: 'abeo', origin: 'mutated', name: 'ABEO', title: 'Shield of the Hand', role: 'Metal Bodyguard',
     colors: { primary: '#4b6468', secondary: '#f7461b', accent: '#ffdb81', skin: '#5a3a28' },
     hp: 175, ki: 110, speed: 27, metal: true, strength: 9, overdrive: 0.9, threat: 'High', flightTier: 0, guardType: 'deflect', guardStrong: true, meleeTiers: 2,
     ai: { style: 'bruiser', range: 18, aggro: 0.7, fly: 0 }, evade: { kind: 'leap', name: 'Iron Bound', up: 40, fwd: 58 },
@@ -755,7 +755,7 @@ export const ROSTER = [
     },
   },
   {
-    id: 'jelani', name: 'JELANI', title: 'Spear of the Hand', role: 'Strength-Speed',
+    id: 'jelani', origin: 'altered', name: 'JELANI', title: 'Spear of the Hand', role: 'Strength-Speed',
     colors: { primary: '#f6052e', secondary: '#313f4a', accent: '#ffb649', skin: '#5a3a28' },
     hp: 135, ki: 115, speed: 46, strength: 9, overdrive: 1.4, threat: 'High', flightTier: 0, yells: true, voicePitch: 1.0,
     ai: { style: 'rusher', range: 14, aggro: 0.95, fly: 0 }, evade: { kind: 'sprint', name: 'Warpath', mult: 1.85, dur: 1.4 },
@@ -771,7 +771,7 @@ export const ROSTER = [
     },
   },
   {
-    id: 'kamaria', name: 'KAMARIA', title: 'Veil of the Hand', role: 'Phasing Guardian',
+    id: 'kamaria', origin: 'mutated', name: 'KAMARIA', title: 'Veil of the Hand', role: 'Phasing Guardian',
     colors: { primary: '#01a1bc', secondary: '#2b3247', accent: '#86e7ff', skin: '#5a3a28' },
     hp: 115, ki: 130, speed: 36, strength: 5, overdrive: 1.0, threat: 'High', flightTier: 2, phase: true,
     ai: { style: 'trickster', range: 30, aggro: 0.7, fly: 0.3 }, evade: { kind: 'phase', name: 'Through the Veil' },
@@ -787,7 +787,7 @@ export const ROSTER = [
     },
   },
   {
-    id: 'ramiro', name: 'RAMIRO', title: 'The Clown-Sheriff', role: 'Cartel Hunter',
+    id: 'ramiro', origin: 'skilled', name: 'RAMIRO', title: 'The Clown-Sheriff', role: 'Cartel Hunter',
     colors: { primary: '#2a56f0', secondary: '#e6e0ce', accent: '#ff6657', skin: '#d8b088' },
     hp: 140, ki: 100, speed: 31, strength: 6, overdrive: 1.1, threat: 'Moderate', flightTier: 0, guardStrong: true, meleeTiers: 3,
     items: [{ kind: 'flashbang', name: 'Flash Rounds', cd: 10, radius: 26, charges: 2 }],
@@ -804,7 +804,7 @@ export const ROSTER = [
     },
   },
   {
-    id: 'jawah', name: 'JAWAH MATU', title: 'The Silence', role: 'Sound Absorber',
+    id: 'jawah', origin: 'mutated', name: 'JAWAH MATU', title: 'The Silence', role: 'Sound Absorber',
     colors: { primary: '#3d4c5d', secondary: '#d9cebc', accent: '#92e68d', skin: '#5a3a28' },
     hp: 125, ki: 135, speed: 34, strength: 5, overdrive: 1.0, threat: 'High', flightTier: 0,
     ai: { style: 'trickster', range: 26, aggro: 0.65, fly: 0 }, evade: { kind: 'phase', name: 'Soundless Step' },
@@ -820,7 +820,7 @@ export const ROSTER = [
     },
   },
   {
-    id: 'moses', name: 'MOSES APIO', title: 'The Atlas Protocol', role: 'Symbiont Host',
+    id: 'moses', origin: 'symbiotic', name: 'MOSES APIO', title: 'The Atlas Protocol', role: 'Symbiont Host',
     colors: { primary: '#28bb39', secondary: '#2b3247', accent: '#a4ff65', skin: '#5a3a28' },
     hp: 140, ki: 125, speed: 35, strength: 7, overdrive: 1.2, threat: 'High', flightTier: 1, grabHeal: 0.3,
     tentacles: { count: 3, segs: 8, segLen: 1.5, radius: 0.45, color: '#14361f', color2: '#9dff5a' },
@@ -837,7 +837,7 @@ export const ROSTER = [
     },
   },
   {
-    id: 'dune', name: 'DUNE', title: 'The Walking Sahara', role: 'Sand Shaper',
+    id: 'dune', origin: 'mutated', name: 'DUNE', title: 'The Walking Sahara', role: 'Sand Shaper',
     colors: { primary: '#f7741b', secondary: '#b25c37', accent: '#ffe8bf', skin: '#c9915a' },
     hp: 130, ki: 130, speed: 30, strength: 6, overdrive: 0.9, threat: 'Moderate', flightTier: 0,
     ai: { style: 'zoner', range: 40, aggro: 0.6, fly: 0 }, evade: { kind: 'slide', name: 'Dune Surf', slideT: 0.65, power: 126 },
@@ -853,7 +853,7 @@ export const ROSTER = [
     },
   },
   {
-    id: 'graven', name: 'GRAVEN', title: 'The Weight of the World', role: 'Gravity Controller',
+    id: 'graven', origin: 'mutated', name: 'GRAVEN', title: 'The Weight of the World', role: 'Gravity Controller',
     colors: { primary: '#2b3747', secondary: '#3f6790', accent: '#86b4ff', skin: '#b9c6cc' },
     hp: 130, ki: 140, speed: 29, strength: 6, overdrive: 0.9, threat: 'Very High', flightTier: 2, yells: true, voicePitch: 0.8,
     ai: { style: 'artillery', range: 48, aggro: 0.6, fly: 0.4 }, evade: { kind: 'blink', name: 'Mass Shift', range: 22 },
@@ -869,7 +869,7 @@ export const ROSTER = [
     },
   },
   {
-    id: 'bulwark', name: 'BULWARK', title: 'The Living Rampart', role: 'Fortress',
+    id: 'bulwark', origin: 'altered', name: 'BULWARK', title: 'The Living Rampart', role: 'Fortress',
     colors: { primary: '#75903f', secondary: '#3d485d', accent: '#cad0db', skin: '#c9915a' },
     hp: 195, ki: 120, speed: 25, strength: 9, overdrive: 0.8, threat: 'High', flightTier: 0, guardType: 'barrier', guardStrong: true, meleeTiers: 2,
     items: [{ kind: 'shieldpack', name: 'Aegis Cell', cd: 13, shield: 45, charges: 2 }],
@@ -886,7 +886,7 @@ export const ROSTER = [
     },
   },
   {
-    id: 'feral', name: 'FERAL', title: 'The Reclaimed', role: 'Beast Rusher',
+    id: 'feral', origin: 'altered', name: 'FERAL', title: 'The Reclaimed', role: 'Beast Rusher',
     colors: { primary: '#b85123', secondary: '#6b3e24', accent: '#ffb649', skin: '#c9915a' },
     hp: 145, ki: 110, speed: 43, thorns: 8, strength: 7, overdrive: 1.4, threat: 'High', flightTier: 0, yells: true, voicePitch: 1.05,
     ai: { style: 'rusher', range: 13, aggro: 1, fly: 0 }, evade: { kind: 'leap', name: 'Pounce', up: 46, fwd: 72 },
