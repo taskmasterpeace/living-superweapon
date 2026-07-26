@@ -43,6 +43,10 @@ is worse than no map. If you add a system, add a row.
 | Squad radio | `engine/ai.js` | `ai._callOut(game, real)` | Earned by one pair of eyes, pushed to allies within 160u. `_jammedT` suppresses it. |
 | Search | `engine/ai.js` | `ai._searchGoal(game, dt)` | walk the lead → COLD → sweep 55u for ~9s → patrol. Eyes sweep while searching. |
 | Fairness | `engine/ai.js` | `_turnToward`, `_wander`, `reflex`, `_acq` | Difficulty buys judgment, never physics. Aim at what it BELIEVES (`it.aimAt`), never `target.pos`. |
+| **Companions** | `engine/summons.js` | `new Summon(game, owner, def, i)` | Already a follower: inherits `owner.team`, homes on the owner, picks foes via `nearestFoe`. Has NO identity, psyche or persistence. |
+| Wildlife | `engine/wildlife.js` | `wildlife.scare(x,z,r)` | Instanced birds and litter. **No creature has stats or an entity** — there is no animal sheet in the project. |
+| Emotion display | `engine/hud.js` | the mood chip (`_moodEl`) | ⚠ Shows the PLAYER's own psyche only (`g.player._psyche`). Nothing in the game displays anyone else's. |
+| Hiring | `data/org.js` | `ROLES` = lsw · merc · scientist · engineer · physician · psych | A human sidekick is a HIRE, not a new system. Pay scales off the rank ladder. |
 | Psyche | `engine/psyche.js`, `data/psyche.js` | `psyche.feel(f, event)`, `f.psyche.main` | Mood is a MULTIPLIER LAYER through existing choke points. Never a second combat system. |
 | Drives | `data/psyche.js` | `DRIVE_WEIGHTS`, appraisal | An event is measured against what the person WANTS. Same punch → different emotion per personality. |
 | Personality | `data/psyche.js` | 20 types → 5 targeting rules | Only ever chooses among foes it can actually SEE. Honesty outranks personality. |
