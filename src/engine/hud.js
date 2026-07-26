@@ -764,6 +764,36 @@ export class HUD {
   }
   transcriptOpen() { return !!(this.el.transcript && this.el.transcript.style.display === 'block'); }
 
+  // ⚠ YOU MUST BE ABLE TO SEE HOW YOUR OWN CHARACTER FEELS — that was the whole point of the ask
+  // ("so a player can always kind of know how the character is feeling"). The shade is the WORD
+  // from Robert's wheel, not a number, and the mood line is what it is currently doing to you, so
+  // the chip explains the multiplier rather than hiding it.
+  updateMood(g) {
+    const p = g.player, P = p && p._psyche;
+    let el = this._moodEl;
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'plMood';
+      el.style.cssText = 'position:fixed;left:14px;bottom:250px;z-index:21;padding:5px 10px 6px;' +
+        'border-radius:var(--r-2,8px);border:1px solid var(--line,#2a2d33);background:var(--surface,rgba(14,16,24,.72));' +
+        'font-family:var(--f-display,Rajdhani),sans-serif;letter-spacing:.06em;display:none;pointer-events:none';
+      document.body.appendChild(el);
+      this._moodEl = el;
+    }
+    const on = !!(P && g.mode && g.running);
+    if (!on) { if (el.style.display !== 'none') el.style.display = 'none'; return; }
+    const key = P.main + '|' + P.shade + '|' + (P.mood && P.mood.id);
+    if (key === this._moodKey) return;                       // dirty-checked, like every other chip
+    this._moodKey = key;
+    el.style.display = 'block';
+    el.style.borderColor = P.colour;
+    el.innerHTML =
+      '<div style="font:700 9px var(--f-mono,monospace);letter-spacing:.22em;color:var(--text-5,#8b8577)">MOOD</div>' +
+      '<div style="font-weight:800;font-size:15px;color:' + P.colour + '">' + P.shade.toUpperCase() + '</div>' +
+      (P.mood ? '<div style="font:600 10px var(--f-mono,monospace);letter-spacing:.1em;color:var(--text-4,#9a9384)">' +
+        P.mood.text + '</div>' : '');
+  }
+
   updateFoeArrow(g) {
     const el = this.el.foeArrow; if (!el) return;
     const inMatch = !!(g.mode && g.running && !g.matchOver);
@@ -1680,6 +1710,7 @@ export class HUD {
     this.updateModeBar(g);
     this.updateKitWidget(p);
     this.updateDpsMeters(g);
+    this.updateMood(g);
     this.updateFoeArrow(g);
     // the comic layer rides the HUD's frame — it is presentation, and it must never be able to
     // throw into the sim

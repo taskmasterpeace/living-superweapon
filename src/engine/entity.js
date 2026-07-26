@@ -1,4 +1,5 @@
 // WAR WORLD: ASCENDANTS — Fighter: articulated figure, stats, physics, flight, combat, ability state.
+import { moodMult } from './psyche.js';
 import { BUILDS, frameOf, applyFrame, figure, buildWeapon } from './figure.js';
 export { BUILDS, frameOf, applyFrame, figure, buildWeapon };   // re-exported: existing importers are unaffected
 import { updateDupes, updatePossession, updateElastic, updateWallCrawl, updateTk, updateMimic, updateMount, updateVisionMode, pulseDupes, dupePool } from './systems2.js';
@@ -423,6 +424,14 @@ export class Fighter {
       return;
     }
     if (this.state === 'ko' || this.invuln > 0) return 0;
+    // ⚠ MOOD REACHES THE FIGHT HERE, at the one place every damage source already passes through —
+    // not at the ten call sites that multiply by powerBuff. An angry fighter hits harder and a sad
+    // one hits softer because of one line, and nothing else has to know emotions exist.
+    if (opts.src && opts.src._psyche) {
+      amount *= moodMult(opts.src, 'dmg', 1);
+      if (opts.src._moodCrit) { amount *= 1.5; opts.src._moodCrit = 0; }   // "the first one hurts"
+    }
+    if (this._moodVulnT > 0) amount *= (this._moodVuln || 1);              // disgust leaves you open
     // ---- SECOND WIND, the counterplay (manual §13): a DOWNED body ignores chip — only a HEAVY
     // STRIKE or a slam FINISHES it for real. Everything else is beneath the moment.
     if (this.downedT > 0) {
@@ -687,6 +696,12 @@ export class Fighter {
     if (this._landT > 0) this._landT -= dt; if (this._liftFx > 0) this._liftFx -= dt;
     if (this._chill > 0) { this._chill -= dt; if (this._chill <= 0) this.speed = this.def.speed || 30; }
     if (this.invuln > 0) this.invuln -= dt;
+    // mood one-shots run on their own short clocks — they are moments, not states
+    if (this._moodVulnT > 0) this._moodVulnT -= dt;
+    if (this._moodMeleeT > 0) this._moodMeleeT -= dt;
+    if (this._moodErraticT > 0) this._moodErraticT -= dt;
+    if (this._moodFleeT > 0) this._moodFleeT -= dt;
+    if (this._moodHasteT > 0) this._moodHasteT -= dt;
     if (this.evadeCd > 0) this.evadeCd -= dt;
     if (this._bounceCd > 0) this._bounceCd -= dt;   // blocked-strike rejection debounce
     if (this.sprintT > 0) this.sprintT -= dt;
@@ -994,7 +1009,7 @@ export class Fighter {
     else this._bigYelled = false;
     this._wasCharge = anyCharge;
     if (this.energyInfinite) this.ki = this.maxKi;                             // android core — the tank never moves
-    else this.ki = clamp(this.ki + (anyCharge ? 3 : 8) * this.sheet.kiRegenMult * (1 - 0.07 * ((this._wounds && this._wounds.torso) || 0)) * dt, 0, this.maxKi);   // ki is a budget — RESOLVE refills it; a torso wound slows the tank (manual §18)
+    else this.ki = clamp(this.ki + (anyCharge ? 3 : 8) * this.sheet.kiRegenMult * moodMult(this, 'kiRegen', 1) * (1 - 0.07 * ((this._wounds && this._wounds.torso) || 0)) * dt, 0, this.maxKi);   // ki is a budget — RESOLVE refills it; a torso wound slows the tank (manual §18)
     // guard to recover ki — and THE POWER CHARGE (DBZ ruling 2026-07-24): hold the stance while
     // genuinely SAFE and it becomes the real thing — the scream, rising sparks, a white-hot state
     // ring, 40/s regen. A foe closing inside 55u drops you back to an honest block on its own;
@@ -1353,7 +1368,7 @@ export class Fighter {
     // the live movement INTENT, stamped for the physics pass (directional descent reads it)
     this._mvX = dir ? dir.x : 0; this._mvZ = dir ? dir.z : 0; this._mvT = 0.12;
     if (this.state === 'ko' || this.hitstop > 0 || this.grabbedBy || this.grabState === 'clinch' || this.staggerT > 0 || this.frozenT > 0 || this.stunT > 0 || this.hanging) return;   // hanging: your feet have nowhere to be
-    let s = this.speed * 1.08 * this.powerBuff * sprint;   // ground feel pass 2026-07-24: +8% across the board
+    let s = this.speed * 1.08 * this.powerBuff * sprint * moodMult(this, 'speed', 1);   // ground feel pass 2026-07-24: +8% across the board
     if (this._wounds && this._wounds.leg) s *= 1 - 0.09 * this._wounds.leg;   // the LIMP is real (manual §18)
     if (this.sprintT > 0) s *= this.sprintMult;   // double-tap sprint surge
     if (this.meleeCharge > 0) s *= 0.4;           // winding up a haymaker roots you

@@ -13,6 +13,7 @@ import { MeleeSystem } from './melee.js';
 import { Pedestrians } from './pedestrians.js';
 import { NewsCrew } from './newscrew.js';
 import { PoliceSystem } from './police.js';
+import { psycheOf, applyInstant, pickByPersonality } from './psyche.js';
 import { WhiteRoom } from './whiteroom.js';
 import { buildReport } from '../data/news.js';
 import { bookInjury, injuryOf, healBout, koElo, matchElo } from '../data/rankings.js';
@@ -813,6 +814,42 @@ export class Game {
     this.scene.add(mesh);
     (this._drops = this._drops || []).push({ ab, mesh, x, z, t: 20, y0: gy + 0.8 });
   }
+  // ⚠ ONE PUMP FOR EVERY FIGHTER'S PSYCHE. Decay, the pending instant action, and the tell —
+  // in one place, so an emotion cannot be updated twice or forgotten by a code path added later.
+  updatePsyche(dt) {
+    const t = this.time || 0;
+    // ⚠ THE PLAYER GETS ONE UP FRONT. Everyone else grows a psyche the first time something happens
+    // to them, but the HUD chip has to have something to show from the first frame of the match.
+    if (this.player && !this.player._psyche) psycheOf(this.player);
+    for (const e of this.entities) {
+      if (!e.alive || !e._psyche) continue;
+      const P = e._psyche;
+      P.update(dt, t);
+      if (P.pendingInstant) {
+        const row = P.pendingInstant; P.pendingInstant = null;
+        applyInstant(this, e, row);
+        // ⚠ THE FEELING SPEAKS. This is the whole point of the layer Robert asked for: you can see
+        // how a character feels because they SAY it, in a balloon whose shape matches the emotion.
+        if (this.comic && row.text) {
+          const tone = P.main === 'angry' ? 'yell' : P.main === 'fearful' ? 'weak'
+            : P.main === 'sad' ? 'weak' : P.main === 'surprised' ? 'yell'
+            : P.main === 'bad' ? 'whisper' : 'talk';
+          const near = !this.player || (Math.abs(this.player.pos.x - e.pos.x) < 300 && Math.abs(this.player.pos.z - e.pos.z) < 300);
+          if (near && t - (this._feelSpokeT || -9) > 1.6) {
+            this._feelSpokeT = t;
+            try { this.comic.say(e, row.text, { tone }); } catch (err) {}
+          }
+        }
+      }
+      // the ground ring already reports state; emotion tints it when nothing louder is happening
+      if (e.parts && e.parts.stateRing && e.parts.stateRing.material && !e.guarding && !e.grabbing
+          && !(e.staggerT > 0) && (e.meleeCharge || 0) <= 0) {
+        e.parts.stateRing.material.color.set(P.colour);
+        e.parts.stateRing.material.opacity = 0.18 + (P.value / 10) * 0.3;
+      }
+    }
+  }
+
   updateDrops(dt) {
     const D = this._drops; if (!D || !D.length) return;
     for (let i = D.length - 1; i >= 0; i--) {
@@ -1692,6 +1729,15 @@ export class Game {
   isHuman(f) { return this.humans.some(h => h.fighter === f); }
 
   handleKO(victim) {
+    if (victim) {
+      const kp = killer && psycheOf(killer);
+      if (kp) kp.feel('kill', 1, this.time || 0);
+      for (const e of this.entities) {
+        if (!e.alive || e === victim || e === killer) continue;
+        const ep = psycheOf(e);
+        if (ep && e.team === victim.team) ep.feel('allyDown', 1, this.time || 0);
+      }
+    }
     // THE KO IS THE PANEL EVERY COMIC ENDS ON. One caption, one sound effect, and nothing else —
     // the layer earns its keep by being rare.
     if (this.comic && victim && victim.pos) {
@@ -1990,6 +2036,20 @@ export class Game {
     // ⚠ ONLY THE BIG ONES, AND ONLY NEAR THE PLAYER. A sound effect per beam tick is confetti;
     // this rate limit is what keeps the layer reading as a comic panel and not as a damage log.
     // Sustained sources (dot) never letter at all.
+    // ⚠ THE WHEEL TURNS ON REAL EVENTS. Every trigger here is something that actually happened in
+    // the fight — no timers, no randomness deciding how someone feels. Sustained sources are
+    // excluded or a beam would spin the wheel sixty times a second.
+    if (!opts.dot && amount > 0) {
+      const src = opts.src;
+      const big = amount >= target.maxHp * 0.12;
+      const tp = psycheOf(target);
+      if (tp) tp.feel(blocked ? 'blocked' : big ? 'hurtBad' : 'hurtLight', 1, this.time || 0);
+      if (src && src !== target) {
+        const sp = psycheOf(src);
+        if (sp) sp.feel(blocked ? 'blocked' : big ? 'bigHitThem' : 'hitThem', 1, this.time || 0);
+      }
+      if (tp && target.hp / target.maxHp < 0.25) tp.feel('lowHealth', 0.5, this.time || 0);
+    }
     if (this.comic && amount >= 14 && !blocked && !opts.dot && target && target.pos) {
       const pl = this.player;
       const near = !pl || (Math.abs(pl.pos.x - target.pos.x) < 260 && Math.abs(pl.pos.z - target.pos.z) < 260);
@@ -2472,6 +2532,19 @@ export class Game {
   }
 
   controlBot(f, dt) {
+    // ⚠ MOOD CHANGES WHAT A BOT WANTS, NOT WHAT IT CAN DO. Anger pulls the preferred range in and
+    // pushes aggression up; fear does the reverse; panic makes it erratic; a fleeing fighter simply
+    // leaves. None of it grants an ability or bends the physics — the honesty and fairness laws
+    // still hold, and a frightened bot is beatable in exactly the ways a frightened person is.
+    if (f._psyche && f.ai) {
+      const MP = f._psyche;
+      f.ai.aggroBias = MP.aggroAdd;
+      f.ai.rangeBias = MP.rangeAdd;
+      if (f._moodMeleeT > 0) f.ai.rangeBias = (f.ai.rangeBias || 0) - 40;
+      if (f._moodFleeT > 0) { f.ai.aggroBias = -1; f.ai.rangeBias = (f.ai.rangeBias || 0) + 120; }
+      f.ai.erratic = f._moodErraticT > 0;
+    }
+
     if (!f.ai || !f.alive) { f.moveDir = { x: 0, z: 0 }; return; }
     if (f.grabbedBy || f.frozenT > 0) { f.moveDir = { x: 0, z: 0 }; return; }   // stunned while held / frozen
     // finish an AI haymaker wind-up
@@ -2686,6 +2759,7 @@ export class Game {
     this.gravityZones.update(dt);
     updateDomes(this, dt);
     updateReshaped(this, dt);
+    this.updatePsyche(dt);
     this.updateDrops(dt);
     // LOW ORBIT DEPARTURE (manual §17): a burner-class flier that punches through the ceiling
     // and keeps the throttle open is LEAVING THE THEATER — offer the world map. Once per climb.

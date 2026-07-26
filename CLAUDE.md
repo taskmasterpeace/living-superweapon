@@ -1406,6 +1406,41 @@ Four laws, three of them the same idea: **a thing must not outlive the match tha
 - `training` survives as an INTERNAL mode with no card: the tutorial (`hud.onTutorial`) and the
   atlas tile proving ground (`hud.onProvingGround`) both still enter it.
 
+## THE PSYCHE, LACED IN (2026-07-25) — `engine/psyche.js`, data in `data/psyche.js`
+- **Robert's emotion wheel is LIVE**: seven emotions valued 1–10 on every fighter, and his rules
+  implemented literally — main = highest · ties break to whichever reached it LAST · the others
+  decay toward 1 while the main holds · **an emotion at 10 that gains more subtracts the excess
+  from the next-highest**. That overflow rule is the interesting one: feeling one thing strongly
+  actively ERODES everything else, which is why a fighter who has been angry a while cannot
+  easily become afraid. Measured: angry caps at 10 and knocks sad 6 → 3.6.
+- **ONE d100 EACH, AT THE MOMENT OF THE CHANGE** — an INSTANT action applied once, and a MOOD held
+  for as long as the emotion lasts. Not per frame, not per hit; the sheet is explicit.
+- ⚠ **MOOD IS A MULTIPLIER LAYER, NOT A SECOND COMBAT SYSTEM.** It reaches the fight through the
+  choke points that already exist — `takeDamage` for damage, `move()` for speed, `pay()` for
+  cooldowns, the ki-regen line — so an emotion can never do something the engine could not already
+  do, and nothing else has to know emotions exist. Measured ×4 between a ×2 and a ×0.5 mood.
+- ⚠ **INSTANT ACTIONS GO THROUGH THE ENGINE'S OWN VERBS** — ki, `staggerT`, the `_shieldHp` pool,
+  `game.disarm` — for the same reason.
+- ⚠ **THE TURN-BASED TRANSLATION.** The sheets say "skips next turn", "+20 initiative", "moves to a
+  later timeline position in FAST". This game is real time and Robert ruled on it directly, so
+  every effect is TRANSLATED with the reading written beside its row: a stagger in seconds, a
+  cooldown multiplier, a change in what the AI WANTS. Rows with no honest reading are dropped.
+- **THE WHEEL TURNS ON REAL EVENTS ONLY** — hits taken and landed, blocks, KOs, an ally going down,
+  low health. No timers and no randomness deciding how anyone feels. DoT is excluded or a beam
+  would spin the wheel sixty times a second.
+- **PERSONALITY DECIDES WHO A BOT ATTACKS** (the Combat Compendium's 20 types → 5 target rules:
+  most health · least health · biggest threat · easiest · random). ⚠ It only ever chooses among
+  foes the bot can ACTUALLY SEE — the honesty law outranks the personality, so "goes for the
+  weakest" still cannot know who is weakest through a wall. And mood shifts a bot's preferred
+  RANGE and AGGRESSION only: never its reflexes, aim or knowledge (the fairness law).
+- **YOU CAN SEE IT**: a HUD mood chip (the SHADE as a word off the wheel — MAD, ANXIOUS, PROUD —
+  plus what the mood is currently doing to you), the state ring tinted by emotion when nothing
+  louder is happening, and **the feeling SPEAKS** — an emotion change puts a line in a comic
+  balloon whose tone matches it (anger yells, fear and sadness come out weak, boredom whispers).
+  That is what the caption layer was for.
+- ⚠ Dummies, sim constructs and the training bag never grow a psyche.
+- Console: `mood` (the live wheel as bars) · `mood angry 5` to push one.
+
 ## THE COMIC LAYER (2026-07-25) — `styles/comic.css` + `engine/comic.js`
 - **THE FONTS WERE CHOSEN BY SPECIMEN, NOT BY NAME.** Eleven candidates rendered inside a real
   balloon, a real caption box and at real SFX size, judged IN CONTEXT:

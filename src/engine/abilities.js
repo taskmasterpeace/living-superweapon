@@ -1,4 +1,5 @@
 // WAR WORLD: ASCENDANTS — ability engine. Data-driven power types dispatched per input slot.
+import { moodMult } from './psyche.js';
 import { spawnDuplicates, possess, setElastic, tkGrab, tkThrow, reshape, consumeSlot, mimicKit, summonMount, domeAt, setVisionMode } from './systems2.js';
 import { setSize, setInvisible, beginRegen, banish } from './systems.js';
 import { visOf } from '../data/visual.js';
@@ -12,7 +13,7 @@ const ORB_CORE_MAT = new THREE.MeshBasicMaterial({ color: '#fff' });
 export const PAYLOAD_COLORS = { poison: '#8fe08a', flame: '#ff7a2a', explosive: '#ffd24a', gas: '#9a4ae0' };
 
 function ready(c, def, st) { return st.cd <= 0 && c.ki >= (def.cost || 0) && c.hitstop <= 0 && c.staggerT <= 0 && c.stunT <= 0; }   // staggered/stunned fighters cast NOTHING
-function pay(c, def, st) { c.ki -= (def.cost || 0); st.cd = (def.cd || 0) * ((c.sheet && c.sheet.cdMult) || 1); }   // INTELLECT + Tactician shave cooldowns
+function pay(c, def, st) { c.ki -= (def.cost || 0); st.cd = ((def.cd || 0) * ((c.sheet && c.sheet.cdMult) || 1)) * moodMult(c, 'cd', 1); }   // INTELLECT + Tactician shave cooldowns
 function chargeOrb(c, st, color) {
   if (!st.orb) {
     const core = new THREE.Mesh(ORB_GEO, ORB_CORE_MAT);

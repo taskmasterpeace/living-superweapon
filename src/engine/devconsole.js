@@ -21,7 +21,8 @@ import { ORBITS, MOONS, moonsOf, moonDistanceInRadii, positionAt, separationAU,
          dateStr, seasonOf, ALIGN_DATE } from '../data/orbits.js';
 import { WORLDS, worldOf, survivalFor, skyFor, SUITS } from '../data/environments.js';
 import { ORIGINS, deriveOrigin, recoveryPlan, HOSPITAL } from '../data/origins.js';
-import { WHEEL, shadeOf, derivePersonality, TARGET_RULES } from '../data/psyche.js';
+import { WHEEL, EMOTIONS, shadeOf, derivePersonality, TARGET_RULES } from '../data/psyche.js';
+import { psycheOf } from './psyche.js';
 
 const U_PER_M = 1 / 0.19;              // TRUE 1:1 SCALE: 1 unit ≈ 0.19m
 const HERO_U = 9.6;                    // a hero is 9.6u ≈ 1.8m — the only ruler that means anything
@@ -436,6 +437,30 @@ export class DevConsole {
       if (what === 'sfx') { if (p) C.sfx(text || 'KRAKOOM!', p.pos, { power: 0.9 }); return; }
       if (!p) return c.err('no player to speak');
       C.say(p, text || 'Say something.', { tone: what === 'say' ? 'talk' : what });
+    });
+
+    // ---- the wheel, live
+    this.cmd('mood', 'mood [emotion] — the live wheel, or push one', (a, c) => {
+      const g = G(), p = P();
+      if (!p) return c.err('no player');
+      const P2 = psycheOf(p);
+      if (!P2) return c.err('this fighter has no psyche');
+      if (a[0]) {
+        const e = a[0].toLowerCase();
+        if (!EMOTIONS.includes(e)) return c.err('emotions: ' + EMOTIONS.join(' '));
+        P2.v[e] = Math.min(10, P2.v[e] + (parseFloat(a[1]) || 4));
+        P2._last = { e, t: g.time || 0 };
+        P2._settle(g.time || 0);
+      }
+      c.print((p.def.name || p.def.id) + '   feels   ' + P2.shade.toUpperCase() + '   (' + P2.label + ' ' + P2.value.toFixed(1) + '/10)');
+      for (const e of EMOTIONS) {
+        const v = P2.v[e], bar = '\u2588'.repeat(Math.round(v)) + '\u00b7'.repeat(10 - Math.round(v));
+        c.print('  ' + e.padEnd(10) + bar + ' ' + v.toFixed(1), e === P2.main ? WHEEL[e].color : '#8b8577');
+      }
+      if (P2.mood) c.print('  MOOD   ' + P2.mood.text + '   ' + JSON.stringify(P2.mood.fx));
+      if (P2.instant) c.print('  LAST   ' + P2.instant.text + '   ' + JSON.stringify(P2.instant.fx));
+      const per = P2.p;
+      c.print('  WHO    #' + per.n + ' ' + per.name + ' \u2014 targets ' + TARGET_RULES[per.target].label);
     });
 
     this.cmd('surfaces', 'run the z-fighting audit on the live scene', (a, c) => {

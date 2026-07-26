@@ -1,5 +1,6 @@
 // WAR WORLD: ASCENDANTS — character-authentic AI. Each hero fights in the style of its counterpart:
 // beamers zone, rushers blitz, artillery kites, zoners wall up, tricksters teleport/phase, grapplers grab, summoners hide behind minions.
+import { pickByPersonality } from './psyche.js';
 import { HOLD_TYPES, holdTimeFor } from './abilityMeta.js';
 import { rand, chance, pick } from '../core/util.js';
 
@@ -100,7 +101,16 @@ export class AI {
     for (const k in b.slots) out.slots[k] = { pressed: false, held: false, released: false };
 
     // focus the player if it's a foe, else the nearest
-    const real = (game.player && game.isFoe(b, game.player) && game.player.alive) ? game.player : game.nearestFoe(b, b.pos, 500);
+    // ⚠ PERSONALITY DECIDES WHO, THE HONESTY LAW DECIDES WHETHER THEY KNOW. The Combat Compendium
+    // gives each of the twenty types a target preference (most health / least health / biggest
+    // threat / easiest / random) — but it only ever chooses among foes this bot can ACTUALLY SEE,
+    // so a "goes for the weakest" fighter still cannot know who is weakest through a wall.
+    let real = (game.player && game.isFoe(b, game.player) && game.player.alive) ? game.player : game.nearestFoe(b, b.pos, 500);
+    if (b._psyche) {
+      const seen = game.entities.filter(e => e.alive && e.def && !e.isDummy && game.isFoe(b, e)
+        && (e._vis == null || e._vis > 0.4) && Math.hypot(e.pos.x - b.pos.x, e.pos.z - b.pos.z) < 500);
+      if (seen.length > 1) real = pickByPersonality(game, b, seen) || real;
+    }
     if (!real) { out.aimDir = { x: Math.sin(b.facing), z: Math.cos(b.facing) }; return out; }
 
     // --- vision ---
@@ -184,10 +194,19 @@ export class AI {
     // movement — hold preferred range + strafe
     this.think -= dt; if (this.think <= 0) { this.think = rand(0.6, 1.5); this.strafe = chance(0.5) ? 1 : -1; }
     let mx = 0, mz = 0;
-    let pref = this.range * (lowHp ? 1.5 : 1); if (this.aggro > 0.85 && !lowHp) pref *= 0.8;
+    // ⚠ MOOD SHIFTS WHAT THE BOT WANTS, applied here where the preferred range and aggression are
+    // decided — never to its reflexes, its aim or its knowledge. An angry fighter closes; a
+    // frightened one backs off; neither gains an ability or bends the physics. The fairness law
+    // holds: difficulty buys judgement, and now emotion buys INTENT, but never certainty.
+    const ag = Math.max(0, Math.min(1.2, this.aggro + (this.aggroBias || 0)));
+    let pref = this.range * (lowHp ? 1.5 : 1) + (this.rangeBias || 0);
+    pref = Math.max(6, pref);
+    if (ag > 0.85 && !lowHp) pref *= 0.8;
     if (real._wounds && real._wounds.leg > 0) pref *= 0.75;   // a visible LIMP invites pressure — sight-gated (we are in the sees branch; manual §18)
     if (d > pref + 8) { mx = dx / d; mz = dz / d; } else if (d < pref - 8) { mx = -dx / d; mz = -dz / d; }
-    const sa = 0.4 + this.aggro * 0.3; mx += (-dz / d) * this.strafe * sa; mz += (dx / d) * this.strafe * sa;
+    let sa = 0.4 + ag * 0.3;
+    if (this.erratic) sa *= 2.2;                      // panic: the strafe stops being a plan
+    mx += (-dz / d) * this.strafe * sa; mz += (dx / d) * this.strafe * sa;
     out.move = { x: mx, z: mz };
     // opener: full commit straight at the foe under throttle; arriving overhead = drop into a dive punch
     if (this._opener > 0) {
