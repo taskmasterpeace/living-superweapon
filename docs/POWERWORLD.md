@@ -283,9 +283,10 @@ directory is not a plan:
 | `pw-platform.md` | Deck and iPad budgets; why PowerWorld is cheaper on CPU and shadows but not automatically on fill |
 | `pw-bfp-map.md` | Ultra BFP's feature list measured against ours |
 
+| `pw-esf-research.md` | what ESF and BFP actually did, from primary sources — the recovered beta 1.2 manual, a live server's `cvarlist`, and the dev team's own retrospectives. **Read §13 below first.** |
+
 ⚠ **Correction for the record:** BFP is a **Quake III Arena** mod; ESF is the Half-Life one. An
-earlier brief in this session called both Half-Life. The ESF/BFP mechanics deep-dive is still
-running and lands in `pw-esf-research.md`.
+earlier brief in this session called both Half-Life.
 
 ---
 
@@ -399,3 +400,86 @@ re-assertion racing it. That is owed, and it belongs with the stage slice.
 What is proven is the part that matters most for the direction: **the chase loop is real and it is
 four times the reach it had.** Whether it is *fun* is Robert's call, in the isometric camera, which
 is exactly where his own build order wanted that question asked.
+
+---
+
+## 13. WHAT ESF ACTUALLY DID — and the five things it changes here
+
+Full research in `docs/powerworld/pw-esf-research.md` (1,468 lines). It rests on primary sources, not
+summaries: the **official ESF beta 1.2 manual**, dead on the live site and recovered from the Internet
+Archive, complete enough to implement Advanced Melee from; a **`cvarlist` dump from a live ESF 1.2
+server** giving the real `am_*` constants; and the ESF dev team's own retrospective articles, in which
+they judge their own famous system.
+
+### 13.1 ⚠ THE LAW OF THE GENRE, in a team member's own words
+
+> *"All you need to do is be close and have to be holding a single mouse button. **How you get close
+> is your choice**, be it swoop, teleport or normally flying. Call it a proximity triggered crowbar."*
+
+**In a fast 3-D flight brawler the strike cannot be the skill test — the approach is.** ESF made the
+punch itself automatic and moved *all* of the difficulty into closing the gap. Every good thing about
+ESF melee follows from that, and the one system that violated it — the advanced-melee arrow minigame —
+is the one its own developers deleted, saying *"we knew the old advanced melee system was no good, so
+it got thrown out."*
+
+This is the single most useful sentence in the research, and it validates something already true here:
+our trifecta is already proximity-and-commitment (`coneFoe` + reach + the step-in), and the CLINCH
+pass's reach inversion — jab furthest, power punch nearest — is already *"the approach is the skill."*
+⚠ It also warns off a whole class of tempting work: **do not add an input minigame to melee.** The
+project's own melee spec has a wrestling-circle wedge minigame in it, and this is evidence against
+putting that on the critical path for PowerWorld.
+
+### 13.2 Teleport intercept is real, and its catchability was an accident worth making deliberate
+
+Confirmed as **the core high-skill technique**: hit them → your swoop ends → teleport toward the
+flying body while holding melee → connect. Nine named combos are transcribed. Three structural facts:
+
+- **You cannot teleport *during* a swoop.** They are mutually exclusive; teleport-while-swooping was
+  requested repeatedly and rejected as overpowered.
+- ⚠ **Whether you can catch them depends on how hard you launched them.** A standing or dropping hit
+  launches slowly and is catchable; a full swoop hit launches too fast to follow. The research is
+  explicit that this trade-off *emerged accidentally* — **so build it on purpose.** That is a real
+  design gift: it makes the biggest hit not automatically the best hit, and it means our own
+  `momentumMult` already has the input the rule needs.
+- ESF 1.2.1 had to stop teleport **overshooting** the opponent, which is exactly why intercepting was
+  so hard before it. Our arrival point should be short of the body, not on it.
+
+### 13.3 ⚠ ESF GAVE UP ON ITS OWN CAMERA, and said so in a changelog
+
+> *"Firstperson is now forced during melee battles, so the screen doesn't fuck up."*
+
+The genre's benchmark **cut away from its own third-person camera rather than solve the two-body
+framing case**. That is the strongest available warning for step 2 of our build order, and it is why
+the kill test there is a screenshot matrix rather than an assertion suite. Swoop framing, beam-struggle
+framing and launched-camera behaviour are **undocumented in every source** — so there is no reference
+answer to copy and we will be deriving it.
+
+### 13.4 Our beam struggle is already correct by ESF's standard
+
+**Powerstruggle is a HOLD-and-spend contest in both games, never a mash** — only advanced melee was an
+input minigame. `clashPower() = might × powerBuff × (0.35 + 0.65 × ki/maxKi)` with both casters burning
+ki is exactly that shape. Nothing to change; §2's airborne fix was the only real gap.
+
+### 13.5 The combo-chain fix is a curve, not a wall
+
+ESF shipped unlimited chaining (broken), then a hard 2-hit cap (hated). ESF:Final replaced both with
+**escalating knockback per chained hit plus a geometric bonus — 1, 2, 4, 8 — that resets on recovery.**
+Worth copying directly if PowerWorld ever gets a combo counter, and worth remembering that the hard cap
+was the version players disliked.
+
+### 13.6 BFP's cautionary lesson argues for lock-on
+
+BFP put no aim assist on a ~2780 u/s free-pitch flier, and produced **the same complaint from 2002 to
+2024**: *"have a lock on system would be better."* That is direct evidence for the lock-on framing
+decision, from the game we are explicitly aiming at.
+
+### Corrections the research makes to the record
+
+ESF: Final is **not** Beta 1.3 (the Open Beta was cancelled); **ESF had no destructible terrain** — a
+team member says so, which means our `crater`/`shatterBlock`/slam-through-a-wall ambitions are *ahead*
+of the reference, not behind it; the base game shipped **9 characters with one transformation each**,
+so the long transformation ladder people remember is fan-made; and a plausible-sounding claim that
+overcharging a beam makes it explode in your hand was traced to wishlist threads and **rejected**.
+
+Fourteen open gaps are listed rather than smoothed over — including that **no source anywhere
+publishes ESF's numeric ki costs**, so any ki economy we build is ours to calibrate.
