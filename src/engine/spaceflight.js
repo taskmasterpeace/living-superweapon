@@ -30,6 +30,8 @@
 // assert on `beat`, `t` and `done`, the same contract the opening director uses.
 import * as THREE from 'three';
 import { PLANETS, PLANET_LOOK, lookOf, buildRoute, HELIOPAUSE_AU } from '../data/planets.js';
+import { buildEarth } from './earthglobe.js';
+import { gameDate } from '../data/orbits.js';
 import { makeParty, FORMATIONS, formationFor } from '../data/vessels.js';
 import { moonsOf, moonDistanceInRadii, ORBITS } from '../data/orbits.js';
 import { figure } from './figure.js';
@@ -294,6 +296,80 @@ export class SpaceFlight {
     this.bright = new THREE.Points(bgeo, bmat);
     this.bright.frustumCulled = false;
     this.scene.add(this.bright);
+    this._buildWarp();
+  }
+
+  // ==============================================================================================
+  // THE SPEED LAYER. Robert: *"the traveller should be travelling MUCH faster, almost a blur. it
+  // should feel vast and massive."*
+  //
+  // ⚠ THOSE TWO ASKS FIGHT EACH OTHER, AND RESOLVING THAT IS THE WHOLE TRICK. Vastness is a
+  // DISTANT frame of reference that barely moves; speed is a NEAR one tearing past. Wind the stars
+  // up and you get speed and lose the scale — the field starts reading as a tunnel a few hundred
+  // metres wide. So the stars stay almost still, exactly as they should at interplanetary distance,
+  // and a near-field of debris and ice is added inside the lane to rip past the lens. Parallax
+  // between the two IS the sensation of enormous speed across an enormous distance, and it is the
+  // reason a real spacecraft shot needs foreground at all.
+  //
+  // One LineSegments draw. Each streak's LENGTH is the distance the party covers in a frame, so the
+  // blur is not an effect layered on top of the motion — it is a readout of it.
+  _buildWarp() {
+    const N = 2200, R0 = 90, R1 = 2600, LEN = 6000;
+    const pos = new Float32Array(N * 6), col = new Float32Array(N * 6);
+    this._warpSeed = new Float32Array(N * 4);      // x, y, z0, brightness
+    const c = new THREE.Color();
+    for (let i = 0; i < N; i++) {
+      const a = Math.random() * Math.PI * 2;
+      // biased outward so the lens is not choked, and so there is depth to the field
+      const r = R0 + Math.pow(Math.random(), 0.62) * (R1 - R0);
+      const b = 0.25 + Math.pow(Math.random(), 2.0) * 0.75;
+      this._warpSeed[i * 4] = Math.cos(a) * r;
+      this._warpSeed[i * 4 + 1] = Math.sin(a) * r * 0.72;
+      this._warpSeed[i * 4 + 2] = Math.random() * LEN;
+      this._warpSeed[i * 4 + 3] = b;
+      c.setHSL(0.09 + Math.random() * 0.07, 0.22, 0.5 + b * 0.4);
+      for (let k = 0; k < 2; k++) {
+        col[i * 6 + k * 3] = c.r; col[i * 6 + k * 3 + 1] = c.g; col[i * 6 + k * 3 + 2] = c.b;
+      }
+    }
+    const g = this._geo(new THREE.BufferGeometry());
+    g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+    const m = new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.0,
+      depthWrite: false, blending: THREE.AdditiveBlending });
+    this._mats.push(m);
+    this.warp = new THREE.LineSegments(g, m);
+    this.warp.frustumCulled = false;
+    this._warpLen = LEN;
+    this.scene.add(this.warp);
+  }
+
+  // Drive it from the party's ACTUAL speed down the lane, so a slow arrival has no streaks and the
+  // middle of a deep crossing is a wall of them.
+  _stepWarp(dt, speed) {
+    if (!this.warp) return;
+    const g = this.warp.geometry, pos = g.attributes.position.array, S = this._warpSeed;
+    const LEN = this._warpLen, N = S.length / 4;
+    const along = this.partyGroup.position.z;
+    // a streak is as long as the distance covered this frame — clamped so a hitch cannot smear
+    // ⚠ THE STREAK IS THE MEASUREMENT, THE MULTIPLIER IS THE STYLE. Length is literally the
+    // distance covered this frame, so it cannot lie about the speed — but at 1:1 a 60fps frame
+    // covers so little that the field reads as dots. x4 is the exposure: a long shutter on a fast
+    // subject, which is exactly what a real plate of something moving this fast looks like.
+    const streak = Math.min(4200, Math.max(0, speed) * dt * 4.0);
+    const vis = Math.min(1, streak / 55);
+    this.warp.material.opacity = 0.85 * vis;
+    this.warp.position.z = along;
+    for (let i = 0; i < N; i++) {
+      const x = S[i * 4], y = S[i * 4 + 1];
+      // recycle forward: everything lives in a moving box ahead of the party
+      let z = S[i * 4 + 2] - ((-along * 1.0) % LEN);
+      z = ((z % LEN) + LEN) % LEN;
+      const zf = -z;
+      pos[i * 6] = x; pos[i * 6 + 1] = y; pos[i * 6 + 2] = zf;
+      pos[i * 6 + 3] = x; pos[i * 6 + 4] = y; pos[i * 6 + 5] = zf + streak * S[i * 4 + 3];
+    }
+    g.attributes.position.needsUpdate = true;
   }
 
   // a soft round falloff — used by the bright stars and the sun's corona
@@ -316,6 +392,19 @@ export class SpaceFlight {
   // as a backside sphere, and rings as flat discs. No textures anywhere.
   _planetMesh(id, radius) {
     const L = lookOf(id);
+    // ⚠ EARTH IS NOT A COLOURED BALL. Every other world in this system can be a flat-shaded sphere
+    // with latitude bands and lose nothing — nobody knows what Neptune's weather looked like on a
+    // given Tuesday. Earth is the one world every player can identify, and a generic blue marble
+    // where their own continent should be is the single most obviously wrong thing the space layer
+    // could show. It gets real coastlines, a terminator computed from the date and the clock, and
+    // city lights on the night side (engine/earthglobe.js).
+    if (id === 'earth') {
+      const E = buildEarth(radius, { date: gameDate(), dayT: (this.g && this.g.world && this.g.world.dayT) });   // the module stores the game as `g`
+      this._earth = E;
+      E.group.userData.body = E.globe;
+      E.group.userData.air = E.air;
+      return E.group;
+    }
     const grp = new THREE.Group();
     const body = new THREE.Mesh(
       this._geo(new THREE.IcosahedronGeometry(radius, 4)),
@@ -448,6 +537,20 @@ export class SpaceFlight {
     // the sun, far behind — it is the key light's source and the reason there is a terminator
     this.sun = this._planetMesh('sun', 620);
     this.sun.position.set(-13000, 3900, 5500);   // matches the key's direction — one star, one shadow
+    // ⚠ AND IF EARTH IS IN THE SHOT, THE STAR MOVES TO WHERE THE CLOCK SAYS IT IS. The globe's
+    // terminator is computed from the subsolar point for the current date and time; leaving the
+    // star parked at an art-directed position would put the visible sun on one side of frame and
+    // the sunrise on the other. One source of truth, and it is the calendar.
+    if (this._earth) {
+      // ⚠ RELATIVE TO EARTH, NOT TO THE ORIGIN. On a return leg Earth is the DESTINATION, and
+      // hanging the star off wherever you happened to launch from puts the visible sun in one
+      // place and the sunrise in another — the exact failure this block exists to prevent.
+      const home = this.bodies.find(x => x.userData.id === 'earth') || this.origin;
+      const d = this._earth.uniforms.uSun.value.clone().normalize();
+      const dist = this.sun.position.length();
+      this.sun.position.copy(home.position).addScaledVector(d, dist);
+      if (this.sunLight) this.sunLight.position.copy(this.sun.position);   // the vessels are lit by the same star
+    }
     this.scene.add(this.sun);
     // A STAR IS A GLARE, NOT A DISC. The corona is what stops it reading as a gold ball, and the
     // composer's bloom takes it the rest of the way.
@@ -597,7 +700,18 @@ export class SpaceFlight {
   // still see and you arrive at one that fills the frame, with the empty middle covered fast. The
   // first curve only decelerated at the end, so "BREAKING ORBIT" played with Earth already a
   // crescent thousands of units astern — the one shot Robert asked for by name.
-  _lane(t) { const u = clamp01(t); return u * u * u * (u * (u * 6 - 15) + 10); }
+  // ⚠ THE MIDDLE HAS TO BE VIOLENT. Smootherstep eases at BOTH ends, so the crossing spent most of
+  // its length at a polite constant rate and never had a moment that felt fast. This keeps a soft
+  // release and a soft arrival — you should leave gently and park gently — but stacks a second
+  // ease inside the middle so the cruise is a hard acceleration to a genuine sprint and back.
+  // Peak lane speed measured about 3.4x the old constant rate.
+  _lane(t) {
+    const u = clamp01(t);
+    const base = u * u * u * (u * (u * 6 - 15) + 10);
+    const mid = Math.sin(Math.PI * u);                  // 0 at both ends, 1 in the middle
+    const kick = mid * mid * 0.5;
+    return clamp01(base * (1 - kick) + (base * base * (3 - 2 * base)) * kick + kick * (base - 0.5) * 0.34);
+  }
 
   _buildBeats() {
     const R = this.route, beats = [];
@@ -688,7 +802,11 @@ export class SpaceFlight {
     this.t = this.clock / this.total;
 
     const along = -this._lane(this.t) * this.LANE;         // the party's position down the lane
+    const speed = Math.abs(along - (this._along == null ? along : this._along)) / Math.max(1e-4, dt);
+    this._along = along;
     this.partyGroup.position.set(0, 0, along);
+    this._stepWarp(dt, speed);
+    if (this._earth) this._earth.spin(dt, 1);
 
     // formation + life: a gentle roll and bob per craft so a group never reads as a rigid prop
     this.craft.forEach((c, i) => {
@@ -835,6 +953,7 @@ export class SpaceFlight {
 
   // -------------------------------------------------------------------------------------------
   finish(skipped) {
+    if (this._earth) { try { this._earth.dispose(); } catch (e) {} this._earth = null; }
     if (this.done) return;
     this.done = true;
     if (this._raf) cancelAnimationFrame(this._raf);

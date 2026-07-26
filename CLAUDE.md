@@ -877,6 +877,40 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   '?' sprite on top of the last one. Measured **40 live ghosts** in one 90s fight once the police
   arrived. Debounced to one per fighter per 1.2s → 2. Edge-triggered is not the same as once.
 
+## LEAVING EARTH (2026-07-26) — `data/earth.js` + `engine/earthglobe.js`, manual §40
+- **THERE WAS NO GEOGRAPHY IN THIS PROJECT.** The cities sheet has 1,050 rows and no coordinates
+  (`_cityLL` hashes country+city precisely because of that), and every world in the space layer was
+  a flat-shaded icosahedron with colour bands. Fine for Neptune; unacceptable for the one planet
+  every player can identify. `data/earth.js` authors ~25 coastline rings + the inland seas that get
+  CUT BACK OUT (without the Caspian and the Great Lakes a globe reads as the wrong planet) + ice
+  latitudes + `subsolar(date, dayT)`. **Polygons, not a bitmap** — the same data serves a thumbnail
+  and a hero shot AND answers `isLand(lon,lat)`, which the city lights need.
+- **THE TERMINATOR IS A CONSEQUENCE, NOT A GRADIENT**: `dot(normal, sunDir)` where the sun direction
+  is the SUBSOLAR POINT — latitude from the SEASON (measured 21 JUN +23.4, 21 DEC -23.4 degrees:
+  that is the axial tilt, not a constant), longitude from `world.dayT`. Leave at dawn, leave into a
+  sunrise.
+- ⚠ **ONE STAR, ONE SHADOW.** The scene's visible sun and the vessel key light are MOVED to the
+  direction the clock computes (verified to agree within a thousandth). Art-directing the star
+  separately puts the sun on one side of frame and the sunrise on the other. ⚠ It hangs off EARTH's
+  position, not the origin — on a return leg Earth is the destination.
+- ⚠ **Three art passes, all wrong first**: the ice wash painted Canada and Siberia white (a pole-to-
+  66-degree gradient covers most northern land) · the relief mottles read as CRATERS (six-degree
+  circles on a globe are moon craters, not terrain) · 900 additive city lights inside a nine-degree
+  radius saturated to white marshmallows (a city light must be nearly invisible ALONE; the
+  brightness comes from how MANY there are).
+- **The EXTRUDED COASTLINE** from his reference is a hard drop shadow offset under every landmass —
+  cheap, and it is the detail that makes it look like the reference.
+- ⚠ **SPEED AND VASTNESS FIGHT EACH OTHER, and that is the whole trick.** Vastness is a DISTANT
+  frame that barely moves; speed is a NEAR one tearing past. Wind the stars up and you get speed and
+  destroy the scale (the field reads as a tunnel a few hundred metres wide). So the stars stay
+  nearly still and a NEAR-FIELD of debris rips past inside the lane — the parallax between the two
+  IS the sensation. One LineSegments draw, 2,200 streaks, and **each streak's length is the distance
+  covered that frame**, so the blur is a readout of the motion rather than an effect on top of it.
+- **The lane curve**: smootherstep eases at BOTH ends, so a crossing never had a fast moment. Soft
+  release and soft arrival kept, a second ease stacked in the middle → measured **peak 6,858 u/s
+  against a 2,576 average, 2.7x the old constant rate.** Refs `wwa-earth.png`,
+  `wwa-flight-003.png`, `wwa-flight-026.png`.
+
 ## HANDOFF
 - **`HANDOFF.md` at the repo root** is the orientation document: architecture, the ten rules that
   are load-bearing, what is solid, what is half-built, what to do next, and the headless

@@ -2014,3 +2014,77 @@ have a character assigned to them, I wanna know that as well"*:
   mount · dome · vision · regen · banish · gravity
 
 The list is generated, so it shrinks the moment somebody picks something up.
+
+
+---
+
+## §40 · LEAVING EARTH (2026-07-26)
+
+Robert, with a reference frame of a terrain globe at a low angle: *"when going to orbit we need to
+see earth like this. make a model of earth 1 to 1 so we see it like this when leaving earth. day and
+night should depend on that. aim for visual awe but aligned with our style. also improve space
+travel — the traveller should be travelling MUCH faster, almost a blur. it should feel vast and
+massive."*
+
+### There was no geography in this project
+
+The cities sheet has 1,050 rows and not one coordinate — `_cityLL` hashes country and city into a
+plausible lat/lon precisely *because* the sheet has none. `data/geography.js` is an authored join
+keyed on country name. And every world in the space layer was a flat-shaded icosahedron with colour
+bands, which is fine for Neptune and unacceptable for the one planet every player can identify.
+
+`data/earth.js` authors it: ~25 coastline rings, the inland seas that get cut back out (without the
+Caspian and the Great Lakes a globe reads as the wrong planet long before anyone can say why), the
+ice latitudes, and `subsolar(date, dayT)`. Polygons rather than a bitmap, so the same data serves a
+64px thumbnail and a 4096px hero shot **and** answers `isLand(lon, lat)`, which the city lights need.
+
+### The terminator is a consequence, not a gradient
+
+`engine/earthglobe.js`. The day/night line is `dot(surface normal, sun direction)`, and the sun
+direction is the **subsolar point** for the current date and time:
+
+- **latitude from the season** — axial tilt swings it between the tropics across the year. Measured:
+  21 JUN noon puts the sun at **+23.4 degrees**, 21 DEC at **-23.4**. Those are the tilt, not constants.
+- **longitude from the clock** — `world.dayT`, the same clock the sky, the news bug and the street
+  already run on. Noon to midnight is exactly half a turn.
+
+Leave at dawn and you leave into a sunrise.
+
+⚠ **ONE STAR, ONE SHADOW.** The visible sun in the scene is *moved* to the direction the clock
+computes, and the vessel key light with it — verified to agree to within a thousandth. Art-directing
+the star independently would put the sun on one side of frame and the sunrise on the other.
+⚠ And it hangs off **Earth's** position, not the origin: on a return leg Earth is the destination.
+
+### Three art passes, all of them wrong first
+
+1. **The ice painted Canada and Siberia white.** A linear wash from pole to 66 degrees covers most of
+   the northern landmass; at a glance the planet was half glacier. The cap has to be tight to the pole.
+2. **The relief read as craters.** Circular mottles six degrees across on a globe are moon craters,
+   not terrain. Far smaller, far more of them, much softer.
+3. **The city lights blew out.** 900 additive dots inside a nine-degree radius saturate to white —
+   South Africa was one marshmallow. A city light must be nearly invisible on its own; the
+   brightness comes from how many there are, which is also true of the real thing.
+
+Style is ours: teal ocean from the `--info` family, warm grey-green land, gold lights, cyan-white
+limb, and the **extruded coastline** from his reference — a hard drop shadow offset under every
+landmass, which is the single detail that makes it look like the reference.
+
+### Speed and vastness fight each other
+
+⚠ **This is the whole trick and it is worth stating plainly.** Vastness is a DISTANT frame of
+reference that barely moves. Speed is a NEAR one tearing past. Wind the stars up and you get speed
+and destroy the scale — the field starts reading as a tunnel a few hundred metres wide.
+
+So the stars stay nearly still, exactly as they should at interplanetary distance, and a near-field
+of debris is added *inside* the lane to rip past the lens. The parallax between the two IS the
+sensation of enormous speed across an enormous distance. One `LineSegments` draw, 2,200 streaks,
+and each streak's **length is the distance the party covers that frame** — the blur is a readout of
+the motion, not an effect layered on top of it.
+
+The lane curve also had to change. Smootherstep eases at *both* ends, so the crossing spent its
+whole length at a polite constant rate and never had a moment that felt fast. It now keeps the soft
+release and the soft arrival — you should leave gently and park gently — and stacks a second ease
+inside the middle. **Measured peak 6,858 units/s against a 2,576 average: the middle of a crossing
+is 2.7x the old constant rate.**
+
+Refs `wwa-earth.png`, `wwa-flight-003.png` (breaking orbit), `wwa-flight-026.png` (in transit).
