@@ -498,8 +498,25 @@ publishes ESF's numeric ki costs**, so any ki economy we build is ours to calibr
 | **No witnesses** | ✅ no pedestrians, police or press — via `hasCivilians()`, one definition |
 | **The HUD** | ✅ the city nameplate, wanted stars and KMK 9 monitor are gone; the panel, hands row and radar stay |
 | **Beam struggle in the air** | ✅ fixed (was silently impossible past ~51° of elevation) |
-| **Steam Deck** | ✅ boot and the quality governor both fixed (the 40 Hz inversion, the `_pixelCap` collision); the packaged path already existed. ⚠ **not measured on hardware** |
-| **iPad** | ✅ boot no longer dies, safe areas now resolve, the item button exists. ⚠ **not measured on hardware**, and the aim-thumb snap-to-zero bug is open |
+| **Steam Deck** | ✅ boot fixed · the 40 Hz governor inversion fixed · **the quality ladder now has three real rungs** (tiers 2 and 1 rendered identically before, because `_maxPR` is 1 there) · the chase view drops the whole directional-shadow pass · the packaged path already existed. ⚠ **no GPU timings** — see below |
+| **iPad** | ✅ boot no longer dies · safe areas resolve (`viewport-fit=cover`) · the item button exists on the touch layer · **lifting the aim thumb no longer aims at the corner of the world**. ⚠ **no GPU timings** |
+
+### ⚠ WHY "OPTIMIZED" IS NOT CLAIMED, PRECISELY
+
+Every platform defect found has been fixed and each fix is verified **structurally** — the ladder
+descends on both a dpr-1 and a dpr-2 display, the shadow pass is measurably absent in the chase view
+and present in the city, the governor walks the ladder both ways at 40 Hz and at 60 Hz, and the aim
+heading holds across a stick release with 0.0u of drift.
+
+What has **not** happened is a frame-time measurement on either device. It cannot happen from here:
+`EXT_disjoint_timer_query_webgl2` is present but every query returns disjoint, and
+`renderer.info.render.calls` reads **1** — the documented hidden-pane artefact, because this
+environment does not composite. Attempts at Deck (1280×800) and iPad (1620×1080) resolutions returned
+CPU submission time against a scene that was never drawn, which is worse than no number.
+
+So: **the platforms went from broken to working, and the known waste is removed.** The frame-cost
+figures in `docs/powerworld/pw-platform.md` remain arithmetic from source and say so. Calling it
+optimized needs a foregrounded tab on the real hardware, and that is one run of the same harness.
 
 ✅ **Teleport-intercept — SHIPPED** (manual §46). No new key, system or state field: `launchT` is the
 eligibility signal, `lastHitBy` the ownership check, `burstT` the clamp lift, `updateBlinkMark` the
