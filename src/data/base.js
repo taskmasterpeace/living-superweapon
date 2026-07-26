@@ -26,7 +26,7 @@
 // ⚠ 4. TIME IS THE CURRENCY. Every facility costs WEEKS as well as cash, and the career already
 // counts weeks — building the vault is a season you did not spend fighting.
 
-import { RESEARCH, MAJORS } from './education.js';
+import { RESEARCH, MAJORS, STAGES, visibleResearch, researchLegal, universitiesTeaching, studyWeeks } from './education.js';
 import { countryOf } from './countries.js';
 import { cityList } from './cities.js';
 import { BANDS } from './scale.js';
@@ -472,6 +472,60 @@ export function capabilities(b = baseState()) {
     if (staffed(i, b)) out.can[rm.fid] = (out.can[rm.fid] || 0) + 1;
   }
   return out;
+}
+
+// -------------------------------------------------------------------------------------------------
+// THE PIPELINE, WIRED TO THE BUILDING. THEORY → RESEARCH → DESIGN → MANUFACTURE was authored in
+// data/education.js and had nowhere to happen; the base has the rooms. This is the join, and it is
+// the reason education stops being a data island: a stage you have not BUILT and STAFFED cannot run.
+const STAGE_ROOM = { theory: null, research: 'lab', design: 'drafting', manufacture: 'workshop' };
+
+// ⚠ WHAT YOUR PEOPLE ACTUALLY KNOW. A major counts only if the person holding it is on staff — this
+// is Robert's "staff are the answer to who studies", made load-bearing rather than decorative.
+export function heldMajors(b = baseState()) {
+  return [...new Set((b.staff || []).map((p) => p.major).filter(Boolean))];
+}
+
+// Which of the four stages this base can currently run, and why not when it cannot.
+export function pipeline(b = baseState()) {
+  const cap = capabilities(b);
+  return STAGES.map((st) => {
+    const room = STAGE_ROOM[st.id];
+    if (!room) {
+      // THEORY happens at a university, in the world — never in your building. A base cannot teach.
+      const majors = heldMajors(b);
+      return { ...st, ok: majors.length > 0, at: 'a university, abroad',
+               why: majors.length ? majors.length + ' DISCIPLINE(S) ON STAFF' : 'NOBODY HERE HAS A DEGREE' };
+    }
+    const built = (b.rooms || []).some((rm, i) => rm && rm.built && rm.fid === room && staffed(i, b));
+    const dug = (b.rooms || []).some((rm) => rm && rm.fid === room);
+    return { ...st, ok: built, at: st.where, room,
+             why: built ? 'READY' : dug ? 'BUILT BUT UNSTAFFED — A ROOM WITH NOBODY IN IT DOES NOTHING'
+                                        : 'NO ' + (facilityById(room)?.n || room) };
+  });
+}
+
+// ⚠ VISIBILITY IS THE POINT (education.js): a row you have no graduate for is ABSENT, not greyed
+// out with a price. This layers the BUILDING on top of that — you can see it, but you still need
+// the lab to start it, and the host country still has to allow it.
+export function researchOptions(b = baseState(), country) {
+  const majors = heldMajors(b);
+  const pipe = pipeline(b);
+  const canResearch = pipe.find((p) => p.id === 'research')?.ok;
+  return visibleResearch(majors).map((r) => {
+    const legal = researchLegal(r, country || b.country);
+    return { ...r, canStart: !!canResearch && legal.ok, legal,
+             why: !canResearch ? 'NO STAFFED RESEARCH LAB' : legal.ok ? 'READY' : legal.why };
+  });
+}
+
+// Where in the world you would have to go to study a discipline you do not have.
+export function studyOptions(mid, n = 5) {
+  return universitiesTeaching(mid).slice(0, n).map((u) => {
+    const w = studyWeeks(u, mid);
+    return { id: u.id, name: u.name, city: u.city, country: u.country, rank: u.rank,
+             standing: u.standing.label, weeks: w ? w.weeks : null, shadow: w ? w.shadow : false };
+  });
 }
 
 export function baseLine(b = baseState()) {

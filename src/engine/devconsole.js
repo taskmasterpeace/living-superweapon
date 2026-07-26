@@ -15,6 +15,9 @@
 //     cover boxes — rather than recomputing what the planner intended. A ruler that agrees with the
 //     source instead of the world is how a wrong number survives being checked.
 import { BANDS } from '../core/util.js';
+import * as BASE from '../data/base.js';
+import * as CITIES from '../data/cities.js';
+import * as COUNTRIES from '../data/countries.js';
 import { FIREARMS, BLADES, GEAR, LOADOUTS, firearmById, bladeById, gearById, buildLoadout } from '../data/armory.js';
 import { playSpaceFlight } from './spaceflight.js';
 import { ORBITS, MOONS, moonsOf, moonDistanceInRadii, positionAt, separationAU,
@@ -441,6 +444,53 @@ export class DevConsole {
     });
 
     // ---- the wheel, live
+    // THE BASE — the site survey, the grid, the pipeline and the cells, all readable from here.
+    this.cmd('base', 'base [survey|grid|pipe|cells|study <major>] — your HQ', (a, c) => {
+      const g = G(), sub = (a[0] || 'grid').toLowerCase();
+      const b = BASE.baseState();
+      if (sub === 'survey') {
+        const th = (g.hud && g.hud.theater) || null;
+        const city = th && CITIES.cityList().find(x => x.name === th.city);
+        const sv = BASE.siteSurvey(city, city && COUNTRIES.countryOf(city.country));
+        c.log((city ? city.name + ' · ' + city.country : 'NO THEATER') + '  →  ' + sv.n + '×' + sv.n +
+              (sv.twoFloors ? ' · TWO FLOORS' : ' · ONE FLOOR') + '   ' + sv.label);
+        c.log(sv.why);
+        for (const k of ['wealth','scale','legal','permissive','infra','watched','chaos','ground','cover'])
+          c.log('   ' + k.padEnd(11) + (sv.terms[k]).toFixed(3));
+        return;
+      }
+      if (sub === 'pipe') { for (const st of BASE.pipeline(b)) c.log((st.ok ? '  READY   ' : '  BLOCKED ') + st.n.padEnd(12) + st.why); return; }
+      if (sub === 'cells') {
+        const cl = BASE.cellsFor(9999, b);
+        if (!cl.length) return c.log('no containment built');
+        for (const x of cl) c.log('  ' + x.fac.n.padEnd(18) + 'holds to rank ' + String(x.fac.holds).padStart(4) + '   ' + x.held + '/' + x.fac.cap + ' occupied');
+        for (const pr of (b.prisoners || [])) c.log('  HELD: ' + pr.name + ' (rank ' + pr.rank + ')');
+        return;
+      }
+      if (sub === 'study') {
+        const m = (a[1] || '').toLowerCase();
+        const opts = BASE.studyOptions(m, 6);
+        if (!opts.length) return c.err('no faculty anywhere teaches "' + m + '"');
+        for (const u of opts) c.log('  #' + String(u.rank).padStart(3) + '  ' + u.name.padEnd(38) + u.country.padEnd(16) + u.weeks + 'w' + (u.shadow ? '  UNCERTIFIED' : ''));
+        return;
+      }
+      // the grid, drawn
+      const P = BASE.permitted(b);
+      c.log(BASE.baseLine(b));
+      for (let f = 0; f < P.floors; f++) {
+        c.log(f === 0 ? 'GROUND FLOOR' : 'UPPER FLOOR');
+        for (let r = 0; r < BASE.GRID; r++) {
+          let ln = '  ';
+          for (let col = 0; col < BASE.GRID; col++) {
+            const i = BASE.idx(col, r, f), rm = b.rooms[i];
+            ln += rm ? (rm.built ? '[' + (BASE.facilityById(rm.fid)?.n || '?').slice(0, 3) + ']' : '{' + rm.weeksLeft + 'w}')
+                     : (BASE.inPermit(i, b) ? '  ·  ' : '     ');
+          }
+          c.log(ln);
+        }
+      }
+    });
+
     // THE ARMORY — every weapon and every piece of gear, reachable. Without this the catalogue is
     // 13 firearms nobody can hold: the police carry their own tuned kit deliberately, and the
     // creator's catalogue is a separate curation pass.
