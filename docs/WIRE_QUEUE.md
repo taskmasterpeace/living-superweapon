@@ -70,7 +70,7 @@ measured audio signature (manual §38).
 - **STILL OPEN:** two or three roster humans (SARGE, SANDRA, KNIGHTFALL) carrying named weapons,
   and the 6 blades + 16 gear rows, none of which has a carrier yet.
 
-## 5 · `data/age.js` — zero importers  ·  ~1 h  ·  ☐
+## 5 · `data/age.js` — zero importers  ·  ~1 h  ·  ☑ DONE 2026-07-26
 
 159 complete lines: birth dates, 16 age bands as CS shifts on the rank ladder, `birthdayCrossings`,
 `riskOver`, `ageLine`, synthetics correctly exempt. Nothing in the repo imports it.
@@ -78,6 +78,15 @@ measured audio signature (manual §38).
 - **Three touch points, all small:** `ageLine(def)` into codex §01 · `birthdayCrossings` around the
   career's `advanceDays` → a ledger line · `ageMods()` folded into `deriveAttrs`.
 - ⚠ The CS shift must go through `data/scale.js`, not a second ladder.
+- **DONE:** `ageMods` folded into `deriveAttrs` (ranks.js) · `ageLine` on codex §01 · a career week
+  now ADVANCES SEVEN DAYS through one `turnWeek` helper and reports birthday crossings on the ledger.
+  ⚠ The last of those was the real find: `career.week++` moved a counter and never touched the
+  calendar, so the in-game date only advanced when somebody was hospitalised and `birthdayCrossings`
+  could not fire at all. Measured: 52 crossings over 52 weeks.
+  ⚠ Age is applied BEFORE `def.attrs`, so an authored value always wins — a birthday must never
+  overwrite the creator's dial.
+  ⚠ The override field is `def.age` (a number) or `def.born = {y,m,d}`. A STRING `born` silently
+  falls through to the id hash, which is how my first test read as a broken wire.
 
 ## 6 · Education's 59 research rows describe their effects in PROSE  ·  ~2 h  ·  ☐
 
@@ -143,11 +152,11 @@ Re-run `node src/bench/orphans.mjs` after each; a finished item should leave the
 
 ## STATE AT 2026-07-26 END OF SESSION
 
-Landed: **1, 2, 3** complete · **4** half (police armed, roster humans open).
-Open: **4** (roster humans, blades, gear) · **5** age.js · **6** the research-prose conversion ·
+Landed: **1, 2, 3, 5** complete · **4** half (police armed, roster humans open).
+Open: **4** (roster humans, blades, gear) · **6** the research-prose conversion ·
 **7** dead ability types · **8** the doors · **9** the clinch wheel · **10** the road graph.
 
 Audit moved: `ARMORY 33 → 28 on no fighter`. Everything else unchanged, which is the honest
 reading — items 5–10 are untouched.
 
-Each remaining row above is self-contained. Start at 5.
+Each remaining row above is self-contained. Start at 6.

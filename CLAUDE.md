@@ -976,6 +976,27 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   canvas corner). A manual `world.render()` outside the frame loop inherits it and a posed shot comes
   back black except one corner. Clear scissor + viewport before posing.
 
+## AGE REACHES THE SHEET (2026-07-26) — `data/age.js` had zero importers
+- 159 complete lines — birth dates, 16 age bands as CS shifts, `birthdayCrossings`, `riskOver`,
+  synthetics correctly exempt — and **nothing in the repo imported it**. Three wires, all small.
+- **AGE IS A COLUMN SHIFT on the attribute ladder** (`deriveAttrs` in ranks.js). `RANKS` IS the
+  column, so one rung of it is one CS — one idea, one implementation. It is not a penalty:
+  measured on SOL, 24 → 47 → 66 runs MGT 9→7→3 and AGL 6→3→1 while INT goes 3→5, which is
+  why the bands were authored as three separate numbers.
+  ⚠ Applied BEFORE `def.attrs`, so an authored value always wins — a birthday must never
+  overwrite the creator's dial.
+- ⚠ **A CAREER WEEK HAD NO DURATION.** `career.week++` moved a counter and the CALENDAR never
+  moved, so the in-game date only advanced when somebody was hospitalised — and the entire point of
+  per-person birth dates could never fire. One `turnWeek(career, roster)` helper (both the fight and
+  the rest week already duplicated the line) advances seven days and puts crossings on the ledger:
+  the player's own birthday always, everyone else only on a BAND change, because "someone turned 34"
+  is noise and "someone entered their decline" is news. Measured 52 crossings over 52 weeks.
+- ⚠ **The override field is `def.age` (a number) or `def.born = {y,m,d}`.** A STRING `born` falls
+  silently through to the id hash — my first test wrote `born: '1968-03-04'`, got the same sheet
+  twice, and read exactly like a wire that does nothing.
+- Codex §01 carries an AGE row (DOES NOT AGE for the 10 synthetics). Live roster: PYRE 21 PRIME
+  · RIPCLAW 42 VETERAN, four distinct age profiles across the 42 who age.
+
 ## HANDOFF
 - **`HANDOFF.md` at the repo root** is the orientation document: architecture, the ten rules that
   are load-bearing, what is solid, what is half-built, what to do next, and the headless

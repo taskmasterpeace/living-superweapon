@@ -10,7 +10,8 @@ import { countryOf } from './countries.js';
 import { relationOf, factionOf, sameBloc, rationaleOf, FACTION_LOOK } from './relations.js';
 import { snapshotTable, championId, crownChampion, injuryOf, healBout, matchElo, recOf } from './rankings.js';
 import { recoveryPlan, deriveOrigin } from './origins.js';
-import { advanceDays } from './orbits.js';
+import { advanceDays, gameDate } from './orbits.js';
+import { birthdayCrossings, ageOf } from './age.js';
 
 const KEY = 'threshold_career_v1';
 export const TITLE_RENOWN = 60;        // the belt is EARNED — renown gates the title shot
@@ -306,6 +307,28 @@ function simWeek(career, roster, R) {
   return line;
 }
 
+// ⚠ A CAREER WEEK HAD NO DURATION. `career.week++` moved a counter and the CALENDAR never moved,
+// so the in-game date only advanced when somebody was hospitalised — and `birthdayCrossings`,
+// which is the whole point of per-person birth dates, could never fire. A week is seven days.
+// One helper, because both the fight and the rest week turn it and they were already duplicated.
+function turnWeek(career, roster) {
+  const from = gameDate();
+  advanceDays(7);
+  const to = gameDate();
+  career.slate = null;
+  const cross = birthdayCrossings(roster || [], from, to);
+  if (!cross.length) return;
+  career.ledger = career.ledger || [];
+  const mine = cross.find(c => c.def.id === career.heroId);
+  // The player's own birthday is always reported; everyone else only when they cross a BAND,
+  // because "someone turned 34" is noise and "someone entered their decline" is news.
+  if (mine) career.ledger.unshift({ week: career.week, kind: 'BIRTHDAY',
+    text: `${mine.def.name} turns ${mine.to}${mine.bandChanged ? ' — ' + mine.band.label : ''}` });
+  for (const c of cross.filter(c => c.bandChanged && c.def.id !== career.heroId).slice(0, 2))
+    career.ledger.unshift({ week: career.week, kind: 'BIRTHDAY', text: `${c.def.name} is ${c.to} — ${c.band.label}` });
+  if (career.ledger.length > 24) career.ledger.length = 24;
+}
+
 // book a fought offer: purse (win) or the show-money cut (loss), renown, the ledger line,
 // the week turn, the world sim. Title wins crown the champion in the SAME book the cold
 // open and codex already read — the career cannot tell a different story than the game.
@@ -321,7 +344,7 @@ export function resolveOffer(career, offer, win, roster) {
   career.history.unshift({ week: career.week, kind: offer.kind, foe: offer.foeName || offer.label, city: offer.city ? offer.city.name : '—', result: win ? 'W' : 'L', paid });
   if (career.history.length > 24) career.history.length = 24;
   const bookedWeek = career.week;
-  career.week++; career.slate = null;
+  career.week++; turnWeek(career, roster);
   const simLine = simWeek(career, roster, mulberry(career.seed * 31 + career.week));
   const table = snapshotTable(roster);
   const now = table.find(r => r.id === career.heroId);
@@ -339,7 +362,7 @@ export function restWeek(career, roster) {
   career.history.unshift({ week: career.week, kind: 'rest', foe: '—', city: '—', result: 'REST', paid: 0 });
   if (career.history.length > 24) career.history.length = 24;
   const bookedWeek = career.week;
-  career.week++; career.slate = null;
+  career.week++; turnWeek(career, roster);
   const simLine = simWeek(career, roster, mulberry(career.seed * 31 + career.week));
   career.lastReport = { week: bookedWeek, rest: true, healed: healed && healed.name, cleared: healed && healed.cleared, simLine, streak: career.streak };
   return healed;

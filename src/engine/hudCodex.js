@@ -19,6 +19,7 @@ import { championId, injuryOf, recOf, recentIncidents, snapshotTable } from '../
 
 import { heroStats } from './hud.js';
 import { THREAT_COLORS, recoveryTier } from './hud.js';
+import { ageLine, ages } from '../data/age.js';
 import { degreeLine } from '../data/education.js';
 import { rankOf, rankBandOf, comparisonOf, csOf, liftTonsOfRank, liftWords, knockbackOf, LB_PER_TON } from '../data/scale.js';
 export const CodexMixin = {
@@ -86,6 +87,7 @@ export const CodexMixin = {
             <div class="cfsh">DERIVED</div>
             <div class="cfrow"><span class="k">HULL</span><span class="v">${c.hp} HP · GUARD ${(c.guardType || 'BLOCK').toUpperCase()}</span></div>
             ${degreeLine(c) ? `<div class="cfrow"><span class="k">EDUCATION</span><span class="v">${esc(degreeLine(c))}</span></div>` : ''}
+            <div class="cfrow"><span class="k">AGE</span><span class="v ${ages(c) ? '' : 'syn'}">${esc(ageLine(c).toUpperCase())}</span></div>
             <div class="cfrow"><span class="k">POWER CORE</span><span class="v ${c.energyInfinite ? 'syn' : ''}">${c.energyInfinite ? '∞ CORE — TIER-CAPPED II' : `RESERVE ${c.ki} · ${recoveryTier(c)} RECOVERY`}</span></div>
             <div class="cfrow"><span class="k">STRENGTH RANK</span><span class="v hot">${rk} · ${esc(rkb.name.toUpperCase())}${rkb.cs ? ' · ' + rkb.cs + 'CS' : ''}</span></div>
             <div class="cfrow"><span class="k">LIFT</span><span class="v">${esc(liftWords(rk).toUpperCase())} · ${esc(comparisonOf(rk).toUpperCase())}</span></div>

@@ -4,6 +4,7 @@
 // systems (rank ladders, attribute spreads, talents, gear) — all names and rules are original.
 // This file is the character creator's future data model: a hero IS a sheet.
 import { rankOf, strengthFromRank } from './scale.js';
+import { ageMods } from './age.js';
 
 // The universal rank ladder (1–10). Every attribute reads off this one table.
 export const RANKS = [
@@ -54,6 +55,14 @@ export function deriveAttrs(def) {
     awr: cl(3 + ((def.ai && def.ai.range) || 30) / 25 + (A.some(a => a.reveal) ? 3 : 0) + (types.includes('bow') || types.includes('rifle') ? 1 : 0)),
     res: cl((def.ki || 100) / 140 * 7 + (def.guardType === 'barrier' ? 1 : 0) + (def.energyInfinite ? 2 : 0)),
   };
+  // ⚠ AGE IS A COLUMN SHIFT, and it goes through the SAME ladder everything else does — RANKS
+  // above IS the column, so one rung of it is one CS. A 41-year-old veteran is not a worse
+  // fighter; MIGHT and AGILITY come down and INTELLECT goes up, which is the whole reason the
+  // bands were authored as three separate numbers instead of one penalty.
+  // ⚠ It is applied BEFORE `def.attrs`, so an authored value always wins. The creator's dial
+  // must not be quietly overwritten by a birthday.
+  const am = ageMods(def);
+  if (!am.ageless) { out.mgt = cl(out.mgt + am.mgt); out.agl = cl(out.agl + am.agl); out.int = cl(out.int + am.int); }
   return Object.assign(out, def.attrs || {});
 }
 
