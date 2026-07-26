@@ -6,7 +6,7 @@ import { World } from './world.js';
 import { Particles3D } from './particles3d.js';
 import { VFX } from './vfx.js';
 import { Projectiles } from './projectiles.js';
-import { buildWeapon, weaponProficiency, PROP_WEIGHT, liftCapacity, bodyWeight, Fighter } from './entity.js';
+import { buildWeapon, weaponProficiency, PROP_WEIGHT, liftCapacityOf, bodyWeight, Fighter } from './entity.js';
 import { AI } from './ai.js';
 import { Minion, Construct } from './summons.js';
 import { MeleeSystem } from './melee.js';
@@ -326,7 +326,7 @@ export class Game {
     arc.visible = true;
     // launch state: muzzle + the same velocity the ability would use
     const spd = def._body ? (((p.grabMode === 'back' ? 60 : 48) + (p.def.strength ?? 5) * 4.6)
-        * (p.grabbing ? Math.max(0.45, Math.min(1.2, 0.75 + 0.15 * Math.log2(liftCapacity(p.def.strength) / Math.max(0.05, bodyWeight(p.grabbing.def))))) : 1))
+        * (p.grabbing ? Math.max(0.45, Math.min(1.2, 0.75 + 0.15 * Math.log2(liftCapacityOf(p.def) / Math.max(0.05, bodyWeight(p.grabbing.def))))) : 1))
       : def._prop ? ((p._carry && p._carry.spd) || 74) : (def.speed || 58);   // the preview promises what the throw delivers (manual §21)
     const grav = (def._prop || def._body) ? 62 : (def.grav || 11) * 6;   // bodies and props fall at world gravity
     const m = def._body ? _v.set(p.pos.x + p.aim.x * 4.4, p.pos.y + 5.2, p.pos.z + p.aim.z * 4.4).clone()
@@ -540,7 +540,7 @@ export class Game {
   propInReach(f) {
     // THE WEIGHT LADDER (manual §21): capacity — not a hard-coded STR gate — decides what your
     // hands can take. The nearest thing you CAN'T lift is remembered so the feed can say why.
-    const R = 22, cap = liftCapacity(f.def.strength);
+    const R = 22, cap = liftCapacityOf(f.def);
     let best = null, bd = R * R;
     f._tooHeavyProp = null;
     const consider = (d, rec) => {
@@ -577,10 +577,10 @@ export class Game {
     const t = this.propInReach(f);
     if (!t) {
       const th = f._tooHeavyProp;
-      if (th && this.isHuman(f) && this.hud) this.hud.feed(`TOO HEAVY — the ${th.kind} is ~${th.w}t; you lift ~${liftCapacity(f.def.strength).toFixed(1)}t`, '#8b8577');
+      if (th && this.isHuman(f) && this.hud) this.hud.feed(`TOO HEAVY — the ${th.kind} is ~${th.w}t; you lift ~${liftCapacityOf(f.def).toFixed(1)}t`, '#8b8577');
       return false;
     }
-    const cap = liftCapacity(f.def.strength), ratio = cap / t.w;
+    const cap = liftCapacityOf(f.def), ratio = cap / t.w;
     let mesh = null;
     if (t.kind === 'car') {
       t.ref.carried = true; t.ref.mesh.visible = false;
@@ -1792,25 +1792,6 @@ export class Game {
   isHuman(f) { return this.humans.some(h => h.fighter === f); }
 
   handleKO(victim) {
-    if (victim) {
-      const kp = killer && psycheOf(killer);
-      if (kp) kp.feel('kill', 1, this.time || 0);
-      for (const e of this.entities) {
-        if (!e.alive || e === victim || e === killer) continue;
-        const ep = psycheOf(e);
-        if (ep && e.team === victim.team) ep.feel('allyDown', 1, this.time || 0);
-      }
-    }
-    // THE KO IS THE PANEL EVERY COMIC ENDS ON. One caption, one sound effect, and nothing else —
-    // the layer earns its keep by being rare.
-    if (this.comic && victim && victim.pos) {
-      try {
-        this.comic.sfx(killer ? 'K.O.!' : 'DOWN!', victim.pos, { power: 1, red: true, size: 42, life: 1.3 });
-        if (this.isHuman(killer) || this.isHuman(victim)) {
-          this.comic.caption((victim.name || 'THEY') + ' is down!', { where: 'top', red: !this.isHuman(killer), life: 2.4 });
-        }
-      } catch (e) { this.reportError && this.reportError(e, 'comic.ko'); }
-    }
 
     try { this.startKoCam(victim); } catch (e) {}   // ROADMAP 18 · camera drama
     // THE DROP ECONOMY (manual §16): KO'd gear carriers leave a weapon on the street — 20s to
@@ -1822,6 +1803,29 @@ export class Game {
     }
     const src = victim.lastHitBy;
     const killer = (src && victim.lastHitT < 4 && src !== victim && src.def) ? src : null;
+
+    // ⚠ BOTH OF THESE MUST LIVE BELOW `const killer`. Placed at the top of handleKO they sat in the
+    // temporal dead zone and EVERY KNOCKOUT THREW — a crash on the most common event in the game,
+    // introduced twice (the comic panel and the psyche trigger) and invisible until something died.
+    // A `const` declared later in a function is not "undefined" above it; touching it is a throw.
+    if (victim) {
+      const kp = killer && psycheOf(killer);
+      if (kp) kp.feel('kill', 1, this.time || 0);
+      for (const e of this.entities) {
+        if (!e.alive || e === victim || e === killer) continue;
+        const ep = psycheOf(e);
+        if (ep && e.team === victim.team) ep.feel('allyDown', 1, this.time || 0);
+      }
+    }
+    // THE KO IS THE PANEL EVERY COMIC ENDS ON — one caption, one sound effect, and nothing else.
+    if (this.comic && victim && victim.pos) {
+      try {
+        this.comic.sfx(killer ? 'K.O.!' : 'DOWN!', victim.pos, { power: 1, red: true, size: 42, life: 1.3 });
+        if (this.isHuman(killer) || this.isHuman(victim)) {
+          this.comic.caption((victim.name || 'THEY') + ' is down!', { where: 'top', red: !this.isHuman(killer), life: 2.4 });
+        }
+      } catch (e) { this.reportError && this.reportError(e, 'comic.ko'); }
+    }
     if (killer) {
       const bonus = 100 + Math.max(0, killer.streak) * 25;
       killer.kills++; killer.score += bonus; killer.streak++;

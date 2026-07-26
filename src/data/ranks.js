@@ -3,6 +3,7 @@
 // character gets a full sheet automatically. Inspired by the SHAPE of classic tabletop supers
 // systems (rank ladders, attribute spreads, talents, gear) — all names and rules are original.
 // This file is the character creator's future data model: a hero IS a sheet.
+import { rankOf, strengthFromRank } from './scale.js';
 
 // The universal rank ladder (1–10). Every attribute reads off this one table.
 export const RANKS = [
@@ -39,7 +40,11 @@ const cl = (v) => Math.max(1, Math.min(10, Math.round(v)));
 export function deriveAttrs(def) {
   const A = Object.values(def.abilities || {});
   const types = A.map(a => a.type);
-  const str = def.strength ?? 5;
+  // ⚠ MIGHT READS THE RANK LADDER, not the raw 1-10. A hero with an explicit `def.rank` (the
+  // whole point of the ladder) would otherwise show a MIGHT that contradicts their own case
+  // file — the sheet is supposed to be derived from the engine, so it derives from the axis
+  // the engine actually lifts and throws with.
+  const str = strengthFromRank(rankOf(def));
   const out = {
     mgt: cl(str),
     agl: cl((def.speed || 30) / 46 * 7 + (def.evade && (def.evade.kind === 'blink' || def.evade.kind === 'phase') ? 1.5 : 0)),

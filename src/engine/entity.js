@@ -35,63 +35,36 @@ const FLY_RISE = 46, FLY_SINK = 26, FLY_TAKEOFF = 19, FLY_HOVER_BOB = 3.2;   // 
 // carry speed, throw speed and impact — all throwable, none equally.
 export const PROP_WEIGHT = { lamp: 0.3, rock: 0.5, tree: 1.1, car: 1.9, plane: 24 };
 // =================================================================================================
-// THE STRENGTH LADDER — calibrated against Robert's own STRENGTH AND WEIGHT sheet.
+// THE STRENGTH LADDER lives in data/scale.js now — ONE table, read by everything.
 //
-// ⚠ TWO LADDERS HAD TO BE RECONCILED, and they disagreed. The sheet is a HUMAN ladder: strength
-// rank 2 lifts 50 lbs, rank 19 lifts 400 ("the absolute most a 20 year old should be able to do"),
-// rank 39 reaches 2,200 and rank 49 reaches 22,400. Our `def.strength` is a 1–10 scale where 10 is
-// RAGE and 6 is already superhuman. They are not the same axis: the sheet's rank is a fine-grained
-// 1–80 ladder that spends its first twenty rungs inside the human range.
+// ⚠ IT USED TO LIVE HERE, AS AN ELEVEN-ENTRY ARRAY, and that was the whole problem. `def.strength`
+// is 1–10, so a lift ladder keyed on it can only ever have ten rungs — which meant every character
+// from "throws a car" to "throws an airliner" had to fit between 8 and 10, and RAGE, TITAN, NOVA
+// and MAJESTY all rounded to the same lifting power. Robert's ladder runs 1–4999 with fifteen named
+// bands, and it is now the real axis: `def.rank`. The 1–10 stays as the AUTHORING shorthand and as
+// the combat multiplier (melee damage, knockback resistance, ice break-out) — those are tuned and
+// are deliberately untouched. What moved to rank is what a fighter can LIFT and what they are
+// CALLED. See data/scale.js for why the two of his tables are kept as two tables.
 //
-// The reconciliation is a MAPPING, not a replacement: our 1–10 is stretched across the sheet's
-// ladder so that the human end matches his numbers exactly and the superhuman end continues the
-// curve his own rows imply (each ~10 ranks roughly an order of magnitude past 30).
-//
-//   ours  sheet rank   lifts              what that is
-//   1        2         50 lb  / 0.02 t    a child
-//   2        6        140 lb  / 0.06 t    an untrained adult
-//   3       11        240 lb  / 0.11 t    fit
-//   4       15        320 lb  / 0.15 t    an athlete
-//   5       19        400 lb  / 0.18 t    the human ceiling — the sheet says so in as many words
-//   6       26        600 lb  / 0.27 t    the first rung that is NOT a person
-//   7       33      1,150 lb  / 0.52 t
-//   8       39      2,200 lb  / 1.0 t     a small car is now liftable
-//   9       49     22,400 lb  / 10.2 t    the sheet's own last written figure
-//   10      59    224,000 lb  / 101.6 t   his curve continued into the rows he left blank
-//
-// ⚠ THIS CHANGES THE GAME. Under the old curve STRENGTH 6 lifted 1.1 t and could throw a car; under
-// Robert's numbers 6 lifts 0.27 t and a 1.9 t car needs STRENGTH 8+. That is the intended reading —
-// "you gotta be strong enough to lift or grab" only means something if most fighters are not.
-// ⚠ THE SHEET STOPS BEFORE OUR TOP END, AND THAT MATTERS. Robert's ladder has rows for ranks 50–80
-// but their lift values are BLANK — rank 49 (22,400 lb / 10.2 t) is the last number he wrote. Map
-// our STRENGTH 10 there and the 24-ton airliner becomes unliftable by anybody, which would kill a
-// feature that already exists and that the design explicitly wants ("STR 10 = the only airliner
-// rank"). So the human end uses HIS figures exactly, and the top continues HIS OWN curve into the
-// rows he left empty: his ladder runs about ×10 per ten ranks from 39 to 49, so 59 is ~224,000 lb.
-//
-// ⚠ AND IT IS STILL A REAL REBALANCE. Under the old exponential, STRENGTH 6 lifted 1.1 t and could
-// throw a car; on Robert's numbers 6 lifts 600 lb and a 1.9 t car needs STRENGTH 9. That is the
-// point of the exercise — "you gotta be strong enough to lift or grab" is meaningless if everyone
-// is — but it narrows car-throwing to the top of the roster. This array is the single knob.
-export const STRENGTH_LB = [0, 50, 140, 240, 320, 400, 600, 1150, 2200, 22400, 224000];
-export const LB_PER_TON = 2204.62;
-export const strengthRank = (str) => [0, 2, 6, 11, 15, 19, 26, 33, 39, 49, 59][Math.max(0, Math.min(10, Math.round(str ?? 5)))];
-export function liftLb(str) {
-  const s = Math.max(0, Math.min(10, str ?? 5));
-  const i = Math.floor(s), f = s - i;
-  const a2 = STRENGTH_LB[i] || 0, b2 = STRENGTH_LB[Math.min(10, i + 1)] || a2;
-  // geometric between rungs — the ladder is multiplicative, so a linear blend would understate it
-  return a2 > 0 && b2 > 0 ? a2 * Math.pow(b2 / a2, f) : a2 + (b2 - a2) * f;
-}
-// tons, which is what the prop table and the carry code speak
-export function liftCapacity(str) { return liftLb(str) / LB_PER_TON; }
+// TWO FRONT DOORS, ONE LADDER: `liftCapacityOf(def)` is the real one; `liftCapacity(str)` is the
+// 1–10 shim for callers that only have a number. Both end up in `liftTonsOfRank`, so they cannot
+// disagree — which is exactly the failure mode the old duplicated array had.
+// ⚠ IMPORT *AND* RE-EXPORT. `export … from` is a pure pass-through — it does NOT bind the names in
+// this module's scope, so the functions below would be reading undefined.
+import { LB_PER_TON, rankOf, liftTonsOfRank, rankForTons, strengthFromRank } from '../data/scale.js';
+export { LB_PER_TON, rankOf, bandOf as rankBandOf, designationOf, threatOfRank, comparisonOf, csOf,
+         liftTonsOfRank, rankForTons, strengthFromRank, knockbackOf, rankLine } from '../data/scale.js';
+export const liftCapacityOf = (def) => liftTonsOfRank(rankOf(def));
+export const liftCapacity = (str) => liftTonsOfRank(rankOf({ strength: str ?? 5 }));
+export const liftLb = (str) => liftCapacity(str) * LB_PER_TON;
+export const strengthRank = (str) => rankOf({ strength: str ?? 5 });
+
 // People have weight too — the person-vs-person battle. Frame, plate and bulk all count.
 // ⚠ A PERSON'S WEIGHT HAS A STRENGTH EQUIVALENT — Robert: "people weight should have str
-// equivalent." So a body is priced on the SAME ladder as everything else: `bodyLiftStr` is the
-// strength you need to pick this person up, and it is derived from their weight rather than
-// asserted. That is what makes "you have to be strong enough to grab them" a real rule instead of
-// a number someone chose — RAGE cannot be scooped up by a fighter who cannot lift his mass.
-// The sheet's own anchor is quoted in it: 128 lb is Bruce Banner, and RAGE is the Hulk.
+// equivalent." So a body is priced on the SAME ladder as everything else: `bodyLiftRank` is the
+// RANK you need to pick this person up, derived from their weight rather than asserted. That is
+// what makes "you have to be strong enough to grab them" a real rule instead of a number someone
+// chose — RAGE cannot be scooped up by a fighter who cannot lift his mass.
 export function bodyWeight(def) {
   const str = (def && def.strength) ?? 5;
   const lb = 120                                   // a light adult, before anything else
@@ -101,16 +74,9 @@ export function bodyWeight(def) {
   return +(lb / LB_PER_TON).toFixed(3);
 }
 export const bodyWeightLb = (def) => Math.round(bodyWeight(def) * LB_PER_TON);
-// the strength rank required to lift a given mass — the inverse of the ladder, so every weight in
-// the game can state its own entry requirement in the same units a fighter is rated in
-export function liftStrFor(tons) {
-  const lb = tons * LB_PER_TON;
-  for (let i = 1; i <= 10; i++) if (STRENGTH_LB[i] >= lb) {
-    const a3 = STRENGTH_LB[i - 1] || 1, b3 = STRENGTH_LB[i];
-    return +(i - 1 + Math.log(lb / a3) / Math.log(b3 / a3)).toFixed(1);
-  }
-  return 11;                                       // nobody on the roster
-}
+export const bodyLiftRank = (def) => rankForTons(bodyWeight(def));
+// kept for anything still speaking 1–10 — same ladder, expressed in the old units
+export const liftStrFor = (tons) => strengthFromRank(rankForTons(tons));
 export const bodyLiftStr = (def) => liftStrFor(bodyWeight(def));
 
 export function weaponProficiency(def) {
@@ -195,6 +161,11 @@ export class Fighter {
 
     this.parts = figure(def);
     this.obj = this.parts.g;
+    // ⚠ A CHARACTER RIG IS NOT LEVEL GEOMETRY. auditSurfaces exists to find z-fighting in the WORLD,
+    // and a figure is dozens of deliberately interpenetrating solids (a head inside a neck, a fist
+    // inside a sleeve). Left unmarked, every extra fighter added a handful of phantom "problems"
+    // and the audit's signal drowned in its own crowd. Marked here, at the one place a rig is made.
+    this.obj.userData.rig = true;
     this.pos = this.obj.position;
     this.pos.set(opts.x || 0, 0, opts.z || 0);
     this.spawn = this.pos.clone();

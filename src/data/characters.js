@@ -5,7 +5,7 @@ export const ROSTER = [
   {
     id: 'sol', origin: 'altered', name: 'SOL', title: 'Man of Sunlight', role: 'Bruiser / Beam',
     colors: { primary: '#ef652e', secondary: '#0a27ff', accent: '#ffd557', skin: '#e8c39a', cape: '#dd4309' },
-    hp: 130, ki: 120, speed: 34, beamMight: 1.2, strength: 8, overdrive: 1.3, threat: 'Very High', frostResist: true, flightTier: 3, afterburner: { mult: 2.1, kiPerSec: 14, wake: ['#ffffff', '#ffd24a'] }, yells: true, voicePitch: 0.9,
+    hp: 130, ki: 120, speed: 34, beamMight: 1.2, strength: 8, rank: 66, overdrive: 1.3, threat: 'Very High', frostResist: true, flightTier: 3, afterburner: { mult: 2.1, kiPerSec: 14, wake: ['#ffffff', '#ffd24a'] }, yells: true, voicePitch: 0.9,
     ai: { style: 'bruiser', range: 30, aggro: 0.8, fly: 0.55 },
     evade: { kind: 'dash', name: 'Solar Step' },
     blurb: 'A living solar reactor. Thin heat-ray, wide freezing breath, and a flight-fist that ends arguments.',
@@ -23,7 +23,7 @@ export const ROSTER = [
   {
     id: 'kano', origin: 'spiritual', name: 'KANO', title: 'Spirit Warrior', role: 'All-Rounder',
     colors: { primary: '#ff5d2d', secondary: '#109bf5', accent: '#e4ffff', skin: '#e8c39a' },
-    hp: 115, ki: 130, speed: 36, beamMight: 1.4, strength: 6, overdrive: 1.3, threat: 'Very High', yells: true, voicePitch: 1.05,
+    hp: 115, ki: 130, speed: 36, beamMight: 1.4, strength: 6, rank: 39, overdrive: 1.3, threat: 'Very High', yells: true, voicePitch: 1.05,
     ai: { style: 'trickster', range: 42, aggro: 0.72, fly: 0.45 },
     evade: { kind: 'blink', name: 'Instant Step', range: 24 },
     blurb: 'Charge the Wave Cannon like a firehose of light. Blink behind them. Then drop a sky-sized Star Sphere.',
@@ -41,7 +41,7 @@ export const ROSTER = [
   {
     id: 'vega', origin: 'alien', name: 'VEGA', title: 'Fallen Prince', role: 'Charge Artillery',
     colors: { primary: '#602af0', secondary: '#d3d9bc', accent: '#ffbc24', skin: '#e8c39a' },
-    hp: 120, ki: 130, speed: 33, beamMight: 1.25, strength: 7, overdrive: 1.2, threat: 'Very High', yells: true, voicePitch: 0.95,
+    hp: 120, ki: 130, speed: 33, beamMight: 1.25, strength: 7, rank: 40, overdrive: 1.2, threat: 'Very High', yells: true, voicePitch: 0.95,
     ai: { style: 'beamer', range: 40, aggro: 0.9, fly: 0.4 },
     evade: { kind: 'dash', name: 'Royal Sidestep' },
     blurb: 'Left-right-left-right blaster storm, a size-scaling Nova Burst that cracks the ground, and the Final Arc.',
@@ -59,7 +59,7 @@ export const ROSTER = [
   {
     id: 'aurum', origin: 'tech', name: 'AURUM', title: 'The Willbearer', role: 'Constructs',
     colors: { primary: '#05da54', secondary: '#087d43', accent: '#84ffa3', skin: '#caa27a' },
-    hp: 125, ki: 120, speed: 32, strength: 5, overdrive: 0.9, threat: 'High', guardType: 'barrier',
+    hp: 125, ki: 120, speed: 32, strength: 5, rank: 20, overdrive: 0.9, threat: 'High', guardType: 'barrier',
     ai: { style: 'zoner', range: 40, aggro: 0.55, fly: 0.2 },
     evade: { kind: 'dash', name: 'Will Surge' },
     blurb: 'Solid-light constructs you fly with your cursor: a rocket fist, a falling hammer, a wall, a sentry turret.',
@@ -77,7 +77,7 @@ export const ROSTER = [
   {
     id: 'nova', origin: 'alien', name: 'NOVA', title: 'Star Sovereign', role: 'Sky Artillery',
     colors: { primary: '#ff9149', secondary: '#613419', accent: '#ffd557', skin: '#e8c39a', cape: '#fa6006' },
-    hp: 110, ki: 130, speed: 33, beamMight: 1.25, strength: 5, overdrive: 0.9, threat: 'Extreme', afterburner: { mult: 2.1, kiPerSec: 14, wake: ['#ffffff', '#7fe6ff'] }, yells: true, voicePitch: 0.95,
+    hp: 110, ki: 130, speed: 33, beamMight: 1.25, strength: 5, rank: 22, overdrive: 0.9, threat: 'Extreme', afterburner: { mult: 2.1, kiPerSec: 14, wake: ['#ffffff', '#7fe6ff'] }, yells: true, voicePitch: 0.95,
     ai: { style: 'artillery', range: 62, aggro: 0.55, fly: 0.45 },
     evade: { kind: 'dash', name: 'Star Step' },
     blurb: 'Rains stars from orbit. A precision Star Lance, a swelling Nova Core, and a sky-wide Meteor Storm.',
@@ -95,7 +95,7 @@ export const ROSTER = [
   {
     id: 'rime', origin: 'mutated', name: 'RIME', title: 'The Deep Cold', role: 'Cryo Control',
     colors: { primary: '#49c4fa', secondary: '#cbf0ff', accent: '#e4ffff', skin: '#cfe6f0' },
-    hp: 115, ki: 120, speed: 31, strength: 4, overdrive: 0.8, threat: 'High', guardType: 'barrier', flightTier: 2, flyStyle: 'ice',
+    hp: 115, ki: 120, speed: 31, strength: 4, rank: 16, overdrive: 0.8, threat: 'High', guardType: 'barrier', flightTier: 2, flyStyle: 'ice',
     ai: { style: 'zoner', range: 44, aggro: 0.5, fly: 0.2 },
     evade: { kind: 'slide', name: 'Ice Skate', slideT: 0.7, power: 135 },
     blurb: 'Freezes the battlefield: breath that slows to a crawl, walls of ice, and an Absolute Zero detonation.',
@@ -113,7 +113,7 @@ export const ROSTER = [
   {
     id: 'volt', origin: 'altered', name: 'VOLT', title: 'The Overclock', role: 'Speed / Lightning',
     colors: { primary: '#ebff2d', secondary: '#38314a', accent: '#e4ffff', skin: '#e8c39a' },
-    hp: 100, ki: 120, speed: 44, thorns: 7, strength: 3, overdrive: 1.6, threat: 'Moderate', flightTier: 1, yells: true, voicePitch: 1.15, meleePace: 1.5,
+    hp: 100, ki: 120, speed: 44, thorns: 7, strength: 3, rank: 12, overdrive: 1.6, threat: 'Moderate', flightTier: 1, yells: true, voicePitch: 1.15, meleePace: 1.5,
     ai: { style: 'rusher', range: 18, aggro: 0.95, fly: 0.35 },
     evade: { kind: 'sprint', name: 'Mach Sprint', mult: 1.95, dur: 1.3, through: true, lightning: true, cost: 7 },
     blurb: 'Faster than you can track. Grab him and the current bites back. Lightning flurries, arc-beams, and Overclock.',
@@ -131,7 +131,7 @@ export const ROSTER = [
   {
     id: 'warden', origin: 'mutated', name: 'WARDEN', title: 'Gravity Anchor', role: 'Control / Slam',
     colors: { primary: '#2c91ab', secondary: '#1a4560', accent: '#86e7ff', skin: '#b9c6cc' },
-    hp: 140, ki: 120, speed: 30, strength: 8, overdrive: 1.1, threat: 'High', meleeTiers: 2, flightTier: 2, yells: true, voicePitch: 0.72,
+    hp: 140, ki: 120, speed: 30, strength: 8, rank: 51, overdrive: 1.1, threat: 'High', meleeTiers: 2, flightTier: 2, yells: true, voicePitch: 0.72,
     ai: { style: 'bruiser', range: 30, aggro: 0.72, fly: 0.2 },
     evade: { kind: 'dash', name: 'Gravity Shift', power: 92 },
     blurb: 'Bends weight itself. Shove crowds with force cones, drop a Singularity, then Collapse the arena.',
@@ -149,7 +149,7 @@ export const ROSTER = [
   {
     id: 'hive', origin: 'tech', name: 'HIVE', title: 'The Conclave', role: 'Summoner',
     colors: { primary: '#e1a33b', secondary: '#60491a', accent: '#ffe181', skin: '#d8b98a' },
-    hp: 105, ki: 130, speed: 32, strength: 3, overdrive: 0.7, threat: 'Moderate', flightTier: 1,
+    hp: 105, ki: 130, speed: 32, strength: 3, rank: 11, overdrive: 0.7, threat: 'Moderate', flightTier: 1,
     ai: { style: 'summoner', range: 56, aggro: 0.42, fly: 0.2 },
     evade: { kind: 'dash', name: 'Scramble' },
     blurb: 'Never fights alone. Swarms of seeker-drones, a fixed sentinel, and an Overmind that empowers the hive.',
@@ -167,7 +167,7 @@ export const ROSTER = [
   {
     id: 'pyre', origin: 'mutated', name: 'PYRE', title: 'Living Wildfire', role: 'Fire Bruiser',
     colors: { primary: '#ff742d', secondary: '#6e2c03', accent: '#ffb649', skin: '#e0a878' },
-    hp: 135, ki: 120, speed: 32, strength: 7, overdrive: 1.2, threat: 'Very High', frostResist: true, flightTier: 2, flyStyle: 'fire', yells: true, voicePitch: 0.85,
+    hp: 135, ki: 120, speed: 32, strength: 7, rank: 45, overdrive: 1.2, threat: 'Very High', frostResist: true, flightTier: 2, flyStyle: 'fire', yells: true, voicePitch: 0.85,
     ai: { style: 'artillery', range: 44, aggro: 0.78, fly: 0.3 },
     evade: { kind: 'dash', name: 'Flare Step' },
     blurb: 'Walking eruption. Lobbed fireballs, a roaring flame cone, a swelling Magma Bomb, and a Rain of Fire.',
@@ -185,7 +185,7 @@ export const ROSTER = [
   {
     id: 'torch', origin: 'altered', name: 'TORCH', title: 'The Human Flame', role: 'Fire Flyer / Air',
     colors: { primary: '#ffb02d', secondary: '#b26300', accent: '#ffd557', skin: '#e8b98a' },
-    hp: 105, ki: 130, speed: 40, thorns: 9, strength: 4, overdrive: 1.3, threat: 'High', frostResist: true, flightTier: 3, flyStyle: 'fire', afterburner: { mult: 2.1, kiPerSec: 14, wake: ['#ff6a1a', '#ffd24a'] }, yells: true, voicePitch: 1.1,
+    hp: 105, ki: 130, speed: 40, thorns: 9, strength: 4, rank: 16, overdrive: 1.3, threat: 'High', frostResist: true, flightTier: 3, flyStyle: 'fire', afterburner: { mult: 2.1, kiPerSec: 14, wake: ['#ff6a1a', '#ffd24a'] }, yells: true, voicePitch: 1.1,
     ai: { style: 'rusher', range: 30, aggro: 0.82, fly: 0.75 },
     evade: { kind: 'sprint', name: 'Jet Sprint', mult: 1.7, dur: 1.6 },
     blurb: 'Flame on. A fast flyer wrapped in fire — grab him and you burn. Jets, homing fireballs, and a supernova.',
@@ -203,7 +203,7 @@ export const ROSTER = [
   {
     id: 'apex', origin: 'altered', name: 'APEX', title: 'The Perfect Being', role: 'Absorb / Regen',
     colors: { primary: '#25ca61', secondary: '#1c6b35', accent: '#c3ff73', skin: '#6fae7a' },
-    hp: 145, ki: 120, speed: 32, grabHeal: 0.6, beamMight: 1.4, strength: 8, overdrive: 1.4, threat: 'Extreme', afterburner: { mult: 2.1, kiPerSec: 14, wake: ['#ffe066', '#ff9a2a'] }, yells: true, voicePitch: 0.8,
+    hp: 145, ki: 120, speed: 32, grabHeal: 0.6, beamMight: 1.4, strength: 8, rank: 62, overdrive: 1.4, threat: 'Extreme', afterburner: { mult: 2.1, kiPerSec: 14, wake: ['#ffe066', '#ff9a2a'] }, yells: true, voicePitch: 0.8,
     ai: { style: 'grappler', range: 30, aggro: 0.78, fly: 0.4 },
     evade: { kind: 'blink', name: 'Afterimage', range: 22 },
     blurb: 'A bio-engineered predator. His throws drain your life to heal him, he regenerates, and charges a perfect wave.',
@@ -221,7 +221,7 @@ export const ROSTER = [
   {
     id: 'specter', origin: 'robotic', name: 'SPECTER', title: 'The Synthezoid', role: 'Phase / Flight',
     colors: { primary: '#28bb83', secondary: '#e0331b', accent: '#ffe270', skin: '#b9c6cc' },
-    hp: 120, ki: 130, speed: 34, phase: true, strength: 6, overdrive: 1.0, threat: 'High',
+    hp: 120, ki: 130, speed: 34, phase: true, strength: 6, rank: 34, overdrive: 1.0, threat: 'High',
     ai: { style: 'trickster', range: 38, aggro: 0.68, fly: 0.5 },
     evade: { kind: 'phase', name: 'Ghost Slip' },
     blurb: 'Controls his own density. Phase through everything with energy, or turn diamond-hard to hit like a truck.',
@@ -239,7 +239,7 @@ export const ROSTER = [
   {
     id: 'vanguard', origin: 'alien', name: 'VANGUARD', title: 'The Invincible', role: 'Air Combat / Invuln',
     colors: { primary: '#190aff', secondary: '#d4d9bc', accent: '#ffd557', skin: '#e8c39a', cape: '#dd6909' },
-    hp: 150, ki: 110, speed: 42, strength: 9, overdrive: 1.5, threat: 'Very High', guardType: 'deflect', meleeTiers: 2, yells: true, voicePitch: 0.85,
+    hp: 150, ki: 110, speed: 42, strength: 9, rank: 95, overdrive: 1.5, threat: 'Very High', guardType: 'deflect', meleeTiers: 2, yells: true, voicePitch: 0.85,
     ai: { style: 'rusher', range: 24, aggro: 0.92, fly: 0.8 },
     evade: { kind: 'sprint', name: 'Blitz Run', mult: 1.75, dur: 1.4 },
     blurb: 'Bulletproof and airborne. Tackles across the sky, laser-visions from range, and turns briefly untouchable.',
@@ -257,7 +257,7 @@ export const ROSTER = [
   {
     id: 'kraken', origin: 'symbiotic', name: 'KRAKEN', title: 'The Abyss Given Form', role: 'Tentacle Grappler',
     colors: { primary: '#01a1bc', secondary: '#026575', accent: '#57ffd7', skin: '#7fb8ac' },
-    hp: 140, ki: 125, speed: 29, grabHeal: 0.4, strength: 8, overdrive: 1.4, threat: 'Very High', meleeTiers: 2, flightTier: 1, yells: true, voicePitch: 0.65,
+    hp: 140, ki: 125, speed: 29, grabHeal: 0.4, strength: 8, rank: 55, overdrive: 1.4, threat: 'Very High', meleeTiers: 2, flightTier: 1, yells: true, voicePitch: 0.65,
     tentacles: { count: 4, segs: 9, segLen: 1.7, radius: 0.55, color: '#0b4a54', color2: '#4affd4' },
     ai: { style: 'grappler', range: 26, aggro: 0.8, fly: 0.15 },
     evade: { kind: 'slide', name: 'Undertow', slideT: 0.6, power: 120 },
@@ -277,7 +277,7 @@ export const ROSTER = [
   {
     id: 'rift', origin: 'mutated', name: 'RIFT', title: 'The Doorbreaker', role: 'Portal Tactician',
     colors: { primary: '#3e445d', secondary: '#c0c7d9', accent: '#ff933b', skin: '#d8b98a' },
-    hp: 110, ki: 135, speed: 34, strength: 3, overdrive: 0.8, threat: 'High', flightTier: 2,
+    hp: 110, ki: 135, speed: 34, strength: 3, rank: 12, overdrive: 0.8, threat: 'High', flightTier: 2,
     ai: { style: 'trickster', range: 40, aggro: 0.65, fly: 0.35 },
     evade: { kind: 'blink', name: 'Side Door', range: 24 },
     blurb: 'Opens doors in the world itself. Orange in, blue out — fighters, fireballs, everything goes through. Geometry is a suggestion.',
@@ -295,7 +295,7 @@ export const ROSTER = [
   {
     id: 'titan', origin: 'robotic', name: 'TITAN', title: 'The War Engine', role: 'Armored Juggernaut',
     colors: { primary: '#62658b', secondary: '#3e3d5d', accent: '#ffa23b', skin: '#8a919c' },
-    hp: 165, ki: 140, speed: 29, metal: true, beamMight: 1.3, strength: 9, overdrive: 0.6, threat: 'High', guardType: 'deflect', meleeTiers: 2, flightTier: 2, energyInfinite: true,
+    hp: 165, ki: 140, speed: 29, metal: true, beamMight: 1.3, strength: 9, rank: 79, overdrive: 0.6, threat: 'High', guardType: 'deflect', meleeTiers: 2, flightTier: 2, energyInfinite: true,
     ai: { style: 'beamer', range: 44, aggro: 0.75, fly: 0.35 },
     evade: { kind: 'dash', name: 'Thruster Burn', power: 100, dtype: 'fire' },
     blurb: 'Not a man — a machine of war. Battery-fed twin cannons, a pulse rifle, thruster exhaust, and armor that showers sparks instead of blood.',
@@ -313,7 +313,7 @@ export const ROSTER = [
   {
     id: 'sarge', origin: 'skilled', name: 'SARGE', title: 'The Last Soldier', role: 'Human Arsenal',
     colors: { primary: '#75903f', secondary: '#4d5d31', accent: '#ffd557', skin: '#c9915a' },
-    hp: 125, ki: 100, speed: 33, guardStrong: true, strength: 4, overdrive: 1.0, threat: 'Low', flightTier: 0,
+    hp: 125, ki: 100, speed: 33, guardStrong: true, strength: 4, rank: 24, overdrive: 1.0, threat: 'Low', flightTier: 0,
     items: [{ kind: 'jetcell', name: 'Jump Jets', cd: 14, dur: 6, charges: 2 }],
     ai: { style: 'zoner', range: 48, aggro: 0.6, fly: 0 },
     evade: { kind: 'leap', name: 'Combat Leap', up: 48, fwd: 68 },
@@ -334,7 +334,7 @@ export const ROSTER = [
     // Ugandan dude." KIVULI is the ONE sanctioned purple in the project. Everything else stays banned.
     id: 'kivuli', origin: 'mutated', name: 'KIVULI', title: 'The Breath of Kampala', role: 'Gas Controller',
     colors: { primary: '#4a2a80', secondary: '#1e1038', accent: '#b06aff', skin: '#6a4a3a' },
-    hp: 115, ki: 135, speed: 33, strength: 4, overdrive: 0.9, threat: 'High', flightTier: 2,
+    hp: 115, ki: 135, speed: 33, strength: 4, rank: 15, overdrive: 0.9, threat: 'High', flightTier: 2,
     ai: { style: 'trickster', range: 34, aggro: 0.6, fly: 0.3 },
     evade: { kind: 'phase', name: 'Mist Walk' },
     blurb: 'From Kampala, Uganda. Exhales a living purple gas that chokes, blinds — and turns SOLID on his command. Walls, blades, coffins of hardened vapor.',
@@ -352,7 +352,7 @@ export const ROSTER = [
   {
     id: 'gale', origin: 'skilled', name: 'GALE', title: 'The Last Ranger', role: 'Archer / Trick Arrows',
     colors: { primary: '#3d7335', secondary: '#32561c', accent: '#a5e86f', skin: '#d8a878' },
-    hp: 105, ki: 100, speed: 36, strength: 3, overdrive: 1.1, threat: 'Low', flightTier: 0,
+    hp: 105, ki: 100, speed: 36, strength: 3, rank: 14, overdrive: 1.1, threat: 'Low', flightTier: 0,
     items: [{ kind: 'medkit', name: 'Field Kit', cd: 9, heal: 40, charges: 2 }],
     ai: { style: 'artillery', range: 58, aggro: 0.55, fly: 0 },
     evade: { kind: 'leap', name: 'Vault', up: 42, fwd: 60 },
@@ -374,7 +374,7 @@ export const ROSTER = [
     // Jackal Sandra; THE MARLETTA is her face — it drifts to you, lingers a heartbeat, and detonates.
     id: 'stefanos', origin: 'altered', name: 'KING STEFANOS', title: 'The First Celebrity Superweapon', role: 'Formed Explosives',
     colors: { primary: '#2a35f0', secondary: '#e6e4ce', accent: '#ffd557', skin: '#d8b088' },
-    hp: 120, ki: 140, speed: 33, strength: 5, overdrive: 0.9, threat: 'Very High', flightTier: 3, yells: true, voicePitch: 0.9,
+    hp: 120, ki: 140, speed: 33, strength: 5, rank: 25, overdrive: 0.9, threat: 'Very High', flightTier: 3, yells: true, voicePitch: 0.9,
     ai: { style: 'artillery', range: 50, aggro: 0.62, fly: 0.55 },
     evade: { kind: 'dash', name: 'Propulsion Step' },
     blurb: 'President of Greece. His energy takes SHAPE before it strikes — jagged motes, concussive forms, and one shape he can never put down: her face, arriving slow, leaving nothing.',
@@ -395,7 +395,7 @@ export const ROSTER = [
     // camera its eye. Clean extractions — the victim survives. She killed Marletta.
     id: 'sandra', origin: 'skilled', name: 'SANDRA', title: 'The First Jackal', role: 'LSW Hunter',
     colors: { primary: '#31344a', secondary: '#6b5824', accent: '#ffb649', skin: '#7a5238' },
-    hp: 115, ki: 105, speed: 37, strength: 4, overdrive: 1.1, threat: 'High', flightTier: 0, grabHeal: 0.35, meleeTiers: 3,
+    hp: 115, ki: 105, speed: 37, strength: 4, rank: 24, overdrive: 1.1, threat: 'High', flightTier: 0, grabHeal: 0.35, meleeTiers: 3,
     items: [{ kind: 'beacon', name: 'Extraction Beacon', cd: 3.5 }],
     ai: { style: 'zoner', range: 44, aggro: 0.7, fly: 0 },
     evade: { kind: 'dash', name: 'Jackal Roll', iframes: 0.3, cost: 4, cd: 0.55 },
@@ -415,7 +415,7 @@ export const ROSTER = [
   {
     id: 'ironclad', origin: 'tech', name: 'IRONCLAD', title: 'The Suit', role: 'Powered Armor',
     colors: { primary: '#e60642', secondary: '#f7691b', accent: '#ffdb81', skin: '#8a919c' },
-    hp: 135, ki: 140, speed: 30, metal: true, strength: 7, overdrive: 0.7, threat: 'High', flightTier: 3,
+    hp: 135, ki: 140, speed: 30, metal: true, strength: 7, rank: 48, overdrive: 0.7, threat: 'High', flightTier: 3,
     ai: { style: 'beamer', range: 46, aggro: 0.7, fly: 0.6 }, evade: { kind: 'dash', name: 'Thruster Slip' },
     blurb: 'A genius in a furnace-gold shell. Repulsors, a chest unibeam, and enough thrust to argue with gravity.',
     abilities: {
@@ -431,7 +431,7 @@ export const ROSTER = [
   {
     id: 'rage', origin: 'altered', name: 'RAGE', title: 'The Monster in the Man', role: 'Pure Strength',
     colors: { primary: '#28bb39', secondary: '#3d485d', accent: '#92e68d', skin: '#5faf6a' },
-    hp: 220, ki: 90, speed: 30, strength: 10, overdrive: 1.5, threat: 'Very High', flightTier: 0, meleeTiers: 2, yells: true, voicePitch: 0.55,
+    hp: 220, ki: 90, speed: 30, strength: 10, rank: 120, overdrive: 1.5, threat: 'Very High', flightTier: 0, meleeTiers: 2, yells: true, voicePitch: 0.55,
     ai: { style: 'bruiser', range: 16, aggro: 0.95, fly: 0 }, evade: { kind: 'leap', name: 'Rage Leap', up: 52, fwd: 74 },
     blurb: 'The angrier he gets, the simpler the fight becomes. Strength 10. Leaps counties. Only knows haymakers.',
     abilities: {
@@ -447,7 +447,7 @@ export const ROSTER = [
   {
     id: 'stormcall', origin: 'spiritual', name: 'STORMCALL', title: 'Heir of Thunder', role: 'Storm God',
     colors: { primary: '#3f4390', secondary: '#c0400f', accent: '#86d6ff', skin: '#e8c39a', cape: '#c0400f' },
-    hp: 160, ki: 130, speed: 31, strength: 9, overdrive: 1.2, threat: 'Very High', flightTier: 3, yells: true, voicePitch: 0.8,
+    hp: 160, ki: 130, speed: 31, strength: 9, rank: 78, overdrive: 1.2, threat: 'Very High', flightTier: 3, yells: true, voicePitch: 0.8,
     ai: { style: 'bruiser', range: 28, aggro: 0.8, fly: 0.5 }, evade: { kind: 'dash', name: 'Storm Step' },
     blurb: 'An axe that remembers lightning. Skies answer when he shouts.',
     abilities: {
@@ -463,7 +463,7 @@ export const ROSTER = [
   {
     id: 'webline', origin: 'altered', name: 'WEBLINE', title: 'The Neighborhood Ghost', role: 'Web Acrobat',
     colors: { primary: '#f68005', secondary: '#3015a0', accent: '#e4ffff', skin: '#e8c39a' },
-    hp: 100, ki: 110, speed: 42, strength: 6, overdrive: 1.3, threat: 'High', flightTier: 0,
+    hp: 100, ki: 110, speed: 42, strength: 6, rank: 42, overdrive: 1.3, threat: 'High', flightTier: 0,
     ai: { style: 'rusher', range: 20, aggro: 0.85, fly: 0 }, evade: { kind: 'leap', name: 'Web Vault', up: 46, fwd: 70 },
     blurb: 'Too fast to hit, too chatty to ignore. His webs pull you in — the wall does the rest.',
     abilities: {
@@ -481,7 +481,7 @@ export const ROSTER = [
   {
     id: 'ripclaw', origin: 'mutated', name: 'RIPCLAW', title: 'The Best At What He Does', role: 'Regenerating Slasher',
     colors: { primary: '#f7b41b', secondary: '#3d485d', accent: '#ffe270', skin: '#e8c39a' },
-    hp: 155, ki: 105, speed: 35, strength: 6, overdrive: 1.4, threat: 'High', flightTier: 0,
+    hp: 155, ki: 105, speed: 35, strength: 6, rank: 40, overdrive: 1.4, threat: 'High', flightTier: 0,
     ai: { style: 'rusher', range: 14, aggro: 0.95, fly: 0 }, evade: { kind: 'dash', name: 'Feral Weave' },
     blurb: 'Claws, healing, and a very short temper. What he does isn\'t very nice.',
     abilities: {
@@ -497,7 +497,7 @@ export const ROSTER = [
   {
     id: 'majesty', origin: 'altered', name: 'MAJESTY', title: 'Higher. Further. Faster.', role: 'Cosmic Powerhouse',
     colors: { primary: '#e6060f', secondary: '#1544a0', accent: '#ffd557', skin: '#e8c39a' },
-    hp: 130, ki: 145, speed: 34, beamMight: 1.3, strength: 8, overdrive: 1.0, threat: 'Extreme', flightTier: 3, afterburner: { mult: 2.1, kiPerSec: 14, wake: ['#eaf2ff', '#c9d9ff'] }, yells: true, voicePitch: 0.95,
+    hp: 130, ki: 145, speed: 34, beamMight: 1.3, strength: 8, rank: 92, overdrive: 1.0, threat: 'Extreme', flightTier: 3, afterburner: { mult: 2.1, kiPerSec: 14, wake: ['#eaf2ff', '#c9d9ff'] }, yells: true, voicePitch: 0.95,
     ai: { style: 'beamer', range: 42, aggro: 0.8, fly: 0.6 }, evade: { kind: 'dash', name: 'Photon Slip' },
     blurb: 'A star wearing a person. When she goes binary, look away.',
     abilities: {
@@ -513,7 +513,7 @@ export const ROSTER = [
   {
     id: 'mystward', origin: 'spiritual', name: 'MYSTWARD', title: 'Keeper of the Seals', role: 'Mystic Defender',
     colors: { primary: '#c00f0f', secondary: '#3d485d', accent: '#ffb649', skin: '#d8b088' },
-    hp: 115, ki: 140, speed: 31, strength: 4, overdrive: 0.8, threat: 'Very High', flightTier: 2, guardType: 'barrier',
+    hp: 115, ki: 140, speed: 31, strength: 4, rank: 14, overdrive: 0.8, threat: 'Very High', flightTier: 2, guardType: 'barrier',
     ai: { style: 'zoner', range: 44, aggro: 0.55, fly: 0.4 }, evade: { kind: 'blink', name: 'Fold Step', range: 24 },
     blurb: 'Doors, wards, and sigils. He was a surgeon once; now he closes wounds in the world. The whip drinks the power right out of you.',
     abilities: {
@@ -529,7 +529,7 @@ export const ROSTER = [
   {
     id: 'onyx', origin: 'tech', name: 'ONYX', title: 'The Kinetic King', role: 'Vibranium Duelist',
     colors: { primary: '#2b3247', secondary: '#3d485d', accent: '#cad0db', skin: '#5a3a28' },
-    hp: 135, ki: 115, speed: 38, strength: 7, overdrive: 1.2, threat: 'High', flightTier: 0, guardType: 'deflect',
+    hp: 135, ki: 115, speed: 38, strength: 7, rank: 41, overdrive: 1.2, threat: 'High', flightTier: 0, guardType: 'deflect',
     ai: { style: 'rusher', range: 16, aggro: 0.85, fly: 0 }, evade: { kind: 'leap', name: 'Panther Pounce', up: 42, fwd: 66 },
     blurb: 'A king in a suit that drinks the hit and hands it back. Claws first, questions later.',
     abilities: {
@@ -545,7 +545,7 @@ export const ROSTER = [
   {
     id: 'chainfire', origin: 'spiritual', name: 'CHAINFIRE', title: 'The Debt Collector', role: 'Hellfire Chains',
     colors: { primary: '#31434a', secondary: '#6b2c24', accent: '#ff853b', skin: '#c9bfa9' },
-    hp: 140, ki: 120, speed: 31, strength: 7, overdrive: 1.1, threat: 'Very High', flightTier: 1, flyStyle: 'fire', frostResist: true, yells: true, voicePitch: 0.75,
+    hp: 140, ki: 120, speed: 31, strength: 7, rank: 43, overdrive: 1.1, threat: 'Very High', flightTier: 1, flyStyle: 'fire', frostResist: true, yells: true, voicePitch: 0.75,
     ai: { style: 'grappler', range: 28, aggro: 0.8, fly: 0.2 }, evade: { kind: 'dash', name: 'Burnout', dtype: 'fire' },
     blurb: 'A skull full of fire and a chain that always finds its debtor. It drags you back to the wall you owe.',
     abilities: {
@@ -561,7 +561,7 @@ export const ROSTER = [
   {
     id: 'tempest', origin: 'mutated', name: 'TEMPEST', title: 'Weather Sovereign', role: 'Weather Control',
     colors: { primary: '#e6e1ce', secondary: '#3d455d', accent: '#beeaff', skin: '#6a4a3a' },
-    hp: 115, ki: 135, speed: 32, strength: 4, overdrive: 0.8, threat: 'Very High', flightTier: 3,
+    hp: 115, ki: 135, speed: 32, strength: 4, rank: 15, overdrive: 0.8, threat: 'Very High', flightTier: 3,
     ai: { style: 'artillery', range: 52, aggro: 0.55, fly: 0.6 }, evade: { kind: 'dash', name: 'Wind Shear' },
     blurb: 'The forecast answers to her. Hail, gale, and lightning filed under mood.',
     abilities: {
@@ -578,7 +578,7 @@ export const ROSTER = [
   {
     id: 'knightfall', origin: 'skilled', name: 'KNIGHTFALL', title: 'The Night Itself', role: 'Tactical Vigilante',
     colors: { primary: '#2b3447', secondary: '#3d4a5d', accent: '#ffd557', skin: '#e8c39a', cape: '#212c44' },
-    hp: 125, ki: 105, speed: 37, strength: 5, overdrive: 1.2, threat: 'Moderate', flightTier: 0, guardStrong: true, meleeTiers: 3, glider: true,
+    hp: 125, ki: 105, speed: 37, strength: 5, rank: 29, overdrive: 1.2, threat: 'Moderate', flightTier: 0, guardStrong: true, meleeTiers: 3, glider: true,
     items: [{ kind: 'beacon', name: 'Line Beacon', cd: 3 }],
     ai: { style: 'zoner', range: 34, aggro: 0.7, fly: 0 }, evade: { kind: 'leap', name: 'Grapnel Vault', up: 44, fwd: 64 },
     blurb: 'No powers. A plan for yours, though. Grapnel to the roofline, cape-glide off it, and he is suddenly somewhere above you.',
@@ -595,7 +595,7 @@ export const ROSTER = [
   {
     id: 'aegis', origin: 'spiritual', name: 'AEGIS', title: 'Daughter of War', role: 'Warrior Princess',
     colors: { primary: '#e60653', secondary: '#156ea0', accent: '#ffd557', skin: '#d8b088' },
-    hp: 155, ki: 125, speed: 35, strength: 9, overdrive: 1.3, threat: 'Very High', flightTier: 2, guardType: 'deflect', yells: true, voicePitch: 0.95,
+    hp: 155, ki: 125, speed: 35, strength: 9, rank: 76, overdrive: 1.3, threat: 'Very High', flightTier: 2, guardType: 'deflect', yells: true, voicePitch: 0.95,
     ai: { style: 'bruiser', range: 22, aggro: 0.85, fly: 0.3 }, evade: { kind: 'dash', name: 'Amazon Step' },
     blurb: 'Bracelets that hand bullets back and a golden lasso that ends arguments against the nearest wall.',
     abilities: {
@@ -611,7 +611,7 @@ export const ROSTER = [
   {
     id: 'olympus', origin: 'spiritual', name: 'OLYMPUS', title: 'The Word Made Lightning', role: 'Divine Champion',
     colors: { primary: '#f63705', secondary: '#e6e2ce', accent: '#ffe270', skin: '#e8c39a', cape: '#e6e2ce' },
-    hp: 150, ki: 130, speed: 33, strength: 8, overdrive: 1.2, threat: 'Very High', flightTier: 3, afterburner: { mult: 2.1, kiPerSec: 14, wake: ['#ffffff', '#ffe9b0'] }, yells: true, voicePitch: 1.0,
+    hp: 150, ki: 130, speed: 33, strength: 8, rank: 68, overdrive: 1.2, threat: 'Very High', flightTier: 3, afterburner: { mult: 2.1, kiPerSec: 14, wake: ['#ffffff', '#ffe9b0'] }, yells: true, voicePitch: 1.0,
     ai: { style: 'bruiser', range: 26, aggro: 0.8, fly: 0.5 }, evade: { kind: 'dash', name: 'Bolt Step' },
     blurb: 'Say the word and the sky says it back. A kid\'s grin wearing a god\'s wattage.',
     abilities: {
@@ -627,7 +627,7 @@ export const ROSTER = [
   {
     id: 'marshal', origin: 'alien', name: 'MARSHAL', title: 'The Last Son of a Dead World', role: 'Phasing Telepath',
     colors: { primary: '#28bb39', secondary: '#31384a', accent: '#86d6ff', skin: '#5faf6a', cape: '#1534a0' },
-    hp: 140, ki: 130, speed: 33, strength: 8, overdrive: 1.0, threat: 'Very High', flightTier: 3, phase: true,
+    hp: 140, ki: 130, speed: 33, strength: 8, rank: 50, overdrive: 1.0, threat: 'Very High', flightTier: 3, phase: true,
     ai: { style: 'trickster', range: 34, aggro: 0.7, fly: 0.5 }, evade: { kind: 'phase', name: 'Ghost Drift' },
     blurb: 'Walks through walls, reads the room literally, hits like a freight train from a world that no longer exists.',
     abilities: {
@@ -643,7 +643,7 @@ export const ROSTER = [
   {
     id: 'circuit', origin: 'tech', name: 'CIRCUIT', title: 'Half Man, All Machine', role: 'Cybernetic Arsenal',
     colors: { primary: '#8da3a9', secondary: '#31424a', accent: '#86e7ff', skin: '#5a3a28' },
-    hp: 155, ki: 130, speed: 28, metal: true, energyInfinite: true, strength: 8, overdrive: 0.6, threat: 'High', flightTier: 2, guardType: 'deflect', meleeTiers: 2,
+    hp: 155, ki: 130, speed: 28, metal: true, energyInfinite: true, strength: 8, rank: 52, overdrive: 0.6, threat: 'High', flightTier: 2, guardType: 'deflect', meleeTiers: 2,
     ai: { style: 'beamer', range: 44, aggro: 0.7, fly: 0.35 }, evade: { kind: 'dash', name: 'Boost Vector' },
     blurb: 'The accident left him half machine — the machine half never runs dry. BOOYAH is a technical term.',
     abilities: {
@@ -659,7 +659,7 @@ export const ROSTER = [
   {
     id: 'trench', origin: 'mutated', name: 'TRENCH', title: 'King of the Drowned Court', role: 'Ocean Sovereign',
     colors: { primary: '#f7df1b', secondary: '#017dbc', accent: '#86e7ff', skin: '#d8b088' },
-    hp: 160, ki: 120, speed: 33, strength: 8, overdrive: 1.2, threat: 'High', flightTier: 0,
+    hp: 160, ki: 120, speed: 33, strength: 8, rank: 58, overdrive: 1.2, threat: 'High', flightTier: 0,
     ai: { style: 'summoner', range: 34, aggro: 0.7, fly: 0 }, evade: { kind: 'slide', name: 'Tidal Rush', slideT: 0.65, power: 128 },
     blurb: 'A trident, a temper, and a court of things with too many teeth that answer when he whistles.',
     abilities: {
@@ -675,7 +675,7 @@ export const ROSTER = [
   {
     id: 'decibel', origin: 'altered', name: 'DECIBEL', title: 'The Cry That Levels Blocks', role: 'Sonic Screamer',
     colors: { primary: '#313f4a', secondary: '#6b3824', accent: '#ffe270', skin: '#e8c39a' },
-    hp: 110, ki: 120, speed: 37, strength: 4, overdrive: 1.2, threat: 'Moderate', flightTier: 0, meleeTiers: 3, yells: true, voicePitch: 1.3,
+    hp: 110, ki: 120, speed: 37, strength: 4, rank: 19, overdrive: 1.2, threat: 'Moderate', flightTier: 0, meleeTiers: 3, yells: true, voicePitch: 1.3,
     ai: { style: 'bruiser', range: 22, aggro: 0.8, fly: 0 }, evade: { kind: 'dash', name: 'Offbeat' },
     blurb: 'Trained fists and a voice that files buildings under rubble. You\'ll hear her before you see her. Everyone does.',
     abilities: {
@@ -691,7 +691,7 @@ export const ROSTER = [
   {
     id: 'coldsnap', origin: 'tech', name: 'COLDSNAP', title: 'The Absolute Zero Rule', role: 'Cryo Gunslinger',
     colors: { primary: '#2aa3f0', secondary: '#e6d7ce', accent: '#beeaff', skin: '#e8c39a' },
-    hp: 115, ki: 115, speed: 32, strength: 3, overdrive: 0.9, threat: 'Moderate', flightTier: 0,
+    hp: 115, ki: 115, speed: 32, strength: 3, rank: 15, overdrive: 0.9, threat: 'Moderate', flightTier: 0,
     ai: { style: 'zoner', range: 46, aggro: 0.6, fly: 0 }, evade: { kind: 'slide', name: 'Ice Slide', slideT: 0.6, power: 122 },
     blurb: 'Rules: plan the job, freeze the hero, walk away. The gun doesn\'t miss because he never hurries.',
     abilities: {
@@ -707,7 +707,7 @@ export const ROSTER = [
   {
     id: 'foundry', origin: 'tech', name: 'FOUNDRY', title: 'The Self-Made Man of Steel', role: 'Hammer Engineer',
     colors: { primary: '#627e8b', secondary: '#c00f36', accent: '#cad0db', skin: '#5a3a28' },
-    hp: 165, ki: 115, speed: 27, metal: true, strength: 9, overdrive: 1.0, threat: 'High', flightTier: 1, meleeTiers: 2,
+    hp: 165, ki: 115, speed: 27, metal: true, strength: 9, rank: 72, overdrive: 1.0, threat: 'High', flightTier: 1, meleeTiers: 2,
     ai: { style: 'bruiser', range: 24, aggro: 0.75, fly: 0.2 }, evade: { kind: 'leap', name: 'Rocket Boots', up: 46, fwd: 62 },
     blurb: 'Built the suit, forged the hammer, earned the S he paints on it. The hammer comes back. Eventually.',
     abilities: {
@@ -723,7 +723,7 @@ export const ROSTER = [
   {
     id: 'talon', origin: 'skilled', name: 'TALON', title: 'The First Sidekick to Outgrow the Shadow', role: 'Acrobat Duelist',
     colors: { primary: '#2d2b47', secondary: '#2415a0', accent: '#46cbff', skin: '#e8c39a' },
-    hp: 115, ki: 110, speed: 40, strength: 5, overdrive: 1.3, threat: 'Low', flightTier: 0, meleeTiers: 3,
+    hp: 115, ki: 110, speed: 40, strength: 5, rank: 26, overdrive: 1.3, threat: 'Low', flightTier: 0, meleeTiers: 3,
     items: [{ kind: 'medkit', name: 'Circus Kit', cd: 9, heal: 36, charges: 2 }],
     ai: { style: 'rusher', range: 16, aggro: 0.85, fly: 0 }, evade: { kind: 'leap', name: 'Quadruple Somersault', up: 44, fwd: 66 },
     blurb: 'Raised in a circus, trained by the night. Two sticks, zero fear, unreasonable hang-time.',
@@ -741,7 +741,7 @@ export const ROSTER = [
   {
     id: 'abeo', origin: 'mutated', name: 'ABEO', title: 'Shield of the Hand', role: 'Metal Bodyguard',
     colors: { primary: '#4b6468', secondary: '#f7461b', accent: '#ffdb81', skin: '#5a3a28' },
-    hp: 175, ki: 110, speed: 27, metal: true, strength: 9, overdrive: 0.9, threat: 'High', flightTier: 0, guardType: 'deflect', guardStrong: true, meleeTiers: 2,
+    hp: 175, ki: 110, speed: 27, metal: true, strength: 9, rank: 74, overdrive: 0.9, threat: 'High', flightTier: 0, guardType: 'deflect', guardStrong: true, meleeTiers: 2,
     ai: { style: 'bruiser', range: 18, aggro: 0.7, fly: 0 }, evade: { kind: 'leap', name: 'Iron Bound', up: 40, fwd: 58 },
     blurb: 'COF canon: Hand of Uganda LSW bodyguard. Living metal. Stands between the president and everything.',
     abilities: {
@@ -757,7 +757,7 @@ export const ROSTER = [
   {
     id: 'jelani', origin: 'altered', name: 'JELANI', title: 'Spear of the Hand', role: 'Strength-Speed',
     colors: { primary: '#f6052e', secondary: '#313f4a', accent: '#ffb649', skin: '#5a3a28' },
-    hp: 135, ki: 115, speed: 46, strength: 9, overdrive: 1.4, threat: 'High', flightTier: 0, yells: true, voicePitch: 1.0,
+    hp: 135, ki: 115, speed: 46, strength: 9, rank: 64, overdrive: 1.4, threat: 'High', flightTier: 0, yells: true, voicePitch: 1.0,
     ai: { style: 'rusher', range: 14, aggro: 0.95, fly: 0 }, evade: { kind: 'sprint', name: 'Warpath', mult: 1.85, dur: 1.4 },
     blurb: 'COF canon: Hand of Uganda bodyguard. Strength AND speed — the combination treaties were written about.',
     abilities: {
@@ -773,7 +773,7 @@ export const ROSTER = [
   {
     id: 'kamaria', origin: 'mutated', name: 'KAMARIA', title: 'Veil of the Hand', role: 'Phasing Guardian',
     colors: { primary: '#01a1bc', secondary: '#2b3247', accent: '#86e7ff', skin: '#5a3a28' },
-    hp: 115, ki: 130, speed: 36, strength: 5, overdrive: 1.0, threat: 'High', flightTier: 2, phase: true,
+    hp: 115, ki: 130, speed: 36, strength: 5, rank: 21, overdrive: 1.0, threat: 'High', flightTier: 2, phase: true,
     ai: { style: 'trickster', range: 30, aggro: 0.7, fly: 0.3 }, evade: { kind: 'phase', name: 'Through the Veil' },
     blurb: 'COF canon: Hand of Uganda bodyguard. Assassins\' blades pass through her; hers do not return the courtesy.',
     abilities: {
@@ -789,7 +789,7 @@ export const ROSTER = [
   {
     id: 'ramiro', origin: 'skilled', name: 'RAMIRO', title: 'The Clown-Sheriff', role: 'Cartel Hunter',
     colors: { primary: '#2a56f0', secondary: '#e6e0ce', accent: '#ff6657', skin: '#d8b088' },
-    hp: 140, ki: 100, speed: 31, strength: 6, overdrive: 1.1, threat: 'Moderate', flightTier: 0, guardStrong: true, meleeTiers: 3,
+    hp: 140, ki: 100, speed: 31, strength: 6, rank: 33, overdrive: 1.1, threat: 'Moderate', flightTier: 0, guardStrong: true, meleeTiers: 3,
     items: [{ kind: 'flashbang', name: 'Flash Rounds', cd: 10, radius: 26, charges: 2 }],
     ai: { style: 'zoner', range: 36, aggro: 0.75, fly: 0 }, evade: { kind: 'dash', name: 'Lawman\'s Roll' },
     blurb: 'COF canon: a heavyset cop in clown makeup who terrorizes the cartels one district at a time. "My son has to go home."',
@@ -806,7 +806,7 @@ export const ROSTER = [
   {
     id: 'jawah', origin: 'mutated', name: 'JAWAH MATU', title: 'The Silence', role: 'Sound Absorber',
     colors: { primary: '#3d4c5d', secondary: '#d9cebc', accent: '#92e68d', skin: '#5a3a28' },
-    hp: 125, ki: 135, speed: 34, strength: 5, overdrive: 1.0, threat: 'High', flightTier: 0,
+    hp: 125, ki: 135, speed: 34, strength: 5, rank: 23, overdrive: 1.0, threat: 'High', flightTier: 0,
     ai: { style: 'trickster', range: 26, aggro: 0.65, fly: 0 }, evade: { kind: 'phase', name: 'Soundless Step' },
     blurb: 'COF canon: absorbs sound through exposed skin. Your scream, your gunshot, your charge-up roar — he eats them all and grows stronger.',
     abilities: {
@@ -822,7 +822,7 @@ export const ROSTER = [
   {
     id: 'moses', origin: 'symbiotic', name: 'MOSES APIO', title: 'The Atlas Protocol', role: 'Symbiont Host',
     colors: { primary: '#28bb39', secondary: '#2b3247', accent: '#a4ff65', skin: '#5a3a28' },
-    hp: 140, ki: 125, speed: 35, strength: 7, overdrive: 1.2, threat: 'High', flightTier: 1, grabHeal: 0.3,
+    hp: 140, ki: 125, speed: 35, strength: 7, rank: 46, overdrive: 1.2, threat: 'High', flightTier: 1, grabHeal: 0.3,
     tentacles: { count: 3, segs: 8, segLen: 1.5, radius: 0.45, color: '#14361f', color2: '#9dff5a' },
     ai: { style: 'grappler', range: 24, aggro: 0.8, fly: 0.2 }, evade: { kind: 'phase', name: 'Symbiont Shift' },
     blurb: 'COF canon: a young Mbarara mechanic bonded to the Atlas Protocol symbiont — it watches, it regenerates, it reaches.',
@@ -839,7 +839,7 @@ export const ROSTER = [
   {
     id: 'dune', origin: 'mutated', name: 'DUNE', title: 'The Walking Sahara', role: 'Sand Shaper',
     colors: { primary: '#f7741b', secondary: '#b25c37', accent: '#ffe8bf', skin: '#c9915a' },
-    hp: 130, ki: 130, speed: 30, strength: 6, overdrive: 0.9, threat: 'Moderate', flightTier: 0,
+    hp: 130, ki: 130, speed: 30, strength: 6, rank: 32, overdrive: 0.9, threat: 'Moderate', flightTier: 0,
     ai: { style: 'zoner', range: 40, aggro: 0.6, fly: 0 }, evade: { kind: 'slide', name: 'Dune Surf', slideT: 0.65, power: 126 },
     blurb: 'Original: every grain within a mile answers to him. Walls, fists, storms — the desert is a toolbox.',
     abilities: {
@@ -855,7 +855,7 @@ export const ROSTER = [
   {
     id: 'graven', origin: 'mutated', name: 'GRAVEN', title: 'The Weight of the World', role: 'Gravity Controller',
     colors: { primary: '#2b3747', secondary: '#3f6790', accent: '#86b4ff', skin: '#b9c6cc' },
-    hp: 130, ki: 140, speed: 29, strength: 6, overdrive: 0.9, threat: 'Very High', flightTier: 2, yells: true, voicePitch: 0.8,
+    hp: 130, ki: 140, speed: 29, strength: 6, rank: 31, overdrive: 0.9, threat: 'Very High', flightTier: 2, yells: true, voicePitch: 0.8,
     ai: { style: 'artillery', range: 48, aggro: 0.6, fly: 0.4 }, evade: { kind: 'blink', name: 'Mass Shift', range: 22 },
     blurb: 'Original: gravity is his native language. He levitates because falling is optional — and his wells swallow the battlefield.',
     abilities: {
@@ -871,7 +871,7 @@ export const ROSTER = [
   {
     id: 'bulwark', origin: 'altered', name: 'BULWARK', title: 'The Living Rampart', role: 'Fortress',
     colors: { primary: '#75903f', secondary: '#3d485d', accent: '#cad0db', skin: '#c9915a' },
-    hp: 195, ki: 120, speed: 25, strength: 9, overdrive: 0.8, threat: 'High', flightTier: 0, guardType: 'barrier', guardStrong: true, meleeTiers: 2,
+    hp: 195, ki: 120, speed: 25, strength: 9, rank: 70, overdrive: 0.8, threat: 'High', flightTier: 0, guardType: 'barrier', guardStrong: true, meleeTiers: 2,
     items: [{ kind: 'shieldpack', name: 'Aegis Cell', cd: 13, shield: 45, charges: 2 }],
     ai: { style: 'zoner', range: 26, aggro: 0.55, fly: 0 }, evade: { kind: 'dash', name: 'Groundbreak', power: 88 },
     blurb: 'Original: a one-man fortification. His barrier covers a squad, his walls rewrite the map, and he does not move unless he chooses to.',
@@ -888,7 +888,7 @@ export const ROSTER = [
   {
     id: 'feral', origin: 'altered', name: 'FERAL', title: 'The Reclaimed', role: 'Beast Rusher',
     colors: { primary: '#b85123', secondary: '#6b3e24', accent: '#ffb649', skin: '#c9915a' },
-    hp: 145, ki: 110, speed: 43, thorns: 8, strength: 7, overdrive: 1.4, threat: 'High', flightTier: 0, yells: true, voicePitch: 1.05,
+    hp: 145, ki: 110, speed: 43, thorns: 8, strength: 7, rank: 44, overdrive: 1.4, threat: 'High', flightTier: 0, yells: true, voicePitch: 1.05,
     ai: { style: 'rusher', range: 13, aggro: 1, fly: 0 }, evade: { kind: 'leap', name: 'Pounce', up: 46, fwd: 72 },
     blurb: 'Original: they made him a weapon; the wild took him back. Claws, hide like barbed wire, and a roar that moves crowds.',
     abilities: {

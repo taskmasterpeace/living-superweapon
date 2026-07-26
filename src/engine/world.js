@@ -1686,7 +1686,10 @@ export class World {
     this.scene.updateMatrixWorld(true);
     this.scene.traverse(o => {
       if (!o.isMesh || !o.visible || !o.geometry) return;
-      for (let p = o.parent; p; p = p.parent) if (!p.visible) return;   // hidden branch
+      for (let p = o.parent; p; p = p.parent) {
+        if (!p.visible) return;                                          // hidden branch
+        if (p.userData && p.userData.rig) return;                        // a character, not the level
+      }
       // ⚠ a surface faded to nothing cannot flicker. Crack overlays sit at +0.05 on every building
       // face and live at opacity 0 until something hits them, so counting them would bury the real
       // findings under one false positive per destructible block in the city.

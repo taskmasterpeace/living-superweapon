@@ -1,5 +1,6 @@
 // WAR WORLD: ASCENDANTS — DOM HUD + character-select screen.
 import { CodexMixin } from './hudCodex.js';
+import { rankOf, rankBandOf } from '../data/scale.js';
 import { playSpaceFlight } from './spaceflight.js';
 import { BroadcastMixin } from './hudBroadcast.js';
 import { TitleMixin } from './hudTitle.js';
@@ -112,6 +113,11 @@ export function kitFacts(def) {
   out.push([s[0], s[1], true]);
   out.push(['range', st.range >= 7 ? 'LONG range' : st.range >= 4 ? 'MID range' : 'CLOSE range']);
   const str = def.strength ?? 5;
+  // THE DESIGNATION, at a glance — the band a character sits in is the single most useful thing
+  // you can tell someone about them before a fight, so it goes on the select screen, not just the
+  // case file. Reads the ladder, so a def.rank override shows up here first.
+  const _rk = rankOf(def), _rb = rankBandOf(_rk);
+  out.push(['might', _rb.name.toUpperCase() + ' — RANK ' + _rk, true]);
   out.push(['fighting', str >= 7 ? 'HEAVY fists' : str >= 4 ? 'solid fists' : 'light fists']);
   const ft = def.flightTier ?? 3;
   out.push(['flight', ft === 0 ? 'grounded' : ft === 1 ? 'clumsy flier' : ft === 2 ? 'levitates' : 'full flight']);

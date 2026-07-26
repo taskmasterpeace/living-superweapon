@@ -1406,6 +1406,41 @@ Four laws, three of them the same idea: **a thing must not outlive the match tha
 - `training` survives as an INTERNAL mode with no card: the tutorial (`hud.onTutorial`) and the
   atlas tile proving ground (`hud.onProvingGround`) both still enter it.
 
+## THE RANK LADDER (2026-07-25) — 1-10 became 1-4999, manual §37
+- **`data/scale.js` is the one table** — Robert's designation ladder (15 bands, CS shifts, threat
+  designations Alpha → OMNIPOTENT) + his weight ladder (rank → lift → comparison) over ONE rank
+  axis. ⚠ **They are two tables and do not share band edges** (designation splits the superhuman
+  range four ways and lumps 1-9; weight does the opposite) — forcing one row set would silently
+  move numbers he wrote down.
+- ⚠ **A BAND'S WEIGHT IS THE FIGURE AT ITS TOP RANK.** His finer sheet settles it: rank 19 = 400 lb
+  and the band 10-19 says 400; rank 39 = 2,200 lb and 30-39 says "1 ton"; rank 49 = 22,400 and
+  40-49 says "10 tons". Anchor at the bottom instead and everyone lifts several times too much.
+  Interpolation inside a band is GEOMETRIC — flat means nine rungs mean nothing.
+- **`def.strength` 1-10 STAYS** as the authoring shorthand AND as the combat multiplier (melee
+  damage, kb resistance, ice break-out — tuned, untouched). What moved to rank is what a fighter
+  can **LIFT** and what they are **CALLED**. `rankOf(def)` prefers `def.rank`, else `STR_TO_RANK`.
+- ⚠ **THE RESOLUTION IS IN THE ROSTER, NOT THE SCALE.** Ten authored values on a 1000-rung ladder
+  = ten occupied points (50-59 and 80-99 came out empty). All 52 heroes carry an explicit
+  `def.rank` now, genre-anchored — KNIGHTFALL 29 · KANO 39 · WEBLINE 42 · TRENCH 58 · SOL 66 ·
+  TITAN 79 · VANGUARD 95 · RAGE 120. **9/15 bands occupied, 45 distinct ranks**; Cosmic and above
+  deliberately empty (headroom is where antagonists and customs live).
+- **ONE LADDER, TWO FRONT DOORS**: `liftCapacityOf(def)` is real, `liftCapacity(str)` is the 1-10
+  shim; both end in `liftTonsOfRank` so they cannot drift — which is what the old duplicated
+  `STRENGTH_LB` array in entity.js did. ⚠ Every carry/throw site passed `def.strength`, so rank
+  reached NOTHING until they were rewired (5 in game.js, 1 in melee.js). Measured: 24/52 can lift
+  a 1.9t car, 12/52 a 24t airliner; WEBLINE 0.5t → 2.0t.
+- **`knockbackOf(rank)`** lives here too — his melee chart uses the SAME band edges, so a second
+  table would only drift. Through-the-wall starts at rank 40 (the Low Superhuman line).
+- **Surfaces**: codex § DERIVED (STRENGTH RANK · designation · CS, LIFT · comparison, knockback
+  spaces) + §02 (DESIGNATION + CONTAINMENT beside LeFevre — capability vs legal posture);
+  select-screen chips lead with the band; `deriveAttrs` MIGHT reads the ladder or a `def.rank`
+  override would contradict its own sheet. Ref `lsw-rank-codex.jpeg`.
+- ⚠ **Import `rankBandOf`, not `bandOf`** — `core/util.js` exports `bandOf` for ALTITUDE bands and
+  a file wanting both gets a duplicate-declaration SyntaxError that takes the whole page down.
+- ⚠ **A tension in the source, flagged not silently fixed**: his designations run to OMNIPOTENT but
+  his weight column stops at 400 tons, so a Sunbreaker lifts ~1.8× an Earthshaker. Past the cosmic
+  line, lifting and destructive power are not the same axis. His numbers are used as written.
+
 ## DRIVES — what makes a fighter feel anything (2026-07-25)
 - **⚠ THE MISSING MIDDLE LAYER.** Until now an event added fixed amounts to fixed emotions
   (`hurtBad → angry 2.0, fearful 1.5`), so a coward and a zealot felt an identical punch

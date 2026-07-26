@@ -1694,3 +1694,90 @@ Venus and Jupiter kill everyone: no suit closes crush 3. Unprotected clocks are 
 `date`, `almanac`, `moons <planet>`, `survive <world> [hero]` in the dev console.
 ⚠ `_dncEarth = {...this._dnc}` copies *references* to the same `THREE.Color` instances — the backup
 was the same object, and Earth → Pluto → Earth came home to Pluto's sky. Clone colours.
+
+## §37 · THE RANK LADDER (2026-07-25) — one scale, from a child to a supreme being
+
+Robert: *"I think 1-10 on strength isn't good enough… think about all the heroes… is that good
+enough or should we scale everything to 1-100, with various levels? We need our designation."*
+
+**HE IS RIGHT, AND THE REASON IS COUNTABLE.** On a 1–10 scale everything from "low superhuman" to
+"cosmic" has to fit in the two rungs between 9 and 10 — so RAGE, TITAN, NOVA and MAJESTY all
+rounded to the same lifting power and the roster's whole top half was one value. His ladder runs
+1–4999 with fifteen named bands and still spends its first nine rungs inside the ordinary human
+range, which is exactly where a superhero roster needs resolution: the gap between a trained
+soldier and a peak human is a real gap, and on a 1–10 scale it is invisible.
+
+`data/scale.js` is the whole ladder and everything reads it.
+
+### The two tables are two tables
+
+⚠ **His DESIGNATION table and his WEIGHT table do not share band edges.** The designation table
+splits the superhuman range into four (50-59, 60-69, 70-79, 80-99) and lumps the human range into
+one (1-9). The weight table does the opposite — it splits the human range into three (1-2, 3-5,
+6-9) and lumps 50-74 and 75-99. Forcing them into one row set would silently move numbers he wrote
+down. `BANDS` and `WEIGHTS` are kept separate over ONE rank axis, and each query reads its own.
+
+### The figure sits at the TOP of its band
+
+⚠ **This is the one thing that is easy to get backwards, and his own finer sheet settles it.** Rank
+19 lifts 400 lb and the band labelled 10-19 says 400 lb; rank 39 lifts 2,200 lb and the band
+labelled 30-39 says "1 ton"; rank 49 lifts 22,400 and 40-49 says "10 tons". Every row lines up on
+its LAST rank. Anchor at the bottom instead and every character in the game lifts several times too
+much. Verified: all seven of his written figures reproduce to the pound through the live page.
+
+Interpolation inside a band is **geometric**, not flat — flat means rank 40 and rank 49 lift
+identically and nine rungs mean nothing, which is the problem the file exists to fix.
+
+### `def.strength` stays; `def.rank` is the real axis
+
+Fifty-two heroes, every ORIGIN custom and the whole creator are authored in 1–10, and breaking that
+to gain resolution would be a bad trade. The 1–10 is the **authoring shorthand** and remains the
+**combat multiplier** (melee damage, knockback resistance, ice break-out — those are tuned and are
+deliberately untouched). What moved to rank is what a fighter can **LIFT** and what they are
+**CALLED**. `rankOf(def)` returns `def.rank` when present and derives from `STR_TO_RANK` otherwise.
+
+⚠ **THE RESOLUTION IS IN THE ROSTER, NOT THE SCALE.** A 1000-rung ladder fed by ten authored values
+has ten occupied points — 50-59 and 80-99 came out completely empty. All 52 heroes carry an
+explicit `def.rank` now, genre-anchored so the band you land in is the band you would name out
+loud: KNIGHTFALL 29 (the very top of Exceptional Human), KANO 39, WEBLINE 42, TRENCH 58, SOL 66,
+TITAN 79, VANGUARD 95, RAGE 120. **Nine of fifteen bands occupied, 45 distinct ranks.** Everything
+from Cosmic/EARTHBREAKER up is deliberately empty — headroom is the point, and that is where
+antagonists and creator customs live.
+
+### One ladder, two front doors
+
+`liftCapacityOf(def)` is the real one; `liftCapacity(str)` is the 1–10 shim for callers holding
+only a number. Both end in `liftTonsOfRank`, so they cannot disagree — which is exactly the failure
+the old duplicated `STRENGTH_LB` array in entity.js had. ⚠ Every live carry/throw site was passing
+`def.strength`, so `def.rank` reached nothing until they were rewired (5 sites in game.js, 1 in
+melee.js). A rank the engine never reads is decoration.
+
+### Consequences that are the point
+
+Measured: **24/52 heroes can lift a 1.9 t car** (rank 42+), **12/52 can lift a 24 t airliner**.
+WEBLINE goes from 0.5 t to 2.0 t — Spider-Man lifting a car is correct and was wrong before.
+HIVE lifts 0.10 t and is refused the car by capacity, not by a hard-coded gate.
+
+### The knockback chart is the same axis
+
+His melee chart's band edges ARE the designation table's, so `knockbackOf(rank)` lives in the same
+file rather than in a second table that can drift: spaces knocked back, and whether the blow puts
+them THROUGH a wall (rank 40+ — the Low Superhuman line). A space is 5 ft ≈ 8 world units.
+
+### Where it shows
+
+The codex prints **STRENGTH RANK · designation · CS** and **LIFT · comparison** in § DERIVED, and
+the **DESIGNATION + CONTAINMENT** rows in §02 beside the LeFevre class — capability and legal
+posture are different statements about the same number. The select screen's at-a-glance chips lead
+with the band name. `deriveAttrs` MIGHT reads the ladder too, or a `def.rank` override would show a
+sheet that contradicts its own case file. Ref `lsw-rank-codex.jpeg`.
+
+⚠ **`rankBandOf` is the name to import.** `core/util.js` already exports `bandOf` for ALTITUDE
+bands; a file wanting both gets a duplicate-declaration SyntaxError at parse time, which takes the
+whole page down rather than just the feature. Paid for once.
+
+⚠ **A tension in the source, flagged not silently "fixed":** his designations run to OMNIPOTENT but
+his weight column stops at 400 tons, so a Sunbreaker lifts only ~1.8× what an Earthshaker does.
+Past the cosmic line, lifting power and destructive power stop being the same axis — a Sunbreaker
+is not defined by tonnage. His numbers are used exactly as written; if the top end should climb,
+that is a decision for the sheet, not for the code.
