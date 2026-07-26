@@ -96,6 +96,7 @@ export class AI {
   radio(x, z, y) { if (!this._sees) this.remember(x, z, y, 'radio', 6); }
 
   intent(dt, game) {
+    if (this._jammedT > 0) this._jammedT -= (game && game.dt) || 1 / 60;   // the jam wears off
     const b = this.bot;
     const out = { move: { x: 0, z: 0 }, aimDir: null, slots: {}, fly: false, target: null };
     for (const k in b.slots) out.slots[k] = { pressed: false, held: false, released: false };
@@ -268,6 +269,10 @@ export class AI {
   // Squad radio: a bot that SEES the foe calls the position to living allies in earshot.
   // Fair (it's earned by one pair of eyes) and it makes 2v2 / police responses read as a unit.
   _callOut(game, foe) {
+    // ⚠ THE JAMMER HAS TO BE READ SOMEWHERE OR IT IS A PARTICLE EFFECT. It cuts SQUAD RADIO only:
+    // a jammed bot still sees perfectly with its own eyes, it just stops being told what everyone
+    // else can see. That is a real tactical effect that never makes anyone blind or stupid.
+    if (this._jammedT > 0) return;
     this._radioT = (this._radioT || 0) - 1;
     if (this._radioT > 0) return;
     this._radioT = 30;                                     // ~every half second of frames

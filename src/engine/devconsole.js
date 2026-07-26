@@ -15,6 +15,7 @@
 //     cover boxes — rather than recomputing what the planner intended. A ruler that agrees with the
 //     source instead of the world is how a wrong number survives being checked.
 import { BANDS } from '../core/util.js';
+import { FIREARMS, BLADES, GEAR, LOADOUTS, firearmById, bladeById, gearById, buildLoadout } from '../data/armory.js';
 import { playSpaceFlight } from './spaceflight.js';
 import { ORBITS, MOONS, moonsOf, moonDistanceInRadii, positionAt, separationAU,
          alignmentSpread, bestAlignmentIn, gameDate, setGameDate, advanceDays,
@@ -440,6 +441,44 @@ export class DevConsole {
     });
 
     // ---- the wheel, live
+    // THE ARMORY — every weapon and every piece of gear, reachable. Without this the catalogue is
+    // 13 firearms nobody can hold: the police carry their own tuned kit deliberately, and the
+    // creator's catalogue is a separate curation pass.
+    this.cmd('arm', 'arm [weapon|gear|loadout] — equip from the armory; bare `arm` lists it', (a, c) => {
+      const g = G(), p = P();
+      if (!p) return c.err('no player');
+      if (!a[0]) {
+        c.log('FIREARMS  ' + FIREARMS.map(w => w.id).join(' '));
+        c.log('BLADES    ' + BLADES.map(w => w.id).join(' '));
+        c.log('GEAR      ' + GEAR.map(w => w.id).join(' '));
+        c.log('LOADOUTS  ' + Object.keys(LOADOUTS).join(' '));
+        return;
+      }
+      const key = a[0].toLowerCase();
+      if (LOADOUTS[key]) {
+        const L = buildLoadout(key);
+        Object.assign(p.def.abilities, L.abilities);
+        p.items = L.items.map(it => ({ def: { ...it, cd: 6 }, charges: it.charges, state: 'ready' }));
+        if (g.hud) g.hud.buildKit && g.hud.buildKit(p);
+        return c.log('LOADOUT · ' + L.name + ' — ' + Object.keys(L.abilities).join('/') + ' + ' + L.items.length + ' items');
+      }
+      const w = firearmById(key) || bladeById(key);
+      if (w) {
+        const slot = a[1] || 'lmb';
+        p.def.abilities[slot] = { ...w.ab, voice: w.voice };
+        if (g.hud) g.hud.buildKit && g.hud.buildKit(p);
+        return c.log(w.n + ' → ' + slot.toUpperCase() + (w.voice ? '  (voice: ' + w.voice + ')' : ''));
+      }
+      const gr = gearById(key);
+      if (gr) {
+        p.items = [{ def: { kind: gr.kind, name: gr.n, mode: gr.mode, payload: gr.payload,
+                            r: gr.r, dur: gr.dur, charges: gr.charges || 1, cd: 6 },
+                     charges: gr.charges || 1, state: 'ready' }];
+        return c.log(gr.n + ' → item slot (X)   ' + (gr.d || ''));
+      }
+      c.err('unknown: ' + key + '   (bare `arm` lists everything)');
+    });
+
     this.cmd('mood', 'mood [emotion] — the live wheel, or push one', (a, c) => {
       const g = G(), p = P();
       if (!p) return c.err('no player');

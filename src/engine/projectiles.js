@@ -395,6 +395,18 @@ class Projectile {
       else if (this.payload === 'poison') foe.addDot({ dps: 5, dur: 4, color: '#8fe08a', kind: 'poison', src: this.caster });
       else if (this.payload === 'sleep') { foe.addSleep(2.6, this.caster); game.particles.burst(foe.pos.x, foe.pos.y + 6, foe.pos.z, { count: 7, speed: 6, life: 0.7, size: 2.2, color: ['#ffe9b0', '#fff'], up: 5, drag: 1.6 }); }
       else if (this.payload === 'gas') foe.addDot({ dps: 6, dur: 3, color: '#9a4ae0', kind: 'gas', src: this.caster });
+      // ⚠ TWO GASES, TWO DIFFERENT WEAPONS. Tear gas is a CONTROL tool — it blinds and it doubles
+      // you over, and it barely scratches you; that is what makes it police equipment. Mustard is a
+      // BLISTER AGENT — slow, no blinding, and it CORRODES, which makes it the one thing an
+      // armoured chassis actually fears. Both ride the DoT + corrode lanes that already exist.
+      else if (this.payload === 'teargas') {
+        foe.addDot({ dps: 1.6, dur: 6, color: '#dfe8c0', kind: 'gas', dtype: 'toxic', src: this.caster });
+        foe.staggerT = Math.max(foe.staggerT || 0, 0.45);
+        foe.blindT = Math.max(foe.blindT || 0, 1.2);
+      }
+      else if (this.payload === 'mustard') {
+        foe.addDot({ dps: 7, dur: 10, color: '#c8b84a', kind: 'acid', dtype: 'acid', corrode: 6, src: this.caster });
+      }
       else if (this.payload === 'flame') { foe.addDot({ dps: 7, dur: 2.5, color: '#ff7a2a', kind: 'burn', src: this.caster }); game.particles.burst(foe.pos.x, foe.pos.y + 5, foe.pos.z, { count: 8, speed: 10, life: 0.5, size: 2.6, color: ['#ff7a2a', '#ffd24a'], up: 8, drag: 1.2 }); }
       if (this.chain) this._arc(game, foe);
       if (this.pierce-- > 0) { game.vfx.flash(this.pos.clone(), this.color, this.radius * 2, 0.12); return true; }

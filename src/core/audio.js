@@ -741,28 +741,61 @@ export class AudioBus {
   }
   // gunshot: a real firearm report — sharp transient crack, body thump, and a tail of room slap.
   // Deliberately NOT the `zap`/`blast` synth: guns must not sound like energy weapons.
-  gunshot(power = 1, pos = null) {
+  gunshot(power = 1, pos = null, voice = null) {
     if (!this.ok || this.muted) return;
-    // no true gunfire in the CC0 library — a heavy plate crack at speed over a sub thump reads
-    // as a bang and is still a real recording, not a synth
-    if (this.sample('gun.crack', { pos, gain: Math.min(1.2, 0.6 + power * 0.4), rate: 1.3 })) { this.sample('boom.deep', { pos, gain: 0.3 * power, rate: 1.7 }); return; }
-    const pg = this._pg(pos, 200); if (!pg) return;
+    // ⚠ EVERY FIREARM GETS ITS OWN VOICE, and it has to, because the point of carrying twelve
+    // weapons is being able to hear which one is shooting at you. The CC0 library has no true
+    // gunfire, so a shared "bang.ogg" across an AK, an MP5 and a .50 would make them indistinct —
+    // worse than the synth, not better. The recorded plate-crack stays as the TRANSIENT (it is a
+    // real recording and reads as an impact), pitched by the weapon's own crack figure, and the
+    // body, tail and ACTION are built underneath it from the profile.
+    const V = voice || { crack: 1, body: 138, tail: 0.20, mech: 0.26 };
+    const pg = this._pg(pos, 200 * (0.45 + V.crack * 0.55));
+    if (!pg) return;
     const t = this.t;
-    // the crack: filtered noise burst, very short
-    const n = this._noise(0.09);
-    const hp = this.ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 1100;
-    n.connect(hp); this._env(hp, 0.07, 0.5 * power * pg, 0.001);
-    n.start(); n.stop(t + 0.09);
-    // the body: a fast low thump that gives it weight
+    // ⚠ every value is coerced — WebAudio throws on a NaN AudioParam, and audio must never
+    // throw into the frame loop (the audio law). `fin` is module scope, not a method.
+    const cr = fin(V.crack, 1), bodyF = fin(V.body, 138);
+    const tail = fin(V.tail, 0.2), mech = fin(V.mech, 0.26);
+
+    // THE TRANSIENT — recorded if we have it, pitched by calibre; noise burst otherwise.
+    if (!this.sample('gun.crack', { pos, gain: Math.min(1.2, (0.34 + power * 0.34) * cr), rate: 0.8 + cr * 0.7 })) {
+      const n = this._noise(0.09);
+      const hp = this.ctx.createBiquadFilter(); hp.type = 'highpass';
+      hp.frequency.value = 600 + cr * 1400;                       // a .50 is not a brighter 9mm, it is a DEEPER one
+      n.connect(hp); this._env(hp, 0.06 + cr * 0.03, 0.42 * power * cr * pg, 0.001);
+      n.start(); n.stop(t + 0.1);
+    }
+    // THE BODY — the chest thump. This is the single most identifying layer: 58Hz reads as a
+    // cannon and 165Hz reads as a machine pistol, at the same loudness.
     const o = this.ctx.createOscillator(); o.type = 'triangle';
-    o.frequency.setValueAtTime(190 * power, t);
-    o.frequency.exponentialRampToValueAtTime(48, t + 0.08);
-    this._env(o, 0.1, 0.34 * power * pg, 0.001); o.start(); o.stop(t + 0.12);
-    // the tail: quiet slap off the buildings
-    const n2 = this._noise(0.18);
-    const bp = this.ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 900; bp.Q.value = 0.7;
-    n2.connect(bp); this._env(bp, 0.18, 0.1 * power * pg, 0.02);
-    n2.start(t + 0.02); n2.stop(t + 0.2);
+    o.frequency.setValueAtTime(bodyF * (0.9 + power * 0.2), t);
+    o.frequency.exponentialRampToValueAtTime(Math.max(28, bodyF * 0.3), t + 0.05 + tail * 0.2);
+    this._env(o, 0.09 + tail * 0.3, 0.30 * power * pg * (0.6 + cr * 0.5), 0.001);
+    o.start(); o.stop(t + 0.14 + tail);
+    // a sub layer only on the big calibres — what you feel rather than hear
+    if (bodyF < 100) {
+      const sb = this.ctx.createOscillator(); sb.type = 'sine';
+      sb.frequency.setValueAtTime(bodyF * 0.55, t);
+      sb.frequency.exponentialRampToValueAtTime(26, t + 0.2);
+      this._env(sb, 0.26, 0.24 * power * pg, 0.004); sb.start(); sb.stop(t + 0.3);
+    }
+    // THE ROOM — how long the street rings. A suppressed PDW has almost none; an AMR has half a second.
+    if (tail > 0.02) {
+      const n2 = this._noise(tail + 0.06);
+      const bp = this.ctx.createBiquadFilter(); bp.type = 'bandpass';
+      bp.frequency.value = 500 + cr * 700; bp.Q.value = 0.6;
+      n2.connect(bp); this._env(bp, tail + 0.06, 0.11 * power * pg * cr, 0.02);
+      n2.start(t + 0.02); n2.stop(t + tail + 0.1);
+    }
+    // THE ACTION — bolt, blowback, cylinder, pump. On a suppressed weapon this is the LOUDEST
+    // layer, which is exactly what a suppressor actually sounds like.
+    if (mech > 0.05) {
+      const n3 = this._noise(0.05);
+      const hp2 = this.ctx.createBiquadFilter(); hp2.type = 'highpass'; hp2.frequency.value = 2600;
+      n3.connect(hp2); this._env(hp2, 0.05, 0.16 * mech * pg, 0.002);
+      n3.start(t + 0.02 + mech * 0.03); n3.stop(t + 0.1);
+    }
   }
   // siren: the two-tone whoop — dispatch and arrival announcements (proximity-attenuated)
   // ---- BODY TYPES: what a fighter is MADE OF decides what they sound like ----------------

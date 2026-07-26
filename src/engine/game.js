@@ -1,5 +1,6 @@
 // WAR WORLD: ASCENDANTS — game orchestrator: entities, control, combat helpers, main update.
 import { updateDomes, updateReshaped, domeBlocks, releasePossession } from './systems2.js';
+import { setVisionMode } from './systems2.js';
 import { Weather, TimeFields, GravityZones, setSize, banish } from './systems.js';
 import * as THREE from 'three';
 import { World } from './world.js';
@@ -2309,6 +2310,58 @@ export class Game {
         else it.state = 'spent';   // out until respawn refills the pouch
       };
       switch (it.def.kind) {
+        // ---- THE ARMORY'S GEAR (2026-07-26) -------------------------------------------------
+        // ⚠ VISION IS A DEVICE YOU CARRY, not a permanent stat. Night vision, the motion tracker
+        // and the thermal scope all route through the ONE vision-mode system that already exists,
+        // so nothing new has to know they were added.
+        case 'vision': {
+          setVisionMode(f, it.def.mode || 'night', it.def.dur || 24, this);
+          this.audio.zap(560, f.pos); spend(); break;
+        }
+        // ⚠ GAS IS A ZONE, NOT A HIT. It hangs where it lands and keeps working — which is the
+        // whole difference between a grenade and a gas grenade. Smoke does no damage at all: it
+        // takes away the one thing every shooter needs.
+        case 'gas': {
+          const pl = it.def.payload || 'smoke', R = it.def.r || 16, DUR = it.def.dur || 8;
+          const p2 = f.pos.clone();
+          this.addSmoke(p2.x, p2.z, R, DUR, f);                 // every gas blinds — that is what a cloud does
+          if (pl !== 'smoke') {
+            const tint = pl === 'mustard' ? '#c8b84a' : '#dfe8c0';
+            // the cloud KEEPS working: a repeating tick inside the radius for its whole life.
+            // ⚠ `later`, never a bare setTimeout — a cloud must not outlive its match (the
+            // deferred-callback law), and this one schedules itself repeatedly.
+            const tick = (left) => {
+              if (left <= 0) return;
+              for (const e of this.entities) {
+                if (!e.alive || e === f || !e.pos) continue;
+                if (Math.hypot(e.pos.x - p2.x, e.pos.z - p2.z) > R) continue;
+                if (pl === 'teargas') {
+                  e.addDot({ dps: 1.6, dur: 2, color: tint, kind: 'gas', dtype: 'toxic', src: f });
+                  e.staggerT = Math.max(e.staggerT || 0, 0.35);
+                } else {
+                  e.addDot({ dps: 7, dur: 4, color: tint, kind: 'acid', dtype: 'acid', corrode: 6, src: f });
+                }
+              }
+              this.particles.burst(p2.x, 3, p2.z, { count: 10, speed: 7, life: 1.6, size: 5,
+                color: [tint, '#ffffff'], up: 3, drag: 0.7 });
+              this.later(() => tick(left - 1), 900);
+            };
+            tick(Math.round(DUR / 0.9));
+          }
+          this.audio.zap(300, f.pos); this.noise(p2, 0.5, f); spend(); break;
+        }
+        case 'armor': {                                          // a ballistic plate: an ablative pool
+          f._shieldHp = (f._shieldHp || 0) + (it.def.hp || 55);
+          this.vfx.ring(f.pos.clone().setY(5), { color: '#cfd8e0', r0: 2, r1: 9, life: 0.4 });
+          this.audio.land(0.6, 'metal', f.pos); spend(); break;
+        }
+        case 'jammer': {
+          // ⚠ IT CUTS THE RADIO, NOT THEIR EYES. Bots stop SHARING what they have seen and fall
+          // back on their own sight — a real tactical effect that never makes them blind or stupid.
+          for (const e of this.entities) if (e.ai) e.ai._jammedT = (it.def.dur || 12);
+          this.vfx.ring(f.pos.clone().setY(4), { color: '#7fe6ff', r0: 3, r1: 30, life: 0.6, flat: true, y: 1 });
+          this.audio.zap(180, f.pos); spend(); break;
+        }
         case 'medkit':
           f.heal(it.def.heal || 40);
           this.vfx.ring(f.pos.clone().setY(5), { color: '#8fe08a', r0: 2, r1: 8, life: 0.4 });

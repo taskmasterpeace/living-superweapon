@@ -1,5 +1,6 @@
 // WAR WORLD: ASCENDANTS — ability engine. Data-driven power types dispatched per input slot.
 import { moodMult } from './psyche.js';
+import { VOICES } from '../data/armory.js';
 import { spawnDuplicates, possess, setElastic, tkGrab, tkThrow, reshape, consumeSlot, mimicKit, summonMount, domeAt, setVisionMode } from './systems2.js';
 import { setSize, setInvisible, beginRegen, banish } from './systems.js';
 import { visOf } from '../data/visual.js';
@@ -706,7 +707,16 @@ export const TYPES = {
       if (aimed) st.cd = (def.interval || 0.5) * (def.stance.rateMult ?? 2.4);   // a settled shot is a SLOW shot
       const kick = def.recoil ?? (cls === 'shotgun' ? 6.5 : cls === 'pistol' ? 3 : 1.6);
       c.vel.x -= c.aim.x * kick; c.vel.z -= c.aim.z * kick;
-      g.audio.gunshot(cls === 'shotgun' ? 1.5 : cls === 'pistol' ? 1.25 : 0.8, c.pos);   // a CRACK, not a zap
+      // ⚠ THE WEAPON'S OWN VOICE, not a guess from three classes. `def.voice` is a profile from
+      // data/armory.js; without one we fall back to the class so every existing kit is unchanged.
+      const vc = def.voice ? VOICES[def.voice] : null;
+      g.audio.gunshot(cls === 'shotgun' ? 1.5 : cls === 'pistol' ? 1.25 : 0.8, c.pos, vc);   // a CRACK, not a zap
+      // ⚠ EVERY SHOT IS HEARD, and the suppressed ones are heard LESS. Writing this as
+      // `if (def.quiet) g.noise(...)` was backwards and nearly shipped: gunfire did not broadcast
+      // at all before this (only the HIT did), so gating on `quiet` would have made a suppressed
+      // PDW the only weapon in the game a bot could hear being fired. The broadcast is what bots
+      // actually hear (the honesty law) — so it has to run for everything, scaled by the report.
+      g.noise(c.pos, def.quiet ?? (cls === 'shotgun' ? 1.1 : cls === 'pistol' ? 0.8 : 0.9), c);
       g.muzzleFlash(c, '#ffcf6a', cls === 'shotgun' ? 0.9 : 0.55);
     }
   },

@@ -335,6 +335,41 @@ export function buildWeapon(kind, m) {
   const g = new THREE.Group();
   const add = (mesh, x, y, z, rx = 0, rz = 0) => { mesh.position.set(x, y, z); mesh.rotation.x = rx; mesh.rotation.z = rz; g.add(mesh); return mesh; };
   switch (kind) {
+    // ---- THE ARMORY'S OWN SILHOUETTES (2026-07-26). Built along the arm's -Y axis like every
+    // other weapon here, so the poses and the ragdoll carry them for free.
+    case 'katana': {                                   // long single edge + a guard + a wrapped hilt
+      const bl = add(new THREE.Mesh(new THREE.BoxGeometry(0.10, 3.4, 0.30), m.metal || m.armor), 0, -1.9, 0);
+      bl.castShadow = true;
+      add(new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.12, 0.5), m.armor), 0, -0.22, 0);   // tsuba
+      add(new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.75, 0.22), m.suit2 || m.armor), 0, 0.2, 0);
+      break;
+    }
+    case 'claws': {                                    // three blades PAST the knuckles, not a held thing
+      for (let i = -1; i <= 1; i++) {
+        const c2 = add(new THREE.Mesh(new THREE.BoxGeometry(0.07, 1.5, 0.16), m.metal || m.armor), i * 0.22, -0.95, 0.04);
+        c2.rotation.z = i * 0.10; c2.castShadow = true;
+      }
+      break;
+    }
+    case 'smg': {                                      // stubby receiver, folding stock, fat suppressor
+      add(new THREE.Mesh(new THREE.BoxGeometry(0.3, 1.5, 0.34), m.armor), 0, -0.7, 0.05);
+      add(new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.11, 0.9, 8), m.armor), 0, -1.7, 0.05);
+      add(new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.7, 0.2), m.armor), 0, 0.2, 0.22);   // magazine
+      break;
+    }
+    case 'sniper': {                                   // long barrel, big scope, bipod
+      add(new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 4.2, 8), m.armor), 0, -1.9, 0.05);
+      add(new THREE.Mesh(new THREE.BoxGeometry(0.32, 1.5, 0.36), m.armor), 0, -0.2, 0.05);
+      const sc = add(new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 1.1, 8), m.metal || m.armor), 0, -0.35, -0.3);
+      sc.rotation.x = Math.PI / 2;
+      add(new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.9, 0.24), m.armor), 0, 0.55, 0.16);   // stock
+      break;
+    }
+    case 'baton': {                                    // a stick, and a grip you can see
+      add(new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.07, 2.1, 8), m.armor), 0, -1.0, 0);
+      add(new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.6, 8), m.suit2 || m.armor), 0, 0.15, 0);
+      break;
+    }
     case 'pistol':
       add(new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.55, 0.5), m.armor), 0, -0.15, 0.1);
       add(new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.9, 0.3), m.armor), 0, -0.6, 0.28);

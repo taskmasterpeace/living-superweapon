@@ -577,6 +577,23 @@ export class World {
   // Everything the room fabricates (city, props, greenery, water) goes translucent holo-cyan
   // with lit edges; the player is never touched, so the live subject reads solid against a
   // fabricated set. Reversible: originals are stashed per-material and restored on exit.
+  // NIGHT VISION — an image intensifier, not a filter over the game. It lifts EXPOSURE (which is
+  // what amplification actually does) and pushes the tone toward phosphor green.
+  // ⚠ It must not touch the light COUNT — the light-count law. Exposure and a tint are free.
+  setNightVision(on) {
+    if (!!on === !!this._nvOn) return;
+    this._nvOn = !!on;
+    if (on) {
+      this._nvSave = { exp: this.renderer.toneMappingExposure, fog: this.scene.fog && this.scene.fog.color.clone() };
+      this.renderer.toneMappingExposure = this._nvSave.exp * 2.35;
+      if (this.scene.fog) this.scene.fog.color.set('#0d2a16');
+    } else if (this._nvSave) {
+      this.renderer.toneMappingExposure = this._nvSave.exp;
+      if (this.scene.fog && this._nvSave.fog) this.scene.fog.color.copy(this._nvSave.fog);
+      this._nvSave = null;
+    }
+  }
+
   setSim(on) {
     if (!!on === !!this._simOn) return;
     this._simOn = !!on;

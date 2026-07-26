@@ -388,6 +388,11 @@ export function updateDomes(game, dt) {
 // Both override the canopy/interior cutaway restrictions, which is the point of them.
 // ============================================================================================
 export function setVisionMode(f, mode, dur, game) {
+  // ⚠ CLEAR THE OLD MODE FIRST, ALWAYS. Without this, using night vision twice saves the
+  // ALREADY-MULTIPLIED vision params as the "original", so the restore hands back a permanently
+  // widened cone — a stacking wallhack that survives the goggles. Switching from night to thermal
+  // had the same shape: `_nvSaved` was stranded and night vision never came back off at all.
+  if (f._visionMode || f._nvSaved) clearVisionMode(f, game);
   f._visionMode = mode ? { mode, t: dur } : null;
   if (!game.isHuman(f)) return;
   const w = game.world;
@@ -396,6 +401,21 @@ export function setVisionMode(f, mode, dur, game) {
       if (o.material && o.material.emissive) { if (!o.userData._vm) o.userData._vm = { e: o.material.emissive.clone(), i: o.material.emissiveIntensity }; o.material.emissive.set('#ff6a1a'); o.material.emissiveIntensity = 1.5; }
     });
     if (game.hud) game.hud.feed('THERMAL — bodies burn through the walls', '#ff8a3a');
+  } else if (mode === 'night') {
+    // ⚠ NIGHT VISION AMPLIFIES, IT DOES NOT REVEAL. It does not see through anything — it makes the
+    // dark stop being cover, which is a different and more interesting thing. It rides the vision
+    // params the fog and the AI already use, so nothing new has to know it exists.
+    // ⚠ THE VISION PARAMS LIVE ON THE GAME, NOT THE FIGHTER (`game.visNear/visRange/visCos` —
+    // they are the human player's cone, used by _humanSees, the fog shader and targeting). Writing
+    // them onto `f` compiles, runs, and does absolutely nothing.
+    f._nvSaved = { near: game.visNear, range: game.visRange, cos: game.visCos };
+    game.visNear = game.visNear * 1.9;
+    game.visRange = game.visRange * 1.45;
+    game.visCos = game.visCos * 0.78;                          // a WIDER cone (cos falls as angle grows)
+    if (game.world && game.world.setNightVision) game.world.setNightVision(true);
+    if (game.hud) game.hud.feed('NIGHT VISION — the dark stops being cover', '#8fe08a');
+  } else if (mode === 'motion') {
+    if (game.hud) game.hud.feed('MOTION TRACKER — it only sees what moves', '#7fe6ff');
   } else if (mode === 'xray') {
     for (const co of w.cover || []) if (co.mesh && co.mesh.material) { if (!co.mesh.userData._vm) co.mesh.userData._vm = co.mesh.material.opacity ?? 1; co.mesh.material.transparent = true; co.mesh.material.opacity = 0.18; }
     if (game.hud) game.hud.feed('X-RAY — structure only', '#cfe6ff');
@@ -408,6 +428,13 @@ export function clearVisionMode(f, game) {
     if (o.userData && o.userData._vm && o.material && o.material.emissive) { o.material.emissive.copy(o.userData._vm.e); o.material.emissiveIntensity = o.userData._vm.i; o.userData._vm = null; }
   });
   for (const co of w.cover || []) if (co.mesh && co.mesh.userData && co.mesh.userData._vm !== undefined && co.mesh.userData._vm !== null) { co.mesh.material.opacity = co.mesh.userData._vm; co.mesh.userData._vm = null; }
+  // ⚠ NIGHT VISION WROTE TO THE FIGHTER'S OWN VISION PARAMS, so it has to put them back — leaving
+  // them multiplied is a permanent wallhack that outlives the goggles.
+  if (f._nvSaved) {
+    game.visNear = f._nvSaved.near; game.visRange = f._nvSaved.range; game.visCos = f._nvSaved.cos;
+    f._nvSaved = null;
+    if (game.world && game.world.setNightVision) game.world.setNightVision(false);
+  }
   f._visionMode = null;
 }
 export function updateVisionMode(f, dt, game) {
@@ -419,6 +446,25 @@ export function updateVisionMode(f, dt, game) {
       if (!e.alive || e === f) continue;
       if (Math.hypot(e.vel.x, e.vel.z) < 6) continue;
       game.particles.spawn({ x: e.pos.x, y: e.pos.y + 3, z: e.pos.z, vx: 0, vy: 0.4, vz: 0, life: 1.1, size: 2.2, color: ['#ff6a1a', '#ffd24a'], drag: 3 });
+    }
+  }
+  // THE MOTION TRACKER. It pings anything MOVING, through walls — and nothing that is standing
+  // still, however close. ⚠ That is the whole design: it is not a wallhack with extra steps,
+  // it is a trade. Stand still and it never sees you; it also never sees a sniper holding a lane.
+  if (V.mode === 'motion' && game.isHuman(f)) {
+    V._ping = (V._ping || 0) - dt;
+    if (V._ping <= 0) {
+      V._ping = 0.85;                                   // a sweep, not a stream — it has a rhythm
+      for (const e of game.entities) {
+        if (!e.alive || e === f || !e.pos) continue;
+        const spd = Math.hypot(e.vel.x, e.vel.z);
+        if (spd < 7) continue;                          // holding still defeats it, by design
+        const d = Math.hypot(e.pos.x - f.pos.x, e.pos.z - f.pos.z);
+        if (d > 220) continue;
+        game.particles.spawn({ x: e.pos.x, y: e.pos.y + 7, z: e.pos.z, vx: 0, vy: 1.2, vz: 0,
+          life: 0.9, size: 3.4, color: ['#7fe6ff', '#cdf3ff'], drag: 2.4 });
+      }
+      if (game.audio && game.audio.zap) game.audio.zap(0.18, f.pos);   // the sweep tick
     }
   }
   if (V.t <= 0) clearVisionMode(f, game);
