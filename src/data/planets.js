@@ -18,7 +18,10 @@ export const PLANETS = [
   { id: 'moon', name: 'The Moon', au: 1.0026, kind: 'moon',
     landable: true,
     settlement: { name: 'TRANQUILITY REACH', popType: 'Small Town', pop: 8200, popLabel: '8.2K',
-      types: ['Mining', 'Military'], crime: 8, safety: 88, relief: 'flat', biome: 'tundra' } },
+      // ⚠ this row said `biome: 'tundra'` — an EARTH biome, on the Moon. The generator was doing
+      // exactly as told. 'mountain' is the honest read: bare rock outcrops and scree, which is
+      // what the lunar surface is, and it is the only biome that asks for no living thing.
+      types: ['Mining', 'Military'], crime: 8, safety: 88, relief: 'flat', biome: 'mountain' } },
   { id: 'mars', name: 'Mars', au: 1.52, kind: 'rocky',
     landable: true,
     settlement: { name: 'ARES LANDING', popType: 'Town', pop: 31000, popLabel: '31K',
@@ -69,6 +72,27 @@ export function transitSecsFor(p) {        // distance over an open throttle, ga
 // and ice giants; `ring` is drawn as flat concentric discs, which is the only honest way to do a
 // ring in a style with no transparency tricks.
 // ⚠ NO PURPLE, including here: Neptune and Uranus go to deep teal and ice-blue, never violet.
+// ⚠ A WORLD DECLARES WHETHER IT HAS AIR AND WHETHER IT HAS LIFE, and every system that needs
+// either one ASKS. Robert, seeing oak trees, hay bales, songbirds and blown litter on the Moon:
+// "this the moon i thought we fixed this permanetly". It had never been fixed anywhere but the
+// SKY — `sky.airless` tinted the sun and nothing else in the entire pipeline had any idea it was
+// standing in a vacuum, because a settlement is a city row through the same planner and a city row
+// has always meant Earth. The Moon's row even declared `biome: 'tundra'`, an EARTH biome, so the
+// generator was right to grow a forest; it was answering the question it was asked.
+//
+// Both facts are DERIVED from data that was already here, so there is no per-planet special case
+// and a new world gets the right answer for free:
+//   air  — the atmosphere in PLANET_LOOK (Moon `atmo: null`; Mars has one, thin and unbreathable,
+//          which is why Mars still gets WIND and dust and the Moon does not).
+//   life — a native biosphere, which for now is Earth alone. Terraform something later and it is
+//          one flag, not a sweep through the map generator.
+export function worldEnv(id) {
+  const P = PLANETS.find(x => x.id === id);
+  const look = PLANET_LOOK[id];
+  if (!P || !look) return { id: id || 'earth', air: true, life: true };
+  return { id, air: !!look.atmo, life: !!P.home };
+}
+
 export const PLANET_LOOK = {
   mercury: { base: '#8b8577', bands: ['#9a927f', '#6f6a5e'], atmo: null,      r: 0.38 },
   venus:   { base: '#e0c489', bands: ['#f0d9a6', '#c9a86a'], atmo: '#ffe6b0', r: 0.95 },

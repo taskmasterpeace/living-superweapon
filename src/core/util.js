@@ -89,7 +89,7 @@ export function mulberry(seed) {
 // surfaces at deliberate heights, so an interior is a building full of chances to get this wrong.
 export const DECAL_LIFT = 0.35;                       // ≈ 6.6cm — the smallest gap that survives
 // the layer ladder for anything pinned to the ground, so two systems never pick the same rung
-export const GROUND_LAYER = { shadow: 0.05, stateRing: 0.35, bandRing: 0.55, faceWedge: 0.75, mark: 0.95 };
+export const GROUND_LAYER = { shadow: 0.05, stateRing: 0.35, bandRing: 0.55, faceWedge: 0.75, mark: 0.95, spacing: 1.15 };
 // push a HOST surface back in depth so anything drawn at its level wins the tie deterministically
 export function sinkSurface(mat, amount = 1.4) {
   if (!mat) return mat;

@@ -21,6 +21,7 @@ import { WhiteRoom } from './whiteroom.js';
 import { buildReport } from '../data/news.js';
 import { bookInjury, injuryOf, healBout, koElo, matchElo } from '../data/rankings.js';
 import { SETTINGS, keymap } from '../core/settings.js';
+import { STRIKES } from '../data/martial.js';
 import { Gamepad } from '../core/gamepad.js';
 import { runSlot, performEvade } from './abilities.js';
 import { ROSTER } from '../data/characters.js';
@@ -192,7 +193,7 @@ export class Game {
     // EVERY city rebuild re-grids what was keyed to the old map — whether it came from a match,
     // the atlas, or the map maker's live preview. There is exactly one of these for a reason.
     this.world.onRebuilt = (plan) => {
-      this.peds.setCity(this.world.ARENA, this.world.waterX);
+      this.peds.setCity(this.world.ARENA, this.world.waterX, !(this.world.plan && this.world.plan.atmosphere === false));
       this.vfx.clearScorches();
       if (this.news && this.news.reset) this.news.reset();
     };
@@ -223,6 +224,7 @@ export class Game {
     this._buildReticle();
     this._buildLockMark();
     this._buildPlayerMark();
+    this._buildSpacingRings();
     this._buildThrowArc();
 
     // camera-aligned movement basis
@@ -299,6 +301,46 @@ export class Game {
     const capped = d > range;                       // out of reach = amber, in reach = clean white
     const col = capped ? '#ffb03a' : '#eaffff';
     if (this._bmCol !== col) { this._bmCol = col; this._bmRing.material.color.set(col); this._bmPip.material.color.set(col); }
+  }
+
+  // THE SPACING RINGS — the whole reason the reach inversion is legible (manual §38).
+  // Three ground rings at jab / cross / power reach in the strike colours. You live on the OUTER
+  // ring; the inner one is where the damage is and where their power reaches you too. Seeing the
+  // bands teaches spacing faster than any tutorial can, which is why this is an accessibility
+  // option rather than a debug flag — it is off by default and it is not a wallhack: it shows YOUR
+  // reach, information you already have, never anything about the opponent.
+  _buildSpacingRings() {
+    const g = new THREE.Group();
+    this._srRings = ['jab', 'cross', 'power'].map((id) => {
+      const S = STRIKES[id];
+      // ⚠ THE RING IS DRAWN AT THE REACH THE ENGINE USES, read from the same table melee.js reads.
+      // A spacing overlay that draws its own idea of reach is worse than none at all.
+      const m = new THREE.Mesh(new THREE.RingGeometry(S.reach - 0.35, S.reach + 0.35, 72),
+        new THREE.MeshBasicMaterial({ color: S.color, transparent: true, opacity: 0.3,
+          blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+      m.rotation.x = -Math.PI / 2; g.add(m); return m;
+    });
+    // the pocket: a faint fill inside power reach — the ground you have to stand on to hurt anyone
+    const pk = new THREE.Mesh(new THREE.CircleGeometry(STRIKES.power.reach, 48),
+      new THREE.MeshBasicMaterial({ color: STRIKES.power.color, transparent: true, opacity: 0.055,
+        blending: THREE.AdditiveBlending, depthWrite: false }));
+    pk.rotation.x = -Math.PI / 2; g.add(pk); this._srPocket = pk;
+    g.visible = false; this.scene.add(g); this.spacingRings = g;
+  }
+
+  updateSpacingRings() {
+    const g = this.spacingRings, p = this.player;
+    if (!g) return;
+    const show = !!(SETTINGS.spacingRings && p && p.alive && this.mode && this.running && !p.flying);
+    if (g.visible !== show) g.visible = show;
+    if (!show) return;
+    g.position.set(p.pos.x, (p.groundY || 0) + GROUND_LAYER.spacing, p.pos.z);
+    // the ring for the strike you could throw RIGHT NOW brightens — the rings read as a state, not
+    // as furniture, and a fighter on cooldown can see that they are the one who has to give ground.
+    const ready = p.strikeCd <= 0 || p.comboWin > 0;
+    const k = ready ? 1 : 0.45;
+    for (const m of this._srRings) m.material.opacity = 0.3 * k;
+    this._srPocket.material.opacity = 0.055 * k;
   }
 
   updatePlayerMark(dt) {
@@ -2924,6 +2966,7 @@ export class Game {
     this.updateVision(dt);
     this.updateReticle(dt);
     this.updatePlayerMark(dt);
+    this.updateSpacingRings();
     this.updateBlinkMark(dt);
     this.updateCarry(dt);
     this.updateThrownBodies(dt);

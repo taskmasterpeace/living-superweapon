@@ -88,6 +88,14 @@ export class Wildlife {
   setCity(arena, cover, world) {
     this.arena = arena || 240;
     this.world = world || this.world;
+    // ⚠ BIRDS NEED A BIOSPHERE AND LITTER NEEDS WIND, and they are separate questions — Mars has
+    // an atmosphere and no life, so a Martian street gets blown dust and litter but no gulls,
+    // while the Moon gets neither. Both come off the plan (data/planets.js worldEnv). The arrays
+    // are never reallocated; the counts are simply driven to zero, so this costs nothing.
+    const plan = (this.world && this.world.plan) || null;
+    this._life = !plan || plan.biosphere !== false;
+    this._air = !plan || plan.atmosphere !== false;
+    this._applyCounts();
     this.roofs.length = 0;
     if (cover) {
       for (const c of cover) {
@@ -116,9 +124,20 @@ export class Wildlife {
   }
 
   setQuality(tier) {
+    this._tier = tier;
+    this._applyCounts();
+  }
+
+  // ⚠ ONE PLACE DECIDES THE COUNTS, because two things now have an opinion about them: the
+  // adaptive quality tier and the world you are standing on. When setQuality owned `nBirds`
+  // outright, a tier change on the Moon would have quietly repopulated the sky.
+  _applyCounts() {
+    const tier = this._tier ?? 2;
     // the adaptive tier trims the flock before it trims anything the player is aiming at
     this.nBirds = tier <= 0 ? 18 : tier === 1 ? 40 : BIRDS;
     this.nLitter = tier <= 0 ? 0 : tier === 1 ? 22 : LITTER;
+    if (this._life === false) this.nBirds = 0;     // nothing flies where nothing lives
+    if (this._air === false) this.nLitter = 0;     // and nothing blows where there is no wind
     this._writeAll();                              // park the hidden ones out of sight
   }
 

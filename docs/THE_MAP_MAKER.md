@@ -821,3 +821,48 @@ defects.
   so the readout cannot disagree with the city it describes.
 - `surveyAt(plan, x, z)` is the **one** function the heightfield stamp asks, and the one any future
   traffic or navigation code must ask, so they can never disagree about where the street is.
+
+## A WORLD DECLARES WHETHER IT HAS AIR AND WHETHER IT HAS LIFE (2026-07-26)
+
+Robert, looking at TRANQUILITY REACH — a small town on the Moon — with oak trees, mown lawns, hay
+bales, songbirds and litter blowing down the street: *"this the moon i thought we fixed this
+permanetly"*.
+
+**It had never been fixed anywhere but the SKY.** `sky.airless` tinted the sun, and that was the
+only line in the entire pipeline that knew it was standing in a vacuum. A settlement is a city row
+through the same planner, and a city row has always meant Earth. The Moon's own row even declared
+`biome: 'tundra'` — an EARTH biome — so the generator was right to grow a forest. It was answering
+the question it was asked.
+
+**Both facts are DERIVED, so there is no per-planet special case.** `worldEnv(id)` in
+`data/planets.js`:
+
+- **air** — the atmosphere already in `PLANET_LOOK` (`moon: atmo null`). Mars has one, thin and
+  unbreathable, which is why **Mars still gets wind and blown dust and the Moon does not**.
+- **life** — a native biosphere, which for now is Earth alone. Terraform something later and it is
+  one flag, not a sweep through the map generator.
+
+They ride on the plan (`plan.world` / `plan.biosphere` / `plan.atmosphere`, both defaulting TRUE so
+all 1,050 sheet cities and the flagship are untouched) and four systems consult them:
+
+1. **Zoning** — park, forest and farmland cells are struck to plaza, before `computeSockets`, for
+   the same reason the density budget runs first: a struck cell's neighbours must see what is
+   actually there. `plan.rural` goes false — there is no countryside without a country.
+2. **`world._buildGreenery`** — the one choke point every tree and lawn in the game arrives at.
+   ⚠ Striking the zoning is NOT enough on its own: trees are appended by the TILE BUILDERS, so a
+   residential court plants street trees whatever the district is. This is the line that makes a
+   vacuum world actually barren.
+3. **`wildlife`** — birds need life, litter needs wind, and they are separate questions.
+   ⚠ The counts now have two owners (the adaptive quality tier and the world), so `_applyCounts` is
+   the single place that decides. When `setQuality` owned `nBirds` outright, a tier change on the
+   Moon would have quietly repopulated the sky.
+4. **`pedestrians`** — nobody stands on an airless world in a shirt. Same instanced mesh, same
+   count, same behaviour: `_reseed` swaps the palette in place for pressure suits with a gold
+   visor instead of a face, which is all a 9.6u figure has room to say.
+
+Measured: Earth 64 birds / 40 litter / greenery built · **Moon 0 / 0 / none, 0 green-zoned cells**
+· Mars 0 birds / 40 litter — dust blows, nothing grows. A quality change cannot refill the Moon
+sky. Ref `wwa-moon-after.png`.
+
+⚠ Still Earth-flavoured on the Moon and deliberately left: the ambulance and the market stalls.
+Those are props, not biology, and want their own pass.

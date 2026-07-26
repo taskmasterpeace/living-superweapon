@@ -867,6 +867,12 @@ export class World {
   }
   // lawns + ONE instanced tree system from a spot list — flagship and generated cities both ride this
   _buildGreenery(lawns, spots, clearCenter = 0) {
+    // ⚠ THE ONE CHOKE POINT FOR EVERY GROWING THING. Trees and lawns are appended by the TILE
+    // BUILDERS — a residential court plants street trees, a park plants a copse — so striking the
+    // park and forest ZONING in the planner is not enough on its own; the ordinary blocks would
+    // still have come up green. Every tree and every lawn in the game arrives here, which is why
+    // this is the line that makes a vacuum world actually barren.
+    if (this.plan && this.plan.biosphere === false) return;
     const lawnTex = this._lawnTex || (this._lawnTex = (() => {
       const c = document.createElement('canvas'); c.width = c.height = 128;
       const x = c.getContext('2d');

@@ -112,3 +112,53 @@ crit table → wound mapping (data entry).
 2. **Directional blocking** — the isometric camera cannot sell it, and the guard arc already answers
    "am I covered".
 3. **Per-art damage numbers** — see above.
+
+---
+
+## Built — step one and the spacing UI (2026-07-26)
+
+`src/data/martial.js` is the table. Reach, frames, step-in, styles, positions, the wheel, the
+struggle window and the submissions live there and nowhere else, so the engine, the rings and the
+codex cannot disagree about how far a jab reaches.
+
+**THE INVERSION IS LIVE.** Jab 11u · cross 9u · power 7u — measured in-engine at 10.5u and 6.5u
+(the half-unit is the active window's granularity). It was 13u jab against a 13.5u haymaker before
+this, which is why stepping in cost nothing and there was no spacing decision in the game at all.
+
+**THE STEP-IN COMES OFF THE TABLE.** `step` is authored as a distance; `STEP_IMPULSE = 8` converts
+it to the velocity impulse the physics wants, calibrated so the tuned feel is unchanged (jab
+2.0 × 8 = the 16 that used to be hard-coded in melee.js). Measured travel: jab 0.5u · cross 2.46u
+· power 5.14u. So effective threat range is jab 11 · cross 11.5 · power 12.1 — the reach inverts
+and the COMMITMENT is what buys it back. That is the whole spacing game in three numbers.
+
+**THE STRUGGLE CURVE SQUARES THE RANK RATIO.** The spec states two figures that a linear ratio
+cannot both satisfy — "~1.4s at even rank" and "a rank-40 clinching a rank-79 gets under half a
+second". Linear gives 0.71s. Squared gives 1.40s even and **0.36s** at that gap, which satisfies
+both and is the better curve anyway: clinching far above your weight becomes a genuinely bad idea
+rather than merely a worse one.
+
+**THE SPACING RINGS** (Options → Spacing Rings, off by default): three ground rings at jab / cross
+/ power reach in the strike colours, plus a faint fill inside power reach — the ground you have to
+stand on to hurt anybody. They dim while you are on cooldown, so the rings read as a state rather
+than as furniture. They draw at the reach the ENGINE uses, read from the same table melee.js
+reads; a spacing overlay that draws its own idea of reach would be worse than none. It is not a
+wallhack — it shows YOUR reach, which is information you already have.
+
+### Three harness bugs, one lesson: drive the gate, don't write past it
+
+The engine hit-test read as broken for four attempts. It was not.
+
+1. `entities[1]` is not the opponent — a duel also spawns the KMK 9 camera operator and reporter,
+   real Fighters on the player's own team. `coneFoe` rightly refuses an ally, so the harness was
+   swinging at a cameraman. Pick by TEAM, which is what the engine itself tests.
+2. `facing` is a DAMPED yaw. Setting it once does nothing.
+3. The one that cost the time: `coneFoe` reads `caster.aim`, and **`controlPlayer` rewrites aim
+   from the mouse every frame** — after the test wrote it and before the hit test read it. The cone
+   pointed wherever the cursor was. Drive `game.controlPlayer`, the documented override point.
+
+And pin both bodies to ABSOLUTE positions. Holding the foe at `player.x + gap` sounds equivalent
+and is not: the strike's own step-in moves the player inside the active window, so reach measured
+8u long. Measure reach with nobody moving; measure the step-in separately.
+
+The suite proves itself first — a point-blank jab has to land before any of the range numbers mean
+anything. 22 checks, 0 failures, 0 console errors.

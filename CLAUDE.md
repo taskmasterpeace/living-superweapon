@@ -737,6 +737,56 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   (overlay removed, running/mapCam restored, 0 errors), real-time run clean, skip works.
   `LSW.playOpening` exposed. Ref: `lsw-opening-freeze.jpeg`.
 
+## THE CLINCH (2026-07-26) — martial arts + wrestling, `data/martial.js`, docs/THE_CLINCH.md
+- **THE INVERSION IS THE WHOLE GAME**: the jab reaches FURTHEST (11u) and the power punch LEAST
+  (7u), cross 9u. It was 13u jab vs a 13.5u haymaker, so stepping in cost nothing and there was no
+  spacing decision at all. Measured live: jab connects to 10.5u, power to 6.5u.
+- **`data/martial.js` is the table** — reach, frames, step-in, 8 STYLES, 4 clinch POSITIONS + their
+  four-option wheels, the struggle window, SUBMISSIONS. melee.js reads it; nothing hard-codes reach.
+- **THE STEP-IN COMES OFF THE TABLE**: `step` is a DISTANCE, `STEP_IMPULSE = 8` converts it to the
+  physics impulse (calibrated so jab 2.0×8 = the 16 melee.js used to hard-code — feel unchanged).
+  Measured travel jab 0.5u · cross 2.46u · power 5.14u → effective threat 11 / 11.5 / 12.1: reach
+  inverts, COMMITMENT buys it back.
+- ⚠ **THE STRUGGLE CURVE SQUARES THE RANK RATIO** — his spec states two figures a linear ratio
+  cannot both satisfy ("~1.4s at even rank" AND "rank-40 clinching rank-79 gets under half a
+  second"; linear = 0.71s). Squared gives 1.40s / **0.36s**. Flagged as a reconciliation of his own
+  two numbers, not a silent change.
+- **THE SPACING RINGS** (Options → Spacing Rings, OFF by default): three ground rings at the three
+  reaches + a faint fill inside power reach. Drawn at the reach the ENGINE uses, from the same
+  table melee.js reads. Dim on cooldown. Not a wallhack — it shows YOUR reach. New shared decal
+  rung `GROUND_LAYER.spacing = 1.15` (never invent your own number — the surface law).
+- ⚠ **DRIVE THE GATE, DON'T WRITE PAST IT** (three harness bugs, four failed attempts):
+  `entities[1]` is the KMK 9 CAMERA OPERATOR, not the opponent (pick by TEAM) · `facing` is a
+  DAMPED yaw so setting it once does nothing · **`coneFoe` reads `caster.aim` and `controlPlayer`
+  rewrites aim from the mouse EVERY FRAME**, after the test wrote it and before the hit test read
+  it — use `game.controlPlayer`, the documented override. And pin both bodies to ABSOLUTE
+  positions: holding the foe at `player.x + gap` lets the step-in smear reach 8u long.
+  The suite proves ITSELF first (a point-blank jab must land) — 22 checks, 0 failures.
+
+## A WORLD DECLARES WHETHER IT HAS AIR AND LIFE (2026-07-26) — docs/THE_MAP_MAKER.md
+- Robert on TRANQUILITY REACH, a town on the Moon with oaks, lawns, hay bales, birds and blown
+  litter: *"this the moon i thought we fixed this permanetly"*. **It had only ever been fixed in the
+  SKY** — `sky.airless` tinted the sun and nothing else in the pipeline knew it was in a vacuum. A
+  settlement is a city row through the same planner and a city row has always meant Earth; the
+  Moon's row even declared `biome: 'tundra'`, an EARTH biome, so the generator grew a forest
+  because that is what it was asked for.
+- **`worldEnv(id)` (data/planets.js) DERIVES both facts** — no per-planet special case. `air` = the
+  atmosphere already in `PLANET_LOOK` · `life` = a native biosphere (Earth alone for now; terraform
+  later = one flag). **Mars has air and no life, so Mars gets blown dust and no birds.**
+- Rides on the plan (`plan.world/biosphere/atmosphere`, both default TRUE → the 1,050 cities and
+  the flagship are untouched). Four consumers: **zoning** (park/forest/farmland struck to plaza
+  BEFORE computeSockets, `plan.rural` false) · **`world._buildGreenery`** (⚠ striking the zoning is
+  NOT enough — trees are appended by TILE BUILDERS, so an ordinary residential block still plants
+  street trees; this is the line that makes it barren) · **wildlife** (birds need life, litter needs
+  wind) · **pedestrians** (`_reseed` swaps the palette in place for pressure suits + gold visor —
+  same mesh, same count, no branch in the walk cycle).
+- ⚠ **`_applyCounts` is the ONE place that decides bird/litter counts** — the quality tier and the
+  world both have an opinion, and while `setQuality` owned `nBirds` outright a tier change on the
+  Moon silently repopulated the sky.
+- Measured: Earth 64 birds/40 litter/greenery · **Moon 0/0/none, 0 green cells** · Mars 0/40.
+  Ref `wwa-moon-after.png`. ⚠ Still Earth-flavoured and deliberately left: the ambulance and the
+  market stalls — props, not biology, and they want their own pass.
+
 ## HANDOFF
 - **`HANDOFF.md` at the repo root** is the orientation document: architecture, the ten rules that
   are load-bearing, what is solid, what is half-built, what to do next, and the headless

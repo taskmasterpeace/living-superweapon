@@ -441,6 +441,11 @@ export function validateTiles() {
   return problems;
 }
 
+// The tiles that are made of living things. On a world with no biosphere these are struck and the
+// ground becomes open plaza — a lunar town is a town on bare regolith, not a town with the trees
+// turned invisible. `mountain` stays: rock is rock anywhere.
+export const NO_LIFE_TILES = { park: 1, forest: 1, farmland: 1 };
+
 export const NO_RESCUE = { water: 1, forest: 1, mountain: 1, farmland: 1, park: 1, plaza: 1 };
 function buildRoads(plan, rng) {
   const N = plan.N, C = plan.cells, rural = !!plan.rural;
@@ -643,6 +648,10 @@ export function generatePlan(city, seed = 1, opts = {}) {
     types: city.types, crime: city.crime, safety: city.safety, seed, N,
     cell, scale: cell / CELL, arena: N * cell / 2,
     water: waterCols > 0, waterCols, flagship: false,
+    // THE WORLD THIS TOWN IS ON. Defaults to Earth, so every one of the 1,050 sheet cities and the
+    // flagship are unchanged; an off-world settlement passes `world` and gets the truth instead.
+    world: opts.world || 'earth',
+    biosphere: opts.biosphere !== false, atmosphere: opts.atmosphere !== false,
     culture: cultureOf(city), region: regionOf(cultureOf(city)),
     // ⚠ the water guard applies to an OVERRIDE too — forcing 'mountains' on a port would otherwise
     // build a sea running over a ridge, which is exactly the bug the guard exists to prevent
@@ -799,6 +808,7 @@ export function generatePlan(city, seed = 1, opts = {}) {
   // A LANDMARK is never demoted — an airport that turns into a car park is not an airport — and a
   // covered `ref` cell isn't its own structure, so it can't be spent twice.
   const OPEN = { water: 1, park: 1, plaza: 1, farmland: 1, forest: 1, mountain: 1 };
+  // (NO_LIFE_TILES is declared at module scope, beside the other tile tables.)
   const structural = [];
   for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
     const cell = C[r][c];
@@ -812,6 +822,16 @@ export function generatePlan(city, seed = 1, opts = {}) {
   // ⚠ sockets are derived LAST, after the density budget has demoted whatever it is going to
   // demote. They used to run before it, so a cell plaza'd by the budget kept the neighbour data
   // of the tower it used to be, and its neighbours kept fences facing a district that was gone.
+  // --- A LIFELESS WORLD GROWS NOTHING. Vegetation zoning is struck before the sockets are
+  // derived, exactly like the density budget above, so the neighbours of a struck cell see what is
+  // actually there. `plan.biosphere` defaults TRUE, so all 1,050 Earth cities are untouched.
+  if (plan.biosphere === false) {
+    for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
+      const cell = C[r][c];
+      if (cell && !cell.ref && NO_LIFE_TILES[cell.t]) C[r][c] = { t: 'plaza', v: (rng() * 2) | 0 };
+    }
+    plan.rural = false;    // there is no countryside without a country
+  }
   computeSockets(plan);
   plan.bands = computeBands(plan);
   buildRoads(plan, rng);

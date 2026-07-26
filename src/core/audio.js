@@ -501,8 +501,15 @@ export class AudioBus {
   arc(power = 1, pos = null) {
     // ⚠ RECORDED ARC. Electricity was synthesised; `fx.glitch` and `fx.forcefield` are real
     // recordings and read far better as a discharge than a noise burst does.
-    if (this.sample(Math.random() < 0.5 ? 'fx.glitch' : 'fx.forcefield',
-                    { pos, gain: 0.55 * fin(power, 1), rate: 0.85 + Math.random() * 0.5 })) return;
+    // ⚠ NOT A COIN FLIP BETWEEN A SHARP SAMPLE AND A SOFT ONE. The first version picked glitch or
+    // forcefield 50/50, and forcefield is a long quiet wash — measured, the arc came out inaudible
+    // on roughly half the calls. An attack sound has to land EVERY time. The glitch is the crack;
+    // the forcefield is layered UNDER it as a tail rather than used instead of it.
+    const pw = fin(power, 1);
+    if (this.sample('fx.glitch', { pos, gain: 0.75 * pw, rate: 0.85 + Math.random() * 0.5 })) {
+      if (pw > 0.7) this.sample('fx.forcefield', { pos, gain: 0.3 * pw, rate: 1.2 });
+      return;
+    }
     power = fin(power, 1);
     if (!this.ok || this.muted) return;
     const pg = this._pg(pos, 170); if (!pg) return;

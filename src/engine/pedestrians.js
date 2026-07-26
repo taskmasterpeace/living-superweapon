@@ -38,12 +38,15 @@ export class Pedestrians {
     this.head = new THREE.InstancedMesh(headGeo, new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.75 }), COUNT);
     for (const m of [this.mesh, this.head]) { m.frustumCulled = false; m.castShadow = false; m.receiveShadow = true; }
     const col = new THREE.Color();
-    const CIV = ['#8a8577', '#5a6a7a', '#7a5a4a', '#4a5a4a', '#9a8a6a', '#6a4a5a', '#7a7a8a'];
-    const SKIN = ['#e8c39a', '#caa27a', '#8a5a3a', '#5a3a24'];
-    for (let i = 0; i < COUNT; i++) {
-      this.mesh.setColorAt(i, col.set(CIV[i % CIV.length]).offsetHSL(0, 0, (Math.random() - 0.5) * 0.08));
-      this.head.setColorAt(i, col.set(SKIN[i % SKIN.length]));
-    }
+    this._CIV = ['#8a8577', '#5a6a7a', '#7a5a4a', '#4a5a4a', '#9a8a6a', '#6a4a5a', '#7a7a8a'];
+    this._SKIN = ['#e8c39a', '#caa27a', '#8a5a3a', '#5a3a24'];
+    // PRESSURE SUITS. Nobody stands on an airless world in a shirt. Same instanced mesh, same
+    // count, same behaviour — a different palette and a mirrored visor instead of a face, which is
+    // all a 9.6u-scale figure has room to say. Suits are high-visibility because that is what a
+    // working EVA suit is; the "skin" row becomes the gold visor.
+    this._SUIT = ['#d8d4cc', '#e8e4dc', '#d0a94a', '#c9c5bd', '#e0dcd2', '#b8b4ac'];
+    this._VISOR = ['#c9a23a', '#8a7a3a'];
+    this._reseed(false);
     this.px = new Float32Array(COUNT); this.pz = new Float32Array(COUNT);
     this.dir = new Float32Array(COUNT);                  // facing/travel angle (axis-aligned while walking)
     this.spd = new Float32Array(COUNT);
@@ -71,7 +74,24 @@ export class Pedestrians {
   }
   reset() { for (let i = 0; i < COUNT; i++) this._respawn(i); this._writeAll(); }
   // a new theater: re-grid the crowd to the new arena + shoreline
-  setCity(arena, waterX) { this.arena = arena; this.waterX = waterX; this.reset(); }
+  // ⚠ THE SUIT IS A RE-SEED, NOT A SECOND CROWD. The colours were written once in the constructor,
+  // so a settlement on a vacuum world inherited Earth's civilians forever. `air === false` swaps
+  // the palette in place — no reallocation, no second mesh, no branch anywhere in the walk cycle.
+  _reseed(suited) {
+    if (this._suited === suited) return;
+    this._suited = suited;
+    const col = new THREE.Color();
+    const BODY = suited ? this._SUIT : this._CIV, FACE = suited ? this._VISOR : this._SKIN;
+    const n = this.mesh.count;
+    for (let i = 0; i < n; i++) {
+      this.mesh.setColorAt(i, col.set(BODY[i % BODY.length]).offsetHSL(0, 0, (Math.random() - 0.5) * (suited ? 0.04 : 0.08)));
+      this.head.setColorAt(i, col.set(FACE[i % FACE.length]));
+    }
+    if (this.mesh.instanceColor) this.mesh.instanceColor.needsUpdate = true;
+    if (this.head.instanceColor) this.head.instanceColor.needsUpdate = true;
+  }
+
+  setCity(arena, waterX, air = true) { this.arena = arena; this.waterX = waterX; this._reseed(air === false); this.reset(); }
   // THE STANCE — 'Banned' | 'Regulated' | 'Legal', read off the country sheet when the theater is
   // raised. Drives whether witnesses film you as evidence and whether any of them are carrying.
   setVigilantism(v) { this.vigilantism = v || 'Regulated'; this.armRate = ARM_RATE[this.vigilantism] ?? 0.1; }

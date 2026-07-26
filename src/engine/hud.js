@@ -7,7 +7,7 @@ import { TitleMixin } from './hudTitle.js';
 import { esc, fileNoOf, fileDate, agoStr, isSynthDef, cfAbilityRows, cfCounterNotes, CF_BUILD, describeEvade, describeAbility } from './hudUtil.js';
 import { ROSTER, SLOT_ORDER } from '../data/characters.js';
 import { climateLine } from '../data/climate.js';
-import { PLANETS, AU_KM, HELIOPAUSE_AU, TERMINATION_SHOCK_AU, SCALE_LADDER, NEAR_STARS, transitSecsFor } from '../data/planets.js';
+import { PLANETS, AU_KM, HELIOPAUSE_AU, TERMINATION_SHOCK_AU, SCALE_LADDER, NEAR_STARS, transitSecsFor, worldEnv } from '../data/planets.js';
 import { CSS, CODEX_MOBILE, PHONE_CSS, TABLET_CSS, DECK_CSS } from './hud.styles.js';
 import { DTYPES, DTYPE_INFO, resistOf, bandOf } from './entity.js';
 import { glyph, padActive, padFaces } from '../core/glyphs.js';
@@ -301,7 +301,12 @@ export class HUD {
       if (P && P.settlement) {
         const S = P.settlement;
         const row = { name: S.name, country: P.name, pop: S.pop, popType: S.popType, popLabel: S.popLabel, types: S.types || [], crime: S.crime ?? 20, safety: S.safety ?? 60 };
-        return generatePlan(row, t.seed || 1, { popType: S.popType, relief: S.relief, biome: S.biome });
+        // ⚠ AND HAND THE PLANNER THE WORLD. Without this the generator has no way to know it is
+        // not on Earth and grows trees, crops, lawns and songbirds on a vacuum world — which is
+        // exactly what it did. worldEnv derives both facts from the planet data (planets.js).
+        const E = worldEnv(P.id);
+        return generatePlan(row, t.seed || 1, { popType: S.popType, relief: S.relief, biome: S.biome,
+          world: P.id, biosphere: E.life, atmosphere: E.air });
       }
     }
     if (t.flagship || t.cityId == null) return thresholdPlan();
@@ -840,6 +845,7 @@ export class HUD {
       ${toggle('dmgNumbers', 'Damage Numbers')}
       ${toggle('hints', 'Controls Hint Panel')}
       ${toggle('aimAssist', 'Aim Assist · magnet targeting')}
+      ${toggle('spacingRings', 'Spacing Rings · draw your strike reach on the ground')}
       ${toggle('heroVoice', 'Hero Voices · DBZ yells (off: fighters fight in silence)')}
       <div class="orow"><span class="ol">Control Scheme</span><div class="chips3">
         ${Object.entries(KEYMAPS).map(([k, m]) => `<span class="c3${keymap(S.scheme) === m ? ' on' : ''}" data-scheme="${k}">${m.name}</span>`).join('')}

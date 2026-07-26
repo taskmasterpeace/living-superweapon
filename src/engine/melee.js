@@ -3,6 +3,7 @@
 // grabHeal lifesteals throws. Back-grabs (from behind) are guaranteed and hit harder.
 // Charged melee: hold strike to wind up — tap jab · straight · HAYMAKER (crushes guards, see chargeRelease).
 import { liftCapacityOf, bodyWeight } from './entity.js';
+import { STRIKES, STEP_IMPULSE, styleOf, hasStrike } from '../data/martial.js';
 import * as THREE from 'three';
 
 const _v = new THREE.Vector3();
@@ -46,7 +47,12 @@ export class MeleeSystem {
     // MOMENTUM (manual §10): read the speed you BROUGHT to the punch — before the lunge fakes one
     f._momSpd = Math.hypot(f.vel.x, f.vel.y, f.vel.z);
     f._momDive = !!(f.flying && (f.descendHeld || f.vel.y < -14));
-    const lunge = f.strikeIdx === 2 ? 26 : 16;
+    // ⚠ THE STEP-IN IS WHAT SELLS THE REACH, and it comes off the TABLE now. A 9.6u fighter's arm
+    // is ~3u; it will never sell an 11u jab, so the whole BODY closes the gap. `step` is authored
+    // as a distance in data/martial.js and STEP_IMPULSE converts it to the velocity impulse the
+    // physics wants — calibrated so the tuned feel is unchanged (jab 2.0 x 8 = the 16 that was
+    // hard-coded right here). One constant, and the frame data owns the rest.
+    const lunge = (f.strikeIdx === 2 ? STRIKES.cross.step : STRIKES.jab.step) * STEP_IMPULSE;
     f.vel.x += f.aim.x * lunge; f.vel.z += f.aim.z * lunge;
     this.game.audio.swing(this._swingKind(f), f.pos);
     this.game.trail(f, f.def.colors.accent);
@@ -85,7 +91,8 @@ export class MeleeSystem {
     f.strikeCd = haymaker ? 0.7 : 0.45;
     f._momSpd = Math.hypot(f.vel.x, f.vel.y, f.vel.z);   // momentum read BEFORE the lunge (manual §10)
     f._momDive = !!(f.flying && (f.descendHeld || f.vel.y < -14));
-    const lunge = haymaker ? 40 : 26;
+    // the straight IS the cross and the haymaker IS the power punch — same table, same step-in
+    const lunge = (haymaker ? STRIKES.power.step : STRIKES.cross.step) * STEP_IMPULSE;
     f.vel.x += f.aim.x * lunge; f.vel.z += f.aim.z * lunge;
     f.invuln = Math.max(f.invuln, haymaker ? 0.1 : 0.05);
     g.audio.swing(haymaker ? 'blunt' : this._swingKind(f), f.pos);
@@ -97,7 +104,10 @@ export class MeleeSystem {
     if (!(f._heavyT > 0)) return;
     f._heavyT -= dt;
     const g = this.game;
-    const foe = g.coneFoe(f, 13.5, 0.8);
+    // ⚠ THE INVERSION (data/martial.js). The power punch reaches LEAST — 7u against the jab's 11u.
+    // It was 13.5u here, further than the jab's 13u, which meant stepping into power range cost
+    // nothing and there was no spacing decision in the game at all. This one number is the design.
+    const foe = g.coneFoe(f, STRIKES.power.reach, 0.8);
     if (foe) {
       f._heavyT = 0;
       const str = f.def.strength ?? 5, hay = f._heavyHay, p = f._heavyP;
@@ -202,7 +212,8 @@ export class MeleeSystem {
     // --- strike active window ---
     if (f.strikeActive > 0) {
       f.strikeActive -= dt;
-      const foe = g.coneFoe(f, 13, 0.75);
+      // the third beat of the combo is the CROSS — shorter than the jabs that set it up
+      const foe = g.coneFoe(f, f.strikeIdx === 2 ? STRIKES.cross.reach : STRIKES.jab.reach, 0.75);
       if (foe && f.strikeHit && !f.strikeHit.has(foe.id)) {
         f.strikeHit.add(foe.id);
         const fin = f.strikeIdx === 2;
@@ -240,7 +251,8 @@ export class MeleeSystem {
     if (f.grabState === 'startup') {
       f.grabT -= dt;
       if (f.grabT <= 0) {
-        const foe = g.coneFoe(f, 8.5, 0.95);
+        // ⚠ a WRESTLER closes from further out — the style's whole identity is getting inside
+        const foe = g.coneFoe(f, STRIKES.grab.reach + ((styleOf(f.def).grabBonus) || 0), 0.95);
         if (foe && !foe.phase && foe.invuln <= 0 && !foe.grabbedBy && foe.alive) {
           const bx = f.pos.x - foe.pos.x, bz = f.pos.z - foe.pos.z, bd = Math.hypot(bx, bz) || 1;
           const behind = (bx / bd) * foe.aim.x + (bz / bd) * foe.aim.z < -0.2;

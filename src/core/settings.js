@@ -48,6 +48,7 @@ export const SETTINGS = {
   hints: true,      // bottom-right controls hint panel
   scheme: 'classic',// control layout: classic | pilot | southpaw (see KEYMAPS in hud.js)
   aimAssist: true,  // magnet targeting near the cursor (facing + attacks steer to the pick)
+  spacingRings: false,  // THE SPACING UI (manual §38): your three strike reaches, drawn on the ground
   // 'aim'    — W goes where the MOUSE points, A/D strafe across it (character-relative; the default)
   // 'camera' — W always goes up-screen regardless of facing (the old fixed-isometric basis)
   moveRelative: 'aim',
