@@ -1819,14 +1819,24 @@ export class World {
     for (const it of (this.interiors || [])) { const t = it.top ?? it.h; if (t != null && t > top) top = t; }
     if (!(top > 0)) return null;                    // open country: keep whatever the plan said
     const S = this.BAND_SHAPE || World.BAND_SHAPE;
+    // ⚠ THE CEILING NEEDS A FLOOR, AND THIS IS WHY "THEY DON'T SEEM TO FLY ANYMORE" IN THE CITY.
+    // Deriving the lid from the tallest building is right for the band SHAPE — it is what keeps
+    // rooftop play working — but as an absolute cap it collapses on a small map. Measured on Robert's
+    // own saved theatre (TRANQUILITY REACH, a Moon village: three buildings, tallest 25u) the flight
+    // ceiling came out at **42u — about four times a fighter's own height.** The flagship, with 132u
+    // towers, gets 224. Most of the 1,050-city sheet is villages, small towns and towns, so most
+    // theatres in the game have had a sky you hit almost immediately.
+    // ⚠ A superhero has to be able to get above the map whether or not the map has skyscrapers. The
+    // shape still scales with what was built; only the floor is absolute.
+    const MIN_CEIL = 260, MIN_SKY = 150;
     const b = {
       ground: 8,
       // ⚠ "as high as STANDING on top of our tallest building" — a fighter on that roof has their
       // feet at `top` and their head at top + 9.6. Ending the band exactly at the roof puts anyone
       // standing on the tallest building in the SKY band while their boots are on concrete.
       building: Math.round(top + 10),
-      sky: Math.round(top * S.sky),
-      ceiling: Math.round(top * S.ceiling),
+      sky: Math.max(MIN_SKY, Math.round(top * S.sky)),
+      ceiling: Math.max(MIN_CEIL, Math.round(top * S.ceiling)),
       shallows: (this.plan && this.plan.bands && this.plan.bands.shallows) ?? -10,
       depths: (this.plan && this.plan.bands && this.plan.bands.depths) ?? -26,
     };

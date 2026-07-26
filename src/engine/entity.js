@@ -291,7 +291,14 @@ export class Fighter {
   toggleFlight() {
     if (this.state === 'ko' || this.grabbedBy || this.frozenT > 0) return;
     if (this.flying) { this.flying = false; }                       // cut it — gravity takes you down
-    else if (this.flightTier > 0) {
+    // ⚠ EVERY CHARACTER FLIES IN POWERWORLD. Robert: *"this is a new dimension, all characters should
+    // be able to work here."* `flightTier 0` is a rule about EARTH — RAGE and SARGE are grounded
+    // because a soldier and a bruiser do not fly over a city — and a dimension whose entire premise is
+    // air combat cannot bench a third of the roster on a rule from the other world. `_openSky` is
+    // already the "this is PowerWorld" flag on a fighter, so no new field is needed.
+    // ⚠ It does NOT flatten flightTier: the TIERS still decide speed, hover quality and the burner.
+    // A grounded fighter can fly here; they are simply not good at it.
+    else if (this.flightTier > 0 || this._openSky) {
       this.flying = true;
       if (this.pos.y < 1.5) this.vel.y = 19;                        // pop off the ground (matches FLY_TAKEOFF)
       this._liftFx = 0.25;
@@ -1226,7 +1233,10 @@ export class Fighter {
         this._flyPrev = this.flyHeld;
       } else {
       // rising edge of the ascend intent → take off into levitation (grounded heroes can't)
-      if (this.flyHeld && !this._flyPrev && !this.flying && this.flightTier > 0) {
+      // ⚠ `_openSky` HERE TOO. This is the OTHER takeoff path — holding ascend from the ground — and
+      // gating it on flightTier alone meant RAGE could be granted flight by the toggle and still not
+      // get off the floor with the ascend key. Two doors into one state need the same lock.
+      if (this.flyHeld && !this._flyPrev && !this.flying && (this.flightTier > 0 || this._openSky)) {
         this.flying = true;
         if (this.pos.y < 1.5) this.vel.y = FLY_TAKEOFF;      // pop off the ground so even a tap lifts into a hover
         this._liftFx = 0.25;
@@ -1244,22 +1254,17 @@ export class Fighter {
         // Bands are the per-city plan.bands; BUILDING's deck is the ROOFTOP UNDER YOU when there
         // is one (that is what keeps rooftop play alive), else the skyline default.
         const bandAt2 = (h) => h < BANDS.ground ? 0 : h < BANDS.building ? 1 : h < BANDS.sky ? 2 : 3;
-        const maxBand = this.def.maxBand ?? (this.flightTier >= 3 ? 3 : 1);   // tier ≤2 lives below the SKY — a balance ruling, def.maxBand overrides (BALANCE.md)
+        // ⚠ AND NO BAND CAP UNDER AN OPEN SKY. `maxBand` pins a tier-2 levitator to band 1 — a real
+        // balance ruling on Earth (BALANCE.md) and meaningless in a dimension with no bands to speak
+        // of. Measured: RAGE took off in PowerWorld and then stopped dead at 28u, held by this cap.
+        const maxBand = this._openSky ? 3 : (this.def.maxBand ?? (this.flightTier >= 3 ? 3 : 1));   // tier ≤2 lives below the SKY — a balance ruling, def.maxBand overrides (BALANCE.md)
         const deckOf = (b) => {
           if (b <= 0) return null;                                            // ground band: free float
           if (b === 1) { const r = this._roofUnder(game); return r != null ? r + 3 : BANDS.ground + (BANDS.building - BANDS.ground) * 0.58; }
           if (b === 2) return BANDS.building + (BANDS.sky - BANDS.building) * 0.5;
           return BANDS.sky + (BANDS.ceiling - BANDS.sky) * 0.55;
         };
-        // ⚠ POWERWORLD HAS NO DECKS. The servo easing you onto a band is right for a city fought
-        // over rooftops and wrong for a dimension whose premise is that the altitude is yours: a
-        // tier-3 flier held at y=64 was measured being walked back down to 48. It already yields to
-        // `launchT` and to a lit afterburner, so this is a third exception on the same rule, not a
-        // fork — and with it off, releasing ascend simply leaves you where you stopped.
-        if (this._noDeckServo && this.launchT <= 0) {
-          this.vel.y *= Math.exp(-2.2 * dt);            // bleed off, then hold: no dock, no sag
-          this._deckSnap = -1;
-        } else if (this.launchT > 0) {
+        if (this.launchT > 0) {
           // knockback owns the axis — a servo here would eat the hit and make heavies weightless.
           // When it expires your band is wherever you ended up. No snap-back tether.
           // GRAVITY INVERSION (brief T3.19): the zone flips the sign, so a ceiling becomes a floor.
@@ -1301,8 +1306,22 @@ export class Fighter {
             this._diving = true;
           } else this._diving = false;
           this._climbBand = bandAt2(this.pos.y); this._deckSnap = -1;
-        } else if (this.flightTier <= 1) {
+        } else if (this.flightTier <= 1 && !this._openSky) {
           this.vel.y = damp(this.vel.y, -7, 4, dt);                           // tier 1 can't hover — it sags
+        } else if (this._openSky) {
+          // ⚠ POWERWORLD HAS NO DECKS — AND THIS BRANCH REPLACES THE DOCK, NOT THE CONTROLS. I first
+          // put this test at the TOP of the chain, which swallowed `flyHeld` and `descendHeld` whole:
+          // in PowerWorld you could no longer rise or sink at all, only damp to zero vertical speed.
+          // Robert found it in about a minute — *"they don't seem to fly anymore… it's like only able
+          // to fly straight."* My test had PASSED because it wrote `pos.y` directly and never drove
+          // the ascend input, which is the exact harness failure this project keeps paying for: drive
+          // the gate. A flag that changes what happens when you RELEASE a button must live where the
+          // release is handled, not in front of the button.
+          const bob = Math.sin(this.animT * 2.1) * FLY_HOVER_BOB * 0.4;
+          const floor = (this.groundY || 0) + 2.6;
+          const lift = this.pos.y < floor ? 8 : 0;      // the soft floor is the only place it pushes
+          this.vel.y = damp(this.vel.y, bob + lift, 4.5, dt);
+          this._climbBand = bandAt2(this.pos.y); this._deckSnap = -1;
         } else {
           // HOVER = DOCK. Releasing the button eases you onto the CURRENT band's deck — never
           // "wherever your thumb stopped". Servo speed caps at FLY_SINK (26) and slam damage
@@ -1384,7 +1403,10 @@ export class Fighter {
       // land + exit flight only when you MEANT to come down (holding descend) or you're a clumsy
       // tier-1 flier sagging out. A knockback/beam-shove dipping you to the floor no longer
       // silently cancels flight MODE — that read as "flight randomly turns off".
-      if (this.flying && !this.flyHeld && (this.descendHeld || this.flightTier <= 1)) this.flying = false;
+      // ⚠ AND IT MUST NOT KICK YOU OUT OF THE AIR IN POWERWORLD EITHER. `flightTier <= 1` drops a
+      // clumsy flier out of flight MODE the instant they stop climbing — correct over a city, and in
+      // a dimension where everyone flies it would eject RAGE and SARGE every time they let go.
+      if (this.flying && !this.flyHeld && !this._openSky && (this.descendHeld || this.flightTier <= 1)) this.flying = false;
       if (impact < -30 && this.state !== 'ko') {
         this._landT = Math.min(0.26, -impact * 0.006);   // knee-crouch on a hard landing
         // YOU HEAR WHAT THEY ARE MADE OF. A robot clangs; a person thumps; a ghost barely lands.
@@ -1392,7 +1414,11 @@ export class Fighter {
       }
       if (impact < -38) this._slam(game, -impact, 'ground');    // hurled into the floor — fall/slam damage
     }
-    if (this.pos.y > BANDS.ceiling) {
+    // ⚠ THERE IS NO CEILING IN POWERWORLD. Robert: *"there is no ceiling."* On Earth the lid is the
+    // atmosphere and leaving it is a whole ceremony (manual §17 — a lit afterburner, the DEPART offer);
+    // in another dimension there is nothing above you to stop at. Raising the number was not enough —
+    // a lid you can reach is still a lid — so the clamp does not run here at all.
+    if (this.pos.y > BANDS.ceiling && !this._openSky) {
       // ORBIT (manual §17): only a LIT AFTERBURNER forces the upper atmosphere — everyone else
       // meets the ceiling. Past +90 even the burner levels off; the DEPART offer fires below that.
       if (this.def.afterburner && this._burnT > 0.8) {

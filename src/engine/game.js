@@ -218,15 +218,20 @@ const MODE_IMPL = {
       g.ms.enemy = o && o.twoPlayer ? hs[1]
         : g.spawnEnemy((o && (o.enemy || o.p2)) || null, { x: 40, z: 40, aiLevel: (o && o.aiLevel) || 1.25 });
       for (const e of g.entities) if (e.def && !e.isDummy) {
-        e._chaseKb = true;              // a knockback CARRIES here — see entity._physics
-        e._noDeckServo = true;          // and the sky does not dock you
+        e._chaseKb = true;   // a knockback CARRIES here — see entity._physics
+        // ⚠ ONE FLAG, FOUR RULES, AND IT IS NAMED FOR THE IDEA RATHER THAN ONE OF ITS EFFECTS.
+        // `_openSky` means: nothing docks you, nothing sags, there is no ceiling, and EVERY character
+        // can fly — because those are not four decisions, they are one dimension. It was called
+        // `_noDeckServo` while it did one job; a flag whose name describes a single side effect is a
+        // flag someone will later add a fifth unrelated meaning to.
+        e._openSky = true;
         if (e.ai) e.ai.flyTend = Math.max(e.ai.flyTend || 0, 0.8);   // the fight belongs in the air
       }
       if (hs[0]) hs[0].pos.set(-40, 0, -40);
     },
     tick(g, dt) {
       // late arrivals (a rival ordered with B, a respawn) inherit the dimension's rules
-      for (const e of g.entities) if (e.def && !e.isDummy && !e._chaseKb) { e._chaseKb = true; e._noDeckServo = true; }
+      for (const e of g.entities) if (e.def && !e.isDummy && !e._chaseKb) { e._chaseKb = true; e._openSky = true; }
       // ⚠ RE-ASSERTED, because `world.fitBands()` runs AFTER the mode's setup and rewrites the band
       // table from the tallest thing it just built — measured: the ceiling I raised in setup was back
       // to 320 by the first frame. Re-asserting here is idempotent and cannot be out-ordered.

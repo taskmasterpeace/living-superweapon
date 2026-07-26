@@ -382,20 +382,29 @@ says the chase loop has to be fun in the view we already have. It is the rule se
 
 ### ⚠ Owed, and not claimed
 
-**The raised flight ceiling is NOT verified.** `BANDS.ceiling` is set to 900 in setup and re-asserted
-each tick, because `world.fitBands()` runs *after* the mode's setup and rewrites the band table from
-the tallest thing it just built. Two harness attempts failed to confirm a player can actually climb
-into it:
+**RESOLVED, and the resolution was better than the plan.** This section used to say the raised ceiling
+was *written but unproven* after two failed harness attempts. Both failures are now explained, and the
+number turned out to be the wrong instrument anyway.
 
-- reading `BANDS` via a console `import('/src/core/util.js')` returns a **phantom second module
-  instance** under Vite's version stamping — the documented trap, so the `320` it reported proves
-  nothing either way;
-- and the flight test could not get airborne: writing `flyHeld` is overwritten by `controlPlayer`
-  every frame, and driving the real key did not toggle `flying` in the harness.
+Why the harness could not get airborne — two traps, both worth keeping:
 
-So the ceiling is **written but unproven**, and the structurally correct fix is still the one the
-world research recommends — a `plan.bandsLocked` early return inside `fitBands` rather than a
-re-assertion racing it. That is owed, and it belongs with the stage slice.
+- **`input.endFrame()` is called by main.js's rAF loop, not by `game.update()`.** A test that steps the
+  sim by hand and dispatches a synthetic keydown therefore leaves the edge latched forever, so the fly
+  key re-toggled every frame and `flying` read false about half the time.
+- **The scheme decides the key.** The tab's saved scheme was BRAWLER, which puts fly on `KeyG` — every
+  `KeyF` press in the old harness was a jab. Read `KEYMAPS[SETTINGS.scheme].fly`, never a literal.
+
+(The phantom-module note stands and is unrelated: reading `BANDS` through a console
+`import('/src/core/util.js')` really does return a second instance under Vite's version stamping.)
+
+And the fix is no longer a number. **A lid you can reach is still a lid**, so in PowerWorld the ceiling
+clamp does not run at all (`!this._openSky`) rather than running against a bigger figure. Measured
+under the real keys: a flier and a grounded bruiser both pass **456u and are still climbing**. Setting
+`BANDS.ceiling = 900` in setup is now belt-and-braces for anything else that reads the band table.
+
+⚠ **Still owed:** the per-tick re-assertion racing `fitBands` should become a `plan.bandsLocked` early
+return inside `fitBands` — one rule instead of two writers. It is no longer load-bearing for flight,
+but it is still the structurally correct shape.
 
 What is proven is the part that matters most for the direction: **the chase loop is real and it is
 four times the reach it had.** Whether it is *fun* is Robert's call, in the isometric camera, which
@@ -493,7 +502,8 @@ publishes ESF's numeric ki costs**, so any ki economy we build is ours to calibr
 | **The dimension** | `powerworld` mode card. Enter it, fight, leave; everything restores (×4 soak clean) |
 | **Third person** | ✅ `world.chase()` — perspective camera swapped into the existing composer, lock-on framing, off-the-shoulder, FOV 58→74 with speed, screenshot-matrix verified across clinch / mid / far / overhead / below |
 | **The chase loop** | ✅ a 101 u/s knockback travels **61.3u** here against **16.1u** in the city |
-| **The open sky** | ✅ no deck servo — release ascend and you stay where you stopped. ⚠ the raised ceiling itself is still unverified (see §12) |
+| **The open sky** | ✅ **verified under the real keys.** One flag, four rules (manual §46): no deck servo · no `maxBand` cap · **every character flies, including `flightTier 0`** · no ceiling clamp at all. A flier and a grounded bruiser both climb **456u and are still rising**; hold drifts 1.6u over 4s; descent saturates `FLY_SINK`. ⚠ Shipped broken once — the flag was the FIRST test in the flight chain and ate `flyHeld`/`descendHeld` ("only able to fly straight"); it now replaces only the dock |
+| **The city's own sky** | ✅ a pre-existing collapse found on the way: `fitBands` derived the lid from the tallest building, so Robert's saved theatre (a Moon village) had a **42u flight ceiling**. Floored at `MIN_CEIL 260` / `MIN_SKY 150` — that village now gives 215u, and PowerWorld is still 2.1× higher |
 | **The stage** | ✅ 900u rock arena, 15 spires + 22 boulders as real cover, its own sky, no city |
 | **No witnesses** | ✅ no pedestrians, police or press — via `hasCivilians()`, one definition |
 | **The HUD** | ✅ the city nameplate, wanted stars and KMK 9 monitor are gone; the panel, hands row and radar stay |
@@ -601,9 +611,16 @@ reach** — the test is the true 3-D distance. Verified through the real strike 
 
 ### Still owed, in priority order
 
-1. **The flight ceiling**, properly, via `plan.bandsLocked` rather than a per-tick re-assertion.
-2. **Limb segmentation — the ARM**, now that the camera is close enough to see it.
-3. **Impact discipline** — `world.shake()` is still the world-space one outside the chase camera, and
+1. **Leaving the world should feel like No Man's Sky** — Robert's brief for the crossing out of
+   PowerWorld, and the one remaining part of it that has not been touched. `engine/spaceflight.js`
+   already renders through the game's own composer, so the material question is whether departure is a
+   continuous climb out of the open sky (now that there is no ceiling to punch through) rather than a
+   cinematic that takes the camera away from you.
+2. **`plan.bandsLocked`** — a `fitBands` early return instead of the per-tick band re-assertion. No
+   longer load-bearing for flight (the clamp simply does not run under an open sky) but still two
+   writers where there should be one.
+3. **Limb segmentation — the ARM**, now that the camera is close enough to see it.
+4. **Impact discipline** — `world.shake()` is still the world-space one outside the chase camera, and
    nine of fourteen VFX are authored for a frame 10.7× taller than this one.
-4. **Hardware measurement** on a Deck and an iPad. Every platform number in `pw-platform.md` is
+5. **Hardware measurement** on a Deck and an iPad. Every platform number in `pw-platform.md` is
    arithmetic from source, and it says so.

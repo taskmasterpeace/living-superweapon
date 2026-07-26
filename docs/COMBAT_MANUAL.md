@@ -2597,3 +2597,48 @@ cannot read is indistinguishable from a broken button.
 Verified 14/14: a catchable launch is intercepted (moved 31.5u, arrives at exactly their altitude,
 6.5u gap); a too-hard launch is refused; you cannot chase a body you did not launch, nor one that is
 not in flight; and both lanes reach the one function. Nine modes regressed clean, ground melee intact.
+
+### THE OPEN SKY — one flag, four rules (`f._openSky`)
+
+Air melee is worthless if the air is a low room. Four separate rules, each correct over a city, each
+wrong in a dimension whose whole premise is that the altitude is yours — so they are one flag, named
+for the idea rather than for any one of its effects. (It was `_noDeckServo` while it did a single job;
+a flag named after one side effect is a flag someone later hangs a fifth unrelated meaning on.)
+
+| rule on Earth | why it exists | under an open sky |
+|---|---|---|
+| **the deck servo** eases you onto a band on release | rooftop play — hover means *dock*, not "wherever your thumb stopped" | releasing holds you where you are, with the soft floor as the only push |
+| **`maxBand`** pins tier ≤2 below the SKY | a balance ruling (BALANCE.md) | no cap — measured RAGE stopping dead at 28u until this lifted |
+| **`flightTier 0` cannot fly**, tier ≤1 sags and drops out of flight mode | a soldier and a bruiser do not fly over a city | **everyone flies.** Tiers still decide speed, hover quality and the burner — a grounded fighter can fly here, they are simply not good at it |
+| **`BANDS.ceiling` clamps you** | the lid is the atmosphere; leaving it is a ceremony (§17) | the clamp does not run. Raising the number is not enough — *a lid you can reach is still a lid* |
+
+⚠ **THE FLAG BELONGS WHERE THE RELEASE IS HANDLED, NOT IN FRONT OF THE BUTTON.** I first wrote the
+no-deck rule as the FIRST test in the flight chain, which swallowed `flyHeld` and `descendHeld` whole:
+you could no longer rise or sink at all, only damp to zero vertical speed. Robert found it in about a
+minute — *"they don't seem to fly anymore… it's like only able to fly straight."* It is now a branch
+that replaces **only** the dock, sitting after both input branches.
+
+⚠ **AND MY TEST HAD PASSED**, because it wrote `pos.y` directly instead of driving the ascend key —
+the exact harness failure this project has now paid for four times (the orbit ceiling, the direction
+triangle, the melee charge, this). **Drive the gate.** Two harness traps specific to flight:
+`input.endFrame()` is called by main.js's rAF loop and *not* by `game.update()`, so a synthetic
+keydown latches forever and re-toggles flight every frame; and the scheme decides the key — a tab
+saved on BRAWLER puts fly on `KeyG`, so hard-coded `KeyF` presses are jabs.
+
+⚠ **THE CITY CEILING HAD ITS OWN, OLDER BUG, AND IT WAS NOT MINE.** `fitBands` derives the lid from
+the tallest thing built, which is right for the band SHAPE and collapses as an absolute cap: on
+Robert's own saved theatre (TRANQUILITY REACH — a Moon village, three buildings, tallest 25u) the
+flight ceiling came out at **42u, about four times a fighter's own height**, against the flagship's
+224. Most of the 1,050-city sheet is villages, small towns and towns, so most theatres in the game
+have had a sky you hit almost at once. `MIN_CEIL = 260` / `MIN_SKY = 150` floor it: a superhero must be
+able to get above the map whether or not the map has skyscrapers. The shape still scales with what was
+built; only the floor is absolute.
+
+Verified under the real keys, both dimensions, four runs, 0 errors:
+
+| | PowerWorld | the city (that village) |
+|---|---|---|
+| a flier (SOL, tier 3) | climbs **456u and still rising** — no lid | climbs to the band-3 deck at **215** (was 42) |
+| a grounded fighter (RAGE, tier 0) | **identical: 456u** | **cannot take off** — the rule is per-dimension |
+| hold | drift **1.6u** over 4s | drift 0.5u |
+| descend | 104u in 4.2s (`FLY_SINK 26` × 4.16s = 108 — the control is saturated) | 106u |

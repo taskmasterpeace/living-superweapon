@@ -1559,9 +1559,52 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
 - Verified 7/8, 0 errors. ⚠ The one red was the TEST reading `base.n` where the field is `base.name`
   — `base` is the ABILITY, not the armory row, and that has been true since the pickup path was
   written.
-- **Not built**: the HUD row (`hud.updateHands` is called and does not exist yet), the pad D-pad
-  binding (⚠ it is already mapped to Q/E/F and hero swap — a real conflict, written in THE_HANDS.md),
-  and the mobile chip strip.
+- **Not built**: the pad D-pad binding (⚠ it is already mapped to Q/E/F and hero swap — a real
+  conflict, written in THE_HANDS.md) and the mobile chip strip. The HUD row (`#hHands`,
+  `hud.updateHands`) shipped: it reports `_gearHeld` (the TRUTH — what is in the fist) not `_hand`
+  (the intent), and never prints a digit the active scheme hasn't freed (`KM.digitsSwap`).
+
+## POWERWORLD — the other dimension (2026-07-26) — read `docs/POWERWORLD.md`, manual §46
+Robert's brief: a Steam Deck game that is *"basically Bid for Power"*, reached through a dimensional
+door, *"essentially a camera change and control changes"* — wide open space, no pedestrians, maps that
+look like BFP. Mode `powerworld` (`engine/powerworld.js` stage + `MODE_IMPL.powerworld`); nine research
+files in `docs/powerworld/` (~8,100 lines on ESF/BFP mechanics, platform limits, the camera).
+- **THE CAMERA IS A POINTER, NOT A REBUILD.** `world.camera` now aliases `camOrtho` (the isometric city
+  camera) or `camChase` (perspective), swapped into the existing composer's RenderPass by
+  `setCameraMode`. `_applyProj()` replaced three hand-written ortho projection sites. `cameraDrive(dt)`
+  is the ONE arbiter: `mapCam` > chase > `followHumans` — before it, `followHumans` overwrote
+  unconditionally, which is why the KO cam and spectator camera were dead in a live match.
+  ⚠ Chase distance is DERIVED (`fit = (min(gap,52)+20) / (2·tan(fov/2))`), FOV 58→74 with speed, and
+  the framing collapses on a target directly overhead — fall back to `subject.facing` when the
+  horizontal component drops under 0.35.
+- **`f._openSky` — ONE FLAG, FOUR RULES** (manual §46): no deck servo · no `maxBand` cap · **every
+  character flies, `flightTier 0` included** · the ceiling clamp does not run. Those are not four
+  decisions, they are one dimension. ⚠ It shipped BROKEN once: written as the FIRST test in the flight
+  chain it swallowed `flyHeld`/`descendHeld` whole — *"it's like only able to fly straight."* **A flag
+  that changes what happens when you RELEASE a button belongs where the release is handled, not in
+  front of the button.** Tiers still decide speed and hover quality: a grounded fighter can fly here,
+  they are simply not good at it.
+- **THE CHASE LOOP**: `_chaseKb` adds `launchT` to the slide-class drag exception, so a 101 u/s
+  knockback travels **61.3u** here against **16.1u** in the city. That plus `game.intercept(f)`
+  (teleport to a body you launched, refused past `CATCH_SPD 132`) is the ESF loop.
+- **NO WITNESSES**: `hasCivilians(modeId)` in data/modes.js is the ONE definition; police.js and
+  newscrew.js both import it. Never a second list.
+- ⚠ **`fitBands` HAD A PRE-EXISTING COLLAPSE**, found on the way and unrelated to PowerWorld: the lid
+  derived from the tallest building, so a Moon village (3 buildings, tallest 25u) had a **42u flight
+  ceiling** against the flagship's 224 — and most of the 1,050-city sheet is villages and towns.
+  `MIN_CEIL 260` / `MIN_SKY 150` floor it. A superhero must get above the map whether or not the map
+  has skyscrapers; the SHAPE still scales with what was built, only the floor is absolute.
+- ⚠ **TWO FLIGHT HARNESS TRAPS, both paid for twice**: `input.endFrame()` is called by main.js's rAF
+  loop and NOT by `game.update()`, so a synthetic keydown latches forever and re-toggles flight every
+  frame; and the SCHEME owns the key — a tab saved on BRAWLER puts fly on `KeyG`, so `KeyF` presses are
+  jabs. Read `KEYMAPS[SETTINGS.scheme].fly`. **Drive the gate**: writing `pos.y` tested my arithmetic,
+  not the player's route, and passed while the feature was broken.
+- **Measured** (the ratios transfer; the absolutes are a 4090's): PowerWorld is **0.625× the city GPU
+  frame** at 4K with `gl.finish()`, and **0.329× the city SIM** (3,000 frames batch-timed, render
+  stubbed) *while carrying 12× more cover*. ⚠ Its **p90 is 1.2ms against the city's 2.5** — for a
+  locked 40Hz the variance matters more than the median. ⚠ `renderer.info` auto-resets per `render()`,
+  so reading it after the composer's final fullscreen pass reports `calls: 1` and looks like a broken
+  scene; set `autoReset = false` (true totals: 147 calls, 17,507 triangles).
 
 ## HANDOFF
 - **`HANDOFF.md` at the repo root** is the orientation document: architecture, the ten rules that
