@@ -91,11 +91,18 @@ function applyPhoneMode() {
   document.body.classList.toggle('phone', phone);
   document.body.classList.toggle('tablet', tablet);
   document.body.classList.toggle('deck', deck);
+  // ⚠ `_pixelBudget`, NOT `_pixelCap`. `_pixelCap` is the clamp METHOD; this is the BUDGET it reads.
+  // Assigning a number over the method made `Math.min(fn || 2.6e6, …)` evaluate to NaN and then
+  // broke every later call — the game did not boot at all on a phone (the throw landed at module
+  // top level and the rAF loop below never started) and the quality governor was pinned on iPad.
+  // Neither cap had ever actually applied. See the comment on `_pixelCap` in world.js.
   if (phone) {
-    game.world._pixelCap = Math.min(game.world._pixelCap || 2.6e6, 1.35e6);
+    game.world._pixelBudget = Math.min(game.world._pixelBudget || 2.6e6, 1.35e6);
     if (game.world._qTier > 1 && !game.world.qualityOverride) { game.world._qTier = 1; game.world._applyQuality && game.world._applyQuality(); }
   } else if (tablet) {
-    game.world._pixelCap = Math.min(game.world._pixelCap || 2.6e6, 2.0e6);   // retina tablets drown at full budget too
+    game.world._pixelBudget = Math.min(game.world._pixelBudget || 2.6e6, 2.0e6);   // retina tablets drown at full budget too
+  } else {
+    game.world._pixelBudget = 2.6e6;   // back to the desktop budget if the window grew past a tablet
   }
   if (deck && game.pad) game.pad.preferGlyphs = true;   // the hint panel already speaks pad when one is active
 }

@@ -2,7 +2,12 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<!-- ⚠ `viewport-fit=cover` IS LOAD-BEARING, NOT DECORATION. Without it iOS/iPadOS never reports a
+     safe area, so every `env(safe-area-inset-*)` in the project resolves to 0px — twelve call sites
+     across the HUD and the touch layer, all written specifically to keep controls clear of the
+     notch, the home indicator and the rounded corners. They were all silently no-ops on the exact
+     devices they exist for. -->
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
 <title>WAR WORLD: ASCENDANTS</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230a0c12'/%3E%3Cpath d='M56 10 28 56h18l-8 34 34-48H54z' fill='%23f5b21a'/%3E%3C/svg%3E" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />

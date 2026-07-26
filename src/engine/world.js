@@ -39,6 +39,8 @@ export class World {
     this.renderer.toneMappingExposure = 1.28;
     // adaptive quality (keeps frame-rate smooth by scaling resolution)
     this._ema = 16.7; this._qTier = 2; this._qCool = 2; this._lastRender = 0;
+    this._pixelBudget = 2.6e6;      // total shaded pixels; the device ladder narrows it (see _pixelCap)
+    this._refreshMs = 16.7;         // the display's OWN cadence, learned — see the governor
 
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color('#0e1119');
@@ -1915,6 +1917,18 @@ export class World {
     if (this._lastRender) {
       const d = Math.min(now - this._lastRender, 100);
       this._ema = this._ema * 0.9 + d * 0.1;
+      // LEARN THE DISPLAY'S CADENCE — the governor's thresholds are relative to it (see below).
+      // ⚠ IT HAS TO BE ABLE TO LEARN *UPWARD*. Learning only the minimum looks right — a vsynced
+      // display cannot present faster than its refresh — but starting from an optimistic 16.7 it can
+      // then never discover that it is on a 40 Hz panel, which is the whole bug.
+      // ⚠ AND IT IS CAPPED AT 26 ms, which is what keeps this from excusing real failure: a locked
+      // 40 Hz panel is 25 ms, so anything slower than 26 is treated as the game missing frames
+      // rather than as the display's cadence. (A perfectly steady 38 ms is genuinely ambiguous with
+      // a locked 26 Hz display; we resolve it as failure, because no target device is 26 Hz.)
+      if (d > 6) {
+        if (d < this._refreshMs) this._refreshMs = this._refreshMs * 0.7 + d * 0.3;        // snap to a faster floor
+        else this._refreshMs = Math.min(26, Math.min(d, this._refreshMs + 0.06));          // creep up to a slower one
+      }
       this.updateDayNight(d / 1000);                            // the sun keeps its own schedule
     }
     this._lastRender = now;
@@ -1926,15 +1940,42 @@ export class World {
     // The print pass keeps its own clock because the sim stops for menus and this must not.
     if (this.print) this.print.tick(sdt);
     this._qCool -= 0.016;
+    // ⚠ THE GOVERNOR INVERTED AT 40 Hz, AND THE STEAM DECK GUIDE TELLS PLAYERS TO LOCK 40 Hz.
+    // `_ema` tracks the PRESENTED interval, and the loop is rAF-driven — so a display locked at
+    // 40 Hz reports 25 ms even with the GPU asleep. Against fixed thresholds that is `> 24`
+    // forever: the tier fell to 0 in about five seconds and could never come back, because 17.2 ms
+    // is unreachable at 40 Hz. Exactly the bug the old comment on the raise line describes, one
+    // refresh rate further down.
+    //
+    // The fix is that the thresholds are RELATIVE to the display's own cadence, learned as the
+    // fastest interval this session (a vsynced display cannot present faster than its refresh, so
+    // the floor IS the cadence). Verify the arithmetic: at 60 Hz this reproduces the old numbers
+    // almost exactly — drop 16.7×1.45 = 24.2 (was 24), raise 16.7×1.08 = 18.0 (was 17.2) — so
+    // desktop behaviour is unchanged. At 40 Hz it becomes drop 36.3 / raise 27.0, and a comfortable
+    // 25 ms now reads as headroom instead of as failure.
     if (this._qCool <= 0 && this.qualityOverride == null) {   // settings can lock the tier
-      if (this._ema > 24 && this._qTier > 0) { this._qTier--; this._applyQuality(); this._qCool = 1.4; }
-      else if (this._ema < 17.2 && this._qTier < 2) { this._qTier++; this._applyQuality(); this._qCool = 4; }   // 13.5 was unreachable under 60Hz vsync — tiers only ever ratcheted DOWN
+      const R = Math.max(8, Math.min(34, this._refreshMs));
+      if (this._ema > R * 1.45 && this._qTier > 0) { this._qTier--; this._applyQuality(); this._qCool = 1.4; }
+      else if (this._ema < R * 1.08 && this._qTier < 2) { this._qTier++; this._applyQuality(); this._qCool = 4; }
     }
   }
-  // clamp total shaded pixels (~2.6MP): a 4K dpr-2 fullscreen was 10-30× the pixel load
-  // of a small pane — the #1 "fast in the pane, slow in my browser" multiplier
+  // clamp total shaded pixels: a 4K dpr-2 fullscreen was 10-30× the pixel load of a small pane —
+  // the #1 "fast in the pane, slow in my browser" multiplier.
+  //
+  // ⚠ THE BUDGET IS A FIELD AND THE CLAMP IS A METHOD, AND CONFLATING THEM BROKE BOTH TOUCH
+  // PLATFORMS. `main.js`'s device ladder wanted a smaller budget for a phone and a tablet, and did
+  // `_pixelCap = Math.min(_pixelCap || 2.6e6, 1.35e6)` — but `_pixelCap` was this METHOD, which is
+  // truthy, so `||` returned the function and `Math.min(fn, …)` is **NaN**. `_pixelCap` then held a
+  // number, so every later call threw:
+  //   · **iPhone / any short-edge ≤500 touch device: the game did not boot.** The phone branch calls
+  //     `_applyQuality()` immediately, at MODULE TOP LEVEL, so the throw took out everything after
+  //     it — including the rAF loop. Nothing after that line in main.js ever ran.
+  //   · **iPad: the quality governor was pinned at tier 2 forever.** Its throw lands inside the
+  //     frame try/catch, so it was counted and swallowed, and the 2.0MP tablet cap never applied.
+  // It shipped green because a desktop-sized window never enters either branch. Budget and clamp are
+  // now separate names, so the ladder can set the budget without overwriting the function.
   _pixelCap(pr) {
-    const cap = Math.sqrt(2.6e6 / Math.max(1, innerWidth * innerHeight));
+    const cap = Math.sqrt((this._pixelBudget || 2.6e6) / Math.max(1, innerWidth * innerHeight));
     return Math.min(pr, Math.max(0.55, cap));
   }
   _applyQuality() {
