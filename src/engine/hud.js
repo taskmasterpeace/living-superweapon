@@ -1578,6 +1578,11 @@ export class HUD {
 
   updateModeBar(g) {
     const el = this.el.mode; if (!g.mode) { el.style.display = 'none'; return; }
+    // ⚠ A MODE THAT DECLARES ITS BAR WRONG MUST NOT TAKE THE FRAME DOWN. `boxing` shipped `hud` as
+    // the STRING 'boxing', so this line threw sixty times a second for the life of the match — and
+    // because the frame is wrapped and `reportError` collapses repeats, the whole thing presented as
+    // "the bar is blank". Degrade to no bar; the real fix is that `hud` is always a function.
+    if (typeof g.mode.hud !== 'function') { el.style.display = 'none'; return; }
     const h = g.mode.hud(g);
     // no score, no clock, no target — free roam and the Danger Room both have nothing to report
     if (h.type === 'training' || h.type === 'freeroam') { el.style.display = 'none'; return; }
@@ -1587,6 +1592,18 @@ export class HUD {
     else if (h.type === 'survival') html = `<div class="seg"><div class="mv" style="color:#ffb03a">${h.wave}</div><div class="ml">Wave</div></div><div class="seg"><div class="mv">${h.score}</div><div class="ml">Score</div></div><div class="seg"><div class="mv" style="color:var(--danger-2)">${'♥'.repeat(h.lives) || '—'}</div><div class="ml">Lives</div></div>`;
     else if (h.type === 'rumble') html = `<div class="seg"><div class="mv" style="color:var(--info)">${h.frags}</div><div class="ml">Frags / ${h.target}</div></div><div class="seg"><div class="mv">${h.timer}</div><div class="ml">Seconds</div></div>`;
     else if (h.type === 'tournament') html = `<div class="seg"><div class="mv" style="color:var(--good)">${h.a}</div><div class="ml">YOU</div></div><div class="vs">${h.roundName} · RD ${h.round} · first to ${h.target} · ⚠ TEAM DMG</div><div class="seg"><div class="mv" style="color:var(--danger-2)">${h.b}</div><div class="ml">${h.bName}</div></div>`;
+    // THE CARD. A boxing bar reports what a broadcast reports: the round, the clock, and the two
+    // scorecards — and while a man is down, the COUNT replaces all of it, because during a ten-count
+    // nothing else on the card matters.
+    else if (h.type === 'boxing') {
+      const mm = Math.floor(h.clock / 60), ss = Math.floor(h.clock % 60);
+      const clock = `${mm}:${String(ss).padStart(2, '0')}`;
+      html = h.count
+        ? `<div class="seg"><div class="mv" style="color:var(--danger)">${h.count}</div><div class="ml">COUNT</div></div><div class="vs" style="color:var(--danger)">${esc(h.countWho)} IS DOWN</div><div class="seg"><div class="mv">${clock}</div><div class="ml">ROUND ${h.round}</div></div>`
+        : `<div class="seg"><div class="mv" style="color:var(--good)">${h.aPts}</div><div class="ml">${esc(h.aName)} · ${h.aLanded}${h.aDowns ? ' · ▼' + h.aDowns : ''}</div></div>`
+          + `<div class="vs">ROUND ${h.round} / ${h.rounds} · ${clock}</div>`
+          + `<div class="seg"><div class="mv" style="color:var(--danger-2)">${h.bPts}</div><div class="ml">${esc(h.bName)} · ${h.bLanded}${h.bDowns ? ' · ▼' + h.bDowns : ''}</div></div>`;
+    }
     if (html !== this._modeHtml) { this._modeHtml = html; el.innerHTML = html; }   // dirty-check — no per-frame DOM rebuild
   }
 

@@ -21,7 +21,7 @@ import { WhiteRoom } from './whiteroom.js';
 import { buildReport } from '../data/news.js';
 import { bookInjury, injuryOf, healBout, koElo, matchElo } from '../data/rankings.js';
 import { SETTINGS, keymap } from '../core/settings.js';
-import { BoxingRing } from './boxingring.js';
+import { BoxingRing, BOXING } from './boxingring.js';
 import { STRIKES } from '../data/martial.js';
 import { beamBuildOf, beamTemperOf } from '../data/visual.js';
 import { Gamepad } from '../core/gamepad.js';
@@ -129,7 +129,26 @@ const MODE_IMPL = {
       const o = g.ring && g.ring.over;
       return o ? { win: !!(o.winner && g.humans.some(h => h.fighter === o.winner)), text: o.why } : null;
     },
-    hud: 'boxing',
+    // ⚠ THIS WAS THE STRING `'boxing'` AND IT THREW EVERY SINGLE FRAME. `updateModeBar` calls
+    // `g.mode.hud(g)`; every other mode returns a live state object from a function. The backlog
+    // recorded this as "the bar is blank", which is what it looked like — the frame try/catch and
+    // the repeated-error ledger between them turned a 60Hz TypeError into a quiet menu item. It was
+    // measured at 1,200 throws in one short match. A mode's `hud` is a function, always.
+    hud: (g) => {
+      const r = g.ring, cards = r ? Object.values(r.cards) : [];
+      const [a, b] = cards;
+      return {
+        type: 'boxing',
+        round: r ? r.round : 1, rounds: BOXING.rounds,
+        clock: r ? Math.max(0, r.roundT) : 0,
+        count: r && r.count ? r.count.n : 0,
+        countWho: r && r.count && r.count.who && r.count.who.def ? r.count.who.def.name : '',
+        aName: a ? a.name : '—', bName: b ? b.name : '—',
+        aPts: a ? a.points : 0, bPts: b ? b.points : 0,
+        aLanded: a ? a.landed : 0, bLanded: b ? b.landed : 0,
+        aDowns: a ? a.downs : 0, bDowns: b ? b.downs : 0,
+      };
+    },
   },
   lab: {
     setup(g) {

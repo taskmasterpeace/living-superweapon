@@ -274,6 +274,52 @@ export class World {
     this._dnSunI = this.sun ? this.sun.intensity : null;
     this._dnHemiI = this.hemi ? this.hemi.intensity : null;
     if (this.scene && this.scene.fog && this._dnFog == null) this._dnFog = this.scene.fog.density;
+    if (this._indoor) this._applyIndoor();
+  }
+
+  /**
+   * INDOORS — a venue with a roof on it (the boxing hall, engine/boxingring.js).
+   *
+   * ⚠ IT MULTIPLIES THE CLOCK, IT DOES NOT REPLACE IT. `updateDayNight` still owns the sun and runs
+   * its whole schedule — the day keeps turning outside, so a card that starts at dusk still ends at
+   * night and the crowd noise and the news bug still agree with it. This scales what the clock just
+   * decided, at the END of that pass, off the baseline it stashes one line above. Writing the sun
+   * from outside instead means fighting the clock for the same property every frame, and multiplying
+   * the LIVE value rather than the baseline compounds — the world goes black in about two seconds.
+   * That is precisely the trap the `_dn*` stash was put there to prevent, and until now **nothing in
+   * the repo read it**: the weather's light dimming was described in a comment and never wired.
+   *
+   * ⚠ IT NEVER TOUCHES THE LIGHT COUNT. Intensity is free; adding, removing or hiding a light rebakes
+   * every material in the scene (the light-count law, and a measured 400ms freeze). An indoor room
+   * turns down what is already there and borrows from `vfx`'s fixed pool for anything new.
+   */
+  setIndoor(mult) {
+    if (!mult) {
+      this._indoor = null;
+      // the sun/hemi/amb/rim and every sky uniform are rewritten from scratch by the next
+      // updateDayNight pass, so they need no restoring. Fog is only ever STASHED there, never
+      // written — so it is the one thing that must be put back by hand.
+      if (this.scene && this.scene.fog && this._dnFog != null) this.scene.fog.density = this._dnFog;
+      return;
+    }
+    this._indoor = mult;
+    this._applyIndoor();
+  }
+
+  _applyIndoor() {
+    const M = this._indoor;
+    if (this.sun) this.sun.intensity *= M.sun ?? 1;
+    if (this.hemi) this.hemi.intensity *= M.hemi ?? 1;
+    if (this.amb) this.amb.intensity *= M.amb ?? 1;
+    if (this.rim) this.rim.intensity *= M.rim ?? 1;
+    // ⚠ THE SKY HAS TO GO WITH THEM. Dimming the lights under a bright dome gives you dark fighters
+    // standing in daylight — the roof is the whole point of being indoors, and on this camera the
+    // sky is most of the upper frame.
+    if (this.skyMat && M.sky != null) {
+      const u = this.skyMat.uniforms;
+      u.uTop.value.multiplyScalar(M.sky); u.uHor.value.multiplyScalar(M.sky); u.uGlow.value.multiplyScalar(M.sky);
+    }
+    if (this.scene && this.scene.fog && M.fog != null && this._dnFog != null) this.scene.fog.density = this._dnFog * M.fog;
   }
 
   _buildArena() {

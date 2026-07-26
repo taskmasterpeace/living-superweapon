@@ -1441,9 +1441,52 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   `burstT` (0.25s covered the impulse, not the journey), not the coefficient.
 - ⚠ `setup(g)` used `o` without declaring it — `o is not defined` at mode start. The signature is
   `setup(g, o)` and `duel` has always had it.
-- **Not done, written down** (`docs/BACKLOG.md`): the venue is still whatever city you were in, so
-  trees stand inside the ropes; the monitor is built behind the isometric camera; no clinch break, no
-  referee, no rest round; `hud: 'boxing'` names a mode-bar type that does not exist.
+- **Not done, written down** (`docs/BACKLOG.md`): no clinch break, no referee, no rest round.
+
+## THE VENUE (2026-07-26) — the hall the ring stands in, `VENUE` in boxingring.js
+- **THE DARK IS THE VENUE.** The recognisable thing about a fight hall is not the seating, it is that
+  **the ring is an island of light in a black room** — the rig hangs over the canvas and everything
+  past the apron falls away. That is a LIGHTING fact before a geometry one, so the budget goes to
+  `world.setIndoor` and the hall itself is deliberately simple.
+- **`world.setIndoor(mult)` — the first consumer of a stash that nothing read.** ⚠ `updateDayNight`
+  has been saving `_dnSunI`/`_dnHemiI`/`_dnFog` every frame with a comment about weather scaling
+  them, and **nothing in the repo ever read them** — the weather's light dimming was described and
+  never wired. Indoors MULTIPLIES the clock at the end of that pass, off the baseline: the day still
+  turns outside, and multiplying the LIVE value instead compounds and blacks the world out in about
+  two seconds. Restoring is `setIndoor(null)` — sun/hemi/amb/rim/sky are rewritten from scratch next
+  frame, and only FOG must be put back by hand because updateDayNight stashes it and never writes it.
+- ⚠ **THE POOL LIGHTS ARE CALIBRATED FOR VFX FLASHES, AND THIS IS AREA LIGHTING AT 1:1 CITY SCALE.**
+  `decay` is 2 — real inverse-square — so the intensity 3.2 a muzzle flash uses delivers 3.2/77² ≈
+  0.0005 at the front row. The seating was BUILT and rendered pure black, and every assertion passed,
+  because **no assertion can see "too dark"** (baseroom.js says exactly this and I walked into it
+  anyway). Rig is 1200 at 210u. Still `vfx.borrowLight` only — intensity is free, the light COUNT is
+  what rebakes every material.
+- ⚠ **THE RIG HANGS LOW (34u), WHICH IS BOTH REAL AND THE WHOLE GRADIENT.** A boxing rig sits
+  ~20-25ft over the canvas. Put it up at the truss and the height term dominates the distance to
+  everything, so the ring and the back row light equally and the hall reads flat. Low and tight,
+  inverse-square does the work: measured ring 85 · front row 21 · back of hall 10.
+- ⚠ **THREE SCALE ERRORS, ALL CAUGHT BY THE PICTURE AND NONE BY THE TESTS** — the ring's own lesson,
+  repeated by me one commit later. (1) The board was 84u wide over a 46u ring, four panels fanned out
+  hiding both fighters. (2) The truss ran 110u across frame. (3) **The seating started at 104u while
+  the camera's ortho half-height is 78 — the audience was outside the frame at all times.** Front row
+  is at 40u now, against the apron, and only the first four or five rows are ever on screen, which is
+  correct rather than a compromise: the rest receding into black is what a fight hall looks like.
+- **The board is centre-hung, and that is the reference rather than a trick.** Billboarding or a HUD
+  mirror both work and are both worse; a real arena hangs a four-sided board over the ring, and doing
+  what the real thing does solves the framing BY CONSTRUCTION. ⚠ `rotation.order = 'YXZ'` — yaw then
+  pitch about the face's own axis, or three of the four faces tip sideways. ⚠ boardY is DERIVED: at
+  96 it landed at ~77 of the 78 available half-height and clipped, the same out-of-frame bug in a new
+  place. **It can also stop trying to be readable now the mode bar carries the card.**
+- ⚠ **`hud: 'boxing'` WAS A STRING AND THREW EVERY FRAME.** `updateModeBar` calls `g.mode.hud(g)`;
+  measured at 1,200 throws in one short match. The frame try/catch and `reportError`'s repeat ledger
+  between them presented a 60Hz TypeError as "the bar is blank" in the backlog. A mode's `hud` is a
+  function, always — and updateModeBar now refuses a non-function instead of throwing.
+- **The restore contract**: visibility, the four prop ARRAYS (`propInReach` walks those, not the
+  scene), BOTH cover arrays, arena bounds, fog and the indoor multiplier. Verified by isolating one
+  open/close — every visibility flag restored exactly — plus a ×7 round-trip soak with scene
+  children, cover, props and light count all flat. Ref `wwa-venue.png`.
+- **The seating is NOT cover**, and that is a decision: the ropes make it unreachable, so registering
+  it would buy nothing and cost collision, LOS, AI vision and fog raster for scenery.
 
 ## THE HANDS (2026-07-26) — `engine/hands.js`, and it is not a stance
 - Robert: *"most games you hit 1 it's melee, 2 it's pistol, 3 it's your main weapon."* Then, after a

@@ -271,16 +271,29 @@ His own definition of done: *"the system is not ready if players can win but can
 `engine/boxingring.js` + the `boxing` mode ship the RULES. Gate items 1, 2, 3, 4, 6 and 8 are met;
 the rest is listed here rather than implied to be finished.
 
-- **THE VENUE.** The ring is built wherever the match already is — the first screenshot has city
-  trees and a parked car inside the ropes. A boxing mode should raise a clean venue, or clear the
-  cover inside the ring footprint, the way `whiteroom.js` builds its own hall.
-- **THE MONITOR IS BEHIND THE CAMERA.** Built at `z = -(size/2) - 40`, which on the fixed isometric
-  view is out of frame. It needs the camera-facing side, or billboarding, or a HUD mirror.
+**Closed 2026-07-26:** ~~THE VENUE~~ · ~~THE MONITOR IS BEHIND THE CAMERA~~ · ~~`hud: 'boxing'`~~.
+The hall is built (`VENUE` + `_hideWorld`/`_buildHall`/`_buildRigs` in boxingring.js), the board is
+centre-hung over the ring, and the mode bar carries the card. ⚠ **`hud: 'boxing'` was not "blank" —
+it was a TypeError thrown 60 times a second** for the life of every boxing match (`updateModeBar`
+calls `g.mode.hud(g)` and it was a STRING). The frame try/catch plus the repeated-error ledger
+between them turned that into a quiet menu item. `updateModeBar` now refuses a non-function `hud`
+instead of throwing, so the next one degrades to no bar.
+
+Still open:
+
 - **THE CLINCH.** Real boxing breaks a clinch after a beat; ours lets you hold. Still the general grab.
 - **NO REFEREE, NO CORNER, NO REST ROUND** — `restSecs` is in the rule book and unused.
-- **`hud: 'boxing'`** names a mode-bar type `hud.updateModeBar` does not implement, so the bar is blank.
-- **Rope bounce returns 39% of entry speed** after drag, up from 26%. It reads as a bounce and not
-  yet as a slingshot; the lever is `burstT` duration rather than `ropeBounce`.
+- **THE CROWD.** The venue has 12 rows of seating and nobody in them: `_hideWorld` hides the
+  pedestrian layer rather than seating it. The peds already carry the reactions this wants —
+  `cheer`, `_panic`, `_embolden`, real line-of-sight — so this is a placement problem, not a new
+  system. It is the next slice and it is why the venue was built first.
+- **Rope bounce returns 72% of entry speed at the moment of the bounce** (80 u/s in, 57 back),
+  measured with `burstT` set. That is not comparable to the old 39% figure, which was measured
+  several frames later after drag — different question, both true. What has not been measured is how
+  it FEELS across the ring.
+- **The venue is only lit for a fight.** The rig, the multipliers and the seat materials were tuned
+  against one camera framing (`frustum` 78, the default). A zoomed-out two-player fit has not been
+  looked at.
 
 ---
 
