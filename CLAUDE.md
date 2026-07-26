@@ -1440,7 +1440,38 @@ Four laws, three of them the same idea: **a thing must not outlive the match tha
   ~1 per 0.42s, never for DoT ticks (a word per beam tick is confetti); `handleKO` gets the panel
   every comic ends on. ⚠ Ticked from the HUD frame, never the sim; cleared by `clearTransients`
   (the reset law); keeps its OWN clock because `hud.update()` takes no dt.
-- Console: `comic [say|shout|whisper|think|radio|cap|sfx|demo] <text>`. Ref `wwa-comic.png`.
+- **⚠ THE BALLOON IS AN SVG PATH GENERATED FROM THE MEASURED TEXT** (`engine/balloon.js`), after
+  Robert: *"text shouldn't come out of the bubble, and the bubble has to work dynamically."*
+  The first pass drew shapes with `clip-path` and `border-radius`, and **neither can ever work**:
+  both CUT the box the text is laid out in, so the words could only be clipped by a spike or spill
+  past a curve. No padding fixes it, because the shape does not know how big the text is. Now:
+  **measure the words → build a shape around them → centre the text**, which makes it
+  mathematically incapable of touching the outline.
+- **THE INFLATION IS THE WHOLE JOB** and differs per shape: an ellipse circumscribing a w×h box has
+  semi-axes **w/√2** — an oval balloon must be **41% larger than its text**, which is why real
+  balloons look so much bigger than the words. A BURST must clear its **inner** radius (spikes are
+  extra), a CLOUD's bumps bulge off a core that already clears the text.
+- **⚠ NO PANCAKES** (`round()`, MAX_ASPECT 2.15). Two lines give a ~200×40 text box, and the
+  identity then yields a 4:1 oval that reads as a bar — and every decoration (spikes, scallops,
+  bumps, wobble) is unreadable stretched along one. Grow the SHORT axis; it can never push text out.
+- **⚠ POINT COUNT IS A LOOK, NOT A RESOLUTION.** Scaling spike count with the perimeter gave a wide
+  balloon fifty tiny teeth = fuzz. A yell has 11 spikes and an announce 16, at any size.
+- **NINE TONES**: talk · yell · whisper · think · robot · alien · announce · weak · narrate, plus
+  **inverted** as a MODIFIER (black fill, "negative emotions") that composes with every shape.
+- **EDGE CASES ARE A SUITE, NOT A HOPE** (9 cases, all passing): every tone · one character ·
+  an unbreakable 72-char word · a wall of text · empty/null/no-speaker · twelve at once (capped
+  to 4) · the speaker dying mid-balloon · a speaker off screen · markup + `<script>` injection.
+  Asserted: text inside the path's own bbox, nothing off screen, no NaN in any path.
+  ⚠ **WIDTH, NOT MAX-WIDTH** when capping a long token: the span is absolutely positioned in a
+  `.cmb` that has NO WIDTH YET (it is sized after measuring), so `max-width` leaves it to
+  shrink-to-fit against a zero-width containing block and `overflow-wrap:anywhere` collapses it to
+  ONE LETTER PER LINE — measured 46px wide by 465 tall, off the bottom of the screen.
+  ⚠ `buildShape()` guards NaN/zero/huge input at the one place every shape is built: a path of
+  "NaN,NaN" renders as nothing and looks exactly like a bug that isn't there.
+  ⚠ A tail beyond a sane reach is DROPPED — an untailed balloon reads as off-panel speech (a real
+  convention); a hundred-pixel spike across the panel reads as a defect.
+- Console: `comic [talk|yell|whisper|think|robot|alien|announce|weak|narrate|cap|sfx|demo] <text>`.
+  Refs `wwa-comic.png`, `wwa-bubbles.png`.
 
 ## ORIGINS · HOSPITALS · THE PSYCHE (2026-07-25) — from Robert's Combat Compendium + Emotions sheet
 - **`data/origins.js`** — the NINE origins and the hospital table, transcribed not reinvented:

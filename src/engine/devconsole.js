@@ -409,7 +409,7 @@ export class DevConsole {
     });
 
     // ---- the comic layer, on demand
-    this.cmd('comic', 'comic [say|shout|whisper|think|radio|cap|sfx|demo] <text>', (a, c) => {
+    this.cmd('comic', 'comic [talk|yell|whisper|think|robot|alien|announce|weak|narrate|cap|sfx|demo] <text>', (a, c) => {
       const g = G(), C = g.comic, p = P();
       if (!C) return c.err('no comic layer');
       const what = (a[0] || 'demo').toLowerCase();
@@ -422,6 +422,15 @@ export class DevConsole {
         if (foe) C.say(foe, 'I will tear you **apart**!', { tone: 'shout' });
         if (p) C.sfx('THWAKK!', p.pos, { power: 0.8 });
         return c.ok('lettered');
+      }
+      if (what === 'tones') {
+        const rows = [['talk', 'Normal speech, balanced.'], ['yell', 'I said MOVE!'],
+          ['whisper', 'Keep it down...'], ['think', 'Maybe this is a bad idea.'],
+          ['robot', 'TARGET ACQUIRED'], ['alien', 'we have come for it'],
+          ['announce', 'ATTENTION, CITIZENS'], ['weak', 'i cant... hold it'],
+          ['narrate', 'Later that night...']];
+        for (const [t, tx] of rows) C.say(p, tx, { tone: t, life: 6, inverted: t === 'alien' });
+        return c.ok('nine tones');
       }
       if (what === 'cap') { C.caption(text || 'Meanwhile...', { where: 'tl' }); return; }
       if (what === 'sfx') { if (p) C.sfx(text || 'KRAKOOM!', p.pos, { power: 0.9 }); return; }

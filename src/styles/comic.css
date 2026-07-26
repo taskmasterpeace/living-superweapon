@@ -39,85 +39,76 @@
 /* the stage. pointer-events off — the comic layer never eats a click. */
 #comicLayer { position: fixed; inset: 0; z-index: 26; pointer-events: none; overflow: hidden; }
 
-/* ============================================================================ SPEECH BALLOONS */
+/* ============================================================================ SPEECH BALLOONS
+ * ⚠ THE SHAPE IS AN SVG PATH GENERATED FROM THE MEASURED TEXT (engine/balloon.js), not a clip-path
+ * over a box. clip-path and border-radius CUT the element the text is laid out in, so words could
+ * only ever be clipped or overflow. Here the element is just a positioning frame: the SVG draws
+ * the outline behind, the text sits centred in front, and the two cannot collide. */
 .cmb {
-  position: absolute; transform-origin: 50% 100%;
+  position: absolute; transform-origin: 50% 90%;
+  animation: cmPop .19s cubic-bezier(.2,1.7,.5,1) both;
+  pointer-events: none;
+}
+.cmb .cmsvg { position: absolute; left: 0; top: 0; overflow: visible; }
+.cmb .cmbody, .cmb .cmtail {
+  fill: var(--cm-paper); stroke: var(--cm-ink); stroke-width: var(--cm-line);
+  stroke-linejoin: round; paint-order: stroke fill;
+}
+.cmb .cmtext {
+  position: absolute;
   font-family: 'ComicLetter', 'Comic Sans MS', cursive; font-weight: 700;
   font-size: 17px; line-height: 1.14; letter-spacing: .015em;
   text-transform: uppercase; text-align: center; color: var(--cm-ink);
-  background: var(--cm-paper); border: var(--cm-line) solid var(--cm-ink);
-  border-radius: 20px; padding: 8px 14px 9px;
-  max-width: 260px; white-space: pre-line;
-  box-shadow: 2px 3px 0 0 rgba(0,0,0,.32);
-  animation: cmPop .19s cubic-bezier(.2,1.7,.5,1) both;
+  white-space: pre; pointer-events: none;
 }
-/* ⚠ THE TAIL IS PART OF THE SILHOUETTE, NOT A TRIANGLE PARKED UNDER THE BOX. Two stacked
- * triangles — black behind, paper in front and inset by the border weight — so the outline reads
- * as one continuous line the way an inked balloon does. Get this wrong and the whole thing looks
- * like a chat bubble from a web app. */
-.cmb .tail, .cmb .tail i { position: absolute; width: 0; height: 0; border-style: solid; }
-.cmb .tail   { border-width: 13px 9px 0 9px; border-color: var(--cm-ink) transparent transparent transparent; bottom: -13px; }
-.cmb .tail i { border-width: 13px 9px 0 9px; border-color: var(--cm-paper) transparent transparent transparent;
-               left: -9px; top: -16px; }
-.cmb.up .tail   { bottom: auto; top: -13px; border-width: 0 9px 13px 9px;
-                  border-color: transparent transparent var(--cm-ink) transparent; }
-.cmb.up .tail i { top: 3px; border-width: 0 9px 13px 9px;
-                  border-color: transparent transparent var(--cm-paper) transparent; }
-
-@keyframes cmPop { from { transform: scale(.6) translateY(8px); opacity: 0 } to { transform: none; opacity: 1 } }
+@keyframes cmPop { from { transform: scale(.62) translateY(8px); opacity: 0 } to { transform: none; opacity: 1 } }
 .cmb.out { animation: cmOut .16s ease-in forwards; }
-@keyframes cmOut { to { transform: scale(.9); opacity: 0 } }
+@keyframes cmOut { to { transform: scale(.92); opacity: 0 } }
 
 /* a word the letterer would have bolded — comics emphasise INSIDE the balloon, always */
-.cmb b { font-size: 1.14em; letter-spacing: .03em; }
-.cmb em { font-style: italic; }
-.cmb .shoutword { color: var(--cm-red); font-size: 1.2em; }
+.cmb b { font-size: 1.13em; letter-spacing: .03em; }
+.cmb .shoutword { color: var(--cm-red); font-size: 1.18em; }
 
-/* --- SHOUTING. A burst outline, not a rounded box. The clip-path is the balloon; the ::before is
- * the same polygon in ink, one pixel larger, standing in for a border a clip-path cannot have. */
-/* ⚠ generous padding, because the clip-path's spikes eat into the box — text laid out to the
- * padding edge of a burst balloon ends up sitting ON a spike and getting clipped. */
-.cmb.shout {
-  border: 0; border-radius: 0; background: transparent; padding: 22px 30px 24px;
-  font-size: 19px; box-shadow: none; max-width: 280px;
+/* --- YELL. The burst is in the PATH; all that changes here is the weight of the voice. */
+.cmb.t-yell .cmtext { font-size: 19px; }
+.cmb.t-yell .cmbody, .cmb.t-yell .cmtail { stroke-width: 3.4px; }
+
+/* --- WHISPER. A dashed outline is the century-old convention and still reads instantly. */
+/* ⚠ the dash has to be COARSE. At 7/5 on a 3px stroke it read as a solid line at gameplay size. */
+.cmb.t-whisper .cmbody { stroke-dasharray: 11 8; stroke-width: 2.6px; }
+.cmb.t-whisper .cmtail { stroke-dasharray: 11 8; stroke-width: 2.6px; }
+.cmb.t-whisper .cmtext { font-size: 14px; color: #4a453c; }
+
+/* --- THINK. The cloud and its trailing circles are both path work. */
+.cmb.t-think .cmtext { font-style: italic; }
+
+/* --- ROBOT. Square, cold, and monospaced — a machine does not have handwriting. */
+.cmb.t-robot .cmbody, .cmb.t-robot .cmtail { fill: #eaf2f6; stroke: var(--cm-blue); }
+.cmb.t-robot .cmtext {
+  font-family: var(--f-mono, 'Cascadia Code', ui-monospace, monospace);
+  font-size: 13px; letter-spacing: .1em; color: #16303f;
 }
-.cmb.shout .fill, .cmb.shout .edge {
-  position: absolute; inset: 0;
-  clip-path: polygon(4% 22%, 13% 14%, 10% 3%, 23% 11%, 31% 2%, 40% 12%, 50% 0, 60% 12%, 69% 2%,
-                     77% 11%, 90% 3%, 87% 14%, 96% 22%, 100% 40%, 94% 52%, 99% 68%, 88% 74%,
-                     91% 88%, 78% 84%, 70% 96%, 60% 87%, 50% 100%, 40% 87%, 30% 96%, 22% 84%,
-                     9% 88%, 12% 74%, 1% 68%, 6% 52%, 0 40%);
-}
-.cmb.shout .edge { background: var(--cm-ink); transform: scale(1.045); }
-.cmb.shout .fill { background: var(--cm-paper); }
-.cmb.shout > span { position: relative; z-index: 2; }
-/* ⚠ A SHOUT STILL POINTS AT SOMEBODY. Hiding the tail made the loudest balloon the only one that
- * did not say who was speaking, which is exactly backwards. It sits under the burst's lower spike. */
-.cmb.shout .tail { bottom: -9px; z-index: 3; }
-.cmb.shout .tail i { top: -16px; }
 
-/* --- WHISPERING. A dashed outline is the century-old convention and it still reads instantly. */
-.cmb.whisper { border-style: dashed; font-size: 14px; color: #4a453c; background: rgba(253,251,244,.92); }
-.cmb.whisper .tail { border-color: #4a453c transparent transparent transparent; }
+/* --- ALIEN. Sickly green, and the letters lean where they should not. */
+.cmb.t-alien .cmbody, .cmb.t-alien .cmtail { fill: #e9f3dd; stroke: #47632c; }
+.cmb.t-alien .cmtext { color: #2c3d1a; font-style: italic; letter-spacing: .09em; }
 
-/* --- THINKING. A cloud, and the tail is a trail of shrinking circles. */
-.cmb.thought { border-radius: 46% 54% 50% 50% / 56% 52% 48% 44%; }
-.cmb.thought .tail { border: 0; width: 13px; height: 13px; border-radius: 50%;
-  background: var(--cm-paper); box-shadow: 0 0 0 var(--cm-line) var(--cm-ink); bottom: -20px; }
-.cmb.thought .tail i { border: 0; width: 8px; height: 8px; border-radius: 50%; left: 2px; top: 15px;
-  background: var(--cm-paper); box-shadow: 0 0 0 var(--cm-line) var(--cm-ink); }
+/* --- ANNOUNCE. A PA, a broadcast, a god — the many-pointed star from the reference sheet. */
+.cmb.t-announce .cmtext { font-size: 18px; letter-spacing: .05em; }
 
-/* --- OVER A RADIO. Square, cold, and the zigzag edge says "this voice is not in the room". */
-.cmb.radio {
-  border-radius: 2px; background: #eef3f6; border-color: var(--cm-blue); color: #16303f;
-  font-size: 15px; letter-spacing: .06em;
-  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 0 86%, 3% 79%, 0 72%, 3% 65%, 0 58%);
-}
-.cmb.radio .tail { display: none; }
+/* --- WEAK / FADING. Thin line, grey ink, small letters: a voice running out. */
+.cmb.t-weak .cmbody, .cmb.t-weak .cmtail { stroke-width: 1.8px; stroke: #6a6459; }
+.cmb.t-weak .cmtext { font-size: 14px; color: #6a6459; }
 
-/* --- SOMEONE OFF PANEL. No tail; the balloon just points with a long spur. */
-.cmb.offpanel .tail { border-width: 26px 6px 0 6px; bottom: -26px; }
-.cmb.offpanel .tail i { border-width: 26px 6px 0 6px; left: -6px; top: -30px; }
+/* --- NARRATION. The story talking, not a person. No tail is drawn for it. */
+.cmb.t-narrate .cmbody { fill: var(--cm-yellow); }
+.cmb.t-narrate .cmtext { font-style: italic; }
+
+/* --- INVERTED. Any balloon, filled black, for the voice you dread — the reference sheet's
+ * "negative emotions". A modifier, so it composes with every shape. */
+.cmb.inv .cmbody, .cmb.inv .cmtail { fill: #100e0b; stroke: #100e0b; }
+.cmb.inv .cmtext { color: #f4f1e8; }
+.cmb.inv .shoutword { color: #ff6a5a; }
 
 /* ================================================================================= CAPTIONS */
 .cmcap {

@@ -18,6 +18,8 @@
 // ⚠ IT NEVER TOUCHES THE SIM. Every element lives in its own fixed layer with pointer-events off,
 // it is driven from the HUD's frame, and a caption that throws can never reach the game loop.
 
+import { SHAPES, buildShape, tailPath, TONES } from './balloon.js';
+
 const LAYER_ID = 'comicLayer';
 
 // ---------------------------------------------------------------------------------------------
@@ -70,30 +72,107 @@ export class Comic {
   }
 
   _add(node, life, item) {
-    this.el.appendChild(node);
+    // ⚠ EDGE CASE — A CROWD ALL TALKING. Six fighters barking every second is a screen of paper.
+    // Oldest balloons are retired so the layer degrades gracefully instead of piling up.
+    if (item && item.kind === 'bub') {
+      const bubs = this.items.filter(i => i.kind === 'bub' && !i._out);
+      const MAX = document.body.classList.contains('phone') ? 2 : 4;
+      for (let i = 0; i <= bubs.length - MAX; i++) { bubs[i].t = Math.min(bubs[i].t, 0.12); }
+    }
+    if (node.parentNode !== this.el) this.el.appendChild(node);
     const it = { node, t: life, life, ...item };
     this.items.push(it);
     return it;
   }
 
   // ------------------------------------------------------------------------------- BALLOONS
-  // `speaker` is a Fighter (anything with `.pos`). Tone: talk · shout · whisper · think · radio.
+  // ⚠ MEASURE THE WORDS, THEN BUILD THE SHAPE AROUND THEM. The first version drew balloons with
+  // clip-path and border-radius, which CUT the box the text is laid out in — so the words could
+  // only ever be clipped by a spike or spill past a curve, and no amount of padding could fix it
+  // because the shape had no idea how big the text was. Now the text is measured first, an SVG
+  // path is generated to contain it (see balloon.js for the per-shape inflation), and the words sit
+  // dead centre where they are mathematically incapable of touching the outline.
+  //
+  // Tones: talk · yell · whisper · think · robot · alien.
   say(speaker, text, opts = {}) {
     if (!text) return null;
-    const tone = opts.tone || 'talk';
+    let tone = String(opts.tone || 'talk').toLowerCase();
+    if (tone === 'shout') tone = 'yell';                 // old names, kept working
+    if (tone === 'radio') tone = 'robot';
+    if (tone === 'thought') tone = 'think';
+    if (!TONES.includes(tone)) tone = 'talk';
+    // ⚠ EDGE CASE — A WALL OF TEXT. A balloon is not a subtitle track: past this it is cropped with
+    // an ellipsis, because a 400-word balloon cannot be made to work, only made smaller.
+    text = String(text).trim();
+    if (!text) return null;
+    if (text.length > 180) text = text.slice(0, 177).replace(/\s+\S*$/, '') + '…';
+
     const node = document.createElement('div');
-    node.className = 'cmb' + (tone === 'shout' ? ' shout' : tone === 'whisper' ? ' whisper'
-      : tone === 'think' ? ' thought' : tone === 'radio' ? ' radio' : '');
-    const body = balance(text, tone === 'whisper' ? 22 : tone === 'shout' ? 18 : 26);
-    if (tone === 'shout') {
-      node.innerHTML = '<div class="edge"></div><div class="fill"></div><span>' + markup(body) + '</span>';
-    } else {
-      node.innerHTML = markup(body) + '<div class="tail"><i></i></div>';
+    node.className = 'cmb t-' + tone;
+
+    const span = document.createElement('div');
+    span.className = 'cmtext';
+    span.innerHTML = markup(balance(text, tone === 'yell' ? 16 : tone === 'whisper' ? 20 : 22));
+    node.appendChild(span);
+    if (opts.inverted) node.classList.add('inv');
+    this.el.appendChild(node);                            // must be in the DOM to be measured
+
+    // 1 — MEASURE. offsetWidth is the layout size and is immune to the pop transform.
+    let tw = Math.max(28, span.offsetWidth), th = Math.max(16, span.offsetHeight);
+    // ⚠ EDGE CASE — AN UNBREAKABLE WORD. `white-space: pre` means one long token cannot wrap, and a
+    // 600px balloon then blows straight through the safe area. Force a wrap and re-measure.
+    const S0 = this._safe();
+    const cap = Math.max(120, (S0.x1 - S0.x0) * 0.52);
+    if (tw > cap) {
+      // ⚠ WIDTH, NOT MAX-WIDTH. The span is absolutely positioned inside .cmb, and .cmb has no
+      // width yet — it is sized AFTER measuring. `max-width` leaves the span to shrink-to-fit
+      // against a zero-width containing block, so `overflow-wrap: anywhere` collapses it to ONE
+      // LETTER PER LINE: a 72-character word measured 46px wide and 465px tall and produced a
+      // balloon that ran off the bottom of the screen. An explicit width has nothing to resolve.
+      span.style.whiteSpace = 'pre-wrap';
+      span.style.overflowWrap = 'anywhere';
+      span.style.width = Math.round(cap) + 'px';
+      tw = Math.max(28, span.offsetWidth); th = Math.max(16, span.offsetHeight);
     }
-    // ⚠ LENGTH DECIDES THE DWELL, not a fixed timer. A three-word bark and a full sentence cannot
-    // share a duration or one of them is always wrong. ~13 characters a second, with a floor.
+    // ⚠ AND A HEIGHT CEILING. Even a correctly wrapped block can be taller than the screen, and a
+    // balloon that does not fit cannot be placed — only shrunk. One step down, then accept it.
+    const maxH = (S0.y1 - S0.y0) * 0.62;
+    if (th > maxH) {
+      span.style.fontSize = '13px';
+      span.style.lineHeight = '1.1';
+      tw = Math.max(28, span.offsetWidth); th = Math.max(16, span.offsetHeight);
+      if (th > maxH) { span.style.height = Math.round(maxH) + 'px'; span.style.overflow = 'hidden'; th = Math.round(maxH); }
+    }
+    // 2 — BUILD a shape that contains it. buildShape guards nonsense so a path can never be NaN.
+    const seed = (text.length * 31 + tone.length * 7) | 0;
+    const shape = buildShape(tone, tw, th, seed);
+    // 3 — LAY the text out in the middle of that shape.
+    node.style.width = Math.ceil(shape.w) + 'px';
+    node.style.height = Math.ceil(shape.h) + 'px';
+    span.style.left = Math.round((shape.w - tw) / 2) + 'px';
+    span.style.top = Math.round((shape.h - th) / 2) + 'px';
+
+    const NS = 'http://www.w3.org/2000/svg';
+    // ⚠ the SVG overflows its own box on purpose — the TAIL reaches outside the balloon body, and
+    // clipping it would put us right back where we started.
+    const svg = document.createElementNS(NS, 'svg');
+    svg.setAttribute('class', 'cmsvg');
+    svg.setAttribute('width', Math.ceil(shape.w));
+    svg.setAttribute('height', Math.ceil(shape.h));
+    svg.setAttribute('overflow', 'visible');
+    const tail = document.createElementNS(NS, 'path');
+    tail.setAttribute('class', 'cmtail');
+    const body = document.createElementNS(NS, 'path');
+    body.setAttribute('class', 'cmbody');
+    body.setAttribute('d', shape.path);
+    // tail first so the body's fill covers the join and the outline stays one continuous line
+    svg.appendChild(tail); svg.appendChild(body);
+    node.insertBefore(svg, span);
+
     const life = opts.life || Math.max(1.5, Math.min(6.5, 0.9 + text.length / 13));
-    return this._add(node, life, { kind: 'bub', speaker, tone, offY: opts.offY });
+    const it = this._add(node, life, { kind: 'bub', speaker, tone, offY: opts.offY, shape, svg, tail, body, noTail: !speaker });
+    it._mounted = true;
+    return it;
   }
 
   // ------------------------------------------------------------------------------- CAPTIONS
@@ -175,45 +254,58 @@ export class Comic {
         it.node.remove();
         continue;
       }
-      if (it.kind === 'bub' && it.speaker) {
+      if (it.kind === 'bub') {
         const f = it.speaker;
-        if (!f.alive || !f.pos) { it.t = Math.min(it.t, 0.12); live.push(it); continue; }
-        // ⚠ THE TAIL POINTS AT THE MOUTH. Head height is where a voice comes from; anchoring at
-        // the feet or the centre is the tell that a machine placed it.
-        const head = (f.parts && f.parts.head ? 12.5 : 11) + (it.offY || 0);
-        const sp = W.screenPosOf(f.pos.x, f.pos.y + head, f.pos.z);
-        if (sp.behind) { it.node.style.opacity = '0'; live.push(it); continue; }
-        it.node.style.opacity = '';
-        // ⚠ offsetWidth, NOT getBoundingClientRect. The rect reports the TRANSFORMED box, so while
-        // the pop animation is scaling a balloon from 0.6 the measurement comes back small — and the
-        // clamp that keeps balloons out of the HUD rail then lets an under-measured one straight
-        // through it. offsetWidth is the layout size and is immune to the transform.
-        const bw = it.node.offsetWidth || 180, bh = it.node.offsetHeight || 48;
-        const GAP = 18;
-        let x = sp.x - bw / 2, y = sp.y - bh - GAP, up = false;
-        if (y < 8) { y = sp.y + GAP; up = true; }                 // no room above — flip under them
+        if (f && (!f.alive || !f.pos)) { it.t = Math.min(it.t, 0.12); live.push(it); continue; }
+        const bw = it.shape.w, bh = it.shape.h;
+        let sp = null;
+        if (f) {
+          // ⚠ THE TAIL POINTS AT THE MOUTH — head height, not the feet or the centre.
+          const head = (f.parts && f.parts.head ? 12.5 : 11) + (it.offY || 0);
+          sp = W.screenPosOf(f.pos.x, f.pos.y + head, f.pos.z);
+          if (sp.behind) { it.node.style.opacity = '0'; live.push(it); continue; }
+          it.node.style.opacity = '';
+        }
         const S = this._safe();
+        const GAP = 26;
+        let x, y;
+        if (sp) { x = sp.x - bw / 2; y = sp.y - bh - GAP; }
+        else { x = (sw - bw) / 2; y = sh * 0.3; }
         x = Math.max(S.x0, Math.min(S.x1 - bw, x));
-        if (y + bh > S.y1) y = sp.y - bh - GAP;              // keep clear of the bottom furniture
-        // and out of the bottom-left player panel specifically
+        if (y < S.y0) y = (sp ? sp.y + GAP : S.y0);
+        if (y + bh > S.y1) y = Math.max(S.y0, (sp ? sp.y - bh - GAP : S.y1 - bh));
         if (x < S.lx && y + bh > S.ly) y = Math.min(y, S.ly - bh - 6);
-        y = Math.max(S.y0, y);
-        // don't stack on an earlier balloon
+        y = Math.max(S.y0, Math.min(S.y1 - bh, y));
         for (let guard = 0; guard < 6; guard++) {
           const hit = taken.find(t => !(x + bw < t.x || x > t.x + t.w || y + bh < t.y || y > t.y + t.h));
           if (!hit) break;
-          y = up ? hit.y + hit.h + 6 : hit.y - bh - 6;
-          if (y < 8) { y = sp.y + GAP; up = true; }
+          y = hit.y + hit.h + 8;
+          if (y + bh > S.y1) { y = Math.max(S.y0, hit.y - bh - 8); break; }
         }
         taken.push({ x, y, w: bw, h: bh });
         it.node.style.left = Math.round(x) + 'px';
         it.node.style.top = Math.round(y) + 'px';
-        it.node.classList.toggle('up', up);
-        // the tail slides along the balloon's edge to stay under the speaker, and never runs off it
-        const tail = it.node.querySelector('.tail');
-        if (tail) {
-          const tx = Math.max(16, Math.min(bw - 26, sp.x - x - 9));
-          tail.style.left = Math.round(tx) + 'px';
+        // ⚠ THE TAIL IS REDRAWN EVERY FRAME toward wherever the speaker now is, in the SVG's own
+        // coordinates. That is what lets it follow a moving fighter instead of pointing where they
+        // used to be — and it never deforms the balloon, because it is a separate path.
+        if (it.tail) {
+          if (!sp || it.noTail) { it.tail.setAttribute('d', ''); }
+          else {
+            // ⚠ EDGE CASE — A SPEAKER THE BALLOON COULD NOT REACH. When the balloon has been
+            // clamped away from its speaker (screen edge, HUD rail, a stack), a tail drawn to the
+            // true position becomes a spear across the panel. Past a sane reach it is dropped —
+            // an untailed balloon reads as off-panel speech, which is a real convention; a
+            // hundred-pixel spike reads as a bug.
+            const rawX = sp.x - x, rawY = sp.y - y;
+            const reach = Math.max(bw, bh) * 1.6 + 90;
+            const away = Math.hypot(rawX - bw / 2, rawY - bh / 2);
+            if (away > reach || it.tone === 'narrate') { it.tail.setAttribute('d', ''); }
+            else {
+              const tx = Math.max(-80, Math.min(bw + 80, rawX));
+              const ty = Math.max(-80, Math.min(bh + 80, rawY));
+              it.tail.setAttribute('d', tailPath(it.tone, bw, bh, tx, ty));
+            }
+          }
         }
       } else if (it.kind === 'sfx' && it.world) {
         // ⚠ SFX SHARE THE OCCUPANCY LIST. They were placed independently, so a KRAKA-DOOM landed on
