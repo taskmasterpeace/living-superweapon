@@ -529,6 +529,44 @@ reports only that pass. With `autoReset = false` the true totals are **147 draw 
 triangles** — the scene was being drawn the whole time. The measurement above is what I should have run
 two attempts earlier.
 
+### MEASURED — AND ON THE AXIS THE DECK IS BOUND BY
+
+`pw-platform.md` argues a Deck at 1280×800 is **CPU-bound**, not fill-bound. So the GPU numbers above
+are the wrong axis for it, and the right one is sim cost — which is a property of the CODE, so the
+ratio transfers to any CPU even though the absolute milliseconds do not.
+
+Render stubbed (the project's documented sim-only technique), **3000 frames timed as one block**,
+best-of-3:
+
+| scene | ms/frame | spread | peds | police | press | fog-of-war | cover |
+|---|---|---|---|---|---|---|---|
+| CITY fight (freeroam) | 0.679 | 0.148 | ✓ | ✓ | ✓ | ✓ | 3 |
+| **POWERWORLD fight** | **0.224** | **0.047** | — | — | — | — | 37 |
+| CITY duel (control) | 0.665 | 0.124 | ✓ | ✓ | ✓ | ✓ | 3 |
+
+- **PowerWorld costs 0.329× the city sim — 67% cheaper on the CPU**, and that is *while carrying twelve
+  times more cover* (37 rocks against that theatre's 3). The pedestrian, police, press and
+  fog-of-war savings dominate cover cost by a wide margin.
+- **The spread is 3× tighter** (0.047 vs 0.148). On a locked 40 Hz panel, variance is what stutters.
+- The two city measurements agree to 2%, which is what makes the harness trustworthy.
+
+**Both axes now point the same way, and PowerWorld wins by more on the one that matters for the Deck:**
+0.625× on the GPU, **0.329× on the CPU.**
+
+### ⚠ TWO MEASUREMENTS I GOT WRONG FIRST, BOTH WORTH KEEPING
+
+1. **"GPU timing is impossible here."** It was not. `renderer.info` auto-resets per `render()`, so
+   reading it after the composer's final fullscreen pass reports that pass alone — hence `calls: 1`,
+   which I mistook for the documented hidden-pane artefact. With `autoReset = false`: **147 draw calls,
+   17,507 triangles.** The scene was being drawn the whole time.
+2. **"PowerWorld is 4× the city on the CPU."** That was noise, and the tell was in the same table: a
+   run with **0 cover boxes measured slower than one with 10**, which is impossible.
+   `performance.now()` is clamped to ~0.1 ms and a sim frame here is one to four ticks, so I was
+   reading the instrument rather than the code. Batch-timing 3000 frames put the total in the hundreds
+   of milliseconds and the quantisation stopped mattering. ⚠ **A sub-millisecond claim from a
+   0.1 ms clock is not a measurement** — if the numbers are not monotonic in the variable you are
+   changing, the instrument is the thing you are measuring.
+
 ### ⚠ WHY "OPTIMIZED" IS STILL NOT CLAIMED OUTRIGHT
 
 Every platform defect found has been fixed and each fix is verified **structurally** — the ladder
@@ -536,14 +574,15 @@ descends on both a dpr-1 and a dpr-2 display, the shadow pass is measurably abse
 and present in the city, the governor walks the ladder both ways at 40 Hz and at 60 Hz, and the aim
 heading holds across a stick release with 0.0u of drift.
 
-What has now happened: the frame cost is **measured**, the dimension is measurably cheaper and steadier
-than a city fight, and the one pass worth removing is gone. What has still **not** happened is a run on
-the devices themselves — every number above is an RTX 4090 with `EXT_disjoint_timer_query_webgl2`
-returning disjoint, so the timing is `gl.finish()` wall-clock. On a Deck's RDNA2 or an A14 the absolute
-milliseconds will be several times larger and the *balance* may shift: at 4K this machine is fragment-
-bound, while `pw-platform.md` argues a Deck at 1280×800 is CPU-bound instead. If that is right, the
-ratios above understate how much PowerWorld helps there, because the CPU savings (no peds, no wildlife,
-no police, no news crew, no road graph) are the ones it is short of.
+Both axes are measured and both favour PowerWorld — 0.625× on the GPU, 0.329× on the CPU — and the
+known waste (the shadow pass) is gone. What remains unmeasured is the **absolute** frame time on the
+devices, because these are one desktop machine's milliseconds. The ratios are the transferable part and
+they are the part that answers "is this dimension affordable there": it is cheaper than the city on both
+axes, and cheapest on the axis the Deck is bound by.
+
+What a hardware run would still add: the absolute headroom at 40 Hz and 60 Hz, whether an A14 iPad's
+WebKit changes the shape, and thermals over a long session. None of those can be inferred from here, and
+none of them are prerequisites for the dimension being the cheaper of the two things this engine runs.
 
 So the honest state: **the platforms went from broken to working, the known waste is removed, and the
 gain is measured rather than argued.** The last mile is one run of this same harness on the hardware —
