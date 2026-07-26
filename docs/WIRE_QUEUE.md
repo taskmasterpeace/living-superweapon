@@ -31,7 +31,7 @@ coordinates exist in the sheet."* They exist now — `data/citycoords.js`, 1,050
 - **Proves it:** transit Tokyo→Osaka must be far shorter than Tokyo→Lima. Today both are hash noise.
 - **Free win:** `_transitSecs` becomes honest, so the travel cinematic's duration means something.
 
-## 2 · `grantsTalents` reaches nothing  ·  ~30 min  ·  ☐
+## 2 · `grantsTalents` reaches nothing  ·  ~30 min  ·  ☑ DONE 2026-07-26
 
 `data/education.js:48` declares `grantsTalents: true` on kinesiology and **that string appears in no
 other file in the repo**.
@@ -42,7 +42,7 @@ other file in the repo**.
   only through `team`/`origin` commands.
 - **Proves it:** a graduate's `bakeSheet()` multiplier differs from a non-graduate's.
 
-## 3 · Beams ignore interior walls  ·  ~10 min  ·  ☐
+## 3 · Beams ignore interior walls  ·  ~10 min  ·  ☑ DONE 2026-07-26
 
 Open in BACKLOG since interiors shipped. `projectiles.js:754` — the beam's per-segment block loop,
 which I rewrote for the streaming beam (manual §42) — walks `world.cover` and never `world.interiors`.

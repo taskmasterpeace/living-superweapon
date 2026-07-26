@@ -26,6 +26,7 @@
 
 import { cityList } from './cities.js';
 import { countryOf, countryList } from './countries.js';
+import { heroTalents } from './ranks.js';   // one-way: ranks.js does not import education
 
 // -------------------------------------------------------------------------------------------------
 // THE TWELVE MAJORS — his table, with the system each one plugs into named so a major can never
@@ -192,6 +193,79 @@ export const bestFor = (mid, n = 10) => universitiesTeaching(mid).slice(0, n);
 
 // How long a degree takes, in WEEKS of the person's time. A better school is faster, because the
 // only thing you can buy with standing is somebody else's time.
+// =================================================================================================
+// GRADUATION — the wire that makes a degree reach the fight.
+//
+// ⚠ `grantsTalents: true` sat on kinesiology and THAT STRING APPEARED IN NO OTHER FILE IN THE REPO.
+// The flag was declared, the balance rule behind it was written down, and nothing could read it —
+// which is why the whole module measured 45% reach with one importer. A field nothing consumes is
+// the same as no field.
+//
+// The wire is deliberately ONE-WAY: education writes `def.talents`, and `heroTalents()` in ranks.js
+// already prefers `def.talents` over its derived fallback ("ORIGIN customs pick their own"). So
+// `bakeSheet()` converts a degree into the same per-frame multipliers everything else uses, and
+// ranks.js does not have to import education.js — no cycle, no second ladder.
+//
+// ⚠ AND STUDY CAN NEVER BUY MIGHT. That is Robert's rule, already stated on the kinesiology row:
+// study buys TECHNIQUE. A talent is a multiplier on what you already do; an attribute is what you
+// are. Keep the grant on the talent side of that line or the rank ladder becomes a shopping trip.
+
+// Which talent a degree earns. Only kinesiology touches the body, and WHICH talent it earns comes
+// from the school — a top-standing programme teaches the harder discipline.
+export const DEGREE_TALENT = {
+  kinesiology: { top: 'martial', mid: 'acrobat', base: 'ironwill' },
+};
+export function talentFor(majorId, uni) {
+  const M = MAJORS[majorId];
+  if (!M || !M.grantsTalents) return null;
+  const tier = DEGREE_TALENT[majorId];
+  if (!tier) return null;
+  // ⚠ UNIVERSITY SCORES ARE 0..1, NOT 0..100. Written against a percentage the thresholds never
+  // fired and the best programme in the world awarded the beginner talent.
+  const score = (uni && (uni.score ?? uni.standingScore)) || 0;
+  return score >= 0.75 ? tier.top : score >= 0.5 ? tier.mid : tier.base;
+}
+
+/**
+ * Award a degree. Mutates and returns the def so a roster entry, an ORIGIN custom and a hired
+ * staff member all take the same path. Idempotent — graduating twice does not stack.
+ */
+export function applyDegree(def, majorId, uni) {
+  if (!def || !MAJORS[majorId]) return def;
+  def.degrees = def.degrees || [];
+  if (!def.degrees.some((d) => d.major === majorId)) {
+    def.degrees.push({ major: majorId, uni: (uni && uni.name) || null, id: (uni && uni.id) || null });
+  }
+  const t = talentFor(majorId, uni);
+  if (t) {
+    // ⚠ STUDY ADDS TO WHAT YOU ARE, IT DOES NOT REPLACE IT. `heroTalents()` returns `def.talents`
+    // whenever it is set, so creating an empty array here and pushing one talent ERASED the three
+    // SARGE was authored with — he went to university and came back having forgotten how to shoot.
+    // Seed from whatever he already has (authored, derived, or previously studied) first.
+    if (!def.talents || !def.talents.length) def.talents = heroTalents(def).slice();
+    // ⚠ THE CAP IS THREE, AND MOST OF THE ROSTER IS ALREADY AT IT — so "add if there is room"
+    // meant a degree did nothing for almost everybody, which is a wire that technically works and
+    // changes no fight. A studied talent DISPLACES the last one instead.
+    //
+    // That is a design decision, not a workaround, and it is the better one: study costs you
+    // something. The last slot is the least-signature talent (heroTalents derives it last, and an
+    // authored list puts the defining pair first), so a degree reshapes the edges of a fighter and
+    // never their core. It is also what makes the choice of major interesting rather than free.
+    if (!def.talents.includes(t)) {
+      if (def.talents.length >= 3) def.talents[2] = t; else def.talents.push(t);
+    }
+  }
+  return def;
+}
+
+/** One line for the codex: what they studied and where. Null when they did not. */
+export function degreeLine(def) {
+  const d = def && def.degrees && def.degrees[0];
+  if (!d) return null;
+  const M = MAJORS[d.major];
+  return (M ? M.name.toUpperCase() : d.major.toUpperCase()) + (d.uni ? ' · ' + d.uni.toUpperCase() : '');
+}
+
 export const BASE_WEEKS = { theory: 12 };
 export function studyWeeks(uni, mid) {
   const f = uni && uni.faculty.find((x) => x.id === mid);
