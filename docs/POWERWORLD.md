@@ -501,22 +501,53 @@ publishes ESF's numeric ki costs**, so any ki economy we build is ours to calibr
 | **Steam Deck** | ✅ boot fixed · the 40 Hz governor inversion fixed · **the quality ladder now has three real rungs** (tiers 2 and 1 rendered identically before, because `_maxPR` is 1 there) · the chase view drops the whole directional-shadow pass · the packaged path already existed. ⚠ **no GPU timings** — see below |
 | **iPad** | ✅ boot no longer dies · safe areas resolve (`viewport-fit=cover`) · the item button exists on the touch layer · **lifting the aim thumb no longer aims at the corner of the world**. ⚠ **no GPU timings** |
 
-### ⚠ WHY "OPTIMIZED" IS NOT CLAIMED, PRECISELY
+### MEASURED — POWERWORLD IS CHEAPER THAN A CITY FIGHT, AND STEADIER
+
+GPU-synced with `gl.finish()` after every frame, 40 samples, at **3840×2160** — because this project's
+own record says a 720p benchmark returns NEGATIVE deltas: the work is smaller than frame-to-frame
+variance until fragment cost dominates. Ratios are the transferable part; the absolutes are a 4090's.
+
+| scene | median | p10 | p90 |
+|---|---|---|---|
+| CITY · shadow on (shipped) | 1.6 ms | 1.4 | **2.5** |
+| **POWERWORLD · shadow off (shipped)** | **1.0 ms** | 0.9 | **1.2** |
+| POWERWORLD · shadow forced on | 1.1 ms | 1.0 | 1.5 |
+
+- **PowerWorld costs 0.625× the city frame** — 37.5% cheaper. The platform research predicted this from
+  source and it is now measured rather than argued: no pedestrians, wildlife, traffic, police, news
+  crew, city tiles, road graph, fog-of-war march or interiors.
+- **The directional-shadow pass was 9% of the frame it was in**, and removing it is also a correctness
+  fix (a 220u shadow box cannot serve a camera sweeping ~3M u²).
+- ⚠ **The p90 is the number that matters for a 40 Hz target.** PowerWorld's is **1.2 ms against the
+  city's 2.5** — less than half the frame-time variance. Stutter is what breaks a locked refresh, not
+  the median, so the steadier frame is worth more here than the faster one.
+
+⚠ **A correction to my own earlier claim.** I previously reported that GPU timing was impossible in this
+environment, citing `renderer.info.render.calls === 1`. That was my error, not the environment's:
+`renderer.info` auto-resets per `render()`, so reading it after the composer's final fullscreen pass
+reports only that pass. With `autoReset = false` the true totals are **147 draw calls and 17,507
+triangles** — the scene was being drawn the whole time. The measurement above is what I should have run
+two attempts earlier.
+
+### ⚠ WHY "OPTIMIZED" IS STILL NOT CLAIMED OUTRIGHT
 
 Every platform defect found has been fixed and each fix is verified **structurally** — the ladder
 descends on both a dpr-1 and a dpr-2 display, the shadow pass is measurably absent in the chase view
 and present in the city, the governor walks the ladder both ways at 40 Hz and at 60 Hz, and the aim
 heading holds across a stick release with 0.0u of drift.
 
-What has **not** happened is a frame-time measurement on either device. It cannot happen from here:
-`EXT_disjoint_timer_query_webgl2` is present but every query returns disjoint, and
-`renderer.info.render.calls` reads **1** — the documented hidden-pane artefact, because this
-environment does not composite. Attempts at Deck (1280×800) and iPad (1620×1080) resolutions returned
-CPU submission time against a scene that was never drawn, which is worse than no number.
+What has now happened: the frame cost is **measured**, the dimension is measurably cheaper and steadier
+than a city fight, and the one pass worth removing is gone. What has still **not** happened is a run on
+the devices themselves — every number above is an RTX 4090 with `EXT_disjoint_timer_query_webgl2`
+returning disjoint, so the timing is `gl.finish()` wall-clock. On a Deck's RDNA2 or an A14 the absolute
+milliseconds will be several times larger and the *balance* may shift: at 4K this machine is fragment-
+bound, while `pw-platform.md` argues a Deck at 1280×800 is CPU-bound instead. If that is right, the
+ratios above understate how much PowerWorld helps there, because the CPU savings (no peds, no wildlife,
+no police, no news crew, no road graph) are the ones it is short of.
 
-So: **the platforms went from broken to working, and the known waste is removed.** The frame-cost
-figures in `docs/powerworld/pw-platform.md` remain arithmetic from source and say so. Calling it
-optimized needs a foregrounded tab on the real hardware, and that is one run of the same harness.
+So the honest state: **the platforms went from broken to working, the known waste is removed, and the
+gain is measured rather than argued.** The last mile is one run of this same harness on the hardware —
+and it is now a harness that works, which it was not an hour ago.
 
 ✅ **Teleport-intercept — SHIPPED** (manual §46). No new key, system or state field: `launchT` is the
 eligibility signal, `lastHitBy` the ownership check, `burstT` the clamp lift, `updateBlinkMark` the
