@@ -28,6 +28,11 @@ export const TitleMixin = {
     this.title.innerHTML = `
       <div class="topbar"><button id="tAtlas">🗺 Atlas</button><button id="tRank">📊 Rankings</button><button id="tNet">🌐 Online</button><button id="tTut">🎓 Tutorial</button><button id="tOpt">⚙ Options</button><button id="tHow">❓ How to Play</button></div>
       <div class="tag">Machine King Labs</div>
+      <div class="thead"><div class="tleft">
+      <h1><span class="t1">WAR WORLD</span><span class="t2">ASCENDANTS</span></h1>
+      <div class="clsbar"><span class="clschip">TOP SECRET // THRESHOLD</span><span class="clsline">THRESHOLD TREATY OFFICE — ASCENDANT REGISTRY · INDEX COPY 7 OF 9 · COSMIC-EYES ONLY</span><span class="clschip">WWA-INDEX</span></div>
+      <div class="term">&gt; QUERY: ASCENDANT INDEX — <b id="termCount"></b> · THEATER: <span class="thchip" id="termTheater" title="Open the City Atlas">${(() => { try { const t = this.theater; if (!t || t.flagship) return 'THE WHITE CITY'; if (t.gallery) return 'PROVING GROUND'; const c = cityList()[t.cityId]; return c ? c.name.toUpperCase() : 'THE WHITE CITY'; } catch { return 'THE WHITE CITY'; } })()}</span><span class="tcur">▍</span></div>
+      </div>
       <div class="colddesk" id="coldDesk">
         <div class="cdmon">
           <canvas id="cdCv" width="384" height="216"></canvas>
@@ -44,9 +49,7 @@ export const TitleMixin = {
           <div class="cdstats" id="cdStats"></div>
         </div>
       </div>
-      <h1><span class="t1">WAR WORLD</span><span class="t2">ASCENDANTS</span></h1>
-      <div class="clsbar"><span class="clschip">TOP SECRET // THRESHOLD</span><span class="clsline">THRESHOLD TREATY OFFICE — ASCENDANT REGISTRY · INDEX COPY 7 OF 9 · COSMIC-EYES ONLY</span><span class="clschip">WWA-INDEX</span></div>
-      <div class="term">&gt; QUERY: ASCENDANT INDEX — <b id="termCount"></b> · THEATER: <span class="thchip" id="termTheater" title="Open the City Atlas">${(() => { try { const t = this.theater; if (!t || t.flagship) return 'THE WHITE CITY'; if (t.gallery) return 'PROVING GROUND'; const c = cityList()[t.cityId]; return c ? c.name.toUpperCase() : 'THE WHITE CITY'; } catch { return 'THE WHITE CITY'; } })()}</span><span class="tcur">▍</span></div>
+</div>
       <div id="circuitBar" style="display:flex;align-items:center;gap:10px;margin:2px 0 4px;padding:8px 12px;border:1px solid var(--line-gold,#6b5824);background:var(--surface,#12110ecc);cursor:pointer;border-radius:var(--r-1,4px)"></div>
       <div class="modes" id="modes"></div>
       <div class="selwrap">
@@ -152,12 +155,34 @@ export const TitleMixin = {
     };
     // ---- roster with filters / sort / search (52+ heroes need navigation) ----
     const filtersEl = this.title.querySelector('#filters');
-    const fState = this._fState || (this._fState = { threat: 'ALL', flight: 'ANY', custom: false, q: '', sort: 'default' });
+    const fState = this._fState || (this._fState = { threat: 'ALL', flight: 'ANY', role: 'ALL', custom: false, q: '', sort: 'default' });
     const THREATS = ['ALL', 'Low', 'Moderate', 'High', 'Very High', 'Extreme'];
+    // ⚠ ROLES ARE DERIVED FROM THE KIT, never a hand-written tag on each hero. Robert: "it's hard to
+    // find the type of characters I want" — the only filters were THREAT TIERS, which answer "how
+    // dangerous" and never "what do they DO". A new hero classifies itself the moment its abilities
+    // exist, and a custom from ORIGIN lands in the right bucket with no extra authoring.
+    const _abil = (c) => Object.values(c.abilities || {});
+    const _hasT = (c, t) => _abil(c).some(a => a.type === t);
+    const ROLES = {
+      BRAWLER:   (c) => ['rusher', 'bruiser'].includes(c.ai && c.ai.style) || (c.strength || 5) >= 9,
+      BLASTER:   (c) => ['beamer', 'artillery'].includes(c.ai && c.ai.style) || (_hasT(c, 'beam') && (c.beamMight || 1) >= 1.2),
+      GUNNER:    (c) => _hasT(c, 'rifle') || _hasT(c, 'bow'),
+      BLADE:     (c) => _abil(c).some(a => a.dmgClass === 'slash'),
+      GRAPPLER:  (c) => (c.ai && c.ai.style) === 'grappler' || _hasT(c, 'tentacle'),
+      COMMANDER: (c) => _hasT(c, 'summon') || _hasT(c, 'construct') || (c.ai && c.ai.style) === 'summoner',
+      TRICKSTER: (c) => (c.ai && c.ai.style) === 'trickster' || _hasT(c, 'portal') || c.phase || c.teleEscape,
+      // ⚠ A FILTER THAT MATCHES 39 OF 52 IS NOT A FILTER. The first ZONER predicate included any
+      // hero with a cone, which is most of the roster. Area-denial is a DOCTRINE, so it reads the
+      // doctrine — plus mines, which are the one ability that is purely about owning ground.
+      ZONER:     (c) => (c.ai && c.ai.style) === 'zoner' || _hasT(c, 'mine'),
+    };
+    const ROLE_IDS = ['ALL', ...Object.keys(ROLES)];
+
     const stCache = new Map(); const stOf = (c) => { if (!stCache.has(c.id)) stCache.set(c.id, heroStats(c)); return stCache.get(c.id); };
     const listNow = () => {
       let L = ROSTER.slice();
       if (fState.threat !== 'ALL') L = L.filter(c => c.threat === fState.threat);
+      if (fState.role !== 'ALL' && ROLES[fState.role]) L = L.filter(ROLES[fState.role]);
       if (fState.flight === 'FLIERS') L = L.filter(c => (c.flightTier ?? 3) > 0);
       if (fState.flight === 'GROUNDED') L = L.filter(c => (c.flightTier ?? 3) === 0);
       if (fState.custom) L = L.filter(c => c.isCustom);
@@ -203,11 +228,14 @@ export const TitleMixin = {
       return card;
     };
     const renderFilters = () => {
-      filtersEl.innerHTML = `<span class="flab">FILTER //</span>` + THREATS.map(t => `<span class="fc${fState.threat === t ? ' on' : ''}" data-th="${t}">${t}</span>`).join('')
+      filtersEl.innerHTML = `<div class="frow1"><span class="flab">ROLE //</span>`
+        + ROLE_IDS.map(r => `<span class="fc rc${fState.role === r ? ' on' : ''}" data-ro="${r}">${r}${r === 'ALL' ? '' : ` <i>${ROSTER.filter(ROLES[r]).length}</i>`}</span>`).join('')
+        + `</div><div class="frow2"><span class="flab">TIER //</span>` + THREATS.map(t => `<span class="fc${fState.threat === t ? ' on' : ''}" data-th="${t}">${t}</span>`).join('')
         + ['ANY', 'FLIERS', 'GROUNDED'].map(fl => `<span class="fc${fState.flight === fl ? ' on' : ''}" data-fl="${fl}">${fl === 'ANY' ? '✈ ANY' : fl}</span>`).join('')
         + `<span class="fc${fState.custom ? ' on' : ''}" data-cu="1">CUSTOM</span>`
         + `<select id="fSort"><option value="default">SORT: ROSTER</option><option value="name">NAME</option><option value="threat">THREAT</option><option value="power">POWER</option><option value="hp">HP</option><option value="spd">SPEED</option></select>`
-        + `<input id="fQ" placeholder="QUERY INDEX…" value="${fState.q}"><span class="cnt" id="fCnt"></span>`;
+        + `<input id="fQ" placeholder="SEARCH…" value="${fState.q}"><span class="cnt" id="fCnt"></span></div>`;
+      filtersEl.querySelectorAll('[data-ro]').forEach(c => c.onclick = () => { fState.role = c.dataset.ro; renderFilters(); renderRoster(); });
       filtersEl.querySelector('#fSort').value = fState.sort;
       filtersEl.querySelectorAll('[data-th]').forEach(c => c.onclick = () => { fState.threat = c.dataset.th; renderFilters(); renderRoster(); });
       filtersEl.querySelectorAll('[data-fl]').forEach(c => c.onclick = () => { fState.flight = c.dataset.fl; renderFilters(); renderRoster(); });

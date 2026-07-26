@@ -719,6 +719,70 @@ export const CSS = `
     body.phone.playing #hud .rotate, body.tablet.playing #hud .rotate{ display:flex; }
     body.phone.playing #touch, body.tablet.playing #touch{ display:none !important; }   /* thumbs are useless under the gate */
   }
+
+/* ---- THE FRONT PAGE, DE-DENSIFIED (2026-07-26) ------------------------------------------------
+   Robert: "it's too dense and I have to scroll down, and it's hard to find the type of characters
+   I want." Measured before the change: 1393px of content in a 900px viewport — 493px of forced
+   scroll — with the roster not starting until y=734, so you saw ONE half-row of characters.
+   ⚠ The fix is not smaller type. It is that the title, the classification bar, the query line and
+   the KMK 9 desk were FOUR full-width blocks stacked vertically. They are one two-column band now,
+   which is ~150px back, and every one of them is still on screen. */
+#title .thead{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,460px); gap:16px 26px;
+  align-items:center; width:100%; margin-bottom:6px; }
+#title .thead .tleft{ min-width:0; display:flex; flex-direction:column; gap:4px; }
+#title .thead h1{ margin:0 0 2px; }
+#title .thead .colddesk{ margin:0; }
+/* ⚠ MOVING THE DESK WAS NOT ENOUGH. Measured after the two-column change the band was still 276px
+   tall, because the band takes the HEIGHT OF ITS TALLEST CHILD and the KMK monitor is a 384x216
+   canvas. Scaling the monitor is what actually gives the roster its room back — the desk is
+   atmosphere and the roster is the product. */
+#title .thead .colddesk .cdmon{ width:268px; }
+#title .thead .colddesk canvas{ width:268px !important; height:151px !important; display:block; }
+#title .thead .colddesk .cdhead{ font-size:var(--t-lg); line-height:1.15; }
+#title .thead .colddesk .cdsub{ font-size:var(--t-tiny); }
+#title .thead{ grid-template-columns:minmax(0,1fr) minmax(0,400px); }
+
+/* the mode cards were 130px of mostly empty space */
+#title .modes{ gap:8px; }
+/* the class is .modecard, not .mode — the first attempt styled a selector that does not exist */
+#title .modecard{ padding:9px 13px; }
+#title .modecard .mi{ font-size:17px; margin-bottom:1px; }
+#title .modecard .mn{ font-size:var(--t-md); }
+#title .modecard .mt{ font-size:var(--t-micro); }
+/* cap the header band: the desk is atmosphere, the roster is the product */
+#title .thead{ max-height:186px; }
+#title .thead .colddesk .cdstats{ display:none; }
+#title .filters{ gap:4px; }
+#title .filters .fc{ padding:3px 8px; }
+#title h1{ font-size:clamp(30px,4.4vw,46px); }
+
+/* ⚠ THE PAGE MUST NOT SCROLL — THE ROSTER SHOULD. That is the actual answer to "I have to scroll
+   down". Trimming blocks only ever bought pixels back; the roster still began at y=724 because
+   the mode cards, the tabs and two filter rows all sit above it inside selwrap. Making the title
+   a fixed-height column and giving the ROSTER the leftover space with its own scrollbar means the
+   characters are always on screen and always the biggest thing on it — and the page itself never
+   moves, so nothing you were looking at slides away.
+   ⚠ The desktop rule only: the phone/tablet branch further down deliberately scrolls the page,
+   because at 500px there is no leftover height to give anybody. */
+@media (min-width: 1081px) and (min-height: 620px){
+  #title{ height:100vh; overflow:hidden; justify-content:flex-start; }
+  #title .selwrap{ flex:1; min-height:0; }
+  #title .selwrap > div:last-child{ min-height:0; }
+  #title .roster{ flex:1; min-height:0; overflow-y:auto; overflow-x:hidden;
+    align-content:start; padding-right:6px; scrollbar-width:thin; }
+  #title .preview{ overflow-y:auto; min-height:0; }
+}
+@media (max-width: 1080px){
+  #title .thead{ grid-template-columns:1fr; }
+  #title .thead .colddesk{ display:none; }   /* the desk is atmosphere; the roster is the product */
+}
+
+/* the filters are TWO rows now: what they DO, then how dangerous they are */
+#title .filters{ flex-direction:column; align-items:stretch; gap:6px; }
+#title .filters .frow1, #title .filters .frow2{ display:flex; flex-wrap:wrap; align-items:center; gap:6px; }
+#title .filters .fc.rc{ border-color:var(--line-2); }
+#title .filters .fc.rc i{ font-style:normal; font-size:var(--t-micro); color:var(--text-5); margin-left:3px; }
+#title .filters .fc.rc.on i{ color:var(--on-gold); opacity:.8; }
 `;
 
 export const CODEX_MOBILE = `
