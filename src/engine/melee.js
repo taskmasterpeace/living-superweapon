@@ -122,7 +122,7 @@ export class MeleeSystem {
         foe.state = 'hit'; foe.stateT = 0;
         foe.takeDamage(dmg * 0.35, { src: f, unblockable: true, hitstop: 0.12, kb: { x: f.aim.x * 46, y: 8, z: f.aim.z * 46 } });
         g.vfx.impactStar(imp, 12, '#ffd24a', 0.24); g.vfx.ring(imp, { color: '#ffd24a', r0: 1, r1: 12, life: 0.3 });
-        g.world.shake(1.6); g.world.punch(0.7); g.audio.impact(1.3, imp); g.audio.boom(0.5, imp); g.slowmo(0.14, 0.4);
+        g.world.shake(1.6); g.world.punch(0.7); g.audio.meleeHit(1.3, imp, true); g.slowmo(0.14, 0.4);
         if (g.hud) { g.hud.damageNumber(foe.pos, 'GUARD CRUSH', '#ffd24a', true); g.hud.flashScreen('#ffd24a', 0.12); }
       } else if (blocked) {
         foe.takeDamage(dmg, { src: f, strike: true, hitstop: 0.07 });     // straights get blocked like strikes
@@ -148,12 +148,14 @@ export class MeleeSystem {
         // which is under two frames of a held pose — the animation flowed straight through the blow.
         f.hitstop = Math.max(f.hitstop, hay ? 0.19 : 0.10);
         g.vfx.impact(imp, { x: f.aim.x, z: f.aim.z }, { color: f.def.colors.accent, power: (hay ? 2 : 1.1) * fp });
-        g.world.shake((hay ? 2.6 : 1.15) * fp); g.audio.impact((hay ? 1.8 : 1.0) * fp, imp);
+        g.world.shake((hay ? 2.6 : 1.15) * fp); g.audio.meleeHit((hay ? 1.8 : 1.0) * fp, imp, hay);
         if (hay || mom > 1.55) {
           // ⚠ THE FLASH IS THE PRINT PASS'S ONE INVERTED FRAME NOW, not a white wash over the whole
           // screen. A wash hides the thing you just did; an inverted frame IS the drawing changing,
           // which is the trick fighting games have run on for thirty years.
-          g.world.punch(0.9); g.slowmo(0.16, 0.34); g.audio.boom(0.62);
+          // ⚠ NO `boom` ON A FIST. boom is the explosion sample; `meleeHit` above already layered
+          // the crack and the body thud, which is what heavy actually sounds like.
+          g.world.punch(0.9); g.slowmo(0.16, 0.34);
         }
         if (dive) { g.vfx.ring(foe.pos.clone().setY(Math.max(0.4, foe.pos.y - 4)), { color: '#ffffff', r0: 1, r1: 10, life: 0.3, flat: true, y: 0.4 }); g.audio.boom(0.5, imp); }
       }
@@ -215,7 +217,7 @@ export class MeleeSystem {
     v.launchT = 1.35; v._thrownT = 1.35; v._thrownBy = holder; if (v._thrownHit) v._thrownHit.clear();
     holder.hitstop = Math.max(holder.hitstop, 0.08);
     g.vfx.impact(v.pos.clone().setY(5.6), { x: dir.x, z: dir.z }, { color: holder.def.colors.accent, power: back ? 1.9 : 1.4 });
-    g.world.shake(back ? 1.7 : 1.2); g.world.punch(0.72); g.audio.impact(back ? 1.4 : 1.1, v.pos); g.audio.boom(0.4, v.pos);
+    g.world.shake(back ? 1.7 : 1.2); g.world.punch(0.72); g.audio.meleeHit(back ? 1.4 : 1.1, v.pos, true);
     g.heroYell(holder, 1.0);
     g.slowmo(0.1, 0.42); if (g.hud) g.hud.flashScreen('#fff', 0.14);
   }
@@ -253,10 +255,10 @@ export class MeleeSystem {
           const fp = 0.6 + 0.4 * mom;   // the impact star and the hit sound ride the SAME number
           g.vfx.impact(imp, { x: f.aim.x, z: f.aim.z }, { color: f.def.colors.accent, power: (fin ? 1.7 : 0.65) * fp });
           g.world.shake((fin ? 1.5 : 0.6) * fp); g.audio.impact((fin ? 1.3 : 0.65) * fp, imp);
-          if (fin || mom > 1.55) { g.world.punch(0.7); g.slowmo(0.12, 0.4); if (g.hud) g.hud.flashScreen('#fff', 0.16); g.audio.boom(0.4); }
+          if (fin || mom > 1.55) { g.world.punch(0.8); g.slowmo(0.14, 0.36); }
           if (dive) {   // the launcher lands: arrival ring under the victim — the ground finishes the sentence
             g.vfx.ring(foe.pos.clone().setY(Math.max(0.4, foe.pos.y - 4)), { color: '#ffffff', r0: 1, r1: 9, life: 0.3, flat: true, y: 0.4 });
-            g.audio.boom(0.45, imp);
+            g.audio.meleeHit(1.2, imp, true);
           }
         }
         if (!fin) f.comboWin = 0.42;

@@ -8,21 +8,39 @@
 export const KEYMAPS = {
   classic: {
     name: 'CLASSIC', wheel: 'hero', digitsSwap: true,
-    up: 'Space', down: 'KeyZ', guard: 'KeyC', item: 'KeyX',
+    up: 'Space', down: 'KeyZ', guard: 'KeyC', item: 'KeyX', strike: 'KeyV', grab: 'KeyG',
     upLabel: 'SPACE', downLabel: 'Z', guardLabel: 'C / MOUSE4', itemLabel: 'X', swapLabel: 'WHEEL · 1–0',
+    strikeLabel: 'V', grabLabel: 'G',
     blurb: 'What shipped. The wheel (and 1–0) swaps hero · Z descends · C guards · X gadget.',
   },
   pilot: {
     name: 'PILOT', wheel: 'ability', digitsSwap: false,
-    up: 'Space', down: 'KeyC', guard: 'KeyX', item: 'KeyZ',
+    up: 'Space', down: 'KeyC', guard: 'KeyX', item: 'KeyZ', strike: 'KeyV', grab: 'KeyG',
     upLabel: 'SPACE', downLabel: 'C', guardLabel: 'X / MOUSE4', itemLabel: 'Z', swapLabel: '[ ]',
+    strikeLabel: 'V', grabLabel: 'G',
     blurb: 'The wheel picks your POWER and LMB fires it · [ ] swaps hero · SPACE up, C down · X guards, Z gadget.',
   },
   hybrid: {
     name: 'HYBRID', wheel: 'ability', digitsSwap: false,
-    up: 'Space', down: 'KeyZ', guard: 'KeyC', item: 'KeyX',
+    up: 'Space', down: 'KeyZ', guard: 'KeyC', item: 'KeyX', strike: 'KeyV', grab: 'KeyG',
     upLabel: 'SPACE', downLabel: 'Z', guardLabel: 'C / MOUSE4', itemLabel: 'X', swapLabel: '[ ]',
+    strikeLabel: 'V', grabLabel: 'G',
     blurb: 'PILOT’s wheel-select and [ ] hero swap, with guard and gadget left on C and X.',
+  },
+  // ⚠ BRAWLER — Robert: *"i dont know how to do melee with my keyboard bro its hard."* He is right,
+  // and the reason is physical: with fingers on WASD, STRIKE on V is reachable and GRAB on G is not.
+  // G is two rows up and three columns right of D — you have to look down and move your whole hand,
+  // mid-fight, to use one third of the melee trifecta. This scheme puts all three under the left
+  // hand without moving off WASD: **F strike · C guard · V grab**, index / ring / middle.
+  // ⚠ It changes NOTHING about the powers. The three-button-mouse melee stance from the design spec
+  // is a bigger change (LMB/RMB have to stop being powers) and belongs with the strike-grammar
+  // slice; this is the ergonomic half, and it is the half that is stopping him playing today.
+  brawler: {
+    name: 'BRAWLER', wheel: 'ability', digitsSwap: false,
+    up: 'Space', down: 'KeyZ', guard: 'KeyC', item: 'KeyX', strike: 'KeyF', grab: 'KeyV',
+    upLabel: 'SPACE', downLabel: 'Z', guardLabel: 'C / MOUSE4', itemLabel: 'X', swapLabel: '[ ]',
+    strikeLabel: 'F', grabLabel: 'V',
+    blurb: 'For fist fights. The whole melee trifecta sits under your left hand — F punch, C guard, V grab — so you never leave WASD.',
   },
 };
 // Resolve a stored scheme name (tolerates the early 'southpaw' build) to a live map.

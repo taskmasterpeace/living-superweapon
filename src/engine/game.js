@@ -2656,7 +2656,7 @@ export class Game {
     // SECOND WIND (manual §13): downed is a held breath — the only input that matters is the rally
     if (p.downedT > 0) {
       p.moveDir = { x: 0, z: 0 };
-      const holding = m.left || m.right || inp.down('KeyV') || inp.down('KeyQ') || inp.down('KeyE')
+      const holding = m.left || m.right || inp.down(KM.strike || 'KeyV') || inp.down('KeyQ') || inp.down('KeyE')
         || inp.down('KeyH') || inp.down('KeyR')
         || pad.down('lmb') || pad.down('rmb') || pad.down('strike') || pad.down('q') || pad.down('e') || pad.down('r') || pad.down('f');
       this.secondWindHold(p, holding, dt);
@@ -2713,10 +2713,10 @@ export class Game {
 
     // --- melee trifecta — Strike (tap=jab, HOLD=haymaker) · Grab · Guard (V/G/C+X+Mouse4, pad ▢/○/L1) ---
     const np = this.netplay && this.netplay.active ? this.netplay : null;
-    if (inp.pressed('KeyV') || pad.pressed('strike')) { this.melee.chargeStart(p); if (np) np.queueMelee('cs'); }
-    if (inp.released('KeyV') || pad.released('strike')) { this.melee.chargeRelease(p); if (np) np.queueMelee('cr'); }
+    if (inp.pressed(KM.strike || 'KeyV') || pad.pressed('strike')) { this.melee.chargeStart(p); if (np) np.queueMelee('cs'); }
+    if (inp.released(KM.strike || 'KeyV') || pad.released('strike')) { this.melee.chargeRelease(p); if (np) np.queueMelee('cr'); }
     // G: carrying → THROW it · something heavy in reach → hoist it · otherwise the normal grab
-    if (inp.pressed('KeyG') || pad.pressed('grab')) {
+    if (inp.pressed(KM.grab || 'KeyG') || pad.pressed('grab')) {
       // THE G-CHAIN (altitude plan 3), in priority order. Four behaviours on one key is only
       // acceptable because the PROMPT shows which one is armed — see hud.interactPrompt.
       //   focused interactable ? interact : carrying ? throw : gear underfoot ? pick up

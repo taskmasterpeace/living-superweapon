@@ -154,7 +154,7 @@ export class SampleBank {
   }
   // Returns TRUE when the event is handled (played, muted, out of earshot) — FALSE only when
   // no buffer is ready yet, which tells the caller to run its synth fallback.
-  play(name, { pos = null, gain = 1, rate = 1, bus = 'sfx', reach } = {}) {
+  play(name, { pos = null, gain = 1, rate = 1, bus = 'sfx', reach, delay = 0 } = {}) {
     const a = this.a;
     if (!a.ok || a.muted) return true;
     const m = MANIFEST[name]; if (!m) return false;
@@ -166,7 +166,9 @@ export class SampleBank {
     src.playbackRate.value = Math.max(0.25, fin(rate, 1) * (1 + (Math.random() * 2 - 1) * rj));
     const g = a.ctx.createGain(); g.gain.value = Math.max(0, fin(gain, 1) * (m.g ?? 1) * fin(pg, 1));
     src.connect(g); g.connect((a.bus && a.bus[bus]) || a.master);
-    src.start();
+    // ⚠ an offset start is what makes a layer read as a SECOND event rather than a thicker first
+    // one. It was accepted by callers and silently dropped here.
+    src.start(fin(delay, 0) > 0 ? a.ctx.currentTime + fin(delay, 0) : 0);
     return true;
   }
   // Sustained loop with the sustain() contract: set(intensity, pos) every live frame,

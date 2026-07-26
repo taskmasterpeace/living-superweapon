@@ -149,6 +149,21 @@ export class AudioBus {
     o.start(); o.stop(this.t + 0.12);
   }
   // heavy, violent melee impact — low thud + high crack (cracks fade with distance faster than thuds)
+  // ⚠ A PUNCH IS THREE SOUNDS, NOT ONE — and a haymaker was firing `boom`, which is the EXPLOSION
+  // sample. That is why it sounded wrong: a fist landing on a body was detonating. Real weight is a
+  // CRACK (the contact), a THUD (the body absorbing it) a few milliseconds later, and air. Layering
+  // two existing recordings with a small offset is what makes a hit sound heavy; volume alone just
+  // makes the same thin sound louder, which is the thing that reads as cheap.
+  meleeHit(power = 1, pos = null, haymaker = false) {
+    if (!this.ok || this.muted) return;
+    this.impact(power, pos);                                   // the crack — the recorded punch
+    if (!haymaker) return;
+    // the body, a beat later. ⚠ through `later`-free scheduling: audio owns its own clock and must
+    // never reach into the frame loop.
+    this.sample('land.flesh', { pos, gain: Math.min(1.0, 0.42 + power * 0.22), rate: 0.82, delay: 0.035 });
+    this.sample('hit.soft', { pos, gain: Math.min(0.7, 0.2 + power * 0.18), rate: 0.7, delay: 0.012 });
+  }
+
   impact(power = 1, pos = null) {
     if (!this.ok || this.muted) return;
     if (this.sample(power > 1.05 ? 'punch.heavy' : 'punch.med', { pos, gain: Math.min(1.3, 0.7 + power * 0.35) })) return;
