@@ -816,6 +816,68 @@ export class Game {
   }
   // ⚠ ONE PUMP FOR EVERY FIGHTER'S PSYCHE. Decay, the pending instant action, and the tell —
   // in one place, so an emotion cannot be updated twice or forgotten by a code path added later.
+  // ⚠ THE WORLD DRIVES THE WHEEL TOO, not just punches. Without this a fighter is emotionally inert
+  // until someone hits them, which is the opposite of how people work — most of what you feel in a
+  // fight comes from the SITUATION: being outnumbered, being hunted, losing, being watched, having
+  // nothing to do. Appraised once a second per fighter, so it costs nothing and cannot spin.
+  _ambientPsyche(e, t) {
+    const P = e._psyche;
+    if (!P) return;
+    if (t - (P._ambT || -9) < 1) return;
+    P._ambT = t;
+    const near = (r) => this.entities.filter(o => o.alive && o.def && o !== e && !o.isDummy
+      && Math.hypot(o.pos.x - e.pos.x, o.pos.z - e.pos.z) < r);
+    const foes = near(90).filter(o => this.isFoe(e, o));
+    const allies = near(90).filter(o => !this.isFoe(e, o));
+
+    if (foes.length === 0) {
+      // nothing to do is its own pressure — it is what makes a bored fighter go looking
+      P.feel(allies.length ? 'idle' : 'alone', 1, t);
+    } else if (foes.length - allies.length >= 2) {
+      P.feel('outnumbered', Math.min(1.4, (foes.length - allies.length) * 0.5), t);
+    }
+
+    const hpF = e.hp / Math.max(1, e.maxHp);
+    if (hpF < 0.3) P.feel('lowHealth', (0.3 - hpF) * 3, t);
+    if (e._wounds && (e._wounds.arm || e._wounds.leg || e._wounds.torso)) P.feel('wounded', 0.35, t);
+
+    // ⚠ THE FIGHT'S SCORE IS A DRIVER. Who is actually ahead — measured off the same stats the
+    // report and the end screen use, so the feeling cannot disagree with the scoreboard.
+    const st = this.stats && this.stats.get && this.stats.get(e);
+    if (st) {
+      const given = st.dmg || 0, taken = st.taken || 0;
+      if (given > taken * 1.6 && given > 40) P.feel('winning', 0.5, t);
+      else if (taken > given * 1.6 && taken > 40) P.feel('losing', 0.5, t);
+    }
+
+    // BEING HUNTED. The police ladder is already a real pressure in the world; it should be one
+    // inside the fighter's head as well.
+    if (this.police && this.police.heatOf) {
+      const heat = this.police.heatOf(e) || 0;
+      if (heat > 35) P.feel('hunted', Math.min(1.3, heat / 120), t);
+    }
+
+    // BEING WATCHED. Glory is only served if someone is there to see it — the crowd the
+    // pedestrian layer already simulates.
+    if (this.peds && this.peds.mood) {
+      if (this.peds.mood === 'cheer') P.feel('crowdCheer', 0.6, t);
+      else if (this.peds.mood === 'panic') P.feel('crowdFlees', 0.4, t);
+    }
+
+    // A NAME FROM THE BOOK. If someone here has beaten you before, that is personal — and the
+    // record already knows, so nothing new has to be stored.
+    if (!P._rivalChecked && foes.length) {
+      P._rivalChecked = 1;
+      try {
+        const rec = this._recOf && this._recOf(e.def.id);
+        const hist = rec && rec.hist;
+        if (hist && foes.some(o => hist.some(h => h && h.foe === o.def.id && h.r === 'L'))) {
+          P.feel('rivalHere', 1, t);
+        }
+      } catch (err) { /* the book is optional */ }
+    }
+  }
+
   updatePsyche(dt) {
     const t = this.time || 0;
     // ⚠ THE PLAYER GETS ONE UP FRONT. Everyone else grows a psyche the first time something happens
@@ -825,6 +887,7 @@ export class Game {
       if (!e.alive || !e._psyche) continue;
       const P = e._psyche;
       P.update(dt, t);
+      this._ambientPsyche(e, t);
       if (P.pendingInstant) {
         const row = P.pendingInstant; P.pendingInstant = null;
         applyInstant(this, e, row);

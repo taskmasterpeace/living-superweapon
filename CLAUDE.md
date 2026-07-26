@@ -1406,6 +1406,54 @@ Four laws, three of them the same idea: **a thing must not outlive the match tha
 - `training` survives as an INTERNAL mode with no card: the tutorial (`hud.onTutorial`) and the
   atlas tile proving ground (`hud.onProvingGround`) both still enter it.
 
+## DRIVES — what makes a fighter feel anything (2026-07-25)
+- **⚠ THE MISSING MIDDLE LAYER.** Until now an event added fixed amounts to fixed emotions
+  (`hurtBad → angry 2.0, fearful 1.5`), so a coward and a zealot felt an identical punch
+  identically and personality was only a targeting preference. That is a lookup table, not a
+  psychology. What sits between an EVENT and a FEELING is an **APPRAISAL**: the event is measured
+  against what the person WANTS. A punch is not intrinsically frightening or enraging — it is
+  frightening if you want to be SAFE and enraging if you want to be DOMINANT.
+  `event → what it does to each DRIVE → the emotions that drive gives when served or thwarted`
+- **SEVEN DRIVES**: dominance · safety · duty · glory · vengeance · order · purpose. Each was
+  chosen because it produces a DIFFERENT emotion when thwarted — a drive that thwarts to the same
+  feeling as another is not a separate drive.
+- **A PERSONALITY IS A SET OF DRIVE WEIGHTS** (`DRIVE_WEIGHTS`, one row per type) plus `vol`
+  (volatility) and `rest` (resting temperament). That is the whole refinement, and it is measured:
+  the same `hurtBad` gives THE ZEALOT **angry 1.09** and THE COWARD **fearful 1.68**; the same
+  `allyDown` gives THE GUARDIAN **sad 1.17** while THE AVENGER feels sad AND happy at once, because
+  vengeance is suddenly on offer.
+- **A FIGHTER OPENS AT THEIR TEMPERAMENT, not at neutral**, and decay drifts back toward it — a
+  coward is already wary before anything happens. Measured across 30 heroes: bad 13 · happy 7 ·
+  angry 6 · surprised 4.
+- **⚠ THE WORLD DRIVES THE WHEEL TOO** (`_ambientPsyche`, appraised once a second per fighter).
+  Without it a fighter is emotionally inert until someone hits them, which is the opposite of how
+  people work. Wired: outnumbered · alone/idle · low health · wounded · winning/losing (off the
+  same stats the report uses) · **hunted** (the police heat ladder) · **crowd cheering or fleeing**
+  (the pedestrian layer) · **a rival present** (read from the Elo book's own history).
+  Measured with nobody attacking: **outnumbered takes fear 1 → 6.7 in ten seconds**; standing alone
+  in an empty street reaches Tired.
+  ⚠ Tuning matters here — at `purpose: -1.6` a fighter hit MAXIMUM boredom in 24 seconds, which
+  makes every idle character Stressed and the state meaningless.
+- Console: `mood` shows the wheel as bars; the readout names what they want.
+
+## THE STRENGTH LADDER, ON ROBERT'S NUMBERS (2026-07-25)
+- **⚠ TWO LADDERS HAD TO BE RECONCILED.** The STRENGTH AND WEIGHT sheet is a HUMAN ladder — rank 2
+  lifts 50 lb, rank 19 lifts 400 ("the absolute most a 20 year old should be able to do"), rank 49
+  reaches 22,400. Our `def.strength` is 1–10 where 6 is already superhuman. Not the same axis, so
+  our scale is MAPPED across his: the human end matches his figures exactly
+  (STR 5 = 400 lb = his stated human ceiling).
+- **⚠ HIS SHEET STOPS BEFORE OUR TOP END.** Ranks 50–80 exist but their values are BLANK. Mapping
+  STRENGTH 10 to his last written row (10.2 t) makes the 24-ton airliner unliftable by anyone and
+  kills a feature the design explicitly wants. The top continues HIS OWN curve (~×10 per ten ranks)
+  into the rows he left empty, so STR 10 = 101.6 t. `STRENGTH_LB` is the single knob.
+- **IT IS A REAL REBALANCE, and that is the point.** Old curve: STR 6 lifted 1.1 t and could throw a
+  car. On his numbers STR 6 lifts 600 lb and a car needs STR 8.3 — nine heroes, not everyone.
+  A streetlight needs STR 6.1, so an ordinary person cannot pick one up.
+- **PEOPLE HAVE A STRENGTH EQUIVALENT** — Robert: *"people weight should have str equivalent."*
+  `bodyWeight` prices a body in pounds off the same ladder and `bodyLiftStr` inverts it, so
+  "you have to be strong enough to grab them" is derived rather than asserted: GALE 163 lb (STR
+  2.3) · RAGE 459 lb (STR 5.3) · TITAN 963 lb (STR 6.7).
+
 ## THE PSYCHE, LACED IN (2026-07-25) — `engine/psyche.js`, data in `data/psyche.js`
 - **Robert's emotion wheel is LIVE**: seven emotions valued 1–10 on every fighter, and his rules
   implemented literally — main = highest · ties break to whichever reached it LAST · the others

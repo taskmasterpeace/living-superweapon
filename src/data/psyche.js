@@ -152,6 +152,127 @@ export function rollBand(table, roll) {
   return table[table.length - 1];
 }
 
+
+// =================================================================================================
+// THE DRIVES — what a fighter WANTS, and therefore why they feel anything at all.
+//
+// Robert: "refine emotions and personalities, so that something DRIVES emotions."
+//
+// ⚠ THE MISSING MIDDLE LAYER. Until now an event added a fixed amount to fixed emotions —
+// `hurtBad → angry 2.0, fearful 1.5` — so a coward and a zealot felt an identical punch identically
+// and personality was only a targeting preference. That is a lookup table, not a psychology.
+//
+// What sits between an EVENT and a FEELING is an APPRAISAL: the event is measured against what the
+// person wants. A punch is not intrinsically frightening or enraging; it is frightening if you
+// want to be SAFE and enraging if you want to be DOMINANT, and the same punch does both in
+// different proportions depending on who is being hit. That is where personality finally bites.
+//
+//   event → what it does to each DRIVE → the emotions that drive produces when served or thwarted
+//
+// Seven drives, chosen because each one produces a DIFFERENT emotion when it is thwarted — a drive
+// that thwarts to the same feeling as another is not a separate drive.
+export const DRIVES = {
+  dominance: { name: 'DOMINANCE', want: 'to be the strongest thing in the room',
+    served: { happy: 1.0 }, thwarted: { angry: 1.0, sad: 0.3 } },
+  safety:    { name: 'SAFETY',    want: 'to not be hurt',
+    served: { happy: 0.4 }, thwarted: { fearful: 1.0 } },
+  duty:      { name: 'DUTY',      want: 'to keep people from being hurt',
+    served: { happy: 0.7 }, thwarted: { sad: 0.9, angry: 0.6 } },
+  glory:     { name: 'GLORY',     want: 'to be seen doing it',
+    served: { happy: 1.0 }, thwarted: { sad: 0.7, disgusted: 0.4 } },
+  vengeance: { name: 'VENGEANCE', want: 'to settle a score',
+    served: { happy: 0.9 }, thwarted: { angry: 1.1 } },
+  order:     { name: 'ORDER',     want: 'the plan to survive contact',
+    served: { happy: 0.4 }, thwarted: { disgusted: 0.9, surprised: 0.5 } },
+  purpose:   { name: 'PURPOSE',   want: 'something worth doing',
+    served: { happy: 0.5 }, thwarted: { bad: 1.0 } },
+};
+export const DRIVE_KEYS = Object.keys(DRIVES);
+
+// ⚠ AN APPRAISAL, NOT AN EMOTION. Each event says which drives it SERVES (+) or THWARTS (−) and by
+// how much. The emotion that results is then computed per fighter from how much they care.
+export const APPRAISALS = {
+  hurtBad:      { safety: -1.0, dominance: -0.7, order: -0.3 },
+  hurtLight:    { safety: -0.3, dominance: -0.25 },
+  hitThem:      { dominance: 0.4, vengeance: 0.2 },
+  bigHitThem:   { dominance: 0.9, glory: 0.5, vengeance: 0.5 },
+  blocked:      { dominance: -0.5, order: -0.4 },
+  guardBroken:  { safety: -0.8, dominance: -0.6 },
+  kill:         { dominance: 1.2, vengeance: 1.0, glory: 0.8 },
+  allyDown:     { duty: -1.2, safety: -0.4, vengeance: 0.8 },
+  lowHealth:    { safety: -1.1, dominance: -0.4 },
+  winning:      { dominance: 0.6, purpose: 0.3 },
+  losing:       { dominance: -0.7, purpose: -0.3 },
+  missed:       { order: -0.5, dominance: -0.2 },
+  stunned:      { order: -1.0, safety: -0.6 },
+  taunted:      { glory: -0.8, dominance: -0.6, vengeance: 0.6 },
+  civilianHurt: { duty: -1.1, glory: -0.4 },
+  crowdCheer:   { glory: 1.0, purpose: 0.4 },
+  crowdFlees:   { glory: -0.6, duty: -0.5 },
+  hunted:       { safety: -0.7, order: -0.6 },
+  // ⚠ BOREDOM HAS TO ACTUALLY ARRIVE. At -0.5, scaled by care and volatility, twenty-four
+  // seconds of standing in an empty street moved the needle by half a point — technically a
+  // driver, practically nothing. Having no reason to be here is the strongest ambient pressure
+  // in the game precisely because it is the one that never stops.
+  idle:         { purpose: -0.7 },
+  tierUp:       { dominance: 1.0, glory: 0.6, purpose: 0.5 },
+  wounded:      { safety: -0.7, dominance: -0.5 },
+  rivalHere:    { vengeance: 0.9, dominance: -0.3 },
+  // ⚠ fear must LEAD here. At safety -0.8 an order-minded fighter came out DISGUSTED at being
+  // surrounded rather than afraid of it, which is a reasonable sentence and the wrong feeling.
+  outnumbered:  { safety: -1.3, order: -0.35 },
+  // ⚠ a SLOW burn. At -1.6 a fighter standing in an empty street reached MAXIMUM boredom in
+  // twenty-four seconds, which makes every idle character Stressed and the state meaningless.
+  alone:        { purpose: -0.85, safety: 0.3 },
+};
+
+// ⚠ A PERSONALITY IS A SET OF DRIVE WEIGHTS, and that is the whole refinement. THE COWARD cares
+// about safety far more than dominance, so the same punch that enrages THE ZEALOT frightens them —
+// from one appraisal, with no per-personality event tables anywhere.
+// `vol` is volatility: how hard feelings hit at all. `rest` is where the mood settles when nothing
+// is happening, which is what gives a roster its range of resting temperaments.
+export const DRIVE_WEIGHTS = {
+  1:  { dominance: 1.0, glory: .6, safety: .3, vengeance: .5, duty: .3, order: .4, purpose: .5, vol: 1.0, rest: 'happy' },
+  2:  { dominance: .5, glory: .2, safety: .5, vengeance: .2, duty: .6, order: 1.0, purpose: .6, vol: .7,  rest: 'bad' },
+  3:  { dominance: .9, glory: .5, safety: .7, vengeance: .4, duty: .1, order: .3, purpose: .3, vol: 1.1, rest: 'disgusted' },
+  4:  { dominance: .6, glory: .4, safety: .8, vengeance: .3, duty: .2, order: .5, purpose: .4, vol: .9,  rest: 'happy' },
+  5:  { dominance: 1.1, glory: .9, safety: .3, vengeance: .5, duty: .3, order: .4, purpose: .6, vol: 1.1, rest: 'happy' },
+  6:  { dominance: .4, glory: .3, safety: .4, vengeance: .5, duty: 1.2, order: .6, purpose: .8, vol: .9,  rest: 'bad' },
+  7:  { dominance: .3, glory: .2, safety: 1.2, vengeance: .2, duty: .2, order: .5, purpose: .3, vol: 1.0, rest: 'fearful' },
+  8:  { dominance: 1.2, glory: .5, safety: .1, vengeance: .7, duty: .4, order: .2, purpose: .9, vol: 1.3, rest: 'angry' },
+  9:  { dominance: .7, glory: .5, safety: .5, vengeance: .4, duty: .3, order: .7, purpose: .5, vol: .8,  rest: 'happy' },
+  10: { dominance: 1.0, glory: .4, safety: .3, vengeance: .8, duty: .1, order: .3, purpose: .6, vol: 1.2, rest: 'angry' },
+  11: { dominance: 1.0, glory: .7, safety: .4, vengeance: 1.1, duty: .2, order: .3, purpose: .5, vol: 1.2, rest: 'angry' },
+  12: { dominance: .2, glory: .2, safety: 1.4, vengeance: .1, duty: .3, order: .6, purpose: .3, vol: 1.2, rest: 'fearful' },
+  13: { dominance: .9, glory: .3, safety: .3, vengeance: .9, duty: .1, order: .4, purpose: .5, vol: 1.1, rest: 'disgusted' },
+  14: { dominance: .6, glory: .3, safety: .5, vengeance: .3, duty: .7, order: 1.2, purpose: .6, vol: .7,  rest: 'bad' },
+  15: { dominance: .7, glory: .4, safety: .3, vengeance: 1.3, duty: .9, order: .3, purpose: .7, vol: 1.2, rest: 'angry' },
+  16: { dominance: .6, glory: .3, safety: .4, vengeance: .4, duty: 1.3, order: .8, purpose: .7, vol: .8,  rest: 'bad' },
+  17: { dominance: .7, glory: .2, safety: .5, vengeance: .4, duty: .3, order: .8, purpose: .5, vol: .7,  rest: 'bad' },
+  18: { dominance: .8, glory: .8, safety: .2, vengeance: .5, duty: .1, order: .1, purpose: .4, vol: 1.5, rest: 'surprised' },
+  19: { dominance: .6, glory: 1.0, safety: .3, vengeance: .3, duty: .2, order: .1, purpose: .5, vol: 1.4, rest: 'surprised' },
+  20: { dominance: .6, glory: .2, safety: .8, vengeance: .5, duty: .1, order: .6, purpose: .4, vol: .8,  rest: 'bad' },
+};
+export const drivesFor = (n) => DRIVE_WEIGHTS[n] || DRIVE_WEIGHTS[2];
+
+// THE APPRAISAL ITSELF. Returns emotion deltas for THIS fighter from THIS event — the one function
+// that turns "what happened" into "what they feel", and the only place personality enters.
+export function appraise(event, weights, scale = 1) {
+  const ap = APPRAISALS[event];
+  if (!ap) return null;
+  const out = {};
+  const vol = weights.vol == null ? 1 : weights.vol;
+  for (const d in ap) {
+    const care = weights[d] == null ? 0.5 : weights[d];
+    const push = ap[d] * scale * care * vol;
+    if (!push) continue;
+    const table = push > 0 ? DRIVES[d].served : DRIVES[d].thwarted;
+    const mag = Math.abs(push);
+    for (const e in table) out[e] = (out[e] || 0) + table[e] * mag;
+  }
+  return out;
+}
+
 // ---------------------------------------------------------------------------------------------
 // WHAT MOVES A FEELING. The engine reports events; this decides what they do to the wheel. Values
 // are in wheel-points, so a knockdown moves a fighter further than a scratch — the numbers are the

@@ -21,7 +21,8 @@
 // choke points that already exist — takeDamage for damage, move() for speed, pay() for cooldowns —
 // so an emotion can never do something the engine could not already do, and nothing else has to
 // know emotions exist.
-import { WHEEL, EMOTIONS, shadeOf, INSTANT, MOOD, TRIGGERS, rollBand, derivePersonality, TARGET_RULES } from '../data/psyche.js';
+import { WHEEL, EMOTIONS, shadeOf, INSTANT, MOOD, TRIGGERS, rollBand, derivePersonality, TARGET_RULES,
+         DRIVES, DRIVE_KEYS, APPRAISALS, drivesFor, appraise } from '../data/psyche.js';
 
 const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
 
@@ -29,13 +30,17 @@ export class Psyche {
   constructor(fighter) {
     this.f = fighter;
     this.p = derivePersonality(fighter.def);
+    // ⚠ WHAT THEY WANT. The drive weights are the personality — everything about how this fighter
+    // feels follows from them, and nothing else consults the personality number again.
+    this.w = drivesFor(this.p.n);
     this.v = {};
     for (const e of EMOTIONS) this.v[e] = 1;
-    // a fighter starts as their personality leans — a coward opens the fight already wary
-    const bias = this.p.bias || {};
-    let seed = 'happy', best = 0;
-    for (const e of EMOTIONS) { const b = bias[e] || 1; if (b > best) { best = b; seed = e; } }
+    // a fighter opens the fight at their RESTING TEMPERAMENT, not at neutral: a coward is already
+    // wary before anything happens, a zealot already hot. That is what makes a roster of twenty
+    // personalities feel like twenty people rather than one person with different targeting.
+    const seed = this.w.rest || 'happy';
     this.v[seed] = 3;
+    this.rest = seed;
     this.main = seed;
     this.stamp = 0;                 // when the current main last took its value (ties break on this)
     this.mood = null;               // the rolled mood row, held while `main` holds
@@ -44,6 +49,11 @@ export class Psyche {
     this._decay = 0;
   }
 
+  // what this fighter wants, strongest first — the readout that explains every feeling they have
+  get wants() {
+    return DRIVE_KEYS.map(d => ({ d, name: DRIVES[d].name, want: DRIVES[d].want, care: this.w[d] == null ? 0.5 : this.w[d] }))
+      .sort((a, b) => b.care - a.care);
+  }
   get value() { return this.v[this.main] || 1; }
   get shade() { return shadeOf(this.main, this.value); }
   get colour() { return (WHEEL[this.main] || {}).color || '#8b8577'; }
@@ -55,13 +65,20 @@ export class Psyche {
   // very strongly actively erodes everything else, which is why a fighter who has been angry for a
   // while cannot easily become afraid.
   feel(trigger, scale = 1, t = 0) {
-    const row = TRIGGERS[trigger];
+    // ⚠ AN EVENT IS APPRAISED, NOT LOOKED UP. This is the refinement: the same punch is measured
+    // against what THIS fighter wants, so it frightens someone who wants to be safe and enrages
+    // someone who wants to be dominant — from one table, with no per-personality event rows.
+    // TRIGGERS remains as the fallback for anything without an appraisal written yet.
+    const row = appraise(trigger, this.w, scale) || TRIGGERS[trigger];
     if (!row) return;
+    const viaAppraisal = !!APPRAISALS[trigger];
     const bias = this.p.bias || {};
     for (const e of EMOTIONS) {
       const raw = row[e];
       if (!raw) continue;
-      const amt = raw * scale * (bias[e] || 1);
+      // the old bias only applies to the fallback path — the appraisal already accounts for who
+      // they are, and applying both would count personality twice
+      const amt = viaAppraisal ? raw * (scale === 1 ? 1 : 1) : raw * scale * (bias[e] || 1);
       const before = this.v[e];
       let next = before + amt;
       if (next > 10) {
@@ -88,6 +105,10 @@ export class Psyche {
       // ⚠ AND THE MAIN DRAINS TOO, slowly — otherwise the first big feeling of a match is the only
       // one that ever happens, because nothing can climb past a value that never falls.
       this.v[this.main] = Math.max(1, this.v[this.main] - step * 0.35);
+      // ⚠ AND IT DRIFTS HOME. Decaying everything toward 1 leaves a fighter emotionally blank
+      // between fights; they should settle back to their own TEMPERAMENT, which is what makes a
+      // personality readable when nothing is happening to them.
+      if (this.rest && this.v[this.rest] < 2.6) this.v[this.rest] = Math.min(2.6, this.v[this.rest] + step * 0.7);
       this._settle(t);
     }
   }
