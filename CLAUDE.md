@@ -1202,6 +1202,52 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   winners, lower-is-better, the loadout persisting to localStorage, and a preset filling the slots.
   Ref `wwa-armory.png`.
 
+## THE PRINT PASS (2026-07-26) — `engine/printpass.js`, the comic-print stack
+- Robert's brief: *"halftone in the shadows, ink on the silhouettes, a limited palette, paper grain
+  over the whole thing... your speech balloons stop looking like a UI layer and start looking like
+  they belong to the same object"* — plus tilt-shift, speed lines, ordered dither, per-world grading
+  and impact frames, **all switchable from Options**.
+- ⚠ **ONE PASS, NOT ELEVEN. This is the whole architectural decision** and it is worth more than any
+  individual effect. Every full-screen pass is a read of one render target and a write to another —
+  at 1080p that is ~2M texels each way, and eleven of them costs more than the scene does. One shader
+  that branches costs ONE, and a disabled effect is a uniform test rather than a blit. The pass also
+  disables itself entirely when every dial is zero, so OFF is exactly the pipeline as it shipped.
+- ⚠ **IT RUNS LAST, AFTER `OutputPass`, ON TONE-MAPPED sRGB.** Halftone, palette snapping, grain and
+  dither are operations on a FINISHED image, the way ink acts on paper. Upstream of tone mapping the
+  quantisation lands on HDR values nobody will ever see and the halftone rides exposure instead of
+  the picture. It therefore does NOT do its own colorspace conversion — doing it twice washes out.
+- ⚠ **EDGES COME FROM LUMINANCE, NOT DEPTH — a deliberate trade, written down.** Depth Sobel also
+  catches same-tone silhouettes, but the composer ping-pongs its two targets and `OutputPass` writes
+  over the buffer `RenderPass` put depth in; clean depth here needs a depth pre-pass (a second scene
+  traversal) or replacing `RenderPass`. Neither is worth it yet, and for a PRINT look the luminance
+  edge is arguably more correct — an inker draws where the TONE changes. The upgrade path is a
+  half-res depth pre-pass and it is the only thing that would change.
+- ⚠ **TICK AFTER THE RENDER, NEVER BEFORE — a real bug, caught by pixels.** The impact frame is a
+  ONE-FRAME uniform; ticking first decremented it and cleared `uInvert` before the frame it belonged
+  to was ever drawn. Measured mean screen brightness came back **93.6 → 93.6 → 93.6** — the punch
+  landed and nothing happened. Fixed: **94.3 → 160 → 94.3**, exactly one frame. A flag would have
+  said "working" the whole time.
+- ⚠ **THE IMPACT FRAME COUNTS FRAMES, NOT SECONDS.** At 30fps a 1/60s timer is skipped entirely and
+  the punch lands silently. And it hangs off **`game.onHit`**, not `melee.js` — every present and
+  future heavy blow already routes through the choke point, so a dive punch, a thrown car and a beam
+  overpower all got it for nothing. Blocked hits never get one: the frame means CONNECTED.
+- ⚠ **THE PER-WORLD GRADE IS DERIVED, NOT A LUT ASSET.** Two vec3s of lift/gain arithmetic do the job
+  of a 3D texture lookup, cost less, and are computed from the sky the planet already declares — so
+  the grade cannot drift from the atmosphere the player is standing in. (`world.applyWorldGrade`.)
+- **Tilt-shift is a SCREEN BAND, not a depth range, and for this camera that is correct rather than a
+  shortcut** — a tilt-shift lens rotates the focal PLANE, which on a fixed isometric view maps to a
+  horizontal band. That is exactly why the effect makes real cities read as models.
+- **Presets are dial positions, not a second system** (`LOOK_PRESETS` in settings.js): OFF · CLEAN ·
+  COMIC PRINT · HEAVY INK · DIORAMA · CUSTOM. A preset writes the same `fx*` settings the sliders
+  write, so there is one source of truth. ⚠ Touching any dial switches to CUSTOM — without that the
+  preset re-stamps its own value on the next `applySettings` and the slider springs back.
+- **Not built, and not claimed**: #6 rim light on fighters (material-level, wants `onBeforeCompile`
+  on the figure materials) and #10 vertex-baked AO (city build time). Both are outside a post pass.
+- ⚠ **The cost was NOT measurable headlessly and the numbers are not reported.** CPU timing around
+  `render()` measures submission, not GPU work, `EXT_disjoint_timer_query_webgl2` was unavailable in
+  the harness, and a hidden pane early-outs (the documented `_ema` artefact). Measure it in a
+  foregrounded tab. Refs `wwa-print-off.png`, `wwa-print-comic.png`, `wwa-print-inked.png`.
+
 ## HANDOFF
 - **`HANDOFF.md` at the repo root** is the orientation document: architecture, the ten rules that
   are load-bearing, what is solid, what is half-built, what to do next, and the headless

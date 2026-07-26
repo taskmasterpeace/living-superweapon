@@ -7,6 +7,7 @@ import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
+import { PrintPass } from './printpass.js';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { clamp, damp, setBands, DECAL_LIFT } from '../core/util.js';
 import { skyFor, worldOf } from '../data/environments.js';
@@ -155,6 +156,32 @@ export class World {
   //     noon is about as bright as our dusk, so the whole world is lit at 2% strength.
   // ⚠ The LIGHT drops with the square of the sun's apparent size, which is the part that makes an
   // outer-system match actually feel like one: it is not a colour grade, it is less light.
+  /**
+   * World point → screen UV (0..1, y measured from the BOTTOM like a texture, because that is what
+   * the shader wants). Used by the speed lines so the streaks radiate from where the blow actually
+   * landed rather than from the middle of the frame.
+   * ⚠ `project` needs an up-to-date camera matrix; the render loop has already updated it by the
+   * time onHit fires, but a posed/manual call must updateMatrixWorld first.
+   */
+  toScreen(p, out) {
+    const v = (this._tsV || (this._tsV = new THREE.Vector3())).set(p.x, p.y || 0, p.z);
+    v.project(this.camera);
+    const o = out || { x: 0, y: 0 };
+    o.x = v.x * 0.5 + 0.5;
+    o.y = v.y * 0.5 + 0.5;
+    return o;
+  }
+
+  /**
+   * The world's own grade. ⚠ DERIVED from the sky the planet already declares, never a per-planet
+   * LUT asset — two vec3s of arithmetic do the job of a 3D texture lookup, cost less, and cannot
+   * drift from the atmosphere the player is standing in.
+   */
+  applyWorldGrade(tint) {
+    if (this.print) this.print.setWorldGrade(tint || (this._dnc && this._dnc.sky) || '#ffffff',
+      this.print.settings.grade);
+  }
+
   setSkyWorld(id) {
     const sky = id && id !== 'earth' ? skyFor(id) : null;
     const env = id ? worldOf(id) : null;
@@ -1084,12 +1111,19 @@ export class World {
     this.bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth * 0.5, innerHeight * 0.5), 0.66, 0.6, 0.8);      // half-res bloom (~4× cheaper)
     this.composer.addPass(this.bloom);
     this.composer.addPass(new OutputPass());
+    // ⚠ THE PRINT PASS RUNS LAST, AFTER TONE MAPPING. Halftone, palette snapping, grain and dither
+    // are operations on a FINISHED image — run them upstream and they land on HDR values nobody
+    // sees. It is one pass doing the work of eleven; a disabled effect is a uniform test, not a blit.
+    this.print = new PrintPass();
+    this.print.setSize(innerWidth * this.renderer.getPixelRatio(), innerHeight * this.renderer.getPixelRatio());
+    this.composer.addPass(this.print);
   }
 
   resize() {
     const w = innerWidth, h = innerHeight, asp = w / h;
     this.renderer.setSize(w, h);
     this.composer.setSize(w, h);
+    if (this.print) this.print.setSize(w * this.renderer.getPixelRatio(), h * this.renderer.getPixelRatio());
     this.bloom.setSize(w * 0.5, h * 0.5);
     this.camera.left = -this.frustum * asp; this.camera.right = this.frustum * asp;
     this.camera.top = this.frustum; this.camera.bottom = -this.frustum;
@@ -1801,6 +1835,12 @@ export class World {
     }
     this._lastRender = now;
     this.composer.render();
+    // ⚠ TICK AFTER THE RENDER, NEVER BEFORE. The impact frame is a ONE-FRAME uniform: ticking first
+    // decrements it to zero and clears `uInvert` before the frame it belongs to is ever drawn, so
+    // the punch lands and the screen does not change. Measured as identical mean brightness before,
+    // during and after — a effect that is switched on and off between the same two renders.
+    // The print pass keeps its own clock because the sim stops for menus and this must not.
+    if (this.print) this.print.tick(sdt);
     this._qCool -= 0.016;
     if (this._qCool <= 0 && this.qualityOverride == null) {   // settings can lock the tier
       if (this._ema > 24 && this._qTier > 0) { this._qTier--; this._applyQuality(); this._qCool = 1.4; }

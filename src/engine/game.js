@@ -2229,6 +2229,21 @@ export class Game {
       }
       if (tp && target.hp / target.maxHp < 0.25) tp.feel('lowHealth', 0.5, this.time || 0);
     }
+    // ⚠ THE IMPACT FRAME HANGS OFF THE CHOKE POINT, not off melee.js. Every present and future
+    // source of a heavy blow already routes through here, which is the same reason the block law
+    // lives in takeDamage rather than in each ability. A haymaker, a dive punch, a thrown car and a
+    // beam overpower all get it for nothing, and none of them had to know this exists.
+    // ⚠ Blocked hits never get one. The frame means CONNECTED; spend it on a blocked jab and it
+    // stops meaning anything within about four seconds of a real fight.
+    if (this.world && this.world.print && !blocked && !opts.dot && amount > 0) {
+      const S = this._look || (this._look = SETTINGS);
+      const heavy = amount >= (target.maxHp || 100) * 0.14 || opts.heavy || opts.haymaker;
+      if (heavy && S.fxImpact !== false) this.world.print.impactFrame(1, Math.min(1, 0.7 + amount / 260));
+      if (heavy && S.fxSpeedLines !== false && target.pos && this.isHuman && (this.isHuman(target) || this.isHuman(src))) {
+        const p = this.world.toScreen ? this.world.toScreen(target.pos) : null;
+        this.world.print.speedLines(p ? p.x : 0.5, p ? p.y : 0.5, Math.min(1, 0.45 + amount / 200), 0.2);
+      }
+    }
     if (this.comic && amount >= 14 && !blocked && !opts.dot && target && target.pos) {
       const pl = this.player;
       const near = !pl || (Math.abs(pl.pos.x - target.pos.x) < 260 && Math.abs(pl.pos.z - target.pos.z) < 260);

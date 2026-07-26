@@ -867,11 +867,32 @@ export class HUD {
         ${[['full', 'CINEMATIC'], ['quick', 'QUICK CARD'], ['off', 'OFF']].map(([v, n]) => `<span class="c3${S.opening === v ? ' on' : ''}" data-open="${v}">${n}</span>`).join('')}
       </div></div>
       <div class="oline2">CINEMATIC cold-opens each match with one of ten openers — case file, broadcast, flyover… Any key skips.</div>
+
+      <div class="dgsec">THE LOOK</div>
+      <div class="orow"><span class="ol">Print Treatment</span><div class="chips3">
+        ${[['off', 'OFF'], ['clean', 'CLEAN'], ['print', 'COMIC PRINT'], ['inked', 'HEAVY INK'], ['diorama', 'DIORAMA'], ['custom', 'CUSTOM']].map(([v, n]) => `<span class="c3${S.look === v ? ' on' : ''}" data-look="${v}">${n}</span>`).join('')}
+      </div></div>
+      <div class="oline2">COMIC PRINT is halftone in the shadows, ink on the silhouettes and paper grain over everything — the treatment the speech balloons already belong to. DIORAMA adds tilt-shift and makes the city read as a model. Every dial below is live; touching one switches you to CUSTOM.</div>
+      ${slider('fxInk', 'Ink outlines', 1.5, 0.05)}
+      ${slider('fxHalftone', 'Halftone (shadows only)', 1.5, 0.05)}
+      ${slider('fxGrain', 'Paper grain', 1.5, 0.05)}
+      ${slider('fxTilt', 'Tilt-shift', 1.5, 0.05)}
+      ${slider('fxDither', 'Ordered dither', 1.5, 0.05)}
+      ${slider('fxGrade', 'World grading', 1.5, 0.05)}
+      <div class="orow"><span class="ol">Palette</span><div class="chips3">
+        ${[['0', 'FULL'], ['9', '9 TONES'], ['7', '7 TONES'], ['5', '5 TONES']].map(([v, n]) => `<span class="c3${String(S.fxLevels) === v ? ' on' : ''}" data-lv="${v}">${n}</span>`).join('')}
+      </div></div>
+      ${toggle('fxImpact', 'Impact frames · one inverted frame on a haymaker')}
+      ${toggle('fxSpeedLines', 'Speed lines on heavy hits')}
+
       <button class="odone">Done</button>
     </div>`;
     const apply = () => { applySettings(this.game); saveSettings(); };
     this.optionsEl.querySelectorAll('input[type=range]').forEach(r => r.oninput = () => {
       S[r.dataset.k] = parseFloat(r.value);
+      // ⚠ touching a look dial switches to CUSTOM. Without this the preset re-stamps its own value
+      // on the very next applySettings and the slider springs back — a control that fights you.
+      if (r.dataset.k.startsWith('fx')) S.look = 'custom';
       this.optionsEl.querySelector(`[data-v="${r.dataset.k}"]`).textContent = Math.round(S[r.dataset.k] * 100) + '%';
       apply();
       if (r.dataset.k === 'master' || r.dataset.k === 'voice') this.game.audio.zap(700);   // audible feedback
@@ -879,6 +900,8 @@ export class HUD {
     this.optionsEl.querySelectorAll('[data-t]').forEach(c => c.onclick = () => { S[c.dataset.t] = c.dataset.on === '1'; apply(); this.showOptions(); });
     this.optionsEl.querySelectorAll('[data-q]').forEach(c => c.onclick = () => { S.quality = c.dataset.q === 'auto' ? 'auto' : c.dataset.q; apply(); this.showOptions(); });
     this.optionsEl.querySelectorAll('[data-open]').forEach(c => c.onclick = () => { S.opening = c.dataset.open; apply(); this.showOptions(); });
+    this.optionsEl.querySelectorAll('[data-look]').forEach(c => c.onclick = () => { S.look = c.dataset.look; apply(); this.showOptions(); });
+    this.optionsEl.querySelectorAll('[data-lv]').forEach(c => c.onclick = () => { S.fxLevels = +c.dataset.lv; S.look = 'custom'; apply(); this.showOptions(); });
     if (!this._uiSndWired) {
       this._uiSndWired = true;
       document.addEventListener('click', (ev) => {
