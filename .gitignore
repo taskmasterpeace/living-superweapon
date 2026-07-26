@@ -24,3 +24,4 @@ Thumbs.db
 .vercel
 encyclopedia/shots/
 encyclopedia/manifest.json
+src/bench/orphans.txt
