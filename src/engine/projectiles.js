@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import { clamp, rand, TAU } from '../core/util.js';
 
 const UP = new THREE.Vector3(0, 1, 0);
+const _wind = new THREE.Vector3();
 const _v = new THREE.Vector3(), _v2 = new THREE.Vector3(), _q = new THREE.Quaternion();
 
 // Shared geometry + white-core material — spawning a projectile/beam must not allocate GPU buffers
@@ -268,6 +269,16 @@ class Projectile {
       return true;
     }
     if (this.grav) this.vel.y -= this.grav * dt;
+    // ⚠ WIND ACTS ON MATTER, AND THERE IS NO `if (energy)` HERE. `windKind` is a LOOKUP into
+    // WIND_DRAG (data/weather.js); a projectile whose kind is not in that table — every ki blast,
+    // beam and orb in the game — gets a drag of zero and is untouched. Energy is exempt BY
+    // CONSTRUCTION rather than by exception, which is the difference between a rule and a list
+    // somebody has to maintain. A bullet visibly curves in a crosswind; a ki blast does not.
+    if (game.weather && game.weather.windSpeed > 0.01) {
+      const k = this.windKind || (this.ballistic ? 'ballistic' : this.arrow ? 'arrow'
+        : this.canister ? 'canister' : this.blade ? 'blade' : null);
+      if (k) { game.weather.force(k, _wind); this.vel.addScaledVector(_wind, dt); }
+    }
     if (this.homing) {
       const t = game.nearestFoe(this.caster, this.pos, 120);
       if (t) { _v.copy(t.pos).setY(t.pos.y + 5).sub(this.pos).normalize().multiplyScalar(this.homing * dt * 60); this.vel.add(_v); const sp = this.vel.length(); this.vel.setLength(clamp(sp, 20, o_maxspeed(this))); }

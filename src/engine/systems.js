@@ -14,15 +14,67 @@ import * as THREE from 'three';
 // Global, gradual (never a switch), and it MOVES things: rain bends with wind, debris and
 // smoke drift, and lightning lights whole building silhouettes.
 // ============================================================================================
+import { STATES, WIND_DRAG, pickWeather } from '../data/weather.js';
+
 export class Weather {
   constructor(game) {
     this.g = game;
     this.rain = 0; this.wind = 0; this.windDir = 0; this.cloud = 0; this.storm = 0;
     this._target = { rain: 0, wind: 0, cloud: 0 };
     this._mesh = null; this._boltT = 0; this._srcT = 0; this._src = null;
+    this.stateId = 'clear'; this._hold = 0; this._natural = 'clear';
   }
+  // ⚠ EXTENDED IN PLACE, NOT REPLACED. I wrote a second Weather class beside this one and the
+  // duplicate silently won the import — the exact failure `docs/SYSTEM_MAP.md` exists to prevent
+  // (build THROUGH a system, never beside it). What was missing here was not the ramping or the
+  // rain, which were already good; it was a NAMED STATE the rest of the game can read, a wind
+  // VECTOR that other systems can ask for a force from, and a visibility figure for the AI.
+
+  /** The named state (data/weather.js). Other systems read this, never the raw numbers. */
+  set(id, { hold = 0, instant = false } = {}) {
+    const S = STATES[id]; if (!S) return this.stateId;
+    this.stateId = id;
+    this._target = { rain: S.rain, wind: S.wind, cloud: S.cloud };
+    this.storm = S.thunder ? Math.max(this.storm, 0.7) : 0;
+    this._hold = hold;
+    if (instant) { this.rain = S.rain; this.wind = S.wind; this.cloud = S.cloud; }
+    if (this.g && this.g.hud && this.g.hud.feed) this.g.hud.feed('WEATHER — ' + S.n, '#9fd0ff');
+    return id;
+  }
+  get state() { return STATES[this.stateId] || STATES.clear; }
+  /** ⚠ THE ONE THE AI READS — and the only wire weather needs into it. Shortening sight range is
+   *  enough, because the honesty law already forbids acting on anything not earned by sight, radio
+   *  or noise. A bot in a storm genuinely loses you, with no weather branch in ai.js. */
+  get visMult() { const S = this.state; return 1 - (1 - S.vis) * Math.min(1, this.rain + this.cloud * 0.4); }
+  get windSpeed() { return this.wind * 42 * (1 + Math.sin(this._srcT * 0.7) * 0.28); }
+
+  /**
+   * Wind force on a moving thing, units/second. ⚠ `kind` is a LOOKUP in WIND_DRAG; a projectile
+   * whose kind is not in that table — every ki blast, beam and orb — gets ZERO. Energy is exempt BY
+   * CONSTRUCTION, never by an `if`. Callers pass a kind, never a boolean.
+   */
+  force(kind, out) {
+    const d = WIND_DRAG[kind];
+    const o = out || { x: 0, y: 0, z: 0 };
+    if (!d || this.wind <= 0.002) { o.x = o.y = o.z = 0; return o; }
+    const a = this.windDir || 0, s = this.windSpeed * d;
+    o.x = Math.cos(a) * s; o.y = 0; o.z = Math.sin(a) * s;
+    return o;
+  }
+
+  /** Raised with a city: the world decides what is possible, the climate biases it. */
+  setCity(plan, climate) {
+    this._natural = pickWeather((plan && plan.world) || 'earth', climate);
+    return this.set(this._natural, { instant: true });
+  }
+
   // a power (or a script) ASKS for weather; it arrives over `ramp` seconds, never instantly
   command({ rain = 0, wind = 0, cloud = 0, storm = 0, dur = 12, src = null } = {}) {
+    // ⚠ AN ABILITY ASKS FOR A STATE, IT DOES NOT AUTHOR ONE — so a commanded storm and a natural
+    // storm are the same thing to every reader.
+    const want = storm >= 0.7 ? 'storm' : rain >= 0.6 ? 'rain' : rain > 0 ? 'drizzle'
+      : cloud >= 0.6 ? 'cloudy' : wind >= 0.6 ? 'storm' : 'fair';
+    this.stateId = want; this._hold = dur;
     this._target = { rain, wind, cloud };
     this.storm = storm; this._srcT = dur; this._src = src;
     this.windDir = Math.random() * Math.PI * 2;

@@ -32,7 +32,12 @@ export class AI {
     // ---- SENSES (see docs: bots must never read the truth they haven't earned) ----
     // AWARENESS from the tabletop sheet buys real perception: a Cosmic-awareness subject sees
     // farther and wider than a civilian-eyed brawler.
-    const vm = (bot.sheet && bot.sheet.visMult) || 1;
+    // ⚠ WEATHER REACHES THE AI THROUGH ONE MULTIPLY, AND NOTHING ELSE CHANGES. The honesty law
+    // already forbids a bot acting on anything it has not earned by sight, radio or noise — so
+    // shortening the sight range degrades acquisition, tracking, search and squad callouts for free.
+    // A bot in a storm genuinely loses you. There is no weather branch anywhere in this file.
+    const wx = (bot._game && bot._game.weather && bot._game.weather.visMult) || 1;
+    const vm = ((bot.sheet && bot.sheet.visMult) || 1) * wx;
     this.seeNear = 30 * vm; this.seeRange = 118 * vm; this.seeCos = Math.cos(Math.min(1.45, 1.2 * vm));
     this.hearRange = 150 * vm;
     this._sees = false;

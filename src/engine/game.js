@@ -1378,6 +1378,8 @@ export class Game {
   // ONE list, called from all three. A new zone system adds its line HERE and is covered
   // everywhere, which is the whole point.
   clearTransients() {
+    // the weather goes home with everything else that must not outlive a match (the reset law)
+    if (this.weather && this.weather.reset) this.weather.reset();
     if (this.lab) { try { this.lab.close(); } catch (e) {} this.lab = null; }   // the white room is a transient too
     if (this.baseRoom) { try { this.baseRoom.close(); } catch (e) {} this.baseRoom = null; }   // ⚠ and so is the BASE — its walls are real cover records; leaving them behind is the invisible-wall bug
     if (this.comic) { try { this.comic.clear(); } catch (e) {} }              // captions must not outlive their match

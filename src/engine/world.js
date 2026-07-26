@@ -8,6 +8,8 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { PrintPass } from './printpass.js';
+import { goldenHour, GOLDEN } from '../data/weather.js';
+const _C1 = new THREE.Color(), _C2 = new THREE.Color(), _C3 = new THREE.Color();
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { clamp, damp, setBands, DECAL_LIFT } from '../core/util.js';
 import { skyFor, worldOf } from '../data/environments.js';
@@ -239,6 +241,39 @@ export class World {
     if (this._winMats) { const e = 0.08 + (1 - dl) * 0.5; for (const m of this._winMats) m.emissiveIntensity = e; }
     if (this._lampMat) this._lampMat.emissiveIntensity = 0.12 + (1 - dl) * 1.6;            // streetlights wake at dusk
     if (this._billMats) for (const m of this._billMats) m.emissiveIntensity = 0.22 + (1 - dl) * 0.85;
+
+    // ---- GOLDEN HOUR ------------------------------------------------------------------------
+    // ⚠ IT IS A FACT ABOUT THE SUN'S ELEVATION, NOT A CLOCK READING. The old `gold` bell above
+    // peaks at dl = 0.5, which is HALFWAY UP — a bright mid-morning. Real golden hour is when the
+    // sun is LOW and still above the horizon, so the light travels through far more atmosphere:
+    // the bell belongs at dl ≈ 0.30. Deriving it from elevation also means it falls out correctly
+    // at a high latitude in winter, where the sun never climbs and the light stays gold for hours.
+    const G = goldenHour(this.dayT);
+    this.golden = G.k;
+    if (G.k > 0.01) {
+      // ⚠ A SUNRISE IS NOT A SUNSET. Morning air is cool and clean; evening air has had all day to
+      // collect dust, so it goes deeper and oranger. Same event, two colours — and neither drifts
+      // toward magenta, because the no-purple law reaches the sky as well.
+      const warm = _C1.set(G.rising ? GOLDEN.sunRise : GOLDEN.sunSet);
+      const skyW = _C2.set(G.rising ? GOLDEN.skyRise : GOLDEN.skySet);
+      if (this.sun) {
+        this.sun.color.lerp(warm, G.k * 0.75);
+        this.sun.intensity *= 1 - G.k * 0.22;                 // low sun is DIMMER as well as warmer
+      }
+      if (this.amb) this.amb.color.lerp(_C3.set(GOLDEN.ambient), G.k * 0.45);
+      // the horizon takes most of it — that is where the long light actually is
+      u.uHor.value.lerp(skyW, G.k * 0.62);
+      u.uTop.value.lerp(skyW, G.k * 0.16);
+      u.uGlow.value.lerp(warm, G.k * 0.7).multiplyScalar(1 + G.k * 1.5);
+      // ⚠ and the RIM light swings warm too, or fighters keep a cold edge in a warm world and read
+      // as cut out of a different picture — the exact thing the rim exists to prevent.
+      if (this.rim) this.rim.color.lerp(warm, G.k * 0.4);
+    }
+    // ⚠ stash what the CLOCK decided before weather scales it — the weather multiplies these every
+    // frame, so without a clean baseline it would compound and the world would go black.
+    this._dnSunI = this.sun ? this.sun.intensity : null;
+    this._dnHemiI = this.hemi ? this.hemi.intensity : null;
+    if (this.scene && this.scene.fog && this._dnFog == null) this._dnFog = this.scene.fog.density;
   }
 
   _buildArena() {

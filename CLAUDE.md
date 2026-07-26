@@ -1286,6 +1286,53 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   ⚠ Measured 48/48 buildings on a generated Tokyo — and **0 on the flagship**, which has its own
   bespoke builder and never calls `tower()`. Known and deliberate; the flagship needs its own pass.
 
+## WEATHER + GOLDEN HOUR (2026-07-26) — `data/weather.js`, folded into `systems.js` Weather
+- ⚠ **THE INTERFACE WAS ALREADY SPECIFIED AND NOBODY HAD NOTICED.** `abilities.js` has registered the
+  `weather` type since the Tier-3 pass and its body calls `g.weather.command({rain, wind, cloud,
+  storm, dur, src})`. `systems.js` already exported a `Weather` class with ramping and rain, and
+  `game.update` already ticked it. The feature was scaffolded end to end and had no STATES, no wind
+  VECTOR and no reader — which is why it did nothing.
+- ⚠ **I BUILT A SECOND `Weather` CLASS BESIDE IT AND THE DUPLICATE SILENTLY WON THE IMPORT** — the
+  exact failure `docs/SYSTEM_MAP.md` was written to prevent, made by the person who wrote it, one day
+  later. The tell was `G.weather.set is not a function`: my object existed, `new Weather(this)`
+  resolved to the other one. Deleted; the new capability is folded INTO the existing class. **Run the
+  routing step even when you are sure — especially when you are sure.**
+- **STATES, NOT EFFECTS** (Robert's framing and the better one): 13 named states — clear · fair ·
+  overcast · drizzle · rain · storm · hurricane · fog · snow · dust · acid rain · methane · none.
+  A state is something other systems READ. Rain that only makes particles is decoration; rain that
+  shortens what a bot can see is weather.
+- ⚠ **WIND ACTS ON MATTER, AND THERE IS NO `if (energy)` ANYWHERE.** `force(kind)` is a LOOKUP in
+  `WIND_DRAG`; a projectile whose kind is not in the table gets zero. Energy is exempt **by
+  construction**, not by exception — the moment somebody writes the exception the rule becomes a list
+  to maintain. Measured in a storm: gas 41.5 · arrow 17.4 · bullet 14.1 · thrown prop 0.83 ·
+  **ki blast 0.00 · beam 0.00**.
+- ⚠ **WEATHER REACHES THE AI THROUGH ONE MULTIPLY AND NOTHING ELSE CHANGES.** `visMult` scales the
+  sight range; the honesty law already forbids acting on anything not earned by sight, radio or
+  noise, so acquisition, tracking, search and squad callouts all degrade for free. Measured: **113u
+  clear → 68u storm.** There is no weather branch in `ai.js`.
+- **A HURRICANE IS A STATE, NOT AN ABILITY** — the ultimate asks for it and every reader already
+  knows what to do, so the ability has nothing to implement.
+- **GOLDEN HOUR IS A FACT ABOUT SUN ELEVATION, NOT A CLOCK READING.** The existing `gold` bell peaked
+  at daylight 0.5 — halfway up, a bright mid-morning. Real golden hour is when the sun is LOW and
+  still up, so the bell belongs at 0.30. Deriving it from elevation also means it falls out correctly
+  at a high latitude in winter where the sun never climbs. The sun warms and DIMS, the horizon takes
+  most of it, and ⚠ the fighter RIM swings warm too or fighters keep a cold edge in a warm world and
+  read as cut out of a different picture.
+- ⚠ **`rising = dayT < 0.5` LOOKS OBVIOUSLY RIGHT AND IS WRONG — caught by the numbers, not by
+  reading it.** Daylight peaks at dayT 0.25 in this clock, so the two golden windows land at 0.60
+  (sunset) and 0.90 (pre-dawn); the naive test called 0.90 a sunset, which would have painted the
+  dawn sky with the dusty evening orange every single morning. A sunrise is cool and clean; an
+  evening has had all day to collect dust.
+- ⚠ **WEATHER MULTIPLIES THE CLOCK, IT DOES NOT REPLACE IT** — `updateDayNight` still owns the sun and
+  stashes what it decided (`_dnSunI`/`_dnHemiI`/`_dnFog`) before weather scales it, or the multiply
+  compounds every frame and the world goes black.
+- Verified 8/8, 0 errors: the ability call site resolves to a state · a storm makes real wind ·
+  gas ≫ arrow > bullet ≫ prop · energy untouched · a bot in a storm sees less · golden peaks at low
+  sun · an airless world has no weather (moon `none`, mars `dust`, venus `acidrain`, titan `methane`).
+- **Not built, and not claimed**: the vertical column, the tornado, hail, and the taxonomy tagging
+  pass. The spec's build order puts the column first and it is the right next slice — one system,
+  six users.
+
 ## HANDOFF
 - **`HANDOFF.md` at the repo root** is the orientation document: architecture, the ten rules that
   are load-bearing, what is solid, what is half-built, what to do next, and the headless
