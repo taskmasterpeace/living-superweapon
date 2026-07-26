@@ -483,3 +483,34 @@ overcharging a beam makes it explode in your hand was traced to wishlist threads
 
 Fourteen open gaps are listed rather than smoothed over — including that **no source anywhere
 publishes ESF's numeric ki costs**, so any ki economy we build is ours to calibrate.
+
+---
+
+## 14. STATUS — what a player can do today
+
+| | state |
+|---|---|
+| **The dimension** | `powerworld` mode card. Enter it, fight, leave; everything restores (×4 soak clean) |
+| **Third person** | ✅ `world.chase()` — perspective camera swapped into the existing composer, lock-on framing, off-the-shoulder, FOV 58→74 with speed, screenshot-matrix verified across clinch / mid / far / overhead / below |
+| **The chase loop** | ✅ a 101 u/s knockback travels **61.3u** here against **16.1u** in the city |
+| **The open sky** | ✅ no deck servo — release ascend and you stay where you stopped. ⚠ the raised ceiling itself is still unverified (see §12) |
+| **The stage** | ✅ 900u rock arena, 15 spires + 22 boulders as real cover, its own sky, no city |
+| **No witnesses** | ✅ no pedestrians, police or press — via `hasCivilians()`, one definition |
+| **The HUD** | ✅ the city nameplate, wanted stars and KMK 9 monitor are gone; the panel, hands row and radar stay |
+| **Beam struggle in the air** | ✅ fixed (was silently impossible past ~51° of elevation) |
+| **Steam Deck** | ✅ boot and the quality governor both fixed (the 40 Hz inversion, the `_pixelCap` collision); the packaged path already existed. ⚠ **not measured on hardware** |
+| **iPad** | ✅ boot no longer dies, safe areas now resolve, the item button exists. ⚠ **not measured on hardware**, and the aim-thumb snap-to-zero bug is open |
+
+### Still owed, in priority order
+
+1. **Teleport-intercept.** Designed end to end in `pw-combat.md`; needs no new key, system or state
+   field. ⚠ Build the ESF catchability trade-off deliberately: whether you can follow depends on how
+   hard you launched them (§13.2).
+2. **The melee vertical gate (10u ≈ one body height)** — the single highest-leverage constant left,
+   and what makes grounded-vs-flier possible at all (§8).
+3. **The flight ceiling**, properly, via `plan.bandsLocked` rather than a per-tick re-assertion.
+4. **Limb segmentation — the ARM**, now that the camera is close enough to see it.
+5. **Impact discipline** — `world.shake()` is still the world-space one outside the chase camera, and
+   nine of fourteen VFX are authored for a frame 10.7× taller than this one.
+6. **Hardware measurement** on a Deck and an iPad. Every platform number in `pw-platform.md` is
+   arithmetic from source, and it says so.
