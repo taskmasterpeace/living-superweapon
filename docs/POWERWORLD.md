@@ -503,6 +503,7 @@ publishes ESF's numeric ki costs**, so any ki economy we build is ours to calibr
 | **Third person** | ✅ `world.chase()` — perspective camera swapped into the existing composer, lock-on framing, off-the-shoulder, FOV 58→74 with speed, screenshot-matrix verified across clinch / mid / far / overhead / below |
 | **The chase loop** | ✅ a 101 u/s knockback travels **61.3u** here against **16.1u** in the city |
 | **The open sky** | ✅ **verified under the real keys.** One flag, four rules (manual §46): no deck servo · no `maxBand` cap · **every character flies, including `flightTier 0`** · no ceiling clamp at all. A flier and a grounded bruiser both climb **456u and are still rising**; hold drifts 1.6u over 4s; descent saturates `FLY_SINK`. ⚠ Shipped broken once — the flag was the FIRST test in the flight chain and ate `flyHeld`/`descendHeld` ("only able to fly straight"); it now replaces only the dock |
+| **Leaving the world** | ✅ **THE CLIMB TO SPACE** (manual §46). Hold the ascend key and the air runs out around you — one altitude fraction darkens the sky, kills the scattering glow and brings the stars out, smoothstepped at both ends. Measured flying the real keys: 446u → 0.00 · 888 → 0.39 · 1,476 → 1.00, reversible, and a grounded fighter makes the same crossing. **Nothing cuts** — that is the whole point, and it is why the existing cinematic departure was not reused. ⚠ *Arriving somewhere* is still owed |
 | **The city's own sky** | ✅ a pre-existing collapse found on the way: `fitBands` derived the lid from the tallest building, so Robert's saved theatre (a Moon village) had a **42u flight ceiling**. Floored at `MIN_CEIL 260` / `MIN_SKY 150` — that village now gives 215u, and PowerWorld is still 2.1× higher |
 | **The stage** | ✅ 900u rock arena, 15 spires + 22 boulders as real cover, no city |
 | **The look** | ✅ **it reads as BFP now** (`wwa-powerworld-bfp.png`). Bright pinned daylight, saturated cyan-blue sky, pale sunlit rock, ochre desert floor, a cloud deck overhead and 18 mesas on the horizon. ⚠ Every one of the five faults was found by a SCREENSHOT, not by an assertion — see below |
@@ -641,11 +642,12 @@ reach** — the test is the true 3-D distance. Verified through the real strike 
 
 ### Still owed, in priority order
 
-1. **Leaving the world should feel like No Man's Sky** — Robert's brief for the crossing out of
-   PowerWorld, and the one remaining part of it that has not been touched. `engine/spaceflight.js`
-   already renders through the game's own composer, so the material question is whether departure is a
-   continuous climb out of the open sky (now that there is no ceiling to punch through) rather than a
-   cinematic that takes the camera away from you.
+1. **The seamless handoff to the interplanetary layer.** The CLIMB is done (manual §46 · the sky runs
+   out continuously as you fly up: 446u → 0.00, 1,476u → 1.00, reversible, player-driven, nothing cut)
+   — so what is left is *arriving somewhere*. `engine/spaceflight.js` renders through the game's own
+   composer, which is what makes a seam avoidable in principle; but it is a CINEMATIC that takes the
+   camera, and reaching for it at the top of the climb would undo the single property that makes the
+   climb worth having. This wants the crossing to continue under the player's own control.
 2. **`plan.bandsLocked`** — a `fitBands` early return instead of the per-tick band re-assertion. No
    longer load-bearing for flight (the clamp simply does not run under an open sky) but still two
    writers where there should be one.

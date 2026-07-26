@@ -130,12 +130,32 @@ export class World {
         uTop:  { value: new THREE.Color(0.03, 0.04, 0.075) },
         uHor:  { value: new THREE.Color(0.075, 0.07, 0.10) },
         uGlow: { value: new THREE.Color(0.10, 0.05, 0.01) },
+        // ⚠ "FROM BLUE TO SPACE" IS ONE DERIVED NUMBER — AIR RUNS OUT (manual §43, learned on the
+        // Earth globe). It is not a colour grade applied to a climb: the sky is thin because there is
+        // less of it above you, so ONE fraction darkens the gradient, kills the scattering glow and
+        // brings the stars out together. Driven by altitude — see `setSpace`.
+        uSpace: { value: 0 },
       },
       vertexShader: `varying vec3 vP; void main(){ vP=position; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
-      fragmentShader: `varying vec3 vP; uniform vec3 uTop, uHor, uGlow; void main(){
+      fragmentShader: `varying vec3 vP; uniform vec3 uTop, uHor, uGlow; uniform float uSpace;
+      // ⚠ STARS ARE A HASH, NOT GEOMETRY. A background needs no vertices, and a point cloud on the
+      // dome would have to be scaled, hidden, faded and disposed by every venue that touches the sky.
+      // ⚠ AND HIERARCHY IS THE WHOLE TELL (manual §35): a uniform scatter of identical dots is the one
+      // distribution that never occurs in nature, so the cell's own hash sets each star's brightness.
+      float starAt(vec3 n, float density, float thresh){
+        vec3 p = n * density; vec3 c = floor(p); vec3 f = fract(p) - 0.5;
+        float h = fract(sin(dot(c, vec3(12.9898, 78.233, 37.719))) * 43758.5453);
+        return step(thresh, h) * smoothstep(0.17, 0.0, length(f)) * (0.35 + h * 0.65);
+      }
+      void main(){
         vec3 n = normalize(vP); float h = n.y*0.5+0.5;
         vec3 c = mix(uHor, uTop, smoothstep(0.30,0.9,h));
         c += uGlow * pow(max(0.0, dot(n, normalize(vec3(0.7,0.12,0.7)))), 5.0);   // sun-side horizon glow
+        if (uSpace > 0.001) {
+          c *= 1.0 - uSpace * 0.95;                                  // the air, thinning out
+          float s = starAt(n, 190.0, 0.9972) + starAt(n, 78.0, 0.9948) * 1.5;   // faint field + bright few
+          c += vec3(s) * uSpace;
+        }
         gl_FragColor = vec4(c, 1.0);
       }`,
     });
@@ -235,6 +255,20 @@ export class World {
 
   // Advance the day and push it into the lights, sky, and building windows. dl: 1 = noon,
   // 0 = midnight; night NEVER drops below the original arena look (Robert's rule: keep it bright).
+  /**
+   * How much of the sky has run out — 0 is sea level, 1 is space. Nothing calls this on Earth, where
+   * the atmosphere is a LID and leaving it is a ceremony (manual §17); it is for a world with no
+   * ceiling, where the only thing between you and space is how long you hold the climb.
+   * ⚠ It sets a uniform and nothing else. It must never touch the light rig, the fog or the exposure:
+   * a fighter has to look the same at 1,400u as at 14, or the roster reads as a different palette in
+   * the third act of every fight.
+   */
+  setSpace(v) {
+    const s = Math.max(0, Math.min(1, v || 0));
+    if (this.skyMat) this.skyMat.uniforms.uSpace.value = s;
+    this.spaceFrac = s;
+  }
+
   updateDayNight(dts) {
     // ⚠ A DIMENSION IS NOT A ROTATING PLANET. `dayT` is a fact about a world turning under its star,
     // and a full cycle here is 240s — so in a place that has no star the sky walked from noon to

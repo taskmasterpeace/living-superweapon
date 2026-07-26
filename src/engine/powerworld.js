@@ -37,6 +37,9 @@ export const STAGE = {
   // to say "the world continues" said "you are in a bowl". Distance is the whole job: further out and
   // shorter reads as bigger country, which is the opposite of the instinct.
   mesas: 18, mesaR: [2200, 3600], mesaH: [140, 320],
+  // THE CLIMB TO SPACE — see `tick()`. Starts above the highest thing on the stage (a 210u spire) so a
+  // rooftop fight never tints, and completes far enough up that getting there is a real commitment.
+  spaceFrom: 430, spaceTo: 1500,
   // ⚠ ABOVE THE FIGHT, NOT IN IT. A flat billboard seen from its own altitude is a smear — at 150u the
   // deck cut across the horizon like a scratch on the lens. Put it overhead and the same quad reads
   // correctly, and a full climb still punches through the top of it.
@@ -218,6 +221,28 @@ export class PowerWorldStage {
     return t;
   }
 
+  /**
+   * THE CLIMB TO SPACE. Robert: *"leaving earth should feel like No Man's Sky."*
+   *
+   * ⚠ WHAT MAKES THAT FEELING IS THAT NOTHING CUTS. There is already a departure in this game and it
+   * is a CINEMATIC — it takes the camera, plays its acts and hands you back (manual §17, §35), which
+   * is the opposite of the thing being asked for. The No Man's Sky beat is that you point up, you hold
+   * it, and the world changes around you the whole way with the controls still in your hands. So this
+   * is not a sequence, a trigger or a state: it is one fraction of altitude, read every frame.
+   *
+   * ⚠ AND IT BELONGS TO THIS DIMENSION ALONE, because PowerWorld is the only world with no ceiling to
+   * stop the climb at. On Earth the atmosphere is a lid and leaving it is supposed to be a ceremony.
+   */
+  tick(p) {
+    if (!p) return;
+    const S = STAGE, y = p.pos.y;
+    const t = (y - S.spaceFrom) / (S.spaceTo - S.spaceFrom);
+    // smoothstep, so there is no edge where the sky "switches" — the ends have to be soft or the
+    // whole illusion collapses into a threshold you can see yourself crossing.
+    const k = Math.max(0, Math.min(1, t));
+    this.g.world.setSpace(k * k * (3 - 2 * k));
+  }
+
   /** A cover record, so physics, LOS and the slam rules all know the rock is there. */
   _reg(x, z, hx, hz, top) {
     const W = this.g.world;
@@ -318,6 +343,7 @@ export class PowerWorldStage {
     this._day0 = this._dayT0 = null;
     if (this._skyScale0 != null && W.skyMesh) { W.skyMesh.scale.setScalar(this._skyScale0); this._skyScale0 = null; }
     if (this._sun0 && W.sunOff) { W.sunOff.copy(this._sun0); this._sun0 = null; }
+    W.setSpace(0);      // ⚠ leaving at altitude must not hand the next theatre a black sky full of stars
     this.group.traverse(o => { if (o.geometry) o.geometry.dispose(); });
     for (const g2 of this._geos) g2.dispose();
     for (const t of this._texs) t.dispose();

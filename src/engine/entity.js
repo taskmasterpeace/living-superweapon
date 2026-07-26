@@ -1281,8 +1281,16 @@ export class Fighter {
           // the flight controls, and the only reason it ever tested green was that the test set
           // the altitude directly. The ceiling clamp below already makes exactly this exception;
           // the servo has to make it too, or the two rules disagree about the same fighter.
-          const burning = !!(this.def.afterburner && this._burnT > 0.8);
-          if (!burning && cb >= maxBand && lid != null && this.pos.y >= lid - 0.6) {
+          // ⚠ THE TOP BAND'S DECK IS ITSELF A LID, AND LIFTING `maxBand` DOES NOT REMOVE IT. Measured:
+          // with the cap gone and the ceiling clamp skipped, a PowerWorld climb still stopped dead at
+          // **684** — which is exactly `sky + (ceiling − sky) × 0.55`, the band-3 deck. So a fifth rule
+          // needed the same exception the other four got, and it is the third place that has now had to
+          // learn it (the orbit route, the ceiling clamp, here): TWO RULES ABOUT ONE FIGHTER MUST AGREE.
+          // ⚠ Found only because the space-ramp test had to climb to 1,500u. The flight suite ran 620
+          // frames and topped out at 456, so it could never have reached this — A SHORTER TEST CANNOT
+          // FIND A HIGHER LID, and "still rising when the test ended" is not the same as "no ceiling".
+          const unlidded = this._openSky || !!(this.def.afterburner && this._burnT > 0.8);
+          if (!unlidded && cb >= maxBand && lid != null && this.pos.y >= lid - 0.6) {
             // your ceiling deck — the servo holds you there instead of letting you drift into a band you haven't earned
             this.vel.y = damp(this.vel.y, clamp((lid - this.pos.y) * 2.6, -FLY_SINK, FLY_SINK * 0.9), 6, dt);
           } else {

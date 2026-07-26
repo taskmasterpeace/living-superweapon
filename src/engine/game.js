@@ -238,6 +238,7 @@ const MODE_IMPL = {
       // (The structurally better fix is a `plan.bandsLocked` early return inside fitBands, which
       // belongs with the stage work — noted in docs/POWERWORLD.md.)
       if (BANDS.ceiling < 900) { BANDS.ceiling = 900; BANDS.sky = Math.max(BANDS.sky, 420); }
+      if (g._pwStage) g._pwStage.tick(g.player);      // the climb to space — one fraction of altitude
     },
     onKO() {},
     isOver() { return null; },          // a proving ground, like free roam — you leave when you like

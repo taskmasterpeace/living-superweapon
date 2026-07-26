@@ -2611,6 +2611,7 @@ a flag named after one side effect is a flag someone later hangs a fifth unrelat
 | **`maxBand`** pins tier ≤2 below the SKY | a balance ruling (BALANCE.md) | no cap — measured RAGE stopping dead at 28u until this lifted |
 | **`flightTier 0` cannot fly**, tier ≤1 sags and drops out of flight mode | a soldier and a bruiser do not fly over a city | **everyone flies.** Tiers still decide speed, hover quality and the burner — a grounded fighter can fly here, they are simply not good at it |
 | **`BANDS.ceiling` clamps you** | the lid is the atmosphere; leaving it is a ceremony (§17) | the clamp does not run. Raising the number is not enough — *a lid you can reach is still a lid* |
+| **the TOP BAND'S DECK** holds you at `sky + (ceiling − sky) × 0.55` | it is the same servo, at its last rung | it does not engage. ⚠ **Lifting `maxBand` does not remove this** — with the cap gone and the clamp skipped, a climb still stopped dead at **684** |
 
 ⚠ **THE FLAG BELONGS WHERE THE RELEASE IS HANDLED, NOT IN FRONT OF THE BUTTON.** I first wrote the
 no-deck rule as the FIRST test in the flight chain, which swallowed `flyHeld` and `descendHeld` whole:
@@ -2638,7 +2639,42 @@ Verified under the real keys, both dimensions, four runs, 0 errors:
 
 | | PowerWorld | the city (that village) |
 |---|---|---|
-| a flier (SOL, tier 3) | climbs **456u and still rising** — no lid | climbs to the band-3 deck at **215** (was 42) |
-| a grounded fighter (RAGE, tier 0) | **identical: 456u** | **cannot take off** — the rule is per-dimension |
+| a flier (SOL, tier 3) | climbs to **1,770u** and is still rising when the test ends | climbs to the band-3 deck at **215** (was 42) |
+| a grounded fighter (RAGE, tier 0) | **identical: 1,770u** | **cannot take off** — the rule is per-dimension |
 | hold | drift **1.6u** over 4s | drift 0.5u |
 | descend | 104u in 4.2s (`FLY_SINK 26` × 4.16s = 108 — the control is saturated) | 106u |
+
+⚠ **A SHORTER TEST CANNOT FIND A HIGHER LID.** The first flight suite ran 620 frames, reached 456u and
+asserted `> 400`, and I wrote down "still rising, no lid". It was true and it was not evidence: the
+band-3 deck sat at 684, above anything that test could reach. The 684 lid was found by a *different*
+feature's test — the space ramp needed 1,500u to exercise its own curve. **"Still climbing when the test
+ended" is not the same claim as "there is no ceiling",** and only one of them was checkable.
+
+### THE CLIMB TO SPACE — the departure with nothing cut
+
+Robert: *"leaving earth should feel like No Man's Sky."* What produces that feeling is that **nothing
+cuts**. This game already has a departure and it is a CINEMATIC (§17, §35) — it takes the camera, plays
+its acts and hands you back, which is the opposite of what was asked for. So the climb is not a
+sequence, a trigger or a state: it is **one fraction of altitude, read every frame**, smoothstepped at
+both ends so there is no edge you can see yourself crossing.
+
+`world.setSpace(0…1)` writes ONE uniform. It darkens the sky gradient, kills the scattering glow and
+brings the stars out together, because those are not three effects — **the air is running out**, which
+is the same single-derived-number law the Earth limb already follows (§43). ⚠ It touches nothing else:
+not the light rig, not the fog, not the exposure. A fighter has to look identical at 1,400u and at 14,
+or the whole roster reads as a different palette in the third act of every fight.
+
+⚠ **STARS ARE A HASH, NOT GEOMETRY** — a background needs no vertices, and a point cloud on the dome
+would have to be scaled, hidden, faded and disposed by every venue that touches the sky. Two fields at
+different densities, brightness from each cell's own hash, because hierarchy is the tell (§35): a
+uniform scatter of identical dots is the one distribution that never occurs in nature.
+
+It belongs to PowerWorld alone, because it is the only world with no ceiling to stop the climb. Measured
+flying the real keys — the curve, not the endpoints: **446u → 0.00 · 593 → 0.06 · 888 → 0.39 · 1,182 →
+0.79 · 1,476 → 1.00.** Reversible (descending brings the sky back), a grounded fighter makes the same
+crossing, the city never tints at any altitude, and leaving PowerWorld at 1,600u hands the next theatre
+a normal sky. 6/6, 0 errors. Ref `wwa-powerworld-space.png`.
+
+⚠ **What this is NOT, and is not claimed:** arriving somewhere. At the top of the climb you are in space
+over PowerWorld; the seamless handoff to the interplanetary layer is still owed, and doing it as a cut
+would undo the one property that makes the climb worth having.

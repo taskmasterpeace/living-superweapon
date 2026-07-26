@@ -1602,6 +1602,21 @@ files in `docs/powerworld/` (~8,100 lines on ESF/BFP mechanics, platform limits,
   billboard only reads from below, so it lives at 260–430.
   ⚠ Aerial perspective is AUTHORED (rock lerped 0.28 toward the sky's own horizon colour): stage fog at
   1,500u is under 1%, so distant rock comes back hard-edged and reads as near. At 0.55 it reads as paper.
+- **THE CLIMB TO SPACE** (`world.setSpace(0..1)`, driven from altitude by the stage's `tick`) — Robert's
+  *"leaving earth should feel like No Man's Sky."* **What makes that feeling is that NOTHING CUTS**, so
+  it is deliberately not the existing cinematic departure (§17/§35 take the camera): one fraction of
+  altitude, read every frame, smoothstepped at both ends. ONE uniform darkens the sky, kills the
+  scattering glow and brings the stars out — the air is running out, the same single-derived-number law
+  as the Earth limb (§43). Measured: 446u → 0.00 · 888 → 0.39 · 1,476 → 1.00, reversible.
+  ⚠ It must touch NOTHING else — not the light rig, fog or exposure. A fighter looks identical at
+  1,400u and at 14, or the roster reads as a different palette in the third act of every fight.
+  ⚠ **Stars are a HASH, not geometry** — a background needs no vertices, and a point cloud would have to
+  be scaled/hidden/faded/disposed by every venue that touches the sky.
+  ⚠ **AND LIFTING `maxBand` DOES NOT REMOVE THE TOP BAND'S DECK.** With the cap gone and the ceiling
+  clamp skipped, a PowerWorld climb still stopped dead at **684** = `sky + (ceiling−sky)×0.55`. Fifth
+  rule, same exception. ⚠ **A SHORTER TEST CANNOT FIND A HIGHER LID** — the flight suite ran 620 frames,
+  reached 456 and I wrote "still rising, no lid": true, but not evidence. Found by a different feature's
+  test that had to climb to 1,500u.
 - **THE CHASE LOOP**: `_chaseKb` adds `launchT` to the slide-class drag exception, so a 101 u/s
   knockback travels **61.3u** here against **16.1u** in the city. That plus `game.intercept(f)`
   (teleport to a body you launched, refused past `CATCH_SPD 132`) is the ESF loop.
