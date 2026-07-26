@@ -53,7 +53,7 @@ Projectiles already honour `hitInteriorWall` (`projectiles.js:326` region).
   crossings, and both-inside is the corner-warfare case (this is already documented for `canSee`).
 - **Proves it:** a beam fired at a bungalow wall stops at it instead of through it.
 
-## 4 · 33 armory weapons on nobody  ·  1–2 h  ·  ☐
+## 4 · 33 armory weapons on nobody  ·  1–2 h  ·  ◐ HALF DONE 2026-07-26 (police armed; roster humans still open)
 
 `data/armory.js` — 13 firearms, 6 blades, 16 gear — and no roster hero or police def carries one.
 Every row is an existing engine type with a `weapon` class, and every firearm already has its own
@@ -63,7 +63,12 @@ measured audio signature (manual §38).
   SWAT → MP5 · FED → suppressed PDW · GUARD → M16 + rifle-grenade.
 - **Why it is worth more than it looks:** the six-rung response ladder starts *sounding* different
   at each rung. The audio work is already paid for.
-- **Then:** two or three roster humans (SARGE, SANDRA, KNIGHTFALL) carry named weapons.
+- **DONE:** all five police rifle slots draw from the armory via `armWith` — 9mm · MP5 ·
+  suppressed PDW · .44 · M16, five distinct audio signatures across the ladder. 33 → 28 uncarried.
+  ⚠ `armWith` takes IDENTITY from the armory and keeps the police NUMBERS: the armory 9mm does 9
+  damage and a beat cop must stay at 5, or the ballistic scale against civilians is undone.
+- **STILL OPEN:** two or three roster humans (SARGE, SANDRA, KNIGHTFALL) carrying named weapons,
+  and the 6 blades + 16 gear rows, none of which has a carrier yet.
 
 ## 5 · `data/age.js` — zero importers  ·  ~1 h  ·  ☐
 
@@ -133,3 +138,16 @@ that stops the disease recurring. **7–10** are real features and should each g
 `wwa-ship-mechanic` or `wwa-wire-in`.
 
 Re-run `node src/bench/orphans.mjs` after each; a finished item should leave the report.
+
+---
+
+## STATE AT 2026-07-26 END OF SESSION
+
+Landed: **1, 2, 3** complete · **4** half (police armed, roster humans open).
+Open: **4** (roster humans, blades, gear) · **5** age.js · **6** the research-prose conversion ·
+**7** dead ability types · **8** the doors · **9** the clinch wheel · **10** the road graph.
+
+Audit moved: `ARMORY 33 → 28 on no fighter`. Everything else unchanged, which is the honest
+reading — items 5–10 are untouched.
+
+Each remaining row above is self-contained. Start at 5.

@@ -10,6 +10,27 @@ import { AI } from './ai.js';
 import { clamp } from '../core/util.js';
 import { countryOf } from '../data/countries.js';
 import { ROSTER } from '../data/characters.js';
+// ⚠ THE ARMORY WAS IN NOBODY'S HANDS. 35 rows in data/armory.js — 13 firearms with their own
+// measured audio signatures (manual §38) — and not one fighter or police def carried a single id.
+// The response ladder therefore sounded identical at every rung: a beat cop and a federal agent
+// fired the same generic "rifle".
+//
+// The badges are the cheapest carriers in the game, and the payoff is the one the ladder was built
+// for: escalation you can HEAR. Each rung now draws a real named weapon out of the armory, so the
+// difference between a patrol car and a tactical team arrives through the audio before you see it.
+// `armWith` copies the armory row's ability and keeps the police tuning that was balanced against
+// civilians — the weapon supplies its identity (name, mesh, voice, class), never its damage.
+import { FIREARMS } from '../data/armory.js';
+const gunOf = (id) => FIREARMS.find((f) => f.id === id) || null;
+function armWith(slot, id) {
+  const g = gunOf(id);
+  if (!g || !g.ab) return slot;
+  // ⚠ IDENTITY FROM THE ARMORY, NUMBERS FROM THE LADDER. Taking the armory's damage would hand a
+  // beat cop a 46-damage marksman round and undo the whole ballistic scale against civilians.
+  return { ...slot, name: g.ab.name, weapon: g.ab.weapon || g.cls, voice: g.voice, mesh: g.mesh,
+           armoryId: g.id, spread: g.ab.spread ?? slot.spread, pellets: g.ab.pellets ?? slot.pellets };
+}
+
 
 const HEAT_CIV = 12, HEAT_COP = 40, THRESH = 35;
 
@@ -20,7 +41,7 @@ export const COP_DEF = {
   ai: { style: 'zoner', range: 36, aggro: 0.6, fly: 0 },
   evade: { kind: 'dash', name: 'Take Cover' },
   abilities: {
-    lmb: { type: 'rifle', name: 'Service Pistol', gear: true, cost: 1.5, interval: 0.46, damage: 5, speed: 130, radius: 0.6, oneHand: true, color: '#cfe0ff' },
+    lmb: armWith({ type: 'rifle', name: 'Service Pistol', gear: true, cost: 1.5, interval: 0.46, damage: 5, speed: 130, radius: 0.6, oneHand: true, color: '#cfe0ff' }, 'p9'),
     shift: { type: 'dash', name: 'Sprint', cost: 4, cd: 0.9, power: 70, iframes: 0.1, color: '#5aa0ff' },
   },
 };
@@ -29,7 +50,7 @@ export const SWAT_DEF = {
   colors: { primary: '#16181e', secondary: '#0e1013', accent: '#5aa0ff', skin: '#caa27a' },
   hp: 95, speed: 28, strength: 5, meleeTiers: 3,
   abilities: {
-    lmb: { type: 'rifle', name: 'Tactical Carbine', gear: true, cost: 1.5, interval: 0.16, damage: 4, speed: 150, radius: 0.55, color: '#cfe0ff' },
+    lmb: armWith({ type: 'rifle', name: 'Tactical Carbine', gear: true, cost: 1.5, interval: 0.16, damage: 4, speed: 150, radius: 0.55, color: '#cfe0ff' }, 'mp5'),
     shift: { type: 'dash', name: 'Breach Sprint', cost: 4, cd: 0.8, power: 80, iframes: 0.12, color: '#5aa0ff' },
   },
 };
@@ -41,8 +62,8 @@ export const FED_DEF = {
   hp: 110, ki: 70, speed: 29, strength: 5, meleeTiers: 3, armor: 4,
   evade: { kind: 'dash', name: 'Break Contact' },
   abilities: {
-    lmb: { type: 'rifle', name: 'Automatic Rifle', gear: true, cost: 1.3, interval: 0.11, damage: 4.5, speed: 165, radius: 0.55, color: '#e4ecff' },
-    rmb: { type: 'rifle', weapon: 'pistol', name: 'Sidearm', cost: 1.5, interval: 0.5, damage: 7, speed: 140, radius: 0.6, oneHand: true, color: '#cfe0ff' },
+    lmb: armWith({ type: 'rifle', name: 'Automatic Rifle', gear: true, cost: 1.3, interval: 0.11, damage: 4.5, speed: 165, radius: 0.55, color: '#e4ecff' }, 'pdw'),
+    rmb: armWith({ type: 'rifle', weapon: 'pistol', name: 'Sidearm', cost: 1.5, interval: 0.5, damage: 7, speed: 140, radius: 0.6, oneHand: true, color: '#cfe0ff' }, 'magnum'),
     shift: { type: 'dash', name: 'Break Contact', cost: 4, cd: 0.85, power: 78, iframes: 0.12, color: '#cfd6e4' },
   },
 };
@@ -55,7 +76,7 @@ export const GUARD_DEF = {
   colors: { primary: '#3a4a2c', secondary: '#232a1a', accent: '#9bd07a', skin: '#caa27a' },
   hp: 145, ki: 90, speed: 27, strength: 6, meleeTiers: 3, armor: 8, body: 'metal',
   abilities: {
-    lmb: { type: 'rifle', name: 'Assault Rifle', gear: true, cost: 1.2, interval: 0.12, damage: 5, speed: 168, radius: 0.55, color: '#e6ffcf' },
+    lmb: armWith({ type: 'rifle', name: 'Assault Rifle', gear: true, cost: 1.2, interval: 0.12, damage: 5, speed: 168, radius: 0.55, color: '#e6ffcf' }, 'm16'),
     rmb: { type: 'projectile', name: 'Rifle Grenade', gear: true, cost: 10, cd: 3.6, damage: 20, speed: 96, radius: 1.2, blast: 11, grav: 5, shock: true, color: '#ffd24a', color2: '#fff' },
     shift: { type: 'dash', name: 'Combat Roll', cost: 4, cd: 0.9, power: 82, iframes: 0.14, color: '#9bd07a' },
   },
