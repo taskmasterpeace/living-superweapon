@@ -760,6 +760,24 @@ class BeamHose {
           this.pn = i; this.blocked = true; blockedCov = cov; break;
         }
       }
+      // ⚠ AND INTERIOR WALLS. Projectiles have honoured `hitInteriorWall` since interiors shipped;
+      // beams never did, and BACKLOG has carried "beams ignore interior walls" ever since. It was
+      // still true after the streaming rewrite because that loop only walks `world.cover` — which
+      // is deliberately NOT where interior walls live (they are never ordinary cover, so that a
+      // room cannot be shot down). A beam through the wall of a house you are standing behind is
+      // the one thing that makes corner warfare pointless.
+      // The wall test is a POINT query, so the segment is SAMPLED rather than tested at its ends:
+      // a node step is about 4 units and an interior wall is about 1 thick, so testing only the
+      // endpoints would let a beam step straight over it.
+      if (!this.blocked && game.world.hitInteriorWall) {
+        const sy = by - ay;
+        for (let k = 1; k <= 4; k++) {
+          const t = k / 4;
+          if (game.world.hitInteriorWall(ax + sx * t, ay + sy * t, az + sz * t, this.radius * 0.5)) {
+            this.pn = i; this.blocked = true; break;
+          }
+        }
+      }
     }
     this.pn = Math.max(2, this.pn);
     const tipI = (this.pn - 1) * 3;
