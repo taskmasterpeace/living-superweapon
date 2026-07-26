@@ -501,16 +501,22 @@ publishes ESF's numeric ki costs**, so any ki economy we build is ours to calibr
 | **Steam Deck** | ✅ boot and the quality governor both fixed (the 40 Hz inversion, the `_pixelCap` collision); the packaged path already existed. ⚠ **not measured on hardware** |
 | **iPad** | ✅ boot no longer dies, safe areas now resolve, the item button exists. ⚠ **not measured on hardware**, and the aim-thumb snap-to-zero bug is open |
 
+✅ **Teleport-intercept — SHIPPED** (manual §46). No new key, system or state field: `launchT` is the
+eligibility signal, `lastHitBy` the ownership check, `burstT` the clamp lift, `updateBlinkMark` the
+marker. Two carriers with two lanes each — KANO and APEX both have a `teleport` slot AND a `blink`
+evade. The counter is ESF's own accident made deliberate: past 132 u/s the body is too fast to catch,
+so **the biggest hit is no longer automatically the best hit.**
+
+✅ **The melee vertical gate — SHIPPED.** It was 10u (1.04 fighter heights) against flight bands
+82–115u apart, so two fliers at any real altitude difference could not touch each other. It splits on
+`flying` now: unchanged on the ground (melee is a same-deck weapon), and in the air **altitude spends
+reach** — the test is the true 3-D distance. Verified through the real strike path.
+
 ### Still owed, in priority order
 
-1. **Teleport-intercept.** Designed end to end in `pw-combat.md`; needs no new key, system or state
-   field. ⚠ Build the ESF catchability trade-off deliberately: whether you can follow depends on how
-   hard you launched them (§13.2).
-2. **The melee vertical gate (10u ≈ one body height)** — the single highest-leverage constant left,
-   and what makes grounded-vs-flier possible at all (§8).
-3. **The flight ceiling**, properly, via `plan.bandsLocked` rather than a per-tick re-assertion.
-4. **Limb segmentation — the ARM**, now that the camera is close enough to see it.
-5. **Impact discipline** — `world.shake()` is still the world-space one outside the chase camera, and
+1. **The flight ceiling**, properly, via `plan.bandsLocked` rather than a per-tick re-assertion.
+2. **Limb segmentation — the ARM**, now that the camera is close enough to see it.
+3. **Impact discipline** — `world.shake()` is still the world-space one outside the chase camera, and
    nine of fourteen VFX are authored for a frame 10.7× taller than this one.
-6. **Hardware measurement** on a Deck and an iPad. Every platform number in `pw-platform.md` is
+4. **Hardware measurement** on a Deck and an iPad. Every platform number in `pw-platform.md` is
    arithmetic from source, and it says so.
