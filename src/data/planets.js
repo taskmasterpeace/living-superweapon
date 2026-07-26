@@ -70,9 +70,9 @@ export function transitSecsFor(p) {        // distance over an open throttle, ga
 export const PLANET_LOOK = {
   mercury: { base: '#8b8577', bands: ['#9a927f', '#6f6a5e'], atmo: null,      r: 0.38 },
   venus:   { base: '#e0c489', bands: ['#f0d9a6', '#c9a86a'], atmo: '#ffe6b0', r: 0.95 },
-  earth:   { base: '#3f7a56', bands: ['#2f5f86', '#4d8a5f'], atmo: '#7fc4ff', r: 1.0, sea: '#2f5f86', land: '#4d8a5f', ice: '#eaf2ff' },
+  earth:   { base: '#3f7a56', bands: ['#2f5f86', '#4d8a5f'], atmo: '#7fc4ff', r: 1.0, night: true, sea: '#2f5f86', land: '#4d8a5f', ice: '#eaf2ff' },
   moon:    { base: '#a8a49b', bands: ['#b8b4aa', '#8b8577'], atmo: null,      r: 0.27 },
-  mars:    { base: '#b4532f', bands: ['#c96a3a', '#8e3f24'], atmo: '#e08a5a', r: 0.53, ice: '#f2efe6' },
+  mars:    { base: '#b4532f', bands: ['#c96a3a', '#8e3f24'], atmo: '#e08a5a', r: 0.53, night: true, ice: '#f2efe6' },
   jupiter: { base: '#c9a06a', bands: ['#e0c08a', '#a87a4a', '#d8b07a', '#8e6238'], atmo: '#f0d8a8', r: 11.2, spot: '#c9482f' },
   saturn:  { base: '#d8c08a', bands: ['#e8d4a2', '#bfa06a'], atmo: '#f0e0b0', r: 9.4, ring: ['#cfc3a0', '#9a8f7c', '#e0d6b8'] },
   uranus:  { base: '#7fc4c4', bands: ['#96d4d2', '#5f9fa4'], atmo: '#aee4e4', r: 4.0, tilt: 1.7 },

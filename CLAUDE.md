@@ -1430,6 +1430,22 @@ Four laws, three of them the same idea: **a thing must not outlive the match tha
   own atmospheric entry. ⚠ The match HUD hides for the duration, restored EXACTLY as found.
   ⚠ The heliopause shell is 0.04 opacity — a backside sphere you're inside tints every pixel and
   drowns the stars; the BOW SHOCK carries the act.
+- ⚠ **SPACE IS NOT BLACK WITH DOTS ON IT** (2026-07-25, "should look more like space"). The first
+  field was 2,600 evenly-scattered white specks on #000 and read as a screensaver, because the two
+  things that actually say *sky* were both missing: a **GALACTIC PLANE** (a broad, ragged, dusty
+  band most stars belong to, with DARK LANES cut through it — dust blocks as much as it glows) and
+  **HIERARCHY** (a few dozen genuinely bright stars against thousands too faint to resolve).
+  ⚠ Uniform scatter is the one distribution that never occurs in nature. Three layers, one draw
+  each: a painted 2048×1024 backdrop sphere · a field CLUSTERED toward the plane with a colour-
+  temperature ramp · additive glow sprites for the bright ones (the composer's bloom takes them).
+  ⚠ All three ride the camera — a 34,000u lane walks straight out of a 26,000u sphere otherwise.
+- ⚠ **THE TERMINATOR IS THE TELL.** Vacuum has no air to bounce light: the unlit side goes nearly
+  black and the line is HARD. Ambient at 0.55 filled it in and every planet looked like a lit toy —
+  it is 0.30 now with a 4.2 key. ⚠ And WHERE the sun sits decides whether you can see anything:
+  outbound you fly away from it, so looking back at the world you left is looking at its NIGHT
+  side. The star is swung wide (still behind, far to one side) so every body shows a fat
+  three-quarter phase instead of a crescent. Settled worlds get CITY LIGHTS on the dark side.
+  A star is a GLARE, not a disc — the sun carries an 8,600u additive corona.
 - Console: `space <target|deep> [flyers] [ship]`. Testable via `{manual:true}` (no rAF).
   Refs `wwa-space-depart/flyby/helio/entry.png`.
 

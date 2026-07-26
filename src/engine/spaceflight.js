@@ -125,44 +125,189 @@ export class SpaceFlight {
   _buildLights() {
     // A star is ONE hard light and almost no fill — that is what makes space read as space, and it
     // is the same lighting grammar as the street (key + rim), just with the fill turned nearly off.
-    const sun = new THREE.DirectionalLight(0xfff2d0, 3.1);
-    sun.position.set(-1, 0.35, 1);
+    // ⚠ THE TERMINATOR IS THE TELL. Vacuum has no atmosphere to bounce light, so the unlit side of
+    // a world goes nearly black and the line between is HARD. Ambient at 0.55 was filling that in
+    // and every planet came out looking like a lit toy. A hard key, a whisper of cold bounce, and
+    // almost no ambient is what makes a sphere read as a world a hundred million miles away.
+    // ⚠ WHERE THE SUN SITS DECIDES WHETHER YOU CAN SEE ANYTHING. Outbound you fly AWAY from it, so
+    // looking back at the world you left is looking at its night side — physically right, and it
+    // rendered Earth as a black disc with a rim. Swinging the star wide to one side keeps that
+    // honesty (it is still behind and to the side) while giving every body a fat three-quarter
+    // phase instead of a crescent: one hard terminator, a lit face worth looking at.
+    const sun = new THREE.DirectionalLight(0xfff4dc, 4.2);
+    sun.position.set(-1, 0.30, 0.42);
     this.scene.add(sun); this.sunLight = sun;
-    const rim = new THREE.DirectionalLight(0x8fb8ff, 0.5);
-    rim.position.set(1, -0.2, -0.6);
+    const rim = new THREE.DirectionalLight(0x6f92c4, 0.34);
+    rim.position.set(1, -0.25, -0.7);
     this.scene.add(rim);
-    this.scene.add(new THREE.AmbientLight(0x2b3038, 0.55));
+    this.scene.add(new THREE.AmbientLight(0x121820, 0.30));
   }
 
   _mat(o) { const m = new THREE.MeshStandardMaterial(o); this._mats.push(m); return m; }
   _basic(o) { const m = new THREE.MeshBasicMaterial(o); this._mats.push(m); return m; }
   _geo(g) { this._geos.push(g); return g; }
 
-  // STARS — one Points cloud, and the only thing in the scene that is not lit. Sizes vary so the
-  // field has depth; colour drifts warm→cold so it does not read as printer dust.
+  // ⚠ SPACE IS NOT BLACK WITH DOTS ON IT. The first field was 2,600 evenly-scattered white specks
+  // on #000, and it read as a screensaver — because the two things that actually say "sky" were
+  // both missing. Real deep sky has (a) a GALACTIC PLANE: a broad, dusty, uneven band that most of
+  // the stars belong to, and (b) VARIETY — a handful of genuinely bright stars against thousands
+  // too faint to resolve, in colours from cold blue-white to old gold. Uniform scatter is the one
+  // distribution that never occurs in nature, which is exactly why it looks synthetic.
+  //
+  // Three layers, one draw each:
+  //   1. THE BACKDROP — a painted inverted sphere: not-quite-black gradient, the milky band, and a
+  //      few enormous faint dust clouds. This is doing most of the work.
+  //   2. THE FIELD — thousands of small stars, CLUSTERED toward the galactic plane rather than
+  //      scattered, with a colour temperature ramp.
+  //   3. THE BRIGHT ONES — a few dozen big additive sprites, because a sky with no hierarchy has
+  //      no depth.
+  // ⚠ NO PURPLE, including in the nebulae: the clouds are gold, rust and deep teal.
+  _skyTexture() {
+    const W = 2048, H = 1024;
+    const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+    const x = cv.getContext('2d');
+    // not-quite-black: a cold floor with a faint warm lift toward one pole, so the sky has a
+    // direction even before anything is drawn on it
+    const g0 = x.createLinearGradient(0, 0, 0, H);
+    g0.addColorStop(0, '#05070c');
+    g0.addColorStop(0.5, '#080a10');
+    g0.addColorStop(1, '#0a0908');
+    x.fillStyle = g0; x.fillRect(0, 0, W, H);
+
+    // THE GALACTIC PLANE — a wide diagonal band of dust, built from many soft blobs so its edge is
+    // ragged. A clean ellipse reads as a paint stroke; the raggedness is the whole effect.
+    const bandY = (u) => H * 0.52 + Math.sin(u * Math.PI * 2 + 0.6) * H * 0.16;
+    x.globalCompositeOperation = 'lighter';
+    for (let i = 0; i < 520; i++) {
+      const u = Math.random();
+      const px = u * W;
+      const spread = H * (0.05 + Math.random() * 0.10);
+      const py = bandY(u) + (Math.random() - 0.5) * spread * 2.4;
+      const r = H * (0.02 + Math.random() * 0.075);
+      const g = x.createRadialGradient(px, py, 0, px, py, r);
+      const warm = Math.random() < 0.62;
+      const a = 0.020 + Math.random() * 0.030;
+      g.addColorStop(0, warm ? `rgba(196,166,116,${a})` : `rgba(120,158,178,${a})`);
+      g.addColorStop(1, 'rgba(0,0,0,0)');
+      x.fillStyle = g; x.beginPath(); x.arc(px, py, r, 0, Math.PI * 2); x.fill();
+    }
+    // DARK LANES cut through it — the band is dust, and dust blocks as much as it glows
+    x.globalCompositeOperation = 'source-over';
+    for (let i = 0; i < 90; i++) {
+      const u = Math.random(), px = u * W;
+      const py = bandY(u) + (Math.random() - 0.5) * H * 0.13;
+      const r = H * (0.012 + Math.random() * 0.05);
+      const g = x.createRadialGradient(px, py, 0, px, py, r);
+      g.addColorStop(0, 'rgba(3,4,7,0.55)');
+      g.addColorStop(1, 'rgba(3,4,7,0)');
+      x.fillStyle = g; x.beginPath(); x.arc(px, py, r, 0, Math.PI * 2); x.fill();
+    }
+    // a few huge, very faint clouds well off the plane, so the sky is not all one feature
+    x.globalCompositeOperation = 'lighter';
+    for (const [cx, cy, r, col] of [[W * 0.18, H * 0.24, H * 0.34, '160,120,70'],
+                                    [W * 0.72, H * 0.78, H * 0.30, '70,120,132'],
+                                    [W * 0.46, H * 0.12, H * 0.22, '150,90,60']]) {
+      const g = x.createRadialGradient(cx, cy, 0, cx, cy, r);
+      g.addColorStop(0, `rgba(${col},0.045)`);
+      g.addColorStop(0.55, `rgba(${col},0.018)`);
+      g.addColorStop(1, 'rgba(0,0,0,0)');
+      x.fillStyle = g; x.beginPath(); x.arc(cx, cy, r, 0, Math.PI * 2); x.fill();
+    }
+    // unresolved star haze INSIDE the band — the milky part of the milky way
+    for (let i = 0; i < 9000; i++) {
+      const u = Math.random();
+      const px = u * W;
+      const py = bandY(u) + (Math.random() - 0.5) * H * (0.05 + Math.random() * 0.12);
+      x.fillStyle = `rgba(230,226,214,${0.05 + Math.random() * 0.16})`;
+      x.fillRect(px, py, 1, 1);
+    }
+    x.globalCompositeOperation = 'source-over';
+    const t = new THREE.CanvasTexture(cv);
+    t.colorSpace = THREE.SRGBColorSpace;
+    this._skyTex = t;
+    return t;
+  }
+
   _buildStars() {
-    const N = 2600, pos = new Float32Array(N * 3), col = new Float32Array(N * 3), sz = new Float32Array(N);
+    // 1 — the painted sky
+    const sky = new THREE.Mesh(
+      this._geo(new THREE.SphereGeometry(26000, 48, 32)),
+      this._basic({ map: this._skyTexture(), side: THREE.BackSide, depthWrite: false, fog: false }));
+    sky.rotation.z = 0.42;                       // tilt the plane so it crosses frame diagonally
+    sky.frustumCulled = false;
+    this.scene.add(sky); this.sky = sky;
+
+    // 2 — the resolved field, CLUSTERED to the galactic plane rather than scattered
+    const N = 3400, pos = new Float32Array(N * 3), col = new Float32Array(N * 3);
     const c = new THREE.Color();
     for (let i = 0; i < N; i++) {
-      const r = 9000 + Math.random() * 12000;
-      const th = Math.random() * Math.PI * 2, ph = Math.acos(2 * Math.random() - 1);
+      const r = 9000 + Math.random() * 11000;
+      const th = Math.random() * Math.PI * 2;
+      // bias latitude toward the plane: cube of a signed uniform hugs zero
+      const u = Math.random() * 2 - 1;
+      const lat = (Math.random() < 0.72 ? Math.pow(Math.abs(u), 2.6) * Math.sign(u) : u) * Math.PI * 0.5;
+      const ph = Math.PI / 2 - lat;
       pos[i * 3] = Math.sin(ph) * Math.cos(th) * r;
       pos[i * 3 + 1] = Math.cos(ph) * r;
       pos[i * 3 + 2] = Math.sin(ph) * Math.sin(th) * r;
+      // colour temperature: mostly cold-white, a warm tail, a few red giants
       const k = Math.random();
-      c.setHSL(k < 0.7 ? 0.09 : 0.56, 0.35, 0.55 + Math.random() * 0.45);
+      const hue = k < 0.55 ? 0.58 : k < 0.86 ? 0.11 : 0.045;
+      const sat = k < 0.55 ? 0.18 : k < 0.86 ? 0.30 : 0.55;
+      const lum = 0.42 + Math.pow(Math.random(), 2.2) * 0.55;
+      c.setHSL(hue, sat, lum);
       col[i * 3] = c.r; col[i * 3 + 1] = c.g; col[i * 3 + 2] = c.b;
-      sz[i] = 14 + Math.pow(Math.random(), 3) * 90;
     }
     const geo = this._geo(new THREE.BufferGeometry());
     geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
     geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
-    geo.setAttribute('size', new THREE.BufferAttribute(sz, 1));
-    const mat = new THREE.PointsMaterial({ size: 40, sizeAttenuation: true, vertexColors: true, transparent: true, opacity: 0.95, depthWrite: false });
+    const mat = new THREE.PointsMaterial({ size: 26, sizeAttenuation: true, vertexColors: true, transparent: true, opacity: 0.9, depthWrite: false });
     this._mats.push(mat);
     this.stars = new THREE.Points(geo, mat);
     this.stars.frustumCulled = false;
     this.scene.add(this.stars);
+
+    // 3 — THE BRIGHT ONES. A sky with no hierarchy has no depth, so a few dozen stars get a real
+    // glow sprite. Additive, so the bloom pass picks them up the way it picks up a ki blast.
+    const B = 46, bp = new Float32Array(B * 3), bc = new Float32Array(B * 3), bs = new Float32Array(B);
+    for (let i = 0; i < B; i++) {
+      const r = 10000 + Math.random() * 9000;
+      const th = Math.random() * Math.PI * 2;
+      const u2 = Math.random() * 2 - 1;
+      const ph = Math.PI / 2 - (Math.pow(Math.abs(u2), 1.8) * Math.sign(u2)) * Math.PI * 0.5;
+      bp[i * 3] = Math.sin(ph) * Math.cos(th) * r;
+      bp[i * 3 + 1] = Math.cos(ph) * r;
+      bp[i * 3 + 2] = Math.sin(ph) * Math.sin(th) * r;
+      const k = Math.random();
+      c.setHSL(k < 0.6 ? 0.58 : 0.1, 0.35, 0.86);
+      bc[i * 3] = c.r; bc[i * 3 + 1] = c.g; bc[i * 3 + 2] = c.b;
+      bs[i] = 1;
+    }
+    const bgeo = this._geo(new THREE.BufferGeometry());
+    bgeo.setAttribute('position', new THREE.BufferAttribute(bp, 3));
+    bgeo.setAttribute('color', new THREE.BufferAttribute(bc, 3));
+    const bmat = new THREE.PointsMaterial({
+      size: 300, sizeAttenuation: true, vertexColors: true, map: this._glowTex(),
+      transparent: true, opacity: 0.95, depthWrite: false, blending: THREE.AdditiveBlending });
+    this._mats.push(bmat);
+    this.bright = new THREE.Points(bgeo, bmat);
+    this.bright.frustumCulled = false;
+    this.scene.add(this.bright);
+  }
+
+  // a soft round falloff — used by the bright stars and the sun's corona
+  _glowTex() {
+    if (this._glow) return this._glow;
+    const S = 128, cv = document.createElement('canvas'); cv.width = cv.height = S;
+    const x = cv.getContext('2d');
+    const g = x.createRadialGradient(S / 2, S / 2, 0, S / 2, S / 2, S / 2);
+    g.addColorStop(0, 'rgba(255,255,255,1)');
+    g.addColorStop(0.16, 'rgba(255,255,255,0.55)');
+    g.addColorStop(0.45, 'rgba(255,255,255,0.10)');
+    g.addColorStop(1, 'rgba(255,255,255,0)');
+    x.fillStyle = g; x.fillRect(0, 0, S, S);
+    this._glow = new THREE.CanvasTexture(cv);
+    return this._glow;
   }
 
   // A WORLD, painted flat. Icosahedron for the body (flat shading, low subdivision — the same
@@ -186,6 +331,26 @@ export class SpaceFlight {
           this._mat({ color: hex, roughness: 0.95, metalness: 0, flatShading: true }));
         grp.add(belt);
       });
+    }
+    // CITY LIGHTS on the night side of a settled world. Nothing else in a space shot says
+    // "people live there" as fast, and it is what makes the terminator worth having.
+    if (L.night) {
+      const N = 900, pos = new Float32Array(N * 3);
+      for (let i = 0; i < N; i++) {
+        const th = Math.random() * Math.PI * 2, u = Math.random() * 2 - 1;
+        const ph = Math.acos(u), r = radius * 1.002;
+        // clump them: most of a planet's lights are on a few coasts
+        const cl = Math.pow(Math.random(), 2.2);
+        pos[i * 3] = Math.sin(ph) * Math.cos(th) * r;
+        pos[i * 3 + 1] = Math.cos(ph) * r * (0.35 + cl * 0.65);
+        pos[i * 3 + 2] = Math.sin(ph) * Math.sin(th) * r;
+      }
+      const g2 = this._geo(new THREE.BufferGeometry());
+      g2.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      const m2 = new THREE.PointsMaterial({ color: '#ffd8a0', size: radius * 0.028, sizeAttenuation: true,
+        transparent: true, opacity: 0.85, depthWrite: false, blending: THREE.AdditiveBlending });
+      this._mats.push(m2);
+      grp.add(new THREE.Points(g2, m2));
     }
     if (L.spot) {   // Jupiter earns its eye
       const spot = new THREE.Mesh(this._geo(new THREE.SphereGeometry(radius * 0.22, 16, 12)),
@@ -226,7 +391,11 @@ export class SpaceFlight {
       const m = this._planetMesh(id, rad);
       // ⚠ A FLYBY HAS TO LOOM. Held out at rad*1.9 + 240 the planets passed as distant marbles —
       // technically a flyby, dramatically nothing. Close enough that the limb crosses the frame.
-      const off = (side || 1) * (rad * 1.25 + 70);
+      // ⚠ A GIANT NEEDS MORE ROOM THAN A MOON. Offsetting every body by the same margin put
+      // Jupiter's unlit limb across a third of the frame during somebody ELSE's flyby — a huge
+      // shapeless dark mass crowding the shot it wasn't in. Scaling the stand-off with the radius
+      // keeps a giant unmistakably vast while leaving the lane clear for whoever's beat it is.
+      const off = (side || 1) * (rad * 2.3 + 80);
       m.position.set(off, (side || 1) * rad * 0.22, -t * LANE);
       m.userData.rad = rad; m.userData.id = id; m.userData.t = t;
       this.scene.add(m);
@@ -246,9 +415,18 @@ export class SpaceFlight {
     this.target.position.set(0, -this.target.userData.rad * 0.55, -LANE - this.target.userData.rad * 1.25);
     if (R.to.id === 'deep') this.target.visible = false;
     // the sun, far behind — it is the key light's source and the reason there is a terminator
-    this.sun = this._planetMesh('sun', 900);
-    this.sun.position.set(-9000, 2600, 9000);
+    this.sun = this._planetMesh('sun', 620);
+    this.sun.position.set(-13000, 3900, 5500);   // matches the key's direction — one star, one shadow
     this.scene.add(this.sun);
+    // A STAR IS A GLARE, NOT A DISC. The corona is what stops it reading as a gold ball, and the
+    // composer's bloom takes it the rest of the way.
+    const corona = new THREE.Sprite(new THREE.SpriteMaterial({
+      map: this._glowTex(), color: '#ffd8a0', transparent: true, opacity: 0.95,
+      blending: THREE.AdditiveBlending, depthWrite: false }));
+    this._mats.push(corona.material);
+    corona.scale.setScalar(8600);
+    corona.position.copy(this.sun.position);
+    this.scene.add(corona); this.corona = corona;
   }
 
   // THE HELIOSPHERE and THE OORT CLOUD — only built for a deep crossing, because they are only
@@ -596,7 +774,12 @@ export class SpaceFlight {
       for (const c of this.craft) for (const burn of c.burns) burn.material.color.setStyle(heat > 0.5 ? '#ff6a1a' : c.wake[0]);
     }
     for (const b2 of this.bodies) if (b2.userData.body) b2.rotation.y += 0.06 * (b2 === this.sun ? 0.1 : 1) * 0.016;
-    if (this.stars) this.stars.position.z = this.partyGroup.position.z;   // the field never runs out
+    // the sky is infinitely far away, so it rides with the camera — otherwise a 34,000-unit lane
+    // walks straight out of a 26,000-unit sphere and the stars simply stop
+    const pz = this.partyGroup.position.z;
+    if (this.stars) this.stars.position.z = pz;
+    if (this.bright) this.bright.position.z = pz;
+    if (this.sky) this.sky.position.z = pz;
   }
 
   _apply() {
