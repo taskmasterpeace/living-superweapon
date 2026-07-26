@@ -282,3 +282,20 @@ the rest is listed here rather than implied to be finished.
 - **Rope bounce returns 39% of entry speed** after drag, up from 26%. It reads as a bounce and not
   yet as a slingshot; the lever is `burstT` duration rather than `ropeBounce`.
 
+---
+
+## THE HANDS — WHAT IS NOT DONE (2026-07-26)
+
+`engine/hands.js` ships the selector and the rules. Gate items 1, 2, 3, 4, 6 and 8 are met.
+
+- **ITEM 5 · READABLE is HALF met and that is the gap.** `hud.updateHands(p)` is called from main.js
+  and **does not exist** — so the weapon is visible in the fighter's hands (the mesh) but there is no
+  HUD row telling you which slot you are on or what the others are. On an isometric camera the mesh
+  alone is not enough. This is the next thing to build.
+- **The pad binding.** ⚠ The D-pad is already mapped to Q / E / F and hero swap in `core/gamepad.js`.
+  Left/right must move to hands and those abilities to the face buttons, or the control fights
+  itself. Written up in `docs/THE_HANDS.md`.
+- **The mobile chip strip** — phone mode hides the slot row entirely (`PHONE_CSS`), so if the hands
+  row is the one thing a phone shows it must be the only thing added back, above the fire thumb.
+- **The wheel** is not bound to `cycleHand` yet in the ability-wheel schemes.
+

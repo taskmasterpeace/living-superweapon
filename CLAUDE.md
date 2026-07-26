@@ -1445,6 +1445,42 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   trees stand inside the ropes; the monitor is built behind the isometric camera; no clinch break, no
   referee, no rest round; `hud: 'boxing'` names a mode-bar type that does not exist.
 
+## THE HANDS (2026-07-26) — `engine/hands.js`, and it is not a stance
+- Robert: *"most games you hit 1 it's melee, 2 it's pistol, 3 it's your main weapon."* Then, after a
+  second opinion argued against a stance setting: *"do you think we need a stance setting?"*
+  **No stance, yes hands** — and they are not the same feature. A stance is a posture you DECLARE and
+  cannot see on a fixed isometric camera. This is an OBJECT, and an object is visible: `buildWeapon`
+  already mounts a real mesh on the fists and the poses and the ragdoll carry it. Design in
+  `docs/THE_HANDS.md`.
+- ⚠ **BUILT THROUGH `_gearHeld`, NOT BESIDE IT.** `game.js` already carried the comment *"hands are a
+  slot: swap, don't stack"* — the picked-up-gear path already modelled exactly one held thing, fired
+  it through a synthetic `_gear` slot, applied weapon proficiency and mounted the mesh. The selector
+  sits on top; it did not add a second way to hold something. (The duplicate `Weather` class is why
+  that check now happens first.)
+- ⚠ **`equipGear` DID NOT EXIST** — the equip was inline inside the ground-pickup function, so
+  "one path in and out" was a claim the code could not honour. Extracted as `game.equipFrom(f, row)`
+  and both paths use it. ⚠ One field apart: a scavenged weapon expires in 12s, one you CHOSE in the
+  armory is `t: Infinity, chosen: true`. Same held-object, two lifetimes.
+- **The slots derive from the armory loadout, never from the fighter.** Measured: a fighter with no
+  loadout has **exactly one slot** and the control disappears for them — the "most of the roster
+  never sees this button" property falling out of the data instead of a hard gate. With a loadout:
+  `1 FISTS · 2 9MM SIDEARM · 3 M16 RIFLE (2H) · 4 FLASHBANG`.
+- ⚠ **TWO-HANDED IS A REAL CONSTRAINT, NOT A LABEL** — `oneHand` is already authored on every armory
+  row that has it, and it decides whether you can still grab. That cost is what makes choosing a slot
+  a decision rather than a free upgrade.
+- ⚠ **IT SAYS NO, AND SAYS WHY.** Not mid-swing, not mid-clinch, not while carrying a car, not while
+  disarmed — gated on `melee.canAct`, the same gate the trifecta already uses, so no new rule was
+  needed. A swap also costs 0.35s and drops a raised guard, like every other committed action.
+- ⚠ **THE DIGITS BELONG TO WHICHEVER SCHEME ASKED FOR THEM.** `KEYMAPS.digitsSwap` already decides:
+  CLASSIC keeps 1–0 for hero swap, the other three leave them free and THE HANDS take them there. One
+  flag, no new branch, and the two features can never both claim a key.
+- Verified 7/8, 0 errors. ⚠ The one red was the TEST reading `base.n` where the field is `base.name`
+  — `base` is the ABILITY, not the armory row, and that has been true since the pickup path was
+  written.
+- **Not built**: the HUD row (`hud.updateHands` is called and does not exist yet), the pad D-pad
+  binding (⚠ it is already mapped to Q/E/F and hero swap — a real conflict, written in THE_HANDS.md),
+  and the mobile chip strip.
+
 ## HANDOFF
 - **`HANDOFF.md` at the repo root** is the orientation document: architecture, the ten rules that
   are load-bearing, what is solid, what is half-built, what to do next, and the headless

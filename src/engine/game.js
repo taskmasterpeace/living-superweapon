@@ -22,6 +22,7 @@ import { buildReport } from '../data/news.js';
 import { bookInjury, injuryOf, healBout, koElo, matchElo } from '../data/rankings.js';
 import { SETTINGS, keymap } from '../core/settings.js';
 import { BoxingRing, BOXING } from './boxingring.js';
+import { selectHand, cycleHand, handLabel } from './hands.js';
 import { STRIKES } from '../data/martial.js';
 import { beamBuildOf, beamTemperOf } from '../data/visual.js';
 import { Gamepad } from '../core/gamepad.js';
@@ -1063,6 +1064,33 @@ export class Game {
     if (this.isHuman(f) && this.hud) this.hud.feed(`SCAVENGED: ${ab.name} ×${prof.toFixed(2)} — X fires it, ~12s of trigger time`, '#ffd24a');
     return true;
   }
+  /**
+   * Put an ARMORY ROW in a fighter's hands directly, with no ground drop involved. Same shape, same
+   * proficiency, same mesh as picking one up — extracted from the pickup path so the selector in
+   * `engine/hands.js` cannot build a second, subtly different kind of "held".
+   * ⚠ Proficiency shows in the HANDS, not in the weapon: the row is untouched and the EFFECTIVE
+   * ability is what gets held. A soldier and a bruiser hold the same carbine differently.
+   */
+  equipFrom(f, row) {
+    if (!f || !row || !row.ab) return null;
+    if (f._gearHeld) this.dropGear(f, false);
+    const prof = weaponProficiency(f.def);
+    const ab = row.ab;
+    const eff = { ...ab, gear: true,
+      damage: ab.damage != null ? +(ab.damage * prof).toFixed(2) : ab.damage,
+      dmgMin: ab.dmgMin != null ? +(ab.dmgMin * prof).toFixed(2) : ab.dmgMin,
+      dmgMax: ab.dmgMax != null ? +(ab.dmgMax * prof).toFixed(2) : ab.dmgMax,
+      spread: ab.spread != null ? +(ab.spread / prof).toFixed(4) : ab.spread };
+    // ⚠ NO `t` TIMER. A picked-up weapon is scavenged and expires in 12s; something you CHOSE in the
+    // armory is yours for the match. Same held-object, two lifetimes, one field apart.
+    f._gearHeld = { ab: eff, base: ab, t: Infinity, prof, chosen: true };
+    f.slots._gear = { def: eff, cd: 0, chargeT: 0, sustainT: 0 };
+    const hand = buildWeapon(this._gearKind(ab), { armor: new THREE.MeshStandardMaterial({ color: '#565c66', roughness: 0.45, metalness: 0.7 }) });
+    hand.position.set(1.55, 4.6, 1.1); hand.rotation.x = -0.5;
+    f.obj.add(hand); f._gearMesh = hand;
+    return eff;
+  }
+
   dropGear(f, spawnDrop = true) {
     if (!f._gearHeld) return;
     if (spawnDrop) this.spawnGearDrop(f._gearHeld.base, f.pos.x + (Math.random() * 4 - 2), f.pos.z + (Math.random() * 4 - 2));

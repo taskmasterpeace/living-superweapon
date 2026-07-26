@@ -28,6 +28,7 @@ import { cityList } from './data/cities.js';
 import { org as loadOrg } from './data/org.js';
 import { openHQGlobe } from './engine/hqglobe.js';
 import { openArmory } from './engine/armoryUI.js';
+import { selectHand, cycleHand, handLabel } from './engine/hands.js';
 
 const canvas = document.getElementById('game');
 const input = new Input(); input.bind(canvas);
@@ -423,6 +424,13 @@ addEventListener('keydown', (e) => {
   // ⚠ REVIEW ITEM 13 — DIGIT PAGING. Number keys reached only 10 of 52 heroes, so 42 of them
   // were TAB-only forever. SHIFT pages the digit bank (1-10 / 11-20 / …), so every hero on the
   // roster is two keys away instead of unreachable. The page wraps and is announced.
+  // ⚠ THE DIGITS BELONG TO WHICHEVER SCHEME ASKED FOR THEM, and `digitsSwap` already decides.
+  // CLASSIC keeps 1–0 for hero swap; the other three schemes leave them free, so THE HANDS take
+  // them there. One flag, no new branch, and the two features can never both claim a key.
+  if (!KM.digitsSwap && e.code in digits && game.running && game.player) {
+    const i = digits[e.code] + 1;
+    if (i <= 4) { selectHand(game, game.player, i); hud.updateHands && hud.updateHands(game.player); }
+  }
   if (KM.digitsSwap && e.code in digits) {
     const page = e.shiftKey ? ((game._digitPage = ((game._digitPage || 0) + 1) % Math.ceil(ROSTER.length / 10))) : (game._digitPage || 0);
     const idx = page * 10 + digits[e.code];
