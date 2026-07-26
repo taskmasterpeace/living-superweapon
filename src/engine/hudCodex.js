@@ -56,6 +56,7 @@ export const CodexMixin = {
           <div class="cfid">
             <div class="cfalias">${esc(c.name)}${champ ? ' 🏆' : ''}</div>
             <div class="cfrole">${esc(c.title || '')} · ${esc(c.role || '')}</div>
+            <div class="cfhome"><span class="cfflag">${idn.f}</span><b>${esc(idn.n)}</b><i>${esc(idn.c)}${idn.co ? ' · ' + esc(idn.co) : ''}</i></div>
             <div class="cfmeta">FILE OPENED ${fileDate(c.id)} · LAST REVIEWED TODAY · HANDLER: ${red(9)}</div>
           </div>
           <div class="cfstamp">LEFEVRE<br/>${esc((c.threat || 'UNRATED').toUpperCase())}<small>THRESHOLD TREATY ASSESSMENT</small></div>
@@ -94,6 +95,13 @@ export const CodexMixin = {
           ${(c.items || []).length ? `<div class="cfsec"><div class="cfsh">CARRIED GEAR</div>${c.items.map(i => `<div class="cfrow"><span class="k">■</span><span class="v">${esc(i.name.toUpperCase())}${i.charges ? ' ×' + i.charges : ''}</span></div>`).join('')}</div>` : ''}
         </div>
         <div class="cfmain">
+          <div class="cftabs" role="tablist">
+            <button class="cftab on" role="tab" data-pane="threat"   aria-selected="true">THREAT</button>
+            <button class="cftab"    role="tab" data-pane="armament" aria-selected="false">ARMAMENT</button>
+            <button class="cftab"    role="tab" data-pane="record"   aria-selected="false">RECORD</button>
+            <button class="cftab"    role="tab" data-pane="doctrine" aria-selected="false">DOCTRINE</button>
+          </div>
+          <div class="cfpane on" data-pane="threat">
           <div class="cfcols">
           <div class="cfsec">
             <div class="cfsh">§02 · THREAT ASSESSMENT</div>
@@ -103,6 +111,14 @@ export const CodexMixin = {
             <div class="cfrow"><span class="k">BASIS</span><span class="v">OUTPUT ${st.power}/10 · REACH ${st.range}/10 · MOBILITY ${st.mobility}/10 · RESILIENCE ${st.defense}/10</span></div>
             <div class="cfrow"><span class="k">FLIGHT CERT</span><span class="v">${['GROUNDED — LEAP ONLY', 'CLASS I — UNSTABLE', 'CLASS II — LEVITATOR', 'CLASS III — FULL FLIGHT'][ft]}${c.flySpeed ? ` · AIRSPEED ×${c.flySpeed}` : ''}</span></div>
           </div>
+          </div>
+          <div class="cfsec wide">
+            <div class="cfsh">§06 · IF ENCOUNTERED — COUNTERMEASURE BRIEF</div>
+            <div class="cfcounter">${counters.map(([k2, t]) => `<div class="cn"><i>[${esc(k2)}]</i><span>${esc(t)}</span></div>`).join('')}</div>
+          </div>
+          </div>
+
+          <div class="cfpane" data-pane="record">
           <div class="cfsec">
             <div class="cfsh">§03 · SANCTIONED RECORD</div>
             <div class="cfrow"><span class="k">POWER INDEX</span><span class="v hot">${rec.elo} · RANK #${me.rank}/${snapAll.length}${champ ? ' · REIGNING CHAMPION' : ''}</span></div>
@@ -110,31 +126,46 @@ export const CodexMixin = {
             ${(() => { const inj = injuryOf(c.id); return inj ? `<div class="cfrow"><span class="k">§ MEDICAL</span><span class="v" style="color:var(--danger-2)">CARRYING ${esc(inj.name).toUpperCase()} — CLEARS IN ${inj.bouts} SANCTIONED BOUT${inj.bouts > 1 ? 'S' : ''} · −5% CERTIFIED OUTPUT</span></div>` : '<div class="cfrow"><span class="k">§ MEDICAL</span><span class="v">FIT TO FIGHT — NO ACTIVE INJURIES</span></div>'; })()}
             ${incid.length ? incid.map(x => `<div class="cfrow"><span class="k">${x.win ? '▲ VICTORY' : '▼ DEFEAT'}</span><span class="v" style="color:${x.win ? 'var(--good)' : 'var(--danger-2)'}">${x.win ? 'def.' : 'lost to'} ${esc(x.vs)} · ${x.how === 'tournament' ? 'INVITATIONAL' : x.how.toUpperCase()} · ${agoStr(x.t)}</span></div>`).join('') : '<div class="cfrow"><span class="k">HISTORY</span><span class="v">NO SANCTIONED BOUTS ON RECORD</span></div>'}
           </div>
+          </div>
+
+          <div class="cfpane" data-pane="doctrine">
           <div class="cfsec">
             <div class="cfsh">§04 · BEHAVIORAL DOCTRINE</div>
             <div class="cfrow"><span class="k">DOCTRINE</span><span class="v hot">${(ai.style || 'BRAWLER').toUpperCase()}</span></div>
             <div class="cfrow"><span class="k">BAND · AGGRO · AIR</span><span class="v">~${ai.range || 30}u · ${Math.round((ai.aggro ?? 0.6) * 100)}% · ${Math.round((ai.fly ?? 0.3) * 100)}%</span></div>
             ${[c.thorns && 'THORNED — PUNISHES GRABS', c.phase && 'INTANGIBILITY CAPABLE', c.grabHeal && 'ABSORBS ON GRAB', c.teleEscape && 'TELEPORT ESCAPE ARTIST', c.metal && 'ARMORED CHASSIS', c.frostResist && 'COLD-HARDENED', (c.beamMight || 1) >= 1.2 && 'CERTIFIED BEAM MASTER'].filter(Boolean).map(t => `<div class="cfrow"><span class="k">FLAG</span><span class="v hot">${t}</span></div>`).join('')}
           </div>
+          <div class="cfsec wide">
+            <div class="cfsh">§07 · FIELD INTERCEPT</div>
+            <div class="cfquote">“Subject was last observed delivering ${esc(causeLine(rng, domKind))}.”<b>— WITNESS DEPOSITION · INCIDENT FILE ${red(6)} · TRANSCRIBED BY THE ${esc(idn.co.toUpperCase())} DESK</b></div>
           </div>
+          </div>
+
+          <div class="cfpane" data-pane="armament">
           <div class="cfsec wide">
             <div class="cfsh">§05 · DOCUMENTED ARMAMENT — VERIFIED FIGURES</div>
             <div class="cfarmwrap"><table class="cfarm"><tr><th>SLOT</th><th>DESIGNATION</th><th>CLASS</th><th>OUTPUT</th><th>KI</th><th>CYCLE</th><th>REACH</th><th>NOTES</th></tr>
             ${rows.map(r => `<tr class="${r.ult ? 'ult' : ''}"><td class="sl2">${esc(r.slot)}</td><td class="an3">${esc(r.name)}</td><td>${esc(r.kind)}</td><td class="dm">${esc(r.dmg)}</td><td>${esc(r.cost)}</td><td>${esc(r.cd)}</td><td>${esc(r.reach)}</td><td>${esc(r.notes)}</td></tr>`).join('')}
             </table></div>
           </div>
-          <div class="cfsec wide">
-            <div class="cfsh">§06 · IF ENCOUNTERED — COUNTERMEASURE BRIEF</div>
-            <div class="cfcounter">${counters.map(([k2, t]) => `<div class="cn"><i>[${esc(k2)}]</i><span>${esc(t)}</span></div>`).join('')}</div>
-          </div>
-          <div class="cfsec wide">
-            <div class="cfsh">§07 · FIELD INTERCEPT</div>
-            <div class="cfquote">“Subject was last observed delivering ${esc(causeLine(rng, domKind))}.”<b>— WITNESS DEPOSITION · INCIDENT FILE ${red(6)} · TRANSCRIBED BY THE ${esc(idn.co.toUpperCase())} DESK</b></div>
           </div>
         </div>
         </div>
         <div class="cffoot"><span>THRESHOLD TREATY OFFICE · INDEX COPY 7 OF 9</span><span>PAGE 1 OF 1 · FILE ${esc(fno)}</span></div>
       </div>`;
+      // THE TABS. ⚠ The active pane is remembered on the HUD, not on the render, so paging through
+      // the roster with ‹ › keeps you on the tab you were reading — flicking between two fighters'
+      // armament tables is the whole reason to have tabs, and resetting to the first pane on every
+      // page would make that comparison impossible.
+      const panes = [...this.codexEl.querySelectorAll('.cfpane')];
+      const tabs = [...this.codexEl.querySelectorAll('.cftab')];
+      const show = (id) => {
+        this._cfTab = id;
+        for (const t of tabs) { const on = t.dataset.pane === id; t.classList.toggle('on', on); t.setAttribute('aria-selected', on ? 'true' : 'false'); }
+        for (const q of panes) q.classList.toggle('on', q.dataset.pane === id);
+      };
+      for (const t of tabs) t.onclick = () => show(t.dataset.pane);
+      show(tabs.some(t => t.dataset.pane === this._cfTab) ? this._cfTab : 'threat');
       const nav = (d) => { const i = ROSTER.indexOf(c); render(ROSTER[(i + d + ROSTER.length) % ROSTER.length]); };
       this.codexEl.querySelector('#cfPrev').onclick = () => nav(-1);
       this.codexEl.querySelector('#cfNext').onclick = () => nav(1);

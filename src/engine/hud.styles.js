@@ -573,6 +573,36 @@ export const CSS = `
 .lswovl .rchip.res{ color:var(--good); border-color:rgba(125,255,158,.35); }
 .lswovl .rchip.weak{ color:var(--danger-2); border-color:rgba(255,138,106,.4); }
 @media (max-width: 900px){ .lswovl .cfbody{ grid-template-columns:1fr; } .lswovl .cfrail{ border-right:none; padding-right:0; } }
+/* ---- THE TABBED CHARACTER SHEET (2026-07-25) -------------------------------------------------
+   Robert: "make better character sheets, ensure we have country flag and hometown... I like a
+   tabbed approach." The reference's signature is a LABEL THAT SITS ON THE PANEL EDGE rather than
+   inside it, so the tab reads as a physical file divider. Translated into our palette: the active
+   tab is filled gold and JOINS the pane below it by killing its own bottom border, which is the
+   one detail that makes a tab strip read as tabs instead of a row of buttons.
+   ⚠ The left spine (identity + attributes) never tabs away. It is the part you compare BETWEEN
+   fighters, so hiding it behind a tab would make paging with the arrows useless. */
+.lswovl .cfhome{ display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; margin:3px 0 2px; }
+.lswovl .cfhome .cfflag{ font-size:19px; line-height:1; filter:saturate(1.1); }
+.lswovl .cfhome b{ font-family:var(--f-mono); font-size:var(--t-sm); color:var(--text); font-weight:700; letter-spacing:.02em; }
+.lswovl .cfhome i{ font-style:normal; font-family:var(--f-mono); font-size:var(--t-tiny); color:var(--gold-pale); letter-spacing:.08em; text-transform:uppercase; }
+.lswovl .cfhome i::before{ content:'◆ '; color:var(--gold-deep); }
+
+.lswovl .cftabs{ display:flex; gap:4px; align-items:flex-end; margin:0 0 -1px; padding:0 2px;
+  border-bottom:1px solid var(--line-gold); position:relative; z-index:1; flex-wrap:wrap; }
+.lswovl .cftab{ font-family:var(--f-mono); font-size:var(--t-label); font-weight:700;
+  letter-spacing:.2em; color:var(--text-4); background:transparent;
+  border:1px solid var(--line-2); border-bottom-color:var(--line-gold);
+  border-radius:var(--r-1) var(--r-1) 0 0; padding:6px 15px 7px; cursor:pointer;
+  transition:color .16s, background .16s, border-color .16s; }
+.lswovl .cftab:hover{ color:var(--gold-pale); border-color:var(--gold-deep); }
+.lswovl .cftab:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
+.lswovl .cftab.on{ background:var(--grad-gold,var(--gold)); color:var(--on-gold);
+  border-color:var(--gold); border-bottom-color:transparent; }
+.lswovl .cfpane{ display:none; padding-top:12px; }
+.lswovl .cfpane.on{ display:block; }
+@media (max-width: 640px){
+  .lswovl .cftab{ padding:7px 11px; letter-spacing:.12em; flex:1 1 auto; }
+}
 .lswovl .cfsec{ margin-bottom:13px; min-width:0; }
 .lswovl .cfsec.wide{ grid-column:1 / -1; }
 .lswovl .cfsec .cfsh{ font-family:'Cascadia Mono',Consolas,monospace; font-size:var(--t-label); font-weight:700; letter-spacing:.26em; color:var(--gold-deep); border-bottom:1px dashed rgba(245,178,26,.4); padding-bottom:4px; margin-bottom:7px; }
