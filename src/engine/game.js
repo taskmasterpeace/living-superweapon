@@ -2882,6 +2882,18 @@ export class Game {
       const ax = this.right.x * pad.rx + this.fwd.x * (-pad.ry), az = this.right.z * pad.rx + this.fwd.z * (-pad.ry);
       soft = p.blindT > 0 ? null : this.pickTargetDir(p, ax, az);
       if (soft) soft.center(a3); else a3.set(p.pos.x + ax * 50, 6, p.pos.z + az * 50);
+      this._padAim = { x: ax, z: az };                  // remember the heading for when the thumb lifts
+    } else if (pad.active && this._padAim) {
+      // ⚠ LIFTING THE AIM THUMB WAS AIMING AT THE TOP-LEFT CORNER OF THE SCREEN. `Input.mouse.clientX/Y`
+      // initialise to 0 and are only ever written by a `mousemove` — which never fires on a touch
+      // device — so the moment the stick was released this fell through to the mouse branch and
+      // `screenToGround(0, 0)` resolved to the corner of the world. On an iPad, where BOTH thumbs are
+      // on sticks and you have to let go of one to press anything, that is most of the session.
+      // ⚠ RELEASING A STICK MEANS "HOLD THIS HEADING", NOT "AIM SOMEWHERE ELSE" — so the last heading
+      // is retained. That is also what makes a pad feel like a pad rather than like a lost cursor.
+      const ax = this._padAim.x, az = this._padAim.z;
+      soft = p.blindT > 0 ? null : this.pickTargetDir(p, ax, az);
+      if (soft) soft.center(a3); else a3.set(p.pos.x + ax * 50, 6, p.pos.z + az * 50);
     } else {
       soft = p.blindT > 0 ? null : this.pickTarget(p);             // BLIND: the aim magnet lets go
       if (soft) soft.center(a3); else { this.world.screenToGround(m.clientX, m.clientY, a3); a3.y = 3; }

@@ -2006,6 +2006,7 @@ export class World {
     }
     this.camera = mode === 'chase' ? this.camChase : this.camOrtho;
     this.camMode = mode;
+    this._applyQuality();   // the tier ladder reads camMode (the shadow pass) — re-apply on a swap
     // ⚠ the RenderPass holds its OWN reference, so moving the pointer is not enough
     for (const p of (this.composer ? this.composer.passes : [])) if (p.camera) p.camera = this.camera;
     this._applyProj();
@@ -2131,14 +2132,32 @@ export class World {
   }
   _applyQuality() {
     const t = this._qTier;
-    const pr = this._pixelCap(t === 2 ? this._maxPR : t === 1 ? Math.min(this._maxPR, 1) : 0.72);
+    // ⚠ A THREE-POSITION LADDER WITH TWO POSITIONS. Tier 1 was `min(_maxPR, 1)` — and on a Steam Deck
+    // `_maxPR` IS 1 (devicePixelRatio 1 at 1280×800), so tiers 2 and 1 rendered at exactly the same
+    // resolution and the governor's first step down did nothing at all. On the device with the least
+    // headroom, the middle rung was a placebo. Tier 1 is now a real fraction of whatever the top rung
+    // is, which reproduces the old value on a dpr-2 display (2 → 1.0) and actually steps on a dpr-1 one.
+    // ⚠ AND THE RUNGS MUST BE IN ORDER. My first fix used `max(0.62, …)`, which on a dpr-1 display gave
+    // tier 1 = 0.62 against tier 0's fixed 0.72 — an INVERTED ladder where dropping to the lowest tier
+    // would have RAISED the resolution. The assertion said "three distinct rungs" and passed; distinct
+    // is not ordered. The floor is above tier 0, and the test checks the ordering now.
+    const pr = this._pixelCap(t === 2 ? this._maxPR : t === 1 ? Math.max(0.86, this._maxPR * 0.5) : 0.72);
     this.renderer.setPixelRatio(pr);
     this.composer.setPixelRatio(pr);   // THE tier bug: EffectComposer caches its construction-time
     this.composer.setSize(innerWidth, innerHeight);   // ratio — tiers never actually shrank the scene pass
     this.bloom.setSize(innerWidth * 0.5, innerHeight * 0.5);
     this.bloom.strength = t === 2 ? 0.66 : t === 1 ? 0.55 : 0.42;
     this.bloom.enabled = t > 0;                       // potato tier: drop the whole bloom chain
-    if (this.sun) this.sun.castShadow = t > 0;        // ...and the shadow pass
+    // ⚠ NO DIRECTIONAL SHADOW IN A CHASE VIEW, AT ANY TIER — and this is correctness before it is
+    // performance. The shadow camera is a 220u orthographic box that `follow()` drags along behind the
+    // isometric view; a perspective camera at a 1200u far plane sweeps roughly 3 million u² of ground,
+    // and there are no cascades. So most of what the player can see is outside the shadow frustum and
+    // the shadows that DO render are the ones nearest the lens popping in and out at its edge. Dropping
+    // the pass removes a whole scene traversal per frame — one of three items `docs/PERFORMANCE.md`
+    // ranked high-GPU and could not remove from a city fight — on the platform that needs it most.
+    // The contact-shadow discs under every fighter already carry the grounding cue.
+    const chase = this.camMode === 'chase';
+    if (this.sun) this.sun.castShadow = t > 0 && !chase;
     if (this.wildlife) this.wildlife.setQuality(t);   // trim the flock before anything you aim at
   }
   get fps() { return this._ema ? Math.round(1000 / this._ema) : 60; }
