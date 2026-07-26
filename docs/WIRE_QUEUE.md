@@ -18,7 +18,7 @@ DOORS     6 mode cards · 15 overlays · no base / armory / education door
 
 ---
 
-## 1 · `_cityLL` still hashes  ·  ~15 min  ·  ☐
+## 1 · `_cityLL` still hashes  ·  ~15 min  ·  ☑ DONE 2026-07-26
 
 `hud.js:931` hashes country+city into a plausible lat/lon and its own comment says *"until real
 coordinates exist in the sheet."* They exist now — `data/citycoords.js`, 1,050 of 1,050 — and

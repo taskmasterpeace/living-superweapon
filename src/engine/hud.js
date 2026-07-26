@@ -9,7 +9,7 @@ import { ROSTER, SLOT_ORDER } from '../data/characters.js';
 import { climateLine } from '../data/climate.js';
 import { PLANETS, AU_KM, HELIOPAUSE_AU, TERMINATION_SHOCK_AU, SCALE_LADDER, NEAR_STARS, transitSecsFor, worldEnv } from '../data/planets.js';
 import { clockStr } from '../data/news.js';
-import { GEO_ATTRIBUTION } from '../data/citycoords.js';
+import { GEO_ATTRIBUTION, cityLatLon } from '../data/citycoords.js';
 import { gameDate, dateStr } from '../data/orbits.js';
 import { CSS, CODEX_MOBILE, PHONE_CSS, TABLET_CSS, DECK_CSS } from './hud.styles.js';
 import { DTYPES, DTYPE_INFO, resistOf, bandOf } from './entity.js';
@@ -928,15 +928,44 @@ export class HUD {
   // Deterministic pseudo-geography: the sheet has no coordinates (HANDOFF documents the gap), so
   // distances hash from country+city — STABLE, same-country cities cluster, and the transit time
   // honestly orders near vs far until real coordinates exist in the sheet.
+  // ⚠ THE HASH IS THE FALLBACK NOW, NOT THE ANSWER. This used to hash country+city into a
+  // plausible-looking lat/lon, and its own comment said "until real coordinates exist in the
+  // sheet." They exist: data/citycoords.js carries all 1,050, matched to GeoNames. Baking them and
+  // leaving the consumer hashing is exactly the half-wire this project keeps producing — the data
+  // landed and nothing read it.
+  // ⚠ cityList() returns a FRESH array per call, so indexOf(cityObject) is always -1 (the known
+  // law). Match on name+country, the same way the theater does.
   _cityLL(c) {
+    if (c && c.name) {
+      if (this._llIdx === undefined) {
+        this._llIdx = new Map();
+        cityList().forEach((x, i) => this._llIdx.set((x.name + '|' + x.country).toLowerCase(), i));
+      }
+      const i = this._llIdx.get(((c.name || '') + '|' + (c.country || '')).toLowerCase());
+      if (i !== undefined) { const ll = cityLatLon(i); if (ll) return { lat: ll[0], lon: ll[1], real: true }; }
+    }
+    // off-world settlements and anything not on the sheet still need a stable ordering
     const h = (s) => { let x = 9; for (let i = 0; i < s.length; i++) x = (x * 31 + s.charCodeAt(i)) >>> 0; return x; };
-    const hc = h(c.country || '?'), hn = h((c.name || '?') + (c.country || ''));
+    const hc = h((c && c.country) || '?'), hn = h(((c && c.name) || '?') + ((c && c.country) || ''));
     return { lat: (hc % 1200) / 10 - 60 + ((hn % 60) / 10 - 3), lon: ((hc >>> 8) % 3400) / 10 - 170 + ((hn >>> 6) % 60) / 10 - 3 };
   }
-  _transitSecs(from, to) {
+  // GREAT-CIRCLE distance, because the coordinates are real now. The old flat lat/lon hypotenuse
+  // was fine for hash noise and is wrong for a globe: it makes any long east-west leg far too long
+  // (a degree of longitude is 111km at the equator and 30km at Oslo) and it cannot cross the
+  // antimeridian at all — Tokyo to Los Angeles would have gone the long way round the planet.
+  _cityKm(from, to) {
     const a = this._cityLL(from || { name: 'x', country: 'x' }), b = this._cityLL(to);
-    const d = Math.hypot(a.lat - b.lat, (a.lon - b.lon) * 0.7);
-    return Math.max(4, Math.min(13, 4 + d * 0.055));
+    const R = 6371, rad = Math.PI / 180;
+    const dLat = (b.lat - a.lat) * rad, dLon = (b.lon - a.lon) * rad;
+    const s1 = Math.sin(dLat / 2), s2 = Math.sin(dLon / 2);
+    const h = s1 * s1 + Math.cos(a.lat * rad) * Math.cos(b.lat * rad) * s2 * s2;
+    return 2 * R * Math.asin(Math.min(1, Math.sqrt(h)));
+  }
+  _transitSecs(from, to) {
+    // half the planet (~20,000km) is the long trip; the clamp keeps a loading screen a loading
+    // screen rather than a punishment.
+    const km = this._cityKm(from, to);
+    return Math.max(4, Math.min(13, 4 + (km / 20000) * 9));
   }
   showDepart(game) {
     if (this._departEl) return;
