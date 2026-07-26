@@ -25,6 +25,8 @@ import { TYPES } from './engine/abilities.js';
 import { loadCareer, saveCareer, clearCareer, newCareer, genSlate, acceptCfg, resolveOffer, restWeek, payClinic, fmtMoney } from './data/career.js';
 import { CareerUI } from './engine/careerUI.js';
 import { cityList } from './data/cities.js';
+import { org as loadOrg } from './data/org.js';
+import { openHQGlobe } from './engine/hqglobe.js';
 
 const canvas = document.getElementById('game');
 const input = new Input(); input.bind(canvas);
@@ -255,6 +257,30 @@ function openDesk() {
   });
 }
 hud.onCircuit = openDesk;
+
+// THE FIRM's front door. ⚠ The whole company — payroll, the four kinds of person, the research tree
+// — was reachable only from the dev console, which means it was not shipped. Incorporation now
+// happens ON THE GLOBE, because two dropdowns make it an administrative step and a planet makes it
+// a geopolitical one: you can see that choosing Zurich over Mogadishu is choosing a set of
+// neighbours. Already founded → the same globe, framed on your own headquarters.
+hud.onFirm = () => {
+  const g = openHQGlobe(game, hud, (res) => {
+    if (res && res.ok) {
+      hud.feed('INCORPORATED: ' + res.firm + ' · ' + res.city + ', ' + res.country, '#e0b23c');
+      if (res.stateNamed) hud.feed('THE STATE NAMED YOUR FIRM — ' + res.why, '#c9564a');
+      hud.buildTitle(enter);                           // the banner reads the save, so rebuild it
+    }
+  });
+  // frame it on the existing headquarters if there is one
+  try {
+    const o = loadOrg();
+    if (g && o && o.founded) {
+      const L = cityList();
+      const i = L.findIndex(c => c.name === o.city && c.country === o.country);
+      if (i >= 0) g.select(i);
+    }
+  } catch (e) {}
+};
 hud.onCareerContinue = () => { soundscape.music('menu'); game.running = false; touch.show(false); document.body.classList.remove('playing'); openDesk(); };
 // a decided career bout books itself the moment the match ends — even if the player
 // goes straight to the main menu from the news screen, the week has turned

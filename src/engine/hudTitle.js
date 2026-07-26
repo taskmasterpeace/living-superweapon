@@ -14,6 +14,7 @@ import { identityOf } from '../data/identities.js';
 import { ATTR_ICON, icon } from './icons.js';
 import { championId, recOf, recentIncidents, snapshotTable } from '../data/rankings.js';
 import { cityList } from '../data/cities.js';
+import { org as loadOrg } from '../data/org.js';
 
 import { heroStats, kitFacts } from './hud.js';
 import { THREAT_COLORS } from './hud.js';
@@ -51,6 +52,7 @@ export const TitleMixin = {
       </div>
 </div>
       <div id="circuitBar" style="display:flex;align-items:center;gap:10px;margin:2px 0 4px;padding:8px 12px;border:1px solid var(--line-gold,#6b5824);background:var(--surface,#12110ecc);cursor:pointer;border-radius:var(--r-1,4px)"></div>
+      <div id="firmBar" style="display:flex;align-items:center;gap:10px;margin:0 0 6px;padding:8px 12px;border:1px solid var(--line-gold,#6b5824);background:var(--surface,#12110ecc);cursor:pointer;border-radius:var(--r-1,4px)"></div>
       <div class="modes" id="modes"></div>
       <div class="selwrap">
         <div class="preview" id="pv"></div>
@@ -73,6 +75,22 @@ export const TitleMixin = {
         ? `<span style="${mono};background:var(--stamp,#8a1d24);color:#fff;padding:2px 8px">THE CIRCUIT</span><b style="color:${chero.colors.accent};letter-spacing:0.05em">${chero.name}</b><span style="${mono};color:var(--text-5,#8b8577)">WEEK ${cc.week} · ${fmtMoney(cc.bank)} · RENOWN ${cc.renown}${cc.titles ? ' · 🏆×' + cc.titles : ''}</span><span style="${mono};margin-left:auto;color:var(--gold,#ffd24a)">CONTINUE ▸</span>`
         : `<span style="${mono};background:var(--stamp,#8a1d24);color:#fff;padding:2px 8px">THE CIRCUIT</span><span style="${mono};color:var(--text-5,#8b8577)">A sanctioned career — weekly contracts, purses, grudges, the belt. Signs the selected weapon.</span><span style="${mono};margin-left:auto;color:var(--gold,#ffd24a)">START ▸</span>`;
       circ.onclick = () => { if (this.onCircuit) this.onCircuit(); };
+    }
+    // THE FIRM banner — the other front door, and the one the firm never had. `data/org.js` builds
+    // a whole company (payroll, four kinds of person who are not interchangeable, a research tree)
+    // and until now every route into it was a dev-console command, which means it was not shipped.
+    // ⚠ The banner reads the save and says what state you are in, so it is never a button that
+    // might or might not do something: FOUND YOUR FIRM, or the firm's own name and where it sits.
+    {
+      const fb = this.title.querySelector('#firmBar');
+      if (fb) {
+        let o = null; try { o = loadOrg(); } catch {}
+        const mono = 'font-family:var(--f-mono,monospace);font-size:10px';
+        fb.innerHTML = o && o.founded
+          ? `<span style="${mono};background:var(--gold-deep,#8a6b1e);color:var(--on-gold,#20180a);padding:2px 8px">THE FIRM</span><b style="color:var(--gold,#e0b23c);letter-spacing:0.05em">${o.firm}</b><span style="${mono};color:var(--text-5,#8b8577)">${o.city}, ${o.country} · ${fmtMoney(o.cash)}</span><span style="${mono};margin-left:auto;color:var(--gold,#ffd24a)">HEADQUARTERS ▸</span>`
+          : `<span style="${mono};background:var(--gold-deep,#8a6b1e);color:var(--on-gold,#20180a);padding:2px 8px">THE FIRM</span><span style="${mono};color:var(--text-5,#8b8577)">Incorporate somewhere on Earth. Where you register decides what you may build, what you can raise, and whether you may even name it.</span><span style="${mono};margin-left:auto;color:var(--gold,#ffd24a)">CHOOSE ON THE GLOBE ▸</span>`;
+        fb.onclick = () => { if (this.onFirm) this.onFirm(); };
+      }
     }
     const bar = (label, v, col, tip, ic) => `<div class="statrow"${tip ? ` title="${tip}"` : ''}><span class="sl">${ic ? icon(ic, 11) + ' ' : ''}${label}</span><span class="sb"><i style="width:${v * 10}%;background:${col}"></i></span><span class="sv">${v}</span></div>`;
     const renderPv = (c) => {
@@ -317,6 +335,11 @@ export const TitleMixin = {
     const testCard = () => {
       const w = cv.width, h = cv.height;
       const bars = ['#5a5a5a', '#a8a020', '#20a0a8', '#20a020', '#a020a0', '#a02020', '#2020a0'];
+      // ⚠ no purple on OUR surfaces — broadcast TEST BARS are the one place the full SMPTE
+      // set appears, and even here we swap the violet bar for slate. Same hue (210°) as the
+      // cold open's slate in opening.js, one step darker because these bars peak at 0xa0
+      // where that set peaks at 0xc8 — it must sit under the green and over the red.
+      bars[4] = '#4a5a6a';
       bars.forEach((c, i) => { ctx.fillStyle = c; ctx.fillRect(i * w / bars.length, 0, w / bars.length + 1, h * 0.72); });
       ctx.fillStyle = '#0d0f14'; ctx.fillRect(0, h * 0.72, w, h * 0.28);
       ctx.fillStyle = '#8b8577'; ctx.font = '600 11px Cascadia Code, Consolas, monospace';

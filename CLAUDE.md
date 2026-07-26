@@ -1061,6 +1061,55 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   captures the DOM (the title sits over the canvas): read the drawing buffer with `toDataURL` in the
   SAME task as the render.
 
+## INCORPORATE ON THE GLOBE (2026-07-26) — `engine/hqglobe.js`, the firm's front door
+- Robert: *"use the globe when selecting corporate HQ at the start of the game."* **The reason it is
+  the right call is that it changes the decision rather than decorating it.** The screen anybody
+  would build by default is two dropdowns, country then city, and two dropdowns make incorporation
+  an ADMINISTRATIVE step. A planet makes it a GEOPOLITICAL one — you can see that choosing Zurich
+  over Mogadishu is choosing a hemisphere and a set of neighbours, and all 1,050 cities are standing
+  there in real coordinates arguing their own case.
+- **It closes the firm's half of the no-door problem** (wire-queue item 8). `data/org.js` builds a
+  whole company — payroll, four kinds of person who are not interchangeable, the research tree — and
+  every route into it was a dev-console command, which means it was not shipped. Title screen now
+  carries a FIRM banner beside THE CIRCUIT, and it READS THE SAVE so it is never a button that might
+  or might not do something: *CHOOSE ON THE GLOBE* or the firm's own name and where it sits.
+- **Every line on the panel is a read, never an authored string**: footprint from `siteSurvey`
+  (eleven sheet fields), money from `seedCapital`, naming rights from `firmNaming`. Measured live:
+  **Zurich 8×8 · $850K · name it yourself** · **Mogadishu 1×1 · $250K** · **Pyongyang 5×5 · $610K ·
+  name ISSUED: DIRECTORATE IX — NORTH KOREA**, "there is no private security market here". The 9×9
+  grid draws the footprint it states (64 lit cells for 8×8) so the control cannot contradict its own
+  label.
+- **The SAME `buildEarth` the space layer flies past** — so the haze, the terminator and the
+  day/night cycle are the ones the rest of the game is using and there is no second Earth to keep in
+  sync. `world.dayT` is pushed every frame: three clock values give three distinct sun vectors.
+- **Picking is NEAREST REGISTERED CITY, not point-in-country.** Raycast the sphere → `vecToLL` →
+  great-circle against all 1,050 (which is nothing). A click therefore always lands on a real row of
+  the sheet, the panel can never show a country we have no city for, and it is exact instead of a
+  polygon test against 178 countries' rings. Beyond 1,400km of anything it selects nothing, so a
+  click in the middle of the Pacific is honest about being empty.
+  ⚠ `vecToLL` is DERIVED from `llToVec3` by reading the forward form backwards. The projection
+  shipped 90° out once (manual §41) precisely because a second hand-rolled spherical was written
+  beside the first.
+- ⚠ **THIS SCREEN DRAWS ON THE CANVAS, AND THE CANVAS IS AT THE BOTTOM OF THE STACK.** The first run
+  came back as the how-to page over a black rectangle: the title screen (z30) and every `.lswovl`
+  (z62) are opaque DOM on top of it, and hiding the title then REVEALS the match HUD (a health bar
+  and a radar label floating over the planet). Anything rendering through the composer has to move
+  the DOM out of the way and put it back exactly as it found it.
+- ⚠ **`select()` moves the camera too.** It is both the test seam and the path main.js uses to frame
+  an existing headquarters — a selection that leaves the view on the far side of the planet is not
+  showing you your site.
+- ⚠ **TOO SMALL IS AS WRONG AS TOO BIG, and it was the same mistake twice.** The day texture's relief
+  started as six-degree circles that read as MOON CRATERS; the correction over-shot to 5,200 blobs of
+  3–18 texels on a 4096 map — one pixel each at any useful camera distance — so the continents came
+  out covered in bright specks that read as dust on the lens. Landform variation must be BIG enough
+  to be a shape and FAINT enough not to be a mark: 1,300 blobs, several times larger, half the
+  contrast, biased dark (a pale blob pops, a shadow recedes).
+- ⚠ Harness: `text-transform:uppercase` does NOT change `textContent`, and adjacent `<span>`s
+  concatenate with **no space** — `footprint9×9`. Two regexes, two false failures.
+- Verified end-to-end through the real pointer path: door → globe → click resolves a city → three
+  cities' panels → clock drives the sun → INCORPORATE writes the save → the banner reports the firm.
+  12/12, 0 console errors. Ref `wwa-hq-globe.png`.
+
 ## HANDOFF
 - **`HANDOFF.md` at the repo root** is the orientation document: architecture, the ten rules that
   are load-bearing, what is solid, what is half-built, what to do next, and the headless

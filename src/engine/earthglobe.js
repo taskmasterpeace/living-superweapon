@@ -141,11 +141,18 @@ function dayTexture(W = 2048) {
   x.beginPath();
   for (const r of rings) { for (let i = 0; i < r.length; i++) { const X = px(r[i][0], W), Y = py(r[i][1], H); if (i === 0) x.moveTo(X, Y); else x.lineTo(X, Y); } x.closePath(); }
   x.clip();
-  for (let i = 0; i < 5200; i++) {
-    const cx = Math.random() * W, cy = Math.random() * H, r = (1.5 + Math.random() * 9) * (W / 2048);
-    const dark = Math.random() < 0.5;
+  // ⚠ TOO SMALL IS AS WRONG AS TOO BIG, AND IT IS THE SAME MISTAKE TWICE. The first pass used
+  // six-degree circles and they read as MOON CRATERS; the correction over-shot to 5,200 blobs of
+  // 3–18 texels on a 4096 map, which at any useful camera distance is one pixel each — so the
+  // continents came out covered in bright white specks that read as dust on the lens. Landform
+  // variation has to be BIG enough to be a shape and FAINT enough not to be a mark: an order of
+  // magnitude fewer, several times larger, half the contrast. And biased dark, because a pale blob
+  // pops and a shadow recedes.
+  for (let i = 0; i < 1300; i++) {
+    const cx = Math.random() * W, cy = Math.random() * H, r = (10 + Math.random() * 44) * (W / 2048);
+    const dark = Math.random() < 0.64;
     const g = x.createRadialGradient(cx, cy, 0, cx, cy, r);
-    g.addColorStop(0, dark ? 'rgba(24,30,22,0.26)' : 'rgba(198,193,164,0.20)');
+    g.addColorStop(0, dark ? 'rgba(24,30,22,0.15)' : 'rgba(198,193,164,0.10)');
     g.addColorStop(1, 'rgba(0,0,0,0)');
     x.fillStyle = g; x.beginPath(); x.arc(cx, cy, r, 0, TAU); x.fill();
   }

@@ -118,7 +118,7 @@ telekinesis · reshape · consume · mimic · mount · dome · vision · wallcra
   same-y" note, and land each through `wwa-ship-mechanic` (two carriers, two delivery systems).
 - Cheapest three by fit: `regen` (a healer archetype), `dome` (a defender), `vision` (a scout).
 
-## 8 · No door for the base, the armory or education  ·  ~2 h  ·  ☐
+## 8 · No door for the base, the armory or education  ·  ~2 h  ·  ◐ FIRM DONE 2026-07-26
 
 `data/modes.js` has six cards and none is `base`, yet `MODE_IMPL.base` exists and `baseroom.js`
 raises a walkable two-floor HQ. There is no `showBase`, `showArmory` or `showEducation`.
@@ -126,6 +126,11 @@ raises a walkable two-floor HQ. There is no `showBase`, `showArmory` or `showEdu
 - **Wire:** one mode card for THE BASE (the room already builds), one overlay for the armory
   (a loadout row on character select is enough to start). The CIRCUIT banner is the pattern.
 - ÷2 on payoff because UI is the slow part — but the base is the one where the content is finished.
+- **DONE (the firm):** `engine/hqglobe.js` + a FIRM banner on the title screen. Incorporation happens
+  on the globe, and every figure on the panel is a read of `siteSurvey` / `seedCapital` /
+  `firmNaming`. See CLAUDE.md · INCORPORATE ON THE GLOBE.
+- **STILL OPEN:** a mode card for THE BASE (the room already builds), an armory loadout surface, and
+  an education door. The firm screen is the pattern to copy for all three.
 
 ## 9 · The clinch wheel  ·  L  ·  ☐
 
