@@ -327,6 +327,10 @@ export const TYPES = {
   teleport(c, def, st, g, inp) {
     if (inp.pressed && ready(c, def, st)) {
       pay(c, def, st);
+      // ⚠ INTERCEPT FIRST. If you have just launched someone and they are still in the air, this
+      // teleport chases them instead of going to the cursor — that is the ESF combo, and putting it
+      // here means the two delivery lanes share one implementation (see `game.intercept`).
+      if (g.intercept && g.intercept(c)) return;
       g.afterimage(c); g.vfx.flash(c.pos.clone().setY(5), def.color || c.def.colors.accent, 6, 0.22); g.audio.teleport();
       const ox = c.pos.x, oz = c.pos.z;   // SMOKE VANISH: the departure point IS the smoke bomb
       const range = def.range || 42; const target = g.aimPoint;
@@ -1070,6 +1074,7 @@ export function performEvade(c, dir, g) {
   const dl = Math.hypot(dir.x, dir.z) || 1; const dx = dir.x / dl, dz = dir.z / dl;
   switch (d.kind) {
     case 'blink': {
+      if (g.intercept && g.intercept(c)) break;   // the same intercept, the other lane
       g.afterimage(c); g.vfx.flash(c.pos.clone().setY(5), color, 5, 0.18); g.audio.teleport();
       c.pos.x += dx * (d.range || 22); c.pos.z += dz * (d.range || 22);
       c.vel.multiplyScalar(0.25); c.invuln = Math.max(c.invuln, d.iframes || 0.3);

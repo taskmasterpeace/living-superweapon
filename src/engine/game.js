@@ -1892,15 +1892,85 @@ export class Game {
     return null;
   }
 
+  /**
+   * TELEPORT-INTERCEPT (docs/POWERWORLD.md §13.2, manual §46). You hit someone hard, they go flying —
+   * and instead of watching them go, you blink to them and keep going. This is **the core high-skill
+   * technique of ESF**, and its research turned up nine named combos built on it.
+   *
+   * ⚠ IT ADDS NO KEY, NO SYSTEM AND NO STATE FIELD. Every part of it already existed:
+   *   · `launchT` is the "this body did not arrive here under its own power" signal (the slam rules'),
+   *   · `lastHitBy` says whose launch it was, so you can only chase your OWN work,
+   *   · `burstT` is the mandatory lift on `move()`'s walk-speed clamp,
+   *   · `updateBlinkMark` already draws a destination marker.
+   * It is one function so the two delivery lanes cannot drift: the `teleport` ability TYPE and the
+   * `blink` EVADE. Two carriers, and the roster already has them — **KANO** (Snap Transit + a blink
+   * evade) and **APEX** (Afterimage + a blink evade).
+   *
+   * ⚠ THE COUNTER IS THE BEST PART, AND IT IS ESF'S OWN — BY ACCIDENT. In ESF, whether you could
+   * follow a launched body depended on how hard you launched it: a standing hit was catchable, a full
+   * swoop hit was not. The research says outright that this emerged accidentally, so here it is
+   * deliberate: past `CATCH_SPD` the body is moving too fast to intercept and you have to fly it down.
+   * That is what stops the biggest hit from also being the best hit.
+   *
+   * ⚠ ARRIVAL IS SHORT OF THE BODY AND AT EXACTLY ITS ALTITUDE. Short, because ESF 1.2.1 had to stop
+   * teleport OVERSHOOTING and that is precisely why intercepting was so hard before it. At its
+   * altitude, because the melee vertical rule would otherwise refuse the punch you teleported to make.
+   * @returns {boolean} true if an intercept happened — the caller then skips its normal behaviour.
+   */
+  intercept(f) {
+    const CATCH_SPD = 132, REACH = 190;
+    let best = null, bd = REACH * REACH;
+    for (const e of this.entities) {
+      if (!this.isFoe(f, e) || !e.alive) continue;
+      if (!(e.launchT > 0) || e.lastHitBy !== f) continue;          // only your own launch, only in flight
+      const q = (e.pos.x - f.pos.x) ** 2 + (e.pos.y - f.pos.y) ** 2 + (e.pos.z - f.pos.z) ** 2;
+      if (q < bd) { bd = q; best = e; }
+    }
+    if (!best) return false;
+    const spd = Math.hypot(best.vel.x, best.vel.y, best.vel.z);
+    if (spd > CATCH_SPD) {
+      // ⚠ IT SAYS WHY. A refusal the player cannot read is indistinguishable from a broken button.
+      if (this.isHuman(f) && this.hud) this.hud.feed('TOO FAST TO CATCH — fly them down', '#8b8577');
+      return false;
+    }
+    // arrive on the far side of their travel, a body-length short, at their altitude
+    const v = Math.hypot(best.vel.x, best.vel.z) || 1;
+    const ax = best.vel.x / v, az = best.vel.z / v;
+    this.afterimage(f);
+    f.pos.set(best.pos.x + ax * 6.5, best.pos.y, best.pos.z + az * 6.5);
+    f.vel.set(best.vel.x * 0.55, best.vel.y * 0.55, best.vel.z * 0.55);   // match their travel, mostly
+    f.burstT = Math.max(f.burstT || 0, 0.5);        // or move()'s walk clamp eats the match-speed
+    f.flying = f.flying || best.flying;             // you go where they went
+    f.faceDir(best.pos.x - f.pos.x, best.pos.z - f.pos.z);
+    f.invuln = 0;                                   // ⚠ NO i-frames: both lanes grant them by default
+    this.afterimage(f);
+    const col = f.def.colors.accent;
+    this.vfx.flash(f.pos.clone().setY(f.pos.y + 5), col, 7, 0.24);
+    this.particles.burst(f.pos.x, f.pos.y + 5, f.pos.z, { count: 20, speed: 26, life: 0.38, size: 2.8, color: ['#fff', col] });
+    this.audio.teleport(); this.noise(f.pos, 0.7, f);
+    if (this.isHuman(f) && this.hud) this.hud.feed('INTERCEPT — ' + (best.def ? best.def.name : 'target'), col);
+    this.slowmo && this.slowmo(0.1, 0.55);
+    return true;
+  }
+
   coneFoe(caster, range, arc) {
     let best = null, bd = range * range;
     for (const f of this.entities) {
       if (!this.isFoe(caster, f)) continue;
       const dx = f.pos.x - caster.pos.x, dz = f.pos.z - caster.pos.z; const d = Math.hypot(dx, dz);
-      if (d > range) continue;
-      // the VERTICAL GATE (altitude plan F5): a jab must not connect with a foe a whole band
-      // overhead — melee and grabs are same-deck weapons. ~one storey of tolerance.
-      if (Math.abs(f.pos.y - caster.pos.y) > 10) continue;
+      const dy = Math.abs(f.pos.y - caster.pos.y);
+      // ⚠ THE VERTICAL GATE IS ABOUT DECKS, AND THERE ARE NO DECKS IN THE AIR. The flat ±10u rule is
+      // right on the ground — melee is a same-deck weapon and a jab must not reach a foe a storey
+      // overhead — but 10u is **1.04 fighter heights**, and the four flight bands are 82–115u apart.
+      // Airborne it meant two fliers at even slightly different altitudes could not touch each other
+      // at all: no jab, no cross, no haymaker, no grab, no cone. In a dimension whose entire premise
+      // is air combat that is not a balance number, it is a wall.
+      //
+      // In the air, ALTITUDE SPENDS REACH: the test becomes the real 3-D distance, so you can punch
+      // someone above you exactly as far as you could punch them beside you, and no further. That is
+      // fair, readable, and it needs no new field — `flying` already says which case you are in.
+      if (caster.flying && f.flying) { if (Math.hypot(d, dy) > range) continue; }
+      else { if (d > range) continue; if (dy > 10) continue; }
       const dot = (dx / (d || 1)) * caster.aim.x + (dz / (d || 1)) * caster.aim.z;
       if (dot < Math.cos(arc)) continue;
       if (d * d < bd) { bd = d * d; best = f; }

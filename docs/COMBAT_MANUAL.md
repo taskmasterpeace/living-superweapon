@@ -2531,3 +2531,69 @@ every list a system reads.
 the same function — the temporal dead zone, so **every frame spent downed threw a ReferenceError**.
 The rally input was never evaluated: you could not get up. Measured 1,800 throws in one duel, all
 invisible behind the frame try/catch and the repeated-error ledger. Declared once, above every use.
+
+---
+
+## §46 · AIR MELEE AND TELEPORT-INTERCEPT (2026-07-26)
+
+The two changes that make an airborne fight a fight. Both are POWERWORLD's reason to exist
+(`docs/POWERWORLD.md`), and both apply everywhere.
+
+### ⚠ THE VERTICAL GATE IS ABOUT DECKS, AND THERE ARE NO DECKS IN THE AIR
+
+`coneFoe` refused any foe more than **10u** above or below the caster. On the ground that is right:
+melee is a same-deck weapon, and a jab must not reach a man on a roof. But 10u is **1.04 fighter
+heights**, and the four flight bands are **82–115u apart** — so two fliers at even a slight altitude
+difference could not touch each other at all. No jab, no cross, no haymaker, no grab, no cone.
+
+The rule now splits on `flying`, which already says which case you are in:
+
+| both airborne | ALTITUDE SPENDS REACH — the test is the real 3-D distance |
+| either grounded | unchanged: horizontal reach, ±10u of tolerance |
+
+So in the air you can punch someone above you exactly as far as you could punch them beside you, and
+no further. Verified end to end through `melee.strike` → `coneFoe` → `onHit`:
+
+| case | result |
+|---|---|
+| ground, level, 7u | **lands** (baseline unchanged) |
+| ground, foe 14u overhead | refused |
+| air, foe 6u above | **lands** — the new capability |
+| air, foe 30u above | refused — altitude is not free |
+
+### TELEPORT-INTERCEPT — `game.intercept(f)`
+
+You hit someone hard, they go flying, and instead of watching them go you blink to them and keep
+going. This is **the core high-skill technique of ESF** — the research recovered nine named combos
+built on it (`docs/powerworld/pw-esf-research.md`).
+
+⚠ **IT ADDS NO KEY, NO SYSTEM AND NO STATE FIELD.** Every part already existed: `launchT` is the
+"did not arrive under its own power" signal the slam rules use, `lastHitBy` says whose launch it was,
+`burstT` is the mandatory lift on `move()`'s walk clamp, and `updateBlinkMark` already draws a
+destination marker. One function, so the two delivery lanes cannot drift.
+
+**Two carriers, two delivery systems** (§5 protocol), and the roster already had them:
+
+| carrier | lane |
+|---|---|
+| **KANO** | `teleport` TYPE (Snap Transit) + the `blink` evade |
+| **APEX** | `teleport` TYPE (Afterimage) + the `blink` evade |
+
+**The counter is ESF's own, and in ESF it was an accident.** Whether you could follow a launched body
+depended on how hard you launched it — a standing hit was catchable, a full swoop hit was not. That
+emerged by accident there; here it is deliberate. Past `CATCH_SPD = 132` the body is travelling too
+fast to intercept and you have to fly it down. **That is what stops the biggest hit from also being
+the best hit**, and it gives the reach inversion a partner: commitment buys damage and costs pursuit.
+
+⚠ **ARRIVAL IS SHORT OF THE BODY AND AT EXACTLY ITS ALTITUDE.** Short (6.5u — inside
+`STRIKES.power.reach` of 7u) because ESF 1.2.1 had to stop teleport OVERSHOOTING, and overshooting is
+exactly why intercepting was so hard before that patch. At its altitude because the vertical rule
+above would otherwise refuse the punch you teleported to make. No i-frames: both lanes grant them by
+default and an intercept must not also be an invulnerability window.
+
+Refusals are spoken, never silent — *"TOO FAST TO CATCH — fly them down"* — because a refusal a player
+cannot read is indistinguishable from a broken button.
+
+Verified 14/14: a catchable launch is intercepted (moved 31.5u, arrives at exactly their altitude,
+6.5u gap); a too-hard launch is refused; you cannot chase a body you did not launch, nor one that is
+not in flight; and both lanes reach the one function. Nine modes regressed clean, ground melee intact.
