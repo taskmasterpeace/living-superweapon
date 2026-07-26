@@ -121,6 +121,12 @@ export const HOT_SET = [
   'swing.air', 'v.pain', 'v.exert', 'ped.scream', 'water.splash',
   'step.concrete', 'step.grass', 'rubble', 'glass.break', 'fire.roar', 'sting.wanted',
   'sting.clear', 'sting.ko', 'sting.victory', 'book.open', 'book.flip', 'book.close', 'parry',
+  // ⚠ THE FIRST KO CRY AND THE FIRST KI CHARGE OF A SESSION WERE FALLING THROUGH TO THE SYNTH.
+  // `v.pain` and `v.exert` were hot but `v.roar` (audio.js:273) was not, and neither were the
+  // power up/down casts (audio.js:739) or the charge loop (audio.js:344). Robert's ruling was
+  // explicit — *"100% should be wav/mp3, no coded sound effects for any attacks"* — and a sample
+  // that decodes on first use is a synth on first use.
+  'v.roar', 'cast.spell', 'cast.magic', 'engine.charge', 'engine.low',
 ];
 
 export class SampleBank {

@@ -30,7 +30,9 @@ export const PAD_ACTION = {
   strike: 'square', grab: 'circle', fly: 'cross', descend: 'l3', ult: 'triangle',
   q: 'dup', e: 'dright', f: 'dleft', swap: 'ddown',
   pause: 'start', roster: 'select',
-  confirm: 'cross', back: 'circle', item: 'square',
+  // ⚠ `item: 'square'` was a lie TWICE: `MAP` had no `item` at all, and square is `strike`. So the
+  // help panel told a pad player that the punch button was the gadget button.
+  confirm: 'cross', back: 'circle', item: 'r3',
 };
 
 // Is a pad the ACTIVE input device? A pad that is merely plugged in shouldn't rewrite the panel

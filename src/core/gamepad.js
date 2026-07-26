@@ -13,6 +13,11 @@ const MAP = {
   fly: 0,                  // Cross fly / ascend (hold)
   descend: 10,             // L3 (left-stick click) descend while flying (hold)
   r: 3,                    // Triangle ultimate
+  // ⚠ THE ITEM BUTTON WAS MISSING ENTIRELY, so `pad.pressed('item')` was permanently false and
+  // **every gadget and every scavenged weapon was keyboard-only** — unreachable on a Steam Deck or
+  // an iPad, which are the two platforms this game is built for. R3 (right-stick click) because the
+  // right thumb is already on that stick to aim: a click costs no hand movement, and X is fly.
+  item: 11,                // R3 (right-stick click) = gadget / fire held gear
   q: 12, e: 15, f: 14,     // Dpad up / right / left = Q / E / F
   swap: 13,                // Dpad down = swap hero
   start: 9, select: 8,     // pause / roster

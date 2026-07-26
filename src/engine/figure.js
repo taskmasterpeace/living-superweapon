@@ -341,7 +341,12 @@ export function figure(def) {
     const boot = new THREE.Mesh(new THREE.CapsuleGeometry(0.58, 0.7, 4, 8), glow.clone());
     boot.material.emissiveIntensity = 0.3; boot.position.set(0, -1.85, 0.2); knee.add(boot);
     const toe = new THREE.Mesh(new THREE.SphereGeometry(0.5, 8, 8), boot.material); toe.position.set(0, -0.15, 0.62); toe.scale.set(1, 0.7, 1.35); boot.add(toe);
-    pivot.userData = { thigh, knee, shin, boot };
+    // ⚠ `kneeCap` IS EXPOSED because anything parented to a JOINT GROUP must be reachable by the
+    // ragdoll. The knee group is zeroed during a ragdoll so its children can be driven in world
+    // space — but a child the ragdoll does not drive is then left at the corpse's own origin.
+    // Measured before this: after 400 ragdoll steps the kneecap sat at [0, 0.05, 0] while its own
+    // shin was at [-0.73, 0.50, -0.04]. A kneecap on the floor under every dead body.
+    pivot.userData = { thigh, knee, shin, boot, kneeCap };
     g.add(pivot); return pivot;
   };
   const legL = mkLeg(-1), legR = mkLeg(1);

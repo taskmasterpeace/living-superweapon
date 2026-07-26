@@ -18,6 +18,10 @@ const BTNS = [
   ['q', 'Q', 'tb-q'], ['e', 'E', 'tb-e'], ['f', 'H', 'tb-f'],
   ['strike', '✊', 'tb-strike'], ['guard', '🛡', 'tb-guard'], ['grab', '✋', 'tb-grab'],
   ['dash', '»', 'tb-dash'], ['fly', '▲', 'tb-fly'], ['descend', '▼', 'tb-desc'],
+  // ⚠ THERE WAS NO ITEM BUTTON, so on an iPad every gadget — medkit, flashbang, jetcell, shield
+  // pack, the beacon — and every weapon you scavenged off the street was unusable. The glyph is
+  // geometry, not an emoji: it renders at a fixed size and is not at the mercy of a platform font.
+  ['item', '◈', 'tb-item'],
 ];
 // system buttons map onto the pad actions main.js's padSystem() already listens for
 const SYS = [['start', '⏸'], ['select', '☰']];

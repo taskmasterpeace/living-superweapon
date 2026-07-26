@@ -8,22 +8,22 @@
 export const KEYMAPS = {
   classic: {
     name: 'CLASSIC', wheel: 'hero', digitsSwap: true,
-    up: 'Space', down: 'KeyZ', guard: 'KeyC', item: 'KeyX', strike: 'KeyV', grab: 'KeyG',
-    upLabel: 'SPACE', downLabel: 'Z', guardLabel: 'C / MOUSE4', itemLabel: 'X', swapLabel: 'WHEEL · 1–0',
+    up: 'Space', down: 'KeyZ', guard: 'KeyC', item: 'KeyX', strike: 'KeyV', grab: 'KeyG', fly: 'KeyF',
+    upLabel: 'SPACE', downLabel: 'Z', guardLabel: 'C / MOUSE4', itemLabel: 'X', swapLabel: 'WHEEL · 1–0', flyLabel: 'F',
     strikeLabel: 'V', grabLabel: 'G',
     blurb: 'What shipped. The wheel (and 1–0) swaps hero · Z descends · C guards · X gadget.',
   },
   pilot: {
     name: 'PILOT', wheel: 'ability', digitsSwap: false,
-    up: 'Space', down: 'KeyC', guard: 'KeyX', item: 'KeyZ', strike: 'KeyV', grab: 'KeyG',
-    upLabel: 'SPACE', downLabel: 'C', guardLabel: 'X / MOUSE4', itemLabel: 'Z', swapLabel: '[ ]',
+    up: 'Space', down: 'KeyC', guard: 'KeyX', item: 'KeyZ', strike: 'KeyV', grab: 'KeyG', fly: 'KeyF',
+    upLabel: 'SPACE', downLabel: 'C', guardLabel: 'X / MOUSE4', itemLabel: 'Z', swapLabel: '[ ]', flyLabel: 'F',
     strikeLabel: 'V', grabLabel: 'G',
     blurb: 'The wheel picks your POWER and LMB fires it · [ ] swaps hero · SPACE up, C down · X guards, Z gadget.',
   },
   hybrid: {
     name: 'HYBRID', wheel: 'ability', digitsSwap: false,
-    up: 'Space', down: 'KeyZ', guard: 'KeyC', item: 'KeyX', strike: 'KeyV', grab: 'KeyG',
-    upLabel: 'SPACE', downLabel: 'Z', guardLabel: 'C / MOUSE4', itemLabel: 'X', swapLabel: '[ ]',
+    up: 'Space', down: 'KeyZ', guard: 'KeyC', item: 'KeyX', strike: 'KeyV', grab: 'KeyG', fly: 'KeyF',
+    upLabel: 'SPACE', downLabel: 'Z', guardLabel: 'C / MOUSE4', itemLabel: 'X', swapLabel: '[ ]', flyLabel: 'F',
     strikeLabel: 'V', grabLabel: 'G',
     blurb: 'PILOT’s wheel-select and [ ] hero swap, with guard and gadget left on C and X.',
   },
@@ -37,8 +37,8 @@ export const KEYMAPS = {
   // slice; this is the ergonomic half, and it is the half that is stopping him playing today.
   brawler: {
     name: 'BRAWLER', wheel: 'ability', digitsSwap: false,
-    up: 'Space', down: 'KeyZ', guard: 'KeyC', item: 'KeyX', strike: 'KeyF', grab: 'KeyV',
-    upLabel: 'SPACE', downLabel: 'Z', guardLabel: 'C / MOUSE4', itemLabel: 'X', swapLabel: '[ ]',
+    up: 'Space', down: 'KeyZ', guard: 'KeyC', item: 'KeyX', strike: 'KeyF', grab: 'KeyV', fly: 'KeyG',
+    upLabel: 'SPACE', downLabel: 'Z', guardLabel: 'C / MOUSE4', itemLabel: 'X', swapLabel: '[ ]', flyLabel: 'G',
     strikeLabel: 'F', grabLabel: 'V',
     blurb: 'For fist fights. The whole melee trifecta sits under your left hand — F punch, C guard, V grab — so you never leave WASD.',
   },

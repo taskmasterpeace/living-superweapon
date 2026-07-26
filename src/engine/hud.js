@@ -509,7 +509,10 @@ export class HUD {
         grp('SYSTEM', [[G('swap'), 'swap hero'], [G('roster'), 'roster'], [G('pause'), 'pause'],
           [G('confirm') + ' / ' + G('back'), 'confirm · back (menus)']])
       : grp('MOVE & AIM', [['WASD', 'move'], ['MOUSE', 'aim'], ['CLICK FOE', 'lock on · T to release'], ['2×TAP', 'evade'], ['SHIFT', 'dash']]) +
-        grp('MELEE', [['V', 'tap = jab · HOLD = haymaker'], ['G', 'grab · hoist a car/tree'], [K.guardLabel, 'guard (hold)']]) +
+        // ⚠ THE PANEL WAS LYING UNDER BRAWLER. Guard read `K.guardLabel` but strike and grab were
+        // hard-coded 'V' and 'G' — so the one scheme that exists BECAUSE the melee keys moved was
+        // the one scheme the help panel printed the old keys for.
+        grp('MELEE', [[K.strikeLabel || 'V', 'tap = jab · HOLD = haymaker'], [K.grabLabel || 'G', 'grab · hoist a car/tree'], [K.guardLabel, 'guard (hold)']]) +
         grp('POWERS', [
           wheelSel ? ['WHEEL', 'pick a power'] : null,
           [wheelSel ? 'LMB' : 'LMB / RMB', wheelSel ? 'fire the picked power' : 'primary · secondary'],

@@ -58,7 +58,12 @@ export class Ragdoll {
       p.armL.children[0], p.armL.children[1], p.armL.children[2],
       p.armR.children[0], p.armR.children[1], p.armR.children[2],
       p.legL.userData.thigh, p.legL.userData.shin, p.legL.userData.boot,
-      p.legR.userData.thigh, p.legR.userData.shin, p.legR.userData.boot].filter(Boolean);
+      p.legR.userData.thigh, p.legR.userData.shin, p.legR.userData.boot,
+      // ⚠ THE KNEECAPS. They are parented to the knee GROUP, which this class zeroes so that its
+      // children can be driven in world space — so a kneecap left out of `driven` is stranded at the
+      // corpse's ground origin while its own shin lies somewhere else. The rule, worth writing down:
+      // anything parented to a joint group is either DRIVEN here or re-parented onto a driven mesh.
+      p.legL.userData.kneeCap, p.legR.userData.kneeCap].filter(Boolean);
     // snapshot originals for a perfect restore
     this._snap = this.driven.map(m => ({ m, p: m.position.clone(), q: m.quaternion.clone(), s: m.scale.clone() }));
     this._pivotSnap = this.pivots.map(v => ({ v, p: v.position.clone(), r: v.rotation.clone() }));

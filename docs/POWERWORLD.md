@@ -1,0 +1,275 @@
+# POWERWORLD — the second dimension
+
+*Started 2026-07-26. A plan, not a decision. Research sections are attributed and dated; anything
+not yet verified in code says so.*
+
+> Robert: *"we want to be able to have a Steam Deck game that is basically Bid for Power, they go in
+> a dimensional door and come to this game… but for now we build this universe which is essentially a
+> camera change and control changes. Our game is lightyears beyond the rest."*
+>
+> And: *"proper planning equals great performance."*
+
+---
+
+## 1. What this is
+
+**POWERWORLD is a dimension you reach through a door, and it is a second game wearing the same
+engine.**
+
+In **ASCENDANTS WORLD** you are a Living Super Weapon in a real city at 1:1 scale. There are
+pedestrians who film you, police who escalate through six rungs, a news desk that reports what you
+did, a career that books your next fight, and a country sheet that decides whether you are a
+sanctioned hero or a criminal on sight. Everything you do has a witness.
+
+In **POWERWORLD** the camera drops behind your shoulder, the horizon opens, there is nobody to
+protect, and the fight becomes Bid For Power.
+
+The strategic point in one sentence: **the fighters, the powers, the damage model, the ki economy,
+the flight tiers, the beams, the ragdolls, the injury ledger and the audio are already built and all
+of it comes with you.** PowerWorld is a camera, a control scheme, a world shape and four small
+mechanics. That is why something this size is reachable — not because the ambition is small.
+
+And the product point: `docs/DESKTOP_AND_STEAM_DECK.md` already ships a working Steam Deck path —
+packaged build, controller layout, no keyboard needed to quit. **The distribution story for a Steam
+Deck arena fighter is solved.** PowerWorld does not need a new pipeline. It needs a camera.
+
+### The two worlds are connected, not alternatives
+
+You do not choose PowerWorld at the main menu instead of the city. You **research your way to the
+door** — Dimensional Physics, then the Portal Anchor, then the Gate — and once it exists you can
+cross in both directions. A fighter who trains in PowerWorld comes back to Ascendants carrying what
+they learned; damage taken there is real, and the medical ledger does not care which dimension broke
+your arm.
+
+---
+
+## 2. The correction that changed the estimate
+
+Robert asked whether beam struggle already existed. **It does, and it is complete.** Verified in
+source rather than recalled:
+
+| What | Where |
+|---|---|
+| *"DBZ-style beam struggle: opposing beams meet; the struggle point moves toward the weaker"* | `projectiles.js:1017` |
+| `clashPower() = might × powerBuff × (0.35 + 0.65 × ki/maxKi)` | `projectiles.js:681` |
+| `_clashT` slides by the power differential every frame | `projectiles.js:1033` |
+| `clashLen` pins each beam's tip to the struggle point | `projectiles.js:1036` |
+| the loser is `end()`ed and `_overpower` detonates on them | `projectiles.js:1060` |
+| the beam VOICE strains upward as it loses — *"you can hear which way a beam struggle is going without looking"* | `projectiles.js:696` |
+
+So the missing list is **four items, and the one previously priced as medium is already shipped.**
+
+| # | Item | Cost | Note |
+|---|---|---|---|
+| 1 | **Teleport-intercept** | small | **the kill test.** Buildable in the CURRENT camera |
+| 2 | **Lock-on chase camera** | large | everything else depends on it |
+| 3 | Limb segmentation | medium | only matters once the camera is close |
+| 4 | Impact-indicator discipline | small | design work, little code |
+| ~~5~~ | ~~Beam struggle~~ | — | **already shipped** |
+
+⚠ The open question on beam struggle is not whether it exists but whether it holds up **airborne and
+at speed** — it was tuned for grounded isometric fights. That is tuning, not building.
+
+---
+
+## 3. Ultra BFP's feature list, measured against ours
+
+Ultra BFP's own player guide is a specification, not a wish list. Mapped against this repo:
+
+| Ultra BFP feature | Ours | Verdict |
+|---|---|---|
+| **Camera Menu (F1): angle · distance · height · FOV** | nothing — the camera is a fixed iso `camDir` on an **OrthographicCamera** (`world.js:55`) | **THE work.** Four dials is a small UI over a camera that does not exist yet |
+| **V — first/third person toggle** | ⚠ `V` is our JAB (`KM.strike`) | collision — must rebind |
+| Z ascend · `.` powerup · X descend | power TIERS I–III/MAX with real transformation ceremonies (`tierOf`, `TIER_COLORS`, shockwave + lightning + pillar + slowmo + announce) — but EARNED by XP, not pressed | a different system wearing the same coat. **Decision C** below |
+| `,` fusion (dance minigame / Potara) | nothing | out of scope for v1, parked in writing |
+| Kaioken — 1 min, lethal if not deactivated | `buff` abilities with `dur`, `overdrive`, ki drain, `onDrained` | the shape exists: a timed self-buff with a cost. A lethal-on-expiry buff is a data row |
+| Transformation style: Fast (instant) vs Normal (cinematic) | the tier-up ceremony is always the full cinematic | one flag, and a real quality-of-life win |
+| Dragon Radar (F7) + 7 collectibles | `hud.updateRadar` (arena, cover, foe dots, fog `?` at `_lastKnown`) | the radar exists; a collectible hunt is a mode, not a system |
+| Wishes: +100 HP, unlimited ki, strength, senzu… | `energyInfinite` (TITAN's ∞ CORE), `powerBuff`, `levelMult`, the medkit item | **every effect already has an engine verb.** A wish is a data row calling one |
+| Music Menu (F6) + custom .wav | `music('menu'\|'combat'\|'victory')`, the five-bus mixer, a 300-file MP3 sample bank | a menu over what exists |
+| Maps including Namek | 1,050 real cities, a procedural planner, terrain/relief/biome, ten planets | we have *more map* than BFP. What we lack is BFP-SHAPED maps: open rock, no city, no people |
+| Modes: FFA · TDM · LMS · Tourney · CTDB · Oozaru · Survival · Battle Royale | duel · survival · rumble · tournament · boxing · freeroam · lab | FFA≈rumble, Tourney=tournament, Survival=survival. Missing: TDM, LMS, CTDB, BR |
+| **Oozaru — giant player form** | `size` is a **live ability type with a runtime handler that NO character carries** (orphan audit class 1) | this feature is already in the engine and unreachable. One data row |
+| Senzu Bean pickup | items with `charges`, `medkit`, ground drops (`_drops`, `spawnGearDrop`, `pickupGear`) | pickup infrastructure done |
+| Big Heads cheat | `frameOf` already derives a per-fighter `head` scale | one multiplier |
+| FPS cap + counter, graphics options | adaptive quality tiers 0–2, `_pixelCap`, `get fps`, `toggleTelemetry` (F2) | done, and better — ours is adaptive |
+| Skins (Skin1/2/3) | `def.colors` palettes + per-hero `BUILDS` | a skin is a palette row |
+
+### The reading
+
+BFP's feature list is mostly **menus over systems**. We have the systems and almost none of the
+menus. The one real exception is the camera, and that is the whole project.
+
+Two BFP headline features are **already implemented in our engine and carried by nobody** — `size`
+(Oozaru) and every wish effect. That is this morning's orphan audit restated: this dimension is
+unusually cheap because most of it is wiring, not building.
+
+### What we deliberately do not copy
+
+- **Fusion.** A two-fighter merge with a timing minigame is a whole system and a whole art problem.
+- **The licensed cast, the music, the Dragon Balls themselves.** Borrowing the shape of BFP's camera
+  and controls is legitimate; borrowing its characters is not. **Our 52 fighters and the ORIGIN
+  creator are the differentiator** — a BFP-like where you built the fighter yourself is a better
+  product than a BFP clone.
+- **First person.** BFP offers it. In a game whose entire readability model is *"you can see both
+  bodies"*, first person fights the lock-on framing. A photo mode at most.
+
+---
+
+## 4. The laws PowerWorld may not break
+
+Load-bearing in this repo, and a new dimension is exactly where they get broken by accident. Every
+one has been paid for once already.
+
+1. **THE LIGHT-COUNT LAW** — a fixed pool of 14 PointLights, always in the scene, always visible;
+   `borrowLight`/`returnLight` drive intensity only. Changing the visible light count rebakes every
+   material in the scene (measured: a 400ms freeze). **A dimension full of energy effects is the
+   highest-risk place in the project for this.**
+2. **THE RESET LAW** — `game.clearTransients()` is the ONE place that empties the board. New
+   transient systems go there, not into a reset path.
+3. **THE DEFERRED-CALLBACK LAW** — `game.later()`, never a bare `setTimeout`, for anything touching
+   the fight.
+4. **THE AI HONESTY LAW** — a bot may act only on what it earned by sight, radio or noise. A lock-on
+   camera must not become a lock-on wallhack.
+5. **THE FAIRNESS LAW** — difficulty buys judgment, never reflexes, aim or knowledge.
+6. **THE FLICKER LAW** — take a rung from `GROUND_LAYER`; never invent your own small offset. A
+   perspective camera at close range makes z-fighting far more visible than the iso camera ever did.
+7. **THE MECHANIC PROTOCOL (§5)** — a data-driven type, not an `id ===` check; one choke point; two
+   carriers via two delivery systems; a counter; readable; in the manual in the same commit;
+   verified headlessly with real assertions.
+8. **NO PURPLE.** KIVULI is the sole exception in the entire project. A DBZ-styled dimension is
+   precisely where violet auras will try to sneak in.
+9. **The manual is the contract** — combat changes update `docs/COMBAT_MANUAL.md` in the same commit.
+
+---
+
+## 5. Decisions that need Robert before anything is built
+
+| # | Decision | Why it blocks |
+|---|---|---|
+| **A** | **Is PowerWorld a MODE, a THEATER, or a PLANET?** All three doors already exist. A mode card is cheapest; a theater rides `hud.theater` + the travel cinematic; a planet gets `worldEnv`'s air/life derivation for free. | decides the door, the save shape, and whether the career can book fights there |
+| **B** | **Does the chase camera apply in PowerWorld only, or become a global option?** | PowerWorld-only keeps the city game frozen and safe; global doubles the test surface |
+| **C** | **Is our TIER ladder the transformation ladder, or is a pressable ascend/descend a new system?** BFP presses Z/./X; our tiers are earned by XP and cannot be un-earned. | decides whether "transformation" is a control group at all |
+| **D** | **One fighter, or a roster?** `THE_MERGE.md` already recommends one hero deployed at a time. | decides whether lock-on needs target cycling on day one |
+| **E** | **Does PowerWorld book Elo, injuries and the career?** | a dimension that does not touch the book is a sandbox; one that does is a career venue |
+
+---
+
+## 6. Build order, and the one test that decides everything
+
+1. **TELEPORT-INTERCEPT, in the current isometric camera.** About a day. It turns momentum melee into
+   the chase loop: knock them away, blink to them, continue. **If it is not fun in isometric, the
+   camera will not fix it** — and this is the cheapest possible way to find that out.
+2. **The chase camera, in one flat empty arena.** No content, no stage art, no modes. Prove the
+   framing, the full-sphere handling, and that aim / fog / occlusion survive the projection change.
+3. **Impact-indicator discipline** — done *with* step 2, because the camera is what exposes it.
+4. **Limb segmentation** — once you are close enough to see the knee.
+5. **Stages and the door.**
+
+⚠ Step 2 is the expensive item and must not start until step 1 has convinced us.
+
+---
+
+## 7. THE SPIKE — the riskiest assumption, measured (2026-07-26)
+
+Before planning a camera it is worth knowing whether the engine will render one at all. The whole
+plan sits downstream of one question: **will the existing `EffectComposer` accept a perspective
+camera?** The camera is an `OrthographicCamera` (`world.js:55`) and every pass, the half-resolution
+bloom, the ACES tone map and the print pass were built around it.
+
+Driven live, in a running match:
+
+| Check | Result |
+|---|---|
+| the news crew already owns a `PerspectiveCamera` — the existing precedent | **PASS** |
+| the composer exposes a pass that owns a camera (`RenderPass`) | **PASS** |
+| swapping `pass.camera` to a perspective camera renders **without throwing** | **PASS** |
+| it drew a real scene, not a black frame | **PASS** — mean luminance 71.0, 74% of pixels lit |
+| cost | **0.65 ms/frame** submission time |
+| shader programs after the swap | **46** — no recompile storm |
+
+**The camera swap is one line — `pass.camera = chase`.** Not a renderer rebuild, not a second
+composer, not a fork of the render path. Bloom, tone mapping and the print pass all simply work
+through it. `spaceflight.js` already swaps a *scene* into the same RenderPass, so swapping a *camera*
+is the same trick on the other axis.
+
+That does **not** mean the camera is cheap — the expensive part was never the projection matrix, it
+is everything that assumed the fixed isometric `camDir`: mouse-to-ground aiming, the fog plane, the
+tower cutaway, the two-player frustum fit. But the foundation is sound and the risk is now known to
+live in the *dependent* systems rather than the renderer.
+
+### Two things the spike found by accident
+
+Both are real, both matter, and neither was what I was looking for:
+
+1. **⚠ THE FOUR-DECK SERVO FIGHTS FREE AIR COMBAT.** Holding a tier-3 flier at y=64 and stepping the
+   sim, the fighter was walked back down to **48** — the servo easing them onto the band's deck,
+   doing exactly what it is documented to do. For a BFP-style fight where altitude is yours to choose,
+   this is wrong. It is already known to yield to `launchT` and to a lit afterburner, so the fix is a
+   third exception rather than a fork — but it must be an explicit decision, not a surprise.
+2. **⚠ HALF THE ROSTER CANNOT FLY.** RAGE was staged at y=71 and fell to 13, because `flightTier 0`
+   means grounded — the toggle refuses. A dimension whose entire premise is air combat has to answer
+   what happens to the grounded fighters: are they excluded, do they get PowerWorld-only flight, or is
+   being ground-bound a legitimate underdog style with leaps and slams? **This is a design decision
+   nobody had written down**, and it affects roster balance, the door, and whether the career can send
+   you to PowerWorld with any fighter you like.
+
+---
+
+## 8. THE GROUNDED FIGHTER PROBLEM — and why it is an opportunity
+
+The spike surfaced this and it needs a decision. `def.flightTier 0` means **grounded — the flight
+toggle refuses.** RAGE and SARGE are among them, and they are flagship characters. A dimension whose
+entire premise is air combat has to say what happens to them.
+
+Four answers, and the fourth is the good one:
+
+| Option | Verdict |
+|---|---|
+| **Exclude them** — PowerWorld has a flier-only roster | ✗ cuts the roster, benches two flagship fighters, and makes the door feel like a restriction |
+| **Grant everyone flight in PowerWorld** | ✗ erases `flightTier` as a stat. Flight tiers are load-bearing character identity — VOLT sags, RIME rides a board, TITAN is capped at tier II as the android trade-off. Flattening that costs more than it buys |
+| **The dimension grants it diegetically** ("PowerWorld's ambient energy lifts you") | ~ tempting, and it is the same erasure with a story on top |
+| **Grounded is a STYLE, and its answer to a flier is to bring them DOWN** | ✓ |
+
+### The fourth option, spelled out
+
+In DBZ the ground-bound heavy is a real archetype — the fighter who cannot chase you but who ends the
+fight the moment you come within arm's reach. That is a playstyle, not a handicap, and **every piece
+it needs already exists in this engine**:
+
+- **the grab** and the clinch struggle window (`melee.js`)
+- **the aimed throw** — authored release velocity, a real parabola preview, and `updateThrownBodies`
+  so a hurled body bowls through a third fighter (manual §11)
+- **slam damage** — being hurled into terrain hurts, credited to the launcher, gated on `launchT`
+- **KRAKEN's tentacles**, which already reach out, seize, drag a victim in and hurl them at cover
+- **`liftCapacity` / the weight ladder** — a STR-10 fighter can throw an airliner
+- **the ground-slam nova** (`groundslam`), RAGE's WORLD BREAKER
+
+So the grounded fighter's kit is: **deny the sky, punish the descent, and end it in one exchange.**
+A flier who never lands wins on points and never lands a knockout; a flier who comes down to finish it
+is entering the one range where they lose.
+
+### ⚠ What blocks it today
+
+`coneFoe` skips any foe more than a fixed vertical distance away — the melee vertical gate. Fighters
+are 9.6u tall, so that gate is barely one body-height, and it means **a grounded fighter currently
+has no reach at all against anyone even slightly above them.** Grabs ride the same gate.
+
+That single number is the difference between "grounded is a style" and "grounded is unplayable." It is
+being quantified in the combat-tuning section, and it is very likely the highest-leverage single
+constant in the whole PowerWorld design.
+
+**Anti-air is therefore a first-class requirement, not a balance pass** — and the §5 protocol applies:
+it needs two carriers via two delivery systems, which the roster already has (a grappler and a
+thrower).
+
+---
+
+*Sections 9 onward — the camera spec, the control scheme, limb segmentation, impact discipline, the
+world layer and door, combat tuning, ESF/BFP mechanics research, the platform budget and the visual
+identity split — are being written from a nine-agent research pass and land here as they are
+verified.*
+
+⚠ **Correction, noted for the record:** BFP is a **Quake III Arena** mod; ESF is the Half-Life one.
+An earlier brief in this session called both Half-Life mods. It matters only insofar as their
+engines gave them different movement feels, which the mechanics research section addresses.

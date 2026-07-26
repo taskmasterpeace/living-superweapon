@@ -2858,7 +2858,11 @@ export class Game {
       intents[sel] = { pressed: intents[sel].pressed || L.pressed, held: intents[sel].held || L.held, released: intents[sel].released || L.released };
       intents.lmb = { pressed: false, held: false, released: false };
     }
-    if (inp.pressed('KeyF')) p.toggleFlight();   // flight is a MODE now: F on, F off
+    // ⚠ THIS WAS A HARD-CODED `KeyF` AND BRAWLER PUTS THE JAB THERE — so in that scheme F both
+    // punched and took off, which is exactly the collision `KEYMAPS`' own header forbids ("no two
+    // keys in one scheme may collide"). The law was unenforceable because the binding lived outside
+    // the table. It is a scheme field now; BRAWLER flies on G, which its own grab move freed up.
+    if (inp.pressed(KM.fly || 'KeyF')) p.toggleFlight();   // flight is a MODE: press on, press off
     if (np) for (const k of SLOT_KEYS) {          // stream ability intents to the other machine
       if (!p.slots[k]) continue;
       if (intents[k].pressed) np.queueSlot(k, 1, p.aim3);
