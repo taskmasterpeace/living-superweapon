@@ -1406,6 +1406,47 @@ Four laws, three of them the same idea: **a thing must not outlive the match tha
 - `training` survives as an INTERNAL mode with no card: the tutorial (`hud.onTutorial`) and the
   atlas tile proving ground (`hud.onProvingGround`) both still enter it.
 
+## THE UNSEEN THINGS, THE PSYCHOLOGIST, AND THE FIRM (2026-07-26)
+- **`data/medical.js` · `data/org.js` · `data/names.js`.** Console: `team` (found / market / week /
+  chart / examine / couch).
+- **⚠ THE WHOLE DESIGN IS IN THE WORD *UNSEEN*.** A wound you can SEE is a number on a bar and you
+  route around it. A condition you cannot see is different in kind: it is already costing you fights
+  before you know it exists, and a physician naming it is a REVEAL rather than a menu update. That
+  gap is the only place the system can generate a feeling, so three rules protect it:
+  1. **A hidden condition still BITES** — measured, internal bleeding + concussion run vigor ×0.64 and
+     awareness ×0.80 while the chart shows nothing. If hidden things did nothing until found, the
+     diagnosis would be the whole mechanic and "unseen" would be decoration.
+  2. **A scan is not a switch** — `examine(quality)` decides what is FOUND, and the highest `find`
+     thresholds sit on exactly the conditions with no outward sign (internal bleeding, cardiac
+     strain, nerve damage, survivor guilt, dissociation).
+  3. **⚠ THE REPORT NEVER SAYS HOW MANY WERE MISSED.** A screen reading "2 missed" defeats the
+     mechanic. The roster row says `OFF FORM`; the only honest signal is that the numbers do not add
+     up. Untreated things worsen, and an undiagnosed thing is by definition untreated.
+- **⚠ THE PSYCHOLOGIST ACTUALLY HELPS** (Robert asked for this specifically). Sessions clear real
+  ground and finishing a course REMOVES the condition — a care system where care is futile says
+  something bleak nobody asked it to say. Treating one condition leaves the others: grief clears,
+  and the survivor guilt booked by the same event is still on the chart.
+- **⚠ TRAUMA IS BOOKED FROM WHAT PEOPLE ACTUALLY WITNESSED**, gated on `canSee` — the SAME
+  line-of-sight the AI honesty law uses. Verified both ways: six kills in view opened eight charts;
+  a witness 900u away got nothing. Second wind books `nearDeath` (+ sometimes hidden cardiac strain);
+  a serious VISIBLE wound sometimes leaves an INVISIBLE one under it (`addWound` → `inflict`).
+- **⚠ IT REACHES THE FIGHT THROUGH THE PSYCHE**, never a bolted-on debuff. Trauma moves the resting
+  temperament and volatility (data/psyche.js), which already feeds mood, which already multiplies
+  damage/speed/cooldowns — so a traumatised fighter BEHAVES differently instead of hitting for less.
+  Measured: resting temperament → fearful, volatility 1.00 → 1.65.
+- **THE FIRM — four kinds of person who are not interchangeable.** Ascendant (fights, wins contracts)
+  · operator (fights, cheap) · scientist (never fights; the ONLY reason the research tree exists) ·
+  engineer/physician/psychologist. They compete for one payroll, and the ones who cannot fight are
+  the ones you are tempted to cut — until the week they matter.
+- **Seed capital is DERIVED from where you incorporate**: Zurich $850K, Mogadishu $250K. Ascendant
+  pay scales off the RANK ladder — MAJESTY (rank 92) $910K/wk vs an operator's $13K.
+- **⚠ NAMES RESPECT THE CULTURE CODE**, which sat on all 1,050 city rows being used for architecture
+  and nothing else. Kampala hires Tendai Moyo; Osaka hires Nari Tanaka; Lima hires Julieta Duarte.
+  ⚠ Code **0 is unset on 22 rows** — always fall back, never assume a region.
+- **⚠ 46 OF 168 STATES NAME THE FIRM FOR YOU**, derived and never a list of country names: a state
+  that bans private Ascendant work, or that has no free press, has no private security market for
+  you to have a brand in. North Korea issues `DIRECTORATE IX` and says why; Norway lets you choose.
+
 ## THE BASE — A 9×9 SITE THE WORLD DECIDES (2026-07-26)
 - **`data/base.js`**: 9×9 grid on **two floors** (slot = `floor*81 + r*9 + c`), 57 facilities, six
   containment tiers. **`engine/baseroom.js`** raises it; mode `base` walks it.
