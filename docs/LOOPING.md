@@ -123,11 +123,38 @@ Don't stop until the critic is wowed. Fan out sub-agents and ultracode.
 
 Ordered. The first two are what stop a loop producing confident garbage.
 
-1. **⚠ CAN AN AGENT SEE WAR WORLD?** Ascendants has a proven harness — Playwright, `window.LSW`,
-   freeze-frame screenshots, `docs/` recipes. **War World's equivalent is unverified.** It ships
-   `harness.html`, `warroom.html`, `armory.html` and a dozen lab pages, but whether an agent can drive
-   a live match and screenshot it has not been tested. **Without this, the harsh critic is blind and
-   the whole pattern degrades to "does it compile".** Check this first.
+1. **CAN AN AGENT SEE WAR WORLD? — CHECKED 2026-07-27. YES, AND IT HAS TWO SEAMS, NOT ONE.**
+   This was written as the unknown that blocked everything. It is answered, and War World is in
+   *better* shape here than Ascendants — because the two jobs are separated instead of sharing one
+   handle.
+
+   | seam | what it is | what it can prove |
+   |---|---|---|
+   | **THE SIM BENCH** — `tools/combat-bench.ts` | pure node. `new World({seed, mode, matchMinutes})`, then `w.step(1/60, cmds)` + `w.takeEvents()` in a loop. **No browser at all.** Siblings: `zombie-bench`, `demolition-bench`, `bench-track`. | *behaviour* — deterministic, seeded, fast, and it drives the **real authoritative World with real commands**, which is the "drive the gate" law satisfied by construction |
+   | **THE SCREENSHOT PATH** — `tools/capture-screenshots.mjs` | Playwright chromium against `npm run dev` on **:3400**, clicking the actual `#mode-select` / `#class-select` cards, then posing via the `window.__ww` debug handle | *appearance* — the thing the boxing stage proved no assertion can see |
+
+   ⚠ **THE DEBUG HANDLE IS A HOUSE CONVENTION, NOT ONE GLOBAL.** Six of them —
+   `__ww` (the game) · `__lab` · `__range` · `__pose` · `__bodylab` · `__wwInstruments` — one per lab
+   page, each documented in its own file as "the live-verify handle, house convention". Ascendants has
+   a single `window.LSW`. This is the better design and the loop should use it: point a critic at the
+   handle for the surface it is criticising.
+   ⚠ They are assigned via `Object.assign(window, {...})`, so **grepping for `window.X =` finds
+   nothing and reads as "no drive seam exists"**. That is exactly the wrong conclusion; I drew it for
+   ten minutes.
+
+   ### ⚠ THE ONE THING ACTUALLY BROKEN — and it is 30 seconds
+   **`playwright` is imported by the capture script and is NOT installed** — not in `devDependencies`,
+   not in `node_modules`. So the *behaviour* seam runs today and the *seeing* seam does not. That is
+   precisely the failure this section was written to prevent: a loop where the critic can only read a
+   console, which is the boxing-stage failure with more steps.
+
+   ```bash
+   npm i -D playwright && npx playwright install chromium
+   ```
+
+   Pin it in `devDependencies` rather than leaning on a global, or the harness works on this machine
+   and silently does not on a fresh clone — the same class of defect as a test that passes because it
+   wrote the value instead of driving the input.
 2. **⚠ ASSERTIONS THAT CAN SEE *WRONG*, NOT JUST *BROKEN*.** Today's lesson, twice over: a 9-mode
    sweep passed a visibly broken stage, and an audit tool reported *fewer* problems as the fault got
    worse. Before looping, write the equivalent of the **floor contract** for whatever is being looped
