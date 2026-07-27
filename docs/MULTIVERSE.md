@@ -396,25 +396,123 @@ already have pieces of.
 turrets being hunted by things that fly, and first person makes tracking a flier overhead and knowing
 where your own squad is into a fight with the camera rather than with the enemy.**
 
+### RULED 2026-07-27 (third pass)
+
+| # | question | ruling |
+|---|---|---|
+| 15 | War World's melee | **THROWN OUT.** Ascendants' melee is canonical — *"it has the melee UI stuff, in a boxing ring it feels good."* War World's in-flight melee/wrestling spec is abandoned. ⚠ War World needs **proper animations** for it. |
+| 16 | The shared repo's name | **CONSEQUENCES OF FAILURE — PASSPORT.** |
+| 17 | Does DNA gate the first crossing? | **NO. Door first.** *"Just put a door there, let us know that it can work."* Ship a working door between two universes; earn-your-destination comes later. |
+| 18 | Whose numbers are canonical? | **ASCENDANTS'.** War World's damage and stats get **retuned to fit Ascendants' scale** — *"the stats don't really mean much, they're kind of cosmetic."* |
+| 19 | Terrain | **UNDER INVESTIGATION.** Robert proposes flattening both worlds to stop the flickering. See §6h before acting — flattening may be treating a symptom. |
+
+---
+
+## 6f. PLAIN LANGUAGE — the three words this document keeps using
+
+Robert asked directly, so here it is without jargon.
+
+**SUBSTRATE** — the part that decides *what actually happens*. If a punch lands, how much it hurts,
+where the body flies, what's in your pockets. It has no pictures and no sound in it. It is the same
+in every world, and that is the entire point: it is what lets one character exist in three games.
+
+**SHELL** — the camera, the controls and the HUD. *How you look at the world and how you touch it.*
+Isometric for The Ascend, top-down for War World, chase for PowerWorld. Swappable.
+
+**SHOW** — the models, the animation, the sound, the effects. *What it looks and sounds like.* War
+World has 76 models and 1,975 audio files; Ascendants draws everything in code. They keep their own.
+
+> One substrate. Many shells. Many shows.
+> **That is the whole architecture.** Everything else in this document is detail.
+
+⚠ **Why "abilities + melee + inventory" specifically?** Because those three are the ones that decide
+*what happens*, and Robert has now ruled that all three must be identical everywhere: powers PORT
+(ruling 4), Ascendants' melee goes ACROSS THE BOARD (ruling 13), one inventory (ruling 14). Anything
+he rules "must be the same in both games" automatically becomes substrate. Nothing else changed —
+the list just grew.
+
+⚠ **"Pure / deterministic" means:** given the same inputs it produces the same answer, every time, on
+every machine. No `Math.random()`, no reading the clock, no drawing. That matters for exactly one
+reason — **multiplayer**. The server and your computer both run the substrate; if they disagree even
+slightly, you see yourself hit and the server says you missed. There are 62 places in the current code
+that would cause that. That is the whole reason for the split.
+
+## 6g. THE ANSWER TO "WHOSE CONTROLS DO YOU TAKE?"
+
+Robert's open question: cross a dimension — do you keep YOUR view and controls, or take the
+destination's?
+
+**Recommendation: THE DIMENSION OWNS THE SHELL. You take the destination's.**
+
+- PowerWorld is an open sky, so it is a chase camera. The Ascend is a dense city, so it is isometric.
+  War World is a squad on a front, so it is top-down. Each shell exists *because* of what its world is
+  like. Carry your own camera in and you must make every world work at every camera — that is three
+  times the design work for a feature nobody asked for.
+- It also gives him the thing he actually wants: **a War World soldier stepping into PowerWorld
+  becomes a third-person shooter** *because PowerWorld is third person*, not because of a special case.
+  The rule produces the good outcome for free.
+
+⚠ **And the multi-genre dream survives this — in fact it needs it.** "An FPS for Robert, isometric for
+Chris, third-person for someone else" works precisely BECAUSE the substrate is shell-agnostic. So:
+
+> **The DIMENSION sets the default shell. The PRODUCT may ship alternates. The PLAYER may pick among
+> the ones shipped.**
+
+A future first-person War World is then not a new game — it is one more shell on the same substrate.
+That is the cheapest version of the dream and it is reachable from here.
+
+## 6h. THE TERRAIN QUESTION — do not flatten yet
+
+Robert: *"a lot of the environment isn't flat… there's a lot of flickering and tearing… I'm thinking
+about just making both worlds completely flat for right now."*
+
+⚠ **The instinct is reasonable and the cost is high.** Flattening would discard `plan.relief`, the
+terracing in `_padCells`, the whole SURVEY system (street gradients, lot planes, cut-and-fill), mining
+pits, the metro trench and bathymetry — a large amount of working, tested, documented work.
+
+⚠ **And there is direct evidence the diagnosis may be wrong.** On 2026-07-26 the boxing stage was
+reported as broken and the cause turned out to be `heightAt()` indexing the heightfield by the LIVE
+`ARENA` while every venue resizes it — so inside a venue, *physics and the visible floor disagreed by
+up to 8 units*. That is the same class of symptom ("things fighting for that space") and it was a
+one-line indexing bug, not a reason to abandon terrain. It is fixed; the question is whether more of
+that family remains.
+
+**A dedicated investigation is running** (measure, don't guess) covering: hard-coded ground offsets
+that skip the `GROUND_LAYER` ladder; whether decals offset along the surface NORMAL or along world Y
+(**offsetting along Y on a slope converges — a constant lift is not constant separation on a hill**);
+and whether road ribbons are tessellated at the same resolution as the terrain they drape over.
+
+**Recommendation: hold the flatten until that lands.** If it says "narrow bug", fix it and keep the
+world. If it says "the ladder cannot work on slopes", flattening becomes the honest call and it will
+be made with a reason rather than a hope.
+
 ### STILL OPEN — smaller, but they shape the build
 
-1. **The third repo** — what is it called, and does it sit beside the other two on disk?
-2. **What does the shared ledger track?** Levels and money are obvious. Ascendants already has a
-   persistent **Elo book**, a **medical ledger** (injuries that persist across weeks) and a **career**;
-   War World has its own career. One of those becomes the truth and the other becomes a projection —
-   or they merge. This is the biggest undecided piece of ruling 5.
-3. **Does a soldier's kit project both ways?** Ruling 9 says an Infiltrator stays invisible in The
-   Ascend. Does an Ascendant's power likewise keep working in War World *unchanged* — or does the
-   projection tune it down for a world where a rifle is lethal? (Ruling 10 says outmatched is the
-   content; it does not say in which direction.)
-4. **Is Ascendants' melee the ONLY melee?** Ruling 13 puts it across the board. War World has its own
-   melee spec in flight (`docs/` melee/wrestling design, its three newest commits). Does the War World
-   design get abandoned, merged, or kept as its own layer on top of the shared trifecta?
-5. **Authentication — build or buy?** Ruling 8 needs accounts before multiplayer is real. A hosted
-   auth provider is days; rolling your own is weeks and a liability.
-6. **Does the DNA loop gate the GATE?** §6d suggests harvested DNA feeds the science layer which
-   unlocks a destination. Confirm that is the progression you want, because it makes the first
-   crossing something you EARN rather than something you switch on.
+1. **⚠ WHICH CAREER BECOMES THE TRUTH?** This is now the biggest undecided thing in the project.
+   Ascendants has a persistent **Elo book**, a **medical ledger** (injuries lasting weeks) and **THE
+   CIRCUIT** (weekly slates, purses, renown, titles). War World has **its own career** plus PMC
+   contracts. Ruling 5 says one shared ledger — so one of these becomes real and the other becomes a
+   view of it, or they merge into a third thing. **Nothing about the Passport's progression half can
+   be designed until this is answered.**
+2. **Authentication — build or buy?** *(This is what "build vs buy" meant: write your own login,
+   password storage, sessions and account recovery, versus paying a service to do it.)*
+   **Recommendation: BUY.** A hosted provider (Clerk, Auth0, Supabase Auth) is days of work; rolling
+   your own is weeks plus a permanent security liability — and ruling 8 makes accounts load-bearing
+   for the whole live-service plan. Nobody has ever been thanked for hand-writing a login.
+3. **Does an Ascendant's power tune DOWN in War World?** Ruling 9 settles the soldier direction (kit
+   projects, invisible stays invisible). The reverse is unstated: does a rank-79 Ascendant hit a
+   soldier for the same numbers a rank-79 hits another Ascendant for? Ruling 10 says outmatched is the
+   content — it does not say which side is outmatched.
+4. **What are War World's animations, and who does them?** Ruling 15 throws out War World's melee and
+   imports Ascendants' — but Ascendants' melee is animated by a *procedural* figure system and War
+   World's is 76 rigged GLB models. **The moves port; the animation does not.** This is the largest
+   unscoped piece of work in the plan and it has no owner.
+5. **What is in the ONE inventory?** Ruling 14 says one system, bigger in some worlds. Does an
+   Ascendant carry a rifle? Does a soldier carry a gadget from The Ascend home? The armory
+   (35 rows) and War World's arsenal (families × brands × Mk tiers, generated) are two different
+   shapes of the same idea and one has to win.
+6. **Two-player local, or straight to networked?** Ascendants already supports two humans on one
+   machine. Cheapest possible multiplayer proof, and it needs no server, no auth and no hosting.
 
 ---
 
