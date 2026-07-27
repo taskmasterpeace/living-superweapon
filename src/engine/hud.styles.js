@@ -960,4 +960,28 @@ body.powerworld #hud .cityplate{ display:none !important; }   /* names a city; t
 body.powerworld #hud .wantedrow{ display:none !important; }    /* no police to be wanted by */
 body.powerworld #hud .pip{ display:none !important; }          /* no press, so no monitor */
 body.powerworld #hud .radar .rlab{ color:var(--text-5); }
+
+/* THE CROSSHAIR — four ticks around a gap, which is what a reticle is: the GAP is the aiming point,
+   and a solid dot in the middle hides the one pixel you are trying to look at. Hidden everywhere
+   except PowerWorld, because an isometric camera does not aim at its own centre. */
+#hCross{ display:none; }
+body.powerworld #hCross{
+  display:block; position:fixed; left:50%; top:50%; width:0; height:0;
+  pointer-events:none; z-index:18;
+}
+body.powerworld #hCross i{
+  position:absolute; background:var(--gold); opacity:.85;
+  box-shadow:0 0 0 1px rgba(0,0,0,.55);
+}
+body.powerworld #hCross i:nth-child(1){ left:-1px; top:-15px; width:2px; height:8px; }
+body.powerworld #hCross i:nth-child(2){ left:-1px; top:7px;   width:2px; height:8px; }
+body.powerworld #hCross i:nth-child(3){ left:-15px; top:-1px; width:8px; height:2px; }
+body.powerworld #hCross i:nth-child(4){ left:7px;   top:-1px; width:8px; height:2px; }
+body.powerworld #hCross b{
+  position:absolute; left:-1.5px; top:-1.5px; width:3px; height:3px; border-radius:50%;
+  background:var(--gold); opacity:.5;
+}
+/* LOCKED — the crosshair says so, in the one colour that already means "hostile" everywhere else. */
+body.powerworld.locked #hCross i{ background:var(--danger); opacity:1; }
+body.powerworld.locked #hCross b{ background:var(--danger); opacity:.85; }
 `;

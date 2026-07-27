@@ -233,6 +233,10 @@ export class HUD {
       <div class="hitring" id="hHits"></div>
       <div class="panel radar" id="hRadar"><div class="rlab">Radar</div><canvas id="hRadarC" width="152" height="152"></canvas></div>
       <div class="panel pip" id="hPip" style="display:none"><div class="pipcap"><span class="pipdot"></span><span>ON AIR — KMK 9</span></div></div>
+      <!-- THE CROSSHAIR. A chase camera aims where it LOOKS, so the aim marker belongs at screen
+           centre, not on the floor. CSS-only (no canvas, no sprite, no draw call) and shown only in
+           PowerWorld, where the camera is behind you — see POWERWORLD_CSS. -->
+      <div id="hCross" aria-hidden="true"><i></i><i></i><i></i><i></i><b></b></div>
       <div class="cityplate" id="hCity" style="display:none"></div>
       <div class="sundial" id="hSun" style="display:none"></div>
       <div class="simfx"><div class="simgrid"></div><div class="simscan"></div><div class="simsweep"></div>
@@ -673,8 +677,14 @@ export class HUD {
       c.style.display = 'block';
       c.style.left = sp.x + 'px';
       c.style.top = Math.max(18, sp.y - 6) + 'px';
-      c.style.color = ['#8fe08a', '#ffd24a', '#7fe6ff', '#ffffff'][b];
-      c.textContent = `↑ ${GL[b]} · ${Math.round((e.pos.y - (e.groundY || 0)) * 0.19)}m · ${e.name}`;
+      // ⚠ THE BAND WORD IS THE LADDER PRINTED OVER EVERY ENEMY'S HEAD. "↑ SKY · 42m" tells you which
+      // of four storeys someone is on, which is the right reading of a city with rooftops and the
+      // wrong one for an open sky where the altitude is continuous. The METRES stay — an air fight
+      // needs them more than a street fight does — and the storey name and its four colours go.
+      const open = g.player && g.player._openSky;
+      c.style.color = open ? '#cfe6f2' : ['#8fe08a', '#ffd24a', '#7fe6ff', '#ffffff'][b];
+      const m = Math.round((e.pos.y - (e.groundY || 0)) * 0.19);
+      c.textContent = open ? `↑ ${m}m · ${e.name}` : `↑ ${GL[b]} · ${m}m · ${e.name}`;
     }
   }
 
@@ -1845,6 +1855,14 @@ export class HUD {
 
   update() {
     const g = this.game, p = g.player; if (!p) return;
+    // ⚠ `body.powerworld` WAS DECLARED IN CSS AND NEVER ADDED BY ANYTHING. Every rule in
+    // POWERWORLD_CSS — hiding the city nameplate, the wanted stars and the KMK 9 monitor — has been
+    // dead since it was written, which is why a dimension with no city and no police was still
+    // showing all three. A stylesheet hook is not a feature until something toggles it.
+    // ⚠ Cached, because this runs every frame and a classList write per frame is a layout thrash.
+    const pw = !!p._openSky, lk = pw && !!g.hardLock;
+    if (pw !== this._pwCls) { this._pwCls = pw; document.body.classList.toggle('powerworld', pw); }
+    if (lk !== this._lkCls) { this._lkCls = lk; document.body.classList.toggle('locked', lk); }
     this.el.hp.style.width = clamp(p.hp / p.maxHp * 100, 0, 100) + '%';
     this.el.ki.style.width = clamp(p.ki / p.maxKi * 100, 0, 100) + '%';
     // energy readability: amber when low, red pulse when critical, DRAINED tag after an all-in fizzle

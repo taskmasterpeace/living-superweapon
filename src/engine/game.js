@@ -1275,6 +1275,25 @@ export class Game {
   updateReticle(dt) {
     // gold soft reticle = where the mouse is aiming (what your attacks will hit)
     const t = this.lockTarget;
+    // ⚠ THE GOLD RETICLE IS A GROUND DECAL AND THE GROUND IS NOT WHERE THE FIGHT IS. It is drawn at
+    // y = 0.35 under the soft target — legible in an isometric street fight, and in an air battle a
+    // ring on the desert a few hundred units below the two people actually fighting. The screen-centre
+    // crosshair in the HUD replaces it here, because a chase camera aims where it LOOKS.
+    if (this.player && this.player._openSky) {
+      this.reticle.visible = false;
+      const h0 = this.hardLock;
+      if (h0 && h0.alive && (!this.fov || (h0._vis || 1) > 0.35)) {
+        this.redTri.visible = true;
+        this.redTri.position.set(h0.pos.x, h0.pos.y + 15 + Math.sin(this.time * 5) * 0.7, h0.pos.z);
+        // ⚠ CONSTANT SCREEN SIZE. A world-scaled sprite is the right call for a fixed isometric camera
+        // and wrong for one that ranges from a clinch to three hundred units out — the lock mark
+        // shrank to a speck exactly when you most needed to know who you were locked to.
+        const d = this.world.camera.position.distanceTo(this.redTri.position);
+        const s = Math.max(6, Math.min(30, d * 0.055));
+        this.redTri.scale.set(s, s, s);
+      } else this.redTri.visible = false;
+      return;
+    }
     if (t && t.alive) {
       this.reticle.visible = true;
       this.reticle.position.set(t.pos.x, 0.35, t.pos.z);
@@ -1463,6 +1482,54 @@ export class Game {
   }
 
   // Soft body separation so fighters don't stack (skips grab pairs).
+  /**
+   * T — ACQUIRE, THEN CYCLE, THEN LET GO.
+   *
+   * Robert: *"you should be able to hit the T and then you get the little symbol above their hair …
+   * if there's multiple enemies you should be able to cycle through them."*
+   *
+   * The order is by SCREEN-RELATIVE angle from where you are already looking, not by distance —
+   * cycling by distance jumps you across the sky, while cycling by angle walks the enemies in front of
+   * you left to right, which is what makes the second press predictable.
+   *
+   * ⚠ It obeys the honesty law like every other targeting path: you may only lock what you can
+   * actually SEE (`_vis`), so this cannot become a wallhack that finds someone through a mesa.
+   * ⚠ And the cycle ENDS in release. A lock you cannot drop is the thing that was stopping him flying
+   * past people, so the last press hands the sky back rather than wrapping forever.
+   */
+  cycleLock(p) {
+    const foes = this.entities.filter(e => e !== p && e.alive && e.def && !e.isDummy &&
+      this.isFoe(p, e) && (e._vis == null || e._vis > 0.4));
+    if (!foes.length) { this.hardLock = null; return null; }
+    const cam = this.world.camera, cf = _v.set(0, 0, 0); cam.getWorldDirection(cf);
+    const ang = (e) => {
+      const dx = e.pos.x - p.pos.x, dy = e.pos.y - p.pos.y, dz = e.pos.z - p.pos.z;
+      const l = Math.hypot(dx, dy, dz) || 1;
+      return Math.acos(Math.max(-1, Math.min(1, (dx * cf.x + dy * cf.y + dz * cf.z) / l)));
+    };
+    foes.sort((a, b) => ang(a) - ang(b));
+    // ⚠ THE ORDER MUST BE CAPTURED ONCE, NOT RECOMPUTED PER PRESS. Sorting by angle every time looks
+    // right and cycles at random — measured RAGE → MAJESTY → RAGE → VEGA — because acquiring a target
+    // makes the chase camera reframe onto it, which changes the very angles the sort is reading. The
+    // ranking is taken when the cycle STARTS and then walked; it goes stale after a few seconds of not
+    // pressing, so a later press re-ranks against wherever the fight has moved to.
+    const fresh = this._cycle && this.time - this._cycle.t < 3 &&
+      this._cycle.list.length && this._cycle.list.every(e => e.alive);
+    if (!fresh || this._cycle.list.indexOf(this.hardLock) < 0) this._cycle = { list: foes, t: this.time };
+    const list = this._cycle.list;
+    this._cycle.t = this.time;
+    const i = list.indexOf(this.hardLock);
+    // not locked → the one you are most nearly looking at. Locked → the next one round. Last → let go.
+    const next = i < 0 ? list[0] : (i + 1 < list.length ? list[i + 1] : null);
+    this.hardLock = next;
+    if (!next) this._cycle = null;      // the cycle ended; the next press starts a fresh ranking
+    if (next) {
+      if (this.audio) { try { this.audio.ui && this.audio.ui(); } catch (err) {} }
+      if (this.hud && this.hud.feed) this.hud.feed(`TARGET · ${next.def.name}`);
+    } else if (this.hud && this.hud.feed) this.hud.feed('TARGET RELEASED');
+    return next;
+  }
+
   resolveBodies() {
     const E = this.entities;
     for (let i = 0; i < E.length; i++) {
@@ -1470,6 +1537,14 @@ export class Game {
       for (let j = i + 1; j < E.length; j++) {
         const b = E[j]; if (!b.alive) continue;
         if (a.grabbing === b || b.grabbing === a || a.grabbedBy === b || b.grabbedBy === a) continue;
+        // ⚠ TWO FLIERS PASS THROUGH EACH OTHER UNDER AN OPEN SKY. Robert: *"if I push the thing
+        // straight towards them, it'll just fly right in them."* Two bodies inside each other's radius
+        // are shoved apart every frame, which at cruise speed is an invisible wall you hit and slide
+        // off — and it is the other half of why a lock-on approach turned into an orbit. A swoop has
+        // to be able to go THROUGH the space someone is occupying and out the other side; that is the
+        // single most characteristic move in the reference. On the ground, and for anyone standing on
+        // it, the separation is unchanged — bodies still cannot share a square of pavement.
+        if (a._openSky && b._openSky && a.flying && b.flying) continue;
         if (Math.abs(b.pos.y - a.pos.y) > 7) continue;
         const dx = b.pos.x - a.pos.x, dz = b.pos.z - a.pos.z, d = Math.hypot(dx, dz), min = a.radius + b.radius;
         if (d < min && d > 0.001) {
@@ -2902,13 +2977,30 @@ export class Game {
       if (soft) soft.center(a3); else a3.set(p.pos.x + ax * 50, 6, p.pos.z + az * 50);
     } else {
       soft = p.blindT > 0 ? null : this.pickTarget(p);             // BLIND: the aim magnet lets go
-      if (soft) soft.center(a3); else { this.world.screenToGround(m.clientX, m.clientY, a3); a3.y = 3; }
+      // ⚠ AIMING AT THE GROUND IS MEANINGLESS 200 UNITS ABOVE IT. `screenToGround` intersects the mouse
+      // ray with the floor plane, which is exactly right for an isometric city fight and absurd behind
+      // a chase camera in an empty sky: with no lock, every shot was aimed at a patch of desert far
+      // below whoever you were looking at. Under an open sky the aim is the CAMERA'S OWN RAY — the
+      // crosshair sits at screen centre and what is under it is what you hit.
+      if (soft) soft.center(a3);
+      else if (p._openSky) {
+        const cf = _v.set(0, 0, 0); this.world.camera.getWorldDirection(cf);
+        a3.set(p.pos.x + cf.x * 120, p.pos.y + 5 + cf.y * 120, p.pos.z + cf.z * 120);
+      } else { this.world.screenToGround(m.clientX, m.clientY, a3); a3.y = 3; }
     }
     // hard lock ONLY on a direct click ON a character (LMB is also fire — the old "any attack
     // click near a foe locks you" was the "faces one way while I aim another" bug)
     if (m.leftEdge && this._hoverPick) this.hardLock = this._hoverPick;
     else if (pad.active && pad.pressed('lmb') && soft) this.hardLock = soft;   // pads have no cursor — keep soft
-    if (inp.pressed('KeyT')) this.hardLock = null;                          // T clears the lock
+    // ⚠ T IS A CYCLE UNDER AN OPEN SKY, AND A RELEASE EVERYWHERE ELSE. In a city you acquire by
+    // clicking a body with a mouse cursor and T lets go — that works because the camera is fixed and
+    // everything worth hitting is on screen. Behind a chase camera in an empty sky there is no cursor
+    // over anybody, so "click to lock" is unreachable and T-as-release had nothing to release: the
+    // whole targeting model was inherited from a game with a different camera.
+    if (inp.pressed('KeyT')) {
+      if (p._openSky) this.cycleLock(p);
+      else this.hardLock = null;
+    }
     if (this.hardLock && !this.hardLock.alive) this.hardLock = null;
     if (p.blindT > 0) this.hardLock = null;                       // BLIND breaks the lock (manual §14)
     this.lockTarget = soft;
@@ -2954,6 +3046,37 @@ export class Game {
     // sideways relative to their own body. Forward is now the direction you are AIMING, flattened,
     // with A/D strafing across it — the character-relative scheme a twin-stick action game wants.
     // `right` is fwd × up = (-fz, 0, fx), which keeps A/D from inverting when you face south.
+    // ⚠ POWERWORLD FLIES OFF THE CAMERA, IN THREE DIMENSIONS, AND THAT IS THE WHOLE FEEL.
+    // Two separate things were wrong for a flight brawler. (1) The basis: `this.fwd`/`this.right` are
+    // computed ONCE in the constructor from the fixed isometric `camDir`, so behind a chase camera the
+    // movement axes are stale — and building forward out of `aim3` instead welds it to whatever you
+    // have locked, which is exactly why pressing forward at someone flew you INTO them and then
+    // orbited: the direction was re-aimed at them every frame. (2) The Y: `moveDir` was flattened, so
+    // vertical was a separate elevator key. Live camera basis, pitch included, and forward means
+    // where the camera is looking.
+    if (p._openSky && p.flying) {
+      // ⚠ WHEN LOCKED, FORWARD IS THE LINE TO THEM — NOT THE CAMERA'S FORWARD. Measured on an
+      // approach: the chase camera sits above and off the shoulder, so its forward reads **y = −0.17**
+      // even with the target at exactly your altitude. Flying "at" someone therefore sank you ~30u
+      // over a hundred units of travel, and because the camera keeps orbiting to hold the framing,
+      // forward rotated as you closed and the approach curved into a spiral. Both are cinematic
+      // framing doing a flight controller's job. Locked = straight at them; unlocked = the camera is
+      // the only thing that knows where you want to go, so it is the basis.
+      let fwx, fwy, fwz;
+      const L = p.hardLock;
+      if (L && L.alive) {
+        fwx = L.pos.x - p.pos.x; fwy = L.pos.y - p.pos.y; fwz = L.pos.z - p.pos.z;
+        const ll = Math.hypot(fwx, fwy, fwz) || 1; fwx /= ll; fwy /= ll; fwz /= ll;
+      } else {
+        const cf = _v.set(0, 0, 0); this.world.camera.getWorldDirection(cf);
+        fwx = cf.x; fwy = cf.y; fwz = cf.z;
+      }
+      const rx = -fwz, rz = fwx, rl = Math.hypot(rx, rz) || 1;     // right, flattened
+      const d3 = { x: fwx * iz + (rx / rl) * ix, y: fwy * iz, z: fwz * iz + (rz / rl) * ix };
+      const l3 = Math.hypot(d3.x, d3.y, d3.z);
+      if (l3 > 1) { d3.x /= l3; d3.y /= l3; d3.z /= l3; }
+      p.moveDir = d3;
+    } else {
     let fx = p.aim3.x, fz = p.aim3.z;
     const fl = Math.hypot(fx, fz);
     if (fl > 0.001 && SETTINGS.moveRelative !== 'camera') {
@@ -2965,6 +3088,7 @@ export class Game {
       const dir = _v.set(0, 0, 0).addScaledVector(this.fwd, iz).addScaledVector(this.right, ix);
       if (dir.lengthSq() > 1) dir.normalize();   // keep analog magnitude, cap at 1
       p.moveDir = { x: dir.x, z: dir.z };
+    }
     }
     // double-tap a move key → this hero's evade tech (dash / blink / sprint / slide / phase — data-driven)
     if (!this._tapT) this._tapT = {};

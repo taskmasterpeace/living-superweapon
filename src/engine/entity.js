@@ -1296,9 +1296,12 @@ export class Fighter {
           } else {
             this.vel.y = damp(this.vel.y, FLY_RISE, 7, dt);                   // climb — holding the button walks the rungs
           }
+          // ⚠ THE RUNG CLICK IS AN AUDIBLE LAYER, and under an open sky it is announcing furniture
+          // that is not there. Robert heard the ladder before he could name it: a rising tone every
+          // time you cross an invisible line tells you the sky is a building. Silent here.
           if (cb !== this._climbBand) {                                       // the CLICK per rung
             this._climbBand = cb;
-            if (game && game.audio) { try { game.audio.zap(430 + cb * 90, this.pos); } catch (err) {} }
+            if (game && game.audio && !this._openSky) { try { game.audio.zap(430 + cb * 90, this.pos); } catch (err) {} }
           }
           this._deckSnap = -1;
         } else if (this.descendHeld) {
@@ -1325,10 +1328,14 @@ export class Fighter {
           // the ascend input, which is the exact harness failure this project keeps paying for: drive
           // the gate. A flag that changes what happens when you RELEASE a button must live where the
           // release is handled, not in front of the button.
-          const bob = Math.sin(this.animT * 2.1) * FLY_HOVER_BOB * 0.4;
-          const floor = (this.groundY || 0) + 2.6;
-          const lift = this.pos.y < floor ? 8 : 0;      // the soft floor is the only place it pushes
-          this.vel.y = damp(this.vel.y, bob + lift, 4.5, dt);
+          // ⚠ COAST, DO NOT HOLD. This branch used to damp toward a bob plus a soft floor, which is a
+          // HOVER — the machine deciding your altitude the moment you stop asking. Under an open sky
+          // the only thing acting on you is drag, so vertical speed you built up carries and bleeds
+          // off, exactly like the horizontal axes have always done. That is what makes a swoop a
+          // swoop instead of a lift arriving at a floor.
+          // ⚠ AND NO SOFT FLOOR. `groundY + 2.6` is an invisible updraft at the bottom of an empty
+          // sky: fly low and something you cannot see pushes back.
+          this.vel.y *= Math.exp(-1.5 * dt);
           this._climbBand = bandAt2(this.pos.y); this._deckSnap = -1;
         } else {
           // HOVER = DOCK. Releasing the button eases you onto the CURRENT band's deck — never
@@ -1559,9 +1566,23 @@ export class Fighter {
     this.vel.z += dir.z * s * dt * 9;
     // during a dash/slide burst the clamp lifts, so the impulse actually carries you (drag reins it in)
     const mx = (this.burstT > 0 || this._slideT > 0) ? Math.max(s, 150) : s;
-    const h = Math.hypot(this.vel.x, this.vel.z);
-    if (h > mx) { this.vel.x = this.vel.x / h * mx; this.vel.z = this.vel.z / h * mx; }
-    if (dir.x || dir.z) { if (this.state === 'idle' || this.state === 'move') this.state = 'move'; }
+    // ⚠ FLIGHT IS NOT A FLOOR PLAN PLUS AN ELEVATOR — THIS IS WHY IT FELT "LAYERED".
+    // `dir` has always been `{x, z}`: the mover works the horizontal plane and ALL vertical motion
+    // comes from a separate ascend/descend key. That is a lift in a building, and no amount of
+    // removing decks fixes it, because the shape of the control is the layering. Under an open sky
+    // `dir` carries a Y — forward means *where you are looking*, pitch included — so you climb by
+    // flying up at something, which is the whole feel of the reference.
+    // ⚠ THE SPEED CLAMP GOES 3-D WITH IT, or a dive is faster than level flight for no reason other
+    // than that the limit was only ever measured on two axes.
+    if (this.flying && this._openSky && dir.y) {
+      this.vel.y += dir.y * s * dt * 9;
+      const m3 = Math.hypot(this.vel.x, this.vel.y, this.vel.z);
+      if (m3 > mx && this.launchT <= 0) { const k = mx / m3; this.vel.x *= k; this.vel.y *= k; this.vel.z *= k; }
+    } else {
+      const h = Math.hypot(this.vel.x, this.vel.z);
+      if (h > mx) { this.vel.x = this.vel.x / h * mx; this.vel.z = this.vel.z / h * mx; }
+    }
+    if (dir.x || dir.z || dir.y) { if (this.state === 'idle' || this.state === 'move') this.state = 'move'; }
     else if (this.state === 'move') this.state = 'idle';
   }
 
@@ -1825,9 +1846,13 @@ export class Fighter {
       this._ringLift = this._ringLift === undefined ? want : damp(this._ringLift, want, 3.2, dt);
       const lift = Number.isFinite(this._ringLift) ? this._ringLift : 0;
       p.bandRing.position.set(0, 0.55 - this.pos.y + gy0 + lift, 0);
-      const b = bandOf(this.pos.y);
+      // ⚠ THE RING STAYS, THE FOUR COLOURS GO. The lifted ring is a genuinely good altitude cue and
+      // an air fight needs one more than a street fight does — but recolouring it per BAND is the
+      // layer ladder drawn under every fighter's feet. Under an open sky it is one colour, and the
+      // HEIGHT of the ring carries the information on its own, continuously.
+      const b = this._openSky ? 1 : bandOf(this.pos.y);
       if (b !== this._band) { this._band = b; p.bandRing.material.color.set(ALT_BANDS[b].c); }
-      p.bandRing.material.opacity = b === 0 ? 0.28 : 0.6;   // louder when someone leaves the ground
+      p.bandRing.material.opacity = this._openSky ? (hAbove > 3 ? 0.5 : 0.22) : (b === 0 ? 0.28 : 0.6);
       // THE TAG rides the ring. Numbers only for a HUMAN — a metre readout floating over every
       // enemy is clutter at best and, for a foe you have only half-seen, an information leak.
       // Their ring still rises, so you read THEIR height as a shape and YOUR height as a figure.
