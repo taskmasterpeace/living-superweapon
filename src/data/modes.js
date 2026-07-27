@@ -32,3 +32,21 @@ export const MODES = [
  */
 const NO_CIVIL = new Set(['training', 'powerworld']);
 export const hasCivilians = (modeId) => !!modeId && !NO_CIVIL.has(modeId);
+
+/**
+ * ARE YOU STANDING IN THE CITY THE PLAN DESCRIBES?
+ *
+ * ⚠ A DIFFERENT QUESTION FROM `hasCivilians`, and conflating them would be wrong in both
+ * directions. A VENUE — the ring, the training hall, the base — replaces the world without ever
+ * touching `world.plan`, so the plan still says TOKYO while you are standing in a boxing hall.
+ * That has always made the city nameplate print a stale city name, which is cosmetic. It is NOT
+ * cosmetic for the district reaction table (data/districts.js): announcing "MEDICAL — RAPID
+ * RESPONSE · PROTECTED" inside a sealed hall with no civilians and no responding units is a lie
+ * about the rules of the fight the player is actually in.
+ *
+ * Declared here rather than sniffed from world state (`_indoor`, cover counts, arena size) because
+ * none of those separate the venues cleanly and all of them would break the first time a venue was
+ * built differently. A mode knows whether it kept the city; it should say so.
+ */
+const NO_CITY = new Set(['boxing', 'lab', 'base', 'powerworld']);
+export const hasCity = (modeId) => !!modeId && !NO_CITY.has(modeId);

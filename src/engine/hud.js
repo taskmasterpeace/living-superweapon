@@ -15,8 +15,9 @@ import { CSS, CODEX_MOBILE, PHONE_CSS, TABLET_CSS, DECK_CSS, POWERWORLD_CSS } fr
 import { DTYPES, DTYPE_INFO, resistOf, bandOf } from './entity.js';
 import { handLabel } from './hands.js';
 import { glyph, padActive, padFaces } from '../core/glyphs.js';
-import { MODES } from '../data/modes.js';
+import { MODES, hasCity } from '../data/modes.js';
 import { visOf, visLine } from '../data/visual.js';
+import { districtLine } from '../data/districts.js';
 import { loadCareer, fmtMoney } from '../data/career.js';
 import { clamp, TAU } from '../core/util.js';
 import { ATTR_DEFS, TALENTS, deriveAttrs, heroTalents, rankName, rankColor, RANKS, bakeSheet } from '../data/ranks.js';
@@ -1985,13 +1986,26 @@ export class HUD {
     this.updateSundial();
     // the theater nameplate — where in the world this fight is happening
     const plan = g.world && g.world.plan;
-    const plateKey = inMatch && plan ? plan.name + plan.seed : '';
+    // ⚠ THE DISTRICT IS PART OF THE KEY. A rule the player cannot perceive did not ship: the plate
+    // used to rebuild only when the CITY changed, so the reaction table would have been invisible
+    // while you walked from a hospital district into a rail yard. Keying on the district type
+    // rebuilds it exactly when you cross a boundary and never once in between.
+    // ⚠ ONLY WHERE THE DISTRICT ACTUALLY GOVERNS — see `hasCity` in data/modes.js. A venue keeps the
+    // last theatre's plan, so the plate has always shown a stale city NAME there (cosmetic, and
+    // pre-existing); a stale district REACTION would be a lie about the rules of this fight.
+    const dtype = inMatch && plan && p && hasCity(g.modeId) && g.world.districtTypeAt
+      ? g.world.districtTypeAt(p.pos.x, p.pos.z) : null;
+    const plateKey = inMatch && plan ? plan.name + plan.seed + '|' + (dtype || '') : '';
     if (plateKey !== this._plateKey) {
       this._plateKey = plateKey;
       if (!plateKey) this.el.city.style.display = 'none';
       else {
         this.el.city.style.display = 'block';
-        this.el.city.innerHTML = `📍 <b>${esc(plan.name.toUpperCase())}</b> · ${esc(plan.country.toUpperCase())} — ${esc(plan.popLabel)}${plan.crime ? ` · CRIME ${plan.crime}` : ''}`;
+        // WHAT IT IS, then WHAT THAT MEANS FOR THIS FIGHT — derived from the same numbers the
+        // crowd, the police and the hazard read, so the line cannot flatter a district.
+        const line = districtLine(dtype);
+        this.el.city.innerHTML = `📍 <b>${esc(plan.name.toUpperCase())}</b> · ${esc(plan.country.toUpperCase())} — ${esc(plan.popLabel)}${plan.crime ? ` · CRIME ${plan.crime}` : ''}`
+          + (line ? `<span class="cpdist">⟩ ${esc(line)}</span>` : '');
       }
     }
     // the KMK 9 live monitor — visible while the field crew is ON AIR

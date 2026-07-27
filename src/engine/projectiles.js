@@ -820,7 +820,7 @@ class BeamHose {
       blockedCov.hp -= this.dps * 2 * dt;
       game.world.setBlockCracks(blockedCov);
       if (Math.random() < 0.4) game.particles.burst(tipPos.x, tipPos.y, tipPos.z, { count: 2, speed: 14, life: 0.3, size: 2.4, color: ['#3a3a44', this.color, '#fff'], drag: 2 });
-      if (blockedCov.hp <= 0) game.shatterBlock(blockedCov);
+      if (blockedCov.hp <= 0) game.shatterBlock(blockedCov, this.caster);   // a beam that cuts a fuel tank owns what comes out of it
     }
 
     // SWEEP the two tubes along the path. No orientation, no scale — the shape IS the path, which

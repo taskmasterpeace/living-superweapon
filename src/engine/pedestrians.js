@@ -4,6 +4,8 @@
 // (phone flashes), scatter from violence, and get knocked flat by blasts (collateral).
 // Two instanced draws total (bodies + heads).
 import * as THREE from 'three';
+import { districtTypeAt } from '../data/cityplan.js';
+import { districtRow, CROWD_KINDS, popCrowd } from '../data/districts.js';
 
 const COUNT = 30;
 const WALK = 0, FLEE = 1, DOWN = 2, FILM = 3, ARMED = 4;
@@ -27,6 +29,7 @@ const ARM_RATE = { Banned: 0.34, Regulated: 0.18, Legal: 0 };
 const GRID = 96, SIDEWALK = 8;                          // street pitch + sidewalk offset from the lane line
 const _m4 = new THREE.Matrix4(), _q = new THREE.Quaternion(), _q2 = new THREE.Quaternion(), _p = new THREE.Vector3(), _s = new THREE.Vector3(1, 1, 1);
 const _Y = new THREE.Vector3(0, 1, 0), _Z = new THREE.Vector3(0, 0, 1);
+const _col = new THREE.Color();
 
 export class Pedestrians {
   constructor(scene, arena, waterX) {
@@ -46,6 +49,11 @@ export class Pedestrians {
     // working EVA suit is; the "skin" row becomes the gold visor.
     this._SUIT = ['#d8d4cc', '#e8e4dc', '#d0a94a', '#c9c5bd', '#e0dcd2', '#b8b4ac'];
     this._VISOR = ['#c9a23a', '#8a7a3a'];
+    // THE LIVE COUNT. `COUNT` is the ALLOCATION (built once, never resized); `this.n` is how many of
+    // those instances are actually on the street, and it rides the city's population tier — Robert's
+    // "leverage population or size". ⚠ Setting `mesh.count` costs nothing: it is still one draw call,
+    // which is exactly why the budget can vary without the draw calls doing so.
+    this.n = COUNT; this.plan = null;
     this._reseed(false);
     this.px = new Float32Array(COUNT); this.pz = new Float32Array(COUNT);
     this.dir = new Float32Array(COUNT);                  // facing/travel angle (axis-aligned while walking)
@@ -61,18 +69,49 @@ export class Pedestrians {
   }
 
   _lane() { const k = ((Math.random() * ((this.arena * 2) / GRID - 1)) | 0) + 1; return -this.arena + k * GRID; }
-  _respawn(i) {
+  // one candidate spot on a sidewalk somewhere in the arena
+  _spot() {
     const alongX = Math.random() < 0.5;
     const lane = this._lane() + (Math.random() < 0.5 ? -SIDEWALK : SIDEWALK);   // ON the sidewalk, not mid-street
     const along = (Math.random() * 2 - 1) * (this.arena - 24);
     let x = alongX ? along : lane, z = alongX ? lane : along;
     if (x > this.waterX - 10) x -= 90;
-    this.px[i] = x; this.pz[i] = z;
-    this.dir[i] = alongX ? (Math.random() < 0.5 ? Math.PI / 2 : -Math.PI / 2) : (Math.random() < 0.5 ? 0 : Math.PI);
+    return { x, z, alongX };
+  }
+  // THE DISTRICT DECIDES WHO IS ON THE STREET (data/districts.js). A resort is thick with tourists;
+  // an industrial estate is nearly empty; a military compound has NOBODY, by rule.
+  // ⚠ WEIGHTED RESERVOIR OVER A HANDFUL OF CANDIDATES, not rejection sampling — it always
+  // terminates in a fixed number of tries, it never loops, and a zero-weight district can never be
+  // picked while any other candidate exists. That last property is what makes "no civilians on a
+  // military base" a RULE rather than a strong tendency.
+  // ⚠ The palette is chosen at respawn and then LEFT ALONE. A dock worker who walks into the plaza
+  // is still a dock worker; recolouring per-frame by whatever cell they are standing in would make
+  // the whole crowd strobe as it crosses a boundary.
+  _respawn(i) {
+    let pick = null, sum = 0, kind = 'civil';
+    for (let k = 0; k < 10; k++) {
+      const s = this._spot();
+      const t = this.plan ? districtTypeAt(this.plan, s.x, s.z) : null;
+      const d = districtRow(t), w = d.crowd;
+      if (w <= 0) continue;                                       // nobody lives here — never the pick
+      sum += w;
+      if (Math.random() < w / sum) { pick = s; kind = d.kind; }
+    }
+    // degenerate map (everything zero-weight): put them somewhere rather than nowhere
+    if (!pick) { pick = this._spot(); kind = 'civil'; }
+    this.px[i] = pick.x; this.pz[i] = pick.z;
+    this.dir[i] = pick.alongX ? (Math.random() < 0.5 ? Math.PI / 2 : -Math.PI / 2) : (Math.random() < 0.5 ? 0 : Math.PI);
     this.spd[i] = 6.5 + Math.random() * 3;
     this.state[i] = WALK; this.t[i] = 2 + Math.random() * 4; this._turnCd[i] = 0;
+    // ⚠ VACUUM WINS. On an airless world everybody is in a pressure suit whatever the zoning says —
+    // `_reseed` owns the palette there and the district must not paint over it.
+    if (!this._suited) {
+      const pal = CROWD_KINDS[kind] || CROWD_KINDS.civil;
+      this.mesh.setColorAt(i, _col.set(pal[i % pal.length]).offsetHSL(0, 0, (Math.random() - 0.5) * 0.08));
+      if (this.mesh.instanceColor) this.mesh.instanceColor.needsUpdate = true;
+    }
   }
-  reset() { for (let i = 0; i < COUNT; i++) this._respawn(i); this._writeAll(); }
+  reset() { for (let i = 0; i < this.n; i++) this._respawn(i); this._writeAll(); }
   // a new theater: re-grid the crowd to the new arena + shoreline
   // ⚠ THE SUIT IS A RE-SEED, NOT A SECOND CROWD. The colours were written once in the constructor,
   // so a settlement on a vacuum world inherited Earth's civilians forever. `air === false` swaps
@@ -82,8 +121,9 @@ export class Pedestrians {
     this._suited = suited;
     const col = new THREE.Color();
     const BODY = suited ? this._SUIT : this._CIV, FACE = suited ? this._VISOR : this._SKIN;
-    const n = this.mesh.count;
-    for (let i = 0; i < n; i++) {
+    // ⚠ over the ALLOCATION, not the live count — a city that later raises `n` must not reveal
+    // instances whose colours were never written.
+    for (let i = 0; i < this.n; i++) {
       this.mesh.setColorAt(i, col.set(BODY[i % BODY.length]).offsetHSL(0, 0, (Math.random() - 0.5) * (suited ? 0.04 : 0.08)));
       this.head.setColorAt(i, col.set(FACE[i % FACE.length]));
     }
@@ -91,12 +131,21 @@ export class Pedestrians {
     if (this.head.instanceColor) this.head.instanceColor.needsUpdate = true;
   }
 
-  setCity(arena, waterX, air = true) { this.arena = arena; this.waterX = waterX; this._reseed(air === false); this.reset(); }
+  // A NEW THEATER. The plan is what makes the crowd this city's crowd: `popType` sets how many
+  // people are out, the district table sets where they stand and what they wear.
+  setCity(arena, waterX, air = true, plan = null) {
+    this.arena = arena; this.waterX = waterX; this.plan = plan;
+    const live = Math.max(4, Math.round(COUNT * popCrowd(plan && plan.popType)));
+    this.n = Math.min(COUNT, live);
+    this.mesh.count = this.n; this.head.count = this.n;
+    this._reseed(air === false);
+    this.reset();
+  }
   // THE STANCE — 'Banned' | 'Regulated' | 'Legal', read off the country sheet when the theater is
   // raised. Drives whether witnesses film you as evidence and whether any of them are carrying.
   setVigilantism(v) { this.vigilantism = v || 'Regulated'; this.armRate = ARM_RATE[this.vigilantism] ?? 0.1; }
   _writeAll() {
-    for (let i = 0; i < COUNT; i++) this._write(i);
+    for (let i = 0; i < this.n; i++) this._write(i);
     this.mesh.instanceMatrix.needsUpdate = true; this.head.instanceMatrix.needsUpdate = true;
     if (this.mesh.instanceColor) this.mesh.instanceColor.needsUpdate = true;
     if (this.head.instanceColor) this.head.instanceColor.needsUpdate = true;
@@ -119,7 +168,7 @@ export class Pedestrians {
   set audio(v) { this._audio = v; }
   scare(x, z, r) {
     const r2 = r * r;
-    for (let i = 0; i < COUNT; i++) {
+    for (let i = 0; i < this.n; i++) {
       if (this.state[i] === DOWN) continue;
       const dx = this.px[i] - x, dz = this.pz[i] - z;
       if (dx * dx + dz * dz > r2) continue;
@@ -137,7 +186,7 @@ export class Pedestrians {
   cheer(x, z) {
     if (this.vigilantism !== 'Legal') return;
     const r2 = 130 * 130; let cheered = 0;
-    for (let i = 0; i < COUNT; i++) {
+    for (let i = 0; i < this.n; i++) {
       const stt = this.state[i]; if (stt === DOWN || stt === ARMED) continue;
       const dx = this.px[i] - x, dz = this.pz[i] - z; if (dx * dx + dz * dz > r2) continue;
       this.state[i] = FILM; this.t[i] = 2.5 + Math.random() * 2; this.dir[i] = Math.atan2(-dx, -dz); cheered++;
@@ -148,7 +197,7 @@ export class Pedestrians {
   }
   blast(x, z, r) {
     const r2 = r * r; let downed = 0;
-    for (let i = 0; i < COUNT; i++) {
+    for (let i = 0; i < this.n; i++) {
       if (this.state[i] === DOWN) continue;
       const dx = this.px[i] - x, dz = this.pz[i] - z;
       if (dx * dx + dz * dz > r2) continue;
@@ -178,7 +227,7 @@ export class Pedestrians {
     // crowd mood eases back to calm — bravado bleeds off, terror fades
     if (this._embolden > 0) this._embolden = Math.max(0, this._embolden - dt * 0.12);
     if (this._panic > 0) this._panic -= dt;
-    for (let i = 0; i < COUNT; i++) {
+    for (let i = 0; i < this.n; i++) {
       const st = this.state[i];
       this.t[i] -= dt; this._turnCd[i] -= dt;
       if (st === DOWN) { if (this.t[i] <= 0) { this._respawn(i); moved = true; } continue; }

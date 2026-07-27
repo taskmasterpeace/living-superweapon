@@ -1012,27 +1012,57 @@ export function galleryPlan() {
   return plan;
 }
 
-// district naming for the news desk + lower thirds ("STRUCTURE COLLAPSE — THE MINEWORKS")
-export function districtNameAt(plan, x, z) {
-  if (!plan) return null;
-  if (!plan.cells) {   // flagship keeps its canon names
-    if (x > 150) return 'THE HARBOR FRONT';
-    if (x < -140 && z > 140) return 'THE GARRISON';
-    if (x < -140 && z > -130) return 'MEMORIAL PARK';
-    if (z < -60) return 'DOWNTOWN';
-    if (z > 60) return 'THE SOUTHSIDE';
-    return 'MIDTOWN PLAZA';
-  }
+// THE ONE CELL LOOKUP. `districtNameAt` (what the news desk says) and `districtTypeAt` (what the
+// district reaction table is keyed on) are two READINGS of the same question — which cell is this
+// point in — so they resolve it once, here, and can never disagree about where a boundary is.
+export function cellAtXZ(plan, x, z) {
+  if (!plan || !plan.cells) return null;
   const N = plan.N, A = plan.arena, K = plan.cell || CELL;
   const c = Math.max(0, Math.min(N - 1, Math.floor((x + A) / K)));
   const r = Math.max(0, Math.min(N - 1, Math.floor((z + A) / K)));
   let cell = plan.cells[r] && plan.cells[r][c];
+  if (!cell) return null;
+  if (cell.ref) cell = (plan.cells[cell.ref[0]] || [])[cell.ref[1]] || cell;   // a landmark is one place
+  return cell;
+}
+
+// THE FLAGSHIP HAS NO CELLS but it has six hand-authored districts, and it is the DEFAULT theater —
+// leaving it out would mean the district layer did nothing in the map most players see first. Its
+// canon regions map onto the same tile vocabulary the generated cities use.
+// ⚠ Keep in lockstep with the name branch below: one region, one name, one type.
+const FLAGSHIP_TYPE = { 'THE HARBOR FRONT': 'seaport', 'THE GARRISON': 'military', 'MEMORIAL PARK': 'park',
+                        'DOWNTOWN': 'commercial', 'THE SOUTHSIDE': 'residential', 'MIDTOWN PLAZA': 'plaza' };
+
+// district naming for the news desk + lower thirds ("STRUCTURE COLLAPSE — THE MINEWORKS")
+export function districtNameAt(plan, x, z) {
+  if (!plan) return null;
+  if (!plan.cells) return flagshipRegion(x, z);   // flagship keeps its canon names
+  const cell = cellAtXZ(plan, x, z);
   if (!cell) return 'THE OUTSKIRTS';
-  if (cell.ref) cell = plan.cells[cell.ref[0]][cell.ref[1]] || cell;   // a landmark is one place
   if (cell.t === 'water') return 'THE WATERFRONT';
   if (cell.lname) return cell.lname;            // "THE SPIRE OF TOKYO", not "THE DISTRICT"
   if (cell.sname) return cell.sname;            // "THE CONTAINER TERMINAL", not "THE DOCKLANDS"
   return 'THE ' + (TILE_INFO[cell.t] ? TILE_INFO[cell.t].label : 'DISTRICT');
+}
+function flagshipRegion(x, z) {
+  if (x > 150) return 'THE HARBOR FRONT';
+  if (x < -140 && z > 140) return 'THE GARRISON';
+  if (x < -140 && z > -130) return 'MEMORIAL PARK';
+  if (z < -60) return 'DOWNTOWN';
+  if (z > 60) return 'THE SOUTHSIDE';
+  return 'MIDTOWN PLAZA';
+}
+
+// WHAT KIND OF PLACE IS THIS — the key the district reaction table (data/districts.js) is read on.
+// Returns a raw tile type ('military', 'hospital', 'industrial'…) or null where nothing is zoned.
+// ⚠ It answers for the CELL, not the structure: standing in the street outside a fuel depot is
+// still standing in the industrial district, which is what makes the response and the crowd read
+// as an AREA rather than as a hitbox around a building.
+export function districtTypeAt(plan, x, z) {
+  if (!plan) return null;
+  if (!plan.cells) return FLAGSHIP_TYPE[flagshipRegion(x, z)] || null;
+  const cell = cellAtXZ(plan, x, z);
+  return cell ? (cell.t || null) : null;
 }
 
 // ---- INTERIORS v1 — the floorplan engine -------------------------------------------------------

@@ -1481,7 +1481,14 @@ export function buildTiles(world, group, plan, rng) {
     // the three things builders push as raw world coordinates have to be scaled too — snapshot the
     // lengths, run the tile, then convert whatever it appended
     const t0 = ctx.treeSpots.length, k0 = world._pendingCuts.length, p0 = world._pendingPits.length;
+    const c0 = world.cover.length;                     // ...and the SAME idiom tags what it registered
     builder(ctx, ctx.cx, ctx.cz, cell.v || 0, cell);   // cell carries r/c, neighbours, sockets, frontage
+    // ⚠ A STRUCTURE REMEMBERS WHAT BUILT IT. Both `tower()` and `reg()` end by pushing to
+    // world.cover, so everything appended during this builder's run belongs to this cell's district
+    // — which is what lets `shatterBlock` ask the district table what breaking this does BACK
+    // without a single builder having to know the hazard system exists. No new plumbing, no per-tile
+    // opt-in, and a tile added tomorrow is tagged for free.
+    for (let i = c0; i < world.cover.length; i++) world.cover[i].district = cell.t;
     if (S !== 1) {
       for (let i = t0; i < ctx.treeSpots.length; i++) { const t = ctx.treeSpots[i]; t[0] = sx(ctx, t[0]); t[1] = sz(ctx, t[1]); }
       for (let i = k0; i < world._pendingCuts.length; i++) { const k = world._pendingCuts[i]; k[0] = sx(ctx, k[0]); k[1] = sz(ctx, k[1]); k[2] *= S; k[3] *= S; k[4] *= S; }

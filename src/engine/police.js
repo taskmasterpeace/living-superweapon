@@ -10,6 +10,7 @@ import { hasCivilians } from '../data/modes.js';
 import { AI } from './ai.js';
 import { clamp } from '../core/util.js';
 import { countryOf } from '../data/countries.js';
+import { districtRow, districtLine } from '../data/districts.js';
 import { ROSTER } from '../data/characters.js';
 // ⚠ THE ARMORY WAS IN NOBODY'S HANDS. 35 rows in data/armory.js — 13 firearms with their own
 // measured audio signatures (manual §38) — and not one fighter or police def carried a single id.
@@ -177,12 +178,23 @@ export class PoliceSystem {
   }
 
   // a blast just put civilians on the ground — the perpetrator owns that
-  onCivHarm(src, n) {
+  // ⚠ WHERE IT HAPPENED IS PART OF WHAT IT COSTS (data/districts.js). The same act books far more
+  // heat outside a hospital or on a campus than it does on an industrial estate — the city is not
+  // equally protective of every block, and the multiplier is the whole of that rule. `at` is the
+  // BLAST position, not the perpetrator's: an artillery shot fired from a rail yard into a school
+  // is a crime in the school.
+  onCivHarm(src, n, at) {
     if (!this.active || !src || !src.def || src.def.police) return;
-    this.heat.set(src, this.heatOf(src) + n * HEAT_CIV);
+    const p = at || src.pos;
+    const dt = p && this.g.world.districtTypeAt ? this.g.world.districtTypeAt(p.x, p.z) : null;
+    const mult = districtRow(dt).heat;
+    this.heat.set(src, this.heatOf(src) + n * HEAT_CIV * mult);
     this._lastHarmT = this.g.time;
     const lvl = this.wantedLevel(src);
-    if (lvl > 0 && this.g.hud && this.g.isHuman(src)) this.g.hud.feed(`🚨 WANTED ${'★'.repeat(lvl)} — civilians harmed`, '#5aa0ff');
+    if (lvl > 0 && this.g.hud && this.g.isHuman(src)) {
+      const why = mult >= 1.4 ? ' (protected district)' : mult <= 0.8 ? ' (nobody is watching)' : '';
+      this.g.hud.feed(`🚨 WANTED ${'★'.repeat(lvl)} — civilians harmed${why}`, '#5aa0ff');
+    }
   }
   // KILLING A BADGE JUMPS THE LADDER — it does not tick it. One dead officer pushes you at least to
   // the next star, and every subsequent one compounds. (Robert's ruling: attacking police escalates
@@ -238,7 +250,10 @@ export class PoliceSystem {
   // its police are, and how corrupt. A well-funded force in a safe city is on you in seconds; a
   // broke, corrupt one in a rough city takes the better part of half a minute — and sometimes
   // doesn't come at all (see _corruptionIgnores).
-  _responseDelay() {
+  // ...AND THE DISTRICT YOU ARE STANDING IN. A capitol or a military compound answers almost
+  // instantly because the response is already standing there; an industrial edge or a mine works
+  // takes its time; a resort protects its tourists fast because that is the money.
+  _responseDelay(at) {
     const plan = this.g.world.plan || {};
     const safety = plan.safety || 50;
     const C = countryOf(plan.country);
@@ -248,7 +263,20 @@ export class PoliceSystem {
       d -= (C.lawBudget - 50) * 0.06;           // money: cars, radios, coverage
       d += (50 - C.integrity) * 0.05;           // ⚠ integrity is HIGH=CLEAN — a bought force is in no hurry
     }
-    return clamp(d, 4, 30);
+    // ⚠ THE BASELINE IS FLOORED **BEFORE** THE DISTRICT, AND THE ORDER IS THE WHOLE FIX.
+    // Measuring this exposed a bug that PREDATES the district layer: the raw formula returns
+    // **0.51s for Tokyo and 3.48s for Oslo**, both under the old floor of 4 — so the two
+    // best-policed theatres in the game were identical, and `lawEnforcement`, `lawBudget` and
+    // `integrity` did nothing whatsoever in any well-run country. The documented "Tokyo 4.0s ·
+    // Hell, Norway 4.0s" figures were the CLAMP, not a computation.
+    // So: the city and the country produce a BASELINE (clamped exactly as before, which preserves
+    // every measured figure on record — Mexico City 14.9, Mogadishu 15.7, Kabul 21.0), and the
+    // district then bends THAT. Sub-4-second arrivals now exist and are earned by one thing only:
+    // standing somewhere the response was already posted.
+    d = clamp(d, 4, 30);
+    const dt = at && this.g.world.districtTypeAt ? this.g.world.districtTypeAt(at.x, at.z) : null;
+    d *= districtRow(dt).respond;
+    return clamp(d, 1.5, 40);          // an absolute sanity rail; nobody arrives instantly
   }
   // A BOUGHT FORCE lets some calls go unanswered entirely. ⚠ `integrity` is HIGH = CLEAN
   // (Norway 85, Somalia 20) — the sheet's column is named GovermentCorruption but the values are
@@ -325,10 +353,15 @@ export class PoliceSystem {
         try { g.audio.squelch(V.pos, true); g.audio.squelch(V.pos, false); } catch (e) {}   // opened, closed, nothing said
         return;
       }
-      this._respT = this._responseDelay();
+      this._respT = this._responseDelay(V.pos);
       if (g.hud && !this._announced) {
         this._announced = true;
+        // ⚠ THE ETA HAS TO SAY WHY IT IS WHAT IT IS. A number that swings from 3s to 30s with no
+        // stated cause reads as randomness; naming the district turns it into information the
+        // player can act on — and next time, fight somewhere else.
+        const dl = districtLine(g.world.districtTypeAt && g.world.districtTypeAt(V.pos.x, V.pos.z));
         g.hud.announce('🚨 WANTED', `${V.name} — units dispatched (ETA ${Math.round(this._respT)}s)`, '#5aa0ff');
+        if (dl) g.hud.feed(`🚔 ${dl}`, '#5aa0ff');
         this._dispatch(V.pos, true);                                 // the call goes out over the air
         g.hud.feed(`🚨 ${V.name} flagged — response en route`, '#5aa0ff');
         if (g.news) g.news.highlight('police', 'POLICE DISPATCHED — ' + g.world.districtAt(V.pos.x, V.pos.z), { dur: 2.2, priority: 1, focus: V.pos });

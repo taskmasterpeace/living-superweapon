@@ -571,6 +571,9 @@ export const CSS = `
   font-size:8px; letter-spacing:.2em; color:var(--text-5); margin-top:1px; }
 #hud .cityplate{ position:absolute; left:50%; transform:translateX(-50%); bottom:108px; font-family:'Cascadia Mono',Consolas,monospace; font-size:var(--t-label); letter-spacing:.14em; color:var(--text-4); background:rgba(8,10,16,.5); border:1px solid rgba(255,255,255,.08); border-radius:var(--r-2); padding:4px 12px; pointer-events:none; }
 #hud .cityplate b{ color:var(--gold-pale); font-weight:700; }
+/* WHAT THE DISTRICT MEANS — the second line of the plate. Gold because it is the one part of the
+   nameplate that is about THIS FIGHT rather than about the map. */
+#hud .cityplate .cpdist{ display:block; margin-top:2px; color:var(--gold); letter-spacing:.16em; font-size:var(--t-micro); }
 /* ===== THE DANGER ROOM — a simulated environment + the engine's test harness =====
    Everything but your character should read as PROJECTED: scanned grid, corner brackets,
    a sweeping holo line, and a live telemetry column. This is how we test the engine. */

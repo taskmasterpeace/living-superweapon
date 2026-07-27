@@ -19,6 +19,8 @@ import { PoliceSystem } from './police.js';
 import { psycheOf, applyInstant, pickByPersonality } from './psyche.js';
 import { WhiteRoom } from './whiteroom.js';
 import { buildReport } from '../data/news.js';
+import { districtRow } from '../data/districts.js';
+import { hasCity } from '../data/modes.js';
 import { bookInjury, injuryOf, healBout, koElo, matchElo } from '../data/rankings.js';
 import { SETTINGS, keymap } from '../core/settings.js';
 import { BoxingRing, BOXING } from './boxingring.js';
@@ -337,7 +339,9 @@ export class Game {
     // EVERY city rebuild re-grids what was keyed to the old map — whether it came from a match,
     // the atlas, or the map maker's live preview. There is exactly one of these for a reason.
     this.world.onRebuilt = (plan) => {
-      this.peds.setCity(this.world.ARENA, this.world.waterX, !(this.world.plan && this.world.plan.atmosphere === false));
+      // ⚠ THE PLAN GOES THROUGH. Without it the crowd has no idea what kind of place it is standing
+      // in — the district table and the population tier both hang off it.
+      this.peds.setCity(this.world.ARENA, this.world.waterX, !(this.world.plan && this.world.plan.atmosphere === false), this.world.plan);
       this.vfx.clearScorches();
       if (this.news && this.news.reset) this.news.reset();
     };
@@ -2230,7 +2234,7 @@ export class Game {
     for (let i = this.world.cover.length - 1; i >= 0; i--) {
       const c = this.world.cover[i]; if (c.hp == null || c.hp <= 0) continue;
       const d = Math.hypot(pos.x - c.x, pos.z - c.z);
-      if (d < radius + (c.r || 6)) { const fall = 1 - clamp((d - (c.r || 6)) / (radius + 1), 0, 1); this.damageBlock(c, power * 20 * fall, pos); }
+      if (d < radius + (c.r || 6)) { const fall = 1 - clamp((d - (c.r || 6)) / (radius + 1), 0, 1); this.damageBlock(c, power * 20 * fall, pos, src); }
     }
     // parked cars catch blasts and go up in chained fireballs
     if (this.world.cars) for (const car of this.world.cars) {
@@ -2244,7 +2248,7 @@ export class Game {
       const downed = this.peds.blast(pos.x, pos.z, Math.max(6, radius * 0.85));
       if (downed) {
         this.cityStats.civs += downed;
-        if (this.police) this.police.onCivHarm(src, downed);   // the villain is whoever hurts humans
+        if (this.police) this.police.onCivHarm(src, downed, pos);   // the villain is whoever hurts humans — and WHERE decides what it costs
         if (this.hud) this.hud.feed(`⚠ COLLATERAL — ${downed} civilian${downed > 1 ? 's' : ''} down`, '#ff8a6a');
         if (src && this.isHuman(src)) src.score = Math.max(0, (src.score || 0) - 40 * downed);
         if (downed >= 2 && this.news) this.news.highlight('collateral', 'CIVILIANS CAUGHT IN THE BLAST', { dur: 2.0, priority: 1, focus: pos });
@@ -2265,15 +2269,92 @@ export class Game {
     this.audio.boom(0.55, pos); this.world.shake(1.2); this.world.punch(0.85);
     this.areaDamage(src || this.player, pos, 14, 22, 2);   // hero-scale fireball — hurts fighters, craters, CHAINS to the next car
   }
-  damageBlock(c, amt, pos) {
+  damageBlock(c, amt, pos, src = null) {
     if (c.hp == null || c.hp <= 0 || amt <= 0) return;
     c.hp -= amt;
+    if (src) c._breaker = src;                       // whoever was working on it owns what it does back
     const py = Math.min(c.top || c.h, (pos && pos.y) || 6);
     this.particles.burst(c.x + rand(-c.hx, c.hx), py, c.z + rand(-c.hz, c.hz), { count: 4 + (amt * 0.12 | 0), speed: 12, life: 0.5, size: 3.2, color: ['#3a3a44', '#22232c', '#6a6a74'], up: 5, grav: 8, drag: 1.5 });
     this.world.setBlockCracks(c);
-    if (c.hp <= 0) this.shatterBlock(c);
+    if (c.hp <= 0) this.shatterBlock(c, src);
+    else this._ventHazard(c);
   }
-  shatterBlock(c) {
+
+  // ---------- THE DISTRICT REACTS (data/districts.js) ----------
+  // ⚠ THE TELL COMES BEFORE THE BANG. A hazard nobody saw coming is not a mechanic, it is an
+  // ambush — the player has to be able to READ that this particular wall is the wrong wall to throw
+  // somebody through. A damaged hazardous structure VENTS: coloured smoke out of the fracture, a
+  // named warning on the feed the first time it is touched, and a hiss. The intensity rides the
+  // remaining hull, so the closer it is to going up the harder it is to miss.
+  _ventHazard(c) {
+    const HZ = districtRow(c.district).hazard;
+    if (!HZ || c.hp <= 0) return;
+    const frac = c.hp / c.maxHp;
+    if (frac > 0.78) return;                          // a scratch on a tank is not a leak
+    if (!c._ventSeen) {
+      c._ventSeen = true;
+      if (this.hud) this.hud.feed(`⚠ ${HZ.tell} — that structure will go up`, HZ.color);
+      try { this.audio.zap(220, { x: c.x, z: c.z }); } catch (e) {}
+    }
+    if ((c._ventT || 0) > this.time) return;
+    c._ventT = this.time + 0.28;
+    const urgency = 1 - frac;                          // near death it is pouring out
+    this.particles.burst(c.x + rand(-c.hx * 0.6, c.hx * 0.6), (c.top || c.h) * 0.6, c.z + rand(-c.hz * 0.6, c.hz * 0.6), {
+      count: 3 + (urgency * 7 | 0), speed: 6 + urgency * 10, life: 1.1 + urgency, size: 4 + urgency * 3,
+      color: [HZ.color, '#ffffff'], up: 6 + urgency * 8, grav: -1.5, drag: 0.8,
+    });
+  }
+
+  // WHAT BREAKS BACK. Everything here routes through systems that already exist — `areaDamage`
+  // (which brings craters, car chains, collateral booking, kill attribution and the whole
+  // resistance table with it) and `addDot` for the cloud that stays. There is no bespoke damage
+  // path, and the hazard cannot do anything an ability could not already do.
+  // ⚠ EVERY HAZARD CARRIES A REAL `dtype`, so the counter was never authored: `metal` shrugs off a
+  // fuel fire and is IMMUNE to the toxic clouds, and CORRODES in the chemical works. A robot picks
+  // its fights by district whether or not anybody told it to.
+  districtHazard(c, src) {
+    // ⚠ NEVER INSIDE A VENUE. A venue hides the city rather than tearing it down, so the previous
+    // theatre's tagged cover can still be sitting in `world.cover` while you are in a boxing hall —
+    // and a fuel-farm detonation in the ring would be the district layer reaching into a fight it
+    // does not govern. `hasCity` is the one definition (data/modes.js), the same one the nameplate
+    // reads, so the rule and the surface that announces it can never disagree.
+    if (!hasCity(this.modeId)) return;
+    const HZ = districtRow(c.district).hazard;
+    if (!HZ) return;
+    const at = new THREE.Vector3(c.x, Math.min(8, (c.top || c.h) * 0.4), c.z);
+    const who = src || c._breaker || this.player;
+    this.vfx.flash(at.clone().setY(6), HZ.color, 26, 0.7);
+    this.vfx.shockwave(at.clone().setY(0.4), { color: HZ.color, radius: HZ.r * 0.8, power: HZ.blast });
+    this.particles.burst(c.x, 5, c.z, { count: 44, speed: 34, life: 1.3, size: 7, color: [HZ.color, '#ffd24a', '#22232c'], up: 22, grav: 7, drag: 1.1 });
+    this.world.shake(2.4); this.world.punch(1.4);
+    this.audio.boom(0.95, { x: c.x, z: c.z });
+    // the secondary — a REAL explosion, so it craters, chains to parked cars and books its own
+    // collateral against whoever caused it
+    this.areaDamage(who, at, HZ.r, HZ.dmg, HZ.blast, { dtype: HZ.dtype });
+    if (this.hud) this.hud.feed(`💥 ${HZ.tell} DETONATION — ${this.world.districtAt(c.x, c.z)}`, HZ.color);
+    if (this.news) this.news.highlight('building', `${HZ.tell} EXPLOSION — ` + this.world.districtAt(c.x, c.z), { dur: 2.8, priority: 3, focus: at });
+    if (!HZ.dot || !HZ.linger) return;
+    // ...and the part that stays. A cloud is a ZONE, not a hit — the same shape the armory's gas
+    // uses, and for the same reason: what makes a chemical works frightening is that the ground is
+    // still dangerous after the bang.
+    // ⚠ `later`, NEVER a bare setTimeout — a cloud must not outlive the match that made it
+    // (the deferred-callback law), and this one schedules itself repeatedly.
+    this.addSmoke(c.x, c.z, HZ.r * 0.55, HZ.linger, who);
+    const R = HZ.r * 0.55;
+    const tick = (left) => {
+      if (left <= 0) return;
+      for (const e of this.entities) {
+        if (!e.alive || !e.pos || e.isDummy) continue;
+        if (Math.hypot(e.pos.x - c.x, e.pos.z - c.z) > R) continue;
+        e.addDot({ ...HZ.dot, color: HZ.color, src: who });
+      }
+      this.particles.burst(c.x, 3, c.z, { count: 8, speed: 7, life: 1.8, size: 5.5, color: [HZ.color, '#ffffff'], up: 3, drag: 0.7 });
+      this.later(() => tick(left - 1), 900);
+    };
+    tick(Math.round(HZ.linger / 0.9));
+  }
+
+  shatterBlock(c, src = null) {
     // ⚠ A COVER RECORD MAY OWN ITS OWN DEATH. The city's version below reads `c.mesh`, `c.crack` and
     // `c.y0` and calls `districtAt` — none of which a venue's hand-registered rock has, so a
     // destructible stage could not route through the one choke point without either faking those
@@ -2304,6 +2385,11 @@ export class Game {
       dispose: () => { mesh.visible = false; if (crack) crack.visible = false; },   // hidden, not disposed — resetTerrain restores it
     });
     this.world.shake(1.5); this.world.punch(0.9); this.audio.boom(0.6, { x: c.x, z: c.z });
+    // ⚠ LAST, AFTER THE COLLAPSE IS FULLY BOOKED. The hazard calls `areaDamage`, which craters,
+    // chains to cars and can shatter the NEXT block — so this block has to be off the cover list and
+    // its own stats counted before the secondary goes off, or a chain re-enters a half-finished
+    // collapse. `removeBlockFromCover` above is what makes the recursion terminate.
+    this.districtHazard(c, src);
   }
 
   // ---------- gamified combat: kills, streaks, XP/levels, announcer ----------

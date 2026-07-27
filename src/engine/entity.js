@@ -1500,7 +1500,10 @@ export class Fighter {
         if (ox < oz) { this.pos.x += Math.sign(dx || 1) * ox; this.vel.x *= -0.3; }   // push out + bounce
         else { this.pos.z += Math.sign(dz || 1) * oz; this.vel.z *= -0.3; }
         // slammed into a wall hard enough → crack it AND hurt whoever got thrown into it
-        if (spd > 34 && c.hp != null && this._game) { this._game.damageBlock(c, spd * 0.55, { x: this.pos.x, y: this.pos.y + 4, z: this.pos.z }); this.hitstop = Math.max(this.hitstop, 0.04); }
+        // ⚠ WHO BROKE IT MIRRORS THE SLAM LAW: hurled into a fuel tank, your LAUNCHER owns the
+        // explosion; flew into it under your own power and you own it yourself. Same `launchT` gate
+        // `_slam` uses, so the two can never credit different fighters for one impact.
+        if (spd > 34 && c.hp != null && this._game) { this._game.damageBlock(c, spd * 0.55, { x: this.pos.x, y: this.pos.y + 4, z: this.pos.z }, (this.launchT > 0 && this.lastHitBy) || this); this.hitstop = Math.max(this.hitstop, 0.04); }
         this._slam(game, spd, 'wall');
       }
     }

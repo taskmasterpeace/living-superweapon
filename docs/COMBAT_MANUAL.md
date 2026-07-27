@@ -2877,3 +2877,123 @@ piece of that evidence: not an argument that nothing changed, but the same numbe
 `LSW.PW_KB` in the console, live: `LSW.PW_KB.kb = 3` takes effect on the next hit, and `catchK`
 follows it so the intercept trade cannot break. `LSW.pwSuite()` re-runs all 42 checks. The starting
 positions and what each does are the table in 47.1.
+
+## §48 · WHERE YOU FIGHT CHANGES HOW THE FIGHT GOES (2026-07-27)
+
+Robert: *"we can have building types — a nuclear place, versus tourists are more peds, that kinda
+stuff. Wire in what we HAVE. Military bases. Leverage the city stuff and have it react. Leverage
+population or size and all that."*
+
+### 48.1 · WHAT THIS DELIBERATELY IS NOT
+
+It is not a city simulation. No per-cell fields, no update loop, no land value, no pollution
+gradient. Ascendants is a fighting game and nobody will ever zone a district in it, so the version
+that earns its place is far narrower: **a lookup from tile type to a handful of reaction numbers**,
+read at four choke points that already existed. `data/districts.js` has no state and no tick.
+
+⚠ **ONE TABLE, NOT FOUR.** Four hard-coded lookups across `pedestrians.js` / `police.js` /
+`game.js` / `hud.js` is how a rule like this drifts until the four halves disagree about what a
+MILITARY district is. Every consumer imports the one table — the `resistOf` / damage-codex law.
+
+### 48.2 · EVERYTHING IT NEEDED ALREADY EXISTED AND WAS UNWIRED
+
+`world.districtAt(x,z)` has been plan-aware for months and **the news desk was very nearly its only
+reader**. `ctx._tile` was already stamped per cell in `buildTiles`. The whole job was reading them.
+
+- `cellAtXZ` / `districtTypeAt` (cityplan.js) — the name and the type are now two readings of ONE
+  cell lookup, so they cannot disagree about where a boundary is.
+- ⚠ **Cover remembers what built it.** `buildTiles` snapshots `world.cover.length` around each
+  builder and tags what was appended — the same idiom already used for `treeSpots` / `_pendingCuts`
+  / `_pendingPits`. No builder had to change and a tile added tomorrow is tagged for free.
+- ⚠ **The flagship needed its own line.** It has no tile builders, and it is the DEFAULT theatre, so
+  the hazard layer would have been invisible in the map most players see first (the same shape as
+  the vertex-AO gap). Its districts are positional, so it is tagged positionally from the same
+  `districtTypeAt`.
+
+### 48.3 · THE FOUR READERS
+
+| reader | file | what the district does |
+|---|---|---|
+| the crowd | `pedestrians.js` | how many people, and who they are |
+| the response | `police.js` `_responseDelay` | how fast the state answers here |
+| the heat | `police.js` `onCivHarm` | what hurting someone here costs |
+| the hazard | `game.js` `districtHazard` | what breaking the structures does BACK |
+
+⚠ **Every field is a MULTIPLIER on a number that already existed**, never a replacement, so the
+country sheet, the safety index and the population ladder all keep working underneath.
+
+⚠ **THE HAZARD ROUTES THROUGH `areaDamage` AND `addDot`, NEVER A NEW DAMAGE PATH.** It therefore
+inherits craters, car chains, collateral booking, kill attribution, noise broadcast and the whole
+resistance table, and it cannot do anything an ability could not already do. The lingering cloud is
+the same shape as the armory's gas, including `game.later` rather than a bare `setTimeout` (the
+deferred-callback law).
+
+⚠ **EVERY HAZARD DECLARES A REAL `dtype`, WHICH IS WHERE THE COUNTER CAME FROM FOR FREE.** `metal`
+resists fire 0.6, is IMMUNE to toxic, and is WEAK to acid 1.6 — so a robot walks out of a burning
+fuel farm and dies in a chemical works, straight out of `resistOf`. Nobody authored that.
+
+⚠ **THE TELL COMES BEFORE THE BANG.** A hazard nobody saw coming is an ambush, not a mechanic. Below
+78% hull a hazardous structure VENTS in the hazard's colour, names itself once on the feed, and
+vents harder as it dies. Driven from `damageBlock` — the same choke point that breaks it.
+
+⚠ **WHO BROKE IT MIRRORS THE SLAM LAW.** `damageBlock(c, amt, pos, src)` stores the breaker; hurled
+into a fuel tank your LAUNCHER owns the explosion, flown into it under your own power you do, gated
+on the same `launchT` that `_slam` uses, so the two can never credit different fighters for one impact.
+
+⚠ **NEVER INSIDE A VENUE** (`hasCity`, data/modes.js — a NEW definition, distinct from
+`hasCivilians`). A venue hides the city rather than tearing it down, so the previous theatre's
+tagged cover is still in `world.cover` while you are in a boxing hall — **measured and confirmed** —
+and a fuel-farm detonation in the ring would be the district layer reaching into a fight it does not
+govern. The nameplate reads the same definition, so the rule and the surface announcing it agree.
+
+### 48.4 · THE BUG THE MEASUREMENT FOUND, WHICH PREDATES ALL OF THIS
+
+The police ETA came back **identical in all five districts** at the clamp floor. The cause was not
+the multiplier: the raw `_responseDelay` formula returns **0.51s for Tokyo and 3.48s for Oslo**,
+both under the old `clamp(d, 4, 30)` floor — so the two best-policed theatres in the game were
+indistinguishable, and `lawEnforcement`, `lawBudget` and `integrity` **did nothing whatsoever in any
+well-run country**. The documented "Tokyo 4.0s · Hell, Norway 4.0s" figures were the CLAMP, not a
+computation.
+
+⚠ **The fix is an ORDER, not a wider clamp.** The city and country produce a BASELINE clamped
+exactly as before — which preserves every figure on record (Mexico City 14.9, Mogadishu 15.7, Kabul
+21.0) — and the district then bends that, with an absolute rail at `[1.5, 40]`. Sub-4-second
+arrivals now exist and are earned by exactly one thing: standing where the response was already
+posted. This is the same family as "a clamp that swallows a rule makes the rule invisible".
+
+### 48.5 · THE MEASUREMENTS
+
+⚠ **DRIVE THE GATE.** Reading the table back proves only that I can read my own table. The first
+harness hunted for a real city containing all five districts, and that is a **bad experiment even
+when it succeeds**: the ETA also reads the city's safety index and the country's law budget, so
+comparing military-in-Cairo against resort-in-Tokyo measures three things and blames the district
+for all of it. `src/bench/districts.js` paints a 3×3 patch into the **same cells of the same city**
+through `applyPlanEdits` — the map editor's own door, which re-derives sockets and roads — so the
+country, safety index, population and position are all fixed and only the district varies.
+
+Tokyo, seed 7, Mega City, one 3×3 patch. Crowd counted off the pedestrian arrays; ETA read off the
+dispatcher's own clock after real civilians were really knocked down; hazard damage read off a
+bystander's hp:
+
+| district | civilians | police ETA | heat / civilian | hazard damage |
+|---|---|---|---|---|
+| MILITARY | **0** | **1.78s** | 12.0 | **42.3** |
+| MEDICAL | 8 | 1.98s | **21.6** | 11.1 |
+| RESORT | 7 | 2.18s | 15.0 | 0.0 |
+| GREENBELT | 5 | 4.18s | 13.2 | 0.0 |
+| INDUSTRIAL | 3 | **5.78s** | **9.0** | 15.6 |
+
+Population: a Village street carries **7** people, a Mega City **30** — through the same `setCity`
+the game calls. ⚠ It scales `mesh.count`, the LIVE instance count, never the allocation: still one
+draw call, which is exactly why the budget can vary when the draw calls must not.
+
+**11/11 checks, 0 console errors.** ⚠ Law 4 earned its keep here: the first run's check 0 failed
+("NOT FOUND — nothing below is meaningful") and refused to report the ten numbers underneath it.
+
+### 48.6 · THE TRADE, WHICH IS THE POINT
+
+An industrial edge is where you take a fight you do not want witnessed — **three civilians, nobody
+coming for six seconds, and the cheapest heat in the city** — and it is also the ground most likely
+to kill you. A capitol answers in under two seconds. That is one decision the player now makes with
+their feet, and the nameplate states it in words derived from the same numbers the engine reads
+(`districtLine`), so the surface cannot flatter a district.

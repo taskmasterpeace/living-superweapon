@@ -1809,6 +1809,77 @@ measured, not claimed** (see the last row block). Harness: `src/bench/powerworld
   skins and the cutaway ledger are restored. ⚠ The four `||` FALLBACKS are where "provably identical"
   actually lives, so they are DRIVEN in the suite rather than reasoned about.
 
+## THE DISTRICT REACTS (2026-07-27) — `data/districts.js`, manual §48
+- Robert: *"we can have building types — a nuclear place, versus tourists are more peds... Wire in
+  what we HAVE. Military bases. Leverage the city stuff and have it react."* **The constraint is the
+  point: this is NOT a city simulation** — no per-cell fields, no update loop, no land value. A
+  fighting game will never have anyone zone a district. The honest version is a LOOKUP from tile
+  type to four reaction numbers, read at four choke points that already existed. No state, no tick.
+- ⚠ **EVERYTHING IT NEEDED WAS ALREADY BUILT AND UNWIRED.** `world.districtAt` has been plan-aware
+  for months and **the news desk was very nearly its only reader**; `ctx._tile` was already stamped
+  per cell in `buildTiles`. The whole job was reading them. ONE TABLE, not four scattered lookups —
+  the `resistOf`/damage-codex law, or the four halves drift on what MILITARY means.
+- **THE FOUR READERS**, each a small change to an existing system: **crowd** (pedestrians.js —
+  density AND palette by district: resort tourists, campus young, industrial hi-vis, **military
+  zero, by rule**) · **respond** (police `_responseDelay`) · **heat** (police `onCivHarm`) ·
+  **hazard** (`game.districtHazard`). Every field MULTIPLIES a number that already existed, so the
+  country sheet, safety index and population ladder all keep working underneath.
+- **MEASURED — same city, same cells, only the district painted** (Tokyo seed 7, a 3×3 patch via
+  `applyPlanEdits`, the map editor's own door): MILITARY **0 civs · 1.78s · 42.3 hazard dmg** ·
+  MEDICAL 8 · 1.98s · **21.6 heat/civ** · RESORT 7 · 2.18s · 0 · GREENBELT 5 · 4.18s · 0 ·
+  INDUSTRIAL **3 · 5.78s · 9.0 heat/civ** · 15.6. Village street **7** people, Mega City **30**.
+  11/11, 0 console errors. ⚠ Hunting for one real city containing all five districts was the first
+  harness and is a BAD EXPERIMENT even when it succeeds — the ETA also reads city safety and the
+  country's law budget, so military-in-Cairo vs resort-in-Tokyo measures three things and blames
+  the district for all of it.
+- ⚠ **THE MEASUREMENT FOUND A BUG THAT PREDATES ALL OF THIS.** Every district returned the same ETA
+  at the clamp floor — and the cause was not the multiplier: the raw `_responseDelay` returns
+  **0.51s for Tokyo and 3.48s for Oslo**, both under the old `clamp(d,4,30)` floor, so the two
+  best-policed theatres were identical and `lawEnforcement`/`lawBudget`/`integrity` **did nothing in
+  any well-run country**. The documented "Tokyo 4.0s · Hell, Norway 4.0s" were the CLAMP, not a
+  computation. **The fix is an ORDER, not a wider clamp**: city+country produce a baseline clamped
+  exactly as before (every figure on record preserved — Mexico City 14.9, Mogadishu 15.7, Kabul
+  21.0), then the district bends THAT, rail `[1.5, 40]`. Sub-4s arrivals are earned by one thing:
+  standing where the response was already posted.
+- ⚠ **COVER REMEMBERS WHAT BUILT IT.** `buildTiles` snapshots `world.cover.length` around each
+  builder and tags what was appended — the same idiom already used for `treeSpots`/`_pendingCuts`/
+  `_pendingPits`. No builder changed; a tile added tomorrow is tagged for free. ⚠ **The flagship
+  needed its own line** — it has no tile builders and is the DEFAULT theatre, so the hazard layer
+  would have been invisible in the map most players see first (same shape as the vertex-AO gap).
+  Its districts are positional, so it is tagged positionally from the same `districtTypeAt`.
+- ⚠ **THE HAZARD ROUTES THROUGH `areaDamage` + `addDot`, NEVER A NEW DAMAGE PATH** — so it inherits
+  craters, car chains, collateral booking, kill attribution, noise and the whole resistance table,
+  and cannot do anything an ability could not. ⚠ **Every hazard declares a real `dtype`, which is
+  where the COUNTER came from for free**: `metal` resists fire 0.6, is IMMUNE to toxic, is WEAK to
+  acid 1.6 — a robot walks out of a burning fuel farm and dies in a chemical works, straight out of
+  `resistOf`. Nobody authored that. ⚠ **The tell comes BEFORE the bang**: under 78% hull a hazardous
+  structure vents in its hazard colour and names itself once on the feed, driven from `damageBlock`,
+  the same choke point that breaks it. ⚠ **Who broke it mirrors the SLAM LAW** —
+  `damageBlock(c, amt, pos, src)`; hurled into a fuel tank your LAUNCHER owns the explosion, same
+  `launchT` gate `_slam` uses.
+- ⚠ **`hasCity(modeId)` IS A NEW, SEPARATE DEFINITION FROM `hasCivilians`** (data/modes.js). A VENUE
+  hides the city rather than tearing it down, so the previous theatre's tagged cover is still in
+  `world.cover` while you are in a boxing hall (measured and confirmed) — a fuel-farm detonation in
+  the ring would be the district layer reaching into a fight it does not govern. Both the hazard and
+  the nameplate read it, so the rule and the surface announcing it cannot disagree. ⚠ Note this also
+  documents that `hasCivilians` currently lets POLICE AND THE NEWS CREW run inside the ring, the
+  training hall and the base — pre-existing, left alone deliberately, worth a look later.
+- **AND IT IS VISIBLE**: the `#hCity` nameplate gained a gold second line —
+  `⟩ INDUSTRIAL — SLOW RESPONSE · UNWATCHED · VOLATILE · CHEMICAL` — keyed on the district TYPE so
+  it rebuilds exactly when you cross a boundary and never in between. ⚠ The words are DERIVED from
+  the same numbers the engine reads (`districtLine`), never authored per row, so the surface cannot
+  flatter a district — the LeFevre/recovery-tier law.
+- **THE TRADE IS THE DESIGN**: an industrial edge is where you take a fight you do not want
+  witnessed — 3 civilians, nobody coming for six seconds, the cheapest heat in the city — and it is
+  also the ground most likely to kill you.
+- ⚠ **THERE IS NO NUCLEAR TILE** and one was not invented — the brief said wire in what we HAVE.
+  Industrial variant 1 is the tank farm, the closest thing that exists, and it carries the CHEMICAL
+  hazard. Adding a nuclear district later is one PLACEMENT row plus one DISTRICTS row.
+- Harness `src/bench/districts.js` → `await window.LSW.districtSuite()`. `validateDistricts()`
+  reports any tile type with no row (the `validateTiles` law) — 29 rows, 0 problems.
+- ⚠ **DOC DRIFT FOUND**: CLAUDE.md says the crowd is 64 pedestrians in several places. It is
+  `COUNT = 30` in `pedestrians.js` and has been for some time (64 is the WILDLIFE bird count).
+
 ## HANDOFF
 - **`HANDOFF.md` at the repo root** is the orientation document: architecture, the ten rules that
   are load-bearing, what is solid, what is half-built, what to do next, and the headless

@@ -520,6 +520,7 @@ window.LSW.runBenchmark = (opts) => runBenchmark(game, hud, opts);
 // POWERWORLD's own suite (manual §47) — the throwable/destructible stage, the knockback dial, and
 // the city-is-unchanged control. Lazy so the bench never costs the boot a byte.
 window.LSW.pwSuite = async (opts) => (await import('./bench/powerworld.js')).pwSuite(game, hud, opts);
+window.LSW.districtSuite = async (opts) => (await import('./bench/districts.js')).districtSuite(game, hud, opts);
 if (location.search.includes('bench')) {
   addEventListener('load', () => setTimeout(async () => {
     const r = await runBenchmark(game, hud);

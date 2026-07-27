@@ -14,7 +14,7 @@ import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js
 import { clamp, damp, setBands, DECAL_LIFT } from '../core/util.js';
 import { skyFor, worldOf } from '../data/environments.js';
 import { buildTiles , scaleBoxUV, resetDecalLadder, redrapeDecals } from './citytiles.js';
-import { CELL, districtNameAt, thresholdPlan, ROAD, junctionAt, WATER_DEPTHS, roadClear, surveyCity, surveyAt } from '../data/cityplan.js';
+import { CELL, districtNameAt, districtTypeAt, thresholdPlan, ROAD, junctionAt, WATER_DEPTHS, roadClear, surveyCity, surveyAt } from '../data/cityplan.js';
 import { mulberry } from '../data/news.js';
 
 // FOG OCCLUSION GRID — the replacement for the old 24-box uniform array. 256² texels over the
@@ -742,6 +742,10 @@ export class World {
 
   // district naming for the news desk / lower thirds — plan-aware, flagship keeps canon names
   districtAt(x, z) { return districtNameAt(this.plan, x, z) || 'THE CITY'; }
+  // WHAT KIND of place this is — the key data/districts.js is read on. `districtAt` says what the
+  // news desk CALLS this block; this says what it IS, which is what the crowd, the police, the
+  // hazard and the nameplate all react to.
+  districtTypeAt(x, z) { return districtTypeAt(this.plan, x, z); }
 
   // ---- SIMULATION MODE: the Danger Room renders the WORLD as a projection ----
   // Everything the room fabricates (city, props, greenery, water) goes translucent holo-cyan
@@ -859,6 +863,12 @@ export class World {
       this.ARENA = 240;
       this._buildArena(); this._buildGrass();
       this._ghBase = null;
+      // ⚠ THE FLAGSHIP HAS NO TILE BUILDERS, so `buildTiles`' district tag never reaches it — and it
+      // is the DEFAULT theatre, which would have made the hazard layer invisible in the map most
+      // players see first. (Same shape as the vertex-AO gap: a bespoke builder skipping a rule every
+      // generated city gets for free.) Its districts are POSITIONAL, so a positional tag is not a
+      // workaround here, it is the correct answer — ask the same `districtTypeAt` everything else asks.
+      for (const c of this.coverAll) c.district = districtTypeAt(plan, c.x, c.z);
     } else {
       this.ARENA = plan.arena;
       this._buildGenCity(plan);
