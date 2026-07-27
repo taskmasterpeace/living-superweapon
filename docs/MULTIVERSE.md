@@ -322,19 +322,99 @@ Same discipline, applied to combat.
 Traffic is now two-way, so *both* engines must be able to run *both* kinds of character. There is no
 version of that where one game owns the ability code.
 
+### RULED 2026-07-27 (second pass)
+
+| # | question | ruling |
+|---|---|---|
+| 8 | Ledger authority | **SERVER-AUTHORITATIVE, with authentication.** *"Your ledger has to be server authoritative… think about making it live service where you gotta have Internet."* Start small (local, single-player only) and grow into it — but a local file is never the truth once multiplayer exists. |
+| 9 | What a soldier BECOMES in The Ascend | **A soldier.** They keep their weapon, their movement and their kit; the kit PROJECTS rather than being replaced. *"How the Infiltrator can go invisible in their world, can go invisible in this world. I can set up a turret in this world."* |
+| 10 | Is being outmatched the content? | **YES, definitively.** |
+| 11 | War World → PowerWorld camera | **THIRD PERSON.** (Reasoning below.) |
+| 12 | Can Ascendants drive vehicles? | **NO. Absolutely not.** Possibly a gameplay wrinkle instead — see §6c. |
+| 13 | Melee | **ASCENDANTS' MELEE GOES ACROSS THE BOARD.** *"The melee inside of Ascendants is really good, I like it a lot… that's the real melee and that has to be put across the board."* It is shared substrate, not an Ascendants feature. |
+| 14 | Inventory | **ONE inventory system across all three worlds**, carried by the Passport. A world may have a BIGGER inventory, not a different one. |
+
+### ⚠ 6b. THREE RULINGS THAT ENLARGE THE SUBSTRATE
+
+Rulings 4, 13 and 14 together change what "shared" means. It is no longer *the ability engine* — it is:
+
+```
+   THE SUBSTRATE   abilities  ·  MELEE (the trifecta, the clinch, momentum)  ·  INVENTORY
+                   all pure, all deterministic, all seeded — ability.sim's siblings
+        ↓
+   THE SHELL       camera + controls + HUD          (per product)
+   THE SHOW        models, audio, vfx               (per product)
+   THE PROJECTION  what an attribute BUYS here      (per dimension)
+```
+
+⚠ **PROMPT 2b must therefore split melee too**, not just abilities — `melee.js` is 340 lines with 32
+presentation calls and 5 wall-clock/random calls, which is the *easiest* of the five files to make
+pure and the one Robert most wants preserved exactly. Do it in the same pass; it is the smallest file
+and the highest-value single system in the project by his own account.
+
+⚠ **Slot convention must unify.** In Ascendants, `1` is FISTS (`docs/THE_HANDS.md`); in War World `1`
+is the main weapon. If melee is shared substrate then the hand that holds it should be too — pick one
+convention and make both games use it. This is a small change that will feel enormous.
+
+### ⚠ 6c. VEHICLES — the asymmetry is better than the ban
+
+Ruling 12 says an Ascendant cannot drive. **The engine already has the more interesting answer, and
+it costs nothing:** in Ascendants a strong enough fighter can already **pick a car up and throw it**
+(`liftCapacity`, `grabProp`/`throwProp`, `PROP_WEIGHT` — 24 of 52 can lift a 1.9t car, 12 can lift a
+24t airliner). So the rule writes itself and reads as canon rather than as a restriction:
+
+> **A soldier drives the vehicle. An Ascendant throws it.**
+
+Same object, two verbs, decided by which dimension the character came from. Recommend shipping that
+rather than a bare "cannot enter" — a locked door is a limitation, a thrown car is a feature.
+
+### ⚠ 6d. THE BLOOD LOOP — it is already in War World's code
+
+Robert: *"they can get their blood and if they get their blood, they can bring it back."* This is not
+a new system. `src/sim/types.ts:1307` already has:
+
+```ts
+| 'dna'    // #127: a fallen god's blood banked — text = ascendant id, soldierId = harvester
+```
+
+A pickup that banks **a named Ascendant's DNA**, tagged with who harvested it. That is the economic
+spine of the whole crossover, already built:
+
+```
+  soldiers hunt an Ascendant  →  it falls  →  they harvest DNA (exists)
+        →  carry it home  →  the SCIENCE layer studies it (the base, the research tree)
+        →  that is how you LEARN a dimension  →  which is how you build the GATE
+```
+
+⚠ **Do not design a new crossover economy.** Wire this one. It connects soldiers-hunt-gods, the base
+builder, the science/learning gate and the dimensional door into a single loop that both repos
+already have pieces of.
+
+### 6e. WHY THIRD PERSON FOR WAR WORLD → POWERWORLD (ruling 11, asked for in one sentence)
+
+**Third person — because the content Robert describes is a squad on the ground with grenades, dogs and
+turrets being hunted by things that fly, and first person makes tracking a flier overhead and knowing
+where your own squad is into a fight with the camera rather than with the enemy.**
+
 ### STILL OPEN — smaller, but they shape the build
 
-1. **Multiplayer authority.** A Passport that is a JSON file the player owns is trivially edited. Does
-   the Ledger become server-authoritative for multiplayer, with local files only for single-player?
-   (Ruling 5 makes this urgent: a shared ledger is a shared cheat surface.)
-2. **Vehicles.** Do Ascendants drive War World's vehicles when they cross? You rate them the best
-   thing in either repo, and they are the one system with no equivalent on this side.
-3. **The third repo** — name, and does it sit beside the other two on disk?
-4. **What does a soldier BECOME in The Ascend?** Ruling 6 says they cross; it does not say whether
-   they get a projection that makes them survivable, or whether being outmatched is the content.
-5. **What does the shared ledger track?** Levels and money are obvious. Reputation? Injuries?
-   Ascendants already has a persistent Elo book, a medical ledger and a career — War World has its own
-   career. One of those becomes the truth.
+1. **The third repo** — what is it called, and does it sit beside the other two on disk?
+2. **What does the shared ledger track?** Levels and money are obvious. Ascendants already has a
+   persistent **Elo book**, a **medical ledger** (injuries that persist across weeks) and a **career**;
+   War World has its own career. One of those becomes the truth and the other becomes a projection —
+   or they merge. This is the biggest undecided piece of ruling 5.
+3. **Does a soldier's kit project both ways?** Ruling 9 says an Infiltrator stays invisible in The
+   Ascend. Does an Ascendant's power likewise keep working in War World *unchanged* — or does the
+   projection tune it down for a world where a rifle is lethal? (Ruling 10 says outmatched is the
+   content; it does not say in which direction.)
+4. **Is Ascendants' melee the ONLY melee?** Ruling 13 puts it across the board. War World has its own
+   melee spec in flight (`docs/` melee/wrestling design, its three newest commits). Does the War World
+   design get abandoned, merged, or kept as its own layer on top of the shared trifecta?
+5. **Authentication — build or buy?** Ruling 8 needs accounts before multiplayer is real. A hosted
+   auth provider is days; rolling your own is weeks and a liability.
+6. **Does the DNA loop gate the GATE?** §6d suggests harvested DNA feeds the science layer which
+   unlocks a destination. Confirm that is the progression you want, because it makes the first
+   crossing something you EARN rather than something you switch on.
 
 ---
 
