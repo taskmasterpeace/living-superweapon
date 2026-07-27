@@ -486,6 +486,57 @@ and whether road ribbons are tessellated at the same resolution as the terrain t
 world. If it says "the ladder cannot work on slopes", flattening becomes the honest call and it will
 be made with a reason rather than a hope.
 
+## 6i. THE CALENDAR vs MULTIPLAYER — recommendation
+
+Robert was unsure *because of multiplayer*, and he was right to be: it is what breaks the simple
+answer. One shared calendar is great in single-player and impossible in multiplayer — you cannot put
+a player whose career is at week 40 into the same match as one at week 12 and have "a week passes"
+mean anything to both.
+
+**⚠ The fix is to stop treating them as one thing. Separate the CHARACTER from the CALENDAR.**
+
+His own reference already solves this — he cited *NBA 2K* himself (*"campaigns, season, custom teams,
+1v1, 2v2"*):
+
+| 2K | here |
+|---|---|
+| **MyPlayer** — one build, goes everywhere | **THE PASSPORT** — body, powers, injuries, gear |
+| **MyCareer** — a season, weeks pass, consequences | **THE CIRCUIT / the PMC** — single-player, one calendar across both worlds |
+| **Park / Rec** — same player, no season advancement | **MULTIPLAYER** — bring your character, but no week passes |
+
+**RECOMMENDED RULING:**
+
+1. **Single-player: ONE calendar across both worlds.** Spend a month running PMC contracts in War
+   World and a month passed in your fight career too — rivals fought, the book moved, your ranking
+   slipped. That is the version with real trade-offs, and Ascendants already simulates the world
+   moving without you (`simWeek`).
+2. **Multiplayer has NO calendar.** A match is an *event*, not a week. You bring the character exactly
+   as they are; nothing ages, nothing decays, no story advances. This also removes the sync problem
+   entirely rather than solving it.
+3. **What multiplayer MAY change:** money, ranking, cosmetics. **What it must NOT change:** the
+   calendar, campaign progress, and **injuries**.
+
+⚠ **On injuries — Robert picked these to carry, and it is the single best pick on the list**, because
+it is what makes the multiverse feel like one world instead of a menu. Get your arm broken in War
+World and you fight hurt in The Ascend for weeks. Ascendants already has the medical ledger to hold
+it; War World would write to the same one.
+
+**But injuries must carry BETWEEN WORLDS, not OUT OF MULTIPLAYER.** If a stranger can break your arm
+online and ruin the campaign you have been building for a month, people will stop playing online —
+and it is a grief vector, not a feature. Multiplayer is sparring. It costs you pride and ranking, not
+bone.
+
+### What should carry — recommendation
+
+| carries | verdict | why |
+|---|---|---|
+| **Body** — strength, speed, powers, rank | **YES** | This is the point of the whole exercise. |
+| **Injuries** | **YES, between worlds. NOT out of multiplayer.** | The thing that makes it one life. See above. |
+| **Weapons / inventory** | **YES — but each world decides what you may USE.** | Ruling 14 is one inventory. The Gate is where a world says "not that, not here." Carrying a rifle into The Ascend should be *allowed and unimpressive* — that is better writing than confiscating it. |
+| **Money** | **YES — one wallet.** | It is the cheapest possible reason to play both games. Earn it as a PMC, spend it on your fight career. Nothing else connects them so directly for so little work. |
+| **Reputation** | **YES, but as TWO numbers that leak into each other.** | Fame as a registered Ascendant is not the same as a PMC's contract standing — merging them loses both. Keep both; let being famous in one open doors (and put targets on you) in the other. Richer than merging, cheaper than isolating. |
+| **Vehicles** | **NO** — ruled 12. | And the better version is §6c: a soldier drives it, an Ascendant throws it. |
+
 ### STILL OPEN — smaller, but they shape the build
 
 1. **⚠ WHICH CAREER BECOMES THE TRUTH?** This is now the biggest undecided thing in the project.
@@ -503,10 +554,13 @@ be made with a reason rather than a hope.
    projects, invisible stays invisible). The reverse is unstated: does a rank-79 Ascendant hit a
    soldier for the same numbers a rank-79 hits another Ascendant for? Ruling 10 says outmatched is the
    content — it does not say which side is outmatched.
-4. **What are War World's animations, and who does them?** Ruling 15 throws out War World's melee and
-   imports Ascendants' — but Ascendants' melee is animated by a *procedural* figure system and War
-   World's is 76 rigged GLB models. **The moves port; the animation does not.** This is the largest
-   unscoped piece of work in the plan and it has no owner.
+4. ~~What are War World's animations, and who does them?~~ **ANSWERED BY MEASUREMENT, not a
+   question for Robert.** I assumed War World's 76 GLB models were animated by baked clips, which
+   would have meant importing moves with no bodies to play them. **Wrong.** 
+   (799 lines) drives JOINTS procedurally — , , , and
+   already ,  (clinch), ,  — and the sim has "always
+   graded a melee swing FOUR ways". **Both games animate by writing joint angles in code.** Ruling 15
+   is therefore far cheaper than feared: the melee substrate can drive War World's models directly.
 5. **What is in the ONE inventory?** Ruling 14 says one system, bigger in some worlds. Does an
    Ascendant carry a rifle? Does a soldier carry a gadget from The Ascend home? The armory
    (35 rows) and War World's arsenal (families × brands × Mk tiers, generated) are two different
