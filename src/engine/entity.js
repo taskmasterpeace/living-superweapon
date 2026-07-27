@@ -6,7 +6,7 @@ export { BUILDS, frameOf, applyFrame, figure, buildWeapon };   // re-exported: e
 import { updateDupes, updatePossession, updateElastic, updateWallCrawl, updateTk, updateMimic, updateMount, updateVisionMode, pulseDupes, dupePool } from './systems2.js';
 import { updateSize, updateInvisible, updateRegen, updateBanish, beginRegen } from './systems.js';
 import * as THREE from 'three';
-import { clamp, damp, TAU, lerp, BANDS, bandOf } from '../core/util.js';
+import { clamp, damp, TAU, lerp, BANDS, bandOf, PW_KB } from '../core/util.js';
 export { BANDS, bandOf, setBands } from '../core/util.js';
 import { ARENA as ARENA_FALLBACK } from './world.js';   // ⚠ review item 7: the FROZEN flagship value.
 // It is a last-resort default ONLY — every live read must go through world.ARENA, which is
@@ -700,13 +700,20 @@ export class Fighter {
     // meant any beam was a permanent stunlock on a live fighter. An explicit 0 must mean 0.
     this.hitFlash = 1; this.hitstop = Math.max(this.hitstop, opts.hitstop ?? 0.04);
     // STRENGTH plants your feet: 10 shrugs off ~40% of knockback, 1 gets ragdolled around
-    const kbMul = (this.metal ? 0.72 : 1) * (1.22 - this.strength * 0.047);
-    if (opts.kb) { this.vel.x += (opts.kb.x || 0) * kbMul; this.vel.y += (opts.kb.y || 0) * kbMul; this.vel.z += (opts.kb.z || 0) * kbMul; }
-    if (opts.launch) this.vel.y += opts.launch * kbMul;
+    let kbMul = (this.metal ? 0.72 : 1) * (1.22 - this.strength * 0.047);
+    // ⚠ POWERWORLD HITS HARDER THAN THE CITY, AND THAT IS THE WHOLE POINT (manual §47). The carry
+    // was already four times the city's; what was missing was the LAUNCH. `_chaseKb` is set only by
+    // the powerworld mode, so an undefined flag leaves `kbMul` exactly as the city computed it.
+    // ⚠ VERTICAL IS ITS OWN NUMBER. At parity with the horizontal every punch is a pop-up — the fight
+    // climbs instead of crossing the stage, which reads as floaty rather than violent.
+    let kbLaunchMul = kbMul;
+    if (this._chaseKb) { kbMul *= PW_KB.kb; kbLaunchMul *= PW_KB.launch; }
+    if (opts.kb) { this.vel.x += (opts.kb.x || 0) * kbMul; this.vel.y += (opts.kb.y || 0) * kbLaunchMul; this.vel.z += (opts.kb.z || 0) * kbMul; }
+    if (opts.launch) this.vel.y += opts.launch * kbLaunchMul;
     // launched hard enough → walls and the ground become weapons for ~1.1s (slam damage in _physics)
     if (!opts.slam) {
       const kmag = opts.kb ? Math.hypot(opts.kb.x || 0, opts.kb.z || 0) : 0;
-      if (kmag > 30 || Math.abs(opts.launch || 0) > 12) this.launchT = 1.1;   // |launch|: a dive-punch DOWN-force arms slam physics too (manual §10)
+      if (kmag > 30 || Math.abs(opts.launch || 0) > 12) this.launchT = this._chaseKb ? PW_KB.window : 1.1;   // |launch|: a dive-punch DOWN-force arms slam physics too (manual §10)
       if ((kmag > 14 || (opts.launch || 0) > 6) && (this.hanging || this._grapple)) this.releaseHang();   // knocked off the wall
     }
     // ---- BLEEDING (manual §12): heavy physical trauma and every slash-class weapon OPENS A WOUND.
@@ -1403,7 +1410,11 @@ export class Fighter {
     // which is a nudge, not a manoeuvre. Matched at −1.8 it carries about two body lengths and is
     // still travelling when it gets there, which is what makes overshooting a real cost.
     const glide = this._openSky && this.flying;
-    const dragF = Math.exp((this._slideT > 0 || this._thrownT > 0 || launched ? -1.3 : glide ? -AIR_DRAG : -6) * dt);
+    // ⚠ THE LAUNCHED CLASS IS ITS OWN COEFFICIENT NOW, not a borrow of the thrown-body slide class.
+    // They were sharing −1.3 because a thrown body and a launched body look alike; they are not the
+    // same event. A thrown body was AIMED and is meant to land somewhere; a launched body is being
+    // sent away, and how far it goes is the readout of how hard it was hit. `PW_KB.drag` is the dial.
+    const dragF = Math.exp((launched ? -PW_KB.drag : this._slideT > 0 || this._thrownT > 0 ? -1.3 : glide ? -AIR_DRAG : -6) * dt);
     this.vel.x *= dragF; this.vel.z *= dragF;
     this.vel.y = clamp(this.vel.y, -160, 70);       // never let launches/lift escape
 
@@ -1595,7 +1606,11 @@ export class Fighter {
       if (m3 > mx && this.launchT <= 0) { const k = mx / m3; this.vel.x *= k; this.vel.y *= k; this.vel.z *= k; }
     } else {
       const h = Math.hypot(this.vel.x, this.vel.z);
-      if (h > mx) { this.vel.x = this.vel.x / h * mx; this.vel.z = this.vel.z / h * mx; }
+      // ⚠ A LAUNCHED BODY MUST NOT BRAKE ITSELF BY WALKING. The 3-D open-sky branch above has always
+      // excused `launchT`; this one never did, so a grounded victim who touched the stick had their
+      // knockback clamped straight back to walking speed and the long carry was defeated by the one
+      // thing anyone does after being hit. Scoped to `_chaseKb` — the city keeps its clamp exactly.
+      if (h > mx && !(this._chaseKb && this.launchT > 0)) { this.vel.x = this.vel.x / h * mx; this.vel.z = this.vel.z / h * mx; }
     }
     if (dir.x || dir.z || dir.y) { if (this.state === 'idle' || this.state === 'move') this.state = 'move'; }
     else if (this.state === 'move') this.state = 'idle';

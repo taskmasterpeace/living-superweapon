@@ -661,3 +661,69 @@ reach** — the test is the true 3-D distance. Verified through the real strike 
    nine of fourteen VFX are authored for a frame 10.7× taller than this one.
 5. **Hardware measurement** on a Deck and an iPad. Every platform number in `pw-platform.md` is
    arithmetic from source, and it says so.
+
+---
+
+## 15. THE GROUND IS AMMUNITION, AND THE PUNCH SENDS THEM (2026-07-27) — manual §47
+
+Robert named exactly two things missing before this feels like Bid For Power. Both are in now, and
+both are gated on `f._chaseKb` / `f._openSky` — the city game is unchanged and the evidence is at the
+bottom of manual §47 rather than being a promise here.
+
+### The knockback, and why the previous pass fell short
+
+The chase-loop drag exception was tuned against a **synthetic 101 u/s impulse**. Driving the real
+melee path, a RAGE haymaker on SOL leaves at **49.2 u/s** and carried **26.0u** — under three body
+lengths. Fixing the drag alone could never reach BFP distance because the quantity being multiplied
+was half of what the test assumed.
+
+`PW_KB` in `core/util.js` is the dial, live from the console (`LSW.PW_KB`):
+
+| | before | after |
+|---|---|---|
+| RAGE haymaker on SOL, POWERWORLD | 26.0u · peak 49.2 u/s | **143.9u · peak 103.8 u/s** (15.0 body lengths) |
+| the identical punch, THE CITY | 7.2u | **7.2u** |
+| a 101 u/s launch, POWERWORLD | 60.3u | **147.7u** |
+| a 101 u/s launch, THE CITY | 16.0u | **16.0u** |
+
+⚠ **The intercept line had to move with it.** `catchK × kb` = 114.4 u/s, derived so one dial moves
+both — leave it at 132 while multiplying the impulse and every launch is uncatchable, which deletes
+teleport-intercept silently. It sits inside the real spread (TITAN 70.6 · SOL 103.8 · RAGE 104.3 ·
+VEGA 109.6 · GALE 132.7), so who you hit decides whether you can chase them.
+
+⚠ **A launched body was braking itself by walking** — `move()`'s 2-D clamp never excused `launchT`
+the way the 3-D one always has.
+
+### The throwable, destructible stage
+
+Almost all of it existed and none of it was reachable: the stage registered **every rock as COVER and
+nothing as a PROP**, and gave its cover `hp: 1e9`. So the dimension had scenery to hide behind, one
+array away from `grabProp` / `throwProp` / the weight ladder / the arc preview, all finished.
+
+- **26 loose rocks** on the floor from the start, across a six-rung ladder derived from the roster's
+  own lift distribution — SHARD 0.12t (49 of 52 can lift it) → MONOLITH 60t (**3**). Three fighters
+  can lift nothing here, which is the floor working.
+- **Spires and boulders break**, on the city's hp formula, and leave rubble sized from what broke.
+- **A thrown prop is a real object** (`game._flung`) that can be **shot out of the air** —
+  `game.hitFlung` is the one door for projectiles and beams alike, hp off the same weight ladder.
+  Bots do it too, gated on line of sight and their own reflex delay.
+
+⚠ **The spires were transparent to gunfire.** The cover records were missing `r` and `h`, which
+`projectiles.js` compares against — and `x < undefined` is false. Fifteen spires stopped bodies and
+let every bullet, blast and beam through. Fixed at the registration, not with a guard in the shooters.
+
+⚠ **The rubble shipped black and a screenshot caught it** — `rockDark` is the ACCENT, as this file's
+own header says in capitals. Refs `wwa-pw-rubble.png`.
+
+**Verified**: `src/bench/powerworld.js` — `await LSW.pwSuite()`. 42 checks, 0 failures, 0 console
+errors, three consecutive runs. Plus 52 heroes × 364 slots in a city duel with 0 errors, and the city
+sim reproducing **0.680 ms/frame** against the 0.679 previously documented.
+
+### Still owed here
+
+- **The bots aim at where the prop IS, not where it will be**, so they intercept about one throw in
+  three. That reads well (sometimes they shoot it down) and is a real ceiling on the exchange.
+- **Nothing but rock is throwable on this stage.** Cars, trees and planes are city props; a BFP-style
+  stage with a wrecked structure or two would widen the ladder without new systems.
+- The rubble is a shared geometry per crossing but a separate mesh per rock; at very high shatter
+  counts an instanced pool would be the honest next step. Measured cost today is nil.

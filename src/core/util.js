@@ -56,6 +56,41 @@ export function setBands(b) {
 }
 export const bandOf = (y) => y < BANDS.ground ? 0 : y < BANDS.building ? 1 : y < BANDS.sky ? 2 : 3;
 
+// ---- THE POWERWORLD KNOCKBACK DIAL -----------------------------------------------------------
+// Robert: *"you punch them or you blast them and they go flying back really far — that's one thing
+// that we're missing in PowerWorld."*
+//
+// ⚠ THE PREVIOUS PASS TUNED THE CARRY AND NEVER LOOKED AT THE LAUNCH, and that is why it still felt
+// short. `_chaseKb` was calibrated against a SYNTHETIC 101 u/s impulse (16.1u in the city → 60.3u
+// here, both reproduced). A real punch never produces 101: measured through the real melee path, a
+// RAGE haymaker on SOL leaves at **49.2 u/s** and carried **26.0u** — under three body lengths, with
+// the fighter still standing in front of you. Fixing the drag alone could never reach BFP distance
+// because the number it was multiplying was half what the test assumed.
+//
+// So the dial has four positions and they do different jobs:
+//   kb     — the horizontal impulse. This is the one that makes the hit LOOK big.
+//   launch — the vertical. Deliberately lower than `kb`: at parity every punch is a pop-up and the
+//            fight leaves the arena instead of crossing it.
+//   drag   — the launched drag coefficient (city 6.0; the thrown-body slide class is 1.3).
+//   window — seconds `launchT` runs, i.e. how long the exception and the slam arming last.
+//   catchK — `game.intercept`'s too-fast-to-follow line, expressed as a MULTIPLE OF `kb` so the one
+//            dial moves it too. ESF's own accident made deliberate: a standing hit is catchable, a
+//            full swoop hit is not. Leave the line at the city's 132 while multiplying the impulse
+//            and every hit becomes uncatchable, which silently deletes teleport-intercept — a
+//            mechanic that shipped two days ago. 52 × 2.2 = 114 u/s, and 114 is not a taste: over a
+//            90-second AI-vs-AI fight here the launch speeds came out p50 80 · p75 85 · p90 109 ·
+//            max 151, and a standing haymaker measures 104. The line therefore leaves a standing hit
+//            catchable and takes roughly the hardest tenth away — the trade the reference had.
+//            ⚠ Set it too HIGH and nothing is ever uncatchable, which is the same as not having the
+//            rule; too LOW and the committed blow you most want to follow up is the one refused.
+//
+// ⚠ IT LIVES IN util.js FOR THE SAME REASON `BANDS` DOES: entity.js and game.js both read it and
+// neither may import the stage (powerworld.js imports figure.js). One home, live-editable from the
+// console — `LSW.PW_KB.kb = 3` takes effect on the next hit, which is what "give him a dial" means.
+// ⚠ EVERY READER GATES ON `f._chaseKb`, which only the powerworld mode sets. The city never reads it.
+export const PW_KB = { kb: 2.2, launch: 1.45, drag: 0.5, window: 2.6, catchK: 52 };
+export const pwCatchSpeed = () => PW_KB.catchK * PW_KB.kb;
+
 // seeded PRNG (mulberry32) — moved from data/news.js: the city planner and the world both
 // need it, and a planner importing from the news desk was a dependency inversion (review find).
 export function mulberry(seed) {

@@ -28,11 +28,15 @@ import { beamBuildOf, beamTemperOf } from '../data/visual.js';
 import { Gamepad } from '../core/gamepad.js';
 import { runSlot, performEvade } from './abilities.js';
 import { ROSTER } from '../data/characters.js';
-import { BANDS, clamp, rand, TAU, damp, GROUND_LAYER} from '../core/util.js';
+import { BANDS, clamp, rand, TAU, damp, GROUND_LAYER, PW_KB, pwCatchSpeed } from '../core/util.js';
 import { tierOf, TIER_COLORS } from './entity.js';
 
 const _v = new THREE.Vector3();
 const SLOT_KEYS = ['lmb', 'rmb', 'q', 'e', 'r', 'f', 'shift'];
+// what a bot may fire at a thrown car (manual §47) — a TAPPED, aimed, travelling shot. Charges,
+// rushes and ultimates are all the wrong answer to a rock arriving in a second and a half, and the
+// ult is deliberately excluded: nobody spends a Supernova on a boulder.
+const SHOOTDOWN_TYPES = new Set(['projectile', 'volley', 'rifle', 'bow']);
 const TAP_DIRS = [['KeyW', 'ArrowUp', 0, 1], ['KeyS', 'ArrowDown', 0, -1], ['KeyA', 'ArrowLeft', -1, 0], ['KeyD', 'ArrowRight', 1, 0]];
 const NULL_PAD = { active: false, aiming: false, moving: false, lx: 0, ly: 0, rx: 0, ry: 0, down: () => false, pressed: () => false, released: () => false };
 const _inp = { pressed: false, held: false, released: false, dt: 0 };   // scratch intent — runSlot reads it synchronously
@@ -779,10 +783,16 @@ export class Game {
       const dx = pl.x - f.pos.x, dz = pl.z - f.pos.z;
       consider(dx * dx + dz * dz, { kind: 'plane', ref: pl, x: pl.x, z: pl.z, w: PROP_WEIGHT.plane });
     }
-    for (const rk of this.world.rocks || []) {                      // loose stones (0.5t — STR 3 territory)
+    // Loose stone. ⚠ A ROCK IS THE ONE PROP WITH NO FIXED SIZE, so it is the one that carries its
+    // OWN tonnage — `rk.w` if the builder authored one, else the city's 0.5t constant. A car is a
+    // car and a plane is a plane; a rock is a shard or a monolith, and the whole reason the weight
+    // ladder exists is so that difference is a decision about who can pick it up. Every city rock
+    // has no `w`, so this line is provably the old behaviour there. (The taxonomy's `object-mass`
+    // node called PROP_WEIGHT "a constant per prop kind, not a per-object field" — for rocks now it is.)
+    for (const rk of this.world.rocks || []) {
       if (rk.dead || rk.carried) continue;
       const dx = rk.x - f.pos.x, dz = rk.z - f.pos.z;
-      consider(dx * dx + dz * dz, { kind: 'rock', ref: rk, x: rk.x, z: rk.z, w: PROP_WEIGHT.rock });
+      consider(dx * dx + dz * dz, { kind: 'rock', ref: rk, x: rk.x, z: rk.z, w: rk.w || PROP_WEIGHT.rock });
     }
     const G = this.world.grass;                                     // street trees (instanced)
     if (G && this.world._gPos) for (let i = 0; i < G.count; i++) {
@@ -808,7 +818,10 @@ export class Game {
       mesh = new THREE.Mesh(this.world._carGeo, t.ref.paint);
     } else if (t.kind === 'rock') {
       t.ref.carried = true; t.ref.mesh.visible = false;
-      mesh = new THREE.Mesh(new THREE.DodecahedronGeometry(2.8, 0), new THREE.MeshStandardMaterial({ color: '#8d8577', roughness: 0.95, flatShading: true }));
+      // the silhouette is the tonnage: a shard you palm and a monolith that hides your whole body
+      // have to look different or the weight ladder is invisible. 2.8 = the city stone, unchanged.
+      const rs = t.ref.s || 2.8;
+      mesh = new THREE.Mesh(new THREE.DodecahedronGeometry(rs, 0), new THREE.MeshStandardMaterial({ color: t.ref.color || '#8d8577', roughness: 0.95, flatShading: true }));
     } else if (t.kind === 'plane') {
       t.ref.carried = true; for (const m of t.ref.meshes) m.visible = false;
       const fus = new THREE.Mesh(new THREE.CylinderGeometry(3.2, 2.5, 38, 8), new THREE.MeshStandardMaterial({ color: '#dfe3e6', roughness: 0.4, metalness: 0.35 }));
@@ -824,7 +837,7 @@ export class Game {
     mesh.castShadow = true; this.scene.add(mesh);
     // the hurl the arc will preview — computed ONCE here so the preview can never lie
     const spd = 74 * Math.max(0.5, Math.min(1.25, 0.5 + 0.16 * Math.log2(Math.max(0.6, ratio))));
-    f._carry = { kind: t.kind, mesh, t: 0, w: t.w, spd, ratio };
+    f._carry = { kind: t.kind, mesh, t: 0, w: t.w, spd, ratio, size: t.ref && t.ref.s };
     f.speed = (f.def.speed || 30) * Math.max(0.42, Math.min(0.93, 1 - 0.45 / Math.max(0.9, ratio)));   // weight on your back is speed off your feet
     this.audio.impact(t.kind === 'plane' ? 1.1 : 0.7, f.pos); this.world.shake(t.kind === 'plane' ? 1.1 : 0.5);
     if (this.isHuman(f) && this.hud) this.hud.feed(`Hoisted a ${t.kind} (~${t.w}t) — press G again to THROW`, '#ff8a3a');
@@ -838,17 +851,36 @@ export class Game {
     const pos = f.muzzle(new THREE.Vector3(), 5, 6.4);
     const mesh = c.mesh; mesh.position.copy(pos);
     const str = f.strength ?? 5;
-    const dmg = ((c.kind === 'plane' ? 60 : c.kind === 'car' ? 34 : c.kind === 'rock' ? 14 : 22) + str * 3) * Math.min(1.6, 0.75 + 0.25 * Math.min(3, c.ratio || 1));
+    // A ROCK'S BITE IS ITS TONNAGE. Every other prop has one size, so one number is honest for it;
+    // a rock spans a hand shard to a monolith only three fighters can lift, and a flat 14 would make
+    // the whole ladder cosmetic. Anchored on the city stone (0.5t → 14) and capped, so no boulder
+    // one-shots. The `ratio` multiplier below still rewards throwing something light for you.
+    const rockBase = Math.min(90, 14 * Math.pow(Math.max(0.05, c.w || 0.5) / 0.5, 0.45));
+    const dmg = ((c.kind === 'plane' ? 60 : c.kind === 'car' ? 34 : c.kind === 'rock' ? rockBase : 22) + str * 3) * Math.min(1.6, 0.75 + 0.25 * Math.min(3, c.ratio || 1));
     let spin = rand(-5, 5), t = 0;
+    // a car is 24u long and a tree is 20u tall — they need a hitbox to match, and a tall one:
+    // `overlapFoe`'s ±9u vertical window let a lobbed car sail clean over someone's head.
+    const R = c.kind === 'plane' ? 22 : c.kind === 'car' ? 13 : c.kind === 'rock' ? Math.max(7, (c.size || 2.8) * 2.1) : 10;
+    const RV = c.kind === 'plane' ? 20 : c.kind === 'car' ? 16 : c.kind === 'rock' ? Math.max(10, (c.size || 2.8) * 2.8) : 14;
+    // ⚠ THE FLUNG RECORD IS WHAT MAKES IT SHOOTABLE. Robert: *"the other person could be throwing
+    // little energy blasts at whatever you're throwing at them before it hit them."* Until now a
+    // thrown prop was a CLOSURE inside a vfx entry — a mesh nothing else in the engine could see, so
+    // there was nothing for a blast to hit. It is a record on `game._flung` now, with real hp off
+    // the same weight ladder, and `hitFlung` is the one door into it.
+    // ⚠ REGISTERED ONLY UNDER AN OPEN SKY. `_openSky` is the powerworld flag; in the city the array
+    // stays empty, every reader early-outs on `.length`, and a thrown car behaves exactly as it did.
+    const flung = f._openSky ? {
+      x: pos.x, y: pos.y, z: pos.z, r: R * 0.62, kind: c.kind, w: c.w || 0.5,
+      hp: 16 + (c.w || 0.5) * 20, by: f, team: f.team, dead: false, shot: false,
+    } : null;
+    if (flung) { if (!this._flung) this._flung = []; this._flung.push(flung); }
     this.audio.boom(0.4, f.pos); this.heroYell(f, 1.1);
     this.vfx._add({
       update: (dt) => {
         t += dt; vel.y -= 62 * dt;
         mesh.position.addScaledVector(vel, dt);
         mesh.rotation.z += spin * dt; mesh.rotation.x += spin * 0.5 * dt;
-        // a car is 24u long and a tree is 20u tall — they need a hitbox to match, and a tall one:
-        // `overlapFoe`'s ±9u vertical window let a lobbed car sail clean over someone's head.
-        const R = c.kind === 'plane' ? 22 : c.kind === 'car' ? 13 : c.kind === 'rock' ? 7 : 10, RV = c.kind === 'plane' ? 20 : c.kind === 'car' ? 16 : c.kind === 'rock' ? 10 : 14;
+        if (flung) { flung.x = mesh.position.x; flung.y = mesh.position.y; flung.z = mesh.position.z; }
         let foe = null;
         for (const e of this.entities) {
           if (!this.isFoe(f, e)) continue;
@@ -856,20 +888,73 @@ export class Game {
           if (Math.hypot(dx, dz) < R + e.radius && Math.abs((e.pos.y + 5) - mesh.position.y) < RV) { foe = e; break; }
         }
         const grounded = mesh.position.y <= 1.2;
-        if (foe || grounded || t > 4) {
+        const shot = !!(flung && flung.dead);
+        if (foe || grounded || shot || t > 4) {
           const p = mesh.position.clone(); p.y = Math.max(0.4, p.y);
-          if (foe) foe.takeDamage(dmg, { src: f, kb: vel.clone().setY(0).setLength(dmg * 0.7), launch: 14, hitstop: 0.12 });
-          this.areaDamage(f, p, c.kind === 'plane' ? 22 : c.kind === 'car' ? 13 : 9, dmg * 0.5, c.kind === 'plane' ? 2 : 1.5);
+          // SHOT OUT OF THE AIR: it never reaches anybody. The blast still happens where it broke —
+          // an intercept a body-length from your face is meant to be a bad intercept.
+          if (foe && !shot) foe.takeDamage(dmg, { src: f, kb: vel.clone().setY(0).setLength(dmg * 0.7), launch: 14, hitstop: 0.12 });
+          this.areaDamage(f, p, c.kind === 'plane' ? 22 : c.kind === 'car' ? 13 : 9, dmg * (shot ? 0.22 : 0.5), c.kind === 'plane' ? 2 : 1.5);
           if (c.kind === 'plane') { this.vfx.explode(p, { color: '#ff8a3d', color2: '#ffffff', radius: 22, power: 2.4 }); this.audio.boom(1.2, p); this.world.crater(p.x, p.z, 9, 1.6); this.world.punch(0.8); this.slowmo(0.15, 0.45); }
           else if (c.kind === 'car') { this.vfx.explode(p, { color: '#ff8a3d', color2: '#ffd24a', radius: 12, power: 1.6 }); this.audio.boom(0.6, p); }
           else { this.particles.burst(p.x, p.y, p.z, { count: 14, speed: 16, life: 0.6, size: 3, color: ['#5a4630', '#4a6a3a'], up: 6, grav: 12, drag: 1.4 }); this.audio.impact(1.1, p); }
           this.world.shake(1.3);
+          if (flung) { flung.dead = true; const i = this._flung.indexOf(flung); if (i >= 0) this._flung.splice(i, 1); }
           return true;
         }
         return false;
       },
-      dispose: () => { this.scene.remove(mesh); },
+      dispose: () => { this.scene.remove(mesh); if (flung) { flung.dead = true; const i = (this._flung || []).indexOf(flung); if (i >= 0) this._flung.splice(i, 1); } },
     });
+  }
+
+  /**
+   * SHOOT IT OUT OF THE AIR — the other half of "you could pick it up and throw it at them".
+   *
+   * ⚠ ONE DOOR, so a projectile, a beam and anything added later all break a flung car by the same
+   * rule and the number can only be tuned in one place. It answers `null` for the thrower's own side:
+   * blowing up your own throw is not a play, and letting splash from the thrower's second shot
+   * detonate their first one would make throwing self-defeating.
+   * ⚠ HP IS THE WEIGHT LADDER AGAIN — a shard is two blasts, a car is four, an airliner is not
+   * getting shot down by anything hand-held. That is why it must not be a flat constant.
+   *
+   * @returns {object|null} the record that was hit (already marked dead if it broke).
+   */
+  hitFlung(src, pos, radius, amount) {
+    const list = this._flung;
+    if (!list || !list.length || !src) return null;
+    for (const fl of list) {
+      if (fl.dead || fl.by === src) continue;
+      if (fl.by && !this.isFoe(fl.by, src)) continue;         // only the side it was thrown AT may break it
+      const dx = fl.x - pos.x, dy = fl.y - pos.y, dz = fl.z - pos.z;
+      if (dx * dx + dy * dy + dz * dz > (fl.r + radius) * (fl.r + radius)) continue;
+      fl.hp -= amount || 0;
+      const at = new THREE.Vector3(fl.x, fl.y, fl.z);
+      if (fl.hp <= 0) {
+        fl.dead = true; fl.shot = true;
+        this.vfx.impactStar(at, 12, '#ffd24a', 0.22);
+        if (this.hud) this.hud.damageNumber(at, 'INTERCEPTED', '#ffd24a', true);
+        if (this.isHuman(src) && this.hud) this.hud.feed(`INTERCEPTED — the ${fl.kind} broke up in the air`, '#ffd24a');
+      } else {
+        this.vfx.impactStar(at, 6, '#ffd24a', 0.14);
+        this.particles.burst(fl.x, fl.y, fl.z, { count: 6, speed: 13, life: 0.35, size: 2, color: ['#cfc8b8', '#8b8577'], drag: 2 });
+      }
+      return fl;
+    }
+    return null;
+  }
+  /** The nearest flung prop inbound at `f` — what the AI reacts to, and what the HUD could warn on. */
+  incomingFlung(f) {
+    const list = this._flung;
+    if (!list || !list.length) return null;
+    for (const fl of list) {
+      if (fl.dead || fl.by === f || (fl.by && !this.isFoe(fl.by, f))) continue;
+      const dx = f.pos.x - fl.x, dy = (f.pos.y + 5) - fl.y, dz = f.pos.z - fl.z;
+      const D = Math.hypot(dx, dy, dz);
+      if (D > 140 || D < 4) continue;
+      return fl;
+    }
+    return null;
   }
   // THE AIMED THROW's highest expression (manual §11): a hurled BODY that passes through another
   // fighter hits them too — both take damage, both are launched, both credited to the thrower.
@@ -1686,6 +1771,10 @@ export class Game {
 
     for (const d of (this._drops || [])) { if (d && d.mesh) { this.scene.remove(d.mesh); if (d.mesh.geometry) d.mesh.geometry.dispose(); } }
     this._drops = [];
+    // a prop in mid-air when the match ends must not still be shootable in the next one (the reset
+    // law). The MESHES belong to vfx entries, which vfx clears; this list is the record side.
+    for (const fl of (this._flung || [])) fl.dead = true;
+    this._flung = [];
 
     this._koCam = null; this._spectate = null;
     if (W.refreshFogBoxes) W.refreshFogBoxes();
@@ -2009,7 +2098,12 @@ export class Game {
     }
     if (!best) return false;
     const spd = Math.hypot(best.vel.x, best.vel.y, best.vel.z);
-    if (spd > CATCH_SPD) {
+    // ⚠ THE CATCH LINE RIDES THE KNOCKBACK DIAL OR THE MECHANIC DIES SILENTLY. Multiplying the
+    // impulse without moving this line makes EVERY launch too fast to follow, so teleport-intercept
+    // would still be "shipped" and unreachable. Scaled by the same number, the ESF trade survives
+    // intact: a standing hit is catchable, a full-speed swoop hit is not. City reads 132 as before.
+    const CATCH = best._chaseKb ? pwCatchSpeed() : CATCH_SPD;
+    if (spd > CATCH) {
       // ⚠ IT SAYS WHY. A refusal the player cannot read is indistinguishable from a broken button.
       if (this.isHuman(f) && this.hud) this.hud.feed('TOO FAST TO CATCH — fly them down', '#8b8577');
       return false;
@@ -2180,6 +2274,12 @@ export class Game {
     if (c.hp <= 0) this.shatterBlock(c);
   }
   shatterBlock(c) {
+    // ⚠ A COVER RECORD MAY OWN ITS OWN DEATH. The city's version below reads `c.mesh`, `c.crack` and
+    // `c.y0` and calls `districtAt` — none of which a venue's hand-registered rock has, so a
+    // destructible stage could not route through the one choke point without either faking those
+    // fields or forking the function. One hook instead, checked first: no city cover carries
+    // `onShatter`, so this line is inert everywhere except the dimension that sets it.
+    if (c.onShatter) { try { return c.onShatter(this, c); } catch (e) { return this.reportError(e, 'onShatter'); } }
     this.cityStats.blocks++;
     if (this.news) this.news.highlight('building', 'STRUCTURE COLLAPSE — ' + this.world.districtAt(c.x, c.z), { dur: 2.6, priority: 2, focus: { x: c.x, y: 8, z: c.z } });
     const w = c.w || c.r * 1.6, h = c.h, d = c.d || c.r * 1.6;
@@ -3252,6 +3352,28 @@ export class Game {
     // existed for that long before it may block or juke. Feints and fast openers now WORK.
     if (f._forceBeamT > 0) f._forceBeamT -= dt;
     f._counterCd = (f._counterCd || 0) - dt;
+    // ⚠ SHOOT THE CAR. Robert described the exchange in both directions — *"the other person could be
+    // throwing little energy blasts at whatever you're throwing at them"* — so a bot that only ever
+    // ate a thrown boulder would make half the mechanic single-player-only. It obeys both laws it
+    // has to: LINE OF SIGHT (honesty — no shooting a rock through a spire) and a REFLEX DELAY off
+    // its own `ai.reflex` (fairness — difficulty buys nerves, never precognition). Under an open sky
+    // only; `_flung` is empty in the city so this is one length check per bot per frame there.
+    f._flungShotCd = (f._flungShotCd || 0) - dt;
+    if (f._openSky && this._flung && this._flung.length) {
+      const fl = this.incomingFlung(f);
+      const seen = fl && this.canSee(f, { pos: fl });
+      if (seen) f._flungT = (f._flungT || 0) + dt; else f._flungT = 0;
+      if (seen && f._flungT > (f.ai.reflex || 0.2) && f._flungShotCd <= 0 && !f.grabbing && !f.grabState && !f._carry) {
+        const k = ['lmb', 'rmb', 'q', 'e'].find(s => f.slots[s] && f.slots[s].cd <= 0 && SHOOTDOWN_TYPES.has(f.slots[s].def.type) && f.ki > (f.slots[s].def.cost || 0));
+        if (k) {
+          // aim at where it IS — a prop is a big slow object and leading it is not the skill test here
+          f.aim3.set(fl.x - f.pos.x, fl.y - (f.pos.y + 5.8), fl.z - f.pos.z).normalize();
+          f.faceDir(fl.x - f.pos.x, fl.z - f.pos.z);
+          runSlot(f, k, { pressed: true, held: false, released: true, dt }, this);
+          f._flungShotCd = 0.28 + Math.random() * 0.25;
+        }
+      }
+    } else f._flungT = 0;
     const threatened = !!(this.incomingBeam(f) || this.incomingProjectile(f));
     if (threatened) f._threatT = (f._threatT || 0) + dt; else f._threatT = 0;
     const reacted = f._threatT > (f.ai.reflex || 0.2);

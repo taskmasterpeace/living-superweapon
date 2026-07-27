@@ -61,7 +61,44 @@ export const STAGE = {
   // still read as black towers — simultaneous contrast against a bright sky drags a mid-brown down
   // hard. Lighter, and only a quarter of the rock uses it.
   rock: '#c1a07c', rockDark: '#9c7c5a', ground: '#9c6e49', darkOdds: 0.25,
+  // LOOSE ROCK ON THE GROUND, before anybody has broken anything. Robert's ask was "destroy
+  // something, pick it up, and throw it" — but a stage where the first throwable only exists after
+  // you have demolished a spire teaches nobody that throwing is available at all. So the floor is
+  // seeded across the whole ladder, weighted light, and the heavy end is rare enough to be an event.
+  loose: [8, 6, 5, 4, 2, 1],     // one count per RUBBLE rung, lightest first
 };
+
+// =================================================================================================
+// THE RUBBLE LADDER — the weight ladder made visible.
+//
+// ⚠ THE RUNGS ARE DERIVED FROM THE ROSTER, NOT PICKED. `liftCapacityOf` over all 52 fighters is
+// sharply bimodal — measured p10 0.14t · p25 0.21 · p50 1.26 · p75 17.9 · p90 50 · max 87.9 (RAGE) —
+// so evenly spaced tonnages would have put four rungs inside one cluster and made the ladder
+// decorative. Each rung below is placed so it SPLITS the roster somewhere different. Measured, in
+// fighters out of 52 who can lift it:
+//        SHARD 49  ·  STONE 31  ·  CHUNK 25  ·  SLAB 20  ·  BOULDER 13  ·  MONOLITH 3
+// That is the fourth time this law has had to be applied here (university standing, the rank
+// ladder's top end, the base site survey): a rung nobody can reach is a rung that does not exist.
+//
+// ⚠ SIZE IS DERIVED FROM WEIGHT (`s ∝ w^⅓`), never authored beside it. The silhouette is the only
+// way a player reads tonnage before trying to lift it, and two independent numbers would drift the
+// day someone nudges one — a 60-tonne rock that looks like a 1-tonne rock is a control that lies.
+// =================================================================================================
+export const RUBBLE = [
+  { n: 'SHARD',    w: 0.12 },
+  { n: 'STONE',    w: 0.45 },
+  { n: 'CHUNK',    w: 1.3 },
+  { n: 'SLAB',     w: 4.8 },
+  { n: 'BOULDER',  w: 20 },
+  { n: 'MONOLITH', w: 60 },
+];
+for (const r of RUBBLE) r.s = +(3.48 * Math.cbrt(r.w)).toFixed(2);   // 1.3t ≈ 3.8u — a stone you hug
+/** The heaviest rung a mass of rock this big honestly breaks into. */
+export function rungFor(volume) {
+  const t = Math.max(0.05, volume * 0.00055);      // stage rock, calibrated so a mid spire drops SLABs
+  let i = 0; while (i < RUBBLE.length - 1 && RUBBLE[i + 1].w <= t) i++;
+  return i;
+}
 
 export class PowerWorldStage {
   constructor(game) {
@@ -69,6 +106,7 @@ export class PowerWorldStage {
     this._mats = []; this._hidden = []; this._cover = [];
     this._geos = []; this._texs = [];              // shared geometry + the cloud canvas, disposed on close
     this._props = null; this._cover0 = null; this._coverAll0 = null; this._int0 = null;
+    this._rockGeo = null; this._rockMat = null;      // shared by every loose rock; rebuilt per crossing
     this._arena0 = null; this._fog0 = null;
     this._day0 = null; this._dayT0 = null; this._skyScale0 = null; this._sun0 = null;
   }
@@ -104,7 +142,7 @@ export class PowerWorldStage {
       const h = 60 + rnd() * 150, w = 9 + rnd() * 16;
       const m = add(new THREE.Mesh(new THREE.CylinderGeometry(w * 0.45, w, h, 6, 1), rnd() > STAGE.darkOdds ? rockM : darkM));
       m.position.set(x, h / 2, z); m.rotation.y = rnd() * 3.14; m.castShadow = h > 90;
-      this._reg(x, z, w, w, h);
+      this._reg(x, z, w, w, h, m);
     }
     // ---- BOULDERS. Low cover and, more importantly, scale: without something human-sized near the
     // camera a 900u disc reads as a small room.
@@ -113,8 +151,9 @@ export class PowerWorldStage {
       const x = Math.cos(a) * r, z = Math.sin(a) * r, s = 6 + rnd() * 13;
       const m = add(new THREE.Mesh(new THREE.IcosahedronGeometry(s, 0), rnd() > STAGE.darkOdds ? rockM : darkM));
       m.position.set(x, s * 0.55, z); m.rotation.set(rnd() * 3, rnd() * 3, rnd() * 3);
-      this._reg(x, z, s * 1.3, s * 1.3, s * 1.1);
+      this._reg(x, z, s * 1.3, s * 1.3, s * 1.1, m);
     }
+    this._scatterRubble(rnd);
     this._buildHorizon(add, rnd);
     this._buildClouds(add, rnd);
     W.scene.add(grp);
@@ -303,11 +342,116 @@ export class PowerWorldStage {
     }
   }
 
-  /** A cover record, so physics, LOS and the slam rules all know the rock is there. */
-  _reg(x, z, hx, hz, top) {
+  /**
+   * A cover record, so physics, LOS and the slam rules all know the rock is there.
+   *
+   * ⚠ IT WAS MISSING `r` AND `h`, AND THAT WAS A HOLE YOU COULD SHOOT THROUGH. Every other cover
+   * record in the engine carries a radius and a height; `projectiles.js` tests `hypot(...) < c.r +
+   * radius && pos.y < c.h` and the beam blocker tests `cov.h` / `cov.r` — both of which evaluate
+   * against `undefined`, and `x < NaN` is false. So the stage's fifteen spires stopped BODIES and
+   * were transparent to every bullet, blast and beam in the game. Fixed here rather than in the
+   * shooters: the defect was a half-filled record, not a missing guard.
+   *
+   * ⚠ AND IT WAS `hp: 1e9`, WHICH IS THE WHOLE FIRST HALF OF THE ASK. Robert: *"imagine if Bid For
+   * Power, you could destroy something, pick it up, and throw it."* The engine has had destructible
+   * cover since the city shipped; the stage simply declared itself indestructible. Same hp formula
+   * the city uses (`70 + volume × 0.0075`) so a spire costs about what a building of its size costs
+   * — a number already balanced against every weapon rather than a second one invented here.
+   */
+  _reg(x, z, hx, hz, top, mesh) {
     const W = this.g.world;
-    const co = { x, z, hx: hx * 0.5, hz: hz * 0.5, top, hp: 1e9, maxHp: 1e9 };
+    const w = hx, d = hz, h = top;
+    const hp = Math.round(70 + w * h * d * 0.0075);
+    const co = {
+      x, z, hx: hx * 0.5, hz: hz * 0.5, top, h, r: Math.max(w, d) * 0.6, w, d,
+      hp, maxHp: hp, mesh, y0: mesh ? mesh.position.y : h / 2, destroyed: false,
+      onShatter: (game, c) => this._shatter(game, c),
+    };
     W.cover.push(co); W.coverAll.push(co); this._cover.push(co);
+    return co;
+  }
+
+  /**
+   * A SPIRE COMES DOWN AND LEAVES SOMETHING YOU CAN THROW.
+   *
+   * This is the loop Robert described, closed: break the rock → the rubble is real → pick a piece up
+   * → hurl it → they shoot it out of the air. It routes through `game.shatterBlock`'s one choke
+   * point via the `onShatter` hook, so a stage rock dies by the same call every building does.
+   *
+   * ⚠ THE RUBBLE IS SIZED FROM WHAT BROKE. A monolith out of a boulder is free tonnage, and a
+   * hillside that always drops shards makes destruction pointless — so the rung comes off the
+   * volume, and the pieces are that rung and the one below it.
+   */
+  _shatter(game, c) {
+    const W = game.world, i = W.cover.indexOf(c);
+    if (i >= 0) W.cover.splice(i, 1);
+    c.destroyed = true;
+    W.refreshFogBoxes && W.refreshFogBoxes();
+    const vol = (c.w || 8) * (c.d || 8) * (c.h || 20);
+    const top = rungFor(vol);
+    // 2–4 pieces, the heaviest rung this mass earns plus lighter ones under it
+    const n = 2 + (Math.random() * 3 | 0);
+    for (let k = 0; k < n; k++) {
+      const rung = Math.max(0, top - (k === 0 ? 0 : 1 + (Math.random() * 2 | 0)));
+      const a = Math.random() * Math.PI * 2, rr = (c.r || 6) * (0.7 + Math.random() * 1.1);
+      this._rock(c.x + Math.cos(a) * rr, c.z + Math.sin(a) * rr, rung);
+    }
+    // the collapse itself — the mesh sinks and hides, exactly as a shattered building does
+    const mesh = c.mesh, y0 = c.y0, h = c.h || 20;
+    if (mesh) {
+      let t = 0;
+      game.vfx._add({
+        update: (dt) => { t += dt; const k = Math.min(1, t / 0.55); mesh.position.y = y0 - k * (h * 0.94); mesh.scale.y = Math.max(0.04, 1 - k); return k >= 1; },
+        dispose: () => { mesh.visible = false; },
+      });
+    }
+    game.particles.burst(c.x, (c.h || 20) * 0.5, c.z, { count: 26, speed: 17, life: 1.0, size: 6, color: [STAGE.rock, STAGE.rockDark, '#e6dcc8'], up: 8, grav: 4, drag: 1.2 });
+    game.world.crater(c.x, c.z, (c.r || 6) * 0.7, 1.8);
+    game.world.shake(1.5); game.world.punch(0.9); game.audio.boom(0.6, { x: c.x, z: c.z });
+    game.noise({ x: c.x, y: 6, z: c.z }, 1.4, null);
+    if (game.hud) game.hud.feed('ROCK SHATTERED — there is rubble on the ground', '#c1a07c');
+  }
+
+  /**
+   * ONE LOOSE ROCK, on the weight ladder, registered where `propInReach` actually looks.
+   *
+   * ⚠ `world.rocks` IS THE LIST, NOT `world.cover`. The stage was registering every rock as cover and
+   * nothing as a prop, so the dimension had scenery you could hide behind and nothing you could pick
+   * up — while `grabProp`, `throwProp`, `updateCarry`, the throw-arc preview and the whole weight
+   * ladder sat finished and unreachable one array away. Loose stone follows the forest tiles'
+   * convention: a prop is NOT cover (you would be hiding behind something you are about to be
+   * holding), which is also why these are not `_reg`'d.
+   */
+  _rock(x, z, rung) {
+    const W = this.g.world, R = RUBBLE[Math.max(0, Math.min(RUBBLE.length - 1, rung | 0))];
+    if (!this._rockGeo) { this._rockGeo = new THREE.IcosahedronGeometry(1, 0); this._geos.push(this._rockGeo); }
+    // ⚠ PALE ROCK, AND I MADE THE MISTAKE THIS FILE ALREADY WARNS ABOUT. `rockDark` is the ACCENT —
+    // the header says so, having been paid for once on the spires — and a screenshot of a shattered
+    // spire came back with its rubble reading as BLACK HOLES in a pale sunlit floor. Simultaneous
+    // contrast against a bright sky drags a mid-brown down hard; six green assertions about tonnage
+    // could not see it. Loose rock is the same stone as the thing it broke off, so it is `rock`.
+    if (!this._rockMat) { this._rockMat = new THREE.MeshStandardMaterial({ color: STAGE.rock, roughness: 0.92, flatShading: true }); this._mats.push(this._rockMat); }
+    const m = new THREE.Mesh(this._rockGeo, this._rockMat);
+    m.position.set(x, R.s * 0.55, z);
+    m.scale.setScalar(R.s);
+    m.rotation.set(Math.random() * 3, Math.random() * 3, Math.random() * 3);
+    m.castShadow = R.s > 5;
+    this.group.add(m);
+    // `color` is read by `game.grabProp` for the mesh you actually hold — the rock in your hands has
+    // to be the rock that was on the ground, or picking one up recolours it.
+    const rec = { x, z, mesh: m, carried: false, dead: false, w: R.w, s: R.s, rung: R.n, color: STAGE.rock };
+    W.rocks.push(rec);
+    return rec;
+  }
+
+  /** Seed the floor across the whole ladder so there is always something in reach to throw. */
+  _scatterRubble(rnd) {
+    for (let rung = 0; rung < STAGE.loose.length; rung++) {
+      for (let k = 0; k < STAGE.loose[rung]; k++) {
+        const a = rnd() * Math.PI * 2, r = 26 + rnd() * 300;   // clustered where the fight starts
+        this._rock(Math.cos(a) * r, Math.sin(a) * r, rung);
+      }
+    }
   }
 
   /**
@@ -390,6 +534,18 @@ export class PowerWorldStage {
     // inherits invisible rocks — the exact bug the venue paid for.
     if (this._cover0) { W.cover = this._cover0; W.coverAll = this._coverAll0; this._cover0 = this._coverAll0 = null; }
     if (this._int0) { W.interiors = this._int0; this._int0 = null; }
+    // ⚠ THE TOWER CUTAWAY NOW APPLIES TO SPIRES, AND ITS BOOKKEEPING HAS TO COME HOME WITH THEM.
+    // Registering `mesh` on the cover record (so a spire can be shattered) also made it eligible for
+    // `updateOcclusion`, which is right — behind a chase camera a rock between the lens and your
+    // fighter must fade — but the fade holds a CLONED material keyed on the cover record, and a stage
+    // that closes mid-fade would leave that clone in `world._fades` pointing at geometry we are about
+    // to dispose. Same family as the news crew's revoked frames: the state outlives the thing.
+    if (W._fades) for (const co of this._cover) {
+      const f = W._fades.get(co);
+      if (!f) continue;
+      for (const [m, orig] of f.mats) { try { m.material.dispose(); m.material = orig; } catch (e) {} }
+      W._fades.delete(co);
+    }
     this._cover = [];
     W.refreshFogBoxes && W.refreshFogBoxes();
     for (const m of this._hidden) m.visible = true;
@@ -411,6 +567,9 @@ export class PowerWorldStage {
     for (const m of this._mats) m.dispose();
     W.scene.remove(this.group);
     this.group = null; this._mats = []; this._geos = []; this._texs = [];
+    // ⚠ the shared rubble geometry/material were just disposed with the rest — hold a dead handle and
+    // the next crossing builds every rock out of a disposed buffer. Cleared, so `_rock` rebuilds them.
+    this._rockGeo = null; this._rockMat = null;
     if (this.g._pwStage === this) this.g._pwStage = null;
   }
 }

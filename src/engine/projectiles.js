@@ -2,7 +2,7 @@
 import { domeBlocks } from './systems2.js';
 import { BUILD_LOOK, TEMPER_LOOK } from '../data/visual.js';
 import * as THREE from 'three';
-import { clamp, rand, TAU } from '../core/util.js';
+import { clamp, rand, TAU, PW_KB } from '../core/util.js';
 
 const UP = new THREE.Vector3(0, 1, 0);
 const _wind = new THREE.Vector3();
@@ -363,6 +363,13 @@ class Projectile {
     }
     // ENERGY SHIELD BUBBLE (brief T3.15): hostile fire flattens on the dome; allied fire leaves.
     if (game._domes && game._domes.length && domeBlocks(game, this)) return this._impact(game, false);
+    // ⚠ A THROWN CAR IS A TARGET (manual §47). Tested BEFORE the foe check on purpose: the interesting
+    // case is the prop arriving at your face, so the shot has to meet the car before it meets you.
+    // ⚠ `_flung` is only ever populated under an open sky, so in the city this is one length check on
+    // an empty array — the whole feature is unreachable there rather than merely switched off.
+    if (game._flung && game._flung.length && game.hitFlung(this.caster, this.pos, this.radius + 1.5, this.damage * this.caster.powerBuff)) {
+      return this._impact(game, false);
+    }
     const foe = game.overlapFoe(this.caster, this.pos, this.radius + 1.5);
     if (foe) {
       if (this.boomerang) {   // clip them and keep flying — both passes hurt
@@ -933,7 +940,10 @@ class BeamHose {
               if (!blocked && press > hold * 1.8 && f._beamPressT > 0.45) {    // the weak get BLASTED off their feet
                 f._beamPressT = 0;
                 f.vel.x += this.dir.x * 34; f.vel.z += this.dir.z * 34; f.vel.y += 11;
-                f.launchT = 1.1;                                               // walls become weapons (slam physics)
+                // ⚠ this writes launchT directly instead of going through takeDamage, so it has to
+                // know about the dimension's longer window itself or a beam-launch would brake three
+                // times sooner than a punch-launch in the same fight (manual §47).
+                f.launchT = f._chaseKb ? PW_KB.window : 1.1;                   // walls become weapons (slam physics)
               }
             } else f._beamPressT = 0;
           }
@@ -942,6 +952,12 @@ class BeamHose {
           game.particles.burst(hx, hy, hz, { count: 2, speed: 12, life: 0.3, size: 2, color: ['#fff', this.color], dir: { x: this.dir.x, z: this.dir.z }, spread: 1.4 });
         }
       }
+      // ⚠ A BEAM CUTS A THROWN CAR TOO (manual §47). The same one door as the projectile path, so a
+      // flung prop cannot be shootable by one weapon class and not another — but tested against the
+      // TIP ONLY, not the whole polyline: a sustained beam sweeping across the sky would otherwise
+      // shear anything that drifted near any part of its length, and the shot you want to reward is
+      // the one you PUT on the object. Empty array in the city; one length check.
+      if (game._flung && game._flung.length) game.hitFlung(c, this.tip.position, this.radius + 2.5, this.dps * c.powerBuff * dt);
       // tip fx + muzzle fx  (read tip from mesh — the damage loop reused the _v temp)
       const tp = this.tip.position;
       if (Math.random() < 0.8) game.particles.burst(tp.x, tp.y, tp.z, { count: 3, speed: 16, life: 0.3, size: this.radius * 1.6, color: ['#fff', this.color, this.color2], drag: 3 });

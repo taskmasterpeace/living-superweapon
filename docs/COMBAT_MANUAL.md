@@ -2678,3 +2678,202 @@ a normal sky. 6/6, 0 errors. Ref `wwa-powerworld-space.png`.
 ⚠ **What this is NOT, and is not claimed:** arriving somewhere. At the top of the climb you are in space
 over PowerWorld; the seamless handoff to the interplanetary layer is still owed, and doing it as a cut
 would undo the one property that makes the climb worth having.
+
+---
+
+## §47 · THE GROUND IS AMMUNITION, AND THE PUNCH SENDS THEM (2026-07-27)
+
+Robert named exactly two things missing from POWERWORLD, and both are in this section. Everything
+here is gated on `f._chaseKb` / `f._openSky`, which only the `powerworld` mode sets — **the city game
+is the game it was**, and the last part of this section is the evidence rather than the promise.
+
+### 47.1 · "THEY GO FLYING BACK REALLY FAR" — and why the last pass did not get there
+
+> *"you punch them or you blast them and they go flying back really far — that's one thing that we're
+> missing in PowerWorld."*
+
+The chase-loop drag exception already existed and was already documented as a 4× win. It was also
+**tuned against a number a real punch never produces.**
+
+`_chaseKb` was calibrated on a SYNTHETIC 101 u/s impulse — 16.1u in the city against 60.3u here, and
+both figures reproduce exactly on the committed harness. But driving the real melee path
+(`chargeStart` → `chargeRelease` → `coneFoe` → `takeDamage`), a **RAGE haymaker on SOL leaves at 49.2
+u/s** — less than half the test impulse — and carried **26.0u**. That is 2.7 body lengths: the man you
+just hit as hard as you can is still standing in front of you. **No drag coefficient could have fixed
+that, because the quantity being multiplied was half of what the test assumed.**
+
+So the dial has four positions and they are four different jobs (`PW_KB` in `core/util.js`):
+
+| knob | now | what it is for |
+|---|---|---|
+| `kb` | **2.2** | the horizontal impulse. This is the one that makes a hit LOOK big |
+| `launch` | **1.45** | the vertical, deliberately lower. At parity every punch is a pop-up and the fight climbs instead of crossing the stage — floaty, not violent |
+| `drag` | **0.5** | the launched drag class (city 6.0; the thrown-body slide class is 1.3) |
+| `window` | **2.6s** | how long `launchT` — the exception AND the slam arming — runs |
+| `catchK` | **52** | ×`kb` = the intercept line. See 47.2 |
+
+Measured through the real punch, and the city control is the row that matters:
+
+| | before | after |
+|---|---|---|
+| **POWERWORLD** — RAGE haymaker on SOL | 26.0u · peak 49.2 u/s | **143.9u · peak 103.8 u/s** (15.0 body lengths) |
+| **THE CITY** — the identical punch | 7.2u | **7.2u** |
+| a synthetic 101 u/s launch, POWERWORLD | 60.3u | **147.7u** |
+| a synthetic 101 u/s launch, THE CITY | 16.0u | **16.0u** |
+
+⚠ **THE LAUNCHED CLASS IS ITS OWN COEFFICIENT NOW.** It was borrowing the thrown-body slide class
+(−1.3) because a thrown body and a launched body look alike. They are not the same event: a thrown
+body was AIMED and is meant to land somewhere, while a launched body is being SENT AWAY, and how far
+it goes is the readout of how hard it was hit.
+
+⚠ **AND A LAUNCHED BODY WAS BRAKING ITSELF BY WALKING.** `move()`'s open-sky 3-D branch has always
+excused `launchT`; the 2-D branch never did. So a grounded victim who touched the stick had their
+knockback clamped straight back to walking speed — the long carry defeated by the single most likely
+thing anyone does after being hit. Scoped to `_chaseKb`; the city keeps its clamp exactly.
+
+⚠ **`launchT` IS WRITTEN DIRECTLY IN ONE OTHER PLACE** — the beam pressure ladder's BLASTED-off-your-
+feet branch (§9). It has to know about the longer window itself, or a beam launch brakes three times
+sooner than a punch launch in the same fight.
+
+### 47.2 · THE INTERCEPT LINE HAD TO MOVE WITH IT
+
+`game.intercept` refuses a body travelling faster than `CATCH_SPD = 132` (§46) — ESF's own accident
+made deliberate: the biggest hit is not automatically the best hit. **Multiply the impulse and leave
+that line alone and every launch becomes uncatchable, which silently deletes a mechanic that shipped
+the day before.** So the line is DERIVED (`catchK × kb` = 114.4 u/s) and one dial moves both.
+
+⚠ **AND IT IS ASSERTED AGAINST A DISTRIBUTION, NOT ONE STAGED HIT.** Setting the line above anything
+achievable is the same failure wearing a number. The same haymaker landed on five different fighters
+spreads out, because `kbMul` is `(metal ? 0.72 : 1) × (1.22 − strength × 0.047)`:
+
+| TITAN | SOL | RAGE | VEGA | GALE |
+|---|---|---|---|---|
+| 70.6 | 103.8 | 104.3 | 109.6 | **132.7** |
+
+The line falls inside that spread, so **who you hit decides whether you can chase them**: knock an
+armoured heavyweight back and you can blink after them; a light fighter is gone.
+
+⚠ My first version of this check sampled launch speeds from 90 seconds of AI-vs-AI. It passed, then
+returned **zero launches** on the next run because the two bots simply never closed. *A check whose
+subject is whether two AIs feel like fighting is not a check.*
+
+### 47.3 · DESTROY IT, PICK IT UP, THROW IT
+
+> *"imagine if Bid For Power, you could destroy something, pick it up, and throw it at the other
+> person. And the other person could be throwing little energy blasts at whatever you're throwing at
+> them before it hit them."*
+
+**Almost all of this already existed and none of it was reachable.** `grabProp` / `throwProp` /
+`updateCarry` / `updateThrowArc`, the weight ladder, the arc preview and the carry-slowdown were all
+finished — and the PowerWorld stage registered **every rock as COVER and nothing as a PROP**, so the
+dimension had scenery to hide behind and nothing to pick up, one array away from the whole feature.
+It also registered its cover with `hp: 1e9`, i.e. it declared itself indestructible.
+
+Three fixes, all in the stage:
+
+- **Loose rock lives in `world.rocks`**, which is where `propInReach` actually looks. A prop is
+  deliberately NOT cover (you would be hiding behind something you are about to be holding) — the
+  same convention the forest tiles already follow.
+- **Spires and boulders are destructible**, on the city's own hp formula (`70 + volume × 0.0075`) so
+  a spire costs about what a building of its size costs. A number already balanced against every
+  weapon in the game, rather than a second one invented for the stage.
+- **Breaking one leaves rubble you can throw**, sized from the volume of what broke. A monolith out
+  of a boulder is free tonnage; a hillside that always drops shards makes destruction pointless.
+
+#### THE RUBBLE LADDER — derived from the roster, not chosen
+
+`liftCapacityOf` across all 52 fighters is sharply bimodal (p10 0.14t · p50 1.26 · p75 17.9 · max
+87.9), so evenly spaced tonnages would have put four rungs inside one cluster. Each rung is placed to
+split the roster somewhere different, and size is DERIVED from weight (`s ∝ w^⅓`) rather than authored
+beside it — the silhouette is the only way a player reads tonnage before trying to lift it.
+
+| | SHARD | STONE | CHUNK | SLAB | BOULDER | MONOLITH |
+|---|---|---|---|---|---|---|
+| tonnes | 0.12 | 0.45 | 1.3 | 4.8 | 20 | 60 |
+| radius | 1.72u | 2.67 | 3.80 | 5.87 | 9.45 | 13.62 |
+| **who can lift it (of 52)** | **49** | **31** | **25** | **20** | **13** | **3** |
+
+**Three fighters can lift nothing here at all**, and that is the floor working rather than a bug: the
+bottom of the roster lifts 0.10t and the lightest shard is 0.12.
+
+⚠ **A ROCK IS THE ONE PROP WITH NO FIXED SIZE, so it is the one that carries its own tonnage.** A car
+is a car and a plane is a plane; `PROP_WEIGHT.rock` stays the fallback and every city rock still reads
+exactly 0.5t. (The taxonomy's `object-mass` node called `PROP_WEIGHT` "a constant per prop kind, not a
+per-object field" — for rocks it now is.)
+
+#### ...AND THEY CAN SHOOT IT OUT OF THE AIR
+
+This is the half that did not exist in any form. A thrown prop was a **closure inside a vfx entry** —
+a mesh nothing else in the engine could see — so there was nothing for a blast to hit.
+
+It is a record on `game._flung` now, and **`game.hitFlung` is the one door**, so a projectile, a beam
+and anything added later break a flung car by the same rule and the number can only be tuned in one
+place. HP is the weight ladder again (`16 + tonnes × 20`): a shard is two blasts, a car is four, an
+airliner is not getting shot down by anything hand-held.
+
+- **The thrower's own side cannot break it.** Blowing up your own throw is not a play, and letting
+  splash from your second shot detonate your first would make throwing self-defeating.
+- **Tested BEFORE the foe check** in the projectile loop — the interesting case is the prop arriving
+  at your face, so the shot has to meet the car before it meets you.
+- **A beam tests its TIP only**, not its whole polyline: a sustained beam sweeping the sky would
+  otherwise shear anything that drifted near any part of its length, and the shot worth rewarding is
+  the one you PUT on the object.
+- **Bots do it too**, under the two laws they must obey: LINE OF SIGHT (honesty — no shooting a rock
+  through a spire) and a REFLEX DELAY off their own `ai.reflex` (fairness — nerves, not precognition).
+  They aim at where it IS, not where it will be, which is why they hit about a third of the time.
+  Robert described the exchange in both directions; a bot that could only ever EAT a thrown boulder
+  would make half of this single-player-only.
+
+⚠ **AND THE ROCKS THEMSELVES WERE TRANSPARENT TO GUNFIRE.** The stage's cover records were missing
+`r` and `h` — every other cover record in the engine has them, `projectiles.js` tests
+`hypot(...) < c.r + radius && pos.y < c.h`, and `x < undefined` is false. So all fifteen spires
+stopped BODIES and let every bullet, blast and beam straight through. Shooting a thrown rock down is
+meaningless in a world where the rocks are transparent. The defect was a half-filled record, not a
+missing guard, so it is fixed at the registration.
+
+⚠ **REGISTERING `mesh` TURNED THE TOWER CUTAWAY ON FOR THE STAGE**, which is right — behind a chase
+camera a rock between the lens and your fighter must fade — but the fade holds a CLONED material
+keyed on the cover record, so a stage closing mid-fade would strand that clone in `world._fades`
+pointing at geometry about to be disposed. Cleared on close, same family as the news crew's revoked
+frames: *the state outlives the thing*.
+
+⚠ **A COVER RECORD MAY NOW OWN ITS OWN DEATH** (`c.onShatter`, checked first in `shatterBlock`). The
+city version reads `c.mesh`, `c.crack`, `c.y0` and calls `districtAt`, none of which a venue's rock
+has — so without the hook a destructible stage would have to fake those fields or fork the choke
+point. No city cover carries `onShatter`, so the line is inert everywhere else.
+
+⚠ **THE RUBBLE SHIPPED BLACK AND A SCREENSHOT CAUGHT IT.** I coloured it `STAGE.rockDark` — and that
+file's own header warns, in capitals, that `rockDark` is the ACCENT because simultaneous contrast
+against a bright sky drags a mid-brown down hard. A shattered spire's rubble read as holes punched in
+a pale sunlit floor. Six green assertions about tonnage could not see it. Ref `wwa-pw-rubble.png`.
+
+### 47.4 · THE EVIDENCE THAT THE CITY IS UNCHANGED
+
+> *"DO NOT CHANGE THE GAME! ONLY POWER WORLD! the rest of the game stays the same."*
+
+Every reader is gated on `f._chaseKb`, `f._openSky`, `c.onShatter` or a `game._flung` array that only
+an open sky ever fills. Four call sites take a fallback instead of a flag, and those are the ones a
+claim of "provably identical" actually rests on — so they are driven rather than reasoned about:
+`rk.w || PROP_WEIGHT.rock`, `rk.s || 2.8`, `rk.color || '#8d8577'`, and a rock's thrown damage, which
+evaluates to exactly the old constant 14 at 0.5t.
+
+Measured (`src/bench/powerworld.js`, run three times — 42 checks, 0 failures, 0 console errors):
+
+| control | result |
+|---|---|
+| the same haymaker in a city duel | **7.2u**, unchanged |
+| a 101 u/s launch in the city | **16.0u**, unchanged |
+| a city-shaped rock record (no `w`/`s`/`color`) hoisted through the real path | **0.5t**, and nothing registers as flung |
+| a car thrown in the city | nothing shootable registers |
+| 52 heroes × every slot, in a city duel | **364 slots fired, 0 console errors** |
+| city sim cost, batch-timed 3000 frames | **0.680 ms/frame** — the previously documented figure is 0.679 |
+| after a PowerWorld match: flags · flung list · `BANDS` · cover · props · skins · cutaway ledger | all restored, all zero |
+
+⚠ The city sim reproducing **0.679 → 0.680 ms** on the same harness technique is the strongest single
+piece of that evidence: not an argument that nothing changed, but the same number coming back.
+
+### 47.5 · WHERE THE DIAL IS
+
+`LSW.PW_KB` in the console, live: `LSW.PW_KB.kb = 3` takes effect on the next hit, and `catchK`
+follows it so the intercept trade cannot break. `LSW.pwSuite()` re-runs all 42 checks. The starting
+positions and what each does are the table in 47.1.

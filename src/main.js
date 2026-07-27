@@ -22,6 +22,7 @@ import { Soundscape } from './core/soundscape.js';
 import { validateRoster } from './engine/abilityMeta.js';
 import { validateVis, applyDtypes } from './data/visual.js';
 import { TYPES } from './engine/abilities.js';
+import { PW_KB } from './core/util.js';   // the POWERWORLD knockback dial — tunable live from the console
 import { loadCareer, saveCareer, clearCareer, newCareer, genSlate, acceptCfg, resolveOffer, restWeek, payClinic, fmtMoney } from './data/career.js';
 import { CareerUI } from './engine/careerUI.js';
 import { cityList } from './data/cities.js';
@@ -514,8 +515,11 @@ window.addEventListener('error', (e) => { if (e && e.error) game.reportError(e.e
 window.addEventListener('unhandledrejection', (e) => game.reportError(e && e.reason, 'promise'));
 
 // expose for debugging + performance benchmarking
-window.LSW = { dev, comic, game, hud, ROSTER, runSlot, performEvade, input, tutorial, netplay, uinav, soundscape, SETTINGS, KEYMAPS, playOpening, hands: { handsOf, selectHand, cycleHand, handLabel }, creator: { ui: creator, freshPicks, buildDef, tally, validate, saveCustom, deleteCustom, loadCustoms } };
+window.LSW = { dev, comic, game, hud, ROSTER, runSlot, performEvade, input, tutorial, netplay, uinav, soundscape, SETTINGS, KEYMAPS, playOpening, PW_KB, hands: { handsOf, selectHand, cycleHand, handLabel }, creator: { ui: creator, freshPicks, buildDef, tally, validate, saveCustom, deleteCustom, loadCustoms } };
 window.LSW.runBenchmark = (opts) => runBenchmark(game, hud, opts);
+// POWERWORLD's own suite (manual §47) — the throwable/destructible stage, the knockback dial, and
+// the city-is-unchanged control. Lazy so the bench never costs the boot a byte.
+window.LSW.pwSuite = async (opts) => (await import('./bench/powerworld.js')).pwSuite(game, hud, opts);
 if (location.search.includes('bench')) {
   addEventListener('load', () => setTimeout(async () => {
     const r = await runBenchmark(game, hud);
