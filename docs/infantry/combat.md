@@ -284,9 +284,9 @@ and adaptability/variation."* Their aiming doctrine:
 That last line is the game in miniature: the dodge is timed against the **enemy's fire delay**, not
 against the bullet.
 
-### The per-projectile physics fields — CONFIRMED
+### The per-projectile physics fields — CONFIRMED at engine level
 
-Every weapon carries these ([weapons DB](https://www.cs.hmc.edu/~jhsu/infantry/weapons.html)):
+The player-facing dump ([weapons DB](https://www.cs.hmc.edu/~jhsu/infantry/weapons.html)) exposes:
 
 ```
 Fire Delay / Reload Delay / Ammo Capacity / Ammo Per Shot / Energy Cost
@@ -294,6 +294,50 @@ Fire Angle / Friction (%/s) / Muzzle Velocity / Lifetime
 Wall Bounces / Floor Bounces / Proximity Radius / Ballistic (Yes|No)
 Damage: {Kinetic, Explosive, Plasma, Gas/Chemical, Armor Piercing, Energy Drain} × {Inner, Outer, Blast Radius}
 ```
+
+The engine's actual `.itm` projectile schema (`Assets/Itm/ItmInfo.Projectile.cs`, 0-based CSV index):
+
+```
+muzzleVelocity[101]  gravityAcceleration[102]  horizontalFriction[93]  inheritedSpeed[94]
+horizontalBounceSpeed[103]  bounceCount[104]
+floorBounceVerticalSpeed[105]  floorBounceHorizontalSpeed[106]  floorBounceCount[107]
+proximityRadius[108]  triggerWeight[109]  aliveTime[110]
+fireDelay[54]  fireDelayOther[55]  maxFireDelay[56]  reloadDelayNormal[58]  reloadDelayPartial[59]
+ammoCapacity[33]  ammoUsedPerShot[32]  prefireDelay[68]  reliability[69]
+terrain0EnergyCost .. terrain15EnergyCost[36..51]   ← per-terrain firing cost
+antiEffectsRadius[134] antiEffectsRecharge[135] antiEffectsFire[136]
+antiEffectsThrust[137] antiEffectsRotate[138]      ← EMP, per-subsystem
+6 damage channels × {Radius, Inner, Outer, Mode}[151..174]
+```
+
+**Real values decoded from shipped `bughunt.itm`:**
+
+| Weapon | muzzleVel | gravity | wall bounces | floor bounces | proxRadius | fireDelay | reload | ammo |
+|---|---|---|---|---|---|---|---|---|
+| Sniper Rifle | **15000** | 0 | 0 | 0 | 0 | 2000 ms | 3000 ms | 1 |
+| Assault Rifle | **7000** | 0 | 0 | 0 | 8 | **220 ms** (~4.5/s) | 1500 ms | 30 |
+| LAW (rocket) | **5000** | 0 | 0 | 0 | 10 (triggerWeight 50000) | 850 ms | 2500 ms | 1 |
+| Hand Grenade | **2000** | **−22** | **5** | 1 (vert 750 / horz 650) | 0 | 200 ms | 1500 ms | 1 |
+| Flamethrower | **2000** | 0 | 0 | (1000/1000) | 16 | 200 ms | 2000 ms | 8 |
+
+Three things fall out of that table:
+
+1. **A 7.5× muzzle-velocity spread** between the sniper and the grenade — travel time is a primary
+   design axis, not a rounding detail.
+2. **Gravity is opt-in per projectile.** Only the thrown grenade has it (`−22`; the zone default is
+   `[Level] Gravity`, documented as `-25 = default`). Everything else flies flat.
+3. **Wall bounces and floor bounces are separate counters with separate speed retention.** The
+   grenade bounces off walls five times at 65% horizontal speed but off the floor only once, at 75%
+   vertical / 65% horizontal. That asymmetry is what makes a grenade skitter down a corridor rather
+   than bounce like a ball.
+
+⚠ `aliveTime` came back **negative** on every weapon decoded (−100 to −400). The sign convention is
+unknown — do not assume it maps directly to the player-facing "Lifetime" seconds above.
+
+**EMP is per-subsystem.** `antiEffectsRecharge` / `antiEffectsFire` / `antiEffectsThrust` /
+`antiEffectsRotate` are four independent suppressions on one projectile. A weapon can stop you
+*recharging* without stopping you *shooting*, or freeze your rotation while leaving your thrust — a
+much finer instrument than a generic stun.
 
 - **`Ballistic: Yes`** = thrown/arcing (grenades, grenade launcher). `Fire Angle: 33 d` on the frag
   grenade is its launch arc. Bullets are `Ballistic: No`, `Fire Angle: 0 d`.
@@ -359,11 +403,35 @@ combat happens in the shield layer; health is a small brittle thing underneath i
 No passive health regen. Ever. You carry **one** Stim Pack (`Max Allowed(Hard): 1`) or you find a
 Medic.
 
-### Six damage types — CONFIRMED
+### Six damage channels — CONFIRMED, and the count is fixed in the engine
 
-`Kinetic · Explosive · Plasma · Gas/Chemical · Armor Piercing · Energy Drain`
-([weapons DB](https://www.cs.hmc.edu/~jhsu/infantry/weapons.html)). Note that **Energy Drain is a
-damage type in its own right**, sitting on the same table as kinetic — see §5.
+The CTF zone showed `Kinetic · Explosive · Plasma · Gas/Chemical · Armor Piercing · Energy Drain`
+([weapons DB](https://www.cs.hmc.edu/~jhsu/infantry/weapons.html)). BugHunt's `.veh` armour block
+names them `Kinetic · Explosive · Electronic · Psionic · Bypass · Drain`.
+
+**They are the same six slots, renamed.** The engine hard-codes **exactly six damage channels** —
+every projectile has six `{Radius, Inner, Outer, Mode}` groups (`ItmInfo.Projectile.cs:151–174`),
+every vehicle has six armour channels × four parameters (`.veh` Elements 10–33,
+`Assets/Shared/ArmorValues.cs`) — and each zone supplies **display names** via
+`[DamageType] Name0..Name5`. BugHunt ships `Name0=Kinetic, Name1=Explosive, Name2=Armor Piercing`.
+
+That is a genuinely good piece of architecture: **six fixed channels, zone-authored labels.** A
+sci-fi zone calls slot 3 "Psionic", a modern-military zone calls it "Incendiary", and the engine,
+the armour tables and the balance maths never change.
+
+⚠ The 1:1 mapping of channel index to display name is **INFERRED** — six schema channels, six name
+slots, six armour channels is a clean correspondence, but no document states it explicitly. Likewise
+**"Bypass" is almost certainly the shield-piercing channel and "Drain" the shields-only channel**,
+matching the manual's *"Some weapons are capable of bypassing sheilds and other weapons only attack
+the players sheilds"* — but that is my reading, not a cited fact.
+
+Each armour channel carries four parameters, not one: **`Self Ignore`, `Pass Ignore`,
+`Self Reduction`, `Pass Damage`** (`Docs/Veh/Shared.txt:10-33`) — i.e. flat-ignore and
+percentage-reduction, computed separately for damage *to the vehicle* and damage *passed through to
+the occupant*. That second axis is how a bunker protects the man inside it.
+
+Note that **Energy Drain is a damage channel in its own right**, sitting on the same table as
+kinetic — see §5.
 
 > *"Most game modes contain at least two damage types: Energy and Kinetic. **Energy shots are usually
 > better at draining the target's Energy while Kinetic typically drains more Hit Points.**"*
@@ -395,15 +463,31 @@ And they invert your matchups. Against the **SiG Arms m2 AS** auto-shotgun, Cara
 PF gives you 3 hits, IDF gives you 3 — but IDF drops the eventual per-hit damage curve much faster.
 ([armor analysis](https://www.cs.hmc.edu/~jhsu/infantry/armor.html))
 
-### Healing and respawn — CONFIRMED
+Health itself is `.veh` **Element 7** (`VehInfo.cs:53 public int Hitpoints`). Shipped BugHunt values:
+**Marine, Medic and Sergeant are all `HP=100`, `Weight=10000`** — that zone made every class equally
+fragile and differentiated them on strafe thrust and kit instead.
+
+### Healing and respawn — CONFIRMED, with the exact respawn formula
 
 - **Medikit:** *"Heals all friendlies in an area over a period of time. Requires 1 Tsolvy Crystal per
-  use."* Deluxe version costs 5 crystals. Area-of-effect, resource-consuming, Field-Medic-only.
+  use."* Deluxe version costs 5 crystals. Area-of-effect, resource-consuming, Field-Medic-only. At
+  engine level a medic's tool is **item type 11, `RepairItem`** (`ItmInfo.cs:62`); BugHunt ships
+  `"MediKit"` as type 11.
 - **Stim Pack:** *"an ampule of stimulant and HyperCortisone that allows the user to heal a small
   amount of damage. **These are created by Medics.**"* — a medic *manufactures* the consumable other
   players carry.
-- **Respawn:** at the team drop ship, which is also the shop, plus *"a dynamic portal system
-  [that] allows for fast warping to enemy/home"* ([freeinfantry.com](https://www.freeinfantry.com/)).
+- **The ground can heal you.** Per-terrain `HealthRate=Health Recharge Rate` and `RepairRate=Vehicle
+  Repair rate` in `[Terrain0..15]` (`iceHelp.cfg`) — a tile type can be a med bay, or a hazard.
+- **Respawn delay = `[Timing] EnterDelay × 10 ms`** — CONFIRMED in the server source:
+  ```csharp
+  if (player._deathTime != 0 && now - player._deathTime > _server._zoneConfig.timing.enterDelay * 10)
+  ```
+  `ZoneServer/Game/Arena/Arena.cs:581`. Shipped: **BugHunt `EnterDelay=800` → 8.0 s**;
+  **BoomBallX `EnterDelay=150` → 1.5 s.** A single zone-level dial, and the spread across shipped
+  zones is **5.3×** — a co-op survival zone makes death cost eight seconds, a sports zone a second
+  and a half.
+- **Where:** the team drop ship, which is also the shop, plus *"a dynamic portal system [that] allows
+  for fast warping to enemy/home"* ([freeinfantry.com](https://www.freeinfantry.com/)).
 - **Spawn camping** was solved with **invincible turrets**: *"Invincible Sentry Guns also defend the
   spawn points in many game modes to discourage Spawn Camping."* ([TV Tropes](https://tvtropes.org/pmwiki/pmwiki.php/VideoGame/InfantryOnline))
 
@@ -427,6 +511,40 @@ This is the system. Here is the developers' own 1999 description, in full:
 > ...**Some weapons are capable of bypassing sheilds and other weapons only attack the players
 > sheilds.**"
 > — [Infantry manual, v0.25, Harmless Games](https://freeinfantry.com/history/infantry/iomversion25.htm)
+
+### ⚠ But the exact shield formula is NOT fully resolved — read this before copying it
+
+Two authoritative sources describe **two different models**:
+
+- **The manual (v0.25 beta) says PROPORTIONAL MITIGATION.** At 50% energy you block 50% of incoming
+  damage; energy is a *percentage multiplier* on damage reduction.
+- **`iceHelp.cfg`, the CFG editor's own key documentation, says DEPLETING POOL:**
+  ```
+  [Soul]
+  EnergyShieldMode=Energy shields are enabled. Energy takes damage before affecting health. (1=Yes, 0=No)
+  ```
+  i.e. energy is a buffer consumed *before* HP — closer to a conventional overshield.
+
+**The server emulator parses `energyShieldMode` (`CfgInfo.Soul.cs:32`) and then never reads it.** The
+damage/shield resolution lived in the **closed-source client**, so the emulator cannot settle it and
+neither can I. And ⚠ **shipped zones set `EnergyShieldMode=2`, a value `iceHelp` does not document at
+all** (it claims 1/0 only) — so there is at least one behaviour in production that nobody wrote down.
+
+Shipped values (decoded from real zone `.cfg` files):
+
+| Zone | `EnergyDefaultMax` | `EnergyDefaultRate` | `EnergyShieldMode` |
+|---|---|---|---|
+| BugHunt | 400000 | 100 | **0** (off) |
+| BoomBallX | 400000 | 100 | **2** |
+| GB_avp_hw | 600000 | 250 | **2** |
+
+Note **the shield can be switched off entirely per zone** (BugHunt, a co-op PvE zone, runs mode 0) —
+confirming at engine level what Giant Bomb described for Skirmish (§5, end).
+
+The CTF zone's armour tables are the strongest evidence for the *shape* of the shipped behaviour,
+and they are consistent with proportional mitigation plus a per-weapon threshold (see BREAK, below).
+**I would build the manual's proportional model.** But the honest statement is: the exact curve is
+unrecovered.
 
 ### The rule in one line
 
@@ -459,6 +577,12 @@ weakest armour — and *"All of the Infiltrator's weapons take energy to use, wh
 more vulnerable target in small skirmishes."* ([Giant Bomb](https://giantbomb.com/wiki/Games/Infantry)).
 Fire the Particle Accelerator twice and you are at zero energy, standing still, with 50 HP and no
 shield. That trade is the class.
+
+⚠ At engine level the firing cost is **per terrain type**: `terrain0EnergyCost` … `terrain15EnergyCost`
+(`ItmInfo.Projectile.cs:36-51`), plus `secondShotEnergy` / `secondShotTimeout` for a distinct
+follow-up cost. **The same weapon can cost different energy to fire depending on what you are
+standing on** — a design lever I have not seen anywhere else and did not find used in any zone I
+could inspect.
 
 **2. Running equipment — a continuous per-second drain.** This is the part everyone misses:
 

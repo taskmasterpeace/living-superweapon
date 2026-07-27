@@ -934,6 +934,42 @@ So: a vehicle (DeathBoard, $10,000) is the mining tool, the ore is on **conteste
 player is the designated miner, and the ore he brings back is what lets the engineer build turrets.
 **That is a complete supply chain from map control to fortification.**
 
+### 5.3b There was a whole RTS economy layer — **CONFIRMED**
+
+Beyond the CTF mining loop, the engine grew **team inventory and production facilities** [REL]:
+
+- v0.66 (Jan 2000) admin `"*teamprofile = ... will list target players team-inventory totals."`
+- v0.82 (May 2000) `"resource-centers/production facility support added. Type ?resources to see your
+  teams inventory in applicable game types (not currently used)."`
+- v0.83 `"added more support for production facilities"` · v0.84 `"finished implementing building
+  logic dependencies"` · v0.88 `"keyboard shortcuts added to production center menus"` and
+  `"fixed server bug to prevent facility production queue overflow"`
+- v1.29 (2001) `"enhanced ?resources command to show team assets as well (try it in the Rogue Trader
+  zone)"` · v1.34/v1.35 reworked `"the reward structure in RTS games"`
+
+So a **build queue, building dependencies and a shared team stockpile** all shipped. ⚠ Note v0.82's
+parenthetical — the feature existed for a year and a half before a zone used it. Infantry routinely
+shipped engine capability ahead of content.
+
+**Player-run supply lines were real**, not a feature — the shipped engineer macro buys in bulk and
+dumps for the squad [LOD]:
+```
+?buy Ammo Rifle:#400, Ammo Shotgun:#200, Light HE:#50, Rocket:#40, ...
+?drop Ammo Rifle:100
+?drop Ammo Shotgun:40
+?drop Light HE:25
+?drop Rocket:20
+```
+
+### 5.3c Death and loot — **CONFIRMED as optional**
+
+Gear generally survived death — the squad doctrine assumes constant dying and rebuying only
+expendables [PLY]: *"Death is just another way to get to the Dropship without wasting energy."*
+Dropping loot on death was an added, zone-configurable feature: [REL] v1.22 (Jun 2001) `"added
+support for dropping prizes upon death"`; v1.28 `"enhanced multi items to be able to expand child
+items upon dropping… can be linked to vehicle deaths"`; v1.14 `"made utility devices turn off upon
+death."` ⚠ Which live zones enabled it is UNVERIFIED.
+
 ### 5.4 Medical items are resource-fed too — **CONFIRMED**
 
 | Item | kg | $ | Effect [WDB] |
@@ -1099,18 +1135,33 @@ attended… It DOES NOT mean that the person has incredible dueling skills."*
 
 ## 8. WHAT I COULD NOT FIND
 
-1. **A raw `.itm` file.** Everything numeric here comes from one fan site's *dump* of an item file,
-   not the file itself. The `InfantryOnline/Zone-Assets` repo exists but I did not retrieve a parsed
-   item file from it.
-2. **The 200+ figure.** War World's own comments cite "Infantry Online's 200+ weapon armory." The
-   zone I found dumps **156 items total**, of which roughly **95 are weapons**. Either another zone
-   was bigger, the count aggregates across zones, or the figure is folklore. **I could not source
-   "200+" to anything.**
+1. **~~A raw `.itm` file~~ — FOUND.** See §1.6. Remaining gap: I parsed **one** of the 278 archived
+   item files. The `Zone-Assets` repo also holds **280 `.veh`** files I did not parse, which is where
+   the vehicle roster (§8.7) actually lives.
+2. **The 200+ figure.** War World's own comments cite "Infantry Online's 200+ weapon armory."
+   The fan-site dump is **156 items** (~95 weapons); the real `ctfpl.itm` is **492 rows**, but that
+   counts both halves of every two-part weapon plus staff/event items. **The closest honest number is
+   261 class-6 projectiles in CTFPL** [ITM]. Other zones are much bigger — `Complete Zones/sub/sub.itm`
+   is **956 KB** against CTFPL's 291 KB. So "200+" is *defensible* but I could not source it directly.
 3. **The damage-type rename.** I could not find the config key that maps engine `Electronic/Psionic/
    Bypass/Energy` to zone `Plasma/Gas-Chemical/Armor Piercing/Energy Drain`. The slot alignment is
    strong evidence but not proof.
 4. **`Sub-Weapon Count` semantics.** Clear for shotguns (10 pellets) and the Micro Missile Launcher
-   (6). I cannot explain why most rifles carry 2.
+   (6). I cannot explain why most rifles carry 2. Likely related to the class-8 → class-6 `-MAIN`
+   two-part structure (§1.6), but I did not confirm it.
+4b. **The `%` prefix in Skill Logic** (§1.7). Operators `| & ! ()` are decoded; `%N` is not.
+4c. **Armour `Percent` scale.** `Carapace` stores `KinPct 150` [ITM] where the dump prints
+   `20.0 %` [WDB]. The two files are different revisions, so I could not derive the conversion.
+4d. **Negative `Alive Time`** (`-300` on the AR, `-600` on the sniper) [ITM]. Positive on mines. Some
+   flag, meaning unknown.
+4e. **Skill and attribute prices.** Classes are purchasable Skill items, but CTFPL sets them all to
+   $0 (a league zone), and no source gives a real price from a normal zone. The "different pricing
+   schemes… for attributes and skills" [REL v0.39] are named and never described.
+4f. **Kill/objective payout rates.** Bounty is described qualitatively with only the **30000 cap**
+   surviving [REL v0.71]; the accrual rate, the assist fraction and the per-terrain reward
+   percentages were all level-designer config and no zone's config surfaced.
+4g. **XP thresholds and rank names.** Confirmed to exist as "a text representation of your experience
+   points level"; no zone's ladder survives.
 5. **`Damage Mode` values.** Elements 155/159/163/167/171/175 are integers with no documented
    enumeration. I do not know what mode 0 vs 1 vs 2 does.
 6. **The 16 terrain types.** Every weapon has `Terrain 0..15 Energy Cost` [SRV]. I found no list of
@@ -1264,7 +1315,65 @@ slow, Kuchler is light and expensive, Kamenev is cheap and crude. **Same damage.
 money to War World's brand axis and the brands stop being flavour text and start being a decision —
 without adding a single point of damage to the game.
 
-### 9.10 DO NOT steal
+### 9.10 STEAL — the vehicle sets the *weight budget*, not the speed
+
+⚠ **The best single idea I found, and it is three lines in a 1999 manual** (§3.2): the M1 jetpack
+lets you carry **30 kg** before slowing; the Hoverboard starts slowing at **10 kg**. The vehicle does
+not make you faster — **it changes the weight at which you begin to lose speed.**
+
+Why this is better than a speed multiplier: it *retroactively reprices your entire loadout*. Picking
+the hoverboard doesn't make you fast, it makes you fast **only if you stay light**, so the vehicle
+choice reaches back into every weapon and ammo decision you already made. One number, and two
+vehicles produce genuinely different players out of the same armoury.
+
+For War World: if vehicles or movement kit ever land, give them a **carry budget** rather than a
+speed stat, and the ~200 weapons instantly mean something different depending on what you're riding.
+
+### 9.11 STEAL — `:#N` top-up purchasing, and macros that ARE loadouts
+
+Two ideas, both nearly free:
+
+1. **`?buy item:#N` means "top me up TO N"**, not "add N" ([REL] v0.98, §3.3). That single `#` is why
+   one key rebuys correctly after any death, regardless of what survived. A resupply UI built on
+   "add N" needs the player to do subtraction; built on "up to N" it needs nothing.
+2. **The loadout system was the chat-macro system** (§4.3). `?buy` is a chat command, so a stored
+   chat macro *is* a stored loadout — 24 slots, no separate loadout UI, and the same slots carry
+   comms barks with live tokens like `%coord` and `%count[Tsolvy Crystals]`. **One feature, two jobs.**
+
+### 9.12 STEAL — bounty that rises while you live
+
+[MAN]: *"your bounty goes up gradually the longer you stay alive and increases every time you get a
+kill"*, capped at **30,000** [REL v0.71]. ⚠ **The player who is winning is worth more money to kill.**
+That is rubber-banding with no rubber band — it is an *incentive*, so the comeback is something the
+losing team chooses to go and take, not something the game hands them. It also makes a streaking
+player a visible objective, which generates fights instead of stalemates.
+
+Cheap companion: **income scaled by terrain held** ([REL] v0.57). Map control pays. War World has a
+city with districts; a "this ground pays better" number is a one-line way to make position matter.
+
+### 9.13 STEAL — split the shop entry from the ballistics
+
+`Maklov AR mk 606` (class 8, 109 fields) is the thing you buy; `Maklov AR mk 606-MAIN` (class 6, 227
+fields) is the thing that flies (§1.6). One purchasable weapon can reference several projectile
+definitions as firing modes.
+
+⚠ **For a *generated* armoury this is the important one.** War World generates ~200 weapons as
+families × brands × Mk tiers. If the shop entry and the projectile are one object, every alt-fire,
+every pellet pattern and every payload variant multiplies your row count. Split them and you generate
+a modest set of *projectiles* and a larger set of *weapons that combine them* — which is how Infantry
+got 261 projectiles into a zone without 261 hand-authored guns.
+
+### 9.14 CONSIDER — a class is a skill is a body
+
+Infantry has no class system (§4.1b). You buy a **Skill item**; the skill carries a **default
+vehicle**; that vehicle **is your on-foot soldier**. Class stats are vehicle stats; class gear access
+is item logic passing. Nothing in the engine knows what a "class" is.
+
+⚠ Marked CONSIDER rather than STEAL because War World may not want classes at all. But if it ever
+does, this is the version that costs nothing: no class enum, no per-class code path, and adding a
+class is adding a row.
+
+### 9.15 DO NOT steal
 
 - **227 elements per item.** Roughly 90 of them are the five HSV-shifted graphics blocks and three
   sound blocks. Infantry needed that because it was compositing 2D sprite blobs; War World is

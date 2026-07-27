@@ -161,7 +161,7 @@ of a rights clearance, since Valve requires it — but nobody has published the 
 
 ### There was real currency, and it was called cash
 
-Three independent confirmations that money was a first-class, server-side, persistent player property:
+Four independent confirmations that money was a first-class, server-side, persistent player property:
 
 1. The moderator command `*cash` — "Sent privately it will **grant target player the specified
    amount of cash**."
@@ -183,7 +183,7 @@ you are near an enemy when he is killed by a teammate you get a small amount of 
 'assist'. This helps get rid of some of the frustration of stolen kills."
 ([1999 manual, v25 guide](https://www.freeinfantry.com/history/infantry/iomversion25.htm))
 
-⚠ That bounty rule is a *self-balancing* design and it is worth stealing (§steal). A player who
+⚠ That bounty rule is a *self-balancing* design and it is worth stealing (see WHAT WAR WORLD SHOULD STEAL). A player who
 survives and racks up kills becomes progressively more valuable to kill. The game applies pressure
 to the leader automatically, with no rubber-banding and no hidden handicap — it is entirely legible
 to everyone.
@@ -301,7 +301,7 @@ statistical tracking" as an account-level property.
 ⚠ **This is what let a stranger host a zone without the game losing coherence.** A zone operator gets
 to run their own economy and ladder — they cannot inflate the *global* one, because there isn't one.
 Identity is central and authoritative; progress is local and disposable. If you are building
-community-hosted anything, copy this split exactly (§steal).
+community-hosted anything, copy this split exactly (see WHAT WAR WORLD SHOULD STEAL).
 
 ### Which zones had RPG progression
 
@@ -392,7 +392,7 @@ callout system**: press a key, your team gets "enemy flagger DEATHBRINGER at G7 
 live values. No voice chat, no ping wheel — a text templating language.
 
 ⚠ This is the best idea in Infantry that nobody copied. It is not a chat feature; it is a *tactical
-information protocol* that the player composes themselves. Steal it (§steal).
+information protocol* that the player composes themselves. Steal it (see WHAT WAR WORLD SHOULD STEAL).
 
 ### Leagues: five separate competitions, each with its own website and its own zone
 
