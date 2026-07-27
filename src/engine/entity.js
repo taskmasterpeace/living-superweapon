@@ -24,6 +24,9 @@ export const TIER_COLORS = ['#ffffff', null, '#ffd24a', '#ffedb0', '#ffffff'];  
 let _fid = 1;
 const _anchor = new THREE.Vector3();
 // flight tuning — levitation model: hold to rise, release to HOVER, descend key to sink.
+// THE OPEN-SKY GLIDE. One coefficient for all three axes, so releasing the stick decays the same way
+// whichever direction you were going — see `move()` and the `_openSky` coast branch. PowerWorld only.
+const AIR_DRAG = 1.8;
 const FLY_RISE = 46, FLY_SINK = 26, FLY_TAKEOFF = 19, FLY_HOVER_BOB = 3.2;   // rise 30→38 (2026-07-24 feel pass: 'flying is really slow'); SINK stays 26 — it is the deck-servo speed cap
 
 // ---- weapon models — one registry, every archetype: mounts on the DRIVEN fist meshes so
@@ -1335,7 +1338,7 @@ export class Fighter {
           // swoop instead of a lift arriving at a floor.
           // ⚠ AND NO SOFT FLOOR. `groundY + 2.6` is an invisible updraft at the bottom of an empty
           // sky: fly low and something you cannot see pushes back.
-          this.vel.y *= Math.exp(-1.5 * dt);
+          this.vel.y *= Math.exp(-AIR_DRAG * dt);   // the SAME number the horizontal axes use
           this._climbBand = bandAt2(this.pos.y); this._deckSnap = -1;
         } else {
           // HOVER = DOCK. Releasing the button eases you onto the CURRENT band's deck — never
@@ -1388,7 +1391,19 @@ export class Fighter {
     // it was tuned with (the ropes, the ring-out rule and every wall slam are calibrated against
     // the short knockback). Whether the long one should become global is a feel call, not mine.
     const launched = this._chaseKb && this.launchT > 0;
-    const dragF = Math.exp((this._slideT > 0 || this._thrownT > 0 || launched ? -1.3 : -6) * dt);
+    // ⚠ THE TWO AXES HAVE TO AGREE. Releasing the stick under an open sky now COASTS vertically at
+    // −1.5 while the horizontal axes still snapped at −6: let go while climbing and you kept rising
+    // but stopped dead sideways, which is a stranger sensation than either behaviour on its own.
+    // ⚠ AND MOMENTUM IS HALF OF WHAT MAKES A SWOOP A SWOOP. A flier who stops the instant they stop
+    // pressing has no weight; the reference carries you through and out the other side, which is
+    // exactly the manoeuvre pass-through was added for. −2.4 in the air here, unchanged everywhere
+    // else — on foot, in the city, and for anyone standing on the ground.
+    // ⚠ ONE NUMBER FOR BOTH AXES (`AIR_DRAG`), because "the two axes have to agree" is not a comment,
+    // it is a value. At −2.4 horizontal against −1.5 vertical a swoop carried 12u — 1.25 body lengths,
+    // which is a nudge, not a manoeuvre. Matched at −1.8 it carries about two body lengths and is
+    // still travelling when it gets there, which is what makes overshooting a real cost.
+    const glide = this._openSky && this.flying;
+    const dragF = Math.exp((this._slideT > 0 || this._thrownT > 0 || launched ? -1.3 : glide ? -AIR_DRAG : -6) * dt);
     this.vel.x *= dragF; this.vel.z *= dragF;
     this.vel.y = clamp(this.vel.y, -160, 70);       // never let launches/lift escape
 

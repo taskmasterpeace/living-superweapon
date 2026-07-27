@@ -3063,11 +3063,35 @@ export class Game {
       // framing doing a flight controller's job. Locked = straight at them; unlocked = the camera is
       // the only thing that knows where you want to go, so it is the basis.
       let fwx, fwy, fwz;
-      const L = p.hardLock;
-      if (L && L.alive) {
-        fwx = L.pos.x - p.pos.x; fwy = L.pos.y - p.pos.y; fwz = L.pos.z - p.pos.z;
-        const ll = Math.hypot(fwx, fwy, fwz) || 1; fwx /= ll; fwy /= ll; fwz /= ll;
+      // ⚠ THE LOCK LIVES ON THE GAME, NOT ON THE FIGHTER. `this.hardLock` is what T, the click path,
+      // the reticle and the facing rule all read; `p.hardLock` is nothing at all, so this steered off
+      // the camera every time and only looked correct in a harness that had set the wrong field.
+      const L = this.hardLock;
+      const ld = L && L.alive ? Math.hypot(L.pos.x - p.pos.x, L.pos.y - p.pos.y, L.pos.z - p.pos.z) : 0;
+      // ⚠ A LOCK STEERS THE APPROACH, IT DOES NOT HOLD YOU ON TOP OF THEM. Steering all the way in
+      // means that the moment you arrive, "forward" flips to point back the way you came and you
+      // oscillate around them — measured, a swoop reached 3.2u and then sat there rocking instead of
+      // coming out the far side. Inside `PASS`, the lock lets go of the wheel and your own heading
+      // carries you through. That is the whole swoop: committed approach, then you are past them and
+      // have to turn around like anybody else.
+      // ⚠ THE HEADING IS LATCHED ON THE WAY IN, NOT RE-DERIVED. Reading the live velocity inside the
+      // pass window is not enough: closing on a target bleeds speed, so by the time you were inside it
+      // you were often under the threshold and fell back to a camera that points straight at them —
+      // measured, the swoop parked at 10-16u and rocked back and forth on the boundary. Latching the
+      // direction you ARRIVED with makes the punch-through unconditional and repeatable.
+      const PASS = 16;
+      if (L && L.alive && ld > PASS) {
+        fwx = (L.pos.x - p.pos.x) / ld; fwy = (L.pos.y - p.pos.y) / ld; fwz = (L.pos.z - p.pos.z) / ld;
+        p._swoop = null;
+      } else if (L && L.alive) {
+        if (!p._swoop) {
+          const s = Math.hypot(p.vel.x, p.vel.y, p.vel.z);
+          p._swoop = s > 4 ? { x: p.vel.x / s, y: p.vel.y / s, z: p.vel.z / s }
+                           : { x: (L.pos.x - p.pos.x) / (ld || 1), y: (L.pos.y - p.pos.y) / (ld || 1), z: (L.pos.z - p.pos.z) / (ld || 1) };
+        }
+        fwx = p._swoop.x; fwy = p._swoop.y; fwz = p._swoop.z;
       } else {
+        p._swoop = null;
         const cf = _v.set(0, 0, 0); this.world.camera.getWorldDirection(cf);
         fwx = cf.x; fwy = cf.y; fwz = cf.z;
       }
