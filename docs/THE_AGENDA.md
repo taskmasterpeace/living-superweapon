@@ -129,9 +129,14 @@ or Infantry's documented behaviour?"*, and the gate —
 
 ## NOT A LOOP, AND DO NOT MAKE IT ONE
 
-**The LSW replacement.** 688 references across 84 files, `AscendantId` is a closed union, and the
-Passport is not proven. Parallel agents that cannot see each other will fight over a type union.
-**Sequential, typechecker-driven** — which is its own kind of loop, and a better one for this job.
+**The LSW replacement.** ⚠ **Re-measured 2026-07-27** — this line used to say *"688 references across
+84 files"* and that number was attached to the wrong symbol. `AscendantId` (`src/sim/types.ts:86`) is
+a closed union of **40 members · 67 occurrences · 19 files**; the actually-large thing is the `lsw`
+system at **1,146 occurrences · 108 files** (`rg -o "lsw" src tests`). Both conclusions survive the
+correction and the reason is stronger, not weaker: parallel agents that cannot see each other will
+both add a valid union member and the merge will silently keep one. **Sequential,
+typechecker-driven** — which is its own kind of loop, and a better one for this job.
+See `docs/LOOPING.md` §5 W2/W3 and §7B on why an uncited number is a rumour.
 
 ---
 
