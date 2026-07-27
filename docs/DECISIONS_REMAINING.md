@@ -7,7 +7,33 @@ is still OPEN, ordered by what blocks the most.*
 
 ---
 
-## A. BLOCKS THE BIG WAR WORLD PUSH — decide before coding
+## A. ANSWERED 2026-07-27 (was blocking) — now build notes
+
+| was | ruled |
+|---|---|
+| How do rooms connect? | **A SHORT CORRIDOR** between rooms. May vary with architecture later; short is the first-person default. |
+| 12 or 18 squares? | **Cannot be decided on paper — he has to SEE it.** *"I gotta see it in game, and that's why I think we're ultimately gonna need a map maker."* ⚠ Ascension already HAS one (ATLAS, `/atlas.html`, standalone, with a live 3-D preview and a validator). Adopt it rather than build a second. |
+| Do science missions gate the LSWs? | **YES.** The science layer must exist before an LSW can appear. |
+| Soldier ceiling on 0–100? | **19 IS RIGHT AND TRAINED OPERATORS DO NOT GO HIGHER.** ⚠ *"You need drugs, or a medical procedure, to go higher"* — and drugs are not in the game yet. That is a whole content lane sitting behind one number, and it is the cleanest possible reason for a soldier to ever exceed a human ceiling. |
+
+### ⚠ WAR WORLD'S MELEE IS NOT ASCENSION'S MELEE
+Ruling 13 said Ascension's melee goes across the board. Refined 2026-07-27: **the SUBSTRATE crosses,
+the moveset does not.** War World keeps its shift-sprint-forward (*"I like that"*), and needs:
+- **SUBMISSIONS** — a hold that drains life slowly rather than a burst of damage
+- **THE HOSTAGE RULE** — while A is grappling B: **shots from the FRONT hurt the hostage, shots from
+  the BEHIND hurt the grappler.** ⚠ This is the best idea in this document. It turns every grapple
+  into a positioning problem for everyone else in the room, and it is exactly the kind of mechanic
+  that only works in a game about fireteams.
+
+### DECIMALS ON THE 0–100 SCALE? — recommendation: **no on the sheet, yes in the maths**
+Store an **integer 0–100** in the Passport; compute in floats internally. Two vocabularies give
+roughly five perceivable bands, so a decimal on the sheet is precision no player can feel and one more
+thing to keep consistent across three games. The engine can already interpolate — `data/scale.js`
+does geometric interpolation *inside* a band precisely so nine rungs mean something.
+
+---
+
+## A2. STILL BLOCKS THE BIG WAR WORLD PUSH
 
 ### A1. How do the nine base rooms connect?
 Corridors? Shared doors? Open plan? **This decides every firefight that will ever happen in that
