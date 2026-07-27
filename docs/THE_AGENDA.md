@@ -165,6 +165,69 @@ and imported rather than reimplemented.
 
 ---
 
+## ▶ THE NEXT TWO SESSIONS — paste these
+
+*Written 2026-07-27 to survive a context wipe. Two sessions, because the first is small and unblocks
+the second. **Do not skip session A** — the map maker exists to answer a look-at-it question, and
+without eyes it cannot answer it.*
+
+### SESSION A — THE HARNESS *(an hour, maybe two)*
+
+```
+Read D:\lsw\docs\THE_AGENDA.md item 0, then work in D:\git\ShootEM.
+
+Install and PIN playwright (npm i -D playwright && npx playwright install
+chromium). Prove tools/capture-screenshots.mjs runs end to end against
+npm run dev on :3400 and leaves a real frame on disk.
+
+Then make `npm run verify` mean the same thing in D:\git\ShootEM and D:\lsw:
+drive real input, assert an invariant, capture a frame. A shared CONTRACT,
+not shared code — the engines have nothing in common.
+
+Gates: npx tsc --noEmit && npx vitest run && npm run lint && npm run build
+Never git add -A. Name every file. Nothing in src/sim/ may use Math.random
+or the wall clock.
+
+Done when one command in either repo fails on a WRONG result, not just an
+absent one.
+```
+
+### SESSION B — THE MAP MAKER *(the big one)*
+
+```
+Read D:\lsw\docs\THE_AGENDA.md item 2 and ShootEm issue #149. Work in
+D:\git\ShootEM.
+
+Build the base-builder / interior editor as a NEW WAR WORLD LAB PAGE. War
+World ships 26 of them and has none for this.
+
+⚠ DO NOT PORT ATLAS from D:\lsw. Different engine, different plan format.
+COPY ITS SHAPE, which is proven: standalone page · live 3-D behind the
+panel · a validator that shares ONE rule with the generator (exported and
+imported, never reimplemented) · undo · named layouts · JSON in and out.
+
+The two rulings already made, at D:\lsw\docs\DECISIONS_REMAINING.md:14-15 —
+rooms connect by a SHORT CORRIDOR, and 12-vs-18 squares is deliberately
+UNDECIDED because Robert has to walk around one to answer it. The tool
+exists to let him answer it. Do not pick for him; make both easy to try.
+
+Gates as session A. Finish by screenshotting a built base through the
+harness from session A.
+```
+
+⚠ **First act of session B: copy those two rulings into #149 as a pointer** (file + line numbers,
+not a duplicate). They govern War World and they live in the other repo.
+
+### STILL OWED, NOT BLOCKING
+
+**The QUERENT choices.** `docs/QUERENT.md` is written and the engineering is settled — an order is a
+**drive**, not an emotion, four of seven are already in `psyche.js:174`, three are new rows. What is
+*not* done is the set of decisions Robert asked for: is Querent a dimension you travel to · do you
+join an order or hunt it · does an order replace a kit or overlay it · which order ships first. Ask
+for it when the map maker is moving.
+
+---
+
 ## THE STANDING ORDER
 
 0 and 1 are prerequisites and are small — call it a day of work between them. 2 is a decision Robert
