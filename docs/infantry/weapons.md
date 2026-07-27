@@ -50,23 +50,27 @@ testing [Massively OP, [massivelyop.com/2018/10/06](https://massivelyop.com/2018
 the tool for the config was the **Infantry CFG Editor ("ICE")**, and companion tools included
 **BlobEdit** (`.blo`/`.lvb`) and **CFSConvW** (sprite conversion) [[freeinfantry.com forum, "Infantry Editors"](http://www.freeinfantry.com/forum/viewtopic.php?f=7&t=47)].
 
-### 1.2 There are ELEVEN item classes, not one — **CONFIRMED**
+### 1.2 There are FOURTEEN item classes, not one — **CONFIRMED**
 
-`Docs/Itm/` in the server repo documents each item class as a numbered element list [SRV]:
+The first CSV column is a type code, dispatched by `switch (values[0])` in the server's
+[`dotnetcore/Assets/Itm/ItmInfo.cs`](https://github.com/InfantryOnline/Infantry-Online-Server/blob/master/dotnetcore/Assets/Itm/ItmInfo.cs) [SRV].
+The **Rows** column is how many of each appear in the real `ctfpl.itm` [ITM]:
 
-| Item class | Doc file | What it models |
-|---|---|---|
-| **Projectile** | `Projectile.txt` | Anything that fires a thing — guns, launchers, grenades, mines |
-| **Utility** | `Utility.txt` | Armour, shields, cloaks, batteries, sensors — the "worn" layer |
-| **Ammo** | `AmmoItem.txt` | Pure consumable stock |
-| **Repair** | `Repair.txt` | Medkits, engineer repair, healing |
-| **Multi-Use** | `Multi-Use Items.txt` | One item with several firing modes |
-| **MultiItem** | `MultiItem.txt` | A bundle that grants cash/energy/health/repair/experience + up to 17 item slots |
-| **Item Maker** | `Item Maker.txt` | An item that *spawns another item* in the world — deployables |
-| **Vehicle Maker** | `Vehicle Maker.txt` | An item that *spawns a vehicle* — turret kits, vehicle kits |
-| **Skill** | `Skills.txt` | The class/skill purchase — grants up to **16 skills**, 2 elements each |
-| **Control** | `Control.txt` | Takes control of another unit |
-| **Upgrade** | `Upgrade.txt` | **15 Input-Item → Output-Item pairs** — an in-place transform |
+| Code | Class | Doc file | Rows | What it models |
+|---|---|---|---|---|
+| 1 | `MultiItem` | `MultiItem.txt` | 19 | A bundle granting cash/energy/health/repair/**experience** + 17 item slots |
+| 4 | `Ammo` | `AmmoItem.txt` | 15 | Pure consumable stock |
+| **6** | **`Projectile`** | `Projectile.txt` | **261** | Anything that fires a thing — guns, launchers, grenades, mines |
+| **7** | **`VehicleMaker`** | `Vehicle Maker.txt` | 16 | Spawns a **vehicle** — turret kits, vehicle kits |
+| **8** | **`MultiUse`** | `Multi-Use Items.txt` | 69 | **The buyable weapon**, referencing projectiles as firing modes |
+| 11 | `RepairItem` | `Repair.txt` | 9 | Medikits, engineer repair, healing |
+| 12 | `ControlItem` | `Control.txt` | 1 | Takes control of another unit (`Control Distance`, `Control Time`) |
+| **13** | **`UtilityItem`** | `Utility.txt` | 36 | Armour, shields, cloaks, batteries, sensors — the "worn" layer |
+| 14 | `ItemMaker` | `Item Maker.txt` | 8 | Spawns another **item** (`Item Maker Item ID`, `Quantity`) |
+| 15 | `UpgradeItem` | `Upgrade.txt` | 18 | **15 Input-Item → Output-Item pairs** — an in-place transform |
+| **16** | **`SkillItem`** | `Skills.txt` | 27 | The class purchase — **16 skills**, 2 elements each |
+| **17** | **`WarpItem`** | `Warp.txt` | 13 | Beacons, summoners, teleport disruptors |
+| 18 | `NestedItem` | — | — | Include-another-file directive |
 
 ⚠ **This taxonomy is the real lesson, and it is the thing War World is most likely to under-build.**
 A turret is not a special case in Infantry — it is a *Vehicle Maker* item. A medkit is not a special
@@ -463,6 +467,15 @@ a weapon that only strips energy is a real weapon. War World has no equivalent c
 day. You need to be motionless to set a mine. You are limited to 5 of these mines active at once."*
 Note `Proximity Radius: 0.91 m` and `Floor Bounces: -2` on it — the mine is a projectile with a
 trigger radius, not a separate entity type.
+
+⚠ **`Trigger Weight` (Projectile element 110) means a mine can ignore light infantry and only fire
+under a vehicle** [SRV]. The same weight number that governs your loadout, your movement speed and
+whether a turret tracks you also decides whether you set off a mine. **One stat, four systems.**
+
+Note the design intent in the numbers: `Bullet Mine` is **29× lighter** (0.035 kg) and allowed **20**
+at once, but only wounds — a denial/harassment tool. AP and Plasma are lethal and rationed to 5.
+`Repulsor Mine` is Combat-Engineer-only and does no damage at all: *"Releases repulsor field, pushing
+everything in blast radius"* [WDB] — area control, not a kill.
 
 **GRENADES** — all 0.25 kg, all $150, all 300 ms fire / 1500 ms reload, all 7.26 m/s, 2.5 s life
 | Grenade | damage |
@@ -898,11 +911,11 @@ The engineer kits [WDB]:
 
 | Kit | kg | $ | Requirement |
 |---|---|---|---|
-| AutoGun Plasma Kit | 4.0 | 2,500 | Titanium Oxide |
-| AutoGun MG Kit | 4.0 | 5,000 | *"Requires 25 units of Titanium Oxide to function."* |
-| AutoGun Rocket Kit | 4.0 | 7,500 | Titanium Oxide |
+| AutoGun Plasma Kit | 4.0 | 2,500 | *"Requires **15 units of Titanium Oxide** to function."* |
+| AutoGun MG Kit | 4.0 | 5,000 | *"Requires **25 units of Titanium Oxide** to function."* |
+| AutoGun Rocket Kit | 4.0 | 7,500 | *"Requires **50 units of Titanium Oxide** to function."* |
 | Energizer Kit | 1.0 | 2,500 | — |
-| Engineer Repair Kit | **0.0** | 3,500 | — |
+| Engineer Repair Kit | **0.0** | 3,500 | *"Repairs selected vehicle/equipment. Requires **5 units of Titanium Oxide per use**."* |
 | Sentry | 2.0 | 100 | — |
 | Turret Dismantle | 0.0 | 0 | *weapon*: KIN 50/50 @0.36, 250 ms, clip 5 |
 
@@ -910,6 +923,52 @@ And the resulting emplacements exist as their own items — `AutoGun Plasma` (10
 (15 kg), `AutoGun Rocket` (25 kg), all $0 (you don't buy them, you build them) [WDB].
 
 ⚠ **`Turret Dismantle` is a weapon that removes your own structures.** Not a menu action — a gun.
+Deployed AutoGuns are also *"Pick up and slot to use"* [WDB] — retrievable via the vehicle's
+`Pickup Item ID` field — and their weight climbs **10 → 15 → 25 kg** (Plasma/MG/Rocket), which is
+what stops an engineer hauling three.
+
+**A clean cost ladder: 15 / 25 / 50 TitOx to build, 5 per repair.** Against a **150-unit carry cap**
+(§5.3) that is exactly **three Rocket AutoGuns per trip.** The cap *is* the build economy.
+
+### 5.2b A turret is a `Computer` vehicle with a real brain — **CONFIRMED**
+
+`Docs/Veh/Computer.txt` elements 203–253 [SRV], names from `VehInfo.Computer.cs`:
+
+```
+203 Rotate Speed        204 Angle Start      205 Angle Length     <- fixed traverse arc
+206 Tracking Time       207 Tracking Radius
+208 Tracking Weight Low  209 Tracking Weight High   (default 0 / 100000)
+210 Fire Radius         214 Randomize Aim    215 Obey LOS
+211 Repair Rate         212 HP to Operate    213 Remove Global Timer
+216 Energy Max          217 Energy Rate      218 Destroyable
+219 Density Radius (default 800)  220-222 Density Max Type/Active/Inactive
+224-229 Frequency + Frequency-Density caps
+230 Chained Turret Required For Building    231 ... For Operation
+232 Chained Turret ID   233 Chained Turret Radius   234 Number Required
+235 Take Ownership Logic    236 Steal Ownership Logic
+```
+
+Four of these are ideas War World has no equivalent for:
+
+- ⚠ **`HP to Operate`** — a turret does not merely die at 0 HP, it **stops firing below a threshold**.
+  That single field is what turns the Engineer Repair Kit from cleanup into a live battlefield job.
+- ⚠ **`Tracking Weight Low/High`** — a turret filters targets **by mass**. It can be set to ignore
+  infantry and engage only vehicles. The same weight number that governs your loadout governs whether
+  the gun even looks at you.
+- ⚠ **`Chained Turret`** — a heavy turret can require **N support turrets within a radius**, either to
+  *build* it or to *keep it operating*. **Kill the support and the big gun goes dark.** A power-grid
+  tech dependency, in five integers.
+- ⚠ **`Angle Start` + `Angle Length`** — a fixed traverse arc, so a turret is *emplaced facing a lane*
+  rather than being an omnidirectional dome.
+
+**Capture is real but off by default**: `LogicTakeOwnership` (unowned) and `LogicStealOwnership`
+(enemy-owned) are skill-logic strings, both defaulting to `"1&!1"` — a deliberately always-false
+expression [SRV]. Zones opt in. Captured turrets carry a `_reprogrammed` flag — which is what the
+`Reprogramming Kit` (§2.2, $6,500) is for.
+
+**Placement is rate-limited by density**, with these verbatim player-facing refusals [SRV]:
+*"You have the maximum allowed computer vehicles of this type"* ·
+*"Your team already has the maximum allowed computer vehicles in the area"*.
 
 ### 5.3 Resources are carried items with weight — **CONFIRMED**
 
@@ -984,7 +1043,34 @@ death."` ⚠ Which live zones enabled it is UNVERIFIED.
 
 The `Repair` item class backs these, with real fields: `Repair Type`, `Repair Amount`,
 `Repair Percentage`, `Repair Time`, `Repair Distance`, `Repair Self : Boolean` [SRV] — so healing is
-*amount or percentage*, over *time*, at *range*, with self-use as an explicit flag.
+*amount or percentage*, over *time*, at *range*, with self-use as an explicit flag. Runtime semantics
+from `handlePlayerRepair` [SRV]:
+
+| `repairType` | Effect |
+|---|---|
+| **0** and **2** | Health **and energy**, applied to players |
+| **1** | Vehicle repair — **also heals the `_childs`** (crew seats); Spectator vehicles excluded |
+
+| `repairDistance` | Mode |
+|---|---|
+| **> 0** | targeted single ally, range-checked |
+| **< 0** | **area heal**, radius = `−repairDistance`; `repairSelf` decides whether the caster is included |
+| **== 0** | self-heal only |
+
+⚠ **MEDICS COULD NOT REVIVE THE DEAD.** The heal path guards on it explicitly [SRV]:
+```csharp
+//Is he dead?
+if (target.IsDead) return;
+//Is he on the correct team?
+if (target._team != player._team) return;
+```
+The same `IsDead` skip runs inside the area-heal loop. **Healing the living only** — which is what
+makes the medic's *summoner* (§5.5) the real revival mechanic: you don't get raised, you get pulled
+back to the fight faster.
+
+⚠ **The teleport items have anti-abuse switches in the data**, not in code — `Warp.txt` elements 100
+and 101 are `Allow Summon Ball Carrier` and `Allow Summon Flag Carrier` [SRV]. Whether a medic can
+yank the flag runner home is a **per-item boolean a zone designer sets.**
 
 ⚠ The **`Kit` pattern is a second economy layer**: you buy a *machine that makes the consumable*
 rather than the consumable. The medic is a factory.
@@ -1003,25 +1089,105 @@ one. **Both sides' mobility is an item somebody paid for.**
 
 ---
 
-## 6. VEHICLES — **PARTIAL / LIKELY**
+## 6. VEHICLES — **CONFIRMED**
 
-### 6.1 Five vehicle classes in the engine — **CONFIRMED**
+### 6.1 Five vehicle classes, and YOUR BODY IS ONE OF THEM
 
-`Docs/Veh/` documents: **`Car.txt` · `Computer.txt` · `Dependent.txt` · `Shared.txt` ·
-`Spectator.txt`** [SRV].
+`Docs/Veh/` documents **`Car.txt` · `Computer.txt` · `Dependent.txt` · `Shared.txt` ·
+`Spectator.txt`** [SRV]. I parsed the real `ctfpl.veh` — **54 rows** [ITM]:
 
-⚠ **The class names carry the architecture**, and this is a strong reading (**LIKELY**):
-- **Car** — a driven vehicle.
-- **Shared** — a vehicle holding **multiple players**.
-- **Dependent** — a vehicle *attached to a parent* — i.e. a turret seat on another vehicle.
-- **Computer** — AI-operated. **This is what an AutoGun is.** A built turret is not a special
-  entity; it is a vehicle with a computer driver.
-- **Spectator** — the observer camera, modelled as a vehicle.
+| Class | Rows | Fields | What is actually in it |
+|---|---|---|---|
+| **2** (Car) | 41 | **454** | `Conscript`, `Infantry`, `Heavy Weapons`, `Infiltrator`, `Jump Trooper`, `Medic`, `Squad Leader`, `Engineer`, `SciOps`, `BioChem`, `Sergeant`, `Captain`, `Marauder`, `Assault Trooper`, `Dueler`, `[Event] Marine`, `[Event] Zombie` — **and** `Hoverboard`, `Jump Pack`, `Flight Pack`, `Deathboard`, `Drop Pack` |
+| **5** (Computer) | 12 | **477** | `Auto Turret-MG`, `Auto Turret-Rocket`, `Auto Turret-Plasma`, `Sentry`, `Sentry Hunter`, **`Ammo Terminal`**, `Practice MG/Rocket/Sentry/Plasma`, `Auto Taunt GG` |
+| **4** (Spectator) | 1 | 202 | `Spectator Mode` |
 
-Together, `Shared` + `Dependent` is a driver-plus-gunner system, and `Computer` is why a turret and
-a tank can share every stat field.
+⚠ **THE CLASSES AND THE VEHICLES ARE THE SAME LIST.** `Infantry` (ID 112) and `Hoverboard` (ID 105)
+are rows in the same file with the same 454 fields. This is §4.1b proven: your soldier is a vehicle,
+your class is which one you spawn as, and mounting a hoverboard is swapping one row for another.
 
-### 6.2 Player-bought vehicles — **CONFIRMED**
+⚠ **A turret is a vehicle with a computer driver** — and so is the **`Ammo Terminal`**. The resupply
+point, the sentry, the practice dummy and the auto-turret are one entity type.
+
+The server's exact enum [SRV, `VehInfo.cs:19–41`]: `Car = 2, Dependent = 3, Spectator = 4,
+Computer = 5, Nested = 6`.
+
+### 6.1b Multi-crew vehicles — **CONFIRMED as engine capability**
+
+`Dependent` is unused in CTFPL but fully implemented. **`Car.txt` elements 57–64 are
+`Child Vehicle 1..8`** — eight crew seats — and `Dependent.txt` carries the seat side [SRV]:
+
+```
+203 Child Rotate Left      204 Child Rotate Right    205 Child Parent Relative Rotation
+206 Child Angle Start      207 Child Angle Length            <- this seat's traverse arc
+208-210 Child Center Delta X / Y / Z                         <- where the seat sits
+212 Child Disable When Parent Dead    213 ... When Parent Empty
+214-216 Child Elevation Low / High Angle / Speed
+221 Graphic Occupied ...   229 Graphic Empty ...   237 Graphic Broken ...
+```
+
+A seat with **its own position offset, its own traverse arc and elevation, and separate
+Occupied / Empty / Broken sprites** is a turret a second player mans. The server instantiates them
+as real vehicles — `ArenaState.cs` walks `veh._type.ChildVehicles`, calls `newVehicle` per slot and
+sets `c._parent` / `c._parentSlot`; each child has **its own `_inhabitant` and its own health** [SRV].
+Area vehicle repair explicitly heals the children too (§5.4).
+
+⚠ **The 5-role tank is a PRE-RELEASE PROMISE, not confirmed shipped.** The archived features page
+(future tense, "will be capable") describes a tank needing a commander, gunner, driver, hull gunner
+and technical officer plus 4 passengers
+[[infantryzone.com/features2.html, archived 2000](http://web.archive.org/web/20000831030423id_/http://www.infantryzone.com/features2.html)].
+**What is confirmed is the capability** — 8 child slots, per-seat health, per-seat occupancy sprites.
+There is no passenger-count field anywhere, so passengers were probably just more `Dependent` slots.
+
+**Entering and exiting is range- and rate-gated** [SRV, `ScriptArena.cs:1111–1172`]:
+`arena.vehicleGetInDistance` proximity check · `vehicle.warpGetInDelay` cooldown · *"Can't enter dead
+vehicles"* · and on exit you are **warped clear within `arena.vehicleExitWarpRadius`** so you cannot
+get stuck inside the hull. On death a vehicle drops loot via `DropItemId` / `DropItemQuantity`, and
+`Remove Dead / Unoccupied / Global Timer` clean up wrecks.
+
+⚠ The in-fiction factions are **Titan** and **The Collective**
+[[infantryzone.com/infantryman.html, archived 2000](http://web.archive.org/web/20000831id_/http://www.infantryzone.com/infantryman.html)].
+
+### 6.2 Real vehicle stats — and they validate the fan site exactly
+
+Raw values from `ctfpl.veh` [ITM]; weight ÷1000 = kg, energy rate ÷10 = kJ/s:
+
+| Vehicle | ID | Energy Max | Energy Rate | Normal Wt | Stop Wt | Roll Top Speed |
+|---|---|---|---|---|---|---|
+| Conscript *(no skill)* | 100 | 500 | 200 | **30 kg** | 50 kg | 2800 |
+| Infantry | 112 | **600** | 250 | **45 kg** | **55 kg** | 2400 |
+| Heavy Weapons | 111 | **650** | 250 | **60 kg** | **80 kg** | **2200** |
+| Jump Trooper | 114 | **500** | 300 | **40 kg** | **50 kg** | 2900 |
+| Infiltrator | 113 | **800** | 300 | **30 kg** | **50 kg** | **3000** |
+| Medic | 115 | **500** | 250 | **50 kg** | **60 kg** | 2800 |
+| Squad Leader | 116 | **500** | 300 | **50 kg** | **60 kg** | 2800 |
+| Engineer | 110 | **500** | 250 | **60 kg** | **80 kg** | 2600 |
+| Hoverboard | 105 | 1000 | **−1** | **80 kg** | 150 kg | 3300 |
+| Jump Pack | 107 | 1000 | **−1** | 40 kg | 80 kg | 3500 |
+| Flight Pack | 106 | 1000 | **−1** | 50 kg | 100 kg | 3300 |
+| Deathboard | 108 | 500 | **−1** | **100 kg** | 150 kg | **4000** |
+| Drop Pack | 109 | 500 | 200 | 85 kg | 150 kg | 3500 |
+
+⚠ **Every one of the seven classes' battery, regen and soft/hard weight matches [CLS] exactly.**
+That is an independent validation of the whole fan-site dataset against the shipped file.
+
+Three things fall straight out of this table:
+- **`Normal Weight` / `Stop Weight` live on the VEHICLE**, confirming the 1999 manual's carry-budget
+  rule (§3.2) with shipped numbers. A Deathboard raises your soft limit to **100 kg**.
+- **Mounts have `Energy Rate −1` — no energy regeneration while riding.** Since energy is your shield
+  (§3.4), *being on a vehicle means your shield does not recharge*. That is the cost, and it is one
+  integer.
+- **Roll Top Speed matches the prose**: Infiltrator 3000 is *"fastest class on foot"*, Heavy Weapons
+  2200 is *"slowest of all soldiers"* [CLS], and the Deathboard at 4000 is the fastest thing going.
+
+⚠ The 454 fields are mostly a **16-terrain movement matrix** — `Terrain N Roll Thrust / Roll Top
+Speed / Strafe Thrust / Hyper Top Speed / Hyper Thrust / Backward Thrust / Backward Hyper Thrust`
+[SRV]. Seven movement values × 16 terrains, per vehicle. **Ground type changes how every vehicle
+handles**, and that is the same 16 terrains the weapons pay per-terrain energy costs against (§1.3).
+
+⚠ Class-body IDs appear twice (100–125 and 200–224) — almost certainly one set per team. UNVERIFIED.
+
+### 6.3 Player-bought vehicles — **CONFIRMED**
 
 | Vehicle | kg | $ | Gated to [WDB] |
 |---|---|---|---|
@@ -1034,7 +1200,7 @@ a tank can share every stat field.
 ⚠ **A jetpack is a vehicle you carry in your inventory and it costs weight.** Not a class ability —
 an item, subject to the same encumbrance as a rifle.
 
-### 6.3 Vehicle-mounted weapons — **CONFIRMED**
+### 6.4 Vehicle-mounted weapons — **CONFIRMED**
 
 The `TANK` category holds 13 weapons, all $0 (not player-purchasable — they come with the platform)
 [WDB]:
@@ -1166,18 +1332,40 @@ attended… It DOES NOT mean that the person has incredible dueling skills."*
    enumeration. I do not know what mode 0 vs 1 vs 2 does.
 6. **The 16 terrain types.** Every weapon has `Terrain 0..15 Energy Cost` [SRV]. I found no list of
    what terrains 0–15 *are*.
-7. **Named vehicle roster.** I have vehicle *weapons* and vehicle *classes*, not a list of actual
-   tanks/APCs/aircraft with their armour and crew counts.
-8. **Skill prices.** Classes are purchased Skill items with a Buy Price field, but no source gave me
-   the actual cost of buying "Combat Engineer".
-9. **Kill/objective payouts.** I never found what a kill, a flag capture or a match win paid in cash.
-   This is the biggest single gap in the economy picture.
-10. **Reliability / Recoil units.** Elements 67, 70, 71 exist; their scale is undocumented and the
-    zone dump does not print them.
-11. **Ammo resupply in the field.** Whether you could only rebuy at a base, or from a teammate/crate.
-    The `?buy` command's location requirements are unknown to me.
-12. **Whether HP regenerated.** Energy regen is documented per class (+25/+30 kJ/s). Health regen is
-    not, and `Stim Pack` / `Medikit` imply it did not.
+7. **Named tanks, APCs and aircraft.** ⚠ **CTFPL has none** — its `.veh` holds only class bodies,
+   five personal mounts and turrets (§6.1). The `TANK` weapon category and the `Squish` roadkill
+   weapon prove drivable hulls existed *somewhere*; the official features page promises *"Tanks,
+   buggies, jetpacks, hover boards, bikes, skimmers, flyers, transport craft, ambulances and even
+   tunneling machines"* — but **no source I reached gives a single named ground vehicle** (nothing
+   analogous to "M1 Abrams"). 280 `.veh` files remain unsurveyed; that is where they are.
+7b. **Whether the 5-role tank crew shipped.** The commander/gunner/driver/hull-gunner/technical-
+   officer + 4 passengers description is **pre-release, future tense**. The 8-child-slot capability
+   is confirmed; that configuration is not, and `Dependent` is unused in the zone I parsed.
+7c. **Player-built walls or barriers — NOT FOUND.** No deployable of that kind exists in any item or
+   vehicle doc. Doors, switches and portals are `.lio` *level* features, not player-built.
+7d. **Descriptions for `Deluxe Medikit`, `Stim Pack`, `Energizer`, `Tranq`, `Stunner`.** All five are
+   confirmed to exist (loadouts; `Stunner` also on the official SOE medic page; `Energizer` as a live
+   server asset name) but the weapons dump has no entries for them — it is a partial snapshot.
+   **LIKELY** they are `MultiItem`s granting `Health`/`Energy` directly (§1.2), which needs no new
+   mechanic — but that is inference from the format, not a source.
+7e. **Turret HP.** `Computer.txt` has an `HP` field; no source gives a real value. The "400 HP
+   turrets" figure is from the modern revival's Twin Peaks (Mini) blurb, not a specific AutoGun.
+8. **~~Skill prices~~ — partially closed.** CTFPL sets every skill to **$0** (league zone). A normal
+   zone's class prices are still unknown.
+9. **Kill/objective payouts.** Bounty accrues over life and per kill, capped at **30,000**
+   [REL v0.71] — but the *rate*, the assist fraction and the per-terrain reward percentages were
+   level-designer config and no zone's config surfaced. **Still the biggest gap in the economy.**
+10. **Reliability / Recoil units.** Elements 67, 70, 71 exist and carry real values in `ctfpl.itm`
+    (AR recoil `80`, sniper `100`), but the scale is undocumented and the dump does not print them.
+11. **Ammo resupply in the field.** ⚠ Partially answered: the archive contains an **`Ammo Terminal`**
+    computer-vehicle (§6.1) and squads ran `?drop` supply macros (§5.3b). Whether `?buy` itself
+    worked anywhere or only on `store` terrain is **UNVERIFIED**.
+12. **Whether HP regenerated.** Energy regen is per class (+25/+30 kJ/s); health regen is not
+    documented, and `Stim Pack` (10 hp, one carried) / `Medikit` imply it did not.
+13. **Actual HP values from the file.** `Car.txt` element 50 is `Display Health` — a display *mode*
+    (values 0/1/2), not the hit-point total. Where a vehicle's real health lives, I did not find.
+14. **The 16 terrain types remain unnamed** — they now appear in *three* places (weapon energy cost,
+    vehicle movement matrix, terrain reward percentages), which makes the missing list more annoying.
 
 ---
 
@@ -1326,8 +1514,22 @@ the hoverboard doesn't make you fast, it makes you fast **only if you stay light
 choice reaches back into every weapon and ammo decision you already made. One number, and two
 vehicles produce genuinely different players out of the same armoury.
 
+**And the shipped file proves it.** `Normal Weight`/`Stop Weight` are fields on the *vehicle*
+(`Car.txt` elements 48–49), and the real values are: on foot **30–60 kg**, Hoverboard **80 kg**,
+Deathboard **100 kg** (§6.2). Riding raises the ceiling.
+
+⚠ **The counterweight is one integer: `Energy Rate = −1` on every mount.** No shield regeneration
+while you ride. So the trade is *carry more and move faster, but you stop healing* — and because
+energy is also ammunition for half the armoury (§3.4), it silently pushes riders toward ballistic
+weapons. **One field, three consequences.**
+
 For War World: if vehicles or movement kit ever land, give them a **carry budget** rather than a
 speed stat, and the ~200 weapons instantly mean something different depending on what you're riding.
+
+⚠ Related and much cheaper: **the 16-terrain matrix**. Every vehicle carries seven movement values
+per terrain type, and every weapon carries an energy cost per terrain type (§6.2, §1.3). War World
+already has districts, roads, water and rooftops. A single "terrain class" integer that both movement
+and weapons read would make the map argue with the loadout — which is the thing Infantry does best.
 
 ### 9.11 STEAL — `:#N` top-up purchasing, and macros that ARE loadouts
 
@@ -1373,7 +1575,38 @@ is item logic passing. Nothing in the engine knows what a "class" is.
 does, this is the version that costs nothing: no class enum, no per-class code path, and adding a
 class is adding a row.
 
-### 9.15 DO NOT steal
+### 9.15 STEAL — one WEIGHT number read by four systems
+
+Weight in Infantry is not an inventory stat. The same number decides:
+1. **Your movement** — soft/hard carry band (§3.2).
+2. **Which vehicle helps you** — mounts have their own carry budget (§9.10).
+3. **Whether a turret shoots at you** — `Tracking Weight Low/High` filters targets by mass (§5.2b).
+4. **Whether a mine goes off under you** — `Trigger Weight` (§2.2).
+
+⚠ **That is the whole trick of this game's design, in one stat.** Nothing is a bespoke system;
+everything reads a number that already existed for another reason. A light infiltrator is fast
+*because* he is light, ignored by the anti-vehicle turret *because* he is light, and walks over the
+vehicle mine *because* he is light — and no code anywhere says "infiltrators are sneaky."
+
+For War World: if you add weight (§9.4), make **everything that could plausibly care about mass read
+it** rather than inventing a `stealth` flag. That is how you get emergent roles out of a generated
+armoury instead of hand-authored ones.
+
+### 9.16 STEAL — `HP to Operate` and chained turrets
+
+Two fields, both cheap, both producing behaviour War World's destructible cover cannot express:
+
+- **`HP to Operate`** (§5.2b) — a structure **stops working** below a damage threshold instead of only
+  dying at zero. It converts repair from janitorial cleanup into a live combat role, and it gives
+  attackers a cheaper win condition than destruction: *suppress it*.
+- **`Chained Turret Required For Operation`** — a heavy emplacement requires N supporting structures
+  within a radius **to keep firing**. Kill the small ones and the big one goes dark. A power grid in
+  five integers, and it makes a defensive position have a *shape* rather than being a list of guns.
+
+LSW already has destructible cover with `hp`/`maxHp` and crack overlays. Adding "below X% it stops
+doing its job" is a one-line change to anything that has a job.
+
+### 9.17 DO NOT steal
 
 - **227 elements per item.** Roughly 90 of them are the five HSV-shifted graphics blocks and three
   sound blocks. Infantry needed that because it was compositing 2D sprite blobs; War World is
