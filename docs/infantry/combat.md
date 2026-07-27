@@ -597,7 +597,9 @@ could inspect.
 | **Suit SuperCharger** | **+10.00 kJ/sec** (*"Does not increase overall capacity, but does improve recharge rate"*) |
 | Heavy Powercell | +250 kJ **capacity** (10 kg) |
 
-Source: [weapons DB](https://www.cs.hmc.edu/~jhsu/infantry/weapons.html).
+Source: [weapons DB](https://www.cs.hmc.edu/~jhsu/infantry/weapons.html). The engine fields behind
+this are **`EnergyCostPerTick`** (`.veh` Element 47 — a vehicle costs energy simply to *be* in) and
+**`HyperEnergyCost`** (sprinting, §2). Utility items grant `Recharge Rate` (`Docs/Itm/Utility.txt:35`).
 
 **Your shield generator burns your shield.** The thing that makes you tough is itself consuming the
 resource that makes you tough. Running a PF Generator, Enhanced Sensors and a Teleport Disruptor at
@@ -636,7 +638,18 @@ The 42nd's numbers: *"The Enhanced Repulsor Field Generator (ERFG) drains up to 
 ### What refills it
 
 A **per-character `pre set charge rate`** ([manual](https://freeinfantry.com/history/infantry/iomversion25.htm)),
-modifiable by the Suit SuperCharger (+10 kJ/s), plus two consumables:
+modifiable by the Suit SuperCharger (+10 kJ/s). At engine level the zone default is
+`[Soul] EnergyDefaultRate` (shipped: 100, or 250 in GB_avp_hw), overridden per class by `.veh`
+Elements 95/96/97 (`Energy Max` / `Energy Rate` / `Energy Start`) — and `iceHelp` is explicit that
+the zone value is *"Only used for default character. You should edit this in the .VEH file for
+characters."*
+
+**And the ground recharges you.** `[TerrainN] EnergyRate=Energy recharge rate` (`iceHelp.cfg`) — a
+tile type can be a recharge pad, or drain you. Combined with per-terrain firing costs and per-terrain
+movement (§2), **terrain in Infantry is a full combat parameter, not decoration.** A room can be
+authored to be slow, expensive to shoot in, and to drain your shield.
+
+Plus two consumables:
 
 > *"The Energizer gives a quick jolt of energy to the user suit. The Flux Capacitor is drained upon
 > use."* — `Max Allowed(Hard): 2`, [weapons DB](https://www.cs.hmc.edu/~jhsu/infantry/weapons.html)
@@ -647,9 +660,12 @@ modifiable by the Suit SuperCharger (+10 kJ/s), plus two consumables:
 the hard cap that makes the resource genuinely scarce, and it is why the playbook says *"don't plan
 on living beyond each 'play'."* Combat Engineers could deploy an **Energizer Kit** for the team.
 
-### What happens at zero — the death spiral is EXPLICIT
+### What happens at zero — the death spiral is EXPLICIT (but zone-level, not engine-level)
 
-Three documented consequences, each independently sourced:
+⚠ **There is no zero-energy field or handler anywhere in the engine schema** — no prose in
+`iceHelp.cfg`, no branch in the emulator. Everything below is behaviour observed and documented **in
+the CTF zone**, and it may be client-side or emergent rather than a named system. It is nonetheless
+consistently attested by three independent sources:
 
 **(a) Your shield reaches 0% and every hit lands in full.** Directly from the manual's percentage
 rule.
@@ -813,7 +829,7 @@ those actually shipped in the live zones.
 
 ---
 
-## 8. INDOOR / ENCLOSED COMBAT — **MIXED** (tactics CONFIRMED; camera/rendering UNVERIFIED)
+## 8. INDOOR / ENCLOSED COMBAT — **CONFIRMED** (tactics and the LOS system; only camera *framing* unverified)
 
 ### The single most important finding in this file
 
@@ -908,14 +924,76 @@ Nothing at range. The 20 m weapons are the room-clearing weapons.
   seen at range by turrets, or players with Enhanced Sensors"*; Enhanced Sensors gives 9.29 m
   anti-cloak, the Cloaking Unit 1.74 m cloak distance.
 
-### ⚠ How the camera handled interiors — **UNVERIFIED**
+### How interiors actually worked: LOS TYPES — **CONFIRMED (Tier A)**
 
-I could not establish this. Infantry is a fixed-scale isometric 2D sprite game with no third
-dimension to occlude, so the likely answer is that **interiors were simply drawn — there was no roof
-to remove** — and concealment was handled entirely by the fog-of-war and radar systems rather than by
-geometry hiding the player. **I found no source stating this, and I am not asserting it.** The manual
-references a line-of-sight section (`See LOS section`) that is **not present in the surviving
-archive** (`los.htm` and `iomlos.htm` both 404).
+This is the mechanism, and it is better than anything I expected to find.
+
+**Vision is a cone with a hard block-based range**, set per zone (`CfgInfo.Los.cs`), documented in
+`iceHelp.cfg`:
+
+```
+DefaultDistance = Line of Sight distance by blocks. (The blocks you see when editing a map for vision/physics)
+DefaultAngle    = Formula should be this: DefaultAngle*2 = Vision in degrees. 180 should be all around vision.
+```
+
+Shipped values:
+
+| Zone | `DefaultDistance` | `DefaultAngle` | → field of view | `Xray` | `TeamVisionDistance` |
+|---|---|---|---|---|---|
+| BugHunt | 76 blocks (1216 px) | 100 | **200°** | 0 | 3096 |
+| GB_avp_hw | 250 blocks | 180 | **360° all-round** | 0 | 1200 |
+| BoomBallX | 2048 | 360 | all-round | **1** | 5000 |
+
+So a survival-horror zone gives you a 200° cone, a sports zone gives you the whole map. Vehicles
+override it: BugHunt's Marine ships `LOS Distance=100, LOS Angle=90` — a **180° cone, narrower than
+its own zone default** (`.veh` Elements 133/134/135). **Sight is a per-class stat.**
+
+**And now the part that answers the interior question.** The engine defines **eight LOS TYPES, each
+carrying an 8×8 visibility matrix** (`CfgInfo.LosType.cs`):
+
+```
+[LosType0..7]
+  SeeType0 .. SeeType7   ← can someone standing in type X see into type N?
+  VisibleDistance        ← sight radius clamp while in this type
+  Solid                  ← does it block entirely
+```
+
+Shipped `GB_avp_hw` — a graduated ladder of interior sight radii:
+
+| LosType | `VisibleDistance` | `Solid` |
+|---|---|---|
+| 4 | **4 blocks** (64 px) | 0 |
+| 5 | **8 blocks** | 0 |
+| 6 | **12 blocks** | 0 |
+| 7 | **16 blocks** | 0 |
+
+BugHunt: `LosType0` = `VisibleDistance=-1, Solid=0` (open ground, unlimited); `LosType1` = `-1,
+Solid=1`; `LosType2` = `32, Solid=1`.
+
+**A level designer paints sight range onto the floor.** Tag a corridor `LosType4` and everyone
+standing in it is clamped to four blocks — sixty-four pixels — *regardless of the zone's 250-block
+default*. Tag the room it opens into `LosType6` and sight opens back up to twelve. And the 8×8
+`SeeTypeN` matrix means visibility is **directional and asymmetric between spaces**: you can author
+a type that can see *out* into the open but not *in* from it, which is an ambush-from-a-doorway
+primitive expressed purely as level data.
+
+That is how Infantry did enclosed combat. Not occlusion geometry, not a roof-removal camera — **a
+per-tile sight-radius field plus a room-to-room visibility matrix.** In a fixed-scale 2D isometric
+game there is no third dimension to occlude and nothing to hide behind visually, so concealment was
+made a *property of the floor you are standing on*.
+
+⚠ **INFERRED:** that low-`VisibleDistance` LOS types are specifically how buildings and rooms clamp
+sight is my reading of the shipped values — the mechanism is confirmed in source, the level-design
+intent is not documented. `DefaultXray` and `TeamSharing` are parsed by the server but appear in no
+documentation at all.
+
+⚠ **Still UNVERIFIED: how the camera framed interiors** — whether walls were drawn over you, cut
+away, or simply had no roof. No source. The manual points at a line-of-sight section (`See LOS
+section`) that is **missing from the surviving archive** (`los.htm` and `iomlos.htm` both 404).
+
+**Radar is a separate channel** and per-vehicle: `Display On Friendly Radar` / `Display On Enemy
+Radar` plus colours (`.veh` Elements 139–142), with `[Flag] CarrierOnRadar` and
+`CarrierLineOfSight` making the objective-carrier's visibility its own tunable.
 
 ---
 
@@ -1024,33 +1102,42 @@ energy, the UI has to teach it.
 
 # WHAT I COULD NOT FIND
 
-1. **The unit for `Top Speed`.** Classes are rated 1200–2000, but the manual never states the unit,
-   and projectile speeds are in m/s. **I cannot compute the ratio of player speed to bullet speed** —
-   which is the single most important tuning number in a slow-projectile game. Recovering it would
-   need the server emulator source or a measurement in the live client.
-2. **The base energy recharge rate.** The manual says every character has a *"pre set charge rate"*
-   and the SuperCharger adds +10.00 kJ/s, but I never found the baseline value for any class. Without
-   it, the whole energy economy is unquantified.
-3. **Respawn timing.** Confirmed *where* (drop ship, which is also the shop, via a ground-side
-   teleporter) but found **no respawn delay in seconds**, no death penalty beyond lost expendables,
-   and no wave-spawn rules.
-4. **The line-of-sight documentation.** The manual explicitly points at a LOS section
-   (*"See LOS section"*); `los.htm` and `iomlos.htm` both 404 in the surviving archive. **Vision
-   ranges, cone angles, and whether LOS was blocked by geometry or only by the fog-of-war system are
-   all unknown.**
-5. **How the camera handled interiors.** No source at all. See the §8 caveat.
-6. **Whether energy regenerated while taking fire**, or was suppressed on hit. This determines
-   whether sustained small-arms pressure can ever actually break a shield.
-7. **The Maklov AR mk 606's muzzle velocity** — the page truncated at that field. (Fire delay 100 ms,
-   3-round capacity, 1200 ms reload are confirmed.)
-8. **Boarding Action's actual layouts and rules** beyond the one TV Tropes sentence about magazines —
-   frustrating, because it is the zone most relevant to enclosed combat.
-9. **Reddit testimony.** `reddit.com` blocks the crawler outright; every Reddit thread on the game was
-   inaccessible. Steam and forum testimony had to carry §9.
-10. **The freeinfantry.com forums** (`/forum/viewforum.php?f=26`, the CTF board) return HTTP 500. The
+1. **THE SHIPPED ENERGY-SHIELD FORMULA — the most important gap in this file.** The manual describes
+   proportional mitigation; `iceHelp.cfg` describes a depleting pool consumed before HP. The server
+   emulator **parses `energyShieldMode` and never uses it** — the maths lived in the closed-source
+   client. Worse, production zones ship **`EnergyShieldMode=2`, a value `iceHelp` does not document**.
+   The CTF armour tables are the best surviving evidence of the *shape*, and they favour the manual.
+   I would build proportional. But it is not settled.
+2. **What happens at zero energy — at engine level.** No field, no handler, no prose anywhere in the
+   schema. The three consequences in §5 are attested for the CTF zone only and may be client-side or
+   emergent.
+3. **Whether energy regenerated while taking fire**, or was suppressed on hit. This decides whether
+   sustained small-arms pressure can ever break a shield at all, and I found nothing on it.
+4. **The unit for the manual's `Top Speed`** (1200–2000 per class). The engine works in pixels and
+   centiseconds and stores `RollTopSpeed=3000` for BugHunt foot classes, but I could not tie the
+   manual's class figures to the engine's units, so **I still cannot state the ratio of player speed
+   to bullet speed** — the single most important tuning number in a slow-projectile game.
+5. **`aliveTime` sign convention.** Negative on every weapon decoded (−100 to −400). Unknown whether
+   this is a flag, a different unit, or a sentinel.
+6. **How the camera framed interiors.** The *vision* mechanism is now confirmed (LOS types, §8) but
+   how the renderer presented a player inside a building is still unsourced.
+7. **`DefaultXray` and `TeamSharing`** are parsed by the server and documented nowhere.
+8. **Boarding Action's layouts and rules** beyond one TV Tropes sentence about magazines — frustrating,
+   because it is the zone most relevant to enclosed combat.
+9. **The Maklov AR mk 606's muzzle velocity** — the source page truncated at that field. (100 ms fire
+   delay, 3-round capacity, 1200 ms reload are confirmed.)
+10. **Reddit testimony.** `reddit.com` blocks the crawler outright; every Reddit thread on the game
+    was inaccessible. Steam and forum testimony had to carry §9.
+11. **The freeinfantry.com forums** (`/forum/viewforum.php?f=26`, the CTF board) return HTTP 500. The
     deepest tactical discussion almost certainly lives there.
-11. **Per-zone variation.** Every number in this file except the class table is from the **CTF zone,
-    c. 2000–01**. Skirmish, Bug Hunt, Io's Landing and the RPG zones had different databases.
+12. **No prose documentation exists for `.itm`/`.veh` fields at all** — only ordinal
+    `Element N : Name : Type` lists in `Docs/`. There is no `iceHelp` equivalent for weapons or
+    vehicles, and the two vehicle docs contradict each other (`Docs/Veh/Shared.txt` calls Elements
+    110–125 "Soccer Prox Terrain 0..15"; `Docs/Veh/Car.txt` calls them bare "Terrain N"). The
+    community's own `Car.txt` is **off by two** on where the terrain block starts.
+13. **Per-zone variation.** Balance numbers here are from the **CTF zone, c. 2000–01**; engine values
+    are from **BugHunt / BoomBallX / GB_avp_hw**. Every zone shipped its own database, and they
+    disagree by design — including about whether the energy shield exists at all.
 
 ---
 
@@ -1128,14 +1215,55 @@ explosives ignore shields, the tight room belongs to whoever is throwing *in*. I
 currently favour the holder, this is the lever: give attackers **bouncing, shield-ignoring area
 weapons with short range**, and holding a corner stops being free.
 
-### 6. Ricochet count as a per-weapon integer, and it is what separates indoor from outdoor guns
+### 6. LOS TYPES — paint sight radius onto the floor. This is the enclosed-combat system.
+
+If you take one structural idea from Infantry into War World, take this one. §8 has the detail; the
+shape is:
+
+- Eight **LOS types**, assigned per map tile.
+- Each carries a **`VisibleDistance`** that *clamps* sight for anyone standing in it, overriding the
+  zone default (GB_avp_hw ships a 4 / 8 / 12 / 16-block ladder), plus a **`Solid`** flag.
+- Each carries an **8×8 `SeeTypeN` matrix**: whether someone in type X can see into type N — so
+  visibility between two spaces can be **asymmetric**.
+
+This gives you, as pure level data and with no per-room scripting:
+
+- **A corridor that is genuinely claustrophobic** — 64 px of sight while the open map runs 4000.
+- **A doorway you can watch out of but not into** — the ambush primitive, expressed as one matrix
+  cell.
+- **Graduated interiors** — a lobby that sees further than a service passage, tuned by a designer
+  painting tiles rather than by an engineer writing occlusion code.
+
+War World is 3D, so you also have real occlusion available — which makes this *more* attractive, not
+less: real geometry handles what you can see *past*, and the LOS type handles how far you can see
+*at all*, which is the knob that actually decides whether a room feels tight. **They compose.** And
+pair it with the per-class override (`LOS Distance` / `LOS Angle` on the vehicle) so a scout genuinely
+sees more of a room than a heavy does.
+
+### 7. Terrain as a full combat parameter, not decoration
+
+The engine tags every tile type with, independently:
+
+- **movement** — 10 values per terrain per vehicle (friction, thrust, rotation, top speed, strafe,
+  reverse, sprint) — §2
+- **energy regen** — `[TerrainN] EnergyRate`
+- **firing cost** — `terrain0EnergyCost … terrain15EnergyCost`, **per weapon**
+- **healing / repair** — `HealthRate`, `RepairRate`
+- **sight** — the LOS type above
+
+So a single room can be authored as: slow to cross, expensive to shoot in, draining your shield,
+and blind past four blocks. **That is an encounter, written entirely in level data.** For a game
+whose strength is enclosed spaces, this is the highest-leverage system in the whole engine, and it
+costs one lookup table.
+
+### 8. Ricochet count as a per-weapon integer, and it is what separates indoor from outdoor guns
 
 `Wall Bounces` / `Floor Bounces` as a field, not a physics flag. Bullets 0, plasma 1–2, grenade
 launcher 5/5. **This one integer is what makes a weapon an indoor weapon** — a projectile that bounces
 is a projectile that works around a corner, and it gives interior fights an indirect-fire layer that
 open ground does not have.
 
-### 7. No friendly fire, but friendly bodies still block shots
+### 9. No friendly fire, but friendly bodies still block shots
 
 > *"if your shot hits an ally it will be blocked by their body, which somewhat limits the amount of
 > Bullet Hell projectile spam possible in team games."*
@@ -1144,24 +1272,30 @@ Cheap to implement, and it is the rule that stops a corridor becoming an undiffe
 team DPS. Formation matters; nobody gets punished for a teammate's mistake. In a game about doorways
 this is nearly free value.
 
-### 8. Range as `velocity × lifetime`. Delete range falloff.
+### 10. Range as `velocity × lifetime`. Delete range falloff.
 
 Two numbers per weapon, and you get a 16× range spread (5.8 m flamethrower → 327 m rail sniper) with
 no arbitrary cutoffs, no damage-over-distance curve, and a projectile whose behaviour at its
 maximum range is *visibly* the same as at point blank — it just stops existing. Players can see and
 learn every weapon's reach.
 
-### 9. Movement gates instead of accuracy penalties
+### 11. Movement gates instead of accuracy penalties — and no move-spread at all
 
-`cannot fire while moving` on the heaviest weapons is better than a spreading reticle: it is binary,
-readable at a glance by the enemy, and it converts the biggest gun into a stationary target.
+Infantry has **no move-accuracy field at all** — confirmed by grepping the whole projectile schema
+(§2). Your aim is identical sprinting and standing. In a game whose survival model is "never stop
+moving", a spread penalty would have fought the core loop every second of every fight, and they
+simply did not ship one.
+
+What they shipped instead is a hard gate: `cannot fire while moving` on the heaviest weapons. That is
+better than a spreading reticle in three ways — it is binary, it is **readable by the enemy at a
+glance**, and it converts the biggest gun into a stationary target.
 TV Tropes calls the heavy MG *"a death sentence against any decent opponents"* — that is a designer
 succeeding, not failing, because the weapon is genuinely dominant when the situation earns it.
 
 Pair it with **weight as the movement limiter** rather than a stamina bar. Encumbrance makes every
 loadout choice a movement choice, it is always visible, and there is no meter to babysit.
 
-### 10. Summon, deny-summon, and brown-out the denial
+### 12. Summon, deny-summon, and brown-out the denial
 
 The three-layer objective system in §6 is the best thing about Infantry's team play and it is almost
 free once you have energy:
@@ -1176,7 +1310,7 @@ free once you have energy:
 That third rung is the one to make sure you build. It turns a defensive structure into something with
 a *power supply you can attack*, and it gives the zero-damage utility weapons a reason to exist.
 
-### 11. Two energy consumables per life, and death is a resupply
+### 13. Two energy consumables per life, and death is a resupply
 
 **Exactly two Energizers, 200 each, 1.5 s to use.** Not a regenerating charge, not three. That cap is
 what turns energy from a bar into a decision, and it is why the playbook could write *"don't plan on
@@ -1187,7 +1321,35 @@ without wasting energy."* A short, forgiving death loop is what let Infantry's f
 and its assaults be repeatable. If War World's enclosed fights are its strength, the thing you want
 is players willing to walk into the room.
 
-### 12. Build the tutorial. This is the one thing Infantry never fixed.
+### 14. Six fixed damage channels, zone-renamable
+
+The engine hard-codes **exactly six** damage channels — six on every projectile, six on every
+armour block — and lets each zone supply **display names** (`[DamageType] Name0..Name5`). So CTF's
+"Plasma / Gas-Chemical / Armor Piercing" and BugHunt's "Electronic / Psionic / Bypass" are the *same
+slots wearing different labels*, and no maths anywhere changes between them.
+
+This is the right shape for a game that wants more than one setting or more than one map style: the
+balance surface stays a fixed 6×N table you can actually reason about, while the fiction stays free.
+Add a seventh channel and you have doubled the tuning space forever; rename slot 3 and you have
+changed nothing.
+
+Pair it with Infantry's **four-parameter armour** per channel — `Self Ignore`, `Pass Ignore`,
+`Self Reduction`, `Pass Damage` — where "self" is damage to the vehicle and "pass" is damage that
+reaches the occupant. That second axis is what makes a bunker, a cockpit or a doorway-mounted shield
+mean something specific rather than just "more HP".
+
+### 15. EMP that suppresses subsystems independently
+
+`antiEffectsRecharge` / `antiEffectsFire` / `antiEffectsThrust` / `antiEffectsRotate` — four separate
+suppressions on one projectile, each with its own radius.
+
+A weapon that stops you **recharging** without stopping you shooting is a completely different threat
+from one that stops you **rotating** while you can still run. Both are far more interesting than a
+generic stun, and in enclosed spaces they are devastating in ways that read as tactical rather than
+unfair: freeze a defender's rotation in a doorway and you have not removed his agency, you have
+removed his *facing*.
+
+### 16. Build the tutorial. This is the one thing Infantry never fixed.
 
 Every negative review, and several positive ones, say the same thing: bad UI, no tutorial, twenty-five
 years of veterans, no way in. **brized** — one of the game's most articulate defenders — asked for
