@@ -222,10 +222,58 @@ function reg(world, m, x, z, hx, hz, top, hp) {
 let _decalSeq = 0;
 export const resetDecalLadder = () => { _decalSeq = 0; };
 const decalY = (y) => (y < 1 ? y + ((_decalSeq++ % 26) * 0.014) : y);
-const disc = (ctx, mat, x, z, r, y = 0.1, seg = 26) => { const p = mesh(ctx, new THREE.CircleGeometry(r, seg), mat, x, decalY(y), z, { recv: false }); p.rotation.x = -Math.PI / 2; return p; };
+/**
+ * ⚠ DRAPE, DO NOT PLACE. A ground decal used to be a FLAT plane at ONE height — `ctx.gy`, sampled at
+ * the cell centre — while `_padCells` deliberately makes every lot a BILINEAR TILTED PLANE across its
+ * four surveyed corners. A flat plane cannot clear a tilted plane by any constant offset: measured on
+ * a mountain city, 13 of 14 flat decals crossed straight through the terrain, the worst with 96.5u of
+ * tilt underneath it. The visible result is half a plaza swallowed by the hill and the intersection
+ * line crawling as the camera moves — which is most of what Robert has been seeing.
+ * ⚠ The lift is added AFTER the sample, in world Y. That is correct here and the normal-offset idea
+ * is not worth it: at a 10% grade a normal offset buys 2% more clearance for a lot more arithmetic.
+ * What matters is that the decal FOLLOWS the ground, not the direction it is nudged.
+ */
+function drapeToGround(ctx, p, lift) {
+  const W = ctx.world; if (!W || !W.heightAt) return p;
+  const g = p.geometry, pos = g.attributes.position;
+  p.updateMatrixWorld(true);
+  const v = new THREE.Vector3(), inv = p.matrixWorld.clone().invert();
+  let any = false;
+  for (let i = 0; i < pos.count; i++) {
+    v.fromBufferAttribute(pos, i).applyMatrix4(p.matrixWorld);
+    const want = W.heightAt(v.x, v.z) + lift;
+    if (Math.abs(want - v.y) > 0.001) any = true;
+    v.y = want; v.applyMatrix4(inv);
+    pos.setXYZ(i, v.x, v.y, v.z);
+  }
+  if (any) { pos.needsUpdate = true; g.computeBoundingBox(); g.computeBoundingSphere(); }
+  // ⚠ AND REMEMBER IT. Tiles are built BEFORE the mining pits, the metro trenches and the second
+  // road grade run (world.js ~1009-1017), so a decal draped here is draped against a floor that
+  // then MOVES underneath it. The world re-drapes this list once the ground has stopped changing.
+  if (ctx.decals) ctx.decals.push({ p, lift });
+  return p;
+}
+// ⚠ THE LADDER STEPS AT `DECAL_LIFT`, NOT AT 14mm. The old rung was 0.014 — one TWENTY-FIFTH of the
+// value `core/util.js` itself calls "the smallest gap that survives" — and a second private ladder in
+// world.js used the same 0.014 and interleaved with it. Measured on FLAT ground: 21 decal pairs
+// closer together than DECAL_LIFT. A ladder finer than the law's own minimum is not a ladder.
+const decalLift = (y) => (y < 1 ? DECAL_LIFT * (1 + (_decalSeq % 6) * 0.34) : y);
+// ⚠ AND A DECAL MUST BE SUBDIVIDED TO BE DRAPEABLE. Draping only moves the vertices that exist, and
+// `CircleGeometry` is a FAN of long pie slices from one centre point — drape its rim and the middle
+// of every slice still cuts the hill. `RingGeometry(0, r, …, rings)` is the same disc WITH radial
+// subdivision. Rings are sized against the terrain lattice (~4.3u), so the decal can follow it.
+const disc = (ctx, mat, x, z, r, y = 0.1, seg = 26) => {
+  const rings = Math.max(1, Math.min(8, Math.round(r / 5)));
+  const p = mesh(ctx, new THREE.RingGeometry(0.0001, r, seg, rings), mat, x, decalY(y), z, { recv: false });
+  p.rotation.x = -Math.PI / 2; return drapeToGround(ctx, p, decalLift(y));
+};
 // a box with the facade UVs already scaled — for the structures that aren't tower()s
 const boxUV = (w, h, d, mat) => { const g = new THREE.BoxGeometry(w, h, d); scaleBoxUV(g, w, h, d, ((mat && mat.userData && mat.userData.bay) || 17) * CUR_M); return g; };
-const slab = (ctx, mat, x, z, w, d, y = 0.14) => { const p = mesh(ctx, new THREE.PlaneGeometry(w, d), mat, x, decalY(y), z, { recv: false }); p.rotation.x = -Math.PI / 2; return p; };
+const slab = (ctx, mat, x, z, w, d, y = 0.14) => {
+  const sx = Math.max(1, Math.min(16, Math.round(w / 5))), sz = Math.max(1, Math.min(16, Math.round(d / 5)));
+  const p = mesh(ctx, new THREE.PlaneGeometry(w, d, sx, sz), mat, x, decalY(y), z, { recv: false });
+  p.rotation.x = -Math.PI / 2; return drapeToGround(ctx, p, decalLift(y));
+};
 // a parked tractor — the one piece of machinery that tells you which century the farm is in
 function tractor(ctx, x, z, yaw) {
   const M2 = ctx.mats;
@@ -1371,6 +1419,20 @@ const T = {
 };
 
 // Build every cell of a generated plan into `group`. Returns { treeSpots } for the tree system.
+export function redrapeDecals(world, decals) {
+  for (const d of decals || []) {
+    const g = d.p.geometry, pos = g.attributes.position;
+    d.p.updateMatrixWorld(true);
+    const v = new THREE.Vector3(), inv = d.p.matrixWorld.clone().invert();
+    for (let i = 0; i < pos.count; i++) {
+      v.fromBufferAttribute(pos, i).applyMatrix4(d.p.matrixWorld);
+      v.y = world.heightAt(v.x, v.z) + d.lift; v.applyMatrix4(inv);
+      pos.setXYZ(i, v.x, v.y, v.z);
+    }
+    pos.needsUpdate = true; g.computeBoundingBox(); g.computeBoundingSphere();
+  }
+}
+
 export function buildTiles(world, group, plan, rng) {
   const region = plan.region || regionOf(plan.culture);
   const M2 = mats(world, region);
@@ -1389,7 +1451,7 @@ export function buildTiles(world, group, plan, rng) {
   CUR_M = M;                                             // boxUV/tower read it for the window bay
   const ctx = { world, g: group, rng, mats: M2, region, treeSpots: [], plan, M,
                 W: CELL, D: CELL, fw: 1, fh: 1, S, cell: cellSize, cx: 0, cz: 0, gy: 0,
-                LI: 1, LS: 1, LOX: 0, LOZ: 0 };     // the lot inset — set per cell just below
+                LI: 1, LS: 1, LOX: 0, LOZ: 0, decals: [] };     // the lot inset — set per cell just below
   world._pendingCuts = world._pendingCuts || []; world._pendingPits = world._pendingPits || [];
   for (let r = 0; r < plan.N; r++) for (let c = 0; c < plan.N; c++) {
     const cell = plan.cells[r][c];
@@ -1426,5 +1488,5 @@ export function buildTiles(world, group, plan, rng) {
       for (let i = p0; i < world._pendingPits.length; i++) { const p = world._pendingPits[i]; p[0] = sx(ctx, p[0]); p[1] = sz(ctx, p[1]); p[2] *= S; p[3] *= S; }
     }
   }
-  return { rockProps: ctx.rockProps || [], planeProps: ctx.planeProps || [], treeSpots: ctx.treeSpots };
+  return { rockProps: ctx.rockProps || [], planeProps: ctx.planeProps || [], treeSpots: ctx.treeSpots, decals: ctx.decals };
 }

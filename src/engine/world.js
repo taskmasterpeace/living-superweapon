@@ -13,7 +13,7 @@ const _C1 = new THREE.Color(), _C2 = new THREE.Color(), _C3 = new THREE.Color();
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { clamp, damp, setBands, DECAL_LIFT } from '../core/util.js';
 import { skyFor, worldOf } from '../data/environments.js';
-import { buildTiles , scaleBoxUV, resetDecalLadder } from './citytiles.js';
+import { buildTiles , scaleBoxUV, resetDecalLadder, redrapeDecals } from './citytiles.js';
 import { CELL, districtNameAt, thresholdPlan, ROAD, junctionAt, WATER_DEPTHS, roadClear, surveyCity, surveyAt } from '../data/cityplan.js';
 import { mulberry } from '../data/news.js';
 
@@ -945,7 +945,7 @@ export class World {
     this.doors = [];                       // the tiles re-register every entrance
     this.interiors = [];
     resetDecalLadder();          // the rung counter is per-CITY, so a long session can't drift it up
-    const { treeSpots, planeProps, rockProps } = buildTiles(this, g, plan, rng);
+    const { treeSpots, planeProps, rockProps, decals } = buildTiles(this, g, plan, rng);
     this.planes = planeProps || [];   // 24-ton props for whoever can lift them (manual §21)
     this.rocks = rockProps || [];     // loose 0.5t stones — the bottom of the same ladder
     const M = ((plan.metric && plan.metric.humanH) || 9.6) / 9.6;   // the METRIC — people size, not map size
@@ -1019,6 +1019,12 @@ export class World {
     // ROADS LAST — they drape over the finished ground, so they dip into the metro cut and
     // ride the mining spoil instead of hovering over a hole they can't see.
     this._buildRoadNet(plan, g);
+    // ⚠ NOW the ground has finished moving — relief, lot terracing, mining pits, metro trenches
+    // and BOTH road grades are all in. Every ground decal was draped during buildTiles, which
+    // runs before the last three of those, so it was fitted to a floor that then changed.
+    // Re-drape against the final terrain. This is the pass that makes 'follow the ground' true
+    // rather than nearly true.
+    redrapeDecals(this, decals);
     this.groundGeo.computeVertexNormals(); this._normalsDirty = false;
     // greenery from what the tiles asked for
     this._buildGreenery([], treeSpots, 0);
@@ -2022,6 +2028,7 @@ export class World {
       }
     }
     hits.sort((p2, q) => (p2.gap - q.gap) || (q.area - p2.area));
+    const ground = this.auditGround(opts);
     // ⚠ TWO KNOWN BLIND SPOTS, both inherent to testing axis-aligned boxes:
     //   · A MERGED or INSTANCED mesh spanning the whole map (the road classes, the grass) has a
     //     map-wide bounding box, so two of them always "overlap" even when their ribbons never
@@ -2030,7 +2037,85 @@ export class World {
     //     intersection is resolved correctly by the depth test — only near-COPLANAR surfaces tear.
     // Both over-report. Neither can hide a real fight, which is the trade worth making.
     return { surfaces: items.length, problems: hits.length, worst: hits.slice(0, 12),
-             untestable: skipped.length, untestableNames: [...new Set(skipped)] };
+             untestable: skipped.length, untestableNames: [...new Set(skipped)],
+             ground: ground.problems, groundWorst: ground.worst, groundSolids: ground.solids };
+  }
+
+  /**
+   * THE OTHER HALF OF THE AUDIT — every surface against THE GROUND ITSELF.
+   *
+   * ⚠ THIS IS THE ONE THAT WAS MISSING, AND ITS ABSENCE IS WHY THE FLICKER KEPT COMING BACK.
+   * `auditSurfaces` compares mesh AABB to mesh AABB. The terrain is ONE mesh, and on a city with
+   * relief its box spans y −13 → +122.65 — so `box.max.y` is the highest peak in the map. Every
+   * decal in the city sits more than `DECAL_LIFT` below that peak, the sorted loop breaks, and
+   * **nothing is ever compared against the ground at all**. Measured proof that the instrument was
+   * inverted: it reported FEWER problems on mountains (24) than on hills (36) while the real defect
+   * count went the other way. Every previous fix was verified against a gauge that could not see
+   * the fault, which is exactly how you "keep trying to fix it and keep getting it wrong".
+   *
+   * ⚠ IT SAMPLES TRIANGLE CENTROIDS, NOT ONLY VERTICES. A road junction fillet is an 8-triangle fan
+   * whose three corners each sit exactly `ROAD_LIFT` above the terrain while the middle of the
+   * triangle is **13 units underneath it**. A vertex-only test says that surface is perfect. Any
+   * flat triangle spanning sloped ground has this property; it is the whole reason a constant
+   * offset cannot save a coarse mesh on a hill.
+   */
+  auditGround(opts = {}) {
+    const minSep = opts.minSep ?? DECAL_LIFT, hits = [];
+    let solids = 0;
+    if (!this._gh) return { problems: 0, worst: [], solids: 0 };
+    const v = new THREE.Vector3(), a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3();
+    this.scene.updateMatrixWorld(true);
+    this.scene.traverse(o => {
+      if (!o.isMesh || !o.visible || !o.geometry || o === this.ground) return;
+      for (let p = o.parent; p; p = p.parent) {
+        if (!p.visible) return;
+        if (p.userData && p.userData.rig) return;      // a character stands ON the ground, by design
+      }
+      const g = o.geometry, pos = g.attributes && g.attributes.position;
+      if (!pos || pos.count < 3) return;
+      // ⚠ ONLY SHEETS CAN TEAR. A boulder half-buried in a hillside, a building sunk into its own
+      // terrace and a tree with its roots under the soil are all INTENDED, and the depth test
+      // resolves a solid intersection correctly — only near-COPLANAR surfaces fight. Without this
+      // the ground audit reports 300+ "problems" that are the city working as designed, which is
+      // just the old blind spot inverted: an audit that cries wolf is one you stop reading.
+      // A sheet is thin in its own Y relative to its footprint; a draped ribbon still is.
+      if (!g.boundingBox) g.computeBoundingBox();
+      const bb = g.boundingBox, gh = (bb.max.y - bb.min.y) * Math.abs(o.scale.y || 1);
+      const gw = (bb.max.x - bb.min.x) * Math.abs(o.scale.x || 1);
+      const gd = (bb.max.z - bb.min.z) * Math.abs(o.scale.z || 1);
+      const foot = Math.min(gw, gd);
+      if (!(gh <= 1.5 || gh < foot * 0.12)) { solids++; return; }        // a solid — declared, not counted
+      // ⚠ The terrain itself, the sky, the water and anything that opts out of depth are all
+      // legitimately not "clearing the ground" — skip them rather than report 400 false hits.
+      if (o === this.skyMesh || (o.name && /^(sky|water|fog|ground)/i.test(o.name))) return;
+      const mm = Array.isArray(o.material) ? o.material : [o.material];
+      if (mm.every(m => m && m.depthWrite === false)) return;
+      if (mm.every(m => m && m.transparent && (m.opacity ?? 1) < 0.02)) return;
+      let worst = Infinity, wx = 0, wz = 0, kind = 'vertex';
+      const idx = g.index, n = idx ? idx.count : pos.count;
+      const stride = Math.max(3, Math.floor(n / 900) * 3);   // bounded work on a merged city mesh
+      for (let i = 0; i + 2 < n; i += stride) {
+        const i0 = idx ? idx.getX(i) : i, i1 = idx ? idx.getX(i + 1) : i + 1, i2 = idx ? idx.getX(i + 2) : i + 2;
+        a.fromBufferAttribute(pos, i0).applyMatrix4(o.matrixWorld);
+        b.fromBufferAttribute(pos, i1).applyMatrix4(o.matrixWorld);
+        c.fromBufferAttribute(pos, i2).applyMatrix4(o.matrixWorld);
+        // the three corners AND the centroid — the centroid is what catches a big flat triangle
+        // laid across a slope, which no vertex test can see
+        for (let k = 0; k < 4; k++) {
+          if (k === 0) v.copy(a); else if (k === 1) v.copy(b); else if (k === 2) v.copy(c);
+          else v.copy(a).add(b).add(c).multiplyScalar(1 / 3);
+          const clear = v.y - this.heightAt(v.x, v.z);
+          if (clear < worst) { worst = clear; wx = v.x; wz = v.z; kind = k === 3 ? 'centroid' : 'vertex'; }
+        }
+      }
+      if (worst < minSep) {
+        hits.push({ clear: +worst.toFixed(2), at: kind,
+                    name: o.name || (o.parent && o.parent.name) || g.type,
+                    x: Math.round(wx), z: Math.round(wz) });
+      }
+    });
+    hits.sort((p2, q) => p2.clear - q.clear);
+    return { problems: hits.length, worst: hits.slice(0, 14), solids };
   }
 
   render() {
