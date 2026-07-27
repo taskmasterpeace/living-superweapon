@@ -401,7 +401,7 @@ export class World {
     this.ground = ground; this.groundGeo = groundGeo;
     // per-vertex world XZ + accumulated height (for GeoMod-style craters); local +z maps to world +y
     const pa = groundGeo.attributes.position.array; const nV = pa.length / 3;
-    this._gvx = new Float32Array(nV); this._gvz = new Float32Array(nV); this._gh = new Float32Array(nV); this._gseg = SEG;
+    this._gvx = new Float32Array(nV); this._gvz = new Float32Array(nV); this._gh = new Float32Array(nV); this._gseg = SEG; this._ghArena = this.ARENA;
     for (let i = 0; i < nV; i++) { this._gvx[i] = pa[i * 3]; this._gvz[i] = -pa[i * 3 + 1]; }
 
     // (the gold emblem ring is baked into the radial glow texture now — one draw fewer)
@@ -898,7 +898,7 @@ export class World {
     ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; g.add(ground);
     this.ground = ground; this.groundGeo = groundGeo;
     const pa = groundGeo.attributes.position.array; const nV = pa.length / 3;
-    this._gvx = new Float32Array(nV); this._gvz = new Float32Array(nV); this._gh = new Float32Array(nV); this._gseg = SEG;
+    this._gvx = new Float32Array(nV); this._gvz = new Float32Array(nV); this._gh = new Float32Array(nV); this._gseg = SEG; this._ghArena = this.ARENA;
     for (let i = 0; i < nV; i++) { this._gvx[i] = pa[i * 3]; this._gvz[i] = -pa[i * 3 + 1]; }
     // border parapets
     const wallMat = new THREE.MeshStandardMaterial({ color: '#d8d0be', emissive: '#f5b21a', emissiveIntensity: 0.22, roughness: 0.7 });
@@ -1459,7 +1459,17 @@ export class World {
   heightAt(x, z) {
     const gh = this._gh, S = this._gseg;
     if (!gh || !S) return 0;
-    const A = this.ARENA, W = S + 1, k = S / (A * 2);
+    // ⚠ THE FIELD IS INDEXED BY THE ARENA IT WAS BUILT WITH, NEVER THE LIVE ONE. This read the live
+    // `this.ARENA`, and every venue CHANGES that on the way in — the boxing hall, the base, the
+    // training hall and PowerWorld all resize it so that spawns and the news crew stay inside the
+    // room. The moment they do, every ground query maps world coordinates onto the wrong part of the
+    // heightfield: measured inside the ring in a city with relief, `_gh` was dead flat at 23.39 while
+    // `heightAt` reported 21.48 → 25.81 across the same 46u. Physics, the ragdoll floor, the ground
+    // markers and every decal were reading a floor that was not there.
+    // ⚠ It is invisible in a FLAT theatre — the Moon town the venue was built and screenshotted in —
+    // which is exactly why it survived: a mis-scaled index into a constant field returns the right
+    // answer every time. The bug needs relief to show, and most of the 1,050-city sheet has it.
+    const A = this._ghArena || this.ARENA, W = S + 1, k = S / (A * 2);
     const fx = clamp((x + A) * k, 0, S - 0.0001), fz = clamp((z + A) * k, 0, S - 0.0001);
     const c0 = fx | 0, r0 = fz | 0, tx = fx - c0, tz = fz - r0;
     const i0 = r0 * W + c0, i1 = i0 + W;
@@ -1765,6 +1775,45 @@ export class World {
   }
 
   // --- destructible terrain (GeoMod-lite): crater the ground ---
+  /**
+   * LEVEL A RECTANGULAR PAD TO ONE HEIGHT, with a sloped apron so it does not leave a cliff.
+   *
+   * ⚠ A VENUE CANNOT INHERIT THE GROUND IT LANDS ON. The boxing hall was built on whatever terrain the
+   * theatre had at the origin, and in a city with relief that is a HILLSIDE: measured across the 46u
+   * canvas, `heightAt` ran 19.7 → 28.1 — an 8.4u rise, 22 distinct heights. The canvas draws flat, so
+   * the floor the fighters actually stand on disagreed with the floor they could see, one boxer stood
+   * eight units above the other, and a corner read as someone floating outside the ropes. It only ever
+   * looked right because the reference shot was taken on the Moon, where that spot happens to be flat.
+   *
+   * Returns an undo record; pass it to `restoreTerrainPatch` to put the land back exactly.
+   */
+  levelArea(cx, cz, hw, hd, y, apron = 26) {
+    if (!this.groundGeo) return null;
+    const pa = this.groundGeo.attributes.position.array, undo = [];
+    for (let i = 0; i < this._gh.length; i++) {
+      const dx = Math.abs(this._gvx[i] - cx) - hw, dz = Math.abs(this._gvz[i] - cz) - hd;
+      const out = Math.max(0, dx, dz);
+      if (out > apron) continue;
+      const t = out <= 0 ? 1 : 1 - out / apron;                       // 1 inside the pad, easing out
+      const k = t * t * (3 - 2 * t);                                  // smoothstep, so no rim
+      undo.push(i, this._gh[i]);
+      this._gh[i] = this._gh[i] + (y - this._gh[i]) * k;
+      pa[i * 3 + 2] = this._gh[i];
+    }
+    this.groundGeo.attributes.position.needsUpdate = true; this._normalsDirty = true;
+    return undo;
+  }
+
+  /** Put back exactly what `levelArea` changed — the venue restore contract, for the land. */
+  restoreTerrainPatch(undo) {
+    if (!undo || !this.groundGeo) return;
+    const pa = this.groundGeo.attributes.position.array;
+    for (let n = 0; n < undo.length; n += 2) {
+      const i = undo[n]; this._gh[i] = undo[n + 1]; pa[i * 3 + 2] = this._gh[i];
+    }
+    this.groundGeo.attributes.position.needsUpdate = true; this._normalsDirty = true;
+  }
+
   crater(cx, cz, radius, depth) {
     if (!this.groundGeo) return;
     const pa = this.groundGeo.attributes.position.array, r132 = (radius * 1.3) * (radius * 1.3);

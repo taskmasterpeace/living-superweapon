@@ -1564,6 +1564,31 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   `hud.updateHands`) shipped: it reports `_gearHeld` (the TRUTH — what is in the fist) not `_hand`
   (the intent), and never prints a digit the active scheme hasn't freed (`KM.digitsSwap`).
 
+## THE GROUND UNDER A VENUE (2026-07-26) — "you broke the boxing stage"
+- ⚠ **`heightAt` MUST INDEX THE HEIGHTFIELD BY THE ARENA IT WAS BUILT WITH, NEVER THE LIVE ONE.** It
+  read `this.ARENA` — and **every venue changes that on the way in** (the boxing hall, the base, the
+  training hall, PowerWorld all resize it so spawns and the news crew stay inside the room). The
+  moment they do, every ground query maps world coordinates onto the wrong part of the field.
+  Measured inside the ring in a city with relief: `_gh` dead flat at 23.39 while `heightAt` returned
+  **21.48 → 25.81** across the same 46u. Physics, the ragdoll floor, the ground markers and every
+  decal were reading a floor that was not there. `world._ghArena` is stamped where the field is built.
+- ⚠ **IT IS INVISIBLE IN A FLAT THEATRE, WHICH IS WHY IT SURVIVED.** A mis-scaled index into a
+  constant field returns the right answer every time — and the venue was built and screenshotted on
+  the MOON. The bug needs relief to show, and most of the 1,050-city sheet has it. **When a feature
+  reads the terrain, test it in a theatre that HAS terrain.**
+- ⚠ **A VENUE CANNOT INHERIT THE GROUND IT LANDS ON.** Every other line of `_hideWorld` clears
+  something the city left behind — meshes, props, cover, interiors — and the LAND was the one thing
+  nobody cleared, so the ring stood on a hillside (8.4u of rise across the canvas: one boxer eight
+  units above the other, a corner reading as someone floating outside the ropes).
+  `world.levelArea(cx,cz,hw,hd,y,apron)` cuts a flat pad with a smoothstep apron and returns an undo
+  record; `restoreTerrainPatch(undo)` puts the land back exactly. Verified flat to 0.04u, restored to
+  0.00u, and no drift over three round trips.
+- ⚠ **"0 ERRORS" IS NOT "CORRECT", AND MY OWN 9-MODE SWEEP PROVED IT** — it ran boxing clean while the
+  stage was visibly broken, because nothing it asserted could see a sloped floor. The check that
+  catches this class is a **FLOOR CONTRACT**: `|groundY − heightAt(x,z)| < 0.25` for every fighter,
+  in every mode, plus flatness inside a venue. Run it after anything that touches terrain, venues or
+  `ARENA`. Same family as the venue's own lesson that no assertion can see "too dark".
+
 ## POWERWORLD — the other dimension (2026-07-26) — read `docs/POWERWORLD.md`, manual §46
 Robert's brief: a Steam Deck game that is *"basically Bid for Power"*, reached through a dimensional
 door, *"essentially a camera change and control changes"* — wide open space, no pedestrians, maps that

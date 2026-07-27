@@ -175,6 +175,16 @@ export class BoxingRing {
     // nobody can see.
     this._arena0 = W.ARENA;
     W.ARENA = VENUE.floorR + VENUE.tiers * VENUE.depth;
+    // ⚠ AND THE GROUND ITSELF, WHICH IS THE SAME CLASS OF BUG AS ALL THE OTHERS ABOVE: a venue cannot
+    // inherit the terrain it lands on. Every other line here clears something the city left behind;
+    // the LAND was the one thing nobody cleared. Measured in a city with relief, `heightAt` across the
+    // 46u canvas ran 19.7 → 28.1 — an 8.4u rise. The canvas draws dead flat, so the floor the boxers
+    // stood on disagreed with the floor you could see: one fighter eight units above the other, a
+    // corner reading as someone floating outside the ropes. It only ever looked correct because the
+    // reference shot was taken on the Moon, where that particular spot happens to be flat.
+    // ⚠ Levelled to the height at the CENTRE, so the ring stays where the camera already frames it,
+    // with a wide smoothstep apron so the hall floor does not end in a cliff. Restored on close.
+    this._land = W.levelArea(0, 0, VENUE.floorR * 0.55, VENUE.floorR * 0.55, W.heightAt(0, 0), 40);
     this._hidden = [];
     const hide = (m) => { if (m && m.visible) { this._hidden.push(m); m.visible = false; } };
     const keep = new Set([this.group]);
@@ -527,6 +537,7 @@ export class BoxingRing {
     this._lights = [];
     W.setIndoor(null);
     if (this._arena0 != null) { W.ARENA = this._arena0; this._arena0 = null; }
+    if (this._land) { W.restoreTerrainPatch(this._land); this._land = null; }   // give the hillside back
     if (this._props) { W.cars = this._props.cars; W.planes = this._props.planes; W.rocks = this._props.rocks; W.treeSpots = this._props.trees; this._props = null; }
     if (this._cover0) { W.cover = this._cover0; W.coverAll = this._coverAll0; this._cover0 = this._coverAll0 = null; W.refreshFogBoxes && W.refreshFogBoxes(); }
     if (this._int0) { W.interiors = this._int0; this._int0 = null; }
