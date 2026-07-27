@@ -623,6 +623,65 @@ have to be good enough that people still queue. That is a real feature, not a ca
 AIs and the balance all have to be right at the same time. Recommend the first door still be a
 *small* real fight — one Ascendant against one fireteam — rather than a set piece.
 
+### RULED 2026-07-27 (fifth pass) — the number that crosses genres
+
+| # | ruling |
+|---|---|
+| 24 | **EVERY STAT IS 0–100.** One scale for a military game, a superhero game and a sword-and-sandals game. *"I would love to find a unified thing that could be used in a military thing… the superhero world… and a Diablo type world."* |
+| 25 | **"Elo" is retired as a word.** The player-facing name is **POWER RANKINGS**, and it should feel like **college football rankings** — emblems, logos, a board. The maths stays on the back end where nobody has to meet it. |
+| 26 | **CHARACTER STATUS BADGES**: ACTIVE · INACTIVE · RETIRED · DEAD · **MISSING**. ⚠ **MISSING is the multiverse hook** — it means *in another universe or another timeline*. A character who walked through a door is not gone, they are MISSING. |
+| 27 | **A MELEE CAMERA.** The ring feels right but the camera is too far out. Entering melee should push in — *"a little magnifier version of it so you can manoeuvre better."* Treat melee as a camera STATE, not a new camera. |
+
+### ⚠ 6j. THE 0–100 SCALE IS THE REAL SPINE OF THE PASSPORT
+
+This is the most important ruling in the document and it deserves its own section, because it is the
+thing that makes "one character in many genres" possible at all.
+
+**A stat means nothing on its own. It only means something against a scale.** War World's numbers and
+Ascendants' numbers cannot be compared today because they are answers to different questions — one is
+"how much damage does this rifle do to a soldier", the other is "how hard does a god punch". Putting
+both on **0–100** does not merge them; it gives them a shared *ruler*.
+
+```
+   THE PASSPORT stores 0-100.        STRENGTH 74 is just STRENGTH 74.
+        ↓
+   EACH WORLD'S PROJECTION decides what 74 BUYS there:
+     WAR WORLD      74 → you lift a crate, a rifle still kills you
+     THE ASCEND     74 → you throw a car
+     A DIABLO WORLD 74 → a two-handed weapon and heavy armour
+```
+
+⚠ **And the ceiling has to be genre-independent, which is the hard part.** If 100 means "the strongest
+thing in this game", then 100 in a military game and 100 in a superhero game are different amounts of
+strength and the whole scheme collapses. **100 must mean the same thing everywhere** — pick the
+absolute (the strongest thing in the FICTION, across all worlds) and let a military game simply never
+use the top half. A soldier topping out at 30 is correct and is the point: it is what makes being
+outmatched (ruling 10) a measurable fact rather than a vibe.
+
+⚠ Ascendants already has a 1–4,999 rank ladder in `data/scale.js` with designations and lift tonnage.
+**It is not thrown away — it becomes a PROJECTION of the 0–100 number**, which is exactly the
+substrate/projection split the rest of this document describes.
+
+### 6k. THE GENRE LADDER — where this could go, in Robert's own ranking
+
+He rated his own appetite (1 = most excited):
+
+| rank | genre | note |
+|---|---|---|
+| **1.5** | **FIRST PERSON** | *"a lot of AI can already do it"* — extraction shooter, alien invasion, detective |
+| 4–5 | real-time strategy | an existing open-source RTS engine; *"take that archer into a real time strategy"* |
+| 5 | Diablo-like | an existing open-source ARPG engine |
+| 5 | 2D (Starbound-like) | least interested |
+
+⚠ **This changes what the Passport is FOR.** It is not a bridge between two games — it is the format
+that lets a character exist in engines *nobody has written yet*, including third-party open-source
+ones. That is a strong argument for ruling 2 (the contract lives in its own repo) and for keeping the
+schema plain JSON with no imports from either game.
+
+⚠ **And a pocket universe does not have to be big.** *"Maybe they all don't have to be big — maybe it
+can be a pocket universe."* A dimension can be one room with one fight in it. That is the cheapest
+possible way to prove the multiverse and it should be considered for the first door.
+
 ### STILL OPEN — smaller, but they shape the build
 
 1. **⚠ WHAT IS THE CAREER?** *(Reframed 2026-07-27 — Robert: "there is no fight ranking", so the
