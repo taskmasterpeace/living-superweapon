@@ -2929,6 +2929,17 @@ Four laws, three of them the same idea: **a thing must not outlive the match tha
 - **Nothing spawns a rival into the blue room** — `KeyB` and the `KeyN` sparring toggle both refuse
   and say where to go instead. `clearTransients` already closes the hall (the reset law).
 
+## ⚠ NEVER ESTIMATE IN WEEKS. WE WORK IN LOOPS. (Robert, 2026-07-27, direct instruction)
+> *"You say different weeks. No, we're not doing it in weeks. We doing a loop. We're not doing it in
+> weeks. **I hate when AI does that. Please stop doing that forever.** Put that in your CLAUDE.md."*
+
+Do not say "that's a different week of work", "that's a two-week project", or any calendar estimate.
+The unit of work here is **a loop** — a scoped task with a gate, run until the gate is green. Size
+things by **how many loops and what each loop's finish line is**, never by elapsed human time.
+⚠ This is not a wording preference. A week estimate is a guess dressed as a plan, it invites
+scope-cutting against a clock nobody set, and it is exactly the reflex that makes an assistant sound
+like it is managing you instead of building.
+
 ## Hard rules (do not break)
 - **`opts.hitstop ?? 0.04`, NEVER `||`** (`entity.takeDamage`). Sustained damage — beams, cones,
   lifedrain, DoT ticks — passes `hitstop: 0` deliberately. With `||`, that falsy zero became 0.04
