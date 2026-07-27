@@ -586,14 +586,50 @@ bone.
 | **Reputation** | **YES, but as TWO numbers that leak into each other.** | Fame as a registered Ascendant is not the same as a PMC's contract standing — merging them loses both. Keep both; let being famous in one open doors (and put targets on you) in the other. Richer than merging, cheaper than isolating. |
 | **Vehicles** | **NO** — ruled 12. | And the better version is §6c: a soldier drives it, an Ascendant throws it. |
 
+### RULED 2026-07-27 (fourth pass) — and one of my premises was wrong
+
+| # | question | ruling |
+|---|---|---|
+| 20 | Shared money? | **NO. Separate wallets.** *"not same money."* |
+| 21 | Shared items? | **SOMETIMES — cherry-picked.** *"I want to be able to bring items from other dimensions sometimes… let's cherry pick what we want."* The Passport carries a CURATED list, not everything a character owns. |
+| 22 | Injuries from multiplayer | **YES — it is all one life.** Even a stranger online can leave a mark that follows you home. This **overrides my recommendation**; it was mine to advise and his to decide, and he took the harder, more consistent version. |
+| 23 | What is behind the first door | **A REAL FIGHT, straight away.** Not a proving ground. |
+
+⚠ **AND HE CORRECTED A PREMISE I HAD BEEN BUILDING ON: *"there is no fight ranking."*** I had been
+treating Ascendants' Elo book / THE CIRCUIT as the career that would become the shared truth, and
+described it as the biggest undecided thing in the project. **That question was malformed.** Whatever
+progression the multiverse shares, it is not a boxing-style ranking ladder. Do not design the
+Passport's progression half around the Elo book until he says what the career actually is.
+
+⚠ **Ruling 20 + 21 together change the Passport's shape.** It is no longer "the character and
+everything they own". It is:
+
+```
+   ALWAYS CARRIES     identity · attributes · powers · progression · INJURIES
+   NEVER CARRIES      money (separate wallets per world)
+   CHERRY-PICKED      items — a curated list, decided per item, not a blanket rule
+```
+
+That is a better contract than the one I proposed, because "everything crosses" makes every future
+item in either game a balance problem in the other. A per-item decision means a new gun in War World
+is War World's business until someone deliberately says otherwise.
+
+⚠ **Ruling 22 has a consequence worth building for rather than discovering:** if online damage is
+permanent, then **griefing is now a design problem with a design answer** — consent (you agreed to a
+real fight), stakes (both sides risk it), and recovery (the clinic, time, the medical ledger) all
+have to be good enough that people still queue. That is a real feature, not a caveat.
+
+⚠ **Ruling 23 raises the bar on the first slice.** A real fight on day one means the projection, both
+AIs and the balance all have to be right at the same time. Recommend the first door still be a
+*small* real fight — one Ascendant against one fireteam — rather than a set piece.
+
 ### STILL OPEN — smaller, but they shape the build
 
-1. **⚠ WHICH CAREER BECOMES THE TRUTH?** This is now the biggest undecided thing in the project.
-   Ascendants has a persistent **Elo book**, a **medical ledger** (injuries lasting weeks) and **THE
-   CIRCUIT** (weekly slates, purses, renown, titles). War World has **its own career** plus PMC
-   contracts. Ruling 5 says one shared ledger — so one of these becomes real and the other becomes a
-   view of it, or they merge into a third thing. **Nothing about the Passport's progression half can
-   be designed until this is answered.**
+1. **⚠ WHAT IS THE CAREER?** *(Reframed 2026-07-27 — Robert: "there is no fight ranking", so the
+   version of this question that named the Elo book was malformed.)* Ruling 5 says one shared ledger
+   and ruling 20 says separate money, so what actually accumulates across both worlds? Reputation?
+   Contracts completed? Dimensions unlocked? **Nothing about the Passport's progression half can be
+   designed until this is answered**, and it should be answered in fiction first, not in code.
 2. **Authentication — build or buy?** *(This is what "build vs buy" meant: write your own login,
    password storage, sessions and account recovery, versus paying a service to do it.)*
    **Recommendation: BUY.** A hosted provider (Clerk, Auth0, Supabase Auth) is days of work; rolling
