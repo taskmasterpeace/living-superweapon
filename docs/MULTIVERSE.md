@@ -482,9 +482,58 @@ that skip the `GROUND_LAYER` ladder; whether decals offset along the surface NOR
 (**offsetting along Y on a slope converges — a constant lift is not constant separation on a hill**);
 and whether road ribbons are tessellated at the same resolution as the terrain they drape over.
 
-**Recommendation: hold the flatten until that lands.** If it says "narrow bug", fix it and keep the
-world. If it says "the ladder cannot work on slopes", flattening becomes the honest call and it will
-be made with a reason rather than a hope.
+### ⚠ IT LANDED. VERDICT: DO NOT FLATTEN — IT WOULD NOT FIX IT.
+
+Measured live: the same city (Kabul, seed 7) rebuilt at `relief: flat | hills | mountains`, sampling
+**every mesh vertex and triangle centroid against `world.heightAt`**.
+
+| | flat | hills | mountains |
+|---|---|---|---|
+| terrain spread | 13.0u | 27.3u | 135.6u |
+| `auditSurfaces` problems | 23 | **36** | **24** |
+| flat decals crossing the ground | 0 | 15 | 13 |
+| road triangles buried | 12 | 32 | 93 |
+| **decal pairs closer than `DECAL_LIFT`** | **21** | — | **5** |
+
+**A FLAT world still had 12 buried road triangles, a gap-0.00 coplanar pair, and FOUR TIMES the
+near-coplanar decal pairs of the mountain build** — because on flat ground everything piles up at the
+same height. Robert would lose relief, terracing, the survey, mining pits, the metro and bathymetry
+and still be looking at flicker.
+
+### ⚠ AND HERE IS WHY IT KEPT COMING BACK: THE INSTRUMENT WAS LYING
+
+`world.auditSurfaces()` (`world.js:1985`) reduces every mesh to one AABB. **The terrain is ONE mesh
+spanning y −13 → +122.65**, so its `box.max.y` is the highest peak in the city — and every decal more
+than 0.35u below that peak (i.e. *every decal in the city*) is never compared against the ground at
+all. The proof is in the table: it reports **fewer** problems on mountains (24) than on hills (36)
+while the real defect count goes the other way. **The instrument moves opposite to the fault.**
+
+It works correctly on the flat flagship, which is exactly why it survived — and it is the reason
+every previous fix "kept getting it wrong": they were verified against a broken gauge.
+
+### The real causes, ranked
+
+1. **The blind audit** (above) — everywhere, but only matters off-flat. **Fix first: nothing else is
+   verifiable until it is.** ~½ day.
+2. **Flat decals on tilted lots** — `ctx.gy = heightAt(cx, cz)` is ONE scalar per cell
+   (`citytiles.js:1414`) while `_padCells` deliberately makes each lot a **bilinear tilted plane**
+   (`world.js:1698`). A flat plane cannot clear a tilted plane by any constant offset. 13 of 14 cross
+   on mountains, 0 of 18 on flat. Worst tilt under a single decal: **96.5u**. ~1 day, three call sites
+   (`disc`/`slab`/lawn), and `drape()` at `roads.js:231` is already the pattern. **Biggest win.**
+   ⚠ Note: my "normal vs world-Y" hypothesis was *wrong* — at a 10% grade a normal offset gains 2%.
+3. **Junction fillets are 8-triangle fans** (`roads.js:128`) on ungraded corner ground: all three
+   vertices exactly 0.4 above the terrain, **centroid 13.04u below it**. ~1 hour.
+   ⚠ My tessellation-mismatch hypothesis was also wrong for the *ribbons* — measured interpolation
+   error 0.10u against a 0.4 lift. It is only the fans.
+4. **Two private decal ladders, both stepped at 0.014** — `citytiles.js:224` and `world.js:1072` —
+   which is **1/25 of `DECAL_LIFT`**, the value the law itself calls "the smallest gap that survives".
+   They interleave. This is the flat-ground flicker.
+5. **A gap-0.00 pair that both write depth**, present identically at every relief setting.
+6. **`vfx.scorch` never adds `heightAt`** (`vfx.js:240`) — scorch marks are buried city-wide. One line.
+
+**Items 1–3 are about two days and cover everything relief-related; 4–6 are small and independent.**
+
+**RULING RECOMMENDED: keep the terrain, fix the gauge first.**
 
 ## 6i. THE CALENDAR vs MULTIPLAYER — recommendation
 
