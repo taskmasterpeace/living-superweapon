@@ -1564,6 +1564,42 @@ The **engine is the product** — a data-driven power system. Demo-first, offlin
   `hud.updateHands`) shipped: it reports `_gearHeld` (the TRUTH — what is in the fist) not `_hand`
   (the intent), and never prints a digit the active scheme hasn't freed (`KM.digitsSwap`).
 
+## THE FLICKER, ACTUALLY FIXED (2026-07-27) — the gauge was blind
+- Robert: *"there's a lot of flickering and tearing… it's consistent, you keep trying to fix it, you
+  keep getting it wrong."* He proposed flattening every world. **Measured: flattening would not fix
+  it** — a FLAT rebuild of the same city still had 12 buried road triangles, a gap-0.00 coplanar pair
+  and **21 decal pairs closer than `DECAL_LIFT` against the mountain build's 5**, because on flat
+  ground everything piles up at the same height. Keep the terrain.
+- ⚠ **THE REASON EVERY FIX MISSED: `auditSurfaces` COULD NOT SEE THE GROUND.** It compares mesh AABB
+  to mesh AABB; the terrain is ONE mesh whose box spans y −13 → +122.65, so `box.max.y` is the highest
+  peak and every decal sits far below it, the sorted loop breaks, and nothing was ever tested against
+  the ground. Proof it was INVERTED: it reported fewer problems on mountains (24) than on hills (36)
+  while the real count went the other way. It is correct on the FLAT flagship — which is exactly why
+  it survived. **A fix verified against a broken gauge is a coin toss.**
+- **`world.auditGround()`** is the missing half: every surface sampled against `heightAt`, at triangle
+  **CENTROIDS** as well as vertices — a junction fillet is an 8-triangle fan whose three corners sit
+  exactly `ROAD_LIFT` above the terrain while the **centroid is 13u underneath it**, and no
+  vertex-only test can see that. ⚠ It separates SHEETS from SOLIDS or it is the old blind spot
+  inverted: a half-buried boulder, a building on its terrace and a tree's roots are all intended and
+  the depth test resolves them. Unfiltered it cried wolf 375 times; filtered, 8 real and 454 declared.
+- ⚠ **A GROUND DECAL MUST DRAPE, AND MUST BE SUBDIVIDED TO DRAPE.** `disc`/`slab` were flat planes at
+  ONE centre-sampled height (`ctx.gy`) while `_padCells` deliberately makes every lot a **bilinear
+  TILTED plane** — a flat plane cannot clear a tilted plane by any constant offset. And draping alone
+  is not enough: `CircleGeometry` is a fan of long pie slices, so the middles still cut through.
+  `RingGeometry(0, r, seg, rings)` is the same disc WITH radial subdivision, sized to the terrain
+  lattice. ⚠ Normal-offsetting is NOT worth it — at a 10% grade it buys 2%.
+- ⚠ **THE LADDER STEPPED AT 1/25 OF THE LAW'S OWN MINIMUM.** Two private ladders (`citytiles.js` and
+  `world.js`) both stepped at **0.014** while `DECAL_LIFT` is 0.35 — and they interleaved. A ladder
+  finer than the smallest gap that survives is not a ladder.
+- ⚠ **AND DECALS WERE FITTED TO A FLOOR THAT THEN MOVED.** `buildTiles` runs at `world.js:948`; the
+  mining pits, metro trenches and the **second** `_gradeRoads` all run at 1009–1017. `redrapeDecals()`
+  re-fits them once the ground has stopped changing.
+- **Still open, and now NAMED rather than mysterious**: ~8 sheet-vs-ground conflicts left, all
+  **seaport piers and decking** (`wood` `#7a5a3a`, container `#2a4a6a`) placed at a fixed y where the
+  shore terrain falls away. Same root cause as the decals, different call site — they go through
+  `mesh()` with an absolute height instead of `disc`/`slab`. ⚠ Also unfixed: `vfx.scorch` never adds
+  `heightAt` (`vfx.js:240`), so scorch marks are buried city-wide.
+
 ## THE GROUND UNDER A VENUE (2026-07-26) — "you broke the boxing stage"
 - ⚠ **`heightAt` MUST INDEX THE HEIGHTFIELD BY THE ARENA IT WAS BUILT WITH, NEVER THE LIVE ONE.** It
   read `this.ARENA` — and **every venue changes that on the way in** (the boxing hall, the base, the
