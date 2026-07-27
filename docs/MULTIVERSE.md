@@ -729,6 +729,77 @@ Promotion-on-demand is the pattern that makes this affordable: the crowd is chea
 becomes a character, and then it is a character. It also answers ruling 32 for free — a promoted ped
 has a `stateRing`, an aura and a figure, so mind control already has somewhere to show itself.
 
+### RULED 2026-07-27 (seventh pass) — NAMES, THE CEILING, AND THE SHIPPING PLAN
+
+| # | ruling |
+|---|---|
+| 34 | **The three dimensions are WAR WORLD · POWER WORLD · ASCENSION.** "The Ascend" is superseded — the dimension is **ASCENSION**. |
+| 35 | **The contract repo is `cof-passport`.** Small, its own repo, plain JSON, no imports from either game. |
+| 36 | **EACH SHIPS AS ITS OWN GAME.** No umbrella product. War World is War World; Ascension is Ascension. **The Passport is the quiet thing connecting them** — a feature, not a storefront. |
+| 37 | **90–100 = "THE ONES A PLANET PLANS AROUND."** Goku tier. The band is real and occupied, not headroom. |
+| 38 | **TWO VOCABULARIES THAT MEET IN THE MIDDLE** for the 0–100 bands: humans get human words (Trained · Elite · Exceptional), Ascendants get threat words (High · Extreme · Cosmic), overlapping at **30–40 where the best human meets the weakest Ascendant.** |
+| 39 | **INTERIORS AND THE BASE BUILDER ARE THE CRITICAL PATH**, ahead of the LSW swap and the crossover. |
+| 40 | **Science missions may be the gateway that unlocks LSWs.** |
+
+### ⚠ 6m. RULING 36 IS BIGGER THAN IT LOOKS
+
+"Each ships as its own game" settles the naming mess AND changes the engineering. If there is no
+umbrella build, then:
+
+- **Nothing has to merge.** Two engines, two release cycles, two audiences — an FPS crowd and a
+  superhero crowd are not the same people, and neither game waits for the other.
+- **`cof-passport` becomes the only thing that must be stable**, because it is the only thing two
+  independently-shipping products both depend on. That is a strong argument for keeping it tiny.
+- **The crossover is a FEATURE of each game**, not the product. It can ship late, ship to one game
+  first, or ship as an update — none of which is possible if the multiverse is the storefront pitch.
+
+### ⚠ 6n. THE SCALE, SETTLED
+
+The question was never "what is the strongest thing imaginable". Robert answered it himself:
+**Ascension is the top of the scale, War World is the normal band.**
+
+| band | who | vocabulary |
+|---|---|---|
+| 0–20 | every soldier — Krystal Bell, Odessa, the fireteam | **human words.** A rifle is the great equaliser here |
+| 20–40 | the best humans alive | *"Jack Bauer"* — and this is the OVERLAP where the two vocabularies meet |
+| 40–70 | most Ascendants | threat words begin |
+| 70–90 | TITAN, VANGUARD, RAGE | the ones a *country* plans around |
+| **90–100** | **the ones a PLANET plans around** | *"think Goku"* |
+
+⚠ **`data/scale.js` is not thrown away** — its 1–4,999 ladder, designations and lift tonnages become a
+PROJECTION of the 0–100 number, which is the substrate/projection split applied to itself. And its
+human ceiling is already authored: rank 19 lifts 400 lb, *"the absolute most a 20-year-old should be
+able to do"* — that is the 0–20 band's top, already decided, already in the code.
+
+⚠ **The win condition, in Robert's words: "you can have Jack Bauer and Goku in the same world with the
+passport."** Ruling 38 is what makes that legible — Bauer is not "22", he is EXCEPTIONAL; Goku is not
+"94", he is COSMIC. One ruler, two languages, no numbers on screen.
+
+### ⚠ 6o. THE BASE BUILDER — the shape, and the unsolved part
+
+Filed as ShootEm **#149**. Think XCOM, but nine cells:
+
+```
+   THE BASE     3 × 3 = 9 CELLS, each cell a ROOM you walk through
+   EACH ROOM    12 (3×4) or 18 (3×6) buildable squares — a facility occupies SEVERAL,
+                so where you put it inside the room is a real decision
+   CONNECTION   ⚠ UNSOLVED, AND IT IS THE WHOLE DESIGN — how nine rooms join decides
+                every firefight that will ever happen in this game
+```
+
+⚠ **Robert's own uncertainty is recorded, not resolved:** *"maybe 12 or 18, because we've got to be
+able to walk through it… maybe the bases should be bigger, I don't know."* Prototype both; let walking
+through them decide.
+
+⚠ **AND ASCENDANTS ALREADY HAS A BASE SYSTEM** — `data/base.js`: 9×9 on two floors, 57 facilities, six
+containment tiers priced on the rank ladder, a `reachable()` walk that guarantees connectivity by
+construction, and stairwells that cannot be demolished out from under the rooms above them. Robert
+wondered whether Ascension could adopt War World's builder; **it may be the reverse.** Compare before
+writing a second one.
+
+⚠ **Doors are WIDE, by ruling.** *"In order to enter a building they've got to be kind of wide."* A
+door you fight through is not a door you walk through — and this is what makes interior combat read.
+
 ### STILL OPEN — smaller, but they shape the build
 
 1. **⚠ WHAT IS THE CAREER?** *(Reframed 2026-07-27 — Robert: "there is no fight ranking", so the
