@@ -96,14 +96,22 @@ export const RoadMixin = {
     const flat = (geo) => { geo.rotateX(-Math.PI / 2); geo.translate(px, 0, pz); return geo; };
 
     // A DEAD END is a turning head, not a stub.
-    if (j.deg === 1) { add(cid, flat(new THREE.CircleGeometry(w * 0.78, 14, 0, Math.PI * 2))); return 'end'; }
+    // ⚠ RADIALLY SUBDIVIDED, NOT A FAN. `CircleGeometry` is pie slices from ONE centre point, so a
+    // 30u turning head is triangles 15u long — and a flat triangle laid across sloping ground has
+    // its CORNERS clear and its MIDDLE buried. That is the intersection flicker: the ground pokes
+    // up through the middle of the tarmac and the intersection line crawls as the camera moves.
+    if (j.deg === 1) {
+      const rr = w * 0.78;
+      add(cid, flat(new THREE.RingGeometry(0.0001, rr, 14, Math.max(2, Math.round(rr / (5 * S))))));
+      return 'end';
+    }
 
     // A ROUNDABOUT, but only where the PLANNER said so — see plan.roundabouts. The island is real
     // cover you can break line of sight behind, which is the whole reason to build one rather than
     // paint one, and the ribbons feeding it have already been trimmed back to its outer edge.
     if (this._isRoundabout(plan, r, c)) {
       const rOut = roundR(w), rIn = rOut * 0.44;
-      add(cid, flat(new THREE.RingGeometry(rIn, rOut, 30)));
+      add(cid, flat(new THREE.RingGeometry(rIn, rOut, 30, Math.max(2, Math.round((rOut - rIn) / (5 * S))))));
       island(px, pz, rIn);
       for (let i = 0; i < 12; i++) {                             // give-way chevrons on the ring
         const a = (i / 12) * Math.PI * 2, rr = (rIn + rOut) / 2;
@@ -125,7 +133,9 @@ export const RoadMixin = {
     for (const [a, b, rot] of CORNERS) {
       if (!has[a] || !has[b]) continue;
       const fr = w * 0.34;
-      const g = new THREE.CircleGeometry(fr, 8, rot, Math.PI / 2);
+      // the fillet had all three corners exactly ROAD_LIFT above the terrain and its centroid
+      // measured 13.04u UNDERNEATH it — the worst single offender in the whole audit
+      const g = new THREE.RingGeometry(0.0001, fr, 8, Math.max(2, Math.round(fr / (4 * S))), rot, Math.PI / 2);
       g.rotateX(-Math.PI / 2);
       const sx = (a === 'e' || b === 'e') ? 1 : -1, sz = (a === 's' || b === 's') ? 1 : -1;
       g.translate(px + sx * w / 2, 0.005, pz + sz * w / 2);
