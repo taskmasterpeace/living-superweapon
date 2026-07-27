@@ -1617,6 +1617,43 @@ files in `docs/powerworld/` (~8,100 lines on ESF/BFP mechanics, platform limits,
   rule, same exception. ⚠ **A SHORTER TEST CANNOT FIND A HIGHER LID** — the flight suite ran 620 frames,
   reached 456 and I wrote "still rising, no lid": true, but not evidence. Found by a different feature's
   test that had to climb to 1,500u.
+- **FLIGHT IS BFP, AND THE LAYERING WAS THE SHAPE OF THE CONTROL** (Robert: *"flight in power world
+  feels layered like Ascendants"*). Removing the deck servo was necessary and nowhere near sufficient:
+  `move(dir)` has always taken `{x, z}`, so the mover works a horizontal plane and ALL vertical motion
+  comes from a separate ascend key — a floor plan plus an elevator. Under an open sky `dir` carries a
+  **Y**: forward means where you are LOOKING. Measured: forward alone gains 72u on a foe overhead and
+  dives 76.8u at one below, ascend key never touched. The speed clamp goes 3-D with it.
+  ⚠ Four more layer tells were still running in a dimension with no layers, and all are gone here: the
+  **rung click** (a tone per invisible line), the **band-COLOURED ring** under each fighter (the ring
+  stays — its HEIGHT is the honest continuous cue), the **"↑ SKY · 42m"** chip over each flier (metres
+  stay, storey name goes), and the **hover** (releasing now COASTS; no bob, no soft floor).
+- **FLYING PAST SOMEBODY** — two causes: `resolveBodies` shoves overlapping bodies apart every frame
+  (an invisible wall at cruise speed — two fliers pass THROUGH each other under an open sky now), and
+  forward was built from `aim3`, which is welded to the lock, so an approach became an orbit.
+  ⚠ **The chase camera cannot be the flight basis when locked** — measured `y = −0.17` with the target
+  at your own altitude, so flying "at" someone sank you 30u and spiralled. Locked → the line to them;
+  unlocked → the camera's forward. ⚠ `this.fwd`/`this.right` are computed ONCE in the ctor from the
+  fixed iso camera and are stale behind a chase camera.
+- **TARGETING: T acquires → cycles → releases** (`game.cycleLock`), ordered by angle from where you are
+  looking, marker above the head at constant screen size. ⚠ **The ranking is CAPTURED on the first
+  press** — acquiring makes the camera reframe, which changes the angles the sort reads, so
+  recomputing per press cycles at random (measured RAGE → MAJESTY → RAGE → VEGA). ⚠ The cycle ENDS in
+  release: a lock you cannot drop is what stops you flying past people. Obeys the honesty law (`_vis`).
+- **THE CROSSHAIR**: screen-centre CSS reticle (no draw call), hostile red while locked; unlocked aim
+  is the camera's own ray. ⚠ `screenToGround` aimed every unlocked shot at a patch of desert far below
+  whoever you were looking at — right for an isometric street fight, absurd 200u up.
+- **THE MANNEQUIN TREATMENT** (`_skinFighters`): matte body, hero colour only **30%** toward bone,
+  armour/visor/glow/cape untouched because they ARE the identity. Per-fighter materials (`parts.mats`),
+  stashed and restored. ⚠ **The mannequin read comes from the FINISH, not the colour** — at 72% two
+  close heroes came out 3 values apart out of 255. ⚠ Measure any tint on the CLOSEST pair, never a
+  vivid one (SOL and MAJESTY sit 38 apart before anything is done to them).
+- ⚠ **`body.powerworld` WAS DECLARED IN CSS AND NEVER ADDED BY ANYTHING** — every POWERWORLD_CSS rule
+  was dead. A stylesheet hook is not a feature until something toggles it.
+- ⚠ **EVERYTHING ABOVE IS GATED ON `_openSky` OR `body.powerworld`, AND THAT IS VERIFIED, NOT CLAIMED**
+  (Robert: *"DO NOT CHANGE THE GAME, ONLY POWER WORLD"*): a city duel after a PowerWorld match has 0
+  fighters carrying `_openSky`/`_chaseKb`, `camMode` back to `iso`, the rung click still firing, the
+  deck servo still docking, T still clearing, the gold ground reticle still used, bodies still
+  separating, `sunOff` 120/200/80, `dayFixed` null, `spaceFrac` 0 and every suit colour restored.
 - **THE CHASE LOOP**: `_chaseKb` adds `launchT` to the slide-class drag exception, so a 101 u/s
   knockback travels **61.3u** here against **16.1u** in the city. That plus `game.intercept(f)`
   (teleport to a body you launched, refused past `CATCH_SPD 132`) is the ESF loop.

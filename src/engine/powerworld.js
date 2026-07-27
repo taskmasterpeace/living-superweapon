@@ -17,6 +17,8 @@
 // =================================================================================================
 import * as THREE from 'three';
 import { GROUND_LAYER } from '../core/util.js';
+import { setRim } from './figure.js';
+import { SETTINGS } from '../core/settings.js';
 
 export const STAGE = {
   radius: 900,          // the ground disc. Generous: the chase loop needs somewhere to chase TO.
@@ -117,6 +119,7 @@ export class PowerWorldStage {
     this._buildClouds(add, rnd);
     W.scene.add(grp);
     this._skin();
+    this._skinFighters();
     g._pwStage = this;
     return this;
   }
@@ -234,6 +237,7 @@ export class PowerWorldStage {
    * stop the climb at. On Earth the atmosphere is a lid and leaving it is supposed to be a ceremony.
    */
   tick(p) {
+    this._skinFighters();      // late arrivals (a rival ordered with B, a respawn) get the treatment too
     if (!p) return;
     const S = STAGE, y = p.pos.y;
     const t = (y - S.spaceFrom) / (S.spaceTo - S.spaceFrom);
@@ -241,6 +245,62 @@ export class PowerWorldStage {
     // whole illusion collapses into a threshold you can see yourself crossing.
     const k = Math.max(0, Math.min(1, t));
     this.g.world.setSpace(k * k * (3 - 2 * k));
+  }
+
+  /**
+   * THE MANNEQUIN TREATMENT — the same fighters, a different material language.
+   *
+   * Robert: *"I want the visuals to look different… same characters… what if they look like
+   * mannequins and we just give them my logos and capes and helmets and weapons."* That is a good
+   * instinct and it is nearly free, because the identity in this roster is NOT carried by the body —
+   * it is carried by the flourishes `figure()` already mounts (helmet, crest, cape, pauldrons, visor,
+   * weapon) and by the aura. So the body can go to a matte display finish and nothing is lost.
+   *
+   * ⚠ IT IS A MATERIAL PASS, NOT A REMODEL. `figure()` builds its materials PER FIGHTER and hands
+   * them out on `parts.mats`, so this cannot leak into the city: there is no shared cache to corrupt,
+   * and every value is stashed and put back on the way out.
+   * ⚠ THE MANNEQUIN READ COMES FROM THE FINISH, NOT THE COLOUR — and getting that backwards nearly
+   * shipped. At 72% toward bone, SOL (a hot orange) and MAJESTY (a warm red) came out **#dfbcac and
+   * #dcb5ab**: three values apart out of 255, which at two hundred units in an empty sky is the same
+   * figure twice. What makes something look like a display mannequin is that it is MATTE and UNIFORM —
+   * roughness up, metalness down — and that costs no identity at all. So the finish does the work and
+   * the colour only moves 30%. Armour, visor, glow and cape are untouched: they are the identity.
+   * ⚠ A tint toward a common colour COMPRESSES THE WHOLE ROSTER TOWARD EACH OTHER, and the pairs that
+   * suffer are the ones already close (SOL and MAJESTY sit 46 apart on Earth before anything is done
+   * to them). Any future treatment here has to be measured on the CLOSEST pair, never a vivid one.
+   * ⚠ The rim goes up because it is the one thing that separates a figure from a bright sky, and it
+   * is a uniform — the cheapest visual in the engine (see the look ladder: rim is 0 texture fetches).
+   */
+  _skinFighters() {
+    const bone = new THREE.Color('#d8d2c6');
+    for (const e of this.g.entities) {
+      const P = e.parts; if (!P || !P.mats || e._pwSkin) continue;
+      const keep = {};
+      for (const k of ['suit', 'suit2', 'skin']) {
+        const m = P.mats[k]; if (!m) continue;
+        keep[k] = { c: m.color.clone(), r: m.roughness, mt: m.metalness,
+                    e: m.emissive ? m.emissive.clone() : null, ei: m.emissiveIntensity };
+        m.color.lerp(bone, 0.3);                  // a third of the way — the FINISH does the rest
+        m.roughness = Math.min(1, m.roughness + 0.4);
+        m.metalness *= 0.25;
+        if (m.emissive) m.emissiveIntensity = (m.emissiveIntensity || 0) * 0.4;
+      }
+      e._pwSkin = keep;
+      setRim(P, 0.85);
+    }
+  }
+
+  _unskinFighters() {
+    for (const e of this.g.entities) {
+      const keep = e._pwSkin, P = e.parts; if (!keep || !P || !P.mats) continue;
+      for (const k of Object.keys(keep)) {
+        const m = P.mats[k], s = keep[k]; if (!m) continue;
+        m.color.copy(s.c); m.roughness = s.r; m.metalness = s.mt;
+        if (m.emissive && s.e) { m.emissive.copy(s.e); m.emissiveIntensity = s.ei; }
+      }
+      e._pwSkin = null;
+      setRim(P, SETTINGS.fxRim == null ? 0.35 : SETTINGS.fxRim);
+    }
   }
 
   /** A cover record, so physics, LOS and the slam rules all know the rock is there. */
@@ -323,6 +383,7 @@ export class PowerWorldStage {
   close() {
     if (!this.group) return;
     const W = this.g.world;
+    this._unskinFighters();      // hand every fighter their own colours back before anything else
     if (this._arena0 != null) { W.ARENA = this._arena0; this._arena0 = null; }
     if (this._props) { W.cars = this._props.cars; W.planes = this._props.planes; W.rocks = this._props.rocks; W.treeSpots = this._props.trees; this._props = null; }
     // ⚠ our own cover records leave BOTH arrays before the originals come back, or the next match
