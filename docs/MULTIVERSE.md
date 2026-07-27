@@ -682,6 +682,53 @@ schema plain JSON with no imports from either game.
 can be a pocket universe."* A dimension can be one room with one fight in it. That is the cheapest
 possible way to prove the multiverse and it should be considered for the first door.
 
+### RULED 2026-07-27 (sixth pass) — THE CROWD BECOMES CHARACTERS
+
+| # | ruling |
+|---|---|
+| 28 | **The camera-rises-with-the-unit zoom is for ASCENDANTS' ISOMETRIC view specifically** — not a general answer to airborne fights. |
+| 29 | **PEDESTRIANS GET REAL STATS AND REAL LOGIC.** *"Give peds the logic we'd expect… like normal characters but they are regular people."* You can fight them. Will they panic, melee, pull a gun, call the police. |
+| 30 | **PEDESTRIANS GET EMOTIONS** — and that is the point, not decoration. It unlocks powers that act on feeling. |
+| 31 | **ROBOTS HAVE NO EMOTIONS. ALIENS ARE OPTIONAL.** A per-body fact, like the existing `metal` flag. |
+| 32 | **MIND CONTROL AND ITS FAMILY MUST SHOW A VISUAL RESPONSE** on the controlled body. |
+| 33 | **Cars do not all explode.** Some chance on heavy damage, not a certainty, not never. |
+
+### ⚠ 6l. THE FEAR SIPHON — why ruling 30 is the interesting one
+
+Robert's example, and it is a good one: *"say a power was a fear siphon — in order to get more power, a
+character causes fear to the pedestrians, because it's more difficult to do with the heroes."*
+
+That single sentence turns the crowd from scenery into **a resource with a difficulty curve**. Sixty
+civilians are easy to frighten and worth little; the fighter opposite you is hard to frighten and worth
+a lot. **The power has a strategy built into it before anyone tunes a number** — and it is the kind of
+mechanic only a game with a real psyche system can have.
+
+⚠ **And most of this already exists — it wants CONNECTING, not building:**
+
+| already shipped | what it gives ruling 29/30 |
+|---|---|
+| `engine/psyche.js` + `data/psyche.js` | the emotion wheel, appraisal, drives, 20 personalities — the whole model |
+| `peds._embolden` / `peds._panic` | **crowd contagion already IS an emotional model in miniature** — a drawn weapon rallies a block, a corpse collapses its nerve |
+| `peds.cheer`, `peds._sees` | the crowd already reacts, and already has honest line of sight |
+| `resistOf`, `body: 'metal'` | the precedent for ruling 31 — a per-body fact, not an `if` |
+| `takeDamage`, `applyStun`, `addBleed` | pedestrians routing through the same choke points is what makes them fightable |
+
+⚠ **THE ONE REAL DESIGN PROBLEM: 64 pedestrians cannot each run a full psyche.** The wheel is seven
+emotions with appraisal against seven drives, per fighter, and the peds are ONE InstancedMesh precisely
+because they must be nearly free. Recommended shape:
+
+```
+   THE BLOCK has a MOOD          one aggregate psyche per crowd cluster — cheap, and it is
+                                 what a fear siphon should actually read
+   A PED has TWO NUMBERS         fear + anger, plus the flags it already has
+   A NAMED ped PROMOTES          the moment one matters (mind-controlled, grabbed, interviewed
+                                 by KMK 9) it becomes a real Fighter with a real psyche
+```
+
+Promotion-on-demand is the pattern that makes this affordable: the crowd is cheap until one of them
+becomes a character, and then it is a character. It also answers ruling 32 for free — a promoted ped
+has a `stateRing`, an aura and a figure, so mind control already has somewhere to show itself.
+
 ### STILL OPEN — smaller, but they shape the build
 
 1. **⚠ WHAT IS THE CAREER?** *(Reframed 2026-07-27 — Robert: "there is no fight ranking", so the
