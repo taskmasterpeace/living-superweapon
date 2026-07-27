@@ -35,24 +35,16 @@ does geometric interpolation *inside* a band precisely so nine rungs mean someth
 
 ## A2. STILL BLOCKS THE BIG WAR WORLD PUSH
 
-### A1. How do the nine base rooms connect?
-Corridors? Shared doors? Open plan? **This decides every firefight that will ever happen in that
-game**, and it is the one thing in the base builder that cannot be prototyped away.
-→ ShootEm #149. ⚠ Compare Ascension's existing `data/base.js` (9×9, two floors, guaranteed
-connectivity, undemolishable stairwells) before designing a second system.
+Only two things left here, and neither is a design question:
 
-### A2. 12 or 18 squares per room?
-Your own words: *"maybe 12 or 18, because we've got to be able to walk through it."* Build both,
-walk through both, pick. Cheap to answer, expensive to guess.
+### A1. Build the map maker / interior editor FIRST
+Robert cannot answer "12 or 18 squares" — or any other size question — until he can walk around one.
+⚠ **Ascension's ATLAS already is this tool**: standalone at `/atlas.html`, one module with two mounts,
+live 3-D preview, drag-orbit camera, a validator, undo 50 deep, named layouts and JSON import/export.
+**Adopt it before writing a second one.**
 
-### A3. Do the science missions gate the LSWs?
-You floated it. If yes, the science layer must exist before an LSW can appear — which changes the
-order of the whole push.
-
-### A4. What is a soldier's ceiling, in your fiction?
-The 0–100 scale is settled but the **human top** is not. `data/scale.js` says rank 19 = 400 lb =
-*"the absolute most a 20-year-old should be able to do."* Is that War World's 20? Or do trained
-operators go higher?
+### A2. Write the Infantry Online inspiration folder
+See section E. The base builder is about to be designed and its reference is undocumented.
 
 ---
 
