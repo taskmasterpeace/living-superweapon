@@ -230,23 +230,111 @@ regenerating it — scriptable (`tools/gen-lsw-vo.mjs` already exists), but budg
 
 ---
 
-## 6. QUESTIONS I NEED ANSWERED
+## 6. RULINGS AND OPEN QUESTIONS
 
-1. **Naming.** Is the *product* called PowerWorld and the *dimension* something else? Right now one
-   word means two things and every document after this inherits the confusion.
-2. **Which repo owns the Passport schema?** My recommendation: **neither** — a third, tiny repo (or a
-   `packages/passport` folder) that both read, so the contract cannot be owned by one game's release
-   cycle.
-3. **Are War World's 40 LSWs to be deleted, or re-mapped?** Deleting loses 42 hand-written brains and
-   their VO. Re-mapping keeps the embodiment and swaps the identity. Canon says the roster is one —
-   it does not say the brains must be thrown away.
-4. **Does War World keep its own progression, or read the Ledger?** This decides whether a character
-   levelling in War World levels in The Ascend.
-5. **TypeScript or JavaScript for the shared contract?** JSON schema is neutral, but the *readers*
-   are not. War World will want types.
-6. **What is the first thing you want to SEE working?** My recommendation is the smallest possible
-   proof: one Ascendants fighter standing in War World with correctly projected numbers. Everything
-   else is downstream of that working once.
+### RULED 2026-07-27
+
+| # | question | Robert's ruling |
+|---|---|---|
+| 1 | Is PowerWorld the product or the dimension? | **BOTH.** The game is called PowerWorld; the open flight dimension is also PowerWorld. |
+| 2 | Who owns the Passport schema? | **A third small repo.** Neither game owns the contract. |
+| 3 | Delete War World's LSWs, or re-map them? | **DELETE.** *"I hate the war world lsws, we can dump them."* The 42 brains and their VO go. |
+
+⚠ **Ruling 1 has a consequence worth stating plainly:** if the product and one of its dimensions
+share a name, then **THE ASCEND and WAR WORLD are dimensions inside the PowerWorld product**, and the
+two repos are two *engines* of one game rather than two games. That is a stronger position than the
+one this document started from, and it makes the third repo (ruling 2) load-bearing rather than tidy.
+
+⚠ **Ruling 3 is cheaper than it looked, and here is the measurement that says so.** Dumping the
+brains does not mean an Ascendant has no powers in War World, because **War World's arsenal is
+already an ability vocabulary**. `WeaponDef` carries `damage · rof · speed · spread · pellets · clip ·
+reloadTime · reserve · range · splash · splashDamage · arc · heals · knockback · sound · tracer`, and
+weapons are *generated deterministically* from family × brand × Mk-tier so that the table is identical
+on every client and the server. Against Ascendants' 400 ability slots across 31 types:
+
+| Ascendants slots | shape | how it lands in War World |
+|---|---|---|
+| **~140** — projectile 36 · cone 36 · beam 25 · charge 23 · volley 14 · rifle 11 · meteor 9 · growingorb 4 · bow/quiver/mine/facebomb | **weapon-shaped** | a generated `WeaponDef`. Nearly free. The `laser` and `special` families already exist. |
+| **58** — melee 40 · rush 18 | melee | the `melee_weapon` family, already there |
+| **~85** — buff 49 · construct 14 · teleport 10 · summon 4 · phase 4 · portal · tentacle · grapple · lifedrain · mindcontrol | **state / spawn** | genuine bespoke work — nothing in the arsenal expresses "become intangible" or "spawn a turret" |
+| rest | damage types (fire 22 · toxic 5 · cold 4 · acid 2 · magic 3) + evade (dash 52) | riders on the rows above; soldiers already have movement |
+
+So roughly **half the roster's kit projects onto weapons for free**, and the work is concentrated in
+buffs, constructs and teleports — which is exactly where it should be.
+
+### ALSO RULED 2026-07-27
+
+| # | question | ruling |
+|---|---|---|
+| 4 | Do powers RUN in War World, or get translated? | **PORT THE WHOLE ABILITY ENGINE.** Full fidelity — a beam is the same beam in both dimensions. |
+| 5 | One ledger or two? | **ONE SHARED LEDGER.** Level in War World, level in The Ascend. One character, one history. |
+| 6 | Do soldiers cross into The Ascend? | **YES — that is the point.** A soldier with a rifle and a plan among gods. |
+| 7 | First proof | **One Ascendants fighter standing in War World** with correctly projected numbers. |
+
+---
+
+## 6a. ⚠ THE PORT — what ruling 4 actually costs, measured
+
+Porting is the ambitious choice and it is defensible: it makes the ability engine the **shared
+substrate** rather than a thing each product reimplements. But it has exactly one hazard, and it is
+fatal if unhandled.
+
+| file | lines | `THREE.` | presentation calls (vfx/audio/mesh/scene/material/particles/hud) | **wall-clock / `Math.random`** |
+|---|---|---|---|---|
+| `entity.js` | 1,999 | 19 | 95 | **37** |
+| `abilities.js` | 1,116 | 23 | 116 | **14** |
+| `projectiles.js` | 1,079 | 83 | 90 | **6** |
+| `melee.js` | 340 | 1 | 32 | **5** |
+| **total (incl. summons.js)** | **4,765** | **126** | **~333** | **62** |
+
+⚠ **THE 62 ARE THE PROBLEM, NOT THE 4,765.** War World's `sim/` is DOM-free and deterministic *by
+law* because the server is authoritative — the arsenal is even generated deterministically so "the
+table is identical on every client and the server". **`Math.random()` inside a ported ability means
+the client and the server disagree about whether you hit**, which is not a bug you debug, it is a
+desync. The line count is a schedule; the 62 are a correctness gate.
+
+### The way to make ruling 4 work: SPLIT SIM FROM SHOW
+
+Do not port `abilities.js` as it stands. Split it first, in Ascendants, where it can be tested against
+a working game:
+
+```
+   ability.sim         PURE. (caster, target, worldState, tick, seededRng) → EFFECTS
+                       No THREE. No audio. No vfx. No wall clock. No Math.random.
+                       This is what War World's sim/ imports. Deterministic, server-safe.
+        ↓ effects
+   ability.show        Takes effects and makes them look and sound like something.
+                       ASCENDANTS writes one (procedural figures, its own vfx).
+                       WAR WORLD writes its own (76 GLB models, 1,975 audio files).
+```
+
+This is the **same idea as the shell** (§7 PROMPT 4), one level down: the substrate must not know how
+it is being drawn. Do it once and you get three things — the port becomes mechanical, War World keeps
+its models and audio without importing Ascendants' art, and a third product can adopt the ability
+engine without adopting either game's look.
+
+⚠ **Seeded RNG is not optional and not a detail.** Every one of the 62 sites becomes a draw from a
+per-tick seeded stream. Ascendants already knows how to do this — `cityplan.js` uses named
+`mulberry32` streams and position-seeded hashes precisely so one edit cannot perturb everything else.
+Same discipline, applied to combat.
+
+⚠ **Ruling 6 (soldiers cross into The Ascend) makes the split mandatory rather than merely wise.**
+Traffic is now two-way, so *both* engines must be able to run *both* kinds of character. There is no
+version of that where one game owns the ability code.
+
+### STILL OPEN — smaller, but they shape the build
+
+1. **Multiplayer authority.** A Passport that is a JSON file the player owns is trivially edited. Does
+   the Ledger become server-authoritative for multiplayer, with local files only for single-player?
+   (Ruling 5 makes this urgent: a shared ledger is a shared cheat surface.)
+2. **Vehicles.** Do Ascendants drive War World's vehicles when they cross? You rate them the best
+   thing in either repo, and they are the one system with no equivalent on this side.
+3. **The third repo** — name, and does it sit beside the other two on disk?
+4. **What does a soldier BECOME in The Ascend?** Ruling 6 says they cross; it does not say whether
+   they get a projection that makes them survivable, or whether being outmatched is the content.
+5. **What does the shared ledger track?** Levels and money are obvious. Reputation? Injuries?
+   Ascendants already has a persistent Elo book, a medical ledger and a career — War World has its own
+   career. One of those becomes the truth.
 
 ---
 
@@ -299,27 +387,57 @@ internals. Show projected numbers before and after. War World's gates are
 pass. Name files individually in git add; never `git add -A` in either repo.
 ```
 
-### PROMPT 3 — one roster
+### PROMPT 2b — SPLIT SIM FROM SHOW *(new, and it is now the critical path)*
 ```
-Replace War World's native living superweapons with the shared ASCENDANTS roster via
-the Passport.
+Split Ascendants' combat into a PURE simulation half and a PRESENTATION half, in this
+repo, where it can be tested against a working game. Ruling 4 (2026-07-27) is that War
+World runs the real ability engine rather than translating it, and this is what makes
+that safe.
+
+  ability.sim   (caster, target, worldState, tick, seededRng) → EFFECTS
+                No THREE, no audio, no vfx, no hud, NO WALL CLOCK, NO Math.random.
+  ability.show  effects → how it looks and sounds. Ascendants keeps its own.
+
+⚠ Measured (MULTIVERSE.md §6a): 4,765 lines across entity/abilities/projectiles/melee/
+summons, ~333 presentation calls, and **62 wall-clock or Math.random calls**. The 62 are
+the gate, not the line count: War World's server is authoritative and its sim/ is
+deterministic by law, so a Math.random inside a ported ability is a DESYNC — the client
+and the server disagree about whether you hit. Every one becomes a draw from a per-tick
+seeded stream. cityplan.js already does exactly this discipline with named mulberry32
+streams and position-seeded hashes — follow it.
+
+⚠ Do this WITHOUT changing what the game does. The gate is that every existing headless
+suite still passes and a 3-minute AI-vs-AI soak is unchanged: same damage, same KOs,
+0 errors. This is a refactor, not a rebalance.
+
+Do NOT port anything to War World in this prompt. Split, prove, commit.
+```
+
+### PROMPT 3 — one roster *(amended: DELETE ruled, and the arsenal is the vocabulary)*
+```
+DELETE War World's 40 native living superweapons and replace them with the shared
+ASCENDANTS roster, loaded through the Passport. Robert's ruling 2026-07-27: the War
+World LSWs go — brains, VO and all.
 
 CANON (CONSEQUENCES OF FAILURE): the dimensions the travellers see have NO native
-living superweapons. War World's LSWs are Ascendants who TRAVELLED — non-native by
-canon. That is the in-fiction reason there is one roster.
+living superweapons. War World's LSWs were always Ascendants who TRAVELLED. That is
+the in-fiction reason there is one roster, and it is why deleting them costs no story.
 
-⚠ Measured (MULTIVERSE.md §4): 40 units, 42 brain files, 688 references across 84
-files. `AscendantId` is a closed union — the typechecker will walk you through every
-call site, so let it. `Soldier.ascendant` is already the seam; replace what fills it,
-do not remove it.
+⚠ Measured (MULTIVERSE.md §4, §6): 40 units, 42 brain files, 688 references across 84
+files. `AscendantId` is a CLOSED UNION — deleting members is a compile error at every
+call site, so let the typechecker drive the whole replacement. `Soldier.ascendant` is
+already the projection seam: change what FILLS it, do not remove it.
 
-KEEP the models. `LswDef` already separates identity from embodiment (rig / prop /
-attackPose / scale / colour) — map shared characters onto that triple. If a specific
-model genuinely cannot be re-skinned, say so plainly rather than porting Ascendants'
-procedural figure system by default.
+⚠ Powers RUN here, they are not translated (ruling 4). That means PROMPT 2b must land
+first — this prompt consumes `ability.sim` rather than reimplementing anything. Do not
+hand-write forty movesets, and do not copy abilities.js across as-is.
 
-Budget for VO: 4 lines × 40 units of generated announcer audio are keyed by unit id
-(tools/gen-lsw-vo.mjs). Say what it costs before you start.
+KEEP the 76 models. `LswDef` separates identity from embodiment (rig / prop / attackPose
+/ scale / colour) — map shared characters onto that triple. If a model genuinely cannot
+be re-skinned, say so plainly rather than porting the procedural figure system by default.
+
+Budget the VO out loud before starting: 4 lines × 40 units, keyed by unit id
+(tools/gen-lsw-vo.mjs). The new roster is 52.
 
 Test: change a stat in Ascendants, confirm it appears in War World with no second edit.
 ```
@@ -364,5 +482,39 @@ friend play from a URL with no download? Note that Vercel cannot host a persiste
 WebSocket process — say what can, and what it costs.
 ```
 
-⚠ **Do PROMPT 1 and 2 before 3.** Replacing forty units before the contract is proven means doing
-it twice.
+### PROMPT 8 — soldiers go the other way *(new, from ruling 6)*
+```
+A WAR WORLD soldier walks into THE ASCEND. Two-way traffic is ruled, and this is the
+harder direction: the projection has to make a mortal SURVIVABLE among gods rather than
+nerf a god down to mortal.
+
+Answer before building: is a soldier among Ascendants underpowered on purpose (an
+underdog with a rifle, a plan and the whole city as cover) or does the projection lift
+them? Both are legitimate; only one is designed.
+
+⚠ This is also the proof that the Passport is genuinely bidirectional. A contract that
+only carries gods downhill is a export format, not a passport.
+```
+
+---
+
+### THE ORDER, after the 2026-07-27 rulings
+
+```
+  0  context
+  1  PASSPORT schema            ← third repo, engine-neutral JSON
+  2  implement + prove          ← ONE fighter standing in War World  ★ first thing to SEE
+ 2b  SPLIT SIM FROM SHOW        ← the critical path for ruling 4
+  3  delete the 40, load the 52 ← consumes 2b
+  4  the SHELL (camera+controls)
+  5  the GATE (dimensional door)
+  8  soldiers into The Ascend   ← proves the passport is bidirectional
+  6  multiplayer for real
+```
+
+⚠ **PROMPT 2 before 2b before 3.** The contract must be proven before forty units are deleted, and
+the sim/show split must land before the ability engine crosses — otherwise the port happens twice and
+the second time it takes the server down with it.
+
+⚠ **One conversation each.** Every one of these is a full session, and several rewrite shipped design
+reasoning (PROMPT 4 invalidates `docs/THE_HANDS.md`; PROMPT 3 deletes 688 references).
