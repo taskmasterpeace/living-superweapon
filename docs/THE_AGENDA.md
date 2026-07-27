@@ -176,25 +176,48 @@ and imported rather than reimplemented.
 the second. **Do not skip session A** — the map maker exists to answer a look-at-it question, and
 without eyes it cannot answer it.*
 
-### SESSION A — THE HARNESS *(an hour, maybe two)*
+### SESSION A — THE HARNESS *(Robert chose this as the first loop, 2026-07-27)*
+
+⚠ **BOTH repos are blind, not just one.** War World's playwright is missing — AND on 2026-07-27 an
+agent working in **Ascension** could not screenshot either ("the Browser pane wasn't compositing")
+and fell back to asserting a layout instead of looking at it. **It shipped a UI change nobody saw.**
+That is the entire reason this is loop one.
 
 ```
-Read D:\lsw\docs\THE_AGENDA.md item 0, then work in D:\git\ShootEM.
+Read D:\lsw\docs\THE_AGENDA.md item 0 and docs/LOOPING.md §2 (the critic
+contract). Fix the SEEING path in BOTH repos. Nothing else runs until this
+works.
 
-Install and PIN playwright (npm i -D playwright && npx playwright install
-chromium). Prove tools/capture-screenshots.mjs runs end to end against
-npm run dev on :3400 and leaves a real frame on disk.
+WAR WORLD (D:\git\ShootEM):
+  npm i -D playwright && npx playwright install chromium  — and PIN it.
+  Prove tools/capture-screenshots.mjs runs end to end against npm run dev
+  on :3400 and leaves a real frame on disk.
 
-Then make `npm run verify` mean the same thing in D:\git\ShootEM and D:\lsw:
-drive real input, assert an invariant, capture a frame. A shared CONTRACT,
-not shared code — the engines have nothing in common.
+ASCENSION (D:\lsw):
+  Its capture path is BROKEN — an agent hit "Browser pane not compositing"
+  on 2026-07-27 and shipped a UI change verified only by layout assertion.
+  Diagnose it. window.LSW = {game, hud, ROSTER} is the drive seam and the
+  freeze-frame recipe is in CLAUDE.md. A screenshot of the RUNNING GAME,
+  posed and on disk, is the deliverable. ⚠ Clear scissor + viewport before
+  posing — the news camera leaves a scissor rect on the renderer and a
+  manual render comes back black except one corner.
 
-Gates: npx tsc --noEmit && npx vitest run && npm run lint && npm run build
-Never git add -A. Name every file. Nothing in src/sim/ may use Math.random
-or the wall clock.
+THEN: make `npm run verify` mean the same thing in both — drive real input,
+assert an invariant, capture a frame. A shared CONTRACT, not shared code.
+⚠ Ascension has NO gate at all today (no test, lint, typecheck or tests/),
+so this command is the first one it has ever had.
+
+⚠ PROVE THE HARNESS ITSELF FIRST (the calibration frame, LOOPING.md §2):
+break something on purpose and confirm the capture SHOWS it. A screenshot
+tool that returns a stale or blank frame passes every test ever written.
+
+Gates (War World): npx tsc --noEmit && npx vitest run && npm run lint && npm run build
+Never git add -A — name every file; that hazard bit twice on 2026-07-27,
+one agent's commit swallowing another's in-progress main.ts.
+Nothing in src/sim/ may use Math.random or the wall clock.
 
 Done when one command in either repo fails on a WRONG result, not just an
-absent one.
+absent one — and leaves a picture on disk proving it looked.
 ```
 
 ### SESSION B — THE MAP MAKER *(the big one)*
