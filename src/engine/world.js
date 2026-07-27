@@ -2108,6 +2108,12 @@ export class World {
           if (clear < worst) { worst = clear; wx = v.x; wz = v.z; kind = k === 3 ? 'centroid' : 'vertex'; }
         }
       }
+      // ⚠ A PIER IS SUPPOSED TO BE ABOVE A SEABED THAT FALLS AWAY. The last survivors of this audit
+      // were all seaport decking and quays (`wood`, container paint) reported at -80u clearance —
+      // which is not a defect, it is a jetty over deep water doing exactly its job. A ground audit
+      // that does not know about water reports the harbour as broken forever, and an audit you learn
+      // to ignore is worse than none. Counted as a solid (declared) rather than a problem.
+      if (worst < minSep && this.waterAt && this.waterAt(wx, wz)) { solids++; return; }
       if (worst < minSep) {
         hits.push({ clear: +worst.toFixed(2), at: kind,
                     name: o.name || (o.parent && o.parent.name) || g.type,

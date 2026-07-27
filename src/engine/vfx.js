@@ -237,7 +237,12 @@ export class VFX {
     // have the most scorch marks. A monotonic counter can't stall; the rung comes off the ladder.
     this._scorchN = (this._scorchN || 0) + 1;
     m.rotation.x = -Math.PI / 2;
-    m.position.set(pos.x, GROUND_LAYER.shadow + 0.01 + (this._scorchN % 24) * 0.004, pos.z);
+    // ⚠ ON THE GROUND, NOT AT AN ABSOLUTE HEIGHT. This set y from GROUND_LAYER alone and never
+    // added the terrain, so on any city with relief every scorch mark was BURIED — measured on
+    // Kabul, whose terrain runs -13 to +122. Invisible rather than tearing (depthWrite is off),
+    // but it meant the one mark that says 'something exploded here' was missing city-wide.
+    const gy = this.world && this.world.heightAt ? this.world.heightAt(pos.x, pos.z) : 0;
+    m.position.set(pos.x, gy + GROUND_LAYER.shadow + 0.01 + (this._scorchN % 24) * 0.004, pos.z);
     m.scale.setScalar(radius);
     this.scene.add(m); this.scorches.push(m);
     if (this.world.flattenGrass) this.world.flattenGrass(pos.x, pos.z, radius);   // burned ground = burned grass
