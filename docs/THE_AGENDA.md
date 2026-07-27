@@ -135,6 +135,36 @@ Passport is not proven. Parallel agents that cannot see each other will fight ov
 
 ---
 
+## ⚠ FILES OR GITHUB ISSUES? — files, with two narrow exceptions
+
+*Asked 2026-07-27. The two repos already disagree: Ascension runs entirely on `docs/` + commit
+messages, War World has issues (#145-#149). Recommendation: keep both, but on a rule.*
+
+**FILES ARE THE DEFAULT, and the reason is not taste — it is that we work through agents.**
+
+- **An agent reads files for free; an issue costs a `gh` call, a network round trip and auth.** Every
+  loop, every subagent, every fresh session opens `CLAUDE.md` and `docs/`. A ruling in a doc is in the
+  context window before anyone asks. A ruling in an issue is only found by someone who already
+  suspected it existed.
+- **A file versions with the code.** The decision sits in the commit that implemented it. An issue is
+  a second timeline, and second timelines drift.
+- **The commit messages here already ARE the engineering log** — reasoning, measurements, traps. That
+  is strictly better than an issue thread, because it cannot detach from the diff it describes.
+
+**USE AN ISSUE ONLY WHEN:**
+1. **Another person has to see or act on it.** Issues are for humans who are not in the conversation.
+2. **The work is in a repo you are not currently in.** ⚠ This is the real one, and it just bit us:
+   the interior ruling is at `docs/DECISIONS_REMAINING.md:14-15` in *this* repo while the work is
+   **ShootEm #149**. A file in D:\lsw cannot nag you about D:\git\ShootEM.
+3. **The work is cross-repo** — the Passport belongs to neither docs folder.
+
+⚠ **AND THE FIX FOR CASE 2 IS NOT "MOVE IT TO AN ISSUE."** It is: **the ruling lives in the file, and
+the issue carries a pointer to it.** One line in #149 naming the file and line numbers. Duplicating a
+decision into two places is how the two copies start disagreeing — the same law as one rule exported
+and imported rather than reimplemented.
+
+---
+
 ## THE STANDING ORDER
 
 0 and 1 are prerequisites and are small — call it a day of work between them. 2 is a decision Robert
