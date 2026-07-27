@@ -204,19 +204,51 @@ in §8. The novice is clicking through an armoury; the veteran typed one line an
 The CTF zone is documented as having "an **extensive store** with purchasable weapons."
 ([Gamia wikitext](https://gamia-archive.fandom.com/wiki/Infantry_Online))
 
-### Did death cost you anything? — **LIKELY: yes, your carried inventory. Not confirmed directly.**
+### The reward formula is five numbers, set per zone — and killing pays out of the VICTIM's ledger
 
-I could not find an explicit statement of a death penalty. What the sources support:
+The engine's config parser gives the exact shape. `Cash` and `Experience` are **the same five knobs**:
 
-- Loadouts were **carried**, in a real inventory with weight limits (§7), and were bought with cash.
-  Items could be dropped for teammates. The natural reading is that you re-equipped after dying and
-  that re-equipping cost money.
-- The design pressure is visible in the manual's own tips: "Players will not be in a position to
-  carry all the weapons he wants. Players should pick a weapon he feels comfortable with and try and
-  find an ideal 'load' that he likes."
-  ([1999 manual](https://www.freeinfantry.com/history/infantry/iomversion25.htm))
-- ⚠ But this is inference. **Do not cite Infantry as proof that death-costs-money works.** I did not
-  find a rule statement, and it very likely varied per zone (§5 — every zone set its own economy).
+```csharp
+public class Cash {                       public class Bounty {
+    public int shareRadius;                   public int start;
+    public int sharePercent;                  public int percentToKillerBounty;
+    public int percentOfKiller;               public int percentToAssistBounty;
+    public int percentOfTarget;               public int fixedToKillerBounty;
+    public int killReward;                }
+}
+```
+([CfgInfo.Cash.cs](https://github.com/InfantryOnline/Infantry-Online-Server/blob/master/dotnetcore/Assets/Cfg/CfgInfo.Cash.cs),
+[CfgInfo.Experience.cs](https://github.com/InfantryOnline/Infantry-Online-Server/blob/master/dotnetcore/Assets/Cfg/CfgInfo.Experience.cs),
+[CfgInfo.Bounty.cs](https://github.com/InfantryOnline/Infantry-Online-Server/blob/master/dotnetcore/Assets/Cfg/CfgInfo.Bounty.cs))
+
+Three things fall straight out of that:
+
+1. **A kill's payout is computed from BOTH players' state, not a constant.** `killReward` is the flat
+   part; `percentOfTarget` and `percentOfKiller` scale it by what the two parties are carrying. This
+   is the mechanism behind the manual's bounty rule — a fat target pays more.
+2. **`shareRadius` + `sharePercent` = proximity reward sharing.** Standing near a teammate who scores
+   pays you a percentage, at a configurable distance. That is the manual's "assist" system
+   generalised into a spatial rule, and it is a *much* better idea than a kill-assist flag: it
+   silently pays people for holding a line together. Same knob on cash, XP and bounty.
+3. **Every one of those numbers is per-zone.** Two zones on the same server can run opposite
+   economies with no code.
+
+### Did death cost you anything? — **LIKELY yes, but the semantics are undocumented**
+
+⚠ Be careful here, because it is easy to over-read. `percentOfTarget` proves the payout is *drawn
+from a quantity belonging to the victim* — but the source does not say whether that quantity is the
+victim's **cash balance** (a real wealth transfer, so dying makes you poorer) or the victim's
+**bounty** (a scoreboard value, so dying costs you only your accumulated standing). The
+SubSpace lineage suggests bounty. **I could not settle it.**
+
+What is solid: loadouts were bought, carried, and weight-limited (§7); items could be dropped for
+teammates; and the manual's own advice assumes scarcity — "Players will not be in a position to carry
+all the weapons he wants… find an ideal 'load' that he likes."
+([1999 manual](https://www.freeinfantry.com/history/infantry/iomversion25.htm))
+The natural reading is that you re-equipped after dying and re-equipping cost money.
+
+⚠ **Do not cite Infantry as proof that death-costs-money works.** The rule was never written down in
+any surviving document, and — given the five knobs above — it demonstrably *varied per zone*.
 
 ### Resources, supply and base building — **CONFIRMED that all three existed**
 
@@ -302,6 +334,18 @@ statistical tracking" as an account-level property.
 to run their own economy and ladder — they cannot inflate the *global* one, because there isn't one.
 Identity is central and authoritative; progress is local and disposable. If you are building
 community-hosted anything, copy this split exactly (see WHAT WAR WORLD SHOULD STEAL).
+
+### Ranks were a NAMED ladder off experience, defined per zone
+
+`CfgInfo.Rank` holds an `enabled` flag, a `label`, and a list of `Name0/Points0 … NameN/PointsN`
+pairs, resolved by `getRank(int experience)`.
+([CfgInfo.Rank.cs](https://github.com/InfantryOnline/Infantry-Online-Server/blob/master/dotnetcore/Assets/Cfg/CfgInfo.Rank.cs))
+
+⚠ So a zone author writes the rank *words* and the thresholds; the engine returns a name for a
+number. WAR WORLD already does this in three places (LeFevre threat, recovery tiers, the rank
+ladder) and the law it obeys — a ladder's rungs come from the distribution, never from hand-picked
+constants — is the one thing Infantry's version does *not* enforce. Its rungs are whatever the zone
+author typed.
 
 ### Which zones had RPG progression
 
@@ -677,6 +721,34 @@ Four independent confirmations of what it controls:
 Note the division of labour: **weapon and item stats live in `.itm`, vehicles in `.veh`, classes and
 skills in `.rpg`.** The `.cfg` holds zone-wide rules and the manifest, not the numbers.
 
+**How big is "zone-wide rules"? Fifty-seven sections.** The engine's parser has one class per `.cfg`
+section, and they are:
+
+> Addon · Arena · Attribute · Bong · Bot · **Bounty** · Bubble · **Cash** · DamageType · **DeathMatch**
+> · Door · Event · **Experience** · Expire · FixedStat · **Flag** · FlagMvp · HeldCategory · HelpMenu ·
+> Jackpot · **King** · Level · **Los** · LosType · Message · NamedArena · Owner · Point ·
+> PublicColors · PublicProfile · QuickSkill · **Radar** · **Rank** · Render · **Rpg** · **Rts** ·
+> RtsStateDefault · **Soccer** · SoccerMvp · **Soul** · Sound · StartGame · Stat · TeamDefault ·
+> TeamInfo · Terrain · Timing · **Uiart** · **UiartFont** · **UiartMetrics** · Uiwav · Vehicle ·
+> **View** · WarpGroup · WebMenu · ZoneStat
+
+([dotnetcore/Assets/Cfg/](https://github.com/InfantryOnline/Infantry-Online-Server/tree/master/dotnetcore/Assets/Cfg))
+
+⚠ Read the bolded ones. A `.cfg` is not a settings file — it is **a game definition**. It carries the
+win conditions for five different sports and modes (Flag, King, DeathMatch, Soccer, Rts, Rpg), the
+economy (Cash, Experience, Bounty), the vision model (Los, LosType, Radar, View), the player chassis
+(Soul — see below), the rank ladder, **and the entire HUD layout** (Uiart, UiartFont, UiartMetrics,
+Uiwav, PublicColors). That is why a zone can feel like a different game while running the same
+`InfServer.exe`, and it is the real reason the tools story worked.
+
+And `Soul` — the player chassis — is exactly the 1999 manual's systems, still data-driven per zone:
+`energyDefaultMax`, `energyDefaultRate`, `energyDefaultStart`, `energyShieldMode`,
+`weightNormalMax`, `weightStopMax`, `weightPrunePercentage`, `utilitySlots` (plus five per-weight-band
+overrides `utilitySlots1-99` … `utilitySlots400-499`), `combatAwarenessTime`.
+([CfgInfo.Soul.cs](https://github.com/InfantryOnline/Infantry-Online-Server/blob/master/dotnetcore/Assets/Cfg/CfgInfo.Soul.cs))
+Energy-as-shield and encumbrance were not hard-coded mechanics — they were **numbers a zone author
+could turn off**.
+
 ### Scripting: C#, in the modern emulator
 
 `scripts/GameTypes/` holds **26** game types — AxiCTF, Basic, BasketBall, Blank, BoomBall, BugHunt,
@@ -810,10 +882,21 @@ top-down/isometric game where you cannot tell a chest-high wall from a tall one.
   "to figure out how to get **higher framerates at higher resolutions**," and users report 1024×768
   as workable but "not as zoomed in as desired."
   ([cnc-ddraw issue #138](https://github.com/CnCNet/cnc-ddraw/issues/138))
-  ⚠ **UNVERIFIED whether the HUD scales with resolution.** The evidence that `?radarsize` and
-  `?namewidth` are specified *in pixels* strongly suggests a fixed-pixel UI over a resizable
-  viewport — i.e. raising resolution makes the world bigger and the text smaller. Directly relevant
-  to a Deck. I could not confirm it.
+  ⚠ **The HUD is laid out in ABSOLUTE PIXELS, and the zone's `.cfg` sets them.** `CfgInfo.UiartMetrics`
+  carries `guageEnergyX/Y`, `guageEnergyTX/TY`, `guageHealthX/Y`, `guageUnitX/Y`, plus
+  `messageBorderLeft/Right/Top/First`, `notepadListBoxLeft/Top/Bottom`, `playerListBoxTopHeight` /
+  `BottomHeight`, `inventoryListBoxTopHeight` / `BottomHeight`, `menuButtonSize`,
+  `keystrokeBubbleButtonSize`, a `displayEncumbrance` toggle, and a full font/colour set
+  (`guageFont`, `menuFont`, `menuSelectFont`, `menuTitleFont`, `menuDisabledFont` and their colours).
+  ([CfgInfo.UiartMetrics.cs](https://github.com/InfantryOnline/Infantry-Online-Server/blob/master/dotnetcore/Assets/Cfg/CfgInfo.UiartMetrics.cs))
+  Two consequences, and they pull in opposite directions:
+  **(a)** pixel coordinates in config means a **fixed-pixel UI over a resizable viewport** — raising
+  resolution enlarges the world and shrinks the interface. That is the handheld failure mode, and it
+  is baked into the format.
+  **(b)** but it also means **a zone can re-skin the entire HUD from data** — move the gauges, swap
+  the art (`Uiart`), the fonts (`UiartFont`), the sounds (`Uiwav`) and the palette (`PublicColors`)
+  without touching the client. Infantry gave content authors the HUD and gave nobody a scaling
+  factor.
 - Keyboard was **fully rebindable from the first public build** (VIEW → KEYBOARD CONFIGURATION).
   ([1999 manual, controls](https://www.freeinfantry.com/history/infantry/iomcontrol.htm))
 - No controller support in the original; Steam tags list neither. The 2024 Steam release notes
@@ -930,9 +1013,11 @@ was not.
 
 ## WHAT I COULD NOT FIND
 
-1. **A death penalty rule.** No source states what dying cost you. Inventory loss is the natural
-   reading of a bought, carried, weight-limited loadout, but it is inference and it almost certainly
-   varied per zone. §2.
+1. **What exactly a death cost you.** Partly closed: the engine's `Cash`/`Experience` config both
+   carry a `percentOfTarget` term, so a kill is paid *out of something belonging to the victim*. What
+   the source does not say is whether that something is the victim's **cash balance** (a real wealth
+   transfer) or merely their **bounty** (a scoreboard figure). No surviving document states the rule,
+   and the five knobs prove it varied per zone anyway. §2.
 2. **Whether bases had to be continuously supplied.** Team inventories (`?resources`,
    `*teamprofile`), player-built structures (`?struct`) and harvesting (Fleet) are all confirmed. A
    decay/logistics rule is not. §2.
@@ -949,9 +1034,9 @@ was not.
    pre-2002. No SOE figure was ever published — not even in the shutdown notice. §8.
 7. **Confirmation of the Daybreak licence.** Asserted by MMOBomb and by Free Infantry's own PR;
    Massively OP wrote "we're assuming they got it." No Daybreak statement exists. §1.
-8. **Whether the HUD scales with resolution** — the question that matters most for a handheld.
-   `?radarsize` and `?namewidth` are specified *in pixels*, which strongly implies a fixed-pixel UI
-   over a resizable viewport, but I found no direct statement. §7.
+8. **A scaling factor for the HUD.** Closed, and the answer is that there isn't one: `UiartMetrics`
+   positions every gauge and panel in **absolute pixels** from the zone's `.cfg`. What I could not
+   find is any evidence that the client ever gained a UI scale setting, in the SOE era or since. §7.
 9. **The full "Infantry Editors" thread.** freeinfantry.com's forum returns HTTP 500 on every URL and
    appears dead; tool names and versions in §6 come from search-engine snippets of it.
 10. **Anything from the developers.** No post-mortem, no design document, no substantive interview
@@ -1007,19 +1092,29 @@ was not.
 9. **Bounty that rises the longer you live.** Kill value scales with the target's survival and kill
    streak, and *everyone can see it*. Self-balancing pressure on the leader with no rubber-banding
    and no hidden handicap. Legible, which is the whole point.
-10. **`?squadchart` — presence with location.** One command listing every squadmate and where they
+10. **`shareRadius` + `sharePercent` — proximity reward sharing.** A configurable radius around a
+   kill, and a percentage of the cash, XP and bounty paid to every teammate inside it. Better than a
+   kill-assist flag because it needs no detection logic and no arbitration: it simply pays people for
+   being where the fight is. Three lines of config, and it makes holding a line together
+   mechanically worth doing.
+11. **A zone's whole rule set in one declarative file.** 57 sections covering win conditions for five
+   modes, the economy, the vision model, the player chassis, the rank ladder and the HUD — all read
+   by one `InfServer.exe`. This is the reason a modding scene existed at all, and it is the same
+   instinct behind your own data-driven power registry. The lesson to take is the *breadth*: they put
+   energy-as-shield and encumbrance in config, so a zone could turn off a signature mechanic.
+12. **`?squadchart` — presence with location.** One command listing every squadmate and where they
     are, across the entire game. This is the single feature that makes a small population feel
     populated: you don't open a dead game, you open a list of your people. At WAR WORLD's likely
     scale this matters more than anything in §5.
-11. **Concentrate population in TIME, not in fewer zones.** Fixed weekly appointments — Twin Peaks
+13. **Concentrate population in TIME, not in fewer zones.** Fixed weekly appointments — Twin Peaks
     Tuesdays, Skirmish Sundays, league nights — are how ~40 concurrent players sustained a 10v10
     competitive scene for 50+ seasons. Scheduling is the cheapest matchmaking there is.
-12. **File broken content by the exception it throws.** Zone-Assets sorts 141 non-working zones into
+14. **File broken content by the exception it throws.** Zone-Assets sorts 141 non-working zones into
     `KeyNotFoundException/` (85), `SilentClientCrash/` (31), `FormatException/` (13)… so fixing one
     server bug promotes eighty-five zones at once. A genuinely original preservation idea.
-13. **`?buy grenades:10` and `?buy grenades:#` (top up to N).** A power-user tier on the store that
+15. **`?buy grenades:10` and `?buy grenades:#` (top up to N).** A power-user tier on the store that
     turns a re-equip into one keystroke. Ship it *alongside* the clickable armoury, never instead.
-14. **Two UI ideas for the Deck.** The **four MODE buttons** — one rectangle, four panels, one click
+16. **Two UI ideas for the Deck.** The **four MODE buttons** — one rectangle, four panels, one click
     apart, with a stated default ("the most common mode used is INVENTORY") — Infantry did not try to
     fit inventory, comms, status and options on screen at once, it time-multiplexed one region and
     told you which face was normal. And **`?viewpercent 75`**: the camera does not centre the player,
@@ -1059,19 +1154,25 @@ was not.
    was mostly about that, and the fix, when it came in 2022, was an unrelated open-source Command &
    Conquer shim. You own your whole stack in Three.js. Keep it that way — and note that this is the
    same law your own `print pass` already follows by branching one shader instead of chaining eleven.
-7. **Do not treat a "beginner zone" flag as onboarding.** One bit on the zone record, in a game whose
+7. **Do not put absolute pixel coordinates in your content format.** `guageEnergyX = 12` in a zone's
+   config is a *lovely* modding affordance and a permanent scaling trap: every gauge, every list box
+   and every border in Infantry is an absolute pixel value authored by a content creator, so there is
+   no factor anyone could later multiply. If you let authors position UI — and you should — make them
+   express it in a resolution-independent unit, or you will be shipping a game that cannot be made
+   readable on a handheld without breaking every zone ever made.
+8. **Do not treat a "beginner zone" flag as onboarding.** One bit on the zone record, in a game whose
    Steam reviews in 2025 read *"You'll be instantly outmatched by veterans with decades of
    experience"* and *"new players are frequently mocked or ignored."* A flag is not a ramp.
-8. **Do not let zone count outrun population.** Seven zones, three players, all three in one of them.
+9. **Do not let zone count outrun population.** Seven zones, three players, all three in one of them.
    Every additional hostable surface divides the same people. If you go community-hosted, decide in
    advance what *forces* convergence — a default zone, a rotation, a scheduled event, an in-client
    "where is everyone" — because the directory will not do it for you.
-9. **Do not rely on the community being the developer.** By 2010 Infantry's own wiki recorded, as
+10. **Do not rely on the community being the developer.** By 2010 Infantry's own wiki recorded, as
    consensus, that "Player Development and content is the only real way to help Infantry survive."
    That is a community writing its publisher's obituary. Tools multiply an active developer; they do
    not replace one. Infantry's last decade had between zero and three people on it — one of them a
    former support rep — and no amount of player content changed the outcome.
-10. **Do not assume distribution is the bottleneck.** Free Infantry got the thing it spent four years
+11. **Do not assume distribution is the bottleneck.** Free Infantry got the thing it spent four years
     asking for: a Steam listing, free, no microtransactions, on the largest storefront in PC gaming.
     All-time peak concurrency: **70**. Two years later it is averaging six. Discovery was solved.
     Retention was not, and retention is §8 items 3 and 4.
