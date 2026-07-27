@@ -1,6 +1,7 @@
 # HANDOFF — WAR WORLD: ASCENDANTS
 
-*Written 2026-07-24. Read this first, then `CLAUDE.md`.*
+*Written 2026-07-24. Status, OPEN ISSUES and OPEN CONVERSATIONS refreshed 2026-07-26.*
+*Read this first, then `CLAUDE.md`.*
 
 This is the state of the project as it stands, what is solid, what is half-built, and what I would
 do next. It is written for whoever picks this up — including me, later, with no memory of today.
@@ -137,26 +138,98 @@ These are load-bearing. Every one of them was learned by breaking it.
   *geometry* per region is cheap and would pay off immediately.
 - **19 of 28 tile builders still ignore their footprint.** The nine that matter adapt; the rest are
   1×1 only. Giving one a size ladder means making its builder read `ctx.W`/`ctx.D` first.
-- **No interiors.** Buildings are solid. Deliberately parked — see `docs/BACKLOG.md`.
+- **Interiors are v1 only.** Four enterable bungalows on the residential archetype; everything else
+  is solid. Bots do not navigate doorways and beams ignore interior walls — both deliberate, both in
+  `docs/BACKLOG.md`.
+- **POWERWORLD is a dimension with one room in it.** The flight model, camera, targeting, stage and
+  the climb to space are real (`docs/POWERWORLD.md` §14). What it does not have: a second map, any
+  reason to go there other than to fight, and an exit that arrives anywhere.
 - **No real tunnels.** A heightfield cannot fold over itself. The metro is an open cut for exactly
   that reason. Both need a roofed-volume system.
 - **Water is a column.** Paintable per cell, but the shore is still a straight edge — no bays,
   no islands, no rivers.
 - **Netcode.** The human/scheme abstraction is LAN-ready; nothing is implemented.
 
+## OPEN ISSUES
+
+*Known-wrong or known-missing, as of 2026-07-26. Ordered by how likely they are to bite.*
+
+### Defects — real, reproduced, not fixed
+
+| # | what | where | notes |
+|---|---|---|---|
+| 1 | **A duel ignores `p2`.** `_lastCfg = {mode:'duel', p2:'majesty'}` still spawns a random foe. Found while A/B-ing the boxing stage — a test asked for MAJESTY and got VEGA, then TALON, then TEMPEST. Every other mode honours `o.enemy \|\| o.p2`. | `MODE_IMPL.duel` setup, `game.js` | Cost me a wrong measurement before I noticed. Same family as the boxing bug that read only `o.enemy`. |
+| 2 | **Bots still fly the old way in PowerWorld.** `controlBot` writes `moveDir = {x, z}` with no Y, so the AI climbs with the ascend key while the player flies where they look. An AI flier reads as "layered" next to a human one. | `game.js controlBot` | The player-side fix is `p._openSky && p.flying` in `controlPlayer`; the bot needs the same basis. |
+| 3 | **Two writers own the band table.** PowerWorld re-asserts `BANDS.ceiling` every tick because `fitBands()` runs after mode setup and overwrites it. Works, races. | `game.js` powerworld tick / `world.fitBands` | Wants a `plan.bandsLocked` early return. No longer load-bearing for flight (the clamp does not run under an open sky). |
+| 4 | **`world.shake()` is world-space behind the chase camera**, and 9 of 14 VFX are authored for a frame ~10.7× taller than PowerWorld's. Impacts under-read there. | `world.js`, `vfx.js` | `docs/POWERWORLD.md` "still owed" #4. |
+| 5 | **Arms have no elbow.** The leg has a driven knee (ragdoll + run cycle); the arm is one piece. Visible now the camera is close. | `figure.js` | `docs/powerworld/pw-limbs.md`. |
+| 6 | **No hardware numbers.** Every Deck/iPad figure in `pw-platform.md` is arithmetic from source and says so. All measurements are a 4090's. | — | Needs a real device. |
+| 7 | **Boxing has no referee, no clinch break, no rest round.** A clinch just runs its timer. | `boxingring.js` | `docs/BACKLOG.md`. |
+| 8 | **The flagship city has no vertex AO.** It builds through its own bespoke path and never calls `tower()`. Measured 48/48 on a generated Tokyo, 0 on the flagship. | `world._buildArena` | Known and deliberate; wants its own pass. |
+
+### Latent traps that are written down but not defended by a test
+
+- **The floor contract.** `|groundY − heightAt(x,z)| < 0.25` for every fighter in every mode, plus
+  flatness inside a venue. This is the check that would have caught the boxing stage; it exists as a
+  rule in `CLAUDE.md` and as an ad-hoc probe, **not** as a runnable suite. Writing it as one is the
+  single highest-value test in the project.
+- **Anything reading terrain must be tested in a theatre that HAS relief.** The `heightAt`/`ARENA`
+  bug was invisible for weeks because the venue was built and screenshotted on the Moon.
+- **"0 errors" is not "correct".** A 9-mode sweep passed boxing clean while it was visibly broken.
+
+---
+
+## OPEN CONVERSATIONS
+
+*Decisions that are Robert's, not mine. Each has a default I have already shipped, so nothing is
+blocked — but these are the places where the shipped answer is a guess.*
+
+1. **The one change that is not PowerWorld-only.** `fitBands` now floors the flight ceiling at
+   `MIN_CEIL 260 / MIN_SKY 150`. It fixes a real pre-existing bug — your saved theatre (a Moon
+   village) had a **42u ceiling**, about four times a fighter's height, and most of the 1,050-city
+   sheet is villages and towns. But you said *"DO NOT CHANGE THE GAME, ONLY POWER WORLD"* and this
+   does change the base game. **Shipped: kept.** One line to revert.
+2. **How far do the mannequins go?** Currently the body is 30% toward bone with a matte finish, and
+   armour/visor/glow/cape keep the hero's colours. You floated *"give them my logos"* — there is no
+   emblem or decal system for a figure, so that part is not built. Do you want the treatment
+   stronger, or the logo system?
+3. **What else should PowerWorld spend its headroom on?** Measured **0.625× the city's GPU frame and
+   0.329× its CPU**. So far that budget has bought a rim light and the mannequin pass. Candidates:
+   real shadows in the chase view, a denser stage, per-fighter trails, a second map.
+4. **Should the long knockback become global?** `_chaseKb` gives PowerWorld a 61.3u carry against the
+   city's 16.1u. The city's ropes, ring-out and every wall slam are tuned against the short one.
+   `pw-combat.md` calls this a feel call and explicitly not mine. **Shipped: PowerWorld only.**
+5. **Is 40 Hz the Steam Deck target?** The governor, the pixel ladder and the p90 variance argument
+   all assume it. Never confirmed.
+6. **Does PowerWorld need a second map?** The brief said *"maps look like Bid for Power"* — plural.
+   There is one stage.
+7. **Does the map maker still stay a game feature?** The 2026-07-23 ruling was "extracted later".
+   ATLAS now stands alone at `/atlas.html`, which is most of the way there.
+8. **Two background tasks you started** (`_pixelCap` returning a method, and the 40 Hz governor
+   inversion) may duplicate fixes already committed for both bugs — worth checking for conflicting
+   edits before merging anything they produce.
+
+---
+
 ## WHAT I WOULD DO NEXT, IN ORDER
 
-0. **Interiors follow-through** — bots steering through `world.interiors[].doorways` when
+*Reordered 2026-07-26. The first two are new and both are cheap.*
+
+0. **Write the floor contract as a real suite** (see OPEN ISSUES). It is the check that catches the
+   class of bug that just broke the boxing stage, and it is maybe forty lines.
+1. **Give the bots pitched flight** (OPEN ISSUES #2). PowerWorld's whole feel is that forward is
+   where you look, and half the fighters in it do not do that yet. One basis change in `controlBot`.
+2. **Interiors follow-through** — bots steering through `world.interiors[].doorways` when
    blocked (no pathfinding exists anywhere; this is the one heuristic that unlocks indoor AI),
    beams stopping at interior walls, and the other three archetypes (commercial/institutional/
    industrial) on the same floorplan engine.
 
-1. **Drive the road graph.** Everything is in place and nothing uses it. Highest payoff per hour.
-2. **Roof geometry per region.** Small change, large visual return.
-3. **Drag-paint and rectangle fill in the editor.** The biggest quality-of-life gap.
-4. **More size ladders** — now that the machinery exists, each new one is a table row plus making
+3. **Drive the road graph.** Everything is in place and nothing uses it. Highest payoff per hour.
+4. **Roof geometry per region.** Small change, large visual return.
+5. **Drag-paint and rectangle fill in the editor.** The biggest quality-of-life gap.
+6. **More size ladders** — now that the machinery exists, each new one is a table row plus making
    one builder read its footprint.
-5. **Coastline authoring** — needs the water mesh and `waterAt()` to read the plan rather than one
+7. **Coastline authoring** — needs the water mesh and `waterAt()` to read the plan rather than one
    x threshold.
 
 ---

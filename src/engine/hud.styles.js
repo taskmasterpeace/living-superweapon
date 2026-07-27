@@ -982,6 +982,6 @@ body.powerworld #hCross b{
   background:var(--gold); opacity:.5;
 }
 /* LOCKED — the crosshair says so, in the one colour that already means "hostile" everywhere else. */
-body.powerworld.locked #hCross i{ background:var(--danger); opacity:1; }
-body.powerworld.locked #hCross b{ background:var(--danger); opacity:.85; }
+body.powerworld.pw-locked #hCross i{ background:var(--danger); opacity:1; }
+body.powerworld.pw-locked #hCross b{ background:var(--danger); opacity:.85; }
 `;

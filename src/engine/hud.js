@@ -1862,7 +1862,7 @@ export class HUD {
     // ⚠ Cached, because this runs every frame and a classList write per frame is a layout thrash.
     const pw = !!p._openSky, lk = pw && !!g.hardLock;
     if (pw !== this._pwCls) { this._pwCls = pw; document.body.classList.toggle('powerworld', pw); }
-    if (lk !== this._lkCls) { this._lkCls = lk; document.body.classList.toggle('locked', lk); }
+    if (lk !== this._lkCls) { this._lkCls = lk; document.body.classList.toggle('pw-locked', lk); }
     this.el.hp.style.width = clamp(p.hp / p.maxHp * 100, 0, 100) + '%';
     this.el.ki.style.width = clamp(p.ki / p.maxKi * 100, 0, 100) + '%';
     // energy readability: amber when low, red pulse when critical, DRAINED tag after an all-in fizzle
