@@ -81,6 +81,32 @@ deep, JSON in/out). Adopt it before writing a second one.
 
 **Not a loop yet.** It is an adoption, then Robert walks around one, *then* it becomes a loop.
 
+### WHERE THE CONVERSATION IS, AND WHERE THE TOOL GOES *(asked 2026-07-27)*
+
+⚠ **THE DECISIONS AND THE WORK ARE IN DIFFERENT REPOS, AND THAT IS A HAZARD WORTH NAMING.**
+
+| what | where |
+|---|---|
+| **the rulings** | `docs/DECISIONS_REMAINING.md:14-15` — *short corridor* · *12-or-18 cannot be decided on paper* |
+| **his own uncertainty, verbatim, unresolved** | `docs/MULTIVERSE.md:790` |
+| **the Ascension-side interiors that already work** | `docs/THE_MAP_MAKER.md` · `docs/ATLAS_FORMAT.md` · `docs/BACKLOG.md` |
+| **the actual work item** | **ShootEm #149, OPEN** — *"THE BASE BUILDER + interior combat — the critical path before the big push"* |
+
+So while the focus is War World, the ruling that governs it lives in the *other* repo's docs folder.
+Copy the two decisions into #149 before the next push, or they will be re-litigated by someone who
+never saw them.
+
+**WHERE TO BUILD IT: a new War World LAB PAGE.** War World ships 26 of them and has **no**
+base/interior/room page — `animroom` and `warroom` are the nearest and neither is it. ⚠ **Do not port
+ATLAS** — different engine, different plan format, and a port drags Ascension's city model into a game
+that does not want it. **Copy its SHAPE**, which is proven: standalone page · live 3-D behind the panel
+· a validator that shares one rule with the generator · undo · named layouts · JSON in and out.
+
+⚠ **And this is the item that most needs the unified harness**, which is why 0 and 2 are really one
+move: *"12 or 18 squares"* is a **look-at-it** question, so the critic must be able to screenshot,
+so `playwright` must be installed. Without item 0 this loop cannot answer the only question it exists
+to answer.
+
 ---
 
 ## 3–6. THE CONTENT LOOPS — *these are the ones that actually run the pattern*
