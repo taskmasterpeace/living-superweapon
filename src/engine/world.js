@@ -2511,7 +2511,7 @@ export class World {
   chase(subject, target, dt) {
     const c = this.setCameraMode('chase');
     const S = subject.pos, spd = Math.hypot(subject.vel.x, subject.vel.y, subject.vel.z);
-    const gap = target ? Math.hypot(target.pos.x - S.x, target.pos.y - S.y, target.pos.z - S.z) : 40;
+    const gap = target ? Math.hypot(target.pos.x - S.x, target.pos.y - S.y, target.pos.z - S.z) : 14;   // BFP tightening (2026-07-28): no-lock solo flight sits CLOSE behind, not 40u out
     // ---- FOV rides speed. BFP exposes FOV as a player dial and the reason is that it is the single
     // cheapest sensation of pace in the genre: the frame widens as you commit.
     // ⚠ `vRef` KILLS THE SEVENTH HAND-PICKED LADDER (aaa-04 §7). The old `k = (spd−14)/96` measured
@@ -2637,11 +2637,17 @@ export class World {
     // FRAME_MAX the camera frames YOU and the HUD's off-screen foe arrow does its job, which is what
     // that arrow already exists for. Chasing an unwinnable framing costs readability at every range.
     const FRAME_MAX = 52;
-    const fit = (Math.min(gap, FRAME_MAX) + 20) / (2 * Math.tan((this._chaseFov * Math.PI / 180) / 2));
+    // ⚠ THE BFP OVER-THE-SHOULDER TIGHTENING (Robert, 2026-07-28: the audit vs Bid for Power — the
+    // hero read small at ~56u; BFP keeps the character large, ~1/3 of the frame, close behind). The
+    // FRAMING still scales with `gap` (two fighters stay in frame during combat), but the base
+    // standoff drops hard: padding `+20 → +8`, margin `1.15 → 1.05`, min `24 → 15`. Solo flight now
+    // sits ~20u behind instead of ~62. Feel dial — re-shoot and tune with Robert; the camSuite gates
+    // encoded the OLD framing and will move.
+    const fit = (Math.min(gap, FRAME_MAX) + 8) / (2 * Math.tan((this._chaseFov * Math.PI / 180) / 2));
     // ⚠ AIR RIDER (from AIR, aaa doc §Wave3): `k·16 → k·26`. Open-sky top speed rose to PW_AIR.top=210,
     // so two fighters close far faster (gate A2: both in frame at 210 u/s) — the speed pull-back must
     // earn more standoff. `ov.range` is the frame claim's additive distance (0 = null claim).
-    const want = clamp(Math.max(24, fit * 1.15) + k * 26 + ov.range, 24, 86);   // 15% margin so nobody rides the edge
+    const want = clamp(Math.max(15, fit * 1.05) + k * 26 + ov.range, 15, 86);
     // ⚠ THE SNAP (aaa-04 §4.8): on a discontinuity the damped state copies ideal with no lerp, so the
     // eye does not fly across the map. `snapChase()` sets `_chaseSnap`; this helper honours it once.
     const snap = this._chaseSnap;

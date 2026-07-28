@@ -78,7 +78,11 @@ export const SETTINGS = {
   // can take the whole look in one click and then argue with any single part of it.
   // ⚠ 'off' is a real preset and it is exactly the pipeline as it shipped — the pass disables itself
   // when nothing is on, so choosing OFF costs a uniform test, not a blit.
-  look: 'broadcast',
+  // ⚠ POWERWORLD FORK: DEFAULT OFF (Robert, 2026-07-28: "remove the comic filter, this game should
+  // have that feel"). PowerWorld wants the clean BFP look, not the ink/halftone/paper treatment.
+  // `applySettings` writes the preset's dials, so 'off' zeroes every fx*. Still a real preset in
+  // Options — a player can pick the comic look back on. (ASCENDANTS keeps 'broadcast'.)
+  look: 'off',
   fxInk: 0.85, fxHalftone: 0.55, fxLevels: 0, fxGrain: 0.30,
   fxTilt: 0, fxDither: 0.35, fxGrade: 1, fxImpact: true, fxSpeedLines: true,
   fxVibrance: 0.35, fxSaturation: 0, fxRim: 0.8,
