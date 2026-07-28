@@ -1880,6 +1880,58 @@ measured, not claimed** (see the last row block). Harness: `src/bench/powerworld
 - ⚠ **DOC DRIFT FOUND**: CLAUDE.md says the crowd is 64 pedestrians in several places. It is
   `COUNT = 30` in `pedestrians.js` and has been for some time (64 is the WILDLIFE bird count).
 
+## WAVE 4 — THE JUMP + THE IMPACT FRAME (2026-07-28) — AAA doc §"WAVE 4", gates GROUND/IMPACT
+- **THE GAME'S FIRST JUMP** (`entity.js`): `Space` is one key, two meanings, disambiguated by FOOTING.
+  On the GROUND a rising edge JUMPS (`JUMP_VEL 25.5` — JKA's apex in body-lengths under our 60 wu/s²
+  gravity, ≈5.42u apex / 0.85s airtime); the same edge in the AIR, or the button HELD past the apex
+  (`_jumpT` clock), is TAKEOFF into flight — so "altitude is the mode switch" survives. Grounded heroes
+  (RAGE/SARGE, flightTier 0) jump too. Adds COYOTE (0.12s of "still on the ground" after a lip),
+  Q3 TWO-REGIME ground friction (`STOP_SPEED 17.1` — proportional above, an absolute floor below, so a
+  run comes to a crisp REST in ~0.167s instead of an exponential tail; GROUND CLASS only, the open-sky
+  coast + launched/thrown/slide keep exp decay), CROUCH (`KM.down` while `onFoot` → ×0.50 speed,
+  pm_duckScale, + halves a hard-landing knee), and the **LANDING flight-exit fix** — flight now exits
+  only on a real ARRIVAL (`arrived = impact≤0 && launchT≤0 && !flyHeld`); under `_openSky` this is what
+  finally lets a PowerWorld fighter STAND ON THE FLOOR (`flying` used to stay true there forever).
+  New footing signals `onFoot`/`airT`/`footT` (computed LAST in `_physics`, never true while flying) and
+  the MEASURED SWING (`_handSpd` — the fist mesh `arm.children[2]` world speed, for melee.js swingMult).
+- ⚠ **`onFoot` ≠ `flying`/`gait`**: `flying` answers "which grammar owns me", `onFoot` answers "are my
+  feet on something" — which is what jump/crouch/roll/the measured swing need, and a descending fighter
+  is airborne the whole way down. COYOTE keeps it true for 0.12s of air after a lip so a move never
+  visibly fires from ground state after the ground is gone.
+- **THE IMPACT FRAME reads in the CLOSE (chase) frame** (`vfx.js`/`world.js`/`game.js`/`hud.js`/
+  `comic.js`/`particles3d.js`), ALL gated on `camMode === 'chase'` so **the city (iso) is byte-identical**:
+  angular shake RING-DOWN (two decaying octaves on an axis stamped once per EVENT in the camera's screen
+  plane — the eye NEVER moves, look-point only, camera POSITION deviation exactly 0); a spark-AREA cap
+  (`particles.setMaxPx` + `_cap`/`frameHeightAt` — a hit spark is smaller than the fighter it lands on,
+  the perspective divide finally bites at chase distance); the two-layer star rule CUTS the accent star;
+  the blast DOME cut entirely + the detonation KERNEL suppressed when the eye is inside them (a backside
+  additive sphere you're inside tints every pixel — the heliopause-shell lesson); `impactStar` takes
+  `depthTest:true` so it stops painting over the player's own back; `world.print.impactFrame` fires on the
+  teleport-catch and the shoot-a-throw-out-of-the-air beats (heavy, no fighter hit); and the DOM clears
+  off the centre box — `flashScreen` + `damageNumber` CUT in chase (the print pass's one inverted frame
+  IS the heavy tell now), the hit-direction disc becomes an ANNULUS SECTOR, the comic reserves the centre.
+- **THE DIALS** are `PW_FX` in `core/util.js` (pre-seeded in an earlier wave, "landed unread" — Wave 4
+  is what CONSUMES them): shake deg/mix/octaves, spark tiers (jab 0.088 → heavy 0.181 of frame),
+  blastCore/Shell/kernelNear, ptMaxFrac, sparkCount, axisEvent.
+- **GATES**: `LSW.groundSuite()` = **15/15 logic green**, styles clean (5 distinct arcs). `LSW.pwSuite()`
+  (the city/PW regression) = **42/42, 0 console errors** — the city haymaker is byte-identical, a
+  101-impulse launch still carries 16.0u, PW throws ≥10× the city. ⚠ **The IMPACT PIXEL gate**
+  (`LSW.impactSuite()`, I0–I8: silhouette delta, one-frame invert, blowout) **needs a FOREGROUNDED tab**
+  — it throttles/hangs in a hidden pane (the documented pixels-need-foreground limitation), so it is
+  verified here by targeted non-pixel checks + deps/PW_FX-rungs present + bundles clean + 0 console
+  errors, NOT by the pixel run. Run it in a real tab to close it.
+- ⚠ **THE pwSuite HARNESS WENT STALE against Wave 3's three-phase melee, and it cost a run.** Its H0
+  self-proof (a point-blank haymaker must land) read **0 dmg** and cascaded ALL 13 failures — since the
+  three-phase machine, `chargeUpdate` ZEROES `meleeCharge` on any frame `canAct` is false, and a harness
+  stub can't hold the strike input a player does, so the wind-up never accumulated and `chargeRelease`
+  fired a 0-charge. **The ENGINE was never regressed** (a live-driven haymaker always lands 39.1 dmg,
+  first hit at frame 21 = the 0.35s startup, city ≡ PowerWorld); Wave 4 touches no melee code. Fix
+  (`bench/powerworld.js`): FORCE the wind-up directly each frame (ground.js's proven method) —
+  controlPlayer runs before melee.update and chargeRelease reads the value in the same call, so the
+  zeroing can't beat it. ⚠ **When a gate goes red, prove the ENGINE with a driven repro before believing
+  the gate** — a stale harness measuring its own driving is inadmissible (the wwa-verify law).
+- ⚠ `boot.js` now exposes `LSW.groundSuite` + `LSW.THREE` (the hand-speed instrument reads `L.THREE`).
+
 ## WAVE 3 — THE TWO GRAMMARS: BFP AIR, JEDI-ACADEMY GROUND (2026-07-28) — AAA doc §"WAVE 3"
 - **AIR — flight now COMMITS (BFP momentum).** Under `flying && _openSky`, `PW_AIR.accel == AIR_DRAG`:
   time-to-top 0.124s → **1.66s**, turn radius 11 → **55.6u**, a 180° reversal **17u** — half a body
