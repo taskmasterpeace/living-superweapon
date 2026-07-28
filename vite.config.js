@@ -23,7 +23,12 @@ export default defineConfig({
     // own identity — on one engine. See src/boot.js.
     rollupOptions: {
       input: {
-        main: fileURLToPath(new URL('./index.html', import.meta.url)),
+        // ⚠ THE POWERWORLD FORK: `/` (index.html) IS PowerWorld here — this repo's front door is
+        // the chase-camera game, not the isometric city one. The city game is preserved, buildable,
+        // one click away at `/citygame.html`; both are the same engine. (In the ASCENDANTS repo the
+        // roles are reversed: index = city, powerworld.html = the second door.)
+        main: fileURLToPath(new URL('./index.html', import.meta.url)),        // = PowerWorld
+        citygame: fileURLToPath(new URL('./citygame.html', import.meta.url)), // the ASCENDANTS city game
         atlas: fileURLToPath(new URL('./atlas.html', import.meta.url)),
         powerworld: fileURLToPath(new URL('./powerworld.html', import.meta.url)),
       },
