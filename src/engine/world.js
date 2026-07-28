@@ -11,7 +11,7 @@ import { PrintPass } from './printpass.js';
 import { goldenHour, GOLDEN } from '../data/weather.js';
 const _C1 = new THREE.Color(), _C2 = new THREE.Color(), _C3 = new THREE.Color();
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import { clamp, damp, setBands, DECAL_LIFT } from '../core/util.js';
+import { clamp, damp, setBands, DECAL_LIFT, PW_AIR, PW_FX } from '../core/util.js';
 import { skyFor, worldOf } from '../data/environments.js';
 import { buildTiles , scaleBoxUV, resetDecalLadder, redrapeDecals } from './citytiles.js';
 import { CELL, districtNameAt, districtTypeAt, thresholdPlan, ROAD, junctionAt, WATER_DEPTHS, roadClear, surveyCity, surveyAt } from '../data/cityplan.js';
@@ -66,6 +66,15 @@ export class World {
     this.camera = this.camOrtho;
     this.camMode = 'iso';
     this._shake = 0; this.shakeV = new THREE.Vector3();
+    // THE UNCLAIMED CAMERA AXIS (aaa-04 §5.6) — the direction the camera is TRYING to look along,
+    // published by chase() after the degenerate blend and BEFORE any frame claim. game.cameraDrive
+    // reads it for the move/aim basis (RIDER), so a camera flourish can never invert the controls.
+    this.camBasis = new THREE.Vector3(0, 0, 1);
+    // POINTER-LOCK MOUSE-LOOK state (aaa-01 §2.3). Yaw is UNBOUNDED; pitch clamped to ±asin(camPitch)
+    // = ±80°. Fed per frame by world.mouseLook(dx,dy) (called from the chase-mode branch of
+    // game.cameraDrive — RIDER); consumed by chase() as the view axis when there is no lock target.
+    this._lookYaw = 0; this._lookPitch = 0; this._lookActive = false;
+    this._lookSens = 0.0024;   // rad per locked-pointer pixel
 
     this._buildLights();
     this._buildSky();
@@ -1296,7 +1305,35 @@ export class World {
 
   setBaseZoom(f) { this._baseFrustum = f; }
   shake(a) { this._shake = Math.min(this._shake + a * (this.shakeMult ?? 1), 8); }
-  punch(z) { this.frustumTarget = Math.min(this.frustumTarget, this.frustum * z); } // zoom IN briefly
+  // ⚠ punch() WAS A NO-OP IN THE CHASE VIEW (aaa-04 §9 / aaa-06 §5): `frustumTarget` is read only by
+  // the orthographic projection branch, so ~24 combat-feel beats died in PowerWorld AND leaked —
+  // `Math.min` only ratchets `frustumTarget` down and nothing in chase() damped it home, so the city
+  // came back punched-in. Under a perspective camera a punch is an FOV KICK. The early return is the
+  // leak fix: `frustumTarget` is never written while chase is up, so the city is byte-unchanged.
+  // The kick is compressed through PW_FX.punchK so a 0.62 call site is a −9.9° shove, not a 22° lens
+  // change, preserving the ordering all call sites authored (aaa-06 §5.2) — the PW_KB discipline.
+  punch(z) {
+    if (this.camMode === 'chase') { this._fovKick = Math.min(this._fovKick ?? 1, 1 - (1 - z) * PW_FX.punchK); return; }
+    this.frustumTarget = Math.min(this.frustumTarget, this.frustum * z);   // zoom IN briefly
+  }
+
+  // THE KILL SWITCH (aaa-04 §4.8). Consumed by the NEXT chase() call, which copies ideal → damped
+  // with no lerp so the eye does not fly across the map on a discontinuity. setCameraMode('chase')
+  // arms it for the FIRST chase frame (the inherited iso eye is 260u away); the other five triggers
+  // — mapCam release, match reset, teleport-intercept, portal hop, respawn — live in game.js (RIDERS).
+  snapChase() { this._chaseSnap = true; this._fovKick = 1; }
+
+  // POINTER-LOCK MOUSE-LOOK (aaa-01 §2.3, requirement table). Integrates a per-frame pointer delta
+  // into the view yaw (unbounded) and pitch (clamped to ±asin(PW_AIR.camPitch) = ±80°, which lands
+  // inside the degenerate-blend case chase() already handles). Marks the look active so chase() uses
+  // it as the axis when there is no lock target. dy is inverted: pushing the mouse UP looks UP.
+  mouseLook(dx, dy) {
+    if (!dx && !dy) return;
+    const pMax = Math.asin(clamp(PW_AIR.camPitch, 0, 1));   // 80°
+    this._lookYaw += (dx || 0) * this._lookSens;
+    this._lookPitch = clamp(this._lookPitch - (dy || 0) * this._lookSens, -pMax, pMax);
+    this._lookActive = true;
+  }
 
   // ---- THE MAP TOOL CAMERA ---------------------------------------------------------------------
   // A free orbit/pan/zoom over the plan, for authoring rather than playing. The match camera is a
@@ -1436,18 +1473,35 @@ export class World {
     }
     if (writes) cv.instanceMatrix.needsUpdate = true;
   }
-  _segBox3(x0, y0, z0, x1, y1, z1, c) {
+  // THE TRACE PRIMITIVE (aaa-05 §5.1). Parametric entry distance along the segment in [0,1], or -1
+  // for a miss / an unreadable record. NO gating — the caller decides what range it cares about.
+  // ⚠ REFUSES a half-filled record (aaa-05 §5.4): PowerWorld's spires shipped with no hx/hz/top, and
+  // `x < undefined` is false, so they were transparent to every ray. A trace that silently declines
+  // to see a mountain is the same defect as a bullet flying through it — return -1, never compute
+  // with `undefined`.
+  // ⚠ THE Y FLOOR IS 0, NOT `c.y0`. In THIS codebase `y0` is the box CENTRE (world.js:515,
+  // citytiles.js:193), not its bottom — reading it would halve every building's occlusion box and
+  // break the byte-identical contract below. The old `_segBox3` used the literal 0; so does this.
+  traceBox3(x0, y0, z0, x1, y1, z1, c) {
     const hx = c.hx ?? c.r, hz = c.hz ?? c.r, top = c.top ?? c.h;
+    if (hx == null || hz == null || top == null) return -1;
     let tmin = 0, tmax = 1;
     const axes = [[x0, x1 - x0, c.x - hx, c.x + hx], [y0, y1 - y0, 0, top], [z0, z1 - z0, c.z - hz, c.z + hz]];
     for (const [p0, d, mn, mx] of axes) {
-      if (Math.abs(d) < 1e-6) { if (p0 < mn || p0 > mx) return false; continue; }
+      if (Math.abs(d) < 1e-6) { if (p0 < mn || p0 > mx) return -1; continue; }
       let t1 = (mn - p0) / d, t2 = (mx - p0) / d;
       if (t1 > t2) { const t = t1; t1 = t2; t2 = t; }
       tmin = Math.max(tmin, t1); tmax = Math.min(tmax, t2);
-      if (tmin > tmax) return false;
+      if (tmin > tmax) return -1;
     }
-    return tmin > 0.02 && tmin < 0.98;
+    return tmin;
+  }
+  // ⚠ BYTE-IDENTICAL to the old _segBox3 (aaa-05 §5.1). updateOcclusion calls this on the camera→
+  // player segment every frame; the tower/canopy cutaway depends on it, and any drift is a visible
+  // regression in the city. -1 (miss or unreadable) → false, exactly as the old NaN path returned.
+  _segBox3(x0, y0, z0, x1, y1, z1, c) {
+    const t = this.traceBox3(x0, y0, z0, x1, y1, z1, c);
+    return t > 0.02 && t < 0.98;
   }
 
   // Screen (client px) -> ground world point (y=0 plane). Reuses one raycaster/plane (called every frame).
@@ -1455,6 +1509,84 @@ export class World {
     _ndc.set((mx / innerWidth) * 2 - 1, -(my / innerHeight) * 2 + 1);
     _ray.setFromCamera(_ndc, this.camera);
     _ray.ray.intersectPlane(_groundPlane, out);
+    return out;
+  }
+
+  /**
+   * THE AIM TRACE (aaa-05 §5.2). One ray — from the camera, through the crosshair, into the world —
+   * and the NEAREST hit written into `out`. This is what makes the reticle stop lying: MARK builds a
+   * convergent aim from `out.point` instead of applying the camera's DIRECTION from the player's
+   * POSITION (two parallel rays that never meet — a constant 6.8u miss).
+   *
+   * ⚠ FROZEN SIGNATURE (POWERWORLD_AAA.md WAVE 1). MARK provides, VIEW never changes it:
+   *     aimTrace(out, { origin, dir, maxD, foes, ignore, blind })   — plus optional { flung, pad }
+   *     out = { point: Vector3, dist, hit: 'foe'|'flung'|'cover'|'interior'|'ground'|null, ent }
+   * Returns `out`, always. `origin`/`dir` are GIVEN (MARK reads them off the camera); `dir` unit.
+   *
+   * ⚠ THE HONESTY LAW. Only a foe you can SEE stops the ray — the same `_vis > 0.4` gate pickTarget
+   * and cycleLock use — and when `blind` the foe pass is skipped entirely, so a blinded crosshair can
+   * never converge on a body and the reticle can never be read as a wallhack (GATE R5).
+   */
+  aimTrace(out, o) {
+    const D = o.maxD, O = o.origin, R = o.dir, pad = o.pad || 0;
+    const x1 = O.x + R.x * D, y1 = O.y + R.y * D, z1 = O.z + R.z * D;
+    let best = 1, kind = null, ent = null;
+    // 1. FOES — a body under the crosshair is the case the whole feature exists for; hitting it
+    //    exactly is what makes the miss ZERO rather than small. Eye offset +5.2u (chest, not feet).
+    if (!o.blind && o.foes) {
+      for (const f of o.foes) {
+        if (!f || f === o.ignore || !f.alive) continue;
+        if (f._vis != null && f._vis <= 0.4) continue;                 // honesty gate
+        const t = raySphere(O, R, f.pos.x, f.pos.y + 5.2, f.pos.z, (f.radius || 2.2) + pad, D);
+        if (t >= 0 && t / D < best) { best = t / D; kind = 'foe'; ent = f; }
+      }
+    }
+    // 2. FLUNG PROPS — a thrown car IS a target (manual §47). Optional list MARK passes from game._flung.
+    if (o.flung) {
+      for (const fl of o.flung) {
+        if (!fl || fl.dead) continue;
+        const t = raySphere(O, R, fl.x, fl.y, fl.z, (fl.r || 2) + pad, D);
+        if (t >= 0 && t / D < best) { best = t / D; kind = 'flung'; ent = fl; }
+      }
+    }
+    // 3. COVER — buildings, spires, boulders, rubble. traceBox3 in the same [0,1] segment space.
+    for (const c of this.cover) {
+      const t = this.traceBox3(O.x, O.y, O.z, x1, y1, z1, c);
+      if (t >= 0 && t < best) { best = t; kind = 'cover'; ent = c; }
+    }
+    // 4. INTERIOR WALLS — never ordinary cover (they must not be shootable), so a separate list every
+    //    consumer queries separately. The half-filled-record guard in traceBox3 protects this too.
+    if (this.interiors) for (const it of this.interiors) {
+      if (!it.walls) continue;
+      for (const wl of it.walls) {
+        const t = this.traceBox3(O.x, O.y, O.z, x1, y1, z1, { x: wl.x, z: wl.z, hx: wl.hx, hz: wl.hz, top: it.top });
+        if (t >= 0 && t < best) { best = t; kind = 'interior'; ent = wl; }
+      }
+    }
+    // 5. THE GROUND, and it is `heightAt`, NOT a y=0 plane — that plane is nonsense on relief and on a
+    //    city with metro trenches. March the ray and take the first crossing (STEP 4u = the ~4u
+    //    heightfield lattice; a coarser step steps over a spire's foot, a finer buys nothing).
+    if (R.y < 0) {
+      const far = best * D, step = 4;
+      let pt = 0;
+      for (let t = step; t <= far; t += step) {
+        const h = O.y + R.y * t - this.heightAt(O.x + R.x * t, O.z + R.z * t);
+        if (h <= 0) {
+          let lo = pt, hi = t;
+          for (let i = 0; i < 4; i++) {
+            const mid = (lo + hi) * 0.5;
+            const hm = O.y + R.y * mid - this.heightAt(O.x + R.x * mid, O.z + R.z * mid);
+            if (hm <= 0) hi = mid; else lo = mid;
+          }
+          if (hi / D < best) { best = hi / D; kind = 'ground'; ent = null; }
+          break;
+        }
+        pt = t;
+      }
+    }
+    const P = out.point || (out.point = new THREE.Vector3());
+    P.set(O.x + R.x * best * D, O.y + R.y * best * D, O.z + R.z * best * D);
+    out.dist = best * D; out.hit = kind; out.ent = ent;
     return out;
   }
 
@@ -2206,6 +2338,20 @@ export class World {
   }
 
   /**
+   * World height of the frame at a world point (aaa-06 §1.3). The ONE number every screen-relative
+   * size reads — the GROUND_LAYER/DECAL_LIFT ladder shape (core/util.js) applied to sizes instead of
+   * heights, so forty call sites stop each picking a small number. On the ortho camera the frame is a
+   * constant `2·frustum` (156u); on the perspective chase camera it is `2·dist·tan(fov/2)`, so a
+   * 9.6u fighter is 6.2% of the frame at ortho and 29% at a clinch — which is the whole point.
+   */
+  frameHeightAt(p) {
+    const c = this.camera;
+    if (c.isOrthographicCamera) return this.frustum * 2;
+    const dx = c.position.x - p.x, dy = c.position.y - p.y, dz = c.position.z - p.z;
+    return 2 * Math.hypot(dx, dy, dz) * Math.tan((c.fov * Math.PI / 180) / 2);
+  }
+
+  /**
    * SWAP THE ACTIVE CAMERA. Verified live before any of this was written: the existing
    * `EffectComposer` renders a `PerspectiveCamera` through the identical chain — bloom, ACES tone
    * mapping and the print pass all simply work — for 0.65ms and **zero new shader programs**. The
@@ -2218,6 +2364,9 @@ export class World {
       this.camChase = new THREE.PerspectiveCamera(58, innerWidth / innerHeight, 0.6, 4200);
       this._chaseFov = 58;
     }
+    // First frame in chase: the eye is inherited from the ortho drive (a 260u-distant iso position).
+    // Snap so it does not fly in from there (aaa-04 §4.8, trigger 1 — the only one in this lane).
+    if (mode === 'chase') this.snapChase();
     this.camera = mode === 'chase' ? this.camChase : this.camOrtho;
     this.camMode = mode;
     this._applyQuality();   // the tier ladder reads camMode (the shadow pass) — re-apply on a swap
@@ -2245,16 +2394,31 @@ export class World {
     // ---- FOV rides speed. BFP exposes FOV as a player dial and the reason is that it is the single
     // cheapest sensation of pace in the genre: the frame widens as you commit.
     const k = clamp((spd - 14) / 96, 0, 1);
-    this._chaseFov = damp(this._chaseFov ?? 58, 58 + k * 16, 4, dt);
-    // ---- the axis toward what we are looking at (the foe if there is one, else where we are going)
+    // ⚠ FOV is TWO gestures that must not fight: the speed ride (slow, aesthetic) and the punch KICK
+    // (instant in, eased out). Split so a punch cannot be smeared by the speed damp (aaa-06 §5.1).
+    this._chaseFovBase = damp(this._chaseFovBase ?? 58, 58 + k * 16, 4, dt);
+    this._fovKick = damp(this._fovKick ?? 1, 1, PW_FX.punchHome, dt);   // fast in (Math.min), slow out
+    this._chaseFov = this._chaseFovBase * this._fovKick;
+    // ---- the axis toward what we are looking at: a lock target frames both bodies; else the player's
+    // own MOUSE-LOOK steers the view (aaa-01 §2.3 — a lock overrides look for movement, never the
+    // camera); else fall back to travel direction, then facing. When the mouse is not steering, seed
+    // the look angles from the live axis so activation is seamless (no snap when the player grabs it).
     let ax = 0, ay = 0, az = 1;
     if (target) { ax = target.pos.x - S.x; ay = (target.pos.y + 5) - (S.y + 5); az = target.pos.z - S.z; }
+    else if (this._lookActive) {
+      const cp = Math.cos(this._lookPitch);
+      ax = Math.sin(this._lookYaw) * cp; ay = Math.sin(this._lookPitch); az = Math.cos(this._lookYaw) * cp;
+    }
     else if (spd > 6) { ax = subject.vel.x; ay = subject.vel.y * 0.4; az = subject.vel.z; }
     else { ax = Math.sin(subject.facing); az = Math.cos(subject.facing); }
+    if (!this._lookActive || target) { this._lookYaw = Math.atan2(ax, az); this._lookPitch = clamp(Math.asin(clamp(ay / (Math.hypot(ax, ay, az) || 1), -1, 1)), -Math.asin(PW_AIR.camPitch), Math.asin(PW_AIR.camPitch)); }
     let L = Math.hypot(ax, ay, az) || 1; ax /= L; ay /= L; az /= L;
     // ⚠ CLAMP THE PITCH. Full-sphere means the target can be directly overhead, and a camera that
-    // rolls to follow that is nausea. The vertical component is damped, not obeyed.
-    ay = clamp(ay * 0.55, -0.82, 0.82);
+    // rolls to follow that is nausea. The vertical component is damped, not obeyed — EXCEPT under the
+    // player's own mouse-look, where the pitch is a deliberate choice and is obeyed to ±80°
+    // (PW_AIR.camPitch); that lands inside the degenerate-blend case below, which already handles it.
+    ay = (this._lookActive && !target) ? clamp(ay, -PW_AIR.camPitch, PW_AIR.camPitch)
+                                       : clamp(ay * 0.55, -0.82, 0.82);
     // ⚠ AND THE DEGENERATE CASE HAS TO BE HANDLED EXPLICITLY. With the target straight up, `ax` and
     // `az` both go to zero — the axis has no horizontal part to sit behind, the perpendicular is
     // undefined, and the eye placement collapses. Measured before this fix: with a foe 46u directly
@@ -2268,6 +2432,11 @@ export class World {
       ax += Math.sin(subject.facing) * w; az += Math.cos(subject.facing) * w;
     }
     L = Math.hypot(ax, ay, az) || 1; ax /= L; ay /= L; az /= L;
+    // ---- PUBLISH THE UNCLAIMED AXIS (aaa-04 §5.6). This is the direction the camera is trying to
+    // look along, AFTER the degenerate blend and normalisation and BEFORE any frame claim — JKA's
+    // `pm->ps->viewangles`. game.cameraDrive reads camBasis for the move/aim basis instead of the
+    // live camera quaternion, so a 360° camera flourish can never invert the controls.
+    this.camBasis.set(ax, ay, az);
     // ---- DISTANCE, and it is DERIVED, not chosen. A perspective camera at FOV f sees a vertical
     // extent of `2·D·tan(f/2)` — at 58° that is 1.11·D. To hold two 9.6u fighters AND the gap
     // between them the frame has to be at least `gap + 2 fighters` tall, so `D ≥ (gap + 20) / 1.11`.
@@ -2285,13 +2454,17 @@ export class World {
     const FRAME_MAX = 52;
     const fit = (Math.min(gap, FRAME_MAX) + 20) / (2 * Math.tan((this._chaseFov * Math.PI / 180) / 2));
     const want = clamp(Math.max(24, fit * 1.15) + k * 16, 24, 86);   // 15% margin so nobody rides the edge
-    this._chaseDist = damp(this._chaseDist ?? want, want, 3.2, dt);
+    // ⚠ THE SNAP (aaa-04 §4.8): on a discontinuity the damped state copies ideal with no lerp, so the
+    // eye does not fly across the map. `snapChase()` sets `_chaseSnap`; this helper honours it once.
+    const snap = this._chaseSnap;
+    const D1 = (a, b, l) => snap ? b : damp(a, b, l, dt);
+    this._chaseDist = D1(this._chaseDist ?? want, want, 3.2);
     // ---- the look point: biased toward the target so both bodies sit in frame
     const bias = target ? clamp(gap * 0.012, 0.16, 0.42) : 0.2;
     const lx = S.x + ax * gap * bias, ly = S.y + 5.4 + ay * gap * bias, lz = S.z + az * gap * bias;
-    this.camTarget.x = damp(this.camTarget.x, lx, 9, dt);
-    this.camTarget.y = damp(this.camTarget.y, ly, 7, dt);
-    this.camTarget.z = damp(this.camTarget.z, lz, 9, dt);
+    this.camTarget.x = D1(this.camTarget.x, lx, 9);
+    this.camTarget.y = D1(this.camTarget.y, ly, 7);
+    this.camTarget.z = D1(this.camTarget.z, lz, 9);
     // ---- and the eye, behind the subject along that axis, lifted
     const d = this._chaseDist;
     // ⚠ AND IT LOOKS SLIGHTLY DOWN, not up. The first version lifted the eye by `d·0.20` and pulled
@@ -2306,9 +2479,9 @@ export class World {
     const px = az / Math.hypot(ax, az || 1e-6), pz = -ax / Math.hypot(ax, az || 1e-6);   // perpendicular, level
     const off = d * 0.17;
     const ex = S.x - ax * d + px * off, ey = S.y + 5.4 - ay * d * 0.18 + d * 0.30, ez = S.z - az * d + pz * off;
-    this.camPos.x = damp(this.camPos.x, ex, 8, dt);
-    this.camPos.y = damp(this.camPos.y, ey, 6, dt);
-    this.camPos.z = damp(this.camPos.z, ez, 8, dt);
+    this.camPos.x = D1(this.camPos.x, ex, 8);
+    this.camPos.y = D1(this.camPos.y, ey, 6);
+    this.camPos.z = D1(this.camPos.z, ez, 8);
     // ⚠ ANGULAR SHAKE, NEVER THE WORLD-SPACE ONE. `follow()` adds a metres-long random vector to both
     // the eye and the look point; at ortho that is ~1.8° of jitter, but at a 21u chase distance the
     // same 8u clamp is **29.7°** and 8u is a third of the way to the subject — the camera would pass
@@ -2324,6 +2497,7 @@ export class World {
     const so = this.sunOff;
     this.sun.position.set(sx + so.x, so.y, sz + so.z);
     this.sun.target.position.set(sx, 0, sz);
+    this._chaseSnap = false;   // consumed for exactly one frame (aaa-04 §4.8)
   }
 
   // clamp total shaded pixels: a 4K dpr-2 fullscreen was 10-30× the pixel load of a small pane —
@@ -2409,6 +2583,18 @@ const _gcp = new THREE.Vector3(), _gcq = new THREE.Quaternion(), _gcs = new THRE
 const _ndc = new THREE.Vector2();
 const _ray = new THREE.Raycaster();
 const _groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+
+// nearest positive root of |O + R·t − C|² = r² along UNIT direction R, or -1 (aaa-05 §5.2)
+function raySphere(O, R, cx, cy, cz, r, maxT) {
+  const ox = O.x - cx, oy = O.y - cy, oz = O.z - cz;
+  const b = ox * R.x + oy * R.y + oz * R.z;
+  const c = ox * ox + oy * oy + oz * oz - r * r;
+  const disc = b * b - c;
+  if (disc < 0) return -1;
+  const s = Math.sqrt(disc);
+  const t = -b - s >= 0 ? -b - s : -b + s;
+  return (t >= 0 && t <= maxT) ? t : -1;
+}
 
 
 

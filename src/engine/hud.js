@@ -267,6 +267,7 @@ export class HUD {
       city: this.root.querySelector('#hCity'), telem: this.root.querySelector('#hTelem'),
       sundial: this.root.querySelector('#hSun'),
       wanted: this.root.querySelector('#plWanted'),
+      cross: this.root.querySelector('#hCross'),
       hits: this.root.querySelector('#hHits'), danger: this.root.querySelector('#hDanger'),
       ko: this.root.querySelector('#hKO'), koT: this.root.querySelector('#hKOt'), koS: this.root.querySelector('#hKOs'),
       hint: this.root.querySelector('#hHint'), foeArrow: this.root.querySelector('#hFoeArrow'),
@@ -1854,6 +1855,42 @@ export class HUD {
     while (this.el.feed.children.length > 5) this.el.feed.lastChild.remove();
   }
 
+  // THE CROSSHAIR IS DRAWN WHERE THE SHOT GOES (docs/powerworld/aaa-05-reticle.md §6.4). JKA's own
+  // rule: CG_DrawCrosshair(trace.endpos) — the mark is painted at the projected AIM POINT, every
+  // frame, and hidden when it is behind the camera. Unlocked with a hit on the camera's centre ray
+  // this projects to screen centre and the reticle does not visibly move (the fix is invisible in
+  // the common case); LOCKED it walks onto the enemy, which closes §3.2's lie — the crosshair used
+  // to recolour to hostile red AT SCREEN CENTRE while the shot left for a body 16-42% of the gap
+  // off-centre. Called from game.updateReticle (the SIM loop), never from update() — see the note
+  // there and in update()'s class-toggle block.
+  updateCrosshair(g) {
+    const p = g.player;
+    const pw = !!(p && p._openSky);
+    if (pw !== this._pwCls) { this._pwCls = pw; document.body.classList.toggle('powerworld', pw); }
+    if (!pw) { if (this._lkCls) { this._lkCls = false; document.body.classList.toggle('pw-locked', false); } return; }
+    const el = this.el.cross; if (!el) return;
+    const a = g._aim3pt, s = this._csp || (this._csp = { x: 0, y: 0, behind: false });
+    g.world.screenPosOf(a.x, a.y, a.z, s);
+    if (s.behind) {                                    // ⚠ JKA's rule: "off screen, don't draw it"
+      if (this._csOff !== true) { this._csOff = true; el.style.visibility = 'hidden'; }
+    } else {
+      if (this._csOff !== false) { this._csOff = false; el.style.visibility = ''; }
+      // ⚠ `#hCross` is `position:fixed; left:50%; top:50%` (screen centre) with its ticks at negative
+      // offsets — a `transform: translate()` moves the whole assembly and touches nothing else. Do
+      // NOT write left/top (layout properties, invalidated every frame). ⚠ WRITE ONLY ON CHANGE:
+      // this runs at 60Hz and a per-frame style write is a layout thrash.
+      const dx = Math.round(s.x - innerWidth * 0.5), dy = Math.round(s.y - innerHeight * 0.5);
+      if (dx !== this._csx || dy !== this._csy) {
+        this._csx = dx; this._csy = dy; el.style.transform = `translate(${dx}px, ${dy}px)`;
+      }
+    }
+    // AND IT SAYS WHAT IT HAS. `pw-locked` now means "this mark is hostile" — a hard lock OR the
+    // crosshair sitting on a foe (§6.4's deliberate meaning change: under the convergent trace that
+    // is knowable without a lock). Makes the §5.5 discontinuity visible rather than silent.
+    const hot = !!g.hardLock || !!g.lockTarget || !!(g._aimHit && g._aimHit.hit === 'foe');
+    if (hot !== this._lkCls) { this._lkCls = hot; document.body.classList.toggle('pw-locked', hot); }
+  }
+
   update() {
     const g = this.game, p = g.player; if (!p) return;
     // ⚠ `body.powerworld` WAS DECLARED IN CSS AND NEVER ADDED BY ANYTHING. Every rule in
@@ -1861,9 +1898,18 @@ export class HUD {
     // dead since it was written, which is why a dimension with no city and no police was still
     // showing all three. A stylesheet hook is not a feature until something toggles it.
     // ⚠ Cached, because this runs every frame and a classList write per frame is a layout thrash.
-    const pw = !!p._openSky, lk = pw && !!g.hardLock;
-    if (pw !== this._pwCls) { this._pwCls = pw; document.body.classList.toggle('powerworld', pw); }
-    if (lk !== this._lkCls) { this._lkCls = lk; document.body.classList.toggle('pw-locked', lk); }
+    // ⚠ THE CROSSHAIR ITSELF (position + the `pw-locked` state) IS OWNED BY `updateCrosshair`, driven
+    // from the SIM loop (game.updateReticle) so the reticle harness — which steps game.update by hand
+    // and never calls hud.update — can measure it. Here we only manage the `powerworld` class as the
+    // cleanup safety net for LEAVING PowerWorld: when the match ends `game.update` early-returns and
+    // updateCrosshair stops running, but hud.update keeps ticking, so this is where the class comes
+    // back off (and pw-locked with it). Both share `_pwCls`; the value is identical, so they never
+    // fight, and whichever runs first wins the frame.
+    const pw = !!p._openSky;
+    if (pw !== this._pwCls) {
+      this._pwCls = pw; document.body.classList.toggle('powerworld', pw);
+      if (!pw && this._lkCls) { this._lkCls = false; document.body.classList.toggle('pw-locked', false); }
+    }
     this.el.hp.style.width = clamp(p.hp / p.maxHp * 100, 0, 100) + '%';
     this.el.ki.style.width = clamp(p.ki / p.maxKi * 100, 0, 100) + '%';
     // energy readability: amber when low, red pulse when critical, DRAINED tag after an all-in fizzle

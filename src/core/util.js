@@ -6,6 +6,16 @@ export const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
 export const lerp = (a, b, t) => a + (b - a) * t;
 // frame-rate independent smoothing
 export const damp = (a, b, lambda, dt) => lerp(a, b, 1 - Math.exp(-lambda * dt));
+// THE YAW-RATE STIFFENER (openjk cg_view.cpp:646 / aaa-04 §4.2). `stiff` in [0,1] is how much of the
+// REMAINING lag to shave off — 0 is plain damp(), 1 is a hard snap. Expressed on the closed FRACTION
+// rather than on lambda, because the lambda multiplier that reproduces JKA is different for every
+// lambda and would be a magic constant per channel.
+// ⚠ DECLARED FOR WAVE 2 VIEW; no consumer in Wave 1.
+export const dampStiff = (a, b, lambda, dt, stiff = 0) => {
+  let closed = 1 - Math.exp(-lambda * dt);
+  if (stiff > 0) closed += (1 - closed) * stiff;
+  return lerp(a, b, closed);
+};
 
 export const rand = (a = 1, b) => (b === undefined ? Math.random() * a : a + Math.random() * (b - a));
 export const randInt = (a, b) => Math.floor(a + Math.random() * (b - a + 1));
@@ -90,6 +100,54 @@ export const bandOf = (y) => y < BANDS.ground ? 0 : y < BANDS.building ? 1 : y <
 // ⚠ EVERY READER GATES ON `f._chaseKb`, which only the powerworld mode sets. The city never reads it.
 export const PW_KB = { kb: 2.2, launch: 1.45, drag: 0.5, window: 2.6, catchK: 52 };
 export const pwCatchSpeed = () => PW_KB.catchK * PW_KB.kb;
+
+// ---- THE POWERWORLD DIAL TABLES ---------------------------------------------------------------
+// Wave 1 (VIEW) lands them ALL in one place so no later wave has to fight for this file. Same home,
+// same reason as PW_KB: entity.js and game.js both read these and neither may import the stage
+// (powerworld.js imports figure.js). Every one is live-editable from the console — `LSW.PW_AIR.top`.
+//
+// AIR grammar (aaa-01 §9.2). Only `camPitch` is CONSUMED in Wave 1 — the chase-camera pitch clamp
+// under pointer-lock mouse-look. The rest is Wave 3 AIR, landed with spec'd defaults, unread here.
+export const PW_AIR = {
+  accel: 1.8,        // == AIR_DRAG. accel/friction IS the terminal-speed multiplier. BFP: 2.0/2.0.
+  plGain: 0.7143,    // airGain = 1 + plGain·(powerBuff−1); derived so airGain(1.70) = 1.50
+  top: 210,          // u/s cap on open-sky wish speed; derived from the chase camera
+  drift: 0.0375, driftSlow: 1.0, driftThresh: 0.3125, driftUp: 0.125,   // PM_Drifting (§4)
+  camPitch: 0.985,   // sin(80°) — world.chase's ay clamp under mouse-look (§6.3)
+};
+
+// IMPACT dials (aaa-06 §15). Only `punchK`/`punchHome` are CONSUMED in Wave 1 — world.punch()'s FOV
+// kick and its ease-home. The rest is Wave 6 IMPACT, landed unread.
+export const PW_FX = {
+  shakeDegPer: 0.18, shakeMaxDeg: 1.25, oct1Hz: 12, oct2Hz: 4.5, oct1Mix: 0.30, axisEvent: 0.5,
+  punchK: 0.45, punchHome: 3.5,
+  sparkJab: 0.088, sparkMid: 0.131, sparkHeavy: 0.181,
+  blastCore: 0.292, blastShell: 0.640, pressureRing: 0.900, flash: 0.05, kernelNear: 1.4,
+  ptMaxFrac: 0.035, sparkCount: 20, speedMix: 0.40,
+};
+
+// THE GAIT MACHINE (aaa-03 §2). DECLARED for Wave 2 GAIT; NO consumer in Wave 1. `gaitAllows` is a
+// permissive placeholder — nothing reads it yet, and the GAIT lane fills its real body (aaa-03 §6.1)
+// when it wires the state machine. Names describe what the fighter is DOING, not which system runs.
+export const GAIT = {
+  GROUNDED: 'grounded',   // feet on a surface — the ground grammar owns you
+  LIFT:     'lift',       // leaving it — the air grammar owns input, the body is catching up
+  AIRBORNE: 'airborne',   // free in three dimensions
+  STOOP:    'stoop',      // a committed descent under your own power
+  SETTLE:   'settle',     // arriving under your own power — the ground grammar already owns input
+  CRASH:    'crash',      // arriving because someone put you here (the only 'none' owner — stagger)
+};
+export const GAIT_OWNER = {                 // WHICH GRAMMAR OWNS INPUT — never null except CRASH
+  grounded: 'ground', settle: 'ground',
+  airborne: 'air', lift: 'air', stoop: 'air',
+  crash: 'none',
+};
+export const gaitAllows = (_f, _move) => true;   // Wave 2 GAIT fills this; unread in Wave 1.
+
+// THE AIM TRACE FALLBACK (aaa-05 §5.3): the p50 reach of a ranged ability over all 52 heroes and 364
+// abilities — the convergence point when the crosshair ray hits nothing (residual ≤ 1.03u at any
+// range). Derived from the distribution, not chosen. Passed by MARK to world.aimTrace as `maxD`.
+export const AIM_MAX_D = 162;
 
 // seeded PRNG (mulberry32) — moved from data/news.js: the city planner and the world both
 // need it, and a planner importing from the news desk was a dependency inversion (review find).

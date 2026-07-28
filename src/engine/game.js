@@ -30,10 +30,17 @@ import { beamBuildOf, beamTemperOf } from '../data/visual.js';
 import { Gamepad } from '../core/gamepad.js';
 import { runSlot, performEvade } from './abilities.js';
 import { ROSTER } from '../data/characters.js';
-import { BANDS, clamp, rand, TAU, damp, GROUND_LAYER, PW_KB, pwCatchSpeed } from '../core/util.js';
+import { BANDS, clamp, rand, TAU, damp, GROUND_LAYER, PW_KB, pwCatchSpeed, AIM_MAX_D } from '../core/util.js';
 import { tierOf, TIER_COLORS } from './entity.js';
 
 const _v = new THREE.Vector3();
+// ⚠ THE RETICLE NEVER LIES (docs/powerworld/aaa-05-reticle.md). `_muz` is the muzzle point for the
+// aim two-pass and `_camDir` the camera's own ray direction — NEITHER may be `_v`, which is live
+// inside `controlPlayer` today (the shared-temp aliasing rule is a hard rule). `_aimOut` is the
+// reused write target for `world.aimTrace` (its `.point` is created once and reused).
+const _muz = new THREE.Vector3();
+const _camDir = new THREE.Vector3();
+const _aimOut = { point: new THREE.Vector3(), dist: 0, hit: null, ent: null };
 const SLOT_KEYS = ['lmb', 'rmb', 'q', 'e', 'r', 'f', 'shift'];
 // what a bot may fire at a thrown car (manual §47) — a TAPPED, aimed, travelling shot. Charges,
 // rushes and ultimates are all the wrong answer to a rock arriving in a second and a half, and the
@@ -1483,7 +1490,16 @@ export class Game {
 
   // Target the character the cursor is OVER; else the foe nearest the cursor (aim-assist).
   pickTarget(p) {
-    const cx = this.input.mouse.clientX, cy = this.input.mouse.clientY;
+    // ⚠ UNDER AN OPEN SKY THE MAGNET MEASURES FROM THE CROSSHAIR, NOT THE CURSOR (aaa-05 §3.1).
+    // There is no pointer lock, so the mouse cursor is a stale, free-floating screen position the
+    // player is not looking at — measuring aim from it silently dragged every shot to wherever it
+    // happened to sit, while the crosshair stayed nailed to screen centre. Measuring from centre
+    // also makes `_hoverPick` reachable: put the crosshair on a body, click, and you hard-lock it.
+    // ⚠ In the iso city the cursor IS the aim and pickTarget is correct as written — this is a
+    // branch on `_openSky`, not a replacement.
+    const pw = p._openSky;
+    const cx = pw ? innerWidth * 0.5 : this.input.mouse.clientX;
+    const cy = pw ? innerHeight * 0.5 : this.input.mouse.clientY;
     let hover = null, hoverD = 1e9, near = null, nearD = 110;   // magnet radius trimmed (was 210 — grabbed aim from across the screen)
     const sp = this._sp, sp2 = this._sp2 || (this._sp2 = { x: 0, y: 0, behind: false });
     for (const f of this.entities) {
@@ -3163,15 +3179,24 @@ export class Game {
       if (soft) soft.center(a3); else a3.set(p.pos.x + ax * 50, 6, p.pos.z + az * 50);
     } else {
       soft = p.blindT > 0 ? null : this.pickTarget(p);             // BLIND: the aim magnet lets go
-      // ⚠ AIMING AT THE GROUND IS MEANINGLESS 200 UNITS ABOVE IT. `screenToGround` intersects the mouse
-      // ray with the floor plane, which is exactly right for an isometric city fight and absurd behind
-      // a chase camera in an empty sky: with no lock, every shot was aimed at a patch of desert far
-      // below whoever you were looking at. Under an open sky the aim is the CAMERA'S OWN RAY — the
-      // crosshair sits at screen centre and what is under it is what you hit.
       if (soft) soft.center(a3);
       else if (p._openSky) {
-        const cf = _v.set(0, 0, 0); this.world.camera.getWorldDirection(cf);
-        a3.set(p.pos.x + cf.x * 120, p.pos.y + 5 + cf.y * 120, p.pos.z + cf.z * 120);
+        // ⚠ THE RETICLE NEVER LIES (docs/powerworld/aaa-05-reticle.md). This used to take the
+        // CAMERA'S direction and apply it from the PLAYER'S position — two parallel rays from
+        // different origins, which never converge. Measured miss: 0.55u at a 16u gap, 8.82u at
+        // 100u, and 15.4u against a foe 45° above at 70u — the bug is worst exactly where the
+        // altitude thesis lives. Now: trace from the CAMERA through the CROSSHAIR (screen centre)
+        // and aim at the world point that ray actually reaches. `getWorldDirection` is the ray
+        // through NDC centre — NOT camBasis, which is the framing axis and reads 15° off here.
+        const cam = this.world.camera;
+        cam.getWorldDirection(_camDir);
+        this._aimHit = this.world.aimTrace(_aimOut, {
+          origin: cam.position, dir: _camDir, maxD: AIM_MAX_D,
+          foes: this.entities, ignore: p, blind: p.blindT > 0,   // honesty: unseen foes never stop the ray
+          flung: this._flung,
+          pad: SETTINGS.aimAssist === false ? 0 : (p.radius || 2.2) * 0.5,
+        });
+        a3.copy(_aimOut.point);
       } else { this.world.screenToGround(m.clientX, m.clientY, a3); a3.y = 3; }
     }
     // hard lock ONLY on a direct click ON a character (LMB is also fire — the old "any attack
@@ -3190,11 +3215,31 @@ export class Game {
     if (this.hardLock && !this.hardLock.alive) this.hardLock = null;
     if (p.blindT > 0) this.hardLock = null;                       // BLIND breaks the lock (manual §14)
     this.lockTarget = soft;
+    // ⚠ THE HARD LOCK OWNS THE AIM POINT (aaa-05 §8). Facing already follows the lock (below); the
+    // aim point did NOT — it came from `soft` (the magnet), which is usually the same fighter but
+    // need not be, so you could be locked to A, facing A, and shooting at B. Under an open sky the
+    // lock is an explicit "this is the target": it owns the point, the facing AND the crosshair, or
+    // "locked" means three things at once. Gated to `_openSky` — the iso city is proven untouched.
+    if (p._openSky && this.hardLock && this.hardLock.alive) this.hardLock.center(a3);
     this.aimPoint.copy(a3).setY(0);
+    // pass 1 — a provisional direction from the body, only to resolve the flat `aim` the muzzle
+    // needs, and to drive facing.
     p.aim3.set(a3.x - p.pos.x, a3.y - (p.pos.y + 5.8), a3.z - p.pos.z).normalize();
     // facing: hard-locked → always face the lock; otherwise face where you aim
     if (this.hardLock && this.hardLock.alive) p.faceDir(this.hardLock.pos.x - p.pos.x, this.hardLock.pos.z - p.pos.z);
     else p.faceDir(p.aim3.x, p.aim3.z);
+    // pass 2 — ⚠ THE SHOT LEAVES THE MUZZLE, SO THE AIM IS MEASURED FROM THE MUZZLE (aaa-05 §6.2).
+    // `aim3` above is measured from `pos + 5.8`, but every shot leaves `c.muzzle()` at `pos + aim*3.4`
+    // — a camera-independent residual of `3.4·sin θ` (2.94u at 60° pitch, a clean miss on a 2.2u
+    // body). `faceDir` has just written `aim`, the only input `muzzle()` needs beyond `pos`, so this
+    // is exact and not a one-frame lag. ⚠ Do NOT re-run `faceDir` — pass 1 owns facing; running it
+    // twice with two slightly different vectors makes the body yaw chase its own tail. Gated to
+    // `_openSky` (the city's near-level ground aim leaves the residual < 0.2u — a no-op, measured).
+    if (p._openSky) {
+      p.muzzle(_muz);
+      p.aim3.set(a3.x - _muz.x, a3.y - _muz.y, a3.z - _muz.z).normalize();
+    }
+    this._aimFresh = true;   // controlPlayer set the aim point this frame — the post-cameraDrive re-anchor is a no-op
 
     // ⚠ THE KEYMAP IS READ 49 LINES BEFORE IT USED TO BE DECLARED. `const KM` sat further down this
     // same function while the SECOND WIND branch below already read `KM.strike` — and a `const` is
@@ -3689,6 +3734,41 @@ export class Game {
     if (this.mode && !this.matchOver) { const over = this.mode.isOver(this); if (over) this.endMatch(over); }
 
     this.cameraDrive(dt);   // ⚠ the ONE arbiter — cinematic > chase view > the two-player fit
+    // ⚠ THE POWERWORLD CROSSHAIR IS PROJECTED HERE — after cameraDrive, in the SIM loop, and gated on
+    // `_openSky` so the iso city path is byte-unchanged (§2.0 rule 5). Two reasons it lives here and
+    // not in updateReticle or hud.update (aaa-05 §6.4):
+    //   · AFTER cameraDrive: controlPlayer computes the aim point a frame before the camera moves;
+    //     projecting it earlier uses a one-frame-stale camera, which reads as ~4px = 1.6u of error
+    //     while the chase camera is drifting (a foe overhead with no stable framing).
+    //   · in game.update, not hud.update: the reticle harness steps game.update by hand and never
+    //     calls hud.update, so the mark has to move here for the gate to be measurable at all.
+    const _pl = this.player;
+    if (_pl && _pl.alive && _pl._openSky) {
+      // ⚠ REFRESH THE CAMERA MATRIX FIRST. cameraDrive set the camera POSITION and its quaternion via
+      // lookAt, but matrixWorld — which getWorldDirection and screenPosOf's .project() both read — is
+      // only rebuilt by updateMatrixWorld, normally in render() a frame later. Both the re-anchor and
+      // updateCrosshair need the fresh matrix or the mark lands on last frame's camera.
+      const _cam = this.world.camera;
+      _cam.updateMatrixWorld();
+      // ⚠ RE-ANCHOR onto game.player's ACTUAL aim ray when the player is BOT-DRIVEN (spectator cam,
+      // AI-vs-AI tests): controlBot writes aim3 but never the aim point, so a stale point would trail
+      // the mover. `_aimFresh` is set by controlPlayer, so this is SKIPPED for the human (their traced
+      // point is authoritative). A bot aims where a human never can — off-axis, even launched behind
+      // its own chase camera — so anchor ON the shot line but IN FRONT of the lens (the distance is
+      // free; only the sign of the depth matters). Behind-and-aiming-away has no on-screen mark and is
+      // a state a real player is never in.
+      if (!this._aimFresh) {
+        _pl.muzzle(_muz);
+        _cam.getWorldDirection(_camDir);
+        const _O = _cam.position;
+        const _depthM = (_muz.x - _O.x) * _camDir.x + (_muz.y - _O.y) * _camDir.y + (_muz.z - _O.z) * _camDir.z;
+        const _fwdDot = _pl.aim3.x * _camDir.x + _pl.aim3.y * _camDir.y + _pl.aim3.z * _camDir.z;
+        const _D = _depthM > 8 ? 4 : (_fwdDot > 0.05 ? clamp((30 - _depthM) / _fwdDot, 4, 4000) : 4);
+        this._aim3pt.set(_muz.x + _pl.aim3.x * _D, _muz.y + _pl.aim3.y * _D, _muz.z + _pl.aim3.z * _D);
+      }
+      if (this.hud && this.hud.updateCrosshair) this.hud.updateCrosshair(this);
+    }
+    this._aimFresh = false;
     if (this.player) this.world.updateOcclusion(this.player.pos, dt);   // towers between lens and player go glassy
     if (this.news) this.news.update(dt);   // the crew shoots BEFORE the main pass — their POV render hides under it
     this.world.render();

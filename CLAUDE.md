@@ -1880,6 +1880,34 @@ measured, not claimed** (see the last row block). Harness: `src/bench/powerworld
 - ⚠ **DOC DRIFT FOUND**: CLAUDE.md says the crowd is 64 pedestrians in several places. It is
   `COUNT = 30` in `pedestrians.js` and has been for some time (64 is the WILDLIFE bird count).
 
+## WAVE 1 — THE RETICLE CONVERGES, THE CROSSHAIR STOPS LYING (2026-07-28) — AAA doc §"WAVE 1"
+- The bug the harness measured: PowerWorld applied the camera's DIRECTION from the player's POSITION —
+  two parallel rays that never converge, so the static miss GREW with distance (0.5u@16 → **8.8u@100**,
+  worst **697u** over a fight) and the crosshair was drawn **23px** off where the shot actually went.
+- **THE FIX (all gated on `f._openSky` — the city is byte-unchanged, pwSuite 42/42, 0 regressions):**
+  · **`world.aimTrace(out,{origin,dir,maxD,foes,ignore,blind})`** in world.js — the convergent ray
+    from the camera through screen-centre to the first foe/cover/ground; honesty lives here (a foe at
+    `_vis≤0.4` or `blind` never stops the ray → R5 green, never a wallhack).
+  · **THE MUZZLE TWO-PASS** (game.js): aim3 is measured from `pos+5.8` but every shot leaves
+    `c.muzzle()` at `pos+aim*3.4` — a 2.94u residual at 60° pitch. Pass 2 recomputes aim from the
+    MUZZLE. Measured 0.004u at 81.5° pitch.
+  · **THE CROSSHAIR IS DRAWN AT `screenPosOf(game._aim3pt)`** (hud) so it cannot lie (≤0.32px).
+    ⚠ It must run AFTER `cameraDrive` AND `camera.updateMatrixWorld()` — `.project()` reads
+    `matrixWorldInverse`, which `render()` rebuilds a frame later, so a drifting camera lagged the
+    mark 11px = 2.5u. Driven from the SIM loop, not hud.update (the harness steps game.update by hand).
+- **Measured static: 697u → 0.035u@16, 0.138u@100; 45°-above 0.000u; overhead 0.073u; pitch-80 0.025u;
+  crosshair ≤0.32px; honesty 0 convergences.** R1–R3, R5 green.
+- ⚠ **NOT yet green, honestly (tracked):** R4 (dynamic 60s-fight worst ≤2.2u) spikes over the bar
+  intermittently — the one-frame camera-matrix lag under fast relative motion. Three RETICLE-SUITE
+  checks are flaky MEASUREMENT bugs, not engine bugs (a soft-lock contaminating the free-aim test,
+  the pure-node predictor miscalibrated ~8.6u vs the engine, the pitch-80 setup not reaching 80° in
+  free aim). **Camera CLIP-THROUGH (C6) is Wave 2's collision work, not Wave 1's** — the gate that
+  flagged it was mis-scoped; VIEW correctly deferred the two-swept-trace collision to Wave 2.
+- ⚠ **RIDERS VIEW handed to later waves** (written in the workflow result, honor them): fill the real
+  `gaitAllows` body (Wave 2, util.js — a permissive `=>true` stub ships now); Wave 2 VIEW owns the
+  camera collision + `CAM_PAD`. `world.camBasis` is the framing axis (measured 15° off the view ray) —
+  the reticle uses `getWorldDirection`, NOT camBasis; don't "fix" that.
+
 ## THE VISUAL PROFILE — every ability legible, no two alike (2026-07-28) — `data/visual.js`
 - Robert's rule: every one of the **364 abilities** carries a **7-trait profile** (source · silhouette
   · motion · impact · residue · family · status-tell) and **no two share more than 3 of the 7**.
