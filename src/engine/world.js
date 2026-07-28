@@ -2661,9 +2661,17 @@ export class World {
     // "two channels at one rate is a single-channel camera wearing two names." Raised to JKA's own
     // relationship (look:eye ≈ 1.8, cg_thirdPersonTargetDamp 0.5 = λ 13.86 vs the eye's 7.13). The eye
     // stays at 8/6/8; only the look point moves, which is what makes the connecting view angle lively.
-    this.camTarget.x = D1(this.camTarget.x, lx, 14.5);
-    this.camTarget.y = D1(this.camTarget.y, ly, 11);
-    this.camTarget.z = D1(this.camTarget.z, lz, 14.5);
+    // ⚠ THE MOUSE IS NOT A SUBJECT TO CHASE (Robert 2026-07-28: "the mouse controls seem off" — and
+    // the BFP source note is explicit: the mouse sweeps the view INSTANTLY, no turn-rate cap; Q3
+    // applies viewangles the same frame). Damping is for tracking the BODY, not the player's own
+    // view input — routed through two cascaded damps (look λ14.5 + eye λ8) a 90° flick smeared over
+    // ~¼s and read as floaty. When the MOUSE owns the view (look active, no lock target), both
+    // channels go ~6× stiffer (time constants ~11/21ms — imperceptible lag, instant feel) while a
+    // LOCKED camera keeps the cinematic damp it was tuned with.
+    const mlk = (this._lookActive && !target) ? 6 : 1;
+    this.camTarget.x = D1(this.camTarget.x, lx, 14.5 * mlk);
+    this.camTarget.y = D1(this.camTarget.y, ly, 11 * mlk);
+    this.camTarget.z = D1(this.camTarget.z, lz, 14.5 * mlk);
     // ---- CAMERA COLLISION, TRACE A (aaa-04 §3.3, openjk.md:298-311). Validate the LOOK POINT against
     // the subject's own eye FIRST, so the eye trace below can never be pulled to a look-at that is
     // itself inside geometry — the corner-spin failure that makes naive chase cameras pirouette. The
@@ -2714,9 +2722,9 @@ export class World {
     // ⚠ `ov.damp` MULTIPLIES the eye lambda (aaa-04 §5.5): 0.5 = twice as loose, 2 = twice as tight.
     // Rides the eye channels only, the same channels JKA applies the stiffener to.
     const E1 = (a, b, l) => this._chaseSnap ? b : dampStiff(a, b, l * ov.damp, dt, stiff);
-    this.camPos.x = E1(this.camPos.x, ex, 8);
-    this.camPos.y = E1(this.camPos.y, ey, 6);
-    this.camPos.z = E1(this.camPos.z, ez, 8);
+    this.camPos.x = E1(this.camPos.x, ex, 8 * mlk);   // mlk: the mouse owns the view — see the look-point note
+    this.camPos.y = E1(this.camPos.y, ey, 6 * mlk);
+    this.camPos.z = E1(this.camPos.z, ez, 8 * mlk);
     // ---- CAMERA COLLISION, TRACE B (aaa-04 §3.3). The eye against the CORRECTED look point. The
     // shoulder offset is already INSIDE the eye expression above (§3.3: do not refactor it out — trace
     // B covers it). No push-out, no lerp, no swing-around: the camera stops PAD-before the wall and the
