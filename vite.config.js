@@ -14,11 +14,18 @@ export default defineConfig({
     // The desktop build ships the whole game offline; a bigger single chunk beats a waterfall of
     // requests over file://, where there is no HTTP caching to win back.
     chunkSizeWarningLimit: 2500,
-    // TWO entries: the game, and ATLAS — the standalone city-generator tool.
+    // THREE entries: the game, ATLAS — the standalone city-generator tool — and POWERWORLD.
+    // ⚠ POWERWORLD IS A PAGE, NOT A REPO, AND THAT WAS A MEASURED DECISION (2026-07-27). The engine
+    // is 44,405 lines across 105 files; PowerWorld's own stage is 575 and everything else it needs
+    // is ~104 flag reads. Forking would have meant maintaining 43,700 duplicated lines to own 700,
+    // and every melee fix, damage type, hero and sample-bank entry would have had to land twice.
+    // A third input costs three lines and gives it its own build target, its own front door and its
+    // own identity — on one engine. See src/boot.js.
     rollupOptions: {
       input: {
         main: fileURLToPath(new URL('./index.html', import.meta.url)),
         atlas: fileURLToPath(new URL('./atlas.html', import.meta.url)),
+        powerworld: fileURLToPath(new URL('./powerworld.html', import.meta.url)),
       },
     },
   },

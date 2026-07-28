@@ -1,0 +1,97 @@
+/* THE PAGE SHELL — shared by every page in the project.
+   ⚠ MOVED OUT OF `index.html`, NOT COPIED (2026-07-27, the PowerWorld front door). It was an inline
+   <style> block, so a second page could only have these rules by duplicating ninety lines — and the
+   day someone fixed the touch layer's safe-area insets, they would fix them on one page. Same law
+   ATLAS already follows with tokens.css/overlays.css: move it, link it from both.
+   Contains: the base page (html/body/#game/#overlay/#hud), the War World title screen, and the
+   TOUCH layer. PowerWorld links this for the base and the touch controls; its own front door
+   (#pwTitle) styles itself in engine/pwTitle.js and the title rules here simply go unused. */
+  /* ============================================================================
+     THE THRESHOLD VISUAL LANGUAGE — one system, followed everywhere.
+     Warm-neutral dark + a single gold accent. NO PURPLE (house rule; KIVULI only).
+     Surfaces are documents and broadcast furniture: hairline borders, dashed section
+     rules, mono for DATA, Rajdhani for VOICE. Every panel in the game — HUD, registry,
+     codex, bracket, atlas, news — draws from these tokens and nothing else.
+     ============================================================================ */
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html,body{ width:100%; height:100%; background:#05060a; overflow:hidden; }
+  body{
+    font-family:"Rajdhani","Inter",system-ui,-apple-system,sans-serif;
+    color:var(--bone); -webkit-font-smoothing:antialiased; cursor:crosshair;
+    user-select:none;
+  }
+  #game{ display:block; width:100vw; height:100vh; image-rendering:auto; }
+  #overlay{ position:fixed; inset:0; pointer-events:none; z-index:10; }
+
+  /* ---- Title / select screen ---- */
+  #title{
+    /* ⚠ justify-content:center + content TALLER than the viewport pushes the top off-screen and
+       makes it unreachable — you cannot scroll above a centred flex item. Once the cold-open desk
+       was added the title stack exceeded 889px on a laptop and the headline was simply gone.
+       flex-start + auto margins keeps it centred when it FITS and scrollable when it does not. */
+    position:fixed; inset:0; z-index:30; display:flex; flex-direction:column;
+    align-items:center; justify-content:flex-start; gap:18px;
+    overflow-y:auto; overscroll-behavior:contain;
+    background:radial-gradient(120% 90% at 50% 20%, rgba(30,20,10,.72), rgba(4,5,9,.96));
+    text-align:center; padding:24px; pointer-events:auto;
+  }
+  #title h1{
+    font-family:"Rajdhani","Inter",sans-serif; font-weight:800; letter-spacing:.06em;
+    font-size:clamp(34px,8vw,86px); line-height:.92;
+    background:linear-gradient(180deg,#fff,var(--gold) 55%,#ff7a1a);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    text-shadow:0 4px 34px rgba(255,150,30,.35); filter:drop-shadow(0 6px 0 rgba(0,0,0,.4));
+  }
+  #title .tag{ letter-spacing:.44em; font-size:var(--t-body); color:var(--gold-pale); text-transform:uppercase; opacity:.85; }
+  #title .sub{ max-width:640px; color:var(--text-2); font-size:var(--t-lg); line-height:1.5; }
+  .roster{ display:grid; grid-template-columns:repeat(5,1fr); gap:10px; max-width:900px; width:100%; margin-top:6px; max-height:46vh; overflow-y:auto; padding-right:6px; scrollbar-width:thin; scrollbar-color:#f5b21a44 transparent; }
+  .rcard{
+    pointer-events:auto; cursor:pointer; border:1px solid rgba(255,255,255,.10);
+    background:rgba(255,255,255,.03); border-radius:var(--r-3); padding:12px 10px; text-align:left;
+    transition:transform .12s ease, border-color .12s ease, background .12s ease;
+  }
+  .rcard:hover{ transform:translateY(-3px); border-color:var(--pc,var(--gold-deep)); background:rgba(255,255,255,.06); }
+  .rcard .dot{ width:12px; height:12px; border-radius:50%; display:inline-block; box-shadow:0 0 12px var(--pc); background:var(--pc); }
+  .rcard .nm{ font-weight:700; font-size:16px; margin-top:6px; letter-spacing:.02em; }
+  .rcard .rl{ font-size:var(--t-sm); color:var(--text-4); text-transform:uppercase; letter-spacing:.14em; }
+  #title .hint{ font-size:var(--t-md); color:var(--text-5); margin-top:8px; }
+  .startbtn{
+    pointer-events:auto; cursor:pointer; margin-top:4px; font-family:inherit; font-weight:800;
+    letter-spacing:.18em; font-size:16px; color:var(--on-gold); padding:12px 26px; border:none; border-radius:var(--r-3);
+    background:linear-gradient(180deg,var(--gold),var(--gold-warm)); box-shadow:0 6px 0 var(--gold-shadow), 0 14px 30px rgba(245,146,26,.4);
+    text-transform:uppercase; transition:transform .08s ease;
+  }
+  .startbtn:active{ transform:translateY(3px); box-shadow:0 3px 0 var(--gold-shadow); }
+  .fadeout{ animation:fade .4s ease forwards; }
+  @keyframes fade{ to{ opacity:0; visibility:hidden; } }
+  #hud{ position:fixed; inset:0; z-index:20; pointer-events:none; }
+
+  /* ================= TOUCH CONTROLS (iPhone / iPad) =================
+     Emits gamepad-shaped state, so gameplay logic is untouched. Laid out inside the
+     safe area so nothing sits under the notch or the home indicator. */
+  #touch{ position:fixed; inset:0; z-index:24; display:none; pointer-events:none;
+    padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
+  #touch .tzone{ position:absolute; bottom:0; top:34%; width:44%; pointer-events:auto; touch-action:none; }
+  #touch .tzone-l{ left:0; } #touch .tzone-r{ right:0; }
+  #touch .tstick{ position:fixed; width:112px; height:112px; margin:-56px 0 0 -56px; border-radius:50%;
+    border:2px solid var(--line-2); background:rgba(10,12,18,.28); opacity:0; transition:opacity .12s; pointer-events:none; }
+  #touch .tstick.on{ opacity:.9; }
+  #touch .tstick i{ position:absolute; left:50%; top:50%; width:52px; height:52px; margin:-26px 0 0 -26px;
+    border-radius:50%; background:var(--gold); opacity:.55; box-shadow:0 0 18px rgba(245,178,26,.5); }
+  #touch .tpad{ position:absolute; right:calc(10px + env(safe-area-inset-right)); bottom:calc(14px + env(safe-area-inset-bottom));
+    display:grid; grid-template-columns:repeat(3,1fr); gap:9px; pointer-events:none; }
+  #touch .tsys{ position:absolute; top:calc(8px + env(safe-area-inset-top)); left:calc(8px + env(safe-area-inset-left)); display:flex; gap:8px; }
+  #touch .tbtn{ pointer-events:auto; touch-action:none; -webkit-tap-highlight-color:transparent;
+    width:62px; height:62px; border-radius:50%; border:1.5px solid var(--line-2);
+    background:rgba(10,12,18,.5); color:var(--text); font-family:var(--f-display); font-weight:800; font-size:19px;
+    display:flex; align-items:center; justify-content:center; backdrop-filter:blur(3px); user-select:none; }
+  #touch .tbtn.on{ background:var(--gold); color:var(--on-gold); border-color:var(--gold); transform:scale(.94); }
+  #touch .tbtn.tsm{ width:46px; height:46px; font-size:16px; }
+  #touch .tb-lmb{ background:rgba(245,178,26,.22); } #touch .tb-ult{ background:rgba(216,31,38,.25); }
+  #touch .tb-guard{ background:rgba(159,208,255,.2); }
+  /* the gadget sits alone on its own row, centred under the movement row — it is a different KIND
+     of thing from a power, a punch or a thruster, and reading as separate is correct */
+  #touch .tb-item{ grid-column:2; background:rgba(224,178,60,.14); }
+
+  /* (responsive rules live at the END of hud.js CSS so they win the cascade) */
+

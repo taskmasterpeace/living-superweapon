@@ -1,7 +1,7 @@
 {
   "name": "war-world-ascendants",
   "version": "0.1.0",
-  "description": "WAR WORLD: ASCENDANTS \u2014 isometric superhuman action. 1,050 real cities, 168 real nations.",
+  "description": "WAR WORLD: ASCENDANTS — isometric superhuman action. 1,050 real cities, 168 real nations.",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -16,6 +16,7 @@
   "devDependencies": {
     "electron": "^33.4.11",
     "electron-builder": "^25.1.8",
+    "playwright": "^1.62.0",
     "vite": "^5.4.0"
   },
   "dependencies": {
