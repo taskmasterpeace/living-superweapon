@@ -94,6 +94,9 @@ class Projectile {
     this.game = game; this.caster = caster; this.team = caster.team;
     this.pos = new THREE.Vector3().copy(o.pos);
     this.vel = new THREE.Vector3().copy(o.vel);
+    // ⚠ BFP PROJECTILE SPEED (Robert, 2026-07-28: "increase projectile speed to BFP"). Open-sky only,
+    // so the city game is byte-unchanged. One choke point — every projectile's velocity is set here.
+    if (caster && caster._openSky) this.vel.multiplyScalar(1.5);
     this.radius = o.radius || 1.4;
     this.damage = o.damage || 12;
     this.blast = (o.blast || this.radius * 2.4) * ((caster.sheet && caster.sheet.blastMult) || 1);   // Demolitionist widens it

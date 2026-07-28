@@ -111,7 +111,9 @@ export const pwCatchSpeed = () => PW_KB.catchK * PW_KB.kb;
 export const PW_AIR = {
   accel: 1.8,        // == AIR_DRAG. accel/friction IS the terminal-speed multiplier. BFP: 2.0/2.0.
   plGain: 0.7143,    // airGain = 1 + plGain·(powerBuff−1); derived so airGain(1.70) = 1.50
-  top: 210,          // u/s cap on open-sky wish speed; derived from the chase camera
+  speedMul: 1.55,    // ⚠ BFP FLIGHT SPEED (Robert, 2026-07-28: "increase flight speed to BFP"). A flat
+                     // open-sky-only multiplier on air wish speed — city flight untouched. Feel dial.
+  top: 340,          // u/s cap on open-sky wish speed (raised 210→340 so the faster flight has headroom)
   drift: 0.0375, driftSlow: 1.0, driftThresh: 0.3125, driftUp: 0.125,   // PM_Drifting (§4)
   // C5 air stopspeed threshold, as a fraction of the fighter's BASE air wish speed. BFP's own ratio
   // is pm_stopspeed/g_speed = 0.3125 (== driftThresh), but that pulls the pwmove suite's normalised

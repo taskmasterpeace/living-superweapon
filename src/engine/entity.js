@@ -404,14 +404,12 @@ export class Fighter {
   toggleFlight() {
     if (this.state === 'ko' || this.grabbedBy || this.frozenT > 0) return;
     if (this.flying) { this.flying = false; }                       // cut it — gravity takes you down
-    // ⚠ EVERY CHARACTER FLIES IN POWERWORLD. Robert: *"this is a new dimension, all characters should
-    // be able to work here."* `flightTier 0` is a rule about EARTH — RAGE and SARGE are grounded
-    // because a soldier and a bruiser do not fly over a city — and a dimension whose entire premise is
-    // air combat cannot bench a third of the roster on a rule from the other world. `_openSky` is
-    // already the "this is PowerWorld" flag on a fighter, so no new field is needed.
-    // ⚠ It does NOT flatten flightTier: the TIERS still decide speed, hover quality and the burner.
-    // A grounded fighter can fly here; they are simply not good at it.
-    else if (this.flightTier > 0 || this._openSky) {
+    // ⚠ FLIGHT RESPECTS flightTier — EVEN IN POWERWORLD (Robert, 2026-07-28, said twice: "ground stuff
+    // SHOULD NOT BE FLYERS... do not add flying to characters who shouldn't have it"). This REVERSES the
+    // earlier "every character flies here" ruling: a grounded fighter (flightTier 0 — SARGE, MERC, GALE)
+    // is grounded EVERYWHERE. `_openSky` still governs HOW the fliers fly (open momentum, no deck servo,
+    // no ceiling) — it no longer GRANTS flight to those who never had it.
+    else if (this.flightTier > 0) {
       this.flying = true;
       if (this.pos.y < 1.5) this.vel.y = 19;                        // pop off the ground (matches FLY_TAKEOFF)
       this._liftFx = 0.25;
@@ -1371,7 +1369,7 @@ export class Fighter {
       // the same edge in the AIR, or the button HELD past the apex, is TAKEOFF into flight, so
       // "altitude is the mode switch" survives intact. The jump refuses while a hard landing recovers
       // (_landT gates JUMP and ROLL only, never strike/guard/grab — §2.4).
-      const canFly = this.flightTier > 0 || this._openSky;
+      const canFly = this.flightTier > 0;   // ⚠ flightTier is the ONLY thing that grants flight (2026-07-28) — a grounded fighter jumps but never takes off, even under _openSky
       const rise = this.flyHeld && !this._flyPrev;
       if (rise && !this.flying && this.onFoot && this._landT <= 0) {
         this.vel.y = Math.max(this.vel.y, JUMP_VEL);         // leave the ground under gravity — NOT flight
@@ -1775,6 +1773,7 @@ export class Fighter {
       // derived so airGain(1.70) = 1.50 (BFP's own flight-only PL term, 2.0→3.0 across its range).
       // ⚠ airGain(1.0) = 1.0 EXACTLY — nobody's opening speed moves; the change is neutral at base power.
       if (this._openSky) {
+        s *= PW_AIR.speedMul;   // ⚠ BFP flight speed (2026-07-28) — open-sky only, so city flight is byte-unchanged
         s *= 1 + PW_AIR.plGain * (this.powerBuff - 1);
         // C5 stopspeed reference: PW_AIR.stopThresh × the BASE air wish speed — read off the
         // CHARACTERISTIC speed, not the cruise/power-inflated `s`, so a coast comes to rest at the

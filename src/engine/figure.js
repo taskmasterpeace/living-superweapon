@@ -221,6 +221,24 @@ export function figure(def) {
     const col = new THREE.Mesh(new THREE.CylinderGeometry(1.32, 1.02, 1.2, 14, 1, true, -1.05, 2.1), armor);
     col.material.side = THREE.DoubleSide; col.position.set(0, 1.9, -0.15); torso.add(col);
   }
+  // ---- THE BODY FORGE STANDARD (Robert, 2026-07-28): "use the models I designed in WAR WORLD —
+  // that military stripe across the chest — as the standard Multiverse model." Slice 1: the
+  // BANDOLIER. A diagonal fabric strap from one shoulder to the opposite hip, mounted on the TORSO
+  // so poses and the ragdoll carry it (the rig contract). Per-hero: it wears the hero's ACCENT
+  // (matte, not the glow), so it varies by fighter like the creator would. `def.build.noSash`
+  // opts a bespoke figure out. Cube head + Forge proportions are the next slices.
+  if (!b.noSash) {
+    // ⚠ TORSO-LOCAL COORDS — child of `torso` (world y≈5.2, capsule r≈1.5). Local origin = chest
+    // centre; front face ≈ z 1.3; chest spans local y ≈ ±2. The sash runs shoulder→opposite hip.
+    // ⚠ SIT IT PROUD OF THE CHEST. The torso is a CAPSULE bulging to z≈1.5 at the centre; a strap set
+    // back at z1.18 sank into that bulge and read as two disconnected ends. z1.62 + a shallow box keeps
+    // the whole diagonal on the surface as one continuous bandolier.
+    const sashMat = new THREE.MeshStandardMaterial({ color: c.accent, roughness: 0.62, metalness: 0.12 });
+    const sash = new THREE.Mesh(new THREE.BoxGeometry(0.62, 3.6, 0.22), sashMat);
+    sash.position.set(-0.05, 0.1, 1.62);      // proud of the chest front
+    sash.rotation.set(0.12, 0, 0.6);          // shoulder→hip diagonal, tipped to follow the chest
+    sash.castShadow = true; torso.add(sash);
+  }
   // chest emblem
   const emblem = new THREE.Mesh(new THREE.CircleGeometry(0.8, 16), glow);
   emblem.position.set(0, 5.7, 1.5); g.add(emblem);
