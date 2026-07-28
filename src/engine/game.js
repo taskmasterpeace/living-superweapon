@@ -1606,35 +1606,33 @@ export class Game {
    * past people, so the last press hands the sky back rather than wrapping forever.
    */
   cycleLock(p) {
-    const foes = this.entities.filter(e => e !== p && e.alive && e.def && !e.isDummy &&
-      this.isFoe(p, e) && (e._vis == null || e._vis > 0.4));
-    if (!foes.length) { this.hardLock = null; return null; }
+    // ⚠ TARGET ONLY WHAT YOU ARE LOOKING AT, AND T ALWAYS RELEASES (Robert, 2026-07-28: "the targeting
+    // is on permanently, I can't turn it off... you should only be able to target what you're looking
+    // at... T to toggle while already locked should toggle off"). The old cycle CAPTURED a foe list
+    // and walked it, but the list went stale the moment a foe moved or _vis flickered, so repeated T
+    // re-ranked and RE-LOCKED list[0] instead of releasing — the "stuck on" bug. And it had no front
+    // cone, so it locked foes BEHIND you. Now: a FRONT-CONE list (never behind), rebuilt each press.
     const cam = this.world.camera, cf = _v.set(0, 0, 0); cam.getWorldDirection(cf);
+    const FRONT = 1.15;   // ~66° — you must be roughly LOOKING at a foe to lock it
     const ang = (e) => {
       const dx = e.pos.x - p.pos.x, dy = e.pos.y - p.pos.y, dz = e.pos.z - p.pos.z;
       const l = Math.hypot(dx, dy, dz) || 1;
       return Math.acos(Math.max(-1, Math.min(1, (dx * cf.x + dy * cf.y + dz * cf.z) / l)));
     };
-    foes.sort((a, b) => ang(a) - ang(b));
-    // ⚠ THE ORDER MUST BE CAPTURED ONCE, NOT RECOMPUTED PER PRESS. Sorting by angle every time looks
-    // right and cycles at random — measured RAGE → MAJESTY → RAGE → VEGA — because acquiring a target
-    // makes the chase camera reframe onto it, which changes the very angles the sort is reading. The
-    // ranking is taken when the cycle STARTS and then walked; it goes stale after a few seconds of not
-    // pressing, so a later press re-ranks against wherever the fight has moved to.
-    const fresh = this._cycle && this.time - this._cycle.t < 3 &&
-      this._cycle.list.length && this._cycle.list.every(e => e.alive);
-    if (!fresh || this._cycle.list.indexOf(this.hardLock) < 0) this._cycle = { list: foes, t: this.time };
-    const list = this._cycle.list;
-    this._cycle.t = this.time;
-    const i = list.indexOf(this.hardLock);
-    // not locked → the one you are most nearly looking at. Locked → the next one round. Last → let go.
-    const next = i < 0 ? list[0] : (i + 1 < list.length ? list[i + 1] : null);
+    const front = this.entities.filter(e => e !== p && e.alive && e.def && !e.isDummy &&
+      this.isFoe(p, e) && (e._vis == null || e._vis > 0.4) && ang(e) <= FRONT);
+    front.sort((a, b) => ang(a) - ang(b));
+    const locked = (this.hardLock && this.hardLock.alive) ? this.hardLock : null;
+    let next;
+    if (!locked) next = front[0] || null;             // lock the one you're most nearly looking at
+    else {
+      const i = front.indexOf(locked);
+      // in view → the NEXT foe in view, or RELEASE past the last; turned away from your lock → RELEASE
+      next = i < 0 ? null : (i + 1 < front.length ? front[i + 1] : null);
+    }
     this.hardLock = next;
-    if (!next) this._cycle = null;      // the cycle ended; the next press starts a fresh ranking
-    if (next) {
-      if (this.audio) { try { this.audio.ui && this.audio.ui(); } catch (err) {} }
-      if (this.hud && this.hud.feed) this.hud.feed(`TARGET · ${next.def.name}`);
-    } else if (this.hud && this.hud.feed) this.hud.feed('TARGET RELEASED');
+    if (this.audio) { try { this.audio.ui && this.audio.ui(); } catch (err) {} }
+    if (this.hud && this.hud.feed) this.hud.feed(next ? `TARGET · ${next.def.name}` : 'TARGET RELEASED');
     return next;
   }
 
@@ -3230,8 +3228,10 @@ export class Game {
     }
     // hard lock ONLY on a direct click ON a character (LMB is also fire — the old "any attack
     // click near a foe locks you" was the "faces one way while I aim another" bug)
-    if (m.leftEdge && this._hoverPick) this.hardLock = this._hoverPick;
-    else if (pad.active && pad.pressed('lmb') && soft) this.hardLock = soft;   // pads have no cursor — keep soft
+    // ⚠ FIRING NEVER LOCKS UNDER AN OPEN SKY (Robert 2026-07-28). In PowerWorld the ONLY way to lock
+    // is T (looking at a foe), so LMB/□ stay pure fire and you can't get stuck locked by shooting.
+    if (!p._openSky && m.leftEdge && this._hoverPick) this.hardLock = this._hoverPick;
+    else if (!p._openSky && pad.active && pad.pressed('lmb') && soft) this.hardLock = soft;   // iso city: pads keep soft
     // ⚠ T IS A CYCLE UNDER AN OPEN SKY, AND A RELEASE EVERYWHERE ELSE. In a city you acquire by
     // clicking a body with a mouse cursor and T lets go — that works because the camera is fixed and
     // everything worth hitting is on screen. Behind a chase camera in an empty sky there is no cursor
