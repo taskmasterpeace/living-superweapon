@@ -3201,27 +3201,28 @@ export class Game {
       const ax = this._padAim.x, az = this._padAim.z;
       soft = p.blindT > 0 ? null : this.pickTargetDir(p, ax, az);
       if (soft) soft.center(a3); else a3.set(p.pos.x + ax * 50, 6, p.pos.z + az * 50);
+    } else if (p._openSky) {
+      // ⚠ FREE AIM UNDER AN OPEN SKY IS THE CAMERA RAY, NEVER THE MAGNET (Robert, 2026-07-28: "target
+      // seems to always be on"). `pickTarget` snaps the aim to the NEAREST foe and set `lockTarget`
+      // every frame, so the hostile reticle was ALWAYS lit and the aim got yanked off where you look.
+      // BFP aims where you LOOK; a SOFT target exists only when a foe is genuinely under the crosshair.
+      // THE RETICLE NEVER LIES (aaa-05): trace from the CAMERA through screen centre — NOT camBasis
+      // (the framing axis, 15° off) — and aim at the world point that ray reaches. A gentle assist
+      // radius (`pad`) still nudges onto a foe near the reticle; the aggressive magnet is gone.
+      const cam = this.world.camera;
+      cam.getWorldDirection(_camDir);
+      this._aimHit = this.world.aimTrace(_aimOut, {
+        origin: cam.position, dir: _camDir, maxD: AIM_MAX_D,
+        foes: this.entities, ignore: p, blind: p.blindT > 0,   // honesty: unseen foes never stop the ray
+        flung: this._flung,
+        pad: SETTINGS.aimAssist === false ? 0 : (p.radius || 2.2) * 0.5,
+      });
+      a3.copy(_aimOut.point);
+      soft = (p.blindT <= 0 && this._aimHit && this._aimHit.hit === 'foe') ? this._aimHit.ent : null;
     } else {
       soft = p.blindT > 0 ? null : this.pickTarget(p);             // BLIND: the aim magnet lets go
       if (soft) soft.center(a3);
-      else if (p._openSky) {
-        // ⚠ THE RETICLE NEVER LIES (docs/powerworld/aaa-05-reticle.md). This used to take the
-        // CAMERA'S direction and apply it from the PLAYER'S position — two parallel rays from
-        // different origins, which never converge. Measured miss: 0.55u at a 16u gap, 8.82u at
-        // 100u, and 15.4u against a foe 45° above at 70u — the bug is worst exactly where the
-        // altitude thesis lives. Now: trace from the CAMERA through the CROSSHAIR (screen centre)
-        // and aim at the world point that ray actually reaches. `getWorldDirection` is the ray
-        // through NDC centre — NOT camBasis, which is the framing axis and reads 15° off here.
-        const cam = this.world.camera;
-        cam.getWorldDirection(_camDir);
-        this._aimHit = this.world.aimTrace(_aimOut, {
-          origin: cam.position, dir: _camDir, maxD: AIM_MAX_D,
-          foes: this.entities, ignore: p, blind: p.blindT > 0,   // honesty: unseen foes never stop the ray
-          flung: this._flung,
-          pad: SETTINGS.aimAssist === false ? 0 : (p.radius || 2.2) * 0.5,
-        });
-        a3.copy(_aimOut.point);
-      } else { this.world.screenToGround(m.clientX, m.clientY, a3); a3.y = 3; }
+      else { this.world.screenToGround(m.clientX, m.clientY, a3); a3.y = 3; }
     }
     // hard lock ONLY on a direct click ON a character (LMB is also fire — the old "any attack
     // click near a foe locks you" was the "faces one way while I aim another" bug)

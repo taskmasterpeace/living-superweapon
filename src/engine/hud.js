@@ -1887,7 +1887,10 @@ export class HUD {
     // AND IT SAYS WHAT IT HAS. `pw-locked` now means "this mark is hostile" — a hard lock OR the
     // crosshair sitting on a foe (§6.4's deliberate meaning change: under the convergent trace that
     // is knowable without a lock). Makes the §5.5 discontinuity visible rather than silent.
-    const hot = !!g.hardLock || !!g.lockTarget || !!(g._aimHit && g._aimHit.hit === 'foe');
+    // ⚠ NOT the passive `lockTarget` — that used to be set every frame by the aim magnet, so the mark
+    // was ALWAYS hot ("target seems to always be on"). Hostile = an explicit hard lock OR the crosshair
+    // actually sitting on a foe (the convergent trace makes that knowable without a lock).
+    const hot = !!g.hardLock || !!(g._aimHit && g._aimHit.hit === 'foe');
     if (hot !== this._lkCls) { this._lkCls = hot; document.body.classList.toggle('pw-locked', hot); }
   }
 
