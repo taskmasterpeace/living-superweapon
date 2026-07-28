@@ -211,8 +211,13 @@ export function figure(def) {
   const stateRing = new THREE.Mesh(new THREE.RingGeometry(4.0, 4.9, 28), new THREE.MeshBasicMaterial({ color: '#9fd0ff', transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide }));
   stateRing.rotation.x = -Math.PI / 2; stateRing.position.y = 0.35; stateRing.renderOrder = 2; groundRig.add(stateRing);
 
-  // torso (chest taper) + neck + collar
-  const torso = new THREE.Mesh(new THREE.CapsuleGeometry(1.5, 2.2, 6, 12), suit);
+  // torso — the Body Forge BLOCK (slice 3): a flat-faced military chest, not a capsule. Same mesh
+  // reference/position, so applyFrame's bulk/scale and every mount (neck, collar, sash, wings, tank)
+  // ride unchanged. Slightly shallow front-to-back — the papercraft plate read.
+  // ⚠ width 2.7, arms at ±1.95 (Robert: "the arms are in the body"): the old CAPSULE tapered at
+  // shoulder height so ±1.58 cleared it; a flat 3.05 plate swallowed the inner half of each arm,
+  // and applyFrame's bulk (×1.42 heavies) vs broad (×1.34) made heavies swallow them whole.
+  const torso = new THREE.Mesh(new THREE.BoxGeometry(2.7, 4.3, 1.85), suit);
   torso.position.y = 5.2; torso.castShadow = true; g.add(torso);
   const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.62, 1.0, 10), skinMat);
   neck.position.set(0, 2.0, 0); torso.add(neck);
@@ -230,32 +235,63 @@ export function figure(def) {
   if (!b.noSash) {
     // ⚠ TORSO-LOCAL COORDS — child of `torso` (world y≈5.2, capsule r≈1.5). Local origin = chest
     // centre; front face ≈ z 1.3; chest spans local y ≈ ±2. The sash runs shoulder→opposite hip.
-    // ⚠ SIT IT PROUD OF THE CHEST. The torso is a CAPSULE bulging to z≈1.5 at the centre; a strap set
-    // back at z1.18 sank into that bulge and read as two disconnected ends. z1.62 + a shallow box keeps
-    // the whole diagonal on the surface as one continuous bandolier.
+    // The chest is a FLAT BLOCK now (Forge slice 3), so the strap lies flush on the plate: torso
+    // half-depth 0.925, sash centred z1.04 → back face flush, front proud by ~0.2.
     const sashMat = new THREE.MeshStandardMaterial({ color: c.accent, roughness: 0.62, metalness: 0.12 });
-    const sash = new THREE.Mesh(new THREE.BoxGeometry(0.62, 3.6, 0.22), sashMat);
-    sash.position.set(-0.05, 0.1, 1.62);      // proud of the chest front
-    sash.rotation.set(0.12, 0, 0.6);          // shoulder→hip diagonal, tipped to follow the chest
+    const sash = new THREE.Mesh(new THREE.BoxGeometry(0.66, 3.9, 0.22), sashMat);
+    sash.position.set(-0.05, 0.1, 1.04);      // flush on the chest plate
+    sash.rotation.set(0, 0, 0.6);             // shoulder→hip diagonal
     sash.castShadow = true; torso.add(sash);
   }
-  // chest emblem
+  // chest emblem — on the flat plate now (box half-depth 0.925), not floating where the capsule bulged
   const emblem = new THREE.Mesh(new THREE.CircleGeometry(0.8, 16), glow);
-  emblem.position.set(0, 5.7, 1.5); g.add(emblem);
-  // pelvis + glowing belt
-  const pelvis = new THREE.Mesh(new THREE.CapsuleGeometry(1.3, 0.8, 4, 10), suit2);
+  emblem.position.set(0, 5.7, 1.06); g.add(emblem);
+  // pelvis + glowing belt — the Forge hip block
+  const pelvis = new THREE.Mesh(new THREE.BoxGeometry(2.55, 1.7, 1.7), suit2);
   pelvis.position.y = 3.2; pelvis.castShadow = true; g.add(pelvis);
   const belt = new THREE.Mesh(new THREE.TorusGeometry(1.24, 0.16, 8, 16), glow.clone());
   belt.material.emissiveIntensity = 0.5; belt.rotation.x = Math.PI / 2; belt.position.y = 0.35; pelvis.add(belt);
 
-  // head + jaw
-  const head = new THREE.Mesh(new THREE.SphereGeometry(1.15, 16, 14), skinMat);
-  head.position.y = 8.0; head.scale.setScalar(0.88); head.castShadow = true; g.add(head);   // a touch smaller — heroic proportions
-  const jaw = new THREE.Mesh(new THREE.SphereGeometry(0.86, 12, 10), skinMat);
-  jaw.position.set(0, -0.42, 0.32); jaw.scale.set(1, 0.72, 0.92); head.add(jaw);
-  // hair/cowl (child of g; ragdoll pins it to the head)
-  const cowl = new THREE.Mesh(new THREE.SphereGeometry(1.22, 16, 12, 0, TAU, 0, Math.PI * 0.62), suit2);
-  cowl.position.y = 8.1; cowl.scale.setScalar(0.9); g.add(cowl);   // tracks the smaller head
+  // ---- THE HEAD RACK (Body Forge slice 2 — Robert 2026-07-28: "funny shaped hair like a square,
+  // but not really square... that kind is the standard Multiverse model"). The sphere head is gone:
+  // every skull is BLOCKY, drawn from the Forge's rack (heads.ts) and picked per hero — `def.headShape`
+  // overrides, else a deterministic id-hash over the Forge's own house blend (wedge 4 · cube 3 ·
+  // jaw 3 · tall 2). Same mesh reference (`head`), same y/scale contract, so the ragdoll, applyFrame
+  // and every mount (visor, horns, hood, crest) are untouched.
+  const HEAD_RACK = ['wedge', 'wedge', 'wedge', 'wedge', 'cube', 'cube', 'cube', 'jaw', 'jaw', 'jaw', 'tall', 'tall'];
+  let hh = 0; for (let i = 0; i < (def.id || '').length; i++) hh = (hh * 31 + def.id.charCodeAt(i)) >>> 0;
+  const hshape = def.headShape || HEAD_RACK[hh % HEAD_RACK.length];
+  let headGeo;
+  if (hshape === 'tall') headGeo = new THREE.BoxGeometry(2.0, 2.75, 2.0);
+  else if (hshape === 'jaw') headGeo = new THREE.BoxGeometry(2.3, 2.2, 2.1);
+  else if (hshape === 'wedge') { headGeo = new THREE.CylinderGeometry(1.02, 1.42, 2.35, 4, 1); headGeo.rotateY(Math.PI / 4); }
+  else headGeo = new THREE.BoxGeometry(2.2, 2.35, 2.2);   // cube
+  const head = new THREE.Mesh(headGeo, skinMat);
+  head.position.y = 8.0; head.scale.setScalar(0.88); head.castShadow = true; g.add(head);
+  if (hshape === 'jaw') {   // the WIDE JAW skull carries its chin as a second block
+    const chin = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.7, 1.75), skinMat);
+    chin.position.set(0, -1.25, 0.12); head.add(chin);
+  }
+  // THE FACE LAW (Forge heads.ts `face()`): ink brows + a mouth line on the front plane. The eyes
+  // stay the hero-accent meshes below (identity), reshaped flat onto the same plane.
+  const inkMat = new THREE.MeshStandardMaterial({ color: '#14100c', roughness: 0.9 });
+  for (const side of [-1, 1]) {
+    const brow = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.13, 0.06), inkMat);
+    brow.position.set(side * 0.42, 0.5, 1.12); head.add(brow);
+  }
+  const mouth = new THREE.Mesh(new THREE.BoxGeometry(0.56, 0.1, 0.06), inkMat);
+  mouth.position.set(0, -0.66, 1.12); head.add(mouth);
+  // THE HAIR — a square-but-not-really cap (the Forge signature): a main slab overhanging the
+  // skull + an asymmetric fringe block. `cowl` keeps its name/reference (ragdoll pins it to the
+  // head; b.hood/b.helmet hide it) — the fringe rides as its child.
+  // ⚠ SUNK INTO THE SKULL, NOT PERCHED. The old dome overlapped the head sphere near-totally, so the
+  // idle head bob never showed; a thin slab perched at the crown opened a visible gap the moment
+  // _animate breathed (measured: slab bottom 0.05u ABOVE the skull top on RAGE). Taller cap, centred
+  // lower — ~0.7u embedded at rest — so no bob can daylight it. Crown still reads above the skull.
+  const cowl = new THREE.Mesh(new THREE.BoxGeometry(2.34, 1.15, 2.28), suit2);
+  cowl.position.y = 8.85; cowl.scale.setScalar(0.9); g.add(cowl);
+  { const fringe = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.55, 0.5), suit2);
+    fringe.position.set(0.34, -0.42, 0.92); cowl.add(fringe); }
   if (b.helmet) { cowl.visible = false; const hel = new THREE.Mesh(new THREE.SphereGeometry(1.3, 18, 12, 0, TAU, 0, Math.PI * 0.66), armor); hel.position.y = 0.1; head.add(hel); }
   if (b.crest) {                                   // fin / flame / antenna
     const cr = new THREE.Mesh(new THREE.ConeGeometry(0.5, 1.8, 4), glow.clone()); cr.material.emissiveIntensity = 0.85; cr.position.set(0, 1.15, -0.1); head.add(cr);
@@ -302,22 +338,23 @@ export function figure(def) {
   }
   if (b.visor) { const vis = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.42, 0.42), visorMat); vis.position.set(0, 0.12, 0.92); head.add(vis); }
   // eyes (children of head; hidden behind a visor)
-  const eyeGeo = new THREE.SphereGeometry(0.2, 8, 8);
+  const eyeGeo = new THREE.BoxGeometry(0.4, 0.34, 0.08);   // Forge face law: flat eye blocks on the front plane (accent = identity)
   const eyeMat = new THREE.MeshBasicMaterial({ color: c.accent });
-  const eyeL = new THREE.Mesh(eyeGeo, eyeMat); eyeL.position.set(-0.42, 0.05, 1.0); head.add(eyeL);
-  const eyeR = new THREE.Mesh(eyeGeo, eyeMat); eyeR.position.set(0.42, 0.05, 1.0); head.add(eyeR);
+  const eyeL = new THREE.Mesh(eyeGeo, eyeMat); eyeL.position.set(-0.42, 0.06, 1.13); head.add(eyeL);
+  const eyeR = new THREE.Mesh(eyeGeo, eyeMat); eyeR.position.set(0.42, 0.06, 1.13); head.add(eyeR);
   if (b.visor) { eyeL.visible = false; eyeR.visible = false; }
 
   // arms — pivot groups; children[0]=upper,[1]=fore,[2]=fist (indices are a ragdoll contract).
   const mkArm = (side) => {
-    const pivot = new THREE.Group(); pivot.position.set(side * 1.58, 6.72, 0);   // seated INTO the torso, at shoulder height
-    const upper = new THREE.Mesh(new THREE.CapsuleGeometry(0.52, 1.5, 4, 8), suit);
+    const pivot = new THREE.Group(); pivot.position.set(side * 1.95, 6.72, 0);   // OUTSIDE the chest plate — the delt pad bridges the joint
+    // Forge slice 3: BOX limb segments + a square shoulder pad + the BRICK hand (bodyforge's lego
+    // fist). ⚠ Child ORDER is the ragdoll contract — upper[0], fore[1], fist[2] — do not reorder.
+    const upper = new THREE.Mesh(new THREE.BoxGeometry(1.0, 2.4, 1.0), suit);
     upper.position.y = -1.05; upper.castShadow = true; pivot.add(upper);
-    // deltoid cap sits ON the joint so the shoulder reads solid from the top-down camera
-    const delt = new THREE.Mesh(new THREE.SphereGeometry(0.74, 10, 8), suit); delt.position.set(-side * 0.1, 0.92, 0); delt.scale.set(1.05, 0.9, 1.05); upper.add(delt);
-    const fore = new THREE.Mesh(new THREE.CapsuleGeometry(0.46, 1.5, 4, 8), skinMat);
+    const delt = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.85, 1.2), suit); delt.position.set(-side * 0.1, 0.95, 0); upper.add(delt);
+    const fore = new THREE.Mesh(new THREE.BoxGeometry(0.88, 2.05, 0.88), skinMat);
     fore.position.y = -2.85; pivot.add(fore);
-    const fist = new THREE.Mesh(new THREE.IcosahedronGeometry(0.66, 0), glow.clone());   // faceted glove
+    const fist = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.9, 0.95), glow.clone());   // the brick hand
     fist.material.emissiveIntensity = 0.0; fist.position.y = -3.85; pivot.add(fist);
     if (b.pauldron) {
       const pa = new THREE.Mesh(new THREE.SphereGeometry(0.98, 12, 10, 0, TAU, 0, Math.PI * 0.62), armor); pa.scale.set(1.15, 0.8, 1.15); pa.position.y = 0.55; upper.add(pa);
@@ -349,16 +386,17 @@ export function figure(def) {
   // _animate swings the hip (pivot.rotation.x) and flexes the knee (knee.rotation.x) for a real gait.
   const mkLeg = (side) => {
     const pivot = new THREE.Group(); pivot.position.set(side * 0.7, 3.0, 0);          // hip joint
-    const thigh = new THREE.Mesh(new THREE.CapsuleGeometry(0.56, 1.5, 4, 8), suit2);
+    // Forge slice 3: box thigh/shin/boot — same userData names, same knee-group structure.
+    const thigh = new THREE.Mesh(new THREE.BoxGeometry(1.1, 2.55, 1.1), suit2);
     thigh.position.y = -0.95; thigh.castShadow = true; pivot.add(thigh);              // hip → knee
-    const hipCap = new THREE.Mesh(new THREE.SphereGeometry(0.62, 10, 8), suit2); hipCap.position.y = 0.85; thigh.add(hipCap);
+    const hipCap = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.9, 1.15), suit2); hipCap.position.y = 0.85; thigh.add(hipCap);
     const knee = new THREE.Group(); knee.position.y = -1.9; pivot.add(knee);          // knee joint
-    const shin = new THREE.Mesh(new THREE.CapsuleGeometry(0.5, 1.3, 4, 8), suit2);
+    const shin = new THREE.Mesh(new THREE.BoxGeometry(0.98, 2.1, 0.98), suit2);
     shin.position.y = -0.85; shin.castShadow = true; knee.add(shin);                  // knee → ankle
-    const kneeCap = new THREE.Mesh(new THREE.SphereGeometry(0.5, 10, 8), suit2); kneeCap.position.y = 0.05; knee.add(kneeCap);
-    const boot = new THREE.Mesh(new THREE.CapsuleGeometry(0.58, 0.7, 4, 8), glow.clone());
+    const kneeCap = new THREE.Mesh(new THREE.BoxGeometry(1.02, 0.6, 1.02), suit2); kneeCap.position.y = 0.05; knee.add(kneeCap);
+    const boot = new THREE.Mesh(new THREE.BoxGeometry(1.05, 1.05, 1.25), glow.clone());
     boot.material.emissiveIntensity = 0.3; boot.position.set(0, -1.85, 0.2); knee.add(boot);
-    const toe = new THREE.Mesh(new THREE.SphereGeometry(0.5, 8, 8), boot.material); toe.position.set(0, -0.15, 0.62); toe.scale.set(1, 0.7, 1.35); boot.add(toe);
+    const toe = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.6, 0.75), boot.material); toe.position.set(0, -0.2, 0.85); boot.add(toe);
     // ⚠ `kneeCap` IS EXPOSED because anything parented to a JOINT GROUP must be reachable by the
     // ragdoll. The knee group is zeroed during a ragdoll so its children can be driven in world
     // space — but a child the ragdoll does not drive is then left at the corpse's own origin.
@@ -398,6 +436,11 @@ export function figure(def) {
   for (const m of [suit, suit2, skinMat, armor]) applyRim(m, new THREE.Color(c.accent).lerp(new THREE.Color('#bcd8ff'), 0.55), 0);
   const P = { g, groundRig, torso, head, pelvis, cowl, emblem, aura, cape, armL, armR, legL, legR, eyeL, eyeR, shadow, bandRing, faceWedge, stateRing, guardArc, ice, tether, mats: { suit, suit2, glow, skin: skinMat, armor } };
   applyFrame(P, frameOf(def));   // ← the silhouette: proportions derived from who this fighter IS
+  // ⚠ THE HAIR FOLLOWS THE HEAD (Forge slice 2). `_animate` writes head.position.y ABSOLUTELY every
+  // frame (bob + landing dip) and never moved the cowl — the old dome overlapped the skull so deeply
+  // it could never show; the Forge cap is a slab and daylights on any pose (measured 0.51u on a posed
+  // SOL). The built offset is stamped HERE (after applyFrame's scaling) and _animate keeps it.
+  P._cowlDy = P.cowl.position.y - P.head.position.y;
   return P;
 }
 

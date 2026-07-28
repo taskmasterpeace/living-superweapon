@@ -1963,6 +1963,8 @@ export class Fighter {
     const land = clamp(this._landT || 0, 0, 1);
     p.torso.position.y = 5.2 + bob + (this.pos.y > 0 ? 0.3 : 0) - land * 1.1;
     p.head.position.y = 8.0 + bob - land * 1.1;
+    // the Forge hair cap rides the head through every pose — the stamped build offset (figure.js)
+    if (p.cowl && p._cowlDy != null) p.cowl.position.y = p.head.position.y + p._cowlDy;
     // run cycle — hips swing, KNEES flex on the back-lift; blends to a trailing pose in flight
     const mv = moving ? 1 : 0;
     const rc = Math.sin(this.animT * 12) * (moving ? 0.7 : 0.05);

@@ -934,13 +934,29 @@ export class Game {
    *
    * @returns {object|null} the record that was hit (already marked dead if it broke).
    */
-  hitFlung(src, pos, radius, amount) {
+  // ⚠ SWEPT, NOT SAMPLED (2026-07-28). This was a point-vs-sphere test per frame — and the BFP
+  // projectile speed pass (×1.5 under an open sky) pushed a rifle round to ~4.7u PER FRAME against
+  // combined radii of ~2-4u, so shots TUNNELLED through a flung rock between frames. Measured: the
+  // bot-interception gate went 0/6 three runs straight (p≈0.0007 as variance — it was the physics).
+  // `prev` is the projectile's position last frame; the test is closest-point-on-segment, so no
+  // speed can step over a target. Callers without a segment (the beam tip) pass nothing and get the
+  // old point test.
+  hitFlung(src, pos, radius, amount, prev) {
     const list = this._flung;
     if (!list || !list.length || !src) return null;
     for (const fl of list) {
       if (fl.dead || fl.by === src) continue;
       if (fl.by && !this.isFoe(fl.by, src)) continue;         // only the side it was thrown AT may break it
-      const dx = fl.x - pos.x, dy = fl.y - pos.y, dz = fl.z - pos.z;
+      let px = pos.x, py = pos.y, pz = pos.z;
+      if (prev) {                                             // closest point of the swept segment to the rock
+        const sx = pos.x - prev.x, sy = pos.y - prev.y, sz = pos.z - prev.z;
+        const ll = sx * sx + sy * sy + sz * sz;
+        if (ll > 1e-8) {
+          const t = Math.max(0, Math.min(1, ((fl.x - prev.x) * sx + (fl.y - prev.y) * sy + (fl.z - prev.z) * sz) / ll));
+          px = prev.x + sx * t; py = prev.y + sy * t; pz = prev.z + sz * t;
+        }
+      }
+      const dx = fl.x - px, dy = fl.y - py, dz = fl.z - pz;
       if (dx * dx + dy * dy + dz * dz > (fl.r + radius) * (fl.r + radius)) continue;
       fl.hp -= amount || 0;
       const at = new THREE.Vector3(fl.x, fl.y, fl.z);

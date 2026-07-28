@@ -370,7 +370,8 @@ class Projectile {
     // case is the prop arriving at your face, so the shot has to meet the car before it meets you.
     // ⚠ `_flung` is only ever populated under an open sky, so in the city this is one length check on
     // an empty array — the whole feature is unreachable there rather than merely switched off.
-    if (game._flung && game._flung.length && game.hitFlung(this.caster, this.pos, this.radius + 1.5, this.damage * this.caster.powerBuff)) {
+    if (game._flung && game._flung.length && game.hitFlung(this.caster, this.pos, this.radius + 1.5, this.damage * this.caster.powerBuff,
+        { x: this.pos.x - this.vel.x * dt, y: this.pos.y - this.vel.y * dt, z: this.pos.z - this.vel.z * dt })) {   // the SWEPT segment — BFP-speed shots stepped past the rock (see hitFlung)
       return this._impact(game, false);
     }
     const foe = game.overlapFoe(this.caster, this.pos, this.radius + 1.5);
