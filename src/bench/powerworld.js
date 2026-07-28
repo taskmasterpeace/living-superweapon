@@ -67,10 +67,18 @@ export async function pwSuite(game, hud, opts = {}) {
         p.flying = true; p.cruiseHeld = true; p.ki = p.maxKi;
         p.move({ x: 1, z: 0 }, dt, 1);           // real flight, real speed, real momentum
       }
+      // ⚠ FORCE THE WIND-UP (aaa-02 §4, the three-phase melee changed accumulation). `chargeStart`
+      // then relying on melee.update to accumulate no longer works from a harness: `chargeUpdate`
+      // zeroes `meleeCharge` on any frame `canAct` is false (a stub can't hold the strike input the
+      // way a player does), so charge stayed 0 and the point-blank haymaker did 0 dmg — the H0
+      // self-proof that cascaded 13 fails. Drive it directly each frame (ground.js's proven method);
+      // controlPlayer runs BEFORE melee.update, and chargeRelease reads the value in the SAME call,
+      // so the zeroing can never beat it. Still a REAL release + real hit + real physics.
       if (frame === 2) game.melee.chargeStart(p);
+      if (!released) p.meleeCharge = Math.min(1.3, (p.meleeCharge || 0) + dt * 3);
       const d = Math.abs(foe.pos.x - p.pos.x);
       const fire = o.swoop ? (p.meleeCharge > 0.6 && d < 7.4) : frame === 45;
-      if (fire && !released) { released = true; momAt = Math.hypot(p.vel.x, p.vel.y, p.vel.z); game.melee.chargeRelease(p); }
+      if (fire && !released) { released = true; momAt = Math.hypot(p.vel.x, p.vel.y, p.vel.z); p.meleeCharge = 1.3; game.melee.chargeRelease(p); }
     };
     for (frame = 0; frame < 1200; frame++) {
       if (!released) { if (!o.swoop) { p.pos.set(0, 0, 0); p.vel.set(0, 0, 0); } foe.pos.set(FOEX, Y, 0); foe.vel.set(0, 0, 0); }
