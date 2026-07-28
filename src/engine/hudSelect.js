@@ -23,6 +23,24 @@ import { rankOf, rankBandOf } from '../data/scale.js';
 import { identityOf } from '../data/identities.js';
 import { icon } from './icons.js';
 import { glyph, padActive } from '../core/glyphs.js';
+import { profileOf, visOf } from '../data/visual.js';
+import { describeAbility, slotFacts } from './hudUtil.js';
+
+// 1u ≈ 0.19m (TRUE 1:1 SCALE, CLAUDE.md); the hero is 9.6u = 1.8m. Everything the studio draws is in
+// world units, so the figure and a power's footprint stand at their real relative sizes by construction.
+const U_TO_M = 0.19;
+const SLOT_ORDER = ['lmb', 'rmb', 'q', 'e', 'f', 'shift', 'r'];   // the fire order on the HUD row
+// Reach in world units, from whatever field the ability actually uses (mirrors hudUtil.reachOf, which
+// isn't exported — one small copy, kept in step with it).
+function powReach(a) {
+  if (!a) return 0;
+  if (a.reach) return a.reach;
+  if (a.range) return a.range;
+  if (a.maxLen) return a.maxLen;
+  if (a.speed) return a.speed * (a.life != null ? a.life : 1.2);
+  if (a.radius) return a.radius;
+  return 0;
+}
 
 const SEL_CSS = `
 #hSelect{position:fixed;inset:0;z-index:71;display:none;flex-direction:column;
@@ -89,6 +107,58 @@ const SEL_CSS = `
 #hSelect .selfilt{margin-left:auto;font-family:var(--f-mono,monospace);font-size:11px;letter-spacing:.16em;
   color:var(--text-4,#8b8577);border:1px solid var(--line,rgba(255,255,255,.1));border-radius:20px;padding:5px 14px;cursor:pointer}
 #hSelect .selfilt:hover{color:var(--gold,#ffd24a);border-color:var(--line-gold,rgba(245,178,26,.35))}
+
+/* ---- STRIP FEEL: depth falloff, a landing pop, and a sheen on the selected card ---------------- */
+#hSelect .scard{box-shadow:0 4px 12px rgba(0,0,0,.4)}
+#hSelect .scard.near{filter:grayscale(.24) brightness(.82);opacity:.9;transform:scale(1.07) translateY(-3px)}
+#hSelect .scard.near2{filter:grayscale(.4) brightness(.72);opacity:.8;transform:scale(1.0) translateY(-1px)}
+#hSelect .scard.on::after{content:"";position:absolute;inset:0;pointer-events:none;border-radius:10px;
+  background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.32) 48%,transparent 66%);
+  transform:translateX(-120%);animation:selsheen 2.6s ease-in-out .25s infinite}
+@keyframes selsheen{0%,58%{transform:translateX(-120%)}80%,100%{transform:translateX(120%)}}
+#hSelect .scard.pop{animation:selpop .34s cubic-bezier(.2,1.5,.35,1)}
+@keyframes selpop{0%{transform:scale(1.06) translateY(-3px)}45%{transform:scale(1.42) translateY(-13px)}100%{transform:scale(1.28) translateY(-8px)}}
+#hSelect .scard .sedge{position:absolute;left:0;right:0;top:0;height:3px;background:var(--c-accent);opacity:0;transition:opacity .28s}
+#hSelect .scard.on .sedge{opacity:1;box-shadow:0 0 10px var(--c-glow)}
+
+/* ---- POWERS · 1:1 — the studio that renders each ability at true world scale ------------------- */
+#hSelect .selpowbtn{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:8px;cursor:pointer;
+  font-family:var(--f-mono,monospace);font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--pc,#ffd24a);background:var(--surface,rgba(8,10,16,.55));border:1px solid var(--pc,#ffd24a);
+  border-radius:8px;padding:9px 12px;transition:background .2s,color .2s}
+#hSelect .selpowbtn:hover{background:var(--pc,#ffd24a);color:#0a0a0f}
+#hSelect .selpowhd{display:flex;align-items:center;gap:10px;margin-bottom:2px}
+#hSelect .selpowhd .h{font-size:20px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--pc,#ffd24a)}
+#hSelect .selpowhd .x{margin-left:auto;cursor:pointer;font-family:var(--f-mono,monospace);font-size:11px;letter-spacing:.14em;
+  color:var(--text-4,#8b8577);border:1px solid var(--line,rgba(255,255,255,.12));border-radius:20px;padding:4px 11px}
+#hSelect .selpowhd .x:hover{color:var(--gold,#ffd24a);border-color:var(--line-gold,rgba(245,178,26,.35))}
+#hSelect .selpowlist{display:flex;flex-direction:column;gap:6px;overflow-y:auto;max-height:38vh;padding-right:4px}
+#hSelect .selprow{display:flex;align-items:center;gap:11px;cursor:pointer;border-radius:8px;padding:8px 11px;
+  background:var(--surface,rgba(8,10,16,.5));border:1px solid var(--line,rgba(255,255,255,.08));
+  border-left:3px solid var(--rc,#666);transition:background .18s,border-color .18s}
+#hSelect .selprow:hover{background:rgba(255,255,255,.05)}
+#hSelect .selprow.on{background:var(--rc,#666)18;border-color:var(--rc,#888);box-shadow:inset 0 0 0 1px var(--rc,#888)55}
+#hSelect .selprow .g{font-size:15px;width:18px;text-align:center;color:var(--rc,#ffd24a)}
+#hSelect .selprow .nm{font-weight:700;font-size:14px;letter-spacing:.01em;color:var(--text,#e8e2d6)}
+#hSelect .selprow .sub{margin-left:auto;font-family:var(--f-mono,monospace);font-size:10px;letter-spacing:.1em;color:var(--text-4,#8b8577);text-align:right}
+#hSelect .selprow .sub b{color:var(--rc,#ffd24a);font-weight:700}
+/* the readout + capture, pinned to the stage so the render behind it stays clean for a screenshot */
+#hSelect .selscale{position:absolute;left:50%;bottom:6%;transform:translateX(-50%);display:flex;align-items:center;gap:14px;
+  font-family:var(--f-mono,monospace);font-size:12px;letter-spacing:.1em;color:var(--text-2,#c9c2b4);
+  background:rgba(6,7,11,.66);border:1px solid var(--line,rgba(255,255,255,.1));border-radius:20px;padding:7px 16px;z-index:3;white-space:nowrap}
+#hSelect .selscale b{color:var(--gold,#ffd24a);font-weight:700}
+#hSelect .selcap{cursor:pointer;color:var(--gold,#ffd24a);border-left:1px solid var(--line,rgba(255,255,255,.12));padding-left:12px}
+#hSelect .selcap:hover{color:#fff}
+#hSelect .selprof{position:absolute;left:16px;bottom:14px;z-index:3;display:flex;flex-direction:column;gap:6px;max-width:340px;pointer-events:none}
+#hSelect .selprof .pdesc{font-size:13px;font-weight:600;color:var(--text-2,#c9c2b4);line-height:1.25;
+  text-shadow:0 1px 3px #000;background:rgba(6,7,11,.5);border-radius:7px;padding:5px 9px}
+#hSelect .selprof .ptraits{display:flex;flex-wrap:wrap;gap:5px}
+#hSelect .selprof .pt{font-family:var(--f-mono,monospace);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--text-3,#b7b0a2);background:rgba(6,7,11,.62);border:1px solid var(--line,rgba(255,255,255,.1));border-radius:5px;padding:3px 7px}
+#hSelect .selprof .pt b{color:var(--rc,#ffd24a);font-weight:700}
+#hSelect.powon .selstrip,#hSelect.powon .selbar{opacity:.32;filter:saturate(.5);pointer-events:none;transition:opacity .25s}
+#hSelect .selgrid{position:absolute;left:16px;top:14px;z-index:3;font-family:var(--f-mono,monospace);font-size:10px;
+  letter-spacing:.12em;color:var(--text-5,#8b8577);background:rgba(6,7,11,.5);border-radius:6px;padding:4px 9px;pointer-events:none}
 `;
 
 // One WebGLRenderer + scene, built lazily, reused for the whole session. figure(def) is pure
@@ -120,6 +190,7 @@ export const SelectMixin = {
 
   hideSelect() {
     if (!this._sel) return;
+    if (this._powOpen) this._selPowersClose();   // never leave the studio open under the closed screen
     this._selOpen = false;
     this._sel.el.classList.remove('on');
     if (this.title) this.title.style.visibility = this._selTitleVis || 'visible';
@@ -158,7 +229,8 @@ export const SelectMixin = {
       card.style.setProperty('--c2', c.secondary || '#111');
       card.style.setProperty('--c-accent', c.accent || '#ffd24a');
       card.style.setProperty('--c-glow', (c.accent || '#ffd24a') + '88');
-      card.innerHTML = `<span class="sfno">${String(i + 1).padStart(2, '0')}</span>`
+      card.innerHTML = `<span class="sedge"></span>`
+        + `<span class="sfno">${String(i + 1).padStart(2, '0')}</span>`
         + `<span class="sdot" style="color:${tc};background:${tc}"></span>`
         + `<span class="ssil">${(d.name || '?')[0]}</span>`
         + `<span class="snm">${d.name}</span>`;
@@ -174,15 +246,24 @@ export const SelectMixin = {
     // keyboard nav — its own listener, only live while the screen is open
     this._selKey = (e) => {
       if (!this._selOpen) return;
+      // POWERS STUDIO owns the keys while open: ↑/↓ walk the abilities, P/Enter capture, Esc exits to roster
+      if (this._powOpen) {
+        if (e.code === 'ArrowDown' || e.code === 'KeyS' || e.code === 'ArrowRight' || e.code === 'KeyD') { this._selPowStep(1); e.preventDefault(); }
+        else if (e.code === 'ArrowUp' || e.code === 'KeyW' || e.code === 'ArrowLeft' || e.code === 'KeyA') { this._selPowStep(-1); e.preventDefault(); }
+        else if (e.code === 'KeyP' || e.code === 'Enter' || e.code === 'NumpadEnter') { this._selCapture(); e.preventDefault(); }
+        else if (e.code === 'Escape' || e.code === 'Backspace') { this._selPowersClose(); e.preventDefault(); }
+        return;
+      }
       if (e.code === 'ArrowRight' || e.code === 'KeyD') { this._selStep(1); e.preventDefault(); }
       else if (e.code === 'ArrowLeft' || e.code === 'KeyA') { this._selStep(-1); e.preventDefault(); }
       else if (e.code === 'ArrowDown' || e.code === 'KeyS') { this._selStep(6); e.preventDefault(); }
       else if (e.code === 'ArrowUp' || e.code === 'KeyW') { this._selStep(-6); e.preventDefault(); }
+      else if (e.code === 'KeyP') { this._selPowersOpen(); e.preventDefault(); }
       else if (e.code === 'Enter' || e.code === 'NumpadEnter' || e.code === 'Space') { this._selConfirm(); e.preventDefault(); }
       else if (e.code === 'Escape' || e.code === 'Backspace') { this._selBack(); e.preventDefault(); }
     };
     addEventListener('keydown', this._selKey);
-    this._selWheelH = (e) => { if (this._selOpen) { this._selStep(Math.sign(e.deltaY) || 1); e.preventDefault(); } };
+    this._selWheelH = (e) => { if (!this._selOpen) return; const d = Math.sign(e.deltaY) || 1; if (this._powOpen) this._selPowStep(d); else this._selStep(d); e.preventDefault(); };
     el.addEventListener('wheel', this._selWheelH, { passive: false });
     addEventListener('resize', () => { if (this._selOpen) this._selResize(); });
   },
@@ -193,7 +274,7 @@ export const SelectMixin = {
     const g = (a) => glyph(a, pad);
     this._sel.bar.innerHTML = on
       ? `<span><b>${g('guard')}</b>/<b>${g('dash')}</b>CYCLE</span><span class="go"><b>${g('confirm')}</b>SELECT</span><span><b>${g('back')}</b>BACK</span>`
-      : `<span><b>‹</b><b>›</b> / <b>A</b><b>D</b> CYCLE</span><span class="go"><b>ENTER</b>SELECT</span><span><b>ESC</b>BACK</span>`;
+      : `<span><b>‹</b><b>›</b> / <b>A</b><b>D</b> CYCLE</span><span class="go"><b>ENTER</b>SELECT</span><span><b>P</b>POWERS · 1:1</span><span><b>ESC</b>BACK</span>`;
     // filters escape hatch back to the classic registry roster
     const f = document.createElement('span'); f.className = 'selfilt'; f.textContent = '⚙ FILTERS & REGISTRY';
     f.onclick = () => this._selBack();
@@ -206,13 +287,23 @@ export const SelectMixin = {
     const S = this._sel; S.idx = i;
     const def = ROSTER[i];
     this.selectedHero = def.id;
-    S.cards.forEach((c, k) => c.classList.toggle('on', k === i));
-    // centre the strip on the selection
+    // depth falloff: the selection blooms, its two neighbours each side read as "nearer", the rest recede
+    S.cards.forEach((c, k) => {
+      const d = Math.min(Math.abs(k - i), ROSTER.length - Math.abs(k - i));
+      c.classList.toggle('on', d === 0);
+      c.classList.toggle('near', d === 1);
+      c.classList.toggle('near2', d === 2);
+    });
+    // a tactile landing pop on the card that just became selected (not on the very first frame)
     const card = S.cards[i];
+    if (!immediate) { card.classList.remove('pop'); void card.offsetWidth; card.classList.add('pop'); }
+    // centre the strip on the selection
     const x = (S.strip.parentElement.clientWidth / 2) - (card.offsetLeft + card.offsetWidth / 2);
     S.strip.style.transition = immediate ? 'none' : '';
     S.strip.style.transform = `translateX(${x}px)`;
     if (immediate) requestAnimationFrame(() => { S.strip.style.transition = ''; });
+    if (!immediate) { try { this.game && this.game.audio && this.game.audio.zap(600 + (i % 5) * 26); } catch (e) {} }
+    if (this._powOpen) this._selPowersClose();   // a new hero drops the powers studio back to the portrait
     this._selInfo(def);
     this._selShow3D(def);
   },
@@ -235,7 +326,10 @@ export const SelectMixin = {
       + `</div>`
       + `<div class="selchips">`
         + facts.map(([ic, t, lead]) => `<div class="selchip${lead ? ' lead' : ''}">${icon(ic, 15)}<span>${t}</span></div>`).join('')
-      + `</div>`;
+      + `</div>`
+      + `<div class="selpowbtn" id="selPowBtn">${icon('might', 14)} POWERS · 1:1 SCALE</div>`;
+    const btn = info.querySelector('#selPowBtn');
+    if (btn) btn.onclick = () => this._selPowersOpen();
     // the aura in the hero's own accent (literal, not a token)
     this._sel.aura.style.background = `radial-gradient(circle, ${acc}66 0%, ${acc}2e 34%, transparent 66%)`;
   },
@@ -243,7 +337,7 @@ export const SelectMixin = {
   // ---- the live 3D of the selected hero ----
   _selInit3D() {
     const cv = this._sel.cv;
-    const renderer = new THREE.WebGLRenderer({ canvas: cv, alpha: true, antialias: true });
+    const renderer = new THREE.WebGLRenderer({ canvas: cv, alpha: true, antialias: true, preserveDrawingBuffer: true });
     renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -256,7 +350,14 @@ export const SelectMixin = {
     const fill = new THREE.DirectionalLight('#8fb0ff', 0.35); fill.position.set(-7, 5, 7); scene.add(fill);
     const rim = new THREE.DirectionalLight('#ffffff', 1.6); rim.position.set(-6, 8, -11); scene.add(rim);
     // the figure's FRONT faces the lens at yaw 0 (eyes toward +Z camera); a touch off-axis = 3/4 pose.
-    this._sel.three = { renderer, scene, cam, rim, fig: null, t: 0, base: -0.42 };
+    // PORTRAIT_CAM is the framing to restore when the powers studio hands the camera back.
+    this._sel.three = { renderer, scene, cam, rim, fig: null, foot: null, t: 0, base: -0.42, enterT: 1,
+      portraitCam: { pos: cam.position.clone(), look: new THREE.Vector3(0, 4.9, 0) } };
+  },
+
+  _selPortraitCam() {
+    const T = this._sel.three; if (!T) return;
+    T.cam.position.copy(T.portraitCam.pos); T.cam.lookAt(T.portraitCam.look);
   },
 
   _selShow3D(def) {
@@ -272,6 +373,7 @@ export const SelectMixin = {
     const acc = (def.colors && def.colors.accent) || '#ffffff';
     T.rim.color.set(acc);                // rim the silhouette in the hero's own colour
     T.fig = P; T.base = -0.42;
+    T.enterT = 0;                        // drives the entrance (scale-up + lift + aura flash)
     T.scene.add(P.g);
   },
 
@@ -287,6 +389,8 @@ export const SelectMixin = {
     const cv = this._sel.cv, w = cv.clientWidth || 600, h = cv.clientHeight || 540;
     this._sel.three.renderer.setSize(w, h, false);
     this._sel.three.cam.aspect = w / h; this._sel.three.cam.updateProjectionMatrix();
+    // the studio reframes to the current footprint (aspect changed); the portrait leaves its fixed cam
+    if (this._powOpen && this._pow && this._pow._extent) this._selFrame(this._pow._extent);
     // re-centre the strip (widths may have changed)
     if (this._selOpen) { const S = this._sel, card = S.cards[S.idx]; if (card) S.strip.style.transform = `translateX(${(S.strip.parentElement.clientWidth / 2) - (card.offsetLeft + card.offsetWidth / 2)}px)`; }
   },
@@ -297,7 +401,19 @@ export const SelectMixin = {
     const T = this._sel.three;
     if (T) {
       T.t += 0.016;
-      if (T.fig) { T.fig.g.rotation.y = T.base + Math.sin(T.t * 0.7) * 0.24; T.fig.g.position.y = Math.sin(T.t * 1.5) * 0.14; }
+      T.enterT = Math.min(1, (T.enterT || 0) + 0.06);
+      const e = 1 - Math.pow(1 - T.enterT, 3);   // ease-out on the entrance
+      if (this._powOpen) {
+        // STUDIO: figure planted in profile facing the aim (+X); the footprint animates, the camera holds
+        if (T.fig) { T.fig.g.rotation.y = Math.PI / 2; T.fig.g.position.y = 0; T.fig.g.scale.setScalar(1); }
+        if (T.foot && T.foot.userData.pulse) T.foot.userData.pulse(T.t);
+      } else if (T.fig) {
+        // PORTRAIT: entrance (scale/lift/aura flash) then a slow breathing turn + bob
+        T.fig.g.rotation.y = T.base + Math.sin(T.t * 0.7) * 0.24;
+        T.fig.g.position.y = (1 - e) * -1.6 + Math.sin(T.t * 1.5) * 0.14;
+        T.fig.g.scale.setScalar(0.9 + 0.1 * e);
+        if (this._sel.aura) this._sel.aura.style.opacity = String(0.55 + 0.35 * e);
+      }
       T.renderer.render(T.scene, T.cam);
     }
     requestAnimationFrame(() => this._selLoop());
@@ -309,12 +425,264 @@ export const SelectMixin = {
     if (!pad) return;
     const P = this._sel.padPrev;
     const edge = (a) => { const d = pad.down(a); const was = P[a]; P[a] = d; return d && !was; };
+    if (this._powOpen) {                          // POWERS STUDIO owns the pad while open
+      if (edge('dash') || edge('e')) this._selPowStep(1);
+      if (edge('guard') || edge('f')) this._selPowStep(-1);
+      if (edge('fly')) this._selCapture();        // Cross / A = grab the frame
+      if (edge('grab')) this._selPowersClose();   // Circle / B = back to roster
+      return;
+    }
     if (edge('dash')) this._selStep(1);        // R1 / RB
     if (edge('guard')) this._selStep(-1);       // L1 / LB
     if (edge('e')) this._selStep(1);            // D-pad right
     if (edge('f')) this._selStep(-1);           // D-pad left
     if (edge('fly')) this._selConfirm();        // Cross / A
     if (edge('grab')) this._selBack();          // Circle / B
+  },
+
+  // ============================================================================================
+  // POWERS · 1:1 — render each of the selected hero's abilities at TRUE world scale beside the
+  // 1.8m figure, so the reach/orb/cone footprint reads at its real proportions. A metric readout
+  // gives the absolute size and CAPTURE PNG grabs a clean frame for authoring the power's art.
+  // Everything derives from live ability data + the 7-trait visual profile, so it can't drift.
+  // ============================================================================================
+  _selPowKeys(def) {
+    const ab = def.abilities || {};
+    const keys = SLOT_ORDER.filter(k => ab[k]);
+    for (const k of Object.keys(ab)) if (!keys.includes(k) && ab[k]) keys.push(k);   // any extra slots after the known 7
+    return keys;
+  },
+
+  _selPowersOpen() {
+    if (!this._sel || this._powOpen) return;
+    const def = ROSTER[this._sel.idx];
+    const keys = this._selPowKeys(def);
+    if (!keys.length) return;
+    this._powOpen = true; this._powKeys = keys; this._powIdx = 0;
+    this._sel.el.classList.add('powon');
+    // the studio gets a solid dark backing so ADDITIVE energy reads (the portrait is transparent, which
+    // is why a beam vanished — additive over transparent/white only brightens toward white). Also the
+    // clean backdrop is what a captured reference frame wants.
+    if (this._sel.three) this._sel.three.scene.background = new THREE.Color(0x090a10);
+    const acc = (def.colors && def.colors.accent) || '#ffd24a';
+    // right panel → the abilities browser
+    const info = this._sel.info;
+    info.innerHTML =
+      `<div class="selpowhd"><div class="h">${def.name} · POWERS</div><div class="x" id="selPowX">✕ ROSTER</div></div>`
+      + `<div class="selpowlist" id="selPowList">`
+      + keys.map((k, i) => {
+          const a = def.abilities[k]; const f = slotFacts(a, visOf);
+          const rc = a.color || acc;
+          return `<div class="selprow" data-i="${i}" style="--rc:${rc}">`
+            + `<span class="g">${f.glyph}</span>`
+            + `<span class="nm">${a.name || k}</span>`
+            + `<span class="sub"><b>${f.range}</b> · ${f.units}u · ${f.kind}</span></div>`;
+        }).join('')
+      + `</div>`;
+    info.querySelector('#selPowX').onclick = () => this._selPowersClose();
+    info.querySelectorAll('.selprow').forEach(r => { r.onclick = () => this._selPowPick(+r.dataset.i); });
+    // stage overlays (created once per studio session, cleaned on close)
+    const wrap = this._sel.el.querySelector('.selcvwrap');
+    const mk = (cls) => { const d = document.createElement('div'); d.className = cls; wrap.appendChild(d); return d; };
+    this._pow = {
+      grid: mk('selgrid'), scale: mk('selscale'), prof: mk('selprof'),
+    };
+    this._pow.grid.textContent = '1u ≈ 0.19m · GRID 10u';
+    this._selPowPick(0);
+  },
+
+  _selPowersClose() {
+    if (!this._powOpen) return;
+    this._powOpen = false;
+    this._sel.el.classList.remove('powon');
+    // tear down the footprint + studio grid + overlays
+    const T = this._sel.three;
+    if (T) {
+      if (T.foot) { T.scene.remove(T.foot); this._selDispose(T.foot); T.foot = null; }
+      if (T.grid) { T.scene.remove(T.grid); T.grid.geometry && T.grid.geometry.dispose(); T.grid.material && T.grid.material.dispose(); T.grid = null; }
+      T.scene.background = null;   // hand the transparent portrait backdrop back
+      this._selPortraitCam();
+    }
+    if (this._pow) { for (const k in this._pow) { const el = this._pow[k]; if (el && el.remove) el.remove(); } this._pow = null; }
+    this._selInfo(ROSTER[this._sel.idx]);   // rebuild the roster info panel
+  },
+
+  _selPowStep(d) {
+    if (!this._powOpen) return;
+    this._selPowPick((this._powIdx + d + this._powKeys.length) % this._powKeys.length);
+  },
+
+  _selPowPick(i) {
+    const T = this._sel.three; if (!T) return;
+    this._powIdx = i;
+    const def = ROSTER[this._sel.idx];
+    const key = this._powKeys[i];
+    const a = def.abilities[key];
+    const acc = (def.colors && def.colors.accent) || '#ffd24a';
+    // list highlight
+    this._sel.info.querySelectorAll('.selprow').forEach((r, k) => r.classList.toggle('on', k === i));
+    try { this.game && this.game.audio && this.game.audio.zap(520 + i * 30); } catch (e) {}
+    // rebuild the footprint at 1:1
+    if (T.foot) { T.scene.remove(T.foot); this._selDispose(T.foot); T.foot = null; }
+    const fp = this._selBuildFootprint(a, acc);
+    T.foot = fp.group; T.scene.add(fp.group);
+    // a fresh 1:1 ground grid sized to the footprint (every line = 10u ≈ 1.9m)
+    if (T.grid) { T.scene.remove(T.grid); T.grid.geometry && T.grid.geometry.dispose(); T.grid.material && T.grid.material.dispose(); }
+    const span = Math.max(fp.maxX, -fp.minX, 12);
+    const gsize = Math.ceil(span * 2 / 10) * 10;
+    const grid = new THREE.GridHelper(gsize, gsize / 10, 0x4a4a55, 0x26262e);
+    grid.position.set((fp.minX + fp.maxX) / 2, 0.02, 0);
+    grid.material.transparent = true; grid.material.opacity = 0.5;
+    T.grid = grid; T.scene.add(grid);
+    // frame it, then print the readout + profile
+    this._pow._extent = { minX: fp.minX, maxX: fp.maxX, maxY: fp.maxY };
+    this._selFrame(this._pow._extent);
+    const reach = Math.round(fp.reach);
+    const m = (fp.reach * U_TO_M).toFixed(1);
+    const f = slotFacts(a, visOf);
+    this._pow.scale.innerHTML = `${f.kind} · <b>${reach}u</b> ≈ <b>${m}m</b> · HERO 9.6u = 1.8m`
+      + `<span class="selcap" id="selCapBtn">⬇ CAPTURE PNG</span>`;
+    this._pow.scale.querySelector('#selCapBtn').onclick = () => this._selCapture();
+    const p = profileOf(a) || {};
+    const ax = [['SRC', p.source], ['SIL', p.silhouette], ['MOT', p.motion], ['IMP', p.impact], ['RES', p.residue], ['FAM', p.family], ['TELL', p.tell]];
+    this._pow.prof.style.setProperty('--rc', a.color || acc);
+    this._pow.prof.innerHTML = `<div class="pdesc">${a.name || key} — ${describeAbility(a)}</div>`
+      + `<div class="ptraits">` + ax.map(([l, v]) => `<span class="pt"><b>${l}</b> ${v || '—'}</span>`).join('') + `</div>`;
+  },
+
+  // Build a group, in WORLD UNITS, that reads as the ability's real spatial footprint. Returns the
+  // group plus its extent {minX,maxX,maxY} so the camera can frame it against the figure.
+  _selBuildFootprint(a, acc) {
+    const g = new THREE.Group();
+    const c1 = a.color || acc, c2 = a.color2 || c1;
+    const HAND = { x: 1.4, y: 6.0 };
+    const reach = powReach(a);
+    const glow = (col, op = 0.85) => new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: op, blending: THREE.AdditiveBlending, depthWrite: false });
+    const rod = (from, to, r, col, op) => {
+      const dx = to.x - from.x, dy = to.y - from.y, len = Math.hypot(dx, dy) || 0.01;
+      const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, len, 14), glow(col, op));
+      m.position.set((from.x + to.x) / 2, (from.y + to.y) / 2, 0);
+      m.rotation.z = Math.atan2(dy, dx) - Math.PI / 2;   // cylinder's default axis is +Y
+      g.add(m); return m;
+    };
+    const orb = (x, y, r, col, op = 0.8) => { const m = new THREE.Mesh(new THREE.SphereGeometry(r, 22, 16), glow(col, op)); m.position.set(x, y, 0); g.add(m); return m; };
+    let minX = -2.4, maxX = 6, maxY = 10.6, pulse = null;
+    const t = a.type;
+
+    if (t === 'beam') {
+      const L = a.maxLen || reach || 120, r = Math.max(a.radius || 0.6, 0.5);
+      rod(HAND, { x: HAND.x + L, y: HAND.y }, r, c1, 0.55);
+      const core = rod(HAND, { x: HAND.x + L, y: HAND.y }, r * 0.42, c2, 0.95);
+      orb(HAND.x, HAND.y, r * 1.5, c2, 0.9);        // the muzzle flare
+      maxX = HAND.x + L; maxY = HAND.y + r + 1;
+      pulse = (tt) => { core.material.opacity = 0.8 + 0.15 * Math.sin(tt * 6); };
+    } else if (t === 'cone') {
+      const half = (a.arc || 1.1) / 2, L = a.range || reach || 40, N = 22;
+      const pos = [HAND.x, HAND.y, 0];
+      const verts = [];
+      for (let i = 0; i < N; i++) {
+        const a0 = -half + (2 * half) * i / N, a1 = -half + (2 * half) * (i + 1) / N;
+        verts.push(pos[0], pos[1], pos[2],
+          HAND.x + L * Math.cos(a0), HAND.y + L * Math.sin(a0), 0,
+          HAND.x + L * Math.cos(a1), HAND.y + L * Math.sin(a1), 0);
+      }
+      const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(verts, 3));
+      const mesh = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: c1, transparent: true, opacity: 0.4, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, depthWrite: false }));
+      g.add(mesh);
+      maxX = HAND.x + L; maxY = HAND.y + L * Math.sin(half) + 1;
+      pulse = (tt) => { mesh.material.opacity = 0.35 + 0.12 * Math.sin(tt * 4); };
+    } else if (t === 'nova' || t === 'mine') {
+      const R = a.radius || reach || 24, cx = t === 'mine' ? (reach || 20) : 0;
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(R, 0.55, 10, 60), glow(c1, 0.85));
+      ring.rotation.x = Math.PI / 2; ring.position.set(cx, 0.3, 0); g.add(ring);
+      const disc = new THREE.Mesh(new THREE.CircleGeometry(R, 44), glow(c1, 0.14));
+      disc.rotation.x = -Math.PI / 2; disc.position.set(cx, 0.15, 0); g.add(disc);
+      orb(cx, 1.2, 1.4, c2, 0.9);
+      minX = Math.min(minX, cx - R); maxX = cx + R; maxY = 8;
+      pulse = (tt) => { const s = 0.9 + 0.12 * (0.5 + 0.5 * Math.sin(tt * 3)); ring.scale.set(s, s, 1); };
+    } else if (t === 'charge' || t === 'growingorb' || t === 'facebomb') {
+      const ro = Math.max(a.radius || (t === 'growingorb' ? 5 : t === 'facebomb' ? 2.4 : 3), 1.6);
+      const cx = HAND.x + ro + 1, cy = Math.max(HAND.y, ro + 1.5);
+      rod(HAND, { x: cx, y: cy }, 0.14, c2, 0.5);
+      const o = orb(cx, cy, ro, c1, 0.55); orb(cx, cy, ro * 0.5, c2, 0.9);
+      maxX = cx + ro; maxY = cy + ro;
+      pulse = (tt) => { const s = 1 + 0.05 * Math.sin(tt * 4); o.scale.setScalar(s); };
+    } else if (t === 'melee' || t === 'rush') {
+      const R = a.range || a.reach || 12;
+      const arc = new THREE.Mesh(new THREE.TorusGeometry(R, 0.5, 8, 40, 1.5), glow(c1, 0.8));
+      arc.position.set(HAND.x, HAND.y - 0.5, 0); arc.rotation.z = -0.75; g.add(arc);
+      maxX = HAND.x + R; maxY = HAND.y + R * 0.6;
+    } else if (t === 'buff' || t === 'phase' || t === 'nova2') {
+      const o = orb(0, 5.2, 5.4, c1, 0.22); orb(0, 5.2, 3.2, c2, 0.14);
+      rod({ x: 0, y: 0 }, { x: 0, y: 16 }, 1.1, c1, 0.3);   // the rising transformation pillar
+      maxX = 6; maxY = 16; minX = -6;
+      pulse = (tt) => { o.scale.setScalar(1 + 0.06 * Math.sin(tt * 3)); };
+    } else if (t === 'meteor') {
+      const R = a.radius || 10, top = 26;
+      rod({ x: reach || 20, y: 0 }, { x: reach || 20, y: top }, 1.2, c1, 0.5);
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(R, 0.5, 8, 44), glow(c2, 0.8));
+      ring.rotation.x = Math.PI / 2; ring.position.set(reach || 20, 0.3, 0); g.add(ring);
+      maxX = (reach || 20) + R; maxY = top; minX = Math.min(minX, (reach || 20) - R);
+    } else if (t === 'summon' || t === 'construct') {
+      const R = a.range || reach || 20;
+      for (let i = 0; i < 3; i++) orb(HAND.x + 3 + i * 2.4, HAND.y + 1 + (i % 2) * 1.4, 0.8, c1, 0.85);
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(R, 0.35, 8, 50), glow(c1, 0.4));
+      ring.rotation.x = Math.PI / 2; ring.position.set(0, 0.2, 0); g.add(ring);
+      minX = Math.min(minX, -R); maxX = R; maxY = 9;
+    } else if (t === 'teleport' || t === 'dash') {
+      const R = a.range || reach || 40;
+      for (let i = 0; i <= 8; i++) { const x = HAND.x + (R - HAND.x) * i / 8; orb(x, 4.5, 0.35, c2, 0.7); }
+      const ghost = new THREE.Mesh(new THREE.BoxGeometry(2.6, 9.6, 1.4), glow(c1, 0.16)); ghost.position.set(R, 4.8, 0); g.add(ghost);
+      maxX = R + 1.5; maxY = 10.6;
+    } else if (t === 'portal') {
+      const R = reach || 50;
+      const p1 = new THREE.Mesh(new THREE.TorusGeometry(3.4, 0.4, 10, 40), glow('#ff8a3d', 0.85)); p1.position.set(HAND.x + 4, 5, 0); g.add(p1);
+      const p2 = new THREE.Mesh(new THREE.TorusGeometry(3.4, 0.4, 10, 40), glow('#4aa8ff', 0.85)); p2.position.set(R, 5, 0); g.add(p2);
+      maxX = R + 4; maxY = 9;
+    } else if (t === 'tentacle' || t === 'grapple' || t === 'mindcontrol' || t === 'lifedrain') {
+      const R = reach || 60;
+      rod(HAND, { x: R, y: 5 }, 0.4, c1, 0.7);
+      orb(R, 5, 1.1, c2, 0.85);
+      maxX = R + 1; maxY = 8;
+    } else {
+      // projectile / volley / rifle / bow / quiver / default: a travel line to reach + an orb at the tip
+      const R = reach || 90, ro = Math.max(a.radius || 0.9, 0.7);
+      rod(HAND, { x: HAND.x + R, y: HAND.y }, 0.16, c2, 0.6);
+      const o = orb(HAND.x + R, HAND.y, ro, c1, 0.85); orb(HAND.x + R, HAND.y, ro * 0.5, c2, 0.95);
+      maxX = HAND.x + R + ro; maxY = HAND.y + ro + 1;
+      pulse = (tt) => { o.scale.setScalar(1 + 0.08 * Math.sin(tt * 7)); };
+    }
+    g.userData.pulse = pulse || (() => {});
+    return { group: g, minX, maxX, maxY, reach: Math.max(reach, maxX - HAND.x) };
+  },
+
+  _selFrame(ext) {
+    const T = this._sel.three, cam = T.cam;
+    const mnx = Math.min(ext.minX, -2.4), mxx = Math.max(ext.maxX, 6), mxy = Math.max(ext.maxY, 10.6);
+    const cx = (mnx + mxx) / 2, cy = mxy * 0.5;
+    const Wd = mxx - mnx, Hd = mxy;
+    const vfov = cam.fov * Math.PI / 180, aspect = cam.aspect || 1.2;
+    const d = Math.max(Wd / (2 * Math.tan(vfov / 2) * aspect), Hd / (2 * Math.tan(vfov / 2))) * 1.18;
+    const dir = new THREE.Vector3(0, 0.26, 1).normalize();
+    cam.position.set(cx + dir.x * d, cy + dir.y * d, dir.z * d);
+    cam.lookAt(cx, cy, 0);
+  },
+
+  _selCapture() {
+    const T = this._sel.three; if (!T) return;
+    T.renderer.render(T.scene, T.cam);   // fresh frame; preserveDrawingBuffer keeps it readable
+    try {
+      const def = ROSTER[this._sel.idx], key = this._powKeys[this._powIdx];
+      const name = `${def.id}-${(def.abilities[key].name || key).replace(/[^a-z0-9]+/gi, '-')}-1x1`.toLowerCase();
+      T.renderer.domElement.toBlob((blob) => {
+        if (!blob) return;
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = name + '.png';
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 4000);
+      }, 'image/png');
+      this.game && this.game.audio && this.game.audio.zap(880);
+    } catch (e) {}
   },
 
   _selConfirm() {
