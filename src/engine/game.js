@@ -3818,18 +3818,23 @@ export class Game {
    * Priority, highest first: a cinematic or the map tool → the POWERWORLD chase view → the fit.
    */
   cameraDrive(dt) {
-    if (this.mapCam) { this.world.orbit(this.mapCam); return; }
+    if (this.mapCam) { if (this.input) this.input.pointerLock = false; this.world.orbit(this.mapCam); return; }
     if (this.ms && this.ms.chaseCam && this.player && this.player.alive) {
-      // the subject we frame against: the hard lock, else whatever is visibly nearest — and NEVER a
-      // foe the honesty layer says we cannot see, or the camera becomes the wallhack the AI is
-      // forbidden from having.
-      let foe = this.hardLock && this.hardLock.alive ? this.hardLock : this.lockTarget;
-      if (foe && this.fov && (foe._vis ?? 1) < 0.4) foe = null;
-      if (!foe) foe = this.nearestFoe(this.player, this.player.pos, 220);
+      // ⚠ FLYING FOLLOWS THE MOUSE — BFP (Robert, 2026-07-28: "make sure flying follows the mouse and
+      // acts like BFP"). The chase camera already steers off its own mouse-look yaw/pitch, and unlocked
+      // flight forward IS the camera's getWorldDirection — but `mouseLook()` was never called and
+      // pointer-lock was never engaged (the deferred Wave-1 rider), so the mouse never touched the
+      // camera. Engage it here and feed the per-frame deltas; input.endFrame consumes/resets them.
+      if (this.input) { this.input.pointerLock = true; this.world.mouseLook(this.input.mouse.dx, this.input.mouse.dy); }
+      // ⚠ FRAME THE FIGHT ONLY ON AN EXPLICIT HARD LOCK (T). An unlocked camera is YOURS to steer with
+      // the mouse — a spectator cam that swings to whatever foe wanders within 220u was fighting the
+      // mouse for control (the "I can't aim where I'm looking" feel). No lock → the mouse owns the view.
+      let foe = (this.hardLock && this.hardLock.alive) ? this.hardLock : null;
       if (foe && this.fov && (foe._vis ?? 1) < 0.4) foe = null;
       this.world.chase(this.player, foe, dt);
       return;
     }
+    if (this.input) this.input.pointerLock = false;
     this.followHumans(dt);
   }
 

@@ -40,7 +40,7 @@ export const ROSTER = [
   },
   {
     id: 'vega', origin: 'alien', name: 'VEGA', title: 'Fallen Prince', role: 'Charge Artillery',
-    colors: { primary: '#602af0', secondary: '#d3d9bc', accent: '#ffbc24', skin: '#e8c39a' },
+    colors: { primary: '#e0243a', secondary: '#d3d9bc', accent: '#ffbc24', skin: '#e8c39a' },
     hp: 120, ki: 130, speed: 33, beamMight: 1.25, strength: 7, rank: 40, overdrive: 1.2, threat: 'Very High', yells: true, voicePitch: 0.95,
     ai: { style: 'beamer', range: 40, aggro: 0.9, fly: 0.4 },
     evade: { kind: 'dash', name: 'Royal Sidestep' },
