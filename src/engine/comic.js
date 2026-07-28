@@ -267,6 +267,10 @@ export class Comic {
     const live = [];
     // balloons are placed top-down so an earlier one keeps its spot and later ones move clear
     const taken = [];
+    // aaa-06 §11: in the close (chase) frame the centre box is where the fight is — reserve it FIRST
+    // so both balloons and SFX route around it and a KRAKA-DOOM never lands on the opponent.
+    const chase = !!(W && W.camMode === 'chase');
+    if (chase) taken.push({ x: sw * 0.38, y: sh * 0.34, w: sw * 0.24, h: sh * 0.32 });
     for (const it of this.items) {
       it.t -= dt;
       if (it.t <= 0) {
@@ -343,6 +347,10 @@ export class Comic {
         const cx = sp.x - fw / 2, cy = sp.y - fh / 2 - it.drift;
         const cands = [[0, 0], [0, -fh - 10], [0, fh + 10], [-fw * 0.62, 0], [fw * 0.62, 0],
                        [-fw * 0.55, -fh - 8], [fw * 0.55, -fh - 8], [0, -fh * 2 - 16], [0, fh * 2 + 16]];
+        // ⚠ §11: the existing offsets (±fw*0.62) cannot clear the centre box's ~230px half-width.
+        // Add two lateral candidates wide enough to reach the outer band. The search still tries the
+        // natural spot first and takes the least-covering option, so a dead-centre hit still gets its word.
+        if (chase) { const L = sw * 0.12 + fw / 2 + 12; cands.push([-L, 0], [L, 0]); }
         let fx = cx, fy = cy, bestCover = Infinity;
         for (const [ox, oy] of cands) {
           const tx = Math.max(S.x0, Math.min(S.x1 - fw, cx + ox));

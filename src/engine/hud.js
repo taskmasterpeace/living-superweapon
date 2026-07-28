@@ -1549,6 +1549,31 @@ export class HUD {
     const cxp = innerWidth / 2, cyp = innerHeight / 2;
     let ang = Math.atan2((sp.y || cyp) - cyp, (sp.x || cxp) - cxp);
     if (sp.behind) ang += Math.PI;                       // source behind camera → opposite edge
+    // aaa-06 §10.2: in the close (chase) frame the disc becomes an ANNULUS SECTOR — a 46° wedge in
+    // the outer band, nothing inside `outer − 90px`, so the indicator never reaches the centre box
+    // where the fight is. `sp.behind` (already handled above) is load-bearing here: most hits from
+    // behind ARE behind the camera in third person, the exact case this indicator exists for.
+    if (this.game.world.camMode === 'chase') {
+      const outer = Math.min(innerWidth, innerHeight) * 0.5, inner = Math.max(0, outer - 90), half = 0.4014;   // 23°
+      const a0 = ang - half, a1 = ang + half;
+      let minx = Infinity, miny = Infinity, maxx = -Infinity, maxy = -Infinity;
+      for (let i = 0; i <= 12; i++) { const a = a0 + (a1 - a0) * i / 12;
+        for (const r of [inner, outer]) { const x = cxp + Math.cos(a) * r, y = cyp + Math.sin(a) * r;
+          if (x < minx) minx = x; if (x > maxx) maxx = x; if (y < miny) miny = y; if (y > maxy) maxy = y; } }
+      const NS = 'http://www.w3.org/2000/svg';
+      const svg = document.createElementNS(NS, 'svg');
+      svg.setAttribute('width', (maxx - minx)); svg.setAttribute('height', (maxy - miny));
+      svg.style.cssText = `position:absolute;left:${minx}px;top:${miny}px;pointer-events:none;opacity:.9;transition:opacity .55s ease-out;`;
+      const P = (r, a) => `${(cxp + Math.cos(a) * r - minx).toFixed(1)} ${(cyp + Math.sin(a) * r - miny).toFixed(1)}`;
+      const path = document.createElementNS(NS, 'path');
+      path.setAttribute('d', `M ${P(outer, a0)} A ${outer} ${outer} 0 0 1 ${P(outer, a1)} L ${P(inner, a1)} A ${inner} ${inner} 0 0 0 ${P(inner, a0)} Z`);
+      path.setAttribute('fill', 'rgba(255,52,34,.5)');
+      svg.appendChild(path); this.el.hits.appendChild(svg);
+      requestAnimationFrame(() => { svg.style.opacity = '0'; });
+      setTimeout(() => svg.remove(), 600);
+      while (this.el.hits.children.length > 4) this.el.hits.firstChild.remove();   // five directions at once is not information
+      return;
+    }
     const rad = Math.min(innerWidth, innerHeight) * 0.5;
     const el = document.createElement('div'); el.className = 'hitarc';
     el.style.left = (cxp + Math.cos(ang) * rad) + 'px';
@@ -1761,6 +1786,11 @@ export class HUD {
   hideEndScreen() { this._stopTV(); this.el.end.style.display = 'none'; this.el.end.classList.remove('news'); }
 
   flashScreen(color = '#ffffff', dur = 0.15) {
+    // aaa-06 §10.1: CUT in the chase (close) camera — all 12 call sites, one early return. A
+    // full-viewport 50% screen-blend wash is the definition of screen fill, and the print pass's
+    // one inverted frame IS the heavy tell now. Every remaining caller already has a shake, a
+    // sound and a banner. The city (camMode iso) is untouched.
+    if (this.game.world && this.game.world.camMode === 'chase') return;
     const el = this.el.flash; if (!el) return;
     el.style.transition = 'none'; el.style.background = color; el.style.opacity = '0.5';
     requestAnimationFrame(() => { el.style.transition = `opacity ${dur}s ease-out`; el.style.opacity = '0'; });
@@ -1770,6 +1800,10 @@ export class HUD {
   // differently from the defensive popups, which float up).
   damageNumber(worldPos, text, color = '#fff', tag = false, slash = false) {
     if (this.dmgNumbersOff) return;
+    // aaa-06 §10.3: OFF BY DEFAULT in the close (chase) frame — a world-anchored number at 29% of
+    // the frame flies off the top as often as not, and the combo counter / health bar / recorded
+    // punch already say what happened. The centre box stays clear of the DOM (gate I6).
+    if (this.game.world && this.game.world.camMode === 'chase') return;
     if (this.el.dmg.childElementCount > 48) return;   // AoE storms don't get to drown the DOM
     if (!this.game.world) return;
     const sp = this.game.world.screenPosOf(worldPos.x, worldPos.y + 7, worldPos.z);

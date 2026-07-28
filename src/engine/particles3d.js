@@ -8,10 +8,12 @@ attribute vec3 aColor;
 attribute float aAlpha;
 varying vec3 vColor;
 varying float vAlpha;
+uniform float uMaxPx;   // aaa-06 §7: 0 = unbounded (the city). >0 caps device-pixel size in the close frame.
 void main() {
   vColor = aColor; vAlpha = aAlpha;
   vec4 mv = modelViewMatrix * vec4(position, 1.0);
   gl_PointSize = aSize * (300.0 / -mv.z);
+  if (uMaxPx > 0.0) gl_PointSize = min(gl_PointSize, uMaxPx);
   gl_Position = projectionMatrix * mv;
 }`;
 const FRAG = `
@@ -48,12 +50,18 @@ export class Particles3D {
     this.geo = geo;
     this.mat = new THREE.ShaderMaterial({
       vertexShader: VERT, fragmentShader: FRAG,
+      uniforms: { uMaxPx: { value: 0 } },
       transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
     });
     this.points = new THREE.Points(geo, this.mat);
     this.points.frustumCulled = false;
     scene.add(this.points);
   }
+
+  // aaa-06 §7: bound the on-screen area of a single additive spark in the close (chase) frame. `px`
+  // is a device-pixel ceiling (0 = unbounded, the city). One uniform, one clamp; the count stays
+  // cheap and near sparks still cue depth up to the cap.
+  setMaxPx(px) { this.mat.uniforms.uMaxPx.value = px || 0; }
 
   spawn(o) {
     let i;

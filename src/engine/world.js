@@ -67,6 +67,7 @@ export class World {
     this.camera = this.camOrtho;
     this.camMode = 'iso';
     this._shake = 0; this.shakeV = new THREE.Vector3();
+    this._shakeT = 0; this._shakeAxTh = 0;   // aaa-06 §4: chase-view angular ring-down clock + per-event axis angle
     // THE UNCLAIMED CAMERA AXIS (aaa-04 §5.6) — the direction the camera is TRYING to look along,
     // published by chase() after the degenerate blend and BEFORE any frame claim. game.cameraDrive
     // reads it for the move/aim basis (RIDER), so a camera flourish can never invert the controls.
@@ -1305,7 +1306,14 @@ export class World {
   }
 
   setBaseZoom(f) { this._baseFrustum = f; }
-  shake(a) { this._shake = Math.min(this._shake + a * (this.shakeMult ?? 1), 8); }
+  shake(a) {
+    this._shake = Math.min(this._shake + a * (this.shakeMult ?? 1), 8);
+    // aaa-06 §4.2: in the chase view the shake is an angular RING-DOWN on an axis stamped ONCE per
+    // EVENT (a real blow, a >= axisEvent — the 0.12 rumble and the 0.1 beam tick are texture), not
+    // white noise re-rolled per frame. A second real blow restarts the ring-down. The city
+    // (camMode iso) never reads _shakeAxTh/_shakeT, so follow()'s shake is byte-identical.
+    if (this.camMode === 'chase' && a >= PW_FX.axisEvent) { this._shakeAxTh = Math.random() * (Math.PI * 2); this._shakeT = 0; }
+  }
   // ⚠ punch() WAS A NO-OP IN THE CHASE VIEW (aaa-04 §9 / aaa-06 §5): `frustumTarget` is read only by
   // the orthographic projection branch, so ~24 combat-feel beats died in PowerWorld AND leaked —
   // `Math.min` only ratchets `frustumTarget` down and nothing in chase() damped it home, so the city
@@ -2725,12 +2733,30 @@ export class World {
     // can never push the eye up into a building it just cleared.
     this.camPos.y = Math.max(this.camPos.y, this.heightAt(this.camPos.x, this.camPos.z) + CAM_PAD);
     // ⚠ ANGULAR SHAKE, NEVER THE WORLD-SPACE ONE. `follow()` adds a metres-long random vector to both
-    // the eye and the look point; at ortho that is ~1.8° of jitter, but at a 21u chase distance the
-    // same 8u clamp is **29.7°** and 8u is a third of the way to the subject — the camera would pass
-    // through the fighter. Here the shake is an ANGLE, capped at 1.6°, applied to the look point only.
+    // the eye and the look point; at ortho that is ~1.8° of jitter, but at a chase distance the same
+    // 8u clamp would swing the camera through the fighter. Here the shake is an ANGLE on the look
+    // point only, capped at PW_FX.shakeMaxDeg — see the ring-down below.
+    // ⚠ ANGULAR RING-DOWN, NOT WHITE NOISE (aaa-06 §4). Two decaying octaves — the CRACK (oct1)
+    // riding the BODY (oct2, which carries most of the amplitude) — on an axis stamped once per
+    // EVENT in the camera's own screen plane, so the shake reads as impact and not as interference,
+    // and its per-frame step stays under budget at the 40 Hz Steam-Deck lock (26 Hz would alias).
+    // Frequencies are DERIVED from that lock; amplitude/mix are PW_FX dials. Applied to the LOOK
+    // POINT only — the eye position is never touched, so camera POSITION deviation is exactly 0.
     this._shake *= Math.exp(-7 * dt);
-    const jit = Math.min(0.028, this._shake * 0.011) * d;
-    const jx = (Math.random() * 2 - 1) * jit, jy = (Math.random() * 2 - 1) * jit, jz = (Math.random() * 2 - 1) * jit;
+    this._shakeT = (this._shakeT ?? 0) + dt;
+    const _A = Math.min(PW_FX.shakeMaxDeg, this._shake * PW_FX.shakeDegPer) * (Math.PI / 180);
+    // eye->look view axis, then a screen-plane basis perpendicular to it (worldUp = +Y)
+    let _vx = this.camTarget.x - this.camPos.x, _vy = this.camTarget.y - this.camPos.y, _vz = this.camTarget.z - this.camPos.z;
+    const _D = Math.hypot(_vx, _vy, _vz) || 1; _vx /= _D; _vy /= _D; _vz /= _D;
+    const _rn = Math.hypot(_vz, _vx) || 1;                         // right = normalize(view × up), no Y
+    const _rgx = -_vz / _rn, _rgz = _vx / _rn;
+    const _ugx = -_vx * _vy / _rn, _ugy = _rn, _ugz = -_vz * _vy / _rn;   // up' = right × view (unit)
+    const _th = this._shakeAxTh ?? 0, _ct = Math.cos(_th), _st = Math.sin(_th) * 0.55;   // biased horizontal
+    const _axx = _rgx * _ct + _ugx * _st, _axy = _ugy * _st, _axz = _rgz * _ct + _ugz * _st;
+    const _TAU = Math.PI * 2, _t = this._shakeT;
+    const _w = PW_FX.oct1Mix * Math.sin(_TAU * PW_FX.oct1Hz * _t) + (1 - PW_FX.oct1Mix) * Math.sin(_TAU * PW_FX.oct2Hz * _t + 1.9);
+    const _ang = _A * _w;
+    const jx = _axx * _ang * _D, jy = _axy * _ang * _D, jz = _axz * _ang * _D;
     this._applyProj();
     c.position.set(this.camPos.x, this.camPos.y, this.camPos.z);
     c.lookAt(this.camTarget.x + jx, this.camTarget.y + jy, this.camTarget.z + jz);

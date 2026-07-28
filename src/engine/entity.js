@@ -23,6 +23,22 @@ export const TIER_COLORS = ['#ffffff', null, '#ffd24a', '#ffedb0', '#ffffff'];  
 
 let _fid = 1;
 const _anchor = new THREE.Vector3();
+const _handW = new THREE.Vector3();   // scratch for the fist's world position (the measured swing, §4.6)
+// THE JUMP (aaa-02-ground.md §3.4) — the game's FIRST jump. `Space` is the flight key in all four
+// schemes; on the GROUND it now jumps, and the same key HELD past the apex (or pressed again in the
+// air) is takeoff. One key, two meanings, disambiguated by FOOTING. JUMP_VEL is derived to match
+// JKA's jump apex IN BODY LENGTHS under our 60 wu/s² gravity, not ported: apex 0.564 body heights →
+// sqrt(2·60·(0.564·9.6)) = 25.5 wu/s → apex 5.42 wu, airtime 0.85 s.
+const JUMP_VEL = 25.5, GRAVITY = 60;
+// COYOTE (§2.3) — feet count as "on the ground" for this long after leaving a lip. DERIVED, not
+// picked: ≥ 2 clamped sim frames (the 0.05 s slow-mo cap → 0.10 s) and inside one frame of the jab's
+// 0.10 s startup, so a move never visibly fires from ground state after the ground is gone.
+const COYOTE = 0.12;
+// GROUND STOPSPEED (§3.2) — Q3's pm_stopspeed 100 qu/s = 17.1 wu/s. Above it friction is proportional
+// (≈ the exponential we already run); below it the drop becomes a CONSTANT (17.1·6 = 102.6 wu/s²), so
+// the last speed is shed in 0.167 s — the crisp Quake stop instead of an exponential's endless tail.
+// GROUND CLASS ONLY: the open-sky coast (§3.5) and every launched/thrown/slide class keep exp decay.
+const STOP_SPEED = 17.1;
 // flight tuning — levitation model: hold to rise, release to HOVER, descend key to sink.
 // THE OPEN-SKY GLIDE. One coefficient for all three axes, so releasing the stick decays the same way
 // whichever direction you were going — see `move()` and the `_openSky` coast branch. PowerWorld only.
@@ -212,6 +228,14 @@ export class Fighter {
     this._liftT = 0; this._liftBase = 0; this._settleT = 0;   // LIFT ramp clock/base, SETTLE ramp clock
     this._gaitCrash = 0;        // set by _slam when it APPLIES: "somebody drove me into geometry" (T8)
     this.onBlock = false;
+    // FOOTING (aaa-02 §2.3): the REAL ground state. `flying`/`gait` answer "which grammar owns me";
+    // `onFoot` answers "are my feet on something" — which is what jump, crouch, the roll and the
+    // MEASURED SWING (melee.js swingMult, dormant until this is set) all need. `_handSpd` is the
+    // fist's world speed, computed each frame in the poser.
+    this.onFoot = true; this.footT = 0; this.airT = 0;
+    this.crouching = false;                                  // CROUCH (§3.6): KM.down while onFoot
+    this._jumpT = 0;                                         // jump apex clock — while > 0, holding Space does not take off
+    this._handSpd = 0; this._handPrev = null;               // measured swing (§4.6)
     this.animT = Math.random() * 10;
 
     // per-slot ability runtime state
@@ -1337,12 +1361,25 @@ export class Fighter {
       // ⚠ `_openSky` HERE TOO. This is the OTHER takeoff path — holding ascend from the ground — and
       // gating it on flightTier alone meant RAGE could be granted flight by the toggle and still not
       // get off the floor with the ascend key. Two doors into one state need the same lock.
-      if (this.flyHeld && !this._flyPrev && !this.flying && (this.flightTier > 0 || this._openSky)) {
-        this.flying = true;
+      // THE JUMP vs TAKEOFF (aaa-02 §3.4). `Space` is one key with two meanings, disambiguated by
+      // FOOTING: a rising edge on the GROUND is a JUMP (the game's first — grounded heroes jump too);
+      // the same edge in the AIR, or the button HELD past the apex, is TAKEOFF into flight, so
+      // "altitude is the mode switch" survives intact. The jump refuses while a hard landing recovers
+      // (_landT gates JUMP and ROLL only, never strike/guard/grab — §2.4).
+      const canFly = this.flightTier > 0 || this._openSky;
+      const rise = this.flyHeld && !this._flyPrev;
+      if (rise && !this.flying && this.onFoot && this._landT <= 0) {
+        this.vel.y = Math.max(this.vel.y, JUMP_VEL);         // leave the ground under gravity — NOT flight
+        this._jumpT = JUMP_VEL / GRAVITY;                    // ≈ time to apex; holding does not take off until it elapses
+        this._liftFx = 0.18;
+        if (game && game.audio && game.audio.land) { try { game.audio.land(0.5, this.body, this.pos); } catch (e) {} }
+      } else if (!this.flying && canFly && ((rise && !this.onFoot) || (this.flyHeld && !this.onFoot && this._jumpT <= 0))) {
+        this.flying = true;                                  // takeoff — a press in the air, or ascend still held past the apex
         if (this.pos.y < 1.5) this.vel.y = FLY_TAKEOFF;      // pop off the ground so even a tap lifts into a hover
         this._liftFx = 0.25;
         if (game && game.audio) { try { game.audio.zap(560); } catch (e) {} }
       }
+      if (this._jumpT > 0) this._jumpT -= dt;
       // releasing ascend while aloft → stop climbing and settle here (no long coast up)
       if (!this.flyHeld && this._flyPrev && this.flying) this.vel.y = clamp(this.vel.y, -FLY_SINK, 5);
       this._flyPrev = this.flyHeld;
@@ -1527,11 +1564,20 @@ export class Fighter {
     // (the swoop coast §3.5 protects is untouched), below it the control clamps to `_airStop` so speed
     // reaches zero in finite time. Everything else (launched, thrown, slide, walk, city flight) keeps
     // the exponential exactly. Launched bodies are excused — their carry is the readout of the hit.
+    // GROUND CLASS = feet on a surface under your own power (not launched, thrown, sliding or in the
+    // open-sky air). It gets Q3's TWO-REGIME friction (§3.2): proportional above STOP_SPEED, an
+    // absolute floor below it, so a run comes to a crisp REST in a sixth of a second instead of
+    // creeping down an exponential tail. Everything else keeps the exact exponential it was tuned with.
+    const groundClass = !glide && !launched && this.launchT <= 0 && this._slideT <= 0 && this._thrownT <= 0 && this.gait === GAIT.GROUNDED;
     let dragF;
     if (glide && !launched && this.launchT <= 0 && this._airStop > 0) {
       const sp = Math.hypot(this.vel.x, this.vel.z);
       const control = Math.max(sp, this._airStop);
       dragF = sp > 1e-4 ? Math.max(0, sp - control * AIR_DRAG * dt) / sp : 0;
+    } else if (groundClass) {
+      const sp = Math.hypot(this.vel.x, this.vel.z);
+      const control = Math.max(sp, STOP_SPEED);              // Q3 pm_stopspeed floor
+      dragF = sp > 1e-4 ? Math.max(0, sp - control * 6 * dt) / sp : 0;
     } else {
       dragF = Math.exp((launched ? -PW_KB.drag : this._slideT > 0 || this._thrownT > 0 ? -1.3 : glide ? -AIR_DRAG : -6) * dt);
     }
@@ -1570,9 +1616,16 @@ export class Fighter {
       // ⚠ AND IT MUST NOT KICK YOU OUT OF THE AIR IN POWERWORLD EITHER. `flightTier <= 1` drops a
       // clumsy flier out of flight MODE the instant they stop climbing — correct over a city, and in
       // a dimension where everyone flies it would eject RAGE and SARGE every time they let go.
-      if (this.flying && !this.flyHeld && !this._openSky && (this.descendHeld || this.flightTier <= 1)) this.flying = false;
+      // LANDING (aaa-02 §2.2) — exit flight ONLY on a real ARRIVAL. Landing is not "touching": it is
+      // coming down or level (never mid-climb), not while a knockback owns the axis, not while holding
+      // ascend. `_openSky` needs only that (this is what finally lets a PowerWorld fighter stand on the
+      // floor — `flying` used to stay true there forever, the bug that blocked the whole ground grammar).
+      // The city keeps its original descendHeld / tier-1 exit unchanged.
+      const arrived = impact <= 0 && this.launchT <= 0 && !this.flyHeld;
+      if (this.flying && (this._openSky ? arrived : (!this.flyHeld && (this.descendHeld || this.flightTier <= 1)))) this.flying = false;
       if (impact < -30 && this.state !== 'ko') {
         this._landT = Math.min(0.26, -impact * 0.006);   // knee-crouch on a hard landing
+        if (this.crouching) this._landT *= 0.5;          // a crouch held at contact absorbs it (§2.4, JKA delta/=3)
         // YOU HEAR WHAT THEY ARE MADE OF. A robot clangs; a person thumps; a ghost barely lands.
         if (game && game.audio && game.audio.land) game.audio.land(Math.min(2.2, -impact / 38), this.body, this.pos);
       }
@@ -1659,6 +1712,16 @@ export class Fighter {
         this._slam(game, spd, 'wall');
       }
     }
+    // FOOTING (aaa-02 §2.3) — computed LAST, so `onBlock` and `groundY` are final for this frame.
+    // A fighter with `flying === false` is airborne for the whole descent, so `flying`/`gait` cannot
+    // answer "are my feet on something"; this can. COYOTE keeps it true for 0.12 s of air after a lip.
+    // ⚠ Never true while flying: the ground grammar (jump/crouch/roll) must not be offered in the air.
+    const _contact = (this.pos.y <= (this.groundY || 0) + 0.01) || this.onBlock;
+    if (_contact) { this.footT += dt; this.airT = 0; } else { this.airT += dt; this.footT = 0; }
+    this.onFoot = !this.flying && (_contact || this.airT < COYOTE);
+    // CROUCH is a single derived predicate: KM.down (descendHeld) while planted. One owner for the
+    // ×0.50 in move(), the landing absorb and (via the shell) the roll trigger.
+    this.crouching = this.onFoot && this.descendHeld && this.gait === GAIT.GROUNDED && this.state !== 'ko';
   }
 
   // Let go of the grapnel/ledge — the ONE release path (input, damage, KO all come through here).
@@ -1733,6 +1796,7 @@ export class Fighter {
       if (wl) s *= wl === 2 ? 0.45 : 0.62;
     }
     if (this.gliding) s *= 1.4;                 // wings out — the glide carries you
+    if (this.crouching) s *= 0.5;               // CROUCH (§3.3/§3.6) — pm_duckScale, EXACTLY ×0.50
     if (this.guarding) s *= 0.34;               // guarding slows you
     if (this.strikeActive > 0) s *= 0.5;
     // ⚠ THE MOMENTUM COEFFICIENT (aaa-01 §3). BFP's whole flight feel is Quake's `PM_Accelerate` with
@@ -2192,6 +2256,20 @@ export class Fighter {
     p.mats.suit.emissiveIntensity = 0.05 + hf * 2;
     p.mats.suit.emissive.setRGB(0.05 + hf, 0.05 + hf * 0.3, 0.05);
     if (hf <= 0) p.mats.suit.emissive.set(this.def.colors.primary);
+    // THE MEASURED SWING (aaa-02 §4.6) — the fist's world speed, for melee.js swingMult/handMult. On
+    // the GROUND the body stands still and the FIST is what moves, so the air's body-|vel| model is
+    // wrong there; JKA measures blade-base travel instead. The fist is arm.children[2] (the rig
+    // contract); getWorldPosition composes the poser's fresh rotations, so this reads the swing we
+    // just posed. HAND_REF/HAND_SPAN were measured off exactly this signal (bench/ground.js).
+    if (dt > 0) {
+      const arm = p.armR || p.armL;
+      const fist = arm && arm.children && arm.children[2] ? arm.children[2] : arm;
+      if (fist) {
+        fist.getWorldPosition(_handW);
+        if (this._handPrev) this._handSpd = _handW.distanceTo(this._handPrev) / dt;
+        this._handPrev = (this._handPrev || new THREE.Vector3()).copy(_handW);
+      }
+    }
   }
 
   _sync() { /* obj.position is this.pos (same ref); nothing extra */ }

@@ -15,6 +15,7 @@
 // — the KMK 9 cold-open desk, the circuit and firm banners, the registry dossier — and threading a
 // profile through all of it would put an `if` on every block. A page whose front door is genuinely
 // different gets its own front door module; the shared part is the engine, not the chrome.
+import * as THREE from 'three';
 import { Input } from './core/input.js';
 import { DevConsole } from './engine/devconsole.js';
 import { Comic } from './engine/comic.js';
@@ -572,7 +573,7 @@ export function boot(P = PROFILE_FULL) {
   window.addEventListener('unhandledrejection', (e) => game.reportError(e && e.reason, 'promise'));
 
   // expose for debugging + performance benchmarking
-  const handle = { dev, comic, game, hud, ROSTER, runSlot, performEvade, input, tutorial, netplay, uinav, soundscape, SETTINGS, KEYMAPS, playOpening, PW_KB, profile: P, enter, openMenu, loadPrefs, hands: { handsOf, selectHand, cycleHand, handLabel }, creator: { ui: creator, freshPicks, buildDef, tally, validate, saveCustom, deleteCustom, loadCustoms } };
+  const handle = { dev, comic, game, hud, THREE, ROSTER, runSlot, performEvade, input, tutorial, netplay, uinav, soundscape, SETTINGS, KEYMAPS, playOpening, PW_KB, profile: P, enter, openMenu, loadPrefs, hands: { handsOf, selectHand, cycleHand, handLabel }, creator: { ui: creator, freshPicks, buildDef, tally, validate, saveCustom, deleteCustom, loadCustoms } };
   handle.runBenchmark = (opts) => runBenchmark(game, hud, opts);
   // POWERWORLD's own suite (manual §47) — the throwable/destructible stage, the knockback dial, and
   // the city-is-unchanged control. Lazy so the bench never costs the boot a byte.
@@ -608,6 +609,7 @@ export function boot(P = PROFILE_FULL) {
   handle.camSuite = async (o) => (await import('./bench/pwcam.js')).camSuite(game, hud, o);
   handle.reticleSuite = async (o) => (await import('./bench/reticle.js')).reticleSuite(game, hud, o);
   handle.impactSuite = async (o) => (await import('./bench/pwimpact.js')).impactSuite(game, hud, o);
+  handle.groundSuite = async (o) => (await import('./bench/ground.js')).groundSuite(game, o);
   handle.audioSuite = async (o) => (await import('./bench/audio.js')).audioSuite(game, hud, o);
   handle.injectCityDrag = async (f) => (await import('./bench/pwmove.js')).injectCityDrag(game, f);
   handle.injectVelocityWritingTransition = async (f) => (await import('./bench/transition.js')).injectVelocityWritingTransition(game, f);

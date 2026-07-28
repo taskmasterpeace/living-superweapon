@@ -30,7 +30,7 @@ import { beamBuildOf, beamTemperOf } from '../data/visual.js';
 import { Gamepad } from '../core/gamepad.js';
 import { runSlot, performEvade } from './abilities.js';
 import { ROSTER } from '../data/characters.js';
-import { BANDS, clamp, rand, TAU, damp, GROUND_LAYER, PW_KB, pwCatchSpeed, AIM_MAX_D, GAIT, GAIT_OWNER } from '../core/util.js';
+import { BANDS, clamp, rand, TAU, damp, GROUND_LAYER, PW_KB, PW_FX, pwCatchSpeed, AIM_MAX_D, GAIT, GAIT_OWNER } from '../core/util.js';
 import { tierOf, TIER_COLORS } from './entity.js';
 
 const _v = new THREE.Vector3();
@@ -949,6 +949,9 @@ export class Game {
         this.vfx.impactStar(at, 12, '#ffd24a', 0.22);
         if (this.hud) this.hud.damageNumber(at, 'INTERCEPTED', '#ffd24a', true);
         if (this.isHuman(src) && this.hud) this.hud.feed(`INTERCEPTED — the ${fl.kind} broke up in the air`, '#ffd24a');
+        // aaa-06 §8.2: shooting a thrown mass out of the air is a HEAVY beat and routes through no
+        // fighter hit, so it fires the impact frame at the site that knows it is heavy.
+        { const S = this._look || (this._look = SETTINGS); if (this.world.print && S.fxImpact !== false) this.world.print.impactFrame(1, 1); }
       } else {
         this.vfx.impactStar(at, 6, '#ffd24a', 0.14);
         this.particles.burst(fl.x, fl.y, fl.z, { count: 6, speed: 13, life: 0.35, size: 2, color: ['#cfc8b8', '#8b8577'], drag: 2 });
@@ -2166,6 +2169,9 @@ export class Game {
     this.audio.teleport(); this.noise(f.pos, 0.7, f);
     if (this.isHuman(f) && this.hud) this.hud.feed('INTERCEPT — ' + (best.def ? best.def.name : 'target'), col);
     this.slowmo && this.slowmo(0.1, 0.55);
+    // aaa-06 §8.2: the teleport catch is the dimension's signature technique and lands no fighter
+    // hit — fire the impact frame here, the site that knows it is heavy.
+    { const S = this._look || (this._look = SETTINGS); if (this.world.print && S.fxImpact !== false) this.world.print.impactFrame(1, 1); }
     return true;
   }
 
@@ -3713,6 +3719,9 @@ export class Game {
     this.projectiles.update(dt, this);
     for (let i = this.minions.length - 1; i >= 0; i--) if (!this.minions[i].update(dt, this)) this.minions.splice(i, 1);
     for (let i = this.constructs.length - 1; i >= 0; i--) if (!this.constructs[i].update(dt, this)) this.constructs.splice(i, 1);
+    // aaa-06 §7: cap on-screen spark AREA in the close (chase) frame only — 3.5% of frame height,
+    // ~1/8 of a fighter — and leave the city (camMode iso) byte-identical at 0 (unbounded).
+    this.particles.setMaxPx(this.world.camMode === 'chase' ? PW_FX.ptMaxFrac * (this.world.renderer?.domElement?.height || innerHeight) : 0);
     this.particles.update(dt);
     this.vfx.update(dt);
     if (this.running && this.peds) this.peds.update(dt, this);

@@ -1,6 +1,6 @@
 // WAR WORLD: ASCENDANTS — transient 3D effects: explosions, shockwaves, lightning, rings, flashes, scorch.
 import * as THREE from 'three';
-import { rand, TAU, lerp, GROUND_LAYER } from '../core/util.js';
+import { rand, TAU, lerp, GROUND_LAYER, PW_FX } from '../core/util.js';
 
 const addMat = (color, opacity = 1) => new THREE.MeshBasicMaterial({ color, transparent: true, opacity, blending: THREE.AdditiveBlending, depthWrite: false });
 
@@ -62,17 +62,32 @@ export class VFX {
   }
   returnLight(l) { if (!l) return; l.intensity = 0; if (!this.lightPool.includes(l)) this.lightPool.push(l); }   // never touch .visible, never remove from the scene
 
+  // aaa-06 §3.2: in the CLOSE (chase) camera a world-space effect size is clamped to a fraction of
+  // the LIVE frame height, so a hit spark is smaller than the fighter it lands on. In the city
+  // (camMode iso) this is a byte-identical no-op — the guard is off, so nothing is clamped, and a
+  // clamp can only shrink, never inflate a far spark. `frac` is a PW_FX ladder rung. Passing
+  // Infinity as worldSize asks only for the ceiling (frac × frame), still Infinity in the city.
+  _cap(pos, worldSize, frac) {
+    if (this.world.camMode !== 'chase') return worldSize;
+    return Math.min(worldSize, frac * this.world.frameHeightAt(pos));
+  }
+  get _close() { return this.world.camMode === 'chase'; }
+
   flash(pos, color = '#fff', size = 6, life = 0.18) {
     if (!okPos(pos, 'flash')) return;
+    // aaa-06 §3.4: in the close frame the flash MESH shrinks (highest-frequency light in the game)
+    // but the borrowed LIGHT is untouched — illuminance is camera-independent (§6), so the light
+    // distance stays keyed to the original size while only the visible sphere is clamped.
+    const ms = this._cap(pos, size, PW_FX.flash);
     const m = new THREE.Mesh(this._sphere, addMat(color, 1));
-    m.position.copy(pos); m.scale.setScalar(size * 0.4); this.scene.add(m);
+    m.position.copy(pos); m.scale.setScalar(ms * 0.4); this.scene.add(m);
     const l = this.borrowLight(color, 6, size * 6);
     l.position.copy(pos);
     let t = 0;
     this._add({
       update: (dt) => {
         t += dt; const k = t / life;
-        m.scale.setScalar(size * (0.4 + k * 0.9));
+        m.scale.setScalar(ms * (0.4 + k * 0.9));
         m.material.opacity = Math.max(0, 0.85 * (1 - k));
         l.intensity = Math.max(0, 6 * (1 - k));
         return k >= 1;
@@ -93,10 +108,11 @@ export class VFX {
     const l = this.borrowLight(color, 10 * power, radius * 8); l.position.copy(pos);
     let t = 0; const life = 0.5 + power * 0.15;
     const c1 = new THREE.Color(color), c2 = new THREE.Color(color2);   // once per explosion, not per frame
+    const shellMax = this._cap(pos, Infinity, PW_FX.blastShell);   // §3.4: cap the fireball peak at 0.64 of frame
     this._add({
       update: (dt) => {
         t += dt; const k = t / life;
-        shell.scale.setScalar(radius * (0.3 + k * 1.1));
+        shell.scale.setScalar(Math.min(radius * (0.3 + k * 1.1), shellMax));
         shell.material.opacity = Math.max(0, 0.9 * (1 - k));
         shell.material.color.lerpColors(c1, c2, k);
         l.intensity = Math.max(0, 10 * power * (1 - k * k));
@@ -104,19 +120,26 @@ export class VFX {
       },
       dispose: () => { this.scene.remove(shell); shell.material.dispose(); this.returnLight(l); },
     });
-    // the detonation KERNEL — a fast white core that pops and dies before the fireball peaks,
-    // which is what makes a blast read as a detonation instead of a balloon inflating
-    const core = new THREE.Mesh(this._sphere, addMat('#ffffff', 0.95));
-    core.position.copy(pos); core.scale.setScalar(radius * 0.12); this.scene.add(core);
-    let ct = 0; const clife = 0.14;
-    this._add({
-      update: (dt) => { ct += dt; const k = ct / clife; core.scale.setScalar(radius * (0.12 + k * 0.55)); core.material.opacity = Math.max(0, 0.95 * (1 - k)); return k >= 1; },
-      dispose: () => { this.scene.remove(core); core.material.dispose(); },
-    });
+    // the detonation KERNEL — a fast white core that pops and dies before the fireball peaks, which
+    // is what makes a blast read as a detonation instead of a balloon inflating. ⚠ §2.1: SUPPRESS it
+    // entirely when the eye is inside `kernelNear × radius` — a solid white sphere the camera is
+    // sitting inside is a full-frame white flash, not a detonation; else cap it to 0.292 of frame.
+    if (!(this._close && this.world.camera.position.distanceTo(pos) < radius * PW_FX.kernelNear)) {
+      const core = new THREE.Mesh(this._sphere, addMat('#ffffff', 0.95));
+      core.position.copy(pos); core.scale.setScalar(radius * 0.12); this.scene.add(core);
+      const coreMax = this._cap(pos, Infinity, PW_FX.blastCore);
+      let ct = 0; const clife = 0.14;
+      this._add({
+        update: (dt) => { ct += dt; const k = ct / clife; core.scale.setScalar(Math.min(radius * (0.12 + k * 0.55), coreMax)); core.material.opacity = Math.max(0, 0.95 * (1 - k)); return k >= 1; },
+        dispose: () => { this.scene.remove(core); core.material.dispose(); },
+      });
+    }
     // the pressure ring, tilted flat — the blast telling the world how wide it reached
-    this.ring(pos, { color, r0: radius * 0.25, r1: radius * 1.7, life: 0.32, flat: true, opacity: 0.7 });
-    // sparks + embers + smoke + tumbling DEBRIS with real gravity
-    this.P.burst(pos.x, pos.y, pos.z, { count: 26 + power * 14, speed: 20 + power * 10, life: 0.6, size: 2.6, color: ['#ffffff', color, color2], up: 4, grav: 10, drag: 1.3 });
+    this.ring(pos, { color, r0: radius * 0.25, r1: this._cap(pos, radius * 1.7, PW_FX.pressureRing), life: 0.32, flat: true, opacity: 0.7 });
+    // sparks + embers + smoke + tumbling DEBRIS with real gravity. ⚠ §7: in the close frame each
+    // spark draws up to 9× its authored area (the perspective divide finally bites), so cap the count.
+    const sparkN = this._close ? Math.min(PW_FX.sparkCount, 26 + power * 14) : 26 + power * 14;
+    this.P.burst(pos.x, pos.y, pos.z, { count: sparkN, speed: 20 + power * 10, life: 0.6, size: 2.6, color: ['#ffffff', color, color2], up: 4, grav: 10, drag: 1.3 });
     this.P.burst(pos.x, pos.y, pos.z, { count: 6 + power * 5, speed: 26 + power * 8, life: 1.0, size: 1.6, color: ['#3a352c', '#57504a', color2], up: 14, grav: 60, drag: 0.6 });
     this.P.burst(pos.x, pos.y, pos.z, { count: 10, speed: 7, life: 1.1, size: 4.5, color: ['#20222c', '#15161d'], up: 6, grav: -3, drag: 1.1 });
     if (opt.scorch !== false && pos.y < 4) this.scorch(pos, radius * 0.6, color2);
@@ -133,26 +156,32 @@ export class VFX {
     // second ring (delayed)
     const ring2 = new THREE.Mesh(this._ring, addMat('#ffffff', 0.7));
     ring2.rotation.x = -Math.PI / 2; ring2.position.set(pos.x, 0.35, pos.z); ring2.scale.setScalar(1); this.scene.add(ring2);
-    // dome
-    const dome = new THREE.Mesh(this._sphere, addMat(color, 0.24));
-    dome.position.set(pos.x, 0, pos.z); dome.scale.setScalar(3); this.scene.add(dome);
+    // dome — ⚠ CUT ENTIRELY in the close frame (aaa-06 §2.1). At the clinch framing the eye sits
+    // INSIDE this additive ellipsoid (measured `(30/47)² + (14/25)² = 0.72 < 1`), and a backside
+    // sphere you are inside tints EVERY pixel — the heliopause-shell lesson at ten times the
+    // opacity. A percentage clamp cannot fix that; the two flat rings carry the read.
+    const dome = this._close ? null : new THREE.Mesh(this._sphere, addMat(color, 0.24));
+    if (dome) { dome.position.set(pos.x, 0, pos.z); dome.scale.setScalar(3); this.scene.add(dome); }
     let t = 0; const life = 0.5 + power * 0.14;
     this._add({
       update: (dt) => {
         t += dt; const k = t / life; const e = 1 - Math.pow(1 - k, 2);
         ring.scale.setScalar(2 + e * maxR); ring.material.opacity = 0.9 * (1 - k);
         ring2.scale.setScalar(1 + Math.max(0, (k - 0.12)) * maxR * 1.15); ring2.material.opacity = 0.7 * (1 - k);
-        dome.scale.set(3 + e * maxR, 3 + e * maxR * 0.5, 3 + e * maxR); dome.material.opacity = 0.32 * (1 - k);
+        if (dome) { dome.scale.set(3 + e * maxR, 3 + e * maxR * 0.5, 3 + e * maxR); dome.material.opacity = 0.32 * (1 - k); }
         return k >= 1;
       },
-      dispose: () => { [ring, ring2, dome].forEach(m => { this.scene.remove(m); m.material.dispose(); }); },
+      dispose: () => { [ring, ring2, dome].forEach(m => { if (!m) return; this.scene.remove(m); m.material.dispose(); }); },
     });
     // dust ring particles
     for (let i = 0; i < 30; i++) {
       const a = (i / 30) * TAU;
       this.P.spawn({ x: pos.x + Math.cos(a) * 3, y: 0.5, z: pos.z + Math.sin(a) * 3, vx: Math.cos(a) * (16 + power * 8), vz: Math.sin(a) * (16 + power * 8), vy: rand(2, 8), life: 0.7, size: 5, color: ['#4a4a55', color], grav: 6, drag: 1.5 });
     }
-    this.lightning(pos, { color, count: 4 + (power * 3 | 0), radius: maxR * 0.7, height: 10 + power * 8 });
+    // ⚠ §3.4: the lightning skirt is authored against the 156u ortho frame; scale it by the live
+    // frame so a shockwave under the player at the clinch does not fill the screen with bolts.
+    const _ls = this._close ? Math.min(1, this.world.frameHeightAt(pos) / 156) : 1;
+    this.lightning(pos, { color, count: 4 + (power * 3 | 0), radius: maxR * 0.7 * _ls, height: (10 + power * 8) * _ls });
     this.world.shake(0.8 + power);
   }
 
@@ -264,8 +293,13 @@ export class VFX {
   // comic-style impact star (billboard, draws over everything)
   impactStar(pos, size, color = '#fff', life = 0.2) {
     if (!okPos(pos, 'impactStar')) return;
-    const mat = new THREE.SpriteMaterial({ map: this._impactTex(), color, transparent: true, opacity: 1, blending: THREE.AdditiveBlending, depthWrite: false, depthTest: false, rotation: rand(0, TAU) });
-    const s = new THREE.Sprite(mat); s.position.copy(pos); s.scale.setScalar(size * 0.3); this.scene.add(s);
+    // ⚠ §3.4: `depthTest:false` draws the star over EVERYTHING — a convenience at 260u, but in the
+    // chase view the nearest object to the lens is the player's own back, so the star paints over
+    // your own fighter. In the close frame it takes depthTest:true with renderOrder raised, so it
+    // still wins ties against the fighter it lands on and loses to anything in front of the lens.
+    const close = this._close;
+    const mat = new THREE.SpriteMaterial({ map: this._impactTex(), color, transparent: true, opacity: 1, blending: THREE.AdditiveBlending, depthWrite: false, depthTest: close, rotation: rand(0, TAU) });
+    const s = new THREE.Sprite(mat); s.renderOrder = close ? 6 : 0; s.position.copy(pos); s.scale.setScalar(size * 0.3); this.scene.add(s);
     let t = 0; const spin = rand(-3, 3);
     this._add({ update: (dt) => { t += dt; const k = t / life; s.scale.setScalar(size * (0.3 + easeOut(k) * 0.9)); mat.opacity = Math.max(0, 1 - k * k); mat.rotation += spin * dt; return k >= 1; }, dispose: () => { this.scene.remove(s); mat.dispose(); } });
   }
@@ -274,13 +308,17 @@ export class VFX {
   impact(pos, dir, opt = {}) {
     if (!okPos(pos, 'impact')) return;
     const color = opt.color || '#ffffff', power = opt.power || 1;
-    this.impactStar(pos, 7 + power * 6, '#ffffff', 0.16);
-    if (power > 0.9) this.impactStar(pos, 5 + power * 5, color, 0.24);
+    // §3.3 ladder: the white star is clamped to a fraction of the frame keyed to the blow — a
+    // haymaker star goes from 69% of frame height to 18%. The accent star is the SECOND additive
+    // layer over the centre box; the two-layer rule (§6) CUTS it in the close frame.
+    const _tier = power >= 1.6 ? PW_FX.sparkHeavy : power >= 0.9 ? PW_FX.sparkMid : PW_FX.sparkJab;
+    this.impactStar(pos, this._cap(pos, 7 + power * 6, _tier), '#ffffff', 0.16);
+    if (power > 0.9 && !this._close) this.impactStar(pos, 5 + power * 5, color, 0.24);
     this.flash(pos, '#ffffff', 3 + power * 3, 0.09);
     const d = dir ? { x: dir.x, z: dir.z } : null;
     this.P.burst(pos.x, pos.y, pos.z, { count: 10 + (power * 10 | 0), speed: 30 + power * 20, life: 0.4, size: 2.8, color: ['#fff', color], dir: d, spread: 0.55, up: power * 4, grav: 9, drag: 2.2 });
     this.P.burst(pos.x, pos.y, pos.z, { count: 5 + (power * 4 | 0), speed: 16 + power * 10, life: 0.55, size: 3.6, color: [color, '#fff'], up: 6, grav: 11, drag: 1.5, shrink: false });
-    this.ring(pos, { color: '#fff', r0: 1, r1: 5 + power * 5, life: 0.2, opacity: 0.9 });
+    this.ring(pos, { color: '#fff', r0: 1, r1: this._cap(pos, 5 + power * 5, PW_FX.sparkHeavy), life: 0.2, opacity: 0.9 });
     this.world.shake(0.4 + power);
   }
 

@@ -11,21 +11,21 @@ export const KEYMAPS = {
     up: 'Space', down: 'KeyZ', guard: 'KeyC', item: 'KeyX', strike: 'KeyV', grab: 'KeyG', fly: 'KeyF',
     upLabel: 'SPACE', downLabel: 'Z', guardLabel: 'C / MOUSE4', itemLabel: 'X', swapLabel: 'WHEEL · 1–0', flyLabel: 'F',
     strikeLabel: 'V', grabLabel: 'G',
-    blurb: 'What shipped. The wheel (and 1–0) swaps hero · Z descends · C guards · X gadget.',
+    blurb: 'What shipped. The wheel (and 1–0) swaps hero · Z descends · C guards · X gadget. SPACE JUMPS on the ground and flies in the air (hold past the apex to take off); Z also CROUCHES on foot.',
   },
   pilot: {
     name: 'PILOT', wheel: 'ability', digitsSwap: false,
     up: 'Space', down: 'KeyC', guard: 'KeyX', item: 'KeyZ', strike: 'KeyV', grab: 'KeyG', fly: 'KeyF',
     upLabel: 'SPACE', downLabel: 'C', guardLabel: 'X / MOUSE4', itemLabel: 'Z', swapLabel: '[ ]', flyLabel: 'F',
     strikeLabel: 'V', grabLabel: 'G',
-    blurb: 'The wheel picks your POWER and LMB fires it · [ ] swaps hero · SPACE up, C down · X guards, Z gadget.',
+    blurb: 'The wheel picks your POWER and LMB fires it · [ ] swaps hero · SPACE up, C down · X guards, Z gadget. SPACE JUMPS on the ground and flies in the air (hold past the apex to take off); C also CROUCHES on foot.',
   },
   hybrid: {
     name: 'HYBRID', wheel: 'ability', digitsSwap: false,
     up: 'Space', down: 'KeyZ', guard: 'KeyC', item: 'KeyX', strike: 'KeyV', grab: 'KeyG', fly: 'KeyF',
     upLabel: 'SPACE', downLabel: 'Z', guardLabel: 'C / MOUSE4', itemLabel: 'X', swapLabel: '[ ]', flyLabel: 'F',
     strikeLabel: 'V', grabLabel: 'G',
-    blurb: 'PILOT’s wheel-select and [ ] hero swap, with guard and gadget left on C and X.',
+    blurb: 'PILOT’s wheel-select and [ ] hero swap, with guard and gadget left on C and X. SPACE JUMPS on the ground and flies in the air (hold past the apex to take off); Z also CROUCHES on foot.',
   },
   // ⚠ BRAWLER — Robert: *"i dont know how to do melee with my keyboard bro its hard."* He is right,
   // and the reason is physical: with fingers on WASD, STRIKE on V is reachable and GRAB on G is not.
@@ -40,7 +40,7 @@ export const KEYMAPS = {
     up: 'Space', down: 'KeyZ', guard: 'KeyC', item: 'KeyX', strike: 'KeyF', grab: 'KeyV', fly: 'KeyG',
     upLabel: 'SPACE', downLabel: 'Z', guardLabel: 'C / MOUSE4', itemLabel: 'X', swapLabel: '[ ]', flyLabel: 'G',
     strikeLabel: 'F', grabLabel: 'V',
-    blurb: 'For fist fights. The whole melee trifecta sits under your left hand — F punch, C guard, V grab — so you never leave WASD.',
+    blurb: 'For fist fights. The whole melee trifecta sits under your left hand — F punch, C guard, V grab — so you never leave WASD. SPACE JUMPS on the ground and flies in the air (hold past the apex to take off); Z also CROUCHES on foot.',
   },
 };
 // Resolve a stored scheme name (tolerates the early 'southpaw' build) to a live map.
