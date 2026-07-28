@@ -1871,28 +1871,36 @@ export class HUD {
     if (pw !== this._pwCls) { this._pwCls = pw; document.body.classList.toggle('powerworld', pw); }
     if (!pw) { if (this._lkCls) { this._lkCls = false; document.body.classList.toggle('pw-locked', false); } return; }
     const el = this.el.cross; if (!el) return;
-    const a = g._aim3pt, s = this._csp || (this._csp = { x: 0, y: 0, behind: false });
-    g.world.screenPosOf(a.x, a.y, a.z, s);
-    if (s.behind) {                                    // ⚠ JKA's rule: "off screen, don't draw it"
-      if (this._csOff !== true) { this._csOff = true; el.style.visibility = 'hidden'; }
-    } else {
-      if (this._csOff !== false) { this._csOff = false; el.style.visibility = ''; }
-      // ⚠ `#hCross` is `position:fixed; left:50%; top:50%` (screen centre) with its ticks at negative
-      // offsets — a `transform: translate()` moves the whole assembly and touches nothing else. Do
-      // NOT write left/top (layout properties, invalidated every frame). ⚠ WRITE ONLY ON CHANGE:
-      // this runs at 60Hz and a per-frame style write is a layout thrash.
-      const dx = Math.round(s.x - innerWidth * 0.5), dy = Math.round(s.y - innerHeight * 0.5);
-      if (dx !== this._csx || dy !== this._csy) {
-        this._csx = dx; this._csy = dy; el.style.transform = `translate(${dx}px, ${dy}px)`;
+    const locked = g.hardLock && g.hardLock.alive;
+    if (locked) {
+      // LOCKED (T): the mark rides the target, which can be off-centre or even off-screen.
+      const a = g._aim3pt, s = this._csp || (this._csp = { x: 0, y: 0, behind: false });
+      g.world.screenPosOf(a.x, a.y, a.z, s);
+      if (s.behind) {                                  // ⚠ JKA's rule: "off screen, don't draw it"
+        if (this._csOff !== true) { this._csOff = true; el.style.visibility = 'hidden'; }
+      } else {
+        if (this._csOff !== false) { this._csOff = false; el.style.visibility = ''; }
+        // ⚠ `#hCross` is `position:fixed; left:50%; top:50%` with ticks at negative offsets — a
+        // `transform: translate()` moves the whole assembly. NOT left/top (layout, invalidated every
+        // frame). WRITE ONLY ON CHANGE (60Hz — a per-frame style write is a layout thrash).
+        const dx = Math.round(s.x - innerWidth * 0.5), dy = Math.round(s.y - innerHeight * 0.5);
+        if (dx !== this._csx || dy !== this._csy) {
+          this._csx = dx; this._csy = dy; el.style.transform = `translate(${dx}px, ${dy}px)`;
+        }
       }
+    } else {
+      // ⚠ FREE AIM IS A CENTRE RETICLE (Robert 2026-07-28: "the crosshair isn't on point"). Under
+      // mouse-look the shot goes along the camera's CENTRE ray, so the reticle IS the centre of the
+      // screen. Projecting a traced point drifts as the camera turns — controlPlayer computes the
+      // point, then cameraDrive's mouse-look moves the camera, and projecting the now-stale point
+      // lagged the aim by ~9px. Pin it to centre; that is exactly where the shot lands.
+      if (this._csOff !== false) { this._csOff = false; el.style.visibility = ''; }
+      if (this._csx !== 0 || this._csy !== 0) { this._csx = 0; this._csy = 0; el.style.transform = 'translate(0px, 0px)'; }
     }
-    // AND IT SAYS WHAT IT HAS. `pw-locked` now means "this mark is hostile" — a hard lock OR the
-    // crosshair sitting on a foe (§6.4's deliberate meaning change: under the convergent trace that
-    // is knowable without a lock). Makes the §5.5 discontinuity visible rather than silent.
-    // ⚠ NOT the passive `lockTarget` — that used to be set every frame by the aim magnet, so the mark
-    // was ALWAYS hot ("target seems to always be on"). Hostile = an explicit hard lock OR the crosshair
-    // actually sitting on a foe (the convergent trace makes that knowable without a lock).
-    const hot = !!g.hardLock || !!(g._aimHit && g._aimHit.hit === 'foe');
+    // ⚠ HOSTILE ONLY WHEN EXPLICITLY LOCKED (Robert 2026-07-28: "target doesn't turn off"). Lighting
+    // the mark red on `aimHit==='foe'` meant it went red whenever ANY foe drifted under the centre —
+    // which in a fight is always — so it never turned off. The T lock is the ONE toggle for the target.
+    const hot = !!locked;
     if (hot !== this._lkCls) { this._lkCls = hot; document.body.classList.toggle('pw-locked', hot); }
   }
 
