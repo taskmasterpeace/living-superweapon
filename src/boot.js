@@ -36,7 +36,7 @@ import { TouchControls, isTouchDevice } from './core/touch.js';
 import { UINav } from './core/uinav.js';
 import { Soundscape } from './core/soundscape.js';
 import { validateRoster } from './engine/abilityMeta.js';
-import { validateVis, applyDtypes } from './data/visual.js';
+import { validateVis, applyDtypes, applyProfiles } from './data/visual.js';
 import { TYPES } from './engine/abilities.js';
 import { PW_KB } from './core/util.js';   // the POWERWORLD knockback dial — tunable live from the console
 import { loadCareer, saveCareer, clearCareer, newCareer, genSlate, acceptCfg, resolveOffer, restWeek, payClinic, fmtMoney } from './data/career.js';
@@ -367,6 +367,10 @@ export function boot(P = PROFILE_FULL) {
   // the roster ever declared a `dtype`, so cold cones dealt ENERGY and frostResist did nothing.
   // MATERIAL already knows what a power is made of — stamp the type from it, once, at boot.
   console.log('[THRESHOLD] damage types derived for', applyDtypes(ROSTER), 'abilities');
+  // THE VISUAL PROFILE (Robert's 7-trait legibility contract): load the baked differentiation so no
+  // two abilities share >3 of 7 traits (down to the roster's mathematical floor). Instant — the
+  // solver ran offline in tools/bake-vprofiles.mjs. profileOf() then answers for every ability.
+  console.log('[THRESHOLD] visual profiles applied to', applyProfiles(ROSTER).applied, 'abilities');
   const creator = P.doors.forge ? new CreatorUI(ROSTER) : null;
   function afterForge(def, { test } = {}) {
     hud.buildTitle(enter);                                  // rebuild so the new card exists
@@ -580,6 +584,34 @@ export function boot(P = PROFILE_FULL) {
   handle.abilityList = async () => (await import('./bench/abilities.js')).abilityList();
   handle.abilitySuite = async (opts) => (await import('./bench/abilities.js')).abilitySuite(game, hud, opts);
   handle.stageAbility = async (id, slot, opts) => (await import('./bench/abilities.js')).stageAbility(game, hud, id, slot, opts);
+  // THE VISUAL PROFILE GAUGE (POWERWORLD_AAA §"THE VISUAL PROFILE") — every ability's 7-trait
+  // profile checked pairwise for Robert's "no two share >3 traits" rule, over the LIVE roster so it
+  // can never drift from what the engine derives. Returns { total, checks, failures, collisions }.
+  handle.profileSuite = async () => (await import('./data/visual.js')).verifyProfiles(ROSTER);
+  // ============================================================================================
+  // THE POWERWORLD AAA GAUGES — `docs/POWERWORLD_AAA.md` WAVE 0. Six suites across four lanes, and
+  // THIS IS THE ONE REGISTRATION POINT for all of them (§2.1: G-MOVE owns boot.js so the other
+  // three lanes never have to touch it).
+  //
+  // ⚠ ALL SIX ARE REGISTERED WHETHER OR NOT THEIR FILE IS ON DISK YET, AND THAT IS DELIBERATE.
+  // The import is lazy, so a missing lane costs the boot nothing and fails only at the moment
+  // somebody calls it — with the module name in the error. Wiring them up front is what stops the
+  // registration itself becoming a merge conflict between four agents.
+  //
+  // ⚠ EVERY SUITE TAKES `(game, hud, opts)` AND RETURNS `{ checks, failures, rows }`. That shape is
+  // frozen in POWERWORLD_AAA.md's export contract; a lane may add fields and may not change these.
+  //
+  // ⚠ THE INJECTORS ARE REGISTERED TOO. Rubric §5.2: a verdict from an unproven harness is
+  // INADMISSIBLE, so the known-bad has to be as reachable as the suite it discredits.
+  handle.moveSuite = async (o) => (await import('./bench/pwmove.js')).moveSuite(game, hud, o);
+  handle.transitionSuite = async (o) => (await import('./bench/transition.js')).transitionSuite(game, hud, o);
+  handle.camSuite = async (o) => (await import('./bench/pwcam.js')).camSuite(game, hud, o);
+  handle.reticleSuite = async (o) => (await import('./bench/reticle.js')).reticleSuite(game, hud, o);
+  handle.impactSuite = async (o) => (await import('./bench/pwimpact.js')).impactSuite(game, hud, o);
+  handle.audioSuite = async (o) => (await import('./bench/audio.js')).audioSuite(game, hud, o);
+  handle.injectCityDrag = async (f) => (await import('./bench/pwmove.js')).injectCityDrag(game, f);
+  handle.injectVelocityWritingTransition = async (f) => (await import('./bench/transition.js')).injectVelocityWritingTransition(game, f);
+  handle.injectBadGait = async (f) => (await import('./bench/transition.js')).injectBadGait(game, f);
   if (location.search.includes('bench')) {
     addEventListener('load', () => setTimeout(async () => {
       const r = await runBenchmark(game, hud);

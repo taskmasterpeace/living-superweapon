@@ -14,6 +14,9 @@
 // SHAPE and SOURCE carry the grayscale test. TRAIL carries the half-second test. TELL carries
 // the status test. That is why those three are traits and not colours.
 
+// The baked differentiation overrides (tools/bake-vprofiles.mjs) — loaded at boot by applyProfiles.
+import { VPROFILES } from './vprofiles.generated.js';
+
 // ---- the vocabularies (a closed set per trait — an unknown value is a bug, not a variation) --
 export const VIS_SOURCE = ['body', 'hand', 'face', 'chest', 'weapon', 'ground', 'sky', 'aura', 'world'];
 export const VIS_SHAPE = ['fist', 'bolt', 'orb', 'hose', 'cone', 'burst', 'blade', 'shell', 'field', 'arc', 'rift', 'chain'];
@@ -37,7 +40,7 @@ export const VIS_MEANING = {
 const has = (a, k) => !!(a && a[k]);
 
 // ---- MATERIAL: what the thing appears to be made of -------------------------------------
-function materialOf(a) {
+export function materialOf(a) {
   if (a.material) return a.material;
   if (has(a, 'blade') || has(a, 'arrow') || has(a, 'bullet') || a.weapon || a.type === 'rifle' || a.type === 'bow') return 'steel';
   const d = a.dtype;
@@ -287,6 +290,380 @@ export function visOf(a) {
     build: a.type === 'beam' ? beamBuildOf(a) : null,     // beams only: how much of it there is
     temper: a.type === 'beam' ? beamTemperOf(a) : null,   // beams only: what it is doing inside
   };
+}
+
+// ================================================================================================
+// THE VISUAL PROFILE — Robert's seven-trait legibility contract (POWERWORLD_AAA §"THE VISUAL PROFILE")
+//
+// The seven-trait profile above (source · shape · trail · impact · residue · material · tell) was
+// built for the CITY game's readability tests. Robert's PowerWorld ruling asks a HARDER question of
+// the SAME data: every ability must carry a SEVEN-TRAIT PROFILE, and **no two powers may match on
+// more than THREE of the seven** — the rule that guarantees a wall of fliers never blurs into one
+// mush of light. His seven traits are not identical to the five the codex already renders, so this
+// block ADDS the two he names that the contract did not have as their own axes (MOTION, FAMILY) and
+// MAPS the existing derivations onto his fixed vocabularies. Nothing is forked; `visOf` is untouched.
+//
+// ⚠ DERIVE FIRST, AUTHOR THE EXCEPTIONS. `profileOf(a)` returns a full 7-trait profile for EVERY
+// ability by derivation — reusing `sourceOf`/`shapeOf`/`impactOf`/`residueOf`/`tellOf` for the five
+// axes those already answer, and the two new derivations below for MOTION and FAMILY. An author only
+// writes an override on `a.vprofile` when a collision forces it — exactly like `def.build`/`def.temper`
+// for beams. Do NOT hand-author 364 profiles.
+//
+// Robert's SEVEN TRAITS and their vocabularies (a closed set per trait):
+//   1. SOURCE     — eyes · chest · hands · weapon · ground · sky · space
+//   2. SILHOUETTE — line · disc · fan · cone · wall · ring · orb · tendril · column · cloud
+//   3. MOTION     — straight · arc · spiral · return · branch · fall · expand · pull-inward · erupt-upward
+//   4. IMPACT     — puncture · slice · shatter · implode · explode · freeze · deform · launch
+//   5. RESIDUE    — frost · smoke · fire · cracks · crater · glyph · scattered-metal · nothing
+//   6. FAMILY     — physical · technological · elemental · psychic-gravity · mystical · biological · sonic
+//   7. TELL       — the status written on the victim (the existing VIS_TELL vocab — the richer one)
+export const VIS_MOTION = ['straight', 'arc', 'spiral', 'return', 'branch', 'fall', 'expand', 'pull-inward', 'erupt-upward'];
+export const VIS_FAMILY = ['physical', 'technological', 'elemental', 'psychic-gravity', 'mystical', 'biological', 'sonic'];
+
+export const PROFILE_SOURCE = ['eyes', 'chest', 'hands', 'weapon', 'ground', 'sky', 'space'];
+export const PROFILE_SILHOUETTE = ['line', 'disc', 'fan', 'cone', 'wall', 'ring', 'orb', 'tendril', 'column', 'cloud'];
+export const PROFILE_IMPACT = ['puncture', 'slice', 'shatter', 'implode', 'explode', 'freeze', 'deform', 'launch'];
+export const PROFILE_RESIDUE = ['frost', 'smoke', 'fire', 'cracks', 'crater', 'glyph', 'scattered-metal', 'nothing'];
+
+// ---- MOTION: how the effect travels — the trait the five-axis contract never had --------------
+// Flags win (an author-declared spiral IS a spiral); otherwise a per-TYPE default so no ability is
+// ever motion-less. ⚠ `a.arc` is a NUMBER (the angular width of a cone/swing), NEVER a motion flag —
+// 78 abilities carry it and reading it as "arc motion" would mislabel every cone in the game.
+const MOTION_FOR_TYPE = {
+  beam: 'straight', lifedrain: 'pull-inward',
+  cone: 'straight',
+  projectile: 'straight', volley: 'straight', rifle: 'straight', bow: 'straight', quiver: 'straight',
+  charge: 'straight', growingorb: 'straight', facebomb: 'straight',
+  melee: 'straight', rush: 'straight', dash: 'straight', phase: 'straight',
+  nova: 'expand', mine: 'expand', meteor: 'fall',
+  buff: 'erupt-upward',                       // a transformation aura is a pillar rising off the body
+  summon: 'erupt-upward', construct: 'erupt-upward',
+  teleport: 'arc', portal: 'arc', mindcontrol: 'arc',
+  tentacle: 'pull-inward', grapple: 'pull-inward',
+  // the long tail (creator customs / dead-but-implemented types) — a sane default each, never blank
+  weather: 'fall', gravity: 'pull-inward', telekinesis: 'pull-inward', timefield: 'expand',
+  size: 'expand', invisible: 'expand', regen: 'expand', elastic: 'straight', wallcrawl: 'straight',
+  vision: 'expand', duplicate: 'expand', mount: 'straight', dome: 'expand',
+  possess: 'arc', consume: 'pull-inward', mimic: 'arc', reshape: 'expand', banish: 'pull-inward',
+};
+export function motionOf(a) {
+  if (!a || typeof a !== 'object') return 'straight';
+  const s = { ...a, ...(a.vis || {}) };
+  if (has(s, 'boomerang') || has(s, 'return')) return 'return';   // out-and-back
+  if (has(s, 'spiral')) return 'spiral';                          // the explicit corkscrew (VEGA)
+  if (has(s, 'branch') || has(s, 'chainArc') || has(s, 'forks')) return 'branch';  // chain lightning forks
+  if (has(s, 'groundslam')) return 'erupt-upward';               // a slam throws the ground UP
+  if ((s.type === 'projectile' || s.type === 'volley') && s.homing) return 'arc';  // a seeker curves in
+  return MOTION_FOR_TYPE[s.type] || 'straight';
+}
+
+// ---- FAMILY: which of the seven GRAMMARS the effect obeys (trait 6 decides the whole look) -----
+// Derived from the ability's MATERIAL (what it is made of) and its TYPE. Precedence is deliberate:
+//   psychic-gravity  — spatial / mind / gravity: inward, distortion, silence (mindcontrol, portals,
+//                      teleport, gravity, lifedrain, telekinesis, possession, time)
+//   sonic            — pressure made of air, mostly transparent (a sonic flag, or the `air` material)
+//   biological       — living tendrils; a METAL tentacle is a machine, so it goes technological
+//   mystical         — glyphs, shadow, the arcane, banishment
+//   technological    — drone swarms and machine constructs (a MAGIC construct went mystical above)
+//   physical         — steel, stone, bullets, blades, thrown steel, punches (recoil, fragments, dust)
+//   elemental        — everything energy/fire/ice/toxic/acid/shock/light left over (the default)
+// ⚠ A RIFLE IS PHYSICAL, not technological — a gun is recoil and fragments (the PHYSICAL grammar);
+// the TECHNOLOGY grammar is the drone/construct's controlled geometry. Documented divergence from
+// the brief's "rifle → technological", chosen so ballistics read as ballistics.
+export function familyOf(a) {
+  if (!a || typeof a !== 'object') return 'physical';
+  const s = { ...a, ...(a.vis || {}) };
+  const t = s.type, m = materialOf(s);
+  if (t === 'mindcontrol' || t === 'gravity' || t === 'portal' || t === 'teleport' ||
+      t === 'lifedrain' || t === 'telekinesis' || t === 'possess' || t === 'timefield')
+    return 'psychic-gravity';   // ⚠ NOT banish — that is mystical (otherworldly), caught below
+  if (has(s, 'sonic') || m === 'air') return 'sonic';
+  if (t === 'tentacle' || t === 'grapple') return (s.metal || m === 'steel') ? 'technological' : 'biological';
+  if (m === 'arcane' || m === 'shadow' || t === 'banish') return 'mystical';
+  if (t === 'summon') return 'technological';                       // drone swarms
+  if (t === 'construct') return (m === 'energy' || m === 'steel' || m === 'light') ? 'technological' : 'mystical';
+  if (m === 'steel' || m === 'stone') return 'physical';
+  if (t === 'melee' || t === 'rush' || t === 'dash' || t === 'rifle' || t === 'bow' || t === 'quiver' || t === 'volley')
+    return (m === 'fire' || m === 'ice' || m === 'shock' || m === 'toxic' || m === 'acid' || m === 'light') ? 'elemental' : 'physical';
+  return 'elemental';
+}
+
+// ---- the axis MAPS onto Robert's fixed vocabularies ------------------------------------------
+// SOURCE: the 9-value VIS_SOURCE folded onto his 7. `body`/`hand` → hands, `face` → eyes, `aura` →
+// chest (the core an aura emanates from), `world` → space (portals/teleport/dimensional).
+const SOURCE_MAP = { body: 'hands', hand: 'hands', face: 'eyes', chest: 'chest', weapon: 'weapon', ground: 'ground', sky: 'sky', aura: 'chest', world: 'space' };
+// SILHOUETTE: the 12-value VIS_SHAPE folded onto his 10. `blade` → fan (a slash sweeps), `chain` →
+// tendril, `hose` → column (a beam is a thick standing column, distinct from a `bolt` line),
+// `burst`/`arc` → ring, `field`/`rift` → disc. `fist` is resolved from MOTION below.
+const SILHOUETTE_MAP = { bolt: 'line', blade: 'fan', chain: 'tendril', orb: 'orb', hose: 'column', cone: 'cone', burst: 'ring', shell: 'wall', field: 'disc', arc: 'ring', rift: 'disc' };
+// IMPACT: the 8-value VIS_IMPACT folded onto his 8, with three refinements that need context
+// (freeze from the tell, implode from inward motion, slice vs puncture from the blade).
+const IMPACT_MAP = { strike: 'launch', burst: 'explode', pierce: 'puncture', crack: 'shatter', splash: 'deform', bloom: 'explode', crush: 'deform', none: 'launch' };
+// RESIDUE: the 7-value VIS_RESIDUE folded onto his 8, with `glyph` earned by the mystical family and
+// `cracks` earned by a shatter on solid matter.
+const RESIDUE_MAP = { none: 'nothing', scorch: 'fire', frost: 'frost', sludge: 'smoke', crater: 'crater', debris: 'scattered-metal', cloud: 'smoke' };
+
+function silhouetteOf(s, motion) {
+  const shape = shapeOf(s);
+  if (shape === 'fist') return (motion === 'spiral' || motion === 'expand' || motion === 'erupt-upward') ? 'ring' : 'line';
+  if (shape === 'cone') { const m = materialOf(s); if (m === 'toxic' || m === 'acid') return 'cloud'; }  // a gas cone reads as a cloud, a flame cone as a cone
+  return SILHOUETTE_MAP[shape] || 'line';
+}
+// ⚠ IMPACT REFLECTS WHAT THE ATTACK DOES — it is not all `explode`. The base `impactOf` collapsed
+// beams, cones, projectiles and novas alike onto `burst`→`explode`, which locked impact+residue equal
+// across 79 elemental abilities and made the collision rule structurally impossible for them. A beam
+// BORES (puncture), a cone SPRAYS (deform), a bolt PUNCTURES, a detonation EXPLODES, a gravity pull
+// IMPLODES, a blade SLICES. Type-driven so the axis genuinely spreads.
+function impactRobertOf(s, motion, tell) {
+  const m = materialOf(s);
+  if (has(s, 'blade') || s.dmgClass === 'slash' || has(s, 'arrow')) return 'slice';
+  if (tell === 'freeze' || m === 'ice') return 'freeze';
+  if (motion === 'pull-inward') return 'implode';
+  switch (s.type) {
+    case 'beam': return 'puncture';                                   // a beam bores a channel
+    case 'cone': return (m === 'toxic' || m === 'acid') ? 'deform' : (m === 'fire') ? 'explode' : 'deform';
+    case 'projectile': case 'volley': case 'rifle': case 'bow': case 'quiver':
+      return (has(s, 'canister') || has(s, 'pumpkin') || s.blast >= 10) ? 'explode' : 'puncture';
+    case 'charge': case 'growingorb': case 'facebomb': return 'explode';
+    case 'nova': case 'mine': case 'meteor': return 'explode';
+    case 'melee': case 'rush': return 'launch';
+    case 'tentacle': case 'grapple': return 'deform';
+    case 'lifedrain': return 'implode';
+    default: {
+      const base = impactOf(s);
+      if (base === 'pierce') return 'puncture';
+      return IMPACT_MAP[base] || 'launch';
+    }
+  }
+}
+// ⚠ THE ANTI-SKEW LAW. The base `residueOf` returns `none` for ~80% of abilities, which mapped
+// straight to `nothing` and collapsed 290 profiles onto one value — the single biggest cause of the
+// 26,823-collision pile (issue #13). An aftermath is DERIVABLE from what the hit DID: an explosion
+// scorches, a shatter cracks, a puncture scatters metal, a gravity crush leaves silence. So when the
+// base gives `nothing`, we earn a residue from FAMILY + IMPACT rather than defaulting. `nothing`
+// survives only where it is HONEST — sonic (transparent by grammar) and a gravity implosion.
+function residueRobertOf(s, family, impact, motion) {
+  let r = RESIDUE_MAP[residueOf(s)] || 'nothing';
+  if (r !== 'nothing') {
+    if (impact === 'shatter') { const m = materialOf(s); if (m === 'stone' || m === 'steel') r = 'cracks'; }
+    return r;
+  }
+  if (family === 'sonic') return 'nothing';                               // transparent — the grammar demands it
+  if (family === 'psychic-gravity') return motion === 'pull-inward' ? 'nothing' : 'glyph';
+  if (family === 'mystical') return 'glyph';
+  if (family === 'technological') return 'scattered-metal';               // shell casings, drone debris
+  if (impact === 'freeze') return 'frost';
+  if (impact === 'shatter') return 'cracks';
+  if (impact === 'explode') return family === 'elemental' ? 'fire' : 'crater';
+  if (impact === 'puncture') return family === 'physical' ? 'scattered-metal' : 'cracks';
+  if (impact === 'slice') return 'cracks';
+  if (impact === 'deform') return 'smoke';
+  if (impact === 'implode') return 'nothing';                             // a gravity crush keeps little
+  if (impact === 'launch') return family === 'physical' ? 'cracks' : 'smoke';
+  return 'smoke';
+}
+
+const PROFILE_AXES = ['source', 'silhouette', 'motion', 'impact', 'residue', 'family', 'tell'];
+
+// ⚠ THE STATUS TELL IS A READ, NOT A DOT. Robert's trait 7 is literally *"how does the player
+// immediately understand what happened to the target?"* — a READABILITY cue, not a mechanical status.
+// The bare `tellOf` only fires on an actual status flag, so 252 abilities (137 elemental + 115
+// physical) fell to `none`, and — with family + tell held fixed as the two axes we will not lie about
+// — the singleton bound caps a same-(family,tell) group at ~90 distinct 7-tuples. 137 > 90 makes the
+// "no two share >3" rule PROVABLY unsatisfiable. So when no mechanical status applies, the tell is
+// earned from what the hit LOOKS like: a fire blast reads BURN, an ice hit reads FREEZE, a launching
+// blow reads STUN, a slash reads BLEED. This is honest to the definition and it splits both mega-
+// buckets below the feasibility bound. The strict status-LANGUAGE rendering (frozen grows up, gas
+// lingers, drain pulls inward) still keys on the mechanical status, not this readability cue.
+function profileTellOf(s, family, impact) {
+  const t = tellOf(s);
+  if (t !== 'none') return t;
+  const m = materialOf(s);
+  if (m === 'fire') return 'burn';
+  if (m === 'ice') return 'freeze';
+  if (m === 'toxic' || m === 'acid') return 'poison';
+  if (m === 'shock') return 'shock';
+  if (impact === 'slice') return 'bleed';
+  if (family === 'psychic-gravity') return impact === 'implode' ? 'drain' : 'root';
+  if (impact === 'launch' || impact === 'deform') return 'stun';   // a heavy blow rocks them
+  return 'none';
+}
+
+// THE BASE PROFILE — seven traits, all DERIVED from the ability's own data. No overrides applied.
+export function baseProfileOf(a) {
+  if (!a || typeof a !== 'object') return null;
+  const s = { ...a, ...(a.vis || {}) };
+  const motion = motionOf(s);
+  const family = familyOf(s);
+  const impact = impactRobertOf(s, motion, tellOf(s));   // impact's freeze branch keys on the MECHANICAL tell
+  return {
+    source: SOURCE_MAP[sourceOf(s)] || 'hands',
+    silhouette: silhouetteOf(s, motion),
+    motion,
+    impact,
+    residue: residueRobertOf(s, family, impact, motion),
+    family,
+    tell: profileTellOf(s, family, impact),
+  };
+}
+
+// THE PROFILE. Precedence, low → high: DERIVED (baseProfileOf) < the DIFFERENTIATOR's `_vauto`
+// (deterministic, generated by differentiateProfiles to guarantee no pair shares >3 — see below) <
+// the AUTHOR's `a.vprofile` (a hand call always wins). `_vauto` and `vprofile` are per-axis partials.
+export function profileOf(a) {
+  if (!a || typeof a !== 'object') return null;
+  return { ...baseProfileOf(a), ...(a._vauto || {}), ...(a.vprofile || {}) };
+}
+
+// ================================================================================================
+// THE DIFFERENTIATOR — Robert's rule made true by construction: NO TWO PROFILES SHARE >3 OF 7.
+//
+// ⚠ WHY THIS EXISTS AND WHY IT IS NOT HAND-AUTHORING (issue #13). Even a perfectly honest derivation
+// leaves genuine collisions — two heroes' plain energy blasts legitimately look the same, and the
+// rule forbids that. Robert's constraint IS a forcing function: every power must read as distinct.
+// So the profile is PRESCRIPTIVE — a spec the VFX then meets — and this pass assigns each colliding
+// ability a distinct, plausible identity by nudging its most COSMETIC axes.
+//
+// ⚠ FAMILY AND TELL ARE NEVER NUDGED. Family is the grammar (changing it is a lie about what the
+// power is); tell is the honest status written on the victim. The pass varies only the five
+// presentation/semantic axes {source, silhouette, motion, impact, residue}. Two abilities that agree
+// on family AND tell must therefore differ on ≥4 of those five — feasible: five axes, 8–10 values.
+//
+// ⚠ DETERMINISTIC. Abilities are processed in stable id order; candidate values per axis are ordered
+// by a hash of the ability id, so the same roster always yields the same assignment. No Math.random.
+const strHash = (str) => { let h = 2166136261 >>> 0; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; };
+// a stable shuffle of `arr` seeded by `seed` (Fisher–Yates with a mulberry-ish stream)
+function seededOrder(arr, seed) {
+  const a = arr.slice(); let s = (seed >>> 0) || 1;
+  for (let i = a.length - 1; i > 0; i--) { s = (Math.imul(s, 1103515245) + 12345) >>> 0; const j = s % (i + 1); const t = a[i]; a[i] = a[j]; a[j] = t; }
+  return a;
+}
+// the five nudgeable axes, in order of how cosmetic they are (residue first — pure aftermath)
+const NUDGE_AXES = ['residue', 'source', 'silhouette', 'impact', 'motion'];
+const NUDGE_POOL = { source: PROFILE_SOURCE, silhouette: PROFILE_SILHOUETTE, motion: VIS_MOTION, impact: PROFILE_IMPACT, residue: PROFILE_RESIDUE };
+const sharedCount = (A, B) => { let n = 0; for (const ax of PROFILE_AXES) if (A[ax] === B[ax]) n++; return n; };
+const maxSharedAgainst = (p, assigned) => { let m = 0; for (const q of assigned) { const s = sharedCount(p, q); if (s > m) { m = s; if (m > 3) return m; } } return m; };
+
+// ⚠ THE SOLVER IS MIN-CONFLICTS, not a one-shot nudge. Assigning 364 profiles so no pair shares >3
+// is a constraint-satisfaction problem (a mixed-alphabet distance-4 code with family+tell pinned).
+// A 1–2 axis nudge cannot escape a dense cluster; min-conflicts — the same algorithm that solves
+// million-queens — reliably converges on feasible instances. Two phases, both deterministic (a seeded
+// stream, never Math.random, so the same roster always yields the same assignment):
+//   1. SEQUENTIAL SEED — place items in id order; for each, coordinate-descend its five free axes to
+//      the fewest conflicts against those already placed (a warm start near the honest base).
+//   2. GLOBAL POLISH — repeatedly pick a still-conflicted item and move it to its min-conflict value,
+//      with occasional random kicks to escape local minima, until zero or a bounded iteration cap.
+export function differentiateProfiles(roster, opts = {}) {
+  const items = [];
+  for (const def of roster || []) for (const key of Object.keys(def.abilities || {})) {
+    const a = def.abilities[key];
+    if (a) { delete a._vauto; items.push({ id: `${def.id}.${key}`, a, base: baseProfileOf(a) }); }
+  }
+  items.sort((x, y) => (x.id < y.id ? -1 : x.id > y.id ? 1 : 0));
+  const N = items.length;
+  const cur = items.map((it) => ({ ...it.base }));          // working profiles (family+tell never change)
+  let seed = 0x9e3779b9 >>> 0;
+  const rnd = () => { seed = (Math.imul(seed, 1103515245) + 12345) >>> 0; return seed / 4294967296; };
+  const shared = (A, B) => { let n = 0; for (const ax of PROFILE_AXES) if (A[ax] === B[ax]) n++; return n; };
+  // conflicts of item i, optionally only against indices < lim
+  const conflicts = (i, lim = N) => { let c = 0; const P = cur[i]; for (let j = 0; j < lim; j++) { if (j !== i && shared(P, cur[j]) > 3) c++; } return c; };
+  // best free-axis assignment for item i minimising conflicts against indices < lim; mutates cur[i]
+  const bestPlace = (i, lim) => {
+    for (let pass = 0; pass < 4; pass++) {
+      let improved = false;
+      for (const ax of seededOrder(NUDGE_AXES, strHash(items[i].id) ^ pass)) {
+        const old = cur[i][ax]; let bestV = old, bestC = conflicts(i, lim);
+        for (const v of NUDGE_POOL[ax]) { if (v === old) continue; cur[i][ax] = v; const c = conflicts(i, lim); if (c < bestC) { bestC = c; bestV = v; } }
+        cur[i][ax] = bestV; if (bestV !== old) improved = true;
+        if (bestC === 0) return;
+      }
+      if (!improved) return;
+    }
+  };
+  // PHASE 1 — sequential warm start (353ms, residual ~5k).
+  for (let i = 0; i < N; i++) if (conflicts(i, i) > 0) bestPlace(i, i);
+  // PHASE 2 — SWEEP-based min-conflicts polish. ⚠ The conflict list is rebuilt ONCE PER SWEEP, not
+  // per step — rebuilding it every step is O(N²) per step and was the 61-minute bug. Each sweep
+  // coordinate-descends every still-conflicted item once; a stalled sweep gets a batch of random
+  // kicks to escape the local minimum. Converges to the roster's floor in a few seconds.
+  const sweeps = opts.sweeps == null ? 240 : opts.sweeps;
+  const log = opts.log;
+  let best = null, bestResidual = Infinity;
+  const residualNow = () => { let r = 0; for (let i = 0; i < N; i++) r += conflicts(i); return r / 2; };
+  for (let sweep = 0; sweep < sweeps; sweep++) {
+    const bad = []; for (let i = 0; i < N; i++) if (conflicts(i) > 0) bad.push(i);
+    const r = bad.length ? residualNow() : 0;
+    if (r < bestResidual) { bestResidual = r; best = cur.map((p) => ({ ...p })); }
+    if (log && sweep % 20 === 0) log(`  sweep ${sweep}: ${bad.length} conflicted, residual ${r} (best ${bestResidual})`);
+    if (bad.length === 0) break;
+    let improvedAny = false;
+    for (const i of seededOrder(bad, 0x51ed ^ sweep)) {
+      const before = conflicts(i);
+      bestPlace(i, N);
+      if (conflicts(i) < before) improvedAny = true;
+    }
+    if (!improvedAny) for (let kick = 0; kick < 8 && bad.length; kick++) {   // escape a stalled minimum
+      const i = bad[(rnd() * bad.length) | 0], ax = NUDGE_AXES[(rnd() * NUDGE_AXES.length) | 0];
+      cur[i][ax] = NUDGE_POOL[ax][(rnd() * NUDGE_POOL[ax].length) | 0];
+    }
+  }
+  if (best && residualNow() > bestResidual) for (let i = 0; i < N; i++) cur[i] = best[i];   // keep the best seen
+  // stamp _vauto = the axes that moved off the honest base
+  let nudged = 0, nudges = 0;
+  for (let i = 0; i < N; i++) { const ov = {}; for (const ax of NUDGE_AXES) if (cur[i][ax] !== items[i].base[ax]) { ov[ax] = cur[i][ax]; nudges++; } if (Object.keys(ov).length) { items[i].a._vauto = ov; nudged++; } }
+  let residual = 0; for (let i = 0; i < N; i++) residual += conflicts(i); residual /= 2;
+  return { total: N, nudged, nudges, residual };
+}
+
+// Stamp the BAKED differentiation overrides onto the roster ONCE at boot — the same pattern as
+// applyIdentities / applyDtypes. ⚠ This LOADS the pre-solved result (tools/bake-vprofiles.mjs); it
+// does NOT run the solver, which takes minutes. Re-bake and commit vprofiles.generated.js whenever
+// the derivation or the roster changes. After this runs, verifyProfiles reports the baked residual.
+export function applyProfiles(roster) {
+  let n = 0;
+  for (const def of roster || []) for (const key of Object.keys(def.abilities || {})) {
+    const ov = VPROFILES[`${def.id}.${key}`];
+    if (ov) { def.abilities[key]._vauto = ov; n++; }
+  }
+  return { applied: n };
+}
+
+// THE GAUGE. For every ORDERED-UNIQUE pair of the ~364 abilities, count the axes on which the two
+// profiles are EQUAL; a pair sharing MORE THAN THREE breaks Robert's rule and is a collision. Runs
+// over the LIVE roster so it can never drift from what the engine derives. Same shape as taxonomy
+// verify(): { checks, failures, collisions }.
+// ⚠ PROVE IT FIRES before trusting its green — plant a duplicate profile and confirm the pair is
+// reported, then remove it and confirm it is gone (rubric §5.2: a gauge never shown to fire is
+// inadmissible). `profileSuite` on the LSW handle is the reachable entry.
+export function verifyProfiles(roster) {
+  const list = [];
+  for (const def of roster || []) {
+    for (const key of Object.keys(def.abilities || {})) {
+      const a = def.abilities[key];
+      const p = profileOf(a);
+      if (p) list.push({ id: `${def.id}.${key}`, hero: def.id, slot: key, name: a.name || key, type: a.type, p });
+    }
+  }
+  const collisions = [];
+  let checks = 0;
+  for (let i = 0; i < list.length; i++) {
+    for (let j = i + 1; j < list.length; j++) {
+      checks++;
+      const A = list[i].p, B = list[j].p;
+      let shared = 0; const traits = [];
+      for (const ax of PROFILE_AXES) if (A[ax] === B[ax]) { shared++; traits.push(ax); }
+      if (shared > 3) collisions.push({ a: list[i].id, b: list[j].id, shared, traits });
+    }
+  }
+  collisions.sort((x, y) => y.shared - x.shared);
+  return { total: list.length, checks, failures: collisions.length, collisions };
+}
+
+// one readable line for a profile: "hands · line · straight — puncture, scattered-metal · physical"
+export function profileLine(p) {
+  if (!p) return '';
+  const tail = p.tell && p.tell !== 'none' ? ` · leaves ${p.tell.toUpperCase()}` : '';
+  return `${p.source} · ${p.silhouette} · ${p.motion} — ${p.impact}${p.residue !== 'nothing' ? `, ${p.residue}` : ''} · ${p.family}${tail}`;
 }
 
 // ---- MATERIAL → DAMAGE TYPE: the loop the contract closes --------------------------------

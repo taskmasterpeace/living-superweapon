@@ -633,6 +633,122 @@ escalation path is a denial of service.*
 
 ---
 
+# THE VISUAL PROFILE — every ability is legible
+
+Robert's ruling: *"When dozens of fliers are on screen firing at once, a player must still be able to
+read what each power IS and what it just DID to a target — in grayscale, in a freeze-frame, in half a
+second."* The answer is a **seven-trait profile on every one of the 364 abilities**, DERIVED from what
+the ability already is (`profileOf(a)` in `src/data/visual.js`), with `a.vprofile = {trait: value}` as
+the per-trait override the family authors reach for only when a collision forces it — exactly the
+`def.build`/`def.temper` pattern the beam anatomy already uses. Nothing is hand-authored to be correct.
+
+## The seven traits and their vocabularies
+
+Each trait is a **closed set** — a value outside its vocabulary is a typo, not a variation.
+
+| # | trait | vocabulary |
+|---|---|---|
+| 1 | **SOURCE** | `eyes` · `chest` · `hands` · `weapon` · `ground` · `sky` · `space` |
+| 2 | **SILHOUETTE** | `line` · `disc` · `fan` · `cone` · `wall` · `ring` · `orb` · `tendril` · `column` · `cloud` |
+| 3 | **MOTION** | `straight` · `arc` · `spiral` · `return` · `branch` · `fall` · `expand` · `pull-inward` · `erupt-upward` |
+| 4 | **IMPACT** | `puncture` · `slice` · `shatter` · `implode` · `explode` · `freeze` · `deform` · `launch` |
+| 5 | **RESIDUE** | `frost` · `smoke` · `fire` · `cracks` · `crater` · `glyph` · `scattered-metal` · `nothing` |
+| 6 | **FAMILY** | `physical` · `technological` · `elemental` · `psychic-gravity` · `mystical` · `biological` · `sonic` |
+| 7 | **TELL** | the status written on the victim (the richer 12-value `VIS_TELL` — `freeze`/`burn`/`poison`/`sleep`/`blind`/`stun`/`bleed`/`drain`/`shock`/`root`/`dominate`/`none`) |
+
+⚠ SOURCE/SILHOUETTE/MOTION/IMPACT/RESIDUE map the *existing* five-axis contract onto Robert's fixed
+vocabularies (documented at each map in `visual.js`); MOTION and FAMILY are the two axes he named that
+the contract did not have and are new derivations (`motionOf`, `familyOf`). ⚠ `a.arc` is a NUMBER (a
+cone/swing's angular width, on 78 abilities) and is **never** read as an "arc motion". ⚠ A RIFLE is
+`physical`, not technological — a gun is recoil and fragments; the TECHNOLOGY grammar belongs to the
+drone/construct's controlled geometry (a documented divergence from the brief's "rifle → technological").
+
+## THE HARD RULE
+
+> **No two powers may match on more than THREE of the seven traits.**
+
+`verifyProfiles(ROSTER)` (exported from `visual.js`, on the LSW handle as `profileSuite`) checks every
+ordered-unique pair of the 364 abilities and returns `{ total, checks, failures, collisions }`; a pair
+sharing **> 3** traits is a `collision`, sorted worst-first with the exact shared axes. It runs over
+the **live roster** so it can never drift from what the engine derives. ⚠ Prove it fires before
+trusting its green (rubric §5.2): planting one ability's profile onto another via `vprofile` reports
+that pair (`failures` 0 → 1); a genuinely distinct pair is green. Both were shown.
+
+### LANDED — 26,823 → 138 (99.79% distinct), and the rule is provably a floor, not a zero
+
+**The pure derivation began at 26,823 colliding pairs of 66,066** — and the first instinct (author a
+`vprofile` per colliding pair) is wrong: 26k is not an authoring list, it is a symptom. The cause was a
+**skewed derivation** collapsing hundreds of abilities onto one tuple: `residue → nothing` on 290,
+`tell → none` on 299 (the bare `tellOf` only fired on a mechanical DoT), `source → hands` on 259, and
+— worst — the base `impactOf` mapped beams, cones, projectiles and novas alike to `explode`, locking
+family+tell+impact+residue equal across 79 elemental abilities. Three honest de-skews fixed the root:
+
+- **RESIDUE is earned from family+impact** when the base gives nothing (an explosion scorches, a
+  shatter cracks, a puncture scatters metal; `nothing` survives only where honest — sonic, a gravity
+  implosion). 290 → 14.
+- **The STATUS TELL is a READ, not a DoT** — Robert's trait 7 is literally *"how does the player
+  understand what happened"*. A fire hit reads BURN, an ice hit FREEZE, a launching blow STUN. This is
+  honest to his own definition and splits the two mega-buckets below the feasibility bound.
+- **IMPACT reflects what the attack DOES** — a beam bores (`puncture`), a cone sprays (`deform`), a
+  bolt punctures, a detonation explodes — not all `explode`.
+
+Then a **deterministic differentiator** (`differentiateProfiles`, a min-conflicts CSP solver — the
+rule IS a mixed-alphabet distance-4 code) assigns the residual collisions distinct, plausible
+profiles by nudging only the five *presentation* axes (family and tell are never touched — one is the
+grammar, one is the truth about the status). It runs OFFLINE in `tools/bake-vprofiles.mjs` (minutes)
+and bakes `src/data/vprofiles.generated.js`, which `applyProfiles(ROSTER)` loads at boot instantly.
+
+⚠ **TRUE ZERO IS MATHEMATICALLY IMPOSSIBLE for this roster, and that is a finding, not a miss.** A
+distance-4 code over the five free axes tops out near ~50 codewords (greedy: 34), but `physical|none`
+and `elemental|stun` each hold **69** abilities that share family AND status-read — 51 of the physical
+ones are dashes, which are honestly the same visual. You cannot make 69 things pairwise-distinct on
+axes that support ~50 values without lying about what a power *is* or *does*. The baked floor is
+**138 collisions (99.79% pairwise-distinct)**; to reach a literal zero would require expanding the
+trait vocabularies or accepting that some powers are twins. `profiles.derived.json` carries the full
+inventory; `verifyProfiles` reports the live residual and is proven to fire on a planted duplicate.
+
+## The seven FAMILY grammars (trait 6 decides the whole look)
+
+| family | grammar |
+|---|---|
+| **PHYSICAL** | real weight, sparks, fragments, dust, recoil — **minimal glow** |
+| **TECHNOLOGY** | precise lines, targeting brackets, segmented lights, controlled geometry, mechanical movement |
+| **ELEMENTAL** | turbulent volume, environmental reactions, persistent residue |
+| **PSYCHIC/GRAVITY** | distortion, refraction, **inward** movement, stretched particles, **unnatural silence** |
+| **MYSTICAL** | glyphs, asymmetry, impossible movement — effects that do **not** obey ordinary physics |
+| **BIOLOGICAL** | tendrils, pulses, elastic movement, uneven shapes, organic rhythms |
+| **SONIC** | **mostly transparent** — force is visible only through pressure rings, dust, clothing, glass, smoke, environmental movement |
+
+## The seven STATUS languages (trait 7 — absolute; every carrier obeys)
+
+| status | how the player reads it |
+|---|---|
+| **FROZEN** | grows **upward from the feet** with angular crystals |
+| **STAGGER** | offset double-image, broken posture, asymmetrical motion |
+| **GAS** | diffuse lingering cloud + coughing/choking body language |
+| **DRAIN** | particles move **inward**, victim → attacker |
+| **MIND CONTROL** | a visible eye, halo, tether, or head-level signal |
+| **SLEEP** | slow **downward** movement, softened posture, rounded shapes |
+| **BLINDNESS** | obscured sight — smoke, a blocked-eye symbol, or interrupted targeting |
+
+## THE CRITIC CHECKLIST — what every wave's critic must verify about visuals
+
+1. **`profileSuite` was run this session** and its `failures`/`collisions` are quoted verbatim — a
+   grade above C requires the gauge to have been shown to FIRE (a planted-collision self-proof) in the
+   same session (the known-bad-injection law).
+2. **No two powers ON SCREEN in any captured frame share >3 traits** without a purpose the shot makes
+   legible — check the collision list for every pair actually co-present.
+3. **Each family reads as its grammar** in grayscale: a PHYSICAL power does not glow like ELEMENTAL; a
+   SONIC power is transparent (pressure rings/dust, not a beam); a PSYCHIC/GRAVITY power moves inward
+   and is quiet.
+4. **Each status reads as its language** on the victim: FROZEN grows up, SLEEP sinks down, DRAIN flows
+   toward the attacker, GAS lingers as a cloud, MIND-CONTROL shows a head-level signal.
+5. **The freeze-frame test**: a single captured frame identifies both what the power IS (source +
+   silhouette + family) and what it DID (impact + tell) with no motion and no colour.
+6. **NO PURPLE** outside KIVULI, in any effect, on any frame (the standing law).
+
+---
+
 # 3. THE VERIFICATION CONTRACT
 
 **One command.**

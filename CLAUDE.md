@@ -1880,6 +1880,37 @@ measured, not claimed** (see the last row block). Harness: `src/bench/powerworld
 - ⚠ **DOC DRIFT FOUND**: CLAUDE.md says the crowd is 64 pedestrians in several places. It is
   `COUNT = 30` in `pedestrians.js` and has been for some time (64 is the WILDLIFE bird count).
 
+## THE VISUAL PROFILE — every ability legible, no two alike (2026-07-28) — `data/visual.js`
+- Robert's rule: every one of the **364 abilities** carries a **7-trait profile** (source · silhouette
+  · motion · impact · residue · family · status-tell) and **no two share more than 3 of the 7**.
+  `profileOf(a)` answers for every ability; `verifyProfiles(ROSTER)` is the gauge (LSW `profileSuite`).
+- ⚠ **THE RULE IS A MIXED-ALPHABET DISTANCE-4 CODE, and true zero is PROVABLY IMPOSSIBLE for this
+  roster.** `physical|none` and `elemental|stun` each hold 69 abilities sharing family AND status-read
+  (51 physical ones are dashes — a dash is honestly the same visual), but a distance-4 code over the 5
+  free axes tops out near ~50 codewords. The baked floor is **138 collisions / 66,066 pairs (99.79%
+  distinct)**, down from 26,823. Don't chase a literal zero — it would require lying about what a power
+  IS or DOES. This is a finding, written into `docs/POWERWORLD_AAA.md` §"THE VISUAL PROFILE".
+- ⚠ **26,823 → 138 came from DE-SKEWING THE DERIVATION, not per-pair authoring.** The base derivation
+  collapsed hundreds onto one tuple: `residue→nothing` ×290, `tell→none` ×299, `impact→explode` for
+  every beam/cone/projectile/nova. Three honest fixes: residue earned from family+impact; **the
+  status-tell is a READ not a DoT** (fire→burn, ice→freeze, a launching blow→stun — honest to trait
+  7's own definition, *"how does the player understand what happened"*); impact reflects what the
+  attack does (a beam bores=puncture, a cone sprays=deform). A per-pair override list for 26k is the
+  wrong instinct — the skew is the disease.
+- ⚠ **THE SOLVER RUNS OFFLINE, THE GAME LOADS THE BAKE.** `differentiateProfiles` (min-conflicts,
+  sweep-based — rebuilding the conflict list per-STEP instead of per-sweep is an O(N²)/step trap that
+  cost a 61-minute run) takes minutes. `tools/bake-vprofiles.mjs` runs it once and writes
+  `src/data/vprofiles.generated.js`; `applyProfiles(ROSTER)` loads that at boot instantly (wired at
+  `boot.js` beside applyDtypes). **Re-bake and commit the generated file after any derivation or roster
+  change**, or the gauge and the bake drift.
+- ⚠ The differentiator nudges only the **five presentation axes** — family (the grammar) and tell (the
+  truth about the status) are never touched. The profile is PRESCRIPTIVE: where two powers are forced
+  apart, the profile becomes the spec the VFX then meets.
+- Still open (the goal's spec, not yet built): the 7 family GRAMMARS and 7 STATUS LANGUAGES are
+  documented and derived into the profile, but the VFX rendering pass that makes *frozen grow upward*,
+  *drain pull inward*, *sonic stay transparent* etc. on screen is a later wave. The profile is the
+  contract; the pixels come next.
+
 ## HANDOFF
 - **`HANDOFF.md` at the repo root** is the orientation document: architecture, the ten rules that
   are load-bearing, what is solid, what is half-built, what to do next, and the headless
