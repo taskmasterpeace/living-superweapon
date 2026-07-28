@@ -62,6 +62,7 @@ export const SETTINGS = {
   volUi: 1,         // menus, news stings, broadcast furniture
   voice: 1,         // DBZ battle-cry synth loudness (separate from the voice BUS)
   shake: 1,         // screen-shake multiplier 0–1.5
+  lookSens: 1,      // PowerWorld mouse-look sensitivity — a multiplier on the 0.0024 rad/px base (0–3)
   dmgNumbers: true, // floating damage numbers
   hints: true,      // bottom-right controls hint panel
   scheme: 'classic',// control layout: classic | pilot | southpaw (see KEYMAPS in hud.js)
@@ -158,6 +159,7 @@ export function applySettings(game) {
   }
   if (w) {
     w.shakeMult = SETTINGS.shake;
+    w._lookSens = 0.0024 * (SETTINGS.lookSens ?? 1);   // PowerWorld mouse-look — the base rate × the player's dial
     // ⚠ ONE PLACE decides what the print pass is doing. A preset writes the individual dials, and the
     // dials are what the pass reads — so a preset can never disagree with the sliders under it.
     if (w.print) {

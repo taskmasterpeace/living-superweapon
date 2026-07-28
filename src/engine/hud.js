@@ -866,6 +866,7 @@ export class HUD {
       <div class="dgsec">GAME</div>
       ${slider('voice', 'Battle Cry Intensity', 1, 0.05)}
       ${slider('shake', 'Screen Shake', 1.5, 0.05)}
+      ${slider('lookSens', 'Mouse Look Sensitivity', 3, 0.1)}
       ${toggle('dmgNumbers', 'Damage Numbers')}
       ${toggle('hints', 'Controls Hint Panel')}
       ${toggle('aimAssist', 'Aim Assist · magnet targeting')}
