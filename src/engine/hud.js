@@ -4,6 +4,7 @@ import { rankOf, rankBandOf } from '../data/scale.js';
 import { playSpaceFlight } from './spaceflight.js';
 import { BroadcastMixin } from './hudBroadcast.js';
 import { TitleMixin } from './hudTitle.js';
+import { SelectMixin } from './hudSelect.js';
 import { esc, fileNoOf, fileDate, agoStr, isSynthDef, cfAbilityRows, cfCounterNotes, CF_BUILD, describeEvade, describeAbility, slotFacts } from './hudUtil.js';
 import { ROSTER, SLOT_ORDER } from '../data/characters.js';
 import { climateLine } from '../data/climate.js';
@@ -2109,7 +2110,7 @@ export class HUD {
 // the post-fight broadcast and the title/cold-open are now their own modules, installed here as
 // mixins so `this` still means the HUD and every existing call site is untouched. The shared
 // helpers they all needed went to hudUtil.js FIRST, which is what keeps this acyclic.
-Object.assign(HUD.prototype, CodexMixin, BroadcastMixin, TitleMixin);
+Object.assign(HUD.prototype, CodexMixin, BroadcastMixin, TitleMixin, SelectMixin);
 
 
 

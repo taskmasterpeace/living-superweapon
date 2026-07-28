@@ -27,7 +27,7 @@ export const TitleMixin = {
     let selP2 = ROSTER[2], two = !!PF.two;
     if (PF.format) this._tFormat = PF.format;
     this.title.innerHTML = `
-      <div class="topbar"><button id="tAtlas">🗺 Atlas</button><button id="tRank">📊 Rankings</button><button id="tArm">⚔ Armory</button><button id="tNet">🌐 Online</button><button id="tTut">🎓 Tutorial</button><button id="tOpt">⚙ Options</button><button id="tHow">❓ How to Play</button></div>
+      <div class="topbar"><button id="tSelect">🎮 Character Select</button><button id="tAtlas">🗺 Atlas</button><button id="tRank">📊 Rankings</button><button id="tArm">⚔ Armory</button><button id="tNet">🌐 Online</button><button id="tTut">🎓 Tutorial</button><button id="tOpt">⚙ Options</button><button id="tHow">❓ How to Play</button></div>
       <div class="tag">Machine King Labs</div>
       <div class="thead"><div class="tleft">
       <h1><span class="t1">WAR WORLD</span><span class="t2">ASCENDANTS</span></h1>
@@ -281,7 +281,7 @@ export const TitleMixin = {
     // keyboard: arrows move the highlight, Enter enters the arena
     if (this._titleNavBound) removeEventListener('keydown', this._titleNavBound);
     this._titleNavBound = (e) => {
-      if (!this.titleOpen || this.overlayOpen()) return;
+      if (!this.titleOpen || this.overlayOpen() || this._selOpen) return;   // the character-select owns the keyboard while it's up
       const ae = document.activeElement; if (ae && (ae.tagName === 'INPUT' || ae.tagName === 'SELECT')) return;
       const idx = Math.max(0, list.indexOf(selP1));
       let n = null;
@@ -294,6 +294,9 @@ export const TitleMixin = {
     };
     addEventListener('keydown', this._titleNavBound);
     // top bar
+    // THE ARENA-FIGHTER CHARACTER SELECT (DBZ filmstrip) — the same `onStart` the roster uses, so
+    // A/Enter drops straight into a match with the mode currently selected on the cards.
+    this.title.querySelector('#tSelect').onclick = () => { this.showSelect(onStart, { mode: selMode, modeName: (MODES.find(m => m.id === selMode) || {}).name || selMode }); };
     this.title.querySelector('#tArm').onclick = () => { if (this.onArmory) this.onArmory(); };
     this.title.querySelector('#tOpt').onclick = () => this.showOptions();
     this.title.querySelector('#tHow').onclick = () => this.showHowto();
