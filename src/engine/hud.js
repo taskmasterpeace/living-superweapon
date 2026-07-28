@@ -2079,7 +2079,10 @@ export class HUD {
     this.updateColumnChips(g);
     this.updateTelemetry(g);
     // radar (hidden at the title / while paused) + low-HP danger pulse
-    const inMatch = !!(g.mode && g.running);
+    // ⚠ NO RADAR IN POWERWORLD (Robert 2026-07-28: "rip out Ascendants cam view and stuff"). The
+    // top-down minimap is the ISO city's spatial aid; a chase-cam BFP game reads threats off the
+    // reticle + off-screen markers, not a map. The city page keeps it.
+    const inMatch = !!(g.mode && g.running) && g.modeId !== 'powerworld';
     this.el.radar.style.display = inMatch ? 'block' : 'none';
     this.updateRadar(g);
     this.updateSundial();

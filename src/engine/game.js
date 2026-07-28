@@ -3406,8 +3406,17 @@ export class Game {
         fwx = p._swoop.x; fwy = p._swoop.y; fwz = p._swoop.z;
       } else {
         p._swoop = null;
-        const cf = _v.set(0, 0, 0); this.world.camera.getWorldDirection(cf);
-        fwx = cf.x; fwy = cf.y; fwz = cf.z;
+        // ⚠ THE SPIN, FIXED FOR REAL (Robert, repeatedly: "character just spins in a circle").
+        // ROOT CAUSE, MEASURED: forward read `camera.getWorldDirection()`, but the chase eye sits at
+        // a LATERAL SHOULDER OFFSET (world.js `off = d*0.17`), so that vector carries a constant
+        // sideways bias. Flying forward → you curve → the camera re-aims along the new velocity →
+        // the bias rotates WITH it → a closed circle, even with the mouse untouched (camYaw marched
+        // -2.16→-2.30→-2.43… around the ring). `world.camBasis` is the offset-free look axis the
+        // design says to use here (world.js:2599) — with no lateral bias, forward == velocity and
+        // the path is straight. This is what BFP does: fly where the CAMERA looks, not where the
+        // offset eye points.
+        const cb = this.world.camBasis;
+        fwx = cb.x; fwy = cb.y; fwz = cb.z;
       }
       const rx = -fwz, rz = fwx, rl = Math.hypot(rx, rz) || 1;     // right, flattened
       const d3 = { x: fwx * iz + (rx / rl) * ix, y: fwy * iz, z: fwz * iz + (rz / rl) * ix };
@@ -3439,8 +3448,8 @@ export class Game {
     if (!this._tapT) this._tapT = {};
     let bfx, bfz, brx, brz;                       // evade basis: fwd (bfx,bfz), right (brx,brz)
     if (p._openSky && GAIT_OWNER[p.gait] === 'air') {
-      const cf = _v.set(0, 0, 0); this.world.camera.getWorldDirection(cf);
-      const cl = Math.hypot(cf.x, cf.z) || 1; bfx = cf.x / cl; bfz = cf.z / cl;
+      const cb = this.world.camBasis;   // ⚠ camBasis, NOT getWorldDirection — the offset carries the spin bias (see the flight-forward note above)
+      const cl = Math.hypot(cb.x, cb.z) || 1; bfx = cb.x / cl; bfz = cb.z / cl;
       brx = -bfz; brz = bfx;
     } else {
       let fx = p.aim3.x, fz = p.aim3.z; const fl = Math.hypot(fx, fz);
@@ -3918,7 +3927,7 @@ export class Game {
     // own"). The `alive` gate meant a KO snapped the view back to the ISO CITY camera — the other
     // game's lens — mid-dimension. In PW the chase camera holds through death (the corpse still has
     // a position; the ragdoll is the shot). The city page keeps followHumans untouched.
-    if (this.ms && this.ms.chaseCam && this.player && (this.player.alive || this.modeId === 'powerworld')) {
+    if ((this.modeId === 'powerworld' || (this.ms && this.ms.chaseCam)) && this.player && (this.player.alive || this.modeId === 'powerworld')) {
       // ⚠ FLYING FOLLOWS THE MOUSE — BFP (Robert, 2026-07-28: "make sure flying follows the mouse and
       // acts like BFP"). The chase camera already steers off its own mouse-look yaw/pitch, and unlocked
       // flight forward IS the camera's getWorldDirection — but `mouseLook()` was never called and
