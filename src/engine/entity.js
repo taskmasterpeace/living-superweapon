@@ -233,6 +233,11 @@ export class Fighter {
     // MEASURED SWING (melee.js swingMult, dormant until this is set) all need. `_handSpd` is the
     // fist's world speed, computed each frame in the poser.
     this.onFoot = true; this.footT = 0; this.airT = 0;
+    // ⚠ `_landT` MUST INIT TO 0 (the ctor-init law — same trap as the AI reaction fields): it is
+    // first WRITTEN by a hard landing, and the jump gate reads `_landT <= 0` — `undefined <= 0` is
+    // FALSE in JS, so a fighter who had never hard-landed could never jump. Found by a Math.max spy
+    // after three reads of `(_landT||0)` masked it as "0.00" — coerce in DISPLAYS, never in GATES.
+    this._landT = 0;
     this.crouching = false;                                  // CROUCH (§3.6): KM.down while onFoot
     this._jumpT = 0;                                         // jump apex clock — while > 0, holding Space does not take off
     this._handSpd = 0; this._handPrev = null;               // measured swing (§4.6)

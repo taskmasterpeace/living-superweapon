@@ -330,6 +330,34 @@ export const ROSTER = [
     },
   },
   {
+    // MERC — THE GUN-COMBAT CHARACTER (2026-07-28, Robert: "give me a gun combat character. should
+    // feel Just like Jedi Knight"). The loadout IS Kyle Katarn's, mapped onto engine-proven types:
+    // a fast slightly-wild blaster rifle (the ST rifle), a CHARGED pistol on RMB (the Bryar
+    // secondary — the charge-=-scale law does exactly what JK's did), a scatter blaster, thermal
+    // detonators on a real fuse arc, a heavy accurate pistol, a homing rail detonator, a personal
+    // energy shield (the JK shield pickup = our shieldpack item) and a combat roll with i-frames.
+    // flightTier 0 — a GROUNDED kit on purpose: this is the character you test the JK ground
+    // grammar with (jump, crouch, the crouch-at-speed roll, Q3 friction). All ballistic-scale guns:
+    // lethal to people and dummies, an annoyance to superweapons — exactly a gunman's place here.
+    id: 'merc', origin: 'skilled', name: 'MERC', title: 'The Outlander', role: 'Gun Combat', art: 'cqc',
+    colors: { primary: '#6a5c48', secondary: '#3d362c', accent: '#ffb24a', skin: '#c9a075' },
+    hp: 120, ki: 110, speed: 34, strength: 3, rank: 22, overdrive: 1.0, threat: 'Low', flightTier: 0,
+    items: [{ kind: 'shieldpack', name: 'Personal Shield', cd: 18, hp: 60, charges: 2 }],
+    ai: { style: 'zoner', range: 52, aggro: 0.55, fly: 0 },
+    evade: { kind: 'dash', name: 'Combat Roll' },
+    blurb: 'A mercenary with a gun for every range and no powers at all. Charged pistol, blaster rifle, thermal detonators — and the reflexes to still be alive.',
+    sig: ['LMB Blaster Rifle (auto)', 'RMB Charged Pistol (hold = bigger bolt)', 'E Thermal Detonator', 'R Rail Detonator (homing)'],
+    abilities: {
+      lmb: { type: 'rifle', weapon: 'rifle', name: 'Blaster Rifle', gear: true, cost: 2, interval: 0.09, damage: 6, speed: 190, radius: 0.5, blast: 2, recoil: 2.1, color: '#ff5a3a', color2: '#ffd0a0' },
+      rmb: { type: 'charge', name: 'Charged Pistol', gear: true, cost: 4, cd: 0.4, kiPerSec: 8, maxCharge: 1.4, minR: 0.6, maxR: 2.2, dmgMin: 12, dmgMax: 34, maxBlast: 9, speedMin: 110, speedMax: 150, chargePower: 1.8, color: '#ffb24a', color2: '#fff2c0' },
+      q: { type: 'rifle', weapon: 'shotgun', name: 'Scatter Blaster', gear: true, cost: 7, interval: 0.65, damage: 8, pellets: 9, speed: 150, radius: 0.7, blast: 2.2, color: '#ffb24a', color2: '#fff' },
+      e: { type: 'projectile', name: 'Thermal Detonator', gear: true, cost: 9, cd: 0.9, damage: 26, speed: 55, radius: 1.2, blast: 14, grav: 11, shock: true, canister: true, color: '#8a8f6a', color2: '#ffd24a' },
+      f: { type: 'rifle', weapon: 'pistol', name: 'Heavy Pistol', gear: true, cost: 4, interval: 0.42, damage: 17, speed: 210, radius: 0.55, blast: 2, color: '#ffd0a0', color2: '#fff' },
+      shift: { type: 'dash', name: 'Combat Roll', cost: 4, cd: 0.55, power: 92, iframes: 0.3, color: '#ffb24a' },
+      r: { type: 'projectile', name: 'Rail Detonator', gear: true, cost: 26, cd: 8, damage: 38, speed: 95, radius: 1.4, blast: 16, homing: 2.6, shock: true, canister: true, color: '#ff8a3d', color2: '#ffd24a' },
+    },
+  },
+  {
     // PURPLE OVERRIDE — creator ruling 2026-07-22: "we need to break the no-purple rule for my
     // Ugandan dude." KIVULI is the ONE sanctioned purple in the project. Everything else stays banned.
     id: 'kivuli', origin: 'mutated', name: 'KIVULI', title: 'The Breath of Kampala', role: 'Gas Controller',

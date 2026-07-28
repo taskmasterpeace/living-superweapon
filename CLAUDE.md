@@ -1880,6 +1880,51 @@ measured, not claimed** (see the last row block). Harness: `src/bench/powerworld
 - ⚠ **DOC DRIFT FOUND**: CLAUDE.md says the crowd is 64 pedestrians in several places. It is
   `COUNT = 30` in `pedestrians.js` and has been for some time (64 is the WILDLIFE bird count).
 
+## THE JK GROUND KIT: MERC, THE RANGE, THE ROLL (2026-07-28) — "should feel Just like Jedi Knight"
+- **MERC (`id: 'merc'`, roster 52 → 53)** — the gun-combat character, Kyle Katarn's loadout on
+  engine-proven types: Blaster Rifle (fast, recoil 2.1 — the ST rifle) · **Charged Pistol on RMB**
+  (the Bryar secondary — a real `charge` row, so hold-=-bigger-bolt is the engine's own law; measured
+  52 dmg full vs fizzle on a micro-tap) · Scatter Blaster · Thermal Detonator (canister fuse arc) ·
+  Heavy Pistol · homing Rail Detonator · **Personal Shield** (the JK shield pickup = our shieldpack
+  item) · Combat Roll. `flightTier 0` ON PURPOSE — the character you test the JK ground grammar with.
+  ⚠ **The roster validator caught the first draft**: `charge` requires `dmgMin/dmgMax/minR/maxR/
+  speedMin/speedMax`, not `damage/speed` — copy a proven row's field shape, never guess a schema.
+- **THE FIRING RANGE** (`game.deployRange()`, **Shift+N** in training / freeroam / **powerworld**;
+  plain N still drops one construct): 5 static Sim Constructs on the distance ladder
+  (15/30/50/80/120u, fanned off-axis so near never eclipses far) + **2 MOVERS** at 40u/70u strafing
+  ±22u across the lane — driven by the REAL mover (`f.move` via a `_patrol` branch at the top of
+  `controlBot`), so leading them is leading a real fighter. Dummies respawn where they fell — the
+  range resets itself. Measured: movers hold 24/33 u/s; MERC's rifle put 78 dmg on a static.
+  ⚠ **The dummy flag is `isDummy`, NOT `dummy`** — `addFighter({dummy:true})` maps to `f.isDummy`,
+  and a filter on `e.dummy` silently matches nothing (cost one debugging round; `game.js:2465` reads
+  `w.dummy` and has therefore been dead forever — pre-existing, left for its own pass).
+- **THE ROLL (aaa-02 §3.5, all three changes)**: ① ground-flavoured evade kinds (dash/slide/sprint/
+  leap) refuse in OPEN-SKY air (`performEvade` gate; blink/phase stay airborne — a teleport is not a
+  step). ⚠ Deliberately `_openSky`-scoped: the city keeps every air-juke exactly as tuned (bots juke
+  with these — removing that roster-wide is a balance change with no mandate). ② **the double-tap
+  evade basis now mirrors the MOVEMENT basis** (aim-relative, or camera under an open sky) — it read
+  the ctor-frozen isometric `this.fwd/right`, so a tap rolled along axes movement stopped using
+  (straight bug). ③ **the JKA trigger**: crouch PRESSED while running on foot fires the fighter's
+  own evade ALONG THE RUN (direction = velocity, never aim). Verified through REAL key events:
+  standstill crouch refuses; at 33 u/s it fires, dot 1.00 along the run.
+  ⚠ **THE THRESHOLD IS A RATIO, NOT THE PORTED CONSTANT.** The spec's 200 qu/s → 34.3 wu/s sits
+  ABOVE some fighters' measured run equilibrium (MERC tops at 33 under drag) — a control that can
+  never fire (the rung-nobody-can-reach law). JKA's 200 is ~80% of ITS run speed, so ours is
+  `0.8 × speed·1.08` — reachable at full run for the whole roster by construction.
+- ⚠ **THE JUMP WAS DEAD ON ARRIVAL AND THREE GREEN CHECKS COULDN'T SEE IT.** `_landT` was never
+  ctor-initialized (first WRITTEN by a hard landing), and the Wave-4 jump gate reads `_landT <= 0`
+  — **`undefined <= 0` is FALSE**, so a fighter who had never hard-landed could never jump. Found
+  with a `Math.max` spy + a `_updateGait` flag probe after three reads of `(_landT||0)` masked it as
+  "0.00": **coerce in DISPLAYS, never in GATES** — and ctor-init every field a gate compares
+  (the AI-reaction-fields law, paid for again). Verified through real Space keys after the fix:
+  MERC tap-jumps to a 5.21u apex and lands (never flies, tier 0); SOL holds past the apex and takes
+  off; MERC holding never flies. ⚠ The fast-fall (§3.4's snappier descent) is left OUT — the doc
+  calls it a feel-call, and it is one dial (`vel.y` extra gravity on the jump's down half) if the
+  arc floats in Robert's hands.
+- **The test loop as shipped**: SELECT → MERC → FREE ROAM (or PowerWorld) → **Shift+N** → shoot the
+  ladder, lead the movers, jump/roll between lanes. Gates after: groundSuite 15/15 · pwSuite 42/42 ·
+  0 boot errors · MERC 7/7 slots.
+
 ## WAVE 4 — THE JUMP + THE IMPACT FRAME (2026-07-28) — AAA doc §"WAVE 4", gates GROUND/IMPACT
 - **THE GAME'S FIRST JUMP** (`entity.js`): `Space` is one key, two meanings, disambiguated by FOOTING.
   On the GROUND a rising edge JUMPS (`JUMP_VEL 25.5` — JKA's apex in body-lengths under our 60 wu/s²

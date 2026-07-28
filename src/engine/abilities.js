@@ -1068,6 +1068,13 @@ export const EVADE_DEFAULTS = {
 export function performEvade(c, dir, g) {
   const ev = c.def.evade; if (!ev || c.evadeCd > 0 || c.grabbedBy || c.staggerT > 0 || c.state === 'ko') return false;
   const d = { ...EVADE_DEFAULTS[ev.kind || 'dash'], ...ev };
+  // FOOTWORK IS FOOTWORK (aaa-02 §3.5 change 1): under an OPEN SKY the four ground-flavoured kinds
+  // (dash / slide / sprint / leap) need feet on something — a slide in mid-air is a cartoon. `blink`
+  // and `phase` stay available airborne: a teleport and an intangibility slip are not steps.
+  // ⚠ _openSky-gated ON PURPOSE — in the CITY every fighter keeps their air-juke exactly as tuned
+  // (bots juke incoming projectiles with these; removing that roster-wide is a balance change this
+  // pass has no mandate for). The dimension where the two-grammar rule lives is where it binds.
+  if (c._openSky && !c.onFoot && (d.kind === 'dash' || d.kind === 'slide' || d.kind === 'sprint' || d.kind === 'leap')) return false;
   if (c.ki < (d.cost || 0)) { if (g.onNoKi) g.onNoKi(c, 'evade'); return false; }
   c.ki -= d.cost || 0; c.evadeCd = (d.cd || 0.7) * ((c.sheet && c.sheet.evadeCdMult) || 1);   // AGILITY + Acrobat recover faster
   const color = d.color || c.def.colors.accent;

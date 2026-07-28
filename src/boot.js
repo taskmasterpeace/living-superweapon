@@ -467,11 +467,16 @@ export function boot(P = PROFILE_FULL) {
       if (game.lab && game.lab.room === 'blue') hud.feed('Not in the blue room — the console opens the white room next door.', '#7fe6ff');
       else { const b = game.spawnRival(); hud.feed('A rival ' + b.name + ' enters the arena!', b.def.colors.accent); }
     }
-    // ORDER A TRAINING BOT — the Danger Room starts empty now; targets appear on command
-    if (e.code === 'KeyN' && (game.modeId === 'training' || game.modeId === 'freeroam') && game.player) {
-      const p = game.player, a = Math.random() * Math.PI * 2;
-      game.spawnDummy(p.pos.x + Math.cos(a) * 16, p.pos.z + Math.sin(a) * 16);
-      hud.feed('Sim Construct deployed', '#7fe6ff');
+    // ORDER A TRAINING BOT — the Danger Room starts empty now; targets appear on command.
+    // Shift+N = THE FIRING RANGE (5 static on the distance ladder + 2 movers, down your aim).
+    // PowerWorld included: it is the dimension you test the guns and the chase reticle in.
+    if (e.code === 'KeyN' && (game.modeId === 'training' || game.modeId === 'freeroam' || game.modeId === 'powerworld') && game.player) {
+      if (e.shiftKey) game.deployRange();
+      else {
+        const p = game.player, a = Math.random() * Math.PI * 2;
+        game.spawnDummy(p.pos.x + Math.cos(a) * 16, p.pos.z + Math.sin(a) * 16);
+        hud.feed('Sim Construct deployed (Shift+N = firing range)', '#7fe6ff');
+      }
     }
     // THE WHITE ROOM — N is the dummy's temperament: a bag that stands still, or a partner that
     // fights back. The same attack measures differently against a raised guard, which is the point.

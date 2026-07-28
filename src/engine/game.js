@@ -1872,6 +1872,33 @@ export class Game {
     return d;
   }
 
+  // THE FIRING RANGE (2026-07-28, Robert: "Make targets for me to test combat and shooting").
+  // One call raises a whole range DOWN YOUR AIM: five static constructs on a distance ladder
+  // (15/30/50/80/120u — CLOSE through FAR, the same bands the slot chips use) fanned slightly
+  // off-axis so a near target never eclipses a far one, plus two MOVERS strafing across the lane
+  // at 40u and 70u (driven by the real mover in controlBot — lead them like real fighters).
+  // Dummies respawn where they fell, so the range resets itself. Shift+N on the keyboard; also
+  // `LSW.game.deployRange()` (agent-native — the key and the console reach the same method).
+  deployRange() {
+    const p = this.player; if (!p) return 0;
+    let ax = p.aim.x, az = p.aim.z; const al = Math.hypot(ax, az);
+    if (al > 0.01) { ax /= al; az /= al; } else { ax = 1; az = 0; }
+    const rx = -az, rz = ax;                                    // lateral, across the lane
+    const at = (d, side) => ({ x: p.pos.x + ax * d + rx * side, z: p.pos.z + az * d + rz * side });
+    const lanes = [[15, -6], [30, 6], [50, -12], [80, 12], [120, 0]];
+    let n = 0;
+    for (const [d, s] of lanes) { const t = at(d, s); this.spawnDummy(t.x, t.z); n++; }
+    for (const [d, sp] of [[40, 26], [70, 34]]) {
+      const a = at(d, -22), b = at(d, 22);
+      const m = this.spawnDummy(a.x, a.z);
+      m.speed = sp;                                             // spawnDummy's def is speed 0 — a mover needs legs
+      m._patrol = { x0: a.x, z0: a.z, x1: b.x, z1: b.z, flip: true };
+      n++;
+    }
+    if (this.hud) this.hud.feed(`RANGE DEPLOYED — 5 static (15/30/50/80/120u) + 2 movers (40u, 70u)`, '#7fe6ff');
+    return n;
+  }
+
   spawnRival(charId) {
     const pick = charId ? ROSTER.find(r => r.id === charId) : ROSTER[(Math.random() * ROSTER.length) | 0];
     const ang = rand(0, TAU), r = 60;
@@ -3386,13 +3413,30 @@ export class Game {
     }
     }
     // double-tap a move key → this hero's evade tech (dash / blink / sprint / slide / phase — data-driven)
+    // ⚠ THE EVADE BASIS IS THE MOVEMENT BASIS (aaa-02 §3.5 change 2 — a straight bug, not a design
+    // item). This used to read `this.fwd`/`this.right`, which are computed ONCE in the ctor from the
+    // fixed ISOMETRIC camera — so in the aim-relative scheme (the default) and behind the chase
+    // camera, a double-tap rolled along axes the movement no longer used: tap LEFT while aiming
+    // south and the dodge went screen-left, not your left. The basis here now mirrors the moveDir
+    // branch above exactly: aim-relative when the scheme is, camera-forward under an open sky,
+    // `this.fwd/right` only in the legacy camera scheme (where movement itself still uses them).
     if (!this._tapT) this._tapT = {};
+    let bfx, bfz, brx, brz;                       // evade basis: fwd (bfx,bfz), right (brx,brz)
+    if (p._openSky && GAIT_OWNER[p.gait] === 'air') {
+      const cf = _v.set(0, 0, 0); this.world.camera.getWorldDirection(cf);
+      const cl = Math.hypot(cf.x, cf.z) || 1; bfx = cf.x / cl; bfz = cf.z / cl;
+      brx = -bfz; brz = bfx;
+    } else {
+      let fx = p.aim3.x, fz = p.aim3.z; const fl = Math.hypot(fx, fz);
+      if (fl > 0.001 && SETTINGS.moveRelative !== 'camera') { bfx = fx / fl; bfz = fz / fl; brx = -bfz; brz = bfx; }
+      else { bfx = this.fwd.x; bfz = this.fwd.z; brx = this.right.x; brz = this.right.z; }
+    }
     for (const [k1, k2, tx, tz] of TAP_DIRS) {
       if (inp.pressed(k1) || inp.pressed(k2)) {
         const now = performance.now() / 1000, last = this._tapT[k1] || -9;
         this._tapT[k1] = now;
         if (now - last < 0.28 && now - last > 0.04) {
-          const ex = this.right.x * tx + this.fwd.x * tz, ez = this.right.z * tx + this.fwd.z * tz;
+          const ex = brx * tx + bfx * tz, ez = brz * tx + bfz * tz;
           performEvade(p, { x: ex, z: ez }, this);
         }
       }
@@ -3400,6 +3444,20 @@ export class Game {
     // flight + guard keys come from the active control scheme (Options → Control Scheme)
     p.flyHeld = inp.down(KM.up) || pad.down('fly');
     p.descendHeld = inp.down(KM.down) || inp.down('ControlLeft') || inp.down('ControlRight') || pad.down('descend');
+    // THE JKA ROLL TRIGGER (aaa-02 §3.5 change 3): crouch PRESSED while already running on foot
+    // fires the fighter's own evade kind ALONG THE RUN. Not a new move — a second door into
+    // performEvade: a dodge you reach by already running is a different decision from one you reach
+    // by double-tapping, and it costs one `if`. The direction is the VELOCITY (the run you brought),
+    // never the aim — a roll goes where your legs were going.
+    // ⚠ THE THRESHOLD IS A FRACTION OF *YOUR OWN* RUN, NOT THE PORTED CONSTANT. The spec's direct
+    // conversion (200 qu/s → 34.3 wu/s) is ABOVE some fighters' measured run equilibrium (MERC
+    // tops out at 33 — drag settles under the 36.7 walk clamp), which makes the roll a control
+    // that exists and can never fire (the rung-nobody-can-reach law). JKA's 200 qu/s is ~80% of
+    // ITS run speed (250), so the honest port is the RATIO: 0.8 × this fighter's own walk clamp.
+    if ((inp.pressed(KM.down) || pad.pressed('descend')) && p.onFoot) {
+      const rv = Math.hypot(p.vel.x, p.vel.z);
+      if (rv >= p.speed * 1.08 * 0.8) performEvade(p, { x: p.vel.x / rv, z: p.vel.z / rv }, this);
+    }
     p.cruiseHeld = p.flying && (inp.down('ShiftLeft') || inp.down('ShiftRight'));   // held SHIFT in the air = sustained cruise
     p.move(p.moveDir, dt);
 
@@ -3499,6 +3557,18 @@ export class Game {
       f.ai.erratic = f._moodErraticT > 0;
     }
 
+    // THE FIRING-RANGE MOVER (2026-07-28, "make targets for me to test combat and shooting"): a
+    // target with `_patrol` ping-pongs between two posts under the REAL mover (f.move — friction,
+    // footing, the whole physics), so leading a strafing target here is leading a real fighter.
+    // No ai — it never fights back, never sees you; it is a target, not an opponent.
+    if (f._patrol && f.alive && !f.ai) {
+      const P = f._patrol;
+      const tx = P.flip ? P.x1 : P.x0, tz = P.flip ? P.z1 : P.z0;
+      const dx = tx - f.pos.x, dz = tz - f.pos.z, d = Math.hypot(dx, dz);
+      if (d < 2.5) { P.flip = !P.flip; f.moveDir = { x: 0, z: 0 }; }
+      else { f.moveDir = { x: dx / d, z: dz / d }; f.faceDir(dx, dz); f.move(f.moveDir, dt); }
+      return;
+    }
     if (!f.ai || !f.alive) { f.moveDir = { x: 0, z: 0 }; return; }
     if (f.grabbedBy || f.frozenT > 0) { f.moveDir = { x: 0, z: 0 }; return; }   // stunned while held / frozen
     // finish an AI haymaker wind-up

@@ -24,6 +24,7 @@ export const IDENTITIES = {
   rift:       { n: 'Arjun Deshpande',       c: 'Mumbai',              co: 'India',        f: '🇮🇳' },
   titan:      { n: 'Unit T-1TAN (war engine)', c: 'Detroit',          co: 'USA',          f: '🇺🇸' },
   sarge:      { n: 'Marcus Cole',           c: 'Columbus, Georgia',   co: 'USA',          f: '🇺🇸' },
+  merc:       { n: 'Dane Korr',             c: 'Sulaco, Honduras',    co: 'Honduras',     f: '🇭🇳' },
   kivuli:     { n: 'Kato Ssemanda',         c: 'Kampala',             co: 'Uganda',       f: '🇺🇬' },
   gale:       { n: 'Gwendolyn Alderwood',   c: 'Inverness',           co: 'United Kingdom', f: '🇬🇧' },
   stefanos:   { n: 'Stefanos Vasilakis',    c: 'Athens',              co: 'Greece',       f: '🇬🇷' },
