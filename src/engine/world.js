@@ -2415,6 +2415,79 @@ export class World {
     return this.camera;
   }
 
+  // ================================================================================================
+  // THE FRAME CLAIM (aaa-04 §5). A move may briefly BORROW the camera through an ADDITIVE, per-
+  // parameter override, and it can NEVER invert the controls.
+  //
+  // ⚠ EVERY FIELD ADDS OR MULTIPLIES; NONE REPLACES (§5.2). Ours are computed every frame from the
+  // gap, the speed and the altitude — a claim that REPLACED `range` with 60 would defeat the fit rule
+  // and reintroduce the cutscene framing world.js already paid for once. Additive claims compose with
+  // derived framing; replacing ones fight it. Absent field = a null claim (JS makes the flag word free
+  // — JKA needed a bitmask only because C has no null float).
+  //
+  // ⚠ PLAYER-ONLY BY CONSTRUCTION (§5.4, openjk.md:687-689). The claim is tagged with its CLAIMANT and
+  // applied only when that claimant is the chased subject. `cameraDrive` only ever frames `this.player`
+  // (game.js), so an AI throwing the IDENTICAL move moves the camera by exactly 0 — the door is
+  // player-gated with no reference to `game.humans` from inside the world. An AI claim still ramps its
+  // envelope out and is reaped; it is simply never selected as the effective claim.
+  //
+  // ⚠ THE ENVELOPE IS READ FROM THE MOVE'S OWN CLOCK, NEVER A TIMER THE CAMERA OWNS (§5.3). `phase`
+  // names which live field of the move drives liveness; when that clock is exhausted the claim releases
+  // itself, so it cannot desynchronise from the move. The in/out ramps are ASYMMETRIC by default
+  // (in 1.0 / out 0.5 — JKA's own ratio, cg Force Speed eases out twice as fast) so a power reads as
+  // ENDING rather than fading. ⚠ It is a TRANSIENT: a live claim surviving a match reset is a camera
+  // stuck 18u back next fight. The reset path (game.clearTransients) must call `world.clearFrameClaims()`
+  // — RIDER to the game.js owner; documented in aaa-04 §5.4.
+  clearFrameClaims() { if (this._camClaims) this._camClaims.clear(); }
+  frameClaim(f, spec, key = 'default') {
+    if (!f || !spec) return;
+    const m = this._camClaims || (this._camClaims = new Map());
+    const prev = m.get(key);
+    const seq = this._camSeq = (this._camSeq || 0) + 1;   // monotonic — 'newest wins on a pri tie' (§5.2)
+    m.set(key, { f, spec, key, seq, rel: false,
+                 env: prev && prev.f === f && !prev.rel ? prev.env : 0 });
+  }
+  frameRelease(f, key = 'default') {
+    const c = this._camClaims && this._camClaims.get(key);
+    if (c && c.f === f) c.rel = true;
+  }
+  // The move clock a `phase` points at (§5.3). Returns { v: 0..1 progress, alive: is the move running }.
+  // Unknown/'live' is held-until-released — the default, the in/out ramps do the rest.
+  _camPhase(f, phase) {
+    if (phase === 'charge') { const v = (f.meleeCharge || 0) / 0.55; return { v: Math.min(1, v), alive: (f.meleeCharge || 0) > 1e-3 }; }
+    if (phase === 'anim')   { const a = f.strikeActive || 0;         return { v: a > 0 ? 0 : 1,   alive: a > 0 }; }
+    return { v: 1, alive: true };
+  }
+  // Advance every live claim's envelope once per frame off the MOVE'S clock, reap the dead, and return
+  // the effective additive override for the chased subject (highest `pri`, newest on a tie). Called
+  // ONCE at the top of chase(); the six read sites below only read the returned object.
+  _camClaimTick(subject, dt) {
+    const ov = { fov: 0, range: 0, vert: 0, horz: 0, pitch: 0, yaw: 0, damp: 1 };
+    const m = this._camClaims;
+    if (!m || !m.size) return ov;
+    let best = null, bestPri = -Infinity, bestSeq = -1;
+    for (const c of m.values()) {
+      const s = c.spec, ph = this._camPhase(c.f, s.phase);
+      if (!c.rel && s.phase && !ph.alive && c.env > 0) c.rel = true;   // the move ended — release itself
+      const target = c.rel ? 0
+                   : (s.shape === 'tri' ? (ph.v < 0.5 ? ph.v * 2 : (1 - ph.v) * 2) : 1);
+      const dur = target >= c.env ? (s.in ?? 1.0) : (s.out ?? 0.5);    // asymmetric BY DEFAULT
+      const step = dur > 0 ? dt / dur : 1;
+      c.env = target > c.env ? Math.min(target, c.env + step) : Math.max(target, c.env - step);
+      if (c.rel && c.env <= 1e-4) { m.delete(c.key); continue; }
+      if (c.f !== subject) continue;                                   // an AI's claim moves no camera
+      const pri = s.pri || 0;
+      if (pri > bestPri || (pri === bestPri && c.seq > bestSeq)) { best = c; bestPri = pri; bestSeq = c.seq; }
+    }
+    if (best) {
+      const e = best.env, s = best.spec;
+      ov.fov = (s.fov || 0) * e; ov.range = (s.range || 0) * e; ov.vert = (s.vert || 0) * e;
+      ov.horz = (s.horz || 0) * e; ov.pitch = (s.pitch || 0) * e; ov.yaw = (s.yaw || 0) * e;
+      if (s.damp != null) ov.damp = lerp(1, s.damp, e);               // multiplies the eye lambda
+    }
+    return ov;
+  }
+
   /**
    * THE LOCK-ON CHASE CAMERA (docs/POWERWORLD.md §9). Sits behind `subject` on the subject→target
    * axis and frames BOTH bodies, because the whole readability model of this genre is that you can
@@ -2445,6 +2518,7 @@ export class World {
     const vRefAir = (subject.speed || 30) * 1.08 * airMul * 1.5 * (ab ? ab.mult / 1.5 : 1);
     const vRefGnd = (subject.speed || 30) * 1.08;
     const gGrammar = 1 - smoothstep(clamp((S.y - (subject.groundY || 0)) / 10, 0, 1));   // 1 ground, 0 air
+    subject._camG = gGrammar;   // PUBLISH g ON THE FIGHTER (aaa-04 §6.4) — one honest number a future move gate reads. Nothing gates on it in slice 1.
     const vRef = lerp(vRefAir, vRefGnd, gGrammar) * (subject.powerBuff || 1);
     const k = smoothstep(clamp((spd - 0.30 * vRef) / Math.max(1, 0.62 * vRef), 0, 1));
     // ⚠ THE CLINCH NARROWING is derived from the STRIKE TABLE, not from a picked 14/30 (aaa-04 §7.3).
@@ -2453,9 +2527,15 @@ export class World {
     // grammar's single most important framing beat, and it rides `gap` (so it needs no altitude gate).
     const Rj = reachOf('jab');
     const clinch = 1 - smoothstep(clamp((gap - Rj) / (2 * Rj), 0, 1));   // 1 at ≤11u, 0 beyond 33u
+    // ⚠ THE FRAME CLAIM (aaa-04 §5). Advance every live claim's envelope ONCE per frame off the move's
+    // own clock, reap the dead, and read off the effective additive override for the chased subject.
+    // Every `ov.*` is an ADD (0 = null claim) except `ov.damp`, a multiplier (1 = null). Six read sites
+    // below + the ov.yaw axis rotation after camBasis is published (§5.5/§5.6). An AI's identical claim
+    // ramps and is reaped here but is never selected — the camera does not move for it.
+    const ov = this._camClaimTick(subject, dt);
     // ⚠ FOV is TWO gestures that must not fight: the speed ride (slow, aesthetic) and the punch KICK
     // (instant in, eased out). Split so a punch cannot be smeared by the speed damp (aaa-06 §5.1).
-    this._chaseFovBase = damp(this._chaseFovBase ?? 58, clamp(58 + k * 16 - 6 * clinch, 40, 76), 4, dt);
+    this._chaseFovBase = damp(this._chaseFovBase ?? 58, clamp(58 + k * 16 - 6 * clinch + ov.fov, 40, 76), 4, dt);
     this._fovKick = damp(this._fovKick ?? 1, 1, PW_FX.punchHome, dt);   // fast in (Math.min), slow out
     this._chaseFov = this._chaseFovBase * this._fovKick;
     // CAM_PAD — DERIVED from the near-plane corner radius (aaa-04 §3.4), at the WIDEST fov the frustum
@@ -2503,6 +2583,16 @@ export class World {
     // `pm->ps->viewangles`. game.cameraDrive reads camBasis for the move/aim basis instead of the
     // live camera quaternion, so a 360° camera flourish can never invert the controls.
     this.camBasis.set(ax, ay, az);
+    // ⚠ THE CLAIM MAY NEVER ROTATE THE MOVEMENT BASIS (aaa-04 §5.6, openjk.md:2177-2180). `ov.yaw`
+    // orbits the FRAME — the axis the eye and look point are placed from — AFTER camBasis is published
+    // above, so a full 360° flourish spins the picture while movement/aim stay keyed to the unclaimed
+    // axis. A camera flourish that inverts the controls is a bug; publishing camBasis first is what
+    // prevents it. Rotation about Y preserves the xz length and leaves `ay` (pitch) untouched.
+    if (ov.yaw) {
+      const cy = Math.cos(ov.yaw), sy = Math.sin(ov.yaw);
+      const nx = ax * cy + az * sy, nz = -ax * sy + az * cy;
+      ax = nx; az = nz;
+    }
     // ---- THE YAW-RATE STIFFENER (aaa-04 §4, openjk.md:228-234). "The single cheapest thing in the
     // whole reference": during ordinary tracking (tens of °/s) it is inert, and it saturates only on a
     // flick that crosses ~42° in a single frame — so a damped camera stops feeling like it is fighting
@@ -2540,7 +2630,10 @@ export class World {
     // that arrow already exists for. Chasing an unwinnable framing costs readability at every range.
     const FRAME_MAX = 52;
     const fit = (Math.min(gap, FRAME_MAX) + 20) / (2 * Math.tan((this._chaseFov * Math.PI / 180) / 2));
-    const want = clamp(Math.max(24, fit * 1.15) + k * 16, 24, 86);   // 15% margin so nobody rides the edge
+    // ⚠ AIR RIDER (from AIR, aaa doc §Wave3): `k·16 → k·26`. Open-sky top speed rose to PW_AIR.top=210,
+    // so two fighters close far faster (gate A2: both in frame at 210 u/s) — the speed pull-back must
+    // earn more standoff. `ov.range` is the frame claim's additive distance (0 = null claim).
+    const want = clamp(Math.max(24, fit * 1.15) + k * 26 + ov.range, 24, 86);   // 15% margin so nobody rides the edge
     // ⚠ THE SNAP (aaa-04 §4.8): on a discontinuity the damped state copies ideal with no lerp, so the
     // eye does not fly across the map. `snapChase()` sets `_chaseSnap`; this helper honours it once.
     const snap = this._chaseSnap;
@@ -2548,7 +2641,7 @@ export class World {
     this._chaseDist = D1(this._chaseDist ?? want, want, 3.2);
     // ---- the look point: biased toward the target so both bodies sit in frame
     const bias = target ? clamp(gap * 0.012, 0.16, 0.42) : 0.2;
-    const lx = S.x + ax * gap * bias, ly = S.y + 5.4 + ay * gap * bias, lz = S.z + az * gap * bias;
+    const lx = S.x + ax * gap * bias, ly = S.y + 5.4 + ay * gap * bias + ov.vert, lz = S.z + az * gap * bias;
     // ⚠ THE LOOK POINT IS THE FAST CHANNEL (aaa-04 §4.7, C1-C3). Our two damped points ran at almost
     // the same rate (9 vs 8, ratio 1.13), so the two-damped-point structure produced ONE behaviour —
     // "two channels at one rate is a single-channel camera wearing two names." Raised to JKA's own
@@ -2588,12 +2681,20 @@ export class World {
     // range. (ESF shipped centred-behind and a player's objection to an offset was that it "shrinks
     // your right side view angle" — a real 360°-threat point, which is why this is 0.17 and not 0.5.)
     const px = az / Math.hypot(ax, az || 1e-6), pz = -ax / Math.hypot(ax, az || 1e-6);   // perpendicular, level
-    const off = d * 0.17;
-    const ex = S.x - ax * d + px * off, ey = S.y + 5.4 - ay * d * 0.18 + d * 0.30, ez = S.z - az * d + pz * off;
+    const off = d * (0.17 + ov.horz);
+    // ⚠ THE GRAMMAR BLEND `g` GOVERNS THE FRAME (aaa-04 §6.2, C9). The eye height fraction rides the
+    // continuous scalar, not `gait`: 0.30 (16.7° down) grounded, so you read the FLOOR you fight on —
+    // the Jedi Academy read — and 0.16 (9.1° down) airborne, where the horizon is the reference and a
+    // high camera reads as a map view. A smoothstep of altitude, so a fighter bobbing across 5u cannot
+    // chatter it and no hysteresis is needed. `ov.pitch` is the claim's additive lift fraction.
+    const hFrac = lerp(0.16, 0.30, gGrammar);
+    const ex = S.x - ax * d + px * off, ey = S.y + 5.4 - ay * d * 0.18 + d * (hFrac + ov.pitch), ez = S.z - az * d + pz * off;
     // ⚠ THE STIFFENER RIDES THE EYE CHANNELS ONLY (aaa-04 §4.6). JKA applies it in the camera block,
     // not the look point (already the fast channel). `dampStiff` closes an extra `stiff` fraction of
     // the REMAINING lag — 0 is plain damp, so a snap frame (D1) or slow tracking (stiff=0) is unchanged.
-    const E1 = (a, b, l) => this._chaseSnap ? b : dampStiff(a, b, l, dt, stiff);
+    // ⚠ `ov.damp` MULTIPLIES the eye lambda (aaa-04 §5.5): 0.5 = twice as loose, 2 = twice as tight.
+    // Rides the eye channels only, the same channels JKA applies the stiffener to.
+    const E1 = (a, b, l) => this._chaseSnap ? b : dampStiff(a, b, l * ov.damp, dt, stiff);
     this.camPos.x = E1(this.camPos.x, ex, 8);
     this.camPos.y = E1(this.camPos.y, ey, 6);
     this.camPos.z = E1(this.camPos.z, ez, 8);

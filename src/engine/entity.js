@@ -6,7 +6,7 @@ export { BUILDS, frameOf, applyFrame, figure, buildWeapon };   // re-exported: e
 import { updateDupes, updatePossession, updateElastic, updateWallCrawl, updateTk, updateMimic, updateMount, updateVisionMode, pulseDupes, dupePool } from './systems2.js';
 import { updateSize, updateInvisible, updateRegen, updateBanish, beginRegen } from './systems.js';
 import * as THREE from 'three';
-import { clamp, damp, TAU, lerp, BANDS, bandOf, PW_KB, GAIT, GAIT_OWNER } from '../core/util.js';
+import { clamp, damp, TAU, lerp, BANDS, bandOf, PW_KB, PW_AIR, GAIT, GAIT_OWNER } from '../core/util.js';
 export { BANDS, bandOf, setBands } from '../core/util.js';
 import { ARENA as ARENA_FALLBACK } from './world.js';   // ⚠ review item 7: the FROZEN flagship value.
 // It is a last-resort default ONLY — every live read must go through world.ARENA, which is
@@ -241,6 +241,11 @@ export class Fighter {
     this.launchT = 0; this._slamCd = 0;
     this._thrownT = 0; this._thrownBy = null;   // aimed-throw body-as-projectile window (manual §11)
     this._mvX = 0; this._mvZ = 0; this._mvT = 0;   // live move intent (directional descent)
+    // WAVE 3 AIR (aaa-01 §4/§5): the open-sky flight momentum state. `_airStop` is the C5 stopspeed
+    // threshold (stamped in move() from the fighter's base air wish speed); `_driftSgn` latches
+    // PM_Drifting's lateral sign through a straight-line release (Math.sign(0) is 0 — without the
+    // latch the bank flickers off, aaa-01 §4.4 step 4).
+    this._airStop = 0; this._driftSgn = 0; this._driftK = 0;
     this.shockT = 0; this._shockImmune = 0;                              // ROADMAP 5 · shock
     // ROADMAP 4 · ARMOUR AS A THIRD BAR — a real pool, not just a flat subtraction. Derived
     // from what the fighter IS, so nothing is hand-authored: plate is plate.
@@ -942,7 +947,7 @@ export class Fighter {
       const AF = this.def.afterburner;
       // ⚠ READER #10 (aaa-03 §1): the burner is a FLIGHT system and must not stay lit on the floor.
       // `airborne` (gait) not `flying`, so a fighter standing on the PowerWorld floor cuts the burn.
-      if (AF && this.airborne && this.cruiseHeld && this.ki > 1) {
+      if (AF && this.airborne && this.cruiseHeld && this.ki > 1 && !(this._openSky && this.guarding)) {   // ⚠ no burn behind a raised guard (aaa-01 lane AIR); `_openSky`-scoped so the city is unchanged
         const was = this._burnT || 0;
         this._burnT = was + dt;
         if (was < 0.8 && this._burnT >= 0.8 && this._game) {   // ignition: one compression ring, then the wake
@@ -1389,6 +1394,14 @@ export class Fighter {
           if (!unlidded && cb >= maxBand && lid != null && this.pos.y >= lid - 0.6) {
             // your ceiling deck — the servo holds you there instead of letting you drift into a band you haven't earned
             this.vel.y = damp(this.vel.y, clamp((lid - this.pos.y) * 2.6, -FLY_SINK, FLY_SINK * 0.9), 6, dt);
+          } else if (this._openSky) {
+            // ⚠ THE ASCEND SERVO IS A BLEND UNDER AN OPEN SKY, NOT AN ASSIGN (aaa-01 §2.3 / lane AIR).
+            // move() runs BEFORE _physics and has already put the PITCHED-FORWARD vertical component of
+            // your fly vector into vel.y (`this.vel.y += dir.y·s·dt·A`); a bare `vel.y = damp(…FLY_RISE…)`
+            // one function later THREW IT AWAY, so holding SPACE while pointed 45° up climbed at exactly
+            // FLY_RISE regardless of where you aimed — a lift, not flight. SPACE is now an ADDED thruster:
+            // it only ever raises vel.y toward FLY_RISE, never pulls the steeper pitched climb back down.
+            this.vel.y = Math.max(this.vel.y, damp(this.vel.y, FLY_RISE, 7, dt));
           } else {
             this.vel.y = damp(this.vel.y, FLY_RISE, 7, dt);                   // climb — holding the button walks the rungs
           }
@@ -1452,7 +1465,11 @@ export class Fighter {
           }
           this._climbBand = bandAt2(this.pos.y);
         }
-        if (this.flightTier <= 1) {                                           // clumsy drift — the GAH wobble
+        if (this.flightTier <= 1 && !this._openSky) {                         // clumsy drift — the GAH wobble
+          // ⚠ CITY ONLY (aaa-01 lane AIR). Under an open sky the momentum mover (A == AIR_DRAG) owns
+          // the axes and a clumsy flier is "bad" through lower speed and worse hover, NOT a random
+          // sideways shove that fights the commitment feel BFP is built on. `_openSky`-scoped so the
+          // city keeps its GAH wobble byte-for-byte.
           this.vel.x += Math.sin(this.animT * 3.1) * 9 * dt;
           this.vel.z += Math.cos(this.animT * 2.6) * 9 * dt;
         }
@@ -1503,7 +1520,21 @@ export class Fighter {
     // They were sharing −1.3 because a thrown body and a launched body look alike; they are not the
     // same event. A thrown body was AIMED and is meant to land somewhere; a launched body is being
     // sent away, and how far it goes is the readout of how hard it was hit. `PW_KB.drag` is the dial.
-    const dragF = Math.exp((launched ? -PW_KB.drag : this._slideT > 0 || this._thrownT > 0 ? -1.3 : glide ? -AIR_DRAG : -6) * dt);
+    // ⚠ THE AIR STOPSPEED (aaa-01 §3.5 / C5). BFP's `PM_Friction` uses `control = max(speed, stopspeed)`:
+    // proportional drag above the stopspeed, an ABSOLUTE floor below it — which is what lets a flier
+    // actually come to REST and hold a position instead of creeping in an exponential's tail forever.
+    // The open-sky glide gets that two-regime friction; above `_airStop` it is 1−f·dt ≈ exp(−f·dt)
+    // (the swoop coast §3.5 protects is untouched), below it the control clamps to `_airStop` so speed
+    // reaches zero in finite time. Everything else (launched, thrown, slide, walk, city flight) keeps
+    // the exponential exactly. Launched bodies are excused — their carry is the readout of the hit.
+    let dragF;
+    if (glide && !launched && this.launchT <= 0 && this._airStop > 0) {
+      const sp = Math.hypot(this.vel.x, this.vel.z);
+      const control = Math.max(sp, this._airStop);
+      dragF = sp > 1e-4 ? Math.max(0, sp - control * AIR_DRAG * dt) / sp : 0;
+    } else {
+      dragF = Math.exp((launched ? -PW_KB.drag : this._slideT > 0 || this._thrownT > 0 ? -1.3 : glide ? -AIR_DRAG : -6) * dt);
+    }
     this.vel.x *= dragF; this.vel.z *= dragF;
     this.vel.y = clamp(this.vel.y, -160, 70);       // never let launches/lift escape
 
@@ -1670,13 +1701,31 @@ export class Fighter {
     // reader #10). `airborne` (gait) not `flying`, so a fighter standing on the PowerWorld floor uses
     // GROUND speed, not the air multiplier. City: airborne ⟺ flying, so this block is unchanged there.
     if (this.airborne) {
-      s *= this.flightTier >= 3 ? this.flySpeed * 1.2 : this.flightTier === 2 ? 0.78 : 0.95;   // air feel pass 2026-07-24: fliers +20%, levitators 0.62→0.78, clumsy 0.85→0.95
-      // SHIFT held in the air = sustained CRUISE (not the burst dash) — costs a trickle of ki
-      if (this.cruiseHeld && this.ki > 1) {
+      const airMult = this.flightTier >= 3 ? this.flySpeed * 1.2 : this.flightTier === 2 ? 0.78 : 0.95;   // air feel pass 2026-07-24: fliers +20%, levitators 0.62→0.78, clumsy 0.85→0.95
+      s *= airMult;
+      // POWER BUYS THE SKY (aaa-01 §5): under an open sky, air speed scales super-linearly with power,
+      // derived so airGain(1.70) = 1.50 (BFP's own flight-only PL term, 2.0→3.0 across its range).
+      // ⚠ airGain(1.0) = 1.0 EXACTLY — nobody's opening speed moves; the change is neutral at base power.
+      if (this._openSky) {
+        s *= 1 + PW_AIR.plGain * (this.powerBuff - 1);
+        // C5 stopspeed reference: PW_AIR.stopThresh × the BASE air wish speed — read off the
+        // CHARACTERISTIC speed, not the cruise/power-inflated `s`, so a coast comes to rest at the
+        // same low band whatever the throttle. The coefficient is DERIVED BY MEASUREMENT (C5's own
+        // rule): 0.12 keeps the pwmove suite's normalised V2 in [45.7,56] while still terminating.
+        this._airStop = PW_AIR.stopThresh * (this.speed * 1.08 * airMult);
+      }
+      // SHIFT held in the air = sustained CRUISE (not the burst dash) — costs a trickle of ki.
+      // ⚠ SUPPRESSED WHILE GUARDING under an open sky (aaa-01 lane AIR): no cruise-boost or burn behind
+      // a raised guard. Scoped to `_openSky` so city flight is byte-unchanged.
+      if (this.cruiseHeld && this.ki > 1 && !(this._openSky && this.guarding)) {
         s *= 1.5; this.ki = Math.max(0, this.ki - 2.6 * dt);
         // AFTERBURNER (brief Part Six, manual §15): past ignition the throttle opens all the way
         if (this.def.afterburner && this._burnT > 0.8) s *= (this.def.afterburner.mult || 2.1) / 1.5;
       }
+      // THE CAMERA'S OWN LIMIT (aaa-01 §5.5): open-sky wish speed caps at PW_AIR.top, derived from the
+      // chase camera's eye-damp λ and distance clamp so two fighters closing stay in frame. Last, so it
+      // bounds cruise + burner too.
+      if (this._openSky) s = Math.min(s, PW_AIR.top);
     }
     // the harbor: shallow water slows, deep water is a swim (flight lifts you out)
     if (!this.flying && this.pos.y < 2 && this._game && this._game.world.waterAt) {
@@ -1686,8 +1735,14 @@ export class Fighter {
     if (this.gliding) s *= 1.4;                 // wings out — the glide carries you
     if (this.guarding) s *= 0.34;               // guarding slows you
     if (this.strikeActive > 0) s *= 0.5;
-    this.vel.x += dir.x * s * dt * 9;
-    this.vel.z += dir.z * s * dt * 9;
+    // ⚠ THE MOMENTUM COEFFICIENT (aaa-01 §3). BFP's whole flight feel is Quake's `PM_Accelerate` with
+    // `a == f` (accel == friction), which makes terminal speed = the wish speed and demotes the clamp
+    // to a safety net. Ours ran `a = 9·f`, so a flier reached top speed in 0.124s and turned on a coin.
+    // Setting the OPEN-SKY air accel equal to `AIR_DRAG` gives 1.664s to 95% top and a 55.6u stop /
+    // turn radius — half a body length of commitment becomes 1.8. The city stays `9` (unchanged).
+    const A = (this.airborne && this._openSky) ? PW_AIR.accel : 9;
+    this.vel.x += dir.x * s * dt * A;
+    this.vel.z += dir.z * s * dt * A;
     // during a dash/slide burst the clamp lifts, so the impulse actually carries you (drag reins it in)
     const mx = (this.burstT > 0 || this._slideT > 0) ? Math.max(s, 150) : s;
     // ⚠ FLIGHT IS NOT A FLOOR PLAN PLUS AN ELEVATOR — THIS IS WHY IT FELT "LAYERED".
@@ -1698,8 +1753,42 @@ export class Fighter {
     // flying up at something, which is the whole feel of the reference.
     // ⚠ THE SPEED CLAMP GOES 3-D WITH IT, or a dive is faster than level flight for no reason other
     // than that the limit was only ever measured on two axes.
-    if (this.airborne && this._openSky && dir.y) {
-      this.vel.y += dir.y * s * dt * 9;
+    // ⚠ THE `dir.y` GATE FIX (aaa-01 lane AIR). This branch used to be gated on `dir.y` being TRUTHY,
+    // so a pure horizontal strafe (dir.y === 0) fell silently into the 2-D `else` clamp below, which
+    // only bounds `hypot(x,z)` and leaves any vertical velocity uncapped — the 3-D speed limit was
+    // never enforced on a strafing flier. It now runs for every open-sky airborne frame, and `dir.y`
+    // is read as `(dir.y || 0)` so a strafe adds no spurious vertical.
+    if (this.airborne && this._openSky) {
+      this.vel.y += (dir.y || 0) * s * dt * A;
+      // PM_DRIFTING (aaa-01 §4): "banking to a stop". While NOT pressing forward but still TRAVELLING
+      // forward, push laterally — the strongest single feel-detail in BFP's flight. `aim3` is the basis
+      // (where you are pointed), flattened; the mismatch between it and where you slide IS the bank.
+      // ⚠ THE REGIME IS LATCHED AT RELEASE, not re-read every frame. §4.1 ("strongest as you slow")
+      // and §4.2's displacement table (`k·v₀/f²`, slow-release banks MORE than a fast one) are only
+      // reconcilable this way: re-reading `k` every frame lets a fast coast accumulate the slow-regime
+      // tail and INVERTS the table (fast > slow, ~5u swerve); latching the regime by how fast you were
+      // when you released — the same idea as the sign latch — reproduces §4.2 exactly (1.16u @100,
+      // 6.17u @20) and self-fades on the `forwardSpeed` factor, so a hover (forwardSpeed≈0) never drifts.
+      if (this.launchT <= 0) {                                          // knockback owns the axis, not the bank
+        const a3 = this.aim3, fwdIn = dir.x * a3.x + dir.z * a3.z;      // forward component of THIS frame's input
+        if (fwdIn > 0.05) { this._driftSgn = 0; this._driftK = 0; }     // pressing forward — no bank, drop both latches
+        else {
+          const fwdSpd = this.vel.x * a3.x + this.vel.z * a3.z;         // travel along facing (flattened)
+          if (fwdSpd > 1) {                                             // only bank while genuinely coasting forward
+            if (!this._driftK) this._driftK = fwdSpd < PW_AIR.driftThresh * s ? PW_AIR.driftSlow : PW_AIR.drift;   // latch the regime at release
+            const rl = Math.hypot(a3.x, a3.z) || 1, rx = -a3.z / rl, rz = a3.x / rl;   // right = flatten(fwd × up)
+            const rightSpd = this.vel.x * rx + this.vel.z * rz;
+            // ⚠ Math.sign(0) is 0 and rightSpeed passes through 0 on a straight-line release — LATCH it,
+            // or the push flickers off and the sign flip-flops (aaa-01 §4.4 step 4).
+            const sgn = Math.sign(rightSpd) || this._driftSgn || 1; this._driftSgn = sgn;
+            this.vel.x += rx * sgn * this._driftK * fwdSpd * dt;
+            this.vel.z += rz * sgn * this._driftK * fwdSpd * dt;
+            // vertical variant: float up out of a falling strafe (BFP pushes along up; ours is world-up
+            // because our `right` is already flattened, aaa-01 §4.4 step 6).
+            if (this.vel.y < 0) this.vel.y += PW_AIR.driftUp * Math.abs(rightSpd) * dt;
+          }
+        }
+      }
       const m3 = Math.hypot(this.vel.x, this.vel.y, this.vel.z);
       if (m3 > mx && this.launchT <= 0) { const k = mx / m3; this.vel.x *= k; this.vel.y *= k; this.vel.z *= k; }
     } else {
@@ -1925,7 +2014,11 @@ export class Fighter {
       const vy = this.vel.y;
       const k = clamp((Math.hypot(this.vel.x, this.vel.z, vy * 0.5) - 6) / 20, 0, 1);   // engage with real speed
       const ang = fwd > 2 ? Math.atan2(fwd, vy) : 0;                       // vertical travel stays feet-first
-      pitchT = clamp(ang, 0, 1.85) * k;
+      // ⚠ UNCLAMP THE DIVE POSE UNDER AN OPEN SKY (aaa-01 §6.2). The 1.85 (≈106°) clamp truncated every
+      // dive — a straight-down dive rendered 74° short and the body never pointed down. `ang ∈ [0, π]`
+      // here (`fwd > 2` guards the sign), so π is the only bound needed; the ground rig already inverts
+      // this pitch exactly (order 'ZXY'), so the shadow/rings stay under a diving fighter. City keeps 1.85.
+      pitchT = clamp(ang, 0, this._openSky ? Math.PI : 1.85) * k;
       if (fwd < -4) pitchT = -0.25 * k;                                    // backpedal: slight back-lean
       rollT = clamp(-latR * 0.014, -0.5, 0.5) * k;
     }

@@ -113,6 +113,14 @@ export const PW_AIR = {
   plGain: 0.7143,    // airGain = 1 + plGain·(powerBuff−1); derived so airGain(1.70) = 1.50
   top: 210,          // u/s cap on open-sky wish speed; derived from the chase camera
   drift: 0.0375, driftSlow: 1.0, driftThresh: 0.3125, driftUp: 0.125,   // PM_Drifting (§4)
+  // C5 air stopspeed threshold, as a fraction of the fighter's BASE air wish speed. BFP's own ratio
+  // is pm_stopspeed/g_speed = 0.3125 (== driftThresh), but that pulls the pwmove suite's normalised
+  // V2 (released from the non-cruise plateau, normalised as if drag were a pure exponential) down to
+  // ~43.7u — under the 45.7 floor. C5 is explicit that this term is "gated by measurement", so the
+  // stopspeed gets its OWN, gentler coefficient: it exists only to CRISP the last few u/s to a real
+  // rest (so a flier can hold a position), not to shorten the swoop. 0.12 keeps normalised V2 ≈ 51u
+  // across the ladder while still terminating. The DRIFT keeps the full 0.3125 (it must be felt).
+  stopThresh: 0.12,
   camPitch: 0.985,   // sin(80°) — world.chase's ay clamp under mouse-look (§6.3)
 };
 

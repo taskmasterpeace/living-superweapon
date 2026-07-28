@@ -1880,6 +1880,39 @@ measured, not claimed** (see the last row block). Harness: `src/bench/powerworld
 - ⚠ **DOC DRIFT FOUND**: CLAUDE.md says the crowd is 64 pedestrians in several places. It is
   `COUNT = 30` in `pedestrians.js` and has been for some time (64 is the WILDLIFE bird count).
 
+## WAVE 3 — THE TWO GRAMMARS: BFP AIR, JEDI-ACADEMY GROUND (2026-07-28) — AAA doc §"WAVE 3"
+- **AIR — flight now COMMITS (BFP momentum).** Under `flying && _openSky`, `PW_AIR.accel == AIR_DRAG`:
+  time-to-top 0.124s → **1.66s**, turn radius 11 → **55.6u**, a 180° reversal **17u** — half a body
+  length of commitment becomes 1.8. Measured on FOUR fighters (tier 0/1/2/3): V1 ∈[1.50,1.75]s, V2
+  stop ∈[45.7,56]u AND terminates, V3 reversal in band. `airGain(1.0)==1.0` EXACT (nobody's opening
+  speed moves); TORCH@1.7 caps 210, roster air spread 2.33× ≤2.5. Pitched-45°-up climb preserved
+  (vel.y 70 + horizontal 64.5, not clobbered to 46); dive pitch unclamps to π (3.07 rad open sky /
+  1.85 city). **City unchanged** (haymaker 7.2u, city flier 95%-top in 0.167s — all `_openSky`-gated).
+- **GROUND — melee has FRAMES now (Jedi Academy).** A three-phase state machine (startup→active→
+  recover) in melee.js; `strikeActive` is a DERIVED shim (>0 the whole committed window, clamped ≥0 —
+  all 12 external readers behave). A jab does NOT connect in its first 0.10s; a haymaker's 0.34s
+  startup is INTERRUPTIBLE by a jab (cancels to null); a grab in the victim's recover → back-grab.
+  `guardArcOf` = 5 distinct arcs (barrier 360° kept); `swingMult` = `momentumMult` exactly in the air,
+  measured hand speed on foot (`HAND_REF 128` — measured over all 52, NOT guessed; dormant until the
+  footing lane sets `onFoot`). 8 fighting STYLES live via `artOf` (0-in-a-style/>21 = red → neither);
+  clinch adopts the squared-rank `clinchWindow` (R-C: even-rank 1.40s, r40-vs-r79 0.36s).
+- ⚠ **A ROSTER-WIDE BALANCE CHANGE ROBERT SHOULD REVIEW (R-B ruled GLOBAL, per the doc default).**
+  The three-phase timing applies in the CITY too, and **`hasStrike` removes strikes roster-wide**: 6
+  fighters become slam-only (lose the jab: vanguard/titan/rage/foundry/abeo/bulwark — their strike
+  press fires a haymaker), 20 lose the cross, 18 lose the power. Damage/kb are BYTE-IDENTICAL (only
+  frame timing + strike availability change); still a real neutral-melee nerf. ⚠ **REVERSIBLE**: the
+  doc says "if ruled PowerWorld-only it becomes one `gaitAllows` tag with no rework." Flagged for a
+  balance sign-off; shipped GLOBAL per R-B's default, not silently.
+- ⚠ **VIEW — the frame-claim is SCAFFOLDING, not a shipped feature.** The mechanism (`frameClaim`/
+  `clearFrameClaims`/`camBasis`/the additive camera block) is built and player-gated (an AI's claim
+  moves the camera 0.000; the player's moves it), but it has **NO CARRIER** — no game code calls
+  `world.frameClaim()`, so the camera never actually gets a claim in-game. Two latent bugs, dormant
+  only because of that: `camBasis` is written and **read nowhere** (so a live yaw-claim would rotate
+  the controls, 179° deviation), and `clearTransients` didn't clear a claim (now it does — the rider
+  landed this commit). The ACTIVE, needed part of VIEW's world.js is the AIR camera riders (the §5.5
+  companions that keep a 210 u/s fight in frame). ⚠ Before wiring a carrier (the haymaker), fix the
+  `camBasis` read at game.js:3356 or the flourish inverts the controls.
+
 ## WAVE 2 — THE GAIT STATE FIELD, THE CAMERA STOPS CLIPPING, THE LOOPS SURVIVE (2026-07-28)
 - **THE #1 BLOCKER OF THE WHOLE PLAN IS FIXED.** `entity.js` never exited flight under an open sky, so
   `flying` stayed TRUE while a fighter STOOD on the PowerWorld floor and ten systems read that as "in

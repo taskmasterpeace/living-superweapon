@@ -2997,3 +2997,62 @@ coming for six seconds, and the cheapest heat in the city** — and it is also t
 to kill you. A capitol answers in under two seconds. That is one decision the player now makes with
 their feet, and the nameplate states it in words derived from the same numbers the engine reads
 (`districtLine`), so the surface cannot flatter a district.
+
+## §49 · THE AIR IS BID FOR POWER NOW — THE MOMENTUM MOVER (2026-07-28)
+
+**Everything here is gated on `f.airborne && f._openSky`** (the `powerworld` flag). The city flight
+model is byte-unchanged and it is measured, not asserted: a city-duel haymaker still carries **7.2u**,
+a city flier still reaches top speed in **~0.17s** (the snappy `A = 9` accel), `_airStop` is never set
+off an open sky, and `powerBuff 1.7` in the city multiplies air speed by exactly 1.7 (no `airGain`).
+Files: `src/engine/entity.js`, `src/core/util.js` (`PW_AIR`). Gate: `LSW.moveSuite()` (suite `pwmove`),
+**26 checks · 0 failures · 0 console errors**.
+
+- **THE MOMENTUM COEFFICIENT (`PW_AIR.accel == AIR_DRAG == 1.8`).** BFP's whole flight feel is Quake's
+  `PM_Accelerate` with **accel equal to friction**: terminal speed becomes the wish speed and the
+  clamp is demoted to a safety net. Ours ran `a = 9·f`, so a flier hit top speed in **0.124s** and
+  turned on a coin. At `a = f` the three feels collapse into `v/f` and cannot disagree: **time to 95%
+  top 1.66s**, **stop distance 55.6u**, **turn radius 55.6u**, **180° reversal 17u** — *half a body
+  length of commitment becomes 1.8*. In `move()`, `A` is `9` unless `airborne && _openSky`.
+  ⚠ Do NOT change `AIR_DRAG` (it is the one number both axes share) and do NOT delete the clamp (it
+  still catches `burstT`/`_slideT`/evade/intercept).
+- **POWER BUYS THE SKY (`airGain = 1 + PW_AIR.plGain·(powerBuff − 1)`, `plGain 0.7143`).** BFP's
+  flight-only PL term swings ×1.5 across its range; transplanted onto our `powerBuff ∈ [1, 1.7]` so
+  `airGain(1.70) = 1.50`. ⚠ **`airGain(1.0) = 1.0` exactly** — the opening speed of all 52 fighters is
+  unmoved; you are faster because you levelled or transformed, not because the game was retuned.
+  Measured: SOL base 52 → `pb 1.7` 132.5 (×1.5 lift). Bounded by **`PW_AIR.top = 210`** (derived from
+  the chase camera's own λ and distance clamp). TORCH at `1.7`+cruise+burner caps at 210; the roster
+  air spread at max power **CONVERGES to ×2.33** (circuit 88.7 → nova 206.4) as the cap compresses the
+  top while power lifts the bottom — which is what makes "every fighter gets both grammars" survive a
+  19-strong `flightTier 0` contingent.
+- **THE `dir.y` GATE + THE ASCEND-SERVO BLEND.** The 3-D branch used to fire only when `dir.y` was
+  truthy, so a pure strafe (`dir.y === 0`) fell into the 2-D clamp and the 3-D speed limit was never
+  enforced on a strafing flier — it runs every open-sky airborne frame now, reading `(dir.y || 0)`.
+  And the deck-climb servo used to **assign** `vel.y` toward `FLY_RISE`, throwing away the pitched
+  climb `move()` had just built one function earlier: hold SPACE pitched 45° up and you climbed at
+  exactly 46 regardless of aim. Under an open sky SPACE is an ADDED thruster (`max(vel.y, damp(…))`),
+  so a 45°-up climb measures **vel.y 70 with 64 u/s of horizontal** — it obeys where you point.
+- **`PM_Drifting` — "banking to a stop" (§4).** While NOT pressing forward but still travelling
+  forward, push laterally off `aim3`, strongest as you slow. ⚠ The regime (`drift` vs `driftSlow`,
+  ratio 26.67 from the source) is **LATCHED at release**, not re-read every frame — re-reading lets a
+  fast coast accumulate the slow-regime tail and inverts the intended table (a 5u swerve). The sign is
+  latched too (`Math.sign(0)` is 0 and `rightSpeed` crosses zero on a straight-line release). Verified
+  0 sign-flips, slow-release banks more than a fast one, and a hover never drifts (`forwardSpeed ≈ 0`
+  self-fades it).
+- **THE AIR STOPSPEED (C5).** BFP's `PM_Friction` uses `control = max(speed, stopspeed)`: proportional
+  drag above the threshold, an absolute floor below it, so a flier reaches REST and can hold a
+  position instead of creeping down an exponential's tail. The glide gets that two-regime friction.
+  ⚠ **Its coefficient is gated by measurement (C5's own rule), NOT by the drift's.** BFP's literal
+  ratio 0.3125 pulls the suite's normalised V2 — released from the non-cruise plateau, normalised as
+  if drag were a pure exponential — down to **43.7u, under the 45.7 floor**. `PW_AIR.stopThresh = 0.12`
+  (its own dial, off the fighter's BASE air wish speed) keeps normalised **V2 ≈ 50u** across the ladder
+  and every fighter terminates in ~1.6s. The DRIFT keeps the full 0.3125 — it must be felt; the
+  stopspeed only crisps the last few u/s.
+- **THE POSE UNCLAMPS TO π (§6.2).** The dive pose clamped at 1.85 (≈106°), so a vertical dive rendered
+  74° short and the body never pointed down. Open sky clamps to π; a driven vertical dive reads
+  `parts.g.rotation.x = 3.07`, and the ground rig's `'ZXY'` counter-rotation keeps the shadow/rings
+  under the fighter. City keeps 1.85 exactly.
+- ⚠ **THE CLUMSY WOBBLE IS CITY-ONLY NOW.** `flightTier ≤ 1` fliers got a random `±9 u/s²` sideways
+  shove ("the GAH wobble") every flying frame — fine as a city clumsiness cue, but under an open sky it
+  fights the momentum-commitment grammar and corrupted the tier-0 fighter's V1. `!_openSky`-scoped, so
+  the city keeps it byte-for-byte; a clumsy flier in PowerWorld is "bad" through lower speed and worse
+  hover, not a swerve.

@@ -255,7 +255,7 @@ export const ROSTER = [
     },
   },
   {
-    id: 'kraken', origin: 'symbiotic', name: 'KRAKEN', title: 'The Abyss Given Form', role: 'Tentacle Grappler',
+    id: 'kraken', origin: 'symbiotic', name: 'KRAKEN', title: 'The Abyss Given Form', role: 'Tentacle Grappler', art: 'wrestling',
     colors: { primary: '#01a1bc', secondary: '#026575', accent: '#57ffd7', skin: '#7fb8ac' },
     hp: 140, ki: 125, speed: 29, grabHeal: 0.4, strength: 8, rank: 55, overdrive: 1.4, threat: 'Very High', meleeTiers: 2, flightTier: 1, yells: true, voicePitch: 0.65,
     tentacles: { count: 4, segs: 9, segLen: 1.7, radius: 0.55, color: '#0b4a54', color2: '#4affd4' },
@@ -311,7 +311,7 @@ export const ROSTER = [
     },
   },
   {
-    id: 'sarge', origin: 'skilled', name: 'SARGE', title: 'The Last Soldier', role: 'Human Arsenal',
+    id: 'sarge', origin: 'skilled', name: 'SARGE', title: 'The Last Soldier', role: 'Human Arsenal', art: 'cqc',
     colors: { primary: '#75903f', secondary: '#4d5d31', accent: '#ffd557', skin: '#c9915a' },
     hp: 125, ki: 100, speed: 33, guardStrong: true, strength: 4, rank: 24, overdrive: 1.0, threat: 'Low', flightTier: 0,
     items: [{ kind: 'jetcell', name: 'Jump Jets', cd: 14, dur: 6, charges: 2 }],
@@ -429,7 +429,7 @@ export const ROSTER = [
     },
   },
   {
-    id: 'rage', origin: 'altered', name: 'RAGE', title: 'The Monster in the Man', role: 'Pure Strength',
+    id: 'rage', origin: 'altered', name: 'RAGE', title: 'The Monster in the Man', role: 'Pure Strength', art: 'powergrap',
     colors: { primary: '#28bb39', secondary: '#3d485d', accent: '#92e68d', skin: '#5faf6a' },
     hp: 220, ki: 90, speed: 30, strength: 10, rank: 120, overdrive: 1.5, threat: 'Very High', flightTier: 0, meleeTiers: 2, yells: true, voicePitch: 0.55,
     ai: { style: 'bruiser', range: 16, aggro: 0.95, fly: 0 }, evade: { kind: 'leap', name: 'Rage Leap', up: 52, fwd: 74 },

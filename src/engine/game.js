@@ -1739,6 +1739,10 @@ export class Game {
   clearTransients() {
     // the weather goes home with everything else that must not outlive a match (the reset law)
     if (this.weather && this.weather.reset) this.weather.reset();
+    // ⚠ THE FRAME CLAIM goes home too (Wave 3 VIEW rider) — a camera claim that survives a reset is
+    // the "camera stuck 18u back next fight" bug. Dormant today (no carrier calls world.frameClaim),
+    // but the reset law says clear it here, not when a carrier finally lands.
+    if (this.world && this.world.clearFrameClaims) this.world.clearFrameClaims();
     // ⚠ AND SO DOES POWERWORLD'S OPEN SKY. The dimension raises `BANDS.ceiling`/`.sky` on the shared
     // band object, and a raised ceiling leaking into a city fight would let a flier climb out of the
     // theatre. `MODE_IMPL` has no teardown hook, and inventing one would be a second reset path —
