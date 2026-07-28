@@ -574,6 +574,12 @@ export function boot(P = PROFILE_FULL) {
   // the city-is-unchanged control. Lazy so the bench never costs the boot a byte.
   handle.pwSuite = async (opts) => (await import('./bench/powerworld.js')).pwSuite(game, hud, opts);
   handle.districtSuite = async (opts) => (await import('./bench/districts.js')).districtSuite(game, hud, opts);
+  // THE ABILITY PROVING GROUND — every one of the 364 slots fired, proven to DO something, and
+  // posed for a photograph. `stageAbility` leaves the sim frozen on the photogenic frame so an
+  // external driver can screenshot it; the shots are kept as manual assets.
+  handle.abilityList = async () => (await import('./bench/abilities.js')).abilityList();
+  handle.abilitySuite = async (opts) => (await import('./bench/abilities.js')).abilitySuite(game, hud, opts);
+  handle.stageAbility = async (id, slot, opts) => (await import('./bench/abilities.js')).stageAbility(game, hud, id, slot, opts);
   if (location.search.includes('bench')) {
     addEventListener('load', () => setTimeout(async () => {
       const r = await runBenchmark(game, hud);
