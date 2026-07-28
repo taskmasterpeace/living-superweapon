@@ -2,6 +2,19 @@
 // Kenney CC0, /public/audio — still fully offline); the synth bodies below remain as cold-cache
 // fallbacks and as the crafted voices samples can't replace (ki sustain, siren, splash, arcs).
 //
+// ================================ THE AUDIO CONTRACT ============================================
+// (aaa-07-audio.md §0 / POWERWORLD_AAA §1.9 — stated once because two rulings looked contradictory.)
+//   Every sound in this game is either (a) a CC0 recording we hold on disk, or (b) DSP we wrote,
+//   driven by parameters the engine already computes, usually layered on top of (a). NOTHING is
+//   ever produced by an AI audio model, and NO sound is ever fetched at runtime.
+// `gunshot()` (below) is the proof and the template: a recorded plate transient + three generated
+// layers from four scalars per weapon → 13 weapons, 13 signatures, zero AI, zero per-weapon assets.
+// `data/sfx.js` generalises that to all 364 powers (ATTACK × GRAIN × BODY × TAIL). The provenance of
+// every recorded family is the checked-in ledger `docs/AUDIO_SOURCES.md` — a ledger is the only
+// enforceable form of "no AI sounds". Hero VOICE lines are OUT unless a human records them
+// (`heroVoice` is false by default); no AI-TTS bark pipeline is used or planned.
+// ===============================================================================================
+//
 // THE MIX. Everything used to connect straight to a single master gain, so there was no way to
 // turn the music down without turning the punches down. There is now a real bus structure:
 //
@@ -140,7 +153,16 @@ export class AudioBus {
 
   blast(freq = 420, dur = 0.16, type = 'sawtooth', pos = null) {
     if (!this.ok || this.muted) return;
-    if (this.sample('ki.blast', { pos, rate: Math.max(0.6, Math.min(1.6, freq / 420)) })) return;
+    // ⚠ D3 — THREE CALLERS PASS A POSITION WHERE THE OSCILLATOR TYPE BELONGS: `blast(140, 0.5, c.pos)`
+    // (abilities.js weather ult · game.js · systems.js). `OscillatorNode.type = <Vector3>` is a
+    // throw INTO THE FRAME LOOP, the one audio law this project holds absolutely — latent only
+    // because `ki.blast` is HOT and the early return below fires first, but a cold cache, an audio
+    // 404 or a decode failure makes it live. Coerce here (a type check, never `pos = pos || type`
+    // — a meaningful value must survive, the `opts.hitstop ?? 0.04` law) so `blast` is
+    // throw-proof regardless of the caller; the three call sites are still fixed at source (riders).
+    if (type && typeof type === 'object') { pos = type; type = 'sawtooth'; }
+    if (typeof type !== 'string') type = 'sawtooth';
+    if (this.sample('ki.blast', { pos, rate: Math.max(0.6, Math.min(1.6, fin(freq, 420) / 420)) })) return;
     const pg = this._pg(pos, 120); if (!pg) return;
     const o = this.ctx.createOscillator(); o.type = type;
     o.frequency.setValueAtTime(freq, this.t);

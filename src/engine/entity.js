@@ -6,7 +6,7 @@ export { BUILDS, frameOf, applyFrame, figure, buildWeapon };   // re-exported: e
 import { updateDupes, updatePossession, updateElastic, updateWallCrawl, updateTk, updateMimic, updateMount, updateVisionMode, pulseDupes, dupePool } from './systems2.js';
 import { updateSize, updateInvisible, updateRegen, updateBanish, beginRegen } from './systems.js';
 import * as THREE from 'three';
-import { clamp, damp, TAU, lerp, BANDS, bandOf, PW_KB } from '../core/util.js';
+import { clamp, damp, TAU, lerp, BANDS, bandOf, PW_KB, GAIT, GAIT_OWNER } from '../core/util.js';
 export { BANDS, bandOf, setBands } from '../core/util.js';
 import { ARENA as ARENA_FALLBACK } from './world.js';   // ⚠ review item 7: the FROZEN flagship value.
 // It is a last-resort default ONLY — every live read must go through world.ARENA, which is
@@ -202,6 +202,15 @@ export class Fighter {
     this.descendHeld = false;   // descend intent (Ctrl / pad held)
     this.flying = false;        // levitation mode — gravity suspended, you hover
     this._flyPrev = false;      // rising-edge detector for take-off
+    // THE GAIT MACHINE (aaa-03). `gait` is the DERIVED answer to "where am I with respect to the
+    // floor" — six states, one writer (`_updateGait`), computed every frame. It REPLACES `flying`
+    // as the proxy the ground-vs-air readers consult, and it is correct in the city too (in the
+    // city the deck servo keeps a flier off the floor, so ground-owner ⟺ !flying there). `flying`
+    // stays the physics source of truth for the flight chain; `gait` is derived from it, not beside.
+    this.gait = GAIT.GROUNDED;
+    this._gaitFly = false;      // flying at the END of the last _updateGait — the takeoff rising edge
+    this._liftT = 0; this._liftBase = 0; this._settleT = 0;   // LIFT ramp clock/base, SETTLE ramp clock
+    this._gaitCrash = 0;        // set by _slam when it APPLIES: "somebody drove me into geometry" (T8)
     this.onBlock = false;
     this.animT = Math.random() * 10;
 
@@ -287,8 +296,75 @@ export class Fighter {
     this.teleEscape = def.teleEscape || Object.values(def.abilities || {}).some(a => a.type === 'teleport'); // blinks out of grabs
   }
 
-  get grounded() { return (this.pos.y <= (this.groundY || 0) + 0.01 || this.onBlock) && !this.flying; }
+  // ⚠ READER #1 of the ten (aaa-03 §1). `grounded` was `onFloor && !flying`, which returns FALSE for a
+  // fighter standing on the PowerWorld floor because `flying` never goes false there. It now reads the
+  // gait's OWNER, so "feet planted" is the machine's answer, not the boolean's. In the city this is
+  // byte-identical (the servo makes ground-owner ⟺ !flying); under an open sky it is the whole fix.
+  get grounded() { return GAIT_OWNER[this.gait] === 'ground'; }
+  // the mirror: air-owned = LIFT/AIRBORNE/STOOP. The ground-vs-air proxy readers use this instead of
+  // `this.flying`, so a GROUNDED fighter on the PowerWorld floor is never treated as airborne again.
+  get airborne() { return GAIT_OWNER[this.gait] === 'air'; }
   get alive() { return this.state !== 'ko'; }
+
+  // ---- THE GAIT STATE MACHINE (aaa-03 §2/§3) --------------------------------------------------
+  // ONE writer, computed at the top of `_physics` AFTER inputs are written and BEFORE the flight
+  // chain (§2.1 — a flag that changes what a released button does must be READ by that chain, never
+  // tested in front of it; that is the `_openSky`-before-the-input-branch bug pre-empted). Derived
+  // entirely from state the engine already computes; if `gait` and the physics ever disagree, the
+  // physics is right and `gait` has a bug. The transitions carry input ownership across on ONE frame
+  // edge (§4) — a transition state belongs, for input, to the grammar it is going TO, from frame one.
+  _updateGait(dt) {
+    const groundY = this.groundY || 0;
+    const flying = this.flying;
+    const onFloor = this.pos.y <= groundY + 0.02 || this.onBlock;
+    // a corpse has no grammar (T12); a claim on the body (grapnel/ledge-hang) OWNS the gait and no
+    // transition fires while it holds — they already suspend the deck servo and gravity (§8.1).
+    if (this.state === 'ko') { this.gait = GAIT.GROUNDED; this._liftT = this._settleT = 0; this._gaitFly = flying; this._gaitCrash = 0; return; }
+    if (this._grapple || this.hanging) { this._gaitFly = flying; return; }
+
+    const crashArmed = this._gaitCrash > 0; this._gaitCrash = 0;
+    let g = this.gait;
+
+    // CRASH ≡ stagger (§2/§4): the only 'none' owner, and it is a refusal the engine already has.
+    // ⚠ T1n IS A HARD CONSTRAINT: a 'none' sample MUST be staggered, so CRASH is gated on
+    // `staggerT > 0`. It is entered only on a real "somebody put me here" event — `_slam` applying
+    // (T8) WHILE staggered — so a plain guard-break stagger stays GROUNDED and the city is unchanged.
+    if (crashArmed && this.staggerT > 0) { this.gait = GAIT.CRASH; this._liftT = this._settleT = 0; this._gaitFly = flying; return; }
+    if (g === GAIT.CRASH) {
+      if (this.staggerT > 0) { this._gaitFly = flying; return; }       // still owned by the stagger
+      // T11 — the most important row: an involuntary arrival returns you to the grammar you were in,
+      // never to GROUNDED. `flying` is preserved through a slam (§3.2), so this reads it directly.
+      g = flying ? GAIT.AIRBORNE : (onFloor ? GAIT.GROUNDED : GAIT.AIRBORNE);
+      this._liftT = this._settleT = 0;
+    }
+
+    const tookOff = flying && !this._gaitFly;   // the `flying` field went true (either takeoff door, §8.1)
+    if (flying) {
+      if (tookOff) { this.gait = GAIT.LIFT; this._liftT = 0; this._liftBase = this.pos.y; }   // T1
+      else if (g === GAIT.CRASH) this.gait = GAIT.AIRBORNE;            // resumed a crash while flying
+      if (this.gait === GAIT.LIFT) {                                   // the LIFT ramp
+        this._liftT += dt;
+        // clearance is a body radius above the SURFACE you left (a rooftop takeoff is already high),
+        // a statement about the world, not a tuning number. The 0.30s is a stuck-state guard only.
+        if (this.pos.y - this._liftBase > this.radius || this._liftT >= 0.30) this.gait = GAIT.AIRBORNE;   // T2
+      } else {                                                         // AIRBORNE / STOOP
+        const diving = this.descendHeld && this._mvT > 0 && (Math.abs(this._mvX) > 0.2 || Math.abs(this._mvZ) > 0.2);
+        this.gait = diving ? GAIT.STOOP : GAIT.AIRBORNE;               // T4 / T5 — the engine's own power-dive predicate
+      }
+    } else {
+      if (g === GAIT.LIFT) { this.gait = GAIT.GROUNDED; this._liftT = 0; }   // T3 — cancelled the takeoff before clearance
+      else if (onFloor) {
+        if (GAIT_OWNER[g] === 'air') { this.gait = GAIT.SETTLE; this._settleT = Math.max(0.10, this._landT || 0); }   // T6/T7 — arrived under your own power
+        else if (g === GAIT.SETTLE) { this._settleT -= dt; if (this._settleT <= 0) this.gait = GAIT.GROUNDED; }       // T9
+        else this.gait = GAIT.GROUNDED;
+      } else {
+        // not flying, off the ground: a knocked-up grounded fighter, a glider, a stunned flier
+        // falling. Air-owned by physics — the ground grammar cannot own you while your feet are off it.
+        this.gait = GAIT.AIRBORNE;
+      }
+    }
+    this._gaitFly = flying;
+  }
 
   // F key: flight is a MODE you switch on and off, not a button you hold.
   toggleFlight() {
@@ -812,6 +888,11 @@ export class Fighter {
     const dmg = Math.min(32, (speed - 22) * 0.5);
     const src = this.lastHitT < 3 ? this.lastHitBy : null;
     this.takeDamage(dmg, { src, slam: true, unblockable: true, hitstop: 0.1 });
+    // T8: somebody drove me into geometry. `_updateGait` consumes this next frame and, IF the impact
+    // left me staggered, calls it CRASH — the 'none' owner. A slam that neither staggers nor stuns
+    // just keeps my grammar (F1: an involuntary arrival never cancels flight). NOTE `_slam` does NOT
+    // itself write staggerT — that would change every city wall-slam (rule: the city is unchanged).
+    this._gaitCrash = 1;
     if (game.onSlam) game.onSlam(this, dmg, kind);
   }
 
@@ -859,7 +940,9 @@ export class Fighter {
     // ---- AFTERBURNER (manual §15): hold cruise 0.8s with a burner-class core → IGNITION ----
     {
       const AF = this.def.afterburner;
-      if (AF && this.flying && this.cruiseHeld && this.ki > 1) {
+      // ⚠ READER #10 (aaa-03 §1): the burner is a FLIGHT system and must not stay lit on the floor.
+      // `airborne` (gait) not `flying`, so a fighter standing on the PowerWorld floor cuts the burn.
+      if (AF && this.airborne && this.cruiseHeld && this.ki > 1) {
         const was = this._burnT || 0;
         this._burnT = was + dt;
         if (was < 0.8 && this._burnT >= 0.8 && this._game) {   // ignition: one compression ring, then the wake
@@ -1203,6 +1286,9 @@ export class Fighter {
 
   _physics(dt, game) {
     if (this.remote) return;   // puppets are positioned by the wire (controlRemote), not local physics
+    // WHERE AM I? — computed AFTER this frame's inputs (controlPlayer/Bot/Pad ran already) and BEFORE
+    // the flight chain reads them (§2.1). Everything below is UNCHANGED; `gait` only DERIVES from it.
+    this._updateGait(dt);
     // --- flight / levitation ---
     if (this.state !== 'ko') {
       // ---- THE GRAPNEL LINE: reeling and hanging own the axes — the deck servo, takeoff and
@@ -1409,7 +1495,10 @@ export class Fighter {
     // it is a value. At −2.4 horizontal against −1.5 vertical a swoop carried 12u — 1.25 body lengths,
     // which is a nudge, not a manoeuvre. Matched at −1.8 it carries about two body lengths and is
     // still travelling when it gets there, which is what makes overshooting a real cost.
-    const glide = this._openSky && this.flying;
+    // ⚠ READER #7 (aaa-03 §1): the drag CLASS. `flying` on the PowerWorld floor gave `glide = true` →
+    // drag 1.8 → you SKATE on the floor. `airborne` (gait) instead: a GROUNDED fighter gets the
+    // walking coefficient (6). The `_openSky` gate is kept, so the city (no open sky) is untouched.
+    const glide = this._openSky && this.airborne;
     // ⚠ THE LAUNCHED CLASS IS ITS OWN COEFFICIENT NOW, not a borrow of the thrown-body slide class.
     // They were sharing −1.3 because a thrown body and a launched body look alike; they are not the
     // same event. A thrown body was AIMED and is meant to land somewhere; a launched body is being
@@ -1424,7 +1513,10 @@ export class Fighter {
     this.groundY = (game && game.world && game.world.heightAt) ? game.world.heightAt(this.pos.x, this.pos.z) : 0;
     // FOOTSTEPS — real recordings planted on the run-cycle's zero crossings (small-details law:
     // the leg sine in _animate is sin(animT*12); a sign flip = a foot planting)
-    if (!this.flying && this.grounded && game && game.audio && game.audio.sample) {
+    // ⚠ READER #3 (aaa-03 §1): FOOTSTEPS — the single best "your feet are on the ground" cue, and it
+    // had NEVER FIRED in PowerWorld because `!this.flying` was false on the floor. Re-gated on
+    // `gait === GROUNDED` (not merely ground-owned: SETTLE is the knee-crouch recovery, no steps yet).
+    if (this.gait === GAIT.GROUNDED && game && game.audio && game.audio.sample) {
       const _sp = Math.hypot(this.vel.x, this.vel.z);
       if (_sp > 8) {
         const _ss = Math.sin(this.animT * 12) >= 0 ? 1 : -1;
@@ -1574,7 +1666,10 @@ export class Fighter {
     if (this._wounds && this._wounds.leg) s *= 1 - 0.09 * this._wounds.leg;   // the LIMP is real (manual §18)
     if (this.sprintT > 0) s *= this.sprintMult;   // double-tap sprint surge
     if (this.meleeCharge > 0) s *= 0.4;           // winding up a haymaker roots you
-    if (this.flying) {
+    // ⚠ READER #2 (aaa-03 §1): the air-vs-ground speed MULTIPLIER (and the cruise/burner inside it,
+    // reader #10). `airborne` (gait) not `flying`, so a fighter standing on the PowerWorld floor uses
+    // GROUND speed, not the air multiplier. City: airborne ⟺ flying, so this block is unchanged there.
+    if (this.airborne) {
       s *= this.flightTier >= 3 ? this.flySpeed * 1.2 : this.flightTier === 2 ? 0.78 : 0.95;   // air feel pass 2026-07-24: fliers +20%, levitators 0.62→0.78, clumsy 0.85→0.95
       // SHIFT held in the air = sustained CRUISE (not the burst dash) — costs a trickle of ki
       if (this.cruiseHeld && this.ki > 1) {
@@ -1603,7 +1698,7 @@ export class Fighter {
     // flying up at something, which is the whole feel of the reference.
     // ⚠ THE SPEED CLAMP GOES 3-D WITH IT, or a dive is faster than level flight for no reason other
     // than that the limit was only ever measured on two axes.
-    if (this.flying && this._openSky && dir.y) {
+    if (this.airborne && this._openSky && dir.y) {
       this.vel.y += dir.y * s * dt * 9;
       const m3 = Math.hypot(this.vel.x, this.vel.y, this.vel.z);
       if (m3 > mx && this.launchT <= 0) { const k = mx / m3; this.vel.x *= k; this.vel.y *= k; this.vel.z *= k; }
@@ -1821,7 +1916,10 @@ export class Fighter {
     // level cruise → prone (head first), rising → vertical (head points where you're going),
     // pure up/down or hovering at altitude → fully upright, dives → nose-down, strafes → bank into the turn.
     let pitchT = 0, rollT = 0;
-    if (this.flying) {
+    // ⚠ READER #9 (aaa-03 §1): the FLIGHT POSE. Driven by `airborne` (gait), so a fighter standing on
+    // the PowerWorld floor is UPRIGHT, not prone. The damp(7) below already ramps the pose in over
+    // LIFT and out over SETTLE; the explicit gaitBlend envelope (§6.2) is the Loop 4 polish, not this.
+    if (this.airborne) {
       const fwd = this.vel.x * this.aim.x + this.vel.z * this.aim.z;       // motion along facing
       const latR = this.vel.x * this.aim.z - this.vel.z * this.aim.x;      // motion to the body's right
       const vy = this.vel.y;

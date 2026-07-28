@@ -189,12 +189,24 @@ export class SampleBank {
     const g = a.ctx.createGain(); g.gain.value = 0.0001;
     src.connect(g); g.connect((a.bus && a.bus[bus]) || a.master);
     src.start();
+    // ⚠ D1 — TWO CLOCKS, ONE WATCHDOG. `T()` is `ctx.currentTime` (SECONDS from AudioContext
+    // creation) and is correct for scheduling every AudioParam here — never change it. But the
+    // sustain watchdog (`AudioBus.sweep`, audio.js) reaps on `performance.now() - h.last > 450`,
+    // and `performance.now()` is MILLISECONDS from navigation start. Stamping `h.last` in ctx
+    // seconds meant `now(ms, ~120000) - last(s, ~5)` is permanently > 450, so every RECORDED loop
+    // in the game — the beam voice, the ki-charge spool, the flamethrower roar — was reaped on the
+    // first sweep after creation, however hard `set()` was driving it. Every SYNTH handle
+    // (charge/beamVoice/sustain in audio.js) already stamps `performance.now()`; this is the one
+    // outlier. `last` is ONLY read by the watchdog, so it uses the watchdog's clock; scheduling
+    // keeps ctx time. Do NOT "fix" this by widening the 450ms window — the two clocks diverge
+    // without bound, so no threshold works.
     const T = () => a.ctx.currentTime;
+    const NOW = () => performance.now();
     g.gain.linearRampToValueAtTime((m.g ?? 1) * 0.5, T() + 0.06);
     const h = {
-      last: T(),
+      last: NOW(),
       set(I, p) {
-        h.last = T();
+        h.last = NOW();
         const pg = a._pg(p ?? pos, m.reach ?? 140);
         const target = Math.max(0.0001, (m.g ?? 1) * (0.15 + 0.85 * Math.min(1, I)) * pg);
         g.gain.setTargetAtTime(target, T(), 0.08);

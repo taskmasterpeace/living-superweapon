@@ -11,7 +11,8 @@ import { PrintPass } from './printpass.js';
 import { goldenHour, GOLDEN } from '../data/weather.js';
 const _C1 = new THREE.Color(), _C2 = new THREE.Color(), _C3 = new THREE.Color();
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import { clamp, damp, setBands, DECAL_LIFT, PW_AIR, PW_FX } from '../core/util.js';
+import { clamp, damp, lerp, smoothstep, dampStiff, angleDiff, setBands, DECAL_LIFT, PW_AIR, PW_FX } from '../core/util.js';
+import { reachOf } from '../data/martial.js';
 import { skyFor, worldOf } from '../data/environments.js';
 import { buildTiles , scaleBoxUV, resetDecalLadder, redrapeDecals } from './citytiles.js';
 import { CELL, districtNameAt, districtTypeAt, thresholdPlan, ROAD, junctionAt, WATER_DEPTHS, roadClear, surveyCity, surveyAt } from '../data/cityplan.js';
@@ -1482,11 +1483,17 @@ export class World {
   // ⚠ THE Y FLOOR IS 0, NOT `c.y0`. In THIS codebase `y0` is the box CENTRE (world.js:515,
   // citytiles.js:193), not its bottom — reading it would halve every building's occlusion box and
   // break the byte-identical contract below. The old `_segBox3` used the literal 0; so does this.
-  traceBox3(x0, y0, z0, x1, y1, z1, c) {
-    const hx = c.hx ?? c.r, hz = c.hz ?? c.r, top = c.top ?? c.h;
-    if (hx == null || hz == null || top == null) return -1;
+  traceBox3(x0, y0, z0, x1, y1, z1, c, pad = 0) {
+    const hxr = c.hx ?? c.r, hzr = c.hz ?? c.r, topr = c.top ?? c.h;
+    if (hxr == null || hzr == null || topr == null) return -1;
+    // ⚠ `pad` INFLATES THE BOX — this is JKA's box-sweep (CAMERA_SIZE 4, openjk.md:286), a moving box
+    // vs a fixed box, done as a segment vs the box grown by the camera's half-size. At the default
+    // `pad = 0` this is BYTE-IDENTICAL to the old ray-vs-box (bottom stays the literal 0), so
+    // updateOcclusion and aimTrace are unchanged; the camera passes `CAM_PAD` so it stops that far off
+    // a wall on ANY approach, not only where the look→eye segment crosses a face.
+    const hx = hxr + pad, hz = hzr + pad, top = topr + pad, bot = pad ? -pad : 0;
     let tmin = 0, tmax = 1;
-    const axes = [[x0, x1 - x0, c.x - hx, c.x + hx], [y0, y1 - y0, 0, top], [z0, z1 - z0, c.z - hz, c.z + hz]];
+    const axes = [[x0, x1 - x0, c.x - hx, c.x + hx], [y0, y1 - y0, bot, top], [z0, z1 - z0, c.z - hz, c.z + hz]];
     for (const [p0, d, mn, mx] of axes) {
       if (Math.abs(d) < 1e-6) { if (p0 < mn || p0 > mx) return -1; continue; }
       let t1 = (mn - p0) / d, t2 = (mx - p0) / d;
@@ -1502,6 +1509,38 @@ export class World {
   _segBox3(x0, y0, z0, x1, y1, z1, c) {
     const t = this.traceBox3(x0, y0, z0, x1, y1, z1, c);
     return t > 0.02 && t < 0.98;
+  }
+
+  /**
+   * CAMERA-COLLISION BROADPHASE (aaa-04 §3.3/§3.5). The nearest entry parameter t ∈ [0,1] along the
+   * segment across EVERY blocker (cover + interior walls), or 1 for a clean segment. The blocker set
+   * is `MASK_CAMERACLIP` (openjk.md:291-293): `c.noCam === true` is solid to bodies but invisible to
+   * the lens — the other half of the boxing venue's "this blocks nothing but keep the camera out of
+   * it" (CLAUDE.md THE VENUE). ⚠ ONE slab test, never two — this reuses `traceBox3` (the NO_RESCUE /
+   * validatePlan law: export the rule, never reimplement it). Cost is `updateOcclusion`'s class
+   * (§3.6): ~99 cover + ~224 interior walls, twice a frame, and updateOcclusion already loops cover
+   * unguarded every frame for nothing measurable.
+   */
+  _camNearestT(x0, y0, z0, x1, y1, z1, pad = 0) {
+    let best = 1;
+    const cov = this.cover;
+    for (let i = 0; i < cov.length; i++) {
+      const c = cov[i];
+      if (!c || c.hidden || c.noCam === true) continue;
+      const t = this.traceBox3(x0, y0, z0, x1, y1, z1, c, pad);
+      if (t >= 0 && t < best) best = t;
+    }
+    const ints = this.interiors;
+    if (ints) for (let i = 0; i < ints.length; i++) {
+      const it = ints[i], walls = it && it.walls;
+      if (!walls) continue;
+      for (let j = 0; j < walls.length; j++) {
+        const wl = walls[j];
+        const t = this.traceBox3(x0, y0, z0, x1, y1, z1, { x: wl.x, z: wl.z, hx: wl.hx, hz: wl.hz, top: it.top }, pad);
+        if (t >= 0 && t < best) best = t;
+      }
+    }
+    return best;
   }
 
   // Screen (client px) -> ground world point (y=0 plane). Reuses one raycaster/plane (called every frame).
@@ -2391,14 +2430,41 @@ export class World {
   chase(subject, target, dt) {
     const c = this.setCameraMode('chase');
     const S = subject.pos, spd = Math.hypot(subject.vel.x, subject.vel.y, subject.vel.z);
+    const gap = target ? Math.hypot(target.pos.x - S.x, target.pos.y - S.y, target.pos.z - S.z) : 40;
     // ---- FOV rides speed. BFP exposes FOV as a player dial and the reason is that it is the single
     // cheapest sensation of pace in the genre: the frame widens as you commit.
-    const k = clamp((spd - 14) / 96, 0, 1);
+    // ⚠ `vRef` KILLS THE SEVENTH HAND-PICKED LADDER (aaa-04 §7). The old `k = (spd−14)/96` measured
+    // speed against a 96 u/s constant, so a tier-2 levitator flying flat out reached k=0.275 and TORCH
+    // saturated with 21% of their range left — the camera told two thirds of the roster they were
+    // standing still. `k` is now measured against YOUR OWN top speed, built from the SAME expression
+    // `move()` uses (entity.js:1578) so it cannot drift. The buff is multiplied at read time
+    // (aaa-04 §7.2), and the air/ground reference is blended on the melee vertical gate (=10, the
+    // engine's own definition of a ground fight, game.js coneFoe) so a sprinting brawler earns FOV too.
+    const airMul = subject.flightTier >= 3 ? (subject.flySpeed || 1) * 1.2 : subject.flightTier === 2 ? 0.78 : 0.95;
+    const ab = subject.def && subject.def.afterburner;
+    const vRefAir = (subject.speed || 30) * 1.08 * airMul * 1.5 * (ab ? ab.mult / 1.5 : 1);
+    const vRefGnd = (subject.speed || 30) * 1.08;
+    const gGrammar = 1 - smoothstep(clamp((S.y - (subject.groundY || 0)) / 10, 0, 1));   // 1 ground, 0 air
+    const vRef = lerp(vRefAir, vRefGnd, gGrammar) * (subject.powerBuff || 1);
+    const k = smoothstep(clamp((spd - 0.30 * vRef) / Math.max(1, 0.62 * vRef), 0, 1));
+    // ⚠ THE CLINCH NARROWING is derived from the STRIKE TABLE, not from a picked 14/30 (aaa-04 §7.3).
+    // `reachOf('jab')` is the same 11u the spacing rings draw and melee.js reads — one number, no drift.
+    // A wide lens at clinch range distorts two bodies into fish-eye; the narrowing is the ground
+    // grammar's single most important framing beat, and it rides `gap` (so it needs no altitude gate).
+    const Rj = reachOf('jab');
+    const clinch = 1 - smoothstep(clamp((gap - Rj) / (2 * Rj), 0, 1));   // 1 at ≤11u, 0 beyond 33u
     // ⚠ FOV is TWO gestures that must not fight: the speed ride (slow, aesthetic) and the punch KICK
     // (instant in, eased out). Split so a punch cannot be smeared by the speed damp (aaa-06 §5.1).
-    this._chaseFovBase = damp(this._chaseFovBase ?? 58, 58 + k * 16, 4, dt);
+    this._chaseFovBase = damp(this._chaseFovBase ?? 58, clamp(58 + k * 16 - 6 * clinch, 40, 76), 4, dt);
     this._fovKick = damp(this._fovKick ?? 1, 1, PW_FX.punchHome, dt);   // fast in (Math.min), slow out
     this._chaseFov = this._chaseFovBase * this._fovKick;
+    // CAM_PAD — DERIVED from the near-plane corner radius (aaa-04 §3.4), at the WIDEST fov the frustum
+    // can present (the clamp ceiling), NOT the live fov: the FOV can widen the frame AFTER a trace, so
+    // the pad must protect the largest near plane the frustum will ever show, or a wall cleared at 40°
+    // reappears inside the near corners at 74°. The 1.35 factor covers one frame of damping between
+    // the trace and the next. Never hand-pick the pad.
+    const _asp = (typeof innerWidth === 'number' ? innerWidth / Math.max(1, innerHeight) : 16 / 9);
+    const CAM_PAD = c.near * Math.sqrt(1 + Math.tan((76 * Math.PI / 180) / 2) ** 2 * (1 + _asp * _asp)) * 1.35;
     // ---- the axis toward what we are looking at: a lock target frames both bodies; else the player's
     // own MOUSE-LOOK steers the view (aaa-01 §2.3 — a lock overrides look for movement, never the
     // camera); else fall back to travel direction, then facing. When the mouse is not steering, seed
@@ -2437,6 +2503,27 @@ export class World {
     // `pm->ps->viewangles`. game.cameraDrive reads camBasis for the move/aim basis instead of the
     // live camera quaternion, so a 360° camera flourish can never invert the controls.
     this.camBasis.set(ax, ay, az);
+    // ---- THE YAW-RATE STIFFENER (aaa-04 §4, openjk.md:228-234). "The single cheapest thing in the
+    // whole reference": during ordinary tracking (tens of °/s) it is inert, and it saturates only on a
+    // flick that crosses ~42° in a single frame — so a damped camera stops feeling like it is fighting
+    // you without ever being visible. Measured on the axis yaw AFTER the degenerate blend (the direction
+    // the camera is actually trying to look along, JKA's `pm->ps->viewangles`). ⚠ THE ±180° SEAM IS
+    // SOLVED BY `angleDiff` — never subtract two atan2 results (the pirouette bug).
+    const _yaw = Math.atan2(ax, az);
+    const _dYaw = Math.abs(angleDiff(this._chaseYaw ?? _yaw, _yaw)) * 57.29577951;   // degrees
+    const _rate = _dYaw / Math.max(0.001, dt * 1000);                                // JKA's unit: °/ms
+    const _yawStiff = _rate < 1 ? 0 : _rate > 2.5 ? 0.75 : (_rate - 1) * 0.5;
+    // ⚠ PITCH ALSO REDUCES DAMPING, and the divisor is DERIVED, not copied (aaa-04 §4.4). JA divides
+    // by 115 against an 89° clamp (ratio 1.292) so damping never quite switches off; JO divided by the
+    // clamp itself and cut damping dead. Our `ay` clamp is asin(0.82)=0.961 rad, so the matching divisor
+    // is 0.961·1.292 = 1.242 rad — max term (0.82/1.242)² = 0.598, JA's 0.599, derived not copied.
+    const _pStiff = (Math.abs(Math.asin(clamp(ay, -1, 1))) / 1.242) ** 2;
+    // `max`, not sum: two symptoms of one problem (the eye swinging a large arc for a small angular
+    // change) — adding them double-counts a diving flick. The 0.85 cap is the JO→JA lesson: damping
+    // must never switch off entirely or a hard flick teleports the lens. `_stiffScale` is a test seam
+    // (default 1) so the gate can force `stiff = 0` and prove the known-bad ≥40° residual.
+    const stiff = this._chaseSnap ? 0 : Math.min(0.85, Math.max(_yawStiff, _pStiff)) * (this._stiffScale ?? 1);
+    this._chaseYaw = _yaw;
     // ---- DISTANCE, and it is DERIVED, not chosen. A perspective camera at FOV f sees a vertical
     // extent of `2·D·tan(f/2)` — at 58° that is 1.11·D. To hold two 9.6u fighters AND the gap
     // between them the frame has to be at least `gap + 2 fighters` tall, so `D ≥ (gap + 20) / 1.11`.
@@ -2445,8 +2532,8 @@ export class World {
     // as a cutscene rather than a fight. Ten green assertions had said the framing was fine, because
     // "both bodies are within the frustum" is not the same question as "can you read the fight".
     // This project has now made that mistake three times (the ring 4× too big, the venue's audience
-    // built outside the frame, and this).
-    const gap = target ? Math.hypot(target.pos.x - S.x, target.pos.y - S.y, target.pos.z - S.z) : 40;
+    // built outside the frame, and this). `gap` is computed once at the top of chase() now (the FOV
+    // clinch term and the vRef grammar blend both need it).
     // ⚠ AND IT STOPS TRYING PAST A POINT. Framing a 100u gap means pulling back until both fighters
     // are specks — measured, the foe still left frame at x = −0.93 while the subject shrank. Beyond
     // FRAME_MAX the camera frames YOU and the HUD's off-screen foe arrow does its job, which is what
@@ -2462,9 +2549,33 @@ export class World {
     // ---- the look point: biased toward the target so both bodies sit in frame
     const bias = target ? clamp(gap * 0.012, 0.16, 0.42) : 0.2;
     const lx = S.x + ax * gap * bias, ly = S.y + 5.4 + ay * gap * bias, lz = S.z + az * gap * bias;
-    this.camTarget.x = D1(this.camTarget.x, lx, 9);
-    this.camTarget.y = D1(this.camTarget.y, ly, 7);
-    this.camTarget.z = D1(this.camTarget.z, lz, 9);
+    // ⚠ THE LOOK POINT IS THE FAST CHANNEL (aaa-04 §4.7, C1-C3). Our two damped points ran at almost
+    // the same rate (9 vs 8, ratio 1.13), so the two-damped-point structure produced ONE behaviour —
+    // "two channels at one rate is a single-channel camera wearing two names." Raised to JKA's own
+    // relationship (look:eye ≈ 1.8, cg_thirdPersonTargetDamp 0.5 = λ 13.86 vs the eye's 7.13). The eye
+    // stays at 8/6/8; only the look point moves, which is what makes the connecting view angle lively.
+    this.camTarget.x = D1(this.camTarget.x, lx, 14.5);
+    this.camTarget.y = D1(this.camTarget.y, ly, 11);
+    this.camTarget.z = D1(this.camTarget.z, lz, 14.5);
+    // ---- CAMERA COLLISION, TRACE A (aaa-04 §3.3, openjk.md:298-311). Validate the LOOK POINT against
+    // the subject's own eye FIRST, so the eye trace below can never be pulled to a look-at that is
+    // itself inside geometry — the corner-spin failure that makes naive chase cameras pirouette. The
+    // clip is written BACK INTO the damped `camTarget`, so recovery when you step off the wall is the
+    // damping, for free (openjk.md:2113-2115: one state, not two). Runs on snap frames too — a snapped
+    // `camTarget` is already the ideal value, and a teleport that lands the look point in a wall should
+    // be corrected the same frame, not one frame later.
+    {
+      const ox = S.x, oy = S.y + 5.4, oz = S.z;
+      const dx = this.camTarget.x - ox, dy = this.camTarget.y - oy, dz = this.camTarget.z - oz;
+      const len = Math.hypot(dx, dy, dz);
+      if (len > 1e-4) {
+        const t = this._camNearestT(ox, oy, oz, this.camTarget.x, this.camTarget.y, this.camTarget.z, CAM_PAD);
+        if (t < 0.999) {
+          const stop = Math.max(0, t * len);   // inflated-box entry already sits CAM_PAD off the wall
+          this.camTarget.x = ox + dx / len * stop; this.camTarget.y = oy + dy / len * stop; this.camTarget.z = oz + dz / len * stop;
+        }
+      }
+    }
     // ---- and the eye, behind the subject along that axis, lifted
     const d = this._chaseDist;
     // ⚠ AND IT LOOKS SLIGHTLY DOWN, not up. The first version lifted the eye by `d·0.20` and pulled
@@ -2479,9 +2590,34 @@ export class World {
     const px = az / Math.hypot(ax, az || 1e-6), pz = -ax / Math.hypot(ax, az || 1e-6);   // perpendicular, level
     const off = d * 0.17;
     const ex = S.x - ax * d + px * off, ey = S.y + 5.4 - ay * d * 0.18 + d * 0.30, ez = S.z - az * d + pz * off;
-    this.camPos.x = D1(this.camPos.x, ex, 8);
-    this.camPos.y = D1(this.camPos.y, ey, 6);
-    this.camPos.z = D1(this.camPos.z, ez, 8);
+    // ⚠ THE STIFFENER RIDES THE EYE CHANNELS ONLY (aaa-04 §4.6). JKA applies it in the camera block,
+    // not the look point (already the fast channel). `dampStiff` closes an extra `stiff` fraction of
+    // the REMAINING lag — 0 is plain damp, so a snap frame (D1) or slow tracking (stiff=0) is unchanged.
+    const E1 = (a, b, l) => this._chaseSnap ? b : dampStiff(a, b, l, dt, stiff);
+    this.camPos.x = E1(this.camPos.x, ex, 8);
+    this.camPos.y = E1(this.camPos.y, ey, 6);
+    this.camPos.z = E1(this.camPos.z, ez, 8);
+    // ---- CAMERA COLLISION, TRACE B (aaa-04 §3.3). The eye against the CORRECTED look point. The
+    // shoulder offset is already INSIDE the eye expression above (§3.3: do not refactor it out — trace
+    // B covers it). No push-out, no lerp, no swing-around: the camera stops PAD-before the wall and the
+    // damping is the recovery (openjk.md:313-318, Raven removed id's `view[2] += (1-frac)*32` fudge).
+    {
+      const ox = this.camTarget.x, oy = this.camTarget.y, oz = this.camTarget.z;
+      const dx = this.camPos.x - ox, dy = this.camPos.y - oy, dz = this.camPos.z - oz;
+      const len = Math.hypot(dx, dy, dz);
+      if (len > 1e-4) {
+        const t = this._camNearestT(ox, oy, oz, this.camPos.x, this.camPos.y, this.camPos.z, CAM_PAD);
+        if (t < 0.999) {
+          const stop = Math.max(0, t * len);   // inflated-box entry already sits CAM_PAD off the wall
+          this.camPos.x = ox + dx / len * stop; this.camPos.y = oy + dy / len * stop; this.camPos.z = oz + dz / len * stop;
+        }
+      }
+    }
+    // ---- TRACE C: the terrain floor, unconditional (aaa-04 §3.3). The camera never sinks below the
+    // ground under it. Only ever RAISES y, and only when already below `heightAt + PAD` — which is open
+    // ground by construction (a footprint below the terrain would have been caught by trace B), so it
+    // can never push the eye up into a building it just cleared.
+    this.camPos.y = Math.max(this.camPos.y, this.heightAt(this.camPos.x, this.camPos.z) + CAM_PAD);
     // ⚠ ANGULAR SHAKE, NEVER THE WORLD-SPACE ONE. `follow()` adds a metres-long random vector to both
     // the eye and the look point; at ortho that is ~1.8° of jitter, but at a 21u chase distance the
     // same 8u clamp is **29.7°** and 8u is a third of the way to the subject — the camera would pass

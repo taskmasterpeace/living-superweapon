@@ -1880,6 +1880,40 @@ measured, not claimed** (see the last row block). Harness: `src/bench/powerworld
 - ⚠ **DOC DRIFT FOUND**: CLAUDE.md says the crowd is 64 pedestrians in several places. It is
   `COUNT = 30` in `pedestrians.js` and has been for some time (64 is the WILDLIFE bird count).
 
+## WAVE 2 — THE GAIT STATE FIELD, THE CAMERA STOPS CLIPPING, THE LOOPS SURVIVE (2026-07-28)
+- **THE #1 BLOCKER OF THE WHOLE PLAN IS FIXED.** `entity.js` never exited flight under an open sky, so
+  `flying` stayed TRUE while a fighter STOOD on the PowerWorld floor and ten systems read that as "in
+  the air". **`f.gait`** (six states, `util.js` GAIT/GAIT_OWNER/gaitAllows; `_updateGait` at the top
+  of `_physics`) replaces the boolean. All ten `flying`-as-ground-proxy readers migrated in ONE commit
+  (a half-migration IS the bug — F5). Measured: **gait coverage 100.00% over 20,000 samples**, `none`
+  only while staggerT>0; 1-frame input response (T2); momentum carries exact (T3, Δv==drag-alone);
+  dives/crash correct (T4/T5). **FOOTSTEPS FIRE IN POWERWORLD FOR THE FIRST TIME EVER** — 240/240
+  grounded, RMS 0.237. ⚠ CRASH is real and was driven (staggerT>0 owner 'none', resumes AIRBORNE) but
+  is an honest GAP in the T1 auto-drive (a no-combat drive creates no staggered launches).
+- **THE CAMERA STOPS CLIPPING.** VIEW's camera COLLISION (two swept `traceBox3` traces in JKA order,
+  clip into the DAMPED state, `CAM_PAD` derived from the near-plane corner radius) took **C6
+  clip-through 353 → 0** over 3,600 frames in a 105-piece Mega City. The damping RATIO (C3, the
+  structural metric — two channels at one rate is one channel) went **1.13 → 1.807** (in band); the
+  yaw stiffener (`dampStiff`) engages (1x@400°/s → 11.4x@3000) and is invisible in ordinary tracking
+  (0.017% at 20°/s). ⚠ ONE C5 sub-clause (>40° with stiff forced 0 at t+0.25s) reads 3.49° because the
+  C3-mandated base damping fully converges in 0.25s regardless — the two clauses are mutually
+  exclusive once the base is fast enough to pass C3; the stiffener's value is first-frame snappiness
+  (150°→22° at f1). Flagged for a ruling on the number, not hidden.
+- **EVERY RECORDED LOOP WAS DYING IN 0.4s.** AUDIO's D1: the sustain watchdog compared
+  `performance.now()` (ms) against the loop's `ctx.currentTime` (s) — so the beam voice, ki-charge
+  spool and flamethrower roar were all reaped within ~0.4s in every match. One-line fix in samples.js
+  (stamp `h.last` with `performance.now()`); verified the loop survives a full drive (2.66e-2 RMS) AND
+  the reaper still culls a neglected loop. D3 never-throw (blast with a position) fixed too.
+- ⚠ **NOT green, honestly (tracked):** the 3 self-proofs are still BLIND (snag #14 — gait/movement
+  suites are green 19/0, 26/0 but their injectors don't flip them). Camera SHAKE smoothness (CS-b/CS-c
+  at _shake=8: 1.52°/2.20° vs 1.25/1.35 bars) is PRE-EXISTING (world.js clamps shake at 1.6°) — not
+  Wave 2 VIEW scope, a later pass. AUDIO voice-distinctness (voices 6-9 vs ≥10) and firearm audibility
+  (8/0/9 of 13) are FLAKY at the analyser threshold — harness sensitivity, D1/D3 are solid. ⚠ The
+  camera collision made the RETICLE R4 dynamic WORST-case spike (951-1618u) on a rare camera-recovery
+  frame — **static/typical reticle is intact (p90 0.05u, R1 green)**; the fix is smoothing the aim
+  point across a camera snap (a Wave-3+ follow-up). R2-pitch free-aim is now limited by the camera
+  pitch clamp (±47°) — hard-lock steep aim still works (0.025u@80°).
+
 ## WAVE 1 — THE RETICLE CONVERGES, THE CROSSHAIR STOPS LYING (2026-07-28) — AAA doc §"WAVE 1"
 - The bug the harness measured: PowerWorld applied the camera's DIRECTION from the player's POSITION —
   two parallel rays that never converge, so the static miss GREW with distance (0.5u@16 → **8.8u@100**,

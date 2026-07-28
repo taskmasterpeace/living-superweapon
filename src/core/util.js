@@ -142,7 +142,19 @@ export const GAIT_OWNER = {                 // WHICH GRAMMAR OWNS INPUT — neve
   airborne: 'air', lift: 'air', stoop: 'air',
   crash: 'none',
 };
-export const gaitAllows = (_f, _move) => true;   // Wave 2 GAIT fills this; unread in Wave 1.
+// WAVE 2 · GAIT fills the body. A move is either GRAMMAR-AGNOSTIC (the default — carries across the
+// boundary, §5's carry-by-default rule) or tagged to one grammar. The check reads the fighter's live
+// OWNER, so it can never disagree with the state machine. ⚠ CRASH ('none') is NOT a second refusal:
+// the engine's own stagger gates (`melee.canAct`, `abilities.ready`, `busy`) already refuse there
+// (§4), so gaitAllows lets a grammar-tagged move through under 'none' and lets stagger do the saying.
+// The moveset split (Loop 5) grows the tag vocabulary; today the two grammar tags are all there is.
+export const gaitAllows = (f, move) => {
+  if (!f || !move || f.gait === undefined) return true;
+  const owner = GAIT_OWNER[f.gait];
+  if (move === 'air') return owner !== 'ground';       // air-only: any owner but planted feet
+  if (move === 'ground') return owner !== 'air';       // ground-only: any owner but free in the air
+  return true;                                         // grammar-agnostic — carries across the seam
+};
 
 // THE AIM TRACE FALLBACK (aaa-05 §5.3): the p50 reach of a ranged ability over all 52 heroes and 364
 // abilities — the convergence point when the crosshair ray hits nothing (residual ≤ 1.03u at any

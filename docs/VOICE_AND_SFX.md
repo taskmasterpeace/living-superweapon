@@ -1,7 +1,19 @@
 # Voice Lines & Sound Effects Manifest
 
-Living Superweapon — the audio bible. Voice lines are written to be generated per-character with
-country-appropriate accents (Ad Lab voice pipeline). Keep barks under ~2.5s. `[ ]` = delivery note.
+> ⚠ **STRUCK 2026-07-28 — THE AUDIO CONTRACT KILLS THE TTS PLAN.** This document once said barks are
+> *"generated per-character with country-appropriate accents (Ad Lab voice pipeline)"* — i.e. 52 × 8
+> AI-TTS lines via `generate-voice.js`. Robert's ruling is **"generated sounds for all attacks, NO AI
+> sounds"**, and the audio contract (audio.js header · `docs/AUDIO_SOURCES.md` ·
+> `docs/powerworld/aaa-07-audio.md` §0) forbids any AI audio model. **Hero voice lines are OUT unless
+> a human records them.** `audio.heroVoice` is `false` by default and `yell/grunt/cry` all gate on it.
+> The engine never implemented the TTS pipeline (nothing in `src/` calls `generate-voice.js`), so
+> nothing is ripped out — but the plan below is a WRITING PROMPT for human VO or a reference, never an
+> instruction to synthesise. The bark TEXT is kept because a human could record it; the *pipeline* is
+> gone. The SFX table at the foot is superseded by `src/core/samples.js` MANIFEST (300 CC0 files
+> already shipped) and `docs/AUDIO_SOURCES.md`.
+
+Living Superweapon — the audio bible. Voice-line TEXT below is a script for HUMAN recording only;
+there is no AI/TTS generation path. Keep barks under ~2.5s. `[ ]` = delivery note.
 
 ## Bark slots (every character records these 8)
 
@@ -60,7 +72,8 @@ country-appropriate accents (Ad Lab voice pipeline). Keep barks under ~2.5s. `[ 
 - intro: "The deep is patient. I am not."
 - kill: "The tide takes everything."
 
-(…every remaining hero gets the same 8 slots; generate with `generate-voice.js` per accent.)
+(…every remaining hero gets the same 8 slots — as a HUMAN VO script only; the `generate-voice.js`
+AI-TTS path is struck, see the header.)
 
 ## Announcer (already partially implemented via hud.announce)
 - "FIRST BLOOD" · "DOUBLE KO" · "TRIPLE KO" · "QUAD KO" · "RAMPAGE" · "UNSTOPPABLE" · "GODLIKE"

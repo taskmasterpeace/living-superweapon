@@ -30,7 +30,7 @@ import { beamBuildOf, beamTemperOf } from '../data/visual.js';
 import { Gamepad } from '../core/gamepad.js';
 import { runSlot, performEvade } from './abilities.js';
 import { ROSTER } from '../data/characters.js';
-import { BANDS, clamp, rand, TAU, damp, GROUND_LAYER, PW_KB, pwCatchSpeed, AIM_MAX_D } from '../core/util.js';
+import { BANDS, clamp, rand, TAU, damp, GROUND_LAYER, PW_KB, pwCatchSpeed, AIM_MAX_D, GAIT, GAIT_OWNER } from '../core/util.js';
 import { tierOf, TIER_COLORS } from './entity.js';
 
 const _v = new THREE.Vector3();
@@ -486,7 +486,10 @@ export class Game {
   updateSpacingRings() {
     const g = this.spacingRings, p = this.player;
     if (!g) return;
-    const show = !!(SETTINGS.spacingRings && p && p.alive && this.mode && this.running && !p.flying);
+    // ⚠ READER #6 (aaa-03 §1): the spacing overlay is a GROUND-fight tool. `GAIT_OWNER === 'ground'`
+    // not `!flying`, so it appears when a fighter stands on the PowerWorld floor (where `flying` was
+    // stuck true and the overlay never showed) and hides in the air/transitions. City: ground ⟺ !flying.
+    const show = !!(SETTINGS.spacingRings && p && p.alive && this.mode && this.running && GAIT_OWNER[p.gait] === 'ground');
     if (g.visible !== show) g.visible = show;
     if (!show) return;
     g.position.set(p.pos.x, (p.groundY || 0) + GROUND_LAYER.spacing, p.pos.z);
@@ -1649,7 +1652,10 @@ export class Game {
         // to be able to go THROUGH the space someone is occupying and out the other side; that is the
         // single most characteristic move in the reference. On the ground, and for anyone standing on
         // it, the separation is unchanged — bodies still cannot share a square of pavement.
-        if (a._openSky && b._openSky && a.flying && b.flying) continue;
+        // ⚠ READER #5 (aaa-03 §1): two PowerWorld fliers pass THROUGH each other — a swoop's most
+        // characteristic move. `airborne` (gait) not `flying`, so a fighter standing on the floor
+        // collides normally. The `_openSky` gate is kept, so the city separation is byte-unchanged.
+        if (a._openSky && b._openSky && GAIT_OWNER[a.gait] === 'air' && GAIT_OWNER[b.gait] === 'air') continue;
         if (Math.abs(b.pos.y - a.pos.y) > 7) continue;
         const dx = b.pos.x - a.pos.x, dz = b.pos.z - a.pos.z, d = Math.hypot(dx, dz), min = a.radius + b.radius;
         if (d < min && d > 0.001) {
@@ -1797,6 +1803,19 @@ export class Game {
     this._flung = [];
 
     this._koCam = null; this._spectate = null;
+    // ⚠ THE RESET LAW REACHES THE FIGHTERS (aaa-03 F7). PowerWorld stamps `_openSky`/`_chaseKb` onto
+    // every entity and `gait` walks a machine; a raised ceiling or a stale open-sky flag leaking into
+    // a city duel would let a flier climb out of the theatre, and a stale `gait` would carry the wrong
+    // grammar for a frame. The three reset paths empty `this.entities` right after this, so today this
+    // is belt-and-suspenders — but a new mode that reuses bodies would step straight on F7 without it.
+    for (const e of this.entities) {
+      if (!e || !e.def) continue;
+      e._openSky = false; e._chaseKb = false;
+      e.gait = GAIT.GROUNDED; e._gaitFly = false; e._liftT = 0; e._settleT = 0; e._gaitCrash = 0;
+    }
+    // VIEW's Wave-1 rider: the camera re-anchors so the new match's first frame is not a lerp from
+    // wherever the last one left the chase rig (world.snapChase(), aaa-04 / POWERWORLD_AAA WAVE 1).
+    if (W.snapChase) W.snapChase();
     if (W.refreshFogBoxes) W.refreshFogBoxes();
   }
 
@@ -2164,7 +2183,12 @@ export class Game {
       // In the air, ALTITUDE SPENDS REACH: the test becomes the real 3-D distance, so you can punch
       // someone above you exactly as far as you could punch them beside you, and no further. That is
       // fair, readable, and it needs no new field — `flying` already says which case you are in.
-      if (caster.flying && f.flying) { if (Math.hypot(d, dy) > range) continue; }
+      // ⚠ READER #4 (aaa-03 §1): selects on the GAIT OWNER of BOTH parties, not `flying`. Two
+      // air-owned fighters spend reach on altitude (the real 3-D distance); anything TOUCHING the
+      // ground gets the flat ±10u deck rule. On the PowerWorld floor `flying` was stuck true, so the
+      // deck rule never applied — now a grounded fighter uses it correctly. (The missing vertical arc
+      // in the dot test below is a separate defect, aaa-03 §8.8, and belongs to the combat spec.)
+      if (GAIT_OWNER[caster.gait] === 'air' && GAIT_OWNER[f.gait] === 'air') { if (Math.hypot(d, dy) > range) continue; }
       else { if (d > range) continue; if (dy > 10) continue; }
       const dot = (dx / (d || 1)) * caster.aim.x + (dz / (d || 1)) * caster.aim.z;
       if (dot < Math.cos(arc)) continue;
@@ -3285,7 +3309,12 @@ export class Game {
     // orbited: the direction was re-aimed at them every frame. (2) The Y: `moveDir` was flattened, so
     // vertical was a separate elevator key. Live camera basis, pitch included, and forward means
     // where the camera is looking.
-    if (p._openSky && p.flying) {
+    // ⚠ READER #8 (aaa-03 §1): the player MOVE BASIS — the primary "which grammar is live" tell (§6.1).
+    // Air-owned → 3-D, forward-is-look, pitch included; ground-owned → the 2-D `else` branch below.
+    // `GAIT_OWNER === 'air'` not `flying`, so standing on the PowerWorld floor gives the GROUND control
+    // scheme (push forward and you do NOT climb — that single fact is the grammar) instead of a stuck
+    // 3-D basis. During LIFT/AIRBORNE/STOOP it is 3-D; during SETTLE/GROUNDED it is 2-D.
+    if (p._openSky && GAIT_OWNER[p.gait] === 'air') {
       // ⚠ WHEN LOCKED, FORWARD IS THE LINE TO THEM — NOT THE CAMERA'S FORWARD. Measured on an
       // approach: the chase camera sits above and off the shoulder, so its forward reads **y = −0.17**
       // even with the target at exactly your altitude. Flying "at" someone therefore sank you ~30u
