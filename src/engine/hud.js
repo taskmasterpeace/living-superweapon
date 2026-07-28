@@ -225,6 +225,7 @@ export class HUD {
       <div class="paused" id="hPaused"><div class="pwrap">
         <div class="t">PAUSED</div>
         <button data-p="resume">▶ Resume</button>
+        <button data-p="codex" class="ghost">📁 Case File</button>
         <button data-p="options" class="ghost">⚙ Options</button>
         <button data-p="howto" class="ghost">❓ How to Play</button>
         <button data-p="menu" class="ghost">Main Menu</button>
@@ -282,6 +283,11 @@ export class HUD {
     this.el.paused.querySelectorAll('button').forEach(b => b.onclick = () => {
       const a = b.dataset.p;
       if (a === 'resume') { this.setPaused(false); this.onResume && this.onResume(); }
+      // 📁 CASE FILE — the ASCENDANTS Codex, opened for the hero you are piloting. The overlay is
+      // data-driven and mode-agnostic (`showCodex(def)` reads only the def), so the SAME dossier
+      // works in PowerWorld: the pause menu is the one entry point present in every mode and on the
+      // Steam Deck (no keyboard needed). Robert, 2026-07-28: "can we use the same Codex in PowerWorld?"
+      else if (a === 'codex') { const d = this.game && this.game.player && this.game.player.def; if (d) this.showCodex(d); }
       else if (a === 'options') this.showOptions();
       else if (a === 'howto') this.showHowto();
       else if (a === 'menu') { this.setPaused(false); this.onMenu && this.onMenu(); }
