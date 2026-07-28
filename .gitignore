@@ -12,6 +12,7 @@ release2/
 
 # tooling / local artifacts
 .playwright-mcp/
+.worktrees/
 .claude/settings.local.json
 .claude/skills/
 skills-lock.json
