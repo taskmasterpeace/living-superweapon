@@ -1339,7 +1339,10 @@ export class World {
   mouseLook(dx, dy) {
     if (!dx && !dy) return;
     const pMax = Math.asin(clamp(PW_AIR.camPitch, 0, 1));   // 80°
-    this._lookYaw += (dx || 0) * this._lookSens;
+    // ⚠ YAW IS NEGATIVE-dx (Robert 2026-07-28: "left right is inverted" — MEASURED: +dx made a fixed
+    // point ahead move RIGHT on screen, i.e. the view turned LEFT). In this axis convention
+    // (dir = sin(yaw),·,cos(yaw); +yaw takes +Z toward +X) a rightward mouse must DECREASE yaw.
+    this._lookYaw -= (dx || 0) * this._lookSens;
     this._lookPitch = clamp(this._lookPitch - (dy || 0) * this._lookSens, -pMax, pMax);
     this._lookActive = true;
   }
@@ -2580,9 +2583,14 @@ export class World {
     // effectively inside him. The screenshot matrix found this; no single-framing test could.
     // The fix is to borrow the horizontal direction from the subject's own FACING, which always has
     // one, and blend it in as the axis approaches vertical.
+    // ⚠ Under MOUSE-LOOK the blend threshold drops to 0.12: the 0.35 gate fired at pitch ≥ ~69.5° —
+    // INSIDE the 80° mouse range — and quietly bent a steep look toward the FACING, which is part of
+    // why "up/down doesn't feel like BFP". The mouse pitch clamp (80° → horiz ≥ 0.17) keeps the
+    // mouse path out of the degenerate zone entirely; only LOCK framing (true verticals) still blends.
     const horiz = Math.hypot(ax, az);
-    if (horiz < 0.35) {
-      const w = 1 - horiz / 0.35;
+    const dgT = (this._lookActive && !target) ? 0.12 : 0.35;
+    if (horiz < dgT) {
+      const w = 1 - horiz / dgT;
       ax += Math.sin(subject.facing) * w; az += Math.cos(subject.facing) * w;
     }
     L = Math.hypot(ax, ay, az) || 1; ax /= L; ay /= L; az /= L;
@@ -2715,7 +2723,15 @@ export class World {
     // the screen and the shot went into the ground. 0.04 keeps a hair of height for depth without
     // aiming you at the dirt. Grounded stays 0.30 (the Jedi-Academy floor read).
     const hFrac = lerp(0.04, 0.30, gGrammar);
-    const ex = S.x - ax * d + px * off, ey = S.y + 5.4 - ay * d * 0.18 + d * (hFrac + ov.pitch), ez = S.z - az * d + pz * off;
+    // ⚠ BFP PITCH IS A FULL ORBIT (Robert 2026-07-28: "up/down just doesn't feel like BFP"). The eye
+    // only counter-moved 18% of the pitch (−ay·d·0.18) — pitching mostly slid the LOOK point, so
+    // looking down never put the camera above you. Q3/BFP: eye = focus − forward·range, the FULL ay.
+    // Mouse-owned view + AIRBORNE = the BFP orbit; blended by gGrammar back to the JK framing on the
+    // ground (Robert: "keep ground like JK") and untouched whenever a lock owns the frame.
+    const eyJK = S.y + 5.4 - ay * d * 0.18 + d * (hFrac + ov.pitch);
+    const eyBFP = S.y + 5.4 - ay * d + 1.6 + d * ov.pitch;
+    const ex = S.x - ax * d + px * off, ez = S.z - az * d + pz * off;
+    const ey = (this._lookActive && !target) ? lerp(eyBFP, eyJK, gGrammar) : eyJK;
     // ⚠ THE STIFFENER RIDES THE EYE CHANNELS ONLY (aaa-04 §4.6). JKA applies it in the camera block,
     // not the look point (already the fast channel). `dampStiff` closes an extra `stiff` fraction of
     // the REMAINING lag — 0 is plain damp, so a snap frame (D1) or slow tracking (stiff=0) is unchanged.

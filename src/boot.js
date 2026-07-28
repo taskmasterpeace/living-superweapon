@@ -502,7 +502,7 @@ export function boot(P = PROFILE_FULL) {
       const i = digits[e.code] + 1;
       if (i <= 4) { selectHand(game, game.player, i); hud.updateHands && hud.updateHands(game.player); }
     }
-    if (KM.digitsSwap && e.code in digits) {
+    if (KM.digitsSwap && e.code in digits && game.modeId !== 'powerworld') {   // PW: no mid-match hero swap — an Ascendants mechanic (2026-07-28)
       const page = e.shiftKey ? ((game._digitPage = ((game._digitPage || 0) + 1) % Math.ceil(ROSTER.length / 10))) : (game._digitPage || 0);
       const idx = page * 10 + digits[e.code];
       const c = ROSTER[idx];
@@ -559,7 +559,10 @@ export function boot(P = PROFILE_FULL) {
         // WHEEL: classic swaps hero; the other schemes cycle your selected POWER instead, which is
         // what you reach for mid-fight (hero swap moves to the brackets).
         if (game.running && !hud.titleOpen && input.wheel) {
-          if (keymap(SETTINGS.scheme).wheel === 'hero') cycleHero(Math.sign(input.wheel));
+          // ⚠ POWERWORLD: THE WHEEL CHANGES ATTACKS, ALWAYS (Robert 2026-07-28). Hero-swap is an
+          // Ascendants mechanic; in the dimension the wheel walks your POWERS whatever the scheme.
+          if (game.modeId === 'powerworld') cycleAbility(Math.sign(input.wheel));
+          else if (keymap(SETTINGS.scheme).wheel === 'hero') cycleHero(Math.sign(input.wheel));
           else cycleAbility(Math.sign(input.wheel));
         }
       }

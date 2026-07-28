@@ -3510,7 +3510,7 @@ export class Game {
     };
     // WHEEL-SELECT (PILOT/SOUTHPAW): the wheel PICKS a power and LMB FIRES it. Without this the
     // wheel would only ever light a chip — a selection has to have a trigger, or it isn't a control.
-    if (KM.wheel === 'ability' && p._selSlot && p._selSlot !== 'lmb' && p.slots[p._selSlot]) {
+    if ((KM.wheel === 'ability' || this.modeId === 'powerworld') && p._selSlot && p._selSlot !== 'lmb' && p.slots[p._selSlot]) {   // PW: the wheel picks attacks whatever the scheme (2026-07-28)
       const sel = p._selSlot, L = intents.lmb;
       intents[sel] = { pressed: intents[sel].pressed || L.pressed, held: intents[sel].held || L.held, released: intents[sel].released || L.released };
       intents.lmb = { pressed: false, held: false, released: false };
@@ -3914,7 +3914,11 @@ export class Game {
    */
   cameraDrive(dt) {
     if (this.mapCam) { if (this.input) this.input.pointerLock = false; this.world.orbit(this.mapCam); return; }
-    if (this.ms && this.ms.chaseCam && this.player && this.player.alive) {
+    // ⚠ RIP THE ASCENDANTS CAMERA OUT OF POWERWORLD (Robert 2026-07-28: "keep Ascendants on its
+    // own"). The `alive` gate meant a KO snapped the view back to the ISO CITY camera — the other
+    // game's lens — mid-dimension. In PW the chase camera holds through death (the corpse still has
+    // a position; the ragdoll is the shot). The city page keeps followHumans untouched.
+    if (this.ms && this.ms.chaseCam && this.player && (this.player.alive || this.modeId === 'powerworld')) {
       // ⚠ FLYING FOLLOWS THE MOUSE — BFP (Robert, 2026-07-28: "make sure flying follows the mouse and
       // acts like BFP"). The chase camera already steers off its own mouse-look yaw/pitch, and unlocked
       // flight forward IS the camera's getWorldDirection — but `mouseLook()` was never called and

@@ -1004,6 +1004,28 @@ export class Fighter {
         if (this._burnLoop) { this._burnLoop.stop(); this._burnLoop = null; }
       }
     }
+    // ---- THE ENERGY TRAIL (Robert 2026-07-28: "we need the energy trail depending on how they
+    // fly"). Every open-sky flier streams their ACCENT behind them, and the trail IS a readout of
+    // the flight: nothing at hover, a thin thread at cruise, a hard bright stream flat out, and the
+    // burner's own wake colours take over past ignition. Each mote is dropped AT the body and left
+    // behind (the beam-is-a-stream law applied to flight), so the trail bends with the path —
+    // a climb, a dive and a bank each draw their own line. Pooled particles: no allocation, no
+    // disposal contract, and _openSky-scoped so city flight is byte-unchanged.
+    if (this._openSky && this.flying && this._game) {
+      const _ts = Math.hypot(this.vel.x, this.vel.y, this.vel.z);
+      const tk = Math.min(1, _ts / 130);                        // 0 hover → 1 flat out
+      if (_ts > 22 && Math.random() < 0.35 + tk * 0.65) {
+        const burning = (this._burnT || 0) > 0.8;
+        const w = burning && this.def.afterburner && this.def.afterburner.wake
+          ? this.def.afterburner.wake : [this.def.colors.accent, '#ffffff'];
+        this._game.particles.spawn({
+          x: this.pos.x - this.vel.x * 0.03, y: this.pos.y + 4.6 - this.vel.y * 0.03, z: this.pos.z - this.vel.z * 0.03,
+          vx: -this.vel.x * 0.06 + (Math.random() * 2 - 1) * 1.5,
+          vy: -this.vel.y * 0.06 + (Math.random() * 2 - 1) * 1.5,
+          vz: -this.vel.z * 0.06 + (Math.random() * 2 - 1) * 1.5,
+          life: 0.26 + tk * 0.34, size: 1.6 + tk * 2.8, color: w, drag: 1.2, shrink: true });
+      }
+    }
     if (this._sleepGrace > 0) this._sleepGrace -= dt;
     if (this.sleepT > 0) {
       this.sleepT -= dt;
