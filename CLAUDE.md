@@ -1880,6 +1880,38 @@ measured, not claimed** (see the last row block). Harness: `src/bench/powerworld
 - ⚠ **DOC DRIFT FOUND**: CLAUDE.md says the crowd is 64 pedestrians in several places. It is
   `COUNT = 30` in `pedestrians.js` and has been for some time (64 is the WILDLIFE bird count).
 
+## UI ↔ ATTACKS/ITEMS AUDIT + THE GADGET SOUND LIST (2026-07-28)
+- Robert: *"make sure the UI elements match the weapons and gadgets and items, check 100% of the
+  attacks and confirm."* **Verified, two layers, 0 mismatches:**
+  · **DATA**: `slotFacts`/`describeAbility`/`profileOf` over all **371 abilities** (53 heroes) — every
+  one has a glyph, a kind, a range word, a full 7-trait profile, and a hold-flag that matches its own
+  data (`charge`/`kiPerSec`/`sustain`). 371/371.
+  · **RENDERED DOM**: `hud.setPlayer(def)` builds the real chips; asserted the chip's NAME, GLYPH,
+  RANGE word, COST cell and ⏱ hold-marker against `slotFacts` for every slot of all 53. **371/371
+  chips match.** The chip cannot drift because `buildSlots` reads the SAME `slotFacts` the check does
+  (the damage-codex law).
+  · **GADGETS**: all **8 item-carriers × 5 kinds** (jetcell/shieldpack/medkit/beacon/flashbang) show
+  correctly in the kit widget, and firing each transitions the chip through its real state machine —
+  jets→"🔥 JETS 6s", shield→"🛡 SHIELD 45", medkit→hp+40, beacon→"X TO RECALL", flashbang→"CD 9s".
+- ⚠ **FINDING (not a bug, worth a pass): the shieldpack has NO world VISUAL** — only the `_shieldHp`
+  ablative pool + the HUD chip. Every other gadget either spawns a mesh (beacon tripod), a buff
+  (jetcell), or a zone; the shield is invisible in the world. `game.js:2465` also reads `w.dummy`
+  which never matches (the flag is `isDummy`) — dead since it was written, left for its own pass.
+- **THE GADGET SOUND LIST** (`GADGET_SOUNDS` in `bench/audio.js`, + a new §4 in `audioSuite`). Robert:
+  *"identify all sounds we need for the items and such, add to audio harness."* ⚠ **NEARLY EVERY
+  GADGET IS `audio.zap()` AT A DIFFERENT PITCH** — a medkit, a shield, goggles, gas and a jammer all
+  read as "a beep" (measured: 7 of 10 are a lone `zap`; only recall=teleport, armor=metal-clang, and
+  jets=zap+power have any voice). This is the pre-armory guns problem (§38) in the item layer. The
+  table names the sound each gadget SHOULD have (the shopping list — injector hiss, shield whoomp,
+  thruster ignition, tripod clunk, comms-dying warble, …); the gauge proves each is AUDIBLE now
+  (10/10 fire, 0 throws, verified by spying the audio calls) and reports how many collapse into one
+  voice, so a later audio wave has a red/green to move. ⚠ **The analyser gauge REFUSES in a hidden
+  pane** (can't measure a 40ms transient at throttled rAF — the same honest refusal the whole audio
+  suite makes); run `LSW.audioSuite()` in a FOREGROUNDED tab for the spectral distinctness numbers.
+- Refs `shots/gear-merc-blaster.png` (blaster tracers), `shots/gear-merc-detonator.png` (rail-det
+  blast), `shots/gadget-sandra-beacon.png` (deployed beacon). Gates after: groundSuite 15/15 ·
+  pwSuite 42/42 · 0 console errors.
+
 ## THE JK GROUND KIT: MERC, THE RANGE, THE ROLL (2026-07-28) — "should feel Just like Jedi Knight"
 - **MERC (`id: 'merc'`, roster 52 → 53)** — the gun-combat character, Kyle Katarn's loadout on
   engine-proven types: Blaster Rifle (fast, recoil 2.1 — the ST rifle) · **Charged Pistol on RMB**

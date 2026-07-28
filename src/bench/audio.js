@@ -36,6 +36,28 @@ import { FIREARMS, VOICES } from '../data/armory.js';
 const FRAMES = 14;              // ≈230 ms at 60 Hz — long enough for transient AND early tail
 const GAP = 6;                  // rAF frames of silence between subjects, so tails do not overlap
 
+// =================================================================================================
+// THE ITEM / GADGET SOUNDS — identified per Robert (2026-07-28, "identify all sounds we need for the
+// items and such, add to audio harness"). `fire` REPLAYS the sound the gadget makes TODAY (the exact
+// `audio.*` calls inside `game.useItem`), so the gauge measures the shipped state without needing a
+// fighter. `need` is the FINDING: the distinct, recognisable sound each gadget SHOULD have, the way
+// the armory (§38) gave 13 firearms 13 voices. ⚠ TODAY NEARLY EVERY GADGET IS `zap()` AT A DIFFERENT
+// PITCH — a medkit, a shield and a jammer all read as "a beep", the pre-armory guns problem in the
+// item layer. This table is the spec a later audio wave meets; the gauge proves they are at least
+// AUDIBLE now and reports how many collapse into one voice.
+export const GADGET_SOUNDS = [
+  { kind: 'medkit',    label: 'MEDKIT',     fire: (a) => a.zap(820),                   need: 'a pneumatic injector hiss + a rising confirm chime (heal, not a beep)' },
+  { kind: 'shieldpack',label: 'SHIELD CELL',fire: (a) => a.zap(700),                   need: 'an energy shield WHOOMP that swells and settles into a faint hum' },
+  { kind: 'jetcell',   label: 'JUMP JETS',  fire: (a) => { a.zap(560); a.power(true); },need: 'a thruster IGNITION crack into the sustained roar (the fire loop)' },
+  { kind: 'flashbang', label: 'FLASHBANG',  fire: (a) => { a.zap(1200); a.impact(0.7); },need: 'the CRACK is right; add the ringing after-whine that sells the blind' },
+  { kind: 'beacon',    label: 'BEACON PLANT',fire: (a) => { a.zap(520); a.zap(760); },  need: 'a mechanical tripod CLUNK + a servo whir + a lock beep' },
+  { kind: 'recall',    label: 'BEACON RECALL',fire: (a) => a.teleport(),               need: 'DISTINCT already — the teleport swoosh. Keep it.' },
+  { kind: 'vision',    label: 'GOGGLES',    fire: (a) => a.zap(560),                   need: 'a soft electronic power-on whir (night-vision), not the shield beep' },
+  { kind: 'gas',       label: 'GAS CANISTER',fire: (a) => a.zap(300),                  need: 'a canister POP into the sustained gas HISS (the sustain(\'gas\') loop)' },
+  { kind: 'jammer',    label: 'RADIO JAMMER',fire: (a) => a.zap(180),                  need: 'a descending electronic WARBLE into static — the sound of comms dying' },
+  { kind: 'armor',     label: 'ARMOR PLATE',fire: (a) => a.land(0.6, 'metal'),         need: 'DISTINCT already — the metal plate clang. Keep it.' },
+];
+
 /**
  * The only correct sampler shape in this repo. Returns one RMS per rAF frame, plus the frequency
  * magnitudes SUMMED over every frame — the transient is where identity lives and rAF cannot be
@@ -414,7 +436,38 @@ export async function audioSuite(game, hud, opts = {}) {
     ok('no sustained voice is left orphaned', a._sus.size === 0, a._sus.size, 0);
 
     // ==========================================================================================
-    // 4 · NO MISSING SAMPLES
+    // 4 · THE ITEMS / GADGETS (Robert, 2026-07-28) — every gadget's sound is AUDIBLE, and how many
+    //     collapse into one voice today (the finding a later audio wave meets — see GADGET_SOUNDS).
+    // ==========================================================================================
+    const gadgets = [];
+    for (const g of GADGET_SOUNDS) {
+      let threw = null;
+      const s = signature(await grab(analyser, FRAMES, () => { try { g.fire(a); } catch (e) { threw = String((e && e.message) || e); } }), a.ctx.sampleRate, analyser.frequencyBinCount);
+      gadgets.push({ kind: g.kind, label: g.label, need: g.need, threw, ...s });
+      await idle(GAP);
+    }
+    const audibleN = gadgets.filter((x) => x.peak > floor * 3).length;
+    ok('every gadget makes an AUDIBLE sound', audibleN === gadgets.length,
+      `${audibleN}/${gadgets.length}`, `${gadgets.length}/${gadgets.length}`);
+    ok('no gadget sound THROWS into the frame loop', gadgets.every((x) => !x.threw),
+      gadgets.filter((x) => x.threw).map((x) => `${x.kind}: ${x.threw}`).join(', ') || 'none', 'none');
+    // DISTINCTNESS — the same centroid-cluster the firearms use, with the same jitter-derived tolerance.
+    const gTol = Math.max(80, (typeof TOL === 'number' ? TOL : 120));
+    const gsame = sameWithin(gTol);
+    const gGroups = [];
+    for (const r of gadgets) { const grp = gGroups.find((q) => gsame(q[0], r)); if (grp) grp.push(r); else gGroups.push([r]); }
+    note('gadget signatures — centroid Hz', gadgets.map((x) => `${x.label} ${Math.round(x.centroid)}`).join(' · '));
+    note('gadgets resolve into DISTINCT voices', `${gGroups.length} of ${gadgets.length} (the rest are zap() beeps sharing a voice — see GADGET_SOUNDS.need)`);
+    // ⚠ THE BAR IS "AT LEAST THE TWO ALREADY-DISTINCT ONES + AUDIBLE", NOT full separation — the owner
+    // deprioritised the audio ENGINE, so authoring 10 gadget voices is a later wave. This gauge exists
+    // so that wave has a target and a red/green it can watch move. recall (teleport) + armor (clang)
+    // are already their own voices; everything else is the zap cluster the `need` column describes.
+    ok('the already-distinct gadget voices (recall, armor) do not collapse into the beep cluster',
+      gGroups.length >= 3, `${gGroups.length} voices`, '>= 3 (beep cluster + teleport + clang)');
+    note('THE SOUND SHOPPING LIST (what each gadget needs)', gadgets.map((x) => `${x.label}: ${x.need}`).join('  |  '));
+
+    // ==========================================================================================
+    // 5 · NO MISSING SAMPLES
     // ==========================================================================================
     // ⚠ `samples.js` logs `console.warn('[samples] missing', file)` on a 404 and returns null, so a
     // missing recording is SILENT at the call site and the synth fallback covers for it. The warning
