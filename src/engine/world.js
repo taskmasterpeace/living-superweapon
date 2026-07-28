@@ -2687,7 +2687,12 @@ export class World {
     // the Jedi Academy read — and 0.16 (9.1° down) airborne, where the horizon is the reference and a
     // high camera reads as a map view. A smoothstep of altitude, so a fighter bobbing across 5u cannot
     // chatter it and no hysteresis is needed. `ov.pitch` is the claim's additive lift fraction.
-    const hFrac = lerp(0.16, 0.30, gGrammar);
+    // ⚠ AIRBORNE THE CAMERA IS NEARLY LEVEL, SO THE CENTRE RETICLE POINTS FORWARD AT FOES, NOT AT THE
+    // GROUND (Robert 2026-07-28: "the crosshair isn't on point"). At 0.16 the eye rode d·0.16 above the
+    // look point, tilting the view ~20° down — so a foe at your own altitude appeared near the TOP of
+    // the screen and the shot went into the ground. 0.04 keeps a hair of height for depth without
+    // aiming you at the dirt. Grounded stays 0.30 (the Jedi-Academy floor read).
+    const hFrac = lerp(0.04, 0.30, gGrammar);
     const ex = S.x - ax * d + px * off, ey = S.y + 5.4 - ay * d * 0.18 + d * (hFrac + ov.pitch), ez = S.z - az * d + pz * off;
     // ⚠ THE STIFFENER RIDES THE EYE CHANNELS ONLY (aaa-04 §4.6). JKA applies it in the camera block,
     // not the look point (already the fast channel). `dampStiff` closes an extra `stiff` fraction of
