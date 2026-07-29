@@ -3268,8 +3268,15 @@ export class Game {
         flung: this._flung,
         pad: SETTINGS.aimAssist === false ? 0 : (p.radius || 2.2) * 0.5,
       });
-      a3.copy(_aimOut.point);
+      // ⚠ AIM WHERE YOU LOOK, NOT AT THE GROUND (Robert 2026-07-28: "aiming while flying doesn't
+      // follow the mouse"). The trace hits the GROUND when you fly high and look toward the horizon,
+      // and because you sit ~21u IN FRONT of the camera, aiming at that ground point put the shot on
+      // a different line than the crosshair — parallax that reads as the aim not tracking. BFP fires
+      // straight down the look ray. So: converge on a FOE under the crosshair (auto-aim), otherwise
+      // aim at a FAR point along the camera ray — the shot goes exactly where the crosshair points.
       soft = (p.blindT <= 0 && this._aimHit && this._aimHit.hit === 'foe') ? this._aimHit.ent : null;
+      if (soft) a3.copy(_aimOut.point);
+      else a3.copy(cam.position).addScaledVector(_camDir, AIM_MAX_D);
     } else {
       soft = p.blindT > 0 ? null : this.pickTarget(p);             // BLIND: the aim magnet lets go
       if (soft) soft.center(a3);
