@@ -2711,7 +2711,14 @@ export class World {
     // range. (ESF shipped centred-behind and a player's objection to an offset was that it "shrinks
     // your right side view angle" — a real 360°-threat point, which is why this is 0.17 and not 0.5.)
     const px = az / Math.hypot(ax, az || 1e-6), pz = -ax / Math.hypot(ax, az || 1e-6);   // perpendicular, level
-    const off = d * (0.17 + ov.horz);
+    // ⚠ CENTRED BEHIND WHEN FREE-FLYING — THE ROOT OF THE SPIN (Robert, days of "it spins in a
+    // circle"). The 0.17 shoulder offset puts the eye off to the side, so EVERY vector derived from
+    // the camera (movement forward, the aim ray, facing) carried an ~8.7° lateral bias — measured;
+    // fly forward and that bias curved you, the camera re-aimed, the bias rotated with it → a closed
+    // circle. BFP/ESF ship centred-behind for exactly this reason. Free flight → off = 0 (no bias,
+    // no spin, no lean). A LOCK keeps a small offset so your own body can't eclipse the foe you are
+    // framing. `getWorldDirection` now equals `camBasis` when free, so aim + facing come out clean too.
+    const off = d * ((target ? 0.13 : 0) + ov.horz);
     // ⚠ THE GRAMMAR BLEND `g` GOVERNS THE FRAME (aaa-04 §6.2, C9). The eye height fraction rides the
     // continuous scalar, not `gait`: 0.30 (16.7° down) grounded, so you read the FLOOR you fight on —
     // the Jedi Academy read — and 0.16 (9.1° down) airborne, where the horizon is the reference and a
