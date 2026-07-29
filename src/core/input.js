@@ -28,14 +28,24 @@ export class Input {
     addEventListener('keyup', (e) => { this.keys.delete(e.code); this.justReleased.add(e.code); });
 
     const setMouse = (e) => {
-      // pointer-locked: accumulate the relative movement (the LOOK delta); absolute coords are frozen
-      // and meaningless while captured, but harmless to keep computing.
-      if (this.mouse.locked) { this.mouse.dx += e.movementX || 0; this.mouse.dy += e.movementY || 0; }
       const r = canvas.getBoundingClientRect();
-      this.mouse.clientX = e.clientX - r.left;
-      this.mouse.clientY = e.clientY - r.top;
-      this.mouse.x = this.mouse.clientX * (canvas.width / r.width);
-      this.mouse.y = this.mouse.clientY * (canvas.height / r.height);
+      const nx = e.clientX - r.left, ny = e.clientY - r.top;
+      // THE LOOK DELTA (Robert 2026-07-29: "point the cursor and it just shoots straight"). PowerWorld
+      // is JK ground / BFP air — mouse-look, the mouse TURNS THE VIEW and you shoot down the centre.
+      // ⚠ THAT DEPENDED ENTIRELY ON POINTER-LOCK, which is BLOCKED in the CC preview pane (an iframe)
+      // and needs a click gesture even in a real tab — so when it didn't engage, the mouse produced NO
+      // delta, the view never turned, and every shot went straight forever. So the delta now has a
+      // FALLBACK: when the chase view asked for a lock (`pointerLock`) but capture is NOT active, drive
+      // the look from the raw change in cursor position. Captured → movementX/Y (smooth, infinite);
+      // uncaptured → cursor delta (works in the pane, just runs out of room at the window edge). The
+      // city game never sets `pointerLock`, so its free-cursor aim is untouched.
+      if (this.mouse.locked) { this.mouse.dx += e.movementX || 0; this.mouse.dy += e.movementY || 0; }
+      else if (this.pointerLock && this._lastCX != null) { this.mouse.dx += nx - this._lastCX; this.mouse.dy += ny - this._lastCY; }
+      this._lastCX = nx; this._lastCY = ny;
+      this.mouse.clientX = nx;
+      this.mouse.clientY = ny;
+      this.mouse.x = nx * (canvas.width / r.width);
+      this.mouse.y = ny * (canvas.height / r.height);
     };
     canvas.addEventListener('mousemove', setMouse);
     document.addEventListener('pointerlockchange', () => { this.mouse.locked = document.pointerLockElement === canvas; });
