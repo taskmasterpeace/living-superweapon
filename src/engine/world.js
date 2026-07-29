@@ -2661,9 +2661,20 @@ export class World {
     const snap = this._chaseSnap;
     const D1 = (a, b, l) => snap ? b : damp(a, b, l, dt);
     this._chaseDist = D1(this._chaseDist ?? want, want, 3.2);
+    // ---- OVER-THE-SHOULDER SHOULDER SHIFT (Robert 2026-07-29: "the crosshair is right on the
+    // character back"). A third-person shooter puts the body off to ONE side so the centre reticle
+    // sits in clear space. ⚠ IT MUST TRANSLATE BOTH THE EYE AND THE LOOK POINT BY THE SAME VECTOR — a
+    // pure lateral shift leaves `getWorldDirection` (eye→look) UNCHANGED, so the aim direction and the
+    // crosshair are untouched (the earlier eye-ONLY offset rotated the ray and biased the aim, and
+    // offsetting nothing left the body dead-centre under the mark). `camBasis` (the move basis) is
+    // offset-free by construction, so this can't spin you either. Grounded only (gGrammar), and never
+    // under a lock (the target framing owns the composition). `perp` is level-right of the look axis.
+    const shMag = target ? 0 : gGrammar * this._chaseDist * 0.16;   // this._chaseDist (set just above); `d` is declared later
+    const _ph = Math.hypot(ax, az) || 1e-6;
+    const shX = (az / _ph) * shMag, shZ = (-ax / _ph) * shMag;
     // ---- the look point: biased toward the target so both bodies sit in frame
     const bias = target ? clamp(gap * 0.012, 0.16, 0.42) : 0.2;
-    const lx = S.x + ax * gap * bias, ly = S.y + 5.4 + ay * gap * bias + ov.vert, lz = S.z + az * gap * bias;
+    const lx = S.x + ax * gap * bias + shX, ly = S.y + 5.4 + ay * gap * bias + ov.vert, lz = S.z + az * gap * bias + shZ;
     // ⚠ THE LOOK POINT IS THE FAST CHANNEL (aaa-04 §4.7, C1-C3). Our two damped points ran at almost
     // the same rate (9 vs 8, ratio 1.13), so the two-damped-point structure produced ONE behaviour —
     // "two channels at one rate is a single-channel camera wearing two names." Raised to JKA's own
@@ -2729,7 +2740,13 @@ export class World {
     // look point, tilting the view ~20° down — so a foe at your own altitude appeared near the TOP of
     // the screen and the shot went into the ground. 0.04 keeps a hair of height for depth without
     // aiming you at the dirt. Grounded stays 0.30 (the Jedi-Academy floor read).
-    const hFrac = lerp(0.04, 0.30, gGrammar);
+    // ⚠ GROUNDED WAS 0.30 (16.7° DOWN) AND IT PUT THE CROSSHAIR ON THE CHARACTER'S BACK (Robert
+    // 2026-07-29: "the crosshair is right on the character back"). Screen-centre is the camera's
+    // actual look ray, which tilts down by atan(hFrac) because the eye rides d·hFrac above the look
+    // point — so a 16.7° floor read aimed the centre reticle at the character's spine and shots down
+    // it into the dirt. 0.16 (~9°) keeps a real floor read for the Jedi-Academy ground fight while
+    // the centre ray points forward at foe height. Air stays 0.04 (near level, BFP).
+    const hFrac = lerp(0.04, 0.16, gGrammar);
     // ⚠ BFP PITCH IS A FULL ORBIT (Robert 2026-07-28: "up/down just doesn't feel like BFP"). The eye
     // only counter-moved 18% of the pitch (−ay·d·0.18) — pitching mostly slid the LOOK point, so
     // looking down never put the camera above you. Q3/BFP: eye = focus − forward·range, the FULL ay.
@@ -2737,7 +2754,7 @@ export class World {
     // ground (Robert: "keep ground like JK") and untouched whenever a lock owns the frame.
     const eyJK = S.y + 5.4 - ay * d * 0.18 + d * (hFrac + ov.pitch);
     const eyBFP = S.y + 5.4 - ay * d + 1.6 + d * ov.pitch;
-    const ex = S.x - ax * d + px * off, ez = S.z - az * d + pz * off;
+    const ex = S.x - ax * d + px * off + shX, ez = S.z - az * d + pz * off + shZ;   // shX/shZ: over-the-shoulder shift, SAME as the look point so the look ray stays parallel (no aim bias)
     const ey = (this._lookActive && !target) ? lerp(eyBFP, eyJK, gGrammar) : eyJK;
     // ⚠ THE STIFFENER RIDES THE EYE CHANNELS ONLY (aaa-04 §4.6). JKA applies it in the camera block,
     // not the look point (already the fast channel). `dampStiff` closes an extra `stiff` fraction of

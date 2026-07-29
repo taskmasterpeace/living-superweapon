@@ -3274,18 +3274,15 @@ export class Game {
       // a different line than the crosshair — parallax that reads as the aim not tracking. BFP fires
       // straight down the look ray. So: converge on a FOE under the crosshair (auto-aim), otherwise
       // aim at a FAR point along the camera ray — the shot goes exactly where the crosshair points.
+      // THE CROSSHAIR IS SCREEN-CENTRE = THE CAMERA'S CENTRE RAY, so the shot MUST go down that ray or
+      // the reticle lies (Robert 2026-07-29: "it aims fwd no matter where i aim"). Air and ground both
+      // fire down `_camDir` now — the difference is the CAMERA (world.chase): the ground camera looks a
+      // gentle ~9° down (not 16.7°), so a straight-ray shot lands near foe level instead of in the dirt,
+      // and the shoulder offset keeps the character out from under the mark. A foe under the crosshair
+      // still converges (auto-aim). This replaces an earlier 35%-pitch fudge that made the crosshair lie.
       soft = (p.blindT <= 0 && this._aimHit && this._aimHit.hit === 'foe') ? this._aimHit.ent : null;
-      if (soft) a3.copy(_aimOut.point);                                    // a foe under the crosshair — converge (auto-aim)
-      else if (!p.onFoot) a3.copy(cam.position).addScaledVector(_camDir, AIM_MAX_D);   // AIR (BFP): fire where you LOOK, straight down the ray
-      else {
-        // GROUND (Jedi Academy): the camera looks ~15° DOWN for the floor read, so firing straight
-        // along it plants every shot in the dirt (Robert: "the shooting doesn't feel like JK"). JKA
-        // aims at FOE HEIGHT ahead of you. Fire mostly LEVEL — full horizontal heading, but only 35%
-        // of the look pitch — so a foe standing in front takes the shot without you aiming up, and
-        // deliberately looking up/down still angles it.
-        const fx = _camDir.x, fz = _camDir.z, fl = Math.hypot(fx, fz) || 1;
-        a3.set(p.pos.x + (fx / fl) * AIM_MAX_D, p.pos.y + 5.4 + _camDir.y * AIM_MAX_D * 0.35, p.pos.z + (fz / fl) * AIM_MAX_D);
-      }
+      if (soft) a3.copy(_aimOut.point);
+      else a3.copy(cam.position).addScaledVector(_camDir, AIM_MAX_D);
     } else {
       soft = p.blindT > 0 ? null : this.pickTarget(p);             // BLIND: the aim magnet lets go
       if (soft) soft.center(a3);
