@@ -2341,6 +2341,14 @@ export class World {
       this.updateDayNight(d / 1000);                            // the sun keeps its own schedule
     }
     this._lastRender = now;
+    // THE SKY IS A DIRECTION, NOT A PLACE. The dome used to sit parked at the origin, so any
+    // camera away from center saw a 900u balloon — horizon too close on one side, too far on
+    // the other, and a PowerWorld fighter at the play edge was literally outside the sky
+    // (the old note on _buildSky). Riding the active camera every frame makes it optically
+    // infinite: the horizon sits at eye level from every seat — the curb, the far edge, orbit.
+    // (Shader-safe: the star hash keys off the dome-space DIRECTION, which is exactly the view
+    // direction once the center is the eye. News POV recenters for its own pass in newscrew.)
+    if (this.skyMesh) this.skyMesh.position.copy(this.camera.position);
     this.composer.render();
     // ⚠ TICK AFTER THE RENDER, NEVER BEFORE. The impact frame is a ONE-FRAME uniform: ticking first
     // decrements it to zero and clears `uInvert` before the frame it belongs to is ever drawn, so

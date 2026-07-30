@@ -510,6 +510,9 @@ export class NewsCrew {
     const shown = [];
     for (const e of g.entities) if (e.obj && !e.obj.visible) { e.obj.visible = true; shown.push(e.obj); }
     const sm = r.shadowMap.autoUpdate; r.shadowMap.autoUpdate = false;   // reuse this frame's shadow maps
+    // the sky rides the EYE (world render loop does the same for the main camera) — without this
+    // the POV footage keeps the dome centered on the iso camera and the broadcast horizon skews
+    if (world.skyMesh) world.skyMesh.position.copy(this.cam.position);
     r.setRenderTarget(null);
     r.setViewport(0, 0, W / pr, H / pr);
     r.setScissor(0, 0, W / pr, H / pr);
