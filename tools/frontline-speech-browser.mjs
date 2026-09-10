@@ -4,7 +4,7 @@ import {mkdir,writeFile} from 'node:fs/promises';
 const out=process.env.LSW_SPEECH_OUT||'artifacts/frontline-speech',base=process.env.LSW_URL||'http://127.0.0.1:5182';
 await mkdir(out,{recursive:true});
 const browser=await chromium.launch({channel:'chromium'}),page=await browser.newPage({viewport:{width:1600,height:900}});
-const errors=[],report={url:base+'/powerworld.html',browserChannel:'chromium',evidence:'Native UI entry and observed native speech calls; subsequent explicitly injected layout fixtures are not naturally triggered dialogue.'};
+const errors=[],report={url:base+'/powerworld.html',runtimeCommit:process.env.LSW_RUNTIME_COMMIT||null,browserChannel:'chromium',evidence:'Native UI entry and observed native speech calls; subsequent explicitly injected layout fixtures are not naturally triggered dialogue.'};
 page.on('pageerror',e=>errors.push(e.message));
 try {
  await page.goto(report.url);await page.waitForFunction(()=>window.PW?.game);
