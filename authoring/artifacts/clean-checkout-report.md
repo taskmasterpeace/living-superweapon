@@ -180,3 +180,27 @@ clones); package/adapter table matches the built catalog.
 - `C:\WINDOWS\TEMP\claude\D--lsw\8b506ba9-3966-4132-b7dd-87c7315cb54a\scratchpad\pw-lf-control` — the
   LF control clone (same HEAD); disposable.
 - No servers left running.
+
+---
+
+## Re-verification after the fixes (commit 5f075f1, same clone, default `core.autocrlf=true`)
+
+The findings above (all on `fe1a14b`) were fixed in `5f075f1`: `authoring/.gitattributes` and
+`public/authored-assets/.gitattributes` (`* -text`), LF-normalised hashing of text sources in
+`authoring/lib/build.js`, an LF-normalised baseline measurement, the five-file source checklist
+in `docs/authoring/SOURCES.md` (CMU files are in `D:/powerworld-authoring/assets-src/cmu/`, not
+`D:/lsw`), `baseline` removed from the clean-checkout sequence, and `viewer.check.mjs` accepting
+any non-5180 `127.0.0.1` port.
+
+Re-run in `D:/pw-clean-check` after `git fetch && git reset --hard FETCH_HEAD && git rm -r --cached . && git reset --hard HEAD`
+(forces the new attributes to apply) and copying the two CMU files:
+
+| step | result |
+| --- | --- |
+| `git ls-files --eol` | `authoring/lib/build.js` and `public/authored-assets/.../pose-bank.json` checked out **LF** (`attr/-text`); `src/data/locomotion-bank.json` still CRLF (outside this branch's folders, and no longer affects any hash) |
+| `node authoring/bin/authoring.js validate` | `11 packages, all valid` |
+| `node authoring/bin/authoring.js reproduce` | `REPRODUCIBLE: 11 packages rebuilt from committed recipes and pinned sources with identical hashes` |
+| `cd authoring && npm test` | `tests 35 · pass 35 · fail 0` |
+| `node authoring/bin/authoring.js baseline` (optional re-derive) | identical to the committed baseline; `git status` shows only the untracked sources |
+
+Verified 2026-09-10 on the same Windows 11 / Node 25.8 machine as the audit above.

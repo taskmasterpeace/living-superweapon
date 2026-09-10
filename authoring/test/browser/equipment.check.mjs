@@ -1,6 +1,7 @@
 // Two weapons on four proportions, at rest and in aim/reload/walk poses, on the production rig:
-// grip on the hand socket, support hand solved, muzzle along the hand axis, holster placed from
-// the body package. Usage: node authoring/test/browser/equipment.check.mjs
+// grip on the hand socket, support-hand reach measured (fit only in the drawn-in reload pose;
+// full-extension aim rows are recorded as BLOCKED), muzzle along the hand axis, holster placed
+// from the body package. Usage: node authoring/test/browser/equipment.check.mjs
 import assert from 'node:assert/strict';
 import {mkdir,writeFile} from 'node:fs/promises';
 import {chromium} from 'playwright';
