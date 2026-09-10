@@ -135,6 +135,7 @@ function checkOutputs(outputs,kind,{fail}){
  });
  const roles=new Set(outputs.filter(plainObject).map(o=>o.role));
  if(kind==='humanoid-motion'&&!roles.has('pose-bank'))fail('outputs','$.outputs','a humanoid-motion package must emit a pose-bank');
+ if(kind==='humanoid-body'&&!roles.has('body'))fail('outputs','$.outputs','a humanoid-body package must emit a body record');
  if(['equipment','creature','prop'].includes(kind)&&!roles.has('glb'))fail('outputs','$.outputs',`a ${kind} package must emit a glb`);
 }
 function checkBounds(b,{fail}){

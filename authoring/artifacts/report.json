@@ -3,6 +3,180 @@
  "catalog": true,
  "packages": [
   {
+   "dir": "public/authored-assets/body.hero-heavy/v1",
+   "ok": true,
+   "errors": [],
+   "warnings": [],
+   "id": "body.hero-heavy",
+   "version": 1,
+   "kind": "humanoid-body",
+   "budgets": {
+    "profile": "desktop",
+    "measured": {
+     "triangles": 14318,
+     "drawCalls": 3,
+     "materials": 3,
+     "bones": 65,
+     "textures": 1,
+     "bytes": 1984416
+    },
+    "limits": {
+     "triangles": 18825,
+     "drawCalls": 4,
+     "materials": 4,
+     "bones": 82,
+     "textures": 2,
+     "bytes": 2565382
+    }
+   },
+   "packageHash": "4c12a174522497a8589df61021d28662ae6feea741f604c5e211d79518cd734d"
+  },
+  {
+   "dir": "public/authored-assets/body.hero-lean/v1",
+   "ok": true,
+   "errors": [],
+   "warnings": [],
+   "id": "body.hero-lean",
+   "version": 1,
+   "kind": "humanoid-body",
+   "budgets": {
+    "profile": "desktop",
+    "measured": {
+     "triangles": 15060,
+     "drawCalls": 3,
+     "materials": 3,
+     "bones": 65,
+     "textures": 1,
+     "bytes": 2052305
+    },
+    "limits": {
+     "triangles": 18825,
+     "drawCalls": 4,
+     "materials": 4,
+     "bones": 82,
+     "textures": 2,
+     "bytes": 2565382
+    }
+   },
+   "packageHash": "708bc523ef3e0fcdaa89c1b5f708d3d4eaac103e7878b8c1c03632587d54528f"
+  },
+  {
+   "dir": "public/authored-assets/body.hero-standard-female/v1",
+   "ok": true,
+   "errors": [],
+   "warnings": [],
+   "id": "body.hero-standard-female",
+   "version": 1,
+   "kind": "humanoid-body",
+   "budgets": {
+    "profile": "desktop",
+    "measured": {
+     "triangles": 15060,
+     "drawCalls": 3,
+     "materials": 3,
+     "bones": 65,
+     "textures": 1,
+     "bytes": 2052305
+    },
+    "limits": {
+     "triangles": 18825,
+     "drawCalls": 4,
+     "materials": 4,
+     "bones": 82,
+     "textures": 2,
+     "bytes": 2565382
+    }
+   },
+   "packageHash": "036e005823ac93c0bbb254d414f6a2396de4126bd9b6451c3123cd9106c7c082"
+  },
+  {
+   "dir": "public/authored-assets/body.hero-standard/v1",
+   "ok": true,
+   "errors": [],
+   "warnings": [],
+   "id": "body.hero-standard",
+   "version": 1,
+   "kind": "humanoid-body",
+   "budgets": {
+    "profile": "desktop",
+    "measured": {
+     "triangles": 14318,
+     "drawCalls": 3,
+     "materials": 3,
+     "bones": 65,
+     "textures": 1,
+     "bytes": 1984416
+    },
+    "limits": {
+     "triangles": 18825,
+     "drawCalls": 4,
+     "materials": 4,
+     "bones": 82,
+     "textures": 2,
+     "bytes": 2565382
+    }
+   },
+   "packageHash": "0f7899ae3d4e20d21b149e72a202469c0245bb71ffcf1110a171990559134ad4"
+  },
+  {
+   "dir": "public/authored-assets/equipment.carbine/v1",
+   "ok": true,
+   "errors": [],
+   "warnings": [],
+   "id": "equipment.carbine",
+   "version": 1,
+   "kind": "equipment",
+   "budgets": {
+    "profile": "desktop",
+    "measured": {
+     "triangles": 160,
+     "drawCalls": 3,
+     "materials": 3,
+     "bones": 0,
+     "textures": 0,
+     "bytes": 13968
+    },
+    "limits": {
+     "triangles": 5320,
+     "drawCalls": 8,
+     "materials": 4,
+     "bones": 1,
+     "textures": 1,
+     "bytes": 427570
+    }
+   },
+   "packageHash": "44f7bb25999db13e5d814e64b08027f022cfc069a62dc02f111768f642e7bc82"
+  },
+  {
+   "dir": "public/authored-assets/equipment.sidearm/v1",
+   "ok": true,
+   "errors": [],
+   "warnings": [],
+   "id": "equipment.sidearm",
+   "version": 1,
+   "kind": "equipment",
+   "budgets": {
+    "profile": "desktop",
+    "measured": {
+     "triangles": 116,
+     "drawCalls": 2,
+     "materials": 2,
+     "bones": 0,
+     "textures": 0,
+     "bytes": 10068
+    },
+    "limits": {
+     "triangles": 5320,
+     "drawCalls": 8,
+     "materials": 4,
+     "bones": 1,
+     "textures": 1,
+     "bytes": 427570
+    }
+   },
+   "packageHash": "d83d05c4447ea2af0ac146d033c3ce1350b0d1371e33e49868fca349fdd080e5"
+  },
+  {
    "dir": "public/authored-assets/motion.hero-ual2/v1",
    "ok": true,
    "errors": [],
@@ -59,6 +233,35 @@
     }
    },
    "packageHash": "226f2c888dbc77656e006ae653a1b2e1489e59a070b5d2e63c473ef453344a47"
+  },
+  {
+   "dir": "public/authored-assets/prop.ammo-crate/v1",
+   "ok": true,
+   "errors": [],
+   "warnings": [],
+   "id": "prop.ammo-crate",
+   "version": 1,
+   "kind": "prop",
+   "budgets": {
+    "profile": "desktop",
+    "measured": {
+     "triangles": 532,
+     "drawCalls": 4,
+     "materials": 4,
+     "bones": 0,
+     "textures": 0,
+     "bytes": 27800
+    },
+    "limits": {
+     "triangles": 67793,
+     "drawCalls": 32,
+     "materials": 9,
+     "bones": 1,
+     "textures": 4,
+     "bytes": 3170030
+    }
+   },
+   "packageHash": "a7e88c63ccdc5a80091eb87b3cbbf31338df8d64b179f8450b73c7133e6a5d8a"
   }
  ],
  "fixtures": [

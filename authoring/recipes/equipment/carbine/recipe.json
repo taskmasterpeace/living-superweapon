@@ -1,0 +1,30 @@
+{
+ "id": "equipment.carbine",
+ "kind": "equipment",
+ "adapter": "procedural-prop",
+ "displayName": "Field carbine",
+ "tags": [
+  "equipment",
+  "firearm",
+  "rifle",
+  "two-handed",
+  "procedural"
+ ],
+ "model": "model.js",
+ "sources": [
+  "authoring/recipes/equipment/carbine/model.js"
+ ],
+ "equipment": {
+  "class": "firearm",
+  "twoHanded": true,
+  "hand": "right"
+ },
+ "provenance": {
+  "author": "PowerWorld authoring (procedural, img2threejs method)",
+  "license": "Proprietary-Internal",
+  "redistribution": "internal",
+  "revision": "6e60b5e22419464b4853e01ddb6c0e6f6659a733",
+  "terms": "Committed procedural factory reviewed as build-time source. No reference photo was traced; the silhouette follows the engine's existing rifle proportions so it fits the production hand socket.",
+  "attribution": "Method: img2threejs (Apache-2.0) at the recorded revision; no img2threejs code ships in the package."
+ }
+}

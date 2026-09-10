@@ -3,6 +3,8 @@
 // conversion). Adapters are versioned; bumping a version changes every cache key it touches.
 // Each adapter exports {name, version, kinds, build({recipe, recipeDir, sources, options, log})}.
 import quaterniusUal from './quaternius-ual.js';
+import proceduralProp from './procedural-prop.js';
+import humanoidBody from './humanoid-body.js';
 
 export const ADAPTERS={};
 export function registerAdapter(adapter){
@@ -11,3 +13,5 @@ export function registerAdapter(adapter){
  ADAPTERS[adapter.name]=adapter;return adapter;
 }
 registerAdapter(quaterniusUal);
+registerAdapter(proceduralProp);
+registerAdapter(humanoidBody);

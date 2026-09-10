@@ -24,7 +24,7 @@ async function loadCatalog(){
  await loadFixtures();
  const res=await fetch('/authored-assets/catalog.json',{cache:'no-store'});
  if(!res.ok){state.catalog={packages:[],ok:false,missing:true};$('#catalog-state').textContent='no catalog: run node authoring/bin/authoring.js build';$('#list').innerHTML='<li class="empty">No packages built yet.</li>';return;}
- state.catalog=await res.json();
+ state.catalog=await res.json();stage.catalog=state.catalog;
  $('#catalog-state').textContent=`${state.catalog.packages.length} packages · catalog ${state.catalog.ok?'valid':'HAS FAILURES'}`;
  renderKinds();renderList();
  const hash=location.hash.slice(1);

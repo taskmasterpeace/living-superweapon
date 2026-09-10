@@ -1,0 +1,178 @@
+{
+ "format": "pw-asset-package",
+ "formatVersion": 1,
+ "id": "prop.ammo-crate",
+ "version": 1,
+ "kind": "prop",
+ "displayName": "Ammunition crate",
+ "tags": [
+  "prop",
+  "field",
+  "cover",
+  "procedural"
+ ],
+ "rig": {
+  "skeleton": "none"
+ },
+ "sockets": [
+  {
+   "name": "carry-left",
+   "parent": "ammo-crate",
+   "position": [
+    -2.47,
+    0.84,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "carry-right",
+   "parent": "ammo-crate",
+   "position": [
+    2.47,
+    0.84,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "lid",
+   "parent": "ammo-crate",
+   "position": [
+    0,
+    2,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  }
+ ],
+ "bounds": {
+  "min": [
+   -2.5306217670440674,
+   0,
+   -1.2999999523162842
+  ],
+  "max": [
+   2.5306217670440674,
+   2.0299999713897705,
+   1.25
+  ]
+ },
+ "materials": [
+  {
+   "name": "olive-steel"
+  },
+  {
+   "name": "worn-steel"
+  },
+  {
+   "name": "rope"
+  },
+  {
+   "name": "stencil"
+  }
+ ],
+ "lods": [
+  {
+   "level": 0,
+   "output": "model.glb",
+   "triangles": 532
+  }
+ ],
+ "units": {
+  "lengthUnit": "game-unit",
+  "metersPerUnit": 0.19,
+  "up": "+Y",
+  "forward": "+Z",
+  "handedness": "right",
+  "sourceConversion": {
+   "scale": 1,
+   "yawDegrees": 0,
+   "mirrorX": false,
+   "sourceUp": "+Y",
+   "sourceForward": "+Z",
+   "note": "authored directly in game units along the engine weapon axis (-Y toward the muzzle)"
+  }
+ },
+ "budgets": {
+  "profile": "desktop",
+  "measured": {
+   "triangles": 532,
+   "drawCalls": 4,
+   "materials": 4,
+   "bones": 0,
+   "textures": 0,
+   "bytes": 27800
+  },
+  "limits": {
+   "triangles": 67793,
+   "drawCalls": 32,
+   "materials": 9,
+   "bones": 1,
+   "textures": 4,
+   "bytes": 3170030
+  }
+ },
+ "structural": {
+  "validator": "2.0.0-dev.3.10",
+  "errors": 0,
+  "warnings": 0
+ },
+ "provenance": {
+  "author": "PowerWorld authoring (procedural, img2threejs method)",
+  "license": "Proprietary-Internal",
+  "redistribution": "internal",
+  "revision": "6e60b5e22419464b4853e01ddb6c0e6f6659a733",
+  "terms": "Committed procedural factory reviewed as build-time source. Authored from the generic field-crate brief, not traced from a photograph.",
+  "attribution": "Method: img2threejs (Apache-2.0) at the recorded revision; no img2threejs code ships in the package."
+ },
+ "source": {
+  "adapter": "procedural-prop@1",
+  "files": [
+   {
+    "path": "authoring/recipes/props/ammo-crate/model.js",
+    "sha256": "26915bd2cc71f8a0f78c680819059916dbeb6c90f27d29a1ea2073344b136d79"
+   }
+  ],
+  "recipe": {
+   "path": "authoring/recipes/props/ammo-crate/recipe.json",
+   "sha256": "cf5500c2566133df285a2c9a758f5294b1cb220a3d9d58501d8a42f65c7369fc"
+  }
+ },
+ "tool": {
+  "name": "powerworld-authoring",
+  "version": "0.1.0",
+  "three": "0.169.0",
+  "adapterVersion": 1
+ },
+ "build": {
+  "options": {},
+  "cacheKey": "450ccca08196287ef09ef7db2abe7467e02f2fa789c7a09020488f569c9ce917",
+  "contentHash": "6c1812dfd01469637b2244c405b3ffa6d4266b1a5894bb79d6e98b41606201d0",
+  "profile": "desktop"
+ },
+ "outputs": [
+  {
+   "path": "model.glb",
+   "role": "glb",
+   "sha256": "b6842c60e10f359cfd657c00c4432b62a044531500c80f14def56ce6212f6081",
+   "bytes": 27800
+  }
+ ],
+ "packageHash": "a7e88c63ccdc5a80091eb87b3cbbf31338df8d64b179f8450b73c7133e6a5d8a"
+}

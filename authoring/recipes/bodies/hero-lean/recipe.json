@@ -1,0 +1,19 @@
+{
+ "id": "body.hero-lean",
+ "kind": "humanoid-body",
+ "adapter": "humanoid-body",
+ "displayName": "Hero body - lean frame x0.8 (superhero female)",
+ "tags": ["humanoid", "body", "lean", "cc0-body"],
+ "hero": "sol",
+ "catalogBody": "superhero-female",
+ "frame": {"scale": 0.8, "bulk": 0.75, "broad": 0.85},
+ "sources": ["assets-src/quaternius/base-characters/PROVENANCE.md"],
+ "provenance": {
+  "author": "Quaternius (body) / PowerWorld authoring (proportions, sockets)",
+  "license": "CC0-1.0",
+  "redistribution": "free",
+  "url": "https://quaternius.com/packs/universalbasecharacters.html",
+  "revision": "0cc5dc351f4fffbe13a25381e73cb0a1aea67f47",
+  "terms": "Universal Base Characters, CC0 1.0. The third humanoid is one recipe file: a different catalog body under a lean frame."
+ }
+}

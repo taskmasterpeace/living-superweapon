@@ -1,0 +1,2805 @@
+{
+ "rows": [
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.3024000053405763,
+   "armL": {
+    "reach": 3.583000000000001,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "armR": {
+    "reach": 3.5840000000000005,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "pivotHeight": 5.152,
+   "skinned": true,
+   "skinId": "superhero-male",
+   "frameScale": 1.12,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "superhero-male",
+   "weapon": "equipment.carbine",
+   "mountedOn": "right",
+   "mounted": true,
+   "gripAtHand": 0,
+   "supportError": 2.4976370192603996,
+   "muzzleDot": 0.9983713344239767,
+   "muzzleWorld": [
+    1.9592,
+    1.3664000000000005,
+    0.2048
+   ],
+   "magazineWorld": [
+    1.9592,
+    4.401600000000001,
+    -0.6592
+   ],
+   "holsterWorld": [
+    0.504064,
+    7.616000000000001,
+    -1.604864
+   ],
+   "holsterPenetrates": false,
+   "holsterDepth": 0,
+   "holsterFrom": "sling.back",
+   "hiddenProceduralWeapons": 0,
+   "clip": "rest",
+   "frac": 0
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.02500000000000041,
+   "armL": {
+    "reach": 3.583000000000001,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "armR": {
+    "reach": 3.126232618507555,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "pivotHeight": 5.152,
+   "skinned": true,
+   "skinId": "superhero-male",
+   "frameScale": 1.12,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "superhero-male",
+   "weapon": "equipment.carbine",
+   "mountedOn": "right",
+   "mounted": true,
+   "gripAtHand": 0,
+   "supportError": 0.8803842681343008,
+   "muzzleDot": 0.9983713344239764,
+   "muzzleWorld": [
+    -2.6857336175949875,
+    8.612505025603229,
+    5.164646828827708
+   ],
+   "magazineWorld": [
+    -0.13376451853501636,
+    7.212991170563546,
+    3.9449133632726237
+   ],
+   "holsterWorld": [
+    0.8929843374294208,
+    7.239232000553903,
+    -1.3051737722351353
+   ],
+   "holsterPenetrates": false,
+   "holsterDepth": 0,
+   "holsterFrom": "sling.back",
+   "hiddenProceduralWeapons": 0,
+   "clip": "aim-neutral",
+   "frac": 1
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.025000000000000133,
+   "armL": {
+    "reach": 3.583000000000001,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "armR": {
+    "reach": 3.0380711048370324,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "pivotHeight": 5.152,
+   "skinned": true,
+   "skinId": "superhero-male",
+   "frameScale": 1.12,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "superhero-male",
+   "weapon": "equipment.carbine",
+   "mountedOn": "right",
+   "mounted": true,
+   "gripAtHand": 0,
+   "supportError": 0.8062587512631929,
+   "muzzleDot": 0.9983713344239766,
+   "muzzleWorld": [
+    -2.7709143412646755,
+    8.453013492565294,
+    4.951911256391696
+   ],
+   "magazineWorld": [
+    -0.09787709198807315,
+    7.14485914803745,
+    3.901892630427037
+   ],
+   "holsterWorld": [
+    0.8964194551814759,
+    7.25013132155265,
+    -1.2814312307987898
+   ],
+   "holsterPenetrates": false,
+   "holsterDepth": 0,
+   "holsterFrom": "sling.back",
+   "hiddenProceduralWeapons": 0,
+   "clip": "pistol-idle",
+   "frac": 0.5
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.024999999999999856,
+   "armL": {
+    "reach": 3.583000000000001,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "armR": {
+    "reach": 2.815461754560608,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "pivotHeight": 5.152,
+   "skinned": true,
+   "skinId": "superhero-male",
+   "frameScale": 1.12,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "superhero-male",
+   "weapon": "equipment.carbine",
+   "mountedOn": "right",
+   "mounted": true,
+   "gripAtHand": 0,
+   "supportError": 0.2536091444603583,
+   "muzzleDot": 0.9983713344239767,
+   "muzzleWorld": [
+    -4.032290391793292,
+    9.887727803132472,
+    2.550238360140615
+   ],
+   "magazineWorld": [
+    -1.6830410446368627,
+    7.859724666461638,
+    3.1222224705303647
+   ],
+   "holsterWorld": [
+    1.3618271357783165,
+    7.22613622835807,
+    -0.8464834503451966
+   ],
+   "holsterPenetrates": false,
+   "holsterDepth": 0,
+   "holsterFrom": "sling.back",
+   "hiddenProceduralWeapons": 0,
+   "clip": "reload",
+   "frac": 0.55
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.02790259200000017,
+   "armL": {
+    "reach": 3.583000000000001,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "armR": {
+    "reach": 3.400531015011127,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "pivotHeight": 5.152,
+   "skinned": true,
+   "skinId": "superhero-male",
+   "frameScale": 1.12,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "superhero-male",
+   "weapon": "equipment.carbine",
+   "mountedOn": "right",
+   "mounted": true,
+   "gripAtHand": 0,
+   "supportError": 3.0510129422626466,
+   "muzzleDot": 0.9983713344239765,
+   "muzzleWorld": [
+    3.21008296746169,
+    2.2175496355453768,
+    3.4016530978814536
+   ],
+   "magazineWorld": [
+    3.0984255411808737,
+    4.399399274659562,
+    1.1243740610803739
+   ],
+   "holsterWorld": [
+    0.5570901354432372,
+    7.6369167419737805,
+    -1.2047971618059612
+   ],
+   "holsterPenetrates": false,
+   "holsterDepth": 0,
+   "holsterFrom": "sling.back",
+   "hiddenProceduralWeapons": 0,
+   "clip": "walk",
+   "frac": 0.35
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.030647712000000438,
+   "armL": {
+    "reach": 3.583000000000001,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "armR": {
+    "reach": 3.1621138739537225,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "pivotHeight": 5.152,
+   "skinned": true,
+   "skinId": "superhero-male",
+   "frameScale": 1.12,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "superhero-male",
+   "weapon": "equipment.carbine",
+   "mountedOn": "right",
+   "mounted": true,
+   "gripAtHand": 0,
+   "supportError": 2.1510638833099702,
+   "muzzleDot": 0.9983713344239766,
+   "muzzleWorld": [
+    0.7233607436457077,
+    5.379381708895773,
+    4.69735399902787
+   ],
+   "magazineWorld": [
+    2.4438660824325873,
+    5.743729149510651,
+    2.077039635879197
+   ],
+   "holsterWorld": [
+    0.5339016386393342,
+    6.6786681935041905,
+    -2.317105192393954
+   ],
+   "holsterPenetrates": false,
+   "holsterDepth": 0,
+   "holsterFrom": "sling.back",
+   "hiddenProceduralWeapons": 0,
+   "clip": "walk-carry",
+   "frac": 0.35
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.02499999999999969,
+   "armL": {
+    "reach": 3.583000000000001,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "armR": {
+    "reach": 3.281549382436568,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "pivotHeight": 5.152,
+   "skinned": true,
+   "skinId": "superhero-male",
+   "frameScale": 1.12,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "superhero-male",
+   "weapon": "equipment.carbine",
+   "mountedOn": "right",
+   "mounted": true,
+   "gripAtHand": 0,
+   "supportError": 3.3794744149495144,
+   "muzzleDot": 0.9983713344239767,
+   "muzzleWorld": [
+    4.05845460906481,
+    -0.7705541722455886,
+    0.04843487963280094
+   ],
+   "magazineWorld": [
+    3.8399613952930407,
+    2.338389960215512,
+    -0.4472082750373534
+   ],
+   "holsterWorld": [
+    0.8710966483666475,
+    5.607250164136956,
+    -0.20556526760033833
+   ],
+   "holsterPenetrates": false,
+   "holsterDepth": 0,
+   "holsterFrom": "sling.back",
+   "hiddenProceduralWeapons": 0,
+   "clip": "crouch-idle",
+   "frac": 0.5
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.3024000053405763,
+   "armL": {
+    "reach": 3.583000000000001,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "armR": {
+    "reach": 3.5840000000000005,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "pivotHeight": 5.152,
+   "skinned": true,
+   "skinId": "superhero-female",
+   "frameScale": 1.12,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "superhero-female",
+   "weapon": "equipment.carbine",
+   "mountedOn": "right",
+   "mounted": true,
+   "gripAtHand": 0,
+   "supportError": 2.4976370192603996,
+   "muzzleDot": 0.9983713344239767,
+   "muzzleWorld": [
+    1.9592,
+    1.3664000000000005,
+    0.2048
+   ],
+   "magazineWorld": [
+    1.9592,
+    4.401600000000001,
+    -0.6592
+   ],
+   "holsterWorld": [
+    0.504064,
+    7.616000000000001,
+    -1.604864
+   ],
+   "holsterPenetrates": false,
+   "holsterDepth": 0,
+   "holsterFrom": "sling.back",
+   "hiddenProceduralWeapons": 0,
+   "clip": "rest",
+   "frac": 0
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.02500000000000041,
+   "armL": {
+    "reach": 3.583000000000001,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "armR": {
+    "reach": 3.126232618507555,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "pivotHeight": 5.152,
+   "skinned": true,
+   "skinId": "superhero-female",
+   "frameScale": 1.12,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "superhero-female",
+   "weapon": "equipment.carbine",
+   "mountedOn": "right",
+   "mounted": true,
+   "gripAtHand": 0,
+   "supportError": 0.8803842681343008,
+   "muzzleDot": 0.9983713344239764,
+   "muzzleWorld": [
+    -2.6857336175949875,
+    8.612505025603229,
+    5.164646828827708
+   ],
+   "magazineWorld": [
+    -0.13376451853501636,
+    7.212991170563546,
+    3.9449133632726237
+   ],
+   "holsterWorld": [
+    0.8929843374294208,
+    7.239232000553903,
+    -1.3051737722351353
+   ],
+   "holsterPenetrates": false,
+   "holsterDepth": 0,
+   "holsterFrom": "sling.back",
+   "hiddenProceduralWeapons": 0,
+   "clip": "aim-neutral",
+   "frac": 1
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.025000000000000133,
+   "armL": {
+    "reach": 3.583000000000001,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "armR": {
+    "reach": 3.0380711048370324,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "pivotHeight": 5.152,
+   "skinned": true,
+   "skinId": "superhero-female",
+   "frameScale": 1.12,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "superhero-female",
+   "weapon": "equipment.carbine",
+   "mountedOn": "right",
+   "mounted": true,
+   "gripAtHand": 0,
+   "supportError": 0.8062587512631929,
+   "muzzleDot": 0.9983713344239766,
+   "muzzleWorld": [
+    -2.7709143412646755,
+    8.453013492565294,
+    4.951911256391696
+   ],
+   "magazineWorld": [
+    -0.09787709198807315,
+    7.14485914803745,
+    3.901892630427037
+   ],
+   "holsterWorld": [
+    0.8964194551814759,
+    7.25013132155265,
+    -1.2814312307987898
+   ],
+   "holsterPenetrates": false,
+   "holsterDepth": 0,
+   "holsterFrom": "sling.back",
+   "hiddenProceduralWeapons": 0,
+   "clip": "pistol-idle",
+   "frac": 0.5
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.024999999999999856,
+   "armL": {
+    "reach": 3.583000000000001,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "armR": {
+    "reach": 2.815461754560608,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "pivotHeight": 5.152,
+   "skinned": true,
+   "skinId": "superhero-female",
+   "frameScale": 1.12,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "superhero-female",
+   "weapon": "equipment.carbine",
+   "mountedOn": "right",
+   "mounted": true,
+   "gripAtHand": 0,
+   "supportError": 0.2536091444603583,
+   "muzzleDot": 0.9983713344239767,
+   "muzzleWorld": [
+    -4.032290391793292,
+    9.887727803132472,
+    2.550238360140615
+   ],
+   "magazineWorld": [
+    -1.6830410446368627,
+    7.859724666461638,
+    3.1222224705303647
+   ],
+   "holsterWorld": [
+    1.3618271357783165,
+    7.22613622835807,
+    -0.8464834503451966
+   ],
+   "holsterPenetrates": false,
+   "holsterDepth": 0,
+   "holsterFrom": "sling.back",
+   "hiddenProceduralWeapons": 0,
+   "clip": "reload",
+   "frac": 0.55
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.02790259200000017,
+   "armL": {
+    "reach": 3.583000000000001,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "armR": {
+    "reach": 3.400531015011127,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "pivotHeight": 5.152,
+   "skinned": true,
+   "skinId": "superhero-female",
+   "frameScale": 1.12,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "superhero-female",
+   "weapon": "equipment.carbine",
+   "mountedOn": "right",
+   "mounted": true,
+   "gripAtHand": 0,
+   "supportError": 3.0510129422626466,
+   "muzzleDot": 0.9983713344239765,
+   "muzzleWorld": [
+    3.21008296746169,
+    2.2175496355453768,
+    3.4016530978814536
+   ],
+   "magazineWorld": [
+    3.0984255411808737,
+    4.399399274659562,
+    1.1243740610803739
+   ],
+   "holsterWorld": [
+    0.5570901354432372,
+    7.6369167419737805,
+    -1.2047971618059612
+   ],
+   "holsterPenetrates": false,
+   "holsterDepth": 0,
+   "holsterFrom": "sling.back",
+   "hiddenProceduralWeapons": 0,
+   "clip": "walk",
+   "frac": 0.35
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.030647712000000438,
+   "armL": {
+    "reach": 3.583000000000001,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "armR": {
+    "reach": 3.1621138739537225,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "pivotHeight": 5.152,
+   "skinned": true,
+   "skinId": "superhero-female",
+   "frameScale": 1.12,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "superhero-female",
+   "weapon": "equipment.carbine",
+   "mountedOn": "right",
+   "mounted": true,
+   "gripAtHand": 0,
+   "supportError": 2.1510638833099702,
+   "muzzleDot": 0.9983713344239766,
+   "muzzleWorld": [
+    0.7233607436457077,
+    5.379381708895773,
+    4.69735399902787
+   ],
+   "magazineWorld": [
+    2.4438660824325873,
+    5.743729149510651,
+    2.077039635879197
+   ],
+   "holsterWorld": [
+    0.5339016386393342,
+    6.6786681935041905,
+    -2.317105192393954
+   ],
+   "holsterPenetrates": false,
+   "holsterDepth": 0,
+   "holsterFrom": "sling.back",
+   "hiddenProceduralWeapons": 0,
+   "clip": "walk-carry",
+   "frac": 0.35
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.02499999999999969,
+   "armL": {
+    "reach": 3.583000000000001,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "armR": {
+    "reach": 3.281549382436568,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "pivotHeight": 5.152,
+   "skinned": true,
+   "skinId": "superhero-female",
+   "frameScale": 1.12,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "superhero-female",
+   "weapon": "equipment.carbine",
+   "mountedOn": "right",
+   "mounted": true,
+   "gripAtHand": 0,
+   "supportError": 3.3794744149495144,
+   "muzzleDot": 0.9983713344239767,
+   "muzzleWorld": [
+    4.05845460906481,
+    -0.7705541722455886,
+    0.04843487963280094
+   ],
+   "magazineWorld": [
+    3.8399613952930407,
+    2.338389960215512,
+    -0.4472082750373534
+   ],
+   "holsterWorld": [
+    0.8710966483666475,
+    5.607250164136956,
+    -0.20556526760033833
+   ],
+   "holsterPenetrates": false,
+   "holsterDepth": 0,
+   "holsterFrom": "sling.back",
+   "hiddenProceduralWeapons": 0,
+   "clip": "crouch-idle",
+   "frac": 0.5
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.21600000381469747,
+   "armL": {
+    "reach": 2.5590000000000006,
+    "max": 2.5600000000000005,
+    "min": 0.07999999999999985
+   },
+   "armR": {
+    "reach": 2.5600000000000005,
+    "max": 2.5600000000000005,
+    "min": 0.07999999999999985
+   },
+   "pivotHeight": 3.6799999999999997,
+   "skinned": true,
+   "skinId": "superhero-female",
+   "frameScale": 0.8,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "lean",
+   "weapon": "equipment.carbine",
+   "mountedOn": "right",
+   "mounted": true,
+   "gripAtHand": 0,
+   "supportError": 1.7121381387166577,
+   "muzzleDot": 0.9989031743698379,
+   "muzzleWorld": [
+    1.343,
+    0.9759999999999991,
+    0.12
+   ],
+   "magazineWorld": [
+    1.343,
+    3.1439999999999997,
+    -0.38625
+   ],
+   "holsterWorld": [
+    0.36,
+    5.44,
+    -1.0194
+   ],
+   "holsterPenetrates": false,
+   "holsterDepth": 0,
+   "holsterFrom": "sling.back",
+   "hiddenProceduralWeapons": 0,
+   "clip": "rest",
+   "frac": 0
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.024999999999999967,
+   "armL": {
+    "reach": 2.5590000000000006,
+    "max": 2.5600000000000005,
+    "min": 0.07999999999999985
+   },
+   "armR": {
+    "reach": 2.2330232989339684,
+    "max": 2.5600000000000005,
+    "min": 0.07999999999999985
+   },
+   "pivotHeight": 3.6799999999999997,
+   "skinned": true,
+   "skinId": "superhero-female",
+   "frameScale": 0.8,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "lean",
+   "weapon": "equipment.carbine",
+   "mountedOn": "right",
+   "mounted": true,
+   "gripAtHand": 0,
+   "supportError": 0.5600277250254364,
+   "muzzleDot": 0.998903174369838,
+   "muzzleWorld": [
+    -1.9668643108991057,
+    6.144961144268411,
+    3.6907838688659975
+   ],
+   "magazineWorld": [
+    -0.1693371639480043,
+    5.2280594178960325,
+    2.7501987091653
+   ],
+   "holsterWorld": [
+    0.6047561792221602,
+    5.177558076871292,
+    -0.8098570735548419
+   ],
+   "holsterPenetrates": false,
+   "holsterDepth": 0,
+   "holsterFrom": "sling.back",
+   "hiddenProceduralWeapons": 0,
+   "clip": "aim-neutral",
+   "frac": 1
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.0249999999999998,
+   "armL": {
+    "reach": 2.5590000000000006,
+    "max": 2.5600000000000005,
+    "min": 0.07999999999999985
+   },
+   "armR": {
+    "reach": 2.1700507891693084,
+    "max": 2.5600000000000005,
+    "min": 0.07999999999999985
+   },
+   "pivotHeight": 3.6799999999999997,
+   "skinned": true,
+   "skinId": "superhero-female",
+   "frameScale": 0.8,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "lean",
+   "weapon": "equipment.carbine",
+   "mountedOn": "right",
+   "mounted": true,
+   "gripAtHand": 0,
+   "supportError": 0.5045385933426367,
+   "muzzleDot": 0.9989031743698382,
+   "muzzleWorld": [
+    -2.027299709313679,
+    6.032006192143665,
+    3.5394311814881423
+   ],
+   "magazineWorld": [
+    -0.1444816213044504,
+    5.175985328492059,
+    2.7155759812506064
+   ],
+   "holsterWorld": [
+    0.6061802928148774,
+    5.184466913389352,
+    -0.7932251214134447
+   ],
+   "holsterPenetrates": false,
+   "holsterDepth": 0,
+   "holsterFrom": "sling.back",
+   "hiddenProceduralWeapons": 0,
+   "clip": "pistol-idle",
+   "frac": 0.5
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.02499999999999991,
+   "armL": {
+    "reach": 2.5590000000000006,
+    "max": 2.5600000000000005,
+    "min": 0.07999999999999985
+   },
+   "armR": {
+    "reach": 2.011044110400434,
+    "max": 2.5600000000000005,
+    "min": 0.07999999999999985
+   },
+   "pivotHeight": 3.6799999999999997,
+   "skinned": true,
+   "skinId": "superhero-female",
+   "frameScale": 0.8,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "lean",
+   "weapon": "equipment.carbine",
+   "mountedOn": "right",
+   "mounted": true,
+   "gripAtHand": 0,
+   "supportError": 0.11204505116825578,
+   "muzzleDot": 0.998903174369838,
+   "muzzleWorld": [
+    -2.9336872270177254,
+    7.060598277525269,
+    1.805547030381424
+   ],
+   "magazineWorld": [
+    -1.2179472895972157,
+    5.680847610038261,
+    2.135755487585996
+   ],
+   "holsterWorld": [
+    0.8947780011041585,
+    5.169498218310888,
+    -0.5045896740714715
+   ],
+   "holsterPenetrates": false,
+   "holsterDepth": 0,
+   "holsterFrom": "sling.back",
+   "hiddenProceduralWeapons": 0,
+   "clip": "reload",
+   "frac": 0.55
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.0270732799999997,
+   "armL": {
+    "reach": 2.5590000000000006,
+    "max": 2.5600000000000005,
+    "min": 0.07999999999999985
+   },
+   "armR": {
+    "reach": 2.428950725007948,
+    "max": 2.5600000000000005,
+    "min": 0.07999999999999985
+   },
+   "pivotHeight": 3.6799999999999997,
+   "skinned": true,
+   "skinId": "superhero-female",
+   "frameScale": 0.8,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "lean",
+   "weapon": "equipment.carbine",
+   "mountedOn": "right",
+   "mounted": true,
+   "gripAtHand": 0,
+   "supportError": 2.0882628686460625,
+   "muzzleDot": 0.998903174369838,
+   "muzzleWorld": [
+    2.2467010282039626,
+    1.546116005069634,
+    2.4042171176052998
+   ],
+   "magazineWorld": [
+    2.124513566329454,
+    3.152829617749563,
+    0.8679701799388078
+   ],
+   "holsterWorld": [
+    0.3889606388213989,
+    5.411436396073297,
+    -0.7352205597124093
+   ],
+   "holsterPenetrates": false,
+   "holsterDepth": 0,
+   "holsterFrom": "sling.back",
+   "hiddenProceduralWeapons": 0,
+   "clip": "walk",
+   "frac": 0.35
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.02903407999999985,
+   "armL": {
+    "reach": 2.5590000000000006,
+    "max": 2.5600000000000005,
+    "min": 0.07999999999999985
+   },
+   "armR": {
+    "reach": 2.2586527671098016,
+    "max": 2.5600000000000005,
+    "min": 0.07999999999999985
+   },
+   "pivotHeight": 3.6799999999999997,
+   "skinned": true,
+   "skinId": "superhero-female",
+   "frameScale": 0.8,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "lean",
+   "weapon": "equipment.carbine",
+   "mountedOn": "right",
+   "mounted": true,
+   "gripAtHand": 0,
+   "supportError": 1.447091926005283,
+   "muzzleDot": 0.998903174369838,
+   "muzzleWorld": [
+    0.4805744336075609,
+    3.8103143824396173,
+    3.355581646973892
+   ],
+   "magazineWorld": [
+    1.624047026768661,
+    4.1405444587482,
+    1.4741110551519903
+   ],
+   "holsterWorld": [
+    0.3758340960799212,
+    4.798918545885147,
+    -1.5355273049535654
+   ],
+   "holsterPenetrates": false,
+   "holsterDepth": 0,
+   "holsterFrom": "sling.back",
+   "hiddenProceduralWeapons": 0,
+   "clip": "walk-carry",
+   "frac": 0.35
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.024999999999999578,
+   "armL": {
+    "reach": 2.5590000000000006,
+    "max": 2.5600000000000005,
+    "min": 0.07999999999999985
+   },
+   "armR": {
+    "reach": 2.3439638445975484,
+    "max": 2.5600000000000005,
+    "min": 0.07999999999999985
+   },
+   "pivotHeight": 3.6799999999999997,
+   "skinned": true,
+   "skinId": "superhero-female",
+   "frameScale": 0.8,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "lean",
+   "weapon": "equipment.carbine",
+   "mountedOn": "right",
+   "mounted": true,
+   "gripAtHand": 0,
+   "supportError": 2.314006019783248,
+   "muzzleDot": 0.998903174369838,
+   "muzzleWorld": [
+    2.854162766007933,
+    -0.6539338696322312,
+    0.010408516141249491
+   ],
+   "magazineWorld": [
+    2.65066380224343,
+    1.548296385024988,
+    -0.2450971388239046
+   ],
+   "holsterWorld": [
+    0.612836488430283,
+    3.829499179287055,
+    -0.035745399261263966
+   ],
+   "holsterPenetrates": false,
+   "holsterDepth": 0,
+   "holsterFrom": "sling.back",
+   "hiddenProceduralWeapons": 0,
+   "clip": "crouch-idle",
+   "frac": 0.5
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.3510000061988828,
+   "armL": {
+    "reach": 4.158999999999999,
+    "max": 4.16,
+    "min": 0.1299999999999999
+   },
+   "armR": {
+    "reach": 4.16,
+    "max": 4.16,
+    "min": 0.1299999999999999
+   },
+   "pivotHeight": 5.9799999999999995,
+   "skinned": true,
+   "skinId": "superhero-male",
+   "frameScale": 1.3,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "heavy",
+   "weapon": "equipment.carbine",
+   "mountedOn": "right",
+   "mounted": true,
+   "gripAtHand": 0,
+   "supportError": 2.7203754076950917,
+   "muzzleDot": 0.9984485145938474,
+   "muzzleWorld": [
+    2.1330000000000005,
+    1.5860000000000003,
+    0.23199999999999998
+   ],
+   "magazineWorld": [
+    2.1330000000000005,
+    5.109,
+    -0.74675
+   ],
+   "holsterWorld": [
+    0.58493,
+    8.84,
+    -1.835265
+   ],
+   "holsterPenetrates": false,
+   "holsterDepth": 0,
+   "holsterFrom": "sling.back",
+   "hiddenProceduralWeapons": 0,
+   "clip": "rest",
+   "frac": 0
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.02500000000000019,
+   "armL": {
+    "reach": 4.158999999999999,
+    "max": 4.16,
+    "min": 0.1299999999999999
+   },
+   "armR": {
+    "reach": 3.628662860767698,
+    "max": 4.16,
+    "min": 0.1299999999999999
+   },
+   "pivotHeight": 5.9799999999999995,
+   "skinned": true,
+   "skinId": "superhero-male",
+   "frameScale": 1.3,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "heavy",
+   "weapon": "equipment.carbine",
+   "mountedOn": "right",
+   "mounted": true,
+   "gripAtHand": 0,
+   "supportError": 0.8780463676227748,
+   "muzzleDot": 0.9984485145938474,
+   "muzzleWorld": [
+    -3.2522704424164743,
+    9.98645793292933,
+    5.961534338243949
+   ],
+   "magazineWorld": [
+    -0.29566517500267797,
+    8.380011562074786,
+    4.530696851745478
+   ],
+   "holsterWorld": [
+    1.029194814852599,
+    8.394483623005229,
+    -1.4884256846292043
+   ],
+   "holsterPenetrates": false,
+   "holsterDepth": 0,
+   "holsterFrom": "sling.back",
+   "hiddenProceduralWeapons": 0,
+   "clip": "aim-neutral",
+   "frac": 1
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.025000000000000244,
+   "armL": {
+    "reach": 4.158999999999999,
+    "max": 4.16,
+    "min": 0.1299999999999999
+   },
+   "armR": {
+    "reach": 3.5263325324001262,
+    "max": 4.16,
+    "min": 0.1299999999999999
+   },
+   "pivotHeight": 5.9799999999999995,
+   "skinned": true,
+   "skinId": "superhero-male",
+   "frameScale": 1.3,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "heavy",
+   "weapon": "equipment.carbine",
+   "mountedOn": "right",
+   "mounted": true,
+   "gripAtHand": 0,
+   "supportError": 0.7876868887278486,
+   "muzzleDot": 0.9984485145938475,
+   "muzzleWorld": [
+    -3.350762853883117,
+    9.801385107547722,
+    5.7136803153382
+   ],
+   "magazineWorld": [
+    -0.2538899482497453,
+    8.300029736440575,
+    4.4788561098329644
+   ],
+   "holsterWorld": [
+    1.0329590630604133,
+    8.406944419296156,
+    -1.4609393903031436
+   ],
+   "holsterPenetrates": false,
+   "holsterDepth": 0,
+   "holsterFrom": "sling.back",
+   "hiddenProceduralWeapons": 0,
+   "clip": "pistol-idle",
+   "frac": 0.5
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.0250000000000003,
+   "armL": {
+    "reach": 4.158999999999999,
+    "max": 4.16,
+    "min": 0.1299999999999999
+   },
+   "armR": {
+    "reach": 3.2679466794007053,
+    "max": 4.16,
+    "min": 0.1299999999999999
+   },
+   "pivotHeight": 5.9799999999999995,
+   "skinned": true,
+   "skinId": "superhero-male",
+   "frameScale": 1.3,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "heavy",
+   "weapon": "equipment.carbine",
+   "mountedOn": "right",
+   "mounted": true,
+   "gripAtHand": 0,
+   "supportError": 0.14893085042611187,
+   "muzzleDot": 0.9984485145938476,
+   "muzzleWorld": [
+    -4.793635967752813,
+    11.46880357511331,
+    2.8775754529223545
+   ],
+   "magazineWorld": [
+    -2.0586320181834687,
+    9.129832884985131,
+    3.524452619826086
+   ],
+   "holsterWorld": [
+    1.563682382771241,
+    8.379006500441923,
+    -0.9609151033854288
+   ],
+   "holsterPenetrates": false,
+   "holsterDepth": 0,
+   "holsterFrom": "sling.back",
+   "hiddenProceduralWeapons": 0,
+   "clip": "reload",
+   "frac": 0.55
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.02836907999999977,
+   "armL": {
+    "reach": 4.158999999999999,
+    "max": 4.16,
+    "min": 0.1299999999999999
+   },
+   "armR": {
+    "reach": 3.9470449281379154,
+    "max": 4.16,
+    "min": 0.1299999999999999
+   },
+   "pivotHeight": 5.9799999999999995,
+   "skinned": true,
+   "skinId": "superhero-male",
+   "frameScale": 1.3,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "heavy",
+   "weapon": "equipment.carbine",
+   "mountedOn": "right",
+   "mounted": true,
+   "gripAtHand": 0,
+   "supportError": 3.3276002999999363,
+   "muzzleDot": 0.9984485145938475,
+   "muzzleWorld": [
+    3.587492253877851,
+    2.5527269901788627,
+    3.9334113755930837
+   ],
+   "magazineWorld": [
+    3.4486655020467016,
+    5.095720075740393,
+    1.30978909670798
+   ],
+   "holsterWorld": [
+    0.6445454133883679,
+    8.8435916690622,
+    -1.3712546614553183
+   ],
+   "holsterPenetrates": false,
+   "holsterDepth": 0,
+   "holsterFrom": "sling.back",
+   "hiddenProceduralWeapons": 0,
+   "clip": "walk",
+   "frac": 0.35
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.031555380000000355,
+   "armL": {
+    "reach": 4.158999999999999,
+    "max": 4.16,
+    "min": 0.1299999999999999
+   },
+   "armR": {
+    "reach": 3.6703107465534277,
+    "max": 4.16,
+    "min": 0.1299999999999999
+   },
+   "pivotHeight": 5.9799999999999995,
+   "skinned": true,
+   "skinId": "superhero-male",
+   "frameScale": 1.3,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "heavy",
+   "weapon": "equipment.carbine",
+   "mountedOn": "right",
+   "mounted": true,
+   "gripAtHand": 0,
+   "supportError": 2.3035800179722035,
+   "muzzleDot": 0.9984485145938475,
+   "muzzleWorld": [
+    0.7030965048977915,
+    6.2215097383296705,
+    5.447795997355552
+   ],
+   "magazineWorld": [
+    2.6815334146913608,
+    6.659626475101928,
+    2.4042254492284845
+   ],
+   "holsterWorld": [
+    0.6183751671621341,
+    7.7465171486208515,
+    -2.663579330508406
+   ],
+   "holsterPenetrates": false,
+   "holsterDepth": 0,
+   "holsterFrom": "sling.back",
+   "hiddenProceduralWeapons": 0,
+   "clip": "walk-carry",
+   "frac": 0.35
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.02499999999999969,
+   "armL": {
+    "reach": 4.158999999999999,
+    "max": 4.16,
+    "min": 0.1299999999999999
+   },
+   "armR": {
+    "reach": 3.8089412474710156,
+    "max": 4.16,
+    "min": 0.1299999999999999
+   },
+   "pivotHeight": 5.9799999999999995,
+   "skinned": true,
+   "skinId": "superhero-male",
+   "frameScale": 1.3,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "heavy",
+   "weapon": "equipment.carbine",
+   "mountedOn": "right",
+   "mounted": true,
+   "gripAtHand": 0,
+   "supportError": 3.6887112835846425,
+   "muzzleDot": 0.9984485145938475,
+   "muzzleWorld": [
+    4.573208886577118,
+    -0.8920665526180249,
+    0.04905779501506563
+   ],
+   "magazineWorld": [
+    4.309289304520827,
+    2.7125197228797586,
+    -0.5048237800533303
+   ],
+   "holsterWorld": [
+    1.0089280823748674,
+    6.478951778013906,
+    -0.214516646778105
+   ],
+   "holsterPenetrates": false,
+   "holsterDepth": 0,
+   "holsterFrom": "sling.back",
+   "hiddenProceduralWeapons": 0,
+   "clip": "crouch-idle",
+   "frac": 0.5
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.3024000053405763,
+   "armL": {
+    "reach": 3.583000000000001,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "armR": {
+    "reach": 3.5840000000000005,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "pivotHeight": 5.152,
+   "skinned": true,
+   "skinId": "superhero-male",
+   "frameScale": 1.12,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "superhero-male",
+   "weapon": "equipment.sidearm",
+   "mountedOn": "right",
+   "mounted": true,
+   "gripAtHand": 0,
+   "supportError": 1.9204943953819003,
+   "muzzleDot": 0.9718501056887048,
+   "muzzleWorld": [
+    1.9592,
+    3.472000000000001,
+    0.35840000000000005
+   ],
+   "magazineWorld": [
+    1.9592,
+    5.320000000000001,
+    -0.0768
+   ],
+   "holsterWorld": [
+    1.9541606399999998,
+    4.536,
+    0.13443071999999998
+   ],
+   "holsterPenetrates": false,
+   "holsterDepth": 0,
+   "holsterFrom": "holster.hip",
+   "hiddenProceduralWeapons": 0,
+   "clip": "rest",
+   "frac": 0
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.02500000000000041,
+   "armL": {
+    "reach": 3.583000000000001,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "armR": {
+    "reach": 3.126232618507555,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "pivotHeight": 5.152,
+   "skinned": true,
+   "skinId": "superhero-male",
+   "frameScale": 1.12,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "superhero-male",
+   "weapon": "equipment.sidearm",
+   "mountedOn": "right",
+   "mounted": true,
+   "gripAtHand": 0,
+   "supportError": 0.6493354033304876,
+   "muzzleDot": 0.9718501056887048,
+   "muzzleWorld": [
+    -1.0872087238267303,
+    8.203517154164736,
+    3.847607951262054
+   ],
+   "magazineWorld": [
+    0.44583907008202117,
+    7.419210406886845,
+    3.0481516186422635
+   ],
+   "holsterWorld": [
+    1.8569474058521422,
+    4.109344199165092,
+    0.6387131209705158
+   ],
+   "holsterPenetrates": false,
+   "holsterDepth": 0.1111111111111111,
+   "holsterFrom": "holster.hip",
+   "hiddenProceduralWeapons": 0,
+   "clip": "aim-neutral",
+   "frac": 1
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.025000000000000133,
+   "armL": {
+    "reach": 3.583000000000001,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "armR": {
+    "reach": 3.0380711048370324,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "pivotHeight": 5.152,
+   "skinned": true,
+   "skinId": "superhero-male",
+   "frameScale": 1.12,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "superhero-male",
+   "weapon": "equipment.sidearm",
+   "mountedOn": "right",
+   "mounted": true,
+   "gripAtHand": 0,
+   "supportError": 0.6273713402451013,
+   "muzzleDot": 0.9718501056887046,
+   "muzzleWorld": [
+    -1.0964564372126786,
+    8.07769091295846,
+    3.722086875109934
+   ],
+   "magazineWorld": [
+    0.5093325246106643,
+    7.3454238727965695,
+    3.0222798788753593
+   ],
+   "holsterWorld": [
+    1.856947405852142,
+    4.109344199165089,
+    0.6387131209705161
+   ],
+   "holsterPenetrates": false,
+   "holsterDepth": 0.1111111111111111,
+   "holsterFrom": "holster.hip",
+   "hiddenProceduralWeapons": 0,
+   "clip": "pistol-idle",
+   "frac": 0.5
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.024999999999999856,
+   "armL": {
+    "reach": 3.583000000000001,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "armR": {
+    "reach": 2.815461754560608,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "pivotHeight": 5.152,
+   "skinned": true,
+   "skinId": "superhero-male",
+   "frameScale": 1.12,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "superhero-male",
+   "weapon": "equipment.sidearm",
+   "mountedOn": "right",
+   "mounted": true,
+   "gripAtHand": 0,
+   "supportError": 0.18171026784332692,
+   "muzzleDot": 0.9718501056887048,
+   "muzzleWorld": [
+    -2.1465320206623746,
+    8.948166485733335,
+    2.415019217424555
+   ],
+   "magazineWorld": [
+    -0.685286771555365,
+    7.769789340191654,
+    2.699083760842485
+   ],
+   "holsterWorld": [
+    1.8360020209531036,
+    4.116654192388651,
+    0.7021773940375431
+   ],
+   "holsterPenetrates": false,
+   "holsterDepth": 0.1111111111111111,
+   "holsterFrom": "holster.hip",
+   "hiddenProceduralWeapons": 0,
+   "clip": "reload",
+   "frac": 0.55
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.02790259200000017,
+   "armL": {
+    "reach": 3.583000000000001,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "armR": {
+    "reach": 3.400531015011127,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "pivotHeight": 5.152,
+   "skinned": true,
+   "skinId": "superhero-male",
+   "frameScale": 1.12,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "superhero-male",
+   "weapon": "equipment.sidearm",
+   "mountedOn": "right",
+   "mounted": true,
+   "gripAtHand": 0,
+   "supportError": 2.462509766974436,
+   "muzzleDot": 0.9718501056887048,
+   "muzzleWorld": [
+    2.8445021299813007,
+    4.0587798300402405,
+    2.4355442312688202
+   ],
+   "magazineWorld": [
+    2.74175525294476,
+    5.4267419086862585,
+    1.123055804407194
+   ],
+   "holsterWorld": [
+    1.9674131572882425,
+    4.398362651323022,
+    0.1564172101429088
+   ],
+   "holsterPenetrates": false,
+   "holsterDepth": 0,
+   "holsterFrom": "holster.hip",
+   "hiddenProceduralWeapons": 0,
+   "clip": "walk",
+   "frac": 0.35
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.030647712000000438,
+   "armL": {
+    "reach": 3.583000000000001,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "armR": {
+    "reach": 3.1621138739537225,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "pivotHeight": 5.152,
+   "skinned": true,
+   "skinId": "superhero-male",
+   "frameScale": 1.12,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "superhero-male",
+   "weapon": "equipment.sidearm",
+   "mountedOn": "right",
+   "mounted": true,
+   "gripAtHand": 0,
+   "supportError": 1.7926336081889092,
+   "muzzleDot": 0.9718501056887048,
+   "muzzleWorld": [
+    1.3366361140424057,
+    6.107327564545742,
+    2.8129091281688607
+   ],
+   "magazineWorld": [
+    2.3141612596503474,
+    6.386497093222851,
+    1.2094715696832257
+   ],
+   "holsterWorld": [
+    1.9646639020952632,
+    4.47236660275606,
+    0.43914418025191976
+   ],
+   "holsterPenetrates": false,
+   "holsterDepth": 0,
+   "holsterFrom": "holster.hip",
+   "hiddenProceduralWeapons": 0,
+   "clip": "walk-carry",
+   "frac": 0.35
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.02499999999999969,
+   "armL": {
+    "reach": 3.583000000000001,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "armR": {
+    "reach": 3.281549382436568,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "pivotHeight": 5.152,
+   "skinned": true,
+   "skinId": "superhero-male",
+   "frameScale": 1.12,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "superhero-male",
+   "weapon": "equipment.sidearm",
+   "mountedOn": "right",
+   "mounted": true,
+   "gripAtHand": 0,
+   "supportError": 2.775651701142626,
+   "muzzleDot": 0.9718501056887049,
+   "muzzleWorld": [
+    3.5848065870224537,
+    1.2609655826524242,
+    0.3735953887271271
+   ],
+   "magazineWorld": [
+    3.412915534701808,
+    3.1387543497776695,
+    0.15253916920287697
+   ],
+   "holsterWorld": [
+    1.7878149978306894,
+    1.7557385914339352,
+    0.09486791817000409
+   ],
+   "holsterPenetrates": false,
+   "holsterDepth": 0,
+   "holsterFrom": "holster.hip",
+   "hiddenProceduralWeapons": 0,
+   "clip": "crouch-idle",
+   "frac": 0.5
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.3024000053405763,
+   "armL": {
+    "reach": 3.583000000000001,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "armR": {
+    "reach": 3.5840000000000005,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "pivotHeight": 5.152,
+   "skinned": true,
+   "skinId": "superhero-female",
+   "frameScale": 1.12,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "superhero-female",
+   "weapon": "equipment.sidearm",
+   "mountedOn": "right",
+   "mounted": true,
+   "gripAtHand": 0,
+   "supportError": 1.9204943953819003,
+   "muzzleDot": 0.9718501056887048,
+   "muzzleWorld": [
+    1.9592,
+    3.472000000000001,
+    0.35840000000000005
+   ],
+   "magazineWorld": [
+    1.9592,
+    5.320000000000001,
+    -0.0768
+   ],
+   "holsterWorld": [
+    1.9541606399999998,
+    4.536,
+    0.13443071999999998
+   ],
+   "holsterPenetrates": false,
+   "holsterDepth": 0,
+   "holsterFrom": "holster.hip",
+   "hiddenProceduralWeapons": 0,
+   "clip": "rest",
+   "frac": 0
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.02500000000000041,
+   "armL": {
+    "reach": 3.583000000000001,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "armR": {
+    "reach": 3.126232618507555,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "pivotHeight": 5.152,
+   "skinned": true,
+   "skinId": "superhero-female",
+   "frameScale": 1.12,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "superhero-female",
+   "weapon": "equipment.sidearm",
+   "mountedOn": "right",
+   "mounted": true,
+   "gripAtHand": 0,
+   "supportError": 0.6493354033304876,
+   "muzzleDot": 0.9718501056887048,
+   "muzzleWorld": [
+    -1.0872087238267303,
+    8.203517154164736,
+    3.847607951262054
+   ],
+   "magazineWorld": [
+    0.44583907008202117,
+    7.419210406886845,
+    3.0481516186422635
+   ],
+   "holsterWorld": [
+    1.8569474058521422,
+    4.109344199165092,
+    0.6387131209705158
+   ],
+   "holsterPenetrates": false,
+   "holsterDepth": 0.1111111111111111,
+   "holsterFrom": "holster.hip",
+   "hiddenProceduralWeapons": 0,
+   "clip": "aim-neutral",
+   "frac": 1
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.025000000000000133,
+   "armL": {
+    "reach": 3.583000000000001,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "armR": {
+    "reach": 3.0380711048370324,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "pivotHeight": 5.152,
+   "skinned": true,
+   "skinId": "superhero-female",
+   "frameScale": 1.12,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "superhero-female",
+   "weapon": "equipment.sidearm",
+   "mountedOn": "right",
+   "mounted": true,
+   "gripAtHand": 0,
+   "supportError": 0.6273713402451013,
+   "muzzleDot": 0.9718501056887046,
+   "muzzleWorld": [
+    -1.0964564372126786,
+    8.07769091295846,
+    3.722086875109934
+   ],
+   "magazineWorld": [
+    0.5093325246106643,
+    7.3454238727965695,
+    3.0222798788753593
+   ],
+   "holsterWorld": [
+    1.856947405852142,
+    4.109344199165089,
+    0.6387131209705161
+   ],
+   "holsterPenetrates": false,
+   "holsterDepth": 0.1111111111111111,
+   "holsterFrom": "holster.hip",
+   "hiddenProceduralWeapons": 0,
+   "clip": "pistol-idle",
+   "frac": 0.5
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.024999999999999856,
+   "armL": {
+    "reach": 3.583000000000001,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "armR": {
+    "reach": 2.815461754560608,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "pivotHeight": 5.152,
+   "skinned": true,
+   "skinId": "superhero-female",
+   "frameScale": 1.12,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "superhero-female",
+   "weapon": "equipment.sidearm",
+   "mountedOn": "right",
+   "mounted": true,
+   "gripAtHand": 0,
+   "supportError": 0.18171026784332692,
+   "muzzleDot": 0.9718501056887048,
+   "muzzleWorld": [
+    -2.1465320206623746,
+    8.948166485733335,
+    2.415019217424555
+   ],
+   "magazineWorld": [
+    -0.685286771555365,
+    7.769789340191654,
+    2.699083760842485
+   ],
+   "holsterWorld": [
+    1.8360020209531036,
+    4.116654192388651,
+    0.7021773940375431
+   ],
+   "holsterPenetrates": false,
+   "holsterDepth": 0.1111111111111111,
+   "holsterFrom": "holster.hip",
+   "hiddenProceduralWeapons": 0,
+   "clip": "reload",
+   "frac": 0.55
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.02790259200000017,
+   "armL": {
+    "reach": 3.583000000000001,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "armR": {
+    "reach": 3.400531015011127,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "pivotHeight": 5.152,
+   "skinned": true,
+   "skinId": "superhero-female",
+   "frameScale": 1.12,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "superhero-female",
+   "weapon": "equipment.sidearm",
+   "mountedOn": "right",
+   "mounted": true,
+   "gripAtHand": 0,
+   "supportError": 2.462509766974436,
+   "muzzleDot": 0.9718501056887048,
+   "muzzleWorld": [
+    2.8445021299813007,
+    4.0587798300402405,
+    2.4355442312688202
+   ],
+   "magazineWorld": [
+    2.74175525294476,
+    5.4267419086862585,
+    1.123055804407194
+   ],
+   "holsterWorld": [
+    1.9674131572882425,
+    4.398362651323022,
+    0.1564172101429088
+   ],
+   "holsterPenetrates": false,
+   "holsterDepth": 0,
+   "holsterFrom": "holster.hip",
+   "hiddenProceduralWeapons": 0,
+   "clip": "walk",
+   "frac": 0.35
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.030647712000000438,
+   "armL": {
+    "reach": 3.583000000000001,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "armR": {
+    "reach": 3.1621138739537225,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "pivotHeight": 5.152,
+   "skinned": true,
+   "skinId": "superhero-female",
+   "frameScale": 1.12,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "superhero-female",
+   "weapon": "equipment.sidearm",
+   "mountedOn": "right",
+   "mounted": true,
+   "gripAtHand": 0,
+   "supportError": 1.7926336081889092,
+   "muzzleDot": 0.9718501056887048,
+   "muzzleWorld": [
+    1.3366361140424057,
+    6.107327564545742,
+    2.8129091281688607
+   ],
+   "magazineWorld": [
+    2.3141612596503474,
+    6.386497093222851,
+    1.2094715696832257
+   ],
+   "holsterWorld": [
+    1.9646639020952632,
+    4.47236660275606,
+    0.43914418025191976
+   ],
+   "holsterPenetrates": false,
+   "holsterDepth": 0,
+   "holsterFrom": "holster.hip",
+   "hiddenProceduralWeapons": 0,
+   "clip": "walk-carry",
+   "frac": 0.35
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.02499999999999969,
+   "armL": {
+    "reach": 3.583000000000001,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "armR": {
+    "reach": 3.281549382436568,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "pivotHeight": 5.152,
+   "skinned": true,
+   "skinId": "superhero-female",
+   "frameScale": 1.12,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "superhero-female",
+   "weapon": "equipment.sidearm",
+   "mountedOn": "right",
+   "mounted": true,
+   "gripAtHand": 0,
+   "supportError": 2.775651701142626,
+   "muzzleDot": 0.9718501056887049,
+   "muzzleWorld": [
+    3.5848065870224537,
+    1.2609655826524242,
+    0.3735953887271271
+   ],
+   "magazineWorld": [
+    3.412915534701808,
+    3.1387543497776695,
+    0.15253916920287697
+   ],
+   "holsterWorld": [
+    1.7878149978306894,
+    1.7557385914339352,
+    0.09486791817000409
+   ],
+   "holsterPenetrates": false,
+   "holsterDepth": 0,
+   "holsterFrom": "holster.hip",
+   "hiddenProceduralWeapons": 0,
+   "clip": "crouch-idle",
+   "frac": 0.5
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.21600000381469747,
+   "armL": {
+    "reach": 2.5590000000000006,
+    "max": 2.5600000000000005,
+    "min": 0.07999999999999985
+   },
+   "armR": {
+    "reach": 2.5600000000000005,
+    "max": 2.5600000000000005,
+    "min": 0.07999999999999985
+   },
+   "pivotHeight": 3.6799999999999997,
+   "skinned": true,
+   "skinId": "superhero-female",
+   "frameScale": 0.8,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "lean",
+   "weapon": "equipment.sidearm",
+   "mountedOn": "right",
+   "mounted": true,
+   "gripAtHand": 0,
+   "supportError": 1.29244158075908,
+   "muzzleDot": 0.9807944245237733,
+   "muzzleWorld": [
+    1.343,
+    2.4799999999999995,
+    0.21000000000000002
+   ],
+   "magazineWorld": [
+    1.343,
+    3.8,
+    -0.045
+   ],
+   "holsterWorld": [
+    1.523016,
+    3.2399999999999998,
+    0.09597599999999999
+   ],
+   "holsterPenetrates": false,
+   "holsterDepth": 0,
+   "holsterFrom": "holster.hip",
+   "hiddenProceduralWeapons": 0,
+   "clip": "rest",
+   "frac": 0
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.024999999999999967,
+   "armL": {
+    "reach": 2.5590000000000006,
+    "max": 2.5600000000000005,
+    "min": 0.07999999999999985
+   },
+   "armR": {
+    "reach": 2.2330232989339684,
+    "max": 2.5600000000000005,
+    "min": 0.07999999999999985
+   },
+   "pivotHeight": 3.6799999999999997,
+   "skinned": true,
+   "skinId": "superhero-female",
+   "frameScale": 0.8,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "lean",
+   "weapon": "equipment.sidearm",
+   "mountedOn": "right",
+   "mounted": true,
+   "gripAtHand": 0,
+   "supportError": 0.38534093156957183,
+   "muzzleDot": 0.9807944245237735,
+   "muzzleWorld": [
+    -0.8205616288959481,
+    5.83811565665446,
+    2.7623701636874687
+   ],
+   "magazineWorld": [
+    0.2617248146561594,
+    5.31957855035569,
+    2.1563996004629584
+   ],
+   "holsterWorld": [
+    1.450164774668695,
+    2.9476177214597237,
+    0.48549107197189756
+   ],
+   "holsterPenetrates": false,
+   "holsterDepth": 0,
+   "holsterFrom": "holster.hip",
+   "hiddenProceduralWeapons": 0,
+   "clip": "aim-neutral",
+   "frac": 1
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.0249999999999998,
+   "armL": {
+    "reach": 2.5590000000000006,
+    "max": 2.5600000000000005,
+    "min": 0.07999999999999985
+   },
+   "armR": {
+    "reach": 2.1700507891693084,
+    "max": 2.5600000000000005,
+    "min": 0.07999999999999985
+   },
+   "pivotHeight": 3.6799999999999997,
+   "skinned": true,
+   "skinId": "superhero-female",
+   "frameScale": 0.8,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "lean",
+   "weapon": "equipment.sidearm",
+   "mountedOn": "right",
+   "mounted": true,
+   "gripAtHand": 0,
+   "supportError": 0.36734550719250864,
+   "muzzleDot": 0.9807944245237736,
+   "muzzleWorld": [
+    -0.8265482634271819,
+    5.749985284752678,
+    2.674112643032014
+   ],
+   "magazineWorld": [
+    0.30709860892107715,
+    5.266415225421489,
+    2.1370560663723093
+   ],
+   "holsterWorld": [
+    1.4501647746686945,
+    2.947617721459723,
+    0.4854910719718979
+   ],
+   "holsterPenetrates": false,
+   "holsterDepth": 0,
+   "holsterFrom": "holster.hip",
+   "hiddenProceduralWeapons": 0,
+   "clip": "pistol-idle",
+   "frac": 0.5
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.02499999999999991,
+   "armL": {
+    "reach": 2.5590000000000006,
+    "max": 2.5600000000000005,
+    "min": 0.07999999999999985
+   },
+   "armR": {
+    "reach": 2.011044110400434,
+    "max": 2.5600000000000005,
+    "min": 0.07999999999999985
+   },
+   "pivotHeight": 3.6799999999999997,
+   "skinned": true,
+   "skinId": "superhero-female",
+   "frameScale": 0.8,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "lean",
+   "weapon": "equipment.sidearm",
+   "mountedOn": "right",
+   "mounted": true,
+   "gripAtHand": 0,
+   "supportError": 0.04892833836287705,
+   "muzzleDot": 0.9807944245237735,
+   "muzzleWorld": [
+    -1.5934200178267255,
+    6.377247850533626,
+    1.7228911056227592
+   ],
+   "magazineWorld": [
+    -0.5306814195979339,
+    5.570216290220011,
+    1.8863283489073774
+   ],
+   "holsterWorld": [
+    1.4341326777833259,
+    2.9539795568594625,
+    0.5350277961399932
+   ],
+   "holsterPenetrates": false,
+   "holsterDepth": 0,
+   "holsterFrom": "holster.hip",
+   "hiddenProceduralWeapons": 0,
+   "clip": "reload",
+   "frac": 0.55
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.0270732799999997,
+   "armL": {
+    "reach": 2.5590000000000006,
+    "max": 2.5600000000000005,
+    "min": 0.07999999999999985
+   },
+   "armR": {
+    "reach": 2.428950725007948,
+    "max": 2.5600000000000005,
+    "min": 0.07999999999999985
+   },
+   "pivotHeight": 3.6799999999999997,
+   "skinned": true,
+   "skinId": "superhero-female",
+   "frameScale": 0.8,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "lean",
+   "weapon": "equipment.sidearm",
+   "mountedOn": "right",
+   "mounted": true,
+   "gripAtHand": 0,
+   "supportError": 1.6652050882003733,
+   "muzzleDot": 0.9807944245237735,
+   "muzzleWorld": [
+    1.993115353221906,
+    2.8527027257548254,
+    1.6980716320479594
+   ],
+   "magazineWorld": [
+    1.898351491934654,
+    3.854121990752588,
+    0.8061051157003609
+   ],
+   "holsterWorld": [
+    1.532434421720716,
+    3.1192422444768235,
+    0.11310069512385769
+   ],
+   "holsterPenetrates": false,
+   "holsterDepth": 0,
+   "holsterFrom": "holster.hip",
+   "hiddenProceduralWeapons": 0,
+   "clip": "walk",
+   "frac": 0.35
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.02903407999999985,
+   "armL": {
+    "reach": 2.5590000000000006,
+    "max": 2.5600000000000005,
+    "min": 0.07999999999999985
+   },
+   "armR": {
+    "reach": 2.2586527671098016,
+    "max": 2.5600000000000005,
+    "min": 0.07999999999999985
+   },
+   "pivotHeight": 3.6799999999999997,
+   "skinned": true,
+   "skinId": "superhero-female",
+   "frameScale": 0.8,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "lean",
+   "weapon": "equipment.sidearm",
+   "mountedOn": "right",
+   "mounted": true,
+   "gripAtHand": 0,
+   "supportError": 1.187632349319077,
+   "muzzleDot": 0.9807944245237734,
+   "muzzleWorld": [
+    0.9338211214606111,
+    4.317834480447735,
+    2.0112949253002492
+   ],
+   "magazineWorld": [
+    1.5890069547331034,
+    4.5524914311047455,
+    0.8610372848616459
+   ],
+   "holsterWorld": [
+    1.5304892774310155,
+    3.1833674719221623,
+    0.31321595183877926
+   ],
+   "holsterPenetrates": false,
+   "holsterDepth": 0,
+   "holsterFrom": "holster.hip",
+   "hiddenProceduralWeapons": 0,
+   "clip": "walk-carry",
+   "frac": 0.35
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.024999999999999578,
+   "armL": {
+    "reach": 2.5590000000000006,
+    "max": 2.5600000000000005,
+    "min": 0.07999999999999985
+   },
+   "armR": {
+    "reach": 2.3439638445975484,
+    "max": 2.5600000000000005,
+    "min": 0.07999999999999985
+   },
+   "pivotHeight": 3.6799999999999997,
+   "skinned": true,
+   "skinId": "superhero-female",
+   "frameScale": 0.8,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "lean",
+   "weapon": "equipment.sidearm",
+   "mountedOn": "right",
+   "mounted": true,
+   "gripAtHand": 0,
+   "supportError": 1.8818559694144799,
+   "muzzleDot": 0.9807944245237732,
+   "muzzleWorld": [
+    2.5242751738187628,
+    0.8004306252556819,
+    0.22515043689510914
+   ],
+   "magazineWorld": [
+    2.377603983992374,
+    2.132417941646796,
+    0.11688063017084484
+   ],
+   "holsterWorld": [
+    1.4012901622870757,
+    1.1138036892637235,
+    0.07728738811000292
+   ],
+   "holsterPenetrates": false,
+   "holsterDepth": 0,
+   "holsterFrom": "holster.hip",
+   "hiddenProceduralWeapons": 0,
+   "clip": "crouch-idle",
+   "frac": 0.5
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.3510000061988828,
+   "armL": {
+    "reach": 4.158999999999999,
+    "max": 4.16,
+    "min": 0.1299999999999999
+   },
+   "armR": {
+    "reach": 4.16,
+    "max": 4.16,
+    "min": 0.1299999999999999
+   },
+   "pivotHeight": 5.9799999999999995,
+   "skinned": true,
+   "skinId": "superhero-male",
+   "frameScale": 1.3,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "heavy",
+   "weapon": "equipment.sidearm",
+   "mountedOn": "right",
+   "mounted": true,
+   "gripAtHand": 0,
+   "supportError": 2.031253407575494,
+   "muzzleDot": 0.9731338097997108,
+   "muzzleWorld": [
+    2.1330000000000005,
+    4.03,
+    0.406
+   ],
+   "magazineWorld": [
+    2.1330000000000005,
+    6.175000000000001,
+    -0.087
+   ],
+   "holsterWorld": [
+    2.1250272,
+    5.265,
+    0.1560432
+   ],
+   "holsterPenetrates": false,
+   "holsterDepth": 0,
+   "holsterFrom": "holster.hip",
+   "hiddenProceduralWeapons": 0,
+   "clip": "rest",
+   "frac": 0
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.02500000000000019,
+   "armL": {
+    "reach": 4.158999999999999,
+    "max": 4.16,
+    "min": 0.1299999999999999
+   },
+   "armR": {
+    "reach": 3.628662860767698,
+    "max": 4.16,
+    "min": 0.1299999999999999
+   },
+   "pivotHeight": 5.9799999999999995,
+   "skinned": true,
+   "skinId": "superhero-male",
+   "frameScale": 1.3,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "heavy",
+   "weapon": "equipment.sidearm",
+   "mountedOn": "right",
+   "mounted": true,
+   "gripAtHand": 0,
+   "supportError": 0.5724345529422771,
+   "muzzleDot": 0.9731338097997105,
+   "muzzleWorld": [
+    -1.3958616781379214,
+    9.508541760534337,
+    4.435508574348366
+   ],
+   "magazineWorld": [
+    0.38079755890122663,
+    8.607247018695421,
+    3.4999746392198783
+   ],
+   "holsterWorld": [
+    2.0160433378108715,
+    4.762813622971302,
+    0.708369585803823
+   ],
+   "holsterPenetrates": false,
+   "holsterDepth": 0.1111111111111111,
+   "holsterFrom": "holster.hip",
+   "hiddenProceduralWeapons": 0,
+   "clip": "aim-neutral",
+   "frac": 1
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.025000000000000244,
+   "armL": {
+    "reach": 4.158999999999999,
+    "max": 4.16,
+    "min": 0.1299999999999999
+   },
+   "armR": {
+    "reach": 3.5263325324001262,
+    "max": 4.16,
+    "min": 0.1299999999999999
+   },
+   "pivotHeight": 5.9799999999999995,
+   "skinned": true,
+   "skinId": "superhero-male",
+   "frameScale": 1.3,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "heavy",
+   "weapon": "equipment.sidearm",
+   "mountedOn": "right",
+   "mounted": true,
+   "gripAtHand": 0,
+   "supportError": 0.5420189826078955,
+   "muzzleDot": 0.9731338097997108,
+   "muzzleWorld": [
+    -1.4061717121163824,
+    9.362713838401506,
+    4.289059380145966
+   ],
+   "magazineWorld": [
+    0.4547893358795344,
+    8.521343160123262,
+    3.46869765531018
+   ],
+   "holsterWorld": [
+    2.0160433378108715,
+    4.7628136229713,
+    0.7083695858038235
+   ],
+   "holsterPenetrates": false,
+   "holsterDepth": 0.1111111111111111,
+   "holsterFrom": "holster.hip",
+   "hiddenProceduralWeapons": 0,
+   "clip": "pistol-idle",
+   "frac": 0.5
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.0250000000000003,
+   "armL": {
+    "reach": 4.158999999999999,
+    "max": 4.16,
+    "min": 0.1299999999999999
+   },
+   "armR": {
+    "reach": 3.2679466794007053,
+    "max": 4.16,
+    "min": 0.1299999999999999
+   },
+   "pivotHeight": 5.9799999999999995,
+   "skinned": true,
+   "skinId": "superhero-male",
+   "frameScale": 1.3,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "heavy",
+   "weapon": "equipment.sidearm",
+   "mountedOn": "right",
+   "mounted": true,
+   "gripAtHand": 0,
+   "supportError": 0.022652983802874154,
+   "muzzleDot": 0.9731338097997108,
+   "muzzleWorld": [
+    -2.6062664730416203,
+    10.375581505556209,
+    2.7236527442657366
+   ],
+   "magazineWorld": [
+    -0.9060495436179887,
+    9.015358492851016,
+    3.0447909522206382
+   ],
+   "holsterWorld": [
+    1.9929391173330748,
+    4.770418645345757,
+    0.7772994856264125
+   ],
+   "holsterPenetrates": false,
+   "holsterDepth": 0.1111111111111111,
+   "holsterFrom": "holster.hip",
+   "hiddenProceduralWeapons": 0,
+   "clip": "reload",
+   "frac": 0.55
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.02836907999999977,
+   "armL": {
+    "reach": 4.158999999999999,
+    "max": 4.16,
+    "min": 0.1299999999999999
+   },
+   "armR": {
+    "reach": 3.9470449281379154,
+    "max": 4.16,
+    "min": 0.1299999999999999
+   },
+   "pivotHeight": 5.9799999999999995,
+   "skinned": true,
+   "skinId": "superhero-male",
+   "frameScale": 1.3,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "heavy",
+   "weapon": "equipment.sidearm",
+   "mountedOn": "right",
+   "mounted": true,
+   "gripAtHand": 0,
+   "supportError": 2.631258971626514,
+   "muzzleDot": 0.9731338097997109,
+   "muzzleWorld": [
+    3.1647972433715768,
+    4.688004461966675,
+    2.8085420291494394
+   ],
+   "magazineWorld": [
+    3.040891119984348,
+    6.2811009573439796,
+    1.295014748588002
+   ],
+   "holsterWorld": [
+    2.140463740498275,
+    5.084828116847475,
+    0.17996444521898727
+   ],
+   "holsterPenetrates": false,
+   "holsterDepth": 0,
+   "holsterFrom": "holster.hip",
+   "hiddenProceduralWeapons": 0,
+   "clip": "walk",
+   "frac": 0.35
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.031555380000000355,
+   "armL": {
+    "reach": 4.158999999999999,
+    "max": 4.16,
+    "min": 0.1299999999999999
+   },
+   "armR": {
+    "reach": 3.6703107465534277,
+    "max": 4.16,
+    "min": 0.1299999999999999
+   },
+   "pivotHeight": 5.9799999999999995,
+   "skinned": true,
+   "skinId": "superhero-male",
+   "frameScale": 1.3,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "heavy",
+   "weapon": "equipment.sidearm",
+   "mountedOn": "right",
+   "mounted": true,
+   "gripAtHand": 0,
+   "supportError": 1.8646013189976396,
+   "muzzleDot": 0.9731338097997109,
+   "muzzleWorld": [
+    1.4182367822755697,
+    7.063742277544718,
+    3.2608733344432568
+   ],
+   "magazineWorld": [
+    2.5435062674297484,
+    7.395441412498769,
+    1.3986654326096337
+   ],
+   "holsterWorld": [
+    2.137251579887817,
+    5.17342188374624,
+    0.5101998923844171
+   ],
+   "holsterPenetrates": false,
+   "holsterDepth": 0,
+   "holsterFrom": "holster.hip",
+   "hiddenProceduralWeapons": 0,
+   "clip": "walk-carry",
+   "frac": 0.35
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.02499999999999969,
+   "armL": {
+    "reach": 4.158999999999999,
+    "max": 4.16,
+    "min": 0.1299999999999999
+   },
+   "armR": {
+    "reach": 3.8089412474710156,
+    "max": 4.16,
+    "min": 0.1299999999999999
+   },
+   "pivotHeight": 5.9799999999999995,
+   "skinned": true,
+   "skinId": "superhero-male",
+   "frameScale": 1.3,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "heavy",
+   "weapon": "equipment.sidearm",
+   "mountedOn": "right",
+   "mounted": true,
+   "gripAtHand": 0,
+   "supportError": 2.9781879433304517,
+   "muzzleDot": 0.9731338097997106,
+   "muzzleWorld": [
+    4.025271996547755,
+    1.4666602650539797,
+    0.4226685070400906
+   ],
+   "magazineWorld": [
+    3.8205617124587605,
+    3.644216865998626,
+    0.17687398051315073
+   ],
+   "holsterWorld": [
+    1.9352266074389104,
+    2.05009442523102,
+    0.09934905830969559
+   ],
+   "holsterPenetrates": false,
+   "holsterDepth": 0,
+   "holsterFrom": "holster.hip",
+   "hiddenProceduralWeapons": 0,
+   "clip": "crouch-idle",
+   "frac": 0.5
+  }
+ ],
+ "errors": []
+}

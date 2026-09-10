@@ -13,7 +13,7 @@ const errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('console'
 const rows=[];let baseScale=null;
 async function selectPackage(id){
  await page.evaluate(id=>AUTHORING.select(AUTHORING.state.catalog.packages.find(p=>p.id===id)),id);
- await page.waitForFunction(id=>AUTHORING.state.selected?.id===id&&AUTHORING.stage.playback?.clips?.length>0,id);
+ await page.waitForFunction(id=>AUTHORING.state.selected?.id===id&&AUTHORING.stage.pkg?.manifest?.id===id&&!!AUTHORING.stage.playback,id);
  await page.evaluate(()=>{AUTHORING.stage.playing=false;});
 }
 async function pose(body,clip,frac){

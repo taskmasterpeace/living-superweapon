@@ -1,0 +1,175 @@
+{
+ "format": "pw-asset-package",
+ "formatVersion": 1,
+ "id": "body.hero-lean",
+ "version": 1,
+ "kind": "humanoid-body",
+ "displayName": "Hero body - lean frame x0.8 (superhero female)",
+ "tags": [
+  "humanoid",
+  "body",
+  "lean",
+  "cc0-body"
+ ],
+ "rig": {
+  "skeleton": "pw-hero-rig@1",
+  "catalogBody": "superhero-female",
+  "bones": 65
+ },
+ "sockets": [
+  {
+   "name": "hand.right",
+   "parent": "rightHand",
+   "position": [
+    0,
+    0,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "hand.left",
+   "parent": "leftHand",
+   "position": [
+    0,
+    0,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "holster.hip",
+   "parent": "pelvis",
+   "position": [
+    2.1153,
+    -0.55,
+    0.1333
+   ],
+   "rotation": [
+    0,
+    0,
+    -0.089879,
+    0.995953
+   ],
+   "worldOffset": [
+    1.523,
+    -0.44,
+    0.096
+   ]
+  },
+  {
+   "name": "sling.back",
+   "parent": "chest",
+   "position": [
+    0.48,
+    0.35,
+    -1.3592
+   ],
+   "rotation": [
+    0.073785,
+    0.013046,
+    -0.173619,
+    0.981958
+   ],
+   "worldOffset": [
+    0.36,
+    0.28,
+    -1.0194
+   ]
+  }
+ ],
+ "frame": {
+  "scale": 0.8,
+  "bulk": 0.75,
+  "broad": 0.85,
+  "head": 0.9,
+  "neck": 1.34,
+  "stance": 1.18
+ },
+ "units": {
+  "lengthUnit": "game-unit",
+  "metersPerUnit": 0.19,
+  "up": "+Y",
+  "forward": "+Z",
+  "handedness": "right",
+  "sourceConversion": {
+   "scale": 1,
+   "yawDegrees": 0,
+   "mirrorX": false,
+   "sourceUp": "+Y",
+   "sourceForward": "+Z",
+   "note": "catalog body already in game units; see assets-src/quaternius/base-characters/PROVENANCE.md"
+  }
+ },
+ "budgets": {
+  "profile": "desktop",
+  "measured": {
+   "triangles": 15060,
+   "drawCalls": 3,
+   "materials": 3,
+   "bones": 65,
+   "textures": 1,
+   "bytes": 2052305
+  },
+  "limits": {
+   "triangles": 18825,
+   "drawCalls": 4,
+   "materials": 4,
+   "bones": 82,
+   "textures": 2,
+   "bytes": 2565382
+  }
+ },
+ "provenance": {
+  "author": "Quaternius (body) / PowerWorld authoring (proportions, sockets)",
+  "license": "CC0-1.0",
+  "redistribution": "free",
+  "url": "https://quaternius.com/packs/universalbasecharacters.html",
+  "revision": "0cc5dc351f4fffbe13a25381e73cb0a1aea67f47",
+  "terms": "Universal Base Characters, CC0 1.0. The third humanoid is one recipe file: a different catalog body under a lean frame."
+ },
+ "source": {
+  "adapter": "humanoid-body@1",
+  "files": [
+   {
+    "path": "assets-src/quaternius/base-characters/PROVENANCE.md",
+    "sha256": "f786e54d54659843dee0f83dd86effd7fb837dead93383ec6a1b1cbe24b1d0ca"
+   }
+  ],
+  "recipe": {
+   "path": "authoring/recipes/bodies/hero-lean/recipe.json",
+   "sha256": "21ca499874a17a78d4ed7d809be20e9fae6a70c7781c3c48904c28a76f7086fd"
+  }
+ },
+ "tool": {
+  "name": "powerworld-authoring",
+  "version": "0.1.0",
+  "three": "0.169.0",
+  "adapterVersion": 1
+ },
+ "build": {
+  "options": {},
+  "cacheKey": "73b26afb021dcdb4355f676bbb8bcc59d4f03b4120cc1a9f45aed28ac3f323a1",
+  "contentHash": "c0953ca019f526e38b91e7a69c597788fb4a15af4065956d85657cb4fa175226",
+  "profile": "desktop"
+ },
+ "outputs": [
+  {
+   "path": "body.json",
+   "role": "body",
+   "sha256": "6af79732927900ddacbe98c35806b5b81ead6f6392be31e0ff735409d5b6f186",
+   "bytes": 1480
+  }
+ ],
+ "packageHash": "708bc523ef3e0fcdaa89c1b5f708d3d4eaac103e7878b8c1c03632587d54528f"
+}

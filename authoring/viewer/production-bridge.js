@@ -11,6 +11,25 @@ import {authoredParts,samplePoseFrame,applyAuthoredPose} from '/src/engine/autho
 import {updateHeroSkin} from '/src/engine/hero-skin.js';
 import {animateCape,syncHeadCover} from '/src/engine/hero-rig.js';
 import {loadEquipmentPreview} from './equipment-bridge.js';
+import {loadGlbPreview} from './glb-bridge.js';
+
+// A body package on the stage: the catalog body under the package's frame, at rest, with its
+// derived sockets drawn where the runtime would attach them.
+async function loadBody(pkg,stage){
+ const m=pkg.manifest;
+ const spec={hero:m.rig.hero||'sol',body:m.rig.catalogBody,frame:m.frame};
+ const body=await (await fetch(pkg.base+'body.json',{cache:'no-store'})).json();
+ const f=makeFighter({hero:body.hero,body:body.catalogBody,frame:body.frame});stage.content.add(f.obj);
+ stage.controls.target.set(0,f.parts.rig.pivotHeight,0);
+ const overlays=buildOverlays(stage,f,m);
+ const anchors=new THREE.Group();stage.helpers.add(anchors);
+ const parents={pelvis:f.parts.pelvis,chest:f.parts.torso,rightHand:f.parts.rig.sockets.rightHand,leftHand:f.parts.rig.sockets.leftHand};
+ for(const s of m.sockets){const parent=parents[s.parent];if(!parent)continue;const a=new THREE.Object3D();a.position.fromArray(s.position);a.quaternion.fromArray(s.rotation);parent.add(a);const mk=new THREE.Mesh(new THREE.OctahedronGeometry(.26),new THREE.MeshBasicMaterial({color:'#e0a15f',depthTest:false}));mk.renderOrder=14;mk.userData.anchor=a;anchors.add(mk);}
+ const refresh=()=>{f.obj.updateMatrixWorld(true);updateHeroSkin(f.parts);overlays.refresh();for(const mk of anchors.children)mk.userData.anchor.getWorldPosition(mk.position);};
+ refresh();
+ stage.dispose=()=>{stage.content.remove(f.obj);overlays.dispose();stage.helpers.remove(anchors);f.dispose();};
+ return {clips:[{id:'rest',take:'(rig rest)',duration:1,loop:true,events:[]}],bodies:[],get fighter(){return f;},apply(){refresh();},refreshOverlays:refresh,measure(){return {...measureFighter(f),sockets:m.sockets.map(s=>s.name)};}};
+}
 
 const frame=new Float64Array(45),box=new THREE.Box3(),tmp=new THREE.Vector3();
 export const BODIES=[
@@ -89,6 +108,8 @@ export async function loadPackage(pkg,stage){
  const m=pkg.manifest;
  if(m.kind==='humanoid-motion')return loadMotion(pkg,stage);
  if(m.kind==='equipment')return loadEquipmentPreview(pkg,stage,{makeFighter,BODIES,buildOverlays,measureFighter,snapshotBase,restoreBase});
+ if(m.kind==='prop'||m.kind==='creature')return loadGlbPreview(pkg,stage);
+ if(m.kind==='humanoid-body')return loadBody(pkg,stage);
  return {clips:[],bodies:[]};
 }
 async function loadMotion(pkg,stage){
