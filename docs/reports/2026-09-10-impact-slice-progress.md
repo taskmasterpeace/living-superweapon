@@ -41,6 +41,14 @@ Main reviewed desktop/mobile PNGs and extracted Vega sequence. Remaining visible
 
 ## Release gates still open
 
-Rebuild a separately identified candidate after KO/mobile regression fixes and retest affected paths. Authored rifle contact/resource lifecycle, actual flying strike contact/recovery, foreground performance and full audible replacement coverage remain open. No10/10 visual score or full-goal acceptance has been awarded. Keep the goal active until every requested gate has evidence.
+### Final regression candidate
+
+Runtime df07eba07b59662c796ddbde26e3bb6c0dd7ae6e built successfully into `artifacts/impact-slice/candidate-1852`, served at **http://127.0.0.1:5184/powerworld.html**. Main reran **234/234** combined tests. Main reran fully rendered native loadout browser: M16/pump/M24 issuance/fire/reload, menu isolation and prior-pause restoration all pass; renderer reports RTX4090 D3D11. This short renderer diagnostic is not a representative performance benchmark.
+
+Mobile Loadout now opens from the top Pause menu rather than a fixed combat-pad overlay. Native portrait390×844 and landscape844×390 tests show zero trigger/control overlaps and successful Pause→Loadout→Close→top Pause resume. Existing landscape menu Resume button can still be intercepted by touch controls; the top Pause button is the verified workaround. This broader menu layering defect is not claimed fixed.
+
+KO drop correctiond4615de independently approved: issued gun only, original kit only, additional held gun plus original kit preserve legitimate drops. The authored-rifle model remains unapproved; these firearm tests use procedural equipment.
+
+The separate candidate and affected-path reruns are complete. Authored rifle contact/resource lifecycle, actual flying strike contact/recovery, foreground performance and full audible replacement coverage remain open. No10/10 visual score or full-goal acceptance has been awarded. Keep the goal active until every requested gate has evidence.
 
 Git maintenance warning: automatic GC reported corrupt loose object a5a5fe6ca37dc54a133ea0c09f2de3e75f358cd0 in the shared repository. Current HEAD was readable and builds succeeded. No destructive repair was attempted; scoped subsequent commits disable automatic GC for that command. Repository integrity needs a separate read-only diagnosis before release/push.
