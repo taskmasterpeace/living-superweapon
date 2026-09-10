@@ -1,5 +1,7 @@
 # POWERWORLD
 
+**[Play the live game](https://powerworld-mauve.vercel.app)** · **[Character Studio](https://powerworld-mauve.vercel.app/studio.html)** · **[Watch the gameplay reel](https://powerworld-mauve.vercel.app/showcase/living-superweapon-gameplay.mp4)**
+
 **A third-person, BFP-style action game for the Steam Deck** — flight that commits like *Bid for Power*, ground combat framed like *Jedi Knight*, on a full data-driven power system with 53 fighters.
 
 > This repository is a **fork of [WAR WORLD: ASCENDANTS](https://github.com/taskmasterpeace/living-superweapon)**. PowerWorld is not a separate module — it is the *same engine* seen through a chase camera plus a stage. Forking carries the whole engine along (52 heroes, the ability/damage/psyche/audio systems, the whole thing); that is the point. See **"Divergence"** below.
