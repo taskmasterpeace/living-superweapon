@@ -16,6 +16,7 @@ import { clamp, damp, lerp, smoothstep, dampStiff, angleDiff, setBands, DECAL_LI
 import { reachOf } from '../data/martial.js';
 import { CAMERA_DEFAULTS } from '../data/flight-tuning.js';
 import {cameraProfileOf} from '../data/camera-presets.js';
+import {getCameraPreferences} from '../core/camera-settings.js';
 import {resolveGroundCamera} from './camera-ground.js';
 import {firearmSightZoom} from './firearm-aim.js';
 import {terrainEntry} from './projectile-contact.js';
@@ -2582,7 +2583,7 @@ export class World {
   // Values are adapted to our rig, not copied Quake world units.
   _chaseBfp(subject,target,dt) {
     const c=this.setCameraMode('chase'),S=subject.pos,snap=this._chaseSnap;
-    const profile=cameraProfileOf(subject),value=key=>profile?.[key]??CAMERA_DEFAULTS[key];
+    const profile=cameraProfileOf(subject,this.game?.player===subject?getCameraPreferences():null),value=key=>profile?.[key]??CAMERA_DEFAULTS[key];
     this._camClaimTick(subject,dt); // Reap gameplay claims; they do not reframe this camera.
     if(!this._lookActive){this._lookYaw=subject.facing;this._lookPitch=0;this._lookActive=true;}
     if(subject._aircraftVehicle){
@@ -2647,7 +2648,7 @@ export class World {
     if(this._bfpCameraActive)return this._chaseBfp(subject,target,dt);
     clearForegroundVisibility(this);
     const c = this.setCameraMode('chase');
-    const cameraProfile = cameraProfileOf(subject);
+    const cameraProfile = cameraProfileOf(subject,this.game?.player===subject?getCameraPreferences():null);
     const cameraValue = key => cameraProfile?.[key] ?? CAMERA_DEFAULTS[key];
     const combatView = !!subject._openSky;
     if(!target && !this._lookActive) {

@@ -29,6 +29,9 @@ import { loadCareer, fmtMoney } from '../data/career.js';
 import { clamp, TAU } from '../core/util.js';
 import { ATTR_DEFS, TALENTS, deriveAttrs, heroTalents, rankName, rankColor, RANKS, bakeSheet } from '../data/ranks.js';
 import { LOOK_PRESETS, SETTINGS, saveSettings, applySettings, KEYMAPS, keymap } from '../core/settings.js';
+import {CAMERA_OPTION_LIMITS,getCameraPreferences,setCameraPreferences,resetCameraPreferences} from '../core/camera-settings.js';
+import {cameraProfileOf} from '../data/camera-presets.js';
+import {CAMERA_DEFAULTS} from '../data/flight-tuning.js';
 import { identityOf } from '../data/identities.js';
 import { icon, ATTR_ICON, ICON_MEANING } from './icons.js';
 import { writeBroadcast, tapeRows, llmPunchUp, titleCase, money, causeLine, mulberry } from '../data/news.js';
@@ -911,10 +914,26 @@ export class HUD {
 
   showOptions() {
     const S = SETTINGS;
+    const cameraPreference=getCameraPreferences();
+    const cameraProfile=cameraProfileOf({def:this.game.player?.def,_cameraPreset:this.game.player?._cameraPreset},cameraPreference)||CAMERA_DEFAULTS;
+    const cameraSlider=(key,label,step)=>`<div class="orow"><label class="ol" for="camera-${key}">${label}</label><input id="camera-${key}" type="range" data-camera-value="${key}" min="${CAMERA_OPTION_LIMITS[key][0]}" max="${CAMERA_OPTION_LIMITS[key][1]}" step="${step}" value="${cameraProfile[key]??CAMERA_DEFAULTS[key]}"><output class="ov" for="camera-${key}">${cameraProfile[key]??CAMERA_DEFAULTS[key]}</output></div>`;
+    if(this.optionsEl.style.display!=='flex')this.game.retireCombatViewInput?.();
+    this.optionsEl.setAttribute('role','dialog');this.optionsEl.setAttribute('aria-label','Options');this.optionsEl.setAttribute('aria-modal','true');
+    // Keep menu keys away from the global combat input, while preserving native
+    // button activation and range-key behavior (no preventDefault).
+    this.optionsEl.onkeydown=this.optionsEl.onkeyup=e=>{if(e.key!=='Escape')e.stopPropagation();};
     const slider = (key, label, max, step) => `<div class="orow"><span class="ol">${label}</span><input type="range" data-k="${key}" min="0" max="${max}" step="${step}" value="${S[key]}"><span class="ov" data-v="${key}">${Math.round(S[key] * 100)}%</span></div>`;
     const toggle = (key, label) => `<div class="orow"><span class="ol">${label}</span><div class="chips3"><span class="c3${S[key] ? ' on' : ''}" data-t="${key}" data-on="1">ON</span><span class="c3${!S[key] ? ' on' : ''}" data-t="${key}" data-on="0">OFF</span></div></div>`;
     this.optionsEl.innerHTML = `<div class="obox">
       <div class="oh">Options</div>
+      <div class="dgsec">CAMERA</div>
+      <div class="orow"><span class="ol">Player view</span><div class="chips3" role="group" aria-label="Player camera">
+        ${[['character','Character / Match'],['centered','Centered BFP'],['shoulder','Shoulder']].map(([id,label])=>`<button type="button" class="c3${(cameraPreference?.mode||'character')===id?' on':''}" data-camera-option="${id}" aria-pressed="${(cameraPreference?.mode||'character')===id}">${label}</button>`).join('')}
+      </div></div>
+      ${cameraSlider('fov','Vertical field of view',.01)}
+      ${cameraSlider('range','Camera range',.5)}
+      <div class="oline2">Camera changes apply immediately. Character / Match follows your match choice and character camera. Vehicles use their own view.</div>
+      <button type="button" class="odone oghost" data-camera-reset>Reset camera</button>
       ${slider('master', 'Master Volume', 1, 0.05)}
       <div class="dgsec">THE MIX</div>
       ${slider('volMusic', 'Music', 1, 0.05)}
@@ -968,10 +987,10 @@ export class HUD {
       ${toggle('fxImpact', 'Impact frames · one inverted frame on a haymaker')}
       ${toggle('fxSpeedLines', 'Speed lines on heavy hits')}
 
-      <button class="odone">Done</button>
+      <button class="odone" data-options-done>Done</button>
     </div>`;
     const apply = () => { applySettings(this.game); saveSettings(); };
-    this.optionsEl.querySelectorAll('input[type=range]').forEach(r => r.oninput = () => {
+    this.optionsEl.querySelectorAll('input[data-k]').forEach(r => r.oninput = () => {
       S[r.dataset.k] = parseFloat(r.value);
       // ⚠ touching a look dial switches to CUSTOM. Without this the preset re-stamps its own value
       // on the very next applySettings and the slider springs back — a control that fights you.
@@ -997,7 +1016,18 @@ export class HUD {
       this.feed('Controls: ' + keymap(S.scheme).name, 'var(--gold)');
       this.showOptions();
     });
-    this.optionsEl.querySelector('.odone').onclick = () => { apply(); this.optionsEl.style.display = 'none'; };
+    const applyCamera=()=>{const w=this.game.world;if(this.game.player&&w?.camMode==='chase')w.chase(this.game.player,this.game.hardLock,0,w._bfpCameraActive?'bfp':'auto');};
+    this.optionsEl.querySelectorAll('[data-camera-option]').forEach(button=>button.onclick=()=>{
+      if(button.dataset.cameraOption==='character')resetCameraPreferences();else setCameraPreferences({mode:button.dataset.cameraOption});
+      applyCamera();this.showOptions();this.optionsEl.querySelector(`[data-camera-option="${button.dataset.cameraOption}"]`).focus();
+    });
+    this.optionsEl.querySelector('[data-camera-reset]').onclick=()=>{resetCameraPreferences();applyCamera();this.showOptions();this.optionsEl.querySelector('[data-camera-reset]').focus();};
+    this.optionsEl.querySelectorAll('[data-camera-value]').forEach(input=>input.oninput=()=>{
+      const current=getCameraPreferences()||{mode:cameraProfile.shoulder?'shoulder':'centered',fov:cameraProfile.fov??CAMERA_DEFAULTS.fov,range:cameraProfile.range??CAMERA_DEFAULTS.range};
+      setCameraPreferences({...current,[input.dataset.cameraValue]:+input.value});input.nextElementSibling.textContent=input.value;applyCamera();
+      this.optionsEl.querySelectorAll('[data-camera-option]').forEach(button=>{const active=button.dataset.cameraOption===getCameraPreferences().mode;button.classList.toggle('on',active);button.setAttribute('aria-pressed',String(active));});
+    });
+    this.optionsEl.querySelector('[data-options-done]').onclick = () => { apply();this.game.retireCombatViewInput?.();this.optionsEl.style.display = 'none'; };
     this.optionsEl.style.display = 'flex';
   }
 

@@ -10,4 +10,16 @@ export function withCameraPreset(def,id){
 const SCOUT_CAMERA=Object.freeze({...CAMERA_DEFAULTS,range:52,height:18,shoulder:0,fov:68});
 const HELICOPTER_CAMERA=Object.freeze({...CAMERA_DEFAULTS,range:95,height:22,shoulder:0,fov:68});
 const JET_CAMERA=Object.freeze({...CAMERA_DEFAULTS,range:155,height:35,shoulder:0,fov:72});
-export function cameraProfileOf(subject){return subject._aircraftVehicle?(subject._aircraftVehicle.kind==='jet'?JET_CAMERA:HELICOPTER_CAMERA):subject._scoutVehicle?SCOUT_CAMERA:subject._cameraPreset==='frontline'?FRONTLINE_CAMERA:subject.def?.model?.camera;}
+// Temporary vehicles win; an explicit player choice wins over the match preset,
+// then the Studio character profile, then the calibrated BFP defaults in World.
+// Passing preferences explicitly keeps Studio previews and NPCs independent.
+export function cameraProfileOf(subject,preference=null){
+ if(subject._aircraftVehicle)return subject._aircraftVehicle.kind==='jet'?JET_CAMERA:HELICOPTER_CAMERA;
+ if(subject._scoutVehicle)return SCOUT_CAMERA;
+ if(preference){
+  const profile={...(preference.mode==='shoulder'?FRONTLINE_CAMERA:CAMERA_DEFAULTS)};
+  for(const key of ['fov','range'])if(Number.isFinite(preference[key]))profile[key]=preference[key];
+  return profile;
+ }
+ return subject._cameraPreset==='frontline'?FRONTLINE_CAMERA:subject.def?.model?.camera;
+}
