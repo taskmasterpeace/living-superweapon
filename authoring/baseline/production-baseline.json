@@ -236,7 +236,7 @@
     "materials": 0,
     "bones": 0,
     "textures": 0,
-    "bytes": 136024
+    "bytes": 136023
    },
    "mean": {
     "triangles": 0,
@@ -254,9 +254,9 @@
      "materials": 0,
      "bones": 0,
      "textures": 0,
-     "bytes": 136024,
+     "bytes": 136023,
      "frames": 329,
-     "bytesPerFrame": 413.45
+     "bytesPerFrame": 413.44
     },
     {
      "name": "src/data/strike-bank.json",
@@ -287,13 +287,13 @@
      "materials": 0,
      "bones": 0,
      "textures": 0,
-     "bytes": 130277,
+     "bytes": 130276,
      "frames": 308,
-     "bytesPerFrame": 422.98
+     "bytesPerFrame": 422.97
     }
    ],
    "perFrame": {
-    "bytes": 422.97727272727275
+    "bytes": 422.97402597402595
    }
   }
  }

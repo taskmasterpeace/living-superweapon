@@ -3,10 +3,17 @@
  "kind": "humanoid-body",
  "adapter": "humanoid-body",
  "displayName": "Hero body - standard (superhero male)",
- "tags": ["humanoid", "body", "standard", "cc0-body"],
+ "tags": [
+  "humanoid",
+  "body",
+  "standard",
+  "cc0-body"
+ ],
  "hero": "sol",
  "catalogBody": "superhero-male",
- "sources": ["assets-src/quaternius/base-characters/PROVENANCE.md"],
+ "sources": [
+  "assets-src/quaternius/base-characters/PROVENANCE.md"
+ ],
  "provenance": {
   "author": "Quaternius (body) / PowerWorld authoring (proportions, sockets)",
   "license": "CC0-1.0",
@@ -14,5 +21,10 @@
   "url": "https://quaternius.com/packs/universalbasecharacters.html",
   "revision": "0cc5dc351f4fffbe13a25381e73cb0a1aea67f47",
   "terms": "Universal Base Characters, CC0 1.0. The mesh ships in src/data/hero-body-bank.json; this package carries proportions and sockets only."
+ },
+ "acceptance": {
+  "visual": "unapproved",
+  "blockers": [],
+  "note": "Measured rig metadata over a catalog body; sockets and hit zones derived, not judged by a person."
  }
 }

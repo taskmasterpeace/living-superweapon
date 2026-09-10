@@ -236,12 +236,12 @@
   "files": [
    {
     "path": "assets-src/quaternius/base-characters/PROVENANCE.md",
-    "sha256": "f786e54d54659843dee0f83dd86effd7fb837dead93383ec6a1b1cbe24b1d0ca"
+    "sha256": "150636a2a4b179706daa1787d0870ce99eaa21e13aba4b3f037ca5b1da949452"
    }
   ],
   "recipe": {
    "path": "authoring/recipes/bodies/hero-lean/recipe.json",
-   "sha256": "21ca499874a17a78d4ed7d809be20e9fae6a70c7781c3c48904c28a76f7086fd"
+   "sha256": "d25fdeeee2dbaf7f44432f0e0389d8338e0d7eb6834979817acb965d11d301d0"
   }
  },
  "tool": {
@@ -252,9 +252,14 @@
  },
  "build": {
   "options": {},
-  "cacheKey": "eceafe4e80e2cd4d64544d2ca7f837feaeaeb7d9f3e3881c8cf64b65b202c658",
+  "cacheKey": "2acf7c8739109ff82107b97d4799219da144315574bd94ca8a785401254a2050",
   "contentHash": "8bd80b9d0c1977c58b2d221fafa9acc2fbc6aa86d0e10a7b04c35e12c03a0296",
   "profile": "desktop"
+ },
+ "acceptance": {
+  "visual": "unapproved",
+  "blockers": [],
+  "note": "Measured rig metadata over a catalog body; sockets and hit zones derived, not judged by a person."
  },
  "outputs": [
   {
@@ -264,5 +269,5 @@
    "bytes": 2524
   }
  ],
- "packageHash": "bfebe7469e20a66d111dab7ee3c1190ac199e9e7485f880d263152f1fe13ae07"
+ "packageHash": "0a4d02f033c07356a515efb43fd4045a2862087afd812c0b0e107f3d1457bc02"
 }

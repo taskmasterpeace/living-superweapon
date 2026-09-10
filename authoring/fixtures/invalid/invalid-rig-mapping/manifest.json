@@ -98,7 +98,12 @@
      "t": 0,
      "type": "loop"
     }
-   ]
+   ],
+   "posture": {
+    "start": "standing",
+    "end": "standing"
+   },
+   "category": "cycle"
   }
  ],
  "budgets": {
@@ -120,6 +125,10 @@
    "bytes": 1058
   }
  },
+ "acceptance": {
+  "visual": "unapproved",
+  "blockers": []
+ },
  "compatibility": {
   "poseBridge": {
    "frameLength": 45,
@@ -127,5 +136,5 @@
    "engineModule": "src/engine/authored-pose.js"
   }
  },
- "packageHash": "1ce1415b0c49b6eaf6bfcbf8cd3755973a9fbdaaa8c9e5f2358eeed83a19ece8"
+ "packageHash": "5e6fd14171d57cb9cfba01b298ad5355f2142dd0f239d36f9a6ac396ac3bf95c"
 }

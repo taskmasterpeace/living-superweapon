@@ -4,15 +4,23 @@ Things this branch does not do, with the reason, so nobody discovers them by sur
 
 ## Motion
 
-- **No rifle takes exist in the free Quaternius tiers**, so the carbine's two-handed hold is proven
-  where the source lets it be proven: in the reload take the support hand closes on the handguard
-  within 0.35u on every proportion. In the full-extension pistol aim takes the production rig's
-  arms (reach 3.58u on a 3.92u shoulder span at scale 1.12) cannot converge on a second grip at
-  all, so those poses report a 0.5–0.9u support gap rather than claim a fit. The engine's armed
-  poses (`weapon-support-grip`, `rifleContact`) own the trigger-hand pull-back that makes a real
-  rifle hold; the package supplies the sockets they need. See INTEGRATION.md.
-- **Prone** is the first frame of `LayToIdle` (UAL2), which lies on the back, and the `Death01`
-  end pose; there is no authored prone crawl in either free tier.
+- **No rifle takes exist in the free Quaternius tiers, and the full-extension two-hand grip does
+  NOT fit on this rig.** That is declared as the integration blocker `full-extension-support-hand`
+  on both weapon packages (INTEGRATION.md) with the measured gaps (0.50–0.88u carbine,
+  0.37–0.65u sidearm; arm reach 3.58u on a 3.92u shoulder span at scale 1.12). The support hand
+  passes only in the drawn-in reload pose. The aim-pose stills are not fits and the equipment
+  check records those rows as `blocked`.
+- **There is no prone animation in either free tier.** Postures are measured from the retargeted
+  anatomy, not read off take names: `LayToIdle` starts SUPINE (chest up, hips on the ground) and
+  ends standing, so it is packaged as `supine-rise` (category `get-up`, from supine); `Death01` is
+  `fall-supine` (standing → supine); `Hit_Knockback` is a `knockdown` ending supine. `Roll` passes
+  through a face-down tuck for a few frames but never holds it, so it is a crouch→standing action.
+  A face-down hold, crawl or prone get-up would need a new source and is not claimed; the catalog
+  lists `prone: []` for every motion package.
+- **Posture is measured at a clip's first and last frame only.** `postureOf` reads one frame
+  (torso up, chest normal, hip height over the bind floor); mid-clip postures are not tracked, so
+  the roll's transient face-down tuck is not surfaced as metadata. The rule is deliberately
+  conservative: thresholds that fall between bands report `transition` rather than guess.
 - **Grenade release** is derived from the peak hand speed of `OverhandThrow`; it is an honest
   read of the take, not an animator's mark.
 - **CMU** ships one clip as the adapter proof. The database is not vendored (its terms forbid

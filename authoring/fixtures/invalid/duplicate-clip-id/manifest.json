@@ -99,7 +99,12 @@
      "t": 0,
      "type": "loop"
     }
-   ]
+   ],
+   "posture": {
+    "start": "standing",
+    "end": "standing"
+   },
+   "category": "cycle"
   },
   {
    "id": "idle",
@@ -115,7 +120,12 @@
      "t": 0,
      "type": "loop"
     }
-   ]
+   ],
+   "posture": {
+    "start": "standing",
+    "end": "standing"
+   },
+   "category": "cycle"
   }
  ],
  "budgets": {
@@ -137,6 +147,10 @@
    "bytes": 1058
   }
  },
+ "acceptance": {
+  "visual": "unapproved",
+  "blockers": []
+ },
  "compatibility": {
   "poseBridge": {
    "frameLength": 45,
@@ -144,5 +158,5 @@
    "engineModule": "src/engine/authored-pose.js"
   }
  },
- "packageHash": "13582eeb8b26e3900bb817d7cf09927f54a07a90f55a5ab9e265b5cbe67ed3e4"
+ "packageHash": "117e97e976cf5d3d4f41f2056c0128c7c299b96ad919211f0d62232860f606d9"
 }

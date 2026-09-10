@@ -175,7 +175,7 @@
   ],
   "recipe": {
    "path": "authoring/recipes/creatures/field-hound/recipe.json",
-   "sha256": "82967ab353684643b04059e33e08def2d03a0de8a6a6f5ec7f72e20332333fa3"
+   "sha256": "26bb829fa652348c37359b4cd14ff16afecaece51433e23cf11a75bcbade7ea2"
   }
  },
  "tool": {
@@ -186,9 +186,20 @@
  },
  "build": {
   "options": {},
-  "cacheKey": "692865808506336c68c134d30e4e153204817f2a5e21141a71bd6dd5f03526ee",
+  "cacheKey": "5478dcbf2b3e52793cc5483ffe8f48670c0757f75a54067a0106cf1deb07b50e",
   "contentHash": "efb7a8d894212006674cd36f47383a24599293c7f0062590044037cb10a44557",
   "profile": "desktop"
+ },
+ "acceptance": {
+  "visual": "unapproved-placeholder",
+  "blockers": [
+   {
+    "id": "no-creature-runtime",
+    "owner": "main-task",
+    "summary": "No creature actor or loader exists in the engine; the package cannot enter gameplay until one is built (INTEGRATION.md seam 4)."
+   }
+  ],
+  "note": "Passes anyCreature mechanical checks and structural validation. Procedural placeholder, not art-approved against the grounded direction."
  },
  "outputs": [
   {
@@ -198,5 +209,5 @@
    "bytes": 199684
   }
  ],
- "packageHash": "354a4113dbd7e2768c71c1dafa7583707d610d50ef52d4d02fc17d8a009dc8d3"
+ "packageHash": "24719069b5407865d954dbbee45794381c379066c8b115ea6ad9b19699f806d1"
 }

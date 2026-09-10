@@ -3,13 +3,57 @@
  "kind": "creature",
  "adapter": "anycreature",
  "displayName": "Field hound (anyCreature adapter proof)",
- "tags": ["creature", "quadruped", "hound", "procedural", "anycreature"],
+ "tags": [
+  "creature",
+  "quadruped",
+  "hound",
+  "procedural",
+  "anycreature"
+ ],
  "spec": "creature.json",
- "sources": ["authoring/recipes/creatures/field-hound/creature.json", "authoring/vendor/anycreature/VENDOR.json"],
+ "sources": [
+  "authoring/recipes/creatures/field-hound/creature.json",
+  "authoring/vendor/anycreature/VENDOR.json"
+ ],
  "clips": [
-  {"id": "idle", "anim": "idle"},
-  {"id": "move", "anim": "move", "events": [{"type": "footstep", "t": 0.2, "side": "L", "note": "authored: front-left plant"}, {"type": "footstep", "t": 0.61, "side": "R", "note": "authored: front-right plant"}]},
-  {"id": "attack", "anim": "attack", "events": [{"type": "contact", "t": 0.34, "note": "authored: bite commits at the lunge apex"}, {"type": "recovery", "t": 0.5, "note": "authored"}]}
+  {
+   "id": "idle",
+   "anim": "idle"
+  },
+  {
+   "id": "move",
+   "anim": "move",
+   "events": [
+    {
+     "type": "footstep",
+     "t": 0.2,
+     "side": "L",
+     "note": "authored: front-left plant"
+    },
+    {
+     "type": "footstep",
+     "t": 0.61,
+     "side": "R",
+     "note": "authored: front-right plant"
+    }
+   ]
+  },
+  {
+   "id": "attack",
+   "anim": "attack",
+   "events": [
+    {
+     "type": "contact",
+     "t": 0.34,
+     "note": "authored: bite commits at the lunge apex"
+    },
+    {
+     "type": "recovery",
+     "t": 0.5,
+     "note": "authored"
+    }
+   ]
+  }
  ],
  "provenance": {
   "author": "PowerWorld authoring (recipe) / anyCreature engine by Ariescar (MIT)",
@@ -18,5 +62,16 @@
   "url": "https://github.com/Ariescar/anyCreature",
   "revision": "44e1abc2c7fe083f19f989c8437c44a141adc7f3",
   "terms": "The creature recipe is original. The vendored compiler is MIT (authoring/vendor/anycreature/LICENSE). Structural pass only: this procedural creature has not been art-approved against the grounded visual direction."
+ },
+ "acceptance": {
+  "visual": "unapproved-placeholder",
+  "blockers": [
+   {
+    "id": "no-creature-runtime",
+    "owner": "main-task",
+    "summary": "No creature actor or loader exists in the engine; the package cannot enter gameplay until one is built (INTEGRATION.md seam 4)."
+   }
+  ],
+  "note": "Passes anyCreature mechanical checks and structural validation. Procedural placeholder, not art-approved against the grounded direction."
  }
 }

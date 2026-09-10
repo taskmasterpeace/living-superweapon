@@ -20,5 +20,10 @@
   "revision": "6e60b5e22419464b4853e01ddb6c0e6f6659a733",
   "terms": "Committed procedural factory reviewed as build-time source. Authored from the generic field-crate brief, not traced from a photograph.",
   "attribution": "Method: img2threejs (Apache-2.0) at the recorded revision; no img2threejs code ships in the package."
+ },
+ "acceptance": {
+  "visual": "unapproved-placeholder",
+  "blockers": [],
+  "note": "Procedural placeholder. Not art-approved."
  }
 }

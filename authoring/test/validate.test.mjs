@@ -26,6 +26,8 @@ const EXPECTED={
  'budget-exceeded':['budget'],
  'duplicate-clip-id':['duplicate-id'],
  'incompatible-version':['incompatible-version'],
+ 'missing-acceptance':['acceptance'],
+ 'bad-posture':['clips'],
 };
 for(const [name,codes] of Object.entries(EXPECTED)){
  test(`fixture ${name} fails only with ${codes.join(',')}`,async()=>{

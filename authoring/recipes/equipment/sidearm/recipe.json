@@ -24,7 +24,18 @@
   "license": "Proprietary-Internal",
   "redistribution": "internal",
   "revision": "6e60b5e22419464b4853e01ddb6c0e6f6659a733",
-  "terms": "Committed procedural factory reviewed as build-time source. Proportions follow the engine's existing pistol so the grip lands on the production hand socket.",
+  "terms": "Committed procedural factory reviewed as build-time source. Proportions follow the engine's existing pistol so the primary grip mounts on the production hand socket; the full-extension support-hand fit remains an integration blocker.",
   "attribution": "Method: img2threejs (Apache-2.0) at the recorded revision; no img2threejs code ships in the package."
+ },
+ "acceptance": {
+  "visual": "unapproved-placeholder",
+  "blockers": [
+   {
+    "id": "full-extension-support-hand",
+    "owner": "main-task",
+    "summary": "In full-extension aim takes the production rig cannot close the support hand on the grip (measured 0.5-0.9 u gap; arm reach 3.58 u on a 3.92 u shoulder span at scale 1.12). Only the drawn-in reload pose closes within 0.35 u. The armed carrier must pull the trigger hand back before this weapon can be called fitted in aim poses."
+   }
+  ],
+  "note": "Procedural placeholder. Not art-approved."
  }
 }

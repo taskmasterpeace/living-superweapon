@@ -4,8 +4,37 @@ Every external input is named here with its terms, its pinned revision and the S
 build verifies before use. None of these files is committed; the repository convention
 (already used by `tools/lib/quaternius-source.mjs` and `tools/lib/hero-body-source.mjs`) keeps
 licensed binaries under the untracked `assets-src/` tree. A build whose source is absent fails
-naming the file. On another machine, copy the files from `D:/lsw/assets-src/` or fetch them
-from the pinned mirrors below.
+naming the file.
+
+## The checklist (what a clean checkout needs, and nothing else)
+
+Exactly five untracked files are build inputs. Copy them to the same relative paths and verify:
+
+| file | where it is on the authoring machine |
+| --- | --- |
+| `assets-src/quaternius/AnimationLibrary_Godot_Standard.gltf` | `D:/lsw/assets-src/quaternius/` (also in `D:/powerworld-authoring/assets-src/`) |
+| `assets-src/quaternius/AnimationLibrary_Godot_Standard.bin` | same |
+| `assets-src/quaternius/library-2/UAL2_Standard.glb` | same |
+| `assets-src/cmu/02.asf` | **only** `D:/powerworld-authoring/assets-src/cmu/` (not in `D:/lsw`), or fetch with the curl lines below |
+| `assets-src/cmu/02_01.amc` | same |
+
+```bash
+cat > /tmp/pw-sources.sha256 <<'EOF'
+0ff075c7ad6855c5c2c37a171592ee8f0d6ab2f58259e2be77a9b63dd8027765 *assets-src/quaternius/AnimationLibrary_Godot_Standard.gltf
+6e65377d81558333c4093dbb144a48fd19019343d82b1a3a7992a98ec0e0543c *assets-src/quaternius/AnimationLibrary_Godot_Standard.bin
+8cee20ab1bc55130092447e810e26df22dd2803eccc54f52137a7d54d7ab88a8 *assets-src/quaternius/library-2/UAL2_Standard.glb
+c9f5ff45b4437b279f58b95dacf017afd3135373096274df69436a9354d796cf *assets-src/cmu/02.asf
+1503c481f4726e640c77888f0c841dd3be0694684bcd32296cf53685c6fc1492 *assets-src/cmu/02_01.amc
+EOF
+sha256sum -c /tmp/pw-sources.sha256
+```
+
+The body packages read only the committed `assets-src/quaternius/base-characters/PROVENANCE.md`;
+the base-character glTF/bin files are **not** inputs to this pipeline (the meshes are already
+baked into `src/data/hero-body-bank.json`). Text sources (`.gltf`, `.asf`, `.amc`, `.md`,
+`.json`) are hashed after normalising line endings to LF, so a checkout made with Git's CRLF
+conversion produces the same hashes as one made without it; binary sources are hashed as-is.
+Playwright's browser must be installed once for the browser checks: `npx playwright install chromium`.
 
 ## Quaternius Universal Animation Library — Standard (CC0-1.0)
 

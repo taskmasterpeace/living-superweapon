@@ -10,7 +10,7 @@ const out='authoring/artifacts';await mkdir(out,{recursive:true});
 const browser=await chromium.launch({headless:true});
 const page=await browser.newPage({viewport:{width:1500,height:980}});
 const errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
-const rows=[];
+const rows=[],blocked=[];
 async function selectPackage(id){
  await page.evaluate(id=>AUTHORING.select(AUTHORING.state.catalog.packages.find(p=>p.id===id)),id);
  await page.waitForFunction(id=>AUTHORING.state.selected?.id===id&&AUTHORING.stage.pkg?.manifest?.id===id&&!!AUTHORING.stage.playback,id);
@@ -35,12 +35,14 @@ try{
     assert.equal(r.mounted,true,`${weapon}/${body}: mounted on the ${r.mountedOn} hand socket`);
     assert.ok(r.gripAtHand<1e-3,`${weapon}/${body}/${clip}: grip socket coincides with the hand (${r.gripAtHand})`);
     assert.ok(r.muzzleDot>.9,`${weapon}/${body}/${clip}: muzzle points down the hand axis (dot ${r.muzzleDot?.toFixed(3)})`);
-    // The support hand must close on the fore-grip / two-hand grip in the drawn-in reload pose. In
-    // full-extension aim takes the production rig's arms (reach 3.58u on a 3.92u shoulder span at
-    // scale 1.12) cannot converge a two-hand grip at all; that is reported, not asserted, and is
-    // written up in docs/authoring/INTEGRATION.md as a rig/pose seam, not a package defect.
-    if(clip==='reload')assert.ok(r.supportError<.35,`${weapon}/${body}/${clip}: support hand closes on the grip (error ${r.supportError?.toFixed(3)}u)`);
-    else if(['aim-neutral','pistol-idle'].includes(clip))assert.ok(r.supportError<1.0,`${weapon}/${body}/${clip}: support hand within a hand's length of the grip (error ${r.supportError?.toFixed(3)}u)`);
+    // Support-hand policy. Mount, muzzle and holster are fits. The support hand is a FIT only where
+    // it closes within 0.35u (the drawn-in reload pose). In full-extension aim takes the rig cannot
+    // converge a two-hand grip (reach 3.58u on a 3.92u shoulder span at scale 1.12); those rows are
+    // recorded as BLOCKED — an integration blocker owned by the main task's armed carrier, declared
+    // on the package (acceptance.blockers: full-extension-support-hand) — never as a passed fit.
+    r.supportFit=r.supportError==null?'n/a':r.supportError<.35?'pass':['aim-neutral','pistol-idle'].includes(clip)?'blocked':'not-a-hold-pose';
+    if(clip==='reload')assert.equal(r.supportFit,'pass',`${weapon}/${body}/${clip}: support hand closes on the grip (error ${r.supportError?.toFixed(3)}u)`);
+    if(r.supportFit==='blocked')blocked.push(`${weapon}/${body}/${clip} gap ${r.supportError.toFixed(2)}u`);
     assert.ok(r.holsterFrom,`${weapon}/${body}: holster placed from a body package socket`);
     assert.equal(r.holsterPenetrates,false,`${weapon}/${body}/${clip}: holstered copy must not sit inside the torso or a thigh (depth ${r.holsterDepth})`);
    }
@@ -56,7 +58,12 @@ try{
  await pose('heavy','reload',.55);await shot('m3-sidearm-heavy-reload-side','side');
  await pose('superhero-male','rest',0);await shot('m3-sidearm-male-rest-rear','rear');
  await selectPackage('prop.ammo-crate');await page.waitForTimeout(300);await shot('m3-prop-crate','front');
- await writeFile(`${out}/m3-equipment-results.json`,JSON.stringify({rows,errors},null,1));
+ const fits=rows.filter(r=>r.supportFit==='pass').length;
+ const summary={mounts:rows.length,supportFits:fits,supportBlocked:blocked.length,supportNotHoldPose:rows.filter(r=>r.supportFit==='not-a-hold-pose').length,
+  verdict:'mount/muzzle/holster PASS on every row; support hand PASS only in the drawn-in reload pose; full-extension aim rows are BLOCKED (integration blocker full-extension-support-hand, owner main-task), not fits'};
+ await writeFile(`${out}/m3-equipment-results.json`,JSON.stringify({summary,blocked,rows,errors},null,1));
  assert.deepEqual(errors,[],'viewer must stay free of page and console errors');
- console.log(`PASS ${rows.length} fits: 2 weapons × 4 proportions × 7 poses, stills written to ${out}/m3-*.jpg`);
+ assert.equal(blocked.length,16,'every full-extension aim row (2 weapons × 4 proportions × 2 takes) must stay recorded as blocked; a silent pass here would hide the integration blocker');
+ assert.equal(fits,8,'the support hand passes exactly on the 8 reload rows');
+ console.log(`PASS ${rows.length} mounts (2 weapons × 4 proportions × 7 poses): grip/muzzle/holster fit on all; support hand fit on ${fits} reload rows; ${blocked.length} full-extension aim rows BLOCKED (integration blocker, not fits); stills → ${out}/m3-*.jpg`);
 }finally{await browser.close();}

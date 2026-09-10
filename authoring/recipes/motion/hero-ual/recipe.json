@@ -3,7 +3,13 @@
  "kind": "humanoid-motion",
  "adapter": "quaternius-ual",
  "displayName": "Hero motion set (Quaternius UAL Standard)",
- "tags": ["humanoid", "locomotion", "pistol", "crouch", "cc0"],
+ "tags": [
+  "humanoid",
+  "locomotion",
+  "pistol",
+  "crouch",
+  "cc0"
+ ],
  "sources": [
   "assets-src/quaternius/AnimationLibrary_Godot_Standard.gltf",
   "assets-src/quaternius/AnimationLibrary_Godot_Standard.bin"
@@ -19,34 +25,249 @@
   "terms": "CC0 1.0 Universal. The advertised full library is not a claim that every take is in this free subset; takes used are named per clip."
  },
  "bindTake": "A_TPose",
- "sourceConversion": {"scale": 1, "yawDegrees": 0, "mirrorX": false, "sourceUp": "+Y", "sourceForward": "+Z"},
+ "sourceConversion": {
+  "scale": 1,
+  "yawDegrees": 0,
+  "mirrorX": false,
+  "sourceUp": "+Y",
+  "sourceForward": "+Z"
+ },
  "mapping": {
-  "hip": "DEF-hips", "chest": "DEF-spine.003", "head": "DEF-head",
-  "shoulderL": "DEF-upper_arm.R", "elbowL": "DEF-forearm.R", "handL": "DEF-hand.R",
-  "shoulderR": "DEF-upper_arm.L", "elbowR": "DEF-forearm.L", "handR": "DEF-hand.L",
-  "hipL": "DEF-thigh.R", "kneeL": "DEF-shin.R", "footL": "DEF-foot.R", "toeL": "DEF-toe.R",
-  "hipR": "DEF-thigh.L", "kneeR": "DEF-shin.L", "footR": "DEF-foot.L", "toeR": "DEF-toe.L"
+  "hip": "DEF-hips",
+  "chest": "DEF-spine.003",
+  "head": "DEF-head",
+  "shoulderL": "DEF-upper_arm.R",
+  "elbowL": "DEF-forearm.R",
+  "handL": "DEF-hand.R",
+  "shoulderR": "DEF-upper_arm.L",
+  "elbowR": "DEF-forearm.L",
+  "handR": "DEF-hand.L",
+  "hipL": "DEF-thigh.R",
+  "kneeL": "DEF-shin.R",
+  "footL": "DEF-foot.R",
+  "toeL": "DEF-toe.R",
+  "hipR": "DEF-thigh.L",
+  "kneeR": "DEF-shin.L",
+  "footR": "DEF-foot.L",
+  "toeR": "DEF-toe.L"
  },
  "_mappingNote": "The engine's L slot is the negative-X limb. In this glTF the anatomical .R limb sits on negative X, so it feeds slot L. Slots are mapped, the source is never rotated.",
  "clips": [
-  {"id": "idle", "take": "Idle_Loop", "loop": true, "handedness": "none"},
-  {"id": "walk", "take": "Walk_Loop", "loop": true, "handedness": "none", "events": [{"type": "footstep", "derive": "foot-contact"}]},
-  {"id": "jog", "take": "Jog_Fwd_Loop", "loop": true, "handedness": "none", "events": [{"type": "footstep", "derive": "foot-contact"}]},
-  {"id": "sprint", "take": "Sprint_Loop", "loop": true, "handedness": "none", "events": [{"type": "footstep", "derive": "foot-contact"}]},
-  {"id": "crouch-idle", "take": "Crouch_Idle_Loop", "loop": true, "handedness": "none"},
-  {"id": "crouch-walk", "take": "Crouch_Fwd_Loop", "loop": true, "handedness": "none", "events": [{"type": "footstep", "derive": "foot-contact"}]},
-  {"id": "pistol-idle", "take": "Pistol_Idle_Loop", "loop": true, "handedness": "right"},
-  {"id": "aim-neutral", "take": "Pistol_Aim_Neutral", "loop": false, "handedness": "right"},
-  {"id": "aim-up", "take": "Pistol_Aim_Up", "loop": false, "handedness": "right"},
-  {"id": "aim-down", "take": "Pistol_Aim_Down", "loop": false, "handedness": "right"},
-  {"id": "pistol-shoot", "take": "Pistol_Shoot", "loop": false, "handedness": "right", "events": [{"type": "contact", "derive": "hand-speed-peak", "hand": "R"}]},
-  {"id": "reload", "take": "Pistol_Reload", "loop": false, "handedness": "right", "events": [{"type": "mag-out", "derive": "support-hand-leave"}, {"type": "mag-in", "derive": "support-hand-return"}]},
-  {"id": "roll", "take": "Roll", "loop": false, "handedness": "none"},
-  {"id": "jump-start", "take": "Jump_Start", "loop": false, "handedness": "none"},
-  {"id": "jump-loop", "take": "Jump_Loop", "loop": true, "handedness": "none"},
-  {"id": "jump-land", "take": "Jump_Land", "loop": false, "handedness": "none", "events": [{"type": "contact", "derive": "foot-contact"}]},
-  {"id": "hit-chest", "take": "Hit_Chest", "loop": false, "handedness": "none"},
-  {"id": "jab", "take": "Punch_Jab", "loop": false, "handedness": "right", "mode": "strike", "side": 1, "contactStart": 0.21667, "contactEnd": 0.33333, "events": [{"type": "contact", "t": 0.21667, "note": "matches strike-bank contactStart"}, {"type": "recovery", "t": 0.33333, "note": "matches strike-bank contactEnd"}]},
-  {"id": "cross", "take": "Punch_Cross", "loop": false, "handedness": "left", "mode": "strike", "side": -1, "contactStart": 0.26667, "contactEnd": 0.46667, "events": [{"type": "contact", "t": 0.26667, "note": "matches strike-bank contactStart"}, {"type": "recovery", "t": 0.46667, "note": "matches strike-bank contactEnd"}]}
- ]
+  {
+   "id": "idle",
+   "take": "Idle_Loop",
+   "loop": true,
+   "handedness": "none"
+  },
+  {
+   "id": "walk",
+   "take": "Walk_Loop",
+   "loop": true,
+   "handedness": "none",
+   "events": [
+    {
+     "type": "footstep",
+     "derive": "foot-contact"
+    }
+   ]
+  },
+  {
+   "id": "jog",
+   "take": "Jog_Fwd_Loop",
+   "loop": true,
+   "handedness": "none",
+   "events": [
+    {
+     "type": "footstep",
+     "derive": "foot-contact"
+    }
+   ]
+  },
+  {
+   "id": "sprint",
+   "take": "Sprint_Loop",
+   "loop": true,
+   "handedness": "none",
+   "events": [
+    {
+     "type": "footstep",
+     "derive": "foot-contact"
+    }
+   ]
+  },
+  {
+   "id": "crouch-idle",
+   "take": "Crouch_Idle_Loop",
+   "loop": true,
+   "handedness": "none"
+  },
+  {
+   "id": "crouch-walk",
+   "take": "Crouch_Fwd_Loop",
+   "loop": true,
+   "handedness": "none",
+   "events": [
+    {
+     "type": "footstep",
+     "derive": "foot-contact"
+    }
+   ]
+  },
+  {
+   "id": "pistol-idle",
+   "take": "Pistol_Idle_Loop",
+   "loop": true,
+   "handedness": "right"
+  },
+  {
+   "id": "aim-neutral",
+   "take": "Pistol_Aim_Neutral",
+   "loop": false,
+   "handedness": "right"
+  },
+  {
+   "id": "aim-up",
+   "take": "Pistol_Aim_Up",
+   "loop": false,
+   "handedness": "right"
+  },
+  {
+   "id": "aim-down",
+   "take": "Pistol_Aim_Down",
+   "loop": false,
+   "handedness": "right"
+  },
+  {
+   "id": "pistol-shoot",
+   "take": "Pistol_Shoot",
+   "loop": false,
+   "handedness": "right",
+   "events": [
+    {
+     "type": "contact",
+     "derive": "hand-speed-peak",
+     "hand": "R"
+    }
+   ]
+  },
+  {
+   "id": "reload",
+   "take": "Pistol_Reload",
+   "loop": false,
+   "handedness": "right",
+   "events": [
+    {
+     "type": "mag-out",
+     "derive": "support-hand-leave"
+    },
+    {
+     "type": "mag-in",
+     "derive": "support-hand-return"
+    }
+   ]
+  },
+  {
+   "id": "roll",
+   "take": "Roll",
+   "loop": false,
+   "handedness": "none"
+  },
+  {
+   "id": "jump-start",
+   "take": "Jump_Start",
+   "loop": false,
+   "handedness": "none"
+  },
+  {
+   "id": "jump-loop",
+   "take": "Jump_Loop",
+   "loop": true,
+   "handedness": "none"
+  },
+  {
+   "id": "jump-land",
+   "take": "Jump_Land",
+   "loop": false,
+   "handedness": "none",
+   "events": [
+    {
+     "type": "contact",
+     "derive": "foot-contact"
+    }
+   ]
+  },
+  {
+   "id": "hit-chest",
+   "take": "Hit_Chest",
+   "loop": false,
+   "handedness": "none"
+  },
+  {
+   "id": "jab",
+   "take": "Punch_Jab",
+   "loop": false,
+   "handedness": "right",
+   "mode": "strike",
+   "side": 1,
+   "contactStart": 0.21667,
+   "contactEnd": 0.33333,
+   "events": [
+    {
+     "type": "contact",
+     "t": 0.21667,
+     "note": "matches strike-bank contactStart"
+    },
+    {
+     "type": "recovery",
+     "t": 0.33333,
+     "note": "matches strike-bank contactEnd"
+    }
+   ]
+  },
+  {
+   "id": "cross",
+   "take": "Punch_Cross",
+   "loop": false,
+   "handedness": "left",
+   "mode": "strike",
+   "side": -1,
+   "contactStart": 0.26667,
+   "contactEnd": 0.46667,
+   "events": [
+    {
+     "type": "contact",
+     "t": 0.26667,
+     "note": "matches strike-bank contactStart"
+    },
+    {
+     "type": "recovery",
+     "t": 0.46667,
+     "note": "matches strike-bank contactEnd"
+    }
+   ]
+  },
+  {
+   "id": "fall-supine",
+   "take": "Death01",
+   "loop": false,
+   "handedness": "none",
+   "expectPosture": {
+    "start": "standing",
+    "end": "supine"
+   },
+   "events": [
+    {
+     "type": "contact",
+     "derive": "hand-speed-peak",
+     "hand": "R",
+     "note": "derived: peak hand speed as the body meets the ground"
+    }
+   ]
+  }
+ ],
+ "acceptance": {
+  "visual": "unapproved",
+  "blockers": [],
+  "note": "Retargeted licensed motion; not visually signed off by a person. No prone (face-down) hold or prone get-up exists in this source; Death01 ends supine."
+ }
 }

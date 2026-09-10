@@ -1,4 +1,29 @@
 {
+ "summary": {
+  "mounts": 56,
+  "supportFits": 8,
+  "supportBlocked": 16,
+  "supportNotHoldPose": 32,
+  "verdict": "mount/muzzle/holster PASS on every row; support hand PASS only in the drawn-in reload pose; full-extension aim rows are BLOCKED (integration blocker full-extension-support-hand, owner main-task), not fits"
+ },
+ "blocked": [
+  "equipment.carbine/superhero-male/aim-neutral gap 0.88u",
+  "equipment.carbine/superhero-male/pistol-idle gap 0.81u",
+  "equipment.carbine/superhero-female/aim-neutral gap 0.88u",
+  "equipment.carbine/superhero-female/pistol-idle gap 0.81u",
+  "equipment.carbine/lean/aim-neutral gap 0.56u",
+  "equipment.carbine/lean/pistol-idle gap 0.50u",
+  "equipment.carbine/heavy/aim-neutral gap 0.88u",
+  "equipment.carbine/heavy/pistol-idle gap 0.79u",
+  "equipment.sidearm/superhero-male/aim-neutral gap 0.65u",
+  "equipment.sidearm/superhero-male/pistol-idle gap 0.63u",
+  "equipment.sidearm/superhero-female/aim-neutral gap 0.65u",
+  "equipment.sidearm/superhero-female/pistol-idle gap 0.63u",
+  "equipment.sidearm/lean/aim-neutral gap 0.39u",
+  "equipment.sidearm/lean/pistol-idle gap 0.37u",
+  "equipment.sidearm/heavy/aim-neutral gap 0.57u",
+  "equipment.sidearm/heavy/pistol-idle gap 0.54u"
+ ],
  "rows": [
   {
    "rootDrift": 0,
@@ -48,7 +73,8 @@
    "holsterFrom": "sling.back",
    "hiddenProceduralWeapons": 0,
    "clip": "rest",
-   "frac": 0
+   "frac": 0,
+   "supportFit": "not-a-hold-pose"
   },
   {
    "rootDrift": 0,
@@ -98,7 +124,8 @@
    "holsterFrom": "sling.back",
    "hiddenProceduralWeapons": 0,
    "clip": "aim-neutral",
-   "frac": 1
+   "frac": 1,
+   "supportFit": "blocked"
   },
   {
    "rootDrift": 0,
@@ -148,7 +175,8 @@
    "holsterFrom": "sling.back",
    "hiddenProceduralWeapons": 0,
    "clip": "pistol-idle",
-   "frac": 0.5
+   "frac": 0.5,
+   "supportFit": "blocked"
   },
   {
    "rootDrift": 0,
@@ -198,7 +226,8 @@
    "holsterFrom": "sling.back",
    "hiddenProceduralWeapons": 0,
    "clip": "reload",
-   "frac": 0.55
+   "frac": 0.55,
+   "supportFit": "pass"
   },
   {
    "rootDrift": 0,
@@ -248,7 +277,8 @@
    "holsterFrom": "sling.back",
    "hiddenProceduralWeapons": 0,
    "clip": "walk",
-   "frac": 0.35
+   "frac": 0.35,
+   "supportFit": "not-a-hold-pose"
   },
   {
    "rootDrift": 0,
@@ -298,7 +328,8 @@
    "holsterFrom": "sling.back",
    "hiddenProceduralWeapons": 0,
    "clip": "walk-carry",
-   "frac": 0.35
+   "frac": 0.35,
+   "supportFit": "not-a-hold-pose"
   },
   {
    "rootDrift": 0,
@@ -348,7 +379,8 @@
    "holsterFrom": "sling.back",
    "hiddenProceduralWeapons": 0,
    "clip": "crouch-idle",
-   "frac": 0.5
+   "frac": 0.5,
+   "supportFit": "not-a-hold-pose"
   },
   {
    "rootDrift": 0,
@@ -398,7 +430,8 @@
    "holsterFrom": "sling.back",
    "hiddenProceduralWeapons": 0,
    "clip": "rest",
-   "frac": 0
+   "frac": 0,
+   "supportFit": "not-a-hold-pose"
   },
   {
    "rootDrift": 0,
@@ -448,7 +481,8 @@
    "holsterFrom": "sling.back",
    "hiddenProceduralWeapons": 0,
    "clip": "aim-neutral",
-   "frac": 1
+   "frac": 1,
+   "supportFit": "blocked"
   },
   {
    "rootDrift": 0,
@@ -498,7 +532,8 @@
    "holsterFrom": "sling.back",
    "hiddenProceduralWeapons": 0,
    "clip": "pistol-idle",
-   "frac": 0.5
+   "frac": 0.5,
+   "supportFit": "blocked"
   },
   {
    "rootDrift": 0,
@@ -548,7 +583,8 @@
    "holsterFrom": "sling.back",
    "hiddenProceduralWeapons": 0,
    "clip": "reload",
-   "frac": 0.55
+   "frac": 0.55,
+   "supportFit": "pass"
   },
   {
    "rootDrift": 0,
@@ -598,7 +634,8 @@
    "holsterFrom": "sling.back",
    "hiddenProceduralWeapons": 0,
    "clip": "walk",
-   "frac": 0.35
+   "frac": 0.35,
+   "supportFit": "not-a-hold-pose"
   },
   {
    "rootDrift": 0,
@@ -648,7 +685,8 @@
    "holsterFrom": "sling.back",
    "hiddenProceduralWeapons": 0,
    "clip": "walk-carry",
-   "frac": 0.35
+   "frac": 0.35,
+   "supportFit": "not-a-hold-pose"
   },
   {
    "rootDrift": 0,
@@ -698,7 +736,8 @@
    "holsterFrom": "sling.back",
    "hiddenProceduralWeapons": 0,
    "clip": "crouch-idle",
-   "frac": 0.5
+   "frac": 0.5,
+   "supportFit": "not-a-hold-pose"
   },
   {
    "rootDrift": 0,
@@ -748,7 +787,8 @@
    "holsterFrom": "sling.back",
    "hiddenProceduralWeapons": 0,
    "clip": "rest",
-   "frac": 0
+   "frac": 0,
+   "supportFit": "not-a-hold-pose"
   },
   {
    "rootDrift": 0,
@@ -798,7 +838,8 @@
    "holsterFrom": "sling.back",
    "hiddenProceduralWeapons": 0,
    "clip": "aim-neutral",
-   "frac": 1
+   "frac": 1,
+   "supportFit": "blocked"
   },
   {
    "rootDrift": 0,
@@ -848,7 +889,8 @@
    "holsterFrom": "sling.back",
    "hiddenProceduralWeapons": 0,
    "clip": "pistol-idle",
-   "frac": 0.5
+   "frac": 0.5,
+   "supportFit": "blocked"
   },
   {
    "rootDrift": 0,
@@ -898,7 +940,8 @@
    "holsterFrom": "sling.back",
    "hiddenProceduralWeapons": 0,
    "clip": "reload",
-   "frac": 0.55
+   "frac": 0.55,
+   "supportFit": "pass"
   },
   {
    "rootDrift": 0,
@@ -948,7 +991,8 @@
    "holsterFrom": "sling.back",
    "hiddenProceduralWeapons": 0,
    "clip": "walk",
-   "frac": 0.35
+   "frac": 0.35,
+   "supportFit": "not-a-hold-pose"
   },
   {
    "rootDrift": 0,
@@ -998,7 +1042,8 @@
    "holsterFrom": "sling.back",
    "hiddenProceduralWeapons": 0,
    "clip": "walk-carry",
-   "frac": 0.35
+   "frac": 0.35,
+   "supportFit": "not-a-hold-pose"
   },
   {
    "rootDrift": 0,
@@ -1048,7 +1093,8 @@
    "holsterFrom": "sling.back",
    "hiddenProceduralWeapons": 0,
    "clip": "crouch-idle",
-   "frac": 0.5
+   "frac": 0.5,
+   "supportFit": "not-a-hold-pose"
   },
   {
    "rootDrift": 0,
@@ -1098,7 +1144,8 @@
    "holsterFrom": "sling.back",
    "hiddenProceduralWeapons": 0,
    "clip": "rest",
-   "frac": 0
+   "frac": 0,
+   "supportFit": "not-a-hold-pose"
   },
   {
    "rootDrift": 0,
@@ -1148,7 +1195,8 @@
    "holsterFrom": "sling.back",
    "hiddenProceduralWeapons": 0,
    "clip": "aim-neutral",
-   "frac": 1
+   "frac": 1,
+   "supportFit": "blocked"
   },
   {
    "rootDrift": 0,
@@ -1198,7 +1246,8 @@
    "holsterFrom": "sling.back",
    "hiddenProceduralWeapons": 0,
    "clip": "pistol-idle",
-   "frac": 0.5
+   "frac": 0.5,
+   "supportFit": "blocked"
   },
   {
    "rootDrift": 0,
@@ -1248,7 +1297,8 @@
    "holsterFrom": "sling.back",
    "hiddenProceduralWeapons": 0,
    "clip": "reload",
-   "frac": 0.55
+   "frac": 0.55,
+   "supportFit": "pass"
   },
   {
    "rootDrift": 0,
@@ -1298,7 +1348,8 @@
    "holsterFrom": "sling.back",
    "hiddenProceduralWeapons": 0,
    "clip": "walk",
-   "frac": 0.35
+   "frac": 0.35,
+   "supportFit": "not-a-hold-pose"
   },
   {
    "rootDrift": 0,
@@ -1348,7 +1399,8 @@
    "holsterFrom": "sling.back",
    "hiddenProceduralWeapons": 0,
    "clip": "walk-carry",
-   "frac": 0.35
+   "frac": 0.35,
+   "supportFit": "not-a-hold-pose"
   },
   {
    "rootDrift": 0,
@@ -1398,7 +1450,8 @@
    "holsterFrom": "sling.back",
    "hiddenProceduralWeapons": 0,
    "clip": "crouch-idle",
-   "frac": 0.5
+   "frac": 0.5,
+   "supportFit": "not-a-hold-pose"
   },
   {
    "rootDrift": 0,
@@ -1448,7 +1501,8 @@
    "holsterFrom": "holster.hip",
    "hiddenProceduralWeapons": 0,
    "clip": "rest",
-   "frac": 0
+   "frac": 0,
+   "supportFit": "not-a-hold-pose"
   },
   {
    "rootDrift": 0,
@@ -1498,7 +1552,8 @@
    "holsterFrom": "holster.hip",
    "hiddenProceduralWeapons": 0,
    "clip": "aim-neutral",
-   "frac": 1
+   "frac": 1,
+   "supportFit": "blocked"
   },
   {
    "rootDrift": 0,
@@ -1548,7 +1603,8 @@
    "holsterFrom": "holster.hip",
    "hiddenProceduralWeapons": 0,
    "clip": "pistol-idle",
-   "frac": 0.5
+   "frac": 0.5,
+   "supportFit": "blocked"
   },
   {
    "rootDrift": 0,
@@ -1598,7 +1654,8 @@
    "holsterFrom": "holster.hip",
    "hiddenProceduralWeapons": 0,
    "clip": "reload",
-   "frac": 0.55
+   "frac": 0.55,
+   "supportFit": "pass"
   },
   {
    "rootDrift": 0,
@@ -1648,7 +1705,8 @@
    "holsterFrom": "holster.hip",
    "hiddenProceduralWeapons": 0,
    "clip": "walk",
-   "frac": 0.35
+   "frac": 0.35,
+   "supportFit": "not-a-hold-pose"
   },
   {
    "rootDrift": 0,
@@ -1698,7 +1756,8 @@
    "holsterFrom": "holster.hip",
    "hiddenProceduralWeapons": 0,
    "clip": "walk-carry",
-   "frac": 0.35
+   "frac": 0.35,
+   "supportFit": "not-a-hold-pose"
   },
   {
    "rootDrift": 0,
@@ -1748,7 +1807,8 @@
    "holsterFrom": "holster.hip",
    "hiddenProceduralWeapons": 0,
    "clip": "crouch-idle",
-   "frac": 0.5
+   "frac": 0.5,
+   "supportFit": "not-a-hold-pose"
   },
   {
    "rootDrift": 0,
@@ -1798,7 +1858,8 @@
    "holsterFrom": "holster.hip",
    "hiddenProceduralWeapons": 0,
    "clip": "rest",
-   "frac": 0
+   "frac": 0,
+   "supportFit": "not-a-hold-pose"
   },
   {
    "rootDrift": 0,
@@ -1848,7 +1909,8 @@
    "holsterFrom": "holster.hip",
    "hiddenProceduralWeapons": 0,
    "clip": "aim-neutral",
-   "frac": 1
+   "frac": 1,
+   "supportFit": "blocked"
   },
   {
    "rootDrift": 0,
@@ -1898,7 +1960,8 @@
    "holsterFrom": "holster.hip",
    "hiddenProceduralWeapons": 0,
    "clip": "pistol-idle",
-   "frac": 0.5
+   "frac": 0.5,
+   "supportFit": "blocked"
   },
   {
    "rootDrift": 0,
@@ -1948,7 +2011,8 @@
    "holsterFrom": "holster.hip",
    "hiddenProceduralWeapons": 0,
    "clip": "reload",
-   "frac": 0.55
+   "frac": 0.55,
+   "supportFit": "pass"
   },
   {
    "rootDrift": 0,
@@ -1998,7 +2062,8 @@
    "holsterFrom": "holster.hip",
    "hiddenProceduralWeapons": 0,
    "clip": "walk",
-   "frac": 0.35
+   "frac": 0.35,
+   "supportFit": "not-a-hold-pose"
   },
   {
    "rootDrift": 0,
@@ -2048,7 +2113,8 @@
    "holsterFrom": "holster.hip",
    "hiddenProceduralWeapons": 0,
    "clip": "walk-carry",
-   "frac": 0.35
+   "frac": 0.35,
+   "supportFit": "not-a-hold-pose"
   },
   {
    "rootDrift": 0,
@@ -2098,7 +2164,8 @@
    "holsterFrom": "holster.hip",
    "hiddenProceduralWeapons": 0,
    "clip": "crouch-idle",
-   "frac": 0.5
+   "frac": 0.5,
+   "supportFit": "not-a-hold-pose"
   },
   {
    "rootDrift": 0,
@@ -2148,7 +2215,8 @@
    "holsterFrom": "holster.hip",
    "hiddenProceduralWeapons": 0,
    "clip": "rest",
-   "frac": 0
+   "frac": 0,
+   "supportFit": "not-a-hold-pose"
   },
   {
    "rootDrift": 0,
@@ -2198,7 +2266,8 @@
    "holsterFrom": "holster.hip",
    "hiddenProceduralWeapons": 0,
    "clip": "aim-neutral",
-   "frac": 1
+   "frac": 1,
+   "supportFit": "blocked"
   },
   {
    "rootDrift": 0,
@@ -2248,7 +2317,8 @@
    "holsterFrom": "holster.hip",
    "hiddenProceduralWeapons": 0,
    "clip": "pistol-idle",
-   "frac": 0.5
+   "frac": 0.5,
+   "supportFit": "blocked"
   },
   {
    "rootDrift": 0,
@@ -2298,7 +2368,8 @@
    "holsterFrom": "holster.hip",
    "hiddenProceduralWeapons": 0,
    "clip": "reload",
-   "frac": 0.55
+   "frac": 0.55,
+   "supportFit": "pass"
   },
   {
    "rootDrift": 0,
@@ -2348,7 +2419,8 @@
    "holsterFrom": "holster.hip",
    "hiddenProceduralWeapons": 0,
    "clip": "walk",
-   "frac": 0.35
+   "frac": 0.35,
+   "supportFit": "not-a-hold-pose"
   },
   {
    "rootDrift": 0,
@@ -2398,7 +2470,8 @@
    "holsterFrom": "holster.hip",
    "hiddenProceduralWeapons": 0,
    "clip": "walk-carry",
-   "frac": 0.35
+   "frac": 0.35,
+   "supportFit": "not-a-hold-pose"
   },
   {
    "rootDrift": 0,
@@ -2448,7 +2521,8 @@
    "holsterFrom": "holster.hip",
    "hiddenProceduralWeapons": 0,
    "clip": "crouch-idle",
-   "frac": 0.5
+   "frac": 0.5,
+   "supportFit": "not-a-hold-pose"
   },
   {
    "rootDrift": 0,
@@ -2498,7 +2572,8 @@
    "holsterFrom": "holster.hip",
    "hiddenProceduralWeapons": 0,
    "clip": "rest",
-   "frac": 0
+   "frac": 0,
+   "supportFit": "not-a-hold-pose"
   },
   {
    "rootDrift": 0,
@@ -2548,7 +2623,8 @@
    "holsterFrom": "holster.hip",
    "hiddenProceduralWeapons": 0,
    "clip": "aim-neutral",
-   "frac": 1
+   "frac": 1,
+   "supportFit": "blocked"
   },
   {
    "rootDrift": 0,
@@ -2598,7 +2674,8 @@
    "holsterFrom": "holster.hip",
    "hiddenProceduralWeapons": 0,
    "clip": "pistol-idle",
-   "frac": 0.5
+   "frac": 0.5,
+   "supportFit": "blocked"
   },
   {
    "rootDrift": 0,
@@ -2648,7 +2725,8 @@
    "holsterFrom": "holster.hip",
    "hiddenProceduralWeapons": 0,
    "clip": "reload",
-   "frac": 0.55
+   "frac": 0.55,
+   "supportFit": "pass"
   },
   {
    "rootDrift": 0,
@@ -2698,7 +2776,8 @@
    "holsterFrom": "holster.hip",
    "hiddenProceduralWeapons": 0,
    "clip": "walk",
-   "frac": 0.35
+   "frac": 0.35,
+   "supportFit": "not-a-hold-pose"
   },
   {
    "rootDrift": 0,
@@ -2748,7 +2827,8 @@
    "holsterFrom": "holster.hip",
    "hiddenProceduralWeapons": 0,
    "clip": "walk-carry",
-   "frac": 0.35
+   "frac": 0.35,
+   "supportFit": "not-a-hold-pose"
   },
   {
    "rootDrift": 0,
@@ -2798,7 +2878,8 @@
    "holsterFrom": "holster.hip",
    "hiddenProceduralWeapons": 0,
    "clip": "crouch-idle",
-   "frac": 0.5
+   "frac": 0.5,
+   "supportFit": "not-a-hold-pose"
   }
  ],
  "errors": []

@@ -545,6 +545,32 @@
    "clip": "grenade-throw",
    "frac": 0.21247505311876327,
    "time": 0.2833
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.1446829759999998,
+   "armL": {
+    "reach": 3.583000000000001,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "armR": {
+    "reach": 3.583000000000001,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "pivotHeight": 5.152,
+   "skinned": true,
+   "skinId": "superhero-male",
+   "frameScale": 1.12,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "superhero-male",
+   "clip": "supine-rise",
+   "frac": 0,
+   "time": 0
   }
  ],
  "errors": []

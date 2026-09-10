@@ -29,7 +29,7 @@
      "bytes": 2565382
     }
    },
-   "packageHash": "c453affcea9079c45950c0cbb307b91c814abd73c620835d9d4cc2a8e1a223d2"
+   "packageHash": "8487ba772735dff2f7856771e282f5198bade431b19048b5a4cea57f2cfb5a1e"
   },
   {
    "dir": "public/authored-assets/body.hero-lean/v1",
@@ -58,7 +58,7 @@
      "bytes": 2565382
     }
    },
-   "packageHash": "bfebe7469e20a66d111dab7ee3c1190ac199e9e7485f880d263152f1fe13ae07"
+   "packageHash": "0a4d02f033c07356a515efb43fd4045a2862087afd812c0b0e107f3d1457bc02"
   },
   {
    "dir": "public/authored-assets/body.hero-standard-female/v1",
@@ -87,7 +87,7 @@
      "bytes": 2565382
     }
    },
-   "packageHash": "d753dd812575ab48ec4959dc2291e1b0cdaa70d4af80a7c64227911f68d9d0de"
+   "packageHash": "98009988fb704897790b9de70e5045cf5fba17e8a529d296085295eed09b6e11"
   },
   {
    "dir": "public/authored-assets/body.hero-standard/v1",
@@ -116,7 +116,7 @@
      "bytes": 2565382
     }
    },
-   "packageHash": "a697ae0b8a28fab30e84e1ae81f7bb13a36877c26a9ec431bcea23cefc374d0c"
+   "packageHash": "0aab2416dc8d79ccc05a4fc1daa82b12a6dd9174d272a8ef7df104acb63321fa"
   },
   {
    "dir": "public/authored-assets/creature.field-hound/v1",
@@ -145,7 +145,7 @@
      "bytes": 2565382
     }
    },
-   "packageHash": "354a4113dbd7e2768c71c1dafa7583707d610d50ef52d4d02fc17d8a009dc8d3"
+   "packageHash": "24719069b5407865d954dbbee45794381c379066c8b115ea6ad9b19699f806d1"
   },
   {
    "dir": "public/authored-assets/equipment.carbine/v1",
@@ -174,7 +174,7 @@
      "bytes": 427570
     }
    },
-   "packageHash": "81f6869cc83618a9e8f5d1b274cddd79e412dde54a89074a8bf7fb0e03e5193c"
+   "packageHash": "492f111e20cc043615096fa893dd04df33e160ccf7f60b69ddf016b04f3ff251"
   },
   {
    "dir": "public/authored-assets/equipment.sidearm/v1",
@@ -203,7 +203,7 @@
      "bytes": 427570
     }
    },
-   "packageHash": "04859041177a4f39ab8f2d57cb0cefe800ab6f738c27c6c06fea5501866f6760"
+   "packageHash": "2aef653d12f5bde3a7dbbf2b270e77c3f21332ca933e2724611c53e397f09c45"
   },
   {
    "dir": "public/authored-assets/motion.cmu-walk-02/v1",
@@ -229,10 +229,10 @@
      "materials": 1,
      "bones": 1,
      "textures": 1,
-     "bytes": 90941
+     "bytes": 90940
     }
    },
-   "packageHash": "a5dee40409f310c594f323a4027caca73d5772bf2b5780c580ce2d9ad9b68c5f"
+   "packageHash": "82b1be9eab4f4ef1b2efaead5c8a478c410b6f63acf9296affe5d1afcd011341"
   },
   {
    "dir": "public/authored-assets/motion.hero-ual2/v1",
@@ -250,7 +250,7 @@
      "materials": 0,
      "bones": 0,
      "textures": 0,
-     "bytes": 171815
+     "bytes": 171918
     },
     "limits": {
      "triangles": 1,
@@ -258,10 +258,10 @@
      "materials": 1,
      "bones": 1,
      "textures": 1,
-     "bytes": 217834
+     "bytes": 217832
     }
    },
-   "packageHash": "b283e4c78568778fbac4d2264b484343932f922fc2efa99ba303686b06c2f8fb"
+   "packageHash": "96e5ec5b9bd4e340c3514ea457a758282e2cbe6c9bbc3135ddc5076a6f43ebfe"
   },
   {
    "dir": "public/authored-assets/motion.hero-ual/v1",
@@ -279,7 +279,7 @@
      "materials": 0,
      "bones": 0,
      "textures": 0,
-     "bytes": 588648
+     "bytes": 649560
     },
     "limits": {
      "triangles": 1,
@@ -287,10 +287,10 @@
      "materials": 1,
      "bones": 1,
      "textures": 1,
-     "bytes": 756072
+     "bytes": 832202
     }
    },
-   "packageHash": "6c9c14457c294a9119d67beb84814aa3c52b428ca3f499e355e8ceb90dbc489c"
+   "packageHash": "3aa515b3c3ee58a46c9995736516aeff4cf69a3d3d0988988e2b5079bed6d3d7"
   },
   {
    "dir": "public/authored-assets/prop.ammo-crate/v1",
@@ -319,7 +319,7 @@
      "bytes": 3170030
     }
    },
-   "packageHash": "4bff85d1a0f8b0e0eb65b3a98a64be965ee959387b4ae228af00b689755e5e2c"
+   "packageHash": "82669d20a5b586c456cde99a555b5769913c30d5ba36af660b74e48f1a7c31e8"
   }
  ],
  "fixtures": [
@@ -329,6 +329,21 @@
    "ok": true,
    "codes": [],
    "errors": []
+  },
+  {
+   "group": "invalid",
+   "name": "bad-posture",
+   "ok": false,
+   "codes": [
+    "clips"
+   ],
+   "errors": [
+    {
+     "code": "clips",
+     "path": "$.clips[0].posture",
+     "message": "posture start/end must be one of standing, crouch, prone, supine, airborne, transition"
+    }
+   ]
   },
   {
    "group": "invalid",
@@ -392,6 +407,21 @@
      "code": "rig-mapping",
      "path": "$.rig.mapping",
      "message": "two slots map to the same source joint"
+    }
+   ]
+  },
+  {
+   "group": "invalid",
+   "name": "missing-acceptance",
+   "ok": false,
+   "codes": [
+    "acceptance"
+   ],
+   "errors": [
+    {
+     "code": "acceptance",
+     "path": "$.acceptance",
+     "message": "acceptance record is required (visual status + blockers)"
     }
    ]
   },

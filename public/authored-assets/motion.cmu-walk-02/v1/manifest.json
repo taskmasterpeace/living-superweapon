@@ -58,7 +58,26 @@
      "side": "L",
      "note": "derived:foot-contact"
     }
-   ]
+   ],
+   "posture": {
+    "start": "standing",
+    "end": "standing",
+    "measured": {
+     "start": {
+      "posture": "standing",
+      "up": 0.992,
+      "forwardY": -0.098,
+      "hipRatio": 1
+     },
+     "end": {
+      "posture": "standing",
+      "up": 1,
+      "forwardY": -0.003,
+      "hipRatio": 1
+     }
+    }
+   },
+   "category": "action"
   }
  ],
  "units": {
@@ -92,7 +111,7 @@
    "materials": 1,
    "bones": 1,
    "textures": 1,
-   "bytes": 90941
+   "bytes": 90940
   }
  },
  "provenance": {
@@ -108,16 +127,16 @@
   "files": [
    {
     "path": "assets-src/cmu/02.asf",
-    "sha256": "c9f5ff45b4437b279f58b95dacf017afd3135373096274df69436a9354d796cf"
+    "sha256": "c50c9cf21fa50dcea0b597e8caf5a2191975cd20999935cc50ab60d44382de9b"
    },
    {
     "path": "assets-src/cmu/02_01.amc",
-    "sha256": "1503c481f4726e640c77888f0c841dd3be0694684bcd32296cf53685c6fc1492"
+    "sha256": "e196f67e5cee0bb575e2ed105082231166a13f81f6ff7b460f6078ed66c8e43a"
    }
   ],
   "recipe": {
    "path": "authoring/recipes/motion/cmu-walk-02/recipe.json",
-   "sha256": "ed52da24dfdf1c66ea069a962ab74ae33c1179e20843dafd11e4ca20804d5463"
+   "sha256": "21e89f16fe4604ffaac882784ffbfec609631f7eab5a963fce16df41c169ad68"
   }
  },
  "tool": {
@@ -128,9 +147,14 @@
  },
  "build": {
   "options": {},
-  "cacheKey": "e3ec8ee59e4cebda5d2a4b80d0b6747b084aff0fffdd567d40b4b0f0747f2dfb",
-  "contentHash": "bd0be2f09b670f4797ac63a5560c181d7fc2b7ac9cd968efdb8c8f5961f2ecdb",
+  "cacheKey": "7ffb458883e257a5cd05b78e3d6d9a02128309e3e7e78cc4997fe9dc49d4f3f5",
+  "contentHash": "acaa934b59df9682bdaa4617d41f357c5fe075b992cb83f702de5bd649d73cde",
   "profile": "desktop"
+ },
+ "acceptance": {
+  "visual": "unapproved",
+  "blockers": [],
+  "note": "Adapter proof clip; not visually signed off."
  },
  "compatibility": {
   "poseBridge": {
@@ -143,9 +167,9 @@
   {
    "path": "pose-bank.json",
    "role": "pose-bank",
-   "sha256": "28f7ae68fa883dd135bfc333d0c3e0b1d03e0b12ce75bce52c5b6bfad1cb346c",
+   "sha256": "5515b57f3d483146d5ad8a8bd623a190164ce1a6d365d9f63d2593276e9b911e",
    "bytes": 72679
   }
  ],
- "packageHash": "a5dee40409f310c594f323a4027caca73d5772bf2b5780c580ce2d9ad9b68c5f"
+ "packageHash": "82b1be9eab4f4ef1b2efaead5c8a478c410b6f63acf9296affe5d1afcd011341"
 }

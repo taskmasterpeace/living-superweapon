@@ -45,7 +45,26 @@
    "frames": 151,
    "mirror": null,
    "handedness": "none",
-   "events": []
+   "events": [],
+   "posture": {
+    "start": "standing",
+    "end": "standing",
+    "measured": {
+     "start": {
+      "posture": "standing",
+      "up": 0.999,
+      "forwardY": -0.052,
+      "hipRatio": 0.956
+     },
+     "end": {
+      "posture": "standing",
+      "up": 0.999,
+      "forwardY": -0.053,
+      "hipRatio": 0.956
+     }
+    }
+   },
+   "category": "cycle"
   },
   {
    "id": "walk",
@@ -69,7 +88,26 @@
      "side": "L",
      "note": "derived:foot-contact"
     }
-   ]
+   ],
+   "posture": {
+    "start": "standing",
+    "end": "standing",
+    "measured": {
+     "start": {
+      "posture": "standing",
+      "up": 0.99,
+      "forwardY": -0.141,
+      "hipRatio": 0.949
+     },
+     "end": {
+      "posture": "standing",
+      "up": 0.99,
+      "forwardY": -0.141,
+      "hipRatio": 0.949
+     }
+    }
+   },
+   "category": "cycle"
   },
   {
    "id": "jog",
@@ -80,7 +118,26 @@
    "frames": 56,
    "mirror": null,
    "handedness": "none",
-   "events": []
+   "events": [],
+   "posture": {
+    "start": "standing",
+    "end": "standing",
+    "measured": {
+     "start": {
+      "posture": "standing",
+      "up": 0.96,
+      "forwardY": -0.154,
+      "hipRatio": 0.902
+     },
+     "end": {
+      "posture": "standing",
+      "up": 0.96,
+      "forwardY": -0.155,
+      "hipRatio": 0.928
+     }
+    }
+   },
+   "category": "cycle"
   },
   {
    "id": "sprint",
@@ -91,7 +148,26 @@
    "frames": 41,
    "mirror": null,
    "handedness": "none",
-   "events": []
+   "events": [],
+   "posture": {
+    "start": "standing",
+    "end": "standing",
+    "measured": {
+     "start": {
+      "posture": "standing",
+      "up": 0.846,
+      "forwardY": -0.41,
+      "hipRatio": 0.945
+     },
+     "end": {
+      "posture": "standing",
+      "up": 0.846,
+      "forwardY": -0.41,
+      "hipRatio": 0.945
+     }
+    }
+   },
+   "category": "cycle"
   },
   {
    "id": "crouch-idle",
@@ -102,7 +178,26 @@
    "frames": 176,
    "mirror": null,
    "handedness": "none",
-   "events": []
+   "events": [],
+   "posture": {
+    "start": "crouch",
+    "end": "crouch",
+    "measured": {
+     "start": {
+      "posture": "crouch",
+      "up": 0.845,
+      "forwardY": -0.518,
+      "hipRatio": 0.504
+     },
+     "end": {
+      "posture": "crouch",
+      "up": 0.845,
+      "forwardY": -0.518,
+      "hipRatio": 0.504
+     }
+    }
+   },
+   "category": "crouch-cycle"
   },
   {
    "id": "crouch-walk",
@@ -126,7 +221,26 @@
      "side": "R",
      "note": "derived:foot-contact"
     }
-   ]
+   ],
+   "posture": {
+    "start": "crouch",
+    "end": "crouch",
+    "measured": {
+     "start": {
+      "posture": "crouch",
+      "up": 0.841,
+      "forwardY": -0.522,
+      "hipRatio": 0.504
+     },
+     "end": {
+      "posture": "crouch",
+      "up": 0.841,
+      "forwardY": -0.522,
+      "hipRatio": 0.504
+     }
+    }
+   },
+   "category": "crouch-cycle"
   },
   {
    "id": "pistol-idle",
@@ -137,7 +251,26 @@
    "frames": 101,
    "mirror": null,
    "handedness": "right",
-   "events": []
+   "events": [],
+   "posture": {
+    "start": "standing",
+    "end": "standing",
+    "measured": {
+     "start": {
+      "posture": "standing",
+      "up": 0.999,
+      "forwardY": -0.045,
+      "hipRatio": 0.956
+     },
+     "end": {
+      "posture": "standing",
+      "up": 0.999,
+      "forwardY": -0.045,
+      "hipRatio": 0.956
+     }
+    }
+   },
+   "category": "cycle"
   },
   {
    "id": "aim-neutral",
@@ -148,7 +281,26 @@
    "frames": 11,
    "mirror": null,
    "handedness": "right",
-   "events": []
+   "events": [],
+   "posture": {
+    "start": "standing",
+    "end": "standing",
+    "measured": {
+     "start": {
+      "posture": "standing",
+      "up": 0.999,
+      "forwardY": -0.045,
+      "hipRatio": 0.956
+     },
+     "end": {
+      "posture": "standing",
+      "up": 0.999,
+      "forwardY": -0.045,
+      "hipRatio": 0.956
+     }
+    }
+   },
+   "category": "action"
   },
   {
    "id": "aim-up",
@@ -159,7 +311,26 @@
    "frames": 11,
    "mirror": null,
    "handedness": "right",
-   "events": []
+   "events": [],
+   "posture": {
+    "start": "standing",
+    "end": "standing",
+    "measured": {
+     "start": {
+      "posture": "standing",
+      "up": 0.999,
+      "forwardY": 0.026,
+      "hipRatio": 0.956
+     },
+     "end": {
+      "posture": "standing",
+      "up": 0.999,
+      "forwardY": 0.026,
+      "hipRatio": 0.956
+     }
+    }
+   },
+   "category": "action"
   },
   {
    "id": "aim-down",
@@ -170,7 +341,26 @@
    "frames": 11,
    "mirror": null,
    "handedness": "right",
-   "events": []
+   "events": [],
+   "posture": {
+    "start": "standing",
+    "end": "standing",
+    "measured": {
+     "start": {
+      "posture": "standing",
+      "up": 0.991,
+      "forwardY": -0.129,
+      "hipRatio": 0.956
+     },
+     "end": {
+      "posture": "standing",
+      "up": 0.991,
+      "forwardY": -0.129,
+      "hipRatio": 0.956
+     }
+    }
+   },
+   "category": "action"
   },
   {
    "id": "pistol-shoot",
@@ -188,7 +378,26 @@
      "side": "R",
      "note": "derived:hand-speed-peak"
     }
-   ]
+   ],
+   "posture": {
+    "start": "standing",
+    "end": "standing",
+    "measured": {
+     "start": {
+      "posture": "standing",
+      "up": 0.999,
+      "forwardY": -0.045,
+      "hipRatio": 0.956
+     },
+     "end": {
+      "posture": "standing",
+      "up": 0.999,
+      "forwardY": -0.045,
+      "hipRatio": 0.956
+     }
+    }
+   },
+   "category": "action"
   },
   {
    "id": "reload",
@@ -212,7 +421,26 @@
      "side": "L",
      "note": "derived:support-hand-return"
     }
-   ]
+   ],
+   "posture": {
+    "start": "standing",
+    "end": "standing",
+    "measured": {
+     "start": {
+      "posture": "standing",
+      "up": 0.999,
+      "forwardY": -0.045,
+      "hipRatio": 0.956
+     },
+     "end": {
+      "posture": "standing",
+      "up": 0.999,
+      "forwardY": -0.045,
+      "hipRatio": 0.956
+     }
+    }
+   },
+   "category": "action"
   },
   {
    "id": "roll",
@@ -223,7 +451,26 @@
    "frames": 89,
    "mirror": null,
    "handedness": "none",
-   "events": []
+   "events": [],
+   "posture": {
+    "start": "crouch",
+    "end": "standing",
+    "measured": {
+     "start": {
+      "posture": "crouch",
+      "up": 0.924,
+      "forwardY": -0.382,
+      "hipRatio": 0.548
+     },
+     "end": {
+      "posture": "standing",
+      "up": 1,
+      "forwardY": -0.03,
+      "hipRatio": 0.956
+     }
+    }
+   },
+   "category": "action"
   },
   {
    "id": "jump-start",
@@ -234,7 +481,26 @@
    "frames": 81,
    "mirror": null,
    "handedness": "none",
-   "events": []
+   "events": [],
+   "posture": {
+    "start": "crouch",
+    "end": "standing",
+    "measured": {
+     "start": {
+      "posture": "crouch",
+      "up": 0.955,
+      "forwardY": -0.295,
+      "hipRatio": 0.563
+     },
+     "end": {
+      "posture": "standing",
+      "up": 0.995,
+      "forwardY": 0.086,
+      "hipRatio": 0.946
+     }
+    }
+   },
+   "category": "action"
   },
   {
    "id": "jump-loop",
@@ -245,7 +511,26 @@
    "frames": 151,
    "mirror": null,
    "handedness": "none",
-   "events": []
+   "events": [],
+   "posture": {
+    "start": "standing",
+    "end": "standing",
+    "measured": {
+     "start": {
+      "posture": "standing",
+      "up": 0.995,
+      "forwardY": 0.086,
+      "hipRatio": 0.946
+     },
+     "end": {
+      "posture": "standing",
+      "up": 0.995,
+      "forwardY": 0.086,
+      "hipRatio": 0.946
+     }
+    }
+   },
+   "category": "cycle"
   },
   {
    "id": "jump-land",
@@ -269,7 +554,26 @@
      "side": "L",
      "note": "derived:foot-contact"
     }
-   ]
+   ],
+   "posture": {
+    "start": "standing",
+    "end": "standing",
+    "measured": {
+     "start": {
+      "posture": "standing",
+      "up": 0.993,
+      "forwardY": -0.092,
+      "hipRatio": 1.011
+     },
+     "end": {
+      "posture": "standing",
+      "up": 0.999,
+      "forwardY": -0.046,
+      "hipRatio": 0.956
+     }
+    }
+   },
+   "category": "action"
   },
   {
    "id": "hit-chest",
@@ -280,7 +584,26 @@
    "frames": 21,
    "mirror": null,
    "handedness": "none",
-   "events": []
+   "events": [],
+   "posture": {
+    "start": "standing",
+    "end": "standing",
+    "measured": {
+     "start": {
+      "posture": "standing",
+      "up": 0.988,
+      "forwardY": 0.144,
+      "hipRatio": 0.933
+     },
+     "end": {
+      "posture": "standing",
+      "up": 0.998,
+      "forwardY": -0.055,
+      "hipRatio": 0.956
+     }
+    }
+   },
+   "category": "action"
   },
   {
    "id": "jab",
@@ -302,7 +625,26 @@
      "type": "recovery",
      "note": "matches strike-bank contactEnd"
     }
-   ]
+   ],
+   "posture": {
+    "start": "standing",
+    "end": "standing",
+    "measured": {
+     "start": {
+      "posture": "standing",
+      "up": 0.973,
+      "forwardY": 0.217,
+      "hipRatio": 0.898
+     },
+     "end": {
+      "posture": "standing",
+      "up": 0.973,
+      "forwardY": 0.217,
+      "hipRatio": 0.898
+     }
+    }
+   },
+   "category": "action"
   },
   {
    "id": "cross",
@@ -324,7 +666,63 @@
      "type": "recovery",
      "note": "matches strike-bank contactEnd"
     }
-   ]
+   ],
+   "posture": {
+    "start": "standing",
+    "end": "standing",
+    "measured": {
+     "start": {
+      "posture": "standing",
+      "up": 0.973,
+      "forwardY": 0.217,
+      "hipRatio": 0.898
+     },
+     "end": {
+      "posture": "standing",
+      "up": 0.973,
+      "forwardY": 0.217,
+      "hipRatio": 0.898
+     }
+    }
+   },
+   "category": "action"
+  },
+  {
+   "id": "fall-supine",
+   "take": "Death01",
+   "duration": 2.375,
+   "loop": false,
+   "sampleRate": 60,
+   "frames": 144,
+   "mirror": null,
+   "handedness": "none",
+   "events": [
+    {
+     "t": 0.9799,
+     "type": "contact",
+     "side": "R",
+     "note": "derived:hand-speed-peak"
+    }
+   ],
+   "posture": {
+    "start": "standing",
+    "end": "supine",
+    "measured": {
+     "start": {
+      "posture": "standing",
+      "up": 0.999,
+      "forwardY": -0.045,
+      "hipRatio": 0.956
+     },
+     "end": {
+      "posture": "supine",
+      "up": 0.102,
+      "forwardY": 0.992,
+      "hipRatio": 0.053
+     }
+    }
+   },
+   "category": "fall"
   }
  ],
  "units": {
@@ -349,7 +747,7 @@
    "materials": 0,
    "bones": 0,
    "textures": 0,
-   "bytes": 588648
+   "bytes": 649560
   },
   "limits": {
    "triangles": 1,
@@ -357,7 +755,7 @@
    "materials": 1,
    "bones": 1,
    "textures": 1,
-   "bytes": 756072
+   "bytes": 832202
   }
  },
  "provenance": {
@@ -384,7 +782,7 @@
   ],
   "recipe": {
    "path": "authoring/recipes/motion/hero-ual/recipe.json",
-   "sha256": "5d14d7b55c9d340f2e61c72ee07b88272d33f49e0e5c866a74269afade7f2718"
+   "sha256": "1bd904597130c8ef2eb266852a644d4da65841e26e2f661b019e18a1cf148aad"
   }
  },
  "tool": {
@@ -395,9 +793,14 @@
  },
  "build": {
   "options": {},
-  "cacheKey": "b228583ee407ae73a29cd2c4e797597193b49e3935f1aa799dff523038c14efb",
-  "contentHash": "bbfea9417dd30dd1ced8eb26f3bc8a5ab1d323340654c50d9665a819a41e20d9",
+  "cacheKey": "b52fedd79366fef5785faef2ba350c4e687f0c434f9fe2b9b8429ad7ca55030d",
+  "contentHash": "f1041dc6cedd0c50aa611c090936ad90964fcb7b9c728b14336aebb5839a0d27",
   "profile": "desktop"
+ },
+ "acceptance": {
+  "visual": "unapproved",
+  "blockers": [],
+  "note": "Retargeted licensed motion; not visually signed off by a person. No prone (face-down) hold or prone get-up exists in this source; Death01 ends supine."
  },
  "compatibility": {
   "poseBridge": {
@@ -410,9 +813,9 @@
   {
    "path": "pose-bank.json",
    "role": "pose-bank",
-   "sha256": "4827467b12c304dc58f4c8374d75147aa1ac541f88d70bf091a9535ae5762c6f",
-   "bytes": 588648
+   "sha256": "e20775525d67672e500164f91b772b948cd34aedd15388c0277e6fc827a2f3ac",
+   "bytes": 649560
   }
  ],
- "packageHash": "6c9c14457c294a9119d67beb84814aa3c52b428ca3f499e355e8ceb90dbc489c"
+ "packageHash": "3aa515b3c3ee58a46c9995736516aeff4cf69a3d3d0988988e2b5079bed6d3d7"
 }

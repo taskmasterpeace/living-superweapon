@@ -32,8 +32,9 @@ function baseManifest(bankText){
   units:{lengthUnit:'game-unit',metersPerUnit:0.19,up:'+Y',forward:'+Z',handedness:'right',sourceConversion:{scale:1,yawDegrees:0,mirrorX:false,sourceUp:'+Y',sourceForward:'+Z'}},
   outputs:[{path:'pose-bank.json',role:'pose-bank',sha256:sha256(Buffer.from(bankText)),bytes:Buffer.byteLength(bankText)}],
   rig:{skeleton:POSE_BRIDGE.skeleton,mapping,bones:HUMANOID_SLOTS.length},
-  clips:[{id:'idle',take:'Fixture_Idle',duration:1/60,loop:true,sampleRate:60,frames:2,mirror:null,handedness:'none',events:[{t:0,type:'loop'}]}],
+  clips:[{id:'idle',take:'Fixture_Idle',duration:1/60,loop:true,sampleRate:60,frames:2,mirror:null,handedness:'none',events:[{t:0,type:'loop'}],posture:{start:'standing',end:'standing'},category:'cycle'}],
   budgets:{profile:'desktop',measured,limits:limitsFor('humanoid-motion','desktop',{frames:2})},
+  acceptance:{visual:'unapproved',blockers:[]},
   compatibility:{poseBridge:{frameLength:POSE_BRIDGE.frameLength,layout:POSE_BRIDGE.layout,engineModule:POSE_BRIDGE.engineModule}},
  };
 }
@@ -57,6 +58,8 @@ const broken={
  'budget-exceeded':m=>{m.budgets.measured.triangles=m.budgets.limits.triangles+1;},
  'duplicate-clip-id':m=>{m.clips.push({...m.clips[0]});},
  'incompatible-version':m=>{m.formatVersion=2;},
+ 'missing-acceptance':m=>{delete m.acceptance;},
+ 'bad-posture':m=>{m.clips[0].posture={start:'lying',end:'standing'};},
 };
 for(const [name,mutate] of Object.entries(broken)){
  const manifest=baseManifest(bankText);

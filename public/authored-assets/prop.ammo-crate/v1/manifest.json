@@ -151,7 +151,7 @@
   ],
   "recipe": {
    "path": "authoring/recipes/props/ammo-crate/recipe.json",
-   "sha256": "cf5500c2566133df285a2c9a758f5294b1cb220a3d9d58501d8a42f65c7369fc"
+   "sha256": "8359fdba81fe2b5dee6a7608f8b40477fa0ead7f4e25a4132524b81edd93b2da"
   }
  },
  "tool": {
@@ -162,9 +162,14 @@
  },
  "build": {
   "options": {},
-  "cacheKey": "137b2477a312ea726d1c51d5d46d44a76695491d540608e49f08689b511b8661",
+  "cacheKey": "81ed7c9cd85f4c644bd92bc4eb03eec247f60674dfc57a1149d1544fd7550316",
   "contentHash": "21977811a4594e6184854916a79a6ffd4aa0a2fae5b1e7c13fcfe8531f93af09",
   "profile": "desktop"
+ },
+ "acceptance": {
+  "visual": "unapproved-placeholder",
+  "blockers": [],
+  "note": "Procedural placeholder. Not art-approved."
  },
  "outputs": [
   {
@@ -174,5 +179,5 @@
    "bytes": 27800
   }
  ],
- "packageHash": "4bff85d1a0f8b0e0eb65b3a98a64be965ee959387b4ae228af00b689755e5e2c"
+ "packageHash": "82669d20a5b586c456cde99a555b5769913c30d5ba36af660b74e48f1a7c31e8"
 }

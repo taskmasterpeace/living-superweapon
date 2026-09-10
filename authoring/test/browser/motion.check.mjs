@@ -62,7 +62,9 @@ try{
  const r=await pose('superhero-male','grenade-throw',release.t/grenade.duration);rows.push(r);
  assert.equal(r.rootDrift,0);
  await shot('m2-grenade-release-male-side','side');
- await pose('superhero-male','prone-rise',0);await shot('m2-prone-male-side','side');
+ const rise=await pose('superhero-male','supine-rise',0);rows.push(rise);
+ assert.equal(await page.evaluate(()=>AUTHORING.stage.clip?.id),'supine-rise','the get-up clip must resolve (it starts supine, not prone)');
+ await shot('m2-supine-rise-male-side','side');await pose('superhero-male','supine-rise',1);await shot('m2-supine-rise-male-side-end','side');
  await writeFile(`${out}/m2-motion-results.json`,JSON.stringify({rows,errors},null,1));
  assert.deepEqual(errors,[],'viewer must stay free of page and console errors');
  console.log(`PASS ${rows.length} poses across 5 bodies, 0 root drift, stills + strip written to ${out}/m2-*.jpg`);

@@ -50,14 +50,27 @@ materials         [{name, slot}]                              optional
 rig               skeleton · mapping (17 humanoid slots → source joints) · bones · catalogBody
 sockets           [{name, parent, position, rotation(quat)}]
 equipment         {class firearm|blade|thrown, twoHanded, hand}          equipment only
-clips             [{id, take, duration, loop, sampleRate, frames, mirror, handedness, events}]
+clips             [{id, take, duration, loop, sampleRate, frames, mirror, handedness, events,
+                    posture {start, end, measured}, category}]     posture and category are MEASURED
 hitZones          [{zone, shape, attach, center, radius|end|halfExtents}]  optional metadata
 budgets           profile · measured {triangles, drawCalls, materials, bones, textures, bytes} · limits
+acceptance        visual (approved | unapproved | unapproved-placeholder) · approvedBy + approvedOn
+                  when approved · blockers [{id, owner, summary}] · note
 compatibility     poseBridge {frameLength 45, layout, engineModule}
 packageHash       sha256 of the canonical JSON of every other field
 ```
 
 ## Why these choices
+
+- **Posture is measured, never named.** Each clip records the start and end posture of its
+  retargeted anatomy — `standing`, `crouch`, `prone` (chest to the ground, hips on it), `supine`
+  (chest to the sky, hips on the ground), `airborne`, `transition` — from the torso up vector, the
+  chest normal against +Y and hip height over the bind pose, plus a derived category (`get-up`,
+  `fall`, `knockdown`, cycles, actions). A recipe may state `expectPosture`; the build fails when
+  the take disagrees. That is how `LayToIdle` became `supine-rise` rather than a "prone rise".
+- **Structural pass and visual acceptance are two different facts.** `acceptance.visual` is
+  required on every package; `approved` needs a name and a date; `blockers` name reasons
+  integration must not proceed, each with an owner. Placeholder art says so on the package.
 
 - **Explicit units and axis conversion.** Every adapter must state how it turned the source's
   axes and scale into game units (1u = 0.19m, +Y up, +Z forward). A missing conversion is a
@@ -82,10 +95,11 @@ packageHash       sha256 of the canonical JSON of every other field
 
 Every failure carries one of: `shape`, `unsafe-key`, `finite`, `incompatible-version`, `id`,
 `kind`, `license`, `source`, `unsafe-path`, `units`, `outputs`, `hash`, `rig-mapping`,
-`missing-socket`, `clips`, `duplicate-id`, `budget`, `nan-frame`, `root-motion`, `pose-bank`.
+`missing-socket`, `clips`, `duplicate-id`, `budget`, `nan-frame`, `root-motion`, `pose-bank`,
+`acceptance`.
 `authoring/fixtures/invalid/*` holds one deliberately broken package per rule the brief named
 (rig mapping, missing muzzle, NaN frame, absent license, unsafe external path, exceeded budget)
-plus duplicate ids and an incompatible version. Each fails for exactly that one code — the test
+plus duplicate ids, an incompatible version, a missing acceptance record and an invalid posture. Each fails for exactly that one code — the test
 asserts the code set equals the expected set, so a fixture that failed for two reasons would
 be caught.
 

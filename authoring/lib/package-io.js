@@ -78,8 +78,19 @@ export async function commitPackage(manifest,outputs,root=OUTPUT_ROOT){
 }
 export async function writeCatalog(root=OUTPUT_ROOT){
  const {packages,ok,catalogErrors}=await checkCatalog(root);
- const entries=packages.filter(p=>p.manifest).map(p=>({id:p.manifest.id,version:p.manifest.version,kind:p.manifest.kind,displayName:p.manifest.displayName,tags:p.manifest.tags||[],
-  dir:toPosix(p.dir).split('public/authored-assets/')[1],packageHash:p.manifest.packageHash,ok:p.ok,errors:p.errors.length,license:p.manifest.provenance?.license,adapter:p.manifest.source?.adapter}));
+ const entries=packages.filter(p=>p.manifest).map(p=>{
+  const m=p.manifest,clips=m.clips||[];
+  // Posture is catalog-level information: which clips hold or leave the ground, and how.
+  const byCategory={},postures={prone:[],supine:[],'get-up':[],fall:[],knockdown:[]};
+  for(const c of clips){if(c.category)(byCategory[c.category]??=[]).push(c.id);
+   if(c.posture?.start==='prone'||c.posture?.end==='prone')postures.prone.push(c.id);
+   if(c.posture?.start==='supine'||c.posture?.end==='supine')postures.supine.push(c.id);
+   if(c.category==='get-up')postures['get-up'].push(c.id);if(c.category==='fall')postures.fall.push(c.id);if(c.category==='knockdown')postures.knockdown.push(c.id);}
+  return {id:m.id,version:m.version,kind:m.kind,displayName:m.displayName,tags:m.tags||[],
+   dir:toPosix(p.dir).split('public/authored-assets/')[1],packageHash:m.packageHash,ok:p.ok,errors:p.errors.length,license:m.provenance?.license,adapter:m.source?.adapter,
+   acceptance:{structural:p.ok?'pass':'fail',visual:m.acceptance?.visual??'unapproved',blockers:(m.acceptance?.blockers||[]).map(b=>b.id)},
+   ...(clips.length?{clipCategories:byCategory,postures}:{})};
+ });
  const catalog={format:'pw-asset-catalog',formatVersion:1,ok,packages:entries,catalogErrors};
  await mkdir(root,{recursive:true});
  await writeFile(join(root,'catalog.json'),JSON.stringify(catalog,null,1)+'\n');

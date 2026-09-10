@@ -8,9 +8,10 @@
  "tags": [
   "humanoid",
   "grenade",
-  "prone",
+  "supine",
   "carry",
-  "cc0"
+  "cc0",
+  "get-up"
  ],
  "rig": {
   "skeleton": "pw-pose-bridge@1",
@@ -52,10 +53,29 @@
      "side": "R",
      "note": "derived:hand-speed-peak"
     }
-   ]
+   ],
+   "posture": {
+    "start": "standing",
+    "end": "standing",
+    "measured": {
+     "start": {
+      "posture": "standing",
+      "up": 0.996,
+      "forwardY": -0.084,
+      "hipRatio": 0.956
+     },
+     "end": {
+      "posture": "standing",
+      "up": 0.996,
+      "forwardY": -0.084,
+      "hipRatio": 0.956
+     }
+    }
+   },
+   "category": "action"
   },
   {
-   "id": "prone-rise",
+   "id": "supine-rise",
    "take": "LayToIdle",
    "duration": 1.533333,
    "loop": false,
@@ -63,7 +83,26 @@
    "frames": 93,
    "mirror": null,
    "handedness": "none",
-   "events": []
+   "events": [],
+   "posture": {
+    "start": "supine",
+    "end": "standing",
+    "measured": {
+     "start": {
+      "posture": "supine",
+      "up": 0.035,
+      "forwardY": 0.998,
+      "hipRatio": 0.032
+     },
+     "end": {
+      "posture": "standing",
+      "up": 0.996,
+      "forwardY": -0.084,
+      "hipRatio": 0.956
+     }
+    }
+   },
+   "category": "get-up"
   },
   {
    "id": "hit-knockback",
@@ -74,7 +113,26 @@
    "frames": 51,
    "mirror": null,
    "handedness": "none",
-   "events": []
+   "events": [],
+   "posture": {
+    "start": "crouch",
+    "end": "supine",
+    "measured": {
+     "start": {
+      "posture": "crouch",
+      "up": 0.664,
+      "forwardY": -0.748,
+      "hipRatio": 0.661
+     },
+     "end": {
+      "posture": "supine",
+      "up": 0.144,
+      "forwardY": 0.985,
+      "hipRatio": 0.047
+     }
+    }
+   },
+   "category": "knockdown"
   },
   {
    "id": "walk-carry",
@@ -98,7 +156,26 @@
      "side": "R",
      "note": "derived:foot-contact"
     }
-   ]
+   ],
+   "posture": {
+    "start": "standing",
+    "end": "standing",
+    "measured": {
+     "start": {
+      "posture": "standing",
+      "up": 0.938,
+      "forwardY": 0.343,
+      "hipRatio": 0.861
+     },
+     "end": {
+      "posture": "standing",
+      "up": 0.938,
+      "forwardY": 0.343,
+      "hipRatio": 0.861
+     }
+    }
+   },
+   "category": "cycle"
   },
   {
    "id": "power",
@@ -115,7 +192,26 @@
      "type": "contact",
      "note": "matches heavy-strike-bank contactStart"
     }
-   ]
+   ],
+   "posture": {
+    "start": "crouch",
+    "end": "crouch",
+    "measured": {
+     "start": {
+      "posture": "crouch",
+      "up": 0.999,
+      "forwardY": 0.016,
+      "hipRatio": 0.821
+     },
+     "end": {
+      "posture": "crouch",
+      "up": 0.83,
+      "forwardY": -0.516,
+      "hipRatio": 0.596
+     }
+    }
+   },
+   "category": "crouch-action"
   },
   {
    "id": "power-recover",
@@ -132,7 +228,26 @@
      "type": "recovery",
      "note": "recovery segment begins"
     }
-   ]
+   ],
+   "posture": {
+    "start": "crouch",
+    "end": "standing",
+    "measured": {
+     "start": {
+      "posture": "crouch",
+      "up": 0.83,
+      "forwardY": -0.516,
+      "hipRatio": 0.596
+     },
+     "end": {
+      "posture": "standing",
+      "up": 0.99,
+      "forwardY": 0.124,
+      "hipRatio": 0.898
+     }
+    }
+   },
+   "category": "action"
   }
  ],
  "units": {
@@ -157,7 +272,7 @@
    "materials": 0,
    "bones": 0,
    "textures": 0,
-   "bytes": 171815
+   "bytes": 171918
   },
   "limits": {
    "triangles": 1,
@@ -165,7 +280,7 @@
    "materials": 1,
    "bones": 1,
    "textures": 1,
-   "bytes": 217834
+   "bytes": 217832
   }
  },
  "provenance": {
@@ -186,7 +301,7 @@
   ],
   "recipe": {
    "path": "authoring/recipes/motion/hero-ual2/recipe.json",
-   "sha256": "e2ac66ac8665ffda435b4b615c1cda23d5c2a6d29d19d30afdf8a88595303547"
+   "sha256": "5afdeb23f35f6456cdd701f2119e979d6a70f4c4b9f9923fa2fd3be57908ced3"
   }
  },
  "tool": {
@@ -197,9 +312,14 @@
  },
  "build": {
   "options": {},
-  "cacheKey": "3a3ca5254b232434db057a4f75712084816d459a6ce359ed381038efcbff2fb2",
-  "contentHash": "ad2f8bf463c43b597b961d1da2c5822b3b46a126f0f06d0b8b3cfcc7b418f83d",
+  "cacheKey": "92cbf5972831a7b71a588e7c19773bf520cfb67bdcf0a352264acd66ccb907fa",
+  "contentHash": "0405658731da0b90296d248ca98f163ddf16acf523d163da2fc47cbae083b31d",
   "profile": "desktop"
+ },
+ "acceptance": {
+  "visual": "unapproved",
+  "blockers": [],
+  "note": "Retargeted licensed motion; not visually signed off. LayToIdle is a SUPINE get-up (starts on the back), not a prone one; Hit_Knockback ends supine. This source has no prone animation."
  },
  "compatibility": {
   "poseBridge": {
@@ -212,9 +332,9 @@
   {
    "path": "pose-bank.json",
    "role": "pose-bank",
-   "sha256": "2c1420106bf6486fa7693f85674399b26291cffefd27a66115932c04fe1860ad",
-   "bytes": 171815
+   "sha256": "3c46c2c198757463e3e742f6df9ebb1a1d6c0a92f2d90e7b84a30031bd18d73b",
+   "bytes": 171918
   }
  ],
- "packageHash": "b283e4c78568778fbac4d2264b484343932f922fc2efa99ba303686b06c2f8fb"
+ "packageHash": "96e5ec5b9bd4e340c3514ea457a758282e2cbe6c9bbc3135ddc5076a6f43ebfe"
 }

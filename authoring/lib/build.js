@@ -27,8 +27,13 @@ async function toolSourceHash(){
 const TOOL_SOURCE=await toolSourceHash();
 export const UNITS={lengthUnit:'game-unit',metersPerUnit:0.19,up:'+Y',forward:'+Z',handedness:'right'};
 
+// Text inputs are hashed and parsed with their line endings normalised to LF, so a checkout made
+// with Git's CRLF conversion records and reproduces the same hashes as one made without it.
+export const TEXT_SOURCE=/[.](json|js|mjs|md|txt|gltf|asf|amc|csv)$/i;
+const CR=String.fromCharCode(13),LF=String.fromCharCode(10);
+export const normalizeEol=bytes=>{const s=bytes.toString('utf8');return s.includes(CR)?Buffer.from(s.split(CR+LF).join(LF).split(CR).join(LF),'utf8'):bytes;};
 export async function loadRecipe(recipePath){
- const abs=resolve(REPO_ROOT,recipePath),text=await readFile(abs,'utf8');
+ const abs=resolve(REPO_ROOT,recipePath),text=normalizeEol(await readFile(abs)).toString('utf8');
  const recipe=JSON.parse(text);
  const rel=toPosix(relative(REPO_ROOT,abs));
  if(!rel.startsWith('authoring/recipes/'))throw new Error(`recipes live under authoring/recipes/: ${rel}`);
@@ -43,6 +48,7 @@ export async function resolveSources(loaded){
   if(!isUnderSourceRoot(p))throw new Error(`${loaded.path}: source ${p} must live under assets-src/ or authoring/`);
   const abs=resolveWithin(REPO_ROOT,p);
   let bytes;try{bytes=await readFile(abs);}catch{throw new Error(`${loaded.path}: source file missing: ${p}. See docs/authoring/SOURCES.md for how to fetch pinned sources.`);}
+  if(TEXT_SOURCE.test(p))bytes=normalizeEol(bytes);
   files.push({path:p,sha256:sha256(bytes),abs,bytes});
  }
  return files;
@@ -95,6 +101,9 @@ export async function buildRecipe(recipePath,{root=OUTPUT_ROOT,profile='desktop'
   build:{options,cacheKey,contentHash,profile},
   units:{...UNITS,sourceConversion:partial.units?.sourceConversion},
   budgets:{profile,measured,limits},
+  // Structural pass is what commitPackage proves; visual acceptance and blockers are declared
+  // on the recipe by a person and default to "not approved, no blockers known".
+  acceptance:{visual:'unapproved',blockers:[],...(loaded.recipe.acceptance||{}),...(partial.acceptance||{})},
  };
  if(loaded.recipe.kind==='humanoid-motion')manifest.compatibility={...manifest.compatibility,poseBridge:{frameLength:POSE_BRIDGE.frameLength,layout:POSE_BRIDGE.layout,engineModule:POSE_BRIDGE.engineModule}};
  const committed=await commitPackage(manifest,outputs,root);

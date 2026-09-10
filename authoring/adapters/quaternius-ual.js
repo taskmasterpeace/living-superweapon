@@ -2,7 +2,7 @@
 // Reads pinned local files only; the loader embeds the .bin as a data URI so no network path exists.
 import * as THREE from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
-import {makeSampler,resolveNodes,checkBindContract,retarget,analyzeTake} from '../lib/humanoid-retarget.js';
+import {makeSampler,resolveNodes,checkBindContract,retarget,analyzeTake,postureOf,categoryOf} from '../lib/humanoid-retarget.js';
 import {deriveEvents} from '../lib/clip-events.js';
 import {POSE_BRIDGE} from '../lib/slots.js';
 
@@ -36,13 +36,17 @@ export default {
    if(!sampler.takes.includes(c.take))throw new Error(`take "${c.take}" is not in the source (${sampler.takes.length} takes)`);
    const {id,events,...spec}=c;takes[id]=spec;
   }
-  const {clips,meta,legLength,restSupport}=retarget(sampler,takes,{bindTake,sampleRate:60});
+  const {clips,meta,bind,legLength,restSupport}=retarget(sampler,takes,{bindTake,sampleRate:60});
   const manifestClips=[];
   for(const c of recipe.clips){
-   const clip=clips[c.id],analysis=analyzeTake(meta[c.id].samples,clip.duration,{legLength,restSupport});
+   const clip=clips[c.id],samples=meta[c.id].samples,analysis=analyzeTake(samples,clip.duration,{legLength,restSupport});
    const events=deriveEvents(c.events,analysis,clip.duration,legLength,{loop:c.loop===true});
-   manifestClips.push({id:c.id,take:c.take,duration:+clip.duration.toFixed(6),loop:c.loop===true,sampleRate:60,frames:clip.frames.length,mirror:c.mirror??null,handedness:c.handedness||'right',events});
-   log(`  ${c.id}: ${c.take} ${clip.duration.toFixed(3)}s ${clip.frames.length} frames${events.length?' events '+events.map(e=>`${e.type}${e.side?'·'+e.side:''}@${e.t}`).join(' '):''}`);
+   const start=postureOf(samples[0],bind),end=postureOf(samples.at(-1),bind);
+   const category=categoryOf(start.posture,end.posture,c.loop===true);
+   if(c.expectPosture&&(c.expectPosture.start!==start.posture||c.expectPosture.end!==end.posture))throw new Error(`${c.id}: recipe expects posture ${c.expectPosture.start}→${c.expectPosture.end} but the take measures ${start.posture}→${end.posture}`);
+   manifestClips.push({id:c.id,take:c.take,duration:+clip.duration.toFixed(6),loop:c.loop===true,sampleRate:60,frames:clip.frames.length,mirror:c.mirror??null,handedness:c.handedness||'right',events,
+    posture:{start:start.posture,end:end.posture,measured:{start,end}},category});
+   log(`  ${c.id}: ${c.take} ${clip.duration.toFixed(3)}s ${clip.frames.length} frames · ${category} ${start.posture}→${end.posture}${events.length?' · events '+events.map(e=>`${e.type}${e.side?'·'+e.side:''}@${e.t}`).join(' '):''}`);
   }
   let bones=0;gltf.scene.traverse(o=>{if(o.isBone)bones++;});
   const bank={version:1,source:{author:recipe.provenance.author,pack:recipe.provenance.pack,license:recipe.provenance.license,url:recipe.provenance.url,files:sources.map(s=>s.path),sha256:Object.fromEntries(sources.map(s=>[s.path.split('/').pop(),s.sha256])),

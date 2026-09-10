@@ -236,12 +236,12 @@
   "files": [
    {
     "path": "assets-src/quaternius/base-characters/PROVENANCE.md",
-    "sha256": "f786e54d54659843dee0f83dd86effd7fb837dead93383ec6a1b1cbe24b1d0ca"
+    "sha256": "150636a2a4b179706daa1787d0870ce99eaa21e13aba4b3f037ca5b1da949452"
    }
   ],
   "recipe": {
    "path": "authoring/recipes/bodies/hero-standard-female/recipe.json",
-   "sha256": "ff1e9631a2cbd6ab4dcd1ea47fb4b931d219f15067dd9db2d06a87fdcdca3df8"
+   "sha256": "9a7cd1694ce638bc8d4fb6e3bb046bd301acf6c7d911959184dc136ee71f4056"
   }
  },
  "tool": {
@@ -252,9 +252,14 @@
  },
  "build": {
   "options": {},
-  "cacheKey": "9d1e9e73746d1610ee0afbaf04fcbf8795e9c76c0c032937bf4f46692a15c611",
+  "cacheKey": "a238d67104ea8a683cdba596f8d64fe654432ef88ad29234effc7548facd7b94",
   "contentHash": "329d4e1cba58a764e988d4af625a23357e1be19a39b869f27b5115cf6f757bd0",
   "profile": "desktop"
+ },
+ "acceptance": {
+  "visual": "unapproved",
+  "blockers": [],
+  "note": "Measured rig metadata over a catalog body; sockets and hit zones derived, not judged by a person."
  },
  "outputs": [
   {
@@ -264,5 +269,5 @@
    "bytes": 2557
   }
  ],
- "packageHash": "d753dd812575ab48ec4959dc2291e1b0cdaa70d4af80a7c64227911f68d9d0de"
+ "packageHash": "98009988fb704897790b9de70e5045cf5fba17e8a529d296085295eed09b6e11"
 }

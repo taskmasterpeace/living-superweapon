@@ -83,6 +83,10 @@
    "bytes": 427570
   }
  },
+ "acceptance": {
+  "visual": "unapproved",
+  "blockers": []
+ },
  "equipment": {
   "class": "firearm",
   "twoHanded": false,
@@ -150,5 +154,5 @@
    ]
   }
  ],
- "packageHash": "fd509b29f0ec5dcd9212f4721582969a9e41af8d8191f1e53d33e877b4cfe1fe"
+ "packageHash": "d7829b179b1e59f9c1fc8ed6c96fabd61245f592862f80601ea0a46618d317d5"
 }

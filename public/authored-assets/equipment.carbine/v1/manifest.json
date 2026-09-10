@@ -171,7 +171,7 @@
   "license": "Proprietary-Internal",
   "redistribution": "internal",
   "revision": "6e60b5e22419464b4853e01ddb6c0e6f6659a733",
-  "terms": "Committed procedural factory reviewed as build-time source. No reference photo was traced; the silhouette follows the engine's existing rifle proportions so it fits the production hand socket.",
+  "terms": "Committed procedural factory reviewed as build-time source. No reference photo was traced; the silhouette follows the engine's existing rifle proportions so the primary grip mounts on the production hand socket; the full-extension support-hand fit remains an integration blocker.",
   "attribution": "Method: img2threejs (Apache-2.0) at the recorded revision; no img2threejs code ships in the package."
  },
  "source": {
@@ -184,7 +184,7 @@
   ],
   "recipe": {
    "path": "authoring/recipes/equipment/carbine/recipe.json",
-   "sha256": "5847c705d01cfa2c907bffe27d188f32c423658f795c2e122aefb79a4a563f62"
+   "sha256": "b556449bfd767cf6706aeca94ba2b8a32164c9edfbb7571fdf5e7da6f35be219"
   }
  },
  "tool": {
@@ -195,9 +195,20 @@
  },
  "build": {
   "options": {},
-  "cacheKey": "9723bc0d981760763e18a23fcab27129381ac4990b47e54769d4ad4255000dd1",
+  "cacheKey": "cfa5ed21f6896993f752a96ee816cd9dd7cb034329568114ebb3f4a8a1bc030d",
   "contentHash": "1847100642e2a520b8b500964d186ca74b9b0489754f8ed191fb20e229bbf8e5",
   "profile": "desktop"
+ },
+ "acceptance": {
+  "visual": "unapproved-placeholder",
+  "blockers": [
+   {
+    "id": "full-extension-support-hand",
+    "owner": "main-task",
+    "summary": "In full-extension aim takes the production rig cannot close the support hand on the grip (measured 0.5-0.9 u gap; arm reach 3.58 u on a 3.92 u shoulder span at scale 1.12). Only the drawn-in reload pose closes within 0.35 u. The armed carrier must pull the trigger hand back before this weapon can be called fitted in aim poses."
+   }
+  ],
+  "note": "Procedural placeholder authored in the engine silhouette language without a reference photo. Not art-approved."
  },
  "outputs": [
   {
@@ -207,5 +218,5 @@
    "bytes": 13968
   }
  ],
- "packageHash": "81f6869cc83618a9e8f5d1b274cddd79e412dde54a89074a8bf7fb0e03e5193c"
+ "packageHash": "492f111e20cc043615096fa893dd04df33e160ccf7f60b69ddf016b04f3ff251"
 }

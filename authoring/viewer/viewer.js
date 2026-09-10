@@ -42,7 +42,8 @@ function visible(){
 }
 function renderList(){
  const items=visible();
- $('#list').innerHTML=items.length?items.map(p=>`<li data-key="${p.id}@${p.version}" class="${state.selected&&state.selected.id===p.id&&state.selected.version===p.version?'on':''}"><span class="${p.ok?'ok':'bad'}">${p.ok?'VALID':'INVALID'}</span><div class="id">${p.id} <span class="mono">v${p.version}</span></div><span class="k">${p.kind.toUpperCase()} · ${p.adapter} · ${p.license}</span></li>`).join(''):'<li class="empty">Nothing matches.</li>';
+ const badge=p=>{const a=p.acceptance||{};const v=a.visual==='approved'?'<span class="tag ok">APPROVED</span>':a.visual==='unapproved-placeholder'?'<span class="tag warn">PLACEHOLDER ART</span>':'<span class="tag">NOT APPROVED</span>';return v+(a.blockers?.length?`<span class="tag bad">${a.blockers.length} BLOCKER${a.blockers.length>1?'S':''}</span>`:'');};
+ $('#list').innerHTML=items.length?items.map(p=>`<li data-key="${p.id}@${p.version}" class="${state.selected&&state.selected.id===p.id&&state.selected.version===p.version?'on':''}"><span class="${p.ok?'ok':'bad'}">${p.ok?'VALID':'INVALID'}</span><div class="id">${p.id} <span class="mono">v${p.version}</span></div><span class="k">${p.kind.toUpperCase()} · ${p.adapter} · ${p.license}</span><div class="tags">${badge(p)}</div></li>`).join(''):'<li class="empty">Nothing matches.</li>';
  for(const li of $('#list').querySelectorAll('li[data-key]'))li.onclick=()=>select(state.catalog.packages.find(p=>`${p.id}@${p.version}`===li.dataset.key));
 }
 async function select(entry){

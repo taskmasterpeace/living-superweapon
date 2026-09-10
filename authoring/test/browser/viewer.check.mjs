@@ -5,7 +5,8 @@ import {mkdir} from 'node:fs/promises';
 import {chromium} from 'playwright';
 
 const base=process.env.PW_AUTHORING_URL||'http://127.0.0.1:5181';
-assert.equal(new URL(base).port,'5181','the authoring branch uses its own dev server on 5181');
+assert.equal(new URL(base).hostname,'127.0.0.1','use an isolated 127.0.0.1 origin, never localhost storage');
+assert.notEqual(new URL(base).port,'5180','5180 belongs to the main task; run the authoring viewer on its own port (5181 by default, or PW_AUTHORING_URL)');
 const name=process.argv[2]||'viewer';
 const out='authoring/artifacts';await mkdir(out,{recursive:true});
 const browser=await chromium.launch({headless:true});

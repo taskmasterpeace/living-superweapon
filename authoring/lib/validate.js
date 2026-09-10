@@ -1,7 +1,7 @@
 // The manifest validator. Every rule has a code; every failure names the path it found.
 // It never throws on bad input — the CLI and tests read the result. Nothing here executes,
 // evaluates or imports anything named by a manifest.
-import {HUMANOID_SLOTS,POSE_BRIDGE,KINDS,OUTPUT_ROLES,EVENT_TYPES} from './slots.js';
+import {HUMANOID_SLOTS,POSE_BRIDGE,KINDS,OUTPUT_ROLES,EVENT_TYPES,POSTURES,CLIP_CATEGORIES,VISUAL_STATUS} from './slots.js';
 import {unsafePathReason,isUnderSourceRoot} from './paths.js';
 import {BUDGET_KEYS,PROFILES,overBudget} from './budgets.js';
 import {packageHashOf} from './hash.js';
@@ -47,6 +47,7 @@ export function validateManifest(manifest,options={}){
  checkHitZones(manifest.hitZones,ctx);
  checkBudgets(manifest.budgets,ctx);
  checkCompatibility(manifest.compatibility,manifest.kind,ctx);
+ checkAcceptance(manifest.acceptance,ctx);
  if(manifest.packageHash!==undefined){
   if(!SHA_RE.test(String(manifest.packageHash)))fail('hash','$.packageHash','not a sha256');
   else if(!nonFinite){try{if(packageHashOf(manifest)!==manifest.packageHash)fail('hash','$.packageHash','package hash does not match manifest content');}catch(e){fail('hash','$.packageHash',e.message);}}
@@ -213,6 +214,10 @@ function checkClips(clips,kind,{fail}){
   if(!Number.isInteger(c.frames)||c.frames<2)fail('clips',path+'.frames','frame count must be at least 2');
   if(c.mirror!==undefined&&c.mirror!==null&&!['L','R'].includes(c.mirror))fail('clips',path+'.mirror','mirror is L, R or null');
   if(!['right','left','none'].includes(c.handedness))fail('clips',path+'.handedness','handedness must be right, left or none');
+  if(c.posture!==undefined){
+   if(!plainObject(c.posture)||!POSTURES.includes(c.posture.start)||!POSTURES.includes(c.posture.end))fail('clips',path+'.posture',`posture start/end must be one of ${POSTURES.join(', ')}`);
+  }
+  if(c.category!==undefined&&!CLIP_CATEGORIES.includes(c.category))fail('clips',path+'.category',`category must be one of ${CLIP_CATEGORIES.join(', ')}`);
   if(c.events!==undefined){
    if(!Array.isArray(c.events))fail('clips',path+'.events','events must be an array');
    else c.events.forEach((e,j)=>{
@@ -249,6 +254,22 @@ function checkBudgets(b,{fail}){
   for(const key of BUDGET_KEYS)if(!Number.isInteger(b[group][key])||b[group][key]<0)fail('budget',`$.budgets.${group}.${key}`,'must be a non-negative integer');
  }
  for(const key of overBudget(b.measured,b.limits))fail('budget',`$.budgets.measured.${key}`,`${b.measured[key]} exceeds the hard ${b.profile} limit ${b.limits[key]}`);
+}
+// Structural pass and human visual acceptance are two different facts. Every package must say
+// where it stands on the second, and a blocker is a named reason integration must not proceed.
+function checkAcceptance(a,{fail}){
+ if(!plainObject(a))return fail('acceptance','$.acceptance','acceptance record is required (visual status + blockers)');
+ if(!VISUAL_STATUS.includes(a.visual))fail('acceptance','$.acceptance.visual',`visual must be one of ${VISUAL_STATUS.join(', ')}`);
+ if(a.visual==='approved'&&(typeof a.approvedBy!=='string'||!a.approvedBy.trim()||typeof a.approvedOn!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(a.approvedOn)))fail('acceptance','$.acceptance','an approved package must record approvedBy and approvedOn (YYYY-MM-DD)');
+ if(!Array.isArray(a.blockers))return fail('acceptance','$.acceptance.blockers','blockers must be an array (empty when none)');
+ a.blockers.forEach((b,i)=>{
+  const path=`$.acceptance.blockers[${i}]`;
+  if(!plainObject(b))return fail('acceptance',path,'blocker must be an object');
+  if(typeof b.id!=='string'||!/^[a-z0-9][a-z0-9-]{1,63}$/.test(b.id))fail('acceptance',path+'.id','blocker id is a kebab-case token');
+  if(typeof b.summary!=='string'||!b.summary.trim()||b.summary.length>400)fail('acceptance',path+'.summary','blocker summary is required, up to 400 characters');
+  if(!['main-task','authoring','source'].includes(b.owner))fail('acceptance',path+'.owner','owner must be main-task, authoring or source');
+ });
+ if(a.note!==undefined&&(typeof a.note!=='string'||a.note.length>600))fail('acceptance','$.acceptance.note','note is a string up to 600 characters');
 }
 function checkCompatibility(c,kind,{fail}){
  if(kind!=='humanoid-motion'){if(c!==undefined&&!plainObject(c))fail('shape','$.compatibility','compatibility must be an object');return;}
@@ -295,4 +316,4 @@ export function validateCatalogIds(manifests){
  }
  return {ok:errors.length===0,errors,warnings:[]};
 }
-export const CODES=['shape','unsafe-key','finite','incompatible-version','id','kind','license','source','unsafe-path','units','outputs','hash','rig-mapping','missing-socket','clips','duplicate-id','budget','nan-frame','root-motion','pose-bank'];
+export const CODES=['shape','unsafe-key','finite','incompatible-version','id','kind','license','source','unsafe-path','units','outputs','hash','rig-mapping','missing-socket','clips','duplicate-id','budget','nan-frame','root-motion','pose-bank','acceptance'];

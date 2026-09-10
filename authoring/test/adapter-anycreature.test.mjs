@@ -28,6 +28,7 @@ test('the hound compiles through the vendored anyCreature engine into a distinct
   assert.ok(first.manifest.budgets.measured.triangles<=first.manifest.budgets.limits.triangles);
   const doc=await readGlb(bytes);assert.ok(doc.getRoot().listNodes().some(n=>n.getName()==='game-units'));
   assert.equal(first.manifest.structural.compiler.revision,'44e1abc2c7fe083f19f989c8437c44a141adc7f3');
+  assert.equal(first.manifest.acceptance.visual,'unapproved-placeholder');assert.ok(first.manifest.acceptance.blockers.some(b=>b.id==='no-creature-runtime'));
  }finally{await rm(a,{recursive:true,force:true});await rm(b,{recursive:true,force:true});}
 });
 test("the compiler's own gates are real: a recoloured copy of its example is refused, so is a spec that lacks animations",async()=>{

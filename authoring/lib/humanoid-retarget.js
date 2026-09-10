@@ -98,6 +98,34 @@ export function retarget(sampler,takes,{bindTake='A_TPose',bindTime=0,sampleRate
  }
  return {clips,bind,meta,legLength,restSupport};
 }
+// Posture of one sampled frame, from the same anatomy the frame carries: torso up vector, the
+// torso's forward vector (chest normal) against +Y, and hip height relative to the bind pose.
+export function postureOf(sample,bind){
+ const p=sample.points;
+ const y=p.chest.clone().sub(p.hip).normalize(),x=p.shoulderR.clone().sub(p.shoulderL).normalize();
+ const z=new THREE.Vector3().crossVectors(x,y).normalize();
+ const floor=s=>Math.min(s.points.footL.y,s.points.footR.y,s.points.toeL.y,s.points.toeR.y);
+ const restHip=bind.points.hip.y-floor(bind);
+ const hip=(p.hip.y-floor(bind))/Math.max(1e-6,restHip);
+ const up=y.y,fwdY=z.y;
+ let posture='transition';
+ if(fwdY<-.6&&hip<.3)posture='prone';
+ else if(fwdY>.6&&hip<.3)posture='supine';
+ else if(up>.72&&hip>1.15)posture='airborne';
+ else if(up>.72&&hip>.85)posture='standing'; // a sprint leans the torso ~40 degrees and is still standing
+ else if(up>.55&&hip>.28&&hip<=.85)posture='crouch';
+ return {posture,up:+up.toFixed(3),forwardY:+fwdY.toFixed(3),hipRatio:+hip.toFixed(3)};
+}
+export function categoryOf(start,end,loop){
+ const ground=p=>p==='prone'||p==='supine';
+ if(ground(start)&&end==='standing')return 'get-up';
+ if(start==='standing'&&ground(end))return 'fall';
+ if(!ground(start)&&start!=='standing'&&ground(end))return 'knockdown';
+ if(start==='prone'&&end==='prone')return loop?'prone-cycle':'prone-hold';
+ if(start==='supine'&&end==='supine')return 'supine-hold';
+ if(start==='crouch'&&end==='crouch')return loop?'crouch-cycle':'crouch-action';
+ return loop?'cycle':'action';
+}
 // Analysis over the raw samples of one take, for deterministic event derivation and reports.
 export function analyzeTake(samples,duration,{legLength,restSupport}){
  const n=samples.length,dt=duration/Math.max(1,n-1);

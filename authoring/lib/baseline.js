@@ -34,7 +34,8 @@ export async function measureBaseline(){
  }
  const motion=[];
  for(const file of ['locomotion-bank.json','strike-bank.json','heavy-strike-bank.json','jump-bank.json']){
-  let text;try{text=await readFile(resolve(REPO_ROOT,'src','data',file),'utf8');}catch{continue;}
+  // Measured on LF-normalised text so a CRLF checkout derives the same limits as an LF one.
+  let text;try{text=(await readFile(resolve(REPO_ROOT,'src','data',file),'utf8')).split(String.fromCharCode(13)+String.fromCharCode(10)).join(String.fromCharCode(10)).split(String.fromCharCode(13)).join(String.fromCharCode(10));}catch{continue;}
   const bankJson=JSON.parse(text);
   let frames=0;for(const clip of Object.values(bankJson.clips))frames+=clip.frames.length;
   motion.push({name:`src/data/${file}`,measured:{triangles:0,drawCalls:0,materials:0,bones:0,textures:0,bytes:Buffer.byteLength(text)},frames});

@@ -1,0 +1,343 @@
+{
+ "generated": "2026-09-10T20:10:55.920Z",
+ "viewer": "http://127.0.0.1:5181/authoring/viewer/index.html",
+ "size": {
+  "width": 960,
+  "height": 600
+ },
+ "scenes": [
+  {
+   "file": "walk-male-side.webm",
+   "package": "motion.hero-ual",
+   "body": "superhero-male",
+   "view": "side",
+   "clips": [
+    "walk"
+   ],
+   "steps": [
+    {
+     "clip": "walk",
+     "duration": 1.333,
+     "loop": true,
+     "mode": "loops×3",
+     "ms": 4040
+    }
+   ],
+   "seconds": 8.05,
+   "playSeconds": 4.04,
+   "bytes": 787917,
+   "errors": []
+  },
+  {
+   "file": "walk-lean-front.webm",
+   "package": "motion.hero-ual",
+   "body": "lean",
+   "view": "front",
+   "clips": [
+    "walk"
+   ],
+   "steps": [
+    {
+     "clip": "walk",
+     "duration": 1.333,
+     "loop": true,
+     "mode": "loops×3",
+     "ms": 4041
+    }
+   ],
+   "seconds": 7.57,
+   "playSeconds": 4.04,
+   "bytes": 795220,
+   "errors": []
+  },
+  {
+   "file": "walk-heavy-front.webm",
+   "package": "motion.hero-ual",
+   "body": "heavy",
+   "view": "front",
+   "clips": [
+    "walk"
+   ],
+   "steps": [
+    {
+     "clip": "walk",
+     "duration": 1.333,
+     "loop": true,
+     "mode": "loops×3",
+     "ms": 4041
+    }
+   ],
+   "seconds": 7.46,
+   "playSeconds": 4.04,
+   "bytes": 785371,
+   "errors": []
+  },
+  {
+   "file": "reload-female-side.webm",
+   "package": "motion.hero-ual",
+   "body": "superhero-female",
+   "view": "side",
+   "clips": [
+    "reload"
+   ],
+   "steps": [
+    {
+     "clip": "reload",
+     "duration": 1.667,
+     "loop": false,
+     "mode": "once×2",
+     "ms": 3650
+    }
+   ],
+   "seconds": 6.58,
+   "playSeconds": 3.65,
+   "bytes": 672463,
+   "errors": []
+  },
+  {
+   "file": "jab-cross-male-front.webm",
+   "package": "motion.hero-ual",
+   "body": "superhero-male",
+   "view": "front",
+   "clips": [
+    "jab",
+    "cross"
+   ],
+   "steps": [
+    {
+     "clip": "jab",
+     "duration": 0.833,
+     "loop": false,
+     "mode": "once×2",
+     "ms": 1998
+    },
+    {
+     "clip": "cross",
+     "duration": 1,
+     "loop": false,
+     "mode": "once×2",
+     "ms": 2305
+    }
+   ],
+   "seconds": 8.22,
+   "playSeconds": 4.3,
+   "bytes": 887741,
+   "errors": []
+  },
+  {
+   "file": "grenade-throw-male-side.webm",
+   "package": "motion.hero-ual2",
+   "body": "superhero-male",
+   "view": "side",
+   "clips": [
+    "grenade-throw"
+   ],
+   "steps": [
+    {
+     "clip": "grenade-throw",
+     "duration": 1.333,
+     "loop": false,
+     "mode": "once×2",
+     "ms": 3020
+    }
+   ],
+   "seconds": 5.88,
+   "playSeconds": 3.02,
+   "bytes": 609870,
+   "errors": []
+  },
+  {
+   "file": "hit-knockback-male-side.webm",
+   "package": "motion.hero-ual2",
+   "body": "superhero-male",
+   "view": "side",
+   "clips": [
+    "hit-knockback"
+   ],
+   "steps": [
+    {
+     "clip": "hit-knockback",
+     "duration": 0.833,
+     "loop": false,
+     "mode": "once×3",
+     "ms": 3141
+    }
+   ],
+   "seconds": 6.45,
+   "playSeconds": 3.14,
+   "bytes": 650222,
+   "errors": []
+  },
+  {
+   "file": "get-up-male-side.webm",
+   "package": "motion.hero-ual2",
+   "body": "superhero-male",
+   "view": "side",
+   "clips": [
+    "supine-rise"
+   ],
+   "steps": [
+    {
+     "clip": "supine-rise",
+     "duration": 1.533,
+     "loop": false,
+     "mode": "once×2",
+     "ms": 3376
+    }
+   ],
+   "seconds": 6.27,
+   "playSeconds": 3.38,
+   "bytes": 644331,
+   "errors": []
+  },
+  {
+   "file": "cmu-walk-male-side.webm",
+   "package": "motion.cmu-walk-02",
+   "body": "superhero-male",
+   "view": "side",
+   "clips": [
+    "cmu-walk"
+   ],
+   "steps": [
+    {
+     "clip": "cmu-walk",
+     "duration": 2.85,
+     "loop": false,
+     "mode": "once×2",
+     "ms": 6024
+    }
+   ],
+   "seconds": 15.73,
+   "playSeconds": 6.02,
+   "bytes": 994691,
+   "errors": []
+  },
+  {
+   "file": "carbine-walk-male-side.webm",
+   "package": "equipment.carbine",
+   "body": "superhero-male",
+   "view": "side",
+   "clips": [
+    "walk"
+   ],
+   "steps": [
+    {
+     "clip": "walk",
+     "duration": 1.333,
+     "loop": true,
+     "mode": "loops×3",
+     "ms": 4031
+    }
+   ],
+   "seconds": 7.15,
+   "playSeconds": 4.03,
+   "bytes": 743863,
+   "errors": []
+  },
+  {
+   "file": "carbine-reload-heavy-side.webm",
+   "package": "equipment.carbine",
+   "body": "heavy",
+   "view": "side",
+   "clips": [
+    "reload"
+   ],
+   "steps": [
+    {
+     "clip": "reload",
+     "duration": 1.667,
+     "loop": false,
+     "mode": "once×2",
+     "ms": 3658
+    }
+   ],
+   "seconds": 6.76,
+   "playSeconds": 3.66,
+   "bytes": 702993,
+   "errors": []
+  },
+  {
+   "file": "sidearm-aim-female-side.webm",
+   "package": "equipment.sidearm",
+   "body": "superhero-female",
+   "view": "side",
+   "clips": [
+    "aim-neutral",
+    "aim-up",
+    "pistol-idle"
+   ],
+   "steps": [
+    {
+     "clip": "aim-neutral",
+     "duration": 0.167,
+     "loop": false,
+     "mode": "hold 2s",
+     "ms": 2045
+    },
+    {
+     "clip": "aim-up",
+     "duration": 0.167,
+     "loop": false,
+     "mode": "hold 2s",
+     "ms": 2038
+    },
+    {
+     "clip": "pistol-idle",
+     "duration": 1.667,
+     "loop": true,
+     "mode": "hold 2s",
+     "ms": 2033
+    }
+   ],
+   "seconds": 9.23,
+   "playSeconds": 6.12,
+   "bytes": 531228,
+   "errors": []
+  },
+  {
+   "file": "hound-move-side.webm",
+   "package": "creature.field-hound",
+   "body": null,
+   "view": "side",
+   "clips": [
+    "move"
+   ],
+   "steps": [
+    {
+     "clip": "move",
+     "duration": 0.82,
+     "loop": true,
+     "mode": "loops×3",
+     "ms": 2468
+    }
+   ],
+   "seconds": 4.58,
+   "playSeconds": 2.47,
+   "bytes": 492874,
+   "errors": []
+  },
+  {
+   "file": "hound-attack-front.webm",
+   "package": "creature.field-hound",
+   "body": null,
+   "view": "front",
+   "clips": [
+    "attack"
+   ],
+   "steps": [
+    {
+     "clip": "attack",
+     "duration": 0.62,
+     "loop": false,
+     "mode": "once×2",
+     "ms": 1547
+    }
+   ],
+   "seconds": 3.81,
+   "playSeconds": 1.55,
+   "bytes": 300608,
+   "errors": []
+  }
+ ],
+ "totalBytes": 9599392
+}

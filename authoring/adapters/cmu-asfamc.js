@@ -4,7 +4,7 @@
 // translation is read and discarded: nothing here can author gameplay root motion.
 import * as THREE from 'three';
 import {HUMANOID_SLOTS} from '../lib/slots.js';
-import {checkBindContract,retarget,analyzeTake} from '../lib/humanoid-retarget.js';
+import {checkBindContract,retarget,analyzeTake,postureOf,categoryOf} from '../lib/humanoid-retarget.js';
 import {deriveEvents} from '../lib/clip-events.js';
 import {POSE_BRIDGE} from '../lib/slots.js';
 
@@ -113,12 +113,14 @@ export default {
   if(problems.length)throw new Error(`bind contract: ${problems.join('; ')}`);
   const specs={};
   for(const c of recipe.clips){if(!takes[c.take])throw new Error(`take "${c.take}" is not among the .amc sources`);const {id,events,...spec}=c;specs[id]=spec;}
-  const {clips,meta,legLength,restSupport}=retarget(sampler,specs,{bindTake:'rest',sampleRate:60});
+  const {clips,meta,bind,legLength,restSupport}=retarget(sampler,specs,{bindTake:'rest',sampleRate:60});
   const manifestClips=[];
   for(const c of recipe.clips){
-   const clip=clips[c.id],analysis=analyzeTake(meta[c.id].samples,clip.duration,{legLength,restSupport});
+   const clip=clips[c.id],samples=meta[c.id].samples,analysis=analyzeTake(samples,clip.duration,{legLength,restSupport});
    const events=deriveEvents(c.events,analysis,clip.duration,legLength,{loop:c.loop===true});
-   manifestClips.push({id:c.id,take:c.take,duration:+clip.duration.toFixed(6),loop:c.loop===true,sampleRate:60,frames:clip.frames.length,mirror:c.mirror??null,handedness:c.handedness||'none',events});
+   const start=postureOf(samples[0],bind),end=postureOf(samples.at(-1),bind),category=categoryOf(start.posture,end.posture,c.loop===true);
+   manifestClips.push({id:c.id,take:c.take,duration:+clip.duration.toFixed(6),loop:c.loop===true,sampleRate:60,frames:clip.frames.length,mirror:c.mirror??null,handedness:c.handedness||'none',events,
+    posture:{start:start.posture,end:end.posture,measured:{start,end}},category});
    log(`  ${c.id}: ${c.take} ${clip.duration.toFixed(3)}s ${clip.frames.length} frames (${takes[c.take].length} source frames @${fps}Hz)${events.length?' events '+events.map(e=>`${e.type}${e.side?'·'+e.side:''}@${e.t}`).join(' '):''}`);
   }
   const bank={version:1,source:{author:recipe.provenance.author,pack:recipe.provenance.pack,license:recipe.provenance.license,url:recipe.provenance.url,files:sources.map(s=>s.path),sha256:Object.fromEntries(sources.map(s=>[s.path.split('/').pop(),s.sha256])),

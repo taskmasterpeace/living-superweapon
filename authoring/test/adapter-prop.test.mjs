@@ -28,6 +28,8 @@ test('procedural equipment and props bake to deterministic, structurally valid G
    const doc=await readGlb(bytes);const inFile=doc.getRoot().listNodes().filter(n=>n.getName().startsWith('socket-')).map(n=>n.getName().slice(7)).sort();
    assert.deepEqual(inFile,[...names].sort(),`${name}: manifest sockets equal the GLB's socket nodes`);
    assert.ok(first.manifest.bounds&&first.manifest.bounds.min.every(Number.isFinite));
+   assert.equal(first.manifest.acceptance.visual,'unapproved-placeholder',name+': placeholder art stays labelled');
+   if(first.manifest.kind==='equipment')assert.ok(first.manifest.acceptance.blockers.some(b=>b.id==='full-extension-support-hand'&&b.owner==='main-task'),name+': carries the support-hand integration blocker');
   }
  }finally{await rm(a,{recursive:true,force:true});await rm(b,{recursive:true,force:true});}
 });
