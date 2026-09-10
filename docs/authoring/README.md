@@ -26,8 +26,9 @@ node authoring/bin/authoring.js build        # rebuilds only what a recipe chang
 re-derives it from the shipped assets and is only needed when the game's own assets change.
 Line endings: `authoring/` and `public/authored-assets/` carry `.gitattributes` with `* -text`, so
 Git never rewrites the bytes the manifests hash, whatever `core.autocrlf` says. A clean clone on
-Windows with the default `autocrlf=true` was verified end to end; the report is
-`authoring/artifacts/clean-checkout-report.md`.
+Windows with the default `autocrlf=true` first FAILED (that audit, and the fixes it forced, are
+the first half of `authoring/artifacts/clean-checkout-report.md`) and then passed validate,
+reproduce and all 35 tests at commit `5f075f1` (the report's final section).
 
 Licensed source motion and bodies are not committed (the repository already keeps them under
 `assets-src/` untracked, pinned by SHA-256). A build whose source is missing fails naming the
