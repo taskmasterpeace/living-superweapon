@@ -56,6 +56,14 @@ inventory.onpointerenter=()=>inventory.style.borderColor='var(--gold,#ffd24a)';
 inventory.onpointerleave=()=>inventory.style.borderColor='var(--line)';
 const inventoryOpen=()=>{if(!PW.game._armory)openArmory(PW.game,PW.hud);};
 inventory.onclick=inventoryOpen;document.body.appendChild(inventory);
+// On touch-sized screens the existing Pause button owns this menu entry;
+// reserve the lower-right corner for native combat controls.
+const mobileInventory=document.createElement('button');
+mobileInventory.id='pwInventoryMobile';mobileInventory.className='ghost';mobileInventory.textContent='Loadout';
+mobileInventory.onclick=inventoryOpen;PW.hud.el.paused.querySelector('[data-p="resume"]').before(mobileInventory);
+const inventoryLayout=document.createElement('style');
+inventoryLayout.textContent='#pwInventoryMobile{display:none}@media(max-width:900px),(pointer:coarse){body.playing #pwInventory{display:none}#pwInventoryMobile{display:block}}';
+document.head.appendChild(inventoryLayout);
 window.addEventListener('keydown',event=>{
  if(event.code!=='KeyI'||event.repeat||event.target?.closest?.('input,textarea,select,[contenteditable=true]'))return;
  event.preventDefault();event.stopImmediatePropagation();inventoryOpen();

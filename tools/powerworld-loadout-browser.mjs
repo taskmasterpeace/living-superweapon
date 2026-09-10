@@ -48,7 +48,7 @@ try{
  if(!functionalOnly){await mkdir('artifacts/impact-loadout',{recursive:true});await page.screenshot({path:'artifacts/impact-loadout/mobile.png'});}
  await page.keyboard.press('Escape');
  await page.evaluate(()=>{PW.game.running=false;PW.hud.setPaused(true);});
- await page.locator('#pwInventory').click();await page.keyboard.press('Escape');
+ await page.locator('#pwInventoryMobile').click();await page.keyboard.press('Escape');
  assert.equal(await page.evaluate(()=>PW.game.running),false,'close preserves a prior pause');
  assert.deepEqual(errors,[]);console.log('PASS native rifle / shotgun / sniper input, ammo, reload, menu pause, mobile and prior-pause restoration',functionalOnly?'(render suppressed; functional evidence only)':'');
 }catch(error){
