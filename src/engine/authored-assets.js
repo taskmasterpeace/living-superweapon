@@ -16,12 +16,12 @@ const clone=value=>JSON.parse(JSON.stringify(value));
 const safeRelative=(path,allowSlash=true)=>{
   if(typeof path!=='string'||path.length===0||path.includes('\\')||/^[a-z][a-z0-9+.-]*:/i.test(path))return false;
   let decoded;try{decoded=decodeURIComponent(path);}catch{return false;}
-  return !decoded.startsWith('/')&&!decoded.includes('\\')&&(allowSlash||!decoded.includes('/'))&&decoded.split('/').every(part=>part&&part!=='.'&&part!=='..');
+  return !decoded.startsWith('/')&&!decoded.includes('\\')&&!/[?#]/.test(decoded)&&(allowSlash||!decoded.includes('/'))&&decoded.split('/').every(part=>part&&part!=='.'&&part!=='..');
 };
 function descendantUrl(path,base,code,ref){
   if(!safeRelative(path))fail(code,`Unsafe authored asset path in ${ref??'catalog'}.`,{ref});
   const parent=new URL(base),resolved=new URL(path,parent),prefix=parent.pathname.endsWith('/')?parent.pathname:`${parent.pathname}/`;
-  if(resolved.origin!==parent.origin||!resolved.pathname.startsWith(prefix))fail(code,`Authored asset path escapes its declared directory in ${ref??'catalog'}.`,{ref});
+  if(resolved.origin!==parent.origin||resolved.search||resolved.hash||!resolved.pathname.startsWith(prefix))fail(code,`Authored asset path escapes its declared directory in ${ref??'catalog'}.`,{ref});
   return resolved;
 }
 const fail=(code,message,options)=>{throw new AuthoredAssetError(code,message,options);};
