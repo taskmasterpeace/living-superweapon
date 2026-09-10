@@ -1,11 +1,8 @@
 // =================================================================================================
 // THE ARMORY — pick what you carry, and be able to tell why one is better than another.
 //
-// Robert: *"build an armory to allow users to select what they want from various categories, should
-// have comparisons and filters and stuff"* — and, explicitly, **do not arm the weapons on people
-// yet**. So this screen selects and persists a loadout; it does not touch `characters.js` and it does
-// not issue anything to a fighter. The screen says which state it is in rather than implying an
-// effect it does not have.
+// Catalog choices persist; explicit issuance equips the current living soldier
+// through game.equipFrom. Previewing or saving a row alone never changes kit.
 //
 // ⚠ EVERY NUMBER IS READ FROM `data/armory.js`. Nothing here is authored twice — DPS, reach, spread
 // and range are DERIVED from the same `ab` block the engine fires with, so the comparison cannot
@@ -20,7 +17,7 @@
 // its own crack/body/tail/mech profile precisely so twelve weapons are twelve weapons and not one
 // bang twelve times. That work is already paid for and was, until now, only audible by being shot.
 // =================================================================================================
-import { FIREARMS, BLADES, GEAR, LOADOUTS, weaponById, gearById } from '../data/armory.js';
+import { FIREARMS, BLADES, GEAR, LOADOUTS, weaponById, gearById, firearmById } from '../data/armory.js';
 
 const LS = 'threshold_loadout_v1';
 
@@ -72,10 +69,19 @@ const TRAITS = {
 };
 
 export function loadLoadout() {
-  try { const o = JSON.parse(localStorage.getItem(LS) || 'null'); if (o && typeof o === 'object') return o; } catch (e) {}
+  try { const o = JSON.parse(localStorage.getItem(LS) || 'null'); if (o && typeof o === 'object') return {lmb:weaponById(o.lmb)?.id||null,rmb:weaponById(o.rmb)?.id||null,gear:Array.isArray(o.gear)?o.gear.filter(id=>gearById(id)).slice(0,3):[]}; } catch (e) {}
   return { lmb: null, rmb: null, gear: [] };
 }
 export function saveLoadout(l) { try { localStorage.setItem(LS, JSON.stringify(l)); } catch (e) {} return l; }
+
+export function loadoutIssueError(game,actor,id){
+  if(!actor||actor!==game?.player||!game.entities?.includes(actor))return 'Enter a match with a soldier to issue a firearm.';
+  if(!actor.alive||actor.state==='ko'||actor.downedT>0||game.matchOver)return 'Cannot issue while down or after the match.';
+  if(actor.def?.archetype!=='soldier')return 'Firearm issuance requires a soldier.';
+  if(actor._carry||actor.grabbedBy||actor.grabbing||actor._aircraftVehicle||actor._scoutVehicle)return 'Leave the current action or vehicle before issuing.';
+  if(!firearmById(id))return 'Select a firearm for LMB first.';
+  return null;
+}
 
 const CSS = `
 #hArm{ position:fixed; inset:0; z-index:64; display:none; background:rgba(6,7,10,.94); backdrop-filter:blur(4px);
@@ -140,17 +146,29 @@ const CSS = `
 #hArm .amnote{ font-size:var(--t-sm,11px); color:var(--text-4,#96907f); line-height:1.45; margin-top:8px; }
 #hArm .amempty{ font-size:var(--t-md,13px); color:var(--text-4,#96907f); line-height:1.5; }
 @media (max-width:1180px){ #hArm .amcmp{ display:none; } #hArm .amrow{ grid-template-columns:22px 1fr 200px 110px; } }
+@media (max-width:640px){
+ #hArm .amtop{padding:8px;gap:8px;flex-wrap:wrap} #hArm .amcls,#hArm .amcount{display:none}
+ #hArm .ambody{flex-direction:column;overflow:auto} #hArm .amrail{width:auto;overflow:visible;border-right:0;padding:12px}
+ #hArm .amcat{flex-direction:row;flex-wrap:wrap} #hArm .amlist{overflow:visible;flex:none;padding:8px}
+ #hArm .amrow{grid-template-columns:22px minmax(0,1fr) 90px;gap:6px} #hArm .ambars{display:none}
+ #hArm button{min-height:44px} #hArm .amnote{font-size:12px}
+}
 `;
 
 const num = (v) => v >= 1000 ? Math.round(v) : v >= 100 ? v.toFixed(0) : v >= 10 ? v.toFixed(1) : v.toFixed(2);
 
 export function openArmory(game, hud) {
   if (document.getElementById('hArm')) return null;
+  const actor=game?.player,previousFocus=document.activeElement;
+  const prior={running:game?.running,paused:game?.paused};
+  if(game){game.retireCombatViewInput?.(actor);game.running=false;game.paused=true;game.combatOverlayOpen=true;}
+  if(document.pointerLockElement)document.exitPointerLock?.();
   if (!document.getElementById('hArmCss')) {
     const st = document.createElement('style'); st.id = 'hArmCss'; st.textContent = CSS; document.head.appendChild(st);
   }
   const el = document.createElement('div');
   el.id = 'hArm';
+  el.setAttribute('role','dialog');el.setAttribute('aria-modal','true');el.setAttribute('aria-label','Armory loadout');
   el.innerHTML = `
     <div class="amtop">
       <span class="amcls">quartermaster · issue</span>
@@ -170,6 +188,7 @@ export function openArmory(game, hud) {
   const traits = new Set();
   const compare = [];                       // ids, max 3
   let load = loadLoadout();
+  let issueNotice='Selection saved locally. Confirm below to equip your current soldier.';
 
   const rows = () => {
     const src = cat === 'firearm' ? FIREARMS : cat === 'blade' ? BLADES : GEAR;
@@ -216,9 +235,18 @@ export function openArmory(game, hud) {
       <div class="amslot"><b>LMB</b><span>${load.lmb ? (weaponById(load.lmb) || {}).n || load.lmb : '—'}</span></div>
       <div class="amslot"><b>RMB</b><span>${load.rmb ? (weaponById(load.rmb) || {}).n || load.rmb : '—'}</span></div>
       <div class="amslot"><b>Gear</b><span>${load.gear.length ? load.gear.map(g => (gearById(g) || {}).n || g).join(', ') : '—'}</span></div>
-      <div class="amnote"><b style="color:var(--gold)">SAVED — NOT YET ISSUED.</b> Your selection is
-      stored, but nothing carries it into a match yet: arming fighters is a separate step and is
-      deliberately not done.</div>`;
+      <div class="amnote" role="status" id="amIssueStatus">${issueNotice}</div>
+      <div class="ambtns"><button id="amIssue" ${loadoutIssueError(game,actor,load.lmb)?'disabled':''}>Equip selected firearm · LMB</button></div>
+      <div class="amnote">${loadoutIssueError(game,actor,load.lmb)||'Replaces your primary firearm. LMB fires · R reloads · wheel selects attacks. Other saved slots are not issued here.'}</div>`;
+    rail.querySelector('#amIssue').onclick=()=>{
+      const error=loadoutIssueError(game,actor,load.lmb);
+      if(error){issueNotice=error;renderRail();return;}
+      game.retireCombatViewInput?.(actor);
+      const row=firearmById(load.lmb),issued=game.equipFrom(actor,row,{primary:true});
+      issueNotice=issued?`EQUIPPED — ${row.n} · LMB`:'Issuance failed. Your current weapon is unchanged.';
+      if(issued){hud?.buildSlots?.({...actor.def,abilities:{...actor.def.abilities,lmb:actor.slots.lmb.def}});hud?.selectSlot?.('lmb',actor._selSecondary);}
+      renderRail();
+    };
     rail.querySelectorAll('[data-cat]').forEach(b => b.onclick = () => {
       cat = b.dataset.cat; cls = null; traits.clear(); q = '';
       sort = (AXES[cat] || [{ k: 'dmg' }])[0].k; compare.length = 0; render();
@@ -288,7 +316,7 @@ export function openArmory(game, hud) {
         const i = load.gear.indexOf(id);
         if (i >= 0) load.gear.splice(i, 1); else { load.gear.push(id); if (load.gear.length > 3) load.gear.shift(); }
       } else load[slot] = load[slot] === id ? null : id;
-      saveLoadout(load); render();
+      saveLoadout(load); issueNotice='Selection saved. Confirm Equip selected firearm to issue LMB.'; render();
     });
     // ⚠ THE ONE THING A TABLE CANNOT DO. Every firearm has its own crack/body/tail/mech profile
     // (manual §38) and it was only ever audible by being shot at. `audio.gunshot` takes the voice.
@@ -329,13 +357,28 @@ export function openArmory(game, hud) {
   const close = () => {
     window.removeEventListener('keydown', onKey, true);
     el.remove();
-    if (game) game._armory = null;
+    if (game) {
+      game._armory = null;game.retireCombatViewInput?.(game.player);
+      if(game.player===actor&&!game.matchOver){game.running=prior.running;game.paused=prior.paused;}
+      game.combatOverlayOpen=!!hud?.overlayOpen?.();
+    }
+    previousFocus?.focus?.();
   };
-  const onKey = (e) => { if (e.key === 'Escape') { e.stopPropagation(); close(); } };
+  const onKey = (e) => {
+    if(e.key==='Escape'){e.preventDefault();e.stopImmediatePropagation();close();return;}
+    // Menu typing must never enter the global game input/key handlers.
+    e.stopImmediatePropagation();
+    if(e.key==='Tab'){
+      const buttons=[...el.querySelectorAll('button:not(:disabled),input,select')],first=buttons[0],last=buttons.at(-1);
+      if(e.shiftKey&&document.activeElement===first){e.preventDefault();last?.focus();}
+      else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first?.focus();}
+    }
+  };
   window.addEventListener('keydown', onKey, true);
   el.querySelector('#amX').onclick = close;
 
   render();
+  el.querySelector('#amX').focus();
   const api = { el, close, get loadout() { return load; },
     // test seams — drive the real render paths without a mouse
     setCategory(c) { cat = c; cls = null; traits.clear(); sort = (AXES[c] || [{ k: 'dmg' }])[0].k; render(); return rows().length; },

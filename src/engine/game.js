@@ -44,7 +44,7 @@ import { STRIKES } from '../data/martial.js';
 import { beamBuildOf, beamTemperOf } from '../data/visual.js';
 import { Gamepad } from '../core/gamepad.js';
 import { runSlot, performEvade } from './abilities.js';
-import {requestReload} from './firearm-ammo.js';
+import {requestReload,firearmAmmo,cancelFirearmReload} from './firearm-ammo.js';
 import { ROSTER } from '../data/characters.js';
 import { BANDS, clamp, rand, TAU, damp, GROUND_LAYER, PW_KB, PW_FX, pwCatchSpeed, AIM_MAX_D, GAIT, GAIT_OWNER } from '../core/util.js';
 import {firearmAimRange,firearmSightZoom} from './firearm-aim.js';
@@ -1337,7 +1337,7 @@ export class Game {
    * ⚠ Proficiency shows in the HANDS, not in the weapon: the row is untouched and the EFFECTIVE
    * ability is what gets held. A soldier and a bruiser hold the same carbine differently.
    */
-  equipFrom(f, row) {
+  equipFrom(f, row, {primary=false}={}) {
     if (!f || !row || !row.ab) return null;
     if (f._gearHeld) this.dropGear(f, false);
     const prof = weaponProficiency(f.def);
@@ -1349,21 +1349,30 @@ export class Game {
       spread: ab.spread != null ? +(ab.spread / prof).toFixed(4) : ab.spread };
     // ⚠ NO `t` TIMER. A picked-up weapon is scavenged and expires in 12s; something you CHOSE in the
     // armory is yours for the match. Same held-object, two lifetimes, one field apart.
-    f._gearHeld = { ab: eff, base: ab, t: Infinity, prof, chosen: true };
+    f._gearHeld = { ab: eff, base: ab, t: Infinity, prof, chosen: true, rowId: row.id, primary };
     f.slots._gear = { def: eff, cd: 0, chargeT: 0, sustainT: 0 };
-    const hand = buildWeapon(this._gearKind(ab), { armor: new THREE.MeshStandardMaterial({ color: '#565c66', roughness: 0.45, metalness: 0.7 }) });
+    firearmAmmo(f.slots._gear);
+    if(primary){
+      f._loadoutPrimary=f.slots.lmb;f.slots.lmb=f.slots._gear;
+      // Keep the held-emitter contract, but tick this shared slot only once.
+      Object.defineProperty(f.slots,'_gear',{value:f.slots.lmb,writable:true,configurable:true,enumerable:false});
+      f._selSlot='lmb';f._hand=3;
+    }
+    const hand = buildWeapon(row.mesh||this._gearKind(ab), { armor: new THREE.MeshStandardMaterial({ color: '#565c66', roughness: 0.45, metalness: 0.7 }) });
     mountHeldWeapon(f,hand);
     return eff;
   }
 
   dropGear(f, spawnDrop = true) {
     if (!f._gearHeld) return;
+    if(f._firearmReload?.slot===f.slots._gear)cancelFirearmReload(f);
     if (spawnDrop) this.spawnGearDrop(f._gearHeld.base, f.pos.x + (Math.random() * 4 - 2), f.pos.z + (Math.random() * 4 - 2));
     if (f._gearMesh) {
       unmountHeldWeapon(f,this);
       f._gearMesh.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material) o.material.dispose(); });
       f._gearMesh = null;
     }
+    if(f._gearHeld.primary){f.slots.lmb=f._loadoutPrimary;delete f._loadoutPrimary;}
     delete f.slots._gear;
     f._gearHeld = null;
     // ⚠ THE SELECTOR IS AN INTENT, AND AN EMPTY HAND MUST NOT KEEP CLAIMING A WEAPON. This is the ONE
@@ -3386,7 +3395,7 @@ export class Game {
   }
 
   prepareCombatView(inputDt) {
-    this.combatOverlayOpen=!!this.hud?.overlayOpen?.();
+    this.combatOverlayOpen=!!(this._armory||this.hud?.overlayOpen?.());
     const active=combatLookActive(this),w=this.world;
     const previous=this._combatControlOwner,changed=previous&&previous!==this.player;
     const rigChanged=previous===this.player&&this._combatControlParts!==this.player?.parts;
@@ -3714,7 +3723,7 @@ export class Game {
     if(soldierControls&&inp.pressed('KeyE')&&!p.guarding&&!p.grabbedBy&&!p.frozenT&&!p.staggerT){
       if(!this.doInteract(p))this.pickupGear(p);
     }
-    if (p._gearHeld) {                                  // the HELD weapon owns X while you carry it
+    if (p._gearHeld&&!p._gearHeld.primary) {             // issued primary fires through LMB
       const gi = { pressed: inp.pressed(KM.item)||(chase&&pad.pressed('item')), held: inp.down(KM.item)||(chase&&pad.down('item')), released: inp.released(KM.item)||(chase&&pad.released('item')), dt };
       if (gi.pressed || gi.held || gi.released) runSlot(p, '_gear', gi, this);
       if (gi.held) this.drainGear(p, dt);
@@ -3723,7 +3732,7 @@ export class Game {
     // --- powers (keyboard/mouse OR gamepad) ---
     const busy = p.guarding || p.strikeActive > 0 || p.grabState || p.grabbing || p.meleeCharge > 0 || p.staggerT > 0;
     const infantry=p.def.archetype==='soldier';
-    if(!busy&&(inp.pressed(infantry?'KeyR':'KeyY')||pad.pressed('reload')))requestReload(p,p._gearHeld?'_gear':mouseCombat.primary,this);
+    if(!busy&&(inp.pressed(infantry?'KeyR':'KeyY')||pad.pressed('reload')))requestReload(p,p._gearHeld&&!p._gearHeld.primary?'_gear':mouseCombat.primary,this);
     const orK = (code, a) => ({ pressed: inp.pressed(code) || pad.pressed(a), held: inp.down(code) || pad.down(a), released: inp.released(code) || pad.released(a) });
     const intents = {
       lmb: { pressed: pad.pressed('lmb'), held: pad.down('lmb'), released: pad.released('lmb') },

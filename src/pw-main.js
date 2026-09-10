@@ -9,6 +9,7 @@
 // meant maintaining 43,700 duplicated lines to own 700.
 import { boot, PROFILE_FULL } from './boot.js';
 import { mountPWTitle } from './engine/pwTitle.js';
+import {openArmory} from './engine/armoryUI.js';
 
 let door = null;
 
@@ -45,3 +46,17 @@ window.PW = PW;
 // this repo reaches for `LSW.game` — a page that renamed the seam would silently fail every test
 // ever written against it. `PW` is the page's own name; `LSW` is the contract.
 window.LSW = PW;
+
+// Native inventory remains reachable before and during the match. Opening it
+// retires combat input; the dialog restores only the state it actually owned.
+const inventory=document.createElement('button');
+inventory.id='pwInventory';inventory.textContent='LOADOUT · I';inventory.setAttribute('aria-label','Open soldier loadout');
+inventory.style.cssText='position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom));z-index:44;min-height:44px;padding:10px 14px;border:1px solid var(--line);border-radius:10px;background:var(--surface,#201d18);color:var(--gold,#ffd24a);font:600 12px Inter,system-ui,sans-serif;cursor:pointer';
+inventory.onpointerenter=()=>inventory.style.borderColor='var(--gold,#ffd24a)';
+inventory.onpointerleave=()=>inventory.style.borderColor='var(--line)';
+const inventoryOpen=()=>{if(!PW.game._armory)openArmory(PW.game,PW.hud);};
+inventory.onclick=inventoryOpen;document.body.appendChild(inventory);
+window.addEventListener('keydown',event=>{
+ if(event.code!=='KeyI'||event.repeat||event.target?.closest?.('input,textarea,select,[contenteditable=true]'))return;
+ event.preventDefault();event.stopImmediatePropagation();inventoryOpen();
+},true);
