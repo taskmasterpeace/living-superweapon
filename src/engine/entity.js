@@ -1,6 +1,7 @@
 // WAR WORLD: ASCENDANTS — Fighter: articulated figure, stats, physics, flight, combat, ability state.
 import { moodMult } from './psyche.js';
 import {mergeAuthoredSelection} from '../data/authored-selection.js';
+import {loadFighterMotion,invalidateFighterMotion} from './authored-character.js';
 import {firearmAmmo,updateFirearmReload} from './firearm-ammo.js';
 import {advanceThrowAction,animateThrowAction,restoreThrowPose,cancelInterruptedThrow} from './throwable-action.js';
 import {animateReloadPose,restoreReloadPose} from './reload-presentation.js';
@@ -417,6 +418,7 @@ export class Fighter {
     this.canPhase = !!def.phase;                                     // can spend energy to go intangible
     this.grabHeal = def.grabHeal || 0;                              // lifesteal on your throws
     this.teleEscape = def.teleEscape || Object.values(def.abilities || {}).some(a => a.type === 'teleport'); // blinks out of grabs
+    if(typeof document!=='undefined')loadFighterMotion(this);
   }
 
   // ⚠ READER #1 of the ten (aaa-03 §1). `grounded` was `onFloor && !flying`, which returns FALSE for a
@@ -633,6 +635,7 @@ export class Fighter {
     root.updateMatrixWorld(true);updateLimbSurfaces(next,true);updateHeroSkin(next);
     presentNanites(this);
     this._releaseFormResources();
+    if(typeof document!=='undefined')loadFighterMotion(this);
     return true;
   }
 
@@ -666,6 +669,7 @@ export class Fighter {
   dispose() {
     if(this._formDisposed)return;
     this._formDisposed=true;
+    invalidateFighterMotion(this);
     this.releaseHang();
     retireNanites(this._nanites);presentNanites(this);
     if(this._game)retireOwnedConstructs(this._game,this,'owner-removed');
@@ -1144,6 +1148,7 @@ export class Fighter {
   }
 
   _ko(opts = {}) {
+    invalidateFighterMotion(this);
     retireNanites(this._nanites);presentNanites(this);
     if(this._game)retireOwnedConstructs(this._game,this,'owner-ko',true);
     this._game?.melee?.clearInput(this);
@@ -1634,7 +1639,9 @@ export class Fighter {
       this.state = 'idle'; this.invuln = 1.4; this.vel.set(0, 0, 0);
       reconcileWindCarry(this);
       resetNanites(this._nanites);
+      const motionGeneration=this._authoredMotionGeneration;
       if(this._pendingForm!==undefined)this.applyForm(this._pendingForm);
+      if(typeof document!=='undefined'&&motionGeneration===this._authoredMotionGeneration)loadFighterMotion(this);
       if (this.isDummy) this.pos.copy(this.spawn);
       else { this.pos.set(this.spawn.x, 0, this.spawn.z); }
       game.vfx.flash(this.pos.clone().setY(5), this.def.colors.accent, 8, 0.4);

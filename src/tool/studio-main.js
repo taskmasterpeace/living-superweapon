@@ -16,6 +16,9 @@ import {styleOf} from '../data/martial.js';
 import {LIMITS,profileFromDef,validateProfile,applyProfile,loadProfile,saveProfile,removeProfile,DraftHistory,resetFlightStyle,resetCamera} from './studio-profile.js';
 import {attackFields,attackIdentity,attackSource,reconcileAttackOverrides,resetAttackOverride,setAttackOverride} from '../data/attack-tuning.js';
 import {progressionInspector,formDialogBody,editForm} from './studio-progression.js';
+import {loadCatalog} from '../engine/authored-assets.js';
+import {catalogInspector,prepareCatalogSelection,updateCatalogRuntime} from './studio-catalog.js';
+import {loadFighterMotion} from '../engine/authored-character.js';
 
 installCustoms(ROSTER);
 try {
@@ -23,6 +26,12 @@ const $=s=>document.querySelector(s), esc=s=>String(s).replace(/[&<>"']/g,c=>({'
 const states={hover:'Hover',forward:'Forward flight',backward:'Backward flight',strafeLeft:'Strafe left',strafeRight:'Strafe right',brake:'Air brake',boost:'Boost',cycle:'Transition loop',beam:'Beam sequence',attack:'Attack sequence',melee:'Melee sequence'};
 Object.assign(states,{groundWalk:'Ground walk',groundJog:'Ground jog',groundSprint:'Ground sprint',groundJump:'Ground jump',groundCrouch:'Crouch · procedural',groundCrouchWalk:'Crouch walk · procedural'});
 let hero=ROSTER.find(d=>d.id===new URLSearchParams(location.search).get('hero'))||ROSTER[0],history,tab='model',pose='hover',attackSlot='lmb',approvedNavigation=false,hasSaved=false;
+let assetCatalog=null,catalogLoading=false,catalogError='',catalogOpen=false,catalogSelectionEpoch=0;
+async function refreshCatalog(){
+ catalogLoading=true;catalogError='';if(history&&tab==='model')inspector();
+ try{assetCatalog=await loadCatalog();}catch(error){catalogError=error.message;}
+ finally{catalogLoading=false;if(history&&tab==='model')inspector();}
+}
 const refHover=new URL('../../docs/reference/Ultra Bid For Power 1.0 - Release [DOWNLOAD] 2-44 screenshot.png',import.meta.url).href;
 const refCamera=new URL('../../docs/reference/Ultra Bid For Power 1.0 - Release [DOWNLOAD] 1-26 screenshot.png',import.meta.url).href;
 $('#studio').innerHTML=`<header><div><div class="brandmark">LIVING SUPERWEAPON / AUTHORING</div><h1>Character Studio</h1><p>Build the silhouette. Shape the flight.</p></div><div class="actions"><span class="save-state"></span><button id="undo">Undo</button><button id="redo">Redo</button><button id="save" class="primary">Save local</button><button id="playtest">Play Test ↗</button></div></header>
@@ -84,6 +93,7 @@ const preview=new StudioPreview($('.viewport'),({time,state,speed,fov,damage=0,c
   if(nanite)$('#nanite-measurements').textContent=nanite.modules.map(m=>`${m.slot.toUpperCase()} ${m.form} / ${m.attachment.replace('-',' ')}: ${m.phase.replaceAll('-',' ')} · ${m.intactCells}/${m.totalCells} intact · absorbed ${m.absorbed.toFixed(1)} · body HP ${m.bodyDamage.toFixed(1)} · ${m.liveFragments} fragments${m.muzzleError===null?'':` · muzzle error ${m.muzzleError.toExponential(1)}u`}`).join(' | ')+` · Outgoing autohealed dummy: ${nanite.outgoingDamage.toFixed(1)} HP / ${nanite.outgoingContacts} events · ${nanite.launches} committed launches · incoming emitted ${nanite.emitted}${nanite.incomingStatus==='unavailable-ko'?' / fixture unavailable: incoming KO':''}${nanite.events.filter(e=>e.target==='owner').length?' / arrived '+nanite.events.filter(e=>e.target==='owner').map(e=>e.time.toFixed(2)+'s').join(', '):' / no arrival'}`;
   if(resource)$('#construct-budget').textContent=`Owner ${resource.infinite?'∞ core':resource.ki.toFixed(1)+' / '+resource.maxKi+' ki'} · `+resource.constructs.map(c=>`${c.slot.toUpperCase()} ${c.kind} / ${c.state}: ${c.mode==='upkeep'?c.rate+' ki/s; physical hit, no per-hit ki charge':c.rate+' ki/hp received'} · ${c.hits} accepted hits / ${c.damage.toFixed(1)} damage received · ${c.kiSpent.toFixed(1)} ki spent`).join(' | ');
   $('.attack-phase').hidden=!['attack','melee'].includes(state);$('.attack-phase').textContent=`SEQUENCE / ${phase.replaceAll('-',' ').toUpperCase()}`;
+  updateCatalogRuntime(preview.fighter,$('.inspector-body'));
 });
 function status(message,error=false){$('#status').textContent=message;$('.statusbar').classList.toggle('error',error);}
 $('#preview-sound').onclick=async()=>{
@@ -169,7 +179,16 @@ function inspector(){const p=history.value;let html='';
   const broadcast=loadBroadcastProfile();
   html+=`<h3>War correspondent</h3><p class="help">Project-wide field-camera direction, separate from your fighter’s chase camera. Applied to new matches in this browser; these settings are not part of a character profile. Recorded action, reporter stand-ups and winner shots appear in the post-match report.</p>${[['crashZoom','Crash zoom',0,1],['handheld','Handheld motion',0,1],['shotHold','Attacker shot hold (seconds)',.6,2.4]].map(([k,label,min,max])=>numeric(k,label,[min,max],broadcast[k]).replaceAll('data-path=','data-broadcast=')).join('')}<button id="broadcast-export">Export camera JSON</button> <button id="broadcast-import">Import camera JSON</button><p class="help">Use Play Test, fight a rival, then finish a match to see the real field footage. Studio’s neutral model stage does not simulate the crew.</p>`;
  }
+ if(tab==='model')html+=catalogInspector(assetCatalog,p.model.assets,{loading:catalogLoading,error:catalogError,open:catalogOpen});
  $('.inspector-body').innerHTML=html;
+ const catalogDetails=$('.asset-catalog');if(catalogDetails)catalogDetails.ontoggle=()=>{catalogOpen=catalogDetails.open;};
+ const catalogRetry=$('#catalog-retry');if(catalogRetry)catalogRetry.onclick=()=>refreshCatalog();
+ const motionRetry=$('#catalog-motion-retry');if(motionRetry)motionRetry.onclick=()=>{
+  const fighter=preview.fighter;
+  loadFighterMotion(fighter).then(()=>{if(preview.fighter===fighter)updateCatalogRuntime(fighter,$('.inspector-body'));});
+  updateCatalogRuntime(fighter,$('.inspector-body'));
+ };
+ updateCatalogRuntime(preview.fighter,$('.inspector-body'));
  if(tab==='model'&&p.model.body&&p.model.body!=='procedural')for(const input of document.querySelectorAll('[data-path="model.costume"],[data-path="frame.neck"]')){input.disabled=true;input.title='Applies to procedural modules only; your value is retained.';}
  $('.inspector-body').classList.toggle('attack-panel',tab==='attacks');
  $('.inspector-body').classList.toggle('progression-panel',tab==='progression');
@@ -185,7 +204,20 @@ for(const b of tabButtons){b.id='tab-'+b.dataset.tab;b.setAttribute('aria-contro
 $('.inspector-body').id='inspector-panel';$('.inspector-body').setAttribute('role','tabpanel');$('.inspector-body').setAttribute('aria-labelledby','tab-model');
 $('.tabs').onclick=e=>{const b=e.target.closest('[data-tab]');if(!b)return;tab=b.dataset.tab;tabButtons.forEach(x=>{x.setAttribute('aria-selected',x===b);x.tabIndex=x===b?0:-1;});$('.inspector-body').setAttribute('aria-labelledby',b.id);inspector();};
 $('.tabs').onkeydown=e=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;e.preventDefault();const n=tabButtons.length,i=tabButtons.indexOf(document.activeElement),next=e.key==='Home'?0:e.key==='End'?n-1:(i+(e.key==='ArrowRight'?1:n-1))%n;tabButtons[next].focus();tabButtons[next].click();};
-$('.inspector-body').addEventListener('change',e=>{const el=e.target;
+$('.inspector-body').addEventListener('change',async e=>{const el=e.target;
+ if(el.dataset.catalog){
+  const owner=history,snapshot=JSON.stringify(history.value),epoch=++catalogSelectionEpoch;
+  try{
+   el.disabled=true;
+   const p=await prepareCatalogSelection(history.value,el.dataset.catalog,el.value);
+   if(epoch!==catalogSelectionEpoch||history!==owner||JSON.stringify(history.value)!==snapshot)return;
+   applyProfile(hero,p);history.push(p);preview.setProfile(hero,p,true);savedState();inspector();
+   document.querySelector(`[data-catalog="${el.dataset.catalog}"]`)?.focus();
+   status('Asset reference updated. Save local or export to keep this selection. Package fit and motion still need inspection.');
+  }catch(error){if(epoch===catalogSelectionEpoch&&history===owner){status(error.message,true);inspector();}}
+  finally{if(el.isConnected)el.disabled=false;}
+  return;
+ }
  if(el.dataset.broadcast){
   if(!el.value.trim()||!el.checkValidity()){status('Enter a camera value within the displayed range.',true);return;}
   try{saveBroadcastProfile({...loadBroadcastProfile(),[el.dataset.broadcast]:Number(el.value)});el.closest('.property-control').querySelectorAll('input').forEach(input=>input.value=el.value);status('Field camera saved for new matches. Fighter camera and character draft are unchanged.');}
@@ -497,6 +529,7 @@ selectHero(hero);
 setView('game');
 const soundLibraryPanel=mountSoundLibrary({host:$('.stage-toolbar'),backend:preview.sound.backend,onOpen:()=>{if(preview.playing)$('#play').click();}});
 window.STUDIO={preview,soundLibrary:soundLibraryPanel.library,soundLibraryPanel,get history(){return history;}};
+refreshCatalog();
 } catch(error) {
  const host=document.querySelector('#studio');host.replaceChildren();
  const heading=document.createElement('h1');heading.textContent='Studio could not open';
