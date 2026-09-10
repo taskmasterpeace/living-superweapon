@@ -167,10 +167,10 @@ export function mountPWTitle(ctx) {
   text-transform:uppercase; padding:7px 13px; cursor:pointer; background:transparent; border:none;
   color:var(--text-4,#9a9385); transition:.2s; min-height:32px; }
 #pwTitle .pwseg button.on{ background:var(--gold-deep,#8a6b1e); color:var(--on-gold,#20180a); font-weight:700; }
-#pwTitle #pwDaylight button{min-height:44px;color:var(--text,#e8e2d4);}
-#pwTitle #pwDaylight button.on{background:var(--gold,#f5b21a);color:var(--on-gold,#20180a);}
-#pwTitle #pwDaylight button:hover{background:var(--line-gold,#6b5824);color:var(--text,#e8e2d4);}
-#pwTitle #pwDaylight button:focus-visible{outline:2px solid var(--text,#e8e2d4);outline-offset:-4px;}
+#pwTitle .pwEnvironment button{min-height:44px;color:var(--text,#e8e2d4);}
+#pwTitle .pwEnvironment button.on{background:var(--gold,#f5b21a);color:var(--on-gold,#20180a);}
+#pwTitle .pwEnvironment button:hover{background:var(--line-gold,#6b5824);color:var(--text,#e8e2d4);}
+#pwTitle .pwEnvironment button:focus-visible{outline:2px solid var(--text,#e8e2d4);outline-offset:-4px;}
 #pwTitle .pwgo{ width:100%; padding:15px; font-family:var(--f-display,Rajdhani,sans-serif); font-size:19px;
   font-weight:800; letter-spacing:.16em; text-transform:uppercase; cursor:pointer; min-height:52px;
   background:var(--grad-gold,linear-gradient(180deg,#f5b21a,#8a6b1e)); color:var(--on-gold,#20180a);
@@ -193,8 +193,9 @@ body.phone #pwTitle h1{ font-size:34px; }
   let encounter = 'sparring'; // The optional recovery slice never replaces the default.
   let cameraPreset=prefs.cameraPreset==='frontline'?'frontline':'character';
   let daylight=daylightPreset(prefs.daylight).id;
+  let weatherPreset=prefs.weatherPreset==='rain'?'rain':'clear';
 
-  const save = () => { try { localStorage.setItem(PREF, JSON.stringify({ p1: selYou.id, p2: selFoe.id, two, ai, cameraPreset, daylight })); } catch {} };
+  const save = () => { try { localStorage.setItem(PREF, JSON.stringify({ p1: selYou.id, p2: selFoe.id, two, ai, cameraPreset, daylight, weatherPreset })); } catch {} };
   const footage = createFieldFootage(ctx.game);
 
   // ---- the stage readout, every figure derived from the stage itself ----
@@ -245,8 +246,11 @@ body.phone #pwTitle h1{ font-size:34px; }
           </div>
           ${encounter === 'frontline' ? '<div class="pwnote">Four ground-bound rifle clones guard a sealed sample. Defeat them, land by the amber case, then return to extraction. Research is not yet implemented. Opponent selection and difficulty apply to sparring.</div>' : ''}
           ${encounter === 'practice' ? '<div class="pwnote">No hostile spawns. Learn your powers, drive the scouts or practice helicopter and jet landings. Health, energy and collision are unchanged. Press B when you want to add a rival.</div>' : ''}
-          <div class="pwrow"><span class="pwlbl" id="pwDaylightLabel">Lighting</span><div class="pwseg" id="pwDaylight" role="group" aria-labelledby="pwDaylightLabel">
+          <div class="pwrow"><span class="pwlbl" id="pwDaylightLabel">Lighting</span><div class="pwseg pwEnvironment" id="pwDaylight" role="group" aria-labelledby="pwDaylightLabel">
             ${Object.values(DAYLIGHT_PRESETS).map(p=>`<button type="button" data-daylight="${p.id}" class="${daylight===p.id?'on':''}" aria-pressed="${daylight===p.id}">${p.label}</button>`).join('')}
+          </div></div>
+          <div class="pwrow"><span class="pwlbl" id="pwWeatherLabel">Weather</span><div class="pwseg pwEnvironment" id="pwWeather" role="group" aria-labelledby="pwWeatherLabel">
+            ${['clear','rain'].map(id=>`<button type="button" data-weather="${id}" class="${weatherPreset===id?'on':''}" aria-pressed="${weatherPreset===id}">${id==='rain'?'Rain':'Clear'}</button>`).join('')}
           </div></div>
           <div class="pwrow"><span class="pwlbl">Camera · 1P</span><div class="pwseg" id="pwCamera">
             <button data-camera="character" class="${cameraPreset==='character'?'on':''}" aria-pressed="${cameraPreset==='character'}">Character / BFP</button>
@@ -322,7 +326,7 @@ body.phone #pwTitle h1{ font-size:34px; }
         hud.onSelectBack = () => {};                       // the door is still mounted beneath
         hud.showSelect((cfg) => {
           selYou = ROSTER.find(r => r.id === cfg.p1) || selYou; save();
-          ctx.enter({ mode: 'powerworld', p1: selYou.id, p2: selFoe.id, twoPlayer: two, aiLevel: ai, encounter: two ? 'sparring' : encounter, cameraPreset:two?'character':cameraPreset, daylight });
+          ctx.enter({ mode: 'powerworld', p1: selYou.id, p2: selFoe.id, twoPlayer: two, aiLevel: ai, encounter: two ? 'sparring' : encounter, cameraPreset:two?'character':cameraPreset, daylight, weatherPreset });
         }, { mode: 'powerworld', modeName: 'POWERWORLD', p1: selYou.id });
         return;
       }
@@ -338,6 +342,13 @@ body.phone #pwTitle h1{ font-size:34px; }
         option.classList.toggle('on',selected);option.setAttribute('aria-pressed',String(selected));
       }
     };
+    for(const b of el.querySelectorAll('#pwWeather button'))b.onclick=()=>{
+      weatherPreset=b.dataset.weather==='rain'?'rain':'clear';save();
+      for(const option of el.querySelectorAll('#pwWeather button')){
+        const selected=option.dataset.weather===weatherPreset;
+        option.classList.toggle('on',selected);option.setAttribute('aria-pressed',String(selected));
+      }
+    };
     for (const b of el.querySelectorAll('#pwAi button')) b.onclick = () => { if (two) return; ai = +b.dataset.ai; save(); render(); };
     el.querySelector('#pwOpt').onclick = () => hud.showOptions();
     el.querySelector('#pwHow').onclick = () => hud.showHowto();
@@ -345,7 +356,7 @@ body.phone #pwTitle h1{ font-size:34px; }
     el.querySelector('#pwGo').onclick = () => {
       save();
       // ⚠ `p2` is what every mode calls the opponent — powerworld's setup reads `o.enemy || o.p2`.
-      ctx.enter({ mode: 'powerworld', p1: selYou.id, p2: selFoe.id, twoPlayer: two, aiLevel: ai, encounter: two ? 'sparring' : encounter, cameraPreset:two?'character':cameraPreset, daylight });
+      ctx.enter({ mode: 'powerworld', p1: selYou.id, p2: selFoe.id, twoPlayer: two, aiLevel: ai, encounter: two ? 'sparring' : encounter, cameraPreset:two?'character':cameraPreset, daylight, weatherPreset });
     };
   }
 

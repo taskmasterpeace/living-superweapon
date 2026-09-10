@@ -366,6 +366,11 @@ export class World {
       // Avoid a lavender midpoint when the cool daytime HDR meets golden hour.
       if(preset.skyTop)u.uTop.value.set(preset.skyTop);
       if(preset.skyHorizon)u.uHor.value.set(preset.skyHorizon);
+      const cloud=Math.max(0,Math.min(1,this.weatherCloud||0));
+      if(this.sun)this.sun.intensity*=1-cloud*.55;
+      if(this.hemi)this.hemi.intensity*=1-cloud*.12;
+      const skyCloud=this.skyMesh?.material.uniforms?.uWeatherCloud;
+      if(skyCloud)skyCloud.value=cloud;
     }
     // ⚠ stash what the CLOCK decided before weather scales it — the weather multiplies these every
     // frame, so without a clean baseline it would compound and the world would go black.

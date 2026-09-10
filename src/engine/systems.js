@@ -15,6 +15,7 @@ import * as THREE from 'three';
 // smoke drift, and lightning lights whole building silhouettes.
 // ============================================================================================
 import { STATES, WIND_DRAG, pickWeather } from '../data/weather.js';
+import {RainField} from './rain-field.js';
 
 export class Weather {
   constructor(game) {
@@ -80,53 +81,31 @@ export class Weather {
     this.windDir = Math.random() * Math.PI * 2;
     return this;
   }
-  clear() { this._target = { rain: 0, wind: 0, cloud: 0 }; this.storm = 0; this._src = null; }
+  clear() { this._target = { rain: 0, wind: 0, cloud: 0 }; this.storm = 0; this._src = null; this.stateId='clear'; }
+
+  reset() {
+    this.clear();this.rain=this.wind=this.cloud=0;
+    this.g.world.weatherCloud=0;
+    this._srcT=this._boltT=this._hold=0;this._natural='clear';this.dispose();
+  }
 
   _buildRain() {
-    const N = 1400;
-    const geo = new THREE.BufferGeometry();
-    const pos = new Float32Array(N * 3);
-    for (let i = 0; i < N; i++) {
-      pos[i * 3] = (Math.random() * 2 - 1) * 300;
-      pos[i * 3 + 1] = Math.random() * 220;
-      pos[i * 3 + 2] = (Math.random() * 2 - 1) * 300;
-    }
-    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-    const mat = new THREE.PointsMaterial({ color: '#a8c4d8', size: 1.1, transparent: true, opacity: 0.5, depthWrite: false });
-    const p = new THREE.Points(geo, mat);
-    p.frustumCulled = false;
-    this.g.scene.add(p);
-    this._mesh = p;
-    return p;
+    this._rainField=new RainField(this.g.world);
+    this._mesh=this._rainField.mesh;this.g.scene.add(this._mesh);
+    return this._mesh;
   }
   update(dt) {
-    const T = this._target;
     if (this._srcT > 0) { this._srcT -= dt; if (this._srcT <= 0) this.clear(); }
+    const T = this._target;
     // GRADUAL — the brief is explicit that global weather must build, not switch
     this.rain += (T.rain - this.rain) * Math.min(1, dt * 0.55);
     this.wind += (T.wind - this.wind) * Math.min(1, dt * 0.4);
     this.cloud += (T.cloud - this.cloud) * Math.min(1, dt * 0.35);
+    this.g.world.weatherCloud=this.cloud;
 
     if (this.rain > 0.02) {
       if (!this._mesh) this._buildRain();
-      const p = this._mesh;
-      p.visible = true;
-      p.material.opacity = 0.12 + this.rain * 0.5;
-      const arr = p.geometry.attributes.position.array;
-      const fall = (90 + this.rain * 120) * dt;
-      const wx = Math.cos(this.windDir) * this.wind * 40 * dt, wz = Math.sin(this.windDir) * this.wind * 40 * dt;
-      const cam = this.g.world.camera;
-      for (let i = 0; i < arr.length; i += 3) {
-        arr[i + 1] -= fall; arr[i] += wx; arr[i + 2] += wz;                 // RAIN BENDS WITH WIND
-        // the same law as the tether: a persistent buffer never takes a non-finite value
-        if (!Number.isFinite(arr[i]) || !Number.isFinite(arr[i + 1]) || !Number.isFinite(arr[i + 2])) { arr[i] = 0; arr[i + 1] = 200; arr[i + 2] = 0; }
-        if (arr[i + 1] < 0) {
-          arr[i + 1] = 200 + Math.random() * 30;
-          arr[i] = cam.position.x + (Math.random() * 2 - 1) * 280;
-          arr[i + 2] = cam.position.z + (Math.random() * 2 - 1) * 280;
-        }
-      }
-      p.geometry.attributes.position.needsUpdate = true;
+      this._rainField.update(dt,this.rain,this.wind,this.windDir);
     } else if (this._mesh) this._mesh.visible = false;
 
     // WIND MOVES THE WORLD: loose debris and smoke drift, and fighters in the air get pushed
@@ -152,11 +131,7 @@ export class Weather {
     }
   }
   dispose() {
-    if (this._mesh) {
-      this.g.scene.remove(this._mesh);
-      this._mesh.geometry.dispose(); this._mesh.material.dispose();
-      this._mesh = null;
-    }
+    this._rainField?.dispose();this._rainField=null;this._mesh=null;
   }
 }
 
@@ -418,4 +393,3 @@ export class GravityZones {
   }
   clear() { this.list.length = 0; }
 }
-

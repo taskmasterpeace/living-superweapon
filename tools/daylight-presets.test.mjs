@@ -28,6 +28,11 @@ test('fixed sunset never compounds ambient/rim warmth or brightness',()=>{
  for(let i=0;i<600;i++)w.updateDayNight(1/60);
  assert.deepEqual(snapshot(w),expected);assert.equal(w.dayT,.6);
 });
+test('rain clouds dim the native key without changing the saved daylight preset',()=>{
+ const {w,stage}=fixture();stage.setDaylight('day');w.updateDayNight(0);const clear=w.sun.intensity;
+ w.weatherCloud=.8;w.updateDayNight(0);assert.ok(w.sun.intensity<clear*.8);assert.equal(w.dayFixed,.2);
+ w.weatherCloud=0;w.updateDayNight(0);assert.equal(w.sun.intensity,clear);
+});
 test('invalid saved preset falls back to bright day without affecting another world',()=>{
  const {w,stage}=fixture();stage.setDaylight('__proto__');w.updateDayNight(0);
  assert.equal(w.dayFixed,.2);assert.equal(w.sun.intensity,2.7);
