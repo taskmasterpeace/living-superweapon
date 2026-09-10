@@ -4,7 +4,7 @@ import {mkdir,writeFile} from 'node:fs/promises';
 const out=process.env.LSW_SPEECH_OUT||'artifacts/frontline-speech',base=process.env.LSW_URL||'http://127.0.0.1:5182';
 await mkdir(out,{recursive:true});
 const browser=await chromium.launch({channel:'chromium'}),page=await browser.newPage({viewport:{width:1600,height:900}});
-const errors=[],report={url:base+'/powerworld.html',runtimeCommit:process.env.LSW_RUNTIME_COMMIT||null,browserChannel:'chromium',evidence:'Native UI entry and observed native speech calls; subsequent explicitly injected layout fixtures are not naturally triggered dialogue.'};
+const errors=[],report={url:base+'/powerworld.html',runtimeCommit:process.env.LSW_RUNTIME_COMMIT||null,browserChannel:'chromium',evidence:'Native UI entry and observed native speech calls; subsequent explicitly injected layout fixtures are not naturally triggered dialogue.',resizeFixtureDevice:'One desktop context resized while simulation is frozen; not a fresh mobile/touch context.',assertionFailures:[]};
 page.on('pageerror',e=>errors.push(e.message));
 try {
  await page.goto(report.url);await page.waitForFunction(()=>window.PW?.game);
@@ -32,7 +32,8 @@ try {
   await page.waitForTimeout(240);await page.evaluate(()=>{LSW.game.comic.update(.016);fixtureItem?.node.getAnimations().forEach(a=>a.finish());});
   const measured=await page.evaluate(()=>{const it=fixtureItem,r=it?.node.getBoundingClientRect(),hud=document.querySelector('#hud .player-status')?.getBoundingClientRect();return {visibility:it?.node.style.visibility,rect:r?{x:r.x,y:r.y,w:r.width,h:r.height}:null,tail:it?.tail?.getAttribute('d'),tailMode:it?.node.dataset.tailMode,speakerLabel:it?.speakerLabel?.textContent,overlapsVitals:!!(r&&hud&&r.right>hud.left&&r.left<hud.right&&r.bottom>hud.top&&r.top<hud.bottom)};});Object.assign(row,measured);
   report.fixtures.push(row);await page.screenshot({path:`${out}/${label}.png`});
-  assert.ok(row.admitted,label+' admitted');assert.equal(row.kind,'bub');assert.equal(row.visibility,'',label+' visible');
+  assert.ok(row.admitted,label+' admitted');assert.equal(row.kind,'bub');
+  if(row.visibility==='hidden'){row.suppression='No safe placement among current HUD and fighter occupancy; this narrow-desktop fixture has not proven visible speech.';report.assertionFailures.push(label+' visible: balloon suppressed');continue;}
   assert.ok(row.rect.x>=0&&row.rect.y>=0&&row.rect.x+row.rect.w<=width&&row.rect.y+row.rect.h<=height,label+' safe bounds');
   assert.equal(row.overlapsVitals,false,label+' avoids portrait/vitals');
   assert.ok(row.tail || (row.tailMode==='speaker-label'&&row.speakerLabel.includes('SPEAKING')),label+' has a mouth tail or explicit speaker fallback');
@@ -57,7 +58,24 @@ try {
  assert.equal(report.policyFixtures.hiddenEnemy,true);assert.equal(report.policyFixtures.far,true);assert.equal(report.policyFixtures.concurrency.count,1);assert.equal(report.policyFixtures.warningPreempts,true);
  assert.equal(report.policyFixtures.radio.kind,'field');assert.equal(report.policyFixtures.radio.noTail,true);
  assert.equal(report.policyFixtures.behindPoint.behind,true);assert.equal(report.policyFixtures.behind,true);
+ report.freshTouchFixtures=[];
+ for(const [label,width,height,tone]of [['touch-portrait',390,844,'talk'],['touch-landscape',844,390,'yell']]){
+  const context=await browser.newContext({viewport:{width,height},isMobile:true,hasTouch:true}),mobile=await context.newPage();mobile.on('pageerror',e=>errors.push(e.message));
+  try{
+   await mobile.goto(report.url);await mobile.waitForFunction(()=>window.PW?.game);
+   await mobile.locator('#pwEncounter [data-encounter="frontline"]').click();await mobile.locator('#pwGo').click();
+   await mobile.waitForFunction(()=>LSW.game.running&&LSW.game.pwStage?.frontlineReady,{},{timeout:60000});await mobile.evaluate(()=>document.fonts.ready);
+   const row=await mobile.evaluate(({label,tone})=>{
+    const g=LSW.game,c=g.comic,p=g.player;g.update=()=>g.world.render();c.clear();const it=c.say(p,tone==='yell'?'GET TO COVER!':'Ready. Moving in.',{tone,life:5});c.update(.016);it?.node.getAnimations().forEach(a=>a.finish());
+    const r=it?.node.getBoundingClientRect(),hud=document.querySelector('#hud .player-status')?.getBoundingClientRect();
+    return {label,injected:true,device:'Fresh isMobile + hasTouch browser context with native entry',bodyClasses:document.body.className,admitted:!!it,visibility:it?.node.style.visibility,tail:it?.tail?.getAttribute('d'),tailMode:it?.node.dataset.tailMode,speakerLabel:it?.speakerLabel?.textContent,rect:r?{x:r.x,y:r.y,w:r.width,h:r.height}:null,overlapsVitals:!!(r&&hud&&r.right>hud.left&&r.left<hud.right&&r.bottom>hud.top&&r.top<hud.bottom)};
+   },{label,tone});report.freshTouchFixtures.push(row);await mobile.screenshot({path:`${out}/${label}.png`});
+   if(row.visibility==='hidden'){row.suppression='No safe slot in fresh touch context';report.assertionFailures.push(label+' visible: balloon suppressed');}
+   else {assert.ok(row.admitted,label+' admitted');assert.equal(row.overlapsVitals,false,label+' avoids vitals');assert.ok(row.tail||(row.tailMode==='speaker-label'&&row.speakerLabel.includes('SPEAKING')),label+' mouth or explicit speaker fallback');}
+  }finally{await context.close();}
+ }
  assert.deepEqual(errors,[]);
 } catch(error) {report.failure=String(error);throw error;
 } finally {report.errors=errors;await writeFile(`${out}/report.json`,JSON.stringify(report,null,2));await browser.close();}
 console.log(JSON.stringify(report,null,2));
+if(report.assertionFailures.length)process.exitCode=1;
