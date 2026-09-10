@@ -59,7 +59,7 @@ Result: exit 0; only Git's existing LF-to-CRLF working-copy warnings.
 - `tools/hit-feedback.test.mjs` (new)
 - `tools/nanite-contact.test.mjs`
 
-Commit: to be recorded after this report is written.
+Commit: `9273164578385be4f86e0f6e687d768b7e95aac9` (`Add truthful resolved hit feedback`).
 
 ## Concerns / evidence still required
 
