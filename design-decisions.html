@@ -17,7 +17,7 @@
     <div class="brand">
       <span class="eyebrow">POWERWORLD // CREATOR WORKBENCH</span>
       <h1>Design Decisions</h1>
-      <p>50 questions that define the combined-arms game.</p>
+      <p>Choose the direction. See what exists, what changes, and why.</p>
     </div>
     <div class="header-actions" aria-label="Document actions">
       <button id="import-open" type="button">Import JSON</button>
@@ -48,11 +48,15 @@
     <article class="editor">
       <div class="question-kicker"><span id="chapter-name"></span><span id="question-number"></span></div>
       <h2 id="question-prompt"></h2>
-      <p class="start-here">Question 50 is the suggested starting point—not a prefilled answer or settled rule.</p>
+      <p class="start-here">Choose an answer or write your own. Recommendations are suggestions—not decisions made for you.</p>
+      <section class="decision-context" aria-label="Current game context"><h3>Grounded in our game</h3><p id="question-context"></p></section>
+      <fieldset class="choice-field"><legend>Choose your direction</legend><div id="answer-choices"></div></fieldset>
+      <p id="choice-rationale" class="choice-rationale"></p>
+      <details class="code-context"><summary>Code and design basis</summary><ul id="question-sources"></ul></details>
 
       <label class="field answer-field" for="answer">
-        <span>Your answer</span>
-        <textarea id="answer" maxlength="20000" placeholder="Write the decision in your own words. Nothing is prefilled."></textarea>
+        <span>Your answer <small>editable, including after choosing an option</small></span>
+        <textarea id="answer" maxlength="20000" placeholder="Select a choice above, or write your own answer. Nothing is selected automatically."></textarea>
       </label>
 
       <div class="meta-grid">

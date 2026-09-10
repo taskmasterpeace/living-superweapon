@@ -8,6 +8,17 @@ import {
   documentsConflict,
   validateImport,
 } from '../src/tool/design-decisions.js';
+import * as decisions from '../src/tool/design-decisions.js';
+
+test('choices never preselect recommendations and preserve legacy custom answers', () => {
+  assert.equal(typeof decisions.selectedChoice, 'function');
+  const {selectedChoice} = decisions;
+  const options = [{id:'a',value:'AI clones with one commandable squad.'},{id:'b',value:'Human squads only.'}];
+  assert.equal(selectedChoice(options, ''), null);
+  assert.equal(selectedChoice(options, options[0].value), 'a');
+  assert.equal(selectedChoice(options, 'My existing answer'), 'custom');
+  assert.equal(selectedChoice(options, options[0].value + ' Plus my exception.'), 'custom');
+});
 
 test('the source questionnaire exposes 50 unique, consecutively numbered prompts', () => {
   assert.equal(QUESTIONS.length, 50);

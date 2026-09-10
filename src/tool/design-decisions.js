@@ -7,6 +7,11 @@ const STATUSES = new Set(['Draft', 'Decided', 'Discuss']);
 const MAX_FIELD = 20000;
 const MAX_FILE = 1500000;
 
+export function selectedChoice(options, answer) {
+  if (!answer.trim()) return null;
+  return options.find(option => option.value === answer)?.id || 'custom';
+}
+
 const blankAnswer = () => ({ answer: '', notes: '', status: 'Draft', updatedAt: null });
 export function createBlankDocument() {
   return { schema: SCHEMA, version: VERSION, exportedAt: null, answers: Object.fromEntries(QUESTIONS.map(q => [q.id, blankAnswer()])) };
@@ -76,7 +81,7 @@ function download(name, text, type) {
 if (typeof document !== 'undefined') {
   const $ = selector => document.querySelector(selector);
   const els = {};
-  let doc = createBlankDocument(), current = null, showUnanswered = false, saveTimer, pendingImport = null;
+  let doc = createBlankDocument(), current = null, showUnanswered = false, saveTimer, pendingImport = null, choiceData = {};
   function setSave(message, kind = '') { els.save.textContent = message; els.save.dataset.kind = kind; }
   function persist() {
     clearTimeout(saveTimer);
@@ -96,7 +101,39 @@ if (typeof document !== 'undefined') {
     const q = qAt(current), item = doc.answers[q.id];
     const next = { answer: els.answer.value, notes: els.notes.value, status: els.status.value, updatedAt: new Date().toISOString() };
     if (item.answer === next.answer && item.notes === next.notes && item.status === next.status) return;
-    doc.answers[q.id] = next; persist(); updateCounts(); renderNav();
+    doc.answers[q.id] = next; persist(); updateCounts(); renderNav(); syncChoice();
+  }
+  function syncChoice() {
+    const options = choiceData[qAt(current)?.id]?.options || [];
+    const selected = selectedChoice(options, els.answer.value);
+    els.choices.querySelectorAll('input[type=radio]').forEach(input => {input.checked = input.value === selected;});
+  }
+  function renderChoices(q) {
+    const entry = choiceData[q.id];
+    els.choices.replaceChildren(); els.sources.replaceChildren();
+    els.context.textContent = entry?.context || 'Loading code-grounded choices… Your saved answer is unchanged.';
+    els.rationale.textContent = entry?.rationale || '';
+    if (!entry) return;
+    for (const option of [...entry.options, {id:'custom',label:'My own answer / combine ideas',description:'Keep or write your own version below. You can add exceptions in Notes.'}]) {
+      const label = document.createElement('label'); label.className = 'answer-choice';
+      const input = document.createElement('input'); input.type = 'radio'; input.name = 'design-choice'; input.value = option.id;
+      const copy = document.createElement('span'), title = document.createElement('strong'), description = document.createElement('span');
+      title.textContent = option.label; description.textContent = option.description;
+      copy.append(title, description);
+      if (option.id === entry.recommendation) {const badge = document.createElement('small');badge.textContent='Recommended';title.append(' ',badge);}
+      label.append(input, copy); els.choices.append(label);
+      input.addEventListener('change', () => {
+        if (option.id === 'custom') {els.answer.focus();return;}
+        const isCustom = selectedChoice(entry.options, els.answer.value) === 'custom';
+        if (isCustom && !confirm('Replace your custom answer with this choice? Your separate notes will stay unchanged.')) {syncChoice();return;}
+        els.answer.value = option.value; commitEditor();
+      });
+    }
+    for (const source of entry.sources || []) {
+      const li = document.createElement('li'), code = document.createElement('code'); code.textContent = source.path;
+      li.append(code, document.createTextNode(` — ${source.note}`)); els.sources.append(li);
+    }
+    syncChoice();
   }
   function visibleQuestions() { return showUnanswered ? QUESTIONS.filter(q => !doc.answers[q.id].answer.trim()) : QUESTIONS; }
   function renderNav() {
@@ -121,18 +158,21 @@ if (typeof document !== 'undefined') {
     const q = qAt(current), a = doc.answers[q.id];
     els.number.textContent = `Question ${q.number} of 50`; els.chapter.textContent = q.chapter; els.prompt.textContent = q.prompt;
     els.answer.value = a.answer; els.notes.value = a.notes; els.status.value = a.status;
+    renderChoices(q);
     els.prev.disabled = current === 1; els.next.disabled = current === 50; renderNav();
     const activeLink = document.querySelector(`[data-question="${current}"]`);
     if (activeLink) {
       if (matchMedia('(max-width: 760px)').matches) els.nav.scrollLeft = Math.max(0, activeLink.closest('section').offsetLeft - 16);
       else els.nav.scrollTop = Math.max(0, activeLink.offsetTop - els.nav.offsetTop - 24);
     }
-    if (focus) els.answer.focus();
+    if (focus) (els.choices.querySelector('input') || els.answer).focus({preventScroll:true});
   }
   function handleInput() { commitEditor(); }
   function setup() {
-    Object.assign(els, { nav: $('#question-nav'), count: $('#answered-count'), progress: $('#progress'), save: $('#save-status'), number: $('#question-number'), chapter: $('#chapter-name'), prompt: $('#question-prompt'), answer: $('#answer'), notes: $('#notes'), status: $('#decision-status'), prev: $('#previous'), next: $('#next'), file: $('#import-file'), dialog: $('#import-dialog'), conflictDialog: $('#conflict-dialog'), importError: $('#import-error') });
+    Object.assign(els, { choices:$('#answer-choices'), context:$('#question-context'), rationale:$('#choice-rationale'), sources:$('#question-sources'), nav: $('#question-nav'), count: $('#answered-count'), progress: $('#progress'), save: $('#save-status'), number: $('#question-number'), chapter: $('#chapter-name'), prompt: $('#question-prompt'), answer: $('#answer'), notes: $('#notes'), status: $('#decision-status'), prev: $('#previous'), next: $('#next'), file: $('#import-file'), dialog: $('#import-dialog'), conflictDialog: $('#conflict-dialog'), importError: $('#import-error') });
     load(); updateCounts(); renderNav(); visit(50, false);
+    import('./design-question-options.js').then(({QUESTION_OPTIONS}) => {choiceData=QUESTION_OPTIONS;renderChoices(qAt(current));}).catch(() => {els.context.textContent='Choices could not load. Your existing answers are safe; you can still write or export them.';});
+    window.addEventListener('pagehide', () => {clearTimeout(saveTimer);try {localStorage.setItem(STORAGE_KEY,JSON.stringify(doc));} catch { /* Export remains available in this session. */ }});
     [els.answer, els.notes].forEach(el => el.addEventListener('input', handleInput)); els.status.addEventListener('change', handleInput);
     els.prev.addEventListener('click', () => visit(current - 1)); els.next.addEventListener('click', () => visit(current + 1));
     $('#jump-form').addEventListener('submit', e => { e.preventDefault(); visit(Number($('#jump').value)); });
