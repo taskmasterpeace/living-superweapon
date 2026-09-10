@@ -15,12 +15,18 @@ function reloadTimeline(motion){
  if(!Array.isArray(events)||!(sourceDuration>0))return PROCEDURAL_RELOAD_TIMELINE;
  const phase=type=>{const event=events.find(e=>e.type===type);return Number.isFinite(event?.t)?event.t/sourceDuration:NaN;};
  const eject=phase('mag-out'),insert=phase('mag-in');
- if(!(eject>=0&&eject<insert&&insert<1))return PROCEDURAL_RELOAD_TIMELINE;
- const span=insert-eject,boltEvent=events.find(e=>e.type==='bolt'||e.type==='chamber'),chamber=Number.isFinite(boltEvent?.t)?boltEvent.t/sourceDuration:.9;
+ if(!(eject>0&&eject<insert&&insert<1))return PROCEDURAL_RELOAD_TIMELINE;
+ const span=insert-eject,boltEvent=events.find(e=>e.type==='bolt'||e.type==='chamber');
+ const sourceChamber=Number.isFinite(boltEvent?.t)?boltEvent.t/sourceDuration:NaN;
+ const chamber=insert<sourceChamber&&sourceChamber<1?sourceChamber:.9;
+ if(!(insert<chamber))return PROCEDURAL_RELOAD_TIMELINE;
+ // Reserve distinct hand-transition and bolt-pull windows even for late inserts.
+ const toBoltStart=Math.max(insert,chamber-.22);
+ const boltStart=Math.max(insert,chamber-.12)>toBoltStart?Math.max(insert,chamber-.12):insert+(chamber-insert)*.5;
  return Object.freeze({eject,drawStart:Math.max(0,eject-Math.min(.08,span*.3)),drawFull:eject,
   handlingStart:eject,handlingFull:eject+span*.25,handlingRelease:eject+span*.55,handlingEnd:eject+span*.78,
-  insertStart:eject+span*.7,insert,boltStart:Math.max(insert,chamber-.12),chamber,boltEnd:Math.min(1,chamber+.04),
-  toBoltStart:Math.max(insert,chamber-.22),toBoltEnd:Math.max(insert,chamber-.12)});
+  insertStart:eject+span*.7,insert,boltStart,chamber,boltEnd:Math.min(1,chamber+.04),
+  toBoltStart,toBoltEnd:boltStart});
 }
 export function cancelFirearmReload(f){resetReloadProps(f);f._firearmReload=null;}
 export function requestReload(f,key,g){

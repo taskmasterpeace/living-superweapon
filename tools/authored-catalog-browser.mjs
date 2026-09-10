@@ -13,6 +13,8 @@ try{
   await page.route('**/motion.hero-ual2/v1/pose-bank.json',route=>denyGrenade?route.fulfill({status:503,body:'Test source unavailable'}):route.continue());
   await page.goto(base+'/studio.html?hero=sarge');
   await page.waitForFunction(()=>window.STUDIO);
+  await page.locator('#play').click();
+  assert.equal(await page.evaluate(()=>STUDIO.preview.playing),false);
   const refs={body:'body.hero-heavy@1','motion.locomotion':'motion.hero-ual@1','motion.reload':'motion.hero-ual@1','motion.grenade':'motion.hero-ual2@1','equipment.rifle':'equipment.carbine@1','equipment.pistol':'equipment.sidearm@1'};
   await page.locator('.asset-catalog > summary').click();
   await page.locator('[data-catalog="body"]').waitFor();
@@ -26,6 +28,9 @@ try{
       denyGrenade=false;
       await page.locator('#catalog-motion-retry').click();
       await page.waitForFunction(()=>STUDIO.preview.fighter._authoredMotionStatus?.grenade?.state==='ready');
+      await page.waitForFunction(()=>document.querySelector('#catalog-runtime').textContent.includes('grenade: ready'));
+      assert.equal(await page.locator('#catalog-motion-retry').isHidden(),true);
+      assert.equal(await page.evaluate(()=>STUDIO.preview.playing),false);
     }
   }
   assert.equal(await page.evaluate(()=>STUDIO.history.value.model.assets.equipment.pistol),'equipment.sidearm@1');

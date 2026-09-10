@@ -38,6 +38,19 @@ export function updateCatalogRuntime(fighter,host){
   if(retry)retry.hidden=!states.some(([,state])=>state.state==='fallback');
 }
 
+const runtimeWatches=new WeakMap();
+export function watchCatalogRuntime(fighter,host,currentFighter){
+  updateCatalogRuntime(fighter,host);
+  const ready=fighter?._authoredMotionReady,previous=runtimeWatches.get(host);
+  if(previous&&previous.fighter===fighter&&previous.ready===ready)return previous.completion;
+  const refresh=()=>{
+    if(currentFighter()===fighter&&fighter?._authoredMotionReady===ready)updateCatalogRuntime(fighter,host);
+  };
+  const completion=Promise.resolve(ready).then(refresh,refresh);
+  runtimeWatches.set(host,{fighter,ready,completion});
+  return completion;
+}
+
 export function selectCatalogReference(profile,path,reference){
   if(!fields.some(field=>field[0]===path))throw new Error('Unknown asset selection.');
   const next=structuredClone(profile),assets=next.model.assets??={},keys=path.split('.');

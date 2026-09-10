@@ -17,7 +17,7 @@ import {LIMITS,profileFromDef,validateProfile,applyProfile,loadProfile,saveProfi
 import {attackFields,attackIdentity,attackSource,reconcileAttackOverrides,resetAttackOverride,setAttackOverride} from '../data/attack-tuning.js';
 import {progressionInspector,formDialogBody,editForm} from './studio-progression.js';
 import {loadCatalog} from '../engine/authored-assets.js';
-import {catalogInspector,prepareCatalogSelection,updateCatalogRuntime} from './studio-catalog.js';
+import {catalogInspector,prepareCatalogSelection,watchCatalogRuntime} from './studio-catalog.js';
 import {loadFighterMotion} from '../engine/authored-character.js';
 
 installCustoms(ROSTER);
@@ -93,7 +93,7 @@ const preview=new StudioPreview($('.viewport'),({time,state,speed,fov,damage=0,c
   if(nanite)$('#nanite-measurements').textContent=nanite.modules.map(m=>`${m.slot.toUpperCase()} ${m.form} / ${m.attachment.replace('-',' ')}: ${m.phase.replaceAll('-',' ')} · ${m.intactCells}/${m.totalCells} intact · absorbed ${m.absorbed.toFixed(1)} · body HP ${m.bodyDamage.toFixed(1)} · ${m.liveFragments} fragments${m.muzzleError===null?'':` · muzzle error ${m.muzzleError.toExponential(1)}u`}`).join(' | ')+` · Outgoing autohealed dummy: ${nanite.outgoingDamage.toFixed(1)} HP / ${nanite.outgoingContacts} events · ${nanite.launches} committed launches · incoming emitted ${nanite.emitted}${nanite.incomingStatus==='unavailable-ko'?' / fixture unavailable: incoming KO':''}${nanite.events.filter(e=>e.target==='owner').length?' / arrived '+nanite.events.filter(e=>e.target==='owner').map(e=>e.time.toFixed(2)+'s').join(', '):' / no arrival'}`;
   if(resource)$('#construct-budget').textContent=`Owner ${resource.infinite?'∞ core':resource.ki.toFixed(1)+' / '+resource.maxKi+' ki'} · `+resource.constructs.map(c=>`${c.slot.toUpperCase()} ${c.kind} / ${c.state}: ${c.mode==='upkeep'?c.rate+' ki/s; physical hit, no per-hit ki charge':c.rate+' ki/hp received'} · ${c.hits} accepted hits / ${c.damage.toFixed(1)} damage received · ${c.kiSpent.toFixed(1)} ki spent`).join(' | ');
   $('.attack-phase').hidden=!['attack','melee'].includes(state);$('.attack-phase').textContent=`SEQUENCE / ${phase.replaceAll('-',' ').toUpperCase()}`;
-  updateCatalogRuntime(preview.fighter,$('.inspector-body'));
+  watchCatalogRuntime(preview.fighter,$('.inspector-body'),()=>preview.fighter);
 });
 function status(message,error=false){$('#status').textContent=message;$('.statusbar').classList.toggle('error',error);}
 $('#preview-sound').onclick=async()=>{
@@ -185,10 +185,10 @@ function inspector(){const p=history.value;let html='';
  const catalogRetry=$('#catalog-retry');if(catalogRetry)catalogRetry.onclick=()=>refreshCatalog();
  const motionRetry=$('#catalog-motion-retry');if(motionRetry)motionRetry.onclick=()=>{
   const fighter=preview.fighter;
-  loadFighterMotion(fighter).then(()=>{if(preview.fighter===fighter)updateCatalogRuntime(fighter,$('.inspector-body'));});
-  updateCatalogRuntime(fighter,$('.inspector-body'));
+  loadFighterMotion(fighter);
+  watchCatalogRuntime(fighter,$('.inspector-body'),()=>preview.fighter);
  };
- updateCatalogRuntime(preview.fighter,$('.inspector-body'));
+ watchCatalogRuntime(preview.fighter,$('.inspector-body'),()=>preview.fighter);
  if(tab==='model'&&p.model.body&&p.model.body!=='procedural')for(const input of document.querySelectorAll('[data-path="model.costume"],[data-path="frame.neck"]')){input.disabled=true;input.title='Applies to procedural modules only; your value is retained.';}
  $('.inspector-body').classList.toggle('attack-panel',tab==='attacks');
  $('.inspector-body').classList.toggle('progression-panel',tab==='progression');

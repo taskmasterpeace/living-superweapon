@@ -19,6 +19,21 @@ const realPack=(ref,bank,manifest,id)=>Object.freeze({ref,packageId:ref,packageH
 const q=part=>part.quaternion.toArray();
 const angle=(a,b)=>a.quaternion.angleTo(b.quaternion);
 
+for(const [insert,bolt,expectedChamber,expectedInsert] of [[.65,.3,.9,.65],[.65,.65,.9,.65],[.65,1,.9,.65],[.95,.4,.9,.65],[.95,undefined,.9,.65],[.95,.98,.98,.95],[.85,.9,.9,.85],[.65,.8,.8,.65]])
+ test(`reload ramps remain ordered for insert ${insert} and bolt ${bolt}`,()=>{
+  const x=mainCombatFixture({hero:'sarge'}),f=x.p;
+  try{
+   const duration=bundled.clips.walk.duration,events=[{t:.2*duration,type:'mag-out'},{t:insert*duration,type:'mag-in'}];
+   if(bolt!==undefined)events.push({t:bolt*duration,type:'bolt'});
+   f.def.model={...f.def.model,assets:{motion:{reload:'fixture.reload@1'}}};
+   bindMotionPackage(f,'reload',pack('fixture.reload@1','reload',events));
+   firearmAmmo(f.slots.lmb).loaded=1;assert.ok(requestReload(f,'lmb',x.g));
+   const t=f._firearmReload.timeline;
+   assert.ok(Math.abs(t.chamber-expectedChamber)<1e-12);assert.ok(Math.abs(t.insert-expectedInsert)<1e-12);
+   for(const [a,b] of [['drawStart','drawFull'],['handlingStart','handlingFull'],['handlingRelease','handlingEnd'],['insertStart','insert'],['boltStart','chamber'],['chamber','boltEnd'],['toBoltStart','toBoltEnd']])assert.ok(t[a]<t[b],`${a} must precede ${b}`);
+  }finally{x.close();}
+ });
+
 test('imported reload markers replace eject/insert timing while chamber remains a labeled procedural fallback',()=>{
  const x=mainCombatFixture({hero:'sarge'}),f=x.p,cues=[];x.g.audio={...x.g.audio,soundLibrary:{play:id=>cues.push(id)}};
  try{
