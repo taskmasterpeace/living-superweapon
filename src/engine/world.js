@@ -9,6 +9,7 @@ import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPa
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { PrintPass } from './printpass.js';
 import { goldenHour, GOLDEN } from '../data/weather.js';
+import {daylightPreset} from '../data/daylight.js';
 const _C1 = new THREE.Color(), _C2 = new THREE.Color(), _C3 = new THREE.Color();
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { clamp, damp, lerp, smoothstep, dampStiff, angleDiff, setBands, DECAL_LIFT, PW_AIR, PW_FX } from '../core/util.js';
@@ -313,10 +314,12 @@ export class World {
     // The flight arena needs a directional key, not uniform sky/ambient wash.
     // Apply within the owning daylight update so the next render cannot undo it.
     if(this.skyWorld==='powerworld'){
-      this.sun.intensity=2.7;
-      this.hemi.intensity=.68;
-      this.amb.intensity=.18;
-      this.rim.intensity=.7;
+      const preset=daylightPreset(this.powerworldDaylight);
+      if(this.sun)this.sun.intensity=preset.sun;
+      if(this.hemi)this.hemi.intensity=preset.hemi;
+      // Reset before golden-hour blending; otherwise each frame adds more warmth.
+      if(this.amb){this.amb.intensity=preset.ambient;this.amb.color.set('#6a7890');}
+      if(this.rim){this.rim.intensity=preset.rim;this.rim.color.set('#8fb8ff');}
     }
     const u = this.skyMat.uniforms;
     // ⚠ AN OUTER-SYSTEM NOON IS GENUINELY DARK. Sunlight falls off as the square of distance, so
@@ -357,6 +360,12 @@ export class World {
       // ⚠ and the RIM light swings warm too, or fighters keep a cold edge in a warm world and read
       // as cut out of a different picture — the exact thing the rim exists to prevent.
       if (this.rim) this.rim.color.lerp(warm, G.k * 0.4);
+    }
+    if(this.skyWorld==='powerworld'){
+      const preset=daylightPreset(this.powerworldDaylight);
+      // Avoid a lavender midpoint when the cool daytime HDR meets golden hour.
+      if(preset.skyTop)u.uTop.value.set(preset.skyTop);
+      if(preset.skyHorizon)u.uHor.value.set(preset.skyHorizon);
     }
     // ⚠ stash what the CLOCK decided before weather scales it — the weather multiplies these every
     // frame, so without a clean baseline it would compound and the world would go black.

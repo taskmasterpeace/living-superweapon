@@ -29,6 +29,7 @@ import {VehicleHUD} from './vehicle-hud.js';
 import {outpostReserved} from './frontline-outpost-layout.js';
 import {installFrontlineOutpost} from './frontline-outpost.js';
 import {installFrontlineLighting,restoreFrontlineLighting} from './frontline-lighting.js';
+import {daylightPreset} from '../data/daylight.js';
 
 export const STAGE = {
   radius: 900,          // central combat/patrol area, independent of pursuit space
@@ -610,7 +611,9 @@ export class PowerWorldStage {
     W.skyWorld = 'powerworld';
     // PIN THE LIGHT. See STAGE.dayT — the clock is a planet's rotation and there is no planet here.
     this._day0 = W.dayFixed ?? null; this._dayT0 = W.dayT;
-    W.dayFixed = STAGE.dayT;
+    this._daylight0 = W.powerworldDaylight;
+    this._lightColors0 = {ambient:W.amb?.color.clone(),rim:W.rim?.color.clone()};
+    this.setDaylight('day');
     // ⚠ AND THE DOME HAS TO CONTAIN THE STAGE. Its radius is 900 and so is the play radius, so a
     // fighter out at the rim and 400u up is OUTSIDE their own sky and it vanishes. depthWrite is off
     // and fog is off on that material, so scaling it is free.
@@ -623,6 +626,17 @@ export class PowerWorldStage {
     // ⚠ MOVING a light is free. ADDING one is not (THE LIGHT-COUNT LAW — three.js bakes the visible
     // light count into every material's program key, so a new light recompiles the whole scene).
     installFrontlineLighting(this);
+  }
+
+  setDaylight(id) {
+    const preset=daylightPreset(id),W=this.g.world;
+    this.daylight=preset.id;
+    W.powerworldDaylight=preset.id;
+    W.dayFixed=preset.time;
+    if(this._frontlineSky){
+      this._frontlineSky.material.uniforms.uFrontlineDayMix.value=preset.skyMix;
+      W.scene.environmentIntensity=preset.environment;
+    }
   }
 
   close() {
@@ -669,6 +683,10 @@ export class PowerWorldStage {
     // another dimension does not advance the clock at home, which is a ruling rather than an accident —
     // the alternative silently jumps the theatre you return to to PowerWorld's fixed noon.
     W.dayFixed = this._day0; if (this._dayT0 != null) W.dayT = this._dayT0;
+    W.powerworldDaylight=this._daylight0;
+    if(this._lightColors0?.ambient)W.amb.color.copy(this._lightColors0.ambient);
+    if(this._lightColors0?.rim)W.rim.color.copy(this._lightColors0.rim);
+    this._daylight0=undefined;this._lightColors0=null;
     this._day0 = this._dayT0 = null;
     if (this._skyScale0 != null && W.skyMesh) { W.skyMesh.scale.setScalar(this._skyScale0); this._skyScale0 = null; }
     W.setSpace(0);      // ⚠ leaving at altitude must not hand the next theatre a black sky full of stars

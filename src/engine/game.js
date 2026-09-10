@@ -214,6 +214,7 @@ const MODE_IMPL = {
     setup(g, o = {}) {
       g.ms = { powerworld: true, chaseCam: true };   // the third-person lock-on view (world.chase)
       g.pwStage = new PowerWorldStage(g); g.pwStage.open();   // the stage — see engine/powerworld.js
+      g.pwStage.setDaylight(o.daylight);
       // ⚠ THE CITY HUD LIES IN ANOTHER DIMENSION. The nameplate read "TRANQUILITY REACH · THE MOON ·
       // POP 8K · CRIME 8" while standing on a rock spire in PowerWorld — a surface stating a fact
       // that is not true of where you are. One body class, and the stylesheet does the rest; the

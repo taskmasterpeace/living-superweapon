@@ -10,11 +10,11 @@ import {earliestOrdinaryContact} from '../src/engine/attack-interception.js';
 
 // Native stage generation/registration/lifecycle. Only cloud-canvas painting,
 // renderer construction and sensory sinks are omitted in this Node fixture.
-function fixture(){
+function fixture(worldOverrides={}){
  const noop=()=>{},documentStub={createElement(){return {getContext(){return {createRadialGradient(){return {addColorStop:noop};},beginPath:noop,arc:noop,fill:noop};}};}};
  const scene=new THREE.Scene(),w=Object.create(World.prototype);
  Object.assign(w,{scene,cover:[],coverAll:[],interiors:[],ARENA:240,cars:[],planes:[],rocks:[],treeSpots:[],
-  refreshFogBoxes:noop,setSkyWorld:noop,setSpace:noop,shake:noop,punch:noop,crater:noop,setBlockCracks:noop});
+  refreshFogBoxes:noop,setSkyWorld:noop,setSpace:noop,shake:noop,punch:noop,crater:noop,setBlockCracks:noop,...worldOverrides});
  const effects=[],g={world:w,scene,entities:[],time:0,isFoe:()=>false,overlapFoe:()=>null,isHuman:()=>false,onHit:noop,slowmo:noop,noise:noop,
   particles:{spawn:noop,burst:noop},audio:{boom:noop,hit:noop,zap:noop},areaDamage:noop,worldImpact:noop,
   vfx:{_add:e=>effects.push(e),borrowLight:()=>new THREE.PointLight(),returnLight:noop,flash:noop,lightning:noop,explode:noop,shockwave:noop,impact:noop}};
@@ -26,6 +26,17 @@ function vertices(mesh){
  mesh.traverse(o=>{const a=o.geometry?.attributes.position;if(a)for(let i=0;i<a.count;i++)points.push(new THREE.Vector3().fromBufferAttribute(a,i).applyMatrix4(o.matrixWorld));});
  return points;
 }
+test('closing a night stage restores the caller clock, preset and light colors',()=>{
+ const amb=new THREE.AmbientLight('#887766'),rim=new THREE.DirectionalLight('#bbccdd');
+ const x=fixture({_dnc:{},dayT:.42,dayFixed:null,powerworldDaylight:undefined,amb,rim});
+ try{
+  assert.equal(x.w.dayFixed,.2);x.stage.setDaylight('night');assert.equal(x.w.dayFixed,.75);
+  amb.color.set('#112233');rim.color.set('#334455');x.close();
+  assert.equal(x.w.dayFixed,null);assert.equal(x.w.dayT,.42);assert.equal(x.w.powerworldDaylight,undefined);
+  assert.equal(amb.color.getHexString(),'887766');assert.equal(rim.color.getHexString(),'bbccdd');
+  x.open();assert.equal(x.w.dayFixed,.2);
+ }finally{x.close();}
+});
 function nominalVolume(c){
  const p=c.mesh.geometry.parameters;
  // Geometry fit and layout may change; registration still preserves its own

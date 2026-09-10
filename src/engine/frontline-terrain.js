@@ -4,6 +4,7 @@ import {RGBELoader} from 'three/examples/jsm/loaders/RGBELoader.js';
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import {applySandstoneSurface,applyGroundSurface} from './frontline-surface.js';
 import {buildFrontlineRubble} from './frontline-rubble.js';
+import {daylightPreset} from '../data/daylight.js';
 
 export const FRONTLINE_GROUND_RADIUS=6800;
 export const FRONTLINE_ASSETS={ground:'./textures/frontline/hardpan-albedo-v1.png',rock:'./models/frontline/boulder-04.glb',mesa:'./models/frontline/tiered-escarpment-kit.glb',talus:'./models/frontline/fractured-talus-kit.glb',sky:'./textures/frontline/kloppenheim_05_puresky-2k.hdr'};
@@ -15,9 +16,9 @@ export function applyFrontlineSky(stage,texture){
  if(!original.fragmentShader.includes(output))throw Error('Native sky shader contract changed');
  const material=new THREE.ShaderMaterial({
   side:THREE.BackSide,depthWrite:false,fog:false,
-  uniforms:{...original.uniforms,uFrontlineSky:{value:texture}},
+  uniforms:{...original.uniforms,uFrontlineSky:{value:texture},uFrontlineDayMix:{value:daylightPreset(stage.daylight).skyMix}},
   vertexShader:original.vertexShader,
-  fragmentShader:'uniform sampler2D uFrontlineSky;\n'+original.fragmentShader.replace(output,`
+  fragmentShader:'uniform sampler2D uFrontlineSky;\nuniform float uFrontlineDayMix;\n'+original.fragmentShader.replace(output,`
    vec3 skyDir=normalize(vP);
    vec2 skyUV=vec2(atan(skyDir.z,skyDir.x)*0.159154943+0.5,asin(clamp(skyDir.y,-1.0,1.0))*0.318309886+0.5);
    vec3 photographed=texture2D(uFrontlineSky,skyUV).rgb;
@@ -30,11 +31,11 @@ export function applyFrontlineSky(stage,texture){
    float skyHighlight=max(0.0,skyLuma-1.0);
    float displayedLuma=min(skyLuma,1.0)+3.0*(1.0-exp(-skyHighlight/3.0));
    photographed*=displayedLuma/max(skyLuma,.00001);
-   gl_FragColor=vec4(mix(photographed,c,uSpace),1.0);`),
+   gl_FragColor=vec4(mix(mix(c,photographed,uFrontlineDayMix),c,uSpace),1.0);`),
  });
  stage._frontlineSky={original,material,environment:world.scene.environment,intensity:world.scene.environmentIntensity};
  texture.mapping=THREE.EquirectangularReflectionMapping;
- world.skyMesh.material=material;world.scene.environment=texture;world.scene.environmentIntensity=.22;
+ world.skyMesh.material=material;world.scene.environment=texture;world.scene.environmentIntensity=daylightPreset(stage.daylight).environment;
  if(stage._cloudMesh)stage._cloudMesh.visible=false;
  stage._mats.push(material);stage._texs.push(texture);
 }
