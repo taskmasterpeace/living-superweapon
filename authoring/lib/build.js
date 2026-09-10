@@ -13,6 +13,18 @@ import {ADAPTERS} from '../adapters/index.js';
 const pkg=JSON.parse(await readFile(new URL('../package.json',import.meta.url),'utf8'));
 const threeVersion=JSON.parse(await readFile(new URL('../node_modules/three/package.json',import.meta.url),'utf8')).version;
 export const TOOL={name:'powerworld-authoring',version:pkg.version,three:threeVersion};
+// The cache must not survive a change to the tool's own code: hash every lib/adapter/vendor
+// source into the key, so an edited derivation rule can never serve yesterday's output.
+async function toolSourceHash(){
+ const {readdir}=await import('node:fs/promises');
+ const parts=[];
+ for(const dir of ['lib','adapters','vendor']){
+  const walk=async d=>{let entries=[];try{entries=await readdir(d,{withFileTypes:true});}catch{return;}for(const e of entries.sort((x,y)=>x.name.localeCompare(y.name))){const p=join(d,e.name);if(e.isDirectory())await walk(p);else if(/\.(m?js|json)$/.test(e.name))parts.push(toPosix(relative(AUTHORING_ROOT,p))+':'+sha256(await readFile(p)));}};
+  await walk(join(AUTHORING_ROOT,dir));
+ }
+ return sha256Text(parts.join('\n'));
+}
+const TOOL_SOURCE=await toolSourceHash();
 export const UNITS={lengthUnit:'game-unit',metersPerUnit:0.19,up:'+Y',forward:'+Z',handedness:'right'};
 
 export async function loadRecipe(recipePath){
@@ -59,7 +71,7 @@ export async function buildRecipe(recipePath,{root=OUTPUT_ROOT,profile='desktop'
  const adapter=ADAPTERS[loaded.recipe.adapter];
  const sources=await resolveSources(loaded);
  const options=loaded.recipe.options||{};
- const cacheKey=hashJson({sources:sources.map(s=>({path:s.path,sha256:s.sha256})),recipe:loaded.sha256,tool:TOOL,adapter:{name:adapter.name,version:adapter.version},options,profile});
+ const cacheKey=hashJson({sources:sources.map(s=>({path:s.path,sha256:s.sha256})),recipe:loaded.sha256,tool:TOOL,toolSource:TOOL_SOURCE,adapter:{name:adapter.name,version:adapter.version},options,profile});
  log(`build ${loaded.recipe.id} via ${adapter.name}@${adapter.version} (cache ${cacheKey.slice(0,12)})`);
  let produced=force?null:await cacheGet(cacheKey);
  if(produced){log('  cache hit');produced.outputs=produced.outputs.map(o=>({...o,bytes:Buffer.from(o.bytes,'base64')}));}
@@ -69,7 +81,8 @@ export async function buildRecipe(recipePath,{root=OUTPUT_ROOT,profile='desktop'
  }
  const {manifest:partial,outputs}=produced;
  const measured={};for(const key of BUDGET_KEYS)measured[key]=Number.isInteger(partial.budgets?.measured?.[key])?partial.budgets.measured[key]:0;
- const limits=limitsFor(loaded.recipe.kind,profile);
+ const frames=(partial.clips||[]).reduce((n,c)=>n+(c.frames||0),0);
+ const limits=limitsFor(loaded.recipe.kind,profile,{frames});
  const contentHash=hashJson({outputs:outputs.map(o=>({path:o.path,role:o.role,sha256:sha256(o.bytes)})),partial:{...partial,budgets:undefined}});
  const {version,existing}=await chooseVersion(loaded.recipe.id,contentHash,root);
  if(existing&&!force){log(`  unchanged: ${loaded.recipe.id} v${version} already holds this content`);return {unchanged:true,id:loaded.recipe.id,version};}

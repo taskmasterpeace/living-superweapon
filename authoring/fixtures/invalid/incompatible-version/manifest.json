@@ -118,7 +118,7 @@
    "materials": 1,
    "bones": 1,
    "textures": 1,
-   "bytes": 170030
+   "bytes": 1058
   }
  },
  "compatibility": {
@@ -128,5 +128,5 @@
    "engineModule": "src/engine/authored-pose.js"
   }
  },
- "packageHash": "8ef88fb074f1ad94f1c955832d6bb4801ddc90f3c5cbe8aef59d8bbf37b3ef91"
+ "packageHash": "616edd7f4eea811208d17918e7d2f791b428368271f62838b793ea214563e046"
 }

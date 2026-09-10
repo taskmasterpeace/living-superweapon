@@ -254,7 +254,9 @@
      "materials": 0,
      "bones": 0,
      "textures": 0,
-     "bytes": 136024
+     "bytes": 136024,
+     "frames": 329,
+     "bytesPerFrame": 413.45
     },
     {
      "name": "src/data/strike-bank.json",
@@ -263,7 +265,9 @@
      "materials": 0,
      "bones": 0,
      "textures": 0,
-     "bytes": 46537
+     "bytes": 46537,
+     "frames": 112,
+     "bytesPerFrame": 415.51
     },
     {
      "name": "src/data/heavy-strike-bank.json",
@@ -272,7 +276,9 @@
      "materials": 0,
      "bones": 0,
      "textures": 0,
-     "bytes": 27411
+     "bytes": 27411,
+     "frames": 65,
+     "bytesPerFrame": 421.71
     },
     {
      "name": "src/data/jump-bank.json",
@@ -281,9 +287,14 @@
      "materials": 0,
      "bones": 0,
      "textures": 0,
-     "bytes": 130277
+     "bytes": 130277,
+     "frames": 308,
+     "bytesPerFrame": 422.98
     }
-   ]
+   ],
+   "perFrame": {
+    "bytes": 422.97727272727275
+   }
   }
  }
 }

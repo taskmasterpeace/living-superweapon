@@ -2,6 +2,45 @@
  "format": "pw-asset-catalog",
  "formatVersion": 1,
  "ok": true,
- "packages": [],
+ "packages": [
+  {
+   "id": "motion.hero-ual2",
+   "version": 1,
+   "kind": "humanoid-motion",
+   "displayName": "Hero action set (Quaternius UAL2 Standard)",
+   "tags": [
+    "humanoid",
+    "grenade",
+    "prone",
+    "carry",
+    "cc0"
+   ],
+   "dir": "motion.hero-ual2/v1",
+   "packageHash": "ac33ff1645e568e273851977bfeb0ef88f7abc0b852338bc14ff21bc322c0f7e",
+   "ok": true,
+   "errors": 0,
+   "license": "CC0-1.0",
+   "adapter": "quaternius-ual@1"
+  },
+  {
+   "id": "motion.hero-ual",
+   "version": 1,
+   "kind": "humanoid-motion",
+   "displayName": "Hero motion set (Quaternius UAL Standard)",
+   "tags": [
+    "humanoid",
+    "locomotion",
+    "pistol",
+    "crouch",
+    "cc0"
+   ],
+   "dir": "motion.hero-ual/v1",
+   "packageHash": "226f2c888dbc77656e006ae653a1b2e1489e59a070b5d2e63c473ef453344a47",
+   "ok": true,
+   "errors": 0,
+   "license": "CC0-1.0",
+   "adapter": "quaternius-ual@1"
+  }
+ ],
  "catalogErrors": []
 }

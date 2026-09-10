@@ -1,7 +1,66 @@
 {
  "generated": "repeatable",
  "catalog": true,
- "packages": [],
+ "packages": [
+  {
+   "dir": "public/authored-assets/motion.hero-ual2/v1",
+   "ok": true,
+   "errors": [],
+   "warnings": [],
+   "id": "motion.hero-ual2",
+   "version": 1,
+   "kind": "humanoid-motion",
+   "budgets": {
+    "profile": "desktop",
+    "measured": {
+     "triangles": 0,
+     "drawCalls": 0,
+     "materials": 0,
+     "bones": 0,
+     "textures": 0,
+     "bytes": 171815
+    },
+    "limits": {
+     "triangles": 1,
+     "drawCalls": 1,
+     "materials": 1,
+     "bones": 1,
+     "textures": 1,
+     "bytes": 217834
+    }
+   },
+   "packageHash": "ac33ff1645e568e273851977bfeb0ef88f7abc0b852338bc14ff21bc322c0f7e"
+  },
+  {
+   "dir": "public/authored-assets/motion.hero-ual/v1",
+   "ok": true,
+   "errors": [],
+   "warnings": [],
+   "id": "motion.hero-ual",
+   "version": 1,
+   "kind": "humanoid-motion",
+   "budgets": {
+    "profile": "desktop",
+    "measured": {
+     "triangles": 0,
+     "drawCalls": 0,
+     "materials": 0,
+     "bones": 0,
+     "textures": 0,
+     "bytes": 588648
+    },
+    "limits": {
+     "triangles": 1,
+     "drawCalls": 1,
+     "materials": 1,
+     "bones": 1,
+     "textures": 1,
+     "bytes": 756072
+    }
+   },
+   "packageHash": "226f2c888dbc77656e006ae653a1b2e1489e59a070b5d2e63c473ef453344a47"
+  }
+ ],
  "fixtures": [
   {
    "group": "valid",

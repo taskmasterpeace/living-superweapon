@@ -33,7 +33,7 @@ export class Stage{
   return this.playback;
  }
  clear(){for(const o of [...this.content.children]){this.content.remove(o);o.traverse?.(x=>{x.geometry?.dispose?.();});}this.helpers.clear();this.dispose?.();this.dispose=null;}
- setClip(id){this.clip=this.playback.clips?.find(c=>c.id===id)||null;this.time=0;this.seek(0);}
+ setClip(id){this.clip=this.playback.clips?.find(c=>c.id===id)||null;this.time=0;this.onClip?.(this.clip?.id??'');this.seek(0);}
  advance(dt){if(!this.clip)return;const d=this.clip.duration;this.time=this.clip.loop?(this.time+dt)%d:Math.min(d,this.time+dt);this.apply();}
  seek(frac){if(!this.clip)return;this.time=frac*this.clip.duration;this.apply();}
  apply(){if(!this.clip)return;this.playback.apply?.(this.clip,this.time);this.onFrame(this.time,this.clip.duration?this.time/this.clip.duration:0);}
@@ -45,6 +45,6 @@ export class Stage{
   if(view==='rear')this.camera.position.set(t.x,t.y+2,t.z-d);
   this.controls.update();
  }
- setBody(id){this.playback.setBody?.(id);}
+ setBody(id){this.playback.setBody?.(id);this.onBody?.(id);}
  snapshot(){this.renderer.render(this.scene,this.camera);return this.canvas.toDataURL('image/jpeg',.85);}
 }

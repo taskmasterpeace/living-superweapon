@@ -4,10 +4,12 @@
 // the report says so.
 import {renderReport} from './report.js';
 import {Stage} from './stage.js';
+import {loadPackage} from './production-bridge.js';
 
 const $=s=>document.querySelector(s);
 const state={catalog:null,packages:new Map(),selected:null,kind:'all',filter:''};
 const stage=new Stage($('#gl'),$('#viewport'));
+stage.loader=loadPackage;
 window.AUTHORING={state,stage,select};
 
 async function loadFixtures(){
@@ -77,4 +79,6 @@ $('#body').onchange=e=>stage.setBody(e.target.value);
 $('#export-json').onclick=()=>{const blob=new Blob([$('#export-text').textContent],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`${state.selected.id}-v${state.selected.version}-report.json`;a.click();};
 stage.onFrame=(t,frac)=>{$('#time').textContent=`${t.toFixed(3)}s`;if(stage.playing)$('#scrub').value=String(frac);};
 stage.onBodies=bodies=>{$('#body').innerHTML=bodies.map(b=>`<option value="${b.id}">${b.label}</option>`).join('');};
+stage.onClip=id=>{$('#clip').value=id;};
+stage.onBody=id=>{$('#body').value=id;};
 loadCatalog();

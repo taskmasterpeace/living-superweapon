@@ -18,12 +18,19 @@ export function loadBaseline(){
  if(!existsSync(file))throw new Error('No production baseline. Run: node authoring/bin/authoring.js baseline');
  return cached=JSON.parse(readFileSync(file,'utf8'));
 }
-export function limitsFor(kind,profile,baseline=loadBaseline()){
+// Motion packages hold a variable number of sampled frames, so their byte limit is per frame
+// (the largest shipped bank's bytes-per-frame × this package's frames × headroom); every other
+// class is judged per asset.
+export function limitsFor(kind,profile,{frames=0,baseline=loadBaseline()}={}){
  const cls=CLASS_OF[kind];if(!cls)throw new Error(`No budget class for kind ${kind}`);
  const ref=baseline.classes[cls];if(!ref)throw new Error(`Baseline has no class ${cls}`);
  const k=HEADROOM[profile];if(!k)throw new Error(`Unknown profile ${profile}`);
  const limits={};
  for(const key of BUDGET_KEYS)limits[key]=Math.max(1,Math.ceil(ref.max[key]*k));
+ if(cls==='motion'){
+  if(!(frames>0))throw new Error('motion limits need the package frame count');
+  limits.bytes=Math.max(1,Math.ceil(ref.perFrame.bytes*frames*k));
+ }
  return limits;
 }
 export function overBudget(measured,limits){

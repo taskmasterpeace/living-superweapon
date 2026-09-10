@@ -63,7 +63,12 @@ export async function commitPackage(manifest,outputs,root=OUTPUT_ROOT){
  const full={...manifest,outputs:recorded};full.packageHash=packageHashOf(full);
  await writeFile(join(staging,'manifest.json'),JSON.stringify(full,null,1)+'\n');
  const check=await checkPackage(staging);
- if(!check.ok){await rm(staging,{recursive:true,force:true});const err=new Error('package failed validation; previous package untouched');err.report=check;throw err;}
+ if(!check.ok){
+  await rm(staging,{recursive:true,force:true});
+  // Leave no empty <id>/ directory behind when this was the first attempt at that id.
+  try{if(!(await readdir(resolve(finalDir,'..'))).length)await rm(resolve(finalDir,'..'),{recursive:true,force:true});}catch{}
+  const err=new Error('package failed validation; previous package untouched');err.report=check;throw err;
+ }
  let hadPrevious=false;try{await stat(finalDir);hadPrevious=true;}catch{}
  await rm(old,{recursive:true,force:true});
  if(hadPrevious)await rename(finalDir,old);

@@ -276,7 +276,9 @@ export function validatePoseBank(bank,manifest){
    for(let j=0;j<frame.length;j++)if(typeof frame[j]!=='number'||!Number.isFinite(frame[j])){fail('nan-frame',`${path}.frames[${i}][${j}]`,'non-finite frame value');break frames;}
    for(let j=0;j<24;j+=3)if(Math.abs(Math.hypot(frame[j],frame[j+1],frame[j+2])-1)>1e-3){fail('nan-frame',`${path}.frames[${i}][${j}]`,'segment direction is not unit length');break frames;}
    for(let j=24;j<44;j+=4)if(Math.abs(Math.hypot(frame[j],frame[j+1],frame[j+2],frame[j+3])-1)>1e-3){fail('nan-frame',`${path}.frames[${i}][${j}]`,'quaternion is not unit length');break frames;}
-   if(frame[44]<-1e-6||frame[44]>1){fail('nan-frame',`${path}.frames[${i}][44]`,'support ratio outside [0,1]');break;}
+   // Support is foot lift over leg length. A roll or a jump can lift the feet past one leg
+   // length; the production bridge clamps what it applies. Three leg lengths is a data error.
+   if(frame[44]<-1e-6||frame[44]>3){fail('nan-frame',`${path}.frames[${i}][44]`,'support ratio outside [0,3]');break;}
   }
   if(Object.hasOwn(clip,'rootMotion'))fail('root-motion',path,'a pose bank must never author gameplay root motion');
  }

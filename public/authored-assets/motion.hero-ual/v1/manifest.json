@@ -1,0 +1,418 @@
+{
+ "format": "pw-asset-package",
+ "formatVersion": 1,
+ "id": "motion.hero-ual",
+ "version": 1,
+ "kind": "humanoid-motion",
+ "displayName": "Hero motion set (Quaternius UAL Standard)",
+ "tags": [
+  "humanoid",
+  "locomotion",
+  "pistol",
+  "crouch",
+  "cc0"
+ ],
+ "rig": {
+  "skeleton": "pw-pose-bridge@1",
+  "mapping": {
+   "hip": "DEF-hips",
+   "chest": "DEF-spine.003",
+   "head": "DEF-head",
+   "shoulderL": "DEF-upper_arm.R",
+   "elbowL": "DEF-forearm.R",
+   "handL": "DEF-hand.R",
+   "shoulderR": "DEF-upper_arm.L",
+   "elbowR": "DEF-forearm.L",
+   "handR": "DEF-hand.L",
+   "hipL": "DEF-thigh.R",
+   "kneeL": "DEF-shin.R",
+   "footL": "DEF-foot.R",
+   "toeL": "DEF-toe.R",
+   "hipR": "DEF-thigh.L",
+   "kneeR": "DEF-shin.L",
+   "footR": "DEF-foot.L",
+   "toeR": "DEF-toe.L"
+  },
+  "bones": 53
+ },
+ "clips": [
+  {
+   "id": "idle",
+   "take": "Idle_Loop",
+   "duration": 2.5,
+   "loop": true,
+   "sampleRate": 60,
+   "frames": 151,
+   "mirror": null,
+   "handedness": "none",
+   "events": []
+  },
+  {
+   "id": "walk",
+   "take": "Walk_Loop",
+   "duration": 1.333333,
+   "loop": true,
+   "sampleRate": 60,
+   "frames": 81,
+   "mirror": null,
+   "handedness": "none",
+   "events": [
+    {
+     "t": 0.3,
+     "type": "footstep",
+     "side": "R",
+     "note": "derived:foot-contact"
+    },
+    {
+     "t": 1.0167,
+     "type": "footstep",
+     "side": "L",
+     "note": "derived:foot-contact"
+    }
+   ]
+  },
+  {
+   "id": "jog",
+   "take": "Jog_Fwd_Loop",
+   "duration": 0.916667,
+   "loop": true,
+   "sampleRate": 60,
+   "frames": 56,
+   "mirror": null,
+   "handedness": "none",
+   "events": []
+  },
+  {
+   "id": "sprint",
+   "take": "Sprint_Loop",
+   "duration": 0.666667,
+   "loop": true,
+   "sampleRate": 60,
+   "frames": 41,
+   "mirror": null,
+   "handedness": "none",
+   "events": []
+  },
+  {
+   "id": "crouch-idle",
+   "take": "Crouch_Idle_Loop",
+   "duration": 2.916667,
+   "loop": true,
+   "sampleRate": 60,
+   "frames": 176,
+   "mirror": null,
+   "handedness": "none",
+   "events": []
+  },
+  {
+   "id": "crouch-walk",
+   "take": "Crouch_Fwd_Loop",
+   "duration": 2,
+   "loop": true,
+   "sampleRate": 60,
+   "frames": 121,
+   "mirror": null,
+   "handedness": "none",
+   "events": [
+    {
+     "t": 1.0833,
+     "type": "footstep",
+     "side": "L",
+     "note": "derived:foot-contact"
+    },
+    {
+     "t": 1.9667,
+     "type": "footstep",
+     "side": "R",
+     "note": "derived:foot-contact"
+    }
+   ]
+  },
+  {
+   "id": "pistol-idle",
+   "take": "Pistol_Idle_Loop",
+   "duration": 1.666667,
+   "loop": true,
+   "sampleRate": 60,
+   "frames": 101,
+   "mirror": null,
+   "handedness": "right",
+   "events": []
+  },
+  {
+   "id": "aim-neutral",
+   "take": "Pistol_Aim_Neutral",
+   "duration": 0.166667,
+   "loop": false,
+   "sampleRate": 60,
+   "frames": 11,
+   "mirror": null,
+   "handedness": "right",
+   "events": []
+  },
+  {
+   "id": "aim-up",
+   "take": "Pistol_Aim_Up",
+   "duration": 0.166667,
+   "loop": false,
+   "sampleRate": 60,
+   "frames": 11,
+   "mirror": null,
+   "handedness": "right",
+   "events": []
+  },
+  {
+   "id": "aim-down",
+   "take": "Pistol_Aim_Down",
+   "duration": 0.166667,
+   "loop": false,
+   "sampleRate": 60,
+   "frames": 11,
+   "mirror": null,
+   "handedness": "right",
+   "events": []
+  },
+  {
+   "id": "pistol-shoot",
+   "take": "Pistol_Shoot",
+   "duration": 0.625,
+   "loop": false,
+   "sampleRate": 60,
+   "frames": 39,
+   "mirror": null,
+   "handedness": "right",
+   "events": [
+    {
+     "t": 0.0164,
+     "type": "contact",
+     "side": "R",
+     "note": "derived:hand-speed-peak"
+    }
+   ]
+  },
+  {
+   "id": "reload",
+   "take": "Pistol_Reload",
+   "duration": 1.666667,
+   "loop": false,
+   "sampleRate": 60,
+   "frames": 101,
+   "mirror": null,
+   "handedness": "right",
+   "events": [
+    {
+     "t": 0.1667,
+     "type": "mag-out",
+     "side": "L",
+     "note": "derived:support-hand-leave"
+    },
+    {
+     "t": 0.6333,
+     "type": "mag-in",
+     "side": "L",
+     "note": "derived:support-hand-return"
+    }
+   ]
+  },
+  {
+   "id": "roll",
+   "take": "Roll",
+   "duration": 1.458333,
+   "loop": false,
+   "sampleRate": 60,
+   "frames": 89,
+   "mirror": null,
+   "handedness": "none",
+   "events": []
+  },
+  {
+   "id": "jump-start",
+   "take": "Jump_Start",
+   "duration": 1.333333,
+   "loop": false,
+   "sampleRate": 60,
+   "frames": 81,
+   "mirror": null,
+   "handedness": "none",
+   "events": []
+  },
+  {
+   "id": "jump-loop",
+   "take": "Jump_Loop",
+   "duration": 2.5,
+   "loop": true,
+   "sampleRate": 60,
+   "frames": 151,
+   "mirror": null,
+   "handedness": "none",
+   "events": []
+  },
+  {
+   "id": "jump-land",
+   "take": "Jump_Land",
+   "duration": 1.25,
+   "loop": false,
+   "sampleRate": 60,
+   "frames": 76,
+   "mirror": null,
+   "handedness": "none",
+   "events": [
+    {
+     "t": 0.0167,
+     "type": "contact",
+     "side": "R",
+     "note": "derived:foot-contact"
+    },
+    {
+     "t": 0.0333,
+     "type": "contact",
+     "side": "L",
+     "note": "derived:foot-contact"
+    }
+   ]
+  },
+  {
+   "id": "hit-chest",
+   "take": "Hit_Chest",
+   "duration": 0.333333,
+   "loop": false,
+   "sampleRate": 60,
+   "frames": 21,
+   "mirror": null,
+   "handedness": "none",
+   "events": []
+  },
+  {
+   "id": "jab",
+   "take": "Punch_Jab",
+   "duration": 0.833333,
+   "loop": false,
+   "sampleRate": 60,
+   "frames": 51,
+   "mirror": null,
+   "handedness": "right",
+   "events": [
+    {
+     "t": 0.2167,
+     "type": "contact",
+     "note": "matches strike-bank contactStart"
+    },
+    {
+     "t": 0.3333,
+     "type": "recovery",
+     "note": "matches strike-bank contactEnd"
+    }
+   ]
+  },
+  {
+   "id": "cross",
+   "take": "Punch_Cross",
+   "duration": 1,
+   "loop": false,
+   "sampleRate": 60,
+   "frames": 61,
+   "mirror": null,
+   "handedness": "left",
+   "events": [
+    {
+     "t": 0.2667,
+     "type": "contact",
+     "note": "matches strike-bank contactStart"
+    },
+    {
+     "t": 0.4667,
+     "type": "recovery",
+     "note": "matches strike-bank contactEnd"
+    }
+   ]
+  }
+ ],
+ "units": {
+  "lengthUnit": "game-unit",
+  "metersPerUnit": 0.19,
+  "up": "+Y",
+  "forward": "+Z",
+  "handedness": "right",
+  "sourceConversion": {
+   "scale": 1,
+   "yawDegrees": 0,
+   "mirrorX": false,
+   "sourceUp": "+Y",
+   "sourceForward": "+Z"
+  }
+ },
+ "budgets": {
+  "profile": "desktop",
+  "measured": {
+   "triangles": 0,
+   "drawCalls": 0,
+   "materials": 0,
+   "bones": 0,
+   "textures": 0,
+   "bytes": 588648
+  },
+  "limits": {
+   "triangles": 1,
+   "drawCalls": 1,
+   "materials": 1,
+   "bones": 1,
+   "textures": 1,
+   "bytes": 756072
+  }
+ },
+ "provenance": {
+  "author": "Quaternius",
+  "pack": "Universal Animation Library - Standard",
+  "license": "CC0-1.0",
+  "redistribution": "free",
+  "url": "https://quaternius.com/packs/universalanimationlibrary.html",
+  "retrievedFrom": "https://github.com/J-Ponzo/gltf-universal-animation-library",
+  "revision": "e24c23cf2a1323488a3faa226ea7ea21f644b73e",
+  "terms": "CC0 1.0 Universal. The advertised full library is not a claim that every take is in this free subset; takes used are named per clip."
+ },
+ "source": {
+  "adapter": "quaternius-ual@1",
+  "files": [
+   {
+    "path": "assets-src/quaternius/AnimationLibrary_Godot_Standard.gltf",
+    "sha256": "0ff075c7ad6855c5c2c37a171592ee8f0d6ab2f58259e2be77a9b63dd8027765"
+   },
+   {
+    "path": "assets-src/quaternius/AnimationLibrary_Godot_Standard.bin",
+    "sha256": "6e65377d81558333c4093dbb144a48fd19019343d82b1a3a7992a98ec0e0543c"
+   }
+  ],
+  "recipe": {
+   "path": "authoring/recipes/motion/hero-ual/recipe.json",
+   "sha256": "5d14d7b55c9d340f2e61c72ee07b88272d33f49e0e5c866a74269afade7f2718"
+  }
+ },
+ "tool": {
+  "name": "powerworld-authoring",
+  "version": "0.1.0",
+  "three": "0.169.0",
+  "adapterVersion": 1
+ },
+ "build": {
+  "options": {},
+  "cacheKey": "f9a9cd9c907164d2b7094d8db1a9887fad68e30b8455c4d8f7dc5f67d8e5b4cd",
+  "contentHash": "bbfea9417dd30dd1ced8eb26f3bc8a5ab1d323340654c50d9665a819a41e20d9",
+  "profile": "desktop"
+ },
+ "compatibility": {
+  "poseBridge": {
+   "frameLength": 45,
+   "layout": "8x3 unit segment directions, 5x4 quaternions (hip,chest,head,footL,footR), 1 support ratio",
+   "engineModule": "src/engine/authored-pose.js"
+  }
+ },
+ "outputs": [
+  {
+   "path": "pose-bank.json",
+   "role": "pose-bank",
+   "sha256": "4827467b12c304dc58f4c8374d75147aa1ac541f88d70bf091a9535ae5762c6f",
+   "bytes": 588648
+  }
+ ],
+ "packageHash": "226f2c888dbc77656e006ae653a1b2e1489e59a070b5d2e63c473ef453344a47"
+}

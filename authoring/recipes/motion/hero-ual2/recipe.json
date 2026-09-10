@@ -1,0 +1,34 @@
+{
+ "id": "motion.hero-ual2",
+ "kind": "humanoid-motion",
+ "adapter": "quaternius-ual",
+ "displayName": "Hero action set (Quaternius UAL2 Standard)",
+ "tags": ["humanoid", "grenade", "prone", "carry", "cc0"],
+ "sources": ["assets-src/quaternius/library-2/UAL2_Standard.glb"],
+ "provenance": {
+  "author": "Quaternius / Gonzalo Furnier",
+  "pack": "Universal Animation Library 2 - Standard",
+  "license": "CC0-1.0",
+  "redistribution": "free",
+  "url": "https://quaternius.itch.io/universal-animation-library-2",
+  "terms": "CC0 1.0 Universal. Free tier file; the paid tier's extra takes are not present and not claimed."
+ },
+ "bindTake": "A_TPose",
+ "sourceConversion": {"scale": 1, "yawDegrees": 0, "mirrorX": false, "sourceUp": "+Y", "sourceForward": "+Z"},
+ "mapping": {
+  "hip": "pelvis", "chest": "spine_03", "head": "Head",
+  "shoulderL": "upperarm_r", "elbowL": "lowerarm_r", "handL": "hand_r",
+  "shoulderR": "upperarm_l", "elbowR": "lowerarm_l", "handR": "hand_l",
+  "hipL": "thigh_r", "kneeL": "calf_r", "footL": "foot_r", "toeL": "ball_r",
+  "hipR": "thigh_l", "kneeR": "calf_l", "footR": "foot_l", "toeR": "ball_l"
+ },
+ "_mappingNote": "UE-style names. The anatomical _r limb sits on negative X and therefore feeds the engine's L slot.",
+ "clips": [
+  {"id": "grenade-throw", "take": "OverhandThrow", "loop": false, "handedness": "right", "events": [{"type": "grenade-release", "derive": "hand-speed-peak", "hand": "R"}]},
+  {"id": "prone-rise", "take": "LayToIdle", "loop": false, "handedness": "none"},
+  {"id": "hit-knockback", "take": "Hit_Knockback", "loop": false, "handedness": "none"},
+  {"id": "walk-carry", "take": "Walk_Carry_Loop", "loop": true, "handedness": "none", "events": [{"type": "footstep", "derive": "foot-contact"}]},
+  {"id": "power", "take": "Melee_Hook", "loop": false, "handedness": "left", "mode": "strike", "side": -1, "contactStart": 0.3, "contactEnd": 0.4, "events": [{"type": "contact", "t": 0.3, "note": "matches heavy-strike-bank contactStart"}]},
+  {"id": "power-recover", "take": "Melee_Hook_Rec", "loop": false, "handedness": "left", "events": [{"type": "recovery", "t": 0, "note": "recovery segment begins"}]}
+ ]
+}

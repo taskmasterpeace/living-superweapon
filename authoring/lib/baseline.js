@@ -39,6 +39,9 @@ export async function measureBaseline(){
   let frames=0;for(const clip of Object.values(bankJson.clips))frames+=clip.frames.length;
   motion.push({name:`src/data/${file}`,measured:{triangles:0,drawCalls:0,materials:0,bones:0,textures:0,bytes:Buffer.byteLength(text)},frames});
  }
+ const motionClass=fold(motion);
+ motionClass.perFrame={bytes:Math.max(...motion.map(m=>m.measured.bytes/m.frames))};
+ motionClass.samples.forEach((s,i)=>{s.frames=motion[i].frames;s.bytesPerFrame=+(motion[i].measured.bytes/motion[i].frames).toFixed(2);});
  return {format:'pw-production-baseline',formatVersion:1,measuredFrom:'pinned combat baseline bcf63279cdf8c99cbdbc5ad66ee142645de93639',
-  classes:{body:fold(body),equipment:fold(equipment),prop:fold(prop),motion:fold(motion)}};
+  classes:{body:fold(body),equipment:fold(equipment),prop:fold(prop),motion:motionClass}};
 }

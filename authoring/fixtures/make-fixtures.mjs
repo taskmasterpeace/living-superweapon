@@ -33,7 +33,7 @@ function baseManifest(bankText){
   outputs:[{path:'pose-bank.json',role:'pose-bank',sha256:sha256(Buffer.from(bankText)),bytes:Buffer.byteLength(bankText)}],
   rig:{skeleton:POSE_BRIDGE.skeleton,mapping,bones:HUMANOID_SLOTS.length},
   clips:[{id:'idle',take:'Fixture_Idle',duration:1/60,loop:true,sampleRate:60,frames:2,mirror:null,handedness:'none',events:[{t:0,type:'loop'}]}],
-  budgets:{profile:'desktop',measured,limits:limitsFor('humanoid-motion','desktop')},
+  budgets:{profile:'desktop',measured,limits:limitsFor('humanoid-motion','desktop',{frames:2})},
   compatibility:{poseBridge:{frameLength:POSE_BRIDGE.frameLength,layout:POSE_BRIDGE.layout,engineModule:POSE_BRIDGE.engineModule}},
  };
 }

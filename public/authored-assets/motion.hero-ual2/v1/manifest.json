@@ -1,0 +1,220 @@
+{
+ "format": "pw-asset-package",
+ "formatVersion": 1,
+ "id": "motion.hero-ual2",
+ "version": 1,
+ "kind": "humanoid-motion",
+ "displayName": "Hero action set (Quaternius UAL2 Standard)",
+ "tags": [
+  "humanoid",
+  "grenade",
+  "prone",
+  "carry",
+  "cc0"
+ ],
+ "rig": {
+  "skeleton": "pw-pose-bridge@1",
+  "mapping": {
+   "hip": "pelvis",
+   "chest": "spine_03",
+   "head": "Head",
+   "shoulderL": "upperarm_r",
+   "elbowL": "lowerarm_r",
+   "handL": "hand_r",
+   "shoulderR": "upperarm_l",
+   "elbowR": "lowerarm_l",
+   "handR": "hand_l",
+   "hipL": "thigh_r",
+   "kneeL": "calf_r",
+   "footL": "foot_r",
+   "toeL": "ball_r",
+   "hipR": "thigh_l",
+   "kneeR": "calf_l",
+   "footR": "foot_l",
+   "toeR": "ball_l"
+  },
+  "bones": 65
+ },
+ "clips": [
+  {
+   "id": "grenade-throw",
+   "take": "OverhandThrow",
+   "duration": 1.333333,
+   "loop": false,
+   "sampleRate": 60,
+   "frames": 81,
+   "mirror": null,
+   "handedness": "right",
+   "events": [
+    {
+     "t": 0.2833,
+     "type": "grenade-release",
+     "side": "R",
+     "note": "derived:hand-speed-peak"
+    }
+   ]
+  },
+  {
+   "id": "prone-rise",
+   "take": "LayToIdle",
+   "duration": 1.533333,
+   "loop": false,
+   "sampleRate": 60,
+   "frames": 93,
+   "mirror": null,
+   "handedness": "none",
+   "events": []
+  },
+  {
+   "id": "hit-knockback",
+   "take": "Hit_Knockback",
+   "duration": 0.833333,
+   "loop": false,
+   "sampleRate": 60,
+   "frames": 51,
+   "mirror": null,
+   "handedness": "none",
+   "events": []
+  },
+  {
+   "id": "walk-carry",
+   "take": "Walk_Carry_Loop",
+   "duration": 2,
+   "loop": true,
+   "sampleRate": 60,
+   "frames": 121,
+   "mirror": null,
+   "handedness": "none",
+   "events": [
+    {
+     "t": 0.9667,
+     "type": "footstep",
+     "side": "L",
+     "note": "derived:foot-contact"
+    },
+    {
+     "t": 1.9667,
+     "type": "footstep",
+     "side": "R",
+     "note": "derived:foot-contact"
+    }
+   ]
+  },
+  {
+   "id": "power",
+   "take": "Melee_Hook",
+   "duration": 0.466667,
+   "loop": false,
+   "sampleRate": 60,
+   "frames": 29,
+   "mirror": null,
+   "handedness": "left",
+   "events": [
+    {
+     "t": 0.3,
+     "type": "contact",
+     "note": "matches heavy-strike-bank contactStart"
+    }
+   ]
+  },
+  {
+   "id": "power-recover",
+   "take": "Melee_Hook_Rec",
+   "duration": 0.6,
+   "loop": false,
+   "sampleRate": 60,
+   "frames": 37,
+   "mirror": null,
+   "handedness": "left",
+   "events": [
+    {
+     "t": 0,
+     "type": "recovery",
+     "note": "recovery segment begins"
+    }
+   ]
+  }
+ ],
+ "units": {
+  "lengthUnit": "game-unit",
+  "metersPerUnit": 0.19,
+  "up": "+Y",
+  "forward": "+Z",
+  "handedness": "right",
+  "sourceConversion": {
+   "scale": 1,
+   "yawDegrees": 0,
+   "mirrorX": false,
+   "sourceUp": "+Y",
+   "sourceForward": "+Z"
+  }
+ },
+ "budgets": {
+  "profile": "desktop",
+  "measured": {
+   "triangles": 0,
+   "drawCalls": 0,
+   "materials": 0,
+   "bones": 0,
+   "textures": 0,
+   "bytes": 171815
+  },
+  "limits": {
+   "triangles": 1,
+   "drawCalls": 1,
+   "materials": 1,
+   "bones": 1,
+   "textures": 1,
+   "bytes": 217834
+  }
+ },
+ "provenance": {
+  "author": "Quaternius / Gonzalo Furnier",
+  "pack": "Universal Animation Library 2 - Standard",
+  "license": "CC0-1.0",
+  "redistribution": "free",
+  "url": "https://quaternius.itch.io/universal-animation-library-2",
+  "terms": "CC0 1.0 Universal. Free tier file; the paid tier's extra takes are not present and not claimed."
+ },
+ "source": {
+  "adapter": "quaternius-ual@1",
+  "files": [
+   {
+    "path": "assets-src/quaternius/library-2/UAL2_Standard.glb",
+    "sha256": "8cee20ab1bc55130092447e810e26df22dd2803eccc54f52137a7d54d7ab88a8"
+   }
+  ],
+  "recipe": {
+   "path": "authoring/recipes/motion/hero-ual2/recipe.json",
+   "sha256": "e2ac66ac8665ffda435b4b615c1cda23d5c2a6d29d19d30afdf8a88595303547"
+  }
+ },
+ "tool": {
+  "name": "powerworld-authoring",
+  "version": "0.1.0",
+  "three": "0.169.0",
+  "adapterVersion": 1
+ },
+ "build": {
+  "options": {},
+  "cacheKey": "333b101f72a59f0a2afc7b5537568535bdc037ebf6cf7685b2740029b997a0f4",
+  "contentHash": "ad2f8bf463c43b597b961d1da2c5822b3b46a126f0f06d0b8b3cfcc7b418f83d",
+  "profile": "desktop"
+ },
+ "compatibility": {
+  "poseBridge": {
+   "frameLength": 45,
+   "layout": "8x3 unit segment directions, 5x4 quaternions (hip,chest,head,footL,footR), 1 support ratio",
+   "engineModule": "src/engine/authored-pose.js"
+  }
+ },
+ "outputs": [
+  {
+   "path": "pose-bank.json",
+   "role": "pose-bank",
+   "sha256": "2c1420106bf6486fa7693f85674399b26291cffefd27a66115932c04fe1860ad",
+   "bytes": 171815
+  }
+ ],
+ "packageHash": "ac33ff1645e568e273851977bfeb0ef88f7abc0b852338bc14ff21bc322c0f7e"
+}
