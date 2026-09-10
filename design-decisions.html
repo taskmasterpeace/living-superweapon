@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Design Decisions · PowerWorld</title>
+  <link rel="stylesheet" href="/src/tool/design-decisions.css">
+</head>
+<body>
+<!-- THESIS: a disciplined field notebook for turning open questions into portable creator decisions.
+     OWN-WORLD: approved warm charcoal, bone text, gold controls, and compact tactical typography.
+     STORY: locate a question, think in one focused editor, save locally, then export for collaboration.
+     FIRST VIEWPORT: chapter rail and progress at left; the active question and answer surface dominate.
+     FORM: responsive workbench, not a gameplay HUD, dashboard redesign, or implementation approval system. -->
+<div class="app-shell">
+  <header>
+    <div class="brand">
+      <span class="eyebrow">POWERWORLD // CREATOR WORKBENCH</span>
+      <h1>Design Decisions</h1>
+      <p>50 questions that define the combined-arms game.</p>
+    </div>
+    <div class="header-actions" aria-label="Document actions">
+      <button id="import-open" type="button">Import JSON</button>
+      <button id="export-json" type="button">Export JSON</button>
+      <button id="export-markdown" class="primary" type="button">Export Markdown</button>
+    </div>
+  </header>
+
+  <div class="truth-strip">
+    <span id="save-status" role="status" aria-live="polite">Saved in this browser</span>
+    <span>Local to this browser · export JSON or Markdown to share with the main AI · no cloud sync · answers are not automatically implemented.</span>
+  </div>
+
+  <main class="workspace">
+    <aside class="rail" aria-label="Question navigation">
+      <div class="progress-card">
+        <div><span>Decision coverage</span><strong id="answered-count">0 / 50 answered</strong></div>
+        <div id="progress" class="progress" aria-hidden="true"></div>
+      </div>
+      <form id="jump-form" class="jump-form">
+        <label for="jump">Jump to question</label>
+        <div><input id="jump" type="number" min="1" max="50" inputmode="numeric" placeholder="#"><button type="submit">Go</button></div>
+      </form>
+      <label class="filter"><input id="unanswered-only" type="checkbox"> Show unanswered only</label>
+      <nav id="question-nav"></nav>
+    </aside>
+
+    <article class="editor">
+      <div class="question-kicker"><span id="chapter-name"></span><span id="question-number"></span></div>
+      <h2 id="question-prompt"></h2>
+      <p class="start-here">Question 50 is the suggested starting point—not a prefilled answer or settled rule.</p>
+
+      <label class="field answer-field" for="answer">
+        <span>Your answer</span>
+        <textarea id="answer" maxlength="20000" placeholder="Write the decision in your own words. Nothing is prefilled."></textarea>
+      </label>
+
+      <div class="meta-grid">
+        <label class="field" for="decision-status"><span>Status</span><select id="decision-status"><option>Draft</option><option>Decided</option><option>Discuss</option></select></label>
+        <label class="field notes-field" for="notes"><span>Notes <small>optional</small></span><textarea id="notes" maxlength="20000" placeholder="Tradeoffs, examples, or questions to revisit."></textarea></label>
+      </div>
+
+      <footer class="editor-footer">
+        <button id="previous" type="button">← Previous</button>
+        <button id="reset" class="danger" type="button">Clear all…</button>
+        <button id="next" class="primary" type="button">Next →</button>
+      </footer>
+    </article>
+  </main>
+</div>
+
+<dialog id="import-dialog" aria-labelledby="import-title">
+  <h2 id="import-title">Import decision workbook</h2>
+  <p>Only versioned PowerWorld decision JSON is accepted. Invalid files leave your current answers untouched.</p>
+  <label class="field" for="import-file"><span>JSON file</span><input id="import-file" type="file" accept="application/json,.json"></label>
+  <p id="import-error" class="error" role="alert"></p>
+  <div class="dialog-actions"><button id="import-cancel" type="button">Cancel</button><button id="import-apply" class="primary" type="button">Validate & import</button></div>
+</dialog>
+
+<script type="module" src="/src/tool/design-decisions.js"></script>
+</body>
+</html>
