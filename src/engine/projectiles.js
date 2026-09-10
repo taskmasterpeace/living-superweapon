@@ -1119,12 +1119,19 @@ class BeamHose {
       // releasing its charge. Read this arm's history, not the body carrier.
       if((c._combatAim.armChannels?.[i]?.gather??c._combatAim.gather)>.2)return false;
       const arm=i?p.armR:p.armL,hand=arm.children[2];
+      // Paired palms converge on the captured point from different sockets.
+      // A nearby point cannot be parallel to both hands and the midpoint ray.
+      this._otherPalm.copy(ray);
+      if(this._launchTarget){
+        hand.getWorldPosition(this._axialDirection);
+        this._otherPalm.copy(this._launchTarget).sub(this._axialDirection).normalize();
+      }
       arm.getWorldPosition(this._axialOrigin);
       hand.getWorldPosition(this._axialDirection).sub(this._axialOrigin).normalize();
-      if(this._axialDirection.dot(ray)<.75)return false;
+      if(this._axialDirection.dot(this._otherPalm)<.75)return false;
       hand.getWorldQuaternion(this._axialRotation);
       this._axialDirection.set(0,-1,0).applyQuaternion(this._axialRotation);
-      if(this._axialDirection.dot(ray)<.99)return false;
+      if(this._axialDirection.dot(this._otherPalm)<.99)return false;
       // A carried weapon keeps its closed grip; source skins keep their own
       // hand shapes. The procedural casting palm must visibly open first.
       if(!p.skin&&!hand.userData.gripOccupied&&(hand.morphTargetInfluences?.[0]??1)<.7)return false;

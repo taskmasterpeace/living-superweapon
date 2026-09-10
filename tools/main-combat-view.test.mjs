@@ -222,12 +222,13 @@ test('native double-tap evade follows the same flat camera basis as city walking
  }finally{SETTINGS.moveRelative=old;x.close();}
 });
 
-test('native form rebind and KO/respawn retire prior life input before a zero-time control',()=>{
+test('native same-life form rebind preserves held input while KO/respawn retire it',()=>{
  const x=mainCombatFixture();try{
   x.control(0);x.p.slots.lmb.charging=true;x.g.input.mouse.left=true;const old=x.p.parts;
   x.p.applyForm({frame:{scale:1.2}});assert.notEqual(x.p.parts,old);x.g.prepareCombatView(0);
-  assert.equal(x.p.slots.lmb.charging,false);assert.equal(x.g.input.mouse.left,false);
+  assert.equal(x.p.slots.lmb.charging,true);assert.equal(x.g.input.mouse.left,true);
   x.p._ko();x.g.prepareCombatView(0);assert.equal(x.g.input.pointerLock,false);
+  assert.equal(x.p.slots.lmb.charging,false);assert.equal(x.g.input.mouse.left,false);
   x.pad.cur={lmb:true};x.g.prepareCombatView(0);x.p.koT=3.5;x.p._updateKO(0,x.g);
   assert.equal(x.p.alive,true);x.control(0);assert.equal(x.pad.down('lmb'),false);
   assert.equal(x.p.slots.lmb.charging,false);assert.equal(x.g.projectiles.list.length,0);

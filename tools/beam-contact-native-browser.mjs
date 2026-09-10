@@ -40,6 +40,18 @@ try{
  if(process.argv.includes('--offset')){await page.keyboard.down('KeyD');await page.waitForTimeout(900);await page.keyboard.up('KeyD');await page.waitForTimeout(250);}
  await aim();
  if(process.argv.includes('--close')){await page.keyboard.down('KeyW');await page.waitForTimeout(500);await page.keyboard.up('KeyW');await page.waitForTimeout(250);await aim();}
+ if(process.argv.includes('--near')){
+  // Navigate through actual input until the range target is close; do not
+  // relocate actors or substitute a camera pose for gameplay approach.
+  for(let n=0;n<60;n++){
+   const gap=await page.evaluate(()=>{const g=PW.game,t=g.entities.filter(f=>f.isDummy&&!f._patrol&&f.alive)[2];return t?.pos.distanceTo(g.player.pos)??Infinity;});
+   if(gap<13)break;
+   await aim();await page.keyboard.down('KeyW');await page.waitForTimeout(70);await page.keyboard.up('KeyW');
+  }
+  await aim();
+  result.closeApproach=await page.evaluate(()=>{const g=PW.game,t=g.entities.filter(f=>f.isDummy&&!f._patrol&&f.alive)[2];return{gap:t?.pos.distanceTo(g.player.pos),position:g.player.pos.toArray(),target:t?.pos.toArray()};});
+  assert.ok(result.closeApproach.gap<15,'Native approach must reach close firing range');
+ }
  await page.screenshot({path:`${out}/01-before.png`});
  const handHeights=()=>page.evaluate(()=>PW.game.entities.filter(f=>f.isDummy).map(f=>f.parts.armL.children[2].getWorldPosition(f.pos.clone()).y-f.parts.torso.getWorldPosition(f.pos.clone()).y));
  const posture=()=>page.evaluate(()=>PW.game.entities.filter(f=>f.isDummy).map(f=>({state:f.state,guard:f.guarding,poseGuard:f.poseGuard,mstate:f.mstate,stun:f.stunT,stagger:f.staggerT,dir:f._hitReaction?.beam?.direction.toArray(),yaw:f.parts.g.rotation.y,torso:f.parts.torso.rotation.toArray(),grip:f.parts.armL.children[2].userData.gripOccupied})));

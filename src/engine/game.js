@@ -3358,9 +3358,15 @@ export class Game {
   prepareCombatView(inputDt) {
     this.combatOverlayOpen=!!this.hud?.overlayOpen?.();
     const active=combatLookActive(this),w=this.world;
-    const previous=this._combatControlOwner,changed=previous&&(previous!==this.player||this._combatControlParts!==this.player?.parts);
+    const previous=this._combatControlOwner,changed=previous&&previous!==this.player;
+    const rigChanged=previous===this.player&&this._combatControlParts!==this.player?.parts;
     const resumed=active&&previous&&!this._combatLookWasActive;
     if((this._combatLookWasActive&&!active)||changed||resumed)this.retireCombatViewInput(previous);
+    else if(rigChanged){
+      // Authored forms replace presentation parts on the same living actor.
+      // Refresh rig-dependent view state without releasing its held attacks.
+      clearForegroundVisibility(w);w.snapChase();this._aimHit=null;this._aimFresh=false;
+    }
     this._combatControlOwner=this.player;this._combatControlParts=this.player?.parts;this._combatLookWasActive=active;
     if(!active&&combatView(this)==='bfp')this.pad?.suppressCombatHeld?.();
     this._combatLockPressed=this.pad?.sampleCombatLock?.(active)??false;

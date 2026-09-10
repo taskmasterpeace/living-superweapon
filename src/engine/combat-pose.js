@@ -169,7 +169,11 @@ export function animateCombatAim(f, dt) {
     p.g.updateMatrixWorld(true);
     beam.sampleMuzzle?beam.sampleMuzzle(emissionOrigin):f.muzzle(emissionOrigin,beam.faceOrigin?1.1:beam.chest?1.2:undefined,beam.faceOrigin?8.3:beam.chest?5.4:undefined);
     beam.predictDirection(emission,dt,emissionOrigin);
-    state.point.copy(emissionOrigin).addScaledVector(emission,100);
+    // While a hand release is preparing, the captured point owns parallax.
+    // Projecting its ray out to 100 units makes a nearby shot chase a moving
+    // virtual target as the palms rise; readiness checks the real close point.
+    if(beam.pendingLaunch&&beam._launchTarget&&!beam.faceOrigin&&!beam.chest)state.point.copy(beam._launchTarget);
+    else state.point.copy(emissionOrigin).addScaledVector(emission,100);
   }
   else if (state.weight < .0001) state.point.copy(direction);
   else state.point.lerp(direction, 1 - Math.exp(-24 * dt));

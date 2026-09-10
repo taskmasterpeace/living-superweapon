@@ -27,7 +27,8 @@ export function updateIndependentHands(f,channels,dt,blocked){
   if(beam?.predictDirection){
    const origin=hand.origin ||= new THREE.Vector3(),direction=hand.direction ||= new THREE.Vector3();
    f.parts.g.updateMatrixWorld(true);beam.sampleMuzzle(origin);beam.predictDirection(direction,dt,origin);
-   hand.point.copy(origin).addScaledVector(direction,100);
+   if(beam.pendingLaunch&&beam._launchTarget)hand.point.copy(beam._launchTarget);
+   else hand.point.copy(origin).addScaledVector(direction,100);
   }else if(hand.weight<.0001)hand.point.copy(command);
   else hand.point.lerp(command,1-Math.exp(-24*dt));
   hand.weight=blocked?0:damp(hand.weight,owner?1:0,owner?18:12,dt);
