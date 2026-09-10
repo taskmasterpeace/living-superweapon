@@ -11,6 +11,7 @@ const readyDirection=new THREE.Vector3();
 const longitudinal=new THREE.Vector3(),up=new THREE.Vector3(0,1,0),right=new THREE.Vector3(),back=new THREE.Vector3(),offset=new THREE.Vector3();
 const frame=new THREE.Matrix4(),rotation=new THREE.Quaternion(),parent=new THREE.Quaternion(),gunRotation=new THREE.Quaternion();
 const carrier=new THREE.Quaternion(),carrierAngles=new THREE.Euler(0,0,0,'XYZ'),pivot=new THREE.Vector3(),stockTarget=new THREE.Vector3();
+const gripBase=new THREE.Vector3(),reachShift=new THREE.Vector3(),supportLocal=new THREE.Vector3();
 const busy=f=>!f.alive||f.state==='ko'||f._abilityMeleePose||f.poseStrike>.02||f.poseGrab>.02||f.meleeCharge>0||f.mstate||f.grabState||f.grabbedBy||f.grabbing||f._carry||f.hanging||f.staggerT>0||f.stunT>0||f.frozenT>0||f.downedT>0||f.sleepT>0;
 
 function select(f){
@@ -159,6 +160,7 @@ export function animateRiflePose(f,dt){
  // a second time lets the shoulders outrun the support hand at phase changes.
  if(!s.active||aimWeight<.001)s.grip.copy(point);else s.grip.lerp(point,1-Math.exp(-18*Math.max(0,dt)));
  s.active=true;
+ s.primaryPullback=0;
  pole.set(side,-.8,.7).applyQuaternion(carrier);reachArm(arm,s.grip,side,1,pole);
  aimWrist(f,emitter,aimWeight);
  for(let i=0;i<5;i++){
@@ -166,6 +168,24 @@ export function animateRiflePose(f,dt){
   aimWrist(f,emitter,aimWeight);
  }
  const support=emitter.weapon.getObjectByName('weapon-support-grip');support.getWorldPosition(point);off.parent.worldToLocal(point);
+ // Long production rifles can put the fore-end just beyond a broad or lean
+ // frame's shared arm workspace. Search a small, bounded whole-rifle shift:
+ // pull the primary grip toward its shoulder and inward toward the sternum,
+ // then recompute the rigid wrist/barrel frame. The support socket never moves
+ // independently, and both shoulder reach limits gate every candidate.
+ if(emitter.weapon.userData.authoredEquipment&&point.distanceTo(off.position)>off.userData.upperLength+off.userData.foreLength-.001){
+  gripBase.copy(s.grip);const primaryReach=arm.userData.upperLength+arm.userData.foreLength-.001,offReach=off.userData.upperLength+off.userData.foreLength-.001;
+  for(let distance=.1*scale;distance<=.9*scale+1e-6;distance+=.1*scale){
+   reachShift.copy(direction).multiplyScalar(-distance).addScaledVector(right,-side*distance*.24);
+   arm.parent.worldToLocal(reachShift.add(arm.parent.localToWorld(new THREE.Vector3())));
+   s.grip.copy(gripBase).add(reachShift);
+   if(s.grip.distanceTo(arm.position)>primaryReach)continue;
+   reachArm(arm,s.grip,side,1,pole);aimWrist(f,emitter,aimWeight);
+   for(let i=0;i<5;i++){if(!constrainWeaponCover(f,emitter,pole))break;aimWrist(f,emitter,aimWeight);}
+   support.getWorldPosition(supportLocal);off.parent.worldToLocal(supportLocal);
+   if(supportLocal.distanceTo(off.position)<=offReach){point.copy(supportLocal);s.primaryPullback=distance;break;}
+  }
+ }
  if(point.distanceTo(off.position)>off.userData.upperLength+off.userData.foreLength-.001){
   // No stretched arm or floating second grip when a fast aim/cover correction
   // leaves the shared workspace. Paid shots keep their original one-hand pose.
