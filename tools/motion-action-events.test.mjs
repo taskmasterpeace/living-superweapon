@@ -32,6 +32,14 @@ test('imported reload markers replace eject/insert timing while chamber remains 
  }finally{x.close();}
 });
 
+test('reload without usable source markers retains the original procedural timeline',()=>{
+ const x=mainCombatFixture({hero:'sarge'}),f=x.p;try{
+  firearmAmmo(f.slots.lmb).loaded=1;assert.ok(requestReload(f,'lmb',x.g));
+  assert.deepEqual(f._firearmReload.timeline,{eject:.2,drawStart:.2,drawFull:.31,handlingStart:.31,handlingFull:.42,
+   handlingRelease:.44,handlingEnd:.54,insertStart:.49,insert:.65,boltStart:.78,chamber:.9,boltEnd:.94,toBoltStart:.68,toBoltEnd:.78});
+ }finally{x.close();}
+});
+
 test('imported grenade release marker changes only pose mapping; native launch and audio still commit once',()=>{
  const x=mainCombatFixture({hero:'sarge',mode:'powerworld'}),f=x.p,cues=[];x.g.audio={...x.g.audio,soundLibrary:{play:id=>cues.push(id)}};
  try{
@@ -56,6 +64,22 @@ test('real reload sampling changes the free arm while its action mask preserves 
   for(const key of Object.keys(excluded))assert.deepEqual(q(a.parts[key]),excluded[key],`${key} escaped the action mask`);
   assert.ok(Math.abs(a._firearmReload.sourcePhase-.43)<1e-12,'reload must sample the native reload clock');
  }finally{imported.close();fallback.close();}
+});
+
+for(const hz of [30,60,120])test(`real reload magazine follows authoritative source cue phases at ${hz}Hz`,()=>{
+ const x=mainCombatFixture({hero:'sarge'}),f=x.p,cues=[];x.g.audio={...x.g.audio,soundLibrary:{play:id=>cues.push(id)}};
+ try{
+  f.def.model={...f.def.model,assets:{motion:{reload:'motion.hero-ual@1'}}};
+  bindMotionPackage(f,'reload',realPack('motion.hero-ual@1',ual,ualManifest,'reload'));
+  const magazine=f.parts.armR.children[2].getObjectByName('weapon-magazine'),rest=magazine.position.clone();
+  firearmAmmo(f.slots.lmb).loaded=1;assert.ok(requestReload(f,'lmb',x.g));f._riflePose={active:true};
+  const {eject,insert}=f._firearmReload.timeline;
+  const advanceTo=phase=>{while(f._firearmReload.elapsed+1/hz<f._firearmReload.duration*phase-1e-9)updateFirearmReload(f,1/hz,x.g);updateFirearmReload(f,f._firearmReload.duration*phase-f._firearmReload.elapsed,x.g);animateReloadPose(f);};
+  advanceTo(eject);assert.ok(magazine.position.distanceTo(rest)>.05,'mag-out cue fired while the magazine was still seated');
+  assert.equal(cues.filter(id=>id==='reload-eject').length,1);
+  advanceTo(insert);assert.ok(magazine.position.distanceTo(rest)<1e-8,'mag-in cue fired before the magazine was seated');
+  assert.equal(cues.filter(id=>id==='reload-insert').length,1);
+ }finally{x.close();}
 });
 
 test('real grenade sampling mirrors right-hand source onto Sarge left and maps release/recovery exactly',()=>{
