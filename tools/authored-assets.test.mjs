@@ -44,6 +44,29 @@ test('manifest activation rejects non-finite transforms and output traversal',as
   }
 });
 
+test('catalog package directories cannot escape the configured asset root',async()=>{
+  const original=JSON.parse(await readFile(resolve(ROOT,'catalog.json'),'utf8'));
+  for(const dir of ['https://evil.test/pkg','%2e%2e/outside']){
+    const catalog=structuredClone(original),entry=catalog.packages.find(item=>item.id==='equipment.carbine');entry.dir=dir;
+    const fetched=[];const fetch=async input=>{fetched.push(String(input));return new Response(JSON.stringify(catalog));};
+    const loader=module.createAuthoredAssetLoader({fetch,baseUrl:assetUrl});
+    await assert.rejects(loader.resolvePackage('equipment.carbine@1','equipment'),error=>error.code==='INVALID_CATALOG');
+    assert.deepEqual(fetched,['https://assets.test/catalog.json']);
+  }
+});
+
+test('manifest output paths cannot escape their catalog-selected package directory',async()=>{
+  const catalog=JSON.parse(await readFile(resolve(ROOT,'catalog.json'),'utf8'));
+  const original=JSON.parse(await readFile(resolve(ROOT,'equipment.carbine/v1/manifest.json'),'utf8'));
+  for(const path of ['https://evil.test/model.glb','%2e%2e/outside.glb']){
+    const manifest=structuredClone(original);manifest.outputs[0].path=path;const fetched=[];
+    const fetch=async input=>{const url=String(input);fetched.push(url);return new Response(url.endsWith('catalog.json')?JSON.stringify(catalog):JSON.stringify(manifest));};
+    const loader=module.createAuthoredAssetLoader({fetch,baseUrl:assetUrl});
+    await assert.rejects(loader.readOutput('equipment.carbine@1','glb',{type:'bytes'}),error=>error.code==='OUTPUT_TRAVERSAL');
+    assert.deepEqual(fetched,['https://assets.test/catalog.json','https://assets.test/equipment.carbine/v1/manifest.json']);
+  }
+});
+
 test('a failed catalog request is retried instead of caching a rejected promise',async()=>{
   let attempts=0;
   const fetch=async input=>{attempts++;return attempts===1?new Response('offline',{status:503}):fileFetch(input);};

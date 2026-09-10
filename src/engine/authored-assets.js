@@ -13,8 +13,17 @@ const freeze=value=>{
   return value;
 };
 const clone=value=>JSON.parse(JSON.stringify(value));
-const safeRelative=(path,allowSlash=true)=>typeof path==='string'&&path.length>0&&!path.startsWith('/')&&!path.startsWith('\\')&&!path.includes('\\')&&
-  (allowSlash||!path.includes('/'))&&path.split('/').every(part=>part&&part!=='.'&&part!=='..');
+const safeRelative=(path,allowSlash=true)=>{
+  if(typeof path!=='string'||path.length===0||path.includes('\\')||/^[a-z][a-z0-9+.-]*:/i.test(path))return false;
+  let decoded;try{decoded=decodeURIComponent(path);}catch{return false;}
+  return !decoded.startsWith('/')&&!decoded.includes('\\')&&(allowSlash||!decoded.includes('/'))&&decoded.split('/').every(part=>part&&part!=='.'&&part!=='..');
+};
+function descendantUrl(path,base,code,ref){
+  if(!safeRelative(path))fail(code,`Unsafe authored asset path in ${ref??'catalog'}.`,{ref});
+  const parent=new URL(base),resolved=new URL(path,parent),prefix=parent.pathname.endsWith('/')?parent.pathname:`${parent.pathname}/`;
+  if(resolved.origin!==parent.origin||!resolved.pathname.startsWith(prefix))fail(code,`Authored asset path escapes its declared directory in ${ref??'catalog'}.`,{ref});
+  return resolved;
+}
 const fail=(code,message,options)=>{throw new AuthoredAssetError(code,message,options);};
 const finiteArray=(value,length)=>Array.isArray(value)&&value.length===length&&value.every(Number.isFinite);
 
@@ -88,13 +97,13 @@ export function createAuthoredAssetLoader({fetch:fetchImpl=globalThis.fetch,base
     const key=`${ref}|${expectedKind??''}`;if(packageCache.has(key))return packageCache.get(key);
     const promise=(async()=>{const catalog=await loadCatalog(),entry=catalog.packages.find(item=>`${item.id}@${item.version}`===ref);if(!entry)fail('PACKAGE_UNAVAILABLE',`Authored asset ${ref} is not in this catalog.`,{ref,retryable:true});
       if(expectedKind&&entry.kind!==expectedKind)fail('WRONG_KIND',`${ref} is ${entry.kind}, not ${expectedKind}.`,{ref});
-      const packageUrl=new URL(`${entry.dir}/`,rootUrl),response=await get(new URL('manifest.json',packageUrl),'manifest',ref);let raw;try{raw=await response.json();}catch(cause){fail('INVALID_MANIFEST',`Manifest for ${ref} is not valid JSON.`,{ref,cause});}
+      const packageDir=descendantUrl(entry.dir,rootUrl,'INVALID_CATALOG',ref),packageUrl=new URL(`${packageDir.href}/`),response=await get(new URL('manifest.json',packageUrl),'manifest',ref);let raw;try{raw=await response.json();}catch(cause){fail('INVALID_MANIFEST',`Manifest for ${ref} is not valid JSON.`,{ref,cause});}
       const manifest=validateManifest(raw,entry,expectedKind,ref);return freeze({manifest,baseUrl:packageUrl.href,packageHash:entry.packageHash});})();
     packageCache.set(key,promise);try{return await promise;}catch(error){packageCache.delete(key);throw error;}
   }
   async function readOutput(ref,role,{type='json',expectedKind}={}){
     const pack=await resolvePackage(ref,expectedKind),output=pack.manifest.outputs.find(item=>item.role===role);if(!output)fail('OUTPUT_UNAVAILABLE',`${ref} has no ${role} output.`,{ref});
-    const key=`${ref}|${role}`;let promise=byteCache.get(key);if(!promise){promise=(async()=>{const response=await get(new URL(output.path,pack.baseUrl),'output',ref),buffer=await response.arrayBuffer();if(buffer.byteLength!==output.bytes||await sha256(buffer)!==output.sha256)fail('HASH_MISMATCH',`Output verification failed for ${ref} (${role}).`,{ref,retryable:true});return buffer;})();byteCache.set(key,promise);}
+    const key=`${ref}|${role}`;let promise=byteCache.get(key);if(!promise){promise=(async()=>{const response=await get(descendantUrl(output.path,pack.baseUrl,'OUTPUT_TRAVERSAL',ref),'output',ref),buffer=await response.arrayBuffer();if(buffer.byteLength!==output.bytes||await sha256(buffer)!==output.sha256)fail('HASH_MISMATCH',`Output verification failed for ${ref} (${role}).`,{ref,retryable:true});return buffer;})();byteCache.set(key,promise);}
     let buffer;try{buffer=await promise;}catch(error){byteCache.delete(key);throw error;}const own=buffer.slice(0);
     if(type==='bytes')return own;if(type!=='json')fail('INVALID_OUTPUT_TYPE',`Unsupported output type ${type}.`,{ref});
     try{return freeze(JSON.parse(new TextDecoder().decode(own)));}catch(cause){fail('INVALID_OUTPUT',`${ref} ${role} output is not valid JSON.`,{ref,cause});}
