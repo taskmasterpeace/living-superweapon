@@ -55,7 +55,7 @@ export function animateThrowAction(f){
  const scale=p.rig.pivotHeight/4.6,t=m.elapsed/m.releaseAt*.38;
  if(m.motion?.clip){
   const event=m.motion.metadata?.events?.find(e=>e.type==='grenade-release'),releasePhase=THREE.MathUtils.clamp((event?.t??m.motion.clip.duration*.35)/m.motion.clip.duration,.01,.99);
-  const phase=m.elapsed<=m.releaseAt?m.elapsed/m.releaseAt*releasePhase:releasePhase+(1-releasePhase)*Math.min(1,(m.elapsed-m.releaseAt)/m.recovery);
+  const phase=m.elapsed<=m.releaseAt?m.elapsed/m.releaseAt*releasePhase:releasePhase+(1-releasePhase)*Math.min(1,(m.elapsed-m.releaseAt)/m.recovery);m.sourcePhase=phase;
   samplePoseFrame(m.motion.clip,phase,actionFrame,false);mirrorPoseFrame(actionFrame);
   applyAuthoredPose(f,actionFrame,1,{legs:false,hips:false,support:false,body:false,head:false,armR:false});
  }
@@ -66,7 +66,7 @@ export function animateThrowAction(f){
  offset.lerp(point.set(-.6,.4,2.95),cast);point.copy(arm.position).add(offset.multiplyScalar(scale));
  hand.getWorldPosition(start);arm.parent.worldToLocal(start);
  point.lerp(start,1-weight);point.z+=Math.sin(Math.PI*weight)*1.1*scale;
- pole.set(0,-1,0).applyQuaternion(arm.quaternion).lerp(offset.set(-1,.25,0),weight);
+ pole.set(0,-1,0).applyQuaternion(arm.quaternion).lerp(offset.set(-1,.25,0),weight*(m.motion?.clip?.frames?0.75:1));
  reachArm(arm,point,-1,1,pole);
  p.g.updateMatrixWorld(true);
  if(f._openSky)constrainArmCover(f,arm,-1,pole.set(-1,-.55,-.15));

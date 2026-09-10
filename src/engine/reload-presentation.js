@@ -35,7 +35,7 @@ export function animateReloadPose(f){
  }
  for(const b of s.base){b.position.copy(b.part.position);b.quaternion.copy(b.part.quaternion);}s.applied=true;
  const t=THREE.MathUtils.clamp(r.elapsed/r.duration,0,1);
- const motion=r.motion??resolveMotionClip(f,'reload','reload');
+ const motion=r.motion??resolveMotionClip(f,'reload','reload');r.sourcePhase=t;
  if(motion?.clip){samplePoseFrame(motion.clip,t,actionFrame,false);applyAuthoredPose(f,actionFrame,1,{legs:false,hips:false,support:false,body:false,head:false,armR:false});}
  // Local -Z points below the upright rifle. Draw straight out of the well,
  // then arc forward in the free hand and return before the insert cue at 65%.
@@ -53,7 +53,9 @@ export function animateReloadPose(f){
  // Keep the reload elbow outside the carrier, following its current blade.
  if(f._pronePose?.weight)endPole.set(side,0,0);
  else endPole.set(side,-.5,3).applyQuaternion(p.torso.quaternion);
- pole.lerp(endPole,weight);
+ // The imported support-arm plane remains visible while the final hand target
+ // stays authoritative at the physical magazine/bolt contact.
+ pole.lerp(endPole,weight*(motion?.clip?.frames?0.75:1));
  reachArm(arm,target,side,1,pole);
  arm.getWorldQuaternion(parent).invert();gun.getWorldQuaternion(rotation);
  hand.quaternion.slerp(parent.multiply(rotation),weight);
