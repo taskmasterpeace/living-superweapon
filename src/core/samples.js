@@ -5,6 +5,21 @@
 // layer was added later and never got it, which is how a NaN distance-gain took the game
 // down from a projectile impact.
 const fin = (v, d = 1) => (Number.isFinite(v) ? v : d);
+const bounded = (v,lo,hi,fallback) => Math.max(lo,Math.min(hi,fin(v,fallback)));
+// Own only the nodes of this voice, never disconnect an existing mix bus.
+function route(a,src,g,bus,pos) {
+  let pan=null;
+  try { pan=a.ctx.createStereoPanner?.()??null; } catch(e) { /* old/limited WebAudio: mono */ }
+  src.connect(g);
+  if(pan){pan.pan.value=bounded(a._pan?.(pos),-.85,.85,0);g.connect(pan);}
+  (pan||g).connect((a.bus&&a.bus[bus])||a.master);
+  // Legacy mono→stereo bus upmix copies the full signal to BOTH channels. An
+  // equal-power panner instead gives each centre channel 1/sqrt(2); compensate
+  // only mono recordings so centred combat keeps its established mix level.
+  const normalization=pan&&src.buffer.numberOfChannels===1?Math.SQRT2:1;
+  let ended=false;
+  return {pan,normalization,disconnect(){if(ended)return;ended=true;for(const node of [src,g,pan])if(node)node.disconnect();}};
+}
 // THE SAMPLE BANK — real recorded audio for every discrete sound effect (Robert's ruling
 // 2026-07-24: "get audio for ALL sound effects and powers — no more generated stuff").
 // Source: Kenney CC0 packs (impact-sounds, sci-fi-sounds, interface-sounds, rpg-audio,
@@ -164,14 +179,16 @@ export class SampleBank {
     const a = this.a;
     if (!a.ok || a.muted) return true;
     const m = MANIFEST[name]; if (!m) return false;
-    const pg = a._pg(pos, reach ?? m.reach ?? 130);
+    const pg = bounded(a._pg(pos, reach ?? m.reach ?? 130),0,1,0);
     if (pg === 0) return true;
     const b = this._pick(m); if (!b) return false;
     const src = a.ctx.createBufferSource(); src.buffer = b;
     const rj = m.rj ?? 0.05;
-    src.playbackRate.value = Math.max(0.25, fin(rate, 1) * (1 + (Math.random() * 2 - 1) * rj));
-    const g = a.ctx.createGain(); g.gain.value = Math.max(0, fin(gain, 1) * (m.g ?? 1) * fin(pg, 1));
-    src.connect(g); g.connect((a.bus && a.bus[bus]) || a.master);
+    src.playbackRate.value = bounded(bounded(rate,.25,16,1) * (1 + (Math.random() * 2 - 1) * rj),.25,16,1);
+    const g = a.ctx.createGain();
+    const routing=route(a,src,g,bus,pos);
+    g.gain.value = bounded(gain,0,16,1) * (m.g ?? 1) * pg * routing.normalization;
+    src.onended=()=>routing.disconnect();
     // ⚠ an offset start is what makes a layer read as a SECOND event rather than a thicker first
     // one. It was accepted by callers and silently dropped here.
     src.start(fin(delay, 0) > 0 ? a.ctx.currentTime + fin(delay, 0) : 0);
@@ -179,15 +196,16 @@ export class SampleBank {
   }
   // Sustained loop with the sustain() contract: set(intensity, pos) every live frame,
   // stop() fades out, registered in audio._sus so the watchdog reaps forgotten loops.
-  loop(name, { pos = null, bus = 'sfx', rate = 1 } = {}) {
+  loop(name, { pos = null, bus = 'sfx', rate = 1, reach } = {}) {
     const a = this.a;
     if (!a.ok || a.muted) return null;
     const m = MANIFEST[name]; if (!m) return null;
     const b = this._pick(m); if (!b) return null;
     const src = a.ctx.createBufferSource(); src.buffer = b; src.loop = true;
+    rate=bounded(rate,.25,16,1);
     src.playbackRate.value = rate;
-    const g = a.ctx.createGain(); g.gain.value = 0.0001;
-    src.connect(g); g.connect((a.bus && a.bus[bus]) || a.master);
+    const g = a.ctx.createGain(); g.gain.value = 0;
+    const routing=route(a,src,g,bus,pos);
     src.start();
     // ⚠ D1 — TWO CLOCKS, ONE WATCHDOG. `T()` is `ctx.currentTime` (SECONDS from AudioContext
     // creation) and is correct for scheduling every AudioParam here — never change it. But the
@@ -202,22 +220,28 @@ export class SampleBank {
     // without bound, so no threshold works.
     const T = () => a.ctx.currentTime;
     const NOW = () => performance.now();
-    g.gain.linearRampToValueAtTime((m.g ?? 1) * 0.5, T() + 0.06);
+    const proximity=p=>a.muted?0:bounded(a._pg(p,reach??m.reach??140),0,1,0);
+    g.gain.setValueAtTime(0,T());
+    g.gain.linearRampToValueAtTime((m.g ?? 1) * 0.5 * proximity(pos) * routing.normalization, T() + 0.06);
     const h = {
       last: NOW(),
       set(I, p) {
+        if(h._dead)return;
         h.last = NOW();
-        const pg = a._pg(p ?? pos, m.reach ?? 140);
-        const target = Math.max(0.0001, (m.g ?? 1) * (0.15 + 0.85 * Math.min(1, I)) * pg);
-        g.gain.setTargetAtTime(target, T(), 0.08);
-        src.playbackRate.setTargetAtTime(rate * (0.85 + 0.45 * Math.min(1, I)), T(), 0.1);
+        const point=p??pos,L=bounded(I,0,1,0),pg=proximity(point);
+        const target=(m.g??1)*(.15+.85*L)*pg*routing.normalization;
+        g.gain.cancelScheduledValues(T());
+        if(a.muted)g.gain.setValueAtTime(0,T());else g.gain.setTargetAtTime(target,T(),.08);
+        if(routing.pan)routing.pan.pan.setTargetAtTime(bounded(a._pan?.(point),-.85,.85,0),T(),.08);
+        src.playbackRate.setTargetAtTime(bounded(rate*(.85+.45*L),.25,16,1),T(),.1);
       },
       stop() {
         if (h._dead) return; h._dead = true;
         a._sus.delete(h);
-        try { g.gain.setTargetAtTime(0.0001, T(), 0.05); src.stop(T() + 0.4); } catch (e) {}
+        try { g.gain.cancelScheduledValues(T());g.gain.setTargetAtTime(0,T(),.05);src.stop(T()+.4); } catch(e) { routing.disconnect(); }
       },
     };
+    src.onended=()=>{h._dead=true;a._sus.delete(h);routing.disconnect();};
     a._sus.add(h);
     return h;
   }

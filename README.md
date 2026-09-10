@@ -43,6 +43,11 @@ npm run dev      # vite dev server → http://localhost:5180
 
 Open **http://localhost:5180**, pick a hero, **ENTER THE ARENA**.
 
+For the current rear-camera flight/combat build, open [PowerWorld](http://localhost:5180/powerworld.html).
+For custom fighters, open [Character Studio](http://localhost:5180/studio.html): **Example characters** creates editable COMET/HELION kits; **New character** opens ORIGIN. Model, pose, camera, flight, attack and progression authoring share the production engine. See the [Studio guide](docs/CHARACTER_STUDIO.md) for saving, portable packages and preview boundaries, and the [current parity ledger](docs/BFP_PARITY_LEDGER.md) for verified work versus remaining gaps. The older gallery and systems notes below also describe the existing isometric city game.
+
+New combat pass: **Options → Control Scheme → ARENA** adds wheel-selected mouse melee. Teleport-equipped fighters double-tap movement to blink in that direction; ORIGIN offers short/medium/long teleport and Deflect guard. BREACH and RECON add military firearm kits. See [controls, editor choices and verified boundaries](docs/ARENA_DEFENSE_PASS.md).
+
 ---
 
 ## Game modes, progression & multiplayer

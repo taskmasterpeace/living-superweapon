@@ -1,0 +1,112 @@
+{
+  "name": "Original generic tandem attack helicopter",
+  "created": "2026-09-09",
+  "externalAssets": [],
+  "rights": "Original project-authored geometry and texture; no external asset license dependencies. No manufacturer markings, insignia or branded model identity.",
+  "authoringSource": "assets-src/frontline-attack-helicopter/author-attack-helicopter.py",
+  "blenderSource": "assets-src/frontline-attack-helicopter/attack-helicopter.blend",
+  "pipeline": "Blender 4.5 CPU authoring/export; glTF Transform 4.5.0 dedup/weld/reorder/resample/PNG lossless. No geometry compression decoder.",
+  "texture": "Original deterministic 512px olive paint PNG, modeled panel seams, localized vertex-color service-panel/exhaust variation; all PBR materials baked to glTF parameters.",
+  "status": "PASS",
+  "triangles": 31416,
+  "draws": 8,
+  "materials": 6,
+  "meshes": {
+    "Armored_fuselage": {
+      "triangles": 2124,
+      "vertices": 5024,
+      "material": "Olive CARC skin"
+    },
+    "Armored_fuselage_1": {
+      "triangles": 560,
+      "vertices": 1047,
+      "material": "Armored smoked glazing"
+    },
+    "Armored_fuselage_2": {
+      "triangles": 20196,
+      "vertices": 34085,
+      "material": "Graphite rotor and machinery"
+    },
+    "Armored_fuselage_3": {
+      "triangles": 3168,
+      "vertices": 5562,
+      "material": "Worn sand armor edges"
+    },
+    "Armored_fuselage_4": {
+      "triangles": 3952,
+      "vertices": 7600,
+      "material": "Tire and intake rubber"
+    },
+    "Armored_fuselage_5": {
+      "triangles": 104,
+      "vertices": 204,
+      "material": "Landing light reflector"
+    },
+    "main_rotor": {
+      "triangles": 1092,
+      "vertices": 2136,
+      "material": "Graphite rotor and machinery"
+    },
+    "tail_rotor": {
+      "triangles": 220,
+      "vertices": 536,
+      "material": "Graphite rotor and machinery"
+    }
+  },
+  "axes": "Metres, +Y up, +Z forward, X lateral; fuselage-centered root",
+  "pivots": {
+    "main_rotor": [
+      0,
+      2.18,
+      -0.42
+    ],
+    "tail_rotor": [
+      -0.22,
+      1.61,
+      -7.12
+    ]
+  },
+  "animation": {
+    "name": "RotorLoop",
+    "duration": 2,
+    "mainRpm": 180,
+    "tailRpm": 480,
+    "loop": true,
+    "shellAnimated": false,
+    "loopClosureRadians": [
+      0,
+      0
+    ],
+    "nativeMixerTest": "Both rotor pivots turn, 2 s loop closes, hull transform unchanged"
+  },
+  "degenerateTriangles": 0,
+  "maxNormalError": 1.2906120949729427e-7,
+  "bounds": {
+    "min": [
+      -6.7033209800720215,
+      -1.8135809898376465,
+      -8.174384117126465
+    ],
+    "max": [
+      6.7033209800720215,
+      2.664384126663208,
+      6.283320993185043
+    ],
+    "size": [
+      13.406641960144043,
+      4.4779651165008545,
+      14.457705110311508
+    ]
+  },
+  "textures": [
+    {
+      "name": "olive-paint",
+      "mimeType": "image/png",
+      "width": 512,
+      "height": 512
+    }
+  ],
+  "bytes": 2280424,
+  "sha256": "734b7ec03a0cc55d43fcb4fc30680d4124e49565c231b9f353c7f7d30fe64e2a",
+  "limitations": "Rigid display asset only; no weapon gameplay, damage states, cockpit interior, independent sensor/chin-gun aim, rotor motion blur or physics flight model. Ground undercarriage at Y approximately -1.814m relative to fuselage origin. Runtime should loop RotorLoop with AnimationMixer; 1x is 180/480 rpm, 1.5x is 270/720 rpm. Native GPU integration is performed by parent."
+}

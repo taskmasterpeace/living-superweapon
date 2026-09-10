@@ -186,7 +186,8 @@ export function makeParty(spec = {}) {
 // 272u — TWELVE lanes. Anything past the gunship belongs to the airport tile, the sky, or a
 // cutscene; it cannot set down between two buildings, and pretending otherwise is exactly how a
 // scale system becomes a lie.
-export const M2U = 1 / 0.19;                    // metres → world units (5.263)
+import {UNITS_PER_METER} from '../core/world-units.js';
+export const M2U = UNITS_PER_METER;
 export const REF = { hero: 9.6, car: 24, bus: 63, street: 22, tower: 150 };
 
 export const AIRCRAFT = [

@@ -13,6 +13,13 @@ const _C1 = new THREE.Color(), _C2 = new THREE.Color(), _C3 = new THREE.Color();
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { clamp, damp, lerp, smoothstep, dampStiff, angleDiff, setBands, DECAL_LIFT, PW_AIR, PW_FX } from '../core/util.js';
 import { reachOf } from '../data/martial.js';
+import { CAMERA_DEFAULTS } from '../data/flight-tuning.js';
+import {cameraProfileOf} from '../data/camera-presets.js';
+import {resolveGroundCamera} from './camera-ground.js';
+import {firearmSightZoom} from './firearm-aim.js';
+import {terrainEntry} from './projectile-contact.js';
+import {updateForegroundVisibility,clearForegroundVisibility} from './foreground-visibility.js';
+const BFP_PITCH_MAX = Math.PI * .497; // Shared mouse/lock limit; leave a stable horizon at the poles.
 import { skyFor, worldOf } from '../data/environments.js';
 import { buildTiles , scaleBoxUV, resetDecalLadder, redrapeDecals } from './citytiles.js';
 import { CELL, districtNameAt, districtTypeAt, thresholdPlan, ROAD, junctionAt, WATER_DEPTHS, roadClear, surveyCity, surveyAt } from '../data/cityplan.js';
@@ -122,6 +129,7 @@ export class World {
     sun.shadow.camera.top = d; sun.shadow.camera.bottom = -d;
     sun.shadow.camera.near = 40; sun.shadow.camera.far = 520;
     sun.shadow.bias = -0.0004;
+    sun.shadow.normalBias = .035;
     this.scene.add(sun); this.scene.add(sun.target);
     this.sun = sun;
     // cool back-rim (opposite the sun) — edge-lights heroes so they pop off the dark arena
@@ -302,12 +310,20 @@ export class World {
     }
     if (this.amb) this.amb.intensity = 0.34 + dl * 0.18;
     if (this.rim) this.rim.intensity = 0.6 + (1 - dl) * 0.35;
+    // The flight arena needs a directional key, not uniform sky/ambient wash.
+    // Apply within the owning daylight update so the next render cannot undo it.
+    if(this.skyWorld==='powerworld'){
+      this.sun.intensity=2.7;
+      this.hemi.intensity=.68;
+      this.amb.intensity=.18;
+      this.rim.intensity=.7;
+    }
     const u = this.skyMat.uniforms;
     // ⚠ AN OUTER-SYSTEM NOON IS GENUINELY DARK. Sunlight falls off as the square of distance, so
     // this is the difference between a colour grade and a place: at Saturn the sun delivers 1% of
     // what it does here. Floored so a match never becomes unplayable — honest, not punishing.
     const lm = this.skyLightMult == null ? 1 : Math.max(0.34, this.skyLightMult);
-    if (this.sun) this.sun.intensity = this._sunI0 == null ? (this._sunI0 = this.sun.intensity) * lm : this._sunI0 * lm;
+    if (this.sun) this.sun.intensity = (this.skyWorld==='powerworld' ? this.sun.intensity : (this._sunI0 ??= this.sun.intensity)) * lm;
     u.uTop.value.lerpColors(P.topNight, P.topDay, dl);
     u.uHor.value.lerpColors(P.horNight, P.horDay, dl);
     u.uGlow.value.copy(P.glowTint).multiplyScalar(0.06 + gold * 0.22);
@@ -1333,13 +1349,14 @@ export class World {
   snapChase() { this._chaseSnap = true; this._fovKick = 1; }
 
   // POINTER-LOCK MOUSE-LOOK (aaa-01 §2.3, requirement table). Integrates a per-frame pointer delta
-  // into the view yaw (unbounded) and pitch (clamped to ±asin(PW_AIR.camPitch) = ±80°, which lands
-  // inside the degenerate-blend case chase() already handles). Marks the look active so chase() uses
+  // into view yaw (unbounded) and pitch (BFP shares the lock limit; legacy view uses ±80°).
+  // Marks the look active so chase() uses
   // it as the axis when there is no lock target. dy is inverted: pushing the mouse UP looks UP.
   mouseLook(dx, dy) {
     if (!dx && !dy) return;
-    const pMax = Math.asin(clamp(PW_AIR.camPitch, 0, 1));   // 80°
-    this._lookYaw += (dx || 0) * this._lookSens;
+    const pMax = this._bfpCameraActive ? BFP_PITCH_MAX : Math.asin(clamp(PW_AIR.camPitch, 0, 1));
+    // +Z is forward for a fighter, so camera-right is -X. Positive yaw would turn LEFT.
+    this._lookYaw -= (dx || 0) * this._lookSens;
     this._lookPitch = clamp(this._lookPitch - (dy || 0) * this._lookSens, -pMax, pMax);
     this._lookActive = true;
   }
@@ -1406,24 +1423,26 @@ export class World {
     this._fades = this._fades || new Map();
     const cam = this.camera.position;
     for (const c of this.cover) {
-      if (!c.mesh || (c.top ?? c.h) < 44) continue;
+      if (!c.mesh || c.noCam || (c.top ?? c.h) < 44) continue;
       const hit = this._segBox3(cam.x, cam.y, cam.z, p.x, p.y + 6, p.z, c);
       let f = this._fades.get(c);
       if (hit && !f) {
         const mats = [];
-        const clone = (m) => { const orig = m.material; m.material = orig.clone(); m.material.transparent = true; mats.push([m, orig]); };
-        clone(c.mesh);
-        for (const ch of c.mesh.children) if (ch.material) clone(ch);
+        const clone = (m) => {
+          const orig = m.material, copy = material => { const next=material.clone(); next.transparent=true; return next; };
+          m.material = Array.isArray(orig) ? orig.map(copy) : copy(orig); mats.push([m, orig]);
+        };
+        c.mesh.traverse(ch=>{if(ch.material)clone(ch);});
         f = { o: 1, mats }; this._fades.set(c, f);
       }
       if (f) {
         f.hit = hit;
         f.o = damp(f.o, hit ? 0.16 : 1, 7, dt);
-        for (const [m] of f.mats) m.material.opacity = f.o;
+        for (const [m] of f.mats) for (const material of Array.isArray(m.material)?m.material:[m.material]) material.opacity = f.o;
         // battle damage respects the cutaway: the crack overlay dims with its building
         if (c.crack && c.crack.visible) c.crack.material.opacity = Math.min(c.crack.userData.baseO ?? c.crack.material.opacity, f.o);
         if (!hit && f.o > 0.985) {
-          for (const [m, orig] of f.mats) { m.material.dispose(); m.material = orig; }
+          for (const [m, orig] of f.mats) { for(const material of Array.isArray(m.material)?m.material:[m.material])material.dispose(); m.material = orig; }
           if (c.crack && c.crack.visible && c.crack.userData.baseO != null) c.crack.material.opacity = c.crack.userData.baseO;
           this._fades.delete(c);
         }
@@ -1499,7 +1518,7 @@ export class World {
     // `pad = 0` this is BYTE-IDENTICAL to the old ray-vs-box (bottom stays the literal 0), so
     // updateOcclusion and aimTrace are unchanged; the camera passes `CAM_PAD` so it stops that far off
     // a wall on ANY approach, not only where the look→eye segment crosses a face.
-    const hx = hxr + pad, hz = hzr + pad, top = topr + pad, bot = pad ? -pad : 0;
+    const hx = hxr + pad, hz = hzr + pad, top = topr + pad, bot = c.frontlineAircraft&&Number.isFinite(c.bottom)?c.bottom-pad:pad ? -pad : 0;
     let tmin = 0, tmax = 1;
     const axes = [[x0, x1 - x0, c.x - hx, c.x + hx], [y0, y1 - y0, bot, top], [z0, z1 - z0, c.z - hz, c.z + hz]];
     for (const [p0, d, mn, mx] of axes) {
@@ -1613,7 +1632,11 @@ export class World {
     // 5. THE GROUND, and it is `heightAt`, NOT a y=0 plane — that plane is nonsense on relief and on a
     //    city with metro trenches. March the ray and take the first crossing (STEP 4u = the ~4u
     //    heightfield lattice; a coarser step steps over a spire's foot, a finer buys nothing).
-    if (R.y < 0) {
+    if(this._ghTriangles){
+      const end={x:O.x+R.x*best*D,y:O.y+R.y*best*D,z:O.z+R.z*best*D};
+      const t=terrainEntry(this,O,end,0);
+      if(Number.isFinite(t)&&t<1){best*=t;kind='ground';ent=null;}
+    }else if (R.y < 0) {
       const far = best * D, step = 4;
       let pt = 0;
       for (let t = step; t <= far; t += step) {
@@ -1665,9 +1688,20 @@ export class World {
     // which is exactly why it survived: a mis-scaled index into a constant field returns the right
     // answer every time. The bug needs relief to show, and most of the 1,050-city sheet has it.
     const A = this._ghArena || this.ARENA, W = S + 1, k = S / (A * 2);
+    if(this._outerTerrain&&(Math.abs(x)>A||Math.abs(z)>A)){
+      const outer=this._outerTerrain.heightAt(x,z);
+      if(outer!==undefined)return outer;
+    }
     const fx = clamp((x + A) * k, 0, S - 0.0001), fz = clamp((z + A) * k, 0, S - 0.0001);
     const c0 = fx | 0, r0 = fz | 0, tx = fx - c0, tz = fz - r0;
     const i0 = r0 * W + c0, i1 = i0 + W;
+    if (this._ghTriangles) {
+      // PowerWorld's visible PlaneGeometry splits each cell across top-right
+      // to bottom-left (indices a,b,d / b,c,d). Sample that rendered surface;
+      // bilinear interpolation can put feet above or beneath a crater face.
+      if (tx + tz <= 1) return gh[i0] + (gh[i0 + 1] - gh[i0]) * tx + (gh[i1] - gh[i0]) * tz;
+      return gh[i1 + 1] + (gh[i1] - gh[i1 + 1]) * (1 - tx) + (gh[i0 + 1] - gh[i1 + 1]) * (1 - tz);
+    }
     const a = gh[i0] + (gh[i0 + 1] - gh[i0]) * tx;
     const b = gh[i1] + (gh[i1 + 1] - gh[i1]) * tx;
     return a + (b - a) * tz;
@@ -2050,6 +2084,7 @@ export class World {
     }
     for (const c of this.coverAll) {
       c.hp = c.maxHp; c.destroyed = false;
+      if(c.frontlineAircraft)continue; // Dynamic flight owner retains its pose on terrain reset.
       c.mesh.visible = true; c.mesh.position.set(c.x, c.y0, c.z); c.mesh.scale.set(1, 1, 1);
       if (c.crack) { c.crack.visible = false; c.crack.material.opacity = 0; c.crack.position.copy(c.mesh.position); c.crack.scale.set(1, 1, 1); }
     }
@@ -2349,13 +2384,6 @@ export class World {
     // (Shader-safe: the star hash keys off the dome-space DIRECTION, which is exactly the view
     // direction once the center is the eye. News POV recenters for its own pass in newscrew.)
     if (this.skyMesh) this.skyMesh.position.copy(this.camera.position);
-    this.composer.render();
-    // ⚠ TICK AFTER THE RENDER, NEVER BEFORE. The impact frame is a ONE-FRAME uniform: ticking first
-    // decrements it to zero and clears `uInvert` before the frame it belongs to is ever drawn, so
-    // the punch lands and the screen does not change. Measured as identical mean brightness before,
-    // during and after — a effect that is switched on and off between the same two renders.
-    // The print pass keeps its own clock because the sim stops for menus and this must not.
-    if (this.print) this.print.tick(sdt);
     this._qCool -= 0.016;
     // ⚠ THE GOVERNOR INVERTED AT 40 Hz, AND THE STEAM DECK GUIDE TELLS PLAYERS TO LOCK 40 Hz.
     // `_ema` tracks the PRESENTED interval, and the loop is rAF-driven — so a display locked at
@@ -2375,6 +2403,15 @@ export class World {
       if (this._ema > R * 1.45 && this._qTier > 0) { this._qTier--; this._applyQuality(); this._qCool = 1.4; }
       else if (this._ema < R * 1.08 && this._qTier < 2) { this._qTier++; this._applyQuality(); this._qCool = 4; }
     }
+    // Quality changes resize (and clear) the canvas. Finish them BEFORE drawing so
+    // every presented frame contains the scene, including the transition frame.
+    this.composer.render();
+    // ⚠ TICK AFTER THE RENDER, NEVER BEFORE. The impact frame is a ONE-FRAME uniform: ticking first
+    // decrements it to zero and clears `uInvert` before the frame it belongs to is ever drawn, so
+    // the punch lands and the screen does not change. Measured as identical mean brightness before,
+    // during and after — a effect that is switched on and off between the same two renders.
+    // The print pass keeps its own clock because the sim stops for menus and this must not.
+    if (this.print) this.print.tick(sdt);
   }
   /**
    * THE PROJECTION, for whichever camera is active. One place, because an orthographic camera is
@@ -2414,6 +2451,7 @@ export class World {
    * the other axis by swapping a whole SCENE into that pass.
    */
   setCameraMode(mode) {
+    if(mode!=='chase')clearForegroundVisibility(this);
     if (mode === this.camMode) return this.camera;
     if (mode === 'chase' && !this.camChase) {
       this.camChase = new THREE.PerspectiveCamera(58, innerWidth / innerHeight, 0.6, 4200);
@@ -2516,8 +2554,83 @@ export class World {
    * ⚠ ESF's own changelog says it forced FIRST person during melee "so the screen doesn't fuck up"
    * — the benchmark gave up on this case rather than solve it. There is no reference to copy here.
    */
-  chase(subject, target, dt) {
+  // BFP's camera is a view-space offset, not a two-body cinematic composition.
+  // Keep the same raised rear boom through flight, aim and lock. In particular,
+  // do not orbit shoulders, compress the lens at range, or flatten dive angles.
+  // Values are adapted to our rig, not copied Quake world units.
+  _chaseBfp(subject,target,dt) {
+    const c=this.setCameraMode('chase'),S=subject.pos,snap=this._chaseSnap;
+    const profile=cameraProfileOf(subject),value=key=>profile?.[key]??CAMERA_DEFAULTS[key];
+    this._camClaimTick(subject,dt); // Reap gameplay claims; they do not reframe this camera.
+    if(!this._lookActive){this._lookYaw=subject.facing;this._lookPitch=0;this._lookActive=true;}
+    if(subject._aircraftVehicle){
+      const aircraft=subject._aircraftVehicle;
+      this._lookYaw=snap?aircraft.yaw:this._lookYaw+angleDiff(this._lookYaw,aircraft.yaw)*(1-Math.exp(-5*dt));
+      this._lookPitch=damp(this._lookPitch,aircraft.kind==='jet'?(aircraft.pitch||0)*.6:0,5,dt);
+      target=null;
+    }
+    const a=this._flightAnchor||(this._flightAnchor=new THREE.Vector3());
+    // Movement already accelerates/brakes in physics. A second translation
+    // spring makes the fighter slide under the reticle and adds braking lag.
+    a.set(S.x,S.y+5.4-(subject._pronePose?.drop||subject._crouchPose?.drop||0),S.z);
+    if(this._sightOwner!==subject){this._sightOwner=subject;this._sightZoom=1;}
+    this._sightZoom=damp(this._sightZoom??1,firearmSightZoom(subject),12,dt);
+    const sight=this._sightZoom,lift=value('height');
+    if(target) {
+      const focus=target.center(this._combatFocus||(this._combatFocus=new THREE.Vector3()));
+      const dx=focus.x-a.x,dy=focus.y-a.y,dz=focus.z-a.z,horizontal=Math.hypot(dx,dz),distance=Math.hypot(horizontal,dy);
+      // Keep BFP's full raised boom. Inside close contact the target may sit
+      // below screen center: shrinking lift to force perfect centering stacks
+      // the bodies and pitches a level fight toward the floor. Bound only the
+      // parallax correction, not the viewing angle toward high/low opponents.
+      const focusDistance=Math.max(distance,lift*1.5,.001);
+      const yaw=horizontal>.001?Math.atan2(dx,dz):this._lookYaw;
+      // At the nadir, keep the raised boom and horizon rather than rolling
+      // through -90 degrees to force perfect centering. The projected lock
+      // reticle still identifies the target slightly above screen center.
+      const pitch=clamp(Math.atan2(dy,horizontal)-Math.asin(clamp(lift/focusDistance,0,.999)),-BFP_PITCH_MAX,BFP_PITCH_MAX);
+      this._lookYaw=snap?yaw:this._lookYaw+angleDiff(this._lookYaw,yaw)*(1-Math.exp(-12*dt));
+      this._lookPitch=snap?pitch:damp(this._lookPitch,pitch,12,dt);
+    }
+    const yaw=this._lookYaw,pitch=this._lookPitch,cp=Math.cos(pitch),sp=Math.sin(pitch),sy=Math.sin(yaw),cy=Math.cos(yaw);
+    const ax=sy*cp,ay=sp,az=cy*cp,ux=-sy*sp,uy=cp,uz=-cy*sp;
+    this.camBasis.set(ax,ay,az);
+    // Studio can explicitly author boost offsets. The BFP default is fixed.
+    const boost=subject.cruiseHeld?clamp(subject.vel.length()/Math.max(1,PW_AIR.top),0,1):0;
+    // Lengthen only the axial boom as the lens narrows: body scale and its
+    // screen offset stay stable, and the camera ray remains on the same line.
+    const range=(value('range')+value('boostRange')*boost)*sight,shoulder=value('shoulder');
+    const wideFov=clamp(value('fov')+value('boostFov')*boost,30,100);
+    this._chaseDist=range;this._chaseFov=2*Math.atan(Math.tan(wideFov*Math.PI/360)/sight)*180/Math.PI;
+    this._chaseFovBase=this._chaseFov;this._combatLensGain=1;this._flightRelease=null;
+    this.camPos.set(a.x-ax*range-cy*shoulder+ux*lift,a.y-ay*range+uy*lift,a.z-az*range+sy*shoulder+uz*lift);
+    const aspect=c.aspect||16/9,tan=Math.tan(this._chaseFov*Math.PI/360),pad=c.near*Math.sqrt(1+tan*tan*(1+aspect*aspect))*1.35;
+    resolveGroundCamera(this,subject,a,this.camPos,pad,dt);
+    this._shake*=Math.exp(-7*dt);this._shakeT=(this._shakeT??0)+dt;
+    const kick=Math.min(PW_FX.shakeMaxDeg,this._shake*PW_FX.shakeDegPer)*Math.PI/180*Math.sin(this._shakeT*PW_FX.oct1Hz*Math.PI*2);
+    this.camTarget.set(this.camPos.x+ax*100+ux*kick*100,this.camPos.y+ay*100+uy*kick*100,this.camPos.z+az*100+uz*kick*100);
+    this._applyProj();c.position.copy(this.camPos);c.lookAt(this.camTarget);
+    this._combatLocked=!!target;
+    this.sun.position.set(Math.round(S.x)+this.sunOff.x,S.y+5.4+this.sunOff.y,Math.round(S.z)+this.sunOff.z);
+    this.sun.target.position.set(Math.round(S.x),S.y+5.4,Math.round(S.z));
+    this._chaseSnap=false;
+    updateForegroundVisibility(this,subject,target,dt);
+  }
+
+  chase(subject, target, dt, style='auto') {
+    this._bfpCameraActive=style==='bfp'||(style==='auto'&&!!subject._openSky);
+    // Ownership can change while both views remain 'chase'. Refresh the cheap
+    // shadow flag without resizing buffers or waiting for a quality transition.
+    if(this.sun)this.sun.castShadow=(this._qTier??2)>0&&this._bfpCameraActive;
+    if(this._bfpCameraActive)return this._chaseBfp(subject,target,dt);
+    clearForegroundVisibility(this);
     const c = this.setCameraMode('chase');
+    const cameraProfile = cameraProfileOf(subject);
+    const cameraValue = key => cameraProfile?.[key] ?? CAMERA_DEFAULTS[key];
+    const combatView = !!subject._openSky;
+    if(!target && !this._lookActive) {
+      this._lookYaw=subject.facing;this._lookPitch=0;this._lookActive=true;
+    }
     const S = subject.pos, spd = Math.hypot(subject.vel.x, subject.vel.y, subject.vel.z);
     const gap = target ? Math.hypot(target.pos.x - S.x, target.pos.y - S.y, target.pos.z - S.z) : 40;
     // ---- FOV rides speed. BFP exposes FOV as a player dial and the reason is that it is the single
@@ -2551,16 +2664,30 @@ export class World {
     const ov = this._camClaimTick(subject, dt);
     // ⚠ FOV is TWO gestures that must not fight: the speed ride (slow, aesthetic) and the punch KICK
     // (instant in, eased out). Split so a punch cannot be smeared by the speed damp (aaa-06 §5.1).
-    this._chaseFovBase = damp(this._chaseFovBase ?? 58, clamp(58 + k * 16 - 6 * clinch + ov.fov, 40, 76), 4, dt);
+    const freeFov = cameraValue('fov') + cameraValue('boostFov') * k;
+    const fovTarget = target && !combatView ? clamp(58 + k * 16 - 6 * clinch + ov.fov,40,76) : clamp(freeFov + ov.fov,30,100);
+    this._chaseFovBase = damp(this._chaseFovBase ?? cameraValue('fov'), fovTarget, 4, dt);
     this._fovKick = damp(this._fovKick ?? 1, 1, PW_FX.punchHome, dt);   // fast in (Math.min), slow out
-    this._chaseFov = this._chaseFovBase * this._fovKick;
+    // At range a wide, short boom makes the enemy a speck beside the player.
+    // Pair lens compression with the same boom multiplier: foreground scale
+    // stays steady while the opponent gains pixels. Close combat/free look
+    // retain their authored lens; unlocking releases this envelope smoothly.
+    const lensBase=this._chaseFovBase*this._fovKick;
+    const previousLens=this._chaseFov ?? lensBase;
+    const focusTarget=combatView&&target ? 1+.8*smoothstep(clamp((gap-3*Rj)/(6*Rj),0,1)) : 1;
+    const releasing=combatView&&!target&&(this._combatLocked||this._flightRelease);
+    this._combatLensGain=this._chaseSnap ? focusTarget : releasing ? (this._combatLensGain ?? 1) : damp(this._combatLensGain ?? 1,focusTarget,4,dt);
+    const maxLensGain=Math.max(1,Math.tan(lensBase*Math.PI/360)/Math.tan(Math.PI/12));
+    let lensGain=combatView ? Math.min(this._combatLensGain,maxLensGain) : 1;
+    this._chaseFov=2*Math.atan(Math.tan(lensBase*Math.PI/360)/lensGain)*180/Math.PI;
     // CAM_PAD — DERIVED from the near-plane corner radius (aaa-04 §3.4), at the WIDEST fov the frustum
     // can present (the clamp ceiling), NOT the live fov: the FOV can widen the frame AFTER a trace, so
     // the pad must protect the largest near plane the frustum will ever show, or a wall cleared at 40°
     // reappears inside the near corners at 74°. The 1.35 factor covers one frame of damping between
     // the trace and the next. Never hand-pick the pad.
     const _asp = (typeof innerWidth === 'number' ? innerWidth / Math.max(1, innerHeight) : 16 / 9);
-    const CAM_PAD = c.near * Math.sqrt(1 + Math.tan((76 * Math.PI / 180) / 2) ** 2 * (1 + _asp * _asp)) * 1.35;
+    const maxFov = Math.max(76, clamp(cameraValue('fov') + cameraValue('boostFov'),30,100), this._chaseFov);
+    const CAM_PAD = c.near * Math.sqrt(1 + Math.tan((maxFov * Math.PI / 180) / 2) ** 2 * (1 + _asp * _asp)) * 1.35;
     // ---- the axis toward what we are looking at: a lock target frames both bodies; else the player's
     // own MOUSE-LOOK steers the view (aaa-01 §2.3 — a lock overrides look for movement, never the
     // camera); else fall back to travel direction, then facing. When the mouse is not steering, seed
@@ -2579,7 +2706,7 @@ export class World {
     // rolls to follow that is nausea. The vertical component is damped, not obeyed — EXCEPT under the
     // player's own mouse-look, where the pitch is a deliberate choice and is obeyed to ±80°
     // (PW_AIR.camPitch); that lands inside the degenerate-blend case below, which already handles it.
-    ay = (this._lookActive && !target) ? clamp(ay, -PW_AIR.camPitch, PW_AIR.camPitch)
+    ay = (combatView || (this._lookActive && !target)) ? clamp(ay, -PW_AIR.camPitch, PW_AIR.camPitch)
                                        : clamp(ay * 0.55, -0.82, 0.82);
     // ⚠ AND THE DEGENERATE CASE HAS TO BE HANDLED EXPLICITLY. With the target straight up, `ax` and
     // `az` both go to zero — the axis has no horizontal part to sit behind, the perpendicular is
@@ -2589,16 +2716,81 @@ export class World {
     // The fix is to borrow the horizontal direction from the subject's own FACING, which always has
     // one, and blend it in as the axis approaches vertical.
     const horiz = Math.hypot(ax, az);
-    if (horiz < 0.35) {
+    if (target && !combatView && horiz < 0.35) {
       const w = 1 - horiz / 0.35;
       ax += Math.sin(subject.facing) * w; az += Math.cos(subject.facing) * w;
     }
+    if (target && combatView && horiz < .174) {
+      // Preserve a stable horizon at the poles without flattening ordinary climbs/dives.
+      const yaw = horiz > .001 ? Math.atan2(ax,az) : (this._chaseYaw ?? subject.facing);
+      ax=Math.sin(yaw)*.174;az=Math.cos(yaw)*.174;
+    }
     L = Math.hypot(ax, ay, az) || 1; ax /= L; ay /= L; az /= L;
-    // ---- PUBLISH THE UNCLAIMED AXIS (aaa-04 §5.6). This is the direction the camera is trying to
-    // look along, AFTER the degenerate blend and normalisation and BEFORE any frame claim — JKA's
-    // `pm->ps->viewangles`. game.cameraDrive reads camBasis for the move/aim basis instead of the
-    // live camera quaternion, so a 360° camera flourish can never invert the controls.
+    // Publish the normalized, unclaimed axis for preview/debug consumers before
+    // cosmetic framing adjustments. PowerWorld's controller derives its locked
+    // approach from the actual opponent, never from the claimed camera orbit.
     this.camBasis.set(ax, ay, az);
+    if (combatView && target) {
+      // A close fly-by can flip atan2 almost 180 degrees in one frame. Bound
+      // the orbit, not mouse look or the movement basis. Fast opponents need
+      // a larger angular budget or a sustained circle leaves the player behind.
+      const relative=this._combatRelative || (this._combatRelative=new THREE.Vector3());
+      const velocity=this._combatRelativeVelocity || (this._combatRelativeVelocity=new THREE.Vector3());
+      const tx=target.pos.x-S.x,ty=target.pos.y-S.y,tz=target.pos.z-S.z;
+      const continuous=!this._chaseSnap && this._orbitTarget===target && dt>0;
+      const vx=continuous?(tx-relative.x)/dt:0,vy=continuous?(ty-relative.y)/dt:0,vz=continuous?(tz-relative.z)/dt:0;
+      const relativeSpeed=Math.hypot(vx,vy,vz),lastSpeed=velocity.length();
+      if(!continuous) {this._combatLaneSide=1;this._combatPassArc=0;}
+      // Choose the side of an approaching pass while the lane is still open.
+      // A lock acquired in a clinch commits its already-visible default side.
+      // Hold it through the encounter: switching at closest approach swings
+      // the camera across the attack. Mirrored passes deserve mirrored routes.
+      const turnSide=vx*tz-vz*tx;
+      // A distant vertical lock still has an open shoulder lane. Reselect only
+      // while BOTH automatic openings are zero, never from small vertical jukes.
+      if(gap>3*Rj && Math.abs(ay)<=.35 && relativeSpeed>4 &&
+        Math.abs(turnSide)>relativeSpeed*.5 && tx*vx+ty*vy+tz*vz<0) {
+        this._combatLaneSide=-Math.sign(turnSide);
+      }
+      // Track a sustained curved path at its own turn rate. Speed alone cannot
+      // distinguish a close circle from a straight pass through the aim axis.
+      const turnCos=continuous && relativeSpeed>4 && lastSpeed>4
+        ? clamp((vx*velocity.x+vy*velocity.y+vz*velocity.z)/(relativeSpeed*lastSpeed),-1,1) : 1;
+      // An abrupt reversal is not a sustained orbit. Treating its pi/dt impulse
+      // as curvature removed the angular limit for exactly the juke frame.
+      const pathTurn=turnCos>0?Math.acos(turnCos)/Math.max(dt,.001):0;
+      velocity.set(vx,vy,vz);
+      relative.set(tx,ty,tz);this._orbitTarget=target;
+      const orbitRate=Math.max(4,2*relativeSpeed/(gap+cameraValue('range')),pathTurn*1.1);
+      let yaw = Math.atan2(ax, az);
+      let passing=false;
+      const horizontalSpeed=Math.hypot(vx,vz);
+      if(continuous && horizontalSpeed>30 && pathTurn<1 && Math.abs(ay)<.35) {
+        // A near-zero miss distance makes the target's azimuth singular. Give
+        // the camera (not the fighter or aim) a continuous, body-sized turn arc.
+        const sx=vz/horizontalSpeed,sz=-vx/horizontalSpeed;
+        const lateral=tx*sx+tz*sz;
+        // Orbit the eye on the passing side, not behind the target's azimuth:
+        // the latter necessarily sweeps the subject between the eye and foe.
+        if(Math.abs(lateral)<2*Rj) {
+          const cameraLateral=-Math.sign(lateral || -this._combatLaneSide)*2*Rj;
+          yaw=Math.atan2(tx+sx*(cameraLateral-lateral),tz+sz*(cameraLateral-lateral));
+          passing=true;
+        }
+      }
+      // The angular limiter handles route changes; this separate envelope keeps
+      // the shoulder continuous when speed, curvature or elevation changes mode.
+      this._combatPassArc=damp(this._combatPassArc ?? 0,passing?1:0,6,dt);
+      const nearPole = Math.abs(ay) > .85;
+      if (!this._chaseSnap && this._combatOrbitYaw != null) {
+        const delta = angleDiff(this._combatOrbitYaw, yaw), step = (nearPole ? 2.4 : orbitRate) * dt;
+        yaw = this._combatOrbitYaw + clamp(delta, -step, step);
+        this._poleOrbit = nearPole || Math.abs(delta) > step;
+        const horizontal = Math.hypot(ax, az);
+        ax = Math.sin(yaw) * horizontal; az = Math.cos(yaw) * horizontal;
+      } else this._poleOrbit = nearPole;
+      this._combatOrbitYaw = yaw;
+    } else { this._combatOrbitYaw = null; this._combatLaneSide=null; this._combatPassArc=false; this._poleOrbit = false; this._orbitTarget=null; }
     // ⚠ THE CLAIM MAY NEVER ROTATE THE MOVEMENT BASIS (aaa-04 §5.6, openjk.md:2177-2180). `ov.yaw`
     // orbits the FRAME — the axis the eye and look point are placed from — AFTER camBasis is published
     // above, so a full 360° flourish spins the picture while movement/aim stay keyed to the unclaimed
@@ -2628,7 +2820,10 @@ export class World {
     // change) — adding them double-counts a diving flick. The 0.85 cap is the JO→JA lesson: damping
     // must never switch off entirely or a hard flick teleports the lens. `_stiffScale` is a test seam
     // (default 1) so the gate can force `stiff = 0` and prove the known-bad ≥40° residual.
-    const stiff = this._chaseSnap ? 0 : Math.min(0.85, Math.max(_yawStiff, _pStiff)) * (this._stiffScale ?? 1);
+    // Combat view already aims directly at the target each frame. The legacy
+    // per-frame pitch stiffener made its eye fight actor-clearance constraints
+    // and jump metres at high refresh rates; keep its eye a time-based spring.
+    const stiff = this._chaseSnap || combatView ? 0 : Math.min(0.85, Math.max(_yawStiff, _pStiff)) * (this._stiffScale ?? 1);
     this._chaseYaw = _yaw;
     // ---- DISTANCE, and it is DERIVED, not chosen. A perspective camera at FOV f sees a vertical
     // extent of `2·D·tan(f/2)` — at 58° that is 1.11·D. To hold two 9.6u fighters AND the gap
@@ -2649,7 +2844,8 @@ export class World {
     // ⚠ AIR RIDER (from AIR, aaa doc §Wave3): `k·16 → k·26`. Open-sky top speed rose to PW_AIR.top=210,
     // so two fighters close far faster (gate A2: both in frame at 210 u/s) — the speed pull-back must
     // earn more standoff. `ov.range` is the frame claim's additive distance (0 = null claim).
-    const want = clamp(Math.max(24, fit * 1.15) + k * 26 + ov.range, 24, 86);   // 15% margin so nobody rides the edge
+    const want = target && !combatView ? clamp(Math.max(24, fit * 1.15) + k * 16 + ov.range, 24, 76)
+      : cameraValue('range') + cameraValue('boostRange') * k + ov.range;
     // ⚠ THE SNAP (aaa-04 §4.8): on a discontinuity the damped state copies ideal with no lerp, so the
     // eye does not fly across the map. `snapChase()` sets `_chaseSnap`; this helper honours it once.
     const snap = this._chaseSnap;
@@ -2686,7 +2882,9 @@ export class World {
       }
     }
     // ---- and the eye, behind the subject along that axis, lifted
-    const d = this._chaseDist;
+    // Unlock puts the entire extra standoff into the one release spring.
+    // A shrinking ideal boom would add a second, unbudgeted translation.
+    const d = this._chaseDist*(target?lensGain:1);
     // ⚠ AND IT LOOKS SLIGHTLY DOWN, not up. The first version lifted the eye by `d·0.20` and pulled
     // it down again by `ay·d·0.35`, so against a target above you the camera ended up UNDERNEATH the
     // pair looking up — which is where the screenshot's "staring up at a giant" framing came from.
@@ -2719,6 +2917,129 @@ export class World {
     this.camPos.x = E1(this.camPos.x, ex, 8);
     this.camPos.y = E1(this.camPos.y, ey, 6);
     this.camPos.z = E1(this.camPos.z, ez, 8);
+    let pairedBoom=0;
+    if (!target || combatView) {
+      // Mouse rotation is direct. Only the follow anchor has a short spring, so world motion
+      // has weight without adding rotational input latency or changing the requested pitch.
+      if (!this._flightAnchor || snap) this._flightAnchor = new THREE.Vector3(S.x,S.y+5.4-(subject._pronePose?.drop||subject._crouchPose?.drop||0),S.z);
+      const a=this._flightAnchor;
+      const anchorX=a.x,anchorY=a.y,anchorZ=a.z;
+      a.x=D1(a.x,S.x+subject.vel.x*.035,22);
+      a.y=D1(a.y,S.y+5.4-(subject._pronePose?.drop||subject._crouchPose?.drop||0)+subject.vel.y*.035,22);
+      a.z=D1(a.z,S.z+subject.vel.z*.035,22);
+      const upx=-ax*ay/(Math.hypot(ax,az)||1), upy=Math.hypot(ax,az), upz=-az*ay/(Math.hypot(ax,az)||1);
+      const lift=(target ? Math.max(14,cameraValue('height')) : cameraValue('height')) + ov.vert + (target ? d*ov.pitch : 0);
+      // In a clinch, a short lateral opening stops the foreground torso eclipsing the foe.
+      // At range we return to BFP's centered rear view; never zoom out to fit empty space.
+      const closeOpening=12*smoothstep(clamp((14-gap)/8,0,1));
+      // Automatic opening was calibrated with a 28u boom. Preserve its clearance
+      // at the player's plane as the boom changes, including bulky forearm shields.
+      // The authored shoulder offset remains additive and free aim stays centered.
+      const separationScale=(d+gap)/(28+gap);
+      // Tilting the view across a vertical fight also needs a side lane: with
+      // a centered boom, that tilted sightline can pass straight through the
+      // player's torso. Reserve a stable lane from the combat axis, not limbs.
+      const verticalOpening=combatView?12*smoothstep(clamp((Math.abs(ay)-.35)/.5,0,1)):0;
+      // The pass arc already reserves the viewing lane. Adding the stationary
+      // clinch shoulder would count that clearance twice and accelerate the view.
+      let opening=target?(12*clinch+closeOpening+verticalOpening)*separationScale*(1-(this._combatPassArc || 0)):0;
+      if(combatView && target && subject.airborne && closeOpening>0) {
+        // A prone sideways flyer presents body LENGTH across the shot lane.
+        // Reserve that envelope while the flight pose engages (4→34u/s), then
+        // relax it as the clinch opens. This does not swap camera shoulders.
+        const sideSpeed=Math.abs(subject.vel.x*px+subject.vel.z*pz);
+        const sideFlight=smoothstep(clamp((sideSpeed-4)/30,0,1))*closeOpening/12;
+        const lane=(subject.radius || 2.2)+8*(subject.parts?.g?.userData.frame?.scale || 1);
+        const angle=Math.atan2(lane,Math.max(1,gap))+Math.asin(clamp(lane*gap/(d*Math.hypot(lane,gap)),0,.95));
+        opening=Math.max(opening,d*Math.tan(Math.min(1.3,angle))*sideFlight);
+      }
+      // Orbit the automatic opening around a constant-length horizontal boom.
+      // Adding it to the rear offset made a clinch pull out to ~44u and shrank
+      // both bodies. Authored shoulder/claim offsets remain separate additions.
+      const orbitScale=d/Math.hypot(d,opening);
+      const rear=d*orbitScale;
+      const shoulder=cameraValue('shoulder') + opening*orbitScale*(this._combatLaneSide ?? 1) + (target?d*ov.horz:0);
+      let bx=a.x-ax*rear-px*shoulder+upx*lift,by=a.y-ay*rear+upy*lift,bz=a.z-az*rear-pz*shoulder+upz*lift;
+      if(combatView && target) {
+        // A close vertical lock needs a view across the bodies, not down the
+        // player's boots (or up their torso). Limit only the cosmetic eye's
+        // elevation: a level-to-30° view in a clinch, opening to ±45° at range.
+        // Beyond that, a ten-unit body reads as a head-sized top-down sliver.
+        // Keep its azimuth and start from the authored distance, then spring toward this ideal;
+        // never choose a new camera route from animated limb intersections.
+        const focus=target.center(this._combatFocus || (this._combatFocus=new THREE.Vector3()));
+        const dx=bx-focus.x,dy=by-focus.y,dz=bz-focus.z;
+        const horizontal=Math.hypot(dx,dz);
+        let radius=Math.hypot(horizontal,dy);
+        const elevation=Math.atan2(dy,horizontal);
+        const close=1-smoothstep(clamp((gap-10)/23,0,1));
+        const limit=Math.PI/4;
+        const limited=clamp(elevation,lerp(-limit,0,close),lerp(limit,Math.PI/6,close));
+        const fitWeight=1-smoothstep(clamp((gap-FRAME_MAX)/(FRAME_MAX*.5),0,1));
+        if(fitWeight>0 && Math.abs(limited-elevation)>.0001) {
+          // An oblique view must still contain the player. Solve the minimum
+          // target distance from the projected rest-body envelope, rather than
+          // a gap-based zoom multiplier. Stable proportions, not animated bones,
+          // keep idle motion from pumping the lens. Very distant locks still
+          // use the existing offscreen indicator instead of shrinking the fight.
+          const ch=Math.cos(limited),ny=Math.sin(limited);
+          const nx=dx/Math.max(horizontal,.001)*ch,nz=dz/Math.max(horizontal,.001)*ch;
+          const ux=-nx*ny/ch,uy=ch,uz=-nz*ny/ch;
+          const height=12*(subject.parts?.g?.userData.frame?.scale || 1);
+          const extent=Math.tan(this._chaseFov*Math.PI/360)*.88;
+          let fitRadius=radius;
+          for(const h of [0,height]) {
+            const vx=S.x-focus.x,vy=S.y+h-focus.y,vz=S.z-focus.z;
+            fitRadius=Math.max(fitRadius,vx*nx+vy*ny+vz*nz+Math.abs(vx*ux+vy*uy+vz*uz)/extent);
+          }
+          radius=lerp(radius,fitRadius,fitWeight);
+        }
+        const scale=radius*Math.cos(limited)/Math.max(horizontal,.001);
+        bx=focus.x+dx*scale;by=focus.y+radius*Math.sin(limited);bz=focus.z+dz*scale;
+      }
+      // Keep the intended standoff, not the eye's damped excursion from last
+      // frame's wall. Otherwise a pinned camera regains zoom every frame.
+      pairedBoom=Math.hypot(bx-a.x,by-a.y,bz-a.z);
+      if(target) {
+        // Translation belongs to the follow anchor. Damping it again in world
+        // space lets a fast strafe erase the shoulder clearance. Only spring
+        // the orbit relative to that moving anchor; collision still runs last.
+        this.camPos.set(E1(c.position.x+a.x-anchorX,bx,14),E1(c.position.y+a.y-anchorY,by,14),E1(c.position.z+a.z-anchorZ,bz,14));
+      }
+      else {
+        this.camPos.set(bx,by,bz);
+        if(snap) this._flightRelease=null;
+        else if(combatView && this._combatLocked) {
+          this._flightRelease=(this._flightRelease || new THREE.Vector3()).copy(c.position).sub(this.camPos);
+          this._flightReleaseVelocity=(this._flightReleaseVelocity || new THREE.Vector3()).set(0,0,0);
+          this._flightReleaseLength=this._flightRelease.length();
+          this._flightReleaseLens=Math.max(1,Math.tan(lensBase*Math.PI/360)/Math.tan(previousLens*Math.PI/360));
+          this._flightReleaseBoom=c.position.distanceTo(a)/this._flightReleaseLens;
+          // A zero-velocity critical spring starts gently even when the combat
+          // fit and free boom are far apart. Bound its peak translation speed.
+          this._flightReleaseRate=Math.min(16,120*Math.E/Math.max(1,this._flightRelease.length()));
+        }
+        if(this._flightRelease) {
+          const offset=this._flightRelease,velocity=this._flightReleaseVelocity;
+          const rate=this._flightReleaseRate,decay=Math.exp(-rate*dt);
+          const jx=(velocity.x+rate*offset.x)*dt,jy=(velocity.y+rate*offset.y)*dt,jz=(velocity.z+rate*offset.z)*dt;
+          offset.set((offset.x+jx)*decay,(offset.y+jy)*decay,(offset.z+jz)*decay);
+          velocity.set((velocity.x-rate*jx)*decay,(velocity.y-rate*jy)*decay,(velocity.z-rate*jz)*decay);
+          this.camPos.add(this._flightRelease);
+          // Lens recovery follows the same zero-velocity spring progress; it
+          // cannot start a second camera movement or keep zoom after standoff ends.
+          const progress=Math.min(1,offset.length()/Math.max(.0001,this._flightReleaseLength));
+          this._flightReleaseProgress=progress;
+          lensGain=Math.min(maxLensGain,1+(this._flightReleaseLens-1)*progress);
+          this._combatLensGain=lensGain;
+          if(this._flightRelease.lengthSq()<.0001) this._flightRelease=null;
+        }
+      }
+      this.camTarget.set(a.x,a.y,a.z);
+      // Prediction can carry the anchor into cover; validate the trace origin in free flight too.
+      const anchorT=this._camNearestT(S.x,S.y+5.4,S.z,a.x,a.y,a.z,CAM_PAD);
+      if(anchorT<.999) this.camTarget.set(S.x+(a.x-S.x)*anchorT,S.y+5.4+(a.y-S.y-5.4)*anchorT,S.z+(a.z-S.z)*anchorT);
+    }
     // ---- CAMERA COLLISION, TRACE B (aaa-04 §3.3). The eye against the CORRECTED look point. The
     // shoulder offset is already INSIDE the eye expression above (§3.3: do not refactor it out — trace
     // B covers it). No push-out, no lerp, no swing-around: the camera stops PAD-before the wall and the
@@ -2740,6 +3061,19 @@ export class World {
     // ground by construction (a footprint below the terrain would have been caught by trace B), so it
     // can never push the eye up into a building it just cleared.
     this.camPos.y = Math.max(this.camPos.y, this.heightAt(this.camPos.x, this.camPos.z) + CAM_PAD);
+    // A wall can remove the extra standoff. Give its matching zoom back on the
+    // same frame rather than magnifying the foreground body against the wall.
+    // Locked and free lift differ. Preserve the effective reference on the
+    // unlock frame, then recover the authored free reference with the spring.
+    const lensReference=!target&&this._flightRelease ? lerp(pairedBoom,this._flightReleaseBoom,this._flightReleaseProgress) : pairedBoom;
+    const availableBoom=lensReference>1e-4?this.camPos.distanceTo(this.camTarget)/lensReference:1;
+    const clearGain=Math.max(1,Math.min(lensGain,(target?lensGain:1)*availableBoom));
+    this._chaseFov=2*Math.atan(Math.tan(lensBase*Math.PI/360)/clearGain)*180/Math.PI;
+    if (!target) this.camTarget.set(this.camPos.x+ax*(d+30),this.camPos.y+ay*(d+30),this.camPos.z+az*(d+30));
+    else if(combatView) {
+      // The actual opponent is the attack point, not a compressed fraction of their altitude.
+      target.center(this.camTarget);
+    }
     // ⚠ ANGULAR SHAKE, NEVER THE WORLD-SPACE ONE. `follow()` adds a metres-long random vector to both
     // the eye and the look point; at ortho that is ~1.8° of jitter, but at a chase distance the same
     // 8u clamp would swing the camera through the fighter. Here the shake is an ANGLE on the look
@@ -2768,6 +3102,13 @@ export class World {
     this._applyProj();
     c.position.set(this.camPos.x, this.camPos.y, this.camPos.z);
     c.lookAt(this.camTarget.x + jx, this.camTarget.y + jy, this.camTarget.z + jz);
+    if(combatView && target) {
+      // Hand free aim the view the player actually saw, not the body-to-body axis.
+      // Otherwise releasing a raised/shoulder lock kicks the reticle by 10–20 degrees.
+      this._lookYaw=Math.atan2(_vx,_vz);
+      this._lookPitch=Math.asin(clamp(_vy,-1,1));
+    }
+    this._combatLocked=combatView && !!target;
     // the sun's tight shadow frustum still has to follow the view
     const sx = Math.round(this.camTarget.x), sz = Math.round(this.camTarget.z);
     const so = this.sunOff;
@@ -2813,16 +3154,11 @@ export class World {
     this.bloom.setSize(innerWidth * 0.5, innerHeight * 0.5);
     this.bloom.strength = t === 2 ? 0.66 : t === 1 ? 0.55 : 0.42;
     this.bloom.enabled = t > 0;                       // potato tier: drop the whole bloom chain
-    // ⚠ NO DIRECTIONAL SHADOW IN A CHASE VIEW, AT ANY TIER — and this is correctness before it is
-    // performance. The shadow camera is a 220u orthographic box that `follow()` drags along behind the
-    // isometric view; a perspective camera at a 1200u far plane sweeps roughly 3 million u² of ground,
-    // and there are no cascades. So most of what the player can see is outside the shadow frustum and
-    // the shadows that DO render are the ones nearest the lens popping in and out at its edge. Dropping
-    // the pass removes a whole scene traversal per frame — one of three items `docs/PERFORMANCE.md`
-    // ranked high-GPU and could not remove from a city fight — on the platform that needs it most.
-    // The contact-shadow discs under every fighter already carry the grounding cue.
+    // City chase retains its cheap contact shadows. Open-sky combat now moves
+    // the shadow volume with the airborne fighter, so body self-shadow remains
+    // valid at every altitude. Lowest quality still drops the shadow pass.
     const chase = this.camMode === 'chase';
-    if (this.sun) this.sun.castShadow = t > 0 && !chase;
+    if (this.sun) this.sun.castShadow = t > 0 && (!chase || this._bfpCameraActive);
     if (this.wildlife) this.wildlife.setQuality(t);   // trim the flock before anything you aim at
   }
   get fps() { return this._ema ? Math.round(1000 / this._ema) : 60; }

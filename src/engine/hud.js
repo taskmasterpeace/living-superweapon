@@ -1,5 +1,8 @@
 // WAR WORLD: ASCENDANTS — DOM HUD + character-select screen.
 import { CodexMixin } from './hudCodex.js';
+import {unitsToMeters} from '../core/world-units.js';
+import {firearmStatus} from './firearm-ammo.js';
+import {firearmSightZoom} from './firearm-aim.js';
 import { rankOf, rankBandOf } from '../data/scale.js';
 import { playSpaceFlight } from './spaceflight.js';
 import { BroadcastMixin } from './hudBroadcast.js';
@@ -7,6 +10,9 @@ import { TitleMixin } from './hudTitle.js';
 import { SelectMixin } from './hudSelect.js';
 import { esc, fileNoOf, fileDate, agoStr, isSynthDef, cfAbilityRows, cfCounterNotes, CF_BUILD, describeEvade, describeAbility, slotFacts } from './hudUtil.js';
 import { ROSTER, SLOT_ORDER } from '../data/characters.js';
+import {slotUnlocked,unlockLevel} from '../data/progression.js';
+import {remoteAttack} from './remote-control.js';
+import {combatView,combatLookActive} from './combat-view.js';
 import { climateLine } from '../data/climate.js';
 import { PLANETS, AU_KM, HELIOPAUSE_AU, TERMINATION_SHOCK_AU, SCALE_LADDER, NEAR_STARS, transitSecsFor, worldEnv } from '../data/planets.js';
 import { clockStr } from '../data/news.js';
@@ -30,6 +36,11 @@ import { injuryOf, recOf, snapshotTable, rankingTable, recentIncidents, champion
 import { cityList } from '../data/cities.js';
 import { generatePlan, thresholdPlan, galleryPlan, TILE_INFO, VARIANTS, popLabel, CELL, CELL_RANGE, POP_TYPES, TILE_FOOT, TILE_SIZES, NO_RESCUE, applyPlanEdits, regionOf, ROAD, validatePlan } from '../data/cityplan.js';
 import { mountAtlas } from './atlasUI.js';
+import {attackIcon} from './attack-icons.js';
+import {attackEntryCost} from './hand-emission.js';
+import {selectedAttacks} from '../core/combat-selection.js';
+import {DUAL_TRIGGER_CSS} from './dual-trigger.styles.js';
+import {PlayerStatusView} from './player-status-view.js';
 
 
 // ---- THRESHOLD REGISTRY paperwork: file numbers, country codes, deterministic file dates ----
@@ -163,6 +174,10 @@ export function kitFacts(def) {
 // the HUD — one code path, no drift.
 export { applyPlanEdits } from '../data/cityplan.js';
 
+// Zero visibility is hidden, not a missing/default value. All target chrome
+// shares this gate so the crosshair, health bar and edge bearing cannot disagree.
+function visibleTarget(g,f) { return !!(f&&f.alive&&(!g.fov||(f._vis??1)>.35)); }
+
 export class HUD {
   constructor(game) {
     this.game = game;
@@ -171,7 +186,7 @@ export class HUD {
     // a 148px label column, the armament table scrolls sideways instead of clipping, and the
     // pager/close controls grow to thumb size. Steam Deck (1280×800) uses the desktop layout.
     
-    const s = document.createElement('style'); s.textContent = CSS + CODEX_MOBILE + PHONE_CSS + TABLET_CSS + DECK_CSS + POWERWORLD_CSS; document.head.appendChild(s);
+    const s = document.createElement('style'); s.textContent = CSS + CODEX_MOBILE + PHONE_CSS + TABLET_CSS + DECK_CSS + POWERWORLD_CSS + DUAL_TRIGGER_CSS; document.head.appendChild(s);
     this.root = document.getElementById('hud');
     this.title = document.getElementById('title');
     this.feedLines = [];
@@ -182,11 +197,13 @@ export class HUD {
     this.root.innerHTML = `
     <div class="wrap">
       <div class="vignette"></div>
+      <div id="hFieldRec" class="field-recorder" hidden role="status" aria-label="Field camera recording status"><i aria-hidden="true"></i><span>FIELD CAM</span></div>
       <div class="panel feed" id="hFeed"></div>
       <div class="panel foe" id="hFoe" style="display:none">
         <div class="fn" id="foeName">RIVAL</div>
         <div class="bar"><i class="fhpF" id="foeHp" style="width:100%"></i></div>
       </div>
+      <div class="status-dock">
       <div class="panel pl">
         <div class="nm" id="plName">—</div>
         <div class="wantedrow" id="plWanted" style="display:none"></div>
@@ -197,21 +214,24 @@ export class HUD {
         <div class="lab">GUARD</div><div class="bar gd"><i class="gdF" id="plGd"></i></div>
         <div class="xpwrap"><span class="lvl" id="plLvl">1</span><span class="tierb" id="plTier">TIER I</span><span class="xp"><i id="plXp" style="width:0%"></i></span></div>
       </div>
+      <div class="panel kit" id="hKit" style="display:none"><div class="kh" id="hKitH">KIT</div><div class="chips" id="hKitChips"></div></div>
+      </div>
       <div class="panel modebar" id="hMode" style="display:none"></div>
       <div class="announce" id="hAnn"><div class="at" id="hAnnT"></div><div class="as" id="hAnnS"></div></div>
-      <div class="panel kit" id="hKit" style="display:none"><div class="kh" id="hKitH">KIT</div><div class="chips" id="hKitChips"></div></div>
       <div class="endscr" id="hEnd"></div>
-      <div class="panel charge" id="hCharge"><i style="width:0%"></i></div>
       <div class="combo" id="hCombo"><div class="n" id="hComboN">0</div><div class="l">Hits</div></div>
       <div class="dmgwrap" id="hDmg"></div>
-      <div class="panel hands" id="hHands" style="display:none"><div class="hhl">HANDS</div><div class="hrow" id="hHandsRow"></div></div>
-      <div class="panel slots" id="hSlots"></div>
+      <div class="combat-dock">
+        <div class="panel hint" id="hHint" tabindex="0" aria-label="Controls help">
+          <div class="hintchip">❓ <b>F1</b> CONTROLS</div>
+          <div class="hintbody" id="hHintBody"></div>
+        </div>
+        <div class="panel hands" id="hHands" style="display:none"><div class="hhl">HANDS</div><div class="hrow" id="hHandsRow"></div></div>
+        <div class="panel charge" id="hCharge"><i style="width:0%"></i></div>
+        <div class="panel slots" id="hSlots"></div>
+      </div>
       <div class="foearrow" id="hFoeArrow"><i></i><u></u><span></span></div>
       <div class="rotate" id="hRotate"><div><div class="ri riphone"></div><div style="font-size:18px;font-weight:800;letter-spacing:.1em;color:var(--gold)">ROTATE YOUR DEVICE</div><div style="font-size:13px;color:var(--text-3);margin-top:6px">The arena plays in landscape.</div></div></div>
-      <div class="panel hint" id="hHint">
-        <div class="hintchip">❓ <b>F1</b> CONTROLS</div>
-        <div class="hintbody" id="hHintBody"></div>
-      </div>
       <div class="panel tut" id="hTut" style="display:none">
         <span class="tskip" id="hTutSkip">skip ✕</span>
         <div class="tact" id="hTutAct"></div>
@@ -227,6 +247,7 @@ export class HUD {
         <button data-p="resume">▶ Resume</button>
         <button data-p="codex" class="ghost">📁 Case File</button>
         <button data-p="options" class="ghost">⚙ Options</button>
+        <button data-p="hud-layout" class="ghost hud-layout-button">HUD position & size</button>
         <button data-p="howto" class="ghost">❓ How to Play</button>
         <button data-p="menu" class="ghost">Main Menu</button>
         <button data-p="quit" class="ghost" id="pQuit" style="display:none">⏻ Quit Game</button>
@@ -248,6 +269,7 @@ export class HUD {
       <div class="telem" id="hTelem"></div>
       <div class="kobanner" id="hKO"><div class="kob" id="hKOt">K.O.</div><div class="kos" id="hKOs"></div></div>
     </div>`;
+    this.playerStatusView=new PlayerStatusView(this.root.querySelector('.wrap'));
     this.el = {
       feed: this.root.querySelector('#hFeed'),
       foe: this.root.querySelector('#hFoe'), foeName: this.root.querySelector('#foeName'), foeHp: this.root.querySelector('#foeHp'),
@@ -261,11 +283,13 @@ export class HUD {
       flash: this.root.querySelector('#hFlash'),
       lvl: this.root.querySelector('#plLvl'), xp: this.root.querySelector('#plXp'), tier: this.root.querySelector('#plTier'),
       plPanel: this.root.querySelector('.pl'),
+      statusDock: this.root.querySelector('.status-dock'),
       mode: this.root.querySelector('#hMode'), ann: this.root.querySelector('#hAnn'), annT: this.root.querySelector('#hAnnT'), annS: this.root.querySelector('#hAnnS'),
       kit: this.root.querySelector('#hKit'), kitChips: this.root.querySelector('#hKitChips'), end: this.root.querySelector('#hEnd'),
       hands: this.root.querySelector('#hHands'), handsRow: this.root.querySelector('#hHandsRow'),
       radar: this.root.querySelector('#hRadar'), radarC: this.root.querySelector('#hRadarC'),
       pip: this.root.querySelector('#hPip'),
+      fieldRecorder: this.root.querySelector('#hFieldRec'),
       city: this.root.querySelector('#hCity'), telem: this.root.querySelector('#hTelem'),
       sundial: this.root.querySelector('#hSun'),
       wanted: this.root.querySelector('#plWanted'),
@@ -289,6 +313,7 @@ export class HUD {
       // Steam Deck (no keyboard needed). Robert, 2026-07-28: "can we use the same Codex in PowerWorld?"
       else if (a === 'codex') { const d = this.game && this.game.player && this.game.player.def; if (d) this.showCodex(d); }
       else if (a === 'options') this.showOptions();
+      else if (a === 'hud-layout') this.playerStatusView.edit(this);
       else if (a === 'howto') this.showHowto();
       else if (a === 'menu') { this.setPaused(false); this.onMenu && this.onMenu(); }
       // CONTROLLER-ONLY NEEDS A WAY OUT. On a Steam Deck there is no keyboard and no window
@@ -505,6 +530,7 @@ export class HUD {
   buildHintBody() {
     const el = this.root.querySelector('#hHintBody'); if (!el) return;
     const K = keymap(SETTINGS.scheme);
+    const soldier=this.game?.player?.def.archetype==='soldier'&&(this.game.modeId==='powerworld'||this.game.player._openSky);
     const grp = (title, rows) => `<div class="hgrp"><div class="hgt">${title}</div>${rows.filter(Boolean).map(([k, d]) => `<div class="hgr"><b>${k}</b><span>${d}</span></div>`).join('')}</div>`;
     const wheelSel = K.wheel === 'ability';
     // ⚠ IF A PAD IS THE ACTIVE DEVICE, PRINT PAD GLYPHS. Telling a Steam Deck player about WASD
@@ -514,35 +540,55 @@ export class HUD {
     const G = (a) => glyph(a, pad);
     this._hintPad = P;                                   // so armHintTimer can re-render on change
     el.innerHTML = P
-      ? grp('MOVE & AIM', [[G('move'), 'move'], [G('aim'), 'aim'], [G('dash'), 'dash'], ['2×FLICK', 'evade']]) +
+      ? grp('MOVE & AIM', [[G('move'), 'move'], [G('aim'), 'aim'], combatView(this.game)==='bfp'?['L1 + R3','lock / release target']:null, [G('dash'), 'dash'], ['2×FLICK', 'evade']]) +
         grp('MELEE', [[G('strike'), 'tap = jab · HOLD = haymaker'], [G('grab'), 'grab · hoist a car/tree'], [G('guard'), 'guard (hold)']]) +
         grp('POWERS', [[G('lmb') + ' / ' + G('rmb'), 'primary · secondary'],
           [G('q') + ' / ' + G('e'), 'skills'], [G('f'), '4th power'], [G('ult'), 'ULTIMATE'], [G('item'), 'gadget']]) +
         grp('FLIGHT', [[G('fly'), 'flight ON / rise'], [G('descend'), 'descend'], [G('dash') + ' (air)', 'cruise']]) +
         grp('SYSTEM', [[G('swap'), 'swap hero'], [G('roster'), 'roster'], [G('pause'), 'pause'],
           [G('confirm') + ' / ' + G('back'), 'confirm · back (menus)']])
-      : grp('MOVE & AIM', [['WASD', 'move'], ['MOUSE', 'aim'], ['CLICK FOE', 'lock on · T to release'], ['2×TAP', 'evade'], ['SHIFT', 'dash']]) +
+      : grp('MOVE & AIM', [['WASD', 'move'], ['MOUSE', 'aim'], soldier?['C (HOLD)','crouch · release to stand']:null, soldier?['Z','prone / stand · WASD crawl']:null, soldier?['E','interact / board · E exits scout, J exits aircraft']:null, [combatView(this.game)==='bfp'?'T':'CLICK FOE',combatView(this.game)==='bfp'?'lock / release target':'lock on · T to release'], ['2×TAP', 'evade'], ['SHIFT', soldier?'hold to sprint · release for combat pace':'dash']]) +
         // ⚠ THE PANEL WAS LYING UNDER BRAWLER. Guard read `K.guardLabel` but strike and grab were
         // hard-coded 'V' and 'G' — so the one scheme that exists BECAUSE the melee keys moved was
         // the one scheme the help panel printed the old keys for.
-        grp('MELEE', [[K.strikeLabel || 'V', 'tap = jab · HOLD = haymaker'], [K.grabLabel || 'G', 'grab · hoist a car/tree'], [K.guardLabel, 'guard (hold)']]) +
+        grp('MELEE', [[K.strikeLabel || 'V', 'tap = jab · HOLD = haymaker'], soldier?null:[K.grabLabel || 'G', 'grab · hoist a car/tree'], [soldier&&K.guard==='KeyC'?'MOUSE4':K.guardLabel, 'guard (hold)']]) +
         grp('POWERS', [
-          wheelSel ? ['WHEEL', 'pick a power'] : null,
-          [wheelSel ? 'LMB' : 'LMB / RMB', wheelSel ? 'fire the picked power' : 'primary · secondary'],
-          wheelSel ? ['RMB', 'secondary'] : null,
-          ['Q / E', 'skills'], ['H', '4th power'], ['R', 'ULTIMATE'], [K.itemLabel, 'gadget'],
+          ['WHEEL', 'select LMB attack'],
+          soldier?['1–6','select equipped attack · does not fire']:null,
+          ['RMB + WHEEL', 'select RMB attack; release, then fire'],
+          K.mouseMelee ? ['V','select melee · release attacks before switching'] : null,
+          ['LMB', 'fire selected primary'],
+          ['RMB', 'tap to fire on release · hold to charge / sustain'],
+          [soldier?'G':'Q / E', soldier?'quick grenade · keeps weapon selected':'skills'], ['H', '4th power'], ['R', soldier?'reload selected weapon':'ULTIMATE'], [soldier?'Q':K.itemLabel, 'gadget'],
         ]) +
-        grp('FLIGHT', [['F', 'flight ON/OFF'], [K.upLabel, 'rise'], [K.downLabel, 'descend'], ['SHIFT (air)', 'cruise']]) +
+        grp('FLIGHT', [[K.flyLabel, 'flight ON/OFF'], [K.upLabel, 'rise'], [K.downLabel, 'descend'], ['SHIFT (air)', 'cruise']]) +
         grp('SYSTEM', [[K.swapLabel, 'swap hero'], ['TAB', 'roster'], ['B', 'order a rival'], ['N', 'order a training bot'], ['ESC', 'pause'], ['F1', 'this panel']]);
   }
   // The full control list is onboarding, not furniture: it earns ~18s of a fresh match, then
   // collapses to a corner chip. F1 (or the Options toggle) brings it back any time.
   hintFull(on) { if (this.el.hint) this.el.hint.classList.toggle('mini', !on); }
-  toggleHint() { if (this.el.hint) { this.el.hint.classList.toggle('mini'); this._hintPinned = !this.el.hint.classList.contains('mini'); } }
+  toggleHint() {
+    const hint = this.el.hint; if (!hint) return;
+    const opening = hint.style.display === 'none' || hint.classList.contains('mini');
+    this._hintPinned = opening;
+    this.hintFull(opening);
+    this.setHintVisible(opening || SETTINGS.hints);
+    if (opening) {
+      this.buildHintBody(); hint.scrollTop = 0;
+      // An explicit reference request overrides hidden onboarding, without changing
+      // the saved preference. Release capture so wheel scrolling reaches the panel.
+      if (document.pointerLockElement) document.exitPointerLock();
+      hint.focus({ preventScroll: true });
+    } else if (document.activeElement === hint) hint.blur();
+  }
   // wheel-select feedback: light the chosen slot so the wheel has a visible consequence
-  selectSlot(key) {
+  selectSlot(key,secondary) {
     if (!this.slotEls) return;
-    for (const k in this.slotEls) this.slotEls[k].root.classList.toggle('sel', k === key);
+    for (const k in this.slotEls){
+      const se=this.slotEls[k];se.root.classList.toggle('sel',k===key);se.root.classList.toggle('sel-secondary',k===secondary);
+      const label=se.root.querySelector('.key');
+      if(label)label.textContent=k===key&&k===secondary?'L + R':k===key?'LMB':k===secondary?'RMB':se.keyLabel||'V';
+    }
   }
   armHintTimer() {
     this.buildHintBody();   // always show the ACTIVE scheme's bindings
@@ -589,7 +635,7 @@ export class HUD {
     html += `<div class="tg"><div class="subj">SUBJECT — ${esc(p.name)}</div>`;
     html += row('HP / KI', `${p.hp | 0}/${p.maxHp} · ${p.ki | 0}/${p.maxKi}`, p.hp < p.maxHp * 0.3 ? 'bad' : '');
     html += row('STATE', `${p.state}${p.hitstop > 0 ? ' +hitstop' : ''}${p.staggerT > 0 ? ' +stagger' : ''}`, p.hitstop > 0 ? 'bad' : '');
-    html += row('ALTITUDE', `${(p.pos.y * 0.19).toFixed(1)} m · ${bands[b]}`, b ? 'hot' : '');
+    html += row('ALTITUDE', `${unitsToMeters(p.pos.y).toFixed(1)} m · ${bands[b]}`, b ? 'hot' : '');
     html += row('FLYING / GUARD', `${p.flying ? 'YES' : 'no'} / ${p.guarding ? 'UP' : 'down'}`);
     html += row('GUARD METER', (p.guardMeter * 100 | 0) + '%', p.guardMeter < 0.3 ? 'bad' : '');
     html += row('TIER / LVL', `${p.tier} / ${p.level}`);
@@ -692,7 +738,7 @@ export class HUD {
       // needs them more than a street fight does — and the storey name and its four colours go.
       const open = g.player && g.player._openSky;
       c.style.color = open ? '#cfe6f2' : ['#8fe08a', '#ffd24a', '#7fe6ff', '#ffffff'][b];
-      const m = Math.round((e.pos.y - (e.groundY || 0)) * 0.19);
+      const m = Math.round(unitsToMeters(e.pos.y - (e.groundY || 0)));
       c.textContent = open ? `↑ ${m}m · ${e.name}` : `↑ ${GL[b]} · ${m}m · ${e.name}`;
     }
   }
@@ -713,7 +759,9 @@ export class HUD {
     const LABEL = { interact: h ? h.verb : 'INTERACT', throw: 'THROW', hurl: 'HURL THEM', hoist: 'HOIST', grab: 'GRAB' };
     if (!f || !g || !g.running || !verb || (verb === 'grab' && !h)) { el.style.display = 'none'; return; }
     el.style.display = 'flex';
-    el.innerHTML = `<b style="color:var(--gold,#ffd24a)">G</b><span>${(LABEL[verb] || verb).toUpperCase()}</span>` +
+    const soldier=f.def.archetype==='soldier'&&(f._openSky||g.modeId==='powerworld');
+    if(soldier&&verb!=='interact'){el.style.display='none';return;}
+    el.innerHTML = `<b style="color:var(--gold,#ffd24a)">${soldier?'E':'G'}</b><span>${(LABEL[verb] || verb).toUpperCase()}</span>` +
       (h && verb === 'interact' ? `<span style="color:var(--text-5,#8b8577)">— ${String(h.label).toUpperCase()}</span>` : '');
   }
 
@@ -791,15 +839,20 @@ export class HUD {
     }
     const on = !!(P && g.mode && g.running);
     if (!on) { if (el.style.display !== 'none') el.style.display = 'none'; return; }
+    const docked=combatLookActive(g)&&!document.body.classList.contains('phone')&&!document.body.classList.contains('tablet');
+    const parent=docked?this.el.statusDock:document.body;
+    if(el.parentNode!==parent)parent.appendChild(el);
+    // Visibility is independent of content dirtiness: an unchanged mood must
+    // return after menu/resume and follow the active HUD layout.
+    el.style.display = 'block';
     const key = P.main + '|' + P.shade + '|' + (P.mood && P.mood.id);
     if (key === this._moodKey) return;                       // dirty-checked, like every other chip
     this._moodKey = key;
-    el.style.display = 'block';
     el.style.borderColor = P.colour;
     el.innerHTML =
-      '<div style="font:700 9px var(--f-mono,monospace);letter-spacing:.22em;color:var(--text-5,#8b8577)">MOOD</div>' +
-      '<div style="font-weight:800;font-size:15px;color:' + P.colour + '">' + P.shade.toUpperCase() + '</div>' +
-      (P.mood ? '<div style="font:600 10px var(--f-mono,monospace);letter-spacing:.1em;color:var(--text-4,#9a9384)">' +
+      '<div class="mood-label" style="font:700 9px var(--f-mono,monospace);letter-spacing:.22em;color:var(--text-5,#8b8577)">MOOD</div>' +
+      '<div class="mood-shade" style="font-weight:800;font-size:15px;color:' + P.colour + '">' + P.shade.toUpperCase() + '</div>' +
+      (P.mood ? '<div class="mood-effect" style="font:600 10px var(--f-mono,monospace);letter-spacing:.1em;color:var(--text-4,#9a9384)">' +
         P.mood.text + '</div>' : '');
   }
 
@@ -808,7 +861,7 @@ export class HUD {
     const inMatch = !!(g.mode && g.running && !g.matchOver);
     let foe = null;
     if (inMatch) {
-      const cand = (g.hardLock && g.hardLock.alive) ? g.hardLock : (g.lockTarget && g.lockTarget.alive) ? g.lockTarget : null;
+      const cand = visibleTarget(g,g.hardLock) ? g.hardLock : visibleTarget(g,g.lockTarget) ? g.lockTarget : null;
       foe = cand && !cand.isDummy ? cand : null;
       if (!foe) { const n = g.nearestFoe(g.player, g.player.pos, 400); if (n && !n.isDummy && (!g.fov || (n._vis || 0) > 0.4)) foe = n; }
     }
@@ -956,7 +1009,7 @@ export class HUD {
       <div class="hsec"><div class="ht">The Melee Triangle</div><div class="hb"><b>V</b> strike (tap = jab combo · <em>hold</em> = HAYMAKER) · <b>G</b> grab · <b>C / Mouse4</b> guard — <em>Strike beats Grab · Grab beats Guard · Guard beats Strike</em> · a HAYMAKER crushes a guard wide open · back-grabs can't be escaped</div></div>
       <div class="hsec"><div class="ht">Flight</div><div class="hb"><b>F</b> toggles flight on/off · hold <b>SPACE</b> to rise · release to hover · <b>Z</b> to descend and land · hold <b>SHIFT</b> in the air to <em>CRUISE</em> (some heroes fly much faster than others) · the <em>ring under every fighter</em> is their altitude band — green GROUND · gold BUILDING · cyan SKY · white CLOUDS — match colors to reach them</div></div>
       <div class="hsec"><div class="ht">Gadgets & The Meter</div><div class="hb"><b>X</b> uses your carried gadget (beacon, medkit, flashbang…) · low ki opens <em>OVERDRIVE</em> — your fists refill the tank · leveling up climbs <em>TIERS</em>: your aura and your meter literally grow</div></div>
-      <div class="hsec"><div class="ht">Swapping & The Rest</div><div class="hb"><b>MOUSE WHEEL</b> or <b>1–0</b> swap hero mid-match · <b>TAB</b> roster · <b>B</b> spawns a rival · <b>ESC</b> pause · <b>M</b> mute · 🎮 pad: sticks move/aim · R2/L2 powers · ▢ ○ melee · L1 guard · ✕ fly</div></div>
+      <div class="hsec"><div class="ht">Attacks & The Rest</div><div class="hb"><b>WHEEL</b> selects LMB attack · <b>RMB + WHEEL</b> selects RMB attack (release, then fire) · <b>[ ]</b> swaps hero · <b>TAB</b> roster · <b>B</b> rival · <b>ESC</b> pause · <b>M</b> mute · 🎮 sticks move/aim · R2/L2 powers · ▢ ○ melee · L1 guard · ✕ fly</div></div>
       <div class="hsec"><div class="ht">The Golden Rule</div><div class="hb">The LeFevre threat scale is real — a Street-tier human <em>should</em> lose to a Cosmic superweapon. Lopsided is honest. Pick your fights, or forge your own weapon in <b>ORIGIN</b>.</div></div>
       <div class="hsec"><div class="ht">Damage Types</div><div class="hb">Every hit has a <em>type</em> — physical, ballistic, energy, fire, cold, toxic, acid — and every fighter resists them differently. A machine <em>cannot</em> be poisoned; <b>ACID</b> eats the armour that stops bullets. Open the codex for the full table.</div></div>
       <button class="odone" id="howtoDmg">☣ Open the Damage Codex</button>
@@ -1462,7 +1515,7 @@ export class HUD {
 
   updateSundial() {
     const el = this.el.sundial, g = this.game;
-    const show = !!(SETTINGS.sundial && g && g.mode && g.running && g.world);
+    const show = !!(SETTINGS.sundial && g && g.mode && g.modeId !== 'powerworld' && g.running && g.world);
     if (this.root.classList.contains('hassun') !== show) this.root.classList.toggle('hassun', show);
     if (!show) { if (el.style.display !== 'none') el.style.display = 'none'; return; }
     if (el.style.display === 'none') { el.style.display = ''; if (!this._sd) this._buildSundial(); }
@@ -1490,13 +1543,18 @@ export class HUD {
     const now = performance.now();                                   // ~25 Hz is plenty for a minimap
     if (this._radarLast && now - this._radarLast < 40) return;
     this._radarLast = now;
-    const W = 152, R = W / 2, cx = R, cy = R, A = (g.world && g.world.ARENA) || 175, sc = (R - 9) / A;
-    const toXY = (wx, wz) => [cx + wx * sc, cy + wz * sc];
+    const W = 152, R = W / 2, cx = R, cy = R, A = (g.world && (g.world.combatRadius || g.world.ARENA)) || 175, sc = (R - 9) / A;
+    // Preserve the compound overview, then scroll continuously at local scale.
+    // A jet-sized world must not turn nearby soldiers and cover into single pixels.
+    const local=g.world?.ARENA>A, p=g.player?.pos;
+    const ox=local&&p?Math.sign(p.x)*Math.max(0,Math.abs(p.x)-A*.35):0;
+    const oz=local&&p?Math.sign(p.z)*Math.max(0,Math.abs(p.z)-A*.35):0;
+    const toXY = (wx, wz) => [cx + (wx-ox) * sc, cy + (wz-oz) * sc];
     ctx.clearRect(0, 0, W, W);
     ctx.save(); ctx.beginPath(); ctx.arc(cx, cy, R - 3, 0, TAU); ctx.clip();
     ctx.fillStyle = 'rgba(16,20,30,.82)'; ctx.fillRect(0, 0, W, W);
     // the harbor
-    if (g.world && g.world.waterX != null) {
+    if (hasCity(g.modeId) && g.world && g.world.waterX != null) {
       ctx.fillStyle = 'rgba(70,140,180,.4)';
       const wx = cx + g.world.waterX * sc;
       ctx.fillRect(wx, 0, W - wx, W);
@@ -1505,7 +1563,7 @@ export class HUD {
     ctx.fillStyle = 'rgba(120,132,155,.55)';
     for (const c of (g.world && g.world.cover) || []) { const [x, y] = toXY(c.x, c.z); const w = (c.hx ?? c.r) * sc, h = (c.hz ?? c.r) * sc; ctx.fillRect(x - w, y - h, Math.max(2, w * 2), Math.max(2, h * 2)); }
     // district labels (canon names on the flagship only — generated cities read from their plan)
-    if (!g.world.plan || g.world.plan.flagship) {
+    if (hasCity(g.modeId) && (!g.world.plan || g.world.plan.flagship)) {
       ctx.font = '700 8px sans-serif'; ctx.textAlign = 'center'; ctx.globalAlpha = 0.85;
       const lab = (t, wx, wz, col) => { const [x, y] = toXY(wx, wz); ctx.fillStyle = col; ctx.fillText(t, x, y); };
       lab('COM', -96, -140, '#9fc0ff'); lab('RES', 0, 140, '#ffb87a'); lab('IND', 156, -20, '#c0d0e0'); lab('MIL', -144, 200, '#a8c070');
@@ -1555,25 +1613,35 @@ export class HUD {
     const cxp = innerWidth / 2, cyp = innerHeight / 2;
     let ang = Math.atan2((sp.y || cyp) - cyp, (sp.x || cxp) - cxp);
     if (sp.behind) ang += Math.PI;                       // source behind camera → opposite edge
-    // aaa-06 §10.2: in the close (chase) frame the disc becomes an ANNULUS SECTOR — a 46° wedge in
-    // the outer band, nothing inside `outer − 90px`, so the indicator never reaches the centre box
-    // where the fight is. `sp.behind` (already handled above) is load-bearing here: most hits from
-    // behind ARE behind the camera in third person, the exact case this indicator exists for.
+    // Chase damage is a bearing from the PLAYER, not the projected attacker's
+    // height. A frontal ground attacker often projects below the reticle; that
+    // must not falsely report a hit from behind. Keep the ribbon at the actual
+    // viewport edge in both landscape and portrait, not a circle inside it.
     if (this.game.world.camMode === 'chase') {
-      const outer = Math.min(innerWidth, innerHeight) * 0.5, inner = Math.max(0, outer - 90), half = 0.4014;   // 23°
+      const player=this.game.player,m=this.game.world.camera.matrixWorld.elements;
+      const dx=worldPos.x-player.pos.x,dz=worldPos.z-player.pos.z;
+      const horizontal=Math.hypot(m[8],m[10]);
+      const right=horizontal>1e-6?(m[10]*dx-m[8]*dz)/horizontal:dx;
+      const front=horizontal>1e-6?(-m[8]*dx-m[10]*dz)/horizontal:-dz;
+      ang=Math.hypot(dx,dz)<.01?-Math.PI/2:Math.atan2(-front,right);
+      const rx=Math.max(8,cxp-16),ry=Math.max(8,cyp-16),thickness=Math.min(12,Math.max(7,Math.min(innerWidth,innerHeight)*.012));
+      const half=Math.min(.2,62/Math.hypot(rx*Math.sin(ang),ry*Math.cos(ang)));
       const a0 = ang - half, a1 = ang + half;
       let minx = Infinity, miny = Infinity, maxx = -Infinity, maxy = -Infinity;
       for (let i = 0; i <= 12; i++) { const a = a0 + (a1 - a0) * i / 12;
-        for (const r of [inner, outer]) { const x = cxp + Math.cos(a) * r, y = cyp + Math.sin(a) * r;
+        for (const inset of [0,thickness]) { const x = cxp + Math.cos(a) * (rx-inset), y = cyp + Math.sin(a) * (ry-inset);
           if (x < minx) minx = x; if (x > maxx) maxx = x; if (y < miny) miny = y; if (y > maxy) maxy = y; } }
       const NS = 'http://www.w3.org/2000/svg';
       const svg = document.createElementNS(NS, 'svg');
       svg.setAttribute('width', (maxx - minx)); svg.setAttribute('height', (maxy - miny));
-      svg.style.cssText = `position:absolute;left:${minx}px;top:${miny}px;pointer-events:none;opacity:.9;transition:opacity .55s ease-out;`;
-      const P = (r, a) => `${(cxp + Math.cos(a) * r - minx).toFixed(1)} ${(cyp + Math.sin(a) * r - miny).toFixed(1)}`;
+      svg.style.cssText = `position:absolute;left:${minx}px;top:${miny}px;pointer-events:none;opacity:.9;transition:opacity .55s ease-out;filter:drop-shadow(0 1px 1px rgba(0,0,0,.7));`;
+      const sector=String((Math.round(ang/(Math.PI/6))+12)%12);
+      for(const existing of this.el.hits.children)if(existing.dataset.bearing===sector)existing.remove();
+      svg.dataset.bearing=sector;
+      const P = (inset, a) => `${(cxp + Math.cos(a) * (rx-inset) - minx).toFixed(1)} ${(cyp + Math.sin(a) * (ry-inset) - miny).toFixed(1)}`;
       const path = document.createElementNS(NS, 'path');
-      path.setAttribute('d', `M ${P(outer, a0)} A ${outer} ${outer} 0 0 1 ${P(outer, a1)} L ${P(inner, a1)} A ${inner} ${inner} 0 0 0 ${P(inner, a0)} Z`);
-      path.setAttribute('fill', 'rgba(255,52,34,.5)');
+      path.setAttribute('d', `M ${P(0, a0)} A ${rx} ${ry} 0 0 1 ${P(0, a1)} L ${P(thickness, a1)} A ${rx-thickness} ${ry-thickness} 0 0 0 ${P(thickness, a0)} Z`);
+      path.setAttribute('fill', 'rgba(255,74,52,.85)');
       svg.appendChild(path); this.el.hits.appendChild(svg);
       requestAnimationFrame(() => { svg.style.opacity = '0'; });
       setTimeout(() => svg.remove(), 600);
@@ -1591,16 +1659,18 @@ export class HUD {
   }
 
   showKO(text = 'K.O.', sub = '', color = '#fff') {
+    const compact=combatView(this.game)==='bfp';this.el.ko.classList.toggle('compact-notice',compact);this.el.ko.dataset.active='true';
     this.el.koT.textContent = text; this.el.koT.style.color = color; this.el.koS.textContent = sub;
     this.el.ko.style.opacity = '1'; this.el.ko.style.transform = 'translateX(-50%) scale(1)';
     clearTimeout(this._koT1); clearTimeout(this._koT2);
-    this._koT1 = setTimeout(() => { this.el.ko.style.transform = 'translateX(-50%) scale(1.09)'; }, 480);
-    this._koT2 = setTimeout(() => { this.el.ko.style.opacity = '0'; }, 1350);
+    if(!compact)this._koT1 = setTimeout(() => { this.el.ko.style.transform = 'translateX(-50%) scale(1.09)'; }, 480);
+    this._koT2 = setTimeout(() => { this.el.ko.style.opacity = '0';this.el.ko.dataset.active='false'; }, 1350);
   }
   setCombatUI(on) { this.el.radar.style.display = on ? 'block' : 'none'; }
 
   // ---- energy feedback ----
   kiWarn() {                                            // ki ran dry mid-ability — flash the bar
+    this.playerStatusView?.energyWarning();
     this.el.kiBar.classList.add('kiflash');
     clearTimeout(this._kiT); this._kiT = setTimeout(() => this.el.kiBar.classList.remove('kiflash'), 650);
   }
@@ -1615,11 +1685,12 @@ export class HUD {
   }
 
   announce(text, sub = '', color = 'var(--gold)') {
+    const compact=combatView(this.game)==='bfp';this.el.ann.classList.toggle('compact-notice',compact);this.el.ann.dataset.active='true';
     this.el.annT.textContent = text; this.el.annT.style.color = color; this.el.annS.textContent = sub;
-    this.el.ann.style.opacity = '1'; this.el.ann.style.transform = 'translateX(-50%) scale(1.12)';
+    this.el.ann.style.opacity = '1'; this.el.ann.style.transform = `translateX(-50%) scale(${compact?1:1.12})`;
     clearTimeout(this._annT1); clearTimeout(this._annT2);
     this._annT1 = setTimeout(() => { this.el.ann.style.transform = 'translateX(-50%) scale(1)'; }, 110);
-    this._annT2 = setTimeout(() => { this.el.ann.style.opacity = '0'; }, 1800);
+    this._annT2 = setTimeout(() => { this.el.ann.style.opacity = '0';this.el.ann.dataset.active='false'; }, 1800);
     try { this.game.audio.zap(760); this.game.audio.blast(220, 0.12); } catch (e) {}
   }
   scorePopup(worldPos, amount) { this.damageNumber({ x: worldPos.x, y: worldPos.y + 4, z: worldPos.z }, '+' + amount, 'var(--gold-pale)', true); }
@@ -1679,8 +1750,11 @@ export class HUD {
     if (p._revealT > 0) chips.push({ t: '👁 THE RING SEES ' + Math.ceil(p._revealT) + 's', on: true });
     const mine = this.game.minions.filter(m => m.owner === p).length; const maxD = Math.max(...Object.values(d.abilities).map(a => a.type === 'summon' ? (a.max || 6) : 0), 0);
     if (maxD) chips.push({ t: '◈ DRONES ' + mine + '/' + maxD, on: mine > 0 });
-    const cons = this.game.constructs.filter(c => c.owner === p);
-    if (Object.values(d.abilities).some(a => a.type === 'construct')) chips.push({ t: cons.length ? 'CONSTRUCT: ' + cons[0].kind.toUpperCase() : 'CONSTRUCTS', on: cons.length > 0 });
+    const cons = this.game.constructs.filter(c => c.owner === p && !c.dead);
+    if (Object.values(d.abilities).some(a => a.type === 'construct')) {
+      const c=cons[0],budget=c?.policy?.mode==='upkeep'?` · ${c.policy.kiPerSec} KI/S`:c?.policy?.mode==='damage'?` · ${c.policy.kiPerDamage} KI/HP`:'';
+      chips.push({ t: c?'CONSTRUCT: '+c.kind.toUpperCase()+budget:'CONSTRUCTS', on:cons.length>0 });
+    }
     if (d.beamMight >= 1.2) chips.push({ t: 'BEAM MASTER', on: false });
     if (d.grabHeal) chips.push({ t: 'ABSORB', on: false });
     if (d.thorns) chips.push({ t: 'THORNS', on: false });
@@ -1857,13 +1931,34 @@ export class HUD {
     else c.style.opacity = '0';
   }
 
-  setPaused(on) { this.el.paused.style.display = on ? 'flex' : 'none'; }
+  setPaused(on) { this._paused=!!on; this.el.paused.style.display = on ? 'flex' : 'none'; }
 
   buildSlots(def) {
     this.el.slots.innerHTML = '';
     this.slotEls = {};
+    this._toolScheme=keymap(SETTINGS.scheme).mouseMelee===true;this._toolKey=null;
+    // THESIS: two readable triggers lead; the compact kit remains available underneath.
+    // OWN-WORLD: existing warm dark/gold combat dock, original attack silhouettes.
+    // STORY/FIRST VIEW: identify LMB and RMB at a glance without covering the fighter.
+    // FORM: local extension of the established HUD, not a replacement visual system.
+    const pair=document.createElement('div');pair.className='trigger-pair';pair.setAttribute('aria-label','Selected mouse attacks');
+    this.triggerEls={};
+    for(const side of ['primary','secondary']){
+      const el=document.createElement('div');el.className='trigger-attack';el.dataset.trigger=side;
+      el.innerHTML=`<span class="trigger-bind">${side==='primary'?'LMB':'RMB'}<small>${side==='primary'?'WHEEL':'RMB + WHEEL'}</small></span><span class="trigger-art"></span><span class="trigger-name"></span><span class="trigger-status"></span>`;
+      pair.appendChild(el);this.triggerEls[side]=el;
+    }
+    this.el.slots.appendChild(pair);
+    if(this._toolScheme){
+      const d=document.createElement('div');d.className='slot';d.dataset.tool='melee';
+      d.title='Select with V or wheel. LMB: tap punch, hold heavy. RMB: grab / throw. C: block.';
+      d.innerHTML='<div class="key">V / WHEEL</div>'+attackIcon({type:'melee'})+'<div class="an">Melee</div><div class="sfx">STRIKE</div>';
+      this.el.slots.appendChild(d);this.slotEls.melee={root:d,keyLabel:'V'};
+    }
     for (const { k, label } of SLOT_ORDER) {
       const a = def.abilities[k]; if (!a) continue;
+      const tactical=def.archetype==='soldier'&&(this.game?.modeId==='powerworld'||this.game?.player?._openSky);
+      const binding=tactical?(k==='shift'?'2×TAP':String(['lmb','rmb','q','e','f','r'].indexOf(k)+1)):def.archetype==='soldier'&&k==='r'?'WHEEL':label;
       const d = document.createElement('div');
       d.className = 'slot' + (k === 'r' ? ' ult' : '');
       // ⚠ THE CHIP NOW SAYS WHAT IT IS. A name alone ("Heat Ray", "Prince's Pride") does not tell you
@@ -1874,17 +1969,18 @@ export class HUD {
       const F = slotFacts(a, visOf);
       d.title = a.name + ' — ' + describeAbility(a) + '\n' + F.kind + ' · ' + F.range +
         (F.units ? ' (' + F.units + 'u)' : '') + (F.hold ? ' · HOLD TO CHARGE' : '') +
-        (a.cost ? ' · ' + a.cost + ' ki' : a.kiPerSec ? ' · ' + a.kiPerSec + ' ki/s' : '');
-      d.innerHTML = `<div class="key">${label}</div><div class="cost">${a.cost ? a.cost : a.kiPerSec ? a.kiPerSec + '/s' : ''}</div>` +
-        `<div class="an">${a.name}</div>` +
+        (attackEntryCost(a) ? ' · ' + attackEntryCost(a) + ' ki' : a.kiPerSec ? ' · ' + a.kiPerSec + ' ki/s' : '');
+      d.innerHTML = `<div class="key">${binding}</div><div class="cost">${attackEntryCost(a) || (a.kiPerSec ? a.kiPerSec + '/s' : '')}</div>` +
+        `${attackIcon(a)}<div class="an">${esc(a.name)}</div>` +
         `<div class="sfx"><b>${F.glyph}</b>${F.range}${F.hold ? ' ⏱' : ''}</div>` +
         `<div class="cd" style="height:0%"></div><div class="cdn"></div>`;
       this.el.slots.appendChild(d);
-      this.slotEls[k] = { root: d, cd: d.querySelector('.cd'), cost: d.querySelector('.cost'), cdn: d.querySelector('.cdn') };
+      this.slotEls[k] = { root: d,keyLabel:k==='lmb'?'I':k==='rmb'?'II':binding, baseTitle:d.title, cd: d.querySelector('.cd'), cost: d.querySelector('.cost'), cdn: d.querySelector('.cdn') };
     }
   }
 
   setPlayer(def) {
+    this._formRole=undefined;
     this.el.name.textContent = def.name;
     this.el.role.textContent = def.title + ' · ' + def.role;
     this.buildSlots(def);
@@ -1905,14 +2001,54 @@ export class HUD {
   // to recolour to hostile red AT SCREEN CENTRE while the shot left for a body 16-42% of the gap
   // off-centre. Called from game.updateReticle (the SIM loop), never from update() — see the note
   // there and in update()'s class-toggle block.
-  updateCrosshair(g) {
-    const p = g.player;
-    const pw = !!(p && p._openSky);
+  syncCombatView(g) {
+    this.updateFieldRecorder(g);
+    const pw=g.modeId==='powerworld',chase=combatLookActive(g);
     if (pw !== this._pwCls) { this._pwCls = pw; document.body.classList.toggle('powerworld', pw); }
-    if (!pw) { if (this._lkCls) { this._lkCls = false; document.body.classList.toggle('pw-locked', false); } return; }
+    if(chase!==this._chaseCls){this._chaseCls=chase;document.body.classList.toggle('combat-chase',chase);}
+    if(!chase){
+      if(this._lkCls){this._lkCls=false;document.body.classList.toggle('pw-locked',false);}
+      if(this.el.cross){this.el.cross.style.visibility='hidden';this._csOff=true;}
+    }
+    return chase;
+  }
+
+  updateFieldRecorder(g){
+    const el=this.el.fieldRecorder;if(!el)return;
+    const paused=!g.running&&this._paused;
+    const news=g.news,shown=g.modeId==='powerworld'&&!this.titleOpen&&(g.running||paused)&&!g.matchOver&&news?.enabled&&!news._finished;
+    el.hidden=!shown;if(!shown)return;
+    const state=paused?'paused':news.rec?'recording':'ready',count=news.clips?.length||0;
+    const text=state==='paused'?'CAM PAUSED':state==='recording'?'REC':count?`${count} CLIP${count===1?'':'S'}`:'FIELD CAM';
+    if(el.dataset.state!==state)el.dataset.state=state;
+    const label=el.querySelector('span');if(label.textContent!==text)label.textContent=text;
+  }
+
+  updateCrosshair(g) {
+    if(!this.syncCombatView(g))return;
     const el = this.el.cross; if (!el) return;
-    const locked = g.hardLock && g.hardLock.alive;
-    if (locked) {
+    const aircraft=g.player?._aircraftVehicle;
+    if(aircraft){
+      const aim=aircraft.combat?.pilotAim?.(),s=this._csp||(this._csp={x:0,y:0,behind:false});
+      if(this._lkCls){this._lkCls=false;document.body.classList.toggle('pw-locked',false);}
+      el.dataset.aimMode='aircraft';
+      if(aim)g.world.screenPosOf(aim.point.x,aim.point.y,aim.point.z,s);
+      const hidden=!aim||s.behind||s.x<18||s.x>innerWidth-18||s.y<18||s.y>innerHeight-32;
+      if(this._csOff!==hidden){this._csOff=hidden;el.style.visibility=hidden?'hidden':'';}
+      if(!hidden){
+        const dx=Math.round(s.x-innerWidth*.5),dy=Math.round(s.y-innerHeight*.5);
+        if(dx!==this._csx||dy!==this._csy){this._csx=dx;this._csy=dy;el.style.transform=`translate(${dx}px, ${dy}px)`;}
+        const label=`CANNON · ${Math.round(aim.range)}u`;
+        if(el.dataset.label!==label)el.dataset.label=label;
+      }
+      return;
+    }
+    if(el.dataset.aimMode){delete el.dataset.aimMode;delete el.dataset.label;}
+    const hasLock = g.hardLock && g.hardLock.alive;
+    const locked = visibleTarget(g,g.hardLock);
+    if (hasLock && !locked) {
+      if(this._csOff!==true){this._csOff=true;el.style.visibility='hidden';}
+    } else if (locked) {
       // LOCKED (T): the mark rides the target, which can be off-centre or even off-screen.
       const a = g._aim3pt, s = this._csp || (this._csp = { x: 0, y: 0, behind: false });
       g.world.screenPosOf(a.x, a.y, a.z, s);
@@ -1945,31 +2081,31 @@ export class HUD {
   }
 
   update() {
-    const g = this.game, p = g.player; if (!p) return;
-    // ⚠ `body.powerworld` WAS DECLARED IN CSS AND NEVER ADDED BY ANYTHING. Every rule in
-    // POWERWORLD_CSS — hiding the city nameplate, the wanted stars and the KMK 9 monitor — has been
-    // dead since it was written, which is why a dimension with no city and no police was still
-    // showing all three. A stylesheet hook is not a feature until something toggles it.
-    // ⚠ Cached, because this runs every frame and a classList write per frame is a layout thrash.
-    // ⚠ THE CROSSHAIR ITSELF (position + the `pw-locked` state) IS OWNED BY `updateCrosshair`, driven
-    // from the SIM loop (game.updateReticle) so the reticle harness — which steps game.update by hand
-    // and never calls hud.update — can measure it. Here we only manage the `powerworld` class as the
-    // cleanup safety net for LEAVING PowerWorld: when the match ends `game.update` early-returns and
-    // updateCrosshair stops running, but hud.update keeps ticking, so this is where the class comes
-    // back off (and pw-locked with it). Both share `_pwCls`; the value is identical, so they never
-    // fight, and whichever runs first wins the frame.
-    const pw = !!p._openSky;
-    if (pw !== this._pwCls) {
-      this._pwCls = pw; document.body.classList.toggle('powerworld', pw);
-      if (!pw && this._lkCls) { this._lkCls = false; document.body.classList.toggle('pw-locked', false); }
+    const g = this.game, p = g.player;this.syncCombatView(g);if (!p) return;
+    if(g.modeId==='powerworld')this.playerStatusView?.update(p);
+    if(this._toolScheme!==(keymap(SETTINGS.scheme).mouseMelee===true))this.buildSlots(p.def);
+    const selection=selectedAttacks(p,keymap(SETTINGS.scheme)),tool=selection.primary+'|'+selection.secondary;
+    if(this._toolKey!==tool){this._toolKey=tool;this.selectSlot(selection.primary,selection.secondary);}
+    for(const side of ['primary','secondary']){
+      const el=this.triggerEls?.[side];if(!el)continue;
+      const k=selection[side],st=p.slots[k],def=st?.def||{type:k,name:k==='grab'?'Grab / Throw':'Melee'};
+      const primaryDef=p.slots[selection.primary]?.def,sight=side==='secondary'&&primaryDef?.type==='rifle'&&primaryDef.scopeZoom>1;
+      const sightName=sight?`${primaryDef.scopeZoom}× Sight`:'';
+      const active=st?.active&&!st.active.dead?st.active:null;
+      const locked=st&&!slotUnlocked(p,k)&&!remoteAttack(p,st);
+      const status=side==='secondary'&&p._mouseCombat?.blocked?'RELEASE TO READY':sight?(p._firearmReload?'LOWERED · RELOADING':firearmSightZoom(p)>1?'AIMING · LMB FIRE':p._scopeHeld?'SIGHT UNAVAILABLE':'HOLD TO AIM'):locked?`LEVEL ${unlockLevel(p.def,k)}`:firearmStatus(p,k)||(st?._handsBusy?'HANDS OCCUPIED':st?._handsRetry?'RELEASE TO RETRY':st?.charging?'CHARGING':active?.pendingLaunch?'ALIGNING':active?.sustaining?'FIRING':st?.cd>.05?`${st.cd.toFixed(1)}s`:st&&p.ki<attackEntryCost(def)?'LOW ENERGY':k==='melee'?'TAP / HOLD HEAVY':k==='grab'?'GRAB / THROW':'READY');
+      if(el._def!==def||el._sightName!==sightName){el._def=def;el._sightName=sightName;el.querySelector('.trigger-art').innerHTML=sight?icon('range',26):attackIcon(def);el.querySelector('.trigger-name').textContent=sightName||def.name;el.title=sight?'Hold RMB to aim this rifle; LMB fires. RMB + wheel still selects the secondary for other primary attacks.':def.name+' — '+(st?describeAbility(def):status);}
+      if(el._status!==status){el._status=status;el.querySelector('.trigger-status').textContent=status;el.classList.toggle('unavailable',!!locked||status==='LOW ENERGY'||status==='HANDS OCCUPIED'||status==='RELEASE TO RETRY');}
     }
+    // syncCombatView above is the HUD-side cleanup safety net for paused/menu
+    // frames; updateCrosshair owns position and lock colour in the native game loop.
     this.el.hp.style.width = clamp(p.hp / p.maxHp * 100, 0, 100) + '%';
     this.el.ki.style.width = clamp(p.ki / p.maxKi * 100, 0, 100) + '%';
     // energy readability: amber when low, red pulse when critical, DRAINED tag after an all-in fizzle
     const kiFrac = p.ki / p.maxKi, drained = p.drainedT > 0;
     if (p.energyInfinite) {   // android core — the tank literally cannot move
-      this.el.ki.classList.remove('crit', 'low'); this.el.kiState.classList.remove('on'); this.el.kiOver.classList.remove('on');
-      if (this._infML !== p.id) { this._infML = p.id; this.el.kiState.textContent = '∞ CORE'; this.el.kiState.classList.add('on'); this.el.kiState.style.color = 'var(--info)'; }
+      this.el.ki.classList.remove('crit', 'low'); this.el.kiState.classList.add('on'); this.el.kiOver.classList.remove('on');
+      if (this._infML !== p.id) { this._infML = p.id; this.el.kiState.textContent = '∞ CORE'; this.el.kiState.style.color = 'var(--info)'; }
     } else {
       if (this._infML) { this._infML = 0; this.el.kiState.textContent = 'DRAINED'; this.el.kiState.style.color = ''; }
       this.el.ki.classList.toggle('crit', drained || kiFrac < 0.15);
@@ -1998,21 +2134,31 @@ export class HUD {
       this.el.tier.textContent = p.tier >= 4 ? 'MAX TIER' : 'TIER ' + ['', 'I', 'II', 'III'][p.tier];
       this.el.tier.className = 'tierb' + (p.tier > 1 ? ' t' + p.tier : '');
       this.el.plPanel.style.minWidth = (240 + (p.tier - 1) * 44) + 'px';
+      this.root.style.setProperty('--tier-spread',((p.tier-1)*44)+'px');
     }
 
     // ability cooldowns / states
+    g.touch?.updateAccess(p);
+    const formRole=p.def.title+' · '+p.def.role+(p.formName?' · '+p.formName:'');
+    if(this._formRole!==formRole){this._formRole=formRole;this.el.role.textContent=formRole;}
     let charging = 0, maxCharge = 1;
     for (const { k } of SLOT_ORDER) {
       const se = this.slotEls?.[k]; if (!se) continue; const st = p.slots[k]; const def = st.def;
+      const locked=!slotUnlocked(p,k)&&!remoteAttack(p,st),required=unlockLevel(p.def,k);
+      if(se._locked!==locked||se._required!==required){
+        se._locked=locked;se._required=required;se.root.classList.toggle('locked',locked);
+        se.root.setAttribute('aria-disabled',String(locked));
+        se.root.title=se.baseTitle+(locked?`\nUnlocks at level ${required}`:'');
+      }
       const cdPct = def.cd ? clamp(st.cd / def.cd, 0, 1) * 100 : 0;
       se.cd.style.height = cdPct + '%';
       // (8) NUMERIC COOLDOWN — "2.4" beats guessing from a shrinking bar
       if (se.cdn) {
-        const secs = st.cd > 0.05 ? (st.cd < 1 ? st.cd.toFixed(1) : Math.ceil(st.cd)) : '';
+        const secs = locked ? `LV ${required}` : st.cd > 0.05 ? (st.cd < 1 ? st.cd.toFixed(1) : Math.ceil(st.cd)) : '';
         if (se._cdn !== secs) { se._cdn = secs; se.cdn.textContent = secs; }
       }
-      const broke = !!(def.cost && p.ki < def.cost);
-      const dim = broke || st.cd > 0.01;
+      const broke = p.ki < attackEntryCost(def);
+      const dim = locked || broke || st.cd > 0.01;
       se.root.classList.toggle('dim', !!dim);
       if (se.cost) se.cost.classList.toggle('nope', broke);   // cost turns red when unaffordable
       se.root.classList.toggle('on', !!(st.charging || st.active));
@@ -2024,8 +2170,8 @@ export class HUD {
 
     // target health bar — the foe you're locked on / aiming at, only while visible
     let foe = null;
-    if (g.hardLock && g.hardLock.alive && (!g.fov || (g.hardLock._vis || 1) > 0.35)) foe = g.hardLock;
-    else if (g.lockTarget && g.lockTarget.alive) foe = g.lockTarget;
+    if (visibleTarget(g,g.hardLock)) foe = g.hardLock;
+    else if (visibleTarget(g,g.lockTarget)) foe = g.lockTarget;
     if (foe && !foe.isDummy) {
       this.el.foe.style.display = 'block';
       const vil = g.police && g.police.wantedLevel(foe) > 0 ? '  ·  🚨 VILLAIN' : '';

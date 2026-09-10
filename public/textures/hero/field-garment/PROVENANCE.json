@@ -1,0 +1,43 @@
+{
+  "name": "Original tailored field garment and painted armor masks",
+  "source": "assets-src/frontline-garment/author-garment.py",
+  "recipe": "assets-src/frontline-garment/README.md",
+  "authorship": "Original project-authored garment patterns, relief and masks. Existing Quaternius CC0 body UVs/bind-space used for placement; no body geometry is included in these maps.",
+  "bodySource": {
+    "author": "Quaternius",
+    "pack": "Universal Base Characters",
+    "license": "CC0-1.0",
+    "url": "https://quaternius.com/packs/universalbasecharacters.html",
+    "mirror": "https://codeberg.org/jamesonBradfield/Quaternius_IK_Rigged_with_animations",
+    "revision": "0cc5dc351f4fffbe13a25381e73cb0a1aea67f47",
+    "kind": "superhero-male",
+    "files": {
+      "gltf": "Superhero_Male_FullBody.gltf",
+      "bin": "Superhero_Male_FullBody.bin",
+      "eye": "T_Eye_Brown.png"
+    },
+    "sha256": {
+      "gltf": "e7fcea214ecf8855afbf910b50de6f9c7d1decfb71ca28bad8a4481452dafeb4",
+      "bin": "459003f9745853ae562a85506a2b94dd56515c1f37728f9fa3d2ce1a3e4cd92f",
+      "eye": "d08e3356a83211bc6ca21fe3a8e39f4b5c1a3b8f85457fc2c0fb57be09935025"
+    },
+    "basis": "Y-up source scene world space"
+  },
+  "files": {
+    "garment-neutral-albedo": {
+      "bytes": 162536,
+      "sha256": "b95e8b1c5142d49af520c2298bae4d77e38bb22be79160468e4c6b6835e7d48e"
+    },
+    "garment-roughness": {
+      "bytes": 184052,
+      "sha256": "21bf687cd1ea4bcf6242cbef2f4cbb293a0aee77c7a8f9664f30cf738d240d41"
+    },
+    "garment-normal": {
+      "bytes": 261448,
+      "sha256": "48f5fcc3d5f05c58694fa7657ce7c24266c8d1071db25845105feee6eea7dea2"
+    }
+  },
+  "usage": "Only model.surface=field with body=superhero-male uses garment maps. Original scalar armor materials retain palette ownership. Standard and other body UV layouts do not use the garment maps.",
+  "textureContract": "1024px; NoColorSpace; flipY=false; repeat 1x1; normalScale 1. Roughness map is absolute (scalar roughness 1).",
+  "maskContract": "Optional normalized Uint8 fieldWear attribute, existing vertex ordering; default [1,0,0] on unmasked shared-armor geometry."
+}

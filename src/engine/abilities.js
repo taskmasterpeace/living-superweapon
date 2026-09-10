@@ -6,6 +6,29 @@ import { setSize, setInvisible, beginRegen, banish } from './systems.js';
 import { visOf } from '../data/visual.js';
 import * as THREE from 'three';
 import { clamp, rand, TAU, lerp } from '../core/util.js';
+import { ChargeGather } from './charge-gather.js';
+import {remoteAttack} from './remote-control.js';
+import {slotUnlocked,unlockLevel} from '../data/progression.js';
+import {TELEPORT_TIERS} from '../data/teleport-tuning.js';
+import {teleportDestination} from './teleport-destination.js';
+import {handEmissionPosition,volleyPattern,volleySides,attackEntryCost} from './hand-emission.js';
+import {firearmEmitter} from './weapon-emission.js';
+import {firearmAmmo,emptyFirearm,cancelFirearmReload} from './firearm-ammo.js';
+import {energyShellMaterial} from './energy-burst-material.js';
+import {conflictingHandSlot} from './cast-channels.js';
+import {constructForSlot,resolveConstructPolicy} from './construct-policy.js';
+import {naniteUseReason} from './nanite-pose.js';
+import {toggleNanite} from './nanite-state.js';
+import {beginAbilityMeleePose,cancelAbilityMeleePose} from './ability-melee-pose.js';
+import {applyAbilityMeleeHit} from './ability-melee-hit.js';
+import {beginWebSnare,clearWebSnare} from './web-snare.js';
+import {attackIdentity} from '../data/attack-tuning.js';
+import {forearmOccupied} from './weapon-emission.js';
+import {findWebZipAnchor,beginWebZip} from './web-zip.js';
+import {clearRush,rushInterrupted,rushTargetValid,findRushTarget,rushLanding} from './rush-safety.js';
+import {usesThrowAction,beginThrowAction,cancelThrowAction} from './throwable-action.js';
+import {firearmLife} from './firearm-aim.js';
+export {remoteAttack} from './remote-control.js';
 
 const _v = new THREE.Vector3();
 
@@ -14,26 +37,100 @@ const ORB_CORE_MAT = new THREE.MeshBasicMaterial({ color: '#fff' });
 export const PAYLOAD_COLORS = { poison: '#8fe08a', flame: '#ff7a2a', explosive: '#ffd24a', gas: '#9a4ae0' };
 
 function ready(c, def, st) { return st.cd <= 0 && c.ki >= (def.cost || 0) && c.hitstop <= 0 && c.staggerT <= 0 && c.stunT <= 0; }   // staggered/stunned fighters cast NOTHING
-function pay(c, def, st) { c.ki -= (def.cost || 0); st.cd = ((def.cd || 0) * ((c.sheet && c.sheet.cdMult) || 1)) * moodMult(c, 'cd', 1); }   // INTELLECT + Tactician shave cooldowns
+function cooldown(c, def, st) { st.cd = ((def.cd || 0) * ((c.sheet && c.sheet.cdMult) || 1)) * moodMult(c, 'cd', 1); }
+function pay(c, def, st) { c.ki -= (def.cost || 0); cooldown(c, def, st); }   // INTELLECT + Tactician shave cooldowns
+function beginPaidCharge(c, def, st, g) {
+  // Pay entry before building charge. Billing it on release allowed charge drain
+  // to spend the same energy twice and launch with a negative ki pool.
+  const cost=def.cost || 0;
+  if(!c.spendKi(cost))return;
+  if(def.type==='charge')st._poseWritten=true;
+  st._chargeEntryCost=c.energyInfinite?0:cost;
+  st._chargeInvestedKi=cost; // equivalent configured investment also counts for an infinite core
+  st.charging=true;st.chargeT=0;st.sfx=g.audio.charge(c.pos);
+}
+function finishPaidCharge(c, def, st) { st._chargeEntryCost=0;st._chargeInvestedKi=0;cooldown(c,def,st); }
 function chargeOrb(c, st, color) {
   if (!st.orb) {
-    const core = new THREE.Mesh(ORB_GEO, ORB_CORE_MAT);
-    const glow = new THREE.Mesh(ORB_GEO, new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending, depthWrite: false }));
+    const spherical=st.def.type==='charge';
+    const core = new THREE.Mesh(ORB_GEO, spherical?new THREE.MeshStandardMaterial({color,emissive:color,emissiveIntensity:.55,roughness:.28,metalness:.08}):ORB_CORE_MAT);
+    const glow = new THREE.Mesh(ORB_GEO, spherical?energyShellMaterial(color,.72):new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending, depthWrite: false }));
     glow.scale.setScalar(1.6);
-    st.orb = new THREE.Group(); st.orb.add(core, glow); c._game.scene.add(st.orb);
+    if(spherical){core.scale.setScalar(.55);glow.scale.setScalar(1);}
+    if(st.def.type==='beam') {
+      // Concentrated emitter, not an opaque ball over the whole caster. The parent
+      // still grows with charge; broad blast/spirit-orb silhouettes are unchanged.
+      core.scale.setScalar(.27);glow.scale.setScalar(.85);
+      glow.material.blending=THREE.NormalBlending;glow.material.opacity=.3;
+    }
+    st.orb = new THREE.Group(); st.orb.add(core, glow);
+    if(st.def.type==='beam'||spherical) { st.gather=new ChargeGather(color,c.def?.effects?.charge);st.orb.add(st.gather); }
+    c._game.scene.add(st.orb);
   }
   return st.orb;
 }
-function killOrb(c, st) { if (st.orb) { c._game.scene.remove(st.orb); st.orb.children[1].material.dispose(); st.orb = null; } }
+function killOrb(c, st) {
+  st._chargeFx=null;
+  if (st.orb) {
+    if(st.orb.children[0].material!==ORB_CORE_MAT)st.orb.children[0].material.dispose();
+    c._game.scene.remove(st.orb);st.orb.children[1].material.dispose();
+    st.gather?.dispose();st.gather=null;st.orb=null;
+  }
+}
 // KO / despawn mid-generation: silence + remove whatever the slot machines left behind.
 // Without this, an interrupted charge's hum has no stop scheduled and rings FOREVER
 // (the stuck-tone bug); the audio watchdog (audio.sweep) is the backstop for paths we miss.
+// Focus can disappear while simulation is paused, before a release edge gets
+// consumed. Cancel preparations explicitly; committed remote shots remain owned.
+export function cancelHeldSlot(c,key) {
+  c._game?.projectiles?.retirePendingNaniteShots?.(c,key);
+  const st=c.slots[key];if(!st)return;
+  st._handsBusy=false;
+  st._handsRetry=false;
+  const existingCd=st.cd||0;
+    if(st.building){st.building=false;st.fed=0;cooldown(c,st.def,st);}
+    if(st.def.type==='growingorb'&&st.active?.charging&&!st.active.launched){
+      st.active._dispose(c._game);st.active=null;cooldown(c,st.def,st);
+    }
+    if(st.charging||st.drawing){
+      killOrb(c,st);st.charging=false;st.drawing=false;st.chargeT=0;st.drawT=0;
+      st._chargeEntryCost=0;st._chargeInvestedKi=0;cooldown(c,st.def,st);
+      st._poseUntil=-1;
+      if(c._rangedPose?.slot===key)c._rangedPose=null;
+    }
+    if(st.sfx){st.sfx.stop();st.sfx=null;}
+    if(st._loop){st._loop.stop();st._loop=null;}
+    if(st.def.type==='beam'&&st.active&&(!st.def.remoteDetonate||st.active.pendingLaunch)){st.active.end();st.active=null;cooldown(c,st.def,st);}
+  st.cd=Math.max(existingCd,st.cd||0);
+  if(st.def.type==='bow')c._bowDrawT=0;
+  if(c.state==='charge'&&!Object.values(c.slots).some(s=>s.charging||s.building||s.drawing||s.active?.charging))c.state='idle';
+}
+export function cancelHeldAttacks(c) {
+  cancelThrowAction(c);
+  cancelFirearmReload(c);
+  for(const key of Object.keys(c.slots))cancelHeldSlot(c,key);
+  c._bowDrawT=0;
+}
 export function clearSlotFx(c) {
+  cancelThrowAction(c);
+  cancelFirearmReload(c);
+  clearWebSnare(c);
+  c.releaseHang?.();
+  cancelAbilityMeleePose(c);
+  c._game?.projectiles?.retirePendingNaniteShots?.(c);
   for (const k in c.slots) {
     const s = c.slots[k];
+    if(s.def.type==='rush')clearRush(s);
+    if(s.def.type==='melee'){s.t=0;s.hit?.clear();}
+    s._handsBusy=false;
+    s._handsRetry=false;
     if (s.sfx) { s.sfx.stop(); s.sfx = null; }
     if (s.victim) releaseMind(s, c._game);   // the CONTROLLER died/despawned mid-leash — the will snaps back
     killOrb(c, s);
+    s._chargeEntryCost=0; // interrupted preparation is spent, never refunded later
+    s._chargeInvestedKi=0;
+    s.remoteShot=null;
+    if(s.def.remoteDetonate && s.def.type==='beam' && s.active){s.active.end();s.active=null;}
   }
 }
 // Mind control ends — expiry, victim death, or the controller going down (clearSlotFx).
@@ -51,28 +148,27 @@ function drained(c, g) { if (g && g.onDrained) g.onDrained(c); }
 const clamp01 = (v) => (Number.isFinite(v) ? Math.max(0, Math.min(1, v)) : 0);
 
 export const TYPES = {
+  naniteShield(c,def,st,g,inp){
+    const key=Object.keys(c.slots).find(k=>c.slots[k]===st),m=c._nanites?.modules.get(key),view=c.parts.nanites?.get(key);
+    if(!inp.pressed||!ready(c,def,st)||!m||m.retired||!m.unlocked||m.sourceKey!==attackIdentity(def)||!view||forearmOccupied(view.arm)||c._carry)return;
+    toggleNanite(c._nanites,key);cooldown(c,def,st);
+  },
 
   // Rushing fist — "flies fist forward"
   melee(c, def, st, g, inp) {
     if (st.t > 0) {
       st.t -= inp.dt;
-      const foe = g.coneFoe(c, def.range || 11, def.arc || 0.7);
+      const contact=c._abilityMeleePose?.physicalContact&&c._abilityMeleePose.slot===st;
+      if(contact)c._abilityMeleePose.contactPending=true;
+      // Losing/cancelling a physical pose must never reinstate the old cone.
+      const foe = def.contact==='fist'&&c._openSky?null:g.coneFoe(c, def.range || 11, def.arc || 0.7);
       if (foe && !st.hit.has(foe.id)) {
-        st.hit.add(foe.id);
-        const blocked = foe.guarding && foe.staggerT <= 0;
-        foe.takeDamage((def.damage || 20) * c.powerBuff, { src: c, strike: true, dmgClass: def.dmgClass, kb: _v.copy(c.aim).setLength(def.knock || 40).setY(0), launch: def.launch || 12, hitstop: 0.13 });
-        c.hitstop = Math.max(c.hitstop, 0.08);          // attacker freeze for weight
-        const imp = foe.pos.clone().set((c.pos.x + foe.pos.x) / 2, 5.7, (c.pos.z + foe.pos.z) / 2);
-        if (blocked) { g.vfx.impactStar(imp, 7, '#bfe0ff', 0.16); g.world.shake(0.4); g.audio.zap(520); }
-        else {
-          g.vfx.impact(imp, { x: c.aim.x, z: c.aim.z }, { color: def.color || c.def.colors.accent, power: 1.6 });
-          g.world.shake(1.4); g.world.punch(0.72); g.audio.impact(1.2, imp); g.audio.boom(0.3, imp);
-          g.slowmo(0.1, 0.45); if (g.hud) g.hud.flashScreen('#fff', 0.14);
-        }
+        applyAbilityMeleeHit(c,def,st,g,foe);
       }
     }
     if (inp.pressed && ready(c, def, st)) {
-      pay(c, def, st); st.t = def.active || 0.24; st.hit = new Set(); c.punchPose = 1; c.state = 'cast'; c.stateT = 0;
+      pay(c, def, st); st.t = def.active || 0.24; st.hit = new Set(); c.punchPose = 1; c.state = 'cast'; c.stateT = 0;c._castPoseRanged=false;
+      beginAbilityMeleePose(c,st);
       c.vel.x += c.aim.x * (def.lunge || 46); c.vel.z += c.aim.z * (def.lunge || 46);
       if (def.fly) { c.vel.y += 8; }
       c.invuln = Math.max(c.invuln, 0.12);
@@ -84,75 +180,109 @@ export const TYPES = {
   // guard (any angle — you're blocking the flurry, not a direction) bounces the rusher off,
   // ends the combo, and opens the punish window. Rushing a blocker is now a MISTAKE.
   rush(c, def, st, g, inp) {
+    if(rushInterrupted(c)){clearRush(st);return;}
+    if(c.hitstop>0)return;
     if (st.combo > 0) {
+      if(!rushTargetValid(c,st.foe,def,g)){clearRush(st);return;}
       st.timer -= inp.dt;
       if (st.timer <= 0 && st.foe && st.foe.alive) {
         st.timer = def.interval || 0.1;
-        const f = st.foe; const side = (st.combo % 2 === 0) ? 1 : -1;
-        const off = _v.set(-c.aim.z * side, 0, c.aim.x * side).multiplyScalar(6);
-        c.pos.set(f.pos.x - c.aim.x * 6 + off.x, f.pos.y, f.pos.z - c.aim.z * 6 + off.z);
+        const f = st.foe,destination=rushLanding(c,f,st.combo,g);
+        if(!destination){clearRush(st);return;}
+        c.pos.copy(destination);c.vel.set(0,0,0);
         c.faceDir(f.pos.x - c.pos.x, f.pos.z - c.pos.z); c.invuln = 0.12; c.punchPose = 1;
         if (f.guarding && f.staggerT <= 0) {
           // REJECTED — chip lands, the flurry does not
           f.takeDamage((def.damage || 9) * 0.12 * c.powerBuff, { src: c, unblockable: true, hitstop: 0.04 });
           f.guardMeter = Math.max(0, f.guardMeter - 0.08);
-          st.combo = 0;
+          clearRush(st);
           g.onBlockedStrike(c, f, { stagger: 0.55, push: 46 });
         } else {
           const last = st.combo === 1;
           f.takeDamage((last ? (def.finisher || 30) : (def.damage || 9)) * c.powerBuff, { src: c, strike: true, dmgClass: def.dmgClass, kb: _v.copy(c.aim).setLength(last ? 60 : 6).setY(0), launch: last ? 20 : 2, hitstop: last ? 0.1 : 0.03 });
-          g.vfx.flash(f.pos.clone().setY(5.5), def.color || c.def.colors.accent, last ? 8 : 4, 0.12);
-          g.trail(c, def.color || c.def.colors.accent); g.audio.hit(260 + st.combo * 20);
-          if (last) { g.world.shake(1.2); g.world.punch(0.8); g.vfx.shockwave(f.pos.clone().setY(0.2), { color: def.color, radius: 26, power: 1.2 }); }
+          const impact=f.center(new THREE.Vector3());
+          g.vfx.impact(impact,c.aim3||c.aim,{color:def.color||c.def.colors.accent,power:last?1.2:.65});
+          g.trail(c, def.color || c.def.colors.accent); g.audio.hit(260 + st.combo * 20,impact);
+          if (last) {
+            g.world.shake(1.2); g.world.punch(0.8);
+            if(f.pos.y<3)g.vfx.shockwave(f.pos.clone().setY(0.2), { color: def.color, radius: 26, power: 1.2 });
+            else g.vfx.ring(impact,{color:def.color,r0:1,r1:12,life:.24});
+          }
           g.world.shake(0.3);
           st.combo--;
+          if(st.combo<=0)clearRush(st);
         }
-      } else if (!st.foe || !st.foe.alive) st.combo = 0;
+      } else if (!st.foe || !st.foe.alive) clearRush(st);
     }
     if (inp.pressed && ready(c, def, st)) {
-      const foe = g.nearestFoe(c, c.pos, def.range || 70);
-      if (foe) { pay(c, def, st); st.foe = foe; st.combo = def.hits || 6; st.timer = 0; c.state = 'cast'; g.audio.zap(900); }
+      if(Object.values(c.slots).some(s=>s.combo>0))return;
+      const foe = findRushTarget(c, def, g);
+      if (foe) { pay(c, def, st);clearWebSnare(c); st.foe = foe; st.combo = def.hits || 6; st.timer = 0; c.state = 'cast';c._castPoseRanged=false; g.audio.zap(900); }
     }
   },
 
   // Single ki blast / homing bolt
   projectile(c, def, st, g, inp) {
     if (inp.pressed && ready(c, def, st)) {
-      pay(c, def, st); c.punchPose = 1; c.state = 'cast'; c.stateT = 0;
-      const m = c.muzzle(_v.clone(), 3.6, 5.8);
-      g.projectiles.spawnProjectile(c, { vis: visOf(def),
-        pos: m, vel: (def.grav ? c.aim.clone().setY(0.5) : c.aim3.clone()).setLength(def.speed || 70),
+      const launch=(m,throwMesh=null)=>{
+      const velocity=throwMesh?c.aim3.clone():def.grav?c.aim.clone().setY(.5):c.aim3.clone();
+      if(throwMesh)velocity.y+=.5;
+      const shot=g.projectiles.spawnProjectile(c, { vis: visOf(def),
+        collisionPriority:def.collisionPriority,
+        pos: m, vel: velocity.setLength(def.speed || 70),throwMesh,launchFlash:throwMesh?false:undefined,
         radius: def.radius || 1.4, damage: def.damage || 14, blast: def.blast || 5, power: def.power || 1,
         homing: def.homing || 0, color: def.color, color2: def.color2, grav: def.grav || 0, shock: def.shock,
         arrow: def.arrow, payload: def.payload, blind: def.blind, boomerang: def.boomerang, range: def.range,
         card: def.card, disc: def.disc, bounces: def.bounces, pumpkin: def.pumpkin,
         blade: def.blade, canister: def.canister,      // thrown steel / shells read as objects, not orbs
         dtype: def.dtype, siphon: def.siphon,          // the damage TYPE rides the shot
+        splitCount:def.remoteDetonate?def.splitCount:0,splitSpread:def.splitSpread,splitSpeed:def.splitSpeed,splitHoming:def.splitHoming,
       });
+      if(def.remoteDetonate)st.remoteShot=shot;
+      if(throwMesh)return;
       if (def.dtype === 'magic') g.audio.zap(760, c.pos); else g.audio.kiRelease(0.32, c.pos);
       g.muzzleFlash(c, def.color);
+      };
+      if(usesThrowAction(c,def)){
+        if(beginThrowAction(c,st,launch))pay(c,def,st);
+        return;
+      }
+      st._poseWritten=true;
+      pay(c, def, st); c.punchPose = 1; c.state = 'cast'; c.stateT = 0;c._castPoseRanged=true;
+      launch(c.muzzle(_v.clone(),3.6,5.8));
     }
   },
 
-  // Rapid alternating-hand volley (alternating-hand volley)
+  // Actual anatomical hand emissions; paired fire pays for both shots atomically.
   volley(c, def, st, g, inp) {
-    if (inp.held && c.ki < (def.cost || 3)) { if (!st._dry) { st._dry = true; drained(c, g); } }
+    const cost=attackEntryCost(def);
+    if (inp.held && c.ki < cost) { if (!st._dry) { st._dry = true; drained(c, g); } }
     else if (!inp.held) st._dry = false;
-    if (inp.held && st.cd <= 0 && c.ki >= (def.cost || 3)) {
-      c.ki -= (def.cost || 3); st.cd = def.interval || 0.08; st.side = (st.side || 1) * -1;
-      c.state = 'cast'; c.stateT = 0; c.punchPose = 1;
-      const off = _v.set(-c.aim.z * st.side, 0, c.aim.x * st.side).multiplyScalar(1.8);
-      const m = c.muzzle(new THREE.Vector3(), 3.4, 5.8).add(off);
+    if (inp.held && st.cd <= 0 && c.ki >= cost) {
+      st._poseWritten=true;
+      c.ki -= cost; st.cd = def.interval || 0.08;
+      c.state = 'cast'; c.stateT = 0; c.punchPose = 1;c._castPoseRanged=true;
+      const handShots=st.handShots ||= {};
+      for(const side of volleySides(def,st)){
+      handShots[side]=c.animT||0;
+      const m = handEmissionPosition(c,side,new THREE.Vector3());
       const spread = (def.spread || 0.09) * ((c.sheet && c.sheet.spreadMult) || 1);
-      const a = Math.atan2(c.aim3.z, c.aim3.x) + rand(-spread, spread);
+      // Authoring/replay can own the gameplay spread stream independently of
+      // cosmetic particles. Normal matches retain the existing random draw.
+      const spreadDraw=typeof g.attackRandom==='function'?-spread+g.attackRandom()*(2*spread):rand(-spread,spread);
+      const a = Math.atan2(c.aim3.z, c.aim3.x) + spreadDraw;
       g.projectiles.spawnProjectile(c, { vis: visOf(def),
-        pos: m, vel: new THREE.Vector3(Math.cos(a), c.aim3.y, Math.sin(a)).setLength(def.speed || 105),
+        collisionPriority:def.collisionPriority,
+        handOrigin:side,
+        launchTarget:c.hasAimWorld?c.aimWorld:null,launchSpread:spreadDraw,
+        pos: m, vel: new THREE.Vector3(Math.cos(a)*Math.hypot(c.aim3.x,c.aim3.z), c.aim3.y, Math.sin(a)*Math.hypot(c.aim3.x,c.aim3.z)).setLength(def.speed || 105),
         radius: def.radius || 0.8, damage: def.damage || 6, blast: def.blast || 3.4, power: 0.5, color: def.color, color2: def.color2,
         arrow: def.arrow, payload: def.payload, blind: def.blind, blade: def.blade,
         grav: def.grav, card: def.card, ground: def.grav > 0,
         homing: def.homing, bounces: def.bounces,
       });
-      g.audio.blast(560 + rand(-40, 40), 0.08); g.muzzleFlash(c, def.color, 0.6, off);
+      }
+      g.audio.blast(560 + rand(-40, 40), 0.08);
     }
   },
 
@@ -161,28 +291,29 @@ export const TYPES = {
     // finish if the live beam self-terminated (ran out of ki)
     if (st.active && st.active.dead) { st.active = null; st.cd = def.cd || 0; }
     if (inp.pressed && ready(c, def, st) && !st.active && !st.charging) {
-      if (def.charge) { st.charging = true; st.chargeT = 0; st.sfx = g.audio.charge(); }
-      else { st.active = g.spawnBeamFor(c, def, 1); pay(c, def, st); }
+      if (def.charge) beginPaidCharge(c, def, st, g);
+      else if(c.spendKi(def.cost||0)) { st.active = g.spawnBeamFor(c, def, 1, def.cost||0); cooldown(c,def,st); }
     }
     if (st.charging) {
       const dry = inp.held && st.chargeT < (def.maxCharge || 1.6) && !c.spendKi((def.kiChargePerSec || 14) * inp.dt);
       if (inp.held && !dry && st.chargeT < (def.maxCharge || 1.6)) {
+        st._chargeInvestedKi+=(def.kiChargePerSec || 14)*inp.dt;
         st.chargeT += inp.dt; c.state = 'charge';
-        const orb = chargeOrb(c, st, def.color2 || def.color); const m = c.muzzle(_v.clone(), 3.6, 5.8);
+        const orb = chargeOrb(c, st, def.color); const m = c.muzzle(_v.clone(), 3.6, 5.8);
         orb.position.copy(m); orb.scale.setScalar(0.6 + st.chargeT * 1.6);
         if (st.sfx) st.sfx.ramp(st.chargeT / (def.maxCharge || 1.6));
-        g.chargeGather(c, def.color, m, 0.5 + st.chargeT);
+        st.gather.update(st.chargeT,st.chargeT/(def.maxCharge||1.6));
       } else if (inp.released || st.chargeT >= (def.maxCharge || 1.6) || dry) {
         // ran dry mid-charge → fire at whatever you paid for (never a frozen orb), with a clear cue
         if (dry) drained(c, g);
         const p = 1 + (st.chargeT / (def.maxCharge || 1.6)) * (def.chargePower || 1.4);
         killOrb(c, st); if (st.sfx) { st.sfx.stop(); st.sfx = null; }
-        st.charging = false; st.active = g.spawnBeamFor(c, def, p); pay(c, def, st);
-        g.world.punch(0.9); g.world.shake(0.8);
+        st.charging = false; st.active = g.spawnBeamFor(c, def, p, st._chargeInvestedKi); finishPaidCharge(c, def, st);
+        // The beam owns release feedback: a preparing emitter has not fired.
         return; // don't let this same-frame release also end the beam
       }
     }
-    if (st.active && inp.released) { st.active.end(); st.active = null; st.cd = def.cd || 0; }
+    if (st.active && inp.released && !def.remoteDetonate) { st.active.end(); st.active = null; st.cd = def.cd || 0; }
   },
 
   // Wide breath cone — cold (slow) or force (push)
@@ -190,7 +321,7 @@ export const TYPES = {
     if (inp.held && c.ki < (def.kiPerSec || 18) * inp.dt) { if (!st._dry) { st._dry = true; drained(c, g); } if (st._loop) { st._loop.stop(); st._loop = null; } }
     else if (!inp.held) st._dry = false;
     if (inp.held && c.ki >= (def.kiPerSec || 18) * inp.dt) {
-      c.ki -= (def.kiPerSec || 18) * inp.dt; c.state = 'cast'; c.stateT = 0;
+      c.ki -= (def.kiPerSec || 18) * inp.dt; c.state = 'cast'; c.stateT = 0;c._castPoseRanged=false;
       c.vel.x *= 0.7; c.vel.z *= 0.7;
       const range = def.range || 34, arc = def.arc || 1.05;
       const m = c.muzzle(_v.clone(), 3.0, 6.2);
@@ -272,21 +403,20 @@ export const TYPES = {
 
   // Nova Burst — charge scales size/damage/radius; ground impact => shockwave + lightning
   charge(c, def, st, g, inp) {
-    if (inp.pressed && ready(c, def, st) && !st.charging) { st.charging = true; st.chargeT = 0; st.sfx = g.audio.charge(); }
+    if (inp.pressed && ready(c, def, st) && !st.charging) beginPaidCharge(c, def, st, g);
     if (st.charging) {
       const dry = inp.held && !c.spendKi((def.kiPerSec || 12) * inp.dt);
       if (dry) drained(c, g);                                  // out of ki → hurl what you built up, loudly
       if (inp.held && !dry) {
         st.chargeT = Math.min(def.maxCharge || 2.2, st.chargeT + inp.dt); c.state = 'charge';
-        c.vel.x *= 0.85; c.vel.z *= 0.85;
         const c01 = st.chargeT / (def.maxCharge || 2.2);
         const orb = chargeOrb(c, st, def.color); const m = c.muzzle(_v.clone(), def.chest ? 1.2 : 3.4 + c01 * 2, def.chest ? 5.4 : 5.8);
-        if (def.chest && Math.random() < 0.3) g.vfx.ring(m.clone(), { color: def.color2 || '#fff', r0: 0.4, r1: 1.8 + c01 * 2.4, life: 0.2 });
-        orb.position.copy(m); orb.scale.setScalar((def.minR || 1.3) + c01 * ((def.maxR || 5) - (def.minR || 1.3)));
+        st._chargeRadius=(def.minR||1.3)+c01*((def.maxR||5)-(def.minR||1.3));
+        orb.position.copy(m); orb.scale.setScalar(st._chargeRadius);
         if (st.sfx) st.sfx.ramp(c01);
-        g.chargeGather(c, def.color, m, 0.6 + c01 * 1.6);
+        st._chargeFx=c01; // consumed once, after the final pose and hit-reaction carrier
+        st.gather?.update(st.chargeT,c01);
         if (c01 > 0.6 && Math.random() < c01 * 0.4) g.world.shake(0.15 * c01);
-        if (c01 >= 1 && Math.random() < 0.3) g.vfx.lightning(m, { color: def.color, count: 2, radius: 8, height: 6 });
       } else if (inp.released || (!inp.held) || dry) {
         // ⚠ `st.chargeT` is undefined if a release arrives without a charge ever having started
         // (a stray released-edge, a netplay echo, a scripted test). `undefined / n` is NaN, and
@@ -296,16 +426,28 @@ export const TYPES = {
         st.charging = false; if (st.sfx) { st.sfx.stop(); st.sfx = null; }
         const orbPos = st.orb ? st.orb.position.clone() : c.muzzle(new THREE.Vector3());
         killOrb(c, st);
-        if (c01 < 0.12) { st.cd = 0.2; return; } // fizzle, refund
-        pay(c, def, st);
+        if (c01 < 0.12) {
+          // No projectile formed: return the entry fee, not charge energy already spent.
+          c.ki=Math.min(c.maxKi,c.ki+(st._chargeEntryCost || 0));st._chargeEntryCost=0;
+          st.cd = 0.2; return;
+        }
+        finishPaidCharge(c, def, st);
+        st._poseWritten=true;
         const power = 1 + c01 * (def.chargePower || 3);
-        g.projectiles.spawnProjectile(c, { vis: visOf(def),
+        const naniteSlot=def.naniteForm==='cannon'?Object.keys(c.slots).find(k=>c.slots[k]===st):null;
+        const shot=g.projectiles.spawnProjectile(c, { vis: visOf(def),
+          collisionPriority:def.collisionPriority,
+          powerOrigin:{...(naniteSlot?{naniteForm:'cannon',slot:naniteSlot,epoch:c._nanites.modules.get(naniteSlot).epoch}:{}),faceOrigin:def.faceOrigin,chest:def.chest,castStyle:def.castStyle,castHand:def.castHand,charge:def.charge,radius:lerp(def.minR||1.3,def.maxR||5,c01)},
+          naniteRelease:def.naniteForm==='cannon'?{sound:.5+c01*1.1,punch:.85-c01*.15,shake:.6+c01}:null,
+          launchTarget:c.hasAimWorld?c.aimWorld:null,
+          launchFlash:{color:def.color,size:8+c01*8,life:.2},
           pos: orbPos, vel: c.aim3.clone().setLength(lerp(def.speedMax || 70, def.speedMin || 42, c01)),
           radius: lerp(def.minR || 1.3, def.maxR || 5, c01), damage: lerp(def.dmgMin || 20, def.dmgMax || 70, c01),
           blast: lerp(8, def.maxBlast || 26, c01), power, color: def.color, color2: def.color2, shock: true, ground: true,
+          splitCount:def.remoteDetonate?def.splitCount:0,splitSpread:def.splitSpread,splitSpeed:def.splitSpeed,splitHoming:def.splitHoming,
         });
-        g.audio.kiRelease(0.5 + c01 * 1.1, c.pos); g.world.punch(0.85 - c01 * 0.15); g.world.shake(0.6 + c01);
-        g.vfx.flash(orbPos, def.color, 8 + c01 * 8, 0.2);
+        if(def.remoteDetonate)st.remoteShot=shot;
+        if(def.naniteForm!=='cannon'){g.audio.kiRelease(0.5 + c01 * 1.1, c.pos); g.world.punch(0.85 - c01 * 0.15); g.world.shake(0.6 + c01);}
       }
     }
   },
@@ -315,7 +457,7 @@ export const TYPES = {
     if (st.active && st.active.dead) { st.active = null; st.cd = def.cd || 0; if (st.sfx) { st.sfx.stop(); st.sfx = null; } }
     if (inp.pressed && ready(c, def, st) && !st.active) {
       pay(c, def, st); st.active = g.projectiles.spawnGrowingOrb(c, { minR: def.minR || 4, maxR: def.maxR || 18, growRate: def.growRate || 8, kiPerSec: def.kiPerSec || 16, color: def.color, color2: def.color2 });
-      st.sfx = g.audio.charge();
+      st.sfx = g.audio.charge(c.pos);
     }
     if (st.active) {
       if (st.sfx) st.sfx.ramp(st.active.charge01);
@@ -381,6 +523,19 @@ export const TYPES = {
 
   // Controllable construct (fist / hammer / wall / turret)
   construct(c, def, st, g, inp) {
+    const policy=resolveConstructPolicy(def);
+    if(def.construct==='tank'||policy.mode!=='timed'){
+      if(c.alive===false||c.hitstop>0||c.staggerT>0||c.stunT>0||c.frozenT>0||c.grabbedBy||c.grabbing||c.grabState||c.sleepT>0||c.downedT>0)return;
+      if(st.active?.dead)st.active=null;
+      if(inp.pressed){
+        if(st.active){st.active._dispose(g,'dismissed');return;}
+        if(ready(c,def,st)){
+          const active=g.spawnConstruct(c,def,st);
+          if(active){pay(c,def,st);st.active=active;g.audio.power(true);}
+        }
+      }
+      return; // Release/focus cancellation is never a resource dismissal.
+    }
     if (st.active && st.active.dead) st.active = null;
     if (inp.pressed && ready(c, def, st)) {
       if (st.active) { st.active.trigger(); }
@@ -419,6 +574,10 @@ export const TYPES = {
   // Tentacle grab-slam: lash out, seize a foe, drag them in, then HURL them into geometry —
   // the slam-damage physics (entity._slam) does the wall/ground crunch on arrival.
   tentacle(c, def, st, g, inp) {
+    if(def.web){
+      if(inp.pressed&&ready(c,def,st)&&beginWebSnare(c,def,st,g))pay(c,def,st);
+      return;
+    }
     const range = def.range || 34;
     const letGo = () => { if (c.tentacles) for (const t of c.tentacles) t.target = null; st.phase = null; st.foe = null; };
     if (st.phase === 'reach') {
@@ -472,7 +631,7 @@ export const TYPES = {
       if (foe) {
         pay(c, def, st);
         st.phase = 'reach'; st.t = def.reachT || 0.22; st.foe = foe; st.pt = st.pt || new THREE.Vector3(); foe.center(st.pt);
-        c.state = 'cast'; c.stateT = 0; g.audio.zap(240);
+        c.state = 'cast'; c.stateT = 0;c._castPoseRanged=false; g.audio.zap(240);
       }
     }
   },
@@ -672,14 +831,22 @@ export const TYPES = {
     }
   },
 
-  // Pulse rifle / firearm — held auto-fire tracers with spread + recoil (ammo = ki)
+  // Physical magazines opt in; energy weapons retain their existing ki supply.
   rifle(c, def, st, g, inp) {
-    if (inp.held && c.ki < (def.cost || 2)) { if (!st._dry) { st._dry = true; drained(c, g); } }
+    const ammo=firearmAmmo(st),cost=def.cost??(ammo?0:2);
+    if(c._firearmReload)return;
+    if(ammo&&inp.held&&ammo.loaded<=0){emptyFirearm(c,st,g);return;}
+    // Trigger ownership lasts across a slow weapon's cooldown. Recoil/cost and
+    // handShots still occur only on emission, not every held input frame.
+    if(inp.held&&c.ki>=cost)st._poseUntil=c.animT+.18;
+    if (inp.held && c.ki < cost) { if (!st._dry) { st._dry = true; drained(c, g); } }
     else if (!inp.held) st._dry = false;
-    if (inp.held && st.cd <= 0 && c.ki >= (def.cost || 2)) {
-      c.ki -= (def.cost || 2); st.cd = def.interval || 0.09;
-      c.state = 'cast'; c.stateT = 0; c.punchPose = 1;
-      const m = c.muzzle(_v.clone(), 4.4, 5.7);
+    if (inp.held && st.cd <= 0 && c.ki >= cost) {
+      st._poseWritten=true;
+      c.ki -= cost;if(ammo)ammo.loaded--;st.cd = def.interval || 0.09;
+      c.state = 'cast'; c.stateT = 0; c.punchPose = 1;c._castPoseRanged=true;
+      const emitter=firearmEmitter(c,def),m=emitter.socket?emitter.socket.getWorldPosition(_v.clone()):c.muzzle(_v.clone());
+      (st.handShots ||= {})[emitter.side]=c.animT;
       // WEAPON CLASS — the same slot type, three different guns. `weapon` on the ability def:
       //   shotgun · a fan of pellets, brutal in your face, useless across the street
       //   pistol  · one accurate, heavy shot on a slow trigger
@@ -698,13 +865,17 @@ export const TYPES = {
       let spread = (def.spread ?? SP[cls] ?? 0.045) * ((c.sheet && c.sheet.spreadMult) || 1);   // Marksman tightens the group
       if (aimed) spread *= def.stance.spreadMult ?? 0.18;
       const pellets = cls === 'shotgun' ? (def.pellets || 8) : 1;
-      const base = Math.atan2(c.aim3.z, c.aim3.x);
+      const random=g.attackRandom||Math.random;
       for (let i = 0; i < pellets; i++) {
-        const a = base + rand(-spread, spread);
+        const yaw=(random()*2-1)*spread,pitch=(random()*2-1)*spread*.7;
+        const velocity=c.aim3.clone().applyAxisAngle(THREE.Object3D.DEFAULT_UP,-yaw);velocity.y+=pitch;
         g.projectiles.spawnProjectile(c, { vis: visOf(def),
-          pos: m, vel: new THREE.Vector3(Math.cos(a), c.aim3.y + rand(-spread, spread) * 0.7, Math.sin(a)).setLength((def.speed || 170) * (cls === 'shotgun' ? rand(0.85, 1) : 1)),
-          radius: def.radius || 0.55, damage: def.damage || 5, blast: def.blast || 2.2, power: 0.35,
-          color: def.color, color2: def.color2, life: (cls === 'shotgun' ? 0.34 : 1.4) * (aimed ? (def.stance.rangeMult ?? 1.8) : 1),   // pellets die fast = real range falloff
+          pos:m,vel:velocity.setLength((def.speed||170)*(cls==='shotgun'?.85+random()*.15:1)),
+          emitterSocket:emitter.socket,emitterDef:def,handOrigin:emitter.side,
+          launchTarget:c.hasAimWorld?c.aimWorld:null,launchSpread:yaw,launchPitch:pitch,
+          launchFlash:i===0?{color:'#ffcf6a',scale:cls==='shotgun'?.9:.55}:false,
+          radius: def.radius || 0.55, damage: def.damage || 5, blast: def.blast ?? 2.2, power: 0.35,
+          color: def.color, color2: def.color2, life: firearmLife({...def,weapon:cls}) * (aimed ? (def.stance.rangeMult ?? 1.8) : 1),
           bullet: true, ballistic: true, weapon: cls, bounces: def.bounces,
         });
       }
@@ -721,7 +892,6 @@ export const TYPES = {
       // PDW the only weapon in the game a bot could hear being fired. The broadcast is what bots
       // actually hear (the honesty law) — so it has to run for everything, scaled by the report.
       g.noise(c.pos, def.quiet ?? (cls === 'shotgun' ? 1.1 : cls === 'pistol' ? 0.8 : 0.9), c);
-      g.muzzleFlash(c, '#ffcf6a', cls === 'shotgun' ? 0.9 : 0.55);
     }
   },
 
@@ -729,7 +899,7 @@ export const TYPES = {
   // target, arrives... hangs there for a heartbeat... then detonates a massive delayed shockwave.
   // Size, damage, and blast all scale with how much energy he pours into her.
   facebomb(c, def, st, g, inp) {
-    if (inp.pressed && ready(c, def, st) && !st.charging) { st.charging = true; st.chargeT = 0; st.sfx = g.audio.charge(); }
+    if (inp.pressed && ready(c, def, st) && !st.charging) { st.charging = true; st.chargeT = 0; st.sfx = g.audio.charge(c.pos); }
     if (st.charging) {
       const dry = inp.held && !c.spendKi((def.kiPerSec || 13) * inp.dt);
       if (dry) drained(c, g);
@@ -767,7 +937,7 @@ export const TYPES = {
   // drainedT opens, and if you have Overdrive, your fists are the comeback plan.
   nova(c, def, st, g, inp) {
     if (inp.pressed && ready(c, def, st) && !st.building) {
-      st.building = true; st.fed = 0; st.sfx = g.audio.charge();
+      st.building = true; st.fed = 0; st.sfx = g.audio.charge(c.pos);
       if (c.def.yells) { c._yellCd = 0; g.heroYell(c, 1.2); }
     }
     if (st.building) {
@@ -865,6 +1035,15 @@ export const TYPES = {
   // ENEMY instead of a building and drags THEM to YOU — the inverse of the mantle, and a
   // heavier cable so the two never read the same.
   grapple(c, def, st, g, inp) {
+    if(def.zip){
+      if(!inp.pressed)return;
+      if(c._grapple||c.hanging){c.releaseHang();return;}
+      if(!ready(c,def,st))return;
+      const anchor=findWebZipAnchor(c,g.world,def.range||150);
+      if(!anchor){st.cd=.25;if(g.isHuman(c))g.hud?.feed?.('NO WEB ANCHOR — aim at a solid wall or roof',def.color||'#eaffff');return;}
+      pay(c,def,st);clearWebSnare(c);cancelHeldAttacks(c);beginWebZip(c,anchor,def);g.audio?.zap?.(760,c.pos);
+      g.vfx?.ring?.(new THREE.Vector3(anchor.x,anchor.y,anchor.z),{color:def.color||'#eaffff',r0:.5,r1:3.5,life:.3});return;
+    }
     if (def.reel && inp.pressed && ready(c, def, st)) {
       const foe = g.nearestFoe(c, c.pos, def.range || 90);
       if (foe && foe.alive && !foe.isDecoy && g.canSee(c, foe)) {
@@ -976,7 +1155,7 @@ export const TYPES = {
     if (inp.held && c.ki < (def.kiPerSec || 14) * inp.dt) { if (!st._dry) { st._dry = true; drained(c, g); } if (st._loop) { st._loop.stop(); st._loop = null; } }
     else if (!inp.held) st._dry = false;
     if (inp.held && c.spendKi((def.kiPerSec || 14) * inp.dt)) {
-      c.state = 'cast'; c.stateT = 0;
+      c.state = 'cast'; c.stateT = 0;c._castPoseRanged=false;
       // THE SIPHON VOICE — a downward pull that swells when it finds a victim, fades on release.
       if (!st._loop) st._loop = g.audio.sustain ? g.audio.sustain('drain', c.pos) : null;
       const foe = g.coneFoe(c, def.range || 26, def.arc || 0.9);
@@ -1014,7 +1193,7 @@ export const TYPES = {
     }
     if (inp.pressed && ready(c, def, st)) {
       pay(c, def, st); st.count = def.count || 10; st.timer = 0; st.tx = g.aimPoint.x; st.tz = g.aimPoint.z;
-      c.state = 'cast'; g.audio.power(true); g.world.shake(0.6);
+      c.state = 'cast';c._castPoseRanged=false; g.audio.power(true); g.world.shake(0.6);
       g.vfx.ring(new THREE.Vector3(st.tx, 0.4, st.tz), { color: def.color, r0: 4, r1: def.spread * 2 || 40, life: 0.8, flat: true, y: 0.4 });
     }
   },
@@ -1022,6 +1201,11 @@ export const TYPES = {
 
 export function runSlot(c, key, inp, g) {
   const st = c.slots[key]; if (!st) return;
+  if(c._throwAction&&(inp.pressed||inp.held)&&!remoteAttack(c,st))return;
+  if(c._firearmReload&&(inp.pressed||inp.held))return;
+  st._handsBusy=false;
+  // An all-false frame can mean combat/input suppression, not a physical key-up.
+  if(inp.pressed||inp.released)st._handsRetry=false;
   // PURE BOXING (engine/boxingring.js): no powers, no guns, no gadgets — fists and the trifecta,
   // which is the one thing that does NOT come through here. ⚠ It is a flag on the FIGHTER, not a
   // check on the mode, so nothing in the ability layer has to know a boxing ring exists and any
@@ -1035,7 +1219,12 @@ export function runSlot(c, key, inp, g) {
   // it (a test harness, a replay, a net frame) would inject NaN into a dozen accumulators.
   if (!Number.isFinite(inp.dt)) inp.dt = (g && g.dt) || 1 / 60;
   // LEDGE-HANG: one hand is holding the building — only oneHand-flagged abilities fire up there.
-  if (c.hanging && !st.def.oneHand) {
+  if (c.hanging && (!st.def.oneHand || st.def.type==='volley'&&!['left','right'].includes(volleyPattern(st.def)))) {
+    // A tagged forearm cannot retain paid preparation behind this legacy early
+    // return and fire when the player later drops with the trigger released.
+    if(st.def.naniteForm==='cannon'){
+      cancelHeldSlot(c,key);st._naniteDenied='occupied';st._naniteRetry=!!inp.held&&!inp.released;
+    }
     if (inp.pressed && g && g.isHuman(c) && g.hud) g.hud.feed('One hand on the wall — that needs both', '#8b8577');
     return;
   }
@@ -1045,12 +1234,62 @@ export function runSlot(c, key, inp, g) {
     if (inp.pressed && g && g.isHuman(c) && g.hud) { g.hud.feed('DISARMED — your hands are empty', '#ff8a6a'); if (g.hud.kiDenied) g.hud.kiDenied(key); }
     return;
   }
+  const remote=remoteAttack(c,st);
+  if(inp.pressed && remote){
+    // This is control of energy already paid for, not another launch. Cooldown
+    // and an empty ki pool must not swallow the detonation or flash a false denial.
+    if(c.alive!==false && !(c.hitstop>0 || c.staggerT>0 || c.stunT>0 || c.frozenT>0 || c.grabbedBy)){
+      remote.detonate(g);st.remoteShot=null;
+      if(st.def.type==='beam')st.active=null;
+      cooldown(c,st.def,st);
+    }
+    return;
+  }
   // pressing an ability you can't afford → tell the player WHY nothing happened
-  if (inp.pressed && (st.def.cost || 0) > c.ki && st.cd <= 0 && g.onNoKi) g.onNoKi(c, key);
+  if (!slotUnlocked(c,key)) {
+    if (inp.pressed && g.isHuman?.(c)) g.hud?.feed(`${st.def.name || 'Attack'} unlocks at level ${unlockLevel(c.def,key)}`, '#d9b86b');
+    return;
+  }
+  if(st.def.naniteForm==='cannon'){
+    if(inp.pressed||inp.released)st._naniteRetry=false;
+    const reason=naniteUseReason(c,key);st._naniteDenied=reason;
+    if(reason){
+      if(st.charging)cancelHeldSlot(c,key);
+      if(inp.pressed||inp.held)st._naniteRetry=!inp.released;
+      if(inp.pressed&&g.isHuman?.(c))g.hud?.feed(reason==='occupied'?'Forearm occupied':reason==='obstructed'?'Muzzle obstructed':`Cannon ${reason}`,'#d9b86b');
+      return;
+    }
+    if(st._naniteRetry&&!inp.pressed&&!inp.released)return;
+  }
+  // A real hand cannot gather or launch two incompatible powers at once. The
+  // first action owns it through sustain/preparation and its short recovery.
+  // Releases and remote control above always pass; a denied press is not queued.
+  const conflict=(inp.pressed||inp.held)&&conflictingHandSlot(c,st);
+  if(st._handsRetry&&!inp.pressed&&!inp.released){st._handsBusy=!!conflict;return;}
+  if(conflict){
+    st._handsBusy=true;
+    st._handsRetry=!inp.released;
+    if(inp.pressed&&g.isHuman?.(c))g.hud?.feed('Hands occupied — release the current hand attack first','#d9b86b');
+    if(!inp.released)return;
+    // Bots/replays can deliver a tap as pressed+released in one command. Honor
+    // its release cleanup, not the conflicting new press hidden in that tap.
+    inp={...inp,pressed:false,held:false};
+  }
+  const ownedConstruct=st.def.type==='construct'?constructForSlot(g,c,st):null;
+  if (inp.pressed && !ownedConstruct && (st.def.cost || 0) > c.ki && st.cd <= 0 && g.onNoKi) g.onNoKi(c, key);
   // stamp real input on the slot — held types (cones/phase/lifedrain) leave no cd/sustain
   // trace, so this is what the tutorial (and any future telemetry) watches
   if (inp.pressed || inp.held) { (c._slotUse || (c._slotUse = {}))[key] = true; if (inp.pressed) c._lastSlot = key; }   // _lastSlot feeds the mastery counter
+  st._poseWritten=false;
   const fn = TYPES[st.def.type]; if (fn) fn(c, st.def, st, g, inp);
+  // Cast-writing handlers stamp their pose ownership explicitly. Resource-only
+  // actions (buffs, teleports, etc.) must not steal a lingering ranged recovery.
+  // Actual successful firing, not merely held input or a cooldown denial.
+  // Used only by visual gait/aim layers; no effect on weapon timing or damage.
+  if(st._poseWritten){
+    st._poseUntil=c.animT+.24;
+    c._rangedPose={slot:key,until:st._poseUntil};
+  }
 }
 
 // ---------- double-tap evade — per-hero movement tech (data: def.evade = {kind,...}) ----------
@@ -1058,7 +1297,7 @@ export function runSlot(c, key, inp, g) {
 //        slide (long low-friction skate) · phase (dash while intangible)
 export const EVADE_DEFAULTS = {
   dash: { name: 'Evade Dash', cost: 5, cd: 0.7, power: 105, iframes: 0.22 },
-  blink: { name: 'Blink', cost: 8, cd: 1.0, range: 22, iframes: 0.3 },
+  blink: TELEPORT_TIERS.blink,
   sprint: { name: 'Sprint', cost: 6, cd: 2.2, mult: 1.65, dur: 1.5 },
   slide: { name: 'Slide', cost: 4, cd: 0.9, power: 125, slideT: 0.55, iframes: 0.2 },
   phase: { name: 'Phase Slip', cost: 7, cd: 1.1, power: 95, iframes: 0.45 },
@@ -1066,27 +1305,30 @@ export const EVADE_DEFAULTS = {
 };
 
 export function performEvade(c, dir, g) {
-  const ev = c.def.evade; if (!ev || c.evadeCd > 0 || c.grabbedBy || c.staggerT > 0 || c.state === 'ko') return false;
-  const d = { ...EVADE_DEFAULTS[ev.kind || 'dash'], ...ev };
-  // FOOTWORK IS FOOTWORK (aaa-02 §3.5 change 1): under an OPEN SKY the four ground-flavoured kinds
-  // (dash / slide / sprint / leap) need feet on something — a slide in mid-air is a cartoon. `blink`
-  // and `phase` stay available airborne: a teleport and an intangibility slip are not steps.
-  // ⚠ _openSky-gated ON PURPOSE — in the CITY every fighter keeps their air-juke exactly as tuned
-  // (bots juke incoming projectiles with these; removing that roster-wide is a balance change this
-  // pass has no mandate for). The dimension where the two-grammar rule lives is where it binds.
-  if (c._openSky && !c.onFoot && (d.kind === 'dash' || d.kind === 'slide' || d.kind === 'sprint' || d.kind === 'leap')) return false;
+  const ev = c.def.evade;
+  if (!ev || c.evadeCd > 0 || c.grabbedBy || c.grabbing || c.grabState || c.staggerT > 0 || c.hitstop > 0 || c.frozenT > 0 || c.stunT > 0 || c.sleepT > 0 || c.downedT > 0 || c.state === 'ko') return false;
+  const d = { kind: 'dash', ...EVADE_DEFAULTS[ev.kind || 'dash'], ...ev };
+  const dl = Math.hypot(dir?.x, dir?.z);
+  if(!Number.isFinite(dl)||dl<0.001)return false;
+  const dx=dir.x/dl,dz=dir.z/dl;
+  // Air evasions use a brief lateral impulse, not a ground slide/leap animation.
+  // Preserve forward momentum so double-tapping sideways can juke mid-swoop.
+  if (c._openSky && c.flying && !c.onFoot && ['dash','slide','sprint','leap'].includes(d.kind)) {
+    d.kind='dash';d.power=d.power??92;d.iframes=d.iframes??.18;
+  }
   if (c.ki < (d.cost || 0)) { if (g.onNoKi) g.onNoKi(c, 'evade'); return false; }
+  const destination=d.kind==='blink'?teleportDestination(c,dir,d.range??22,g.world):null;
+  if(d.kind==='blink'&&!destination)return false;
   c.ki -= d.cost || 0; c.evadeCd = (d.cd || 0.7) * ((c.sheet && c.sheet.evadeCdMult) || 1);   // AGILITY + Acrobat recover faster
   const color = d.color || c.def.colors.accent;
-  const dl = Math.hypot(dir.x, dir.z) || 1; const dx = dir.x / dl, dz = dir.z / dl;
   switch (d.kind) {
     case 'blink': {
-      if (g.intercept && g.intercept(c)) break;   // the same intercept, the other lane
-      g.afterimage(c); g.vfx.flash(c.pos.clone().setY(5), color, 5, 0.18); g.audio.teleport();
-      c.pos.x += dx * (d.range || 22); c.pos.z += dz * (d.range || 22);
-      c.vel.multiplyScalar(0.25); c.invuln = Math.max(c.invuln, d.iframes || 0.3);
-      g.afterimage(c); g.vfx.flash(c.pos.clone().setY(5), color, 6, 0.2);
-      g.particles.burst(c.pos.x, 5, c.pos.z, { count: 14, speed: 22, life: 0.35, size: 2.4, color: ['#fff', color] });
+      g.afterimage(c); g.vfx.flash(c.pos.clone().setY(c.pos.y+5), color, 5, 0.18); g.audio.teleport(c.pos);
+      c.pos.set(destination.x,destination.y,destination.z);
+      if(!(c._openSky&&c.flying&&!c.onFoot))c.vel.multiplyScalar(0.25);
+      c.invuln = Math.max(c.invuln, d.iframes ?? 0.3);
+      g.afterimage(c); g.vfx.flash(c.pos.clone().setY(c.pos.y+5), color, 6, 0.2);
+      g.particles.burst(c.pos.x, c.pos.y+5, c.pos.z, { count: 14, speed: 22, life: 0.35, size: 2.4, color: ['#fff', color] });
       break;
     }
     case 'sprint':

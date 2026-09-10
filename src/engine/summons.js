@@ -1,6 +1,9 @@
 // WAR WORLD: ASCENDANTS — summoned minions & controllable constructs.
 import * as THREE from 'three';
 import { clamp, rand, TAU, damp } from '../core/util.js';
+import { ConstructSurface } from './construct-surface.js';
+import {resolveConstructPolicy,validConstructOwner,debitConstructKi,exhaustConstructOwner} from './construct-policy.js';
+import {tankSettings,tankPlacement,buildTank,stepTank,tankSurfaces} from './construct-tank.js';
 
 const _v = new THREE.Vector3();
 
@@ -108,40 +111,116 @@ export class Minion {
 
 // Player-steered construct: fist / hammer / wall / turret.
 export class Construct {
-  constructor(game, owner, def) {
+  constructor(game, owner, def, placement = null) {
     this.game = game; this.owner = owner; this.kind = def.construct || 'fist';
-    this.def = def; this.dead = false; this.life = def.duration || 9;
+    this.policy = resolveConstructPolicy(def);
+    if(this.kind==='tank'){
+      this.tank=tankSettings(def);placement??=tankPlacement(game,owner);
+      if(!placement)throw new RangeError('Invalid tank placement');
+    }
+    this.def = def; this.dead = false; this.life = this.policy.mode==='timed' ? def.duration || 9 : Infinity;
+    this.kiSpent = 0; this.hitCount = 0; this.damageReceived = 0;
     this.pos = new THREE.Vector3(); this.state = 'idle'; this.stateT = 0; this.fireCd = 0;
     this.color = def.color || '#5fd66a';
-    const mat = new THREE.MeshStandardMaterial({ color: this.color, emissive: this.color, emissiveIntensity: 0.9, transparent: true, opacity: 0.72, roughness: 0.3 });
-    const glowMat = new THREE.MeshBasicMaterial({ color: this.color, transparent: true, opacity: 0.3, blending: THREE.AdditiveBlending, depthWrite: false });
+    const solidColor = new THREE.Color(this.color).multiplyScalar(0.68);
+    const emissiveColor = new THREE.Color(this.color).multiplyScalar(0.55);
+    const mat = new THREE.MeshStandardMaterial({ color: solidColor, emissive: emissiveColor, emissiveIntensity: 0.24, transparent: true, opacity: 0.52, roughness: 0.48 });
+    const edgeMat = new THREE.MeshBasicMaterial({ color: this.color, transparent: true, opacity: 0.14, wireframe: true, blending: THREE.NormalBlending, depthWrite: false });
     let geo, gr = new THREE.Group();
-    if (this.kind === 'fist') { geo = new THREE.BoxGeometry(6, 5, 7); }
+    if (this.kind === 'tank') { geo = null; }
+    else if (this.kind === 'fist') { geo = new THREE.BoxGeometry(5.2, 4.2, 5.4); }
     else if (this.kind === 'hammer') { geo = new THREE.BoxGeometry(8, 6, 6); }
     else if (this.kind === 'wall') { geo = new THREE.BoxGeometry(22, 14, 3); }
     else { geo = new THREE.ConeGeometry(3.5, 8, 6); } // turret
-    const body = new THREE.Mesh(geo, mat); body.castShadow = true; gr.add(body);
-    const glow = new THREE.Mesh(geo.clone(), glowMat); glow.scale.setScalar(1.15); gr.add(glow);
+    const body = this.kind==='tank'?buildTank(this,gr,mat,placement):new THREE.Mesh(geo, mat);
+    body.castShadow = true;if(this.kind!=='tank')gr.add(body);
+    if (this.kind === 'fist') {
+      body.name = 'construct-fist-palm';
+      for (let i = 0; i < 4; i++) {
+        const knuckle = new THREE.Mesh(new THREE.BoxGeometry(1.15, 1.15, 1.5), mat);
+        knuckle.name = `construct-fist-knuckle-${i + 1}`;
+        knuckle.position.set(-2.1 + i * 1.4, 1.9, 2.7);
+        knuckle.castShadow = true; gr.add(knuckle);
+      }
+      const thumb = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.6, 2), mat);
+      thumb.name = 'construct-fist-thumb'; thumb.position.set(2, -0.25, 1.8); thumb.rotation.z = -0.55;
+      thumb.castShadow = true; gr.add(thumb);
+    } else if (this.kind === 'hammer') {
+      body.name = 'construct-hammer-head';
+      const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.68, 0.88, 8, 8), mat);
+      handle.name = 'construct-hammer-handle'; handle.position.y = 6.5; handle.castShadow = true; gr.add(handle);
+    }
+    const edges = new THREE.Mesh((geo||body.geometry).clone(), edgeMat); edges.name = 'construct-surface-edges';
+    if(this.kind==='tank')edges.position.copy(body.position);
+    edges.scale.setScalar(1.015); edges.userData.constructSurfaceExclude = true; gr.add(edges);
     this.obj = gr; this.body = body; game.scene.add(gr);
     game.vfx.flash(owner.pos.clone().setY(6), this.color, 8, 0.25);
     // wall registers as cover for its lifetime
     if (this.kind === 'wall') { this._cover = { x: 0, z: 0, r: 11, h: 14, mesh: body }; }
-    this._place(game, true);
+    if(this.kind!=='tank')this._place(game, true);
+    this.obj.position.copy(this.pos);
+    if(this.kind==='tank'||(this.kind==='wall'&&this.policy.mode!=='timed')){
+      if(this.kind==='wall'){
+        const co=Math.abs(Math.cos(this.obj.rotation.y)),si=Math.abs(Math.sin(this.obj.rotation.y));
+        Object.assign(this._cover,{hx:co*11+si*1.5,hz:si*11+co*1.5,bottom:this.pos.y-7,top:this.pos.y+7,projectileShape:'box'});
+        this._cover.r=Math.hypot(this._cover.hx,this._cover.hz);
+        game.world.refreshFogBoxes?.();
+      }
+      this._cover.construct=this;
+      this._cover.onConstructHit=(amount,options)=>this.receiveHit(amount,options);
+    }
+    const surfaceOptions={
+      ...(owner.def?.effects?.construct || {}),
+      ...(def.constructFx || {}),
+      color: this.color,
+    };
+    this.surfaceFx = this.kind==='tank'?tankSurfaces(this,surfaceOptions):new ConstructSurface(this.obj,surfaceOptions);
   }
   target(game) {
     const o = this.owner;
     return o.isPlayer ? game.aimPoint : _v.copy(o.pos).addScaledVector(o.aim, 26).setY(0);
   }
+  receiveHit(amount,{src=null,pos=null,lane='cover'}={}) {
+    const game=this.game,result={accepted:false,amount:0,kiSpent:0,destroyed:this.dead};
+    if(!validConstructOwner(this,game)){result.destroyed=this.dead;return result;}
+    if(this.policy.mode!=='timed'&&debitConstructKi(this.owner,0).exhausted){
+      exhaustConstructOwner(game,this.owner,this);result.destroyed=true;return result;
+    }
+    if(!this._cover?.onConstructHit||!Number.isFinite(amount)||amount<=0)return result;
+    // Real contact presentation is independent of team billing. Never invent a
+    // Fighter, guard result or center hit when a caller supplied no contact.
+    if(pos&&[pos.x,pos.y,pos.z].every(Number.isFinite)&&
+      (lane!=='beam'||game.time>=(this._beamHitFxAt??-Infinity))){
+      if(lane==='beam')this._beamHitFxAt=game.time+.08;
+      const at=new THREE.Vector3(pos.x,pos.y,pos.z),dir=src?.pos?at.clone().sub(src.pos).normalize():new THREE.Vector3(0,1,0);
+      game.vfx.contact?.(at,dir,{color:this.color,power:.45});
+    }
+    if(!src||src===this.owner)return result;
+    const foe=game.isFoe(src,this.owner);
+    const friendly=lane==='splash'&&game.friendlyFire&&src.team===this.owner.team;
+    if(!foe&&!friendly)return result;
+    const accepted=amount*(foe?1:.5);
+    this.hitCount++;this.damageReceived+=accepted;
+    result.accepted=true;result.amount=accepted;
+    if(this.policy.mode==='damage'){
+      const debit=debitConstructKi(this.owner,accepted*this.policy.kiPerDamage);
+      this.kiSpent+=debit.spent;result.kiSpent=debit.spent;
+      if(debit.exhausted)exhaustConstructOwner(game,this.owner,this);
+    }
+    result.destroyed=this.dead;return result;
+  }
   _place(game, snap) {
     const t = this.target(game);
     if (this.kind === 'turret') { if (snap) this.pos.set(t.x, 0, t.z); }
-    else if (this.kind === 'wall') { if (snap) { this.pos.set(t.x, 7, t.z); this._cover.x = t.x; this._cover.z = t.z; game.world.cover.push(this._cover); this.obj.lookAt(this.owner.pos.x, 7, this.owner.pos.z); } }
+    else if (this.kind === 'wall') { if (snap) { this.pos.set(t.x, 7, t.z); this._cover.x = t.x; this._cover.z = t.z; game.world.cover.push(this._cover); game.world.refreshFogBoxes?.(); this.obj.position.copy(this.pos); this.obj.lookAt(this.owner.pos.x, this.pos.y, this.owner.pos.z); } }
     else { // fist/hammer hover toward target, steered live
       const h = this.kind === 'hammer' ? 16 : 8;
       if (snap) this.pos.set(t.x, h, t.z);
     }
   }
   trigger() {
+    if (this.dead) return;
+    if (this.policy.mode!=='timed') { this._dispose(this.game,'dismissed'); return; }
     if (this.state !== 'idle') return;
     const g = this.game;
     if (this.kind === 'fist') {
@@ -164,10 +243,17 @@ export class Construct {
     g.areaDamage(this.owner, this.pos, 22, 30, 1.2); this.life = 0;
   }
   update(dt, game) {
-    this.life -= dt; this.stateT += dt;
+    if (!validConstructOwner(this,game)) return false;
+    if (this.policy.mode!=='timed' && debitConstructKi(this.owner,0).exhausted) {
+      exhaustConstructOwner(game,this.owner,this);return false;
+    }
+    if (this.policy.mode==='timed') this.life -= dt;
+    this.stateT += dt;
     if (this.life <= 0) { this._dispose(game); return false; }
     const o = this.owner;
-    if (this.kind === 'fist') {
+    if (this.kind === 'tank') {
+      stepTank(this,dt,game);
+    } else if (this.kind === 'fist') {
       if (this.state === 'idle') { const t = this.target(game); this.pos.x = damp(this.pos.x, t.x, 8, dt); this.pos.z = damp(this.pos.z, t.z, 8, dt); this.pos.y = damp(this.pos.y, 8, 8, dt); this.obj.lookAt(o.pos.x, this.pos.y, o.pos.z); }
       else if (this.state === 'punch') {
         const k = this.stateT / 0.18; this.pos.copy(this.punchFrom).addScaledVector(this.punchDir, k * 34);
@@ -215,17 +301,28 @@ export class Construct {
       if (foe && this.fireCd <= 0) { this.fireCd = 0.4; const dir = _v.copy(foe.pos).setY(foe.pos.y + 5).sub(this.pos.clone().setY(6)).normalize(); game.projectiles.spawnProjectile(o, { pos: this.pos.clone().setY(6), vel: dir.multiplyScalar(90), radius: 0.9, damage: 10, blast: 4, color: this.color, color2: '#fff' }); game.audio.blast(600, 0.07); }
     } else if (this.kind === 'wall') {
       // static; gentle pulse
-      this.body.material.emissiveIntensity = 0.7 + Math.sin(game.time * 6) * 0.2;
+      this.body.material.emissiveIntensity = 0.22 + Math.sin(game.time * 6) * 0.05;
     }
     this.obj.position.copy(this.pos);
+    this.surfaceFx?.update(dt, this.life);
+    for(const skin of this.articulatedSurfaceFx||[])skin.update(dt,this.life);
     return true;
   }
-  _dispose(game) {
-    if (this.dead) return; this.dead = true;
+  _dispose(game, reason = 'expired') {
+    if (this.dead) return; this.dead = true; this.reason = reason;
+    if (this.slotState?.active===this) this.slotState.active=null;
     if (this._victim && this._victim.grabbedBy === this.owner) { this._victim.grabbedBy = null; if (this._victim.state === 'hit') this._victim.state = 'idle'; }
-    if (this._cover) { const i = game.world.cover.indexOf(this._cover); if (i >= 0) game.world.cover.splice(i, 1); }
+    if (this._cover) { const i = game.world.cover.indexOf(this._cover); if (i >= 0) { game.world.cover.splice(i, 1); game.world.refreshFogBoxes?.(); } }
     game.vfx.flash(this.pos.clone(), this.color, 6, 0.2);
-    game.scene.remove(this.obj); this.obj.children.forEach(c => { c.geometry.dispose(); c.material.dispose(); });
+    this.surfaceFx?.dispose();
+    for(const skin of this.articulatedSurfaceFx||[])skin.dispose();
+    game.scene.remove(this.obj);
+    const geometries = new Set(), materials = new Set();
+    this.obj.traverse(c => {
+      if (c.geometry) geometries.add(c.geometry);
+      if (Array.isArray(c.material)) c.material.forEach(m => materials.add(m));
+      else if (c.material) materials.add(c.material);
+    });
+    geometries.forEach(geometry => geometry.dispose()); materials.forEach(material => material.dispose());
   }
 }
-

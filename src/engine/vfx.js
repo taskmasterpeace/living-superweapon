@@ -1,6 +1,9 @@
 // WAR WORLD: ASCENDANTS — transient 3D effects: explosions, shockwaves, lightning, rings, flashes, scorch.
 import * as THREE from 'three';
 import { rand, TAU, lerp, GROUND_LAYER, PW_FX } from '../core/util.js';
+import { FlightWake } from './flight-wake.js';
+import {FlightSurfaceWake} from './flight-surface-wake.js';
+import {energyShellMaterial} from './energy-burst-material.js';
 
 const addMat = (color, opacity = 1) => new THREE.MeshBasicMaterial({ color, transparent: true, opacity, blending: THREE.AdditiveBlending, depthWrite: false });
 
@@ -53,10 +56,20 @@ export class VFX {
   }
 
   _add(o) { this.fx.push(o); return o; }
+  surfaceWake(fighter){
+    if(!fighter._surfaceWake&&FlightSurfaceWake.canEmit(this.world,fighter))fighter._surfaceWake=this._add(new FlightSurfaceWake(this.world,fighter));
+  }
+
+  flightWake(fighter) {
+    if(fighter._flightWake||!fighter.obj.visible||(fighter._vis??1)<.35||fighter.vel.lengthSq()<=900||(fighter.def.model?.wake?.intensity??1)<=0)return;
+    if(!okPos(fighter.pos,'flightWake')||!okPos(fighter.vel,'flightWake velocity'))return;
+    fighter._flightWake=this._add(new FlightWake(this.world,fighter));
+  }
 
   borrowLight(color, intensity, dist) {
     let l = this.lightPool.pop();
     if (!l) { l = this._lights[0]; for (const x of this._lights) if (x.intensity < l.intensity) l = x; }  // all busy → steal the dimmest, never grow the count
+    l.userData.vfxLease=(l.userData.vfxLease||0)+1;
     l.color.set(color); l.intensity = intensity; l.distance = dist;   // stays visible — the count is constant
     return l;
   }
@@ -99,11 +112,12 @@ export class VFX {
   // Big energy explosion: flash + fireball + smoke + light + sparks (+ optional scorch)
   explode(pos, opt = {}) {
     if (!okPos(pos, 'explode')) return;
+    if(opt.energyShell && opt.radius===0)return; // authored point burst: no fabricated visual radius
     const color = opt.color || '#ffd15a', color2 = opt.color2 || '#ff5a2a';
     const radius = opt.radius || 12, power = opt.power || 1;
     this.flash(pos, '#ffffff', radius * 0.3, 0.14);
     // fireball shell
-    const shell = new THREE.Mesh(this._sphere, addMat(color, 0.8));
+    const shell = new THREE.Mesh(this._sphere, opt.energyShell?energyShellMaterial(color,.8):addMat(color, 0.8));
     shell.position.copy(pos); shell.scale.setScalar(radius * 0.3); this.scene.add(shell);
     const l = this.borrowLight(color, 10 * power, radius * 8); l.position.copy(pos);
     let t = 0; const life = 0.5 + power * 0.15;
@@ -304,10 +318,57 @@ export class VFX {
     this._add({ update: (dt) => { t += dt; const k = t / life; s.scale.setScalar(size * (0.3 + easeOut(k) * 0.9)); mat.opacity = Math.max(0, 1 - k * k); mat.rotation += spin * dt; return k >= 1; }, dispose: () => { this.scene.remove(s); mat.dispose(); } });
   }
 
-  // VIOLENT melee impact: white star + colored star + spray + shards + ring + shake
+  // Close contact reads through a tiny, short-lived kernel and an open fan of
+  // tapered streaks. No sphere or opaque ring across the opponent's reaction.
+  contact(pos, dir, opt = {}) {
+    if (!okPos(pos, 'contact')) return;
+    const origin = new THREE.Vector3(pos.x, pos.y, pos.z);
+    const power = Math.min(3, Math.max(.3, Number.isFinite(opt.power) ? opt.power : 1));
+    const color = opt.color || '#ffe6a0';
+    this.impactStar(pos, this._cap(pos, .9 + power * .55, .035), '#fff', .055);
+    const axis = new THREE.Vector3(dir?.x ?? 0, dir?.y ?? 0, dir?.z ?? 1);
+    if (!Number.isFinite(axis.lengthSq()) || axis.lengthSq() < .001) axis.set(0, 0, 1);
+    axis.normalize();
+    if(opt.pressure)axis.negate(); // pressure rebounds from a surface, unlike a punch's forward spray
+    const side = new THREE.Vector3().crossVectors(axis, Math.abs(axis.y) > .9 ? new THREE.Vector3(1,0,0) : new THREE.Vector3(0,1,0)).normalize();
+    const up = new THREE.Vector3().crossVectors(side, axis).normalize();
+    const vertices = [], count = 7 + Math.round(power * 2), phase = rand(0, TAU);
+    for (let i = 0; i < count; i++) {
+      const angle = phase + i / count * TAU;
+      const ray = side.clone().multiplyScalar(Math.cos(angle)).addScaledVector(up, Math.sin(angle));
+      const tangent = side.clone().multiplyScalar(-Math.sin(angle)).addScaledVector(up, Math.cos(angle));
+      const radius = (1.8 + power * .8) * rand(.65, 1), width = .055 + power * .025;
+      const tip = ray.clone().multiplyScalar(radius).addScaledVector(axis, radius * .55);
+      const base = ray.clone().multiplyScalar(radius * .35).addScaledVector(axis, radius * .12);
+      for (const p of [base.clone().addScaledVector(tangent, width), tip, base.clone().addScaledVector(tangent, -width)]) vertices.push(p.x,p.y,p.z);
+      this.P.spawn({x:pos.x, y:pos.y, z:pos.z,
+        vx:ray.x*12+axis.x*18, vy:ray.y*12+axis.y*18, vz:ray.z*12+axis.z*18,
+        color, size:.22+power*.06, life:.16+power*.02, grav:3, drag:3});
+    }
+    const geometry = new THREE.BufferGeometry();geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+    const material = new THREE.MeshBasicMaterial({color, side:THREE.DoubleSide, transparent:true, opacity:.95, depthWrite:false});
+    const streaks = new THREE.Mesh(geometry, material);streaks.position.copy(pos);streaks.scale.setScalar(.6);this.scene.add(streaks);
+    let t = 0;const life = .14 + power * .025;
+    this._add({update:dt=>{
+      t += dt;const k = Math.min(1, t / life);
+      streaks.scale.setScalar(.6 + k * 1.4);streaks.position.copy(origin).addScaledVector(axis, k * 1.5);
+      material.opacity = .95 * (1-k) * (1-k);return t >= life;
+    },dispose:()=>{this.scene.remove(streaks);geometry.dispose();material.dispose();}});
+    if(opt.pressure){
+      const radius=this._cap(pos,Math.min(3.2,Math.max(.5,opt.radius??1)*1.15),.075);
+      const rim=new THREE.Mesh(this._ring,new THREE.MeshBasicMaterial({color,transparent:true,opacity:.48,side:THREE.DoubleSide,depthWrite:false}));
+      rim.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1),axis);rim.position.copy(pos).addScaledVector(axis,.08);
+      rim.scale.setScalar(radius*.65);this.scene.add(rim);let age=0;
+      this._add({update:dt=>{age+=dt;const k=Math.min(1,age/.2);rim.scale.setScalar(radius*(.65+k*.65));rim.material.opacity=.48*(1-k);return age>=.2;},
+        dispose:()=>{this.scene.remove(rim);rim.material.dispose();}});
+    }
+  }
+
+  // Distant action retains the broad comic burst; close action exposes the body.
   impact(pos, dir, opt = {}) {
     if (!okPos(pos, 'impact')) return;
     const color = opt.color || '#ffffff', power = opt.power || 1;
+    if (this._close) { this.contact(pos, dir, opt); this.world.shake(.4 + power); return; }
     // §3.3 ladder: the white star is clamped to a fraction of the frame keyed to the blow — a
     // haymaker star goes from 69% of frame height to 18%. The accent star is the SECOND additive
     // layer over the centre box; the two-layer rule (§6) CUTS it in the close frame.

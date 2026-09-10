@@ -24,7 +24,7 @@
 // the whole programme so a star sphere over a busy street doesn't clip, and quiet moments still
 // have presence. Buses are ducked against each other where it matters (see duck()).
 // PROXIMITY: combat methods take an optional world position; gain falls off with distance from the
-// listener (the player). Explosions carry farther than cracks. listen(x,z) is set every frame.
+// listener (the player). Explosions carry farther than cracks. listen(x,z,y,right) is set every frame.
 // Per-bus baseline gains — the STATIC MIX. These are the balance decisions; the player's faders
 // multiply them. Voice sits forward of ambience; music sits under everything.
 const rand2 = (a, b) => a + Math.random() * (b - a);
@@ -32,6 +32,7 @@ const rand2 = (a, b) => a + Math.random() * (b - a);
 // with an exception, and one bad number from a caller used to take a whole ability down with it.
 // Every public sound coerces its inputs through this first.
 import { SampleBank, HOT_SET } from './samples.js';
+import { SoundLibrary } from './sound-library.js';
 
 const fin = (v, d = 1) => (Number.isFinite(v) ? v : d);
 
@@ -56,7 +57,7 @@ function adaptLoop(rec) {
 const BUS_DEFAULT = { music: 0.34, sfx: 1.0, voice: 0.92, ambient: 0.52, ui: 0.7 };
 
 export class AudioBus {
-  constructor() { this.ctx = null; this.master = null; this.ok = false; this.muted = false; this._lx = 0; this._lz = 0; this._hasL = false; this._sus = new Set(); this._bank = null; this.heroVoice = false; }
+  constructor() { this.ctx = null; this.master = null; this.ok = false; this.muted = false; this._lx = 0; this._ly = 0; this._lz = 0; this._hasL = false; this._rx = 0; this._ry = 0; this._rz = 0; this._sus = new Set(); this._bank = null; this.heroVoice = false; this.soundLibrary = new SoundLibrary({audio:this}); }
   // WATCHDOG for sustained sounds (charge hums): a handle whose owner stops ramping it — KO'd
   // mid-charge, disposed on match restart, star sphere starved — self-silences instead of ringing
   // forever (the "stuck tone at match start" bug). Called every frame from game.update.
@@ -65,7 +66,18 @@ export class AudioBus {
     const now = performance.now();
     for (const h of this._sus) if (now - h.last > 450) h.stop();
   }
-  listen(x, z) { this._lx = x; this._lz = z; this._hasL = true; }
+  listen(x, z, y = 0, right = null) {
+    // Bad tracking samples retain the last usable body position. Never retain a
+    // mutable camera vector: the renderer reuses its scratch vectors each frame.
+    if(Number.isFinite(x)&&Number.isFinite(y)&&Number.isFinite(z)){
+      this._lx=x;this._ly=y;this._lz=z;this._hasL=true;
+    }
+    this._rx=this._ry=this._rz=0;
+    if(right&&Number.isFinite(right.x)&&Number.isFinite(right.y)&&Number.isFinite(right.z)){
+      const length=Math.hypot(right.x,right.y,right.z);
+      if(length>0&&Number.isFinite(length)){this._rx=right.x/length;this._ry=right.y/length;this._rz=right.z/length;}
+    }
+  }
   // THE SAMPLE LAYER — real recorded audio, tried FIRST by every discrete SFX below; the old
   // synth bodies remain as fallbacks for a cold cache (never silent — the energy-clarity law).
   sample(name, o) {
@@ -80,10 +92,24 @@ export class AudioBus {
   }
   // distance → gain multiplier. reach = how far this sound family carries (units to near-silence).
   _pg(pos, reach = 130) {
-    if (!pos || !this._hasL) return 1;
-    const d = Math.hypot((pos.x ?? 0) - this._lx, (pos.z ?? 0) - this._lz);
+    if (!pos) return 1;
+    const x=pos.x??0,y=pos.y??0,z=pos.z??0;
+    if(!Number.isFinite(x)||!Number.isFinite(y)||!Number.isFinite(z)||!Number.isFinite(reach)||reach<=0)return 0;
+    if(!this._hasL)return 1;
+    const d = Math.hypot(x-this._lx,y-this._ly,z-this._lz);
     const g = 1.12 - d / reach;
     return g <= 0.06 ? 0 : Math.min(1, g);
+  }
+  _pan(pos) {
+    if(!pos||!this._hasL)return 0;
+    const x=(pos.x??0)-this._lx,y=(pos.y??0)-this._ly,z=(pos.z??0)-this._lz;
+    if(!Number.isFinite(x)||!Number.isFinite(y)||!Number.isFinite(z))return 0;
+    const distance=Math.hypot(x,y,z);
+    if(!Number.isFinite(distance))return 0;
+    // Divide before the dot product so even extreme finite coordinates cannot
+    // overflow. Nearby sounds ease through centre instead of snapping ears.
+    const d=Math.max(12,distance),side=(x/d)*this._rx+(y/d)*this._ry+(z/d)*this._rz;
+    return Math.max(-.85,Math.min(.85,.85*side));
   }
   init() {
     if (this.ctx) return;
@@ -115,6 +141,7 @@ export class AudioBus {
       }
       this._busLevel = { ...BUS_DEFAULT };
       this.ok = true;
+      this.soundLibrary.prepare().catch(() => {});
     } catch (e) { this.ok = false; }
   }
   resume() { if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume(); }
@@ -197,6 +224,7 @@ export class AudioBus {
   // makes the same thin sound louder, which is the thing that reads as cheap.
   meleeHit(power = 1, pos = null, haymaker = false) {
     if (!this.ok || this.muted) return;
+    if (this.soundLibrary.native(haymaker || power > 1.05 ? 'heavy' : 'light', {pos,gain:fin(power,1)})) return;
     this.impact(power, pos);                                   // the crack — the recorded punch
     if (!haymaker) return;
     // the body, a beat later. ⚠ through `later`-free scheduling: audio owns its own clock and must
@@ -371,18 +399,15 @@ export class AudioBus {
   // THE CHARGE — a sustained gather. Sub-bass weight, a rising inharmonic stack, a ring-mod
   // shimmer that grows brighter AND less stable as it fills, and arcing that speeds up.
   // Keeps the {ramp, stop, last} handle contract, so every existing caller is unchanged.
-  charge() {
+  charge(pos = null) {
     // ⚠ A REAL SPOOL-UP, AND IT MUST RETURN THE SAME HANDLE. `charge()` hands back
     // `{ set(level, pos), stop() }` and callers drive it every frame — so the recorded version has
     // to honour that contract exactly, not just make a noise. `sampleLoop` already returns that
     // shape and is registered with the sustain watchdog, so it can be handed straight back.
-    // ⚠ This method takes NO ARGUMENTS. An earlier version of this insert referenced `pos` and
-    // `level` here and would have thrown a ReferenceError into the frame loop on the first charge —
-    // audio must never throw into the game loop.
     // ⚠ `sampleLoop(name, OPTIONS)` — the second argument is an options OBJECT, not a position.
     // Passing `null` defeats the `= {}` default and the destructure throws, which is precisely the
     // "audio must never throw into the game loop" law. Caught by the analyser test, not by reading.
-    const rec = this.sampleLoop && this.sampleLoop('engine.charge', {});
+    const rec = this.sampleLoop && this.sampleLoop('engine.charge', { pos });
     if (rec) return adaptLoop(rec);
     if (!this.ok || this.muted) return null;
     const t = this.t;

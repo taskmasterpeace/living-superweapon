@@ -128,7 +128,11 @@ export function describeAbility(a) {
     case 'teleport': return 'blink to your aim (breaks grabs)';
     case 'dash': return 'quick i-frame dash';
     case 'summon': return 'summon seeker drones that fight for you';
-    case 'construct': return 'cursor-steered ' + (a.construct || 'solid-light') + ' construct';
+    case 'construct': {
+      const form=a.construct==='tank'?'ground-designated tank — holds to fire; close targets inside fixed barrel clearance are not fired on':a.construct==='wall'?'ground-placed protective wall':'cursor-steered '+(a.construct||'solid-light')+' construct';
+      const life=a.constructLifetime==='upkeep'?`continuous upkeep ${a.constructKiPerSec??12} ki/s; physical hits have no per-hit ki charge`:a.constructLifetime==='damage'?`damage-backed energy ${a.constructKiPerDamage??1} ki/hp received`:'';
+      return form+(life?` — ${life}; no timer; press again to dismiss`:'');
+    }
     case 'buff': return 'power-up' + (a.invuln ? ' + invincibility' : '') + (a.heal ? ' + heal' : '') + (a.spendAll ? ' (spends all ki)' : '');
     case 'meteor': return 'call down a meteor storm at your aim';
     case 'phase': return 'hold to go intangible — spends energy';

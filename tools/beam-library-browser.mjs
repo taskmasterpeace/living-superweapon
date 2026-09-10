@@ -1,0 +1,40 @@
+import {chromium} from 'playwright';
+import assert from 'node:assert/strict';
+import {mkdir,writeFile} from 'node:fs/promises';
+const out=process.argv.find(a=>a.startsWith('--out='))?.slice(6)||'artifacts/beam-library';await mkdir(out,{recursive:true});
+const browser=await chromium.launch({channel:'chromium',headless:false});
+const context=await browser.newContext({viewport:{width:1600,height:1000},recordVideo:{dir:out,size:{width:1600,height:1000}}});
+const page=await context.newPage(),video=page.video(),result={scope:'Native Studio browsing, draft protection and production rehearsal navigation.',errors:[]};page.on('pageerror',e=>result.errors.push(String(e)));
+const library=page.getByRole('dialog',{name:'Beam Library',exact:true});
+const open=()=>page.getByRole('button',{name:'Beam Library ↗',exact:true}).click();
+try{
+ await page.goto('http://127.0.0.1:5180/studio.html?hero=kano');await page.waitForFunction(()=>window.STUDIO?.preview?.fighter);await page.bringToFront();
+ await open();assert.equal(await page.evaluate(()=>STUDIO.preview.playing),false);
+ result.total=await library.locator('tbody tr').count();assert.ok(result.total>10);
+ await page.screenshot({path:`${out}/library-desktop.png`});
+ await library.getByLabel('Find a beam').fill('no such attack');assert.equal(await library.locator('.beam-library-empty').isVisible(),true);
+ await library.getByLabel('Find a beam').fill('kano');assert.ok(await library.locator('tbody tr').count()>0);
+ await library.locator('[data-tune]').first().click();await page.waitForFunction(()=>STUDIO.preview.state==='beam');
+ result.selected=await page.evaluate(()=>({hero:STUDIO.preview.fighter.def.id,slot:STUDIO.preview.combat.slot,state:STUDIO.preview.state}));assert.equal(result.selected.hero,'kano');
+ await page.waitForTimeout(100);assert.equal(await page.evaluate(()=>document.activeElement.id),'attack-slot');
+ const dps=page.locator('input[type="number"][data-attack-key="dps"]');await dps.fill('137');await dps.press('Tab');
+ await open();assert.match(await library.locator('tbody').textContent(),/137 HP\/s/);assert.match(await library.locator('tbody').textContent(),/Unsaved draft/);
+ await library.getByLabel('Find a beam').fill('sol');await library.locator('[data-tune]').first().click();
+ const confirmation=page.getByRole('dialog',{name:'Keep your draft?',exact:true});await confirmation.waitFor({state:'visible'});await confirmation.getByRole('button',{name:'Cancel',exact:true}).click();
+ assert.equal(await page.evaluate(()=>STUDIO.preview.fighter.def.id),'kano');assert.equal(await dps.inputValue(),'137');
+ await open();await library.getByLabel('Find a beam').fill('kano');await library.locator('[data-tune]').first().click();assert.equal(await dps.inputValue(),'137');
+ await page.getByRole('button',{name:'Save local',exact:true}).click();await page.reload();await page.waitForFunction(()=>window.STUDIO?.preview?.fighter);
+ await open();await library.getByLabel('Find a beam').fill('kano');assert.match(await library.locator('tbody').textContent(),/137 HP\/s/);assert.match(await library.locator('tbody').textContent(),/Saved local/);
+ await library.getByLabel('Find a beam').fill('');await library.getByLabel('Shape',{exact:true}).selectOption('ray');result.rays=await library.locator('tbody tr').count();assert.ok(result.rays>0&&result.rays<result.total);
+ await library.getByLabel('Sort by').selectOption('travel');
+ await page.setViewportSize({width:390,height:844});await page.screenshot({path:`${out}/library-mobile.png`});
+ const bounds=await library.boundingBox();assert.ok(bounds.x>=0&&bounds.x+bounds.width<=391);
+ await library.getByRole('button',{name:'Close Beam Library'}).click();await page.waitForTimeout(100);assert.equal(await page.evaluate(()=>document.activeElement.id),'beam-library-open');
+ await open();await page.keyboard.press('Escape');await page.waitForTimeout(100);assert.equal(await library.isVisible(),false);
+ await page.setViewportSize({width:1600,height:1000});await open();await library.getByLabel('Shape',{exact:true}).selectOption('all');await library.getByLabel('Find a beam').fill('kano');await library.locator('[data-tune]').first().click();
+ await page.waitForTimeout(2800);await page.getByRole('button',{name:'Pause preview',exact:true}).click();
+ result.rehearsal=await page.evaluate(()=>({state:STUDIO.preview.state,slot:STUDIO.preview.combat.slot,damage:STUDIO.preview.combat.damage}));
+ assert.equal(result.rehearsal.state,'beam');assert.equal(result.rehearsal.slot,'lmb');assert.ok(result.rehearsal.damage>0);
+ await page.screenshot({path:`${out}/tune-rehearsal.png`});assert.deepEqual(result.errors,[]);result.passed=true;
+}catch(e){result.failure=String(e);process.exitCode=1;await page.screenshot({path:`${out}/failure.png`}).catch(()=>{});}
+finally{await writeFile(`${out}/results.json`,JSON.stringify(result,null,2));await context.close();await video.saveAs(`${out}/beam-library.webm`);await browser.close();console.log(JSON.stringify(result));}

@@ -6,35 +6,32 @@
 // away for reporter stand-ups when the fight lulls. Their van waits at the curb.
 //
 // THE CAMERA IS REAL: on highlight moments (KOs, tier-ups, building collapses, car chains)
-// the operator's POV is actually rendered — a 320×180 perspective pass scissored into the
+// the operator's POV is actually rendered — a bounded 640×360 perspective pass scissored into the
 // canvas corner BEFORE the main composer pass (so it never flashes on screen), blitted to a
 // 2D canvas, stamped with the broadcast package (channel bug, LIVE tag, the in-world clock,
-// district lower-thirds), and recorded as JPEG frame CLIPS with a rolling pre-roll. The HUD
+// district lower-thirds), and recorded as WebP frame CLIPS with a rolling pre-roll. The HUD
 // shows the live monitor while ON AIR; hud.showEndScreen replays the clips on a TV.
 // This layer only WATCHES — nothing in gameplay reads it.
 import * as THREE from 'three';
 import { clamp, damp, TAU } from '../core/util.js';
 import { clockStr, pickCrew, fmtClock } from '../data/news.js';
-import { hasCivilians } from '../data/modes.js';   // one definition of "is there a press here"
+import { hasCivilians, hasCity, MODES } from '../data/modes.js';
+import { normalizeNewsCameraProfile, sampleNewsShot } from './news-camera.js';
+import { NewsFrameEncoder, newsFrameBytes, revokeFrames } from './news-capture.js';
+import { createNewsPerson, poseNewsPerson } from './news-figure.js';
+import {OUTPOST_PRESS_PARK} from './frontline-outpost-layout.js';
+export { normalizeNewsCameraProfile, sampleNewsShot, NewsFrameEncoder, revokeFrames, createNewsPerson, poseNewsPerson };
 
-const W = 320, H = 180;                       // broadcast frame (16:9)
+const W = 320, H = 180, FRAME_W = 640, FRAME_H = 360; // logical overlay / recorded frame
 const PREROLL_MAX = 4, PREROLL_INT = 0.24;    // rolling ~1s memory before every event
-const CLIP_FRAME_CAP = 380, CLIP_CAP = 9;     // memory budget across the whole match
+const CLIP_FRAME_CAP = 360, CLIP_CAP = 9, CLIP_BYTE_CAP = 24 * 1024 * 1024;
 const WALK = 13, HUSTLE = 24, SPRINT = 34;
 
 const _v = new THREE.Vector3(), _v2 = new THREE.Vector3(), _e = new THREE.Euler();
-
-// THE REVOKE LAW: never leave a revoked object URL sitting in a live array. The clip arrays are
-// shared with the cold open and the end-screen TV, and a dangling blob: handle loads as
-// ERR_FILE_NOT_FOUND on whatever screen finds it next. Free the resource AND clear the slot.
-export function revokeFrames(frames) {
-  if (!frames) return;
-  for (let i = 0; i < frames.length; i++) {
-    const u = frames[i];
-    if (u && u.startsWith && u.startsWith('blob:')) URL.revokeObjectURL(u);
-    frames[i] = null;
-  }
-}
+const _groundPoint = new THREE.Vector3();
+const _reporterMark = new THREE.Vector3();
+const _newsWorldQ = new THREE.Quaternion(), _newsParentQ = new THREE.Quaternion();
+const _newsFacingFlip = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI);
 
 export class NewsCrew {
   constructor(game) {
@@ -47,7 +44,9 @@ export class NewsCrew {
     // --- the POV camera + broadcast canvas (this canvas IS the live monitor the HUD shows) ---
     this.cam = new THREE.PerspectiveCamera(34, W / H, 0.5, 1100);
     this.fov = 34; this._punchT = 0;
-    this.canvas = document.createElement('canvas'); this.canvas.width = W; this.canvas.height = H;
+    this.cameraProfile = normalizeNewsCameraProfile();
+    this._encoder = new NewsFrameEncoder({ onReady: () => this._trimClips() });
+    this.canvas = document.createElement('canvas'); this.canvas.width = FRAME_W; this.canvas.height = FRAME_H;
     this.ctx = this.canvas.getContext('2d');
     this._buildOverlayAssets();
     // --- crew state ---
@@ -92,17 +91,16 @@ export class NewsCrew {
     dishGlow.position.set(-9.4, 25.7, 0); van.add(dishGlow); this._dishGlow = dishGlow.material;
     grp.add(van);
     // --- the camera operator ---
-    const op = this.op = new THREE.Group();
-    const opBody = new THREE.Mesh(new THREE.CapsuleGeometry(1.05, 4.6, 3, 8), M('#24384f', { r: 0.9 }));
-    opBody.position.y = 3.6; opBody.castShadow = true; op.add(opBody);
+    const pressCanvas = document.createElement('canvas'); pressCanvas.width = 128; pressCanvas.height = 64;
+    const pressContext = pressCanvas.getContext('2d');
+    pressContext.fillStyle = '#fff3d8'; pressContext.fillRect(0, 0, 128, 64);
+    pressContext.fillStyle = '#262a2c'; pressContext.textAlign = 'center'; pressContext.textBaseline = 'middle';
+    pressContext.font = '900 31px Inter,sans-serif'; pressContext.fillText('PRESS', 64, 26);
+    pressContext.fillStyle = '#a93e34'; pressContext.font = '800 13px Inter,sans-serif'; pressContext.fillText('KMK 9', 64, 51);
+    const pressTexture = new THREE.CanvasTexture(pressCanvas); pressTexture.colorSpace = THREE.SRGBColorSpace;
+    const op = this.op = createNewsPerson('operator', pressTexture);
     const pack = new THREE.Mesh(new THREE.BoxGeometry(1.7, 2.3, 0.8), M('#1a2230', { r: 0.9 }));
     pack.position.set(0, 4.7, -1.2); op.add(pack);
-    const opHead = new THREE.Mesh(new THREE.SphereGeometry(0.95, 9, 8), M('#caa27a', { r: 0.7 }));
-    opHead.position.y = 8.3; op.add(opHead);
-    const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.99, 1.02, 0.55, 10), M('#d81f26', { r: 0.8 }));
-    cap.position.y = 8.95; op.add(cap);
-    const brim = new THREE.Mesh(new THREE.BoxGeometry(1.35, 0.14, 0.95), M('#d81f26', { r: 0.8 }));
-    brim.position.set(0, 8.72, 0.95); op.add(brim);
     // the shoulder rig
     const cg = this.camGrp = new THREE.Group(); cg.position.set(1.28, 7.4, 0.25);
     const camBody = new THREE.Mesh(new THREE.BoxGeometry(1.15, 1.2, 2.6), M('#22252c', { r: 0.6, m: 0.35 }));
@@ -120,13 +118,7 @@ export class NewsCrew {
     op.add(cg);
     grp.add(op);
     // --- the reporter ---
-    const rp = this.rp = new THREE.Group();
-    const rpBody = new THREE.Mesh(new THREE.CapsuleGeometry(1.02, 4.5, 3, 8), M('#8a2430', { r: 0.85 }));
-    rpBody.position.y = 3.55; rpBody.castShadow = true; rp.add(rpBody);
-    const rpHead = new THREE.Mesh(new THREE.SphereGeometry(0.95, 9, 8), M('#8a5a3a', { r: 0.7 }));
-    rpHead.position.y = 8.2; rp.add(rpHead);
-    const hair = new THREE.Mesh(new THREE.SphereGeometry(1.02, 9, 8), M('#221a14', { r: 0.95 }));
-    hair.position.set(0, 8.45, -0.18); hair.scale.set(1, 0.92, 1); rp.add(hair);
+    const rp = this.rp = createNewsPerson('reporter', pressTexture);
     const micG = this.micG = new THREE.Group(); micG.position.set(0.85, 6.2, 1.0); micG.rotation.x = -0.35;
     const micStem = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.13, 1.0, 6), M('#181a20', { r: 0.5, m: 0.4 }));
     micG.add(micStem);
@@ -160,19 +152,23 @@ export class NewsCrew {
     // with ERR_FILE_NOT_FOUND (68 of them in one stress run). Blank the slot as you revoke it, and
     // mark the clip dead so a viewer drops it instead of discovering it the hard way.
     for (const c of this.clips || []) { revokeFrames(c.frames); c._dead = true; }
+    revokeFrames(this.rec?.frames);
     revokeFrames(this._preroll);
     this._pool = this._pool || [];
     this._warmed = false;
-    this.enabled = hasCivilians(modeId);   // one definition, in data/modes.js — see police.js
+    // A sports crew may cover an empty arena; this does not turn on city civilians or police.
+    this.enabled = hasCivilians(modeId) || modeId === 'powerworld' || modeId === 'ascendance';
     this.grp.visible = this.enabled;
     this.clips = []; this._preroll = []; this.rec = null; this._onAirT = 0;
-    this._standupClips = 0; this._standupCd = 9; this.standupT = 0;
+    this.t = 0; this._event = null; this._ending = null; this._finished = false;
+    this._standupClips = 0; this._standupCd = 0; this.standupT = 0;
     this.downT = 0; this._downK = 0; this.duckT = 0; this._kick = 0; this._koFocus = null; this._lastEventT = 0;
     const crew = pickCrew(Date.now());
     this.reporterName = crew.reporter; this.operatorName = crew.operator;
     // the van parks at a south-side curb (scaled to whatever city we're in); the crew jogs in
     const A = this.g.world.ARENA || 240;
     this.van.position.set(-A * 0.24, 0, A * 0.49); this.van.rotation.y = Math.PI / 2;
+    if(modeId==='powerworld')this.van.position.set(OUTPOST_PRESS_PARK.x,0,OUTPOST_PRESS_PARK.z);
     this.opPos.set(-A * 0.2, 0, A * 0.44); this.rpPos.set(-A * 0.22, 0, A * 0.42);
     this.goal.copy(this.opPos);
     this.focusSm.set(0, 5, 0); this.lookSm.set(0, 5, 0); this.spreadSm = 20;
@@ -182,20 +178,38 @@ export class NewsCrew {
 
   get onAir() { return !!this.rec || this._onAirT > 0; }
 
+  setCameraProfile(profile) { this.cameraProfile = normalizeNewsCameraProfile(profile); return { ...this.cameraProfile }; }
+
+  // Menu/rematch transitions transfer the one owner, including in-flight encoder destinations.
+  takeClips() {
+    this._finalize();
+    const clips = this.clips; this.clips = [];
+    this._ending = null; this._finished = true;
+    return clips;
+  }
+
+  async flush() { this._finalize(); await this._encoder?.flush(); return this.clips; }
+
   // ---------- events from the game ----------
   // A highlight worth broadcasting. priority: 3 KO · 2 building/tier · 1 big hit · 0 stand-up.
   // KOs and huge hits shoot HIGH-SPEED (20fps) and carry a slow-window so the TV can replay
   // the exact moment of impact in slow motion.
   highlight(tag, title, opts = {}) {
-    if (!this.enabled || this.g.matchOver) return;
+    if (!this.enabled || this._finished || (this.g.matchOver && !opts.closing)) return;
     const dur = opts.dur ?? 2.6, priority = opts.priority ?? 1;
     const SLOWTAGS = { ko: 20, bighit: 20, building: 14 };
     const slow = tag in SLOWTAGS;
     this._lastEventT = this.t;
+    if (priority > 0) this.standupT = 0;
+    // Sustained damage does not re-trigger a crash every frame. Let each shot settle.
+    if (tag !== 'standup' && (!this._event || this.t - this._event.time > 1.25 || priority > this._event.priority)) {
+      this._event = { tag, time: this.t, priority, actor: opts.actor || null, target: opts.target || null,
+        focus: opts.focus ? { x: opts.focus.x, y: opts.focus.y || 4, z: opts.focus.z } : null };
+    }
     if (opts.focus) { this._koFocus = { pos: opts.focus.clone ? opts.focus.clone() : new THREE.Vector3(opts.focus.x, opts.focus.y || 4, opts.focus.z), until: this.t + Math.min(dur, 2.2) }; }
     this._punchT = 0.45;
     if (this.rec) {
-      this.rec.until = Math.max(this.rec.until, this.t + (priority >= this.rec.priority ? dur * 0.85 : dur * 0.35));
+      this.rec.until = Math.min(this.rec.started + 5.5, Math.max(this.rec.until, this.t + (priority >= this.rec.priority ? dur * 0.85 : dur * 0.35)));
       if (priority > this.rec.priority) {
         this.rec.priority = priority; this.rec.tag = tag; this.rec.title = title; this.rec.lt = this._ltFor(tag, title);
         if (slow) { this.rec.slow = true; this.rec.ev = this.rec.frames.length; }   // the moment is NOW — slow window starts here
@@ -205,14 +219,37 @@ export class NewsCrew {
     const fps = this.g.world._qTier === 0 ? Math.ceil((SLOWTAGS[tag] || 12) * 0.6) : (SLOWTAGS[tag] || 12);
     this.rec = {
       tag, title, priority, fps, slow,
-      frames: this._preroll.slice(), until: this.t + dur, acc: 0,
+      frames: this._preroll, until: this.t + Math.min(dur, 5.5), started: this.t, acc: 0, shots: [],
       t0: this.g.matchT || 0, lt: this._ltFor(tag, title),
     };
+    this._preroll = [];
     this.rec.ev = this.rec.frames.length;   // pre-roll plays at speed; the event itself gets the slo-mo
   }
   _ltFor(tag, title) {
     const KICKERS = { ko: 'BREAKING', bighit: 'DEVELOPING', building: 'STRUCTURE DOWN', collateral: 'COLLATERAL', tier: 'POWER SURGE', car: 'DEVELOPING', standup: 'LIVE', police: 'POLICE RESPONSE' };
     return { kicker: KICKERS[tag] || 'BREAKING', title };
+  }
+  endMatch(result = {}) {
+    if (!this.enabled || this._ending || this._finished) return;
+    const human = this.g.humans?.[0]?.fighter || this.g.player;
+    const winner = result.winner?.pos ? result.winner : result.win && human?.alive ? human
+      : this.g.entities.filter(e => e.alive && e.def && !e.isDummy && e !== human && e.team !== human?.team)
+        .sort((a, b) => (b.score || 0) - (a.score || 0))[0];
+    this._ending = { start: this.t, winner, signoff: false };
+    this.standupT = 0;
+    this.highlight('winner', winner ? `${winner.name} — AFTER THE BATTLE` : 'THE DUST SETTLES',
+      { priority: 3, dur: 2.6, closing: true, actor: winner, focus: winner?.pos });
+  }
+
+  _updateEnding() {
+    if (!this._ending) return;
+    const age = this.t - this._ending.start;
+    if (age >= 2.6 && !this._ending.signoff) {
+      this._finalize(); this._ending.signoff = true;
+      this.standupT = 2.6;
+      this.highlight('standup', `${this.reporterName} — REPORTING FROM THE SCENE`, { priority: 0, dur: 2.5, closing: true });
+    }
+    if (age >= 5.2) { this._finalize(); this._ending = null; this._finished = true; this.standupT = 0; }
   }
   // A blast landed near the crew — duck, or go down (the camera keeps rolling on the ground).
   onBlast(pos, radius, power = 1) {
@@ -233,9 +270,15 @@ export class NewsCrew {
     return [A, B];
   }
   _updateFocus(dt) {
-    const [A, B] = this._principals();
+    const [principalA, principalB] = this._principals();
+    const followEvent = this._event && this.t - this._event.time < 2.6;
+    const A = followEvent && this._event.actor?.pos ? this._event.actor : principalA;
+    const B = followEvent && this._event.target?.pos ? this._event.target : principalB;
+    this._subjects = [A, B];
     let fx = 0, fy = 5, fz = 0, spread = 16;
-    if (this._koFocus && this.t < this._koFocus.until) {
+    if (this._ending?.winner?.pos && !this._ending.signoff) {
+      fx = this._ending.winner.pos.x; fy = this._ending.winner.pos.y + 5; fz = this._ending.winner.pos.z;
+    } else if (this._koFocus && this.t < this._koFocus.until) {
       fx = this._koFocus.pos.x; fy = Math.max(2, this._koFocus.pos.y); fz = this._koFocus.pos.z;
       if (A && B) spread = Math.hypot(A.pos.x - B.pos.x, A.pos.z - B.pos.z) * 0.6 + 10;
     } else if (A && B) {
@@ -243,15 +286,32 @@ export class NewsCrew {
       fy = (A.pos.y + B.pos.y) / 2 + 5;
       spread = Math.hypot(A.pos.x - B.pos.x, A.pos.z - B.pos.z) + Math.abs(A.pos.y - B.pos.y) * 0.8 + 10;
     } else if (A) { fx = A.pos.x; fz = A.pos.z; fy = A.pos.y + 5; }
-    this.focusSm.x = damp(this.focusSm.x, fx, 5, dt);
-    this.focusSm.y = damp(this.focusSm.y, fy, 4, dt);
-    this.focusSm.z = damp(this.focusSm.z, fz, 5, dt);
-    this.spreadSm = damp(this.spreadSm, spread, 3, dt);
+    if (!this._warmed) {
+      // Seed the actual bout before choosing the arrival vantage. Damping from
+      // world origin can otherwise put the opening crew inside the action.
+      this.focusSm.set(fx, fy, fz); this.lookSm.copy(this.focusSm); this.spreadSm = spread;
+    } else {
+      this.focusSm.x = damp(this.focusSm.x, fx, 5, dt);
+      this.focusSm.y = damp(this.focusSm.y, fy, 4, dt);
+      this.focusSm.z = damp(this.focusSm.z, fz, 5, dt);
+      this.spreadSm = damp(this.spreadSm, spread, 3, dt);
+    }
     if (A && B) { this._abOn = true; (this._abV || (this._abV = new THREE.Vector3())).set(B.pos.x - A.pos.x, 0, B.pos.z - A.pos.z).normalize(); }
     else this._abOn = false;
   }
   _losClear(x, z) {
-    return this.g.canSee({ pos: { x, y: 2.0, z } }, { pos: { x: this.focusSm.x, y: this.focusSm.y, z: this.focusSm.z } });
+    return this.g.canSee({ pos: { x, y: this._groundAt(x, z) + 7.5, z } }, { pos: { x: this.focusSm.x, y: this.focusSm.y, z: this.focusSm.z } });
+  }
+  _groundAt(x, z) {
+    const g = this.g, stage = g._pwStage?.group;
+    // The active stage draws its own flat floor over a hidden city heightfield. A cached or
+    // detached venue must not override the city after returning to it.
+    if (g.modeId === 'powerworld' && stage?.visible && stage.parent === g.scene) {
+      const floor = stage.children.find(o => o.visible && o.isMesh && o.geometry?.type === 'CircleGeometry');
+      if (floor) return floor.getWorldPosition(_groundPoint).y;
+    }
+    const y = g.world.heightAt?.(x, z);
+    return Number.isFinite(y) ? y : 0;
   }
   _pickVantage() {
     const g = this.g, F = this.focusSm, world = g.world;
@@ -263,7 +323,8 @@ export class NewsCrew {
       const ca = Math.cos(off), sa = Math.sin(off);
       const dx = bx * ca - bz * sa, dz = bx * sa + bz * ca;
       let px = F.x + dx * R, pz = F.z + dz * R;
-      px = clamp(px, -world.ARENA + 14, Math.min(world.ARENA - 14, world.waterX - 9));
+      const east = hasCity(g.modeId) ? world.waterX ?? world.ARENA : world.ARENA;
+      px = clamp(px, -world.ARENA + 14, Math.min(world.ARENA - 14, east - 9));
       pz = clamp(pz, -world.ARENA + 14, world.ARENA - 14);
       let inBlock = false;
       for (const c of world.cover) if (Math.abs(px - c.x) < (c.hx ?? c.r) + 2.5 && Math.abs(pz - c.z) < (c.hz ?? c.r) + 2.5) { inBlock = true; break; }
@@ -286,15 +347,40 @@ export class NewsCrew {
         else p.z = c.z + Math.sign(dz || 1) * hz;
       }
     }
-    p.x = clamp(p.x, -this.g.world.ARENA + 10, this.g.world.waterX - 8);
+    const east = hasCity(this.g.modeId) ? this.g.world.waterX ?? this.g.world.ARENA : this.g.world.ARENA;
+    p.x = clamp(p.x, -this.g.world.ARENA + 10, Math.min(this.g.world.ARENA - 10, east - 8));
     p.z = clamp(p.z, -this.g.world.ARENA + 10, this.g.world.ARENA - 10);
+  }
+
+  _reporterMark(standup, out) {
+    const eye = this.opPos, F = this.focusSm;
+    const length = Math.hypot(F.x - eye.x, F.z - eye.z) || 1;
+    const fx = (F.x - eye.x) / length, fz = (F.z - eye.z) / length;
+    const px = -fz, pz = fx;
+    const forward = standup ? 13 : -1.8;
+    let side = standup ? 6.8 : 4.8;
+    if (standup) for (const subject of this._subjects || []) {
+      const p = subject?.pos; if (!p) continue;
+      const x = p.x - eye.x, z = p.z - eye.z;
+      const depth = x * fx + z * fz;
+      if (depth <= forward) continue;
+      // Stand off the principal's projected silhouette, not directly in front of
+      // the fight. The actual lens pans to the reporter for the stand-up; an
+      // interrupt can now see contact without hiding or teleporting this body.
+      const lateral = x * px + z * pz;
+      side = Math.max(side, (lateral + 6) * forward / depth + 4.5);
+    }
+    return out.set(eye.x + fx * forward + px * side, 0, eye.z + fz * forward + pz * side);
   }
 
   // ---------- per-frame ----------
   update(dt) {
-    if (!this.enabled) return;
+    if (!this.enabled || this._finished) return;
+    this.grp.visible = true; // venue entry hides city scene children; the active crew owns this group
     this.t += dt;
     const g = this.g;
+    this._updateEnding();
+    if (this._finished) return;
     this._kick = Math.max(0, this._kick - dt * 2.4);
     if (this.duckT > 0) this.duckT -= dt;
     if (this._punchT > 0) this._punchT -= dt;
@@ -305,6 +391,10 @@ export class NewsCrew {
     else this._downK = Math.max(0, this._downK - dt * 2.2);
 
     const F = this.focusSm;
+    if (!this._warmed) {
+      // The crew arrives with the bout, already at a valid vantage; no city-length opening jog.
+      this._pickVantage(); this.opPos.copy(this.goal);
+    }
     const distF = Math.hypot(this.opPos.x - F.x, this.opPos.z - F.z);
 
     // stand-up cutaways when the fight goes quiet (and we still owe the desk B-roll)
@@ -313,10 +403,14 @@ export class NewsCrew {
       if (this.standupT <= 0) this._standupCd = 14 + Math.random() * 8;
     } else if (!this.rec && !g.matchOver && this.downT <= 0) {
       this._standupCd -= dt;
-      if (this._standupCd <= 0 && this.t - this._lastEventT > 6 && this._standupClips < 2 && distF > 30 && distF < 90) {
+      if (this._standupCd <= 0 && (this.t < 0.2 || this.t - this._lastEventT > 6) && this._standupClips < 2 && distF >= 30 && distF < 90) {
         this.standupT = 3.4; this._standupClips++;
         this.highlight('standup', `${this.reporterName} · KMK 9 ACTION NEWS`, { dur: 3.2, priority: 0 });
       }
+    }
+    if (!this._warmed) {
+      this._reporterMark(this.standupT > 0, this.rpPos);
+      this._pushOut(this.rpPos);
     }
 
     // vantage re-evaluation: on a clock, when framing breaks, or when the fight walks over us
@@ -339,39 +433,29 @@ export class NewsCrew {
       }
       this._pushOut(this.opPos);
     }
+    this.opPos.y = this._groundAt(this.opPos.x, this.opPos.z);
     // face travel when hustling, face the shot when planted
-    const fdx = spd > WALK ? this.goal.x - this.opPos.x : F.x - this.opPos.x;
-    const fdz = spd > WALK ? this.goal.z - this.opPos.z : F.z - this.opPos.z;
+    const face = this.standupT > 0 ? this.rpPos : this._shot?.look || F;
+    const fdx = spd > WALK ? this.goal.x - this.opPos.x : face.x - this.opPos.x;
+    const fdz = spd > WALK ? this.goal.z - this.opPos.z : face.z - this.opPos.z;
     const wantYaw = Math.atan2(fdx, fdz);
     let dy = (wantYaw - this.op.rotation.y) % TAU;
     if (dy > Math.PI) dy -= TAU; if (dy < -Math.PI) dy += TAU;
     this.op.rotation.y += dy * (1 - Math.exp(-9 * dt));
     // bob + duck + fall
     const bob = spd > 0 ? Math.abs(Math.sin(this.t * (4 + spd * 0.18))) * 0.42 : Math.sin(this.t * 1.6) * 0.05;
-    this.op.position.set(this.opPos.x, bob * (1 - this._downK), this.opPos.z);
+    this.op.position.set(this.opPos.x, this.opPos.y + Math.max(0, bob) * (1 - this._downK), this.opPos.z);
     this.op.rotation.z = -1.5 * this._downK;
     this.op.rotation.x = (spd > WALK ? 0.1 : 0) * (1 - this._downK);
-    const duckS = this.duckT > 0 ? 0.82 : 1;
-    this.op.scale.y = damp(this.op.scale.y, duckS, 10, dt);
-    // shoulder camera pitches at the subject (lowered only once the last shot has wrapped)
-    const pitch = Math.atan2(F.y - 7.4, Math.max(6, distF));
-    this.camGrp.rotation.x = damp(this.camGrp.rotation.x, (g.matchOver && !this.rec) ? 0.5 : -pitch, 8, dt);
+    const crouch = this.duckT > 0 ? 1 : 0;
+    this._crouch = damp(this._crouch || 0, crouch, 10, dt);
+    this.camGrp.position.y = 7.4 - this._crouch * 0.78;
     // tally light: blinking hard while ON AIR
     this.tally.emissiveIntensity = this.rec ? (this.t * 5 % 1 < 0.5 ? 3.0 : 0.7) : (this.t * 1.1 % 1 < 0.1 ? 1.6 : 0.3);
     this._dishGlow.emissiveIntensity = this.t * 0.8 % 1 < 0.5 ? 1.8 : 0.4;
 
-    // --- reporter movement: beside the shooter, out of frame; front-and-center for stand-ups ---
-    let rx, rz;
-    if (this.standupT > 0) {
-      const dl = Math.hypot(F.x - this.opPos.x, F.z - this.opPos.z) || 1;
-      rx = this.opPos.x + ((F.x - this.opPos.x) / dl) * 7.5;      // reporter between camera and skyline
-      rz = this.opPos.z + ((F.z - this.opPos.z) / dl) * 7.5;
-    } else {
-      const dl = Math.hypot(F.x - this.opPos.x, F.z - this.opPos.z) || 1;
-      const px = -(F.z - this.opPos.z) / dl, pz = (F.x - this.opPos.x) / dl;   // perpendicular
-      rx = this.opPos.x + px * 4.8 - ((F.x - this.opPos.x) / dl) * 1.8;
-      rz = this.opPos.z + pz * 4.8 - ((F.z - this.opPos.z) / dl) * 1.8;
-    }
+    // --- reporter movement: beside the operator; a clear action lane even during stand-ups ---
+    const { x: rx, z: rz } = this._reporterMark(this.standupT > 0, _reporterMark);
     const rd = Math.hypot(rx - this.rpPos.x, rz - this.rpPos.z);
     if (rd > 0.6) {
       const rspd = rd > 40 ? SPRINT : rd > 12 ? HUSTLE : WALK;
@@ -379,19 +463,21 @@ export class NewsCrew {
       this.rpPos.x += (rx - this.rpPos.x) * k; this.rpPos.z += (rz - this.rpPos.z) * k;
       this._pushOut(this.rpPos);
     }
+    this.rpPos.y = this._groundAt(this.rpPos.x, this.rpPos.z);
     const rBob = rd > 1.5 ? Math.abs(Math.sin(this.t * 5.2)) * 0.38 : 0;
-    this.rp.position.set(this.rpPos.x, rBob, this.rpPos.z);
+    this.rp.position.set(this.rpPos.x, this.rpPos.y + rBob, this.rpPos.z);
     // reporter faces the action; faces the LENS on a stand-up (with the little mic lift)
     const rTx = this.standupT > 0 ? this.opPos.x : F.x, rTz = this.standupT > 0 ? this.opPos.z : F.z;
     let rdy = (Math.atan2(rTx - this.rpPos.x, rTz - this.rpPos.z) - this.rp.rotation.y) % TAU;
     if (rdy > Math.PI) rdy -= TAU; if (rdy < -Math.PI) rdy += TAU;
     this.rp.rotation.y += rdy * (1 - Math.exp(-8 * dt));
-    this.micG.position.y = damp(this.micG.position.y, this.standupT > 0 ? 6.9 : 6.2, 8, dt);
+    this.micG.position.y = damp(this.micG.position.y, (this.standupT > 0 ? 6.9 : 6.2) - this._crouch * 0.78, 8, dt);
     this.micG.rotation.x = damp(this.micG.rotation.x, this.standupT > 0 ? -0.1 : -0.35, 8, dt);
-    this.rp.scale.y = damp(this.rp.scale.y, this.duckT > 0 ? 0.8 : 1, 10, dt);
-
     // --- the broadcast: pose the lens, then capture on the record clock ---
     this._poseCamera(dt);
+    // Solve grips after the physical camera has followed the final recorded shot.
+    poseNewsPerson(this.op, { time: this.t, speed: spd, duck: this._crouch, camera: this.camGrp });
+    poseNewsPerson(this.rp, { time: this.t, speed: rd > 1.5 ? Math.min(24, rd) : 0, duck: this._crouch, microphone: this.micG });
     // warm the news camera's shader path ONCE, at the top of the match — its POV compiles
     // programs the main camera never used, and a first-compile mid-fight is a visible hitch
     if (!this._warmed) { this._warmed = true; try { this._renderPOV(null); } catch (e) {} }
@@ -406,7 +492,7 @@ export class NewsCrew {
         this.rec.acc = Math.min(this.rec.acc - int, int);
         if (this.rec.frames.length < 90 && g.world._ema < 34) this._captureFrame(this.rec.frames, this.rec.lt);
       }
-      if (this.t >= this.rec.until) this._finalize();   // records THROUGH match end — the last KO wraps on its own clock
+      if (this.t >= this.rec.until || this.rec.frames.length >= 90) this._finalize();
       this._onAirT = 0.8;
     } else {
       if (this._onAirT > 0) this._onAirT -= dt;
@@ -417,7 +503,7 @@ export class NewsCrew {
         this._captureFrame(this._preroll, null);
         if (this._preroll.length > PREROLL_MAX) {
           const dead = this._preroll.shift();
-          if (dead && dead.startsWith && dead.startsWith('blob:')) URL.revokeObjectURL(dead);
+          revokeFrames([dead]);
         }
       }
     }
@@ -425,21 +511,37 @@ export class NewsCrew {
 
   _finalize() {
     const r = this.rec; this.rec = null;
-    if (!r || r.frames.length < 6) return;
+    if (!r) return;
+    if (r.frames.length < 6) { revokeFrames(r.frames); return; }
     this.clips.push({
       tag: r.tag, title: r.title, t0: r.t0, tLabel: fmtClock(r.t0), fps: r.fps, frames: r.frames, priority: r.priority, shotBy: this.operatorName,
       slow: !!r.slow, slowFrom: r.ev || 0, slowTo: (r.ev || 0) + Math.round(r.fps * 1.4),   // the TV slows THIS window
+      shots: r.shots || [], width: FRAME_W, height: FRAME_H,
     });
+    this._trimClips();
+  }
+  _trimClips() {
     // memory budget: shed lowest-priority, oldest first — but the latest KO is sacred
     const lastKO = [...this.clips].reverse().find(c => c.tag === 'ko');
-    let total = this.clips.reduce((s, c) => s + c.frames.length, 0);
-    while ((total > CLIP_FRAME_CAP || this.clips.length > CLIP_CAP) && this.clips.length > 1) {
+    const live = [this.rec?.frames, this._preroll].filter(Boolean);
+    let total = this.clips.reduce((s, c) => s + c.frames.length, 0) + live.reduce((s, a) => s + a.length, 0);
+    let bytes = this.clips.reduce((s, c) => s + newsFrameBytes(c.frames), 0) + live.reduce((s, a) => s + newsFrameBytes(a), 0);
+    while ((total > CLIP_FRAME_CAP || bytes > CLIP_BYTE_CAP || this.clips.length > CLIP_CAP) && this.clips.length > 1) {
       let drop = -1, dp = 1e9;
       for (let i = 0; i < this.clips.length; i++) { const c = this.clips[i]; if (c === lastKO) continue; if (c.priority < dp) { dp = c.priority; drop = i; } }
       if (drop < 0) break;
       total -= this.clips[drop].frames.length;
+      bytes -= newsFrameBytes(this.clips[drop].frames);
       revokeFrames(this.clips[drop].frames); this.clips[drop]._dead = true;   // a shed clip may still be on someone's screen
       this.clips.splice(drop, 1);
+    }
+    // Even one unusual encoded stream must obey the byte ceiling. Keep indices stable for viewers
+    // and pending callbacks; missing slots hold the previous visible frame during playback.
+    if (bytes > CLIP_BYTE_CAP) for (const frames of [...this.clips.map(c => c.frames), ...live]) {
+      for (let i = 0; i < frames.length && bytes > CLIP_BYTE_CAP; i++) {
+        const size = newsFrameBytes([frames[i]]);
+        if (size) { bytes -= size; revokeFrames([frames[i]]); frames[i] = null; }
+      }
     }
   }
 
@@ -448,30 +550,34 @@ export class NewsCrew {
     const F = this.focusSm;
     const down = this._downK;
     // eye: shoulder height, dropped to the pavement when the operator is down
-    const eyeY = 7.5 * (1 - down) + 1.3 * down + (this.duckT > 0 ? -1.1 : 0);
+    const eyeY = this.opPos.y + 7.5 * (1 - down) + 1.3 * down - (this.duckT > 0 ? 1.1 * (1 - down) : 0);
     _v.set(this.opPos.x, eyeY, this.opPos.z);
-    let lookX = F.x, lookY = F.y, lookZ = F.z, fovT;
-    if (this.standupT > 0 && down === 0) {
-      // frame the REPORTER, skyline behind — a real piece-to-camera
-      lookX = this.rpPos.x; lookY = 7.2; lookZ = this.rpPos.z;
-      fovT = 30;
-    } else {
-      const dist = Math.max(8, _v.distanceTo(_v2.set(F.x, F.y, F.z)));
-      fovT = clamp(THREE.MathUtils.radToDeg(2 * Math.atan((this.spreadSm * 0.5 + 9) / dist)), 21, 58);
-      if (down > 0) fovT = 52;
-    }
-    if (this._punchT > 0) fovT *= 0.86;                          // the snap zoom on a moment
-    this.fov = damp(this.fov, fovT, 3.2, dt);
+    const [actor, target] = this._subjects || [];
+    const shot = this._shot = sampleNewsShot({ time: this.t, eye: _v, focus: F, spread: this.spreadSm,
+      actor, target, event: this._event, reporter: this.rpPos, standup: this.standupT > 0, down,
+      winner: this._ending && !this._ending.signoff ? this._ending.winner : null, profile: this.cameraProfile });
+    this.lookSm.lerp(_v2.set(shot.look.x, shot.look.y, shot.look.z), 1 - Math.exp(-shot.response * dt));
+    let lookX = this.lookSm.x, lookY = this.lookSm.y, lookZ = this.lookSm.z;
+    this.fov = damp(this.fov, shot.fov, shot.response, dt);
     // handheld: layered sine sway, worse when moving/scared/blasted
-    const unst = 0.45 + this._kick * 1.6 + (this.duckT > 0 ? 1.2 : 0) + Math.min(1.4, Math.hypot(this.goal.x - this.opPos.x, this.goal.z - this.opPos.z) * 0.02);
+    const unst = (this.cameraProfile?.handheld ?? 0.35) * (0.45 + this._kick * 1.6 + (this.duckT > 0 ? 1.2 : 0) + Math.min(1.4, Math.hypot(this.goal.x - this.opPos.x, this.goal.z - this.opPos.z) * 0.02));
     const n = (i, f) => Math.sin(this.t * f + this._np[i]) * 0.6 + Math.sin(this.t * f * 2.13 + this._np[(i + 1) % 3]) * 0.4;
     const sway = unst * (0.014 * this.fov);
     lookX += n(0, 1.7) * sway; lookY += n(1, 2.1) * sway * 0.7; lookZ += n(2, 1.5) * sway;
     this.cam.position.copy(_v);
+    const sky = this.g.world.skyMesh, scale = sky?.scale;
+    const skyRadius = sky?.geometry?.parameters?.radius || sky?.geometry?.boundingSphere?.radius || 0;
+    this.cam.far = Math.max(1100, this.g.world.camera?.far || 0, skyRadius * Math.max(scale?.x || 1, scale?.y || 1, scale?.z || 1) * 1.05);
     this.cam.fov = this.fov; this.cam.updateProjectionMatrix();
     this.cam.lookAt(lookX, lookY, lookZ);
     const roll = down * 1.25 + n(0, 0.9) * 0.012 * unst;
     if (roll) this.cam.rotateZ(roll);
+    if (this.camGrp) {
+      // Three cameras look down -Z; the shoulder model's lens points +Z. Convert the exact
+      // world view into the operator's local frame, including body yaw/lean and lens roll.
+      this.camGrp.quaternion.copy(this.op.getWorldQuaternion(_newsParentQ).invert())
+        .multiply(this.cam.getWorldQuaternion(_newsWorldQ)).multiply(_newsFacingFlip);
+    }
   }
 
   // ---------- capture: render POV → blit → stamp the broadcast package ----------
@@ -479,54 +585,56 @@ export class NewsCrew {
   // for every captured frame — a main-thread JPEG encode inside the sim frame, over and over while
   // a blocked beam kept the recorder hot. That was the "blocking completely freezes the game"
   // report. The POV render + overlay still land in `this.canvas` (the live PiP monitor), then a
-  // POOLED COPY goes to toBlob (off-thread in every modern browser); the frame slot holds a
-  // '#enc…' token until the blob lands, written back by token so pre-roll shifts and clip
+  // SNAPSHOT transfers to a worker for WebP encoding and its readback. Browsers
+  // without worker canvas support retain the bounded async pooled fallback.
+  // The frame slot holds a '#enc…' token until the blob lands,
+  // written back by token so pre-roll shifts and clip
   // shedding can never mis-file a frame. The TV and the cold open skip frames that never landed.
   _captureFrame(arr, lt) {
-    this._renderPOV(lt);
-    let pooled = this._pool && this._pool.pop();
-    if (!pooled) { pooled = document.createElement('canvas'); pooled.width = W; pooled.height = H; }
-    pooled.getContext('2d').drawImage(this.canvas, 0, 0);
-    const token = '#enc' + (this._seq = (this._seq || 0) + 1);
-    arr.push(token);
-    pooled.toBlob((b) => {
-      // revokeFrames() nulls EVERY slot including these tokens, so a reset that lands between the
-      // push and the callback makes this indexOf miss — the blob is dropped instead of becoming an
-      // object URL nobody will ever revoke. The two laws hold each other up; don't weaken either.
-      const i = arr.indexOf(token);
-      if (b && i >= 0) arr[i] = URL.createObjectURL(b);
-      else if (i >= 0) arr.splice(i, 1);          // encode failed — drop the slot cleanly
-      if (!this._pool) this._pool = [];
-      if (this._pool.length < 8) this._pool.push(pooled);
-    }, 'image/jpeg', 0.62);
+    if (!this._encoder.available || this.g.world.renderer.isContextLost?.()) return false;
+    try { this._renderPOV(lt); } catch { return false; }
+    if (this.rec && arr === this.rec.frames && this.rec.shots.at(-1)?.kind !== this._shot?.kind) {
+      this.rec.shots.push({ frame: arr.length, kind: this._shot?.kind || 'action' });
+    }
+    return this._encoder.capture(this.canvas, arr);
   }
   _renderPOV(lt) {
     const g = this.g, world = g.world, r = world.renderer, cv = r.domElement;
     const pr = r.getPixelRatio();
+    const target = r.getRenderTarget(), cubeFace = r.getActiveCubeFace(), mip = r.getActiveMipmapLevel();
+    const viewport = r.getViewport(new THREE.Vector4()), scissor = r.getScissor(new THREE.Vector4());
+    const scissorTest = r.getScissorTest(), sky = world.skyMesh?.position.clone();
+    // On small windows the GL canvas can be smaller than the broadcast. Preserve its aspect.
+    const scale = Math.min(1, cv.width / FRAME_W, cv.height / FRAME_H);
+    const width = Math.max(1, Math.floor(FRAME_W * scale)), height = Math.max(1, Math.floor(FRAME_H * scale));
     // hide the player-UI layer of the scene — news cameras don't see fog-of-war or reticles
     const hidden = [];
     const hide = (o) => { if (o && o.visible) { o.visible = false; hidden.push(o); } };
-    hide(world.fog); hide(g.reticle); hide(g.redTri);
+    hide(world.fog); hide(g.reticle); hide(g.redTri); hide(g.playerMark); hide(g.blinkMark);
+    hide(this.op); // a shoulder camera cannot film the back of its own operator's head
     const shown = [];
     for (const e of g.entities) if (e.obj && !e.obj.visible) { e.obj.visible = true; shown.push(e.obj); }
     const sm = r.shadowMap.autoUpdate; r.shadowMap.autoUpdate = false;   // reuse this frame's shadow maps
     // the sky rides the EYE (world render loop does the same for the main camera) — without this
     // the POV footage keeps the dome centered on the iso camera and the broadcast horizon skews
-    if (world.skyMesh) world.skyMesh.position.copy(this.cam.position);
-    r.setRenderTarget(null);
-    r.setViewport(0, 0, W / pr, H / pr);
-    r.setScissor(0, 0, W / pr, H / pr);
-    r.setScissorTest(true);
-    r.render(g.scene, this.cam);
-    r.setScissorTest(false);
-    r.setViewport(0, 0, innerWidth, innerHeight);
-    r.shadowMap.autoUpdate = sm;
-    for (const o of hidden) o.visible = true;
-    for (const o of shown) o.visible = false;
-    // blit the freshly rendered corner (bottom-left of the GL buffer) into the broadcast frame
-    const x = this.ctx;
-    x.drawImage(cv, 0, cv.height - H, W, H, 0, 0, W, H);
-    this._overlay(x, lt);
+    try {
+      if (world.skyMesh) world.skyMesh.position.copy(this.cam.position);
+      r.setRenderTarget(null);
+      r.setViewport(0, 0, width / pr, height / pr);
+      r.setScissor(0, 0, width / pr, height / pr);
+      r.setScissorTest(true);
+      r.render(g.scene, this.cam);
+      // Copy before the main scene renders; captures are real scene frames, never re-simulation.
+      this.ctx.drawImage(cv, 0, cv.height - height, width, height, 0, 0, FRAME_W, FRAME_H);
+      this._overlay(this.ctx, lt);
+    } finally {
+      r.setRenderTarget(target, cubeFace, mip);
+      r.setViewport(viewport); r.setScissor(scissor); r.setScissorTest(scissorTest);
+      r.shadowMap.autoUpdate = sm;
+      if (sky) world.skyMesh.position.copy(sky);
+      for (const o of hidden) o.visible = true;
+      for (const o of shown) o.visible = false;
+    }
   }
 
   _buildOverlayAssets() {
@@ -548,6 +656,7 @@ export class NewsCrew {
   _rr(x, px, py, w, h, r) { x.beginPath(); x.moveTo(px + r, py); x.arcTo(px + w, py, px + w, py + h, r); x.arcTo(px + w, py + h, px, py + h, r); x.arcTo(px, py + h, px, py, r); x.arcTo(px, py, px + w, py, r); x.closePath(); }
 
   _overlay(x, lt) {
+    x.save(); x.scale(FRAME_W / W, FRAME_H / H);
     // lens vignette
     x.fillStyle = this._vig; x.fillRect(0, 0, W, H);
     // signal degradation while the camera is on the pavement
@@ -571,7 +680,7 @@ export class NewsCrew {
     x.textAlign = 'left';
     // lower third
     if (lt) {
-      const D = this.g.world.districtAt(this.opPos.x, this.opPos.z);
+      const D = this._venueLabel();
       const y0 = H - 30;
       x.font = '900 8px Inter,sans-serif';
       const kw = x.measureText(lt.kicker).width + 10;
@@ -586,6 +695,13 @@ export class NewsCrew {
       x.fillText(D, W - 14, y0 + 10);
       x.textAlign = 'left';
     }
+    x.restore();
+  }
+  _venueLabel() {
+    const g = this.g;
+    if (g.modeId === 'ascendance') return 'ASCENDANCE ARENA';
+    return hasCity(g.modeId) ? g.world.districtAt(this.opPos.x, this.opPos.z)
+      : MODES.find(m => m.id === g.modeId)?.name || 'ASCENDANCE ARENA';
   }
   _fit(x, s, w) { if (x.measureText(s).width <= w) return s; while (s.length > 4 && x.measureText(s + '…').width > w) s = s.slice(0, -1); return s + '…'; }
 }

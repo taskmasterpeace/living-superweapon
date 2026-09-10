@@ -6,6 +6,32 @@ Gravity-control and black-hole are two different entries — never one vague "gr
 
 ## Entry schema
 
+### Beam and charged-shot origins
+
+Studio **Attacks → Attack origin** selects Kit default, Left palm, Right palm,
+Combined palms, Chest or Eyes. This authoring value is stored in the profile's
+`attacks[slot].values.emissionOrigin`; `applyAttackOverrides` compiles it into
+the ordinary ability fields. Do not put `emissionOrigin` directly on runtime
+abilities. Preparation, pose, hand ownership and emission use the same choice.
+
+For native `beam`/`charge` data:
+
+- `castHand: 'left' | 'right'` selects the **actor's anatomical** palm. Missing
+  metadata preserves the existing kit's hand. Explicit hands override only the
+  implicit martial two-hand fallback, not an explicit `castStyle: 'two-hand'`.
+- `castStyle: 'two-hand'` uses the shared palm midpoint for **one** attack;
+  it does not duplicate cost or damage. Separate left/right beam slots can co-fire.
+- `faceOrigin: true` uses the eyes; `chest: true` uses the chest (eyes take
+  precedence if both are present in old data). Studio restricts compatible poses.
+
+Compatibility note: the legacy +Z-facing rig calls its anatomical left/+X arm
+`armR` and its anatomical right/−X arm `armL`. `palmCastSide` bridges **new**
+beam/charge metadata to these existing lanes. Do not rename the rig or flip
+existing weapon/volley lanes. Returning to Kit default restores the original
+emitter and pose while retaining unrelated attack tuning.
+
+Evidence and current limits: [authored-origin pass](AUTHORED_ORIGIN_PASS.md).
+
 ```js
 {
   type: 'beam',              // mechanical family — one of the 26 registered TYPES (below)

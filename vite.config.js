@@ -26,6 +26,7 @@ export default defineConfig({
         main: fileURLToPath(new URL('./index.html', import.meta.url)),
         atlas: fileURLToPath(new URL('./atlas.html', import.meta.url)),
         powerworld: fileURLToPath(new URL('./powerworld.html', import.meta.url)),
+        studio: fileURLToPath(new URL('./studio.html', import.meta.url)),
       },
     },
   },

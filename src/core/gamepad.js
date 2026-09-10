@@ -56,10 +56,26 @@ export class Gamepad {
     this.active = this._everUsed;       // once a pad is used, treat it as the active input device
   }
 
-  down(a) { return !!this.cur[a]; }
+  // Sample after physical/touch input is merged. A chord owns R3 until its
+  // physical release, including the release edge; modifier order cannot fire X.
+  sampleCombatLock(active) {
+    const held=this._combatSuppressed;
+    if(held)for(const key of held)if(!this.cur[key]&&!this.prev[key])held.delete(key);
+    if(!active)return false;
+    if(this.pressed('lock'))return true;
+    if(this.down('guard')&&this.pressed('item')){
+      (this._combatSuppressed??=new Set()).add('item');return true;
+    }
+    return false;
+  }
+  suppressCombatHeld() {
+    const held=this._combatSuppressed??=new Set();
+    for(const key of Object.keys(this.cur))if(this.cur[key]&&!['start','select','swap'].includes(key))held.add(key);
+  }
+  down(a) { return !this._combatSuppressed?.has(a)&&!!this.cur[a]; }
   raw(i) { return !!this.btn[i]; }      // raw standard-mapping index: 0 A · 1 B · 12-15 D-pad
-  pressed(a) { return !!this.cur[a] && !this.prev[a]; }
-  released(a) { return !this.cur[a] && !!this.prev[a]; }
+  pressed(a) { return !this._combatSuppressed?.has(a)&&!!this.cur[a] && !this.prev[a]; }
+  released(a) { return !this._combatSuppressed?.has(a)&&!this.cur[a] && !!this.prev[a]; }
   get moving() { return Math.abs(this.lx) + Math.abs(this.ly) > 0; }
   get aiming() { return Math.abs(this.rx) + Math.abs(this.ry) > 0; }
 }

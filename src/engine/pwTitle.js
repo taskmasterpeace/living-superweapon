@@ -23,16 +23,17 @@ import { liftCapacityOf } from './entity.js';
 import { heroStats, kitFacts, THREAT_COLORS } from './hud.js';
 import { icon } from './icons.js';
 import { esc } from './hudUtil.js';
+import { createFieldFootage } from './field-footage-view.js';
 
 const PREF = 'powerworld_prefs_v1';
 
 // The four rules of `_openSky` (manual §46). Named here because a player arriving on this page has
 // no way to know this dimension is different, and "one flag, four rules" is the actual design.
 const LAWS = [
-  ['flight', 'EVERY fighter flies here — grounded ones included. Forward is where you look, in 3-D.'],
+  ['flight', 'Every roster fighter flies here. Clone recovery soldiers stay grounded. Forward is where you look, in 3-D.'],
   ['range', 'A punch SENDS them. The same haymaker travels 15 body lengths against the city\'s two.'],
   ['power', 'The ground is ammunition — break a spire, pick up the rubble, throw it. Shoot theirs down.'],
-  ['threat', 'No civilians, no police, no press. Nothing here is watching and nothing here is innocent.'],
+  ['threat', 'No civilians or police. A field camera crew captures major hits and the post-match report.'],
 ];
 
 /** How many of the 52 can lift this rung — the ladder's own justification, computed live. */
@@ -178,13 +179,17 @@ body.phone #pwTitle h1{ font-size:34px; }
     document.head.appendChild(s);
   }
 
-  let selYou = ROSTER.find(r => r.id === prefs.p1) || ROSTER[0];
+  const studioHero = new URLSearchParams(location.search).get('hero');
+  let selYou = ROSTER.find(r => r.id === (studioHero || prefs.p1)) || ROSTER[0];
   let selFoe = ROSTER.find(r => r.id === prefs.p2) || ROSTER[2] || ROSTER[1] || ROSTER[0];
   let picking = 'you';                       // which slot the roster grid is assigning
   let two = !!prefs.two;
   let ai = prefs.ai || 1.25;
+  let encounter = 'sparring'; // The optional recovery slice never replaces the default.
+  let cameraPreset=prefs.cameraPreset==='frontline'?'frontline':'character';
 
-  const save = () => { try { localStorage.setItem(PREF, JSON.stringify({ p1: selYou.id, p2: selFoe.id, two, ai })); } catch {} };
+  const save = () => { try { localStorage.setItem(PREF, JSON.stringify({ p1: selYou.id, p2: selFoe.id, two, ai, cameraPreset })); } catch {} };
+  const footage = createFieldFootage(ctx.game);
 
   // ---- the stage readout, every figure derived from the stage itself ----
   const loose = STAGE.loose.reduce((a, b) => a + b, 0);
@@ -193,13 +198,14 @@ body.phone #pwTitle h1{ font-size:34px; }
     ['COVER', `${STAGE.spires + STAGE.boulders}`, `${STAGE.spires} spires · ${STAGE.boulders} boulders`],
     ['LOOSE ROCK', `${loose}`, 'throwable from the first frame'],
     ['CEILING', `${STAGE.spaceTo}u`, `space from ${STAGE.spaceFrom}u`],
-    ['WITNESSES', 'NONE', 'no law, no press'],
+    ['WITNESSES', 'FIELD PRESS', 'combat highlights'],
   ];
 
   function render() {
     const you = selYou, foe = selFoe;
     el.innerHTML = `
       <div class="pwtop">
+        <a href="./studio.html">CHARACTER / POWER HARNESS ↗</a>
         <a href="./index.html" title="The full game — the city, the career, the registry">← WAR WORLD</a>
         <button id="pwRank">📊 Rankings</button>
         <button id="pwOpt">⚙ Options</button>
@@ -216,7 +222,7 @@ body.phone #pwTitle h1{ font-size:34px; }
         ${stageFacts().map(([k, v, s]) => `<div class="pwsf"><span class="pwsk">${k}</span><span class="pwsv">${v} <small>${esc(s)}</small></span></div>`).join('')}
       </div>
       <div class="pwwrap">
-        <div class="pwpv" id="pwPv"></div>
+        <div class="pwleft"><div id="pwFootage"></div><div class="pwpv" id="pwPv"></div></div>
         <div class="pwright">
           <div class="pwtabs">
             <div class="pwtab ${picking === 'you' ? 'on' : ''}" data-pick="you">YOU — ${esc(you.name)}</div>
@@ -224,23 +230,41 @@ body.phone #pwTitle h1{ font-size:34px; }
           </div>
           <div class="pwroster" id="pwRoster"></div>
           <div class="pwrow">
+            <span class="pwlbl">Encounter</span>
+            <div class="pwseg" id="pwEncounter">
+              <button data-encounter="sparring" class="${encounter === 'sparring' ? 'on' : ''}" aria-pressed="${encounter === 'sparring'}">Sparring</button>
+              <button data-encounter="practice" class="${encounter === 'practice' ? 'on' : ''}" aria-pressed="${encounter === 'practice'}"${two ? ' disabled' : ''}>Free practice · 1P</button>
+              <button data-encounter="frontline" class="${encounter === 'frontline' ? 'on' : ''}" aria-pressed="${encounter === 'frontline'}"${two ? ' disabled style="opacity:.35" title="Clone recovery is one-player only"' : ''}>Clone recovery · 1P</button>
+            </div>
+          </div>
+          ${encounter === 'frontline' ? '<div class="pwnote">Four ground-bound rifle clones guard a sealed sample. Defeat them, land by the amber case, then return to extraction. Research is not yet implemented. Opponent selection and difficulty apply to sparring.</div>' : ''}
+          ${encounter === 'practice' ? '<div class="pwnote">No hostile spawns. Learn your powers, drive the scouts or practice helicopter and jet landings. Health, energy and collision are unchanged. Press B when you want to add a rival.</div>' : ''}
+          <div class="pwrow"><span class="pwlbl">Camera · 1P</span><div class="pwseg" id="pwCamera">
+            <button data-camera="character" class="${cameraPreset==='character'?'on':''}" aria-pressed="${cameraPreset==='character'}">Character / BFP</button>
+            <button data-camera="frontline" class="${cameraPreset==='frontline'?'on':''}" aria-pressed="${cameraPreset==='frontline'}"${two?' disabled':''}>Front-line close</button>
+          </div></div><div class="pwnote">Close framing applies to this match only. Character / BFP keeps your saved Studio camera.</div>
+          <div class="pwrow">
             <span class="pwlbl">Players</span>
             <div class="pwseg" id="pwTwo">
-              <button data-two="0" class="${two ? '' : 'on'}">1P vs AI</button>
+              <button data-two="0" class="${two ? '' : 'on'}">1P</button>
               <button data-two="1" class="${two ? 'on' : ''}">2P LOCAL</button>
             </div>
             <span class="pwlbl" style="margin-left:6px">Opponent</span>
             <div class="pwseg" id="pwAi">
               ${[['0.85', 'ROOKIE'], ['1.25', 'PRO'], ['1.75', 'ELITE']].map(([v, n]) =>
-                `<button data-ai="${v}" class="${Math.abs(ai - +v) < 0.01 ? 'on' : ''}"${two ? ' disabled style="opacity:.35"' : ''}>${n}</button>`).join('')}
+                `<button data-ai="${v}" class="${Math.abs(ai - +v) < 0.01 ? 'on' : ''}"${two || encounter!=='sparring' ? ' disabled style="opacity:.35"' : ''}>${n}</button>`).join('')}
             </div>
           </div>
           <button class="pwgo" id="pwGo">ENTER THE DIMENSION ▶</button>
-          <div class="pwnote">One stage. <b>T</b> locks on and cycles · <b>SPACE</b> climbs, and keeps climbing ·
+          <div class="pwnote">One stage. <b>T</b> locks on and cycles · <b>SPACE</b> jumps; flight-capable characters can climb ·
             <b>G</b> hoists a rock · fists and powers work exactly as they do at home.</div>
+          <div class="pwnote">Soldier play: select MERC, SARGE, BREACH or RECON above. Same third-person mouse-look. MERC: E grenade, double-tap a direction to Combat Blink (6 energy). SARGE: default RMB frag grenade. Wheel changes primary attack; RMB + wheel changes secondary.</div>
+          <div class="pwnote">Grounded characters: approach a parked vehicle and press J. Scout: WASD drive, Space brake. Helicopter: W/S forward, A/D turn, Space/Z lift. Jet: W/S throttle, A/D turn, Space/Z pitch after a takeoff roll. Aircraft LMB cannon; land and stop before J exit. Natural flyers and active flight-gadget users cannot pilot. No cockpit/seat animation yet.
+            <a href="./models/frontline/AIRCRAFT-LICENSE.md" target="_blank" rel="noopener">Aircraft credits &amp; licenses</a></div>
         </div>
       </div>`;
 
+    el.querySelector('#pwFootage').appendChild(footage.el);
     // ---- the roster grid ----
     const grid = el.querySelector('#pwRoster');
     const sel = picking === 'you' ? you : foe;
@@ -279,7 +303,9 @@ body.phone #pwTitle h1{ font-size:34px; }
 
     // ---- wiring ----
     for (const t of el.querySelectorAll('.pwtab')) t.onclick = () => { picking = t.dataset.pick; render(); };
-    for (const b of el.querySelectorAll('#pwTwo button')) b.onclick = () => { two = b.dataset.two === '1'; if (two) picking = 'you'; save(); render(); };
+    for (const b of el.querySelectorAll('#pwTwo button')) b.onclick = () => { two = b.dataset.two === '1'; if (two) { picking = 'you'; encounter = 'sparring'; } save(); render(); };
+    for (const b of el.querySelectorAll('#pwEncounter button')) b.onclick = () => { if (b.disabled) return; encounter = b.dataset.encounter; render(); };
+    for (const b of el.querySelectorAll('#pwCamera button')) b.onclick = () => {if(b.disabled)return;cameraPreset=b.dataset.camera;save();render();};
     for (const b of el.querySelectorAll('#pwAi button')) b.onclick = () => { if (two) return; ai = +b.dataset.ai; save(); render(); };
     el.querySelector('#pwOpt').onclick = () => hud.showOptions();
     el.querySelector('#pwHow').onclick = () => hud.showHowto();
@@ -287,11 +313,15 @@ body.phone #pwTitle h1{ font-size:34px; }
     el.querySelector('#pwGo').onclick = () => {
       save();
       // ⚠ `p2` is what every mode calls the opponent — powerworld's setup reads `o.enemy || o.p2`.
-      ctx.enter({ mode: 'powerworld', p1: selYou.id, p2: selFoe.id, twoPlayer: two, aiLevel: ai });
+      ctx.enter({ mode: 'powerworld', p1: selYou.id, p2: selFoe.id, twoPlayer: two, aiLevel: ai, encounter: two ? 'sparring' : encounter, cameraPreset:two?'character':cameraPreset });
     };
   }
 
   function open() {
+    // Finalize this session's current shot without transferring/revoking its frame URLs.
+    ctx.game.news?.flush().catch(err=>console.warn('Field footage encoding',err));
+    ctx.game.ms?.frontline?.dispose();
+    if (ctx.game.ms?.frontline) delete ctx.game.ms.frontline;
     render();
     // ⚠ `hud.titleOpen` is READ BY THE FRAME LOOP and by padSystem — a front door that does not set
     // it leaves the game thinking a match is live behind the menu (Escape pauses nothing, the pad's
@@ -299,8 +329,10 @@ body.phone #pwTitle h1{ font-size:34px; }
     hud.titleOpen = true;
     document.body.classList.remove('playing');
     el.style.display = 'flex';
+    footage.open();
   }
   function close() {
+    footage.close();
     hud.titleOpen = false;
     el.style.display = 'none';
   }

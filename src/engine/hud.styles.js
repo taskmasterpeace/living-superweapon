@@ -2,6 +2,8 @@
 // a 72KB pure string was a quarter of the module). Injected once by hud's style build.
 export const CSS = `
 #hud .wrap{ position:absolute; inset:0; }
+#hud .combat-dock{ display:contents; }
+#hud .status-dock{ display:contents; }
 #hud .vignette{ position:absolute; inset:0; pointer-events:none; background:radial-gradient(125% 105% at 50% 44%, transparent 52%, rgba(0,0,0,.28) 82%, rgba(0,0,0,.62) 100%); z-index:0; }
 #hud .radar{ position:absolute; top:16px; right:18px; width:152px; height:152px; padding:0; border-radius:var(--r-3); overflow:hidden; }
 #hud .radar canvas{ display:block; width:152px; height:152px; }
@@ -57,6 +59,8 @@ export const CSS = `
   font-family:var(--f-mono); font-size:var(--t-lg); font-weight:700; color:var(--gold-pale); text-shadow:0 2px 6px #000; pointer-events:none; }
 #hud .slot.ult{ border-color:rgba(245,178,26,.5); box-shadow:0 0 16px rgba(245,178,26,.25); }
 #hud .slot.dim{ opacity:.4; }
+#hud .slot.locked{opacity:.78;border-style:dashed;border-color:var(--gold);}
+#hud .slot.locked .cdn{font-size:12px;background:rgba(20,17,11,.7);align-items:flex-start;padding-top:22px;}
 #hud .slot.on{ border-color:var(--gold); box-shadow:0 0 16px rgba(255,210,74,.5); }
 #hud .slot.sel{ outline:2px solid var(--info); outline-offset:2px; }   /* wheel-selected power */
 /* ---- THE HANDS ROW — what your fists are wrapped around, directly above the powers.
@@ -959,32 +963,157 @@ body.deck .rcard, body.deck .mcard{ outline-offset:3px; }   /* stick-focus reads
    needs a press. None of those exist in PowerWorld, so they go — and a surface that cannot be true
    should never be on screen, which is the same rule the armory keeps when it says NOT YET ISSUED. */
 export const POWERWORLD_CSS = `
+body.powerworld #hFieldRec{position:absolute;top:16px;left:64px;display:flex;align-items:center;gap:8px;padding:8px 11px;border-radius:.625rem;background:oklch(.18 .02 70 / .80);border:1px solid oklch(.65 .04 70 / .24);color:oklch(.92 .02 80);font:600 11px Inter,system-ui,sans-serif;letter-spacing:.09em;pointer-events:none;}
+#hFieldRec[hidden]{display:none!important;}
+#hFieldRec i{width:8px;height:8px;border-radius:50%;background:oklch(.70 .11 80);}
+#hFieldRec[data-state="recording"] i{background:oklch(.65 .22 28);box-shadow:0 0 8px oklch(.65 .22 28 / .32);}
+#hFieldRec[data-state="paused"] i{background:oklch(.62 .02 70);}
 body.powerworld #hud .cityplate{ display:none !important; }   /* names a city; there isn't one */
 body.powerworld #hud .wantedrow{ display:none !important; }    /* no police to be wanted by */
-body.powerworld #hud .pip{ display:none !important; }          /* no press, so no monitor */
+body.powerworld #hud .pip{ display:none !important; }          /* compact real recording indicator above; full footage at match end */
 body.powerworld #hud .radar .rlab{ color:var(--text-5); }
+
+/* Live kit content flows above the meters; no guessed pixel height of a name,
+   wound row or status chip can move it into another panel. */
+body.combat-chase:not(.phone):not(.tablet) #hud .status-dock{
+  position:absolute; left:18px; bottom:18px; display:flex; flex-direction:column-reverse;
+  gap:2px; width:min(calc(260px + var(--tier-spread,0px)),calc(50vw - 140px));
+  background:oklch(.18 .02 70 / .82); border:1px solid oklch(.65 .04 70 / .28); border-radius:.625rem;
+}
+body.combat-chase:not(.phone):not(.tablet) #hud .status-dock > .panel{
+  position:relative; inset:auto; transform:none; width:100%; min-width:0 !important;
+  overflow-wrap:anywhere;
+  background:none; border:0; backdrop-filter:none;
+}
+body.combat-chase:not(.phone):not(.tablet) #hud .kit .chip{ max-width:100%; }
+/* Combat owns the viewport. Identity details remain in the case file; these
+   labeled meters are the glanceable state, not a second character sheet. */
+body.combat-chase:not(.phone):not(.tablet) #hud .pl{
+  padding:8px 10px; display:grid; grid-template-columns:74px minmax(0,1fr); gap:6px 8px; align-items:center;
+}
+body.combat-chase:not(.phone):not(.tablet) #hud .pl .nm,
+body.combat-chase:not(.phone):not(.tablet) #hud .pl .wantedrow,
+body.combat-chase:not(.phone):not(.tablet) #hud .pl .xpwrap{ grid-column:1/-1; }
+body.combat-chase:not(.phone):not(.tablet) #hud .pl .nm{ font-size:16px; line-height:20px; }
+body.combat-chase:not(.phone):not(.tablet) #hud .pl .rl{ display:none; }
+body.combat-chase:not(.phone):not(.tablet) #hud .pl .lab{ margin:0; line-height:14px; color:var(--text-2); letter-spacing:.02em; }
+body.combat-chase:not(.phone):not(.tablet) #hud .pl .bar{ height:8px; margin:0; }
+body.combat-chase:not(.phone):not(.tablet) #hud .pl .bar.gd{ height:4px; }
+body.combat-chase:not(.phone):not(.tablet) #hud .pl .xpwrap{ margin-top:0; gap:8px; }
+body.combat-chase:not(.phone):not(.tablet) #hud .pl .lvl,
+body.combat-chase:not(.phone):not(.tablet) #hud .pl .tierb{ height:20px; font-size:12px; }
+body.combat-chase:not(.phone):not(.tablet) #hud .pl .lvl{ width:20px; }
+body.combat-chase:not(.phone):not(.tablet) #hud .pl .kistate:not(.on),
+body.combat-chase:not(.phone):not(.tablet) #hud .pl .kiover:not(.on){ display:none; }
+body.combat-chase:not(.phone):not(.tablet) #hud .pl .kistate.on,
+body.combat-chase:not(.phone):not(.tablet) #hud .pl .kiover.on{ display:block; margin-left:0; letter-spacing:.04em; }
+body.combat-chase:not(.phone):not(.tablet) #hud .kit{ padding:3px 10px; }
+body.combat-chase:not(.phone):not(.tablet) #hud .kit .kh{ display:none; }
+body.combat-chase:not(.phone):not(.tablet) #plMood{
+  position:relative !important; inset:auto !important; padding:5px 10px 0 !important;
+  background:none !important; border:0 !important;
+  width:100%; overflow-wrap:anywhere;
+}
+body.combat-chase:not(.phone):not(.tablet) #plMood .mood-label{ display:inline; margin-right:8px; }
+body.combat-chase:not(.phone):not(.tablet) #plMood .mood-shade{ display:inline; }
+body.combat-chase:not(.phone):not(.tablet) #plMood .mood-effect{ margin-top:2px; }
+/* City identity stays real, at the edge rather than across the fighter's boots. */
+body.combat-chase:not(.phone):not(.tablet) #hud .cityplate{
+  left:18px; top:52px; bottom:auto; transform:none; width:min(260px,30vw);
+  font-size:10px; line-height:1.4; letter-spacing:.03em; overflow-wrap:anywhere; padding:7px 10px;
+}
+body.combat-chase:not(.phone):not(.tablet) #hud .feed{ top:160px; max-width:260px; }
+
+/* The rear-view fighter owns the bottom center. Readouts form one right-hand dock;
+   optional hands/charge rows participate in flow instead of covering the power row.
+   City and touch layouts keep their own absolute-positioned controls. */
+body.combat-chase:not(.phone):not(.tablet) #hud .combat-dock{
+  position:absolute; right:16px; bottom:16px; width:min(352px,calc(50vw - 80px));
+  display:flex; flex-direction:column; gap:8px; max-height:calc(100% - 200px);
+}
+body.combat-chase:not(.phone):not(.tablet) #hud .combat-dock > .panel{
+  position:relative; inset:auto; transform:none; width:100%; margin:0; flex-shrink:0;
+}
+body.combat-chase:not(.phone):not(.tablet) #hud .combat-dock .slots{
+  display:grid; grid-template-columns:repeat(8,minmax(0,1fr)); gap:5px; padding:8px;
+}
+/* The selected pair owns full names/status. The remaining native slots are a
+   hotkey/cooldown rail; their existing title/help keeps the full inventory. */
+body.combat-chase:not(.phone):not(.tablet) #hud .combat-dock .slots .slot{
+  width:auto; min-width:0; min-height:44px; height:44px; padding:16px 2px 3px;
+}
+body.combat-chase:not(.phone):not(.tablet) #hud .combat-dock .slot .an,
+body.combat-chase:not(.phone):not(.tablet) #hud .combat-dock .slot .sfx,
+body.combat-chase:not(.phone):not(.tablet) #hud .combat-dock .slot .cost{ display:none; }
+body.combat-chase:not(.phone):not(.tablet) #hud .combat-dock .slot .attack-icon{ width:20px; height:20px; margin:0 auto; }
+body.combat-chase:not(.phone):not(.tablet) #hud .combat-dock .slot .key{ left:3px; font-size:9px; }
+body.combat-chase:not(.phone):not(.tablet) #hud .combat-dock .slot .cdn{ font-size:12px; }
+body.combat-chase:not(.phone):not(.tablet) #hud .charge{ overflow:hidden; }
+body.combat-chase:not(.phone):not(.tablet) #hud .charge > i{ display:block; height:100%; }
+body.combat-chase:not(.phone):not(.tablet) #hud .hands{ align-items:flex-start; }
+body.combat-chase:not(.phone):not(.tablet) #hud .hands .hrow{ justify-content:flex-start; }
+body.combat-chase:not(.phone):not(.tablet) #hud .combat-dock > .hint{
+  max-width:none; min-height:0; flex-shrink:1; overflow-y:auto; pointer-events:auto; scrollbar-width:thin;
+}
+body.combat-chase:not(.phone):not(.tablet) #hud .hint:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
+@media (max-width:800px){
+  body.combat-chase:not(.phone):not(.tablet) #hud .combat-dock .slots{ grid-template-columns:repeat(4,minmax(0,1fr)); }
+}
 
 /* THE CROSSHAIR — four ticks around a gap, which is what a reticle is: the GAP is the aiming point,
    and a solid dot in the middle hides the one pixel you are trying to look at. Hidden everywhere
    except PowerWorld, because an isometric camera does not aim at its own centre. */
 #hCross{ display:none; }
-body.powerworld #hCross{
+body.combat-chase #hCross{
   display:block; position:fixed; left:50%; top:50%; width:0; height:0;
   pointer-events:none; z-index:18;
 }
-body.powerworld #hCross i{
+body.combat-chase #hCross i{
   position:absolute; background:var(--gold); opacity:.85;
   box-shadow:0 0 0 1px rgba(0,0,0,.55);
 }
-body.powerworld #hCross i:nth-child(1){ left:-1px; top:-15px; width:2px; height:8px; }
-body.powerworld #hCross i:nth-child(2){ left:-1px; top:7px;   width:2px; height:8px; }
-body.powerworld #hCross i:nth-child(3){ left:-15px; top:-1px; width:8px; height:2px; }
-body.powerworld #hCross i:nth-child(4){ left:7px;   top:-1px; width:8px; height:2px; }
-body.powerworld #hCross b{
+body.combat-chase #hCross i:nth-child(1){ left:-1px; top:-15px; width:2px; height:8px; }
+body.combat-chase #hCross i:nth-child(2){ left:-1px; top:7px;   width:2px; height:8px; }
+body.combat-chase #hCross i:nth-child(3){ left:-15px; top:-1px; width:8px; height:2px; }
+body.combat-chase #hCross i:nth-child(4){ left:7px;   top:-1px; width:8px; height:2px; }
+body.combat-chase #hCross b{
   position:absolute; left:-1.5px; top:-1.5px; width:3px; height:3px; border-radius:50%;
   background:var(--gold); opacity:.5;
 }
+/* A small bore marker replaces personal aim while piloting; it is projected
+   after camera movement and never implies mouse-aim or target acquisition. */
+body.combat-chase #hCross[data-aim-mode="aircraft"]::after{
+  content:attr(data-label);position:absolute;left:0;top:21px;transform:translateX(-50%);
+  white-space:nowrap;color:var(--gold);font:600 10px/1.2 Inter,system-ui,sans-serif;
+  letter-spacing:.08em;text-shadow:0 1px 3px #000,0 0 3px #000;
+}
 /* LOCKED — the crosshair says so, in the one colour that already means "hostile" everywhere else. */
-body.powerworld.pw-locked #hCross i{ background:var(--danger); opacity:1; }
-body.powerworld.pw-locked #hCross b{ background:var(--danger); opacity:.85; }
+/* Locked aim brackets the shot point. Shape distinguishes lock even without
+   color; its open center leaves the opponent's face/torso readable. */
+body.combat-chase.pw-locked #hCross i{
+  width:7px; height:7px; background:none; border:solid var(--danger); opacity:1;
+  box-shadow:none; filter:drop-shadow(0 1px 1px #000);
+}
+body.combat-chase.pw-locked #hCross i:nth-child(1){ left:-13px; top:-13px; border-width:2px 0 0 2px; }
+body.combat-chase.pw-locked #hCross i:nth-child(2){ left:6px; top:-13px; border-width:2px 2px 0 0; }
+body.combat-chase.pw-locked #hCross i:nth-child(3){ left:-13px; top:6px; border-width:0 0 2px 2px; }
+body.combat-chase.pw-locked #hCross i:nth-child(4){ left:6px; top:6px; border-width:0 2px 2px 0; }
+body.combat-chase.pw-locked #hCross b{ display:none; }
+/* Combat outcomes stay readable without occupying the target or player. */
+#hud .announce.compact-notice,#hud .kobanner.compact-notice{
+  top:64px; width:max-content; max-width:min(420px,calc(100vw - 32px));
+  box-sizing:border-box; padding:7px 14px; border-radius:10px;
+  background:oklch(.18 .02 70 / .92); text-align:center;
+  transition:opacity .18s ease-out; overflow-wrap:anywhere;
+}
+#hud .kobanner.compact-notice{ top:132px; }
+#hud:has(.compact-notice[data-active="true"]) .combo{ visibility:hidden; }
+#hud .announce.compact-notice .at,#hud .kobanner.compact-notice .kob{
+  font-family:Inter,system-ui,sans-serif; font-size:20px; line-height:1.2;
+  font-weight:700; letter-spacing:-.025em; text-shadow:none;
+}
+#hud .announce.compact-notice .as,#hud .kobanner.compact-notice .kos{
+  margin-top:3px; font-size:11px; line-height:1.4; letter-spacing:.025em;
+  color:oklch(.9 .025 80); text-transform:none;
+}
 `;

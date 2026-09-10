@@ -19,6 +19,7 @@
 // it is driven from the HUD's frame, and a caption that throws can never reach the game loop.
 
 import { SHAPES, buildShape, tailPath, TONES } from './balloon.js';
+import {Matrix4,Vector3} from 'three';
 
 const LAYER_ID = 'comicLayer';
 
@@ -86,6 +87,10 @@ export class Comic {
   constructor(game) {
     this.g = game;
     this.items = [];
+    this._point = new Vector3();
+    this._viewMatrix = new Matrix4();
+    this._clipCorners = Array.from({length:8},()=>new Vector3());
+    this._bodyMeshes = new WeakMap();
     this.el = document.getElementById(LAYER_ID) || (() => {
       const d = document.createElement('div'); d.id = LAYER_ID; document.body.appendChild(d); return d;
     })();
@@ -127,6 +132,23 @@ export class Comic {
     if (!text) return null;
     if (text.length > 180) text = text.slice(0, 177).replace(/\s+\S*$/, '') + '…';
 
+    // Field combat needs the firing corridor clear. Keep the same admitted
+    // dialogue and lifetime, but identify the speaker in the HUD, not a tail
+    // crossing the beam. City comic lettering deliberately retains its style.
+    if (this.g.modeId === 'powerworld') {
+      for (const it of this.items.filter(it => it.kind === 'field')) it.node.remove();
+      this.items = this.items.filter(it => it.kind !== 'field');
+      const node = document.createElement('div'); node.className = 'cmfield';
+      const name = document.createElement('div'); name.className = 'cmfield-speaker';
+      name.textContent = speaker?.name || speaker?.def?.name || 'FIELD COMMS';
+      const line = document.createElement('div'); line.className = 'cmfield-text';
+      line.textContent = text.replace(/\*+/g, '');
+      node.appendChild(name); node.appendChild(line);
+      node.style.visibility = 'hidden';
+      return this._add(node, opts.life || Math.max(1.5, Math.min(6.5, 0.9 + text.length / 13)),
+        {kind:'field', speaker, tone});
+    }
+
     const node = document.createElement('div');
     node.className = 'cmb t-' + tone;
 
@@ -141,7 +163,7 @@ export class Comic {
     let tw = Math.max(28, span.offsetWidth), th = Math.max(16, span.offsetHeight);
     // ⚠ EDGE CASE — AN UNBREAKABLE WORD. `white-space: pre` means one long token cannot wrap, and a
     // 600px balloon then blows straight through the safe area. Force a wrap and re-measure.
-    const S0 = this._safe();
+    const S0 = this._safe(true);
     const cap = Math.max(120, (S0.x1 - S0.x0) * 0.52);
     if (tw > cap) {
       // ⚠ WIDTH, NOT MAX-WIDTH. The span is absolutely positioned inside .cmb, and .cmb has no
@@ -243,8 +265,11 @@ export class Comic {
   // ⚠ THE SAFE AREA. A letterer works inside the panel's margins; balloons that drift under the
   // controls rail or the player panel are unreadable, and no amount of z-index fixes that because
   // the HUD is information the player also needs. These are the rails the HUD actually owns.
-  _safe() {
+  _safe(openCombat = false) {
     const W = innerWidth, H = innerHeight;
+    // Chase HUD occupies corners, not entire right/bottom rails. Actual visible
+    // panels join the occupancy list; the open upper-right remains usable.
+    if(openCombat&&this.g.world?.camMode==='chase')return {x0:10,y0:10,x1:W-10,y1:H-10,lx:10,ly:H-10};
     const phone = document.body.classList.contains('phone');
     return {
       x0: 10, y0: 10,
@@ -255,6 +280,85 @@ export class Comic {
     };
   }
 
+  _combatOccupancy(taken) {
+    const W=this.g.world,v=this._point,camera=W.camera,corners=this._clipCorners;
+    camera.updateMatrixWorld(true);
+    for(const f of this.g.entities||[]) {
+      if(!f.alive||!f.obj?.visible||(!f.isPlayer&&this.g.fov&&(f._vis??1)<.35))continue;
+      const p=f.parts;if(!p?.head)continue;
+      let meshes=this._bodyMeshes.get(f);
+      if(!meshes){
+        meshes=[p.head,p.cowl,p.torso,p.pelvis,...p.armL.children.slice(0,3),...p.armR.children.slice(0,3)];
+        for(const leg of [p.legL,p.legR])meshes.push(leg.userData.thigh,leg.userData.shin,leg.userData.boot);
+        this._bodyMeshes.set(f,meshes);
+      }
+      f.obj.updateMatrixWorld(true);
+      let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity;
+      const include=point=>{
+        v.copy(point).applyMatrix4(camera.projectionMatrix);
+        const x=(v.x+1)*innerWidth*.5,y=(1-v.y)*innerHeight*.5;
+        x0=Math.min(x0,x);x1=Math.max(x1,x);y0=Math.min(y0,y);y1=Math.max(y1,y);
+      };
+      for(const mesh of meshes){
+        if(!mesh?.geometry)continue;
+        if(!mesh.geometry.boundingBox)mesh.geometry.computeBoundingBox();const b=mesh.geometry.boundingBox;
+        this._viewMatrix.multiplyMatrices(camera.matrixWorldInverse,mesh.matrixWorld);
+        let clipped=false;
+        for(let i=0;i<8;i++){
+          const c=corners[i].set(i&1?b.max.x:b.min.x,i&2?b.max.y:b.min.y,i&4?b.max.z:b.min.z).applyMatrix4(this._viewMatrix);
+          if(c.z<=-camera.near&&c.z>=-camera.far)include(c);
+          else clipped=true;
+        }
+        // A corner behind the near plane cannot simply be discarded: the
+        // clipped edge can fill the frame even when surviving corners do not.
+        if(clipped)for(let i=0;i<8;i++)for(let bit=1;bit<=4;bit*=2){
+          const j=i^bit;if(j<i)continue;const a=corners[i],b=corners[j];
+          for(let k=0;k<2;k++){
+            const plane=k?-camera.far:-camera.near;
+            if((a.z<plane&&b.z>plane)||(a.z>plane&&b.z<plane))include(v.lerpVectors(a,b,(plane-a.z)/(b.z-a.z)));
+          }
+        }
+      }
+      if(x1<0||y1<0||x0>innerWidth||y0>innerHeight||!Number.isFinite(x0))continue;
+      taken.push({x:x0-8,y:y0-8,w:x1-x0+16,h:y1-y0+16,fighter:f});
+    }
+    for(const key of ['statusDock','plPanel','kit','slots','radar','foe','mode','charge']){
+      const el=this.g.hud?.el[key];if(!el)continue;
+      const s=getComputedStyle(el);if(s.display==='none'||s.visibility==='hidden'||s.opacity==='0')continue;
+      const r=el.getBoundingClientRect();if(r.width&&r.height)taken.push({x:r.x-8,y:r.y-8,w:r.width+16,h:r.height+16});
+    }
+  }
+
+  _clearPlacement(it,cx,cy,w,h,S,taken,anchor=null) {
+    const xs=[cx,S.x0,S.x1-w],ys=[cy,S.y0,S.y1-h];
+    for(const t of taken){xs.push(t.x-w-8,t.x+t.w+8);ys.push(t.y-h-8,t.y+t.h+8);}
+    let best=null,cost=Infinity;
+    for(const x of xs)for(const y of ys){
+      const tx=Math.round(Math.max(S.x0,Math.min(S.x1-w,x))),ty=Math.round(Math.max(S.y0,Math.min(S.y1-h,y)));
+      if(tx+w>S.x1||ty+h>S.y1||taken.some(t=>tx+w>t.x&&tx<t.x+t.w&&ty+h>t.y&&ty<t.y+t.h))continue;
+      const tailPenalty=anchor&&!this._tailClear(tx+w/2,ty+h/2,anchor,taken,it)?Math.max(w,h)*2:0;
+      const score=Math.hypot(tx-cx,ty-cy)+tailPenalty+(it._placed?Math.hypot(tx-it._placed.x,ty-it._placed.y)*.35:0);
+      if(score<cost){cost=score;best={x:tx,y:ty,w,h,item:it};}
+    }
+    it.node.style.visibility=best?'':'hidden';
+    if(best){it._placed=best;taken.push(best);}
+    return best;
+  }
+
+  _tailClear(x,y,sp,taken,it) {
+    // A tail may end at its speaker, but must not spear another fighter, HUD
+    // panel or balloon. Expand by the tail's shoulder width, not just its line.
+    return !taken.some(r=>{
+      if(r.fighter===it.speaker||r.item===it)return false;
+      let lo=0,hi=1;
+      for(const [start,delta,min,max] of [[x,sp.x-x,r.x-12,r.x+r.w+12],[y,sp.y-y,r.y-12,r.y+r.h+12]]){
+        if(Math.abs(delta)<.001){if(start<min||start>max)return false;}
+        else {const a=(min-start)/delta,b=(max-start)/delta;lo=Math.max(lo,Math.min(a,b));hi=Math.min(hi,Math.max(a,b));if(lo>hi)return false;}
+      }
+      return true;
+    });
+  }
+
   // ------------------------------------------------------------------------------------ tick
   update(dt) {
     // ⚠ THE LAYER KEEPS ITS OWN CLOCK. hud.update() takes no dt, and a caption whose dwell depends
@@ -263,14 +367,24 @@ export class Comic {
     const now = performance.now();
     if (!(dt > 0)) { dt = Math.min(0.05, (now - (this._last || now)) / 1000); }
     this._last = now;
+    if(!this.items.length)return;
     const W = this.g.world, sw = innerWidth, sh = innerHeight;
     const live = [];
     // balloons are placed top-down so an earlier one keeps its spot and later ones move clear
     const taken = [];
-    // aaa-06 §11: in the close (chase) frame the centre box is where the fight is — reserve it FIRST
-    // so both balloons and SFX route around it and a KRAKA-DOOM never lands on the opponent.
+    // Protect the free-aim cue plus actual silhouettes. A fixed central carpet
+    // both missed the lower-screen player and needlessly severed speech tails.
     const chase = !!(W && W.camMode === 'chase');
-    if (chase) taken.push({ x: sw * 0.38, y: sh * 0.34, w: sw * 0.24, h: sh * 0.32 });
+    if (chase) taken.push({ x: sw*.5-20, y: sh*.5-20, w:40, h:40 });
+    if(chase)this._combatOccupancy(taken);
+    if(this.g.modeId==='powerworld'){
+      // These field-only overlays are outside the old comic HUD inventory.
+      for(const el of [document.getElementById('frontlineObjective'),this.g.hud?.el?.fieldRecorder,this.g.hud?.el?.feed]){
+        if(!el||el.hidden)continue;
+        const s=getComputedStyle(el);if(s.display==='none'||s.visibility==='hidden'||s.opacity==='0')continue;
+        const r=el.getBoundingClientRect();if(r.width&&r.height)taken.push({x:r.x-8,y:r.y-8,w:r.width+16,h:r.height+16});
+      }
+    }
     for (const it of this.items) {
       it.t -= dt;
       if (it.t <= 0) {
@@ -278,23 +392,41 @@ export class Comic {
         it.node.remove();
         continue;
       }
-      if (it.kind === 'bub') {
+      if (it.kind === 'field') {
+        const f=it.speaker;
+        const hidden=this.g.modeId!=='powerworld'||!this.g.running||this.g._frontlinePreparing||this.g.hud?.titleOpen||this.g.matchOver
+          ||(f&&(!f.alive||!f.pos||!f.obj?.visible||(!f.isPlayer&&this.g.fov&&(f._vis??1)<.35)
+            ||W.screenPosOf(f.pos.x,f.pos.y+11,f.pos.z).behind));
+        if(hidden){it.node.style.visibility='hidden';live.push(it);continue;}
+        const w=it.node.offsetWidth,h=it.node.offsetHeight;
+        const S={x0:16,y0:12,x1:sw-16,y1:Math.min(180,sh*.26)};
+        const place=this._clearPlacement(it,(sw-w)/2,64,w,h,S,taken);
+        if(place){it.node.style.left=place.x+'px';it.node.style.top=place.y+'px';}
+      } else if (it.kind === 'bub') {
         const f = it.speaker;
         if (f && (!f.alive || !f.pos)) { it.t = Math.min(it.t, 0.12); live.push(it); continue; }
+        if(chase&&f&&(!f.obj?.visible||(!f.isPlayer&&this.g.fov&&(f._vis??1)<.35))){it.node.style.visibility='hidden';live.push(it);continue;}
         const bw = it.shape.w, bh = it.shape.h;
         let sp = null;
         if (f) {
           // ⚠ THE TAIL POINTS AT THE MOUTH — head height, not the feet or the centre.
-          const head = (f.parts && f.parts.head ? 12.5 : 11) + (it.offY || 0);
-          sp = W.screenPosOf(f.pos.x, f.pos.y + head, f.pos.z);
-          if (sp.behind) { it.node.style.opacity = '0'; live.push(it); continue; }
+          if(f.parts?.head){
+            f.parts.head.localToWorld(this._point.set(0,-.12,.7));this._point.y+=it.offY||0;
+            sp=W.screenPosOf(this._point.x,this._point.y,this._point.z);
+          }else sp=W.screenPosOf(f.pos.x,f.pos.y+11+(it.offY||0),f.pos.z);
+          if (sp.behind) { it.node.style.visibility = 'hidden'; live.push(it); continue; }
+          it.node.style.visibility='';
           it.node.style.opacity = '';
         }
-        const S = this._safe();
+        const S = this._safe(chase);
         const GAP = 26;
         let x, y;
         if (sp) { x = sp.x - bw / 2; y = sp.y - bh - GAP; }
         else { x = (sw - bw) / 2; y = sh * 0.3; }
+        if(chase){
+          const place=this._clearPlacement(it,x,y,bw,bh,S,taken,sp);
+          if(!place){live.push(it);continue;}x=place.x;y=place.y;
+        }else{
         x = Math.max(S.x0, Math.min(S.x1 - bw, x));
         if (y < S.y0) y = (sp ? sp.y + GAP : S.y0);
         if (y + bh > S.y1) y = Math.max(S.y0, (sp ? sp.y - bh - GAP : S.y1 - bh));
@@ -307,6 +439,7 @@ export class Comic {
           if (y + bh > S.y1) { y = Math.max(S.y0, hit.y - bh - 8); break; }
         }
         taken.push({ x, y, w: bw, h: bh });
+        }
         it.node.style.left = Math.round(x) + 'px';
         it.node.style.top = Math.round(y) + 'px';
         // ⚠ THE TAIL IS REDRAWN EVERY FRAME toward wherever the speaker now is, in the SVG's own
@@ -323,7 +456,7 @@ export class Comic {
             const rawX = sp.x - x, rawY = sp.y - y;
             const reach = Math.max(bw, bh) * 1.6 + 90;
             const away = Math.hypot(rawX - bw / 2, rawY - bh / 2);
-            if (away > reach || it.tone === 'narrate') { it.tail.setAttribute('d', ''); }
+            if (away > reach || it.tone === 'narrate'||(chase&&!this._tailClear(x+bw/2,y+bh/2,sp,taken,it))) { it.tail.setAttribute('d', ''); }
             else {
               const tx = Math.max(-80, Math.min(bw + 80, rawX));
               const ty = Math.max(-80, Math.min(bh + 80, rawY));
@@ -339,12 +472,24 @@ export class Comic {
         it.node.style.opacity = '';
         it.drift += dt * 26;                                     // SFX float up as they fade
         const fw = it.node.offsetWidth || 120, fh = it.node.offsetHeight || 40;
-        const S = this._safe();
+        const S = this._safe(chase);
         // ⚠ A REAL PLACEMENT SEARCH, not one nudge downward. Pushing only down walked the word into
         // the next balloon and then the clamp shoved it back on top of the first. Try the natural
         // spot and eight neighbours, score each by how much balloon it covers, and take the best —
         // so a sound effect lands in whatever gap the panel actually has.
         const cx = sp.x - fw / 2, cy = sp.y - fh / 2 - it.drift;
+        if(chase){
+          // Bounds of the authored CSS animation, not an unscaled text guess.
+          // cmSfx's easing overshoots its 1.14 keyframe (peak <1.30).
+          // Exit peaks at 1.25. Rotation is +/-8deg, sin(8deg)<.14, cos<=1.
+          // Include burst size, stroke/shadow, and the rotated 22px exit drift.
+          const heavy=it.node.classList.contains('heavy'),bw=fw*(heavy?1.18:1)+12,bh=fh*(heavy?2.1:1)+12;
+          const halfScale=it._out?.625:.65;
+          const px=Math.max(0,(bw+bh*.14)*halfScale+(it._out?4:0)-fw/2),py=Math.max(0,(bh+bw*.14)*halfScale+(it._out?28:0)-fh/2);
+          const place=this._clearPlacement(it,cx-px,cy-py,fw+px*2,fh+py*2,S,taken);
+          if(place){it.node.style.left=Math.round(place.x+px)+'px';it.node.style.top=Math.round(place.y+py)+'px';}
+          live.push(it);continue;
+        }
         const cands = [[0, 0], [0, -fh - 10], [0, fh + 10], [-fw * 0.62, 0], [fw * 0.62, 0],
                        [-fw * 0.55, -fh - 8], [fw * 0.55, -fh - 8], [0, -fh * 2 - 16], [0, fh * 2 + 16]];
         // ⚠ §11: the existing offsets (±fw*0.62) cannot clear the centre box's ~230px half-width.

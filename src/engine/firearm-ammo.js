@@ -1,0 +1,38 @@
+import {resetReloadProps} from './reload-presentation.js';
+// Physical ammunition belongs to the slot, never a mesh or the shared roster def.
+export function firearmAmmo(slot){
+ const d=slot?.def;if(d?.type!=='rifle'||!Number.isInteger(d.magazine)||d.magazine<1){if(slot)slot.ammo=null;return null;}
+ if(!slot.ammo)slot.ammo={loaded:d.magazine,capacity:d.magazine,reserve:Math.max(0,Math.floor(d.reserveAmmo??120)),dryUntil:0};
+ return slot.ammo;
+}
+const interrupted=f=>f.alive===false||f.state==='ko'||f.frozenT>0||f.staggerT>0||f.stunT>0||f.grabbedBy||f.grabbing||f.grabState||f.guarding||f.strikeActive>0||f.meleeCharge>0||f._disarmT>0||f._aircraftVehicle||f._scoutVehicle;
+const cue=(g,id,f)=>g?.audio?.soundLibrary?.play(id,{pos:f.pos,loop:false});
+export function cancelFirearmReload(f){resetReloadProps(f);f._firearmReload=null;}
+export function requestReload(f,key,g){
+ const slot=f.slots[key],a=firearmAmmo(slot);
+ if(!a||f._throwAction||f._firearmReload||interrupted(f)||a.loaded>=a.capacity||a.reserve<=0||Object.values(f.slots).some(s=>s.charging||s.building||s.drawing||s.active?.sustaining))return false;
+ f._firearmReload={key,slot,elapsed:0,duration:Math.max(.25,slot.def.reloadTime??2.2),phase:0};
+ slot._poseUntil=-1;if(f._rangedPose?.slot===key)f._rangedPose=null;
+ cue(g,'reload',f);return true;
+}
+export function updateFirearmReload(f,dt,g){
+ const r=f._firearmReload;if(!r)return;
+ if(interrupted(f)||f.slots[r.key]!==r.slot){cancelFirearmReload(f);return;}
+ if(g?.paused||g?.combatOverlayOpen||g?.hud?.titleOpen||f.hitstop>0||!Number.isFinite(dt)||dt<=0)return;
+ r.elapsed+=dt;
+ const phases=[[.2,'reload-eject'],[.65,'reload-insert'],[.9,'reload-chamber']];
+ while(r.phase<phases.length&&r.elapsed>=r.duration*phases[r.phase][0])cue(g,phases[r.phase++][1],f);
+ if(r.elapsed+1e-8<r.duration)return;
+ const a=firearmAmmo(r.slot),rounds=Math.min(a.capacity-a.loaded,a.reserve);a.loaded+=rounds;a.reserve-=rounds;
+ cancelFirearmReload(f);
+}
+export function emptyFirearm(f,slot,g){
+ const a=firearmAmmo(slot),now=f.animT||0;if(now>=a.dryUntil){cue(g,'empty',f);a.dryUntil=now+.6;}
+ const key=Object.keys(f.slots).find(key=>f.slots[key]===slot);requestReload(f,key,g);
+}
+export function firearmStatus(f,key){
+ const a=f.slots[key]?.ammo;if(!a)return '';
+ const r=f._firearmReload;
+ if(r?.key===key)return `RELOAD ${Math.ceil(100*Math.min(1,r.elapsed/r.duration))}% · ${a.loaded}/${a.reserve}`;
+ return `${a.loaded} / ${a.reserve} · ${a.loaded===0&&a.reserve===0?'NO AMMO':`${f.def.archetype==='soldier'?'R':'Y'} RELOAD`}`;
+}

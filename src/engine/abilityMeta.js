@@ -24,6 +24,7 @@ export const TYPE_META = {
   growingorb:  { family: 'charge',    req: ['minR', 'maxR'],             hold: true,  holdT: [1.1, 2.2], sustained: true },
   teleport:    { family: 'movement',  req: ['range'],                    hold: false },
   phase:       { family: 'defense',   req: [],                           hold: true,  holdT: [0.5, 1.2], sustained: true },
+  naniteShield:{ family: 'defense',   req: [],                           hold: false },
   dash:        { family: 'movement',  req: [],                           hold: false },
   summon:      { family: 'summon',    req: [],                           hold: false },
   construct:   { family: 'summon',    req: [],                           hold: false },
@@ -117,5 +118,4 @@ export function validateRoster(roster, TYPES) {
   }
   return problems;
 }
-
 

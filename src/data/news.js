@@ -51,11 +51,11 @@ export function money(n) {
 }
 
 // ---------- report assembly (reads the live game — the only impure part) ----------
-function snap(g, f) {
+function snap(g, f, arena = false) {
   if (!f || !f.def) return null;
   const st = f.stats || { dmg: 0, taken: 0, big: 0, bigKind: 'blast' };
   return {
-    wanted: g.police ? g.police.wantedLevel(f) : 0,
+    wanted: arena ? 0 : g.police ? g.police.wantedLevel(f) : 0,
     name: f.name, id: f.def.id, title: f.def.title || '', role: f.def.role || '',
     threat: f.def.threat || 'Unrated', person: f.def.person || null,
     level: f.level, tier: f.tier, kills: f.kills, streakBest: f._bestStreak || f.streak || 0,
@@ -79,6 +79,33 @@ export function buildReport(g, result) {
     reporter: g.news ? g.news.reporterName : 'DANA OKAFOR',
     operator: g.news ? g.news.operatorName : 'J. WHITFIELD',
   };
+  if (md === 'powerworld' || md === 'ascendance') {
+    // The proving ground has a sports crew, not a city desk. Its cached city plan, counters
+    // and police state belong to the theatre underneath it and are not facts about this bout.
+    rep.arena = true;
+    rep.district = md === 'powerworld' ? 'POWERWORLD' : 'ASCENDANCE ARENA';
+    rep.place = null; rep.city = { civs: 0, cars: 0, blocks: 0, craters: 0, cops: 0 };
+    rep.policeEv = []; rep.responseS = 0;
+    const fighters = [...new Set([...(g.entities || []), g.player, g.ms?.enemy])].filter(f => f?.def && !f.isDummy);
+    const records = new Map(fighters.map(f => [f, snap(g, f, true)]));
+    rep.participants = [...records.values()]; rep.participantCount = rep.participants.length;
+    rep.a = records.get(g.player) || rep.participants[0] || null;
+    rep.b = records.get(g.ms?.enemy) || rep.participants.find(f => f !== rep.a) || null;
+    rep.kind = rep.participantCount === 2 ? 'duel' : 'arena';
+    rep.ranked = [...rep.participants].sort((a, b) => b.kills - a.kills);
+    rep.draw = !!(result.draw || result.tie || /\bDRAW\b/i.test(result.title || ''));
+    const winnerId = result.winner?.def?.id || result.winner?.id || result.winner;
+    const declared = records.get(result.winner) || rep.participants.find(f => f.id === winnerId || f.name === winnerId);
+    // A result is authoritative; raw KO totals need not decide a scored or scripted bout.
+    // With multiple opponents and no declared winner, do not invent which opponent won.
+    rep.winner = rep.draw ? null : declared || (result.win ? rep.a : rep.participantCount === 2 ? rep.b : null);
+    rep.loser = rep.winner && rep.participantCount === 2 ? rep.participants.find(f => f !== rep.winner) || null : null;
+    rep.aKO = rep.a?.kills || 0; rep.bKO = rep.b?.kills || 0;
+    rep.winKO = rep.winner?.kills || 0; rep.loseKO = rep.loser?.kills || 0;
+    rep.shutout = rep.winKO > 0 && rep.loseKO === 0; rep.comeback = false;
+    rep.timeout = /TIME/.test(result.title || ''); rep.medical = _medical;
+    return rep;
+  }
   // where "the scene" is: the last KO's district, else the player's
   const lastKO = [...log].reverse().find(e => e.type === 'ko');
   rep.district = (lastKO && lastKO.at) || (g.player && g.world.districtAt ? g.world.districtAt(g.player.pos.x, g.player.pos.z) : 'MIDTOWN PLAZA');
@@ -246,7 +273,35 @@ export function damageEstimate(city, rng = Math.random) {
 }
 
 // ---------- the broadcast (procedural writer) ----------
+function writeArenaBroadcast(rep) {
+  const D = rep.district, W = rep.winner, L = rep.loser, names = rep.participants.map(f => f.name);
+  const rng = mulberry((rep.clock * 1000 + (W?.name.length || 5)) | 0);
+  const headline = rep.draw ? `DRAW IN ${D}` : W && L ? `${W.name} DEFEATS ${L.name} IN ${D}`
+    : W ? `${W.name} WINS ${D} BOUT` : `${D} SESSION COMPLETE`;
+  const participants = names.length === 2 ? `${names[0]} versus ${names[1]}.`
+    : names.length ? `${names.length} combatants took part: ${names.join(', ')}.` : 'No combatants were recorded.';
+  const decision = rep.draw ? `The bout ended in a draw at ${fmtClock(rep.clock)}.`
+    : W ? `${W.name} takes the result after ${fmtClock(rep.clock)} of arena action.`
+      : `The session ended at ${fmtClock(rep.clock)} without a declared winner.`;
+  const script = [
+    { who: 'ANCHOR', text: `${D} coverage. ${participants}` },
+    { who: 'ANCHOR', text: decision },
+  ];
+  if (rep.participants.length) script.push({ who: 'ANCHOR', text: 'The recorded knockout totals: '
+    + rep.participants.map(f => `${f.name} ${f.kills || 0}`).join(', ') + '.' });
+  if (rep.bigHit?.by && rep.bigHit.amount > 0) script.push({ who: rep.reporter,
+    text: `${rep.bigHit.by} delivered the largest logged hit: ${Math.round(rep.bigHit.amount)} damage.` });
+  script.push({ who: rep.reporter, text: `From ${D} — ${titleCase(rep.reporter)}, KMK 9 Action News. Back to the desk.` });
+  return {
+    headline, kicker: rep.draw ? 'ARENA DRAW' : W ? 'ARENA RESULT' : 'ARENA REPORT', script,
+    ticker: [headline, `BOUT TIME ${fmtClock(rep.clock)}`, `PARTICIPANTS: ${names.join(' · ') || 'NONE RECORDED'}`, 'KMK 9 — FIELD COVERAGE'],
+    witness: null, est: 0, district: D, timeWord: timeWord(rep.dayT), clockStr: clockStr(rep.dayT),
+    anchorName: pick(rng, ANCHORS),
+  };
+}
+
 export function writeBroadcast(rep) {
+  if (rep.arena) return writeArenaBroadcast(rep);
   const rng = mulberry((rep.clock * 1000 + rep.city.craters * 7 + rep.city.civs * 13 + (rep.winner ? rep.winner.name.length : 5)) | 0);
   const D = rep.district, tw = timeWord(rep.dayT);
   const dc = casualDistrict(D) + (rep.place && rep.place.name && rep.place.name !== 'THE WHITE CITY' ? `, ${rep.place.name}` : '');
@@ -373,6 +428,9 @@ export function tapeRows(rep) {
 
 // ---------- optional LAN LLM punch-up (Mac Mini Ollama). Fully offline-safe. ----------
 export async function llmPunchUp(rep, base) {
+  // The optional writer's prompt fabricates city-witness color. Keep arena copy grounded in
+  // the match facts until that service has a separate, validated sports-report contract.
+  if (rep.arena) return null;
   let cfg = { url: 'http://192.168.1.217:11434/v1/chat/completions', model: 'qwen3.5' };
   try { const o = JSON.parse((localStorage.getItem('threshold_news_llm') || localStorage.getItem('lsw_news_llm')) || 'null'); if (o && o.url) cfg = o; } catch {}
   if ((localStorage.getItem('threshold_news_llm') || localStorage.getItem('lsw_news_llm')) === 'off') return null;

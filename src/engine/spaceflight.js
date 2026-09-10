@@ -988,8 +988,9 @@ export class SpaceFlight {
     for (const [el, disp] of (this._hidHud || [])) el.style.display = disp;
     this._hidHud = null;
     if (this.scene) {
-      this.scene.traverse(o => { if (o.geometry) o.geometry.dispose(); });
-      for (const m of this._mats) m.dispose();
+      const resources=new Set(this._mats);
+      this.scene.traverse(o => { if(o.geometry)for(const geometry of o.geometry.palmVariants||[o.geometry])resources.add(geometry);if(o.skeleton)resources.add(o.skeleton);for(const m of [].concat(o.material||[]))resources.add(m); });
+      for(const resource of resources)resource.dispose();
       this.scene = null; this._mats = []; this._geos = [];
     }
     this.skipped = !!skipped;

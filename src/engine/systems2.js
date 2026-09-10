@@ -2,6 +2,7 @@
 // Same contract as systems.js: public verbs, no hero ids, damage through takeDamage, a
 // readable tell and a counter for each, and every one cleans up after itself.
 import * as THREE from 'three';
+import {snapshotHeroSkins} from './hero-skin.js';
 
 // ============================================================================================
 // 4 · DUPLICATES — true AI clones that SHARE ONE HEALTH POOL.
@@ -19,7 +20,9 @@ export function spawnDuplicates(f, n, dur, game) {
     d.noRespawn = true;
     d._dupeT = dur;
     d.maxHp = f.maxHp; d.hp = f.hp;
-    if (d.obj) d.obj.traverse(o => { if (o.material) { o.material = o.material.clone(); o.material.transparent = true; o.material.opacity = 0.92; } });
+    // addFighter constructs independently owned materials. Cloning them again
+    // drops custom skin/rim shaders and disconnects the actor's tracked palette.
+    if (d.obj) d.obj.traverse(o => { if (o.material) { o.material.transparent = true; o.material.opacity = 0.92; } });
     // each copy carries a small marking so you can track which is which
     d._dupeIndex = i + 2;
     f._dupes.push(d);
@@ -60,7 +63,7 @@ export function updateDupes(f, dt, game) {
 export function possess(caster, victim, dur, game) {
   if (!victim || !victim.alive || victim.def.police || game.isHuman(victim) || victim.isDecoy) return false;
   if (caster._possessing || victim._possessedBy) return false;
-  const spectral = caster.obj.clone(true);
+  const spectral = snapshotHeroSkins(caster.obj.clone(true));
   spectral.traverse(o => { if (o.material) { o.material = o.material.clone(); o.material.transparent = true; o.material.opacity = 0.4; } });
   game.scene.add(spectral);
   caster._possessing = { victim, t: dur, home: caster.pos.clone(), spectral, wasTeam: victim.team };
@@ -92,7 +95,7 @@ export function releasePossession(caster, game) {
   const v = P.victim;
   if (v) { v._possessedBy = null; v.team = P.wasTeam; }
   caster._inert = false; caster.obj.visible = true;
-  if (P.spectral) { game.scene.remove(P.spectral); P.spectral.traverse(o => { if (o.material) o.material.dispose(); }); }
+  if (P.spectral) { game.scene.remove(P.spectral); P.spectral.traverse(o => { if (o.material) o.material.dispose(); if(o.userData._snapshotGeometry)o.geometry.dispose(); }); }
   const slot = game.humans.find(h => h.fighter === v);
   if (slot) { slot.fighter = caster; if (game.player === v) game.player = caster; }
   caster._possessing = null;
@@ -469,5 +472,3 @@ export function updateVisionMode(f, dt, game) {
   }
   if (V.t <= 0) clearVisionMode(f, game);
 }
-
-

@@ -16,6 +16,7 @@
 // the WebGL renderer cannot read CSS tokens.
 
 import * as THREE from 'three';
+import {METERS_PER_UNIT} from '../core/world-units.js';
 import { figure } from './figure.js';
 import { ROSTER } from '../data/characters.js';
 import { heroStats, kitFacts, THREAT_COLORS } from './hud.js';
@@ -28,7 +29,7 @@ import { describeAbility, slotFacts } from './hudUtil.js';
 
 // 1u ≈ 0.19m (TRUE 1:1 SCALE, CLAUDE.md); the hero is 9.6u = 1.8m. Everything the studio draws is in
 // world units, so the figure and a power's footprint stand at their real relative sizes by construction.
-const U_TO_M = 0.19;
+const U_TO_M = METERS_PER_UNIT;
 const SLOT_ORDER = ['lmb', 'rmb', 'q', 'e', 'f', 'shift', 'r'];   // the fire order on the HUD row
 // Reach in world units, from whatever field the ability actually uses (mirrors hudUtil.reachOf, which
 // isn't exported — one small copy, kept in step with it).
@@ -378,10 +379,13 @@ export const SelectMixin = {
   },
 
   _selDispose(obj) {
+    const resources=new Set();
     obj.traverse(o => {
-      if (o.geometry) o.geometry.dispose();
-      if (o.material) (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => m && m.dispose());
+      if (o.geometry) for(const geometry of o.geometry.palmVariants||[o.geometry])resources.add(geometry);
+      if (o.skeleton) resources.add(o.skeleton);
+      if (o.material) (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => m && resources.add(m));
     });
+    for(const resource of resources)resource.dispose();
   },
 
   _selResize() {

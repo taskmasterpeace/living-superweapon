@@ -33,6 +33,7 @@ const CSS = `
 #origin .col{ border:1px solid rgba(255,255,255,.12); border-radius:14px; background:rgba(255,255,255,.03); padding:16px; max-height:calc(100vh - 150px); overflow-y:auto; }
 #origin .sh{ font-size:9px; letter-spacing:.22em; color:#8b8577; text-transform:uppercase; margin:14px 0 7px; }
 #origin .sh:first-child{ margin-top:0; }
+#origin .trait-note{ font-size:11px; line-height:1.5; color:#b7b0a2; margin:7px 0 10px; }
 #origin input[type=text]{ width:100%; font-family:inherit; font-size:15px; font-weight:700; letter-spacing:.04em; color:#e8e2d6; background:rgba(0,0,0,.4); border:1px solid rgba(255,255,255,.14); border-radius:9px; padding:9px 11px; outline:none; }
 #origin input[type=text]:focus{ border-color:#ffd24a; box-shadow:0 0 12px rgba(255,210,74,.25); }
 #origin input[type=range]{ width:100%; accent-color:#f5b21a; }
@@ -125,8 +126,11 @@ export function powerNumbers(ab) {
     case 'rush': return `${ab.hits}×${ab.damage} + ${ab.finisher} finisher`;
     case 'teleport': return `${ab.range}u blink · ${ab.cost} ki`;
     case 'phase': return `intangible · ${ab.kiPerSec} ki/s`;
-    case 'summon': return `${ab.count} units · ${ab.damage}/hit · ${ab.duration}s`;
-    case 'construct': return `${ab.construct} · ${ab.duration}s`;
+    case 'summon': return ab.decoy ? `decoy · ${ab.dur || 5}s distraction` : `${ab.count || 3} units · ${ab.damage || 7}/hit · ${ab.duration || 12}s${ab.inherit ? ' · scales with caster' : ''}`;
+    case 'construct': {
+      const life=ab.constructLifetime==='upkeep'?`${ab.constructKiPerSec??12} ki/s · no timer`:ab.constructLifetime==='damage'?`${ab.constructKiPerDamage??1} ki/hp received · no timer`:`${ab.duration||9}s`;
+      return `${ab.construct} · ${life}${ab.construct==='tank'?` · ${ab.damage||18} dmg cannon · holds to fire`:''}`;
+    }
     case 'tentacle': return `${ab.damage} dmg · ${ab.range}u seize → SLAM`;
     case 'portal': return `door pair · ${ab.range}u · ${ab.dur}s`;
     case 'buff': return `×${ab.mult} for ${ab.dur}s${ab.heal ? ` · +${ab.heal} hp` : ''}${ab.reveal ? ' · WALLHACK' : ''}`;
@@ -157,13 +161,15 @@ export class CreatorUI {
     addEventListener('keydown', this._esc, true);
   }
 
-  show({ edit, onDone, onCancel } = {}) {
+  show({ edit, onDone, onCancel, presentationEditor=false } = {}) {
     this.onDone = onDone; this.onCancel = onCancel;
     this.picks = edit ? JSON.parse(JSON.stringify(edit.picks)) : freshPicks();
     this.editingId = edit ? edit.def.id : null;
     this.selSlot = 'lmb';
     this.open = true;
     this._buildShell();
+    this.root.querySelector('#oPresentation').hidden=presentationEditor;
+    this.root.querySelector('#oAppearanceNote').hidden=!presentationEditor;
     this.renderAll();
     this.root.style.display = 'flex';
     this.root.querySelector('#oName').focus();
@@ -193,10 +199,11 @@ export class CreatorUI {
           </div>
           <input type="text" id="oCity" maxlength="26" placeholder="Hometown (custom)" spellcheck="false" style="display:none;margin-top:6px">
           <div id="oOrigin" style="margin-top:8px;padding:9px 11px;border:1px solid var(--line-gold,#6b5824);border-radius:10px;background:var(--surface,#0d0f14);font-family:var(--f-mono,monospace);font-size:10px;line-height:1.55;color:var(--text-3,#c9c2b4)"></div>
-          <div class="sh">Colors</div><div class="swatches" id="oPal"></div>
+          <p id="oAppearanceNote" class="oline" hidden>Appearance stays in Studio’s Model tab. Power-kit edits preserve your costume, colors, cape and body proportions.</p>
+          <div id="oPresentation"><div class="sh">Colors</div><div class="swatches" id="oPal"></div>
           <div class="sh">Skin</div><div class="swatches" id="oSkin"></div>
           <div class="sh">Frame</div><div class="chips2" id="oFrame"></div>
-          <div class="sh">Cape</div><div class="chips2" id="oCape"></div>
+          <div class="sh">Cape</div><div class="chips2" id="oCape"></div></div>
           <div class="sh">Voice · <span id="oVoiceV" style="color:#ffd24a"></span></div>
           <input type="range" id="oVoice" min="0.55" max="1.3" step="0.05">
           <div class="chips2" style="margin-top:8px" id="oYells"></div>
@@ -326,7 +333,9 @@ export class CreatorUI {
       <div class="sh">Attributes — the rank ladder</div>${attrRows}
       <div class="sh">Flight</div>${tr(FLIGHT_TIERS, P.flightTier, 'flightTier')}
       <div class="sh">Guard</div>${tr(GUARD_TYPES, P.guardType, 'guardType')}
+      <p class="trait-note">${GUARD_TYPES.find(o=>o.v===P.guardType)?.d||''}</p>
       <div class="sh">Evade (2×tap)</div>${tr(EVADE_KINDS, P.evade, 'evade')}
+      <p class="trait-note">${EVADE_KINDS.find(o=>o.v===P.evade)?.d||''}. Recovery is adjusted by your talents.</p>
       <div class="sh">Melee Style</div>${tr(MELEE_TIERS, P.meleeTiers, 'meleeTiers')}
       <div class="sh">Gifts</div><div class="chips2">${GIFTS.map(g => chip(P.gifts.includes(g.id), g.name, g.cost, `data-g="${g.id}" title="${g.d}"`)).join('')}</div>
       <div class="sh">Talents — max 3 · ${TALENT_COST}p each</div><div class="chips2">${Object.entries(TALENTS).map(([k, t]) => chip(P.talents.includes(k), t.name, TALENT_COST, `data-tal="${k}" title="${t.does}"`)).join('')}</div>
@@ -398,11 +407,16 @@ export class CreatorUI {
       </div>`;
     root.querySelector('#oCancel').onclick = () => this.close(false);
     const del = root.querySelector('#oDelete');
-    if (del) del.onclick = () => { deleteCustom(this.editingId, this.roster); this.close(true); if (this.onDone) this.onDone(null, {}); };
+    if (del) del.onclick = () => {
+      if (!confirm('Delete this custom character from this browser? Export a package from Studio first if you need a backup.')) return;
+      try { deleteCustom(this.editingId, this.roster); this.close(true); if (this.onDone) this.onDone(null, {}); }
+      catch(e) { this.root.querySelector('#oErrs').textContent='Not deleted: '+e.message; }
+    };
     const commit = (test) => {
       const errs2 = validate(this.picks); if (errs2.length) { this.renderHeader(); return; }
-      const final = buildDef(this.picks, this.editingId);
-      saveCustom(this.picks, final, this.roster);
+      let final;
+      try { final = saveCustom(this.picks, buildDef(this.picks, this.editingId), this.roster); }
+      catch(e) { this.root.querySelector('#oErrs').textContent='Not saved: '+e.message; return; }
       this.close(true);
       if (this.onDone) this.onDone(final, { test });
     };

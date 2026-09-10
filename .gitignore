@@ -12,7 +12,11 @@ release2/
 
 # tooling / local artifacts
 .playwright-mcp/
+artifacts/flight-review/
+artifacts/studio-flight/
+artifacts/combat-build/
 .worktrees/
+.dream-loop/
 .claude/settings.local.json
 .claude/skills/
 skills-lock.json
@@ -23,6 +27,9 @@ skills-lock.json
 Thumbs.db
 
 .vercel
+.env
+.env.*
+!.env.example
 encyclopedia/shots/
 encyclopedia/manifest.json
 src/bench/orphans.txt

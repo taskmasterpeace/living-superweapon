@@ -6,6 +6,8 @@ export class Input {
     this.justReleased = new Set();
     this.mouse = { x: 0, y: 0, clientX: 0, clientY: 0, left: false, right: false, leftEdge: false, rightEdge: false, leftUp: false, rightUp: false, b3: false, b4: false, dx: 0, dy: 0, locked: false };
     this.wheel = 0;
+    this.wheelPrimary = 0; this.wheelSecondary = 0;
+    this.cancelVersion=0;
     this.anyGesture = false;
     // POINTER-LOCK MOUSE-LOOK (aaa-01 §2.3) — new to the project. GATED so the city is byte-unchanged:
     // nothing requests the lock unless the powerworld chase branch sets this true (a RIDER, game.js).
@@ -55,8 +57,20 @@ export class Input {
       if (e.button === 4) this.mouse.b4 = false;
     });
     canvas.addEventListener('contextmenu', (e) => e.preventDefault());
-    canvas.addEventListener('wheel', (e) => { this.wheel += Math.sign(e.deltaY); e.preventDefault(); }, { passive: false });
-    addEventListener('blur', () => { this.keys.clear(); this.mouse.left = this.mouse.right = false; });
+    canvas.addEventListener('wheel', (e) => {
+      const direction=Math.sign(e.deltaY);this.wheel+=direction;
+      if(this.mouse.right||(e.buttons&2))this.wheelSecondary+=direction;else this.wheelPrimary+=direction;
+      e.preventDefault();
+    }, { passive: false });
+    addEventListener('blur', () => {
+      this.cancelVersion++;
+      for(const key of this.keys)this.justReleased.add(key);
+      this.keys.clear();this.justPressed.clear();
+      this.mouse.leftUp ||= this.mouse.left;this.mouse.rightUp ||= this.mouse.right;
+      this.mouse.left=this.mouse.right=this.mouse.leftEdge=this.mouse.rightEdge=this.mouse.b3=this.mouse.b4=false;
+      this.mouse.dx=this.mouse.dy=this.wheel=0;
+      this.wheelPrimary=this.wheelSecondary=0;
+    });
   }
 
   down(code) { return this.keys.has(code); }
@@ -73,6 +87,7 @@ export class Input {
     this.mouse.dx = 0;                 // the look delta is per-frame; consumed by world.mouseLook
     this.mouse.dy = 0;
     this.wheel = 0;
+    this.wheelPrimary=this.wheelSecondary=0;
     // ungated (left the chase view) but still captured → release, so the city gets its cursor back
     if (!this.pointerLock && this.mouse.locked && typeof document !== 'undefined' && document.exitPointerLock) document.exitPointerLock();
   }
