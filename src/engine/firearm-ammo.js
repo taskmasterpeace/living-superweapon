@@ -18,14 +18,16 @@ function reloadTimeline(motion){
  if(!(eject>0&&eject<insert&&insert<1))return PROCEDURAL_RELOAD_TIMELINE;
  const span=insert-eject,boltEvent=events.find(e=>e.type==='bolt'||e.type==='chamber');
  const sourceChamber=Number.isFinite(boltEvent?.t)?boltEvent.t/sourceDuration:NaN;
- const chamber=insert<sourceChamber&&sourceChamber<1?sourceChamber:.9;
- if(!(insert<chamber))return PROCEDURAL_RELOAD_TIMELINE;
- // Reserve distinct hand-transition and bolt-pull windows even for late inserts.
- const toBoltStart=Math.max(insert,chamber-.22);
- const boltStart=Math.max(insert,chamber-.12)>toBoltStart?Math.max(insert,chamber-.12):insert+(chamber-insert)*.5;
+ const fallbackChamber=insert<.9?.9:insert+(1-insert)*.6;
+ const chamber=insert<sourceChamber&&sourceChamber<1?sourceChamber:fallbackChamber;
+ // Keep valid magazine markers authoritative; compress the procedural bolt
+ // windows into the remaining room rather than replacing source timings.
+ const boltWindow=Math.min(1,(chamber-insert)/.22);
+ const toBoltStart=Math.max(insert,chamber-.22*boltWindow);
+ const boltStart=chamber-.12*boltWindow;
  return Object.freeze({eject,drawStart:Math.max(0,eject-Math.min(.08,span*.3)),drawFull:eject,
   handlingStart:eject,handlingFull:eject+span*.25,handlingRelease:eject+span*.55,handlingEnd:eject+span*.78,
-  insertStart:eject+span*.7,insert,boltStart,chamber,boltEnd:Math.min(1,chamber+.04),
+  insertStart:eject+span*.7,insert,boltStart,chamber,boltEnd:chamber+Math.min(.04,(1-chamber)*.4),
   toBoltStart,toBoltEnd:boltStart});
 }
 export function cancelFirearmReload(f){resetReloadProps(f);f._firearmReload=null;}

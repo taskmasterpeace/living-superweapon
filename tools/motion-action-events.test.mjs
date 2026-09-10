@@ -19,7 +19,7 @@ const realPack=(ref,bank,manifest,id)=>Object.freeze({ref,packageId:ref,packageH
 const q=part=>part.quaternion.toArray();
 const angle=(a,b)=>a.quaternion.angleTo(b.quaternion);
 
-for(const [insert,bolt,expectedChamber,expectedInsert] of [[.65,.3,.9,.65],[.65,.65,.9,.65],[.65,1,.9,.65],[.95,.4,.9,.65],[.95,undefined,.9,.65],[.95,.98,.98,.95],[.85,.9,.9,.85],[.65,.8,.8,.65]])
+for(const [insert,bolt,expectedChamber,expectedInsert] of [[.65,.3,.9,.65],[.65,.65,.9,.65],[.65,1,.9,.65],[.95,.4,.98,.95],[.95,undefined,.98,.95],[.9,undefined,.96,.9],[.999,undefined,.9996,.999],[.95,.98,.98,.95],[.85,.9,.9,.85],[.65,.8,.8,.65]])
  test(`reload ramps remain ordered for insert ${insert} and bolt ${bolt}`,()=>{
   const x=mainCombatFixture({hero:'sarge'}),f=x.p;
   try{
@@ -30,7 +30,16 @@ for(const [insert,bolt,expectedChamber,expectedInsert] of [[.65,.3,.9,.65],[.65,
    firearmAmmo(f.slots.lmb).loaded=1;assert.ok(requestReload(f,'lmb',x.g));
    const t=f._firearmReload.timeline;
    assert.ok(Math.abs(t.chamber-expectedChamber)<1e-12);assert.ok(Math.abs(t.insert-expectedInsert)<1e-12);
+   assert.ok(Math.abs(t.eject-.2)<1e-12,'valid source ejection stays authoritative');
    for(const [a,b] of [['drawStart','drawFull'],['handlingStart','handlingFull'],['handlingRelease','handlingEnd'],['insertStart','insert'],['boltStart','chamber'],['chamber','boltEnd'],['toBoltStart','toBoltEnd']])assert.ok(t[a]<t[b],`${a} must precede ${b}`);
+   f._riflePose={active:true};
+   const magazine=f.parts.armR.children[2].getObjectByName('weapon-magazine'),rest=magazine.position.clone();
+   for(const phase of Object.values(t)){
+    f._firearmReload.elapsed=f._firearmReload.duration*phase;animateReloadPose(f);
+    assert.ok([...magazine.position,...f.parts.armL.quaternion].every(Number.isFinite),'physical ramp must remain finite at every endpoint');
+   }
+   f._firearmReload.elapsed=f._firearmReload.duration*insert;animateReloadPose(f);
+   assert.ok(magazine.position.distanceTo(rest)<1e-8,'magazine seats at the source insert marker');
   }finally{x.close();}
  });
 
