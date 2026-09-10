@@ -108,3 +108,26 @@ test('actual downstream burn and freeze transitions emit status outcomes once',t
   f.frost=.99;f.addFrost(.1,{});
   assert.deepEqual(statuses,['burning','frozen']);
 });
+
+test('real Game.onHit admits a sustained beam guard break and throttles repeats',()=>{
+  const numbers=[],target={pos:new Vector3(),maxHp:100,hp:99,def:{colors:{accent:'#fff'}}},game={time:2,player:null,
+    hud:{damageNumber(_p,text){numbers.push(text);}},comic:null,isHuman:()=>false,vfx:{flash(){}},particles:{burst(){}},noise(){}};
+  const outcome=baseOutcome({attackClass:'sustained',dtype:'energy',healthLost:1,guard:'broken'});
+  Game.prototype.onHit.call(game,target,1,{dot:true,src:{}},true,outcome);
+  game.time=2.1;Game.prototype.onHit.call(game,target,1,{dot:true,src:{}},true,outcome);
+  assert.deepEqual(numbers,['GUARD BROKEN · 1 HP']);
+});
+
+test('real Game.onHit presents resolved burn tick HP instead of suppressing it',()=>{
+  const numbers=[],target={pos:new Vector3(),maxHp:100,hp:97,def:{colors:{accent:'#fff'}}},game={time:2,player:null,
+    hud:{damageNumber(_p,text){numbers.push(text);}},comic:null,isHuman:()=>false,vfx:{flash(){}},particles:{burst(){}},noise(){}};
+  Game.prototype.onHit.call(game,target,3,{dot:true,dtype:'fire',src:{}},false,baseOutcome({attackClass:'sustained',dtype:'fire',healthLost:3}));
+  assert.deepEqual(numbers,['HIT · 3 HP']);
+});
+
+test('priority words retain independently resolved absorption and HP quantities',()=>{
+  const mixed=baseOutcome({healthLost:6,absorbed:{plate:0,armor:4,shield:0,nanite:0},statusesAdded:['bleeding']});
+  assert.equal(selectHitFeedback(mixed).label,'BLEEDING · 4 ABS · 6 HP');
+  assert.equal(selectHitFeedback(baseOutcome({healthLost:12,knockedOut:true})).label,'K.O. · 12 HP');
+  assert.equal(selectHitFeedback(baseOutcome({healthLost:2,absorbed:{plate:3,armor:0,shield:0,nanite:0},guard:'blocked'})).label,'BLOCK · 3 ABS · 2 HP');
+});

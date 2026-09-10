@@ -93,3 +93,18 @@ duration_ms 9788.5045
 ```
 
 Native browser visual acceptance still remains with the main integrator.
+
+## Second review follow-up
+
+Resolved the two remaining P2 findings. All resolved sustained outcomes now enter the semantic presenter (including throttled burn/beam HP and high-priority beam guard breaks). Selector priority controls the word/family only; independently resolved absorption and HP quantities are appended to KO, guard break, deflect, status and block labels.
+
+RED: `node --test tools/hit-feedback.test.mjs` reported 12 pass / 3 fail: sustained guard-break and burn labels were absent, and `BLEEDING` omitted `4 ABS · 6 HP`.
+
+GREEN: `node --test tools/hit-feedback.test.mjs tools/frontline-ballistic-contact.test.mjs tools/ballistic-hit-flash.test.mjs tools/nanite-contact.test.mjs`
+
+```text
+tests 173
+pass 173
+fail 0
+duration_ms 7919.3746
+```

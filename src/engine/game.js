@@ -2947,7 +2947,7 @@ export class Game {
     // the ring scores off the choke point rather than watching the fight itself
     if (this._ring) this._ring.onHit(target, amount, opts, blocked);
     const feedback=outcome&&selectHitFeedback(outcome);
-    if(outcome&&!opts.dot)Game.prototype.presentHitOutcome.call(this,target,opts,outcome);
+    if(outcome)Game.prototype.presentHitOutcome.call(this,target,opts,outcome);
     if (this.comic && !outcome && !opts.dot && target && target.pos && (amount>=14||opts.haymaker)) {
       const pl = this.player;
       const near = !pl || (Math.abs(pl.pos.x - target.pos.x) < 260 && Math.abs(pl.pos.z - target.pos.z) < 260);
