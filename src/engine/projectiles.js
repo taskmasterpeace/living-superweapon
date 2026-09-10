@@ -618,6 +618,11 @@ class Projectile {
           foe._blocked=0.18;
           registerShieldContact(foe,{contactPoint:this.pos});
           if(foe.guardMeter<=1e-9){foe.guardMeter=0;foe.guarding=false;foe.staggerT=Math.max(foe.staggerT||0,0.7);foe.state='hit';foe.stateT=0;}
+          const guard=foe.guardMeter<=1e-9?'broken':'blocked';
+          game.onHit?.(foe,0,hitOptions,true,Object.freeze({dtype:this.dtype||(this.ballistic?'ballistic':'energy'),
+            attackClass:this.ballistic?'bullet':'projectile',healthLost:0,absorbed:Object.freeze({plate:0,armor:0,shield:0,nanite:0}),
+            guard,deflected:true,knockedOut:false,statusesAdded:Object.freeze([]),
+            contact:Object.freeze({x:this.pos.x,y:this.pos.y,z:this.pos.z})}));
           game.vfx.impactStar(this.pos.clone(), 6, '#ffd24a', 0.16); game.audio.zap(760,this.pos);
           if (game.hud) game.hud.damageNumber(foe.pos, 'DEFLECT', '#ffd24a', true);
           return true;

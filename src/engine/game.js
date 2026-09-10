@@ -50,6 +50,7 @@ import { BANDS, clamp, rand, TAU, damp, GROUND_LAYER, PW_KB, PW_FX, pwCatchSpeed
 import {firearmAimRange,firearmSightZoom} from './firearm-aim.js';
 import { tierOf, TIER_COLORS } from './entity.js';
 import {formAt,slotUnlocked} from '../data/progression.js';
+import {selectHitFeedback} from './hit-feedback.js';
 
 const _v = new THREE.Vector3();
 // ⚠ THE RETICLE NEVER LIES (docs/powerworld/aaa-05-reticle.md). `_muz` is the muzzle point for the
@@ -2584,10 +2585,11 @@ export class Game {
       }
     }
     // THE KO IS THE PANEL EVERY COMIC ENDS ON — one caption, one sound effect, and nothing else.
-    if (this.comic && victim && victim.pos && combatView(this)!=='bfp') {
+    if (this.comic && victim && victim.pos) {
       try {
-        this.comic.sfx(killer ? 'K.O.!' : 'DOWN!', victim.pos, { power: 1, red: true, size: 42, life: 1.3 });
-        if (this.isHuman(killer) || this.isHuman(victim)) {
+        const feedback=selectHitFeedback({knockedOut:true,healthLost:0,absorbed:{plate:0,armor:0,shield:0,nanite:0},guard:'none',deflected:false,statusesAdded:[]});
+        (this.comic.impact||this.comic.sfx).call(this.comic,killer?feedback.word:'DOWN!',victim.pos,{feedback,power:1,red:true,size:42,life:1.3});
+        if (combatView(this)!=='bfp'&&(this.isHuman(killer) || this.isHuman(victim))) {
           this.comic.caption((victim.name || 'THEY') + ' is down!', { where: 'top', red: !this.isHuman(killer), life: 2.4 });
         }
       } catch (e) { this.reportError && this.reportError(e, 'comic.ko'); }
@@ -2884,7 +2886,7 @@ export class Game {
     return big ? 'WHUMP!' : 'BAP!';
   }
 
-  onHit(target, amount, opts = {}, blocked = false) {
+  onHit(target, amount, opts = {}, blocked = false, outcome = null) {
     this.ms?.frontline?.onHit(target, amount);
     const src = opts.src;
     // THE WHITE ROOM reads the choke point rather than modelling damage itself — see whiteroom.js.
@@ -2927,17 +2929,21 @@ export class Game {
     // the comic layer's whole job; spend it on intent, not on arithmetic.
     // the ring scores off the choke point rather than watching the fight itself
     if (this._ring) this._ring.onHit(target, amount, opts, blocked);
-    if (this.comic && (amount >= 14 || opts.haymaker) && !blocked && !opts.dot && target && target.pos) {
+    const feedback=outcome&&selectHitFeedback(outcome);
+    if (this.comic && !opts.dot && target && target.pos && feedback?.id!=='ko' && (feedback?.word||(!outcome&&(amount>=14||opts.haymaker)))) {
       const pl = this.player;
       const near = !pl || (Math.abs(pl.pos.x - target.pos.x) < 260 && Math.abs(pl.pos.z - target.pos.z) < 260);
       const t = this.time || 0;
       // ⚠ the rate limit exists so a beam is not confetti — but it must not let a JAB eat the
       // haymaker's word 0.3s later. A committed blow always gets through.
-      if (near && (opts.haymaker || t - (this._sfxT || -9) > 0.42)) {
-        this._sfxT = t;
-        this.comic.sfx(this._sfxWord(amount, opts), target.pos,
-          { power: opts.haymaker ? 1 : Math.min(1, amount / 60),
-            red: !!(opts.slam || opts.haymaker || amount > 48) });
+      const family=feedback?.id||'legacy',urgent=(feedback?.priority||0)>=80||opts.haymaker;
+      const targetTimes=this._hitFeedbackTimes?.get(target)||new Map(),last=targetTimes.get(family)??-9;
+      if (near && (urgent || t-last>(outcome?.attackClass==='bullet'?.32:.42))) {
+        if(!this._hitFeedbackTimes)this._hitFeedbackTimes=new WeakMap();
+        targetTimes.set(family,t);this._hitFeedbackTimes.set(target,targetTimes);
+        (this.comic.impact||this.comic.sfx).call(this.comic,feedback?.word||this._sfxWord(amount,opts),target.pos,
+          {feedback,power:opts.haymaker?1:Math.min(1,Math.max(.25,(outcome?.healthLost||amount)/60)),
+            red:!!(feedback?.id==='ko'||feedback?.id==='guard-broken'||opts.slam||opts.haymaker||amount>48)});
       }
     }
     if (this.lab) {

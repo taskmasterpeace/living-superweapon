@@ -32,7 +32,7 @@ function fixture({reverse=false,back=false,untagged=false,width=1,scale,bulk=1,b
  const scene=new THREE.Scene(),world={scene,camera:new THREE.PerspectiveCamera(),cover:[],interiors:[],ARENA:240,heightAt:()=>0,shake(){},punch(){}};
  const stage=new StudioCombat(scene,world),g=stage.game,events={hits:[],xp:0,flashes:[],metal:[],blocked:0};g.entities=reverse?[b,a]:[a,b];g.player=a;g.isHuman=f=>f===a;g.bigHit={amount:0};g.combo=0;g._p1MaxCombo=0;
  g.grantXp=(_f,n)=>events.xp+=n;g.trail=()=>{};g.heroYell=()=>{};g.melee=new MeleeSystem(g);
- g.onHit=(target,amount,opts,blocked)=>{events.hits.push({target,amount,opts,blocked});Game.prototype.onHit.call(g,target,amount,opts,blocked);};
+ g.onHit=(target,amount,opts,blocked,outcome)=>{events.hits.push({target,amount,opts,blocked,outcome});Game.prototype.onHit.call(g,target,amount,opts,blocked,outcome);};
  g.onBlockedStrike=(...args)=>{events.blocked++;Game.prototype.onBlockedStrike.apply(g,args);};
  g.coneFoe=Game.prototype.coneFoe.bind(g);
  const flash=g.vfx.flash.bind(g.vfx);g.vfx.flash=(p,...args)=>{events.flashes.push(p.clone());return flash(p,...args);};
@@ -124,7 +124,7 @@ test('native detonated split children use local contacts without inherited direc
  }finally{x.close();}
 });
 for(const eligible of [true,false])test(`native deflection precedence for ${eligible?'eligible':'ki-charging ineligible'} actual shield`,()=>{
- const x=fixture();try{x.b.def.guardType='deflect';x.b.chargingKi=!eligible;const shot=fire(x,panel(x));if(eligible){assert.notEqual(shot._defl,true);near(hp(x),7,'shield absorbs actual contact');assert.equal(shot.dead,true);}else{assert.equal(shot._defl,true);near(hp(x),12,'native reflection preempts local damage');assert.equal(x.events.hits.filter(e=>e.target===x.b).length,0);}near(x.b.hp,1000,'reflection or full shield prevents HP');}finally{x.close();}
+ const x=fixture();try{x.b.def.guardType='deflect';x.b.chargingKi=!eligible;const shot=fire(x,panel(x));if(eligible){assert.notEqual(shot._defl,true);near(hp(x),7,'shield absorbs actual contact');assert.equal(shot.dead,true);}else{assert.equal(shot._defl,true);near(hp(x),12,'native reflection preempts local damage');const hit=x.events.hits.filter(e=>e.target===x.b);assert.equal(hit.length,1);assert.equal(hit[0].amount,0);assert.equal(hit[0].outcome?.deflected,true);}near(x.b.hp,1000,'reflection or full shield prevents HP');}finally{x.close();}
 });
 test('real projectile breaks one panel, subsequent hole passes damage, exact repair protects again',()=>{
  const x=fixture();try{const p=panel(x);fire(x,p,12);near(hp(x),0,'first real shot breaks cell');assert.equal(snapshotNaniteCells(x.b).some(c=>c.cell===2),false);fire(x,p,5);near(1000-x.b.hp,2.1,'hole uses native body guard');
@@ -142,12 +142,12 @@ for(const immune of ['invuln','phase','resist'])test(`native ${immune} rejection
 });
 for(const immune of ['invuln','phase','resist','plate'])test(`native deflection survives ${immune} rejection at an otherwise eligible actual panel`,()=>{
  const x=fixture();try{x.b.def.guardType='deflect';if(immune==='resist')x.b.resist.ballistic=0;else if(immune==='plate')x.b.def.armor=20;else x.b[immune]=immune==='invuln'?1:true;
-  const shot=fire(x,panel(x));assert.equal(shot._defl,true,'native reflection remains authoritative when no positive damage reaches absorption');near(hp(x),12,'no local debit');near(x.b.hp,1000,'no body debit');assert.equal(x.events.hits.filter(e=>e.target===x.b).length,0,'reflection is not a synthetic zero-damage hit');
+  const shot=fire(x,panel(x));assert.equal(shot._defl,true,'native reflection remains authoritative when no positive damage reaches absorption');near(hp(x),12,'no local debit');near(x.b.hp,1000,'no body debit');const hit=x.events.hits.filter(e=>e.target===x.b);assert.equal(hit.length,1,'reflection emits one presentation-only outcome');assert.equal(hit[0].outcome?.deflected,true);
  }finally{x.close();}
 });
-test('rejected native panel absorption reflects without consuming crit, waking or emitting a zero-hit callback',()=>{
+test('rejected native panel absorption reflects without consuming crit or waking and emits one resolved outcome',()=>{
  const x=fixture();try{x.b.def.guardType='deflect';x.b.resist.ballistic=0;x.b.sleepT=2;x.a._moodCrit=1;x.a._psyche={fx:(_key,fallback)=>fallback};
-  const shot=fire(x,panel(x),5,{dt:.1});assert.equal(shot._defl,true);near(x.a._moodCrit,1,'reflection did not consume attacker one-shot');near(x.b.sleepT,2,'reflection did not wake');assert.equal(x.events.hits.filter(e=>e.target===x.b).length,0);
+  const shot=fire(x,panel(x),5,{dt:.1});assert.equal(shot._defl,true);near(x.a._moodCrit,1,'reflection did not consume attacker one-shot');near(x.b.sleepT,2,'reflection did not wake');const hit=x.events.hits.filter(e=>e.target===x.b);assert.equal(hit.length,1);assert.equal(hit[0].amount,0);assert.equal(hit[0].outcome?.deflected,true);
  }finally{x.close();}
 });
 test('a rejected panel without native reflection still evaluates canonical admission only once',()=>{
@@ -323,7 +323,7 @@ test('real cannon cell takes integrity damage without absorbing any accepted own
  const x=fixture({form:'cannon'});try{const p=chargedCannon(x);fire(x,p,5);near(hp(x,0),7,'cannon local debit');near(1000-x.b.hp,5,'cannon is not armor');assert.equal(x.events.hits.length,1);}finally{x.close();}
 });
 test('native deflection still wins over a real cannon-cell contact with no copied owner damage',()=>{
- const x=fixture({form:'cannon'});try{const p=chargedCannon(x);x.b.guarding=true;x.b.def.guardType='deflect';const shot=fire(x,p,5);assert.equal(shot._defl,true);near(hp(x,0),12,'cannon cannot overrule native reflection');near(x.b.hp,1000,'no copied reflected damage');assert.equal(x.events.hits.filter(e=>e.target===x.b).length,0);}finally{x.close();}
+ const x=fixture({form:'cannon'});try{const p=chargedCannon(x);x.b.guarding=true;x.b.def.guardType='deflect';const shot=fire(x,p,5);assert.equal(shot._defl,true);near(hp(x,0),12,'cannon cannot overrule native reflection');near(x.b.hp,1000,'no copied reflected damage');const hit=x.events.hits.filter(e=>e.target===x.b);assert.equal(hit.length,1);assert.equal(hit[0].outcome?.deflected,true);}finally{x.close();}
 });
 for(const state of ['lowered','chargingKi'])test(`real ${state} shield loses local integrity without passive absorption`,()=>{
  const x=fixture();try{const p=panel(x);if(state==='lowered')x.b.guarding=false;else x.b.chargingKi=true;fire(x,p);near(hp(x),7,'struck ineligible metal');near(1000-x.b.hp,5,'original accepted amount reaches owner');assert.equal(x.events.hits.length,1);}finally{x.close();}

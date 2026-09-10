@@ -874,6 +874,20 @@ export class Fighter {
       return;
     }
     if (this.state === 'ko' || this.invuln > 0) return 0;
+    const resolvedStart={hp:this.hp,armor:this.armor||0,shield:this._shieldHp||0,
+      bleed:this._bleed>0,frozen:this.frozenT>0,dots:new Set((this._dots||[]).map(d=>d.kind))};
+    let resolvedDtype=null,resolvedPlate=0,resolvedNanite=0,resolvedGuard='none',resolvedDeflected=false;
+    const resolvedOutcome=()=>{
+      const statusesAdded=[];
+      if(!resolvedStart.bleed&&this._bleed>0)statusesAdded.push('bleeding');
+      if(!resolvedStart.frozen&&this.frozenT>0)statusesAdded.push('frozen');
+      for(const d of this._dots||[])if(!resolvedStart.dots.has(d.kind))statusesAdded.push(d.kind==='burn'?'burning':d.kind);
+      return Object.freeze({dtype:resolvedDtype,attackClass:opts.ballistic?'bullet':opts.strike?'melee':opts.dot?'sustained':'impact',
+        healthLost:Math.max(0,resolvedStart.hp-this.hp),absorbed:Object.freeze({plate:resolvedPlate,
+          armor:Math.max(0,resolvedStart.armor-(this.armor||0)),shield:Math.max(0,resolvedStart.shield-(this._shieldHp||0)),nanite:resolvedNanite}),
+        guard:resolvedGuard,deflected:resolvedDeflected,knockedOut:this.state==='ko',statusesAdded:Object.freeze(statusesAdded),
+        contact:opts.contactPoint?Object.freeze({x:opts.contactPoint.x,y:opts.contactPoint.y,z:opts.contactPoint.z}):null});
+    };
     const admission=damageAdmission(this,amount,opts);
     // ⚠ MOOD REACHES THE FIGHT HERE, at the one place every damage source already passes through —
     // not at the ten call sites that multiply by powerBuff. An angry fighter hits harder and a sad
@@ -906,6 +920,7 @@ export class Fighter {
     // EVERY hit has a type. Callers that don't declare one get the sane default for what they are,
     // so no damage source in the game is ever untyped and resistances can't be silently skipped.
     const dtype = admission.dtype;
+    resolvedDtype=dtype;
     // ---- THE BALLISTIC SCALE: a gun is lethal to people and an annoyance to superweapons ----
     // A shotgun ends a pedestrian. Against a registered weapon it meets ARMOUR first (a plated
     // chassis eats the shot), then TOUGHNESS (a Might-10 frame barely notices lead). Energy,
@@ -914,6 +929,7 @@ export class Fighter {
       const plate = admission.plate;   // ACID eats the plate
       if (plate > 0) {
         const stopped = admission.stopped;
+        resolvedPlate=stopped;
         amount = admission.afterPlateAmount;
         if (this._game && stopped > 0.5 && Math.random() < 0.5) {      // sparks off the plate
           this._game.particles.burst(this.pos.x, this.pos.y + 5, this.pos.z, { count: 3, speed: 16, life: 0.22, size: 1.2, color: ['#ffd97a', '#c9c2b4'], drag: 2 });
@@ -922,7 +938,7 @@ export class Fighter {
       amount=admission.ballisticAmount; // STR 10 takes ~15% from bullets
       if (amount <= 0.4) {                                             // it simply did not get through
         this.hitFlash = Math.max(this.hitFlash, 0.35);
-        if (this._game) this._game.onHit(this, 0, opts, true);
+        if (this._game) this._game.onHit(this, 0, opts, true,resolvedOutcome());
         return 0;
       }
     }
@@ -967,6 +983,7 @@ export class Fighter {
     if(localNanite&&!(this.phase&&!opts.unblockable&&!opts.trueDamage)){
       const cell=this._nanites.modules.get(opts.naniteContact.slot).cells[opts.naniteContact.cell],before=cell.hp;
       const result=damageNanite(this._nanites,opts.naniteContact,amount,localNanite.absorb);
+      resolvedNanite=result.absorbed;
       result.integrity=before-cell.hp;
       opts.naniteResult=result;amount=result.remaining;naniteFullBlock=result.absorbed>0&&amount===0;
       if(result.disabledSlot)cancelHeldSlot(this,result.disabledSlot);
@@ -987,7 +1004,7 @@ export class Fighter {
       const soak = Math.min(this._shieldHp, amount);
       this._shieldHp -= soak; amount -= soak;
       if (this._game) this._game.particles.burst(this.pos.x, this.pos.y + 5.5, this.pos.z, { count: 5, speed: 16, life: 0.3, size: 1.8, color: ['#7fe6ff', '#fff'], drag: 1.4 });
-      if (amount <= 0.01) { if (this._game) this._game.onHit(this, 0, opts, true); return 0; }
+      if (amount <= 0.01) { if (this._game) this._game.onHit(this, 0, opts, true,resolvedOutcome()); return 0; }
     }
     // energy-intangible: strikes/projectiles pass through
     if (this.phase && !opts.unblockable && !opts.trueDamage) {
@@ -1020,12 +1037,13 @@ export class Fighter {
         if(amount>0&&!(opts.naniteResult?.absorbed>0))registerShieldContact(this,opts);
         this.hp = clamp(this.hp - amount, 0, this.maxHp);
         if(amount>0&&opts.src!==this){this.lastHitBy=opts.src;this.lastHitT=0;}
-        if (this.guardMeter <= 0.001) { this.guarding = false; this.staggerT = 0.7; this.guardBreakT = 0.7; this.state = 'hit'; this.stateT = 0; } // guard break
+        if (this.guardMeter <= 0.001) { this.guarding = false; this.staggerT = 0.7; this.guardBreakT = 0.7; this.state = 'hit'; this.stateT = 0; resolvedGuard='broken'; } // guard break
+        else resolvedGuard='blocked';
         // A BLOCKED STRIKE REJECTS THE ATTACKER — bounce + recovery stagger (parry if the guard
         // was raised at the last instant). This is what stops melee spam against a raised guard.
         if (opts.strike && this._game && this._game.onBlockedStrike) this._game.onBlockedStrike(opts.src, this, {contactFx:opts.contactFx});
         this._resolveLethal(opts);
-        if (this._game) this._game.onHit(this, amount, opts, true);
+        if (this._game) this._game.onHit(this, amount, opts, true,resolvedOutcome());
         return amount;
       }
     }
@@ -1105,7 +1123,7 @@ export class Fighter {
     }
     this.state = 'hit'; this.stateT = 0;
     this._resolveLethal(opts);
-    if (this._game) this._game.onHit(this, amount, opts, false);
+    if (this._game) this._game.onHit(this, amount, opts, false,resolvedOutcome());
     return amount;
   }
 

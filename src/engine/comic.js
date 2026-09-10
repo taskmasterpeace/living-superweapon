@@ -262,6 +262,12 @@ export class Comic {
     return this._add(node, opts.life || 0.95, { kind: 'sfx', world: pos, drift: 0 });
   }
 
+  impact(text,pos,opts={}) {
+    const it=this.sfx(text,pos,opts),feedback=opts.feedback;
+    if(feedback){it.node.classList.add('impact-'+feedback.id);it.node.dataset.impact=feedback.id;it.node.setAttribute('aria-label',feedback.label||text);}
+    return it;
+  }
+
   // ⚠ THE SAFE AREA. A letterer works inside the panel's margins; balloons that drift under the
   // controls rail or the player panel are unreadable, and no amount of z-index fixes that because
   // the HUD is information the player also needs. These are the rails the HUD actually owns.
