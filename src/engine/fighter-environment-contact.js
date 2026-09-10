@@ -74,7 +74,7 @@ export function sweepFighterEnvironment(f,game,dt){
       const speed=Math.hypot(f.vel.x,f.vel.z);
       f.pos[key]+=hit.normal*EPS;
       f.vel[key]*=-.3;
-      f._wallContact(game,hit.cover,speed);
+      f._wallContact(game,hit.cover,speed,key);
     }else if(hit.normal<0){
       f.pos.y-=EPS;f.vel.y=Math.min(0,f.vel.y)*.3;
     }

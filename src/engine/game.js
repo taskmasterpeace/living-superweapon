@@ -215,7 +215,7 @@ const MODE_IMPL = {
       g.ms = { powerworld: true, chaseCam: true };   // the third-person lock-on view (world.chase)
       g.pwStage = new PowerWorldStage(g); g.pwStage.open();   // the stage — see engine/powerworld.js
       g.pwStage.setDaylight(o.daylight);
-      g.weather.set(['rain','storm'].includes(o.weatherPreset)?o.weatherPreset:'clear');
+      g.weather.set(['rain','storm','tornado','hurricane'].includes(o.weatherPreset)?o.weatherPreset:'clear');
       // ⚠ THE CITY HUD LIES IN ANOTHER DIMENSION. The nameplate read "TRANQUILITY REACH · THE MOON ·
       // POP 8K · CRIME 8" while standing on a rock spire in PowerWorld — a surface stating a fact
       // that is not true of where you are. One body class, and the stylesheet does the rest; the
@@ -2760,17 +2760,17 @@ export class Game {
   }
 
   // A launched fighter just hit a wall / the ground hard (entity._slam). Sell the crunch.
-  onSlam(f, dmg, kind) {
+  onSlam(f, dmg, kind, {ordinaryFall=false}={}) {
     const p = f.pos.clone().setY(f.pos.y + 4);
     this.vfx.impactStar(p, 8 + dmg * 0.35, '#ffffff', 0.18);
     this.particles.burst(f.pos.x, f.pos.y + 3, f.pos.z, { count: 14, speed: 24, life: 0.5, size: 3, color: ['#8a8f99', '#fff', f.def.colors.accent], up: 8, grav: 14, drag: 1.6 });
     if (kind === 'ground' || kind === 'roof') {
-      this.vfx.shockwave(f.pos.clone().setY(f.pos.y+.2), { color: '#c9cfd9', radius: 14 + dmg, power: 0.9 });
-      if(kind==='ground')this.world.crater(f.pos.x, f.pos.z, 6, 1.2);
+      this.vfx.shockwave(f.pos.clone().setY(f.pos.y+.2), { color: '#c9cfd9', radius: ordinaryFall?Math.min(16,4+dmg*.1):14+dmg, power: ordinaryFall?.3:.9 });
+      if(kind==='ground'&&!ordinaryFall)this.world.crater(f.pos.x, f.pos.z, 6, 1.2);
     }
     this.world.shake(1.2); this.audio.impact(1.15, f.pos); this.audio.boom(0.35, f.pos);
     this.audio.grunt(f.def.voicePitch || 1, f.pos);   // pain is universal
-    if (this.hud) this.hud.damageNumber(f.pos, 'SLAM ' + Math.round(dmg), '#ffb03a', false);
+    if (this.hud) this.hud.damageNumber(f.pos, (ordinaryFall?'FALL ':'SLAM ') + Math.round(dmg), '#ffb03a', false);
     if (this.isHuman(f) && this.hud) this.hud.flashScreen('#ff8a5a', 0.12);
   }
 

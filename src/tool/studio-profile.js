@@ -10,6 +10,7 @@ export const LIMITS = {
   frame:{scale:[.65,1.5],bulk:[.65,1.65],broad:[.7,1.6],head:[.65,1.4],neck:[.6,1.6],stance:[.7,1.4]},
   camera:{fov:[40,85],range:[18,60],height:[0,18],shoulder:[-10,10],boostFov:[0,18],boostRange:[0,15],cutaway:[0,1]},
   motion:{acceleration:[3,18],braking:[3,16],boostAcceleration:[3,18],groundSprint:[1,2.2]},
+  environment:{massKg:[20,2000],windResistance:[.1,50],fallSafeSpeed:[30,160],fallDamageScale:[0,2]},
   wake:{life:[.18,.8],width:[.06,.9],intensity:[0,1]},
   surfaceWake:{intensity:[0,1],minSpeed:[30,180],maxHeight:[4,50],life:[.4,3]},
   pose:{armLx:[-3.2,1.2],armRx:[-3.2,1.2],armLz:[-.9,.9],armRz:[-.9,.9],elbowL:[0,2.5],elbowR:[0,2.5],hipL:[-1.6,1.2],hipR:[-1.6,1.2],kneeL:[0,2.4],kneeR:[0,2.4],headPitch:[-1.3,.7]},
@@ -54,7 +55,7 @@ function purple(hex) {
 }
 export function validateProfile(p) {
   record(p,'Profile');
-  allowed(p,['version','heroId','model','colors','frame','camera','motion','poses','wake','surfaceWake','attacks','progression','effects'],'Profile');
+  allowed(p,['version','heroId','model','colors','frame','camera','motion','poses','wake','surfaceWake','attacks','progression','effects','environment'],'Profile');
   if(p.version!==1)fail('Unsupported profile version. Import a version 1 Studio profile.');
   if(typeof p.heroId!=='string'||!/^[a-z0-9][a-z0-9_-]{0,79}$/.test(p.heroId))fail('Invalid hero ID.');
   record(p.model,'Model');
@@ -76,6 +77,7 @@ export function validateProfile(p) {
   for(const key of ['primary','secondary','accent','skin'])if(!p.colors[key])fail(`Missing ${key} color.`);
   numbers(p.frame,LIMITS.frame,'Frame');numbers(p.camera,LIMITS.camera,'Camera');numbers(p.motion,LIMITS.motion,'Flight');
   if(p.wake!==undefined)numbers(p.wake,LIMITS.wake,'Wake');
+  if(p.environment!==undefined)numbers(p.environment,LIMITS.environment,'Environment');
   const surfaceWake={...SURFACE_WAKE_DEFAULTS,...p.surfaceWake};
   if(p.surfaceWake!==undefined)numbers(p.surfaceWake,LIMITS.surfaceWake,'Surface wake');
   const attacks=validateAttackOverrides(p.attacks);
@@ -124,6 +126,7 @@ export function profileFromDef(def) {
   return {version:1,heroId:def.id,model:{body:model.body??'procedural',surface:model.surface??'standard',costume:model.costume,flightStyle:model.flightStyle,hairColor:model.hairColor,definition:model.definition,locomotion:model.locomotion??'authored',strikes:model.strikes??'authored',heavyStrikes:model.heavyStrikes??'authored'},
     frame:frameOf(def),colors:{skin:'#e8c39a',...def.colors},camera:{...CAMERA_DEFAULTS,...model.camera},
     motion:{...MOTION_DEFAULTS,...model.motion},
+    environment:{massKg:def.metal?162:90,windResistance:1+Math.max(0,(def.strength??5)-4)**2*.55,fallSafeSpeed:56,fallDamageScale:def.archetype==='soldier'?1:0,...def.environment},
     wake:{...WAKE_DEFAULTS,...model.wake},surfaceWake:{...SURFACE_WAKE_DEFAULTS,...model.surfaceWake},effects:validateEffects(def.effects),attacks:attackOverridesFromDef(def),progression:copy(def.progression??{unlocks:{},forms:{}}),
     poses:Object.fromEntries(states.map(state=>[state,{...poses[state],...model.poses?.[state]}]))};
 }
@@ -142,7 +145,7 @@ export function applyProfile(def,profile) {
   profile=validateProfile(profile);
   if(def.id!==profile.heroId)fail('This profile belongs to a different hero.');
   const p=copy(profile);
-  return applyAttackOverrides({...def,frame:p.frame,colors:p.colors,effects:p.effects,progression:p.progression,model:{...def.model,...p.model,poses:p.poses,camera:p.camera,motion:p.motion,wake:p.wake,surfaceWake:p.surfaceWake}},p.attacks);
+  return applyAttackOverrides({...def,...(p.environment?{environment:p.environment}:{}),frame:p.frame,colors:p.colors,effects:p.effects,progression:p.progression,model:{...def.model,...p.model,poses:p.poses,camera:p.camera,motion:p.motion,wake:p.wake,surfaceWake:p.surfaceWake}},p.attacks);
 }
 function readStore(storage) {
   let raw;

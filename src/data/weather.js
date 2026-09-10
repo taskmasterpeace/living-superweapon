@@ -45,6 +45,7 @@ export const STATES = {
   // ⚠ A HURRICANE IS A STATE, NOT AN ABILITY. It is what the ultimate PUTS the world into, so the
   // ability has nothing to implement — it asks for this state and every reader already knows it.
   hurricane:{ n: 'HURRICANE',    wind: 1.60, rain: 1.00, cloud: 1.00, vis: 0.45, light: 0.40, wet: 1.0,  fog: 0.55, thunder: true },
+  tornado:  { n: 'TORNADO',      wind: 0.45, rain: 0.80, cloud: 1.00, vis: 0.60, light: 0.45, wet: 0.9,  fog: 0.40, thunder: true },
   fog:      { n: 'FOG',          wind: 0.08, rain: 0,    cloud: 0.60, vis: 0.52, light: 0.70, wet: 0.3,  fog: 0.85 },
   snow:     { n: 'SNOW',         wind: 0.35, rain: 0,    cloud: 0.90, vis: 0.72, light: 0.80, wet: 0.4,  fog: 0.30, snow: true },
   dust:     { n: 'DUST STORM',   wind: 1.10, rain: 0,    cloud: 0.70, vis: 0.40, light: 0.55, wet: 0,    fog: 0.70, dust: true },

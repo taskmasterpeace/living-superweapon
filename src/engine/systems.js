@@ -17,6 +17,7 @@ import * as THREE from 'three';
 import { STATES, WIND_DRAG, pickWeather } from '../data/weather.js';
 import {RainField} from './rain-field.js';
 import {WeatherLightning,weatherSurface} from './weather-lightning.js';
+import {WeatherVortex} from './weather-vortex.js';
 
 export class Weather {
   constructor(game) {
@@ -38,6 +39,7 @@ export class Weather {
   set(id, { hold = 0, instant = false } = {}) {
     const S = STATES[id]; if (!S) return this.stateId;
     this._cancelStorm();this._src=null;this._srcT=0;
+    this._vortex?.dispose();this._vortex=null;this._vortexSpawned=false;
     this.stateId = id;
     this._target = { rain: S.rain, wind: S.wind, cloud: S.cloud };
     this.storm = S.thunder ? Math.max(this.storm, 0.7) : 0;
@@ -51,7 +53,17 @@ export class Weather {
    *  enough, because the honesty law already forbids acting on anything not earned by sight, radio
    *  or noise. A bot in a storm genuinely loses you, with no weather branch in ai.js. */
   get visMult() { const S = this.state; return 1 - (1 - S.vis) * Math.min(1, this.rain + this.cloud * 0.4); }
-  get windSpeed() { return this.wind * 42 * (1 + Math.sin(this._srcT * 0.7) * 0.28); }
+  get windSpeed() { return this.wind * 42 * (1 + Math.sin(this.time * 0.7) * 0.28); }
+
+  sampleBodyWind(pos,out){
+    if(this._vortex?.kind==='hurricane')return this._vortex.sample(pos,out);
+    out.x=Math.cos(this.windDir)*this.windSpeed;out.y=0;out.z=Math.sin(this.windDir)*this.windSpeed;
+    if(this._vortex){
+      const v=this._vortex.sample(pos,this._windSample||(this._windSample={}));
+      out.x+=v.x;out.y+=v.y;out.z+=v.z;
+    }
+    return out;
+  }
 
   /**
    * Wind force on a moving thing, units/second. ⚠ `kind` is a LOOKUP in WIND_DRAG; a projectile
@@ -89,6 +101,7 @@ export class Weather {
   clear() { this._target = { rain: 0, wind: 0, cloud: 0 }; this.storm = 0; this._src = null; this.stateId='clear';this._cancelStorm(); }
 
   _cancelStorm(){
+    this._vortex?.dispose();this._vortex=null;this._vortexSpawned=false;
     this._lightning?.cancel();this._thunder=null;this._strikeSource=null;this.g.world.weatherFlash=0;
     this._thunderVoice?.stop();this._thunderVoice=null;
   }
@@ -114,6 +127,17 @@ export class Weather {
     this.wind += (T.wind - this.wind) * Math.min(1, dt * 0.4);
     this.cloud += (T.cloud - this.cloud) * Math.min(1, dt * 0.35);
     this.g.world.weatherCloud=this.cloud;
+    if(['tornado','hurricane'].includes(this.stateId)&&this.cloud>.7&&this.g.player&&!this._vortexSpawned){
+      const p=this.g.player,kind=this.stateId,forward=p.aim||{x:0,z:1},distance=kind==='tornado'?150:380;
+      this._vortex=new WeatherVortex(this.g,{kind,x:p.pos.x+forward.x*distance,z:p.pos.z+forward.z*distance,
+        radius:kind==='tornado'?65:520,height:230,duration:kind==='tornado'?55:180});
+      this._vortexSpawned=true;
+      this.g.hud?.feed?.(kind==='tornado'?'TORNADO FORMING — take cover; stay out of the debris skirt.':'HURRICANE — strong eyewall winds. Seek solid shelter.','#e5bc72');
+    }
+    if(this._vortex){
+      this._vortex.update(dt);
+      if(this._vortex.age>=this._vortex.duration){this._vortex.dispose();this._vortex=null;this.set('storm');}
+    }
 
     if (this.rain > 0.02) {
       if (!this._mesh) this._buildRain();
@@ -128,14 +152,7 @@ export class Weather {
       this._rainVoice?.set(this.rain*(sheltered ? .18 : 1));
     }else{this._rainVoice?.stop();this._rainVoice=null;}
 
-    // WIND MOVES THE WORLD: loose debris and smoke drift, and fighters in the air get pushed
-    if (this.wind > 0.15) {
-      const wx = Math.cos(this.windDir) * this.wind, wz = Math.sin(this.windDir) * this.wind;
-      for (const f of this.g.entities) {
-        if (!f.alive || f.grounded) continue;
-        f.vel.x += wx * 14 * dt; f.vel.z += wz * 14 * dt;
-      }
-    }
+    // Body wind is integrated by Fighter before its swept collision pass.
     // Lightning cannot arrive before its cloud ceiling. Natural bolts are
     // spectacle; a weather-controller's damaging strike has a ground warning.
     if (this.storm > 0 && this.cloud>.7) {

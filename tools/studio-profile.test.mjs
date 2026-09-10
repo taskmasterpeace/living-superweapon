@@ -147,3 +147,10 @@ test('saving an untouched profile preserves production flight joints for every s
     assert.deepEqual(bad,[]);
   }finally{await browser.close();}
 });
+test('environment response survives profile export and rejects invalid mass',()=>{
+ const hero=ROSTER.find(d=>d.id==='sarge'),p=studio.profileFromDef(hero);
+ p.environment={massKg:105,windResistance:1.3,fallSafeSpeed:58,fallDamageScale:.8};
+ const applied=studio.applyProfile(hero,studio.validateProfile(JSON.parse(JSON.stringify(p))));
+ assert.deepEqual(applied.environment,p.environment);
+ p.environment.massKg=0;assert.throws(()=>studio.validateProfile(p),/massKg/);
+});

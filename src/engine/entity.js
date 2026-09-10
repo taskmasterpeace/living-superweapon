@@ -59,6 +59,7 @@ import {poseNaniteForearms,restoreNanitePose} from './nanite-pose.js';
 import {animateRiflePose,restoreRiflePose} from './rifle-pose.js';
 import {updateWebZip,presentWebZip} from './web-zip.js';
 import {sweepFighterEnvironment} from './fighter-environment-contact.js';
+import {fallDamage,prepareWindBody,applyBodyWind,windMoveScale,windImpactSpeed,reconcileWindCarry} from './weather-body.js';
 import {unitsToMeters} from '../core/world-units.js';
 
 // power tiers (Super-Saiyan-style): level 1–3 = I, 4–6 = II, 7–9 = III, 10 = MAX
@@ -1184,20 +1185,24 @@ export class Fighter {
     else this.ki = clamp(this.ki + (anyCharge ? 3 : 8) * this.sheet.kiRegenMult * moodMult(this, 'kiRegen', 1) * (1 - 0.07 * ((this._wounds && this._wounds.torso) || 0)) * dt, 0, this.maxKi);
   }
 
-  // Impact damage from being hurled into geometry. Only fires while launched (launchT) — dashing
-  // or flying into a wall on your own never hurts. Credit goes to whoever launched you.
-  _slam(game, speed, kind) {
-    if (!game || this.launchT <= 0 || this._slamCd > 0 || this.state === 'ko' || speed < 30) return;
+  // Launch impacts and vulnerable-body falls share one contact admission. An
+  // ordinary self-powered wall touch remains harmless; wind-driven walls don't.
+  _slam(game, speed, kind, axis=null) {
+    if (!game || this._slamCd > 0 || this.state === 'ko' || speed < 30) return;
+    const ownedSpeed=this.launchT>0?speed:kind==='wall'?windImpactSpeed(this,axis):0;
+    const landing=kind==='ground'||kind==='roof';
+    const launchDamage=(landing?ownedSpeed>38:ownedSpeed>=30)?Math.min(32,(ownedSpeed-22)*.5):0;
+    const dmg=Math.max(launchDamage,fallDamage(this,speed,kind));
+    if(dmg<=0)return;
     this._slamCd = 0.45;
-    const dmg = Math.min(32, (speed - 22) * 0.5);
-    const src = this.lastHitT < 3 ? this.lastHitBy : null;
+    const src = this.launchT>0&&this.lastHitT < 3 ? this.lastHitBy : null;
     this.takeDamage(dmg, { src, slam: true, unblockable: true, hitstop: 0.1 });
     // T8: somebody drove me into geometry. `_updateGait` consumes this next frame and, IF the impact
     // left me staggered, calls it CRASH — the 'none' owner. A slam that neither staggers nor stuns
     // just keeps my grammar (F1: an involuntary arrival never cancels flight). NOTE `_slam` does NOT
     // itself write staggerT — that would change every city wall-slam (rule: the city is unchanged).
     this._gaitCrash = 1;
-    if (game.onSlam) game.onSlam(this, dmg, kind);
+    if (game.onSlam) game.onSlam(this, dmg, kind, {ordinaryFall:this.launchT<=0&&kind!=='wall'});
   }
 
   update(dt, game) {
@@ -1624,6 +1629,7 @@ export class Fighter {
       this._wounds = { arm: 0, leg: 0, torso: 0 }; this._woundT = { arm: 0, leg: 0, torso: 0 };   // a fresh body (manual §18)
       for (const it of this.items) if (it.state !== 'deployed') { it.charges = it.def.charges ?? 1; it.state = 'ready'; it.cd = 0; }   // fresh pouch each life
       this.state = 'idle'; this.invuln = 1.4; this.vel.set(0, 0, 0);
+      reconcileWindCarry(this);
       resetNanites(this._nanites);
       if(this._pendingForm!==undefined)this.applyForm(this._pendingForm);
       if (this.isDummy) this.pos.copy(this.spawn);
@@ -1896,9 +1902,10 @@ export class Fighter {
     // open-sky air). It gets Q3's TWO-REGIME friction (§3.2): proportional above STOP_SPEED, an
     // absolute floor below it, so a run comes to a crisp REST in a sixth of a second instead of
     // creeping down an exponential tail. Everything else keeps the exact exponential it was tuned with.
+    const bodyWind=prepareWindBody(this,game);
     const groundClass = !glide && !launched && this.launchT <= 0 && this._slideT <= 0 && this._thrownT <= 0 && this.gait === GAIT.GROUNDED;
     let dragF;
-    if (ownsFlightVelocity(this)) {
+    if (ownsFlightVelocity(this)||bodyWind.driven) {
       dragF = 1;
     } else if (glide && !launched && this.launchT <= 0 && this._airStop > 0) {
       const sp = Math.hypot(this.vel.x, this.vel.z);
@@ -1914,6 +1921,9 @@ export class Fighter {
       dragF = Math.exp((launched ? -PW_KB.drag : this._slideT > 0 || this._thrownT > 0 ? -1.3 : glide ? -AIR_DRAG : -6) * dt);
     }
     this.vel.x *= dragF; this.vel.z *= dragF;
+    if(this._windCarry){this._windCarry.x*=dragF;this._windCarry.z*=dragF;}
+    applyBodyWind(this,bodyWind,dt);
+    const windFrame=this._windFrameVelocity||(this._windFrameVelocity={x:0,z:0});windFrame.x=this.vel.x;windFrame.z=this.vel.z;
     this.vel.y = ownsFlightVelocity(this) ? clamp(this.vel.y, -PW_AIR.top, PW_AIR.top) : clamp(this.vel.y, -160, 70);
 
     const previousY=this.pos.y;
@@ -1962,7 +1972,7 @@ export class Fighter {
         // YOU HEAR WHAT THEY ARE MADE OF. A robot clangs; a person thumps; a ghost barely lands.
         if (game && game.audio && game.audio.land) game.audio.land(Math.min(2.2, -impact / 38), this.body, this.pos);
       }
-      if (impact < -38) this._slam(game, -impact, 'ground');    // hurled into the floor — fall/slam damage
+      if (impact < -30) this._slam(game, -impact, 'ground');    // admission evaluates authored fall resistance
     }
     // ⚠ THERE IS NO CEILING IN POWERWORLD. Robert: *"there is no ceiling."* On Earth the lid is the
     // atmosphere and leaving it is a whole ceremony (manual §17 — a lit afterburner, the DEPART offer);
@@ -1987,8 +1997,8 @@ export class Fighter {
     // let you leave. game.checkRingOut then does the honours.
     const ringOut = !!(game && game.ms && game.ms.ringOut);
     if (!ringOut) {
-      if (Math.abs(this.pos.x) > b) { this._slam(game, Math.abs(this.vel.x), 'wall'); this.vel.x *= -0.4; }
-      if (Math.abs(this.pos.z) > b) { this._slam(game, Math.abs(this.vel.z), 'wall'); this.vel.z *= -0.4; }
+      if (Math.abs(this.pos.x) > b) { this._slam(game, Math.abs(this.vel.x), 'wall','x'); this.vel.x *= -0.4; }
+      if (Math.abs(this.pos.z) > b) { this._slam(game, Math.abs(this.vel.z), 'wall','z'); this.vel.z *= -0.4; }
       this.pos.x = clamp(this.pos.x, -b, b); this.pos.z = clamp(this.pos.z, -b, b);
     }
 
@@ -2011,7 +2021,7 @@ export class Fighter {
       if ((crossedTop || (this.pos.y>=top-.05 && this.pos.y<=top+.05)) && this.vel.y <= 2 && !this.flyHeld && (!this.flying || this.descendHeld)) {
         const impact=this.vel.y;
         this.pos.y = top; if (this.vel.y < 0) this.vel.y = 0; this.onBlock = true; this.flying = false;
-        if(impact < -38)this._slam(game,-impact,'roof');
+        if(impact < -30)this._slam(game,-impact,'roof');
       } else if (this.pos.y < top - 0.5) {
         const spd = Math.hypot(this.vel.x, this.vel.z);
         if (ox < oz) { this.pos.x += Math.sign(dx || 1) * ox; this.vel.x *= -0.3; }   // push out + bounce
@@ -2022,7 +2032,7 @@ export class Fighter {
         // `_slam` uses, so the two can never credit different fighters for one impact.
         // Ordinary walking can exceed 34u/s. Boarding contact must not chew
         // through a parked hull; launches and powered movement still can.
-        this._wallContact(game,c,spd);
+        this._wallContact(game,c,spd,ox<oz?'x':'z');
       }
     }
     // ENTERABLE INTERIORS — the building is standable on top and hollow inside: the wall
@@ -2037,7 +2047,9 @@ export class Fighter {
       const dx = this.pos.x - it.x, dz = this.pos.z - it.z;
       if (Math.abs(dx) > hx || Math.abs(dz) > hz) continue;
       if (this.pos.y >= it.top - 2.5 && this.vel.y <= 2 && !this.flyHeld && (!this.flying || this.descendHeld)) {
+        const impact=this.vel.y;
         this.pos.y = it.top; if (this.vel.y < 0) this.vel.y = 0; this.onBlock = true; this.flying = false;
+        if(impact < -30)this._slam(game,-impact,'roof');
         continue;                                        // standing on the roof
       }
       if (this.pos.y >= it.top - 0.5) continue;          // flying above it
@@ -2052,7 +2064,7 @@ export class Fighter {
         const spd = Math.hypot(this.vel.x, this.vel.z);
         if (ox < oz) { this.pos.x += Math.sign(wdx || 1) * ox; this.vel.x *= -0.3; }
         else { this.pos.z += Math.sign(wdz || 1) * oz; this.vel.z *= -0.3; }
-        this._slam(game, spd, 'wall');
+        this._slam(game, spd, 'wall',ox<oz?'x':'z');
       }
     }
     // FOOTING (aaa-02 §2.3) — computed LAST, so `onBlock` and `groundY` are final for this frame.
@@ -2066,9 +2078,10 @@ export class Fighter {
     // ×0.50 in move(), the landing absorb and (via the shell) the roll trigger.
     if(!this.onFoot||this.state==='ko')this.prone=false;
     this.crouching = !this.prone && this.onFoot && this.descendHeld && this.gait === GAIT.GROUNDED && this.state !== 'ko';
+    reconcileWindCarry(this);
   }
 
-  _wallContact(game,cover,speed) {
+  _wallContact(game,cover,speed,axis=null) {
     const powered=this.launchT>0||this.flying||this.burstT>0||this.sprintT>0||this._slideT>0;
     const vehicle=cover&&(cover.frontlineVehicle||cover.frontlineAircraft);
     if(speed>34&&(!vehicle||powered)&&cover?.hp!=null&&this._game){
@@ -2076,7 +2089,7 @@ export class Fighter {
         (this.launchT>0&&this.lastHitBy)||this);
       this.hitstop=Math.max(this.hitstop,.04);
     }
-    this._slam(game,speed,'wall');
+    this._slam(game,speed,'wall',axis);
   }
 
   // Let go of the grapnel/ledge — the ONE release path (input, damage, KO all come through here).
@@ -2156,6 +2169,7 @@ export class Fighter {
     if (this.guarding) s *= 0.34;               // guarding slows you
     if (this.strikeActive > 0) s *= 0.5;
     s *= castingMoveScale(this);
+    s *= windMoveScale(this,this._game);
     if (ownsFlightVelocity(this)) {
       // The committed punch step is an additive action channel. Hover braking
       // controls the player's motion without cancelling that short approach.
@@ -2189,7 +2203,9 @@ export class Fighter {
     // only bounds `hypot(x,z)` and leaves any vertical velocity uncapped — the 3-D speed limit was
     // never enforced on a strafing flier. It now runs for every open-sky airborne frame, and `dir.y`
     // is read as `(dir.y || 0)` so a strafe adds no spurious vertical.
-    if (this.airborne && this._openSky) {
+    // Only powered flight owns vertical steering and its 3-D speed clamp.
+    // Walking input during a fall must never cancel gravity/landing damage.
+    if (this.airborne && this._openSky && this.flying) {
       this.vel.y += (dir.y || 0) * s * dt * A;
       // PM_DRIFTING (aaa-01 §4): "banking to a stop". While NOT pressing forward but still TRAVELLING
       // forward, push laterally — the strongest single feel-detail in BFP's flight. `aim3` is the basis
@@ -2221,14 +2237,14 @@ export class Fighter {
         }
       }
       const m3 = Math.hypot(this.vel.x, this.vel.y, this.vel.z);
-      if (m3 > mx && this.launchT <= 0) { const k = mx / m3; this.vel.x *= k; this.vel.y *= k; this.vel.z *= k; }
+      if (m3 > mx && this.launchT <= 0 && !this._weatherBody?.driven) { const k = mx / m3; this.vel.x *= k; this.vel.y *= k; this.vel.z *= k; }
     } else {
       const h = Math.hypot(this.vel.x, this.vel.z);
       // ⚠ A LAUNCHED BODY MUST NOT BRAKE ITSELF BY WALKING. The 3-D open-sky branch above has always
       // excused `launchT`; this one never did, so a grounded victim who touched the stick had their
       // knockback clamped straight back to walking speed and the long carry was defeated by the one
       // thing anyone does after being hit. Scoped to `_chaseKb` — the city keeps its clamp exactly.
-      if (h > mx && !(this._chaseKb && this.launchT > 0)) { this.vel.x = this.vel.x / h * mx; this.vel.z = this.vel.z / h * mx; }
+      if (h > mx && !(this._chaseKb && this.launchT > 0) && !this._weatherBody?.driven) { this.vel.x = this.vel.x / h * mx; this.vel.z = this.vel.z / h * mx; }
     }
     if (dir.x || dir.z || dir.y) { if (this.state === 'idle' || this.state === 'move') this.state = 'move'; }
     else if (this.state === 'move') this.state = 'idle';

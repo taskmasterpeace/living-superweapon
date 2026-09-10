@@ -41,10 +41,33 @@ test('commanded harmful lightning warns before impact and clearing cancels damag
  assert.equal(calls.filter(c=>c.id==='damage').length,0);weather.reset();
 });
 test('weather sounds have replacement-ready phase briefs in the existing harness',()=>{
- for(const id of ['weather-rain','weather-thunder']){
+ for(const id of ['weather-rain','weather-thunder','weather-vortex']){
   const cue=SOUND_CUE_BY_ID.get(id);assert.ok(cue,`missing ${id}`);
   assert.ok(cue.wiring.startsWith('native'));assert.ok(cue.generationPrompt.length>60);
  }
+});
+
+test('weather selection owns one vortex, waits for clouds and clears its voice and field',()=>{
+ const {weather,game,calls}=fixture();try{
+  weather.set('tornado',{instant:true});weather.cloud=.2;weather.update(.016);
+  assert.ok(!weather._vortex,'vortex appeared before its storm ceiling');
+  weather.cloud=1;weather.update(.016);const vortex=weather._vortex;assert.ok(vortex);
+  for(let i=0;i<480;i++)weather.update(1/60);
+  assert.equal(weather._vortex,vortex,'weather recreated the vortex during its lifetime');
+  assert.equal(game.scene.children.filter(c=>c.name==='weather-tornado').length,1);
+  assert.equal(calls.filter(c=>c.id==='weather-vortex').length,1);
+  weather.clear();assert.equal(weather._vortex,null);assert.equal(vortex.group.parent,null);
+  assert.ok(calls.find(c=>c.id==='weather-vortex').stopped);
+  for(let i=0;i<60;i++)weather.update(1/60);
+  assert.equal(game.scene.children.filter(c=>c.name==='weather-tornado').length,0);
+ }finally{weather.reset();}
+});
+
+test('energy beams remain wind-exempt even in hurricane weather',()=>{
+ const {weather}=fixture();try{
+  weather.set('hurricane',{instant:true});assert.deepEqual(weather.force('energy'),{x:0,y:0,z:0});
+  assert.ok(Math.hypot(weather.force('ballistic').x,weather.force('ballistic').z)>0);
+ }finally{weather.reset();}
 });
 test('a warned commanded strike damages exactly once after its warning',()=>{
  const {weather,calls}=fixture();weather.command({rain:1,cloud:1,storm:1,src:{alive:true}});
