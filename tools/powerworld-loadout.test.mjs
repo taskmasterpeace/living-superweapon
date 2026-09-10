@@ -46,3 +46,27 @@ for(const id of ['m16','pump','m24'])test(`${id}: native issuance, ammunition, r
 test('every catalog firearm has a finite physical magazine and reload',()=>{
  for(const row of FIREARMS){const ammo=firearmAmmo({def:row.ab});assert.ok(ammo, row.id);assert.ok(ammo.capacity>0);assert.ok(row.ab.reloadTime>0);assert.equal(row.ab.cost,0);}
 });
+
+for(const [held,expected] of [
+ ['issued',['M24 Marksman Rifle']],
+ ['additional',['M24 Marksman Rifle','Service Carbine']],
+ ['none',['Service Carbine']],
+])test(`KO ${held}: drops carried gear without materializing a replaced primary`,()=>{
+ const f=new Fighter(structuredClone(ROSTER.find(d=>d.id==='sarge')));
+ const scene=new THREE.Scene(),world={scene,cover:[],interiors:[],ARENA:240,heightAt:()=>0,shake(){},punch(){}};
+ const combat=new StudioCombat(scene,world),g=combat.game;
+ for(const key of ['equipFrom','dropGear','_gearKind','spawnGearDrop','handleKO'])g[key]=Game.prototype[key];
+ g.entities=[f];f._game=g;scene.add(f.obj);g.audio={...g.audio,cry(){}};
+ const original=f.slots.lmb;
+ try{
+  if(held!=='none')g.equipFrom(f,firearmById('m24'),{primary:held==='issued'});
+  f.hp=0;f.state='ko';g.handleKO(f);
+  assert.deepEqual(g._drops.map(drop=>drop.ab.name),expected);
+  assert.equal(f.slots.lmb,original,'respawn keeps its original primary definition');
+  assert.equal(f._gearHeld,null);
+  assert.ok(g._drops.every(drop=>drop.mesh.parent===scene),'assert native pickup objects, not mocked spawn calls');
+ }finally{
+  for(const drop of g._drops||[]){drop.mesh.removeFromParent();drop.mesh.traverse(o=>{o.geometry?.dispose();o.material?.dispose();});}
+  combat.dispose();f.dispose();
+ }
+});

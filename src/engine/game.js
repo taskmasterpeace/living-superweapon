@@ -2556,9 +2556,12 @@ export class Game {
     // THE DROP ECONOMY (manual §16): KO'd gear carriers leave a weapon on the street — 20s to
     // claim it. Held pickups fall too. Police sidearms join the economy the same way.
     if (!victim.isDummy) {
-      if (victim._gearHeld) this.dropGear(victim, true);
+      // Snapshot carried kit before dropGear restores a replaced primary for
+      // respawn. That backup was not carried and must not become a second drop.
+      const heldAb = victim._gearHeld?.ab;
       const gearAb = Object.values(victim.slots).map(s => s && s.def).find(d => d && d.gear);
-      if (gearAb && (this._drops || []).length < 10) this.spawnGearDrop(gearAb, victim.pos.x + (Math.random() * 5 - 2.5), victim.pos.z + (Math.random() * 5 - 2.5));
+      if (victim._gearHeld) this.dropGear(victim, true);
+      if (gearAb && gearAb !== heldAb && (this._drops || []).length < 10) this.spawnGearDrop(gearAb, victim.pos.x + (Math.random() * 5 - 2.5), victim.pos.z + (Math.random() * 5 - 2.5));
     }
     const src = victim.lastHitBy;
     const killer = (src && victim.lastHitT < 4 && src !== victim && src.def) ? src : null;
