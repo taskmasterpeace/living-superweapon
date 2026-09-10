@@ -16,6 +16,7 @@ import * as THREE from 'three';
 // ============================================================================================
 import { STATES, WIND_DRAG, pickWeather } from '../data/weather.js';
 import {RainField} from './rain-field.js';
+import {WeatherLightning,weatherSurface} from './weather-lightning.js';
 
 export class Weather {
   constructor(game) {
@@ -24,6 +25,8 @@ export class Weather {
     this._target = { rain: 0, wind: 0, cloud: 0 };
     this._mesh = null; this._boltT = 0; this._srcT = 0; this._src = null;
     this.stateId = 'clear'; this._hold = 0; this._natural = 'clear';
+    this.time=0;
+    this._thunder=null;this._rainVoice=null;this._thunderVoice=null;this._strikeSource=null;
   }
   // ⚠ EXTENDED IN PLACE, NOT REPLACED. I wrote a second Weather class beside this one and the
   // duplicate silently won the import — the exact failure `docs/SYSTEM_MAP.md` exists to prevent
@@ -34,6 +37,7 @@ export class Weather {
   /** The named state (data/weather.js). Other systems read this, never the raw numbers. */
   set(id, { hold = 0, instant = false } = {}) {
     const S = STATES[id]; if (!S) return this.stateId;
+    this._cancelStorm();this._src=null;this._srcT=0;
     this.stateId = id;
     this._target = { rain: S.rain, wind: S.wind, cloud: S.cloud };
     this.storm = S.thunder ? Math.max(this.storm, 0.7) : 0;
@@ -71,6 +75,7 @@ export class Weather {
 
   // a power (or a script) ASKS for weather; it arrives over `ramp` seconds, never instantly
   command({ rain = 0, wind = 0, cloud = 0, storm = 0, dur = 12, src = null } = {}) {
+    this._cancelStorm();
     // ⚠ AN ABILITY ASKS FOR A STATE, IT DOES NOT AUTHOR ONE — so a commanded storm and a natural
     // storm are the same thing to every reader.
     const want = storm >= 0.7 ? 'storm' : rain >= 0.6 ? 'rain' : rain > 0 ? 'drizzle'
@@ -81,11 +86,17 @@ export class Weather {
     this.windDir = Math.random() * Math.PI * 2;
     return this;
   }
-  clear() { this._target = { rain: 0, wind: 0, cloud: 0 }; this.storm = 0; this._src = null; this.stateId='clear'; }
+  clear() { this._target = { rain: 0, wind: 0, cloud: 0 }; this.storm = 0; this._src = null; this.stateId='clear';this._cancelStorm(); }
+
+  _cancelStorm(){
+    this._lightning?.cancel();this._thunder=null;this._strikeSource=null;this.g.world.weatherFlash=0;
+    this._thunderVoice?.stop();this._thunderVoice=null;
+  }
 
   reset() {
     this.clear();this.rain=this.wind=this.cloud=0;
     this.g.world.weatherCloud=0;
+    this.time=0;this.g.world.weatherTime=0;
     this._srcT=this._boltT=this._hold=0;this._natural='clear';this.dispose();
   }
 
@@ -95,6 +106,7 @@ export class Weather {
     return this._mesh;
   }
   update(dt) {
+    this.time+=dt;this.g.world.weatherTime=this.time;
     if (this._srcT > 0) { this._srcT -= dt; if (this._srcT <= 0) this.clear(); }
     const T = this._target;
     // GRADUAL — the brief is explicit that global weather must build, not switch
@@ -107,6 +119,14 @@ export class Weather {
       if (!this._mesh) this._buildRain();
       this._rainField.update(dt,this.rain,this.wind,this.windDir);
     } else if (this._mesh) this._mesh.visible = false;
+    if(this.rain>.02){
+      const library=this.g.audio?.soundLibrary;
+      if(this._rainVoice&&library?.active&&!library.active.has(this._rainVoice))this._rainVoice=null;
+      this._rainVoice ||= this.g.audio?.soundLibrary?.play('weather-rain',{gain:.45});
+      const cam=this.g.world.camera?.position;
+      const sheltered=cam&&weatherSurface(this.g.world,cam.x,cam.z)>cam.y;
+      this._rainVoice?.set(this.rain*(sheltered ? .18 : 1));
+    }else{this._rainVoice?.stop();this._rainVoice=null;}
 
     // WIND MOVES THE WORLD: loose debris and smoke drift, and fighters in the air get pushed
     if (this.wind > 0.15) {
@@ -116,21 +136,34 @@ export class Weather {
         f.vel.x += wx * 14 * dt; f.vel.z += wz * 14 * dt;
       }
     }
-    // LIGHTNING lights the whole skyline, and can actually strike
-    if (this.storm > 0) {
+    // Lightning cannot arrive before its cloud ceiling. Natural bolts are
+    // spectacle; a weather-controller's damaging strike has a ground warning.
+    if (this.storm > 0 && this.cloud>.7) {
       this._boltT -= dt;
       if (this._boltT <= 0) {
-        this._boltT = 1.2 + Math.random() * (7 - this.storm * 4);
+        this._boltT = 4 + Math.random()*4;
         const px = (this.g.player ? this.g.player.pos.x : 0) + (Math.random() * 2 - 1) * 120;
         const pz = (this.g.player ? this.g.player.pos.z : 0) + (Math.random() * 2 - 1) * 120;
-        this.g.hud && this.g.hud.flashScreen && this.g.hud.flashScreen('#c8d8ff', 0.09);
-        this.g.vfx.lightning(new THREE.Vector3(px, 0, pz), { color: '#dfe9ff', count: 5, radius: 6, height: 120 });
-        this.g.later(() => this.g.audio.boom(0.85, { x: px, y: 0, z: pz }), 220 + Math.random() * 500);   // thunder must not outlive its storm
-        if (this.storm > 0.6 && this._src) this.g.areaDamage(this._src, new THREE.Vector3(px, 1, pz), 9, 26, 1.2, { dtype: 'energy', shock: true });
+        this._lightning ||= new WeatherLightning(this.g);
+        this._strikeSource=this.storm>.6?this._src:null;
+        this._lightning.start(new THREE.Vector3(px,weatherSurface(this.g.world,px,pz),pz),{warning:!!this._strikeSource,reduced:globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches===true});
       }
+    }
+    if(this._lightning?.update(dt)){
+      const pos=this._lightning.position.clone(),listener=this.g.world.camera?.position||pos;
+      this._thunder={pos,delay:.18+Math.min(1.8,pos.distanceTo(listener)/220)};
+      if(this._strikeSource&&this._strikeSource===this._src&&this._strikeSource.alive!==false)this.g.areaDamage(this._strikeSource,pos,9,26,1.2,{dtype:'energy',shock:true});
+      this._strikeSource=null;
+    }
+    this.g.world.weatherFlash=this._lightning?.flash||0;
+    if(this._thunder){
+      this._thunder.delay-=dt;
+      if(this._thunder.delay<=0){this._thunderVoice?.stop();this._thunderVoice=this.g.audio?.soundLibrary?.play('weather-thunder',{pos:this._thunder.pos});this._thunder=null;}
     }
   }
   dispose() {
+    this._cancelStorm();this._rainVoice?.stop();this._rainVoice=null;
+    this._lightning?.dispose();this._lightning=null;
     this._rainField?.dispose();this._rainField=null;this._mesh=null;
   }
 }

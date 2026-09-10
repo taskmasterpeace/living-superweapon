@@ -5,6 +5,7 @@ import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import {applySandstoneSurface,applyGroundSurface} from './frontline-surface.js';
 import {buildFrontlineRubble} from './frontline-rubble.js';
 import {daylightPreset} from '../data/daylight.js';
+import {createStormCloudTexture,STORM_CLOUD_UNIFORMS,STORM_CLOUD_FRAGMENT} from './storm-clouds.js';
 
 export const FRONTLINE_GROUND_RADIUS=6800;
 export const FRONTLINE_ASSETS={ground:'./textures/frontline/hardpan-albedo-v1.png',rock:'./models/frontline/boulder-04.glb',mesa:'./models/frontline/tiered-escarpment-kit.glb',talus:'./models/frontline/fractured-talus-kit.glb',sky:'./textures/frontline/kloppenheim_05_puresky-2k.hdr'};
@@ -14,11 +15,12 @@ export function applyFrontlineSky(stage,texture){
  const world=stage.g.world,original=world.skyMesh.material;
  const output='gl_FragColor = vec4(c, 1.0);';
  if(!original.fragmentShader.includes(output))throw Error('Native sky shader contract changed');
+ const clouds=createStormCloudTexture();stage._texs.push(clouds);
  const material=new THREE.ShaderMaterial({
   side:THREE.BackSide,depthWrite:false,fog:false,
-  uniforms:{...original.uniforms,uFrontlineSky:{value:texture},uFrontlineDayMix:{value:daylightPreset(stage.daylight).skyMix},uWeatherCloud:{value:world.weatherCloud||0}},
+  uniforms:{...original.uniforms,uFrontlineSky:{value:texture},uFrontlineDayMix:{value:daylightPreset(stage.daylight).skyMix},uWeatherCloud:{value:world.weatherCloud||0},uStormNoise:{value:clouds},uCloudTime:{value:world.weatherTime||0},uWeatherFlash:{value:0}},
   vertexShader:original.vertexShader,
-  fragmentShader:'uniform sampler2D uFrontlineSky;\nuniform float uFrontlineDayMix;\nuniform float uWeatherCloud;\n'+original.fragmentShader.replace(output,`
+  fragmentShader:'uniform sampler2D uFrontlineSky;\nuniform float uFrontlineDayMix;\nuniform float uWeatherCloud;\n'+STORM_CLOUD_UNIFORMS+original.fragmentShader.replace(output,`
    vec3 skyDir=normalize(vP);
    vec2 skyUV=vec2(atan(skyDir.z,skyDir.x)*0.159154943+0.5,asin(clamp(skyDir.y,-1.0,1.0))*0.318309886+0.5);
    vec3 photographed=texture2D(uFrontlineSky,skyUV).rgb;
@@ -31,10 +33,7 @@ export function applyFrontlineSky(stage,texture){
    float skyHighlight=max(0.0,skyLuma-1.0);
    float displayedLuma=min(skyLuma,1.0)+3.0*(1.0-exp(-skyHighlight/3.0));
    photographed*=displayedLuma/max(skyLuma,.00001);
-   // Cloud cover veils the sun and blue sky without another texture/pass.
-   vec3 overcast=vec3(.16,.19,.22)+vec3(min(displayedLuma,.8)*.12);
-   photographed=mix(photographed,overcast,uWeatherCloud*.88);
-   c=mix(c,vec3(dot(c,vec3(.2126,.7152,.0722)))*.72,uWeatherCloud*.65);
+   ${STORM_CLOUD_FRAGMENT}
    gl_FragColor=vec4(mix(mix(c,photographed,uFrontlineDayMix),c,uSpace),1.0);`),
  });
  stage._frontlineSky={original,material,environment:world.scene.environment,intensity:world.scene.environmentIntensity};

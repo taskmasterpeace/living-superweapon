@@ -367,10 +367,18 @@ export class World {
       if(preset.skyTop)u.uTop.value.set(preset.skyTop);
       if(preset.skyHorizon)u.uHor.value.set(preset.skyHorizon);
       const cloud=Math.max(0,Math.min(1,this.weatherCloud||0));
-      if(this.sun)this.sun.intensity*=1-cloud*.55;
-      if(this.hemi)this.hemi.intensity*=1-cloud*.12;
+      const overcast=Math.max(0,(cloud-.05)/.95);
+      if(this.sun)this.sun.intensity*=1-overcast*.55;
+      if(this.hemi)this.hemi.intensity*=1-overcast*.12;
       const skyCloud=this.skyMesh?.material.uniforms?.uWeatherCloud;
       if(skyCloud)skyCloud.value=cloud;
+      const cloudTime=this.skyMesh?.material.uniforms?.uCloudTime;
+      if(cloudTime)cloudTime.value=this.weatherTime||0;
+      const flash=Math.max(0,Math.min(1,this.weatherFlash||0));
+      const skyFlash=this.skyMesh?.material.uniforms?.uWeatherFlash;
+      if(skyFlash)skyFlash.value=flash;
+      if(this.hemi)this.hemi.intensity+=flash*1.4;
+      if(this.rim)this.rim.intensity+=flash*1.8;
     }
     // ⚠ stash what the CLOCK decided before weather scales it — the weather multiplies these every
     // frame, so without a clean baseline it would compound and the world would go black.

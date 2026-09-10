@@ -193,7 +193,7 @@ body.phone #pwTitle h1{ font-size:34px; }
   let encounter = 'sparring'; // The optional recovery slice never replaces the default.
   let cameraPreset=prefs.cameraPreset==='frontline'?'frontline':'character';
   let daylight=daylightPreset(prefs.daylight).id;
-  let weatherPreset=prefs.weatherPreset==='rain'?'rain':'clear';
+  let weatherPreset=['rain','storm'].includes(prefs.weatherPreset)?prefs.weatherPreset:'clear';
 
   const save = () => { try { localStorage.setItem(PREF, JSON.stringify({ p1: selYou.id, p2: selFoe.id, two, ai, cameraPreset, daylight, weatherPreset })); } catch {} };
   const footage = createFieldFootage(ctx.game);
@@ -250,7 +250,7 @@ body.phone #pwTitle h1{ font-size:34px; }
             ${Object.values(DAYLIGHT_PRESETS).map(p=>`<button type="button" data-daylight="${p.id}" class="${daylight===p.id?'on':''}" aria-pressed="${daylight===p.id}">${p.label}</button>`).join('')}
           </div></div>
           <div class="pwrow"><span class="pwlbl" id="pwWeatherLabel">Weather</span><div class="pwseg pwEnvironment" id="pwWeather" role="group" aria-labelledby="pwWeatherLabel">
-            ${['clear','rain'].map(id=>`<button type="button" data-weather="${id}" class="${weatherPreset===id?'on':''}" aria-pressed="${weatherPreset===id}">${id==='rain'?'Rain':'Clear'}</button>`).join('')}
+            ${['clear','rain','storm'].map(id=>`<button type="button" data-weather="${id}" class="${weatherPreset===id?'on':''}" aria-pressed="${weatherPreset===id}">${{clear:'Clear',rain:'Rain',storm:'Storm'}[id]}</button>`).join('')}
           </div></div>
           <div class="pwrow"><span class="pwlbl">Camera · 1P</span><div class="pwseg" id="pwCamera">
             <button data-camera="character" class="${cameraPreset==='character'?'on':''}" aria-pressed="${cameraPreset==='character'}">Character / BFP</button>
@@ -343,7 +343,7 @@ body.phone #pwTitle h1{ font-size:34px; }
       }
     };
     for(const b of el.querySelectorAll('#pwWeather button'))b.onclick=()=>{
-      weatherPreset=b.dataset.weather==='rain'?'rain':'clear';save();
+      weatherPreset=['rain','storm'].includes(b.dataset.weather)?b.dataset.weather:'clear';save();
       for(const option of el.querySelectorAll('#pwWeather button')){
         const selected=option.dataset.weather===weatherPreset;
         option.classList.toggle('on',selected);option.setAttribute('aria-pressed',String(selected));

@@ -453,7 +453,14 @@ export function boot(P = PROFILE_FULL) {
   // ⚠ The KEY comes from the profile. Sharing one key would make picking a fighter on the
   // PowerWorld page silently change which hero the War World page opens on, and vice versa.
   const PREF = P.prefsKey;
-  function savePrefs(c) { try { localStorage.setItem(PREF, JSON.stringify({ p1: c.p1, mode: c.mode, format: c.format, two: c.twoPlayer })); } catch {} }
+  function savePrefs(c) {
+    try {
+      // The native door also owns camera, lighting and weather in this key.
+      // Starting a match must update the loadout, not erase those preferences.
+      const saved=loadPrefs(),prior=saved&&typeof saved==='object'&&!Array.isArray(saved)?saved:{};
+      localStorage.setItem(PREF,JSON.stringify({...prior,p1:c.p1,mode:c.mode,format:c.format,two:c.twoPlayer}));
+    } catch {}
+  }
   function loadPrefs() { try { return JSON.parse(localStorage.getItem(PREF) || 'null'); } catch { return null; } }
   hud.prefs = loadPrefs();
   // (4) MUTE PERSISTS and says so, instead of silently forgetting between sessions.
