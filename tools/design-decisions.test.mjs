@@ -5,6 +5,7 @@ import {
   answeredCount,
   createBlankDocument,
   mergeDocuments,
+  documentsConflict,
   validateImport,
 } from '../src/tool/design-decisions.js';
 
@@ -63,4 +64,15 @@ test('imports enforce field types, allowed statuses, and size bounds', () => {
   assert.throws(() => validateImport({ ...base, answers: { q01: { answer: 7 } } }), /string/i);
   assert.throws(() => validateImport({ ...base, answers: { q01: { answer: 'ok', status: 'Approved' } } }), /status/i);
   assert.throws(() => validateImport({ ...base, answers: { q01: { answer: 'x'.repeat(20001) } } }), /long/i);
+});
+
+test('notes-only and status-only differences require conflict resolution', () => {
+  const current = createBlankDocument();
+  current.answers.q01.notes = 'Keep infantry relevant.';
+  const notesChanged = validateImport({ schema: 'powerworld.design-decisions', version: 1, answers: { q01: { notes: 'Different note' } } });
+  assert.equal(documentsConflict(current, notesChanged), true);
+  const statusCurrent = createBlankDocument();
+  statusCurrent.answers.q02.status = 'Decided';
+  const statusChanged = validateImport({ schema: 'powerworld.design-decisions', version: 1, answers: { q02: { status: 'Discuss' } } });
+  assert.equal(documentsConflict(statusCurrent, statusChanged), true);
 });

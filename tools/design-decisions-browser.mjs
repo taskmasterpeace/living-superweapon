@@ -12,6 +12,7 @@ async function mainFlow() {
   const context = await browser.newContext({ viewport: { width: 1440, height: 1000 }, acceptDownloads: true });
   const page = await context.newPage();
   await page.goto(base, { waitUntil: 'networkidle' });
+  assert.ok(await page.locator('#answered-count').isVisible(), 'desktop progress must remain visible on first view');
   assert.equal(await page.locator('#question-number').textContent(), 'Question 50 of 50');
   assert.equal(await page.locator('#answered-count').textContent(), '0 / 50 answered');
   await page.locator('#answer').fill('The rifleman can hold and search several human-scale objectives without broadcasting a strategic energy signature.');
@@ -46,8 +47,13 @@ async function mainFlow() {
   const conflict = structuredClone(exported); conflict.answers.q01.answer = '32';
   await page.locator('#import-open').click();
   await page.locator('#import-file').setInputFiles({ name: 'conflict.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(conflict)) });
-  page.once('dialog', dialog => dialog.dismiss());
   await page.locator('#import-apply').click();
+  await page.locator('#conflict-cancel').click();
+  assert.equal(await page.locator('#answer').inputValue(), '16');
+  await page.locator('#import-open').click();
+  await page.locator('#import-file').setInputFiles({ name: 'conflict.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(conflict)) });
+  await page.locator('#import-apply').click();
+  await page.locator('#conflict-merge').click();
   await page.waitForFunction(() => document.querySelector('#answer')?.value === '32');
   assert.equal(await page.locator('#answer').inputValue(), '32');
   assert.equal(await page.locator('label[for="answer"]').count(), 1);
@@ -69,7 +75,11 @@ async function storageFailureFlow() {
   const context = await browser.newContext();
   await context.addInitScript(() => { Storage.prototype.setItem = () => { throw new DOMException('blocked', 'QuotaExceededError'); }; });
   const page = await context.newPage(); await page.goto(base, { waitUntil: 'networkidle' });
-  await page.locator('#answer').fill('Session-only answer'); await page.waitForTimeout(250);
+  await page.locator('#answer').fill('Session-only answer');
+  const immediatePromise = page.waitForEvent('download'); await page.locator('#export-json').click();
+  const immediate = await immediatePromise; const immediatePath = path.join(artifacts, 'storage-failure-immediate.json'); await immediate.saveAs(immediatePath);
+  assert.equal(JSON.parse(await fs.readFile(immediatePath, 'utf8')).answers.q50.answer, 'Session-only answer');
+  await page.waitForTimeout(250);
   assert.match(await page.locator('#save-status').textContent(), /Storage failed/);
   assert.equal(await page.locator('#answer').inputValue(), 'Session-only answer');
   const downloadPromise = page.waitForEvent('download'); await page.locator('#export-json').click(); await downloadPromise;

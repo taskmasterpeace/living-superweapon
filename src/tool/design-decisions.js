@@ -47,7 +47,8 @@ export function mergeDocuments(current, incoming, mode = 'merge') {
 export function documentsConflict(current, incoming) {
   return Object.entries(incoming.answers).some(([id, entry]) => {
     const existing = current.answers[id];
-    return existing?.answer.trim() && (existing.answer !== entry.answer || existing.notes !== entry.notes || existing.status !== entry.status);
+    const hasExistingWork = existing && (existing.answer.trim() || existing.notes.trim() || existing.status !== 'Draft');
+    return hasExistingWork && (existing.answer !== entry.answer || existing.notes !== entry.notes || existing.status !== entry.status);
   });
 }
 export function exportDocument(doc) {
@@ -75,7 +76,7 @@ function download(name, text, type) {
 if (typeof document !== 'undefined') {
   const $ = selector => document.querySelector(selector);
   const els = {};
-  let doc = createBlankDocument(), current = null, showUnanswered = false, saveTimer;
+  let doc = createBlankDocument(), current = null, showUnanswered = false, saveTimer, pendingImport = null;
   function setSave(message, kind = '') { els.save.textContent = message; els.save.dataset.kind = kind; }
   function persist() {
     clearTimeout(saveTimer);
@@ -124,13 +125,13 @@ if (typeof document !== 'undefined') {
     const activeLink = document.querySelector(`[data-question="${current}"]`);
     if (activeLink) {
       if (matchMedia('(max-width: 760px)').matches) els.nav.scrollLeft = Math.max(0, activeLink.closest('section').offsetLeft - 16);
-      else activeLink.scrollIntoView({ block: 'nearest' });
+      else els.nav.scrollTop = Math.max(0, activeLink.offsetTop - els.nav.offsetTop - 24);
     }
     if (focus) els.answer.focus();
   }
   function handleInput() { commitEditor(); }
   function setup() {
-    Object.assign(els, { nav: $('#question-nav'), count: $('#answered-count'), progress: $('#progress'), save: $('#save-status'), number: $('#question-number'), chapter: $('#chapter-name'), prompt: $('#question-prompt'), answer: $('#answer'), notes: $('#notes'), status: $('#decision-status'), prev: $('#previous'), next: $('#next'), file: $('#import-file'), dialog: $('#import-dialog'), importError: $('#import-error') });
+    Object.assign(els, { nav: $('#question-nav'), count: $('#answered-count'), progress: $('#progress'), save: $('#save-status'), number: $('#question-number'), chapter: $('#chapter-name'), prompt: $('#question-prompt'), answer: $('#answer'), notes: $('#notes'), status: $('#decision-status'), prev: $('#previous'), next: $('#next'), file: $('#import-file'), dialog: $('#import-dialog'), conflictDialog: $('#conflict-dialog'), importError: $('#import-error') });
     load(); updateCounts(); renderNav(); visit(50, false);
     [els.answer, els.notes].forEach(el => el.addEventListener('input', handleInput)); els.status.addEventListener('change', handleInput);
     els.prev.addEventListener('click', () => visit(current - 1)); els.next.addEventListener('click', () => visit(current + 1));
@@ -144,12 +145,17 @@ if (typeof document !== 'undefined') {
       try {
         const file = els.file.files[0]; if (!file) throw new Error('Choose a JSON file.'); if (file.size > MAX_FILE) throw new Error('Import file is too large.');
         const incoming = validateImport(JSON.parse(await file.text()));
-        let mode = 'merge';
-        if (documentsConflict(doc, incoming)) { const replace = confirm('This import differs from nonempty answers. OK replaces the full workbook; Cancel merges the imported fields into your current workbook.'); mode = replace ? 'replace' : 'merge'; }
-        doc = mergeDocuments(doc, incoming, mode); persist(); updateCounts();
-        const target = current; current = null; visit(target, false); els.dialog.close();
+        if (documentsConflict(doc, incoming)) { pendingImport = incoming; els.dialog.close(); els.conflictDialog.showModal(); return; }
+        applyImport(incoming, 'merge'); els.dialog.close();
       } catch (error) { els.importError.textContent = `Import rejected: ${error.message}`; }
     });
+    function applyImport(incoming, mode) {
+      doc = mergeDocuments(doc, incoming, mode); persist(); updateCounts();
+      const target = current; current = null; visit(target, false);
+    }
+    $('#conflict-cancel').addEventListener('click', () => { pendingImport = null; els.conflictDialog.close(); });
+    $('#conflict-merge').addEventListener('click', () => { applyImport(pendingImport, 'merge'); pendingImport = null; els.conflictDialog.close(); });
+    $('#conflict-replace').addEventListener('click', () => { applyImport(pendingImport, 'replace'); pendingImport = null; els.conflictDialog.close(); });
     $('#reset').addEventListener('click', () => { if (!confirm('Clear all 50 answers and notes? This cannot be undone unless you exported a copy.')) return; doc = createBlankDocument(); persist(); updateCounts(); current = null; visit(50, false); });
   }
   document.addEventListener('DOMContentLoaded', setup);

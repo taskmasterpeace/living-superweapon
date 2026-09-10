@@ -77,6 +77,13 @@
   <div class="dialog-actions"><button id="import-cancel" type="button">Cancel</button><button id="import-apply" class="primary" type="button">Validate & import</button></div>
 </dialog>
 
+<dialog id="conflict-dialog" aria-labelledby="conflict-title">
+  <h2 id="conflict-title">Choose how to import</h2>
+  <p>This file differs from existing answer, notes, or status fields.</p>
+  <p><strong>Merge</strong> imports only included entries; conflicting imported fields overwrite their current entries. <strong>Replace</strong> clears the workbook first, so omitted entries are removed.</p>
+  <div class="dialog-actions conflict-actions"><button id="conflict-cancel" type="button">Cancel · keep untouched</button><button id="conflict-merge" type="button">Merge imported entries</button><button id="conflict-replace" class="primary" type="button">Replace workbook</button></div>
+</dialog>
+
 <script type="module" src="/src/tool/design-decisions.js"></script>
 </body>
 </html>
