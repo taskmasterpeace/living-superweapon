@@ -1,0 +1,158 @@
+{
+ "format": "pw-asset-package",
+ "formatVersion": 1,
+ "id": "fixture.sidearm",
+ "version": 1,
+ "kind": "equipment",
+ "displayName": "Fixture motion",
+ "tags": [
+  "fixture"
+ ],
+ "provenance": {
+  "author": "PowerWorld authoring fixtures",
+  "license": "CC0-1.0",
+  "redistribution": "free",
+  "terms": "Synthetic test data."
+ },
+ "source": {
+  "adapter": "fixture@1",
+  "files": [
+   {
+    "path": "authoring/fixtures/make-fixtures.mjs",
+    "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+   }
+  ],
+  "recipe": {
+   "path": "authoring/recipes/fixture/recipe.json",
+   "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+  }
+ },
+ "tool": {
+  "name": "powerworld-authoring",
+  "version": "0.1.0",
+  "three": "0.169.0",
+  "adapterVersion": 1
+ },
+ "build": {
+  "options": {},
+  "cacheKey": "0000000000000000000000000000000000000000000000000000000000000000",
+  "contentHash": "0000000000000000000000000000000000000000000000000000000000000000",
+  "profile": "desktop"
+ },
+ "units": {
+  "lengthUnit": "game-unit",
+  "metersPerUnit": 0.19,
+  "up": "+Y",
+  "forward": "+Z",
+  "handedness": "right",
+  "sourceConversion": {
+   "scale": 1,
+   "yawDegrees": 0,
+   "mirrorX": false,
+   "sourceUp": "+Y",
+   "sourceForward": "+Z"
+  }
+ },
+ "outputs": [
+  {
+   "path": "model.glb",
+   "role": "glb",
+   "sha256": "cf30a84dec31dee16900e4e62839269b9bdd1d6e13c7f9ea92f27ad3f227bbc3",
+   "bytes": 9
+  }
+ ],
+ "rig": {
+  "skeleton": "none"
+ },
+ "budgets": {
+  "profile": "desktop",
+  "measured": {
+   "triangles": 0,
+   "drawCalls": 0,
+   "materials": 0,
+   "bones": 0,
+   "textures": 0,
+   "bytes": 329
+  },
+  "limits": {
+   "triangles": 5320,
+   "drawCalls": 8,
+   "materials": 4,
+   "bones": 1,
+   "textures": 1,
+   "bytes": 427570
+  }
+ },
+ "acceptance": {
+  "visual": "unapproved",
+  "blockers": []
+ },
+ "equipment": {
+  "class": "firearm",
+  "twoHanded": false,
+  "hand": "right"
+ },
+ "sockets": [
+  {
+   "name": "grip",
+   "parent": "body",
+   "position": [
+    0,
+    0,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "support",
+   "parent": "body",
+   "position": [
+    0,
+    -0.6,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "magazine",
+   "parent": "body",
+   "position": [
+    0,
+    -0.3,
+    -0.4
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "holster",
+   "parent": "body",
+   "position": [
+    0,
+    0,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  }
+ ],
+ "packageHash": "d7829b179b1e59f9c1fc8ed6c96fabd61245f592862f80601ea0a46618d317d5"
+}

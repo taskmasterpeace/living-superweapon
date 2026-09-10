@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Authored Assets · PowerWorld</title>
+<link rel="stylesheet" href="./viewer.css"></head>
+<body>
+<div id="app">
+ <aside id="rail">
+  <header><h1>AUTHORED ASSETS</h1><p class="sub">catalog · inspection · evidence</p></header>
+  <input id="filter" type="search" placeholder="filter id, kind or tag" aria-label="Filter packages">
+  <div id="kinds" role="group" aria-label="Kind filter"></div>
+  <ul id="list" aria-label="Packages"></ul>
+  <section id="fixtures"><h2>VALIDATION FIXTURES</h2><ul id="fixture-list" aria-label="Fixtures"></ul></section>
+  <footer id="catalog-state">loading catalog…</footer>
+ </aside>
+ <main id="stage">
+  <div id="viewport"><canvas id="gl" aria-label="Preview"></canvas>
+   <div id="overlay-controls">
+    <label>Clip <select id="clip"></select></label>
+    <button id="play" type="button">Pause</button>
+    <input id="scrub" type="range" min="0" max="1" step="0.001" value="0" aria-label="Scrub clip">
+    <span id="time" class="mono">0.000s</span>
+    <label><input id="show-skeleton" type="checkbox" checked> skeleton</label>
+    <label><input id="show-sockets" type="checkbox" checked> sockets</label>
+    <label><input id="show-zones" type="checkbox"> hit zones</label>
+    <label>Body <select id="body"></select></label>
+    <label>View <select id="view"><option value="orbit">Orbit</option><option value="front">Front</option><option value="side">Side</option><option value="rear">Rear</option></select></label>
+   </div>
+  </div>
+  <section id="inspector">
+   <div id="summary"><h2 id="title">Select a package</h2><p id="meta" class="mono"></p></div>
+   <div class="tabs" role="tablist"><button data-tab="report" class="on" type="button">Report</button><button data-tab="manifest" type="button">Manifest</button><button data-tab="reference" type="button">Reference</button><button data-tab="export" type="button">Export</button></div>
+   <div id="tab-report" class="tab on"></div>
+   <pre id="tab-manifest" class="tab mono"></pre>
+   <div id="tab-reference" class="tab"></div>
+   <div id="tab-export" class="tab"><button id="export-json" type="button">Download package report</button><pre id="export-text" class="mono"></pre></div>
+  </section>
+ </main>
+</div>
+<script type="module" src="./viewer.js"></script>
+</body>
+</html>

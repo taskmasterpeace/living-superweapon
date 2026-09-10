@@ -1,0 +1,4 @@
+{
+ "type": "commonjs",
+ "_note": "Added by PowerWorld authoring, not upstream: keeps the vendored CommonJS engine loadable under this ESM package."
+}

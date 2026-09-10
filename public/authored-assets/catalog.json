@@ -1,0 +1,367 @@
+{
+ "format": "pw-asset-catalog",
+ "formatVersion": 1,
+ "ok": true,
+ "packages": [
+  {
+   "id": "body.hero-heavy",
+   "version": 1,
+   "kind": "humanoid-body",
+   "displayName": "Hero body - heavy frame x1.3 (superhero male)",
+   "tags": [
+    "humanoid",
+    "body",
+    "heavy",
+    "cc0-body"
+   ],
+   "dir": "body.hero-heavy/v1",
+   "packageHash": "8487ba772735dff2f7856771e282f5198bade431b19048b5a4cea57f2cfb5a1e",
+   "ok": true,
+   "errors": 0,
+   "license": "CC0-1.0",
+   "adapter": "humanoid-body@1",
+   "acceptance": {
+    "structural": "pass",
+    "visual": "unapproved",
+    "blockers": []
+   }
+  },
+  {
+   "id": "body.hero-lean",
+   "version": 1,
+   "kind": "humanoid-body",
+   "displayName": "Hero body - lean frame x0.8 (superhero female)",
+   "tags": [
+    "humanoid",
+    "body",
+    "lean",
+    "cc0-body"
+   ],
+   "dir": "body.hero-lean/v1",
+   "packageHash": "0a4d02f033c07356a515efb43fd4045a2862087afd812c0b0e107f3d1457bc02",
+   "ok": true,
+   "errors": 0,
+   "license": "CC0-1.0",
+   "adapter": "humanoid-body@1",
+   "acceptance": {
+    "structural": "pass",
+    "visual": "unapproved",
+    "blockers": []
+   }
+  },
+  {
+   "id": "body.hero-standard-female",
+   "version": 1,
+   "kind": "humanoid-body",
+   "displayName": "Hero body - standard (superhero female)",
+   "tags": [
+    "humanoid",
+    "body",
+    "standard",
+    "cc0-body"
+   ],
+   "dir": "body.hero-standard-female/v1",
+   "packageHash": "98009988fb704897790b9de70e5045cf5fba17e8a529d296085295eed09b6e11",
+   "ok": true,
+   "errors": 0,
+   "license": "CC0-1.0",
+   "adapter": "humanoid-body@1",
+   "acceptance": {
+    "structural": "pass",
+    "visual": "unapproved",
+    "blockers": []
+   }
+  },
+  {
+   "id": "body.hero-standard",
+   "version": 1,
+   "kind": "humanoid-body",
+   "displayName": "Hero body - standard (superhero male)",
+   "tags": [
+    "humanoid",
+    "body",
+    "standard",
+    "cc0-body"
+   ],
+   "dir": "body.hero-standard/v1",
+   "packageHash": "0aab2416dc8d79ccc05a4fc1daa82b12a6dd9174d272a8ef7df104acb63321fa",
+   "ok": true,
+   "errors": 0,
+   "license": "CC0-1.0",
+   "adapter": "humanoid-body@1",
+   "acceptance": {
+    "structural": "pass",
+    "visual": "unapproved",
+    "blockers": []
+   }
+  },
+  {
+   "id": "creature.field-hound",
+   "version": 1,
+   "kind": "creature",
+   "displayName": "Field hound (anyCreature adapter proof)",
+   "tags": [
+    "creature",
+    "quadruped",
+    "hound",
+    "procedural",
+    "anycreature"
+   ],
+   "dir": "creature.field-hound/v1",
+   "packageHash": "24719069b5407865d954dbbee45794381c379066c8b115ea6ad9b19699f806d1",
+   "ok": true,
+   "errors": 0,
+   "license": "Proprietary-Internal",
+   "adapter": "anycreature@1",
+   "acceptance": {
+    "structural": "pass",
+    "visual": "unapproved-placeholder",
+    "blockers": [
+     "no-creature-runtime"
+    ]
+   },
+   "clipCategories": {},
+   "postures": {
+    "prone": [],
+    "supine": [],
+    "get-up": [],
+    "fall": [],
+    "knockdown": []
+   }
+  },
+  {
+   "id": "equipment.carbine",
+   "version": 1,
+   "kind": "equipment",
+   "displayName": "Field carbine",
+   "tags": [
+    "equipment",
+    "firearm",
+    "rifle",
+    "two-handed",
+    "procedural"
+   ],
+   "dir": "equipment.carbine/v1",
+   "packageHash": "492f111e20cc043615096fa893dd04df33e160ccf7f60b69ddf016b04f3ff251",
+   "ok": true,
+   "errors": 0,
+   "license": "Proprietary-Internal",
+   "adapter": "procedural-prop@1",
+   "acceptance": {
+    "structural": "pass",
+    "visual": "unapproved-placeholder",
+    "blockers": [
+     "full-extension-support-hand"
+    ]
+   }
+  },
+  {
+   "id": "equipment.sidearm",
+   "version": 1,
+   "kind": "equipment",
+   "displayName": "Service sidearm",
+   "tags": [
+    "equipment",
+    "firearm",
+    "pistol",
+    "one-handed",
+    "procedural"
+   ],
+   "dir": "equipment.sidearm/v1",
+   "packageHash": "2aef653d12f5bde3a7dbbf2b270e77c3f21332ca933e2724611c53e397f09c45",
+   "ok": true,
+   "errors": 0,
+   "license": "Proprietary-Internal",
+   "adapter": "procedural-prop@1",
+   "acceptance": {
+    "structural": "pass",
+    "visual": "unapproved-placeholder",
+    "blockers": [
+     "full-extension-support-hand"
+    ]
+   }
+  },
+  {
+   "id": "motion.cmu-walk-02",
+   "version": 1,
+   "kind": "humanoid-motion",
+   "displayName": "CMU subject 02 walk (ASF/AMC adapter proof)",
+   "tags": [
+    "humanoid",
+    "locomotion",
+    "mocap",
+    "cmu",
+    "embed-only"
+   ],
+   "dir": "motion.cmu-walk-02/v1",
+   "packageHash": "82b1be9eab4f4ef1b2efaead5c8a478c410b6f63acf9296affe5d1afcd011341",
+   "ok": true,
+   "errors": 0,
+   "license": "LicenseRef-CMU-Mocap",
+   "adapter": "cmu-asfamc@1",
+   "acceptance": {
+    "structural": "pass",
+    "visual": "unapproved",
+    "blockers": []
+   },
+   "clipCategories": {
+    "action": [
+     "cmu-walk"
+    ]
+   },
+   "postures": {
+    "prone": [],
+    "supine": [],
+    "get-up": [],
+    "fall": [],
+    "knockdown": []
+   }
+  },
+  {
+   "id": "motion.hero-ual2",
+   "version": 1,
+   "kind": "humanoid-motion",
+   "displayName": "Hero action set (Quaternius UAL2 Standard)",
+   "tags": [
+    "humanoid",
+    "grenade",
+    "supine",
+    "carry",
+    "cc0",
+    "get-up"
+   ],
+   "dir": "motion.hero-ual2/v1",
+   "packageHash": "96e5ec5b9bd4e340c3514ea457a758282e2cbe6c9bbc3135ddc5076a6f43ebfe",
+   "ok": true,
+   "errors": 0,
+   "license": "CC0-1.0",
+   "adapter": "quaternius-ual@1",
+   "acceptance": {
+    "structural": "pass",
+    "visual": "unapproved",
+    "blockers": []
+   },
+   "clipCategories": {
+    "action": [
+     "grenade-throw",
+     "power-recover"
+    ],
+    "get-up": [
+     "supine-rise"
+    ],
+    "knockdown": [
+     "hit-knockback"
+    ],
+    "cycle": [
+     "walk-carry"
+    ],
+    "crouch-action": [
+     "power"
+    ]
+   },
+   "postures": {
+    "prone": [],
+    "supine": [
+     "supine-rise",
+     "hit-knockback"
+    ],
+    "get-up": [
+     "supine-rise"
+    ],
+    "fall": [],
+    "knockdown": [
+     "hit-knockback"
+    ]
+   }
+  },
+  {
+   "id": "motion.hero-ual",
+   "version": 1,
+   "kind": "humanoid-motion",
+   "displayName": "Hero motion set (Quaternius UAL Standard)",
+   "tags": [
+    "humanoid",
+    "locomotion",
+    "pistol",
+    "crouch",
+    "cc0"
+   ],
+   "dir": "motion.hero-ual/v1",
+   "packageHash": "3aa515b3c3ee58a46c9995736516aeff4cf69a3d3d0988988e2b5079bed6d3d7",
+   "ok": true,
+   "errors": 0,
+   "license": "CC0-1.0",
+   "adapter": "quaternius-ual@1",
+   "acceptance": {
+    "structural": "pass",
+    "visual": "unapproved",
+    "blockers": []
+   },
+   "clipCategories": {
+    "cycle": [
+     "idle",
+     "walk",
+     "jog",
+     "sprint",
+     "pistol-idle",
+     "jump-loop"
+    ],
+    "crouch-cycle": [
+     "crouch-idle",
+     "crouch-walk"
+    ],
+    "action": [
+     "aim-neutral",
+     "aim-up",
+     "aim-down",
+     "pistol-shoot",
+     "reload",
+     "roll",
+     "jump-start",
+     "jump-land",
+     "hit-chest",
+     "jab",
+     "cross"
+    ],
+    "fall": [
+     "fall-supine"
+    ]
+   },
+   "postures": {
+    "prone": [],
+    "supine": [
+     "fall-supine"
+    ],
+    "get-up": [],
+    "fall": [
+     "fall-supine"
+    ],
+    "knockdown": []
+   }
+  },
+  {
+   "id": "prop.ammo-crate",
+   "version": 1,
+   "kind": "prop",
+   "displayName": "Ammunition crate",
+   "tags": [
+    "prop",
+    "field",
+    "cover",
+    "procedural"
+   ],
+   "dir": "prop.ammo-crate/v1",
+   "packageHash": "82669d20a5b586c456cde99a555b5769913c30d5ba36af660b74e48f1a7c31e8",
+   "ok": true,
+   "errors": 0,
+   "license": "Proprietary-Internal",
+   "adapter": "procedural-prop@1",
+   "acceptance": {
+    "structural": "pass",
+    "visual": "unapproved-placeholder",
+    "blockers": []
+   }
+  }
+ ],
+ "catalogErrors": []
+}

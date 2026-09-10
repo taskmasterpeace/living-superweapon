@@ -1,0 +1,71 @@
+{
+ "id": "motion.cmu-walk-02",
+ "kind": "humanoid-motion",
+ "adapter": "cmu-asfamc",
+ "displayName": "CMU subject 02 walk (ASF/AMC adapter proof)",
+ "tags": [
+  "humanoid",
+  "locomotion",
+  "mocap",
+  "cmu",
+  "embed-only"
+ ],
+ "sources": [
+  "assets-src/cmu/02.asf",
+  "assets-src/cmu/02_01.amc"
+ ],
+ "sourceFps": 120,
+ "provenance": {
+  "author": "CMU Graphics Lab Motion Capture Database",
+  "pack": "Subject 02, trial 01 (walk)",
+  "license": "LicenseRef-CMU-Mocap",
+  "redistribution": "runtime-embed-only",
+  "url": "https://mocap.cs.cmu.edu/",
+  "terms": "Free for use in research projects; may be included in commercially-sold products; may not be resold directly, even in converted form. Created with funding from NSF EIA-0196217. Acknowledge in publications. Terms read from the site front page on 2026-09-10; see docs/authoring/SOURCES.md."
+ },
+ "sourceConversion": {
+  "yawDegrees": 0,
+  "mirrorX": false,
+  "sourceUp": "+Y",
+  "sourceForward": "+Z"
+ },
+ "mapping": {
+  "hip": "root",
+  "chest": "thorax",
+  "head": "head",
+  "shoulderL": "rclavicle",
+  "elbowL": "rhumerus",
+  "handL": "rradius",
+  "shoulderR": "lclavicle",
+  "elbowR": "lhumerus",
+  "handR": "lradius",
+  "hipL": "rhipjoint",
+  "kneeL": "rfemur",
+  "footL": "rtibia",
+  "toeL": "rfoot",
+  "hipR": "lhipjoint",
+  "kneeR": "lfemur",
+  "footR": "ltibia",
+  "toeR": "lfoot"
+ },
+ "_mappingNote": "A slot maps to the END of the named ASF bone (where its child begins): the knee is the end of the femur, the ankle the end of the tibia, the toe the end of the foot. CMU's left side sits on +X, so its r* bones feed the engine's negative-X L slots.",
+ "clips": [
+  {
+   "id": "cmu-walk",
+   "take": "02_01",
+   "loop": false,
+   "handedness": "none",
+   "events": [
+    {
+     "type": "footstep",
+     "derive": "foot-contact"
+    }
+   ]
+  }
+ ],
+ "acceptance": {
+  "visual": "unapproved",
+  "blockers": [],
+  "note": "Adapter proof clip; not visually signed off."
+ }
+}

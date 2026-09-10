@@ -1,0 +1,217 @@
+{
+ "version": 1,
+ "hero": "sol",
+ "catalogBody": "superhero-male",
+ "frame": {
+  "scale": 1.3,
+  "bulk": 1.45,
+  "broad": 1.35,
+  "head": 0.9,
+  "neck": 1.34,
+  "stance": 1.18
+ },
+ "hitZones": [
+  {
+   "zone": "head",
+   "shape": "sphere",
+   "attach": "head",
+   "center": [
+    0,
+    0,
+    0
+   ],
+   "radius": 0.855
+  },
+  {
+   "zone": "torso",
+   "shape": "capsule",
+   "attach": "pelvis",
+   "center": [
+    0,
+    0,
+    0
+   ],
+   "end": [
+    0,
+    2.405,
+    0
+   ],
+   "radius": 2.2765
+  },
+  {
+   "zone": "arm.left",
+   "shape": "capsule",
+   "attach": "armL",
+   "center": [
+    0,
+    0,
+    0
+   ],
+   "end": [
+    0,
+    -4.16,
+    0
+   ],
+   "radius": 0.7105
+  },
+  {
+   "zone": "arm.right",
+   "shape": "capsule",
+   "attach": "armR",
+   "center": [
+    0,
+    0,
+    0
+   ],
+   "end": [
+    0,
+    -4.16,
+    0
+   ],
+   "radius": 0.7105
+  },
+  {
+   "zone": "leg.left",
+   "shape": "capsule",
+   "attach": "legL",
+   "center": [
+    0,
+    0,
+    0
+   ],
+   "end": [
+    0,
+    -4.94,
+    0.1
+   ],
+   "radius": 0.812
+  },
+  {
+   "zone": "leg.right",
+   "shape": "capsule",
+   "attach": "legR",
+   "center": [
+    0,
+    0,
+    0
+   ],
+   "end": [
+    0,
+    -4.94,
+    0.1
+   ],
+   "radius": 0.812
+  }
+ ],
+ "measured": {
+  "pivotHeight": 5.98,
+  "upperLength": 2.145,
+  "foreLength": 2.015,
+  "height": 11.794,
+  "headTop": 12.145,
+  "footBottom": 0.351,
+  "shoulderSpan": 4.266,
+  "hipX": 0.767,
+  "thighHalfWidth": 0.812,
+  "torsoHalfDepth": 1.1202,
+  "rest": {
+   "rightHand": [
+    2.133,
+    5.746,
+    0
+   ],
+   "leftHand": [
+    -2.133,
+    5.746,
+    0
+   ],
+   "pelvis": [
+    0,
+    5.98,
+    0
+   ],
+   "chest": [
+    0,
+    8.385,
+    0
+   ],
+   "head": [
+    0,
+    11.245,
+    0
+   ]
+  }
+ },
+ "sockets": [
+  {
+   "name": "hand.right",
+   "parent": "rightHand",
+   "position": [
+    0,
+    0,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "hand.left",
+   "parent": "leftHand",
+   "position": [
+    0,
+    0,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "holster.hip",
+   "parent": "pelvis",
+   "position": [
+    1.5266,
+    -0.55,
+    0.1121
+   ],
+   "rotation": [
+    0,
+    0,
+    -0.089879,
+    0.995953
+   ],
+   "worldOffset": [
+    2.125,
+    -0.715,
+    0.156
+   ]
+  },
+  {
+   "name": "sling.back",
+   "parent": "chest",
+   "position": [
+    0.4034,
+    0.35,
+    -1.2657
+   ],
+   "rotation": [
+    0.073785,
+    0.013046,
+    -0.173619,
+    0.981958
+   ],
+   "worldOffset": [
+    0.585,
+    0.455,
+    -1.8352
+   ]
+  }
+ ]
+}

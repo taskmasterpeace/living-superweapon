@@ -1,0 +1,340 @@
+{
+ "format": "pw-asset-package",
+ "formatVersion": 1,
+ "id": "motion.hero-ual2",
+ "version": 1,
+ "kind": "humanoid-motion",
+ "displayName": "Hero action set (Quaternius UAL2 Standard)",
+ "tags": [
+  "humanoid",
+  "grenade",
+  "supine",
+  "carry",
+  "cc0",
+  "get-up"
+ ],
+ "rig": {
+  "skeleton": "pw-pose-bridge@1",
+  "mapping": {
+   "hip": "pelvis",
+   "chest": "spine_03",
+   "head": "Head",
+   "shoulderL": "upperarm_r",
+   "elbowL": "lowerarm_r",
+   "handL": "hand_r",
+   "shoulderR": "upperarm_l",
+   "elbowR": "lowerarm_l",
+   "handR": "hand_l",
+   "hipL": "thigh_r",
+   "kneeL": "calf_r",
+   "footL": "foot_r",
+   "toeL": "ball_r",
+   "hipR": "thigh_l",
+   "kneeR": "calf_l",
+   "footR": "foot_l",
+   "toeR": "ball_l"
+  },
+  "bones": 65
+ },
+ "clips": [
+  {
+   "id": "grenade-throw",
+   "take": "OverhandThrow",
+   "duration": 1.333333,
+   "loop": false,
+   "sampleRate": 60,
+   "frames": 81,
+   "mirror": null,
+   "handedness": "right",
+   "events": [
+    {
+     "t": 0.2833,
+     "type": "grenade-release",
+     "side": "R",
+     "note": "derived:hand-speed-peak"
+    }
+   ],
+   "posture": {
+    "start": "standing",
+    "end": "standing",
+    "measured": {
+     "start": {
+      "posture": "standing",
+      "up": 0.996,
+      "forwardY": -0.084,
+      "hipRatio": 0.956
+     },
+     "end": {
+      "posture": "standing",
+      "up": 0.996,
+      "forwardY": -0.084,
+      "hipRatio": 0.956
+     }
+    }
+   },
+   "category": "action"
+  },
+  {
+   "id": "supine-rise",
+   "take": "LayToIdle",
+   "duration": 1.533333,
+   "loop": false,
+   "sampleRate": 60,
+   "frames": 93,
+   "mirror": null,
+   "handedness": "none",
+   "events": [],
+   "posture": {
+    "start": "supine",
+    "end": "standing",
+    "measured": {
+     "start": {
+      "posture": "supine",
+      "up": 0.035,
+      "forwardY": 0.998,
+      "hipRatio": 0.032
+     },
+     "end": {
+      "posture": "standing",
+      "up": 0.996,
+      "forwardY": -0.084,
+      "hipRatio": 0.956
+     }
+    }
+   },
+   "category": "get-up"
+  },
+  {
+   "id": "hit-knockback",
+   "take": "Hit_Knockback",
+   "duration": 0.833333,
+   "loop": false,
+   "sampleRate": 60,
+   "frames": 51,
+   "mirror": null,
+   "handedness": "none",
+   "events": [],
+   "posture": {
+    "start": "crouch",
+    "end": "supine",
+    "measured": {
+     "start": {
+      "posture": "crouch",
+      "up": 0.664,
+      "forwardY": -0.748,
+      "hipRatio": 0.661
+     },
+     "end": {
+      "posture": "supine",
+      "up": 0.144,
+      "forwardY": 0.985,
+      "hipRatio": 0.047
+     }
+    }
+   },
+   "category": "knockdown"
+  },
+  {
+   "id": "walk-carry",
+   "take": "Walk_Carry_Loop",
+   "duration": 2,
+   "loop": true,
+   "sampleRate": 60,
+   "frames": 121,
+   "mirror": null,
+   "handedness": "none",
+   "events": [
+    {
+     "t": 0.9667,
+     "type": "footstep",
+     "side": "L",
+     "note": "derived:foot-contact"
+    },
+    {
+     "t": 1.9667,
+     "type": "footstep",
+     "side": "R",
+     "note": "derived:foot-contact"
+    }
+   ],
+   "posture": {
+    "start": "standing",
+    "end": "standing",
+    "measured": {
+     "start": {
+      "posture": "standing",
+      "up": 0.938,
+      "forwardY": 0.343,
+      "hipRatio": 0.861
+     },
+     "end": {
+      "posture": "standing",
+      "up": 0.938,
+      "forwardY": 0.343,
+      "hipRatio": 0.861
+     }
+    }
+   },
+   "category": "cycle"
+  },
+  {
+   "id": "power",
+   "take": "Melee_Hook",
+   "duration": 0.466667,
+   "loop": false,
+   "sampleRate": 60,
+   "frames": 29,
+   "mirror": null,
+   "handedness": "left",
+   "events": [
+    {
+     "t": 0.3,
+     "type": "contact",
+     "note": "matches heavy-strike-bank contactStart"
+    }
+   ],
+   "posture": {
+    "start": "crouch",
+    "end": "crouch",
+    "measured": {
+     "start": {
+      "posture": "crouch",
+      "up": 0.999,
+      "forwardY": 0.016,
+      "hipRatio": 0.821
+     },
+     "end": {
+      "posture": "crouch",
+      "up": 0.83,
+      "forwardY": -0.516,
+      "hipRatio": 0.596
+     }
+    }
+   },
+   "category": "crouch-action"
+  },
+  {
+   "id": "power-recover",
+   "take": "Melee_Hook_Rec",
+   "duration": 0.6,
+   "loop": false,
+   "sampleRate": 60,
+   "frames": 37,
+   "mirror": null,
+   "handedness": "left",
+   "events": [
+    {
+     "t": 0,
+     "type": "recovery",
+     "note": "recovery segment begins"
+    }
+   ],
+   "posture": {
+    "start": "crouch",
+    "end": "standing",
+    "measured": {
+     "start": {
+      "posture": "crouch",
+      "up": 0.83,
+      "forwardY": -0.516,
+      "hipRatio": 0.596
+     },
+     "end": {
+      "posture": "standing",
+      "up": 0.99,
+      "forwardY": 0.124,
+      "hipRatio": 0.898
+     }
+    }
+   },
+   "category": "action"
+  }
+ ],
+ "units": {
+  "lengthUnit": "game-unit",
+  "metersPerUnit": 0.19,
+  "up": "+Y",
+  "forward": "+Z",
+  "handedness": "right",
+  "sourceConversion": {
+   "scale": 1,
+   "yawDegrees": 0,
+   "mirrorX": false,
+   "sourceUp": "+Y",
+   "sourceForward": "+Z"
+  }
+ },
+ "budgets": {
+  "profile": "desktop",
+  "measured": {
+   "triangles": 0,
+   "drawCalls": 0,
+   "materials": 0,
+   "bones": 0,
+   "textures": 0,
+   "bytes": 171918
+  },
+  "limits": {
+   "triangles": 1,
+   "drawCalls": 1,
+   "materials": 1,
+   "bones": 1,
+   "textures": 1,
+   "bytes": 217832
+  }
+ },
+ "provenance": {
+  "author": "Quaternius / Gonzalo Furnier",
+  "pack": "Universal Animation Library 2 - Standard",
+  "license": "CC0-1.0",
+  "redistribution": "free",
+  "url": "https://quaternius.itch.io/universal-animation-library-2",
+  "terms": "CC0 1.0 Universal. Free tier file; the paid tier's extra takes are not present and not claimed."
+ },
+ "source": {
+  "adapter": "quaternius-ual@1",
+  "files": [
+   {
+    "path": "assets-src/quaternius/library-2/UAL2_Standard.glb",
+    "sha256": "8cee20ab1bc55130092447e810e26df22dd2803eccc54f52137a7d54d7ab88a8"
+   }
+  ],
+  "recipe": {
+   "path": "authoring/recipes/motion/hero-ual2/recipe.json",
+   "sha256": "5afdeb23f35f6456cdd701f2119e979d6a70f4c4b9f9923fa2fd3be57908ced3"
+  }
+ },
+ "tool": {
+  "name": "powerworld-authoring",
+  "version": "0.1.0",
+  "three": "0.169.0",
+  "adapterVersion": 1
+ },
+ "build": {
+  "options": {},
+  "cacheKey": "92cbf5972831a7b71a588e7c19773bf520cfb67bdcf0a352264acd66ccb907fa",
+  "contentHash": "0405658731da0b90296d248ca98f163ddf16acf523d163da2fc47cbae083b31d",
+  "profile": "desktop"
+ },
+ "acceptance": {
+  "visual": "unapproved",
+  "blockers": [],
+  "note": "Retargeted licensed motion; not visually signed off. LayToIdle is a SUPINE get-up (starts on the back), not a prone one; Hit_Knockback ends supine. This source has no prone animation."
+ },
+ "compatibility": {
+  "poseBridge": {
+   "frameLength": 45,
+   "layout": "8x3 unit segment directions, 5x4 quaternions (hip,chest,head,footL,footR), 1 support ratio",
+   "engineModule": "src/engine/authored-pose.js"
+  }
+ },
+ "outputs": [
+  {
+   "path": "pose-bank.json",
+   "role": "pose-bank",
+   "sha256": "3c46c2c198757463e3e742f6df9ebb1a1d6c0a92f2d90e7b84a30031bd18d73b",
+   "bytes": 171918
+  }
+ ],
+ "packageHash": "96e5ec5b9bd4e340c3514ea457a758282e2cbe6c9bbc3135ddc5076a6f43ebfe"
+}
