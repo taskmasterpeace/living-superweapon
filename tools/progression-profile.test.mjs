@@ -36,3 +36,13 @@ test('new custom package import/reload and ORIGIN kit edit retain progression',(
   const edited={...picks,title:'Edited power kit'};saveCustom(edited,buildDef(edited,record.def.id),roster,store);
   assert.deepEqual(roster[0].progression,profile.progression);
 });
+
+test('sparse form asset patches merge by family without erasing base equipment',()=>{
+  const def=ROSTER.find(d=>d.id==='sarge'),p=profileFromDef(def);
+  p.model.assets={body:'body.hero-standard@1',motion:{locomotion:'motion.hero-ual@1',reload:'motion.hero-ual@1'},equipment:{rifle:'equipment.carbine@1',pistol:'equipment.sidearm@1'}};
+  p.progression={unlocks:{},forms:{4:{model:{assets:{motion:{grenade:'motion.hero-ual2@1'}}}}}};
+  const valid=validateProfile(p),form=valid.progression.forms[4];
+  assert.deepEqual(form.model.assets,{motion:{grenade:'motion.hero-ual2@1'}});
+  assert.deepEqual(valid.model.assets.equipment,{rifle:'equipment.carbine@1',pistol:'equipment.sidearm@1'});
+  assert.doesNotThrow(()=>validateProfile({...valid,model:{...valid.model,assets:{...valid.model.assets,motion:{...valid.model.assets.motion,...form.model.assets.motion}}}}));
+});

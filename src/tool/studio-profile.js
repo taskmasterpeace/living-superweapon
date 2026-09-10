@@ -20,6 +20,8 @@ const legacyStates = ['hover','forward','backward','brake','boost'];
 const strafeStates = ['strafeLeft','strafeRight'];
 const states = [...legacyStates,...strafeStates];
 const fail = message => { throw new Error(message); };
+const ASSET_REF=/^[a-z0-9][a-z0-9._-]{0,79}@[1-9]\d*$/;
+const ASSET_KEYS={motion:['locomotion','reload','grenade'],equipment:['rifle','pistol']};
 function record(value, path) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) fail(`${path} must be an object.`);
   for (const key of Object.keys(value)) {
@@ -59,7 +61,8 @@ export function validateProfile(p) {
   if(p.version!==1)fail('Unsupported profile version. Import a version 1 Studio profile.');
   if(typeof p.heroId!=='string'||!/^[a-z0-9][a-z0-9_-]{0,79}$/.test(p.heroId))fail('Invalid hero ID.');
   record(p.model,'Model');
-  allowed(p.model,['costume','flightStyle','hairColor','locomotion','strikes','heavyStrikes','definition','body','surface'],'Model');
+  allowed(p.model,['costume','flightStyle','hairColor','locomotion','strikes','heavyStrikes','definition','body','surface','assets'],'Model');
+  validateAssets(p.model.assets);
   if(p.model.surface!==undefined&&!['standard','field'].includes(p.model.surface))fail('Unknown material surface.');
   if(p.model.body!==undefined&&!HERO_BODIES.includes(p.model.body))fail('Unknown body source. Choose a bundled superhero body or procedural modules.');
   if(p.model.definition!==undefined&&(typeof p.model.definition!=='number'||!Number.isFinite(p.model.definition)||p.model.definition<0||p.model.definition>1))fail('Body definition must be between 0 and 1.');
@@ -115,15 +118,25 @@ function validateProgression(value,base){
     for(const key of ['model','frame','colors'])if(form[key]!==undefined)record(form[key],`Form ${level} ${key}`);
     // Reuse the exact presentation validator against the completed sparse form.
     // Omit progression in this leaf so nested form validation cannot recur.
-    const leaf={...base,model:{...base.model,...form.model},frame:{...base.frame,...form.frame},colors:{...base.colors,...form.colors}};
+    const leaf={...base,model:mergeModel(base.model,form.model),frame:{...base.frame,...form.frame},colors:{...base.colors,...form.colors}};
     delete leaf.progression;validateProfile(leaf);
   }
   return copy({unlocks,forms});
 }
+function validateAssets(value){
+  if(value===undefined)return;
+  record(value,'Model assets');allowed(value,['body','motion','equipment'],'Model assets');
+  if(value.body!==undefined&&(typeof value.body!=='string'||!ASSET_REF.test(value.body)))fail('Model assets.body must be a portable package reference.');
+  for(const family of ['motion','equipment'])if(value[family]!==undefined){record(value[family],`Model assets.${family}`);allowed(value[family],ASSET_KEYS[family],`Model assets.${family}`);for(const ref of Object.values(value[family]))if(typeof ref!=='string'||!ASSET_REF.test(ref))fail(`Model assets.${family} contains an invalid package reference.`);}
+}
+function mergeModel(base={},patch={}){
+  const assets=patch.assets===undefined?base.assets:{...base.assets,...patch.assets,motion:{...base.assets?.motion,...patch.assets?.motion},equipment:{...base.assets?.equipment,...patch.assets?.equipment}};
+  return {...base,...patch,...(assets===undefined?{}:{assets})};
+}
 export function profileFromDef(def) {
   const model=heroModelOf(def);
   const poses=poseDefaultsForStyle(model.flightStyle);
-  return {version:1,heroId:def.id,model:{body:model.body??'procedural',surface:model.surface??'standard',costume:model.costume,flightStyle:model.flightStyle,hairColor:model.hairColor,definition:model.definition,locomotion:model.locomotion??'authored',strikes:model.strikes??'authored',heavyStrikes:model.heavyStrikes??'authored'},
+  return {version:1,heroId:def.id,model:{body:model.body??'procedural',surface:model.surface??'standard',costume:model.costume,flightStyle:model.flightStyle,hairColor:model.hairColor,definition:model.definition,locomotion:model.locomotion??'authored',strikes:model.strikes??'authored',heavyStrikes:model.heavyStrikes??'authored',...(model.assets===undefined?{}:{assets:copy(model.assets)})},
     frame:frameOf(def),colors:{skin:'#e8c39a',...def.colors},camera:{...CAMERA_DEFAULTS,...model.camera},
     motion:{...MOTION_DEFAULTS,...model.motion},
     environment:{massKg:def.metal?162:90,windResistance:1+Math.max(0,(def.strength??5)-4)**2*.55,fallSafeSpeed:56,fallDamageScale:def.archetype==='soldier'?1:0,...def.environment},

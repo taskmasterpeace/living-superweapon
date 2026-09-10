@@ -86,6 +86,21 @@ test('installer applies valid profile and reports corrupt entries without blocki
   s.setItem(studio.STORAGE_KEY,'{broken');assert.match(studio.installProfiles(roster,s).errors[0],/storage/i);
 });
 
+test('portable authored body, motion families, and equipment references roundtrip exactly',()=>{
+  const p=studio.profileFromDef(base());
+  p.model.assets={body:'body.hero-standard@1',motion:{locomotion:'motion.hero-ual@1',reload:'motion.hero-ual@1',grenade:'motion.hero-ual2@1'},equipment:{rifle:'equipment.carbine@1',pistol:'equipment.sidearm@1'}};
+  const s=storage();studio.saveProfile(p,s);const loaded=studio.loadProfile('sol',s),def=studio.applyProfile(base(),loaded);
+  assert.deepEqual(loaded.model.assets,p.model.assets);assert.deepEqual(def.model.assets,p.model.assets);assert.deepEqual(studio.profileFromDef(def).model.assets,p.model.assets);
+});
+
+test('authored asset maps reject malformed structure but retain unknown portable references',()=>{
+  const good=studio.profileFromDef(base());good.model.assets={body:'future.hero@9',motion:{locomotion:'future.motion@2'},equipment:{rifle:'future.rifle@3'}};
+  assert.deepEqual(studio.validateProfile(good).model.assets,good.model.assets);
+  for(const mutate of [p=>p.model.assets.body='../outside@1',p=>p.model.assets.motion.bad='motion.hero-ual@1',p=>p.model.assets.equipment.rifle='no version',p=>p.model.assets.extra={}]){
+    const p=structuredClone(good);mutate(p);assert.throws(()=>studio.validateProfile(p));
+  }
+});
+
 test('untouched SOL profiles preserve its shipped lead fist, including partial authored overrides',()=>{
   const p=studio.profileFromDef(base());
   assert.equal(p.poses.forward.armRx,-2.94);
