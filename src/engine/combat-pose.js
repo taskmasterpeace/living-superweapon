@@ -21,7 +21,7 @@ const forward = new THREE.Vector3(0, 0, 1), down = new THREE.Vector3(0, -1, 0);
 const xAxis = new THREE.Vector3(1, 0, 0), yAxis = new THREE.Vector3(0,1,0), shoulderTurn=new THREE.Quaternion(), direction = new THREE.Vector3(), origin = new THREE.Vector3();
 const inverse = new THREE.Quaternion(), target = new THREE.Quaternion(), bend = new THREE.Quaternion();
 const keys = ['head', 'cowl', 'armL', 'armR', 'body'];
-const handTarget=new THREE.Vector3(), castCenter=new THREE.Vector3(), chargeCenter=new THREE.Vector3();
+const handTarget=new THREE.Vector3(), castCenter=new THREE.Vector3(), chargeCenter=new THREE.Vector3(),castPoint=new THREE.Vector3();
 const hip=new THREE.Vector3(), hipBase=new THREE.Vector3();
 const jointStart=new THREE.Quaternion(),jointTarget=new THREE.Quaternion();
 const jointAccepted=new THREE.Quaternion();
@@ -340,12 +340,29 @@ export function animateCombatAim(f, dt) {
     // Shoulder/spine aiming moves this pair in all three body-local axes.
     // Keeping only their mean height anchored a small tilted body's hands
     // behind its actual shoulder plane and stranded an otherwise legal shot.
-    castCenter.copy(p.armL.position).add(p.armR.position).multiplyScalar(.5).addScaledVector(direction,(f._directionalPose?.applied?3.05:2.65)*scale);
+    castCenter.copy(p.armL.position).add(p.armR.position).multiplyScalar(.5);
+    const fullReach=(f._directionalPose?.applied?3.05:2.65)*scale;
+    castPoint.copy(state.point);p.body.worldToLocal(castPoint);castPoint.sub(castCenter);
+    const nearDistance=castPoint.length();
+    // Close casts fold at the elbows instead of placing the palms beyond the
+    // target. Preserve the authored long-range stance and the flight carrier.
+    if(nearDistance<fullReach+scale){
+      direction.copy(castPoint).normalize();
+      castCenter.addScaledVector(direction,Math.max(0,nearDistance-scale));
+    }else castCenter.addScaledVector(direction,fullReach);
     chargeCenter.set(.25*scale,6.1*scale,1.55*scale);
     chargeCenter.sub(hip.set(0,p.rig.pivotHeight,0)).applyQuaternion(shoulderTurn).add(hip);
     castCenter.lerp(chargeCenter,state.gather);
     for(const [arm,side] of [[p.armL,-1],[p.armR,1]]) {
       handTarget.copy(castCenter).add(origin.set(side*.58*scale,0,0).applyQuaternion(shoulderTurn));
+      if(nearDistance<fullReach+scale){
+        // A fixed pair spacing can turn one forearm across the target on small
+        // rigs. Converge each arm from its own shoulder, stopping short of aim.
+        castPoint.copy(state.point);p.body.worldToLocal(castPoint);castPoint.sub(arm.position);
+        const fraction=Math.min(.65,fullReach/Math.max(.001,castPoint.length()));
+        castPoint.multiplyScalar(fraction).add(arm.position);
+        handTarget.lerp(castPoint,1-state.gather);
+      }
       origin.set(side,-.6,-.2).applyQuaternion(shoulderTurn);
       reachArm(arm,handTarget,side,weight,origin);
     }
