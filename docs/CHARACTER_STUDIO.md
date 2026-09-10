@@ -1,0 +1,48 @@
+# Build and play a custom fighter
+
+Run `npm run dev`, then open [Character Studio](http://localhost:5180/studio.html). The editor and game use the same modular rig, authored ground locomotion, flight poses, powers and contact simulation. The city/map is outside this workflow.
+
+## Source-backed superhero anatomy
+
+In **Model → Body source**, choose **Quaternius · Superhero male** or **Quaternius · Superhero female** to use a bundled CC0 weighted body on the production rig. **Procedural modules** remains the default; existing saves are not migrated. Body selection supports Undo/Redo, Save local, transformation forms and the existing character-package round trip. Play Test uses the selected body, not a separate asset viewer.
+
+The source body uses a fitted suit palette, boots, chest emblem, hair, signature headgear and weapons. Body definition, neck thickness and procedural costume shells are retained in the draft but do not reshape the imported anatomy. The main inspector explains and disables/hides those inapplicable controls; switch back to Procedural modules to edit them.
+
+These body files contain **no animation clips**. They follow the same authored ground/light-strike/bare-hand-heavy motion, procedural flight/guard/grab and armed-heavy motion, final contact and ragdolls as the procedural body. This is a two-body catalog, **not arbitrary GLB/FBX upload support**. Packages store a known catalog ID, not mesh binaries. See [source provenance](../assets-src/quaternius/base-characters/PROVENANCE.md) and [implementation/evidence notes](ASSET_BODY_PASS.md).
+
+## Start from a working kit
+
+**Teleport and deflection:** New character / Edit power kit → **Evade (2×tap)** offers Snap Step, Blink and Rift Step with visible range/ki/recovery descriptions. **Guard → Deflect** returns eligible frontal shots while spending guard meter. All three degrees and Deflect survive Save/reload and packages. **Camera → Opponent visibility cutaway** adjusts close-lock foreground visibility; zero disables it. See [the arena combat pass](ARENA_DEFENSE_PASS.md) for controls and limits.
+
+1. Choose **Example characters** → **Create local copy · HELION** for transformation authoring, or COMET for remote/split attacks. Each choice creates a separate saved fighter; it never replaces one. Alternatively, **New character** opens ORIGIN to choose your own kit.
+2. Use **Edit power kit** for stats, powers, guard and evade. Appearance is in Studio's **Model** tab: costume, proportions, hair/palette, cape and flight language. **Body surface → Body definition** blends smooth fabric into stronger chest, abdomen and back planes without changing strength or reach. **Ground movement** selects authored or procedural locomotion. **Fighting motion → Light strike animation / Heavy punch animation** independently select authored jab/cross and heavy-hook motion or their procedural fallbacks, saved per character.
+3. Preview **Forward flight**, **Boost**, **Air brake**, hover and strafing. **Pose** edits the actual flight joints for the selected state; **Flight** tunes acceleration, braking and trails. Changing flight language replaces that draft's pose family; Undo restores it. **Ground walk / jog / sprint** previews the actual licensed source retargeting, with take names and durations; these clips are not edited through the flight-joint sliders.
+4. Keep **Game camera** selected when judging attack visibility. **Camera** exposes framing/FOV and the combat preset. The reference panel distinguishes footage from the original game rig. For close inspection of a combat pose, choose **Orbit / Front / Side / Rear → Isolate fighter**: the selected body is framed alone, including its active transformation size. Only the opponent's mesh is hidden; contact still runs. Uncheck to fit both fighters again. Game camera always restores the full encounter. This inspection choice is not saved character data.
+5. In **Attacks**, select an actual power slot. Supported beam/projectile/volley/charge parameters feed the production attack. Use **Attack sequence** and target motion to test contact. For punches, select **Motion state → Melee sequence**, then **Melee stage → Grounded / Airborne** and a light/heavy/block/grab sequence. The source label reports the actual jab/cross or heavy-hook take/time. The bare-hand hook includes recovery; armed heavies and grabs remain procedural. Stage choice is rehearsal-only, not character data. These encounters and opposing-projectile fixtures are scripted production combat, not AI/balance certification. Second-press splitting/detonation must be enabled explicitly.
+6. In **Progression**, add appearance forms and slot unlock levels. HELION demonstrates levels 4/7/10. **Form body definition** can override the base surface; leave it blank to inherit. **Preview level** applies real gates/forms but does not simulate XP/stat growth or change a match's starting level. Combat preview resets/replays on level change so old charges cannot remain active below their unlock level.
+7. **Save local**, then **Play Test**. Saved profiles load when the game page loads. Editing a draft does not silently modify an already-running game page or source files.
+8. **Export JSON** for a backup. A custom character exports its ORIGIN recipe plus presentation, supported attack overrides and progression. **Import JSON** installs a new editable copy. Shipped heroes export a profile, not a complete custom character package.
+
+## Important boundaries
+
+- Saves live in this browser and origin. `localhost` and `127.0.0.1`, different ports, and different browsers have separate storage. Export before clearing browser data.
+- Level gates belong to slots, so replacing a power retains its slot's explicit gate. Attack parameter overrides belong to the source ability; incompatible overrides are visibly dropped when that ability changes.
+- Form appearances merge from the base fighter, not cumulatively from the previous form. Changing a form's flight language selects that family's defaults; base custom joint targets do not transfer to a different language.
+- Imported packages contain validated data, not executable plugins. Arbitrary GLB/FBX/audio-file imports are not implemented. Fixed licensed ground, light-strike and bare-hand heavy-hook banks are integrated; packages carry their independent authored/procedural choices, not binary source assets. See [ground motion](AUTHORED_LOCOMOTION_PASS.md), [light strikes](AUTHORED_STRIKE_PASS.md) and [heavy punches](AUTHORED_HEAVY_PASS.md). Armed heavies retain their procedural motion. Preview is intentionally silent; recorded combat audio plays in the game after audio is unlocked by interaction.
+- No overall quality score or complete BFP/network-parity claim. Current evidence and remaining gaps: [BFP parity ledger](BFP_PARITY_LEDGER.md).
+
+## Check punches, flight and ground animation
+
+With the dev server on port 5180, run `npm run test:animations`. It serially runs the ground, strike, hero-hover, flight-language and flight suites, including real Studio and game browser checks. `npm run build` is a separate shipping gate.
+
+The live ground check now exercises one complete input-driven sequence: run → block → resume → light/heavy ground punches → takeoff → light/heavy aerial punches → descend/land → run again. It samples the actual punch shoulder, source take and contact/recovery states, checks that strikes release their overlay, and checks that ground locomotion resumes after landing. No game animation or source assets were replaced by this verification pass.
+
+September 7 refresh: the combined command and build passed, plus `ground-motion-review.mjs`, `strike-motion-review.mjs` and `flight-language-reel.mjs`. Evidence is in `artifacts/locomotion/`, `artifacts/strikes/` and `artifacts/flight-review/languages/`. The animation-authoring acceptance matrix guided source/target phase comparisons, moving loops, armed contact and flight-transition recording. This JavaScript repo uses its existing Node/browser gates, not the skill's example TypeScript/Vitest paths. Build retains the existing large-chunk warning.
+
+Flight's six families are procedural animation, not imported flight clips. Walk/jog/sprint and bare-hand punches have source-backed motion. Ground travel now turns the lower body independently of ranged aim; retreat uses derived reverse playback, not an imported backstep. Guards, grabs and armed heavy swings remain procedural, and dedicated weapon-carry/eight-direction locomotion clips remain an asset gap. These checks establish playback coverage, not an overall feel rating.
+
+## Directional shooting and comic-informed poses
+
+In **Attacks**, choose the actual power slot, then **Beam pose** (beam) or **Attack pose** (charge). Only choices compatible with its emitter appear: eye emitters offer **Optic focus**, hand emitters **Palm** / **Two hand**, and chest emitters **Chest brace**, plus Automatic. The pose choice does not turn a hand attack into an eye/chest attack. TITAN's Q Reactor Burst is a real chest-charge example. Save local and character packages retain the choice.
+
+In the stage's combat controls, **Fighter motion → Ground · left and return / right and return / forward and return** rehearses moving shots against the actual contact target. Legs retain the source gait while shoulders, head and the driven weapon track the attack. This motion setting is inspection-only; it is not saved character data. Use front, both profiles and rear inspection views for clipping, then Game camera for combat readability. Details and source distinctions: [directional combat pass](DIRECTIONAL_COMBAT_PASS.md).

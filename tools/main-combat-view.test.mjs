@@ -29,6 +29,15 @@ for(const [name,patch] of [['pause',{running:false}],['title',{hud:{titleOpen:tr
   assert.equal(policy.combatLookActive({...state(),...patch}),false);
  });
 
+test('PowerWorld knockout retains BFP view ownership without capturing combat input',()=>{
+ const g={...state(),modeId:'powerworld',ms:{chaseCam:true,powerworld:true},player:{alive:false}};
+ assert.equal(policy.combatView(g),'bfp','Own KO switched the PowerWorld view to legacy');
+ assert.equal(policy.combatLookActive(g),false,'Dead player acquired combat input');
+ assert.equal(policy.combatView({...g,humans:[{},{}]}),'shared');
+ assert.equal(policy.combatView({...g,mapCam:{}}),'override');
+ assert.equal(policy.combatView({...g,player:null}),'legacy');
+});
+
 test('explicit native BFP camera keeps city simulation and authored fixed framing',()=>{
  const x=mainCombatFixture();try{
   const {w,p}=x,before={pos:p.pos.toArray(),vel:p.vel.toArray(),flying:p.flying,flightTier:p.flightTier,open:p._openSky};

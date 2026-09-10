@@ -972,13 +972,25 @@ export class Game {
    *
    * @returns {object|null} the record that was hit (already marked dead if it broke).
    */
-  hitFlung(src, pos, radius, amount) {
+  // Optional segment support from PowerWorld: callers with a previous position
+  // can sweep through a prop. Native projectile contacts already sweep before
+  // reaching this helper; they and beam tips retain the point-query contract.
+  hitFlung(src, pos, radius, amount, prev) {
     const list = this._flung;
     if (!list || !list.length || !src) return null;
     for (const fl of list) {
       if (fl.dead || fl.by === src) continue;
       if (fl.by && !this.isFoe(fl.by, src)) continue;         // only the side it was thrown AT may break it
-      const dx = fl.x - pos.x, dy = fl.y - pos.y, dz = fl.z - pos.z;
+      let px = pos.x, py = pos.y, pz = pos.z;
+      if (prev) {                                             // closest point of the swept segment to the rock
+        const sx = pos.x - prev.x, sy = pos.y - prev.y, sz = pos.z - prev.z;
+        const ll = sx * sx + sy * sy + sz * sz;
+        if (ll > 1e-8) {
+          const t = Math.max(0, Math.min(1, ((fl.x - prev.x) * sx + (fl.y - prev.y) * sy + (fl.z - prev.z) * sz) / ll));
+          px = prev.x + sx * t; py = prev.y + sy * t; pz = prev.z + sz * t;
+        }
+      }
+      const dx = fl.x - px, dy = fl.y - py, dz = fl.z - pz;
       if (dx * dx + dy * dy + dz * dz > (fl.r + radius) * (fl.r + radius)) continue;
       fl.hp -= amount || 0;
       const at = new THREE.Vector3(fl.x, fl.y, fl.z);
@@ -3596,8 +3608,8 @@ export class Game {
     if (!this._tapT) this._tapT = {};
     let bfx, bfz, brx, brz;                       // evade basis: fwd (bfx,bfz), right (brx,brz)
     if (p._openSky && GAIT_OWNER[p.gait] === 'air') {
-      const cf = _v.set(0, 0, 0); this.world.camera.getWorldDirection(cf);
-      const cl = Math.hypot(cf.x, cf.z) || 1; bfx = cf.x / cl; bfz = cf.z / cl;
+      const cb = this.world.camBasis;   // ⚠ camBasis, NOT getWorldDirection — the offset carries the spin bias (see the flight-forward note above)
+      const cl = Math.hypot(cb.x, cb.z) || 1; bfx = cb.x / cl; bfz = cb.z / cl;
       brx = -bfz; brz = bfx;
     } else {
       let fx = p.aim3.x, fz = p.aim3.z; const fl = Math.hypot(fx, fz);

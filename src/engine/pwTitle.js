@@ -302,7 +302,23 @@ body.phone #pwTitle h1{ font-size:34px; }
       </div>`;
 
     // ---- wiring ----
-    for (const t of el.querySelectorAll('.pwtab')) t.onclick = () => { picking = t.dataset.pick; render(); };
+    // ⚠ THE FILMSTRIP IS THE PICKER FOR *YOU* (Robert, 2026-07-28: "use the character selector we
+    // had earlier — this is what we should have"). Clicking YOU opens the DBZ-arena SELECT YOUR
+    // CHARACTER screen (hudSelect.js, live 3D hero + filmstrip); ENTER there launches straight into
+    // PowerWorld against the currently-picked opponent. ESC drops back to this door (onSelectBack —
+    // without it, showSelect's back path would open the CITY title on the PowerWorld page).
+    // The OPPONENT keeps the grid: assigning a foe is admin, picking YOUR fighter is the ceremony.
+    for (const t of el.querySelectorAll('.pwtab')) t.onclick = () => {
+      if (t.dataset.pick === 'you' && hud.showSelect) {
+        hud.onSelectBack = () => {};                       // the door is still mounted beneath
+        hud.showSelect((cfg) => {
+          selYou = ROSTER.find(r => r.id === cfg.p1) || selYou; save();
+          ctx.enter({ mode: 'powerworld', p1: selYou.id, p2: selFoe.id, twoPlayer: two, aiLevel: ai, encounter: two ? 'sparring' : encounter, cameraPreset:two?'character':cameraPreset });
+        }, { mode: 'powerworld', modeName: 'POWERWORLD', p1: selYou.id });
+        return;
+      }
+      picking = t.dataset.pick; render();
+    };
     for (const b of el.querySelectorAll('#pwTwo button')) b.onclick = () => { two = b.dataset.two === '1'; if (two) { picking = 'you'; encounter = 'sparring'; } save(); render(); };
     for (const b of el.querySelectorAll('#pwEncounter button')) b.onclick = () => { if (b.disabled) return; encounter = b.dataset.encounter; render(); };
     for (const b of el.querySelectorAll('#pwCamera button')) b.onclick = () => {if(b.disabled)return;cameraPreset=b.dataset.camera;save();render();};

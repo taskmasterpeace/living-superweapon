@@ -527,7 +527,7 @@ export function boot(P = PROFILE_FULL) {
       const i = digits[e.code] + 1;
       if (i <= 4) { selectHand(game, game.player, i); hud.updateHands && hud.updateHands(game.player); }
     }
-    if (KM.digitsSwap && e.code in digits) {
+    if (KM.digitsSwap && e.code in digits && game.modeId !== 'powerworld') {   // PW: no mid-match hero swap — an Ascendants mechanic (2026-07-28)
       const page = e.shiftKey ? ((game._digitPage = ((game._digitPage || 0) + 1) % Math.ceil(ROSTER.length / 10))) : (game._digitPage || 0);
       const idx = page * 10 + digits[e.code];
       const c = ROSTER[idx];
