@@ -1,5 +1,6 @@
 // WAR WORLD: ASCENDANTS — Fighter: articulated figure, stats, physics, flight, combat, ability state.
 import { moodMult } from './psyche.js';
+import {mergeAuthoredSelection} from '../data/authored-selection.js';
 import {firearmAmmo,updateFirearmReload} from './firearm-ammo.js';
 import {advanceThrowAction,animateThrowAction,restoreThrowPose,cancelInterruptedThrow} from './throwable-action.js';
 import {animateReloadPose,restoreReloadPose} from './reload-presentation.js';
@@ -79,6 +80,8 @@ const appearanceKey = value => JSON.stringify(value, function(key,item){
 });
 function formAppearance(base,form){
   const model={...copyAppearance(base.model),...copyAppearance(form?.model)};
+  const assets=mergeAuthoredSelection(base.model.assets,form?.model?.assets);
+  if(assets!==undefined)model.assets=assets;
   if(base.model.wake||form?.model?.wake)model.wake={...base.model.wake,...form?.model?.wake};
   // Authored pose targets belong to their flight language. A form that chooses
   // another language starts from that language's defaults, unless it authors poses.

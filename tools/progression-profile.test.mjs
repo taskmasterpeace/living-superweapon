@@ -46,3 +46,12 @@ test('sparse form asset patches merge by family without erasing base equipment',
   assert.deepEqual(valid.model.assets.equipment,{rifle:'equipment.carbine@1',pistol:'equipment.sidearm@1'});
   assert.doesNotThrow(()=>validateProfile({...valid,model:{...valid.model,assets:{...valid.model.assets,motion:{...valid.model.assets.motion,...form.model.assets.motion}}}}));
 });
+
+test('sparse form asset validation rejects malformed maps before merging defaults',()=>{
+  for(const assets of [null,[],{motion:null},{motion:[]},{equipment:null},{equipment:[]}]){
+    const p=profileFromDef(ROSTER.find(d=>d.id==='sarge'));
+    p.model.assets={motion:{locomotion:'motion.hero-ual@1'},equipment:{rifle:'equipment.carbine@1'}};
+    p.progression={unlocks:{},forms:{4:{model:{assets}}}};
+    assert.throws(()=>validateProfile(p),`malformed sparse assets must not be normalized away: ${JSON.stringify(assets)}`);
+  }
+});

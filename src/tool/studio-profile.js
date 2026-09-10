@@ -4,6 +4,7 @@ import { CAMERA_DEFAULTS, MOTION_DEFAULTS, WAKE_DEFAULTS, SURFACE_WAKE_DEFAULTS,
 import { applyAttackOverrides, attackOverridesFromDef, validateAttackOverrides } from '../data/attack-tuning.js';
 import {validateEffects} from '../data/effects-profile.js';
 import {FRONTLINE_CAMERA} from '../data/camera-presets.js';
+import {mergeAuthoredSelection} from '../data/authored-selection.js';
 
 export const STORAGE_KEY = 'lsw.studio.profiles.v1';
 export const LIMITS = {
@@ -116,6 +117,7 @@ function validateProgression(value,base){
     record(form,`Form ${level}`);allowed(form,['name','model','frame','colors'],`Form ${level}`);
     if(form.name!==undefined&&(typeof form.name!=='string'||form.name.length>32||/[<>\u0000-\u001f]/.test(form.name)))fail('Form name must be plain text, at most 32 characters.');
     for(const key of ['model','frame','colors'])if(form[key]!==undefined)record(form[key],`Form ${level} ${key}`);
+    validateAssets(form.model?.assets);
     // Reuse the exact presentation validator against the completed sparse form.
     // Omit progression in this leaf so nested form validation cannot recur.
     const leaf={...base,model:mergeModel(base.model,form.model),frame:{...base.frame,...form.frame},colors:{...base.colors,...form.colors}};
@@ -130,7 +132,7 @@ function validateAssets(value){
   for(const family of ['motion','equipment'])if(value[family]!==undefined){record(value[family],`Model assets.${family}`);allowed(value[family],ASSET_KEYS[family],`Model assets.${family}`);for(const ref of Object.values(value[family]))if(typeof ref!=='string'||!ASSET_REF.test(ref))fail(`Model assets.${family} contains an invalid package reference.`);}
 }
 function mergeModel(base={},patch={}){
-  const assets=patch.assets===undefined?base.assets:{...base.assets,...patch.assets,motion:{...base.assets?.motion,...patch.assets?.motion},equipment:{...base.assets?.equipment,...patch.assets?.equipment}};
+  const assets=mergeAuthoredSelection(base.assets,patch.assets);
   return {...base,...patch,...(assets===undefined?{}:{assets})};
 }
 export function profileFromDef(def) {
