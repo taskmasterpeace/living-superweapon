@@ -3,9 +3,12 @@
 import * as THREE from 'three';
 import {firearmEmitter} from './weapon-emission.js';
 import {reachArm} from './hero-rig.js';
+import {authoredParts,samplePoseFrame,applyAuthoredPose} from './authored-pose.js';
+import {resolveMotionClip} from './motion-banks.js';
 
 const target=new THREE.Vector3(),start=new THREE.Vector3(),pole=new THREE.Vector3(),endPole=new THREE.Vector3();
 const rotation=new THREE.Quaternion(),parent=new THREE.Quaternion();
+const actionFrame=new Float64Array(45);
 const smooth=t=>{t=THREE.MathUtils.clamp(t,0,1);return t*t*(3-2*t);};
 const ramp=(t,a,b)=>smooth((t-a)/(b-a));
 
@@ -28,10 +31,12 @@ export function animateReloadPose(f){
  if(!s||s.rig!==p.rig||s.magazine!==magazine){
   resetReloadProps(f);
   s=f._reloadPose={rig:p.rig,magazine,bolt,magazineRest:magazine.position.clone(),boltRest:bolt.position.clone(),
-   base:[arm,...arm.children.slice(1,3)].map(part=>({part,position:new THREE.Vector3(),quaternion:new THREE.Quaternion()}))};
+   base:authoredParts(p).map(part=>({part,position:new THREE.Vector3(),quaternion:new THREE.Quaternion()}))};
  }
  for(const b of s.base){b.position.copy(b.part.position);b.quaternion.copy(b.part.quaternion);}s.applied=true;
  const t=THREE.MathUtils.clamp(r.elapsed/r.duration,0,1);
+ const motion=r.motion??resolveMotionClip(f,'reload','reload');
+ if(motion?.clip){samplePoseFrame(motion.clip,t,actionFrame,false);applyAuthoredPose(f,actionFrame,1,{legs:false,hips:false,support:false,body:false,head:false,armR:false});}
  // Local -Z points below the upright rifle. Draw straight out of the well,
  // then arc forward in the free hand and return before the insert cue at 65%.
  const draw=ramp(t,.2,.31)*(1-ramp(t,.49,.65));

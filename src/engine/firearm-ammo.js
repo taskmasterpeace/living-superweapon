@@ -1,4 +1,5 @@
 import {resetReloadProps} from './reload-presentation.js';
+import {resolveMotionClip} from './motion-banks.js';
 // Physical ammunition belongs to the slot, never a mesh or the shared roster def.
 export function firearmAmmo(slot){
  const d=slot?.def;if(d?.type!=='rifle'||!Number.isInteger(d.magazine)||d.magazine<1){if(slot)slot.ammo=null;return null;}
@@ -11,7 +12,8 @@ export function cancelFirearmReload(f){resetReloadProps(f);f._firearmReload=null
 export function requestReload(f,key,g){
  const slot=f.slots[key],a=firearmAmmo(slot);
  if(!a||f._throwAction||f._firearmReload||interrupted(f)||a.loaded>=a.capacity||a.reserve<=0||Object.values(f.slots).some(s=>s.charging||s.building||s.drawing||s.active?.sustaining))return false;
- f._firearmReload={key,slot,elapsed:0,duration:Math.max(.25,slot.def.reloadTime??2.2),phase:0};
+ const motion=resolveMotionClip(f,'reload','reload');
+ f._firearmReload={key,slot,elapsed:0,duration:Math.max(.25,slot.def.reloadTime??2.2),phase:0,motion};
  slot._poseUntil=-1;if(f._rangedPose?.slot===key)f._rangedPose=null;
  cue(g,'reload',f);return true;
 }
@@ -20,7 +22,9 @@ export function updateFirearmReload(f,dt,g){
  if(interrupted(f)||f.slots[r.key]!==r.slot){cancelFirearmReload(f);return;}
  if(g?.paused||g?.combatOverlayOpen||g?.hud?.titleOpen||f.hitstop>0||!Number.isFinite(dt)||dt<=0)return;
  r.elapsed+=dt;
- const phases=[[.2,'reload-eject'],[.65,'reload-insert'],[.9,'reload-chamber']];
+ const imported=r.motion?.metadata?.events??[];
+ const at=(type,fallback)=>{const event=imported.find(e=>e.type===type);return event&&r.motion.clip.duration>0?event.t/r.motion.clip.duration:fallback;};
+ const phases=[[at('mag-out',.2),'reload-eject'],[at('mag-in',.65),'reload-insert'],[.9,'reload-chamber']];
  while(r.phase<phases.length&&r.elapsed>=r.duration*phases[r.phase][0])cue(g,phases[r.phase++][1],f);
  if(r.elapsed+1e-8<r.duration)return;
  const a=firearmAmmo(r.slot),rounds=Math.min(a.capacity-a.loaded,a.reserve);a.loaded+=rounds;a.reserve-=rounds;

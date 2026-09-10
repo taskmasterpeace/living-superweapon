@@ -39,19 +39,20 @@ function legPose(leg,frame,offset,ankle,weight){
  leg.userData.boot.quaternion.slerp(q,weight);
 }
 // Visual-only anatomy. Motion/collision roots and fixed segment lengths are never written.
-export function applyAuthoredPose(f,frame,w,{legs=true,hips=false,support=true,anchorFromCurrent=false}={}){
+export function applyAuthoredPose(f,frame,w,{legs=true,hips=false,support=true,anchorFromCurrent=false,body=true,head=true,armL=true,armR=true}={}){
  const p=f.parts,scale=p.rig.pivotHeight/4.6;
  hip.set(0,p.rig.pivotHeight,0);before.copy(hip);if(anchorFromCurrent)before.applyQuaternion(p.body.quaternion);
- p.body.quaternion.slerp(q.fromArray(frame,28),w);bodyInverse.copy(p.body.quaternion).invert();
- point.copy(hip).applyQuaternion(p.body.quaternion);p.body.position.add(before.sub(point));
+ if(body){p.body.quaternion.slerp(q.fromArray(frame,28),w);point.copy(hip).applyQuaternion(p.body.quaternion);p.body.position.add(before.sub(point));}
+ bodyInverse.copy(p.body.quaternion).invert();
  if(hips){
   // Source hips and shoulders twist independently. Reposition the existing hip
   // pivots around the pelvis, not the entity root; segment lengths stay fixed.
   q2.fromArray(frame,24);q.copy(bodyInverse).multiply(q2);p.pelvis.quaternion.slerp(q,w);
   for(const leg of [p.legL,p.legR]){point.copy(leg.position).sub(hip).applyQuaternion(q2).applyQuaternion(bodyInverse).add(hip);leg.position.lerp(point,w);}
  }
- p.head.quaternion.slerp(q.fromArray(frame,32).premultiply(bodyInverse),w);
- for(const [arm,offset,side]of [[p.armL,0,-1],[p.armR,6,1]]){
+ if(head)p.head.quaternion.slerp(q.fromArray(frame,32).premultiply(bodyInverse),w);
+ for(const [arm,offset,side,enabled]of [[p.armL,0,-1,armL],[p.armR,6,1,armR]]){
+  if(!enabled)continue;
   upper.fromArray(frame,offset).applyQuaternion(bodyInverse).normalize();lower.fromArray(frame,offset+3).applyQuaternion(bodyInverse).normalize();
   point.copy(arm.position).addScaledVector(upper,arm.userData.upperLength).addScaledVector(lower,arm.userData.foreLength);reachArm(arm,point,side,w,upper);
  }

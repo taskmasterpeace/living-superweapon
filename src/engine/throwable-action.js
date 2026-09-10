@@ -2,8 +2,11 @@ import * as THREE from 'three';
 import {reachArm} from './hero-rig.js';
 import {constrainArmCover} from './arm-cover.js';
 import {updateSoldierLoadoutPresentation} from './soldier-loadout-presentation.js';
+import {authoredParts,samplePoseFrame,mirrorPoseFrame,applyAuthoredPose} from './authored-pose.js';
+import {resolveMotionClip} from './motion-banks.js';
 
 const point=new THREE.Vector3(),offset=new THREE.Vector3(),pole=new THREE.Vector3(),start=new THREE.Vector3();
+const actionFrame=new Float64Array(45);
 const smooth=t=>{t=THREE.MathUtils.clamp(t,0,1);return t*t*(3-2*t);};
 const cue=(f,id)=>f._game?.audio?.soundLibrary?.play(id,{pos:f.pos,loop:false});
 const interrupted=f=>f.alive===false||f.state==='ko'||f.staggerT>0||f.stunT>0||f.frozenT>0||f.sleepT>0||f.downedT>0||f.grabbedBy||f.grabbing||f.grabState||f.mstate||f._abilityMeleePose||f.hanging||f._carry||f.guarding||f.meleeCharge>0||f.strikeActive>0||f._disarmT>0||f._aircraftVehicle||f._scoutVehicle;
@@ -18,7 +21,8 @@ export function beginThrowAction(f,slot,release){
  updateSoldierLoadoutPresentation(f);if(hand.userData.gripOccupied)return false;
  const prop=new THREE.Mesh(new THREE.CapsuleGeometry(.22,.24,3,8),new THREE.MeshStandardMaterial({color:slot.def.color||'#8a915a',roughness:.75,metalness:.25}));
  prop.name='held-grenade';prop.position.set(0,-.13,.15);prop.castShadow=true;hand.add(prop);
- f._throwAction={slot,side,prop,release,rig:f.parts.rig,elapsed:0,releaseAt:timing(slot.def.throwWindup,.24,1.5,.38),recovery:timing(slot.def.throwRecovery,.15,1,.32),released:false,releasePosition:new THREE.Vector3()};
+ const motion=resolveMotionClip(f,'grenade','grenade-throw');
+ f._throwAction={slot,side,prop,release,rig:f.parts.rig,elapsed:0,releaseAt:timing(slot.def.throwWindup,.24,1.5,.38),recovery:timing(slot.def.throwRecovery,.15,1,.32),released:false,releasePosition:new THREE.Vector3(),motion};
  cue(f,'grenade-prepare');return true;
 }
 export function restoreThrowPose(f){
@@ -46,9 +50,15 @@ export function advanceThrowAction(f,dt){
 export function animateThrowAction(f){
  const m=f._throwAction,p=f.parts;if(!m||m.rig!==p.rig)return;
  const arm=p.armL,hand=arm.children[2];let s=f._throwPose;
- if(!s||s.rig!==p.rig)s=f._throwPose={rig:p.rig,base:[arm,...arm.children.slice(1,3)].map(part=>({part,position:new THREE.Vector3(),quaternion:new THREE.Quaternion()}))};
+ if(!s||s.rig!==p.rig)s=f._throwPose={rig:p.rig,base:authoredParts(p).map(part=>({part,position:new THREE.Vector3(),quaternion:new THREE.Quaternion()}))};
  for(const b of s.base){b.position.copy(b.part.position);b.quaternion.copy(b.part.quaternion);}s.applied=true;
  const scale=p.rig.pivotHeight/4.6,t=m.elapsed/m.releaseAt*.38;
+ if(m.motion?.clip){
+  const event=m.motion.metadata?.events?.find(e=>e.type==='grenade-release'),releasePhase=THREE.MathUtils.clamp((event?.t??m.motion.clip.duration*.35)/m.motion.clip.duration,.01,.99);
+  const phase=m.elapsed<=m.releaseAt?m.elapsed/m.releaseAt*releasePhase:releasePhase+(1-releasePhase)*Math.min(1,(m.elapsed-m.releaseAt)/m.recovery);
+  samplePoseFrame(m.motion.clip,phase,actionFrame,false);mirrorPoseFrame(actionFrame);
+  applyAuthoredPose(f,actionFrame,1,{legs:false,hips:false,support:false,body:false,head:false,armR:false});
+ }
  const wind=smooth(t/.22),cast=smooth((t-.22)/.16),recovery=smooth((m.elapsed-m.releaseAt)/m.recovery);
  const weight=smooth(t/.12)*(1-recovery);
  // Wide overarm arc: elbow and shell pass outside the helmet and jacket.
