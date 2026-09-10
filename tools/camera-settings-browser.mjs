@@ -15,7 +15,13 @@ const enter=async()=>{
  await page.locator('#pwGo').click();
  await page.waitForFunction(()=>window.PW?.game?.running&&PW.game.pwStage?.frontlineReady);
 };
-const options=async()=>{await page.keyboard.press('Escape');await page.locator('#hPaused [data-p="options"]').click();await page.locator('[data-camera-option="shoulder"]').waitFor();};
+const options=async()=>{
+ await page.keyboard.press('Escape');await page.locator('#hPaused [data-p="options"]').click();
+ await page.locator('[data-camera-option="shoulder"]').waitFor();
+ assert.equal(await page.evaluate(()=>PW.hud.optionsEl.contains(document.activeElement)),true,'Options takes focus from pause menu');
+ await page.keyboard.press('Tab');
+ assert.equal(await page.evaluate(()=>PW.hud.optionsEl.contains(document.activeElement)&&!PW.hud.titleOpen),true,'First Tab stays in Options and does not open roster');
+};
 try{
  await enter();await options();console.log('Opened native Options');
  const authored=await page.evaluate(()=>JSON.stringify(PW.game.player.def.model?.camera));

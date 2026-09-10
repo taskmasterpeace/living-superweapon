@@ -906,7 +906,13 @@ export class HUD {
   completeTutorial() { this.hideTutorial(); }
   hideTutorial() { if (this.el.tut) this.el.tut.style.display = 'none'; }
   overlayOpen() { return [this.optionsEl, this.howtoEl, this.rankingsEl, this.bracketEl, this.atlasEl, this.codexEl, this.damageEl].some(e => e && e.style.display === 'flex'); }
-  closeOverlays() { if (this._atlasUI) this._atlasUI.close(); for (const e of [this.optionsEl, this.howtoEl, this.rankingsEl, this.atlasEl, this.codexEl, this.damageEl]) if (e) e.style.display = 'none'; }   // the bracket closes only through its own buttons
+  closeOptions() {
+    if(this.optionsEl?.style.display!=='flex')return;
+    this.optionsEl.style.display='none';
+    const opener=this._optionsReturnFocus;this._optionsReturnFocus=null;
+    if(opener?.isConnected&&opener.getClientRects().length)opener.focus({preventScroll:true});
+  }
+  closeOverlays() { if (this._atlasUI) this._atlasUI.close(); this.closeOptions(); for (const e of [this.howtoEl, this.rankingsEl, this.atlasEl, this.codexEl, this.damageEl]) if (e) e.style.display = 'none'; }   // the bracket closes only through its own buttons
 
   // ================= THE CODEX — the full case file on one superweapon =================
   // Every line is DERIVED from live data (kit numbers, the Elo book, AI doctrine, the registry)
@@ -917,11 +923,22 @@ export class HUD {
     const cameraPreference=getCameraPreferences();
     const cameraProfile=cameraProfileOf({def:this.game.player?.def,_cameraPreset:this.game.player?._cameraPreset},cameraPreference)||CAMERA_DEFAULTS;
     const cameraSlider=(key,label,step)=>`<div class="orow"><label class="ol" for="camera-${key}">${label}</label><input id="camera-${key}" type="range" data-camera-value="${key}" min="${CAMERA_OPTION_LIMITS[key][0]}" max="${CAMERA_OPTION_LIMITS[key][1]}" step="${step}" value="${cameraProfile[key]??CAMERA_DEFAULTS[key]}"><output class="ov" for="camera-${key}">${cameraProfile[key]??CAMERA_DEFAULTS[key]}</output></div>`;
-    if(this.optionsEl.style.display!=='flex')this.game.retireCombatViewInput?.();
+    const opening=this.optionsEl.style.display!=='flex';
+    if(opening){this._optionsReturnFocus=document.activeElement;this.game.retireCombatViewInput?.();}
     this.optionsEl.setAttribute('role','dialog');this.optionsEl.setAttribute('aria-label','Options');this.optionsEl.setAttribute('aria-modal','true');
-    // Keep menu keys away from the global combat input, while preserving native
-    // button activation and range-key behavior (no preventDefault).
-    this.optionsEl.onkeydown=this.optionsEl.onkeyup=e=>{if(e.key!=='Escape')e.stopPropagation();};
+    // Keep menu keys away from combat shortcuts. Tab stays inside the modal;
+    // ordinary input keys retain native behavior. Escape uses the shared closer.
+    this.optionsEl.onkeyup=e=>{if(e.key!=='Escape')e.stopPropagation();};
+    this.optionsEl.onkeydown=e=>{
+      if(e.key==='Escape')return;
+      e.stopPropagation();
+      if(e.key!=='Tab')return;
+      const controls=[...this.optionsEl.querySelectorAll('button,input,select,textarea,a[href],[tabindex]:not([tabindex="-1"])')].filter(el=>!el.disabled&&el.tabIndex>=0&&el.getClientRects().length);
+      const first=controls[0],last=controls.at(-1),active=document.activeElement;
+      if(!first)return;
+      if(e.shiftKey&&(active===first||!this.optionsEl.contains(active))){e.preventDefault();last.focus();}
+      else if(!e.shiftKey&&(active===last||!this.optionsEl.contains(active))){e.preventDefault();first.focus();}
+    };
     const slider = (key, label, max, step) => `<div class="orow"><span class="ol">${label}</span><input type="range" data-k="${key}" min="0" max="${max}" step="${step}" value="${S[key]}"><span class="ov" data-v="${key}">${Math.round(S[key] * 100)}%</span></div>`;
     const toggle = (key, label) => `<div class="orow"><span class="ol">${label}</span><div class="chips3"><span class="c3${S[key] ? ' on' : ''}" data-t="${key}" data-on="1">ON</span><span class="c3${!S[key] ? ' on' : ''}" data-t="${key}" data-on="0">OFF</span></div></div>`;
     this.optionsEl.innerHTML = `<div class="obox">
@@ -1027,8 +1044,9 @@ export class HUD {
       setCameraPreferences({...current,[input.dataset.cameraValue]:+input.value});input.nextElementSibling.textContent=input.value;applyCamera();
       this.optionsEl.querySelectorAll('[data-camera-option]').forEach(button=>{const active=button.dataset.cameraOption===getCameraPreferences().mode;button.classList.toggle('on',active);button.setAttribute('aria-pressed',String(active));});
     });
-    this.optionsEl.querySelector('[data-options-done]').onclick = () => { apply();this.game.retireCombatViewInput?.();this.optionsEl.style.display = 'none'; };
+    this.optionsEl.querySelector('[data-options-done]').onclick = () => { apply();this.game.retireCombatViewInput?.();this.closeOptions(); };
     this.optionsEl.style.display = 'flex';
+    if(opening)this.optionsEl.querySelector('[data-camera-option][aria-pressed="true"]').focus({preventScroll:true});
   }
 
   showHowto() {
