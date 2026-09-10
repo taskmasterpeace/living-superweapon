@@ -66,3 +66,30 @@ Commit: `9273164578385be4f86e0f6e687d768b7e95aac9` (`Add truthful resolved hit f
 - Native browser evidence remains for the main integrator: verify impact placement beside moving targets, BFP KO scale/dwell, automatic-rifle visual density, guard-break/deflect priority, reduced-motion behavior, and bright/dark scene legibility.
 - This report does not claim visual acceptance.
 - Status metadata records transitions occurring inside native `takeDamage` (including bleed/freeze/DoT state observed at callback time). Projectile payload statuses added after direct damage remain downstream events; no speculative status label is fabricated.
+
+## Review follow-up
+
+Resolved all five P2 review findings:
+
+- Real `Game.onHit` presentation now uses `outcome.healthLost` and semantic outcome labels while leaving legacy gameplay callback arguments unchanged.
+- Comic impacts visibly render semantic labels, absorbed amount and HP loss, with CSS family-shape cues.
+- Deflection uses the dedicated presentation-only `presentHitOutcome` path; it no longer runs damage flash, hit-direction, combo, lab or other hit hooks, and the former duplicate native HUD word was removed.
+- Automatic deflections are coalesced per target/family; the first event remains immediate.
+- Successful new burn/DoT and frozen transitions emit truthful status outcomes from `addDot`/`addFrost` without applying damage again.
+
+Review RED command: `node --test tools/hit-feedback.test.mjs`. New real-path tests initially failed on missing presentation separation/fixtures; the first full regression run exposed all native fixture call sites lacking the new dedicated method. Those failures led to binding the presentation-only path explicitly in the native fixture rather than routing reflection through `onHit`.
+
+Review GREEN command: `node --test tools/hit-feedback.test.mjs tools/frontline-ballistic-contact.test.mjs tools/ballistic-hit-flash.test.mjs tools/nanite-contact.test.mjs`
+
+```text
+tests 170
+suites 0
+pass 170
+fail 0
+cancelled 0
+skipped 0
+todo 0
+duration_ms 9788.5045
+```
+
+Native browser visual acceptance still remains with the main integrator.

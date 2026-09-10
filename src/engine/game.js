@@ -2886,6 +2886,23 @@ export class Game {
     return big ? 'WHUMP!' : 'BAP!';
   }
 
+  presentHitOutcome(target,opts={},outcome){
+    if(!outcome||!target?.pos)return;
+    const feedback=selectHitFeedback(outcome),t=this.time||0,family=feedback.id;
+    const targetTimes=this._hitFeedbackTimes?.get(target)||new Map(),last=targetTimes.get(family)??-9;
+    const delay=outcome.attackClass==='bullet'?.32:.42;
+    if(t-last<=delay)return;
+    if(!this._hitFeedbackTimes)this._hitFeedbackTimes=new WeakMap();
+    targetTimes.set(family,t);this._hitFeedbackTimes.set(target,targetTimes);
+    if(this.hud&&feedback.label)this.hud.damageNumber(target.pos,feedback.label,
+      family==='guard-broken'?'#ff5a4a':family==='deflect'?'#ffd24a':'#e8e2d6',true);
+    if(this.comic&&feedback.word&&family!=='ko'){
+      const pl=this.player,near=!pl||(Math.abs(pl.pos.x-target.pos.x)<260&&Math.abs(pl.pos.z-target.pos.z)<260);
+      if(near)(this.comic.impact||this.comic.sfx).call(this.comic,feedback.word,target.pos,
+        {feedback,power:Math.min(1,Math.max(.25,(outcome.healthLost||0)/60)),red:family==='guard-broken'});
+    }
+  }
+
   onHit(target, amount, opts = {}, blocked = false, outcome = null) {
     this.ms?.frontline?.onHit(target, amount);
     const src = opts.src;
@@ -2930,13 +2947,14 @@ export class Game {
     // the ring scores off the choke point rather than watching the fight itself
     if (this._ring) this._ring.onHit(target, amount, opts, blocked);
     const feedback=outcome&&selectHitFeedback(outcome);
-    if (this.comic && !opts.dot && target && target.pos && feedback?.id!=='ko' && (feedback?.word||(!outcome&&(amount>=14||opts.haymaker)))) {
+    if(outcome&&!opts.dot)Game.prototype.presentHitOutcome.call(this,target,opts,outcome);
+    if (this.comic && !outcome && !opts.dot && target && target.pos && (amount>=14||opts.haymaker)) {
       const pl = this.player;
       const near = !pl || (Math.abs(pl.pos.x - target.pos.x) < 260 && Math.abs(pl.pos.z - target.pos.z) < 260);
       const t = this.time || 0;
       // ⚠ the rate limit exists so a beam is not confetti — but it must not let a JAB eat the
       // haymaker's word 0.3s later. A committed blow always gets through.
-      const family=feedback?.id||'legacy',urgent=(feedback?.priority||0)>=80||opts.haymaker;
+      const family='legacy',urgent=opts.haymaker;
       const targetTimes=this._hitFeedbackTimes?.get(target)||new Map(),last=targetTimes.get(family)??-9;
       if (near && (urgent || t-last>(outcome?.attackClass==='bullet'?.32:.42))) {
         if(!this._hitFeedbackTimes)this._hitFeedbackTimes=new WeakMap();
@@ -2964,7 +2982,7 @@ export class Game {
       }
     }
     // directional damage cue when the human player is hit
-    if (this.hud && this.hud.hitDirection && this.isHuman(target) && src && src !== target) this.hud.hitDirection(src.pos);
+    if (this.hud && this.hud.hitDirection && this.isHuman(target) && src && src !== target && (outcome?.healthLost??amount)>0) this.hud.hitDirection(src.pos);
     // A HELD BEAM on a raised guard calls onHit EVERY FRAME (blocked + dot). Even with the light
     // count now stable, spawning a flash mesh + a BLOCK number 60×/s is wasted churn and a strobe —
     // throttle the sustained-block cosmetics to ~8/s per target. One tell, not sixty.
@@ -2972,10 +2990,11 @@ export class Game {
     const showBlockFx = !beamBlock || (this.time - (target._blkFxT || -1) > 0.12);
     if (beamBlock && showBlockFx) target._blkFxT = this.time;
     if (this.hud) {
-      if (blocked) { if (showBlockFx) this.hud.damageNumber(target.pos, 'BLOCK', '#bfe0ff', true); }
-      else if (opts.dmgClass === 'slash' && amount >= 3) this.hud.damageNumber(target.pos, '⚔ ' + Math.round(amount), '#ffdcdc', false, true);   // claws/blades read as SLASH
-      else if (opts.dmgColor && amount >= 1) this.hud.damageNumber(target.pos, Math.round(amount), opts.dmgColor, true);   // DoT ticks keep their status colour
-      else if (amount >= 5) this.hud.damageNumber(target.pos, Math.round(amount), src === this.player ? '#ffe08a' : '#ff9a6a');
+      const shown=outcome?.healthLost??amount;
+      if (!outcome&&blocked) { if (showBlockFx) this.hud.damageNumber(target.pos, 'BLOCK', '#bfe0ff', true); }
+      else if (!outcome&&opts.dmgClass === 'slash' && shown >= 3) this.hud.damageNumber(target.pos, '⚔ ' + Math.round(shown), '#ffdcdc', false, true);
+      else if (!outcome&&opts.dmgColor && shown >= 1) this.hud.damageNumber(target.pos, Math.round(shown), opts.dmgColor, true);
+      else if (!outcome&&shown >= 5) this.hud.damageNumber(target.pos, Math.round(shown), src === this.player ? '#ffe08a' : '#ff9a6a');
     }
     // Danger Room: dummies log incoming damage for the live DPS meters
     if (target.isDummy && !blocked) { (target._dmgLog = target._dmgLog || []).push({ t: this.time, a: amount }); target._dmgTotal = (target._dmgTotal || 0) + amount; }
@@ -2985,9 +3004,12 @@ export class Game {
     if (showBlockFx && !(opts.contactFx && closeFeedback) && !(opts.naniteResult?.absorbed>0)) {
       // Rifle chip should mark the actual contact, not hide half the hero in
       // a white sphere. Keep committed/heavy hits and overhead City feedback.
-      const chip=closeFeedback&&opts.ballistic&&amount<(target.maxHp||100)*.06&&!opts.heavy&&!opts.haymaker;
-      const point=chip&&opts.contactPoint ? opts.contactPoint.clone() : target.pos.clone().setY(target.pos.y+5.6);
-      this.vfx.flash(point,blocked?'#cfe6ff':(target.def.colors.accent||'#fff'),chip?.55:blocked?3:2.4,.1);
+      const shown=outcome?.healthLost??amount,guarded=outcome?outcome.guard!=='none':blocked;
+      if(!outcome||shown>0){
+        const chip=closeFeedback&&opts.ballistic&&shown<(target.maxHp||100)*.06&&!opts.heavy&&!opts.haymaker;
+        const point=chip&&opts.contactPoint ? opts.contactPoint.clone() : target.pos.clone().setY(target.pos.y+5.6);
+        this.vfx.flash(point,guarded?'#cfe6ff':(target.def.colors.accent||'#fff'),chip?.55:guarded?3:2.4,.1);
+      }
     }
     if (src === this.player && !blocked) {
       if (amount >= 5) { this.combo++; if (this.combo > this._p1MaxCombo) this._p1MaxCombo = this.combo; if (this.hud) this.hud.combo(this.combo); }

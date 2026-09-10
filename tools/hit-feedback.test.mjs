@@ -4,6 +4,8 @@ import {Vector3} from 'three';
 import {selectHitFeedback} from '../src/engine/hit-feedback.js';
 import {Fighter} from '../src/engine/entity.js';
 import {ROSTER} from '../src/data/characters.js';
+import {Game} from '../src/engine/game.js';
+import {Comic} from '../src/engine/comic.js';
 
 const baseOutcome=(extra={})=>({dtype:'ballistic',attackClass:'bullet',healthLost:0,
   absorbed:{plate:0,armor:0,shield:0,nanite:0},guard:'none',deflected:false,
@@ -38,7 +40,7 @@ function fixture(t,{armor=0,plate=0,shield=0,guard=false}={}){
   f.guarding=guard;f.faceDir(0,1);
   const outcomes=[];
   f._game={onHit(_target,_amount,_opts,_blocked,outcome){outcomes.push(outcome);},
-    particles:{burst(){},spawn(){}},vfx:{flash(){},contact(){}},audio:{},world:{},
+    particles:{burst(){},spawn(){}},vfx:{flash(){},contact(){}},audio:{zap(){}},world:{},
     melee:{clearInput(){},release(){}}};
   const src={def:{},pos:new Vector3(0,0,10)};
   t.after(()=>f.dispose());
@@ -69,4 +71,40 @@ test('native directional guard reports its own resolved state and actual chip',t
   const x=fixture(t,{guard:true});const r=x.hit(5,{ballistic:false,dtype:'physical',strike:true});
   assert.equal(r.outcome.guard,'blocked');assert.equal(r.outcome.healthLost,r.hpLost);
   assert.equal(r.outcome.absorbed.armor,0);assert.ok(r.hpLost>0);
+});
+
+test('real Game.onHit presents resolved shield and HP values instead of raw BLOCK damage',()=>{
+  const numbers=[],flashes=[],target={pos:new Vector3(),maxHp:100,hp:98,_openSky:true,def:{colors:{accent:'#fff'}}};
+  const src={pos:new Vector3(0,0,5),def:{}};
+  const game={time:3,ms:null,player:null,hud:{damageNumber(_p,text){numbers.push(text);},hitDirection(){}},
+    vfx:{flash(_p,_c,size){flashes.push(size);}},isHuman:()=>false,combo:0,_p1MaxCombo:0,particles:{burst(){}},world:null,noise(){}};
+  game.presentHitOutcome=Game.prototype.presentHitOutcome;
+  const outcome=baseOutcome({healthLost:2,absorbed:{plate:0,armor:0,shield:78,nanite:0}});
+  Game.prototype.onHit.call(game,target,80,{src,ballistic:true,contactPoint:new Vector3()},true,outcome);
+  assert.deepEqual(numbers,['SHIELD HIT · 78 ABS · 2 HP']);
+  assert.deepEqual(flashes,[.55]);
+});
+
+test('resolved automatic deflections coalesce per target and do not call damage hooks',()=>{
+  const words=[],target={pos:new Vector3()},game={time:1,comic:{impact(word){words.push(word);}},hud:null,player:null};
+  const outcome=baseOutcome({deflected:true});
+  Game.prototype.presentHitOutcome.call(game,target,{},outcome);
+  game.time=1.1;Game.prototype.presentHitOutcome.call(game,target,{},outcome);
+  game.time=1.4;Game.prototype.presentHitOutcome.call(game,target,{},outcome);
+  assert.deepEqual(words,['DEFLECT!','DEFLECT!']);
+});
+
+test('Comic.impact renders a visible semantic label and family hook',()=>{
+  const nodes=[];globalThis.document={body:{classList:{contains:()=>false}},createElement(){return {className:'',style:{setProperty(){}},dataset:{},children:[],classList:{add(v){this.value=v;}},appendChild(n){this.children.push(n);},setAttribute(k,v){this[k]=v;}};}};
+  const comic={sfx(){const node=document.createElement('div');nodes.push(node);return{node};}};
+  Comic.prototype.impact.call(comic,'TINK!',new Vector3(),{feedback:selectHitFeedback(baseOutcome({absorbed:{plate:4,armor:0,shield:0,nanite:0}}))});
+  assert.equal(nodes[0].classList.value,'impact-armor-hit');assert.equal(nodes[0].children[0].textContent,'ARMOR HIT · 4 ABS');
+  delete globalThis.document;
+});
+
+test('actual downstream burn and freeze transitions emit status outcomes once',t=>{
+  const {f}=fixture(t),statuses=[];f._game.presentHitOutcome=(_target,_opts,outcome)=>statuses.push(...outcome.statusesAdded);
+  f.addDot({kind:'burn',src:{}});f.addDot({kind:'burn',src:{}});
+  f.frost=.99;f.addFrost(.1,{});
+  assert.deepEqual(statuses,['burning','frozen']);
 });

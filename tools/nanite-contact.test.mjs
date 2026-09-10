@@ -32,6 +32,7 @@ function fixture({reverse=false,back=false,untagged=false,width=1,scale,bulk=1,b
  const scene=new THREE.Scene(),world={scene,camera:new THREE.PerspectiveCamera(),cover:[],interiors:[],ARENA:240,heightAt:()=>0,shake(){},punch(){}};
  const stage=new StudioCombat(scene,world),g=stage.game,events={hits:[],xp:0,flashes:[],metal:[],blocked:0};g.entities=reverse?[b,a]:[a,b];g.player=a;g.isHuman=f=>f===a;g.bigHit={amount:0};g.combo=0;g._p1MaxCombo=0;
  g.grantXp=(_f,n)=>events.xp+=n;g.trail=()=>{};g.heroYell=()=>{};g.melee=new MeleeSystem(g);
+ g.presentHitOutcome=(target,opts,outcome)=>{events.hits.push({target,amount:0,opts,blocked:true,outcome,presentationOnly:true});Game.prototype.presentHitOutcome.call(g,target,opts,outcome);};
  g.onHit=(target,amount,opts,blocked,outcome)=>{events.hits.push({target,amount,opts,blocked,outcome});Game.prototype.onHit.call(g,target,amount,opts,blocked,outcome);};
  g.onBlockedStrike=(...args)=>{events.blocked++;Game.prototype.onBlockedStrike.apply(g,args);};
  g.coneFoe=Game.prototype.coneFoe.bind(g);

@@ -221,6 +221,13 @@
   clip-path: polygon(50% 0, 61% 26%, 88% 12%, 78% 39%, 100% 50%, 78% 61%, 88% 88%, 61% 74%,
                      50% 100%, 39% 74%, 12% 88%, 22% 61%, 0 50%, 22% 39%, 12% 12%, 39% 26%);
 }
+.cmsfx[class*="impact-"] { padding: 10px 14px; }
+.cmsfx .impact-label { display:block; margin-top:8px; font:700 12px/1 Rajdhani,Inter,system-ui,sans-serif; letter-spacing:.08em; color:#e8e2d6; -webkit-text-stroke:0; text-shadow:0 2px 2px #0a0b10; text-align:center; }
+.cmsfx.impact-armor-hit { border:3px solid #ffd24a; clip-path:polygon(8% 0,92% 0,100% 24%,94% 100%,6% 100%,0 24%); }
+.cmsfx.impact-shield-hit { border:3px solid #7fe6ff; border-radius:50%; }
+.cmsfx.impact-block { border:3px solid #ffd24a; transform:skew(-6deg); }
+.cmsfx.impact-guard-broken { border:3px dashed #ff5a4a; }
+.cmsfx.impact-deflect { border:3px double #ffd24a; clip-path:polygon(0 20%,75% 20%,75% 0,100% 50%,75% 100%,75% 80%,0 80%); }
 
 /* phones: everything one step down, and balloons must never own the whole screen */
 /* ⚠ a phone is held at arm's length, not across a room — the vh clamp would make these enormous */

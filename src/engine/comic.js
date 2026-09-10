@@ -264,7 +264,10 @@ export class Comic {
 
   impact(text,pos,opts={}) {
     const it=this.sfx(text,pos,opts),feedback=opts.feedback;
-    if(feedback){it.node.classList.add('impact-'+feedback.id);it.node.dataset.impact=feedback.id;it.node.setAttribute('aria-label',feedback.label||text);}
+    if(feedback){
+      it.node.classList.add('impact-'+feedback.id);it.node.dataset.impact=feedback.id;it.node.setAttribute('aria-label',feedback.label||text);
+      const label=document.createElement('span');label.className='impact-label';label.textContent=feedback.label;it.node.appendChild(label);
+    }
     return it;
   }
 

@@ -816,7 +816,12 @@ export class Fighter {
     const dtype = o.dtype || DOT_DTYPE[kind] || 'toxic';
     const same = this._dots.find(d => d.kind === kind);
     if (same) { same.t = Math.max(same.t, o.dur || 3); same.dps = Math.max(same.dps, o.dps || 4); same.src = o.src || same.src; }
-    else this._dots.push({ dps: o.dps || 4, t: o.dur || 3, color: o.color || '#8fe08a', kind, dtype, corrode: o.corrode, src: o.src || null });
+    else {
+      this._dots.push({ dps: o.dps || 4, t: o.dur || 3, color: o.color || '#8fe08a', kind, dtype, corrode: o.corrode, src: o.src || null });
+      this._game?.presentHitOutcome?.(this,{src:o.src},{dtype,attackClass:'status',healthLost:0,
+        absorbed:{plate:0,armor:0,shield:0,nanite:0},guard:'none',deflected:false,knockedOut:false,
+        statusesAdded:[kind==='burn'?'burning':kind],contact:null});
+    }
   }
 
   // ---- status: frost buildup → ENCASED IN ICE. Strength melts out faster; fire heroes resist;
@@ -834,6 +839,8 @@ export class Fighter {
       }
       // freeze duration: strength melts it — STR 10 ≈ 0.9s, STR 1 ≈ 2.4s
       this.frozenT = clamp(2.6 - this.strength * 0.17, 0.8, 2.6);
+      this._game?.presentHitOutcome?.(this,{src},{dtype:'cold',attackClass:'status',healthLost:0,
+        absorbed:{plate:0,armor:0,shield:0,nanite:0},guard:'none',deflected:false,knockedOut:false,statusesAdded:['frozen'],contact:null});
       if (src && src !== this) { this.lastHitBy = src; this.lastHitT = 0; }
       this.guarding = false; this.meleeCharge = 0; this.strikeActive = 0;
       this.flyHeld = false; this.descendHeld = false;
