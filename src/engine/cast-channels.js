@@ -9,7 +9,7 @@ export function castHandMask(f,def){
  if(def.type==='volley'){
   const pattern=volleyPattern(def);return pattern==='left'?1:pattern==='right'?2:3;
  }
- if(def.type==='rifle')return firearmEmitter(f,def).side<0?1:2;
+ if(def.type==='rifle')return firearmEmitter(f,def,{includeStowed:true}).side<0?1:2;
  if(def.type==='beam'||def.type==='charge')return usesCombinedHands(f,def)?3:palmCastSide(def)<0?1:2;
  return def.type==='projectile'?2:0;
 }

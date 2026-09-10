@@ -19,7 +19,7 @@ export function updateIndependentHands(f,channels,dt,blocked){
   // firearmEmitter returns shared scratch fields; each lane owns its snapshot.
   // Refresh recovery too: a form/equipment change can retire the previous rig
   // after its trigger was released but before the arm has reached its rest pose.
-  hand.firearm=hand.slot?.def.type==='rifle'?Object.assign(hand._firearm ||= {},firearmEmitter(f,hand.slot.def)):null;
+  hand.firearm=hand.slot?.def.type==='rifle'?Object.assign(hand._firearm ||= {},firearmEmitter(f,hand.slot.def,{includeStowed:true})):null;
   hand.gather=damp(hand.gather,owner?.charging?1:0,owner?.charging?14:20,dt);
   const command=hand.command ||= new THREE.Vector3();
   if(f.hasAimWorld)command.copy(f.aimWorld);else command.copy(f.pos).addScaledVector(f.aim3,100);

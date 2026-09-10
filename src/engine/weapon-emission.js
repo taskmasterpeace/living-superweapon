@@ -4,7 +4,7 @@ import {updateSoldierLoadoutPresentation} from './soldier-loadout-presentation.j
 export function forearmOccupied(arm){
  const hand=arm?.children[2];return !!hand&&(!!hand.userData.gripOccupied||hand.children.some(o=>o.visible&&o.userData.weaponKind));
 }
-export function firearmEmitter(f,def){
+export function firearmEmitter(f,def,{includeStowed=false}={}){
  updateSoldierLoadoutPresentation(f);
  const out=f._firearmEmitter ||= {hand:null,socket:null,weapon:null,side:1};
  out.hand=f.parts?.armR?.children[2];out.socket=out.hand;out.weapon=null;out.side=1;
@@ -15,7 +15,11 @@ export function firearmEmitter(f,def){
  for(const side of [1,-1]){
   const hand=(side<0?f.parts?.armL:f.parts?.armR)?.children[2];
   for(const weapon of hand?.children||[]){
-   if(!weapon.visible)continue;
+   // Input claims precede drawing a stowed soldier sidearm. Its attachment
+   // still owns that hand; visibility must not redirect the claim to a rifle.
+   // Ordinary emission and arbitrary hidden/replaced weapons stay excluded.
+   const stowed=includeStowed&&f._soldierLoadoutPresentation?.weapons.includes(weapon)&&weapon.userData.weaponKind===def.weapon;
+   if(!weapon.visible&&!stowed)continue;
    const socket=weapon.getObjectByName('weapon-muzzle');if(!socket)continue;
    const value={hand,socket,weapon,side};fallback ||= value;
    if(weapon.userData.weaponKind===def.weapon){Object.assign(out,value);return out;}

@@ -8,6 +8,22 @@ import {trunkProbe} from './helpers/trunk-probe.mjs';
 
 const normal=hand=>new THREE.Vector3(0,-1,0).applyQuaternion(hand.getWorldQuaternion(new THREE.Quaternion()));
 
+for(const first of ['lmb','rmb'])test(`stowed soldier sidearm claims its own hand on first trigger (${first} first)`,()=>{
+ const x=disjointCombatFixture({kind:'volley',motion:'hover'}),{f,g}=x;
+ try{
+  f.def.id='merc';f.applyForm({model:{costume:'plated'}});
+  for(const [key,weapon]of [['lmb','rifle'],['rmb','pistol']])Object.assign(f.slots[key].def,{type:'rifle',weapon,spread:0});
+  for(let i=0;i<40;i++)x.step();
+  const pistol=f.parts.armL.children[2].getObjectByName('weapon-pistol');
+  assert.equal(pistol.visible,false,'Fixture begins with the sidearm stowed');
+  x.start(first);x.start(first==='lmb'?'rmb':'lmb');
+  assert.ok(f.slots.rmb.handShots?.[-1]>=0,'The initial sidearm trigger must fire from the left hand');
+  assert.ok(f.slots.lmb.handShots?.[1]>=0,'The rifle must retain the right hand');
+  assert.equal(pistol.visible,true,'An accepted shot draws the sidearm');
+  assert.equal(g.projectiles.list.filter(p=>p.ballistic).length,2,'Both independent triggers create a round');
+ }finally{x.close();}
+});
+
 for(const kind of ['beam','volley'])for(const order of ['normal','reverse'])
 test(`independent left volley keeps an open, aimed hand beside right ${kind}, ${order} slot order`,()=>{
  const x=disjointCombatFixture({kind,order}),{f}=x;
