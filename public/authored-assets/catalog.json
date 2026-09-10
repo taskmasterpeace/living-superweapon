@@ -15,7 +15,7 @@
     "cc0-body"
    ],
    "dir": "body.hero-heavy/v1",
-   "packageHash": "4c12a174522497a8589df61021d28662ae6feea741f604c5e211d79518cd734d",
+   "packageHash": "c453affcea9079c45950c0cbb307b91c814abd73c620835d9d4cc2a8e1a223d2",
    "ok": true,
    "errors": 0,
    "license": "CC0-1.0",
@@ -33,7 +33,7 @@
     "cc0-body"
    ],
    "dir": "body.hero-lean/v1",
-   "packageHash": "708bc523ef3e0fcdaa89c1b5f708d3d4eaac103e7878b8c1c03632587d54528f",
+   "packageHash": "bfebe7469e20a66d111dab7ee3c1190ac199e9e7485f880d263152f1fe13ae07",
    "ok": true,
    "errors": 0,
    "license": "CC0-1.0",
@@ -51,7 +51,7 @@
     "cc0-body"
    ],
    "dir": "body.hero-standard-female/v1",
-   "packageHash": "036e005823ac93c0bbb254d414f6a2396de4126bd9b6451c3123cd9106c7c082",
+   "packageHash": "d753dd812575ab48ec4959dc2291e1b0cdaa70d4af80a7c64227911f68d9d0de",
    "ok": true,
    "errors": 0,
    "license": "CC0-1.0",
@@ -69,11 +69,30 @@
     "cc0-body"
    ],
    "dir": "body.hero-standard/v1",
-   "packageHash": "0f7899ae3d4e20d21b149e72a202469c0245bb71ffcf1110a171990559134ad4",
+   "packageHash": "a697ae0b8a28fab30e84e1ae81f7bb13a36877c26a9ec431bcea23cefc374d0c",
    "ok": true,
    "errors": 0,
    "license": "CC0-1.0",
    "adapter": "humanoid-body@1"
+  },
+  {
+   "id": "creature.field-hound",
+   "version": 1,
+   "kind": "creature",
+   "displayName": "Field hound (anyCreature adapter proof)",
+   "tags": [
+    "creature",
+    "quadruped",
+    "hound",
+    "procedural",
+    "anycreature"
+   ],
+   "dir": "creature.field-hound/v1",
+   "packageHash": "354a4113dbd7e2768c71c1dafa7583707d610d50ef52d4d02fc17d8a009dc8d3",
+   "ok": true,
+   "errors": 0,
+   "license": "Proprietary-Internal",
+   "adapter": "anycreature@1"
   },
   {
    "id": "equipment.carbine",
@@ -88,7 +107,7 @@
     "procedural"
    ],
    "dir": "equipment.carbine/v1",
-   "packageHash": "44f7bb25999db13e5d814e64b08027f022cfc069a62dc02f111768f642e7bc82",
+   "packageHash": "81f6869cc83618a9e8f5d1b274cddd79e412dde54a89074a8bf7fb0e03e5193c",
    "ok": true,
    "errors": 0,
    "license": "Proprietary-Internal",
@@ -107,11 +126,30 @@
     "procedural"
    ],
    "dir": "equipment.sidearm/v1",
-   "packageHash": "d83d05c4447ea2af0ac146d033c3ce1350b0d1371e33e49868fca349fdd080e5",
+   "packageHash": "04859041177a4f39ab8f2d57cb0cefe800ab6f738c27c6c06fea5501866f6760",
    "ok": true,
    "errors": 0,
    "license": "Proprietary-Internal",
    "adapter": "procedural-prop@1"
+  },
+  {
+   "id": "motion.cmu-walk-02",
+   "version": 1,
+   "kind": "humanoid-motion",
+   "displayName": "CMU subject 02 walk (ASF/AMC adapter proof)",
+   "tags": [
+    "humanoid",
+    "locomotion",
+    "mocap",
+    "cmu",
+    "embed-only"
+   ],
+   "dir": "motion.cmu-walk-02/v1",
+   "packageHash": "a5dee40409f310c594f323a4027caca73d5772bf2b5780c580ce2d9ad9b68c5f",
+   "ok": true,
+   "errors": 0,
+   "license": "LicenseRef-CMU-Mocap",
+   "adapter": "cmu-asfamc@1"
   },
   {
    "id": "motion.hero-ual2",
@@ -126,7 +164,7 @@
     "cc0"
    ],
    "dir": "motion.hero-ual2/v1",
-   "packageHash": "ac33ff1645e568e273851977bfeb0ef88f7abc0b852338bc14ff21bc322c0f7e",
+   "packageHash": "b283e4c78568778fbac4d2264b484343932f922fc2efa99ba303686b06c2f8fb",
    "ok": true,
    "errors": 0,
    "license": "CC0-1.0",
@@ -145,7 +183,7 @@
     "cc0"
    ],
    "dir": "motion.hero-ual/v1",
-   "packageHash": "226f2c888dbc77656e006ae653a1b2e1489e59a070b5d2e63c473ef453344a47",
+   "packageHash": "6c9c14457c294a9119d67beb84814aa3c52b428ca3f499e355e8ceb90dbc489c",
    "ok": true,
    "errors": 0,
    "license": "CC0-1.0",
@@ -163,7 +201,7 @@
     "procedural"
    ],
    "dir": "prop.ammo-crate/v1",
-   "packageHash": "a7e88c63ccdc5a80091eb87b3cbbf31338df8d64b179f8450b73c7133e6a5d8a",
+   "packageHash": "4bff85d1a0f8b0e0eb65b3a98a64be965ee959387b4ae228af00b689755e5e2c",
    "ok": true,
    "errors": 0,
    "license": "Proprietary-Internal",

@@ -26,6 +26,12 @@ export class Stage{
  }
  resize(){const w=this.host.clientWidth||1,h=this.host.clientHeight||1;this.renderer.setSize(w,h,false);this.camera.aspect=w/h;this.camera.updateProjectionMatrix();}
  async load(pkg){
+  // Loads are serialised: an auto-selection still in flight must finish (and be cleared) before
+  // the next package builds, or its fighter lands on the stage after the clear.
+  this._queue=(this._queue||Promise.resolve()).then(()=>this._load(pkg),()=>this._load(pkg));
+  return this._queue;
+ }
+ async _load(pkg){
   this.clear();this.pkg=pkg;this.time=0;
   this.playback={clips:[]};
   if(this.loader)this.playback=await this.loader(pkg,this);

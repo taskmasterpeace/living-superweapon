@@ -1,0 +1,202 @@
+{
+ "format": "pw-asset-package",
+ "formatVersion": 1,
+ "id": "creature.field-hound",
+ "version": 1,
+ "kind": "creature",
+ "displayName": "Field hound (anyCreature adapter proof)",
+ "tags": [
+  "creature",
+  "quadruped",
+  "hound",
+  "procedural",
+  "anycreature"
+ ],
+ "rig": {
+  "skeleton": "anycreature@1",
+  "bones": 27
+ },
+ "clips": [
+  {
+   "id": "idle",
+   "take": "idle",
+   "duration": 2.4,
+   "loop": true,
+   "sampleRate": 24,
+   "frames": 59,
+   "mirror": null,
+   "handedness": "none",
+   "events": []
+  },
+  {
+   "id": "move",
+   "take": "move",
+   "duration": 0.82,
+   "loop": true,
+   "sampleRate": 24,
+   "frames": 21,
+   "mirror": null,
+   "handedness": "none",
+   "events": [
+    {
+     "t": 0.2,
+     "type": "footstep",
+     "side": "L",
+     "note": "authored: front-left plant"
+    },
+    {
+     "t": 0.61,
+     "type": "footstep",
+     "side": "R",
+     "note": "authored: front-right plant"
+    }
+   ]
+  },
+  {
+   "id": "attack",
+   "take": "attack",
+   "duration": 0.62,
+   "loop": false,
+   "sampleRate": 24,
+   "frames": 16,
+   "mirror": null,
+   "handedness": "none",
+   "events": [
+    {
+     "t": 0.34,
+     "type": "contact",
+     "note": "authored: bite commits at the lunge apex"
+    },
+    {
+     "t": 0.5,
+     "type": "recovery",
+     "note": "authored"
+    }
+   ]
+  }
+ ],
+ "bounds": {
+  "min": [
+   -1.20526,
+   -0.07895,
+   -3.56842
+  ],
+  "max": [
+   1.20526,
+   4.57492,
+   4.26842
+  ]
+ },
+ "hitZones": [],
+ "materials": [
+  {
+   "name": "hide"
+  },
+  {
+   "name": "hide_dark"
+  },
+  {
+   "name": "dark"
+  },
+  {
+   "name": "eye"
+  }
+ ],
+ "lods": [
+  {
+   "level": 0,
+   "output": "model.glb",
+   "triangles": 2169
+  }
+ ],
+ "units": {
+  "lengthUnit": "game-unit",
+  "metersPerUnit": 0.19,
+  "up": "+Y",
+  "forward": "+Z",
+  "handedness": "right",
+  "sourceConversion": {
+   "scale": 5.263158,
+   "yawDegrees": 0,
+   "mirrorX": false,
+   "sourceUp": "+Y",
+   "sourceForward": "+Z",
+   "note": "anyCreature metres wrapped under a game-units node"
+  }
+ },
+ "budgets": {
+  "profile": "desktop",
+  "measured": {
+   "triangles": 2169,
+   "drawCalls": 4,
+   "materials": 4,
+   "bones": 27,
+   "textures": 0,
+   "bytes": 199684
+  },
+  "limits": {
+   "triangles": 18825,
+   "drawCalls": 4,
+   "materials": 4,
+   "bones": 82,
+   "textures": 2,
+   "bytes": 2565382
+  }
+ },
+ "structural": {
+  "validator": "2.0.0-dev.3.10",
+  "errors": 0,
+  "warnings": 1,
+  "compiler": {
+   "version": "1.3.1",
+   "revision": "44e1abc2c7fe083f19f989c8437c44a141adc7f3",
+   "checks": "all green"
+  }
+ },
+ "provenance": {
+  "author": "PowerWorld authoring (recipe) / anyCreature engine by Ariescar (MIT)",
+  "license": "Proprietary-Internal",
+  "redistribution": "internal",
+  "url": "https://github.com/Ariescar/anyCreature",
+  "revision": "44e1abc2c7fe083f19f989c8437c44a141adc7f3",
+  "terms": "The creature recipe is original. The vendored compiler is MIT (authoring/vendor/anycreature/LICENSE). Structural pass only: this procedural creature has not been art-approved against the grounded visual direction."
+ },
+ "source": {
+  "adapter": "anycreature@1",
+  "files": [
+   {
+    "path": "authoring/recipes/creatures/field-hound/creature.json",
+    "sha256": "19b1914ef4aa66905b183d956e69013202330d7d7579693d0dea33d960460c99"
+   },
+   {
+    "path": "authoring/vendor/anycreature/VENDOR.json",
+    "sha256": "060a30419dab1f6a09e1821dd2c8d5120cfab721bb57ac737581f791f3a775bd"
+   }
+  ],
+  "recipe": {
+   "path": "authoring/recipes/creatures/field-hound/recipe.json",
+   "sha256": "82967ab353684643b04059e33e08def2d03a0de8a6a6f5ec7f72e20332333fa3"
+  }
+ },
+ "tool": {
+  "name": "powerworld-authoring",
+  "version": "0.1.0",
+  "three": "0.169.0",
+  "adapterVersion": 1
+ },
+ "build": {
+  "options": {},
+  "cacheKey": "692865808506336c68c134d30e4e153204817f2a5e21141a71bd6dd5f03526ee",
+  "contentHash": "efb7a8d894212006674cd36f47383a24599293c7f0062590044037cb10a44557",
+  "profile": "desktop"
+ },
+ "outputs": [
+  {
+   "path": "model.glb",
+   "role": "glb",
+   "sha256": "6e703d5ce641eabc4a18a1816680bdb9a26c2d1b670d7d4a4c8fe1fdaab6bc29",
+   "bytes": 199684
+  }
+ ],
+ "packageHash": "354a4113dbd7e2768c71c1dafa7583707d610d50ef52d4d02fc17d8a009dc8d3"
+}

@@ -19,7 +19,12 @@ function sortValue(value){
  return value;
 }
 export const hashJson=value=>sha256Text(canonicalJson(value));
-// The package hash covers everything except itself.
+// The package hash covers the package's CONTENT: everything except itself and the build cache
+// key. The cache key fingerprints the tool's own source files, so including it would change a
+// package's identity whenever a comment in an adapter changed while every output byte stayed
+// the same — exactly what the reproducibility gate must be able to tell apart.
 export function packageHashOf(manifest){
- const {packageHash,...rest}=manifest;return hashJson(rest);
+ const {packageHash,build,...rest}=manifest;
+ const {cacheKey,...buildRest}=build||{};
+ return hashJson({...rest,build:buildRest});
 }

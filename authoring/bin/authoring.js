@@ -17,7 +17,8 @@ const usage=`pw-author <command>
   validate [dir...]     validate package directories (default: every package under public/authored-assets)
   catalog               rewrite public/authored-assets/catalog.json from the packages on disk
   report                write authoring/artifacts/report.json and print a summary
-  fixtures              regenerate authoring/fixtures from authoring/fixtures/make-fixtures.mjs`;
+  fixtures              regenerate authoring/fixtures from authoring/fixtures/make-fixtures.mjs
+  reproduce             clean-rebuild every recipe into a scratch root and diff hashes against public/authored-assets`;
 
 async function findRecipes(dir=join(AUTHORING_ROOT,'recipes')){
  const out=[];
@@ -87,6 +88,32 @@ switch(command){
  }
  case 'fixtures':{
   await import('../fixtures/make-fixtures.mjs');
+  break;
+ }
+ case 'reproduce':{
+  // The reproducibility gate: rebuild every recipe from scratch into a scratch root (no cache)
+  // and compare each package hash and every output hash with what is committed under
+  // public/authored-assets. Any difference is a build that depends on something unrecorded.
+  const {mkdtemp,rm}=await import('node:fs/promises');const {tmpdir}=await import('node:os');
+  const {buildAll}=await import('../lib/build.js');
+  const {readPackage,listPackages}=await import('../lib/package-io.js');
+  const scratch=await mkdtemp(join(tmpdir(),'pw-reproduce-'));
+  try{
+   const recipes=await findRecipes();
+   const results=await buildAll(recipes,{root:scratch,force:true,log:()=>{}});
+   const committed=new Map();for(const dir of await listPackages()){const {manifest}=await readPackage(dir);committed.set(`${manifest.id}@${manifest.version}`,manifest);}
+   let ok=true;
+   for(const r of results){
+    if(r.failed){log(`FAIL ${r.recipe}: ${r.error}`);ok=false;continue;}
+    const key=`${r.id}@${r.version}`,ref=committed.get(key);
+    if(!ref){log(`MISSING ${key}: built fresh but not committed under public/authored-assets`);ok=false;continue;}
+    const same=ref.packageHash===r.manifest.packageHash&&JSON.stringify(ref.outputs)===JSON.stringify(r.manifest.outputs);
+    log(`${same?'SAME':'DIFF'} ${key} ${r.manifest.packageHash.slice(0,12)}${same?'':' vs committed '+ref.packageHash.slice(0,12)}`);
+    ok&&=same;
+   }
+   log(ok?`REPRODUCIBLE: ${results.length} packages rebuilt from committed recipes and pinned sources with identical hashes`:'NOT REPRODUCIBLE');
+   if(!ok)process.exitCode=1;
+  }finally{await rm(scratch,{recursive:true,force:true});}
   break;
  }
  default:

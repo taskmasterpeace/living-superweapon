@@ -63,6 +63,20 @@ export function jointPoints(f){
  }
  return j;
 }
+// A zone drawn as what it declares: sphere, box, or a capsule (two end spheres and the shaft).
+export function zoneMesh(z){
+ const mat=new THREE.MeshBasicMaterial({color:'#ff5a4d',wireframe:true,depthTest:false});
+ let mesh;
+ if(z.shape==='box')mesh=new THREE.Mesh(new THREE.BoxGeometry(...z.halfExtents.map(h=>h*2)),mat);
+ else if(z.shape==='capsule'){
+  mesh=new THREE.Group();const end=new THREE.Vector3().fromArray(z.end),len=end.length();
+  const shaft=new THREE.Mesh(new THREE.CylinderGeometry(z.radius,z.radius,Math.max(.01,len),8,1,true),mat);
+  shaft.position.copy(end).multiplyScalar(.5);shaft.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),end.clone().normalize());mesh.add(shaft);
+  for(const at of [new THREE.Vector3(),end]){const s=new THREE.Mesh(new THREE.SphereGeometry(z.radius,10,8),mat);s.position.copy(at);mesh.add(s);}
+ }else mesh=new THREE.Mesh(new THREE.SphereGeometry(z.radius,12,10),mat);
+ mesh.userData.zone=z;mesh.renderOrder=13;mesh.traverse(o=>{o.renderOrder=13;});
+ return mesh;
+}
 const BONES=[['pelvis','chest'],['chest','head'],['chest','shoulderL'],['shoulderL','elbowL'],['elbowL','handL'],['chest','shoulderR'],['shoulderR','elbowR'],['elbowR','handR'],['pelvis','hipL'],['hipL','kneeL'],['kneeL','footL'],['pelvis','hipR'],['hipR','kneeR'],['kneeR','footR']];
 export function buildOverlays(stage,f,manifest){
  const g=new THREE.Group();g.name='overlays';
@@ -74,10 +88,7 @@ export function buildOverlays(stage,f,manifest){
  for(const [name,obj] of Object.entries(f.parts.rig?.sockets||{})){const m=new THREE.Mesh(socketGeo,socketMat);m.name='socket:'+name;m.renderOrder=12;m.userData.target=obj;sockets.add(m);}
  g.add(sockets);
  const zones=new THREE.Group();
- for(const z of manifest.hitZones||[]){
-  const mesh=z.shape==='box'?new THREE.Mesh(new THREE.BoxGeometry(...z.halfExtents.map(h=>h*2)),new THREE.MeshBasicMaterial({color:'#ff5a4d',wireframe:true,depthTest:false})):new THREE.Mesh(new THREE.SphereGeometry(z.radius,12,10),new THREE.MeshBasicMaterial({color:'#ff5a4d',wireframe:true,depthTest:false}));
-  mesh.userData.zone=z;mesh.renderOrder=13;zones.add(mesh);
- }
+ for(const z of manifest.hitZones||[])zones.add(zoneMesh(z));
  g.add(zones);
  stage.helpers.add(g);
  const socketOf=name=>{const s=f.parts.rig?.sockets||{};return {head:s.head,chest:s.chest,pelvis:s.pelvis,'hand.left':s.leftHand,'hand.right':s.rightHand,'foot.left':s.leftFoot,'foot.right':s.rightFoot}[name]||f.parts[name];};
@@ -89,6 +100,8 @@ export function buildOverlays(stage,f,manifest){
    Object.values(j).forEach((v,i)=>joints.children[i]?.position.copy(v));
    for(const m of sockets.children)m.userData.target.getWorldPosition(m.position);
    for(const m of zones.children){const z=m.userData.zone,host=socketOf(z.attach);if(host){host.getWorldPosition(m.position);tmp.fromArray(z.center);host.getWorldQuaternion(m.quaternion);m.position.add(tmp.applyQuaternion(m.quaternion));}}
+   // Capsules were measured in world orientation at rest; their end is relative to the host origin.
+   for(const m of zones.children)if(m.userData.zone.shape==='capsule'){const z=m.userData.zone,host=socketOf(z.attach);if(host){host.getWorldPosition(m.position);m.quaternion.identity();}}
    skel.visible=joints.visible=!!stage.overlays.skeleton;sockets.visible=!!stage.overlays.sockets;zones.visible=!!stage.overlays.zones;
   },
   dispose(){stage.helpers.remove(g);},

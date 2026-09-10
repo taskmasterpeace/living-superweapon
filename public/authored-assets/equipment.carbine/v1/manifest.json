@@ -94,14 +94,14 @@
  ],
  "bounds": {
   "min": [
-   -0.4099999964237213,
-   -3.1700000762939453,
-   -0.8399999737739563
+   -0.41,
+   -3.17,
+   -0.84
   ],
   "max": [
-   0.25999999046325684,
-   1.1699999570846558,
-   0.6100000143051147
+   0.26,
+   1.17,
+   0.61
   ]
  },
  "materials": [
@@ -195,8 +195,8 @@
  },
  "build": {
   "options": {},
-  "cacheKey": "78d5b13f2e079c95b68e2fb8598db180dee6227d29d6578d3d2a0da77fdbe993",
-  "contentHash": "288eac40899cad04eb21d6412138539da0854d1102d93e1cce022684b590159f",
+  "cacheKey": "9723bc0d981760763e18a23fcab27129381ac4990b47e54769d4ad4255000dd1",
+  "contentHash": "1847100642e2a520b8b500964d186ca74b9b0489754f8ed191fb20e229bbf8e5",
   "profile": "desktop"
  },
  "outputs": [
@@ -207,5 +207,5 @@
    "bytes": 13968
   }
  ],
- "packageHash": "44f7bb25999db13e5d814e64b08027f022cfc069a62dc02f111768f642e7bc82"
+ "packageHash": "81f6869cc83618a9e8f5d1b274cddd79e412dde54a89074a8bf7fb0e03e5193c"
 }

@@ -73,6 +73,10 @@ packageHash       sha256 of the canonical JSON of every other field
   asset of that class; mobile = 0.6×. Exceeding a limit fails the build.
 - **`packageHash` and `contentHash`** let two clean builds be compared byte-for-byte.
   `contentHash` excludes the version number so a rebuild with identical content keeps its version.
+  `packageHash` excludes `build.cacheKey`: the cache key fingerprints the tool's own source files
+  (so the cache invalidates itself on any tool edit), but a package's identity is its content.
+  `node authoring/bin/authoring.js reproduce` rebuilds every recipe into a scratch root and
+  requires identical package and output hashes against `public/authored-assets`.
 
 ## Validation codes
 

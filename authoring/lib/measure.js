@@ -32,13 +32,23 @@ export async function structuralReport(bytes){
  const issues=report.issues?.messages||[];
  return {errors:issues.filter(m=>m.severity===0),warnings:issues.filter(m=>m.severity===1),infos:issues.filter(m=>m.severity>=2).length,validator:report.validatorVersion};
 }
+// Scene-space bounds: every primitive's vertex range is carried through the node's world matrix,
+// so a unit-conversion node (the creature adapter's game-units wrapper) is part of the answer.
 export async function boundsOf(bytes){
  const doc=await readGlb(bytes);
  const min=[Infinity,Infinity,Infinity],max=[-Infinity,-Infinity,-Infinity];
- for(const mesh of doc.getRoot().listMeshes())for(const prim of mesh.listPrimitives()){
-  const pos=prim.getAttribute('POSITION');if(!pos)continue;
-  const lo=pos.getMin([]),hi=pos.getMax([]);
-  for(let i=0;i<3;i++){min[i]=Math.min(min[i],lo[i]);max[i]=Math.max(max[i],hi[i]);}
+ const expand=(m,p)=>{
+  const x=m[0]*p[0]+m[4]*p[1]+m[8]*p[2]+m[12],y=m[1]*p[0]+m[5]*p[1]+m[9]*p[2]+m[13],z=m[2]*p[0]+m[6]*p[1]+m[10]*p[2]+m[14];
+  min[0]=Math.min(min[0],x);min[1]=Math.min(min[1],y);min[2]=Math.min(min[2],z);max[0]=Math.max(max[0],x);max[1]=Math.max(max[1],y);max[2]=Math.max(max[2],z);
+ };
+ for(const node of doc.getRoot().listNodes()){
+  const mesh=node.getMesh();if(!mesh)continue;
+  const m=node.getWorldMatrix();
+  for(const prim of mesh.listPrimitives()){
+   const pos=prim.getAttribute('POSITION');if(!pos)continue;
+   const lo=pos.getMin([]),hi=pos.getMax([]);
+   for(let c=0;c<8;c++)expand(m,[c&1?hi[0]:lo[0],c&2?hi[1]:lo[1],c&4?hi[2]:lo[2]]);
+  }
  }
- return min.every(Number.isFinite)?{min,max}:null;
+ return min.every(Number.isFinite)?{min:min.map(n=>+n.toFixed(5)),max:max.map(n=>+n.toFixed(5))}:null;
 }

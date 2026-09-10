@@ -88,6 +88,99 @@
    ]
   }
  ],
+ "hitZones": [
+  {
+   "zone": "head",
+   "shape": "sphere",
+   "attach": "head",
+   "center": [
+    0,
+    0,
+    0
+   ],
+   "radius": 0.855
+  },
+  {
+   "zone": "torso",
+   "shape": "capsule",
+   "attach": "pelvis",
+   "center": [
+    0,
+    0,
+    0
+   ],
+   "end": [
+    0,
+    1.48,
+    0
+   ],
+   "radius": 1.1775
+  },
+  {
+   "zone": "arm.left",
+   "shape": "capsule",
+   "attach": "armL",
+   "center": [
+    0,
+    0,
+    0
+   ],
+   "end": [
+    0,
+    -2.56,
+    0
+   ],
+   "radius": 0.3675
+  },
+  {
+   "zone": "arm.right",
+   "shape": "capsule",
+   "attach": "armR",
+   "center": [
+    0,
+    0,
+    0
+   ],
+   "end": [
+    0,
+    -2.56,
+    0
+   ],
+   "radius": 0.3675
+  },
+  {
+   "zone": "leg.left",
+   "shape": "capsule",
+   "attach": "legL",
+   "center": [
+    0,
+    0,
+    0
+   ],
+   "end": [
+    0,
+    -3.04,
+    0.1
+   ],
+   "radius": 0.42
+  },
+  {
+   "zone": "leg.right",
+   "shape": "capsule",
+   "attach": "legR",
+   "center": [
+    0,
+    0,
+    0
+   ],
+   "end": [
+    0,
+    -3.04,
+    0.1
+   ],
+   "radius": 0.42
+  }
+ ],
  "frame": {
   "scale": 0.8,
   "bulk": 0.75,
@@ -159,17 +252,17 @@
  },
  "build": {
   "options": {},
-  "cacheKey": "73b26afb021dcdb4355f676bbb8bcc59d4f03b4120cc1a9f45aed28ac3f323a1",
-  "contentHash": "c0953ca019f526e38b91e7a69c597788fb4a15af4065956d85657cb4fa175226",
+  "cacheKey": "eceafe4e80e2cd4d64544d2ca7f837feaeaeb7d9f3e3881c8cf64b65b202c658",
+  "contentHash": "8bd80b9d0c1977c58b2d221fafa9acc2fbc6aa86d0e10a7b04c35e12c03a0296",
   "profile": "desktop"
  },
  "outputs": [
   {
    "path": "body.json",
    "role": "body",
-   "sha256": "6af79732927900ddacbe98c35806b5b81ead6f6392be31e0ff735409d5b6f186",
-   "bytes": 1480
+   "sha256": "49a848ae8128cbf87816cfcf16c3715d1027c48ddb6c6b3506340337562559ca",
+   "bytes": 2524
   }
  ],
- "packageHash": "708bc523ef3e0fcdaa89c1b5f708d3d4eaac103e7878b8c1c03632587d54528f"
+ "packageHash": "bfebe7469e20a66d111dab7ee3c1190ac199e9e7485f880d263152f1fe13ae07"
 }

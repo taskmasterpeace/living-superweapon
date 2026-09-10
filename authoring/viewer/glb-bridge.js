@@ -3,6 +3,7 @@
 // declared hit zones are drawn from the manifest. Bounds are measured from the loaded scene.
 import * as THREE from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+import {zoneMesh} from './production-bridge.js';
 
 async function loadGlb(url){return new Promise((res,rej)=>new GLTFLoader().load(url,g=>res(g),undefined,rej));}
 export async function loadGlbPreview(pkg,stage){
@@ -21,7 +22,7 @@ export async function loadGlbPreview(pkg,stage){
  const sockets=new THREE.Group();helpers.add(sockets);
  for(const s of m.sockets||[]){const node=root.getObjectByName('socket-'+s.name);if(!node)continue;const mk=new THREE.Mesh(new THREE.OctahedronGeometry(Math.max(.12,size.length()*.02)),new THREE.MeshBasicMaterial({color:'#5fb7e0',depthTest:false}));mk.renderOrder=12;mk.userData.node=node;sockets.add(mk);}
  const zones=new THREE.Group();helpers.add(zones);
- for(const z of m.hitZones||[]){const host=root.getObjectByName(z.attach);if(!host)continue;const mesh=z.shape==='box'?new THREE.Mesh(new THREE.BoxGeometry(...z.halfExtents.map(h=>h*2)),new THREE.MeshBasicMaterial({color:'#ff5a4d',wireframe:true,depthTest:false})):new THREE.Mesh(new THREE.SphereGeometry(z.radius,12,10),new THREE.MeshBasicMaterial({color:'#ff5a4d',wireframe:true,depthTest:false}));mesh.userData.zone=z;mesh.userData.host=host;mesh.renderOrder=13;zones.add(mesh);}
+ for(const z of m.hitZones||[]){const host=root.getObjectByName(z.attach);if(!host)continue;const mesh=zoneMesh(z);mesh.userData.host=host;zones.add(mesh);}
  const mixer=gltf.animations.length?new THREE.AnimationMixer(root):null;
  const actions=new Map();for(const clip of gltf.animations)actions.set(clip.name,mixer.clipAction(clip));
  const clips=(m.clips||[]).map(c=>({id:c.id,take:c.take,duration:c.duration,loop:c.loop,events:c.events||[]}));

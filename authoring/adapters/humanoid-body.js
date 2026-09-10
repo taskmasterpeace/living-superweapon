@@ -46,8 +46,23 @@ export default {
    {name:'sling.back',parent:'chest',position:toLocal(p.torso,slingWorld),rotation:quat(.15,0,-.35),worldOffset:round(slingWorld)},
    ...(recipe.sockets||[]),
   ];
+  // Optional semantic hit zones (the brief's six gameplay zones), derived from the driven rig's
+  // own part volumes. Metadata only: runtime collision and effects stay main-task owned.
+  const capsule=(zone,from,to,radiusMesh,attach)=>{
+   const a=from.getWorldPosition(new THREE.Vector3()),b=to.getWorldPosition(new THREE.Vector3()),origin=from.getWorldPosition(new THREE.Vector3());
+   return {zone,shape:'capsule',attach,center:round(a.sub(origin).toArray()),end:round(b.sub(origin).toArray()),radius:round(Math.max(half(radiusMesh,'x'),half(radiusMesh,'z')))};
+  };
+  const headHalf=half(p.head,'y');
+  const hitZones=[
+   {zone:'head',shape:'sphere',attach:'head',center:[0,0,0],radius:round(headHalf)},
+   {zone:'torso',shape:'capsule',attach:'pelvis',center:[0,0,0],end:round(p.torso.getWorldPosition(new THREE.Vector3()).sub(p.pelvis.getWorldPosition(new THREE.Vector3())).toArray()),radius:round(Math.max(half(p.torso,'x'),half(p.torso,'z')))},
+   capsule('arm.left',p.armL,p.armL.children[2],p.armL.children[0],'armL'),
+   capsule('arm.right',p.armR,p.armR.children[2],p.armR.children[0],'armR'),
+   capsule('leg.left',p.legL,p.legL.userData.boot,p.legL.userData.thigh,'legL'),
+   capsule('leg.right',p.legR,p.legR.userData.boot,p.legR.userData.thigh,'legR'),
+  ];
   const body={
-   version:1,hero:def.id,catalogBody:recipe.catalogBody,frame:effective.frame,
+   version:1,hero:def.id,catalogBody:recipe.catalogBody,frame:effective.frame,hitZones,
    measured:{pivotHeight:round(rig.pivotHeight),upperLength:round(p.armR.userData.upperLength),foreLength:round(p.armR.userData.foreLength),
     height:round(headY-bootY),headTop:round(headY),footBottom:round(bootY),shoulderSpan:round(Math.abs(w(p.armL)[0]-w(p.armR)[0])),
     hipX:round(hipX),thighHalfWidth:round(thighHalf),torsoHalfDepth:round(torsoHalfDepth),
@@ -62,7 +77,7 @@ export default {
   return {
    manifest:{
     rig:{skeleton:'pw-hero-rig@1',catalogBody:recipe.catalogBody,bones:bank.joints.length},
-    sockets,
+    sockets,hitZones,
     frame:effective.frame,
     units:{sourceConversion:{scale:1,yawDegrees:0,mirrorX:false,sourceUp:'+Y',sourceForward:'+Z',note:'catalog body already in game units; see assets-src/quaternius/base-characters/PROVENANCE.md'}},
     budgets:{measured:{triangles,drawCalls:bank.meshes.length,materials:new Set(bank.meshes.map(m=>m.material)).size,bones:bank.joints.length,textures:1,bytes:Buffer.byteLength(JSON.stringify(bank))}},

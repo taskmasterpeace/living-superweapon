@@ -88,6 +88,99 @@
    ]
   }
  ],
+ "hitZones": [
+  {
+   "zone": "head",
+   "shape": "sphere",
+   "attach": "head",
+   "center": [
+    0,
+    0,
+    0
+   ],
+   "radius": 0.855
+  },
+  {
+   "zone": "torso",
+   "shape": "capsule",
+   "attach": "pelvis",
+   "center": [
+    0,
+    0,
+    0
+   ],
+   "end": [
+    0,
+    2.072,
+    0
+   ],
+   "radius": 2.0096
+  },
+  {
+   "zone": "arm.left",
+   "shape": "capsule",
+   "attach": "armL",
+   "center": [
+    0,
+    0,
+    0
+   ],
+   "end": [
+    0,
+    -3.584,
+    0
+   ],
+   "radius": 0.6272
+  },
+  {
+   "zone": "arm.right",
+   "shape": "capsule",
+   "attach": "armR",
+   "center": [
+    0,
+    0,
+    0
+   ],
+   "end": [
+    0,
+    -3.584,
+    0
+   ],
+   "radius": 0.6272
+  },
+  {
+   "zone": "leg.left",
+   "shape": "capsule",
+   "attach": "legL",
+   "center": [
+    0,
+    0,
+    0
+   ],
+   "end": [
+    0,
+    -4.256,
+    0.1
+   ],
+   "radius": 0.7168
+  },
+  {
+   "zone": "leg.right",
+   "shape": "capsule",
+   "attach": "legR",
+   "center": [
+    0,
+    0,
+    0
+   ],
+   "end": [
+    0,
+    -4.256,
+    0.1
+   ],
+   "radius": 0.7168
+  }
+ ],
  "frame": {
   "scale": 1.12,
   "bulk": 1.28,
@@ -159,17 +252,17 @@
  },
  "build": {
   "options": {},
-  "cacheKey": "27db478b85186a4f3770524bccd6a802e29913865d992b7f27b8756f5a3b38e1",
-  "contentHash": "60265cc18e2a2397de89cd4da93297c0d25d18a774a69106449ab5f3c75500c9",
+  "cacheKey": "9d1e9e73746d1610ee0afbaf04fcbf8795e9c76c0c032937bf4f46692a15c611",
+  "contentHash": "329d4e1cba58a764e988d4af625a23357e1be19a39b869f27b5115cf6f757bd0",
   "profile": "desktop"
  },
  "outputs": [
   {
    "path": "body.json",
    "role": "body",
-   "sha256": "29e87a0b9b25247c034f84fa371e2361929f3b363fb6442249408444bad72bc7",
-   "bytes": 1504
+   "sha256": "0a6800454837e2db332ed891cbcd4a24366632980d9ed92ee6504027fd9cf061",
+   "bytes": 2557
   }
  ],
- "packageHash": "036e005823ac93c0bbb254d414f6a2396de4126bd9b6451c3123cd9106c7c082"
+ "packageHash": "d753dd812575ab48ec4959dc2291e1b0cdaa70d4af80a7c64227911f68d9d0de"
 }

@@ -5,6 +5,8 @@
 import quaterniusUal from './quaternius-ual.js';
 import proceduralProp from './procedural-prop.js';
 import humanoidBody from './humanoid-body.js';
+import cmuAsfAmc from './cmu-asfamc.js';
+import anycreature from './anycreature.js';
 
 export const ADAPTERS={};
 export function registerAdapter(adapter){
@@ -15,3 +17,5 @@ export function registerAdapter(adapter){
 registerAdapter(quaterniusUal);
 registerAdapter(proceduralProp);
 registerAdapter(humanoidBody);
+registerAdapter(cmuAsfAmc);
+registerAdapter(anycreature);

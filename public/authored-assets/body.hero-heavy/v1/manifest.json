@@ -88,6 +88,99 @@
    ]
   }
  ],
+ "hitZones": [
+  {
+   "zone": "head",
+   "shape": "sphere",
+   "attach": "head",
+   "center": [
+    0,
+    0,
+    0
+   ],
+   "radius": 0.855
+  },
+  {
+   "zone": "torso",
+   "shape": "capsule",
+   "attach": "pelvis",
+   "center": [
+    0,
+    0,
+    0
+   ],
+   "end": [
+    0,
+    2.405,
+    0
+   ],
+   "radius": 2.2765
+  },
+  {
+   "zone": "arm.left",
+   "shape": "capsule",
+   "attach": "armL",
+   "center": [
+    0,
+    0,
+    0
+   ],
+   "end": [
+    0,
+    -4.16,
+    0
+   ],
+   "radius": 0.7105
+  },
+  {
+   "zone": "arm.right",
+   "shape": "capsule",
+   "attach": "armR",
+   "center": [
+    0,
+    0,
+    0
+   ],
+   "end": [
+    0,
+    -4.16,
+    0
+   ],
+   "radius": 0.7105
+  },
+  {
+   "zone": "leg.left",
+   "shape": "capsule",
+   "attach": "legL",
+   "center": [
+    0,
+    0,
+    0
+   ],
+   "end": [
+    0,
+    -4.94,
+    0.1
+   ],
+   "radius": 0.812
+  },
+  {
+   "zone": "leg.right",
+   "shape": "capsule",
+   "attach": "legR",
+   "center": [
+    0,
+    0,
+    0
+   ],
+   "end": [
+    0,
+    -4.94,
+    0.1
+   ],
+   "radius": 0.812
+  }
+ ],
  "frame": {
   "scale": 1.3,
   "bulk": 1.45,
@@ -159,17 +252,17 @@
  },
  "build": {
   "options": {},
-  "cacheKey": "c258647b7cda39325affdb643ec2b105caab70586424acaaad9aeb4244af7231",
-  "contentHash": "db05c74f95e20aaf993bd348c3afde86cf0e15a223d2604328137efa3f9fdb16",
+  "cacheKey": "487997f483893323e1ddfca31c67952598bb146730c8c01f40830839b0a18b66",
+  "contentHash": "3c6d1f88d037c825b5f7398090648b4f88aeb2cd99396e1308bcb8522b1d3b0b",
   "profile": "desktop"
  },
  "outputs": [
   {
    "path": "body.json",
    "role": "body",
-   "sha256": "3683eebbc209c888b9dde5c5a08a5ab90cda341c389e0be0f0f774bc2e7abcc8",
-   "bytes": 1490
+   "sha256": "3423bb797c3df7dcdac069c99b540dc01236eb7a07e58ef78564f7bdad279e85",
+   "bytes": 2537
   }
  ],
- "packageHash": "4c12a174522497a8589df61021d28662ae6feea741f604c5e211d79518cd734d"
+ "packageHash": "c453affcea9079c45950c0cbb307b91c814abd73c620835d9d4cc2a8e1a223d2"
 }

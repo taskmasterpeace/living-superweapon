@@ -63,13 +63,13 @@
  ],
  "bounds": {
   "min": [
-   -2.5306217670440674,
+   -2.53062,
    0,
-   -1.2999999523162842
+   -1.3
   ],
   "max": [
-   2.5306217670440674,
-   2.0299999713897705,
+   2.53062,
+   2.03,
    1.25
   ]
  },
@@ -162,8 +162,8 @@
  },
  "build": {
   "options": {},
-  "cacheKey": "450ccca08196287ef09ef7db2abe7467e02f2fa789c7a09020488f569c9ce917",
-  "contentHash": "6c1812dfd01469637b2244c405b3ffa6d4266b1a5894bb79d6e98b41606201d0",
+  "cacheKey": "137b2477a312ea726d1c51d5d46d44a76695491d540608e49f08689b511b8661",
+  "contentHash": "21977811a4594e6184854916a79a6ffd4aa0a2fae5b1e7c13fcfe8531f93af09",
   "profile": "desktop"
  },
  "outputs": [
@@ -174,5 +174,5 @@
    "bytes": 27800
   }
  ],
- "packageHash": "a7e88c63ccdc5a80091eb87b3cbbf31338df8d64b179f8450b73c7133e6a5d8a"
+ "packageHash": "4bff85d1a0f8b0e0eb65b3a98a64be965ee959387b4ae228af00b689755e5e2c"
 }
