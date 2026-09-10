@@ -1,37 +1,63 @@
-// Bounded native-mode DOM/CSS fixture. Dialogue is explicitly injected through
-// Comic.say for layout coverage; this is not a naturally-triggered speech claim.
-// Actors, AI, camera, HP and simulation clocks are not changed by the fixture.
-import assert from 'node:assert/strict';
 import {chromium} from 'playwright';
+import assert from 'node:assert/strict';
 import {mkdir,writeFile} from 'node:fs/promises';
-import {resolve} from 'node:path';
-const out=resolve('artifacts/frontline-speech-native'),result={rows:[],errors:[],injectedDialogue:true};
-await mkdir(out,{recursive:true});const browser=await chromium.launch(),page=await browser.newPage({viewport:{width:1600,height:900}});
-const watchdog=setTimeout(()=>page.close().catch(()=>{}),90000);
-page.on('pageerror',e=>result.errors.push(e.message));page.on('console',m=>{if(m.type()==='error')result.errors.push(m.text());});
-try{
- await page.addInitScript(()=>localStorage.setItem('powerworld_prefs_v1',JSON.stringify({p1:'vega',p2:'kano',cameraPreset:'frontline',ai:1.25})));
- await page.goto('http://127.0.0.1:5180/powerworld.html');await page.locator('#pwEncounter [data-encounter="frontline"]').click();await page.locator('#pwGo').click();
- await page.waitForFunction(()=>window.PW?.game?.running&&PW.game.pwStage?.frontlineReady,null,{timeout:60000});await page.evaluate(()=>document.fonts.ready);
- for(const [width,height] of [[1600,900],[1280,720],[800,600]]){
-  await page.setViewportSize({width,height});
-  const row=await page.evaluate(()=>{
-   const g=PW.game,c=g.comic,p=g.player,rect=el=>{const r=el.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height,left:r.left,right:r.right,top:r.top,bottom:r.bottom};};
-   const old=c.say(p,'FIRST',{life:10}),it=c.say(p,'STAY BACK!',{tone:'weak',life:10});c.update(.016);
-   const shown=el=>{const s=getComputedStyle(el);return s.display!=='none'&&s.visibility!=='hidden'&&s.opacity!=='0'&&el.getBoundingClientRect().width>0;};
-   const panels=[...new Set([...Object.values(g.hud.el).filter(el=>el?.getBoundingClientRect),document.querySelector('#frontlineObjective')])]
-    .filter(el=>el&&['hFoe','hRadar','hFieldRec','hFeed','frontlineObjective'].includes(el.id)&&shown(el)).map(el=>({id:el.id,rect:rect(el)}));
-   return {width:innerWidth,height:innerHeight,mode:g.modeId,ready:g.pwStage.frontlineReady,kind:it.kind,
-    rect:rect(it.node),visible:shown(it.node),speaker:it.node.querySelector('.cmfield-speaker')?.textContent,text:it.node.querySelector('.cmfield-text')?.textContent,
-    oldRemoved:!old.node.isConnected,fieldCount:c.items.filter(it=>it.kind==='field').length,svg:it.node.querySelectorAll('svg').length,panels,
-    newsEnabled:g.news.enabled,aiEnabled:g.ms.frontline.soldiers.every(f=>!!f.ai)};
-  });
-  result.rows.push(row);assert.equal(row.kind,'field');assert.equal(row.mode,'powerworld');assert.ok(row.ready&&row.visible&&row.oldRemoved);
-  assert.equal(row.fieldCount,1);assert.equal(row.svg,0);assert.equal(row.text,'STAY BACK!');assert.ok(row.speaker.includes('VEGA'));
-  assert.ok(row.rect.top>=0&&row.rect.bottom<=Math.min(180,row.height*.26));assert.ok(row.rect.left>=0&&row.rect.right<=row.width);
-  for(const panel of row.panels)assert.ok(!(row.rect.left<panel.rect.right&&row.rect.right>panel.rect.left&&row.rect.top<panel.rect.bottom&&row.rect.bottom>panel.rect.top),`Field speech overlaps ${panel.id}`);
-  assert.ok(row.newsEnabled&&row.aiEnabled);await page.screenshot({path:resolve(out,`field-${width}.png`)});
+const out='artifacts/frontline-speech',base=process.env.LSW_URL||'http://127.0.0.1:5182';
+await mkdir(out,{recursive:true});
+const browser=await chromium.launch(),page=await browser.newPage({viewport:{width:1600,height:900}});
+const errors=[],report={url:base+'/powerworld.html',evidence:'Native UI entry and observed native speech calls; subsequent explicitly injected layout fixtures are not naturally triggered dialogue.'};
+page.on('pageerror',e=>errors.push(e.message));
+try {
+ await page.goto(report.url);await page.waitForFunction(()=>window.PW?.game);
+ await page.evaluate(()=>{const c=LSW.game.comic,say=c.say.bind(c);window.nativeSpeech=[];c.say=(f,text,opts)=>{const it=say(f,text,opts);nativeSpeech.push({speaker:f?.def?.name,text,tone:opts?.tone,admitted:!!it});return it;};});
+ await page.locator('#pwEncounter [data-encounter="frontline"]').click();await page.locator('#pwGo').click();
+ await page.waitForFunction(()=>LSW.game.running&&LSW.game.pwStage?.frontlineReady,{},{timeout:60000});
+ await page.waitForTimeout(6500);report.nativeCalls=await page.evaluate(()=>nativeSpeech);
+ report.upstreamFixture=await page.evaluate(()=>{
+  const g=LSW.game,c=g.comic,p=g.player;c.clear();g._feelSpokeT=-100;
+  p._psyche.pendingInstant={text:'Still standing.',fx:{}};g.updatePsyche(0);c.update(.016);
+  return {injected:true,path:'Injected pendingInstant -> native updatePsyche -> comic.say',admitted:c.items.some(it=>it.speech),items:c.items.filter(it=>it.speech).map(it=>({kind:it.kind,tone:it.tone}))};
+ });
+ assert.ok(report.upstreamFixture.admitted,'Native upstream speech event path');
+ report.fixtures=[];
+ for(const [label,width,height,tone] of [['talk',1600,900,'talk'],['yell',1600,900,'yell'],['portrait-talk',390,844,'talk'],['landscape-yell',844,390,'yell']]){
+  await page.setViewportSize({width,height});await page.waitForTimeout(200);
+  const row=await page.evaluate(({label,tone})=>{
+   const g=LSW.game,c=g.comic,p=g.player;g.update=()=>g.world.render();g.running=true;g.hud.titleOpen=false;g.matchOver=false;
+   c.clear();p.hp=p.maxHp;p.alive=true;p.obj.visible=true;p.obj.updateMatrixWorld(true);
+   const it=c.say(p,tone==='yell'?'GET TO COVER!':'Ready. Moving in.',{tone,category:label,life:5});c.update(.016);
+   const n=it?.node,r=n?.getBoundingClientRect();
+   window.fixtureItem=it;
+   return {label,injected:true,admitted:!!it,kind:it?.kind,tone:it?.tone,visibility:n?.style.visibility,rect:r?{x:r.x,y:r.y,w:r.width,h:r.height}:null,tail:it?.tail?.getAttribute('d'),point:c._speechPoint(p),viewport:{w:innerWidth,h:innerHeight}};
+  },{label,tone});
+  await page.waitForTimeout(240);await page.evaluate(()=>{LSW.game.comic.update(.016);fixtureItem?.node.getAnimations().forEach(a=>a.finish());});
+  const measured=await page.evaluate(()=>{const it=fixtureItem,r=it?.node.getBoundingClientRect(),hud=document.querySelector('#hud .player-status')?.getBoundingClientRect();return {visibility:it?.node.style.visibility,rect:r?{x:r.x,y:r.y,w:r.width,h:r.height}:null,tail:it?.tail?.getAttribute('d'),tailMode:it?.node.dataset.tailMode,speakerLabel:it?.speakerLabel?.textContent,overlapsVitals:!!(r&&hud&&r.right>hud.left&&r.left<hud.right&&r.bottom>hud.top&&r.top<hud.bottom)};});Object.assign(row,measured);
+  report.fixtures.push(row);await page.screenshot({path:`${out}/${label}.png`});
+  assert.ok(row.admitted,label+' admitted');assert.equal(row.kind,'bub');assert.equal(row.visibility,'',label+' visible');
+  assert.ok(row.rect.x>=0&&row.rect.y>=0&&row.rect.x+row.rect.w<=width&&row.rect.y+row.rect.h<=height,label+' safe bounds');
+  assert.equal(row.overlapsVitals,false,label+' avoids portrait/vitals');
+  assert.ok(row.tail || (row.tailMode==='speaker-label'&&row.speakerLabel.includes('SPEAKING')),label+' has a mouth tail or explicit speaker fallback');
+  if(label==='talk'||label==='yell')assert.ok(row.tail,label+' has a clear mouth tail');
+  if(label==='talk'){
+   report.animatedAnchor=await page.evaluate(()=>{const c=LSW.game.comic,p=LSW.game.player,it=fixtureItem,old=p.parts.head.position.x,a=c._speechPoint(p);p.parts.head.position.x+=1;c.update(.016);const b=c._speechPoint(p),tail=it.tail.getAttribute('d');p.parts.head.position.x=old;return {injected:true,before:a,after:b,tail};});
+   assert.notEqual(report.animatedAnchor.before.x,report.animatedAnchor.after.x,'Tail anchor follows animated head transform');
+  }
  }
- assert.deepEqual(result.errors,[]);result.success=true;
-}catch(error){result.success=false;result.failure=String(error);process.exitCode=1;}
-finally{clearTimeout(watchdog);await browser.close();await writeFile(resolve(out,'results.json'),JSON.stringify(result,null,2));console.log(JSON.stringify(result));}
+ await page.setViewportSize({width:1600,height:900});
+ report.policyFixtures=await page.evaluate(()=>{
+  const g=LSW.game,c=g.comic,p=g.player,foe=g.entities.find(f=>f!==p&&g.isFoe(p,f));const rows={};
+  c.clear();const first=c.say(p,'Ordinary talk',{tone:'talk'});const blocked=c.say(foe,'Crowded chatter',{tone:'talk'});rows.concurrency={first:!!first,blocked:!blocked,count:c.items.filter(i=>i.speech).length};
+  const warning=c.say(p,'Incoming!',{tone:'yell',category:'warning'});rows.warningPreempts=!!warning;
+  c.clear();const oldVisible=foe.obj.visible;foe.obj.visible=false;rows.hiddenEnemy=c.say(foe,'Hidden enemy',{tone:'yell',allowOffscreen:true})===null;foe.obj.visible=oldVisible;
+  c.clear();const old=foe.pos.clone();foe.pos.x=p.pos.x+500;rows.far=c.say(foe,'Far talk',{tone:'talk'})===null;foe.pos.copy(old);
+  c.clear();const camera=g.world.camera,oldCam=camera.position.clone(),mouth=p.parts.head.getWorldPosition(p.pos.clone());camera.position.copy(mouth);camera.position.z+=20;camera.lookAt(mouth.x,mouth.y,mouth.z+100);camera.updateMatrixWorld(true);
+  rows.behindPoint=c._speechPoint(p);rows.behind=c.say(p,'Behind you',{tone:'talk'})===null;
+  const radio=c.say(p,'Radio check',{tone:'radio'});c.update(.016);rows.radio={admitted:!!radio,kind:radio?.kind,label:radio?.name?.textContent,noTail:!radio?.tail};camera.position.copy(oldCam);
+  return rows;
+ });
+ assert.equal(report.policyFixtures.hiddenEnemy,true);assert.equal(report.policyFixtures.far,true);assert.equal(report.policyFixtures.concurrency.count,1);assert.equal(report.policyFixtures.warningPreempts,true);
+ assert.equal(report.policyFixtures.radio.kind,'field');assert.equal(report.policyFixtures.radio.noTail,true);
+ assert.equal(report.policyFixtures.behindPoint.behind,true);assert.equal(report.policyFixtures.behind,true);
+ assert.deepEqual(errors,[]);
+} catch(error) {report.failure=String(error);throw error;
+} finally {report.errors=errors;await writeFile(`${out}/report.json`,JSON.stringify(report,null,2));await browser.close();}
+console.log(JSON.stringify(report,null,2));
