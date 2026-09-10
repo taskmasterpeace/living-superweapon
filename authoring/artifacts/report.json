@@ -1,0 +1,139 @@
+{
+ "generated": "repeatable",
+ "catalog": true,
+ "packages": [],
+ "fixtures": [
+  {
+   "group": "valid",
+   "name": "fixture.motion",
+   "ok": true,
+   "codes": [],
+   "errors": []
+  },
+  {
+   "group": "invalid",
+   "name": "budget-exceeded",
+   "ok": false,
+   "codes": [
+    "budget"
+   ],
+   "errors": [
+    {
+     "code": "budget",
+     "path": "$.budgets.measured.triangles",
+     "message": "2 exceeds the hard desktop limit 1"
+    }
+   ]
+  },
+  {
+   "group": "invalid",
+   "name": "duplicate-clip-id",
+   "ok": false,
+   "codes": [
+    "duplicate-id"
+   ],
+   "errors": [
+    {
+     "code": "duplicate-id",
+     "path": "$.clips[1].id",
+     "message": "duplicate clip id"
+    }
+   ]
+  },
+  {
+   "group": "invalid",
+   "name": "incompatible-version",
+   "ok": false,
+   "codes": [
+    "incompatible-version"
+   ],
+   "errors": [
+    {
+     "code": "incompatible-version",
+     "path": "$.formatVersion",
+     "message": "expected 1, got 2"
+    }
+   ]
+  },
+  {
+   "group": "invalid",
+   "name": "invalid-rig-mapping",
+   "ok": false,
+   "codes": [
+    "rig-mapping"
+   ],
+   "errors": [
+    {
+     "code": "rig-mapping",
+     "path": "$.rig.mapping.kneeL",
+     "message": "every humanoid slot must map to a named source joint"
+    },
+    {
+     "code": "rig-mapping",
+     "path": "$.rig.mapping",
+     "message": "two slots map to the same source joint"
+    }
+   ]
+  },
+  {
+   "group": "invalid",
+   "name": "missing-license",
+   "ok": false,
+   "codes": [
+    "license"
+   ],
+   "errors": [
+    {
+     "code": "license",
+     "path": "$.provenance.license",
+     "message": "license must be an SPDX identifier or Proprietary-Internal"
+    }
+   ]
+  },
+  {
+   "group": "invalid",
+   "name": "missing-muzzle",
+   "ok": false,
+   "codes": [
+    "missing-socket"
+   ],
+   "errors": [
+    {
+     "code": "missing-socket",
+     "path": "$.sockets",
+     "message": "equipment package is missing required socket \"muzzle\""
+    }
+   ]
+  },
+  {
+   "group": "invalid",
+   "name": "nan-frame",
+   "ok": false,
+   "codes": [
+    "nan-frame"
+   ],
+   "errors": [
+    {
+     "code": "nan-frame",
+     "path": "$.outputs[0]",
+     "message": "pose bank is not valid JSON: Unexpected token 'N', ...\".6,-0.8,0,NaN,-1,0,0\"... is not valid JSON"
+    }
+   ]
+  },
+  {
+   "group": "invalid",
+   "name": "unsafe-external-path",
+   "ok": false,
+   "codes": [
+    "unsafe-path"
+   ],
+   "errors": [
+    {
+     "code": "unsafe-path",
+     "path": "$.source.files[0].path",
+     "message": "path must not contain . or .. segments"
+    }
+   ]
+  }
+ ]
+}

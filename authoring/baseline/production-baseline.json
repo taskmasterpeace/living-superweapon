@@ -1,0 +1,289 @@
+{
+ "format": "pw-production-baseline",
+ "formatVersion": 1,
+ "measuredFrom": "pinned combat baseline bcf63279cdf8c99cbdbc5ad66ee142645de93639",
+ "classes": {
+  "body": {
+   "count": 2,
+   "max": {
+    "triangles": 15060,
+    "drawCalls": 3,
+    "materials": 3,
+    "bones": 65,
+    "textures": 1,
+    "bytes": 2052305
+   },
+   "mean": {
+    "triangles": 14689,
+    "drawCalls": 3,
+    "materials": 3,
+    "bones": 65,
+    "textures": 1,
+    "bytes": 2018361
+   },
+   "samples": [
+    {
+     "name": "hero-body-bank:superhero-male",
+     "triangles": 14318,
+     "drawCalls": 3,
+     "materials": 3,
+     "bones": 65,
+     "textures": 1,
+     "bytes": 1984416
+    },
+    {
+     "name": "hero-body-bank:superhero-female",
+     "triangles": 15060,
+     "drawCalls": 3,
+     "materials": 3,
+     "bones": 65,
+     "textures": 1,
+     "bytes": 2052305
+    }
+   ]
+  },
+  "equipment": {
+   "count": 4,
+   "max": {
+    "triangles": 4256,
+    "drawCalls": 6,
+    "materials": 3,
+    "bones": 0,
+    "textures": 0,
+    "bytes": 342056
+   },
+   "mean": {
+    "triangles": 3473,
+    "drawCalls": 5,
+    "materials": 3,
+    "bones": 0,
+    "textures": 0,
+    "bytes": 254288
+   },
+   "samples": [
+    {
+     "name": "public/models/frontline/field-armor.glb",
+     "triangles": 2268,
+     "drawCalls": 6,
+     "materials": 3,
+     "bones": 0,
+     "textures": 0,
+     "bytes": 193576
+    },
+    {
+     "name": "public/models/frontline/field-boot.glb",
+     "triangles": 3416,
+     "drawCalls": 3,
+     "materials": 3,
+     "bones": 0,
+     "textures": 0,
+     "bytes": 275740
+    },
+    {
+     "name": "public/models/frontline/field-greaves.glb",
+     "triangles": 3952,
+     "drawCalls": 6,
+     "materials": 3,
+     "bones": 0,
+     "textures": 0,
+     "bytes": 205780
+    },
+    {
+     "name": "public/models/frontline/field-harness.glb",
+     "triangles": 4256,
+     "drawCalls": 6,
+     "materials": 3,
+     "bones": 0,
+     "textures": 0,
+     "bytes": 342056
+    }
+   ]
+  },
+  "prop": {
+   "count": 12,
+   "max": {
+    "triangles": 54234,
+    "drawCalls": 25,
+    "materials": 7,
+    "bones": 0,
+    "textures": 3,
+    "bytes": 2536024
+   },
+   "mean": {
+    "triangles": 22963,
+    "drawCalls": 7,
+    "materials": 3,
+    "bones": 0,
+    "textures": 1,
+    "bytes": 1128799
+   },
+   "samples": [
+    {
+     "name": "public/models/frontline/armored-scout.glb",
+     "triangles": 30288,
+     "drawCalls": 25,
+     "materials": 7,
+     "bones": 0,
+     "textures": 1,
+     "bytes": 2536024
+    },
+    {
+     "name": "public/models/frontline/attack-helicopter.glb",
+     "triangles": 31416,
+     "drawCalls": 8,
+     "materials": 6,
+     "bones": 0,
+     "textures": 1,
+     "bytes": 2280424
+    },
+    {
+     "name": "public/models/frontline/background-ridge-kit.glb",
+     "triangles": 6600,
+     "drawCalls": 3,
+     "materials": 1,
+     "bones": 0,
+     "textures": 0,
+     "bytes": 218272
+    },
+    {
+     "name": "public/models/frontline/boulder-04.glb",
+     "triangles": 22860,
+     "drawCalls": 1,
+     "materials": 1,
+     "bones": 0,
+     "textures": 3,
+     "bytes": 974160
+    },
+    {
+     "name": "public/models/frontline/cliff-shell-02.glb",
+     "triangles": 3493,
+     "drawCalls": 1,
+     "materials": 1,
+     "bones": 0,
+     "textures": 3,
+     "bytes": 613804
+    },
+    {
+     "name": "public/models/frontline/clone-kit.glb",
+     "triangles": 5688,
+     "drawCalls": 6,
+     "materials": 3,
+     "bones": 0,
+     "textures": 0,
+     "bytes": 394108
+    },
+    {
+     "name": "public/models/frontline/eroded-mesa-kit.glb",
+     "triangles": 51872,
+     "drawCalls": 8,
+     "materials": 1,
+     "bones": 0,
+     "textures": 0,
+     "bytes": 1711056
+    },
+    {
+     "name": "public/models/frontline/fractured-talus-kit.glb",
+     "triangles": 23982,
+     "drawCalls": 4,
+     "materials": 1,
+     "bones": 0,
+     "textures": 0,
+     "bytes": 541472
+    },
+    {
+     "name": "public/models/frontline/outpost-kit.glb",
+     "triangles": 39474,
+     "drawCalls": 16,
+     "materials": 6,
+     "bones": 0,
+     "textures": 3,
+     "bytes": 1915052
+    },
+    {
+     "name": "public/models/frontline/patrol-jet.glb",
+     "triangles": 2684,
+     "drawCalls": 4,
+     "materials": 4,
+     "bones": 0,
+     "textures": 1,
+     "bytes": 461800
+    },
+    {
+     "name": "public/models/frontline/tiered-escarpment-kit.glb",
+     "triangles": 54234,
+     "drawCalls": 8,
+     "materials": 1,
+     "bones": 0,
+     "textures": 0,
+     "bytes": 1698672
+    },
+    {
+     "name": "public/models/frontline/transport-helicopter.glb",
+     "triangles": 2960,
+     "drawCalls": 3,
+     "materials": 1,
+     "bones": 0,
+     "textures": 1,
+     "bytes": 200744
+    }
+   ]
+  },
+  "motion": {
+   "count": 4,
+   "max": {
+    "triangles": 0,
+    "drawCalls": 0,
+    "materials": 0,
+    "bones": 0,
+    "textures": 0,
+    "bytes": 136024
+   },
+   "mean": {
+    "triangles": 0,
+    "drawCalls": 0,
+    "materials": 0,
+    "bones": 0,
+    "textures": 0,
+    "bytes": 85062
+   },
+   "samples": [
+    {
+     "name": "src/data/locomotion-bank.json",
+     "triangles": 0,
+     "drawCalls": 0,
+     "materials": 0,
+     "bones": 0,
+     "textures": 0,
+     "bytes": 136024
+    },
+    {
+     "name": "src/data/strike-bank.json",
+     "triangles": 0,
+     "drawCalls": 0,
+     "materials": 0,
+     "bones": 0,
+     "textures": 0,
+     "bytes": 46537
+    },
+    {
+     "name": "src/data/heavy-strike-bank.json",
+     "triangles": 0,
+     "drawCalls": 0,
+     "materials": 0,
+     "bones": 0,
+     "textures": 0,
+     "bytes": 27411
+    },
+    {
+     "name": "src/data/jump-bank.json",
+     "triangles": 0,
+     "drawCalls": 0,
+     "materials": 0,
+     "bones": 0,
+     "textures": 0,
+     "bytes": 130277
+    }
+   ]
+  }
+ }
+}

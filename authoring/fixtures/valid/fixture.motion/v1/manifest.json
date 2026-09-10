@@ -1,0 +1,132 @@
+{
+ "format": "pw-asset-package",
+ "formatVersion": 1,
+ "id": "fixture.motion",
+ "version": 1,
+ "kind": "humanoid-motion",
+ "displayName": "Fixture motion",
+ "tags": [
+  "fixture"
+ ],
+ "provenance": {
+  "author": "PowerWorld authoring fixtures",
+  "license": "CC0-1.0",
+  "redistribution": "free",
+  "terms": "Synthetic test data."
+ },
+ "source": {
+  "adapter": "fixture@1",
+  "files": [
+   {
+    "path": "authoring/fixtures/make-fixtures.mjs",
+    "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+   }
+  ],
+  "recipe": {
+   "path": "authoring/recipes/fixture/recipe.json",
+   "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+  }
+ },
+ "tool": {
+  "name": "powerworld-authoring",
+  "version": "0.1.0",
+  "three": "0.169.0",
+  "adapterVersion": 1
+ },
+ "build": {
+  "options": {},
+  "cacheKey": "0000000000000000000000000000000000000000000000000000000000000000",
+  "contentHash": "0000000000000000000000000000000000000000000000000000000000000000",
+  "profile": "desktop"
+ },
+ "units": {
+  "lengthUnit": "game-unit",
+  "metersPerUnit": 0.19,
+  "up": "+Y",
+  "forward": "+Z",
+  "handedness": "right",
+  "sourceConversion": {
+   "scale": 1,
+   "yawDegrees": 0,
+   "mirrorX": false,
+   "sourceUp": "+Y",
+   "sourceForward": "+Z"
+  }
+ },
+ "outputs": [
+  {
+   "path": "pose-bank.json",
+   "role": "pose-bank",
+   "sha256": "bcb82c333d45064d6b5b38b46f3d9b8209038f7954b8bb7332019c5ff5d9b3e6",
+   "bytes": 329
+  }
+ ],
+ "rig": {
+  "skeleton": "pw-pose-bridge@1",
+  "mapping": {
+   "hip": "joint_0",
+   "chest": "joint_1",
+   "head": "joint_2",
+   "shoulderL": "joint_3",
+   "elbowL": "joint_4",
+   "handL": "joint_5",
+   "shoulderR": "joint_6",
+   "elbowR": "joint_7",
+   "handR": "joint_8",
+   "hipL": "joint_9",
+   "kneeL": "joint_10",
+   "footL": "joint_11",
+   "toeL": "joint_12",
+   "hipR": "joint_13",
+   "kneeR": "joint_14",
+   "footR": "joint_15",
+   "toeR": "joint_16"
+  },
+  "bones": 17
+ },
+ "clips": [
+  {
+   "id": "idle",
+   "take": "Fixture_Idle",
+   "duration": 0.016666666666666666,
+   "loop": true,
+   "sampleRate": 60,
+   "frames": 2,
+   "mirror": null,
+   "handedness": "none",
+   "events": [
+    {
+     "t": 0,
+     "type": "loop"
+    }
+   ]
+  }
+ ],
+ "budgets": {
+  "profile": "desktop",
+  "measured": {
+   "triangles": 0,
+   "drawCalls": 0,
+   "materials": 0,
+   "bones": 0,
+   "textures": 0,
+   "bytes": 329
+  },
+  "limits": {
+   "triangles": 1,
+   "drawCalls": 1,
+   "materials": 1,
+   "bones": 1,
+   "textures": 1,
+   "bytes": 170030
+  }
+ },
+ "compatibility": {
+  "poseBridge": {
+   "frameLength": 45,
+   "layout": "8x3 unit segment directions, 5x4 quaternions (hip,chest,head,footL,footR), 1 support ratio",
+   "engineModule": "src/engine/authored-pose.js"
+  }
+ },
+ "packageHash": "8fe5e4e39b4bfede1ed198e448a04975d929cbccbc65a4b210ad6f70e9f578db"
+}
