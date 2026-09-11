@@ -198,6 +198,15 @@ body.phone #pwTitle h1{ font-size:34px; }
   const save = () => { try { localStorage.setItem(PREF, JSON.stringify({ p1: selYou.id, p2: selFoe.id, two, ai, cameraPreset, daylight, weatherPreset })); } catch {} };
   const footage = createFieldFootage(ctx.game,{heroId:selYou.id,onOpenNewsroom:()=>ctx.openNewsroom?.({heroId:selYou.id})});
 
+  const openPlayerSelect=()=>{
+    el.style.visibility='hidden';
+    hud.onSelectBack=()=>{el.style.visibility='visible';};
+    hud.showSelect((cfg)=>{
+      selYou=ROSTER.find(r=>r.id===cfg.p1)||selYou;save();
+      ctx.enter({mode:'powerworld',p1:selYou.id,p2:selFoe.id,twoPlayer:two,aiLevel:ai,encounter:two?'sparring':encounter,cameraPreset:two?'character':cameraPreset,daylight,weatherPreset});
+    },{mode:'powerworld',modeName:'POWERWORLD',p1:selYou.id});
+  };
+
   // ---- the stage readout, every figure derived from the stage itself ----
   const loose = STAGE.loose.reduce((a, b) => a + b, 0);
   const stageFacts = () => [
@@ -330,11 +339,7 @@ body.phone #pwTitle h1{ font-size:34px; }
     // The OPPONENT keeps the grid: assigning a foe is admin, picking YOUR fighter is the ceremony.
     for (const t of el.querySelectorAll('.pwtab')) t.onclick = () => {
       if (t.dataset.pick === 'you' && hud.showSelect) {
-        hud.onSelectBack = () => {};                       // the door is still mounted beneath
-        hud.showSelect((cfg) => {
-          selYou = ROSTER.find(r => r.id === cfg.p1) || selYou; save();
-          ctx.enter({ mode: 'powerworld', p1: selYou.id, p2: selFoe.id, twoPlayer: two, aiLevel: ai, encounter: two ? 'sparring' : encounter, cameraPreset:two?'character':cameraPreset, daylight, weatherPreset });
-        }, { mode: 'powerworld', modeName: 'POWERWORLD', p1: selYou.id });
+        openPlayerSelect();
         return;
       }
       picking = t.dataset.pick; render();
@@ -381,8 +386,12 @@ body.phone #pwTitle h1{ font-size:34px; }
     // select button does the wrong thing, the wheel cycles a hero you cannot see).
     hud.titleOpen = true;
     document.body.classList.remove('playing');
+    el.style.visibility='visible';
     el.style.display = 'flex';
     footage.open();
+    // Character choice is PowerWorld's front door. The configuration registry
+    // remains one Escape / Filters action behind it for encounter and weather.
+    if(location.pathname==='/'||location.pathname.endsWith('/index.html'))queueMicrotask(openPlayerSelect);
   }
   function close() {
     footage.close();

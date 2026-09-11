@@ -46,7 +46,7 @@ function powReach(a) {
 const SEL_CSS = `
 #hSelect{position:fixed;inset:0;z-index:71;display:none;flex-direction:column;
   font-family:var(--f-display,"Rajdhani",system-ui,sans-serif);color:var(--text,#e8e2d6);
-  background:radial-gradient(120% 90% at 50% 8%,rgba(14,14,20,.62),rgba(6,7,11,.94) 70%);}
+  background:radial-gradient(120% 90% at 50% 8%,#17170f 0%,#090a0d 48%,#050609 78%);}
 #hSelect.on{display:flex}
 #hSelect .selscan{position:absolute;inset:0;pointer-events:none;
   background:repeating-linear-gradient(0deg,rgba(0,0,0,.16) 0 1px,transparent 1px 3px);opacity:.35;mix-blend-mode:multiply}

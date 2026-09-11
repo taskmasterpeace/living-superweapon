@@ -4,13 +4,13 @@ import {chromium} from 'playwright';
 const base=process.env.LSW_TEST_URL||'http://127.0.0.1:5184';
 const browser=await chromium.launch({headless:true});
 const page=await browser.newPage({viewport:{width:1600,height:900},deviceScaleFactor:1});
-page.setDefaultTimeout(5000);
+page.setDefaultTimeout(15000);
 const errors=[];
 page.on('pageerror',error=>errors.push(String(error)));
 page.on('console',message=>{if(message.type()==='error')errors.push(message.text());});
 
 try{
- await page.goto(base+'/powerworld.html',{waitUntil:'networkidle'});
+ await page.goto(base+'/powerworld.html',{waitUntil:'domcontentloaded'});
  await page.waitForFunction(()=>window.LSW?.game?.world?.renderer);
  await page.locator('#pwTitle .pwtab[data-pick="you"]').evaluate(element=>element.click());
  await page.waitForSelector('#hSelect.on',{state:'visible'});

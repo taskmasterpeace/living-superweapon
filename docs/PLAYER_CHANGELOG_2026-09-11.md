@@ -7,7 +7,7 @@ This release turns the desert prototype into a more complete superhero combat lo
 - Added three physical speed gears. Each tier has its own acceleration, top speed, braking distance, energy pressure, camera response, and HUD state.
 - Shift now controls movement gears. Tap or hold to sprint; double-tap and hold the second press to power up through the available tiers.
 - The highest available speed tier gets a clear MAX presentation so players can tell when they have reached it.
-- Added independent Alt free-look. Hold Alt to look around within the character's shoulder limits while continuing to travel, fly, and aim along the original heading.
+- Added independent Alt camera composition. Hold Alt to slide toward a rear three-quarter view; the camera turns inward enough to keep the player and locked target together while travel and attack aim retain their original heading.
 - Kept flight tier differences: grounded fighters, clumsy fliers, levitators, and full fliers still move differently.
 - Separated universal power-up from combat power slots. Powering up no longer consumes an ability slot.
 
@@ -42,7 +42,10 @@ This release turns the desert prototype into a more complete superhero combat lo
 
 ## HUD, Newsroom, and presentation
 
-- Rebuilt the movement-gear display as a compact lower-left strip with clear I/II/III and MAX feedback. Touch controls keep full-size targets.
+- PowerWorld now opens directly on the full-screen character-selection ceremony, with the live fighter in the center and rendered roster portraits across the bottom. Escape or Filters opens the encounter and weather registry.
+- Removed the separate movement-gears card and standalone Armory/Loadout button. Flight gear and speed now appear inside the existing left-side player panel.
+- Flight speed now drives the length of the fighter's world-space wake, making faster travel readable on the character instead of through another dashboard.
+- Reworked VEGA as a bald Black man with a gold V fitted over both the front and back of his uniform.
 - Restored the Newsroom and operation reports to the shared Impact palette and typography so they read as part of the same game.
 - Added operation-specific headlines and details instead of generic success or failure copy.
 - SOL now uses the weighted hero body by default and has a subtle fabric response on the suit and cape while preserving the established colors and wardrobe.
@@ -66,7 +69,8 @@ This release turns the desert prototype into a more complete superhero combat lo
 - Removed human mood and psyche behavior from zombies.
 - Removed the requirement to kill every clone before recovering the case.
 - Removed combat overlays from Newsroom and operation-result screens.
-- Replaced the oversized desktop movement card and centered default status layout with a compact lower-left presentation.
+- Removed the duplicate movement card and folded its useful flight readout into the existing player status presentation.
+- Removed PowerWorld's floating Armory/Loadout shortcut from gameplay.
 - Replaced the separate Newsroom palette with the game's shared warm-neutral, amber, and gold Impact system.
 
 ## Known presentation work

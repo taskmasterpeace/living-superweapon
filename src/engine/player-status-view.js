@@ -51,7 +51,7 @@ export class PlayerStatusView{
   }
   const effects=s.effects.map(e=>`${e.id}:${e.remaining}:${e.label}`).join('|');
   if(effects!==this.effects){this.effects=effects;this.nodes.effects.replaceChildren();for(const e of s.effects){const el=document.createElement('span');el.className='ps-effect';el.title=e.label;el.setAttribute('aria-label',e.label+(e.remaining?` ${e.remaining} seconds`:''));el.innerHTML=icon(e.glyph,13);if(e.id==='speed')el.append(document.createTextNode(e.label.replace('Speed ','')));if(e.remaining)el.append(document.createTextNode(' '+e.remaining+'s'));this.nodes.effects.appendChild(el);}}
-  this.nodes.flight.hidden=!s.flight;if(s.flight)this.nodes.flight.textContent=`${s.flight.label} · ${s.flight.speed} km/h`;
+  this.nodes.flight.hidden=!s.flight;if(s.flight){this.nodes.flight.textContent=`${s.flight.label} · ${s.flight.speed} km/h`;this.nodes.flight.style.setProperty('--flight-speed',s.flight.ratio);}
   const portraitKey=p.def.id+'|'+p._formKey;
   if(portraitKey!==this.portraitKey){this.portraitKey=portraitKey;this.image.alt=s.name+' — '+s.form;this.image.hidden=true;
    import('./player-status-portrait.js').then(m=>m.portraitOf(p.def)).then(url=>{if(this.portraitKey===portraitKey){this.image.src=url;this.image.hidden=false;}}).catch(error=>{console.warn('HUD portrait unavailable',error);});

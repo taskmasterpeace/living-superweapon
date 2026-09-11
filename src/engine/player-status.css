@@ -25,7 +25,8 @@ body.powerworld #hud .player-status{display:grid;position:absolute;left:clamp(18
 #hud .ps-form{padding:3px 6px;background:var(--ps-bg);font-size:9px;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 #hud .ps-effects{display:flex;gap:3px;}
 #hud .ps-effect{display:flex;align-items:center;gap:2px;padding:3px;background:var(--ps-bg);color:var(--ps-guard);font-size:9px;}
-#hud .ps-flight{grid-column:2;padding:3px 6px;justify-self:start;background:var(--ps-bg);color:var(--ps-energy);font-size:10px;font-variant-numeric:tabular-nums;}
+#hud .ps-flight{position:relative;grid-column:2;width:min(220px,100%);padding:3px 6px 7px;justify-self:start;background:var(--ps-bg);color:var(--ps-energy);font-size:10px;font-variant-numeric:tabular-nums;overflow:hidden;}
+#hud .ps-flight::after{content:'';position:absolute;left:6px;right:6px;bottom:3px;height:2px;background:linear-gradient(90deg,var(--ps-energy),oklch(.94 .05 90));transform:scaleX(var(--flight-speed,0));transform-origin:left;box-shadow:0 0 7px var(--ps-energy);transition:transform .12s linear;}
 #hud .ps-flight[hidden]{display:none;}
 #hud .ps-critical .ps-hp{border-color:oklch(.72 .20 28);}
 #hud .ps-critical .ps-hp .ps-fill{background:oklch(.63 .22 28);}

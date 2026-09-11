@@ -1,0 +1,11 @@
+{
+  "base": "http://127.0.0.1:5182",
+  "state": {
+    "gearPanel": null,
+    "inventory": null,
+    "flight": "FLIGHT · GEAR III · 112 km/h",
+    "wakeSamples": 128,
+    "wakeVisible": true
+  },
+  "errors": []
+}

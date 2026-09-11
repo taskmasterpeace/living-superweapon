@@ -44,7 +44,6 @@ import {attackEntryCost} from './hand-emission.js';
 import {selectedAttacks} from '../core/combat-selection.js';
 import {DUAL_TRIGGER_CSS} from './dual-trigger.styles.js';
 import {PlayerStatusView} from './player-status-view.js';
-import {MovementGearView} from './movement-gear-view.js';
 
 
 // ---- THRESHOLD REGISTRY paperwork: file numbers, country codes, deterministic file dates ----
@@ -275,7 +274,6 @@ export class HUD {
       <div class="kobanner" id="hKO"><div class="kob" id="hKOt">K.O.</div><div class="kos" id="hKOs"></div></div>
     </div>`;
     this.playerStatusView=new PlayerStatusView(this.root.querySelector('.wrap'));
-    this.movementGearView=new MovementGearView(this.root.querySelector('.combat-dock'));
     this.el = {
       feed: this.root.querySelector('#hFeed'),
       foe: this.root.querySelector('#hFoe'), foeName: this.root.querySelector('#foeName'), foeHp: this.root.querySelector('#foeHp'),
@@ -2148,7 +2146,7 @@ export class HUD {
   }
 
   update() {
-    const g = this.game, p = g.player;this.syncCombatView(g);this.movementGearView?.update(g);if (!p) return;
+    const g = this.game, p = g.player;this.syncCombatView(g);if (!p) return;
     if(g.modeId==='powerworld')this.playerStatusView?.update(p);
     // Bench/respawn/form transitions can replace the fighter without the menu's
     // setHero path. Rebuild before reading cooldowns from a different slot set.

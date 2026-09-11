@@ -42,7 +42,10 @@ export class FlightWake {
     if(this.disposed)return true;
     if(!finite(this.fighter.pos)||!finite(this.fighter.vel)||!Number.isFinite(dt)){this.mesh.visible=false;return true;}
     const f=this.fighter,h=this.history,speed=f.vel.length(),visible=f.obj.visible&&(f._vis??1)>=.35;
-    const settings={...WAKE_DEFAULTS,...f.def.model?.wake},LIFE=settings.life;
+    const settings={...WAKE_DEFAULTS,...f.def.model?.wake};
+    // The wake is the speed readout in the world: slow flight leaves a short
+    // ribbon, while committing to the highest gear holds a much longer trail.
+    const speedScale=Math.min(1,Math.max(0,(speed-30)/140)),LIFE=settings.life*(.65+1.35*speedScale);
     for(let i=0;i<this.n;i++)this.age[i]+=dt;
     while(this.n&&this.age[0]>=LIFE){h.copyWithin(0,6);this.age.copyWithin(0,1);this.strength.copyWithin(0,1);this.spread.copyWithin(0,1);this.n--;}
     const active=visible&&f.obj.parent&&f.alive&&f._openSky&&f.airborne&&speed>30&&settings.intensity>0;

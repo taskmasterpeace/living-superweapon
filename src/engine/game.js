@@ -66,6 +66,7 @@ const _v = new THREE.Vector3();
 // reused write target for `world.aimTrace` (its `.point` is created once and reused).
 const _muz = new THREE.Vector3();
 const _camDir = new THREE.Vector3();
+const _camOrigin = new THREE.Vector3();
 const _aimOut = { point: new THREE.Vector3(), dist: 0, hit: null, ent: null };
 function lockAvailable(g,p,e){
   return e!==p&&e.alive&&!e.phase&&!e._banished&&!e._inert&&!(p.blindT>0)&&
@@ -3501,9 +3502,10 @@ export class Game {
       const cam = this.world.camera;
       if(this.world.freeLooking)this.world.combatAimDirection(_camDir);
       else cam.getWorldDirection(_camDir);
+      const rayOrigin=this.world.freeLooking?this.world.combatAimOrigin(_camOrigin):cam.position;
       const firearmRange=firearmAimRange(p,AIM_MAX_D);
       this._aimHit = this.world.aimTrace(_aimOut, {
-        origin: cam.position, dir: _camDir, maxD: firearmRange>AIM_MAX_D?firearmRange+cam.position.distanceTo(p.pos):AIM_MAX_D,
+        origin: rayOrigin, dir: _camDir, maxD: firearmRange>AIM_MAX_D?firearmRange+rayOrigin.distanceTo(p.pos):AIM_MAX_D,
         foes: this.entities, ignore: p, blind: p.blindT > 0,   // honesty: unseen foes never stop the ray
         flung: this._flung,
         pad: SETTINGS.aimAssist === false ? 0 : (p.radius || 2.2) * 0.5,

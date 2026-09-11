@@ -15,7 +15,7 @@ import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.j
 import { anatomyGeometry, bindHeroRig } from './hero-rig.js';
 import {createHeroHand} from './hero-hand.js';
 import {buildHeroFace} from './hero-face.js';
-import {heroTorsoGeometry,heroInsigniaGeometry} from './hero-torso.js';
+import {heroTorsoGeometry,heroInsigniaGeometry,heroVInsigniaGeometry} from './hero-torso.js';
 import {waistbandGeometry} from './hero-waistband.js';
 import { heroModelOf } from '../data/hero-models.js';
 import { dressHero } from './hero-costume.js';
@@ -257,8 +257,16 @@ export function figure(def) {
   }
   // chest emblem
   const emblem = new THREE.Mesh(heroInsigniaGeometry(model.definition), glow);
-  emblem.visible=model.emblem!==false;
+  emblem.visible=model.emblem!==false&&!model.insignia;
   emblem.position.set(0,.45,0);torso.add(emblem);
+  let insigniaFront=null,insigniaBack=null;
+  if(model.insignia==='V'){
+    insigniaFront=gear(new THREE.Mesh(heroVInsigniaGeometry(model.definition,1),glow));
+    insigniaBack=gear(new THREE.Mesh(heroVInsigniaGeometry(model.definition,-1),glow));
+    insigniaFront.name='hero-insignia-v-front';insigniaBack.name='hero-insignia-v-back';
+    insigniaFront.position.set(0,.45,model.surface==='field'?.18:0);
+    insigniaBack.position.set(0,.45,model.surface==='field'?-.18:0);torso.add(insigniaFront,insigniaBack);
+  }
   // The belt is cut from this oval pelvis, not a circular hoop around it.
   const pelvis = new THREE.Mesh(anatomyGeometry([[-.65,.62,.45],[-.2,1.0,.57],[.55,.88,.52]]), suit2);
   pelvis.position.y = 4.6; pelvis.castShadow = true; g.add(pelvis);
@@ -451,7 +459,7 @@ diffuseColor.rgb*=1.7;`);
   // the rim rides the hero's OWN accent, cooled toward the scene's back light — a fighter separates
   // from the street in their own colour, not in a generic blue
   for (const m of [suit, suit2, skinMat, armor]) applyRim(m, new THREE.Color(c.accent).lerp(new THREE.Color('#bcd8ff'), 0.55), 0);
-  const P = { g, groundRig, torso, neck, head, pelvis, cowl, emblem, aura, cape, armL, armR, legL, legR, eyeL, eyeR, shadow, bandRing, faceWedge, stateRing, guardArc, ice, tether, mats: { suit, suit2, glow, skin: skinMat, armor } };
+  const P = { g, groundRig, torso, neck, head, pelvis, cowl, emblem, insigniaFront, insigniaBack, aura, cape, armL, armR, legL, legR, eyeL, eyeR, shadow, bandRing, faceWedge, stateRing, guardArc, ice, tether, mats: { suit, suit2, glow, skin: skinMat, armor } };
   applyFrame(P, frameOf(def));   // ← the silhouette: proportions derived from who this fighter IS
   dressHero(P,model);
   bindHeroRig(P, {...def,model});

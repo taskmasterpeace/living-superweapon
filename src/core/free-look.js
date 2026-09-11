@@ -1,6 +1,6 @@
 // View-only shoulder offsets. The existing look angles remain the travel/aim
 // frame; no body direction, camera boom or gameplay state belongs here.
-export const FREE_LOOK_DEFAULTS=Object.freeze({yawLimit:75*Math.PI/180,pitchLimit:50*Math.PI/180,returnRate:12});
+export const FREE_LOOK_DEFAULTS=Object.freeze({yawLimit:75*Math.PI/180,pitchLimit:50*Math.PI/180,returnRate:12,sideShift:8,backShift:2.5,targetWeight:.52});
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 export const createFreeLook=()=>({yaw:0,pitch:0,held:false,cancelVersion:null});
 export function clearFreeLook(state){state.yaw=state.pitch=0;state.held=false;return state;}

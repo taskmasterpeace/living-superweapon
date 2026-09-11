@@ -103,3 +103,19 @@ export function heroInsigniaGeometry(definition=.7){
  }
  const geometry=new BufferGeometry();geometry.setAttribute('position',new Float32BufferAttribute(vertices,3));geometry.setAttribute('normal',new Float32BufferAttribute(normals,3));geometry.setIndex(indices);return geometry;
 }
+
+// Surface-fitted front/back V used by data-driven hero identities.
+export function heroVInsigniaGeometry(definition=.7,side=1){
+ const vertices=[],normals=[],indices=[];
+ const addStroke=(bottom,top,width)=>{
+  const dx=top[0]-bottom[0],dy=top[1]-bottom[1],length=Math.hypot(dx,dy)||1;
+  const px=-dy/length*width*.5,py=dx/length*width*.5,base=vertices.length/3;
+  for(const [x,y]of[[bottom[0]+px,bottom[1]+py],[bottom[0]-px,bottom[1]-py],[top[0]-px,top[1]-py],[top[0]+px,top[1]+py]]){
+   vertices.push(x,y,torsoDepth(x,y+.45,definition,side)+side*.032);normals.push(0,0,side);
+  }
+  if(side>0)indices.push(base,base+1,base+2,base,base+2,base+3);
+  else indices.push(base,base+2,base+1,base,base+3,base+2);
+ };
+ addStroke([0,-.38],[-.40,.42],.17);addStroke([0,-.38],[.40,.42],.17);
+ const geometry=new BufferGeometry();geometry.setAttribute('position',new Float32BufferAttribute(vertices,3));geometry.setAttribute('normal',new Float32BufferAttribute(normals,3));geometry.setIndex(indices);geometry.computeBoundingSphere();return geometry;
+}

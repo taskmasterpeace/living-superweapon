@@ -12,14 +12,14 @@ function setup(hero='sarge',air=false){
  if(air){x.p.gait='airborne';x.p.flying=true;x.p.pos.y=80;}
  x.control(0);x.g.input.keys.add('KeyW');x.control(0);return x;
 }
-for(const air of [false,true])test(`Alt turns only the view during ${air?'flight':'ground travel'}`,()=>{
+for(const air of [false,true])test(`Alt composes a rear-side view during ${air?'flight':'ground travel'}`,()=>{
  const x=setup(air?'sol':'sarge',air);try{
   const heading=x.w._lookYaw,pitch=x.w._lookPitch,aim=x.p.aim3.clone(),move={...x.p.moveDir},basis=x.w.camBasis.clone(),eye=x.w.camera.position.clone(),before=view(x.w);
   x.g.input.keys.add('AltLeft');x.g.input.mouse.dx=220;x.g.input.mouse.dy=-60;x.control(1/60);
   assert.equal(x.w._lookYaw,heading,'Alt mouse delta steered travel');assert.equal(x.w._lookPitch,pitch);
   assert.deepEqual(x.p.moveDir,move);assert.ok(x.p.aim3.angleTo(aim)<1e-7,'Alt redirected fire');
-  assert.ok(x.w.camBasis.distanceTo(basis)<1e-9);assert.ok(x.w.camera.position.distanceTo(eye)<1e-9,'Head-look moved the collision-resolved eye');
-  assert.ok(view(x.w).angleTo(before)>.45,'Alt did not turn the view');
+  assert.ok(x.w.camBasis.distanceTo(basis)<1e-9);assert.ok(x.w.camera.position.distanceTo(eye)>1,'Alt did not slide the camera');
+  const turn=view(x.w).angleTo(before);assert.ok(turn>.05&&turn<.45,`Rear-side turn ${turn} was not slight`);
  }finally{x.close();}
 });
 test('vertical shoulder limits, sensitivity and frame-independent return are explicit',()=>{
@@ -60,9 +60,10 @@ test('native pointer-lock event deltas reach only the Alt view through the produ
 });
 for(const hz of [30,60,120])test(`shoulder bounds and smooth return preserve aim at ${hz}Hz`,()=>{
  const x=setup('sol',true);try{
-  const original=view(x.w),heading=x.w._lookYaw,aim=x.p.aim3.clone();
+  const original=view(x.w),eye=x.w.camera.position.clone(),heading=x.w._lookYaw,aim=x.p.aim3.clone();
   x.g.input.keys.add('AltRight');x.g.input.mouse.dx=1e5;x.control(1/hz);x.g.input.endFrame();
-  const angle=view(x.w).angleTo(original);assert.ok(Math.abs(angle-75*Math.PI/180)<1e-7,`shoulder yaw ${angle}`);
+  const angle=view(x.w).angleTo(original);assert.equal(Math.abs(x.w._freeLook.yaw),FREE_LOOK_DEFAULTS.yawLimit);assert.ok(angle>.1&&angle<.4,`rear-side yaw ${angle}`);
+  assert.ok(x.w.camera.position.distanceTo(eye)>FREE_LOOK_DEFAULTS.sideShift*.9);
   x.g.input.keys.delete('AltRight');x.control(1/hz);
   assert.ok(view(x.w).angleTo(original)>0,'Release snapped the camera');assert.ok(view(x.w).angleTo(original)<angle);
   for(let i=1;i<hz;i++)x.control(1/hz);
@@ -75,7 +76,9 @@ test('free look preserves hard lock and its target-owned aim',()=>{
   const before=x.p.aim3.clone(),basis=x.w.camBasis.clone(),heading=x.w._lookYaw;
   x.g.input.keys.add('AltLeft');x.g.input.mouse.dx=180;x.control(0);
   assert.equal(x.g.hardLock,foe);assert.equal(x.w._lookYaw,heading);assert.ok(x.p.aim3.angleTo(before)<1e-7);assert.ok(x.w.camBasis.distanceTo(basis)<1e-9);
-  assert.ok(view(x.w).angleTo(basis)>.3);
+  const player=x.p.center(new THREE.Vector3()).project(x.w.camera),locked=foe.center(new THREE.Vector3()).project(x.w.camera);
+  assert.ok(Math.abs(player.x)<.9&&Math.abs(player.y)<.9,'Player left the composed frame');
+  assert.ok(Math.abs(locked.x)<.9&&Math.abs(locked.y)<.9,'Locked target left the composed frame');
  }finally{x.close();}
 });
 for(const boundary of ['blur','pause','KO','map'])test(`${boundary} clears independent look without a held latch`,()=>{
@@ -89,16 +92,15 @@ for(const boundary of ['blur','pause','KO','map'])test(`${boundary} clears indep
   x.g.prepareCombatView(0);assert.equal(x.w._freeLook?.yaw??0,0);assert.equal(x.w._freeLook?.pitch??0,0);assert.equal(x.w._freeLook?.held??false,false);
  }finally{x.close();}
 });
-test('existing HUD projects real Alt aim and shows its offscreen edge bearing',()=>{
+test('existing HUD projects the preserved combat aim inside the composed Alt view',()=>{
  const x=setup();try{
   const cross={style:{setProperty(k,v){this[k]=v;}},dataset:{},classList:{toggle(){}}},hud={syncCombatView:()=>true,el:{cross},_lkCls:false};
   x.g.input.keys.add('AltLeft');x.g.input.mouse.dx=100;x.control(0);
   HUD.prototype.updateCrosshair.call(hud,x.g);assert.notEqual(cross.style.transform,'translate(0px, 0px)','False center reticle while aiming elsewhere');
   assert.ok(Math.abs(hud._csx)>20);
   x.g.input.mouse.dx=1e5;x.control(0);HUD.prototype.updateCrosshair.call(hud,x.g);
-  assert.notEqual(cross.style.visibility,'hidden');assert.equal(cross.dataset.aimMode,'free-look-edge');
+  assert.notEqual(cross.style.visibility,'hidden');
   assert.ok(Math.abs(hud._csx)<=innerWidth/2-40&&Math.abs(hud._csy)<=innerHeight/2-40);
-  assert.ok(Math.abs(hud._csx)>innerWidth/2-50||Math.abs(hud._csy)>innerHeight/2-50,'No edge placement');
   const local=new THREE.Vector3(-20,0,50);x.g._aim3pt.copy(local.applyMatrix4(x.w.camera.matrixWorld));
   HUD.prototype.updateCrosshair.call(hud,x.g);assert.equal(cross.dataset.label,'AIM BEHIND');assert.ok(hud._csx<0,'Behind-left aim mirrored to the right');
   x.g.input.keys.delete('AltLeft');x.control(2);HUD.prototype.updateCrosshair.call(hud,x.g);

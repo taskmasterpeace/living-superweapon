@@ -17,7 +17,7 @@ import { reachOf } from '../data/martial.js';
 import { CAMERA_DEFAULTS } from '../data/flight-tuning.js';
 import {cameraProfileOf} from '../data/camera-presets.js';
 import {getCameraPreferences} from '../core/camera-settings.js';
-import {createFreeLook,advanceFreeLook,clearFreeLook} from '../core/free-look.js';
+import {createFreeLook,advanceFreeLook,clearFreeLook,FREE_LOOK_DEFAULTS} from '../core/free-look.js';
 import {resolveGroundCamera} from './camera-ground.js';
 import {firearmSightZoom} from './firearm-aim.js';
 import {terrainEntry} from './projectile-contact.js';
@@ -1397,6 +1397,9 @@ export class World {
   combatAimDirection(out){
     return this.freeLooking&&this._combatAimDirection?out.copy(this._combatAimDirection):this.camera.getWorldDirection(out);
   }
+  combatAimOrigin(out){
+    return this.freeLooking&&this._combatAimOrigin?out.copy(this._combatAimOrigin):out.copy(this.camera.position);
+  }
 
   // ---- THE MAP TOOL CAMERA ---------------------------------------------------------------------
   // A free orbit/pan/zoom over the plan, for authoring rather than playing. The match camera is a
@@ -2651,11 +2654,21 @@ export class World {
     // the head. camBasis and _lookYaw/Pitch still own movement and flight.
     const aim=this._combatAimDirection||(this._combatAimDirection=new THREE.Vector3());
     c.getWorldDirection(aim);
+    (this._combatAimOrigin||(this._combatAimOrigin=new THREE.Vector3())).copy(c.position);
     if(this.freeLooking){
-      const yaw=Math.atan2(aim.x,aim.z)+this._freeLook.yaw;
-      const pitch=clamp(Math.asin(clamp(aim.y,-1,1))+this._freeLook.pitch,-BFP_PITCH_MAX,BFP_PITCH_MAX),cp=Math.cos(pitch);
-      this.camTarget.set(c.position.x+Math.sin(yaw)*cp*100,c.position.y+Math.sin(pitch)*100,c.position.z+Math.cos(yaw)*cp*100);
-      c.lookAt(this.camTarget);
+      // Slide the camera toward the requested shoulder and toe it inward. This
+      // holds the player and target in a rear three-quarter composition while
+      // the captured combat ray above continues to own travel and attacks.
+      const side=clamp(this._freeLook.yaw/FREE_LOOK_DEFAULTS.yawLimit,-1,1);
+      const easedSide=Math.sin(Math.abs(side)*Math.PI*.5)*Math.sign(side);
+      const sideShift=FREE_LOOK_DEFAULTS.sideShift*easedSide,backShift=FREE_LOOK_DEFAULTS.backShift*Math.abs(easedSide);
+      c.position.x+=cy*sideShift-ax*backShift;c.position.y-=ay*backShift;c.position.z-=sy*sideShift+az*backShift;
+      this.camPos.copy(c.position);
+      const focus=this._freeLookFocus||(this._freeLookFocus=new THREE.Vector3());
+      if(target&&target.alive)focus.copy(a).lerp(target.center(this._combatFocus||(this._combatFocus=new THREE.Vector3())),FREE_LOOK_DEFAULTS.targetWeight);
+      else focus.copy(a).addScaledVector(aim,Math.max(12,range*.65));
+      focus.y+=Math.tan(this._freeLook.pitch)*Math.max(8,c.position.distanceTo(focus));
+      this.camTarget.copy(focus);c.lookAt(this.camTarget);
     }
     this._combatLocked=!!target;
     this.sun.position.set(Math.round(S.x)+this.sunOff.x,S.y+5.4+this.sunOff.y,Math.round(S.z)+this.sunOff.z);
