@@ -1,0 +1,559 @@
+{
+  "schema": "powerworld.design-decisions",
+  "version": 1,
+  "exportedAt": "2026-09-11T00:43:14.029Z",
+  "questions": [
+    {
+      "id": "q01",
+      "number": 1,
+      "prompt": "How many human players are you targeting per match? 8? 16? 32? 64?"
+    },
+    {
+      "id": "q02",
+      "number": 2,
+      "prompt": "Are the clone soldiers players, AI, or both?"
+    },
+    {
+      "id": "q03",
+      "number": 3,
+      "prompt": "Can one player command AI clone squads?"
+    },
+    {
+      "id": "q04",
+      "number": 4,
+      "prompt": "Does every player select a hero, or are superweapons scarce?"
+    },
+    {
+      "id": "q05",
+      "number": 5,
+      "prompt": "Who controls aircraft? Players exclusively or AI too?"
+    },
+    {
+      "id": "q06",
+      "number": 6,
+      "prompt": "Can superweapons pilot vehicles, or would that be pointless?"
+    },
+    {
+      "id": "q07",
+      "number": 7,
+      "prompt": "Can a Superman-tier character pick up vehicles?"
+    },
+    {
+      "id": "q08",
+      "number": 8,
+      "prompt": "Can they throw vehicles?"
+    },
+    {
+      "id": "q09",
+      "number": 9,
+      "prompt": "Can they grab another flying player?"
+    },
+    {
+      "id": "q10",
+      "number": 10,
+      "prompt": "Can they carry soldiers?"
+    },
+    {
+      "id": "q11",
+      "number": 11,
+      "prompt": "Can players be captured instead of killed?"
+    },
+    {
+      "id": "q12",
+      "number": 12,
+      "prompt": "How long should a normal match last: 15, 30, 45, 60 minutes?"
+    },
+    {
+      "id": "q13",
+      "number": 13,
+      "prompt": "Is there persistent progression between matches?"
+    },
+    {
+      "id": "q14",
+      "number": 14,
+      "prompt": "Is genome research match-specific or persistent?"
+    },
+    {
+      "id": "q15",
+      "number": 15,
+      "prompt": "Can factions create custom hybrid soldiers from multiple genomes?"
+    },
+    {
+      "id": "q16",
+      "number": 16,
+      "prompt": "Can enhancements fail or mutate?"
+    },
+    {
+      "id": "q17",
+      "number": 17,
+      "prompt": "Can the enemy steal research rather than stealing a corpse?"
+    },
+    {
+      "id": "q18",
+      "number": 18,
+      "prompt": "Can the cloning facility itself be infiltrated?"
+    },
+    {
+      "id": "q19",
+      "number": 19,
+      "prompt": "Can enemy players disguise themselves as clones?"
+    },
+    {
+      "id": "q20",
+      "number": 20,
+      "prompt": "Can you capture an enemy cloning facility?"
+    },
+    {
+      "id": "q21",
+      "number": 21,
+      "prompt": "What happens when your clone reserve hits zero?"
+    },
+    {
+      "id": "q22",
+      "number": 22,
+      "prompt": "Does the player then permanently die for that match?"
+    },
+    {
+      "id": "q23",
+      "number": 23,
+      "prompt": "Can clones replenish through resources?"
+    },
+    {
+      "id": "q24",
+      "number": 24,
+      "prompt": "Are civilians simulated continuously or spawned around objectives?"
+    },
+    {
+      "id": "q25",
+      "number": 25,
+      "prompt": "Do civilians remember what they witnessed?"
+    },
+    {
+      "id": "q26",
+      "number": 26,
+      "prompt": "Can civilians flee and report your position?"
+    },
+    {
+      "id": "q27",
+      "number": 27,
+      "prompt": "Can civilians lie during interrogation?"
+    },
+    {
+      "id": "q28",
+      "number": 28,
+      "prompt": "Can they support one faction?"
+    },
+    {
+      "id": "q29",
+      "number": 29,
+      "prompt": "Can destroying civilian infrastructure create refugees?"
+    },
+    {
+      "id": "q30",
+      "number": 30,
+      "prompt": "Does escalation affect only military reinforcements, or the world itself?"
+    },
+    {
+      "id": "q31",
+      "number": 31,
+      "prompt": "Can both sides become equally brutal?"
+    },
+    {
+      "id": "q32",
+      "number": 32,
+      "prompt": "Are there neutral factions?"
+    },
+    {
+      "id": "q33",
+      "number": 33,
+      "prompt": "Are there police/local military forces separate from both teams?"
+    },
+    {
+      "id": "q34",
+      "number": 34,
+      "prompt": "How much terrain can eye beams penetrate?"
+    },
+    {
+      "id": "q35",
+      "number": 35,
+      "prompt": "Can beams cut through vehicles?"
+    },
+    {
+      "id": "q36",
+      "number": 36,
+      "prompt": "Can powers destroy terrain?"
+    },
+    {
+      "id": "q37",
+      "number": 37,
+      "prompt": "Can a Goku-tier blast permanently alter the battlefield?"
+    },
+    {
+      "id": "q38",
+      "number": 38,
+      "prompt": "What exactly counts as cover against a superweapon?"
+    },
+    {
+      "id": "q39",
+      "number": 39,
+      "prompt": "How do ordinary soldiers detect extremely fast characters?"
+    },
+    {
+      "id": "q40",
+      "number": 40,
+      "prompt": "Does radar detect biological flyers?"
+    },
+    {
+      "id": "q41",
+      "number": 41,
+      "prompt": "Does infrared?"
+    },
+    {
+      "id": "q42",
+      "number": 42,
+      "prompt": "Can supers hide their energy signature?"
+    },
+    {
+      "id": "q43",
+      "number": 43,
+      "prompt": "What happens when a sniper shoots a superweapon in the eye?"
+    },
+    {
+      "id": "q44",
+      "number": 44,
+      "prompt": "Are powers governed by energy, cooldowns, stamina, or combinations?"
+    },
+    {
+      "id": "q45",
+      "number": 45,
+      "prompt": "Can soldiers develop countermeasures after studying a power?"
+    },
+    {
+      "id": "q46",
+      "number": 46,
+      "prompt": "Can powers interact—beam vs beam, shield vs missile, electricity vs vehicle, etc.?"
+    },
+    {
+      "id": "q47",
+      "number": 47,
+      "prompt": "Can superweapons defect?"
+    },
+    {
+      "id": "q48",
+      "number": 48,
+      "prompt": "Are they people with agency or literally government-owned biological weapons?"
+    },
+    {
+      "id": "q49",
+      "number": 49,
+      "prompt": "Why are these factions fighting?"
+    },
+    {
+      "id": "q50",
+      "number": 50,
+      "prompt": "Most important: what can an ordinary rifleman accomplish that your strongest superweapon cannot?"
+    }
+  ],
+  "answers": {
+    "q01": {
+      "answer": "Support 8, 16, and 32-player matches with objectives, AI population, and map activity scaling to lobby size.",
+      "notes": "",
+      "status": "Draft",
+      "updatedAt": "2026-09-10T23:02:01.263Z"
+    },
+    "q02": {
+      "answer": "Clone soldiers can be controlled by players or AI through the same movement, damage, equipment, and objective rules.",
+      "notes": "",
+      "status": "Draft",
+      "updatedAt": "2026-09-10T23:02:14.371Z"
+    },
+    "q03": {
+      "answer": "A player may command one small AI clone fireteam using move, defend, follow, attack, and interact orders.",
+      "notes": "",
+      "status": "Draft",
+      "updatedAt": "2026-09-10T23:02:28.594Z"
+    },
+    "q04": {
+      "answer": "Living superweapons are scarce team assets, while most human players serve as infantry, specialists, pilots, or commanders.",
+      "notes": "",
+      "status": "Draft",
+      "updatedAt": "2026-09-10T23:03:15.209Z"
+    },
+    "q05": {
+      "answer": "Both players and AI can control aircraft, with players receiving full flight controls and AI using bounded mission behaviors.",
+      "notes": "",
+      "status": "Draft",
+      "updatedAt": "2026-09-10T23:04:12.113Z"
+    },
+    "q06": {
+      "answer": "Grounded and human-scale heroes may pilot compatible vehicles, while flying or oversized superweapons cannot.",
+      "notes": "",
+      "status": "Draft",
+      "updatedAt": "2026-09-10T23:04:36.631Z"
+    },
+    "q07": {
+      "answer": "Strategic-strength superweapons can lift vehicles up to their mass rating after a committed pickup action.",
+      "notes": "",
+      "status": "Draft",
+      "updatedAt": "2026-09-10T23:05:07.648Z"
+    },
+    "q08": {
+      "answer": "Eligible superweapons can throw lifted vehicles through a slow, energy-costly action that turns the vehicle into a destructive projectile.",
+      "notes": "",
+      "status": "Draft",
+      "updatedAt": "2026-09-10T23:05:22.255Z"
+    },
+    "q09": {
+      "answer": "Flying players can grab one another through a committed aerial intercept with a short escape contest and forced release timer.",
+      "notes": "",
+      "status": "Draft",
+      "updatedAt": "2026-09-10T23:05:32.829Z"
+    },
+    "q10": {
+      "answer": "Superweapons can carry consenting allies and incapacitated soldiers for rescue or extraction, but cannot fight normally while carrying them.",
+      "notes": "",
+      "status": "Draft",
+      "updatedAt": "2026-09-10T23:06:12.191Z"
+    },
+    "q11": {
+      "answer": "Players can be captured only in modes built around live recovery, with bounded restraint time and teammate rescue opportunities.",
+      "notes": "",
+      "status": "Draft",
+      "updatedAt": "2026-09-10T23:06:47.223Z"
+    },
+    "q12": {
+      "answer": "Target roughly 30-minute normal matches, with overtime only for actively contested final objectives.",
+      "notes": "",
+      "status": "Draft",
+      "updatedAt": "2026-09-10T23:07:02.705Z"
+    },
+    "q13": {
+      "answer": "Between matches, players retain cosmetics, mastery records, and unlocked sidegrades, but not direct statistical power.",
+      "notes": "",
+      "status": "Draft",
+      "updatedAt": "2026-09-10T23:07:15.584Z"
+    },
+    "q14": {
+      "answer": "Genome research is match-specific; recovered strains unlock temporary derivative capabilities only for that battle.",
+      "notes": "",
+      "status": "Draft",
+      "updatedAt": "2026-09-10T23:07:26.682Z"
+    },
+    "q15": {
+      "answer": "Factions can create hybrid soldiers only from curated two-strain recipes with defined tradeoffs and visual identity.",
+      "notes": "",
+      "status": "Draft",
+      "updatedAt": "2026-09-10T23:07:37.760Z"
+    },
+    "q16": {
+      "answer": "Enhancements do not randomly fail or mutate; paid research yields a predictable authored unit.",
+      "notes": "",
+      "status": "Draft",
+      "updatedAt": "2026-09-10T23:07:44.246Z"
+    },
+    "q17": {
+      "answer": "Enemy research can be stolen from a lab, but copied data is slower or capped compared with a recovered genome sample.",
+      "notes": "",
+      "status": "Draft",
+      "updatedAt": "2026-09-10T23:08:05.018Z"
+    },
+    "q18": {
+      "answer": "Cloning facilities contain a limited authored infiltration route inaccessible or awkward for large superweapons.",
+      "notes": "",
+      "status": "Draft",
+      "updatedAt": "2026-09-10T23:39:20.176Z"
+    },
+    "q19": {
+      "answer": "Only an infiltration specialist can disguise as an enemy clone, with explicit tells and actions that expose the disguise.",
+      "notes": "",
+      "status": "Draft",
+      "updatedAt": "2026-09-10T23:39:34.277Z"
+    },
+    "q20": {
+      "answer": "Teams can temporarily capture an enemy cloning facility to deny respawns and gain a constrained forward deployment point.",
+      "notes": "",
+      "status": "Draft",
+      "updatedAt": "2026-09-10T23:39:46.399Z"
+    },
+    "q21": {
+      "answer": "At zero clone reserve, no new clone bodies can spawn; surviving units may still complete objectives or restore production.",
+      "notes": "",
+      "status": "Draft",
+      "updatedAt": "2026-09-10T23:39:52.005Z"
+    },
+    "q22": {
+      "answer": "With no clone reserve, a dead player cannot respawn a new body but may assume control of an available allied unit or support station.",
+      "notes": "",
+      "status": "Draft",
+      "updatedAt": "2026-09-10T23:40:10.081Z"
+    },
+    "q23": {
+      "answer": "Clone reserve can be replenished slowly through controlled facilities and delivered resources, subject to a maximum stock and interruption.",
+      "notes": "",
+      "status": "Draft",
+      "updatedAt": "2026-09-10T23:40:14.926Z"
+    },
+    "q24": {
+      "answer": "Civilians persist by settlement and identity, with full simulation activated only around relevant players and events.",
+      "notes": "",
+      "status": "Draft",
+      "updatedAt": "2026-09-10T23:40:24.751Z"
+    },
+    "q25": {
+      "answer": "Civilians remember a bounded set of witnessed events during the match and can later report or describe those facts.",
+      "notes": "",
+      "status": "Draft",
+      "updatedAt": "2026-09-10T23:40:28.179Z"
+    },
+    "q26": {
+      "answer": "Civilians can report what they witnessed only after reaching a communication point or allied authority, giving players a counterplay window.",
+      "notes": "",
+      "status": "Draft",
+      "updatedAt": "2026-09-10T23:40:30.578Z"
+    },
+    "q27": {
+      "answer": "Civilians may lie only when their faction support, fear, or coercion state motivates it, with readable credibility clues.",
+      "notes": "",
+      "status": "Draft",
+      "updatedAt": "2026-09-10T23:40:32.970Z"
+    },
+    "q28": {
+      "answer": "Civilians can support a faction based on local history and conduct, enabling bounded intelligence and logistics assistance.",
+      "notes": "",
+      "status": "Draft",
+      "updatedAt": "2026-09-10T23:40:34.530Z"
+    },
+    "q29": {
+      "answer": "Infrastructure destruction creates abstracted refugee flows represented by bounded groups, route congestion, and humanitarian objectives.",
+      "notes": "",
+      "status": "Draft",
+      "updatedAt": "2026-09-10T23:40:36.751Z"
+    },
+    "q30": {
+      "answer": "Escalation changes military response and bounded world conditions such as curfews, civilian movement, checkpoints, and emergency services.",
+      "notes": "",
+      "status": "Draft",
+      "updatedAt": "2026-09-10T23:40:38.425Z"
+    },
+    "q31": {
+      "answer": "Both factions can become equally brutal; escalation evaluates actions and consequences symmetrically.",
+      "notes": "",
+      "status": "Draft",
+      "updatedAt": "2026-09-10T23:51:15.288Z"
+    },
+    "q32": {
+      "answer": "",
+      "notes": "",
+      "status": "Draft",
+      "updatedAt": null
+    },
+    "q33": {
+      "answer": "",
+      "notes": "",
+      "status": "Draft",
+      "updatedAt": null
+    },
+    "q34": {
+      "answer": "Eye beams penetrate authored thin-material depths but cannot tunnel freely through terrain or major structures.",
+      "notes": "",
+      "status": "Draft",
+      "updatedAt": "2026-09-10T23:44:15.884Z"
+    },
+    "q35": {
+      "answer": "Sustained beams can cut through vehicle armor after material- and power-dependent contact time, damaging components along the path.",
+      "notes": "",
+      "status": "Draft",
+      "updatedAt": "2026-09-10T23:44:29.421Z"
+    },
+    "q36": {
+      "answer": "Powers can destroy authored props and structure components and create bounded terrain deformation, but cannot freely excavate the whole map.",
+      "notes": "",
+      "status": "Draft",
+      "updatedAt": "2026-09-10T23:49:25.805Z"
+    },
+    "q37": {
+      "answer": "A Goku-tier blast can permanently alter designated battlefield terrain for the remainder of that match, with hard deformation limits.",
+      "notes": "",
+      "status": "Draft",
+      "updatedAt": "2026-09-10T23:49:49.159Z"
+    },
+    "q38": {
+      "answer": "Cover against a superweapon requires line-of-effect obstruction plus sufficient material/thickness rating for that attack family and duration.",
+      "notes": "",
+      "status": "Draft",
+      "updatedAt": "2026-09-10T23:50:01.128Z"
+    },
+    "q39": {
+      "answer": "Soldiers combine deployable sensors and shared sightings into delayed speedster tracks that support ambushes but not perfect targeting.",
+      "notes": "",
+      "status": "Draft",
+      "updatedAt": "2026-09-10T23:50:10.525Z"
+    },
+    "q40": {
+      "answer": "Radar detects biological flyers conditionally based on altitude, speed, size, energy output, and terrain masking.",
+      "notes": "",
+      "status": "Draft",
+      "updatedAt": "2026-09-10T23:50:31.091Z"
+    },
+    "q41": {
+      "answer": "Infrared detects flyers through a heat-signature model affected by power use, weather, range, and physical occlusion.",
+      "notes": "",
+      "status": "Draft",
+      "updatedAt": "2026-09-10T23:50:50.351Z"
+    },
+    "q42": {
+      "answer": "",
+      "notes": "",
+      "status": "Draft",
+      "updatedAt": null
+    },
+    "q43": {
+      "answer": "",
+      "notes": "",
+      "status": "Draft",
+      "updatedAt": null
+    },
+    "q44": {
+      "answer": "",
+      "notes": "",
+      "status": "Draft",
+      "updatedAt": null
+    },
+    "q45": {
+      "answer": "",
+      "notes": "",
+      "status": "Draft",
+      "updatedAt": null
+    },
+    "q46": {
+      "answer": "",
+      "notes": "",
+      "status": "Draft",
+      "updatedAt": null
+    },
+    "q47": {
+      "answer": "",
+      "notes": "",
+      "status": "Draft",
+      "updatedAt": null
+    },
+    "q48": {
+      "answer": "",
+      "notes": "",
+      "status": "Draft",
+      "updatedAt": null
+    },
+    "q49": {
+      "answer": "The war began when factions rejected a shared genome-control regime and now fight over living-weapon sovereignty, cloning access, and proliferation.",
+      "notes": "",
+      "status": "Draft",
+      "updatedAt": "2026-09-10T23:45:54.327Z"
+    },
+    "q50": {
+      "answer": "An ordinary rifleman can quietly identify people, enter constrained spaces, operate equipment, collect intelligence, and hold one of many simultaneous objectives that a conspicuous superweapon cannot cover alone.",
+      "notes": "",
+      "status": "Draft",
+      "updatedAt": "2026-09-10T23:45:48.770Z"
+    }
+  }
+}
