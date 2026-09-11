@@ -1,13 +1,13 @@
 DONE
-Commit: HEAD task commit (exact hash in handoff; a commit cannot embed its own hash)
-RED: `node --no-experimental-webstorage --test tools/news-archive.test.mjs` failed ERR_MODULE_NOT_FOUND for news-archive-adapter.js; browser witness failed loading missing core module.
-RED follow-up: real IndexedDB browser test exposed favorite loss on idempotent overwrite (`Archived clip not found: a` after retention); fixed by preserving stored favorite state.
-GREEN: archive + recorder focused suite: 49/49 pass (`node --no-experimental-webstorage --test tools/news-archive.test.mjs tools/newscrew.test.mjs tools/news-capture.test.mjs tools/frontline-news.test.mjs`).
-GREEN browser: 10/10 real Chromium IndexedDB checks pass at `http://127.0.0.1:5182/powerworld.html`; isolated timestamped DB, no production DB deletion.
-GREEN build: `npm run build` exit 0; `git diff --check` exit 0.
-Methods: list/get/put/update/remove/stats/setBudget/exportClip/importBackup/close; adapter singleton persist/load/release and snapshot ownership.
-Limits: 360 frames, 24 MiB decoded media, bounded JSON backup, WebP/JPEG/PNG only, 120-char titles, 250 MiB default archive.
-Retention: metadata/media one transaction; oldest ordinary eviction; favorites never auto-evicted; failed insertion aborts atomically.
-Recorder: per-reset match ID, stable clip ID/timestamp, merged actor/target hero union, async saving/error state; legacy live reel remains bounded.
-Concern: build retains pre-existing Vite large-chunk/dynamic-import warnings; no new build error.
+Commits: initial `92d9f4b`; review-fix commit is HEAD (exact hash in handoff).
+Initial RED: missing archive modules failed Node/browser imports; favorite overwrite later failed with `Archived clip not found: a`.
+Initial GREEN: 49/49 focused Node and 10/10 real Chromium IndexedDB checks; build and diff-check clean.
+Review RED: 2 actual-encoder tests failed `encoder.ownFrames is not a function`; malformed PNG reached post-decode rejection.
+Review GREEN: 51/51 focused Node and 15/15 Chromium IndexedDB checks at `http://127.0.0.1:5182/powerworld.html`.
+Ownership fix: encoder token claims copy Blobs before `onReady` trim or actual `archiveFieldFootage` replacement revokes live frames.
+Validation fix: PNG/JPEG/WebP headers and <=2048 dimensions/4M pixels checked before image decode; malformed/truncated headers fail closed.
+Metadata fix: finite fps 1-60, bounded IDs/heroes/shots/text, rename/favorite preserved on retry; blocked late-open connections close.
+Deletion witness removes the surviving record and proves both `list()` and `get()` are empty.
+Limits: 360 frames, 24 MiB media, bounded JSON/base64 backup, 120-char titles, 250 MiB default budget.
+Concern: build has pre-existing Vite large-chunk/dynamic-import warnings only.
 Report: `.superpowers/sdd/2026-09-11-career-archive/task-1-report.md`

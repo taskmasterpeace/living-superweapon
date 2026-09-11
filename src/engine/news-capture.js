@@ -1,11 +1,12 @@
 // Async frame ownership: the destination array is transferred, never copied while encoding.
 const sizes = new Map();
+const encodedBlobs = new Map();
 export function newsFrameBytes(frames) { return (frames || []).reduce((sum, u) => sum + (sizes.get(u) || 0), 0); }
 export function revokeFrames(frames) {
   if (!frames) return;
   for (let i = 0; i < frames.length; i++) {
     const u = frames[i];
-    if (typeof u === 'string' && u.startsWith('blob:')) { URL.revokeObjectURL(u); sizes.delete(u); }
+    if (typeof u === 'string' && u.startsWith('blob:')) { URL.revokeObjectURL(u); sizes.delete(u); encodedBlobs.delete(u); }
     frames[i] = null;
   }
 }
@@ -25,6 +26,7 @@ export class NewsFrameEncoder {
     createURL = blob => URL.createObjectURL(blob), onReady = () => {} } = {}) {
     this.maxPending = maxPending; this.makeCanvas = makeCanvas; this.createURL = createURL; this.onReady = onReady;
     this.pending = new Set(); this.pool = []; this.sequence = 0;
+    this.frameClaims=new Map();
     this.worker=null;this.workerJobs=new Map();
     if(makeCanvas===makeEncodeCanvas&&typeof Worker==='function'&&typeof createImageBitmap==='function'&&typeof OffscreenCanvas==='function'){
       try{
@@ -49,9 +51,11 @@ export class NewsFrameEncoder {
     const done = new Promise(r => { resolve = r; }); this.pending.add(done);
     const complete = blob => {
       if(settled)return;settled=true;clearTimeout(timer);this.workerJobs.delete(token);
+      for(const resolve of this.frameClaims.get(token)||[])resolve(blob);
+      this.frameClaims.delete(token);
       const i = frames.indexOf(token);
       if (i >= 0) {
-        if (blob) { const url = this.createURL(blob); frames[i] = url; sizes.set(url, blob.size || 0); }
+        if (blob) { const url = this.createURL(blob); frames[i] = url; sizes.set(url, blob.size || 0); encodedBlobs.set(url,blob); }
         else frames[i] = null;
       }
       this.pending.delete(done);
@@ -79,6 +83,17 @@ export class NewsFrameEncoder {
       } else canvas.toBlob(complete, 'image/webp', 0.78);
     } catch { complete(null); }
     return true;
+  }
+  ownFrames(frames) {
+    return Promise.all((frames||[]).slice().map((ref,index)=>{
+      if(ref instanceof Blob)return Promise.resolve(ref.slice(0,ref.size,ref.type));
+      if(typeof ref==='string'&&ref.startsWith('#'))return new Promise((resolve,reject)=>{
+        const claims=this.frameClaims.get(ref)||[];claims.push(blob=>blob?resolve(blob.slice(0,blob.size,blob.type)):reject(Error(`Archive frame ${index} failed to encode`)));this.frameClaims.set(ref,claims);
+      });
+      const blob=encodedBlobs.get(ref);if(blob)return Promise.resolve(blob.slice(0,blob.size,blob.type));
+      if(typeof ref==='string')return fetch(ref).then(r=>{if(!r.ok)throw Error(`Archive frame ${index} could not be read`);return r.blob();});
+      return Promise.reject(Error(`Archive frame ${index} is unresolved`));
+    }));
   }
   flush() { return Promise.all([...this.pending]); }
 }

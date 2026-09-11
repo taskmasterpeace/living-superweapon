@@ -152,7 +152,7 @@ export class NewsCrew {
     // a URL but LEAVING the string in the array hands them a dangling handle — the <img> then fails
     // with ERR_FILE_NOT_FOUND (68 of them in one stress run). Blank the slot as you revoke it, and
     // mark the clip dead so a viewer drops it instead of discovering it the hard way.
-    for (const c of this.clips || []) this._retireClip(c);
+    for (const c of this.clips || []) { revokeFrames(c.frames); c._dead = true; }
     revokeFrames(this.rec?.frames);
     revokeFrames(this._preroll);
     this._pool = this._pool || [];
@@ -527,8 +527,7 @@ export class NewsCrew {
     };
     this.clips.push(clip);
     // Archive acquires Blob ownership independently; the live reel remains bounded and revocable.
-    clip._archivePendingFrames=clip.frames.some(frame=>typeof frame==='string'&&frame.startsWith('#'));
-    clip._archivePromise=persistNewsClip(clip, this._encoder).then(()=>{clip.archiveState='saved';},error=>{
+    persistNewsClip(clip, this._encoder).then(()=>{clip.archiveState='saved';},error=>{
       clip.archiveState='error';clip.archiveError=error?.message||String(error);
     });
     this._trimClips();
@@ -545,7 +544,7 @@ export class NewsCrew {
       if (drop < 0) break;
       total -= this.clips[drop].frames.length;
       bytes -= newsFrameBytes(this.clips[drop].frames);
-      this._retireClip(this.clips[drop]);   // a shed clip may still be on someone's screen
+      revokeFrames(this.clips[drop].frames); this.clips[drop]._dead = true;   // a shed clip may still be on someone's screen
       this.clips.splice(drop, 1);
     }
     // Even one unusual encoded stream must obey the byte ceiling. Keep indices stable for viewers
@@ -556,11 +555,6 @@ export class NewsCrew {
         if (size) { bytes -= size; revokeFrames([frames[i]]); frames[i] = null; }
       }
     }
-  }
-  _retireClip(clip) {
-    clip._dead = true;
-    if (clip._archivePendingFrames && clip._archivePromise) clip._archivePromise.finally(() => revokeFrames(clip.frames));
-    else revokeFrames(clip.frames);
   }
 
   // ---------- the lens ----------

@@ -7,14 +7,11 @@ export async function snapshotNewsClip(clip){
  return {...clip,heroIds:[...(clip.heroIds||[])],shots:structuredClone(clip.shots||[]),frames:await Promise.all(jobs)};
 }
 export async function persistNewsClip(clip,encoder){
- // Start ownership of resolved URLs now. Pending encoder tokens are resolved after flush; newscrew
- // keeps only those token-bearing frames alive until this promise settles.
- const ownedFrame=ref=>snapshotNewsClip({...clip,frames:[ref]}).then(x=>({value:x.frames[0]}),error=>({error}));
- const refs=clip.frames.slice(),jobs=refs.map(ref=>typeof ref==='string'&&ref.startsWith('#')?null:ownedFrame(ref));
+ // Register token claims before flush: encoder completion hands Blobs directly to archive ownership
+ // before onReady trimming or any field-footage owner can revoke/null the live array.
+ const ownership=encoder?.ownFrames?encoder.ownFrames(clip.frames):snapshotNewsClip(clip).then(x=>x.frames);
  await encoder?.flush?.();
- for(let i=0;i<jobs.length;i++)if(!jobs[i])jobs[i]=ownedFrame(clip.frames[i]);
- const results=await Promise.all(jobs),failure=results.find(result=>result.error);if(failure)throw failure.error;
- const owned={...clip,heroIds:[...(clip.heroIds||[])],shots:structuredClone(clip.shots||[]),frames:results.map(result=>result.value)};
+ const owned={...clip,heroIds:[...(clip.heroIds||[])],shots:structuredClone(clip.shots||[]),frames:await ownership};
  return getNewsArchive().put(owned);
 }
 export async function loadArchivedClip(id){const clip=await getNewsArchive().get(id);if(!clip)return null;let released=false;const frames=clip.frames.map(b=>URL.createObjectURL(b));return {...clip,frames,release(){if(released)return;released=true;for(const url of frames)URL.revokeObjectURL(url);}};}
