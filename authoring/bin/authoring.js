@@ -101,14 +101,21 @@ switch(command){
   try{
    const recipes=await findRecipes();
    const results=await buildAll(recipes,{root:scratch,force:true,log:()=>{}});
-   const committed=new Map();for(const dir of await listPackages()){const {manifest}=await readPackage(dir);committed.set(`${manifest.id}@${manifest.version}`,manifest);}
+   const committed=new Map();for(const dir of await listPackages()){
+    const {manifest}=await readPackage(dir),versions=committed.get(manifest.id)||[];
+    versions.push(manifest);committed.set(manifest.id,versions);
+   }
    let ok=true;
    for(const r of results){
     if(r.failed){log(`FAIL ${r.recipe}: ${r.error}`);ok=false;continue;}
-    const key=`${r.id}@${r.version}`,ref=committed.get(key);
-    if(!ref){log(`MISSING ${key}: built fresh but not committed under public/authored-assets`);ok=false;continue;}
-    const same=ref.packageHash===r.manifest.packageHash&&JSON.stringify(ref.outputs)===JSON.stringify(r.manifest.outputs);
-    log(`${same?'SAME':'DIFF'} ${key} ${r.manifest.packageHash.slice(0,12)}${same?'':' vs committed '+ref.packageHash.slice(0,12)}`);
+    // A clean scratch root numbers every current recipe v1. Match immutable committed
+    // history by content instead of assuming the scratch version is the shipped version.
+    const versions=committed.get(r.id)||[];
+    const ref=versions.find(m=>m.build?.contentHash===r.manifest.build?.contentHash);
+    if(!ref){log(`MISSING ${r.id}: current content is not committed under public/authored-assets`);ok=false;continue;}
+    const same=JSON.stringify(ref.outputs)===JSON.stringify(r.manifest.outputs);
+    const key=`${r.id}@${ref.version}`;
+    log(`${same?'SAME':'DIFF'} ${key} ${ref.packageHash.slice(0,12)}${same?'':' (output hashes differ)'}`);
     ok&&=same;
    }
    log(ok?`REPRODUCIBLE: ${results.length} packages rebuilt from committed recipes and pinned sources with identical hashes`:'NOT REPRODUCIBLE');
