@@ -27,6 +27,14 @@ Updated September 11, 2026. This is the continuing status index for the [gamepla
 | EARTH-01 | Selectively reuse War World: Earth soldiers/weapons/vehicles | Earth Kuchler rifle adapted through recipe/package pipeline; issued player rifle and tier-5 military attachment pass native CPU checks; helmet/carrier separately uses existing PowerWorld kit; browser firing/arrival pending | Reproducible asset manifest, conversion/rig/socket/physics validation, native integration; no blind cross-engine copy |
 | WEAPON-01 | Visible grounded weapon choices and unlock progression | AK74 explicitly requested; recover actual donor/armory identity before adding; no free catalog issuance | Owned inventory and real firing/reload/ammo; show actual unlock/availability, preserve no permanent stat snowball |
 
+## Merged gameplay-loop evidence — 09:33 EDT
+
+The recovered gameplay work is merged on `codex/construct-effects-pass`: integration commit `09ef03d`, merge commit `d5261fa`, final gameplay plan `d35d2aa`, and reproducible authoring repair `427fb64`. Production build, 35/35 authoring checks, and 12/12 authoring reproduction checks pass. The broad gameplay run is 3707/3710; its three remaining failures are inherited cape-contact assertions documented in the merge report.
+
+A repeatable 1600×900 browser capture pass now records 13 player-facing states from the merged runtime: the preserved desert outpost, Gear III/MAX flight HUD, Alt independent look, Tab melee finisher, energy-first guard, airborne person carry/whirl, beam terrain residue, TEMPEST's bounded storm, finite zombie outbreak, clone recovery case, police response, tier-five military escalation with the KUCHLER, and the operation report. The run logged zero page errors. The labeled contact sheet and source frames are in `artifacts/gameplay-loop-screenshots-2026-09-11/`; combat peak frames use deterministic runtime staging so transient mechanics remain readable in a still.
+
+This evidence closes the missing visual-record gate for the merged slice. It does not by itself close native-input feel, balance, audio-mix, operation extraction, or the three inherited cloth failures still named above.
+
 ## September 11 additions
 
 The creator added the desert preference and police-to-military escalation, explained the purpose of last-hit separation, requested a steerable spinning throw and supplied three clips plus a downloaded ESF installer. These are now part of the existing plan. Exact hit counts, timings, throw impulse/cost and hold controls remain tuning proposals. The reviewed videos have no audio stream and do not establish their game's build identity.
