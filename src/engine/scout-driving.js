@@ -2,6 +2,7 @@ import {Vector3} from 'three';
 import {cancelHeldAttacks} from './abilities.js';
 import {canPilotVehicle} from './mobility-policy.js';
 import {soldierControlsActive} from '../core/soldier-controls.js';
+import {SCOUT_DRIVE,stepGroundDrive,haltDrive} from './ground-driving.js';
 
 // Deliberately bounded arcade ground driving: no suspension, seat animation,
 // ramming damage or player gun input. Native actor remains the chase target.
@@ -29,7 +30,7 @@ export class ScoutDriving {
  }
  enter(v,p){
   if(!canPilotVehicle(p)||v.destroyed||v.occupant)return false;
-  cancelHeldAttacks(p);this.vehicle=v;v.occupant=p;p._scoutVehicle=v;v.speed=0;
+  cancelHeldAttacks(p);this.vehicle=v;v.occupant=p;p._scoutVehicle=v;v.speed=0;v.vx=0;v.vz=0;v.yawVel=0;v.steerSmooth=0;
   v._priorNoCam=v.cover.noCam;v.cover.noCam=true;this.game.world._chaseSnap=true;
   this.throttle=this.steer=0;this.brake=false;v._occupantVisible=p.obj.visible;
   p.flying=false;p.flyHeld=p.descendHeld=false;p.guarding=p.prone=p.crouching=p.sprintHeld=false;p.moveDir={x:0,z:0};p.vel.set(0,0,0);p.obj.visible=false;this._seat();
@@ -57,17 +58,18 @@ export class ScoutDriving {
   const v=this.vehicle;if(!v)return;
   if(v.destroyed||!v.occupant?.alive||v.occupant!==this.game.player||v.occupant._formDisposed){this.exit(true);return;}
   if(this.game.paused||this.game.running===false||!Number.isFinite(dt)||dt<=0)return;
-  if(this.game.matchOver||this.game.hud?.titleOpen||this.game.combatOverlayOpen||this.game._frontlinePreparing){v.speed=0;this.throttle=this.steer=0;return;}
+  if(this.game.matchOver||this.game.hud?.titleOpen||this.game.combatOverlayOpen||this.game._frontlinePreparing){haltDrive(v);this.throttle=this.steer=0;return;}
   dt=Math.min(dt,.1);
-  const drag=this.brake?55:this.throttle?0:10;
-  v.speed=Math.max(-18,Math.min(52,(v.speed||0)+this.throttle*24*dt));
-  v.speed=Math.sign(v.speed)*Math.max(0,Math.abs(v.speed)-drag*dt);
-  const yaw=v.yaw+this.steer*Math.min(1,Math.abs(v.speed)/8)*Math.sign(v.speed)*.9*dt;
-  const steps=Math.max(1,Math.ceil(Math.abs(v.speed)*dt/1.25)),step=v.speed*dt/steps;
+  // Shape the frame's kinematics (accel/brake/steer/traction) in the pure model,
+  // then SWEEP the resulting travel in <=1.25u steps so fast motion can never
+  // tunnel through cover, a cliff or water — the anti-tunnel guard is unchanged.
+  stepGroundDrive(v,{throttle:this.throttle,steer:this.steer,brake:this.brake},dt,SCOUT_DRIVE);
+  const dx=v.vx*dt,dz=v.vz*dt,dist=Math.hypot(dx,dz);
+  const steps=Math.max(1,Math.ceil(dist/1.25)),sx=dx/steps,sz=dz/steps;
   for(let i=0;i<steps;i++){
-   const x=v.cover.x+Math.sin(yaw)*step,z=v.cover.z+Math.cos(yaw)*step,h=this._surface(x,z,yaw),r=v.driveRadius;
-   if(h===null||Math.abs(h-v.ground)>3||!this._clear(x,z,r,v.cover,v.cover.bottom,v.cover.top)){v.speed=0;break;}
-   v.yaw=yaw;v.cover.x=x;v.cover.z=z;v.mesh.position.x=x;v.mesh.position.z=z;v.terrain=[];
+   const x=v.cover.x+sx,z=v.cover.z+sz,h=this._surface(x,z,v.yaw),r=v.driveRadius;
+   if(h===null||Math.abs(h-v.ground)>3||!this._clear(x,z,r,v.cover,v.cover.bottom,v.cover.top)){haltDrive(v);break;}
+   v.cover.x=x;v.cover.z=z;v.mesh.position.x=x;v.mesh.position.z=z;v.terrain=[];
   }
   this.convoy._ground(v);this._seat();
  }
@@ -82,7 +84,7 @@ export class ScoutDriving {
   }
   if(!found&&!force)return false;
   if(!found)this._exit.set(v.cover.x,v.cover.top+.2,v.cover.z);
-  p.pos.copy(this._exit);p.obj.position.copy(p.pos);p.vel.set(0,0,0);p.obj.visible=v._occupantVisible!==false;p._scoutVehicle=null;v.occupant=null;v.speed=0;
+  p.pos.copy(this._exit);p.obj.position.copy(p.pos);p.vel.set(0,0,0);p.obj.visible=v._occupantVisible!==false;p._scoutVehicle=null;v.occupant=null;v.speed=0;v.vx=0;v.vz=0;v.yawVel=0;v.steerSmooth=0;
   v.cover.noCam=v._priorNoCam;this.game.world._chaseSnap=true;
   this.vehicle=null;this.throttle=this.steer=0;this.brake=false;return true;
  }
