@@ -42,7 +42,8 @@ This release turns the desert prototype into a more complete superhero combat lo
 
 ## HUD, Newsroom, and presentation
 
-- PowerWorld now opens directly on the full-screen character-selection ceremony, with the live fighter in the center and rendered roster portraits across the bottom. Escape or Filters opens the encounter and weather registry.
+- PowerWorld now opens directly on the full-screen character-selection ceremony, with the live fighter in the center and rendered roster portraits across the bottom. Escape opens the encounter and weather setup.
+- Corrected the shared character-selection stance so arms hang naturally from lowered shoulders instead of folding inward. Removed the redundant Filters & Registry button from the footer.
 - Removed the separate movement-gears card and standalone Armory/Loadout button. Flight gear and speed now appear inside the existing left-side player panel.
 - Flight speed now drives the length of the fighter's world-space wake, making faster travel readable on the character instead of through another dashboard.
 - Reworked VEGA as a bald Black man with a gold V fitted over both the front and back of his uniform.

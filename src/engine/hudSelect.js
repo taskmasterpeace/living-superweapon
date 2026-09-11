@@ -109,10 +109,6 @@ const SEL_CSS = `
   border:1px solid var(--line-gold,rgba(245,178,26,.35));border-radius:5px;color:var(--gold,#ffd24a);font-weight:700}
 #hSelect .selbar .go{color:var(--good,#8fe08a)}
 #hSelect .selbar .go b{border-color:rgba(143,224,138,.4);color:var(--good,#8fe08a)}
-#hSelect .selfilt{margin-left:auto;font-family:var(--f-mono,monospace);font-size:11px;letter-spacing:.16em;
-  color:var(--text-4,#8b8577);border:1px solid var(--line,rgba(255,255,255,.1));border-radius:20px;padding:5px 14px;cursor:pointer}
-#hSelect .selfilt:hover{color:var(--gold,#ffd24a);border-color:var(--line-gold,rgba(245,178,26,.35))}
-
 /* ---- STRIP FEEL: depth falloff, a landing pop, and a sheen on the selected card ---------------- */
 #hSelect .scard{box-shadow:0 4px 12px rgba(0,0,0,.4)}
 #hSelect .scard.near{filter:grayscale(.24) brightness(.82);opacity:.9;transform:scale(1.07) translateY(-3px)}
@@ -281,10 +277,6 @@ export const SelectMixin = {
     this._sel.bar.innerHTML = on
       ? `<span><b>${g('guard')}</b>/<b>${g('dash')}</b>CYCLE</span><span class="go"><b>${g('confirm')}</b>SELECT</span><span><b>${g('back')}</b>BACK</span>`
       : `<span><b>‹</b><b>›</b> / <b>A</b><b>D</b> CYCLE</span><span class="go"><b>ENTER</b>SELECT</span><span><b>P</b>POWERS · 1:1</span><span><b>ESC</b>BACK</span>`;
-    // filters escape hatch back to the classic registry roster
-    const f = document.createElement('span'); f.className = 'selfilt'; f.textContent = '⚙ FILTERS & REGISTRY';
-    f.onclick = () => this._selBack();
-    this._sel.bar.appendChild(f);
   },
 
   _selStep(d) { this._selSelect((this._sel.idx + d + ROSTER.length) % ROSTER.length); },
@@ -401,8 +393,11 @@ export const SelectMixin = {
     const P = figure(def);
     P.groundRig.visible = false;         // no shadow/rings/wedge — this is a portrait, not the field
     if (P.aura) { P.aura.material.opacity = 0.14; P.aura.scale.set(1.9, 1.6, 1.9); }
-    // a relaxed standing stance: splay the arms a touch off the torso
-    P.armL.rotation.z = 0.15; P.armR.rotation.z = -0.15;
+    // A relaxed standing stance. Local -Y is the arm's hanging axis, so the
+    // signs must point away from the torso; the old signs folded every hand
+    // inward and made the shoulders read as raised wedges.
+    P.armL.position.y -= 0.18; P.armR.position.y -= 0.18;
+    P.armL.rotation.z = -0.045; P.armR.rotation.z = 0.045;
     P.armL.rotation.x = 0.06; P.armR.rotation.x = 0.06;
     const acc = (def.colors && def.colors.accent) || '#ffffff';
     T.rim.color.set(acc);                // rim the silhouette in the hero's own colour
