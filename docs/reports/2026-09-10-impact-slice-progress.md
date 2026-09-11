@@ -52,3 +52,15 @@ KO drop correctiond4615de independently approved: issued gun only, original kit 
 The separate candidate and affected-path reruns are complete. Authored rifle contact/resource lifecycle, actual flying strike contact/recovery, foreground performance and full audible replacement coverage remain open. No10/10 visual score or full-goal acceptance has been awarded. Keep the goal active until every requested gate has evidence.
 
 Git maintenance warning: automatic GC reported corrupt loose object a5a5fe6ca37dc54a133ea0c09f2de3e75f358cd0 in the shared repository. Current HEAD was readable and builds succeeded. No destructive repair was attempted; scoped subsequent commits disable automatic GC for that command. Repository integrity needs a separate read-only diagnosis before release/push.
+
+## Continued work and revised objective
+
+The creator replaced the active objective with the combined-arms / cloning / contested-genome proposal in attachment `da3733fb-16ee-4aea-894d-3ca361cc12e6/pasted-text-1.txt`. Read in full. This supersedes the old completion target; it does not establish every proposed number, map size or mode as an implemented rule. A small Godfall recovery scenario is the recommended next design decision; new match-rule implementation awaits that decision.
+
+Existing seams: `FrontlineEncounter` spawns four grounded clones and supports sealed-case recovery/extraction. It explicitly does not collect a fallen superweapon's genome or research it. PowerWorld currently has an empty `onKO` and no match-end condition. Campaign research has `applyResearch`, but is not proof of a match-scoped genome unlock. Preserve sparring and the current scene while designing the new encounter.
+
+Maintenance that also supports the revised infantry goal:
+
+- Mobile touch layer: combat pads and aim zones now yield while menus own input. Native portrait390×844 and landscape844×390 browser checks pass using the actual Resume button, without the previous top-Pause workaround. This run does not exercise a held multi-touch gesture across pause.
+- Authored carbine: added actual-geometry torso tests and support-hand distance checks on every frame of an abrupt high/low/left/right aim sweep for standard, heavy and lean bodies. Reproduced torso intrusion and transition hand detachment before correction. Imported material batches now use cached triangle-local collision bounds; final placement rechecks torso/cover. Removed independent imported-grip lag against the current shoulder frame. Combined authored-equipment, rifle-contact and firearm-emission tests: **95/95 pass**. This is CPU geometry/behavior evidence, not native visual approval, all-pose certification or a performance benchmark. Prone/imported resource lifecycle and final moving recordings remain open.
+- These working-source changes are not in the immutable5184 candidate. No production deployment or full completion is claimed.
