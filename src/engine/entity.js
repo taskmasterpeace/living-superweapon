@@ -42,6 +42,7 @@ import {animateCrouchPose,restoreCrouchPose,updateCrouchBounds} from './crouch-p
 import {animatePronePose,restorePronePose,updateProneBounds} from './prone-pose.js';
 import {animateJump,usesFlightPose} from './jump-motion.js';
 import {groundHeading,animateDirectionalAim,restoreDirectionalAim} from './directional-pose.js';
+import {animateFreeLookHead,restoreFreeLookHead} from './free-look-head.js';
 import { animateCombatAim, restoreCombatBase } from './combat-pose.js';
 import {advanceAbilityMeleePose,cancelInterruptedAbilityMeleePose} from './ability-melee-pose.js';
 import {restoreChestAim} from './chest-pose.js';
@@ -582,6 +583,7 @@ export class Fighter {
     // snapshot also contains that imported base and must not reintroduce it.
     // A held pressure brace also owns the elbow/wrist, even without an imported
     // body channel. Restore the complete reaction before transferring any rig.
+    restoreFreeLookHead(this);
     restoreThrowPose(this);restoreReloadPose(this);restoreRiflePose(this);restorePronePose(this);restoreNanitePose(this);restoreHitReaction(this);
     if(this._jumpMotion?.applied||this._groundTransition?.applied||(this._groundMotion?.applied&&this._groundMotion.rig===this.parts.rig)||(this._authoredStrike?.applied&&this._authoredStrike.rig===this.parts.rig)||this._directionalPose?.applied||this._chestPose?.applied||this._spinePose?.applied||this._groundAimSupport?.applied){
       restoreAuthoredStrikeBase(this);restoreCombatBase(this);restoreSpineAim(this);restoreChestAim(this);restoreGroundAimSupport(this);restoreDirectionalAim(this);restoreGroundBase(this);
@@ -2421,6 +2423,7 @@ export class Fighter {
       p.eyeMark.position.set(0, 11.8 + Math.sin((this._game ? this._game.time : 0) * 2.2) * 0.2, 0);
     } else if (p.eyeMark && p.eyeMark.visible) p.eyeMark.visible = false;
     // face
+    restoreFreeLookHead(this);
     restoreThrowPose(this);restoreReloadPose(this);restoreRiflePose(this);restorePronePose(this);restoreNanitePose(this);restoreHitReaction(this);
     restoreAuthoredStrikeBase(this);
     restoreCombatBase(this);
@@ -2611,6 +2614,7 @@ export class Fighter {
     animateCrouchPose(this,dt);
     animateDirectionalAim(this,dt);
     animateCombatAim(this, dt);
+    animateFreeLookHead(this);
     animateHands(this,dt);
     // aura from ki%/charge/buff — and POWER TIER: higher tiers burn brighter in gold → white-hot
     const auraP = clamp((anyCharge ? 0.62 : 0) + (this.cruiseHeld && this.airborne ? .28 : 0) + (this.powerBuff > 1 ? .20 : 0) + (this.tier - 1) * 0.12, 0, 1);

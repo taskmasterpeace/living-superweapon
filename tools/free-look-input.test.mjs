@@ -23,12 +23,36 @@ for(const air of [false,true])test(`Alt composes a rear-side view during ${air?'
  }finally{x.close();}
 });
 test('vertical shoulder limits, sensitivity and frame-independent return are explicit',()=>{
+ assert.ok(FREE_LOOK_DEFAULTS.yawLimit>75*Math.PI/180&&FREE_LOOK_DEFAULTS.yawLimit<=85*Math.PI/180,'Alt yaw should extend only slightly beyond the previous 75 degree limit');
  const state=createFreeLook();advanceFreeLook(state,{held:true,dx:100,dy:-100,sensitivity:.001});
  assert.equal(state.yaw,-.1);assert.equal(state.pitch,.1);
  advanceFreeLook(state,{held:true,dy:-1e6});assert.equal(state.pitch,FREE_LOOK_DEFAULTS.pitchLimit);
  advanceFreeLook(state,{held:true,dy:1e6});assert.equal(state.pitch,-FREE_LOOK_DEFAULTS.pitchLimit);
  const offsets=[30,60,120].map(hz=>{const s=createFreeLook();s.yaw=1;for(let i=0;i<hz/2;i++)advanceFreeLook(s,{dt:1/hz});return s.yaw;});
  assert.ok(Math.max(...offsets)-Math.min(...offsets)<1e-12);
+});
+test('the player head follows Alt yaw and pitch, then settles back with the camera',()=>{
+ const x=setup('vega'),neutral=setup('vega');try{
+  x.p._animate(1/60);neutral.p._animate(1/60);x.p.obj.updateMatrixWorld(true);
+  const forward=()=>new THREE.Vector3(0,0,1).applyQuaternion(x.p.parts.head.quaternion).normalize();
+  const before=forward();
+  x.g.input.keys.add('AltLeft');x.g.input.mouse.dx=-260;x.g.input.mouse.dy=-150;x.control(1/60);
+  x.p._animate(1/60);x.p.obj.updateMatrixWorld(true);
+  const looking=forward();
+  assert.ok(looking.angleTo(before)>.08,'Head did not visibly follow independent look');
+  assert.ok(looking.y>before.y+.03,'Looking up did not lift the face');
+  assert.ok(looking.x>before.x+.03,'Looking sideways did not turn the face');
+  const firstTurn=x.p._freeLookHead.head.angleTo(x.p.parts.head.quaternion);
+  x.p._animate(1/60);x.p.obj.updateMatrixWorld(true);
+  const repeatedTurn=x.p._freeLookHead.head.angleTo(x.p.parts.head.quaternion);
+  assert.ok(Math.abs(repeatedTurn-firstTurn)<.01,'A held Alt look accumulated neck rotation every frame');
+  x.g.input.endFrame();x.g.input.keys.delete('AltLeft');
+  for(let i=0;i<90;i++){x.control(1/60);x.p._animate(1/60);neutral.control(1/60);neutral.p._animate(1/60);}
+  x.p.obj.updateMatrixWorld(true);
+  const neutralForward=new THREE.Vector3(0,0,1).applyQuaternion(neutral.p.parts.head.quaternion).normalize();
+  const settled=forward().angleTo(neutralForward);
+  assert.ok(settled<.015,`Head did not settle back after Alt release (${settled}; offsets ${x.w._freeLook.yaw}, ${x.w._freeLook.pitch})`);
+ }finally{x.close();neutral.close();}
 });
 test('pitched flight and a sustained native beam keep their original direction through Alt look',()=>{
  const x=setup('sol',true);try{

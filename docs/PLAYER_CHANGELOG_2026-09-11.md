@@ -8,6 +8,7 @@ This release turns the desert prototype into a more complete superhero combat lo
 - Shift now controls movement gears. Tap or hold to sprint; double-tap and hold the second press to power up through the available tiers.
 - The highest available speed tier gets a clear MAX presentation so players can tell when they have reached it.
 - Added independent Alt camera composition. Hold Alt to slide toward a rear three-quarter view; the camera turns inward enough to keep the player and locked target together while travel and attack aim retain their original heading.
+- Alt free-look now turns the player character's head horizontally and vertically, then eases it back when released. The side-view limit and shoulder slide were increased slightly without changing attack aim.
 - Kept flight tier differences: grounded fighters, clumsy fliers, levitators, and full fliers still move differently.
 - Separated universal power-up from combat power slots. Powering up no longer consumes an ability slot.
 
