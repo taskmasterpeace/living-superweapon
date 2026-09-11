@@ -32,6 +32,7 @@
   <button data-shot="breach">Breach</button>
   <button data-shot="cut-ground">Cut: ground</button>
   <button data-shot="cut-upper">Cut: upper</button>
+  <button data-shot="stairwell">Stairwell</button>
   <button data-shot="chase">Chase cam</button>
   <button id="orbit">Orbit</button>
   <button id="walk">Walkthrough</button>
@@ -106,26 +107,32 @@ function silh(color, h, w) {
   const body = new THREE.Mesh(new THREE.CapsuleGeometry(w / 2, h - w, 6, 12), new THREE.MeshStandardMaterial({ color, transparent: true, opacity: 0.5, emissive: color, emissiveIntensity: 0.25 }));
   body.position.y = h / 2; body.castShadow = true; g.add(body); return g;
 }
-const soldier = silh('#7fe6ff', 9.6, 4.4); const soldierHome = [-6, 0, 20]; soldier.position.set(...soldierHome);  // at the front door
-const hero = silh('#ffd24a', 12.5, 9.5); hero.position.set(22, 0, 9);           // outside the breach flank
-scene.add(soldier); scene.add(hero);
+const soldier = silh('#7fe6ff', 9.6, 4.4); const soldierHome = [-9, 0, 30]; soldier.position.set(...soldierHome);  // outside, approaching the front door (x=-9)
+const hero = silh('#ffd24a', 12.5, 9.5); hero.position.set(30, 0, 11);          // outside the +X breach flank
+// a CLIMBER mid-flight on stair A (-X bay, step 4): feet at y≈9.1, HEAD at ≈18.7 — well above the
+// 14.8u upper-floor underside, so the open stairwell shaft (a real hole in the slab above) is what
+// gives the headroom. Shown in the cut/stairwell shots to make that clearance visible.
+const climber = silh('#7fe6ff', 9.6, 4.4); const climberHome = [-15.8, 9.15, 9.6]; climber.position.set(...climberHome); climber.visible = false;
+scene.add(soldier); scene.add(hero); scene.add(climber);
 
 // ---- camera control --------------------------------------------------------
 const target = new THREE.Vector3(0, 7, 0);
 let orbiting = false, orbitA = 0.6, walking = false, walkT = 0;
 const SHOTS = {
-  front:        { pos: [-4, 24, 78], tgt: [-6, 15, 8] },                              // exterior: both floors, door + upper windows
+  front:        { pos: [-8, 20, 84], tgt: [-9, 11, 12] },                             // exterior: both floors, front DOOR + soldier approaching
   top:          { pos: [18, 92, 56], tgt: [0, 8, -2] },                               // high 3/4 overview
   roof:         { pos: [-4, 54, 50], tgt: [0, 30, -4] },                              // accessible roof deck
-  breach:       { pos: [70, 20, 11], tgt: [8, 10, 11], state: true },                 // breached flank, large hero
-  'cut-upper':  { pos: [-2, 50, 44], tgt: [-1, 18, -3], peel: ['roof'] },             // roof peeled -> upper floor
-  'cut-ground': { pos: [-2, 46, 44], tgt: [-1, 3, -3], peel: ['roof', 'upper', 'stair'] }, // roof + upper peeled -> ground floor
-  chase:        { pos: [-6, 11, 22], tgt: [-5, 4, -9], peel: ['roof', 'upper'], playerAt: [-6, 0, 6] }, // over-the-shoulder, ground floor
+  breach:       { pos: [70, 20, 11], tgt: [8, 10, 11], state: true },                 // breached +X flank, large hero
+  'cut-upper':  { pos: [-2, 50, 46], tgt: [-6, 16, 4], peel: ['roof'], climb: true }, // roof peeled -> upper floor slab + its stair-A shaft HOLE (climber's head rises through it) + stair B
+  'cut-ground': { pos: [12, 34, 46], tgt: [-13, 8, 7], peel: ['roof', 'upper'], climb: true }, // roof + upper peeled -> ground floor, stair A rising with a climber + open air above (clearance)
+  stairwell:    { pos: [-30, 40, 34], tgt: [-15.8, 9, 9], peel: ['roof', 'upper'], climb: true }, // down into the -X bay (clears the wall tops): the full flight + climber + open shaft overhead
+  chase:        { pos: [-9, 11, 26], tgt: [-8, 4, -6], peel: ['roof', 'upper'], playerAt: [-9, 0, 8] }, // over-the-shoulder at the door
 };
 function applyPeel(levels) { for (const k of Object.keys(peelGroups)) { const on = levels && levels.includes(k); for (const m of peelGroups[k]) m.visible = !on; } }
 function applyShot(name) {
   const s = SHOTS[name] || SHOTS.front; orbiting = false; walking = false;
   applyPeel(s.peel || []);
+  climber.visible = !!s.climb;
   if (s.playerAt) { soldier.position.set(...s.playerAt); hero.visible = false; } else { soldier.position.set(...soldierHome); hero.visible = true; }
   if (s.state) applyState(true);
   camera.position.set(...s.pos); target.set(...s.tgt); camera.lookAt(target);
@@ -135,12 +142,12 @@ function applyShot(name) {
 // upper floor -> peel the upper floor to see the ground floor -> the roof deck. Each keyframe carries
 // the per-storey peel that reveals that beat (the third-person visibility model, storey by storey).
 const WALK = [
-  { p: [-4, 18, 88], t: [-6, 14, 8], peel: [] },
-  { p: [-9, 10, 58], t: [-9, 9, 12], peel: [] },
-  { p: [46, 30, 72], t: [0, 18, 0], peel: [] },
-  { p: [-2, 50, 44], t: [-1, 18, -3], peel: ['roof'] },
-  { p: [-2, 46, 44], t: [-1, 3, -3], peel: ['roof', 'upper', 'stair'] },
-  { p: [-4, 54, 50], t: [0, 30, -4], peel: [] },
+  { p: [-9, 12, 92], t: [-9, 10, 14], peel: [] },                              // approach the front door
+  { p: [46, 30, 72], t: [0, 18, 0], peel: [] },                               // pull back: two floors + roof
+  { p: [12, 34, 46], t: [-13, 8, 7], peel: ['roof', 'upper'], climb: true },   // ground floor (roof + upper peeled), stair A rising with a climber
+  { p: [-30, 40, 34], t: [-15.8, 9, 9], peel: ['roof', 'upper'], climb: true },// down into the stairwell: the flight + climber + open shaft (clearance)
+  { p: [-2, 50, 46], t: [-6, 16, 4], peel: ['roof'], climb: true },            // upper floor slab + the stair-A shaft hole (climber's head through it)
+  { p: [-4, 54, 50], t: [0, 30, -4], peel: [] },                              // the roof deck
 ];
 function setWalk(t) {
   const n = WALK.length - 1, f = Math.max(0, Math.min(0.9999, t)) * n, i = Math.floor(f), k = f - i;
@@ -150,6 +157,7 @@ function setWalk(t) {
   target.set(lerp(a.t[0], b.t[0]), lerp(a.t[1], b.t[1]), lerp(a.t[2], b.t[2]));
   camera.lookAt(target);
   applyPeel(a.peel);
+  climber.visible = !!a.climb;
 }
 window.setWalk = setWalk;                 // for the screenshot driver
 window.setShot = applyShot;

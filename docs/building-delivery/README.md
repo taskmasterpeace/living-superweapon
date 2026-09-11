@@ -71,7 +71,8 @@ Authored **directly in PowerWorld world units (`u`)** — import conversion is *
 | Flank breach opening (breached) | 17 × 15 u | large hero (9.5 × 12.5 u) with margin |
 | Upper windows | 7 × 7 u, sill 5 u | LOS / light (not a walk route) |
 | Per-floor clear ceiling | 14.8 u (2.78 m) | +3.8 u over the 11 u head, +2.3 u over the 12.5 u silhouette, room for the chase boom |
-| Stair (each flight) | 7 steps · riser 2.14 u · tread 2.4 u | riser ≤ the runtime's 2.5 u step-on snap; reaches its level |
+| Stair (each flight) | 7 steps · riser 2.29 u · tread 2.4 u | riser ≤ the runtime's 2.5 u step-on snap; reaches its level |
+| Stair headroom | shaft **open over the whole run** in the slab above | climber's head clears the slab from step 2 up — no clip on the way up |
 | Chase-cam ring per entry room | ground_entry 39.6 × 19.2 u · upper_front similar | Ø12 u ring fits both floors |
 
 **Footprint 42 × 46 u** (7.88 × 8.63 m) per floor · **2 storeys**, floor-to-floor 16 u · roof deck at 32 u ·
@@ -137,13 +138,14 @@ soldier (cyan) and large-hero (gold) silhouettes:
 
 | Shot | Shows |
 |---|---|
-| `shots/lab-front.png` | exterior front: two floors, ground door + soldier, upper window, roof deck |
+| `shots/lab-front.png` | exterior front: two floors, ground door + soldier at the threshold, **stair visible through the open doorway**, upper window, roof deck |
+| `shots/lab-stairwell.png` | **the −X stairwell** with a soldier climbing mid-flight — head in the **open shaft** overhead = the headroom made visible |
+| `shots/lab-cutaway-ground.png` | **roof + upper floor peeled** → ground floor: stair A rising from the door with a climber, open air above (clearance), entry/case + breach |
+| `shots/lab-cutaway-upper.png` | **roof peeled** → upper floor slab with the real **stairwell hole** cut over stair A, stair B rising to the roof, windows |
 | `shots/lab-top.png` | overview: parapeted deck, hazard roof panel, stair hatch |
-| `shots/lab-cutaway-ground.png` | **roof + upper floor peeled** → ground floor (entry/case, partition doorway, breach) |
-| `shots/lab-cutaway-upper.png` | **roof peeled** → upper floor (rooms, stair hole, stair to roof, window) |
 | `shots/lab-breach.png` | breached flank — weak panel gone, large hero fitting the opening |
 | `shots/lab-roof.png` | accessible roof deck, parapet, hatch, weak panel |
-| `shots/walkthrough.gif` | two-story tour: exterior → height → upper cutaway → ground cutaway → roof |
+| `shots/walkthrough.gif` | two-story tour: front door → height → ground cutaway (stair) → stairwell climb → upper slab hole → roof |
 
 > The cutaway shots peel a storey at a time — that is an **authoring** view, and it is exactly the
 > per-camera fade model generalized (fade what's between the camera and the player). Generated concept
@@ -181,7 +183,9 @@ disjoint so fading one storey never nukes another. See `INTEGRATION.md` §A.
   extension seam in `INTEGRATION.md` §B — proven by the standalone fixture.
 - **Auto step-up is a movement capability, not asset data.** Both stair flights are geometrically
   walkable (riser ≤ 2.5 u snap) and reach their level; climbing on foot needs the movement step-up
-  seam (or jumping the steps / flight).
+  seam (or jumping the steps / flight). Both flights sit in the **−X bay** (clear of the +X breach
+  path); the slab above each run is an **open shaft over the whole flight**, so a climber has full
+  head clearance the entire way up (see the section view + `lab-stairwell.png`).
 - **Debris is a bounded spec** (counts/sizes/lifetime/spawn volume), not baked chunk meshes; no
   collapse simulation.
 - **The research case is a FrontlineEncounter runtime entity** — this package supplies the plinth and

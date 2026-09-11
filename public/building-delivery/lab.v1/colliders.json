@@ -899,7 +899,7 @@
         "max": [
           21,
           16,
-          -17.6
+          0.6
         ]
       }
     },
@@ -920,12 +920,12 @@
         "min": [
           -21,
           14.8,
-          -17.6
+          0.6
         ],
         "max": [
-          11.8,
+          -19.8,
           16,
-          -11.6
+          6
         ]
       }
     },
@@ -944,14 +944,14 @@
       "dtype": "structural",
       "aabb": {
         "min": [
-          19.8,
+          -11.8,
           14.8,
-          -17.6
+          0.6
         ],
         "max": [
           21,
           16,
-          -11.6
+          6
         ]
       }
     },
@@ -972,12 +972,12 @@
         "min": [
           -21,
           14.8,
-          -11.6
+          6
         ],
         "max": [
-          21,
+          -19.8,
           16,
-          6
+          16
         ]
       }
     },
@@ -996,7 +996,7 @@
       "dtype": "structural",
       "aabb": {
         "min": [
-          -21,
+          -11.8,
           14.8,
           6
         ],
@@ -1051,6 +1051,58 @@
           -21,
           14.8,
           16
+        ],
+        "max": [
+          -19.8,
+          16,
+          18.6
+        ]
+      }
+    },
+    {
+      "id": "p030",
+      "node": "floor_l1",
+      "level": 1,
+      "role": "floor",
+      "material": "floor_struct",
+      "collider": true,
+      "standable": true,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -11.8,
+          14.8,
+          16
+        ],
+        "max": [
+          21,
+          16,
+          18.6
+        ]
+      }
+    },
+    {
+      "id": "p031",
+      "node": "floor_l1",
+      "level": 1,
+      "role": "floor",
+      "material": "floor_struct",
+      "collider": true,
+      "standable": true,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -21,
+          14.8,
+          18.6
         ],
         "max": [
           21,
@@ -1112,7 +1164,7 @@
       }
     },
     {
-      "id": "p030",
+      "id": "p032",
       "node": "roof_structural",
       "level": "roof",
       "role": "roof",
@@ -1133,12 +1185,64 @@
         "max": [
           21,
           32,
+          -19.6
+        ]
+      }
+    },
+    {
+      "id": "p033",
+      "node": "roof_structural",
+      "level": "roof",
+      "role": "roof",
+      "material": "roof_slab",
+      "collider": true,
+      "standable": true,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -21,
+          30.8,
+          -19.6
+        ],
+        "max": [
+          -19.8,
+          32,
           -17
         ]
       }
     },
     {
-      "id": "p031",
+      "id": "p034",
+      "node": "roof_structural",
+      "level": "roof",
+      "role": "roof",
+      "material": "roof_slab",
+      "collider": true,
+      "standable": true,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -11.8,
+          30.8,
+          -19.6
+        ],
+        "max": [
+          21,
+          32,
+          -17
+        ]
+      }
+    },
+    {
+      "id": "p035",
       "node": "roof_structural",
       "level": "roof",
       "role": "roof",
@@ -1157,6 +1261,32 @@
           -17
         ],
         "max": [
+          -19.8,
+          32,
+          -5
+        ]
+      }
+    },
+    {
+      "id": "p036",
+      "node": "roof_structural",
+      "level": "roof",
+      "role": "roof",
+      "material": "roof_slab",
+      "collider": true,
+      "standable": true,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -11.8,
+          30.8,
+          -17
+        ],
+        "max": [
           -11,
           32,
           -5
@@ -1164,7 +1294,7 @@
       }
     },
     {
-      "id": "p032",
+      "id": "p037",
       "node": "roof_structural",
       "level": "roof",
       "role": "roof",
@@ -1190,7 +1320,7 @@
       }
     },
     {
-      "id": "p033",
+      "id": "p038",
       "node": "roof_structural",
       "level": "roof",
       "role": "roof",
@@ -1209,14 +1339,40 @@
           -5
         ],
         "max": [
-          21,
+          -19.8,
           32,
-          -4
+          -1.6
         ]
       }
     },
     {
-      "id": "p034",
+      "id": "p039",
+      "node": "roof_structural",
+      "level": "roof",
+      "role": "roof",
+      "material": "roof_slab",
+      "collider": true,
+      "standable": true,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -11.8,
+          30.8,
+          -5
+        ],
+        "max": [
+          21,
+          32,
+          -1.6
+        ]
+      }
+    },
+    {
+      "id": "p040",
       "node": "roof_structural",
       "level": "roof",
       "role": "roof",
@@ -1232,59 +1388,7 @@
         "min": [
           -21,
           30.8,
-          -4
-        ],
-        "max": [
-          11.8,
-          32,
-          2
-        ]
-      }
-    },
-    {
-      "id": "p035",
-      "node": "roof_structural",
-      "level": "roof",
-      "role": "roof",
-      "material": "roof_slab",
-      "collider": true,
-      "standable": true,
-      "breakable": false,
-      "breakGroup": null,
-      "state": "always",
-      "hp": 1200,
-      "dtype": "structural",
-      "aabb": {
-        "min": [
-          19.8,
-          30.8,
-          -4
-        ],
-        "max": [
-          21,
-          32,
-          2
-        ]
-      }
-    },
-    {
-      "id": "p036",
-      "node": "roof_structural",
-      "level": "roof",
-      "role": "roof",
-      "material": "roof_slab",
-      "collider": true,
-      "standable": true,
-      "breakable": false,
-      "breakGroup": null,
-      "state": "always",
-      "hp": 1200,
-      "dtype": "structural",
-      "aabb": {
-        "min": [
-          -21,
-          30.8,
-          2
+          -1.6
         ],
         "max": [
           21,
@@ -1464,14 +1568,14 @@
       "dtype": "structural",
       "aabb": {
         "min": [
-          11.8,
+          -19.8,
           0,
-          -1.4
+          15.6
         ],
         "max": [
-          19.8,
+          -11.8,
           2.28571,
-          1
+          18
         ]
       }
     },
@@ -1490,14 +1594,14 @@
       "dtype": "structural",
       "aabb": {
         "min": [
-          11.8,
+          -19.8,
           0,
-          -3.8
+          13.2
         ],
         "max": [
-          19.8,
+          -11.8,
           4.57143,
-          -1.4
+          15.6
         ]
       }
     },
@@ -1516,14 +1620,14 @@
       "dtype": "structural",
       "aabb": {
         "min": [
-          11.8,
+          -19.8,
           0,
-          -6.2
+          10.8
         ],
         "max": [
-          19.8,
+          -11.8,
           6.85714,
-          -3.8
+          13.2
         ]
       }
     },
@@ -1542,14 +1646,14 @@
       "dtype": "structural",
       "aabb": {
         "min": [
-          11.8,
+          -19.8,
           0,
-          -8.6
+          8.4
         ],
         "max": [
-          19.8,
+          -11.8,
           9.14286,
-          -6.2
+          10.8
         ]
       }
     },
@@ -1568,14 +1672,14 @@
       "dtype": "structural",
       "aabb": {
         "min": [
-          11.8,
+          -19.8,
           0,
-          -11
+          6
         ],
         "max": [
-          19.8,
+          -11.8,
           11.42857,
-          -8.6
+          8.4
         ]
       }
     },
@@ -1594,14 +1698,14 @@
       "dtype": "structural",
       "aabb": {
         "min": [
-          11.8,
+          -19.8,
           0,
-          -13.4
+          3.6
         ],
         "max": [
-          19.8,
+          -11.8,
           13.71429,
-          -11
+          6
         ]
       }
     },
@@ -1620,14 +1724,14 @@
       "dtype": "structural",
       "aabb": {
         "min": [
-          11.8,
+          -19.8,
           0,
-          -15.8
+          1.2
         ],
         "max": [
-          19.8,
+          -11.8,
           16,
-          -13.4
+          3.6
         ]
       }
     },
@@ -1646,14 +1750,14 @@
       "dtype": "structural",
       "aabb": {
         "min": [
-          11.8,
+          -19.8,
           16,
-          -15.8
+          -19
         ],
         "max": [
-          19.8,
+          -11.8,
           18.28571,
-          -13.4
+          -16.6
         ]
       }
     },
@@ -1672,14 +1776,14 @@
       "dtype": "structural",
       "aabb": {
         "min": [
-          11.8,
+          -19.8,
           16,
-          -13.4
+          -16.6
         ],
         "max": [
-          19.8,
+          -11.8,
           20.57143,
-          -11
+          -14.2
         ]
       }
     },
@@ -1698,14 +1802,14 @@
       "dtype": "structural",
       "aabb": {
         "min": [
-          11.8,
+          -19.8,
           16,
-          -11
+          -14.2
         ],
         "max": [
-          19.8,
+          -11.8,
           22.85714,
-          -8.6
+          -11.8
         ]
       }
     },
@@ -1724,14 +1828,14 @@
       "dtype": "structural",
       "aabb": {
         "min": [
-          11.8,
+          -19.8,
           16,
-          -8.6
+          -11.8
         ],
         "max": [
-          19.8,
+          -11.8,
           25.14286,
-          -6.2
+          -9.4
         ]
       }
     },
@@ -1750,14 +1854,14 @@
       "dtype": "structural",
       "aabb": {
         "min": [
-          11.8,
+          -19.8,
           16,
-          -6.2
+          -9.4
         ],
         "max": [
-          19.8,
+          -11.8,
           27.42857,
-          -3.8
+          -7
         ]
       }
     },
@@ -1776,14 +1880,14 @@
       "dtype": "structural",
       "aabb": {
         "min": [
-          11.8,
+          -19.8,
           16,
-          -3.8
+          -7
         ],
         "max": [
-          19.8,
+          -11.8,
           29.71429,
-          -1.4
+          -4.6
         ]
       }
     },
@@ -1802,14 +1906,14 @@
       "dtype": "structural",
       "aabb": {
         "min": [
-          11.8,
+          -19.8,
           16,
-          -1.4
+          -4.6
         ],
         "max": [
-          19.8,
+          -11.8,
           32,
-          1
+          -2.2
         ]
       }
     },
@@ -1933,15 +2037,19 @@
         "p027",
         "p028",
         "p029",
-        "upper_floor_panel",
-        "upper_floor_panel.mark",
         "p030",
         "p031",
+        "upper_floor_panel",
+        "upper_floor_panel.mark",
         "p032",
         "p033",
         "p034",
         "p035",
         "p036",
+        "p037",
+        "p038",
+        "p039",
+        "p040",
         "roof_weak_panel",
         "roof_weak_panel.mark",
         "parapet.front",
@@ -1997,14 +2105,18 @@
         "p027",
         "p028",
         "p029",
-        "upper_floor_panel",
         "p030",
         "p031",
+        "upper_floor_panel",
         "p032",
         "p033",
         "p034",
         "p035",
         "p036",
+        "p037",
+        "p038",
+        "p039",
+        "p040",
         "roof_weak_panel",
         "parapet.front",
         "parapet.rear",
@@ -2087,6 +2199,10 @@
         "p034",
         "p035",
         "p036",
+        "p037",
+        "p038",
+        "p039",
+        "p040",
         "parapet.front",
         "parapet.rear",
         "parapet.left",

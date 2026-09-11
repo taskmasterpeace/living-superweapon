@@ -56,8 +56,8 @@
   ],
 
   "stairs": [
-    { "id": "stair_a", "from": "ground", "to": "upper", "baseY": 0.0, "topY": 16.0, "bayMinX": 11.8, "bayMaxX": 19.8, "startZ": 1.0, "dir": -1, "steps": 7, "tread": 2.4, "topHole": { "centerX": 15.8, "centerZ": -14.6, "width": 8.0, "depth": 6.0 }, "note": "Ground -> upper, running -Z into the rear bay; head emerges through the upper-floor hole." },
-    { "id": "stair_b", "from": "upper", "to": "roof", "baseY": 16.0, "topY": 32.0, "bayMinX": 11.8, "bayMaxX": 19.8, "startZ": -15.8, "dir": 1, "steps": 7, "tread": 2.4, "topHole": { "centerX": 15.8, "centerZ": -1.0, "width": 8.0, "depth": 6.0 }, "note": "Upper -> roof, running +Z back toward the front (switchback in the same bay); head emerges through the roof hole." }
+    { "id": "stair_a", "from": "ground", "to": "upper", "baseY": 0.0, "topY": 16.0, "bayMinX": -19.8, "bayMaxX": -11.8, "startZ": 18.0, "dir": -1, "steps": 7, "tread": 2.4, "shaftMargin": 0.6, "note": "Ground -> upper, in the FRONT -X bay running -Z. The floor-2 slab is OPEN over the whole run (a real stairwell shaft) so a climbing fighter has full headroom; you emerge onto the solid upper floor at the top of the run." },
+    { "id": "stair_b", "from": "upper", "to": "roof", "baseY": 16.0, "topY": 32.0, "bayMinX": -19.8, "bayMaxX": -11.8, "startZ": -19.0, "dir": 1, "steps": 7, "tread": 2.4, "shaftMargin": 0.6, "note": "Upper -> roof, in the REAR -X bay running +Z toward the centre. The ROOF slab is OPEN over the whole run; you emerge onto the solid roof deck. Stair B stands on the solid upper floor (its bay is not part of stair A's shaft)." }
   ],
 
   "floorPanels": [

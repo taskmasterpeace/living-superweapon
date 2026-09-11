@@ -122,7 +122,7 @@ function section() {
   b += dim(pz(minZ) + 8, py(0), pz(minZ) + 8, py(F2F), `floor-to-floor ${uL(F2F)}`, C.gold);
   b += dim(pz(maxZ) - 20, py(0), pz(maxZ) - 20, py(DECK), `to roof ${uL(DECK)}`, C.gold);
   const s0 = M.stairs[0].steps[0];
-  b += dim(pz(s0.aabb.max[2]) + 6, py(0), pz(s0.aabb.max[2]) + 6, py(s0.aabb.max[1]), `riser ${uL(round(M.stairs[0].rise))}`, C.bone);
+  b += dim(pz(s0.aabb.max[2]) + 6, py(0), pz(s0.aabb.max[2]) + 6, py(s0.aabb.max[1]), `riser ${uL(f(M.stairs[0].rise))}`, C.bone);
   b += Tx(pz(0), py(F2F) + 14, 'FLOOR 2 SLAB (= ground ceiling)', C.bone, 10, 'middle');
   b += Tx(pz(0), py(DECK) - 4, 'ROOF DECK', C.bone, 10, 'middle');
   b += Tx(pz(0), py(F2F / 2), 'GROUND', C.dim, 10, 'middle'); b += Tx(pz(0), py(F2F + F2F / 2), 'UPPER', C.dim, 10, 'middle');
@@ -130,7 +130,6 @@ function section() {
   b += Tx(w - 16, h - 14, `SECTION through the stair bay (x=${x0cut}u) · switchback ground→upper→roof`, C.dim, 10, 'end');
   return doc(w, h, 'RESEARCH LAB — SECTION · TWO FLOORS + STAIR', b);
 }
-const round = (v) => Math.round(v * 1e5) / 1e5;
 
 // ---------- emit ----------
 const O = Object.fromEntries(M.openings.map((o) => [o.id, o]));

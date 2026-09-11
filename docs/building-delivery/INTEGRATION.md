@@ -78,7 +78,12 @@ Consume the richer schema, smallest first:
    straight up/down between floors, and it is what the upper floor stands on.
 3. **Standable step colliders (both flights)** — the 14 `role:"step"` pieces (node `stair`) are
    standable boxes (`aabb.max.y` = `top`); risers ≤ 2.5 u (the existing snap tolerance). Auto step-up
-   is a movement decision the main task owns.
+   is a movement decision the main task owns. Both flights run in the **−X bay** (`x ≈ −19.8…−11.8`),
+   deliberately clear of the +X breach path. Each run's slab above carries an **open shaft over the
+   whole flight** (a hole in `floor_l1` for stair A, in the roof for stair B — see the `+Y` stair
+   openings in `openings.json`): a 9.6 u climber's head reaches ~18.7 u mid-flight, above the 14.8 u
+   slab underside, so the shaft is what gives head clearance. Do **not** register a ceiling collider
+   over a stair run.
 4. **Per-piece breakable state** — 4 breakGroups (`front_door_leaf`, `breach_panel`,
    `upper_floor_panel`, `roof_weak_panel`). Route damage through `damageBlock(c, amt, pos, src)` so it
    inherits kill attribution, the `launchT` "who broke it" slam law, `resistOf` resistances and the

@@ -146,13 +146,13 @@
   },
   "budgets": {
     "drawCalls": 17,
-    "triangles": 840,
-    "vertices": 1680,
+    "triangles": 888,
+    "vertices": 1776,
     "materials": 17,
     "renderNodes": 17,
-    "glbBytes": 61836,
+    "glbBytes": 64716,
     "levels": 2,
-    "colliderPieces": 59,
+    "colliderPieces": 63,
     "breakables": 4,
     "rooms": 4,
     "openings": 10,
@@ -161,8 +161,8 @@
   "files": [
     {
       "path": "colliders.json",
-      "sha256": "6c9bace77f82e65e8df47f108d55b20ca3ef48165b2a972d7dfc738c895215cd",
-      "bytes": 40951,
+      "sha256": "f5f2868142e31e266e78284e4ce45c0d09416cb9402de6332be818b8cd023490",
+      "bytes": 43096,
       "role": "colliders"
     },
     {
@@ -173,20 +173,20 @@
     },
     {
       "path": "lab.glb",
-      "sha256": "cb5bd63e1496053c41407aa93adeec9f9ebef259989134639ca2157d9815b63b",
-      "bytes": 61836,
+      "sha256": "c13d0740ad0b1d0ba16076a5865a2feac905fe6eb42f8a8c3cdc069d8c513e89",
+      "bytes": 64716,
       "role": "render-mesh"
     },
     {
       "path": "openings.json",
-      "sha256": "aebf91cbc620951eec60d088fd5c3d8812b99de348ad2d7efc511fa1d1561ba9",
-      "bytes": 4215,
+      "sha256": "1b745879584ba522d9595da738224722bae99ae02e2f7cfa9156a0d75c53f49c",
+      "bytes": 4220,
       "role": "openings"
     },
     {
       "path": "room-graph.json",
-      "sha256": "b6f0684e6ee3d5ef46b0c064e8c72b817751f5da7e73d1d3804ac145557173fc",
-      "bytes": 13279,
+      "sha256": "c860950194d41d1b689248946667f551041b2bf69a3ea588aa241c040d0f8cc1",
+      "bytes": 13657,
       "role": "room-graph"
     },
     {
@@ -285,7 +285,9 @@
         "p026",
         "p027",
         "p028",
-        "p029"
+        "p029",
+        "p030",
+        "p031"
       ]
     },
     {
@@ -303,13 +305,15 @@
     {
       "node": "roof_structural",
       "pieces": [
-        "p030",
-        "p031",
         "p032",
         "p033",
         "p034",
         "p035",
-        "p036"
+        "p036",
+        "p037",
+        "p038",
+        "p039",
+        "p040"
       ]
     },
     {
@@ -369,5 +373,5 @@
   ],
   "integration": "See docs/building-delivery/INTEGRATION.md for the exact seam (direct subset + extension points).",
   "_selfHashNote": "manifest hashes cover every OTHER output; this file is not self-hashed.",
-  "packageHash": "efd671a6f93221919bea82dd94b708790d16e36693ef751e14a5c31e6dd18444"
+  "packageHash": "1eb4265dd4834d503667377a320b6bd143a2964a3a4c7b27f70007089e79a547"
 }

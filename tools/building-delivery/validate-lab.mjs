@@ -171,6 +171,17 @@ check('both stair flights reach their level with walkable-proportion risers', ()
   for (const s of graph.stairs) { ok(s.reachesTop, `${s.id} !reachesTop`); ok(s.maxRiser <= 2.5 + 1e-6, `${s.id} riser ${s.maxRiser}>2.5`); ok(s.width >= 2 * R, `${s.id} width ${s.width}<${2 * R}`); }
   return graph.stairs.map((s) => `${s.id} ${s.from}->${s.to} ${s.steps.length}steps riser ${s.rise}`).join(' · ');
 });
+check('STAIR HEADROOM: the slab above is OPEN over the whole run (you can climb without clipping)', () => {
+  const slabs = colliders.pieces.filter((p) => p.role === 'floor' || p.role === 'roof');
+  const inSlab = (x, y, z) => slabs.some((c) => x > c.aabb.min[0] && x < c.aabb.max[0] && y > c.aabb.min[1] && y < c.aabb.max[1] && z > c.aabb.min[2] && z < c.aabb.max[2]);
+  for (const s of graph.stairs) {
+    for (const st of s.steps) {
+      const cx = (st.aabb.min[0] + st.aabb.max[0]) / 2, cz = (st.aabb.min[2] + st.aabb.max[2]) / 2;
+      for (let y = st.top + 0.3; y <= st.top + HEAD; y += 0.6) ok(!inSlab(cx, y, cz), `${s.id} step ${st.index}: a slab caps the climber's head at y${round(y)} (no headroom)`);
+    }
+  }
+  return graph.stairs.map((s) => `${s.id} clear over ${s.steps.length} steps`).join(' · ');
+});
 check('inter-storey floor slab separates the storeys and is standable', () => {
   const f1 = colliders.pieces.filter((p) => p.node === 'floor_l1' && p.standable); ok(f1.length > 0, 'no floor_l1 slab');
   ok(near(f1[0].aabb.max[1], manifest.dimensions.floorToFloor_u), `floor top ${f1[0].aabb.max[1]} != ${manifest.dimensions.floorToFloor_u}`);

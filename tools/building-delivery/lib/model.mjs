@@ -162,10 +162,18 @@ export function buildModel(recipe) {
     }
   });
 
+  // A stair's OPEN SHAFT = the slab-above hole covering the whole run, so a climbing fighter has
+  // headroom the entire way up (not just a landing hole). Derived from the run, never hand-authored.
+  const stairShaft = (s) => {
+    const zA = s.startZ, zB = s.startZ + s.dir * s.steps * s.tread, m = s.shaftMargin ?? 0.5;
+    return { a0: s.bayMinX, a1: s.bayMaxX, b0: Math.min(zA, zB) - m, b1: Math.max(zA, zB) + m,
+      centerX: (s.bayMinX + s.bayMaxX) / 2, exitZ: zB, width: s.bayMaxX - s.bayMinX, depth: Math.abs(zB - zA) + 2 * m };
+  };
+
   // ---- inter-storey floor slabs (upper floor = lower ceiling) ----
   const floorHolesFor = (i) => {
     const holes = [];
-    for (const s of R.stairs) if (levelY(i).floorY === s.topY) { const h = s.topHole; holes.push({ a0: h.centerX - h.width / 2, a1: h.centerX + h.width / 2, b0: h.centerZ - h.depth / 2, b1: h.centerZ + h.depth / 2 }); }
+    for (const s of R.stairs) if (levelY(i).floorY === s.topY) { const sh = stairShaft(s); holes.push({ a0: sh.a0, a1: sh.a1, b0: sh.b0, b1: sh.b1 }); }
     for (const fpnl of (R.floorPanels || [])) if (fpnl.level === i) holes.push({ a0: fpnl.centerX - fpnl.width / 2, a1: fpnl.centerX + fpnl.width / 2, b0: fpnl.centerZ - fpnl.depth / 2, b1: fpnl.centerZ + fpnl.depth / 2 });
     return holes;
   };
@@ -184,7 +192,7 @@ export function buildModel(recipe) {
 
   // ---- roof: topmost slab (holes: top stair head + weak panel), breakable panel, parapet ----
   const roofHoles = [];
-  for (const s of R.stairs) if (s.topY === roofDeckTop) { const h = s.topHole; roofHoles.push({ a0: h.centerX - h.width / 2, a1: h.centerX + h.width / 2, b0: h.centerZ - h.depth / 2, b1: h.centerZ + h.depth / 2 }); }
+  for (const s of R.stairs) if (s.topY === roofDeckTop) { const sh = stairShaft(s); roofHoles.push({ a0: sh.a0, a1: sh.a1, b0: sh.b0, b1: sh.b1 }); }
   const rwp = R.roof.weakPanel;
   roofHoles.push({ a0: rwp.centerX - rwp.width / 2, a1: rwp.centerX + rwp.width / 2, b0: rwp.centerZ - rwp.depth / 2, b1: rwp.centerZ + rwp.depth / 2 });
   punchedSlab({ holes: roofHoles, yBot: roofCeil, yTop: roofDeckTop, material: 'roof_slab', node: 'roof_structural', level: 'roof', role: 'roof', standable: true });
@@ -211,8 +219,9 @@ export function buildModel(recipe) {
       const p = add({ id: `${s.id}.step${k}`, role: 'step', standable: true, material: 'stair', node: 'stair', level: s.from, aabb: box([s.bayMinX, s.baseY, z0], [s.bayMaxX, top, z1]) });
       steps.push({ id: p.id, index: k, top: round(top), aabb: p.aabb });
     }
-    stairsOut.push({ id: s.id, from: s.from, to: s.to, steps, rise: round(rise), tread: s.tread, width: round(s.bayMaxX - s.bayMinX), reachesTop: round(steps[steps.length - 1].top) === s.topY, maxRiser: round(rise), baseY: s.baseY, topY: s.topY });
-    openings.push({ id: s.id, level: s.from, connects: [s.from, s.to], axis: '+Y', center: [s.topHole.centerX, s.topY, s.topHole.centerZ].map(round), clearance: { w: s.topHole.width, h: s.topHole.depth }, state: 'always', route: 'soldier', kind: 'stair' });
+    const sh = stairShaft(s);
+    stairsOut.push({ id: s.id, from: s.from, to: s.to, steps, rise: round(rise), tread: s.tread, width: round(s.bayMaxX - s.bayMinX), reachesTop: round(steps[steps.length - 1].top) === s.topY, maxRiser: round(rise), baseY: s.baseY, topY: s.topY, shaft: box([sh.a0, s.baseY, sh.b0], [sh.a1, s.topY, sh.b1]) });
+    openings.push({ id: s.id, level: s.from, connects: [s.from, s.to], axis: '+Y', center: [round(sh.centerX), s.topY, round((sh.b0 + sh.b1) / 2)], clearance: { w: round(sh.width), h: round(sh.depth) }, state: 'always', route: 'soldier', kind: 'stair' });
   }
 
   // ---- thin ground cosmetic floor ----
@@ -222,7 +231,7 @@ export function buildModel(recipe) {
   const roomC = (id) => { const r = rooms.find((x) => x.id === id); return r ? [round((r.aabb.min[0] + r.aabb.max[0]) / 2), r.floorY, round((r.aabb.min[2] + r.aabb.max[2]) / 2)] : [0, 0, 0]; };
   const fd = R.levels[0].exterior.find((o) => o.kind === 'door'), bp = R.levels[0].exterior.find((o) => o.kind === 'breach');
   const cp = R.levels[0].casePedestal, Rrad = R.fitting.fighterRadius_u;
-  const sA = R.stairs[0], sB = R.stairs[1];
+  const sA = R.stairs[0], sB = R.stairs[1], shA = stairShaft(sA), shB = stairShaft(sB);
   const bayMid = (s) => (s.bayMinX + s.bayMaxX) / 2;
   const waypoints = {
     exterior_front: [fd.center, 0, HZ + 4],
@@ -235,11 +244,11 @@ export function buildModel(recipe) {
     case_spawn: [cp.x, cp.height, cp.z],
     breach_exterior: [HX + 4, 0, bp.center],
     breach_threshold: [HX - ht, 0, bp.center],
-    stair_a_base: [bayMid(sA), 0, sA.startZ - sA.dir * sA.tread / 2],
-    stair_a_top: [sA.topHole.centerX, 16, sA.topHole.centerZ],
+    stair_a_base: [round(bayMid(sA)), 0, round(sA.startZ - sA.dir * sA.tread / 2)],   // bottom of the front flight
+    stair_a_top: [round(shA.centerX), 16, round(shA.b0 - 1.4)],                        // step off onto the solid upper floor (past the shaft)
     upper_center: roomC('upper_front'),
-    stair_b_base: [bayMid(sB), 16, sB.startZ - sB.dir * sB.tread / 2],
-    stair_b_top: [sB.topHole.centerX, roofDeckTop, sB.topHole.centerZ],
+    stair_b_base: [round(bayMid(sB)), 16, round(sB.startZ + sB.dir * sB.tread / 2)],   // bottom of the rear flight, on the upper floor
+    stair_b_top: [round(shB.centerX), roofDeckTop, round(shB.b1 + 1.4)],               // step off onto the solid roof deck
     roof_center: [0, roofDeckTop, 0],
     upper_floor_smash_top: [(R.floorPanels[0]).centerX, 16, (R.floorPanels[0]).centerZ],
     roof_smash_top: [rwp.centerX, roofDeckTop, rwp.centerZ],

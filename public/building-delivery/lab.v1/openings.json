@@ -195,13 +195,13 @@
       ],
       "axis": "+Y",
       "center": [
-        15.8,
+        -15.8,
         16,
-        -14.6
+        9.6
       ],
       "clearance": {
         "w": 8,
-        "h": 6
+        "h": 18
       },
       "state": "always",
       "route": "soldier",
@@ -216,13 +216,13 @@
       ],
       "axis": "+Y",
       "center": [
-        15.8,
+        -15.8,
         32,
-        -1
+        -10.6
       ],
       "clearance": {
         "w": 8,
-        "h": 6
+        "h": 18
       },
       "state": "always",
       "route": "soldier",
