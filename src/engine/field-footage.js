@@ -3,6 +3,7 @@ import {revokeFrames} from './news-capture.js';
 export function archiveFieldFootage(game){
  const next=game.news?.takeClips()||[];
  if(!next.length)return;
+ // Durable auto-save owns Blob snapshots in newscrew; this remains the single bounded live-reel owner.
  for(const c of game._fieldClips||[]){revokeFrames(c.frames);c._dead=true;c._imgs=null;c._imageUrls=null;}
  game._fieldClips=next;
 }
