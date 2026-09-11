@@ -19,6 +19,8 @@ LABELS = {
     "11-police-first-response.png": "POLICE RESPONSE",
     "12-military-escalation-kuchler.png": "MILITARY ESCALATION",
     "13-clean-operation-report.png": "OPERATION REPORT",
+    "14-powerworld-character-roster.png": "POWERWORLD ROSTER",
+    "15-character-selection-live-preview.png": "LIVE CHARACTER SELECT",
 }
 
 
