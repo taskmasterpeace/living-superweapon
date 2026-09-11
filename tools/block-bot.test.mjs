@@ -24,11 +24,12 @@ function fixture(run) {
  try{run({a,b,game,hits,m:game.melee});}finally{Math.random=random;a.dispose();b.dispose();}
 }
 
-test('holding block at range never silently enters a defenseless charge in PowerWorld',()=>fixture(({a,b,game,m,hits})=>{
- a._openSky=true;a.ki=0;b.pos.z=100;
+for(const openSky of [true,false])test(`holding block at range stays defensive for ${openSky?'air-capable':'grounded'} PowerWorld actors`,()=>fixture(({a,b,game,m,hits})=>{
+ a._openSky=openSky;game.modeId='powerworld';a.ki=0;b.pos.z=100;
  for(let i=0;i<60;i++){m.guard(a,true);a.update(1/60,game);}
  assert.equal(a.chargingKi,false);assert.equal(a.guarding,true);
  a.takeDamage(10,{src:b,hitstop:0});assert.equal(hits.at(-1).blocked,true);
+ assert.equal(a.hp,a.maxHp);
 }));
 test('disabled or occupied bodies cannot raise or retain block',()=>{
  for(const state of ['frozenT','stunT','sleepT','downedT','_carry'])fixture(({a,m})=>{

@@ -1,3 +1,4 @@
+import {BeamGroundContact} from './beam-ground-contact.js';
 // WAR WORLD: ASCENDANTS — projectiles, beam-hoses (wave cannon), and spirit-bomb lobs.
 import { domeBlocks } from './systems2.js';
 import {hasCivilians} from '../data/modes.js';
@@ -442,10 +443,10 @@ class Projectile {
     // beam and orb in the game — gets a drag of zero and is untouched. Energy is exempt BY
     // CONSTRUCTION rather than by exception, which is the difference between a rule and a list
     // somebody has to maintain. A bullet visibly curves in a crosswind; a ki blast does not.
-    if (game.weather && game.weather.windSpeed > 0.01) {
+    if (game.weather && (game.weather.windSpeed > 0.01 || game.weather.layers?.size)) {
       const k = this.windKind || (this.ballistic ? 'ballistic' : this.arrow ? 'arrow'
         : this.canister ? 'canister' : this.blade ? 'blade' : null);
-      if (k) { game.weather.force(k, _wind); this.vel.addScaledVector(_wind, dt); }
+      if (k) { game.weather.force(k, _wind, this.pos); this.vel.addScaledVector(_wind, dt); }
     }
     if (this.homing) {
       const t = game.nearestFoe(this.caster, this.pos, 120);
@@ -810,6 +811,7 @@ class BeamHose {
     this._bodyContact={fighter:null,point:new THREE.Vector3(),surface:new THREE.Vector3(),direction:new THREE.Vector3()};
     this._constructPreclip={target:null,point:new THREE.Vector3(),arc:0};
     this._constructBlockedPoint=new THREE.Vector3();
+    this._groundResidue=new BeamGroundContact();
     this.radius = o.radius || 1.6;             // beam thickness
     this.tipSpeed = o.tipSpeed || 150;         // how fast the tip races out (waterhose, not instant)
     // THE BEAM ANATOMY (data/visual.js). Two axes, and the engine holds no opinion about any
@@ -1158,9 +1160,9 @@ class BeamHose {
       hand.getWorldQuaternion(this._axialRotation);
       this._axialDirection.set(0,-1,0).applyQuaternion(this._axialRotation);
       if(this._axialDirection.dot(this._otherPalm)<.99)return false;
-      // A carried weapon keeps its closed grip; source skins keep their own
-      // hand shapes. The procedural casting palm must visibly open first.
-      if(!p.skin&&!hand.userData.gripOccupied&&(hand.morphTargetInfluences?.[0]??1)<.7)return false;
+      // Carried weapons retain their grip. Both procedural palms and weighted
+      // skin fingers use this openness driver and must open before emission.
+      if(!hand.userData.gripOccupied&&(hand.morphTargetInfluences?.[0]??1)<.7)return false;
     }
     return true;
   }
@@ -1427,6 +1429,8 @@ class BeamHose {
     // ---- resolve blocking PER SEGMENT along the path. ⚠ This replaces a single ray from the
     // muzzle: a bent beam can pass a wall its own root is behind, and testing only the emission
     // direction would let it clip through geometry it visibly curves around.
+    this._groundResidue.begin(dt);
+    const groundClash=this.clashing||this.clashLen!=null;
     this.blocked = false; let blockedCov = null,blockedPoint=null,blockedArc=0;
     for (let i = 1; i < this.pn && !this.blocked; i++) {
       const a0 = (i - 1) * 3, b0 = i * 3;
@@ -1435,6 +1439,7 @@ class BeamHose {
         this._pb.toArray(this.path,b0);this.pn=i+1;this.blocked=true;
         // One nearest query across cover AND interiors: array order must never
         // let the stream damage an object hidden behind an earlier wall.
+        if(this._obstacleContact.kind==='ground')this._groundResidue.capture(this._pb,this._arcLen());
         if(this._obstacleContact.kind==='cover'){
           blockedCov=this._obstacleContact.target;
           if(blockedCov.onConstructHit){blockedPoint=this._constructBlockedPoint.copy(this._pb);blockedArc=this._arcLen();}
@@ -1495,6 +1500,7 @@ class BeamHose {
       tipPos.set(this.path[ti], this.path[ti + 1], this.path[ti + 2]);
       len = this.clashLen;
     }
+    this._groundResidue.emit(game,tipPos,this._arcLen(),this.radius,this.sustaining,groundClash||bodyHit);
     len = Math.max(0.1, len);
     // sustained beams carve through cover
     if(this.sustaining&&dt>0&&blockedCov?.onConstructHit){
@@ -1777,7 +1783,7 @@ class BeamHose {
     if(!sweepSplitObstacle(world,a,b,this.radius+skin,this._obstacleContact,!!world._ghTriangles,skin))return false;
     b.lerpVectors(a,b,this._obstacleContact.t);return true;
   }
-  _dispose(game) { if (this.dead) return; this.dead = true; if (this._voice) { this._voice.stop(); this._voice = null; } game.scene.remove(this.grp); [this.glow, this.core, this.tip,this.source].forEach(m => m.material.dispose()); if (this.detail) this.detail.material.dispose(); if (this._glowGeo) this._glowGeo.dispose(); if (this._coreGeo) this._coreGeo.dispose(); game.vfx.returnLight(this.light);if(this.sourceLight){if(this.sourceLight.userData.vfxLease===this._sourceLightLease)game.vfx.returnLight(this.sourceLight);this.sourceLight=null;} }   // Tube geometry is per beam; sphere geometry and the fixed scene light pool stay shared.
+  _dispose(game) { if (this.dead) return; this.dead = true; this._groundResidue.reset(); if (this._voice) { this._voice.stop(); this._voice = null; } game.scene.remove(this.grp); [this.glow, this.core, this.tip,this.source].forEach(m => m.material.dispose()); if (this.detail) this.detail.material.dispose(); if (this._glowGeo) this._glowGeo.dispose(); if (this._coreGeo) this._coreGeo.dispose(); game.vfx.returnLight(this.light);if(this.sourceLight){if(this.sourceLight.userData.vfxLease===this._sourceLightLease)game.vfx.returnLight(this.sourceLight);this.sourceLight=null;} }   // Tube geometry is per beam; sphere geometry and the fixed scene light pool stay shared.
 }
 
 // ---- Star Sphere: grow a giant orb overhead, then hurl it ----

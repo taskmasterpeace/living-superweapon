@@ -17,6 +17,7 @@
 // different gets its own front door module; the shared part is the engine, not the chrome.
 import * as THREE from 'three';
 import { Input } from './core/input.js';
+import {toggleMeleeMode} from './core/melee-mode.js';
 import {soldierControlsActive} from './core/soldier-controls.js';
 import {retireOpeningClips} from './engine/broadcast-frames.js';
 import {archiveFieldFootage} from './engine/field-footage.js';
@@ -173,7 +174,7 @@ export function boot(P = PROFILE_FULL) {
 
   // the profile's own view of the boot — handed to openTitle/closeTitle so a front door module
   // never has to reach into this closure by hand.
-  const ctx = { game, hud, audio, input, soundscape, ROSTER, enter: (cfg) => enter(cfg), openMenu: () => openMenu(), openNewsroom: (opts) => openNewsroom(opts), profile: P };
+  const ctx = { game, hud, audio, input, soundscape, ROSTER, enter: (cfg) => enter(cfg), openMenu: () => openMenu(true), openNewsroom: (opts) => openNewsroom(opts), profile: P, resumeFromTitle:false };
   let newsroomPrior=null;
   const newsroom=new NewsroomUI({archive:getNewsArchive(),roster:ROSTER,onClose:()=>closeNewsroom()});
 
@@ -399,7 +400,17 @@ export function boot(P = PROFILE_FULL) {
     Object.assign(input.mouse,{left:false,right:false,leftEdge:false,rightEdge:false,leftUp:false,rightUp:false,b3:false,b4:false});
     input.wheel=input.wheelPrimary=input.wheelSecondary=0;
   }
-  function openMenu() { if(game._frontlinePreparing)game._pwStage?.close();clearCombatInput();soundscape.music('menu'); game.running = false; touch.show(false); document.body.classList.remove('playing'); hud.hideEndScreen(); P.openTitle(ctx); }
+  function openMenu(abandon=false) {
+    ctx.resumeFromTitle=!!(started&&!abandon&&!game.matchOver&&!game._frontlinePreparing&&game.player);
+    if(game._frontlinePreparing)game._pwStage?.close();
+    clearCombatInput();soundscape.music('menu');game.running=false;touch.show(false);
+    document.body.classList.remove('playing');hud.hideEndScreen();P.openTitle(ctx);
+  }
+  function resumeTitle(){
+    if(P.id==='powerworld'&&!ctx.resumeFromTitle)return;
+    clearCombatInput();game.running=true;hud.setPaused(false);P.closeTitle(ctx);soundscape.music('combat');
+    document.body.classList.add('playing');touch.show(isTouchDevice());
+  }
 
   // ---- ORIGIN: install saved customs, wire the forge ----
   // ⚠ Customs are installed on BOTH profiles — a forged fighter is a full roster citizen and must be
@@ -448,7 +459,7 @@ export function boot(P = PROFILE_FULL) {
     if (game._lastCfg && game._lastCfg.net) { openMenu(); hud.showOnline(); return; }   // online rematch = back to the lobby
     if (game._lastCfg) enter(game._lastCfg);
   };
-  hud.onMenu = () => { if (netplay.active) netplay.leave(); openMenu(); };
+  hud.onMenu = () => { if (netplay.active) netplay.leave(); openMenu(true); };
   hud.onResume = () => { game.running = true; hud.setPaused(false); };
   hud.onNewsroom = () => openNewsroom({heroId:game.player?.def?.id});
   if (P.doors.tutorial) hud.onTutorial = () => enter({ mode: 'training', p1: 'sol', tutorial: true });   // SOL teaches every system
@@ -508,7 +519,19 @@ export function boot(P = PROFILE_FULL) {
     // (7) "/" jumps to the roster search instead of reaching for the mouse
     if (e.key === '/' && hud.titleOpen) { const q = document.querySelector('#fQ'); if (q) { e.preventDefault(); q.focus(); q.select(); return; } }
     if (!started) return;
-    if (e.code === 'Tab') { e.preventDefault(); if (!hud.titleOpen) openMenu(); else { game.running = true; P.closeTitle(ctx); } return; }
+    if(e.code==='Tab'&&game.modeId==='powerworld'&&!hud.titleOpen){
+      if(e.altKey||hud.overlayOpen())return;
+      e.preventDefault();
+      if(!e.repeat&&game.running&&!game.matchOver){
+        if(toggleMeleeMode(game.player,input)){
+          hud.selectSlot(game.player._selSlot,game.player._selSecondary);
+          hud.feed(game.player._tabMelee?'MELEE · LMB punch / hold heavy · RMB grab · TAB restore attacks':'ATTACKS RESTORED','#ffd24a');
+        }else hud.feed('Finish the current action and release both triggers to change mode.','#ffd24a');
+      }
+      return;
+    }
+    if(e.code==='F3'&&game.modeId==='powerworld'){e.preventDefault();if(!hud.titleOpen)openMenu();else resumeTitle();return;}
+    if (e.code === 'Tab') { if(hud.overlayOpen())return;e.preventDefault(); if (!hud.titleOpen) openMenu(); else resumeTitle(); return; }
     if (e.code === 'Escape' && game.player && !hud.titleOpen) { if(game.running)clearCombatInput();game.running = !game.running; hud.setPaused(!game.running); return; }
     if (game.running === false) return;
     // brackets swap hero in the non-classic schemes (the wheel is busy selecting powers there)
@@ -582,7 +605,7 @@ export function boot(P = PROFILE_FULL) {
     if (!started) return;
     const inMatch = !hud.titleOpen;   // cached flag — no getComputedStyle in the frame loop
     if (game.pad.pressed('start') && inMatch) { if(game.running)clearCombatInput();game.running = !game.running; hud.setPaused(!game.running); }
-    if (game.pad.pressed('select')) { if (inMatch) openMenu(); else { game.running = true; hud.setPaused(false); P.closeTitle(ctx); } }
+    if (game.pad.pressed('select')) { if (inMatch) openMenu(); else resumeTitle(); }
     if (inMatch && game.running && game.pad.pressed('swap')) cycleHero(1);
   }
 

@@ -26,7 +26,10 @@ test('ground surface shades the native displaced vertices without a second floor
  applyGroundSurface(material,maps);const compiled=shader();material.onBeforeCompile(compiled);
  assert.match(compiled.vertexShader,/transformed, 1\.0/);assert.match(compiled.fragmentShader,/uGravelAlbedo/);
  assert.match(compiled.fragmentShader,/sediment/);assert.match(compiled.fragmentShader,/terrainAerialPerspective/);
- assert.equal(material.customProgramCacheKey(),'frontline-ground-v3');
+ assert.equal(material.customProgramCacheKey(),'frontline-ground-outpost-v4');
+ assert.match(compiled.fragmentShader,/vec2 groundP=vTerrainWorld\.xz/,'Paving must follow the native world surface');
+ for(const feature of ['outpostApron','outpostRoad','outpostRunway','runwayPaint','helipadPaint'])assert.ok(compiled.fragmentShader.includes(feature),`Missing compiled ${feature}`);
+ assert.match(compiled.fragmentShader,/mix\(groundNormal,groundBaseN,outpostPaving\*\.78\)/,'Paving must also affect surface relief');
  material.dispose();Object.values(maps).forEach(t=>t.dispose());
 });
 

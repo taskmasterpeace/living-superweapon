@@ -62,7 +62,8 @@ export function animateMelee(f) {
 }
 
 function animateClinch(f) {
-  const p=f.parts,v=f.grabbing,punch=f._clinchPunch;
+    const p=f.parts,v=f.grabbing,punch=f._clinchPunch;
+    if(f._personCarry)p.body.rotation.y+=f._personCarry.angle;
   const windup=f._clinchFinisher?Math.min(1,f._clinchFinisher.t/f._clinchFinisher.duration):0;
   const extension=punch?(punch.t<.12?smooth(punch.t/.12):1-smooth((punch.t-.18)/.12)):0;
   p.body.rotation.y+=punch?.28*(1-2*extension):0;

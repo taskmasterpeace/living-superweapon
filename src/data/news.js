@@ -83,6 +83,7 @@ export function buildReport(g, result) {
     // The proving ground has a sports crew, not a city desk. Its cached city plan, counters
     // and police state belong to the theatre underneath it and are not facts about this bout.
     rep.arena = true;
+    if(['outbreak','clone-recovery'].includes(result.operation))rep.operation={id:result.operation,lines:(result.lines||[]).filter(line=>typeof line==='string').slice(0,8)};
     rep.district = md === 'powerworld' ? 'POWERWORLD' : 'ASCENDANCE ARENA';
     rep.place = null; rep.city = { civs: 0, cars: 0, blocks: 0, craters: 0, cops: 0 };
     rep.policeEv = []; rep.responseS = 0;
@@ -98,7 +99,7 @@ export function buildReport(g, result) {
     const declared = records.get(result.winner) || rep.participants.find(f => f.id === winnerId || f.name === winnerId);
     // A result is authoritative; raw KO totals need not decide a scored or scripted bout.
     // With multiple opponents and no declared winner, do not invent which opponent won.
-    rep.winner = rep.draw ? null : declared || (result.win ? rep.a : rep.participantCount === 2 ? rep.b : null);
+    rep.winner = rep.draw ? null : declared || (result.win ? rep.a : !rep.operation&&rep.participantCount === 2 ? rep.b : null);
     rep.loser = rep.winner && rep.participantCount === 2 ? rep.participants.find(f => f !== rep.winner) || null : null;
     rep.aKO = rep.a?.kills || 0; rep.bKO = rep.b?.kills || 0;
     rep.winKO = rep.winner?.kills || 0; rep.loseKO = rep.loser?.kills || 0;
@@ -276,11 +277,11 @@ export function damageEstimate(city, rng = Math.random) {
 function writeArenaBroadcast(rep) {
   const D = rep.district, W = rep.winner, L = rep.loser, names = rep.participants.map(f => f.name);
   const rng = mulberry((rep.clock * 1000 + (W?.name.length || 5)) | 0);
-  const headline = rep.draw ? `DRAW IN ${D}` : W && L ? `${W.name} DEFEATS ${L.name} IN ${D}`
+  const headline = rep.operation ? `${rep.title} · ${D}` : rep.draw ? `DRAW IN ${D}` : W && L ? `${W.name} DEFEATS ${L.name} IN ${D}`
     : W ? `${W.name} WINS ${D} BOUT` : `${D} SESSION COMPLETE`;
   const participants = names.length === 2 ? `${names[0]} versus ${names[1]}.`
     : names.length ? `${names.length} combatants took part: ${names.join(', ')}.` : 'No combatants were recorded.';
-  const decision = rep.draw ? `The bout ended in a draw at ${fmtClock(rep.clock)}.`
+  const decision = rep.operation ? `The operation ${rep.win?'succeeded':'failed'} at ${fmtClock(rep.clock)}. ${rep.operation.lines.join(' ')}` : rep.draw ? `The bout ended in a draw at ${fmtClock(rep.clock)}.`
     : W ? `${W.name} takes the result after ${fmtClock(rep.clock)} of arena action.`
       : `The session ended at ${fmtClock(rep.clock)} without a declared winner.`;
   const script = [
@@ -293,7 +294,7 @@ function writeArenaBroadcast(rep) {
     text: `${rep.bigHit.by} delivered the largest logged hit: ${Math.round(rep.bigHit.amount)} damage.` });
   script.push({ who: rep.reporter, text: `From ${D} — ${titleCase(rep.reporter)}, KMK 9 Action News. Back to the desk.` });
   return {
-    headline, kicker: rep.draw ? 'ARENA DRAW' : W ? 'ARENA RESULT' : 'ARENA REPORT', script,
+    headline, kicker: rep.operation ? (rep.win?'OPERATION COMPLETE':'OPERATION FAILED') : rep.draw ? 'ARENA DRAW' : W ? 'ARENA RESULT' : 'ARENA REPORT', script,
     ticker: [headline, `BOUT TIME ${fmtClock(rep.clock)}`, `PARTICIPANTS: ${names.join(' · ') || 'NONE RECORDED'}`, 'KMK 9 — FIELD COVERAGE'],
     witness: null, est: 0, district: D, timeWord: timeWord(rep.dayT), clockStr: clockStr(rep.dayT),
     anchorName: pick(rng, ANCHORS),

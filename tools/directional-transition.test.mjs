@@ -11,7 +11,11 @@ const dt=1/60;
 const tick=f=>{
  if(f._game){
   f.slots.lmb.cd=0;f.ki=f.maxKi;
+  // This animation-only fixture holds the trigger and supplies constant ammo/ki.
+  if(f.slots.lmb.ammo)f.slots.lmb.ammo.loaded=f.slots.lmb.ammo.capacity;
   runSlot(f,'lmb',{pressed:false,held:true,released:false,dt},f._game);
+  assert.ok(f._rangedPose?.until>=f.animT,'The fixture must continue firing through the heading transition');
+  assert.ok(!f._firearmReload,'Reload must not take over this sustained-fire fixture');
   // Hold the fixture's travel constant after actual rifle recoil. This test
   // isolates visual heading arbitration from input/physics acceleration.
   f.vel.set(0,0,14);

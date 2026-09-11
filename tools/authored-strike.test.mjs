@@ -29,10 +29,14 @@ function surfaceInTorso(mesh,torso){
  }).length;
 }
 test('an occupied off-hand carries its shield outside the rendered torso during authored punches',()=>{
- const f=fighter('sarge');try{
-  f.vel.set(0,0,0);let shield;f.parts.armL.children[1].traverse(o=>{if(o.isMesh&&o.geometry.type==='CylinderGeometry')shield=o;});assert.ok(shield);
+ // AEGIS carries her shield during strikes; SARGE stows his when not guarding.
+ const f=fighter('aegis');try{
+  f.vel.set(0,0,0);const shield=f.parts.armL.userData.shield;assert.ok(shield?.isMesh);
   for(const [move,state,phase]of [['jab','startup',.25],['jab','recover',.5],['cross','startup',.75],['cross','active',.5]]){
    f.mId=move;f.mstate=state;f.mT=STRIKES[move][state]*(1-phase)/(f.def.meleePace||1);f._animate(1/60);f.obj.updateMatrixWorld(true);
+   assert.equal(shield.visible,true,'Collision samples must belong to the rendered shield');
+   assert.equal(f.parts.armL.userData.shield,shield,'The authored off-hand must remain occupied');
+   assert.ok(f._authoredStrike?.take,'The fixture must exercise the authored strike pose');
    assert.equal(surfaceInTorso(shield,f.parts.torso),0,`${move} ${state} shield penetrates the actual torso surface`);
   }
  }finally{f.dispose();}

@@ -32,12 +32,15 @@ test('clearing weather cancels delayed thunder, visuals and owned ambience',()=>
  assert.equal(game.world.weatherFlash,0);assert.ok(lights.every(l=>l.intensity===0));
  weather.reset();assert.equal(game.scene.children.length,0);assert.ok(rain.stopped);
 });
-test('commanded harmful lightning warns before impact and clearing cancels damage',()=>{
- const {weather,game,calls}=fixture();const src={alive:true};weather.command({rain:1,cloud:1,storm:1,src});
- weather.update(.016);assert.equal(calls.filter(c=>c.id==='damage').length,0);
+test('commanded harmful lightning warns before impact and owner cancellation cancels damage',()=>{
+ const {weather,game,calls}=fixture();const src={alive:true,pos:new THREE.Vector3(0,340,0)};
+ const layer=weather.command({rain:1,cloud:1,storm:1,src});
+ for(let i=0;i<65;i++)weather.update(1/60);
+ game.isFoe=()=>true;game.entities.push({alive:true,pos:layer.lightning.position.clone(),radius:3,takeDamage:()=>calls.push({id:'damage'})});
+ assert.ok(layer.lightning.age<0);assert.equal(calls.filter(c=>c.id==='damage').length,0);
  for(let i=0;i<30;i++)weather.update(1/60);
  assert.equal(calls.filter(c=>c.id==='damage').length,0);
- weather.clear();for(let i=0;i<90;i++)weather.update(1/60);
+ weather.cancelCommand(src);for(let i=0;i<90;i++)weather.update(1/60);
  assert.equal(calls.filter(c=>c.id==='damage').length,0);weather.reset();
 });
 test('weather sounds have replacement-ready phase briefs in the existing harness',()=>{
@@ -70,8 +73,12 @@ test('energy beams remain wind-exempt even in hurricane weather',()=>{
  }finally{weather.reset();}
 });
 test('a warned commanded strike damages exactly once after its warning',()=>{
- const {weather,calls}=fixture();weather.command({rain:1,cloud:1,storm:1,src:{alive:true}});
- try{for(let i=0;i<120;i++)weather.update(1/60);assert.equal(calls.filter(c=>c.id==='damage').length,1);}
+ const {weather,game,calls}=fixture();const layer=weather.command({rain:1,cloud:1,storm:1,src:{alive:true,pos:new THREE.Vector3(0,340,0)}});
+ try{
+  for(let i=0;i<65;i++)weather.update(1/60);
+  game.isFoe=()=>true;game.entities.push({alive:true,pos:layer.lightning.position.clone(),radius:3,takeDamage:()=>calls.push({id:'damage'})});
+  for(let i=0;i<120;i++)weather.update(1/60);assert.equal(calls.filter(c=>c.id==='damage').length,1);
+ }
  finally{weather.reset();}
 });
 test('lightning honors removed roofs, keeps its storage and leaves a stolen light alone',()=>{

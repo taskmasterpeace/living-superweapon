@@ -160,6 +160,7 @@ for(const infinite of [false,true])test(`${infinite?'infinite':'finite'} core re
 });
 test('native player keyboard Guard applies the mask and the paid release without a direct runSlot bypass',()=>{
  const x=fixture();try{const {f,g,world,dt,animate}=x,inp=new Input();g.player=f;g.humans=[{fighter:f}];g.input=inp;g.melee=new MeleeSystem(g);g._aim3pt=new THREE.Vector3();g._tapT={};g.aimPoint=new THREE.Vector3();g.fwd=new THREE.Vector3(0,0,1);g.right=new THREE.Vector3(1,0,0);
+  g.modeId='powerworld';g.ms={chaseCam:true}; // Native camera-ray controller, not the legacy cursor magnet.
   g.pad={active:false,down:()=>false,pressed:()=>false,released:()=>false};g.hud.selectSlot=()=>{};g.validateLock=()=>{};world.aimTrace=out=>{out.point.set(4,9,60);return null;};
   const KM=keymap(SETTINGS.scheme),step=()=>{Game.prototype.controlPlayer.call(g,dt);animate();inp.endFrame();};
   inp.keys.add(KM.guard);inp.keys.add('KeyQ');inp.justPressed.add('KeyQ');step();assert.equal(f.guarding,true);assert.equal(f._nanites.modules.get('q').deployed,true);

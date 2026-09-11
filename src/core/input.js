@@ -17,6 +17,7 @@ export class Input {
 
   bind(canvas) {
     addEventListener('keydown', (e) => {
+      if(this.pointerLock&&(e.code==='AltLeft'||e.code==='AltRight'))e.preventDefault();
       // Stop browser shortcuts from stealing game keys online (Ctrl+S save-page, Ctrl+D bookmark,
       // Ctrl+G find…). Ctrl+W is browser-reserved and CANNOT be blocked — which is why descend
       // is advertised as Z, not Ctrl. (Before the repeat-gate so held combos stay suppressed.)
@@ -27,7 +28,10 @@ export class Input {
       this.anyGesture = true;
       if (['Space', 'Tab', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault();
     });
-    addEventListener('keyup', (e) => { this.keys.delete(e.code); this.justReleased.add(e.code); });
+    addEventListener('keyup', (e) => {
+      if(this.pointerLock&&(e.code==='AltLeft'||e.code==='AltRight'))e.preventDefault();
+      this.keys.delete(e.code);this.justReleased.add(e.code);
+    });
 
     const setMouse = (e) => {
       const r = canvas.getBoundingClientRect();
@@ -50,7 +54,13 @@ export class Input {
       this.mouse.y = ny * (canvas.height / r.height);
     };
     canvas.addEventListener('mousemove', setMouse);
-    document.addEventListener('pointerlockchange', () => { this.mouse.locked = document.pointerLockElement === canvas; this._lastCX=this._lastCY=null; this.mouse.dx=this.mouse.dy=0; });
+    document.addEventListener('pointerlockchange', () => {
+      const wasLocked=this.mouse.locked;this.mouse.locked=document.pointerLockElement===canvas;
+      this._lastCX=this._lastCY=null;this.mouse.dx=this.mouse.dy=0;
+      // Esc/Alt-Tab can release capture without a window blur. Cancel only an
+      // acquired lock: a denied request must retain the cursor-delta fallback.
+      if(wasLocked&&!this.mouse.locked)this.cancel();
+    });
     canvas.addEventListener('mouseleave',()=>{this._lastCX=this._lastCY=null;});
     canvas.addEventListener('mousedown', (e) => {
       // arm the lock only when the chase view asked for it — a click in the city never grabs the pointer
@@ -73,7 +83,10 @@ export class Input {
       if(this.mouse.right||(e.buttons&2))this.wheelSecondary+=direction;else this.wheelPrimary+=direction;
       e.preventDefault();
     }, { passive: false });
-    addEventListener('blur', () => {
+    addEventListener('blur', () => this.cancel());
+  }
+
+  cancel() {
       this.cancelVersion++;
       this._lastCX=this._lastCY=null;
       for(const key of this.keys)this.justReleased.add(key);
@@ -82,7 +95,6 @@ export class Input {
       this.mouse.left=this.mouse.right=this.mouse.leftEdge=this.mouse.rightEdge=this.mouse.b3=this.mouse.b4=false;
       this.mouse.dx=this.mouse.dy=this.wheel=0;
       this.wheelPrimary=this.wheelSecondary=0;
-    });
   }
 
   down(code) { return this.keys.has(code); }

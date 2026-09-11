@@ -1,0 +1,259 @@
+{
+ "format": "pw-asset-package",
+ "formatVersion": 1,
+ "id": "equipment.kuchler-rifle",
+ "version": 2,
+ "kind": "equipment",
+ "displayName": "Kuchler Mk I (fictional Earth rifle)",
+ "tags": [
+  "equipment",
+  "firearm",
+  "rifle",
+  "two-handed",
+  "procedural",
+  "earth-donor"
+ ],
+ "rig": {
+  "skeleton": "none"
+ },
+ "sockets": [
+  {
+   "name": "charging-handle",
+   "parent": "kuchler-rifle",
+   "position": [
+    -0.23532,
+    -0.3922,
+    0.43829
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "grip",
+   "parent": "kuchler-rifle",
+   "position": [
+    0,
+    0,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "holster",
+   "parent": "kuchler-rifle",
+   "position": [
+    0,
+    0.2,
+    0.3
+   ],
+   "rotation": [
+    0,
+    0,
+    0.187381,
+    0.982287
+   ]
+  },
+  {
+   "name": "magazine",
+   "parent": "kuchler-rifle",
+   "position": [
+    0,
+    -0.7844,
+    -0.1155
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "muzzle",
+   "parent": "kuchler-rifle",
+   "position": [
+    0,
+    -2.97995,
+    0.41868
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "stock",
+   "parent": "kuchler-rifle",
+   "position": [
+    0,
+    1.33427,
+    0.26179
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "support",
+   "parent": "kuchler-rifle",
+   "position": [
+    0,
+    -1.29427,
+    0.04608
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  }
+ ],
+ "bounds": {
+  "min": [
+   -0.30396,
+   -2.97995,
+   -0.35253
+  ],
+  "max": [
+   0.1961,
+   1.33427,
+   0.67361
+  ]
+ },
+ "materials": [
+  {
+   "name": "kuchler-polymer"
+  },
+  {
+   "name": "kuchler-steel"
+  }
+ ],
+ "equipment": {
+  "twoHanded": true,
+  "class": "firearm",
+  "hand": "right"
+ },
+ "lods": [
+  {
+   "level": 0,
+   "output": "model.glb",
+   "triangles": 156
+  }
+ ],
+ "units": {
+  "lengthUnit": "game-unit",
+  "metersPerUnit": 0.19,
+  "up": "+Y",
+  "forward": "+Z",
+  "handedness": "right",
+  "sourceConversion": {
+   "scale": 1,
+   "yawDegrees": 0,
+   "mirrorX": false,
+   "sourceUp": "+Y",
+   "sourceForward": "+Z",
+   "note": "authored directly in game units along the engine weapon axis (-Y toward the muzzle)"
+  }
+ },
+ "budgets": {
+  "profile": "desktop",
+  "measured": {
+   "triangles": 156,
+   "drawCalls": 4,
+   "materials": 2,
+   "bones": 0,
+   "textures": 0,
+   "bytes": 14808
+  },
+  "limits": {
+   "triangles": 5320,
+   "drawCalls": 8,
+   "materials": 4,
+   "bones": 1,
+   "textures": 1,
+   "bytes": 427570
+  }
+ },
+ "structural": {
+  "validator": "2.0.0-dev.3.10",
+  "errors": 0,
+  "warnings": 0
+ },
+ "provenance": {
+  "terms": "MIT. Complete copyright and permission notice is included in provenance.licenseNotice and in the hashed LICENSE.txt source.",
+  "license": "MIT",
+  "attribution": "Adapted selected fictional rifle_kuchler_1 builder from War World: Earth. Exact original file SHA256 and coordinate conversion recorded in hashed provenance.json. Not an AK74.",
+  "revision": "8e0fba7c8bce16637624dee52cc40d07d88dea3b",
+  "redistribution": "free",
+  "author": "Machine King Labs; PowerWorld adaptation",
+  "licenseNotice": "MIT License\r\n\r\nCopyright (c) 2026 Machine King Labs\r\n\r\nPermission is hereby granted, free of charge, to any person obtaining a copy\r\nof this software and associated documentation files (the \"Software\"), to deal\r\nin the Software without restriction, including without limitation the rights\r\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\r\ncopies of the Software, and to permit persons to whom the Software is\r\nfurnished to do so, subject to the following conditions:\r\n\r\nThe above copyright notice and this permission notice shall be included in all\r\ncopies or substantial portions of the Software.\r\n\r\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\r\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\r\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\r\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\r\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\r\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\r\nSOFTWARE."
+ },
+ "source": {
+  "adapter": "procedural-prop@1",
+  "files": [
+   {
+    "path": "authoring/recipes/equipment/kuchler-rifle/model.js",
+    "sha256": "8e3816ad71035dbb542ee4026bd133e1cea3cf859bae297b22ceb4f1f505a2a4"
+   },
+   {
+    "path": "authoring/recipes/equipment/kuchler-rifle/provenance.json",
+    "sha256": "44bbb4ec74383aeb464d4619ada36d8b30a74244aca165e757e97ebb5c08bd0c"
+   },
+   {
+    "path": "authoring/recipes/equipment/kuchler-rifle/LICENSE.txt",
+    "sha256": "e48fa2bb2317e59c37c714dacfe634b7ce582ff1692bda221bce3e35d2dd6752"
+   }
+  ],
+  "recipe": {
+   "path": "authoring/recipes/equipment/kuchler-rifle/recipe.json",
+   "sha256": "5b37b693b0ae7f40a02c1e00110202699eaa06213eba88fb9babb035d4089362"
+  }
+ },
+ "tool": {
+  "name": "powerworld-authoring",
+  "version": "0.1.0",
+  "three": "0.169.0",
+  "adapterVersion": 1
+ },
+ "build": {
+  "options": {},
+  "cacheKey": "74ebac1076f40a5270eedafa90c31670c91fb7ba3ef25254f4f2d0f24882a40f",
+  "contentHash": "8d13815bc6703def56a71aeb9492f44edbca2dbf0548adc369d77fdce5eb0c27",
+  "profile": "desktop"
+ },
+ "acceptance": {
+  "visual": "unapproved",
+  "blockers": [
+   {
+    "id": "legacy-viewer-full-extension",
+    "owner": "authoring",
+    "summary": "Eight static authored-take viewer aim rows retain support gaps because that path omits the production rifle carrier. Production gameplay uses the tested shared-reach solver; viewer parity and creator visual review remain open."
+   }
+  ],
+  "note": "Fictional MIT donor. Production carrier passes three body frames through steep aim, cover and physical reload with support gap below 0.05u. Native armory issuance, muzzle firing and resource retirement pass. All 20 static viewer mounts pass grip/muzzle/holster; creator visual approval remains pending."
+ },
+ "outputs": [
+  {
+   "path": "model.glb",
+   "role": "glb",
+   "sha256": "505ffbf0cc00d80ce05806afcd9cb4c8a695e29c2d6c328ac66696509f2157b7",
+   "bytes": 14808
+  }
+ ],
+ "packageHash": "b53a6fc31211b442a022f640b053a71338b4b824ecb86c29d6eaa8da5224ae6b"
+}

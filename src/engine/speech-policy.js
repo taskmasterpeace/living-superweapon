@@ -1,6 +1,7 @@
 // Distances are game units: local talk uses the existing 90u psyche neighbourhood;
 // yell matches the existing 190u cry reach. These are not claims of real metres.
 export function speechView(game, speaker, tone, opts, point, width, height) {
+  if (game.modeId !== 'powerworld') return null;
   if (!game.running || game._frontlinePreparing || game.hud?.titleOpen || game.matchOver) return null;
   if (!speaker?.alive || !speaker.pos) return null;
   const listener = game.player;

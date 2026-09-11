@@ -1,3 +1,5 @@
+import {activatePowerUp} from './power-up.js';
+import {replaceHeldEquipment,disposeHeldEquipment} from './authored-equipment.js';
 // WAR WORLD: ASCENDANTS — game orchestrator: entities, control, combat helpers, main update.
 import { updateDomes, updateReshaped, domeBlocks, releasePossession } from './systems2.js';
 import { traumatise, inflict } from '../data/medical.js';
@@ -7,19 +9,21 @@ import * as THREE from 'three';
 import {snapshotHeroSkins} from './hero-skin.js';
 import {clearForegroundVisibility} from './foreground-visibility.js';
 import {combatView,combatLookActive} from './combat-view.js';
+import {meleeKeymap} from '../core/melee-mode.js';
 import { World } from './world.js';
 import { Particles3D } from './particles3d.js';
 import { VFX } from './vfx.js';
 import { Projectiles } from './projectiles.js';
 import {beamThreatTime} from './beam-threat.js';
 import { buildWeapon, weaponProficiency, PROP_WEIGHT, liftCapacityOf, bodyWeight, Fighter } from './entity.js';
-import {mountHeldWeapon,unmountHeldWeapon} from './weapon-emission.js';
+import {mountHeldWeapon} from './weapon-emission.js';
 import { AI } from './ai.js';
 import { BaseRoom } from './baseroom.js';
 import { Minion, Construct } from './summons.js';
 import {constructForSlot,settleConstructUpkeep} from './construct-policy.js';
 import {tankPlacement,tankSettings} from './construct-tank.js';
 import { MeleeSystem } from './melee.js';
+import {personThrowCue} from './person-carry.js';
 import {beginBodyContactFrame,resolveBodyContacts} from './fighter-body-contact.js';
 import { Pedestrians } from './pedestrians.js';
 import { NewsCrew } from './newscrew.js';
@@ -40,9 +44,12 @@ import {cancelHeldSlot,cancelHeldAttacks,cancelHeldAttacksIfIncapacitated} from 
 import { BoxingRing, BOXING } from './boxingring.js';
 import { PowerWorldStage } from './powerworld.js';
 import { FrontlineEncounter } from './frontline-encounter.js';
+import {ZombieEncounter} from './zombie-encounter.js';
+import {DesertSecurity} from './desert-security.js';
 import { STRIKES } from '../data/martial.js';
 import { beamBuildOf, beamTemperOf } from '../data/visual.js';
 import { Gamepad } from '../core/gamepad.js';
+import {updateMovementGears,resetMovementGears} from '../core/movement-gears.js';
 import { runSlot, performEvade } from './abilities.js';
 import {requestReload,firearmAmmo,cancelFirearmReload} from './firearm-ammo.js';
 import { ROSTER } from '../data/characters.js';
@@ -257,6 +264,10 @@ const MODE_IMPL = {
       if(!o.twoPlayer&&hs[0]&&o.cameraPreset==='frontline')hs[0]._cameraPreset='frontline';
       if (o.encounter === 'frontline' && !o.twoPlayer) {
         g.ms.frontline = new FrontlineEncounter(g);
+      } else if(o.encounter==='zombies'&&!o.twoPlayer){
+        g.ms.zombies=new ZombieEncounter(g);
+      } else if(o.encounter==='security'&&!o.twoPlayer){
+        g.ms.desertLaw=new DesertSecurity(g);
       } else if(o.encounter === 'practice' && !o.twoPlayer){
         // An explicit menu choice, not an invulnerability/debug override.
         // Normal resources, physics and controls; B can add a rival on demand.
@@ -281,6 +292,8 @@ const MODE_IMPL = {
       if (BANDS.ceiling < 900) { BANDS.ceiling = 900; BANDS.sky = Math.max(BANDS.sky, 420); }
       if (g._pwStage) g._pwStage.tick(g.player);      // the climb to space — one fraction of altitude
       g.ms.frontline?.update(dt);
+      g.ms.zombies?.update(dt);
+      g.ms.desertLaw?.update(dt);
     },
     onKO() {},
     isOver() { return null; },          // a proving ground, like free roam — you leave when you like
@@ -581,6 +594,19 @@ export class Game {
   updateThrowArc() {
     const arc = this.throwArc, p = this.player;
     if (!arc) return;
+    const carryCue=p?.alive&&this.running&&!this.matchOver?personThrowCue(p,this):null;
+    if(carryCue){
+      // A short direction cue, clipped by the actual full-body clearance query.
+      // It deliberately makes no ballistic landing promise; native flight owns
+      // gravity, wind, changing terrain and the subsequent impact.
+      arc.visible=true;this._arcRing.visible=false;
+      for(let i=0;i<this._arcDots.length;i++){
+        const d=this._arcDots[i];d.visible=true;d.position.lerpVectors(carryCue.from,carryCue.end,(i+1)/this._arcDots.length);
+        d.position.y+=carryCue.height;d.material.opacity=.65*(1-i/this._arcDots.length*.65);d.material.color.set('#ffd24a');
+      }
+      this.hud?.throwReach?.(carryCue.blocked?'THROW DIRECTION · COVER':'THROW DIRECTION');this._carryCueShown=true;return;
+    }
+    if(this._carryCueShown){this._carryCueShown=false;this.hud?.throwReach?.('');}
     // A grenade in the inventory is not an aiming gesture. Hide this legacy
     // predictive aid in third person; thrown props/clinch retain deliberate aim.
     if(p?._openSky&&!p._carry&&!(p.grabState==='clinch'&&p.grabbing)){
@@ -1033,7 +1059,7 @@ export class Game {
     for (const v of this.entities) {
       if (!(v._thrownT > 0)) continue;
       v._thrownT -= dt;
-      if (v._thrownT <= 0 || !v.alive) { v._thrownBy = null; continue; }
+      if (v._thrownT <= 0 || !v.alive) { v._thrownBy = null;v._personThrow=null; continue; }
       const spd = Math.hypot(v.vel.x, v.vel.y, v.vel.z);
       if (spd < 24) continue;
       const by = v._thrownBy;
@@ -1360,6 +1386,7 @@ export class Game {
     }
     const hand = buildWeapon(row.mesh||this._gearKind(ab), { armor: new THREE.MeshStandardMaterial({ color: '#565c66', roughness: 0.45, metalness: 0.7 }) });
     mountHeldWeapon(f,hand);
+    if(row.equipmentAsset){const gear=f._gearHeld;gear.equipmentReady=replaceHeldEquipment(f,row.equipmentAsset,gear,{loader:this._equipmentAssetLoader});}
     return eff;
   }
 
@@ -1367,11 +1394,7 @@ export class Game {
     if (!f._gearHeld) return;
     if(f._firearmReload?.slot===f.slots._gear)cancelFirearmReload(f);
     if (spawnDrop) this.spawnGearDrop(f._gearHeld.base, f.pos.x + (Math.random() * 4 - 2), f.pos.z + (Math.random() * 4 - 2));
-    if (f._gearMesh) {
-      unmountHeldWeapon(f,this);
-      f._gearMesh.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material) o.material.dispose(); });
-      f._gearMesh = null;
-    }
+    disposeHeldEquipment(f,this);
     if(f._gearHeld.primary){f.slots.lmb=f._loadoutPrimary;delete f._loadoutPrimary;}
     delete f.slots._gear;
     f._gearHeld = null;
@@ -1791,6 +1814,8 @@ export class Game {
   // everywhere, which is the whole point.
   clearTransients() {
     this.ms?.frontline?.dispose();
+    this.ms?.zombies?.dispose();
+    this.ms?.desertLaw?.dispose();
     // the weather goes home with everything else that must not outlive a match (the reset law)
     if (this.weather && this.weather.reset) this.weather.reset();
     // ⚠ THE FRAME CLAIM goes home too (Wave 3 VIEW rider) — a camera claim that survives a reset is
@@ -2650,7 +2675,7 @@ export class Game {
       killer._mastery = killer._mastery || {};
       killer._mastery[killer._lastSlot] = (killer._mastery[killer._lastSlot] || 0) + 1;
     }
-    if (victim.def.police && this.police) this.police.onCopDown(killer);   // villainy squared
+    if (victim.def.police) (this.ms?.desertLaw||this.police)?.onCopDown(killer);
     // THE HERO SIDE — a CLEAN rival takedown (no civilians harmed, not a cop, not a civilian) by the
     // human player, in a country where vigilantism is legal, makes the crowd cheer instead of flee.
     if (killer && this.isHuman(killer) && !victim.def.police && !victim.isDummy && !killer.def.police
@@ -2665,7 +2690,7 @@ export class Game {
       // the ledger: every registered-weapon knockdown moves the power rankings (AI or human pilot
       // alike) — friendly-fire KOs shame the feed but never touch the book
       if (killer && killer.def && killer.def.id && victim.def.id && killer.team !== victim.team && !killer.def.police && !victim.def.police
-        && !killer._controlled && !victim._controlled && !killer._frontlineClone && !victim._frontlineClone && this.modeId !== 'training') {
+        && !killer._controlled && !victim._controlled && !killer._frontlineClone && !victim._frontlineClone && !killer._encounterNPC && !victim._encounterNPC && this.modeId !== 'training') {
         koElo(killer.def.id, victim.def.id, [killer.def, victim.def]);   // a DOMINATED fighter's KOs are the controller's doing — the book stays honest
         // THE MEDICAL LEDGER (manual §18): some knockdowns leave a mark that outlives the match
         if (Math.random() < 0.3) {
@@ -3059,7 +3084,10 @@ export class Game {
     // (5) NEMESIS — whoever put you down last is marked, and beating them pays
     if (target && this.isHuman(target) && src && src.def && !src.def.police) target._lastAggressor = src;
     // ATTACKING THE POLICE escalates on its own — every hit on a badge books heat and hardens them.
-    if (!blocked && target && target.def && target.def.police && src && src.def && !src.def.police && this.police) this.police.onCopHurt(src, amount);
+    if(target?.def?.police&&src?.def&&!src.def.police){
+      if(this.ms?.desertLaw)this.ms.desertLaw.onCopHurt(src,blocked?(outcome?.guardAbsorbed||0):amount);
+      else if(!blocked)this.police?.onCopHurt(src,amount);
+    }
     // a solid hit is LOUD — nearby bots hear the scuffle and come looking (fair discovery)
     if (amount >= 10 && src && src !== target) this.noise(target.pos, Math.min(1.6, 0.5 + amount * 0.02), src);
     // the news desk's ledger: who dealt what, the biggest hit on record, and hot moments worth a camera
@@ -3382,8 +3410,10 @@ export class Game {
   // ---------- control ----------
   retireCombatViewInput(subject=this.player) {
     if(subject){
+      if(subject._personCarry)this.melee.release(subject);
       this.melee.clearInput(subject);this.melee.guard(subject,false);cancelHeldAttacks(subject);
       subject.moveDir={x:0,z:0};subject.flyHeld=subject.descendHeld=subject.cruiseHeld=subject._scopeHeld=false;
+      resetMovementGears(subject);
       if(this.netplay?.active)for(const key of Object.keys(subject.slots))this.netplay.queueSlot(key,4,subject.aim3);
     }
     const input=this.input;
@@ -3394,7 +3424,7 @@ export class Game {
     }
     this.pad?.suppressCombatHeld?.();this._padAim=null;this._tapT=null;
     this.hardLock=this.lockTarget=null;this._aimHit=null;this._aimFresh=false;
-    clearForegroundVisibility(this.world);this.world.snapChase();
+    clearForegroundVisibility(this.world);this.world.clearFreeLook?.();this.world.snapChase();
   }
 
   prepareCombatView(inputDt) {
@@ -3413,13 +3443,13 @@ export class Game {
     if(!active&&combatView(this)==='bfp')this.pad?.suppressCombatHeld?.();
     this._combatLockPressed=this.pad?.sampleCombatLock?.(active)??false;
     if(this.input)this.input.pointerLock=active;
-    if(!active)return;
+    if(!active){w.clearFreeLook?.();return;}
     this.validateLock(this.player);
     // First entry must establish a real perspective eye even without a look
     // delta. Subsequent zero-time solves only update the view, never gameplay.
     if(w.camMode!=='chase'||!w._bfpCameraActive||!w._lookActive)w.chase(this.player,this.hardLock,0,'bfp');
     const sight=w._sightZoom||1;
-    w.mouseLook(this.input.mouse.dx/sight,this.input.mouse.dy/sight);
+    if(!w.freeLookInput(this.input,inputDt,sight))w.mouseLook(this.input.mouse.dx/sight,this.input.mouse.dy/sight);
     // Native deadzone-normalized stick values; 2.4 radians/s at full throw.
     // Convert to existing mouse-look units so pitch limits/inversion stay shared.
     if(this.pad?.active){
@@ -3430,14 +3460,16 @@ export class Game {
     w.camera.updateMatrixWorld(true);
   }
 
+  onMovementPowerupReady(f) { return activatePowerUp(f,this); }
+
   controlPlayer(dt, inputDt = dt) {
-    const p = this.player; if (!p || !p.alive) { if (p) { cancelHeldAttacksIfIncapacitated(p);p.moveDir = { x: 0, z: 0 }; } this.lockTarget = null; return; }
+    const p = this.player; if (!p || !p.alive) { if (p) { resetMovementGears(p);cancelHeldAttacksIfIncapacitated(p);p.moveDir = { x: 0, z: 0 }; } this.lockTarget = null; return; }
     cancelHeldAttacksIfIncapacitated(p);
     const inp = this.input, m = inp.mouse, pad = this.humans.length < 2 ? this.pad : NULL_PAD;   // in 2P the pad drives P2
     const chase=combatView(this)==='bfp';
-    if(this.running===false||this.matchOver||this.mapCam||this.hud?.titleOpen||this.combatOverlayOpen){p.moveDir={x:0,z:0};return;}
-    if(this._pwStage?.aircraft?.piloting?.handleInput(inp,dt))return;
-    if(this._pwStage?.convoy?.driving?.handleInput(inp,dt))return;
+    if(this.running===false||this.matchOver||this.mapCam||this.hud?.titleOpen||this.combatOverlayOpen){resetMovementGears(p);p.moveDir={x:0,z:0};return;}
+    if(this._pwStage?.aircraft?.piloting?.handleInput(inp,dt)){resetMovementGears(p);return;}
+    if(this._pwStage?.convoy?.driving?.handleInput(inp,dt)){resetMovementGears(p);return;}
 
     // Chase view traces the actual camera centre; legacy view retains cursor aim.
     const a3 = this._aim3pt;
@@ -3467,7 +3499,8 @@ export class Game {
       // (the framing axis, 15° off) — and aim at the world point that ray reaches. A gentle assist
       // radius (`pad`) still nudges onto a foe near the reticle; the aggressive magnet is gone.
       const cam = this.world.camera;
-      cam.getWorldDirection(_camDir);
+      if(this.world.freeLooking)this.world.combatAimDirection(_camDir);
+      else cam.getWorldDirection(_camDir);
       const firearmRange=firearmAimRange(p,AIM_MAX_D);
       this._aimHit = this.world.aimTrace(_aimOut, {
         origin: cam.position, dir: _camDir, maxD: firearmRange>AIM_MAX_D?firearmRange+cam.position.distanceTo(p.pos):AIM_MAX_D,
@@ -3528,7 +3561,7 @@ export class Game {
     // ReferenceError**: the rally input was never evaluated, you could not get up, and the frame
     // failed at 60Hz behind the try/catch. Measured 1,800 throws in one duel. Declared once, here,
     // above every use.
-    const KM = keymap(SETTINGS.scheme);
+    const KM = meleeKeymap(p,keymap(SETTINGS.scheme));
     const soldierControls=soldierControlsActive(p,this);
     const directSelection=soldierControls&&selectSoldierAttack(p,inp);
     const mouseCombat=sampleMouseCombat(p,inp,KM,inputDt,k=>pad.down(k)||inp.down(({q:'KeyQ',e:'KeyE',f:'KeyH',r:'KeyR'})[k]));
@@ -3697,9 +3730,14 @@ export class Game {
       const rv = Math.hypot(p.vel.x, p.vel.z);
       if (rv >= p.speed * 1.08 * 0.8) performEvade(p, { x: p.vel.x / rv, z: p.vel.z / rv }, this);
     }
-    p.cruiseHeld = p.flying && (inp.down('ShiftLeft') || inp.down('ShiftRight'));   // held SHIFT in the air = sustained cruise
-    const sprint=soldierControls?soldierSprint(p,inp,mouseCombat):1;
+    const gearInput=updateMovementGears(p,{held:inp.down('ShiftLeft')||inp.down('ShiftRight')||pad.down('dash')||p._gearUiHeld,selectGear:p._gearUiHeld?p._gearUiSelection:undefined,cancelVersion:inp.cancelVersion},inputDt);
+    if(gearInput.powerupReady)this.onMovementPowerupReady?.(p);
+    const sprintInput={mouse:inp.mouse,down:code=>inp.down(code)||(code==='ShiftLeft'&&(pad.down('dash')||p._gearUiHeld))};
+    const sprint=soldierControls?soldierSprint(p,sprintInput,mouseCombat):1;
     p.move(p.moveDir, dt, sprint);
+    if(p.grabbing&&inp.pressed('KeyJ')){
+      if(p._personCarry)this.melee.setdownPerson(p);else this.melee.liftPerson(p);
+    }
 
     // --- melee trifecta — Strike (tap=jab, HOLD=haymaker) · Grab · Guard (V/G/C+X+Mouse4, pad ▢/○/L1) ---
     const np = this.netplay && this.netplay.active ? this.netplay : null;
@@ -3723,6 +3761,7 @@ export class Game {
       else if (!this.grabProp(p)) { this.melee.grab(p); if (np) np.queueMelee('grab'); }
     }
     this.melee.guard(p, ((!soldierControls||KM.guard!=='KeyC')&&inp.down(KM.guard)) || inp.mouse.b3 || inp.mouse.b4 || pad.down('guard'));
+    if((!soldierControls&&inp.released(KM.grab||'KeyG'))||pad.released('grab')||(mouseCombat.secondary==='grab'&&mouseCombat.buttons.right.released))this.melee.releaseGrab(p);
     if(soldierControls&&inp.pressed('KeyQ')&&p.items.length)this.useItem(p);
     if(soldierControls&&inp.pressed('KeyE')&&!p.guarding&&!p.grabbedBy&&!p.frozenT&&!p.staggerT){
       if(!this.doInteract(p))this.pickupGear(p);
@@ -3742,12 +3781,11 @@ export class Game {
       lmb: { pressed: pad.pressed('lmb'), held: pad.down('lmb'), released: pad.released('lmb') },
       rmb: { pressed: pad.pressed('rmb'), held: pad.down('rmb'), released: pad.released('rmb') },
       q: orK('KeyQ', 'q'), e: orK('KeyE', 'e'), r: orK('KeyR', 'r'), f: orK('KeyH', 'f'),   // 4th power lives on H — F toggles flight
-      shift: orK('ShiftLeft', 'dash'),
+      shift: {pressed:false,held:false,released:false}, // Legacy movement powers remain selectable attacks.
     };
     if(infantry)intents.r={pressed:pad.pressed('r'),held:pad.down('r'),released:pad.released('r')};
     if(soldierControls){
       intents.e={pressed:pad.pressed('e'),held:pad.down('e'),released:pad.released('e')};
-      if(p.onFoot&&!p.flying)intents.shift={pressed:pad.pressed('dash'),held:pad.down('dash'),released:pad.released('dash')};
       // The tactical shortcuts use the existing authored kit and payment/action
       // path. They never replace the player's selected primary or secondary.
       intents.q={pressed:pad.pressed('q'),held:pad.down('q'),released:pad.released('q')};
@@ -3777,7 +3815,7 @@ export class Game {
 
   // Player 2 (gamepad): right-stick auto-aims, left-stick moves.
   controlPad(f, dt) {
-    if (!f || !f.alive || this.matchOver) { if (f) { cancelHeldAttacksIfIncapacitated(f);f.moveDir = { x: 0, z: 0 }; } return; }
+    if (!f || !f.alive || this.matchOver || this.running===false || this.mapCam || this.hud?.titleOpen || this.combatOverlayOpen) { if (f) { resetMovementGears(f);cancelHeldAttacksIfIncapacitated(f);f.moveDir = { x: 0, z: 0 }; } return; }
     cancelHeldAttacksIfIncapacitated(f);
     const pad = this.pad;
     if (f.grabbedBy || f.frozenT > 0) { f.moveDir = { x: 0, z: 0 }; return; }
@@ -3804,14 +3842,23 @@ export class Game {
       const len=Math.hypot(f.moveDir.x,f.moveDir.y,f.moveDir.z);
       if(len>1){f.moveDir.x/=len;f.moveDir.y/=len;f.moveDir.z/=len;}
     }
-    f.flyHeld = pad.down('fly'); f.descendHeld = pad.down('descend'); f.move(f.moveDir, dt);
+    f.flyHeld = pad.down('fly'); f.descendHeld = pad.down('descend');
+    const gearInput=updateMovementGears(f,{held:pad.down('dash')||f._gearUiHeld,selectGear:f._gearUiHeld?f._gearUiSelection:undefined},dt);
+    if(gearInput.powerupReady)this.onMovementPowerupReady?.(f);
+    f.sprintHeld=f.def.archetype==='soldier'&&f.onFoot&&!f.flying&&!f.prone&&!f.crouching&&!f.guarding&&!f._firearmReload&&!pad.down('lmb')&&!pad.down('rmb')&&pad.down('dash');
+    f.move(f.moveDir, dt, f.sprintHeld?f.movementGear.profile.ground[0]:1);
     if (pad.pressed('strike')) this.melee.chargeStart(f);
     if (pad.released('strike')) this.melee.chargeRelease(f);
     if (pad.pressed('grab')) this.melee.grab(f);
     this.melee.guard(f, pad.down('guard'));
     const busy = f.guarding || f.strikeActive > 0 || f.grabState || f.grabbing || f.meleeCharge > 0 || f.staggerT > 0;
     const P = (a) => ({ pressed: pad.pressed(a), held: pad.down(a), released: pad.released(a) });
-    const it = { lmb: P('lmb'), rmb: P('rmb'), q: P('q'), e: P('e'), r: P('r'), f: P('f'), shift: P('dash') };
+    const it = { lmb: P('lmb'), rmb: P('rmb'), q: P('q'), e: P('e'), r: P('r'), f: P('f'), shift: {pressed:false,held:false,released:false} };
+    for(const [selected,trigger]of [[f._selSlot,'lmb'],[f._selSecondary,'rmb']])if(selected==='shift'){
+      for(const edge of ['pressed','held','released'])it.shift[edge]||=it[trigger][edge];
+      it[trigger]={pressed:false,held:false,released:false};
+    }
+    if(it.shift.held)it.shift.released=false;
     for (const k of SLOT_KEYS) if (f.slots[k]) feedSlot(this, f, k, it[k], busy, dt);
   }
 
@@ -3860,7 +3907,9 @@ export class Game {
     f.moveDir = { x: dir.x, z: dir.z };
     f.flyHeld = !!it.fly;
     f.descendHeld = f.flying && !it.fly;      // no longer wants to fly → sink back down and land
-    f.cruiseHeld = f.flying && !!it.fly;      // chasing through the air → open the throttle
+    const requestedGear=it.movementGear??(f.flying&&it.fly?1:0);
+    const gearInput=updateMovementGears(f,{held:requestedGear>0&&!f.movementGear?.blocked,selectGear:requestedGear||undefined},dt);
+    if(gearInput.powerupReady)this.onMovementPowerupReady?.(f);
     if(f._openSky && f.airborne && it.target) {
       // Visible-target height belongs in the same 3-D movement intent, not an always-on rise
       // button. Once level with an opponent the bot hovers and strafes instead of oscillating.
@@ -3975,7 +4024,7 @@ export class Game {
     // one melee strike per fight**, which is the whole of "melee is non-existent" and "the other
     // person can't get to me". Every one of the other twelve reads of this field in the codebase
     // already says `> 0`; this single site was the odd one out.
-    if (!f._forceBeam && !f.grabbing && !f.grabState && !(f.strikeActive > 0)) {
+    if (f.def.ai?.meleePolicy!=='ability' && !f._forceBeam && !f.grabbing && !f.grabState && !(f.strikeActive > 0)) {
       const foe = it.ready ? it.target : null;
       const d = foe ? Math.hypot(foe.pos.x - f.pos.x, foe.pos.z - f.pos.z) : 99;
       f._meleeCd = (f._meleeCd || 0) - dt;
@@ -4078,7 +4127,7 @@ export class Game {
       if (!f._medChecked) {
         f._medChecked = true;
         // carry-over injuries from the book: small, capped, and announced (manual §18)
-        if (f.def && f.def.id && !f.def.police && !f.isDummy && !f._frontlineClone) {
+        if (f.def && f.def.id && !f.def.police && !f.isDummy && !f._frontlineClone && !f._encounterNPC) {
           const inj = injuryOf(f.def.id);
           if (inj) {
             f.maxHp = Math.round(f.maxHp * (1 - Math.min(0.08, inj.debuff || 0.05)));

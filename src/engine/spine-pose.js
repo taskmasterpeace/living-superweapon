@@ -52,7 +52,9 @@ export function animateSpineAim(f,dt,active,blocked){
   const debt=wrap(Math.atan2(before.x,before.z)-Math.atan2(after.x,after.z));
   s.bias=clamp(s.bias+debt*Math.min(1,8*dt),-1.2,1.2);
  }else s.bias=THREE.MathUtils.damp(s.bias,0,12,dt);
- if(!active&&s.relative.angleTo(desired)<1e-5)s.engaged=false;
+ // Reaching this frame's target does not finish a moving combat recovery.
+ // Keep the rate bound until that source blend has released the pose too.
+ if(!active&&(f._combatAim?.weight||0)<.0001&&s.relative.angleTo(desired)<1e-5)s.engaged=false;
  hip.set(0,p.rig.pivotHeight,0);
  for(const b of s.base){
   b.position.copy(b.part.position);b.quaternion.copy(b.part.quaternion);

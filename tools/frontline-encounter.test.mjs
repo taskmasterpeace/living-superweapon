@@ -4,29 +4,91 @@ import * as THREE from 'three';
 import {Fighter} from '../src/engine/entity.js';
 import {ROSTER} from '../src/data/characters.js';
 import {World} from '../src/engine/world.js';
+import {Game} from '../src/engine/game.js';
+import {prepareFrontline} from '../src/engine/frontline-preparation.js';
 
 const module = await import('../src/engine/frontline-encounter.js').catch(e => {
   if (e.code !== 'ERR_MODULE_NOT_FOUND') throw e;
   return {};
 });
-function fixture() {
+function fixture(world={}) {
   assert.equal(typeof module.FrontlineEncounter, 'function', 'Clone recovery encounter must exist');
   const scene = new THREE.Scene(), entities = [], player = new Fighter(ROSTER[0]);
   player.pos.set(-40, 0, -40);
-  const g = {scene, entities, player, running:true, matchOver:false, hud:{titleOpen:false},
-    world:{cover:[{x:10,z:10,hx:16,hz:16,top:30}]},
-    addFighter(def, opts) { const f = new Fighter(def, opts); entities.push(f); scene.add(f.obj); return f; }};
+  const g = {scene, entities, player, results:[],allocations:0,running:true, matchOver:false, hud:{titleOpen:false},
+    endMatch(result){this.results.push(result);this.matchOver=true;},
+    world:{cover:[{x:10,z:10,hx:16,hz:16,top:30}],...world},
+    addFighter(def, opts) { this.allocations++;const f = new Fighter(def, opts); entities.push(f); scene.add(f.obj); return f; }};
   const encounter = new module.FrontlineEncounter(g);
   const clear = () => { for (const f of encounter.soldiers) f.hp = 0; encounter.update(0); };
   return {g, encounter, clear, close(){encounter.dispose();player.dispose();}};
 }
+
+test('native hero replacement returns one sample to its case instead of transferring phantom cargo',()=>{
+ const x=fixture(),e=x.encounter,g=x.g,original=g.player;
+ try{
+  original.pos.copy(e.casePosition);e.update(1.5);assert.equal(e.sampleOwner,original);
+  g.humans=[{fighter:original}];g.vfx={flash(){},ring(){}};Game.prototype.setPlayerChar.call(g,'kano');
+  g.player.pos.copy(e.extractionPosition);e.update(2);
+  assert.equal(e.phase,'recover');assert.equal(e.progress,0);assert.equal(e.sampleOwner,null);assert.equal(e.caseMesh.visible,true);assert.equal(g.results.length,0);
+  g.player.pos.copy(e.casePosition);e.update(1.5);assert.equal(e.sampleOwner,g.player);assert.equal(e.caseMesh.visible,false);
+  g.player.pos.copy(e.extractionPosition);e.update(2);e.update(20);assert.equal(g.results.length,1);assert.equal(e.completions,1);
+ }finally{const replacement=g.player;x.close();if(replacement!==original)replacement.dispose();}
+});
+test('paused and title views preserve an in-progress hold and damage cooldown exactly',()=>{
+ const x=fixture(),e=x.encounter,g=x.g,p=g.player;
+ try{
+  for(const phase of ['recover','extract']){
+   e.phase=phase;e.sampleOwner=phase==='extract'?p:null;p.pos.copy(phase==='recover'?e.casePosition:e.extractionPosition);
+   e.progress=.7;e.damagePause=.6;
+   g.running=false;e.update(100);g.running=true;g.hud.titleOpen=true;e.update(100);g.hud.titleOpen=false;
+   assert.equal(e.progress,.7);assert.equal(e.damagePause,.6);assert.equal(e.phase,phase);assert.equal(g.results.length,0);
+  }
+ }finally{x.close();}
+});
+test('whole objective footprints and native clone roots respect terrain and arena bounds',()=>{
+ const x=fixture({ARENA:75,cover:[],heightAt:(x,z)=>100+x*.05-z*.03}),e=x.encounter;
+ try{
+  assert.equal(e.phase,'recover');assert.equal(e.soldiers.length,4);
+  for(const p of [e.casePosition,e.extractionPosition,...e.soldiers.map(f=>f.pos)]){
+   assert.ok(Math.abs(p.x)+12<=75&&Math.abs(p.z)+12<=75);assert.ok(Math.abs(p.y-x.g.world.heightAt(p.x,p.z))<1e-8);
+  }
+  assert.ok(e.casePosition.distanceTo(e.extractionPosition)>=24,'case and extraction discs must not overlap');
+  for(const f of e.soldiers)assert.equal(f.groundY,f.pos.y);
+ }finally{x.close();}
+});
+test('a later blocked squad footprint leaves no partial actors or objective resources',()=>{
+ const width=40,cover=[{x:-10000,z:0,hx:9940,hz:100000,top:100},{x:10000,z:0,hx:10032-width,hz:100000,top:100},{x:0,z:-10000,hx:100000,hz:9940,top:100},{x:0,z:10000,hx:100000,hz:10032-width,top:100}];
+ const x=fixture({cover}),e=x.encounter;
+ try{assert.equal(e.phase,'blocked');assert.ok(e.casePosition&&e.extractionPosition,'both objective footprints must fit before the later squad failure');assert.equal(x.g.allocations,0,'preflight all positions before even the first native allocation');assert.equal(x.g.entities.length,0);assert.equal(x.g.scene.children.length,0);assert.match(e.equipmentError,/placement.*menu.*retry/i);e.update(10);assert.equal(x.g.results.length,0);}finally{x.close();}
+});
+test('blocked placement stays behind the native preparation error gate and can cancel cleanly',async()=>{
+ const x=fixture({cover:[],heightAt:()=>NaN}),g=x.g;const errors=[];
+ g.ms={frontline:x.encounter};g.reportError=e=>errors.push(e.message);g.world.renderer={compile(){throw Error('must not compile blocked setup');},info:{programs:[]}};
+ const stage={g,group:new THREE.Group(),frontlineLoading:Promise.resolve()},messages=[];
+ try{
+  const task=prepareFrontline(stage,{ui:()=>({update:m=>messages.push(m),destroy(){}})});
+  assert.equal(await task.promise,false);assert.equal(task.status,'error');assert.equal(g._frontlinePreparing,task);assert.equal(stage.frontlineReady,false);
+  assert.match(errors[0],/placement/);assert.ok(messages.some(m=>/Return to menu/.test(m)));assert.equal(g.entities.length,0);task.cancel();assert.equal(g._frontlinePreparing,null);
+ }finally{x.close();}
+});
+test('an actor-construction failure rolls back even a fighter inserted before the throw',()=>{
+ const x=fixture(),g=x.g;x.encounter.dispose();const add=g.addFighter;let calls=0,failed;
+ g.addFighter=function(def,opts){const f=add.call(this,def,opts);if(++calls===2)throw Error('injected actor failure');return f;};
+ try{failed=new module.FrontlineEncounter(g);assert.equal(calls,2);assert.equal(failed.phase,'blocked');assert.equal(g.entities.length,0);assert.equal(g.scene.children.length,0);assert.match(failed.equipmentError,/injected actor failure/);}finally{failed?.dispose();x.close();}
+});
+test('steep and non-finite ground refuse setup through an inert preparation error',()=>{
+ for(const heightAt of [(x,z)=>2*x,()=>NaN]){
+  const x=fixture({cover:[],heightAt});try{assert.equal(x.encounter.phase,'blocked');assert.equal(x.g.entities.length,0);assert.ok(x.encounter.equipmentError);}finally{x.close();}
+ }
+});
 
 test('extraction marker is not a permanent halo under the player before recovery',()=>{
  const x=fixture();try{
   const e=x.encounter,at=e.extractionPosition;
   const extraction=e.markers.children.filter(m=>m.geometry&&m.position.x===at.x&&m.position.z===at.z);
   assert.ok(extraction.length);assert.ok(extraction.every(m=>!m.visible));
-  e.phase='extract';e.update(0);assert.ok(extraction.every(m=>m.visible));
+  x.g.player.pos.copy(e.casePosition);e.update(1.5);e.update(0);assert.ok(extraction.every(m=>m.visible));
  }finally{x.close();}
 });
 test('clones use independent finite ground-only native rifle definitions without roster mutation', () => {
@@ -90,11 +152,11 @@ test('field rifle clones use the shared source body while retaining native limb 
     }finally{sarge.dispose();}
   }finally{x.close();}
 });
-test('the squad must be defeated before a 1.5-second case hold and a separate 2-second extraction', () => {
+test('a living squad can be bypassed through a 1.5-second case hold and separate 2-second extraction', () => {
   const x=fixture(),e=x.encounter,p=x.g.player;
   try {
-    p.pos.copy(e.casePosition); e.update(3); assert.equal(e.phase,'squad');
-    x.clear(); assert.equal(e.phase,'recover');
+    p.pos.copy(e.casePosition); assert.equal(e.phase,'recover');
+    assert.equal(e.soldiers.filter(f=>f.alive&&f.hp>0).length,4);
     e.update(1); assert.equal(e.phase,'recover'); assert.equal(e.progress,1);
     e.update(.5); assert.equal(e.phase,'extract'); assert.equal(e.progress,0);
     e.update(3); assert.equal(e.phase,'extract');
@@ -103,7 +165,7 @@ test('the squad must be defeated before a 1.5-second case hold and a separate 2-
     e.update(8);assert.equal(e.completions,1);assert.equal(x.g.running,true);
   } finally {x.close();}
 });
-test('airborne, outside radius, dead, paused and title states cannot advance interactions', () => {
+test('airborne, outside radius, paused and title states cannot advance interactions', () => {
   const x=fixture(),e=x.encounter,p=x.g.player;
   try {
     x.clear();p.pos.copy(e.casePosition);e.update(.5);
@@ -111,21 +173,58 @@ test('airborne, outside radius, dead, paused and title states cannot advance int
     p.pos.y=20;e.update(2);p.pos.y=0;
     p.gait='airborne';e.update(2);p.gait='grounded';
     p.pos.x+=13;e.update(2);p.pos.copy(e.casePosition);
-    p.hp=0;e.update(2);p.hp=p.maxHp;
     x.g.running=false;e.update(2);x.g.running=true;
     x.g.hud.titleOpen=true;e.update(2);x.g.hud.titleOpen=false;
-    assert.equal(e.progress,.5);assert.equal(e.phase,'recover');
+    assert.equal(e.progress,0);assert.equal(e.phase,'recover');
   } finally {x.close();}
 });
-test('real incoming hit notifications pause both ground holds without inventing blood samples', () => {
+
+test('extraction ends the operation once with a result and a sealed sample receipt',()=>{
+ const x=fixture(),e=x.encounter,p=x.g.player;
+ try{
+  x.clear();p.pos.copy(e.casePosition);e.update(1.5);
+  assert.ok(e.sampleOwner===p,'The recovered case must belong to the player');assert.equal(e.sampleExtracted,false);
+  p.pos.copy(e.extractionPosition);e.update(2);e.update(20);
+  assert.equal(x.g.results.length,1);assert.equal(x.g.results[0].win,true);
+  assert.equal(x.g.results[0].operation,'clone-recovery');
+  assert.equal(e.sampleExtracted,true);assert.equal(e.sampleOwner,null);
+ }finally{x.close();}
+});
+
+test('player defeat ends an unfinished recovery and never manufactures an extracted sample',()=>{
+ const x=fixture(),e=x.encounter,p=x.g.player;
+ try{
+  x.clear();p.pos.copy(e.casePosition);e.update(1.5);p.hp=0;e.update(.1);e.update(20);
+  assert.equal(e.phase,'failed');assert.equal(x.g.results.length,1);
+  assert.equal(x.g.results[0].win,false);assert.equal(e.sampleExtracted,false);assert.equal(e.sampleOwner,null);
+ }finally{x.close();}
+});
+
+test('incapacitation resets either interaction and requires a fresh uninterrupted hold',()=>{
+ const x=fixture(),e=x.encounter,p=x.g.player;
+ try{
+  x.clear();
+  for(const phase of ['recover','extract']){
+   p.pos.copy(phase==='recover'?e.casePosition:e.extractionPosition);
+   e.update(.5);const progress=e.progress;
+   for(const key of ['frozenT','stunT','sleepT','downedT','grabbedBy','hitstop']){
+    p[key]=key==='grabbedBy'?{}:10;e.update(3);
+    assert.equal(e.phase,phase,key);assert.equal(e.progress,0,key);p[key]=key==='grabbedBy'?null:0;
+   }
+   e.update(phase==='recover'?1.5:2);
+  }
+  assert.equal(e.phase,'complete');assert.equal(x.g.results.length,1);
+ }finally{x.close();}
+});
+test('real incoming damage resets both holds without inventing blood samples', () => {
   const x=fixture(),e=x.encounter,p=x.g.player;
   try {
     x.clear();p.pos.copy(e.casePosition);e.update(.5);
-    e.onHit(p,1);e.update(.5);assert.equal(e.progress,.5);
-    e.update(.5);assert.equal(e.progress,.5);
-    e.update(1);assert.equal(e.phase,'extract');
+    e.onHit(p,1);e.update(.5);assert.equal(e.progress,0);
+    e.update(.5);assert.equal(e.progress,0);
+    e.update(1);assert.equal(e.phase,'recover');e.update(.5);assert.equal(e.phase,'extract');
     p.pos.copy(e.extractionPosition);e.update(.5);e.onHit(p,3);e.update(.5);
-    assert.equal(e.progress,.5);e.update(.5);e.update(1.5);assert.equal(e.phase,'complete');
+    assert.equal(e.progress,0);e.update(.5);e.update(1.5);assert.equal(e.phase,'extract');e.update(.5);assert.equal(e.phase,'complete');
   } finally {x.close();}
 });
 test('objectives and squad avoid registered cover; dispose releases resources and repeat owns exactly one set', () => {
@@ -174,10 +273,10 @@ test('native crater terrain supports both grounded holds while excluding flight 
       assert.ok(Math.abs(post.position.y-3.5-world.heightAt(post.position.x,post.position.z))<1e-6);
     p.flying=true;e.update(2);p.flying=false;
     p.onBlock=true;p.pos.y+=.5;e.update(2);p.onBlock=false;
-    p.pos.y=0;e.update(2);assert.equal(e.progress,.5,'Roof/air above the crater must not count as ground');
+    p.pos.y=0;e.update(2);assert.equal(e.progress,0,'Roof/air above the crater must reset the hold');
     // Uneven terrain: player stands toward the rim, not at the case center's height.
     p.pos.x+=10;p.pos.y=world.heightAt(p.pos.x,p.pos.z);
-    assert.ok(p.pos.y-e.casePosition.y>1);e.update(1);assert.equal(e.phase,'extract');
+    assert.ok(p.pos.y-e.casePosition.y>1);e.update(1.5);assert.equal(e.phase,'extract');
     world.crater(e.extractionPosition.x,e.extractionPosition.z,20,4);
     p.pos.copy(e.extractionPosition);p.pos.y=world.heightAt(p.pos.x,p.pos.z);
     e.update(2);assert.equal(e.phase,'complete');assert.equal(e.completions,1);

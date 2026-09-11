@@ -1,12 +1,12 @@
-const order=['lmb','rmb','q','e','f','r'];
-export function combatChoices(f,map){return [...(map.mouseMelee?['melee']:[]),...order.filter(k=>f.slots[k])];}
+const order=['lmb','rmb','q','e','f','r','shift'];
+export function combatChoices(f,map){return [...(map.mouseMelee||f._tabMelee?['melee']:[]),...order.filter(k=>f.slots[k])];}
 // Never remap a held trigger into a different attack or abandon a live clinch.
 export function canChangeMouseTool(f,input){return !input.mouse.left&&!input.mouse.right&&!f.meleeCharge&&!f._meleeQueuedHeld&&!f.mstate&&!f.grabbing&&!f.grabState;}
 
 const empty=()=>({pressed:false,held:false,released:false});
 const step=(choices,key,dir)=>choices[(Math.max(0,choices.indexOf(key))+Math.sign(dir)+choices.length)%choices.length];
 export function selectedAttacks(f,map){
- const primaryChoices=combatChoices(f,map),secondaryChoices=[...(map.mouseMelee?['grab']:[]),...order.filter(k=>f.slots[k])];
+ const primaryChoices=combatChoices(f,map),secondaryChoices=[...(map.mouseMelee||f._tabMelee?['grab']:[]),...order.filter(k=>f.slots[k])];
  const primary=primaryChoices.includes(f._selSlot)?f._selSlot:(f.slots.lmb?'lmb':primaryChoices[0]);
  const fallback=primary==='melee'?'grab':f.slots.rmb?'rmb':secondaryChoices[0];
  return {primary,secondary:secondaryChoices.includes(f._selSecondary)?f._selSecondary:fallback,primaryChoices,secondaryChoices};

@@ -1,6 +1,6 @@
 import {playerStatus} from './player-status.js';
 import {icon} from './icons.js';
-import {HUD_LAYOUT_KEY,hudLayout,hudLayoutPosition} from './hud-layout.js';
+import {HUD_LAYOUT_KEY,hudLayout,hudLayoutPosition,nudgeHudLayout} from './hud-layout.js';
 
 export class PlayerStatusView{
  constructor(root){
@@ -11,8 +11,11 @@ export class PlayerStatusView{
   this.meters=['hp','energy','guard'].map(k=>this.el.querySelector('.ps-'+k));this.image=this.el.querySelector('img');
   try{this.layout=hudLayout(JSON.parse(localStorage.getItem(HUD_LAYOUT_KEY)||'{}'));}catch{this.layout=hudLayout();}
   this.applyLayout();addEventListener('resize',()=>this.applyLayout());
+  // Effects and flight readouts can grow the cluster. Observe that growth
+  // without measuring layout on every gameplay tick.
+  if(typeof ResizeObserver!=='undefined'){this.layoutObserver=new ResizeObserver(()=>this.applyLayout());this.layoutObserver.observe(this.el);}
  }
- applyLayout(){const p=hudLayoutPosition(this.layout,innerWidth,innerHeight);this.el.style.setProperty('--ps-left',p.left+'px');this.el.style.setProperty('--ps-top',p.top+'px');this.el.style.setProperty('--ps-scale',p.scale);}
+ applyLayout(){const p=hudLayoutPosition(this.layout,innerWidth,innerHeight,this.el.offsetWidth||360,Math.max(142,this.el.offsetHeight||0));this.el.style.setProperty('--ps-left',p.left+'px');this.el.style.setProperty('--ps-top',p.top+'px');this.el.style.setProperty('--ps-scale',p.scale);}
  saveLayout(){try{localStorage.setItem(HUD_LAYOUT_KEY,JSON.stringify(this.layout));}catch{/* restricted storage: current session still works */}}
  edit(hud){
   if(this.editor)return;
@@ -28,7 +31,7 @@ export class PlayerStatusView{
   const down=e=>{if(e.button!==0)return;e.preventDefault();const b=this.el.getBoundingClientRect();drag={x:e.clientX-b.x,y:e.clientY-b.y};this.el.setPointerCapture(e.pointerId);};
   const move=e=>{if(!drag)return;this.layout.x=(e.clientX-drag.x)/innerWidth;this.layout.y=(e.clientY-drag.y)/innerHeight;this.layout=hudLayout(this.layout);this.applyLayout();};
   const up=()=>{drag=null;};
-  const keys=e=>{if(!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key))return;e.preventDefault();e.stopPropagation();const step=e.shiftKey?20:4;this.layout.x+=(e.key==='ArrowLeft'?-step:e.key==='ArrowRight'?step:0)/innerWidth;this.layout.y+=(e.key==='ArrowUp'?-step:e.key==='ArrowDown'?step:0)/innerHeight;this.layout=hudLayout(this.layout);this.applyLayout();};
+  const keys=e=>{if(!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key))return;e.preventDefault();e.stopPropagation();const step=e.shiftKey?20:4;this.layout=nudgeHudLayout(this.layout,innerWidth,innerHeight,e.key==='ArrowLeft'?-step:e.key==='ArrowRight'?step:0,e.key==='ArrowUp'?-step:e.key==='ArrowDown'?step:0,this.el.offsetWidth||360,Math.max(142,this.el.offsetHeight||0));this.applyLayout();};
   this.el.addEventListener('pointerdown',down);this.el.addEventListener('pointermove',move);this.el.addEventListener('pointerup',up);this.el.addEventListener('pointercancel',up);this.el.addEventListener('keydown',keys);
   const close=()=>{this.saveLayout();this.el.classList.remove('ps-editing');this.el.removeAttribute('tabindex');for(const [type,fn]of [['pointerdown',down],['pointermove',move],['pointerup',up],['pointercancel',up],['keydown',keys]])this.el.removeEventListener(type,fn);dialog.remove();this.editor=null;g.combatOverlayOpen=oldOverlay;hud.setPaused(true);};
   const escape=e=>{if(e.key==='Escape'){e.preventDefault();e.stopImmediatePropagation();close();document.removeEventListener('keydown',escape,true);}};document.addEventListener('keydown',escape,true);

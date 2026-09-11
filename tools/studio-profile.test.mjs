@@ -135,7 +135,7 @@ test('deliberate flight style reset replaces pose targets without mutating the d
 test('saving an untouched profile preserves production flight joints for every shipped hero',async()=>{
   const {chromium}=await import('playwright'),browser=await chromium.launch({headless:true});
   try {
-    const page=await browser.newPage();await page.goto('http://127.0.0.1:5180/powerworld.html');
+    const page=await browser.newPage();await page.goto(new URL('/powerworld.html',process.env.LSW_TEST_URL||'http://127.0.0.1:5180').href);
     await page.waitForFunction(()=>window.LSW?.game);
     const bad=await page.evaluate(async()=>{
       const {Fighter}=await import('/src/engine/entity.js');

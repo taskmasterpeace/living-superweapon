@@ -33,7 +33,7 @@ export function prepareWindBody(f,game){
  const out=f._weatherBody||(f._weatherBody={});
  out.x=out.y=out.z=out.pressure=0;out.driven=false;out.coefficient=0;out.footing=0;
  const w=game?.weather;
- if(!w||w.wind<=.15||!f.alive||f._scoutVehicle||f._aircraftVehicle||f.phase)return out;
+ if(!w||w.wind<=.15&&!w.layers?.size||!f.alive||f._scoutVehicle||f._aircraftVehicle||f.phase)return out;
  const e=f.def.environment||{},size=Math.max(.35,f.sizeScale||1),strength=f.def.strength??5;
  // Authored kilograms describe the base body; Size Change always scales mass.
  const mass=Math.max(20,finite(e.massKg,90*(f.def.metal?1.8:1))*size**3)/90;

@@ -87,7 +87,7 @@ test('native full soak bypasses armor and shieldpack but keeps one guard consequ
  const x=fixture();try{x.b.armor=20;x.b._shieldHp=20;fire(x,panel(x));near(hp(x),7,'local debit');near(x.b.armor,20,'armor retained');near(x.b._shieldHp,20,'shieldpack retained');near(x.b.guardMeter,.78,'native guard meter');near(x.b.hitstop,.03,'native guard hitstop');near(x.b.hp,1000,'HP retained');assert.equal(x.events.hits.length,1);near(x.events.hits[0].amount,0,'HP callback');near(x.events.xp,0,'no body damage XP');near(x.g.combo,0,'no damage combo');near(x.a.stats.dmg,0,'no HP stats');}finally{x.close();}
 });
 test('native residual applies only the unabsorbed amount to ordinary guard',()=>{
- const x=fixture();try{fire(x,panel(x),20);near(hp(x),0,'cell exhausted');near(1000-x.b.hp,3.36,'12 integrity then 8 * .42 HP');assert.equal(x.events.hits.length,1);}finally{x.close();}
+ const x=fixture();try{fire(x,panel(x),20);near(hp(x),0,'cell exhausted');near(x.b.hp,1000,'funded residual has no HP chip');near(x.b.ki,2,'12 integrity intercepts before the 8 energy bill');assert.equal(x.events.hits.length,1);near(x.events.hits[0].outcome.guardAbsorbed,8,'only residual reaches energy guard');}finally{x.close();}
 });
 test('a native full panel contact owns one actual metal-surface cue, not a fake body ripple',()=>{
  const x=fixture();try{const p=panel(x);fire(x,p);assert.equal(x.events.metal.length,1,'one real metal impact');near(x.events.metal[0].point.distanceTo(p.point),0,'cue touches visible face, not projectile center or body');assert.ok(x.events.metal[0].normal.dot(p.normal)>.999);near(x.b.hp,1000,'cue never fabricates HP');assert.ok(x.b.parts.guardArc.material.hits.every(h=>h.w<0));}finally{x.close();}
@@ -96,7 +96,7 @@ for(const city of [false,true])test(`native ${city?'city':'open-sky'} full panel
  const x=fixture();try{const p=panel(x);x.b._openSky=!city;fire(x,p);assert.equal(x.events.metal.length,1);assert.equal(x.events.flashes.length,0,'actual module owns contact instead of a second body flash');}finally{x.close();}
 });
 for(const city of [false,true])test(`native ${city?'city':'open-sky'} residual shield absorption retains real body consequences without duplicate bubble or ripple`,()=>{
- const x=fixture();try{x.b._openSky=!city;fire(x,panel(x),30);near(hp(x),0,'local cell breaks');near(1000-x.b.hp,7.56,'native residual body HP remains');near(x.b.guardMeter,.78,'native guard consequence remains');assert.equal(x.events.hits.length,1);assert.equal(x.events.hits[0].amount,7.56);near(x.events.xp,0,'native blocked hit still grants no XP');assert.equal(x.b.lastHitBy,x.a,'residual kill credit remains');assert.ok(x.b.hitstop>0);assert.ok(x.b.vel.length()>0,'native impact response remains');assert.equal(x.events.metal.length,1,'actual metal contact remains');assert.equal(x.events.flashes.length,0,'actual absorbed panel hit does not create a second generic body bubble');assert.ok(x.b.parts.guardArc.material.hits.every(h=>h.w<0),'no fake shield-sphere ripple');
+ const x=fixture();try{x.b._openSky=!city;fire(x,panel(x),30);near(hp(x),0,'local cell breaks');const lost=city?7.56:8;near(1000-x.b.hp,lost,'city chip or unpaid domain overflow');near(x.b.ki,city?10:0,'only open-sky guard pays the 10 available energy');near(x.b.guardMeter,.78,'native guard consequence remains');assert.equal(x.events.hits.length,1);near(x.events.hits[0].amount,lost,'only HP enters callback');near(x.events.xp,0,'native blocked hit still grants no XP');assert.equal(x.b.lastHitBy,x.a,'residual kill credit remains');assert.ok(x.b.hitstop>0);assert.ok(x.b.vel.length()>0,'native impact response remains');assert.equal(x.events.metal.length,1,'actual metal contact remains');assert.equal(x.events.flashes.length,0,'actual absorbed panel hit does not create a second generic body bubble');assert.ok(x.b.parts.guardArc.material.hits.every(h=>h.w<0),'no fake shield-sphere ripple');
  }finally{x.close();}
 });
 test('untagged city projectile guard keeps its original body-center flash',()=>{
@@ -128,8 +128,8 @@ for(const eligible of [true,false])test(`native deflection precedence for ${elig
  const x=fixture();try{x.b.def.guardType='deflect';x.b.chargingKi=!eligible;const shot=fire(x,panel(x));if(eligible){assert.notEqual(shot._defl,true);near(hp(x),7,'shield absorbs actual contact');assert.equal(shot.dead,true);}else{assert.equal(shot._defl,true);near(hp(x),12,'native reflection preempts local damage');const hit=x.events.hits.filter(e=>e.target===x.b);assert.equal(hit.length,1);assert.equal(hit[0].amount,0);assert.equal(hit[0].outcome?.deflected,true);}near(x.b.hp,1000,'reflection or full shield prevents HP');}finally{x.close();}
 });
 test('real projectile breaks one panel, subsequent hole passes damage, exact repair protects again',()=>{
- const x=fixture();try{const p=panel(x);fire(x,p,12);near(hp(x),0,'first real shot breaks cell');assert.equal(snapshotNaniteCells(x.b).some(c=>c.cell===2),false);fire(x,p,5);near(1000-x.b.hp,2.1,'hole uses native body guard');
-  advanceNanites(x.b._nanites,1.15,new Set(['q']));presentNanites(x.b);near(hp(x),12,'shared exact repair clock');const body=x.b.hp;fire(x,p,5);near(x.b.hp,body,'restored cell protects');near(hp(x),7,'repaired local debit');
+ const x=fixture();try{const p=panel(x);fire(x,p,12);near(hp(x),0,'first real shot breaks cell');near(x.b.ki,10,'full physical interception retains energy');assert.equal(snapshotNaniteCells(x.b).some(c=>c.cell===2),false);fire(x,p,5);near(x.b.hp,1000,'funded body guard protects HP behind hole');near(x.b.ki,5,'hole cannot absorb; body guard pays original damage');
+  advanceNanites(x.b._nanites,1.15,new Set(['q']));presentNanites(x.b);near(hp(x),12,'shared exact repair clock');const body=x.b.hp,energy=x.b.ki;fire(x,p,5);near(x.b.hp,body,'restored cell protects');near(x.b.ki,energy,'restored cell prevents another energy bill');near(hp(x),7,'repaired local debit');
  }finally{x.close();}
 });
 test('a real panel behind the physical torso cannot add protection to a rear hit',()=>{
@@ -184,16 +184,16 @@ test('real direct plus splash impact debits cell once and keeps separate native 
  const x=fixture();try{fire(x,panel(x),5,{ballistic:false,collisionPriority:1,blast:6});near(hp(x),7,'only direct contact bills the cell');assert.ok(x.events.hits.length>=2,'real splash still runs its native damage path');near(x.events.hits[0].amount,0,'direct full soak HP');near(1000-x.b.hp,x.events.hits.reduce((sum,e)=>sum+e.amount,0),'actual HP callback conservation');}finally{x.close();}
 });
 test('a consumed real contact cannot be reused by a later DoT after same-epoch repair',()=>{
- const x=fixture();try{fire(x,panel(x),5);const prior=x.events.hits[0].opts,epoch=x.b._nanites.modules.get('q').epoch;advanceNanites(x.b._nanites,1.15,new Set(['q']));presentNanites(x.b);x.b.takeDamage(5,{...prior,dot:true});assert.equal(x.b._nanites.modules.get('q').epoch,epoch);near(hp(x),12,'old token cannot damage repaired metal');near(1000-x.b.hp,2.5,'unprotected ordinary DoT keeps native guard damage');}finally{x.close();}
+ const x=fixture();try{fire(x,panel(x),5);const prior=x.events.hits[0].opts,epoch=x.b._nanites.modules.get('q').epoch;advanceNanites(x.b._nanites,1.15,new Set(['q']));presentNanites(x.b);x.b.takeDamage(5,{...prior,dot:true});assert.equal(x.b._nanites.modules.get('q').epoch,epoch);near(hp(x),12,'old token cannot damage repaired metal');near(x.b.hp,1000,'funded ordinary DoT guard protects HP');near(x.b.ki,5,'old token gives no absorption; guard pays full DoT');}finally{x.close();}
 });
 for(const change of ['source','retract','form'])test(`a queued real cell token rejects ${change} before native damage consumption`,()=>{
  const x=fixture();try{const p=panel(x),out={};assert.ok(naniteContact(x.b,p.point.clone().addScaledVector(p.normal,2),p.point.clone().addScaledVector(p.normal,-2),.04,out));x.a.pos.copy(p.point).addScaledVector(p.normal,8);
   if(change==='source')x.b.slots.q.def={type:'shield',cost:0};else if(change==='retract')x.b._nanites.modules.get('q').deployed=false;else x.b.applyForm({name:'Token invalidation',frame:{scale:1.05}});
-  x.b.takeDamage(5,{src:x.a,ballistic:true,naniteContact:out.naniteContact});near(hp(x),12,'old event has no local authority');near(1000-x.b.hp,2.1,'ordinary guard still receives the original amount');
+  const energy=x.b.ki;x.b.takeDamage(5,{src:x.a,ballistic:true,naniteContact:out.naniteContact});near(hp(x),12,'old event has no local authority');near(x.b.hp,1000,'funded ordinary guard retains HP');near(energy-x.b.ki,5,'ordinary guard still pays the full original amount');
  }finally{x.close();}
 });
 test('plain copied metadata is not a physical cell capability',()=>{
- const x=fixture();try{const p=panel(x),out={};assert.ok(naniteContact(x.b,p.point.clone().addScaledVector(p.normal,2),p.point.clone().addScaledVector(p.normal,-2),.04,out));x.a.pos.copy(p.point).addScaledVector(p.normal,8);x.b.takeDamage(5,{src:x.a,ballistic:true,naniteContact:{...out.naniteContact}});near(hp(x),12,'spreading a token loses query authority');near(1000-x.b.hp,2.1,'no forged absorption');}finally{x.close();}
+ const x=fixture();try{const p=panel(x),out={};assert.ok(naniteContact(x.b,p.point.clone().addScaledVector(p.normal,2),p.point.clone().addScaledVector(p.normal,-2),.04,out));x.a.pos.copy(p.point).addScaledVector(p.normal,8);x.b.takeDamage(5,{src:x.a,ballistic:true,naniteContact:{...out.naniteContact}});near(hp(x),12,'spreading a token loses query authority');near(x.b.hp,1000,'funded guard protects HP');near(x.b.ki,5,'forged metadata cannot absorb the ordinary energy bill');}finally{x.close();}
 });
 for(const type of ['edge','corner-miss','unreached'])test(`literal finite sphere cell geometry: ${type}`,()=>{
  const x=fixture({scale:1.5,width:1.2});try{const p=panel(x,0),r=.2,scale=new THREE.Vector3().setFromMatrixScale(p.matrix),local=new THREE.Vector3(-.5, .5,.5);
@@ -227,7 +227,7 @@ for(const change of ['break','retract','form'])test(`held native hose ${change} 
 });
 test('native hose obeys actual cover before panel and keeps pierceFighters outside local billing',()=>{
  for(const covered of [true,false]){const x=fixture();try{const p=panel(x),beam=hose(x,p);if(covered){const at=p.point.clone().addScaledVector(p.normal,3);x.world.cover.push({x:at.x,z:at.z,hx:8,hz:.01,bottom:0,top:20,projectileShape:'box'});}else beam.pierceFighters=true;
-  for(let i=0;i<70;i++)x.g.projectiles.update(1/60,x.g);near(hp(x),12,'cover/pierce does not invent local hit');if(covered){near(x.b.hp,1000,'cover blocks body');assert.equal(x.events.hits.length,0);}else assert.ok(x.b.hp<1000,'native piercing body lane remains active');
+  for(let i=0;i<70;i++)x.g.projectiles.update(1/60,x.g);near(hp(x),12,'cover/pierce does not invent local hit');if(covered){near(x.b.hp,1000,'cover blocks body');assert.equal(x.events.hits.length,0);}else{near(x.b.hp,1000,'funded body guard protects HP');assert.ok(x.b.ki<10,'native piercing body lane pays real guard energy');near(10-x.b.ki,x.events.hits.reduce((sum,e)=>sum+(e.outcome?.guardEnergySpent||0),0),'actual contacts conserve the body energy bill');}
  }finally{x.close();}}
 });
 test('native full-soak hose bills every contact but keeps metal presentation bounded',()=>{
@@ -249,8 +249,8 @@ for(const reverse of [false,true])test(`actual active native fist hits outboard 
 for(const guarded of [true,false])test(`native ${guarded?'blocked straight':'unguarded heavy'} reaches the winning physical cell`,()=>{
  const x=fixture();try{const p=panel(x,0);activeFist(x,p,'straight');x.b.guarding=guarded;x.g.melee.beginContactFrame();resolveFists(x);assert.ok(hp(x,0)<12,'real heavy branch must pass its selected cell');assert.equal(x.events.hits.length,1);if(guarded)assert.equal(x.events.blocked,1);else assert.ok(x.b.hp<1000,'ineligible panel is not passive armor');}finally{x.close();}
 });
-test('native haymaker keeps guard crush bypass instead of gaining panel absorption',()=>{
- const x=fixture();try{const p=panel(x,0);activeFist(x,p,'crush');assert.equal(x.a.mHay,true);x.g.melee.beginContactFrame();resolveFists(x);near(hp(x,0),12,'crush bypass has no local guard armor');assert.equal(x.b.guarding,false);near(x.b.guardMeter,.45,'native crush meter');assert.ok(x.b.hp<1000);assert.equal(x.events.blocked,0);}finally{x.close();}
+for(const energy of [0,100])test(`native haymaker bypasses panel, opens guard, and respects ${energy?'funded':'empty'} energy`,()=>{
+ const x=fixture();try{x.b.ki=energy;const p=panel(x,0);activeFist(x,p,'crush');assert.equal(x.a.mHay,true);x.g.melee.beginContactFrame();resolveFists(x);near(hp(x,0),12,'crush bypass has no local guard armor');assert.equal(x.b.guarding,false);near(x.b.guardMeter,.45,'native crush meter');if(energy){near(x.b.hp,1000,'funded crush has no HP bypass');assert.ok(x.b.ki<energy);near(energy-x.b.ki,x.events.hits[0].outcome.guardEnergySpent,'crush energy bill is conserved');}else{assert.ok(x.b.hp<1000);near(x.b.ki,0,'empty guard gives no free absorption');}assert.equal(x.events.blocked,0);}finally{x.close();}
 });
 for(const reverse of [false,true])test(`native moving defender cell sweep catches an endpoint miss (${reverse?'reversed':'normal'} order)`,()=>{
  const x=fixture({reverse});try{const p=panel(x,0),fist=activeFist(x,p);x.b.pos.x-=3.5;x.b.obj.updateMatrixWorld(true);x.g.melee.beginContactFrame();x.b.pos.x+=7;x.b.obj.updateMatrixWorld(true);const query={};assert.equal(naniteContact(x.b,fist,fist,.42,query),false,'final cells must miss the fist');resolveFists(x);assert.ok(x.b._nanites.modules.get('q').cells.some(c=>c.hp<12),'moving physical cell must be swept');assert.equal(x.a.strikeHit.size,1);assert.equal(x.events.hits.length,1);}finally{x.close();}

@@ -2,6 +2,8 @@
 // a 72KB pure string was a quarter of the module). Injected once by hud's style build.
 export const CSS = `
 #hud .wrap{ position:absolute; inset:0; }
+body.report-open #hud .wrap > :not(.endscr),body.report-open #pwInventory,body.report-open #pwInventoryMobile,body.report-open #plMood,body.report-open #frontlineObjective,body.report-open #zombieObjective,body.report-open #desertSecurity,body.report-open #comicLayer{display:none!important}
+body:not(.playing) #frontlineObjective,body:not(.playing) #zombieObjective,body:not(.playing) #desertSecurity{display:none!important}
 #hud .combat-dock{ display:contents; }
 #hud .status-dock{ display:contents; }
 #hud .vignette{ position:absolute; inset:0; pointer-events:none; background:radial-gradient(125% 105% at 50% 44%, transparent 52%, rgba(0,0,0,.28) 82%, rgba(0,0,0,.62) 100%); z-index:0; }
@@ -1099,6 +1101,18 @@ body.combat-chase.pw-locked #hCross i:nth-child(2){ left:6px; top:-13px; border-
 body.combat-chase.pw-locked #hCross i:nth-child(3){ left:-13px; top:6px; border-width:0 0 2px 2px; }
 body.combat-chase.pw-locked #hCross i:nth-child(4){ left:6px; top:6px; border-width:0 2px 2px 0; }
 body.combat-chase.pw-locked #hCross b{ display:none; }
+body.combat-chase #hCross[data-aim-mode="free-look-edge"] i,
+body.combat-chase #hCross[data-aim-mode="free-look-edge"] b{display:none;}
+body.combat-chase #hCross[data-aim-mode="free-look-edge"]::before{
+  content:'';position:absolute;left:-7px;top:-7px;width:0;height:0;
+  border-top:7px solid transparent;border-bottom:7px solid transparent;border-left:12px solid var(--gold);
+  transform:rotate(var(--aim-bearing));transform-origin:7px 7px;filter:drop-shadow(0 1px 2px #000);
+}
+body.combat-chase #hCross[data-aim-mode="free-look-edge"]::after{
+  content:attr(data-label);position:absolute;top:var(--aim-label-y);left:0;transform:translateX(var(--aim-label-x));
+  white-space:nowrap;color:var(--gold);font:600 10px/1.2 Inter,system-ui,sans-serif;
+  letter-spacing:.08em;text-shadow:0 1px 3px #000,0 0 3px #000;
+}
 /* Combat outcomes stay readable without occupying the target or player. */
 #hud .announce.compact-notice,#hud .kobanner.compact-notice{
   top:64px; width:max-content; max-width:min(420px,calc(100vw - 32px));

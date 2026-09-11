@@ -1,3 +1,4 @@
+import {terrainScorchMesh,disposeScorch,BEAM_GROUND_LIMITS} from './beam-ground-contact.js';
 // WAR WORLD: ASCENDANTS — transient 3D effects: explosions, shockwaves, lightning, rings, flashes, scorch.
 import * as THREE from 'three';
 import { rand, TAU, lerp, GROUND_LAYER, PW_FX } from '../core/util.js';
@@ -267,6 +268,12 @@ export class VFX {
     const TINT = { scorch: '#0b0906', frost: '#cfeaff', sludge: '#7f8f28', debris: '#4a443c', crater: '#0b0906', cloud: '#2a2a2e' };
     this.scorch(pos, radius, TINT[kind] || '#0b0906');
   }
+  beamGroundScorch(pos,radius=2) {
+    if(!okPos(pos,'beamGroundScorch')||!Number.isFinite(radius)||radius<=0||!this.world?.heightAt)return null;
+    const mesh=terrainScorchMesh(this.world,pos,Math.min(6,radius));if(!mesh)return null;
+    this.scene.add(mesh);this.scorches.push(mesh);this.world.flattenGrass?.(pos.x,pos.z,radius);
+    if(this.scorches.length>40)disposeScorch(this.scene,this.scorches.shift());return mesh;
+  }
   scorch(pos, radius = 8, tint = '#000') {
     if (!okPos(pos, 'scorch')) return;
     const mat = new THREE.MeshBasicMaterial({ color: tint, transparent: true, opacity: 0.55, depthWrite: false });
@@ -289,7 +296,7 @@ export class VFX {
     m.scale.setScalar(radius);
     this.scene.add(m); this.scorches.push(m);
     if (this.world.flattenGrass) this.world.flattenGrass(pos.x, pos.z, radius);   // burned ground = burned grass
-    if (this.scorches.length > 40) { const old = this.scorches.shift(); this.scene.remove(old); old.material.dispose(); }
+    if (this.scorches.length > 40) { const old = this.scorches.shift(); disposeScorch(this.scene,old); }
   }
 
   _impactTex() {
@@ -383,9 +390,14 @@ export class VFX {
     this.world.shake(0.4 + power);
   }
 
-  clearScorches() { for (const m of this.scorches) { this.scene.remove(m); m.material.dispose(); } this.scorches.length = 0; }
+  clearScorches() { for (const m of this.scorches) disposeScorch(this.scene,m); this.scorches.length = 0; }
 
   update(dt) {
+    for(let i=this.scorches.length-1;i>=0;i--){const m=this.scorches[i];if(!m.userData.beamGroundScorch)continue;
+      m.userData.age+=Math.max(0,dt);
+      if(m.userData.age>=BEAM_GROUND_LIMITS.life){disposeScorch(this.scene,m);this.scorches.splice(i,1);}
+      else m.material.uniforms.opacity.value=.6*Math.min(1,(BEAM_GROUND_LIMITS.life-m.userData.age)/BEAM_GROUND_LIMITS.fade);
+    }
     for (let i = this.fx.length - 1; i >= 0; i--) {
       if (this.fx[i].update(dt)) { this.fx[i].dispose(); this.fx.splice(i, 1); }
     }

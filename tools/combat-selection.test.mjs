@@ -3,10 +3,10 @@ import assert from 'node:assert/strict';
 import {Input} from '../src/core/input.js';
 import {KEYMAPS} from '../src/core/settings.js';
 import {combatChoices,canChangeMouseTool} from '../src/core/combat-selection.js';
-test('arena wheel contains melee and existing layouts retain their power order',()=>{
+test('arena wheel contains melee and preserves power order before the remapped movement ability',()=>{
  const f={slots:{lmb:{},rmb:{},q:{},shift:{}}};
- assert.deepEqual(combatChoices(f,KEYMAPS.arena),['melee','lmb','rmb','q']);
- for(const key of ['classic','pilot','hybrid','brawler'])assert.deepEqual(combatChoices(f,KEYMAPS[key]),['lmb','rmb','q']);
+ assert.deepEqual(combatChoices(f,KEYMAPS.arena),['melee','lmb','rmb','q','shift']);
+ for(const key of ['classic','pilot','hybrid','brawler'])assert.deepEqual(combatChoices(f,KEYMAPS[key]),['lmb','rmb','q','shift']);
 });
 test('held triggers and unfinished melee prevent remapping a mouse tool',()=>{
  const f={},input=new Input();assert.equal(canChangeMouseTool(f,input),true);

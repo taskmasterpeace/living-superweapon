@@ -138,7 +138,7 @@ export function describeAbility(a) {
     case 'phase': return 'hold to go intangible — spends energy';
     case 'tentacle': return 'tentacles seize a foe, drag them in, and SLAM them into the nearest wall';
     case 'portal': return 'place a door, then its exit — anything that touches one comes out the other';
-    case 'rifle': return (a.interval > 0.2 ? 'heavy sidearm — hard-hitting shots' : 'full-auto tracer fire') + ' (ammo = ki)';
+    case 'rifle': return (a.interval > 0.2 ? 'deliberate fire — hard-hitting shots' : 'full-auto tracer fire') + (Number.isInteger(a.magazine)&&a.magazine>0?` (${a.magazine}-round magazine · reload)`:' (energy-fed)');
     case 'bow': return 'hold to draw — arrow speed & damage scale; payload from your quiver';
     case 'facebomb': return 'charge her up — she drifts to the target, lingers a heartbeat, then DETONATES';
     case 'mine': return 'plant proximity mines at your aim (up to 3) — they arm, blink, and erase';

@@ -44,6 +44,7 @@ import {attackEntryCost} from './hand-emission.js';
 import {selectedAttacks} from '../core/combat-selection.js';
 import {DUAL_TRIGGER_CSS} from './dual-trigger.styles.js';
 import {PlayerStatusView} from './player-status-view.js';
+import {MovementGearView} from './movement-gear-view.js';
 
 
 // ---- THRESHOLD REGISTRY paperwork: file numbers, country codes, deterministic file dates ----
@@ -274,6 +275,7 @@ export class HUD {
       <div class="kobanner" id="hKO"><div class="kob" id="hKOt">K.O.</div><div class="kos" id="hKOs"></div></div>
     </div>`;
     this.playerStatusView=new PlayerStatusView(this.root.querySelector('.wrap'));
+    this.movementGearView=new MovementGearView(this.root.querySelector('.combat-dock'));
     this.el = {
       feed: this.root.querySelector('#hFeed'),
       foe: this.root.querySelector('#hFoe'), foeName: this.root.querySelector('#foeName'), foeHp: this.root.querySelector('#foeHp'),
@@ -545,14 +547,14 @@ export class HUD {
     const G = (a) => glyph(a, pad);
     this._hintPad = P;                                   // so armHintTimer can re-render on change
     el.innerHTML = P
-      ? grp('MOVE & AIM', [[G('move'), 'move'], [G('aim'), 'aim'], combatView(this.game)==='bfp'?['L1 + R3','lock / release target']:null, [G('dash'), 'dash'], ['2×FLICK', 'evade']]) +
+      ? grp('MOVE & AIM', [[G('move'), 'move'], [G('aim'), 'aim'], combatView(this.game)==='bfp'?['L1 + R3','lock / release target']:null, [G('dash'), 'tap, then hold for movement gears'], ['2×FLICK', 'evade']]) +
         grp('MELEE', [[G('strike'), 'tap = jab · HOLD = haymaker'], [G('grab'), 'grab · hoist a car/tree'], [G('guard'), 'guard (hold)']]) +
         grp('POWERS', [[G('lmb') + ' / ' + G('rmb'), 'primary · secondary'],
           [G('q') + ' / ' + G('e'), 'skills'], [G('f'), '4th power'], [G('ult'), 'ULTIMATE'], [G('item'), 'gadget']]) +
-        grp('FLIGHT', [[G('fly'), 'flight ON / rise'], [G('descend'), 'descend'], [G('dash') + ' (air)', 'cruise']]) +
+        grp('FLIGHT', [[G('fly'), 'flight ON / rise'], [G('descend'), 'descend'], [G('dash') + ' (air)', 'movement gears']]) +
         grp('SYSTEM', [[G('swap'), 'swap hero'], [G('roster'), 'roster'], [G('pause'), 'pause'],
           [G('confirm') + ' / ' + G('back'), 'confirm · back (menus)']])
-      : grp('MOVE & AIM', [['WASD', 'move'], ['MOUSE', 'aim'], soldier?['C (HOLD)','crouch · release to stand']:null, soldier?['Z','prone / stand · WASD crawl']:null, soldier?['E','interact / board · E exits scout, J exits aircraft']:null, [combatView(this.game)==='bfp'?'T':'CLICK FOE',combatView(this.game)==='bfp'?'lock / release target':'lock on · T to release'], ['2×TAP', 'evade'], ['SHIFT', soldier?'hold to sprint · release for combat pace':'dash']]) +
+      : grp('MOVE & AIM', [['WASD', 'move'], ['MOUSE', 'aim'], combatView(this.game)==='bfp'?['ALT (HOLD)','look around · release to return']:null, soldier?['C (HOLD)','crouch · release to stand']:null, soldier?['Z','prone / stand · WASD crawl']:null, soldier?['E','interact / board · E exits scout, J exits aircraft']:null, [combatView(this.game)==='bfp'?'T':'CLICK FOE',combatView(this.game)==='bfp'?'lock / release target':'lock on · T to release'], ['2×TAP', 'evade'], ['SHIFT', 'tap, then hold · gears I / II / III']]) +
         // ⚠ THE PANEL WAS LYING UNDER BRAWLER. Guard read `K.guardLabel` but strike and grab were
         // hard-coded 'V' and 'G' — so the one scheme that exists BECAUSE the melee keys moved was
         // the one scheme the help panel printed the old keys for.
@@ -566,8 +568,8 @@ export class HUD {
           ['RMB', 'tap to fire on release · hold to charge / sustain'],
           [soldier?'G':'Q / E', soldier?'quick grenade · keeps weapon selected':'skills'], ['H', '4th power'], ['R', soldier?'reload selected weapon':'ULTIMATE'], [soldier?'Q':K.itemLabel, 'gadget'],
         ]) +
-        grp('FLIGHT', [[K.flyLabel, 'flight ON/OFF'], [K.upLabel, 'rise'], [K.downLabel, 'descend'], ['SHIFT (air)', 'cruise']]) +
-        grp('SYSTEM', [[K.swapLabel, 'swap hero'], ['TAB', 'roster'], ['B', 'order a rival'], ['N', 'order a training bot'], ['ESC', 'pause'], ['F1', 'this panel']]);
+        grp('FLIGHT', [[K.flyLabel, 'flight ON/OFF'], [K.upLabel, 'rise'], [K.downLabel, 'descend'], ['SHIFT (air)', 'movement gears']]) +
+        grp('SYSTEM', [[K.swapLabel, 'swap hero'], ['TAB', 'PowerWorld: melee / restore attacks; city: roster'], ['F3', 'PowerWorld roster'], ['B', 'order a rival'], ['N', 'order a training bot'], ['ESC', 'pause'], ['F1', 'this panel']]);
   }
   // The full control list is onboarding, not furniture: it earns ~18s of a fresh match, then
   // collapses to a corner chip. F1 (or the Options toggle) brings it back any time.
@@ -1054,12 +1056,12 @@ export class HUD {
   showHowto() {
     this.howtoEl.innerHTML = `<div class="obox">
       <div class="oh">How to Play</div>
-      <div class="hsec"><div class="ht">Move & Aim</div><div class="hb"><b>WASD</b> move · <b>Mouse</b> aims everything · hover a foe to target them · <b>Click</b> a foe = hard lock (<b>T</b> clears) · <b>SHIFT</b> dash · <b>2×TAP</b> a direction = your evade</div></div>
+      <div class="hsec"><div class="ht">Move & Aim</div><div class="hb"><b>WASD</b> move · <b>Mouse</b> aims everything · hover a foe to target them · <b>Click</b> a foe = hard lock (<b>T</b> clears) · <b>SHIFT</b> tap, then hold to advance movement gears · <b>2×TAP</b> a direction = your evade</div></div>
       <div class="hsec"><div class="ht">Powers</div><div class="hb"><b>LMB / RMB / Q / E / H</b> fire your powers · <b>R</b> is your ULTIMATE · many powers <em>charge</em> — hold to grow them, release to fire · everything spends <em>KI</em>: run dry and you fizzle, so watch the blue bar</div></div>
       <div class="hsec"><div class="ht">The Melee Triangle</div><div class="hb"><b>V</b> strike (tap = jab combo · <em>hold</em> = HAYMAKER) · <b>G</b> grab · <b>C / Mouse4</b> guard — <em>Strike beats Grab · Grab beats Guard · Guard beats Strike</em> · a HAYMAKER crushes a guard wide open · back-grabs can't be escaped</div></div>
-      <div class="hsec"><div class="ht">Flight</div><div class="hb"><b>F</b> toggles flight on/off · hold <b>SPACE</b> to rise · release to hover · <b>Z</b> to descend and land · hold <b>SHIFT</b> in the air to <em>CRUISE</em> (some heroes fly much faster than others) · the <em>ring under every fighter</em> is their altitude band — green GROUND · gold BUILDING · cyan SKY · white CLOUDS — match colors to reach them</div></div>
+      <div class="hsec"><div class="ht">Flight</div><div class="hb"><b>F</b> toggles flight on/off · hold <b>SPACE</b> to rise · release to hover · <b>Z</b> to descend and land · tap, then hold <b>SHIFT</b> in the air for <em>MOVEMENT GEARS</em> (some heroes fly much faster than others) · the <em>ring under every fighter</em> is their altitude band — green GROUND · gold BUILDING · cyan SKY · white CLOUDS — match colors to reach them</div></div>
       <div class="hsec"><div class="ht">Gadgets & The Meter</div><div class="hb"><b>X</b> uses your carried gadget (beacon, medkit, flashbang…) · low ki opens <em>OVERDRIVE</em> — your fists refill the tank · leveling up climbs <em>TIERS</em>: your aura and your meter literally grow</div></div>
-      <div class="hsec"><div class="ht">Attacks & The Rest</div><div class="hb"><b>WHEEL</b> selects LMB attack · <b>RMB + WHEEL</b> selects RMB attack (release, then fire) · <b>[ ]</b> swaps hero · <b>TAB</b> roster · <b>B</b> rival · <b>ESC</b> pause · <b>M</b> mute · 🎮 sticks move/aim · R2/L2 powers · ▢ ○ melee · L1 guard · ✕ fly</div></div>
+      <div class="hsec"><div class="ht">Attacks & The Rest</div><div class="hb"><b>WHEEL</b> selects LMB attack · <b>RMB + WHEEL</b> selects RMB attack (release, then fire) · <b>[ ]</b> swaps hero · <b>TAB</b> melee / restore attacks in PowerWorld; roster in City · <b>F3</b> PowerWorld roster · <b>B</b> rival · <b>ESC</b> pause · <b>M</b> mute · 🎮 sticks move/aim · R2/L2 powers · ▢ ○ melee · L1 guard · ✕ fly</div></div>
       <div class="hsec"><div class="ht">The Golden Rule</div><div class="hb">The LeFevre threat scale is real — a Street-tier human <em>should</em> lose to a Cosmic superweapon. Lopsided is honest. Pick your fights, or forge your own weapon in <b>ORIGIN</b>.</div></div>
       <div class="hsec"><div class="ht">Damage Types</div><div class="hb">Every hit has a <em>type</em> — physical, ballistic, energy, fire, cold, toxic, acid — and every fighter resists them differently. A machine <em>cannot</em> be poisoned; <b>ACID</b> eats the armour that stops bullets. Open the codex for the full table.</div></div>
       <button class="odone" id="howtoDmg">☣ Open the Damage Codex</button>
@@ -1913,7 +1915,7 @@ export class HUD {
     this._tvRun = (this._tvRun || 0) + 1;
     if (this._tvRaf) { cancelAnimationFrame(this._tvRaf); this._tvRaf = 0; }
   }
-  hideEndScreen() { this._stopTV(); this.el.end.style.display = 'none'; this.el.end.classList.remove('news'); }
+  hideEndScreen() { this._stopTV(); this.el.end.style.display = 'none'; this.el.end.classList.remove('news'); globalThis.document?.body?.classList.remove('report-open'); }
 
   flashScreen(color = '#ffffff', dur = 0.15) {
     // aaa-06 §10.1: CUT in the chase (close) camera — all 12 call sites, one early return. A
@@ -2008,7 +2010,7 @@ export class HUD {
     for (const { k, label } of SLOT_ORDER) {
       const a = def.abilities[k]; if (!a) continue;
       const tactical=def.archetype==='soldier'&&(this.game?.modeId==='powerworld'||this.game?.player?._openSky);
-      const binding=tactical?(k==='shift'?'2×TAP':String(['lmb','rmb','q','e','f','r'].indexOf(k)+1)):def.archetype==='soldier'&&k==='r'?'WHEEL':label;
+      const binding=k==='shift'?'WHEEL':tactical?String(['lmb','rmb','q','e','f','r'].indexOf(k)+1):def.archetype==='soldier'&&k==='r'?'WHEEL':label;
       const d = document.createElement('div');
       d.className = 'slot' + (k === 'r' ? ' ult' : '');
       // ⚠ THE CHIP NOW SAYS WHAT IT IS. A name alone ("Heat Ray", "Prince's Pride") does not tell you
@@ -2098,11 +2100,26 @@ export class HUD {
     const locked = visibleTarget(g,g.hardLock);
     if (hasLock && !locked) {
       if(this._csOff!==true){this._csOff=true;el.style.visibility='hidden';}
-    } else if (locked) {
-      // LOCKED (T): the mark rides the target, which can be off-centre or even off-screen.
+    } else if (locked||g.world.freeLooking) {
+      // Lock or independent look: project the actual aim, which can be offscreen.
       const a = g._aim3pt, s = this._csp || (this._csp = { x: 0, y: 0, behind: false });
       g.world.screenPosOf(a.x, a.y, a.z, s);
-      if (s.behind) {                                  // ⚠ JKA's rule: "off screen, don't draw it"
+      if(g.world.freeLooking&&(s.behind||s.x<44||s.x>innerWidth-44||s.y<44||s.y>innerHeight-44)){
+        // Camera-local lateral bearing avoids the mirrored projection of a
+        // point behind the eye. Exactly aft has two equal turns; choose right.
+        const m=g.world.camera.matrixWorldInverse.elements;
+        let bx=(m[0]*a.x+m[4]*a.y+m[8]*a.z+m[12])/(g.world.camera.aspect||innerWidth/innerHeight);
+        let by=-(m[1]*a.x+m[5]*a.y+m[9]*a.z+m[13]);
+        if(Math.abs(bx)+Math.abs(by)<1e-6)bx=1;
+        const scale=Math.min((innerWidth*.5-44)/Math.max(1e-9,Math.abs(bx)),(innerHeight*.5-44)/Math.max(1e-9,Math.abs(by)));
+        const dx=Math.round(bx*scale),dy=Math.round(by*scale);
+        el.dataset.aimMode='free-look-edge';el.dataset.label=s.behind?'AIM BEHIND':'AIM';
+        el.style.setProperty('--aim-bearing',`${Math.atan2(by,bx)}rad`);
+        el.style.setProperty('--aim-label-x',dx>innerWidth*.25?'-100%':dx<-innerWidth*.25?'0%':'-50%');
+        el.style.setProperty('--aim-label-y',dy>innerHeight*.25?'-28px':'18px');
+        this._csOff=false;el.style.visibility='';this._csx=dx;this._csy=dy;
+        el.style.transform=`translate(${dx}px, ${dy}px)`;
+      }else if (s.behind) {
         if (this._csOff !== true) { this._csOff = true; el.style.visibility = 'hidden'; }
       } else {
         if (this._csOff !== false) { this._csOff = false; el.style.visibility = ''; }
@@ -2131,7 +2148,7 @@ export class HUD {
   }
 
   update() {
-    const g = this.game, p = g.player;this.syncCombatView(g);if (!p) return;
+    const g = this.game, p = g.player;this.syncCombatView(g);this.movementGearView?.update(g);if (!p) return;
     if(g.modeId==='powerworld')this.playerStatusView?.update(p);
     // Bench/respawn/form transitions can replace the fighter without the menu's
     // setHero path. Rebuild before reading cooldowns from a different slot set.

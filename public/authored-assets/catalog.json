@@ -156,6 +156,60 @@
    }
   },
   {
+   "id": "equipment.kuchler-rifle",
+   "version": 1,
+   "kind": "equipment",
+   "displayName": "Kuchler Mk I (fictional Earth rifle)",
+   "tags": [
+    "equipment",
+    "firearm",
+    "rifle",
+    "two-handed",
+    "procedural",
+    "earth-donor"
+   ],
+   "dir": "equipment.kuchler-rifle/v1",
+   "packageHash": "3fad83acb8070bcdf2e5a13e1893579f183bc68741b978196eff6c51e3d0ac38",
+   "ok": true,
+   "errors": 0,
+   "license": "MIT",
+   "adapter": "procedural-prop@1",
+   "acceptance": {
+    "structural": "pass",
+    "visual": "unapproved",
+    "blockers": [
+     "runtime-named-action-parts"
+    ]
+   }
+  },
+  {
+   "id": "equipment.kuchler-rifle",
+   "version": 2,
+   "kind": "equipment",
+   "displayName": "Kuchler Mk I (fictional Earth rifle)",
+   "tags": [
+    "equipment",
+    "firearm",
+    "rifle",
+    "two-handed",
+    "procedural",
+    "earth-donor"
+   ],
+   "dir": "equipment.kuchler-rifle/v2",
+   "packageHash": "b53a6fc31211b442a022f640b053a71338b4b824ecb86c29d6eaa8da5224ae6b",
+   "ok": true,
+   "errors": 0,
+   "license": "MIT",
+   "adapter": "procedural-prop@1",
+   "acceptance": {
+    "structural": "pass",
+    "visual": "unapproved",
+    "blockers": [
+     "legacy-viewer-full-extension"
+    ]
+   }
+  },
+  {
    "id": "equipment.sidearm",
    "version": 1,
    "kind": "equipment",

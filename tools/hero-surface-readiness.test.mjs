@@ -16,7 +16,7 @@ async function fixture(run){
  const api=await import(`../src/engine/hero-materials.js?readiness-test=${++serial}`),textures=new Set(),materials=[];
  const make=(body='superhero-male',surface='field')=>{
   const mats=Object.fromEntries(['suit','suit2','armor'].map(name=>[name,new THREE.MeshStandardMaterial()]));
-  materials.push(...Object.values(mats));api.applyHeroSurface(mats,{body,surface});
+  materials.push(...Object.values(mats));api.applyHeroSurface(mats,{body,surface,costume:'fitted'});
   const root=new THREE.Group();for(const mat of Object.values(mats)){root.add(new THREE.Mesh(new THREE.BufferGeometry(),mat));for(const key of ['map','normalMap','roughnessMap','bumpMap'])if(mat[key])textures.add(mat[key]);}
   return {root,mats};
  };
@@ -24,6 +24,19 @@ async function fixture(run){
  finally{for(const texture of textures)texture.dispose();for(const material of materials)material.dispose();if(previous===undefined)delete globalThis.document;else globalThis.document=previous;}
 }
 const complete=images=>{for(const image of images){image.load();image.decodeOK();}};
+
+test('standard fitted suit and cape share decoded fabric, independently of field sampler settings',()=>fixture(async({api,images,make})=>{
+ const a=make('superhero-male','standard'),b=make('superhero-male','standard');
+ const cape=api.createCapeMaterial('#dd4309',{body:'superhero-male',surface:'standard',costume:'fitted'});
+ try{
+  assert.ok(a.mats.suit.bumpMap);assert.equal(a.mats.suit.bumpMap,cape.bumpMap);assert.equal(b.mats.suit.bumpMap,cape.bumpMap);assert.equal(images.length,1);
+  a.root.add(new THREE.Mesh(new THREE.BufferGeometry(),cape));let ready=false;
+  const pending=api.prepareHeroSurfaces([a.root,b.root]).then(()=>ready=true);images[0].load();await turn();assert.equal(ready,false);
+  images[0].decodeOK();await pending;assert.equal(cape.bumpMap.image,images[0]);
+  const field=make('procedural');assert.notEqual(field.mats.suit.map,cape.bumpMap);assert.deepEqual(field.mats.suit.map.repeat.toArray(),[16,16]);
+  complete(images.slice(1));await api.prepareHeroSurfaces([field.root]);
+ }finally{cape.dispose();}
+}));
 
 test('preparation waits for decoded images before publishing the canonical material texture',()=>fixture(async({api,images,make})=>{
  const {root,mats}=make(),texture=mats.suit.normalMap;let ready=false;

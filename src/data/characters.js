@@ -1,3 +1,4 @@
+import {migratePowerUpDef} from './power-up.js';
 // WAR WORLD: ASCENDANTS — the roster as PURE DATA. Add a hero = add an entry here (52 and counting).
 // Slots: lmb, rmb, shift(mobility), q, e, f, r(ultimate). Colors follow house rules — NO purple.
 
@@ -596,7 +597,7 @@ export const ROSTER = [
       rmb: { type: 'cone', name: 'Gale Force', kiPerSec: 16, range: 34, arc: 1.2, dps: 14, push: 58, lift: 7, color: '#bfeaff' },
       q: { type: 'volley', name: 'Hail Volley', cost: 3, interval: 0.09, damage: 6, speed: 118, radius: 0.8, blast: 3, spread: 0.1, color: '#bfeaff', color2: '#eaffff' },
       e: { type: 'cone', name: 'Flash Freeze', kiPerSec: 19, range: 30, arc: 1.1, dps: 18, cold: true, frost: 0.55, color: '#bfeaff' },
-      f: { type: 'buff', name: 'Eye of the Storm', cost: 24, cd: 18, mult: 1.5, dur: 10, color: '#bfeaff', color2: '#fff' },
+      f: { type: 'weather', name: 'Storm Domain', cost: 24, cd: 18, dur: 16, range: 100, radius: 65, kiPerSec: 5, rain: 1, wind: 1.1, cloud: 1, storm: 1, color: '#bfeaff', color2: '#fff' },
       shift: { type: 'dash', name: 'Tailwind', cost: 5, cd: 0.55, power: 98, iframes: 0.24, color: '#bfeaff' },
       r: { type: 'meteor', name: 'Stormfront', cost: 34, cd: 18, count: 14, interval: 0.16, spread: 30, radius: 3, damage: 33, blast: 18, color: '#bfeaff', color2: '#eaffff' },
     },
@@ -929,7 +930,7 @@ export const ROSTER = [
     },
   },
  ...MILITARY_ROSTER,
-];
+].map(def=>migratePowerUpDef(def));
 
 export const SLOT_ORDER = [
   { k: 'lmb', label: 'LMB' }, { k: 'rmb', label: 'RMB' }, { k: 'shift', label: 'SHIFT' },

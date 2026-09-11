@@ -1,3 +1,4 @@
+import {migratePowerUpDef,migratePowerUpPicks,GENERIC_CUSTOM_POWER_UPS} from './power-up.js';
 import { flagFor } from './identities.js';
 import { carryAttackOverrides } from './attack-tuning.js';
 import {TELEPORT_TIERS} from './teleport-tuning.js';
@@ -260,7 +261,7 @@ const DOCTRINE_NAMES = { rusher: 'Rusher', beamer: 'Beam Artillery', artillery: 
 export function tally(picks) {
   const a = picks.attrs;
   const attrs = Object.values(a).reduce((s, v) => s + ATTR_COST[Math.max(1, Math.min(10, v))], 0);
-  const powers = Object.values(picks.slots).filter(Boolean).reduce((s, id) => s + (powerById(id)?.cost || 0), 0);
+  const powers = [...Object.values(picks.slots),picks.powerUp].filter(Boolean).reduce((s, id) => s + (powerById(id)?.cost || 0), 0);
   const traits =
     (FLIGHT_TIERS.find(f => f.v === picks.flightTier)?.cost || 0) +
     (GUARD_TYPES.find(g => g.v === picks.guardType)?.cost || 0) +
@@ -284,12 +285,14 @@ export function freshPicks() {
     attrs: { fgt: 4, agl: 4, mgt: 4, vig: 4, int: 4, awr: 4, res: 4 },
     flightTier: 0, guardType: 'block', evade: 'dash', meleeTiers: 3,
     gifts: [], talents: [], gadgets: [],
+    powerUp:null,powerUpSourceSlot:null,
     slots: { lmb: null, rmb: null, q: null, e: null, f: null, r: null },
   };
 }
 
 // ---- Assemble a ROSTER-compatible def from picks ----
 export function buildDef(picks, existingId) {
+  picks=migratePowerUpPicks(picks);
   const pal = PALETTES[picks.palette] || PALETTES[0];
   const t = tally(picks);
   const d = derived(picks.attrs);
@@ -329,6 +332,7 @@ export function buildDef(picks, existingId) {
     blurb: `${threat}-threat ${DOCTRINE_NAMES[ai.style] || 'fighter'} forged in ORIGIN. ` +
       Object.values(picks.slots).filter(Boolean).slice(0, 3).map(pid => powerById(pid).name).join(' · ') + '.',
     sig, abilities,
+    ...(picks.powerUp&&GENERIC_CUSTOM_POWER_UPS.includes(picks.powerUp)?{powerUp:{schema:1,sourceSlot:picks.powerUpSourceSlot??null,ability:{...powerById(picks.powerUp).ab}}}:{}),
   };
 }
 
@@ -336,10 +340,11 @@ export function buildDef(picks, existingId) {
 export function validate(picks) {
   const errs = [];
   if (!picks.name || !picks.name.trim()) errs.push('Name your weapon.');
-  if (!picks.slots.lmb || !picks.slots.rmb) errs.push('LMB and RMB powers are required.');
+  if (['lmb','rmb'].some(k=>!picks.slots[k]&&!(picks.powerUp&&picks.powerUpSourceSlot===k))) errs.push('LMB and RMB powers are required.');
+  if(picks.powerUp&&!GENERIC_CUSTOM_POWER_UPS.includes(picks.powerUp))errs.push('Choose an authored power-up form.');
   if (picks.slots.r && !powerById(picks.slots.r)?.ult) errs.push('R takes an ULTIMATE.');
   for (const k of ['lmb', 'rmb', 'q', 'e', 'f']) if (picks.slots[k] && powerById(picks.slots[k])?.ult) errs.push('Ultimates only fit the R slot.');
-  const ids = Object.values(picks.slots).filter(Boolean);
+  const ids = [...Object.values(picks.slots),picks.powerUp].filter(Boolean);
   if (new Set(ids).size !== ids.length) errs.push('Each power can only be taken once.');
   if (ids.includes('quiver') && !ids.includes('longbow')) errs.push('Quiver Switch needs the Longbow.');
   const b = BUDGETS.find(x => x.id === picks.budget);
@@ -355,7 +360,7 @@ function readCustoms(storage) {
   try {
     const list = JSON.parse(storage.getItem(LS_KEY) || '[]');
     if (!Array.isArray(list) || list.some(c => !c?.def?.id)) throw Error('Invalid records');
-    return list;
+    return list.map(c=>{const picks=migratePowerUpPicks(c.picks),id=picks?.powerUp,slot=picks?.powerUpSourceSlot;return {...c,picks,def:migratePowerUpDef(c.def,slot&&id?{slot,name:powerById(id)?.ab?.name}:undefined)};});
   } catch (e) { throw Error(`Custom character storage could not be read; existing data was kept. ${e.message}`); }
 }
 export function loadCustoms(storage) {
@@ -364,6 +369,8 @@ export function loadCustoms(storage) {
 }
 function saveAll(list, storage=localStorage) { storage.setItem(LS_KEY, JSON.stringify(list)); }
 export function saveCustom(picks, def, roster, storage=localStorage) {
+  picks=migratePowerUpPicks(picks);
+  if(picks.powerUp&&picks.powerUpSourceSlot)def=migratePowerUpDef(def,{slot:picks.powerUpSourceSlot,name:powerById(picks.powerUp)?.ab?.name});
   if (!def.isCustom || !def.id.startsWith('cx_') || roster.some(r => r.id===def.id && !r.isCustom)) throw Error('Cannot replace a shipped fighter.');
   const records = readCustoms(storage), previous=records.find(c=>c.def.id===def.id);
   const list = records.filter(c => c.def.id !== def.id);
@@ -380,6 +387,8 @@ export function saveCustom(picks, def, roster, storage=localStorage) {
     if(!def.effects&&(livePrevious?.effects||previous.def.effects))def={...def,effects:structuredClone(livePrevious?.effects||previous.def.effects)};
     if(!def.progression&&(livePrevious?.progression||previous.def.progression))def={...def,progression:livePrevious?.progression||previous.def.progression};
     def=carryAttackOverrides(livePrevious||previous.def,def);
+    const oldForm=(livePrevious||previous.def).powerUp;
+    if(oldForm&&def.powerUp&&previous.picks?.powerUp===picks.powerUp&&oldForm.ability.name===def.powerUp.ability.name)def={...def,powerUp:structuredClone(oldForm)};
   }
   list.push({ v: 1, picks, def });
   saveAll(list, storage);

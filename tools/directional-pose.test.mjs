@@ -88,7 +88,11 @@ test('real rifle fire aims its driven weapon while the legs keep running',()=>{
  const combat=new StudioCombat(scene,world);combat.game.audio={...combat.game.audio,gunshot(){}};f._game=combat.game;
  try{
   for(let i=0;i<90;i++){
-   f.slots.lmb.cd=0;f.ki=f.maxKi;runSlot(f,'lmb',{pressed:i===0,held:true,released:false,dt:1/60},combat.game);f.vel.set(14,0,0);tick(f);
+   // Isolate sustained-fire posing from resource exhaustion, like the ki reset.
+   f.slots.lmb.cd=0;f.ki=f.maxKi;if(f.slots.lmb.ammo)f.slots.lmb.ammo.loaded=f.slots.lmb.ammo.capacity;
+   runSlot(f,'lmb',{pressed:i===0,held:true,released:false,dt:1/60},combat.game);f.vel.set(14,0,0);tick(f);
+   assert.ok(f._rangedPose?.until>=f.animT,'The fixture must continue firing through the sampled stride');
+   assert.ok(!f._firearmReload,'Reload must not take over this sustained-fire fixture');
   }
   assert.ok(f._groundMotion.weight>.95,'Gunfire cannot cancel the running legs');
   const hand=f.parts.armR.children[2],ray=f.aimWorld.clone().sub(hand.getWorldPosition(new THREE.Vector3())).normalize();

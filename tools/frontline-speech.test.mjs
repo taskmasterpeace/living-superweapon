@@ -42,16 +42,24 @@ function fixture(t,{mode='powerworld',width=1600,height=900}={}){
 const visible=node=>!node.hidden&&node.style.display!=='none'&&node.style.visibility!=='hidden'&&node.style.opacity!=='0';
 const overlap=(a,b)=>a.left<b.right&&a.right>b.left&&a.top<b.bottom&&a.bottom>b.top;
 
-test('PowerWorld dialogue routes to one named tail-less field item, retaining tone and lifetime',t=>{
- const f=fixture(t),it=f.comic.say(f.speaker,'STAY BACK!',{tone:'weak',life:2.5});
- assert.equal(it.kind,'field');assert.equal(it.speaker,f.speaker);assert.equal(it.tone,'weak');assert.equal(it.life,2.5);
- assert.ok(it.node.classList.contains('cmfield'));assert.equal(it.node.querySelector('.cmfield-speaker').textContent,f.speaker.name);
+test('PowerWorld radio routes to one named tail-less field item, retaining tone and lifetime',t=>{
+ const f=fixture(t),it=f.comic.say(f.speaker,'STAY BACK!',{tone:'robot',radio:true,life:2.5});
+ assert.equal(it.kind,'field');assert.equal(it.speaker,f.speaker);assert.equal(it.tone,'robot');assert.equal(it.life,2.5);
+ assert.ok(it.node.classList.contains('cmfield'));assert.equal(it.node.querySelector('.cmfield-speaker').textContent,`${f.speaker.name} · NEARBY · RADIO`);
  assert.equal(it.node.querySelector('.cmfield-text').textContent,'STAY BACK!');assert.equal(it.node.querySelectorAll('svg').length,0);assert.ok(!it.tail);
 });
-test('field speech is latest-only without deleting captions or sound effects',t=>{
- const f=fixture(t),cap=f.comic.caption('NEXT ROUND',{drop:false}),sfx=f.comic.sfx('CRACK',{x:0,y:0,z:0}),old=f.comic.say(f.speaker,'FIRST');
- const next=f.comic.say(f.speaker,'SECOND');assert.equal(old.node.parentNode,null);
+test('an admitted warning replaces radio chatter without deleting captions or sound effects',t=>{
+ const f=fixture(t),cap=f.comic.caption('NEXT ROUND',{drop:false}),sfx=f.comic.sfx('CRACK',{x:0,y:0,z:0}),old=f.comic.say(f.speaker,'FIRST',{radio:true});
+ assert.equal(f.comic.say({...f.speaker},'ORDINARY CHATTER',{radio:true}),null,'Concurrent equal-priority speech must be rejected');
+ const next=f.comic.say(f.speaker,'SECOND',{radio:true,category:'warning'});assert.ok(next);assert.equal(old.node.parentNode,null);
  assert.deepEqual(f.comic.items.filter(i=>i.kind==='field'),[next]);assert.ok(f.comic.items.includes(cap));assert.ok(f.comic.items.includes(sfx));
+});
+
+test('nearby PowerWorld speech retains its speaker-linked balloon, tone and lifetime',t=>{
+ const f=fixture(t),it=f.comic.say(f.speaker,'STAY BACK!',{tone:'weak',life:2.5});
+ assert.equal(it.kind,'bub');assert.equal(it.speech,true);assert.equal(it.speaker,f.speaker);assert.equal(it.tone,'weak');assert.equal(it.life,2.5);
+ assert.ok(it.node.classList.contains('cm-local'));assert.equal(it.node.querySelector('.cm-local-speaker').textContent,f.speaker.name);
+ assert.equal(it.node.querySelector('.cmtext').textContent,'STAY BACK!');assert.equal(it.node.querySelectorAll('svg').length,1);assert.ok(it.tail);
 });
 test('City chase keeps native SVG bubbles, multiple speakers and caption treatment',t=>{
  const f=fixture(t,{mode:'freeroam'}),one=f.comic.say(f.speaker,'FIRST'),two=f.comic.say({...f.speaker,name:'OTHER'},'SECOND');
@@ -59,12 +67,12 @@ test('City chase keeps native SVG bubbles, multiple speakers and caption treatme
  assert.equal(f.comic.items.filter(i=>i.kind==='bub').length,2);assert.ok(!one.node.classList.contains('cmfield'));
 });
 test('speaker labels and text stay inert strings; empty speech is ignored',t=>{
- const f=fixture(t);f.speaker.name='<img src=x>';const it=f.comic.say(f.speaker,'<script>alert(1)</script>');
- assert.equal(it.kind,'field');assert.equal(it.node.querySelector('.cmfield-speaker').textContent,'<img src=x>');
+ const f=fixture(t);f.speaker.name='<img src=x>';const it=f.comic.say(f.speaker,'<script>alert(1)</script>',{radio:true,tone:'robot'});
+ assert.equal(it.kind,'field');assert.equal(it.node.querySelector('.cmfield-speaker').textContent,'<img src=x> · NEARBY · RADIO');
  assert.equal(it.node.querySelectorAll('img').length,0);assert.equal(it.node.querySelectorAll('script').length,0);assert.equal(f.comic.say(f.speaker,'   '),null);
 });
 for(const state of ['title','loading','paused','ended','wrongMode'])test(`field dialogue hides during ${state}`,t=>{
- const f=fixture(t),it=f.comic.say(f.speaker,'STAY BACK!',{life:10});
+ const f=fixture(t),it=f.comic.say(f.speaker,'STAY BACK!',{life:10,radio:true});
  if(state==='title')f.game.hud.titleOpen=true;if(state==='loading')f.game._frontlinePreparing={};if(state==='paused'){f.game.running=false;f.game.hud._paused=true;}
  if(state==='ended')f.game.matchOver=true;if(state==='wrongMode')f.game.modeId='freeroam';
  f.comic.update(.016);assert.ok(!visible(it.node)||!it.node.parentNode);
@@ -72,21 +80,21 @@ for(const state of ['title','loading','paused','ended','wrongMode'])test(`field 
 for(const state of ['dead','invisible','fogHidden','behind'])test(`field route does not disclose a ${state} speaker`,t=>{
  const f=fixture(t),it=f.comic.say(f.speaker,'HERE!',{life:10});
  if(state==='dead')f.speaker.alive=false;if(state==='invisible')f.speaker.obj.visible=false;
- if(state==='fogHidden'){f.speaker.isPlayer=false;f.speaker._vis=0;}
+ if(state==='fogHidden'){f.game.player={...f.speaker};f.game.isFoe=()=>true;f.speaker.isPlayer=false;f.speaker._vis=0;}
  if(state==='behind')f.game.world.screenPosOf=()=>({x:800,y:600,behind:true});
  f.comic.update(.016);assert.ok(!visible(it.node)||!it.node.parentNode);
 });
 test('field placement remains in bounded upper band without covering actual reserved HUD boxes',t=>{
- const f=fixture(t),it=f.comic.say(f.speaker,'STAY BACK!',{life:10});f.comic.update(.016);assert.ok(visible(it.node));
+ const f=fixture(t),it=f.comic.say(f.speaker,'STAY BACK!',{life:10,radio:true});f.comic.update(.016);assert.ok(visible(it.node));
  const rect=it.node.getBoundingClientRect();assert.ok(rect.top>=0&&rect.bottom<=Math.min(180,innerHeight*.26));
  assert.ok(rect.left>=0&&rect.right<=innerWidth);
  for(const panel of Object.values(f.game.hud.el))assert.ok(!overlap(rect,panel.getBoundingClientRect()),'dialogue overlaps reserved HUD');
 });
 test('field lifetime and clear retire nodes; new match does not retain an old speaker',t=>{
- const f=fixture(t),it=f.comic.say(f.speaker,'FIRST',{life:.03});f.comic.update(.04);f.comic.update(.3);
+ const f=fixture(t),it=f.comic.say(f.speaker,'FIRST',{life:.03,radio:true});f.comic.update(.04);f.comic.update(.3);
  assert.equal(it.node.parentNode,null);assert.equal(f.comic.items.length,0);
- f.comic.say(f.speaker,'SECOND');f.comic.clear();assert.equal(f.comic.el.children.length,0);
- const next=f.comic.say({...f.speaker,name:'NEW MATCH'},'THIRD');assert.equal(next.kind,'field');assert.equal(f.comic.items.length,1);
+ assert.ok(f.comic.say(f.speaker,'SECOND',{radio:true,category:'warning'}));f.comic.clear();assert.equal(f.comic.el.children.length,0);
+ const next=f.comic.say({...f.speaker,name:'NEW MATCH'},'THIRD',{radio:true});assert.equal(next.kind,'field');assert.equal(f.comic.items.length,1);
 });
 test('native psyche admission, one-shot effects and cooldown are unchanged by presentation route',t=>{
  const f=fixture(t),e=f.speaker,seen=[];e.maxKi=100;e.ki=10;e._psyche={main:'fearful',colour:'#aaa',value:1,update(){},pendingInstant:{text:'STAY BACK!',fx:{ki:.1}}};

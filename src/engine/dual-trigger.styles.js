@@ -3,14 +3,14 @@ export const DUAL_TRIGGER_CSS=`
 .nboards.arena-report{grid-template-columns:minmax(0,1fr);}
 #hud .slots .trigger-pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;grid-column:1/-1;min-width:0;flex:1 0 100%;}
 #hud .slots{flex-wrap:wrap;max-width:calc(100vw - 32px);}
-#hud .trigger-attack{display:grid;grid-template-columns:32px minmax(0,1fr);align-content:start;column-gap:8px;row-gap:4px;padding:10px;border-radius:10px;background:oklch(.23 .025 80);color:oklch(.94 .025 80);min-width:0;}
-#hud .trigger-bind{grid-column:1/-1;display:flex;justify-content:space-between;gap:4px;font:700 12px system-ui,sans-serif;color:oklch(.84 .14 85);}
-#hud .trigger-bind small{font:500 9px system-ui,sans-serif;align-self:center;color:oklch(.79 .03 80);}
+#hud .trigger-attack{display:grid;grid-template-columns:32px minmax(0,1fr);align-content:start;column-gap:8px;row-gap:4px;padding:10px;border-radius:var(--r-2);background:var(--surface-raised);color:var(--text);min-width:0;}
+#hud .trigger-bind{grid-column:1/-1;display:flex;justify-content:space-between;gap:4px;font:700 var(--t-body) var(--f-display);color:var(--gold);}
+#hud .trigger-bind small{font:500 var(--t-tiny) var(--f-display);align-self:center;color:var(--text-3);}
 #hud .trigger-art{grid-row:2/4;align-self:center;}
 #hud .attack-icon{width:28px;height:28px;flex-shrink:0;display:block;}
-#hud .trigger-name{font:600 12px/1.25 system-ui,sans-serif;overflow-wrap:anywhere;}
-#hud .trigger-status{font:500 10px/1.2 system-ui,sans-serif;color:oklch(.8 .035 80);min-height:12px;}
-#hud .trigger-attack.unavailable .trigger-status{color:oklch(.83 .13 40);}
+#hud .trigger-name{font:600 var(--t-body)/1.25 var(--f-display);overflow-wrap:anywhere;}
+#hud .trigger-status{font:500 var(--t-label)/1.2 var(--f-display);color:var(--text-2);min-height:12px;}
+#hud .trigger-attack.unavailable .trigger-status{color:var(--danger-2);}
 #hud .slot .attack-icon{width:24px;height:24px;margin:0 auto 4px;color:var(--gold-pale,#e8cf92);}
 #hud .slot.sel{outline:2px solid var(--gold);outline-offset:0;}
 #hud .slot.sel-secondary{border-bottom:3px solid var(--info);}

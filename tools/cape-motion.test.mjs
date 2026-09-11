@@ -6,7 +6,9 @@ import {animateCape} from '../src/engine/hero-rig.js';
 import {Fighter} from '../src/engine/entity.js';
 import {queueHitReaction} from '../src/engine/hit-reaction.js';
 import {ROSTER} from '../src/data/characters.js';
-const sol=ROSTER.find(d=>d.id==='sol');
+// Preserve authored procedural attachment/frame measurements. The weighted
+// catalog body's attachment/idle/flight are tested against visible triangles.
+const stockSol=ROSTER.find(d=>d.id==='sol'),sol={...stockSol,model:{...stockSol.model,body:'procedural'}};
 function withRig(run,def=sol){const p=figure(def);try{run(p);}finally{p.g.traverse(o=>{o.geometry?.dispose();for(const m of Array.isArray(o.material)?o.material:[o.material])m?.dispose();});}}
 function row(p,fraction,world=false){const a=p.cape.geometry.attributes.position,r=p.cape.userData.rest,max=Math.max(...Array.from(r).filter((_,i)=>i%3===1)),min=Math.min(...Array.from(r).filter((_,i)=>i%3===1)),out=[];p.g.updateMatrixWorld(true);for(let i=0;i<a.count;i++)if(Math.abs((max-r[i*3+1])/(max-min)-fraction)<.01){const v=new Vector3().fromBufferAttribute(a,i);out.push(world?p.cape.localToWorld(v):v);}return out;}
 const mean=points=>points.reduce((a,b)=>a.add(b),new Vector3()).divideScalar(points.length);

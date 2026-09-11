@@ -86,6 +86,7 @@ function killOrb(c, st) {
 export function cancelHeldSlot(c,key) {
   c._game?.projectiles?.retirePendingNaniteShots?.(c,key);
   const st=c.slots[key];if(!st)return;
+  if(st.def.type==='weather')c._game?.weather?.cancelCommand?.(c);
   st._handsBusy=false;
   st._handsRetry=false;
   const existingCd=st.cd||0;
@@ -124,6 +125,7 @@ export function cancelHeldAttacksIfIncapacitated(c) {
   cancelHeldAttacks(c);return true;
 }
 export function clearSlotFx(c) {
+  c._game?.weather?.cancelCommand?.(c);
   cancelThrowAction(c);
   cancelFirearmReload(c);
   clearWebSnare(c);
@@ -571,6 +573,7 @@ export const TYPES = {
   buff(c, def, st, g, inp) {
     if (inp.pressed && ready(c, def, st)) {
       pay(c, def, st);
+      if(c.powerUp&&st!==c.powerUp)c.powerUp.activeT=0;
       // the three Tier-2 buff lanes ride the same activation
       if (def.siphonAura) c._siphon = { r: def.siphonAura.r || 22, dps: def.siphonAura.dps || 9, t: def.dur || 6, color: def.color || '#8a1d24' };
       if (def.hpPerSec) c._bloodBuff = { hps: def.hpPerSec, t: def.dur || 6 };
@@ -701,10 +704,15 @@ export const TYPES = {
 
   // 1 · WEATHER COMMAND — rain, wind, cloud and lightning, arriving GRADUALLY
   weather(c, def, st, g, inp) {
+    if(inp.pressed&&g.weather.layers?.has(c)){g.weather.cancelCommand(c);return;}
     if (inp.pressed && ready(c, def, st)) {
+      const center=g.isHuman?.(c)?g.aimPoint:c.pos.clone().addScaledVector(c.aim3||c.aim,def.range||100);
+      const layer=g.weather.command({rain:def.rain??.8,wind:def.wind??.6,cloud:def.cloud??.7,storm:def.storm??.5,dur:def.dur||14,radius:def.radius,range:def.range,kiPerSec:def.kiPerSec,center,src:c,slot:st});
+      if(!layer){g.hud?.feed?.('Storm limit reached','#d9b86b');return;}
+      // Cancel preparations on entry without cancelling the new domain itself.
+      for(const key of Object.keys(c.slots))if(c.slots[key]!==st)cancelHeldSlot(c,key);
       pay(c, def, st);
-      g.weather.command({ rain: def.rain ?? 0.8, wind: def.wind ?? 0.6, cloud: def.cloud ?? 0.7, storm: def.storm ?? 0.5, dur: def.dur || 14, src: c });
-      g.vfx.ring(c.pos.clone().setY(9), { color: def.color || '#9fd0ff', r0: 2, r1: 22, life: 0.6 });
+      g.vfx.ring(layer.center.clone(), { color: def.color || '#9fd0ff', r0: 2, r1: layer.radius, life: 0.6 });
       g.audio.blast(140, 0.5, c.pos);
       if (g.hud) g.hud.announce('WEATHER', 'the sky answers', def.color || '#9fd0ff');
     }
@@ -1219,7 +1227,7 @@ export const TYPES = {
 };
 
 export function runSlot(c, key, inp, g) {
-  const st = c.slots[key]; if (!st) return;
+  const st = key==='_powerUp'?c.powerUp:c.slots[key]; if (!st) return;
   if(heldAttacksIncapacitated(c)){
     // Direct authoring/replay calls do not pass through a controller. Retained
     // contact handlers own their loop here; traveling beams keep their existing
@@ -1272,8 +1280,9 @@ export function runSlot(c, key, inp, g) {
     return;
   }
   // pressing an ability you can't afford → tell the player WHY nothing happened
-  if (!slotUnlocked(c,key)) {
-    if (inp.pressed && g.isHuman?.(c)) g.hud?.feed(`${st.def.name || 'Attack'} unlocks at level ${unlockLevel(c.def,key)}`, '#d9b86b');
+  const unlockKey=key==='_powerUp'?(st.sourceSlot||key):key;
+  if (!slotUnlocked(c,unlockKey)) {
+    if (inp.pressed && g.isHuman?.(c)) g.hud?.feed(`${st.def.name || 'Attack'} unlocks at level ${unlockLevel(c.def,unlockKey)}`, '#d9b86b');
     return;
   }
   if(st.def.naniteForm==='cannon'){
@@ -1302,7 +1311,7 @@ export function runSlot(c, key, inp, g) {
     inp={...inp,pressed:false,held:false};
   }
   const ownedConstruct=st.def.type==='construct'?constructForSlot(g,c,st):null;
-  if (inp.pressed && !ownedConstruct && (st.def.cost || 0) > c.ki && st.cd <= 0 && g.onNoKi) g.onNoKi(c, key);
+  if (inp.pressed && !ownedConstruct && !(st.def.type==='weather'&&g.weather?.layers?.has(c)) && (st.def.cost || 0) > c.ki && st.cd <= 0 && g.onNoKi) g.onNoKi(c, key);
   // stamp real input on the slot — held types (cones/phase/lifedrain) leave no cd/sustain
   // trace, so this is what the tutorial (and any future telemetry) watches
   if (inp.pressed || inp.held) { (c._slotUse || (c._slotUse = {}))[key] = true; if (inp.pressed) c._lastSlot = key; }   // _lastSlot feeds the mastery counter

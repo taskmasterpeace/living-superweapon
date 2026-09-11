@@ -10,7 +10,10 @@ import {RagdollCape} from '../src/engine/ragdoll-cape.js';
 
 const world={ARENA:240,cover:[],heightAt:()=>0};
 function fixture(frame){
- const f=new Fighter({...ROSTER.find(d=>d.id==='sol'),...(frame?{frame}:{})});f.animT=0;f._openSky=true;f.flying=true;f.gait='airborne';
+ // These strict torso/head probes target the historical procedural body.
+ // cloth-skin-contact.test.mjs checks the current visible weighted body.
+ const def=ROSTER.find(d=>d.id==='sol');
+ const f=new Fighter({...def,model:{...def.model,body:'procedural'},...(frame?{frame}:{})});f.animT=0;f._openSky=true;f.flying=true;f.gait='airborne';
  f.pos.set(20,50,-15);f.vel.set(14,0,45);f.facing=.9;f.aimWorld.set(65,25,90);f.hasAimWorld=true;
  for(let i=0;i<90;i++){f.animT+=1/60;f._animate(1/60);}f.obj.updateMatrixWorld(true);return f;
 }

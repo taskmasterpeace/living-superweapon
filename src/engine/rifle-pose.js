@@ -139,7 +139,9 @@ export function animateRiflePose(f,dt){
  // cannot use the old narrow-frame yaw: at high elevation the far hand ends up
  // outside its workspace even though the weapon is correctly shouldered.
  const shoulderSpan=arm.position.distanceTo(off.position),armReach=off.userData.upperLength+off.userData.foreLength;
- const blade=Math.max(.62,Math.acos(Math.min(1,armReach*.72/Math.max(.01,shoulderSpan))));
+ const foreEnd=emitter.weapon.getObjectByName('weapon-support-grip').position.length();
+ const sharedReach=emitter.weapon.userData.authoredEquipment?Math.max(.58,.72-Math.max(0,foreEnd-1)*.35):.72;
+ const blade=Math.max(.62,Math.acos(Math.min(1,armReach*sharedReach/Math.max(.01,shoulderSpan))));
  // Lean toward the fighter's forward target AFTER blading the shoulders; a
  // yaw-local lean sweeps the whole shoulder line sideways on steep low shots.
  carrier.setFromEuler(carrierAngles.set(Math.min(.72,downward*.72)-Math.min(.65,upward*.46),side*(blade+Math.min(.2,downward*.2)),0));
@@ -185,20 +187,22 @@ export function animateRiflePose(f,dt){
  const support=emitter.weapon.getObjectByName('weapon-support-grip');support.getWorldPosition(point);off.parent.worldToLocal(point);
  // Long production rifles can put the fore-end just beyond a broad or lean
  // frame's shared arm workspace. Search a small, bounded whole-rifle shift:
- // pull the primary grip toward its shoulder and inward toward the sternum,
+ // move the primary grip fore/aft and inward toward the sternum,
  // then recompute the rigid wrist/barrel frame. The support socket never moves
  // independently, and both shoulder reach limits gate every candidate.
  if(emitter.weapon.userData.authoredEquipment&&point.distanceTo(off.position)>off.userData.upperLength+off.userData.foreLength-.001){
   gripBase.copy(s.grip);const primaryReach=arm.userData.upperLength+arm.userData.foreLength-.001,offReach=off.userData.upperLength+off.userData.foreLength-.001;
-  for(let distance=.1*scale;distance<=.9*scale+1e-6;distance+=.1*scale){
-   reachShift.copy(direction).multiplyScalar(-distance).addScaledVector(right,-side*distance*.24);
+  const pullbackLimit=.9*scale;
+  const pullDirection=direction.clone(),pullRight=right.clone();
+  search:for(const sign of [1,-1])for(let distance=.1*scale;distance<=pullbackLimit+1e-6;distance+=.1*scale){
+   reachShift.copy(pullDirection).multiplyScalar(-distance*sign).addScaledVector(pullRight,-side*distance*.24);
    arm.parent.worldToLocal(reachShift.add(arm.parent.localToWorld(new THREE.Vector3())));
    s.grip.copy(gripBase).add(reachShift);
    if(s.grip.distanceTo(arm.position)>primaryReach)continue;
    reachArm(arm,s.grip,side,1,pole);aimWrist(f,emitter,aimWeight);
    clearAuthoredRifle(f,emitter,aimWeight);
    support.getWorldPosition(supportLocal);off.parent.worldToLocal(supportLocal);
-   if(supportLocal.distanceTo(off.position)<=offReach){point.copy(supportLocal);s.primaryPullback=distance;break;}
+   if(supportLocal.distanceTo(off.position)<=offReach){point.copy(supportLocal);s.primaryPullback=distance;break search;}
   }
  }
  if(point.distanceTo(off.position)>off.userData.upperLength+off.userData.foreLength-.001){

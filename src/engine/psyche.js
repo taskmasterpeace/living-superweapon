@@ -163,7 +163,7 @@ export class Psyche {
 // THE ENGINE FACE. One accessor, so nothing else has to know whether a fighter has a psyche yet —
 // dummies, sim constructs and the training bag never grow one.
 export function psycheOf(f) {
-  if (!f || !f.def || f.isDummy || f._labDummy || f.def.holo) return null;
+  if (!f || !f.def || f.isDummy || f._labDummy || f.def.holo || f.def.psyche===false) return null;
   if (!f._psyche) f._psyche = new Psyche(f);
   return f._psyche;
 }
