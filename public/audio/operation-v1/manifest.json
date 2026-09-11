@@ -1,0 +1,1050 @@
+{
+  "format": "lsw.operation-audio.manifest",
+  "version": 1,
+  "generatedBy": "tools/operation-audio-build.mjs",
+  "recipes": "authoring/audio/operation-v1/recipes.mjs",
+  "encoder": "ffmpeg version 8.1.2-full_build-www.gyan.dev Copyright (c) 2000-2026 the FFmpeg developers",
+  "mp3Rendered": true,
+  "sampleRate": 44100,
+  "channels": 1,
+  "mp3Bitrate": "96k",
+  "runtimeDir": "public/audio/operation-v1/",
+  "mastersDir": "authoring/audio/operation-v1/masters/",
+  "counts": {
+    "cues": 22,
+    "files": 40
+  },
+  "totalDurationSec": 15.61,
+  "cues": [
+    {
+      "id": "op.hit.confirm",
+      "sampleName": "op.hit.confirm",
+      "variantStems": [
+        "operation-v1/op_hit_confirm_a",
+        "operation-v1/op_hit_confirm_b",
+        "operation-v1/op_hit_confirm_c"
+      ],
+      "durationSec": 0.09,
+      "peakDbfsMax": -1.31
+    },
+    {
+      "id": "op.block.confirm",
+      "sampleName": "op.block.confirm",
+      "variantStems": [
+        "operation-v1/op_block_confirm_a",
+        "operation-v1/op_block_confirm_b"
+      ],
+      "durationSec": 0.15,
+      "peakDbfsMax": -1.72
+    },
+    {
+      "id": "op.guard.break",
+      "sampleName": "op.guard.break",
+      "variantStems": [
+        "operation-v1/op_guard_break_a",
+        "operation-v1/op_guard_break_b"
+      ],
+      "durationSec": 0.36,
+      "peakDbfsMax": -0.92
+    },
+    {
+      "id": "op.shield.deploy",
+      "sampleName": "op.shield.deploy",
+      "variantStems": [
+        "operation-v1/op_shield_deploy_a"
+      ],
+      "durationSec": 0.72,
+      "peakDbfsMax": -1.94
+    },
+    {
+      "id": "op.shield.hit",
+      "sampleName": "op.shield.hit",
+      "variantStems": [
+        "operation-v1/op_shield_hit_a",
+        "operation-v1/op_shield_hit_b",
+        "operation-v1/op_shield_hit_c"
+      ],
+      "durationSec": 0.19,
+      "peakDbfsMax": -1.94
+    },
+    {
+      "id": "op.shield.collapse",
+      "sampleName": "op.shield.collapse",
+      "variantStems": [
+        "operation-v1/op_shield_collapse_a"
+      ],
+      "durationSec": 0.6,
+      "peakDbfsMax": -1.31
+    },
+    {
+      "id": "op.scanner.acquire",
+      "sampleName": "op.scanner.acquire",
+      "variantStems": [
+        "operation-v1/op_scanner_acquire_a",
+        "operation-v1/op_scanner_acquire_b"
+      ],
+      "durationSec": 0.22,
+      "peakDbfsMax": -1.94
+    },
+    {
+      "id": "op.scanner.lost",
+      "sampleName": "op.scanner.lost",
+      "variantStems": [
+        "operation-v1/op_scanner_lost_a",
+        "operation-v1/op_scanner_lost_b"
+      ],
+      "durationSec": 0.26,
+      "peakDbfsMax": -2.85
+    },
+    {
+      "id": "op.portal.ready",
+      "sampleName": "op.portal.ready",
+      "variantStems": [
+        "operation-v1/op_portal_ready_a"
+      ],
+      "durationSec": 0.54,
+      "peakDbfsMax": -1.94
+    },
+    {
+      "id": "op.portal.cross",
+      "sampleName": "op.portal.cross",
+      "variantStems": [
+        "operation-v1/op_portal_cross_a",
+        "operation-v1/op_portal_cross_b"
+      ],
+      "durationSec": 0.4,
+      "peakDbfsMax": -2.16
+    },
+    {
+      "id": "op.squad.ready",
+      "sampleName": "op.squad.ready",
+      "variantStems": [
+        "operation-v1/op_squad_ready_a"
+      ],
+      "durationSec": 0.34,
+      "peakDbfsMax": -3.1
+    },
+    {
+      "id": "op.squad.regroup",
+      "sampleName": "op.squad.regroup",
+      "variantStems": [
+        "operation-v1/op_squad_regroup_a"
+      ],
+      "durationSec": 0.42,
+      "peakDbfsMax": -3.1
+    },
+    {
+      "id": "op.pursuit.spotted",
+      "sampleName": "op.pursuit.spotted",
+      "variantStems": [
+        "operation-v1/op_pursuit_spotted_a"
+      ],
+      "durationSec": 0.28,
+      "peakDbfsMax": -3.35
+    },
+    {
+      "id": "op.pursuit.airborne",
+      "sampleName": "op.pursuit.airborne",
+      "variantStems": [
+        "operation-v1/op_pursuit_airborne_a"
+      ],
+      "durationSec": 0.16,
+      "peakDbfsMax": -3.35
+    },
+    {
+      "id": "op.pursuit.lost",
+      "sampleName": "op.pursuit.lost",
+      "variantStems": [
+        "operation-v1/op_pursuit_lost_a"
+      ],
+      "durationSec": 0.28,
+      "peakDbfsMax": -3.35
+    },
+    {
+      "id": "op.pursuit.search",
+      "sampleName": "op.pursuit.search",
+      "variantStems": [
+        "operation-v1/op_pursuit_search_a"
+      ],
+      "durationSec": 0.3,
+      "peakDbfsMax": -3.35
+    },
+    {
+      "id": "op.pursuit.reacquired",
+      "sampleName": "op.pursuit.reacquired",
+      "variantStems": [
+        "operation-v1/op_pursuit_reacquired_a"
+      ],
+      "durationSec": 0.26,
+      "peakDbfsMax": -3.35
+    },
+    {
+      "id": "op.zombie.idle",
+      "sampleName": "op.zombie.idle",
+      "variantStems": [
+        "operation-v1/op_zombie_idle_a",
+        "operation-v1/op_zombie_idle_b",
+        "operation-v1/op_zombie_idle_c"
+      ],
+      "durationSec": 0.9,
+      "peakDbfsMax": -3.1
+    },
+    {
+      "id": "op.zombie.alert",
+      "sampleName": "op.zombie.alert",
+      "variantStems": [
+        "operation-v1/op_zombie_alert_a",
+        "operation-v1/op_zombie_alert_b",
+        "operation-v1/op_zombie_alert_c"
+      ],
+      "durationSec": 0.5,
+      "peakDbfsMax": -1.72
+    },
+    {
+      "id": "op.zombie.attack",
+      "sampleName": "op.zombie.attack",
+      "variantStems": [
+        "operation-v1/op_zombie_attack_a",
+        "operation-v1/op_zombie_attack_b",
+        "operation-v1/op_zombie_attack_c"
+      ],
+      "durationSec": 0.45,
+      "peakDbfsMax": -0.92
+    },
+    {
+      "id": "op.zombie.hurt",
+      "sampleName": "op.zombie.hurt",
+      "variantStems": [
+        "operation-v1/op_zombie_hurt_a",
+        "operation-v1/op_zombie_hurt_b",
+        "operation-v1/op_zombie_hurt_c"
+      ],
+      "durationSec": 0.3,
+      "peakDbfsMax": -1.51
+    },
+    {
+      "id": "op.zombie.death",
+      "sampleName": "op.zombie.death",
+      "variantStems": [
+        "operation-v1/op_zombie_death_a",
+        "operation-v1/op_zombie_death_b"
+      ],
+      "durationSec": 0.82,
+      "peakDbfsMax": -1.94
+    }
+  ],
+  "files": [
+    {
+      "stem": "op_hit_confirm_a",
+      "sample": "operation-v1/op_hit_confirm_a",
+      "durationSec": 0.09,
+      "samples": 3969,
+      "sampleRate": 44100,
+      "channels": 1,
+      "peakDbfs": -1.31,
+      "rmsDbfs": -19,
+      "wavBytes": 7982,
+      "wavSha": "96392433150dde63",
+      "mp3Bytes": 1925,
+      "mp3Sha": "d3bb7a0d18812eac",
+      "recipe": "authoring/audio/operation-v1/recipes.mjs",
+      "variant": 0
+    },
+    {
+      "stem": "op_hit_confirm_b",
+      "sample": "operation-v1/op_hit_confirm_b",
+      "durationSec": 0.09,
+      "samples": 3969,
+      "sampleRate": 44100,
+      "channels": 1,
+      "peakDbfs": -1.31,
+      "rmsDbfs": -19.38,
+      "wavBytes": 7982,
+      "wavSha": "7927487064629245",
+      "mp3Bytes": 1925,
+      "mp3Sha": "df83c622e49f3b9b",
+      "recipe": "authoring/audio/operation-v1/recipes.mjs",
+      "variant": 1
+    },
+    {
+      "stem": "op_hit_confirm_c",
+      "sample": "operation-v1/op_hit_confirm_c",
+      "durationSec": 0.09,
+      "samples": 3969,
+      "sampleRate": 44100,
+      "channels": 1,
+      "peakDbfs": -1.31,
+      "rmsDbfs": -19.8,
+      "wavBytes": 7982,
+      "wavSha": "1444734a512a687f",
+      "mp3Bytes": 1925,
+      "mp3Sha": "a21e73518a44b90c",
+      "recipe": "authoring/audio/operation-v1/recipes.mjs",
+      "variant": 2
+    },
+    {
+      "stem": "op_block_confirm_a",
+      "sample": "operation-v1/op_block_confirm_a",
+      "durationSec": 0.15,
+      "samples": 6615,
+      "sampleRate": 44100,
+      "channels": 1,
+      "peakDbfs": -1.72,
+      "rmsDbfs": -15.96,
+      "wavBytes": 13274,
+      "wavSha": "f613da79b89ea404",
+      "mp3Bytes": 2552,
+      "mp3Sha": "b2b7b45e305d903e",
+      "recipe": "authoring/audio/operation-v1/recipes.mjs",
+      "variant": 0
+    },
+    {
+      "stem": "op_block_confirm_b",
+      "sample": "operation-v1/op_block_confirm_b",
+      "durationSec": 0.15,
+      "samples": 6615,
+      "sampleRate": 44100,
+      "channels": 1,
+      "peakDbfs": -1.72,
+      "rmsDbfs": -15.98,
+      "wavBytes": 13274,
+      "wavSha": "d60ce8ed84e81df0",
+      "mp3Bytes": 2552,
+      "mp3Sha": "e418312cb28bd1b6",
+      "recipe": "authoring/audio/operation-v1/recipes.mjs",
+      "variant": 1
+    },
+    {
+      "stem": "op_guard_break_a",
+      "sample": "operation-v1/op_guard_break_a",
+      "durationSec": 0.36,
+      "samples": 15876,
+      "sampleRate": 44100,
+      "channels": 1,
+      "peakDbfs": -0.92,
+      "rmsDbfs": -14.64,
+      "wavBytes": 31796,
+      "wavSha": "a399641bbe9cdd07",
+      "mp3Bytes": 5060,
+      "mp3Sha": "0dfae10565ab1fda",
+      "recipe": "authoring/audio/operation-v1/recipes.mjs",
+      "variant": 0
+    },
+    {
+      "stem": "op_guard_break_b",
+      "sample": "operation-v1/op_guard_break_b",
+      "durationSec": 0.36,
+      "samples": 15876,
+      "sampleRate": 44100,
+      "channels": 1,
+      "peakDbfs": -0.92,
+      "rmsDbfs": -14.64,
+      "wavBytes": 31796,
+      "wavSha": "3febf895e0be0025",
+      "mp3Bytes": 5060,
+      "mp3Sha": "6cce61ef8660ed03",
+      "recipe": "authoring/audio/operation-v1/recipes.mjs",
+      "variant": 1
+    },
+    {
+      "stem": "op_shield_deploy_a",
+      "sample": "operation-v1/op_shield_deploy_a",
+      "durationSec": 0.72,
+      "samples": 31752,
+      "sampleRate": 44100,
+      "channels": 1,
+      "peakDbfs": -1.94,
+      "rmsDbfs": -13.46,
+      "wavBytes": 63548,
+      "wavSha": "3f5502277ce2f0d4",
+      "mp3Bytes": 9449,
+      "mp3Sha": "b287adf3328335a3",
+      "recipe": "authoring/audio/operation-v1/recipes.mjs",
+      "variant": 0
+    },
+    {
+      "stem": "op_shield_hit_a",
+      "sample": "operation-v1/op_shield_hit_a",
+      "durationSec": 0.19,
+      "samples": 8379,
+      "sampleRate": 44100,
+      "channels": 1,
+      "peakDbfs": -1.94,
+      "rmsDbfs": -18.93,
+      "wavBytes": 16802,
+      "wavSha": "eced9b065ade3cd3",
+      "mp3Bytes": 3179,
+      "mp3Sha": "a47172fd37a712b9",
+      "recipe": "authoring/audio/operation-v1/recipes.mjs",
+      "variant": 0
+    },
+    {
+      "stem": "op_shield_hit_b",
+      "sample": "operation-v1/op_shield_hit_b",
+      "durationSec": 0.19,
+      "samples": 8379,
+      "sampleRate": 44100,
+      "channels": 1,
+      "peakDbfs": -1.94,
+      "rmsDbfs": -19.19,
+      "wavBytes": 16802,
+      "wavSha": "a022b114b49ac971",
+      "mp3Bytes": 3179,
+      "mp3Sha": "7381960aba3117a0",
+      "recipe": "authoring/audio/operation-v1/recipes.mjs",
+      "variant": 1
+    },
+    {
+      "stem": "op_shield_hit_c",
+      "sample": "operation-v1/op_shield_hit_c",
+      "durationSec": 0.19,
+      "samples": 8379,
+      "sampleRate": 44100,
+      "channels": 1,
+      "peakDbfs": -1.94,
+      "rmsDbfs": -18.93,
+      "wavBytes": 16802,
+      "wavSha": "67cd73395c3542e1",
+      "mp3Bytes": 3179,
+      "mp3Sha": "afecef46f47c8ef1",
+      "recipe": "authoring/audio/operation-v1/recipes.mjs",
+      "variant": 2
+    },
+    {
+      "stem": "op_shield_collapse_a",
+      "sample": "operation-v1/op_shield_collapse_a",
+      "durationSec": 0.6,
+      "samples": 26460,
+      "sampleRate": 44100,
+      "channels": 1,
+      "peakDbfs": -1.31,
+      "rmsDbfs": -10.71,
+      "wavBytes": 52964,
+      "wavSha": "0259e7b5ddadfd4e",
+      "mp3Bytes": 7881,
+      "mp3Sha": "52bae7e6e4f66937",
+      "recipe": "authoring/audio/operation-v1/recipes.mjs",
+      "variant": 0
+    },
+    {
+      "stem": "op_scanner_acquire_a",
+      "sample": "operation-v1/op_scanner_acquire_a",
+      "durationSec": 0.22,
+      "samples": 9702,
+      "sampleRate": 44100,
+      "channels": 1,
+      "peakDbfs": -1.94,
+      "rmsDbfs": -14.76,
+      "wavBytes": 19448,
+      "wavSha": "d415805a0c4fd42a",
+      "mp3Bytes": 3493,
+      "mp3Sha": "d8baceebd47207a0",
+      "recipe": "authoring/audio/operation-v1/recipes.mjs",
+      "variant": 0
+    },
+    {
+      "stem": "op_scanner_acquire_b",
+      "sample": "operation-v1/op_scanner_acquire_b",
+      "durationSec": 0.22,
+      "samples": 9702,
+      "sampleRate": 44100,
+      "channels": 1,
+      "peakDbfs": -1.94,
+      "rmsDbfs": -16.24,
+      "wavBytes": 19448,
+      "wavSha": "d7263cb38da54641",
+      "mp3Bytes": 3493,
+      "mp3Sha": "3ec4dbdc1f2eb92e",
+      "recipe": "authoring/audio/operation-v1/recipes.mjs",
+      "variant": 1
+    },
+    {
+      "stem": "op_scanner_lost_a",
+      "sample": "operation-v1/op_scanner_lost_a",
+      "durationSec": 0.26,
+      "samples": 11466,
+      "sampleRate": 44100,
+      "channels": 1,
+      "peakDbfs": -2.85,
+      "rmsDbfs": -13.99,
+      "wavBytes": 22976,
+      "wavSha": "0658a0d004330dbe",
+      "mp3Bytes": 3806,
+      "mp3Sha": "48e727c0e954a03c",
+      "recipe": "authoring/audio/operation-v1/recipes.mjs",
+      "variant": 0
+    },
+    {
+      "stem": "op_scanner_lost_b",
+      "sample": "operation-v1/op_scanner_lost_b",
+      "durationSec": 0.26,
+      "samples": 11466,
+      "sampleRate": 44100,
+      "channels": 1,
+      "peakDbfs": -2.85,
+      "rmsDbfs": -14.19,
+      "wavBytes": 22976,
+      "wavSha": "6302b008a0e7bce3",
+      "mp3Bytes": 3806,
+      "mp3Sha": "ae6632b82913a77c",
+      "recipe": "authoring/audio/operation-v1/recipes.mjs",
+      "variant": 1
+    },
+    {
+      "stem": "op_portal_ready_a",
+      "sample": "operation-v1/op_portal_ready_a",
+      "durationSec": 0.54,
+      "samples": 23814,
+      "sampleRate": 44100,
+      "channels": 1,
+      "peakDbfs": -1.94,
+      "rmsDbfs": -12.08,
+      "wavBytes": 47672,
+      "wavSha": "cef0c758d24679f5",
+      "mp3Bytes": 7254,
+      "mp3Sha": "cf87d33867ec5ed6",
+      "recipe": "authoring/audio/operation-v1/recipes.mjs",
+      "variant": 0
+    },
+    {
+      "stem": "op_portal_cross_a",
+      "sample": "operation-v1/op_portal_cross_a",
+      "durationSec": 0.4,
+      "samples": 17640,
+      "sampleRate": 44100,
+      "channels": 1,
+      "peakDbfs": -2.16,
+      "rmsDbfs": -9.52,
+      "wavBytes": 35324,
+      "wavSha": "b1f581627eda4561",
+      "mp3Bytes": 5687,
+      "mp3Sha": "ca054ec636e30876",
+      "recipe": "authoring/audio/operation-v1/recipes.mjs",
+      "variant": 0
+    },
+    {
+      "stem": "op_portal_cross_b",
+      "sample": "operation-v1/op_portal_cross_b",
+      "durationSec": 0.4,
+      "samples": 17640,
+      "sampleRate": 44100,
+      "channels": 1,
+      "peakDbfs": -2.16,
+      "rmsDbfs": -9.35,
+      "wavBytes": 35324,
+      "wavSha": "5be3406f649d8b12",
+      "mp3Bytes": 5687,
+      "mp3Sha": "b78c2d274b151a79",
+      "recipe": "authoring/audio/operation-v1/recipes.mjs",
+      "variant": 1
+    },
+    {
+      "stem": "op_squad_ready_a",
+      "sample": "operation-v1/op_squad_ready_a",
+      "durationSec": 0.34,
+      "samples": 14994,
+      "sampleRate": 44100,
+      "channels": 1,
+      "peakDbfs": -3.1,
+      "rmsDbfs": -15.15,
+      "wavBytes": 30032,
+      "wavSha": "c0dedfde1040e644",
+      "mp3Bytes": 5060,
+      "mp3Sha": "6966cec41802fd29",
+      "recipe": "authoring/audio/operation-v1/recipes.mjs",
+      "variant": 0
+    },
+    {
+      "stem": "op_squad_regroup_a",
+      "sample": "operation-v1/op_squad_regroup_a",
+      "durationSec": 0.42,
+      "samples": 18522,
+      "sampleRate": 44100,
+      "channels": 1,
+      "peakDbfs": -3.1,
+      "rmsDbfs": -14.46,
+      "wavBytes": 37088,
+      "wavSha": "89d8cb48a2e034a9",
+      "mp3Bytes": 6000,
+      "mp3Sha": "d4c4d02d02e85f98",
+      "recipe": "authoring/audio/operation-v1/recipes.mjs",
+      "variant": 0
+    },
+    {
+      "stem": "op_pursuit_spotted_a",
+      "sample": "operation-v1/op_pursuit_spotted_a",
+      "durationSec": 0.28,
+      "samples": 12348,
+      "sampleRate": 44100,
+      "channels": 1,
+      "peakDbfs": -3.35,
+      "rmsDbfs": -17.76,
+      "wavBytes": 24740,
+      "wavSha": "0f9254ac6bde1d09",
+      "mp3Bytes": 4120,
+      "mp3Sha": "48c7a4f6746c88d4",
+      "recipe": "authoring/audio/operation-v1/recipes.mjs",
+      "variant": 0
+    },
+    {
+      "stem": "op_pursuit_airborne_a",
+      "sample": "operation-v1/op_pursuit_airborne_a",
+      "durationSec": 0.16,
+      "samples": 7056,
+      "sampleRate": 44100,
+      "channels": 1,
+      "peakDbfs": -3.35,
+      "rmsDbfs": -15.91,
+      "wavBytes": 14156,
+      "wavSha": "26d38581c303d4d8",
+      "mp3Bytes": 2866,
+      "mp3Sha": "f5408be68bfd04b9",
+      "recipe": "authoring/audio/operation-v1/recipes.mjs",
+      "variant": 0
+    },
+    {
+      "stem": "op_pursuit_lost_a",
+      "sample": "operation-v1/op_pursuit_lost_a",
+      "durationSec": 0.28,
+      "samples": 12348,
+      "sampleRate": 44100,
+      "channels": 1,
+      "peakDbfs": -3.35,
+      "rmsDbfs": -18.15,
+      "wavBytes": 24740,
+      "wavSha": "cc9a39255cb10862",
+      "mp3Bytes": 4120,
+      "mp3Sha": "f864611b47e18603",
+      "recipe": "authoring/audio/operation-v1/recipes.mjs",
+      "variant": 0
+    },
+    {
+      "stem": "op_pursuit_search_a",
+      "sample": "operation-v1/op_pursuit_search_a",
+      "durationSec": 0.3,
+      "samples": 13230,
+      "sampleRate": 44100,
+      "channels": 1,
+      "peakDbfs": -3.35,
+      "rmsDbfs": -17.76,
+      "wavBytes": 26504,
+      "wavSha": "afb6021eac6adab0",
+      "mp3Bytes": 4433,
+      "mp3Sha": "81f6c2dbd926a0fe",
+      "recipe": "authoring/audio/operation-v1/recipes.mjs",
+      "variant": 0
+    },
+    {
+      "stem": "op_pursuit_reacquired_a",
+      "sample": "operation-v1/op_pursuit_reacquired_a",
+      "durationSec": 0.26,
+      "samples": 11466,
+      "sampleRate": 44100,
+      "channels": 1,
+      "peakDbfs": -3.35,
+      "rmsDbfs": -16.47,
+      "wavBytes": 22976,
+      "wavSha": "c1045196da9a2410",
+      "mp3Bytes": 3806,
+      "mp3Sha": "c7e9bc4ae4750b22",
+      "recipe": "authoring/audio/operation-v1/recipes.mjs",
+      "variant": 0
+    },
+    {
+      "stem": "op_zombie_idle_a",
+      "sample": "operation-v1/op_zombie_idle_a",
+      "durationSec": 0.9,
+      "samples": 39690,
+      "sampleRate": 44100,
+      "channels": 1,
+      "peakDbfs": -3.1,
+      "rmsDbfs": -20.99,
+      "wavBytes": 79424,
+      "wavSha": "98da6697bec2f45a",
+      "mp3Bytes": 11643,
+      "mp3Sha": "aa1f2163978398d3",
+      "recipe": "authoring/audio/operation-v1/recipes.mjs",
+      "variant": 0
+    },
+    {
+      "stem": "op_zombie_idle_b",
+      "sample": "operation-v1/op_zombie_idle_b",
+      "durationSec": 0.9,
+      "samples": 39690,
+      "sampleRate": 44100,
+      "channels": 1,
+      "peakDbfs": -3.1,
+      "rmsDbfs": -20.01,
+      "wavBytes": 79424,
+      "wavSha": "62c5470be02955dc",
+      "mp3Bytes": 11643,
+      "mp3Sha": "1aba46535d398317",
+      "recipe": "authoring/audio/operation-v1/recipes.mjs",
+      "variant": 1
+    },
+    {
+      "stem": "op_zombie_idle_c",
+      "sample": "operation-v1/op_zombie_idle_c",
+      "durationSec": 0.9,
+      "samples": 39690,
+      "sampleRate": 44100,
+      "channels": 1,
+      "peakDbfs": -3.1,
+      "rmsDbfs": -20.16,
+      "wavBytes": 79424,
+      "wavSha": "09d2f6ab55b16886",
+      "mp3Bytes": 11643,
+      "mp3Sha": "b4dc0ef9586ca312",
+      "recipe": "authoring/audio/operation-v1/recipes.mjs",
+      "variant": 2
+    },
+    {
+      "stem": "op_zombie_alert_a",
+      "sample": "operation-v1/op_zombie_alert_a",
+      "durationSec": 0.5,
+      "samples": 22050,
+      "sampleRate": 44100,
+      "channels": 1,
+      "peakDbfs": -1.72,
+      "rmsDbfs": -18.73,
+      "wavBytes": 44144,
+      "wavSha": "3d2afac1a839f492",
+      "mp3Bytes": 6941,
+      "mp3Sha": "4d960a8e2dd3eaa8",
+      "recipe": "authoring/audio/operation-v1/recipes.mjs",
+      "variant": 0
+    },
+    {
+      "stem": "op_zombie_alert_b",
+      "sample": "operation-v1/op_zombie_alert_b",
+      "durationSec": 0.5,
+      "samples": 22050,
+      "sampleRate": 44100,
+      "channels": 1,
+      "peakDbfs": -1.72,
+      "rmsDbfs": -18.61,
+      "wavBytes": 44144,
+      "wavSha": "02f25ebe75f82a01",
+      "mp3Bytes": 6941,
+      "mp3Sha": "30eb84712c4ecf2a",
+      "recipe": "authoring/audio/operation-v1/recipes.mjs",
+      "variant": 1
+    },
+    {
+      "stem": "op_zombie_alert_c",
+      "sample": "operation-v1/op_zombie_alert_c",
+      "durationSec": 0.5,
+      "samples": 22050,
+      "sampleRate": 44100,
+      "channels": 1,
+      "peakDbfs": -1.72,
+      "rmsDbfs": -19.22,
+      "wavBytes": 44144,
+      "wavSha": "cfe3f410ba068741",
+      "mp3Bytes": 6941,
+      "mp3Sha": "e385c45ac56fed1a",
+      "recipe": "authoring/audio/operation-v1/recipes.mjs",
+      "variant": 2
+    },
+    {
+      "stem": "op_zombie_attack_a",
+      "sample": "operation-v1/op_zombie_attack_a",
+      "durationSec": 0.45,
+      "samples": 19845,
+      "sampleRate": 44100,
+      "channels": 1,
+      "peakDbfs": -0.92,
+      "rmsDbfs": -16.91,
+      "wavBytes": 39734,
+      "wavSha": "c0012ec2a9c1a57f",
+      "mp3Bytes": 6314,
+      "mp3Sha": "0102fd5a29fe3295",
+      "recipe": "authoring/audio/operation-v1/recipes.mjs",
+      "variant": 0
+    },
+    {
+      "stem": "op_zombie_attack_b",
+      "sample": "operation-v1/op_zombie_attack_b",
+      "durationSec": 0.45,
+      "samples": 19845,
+      "sampleRate": 44100,
+      "channels": 1,
+      "peakDbfs": -0.92,
+      "rmsDbfs": -17.33,
+      "wavBytes": 39734,
+      "wavSha": "b8adbd71b42a2f71",
+      "mp3Bytes": 6314,
+      "mp3Sha": "0b026e68f9f1b2ae",
+      "recipe": "authoring/audio/operation-v1/recipes.mjs",
+      "variant": 1
+    },
+    {
+      "stem": "op_zombie_attack_c",
+      "sample": "operation-v1/op_zombie_attack_c",
+      "durationSec": 0.45,
+      "samples": 19845,
+      "sampleRate": 44100,
+      "channels": 1,
+      "peakDbfs": -0.92,
+      "rmsDbfs": -16.86,
+      "wavBytes": 39734,
+      "wavSha": "f7225790071220b2",
+      "mp3Bytes": 6314,
+      "mp3Sha": "bbe6a1a8611d6781",
+      "recipe": "authoring/audio/operation-v1/recipes.mjs",
+      "variant": 2
+    },
+    {
+      "stem": "op_zombie_hurt_a",
+      "sample": "operation-v1/op_zombie_hurt_a",
+      "durationSec": 0.3,
+      "samples": 13230,
+      "sampleRate": 44100,
+      "channels": 1,
+      "peakDbfs": -1.51,
+      "rmsDbfs": -16.06,
+      "wavBytes": 26504,
+      "wavSha": "1f564a75f492e662",
+      "mp3Bytes": 4433,
+      "mp3Sha": "6b1d9dfd18783eaa",
+      "recipe": "authoring/audio/operation-v1/recipes.mjs",
+      "variant": 0
+    },
+    {
+      "stem": "op_zombie_hurt_b",
+      "sample": "operation-v1/op_zombie_hurt_b",
+      "durationSec": 0.3,
+      "samples": 13230,
+      "sampleRate": 44100,
+      "channels": 1,
+      "peakDbfs": -1.51,
+      "rmsDbfs": -16.38,
+      "wavBytes": 26504,
+      "wavSha": "734b99716511203a",
+      "mp3Bytes": 4433,
+      "mp3Sha": "d59c899252b0d005",
+      "recipe": "authoring/audio/operation-v1/recipes.mjs",
+      "variant": 1
+    },
+    {
+      "stem": "op_zombie_hurt_c",
+      "sample": "operation-v1/op_zombie_hurt_c",
+      "durationSec": 0.3,
+      "samples": 13230,
+      "sampleRate": 44100,
+      "channels": 1,
+      "peakDbfs": -1.51,
+      "rmsDbfs": -17.39,
+      "wavBytes": 26504,
+      "wavSha": "670ce5473eb739e4",
+      "mp3Bytes": 4433,
+      "mp3Sha": "76f5a537f8129fbd",
+      "recipe": "authoring/audio/operation-v1/recipes.mjs",
+      "variant": 2
+    },
+    {
+      "stem": "op_zombie_death_a",
+      "sample": "operation-v1/op_zombie_death_a",
+      "durationSec": 0.82,
+      "samples": 36162,
+      "sampleRate": 44100,
+      "channels": 1,
+      "peakDbfs": -1.94,
+      "rmsDbfs": -19.31,
+      "wavBytes": 72368,
+      "wavSha": "df573fd0106ea5c0",
+      "mp3Bytes": 10703,
+      "mp3Sha": "2ce733578eb51127",
+      "recipe": "authoring/audio/operation-v1/recipes.mjs",
+      "variant": 0
+    },
+    {
+      "stem": "op_zombie_death_b",
+      "sample": "operation-v1/op_zombie_death_b",
+      "durationSec": 0.82,
+      "samples": 36162,
+      "sampleRate": 44100,
+      "channels": 1,
+      "peakDbfs": -1.94,
+      "rmsDbfs": -18.45,
+      "wavBytes": 72368,
+      "wavSha": "051a73e4a1f20679",
+      "mp3Bytes": 10703,
+      "mp3Sha": "ce46d286bd56ed0c",
+      "recipe": "authoring/audio/operation-v1/recipes.mjs",
+      "variant": 1
+    }
+  ],
+  "integration": {
+    "note": "Assets only; NOT wired. Paste `sampleBankManifest` into src/core/samples.js MANIFEST and, optionally, hotSet names into HOT_SET. Files load via audio/<stem>.mp3.",
+    "sampleBankManifest": {
+      "op.hit.confirm": {
+        "f": [
+          "operation-v1/op_hit_confirm_a",
+          "operation-v1/op_hit_confirm_b",
+          "operation-v1/op_hit_confirm_c"
+        ],
+        "g": 0.7
+      },
+      "op.block.confirm": {
+        "f": [
+          "operation-v1/op_block_confirm_a",
+          "operation-v1/op_block_confirm_b"
+        ],
+        "g": 0.7
+      },
+      "op.guard.break": {
+        "f": [
+          "operation-v1/op_guard_break_a",
+          "operation-v1/op_guard_break_b"
+        ],
+        "g": 0.7
+      },
+      "op.shield.deploy": {
+        "f": [
+          "operation-v1/op_shield_deploy_a"
+        ],
+        "g": 0.7,
+        "reach": 150
+      },
+      "op.shield.hit": {
+        "f": [
+          "operation-v1/op_shield_hit_a",
+          "operation-v1/op_shield_hit_b",
+          "operation-v1/op_shield_hit_c"
+        ],
+        "g": 0.7,
+        "reach": 150
+      },
+      "op.shield.collapse": {
+        "f": [
+          "operation-v1/op_shield_collapse_a"
+        ],
+        "g": 0.7,
+        "reach": 150
+      },
+      "op.scanner.acquire": {
+        "f": [
+          "operation-v1/op_scanner_acquire_a",
+          "operation-v1/op_scanner_acquire_b"
+        ],
+        "g": 0.7
+      },
+      "op.scanner.lost": {
+        "f": [
+          "operation-v1/op_scanner_lost_a",
+          "operation-v1/op_scanner_lost_b"
+        ],
+        "g": 0.7
+      },
+      "op.portal.ready": {
+        "f": [
+          "operation-v1/op_portal_ready_a"
+        ],
+        "g": 0.7,
+        "reach": 170
+      },
+      "op.portal.cross": {
+        "f": [
+          "operation-v1/op_portal_cross_a",
+          "operation-v1/op_portal_cross_b"
+        ],
+        "g": 0.7,
+        "reach": 170
+      },
+      "op.squad.ready": {
+        "f": [
+          "operation-v1/op_squad_ready_a"
+        ],
+        "g": 0.6
+      },
+      "op.squad.regroup": {
+        "f": [
+          "operation-v1/op_squad_regroup_a"
+        ],
+        "g": 0.6
+      },
+      "op.pursuit.spotted": {
+        "f": [
+          "operation-v1/op_pursuit_spotted_a"
+        ],
+        "g": 0.6
+      },
+      "op.pursuit.airborne": {
+        "f": [
+          "operation-v1/op_pursuit_airborne_a"
+        ],
+        "g": 0.6
+      },
+      "op.pursuit.lost": {
+        "f": [
+          "operation-v1/op_pursuit_lost_a"
+        ],
+        "g": 0.6
+      },
+      "op.pursuit.search": {
+        "f": [
+          "operation-v1/op_pursuit_search_a"
+        ],
+        "g": 0.6
+      },
+      "op.pursuit.reacquired": {
+        "f": [
+          "operation-v1/op_pursuit_reacquired_a"
+        ],
+        "g": 0.6
+      },
+      "op.zombie.idle": {
+        "f": [
+          "operation-v1/op_zombie_idle_a",
+          "operation-v1/op_zombie_idle_b",
+          "operation-v1/op_zombie_idle_c"
+        ],
+        "g": 0.8,
+        "reach": 150
+      },
+      "op.zombie.alert": {
+        "f": [
+          "operation-v1/op_zombie_alert_a",
+          "operation-v1/op_zombie_alert_b",
+          "operation-v1/op_zombie_alert_c"
+        ],
+        "g": 0.8,
+        "reach": 150
+      },
+      "op.zombie.attack": {
+        "f": [
+          "operation-v1/op_zombie_attack_a",
+          "operation-v1/op_zombie_attack_b",
+          "operation-v1/op_zombie_attack_c"
+        ],
+        "g": 0.8,
+        "reach": 150
+      },
+      "op.zombie.hurt": {
+        "f": [
+          "operation-v1/op_zombie_hurt_a",
+          "operation-v1/op_zombie_hurt_b",
+          "operation-v1/op_zombie_hurt_c"
+        ],
+        "g": 0.8,
+        "reach": 150
+      },
+      "op.zombie.death": {
+        "f": [
+          "operation-v1/op_zombie_death_a",
+          "operation-v1/op_zombie_death_b"
+        ],
+        "g": 0.8,
+        "reach": 150
+      }
+    },
+    "hotSet": [
+      "op.hit.confirm",
+      "op.block.confirm",
+      "op.shield.hit",
+      "op.pursuit.spotted",
+      "op.zombie.attack"
+    ]
+  }
+}
