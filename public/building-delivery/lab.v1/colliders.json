@@ -1,0 +1,1283 @@
+{
+  "id": "building.research-lab",
+  "version": "v1",
+  "kind": "enterable-building",
+  "space": "building-local — origin at footprint ground-centre, floor plane y=0, +Y up, entrance faces +Z, breach flank +X. AABBs are min/max in world units (u).",
+  "units": {
+    "sourceUnit": "powerworld-world-unit",
+    "symbol": "u",
+    "metersPerUnit": 0.1875,
+    "gameConversion": "1:1 — the recipe is authored directly in PowerWorld world units, so no scale is applied at import. The metre figure is documentation only.",
+    "derivation": "Measured from the runtime, not guessed: src/engine/citytiles.js door metric `DH = 11.2 * M` is commented 'a 2.1m doorway', so 2.1 m / 11.2 u = 0.1875 m/u; the same file builds a 9.6u human = 1.8 m. 1 m = 5.3333 u."
+  },
+  "axes": {
+    "up": "+Y",
+    "front": "+Z",
+    "rightFlank": "+X",
+    "handedness": "right-handed (glTF 2.0)",
+    "note": "Building origin (0,0,0) is the ground-centre of the footprint, floor plane at y=0. The entrance faces +Z; the breach panel is on the +X flank. The runtime places the building by an (x,z) world centre and a yaw; these local axes rotate with that yaw."
+  },
+  "note": "Stable-ID collider pieces. `collider` = blocks movement/projectiles; `standable` = you can rest on its top (role floor/step/roof/prop); `breakable` pieces vanish when their breakGroup breaks (state \"intact-only\"). Decor pieces (collider:false, standable:false) are render-only and carry no physics. This is the AUTHORITATIVE physics description; the GLB nodes (same `node` names) are render only.",
+  "pieces": [
+    {
+      "id": "p000",
+      "node": "shell_structural",
+      "role": "blocker",
+      "material": "structural",
+      "collider": true,
+      "standable": false,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -15,
+          0,
+          15.8
+        ],
+        "max": [
+          -9.1,
+          11.6,
+          17
+        ]
+      }
+    },
+    {
+      "id": "p001",
+      "node": "shell_structural",
+      "role": "blocker",
+      "material": "structural",
+      "collider": true,
+      "standable": false,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -2.9,
+          0,
+          15.8
+        ],
+        "max": [
+          15,
+          11.6,
+          17
+        ]
+      }
+    },
+    {
+      "id": "p002",
+      "node": "shell_structural",
+      "role": "blocker",
+      "material": "structural",
+      "collider": true,
+      "standable": false,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -15,
+          11.6,
+          15.8
+        ],
+        "max": [
+          15,
+          13.8,
+          17
+        ]
+      }
+    },
+    {
+      "id": "p003",
+      "node": "shell_structural",
+      "role": "blocker",
+      "material": "structural",
+      "collider": true,
+      "standable": false,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -15,
+          0,
+          -17
+        ],
+        "max": [
+          15,
+          13.8,
+          -15.8
+        ]
+      }
+    },
+    {
+      "id": "p004",
+      "node": "shell_structural",
+      "role": "blocker",
+      "material": "structural",
+      "collider": true,
+      "standable": false,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -15,
+          0,
+          -17
+        ],
+        "max": [
+          -13.8,
+          13.8,
+          17
+        ]
+      }
+    },
+    {
+      "id": "p005",
+      "node": "shell_structural",
+      "role": "blocker",
+      "material": "structural",
+      "collider": true,
+      "standable": false,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          13.8,
+          0,
+          -17
+        ],
+        "max": [
+          15,
+          13,
+          3
+        ]
+      }
+    },
+    {
+      "id": "p006",
+      "node": "shell_structural",
+      "role": "blocker",
+      "material": "structural",
+      "collider": true,
+      "standable": false,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          13.8,
+          0,
+          15
+        ],
+        "max": [
+          15,
+          13,
+          17
+        ]
+      }
+    },
+    {
+      "id": "p007",
+      "node": "shell_structural",
+      "role": "blocker",
+      "material": "structural",
+      "collider": true,
+      "standable": false,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          13.8,
+          13,
+          -17
+        ],
+        "max": [
+          15,
+          13.8,
+          17
+        ]
+      }
+    },
+    {
+      "id": "p008",
+      "node": "shell_structural",
+      "role": "blocker",
+      "material": "structural",
+      "collider": true,
+      "standable": false,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -13.8,
+          0,
+          1.4
+        ],
+        "max": [
+          -9.1,
+          11.6,
+          2.6
+        ]
+      }
+    },
+    {
+      "id": "p009",
+      "node": "shell_structural",
+      "role": "blocker",
+      "material": "structural",
+      "collider": true,
+      "standable": false,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -2.9,
+          0,
+          1.4
+        ],
+        "max": [
+          13.8,
+          11.6,
+          2.6
+        ]
+      }
+    },
+    {
+      "id": "p010",
+      "node": "shell_structural",
+      "role": "blocker",
+      "material": "structural",
+      "collider": true,
+      "standable": false,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -13.8,
+          11.6,
+          1.4
+        ],
+        "max": [
+          13.8,
+          13.8,
+          2.6
+        ]
+      }
+    },
+    {
+      "id": "breach_panel",
+      "node": "breakable_breach_panel",
+      "role": "blocker",
+      "material": "weak_panel",
+      "collider": true,
+      "standable": false,
+      "breakable": true,
+      "breakGroup": "breach_panel",
+      "state": "intact-only",
+      "hp": 140,
+      "dtype": "energy",
+      "aabb": {
+        "min": [
+          13.8,
+          0,
+          3
+        ],
+        "max": [
+          15,
+          13,
+          15
+        ]
+      }
+    },
+    {
+      "id": "breach_panel.stripe0",
+      "node": "breakable_breach_panel_stripe",
+      "role": "decor",
+      "material": "hazard_stripe",
+      "collider": false,
+      "standable": false,
+      "breakable": false,
+      "breakGroup": "breach_panel",
+      "state": "intact-only",
+      "hp": null,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          15.02,
+          1.5,
+          4.35
+        ],
+        "max": [
+          15.22,
+          11.5,
+          6.15
+        ]
+      }
+    },
+    {
+      "id": "breach_panel.stripe1",
+      "node": "breakable_breach_panel_stripe",
+      "role": "decor",
+      "material": "hazard_stripe",
+      "collider": false,
+      "standable": false,
+      "breakable": false,
+      "breakGroup": "breach_panel",
+      "state": "intact-only",
+      "hp": null,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          15.02,
+          1.5,
+          8.1
+        ],
+        "max": [
+          15.22,
+          11.5,
+          9.9
+        ]
+      }
+    },
+    {
+      "id": "breach_panel.stripe2",
+      "node": "breakable_breach_panel_stripe",
+      "role": "decor",
+      "material": "hazard_stripe",
+      "collider": false,
+      "standable": false,
+      "breakable": false,
+      "breakGroup": "breach_panel",
+      "state": "intact-only",
+      "hp": null,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          15.02,
+          1.5,
+          11.85
+        ],
+        "max": [
+          15.22,
+          11.5,
+          13.65
+        ]
+      }
+    },
+    {
+      "id": "p011",
+      "node": "roof_structural",
+      "role": "roof",
+      "material": "roof_slab",
+      "collider": true,
+      "standable": true,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -15,
+          13.8,
+          -17
+        ],
+        "max": [
+          15,
+          15,
+          -16.5
+        ]
+      }
+    },
+    {
+      "id": "p012",
+      "node": "roof_structural",
+      "role": "roof",
+      "material": "roof_slab",
+      "collider": true,
+      "standable": true,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -15,
+          13.8,
+          -16.5
+        ],
+        "max": [
+          7.8,
+          15,
+          -13
+        ]
+      }
+    },
+    {
+      "id": "p013",
+      "node": "roof_structural",
+      "role": "roof",
+      "material": "roof_slab",
+      "collider": true,
+      "standable": true,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          13.8,
+          13.8,
+          -16.5
+        ],
+        "max": [
+          15,
+          15,
+          -13
+        ]
+      }
+    },
+    {
+      "id": "p014",
+      "node": "roof_structural",
+      "role": "roof",
+      "material": "roof_slab",
+      "collider": true,
+      "standable": true,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -15,
+          13.8,
+          -13
+        ],
+        "max": [
+          -8,
+          15,
+          -10.5
+        ]
+      }
+    },
+    {
+      "id": "p015",
+      "node": "roof_structural",
+      "role": "roof",
+      "material": "roof_slab",
+      "collider": true,
+      "standable": true,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          2,
+          13.8,
+          -13
+        ],
+        "max": [
+          7.8,
+          15,
+          -10.5
+        ]
+      }
+    },
+    {
+      "id": "p016",
+      "node": "roof_structural",
+      "role": "roof",
+      "material": "roof_slab",
+      "collider": true,
+      "standable": true,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          13.8,
+          13.8,
+          -13
+        ],
+        "max": [
+          15,
+          15,
+          -10.5
+        ]
+      }
+    },
+    {
+      "id": "p017",
+      "node": "roof_structural",
+      "role": "roof",
+      "material": "roof_slab",
+      "collider": true,
+      "standable": true,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -15,
+          13.8,
+          -10.5
+        ],
+        "max": [
+          -8,
+          15,
+          -3
+        ]
+      }
+    },
+    {
+      "id": "p018",
+      "node": "roof_structural",
+      "role": "roof",
+      "material": "roof_slab",
+      "collider": true,
+      "standable": true,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          2,
+          13.8,
+          -10.5
+        ],
+        "max": [
+          15,
+          15,
+          -3
+        ]
+      }
+    },
+    {
+      "id": "p019",
+      "node": "roof_structural",
+      "role": "roof",
+      "material": "roof_slab",
+      "collider": true,
+      "standable": true,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -15,
+          13.8,
+          -3
+        ],
+        "max": [
+          15,
+          15,
+          17
+        ]
+      }
+    },
+    {
+      "id": "roof_weak_panel",
+      "node": "breakable_roof_weak_panel",
+      "role": "roof",
+      "material": "roof_panel_weak",
+      "collider": true,
+      "standable": true,
+      "breakable": true,
+      "breakGroup": "roof_weak_panel",
+      "state": "intact-only",
+      "hp": 110,
+      "dtype": "physical",
+      "aabb": {
+        "min": [
+          -8,
+          13.8,
+          -13
+        ],
+        "max": [
+          2,
+          15,
+          -3
+        ]
+      }
+    },
+    {
+      "id": "roof_weak_panel.mark",
+      "node": "breakable_roof_weak_panel_mark",
+      "role": "decor",
+      "material": "hazard_stripe",
+      "collider": false,
+      "standable": false,
+      "breakable": false,
+      "breakGroup": "roof_weak_panel",
+      "state": "intact-only",
+      "hp": null,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -8,
+          15,
+          -13
+        ],
+        "max": [
+          -6.6,
+          15.15,
+          -3
+        ]
+      }
+    },
+    {
+      "id": "parapet.front",
+      "node": "roof_parapet",
+      "role": "parapet",
+      "material": "parapet",
+      "collider": true,
+      "standable": false,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -15,
+          15,
+          16
+        ],
+        "max": [
+          15,
+          17.2,
+          17
+        ]
+      }
+    },
+    {
+      "id": "parapet.rear",
+      "node": "roof_parapet",
+      "role": "parapet",
+      "material": "parapet",
+      "collider": true,
+      "standable": false,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -15,
+          15,
+          -17
+        ],
+        "max": [
+          15,
+          17.2,
+          -16
+        ]
+      }
+    },
+    {
+      "id": "parapet.left",
+      "node": "roof_parapet",
+      "role": "parapet",
+      "material": "parapet",
+      "collider": true,
+      "standable": false,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -15,
+          15,
+          -16
+        ],
+        "max": [
+          -14,
+          17.2,
+          16
+        ]
+      }
+    },
+    {
+      "id": "parapet.right",
+      "node": "roof_parapet",
+      "role": "parapet",
+      "material": "parapet",
+      "collider": true,
+      "standable": false,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          14,
+          15,
+          -16
+        ],
+        "max": [
+          15,
+          17.2,
+          16
+        ]
+      }
+    },
+    {
+      "id": "stair.step1",
+      "node": "stair",
+      "role": "step",
+      "material": "stair",
+      "collider": true,
+      "standable": true,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          7.8,
+          0,
+          -1.4
+        ],
+        "max": [
+          13.8,
+          2.14286,
+          1
+        ]
+      }
+    },
+    {
+      "id": "stair.step2",
+      "node": "stair",
+      "role": "step",
+      "material": "stair",
+      "collider": true,
+      "standable": true,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          7.8,
+          0,
+          -3.8
+        ],
+        "max": [
+          13.8,
+          4.28571,
+          -1.4
+        ]
+      }
+    },
+    {
+      "id": "stair.step3",
+      "node": "stair",
+      "role": "step",
+      "material": "stair",
+      "collider": true,
+      "standable": true,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          7.8,
+          0,
+          -6.2
+        ],
+        "max": [
+          13.8,
+          6.42857,
+          -3.8
+        ]
+      }
+    },
+    {
+      "id": "stair.step4",
+      "node": "stair",
+      "role": "step",
+      "material": "stair",
+      "collider": true,
+      "standable": true,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          7.8,
+          0,
+          -8.6
+        ],
+        "max": [
+          13.8,
+          8.57143,
+          -6.2
+        ]
+      }
+    },
+    {
+      "id": "stair.step5",
+      "node": "stair",
+      "role": "step",
+      "material": "stair",
+      "collider": true,
+      "standable": true,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          7.8,
+          0,
+          -11
+        ],
+        "max": [
+          13.8,
+          10.71429,
+          -8.6
+        ]
+      }
+    },
+    {
+      "id": "stair.step6",
+      "node": "stair",
+      "role": "step",
+      "material": "stair",
+      "collider": true,
+      "standable": true,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          7.8,
+          0,
+          -13.4
+        ],
+        "max": [
+          13.8,
+          12.85714,
+          -11
+        ]
+      }
+    },
+    {
+      "id": "stair.step7",
+      "node": "stair",
+      "role": "step",
+      "material": "stair",
+      "collider": true,
+      "standable": true,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          7.8,
+          0,
+          -15.8
+        ],
+        "max": [
+          13.8,
+          15,
+          -13.4
+        ]
+      }
+    },
+    {
+      "id": "case.pedestal",
+      "node": "case_pedestal",
+      "role": "prop",
+      "material": "pedestal",
+      "collider": true,
+      "standable": true,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -2.5,
+          0,
+          -12.5
+        ],
+        "max": [
+          2.5,
+          2,
+          -7.5
+        ]
+      }
+    },
+    {
+      "id": "case.glow",
+      "node": "case_glow",
+      "role": "decor",
+      "material": "case_glow",
+      "collider": false,
+      "standable": false,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": null,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -1.2,
+          2,
+          -11.2
+        ],
+        "max": [
+          1.2,
+          2.6,
+          -8.8
+        ]
+      }
+    },
+    {
+      "id": "trim.doorframe.left",
+      "node": "trim_doorframe",
+      "role": "decor",
+      "material": "door_frame",
+      "collider": false,
+      "standable": false,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -9.7,
+          0,
+          15.7
+        ],
+        "max": [
+          -9.1,
+          12.2,
+          17.1
+        ]
+      }
+    },
+    {
+      "id": "trim.doorframe.right",
+      "node": "trim_doorframe",
+      "role": "decor",
+      "material": "door_frame",
+      "collider": false,
+      "standable": false,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -2.9,
+          0,
+          15.7
+        ],
+        "max": [
+          -2.3,
+          12.2,
+          17.1
+        ]
+      }
+    },
+    {
+      "id": "trim.doorframe.head",
+      "node": "trim_doorframe",
+      "role": "decor",
+      "material": "door_frame",
+      "collider": false,
+      "standable": false,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -9.7,
+          11.6,
+          15.7
+        ],
+        "max": [
+          -2.3,
+          12.2,
+          17.1
+        ]
+      }
+    },
+    {
+      "id": "front_door_leaf",
+      "node": "breakable_front_door_leaf",
+      "role": "decor",
+      "material": "door_leaf",
+      "collider": false,
+      "standable": false,
+      "breakable": true,
+      "breakGroup": "front_door_leaf",
+      "state": "intact-only",
+      "hp": 90,
+      "dtype": "physical",
+      "aabb": {
+        "min": [
+          -14.9,
+          0,
+          15.6
+        ],
+        "max": [
+          -9.3,
+          11.6,
+          16
+        ]
+      }
+    },
+    {
+      "id": "floor.slab",
+      "node": "floor",
+      "role": "decor",
+      "material": "floor_slab",
+      "collider": false,
+      "standable": false,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -13.8,
+          -0.4,
+          -15.8
+        ],
+        "max": [
+          13.8,
+          0,
+          15.8
+        ]
+      }
+    }
+  ],
+  "breakGroups": {
+    "front_door_leaf": [
+      "front_door_leaf"
+    ],
+    "breach_panel": [
+      "breach_panel",
+      "breach_panel.stripe0",
+      "breach_panel.stripe1",
+      "breach_panel.stripe2"
+    ],
+    "roof_weak_panel": [
+      "roof_weak_panel",
+      "roof_weak_panel.mark"
+    ]
+  },
+  "states": {
+    "intact": {
+      "desc": "Nothing broken.",
+      "visible": [
+        "p000",
+        "p001",
+        "p002",
+        "p003",
+        "p004",
+        "p005",
+        "p006",
+        "p007",
+        "p008",
+        "p009",
+        "p010",
+        "breach_panel",
+        "breach_panel.stripe0",
+        "breach_panel.stripe1",
+        "breach_panel.stripe2",
+        "p011",
+        "p012",
+        "p013",
+        "p014",
+        "p015",
+        "p016",
+        "p017",
+        "p018",
+        "p019",
+        "roof_weak_panel",
+        "roof_weak_panel.mark",
+        "parapet.front",
+        "parapet.rear",
+        "parapet.left",
+        "parapet.right",
+        "stair.step1",
+        "stair.step2",
+        "stair.step3",
+        "stair.step4",
+        "stair.step5",
+        "stair.step6",
+        "stair.step7",
+        "case.pedestal",
+        "case.glow",
+        "trim.doorframe.left",
+        "trim.doorframe.right",
+        "trim.doorframe.head",
+        "front_door_leaf",
+        "floor.slab"
+      ],
+      "colliders": [
+        "p000",
+        "p001",
+        "p002",
+        "p003",
+        "p004",
+        "p005",
+        "p006",
+        "p007",
+        "p008",
+        "p009",
+        "p010",
+        "breach_panel",
+        "p011",
+        "p012",
+        "p013",
+        "p014",
+        "p015",
+        "p016",
+        "p017",
+        "p018",
+        "p019",
+        "roof_weak_panel",
+        "parapet.front",
+        "parapet.rear",
+        "parapet.left",
+        "parapet.right",
+        "stair.step1",
+        "stair.step2",
+        "stair.step3",
+        "stair.step4",
+        "stair.step5",
+        "stair.step6",
+        "stair.step7",
+        "case.pedestal"
+      ],
+      "openOpenings": [
+        "front_door",
+        "interior_door",
+        "roof_hatch"
+      ]
+    },
+    "breached": {
+      "desc": "All three breakables broken (breach panel, front door leaf, roof weak panel).",
+      "hidden": [
+        "breach_panel",
+        "breach_panel.stripe0",
+        "breach_panel.stripe1",
+        "breach_panel.stripe2",
+        "roof_weak_panel",
+        "roof_weak_panel.mark",
+        "front_door_leaf"
+      ],
+      "colliders": [
+        "p000",
+        "p001",
+        "p002",
+        "p003",
+        "p004",
+        "p005",
+        "p006",
+        "p007",
+        "p008",
+        "p009",
+        "p010",
+        "p011",
+        "p012",
+        "p013",
+        "p014",
+        "p015",
+        "p016",
+        "p017",
+        "p018",
+        "p019",
+        "parapet.front",
+        "parapet.rear",
+        "parapet.left",
+        "parapet.right",
+        "stair.step1",
+        "stair.step2",
+        "stair.step3",
+        "stair.step4",
+        "stair.step5",
+        "stair.step6",
+        "stair.step7",
+        "case.pedestal"
+      ],
+      "openOpenings": [
+        "front_door",
+        "interior_door",
+        "breach_panel",
+        "roof_hatch",
+        "roof_smash"
+      ]
+    }
+  }
+}

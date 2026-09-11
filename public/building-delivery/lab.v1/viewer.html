@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Research Lab — GLB dev viewer</title>
+<!--
+  DEV VIEWER — not a build input, not required to reproduce the package.
+  It renders the ACTUAL committed lab.glb (real geometry, not concept art) with game-matched
+  lighting and to-scale soldier / large-hero silhouettes, so the mesh can be inspected and a
+  walkthrough recorded. It loads three.js from a CDN; the offline deliverables are the GLB, the
+  collider/graph JSON and the SVG orthographic views, none of which need this page.
+  Query params: ?shot=front|top|inside|breach|roof   ?state=intact|breached   ?walk=1   ?t=0..1
+-->
+<style>
+  :root { color-scheme: dark; }
+  html,body { margin:0; height:100%; background:#14161c; color:#e8e2d6; font:13px Inter,system-ui,sans-serif; overflow:hidden; }
+  #ui { position:fixed; top:10px; left:10px; z-index:10; display:flex; gap:6px; flex-wrap:wrap; max-width:60vw; }
+  button { background:#20232c; color:#e8e2d6; border:1px solid #34373f; border-radius:6px; padding:6px 10px; cursor:pointer; font:600 12px Inter,system-ui; }
+  button:hover { border-color:#ffd24a; color:#ffd24a; }
+  button.on { background:#ffd24a; color:#14161c; border-color:#ffd24a; }
+  #hud { position:fixed; bottom:10px; left:10px; z-index:10; color:#9aa0ad; font-size:11px; }
+  #err { position:fixed; inset:0; display:none; align-items:center; justify-content:center; text-align:center; padding:40px; color:#ff5a4a; }
+  canvas { display:block; }
+</style>
+</head>
+<body>
+<div id="ui">
+  <button data-shot="front">Front</button>
+  <button data-shot="top">Top</button>
+  <button data-shot="inside">Inside</button>
+  <button data-shot="breach">Breach</button>
+  <button data-shot="roof">Roof</button>
+  <button id="orbit">Orbit</button>
+  <button id="walk">Walkthrough</button>
+  <button id="state">Breach state: OFF</button>
+  <button id="silh">Silhouettes: ON</button>
+</div>
+<div id="hud">Research Outpost Lab · real lab.glb · 1u = 0.1875 m · soldier 9.6u (cyan) · large hero 12.5u (gold)</div>
+<div id="err">Could not load three.js (needs internet for the CDN, or a local copy).<br/>This viewer is optional — the GLB, JSON and SVG views are the offline deliverables.</div>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.161.0/examples/jsm/"
+} }
+</script>
+<script type="module">
+let THREE, GLTFLoader;
+try {
+  THREE = await import('three');
+  ({ GLTFLoader } = await import('three/addons/loaders/GLTFLoader.js'));
+} catch (e) { document.getElementById('err').style.display = 'flex'; throw e; }
+
+const U = 1;                             // world units are the model's native units
+const P = new URLSearchParams(location.search);
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.15;
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color('#1a1c22');
+scene.fog = new THREE.Fog('#1a1c22', 160, 420);
+const camera = new THREE.PerspectiveCamera(45, innerWidth / innerHeight, 0.5, 2000);
+
+// desert-forward-base lighting: warm hemi + strong warm key + cool rim
+scene.add(new THREE.HemisphereLight('#cdd8ff', '#6b5a3a', 0.55));
+const sun = new THREE.DirectionalLight('#ffe6b0', 2.1); sun.position.set(60, 90, 40); sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048); sun.shadow.camera.near = 1; sun.shadow.camera.far = 400;
+sun.shadow.camera.left = -60; sun.shadow.camera.right = 60; sun.shadow.camera.top = 60; sun.shadow.camera.bottom = -60;
+scene.add(sun);
+const rim = new THREE.DirectionalLight('#8fb8ff', 0.5); rim.position.set(-50, 30, -40); scene.add(rim);
+
+// sand ground
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(600, 600), new THREE.MeshStandardMaterial({ color: '#c2a86f', roughness: 1 }));
+ground.rotation.x = -Math.PI / 2; ground.position.y = -0.05; ground.receiveShadow = true; scene.add(ground);
+
+const root = new THREE.Group(); scene.add(root);
+const breakable = [];   // nodes whose name starts with 'breakable.'
+const roofNodes = [];   // roof + parapet, hidden for the cutaway
+new GLTFLoader().load('./lab.glb', (gltf) => {
+  gltf.scene.traverse((o) => {
+    if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; }
+    const n = o.name || '';   // node names are dot-free (GLTFLoader sanitizes '.'→'_'); match verbatim
+    if (n.startsWith('breakable_')) breakable.push(o);
+    if (n.startsWith('roof_') || n.startsWith('breakable_roof')) roofNodes.push(o);
+  });
+  root.add(gltf.scene);
+  applyState(P.get('state') === 'breached');
+  if (P.get('open')) applyOpen(true);
+  applyShot(P.get('shot') || 'front');
+  if (P.get('walk')) { walking = true; if (P.has('t')) { walkT = +P.get('t'); walking = false; setWalk(walkT); } }
+}, undefined, () => { document.getElementById('err').style.display = 'flex'; });
+
+// to-scale silhouettes (proxy capsules) — soldier 9.6u cyan, large hero 12.5u gold
+function silh(color, h, w) {
+  const g = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.CapsuleGeometry(w / 2, h - w, 6, 12), new THREE.MeshStandardMaterial({ color, transparent: true, opacity: 0.5, emissive: color, emissiveIntensity: 0.25 }));
+  body.position.y = h / 2; body.castShadow = true; g.add(body); return g;
+}
+const soldier = silh('#7fe6ff', 9.6, 4.4); soldier.position.set(-6, 0, 20);     // at the front door
+const hero = silh('#ffd24a', 12.5, 9.5); hero.position.set(22, 0, 9);           // outside the breach flank
+scene.add(soldier); scene.add(hero);
+
+// ---- camera control --------------------------------------------------------
+const target = new THREE.Vector3(0, 7, 0);
+let orbiting = false, orbitA = 0.6, walking = false, walkT = 0;
+const SHOTS = {
+  front:  { pos: [-2, 13, 54], tgt: [-4, 7, 8] },
+  top:    { pos: [10, 62, 40], tgt: [0, 4, -2] },        // high 3/4 overview (a straight-down cam is degenerate)
+  inside: { pos: [-2, 30, 30], tgt: [-1, 2, -3], open: true },   // roof off, look down into the rooms
+  breach: { pos: [52, 12, 9], tgt: [6, 6, 9], state: true },
+  roof:   { pos: [-3, 33, 30], tgt: [0, 13, -4] },
+};
+function applyOpen(on) { for (const m of roofNodes) m.visible = !on; }
+function applyShot(name) {
+  const s = SHOTS[name] || SHOTS.front; orbiting = false; walking = false;
+  applyOpen(!!s.open);
+  if (s.state) applyState(true);
+  camera.position.set(...s.pos); target.set(...s.tgt); camera.lookAt(target);
+  document.querySelectorAll('#ui [data-shot]').forEach((b) => b.classList.toggle('on', b.dataset.shot === name));
+}
+// walkthrough: outside -> front door -> entry -> case room -> up to the roof
+const WALK = [
+  { p: [-6, 6, 52], t: [-6, 6, 20] },
+  { p: [-6, 6, 22], t: [-6, 6, 2] },
+  { p: [-6, 6, 6], t: [-6, 5.5, -8] },
+  { p: [-4, 6, -4], t: [0, 4, -10] },
+  { p: [6, 8, -6], t: [10, 12, -13] },
+  { p: [10, 16, -8], t: [4, 15, -6] },
+  { p: [2, 24, 6], t: [0, 14, -2] },
+];
+function setWalk(t) {
+  const n = WALK.length - 1, f = Math.max(0, Math.min(0.9999, t)) * n, i = Math.floor(f), k = f - i;
+  const a = WALK[i], b = WALK[Math.min(n, i + 1)];
+  const lerp = (u, v) => u + (v - u) * (k * k * (3 - 2 * k));
+  camera.position.set(lerp(a.p[0], b.p[0]), lerp(a.p[1], b.p[1]), lerp(a.p[2], b.p[2]));
+  target.set(lerp(a.t[0], b.t[0]), lerp(a.t[1], b.t[1]), lerp(a.t[2], b.t[2]));
+  camera.lookAt(target);
+}
+window.setWalk = setWalk;                 // for the screenshot driver
+window.setShot = applyShot;
+window.setState = applyState;
+
+function applyState(breached) {
+  for (const m of breakable) m.visible = !breached;
+  const btn = document.getElementById('state'); if (btn) { btn.textContent = 'Breach state: ' + (breached ? 'ON' : 'OFF'); btn.classList.toggle('on', breached); }
+}
+
+// ---- UI --------------------------------------------------------------------
+document.querySelectorAll('#ui [data-shot]').forEach((b) => b.onclick = () => applyShot(b.dataset.shot));
+document.getElementById('orbit').onclick = (e) => { orbiting = !orbiting; walking = false; e.target.classList.toggle('on', orbiting); };
+document.getElementById('walk').onclick = (e) => { walking = !walking; orbiting = false; walkT = 0; e.target.classList.toggle('on', walking); };
+document.getElementById('state').onclick = () => applyState(breakable[0] ? breakable[0].visible : false);
+document.getElementById('silh').onclick = (e) => { soldier.visible = hero.visible = !soldier.visible; e.target.textContent = 'Silhouettes: ' + (soldier.visible ? 'ON' : 'OFF'); e.target.classList.toggle('on', !soldier.visible); };
+
+addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); });
+
+let last = performance.now();
+function frame(now) {
+  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  if (orbiting) { orbitA += dt * 0.35; const r = 58, y = 26; camera.position.set(Math.cos(orbitA) * r, y, Math.sin(orbitA) * r); target.set(0, 8, 0); camera.lookAt(target); }
+  if (walking) { walkT += dt / 13; if (walkT > 1) walkT = 0; setWalk(walkT); }
+  renderer.render(scene, camera);
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

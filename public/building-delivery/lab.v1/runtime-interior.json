@@ -1,0 +1,90 @@
+{
+  "id": "building.research-lab",
+  "version": "v1",
+  "note": "DIRECT-SUBSET projection onto the current runtime world.interiors contract (src/engine/world.js:95, entity.js:2085). The intact ground-floor shell + partition as vertical AABBs floor->top with door GAPS, roof top = deckTop. Lintels are intentionally omitted so no box sits across a doorway. Place by adding a world (x,z) centre and rotating by yaw; these coordinates are building-local.",
+  "caveats": "Single-storey subset only: it does NOT carry the stairs (no intermediate standable surfaces in this contract), the roof hatch as a hole, per-piece breakable state, floor pieces, or the breach opening as anything but a solid wall. Those need the extension seam in docs/building-delivery/INTEGRATION.md. To breach the flank at runtime, drop the wall whose `breakGroup` is \"breach_panel\" from `walls`.",
+  "interior": {
+    "x": 0,
+    "z": 0,
+    "hx": 15,
+    "hz": 17,
+    "top": 15,
+    "rooms": 2,
+    "walls": [
+      {
+        "x": -12.05,
+        "z": 16.4,
+        "hx": 2.95,
+        "hz": 0.6,
+        "id": "p000"
+      },
+      {
+        "x": 6.05,
+        "z": 16.4,
+        "hx": 8.95,
+        "hz": 0.6,
+        "id": "p001"
+      },
+      {
+        "x": 0,
+        "z": -16.4,
+        "hx": 15,
+        "hz": 0.6,
+        "id": "p003"
+      },
+      {
+        "x": -14.4,
+        "z": 0,
+        "hx": 0.6,
+        "hz": 17,
+        "id": "p004"
+      },
+      {
+        "x": 14.4,
+        "z": -7,
+        "hx": 0.6,
+        "hz": 10,
+        "id": "p005"
+      },
+      {
+        "x": 14.4,
+        "z": 16,
+        "hx": 0.6,
+        "hz": 1,
+        "id": "p006"
+      },
+      {
+        "x": -11.45,
+        "z": 2,
+        "hx": 2.35,
+        "hz": 0.6,
+        "id": "p008"
+      },
+      {
+        "x": 5.45,
+        "z": 2,
+        "hx": 8.35,
+        "hz": 0.6,
+        "id": "p009"
+      },
+      {
+        "x": 14.4,
+        "z": 9,
+        "hx": 0.6,
+        "hz": 6,
+        "id": "breach_panel",
+        "breakGroup": "breach_panel"
+      }
+    ],
+    "doorways": [
+      [
+        -6,
+        16.4
+      ],
+      [
+        -6,
+        2
+      ]
+    ]
+  }
+}

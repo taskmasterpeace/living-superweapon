@@ -1,0 +1,79 @@
+{
+  "id": "building.research-lab",
+  "version": "v1",
+  "note": "Bounded debris per breakable. Chunk counts, size ranges, tri budget and lifetime are suggestions; spawnAABB is the volume the breaking piece occupied. Never a whole-building shatter.",
+  "debris": [
+    {
+      "forBreakGroup": "front_door_leaf",
+      "chunks": 6,
+      "sizeRange": [
+        0.6,
+        1.6
+      ],
+      "lifetimeS": 6,
+      "triBudget": 96,
+      "dtype": "physical",
+      "spawnAABB": {
+        "min": [
+          -14.9,
+          0,
+          15.6
+        ],
+        "max": [
+          -9.3,
+          11.6,
+          16
+        ]
+      },
+      "note": "Bounded debris for front_door_leaf; 6 chunks, <= 96 tris total, 6s lifetime. Never whole-building collapse."
+    },
+    {
+      "forBreakGroup": "breach_panel",
+      "chunks": 14,
+      "sizeRange": [
+        1,
+        3
+      ],
+      "lifetimeS": 8,
+      "triBudget": 168,
+      "dtype": "energy",
+      "spawnAABB": {
+        "min": [
+          13.8,
+          0,
+          3
+        ],
+        "max": [
+          15,
+          13,
+          15
+        ]
+      },
+      "note": "Bounded debris for breach_panel; 14 chunks, <= 168 tris total, 8s lifetime. Never whole-building collapse."
+    },
+    {
+      "forBreakGroup": "roof_weak_panel",
+      "chunks": 10,
+      "sizeRange": [
+        1,
+        2.5
+      ],
+      "lifetimeS": 8,
+      "triBudget": 120,
+      "dtype": "physical",
+      "spawnAABB": {
+        "min": [
+          -8,
+          13.8,
+          -13
+        ],
+        "max": [
+          2,
+          15,
+          -3
+        ]
+      },
+      "note": "Bounded debris for roof_weak_panel; 10 chunks, <= 120 tris total, 8s lifetime. Never whole-building collapse."
+    }
+  ]
+}

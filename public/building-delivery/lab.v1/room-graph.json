@@ -1,0 +1,399 @@
+{
+  "id": "building.research-lab",
+  "version": "v1",
+  "note": "Rooms as volumes, openings as edges (with clearance and state gate), plus navigation waypoints and named routes. Opening centres double as the runtime `doorways` nav points (src/engine/citytiles.js bungalow `doorways`).",
+  "rooms": [
+    {
+      "id": "entry_lab",
+      "name": "Entry Lab (front)",
+      "aabb": {
+        "min": [
+          -13.8,
+          0,
+          2.6
+        ],
+        "max": [
+          13.8,
+          13.8,
+          15.8
+        ]
+      },
+      "floorY": 0,
+      "ceilingY": 13.8
+    },
+    {
+      "id": "case_room",
+      "name": "Case Room (rear)",
+      "aabb": {
+        "min": [
+          -13.8,
+          0,
+          -15.8
+        ],
+        "max": [
+          13.8,
+          13.8,
+          1.4
+        ]
+      },
+      "floorY": 0,
+      "ceilingY": 13.8
+    }
+  ],
+  "openings": [
+    {
+      "id": "front_door",
+      "connects": [
+        "exterior",
+        "entry_lab"
+      ],
+      "axis": "+Z",
+      "center": [
+        -6,
+        5.8,
+        16.4
+      ],
+      "clearance": {
+        "w": 6.2,
+        "h": 11.6
+      },
+      "sillY": 0,
+      "headY": 11.6,
+      "state": "always",
+      "route": "soldier"
+    },
+    {
+      "id": "interior_door",
+      "connects": [
+        "entry_lab",
+        "case_room"
+      ],
+      "axis": "+Z",
+      "center": [
+        -6,
+        5.8,
+        2
+      ],
+      "clearance": {
+        "w": 6.2,
+        "h": 11.6
+      },
+      "sillY": 0,
+      "headY": 11.6,
+      "state": "always",
+      "route": "soldier"
+    },
+    {
+      "id": "breach_panel",
+      "connects": [
+        "exterior",
+        "entry_lab"
+      ],
+      "axis": "+X",
+      "center": [
+        14.4,
+        6.5,
+        9
+      ],
+      "clearance": {
+        "w": 12,
+        "h": 13
+      },
+      "sillY": 0,
+      "headY": 13,
+      "state": "breached-only",
+      "route": "large-hero",
+      "breakGroup": "breach_panel"
+    },
+    {
+      "id": "roof_hatch",
+      "connects": [
+        "roof",
+        "case_room"
+      ],
+      "axis": "+Y",
+      "center": [
+        10.8,
+        15,
+        -13.5
+      ],
+      "clearance": {
+        "w": 6,
+        "h": 6
+      },
+      "state": "always",
+      "route": "soldier"
+    },
+    {
+      "id": "roof_smash",
+      "connects": [
+        "roof",
+        "case_room"
+      ],
+      "axis": "+Y",
+      "center": [
+        -3,
+        15,
+        -8
+      ],
+      "clearance": {
+        "w": 10,
+        "h": 10
+      },
+      "state": "breached-only",
+      "route": "large-hero",
+      "breakGroup": "roof_weak_panel"
+    }
+  ],
+  "waypoints": {
+    "exterior_front": [
+      -6,
+      0,
+      21
+    ],
+    "threshold_front_door": [
+      -6,
+      0,
+      16.4
+    ],
+    "entry_center": [
+      -6,
+      0,
+      8.9
+    ],
+    "interior_doorway": [
+      -6,
+      0,
+      2
+    ],
+    "interior_door_inner": [
+      -6,
+      0,
+      -0.8000000000000003
+    ],
+    "case_room_center": [
+      -6,
+      0,
+      -5
+    ],
+    "case_reach": [
+      -5.3,
+      0,
+      -10
+    ],
+    "case_spawn": [
+      0,
+      2,
+      -10
+    ],
+    "breach_exterior": [
+      19,
+      0,
+      9
+    ],
+    "breach_threshold": [
+      14.4,
+      0,
+      9
+    ],
+    "stair_base": [
+      10.8,
+      0,
+      -0.19999999999999996
+    ],
+    "stair_top": [
+      10.8,
+      15,
+      -14.600000000000001
+    ],
+    "roof_hatch": [
+      10.8,
+      15,
+      -13.5
+    ],
+    "roof_center": [
+      0,
+      15,
+      0
+    ],
+    "roof_smash-top": [
+      -3,
+      15,
+      -8
+    ]
+  },
+  "routes": {
+    "soldier_recover": {
+      "desc": "Front door to the case on foot (soldier, standard hero).",
+      "state": "intact",
+      "path": [
+        "exterior_front",
+        "threshold_front_door",
+        "entry_center",
+        "interior_doorway",
+        "interior_door_inner",
+        "case_room_center",
+        "case_reach"
+      ]
+    },
+    "soldier_roof": {
+      "desc": "Interior to the roof via the stair and hatch.",
+      "state": "intact",
+      "path": [
+        "entry_center",
+        "interior_doorway",
+        "case_room_center",
+        "stair_base",
+        "stair_top",
+        "roof_hatch",
+        "roof_center"
+      ]
+    },
+    "largehero_breach": {
+      "desc": "Large hero breaches the flank panel and enters.",
+      "state": "breached",
+      "path": [
+        "breach_exterior",
+        "breach_threshold",
+        "entry_center"
+      ]
+    },
+    "largehero_roofsmash": {
+      "desc": "Heavy hero smashes the roof panel and drops into the case room.",
+      "state": "breached",
+      "path": [
+        "roof_center",
+        "roof_smash-top",
+        "case_room_center"
+      ]
+    }
+  },
+  "stairs": {
+    "steps": [
+      {
+        "id": "stair.step1",
+        "index": 1,
+        "top": 2.14286,
+        "aabb": {
+          "min": [
+            7.8,
+            0,
+            -1.4
+          ],
+          "max": [
+            13.8,
+            2.14286,
+            1
+          ]
+        }
+      },
+      {
+        "id": "stair.step2",
+        "index": 2,
+        "top": 4.28571,
+        "aabb": {
+          "min": [
+            7.8,
+            0,
+            -3.8
+          ],
+          "max": [
+            13.8,
+            4.28571,
+            -1.4
+          ]
+        }
+      },
+      {
+        "id": "stair.step3",
+        "index": 3,
+        "top": 6.42857,
+        "aabb": {
+          "min": [
+            7.8,
+            0,
+            -6.2
+          ],
+          "max": [
+            13.8,
+            6.42857,
+            -3.8
+          ]
+        }
+      },
+      {
+        "id": "stair.step4",
+        "index": 4,
+        "top": 8.57143,
+        "aabb": {
+          "min": [
+            7.8,
+            0,
+            -8.6
+          ],
+          "max": [
+            13.8,
+            8.57143,
+            -6.2
+          ]
+        }
+      },
+      {
+        "id": "stair.step5",
+        "index": 5,
+        "top": 10.71429,
+        "aabb": {
+          "min": [
+            7.8,
+            0,
+            -11
+          ],
+          "max": [
+            13.8,
+            10.71429,
+            -8.6
+          ]
+        }
+      },
+      {
+        "id": "stair.step6",
+        "index": 6,
+        "top": 12.85714,
+        "aabb": {
+          "min": [
+            7.8,
+            0,
+            -13.4
+          ],
+          "max": [
+            13.8,
+            12.85714,
+            -11
+          ]
+        }
+      },
+      {
+        "id": "stair.step7",
+        "index": 7,
+        "top": 15,
+        "aabb": {
+          "min": [
+            7.8,
+            0,
+            -15.8
+          ],
+          "max": [
+            13.8,
+            15,
+            -13.4
+          ]
+        }
+      }
+    ],
+    "rise": 2.14286,
+    "tread": 2.4,
+    "maxRiser": 2.14286,
+    "width": 6,
+    "reachesDeck": true
+  }
+}

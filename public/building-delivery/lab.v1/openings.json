@@ -1,0 +1,110 @@
+{
+  "id": "building.research-lab",
+  "version": "v1",
+  "openings": [
+    {
+      "id": "front_door",
+      "connects": [
+        "exterior",
+        "entry_lab"
+      ],
+      "axis": "+Z",
+      "center": [
+        -6,
+        5.8,
+        16.4
+      ],
+      "clearance": {
+        "w": 6.2,
+        "h": 11.6
+      },
+      "sillY": 0,
+      "headY": 11.6,
+      "state": "always",
+      "route": "soldier"
+    },
+    {
+      "id": "interior_door",
+      "connects": [
+        "entry_lab",
+        "case_room"
+      ],
+      "axis": "+Z",
+      "center": [
+        -6,
+        5.8,
+        2
+      ],
+      "clearance": {
+        "w": 6.2,
+        "h": 11.6
+      },
+      "sillY": 0,
+      "headY": 11.6,
+      "state": "always",
+      "route": "soldier"
+    },
+    {
+      "id": "breach_panel",
+      "connects": [
+        "exterior",
+        "entry_lab"
+      ],
+      "axis": "+X",
+      "center": [
+        14.4,
+        6.5,
+        9
+      ],
+      "clearance": {
+        "w": 12,
+        "h": 13
+      },
+      "sillY": 0,
+      "headY": 13,
+      "state": "breached-only",
+      "route": "large-hero",
+      "breakGroup": "breach_panel"
+    },
+    {
+      "id": "roof_hatch",
+      "connects": [
+        "roof",
+        "case_room"
+      ],
+      "axis": "+Y",
+      "center": [
+        10.8,
+        15,
+        -13.5
+      ],
+      "clearance": {
+        "w": 6,
+        "h": 6
+      },
+      "state": "always",
+      "route": "soldier"
+    },
+    {
+      "id": "roof_smash",
+      "connects": [
+        "roof",
+        "case_room"
+      ],
+      "axis": "+Y",
+      "center": [
+        -3,
+        15,
+        -8
+      ],
+      "clearance": {
+        "w": 10,
+        "h": 10
+      },
+      "state": "breached-only",
+      "route": "large-hero",
+      "breakGroup": "roof_weak_panel"
+    }
+  ],
+  "note": "Rooms as volumes, openings as edges (with clearance and state gate), plus navigation waypoints and named routes. Opening centres double as the runtime `doorways` nav points (src/engine/citytiles.js bungalow `doorways`)."
+}
