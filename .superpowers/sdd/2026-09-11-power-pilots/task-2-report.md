@@ -35,9 +35,9 @@ This report does not approve every retained power. It reports only the acceptanc
 - Real Studio browser round trip on runtime 5182:
   - Command: `node tools/pilot-studio-alternatives-browser.mjs`
   - Result: pass; empty defaults, deliberate selection, live Fighter rebuild, save/reload, dormant tuned source restoration, and 0 page errors.
-- Existing native WEBLINE browser rehearsals:
-  - Command: `node tools/web-snare-browser.mjs && node tools/web-zip-browser.mjs`
-  - Result: exit 0; Web Snare traveled/held/released without page errors and Web Zip reached/released its physical wall anchor with `ok:true`.
+- Existing native WEBLINE browser rehearsals, explicitly bound to this checkout's runtime:
+  - Command: `$env:LSW_BASE_URL='http://127.0.0.1:5182'; node tools/web-snare-browser.mjs; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; node tools/web-zip-browser.mjs; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; $snare=Get-Content -Raw artifacts/web-snare-native/results.json | ConvertFrom-Json; $zip=Get-Content -Raw artifacts/web-zip-native/results.json | ConvertFrom-Json; if ($snare.baseUrl -ne $env:LSW_BASE_URL -or $snare.errors.Count -ne 0 -or $zip.baseUrl -ne $env:LSW_BASE_URL -or $zip.errors.Count -ne 0 -or -not $zip.ok) { throw '5182 browser evidence validation failed' }; Write-Output "PASS baseUrl=$($env:LSW_BASE_URL) snareErrors=$($snare.errors.Count) zipErrors=$($zip.errors.Count) zipOk=$($zip.ok)"`
+  - Result: exit 0; `PASS baseUrl=http://127.0.0.1:5182 snareErrors=0 zipErrors=0 zipOk=True`. Web Snare traveled/held/released with an attributed 13-damage impact, and Web Zip reached/released its physical command-building wall anchor. Both scripts now honor `LSW_BASE_URL` while retaining `http://127.0.0.1:5180` as their default.
 - Controller-supplied native Web Darts capture:
   - Evidence: `artifacts/power-pilot/web-native/results.json`, `web-contact.png`, and `web-gameplay.mp4`.
   - Result reported by the controller: accepted real Q contact/expiry evidence with clean runtime behavior.
@@ -71,6 +71,8 @@ This report does not approve every retained power. It reports only the acceptanc
 - `tools/pilot-obstruction.test.mjs`
 - `tools/pilot-studio-alternatives-browser.mjs`
 - `tools/pilot-web-control.test.mjs`
+- `tools/web-snare-browser.mjs`
+- `tools/web-zip-browser.mjs`
 - `.superpowers/sdd/2026-09-11-power-pilots/task-2-report.md`
 
 ## Scope and concerns
@@ -79,3 +81,5 @@ This report does not approve every retained power. It reports only the acceptanc
 - Studio keeps its existing library/stage/inspector language. The narrow `Kit source` selector explicitly labels removed definitions as authoring alternatives; it does not fill default gaps or present them as balance recommendations.
 - Native Web Darts contact/expiry evidence was captured and accepted by the controller; additional presentation captures remain controller-owned. This task's own browser acceptance covers Studio/runtime behavior and page errors.
 - The acceptance matrix still lists broader held-power lifecycle and retained-kit coverage gaps. Per controller direction, those are reported rather than folded into this bounded implementation.
+- Minor deferred follow-up: each Web Darts shot still allocates its own knot geometry; the geometry is disposed correctly, but pooling/shared-geometry optimization is outside this fix.
+- Minor deferred follow-up: the focused obstruction test verifies solid-cover HP preservation, but does not include a dedicated interior-wall Web Darts fixture assertion.

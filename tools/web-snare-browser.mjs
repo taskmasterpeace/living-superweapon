@@ -1,13 +1,14 @@
 import {chromium} from 'playwright';
 import assert from 'node:assert/strict';
 import {mkdir,writeFile} from 'node:fs/promises';
+const baseUrl=(process.env.LSW_BASE_URL||'http://127.0.0.1:5180').replace(/\/$/,'');
 const out='artifacts/web-snare-native';await mkdir(out,{recursive:true});
 const browser=await chromium.launch({channel:'chromium',headless:false});
 const context=await browser.newContext({viewport:{width:1672,height:941},recordVideo:{dir:out,size:{width:1672,height:941}}});
-const page=await context.newPage(),video=page.video(),result={kind:'Normal spawn Free practice; public Shift+N training targets, native LMB Web Snare; no actor/camera/AI/timer overrides',errors:[],samples:[]};
+const page=await context.newPage(),video=page.video(),result={baseUrl,kind:'Normal spawn Free practice; public Shift+N training targets, native LMB Web Snare; no actor/camera/AI/timer overrides',errors:[],samples:[]};
 page.on('pageerror',e=>result.errors.push(e.message));
 try{
- await page.goto('http://127.0.0.1:5180/powerworld.html?hero=webline');await page.locator('[data-encounter="practice"]').click();await page.locator('#pwGo').click();
+ await page.goto(`${baseUrl}/powerworld.html?hero=webline`);await page.locator('[data-encounter="practice"]').click();await page.locator('#pwGo').click();
  await page.waitForFunction(()=>PW.game.pwStage?.frontlineReady,null,{timeout:60000});
  await page.mouse.click(800,450,{button:'middle'});await page.waitForFunction(()=>!!document.pointerLockElement);
  await page.keyboard.press('Shift+KeyN');await page.waitForFunction(()=>PW.game.entities.some(f=>f.isDummy));
