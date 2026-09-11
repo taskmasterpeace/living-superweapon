@@ -19,7 +19,7 @@ export const POSE_DEFAULTS = Object.freeze({
   // the elbow lanes. The former signs folded forearms into the ribs on recovery.
   hover: Object.freeze({armLx:-.12,armRx:-.18,armLz:-.22,armRz:.22,elbowL:.75,elbowR:.7,hipL:-.16,hipR:.12,kneeL:.5,kneeR:.3,headPitch:0}),
   forward: Object.freeze({armLx:.28,armRx:.28,armLz:-.18,armRz:.18,elbowL:.32,elbowR:.32,hipL:.04,hipR:-.08,kneeL:.24,kneeR:.16,headPitch:-.8}),
-  backward: Object.freeze({armLx:-.55,armRx:-.62,armLz:-.3,armRz:.3,elbowL:1.12,elbowR:1.18,hipL:-.3,hipR:-.18,kneeL:.68,kneeR:.48,headPitch:.08}),
+  backward: Object.freeze({armLx:-.55,armRx:-.62,armLz:-.3,armRz:.3,elbowL:1.12,elbowR:1.18,hipL:-.78,hipR:-.4,kneeL:1.2,kneeR:.8,headPitch:.08}),
   strafeLeft: Object.freeze({armLx:-.32,armRx:-.48,armLz:-.35,armRz:.3,elbowL:.9,elbowR:1.1,hipL:-.28,hipR:.02,kneeL:.72,kneeR:.45,headPitch:.02}),
   strafeRight: Object.freeze({armLx:-.48,armRx:-.32,armLz:-.3,armRz:.35,elbowL:1.1,elbowR:.9,hipL:.02,hipR:-.28,kneeL:.45,kneeR:.72,headPitch:.02}),
   brake: Object.freeze({armLx:-.55,armRx:-.62,armLz:-.44,armRz:.44,elbowL:1.2,elbowR:1.15,hipL:-.55,hipR:-.38,kneeL:1.05,kneeR:.8,headPitch:.08}),
