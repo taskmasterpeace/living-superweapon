@@ -1,0 +1,154 @@
+{
+  "name": "Original field ceramic shoulder and forearm armor",
+  "created": "2026-09-09",
+  "externalAssets": [],
+  "rights": "Original Blender-authored project geometry. No third-party mesh/texture license obligations.",
+  "source": "assets-src/frontline-hero-armor/author-field-armor.py",
+  "blender": "assets-src/frontline-hero-armor/field-armor.blend",
+  "geometryBank": "src/data/field-armor-bank.json",
+  "sha256": "0f92ed66ff55213bbf21136156505b788984a598c959b9cbcdde8a0cee178353",
+  "bytes": 193576,
+  "materials": [
+    {
+      "name": "ceramic",
+      "color": [
+        0.67,
+        0.61,
+        0.48
+      ],
+      "roughness": 0.56,
+      "metalness": 0.12
+    },
+    {
+      "name": "rubber",
+      "color": [
+        0.028,
+        0.03,
+        0.027
+      ],
+      "roughness": 0.83,
+      "metalness": 0.025
+    },
+    {
+      "name": "hardware",
+      "color": [
+        0.33,
+        0.255,
+        0.135
+      ],
+      "roughness": 0.49,
+      "metalness": 0.68
+    }
+  ],
+  "pieces": {
+    "pauldron": {
+      "triangles": 760,
+      "vertices": 1750,
+      "groups": [
+        {
+          "start": 0,
+          "count": 552,
+          "materialIndex": 1
+        },
+        {
+          "start": 552,
+          "count": 924,
+          "materialIndex": 0
+        },
+        {
+          "start": 1476,
+          "count": 804,
+          "materialIndex": 2
+        }
+      ],
+      "bounds": {
+        "min": [
+          -0.572,
+          -0.0853786,
+          -0.548
+        ],
+        "max": [
+          0.572,
+          0.274,
+          0.548
+        ]
+      },
+      "pivot": [
+        0,
+        0,
+        0
+      ],
+      "mount": {
+        "parent": "upper",
+        "position": [
+          0,
+          0.58,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "degenerateTriangles": 0,
+      "maxNormalError": 7.718597305750308e-8
+    },
+    "forearm_guard": {
+      "triangles": 1508,
+      "vertices": 3720,
+      "groups": [
+        {
+          "start": 0,
+          "count": 1308,
+          "materialIndex": 0
+        },
+        {
+          "start": 1308,
+          "count": 2316,
+          "materialIndex": 1
+        },
+        {
+          "start": 3624,
+          "count": 900,
+          "materialIndex": 2
+        }
+      ],
+      "bounds": {
+        "min": [
+          -0.3826029,
+          -0.495,
+          -0.3266689
+        ],
+        "max": [
+          0.3826029,
+          0.492,
+          0.3379202
+        ]
+      },
+      "pivot": [
+        0,
+        0,
+        0
+      ],
+      "mount": {
+        "parent": "fore",
+        "position": [
+          0,
+          -0.18,
+          0
+        ],
+        "scale": [
+          1,
+          1,
+          1
+        ]
+      },
+      "degenerateTriangles": 0,
+      "maxNormalError": 7.61015329642234e-8
+    }
+  },
+  "texture": "None; panel breaks, liner, straps, bevels and fixtures are modeled geometry.",
+  "rig": "Rigid armor pieces; zero-centered geometry. Mount on existing native upper/fore driven meshes at recorded offsets and unit scale. No skeleton, clips, runtime URL loading or controller.",
+  "limitations": "Generic symmetrical rigid armor. No damage variants, scanned wear or independent plate animation. Preview-stage translations are excluded from exported GLB and bank."
+}

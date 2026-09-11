@@ -1,0 +1,219 @@
+{
+ "format": "pw-asset-package",
+ "formatVersion": 1,
+ "id": "equipment.sidearm",
+ "version": 1,
+ "kind": "equipment",
+ "displayName": "Service sidearm",
+ "tags": [
+  "equipment",
+  "firearm",
+  "pistol",
+  "one-handed",
+  "procedural"
+ ],
+ "rig": {
+  "skeleton": "none"
+ },
+ "sockets": [
+  {
+   "name": "grip",
+   "parent": "sidearm",
+   "position": [
+    0,
+    0,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "holster",
+   "parent": "sidearm",
+   "position": [
+    0,
+    -0.35,
+    0.2
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "magazine",
+   "parent": "sidearm",
+   "position": [
+    0,
+    0.33,
+    -0.06
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "muzzle",
+   "parent": "sidearm",
+   "position": [
+    0,
+    -1.32,
+    0.28
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "support",
+   "parent": "sidearm",
+   "position": [
+    0,
+    -0.25,
+    -0.05
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  }
+ ],
+ "bounds": {
+  "min": [
+   -0.14,
+   -1.3,
+   -0.27
+  ],
+  "max": [
+   0.14,
+   0.3,
+   0.5
+  ]
+ },
+ "materials": [
+  {
+   "name": "gunmetal"
+  },
+  {
+   "name": "polymer"
+  }
+ ],
+ "equipment": {
+  "class": "firearm",
+  "twoHanded": false,
+  "hand": "right"
+ },
+ "lods": [
+  {
+   "level": 0,
+   "output": "model.glb",
+   "triangles": 116
+  }
+ ],
+ "units": {
+  "lengthUnit": "game-unit",
+  "metersPerUnit": 0.19,
+  "up": "+Y",
+  "forward": "+Z",
+  "handedness": "right",
+  "sourceConversion": {
+   "scale": 1,
+   "yawDegrees": 0,
+   "mirrorX": false,
+   "sourceUp": "+Y",
+   "sourceForward": "+Z",
+   "note": "authored directly in game units along the engine weapon axis (-Y toward the muzzle)"
+  }
+ },
+ "budgets": {
+  "profile": "desktop",
+  "measured": {
+   "triangles": 116,
+   "drawCalls": 2,
+   "materials": 2,
+   "bones": 0,
+   "textures": 0,
+   "bytes": 10068
+  },
+  "limits": {
+   "triangles": 5320,
+   "drawCalls": 8,
+   "materials": 4,
+   "bones": 1,
+   "textures": 1,
+   "bytes": 427570
+  }
+ },
+ "structural": {
+  "validator": "2.0.0-dev.3.10",
+  "errors": 0,
+  "warnings": 0
+ },
+ "provenance": {
+  "author": "PowerWorld authoring (procedural, img2threejs method)",
+  "license": "Proprietary-Internal",
+  "redistribution": "internal",
+  "revision": "6e60b5e22419464b4853e01ddb6c0e6f6659a733",
+  "terms": "Committed procedural factory reviewed as build-time source. Proportions follow the engine's existing pistol so the primary grip mounts on the production hand socket; the full-extension support-hand fit remains an integration blocker.",
+  "attribution": "Method: img2threejs (Apache-2.0) at the recorded revision; no img2threejs code ships in the package."
+ },
+ "source": {
+  "adapter": "procedural-prop@1",
+  "files": [
+   {
+    "path": "authoring/recipes/equipment/sidearm/model.js",
+    "sha256": "6cc3a95bad3c90290a585ee3b462c06288f152af8a1f739207170636efda99d4"
+   }
+  ],
+  "recipe": {
+   "path": "authoring/recipes/equipment/sidearm/recipe.json",
+   "sha256": "17f6c4451e0304d9351d8617bd5430a2ca3b9ab4f3147735b93e8e9e96556ce7"
+  }
+ },
+ "tool": {
+  "name": "powerworld-authoring",
+  "version": "0.1.0",
+  "three": "0.169.0",
+  "adapterVersion": 1
+ },
+ "build": {
+  "options": {},
+  "cacheKey": "0e58b7940a621b355489cdc4e569a61d3d89708afbc7a0944acb68b784e2a2c4",
+  "contentHash": "8348fb0f54dea3752fe99b3d26146a4c09c9cf7d77f96401521d4c41b2080000",
+  "profile": "desktop"
+ },
+ "acceptance": {
+  "visual": "unapproved-placeholder",
+  "blockers": [
+   {
+    "id": "full-extension-support-hand",
+    "owner": "main-task",
+    "summary": "In full-extension aim takes the production rig cannot close the support hand on the grip (measured 0.5-0.9 u gap; arm reach 3.58 u on a 3.92 u shoulder span at scale 1.12). Only the drawn-in reload pose closes within 0.35 u. The armed carrier must pull the trigger hand back before this weapon can be called fitted in aim poses."
+   }
+  ],
+  "note": "Procedural placeholder. Not art-approved."
+ },
+ "outputs": [
+  {
+   "path": "model.glb",
+   "role": "glb",
+   "sha256": "b8c940dad78d402d3e0df925f0a79ae003cbce445c34f8f556decebeb55ef637",
+   "bytes": 10068
+  }
+ ],
+ "packageHash": "2aef653d12f5bde3a7dbbf2b270e77c3f21332ca933e2724611c53e397f09c45"
+}

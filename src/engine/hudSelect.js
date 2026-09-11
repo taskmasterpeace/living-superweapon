@@ -16,6 +16,7 @@
 // the WebGL renderer cannot read CSS tokens.
 
 import * as THREE from 'three';
+import {METERS_PER_UNIT} from '../core/world-units.js';
 import { figure } from './figure.js';
 import { ROSTER } from '../data/characters.js';
 import { heroStats, kitFacts, THREAT_COLORS } from './hud.js';
@@ -28,7 +29,7 @@ import { describeAbility, slotFacts } from './hudUtil.js';
 
 // 1u ≈ 0.19m (TRUE 1:1 SCALE, CLAUDE.md); the hero is 9.6u = 1.8m. Everything the studio draws is in
 // world units, so the figure and a power's footprint stand at their real relative sizes by construction.
-const U_TO_M = 0.19;
+const U_TO_M = METERS_PER_UNIT;
 const SLOT_ORDER = ['lmb', 'rmb', 'q', 'e', 'f', 'shift', 'r'];   // the fire order on the HUD row
 // Reach in world units, from whatever field the ability actually uses (mirrors hudUtil.reachOf, which
 // isn't exported — one small copy, kept in step with it).
@@ -45,7 +46,7 @@ function powReach(a) {
 const SEL_CSS = `
 #hSelect{position:fixed;inset:0;z-index:71;display:none;flex-direction:column;
   font-family:var(--f-display,"Rajdhani",system-ui,sans-serif);color:var(--text,#e8e2d6);
-  background:radial-gradient(120% 90% at 50% 8%,rgba(14,14,20,.62),rgba(6,7,11,.94) 70%);}
+  background:radial-gradient(120% 90% at 50% 8%,#17170f 0%,#090a0d 48%,#050609 78%);}
 #hSelect.on{display:flex}
 #hSelect .selscan{position:absolute;inset:0;pointer-events:none;
   background:repeating-linear-gradient(0deg,rgba(0,0,0,.16) 0 1px,transparent 1px 3px);opacity:.35;mix-blend-mode:multiply}
@@ -90,11 +91,15 @@ const SEL_CSS = `
   transform-origin:center bottom}
 #hSelect .scard .snm{position:absolute;left:0;right:0;bottom:0;padding:4px 5px 5px;
   font-size:10px;font-weight:800;letter-spacing:.03em;text-align:center;color:#fff;text-transform:uppercase;
-  background:linear-gradient(180deg,transparent,rgba(0,0,0,.82));text-shadow:0 1px 2px #000;line-height:1}
+  background:linear-gradient(180deg,transparent,rgba(0,0,0,.88));text-shadow:0 1px 2px #000;line-height:1;z-index:3}
 #hSelect .scard .ssil{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);font-size:44px;font-weight:900;
-  color:rgba(255,255,255,.22);text-shadow:0 2px 6px rgba(0,0,0,.4)}
-#hSelect .scard .sfno{position:absolute;top:4px;left:5px;font-family:var(--f-mono,monospace);font-size:8px;letter-spacing:.05em;color:rgba(255,255,255,.7)}
-#hSelect .scard .sdot{position:absolute;top:5px;right:5px;width:8px;height:8px;border-radius:50%;box-shadow:0 0 6px currentColor}
+  color:rgba(255,255,255,.22);text-shadow:0 2px 6px rgba(0,0,0,.4);transition:opacity .18s}
+#hSelect .scard .sportrait{position:absolute;inset:5px 4px 15px;width:calc(100% - 8px);height:calc(100% - 20px);
+  object-fit:contain;object-position:center bottom;opacity:0;z-index:1;filter:drop-shadow(0 5px 5px rgba(0,0,0,.7));transition:opacity .18s}
+#hSelect .scard.portrait-ready .sportrait{opacity:1}
+#hSelect .scard.portrait-ready .ssil{opacity:0}
+#hSelect .scard .sfno{position:absolute;top:4px;left:5px;font-family:var(--f-mono,monospace);font-size:8px;letter-spacing:.05em;color:rgba(255,255,255,.7);z-index:3}
+#hSelect .scard .sdot{position:absolute;top:5px;right:5px;width:8px;height:8px;border-radius:50%;box-shadow:0 0 6px currentColor;z-index:3}
 #hSelect .scard.on{filter:none;opacity:1;transform:scale(1.28) translateY(-8px);z-index:5;
   border-color:var(--c-accent);box-shadow:0 0 0 2px var(--c-accent),0 10px 26px rgba(0,0,0,.6),0 0 34px var(--c-glow)}
 #hSelect .selbar{display:flex;align-items:center;justify-content:center;gap:26px;padding:12px 40px 16px;
@@ -230,6 +235,7 @@ export const SelectMixin = {
       card.style.setProperty('--c-accent', c.accent || '#ffd24a');
       card.style.setProperty('--c-glow', (c.accent || '#ffd24a') + '88');
       card.innerHTML = `<span class="sedge"></span>`
+        + `<img class="sportrait" alt="${d.name} portrait" decoding="async">`
         + `<span class="sfno">${String(i + 1).padStart(2, '0')}</span>`
         + `<span class="sdot" style="color:${tc};background:${tc}"></span>`
         + `<span class="ssil">${(d.name || '?')[0]}</span>`
@@ -283,6 +289,32 @@ export const SelectMixin = {
 
   _selStep(d) { this._selSelect((this._sel.idx + d + ROSTER.length) % ROSTER.length); },
 
+  _selCardPortrait(i) {
+    const S=this._sel,card=S?.cards?.[i],image=card?.querySelector('.sportrait');
+    if(!card||!image||card.dataset.portraitRequested)return;
+    card.dataset.portraitRequested='true';
+    image.onload=()=>card.classList.add('portrait-ready');
+    image.onerror=()=>{delete card.dataset.portraitRequested;card.classList.remove('portrait-ready');};
+    import('./player-status-portrait.js').then(module=>module.portraitOf(ROSTER[i])).then(url=>{image.src=url;})
+      .catch(error=>{image.onerror();console.warn('Character-select portrait unavailable',ROSTER[i]?.id,error);});
+  },
+
+  _selWarmPortraits(origin) {
+    const S=this._sel;if(!S)return;
+    const token=S.portraitWarmToken=(S.portraitWarmToken||0)+1;
+    const order=ROSTER.map((_,i)=>i).sort((a,b)=>{
+      const distance=i=>Math.min(Math.abs(i-origin),ROSTER.length-Math.abs(i-origin));
+      return distance(a)-distance(b);
+    });
+    let cursor=0;
+    const next=()=>{
+      if(token!==S.portraitWarmToken)return;
+      this._selCardPortrait(order[cursor++]);
+      if(cursor<order.length)setTimeout(next,24);
+    };
+    setTimeout(next,0);
+  },
+
   _selSelect(i, immediate) {
     const S = this._sel; S.idx = i;
     const def = ROSTER[i];
@@ -296,6 +328,8 @@ export const SelectMixin = {
     });
     // a tactile landing pop on the card that just became selected (not on the very first frame)
     const card = S.cards[i];
+    this._selCardPortrait(i);
+    this._selWarmPortraits(i);
     if (!immediate) { card.classList.remove('pop'); void card.offsetWidth; card.classList.add('pop'); }
     // centre the strip on the selection
     const x = (S.strip.parentElement.clientWidth / 2) - (card.offsetLeft + card.offsetWidth / 2);
@@ -378,10 +412,13 @@ export const SelectMixin = {
   },
 
   _selDispose(obj) {
+    const resources=new Set();
     obj.traverse(o => {
-      if (o.geometry) o.geometry.dispose();
-      if (o.material) (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => m && m.dispose());
+      if (o.geometry) for(const geometry of o.geometry.palmVariants||[o.geometry])resources.add(geometry);
+      if (o.skeleton) resources.add(o.skeleton);
+      if (o.material) (Array.isArray(o.material) ? o.material : [o.material]).forEach(m => m && resources.add(m));
     });
+    for(const resource of resources)resource.dispose();
   },
 
   _selResize() {

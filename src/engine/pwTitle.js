@@ -23,16 +23,18 @@ import { liftCapacityOf } from './entity.js';
 import { heroStats, kitFacts, THREAT_COLORS } from './hud.js';
 import { icon } from './icons.js';
 import { esc } from './hudUtil.js';
+import { createFieldFootage } from './field-footage-view.js';
+import {DAYLIGHT_PRESETS,daylightPreset} from '../data/daylight.js';
 
 const PREF = 'powerworld_prefs_v1';
 
 // The four rules of `_openSky` (manual §46). Named here because a player arriving on this page has
 // no way to know this dimension is different, and "one flag, four rules" is the actual design.
 const LAWS = [
-  ['flight', 'EVERY fighter flies here — grounded ones included. Forward is where you look, in 3-D.'],
+  ['flight', 'Flyers climb, hover and dive. Grounded soldiers sprint and leap. Hold ALT to look around while keeping your travel and aim.'],
   ['range', 'A punch SENDS them. The same haymaker travels 15 body lengths against the city\'s two.'],
   ['power', 'The ground is ammunition — break a spire, pick up the rubble, throw it. Shoot theirs down.'],
-  ['threat', 'No civilians, no police, no press. Nothing here is watching and nothing here is innocent.'],
+  ['threat', 'Choose an encounter: practice, outbreak, clone recovery or escalating outpost security. The field press records major hits.'],
 ];
 
 /** How many of the 52 can lift this rung — the ladder's own justification, computed live. */
@@ -165,6 +167,10 @@ export function mountPWTitle(ctx) {
   text-transform:uppercase; padding:7px 13px; cursor:pointer; background:transparent; border:none;
   color:var(--text-4,#9a9385); transition:.2s; min-height:32px; }
 #pwTitle .pwseg button.on{ background:var(--gold-deep,#8a6b1e); color:var(--on-gold,#20180a); font-weight:700; }
+#pwTitle .pwEnvironment button{min-height:44px;color:var(--text,#e8e2d4);}
+#pwTitle .pwEnvironment button.on{background:var(--gold,#f5b21a);color:var(--on-gold,#20180a);}
+#pwTitle .pwEnvironment button:hover{background:var(--line-gold,#6b5824);color:var(--text,#e8e2d4);}
+#pwTitle .pwEnvironment button:focus-visible{outline:2px solid var(--text,#e8e2d4);outline-offset:-4px;}
 #pwTitle .pwgo{ width:100%; padding:15px; font-family:var(--f-display,Rajdhani,sans-serif); font-size:19px;
   font-weight:800; letter-spacing:.16em; text-transform:uppercase; cursor:pointer; min-height:52px;
   background:var(--grad-gold,linear-gradient(180deg,#f5b21a,#8a6b1e)); color:var(--on-gold,#20180a);
@@ -178,13 +184,28 @@ body.phone #pwTitle h1{ font-size:34px; }
     document.head.appendChild(s);
   }
 
-  let selYou = ROSTER.find(r => r.id === prefs.p1) || ROSTER[0];
+  const studioHero = new URLSearchParams(location.search).get('hero');
+  let selYou = ROSTER.find(r => r.id === (studioHero || prefs.p1)) || ROSTER[0];
   let selFoe = ROSTER.find(r => r.id === prefs.p2) || ROSTER[2] || ROSTER[1] || ROSTER[0];
   let picking = 'you';                       // which slot the roster grid is assigning
   let two = !!prefs.two;
   let ai = prefs.ai || 1.25;
+  let encounter = 'sparring'; // The optional recovery slice never replaces the default.
+  let cameraPreset=prefs.cameraPreset==='frontline'?'frontline':'character';
+  let daylight=daylightPreset(prefs.daylight).id;
+  let weatherPreset=['rain','storm','tornado','hurricane'].includes(prefs.weatherPreset)?prefs.weatherPreset:'clear';
 
-  const save = () => { try { localStorage.setItem(PREF, JSON.stringify({ p1: selYou.id, p2: selFoe.id, two, ai })); } catch {} };
+  const save = () => { try { localStorage.setItem(PREF, JSON.stringify({ p1: selYou.id, p2: selFoe.id, two, ai, cameraPreset, daylight, weatherPreset })); } catch {} };
+  const footage = createFieldFootage(ctx.game,{heroId:selYou.id,onOpenNewsroom:()=>ctx.openNewsroom?.({heroId:selYou.id})});
+
+  const openPlayerSelect=()=>{
+    el.style.visibility='hidden';
+    hud.onSelectBack=()=>{el.style.visibility='visible';};
+    hud.showSelect((cfg)=>{
+      selYou=ROSTER.find(r=>r.id===cfg.p1)||selYou;save();
+      ctx.enter({mode:'powerworld',p1:selYou.id,p2:selFoe.id,twoPlayer:two,aiLevel:ai,encounter:two?'sparring':encounter,cameraPreset:two?'character':cameraPreset,daylight,weatherPreset});
+    },{mode:'powerworld',modeName:'POWERWORLD',p1:selYou.id});
+  };
 
   // ---- the stage readout, every figure derived from the stage itself ----
   const loose = STAGE.loose.reduce((a, b) => a + b, 0);
@@ -193,21 +214,23 @@ body.phone #pwTitle h1{ font-size:34px; }
     ['COVER', `${STAGE.spires + STAGE.boulders}`, `${STAGE.spires} spires · ${STAGE.boulders} boulders`],
     ['LOOSE ROCK', `${loose}`, 'throwable from the first frame'],
     ['CEILING', `${STAGE.spaceTo}u`, `space from ${STAGE.spaceFrom}u`],
-    ['WITNESSES', 'NONE', 'no law, no press'],
+    ['WITNESSES', 'FIELD PRESS', 'combat highlights'],
   ];
 
   function render() {
     const you = selYou, foe = selFoe;
     el.innerHTML = `
       <div class="pwtop">
+        <a href="./studio.html">CHARACTER / POWER HARNESS ↗</a>
         <a href="./index.html" title="The full game — the city, the career, the registry">← WAR WORLD</a>
+        <button id="pwNewsroom" aria-label="Newsroom">▣ Newsroom</button>
         <button id="pwRank">📊 Rankings</button>
         <button id="pwOpt">⚙ Options</button>
         <button id="pwHow">❓ How to Play</button>
       </div>
       <div class="pwhead">
         <h1>POWERWORLD</h1>
-        <div class="pwkick">The other dimension · open sky · nothing here is watching</div>
+        <div class="pwkick">Desert proving ground · open sky · power leaves a mark</div>
       </div>
       <div class="pwlaws">
         ${LAWS.map(([ic, t]) => `<div class="pwlaw">${icon(ic, 13)}<span>${t}</span></div>`).join('')}
@@ -216,7 +239,7 @@ body.phone #pwTitle h1{ font-size:34px; }
         ${stageFacts().map(([k, v, s]) => `<div class="pwsf"><span class="pwsk">${k}</span><span class="pwsv">${v} <small>${esc(s)}</small></span></div>`).join('')}
       </div>
       <div class="pwwrap">
-        <div class="pwpv" id="pwPv"></div>
+        <div class="pwleft"><div id="pwFootage"></div><div class="pwpv" id="pwPv"></div></div>
         <div class="pwright">
           <div class="pwtabs">
             <div class="pwtab ${picking === 'you' ? 'on' : ''}" data-pick="you">YOU — ${esc(you.name)}</div>
@@ -224,23 +247,53 @@ body.phone #pwTitle h1{ font-size:34px; }
           </div>
           <div class="pwroster" id="pwRoster"></div>
           <div class="pwrow">
+            <span class="pwlbl">Encounter</span>
+            <div class="pwseg" id="pwEncounter">
+              <button data-encounter="sparring" class="${encounter === 'sparring' ? 'on' : ''}" aria-pressed="${encounter === 'sparring'}">Sparring</button>
+              <button data-encounter="practice" class="${encounter === 'practice' ? 'on' : ''}" aria-pressed="${encounter === 'practice'}"${two ? ' disabled' : ''}>Free practice · 1P</button>
+              <button data-encounter="zombies" class="${encounter === 'zombies' ? 'on' : ''}" aria-pressed="${encounter === 'zombies'}"${two ? ' disabled' : ''}>Outbreak · 1P</button>
+              <button data-encounter="security" class="${encounter === 'security' ? 'on' : ''}" aria-pressed="${encounter === 'security'}"${two ? ' disabled' : ''}>Outpost response · 1P</button>
+              <button data-encounter="frontline" class="${encounter === 'frontline' ? 'on' : ''}" aria-pressed="${encounter === 'frontline'}"${two ? ' disabled style="opacity:.35" title="Clone recovery is one-player only"' : ''}>Clone recovery · 1P</button>
+            </div>
+          </div>
+          ${encounter === 'frontline' ? '<div class="pwnote">Four rifle clones guard a sealed sample. Fight or bypass them, land by the amber case for 1.5 seconds, then return to extraction for 2 uninterrupted seconds. Damage interrupts either hold. Deliver the sample to complete the operation.</div>' : ''}
+          ${encounter === 'practice' ? '<div class="pwnote">No hostile spawns. Learn your powers, drive the scouts or practice helicopter and jet landings. Health, energy and collision are unchanged. Press B when you want to add a rival.</div>' : ''}
+          ${encounter === 'zombies' ? '<div class="pwnote">Three finite waves of grounded zombies. Punch, throw or use your weapons; five seconds between waves gives you room to recover. Defeat every wave to contain the outbreak.</div>' : ''}
+          ${encounter === 'security' ? '<div class="pwnote">Two officers guard the outpost. Attacking them brings police backup, tactical units, federal agents and then military infantry. Disengage and create distance to cool the response. No crime is assigned for collecting a research case.</div>' : ''}
+          <div class="pwnote"><b>ALT</b> looks around without turning travel or aim. <b>TAB</b> readies melee: LMB punch / hold heavy, RMB grab. TAB restores your attacks. <b>F3</b> opens the roster.</div>
+          <div class="pwrow"><span class="pwlbl" id="pwDaylightLabel">Lighting</span><div class="pwseg pwEnvironment" id="pwDaylight" role="group" aria-labelledby="pwDaylightLabel">
+            ${Object.values(DAYLIGHT_PRESETS).map(p=>`<button type="button" data-daylight="${p.id}" class="${daylight===p.id?'on':''}" aria-pressed="${daylight===p.id}">${p.label}</button>`).join('')}
+          </div></div>
+          <div class="pwrow"><span class="pwlbl" id="pwWeatherLabel">Weather</span><div class="pwseg pwEnvironment" id="pwWeather" role="group" aria-labelledby="pwWeatherLabel">
+            ${['clear','rain','storm','tornado','hurricane'].map(id=>`<button type="button" data-weather="${id}" class="${weatherPreset===id?'on':''}" aria-pressed="${weatherPreset===id}">${{clear:'Clear',rain:'Rain',storm:'Storm',tornado:'Tornado',hurricane:'Hurricane'}[id]}</button>`).join('')}
+          </div></div>
+          <div class="pwrow"><span class="pwlbl">Camera · 1P</span><div class="pwseg" id="pwCamera">
+            <button data-camera="character" class="${cameraPreset==='character'?'on':''}" aria-pressed="${cameraPreset==='character'}">Character / BFP</button>
+            <button data-camera="frontline" class="${cameraPreset==='frontline'?'on':''}" aria-pressed="${cameraPreset==='frontline'}"${two?' disabled':''}>Front-line close</button>
+          </div></div><div class="pwnote">Close framing applies to this match only. Character / BFP keeps your saved Studio camera.</div>
+          <div class="pwrow">
             <span class="pwlbl">Players</span>
             <div class="pwseg" id="pwTwo">
-              <button data-two="0" class="${two ? '' : 'on'}">1P vs AI</button>
+              <button data-two="0" class="${two ? '' : 'on'}">1P</button>
               <button data-two="1" class="${two ? 'on' : ''}">2P LOCAL</button>
             </div>
             <span class="pwlbl" style="margin-left:6px">Opponent</span>
             <div class="pwseg" id="pwAi">
               ${[['0.85', 'ROOKIE'], ['1.25', 'PRO'], ['1.75', 'ELITE']].map(([v, n]) =>
-                `<button data-ai="${v}" class="${Math.abs(ai - +v) < 0.01 ? 'on' : ''}"${two ? ' disabled style="opacity:.35"' : ''}>${n}</button>`).join('')}
+                `<button data-ai="${v}" class="${Math.abs(ai - +v) < 0.01 ? 'on' : ''}"${two || encounter!=='sparring' ? ' disabled style="opacity:.35"' : ''}>${n}</button>`).join('')}
             </div>
           </div>
           <button class="pwgo" id="pwGo">ENTER THE DIMENSION ▶</button>
-          <div class="pwnote">One stage. <b>T</b> locks on and cycles · <b>SPACE</b> climbs, and keeps climbing ·
+          <div class="pwnote">One stage. <b>T</b> locks on and cycles · <b>SPACE</b> jumps; flight-capable characters can climb ·
             <b>G</b> hoists a rock · fists and powers work exactly as they do at home.</div>
+          <div class="pwnote">Soldier play: select MERC, SARGE, BREACH or RECON above. Same third-person mouse-look. MERC: E grenade, double-tap a direction to Combat Blink (6 energy). SARGE: default RMB frag grenade. Wheel changes primary attack; RMB + wheel changes secondary.</div>
+          <div class="pwnote">Grounded characters: approach a parked vehicle and press J. Scout: WASD drive, Space brake. Helicopter: W/S forward, A/D turn, Space/Z lift. Jet: W/S throttle, A/D turn, Space/Z pitch after a takeoff roll. Aircraft LMB cannon; land and stop before J exit. Natural flyers and active flight-gadget users cannot pilot. No cockpit/seat animation yet.
+            <a href="./models/frontline/AIRCRAFT-LICENSE.md" target="_blank" rel="noopener">Aircraft credits &amp; licenses</a></div>
         </div>
       </div>`;
 
+    footage.setHero(selYou.id);
+    el.querySelector('#pwFootage').appendChild(footage.el);
     // ---- the roster grid ----
     const grid = el.querySelector('#pwRoster');
     const sel = picking === 'you' ? you : foe;
@@ -278,29 +331,70 @@ body.phone #pwTitle h1{ font-size:34px; }
       </div>`;
 
     // ---- wiring ----
-    for (const t of el.querySelectorAll('.pwtab')) t.onclick = () => { picking = t.dataset.pick; render(); };
-    for (const b of el.querySelectorAll('#pwTwo button')) b.onclick = () => { two = b.dataset.two === '1'; if (two) picking = 'you'; save(); render(); };
+    // ⚠ THE FILMSTRIP IS THE PICKER FOR *YOU* (Robert, 2026-07-28: "use the character selector we
+    // had earlier — this is what we should have"). Clicking YOU opens the DBZ-arena SELECT YOUR
+    // CHARACTER screen (hudSelect.js, live 3D hero + filmstrip); ENTER there launches straight into
+    // PowerWorld against the currently-picked opponent. ESC drops back to this door (onSelectBack —
+    // without it, showSelect's back path would open the CITY title on the PowerWorld page).
+    // The OPPONENT keeps the grid: assigning a foe is admin, picking YOUR fighter is the ceremony.
+    for (const t of el.querySelectorAll('.pwtab')) t.onclick = () => {
+      if (t.dataset.pick === 'you' && hud.showSelect) {
+        openPlayerSelect();
+        return;
+      }
+      picking = t.dataset.pick; render();
+    };
+    for (const b of el.querySelectorAll('#pwTwo button')) b.onclick = () => { two = b.dataset.two === '1'; if (two) { picking = 'you'; encounter = 'sparring'; } save(); render(); };
+    for (const b of el.querySelectorAll('#pwEncounter button')) b.onclick = () => { if (b.disabled) return; encounter = b.dataset.encounter; render(); };
+    for (const b of el.querySelectorAll('#pwCamera button')) b.onclick = () => {if(b.disabled)return;cameraPreset=b.dataset.camera;save();render();};
+    for (const b of el.querySelectorAll('#pwDaylight button')) b.onclick = () => {
+      daylight=daylightPreset(b.dataset.daylight).id;save();
+      for(const option of el.querySelectorAll('#pwDaylight button')){
+        const selected=option.dataset.daylight===daylight;
+        option.classList.toggle('on',selected);option.setAttribute('aria-pressed',String(selected));
+      }
+    };
+    for(const b of el.querySelectorAll('#pwWeather button'))b.onclick=()=>{
+      weatherPreset=['rain','storm','tornado','hurricane'].includes(b.dataset.weather)?b.dataset.weather:'clear';save();
+      for(const option of el.querySelectorAll('#pwWeather button')){
+        const selected=option.dataset.weather===weatherPreset;
+        option.classList.toggle('on',selected);option.setAttribute('aria-pressed',String(selected));
+      }
+    };
     for (const b of el.querySelectorAll('#pwAi button')) b.onclick = () => { if (two) return; ai = +b.dataset.ai; save(); render(); };
     el.querySelector('#pwOpt').onclick = () => hud.showOptions();
+    el.querySelector('#pwNewsroom').onclick = () => ctx.openNewsroom?.({heroId:selYou.id});
     el.querySelector('#pwHow').onclick = () => hud.showHowto();
     el.querySelector('#pwRank').onclick = () => hud.showRankings();
     el.querySelector('#pwGo').onclick = () => {
       save();
       // ⚠ `p2` is what every mode calls the opponent — powerworld's setup reads `o.enemy || o.p2`.
-      ctx.enter({ mode: 'powerworld', p1: selYou.id, p2: selFoe.id, twoPlayer: two, aiLevel: ai });
+      ctx.enter({ mode: 'powerworld', p1: selYou.id, p2: selFoe.id, twoPlayer: two, aiLevel: ai, encounter: two ? 'sparring' : encounter, cameraPreset:two?'character':cameraPreset, daylight, weatherPreset });
     };
   }
 
   function open() {
+    // Finalize this session's current shot without transferring/revoking its frame URLs.
+    ctx.game.news?.flush().catch(err=>console.warn('Field footage encoding',err));
+    for(const key of ctx.resumeFromTitle?[]:['frontline','zombies','desertLaw']){
+      ctx.game.ms?.[key]?.dispose();
+      if(ctx.game.ms?.[key])delete ctx.game.ms[key];
+    }
     render();
     // ⚠ `hud.titleOpen` is READ BY THE FRAME LOOP and by padSystem — a front door that does not set
     // it leaves the game thinking a match is live behind the menu (Escape pauses nothing, the pad's
     // select button does the wrong thing, the wheel cycles a hero you cannot see).
     hud.titleOpen = true;
     document.body.classList.remove('playing');
+    el.style.visibility='visible';
     el.style.display = 'flex';
+    footage.open();
+    // Character choice is PowerWorld's front door. The configuration registry
+    // remains one Escape / Filters action behind it for encounter and weather.
+    if(location.pathname==='/'||location.pathname.endsWith('/index.html'))queueMicrotask(openPlayerSelect);
   }
   function close() {
+    footage.close();
     hud.titleOpen = false;
     el.style.display = 'none';
   }

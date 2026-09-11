@@ -3,6 +3,8 @@
 import { pickByPersonality } from './psyche.js';
 import { HOLD_TYPES, holdTimeFor } from './abilityMeta.js';
 import { rand, chance, pick } from '../core/util.js';
+import {remoteAttack,remoteInRange} from './remote-control.js';
+import {slotUnlocked} from '../data/progression.js';
 
 // HOLD + holdTime derive from TYPE_META — ONE registration point per type (review item 2).
 const HOLD = HOLD_TYPES;
@@ -20,6 +22,7 @@ function deriveStyle(def) {
 
 export class AI {
   constructor(bot, level = 1) {
+    level = Math.max(.5, Math.min(2, Number.isFinite(level) ? level : 1));
     this.bot = bot; this.level = level;
     const p = bot.def.ai || {};
     this.style = p.style || deriveStyle(bot.def);
@@ -53,10 +56,12 @@ export class AI {
     const agi = (sh.agility ?? 5) / 5;             // AGILITY turns the head
     const fig = (sh.fighting ?? 5) / 5;            // FIGHTING steadies the hands
     this.turnRate = (2.1 + 0.5 * agi) * (0.75 + level * 0.3);   // rad/s — a real neck, not a turret
-    this.reflex = Math.max(0.11, 0.34 / level);    // seconds before ANY reaction: acquisition + defence
+    this.reflex = Math.max(0.2, 0.4 / level);     // difficulty never buys instant reactions
     this.aimJitter = 0.085 / (level * (0.7 + fig * 0.4));       // radians of wander at rest
     this.lead = Math.min(0.85, 0.35 * level);      // how much of a target's motion it predicts
     this._aimA = bot.facing;                       // the aim it is ACTUALLY holding (turn-rate limited)
+    this._aimPitch=0;this._seenTarget=null;this._threat=null;this._threatAge=0;this._threatAnswered=false;
+    this._beamSeenPoint={x:0,y:0,z:0};
     this._errA = 0; this._errT = 0; this._errTo = 0;
     this._acq = 0;                                 // acquisition timer — can't shoot the instant you appear
     this._lastSeen = false;
@@ -77,6 +82,40 @@ export class AI {
     const step = this.turnRate * dt;
     this._aimA += Math.abs(d) <= step ? d : Math.sign(d) * step;
     return { x: Math.sin(this._aimA), z: Math.cos(this._aimA), onTarget: Math.abs(d) < 0.25 };
+  }
+
+  // Each visible projectile/beam earns one decision after its own observation
+  // window. Retrying a 35% dodge roll every render frame made it near-certain.
+  observeThreat(threat,dt,game,ready=true) {
+    const b=this.bot,source=threat?.muzzle||threat?.pos;
+    const visibleAt=pos=>{
+      if(!pos)return false;
+      const dx=pos.x-b.pos.x,dz=pos.z-b.pos.z,d=Math.hypot(dx,dz);
+      return Math.hypot(dx,pos.y-b.pos.y,dz)<this.seeRange
+        &&(d<this.seeNear||(dx*b.aim.x+dz*b.aim.z)/Math.max(.001,d)>this.seeCos)&&game.canSee(b,{pos});
+    };
+    let visible=false;
+    if(threat&&!threat.dead&&!threat.pendingLaunch&&!(b.blindT>0)){
+      visible=visibleAt(source);
+      // A long shot can enter our sight while its caster remains out of range.
+      // Observe the closest already-emitted segment, never a future aim line.
+      if(!visible&&threat.path&&threat.pn>1){
+        const p=threat.path,point=this._beamSeenPoint;let closest=Infinity;
+        for(let i=1;i<threat.pn;i++){
+          const a=(i-1)*3,c=i*3,dx=p[c]-p[a],dy=p[c+1]-p[a+1],dz=p[c+2]-p[a+2],l2=dx*dx+dy*dy+dz*dz;
+          if(l2<1e-12)continue;
+          const t=Math.max(0,Math.min(1,((b.pos.x-p[a])*dx+(b.pos.y+5.2-p[a+1])*dy+(b.pos.z-p[a+2])*dz)/l2));
+          const x=p[a]+dx*t,y=p[a+1]+dy*t,z=p[a+2]+dz*t,d2=(x-b.pos.x)**2+(y-b.pos.y-5.2)**2+(z-b.pos.z)**2;
+          if(d2<closest){closest=d2;point.x=x;point.y=y;point.z=z;}
+        }
+        if(closest<Infinity)visible=visibleAt(point);
+      }
+    }
+    if(!visible){this._threat=null;this._threatAge=0;this._threatAnswered=false;return false;}
+    if(this._threat!==threat){this._threat=threat;this._threatAge=0;this._threatAnswered=false;}
+    this._threatAge+=dt;
+    if(!ready||this._threatAnswered||this._threatAge+1e-8<this.reflex)return false;
+    this._threatAnswered=true;return true;
   }
 
   // A remembered position. Never overwrite a fresh SIGHTING with a vague noise/radio cue.
@@ -103,7 +142,7 @@ export class AI {
   intent(dt, game) {
     if (this._jammedT > 0) this._jammedT -= (game && game.dt) || 1 / 60;   // the jam wears off
     const b = this.bot;
-    const out = { move: { x: 0, z: 0 }, aimDir: null, slots: {}, fly: false, target: null };
+    const out = { move: { x: 0, z: 0 }, aimDir: null, slots: {}, fly: false, target: null, ready:false };
     for (const k in b.slots) out.slots[k] = { pressed: false, held: false, released: false };
 
     // focus the player if it's a foe, else the nearest
@@ -178,11 +217,17 @@ export class AI {
     const aimed = this._turnToward(Math.atan2(ax - b.pos.x, az - b.pos.z) + this._wander(dt), dt);
     out.aimDir = aimed;
     // the point it BELIEVES it should shoot — never the exact body centre
-    const spread = this._errA * d;
-    out.aimAt = { x: ax - aimed.z * spread, y: ty + rand(-1.4, 1.4), z: az + aimed.x * spread };
+    const aimDistance=Math.max(1,Math.hypot(ax-b.pos.x,ty-b.pos.y,az-b.pos.z));
+    const pitch=Math.atan2(ty-b.pos.y,Math.hypot(ax-b.pos.x,az-b.pos.z));
+    const pitchDelta=pitch-this._aimPitch,maxPitch=this.turnRate*dt;
+    this._aimPitch+=Math.max(-maxPitch,Math.min(maxPitch,pitchDelta));
+    // The firing point follows the same bounded bearing as the body, including
+    // held beams. Previously only the visual facing turned; aimAt snapped exactly.
+    const flat=Math.cos(this._aimPitch)*aimDistance;
+    out.aimAt={x:b.pos.x+aimed.x*flat,y:b.pos.y+Math.sin(this._aimPitch)*aimDistance,z:b.pos.z+aimed.z*flat};
     out.target = real;
     // ACQUISITION: eyes-on doesn't mean trigger-ready — a beat to register and commit
-    if (!this._lastSeen) {
+    if (!this._lastSeen || this._seenTarget!==real) {
       this._acq = this.reflex * rand(0.8, 1.5);
       // THE CRUISE-PUNCH OPENER (momentum melee, manual §10): a confident flier OPENS the
       // engagement by throttling straight in and arriving fist-first. Doctrine (flyTend) picks
@@ -192,8 +237,10 @@ export class AI {
         this._opener = Math.min(3.2, d / 34);
     }
     this._lastSeen = true;
+    this._seenTarget=real;
     if (this._acq > 0) this._acq -= dt;
-    const ready = this._acq <= 0 && aimed.onTarget;                 // must actually be FACING you to fire
+    const ready = this._acq <= 0 && aimed.onTarget && Math.abs(pitchDelta)<.25;
+    out.ready=ready;
     const lowHp = b.hp < b.maxHp * 0.32;
     out.fly = (dh > 6 && this.flyTend > 0.25) || (this.flyTend > 0.6 && ty > 4 && dh > -6);
 
@@ -230,19 +277,32 @@ export class AI {
     }
 
     // --- abilities (only when the target is actually in view) ---
+    const hadAction=!!this.action;
     if (this.action) {
       this.action.t -= dt; const k = this.action.key;
-      if (b.slots[k] && this.action.t > 0) out.slots[k].held = true;
+      if (b.slots[k] && slotUnlocked(b,k) && this.action.t > 0) out.slots[k].held = true;
       else { if (b.slots[k]) out.slots[k].released = true; this.action = null; }
-      return out;
     }
+    if(ready)for(const [key,st] of Object.entries(b.slots)){
+      if(remoteInRange(b,st,real)){
+        out.slots[key]={pressed:true,held:false,released:false};
+        if(this.action?.key===key)this.action=null;
+        this.gcd=Math.max(this.gcd,.35);
+        return out; // a second press through runSlot, never direct damage or a new launch
+      }
+    }
+    if(hadAction)return out;
     if (lowHp) {
-      const buff = (this.byType.buff || []).find(k => b.slots[k].cd <= 0 && b.ki >= (b.slots[k].def.cost || 0));
+      const form=b.powerUp;
+      if(form&&form.cd<=0&&form.activeT<=0&&b.ki>=(form.def.cost||0)&&slotUnlocked(b,form.sourceSlot||'_powerUp')){
+        out.movementGear=2;this.gcd=1;return out;
+      }
+      const buff = (this.byType.buff || []).find(k => slotUnlocked(b,k) && b.slots[k].cd <= 0 && b.ki >= (b.slots[k].def.cost || 0));
       if (buff && chance(0.5)) { out.slots[buff].pressed = true; this.gcd = 1; return out; }
     }
     this.gcd -= dt;
     if (this.gcd <= 0 && ready) {   // not aimed / not yet registered = not shooting
-      this.gcd = rand(0.35, 0.9) / this.level;
+      this.gcd = rand(0.55, 1.15) / this.level;
       const key = this.pick(d, dh, lowHp, real);
       if (key) {
         const type = b.slots[key].def.type;
@@ -265,7 +325,7 @@ export class AI {
       this._searchT = 0; this._patrol = null;
     }
     // cold: sweep outward from the last lead (people move), else patrol the map
-    const A = (game.world && game.world.ARENA) || 240;
+    const A = (game.world && (game.world.combatRadius || game.world.ARENA)) || 240;
     if (!this._patrol || this._patrolT <= 0 || Math.hypot(this._patrol.x - b.pos.x, this._patrol.z - b.pos.z) < 12) {
       this._patrolT = rand(3.5, 7);
       const from = this.belief || b.pos;
@@ -302,7 +362,7 @@ export class AI {
     // fight pressing dead buttons and standing still instead of throwing hands. Returning null here
     // drops it straight to the melee layer, which is the correct doctrine for a boxer anyway.
     if (b.noPowers) return null;
-    const ok = (k) => b.slots[k].cd <= 0 && b.ki >= (b.slots[k].def.cost || 0);
+    const ok = (k) => slotUnlocked(b,k) && !remoteAttack(b,b.slots[k]) && b.slots[k].cd <= 0 && b.ki >= (b.slots[k].def.cost || 0);
     const one = (arr) => { const e = (arr || []).filter(ok); return e.length ? pick(e) : null; };
     const close = d < 14, far = d >= 44;
 

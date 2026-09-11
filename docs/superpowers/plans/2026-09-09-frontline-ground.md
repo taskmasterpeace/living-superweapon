@@ -1,0 +1,19 @@
+# Native visible PowerWorld heightfield
+
+Spec: `.dream-loop/brief.md` and native combat/terrain contract. The visible game floor must agree with the floor fighters and objectives stand on, including combat craters.
+
+## Global Constraints
+
+Keep `powerworld.html`, third-person controls, open-sky flight and combat radius 900 unchanged. Preserve shared dirty work; no commit, staging, reset or worktree creation. Parent owns `frontline-terrain.js`, aircraft assets, and audio proof; do not edit those. No subagents. Preserve all world state on venue exit and in-flight asset loading safety.
+
+### Task 1: Shared visible/physical ground
+
+Own `src/engine/powerworld.js`, new `src/engine/frontline-ground.js` if useful, new `tools/frontline-ground.test.mjs`, and scoped additions to `tools/frontline-terrain-browser.mjs` only after asking for GPU lane. Capture pre-edit powerworld.js and browser harness baselines into `artifacts/frontline-ground-baseline/` before editing. Read the current stage and native World.heightAt/crater/resetTerrain and Fighter ground collision. Recent clone encounter correctly samples world.heightAt; do not modify encounter code.
+
+Problem: stage renders a flat CircleGeometry while World.crater edits the hidden original world's groundGeo/_gh. Fighters follow those physical heights and can therefore sink below the visible sand. Build a stage-owned visible playable ground mesh using the native heightfield contract, spanning the 900-unit combat radius, with enough regular vertices for native craters (224 segments per side is an initial budget). Keep the existing distant visual ground out to FRONTLINE_GROUND_RADIUS and its local texture. Eliminate z-fighting between playable and distant floor: outside filler must not cover crater depressions. Same material/consistent world-space texture scale across surfaces. Do not swap in the old city's ground shape. Initial stage ground must be flat zero; level bands remain off.
+
+Install stage-owned native heightfield state (ground/groundGeo/_gh/_gvx/_gvz/_gseg/_ghArena/_ghBase plus any actual dependent state you find) so existing World.crater, heightAt, resetTerrain and batched normal update all refer to the visible stage geometry. Do not patch methods, add a second crater implementation, or flatten on every frame. Snapshot and restore the prior world's exact object/array references and dirty flags when leaving; don't dispose the prior world's geometry/materials. Stage resources are disposed only by their owner, exactly once where practical. Async terrain texturing must still target the current stage and must not resurrect an old floor after rematch.
+
+TDD: observe RED before implementation, then GREEN on native World.crater/heightAt agreement with visible mesh vertices, initial flatness despite previous terrain relief, reset, and close/reopen restoration of prior world arrays/geometries. Test playable-to-distant ground seam/nonoverlap and consistent texture scale. Use actual Three geometries and native World methods, not a mock crater. Update existing test assumptions only with a written reason, never weaken a collision assertion. Verify focused tests and existing PowerWorld-cover/terrain/encounter tests. Native browser at real route: actual assets load, crater visibly displaces stage geometry at known grounded position, objective markers/player feet agree with heightAt, rematch leaves one ground and preserves 37 cover records. Mark any posed/crater fixture explicitly; no claim of full manual combat victory. Request GPU lane before browser; do not restart shared Vite.
+
+Report RED/GREEN commands/results, complete changed files and lifecycle fields, ownership/restoration evidence, remaining issues. Parent will independently review. No broader terrain redesign or aircraft integration in this task.

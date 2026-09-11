@@ -8,6 +8,14 @@
 // WORLD transform minus the group origin. So we can drive every limb in world space with no
 // reparenting, and restore the exact original transforms on respawn.
 import * as THREE from 'three';
+import { updateLimbSurfaces } from './hero-limb-surface.js';
+import { syncHeadCover } from './hero-rig.js';
+import { RagdollCorePose } from './ragdoll-core-pose.js';
+import { RagdollLimbPose } from './ragdoll-limb-pose.js';
+import { RagdollCape } from './ragdoll-cape.js';
+import { RagdollCoreContact } from './ragdoll-core-contact.js';
+import { RagdollNeckLimit } from './ragdoll-neck-limit.js';
+import { RagdollArmSeam } from './ragdoll-arm-seam.js';
 import { clamp } from '../core/util.js';
 import { ARENA as ARENA_FALLBACK } from './world.js';   // ⚠ review item 7: the FROZEN flagship value.
 // It is a last-resort default ONLY — every live read must go through world.ARENA, which is
@@ -49,12 +57,12 @@ const _a = new THREE.Vector3(), _b = new THREE.Vector3(), _m = new THREE.Vector3
 const _dir = new THREE.Vector3(), _up = new THREE.Vector3(0, 1, 0), _q = new THREE.Quaternion();
 
 export class Ragdoll {
-  constructor(fighter, impulse) {
+  constructor(fighter, impulse, { downward = false } = {}) {
     this.f = fighter;
     const p = fighter.parts;
     // meshes we drive, and their pivots (zeroed so children live in group-local space, then restored)
-    this.pivots = [p.armL, p.armR, p.legL, p.legR, p.legL.userData.knee, p.legR.userData.knee].filter(Boolean);
-    this.driven = [p.torso, p.head, p.pelvis, p.emblem, p.cowl, p.shadow,
+    this.pivots = [p.body, p.armL, p.armR, p.legL, p.legR, p.legL.userData.knee, p.legR.userData.knee].filter(Boolean);
+    this.driven = [p.torso, p.head, p.pelvis, p.cowl, p.shadow,
       p.armL.children[0], p.armL.children[1], p.armL.children[2],
       p.armR.children[0], p.armR.children[1], p.armR.children[2],
       p.legL.userData.thigh, p.legL.userData.shin, p.legL.userData.boot,
@@ -66,24 +74,43 @@ export class Ragdoll {
       p.legL.userData.kneeCap, p.legR.userData.kneeCap].filter(Boolean);
     // snapshot originals for a perfect restore
     this._snap = this.driven.map(m => ({ m, p: m.position.clone(), q: m.quaternion.clone(), s: m.scale.clone() }));
-    this._pivotSnap = this.pivots.map(v => ({ v, p: v.position.clone(), r: v.rotation.clone() }));
+    this._pivotSnap = this.pivots.map(v => ({ v, p: v.position.clone(), r: v.rotation.clone(), s:v.scale.clone() }));
 
-    // build particles in world space from the rest pose at the fighter's current feet
+    // Seed from the actual articulated pose, including body pitch and frame proportions.
+    // A cruising KO must not pop upright or collapse every archetype onto one small skeleton.
+    fighter.obj.updateMatrixWorld(true);
+    const joints = p.rig ? {
+      head:p.head.getWorldPosition(new THREE.Vector3()),chest:p.torso.getWorldPosition(new THREE.Vector3()),
+      pelvis:p.pelvis.getWorldPosition(new THREE.Vector3()),
+      shL:p.armL.getWorldPosition(new THREE.Vector3()),shR:p.armR.getWorldPosition(new THREE.Vector3()),
+      elL:p.armL.localToWorld(new THREE.Vector3(0,-p.armL.userData.upperLength,0)),
+      elR:p.armR.localToWorld(new THREE.Vector3(0,-p.armR.userData.upperLength,0)),
+      haL:p.armL.children[2].getWorldPosition(new THREE.Vector3()),haR:p.armR.children[2].getWorldPosition(new THREE.Vector3()),
+      hiL:p.legL.getWorldPosition(new THREE.Vector3()),hiR:p.legR.getWorldPosition(new THREE.Vector3()),
+      kneeL:p.legL.userData.knee.getWorldPosition(new THREE.Vector3()),kneeR:p.legR.userData.knee.getWorldPosition(new THREE.Vector3()),
+      ftL:p.legL.userData.boot.getWorldPosition(new THREE.Vector3()),ftR:p.legR.userData.boot.getWorldPosition(new THREE.Vector3())
+    } : null;
     const o = fighter.pos;                       // world feet
     this.P = {};
     const com = new THREE.Vector3();
     let n = 0;
     for (const k in REST) {
       const r = REST[k];
-      const pos = new THREE.Vector3(o.x + r[0], o.y + r[1], o.z + r[2]);
+      const pos = joints?.[k] || new THREE.Vector3(o.x + r[0], o.y + r[1], o.z + r[2]);
       this.P[k] = { pos, prev: pos.clone(), w: r[3] };
       com.add(pos); n++;
     }
     com.multiplyScalar(1 / n);
+    this.corePose=joints?new RagdollCorePose(p,this.P):null;
+    this.limbPose=joints?new RagdollLimbPose(p,this.P):null;
+    this.coreContact=this.corePose?new RagdollCoreContact(p,this.corePose,GROUND_R):null;
+    this.neckLimit=this.corePose?new RagdollNeckLimit(this.corePose,p):null;
+    this.armSeam=p.cape&&this.limbPose?new RagdollArmSeam(this.corePose,this.limbPose,p):null;
 
     // launch: base knockback + upward pop + a somersault spin in the launch direction
     const base = impulse ? impulse.clone() : new THREE.Vector3();
-    base.y = clamp(base.y, -4, 20) + 7;
+    // Directed finishers keep their downward drive; ordinary KOs retain the small pop.
+    base.y = downward ? clamp(base.y, -160, -30) : clamp(base.y, -4, 20) + 7;
     base.x = clamp(base.x, -60, 60); base.z = clamp(base.z, -60, 60);
     const horiz = new THREE.Vector3(base.x, 0, base.z);
     const spinAxis = new THREE.Vector3().crossVectors(_up, horiz).normalize(); // tumble forward
@@ -98,8 +125,11 @@ export class Ragdoll {
       const vz = base.z + _b.z + (Math.random() - 0.5) * 5;
       pt.prev.set(pt.pos.x - vx * dt0, pt.pos.y - vy * dt0, pt.pos.z - vz * dt0);
     }
+    this.capePose=p.cape?.userData.rest?new RagdollCape(p,_a.subVectors(this.P.chest.pos,this.P.chest.prev).multiplyScalar(60)):null;
+    this._clothDt=0;this._clothWorld=null;
     // precompute rest lengths
     this.rest = BONES.map(([a, b, s]) => {
+      if (joints) return joints[a].distanceTo(joints[b]);
       const ra = REST[a], rb = REST[b];
       return Math.hypot(ra[0] - rb[0], ra[1] - rb[1], ra[2] - rb[2]);
     });
@@ -113,6 +143,7 @@ export class Ragdoll {
   }
 
   step(dt, game) {
+    this._clothDt+=clamp(dt,0,.05);this._clothWorld=game?.world;
     if (this.asleep) return;
     dt = clamp(dt, 1 / 140, 1 / 45);
     const dt2 = dt * dt;
@@ -138,8 +169,13 @@ export class Ragdoll {
         A.pos.x += _dir.x * fa; A.pos.y += _dir.y * fa; A.pos.z += _dir.z * fa;
         B.pos.x -= _dir.x * fb; B.pos.y -= _dir.y * fb; B.pos.z -= _dir.z * fb;
       }
+      this.neckLimit?.solve();this.armSeam?.solve();
       this._collide(game);
     }
+    // Final contact must see the completed joint orientation. Correcting just
+    // one anchor can rotate a different core mesh back through an earlier wall.
+    this.neckLimit?.solve();this.armSeam?.solve();
+    this.coreContact?.settleIsland(game?.world);
     // sleep when it settles (holds the final pose, frees the CPU)
     if (energy < 0.03) { if ((this._still += dt) > 0.45) this.asleep = true; } else this._still = 0;
   }
@@ -150,7 +186,7 @@ export class Ragdoll {
     const hAt = (game && game.world && game.world.heightAt) ? (x, z) => game.world.heightAt(x, z) : null;
     const wAt = (game && game.world && game.world.waterAt) ? (x, z) => game.world.waterAt(x, z) : null;
     for (const k in this.P) {
-      const pt = this.P[k], r = GROUND_R[k] || DEFAULT_R;
+      const pt = this.P[k], r = GROUND_R[k] || DEFAULT_R, groundRadius=this.coreContact?.floorRadius(k)??r;
       // WATER — a body going in splashes ONCE (core points only) and drags below the surface,
       // then settles on the real seabed like any other ground.
       // ⚠ the trigger is CROSSING THE SURFACE (y≈0.34) while falling, not reaching a depth — on
@@ -169,14 +205,14 @@ export class Ragdoll {
       }
       // ground — the TERRAIN, so bodies settle into quarry pits and craters instead of on thin air
       const gy = hAt ? hAt(pt.pos.x, pt.pos.z) : 0;
-      if (pt.pos.y < gy + r) {
+      if (pt.pos.y < gy + groundRadius) {
         // first hard core-impact BREAKS the ground — crater/dust scaled by the fighter's strength
         const drop = pt.prev.y - pt.pos.y;
         if (!this._impacted && drop > 0.5 && (k === 'chest' || k === 'pelvis' || k === 'head')) {
           this._impacted = true;
           if (game && game.onRagdollImpact) game.onRagdollImpact(this.f, drop * 60, pt.pos);
         }
-        pt.pos.y = gy + r;
+        pt.pos.y = gy + groundRadius;
         pt.prev.x += (pt.pos.x - pt.prev.x) * GROUND_FRICTION;   // friction: bleed horizontal speed
         pt.prev.z += (pt.pos.z - pt.prev.z) * GROUND_FRICTION;
         if (pt.prev.y < pt.pos.y) pt.prev.y = pt.pos.y;          // no downward rebound through floor
@@ -197,7 +233,7 @@ export class Ragdoll {
         }
       }
       // cover blocks — rest on top or get shoved out the nearest face (lets bodies drape over cover)
-      if (cover) for (let i = 0; i < cover.length; i++) {
+      if (cover?.length && !this.coreContact?.coverContact(k,pt,cover)) for (let i = 0; i < cover.length; i++) {
         const c = cover[i];
         const hx = (c.hx ?? c.r), hz = (c.hz ?? c.r), top = (c.top ?? c.h);
         const dx = pt.pos.x - c.x, dz = pt.pos.z - c.z;
@@ -221,21 +257,29 @@ export class Ragdoll {
     const cap = (mesh, ka, kb) => this._orient(mesh, P[ka].pos, P[kb].pos, o);
     const pin = (mesh, ka) => { const p = P[ka].pos; mesh.position.set(p.x - o.x, p.y - o.y, p.z - o.z); };
 
-    cap(f.parts.torso, 'chest', 'pelvis');
-    cap(f.parts.pelvis, 'pelvis', 'hiL');           // small — just needs a plausible tilt
-    f.parts.pelvis.position.set(P.pelvis.pos.x - o.x, P.pelvis.pos.y - o.y - 0.2, P.pelvis.pos.z - o.z);
-    pin(f.parts.head, 'head'); this._face(f.parts.head, P.head.pos, P.chest.pos);
+    if(this.corePose)this.corePose.apply();
+    else{
+      cap(f.parts.torso, 'chest', 'pelvis');
+      cap(f.parts.pelvis, 'pelvis', 'hiL');
+      f.parts.pelvis.position.set(P.pelvis.pos.x - o.x, P.pelvis.pos.y - o.y - 0.2, P.pelvis.pos.z - o.z);
+      pin(f.parts.head, 'head'); this._face(f.parts.head, P.head.pos, P.chest.pos);
+    }
     // details ride the head / chest (eyes/jaw/helmet are children of head → carried automatically)
-    pin(f.parts.cowl, 'head');
-    if (f.parts.emblem) { const c = P.chest.pos; f.parts.emblem.position.set(c.x - o.x, c.y - o.y, c.z - o.z); }
+    syncHeadCover(f.parts);
+    // Insignia and costume panels are torso children, including during tumble.
     // arms (upper + fore + fist), legs (thigh + shin + boot — bends at the knee)
     const aL = f.parts.armL.children, aR = f.parts.armR.children, uL = f.parts.legL.userData, uR = f.parts.legR.userData;
-    cap(aL[0], 'shL', 'elL'); cap(aL[1], 'elL', 'haL'); pin(aL[2], 'haL');
-    cap(aR[0], 'shR', 'elR'); cap(aR[1], 'elR', 'haR'); pin(aR[2], 'haR');
-    cap(uL.thigh, 'hiL', 'kneeL'); cap(uL.shin, 'kneeL', 'ftL'); pin(uL.boot, 'ftL');
-    cap(uR.thigh, 'hiR', 'kneeR'); cap(uR.shin, 'kneeR', 'ftR'); pin(uR.boot, 'ftR');
+    if(this.limbPose)this.limbPose.apply();
+    else{
+      cap(aL[0], 'shL', 'elL'); cap(aL[1], 'elL', 'haL'); pin(aL[2], 'haL');
+      cap(aR[0], 'shR', 'elR'); cap(aR[1], 'elR', 'haR'); pin(aR[2], 'haR');
+      cap(uL.thigh, 'hiL', 'kneeL'); cap(uL.shin, 'kneeL', 'ftL'); pin(uL.boot, 'ftL');
+      cap(uR.thigh, 'hiR', 'kneeR'); cap(uR.shin, 'kneeR', 'ftR'); pin(uR.boot, 'ftR');
+    }
     // contact shadow under the wreck
     if (f.parts.shadow) { f.parts.shadow.position.set(P.pelvis.pos.x - o.x, 0.06, P.pelvis.pos.z - o.z); f.parts.shadow.scale.setScalar(1.15); }
+    updateLimbSurfaces(f.parts);
+    this.capePose?.update(this._clothDt,this._clothWorld);this._clothDt=0;
   }
 
   // place a capsule (local +Y axis) so it spans a→b, centred, in group-local space
@@ -256,8 +300,10 @@ export class Ragdoll {
   // put the figure hierarchy back exactly as it was, for respawn
   restore() {
     for (const s of this._snap) { s.m.position.copy(s.p); s.m.quaternion.copy(s.q); s.m.scale.copy(s.s); }
-    for (const s of this._pivotSnap) { s.v.position.copy(s.p); s.v.rotation.copy(s.r); }
+    for (const s of this._pivotSnap) { s.v.position.copy(s.p); s.v.rotation.copy(s.r); s.v.scale.copy(s.s); }
     this.f.parts.g.rotation.set(0, 0, 0);
+    syncHeadCover(this.f.parts);
+    updateLimbSurfaces(this.f.parts,true);
+    this.capePose?.restore();
   }
 }
-

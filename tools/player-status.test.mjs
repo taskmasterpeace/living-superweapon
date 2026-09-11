@@ -1,0 +1,11 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {playerStatus} from '../src/engine/player-status.js';
+const fighter=()=>({id:1,name:'VEGA',def:{name:'VEGA',speed:40},hp:75,maxHp:150,ki:20,maxKi:100,guardMeter:.4,level:2,vel:{x:3,y:4,z:0},slots:{},_dots:[]});
+test('three real resources, normalized guard and no invented form',()=>{const s=playerStatus(fighter());assert.deepEqual(s.hp,{value:75,max:150,ratio:.5});assert.equal(s.guard.value,40);assert.equal(s.form,'BASE');assert.equal(s.flight,null);assert.deepEqual(s.effects,[]);});
+test('a temporary buff is separate from appearance',()=>{const p=fighter();p.buffT=2.4;p.buffName='Might';const s=playerStatus(p);assert.equal(s.form,'BASE');assert.equal(s.effects[0].remaining,3);p.formName='Ascended';assert.equal(playerStatus(p).form,'Ascended');});
+test('critical resource bounds and infinite energy',()=>{const p=fighter();p.hp=-2;p.guardMeter=2;p.energyInfinite=true;const s=playerStatus(p);assert.equal(s.hp.value,0);assert.equal(s.guard.value,100);assert.equal(s.energy.infinite,true);assert.equal(s.critical,true);});
+test('flight speed stays inside the player panel with a proportional trail',()=>{const p=fighter();p.flying=true;p.cruiseHeld=true;let s=playerStatus(p).flight;assert.equal(s.speed,3);assert.equal(s.label,'FLIGHT');assert.ok(s.ratio>0&&s.ratio<1);p.movementGear={gear:3};s=playerStatus(p).flight;assert.equal(s.label,'FLIGHT · GEAR III');});
+test('expired status is removed and guard break is not ordinary stagger',()=>{const p=fighter();p.buffT=0;p.staggerT=.5;assert.equal(playerStatus(p).guardBroken,false);p.guardMeter=0;assert.equal(playerStatus(p).guardBroken,true);assert.deepEqual(playerStatus(p).effects,[]);});
+test('guard break persists through regeneration and small nonzero break threshold',()=>{const p=fighter();p.guardMeter=.0009;p.staggerT=.5;assert.equal(playerStatus(p).guardBroken,true);p.guardMeter=.1;p.guardBreakT=.3;assert.equal(playerStatus(p).guardBroken,true);});
+test('real sprint multiplier appears with remaining duration',()=>{const p=fighter();p.sprintT=1.8;p.sprintMult=1.6;assert.deepEqual(playerStatus(p).effects,[{id:'speed',label:'Speed +60%',glyph:'mobility',remaining:2}]);});

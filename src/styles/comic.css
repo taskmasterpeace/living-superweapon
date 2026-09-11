@@ -39,6 +39,28 @@
 /* the stage. pointer-events off — the comic layer never eats a click. */
 #comicLayer { position: fixed; inset: 0; z-index: 26; pointer-events: none; overflow: hidden; }
 
+/* Permitted remote radio / offscreen shouts use a directional caption. */
+.cmfield {
+  position: absolute; box-sizing: border-box; width: min(420px, calc(100vw - 32px));
+  padding: 8px 12px; border-radius: .625rem;
+  border: 1px solid oklch(.47 .055 80 / .7); background: oklch(.2 .022 75 / .91);
+  color: oklch(.94 .025 85); font: 500 14px/1.35 Inter, system-ui, sans-serif;
+  box-shadow: 0 3px 14px #0003; pointer-events: none;
+  transition: opacity .2s;
+}
+.cmfield-speaker { color: oklch(.82 .12 85); font-size: 10px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; }
+.cmfield-text { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+.cmfield.out { opacity: 0; }
+.cmb.cm-local .cmtext { font-size: clamp(16px, 2vh, 22px); }
+.cmb.cm-local.t-yell .cmtext { font-size: clamp(18px, 2.3vh, 25px); }
+.cm-local-speaker { position:absolute; left:14px; bottom:4px; right:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:center; color:#51483b; font:700 9px/1 Inter,system-ui,sans-serif; letter-spacing:.04em; }
+.cm-local.cm-detached .cm-local-speaker { color:#14120e; font-weight:800; }
+@media (prefers-reduced-motion: reduce) {
+  .cmb.cm-local, .cmb.cm-local.out { animation:none; }
+  .cmb.cm-local.out { opacity:0; }
+  .cmfield { transition:none; }
+}
+
 /* ============================================================================ SPEECH BALLOONS
  * ⚠ THE SHAPE IS AN SVG PATH GENERATED FROM THE MEASURED TEXT (engine/balloon.js), not a clip-path
  * over a box. clip-path and border-radius CUT the element the text is laid out in, so words could
@@ -207,6 +229,13 @@
   clip-path: polygon(50% 0, 61% 26%, 88% 12%, 78% 39%, 100% 50%, 78% 61%, 88% 88%, 61% 74%,
                      50% 100%, 39% 74%, 12% 88%, 22% 61%, 0 50%, 22% 39%, 12% 12%, 39% 26%);
 }
+.cmsfx[class*="impact-"] { padding: 10px 14px; }
+.cmsfx .impact-label { display:block; margin-top:8px; font:700 12px/1 Rajdhani,Inter,system-ui,sans-serif; letter-spacing:.08em; color:#e8e2d6; -webkit-text-stroke:0; text-shadow:0 2px 2px #0a0b10; text-align:center; }
+.cmsfx.impact-armor-hit { border:3px solid #ffd24a; clip-path:polygon(8% 0,92% 0,100% 24%,94% 100%,6% 100%,0 24%); }
+.cmsfx.impact-shield-hit { border:3px solid #7fe6ff; border-radius:50%; }
+.cmsfx.impact-block { border:3px solid #ffd24a; transform:skew(-6deg); }
+.cmsfx.impact-guard-broken { border:3px dashed #ff5a4a; }
+.cmsfx.impact-deflect { border:3px double #ffd24a; clip-path:polygon(0 20%,75% 20%,75% 0,100% 50%,75% 100%,75% 80%,0 80%); }
 
 /* phones: everything one step down, and balloons must never own the whole screen */
 /* ⚠ a phone is held at arm's length, not across a room — the vh clamp would make these enormous */

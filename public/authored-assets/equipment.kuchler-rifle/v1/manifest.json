@@ -1,0 +1,259 @@
+{
+ "format": "pw-asset-package",
+ "formatVersion": 1,
+ "id": "equipment.kuchler-rifle",
+ "version": 1,
+ "kind": "equipment",
+ "displayName": "Kuchler Mk I (fictional Earth rifle)",
+ "tags": [
+  "equipment",
+  "firearm",
+  "rifle",
+  "two-handed",
+  "procedural",
+  "earth-donor"
+ ],
+ "rig": {
+  "skeleton": "none"
+ },
+ "sockets": [
+  {
+   "name": "charging-handle",
+   "parent": "kuchler-rifle",
+   "position": [
+    0.05883,
+    -0.3922,
+    0.49025
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "grip",
+   "parent": "kuchler-rifle",
+   "position": [
+    0,
+    0,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "holster",
+   "parent": "kuchler-rifle",
+   "position": [
+    0,
+    0.2,
+    0.3
+   ],
+   "rotation": [
+    0,
+    0,
+    0.187381,
+    0.982287
+   ]
+  },
+  {
+   "name": "magazine",
+   "parent": "kuchler-rifle",
+   "position": [
+    0.29415,
+    -0.7844,
+    -0.06354
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "muzzle",
+   "parent": "kuchler-rifle",
+   "position": [
+    0.29415,
+    -2.97995,
+    0.47064
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "stock",
+   "parent": "kuchler-rifle",
+   "position": [
+    0.29415,
+    1.33427,
+    0.31376
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "support",
+   "parent": "kuchler-rifle",
+   "position": [
+    0.64713,
+    -1.37271,
+    -0.11766
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  }
+ ],
+ "bounds": {
+  "min": [
+   -0.00981,
+   -2.97995,
+   -0.30057
+  ],
+  "max": [
+   0.49025,
+   1.33427,
+   0.72557
+  ]
+ },
+ "materials": [
+  {
+   "name": "kuchler-polymer"
+  },
+  {
+   "name": "kuchler-steel"
+  }
+ ],
+ "equipment": {
+  "twoHanded": true,
+  "class": "firearm",
+  "hand": "right"
+ },
+ "lods": [
+  {
+   "level": 0,
+   "output": "model.glb",
+   "triangles": 156
+  }
+ ],
+ "units": {
+  "lengthUnit": "game-unit",
+  "metersPerUnit": 0.19,
+  "up": "+Y",
+  "forward": "+Z",
+  "handedness": "right",
+  "sourceConversion": {
+   "scale": 1,
+   "yawDegrees": 0,
+   "mirrorX": false,
+   "sourceUp": "+Y",
+   "sourceForward": "+Z",
+   "note": "authored directly in game units along the engine weapon axis (-Y toward the muzzle)"
+  }
+ },
+ "budgets": {
+  "profile": "desktop",
+  "measured": {
+   "triangles": 156,
+   "drawCalls": 4,
+   "materials": 2,
+   "bones": 0,
+   "textures": 0,
+   "bytes": 14872
+  },
+  "limits": {
+   "triangles": 5320,
+   "drawCalls": 8,
+   "materials": 4,
+   "bones": 1,
+   "textures": 1,
+   "bytes": 427570
+  }
+ },
+ "structural": {
+  "validator": "2.0.0-dev.3.10",
+  "errors": 0,
+  "warnings": 0
+ },
+ "provenance": {
+  "terms": "MIT. Complete copyright and permission notice is included in provenance.licenseNotice and in the hashed LICENSE.txt source.",
+  "license": "MIT",
+  "attribution": "Adapted selected fictional rifle_kuchler_1 builder from War World: Earth. Exact original file SHA256 and coordinate conversion recorded in hashed provenance.json. Not an AK74.",
+  "revision": "8e0fba7c8bce16637624dee52cc40d07d88dea3b",
+  "redistribution": "free",
+  "author": "Machine King Labs; PowerWorld adaptation",
+  "licenseNotice": "MIT License\r\n\r\nCopyright (c) 2026 Machine King Labs\r\n\r\nPermission is hereby granted, free of charge, to any person obtaining a copy\r\nof this software and associated documentation files (the \"Software\"), to deal\r\nin the Software without restriction, including without limitation the rights\r\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\r\ncopies of the Software, and to permit persons to whom the Software is\r\nfurnished to do so, subject to the following conditions:\r\n\r\nThe above copyright notice and this permission notice shall be included in all\r\ncopies or substantial portions of the Software.\r\n\r\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\r\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\r\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\r\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\r\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\r\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\r\nSOFTWARE."
+ },
+ "source": {
+  "adapter": "procedural-prop@1",
+  "files": [
+   {
+    "path": "authoring/recipes/equipment/kuchler-rifle/model.js",
+    "sha256": "fe1cb68c3f7ff26dae21170e75a950bbe97208f466596e197813cd9f078b59cb"
+   },
+   {
+    "path": "authoring/recipes/equipment/kuchler-rifle/provenance.json",
+    "sha256": "4a3ee6a12dbdbb13199664ed1886232c649cb3f25df45171b8cb1079a3c42223"
+   },
+   {
+    "path": "authoring/recipes/equipment/kuchler-rifle/LICENSE.txt",
+    "sha256": "e48fa2bb2317e59c37c714dacfe634b7ce582ff1692bda221bce3e35d2dd6752"
+   }
+  ],
+  "recipe": {
+   "path": "authoring/recipes/equipment/kuchler-rifle/recipe.json",
+   "sha256": "b22d5e330f278651a013cb745bf769e63782bd0a50b5c372c2e78a372c9e70e0"
+  }
+ },
+ "tool": {
+  "name": "powerworld-authoring",
+  "version": "0.1.0",
+  "three": "0.169.0",
+  "adapterVersion": 1
+ },
+ "build": {
+  "options": {},
+  "cacheKey": "ba36ba883f13b5e79dfa88215224cc191ec4def40c76d4734b51df810554da34",
+  "contentHash": "6b6a93aeb3829c3c4c4973104c8405d5cbbf368482e0e0158971890959974fca",
+  "profile": "desktop"
+ },
+ "acceptance": {
+  "visual": "unapproved",
+  "blockers": [
+   {
+    "summary": "Production equipment mount currently extracts Field Carbine action parts by hardcoded coordinate boxes; use this package named magazine/charging-handle meshes before gameplay integration.",
+    "owner": "main-task",
+    "id": "runtime-named-action-parts"
+   }
+  ],
+  "note": "Deterministic donor recipe; native viewer fit measurements pending, creator visual approval pending."
+ },
+ "outputs": [
+  {
+   "path": "model.glb",
+   "role": "glb",
+   "sha256": "d461b1b86c53a3fb3056ea5e166390be366168a1757db6a20635bff4723dcadb",
+   "bytes": 14872
+  }
+ ],
+ "packageHash": "3fad83acb8070bcdf2e5a13e1893579f183bc68741b978196eff6c51e3d0ac38"
+}

@@ -1,0 +1,222 @@
+{
+ "format": "pw-asset-package",
+ "formatVersion": 1,
+ "id": "equipment.carbine",
+ "version": 1,
+ "kind": "equipment",
+ "displayName": "Field carbine",
+ "tags": [
+  "equipment",
+  "firearm",
+  "rifle",
+  "two-handed",
+  "procedural"
+ ],
+ "rig": {
+  "skeleton": "none"
+ },
+ "sockets": [
+  {
+   "name": "grip",
+   "parent": "carbine",
+   "position": [
+    0,
+    0,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "holster",
+   "parent": "carbine",
+   "position": [
+    0,
+    0.2,
+    0.3
+   ],
+   "rotation": [
+    0,
+    0,
+    0.187381,
+    0.982287
+   ]
+  },
+  {
+   "name": "magazine",
+   "parent": "carbine",
+   "position": [
+    0,
+    -0.49,
+    -0.515
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "muzzle",
+   "parent": "carbine",
+   "position": [
+    0,
+    -3.2,
+    0.16
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "support",
+   "parent": "carbine",
+   "position": [
+    0,
+    -0.95,
+    -0.1
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  }
+ ],
+ "bounds": {
+  "min": [
+   -0.41,
+   -3.17,
+   -0.84
+  ],
+  "max": [
+   0.26,
+   1.17,
+   0.61
+  ]
+ },
+ "materials": [
+  {
+   "name": "gunmetal"
+  },
+  {
+   "name": "olive-furniture"
+  },
+  {
+   "name": "polymer"
+  }
+ ],
+ "equipment": {
+  "class": "firearm",
+  "twoHanded": true,
+  "hand": "right"
+ },
+ "lods": [
+  {
+   "level": 0,
+   "output": "model.glb",
+   "triangles": 160
+  }
+ ],
+ "units": {
+  "lengthUnit": "game-unit",
+  "metersPerUnit": 0.19,
+  "up": "+Y",
+  "forward": "+Z",
+  "handedness": "right",
+  "sourceConversion": {
+   "scale": 1,
+   "yawDegrees": 0,
+   "mirrorX": false,
+   "sourceUp": "+Y",
+   "sourceForward": "+Z",
+   "note": "authored directly in game units along the engine weapon axis (-Y toward the muzzle)"
+  }
+ },
+ "budgets": {
+  "profile": "desktop",
+  "measured": {
+   "triangles": 160,
+   "drawCalls": 3,
+   "materials": 3,
+   "bones": 0,
+   "textures": 0,
+   "bytes": 13968
+  },
+  "limits": {
+   "triangles": 5320,
+   "drawCalls": 8,
+   "materials": 4,
+   "bones": 1,
+   "textures": 1,
+   "bytes": 427570
+  }
+ },
+ "structural": {
+  "validator": "2.0.0-dev.3.10",
+  "errors": 0,
+  "warnings": 0
+ },
+ "provenance": {
+  "author": "PowerWorld authoring (procedural, img2threejs method)",
+  "license": "Proprietary-Internal",
+  "redistribution": "internal",
+  "revision": "6e60b5e22419464b4853e01ddb6c0e6f6659a733",
+  "terms": "Committed procedural factory reviewed as build-time source. No reference photo was traced; the silhouette follows the engine's existing rifle proportions so the primary grip mounts on the production hand socket; the full-extension support-hand fit remains an integration blocker.",
+  "attribution": "Method: img2threejs (Apache-2.0) at the recorded revision; no img2threejs code ships in the package."
+ },
+ "source": {
+  "adapter": "procedural-prop@1",
+  "files": [
+   {
+    "path": "authoring/recipes/equipment/carbine/model.js",
+    "sha256": "c90af10588c4c2578ca2c2fbf95389f4919c2426701918c132a96fc031f97461"
+   }
+  ],
+  "recipe": {
+   "path": "authoring/recipes/equipment/carbine/recipe.json",
+   "sha256": "b556449bfd767cf6706aeca94ba2b8a32164c9edfbb7571fdf5e7da6f35be219"
+  }
+ },
+ "tool": {
+  "name": "powerworld-authoring",
+  "version": "0.1.0",
+  "three": "0.169.0",
+  "adapterVersion": 1
+ },
+ "build": {
+  "options": {},
+  "cacheKey": "cfa5ed21f6896993f752a96ee816cd9dd7cb034329568114ebb3f4a8a1bc030d",
+  "contentHash": "1847100642e2a520b8b500964d186ca74b9b0489754f8ed191fb20e229bbf8e5",
+  "profile": "desktop"
+ },
+ "acceptance": {
+  "visual": "unapproved-placeholder",
+  "blockers": [
+   {
+    "id": "full-extension-support-hand",
+    "owner": "main-task",
+    "summary": "In full-extension aim takes the production rig cannot close the support hand on the grip (measured 0.5-0.9 u gap; arm reach 3.58 u on a 3.92 u shoulder span at scale 1.12). Only the drawn-in reload pose closes within 0.35 u. The armed carrier must pull the trigger hand back before this weapon can be called fitted in aim poses."
+   }
+  ],
+  "note": "Procedural placeholder authored in the engine silhouette language without a reference photo. Not art-approved."
+ },
+ "outputs": [
+  {
+   "path": "model.glb",
+   "role": "glb",
+   "sha256": "054fd2beffb77a80718fa1c91b0199e8ed4ad17262dc187293ee60c8110551e1",
+   "bytes": 13968
+  }
+ ],
+ "packageHash": "492f111e20cc043615096fa893dd04df33e160ccf7f60b69ddf016b04f3ff251"
+}

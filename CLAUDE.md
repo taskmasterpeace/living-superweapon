@@ -3,6 +3,18 @@
 Isometric top-down superhero action game (Three.js). Inspiration: **Bid For Power × Soldat**.
 The **engine is the product** — a data-driven power system. Demo-first, offline, no build gymnastics.
 
+## ⚠ POWERWORLD CONTROL MODEL — SETTLED, NEVER RE-ASK (Robert, repeatedly, 2026-07-28/29)
+This repo is the **PowerWorld fork**. PowerWorld's controls are: **JEDI KNIGHT on the GROUND, BID FOR
+POWER in the AIR.** Both are **pointer-locked MOUSE-LOOK** — the OS cursor is captured and hidden, the
+crosshair is pinned to screen centre, moving the mouse **TURNS THE VIEW**, and you shoot down the
+centre ray. There is **NO free-floating cursor that shots chase** — that is the city game, and it is
+explicitly NOT PowerWorld. Do not ask which aim model; it is decided. References: `docs/powerworld/
+aaa-02-ground.md` (JK ground), `aaa-01-air.md` (BFP air), `aaa-05-reticle.md` (shot = camera centre
+ray). ⚠ The load-bearing bug is **pointer-lock engagement**: `requestPointerLock()` needs a click and
+is BLOCKED in the CC preview pane (iframe). `input.js setMouse` has a fallback — when a lock was asked
+for but capture isn't active, it drives the look from raw cursor deltas — so the mouse turns the view
+even in the pane. Verify the real feel in a REAL browser tab.
+
 ## Run / verify
 - `npm run dev` → http://localhost:5180 (vite, port pinned in `.claude/launch.json`).
 - Headless smoke test (no display needed): load the page, then in the console/Playwright:

@@ -24,7 +24,25 @@
 //   abilitySuite(game, hud, opts)       → fire everything, return the pass/fail report
 import { ROSTER } from '../data/characters.js';
 import { TYPE_META } from '../engine/abilityMeta.js';
-import { runSlot } from '../engine/abilities.js';
+import { runSlot, TYPES } from '../engine/abilities.js';
+
+// Activation evidence is not combat effectiveness. In particular, terrain settling
+// is not proof that a shot fired, and an unregistered handler can never pass.
+export function collectAbilityEvidence(type, test) {
+  if(typeof TYPES[type]!=='function'||!TYPE_META[type])return [];
+  const evidence=[];
+  if(test.spawns>0)evidence.push('spawned');
+  if(test.dmg>.01)evidence.push('damaged');
+  const movement=['dash','teleport','grapple','rush','tentacle'].includes(type);
+  if(movement&&(test.ki>.01||test.cd)&&test.move>6)evidence.push('travelled');
+  if(test.flying)evidence.push('flight');
+  if(test.selfState)evidence.push('self-state');
+  if(test.scale>.02)evidence.push('resize');
+  if(test.buff>.01)evidence.push('buff');
+  if(test.quiver)evidence.push('quiver-changed');
+  if(test.context?.ok)evidence.push(test.context.kind+'-verified');
+  return evidence;
+}
 
 const DT = 1 / 60;
 // ⚠ SEVEN SLOTS, NOT SIX. `SLOT_ORDER` in data/characters.js includes `shift` (the kit's movement
@@ -71,7 +89,7 @@ const SHOT = {
 //     shell barrage is airborne for about three seconds. Measured for 0.30s it looked inert.
 //   · rush   — a charging attack needs RUNWAY. Staged at a punch's 7u it has nowhere to charge.
 const TYPE_SHOT = { meteor: { after: 3.0 }, rush: { after: 0.9 }, mine: { after: 1.2 }, tentacle: { after: 1.0 } };
-const TYPE_DIST = { rush: 34, meteor: 30, tentacle: 22, mine: 12 };
+const TYPE_DIST = { rush: 34, meteor: 30, tentacle: 22, mine: 12, lifedrain: 18 };
 const shotFor = (family, type) => TYPE_SHOT[type] || SHOT[family] || SHOT._default;
 
 // ⚠ SOME POWERS ARE RIGHT TO REFUSE IN AN EMPTY DESERT, and calling that a defect would train
@@ -137,6 +155,8 @@ function snapshot(game) {
     ents: size(game.entities),
     minions: size(game.minions),
     constructs: size(game.constructs),
+    mines: size(p && Object.values(p.slots).flatMap(s => s.list || [])),
+    portals: size(game.portals),
     flung: size(game._flung),
     smoke: size(game._smoke),
     timers: size(game._timers),
@@ -148,6 +168,7 @@ function snapshot(game) {
     // self-state powers change WHAT YOU ARE rather than adding anything to the world — intangible,
     // hidden, guarding. Without these their only observable is invisible and they read as inert.
     phase: !!(p && p.phase),
+    quiver: n(p && p._quiverIdx),
     invisible: !!(p && (p.invisible || p._invisT > 0)),
     invuln: n(p && p.invuln),
     // ⚠ `buffT` AND `powerBuff` — the real field names. This read `powerBuffT || _buffT`, and
@@ -161,6 +182,17 @@ function snapshot(game) {
     shield: n(p && p._shieldHp),
     scale: p && p.obj ? n(p.obj.scale.x) : 1,
   };
+}
+
+// clearTransients retires zones and timers; match reset separately retires these
+// combat collections. Each measurement needs the same isolation as a fresh match.
+function clearCombat(game) {
+  game.clearTransients();
+  for (const list of [game.projectiles.list, game.minions, game.constructs]) {
+    for (const item of list) item._dispose?.(game);
+    list.length = 0;
+  }
+  while (game.portals.length) game._closePair(game.portals[0]);
 }
 
 /**
@@ -194,14 +226,20 @@ export function stageAbility(game, hud, heroId, slot, opts = {}) {
   const realUpdate = game.update.bind(game);
   const prevControl = game.controlPlayer;
   const prevRunning = game.running;
+  const prevBot = game.controlBot;
+  const contextCover = { x: 24, z: 0, hx: 3, hz: 12, r: 12, h: 24, top: 24 };
   game.update = () => {};                 // the page's frame loop now advances nothing
   game.controlPlayer = () => {};          // the mouse no longer rewrites the aim mid-test
+  game.controlBot = function (f, dt) { if (!f._abilityFixture) prevBot.call(this, f, dt); };
   try {
-    return _stage(game, hud, heroId, slot, opts, errors, onErr, realUpdate);
+    return _stage(game, hud, heroId, slot, { ...opts, contextCover }, errors, onErr, realUpdate);
   } finally {
     game.update = realUpdate;
     game.controlPlayer = prevControl;
     game.running = prevRunning;
+    game.controlBot = prevBot;
+    const i = game.world.cover.indexOf(contextCover);
+    if (i >= 0) game.world.cover.splice(i, 1);
   }
 }
 
@@ -209,7 +247,9 @@ function _stage(game, hud, heroId, slot, opts, errors, onErr, realUpdate) {
 
   // ---- a clean board every time. `clearTransients` is the ONE place that empties it (the reset
   // law) — anything a previous ability left behind would otherwise be counted as this one's work.
-  game.clearTransients();
+  clearCombat(game);
+  game.world.resetTerrain();
+  game.vfx.clearScorches();
   game.setPlayerChar(heroId);
   const p = game.player;
   if (!p) return { heroId, slot, ok: false, why: 'no player after setPlayerChar', errors };
@@ -232,11 +272,21 @@ function _stage(game, hud, heroId, slot, opts, errors, onErr, realUpdate) {
   const REACH = { strike: 7, grapple: 12, cone: 18, trap: 14, control: 20, movement: 26 };
   const targetDist = opts.dist ?? TYPE_DIST[ab.type] ??
     (ab.reach ? Math.max(4, ab.reach * 0.75) : (REACH[famFor] || 30));
+  const casterX = -targetDist / 2;
+  const targetX = targetDist / 2;
+  const groundAt = (x, z = 0) => game.world.heightAt ? game.world.heightAt(x, z) : 0;
+  const placeOnGround = (fighter, x, z = 0) => {
+    const y = groundAt(x, z);
+    fighter.pos.set(x, y, z);
+    fighter.groundY = y;
+    fighter.spawn?.copy(fighter.pos);
+  };
 
   // stand the caster still at the origin, facing +x, with a dummy downrange to actually hit
-  p.pos.set(-targetDist / 2, 0, 0);
+  placeOnGround(p, casterX);
   p.vel.set(0, 0, 0);
   p.aim.set(1, 0, 0); p.aim3.set(1, 0, 0);
+  game.aimPoint.set(targetX, groundAt(targetX), 0);
   p.facing = 0;
   p.staggerT = 0; p.frozenT = 0; p.stunT = 0; p.downedT = 0;
   // ⚠ ONE TARGET, NOT A CROWD. Each call used to spawn another dummy and never remove the last, so
@@ -245,9 +295,12 @@ function _stage(game, hud, heroId, slot, opts, errors, onErr, realUpdate) {
   // as inert across most of the roster. Sweep the old ones first; the newest is the only target.
   for (let i = game.entities.length - 1; i >= 0; i--) {
     const e = game.entities[i];
-    if (e && e.isDummy) { try { e.dispose && e.dispose(); } catch (err) {} game.scene.remove(e.obj); game.entities.splice(i, 1); }
+    if (e && (e.isDummy || e._abilityFixture)) { try { e.dispose && e.dispose(); } catch (err) {} game.scene.remove(e.obj); game.entities.splice(i, 1); }
   }
-  const dummy = game.spawnDummy(targetDist / 2, 0);
+  const dummy = ab.type === 'mindcontrol' ? game.spawnRival('sol') : game.spawnDummy(targetX, 0);
+  if (dummy) placeOnGround(dummy, targetX);
+  if (ab.type === 'mindcontrol') dummy._abilityFixture = true;
+  if (ab.type === 'grapple' && !ab.reel) game.world.cover.push(opts.contextCover);
   if (dummy) { dummy.hp = dummy.maxHp; dummy.invuln = 0; }
 
   // ⚠ THE COST MUST NOT DECIDE THE TEST. An ability that is merely UNAFFORDABLE fails silently via
@@ -291,17 +344,21 @@ function _stage(game, hud, heroId, slot, opts, errors, onErr, realUpdate) {
   // ==============================================================================================
   const runOnce = (doFire, photo) => {
     // the same starting conditions every time, so two rows of the report mean the same thing
-    p.pos.set(-targetDist / 2, 0, 0);
+    placeOnGround(p, casterX);
     p.vel.set(0, 0, 0);
     p.aim.set(1, 0, 0); p.aim3.set(1, 0, 0);
     p.facing = 0;
     p.staggerT = 0; p.frozenT = 0; p.stunT = 0; p.downedT = 0;
-    if (dummy) { dummy.hp = dummy.maxHp; dummy.invuln = 0; dummy.pos.set(targetDist / 2, 0, 0); }
+    if (dummy) { dummy.hp = dummy.maxHp; dummy.invuln = 0; placeOnGround(dummy, targetX); }
     topUp();
 
     const before = snapshot(game);
     let peak = { ...before };
-    const busy = (x) => x.proj + x.ents + x.minions + x.constructs + x.flung + x.smoke;
+    let context = null;
+    const observe = () => {
+      const s = snapshot(game);
+      for (const k of Object.keys(s)) peak[k] = Math.max(peak[k], s[k]);
+    };
     // ⚠ A STATEFUL ABILITY MUST BE TICKED EVERY FRAME, NOT JUST PRESSED. Several handlers are
     // little state machines that advance on the intent they are fed — `melee` counts `st.t` down
     // and tests `coneFoe` each frame it is alive, `rush` carries the fighter through its charge,
@@ -310,35 +367,37 @@ function _stage(game, hud, heroId, slot, opts, errors, onErr, realUpdate) {
     // keep running. This harness only called it on press, hold and release — so the machine was
     // started and then never advanced, and three whole ability TYPES reported themselves inert
     // while working perfectly. Feed the neutral intent, exactly as the player's controller does.
-    const step = () => {
-      if (doFire) { try { runSlot(p, slot, { pressed: false, held: false, released: false, dt: DT }, game); } catch (e) { onErr(e); } }
+    const step = (feedNeutral = true) => {
+      if (doFire && feedNeutral) { try { runSlot(p, slot, { pressed: false, held: false, released: false, dt: DT }, game); } catch (e) { onErr(e); } }
       try { realUpdate(DT); } catch (e) { onErr(e); }   // the REAL update — game.update is a no-op now
-      const s = snapshot(game);
-      if (busy(s) > busy(peak)) peak = s;
+      observe();
     };
     const press = (o) => {
       if (!doFire) return;
       try { runSlot(p, slot, o, game); fired = true; } catch (e) { onErr(e); }
+      observe(); // a construct may trigger/dismiss before the first world tick
     };
     const finish = () => {
       const after = snapshot(game);
       const top = (k) => Math.max(after[k], peak[k]);
       return {
         spawns: top('proj') + top('ents') + top('minions') + top('constructs') + top('flung') +
-                top('smoke') + top('timers') -
+                top('smoke') + top('mines') + top('portals') -
                 (before.proj + before.ents + before.minions + before.constructs + before.flung +
-                 before.smoke + before.timers),
+                 before.smoke + before.mines + before.portals),
         move: Math.abs(after.px - before.px) + Math.abs(after.py - before.py) + Math.abs(after.pz - before.pz),
         ki: before.ki - after.ki,
         dmg: dummy ? (dummy.maxHp - dummy.hp) : 0,
         flying: after.flying !== before.flying,
-        selfState: (after.phase !== before.phase) || (after.invisible !== before.invisible),
+        selfState: (top('phase') > before.phase) || (top('invisible') > before.invisible),
+        quiver: top('quiver') !== before.quiver,
         invuln: after.invuln - before.invuln,
         buff: Math.max(after.buffT - before.buffT,
                        after.powerBuff - before.powerBuff,
                        after.shield - before.shield),
         scale: Math.abs(after.scale - before.scale),
         cd: !!(p.slots[slot] && p.slots[slot].cd > 0),
+        context,
       };
     };
 
@@ -349,7 +408,9 @@ function _stage(game, hud, heroId, slot, opts, errors, onErr, realUpdate) {
       for (let i = 0; i < holdFrames; i++) {
         topUp();                                 // a sustained power must not simply run dry
         press({ pressed: false, held: true, released: false, dt: DT });
-        step();
+        // The held intent already advanced this slot. A second, neutral intent here
+        // releases charge-type powers before they reach their minimum charge.
+        step(false);
         // ⚠ ONLY A PHOTO STOPS EARLY. Testing must always run the WHOLE lifecycle, because some
         // beams CHARGE first and only spawn on release (abilities.js: st.active = spawnBeamFor on
         // the release branch). Breaking at the photogenic moment meant measuring a beam that did
@@ -365,6 +426,33 @@ function _stage(game, hud, heroId, slot, opts, errors, onErr, realUpdate) {
       for (let i = 0; i < n; i++) step();
     }
 
+    // Context fixtures assert the actual consumer effect, beyond a changed index
+    // or a half-open door. These fail if payload propagation, hopping, anchoring,
+    // or the allegiance transition stops working.
+    if (!photo && ab.type === 'quiver') {
+      const bowSlot = SLOT_KEYS.find(k => p.def.abilities[k]?.type === 'bow');
+      const expected = (ab.payloads || ['explosive', 'flame', 'poison'])[p._quiverIdx];
+      runSlot(p, bowSlot, { pressed: true, held: true, released: false, dt: 0.5 }, game);
+      runSlot(p, bowSlot, { pressed: false, held: false, released: true, dt: DT }, game);
+      const arrow = game.projectiles.list.find(o => o.caster === p && o.arrow);
+      context = { kind: 'quiver', expected, payload: arrow?.payload, ok: !!arrow && arrow.payload === expected && p._quiverIdx !== before.quiver };
+    } else if (!photo && ab.type === 'portal') {
+      const pair = game.portals.find(pr => pr.owner === p);
+      topUp(); game.aimPoint.set(-targetDist / 2, 0, 30);
+      press({ pressed: true, held: false, released: false, dt: DT });
+      if (pair?.b) {
+        p.pos.set(pair.a.x, 0, pair.a.z); p._portalCd = 0;
+        const projectile = game.projectiles.spawnProjectile(p, { pos: p.pos.clone().setY(6), vel: p.aim.clone(), radius: 1, damage: 1, color: '#ffd24a' });
+        game.updatePortals(DT);
+        const fighterHopped = Math.hypot(p.pos.x - pair.b.x, p.pos.z - pair.b.z) < 0.1;
+        const projectileHopped = Math.hypot(projectile.pos.x - pair.b.x, projectile.pos.z - pair.b.z) < 0.1;
+        context = { kind: 'portal', fighterHopped, projectileHopped, ok: fighterHopped && projectileHopped };
+      } else context = { kind: 'portal', ok: false };
+    } else if (!photo && ab.type === 'mindcontrol') {
+      context = { kind: 'mindcontrol', controlled: !!dummy._controlled, team: dummy.team, casterTeam: p.team, ok: !!dummy._controlled && dummy.team === p.team };
+    } else if (!photo && ab.type === 'grapple' && !ab.reel) {
+      context = { kind: 'grapple', anchored: !!(p._grapple || p.hanging), ok: !!(p._grapple || p.hanging) && p.pos.x > -targetDist / 2 + 6 };
+    }
     return finish();
   };
 
@@ -377,25 +465,14 @@ function _stage(game, hud, heroId, slot, opts, errors, onErr, realUpdate) {
     runOnce(true, true);
   }
 
-  // ⚠ EXECUTION IS REPORTED, NOT REQUIRED — and dropping it as a gate was a real correction. It
-  // cannot be measured honestly here anyway: a sustained power is topped up every held frame so it
-  // does not simply run dry, which erases the very ki-spend it would be judged on. A cone that
-  // dealt 26.9 damage was being failed for "not executing". And it is redundant: an unimplemented
-  // type and an inert buff both produce NO EFFECT, so effect alone already separates them.
+  // Energy is topped up during sustained tests, so spending is not a global gate.
+  // Movement-only evidence does require execution to exclude ordinary settling.
   const executed = test.ki > 0.01 || test.cd;
 
   // ---- DID ANYTHING ACTUALLY HAPPEN? — this is the whole test ----------------------------------
-  const evidence = [];
-  if (test.spawns > 0) evidence.push('spawned');
-  if (test.dmg > 0.01) evidence.push('damaged');
-  if (test.move > 6) evidence.push('travelled');     // a dash/teleport, not a fighter settling
-  if (test.flying) evidence.push('flight');
-  if (test.selfState) evidence.push('self-state');
-  if (test.scale > 0.02) evidence.push('resize');
-  if (test.buff > 0.01) evidence.push('buff');
-
-  const ok = errors.length === 0 && fired && evidence.length > 0;
-  const needsContext = !ok && !errors.length && !!CONTEXTUAL[ab.type];
+  const evidence = collectAbilityEvidence(ab.type,test);
+  const ok = errors.length === 0 && fired && evidence.length > 0 && (!test.context || test.context.ok);
+  const needsContext = !ok && !errors.length && !test.context && !!CONTEXTUAL[ab.type];
 
   // ---- pose the frame -------------------------------------------------------------------------
   // ⚠ THE NEWS CAMERA LEAVES A SCISSOR RECT ON THE RENDERER (its POV renders 320x180 into a corner).
@@ -428,6 +505,7 @@ function _stage(game, hud, heroId, slot, opts, errors, onErr, realUpdate) {
     // ⚠ A FAILING ROW MUST DIAGNOSE ITSELF. 364 rows is far too many to debug one at a time by
     // hand; the raw deltas turn "inert" into "spawned nothing and moved 0.2u", which is a lead.
     raw: { spawns: test.spawns, move: +test.move.toFixed(1), dist: targetDist },
+    context: test.context,
     why: ok ? ''
       : errors.length ? 'threw'
       : !fired ? 'never fired'

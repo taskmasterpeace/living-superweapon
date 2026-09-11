@@ -1,0 +1,58 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "https://powerworld.local/schema/pw-asset-package-1.json",
+ "title": "pw-asset-package v1",
+ "description": "Documentation-grade schema for one authored asset package manifest. The executable authority is authoring/lib/validate.js; this file mirrors it so reviewers can read the contract without reading code. Kind-specific requirements (sockets per equipment class, the 17 humanoid slots, creature clip names, budget limits) are enforced by the validator and described in docs/authoring/MANIFEST.md.",
+ "type": "object",
+ "required": ["format","formatVersion","id","version","kind","displayName","provenance","source","tool","units","outputs","budgets"],
+ "additionalProperties": true,
+ "properties": {
+  "format": {"const": "pw-asset-package"},
+  "formatVersion": {"const": 1},
+  "id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{0,79}$"},
+  "version": {"type": "integer", "minimum": 1},
+  "kind": {"enum": ["humanoid-motion","humanoid-body","equipment","creature","prop"]},
+  "displayName": {"type": "string", "minLength": 1, "maxLength": 80},
+  "tags": {"type": "array", "items": {"type": "string", "pattern": "^[a-z0-9-]{1,32}$"}},
+  "provenance": {
+   "type": "object", "required": ["author","license","redistribution"],
+   "properties": {
+    "author": {"type": "string"},
+    "license": {"type": "string", "description": "SPDX identifier, or Proprietary-Internal"},
+    "redistribution": {"enum": ["free","runtime-embed-only","internal"]},
+    "url": {"type": "string"}, "retrievedFrom": {"type": "string"}, "revision": {"type": "string"},
+    "terms": {"type": "string", "maxLength": 600}, "attribution": {"type": "string"}
+   }
+  },
+  "source": {
+   "type": "object", "required": ["adapter","files","recipe"],
+   "properties": {
+    "adapter": {"type": "string", "pattern": "^[a-z0-9-]+@[0-9]+$"},
+    "files": {"type": "array", "minItems": 1, "items": {"type": "object", "required": ["path","sha256"], "properties": {"path": {"type": "string", "description": "relative, under assets-src/ or authoring/"}, "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}}},
+    "recipe": {"type": "object", "required": ["path","sha256"], "properties": {"path": {"type": "string", "description": "under authoring/recipes/"}, "sha256": {"type": "string"}}}
+   }
+  },
+  "tool": {"type": "object", "required": ["name","version","three","adapterVersion"], "properties": {"name": {"const": "powerworld-authoring"}, "version": {"type": "string"}, "three": {"type": "string"}, "adapterVersion": {"type": "integer", "minimum": 1}}},
+  "build": {"type": "object", "properties": {"options": {"type": "object"}, "cacheKey": {"type": "string"}}},
+  "units": {
+   "type": "object", "required": ["lengthUnit","metersPerUnit","up","forward","handedness","sourceConversion"],
+   "properties": {
+    "lengthUnit": {"const": "game-unit"}, "metersPerUnit": {"const": 0.19}, "up": {"const": "+Y"}, "forward": {"const": "+Z"}, "handedness": {"const": "right"},
+    "sourceConversion": {"type": "object", "required": ["scale","yawDegrees","mirrorX","sourceUp","sourceForward"], "properties": {"scale": {"type": "number", "exclusiveMinimum": 0}, "yawDegrees": {"type": "number"}, "mirrorX": {"type": "boolean"}, "sourceUp": {"type": "string"}, "sourceForward": {"type": "string"}}}
+   }
+  },
+  "outputs": {"type": "array", "minItems": 1, "items": {"type": "object", "required": ["path","role","sha256","bytes"], "properties": {"path": {"type": "string", "description": "flat file name inside the package directory"}, "role": {"enum": ["pose-bank","glb","preview","report","recipe-copy"]}, "sha256": {"type": "string"}, "bytes": {"type": "integer", "minimum": 0}}}},
+  "bounds": {"type": "object", "properties": {"min": {"type": "array", "items": {"type": "number"}, "minItems": 3, "maxItems": 3}, "max": {"type": "array", "items": {"type": "number"}, "minItems": 3, "maxItems": 3}}},
+  "lods": {"type": "array", "items": {"type": "object", "properties": {"level": {"type": "integer"}, "output": {"type": "string"}, "triangles": {"type": "integer"}}}},
+  "materials": {"type": "array", "items": {"type": "object", "properties": {"name": {"type": "string"}, "slot": {"type": "string"}}}},
+  "rig": {"type": "object", "properties": {"skeleton": {"type": "string", "description": "pw-pose-bridge@1 for humanoid motion; a distinct name@version for creatures; none for props/equipment"}, "mapping": {"type": "object", "description": "humanoid slot -> source joint name"}, "bones": {"type": "integer"}, "catalogBody": {"type": "string"}}},
+  "sockets": {"type": "array", "items": {"type": "object", "required": ["name","parent","position","rotation"], "properties": {"name": {"type": "string", "pattern": "^[a-z][a-z0-9.-]{0,31}$"}, "parent": {"type": "string"}, "position": {"type": "array", "minItems": 3, "maxItems": 3}, "rotation": {"type": "array", "minItems": 4, "maxItems": 4}}}},
+  "equipment": {"type": "object", "properties": {"class": {"enum": ["firearm","blade","thrown"]}, "twoHanded": {"type": "boolean"}, "hand": {"enum": ["right","left","either"]}}},
+  "clips": {"type": "array", "items": {"type": "object", "required": ["id","take","duration","loop","sampleRate","frames","handedness"], "properties": {"id": {"type": "string"}, "take": {"type": "string"}, "duration": {"type": "number"}, "loop": {"type": "boolean"}, "sampleRate": {"type": "integer"}, "frames": {"type": "integer"}, "mirror": {"enum": ["L","R",null]}, "handedness": {"enum": ["right","left","none"]}, "events": {"type": "array", "items": {"type": "object", "required": ["t","type"], "properties": {"t": {"type": "number"}, "type": {"enum": ["footstep","contact","recovery","mag-out","mag-in","bolt","grenade-release","loop","custom"]}, "side": {"enum": ["L","R"]}, "note": {"type": "string"}}}}}}},
+  "hitZones": {"type": "array", "items": {"type": "object", "required": ["zone","shape","attach","center"], "properties": {"zone": {"enum": ["head","torso","arm.left","arm.right","leg.left","leg.right","weakpoint"]}, "shape": {"enum": ["sphere","capsule","box"]}, "attach": {"type": "string"}, "center": {"type": "array"}, "radius": {"type": "number"}, "end": {"type": "array"}, "halfExtents": {"type": "array"}}}},
+  "budgets": {"type": "object", "required": ["profile","measured","limits"], "properties": {"profile": {"enum": ["desktop","mobile"]}, "measured": {"$ref": "#/$defs/budget"}, "limits": {"$ref": "#/$defs/budget"}}},
+  "compatibility": {"type": "object", "properties": {"poseBridge": {"type": "object", "properties": {"frameLength": {"const": 45}, "layout": {"type": "string"}, "engineModule": {"const": "src/engine/authored-pose.js"}}}, "lswCharacter": {"type": "object", "description": "How a lsw-character kit package could reference this asset; never a change to that schema."}}},
+  "packageHash": {"type": "string", "pattern": "^[0-9a-f]{64}$", "description": "sha256 of the canonical JSON of every other field"}
+ },
+ "$defs": {"budget": {"type": "object", "required": ["triangles","drawCalls","materials","bones","textures","bytes"], "additionalProperties": false, "properties": {"triangles": {"type": "integer"}, "drawCalls": {"type": "integer"}, "materials": {"type": "integer"}, "bones": {"type": "integer"}, "textures": {"type": "integer"}, "bytes": {"type": "integer"}}}}
+}

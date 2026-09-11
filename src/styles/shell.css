@@ -73,6 +73,8 @@
     padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
   #touch .tzone{ position:absolute; bottom:0; top:34%; width:44%; pointer-events:auto; touch-action:none; }
   #touch .tzone-l{ left:0; } #touch .tzone-r{ right:0; }
+  /* System pause/menu buttons remain available; combat zones must not sit over dialogs. */
+  #touch.touch-menu .tpad,#touch.touch-menu .tzone{display:none!important;pointer-events:none!important;}
   #touch .tstick{ position:fixed; width:112px; height:112px; margin:-56px 0 0 -56px; border-radius:50%;
     border:2px solid var(--line-2); background:rgba(10,12,18,.28); opacity:0; transition:opacity .12s; pointer-events:none; }
   #touch .tstick.on{ opacity:.9; }
@@ -86,6 +88,8 @@
     background:rgba(10,12,18,.5); color:var(--text); font-family:var(--f-display); font-weight:800; font-size:19px;
     display:flex; align-items:center; justify-content:center; backdrop-filter:blur(3px); user-select:none; }
   #touch .tbtn.on{ background:var(--gold); color:var(--on-gold); border-color:var(--gold); transform:scale(.94); }
+  #touch .tbtn.locked{position:relative;opacity:.8;border-style:dashed;}
+  #touch .touch-unlock{position:absolute;bottom:3px;left:3px;right:3px;border-radius:4px;background:rgba(20,17,11,.92);color:var(--gold);font:700 10px Inter,system-ui,sans-serif;line-height:14px;pointer-events:none;}
   #touch .tbtn.tsm{ width:46px; height:46px; font-size:16px; }
   #touch .tb-lmb{ background:rgba(245,178,26,.22); } #touch .tb-ult{ background:rgba(216,31,38,.25); }
   #touch .tb-guard{ background:rgba(159,208,255,.2); }
@@ -94,4 +98,3 @@
   #touch .tb-item{ grid-column:2; background:rgba(224,178,60,.14); }
 
   /* (responsive rules live at the END of hud.js CSS so they win the cascade) */
-

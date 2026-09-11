@@ -15,6 +15,7 @@
 //     cover boxes — rather than recomputing what the planner intended. A ruler that agrees with the
 //     source instead of the world is how a wrong number survives being checked.
 import { BANDS } from '../core/util.js';
+import {UNITS_PER_METER,unitsToMeters} from '../core/world-units.js';
 import { relationOf, factionOf, theaterOf, rationaleOf, alliesOf, rivalsOf, sameBloc,
          factionSplit, relationCount, FACTION_LOOK } from '../data/relations.js';
 import { ROSTER } from '../data/characters.js';
@@ -33,9 +34,9 @@ import { ORIGINS, deriveOrigin, recoveryPlan, HOSPITAL } from '../data/origins.j
 import { WHEEL, EMOTIONS, shadeOf, derivePersonality, TARGET_RULES } from '../data/psyche.js';
 import { psycheOf } from './psyche.js';
 
-const U_PER_M = 1 / 0.19;              // TRUE 1:1 SCALE: 1 unit ≈ 0.19m
+const U_PER_M = UNITS_PER_METER;
 const HERO_U = 9.6;                    // a hero is 9.6u ≈ 1.8m — the only ruler that means anything
-const m = (u) => (u * 0.19).toFixed(1) + 'm';
+const m = (u) => unitsToMeters(u).toFixed(1) + 'm';
 const heroes = (u) => (u / HERO_U).toFixed(1) + '×hero';
 
 export class DevConsole {
@@ -175,6 +176,19 @@ export class DevConsole {
       for (const k of names) c.print('  ' + k.name.padEnd(10) + k.help);
     });
     this.cmd('clear', 'clear the log', () => { this.out.innerHTML = ''; });
+
+    this.cmd('perf', 'measure 8 seconds of live FPS, frame spikes, GPU and CPU sections; keep playing', (a,c) => {
+      if(G()._performanceCapture)return c.warn('A performance capture is already running.');
+      c.print('Measuring for 8 seconds. Close this console and play normally; no quality or gameplay settings are changed.');
+      import('./performance-diagnostic.js').then(({capturePerformance})=>capturePerformance(G(),this.hud)).then(report=>{
+        c.lastPerformance=report;
+        c.print('PERFORMANCE '+(report.fps==null?'no visible frames':report.fps.toFixed(1)+' FPS')+' · p95 '+(report.p95Ms?.toFixed(1)??'—')+'ms · worst '+(report.worstMs?.toFixed(1)??'—')+'ms');
+        c.print('GPU '+report.gpu+'\nCanvas '+report.canvas.join('×')+' · quality '+report.quality+' · hidden frames '+report.hiddenFrames);
+        for(const [name,s] of Object.entries(report.sections))c.print(name+' mean '+s.meanMs.toFixed(2)+'ms / p95 '+s.p95Ms.toFixed(2)+'ms / max '+s.maxMs.toFixed(2)+'ms');
+        c.print('Diagnostic only: CPU sections overlap; render submission time is not a GPU timer.');
+        console.log('[POWERWORLD performance]',JSON.stringify(report));
+      }).catch(e=>c.err('Performance capture failed: '+String(e)));
+    });
 
     this.cmd('verbose', 'verbose [on|off] — trace gated systems', (a, c) => {
       c.verbose = a[0] ? /^(on|1|true|yes)$/i.test(a[0]) : !c.verbose;

@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-10T21:42:00Z",
+  "title": "PowerWorld / Impact",
+  "extensions": {
+    "status": "User-approved design direction; component specimens are documentation, not runtime verification",
+    "source": "DESIGN.md",
+    "motion": [
+      {
+        "name": "calm-between-events",
+        "value": "No ambient looping HUD animation",
+        "purpose": "Reserve comic emphasis for actual outcomes"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary action",
+      "kind": "button",
+      "description": "Explicit save or confirm; gold reserved for primary action.",
+      "html": "<button class=\"ds-primary\">Save local</button>",
+      "css": ".ds-primary{background:#ffd24a;color:#160d02;border:1px solid transparent;border-radius:10px;padding:10px 16px;font:600 14px Inter,system-ui,sans-serif;cursor:pointer}.ds-primary:hover{background:#ffd97a}.ds-primary:focus-visible{outline:2px solid #e8e2d6;outline-offset:3px}.ds-primary:active{transform:translateY(1px)}"
+    },
+    {
+      "name": "Secondary action",
+      "kind": "button",
+      "description": "Quiet deliberate navigation or play test.",
+      "html": "<button class=\"ds-secondary\">Play Test</button>",
+      "css": ".ds-secondary{background:#171710;color:#e8e2d6;border:1px solid #686046;border-radius:10px;padding:10px 16px;font:600 14px Inter,system-ui,sans-serif;cursor:pointer}.ds-secondary:hover{border-color:#ffd24a;color:#ffd24a}.ds-secondary:focus-visible{outline:2px solid #ffd24a;outline-offset:3px}"
+    },
+    {
+      "name": "Vital meter",
+      "kind": "custom",
+      "description": "Labels and numbers supplement color. Demonstration values only.",
+      "html": "<div class=\"ds-vital\"><span>HP</span><meter min=\"0\" max=\"500\" value=\"420\" aria-label=\"Health\">420 / 500</meter><strong>420 / 500</strong></div>",
+      "css": ".ds-vital{display:flex;align-items:center;gap:8px;background:#0a0b10;color:#e8e2d6;padding:8px 10px;font:600 13px Inter,system-ui,sans-serif}.ds-vital meter{accent-color:#ff5a4a;width:110px}.ds-vital strong{font-variant-numeric:tabular-nums;font-size:12px}"
+    },
+    {
+      "name": "Truthful impact label",
+      "kind": "chip",
+      "description": "Only an authoritative armor absorption event may use this specimen.",
+      "html": "<div class=\"ds-impact\"><strong>TINK!</strong><span>ARMOR HIT</span></div>",
+      "css": ".ds-impact{display:inline-flex;flex-direction:column;align-items:center;background:#0a0b10;padding:10px 14px;color:#ffd24a}.ds-impact strong{font:italic 800 28px Rajdhani,Inter,system-ui,sans-serif;text-shadow:2px 2px 0 #000}.ds-impact span{font:600 11px Inter,system-ui,sans-serif;letter-spacing:.04em}"
+    },
+    {
+      "name": "Spoken line",
+      "kind": "custom",
+      "description": "Shape specimen only. Runtime must project a tail to the actual speaker, apply distance and cooldown.",
+      "html": "<div class=\"ds-speech\">Cover me!</div>",
+      "css": ".ds-speech{display:inline-block;background:#e8e2d6;color:#0a0b10;border:2px solid #0a0b10;border-radius:16px;padding:10px 14px;font:600 14px Inter,system-ui,sans-serif;max-width:220px}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Comic impact. Tactical clarity.",
+    "overview": "Compact combat UI with outcome-driven comic feedback and speaker-anchored dialogue.",
+    "keyCharacteristics": [
+      "Battlefield first",
+      "Truthful impact semantics",
+      "Centered BFP default",
+      "Fixed compact mobile meters"
+    ],
+    "rules": [
+      {
+        "name": "The Truth Rule",
+        "body": "Presentation consumes resolved outcomes.",
+        "section": "components"
+      }
+    ],
+    "dos": [
+      "Preserve the target and reticle.",
+      "Use labels and shapes as well as color."
+    ],
+    "donts": [
+      "Do not infer damage status from attack appearance.",
+      "Do not confuse concept art with runtime evidence."
+    ]
+  }
+}

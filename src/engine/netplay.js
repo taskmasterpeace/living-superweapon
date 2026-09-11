@@ -6,7 +6,7 @@
 //     applies the damage to the real you, then your hp streams back (victim authority)
 // Transport: Supabase Realtime broadcast (core/net.js). WebRTC is the upgrade path.
 import { NetSession } from '../core/net.js';
-import { runSlot } from './abilities.js';
+import { runSlot,cancelHeldSlot } from './abilities.js';
 
 const TICK = 1 / 15;
 
@@ -57,6 +57,12 @@ export class Netplay {
   queueSlot(k, phase, aim) { this._evQ.push({ t: 's', k, p: phase, a: aim ? [+aim.x.toFixed(2), +aim.y.toFixed(2), +aim.z.toFixed(2)] : null }); }
   queueMelee(m) { this._evQ.push({ t: 'm', m }); }
 
+  // Pause/menu stop update(), so cancellation must leave without another sim tick.
+  flushEvents() {
+    if(!this.active||!this._evQ.length)return;
+    const list=this._evQ;this._evQ=[];this.net.sendEvent({list});
+  }
+
   // ---- per-frame ----
   update(dt) {
     if (!this.active) return;
@@ -93,6 +99,7 @@ export class Netplay {
       if (ev.t === 's') {
         if (ev.a) r.aim3.set(ev.a[0], ev.a[1], ev.a[2]);
         if (ev.p === 1) { r._held.add(ev.k); runSlot(r, ev.k, { pressed: true, held: true, released: false, dt: 1 / 60 }, g); }
+        else if(ev.p===4){r._held.delete(ev.k);cancelHeldSlot(r,ev.k);}
         else { r._held.delete(ev.k); runSlot(r, ev.k, { pressed: false, held: false, released: true, dt: 1 / 60 }, g); }
       } else if (ev.t === 'm') {
         if (ev.m === 'cs') g.melee.chargeStart(r);

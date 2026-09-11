@@ -1,0 +1,2 @@
+# Byte-exact tree: every recorded hash in a manifest refers to these bytes. No EOL conversion.
+* -text

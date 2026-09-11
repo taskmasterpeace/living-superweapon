@@ -1,37 +1,63 @@
+import {activatePowerUp} from './power-up.js';
+import {replaceHeldEquipment,disposeHeldEquipment} from './authored-equipment.js';
 // WAR WORLD: ASCENDANTS — game orchestrator: entities, control, combat helpers, main update.
 import { updateDomes, updateReshaped, domeBlocks, releasePossession } from './systems2.js';
 import { traumatise, inflict } from '../data/medical.js';
 import { setVisionMode } from './systems2.js';
 import { Weather, TimeFields, GravityZones, setSize, banish } from './systems.js';
 import * as THREE from 'three';
+import {snapshotHeroSkins} from './hero-skin.js';
+import {clearForegroundVisibility} from './foreground-visibility.js';
+import {combatView,combatLookActive} from './combat-view.js';
+import {meleeKeymap} from '../core/melee-mode.js';
 import { World } from './world.js';
 import { Particles3D } from './particles3d.js';
 import { VFX } from './vfx.js';
 import { Projectiles } from './projectiles.js';
+import {beamThreatTime} from './beam-threat.js';
 import { buildWeapon, weaponProficiency, PROP_WEIGHT, liftCapacityOf, bodyWeight, Fighter } from './entity.js';
+import {mountHeldWeapon} from './weapon-emission.js';
 import { AI } from './ai.js';
 import { BaseRoom } from './baseroom.js';
 import { Minion, Construct } from './summons.js';
+import {constructForSlot,settleConstructUpkeep} from './construct-policy.js';
+import {tankPlacement,tankSettings} from './construct-tank.js';
 import { MeleeSystem } from './melee.js';
+import {personThrowCue} from './person-carry.js';
+import {beginBodyContactFrame,resolveBodyContacts} from './fighter-body-contact.js';
 import { Pedestrians } from './pedestrians.js';
 import { NewsCrew } from './newscrew.js';
+import {loadBroadcastProfile} from '../data/broadcast-profile.js';
+import {usesCombinedHands} from './cast-channels.js';
+import {syncChargePresentation} from './power-emission.js';
 import { PoliceSystem } from './police.js';
 import { psycheOf, applyInstant, pickByPersonality } from './psyche.js';
 import { WhiteRoom } from './whiteroom.js';
 import { buildReport } from '../data/news.js';
 import { districtRow } from '../data/districts.js';
-import { hasCity } from '../data/modes.js';
+import { hasCity, hasCivilians } from '../data/modes.js';
 import { bookInjury, injuryOf, healBout, koElo, matchElo } from '../data/rankings.js';
 import { SETTINGS, keymap } from '../core/settings.js';
+import {canChangeMouseTool,sampleMouseCombat} from '../core/combat-selection.js';
+import {soldierControlsActive,selectSoldierAttack,soldierSprint} from '../core/soldier-controls.js';
+import {cancelHeldSlot,cancelHeldAttacks,cancelHeldAttacksIfIncapacitated} from './abilities.js';
 import { BoxingRing, BOXING } from './boxingring.js';
 import { PowerWorldStage } from './powerworld.js';
+import { FrontlineEncounter } from './frontline-encounter.js';
+import {ZombieEncounter} from './zombie-encounter.js';
+import {DesertSecurity} from './desert-security.js';
 import { STRIKES } from '../data/martial.js';
 import { beamBuildOf, beamTemperOf } from '../data/visual.js';
 import { Gamepad } from '../core/gamepad.js';
+import {updateMovementGears,resetMovementGears} from '../core/movement-gears.js';
 import { runSlot, performEvade } from './abilities.js';
+import {requestReload,firearmAmmo,cancelFirearmReload} from './firearm-ammo.js';
 import { ROSTER } from '../data/characters.js';
 import { BANDS, clamp, rand, TAU, damp, GROUND_LAYER, PW_KB, PW_FX, pwCatchSpeed, AIM_MAX_D, GAIT, GAIT_OWNER } from '../core/util.js';
+import {firearmAimRange,firearmSightZoom} from './firearm-aim.js';
 import { tierOf, TIER_COLORS } from './entity.js';
+import {formAt,slotUnlocked} from '../data/progression.js';
+import {selectHitFeedback} from './hit-feedback.js';
 
 const _v = new THREE.Vector3();
 // ⚠ THE RETICLE NEVER LIES (docs/powerworld/aaa-05-reticle.md). `_muz` is the muzzle point for the
@@ -40,7 +66,12 @@ const _v = new THREE.Vector3();
 // reused write target for `world.aimTrace` (its `.point` is created once and reused).
 const _muz = new THREE.Vector3();
 const _camDir = new THREE.Vector3();
+const _camOrigin = new THREE.Vector3();
 const _aimOut = { point: new THREE.Vector3(), dist: 0, hit: null, ent: null };
+function lockAvailable(g,p,e){
+  return e!==p&&e.alive&&!e.phase&&!e._banished&&!e._inert&&!(p.blindT>0)&&
+    (e._vis??1)>.4&&g.isFoe(p,e)&&p.pos.distanceToSquared(e.pos)<=AIM_MAX_D*AIM_MAX_D&&g.canSee(p,e);
+}
 const SLOT_KEYS = ['lmb', 'rmb', 'q', 'e', 'r', 'f', 'shift'];
 // what a bot may fire at a thrown car (manual §47) — a TAPPED, aimed, travelling shot. Charges,
 // rushes and ultimates are all the wrong answer to a rock arriving in a second and a half, and the
@@ -192,6 +223,8 @@ const MODE_IMPL = {
     setup(g, o = {}) {
       g.ms = { powerworld: true, chaseCam: true };   // the third-person lock-on view (world.chase)
       g.pwStage = new PowerWorldStage(g); g.pwStage.open();   // the stage — see engine/powerworld.js
+      g.pwStage.setDaylight(o.daylight);
+      g.weather.set(['rain','storm','tornado','hurricane'].includes(o.weatherPreset)?o.weatherPreset:'clear');
       // ⚠ THE CITY HUD LIES IN ANOTHER DIMENSION. The nameplate read "TRANQUILITY REACH · THE MOON ·
       // POP 8K · CRIME 8" while standing on a rock spire in PowerWorld — a surface stating a fact
       // that is not true of where you are. One body class, and the stylesheet does the rest; the
@@ -228,23 +261,30 @@ const MODE_IMPL = {
       BANDS.ceiling = Math.max(BANDS.ceiling, 900);
       BANDS.sky = Math.max(BANDS.sky, 420);
       const hs = g.humans.map(h => h.fighter).filter(Boolean);
-      g.ms.enemy = o && o.twoPlayer ? hs[1]
-        : g.spawnEnemy((o && (o.enemy || o.p2)) || null, { x: 40, z: 40, aiLevel: (o && o.aiLevel) || 1.25 });
-      for (const e of g.entities) if (e.def && !e.isDummy) {
-        e._chaseKb = true;   // a knockback CARRIES here — see entity._physics
-        // ⚠ ONE FLAG, FOUR RULES, AND IT IS NAMED FOR THE IDEA RATHER THAN ONE OF ITS EFFECTS.
-        // `_openSky` means: nothing docks you, nothing sags, there is no ceiling, and EVERY character
-        // can fly — because those are not four decisions, they are one dimension. It was called
-        // `_noDeckServo` while it did one job; a flag whose name describes a single side effect is a
-        // flag someone will later add a fifth unrelated meaning to.
-        e._openSky = true;
-        if (e.ai) e.ai.flyTend = Math.max(e.ai.flyTend || 0, 0.8);   // the fight belongs in the air
-      }
       if (hs[0]) hs[0].pos.set(-40, 0, -40);
+      if(!o.twoPlayer&&hs[0]&&o.cameraPreset==='frontline')hs[0]._cameraPreset='frontline';
+      if (o.encounter === 'frontline' && !o.twoPlayer) {
+        g.ms.frontline = new FrontlineEncounter(g);
+      } else if(o.encounter==='zombies'&&!o.twoPlayer){
+        g.ms.zombies=new ZombieEncounter(g);
+      } else if(o.encounter==='security'&&!o.twoPlayer){
+        g.ms.desertLaw=new DesertSecurity(g);
+      } else if(o.encounter === 'practice' && !o.twoPlayer){
+        // An explicit menu choice, not an invulnerability/debug override.
+        // Normal resources, physics and controls; B can add a rival on demand.
+        g.ms.practice=true;
+      } else g.ms.enemy = o && o.twoPlayer ? hs[1]
+        : g.spawnEnemy((o && (o.enemy || o.p2)) || null, { x: 40, z: 40, aiLevel: (o && o.aiLevel) || 1.25 });
+      for (const e of g.entities) if (e.def && !e.isDummy && !e._frontlineClone) {
+        e._chaseKb = true;   // a knockback CARRIES here — see entity._physics
+        // Free altitude and presentation rules; flight permission remains per character.
+        e._openSky = true;
+        if (e.ai) e.ai.flyTend = e.flightTier>0?Math.max(e.ai.flyTend || 0, 0.8):0;
+      }
     },
     tick(g, dt) {
       // late arrivals (a rival ordered with B, a respawn) inherit the dimension's rules
-      for (const e of g.entities) if (e.def && !e.isDummy && !e._chaseKb) { e._chaseKb = true; e._openSky = true; }
+      for (const e of g.entities) if (e.def && !e.isDummy && !e._frontlineClone && !e._chaseKb) { e._chaseKb = true; e._openSky = true; }
       // ⚠ RE-ASSERTED, because `world.fitBands()` runs AFTER the mode's setup and rewrites the band
       // table from the tallest thing it just built — measured: the ceiling I raised in setup was back
       // to 320 by the first frame. Re-asserting here is idempotent and cannot be out-ordered.
@@ -252,6 +292,9 @@ const MODE_IMPL = {
       // belongs with the stage work — noted in docs/POWERWORLD.md.)
       if (BANDS.ceiling < 900) { BANDS.ceiling = 900; BANDS.sky = Math.max(BANDS.sky, 420); }
       if (g._pwStage) g._pwStage.tick(g.player);      // the climb to space — one fraction of altitude
+      g.ms.frontline?.update(dt);
+      g.ms.zombies?.update(dt);
+      g.ms.desertLaw?.update(dt);
     },
     onKO() {},
     isOver() { return null; },          // a proving ground, like free roam — you leave when you like
@@ -342,6 +385,7 @@ export class Game {
     this.melee = new MeleeSystem(this);
     this.peds = new Pedestrians(this.world.scene, this.world.ARENA || 240, this.world.waterX || 188);
     this.news = new NewsCrew(this);  // the KMK 9 field crew — films the fight, records the clips
+    this.news.setCameraProfile(loadBroadcastProfile());
     this.police = new PoliceSystem(this);   // the city's answer to whoever hurts humans
     // EVERY city rebuild re-grids what was keyed to the old map — whether it came from a match,
     // the atlas, or the map maker's live preview. There is exactly one of these for a reason.
@@ -504,7 +548,7 @@ export class Game {
   updatePlayerMark(dt) {
     const m = this.playerMark, p = this.player;
     if (!m) return;
-    const show = !!(p && p.alive && this.mode && this.running);
+    const show = !!(p && p.alive && this.mode && this.running && !p._openSky);
     if (m.visible !== show) m.visible = show;
     if (!show) return;
     // ⚠ 0.16 was an invented number that landed 11cm above the contact shadow (0.05) and tied with
@@ -551,6 +595,26 @@ export class Game {
   updateThrowArc() {
     const arc = this.throwArc, p = this.player;
     if (!arc) return;
+    const carryCue=p?.alive&&this.running&&!this.matchOver?personThrowCue(p,this):null;
+    if(carryCue){
+      // A short direction cue, clipped by the actual full-body clearance query.
+      // It deliberately makes no ballistic landing promise; native flight owns
+      // gravity, wind, changing terrain and the subsequent impact.
+      arc.visible=true;this._arcRing.visible=false;
+      for(let i=0;i<this._arcDots.length;i++){
+        const d=this._arcDots[i];d.visible=true;d.position.lerpVectors(carryCue.from,carryCue.end,(i+1)/this._arcDots.length);
+        d.position.y+=carryCue.height;d.material.opacity=.65*(1-i/this._arcDots.length*.65);d.material.color.set('#ffd24a');
+      }
+      this.hud?.throwReach?.(carryCue.blocked?'THROW DIRECTION · COVER':'THROW DIRECTION');this._carryCueShown=true;return;
+    }
+    if(this._carryCueShown){this._carryCueShown=false;this.hud?.throwReach?.('');}
+    // A grenade in the inventory is not an aiming gesture. Hide this legacy
+    // predictive aid in third person; thrown props/clinch retain deliberate aim.
+    if(p?._openSky&&!p._carry&&!(p.grabState==='clinch'&&p.grabbing)){
+      arc.visible=false;
+      if(this._arcOut){this._arcOut=false;this.hud?.throwReach?.('');}
+      return;
+    }
     let def = null;
     if (p && p.alive && this.mode && this.running && !this.matchOver) {
       for (const k of SLOT_KEYS) {                       // the first READY lobbed weapon they carry
@@ -619,6 +683,10 @@ export class Game {
   // control back. Purely presentational, and it never fights the map tool or a cinematic.
   startKoCam(victim, dur = 1.2) {
     if (!victim || this._koCam) return;
+    // A living third-person player still owns aiming and sustained attacks.
+    // Enemy KOs belong in the news/replay view, not a map-camera takeover that
+    // releases pointer lock and retires the player's held input mid-fight.
+    if (combatView(this)==='bfp') return;
     if (this.mapCam && !this._koCam) return;                 // a cinematic or the map tool owns the camera
     if (!this.isHuman(victim) && !this.isHuman(victim.lastHitBy)) return;   // only OUR knockouts
     this._koCam = { t: dur, dur, at: victim.pos.clone(), a0: this.world.orbitAngle || 0 };
@@ -760,9 +828,9 @@ export class Game {
   // THE G-CHAIN, in priority order. Four behaviours on one key is only acceptable because the
   // prompt says which one is armed — so the prompt is not optional, it is part of the feature.
   interactVerb(f) {
+    if (f.grabState === 'clinch' && f.grabbing) return 'hurl';
     if (this._focus && this._focus.enabled(f)) return 'interact';
     if (f._carry) return 'throw';
-    if (f.grabState === 'clinch' && f.grabbing) return 'hurl';
     if (this.propInReach(f)) return 'hoist';
     return 'grab';
   }
@@ -934,13 +1002,25 @@ export class Game {
    *
    * @returns {object|null} the record that was hit (already marked dead if it broke).
    */
-  hitFlung(src, pos, radius, amount) {
+  // Optional segment support from PowerWorld: callers with a previous position
+  // can sweep through a prop. Native projectile contacts already sweep before
+  // reaching this helper; they and beam tips retain the point-query contract.
+  hitFlung(src, pos, radius, amount, prev) {
     const list = this._flung;
     if (!list || !list.length || !src) return null;
     for (const fl of list) {
       if (fl.dead || fl.by === src) continue;
       if (fl.by && !this.isFoe(fl.by, src)) continue;         // only the side it was thrown AT may break it
-      const dx = fl.x - pos.x, dy = fl.y - pos.y, dz = fl.z - pos.z;
+      let px = pos.x, py = pos.y, pz = pos.z;
+      if (prev) {                                             // closest point of the swept segment to the rock
+        const sx = pos.x - prev.x, sy = pos.y - prev.y, sz = pos.z - prev.z;
+        const ll = sx * sx + sy * sy + sz * sz;
+        if (ll > 1e-8) {
+          const t = Math.max(0, Math.min(1, ((fl.x - prev.x) * sx + (fl.y - prev.y) * sy + (fl.z - prev.z) * sz) / ll));
+          px = prev.x + sx * t; py = prev.y + sy * t; pz = prev.z + sz * t;
+        }
+      }
+      const dx = fl.x - px, dy = fl.y - py, dz = fl.z - pz;
       if (dx * dx + dy * dy + dz * dz > (fl.r + radius) * (fl.r + radius)) continue;
       fl.hp -= amount || 0;
       const at = new THREE.Vector3(fl.x, fl.y, fl.z);
@@ -980,7 +1060,7 @@ export class Game {
     for (const v of this.entities) {
       if (!(v._thrownT > 0)) continue;
       v._thrownT -= dt;
-      if (v._thrownT <= 0 || !v.alive) { v._thrownBy = null; continue; }
+      if (v._thrownT <= 0 || !v.alive) { v._thrownBy = null;v._personThrow=null; continue; }
       const spd = Math.hypot(v.vel.x, v.vel.y, v.vel.z);
       if (spd < 24) continue;
       const by = v._thrownBy;
@@ -1269,8 +1349,7 @@ export class Game {
     f._gearHeld = { ab: eff, base: ab, t: 12, prof };
     f.slots._gear = { def: eff, cd: 0, chargeT: 0, sustainT: 0 };
     const hand = buildWeapon(this._gearKind(ab), { armor: new THREE.MeshStandardMaterial({ color: '#565c66', roughness: 0.45, metalness: 0.7 }) });
-    hand.position.set(1.55, 4.6, 1.1); hand.rotation.x = -0.5;
-    f.obj.add(hand); f._gearMesh = hand;
+    mountHeldWeapon(f,hand);
     this.scene.remove(best.mesh);
     best.mesh.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material) o.material.dispose(); });
     this._drops.splice(this._drops.indexOf(best), 1);
@@ -1285,7 +1364,7 @@ export class Game {
    * ⚠ Proficiency shows in the HANDS, not in the weapon: the row is untouched and the EFFECTIVE
    * ability is what gets held. A soldier and a bruiser hold the same carbine differently.
    */
-  equipFrom(f, row) {
+  equipFrom(f, row, {primary=false}={}) {
     if (!f || !row || !row.ab) return null;
     if (f._gearHeld) this.dropGear(f, false);
     const prof = weaponProficiency(f.def);
@@ -1297,22 +1376,27 @@ export class Game {
       spread: ab.spread != null ? +(ab.spread / prof).toFixed(4) : ab.spread };
     // ⚠ NO `t` TIMER. A picked-up weapon is scavenged and expires in 12s; something you CHOSE in the
     // armory is yours for the match. Same held-object, two lifetimes, one field apart.
-    f._gearHeld = { ab: eff, base: ab, t: Infinity, prof, chosen: true };
+    f._gearHeld = { ab: eff, base: ab, t: Infinity, prof, chosen: true, rowId: row.id, primary };
     f.slots._gear = { def: eff, cd: 0, chargeT: 0, sustainT: 0 };
-    const hand = buildWeapon(this._gearKind(ab), { armor: new THREE.MeshStandardMaterial({ color: '#565c66', roughness: 0.45, metalness: 0.7 }) });
-    hand.position.set(1.55, 4.6, 1.1); hand.rotation.x = -0.5;
-    f.obj.add(hand); f._gearMesh = hand;
+    firearmAmmo(f.slots._gear);
+    if(primary){
+      f._loadoutPrimary=f.slots.lmb;f.slots.lmb=f.slots._gear;
+      // Keep the held-emitter contract, but tick this shared slot only once.
+      Object.defineProperty(f.slots,'_gear',{value:f.slots.lmb,writable:true,configurable:true,enumerable:false});
+      f._selSlot='lmb';f._hand=3;
+    }
+    const hand = buildWeapon(row.mesh||this._gearKind(ab), { armor: new THREE.MeshStandardMaterial({ color: '#565c66', roughness: 0.45, metalness: 0.7 }) });
+    mountHeldWeapon(f,hand);
+    if(row.equipmentAsset){const gear=f._gearHeld;gear.equipmentReady=replaceHeldEquipment(f,row.equipmentAsset,gear,{loader:this._equipmentAssetLoader});}
     return eff;
   }
 
   dropGear(f, spawnDrop = true) {
     if (!f._gearHeld) return;
+    if(f._firearmReload?.slot===f.slots._gear)cancelFirearmReload(f);
     if (spawnDrop) this.spawnGearDrop(f._gearHeld.base, f.pos.x + (Math.random() * 4 - 2), f.pos.z + (Math.random() * 4 - 2));
-    if (f._gearMesh) {
-      f.obj.remove(f._gearMesh);
-      f._gearMesh.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material) o.material.dispose(); });
-      f._gearMesh = null;
-    }
+    disposeHeldEquipment(f,this);
+    if(f._gearHeld.primary){f.slots.lmb=f._loadoutPrimary;delete f._loadoutPrimary;}
     delete f.slots._gear;
     f._gearHeld = null;
     // ⚠ THE SELECTOR IS AN INTENT, AND AN EMPTY HAND MUST NOT KEEP CLAIMING A WEAPON. This is the ONE
@@ -1381,19 +1465,11 @@ export class Game {
     // y = 0.35 under the soft target — legible in an isometric street fight, and in an air battle a
     // ring on the desert a few hundred units below the two people actually fighting. The screen-centre
     // crosshair in the HUD replaces it here, because a chase camera aims where it LOOKS.
-    if (this.player && this.player._openSky) {
+    if (combatView(this)==='bfp'||this.mapCam) {
       this.reticle.visible = false;
-      const h0 = this.hardLock;
-      if (h0 && h0.alive && (!this.fov || (h0._vis || 1) > 0.35)) {
-        this.redTri.visible = true;
-        this.redTri.position.set(h0.pos.x, h0.pos.y + 15 + Math.sin(this.time * 5) * 0.7, h0.pos.z);
-        // ⚠ CONSTANT SCREEN SIZE. A world-scaled sprite is the right call for a fixed isometric camera
-        // and wrong for one that ranges from a clinch to three hundred units out — the lock mark
-        // shrank to a speck exactly when you most needed to know who you were locked to.
-        const d = this.world.camera.position.distanceTo(this.redTri.position);
-        const s = Math.max(6, Math.min(30, d * 0.055));
-        this.redTri.scale.set(s, s, s);
-      } else this.redTri.visible = false;
+      // HUD owns the aim point and its lock state. A second crosshair floating
+      // above the head competes with the actual shot and blooms over the fighter.
+      this.redTri.visible = false;
       return;
     }
     if (t && t.alive) {
@@ -1406,7 +1482,7 @@ export class Game {
     } else this.reticle.visible = false;
     // red triangle = the hard-locked target (who you face) — only while you can see them
     const h = this.hardLock;
-    if (h && h.alive && (!this.fov || (h._vis || 1) > 0.35)) {
+    if (h && h.alive && (!this.fov || (h._vis ?? 1) > 0.35)) {
       this.redTri.visible = true;
       this.redTri.position.set(h.pos.x, h.pos.y + 15 + Math.sin(this.time * 5) * 0.7, h.pos.z);
     } else this.redTri.visible = false;
@@ -1572,24 +1648,26 @@ export class Game {
 
   // An enemy beam currently aimed at f (for AI to block / counter).
   incomingBeam(f) {
+    let best=null,soonest=Infinity;
     for (const o of this.projectiles.list) {
-      if (o.sustaining === undefined || !o.sustaining || o.dead || o.team === f.team || o.caster === f) continue;
-      const dx = f.pos.x - o.muzzle.x, dz = f.pos.z - o.muzzle.z, D = Math.hypot(dx, dz);
-      if (D > o.maxLen + 10 || D < 3) continue;
-      if ((o.dir.x * dx + o.dir.z * dz) / D > 0.7) return o;
+      if (o.team === f.team || o.caster === f) continue;
+      const arrival=beamThreatTime(o,f,this.world);
+      if(arrival<soonest){best=o;soonest=arrival;}
     }
-    return null;
+    return best;
   }
   // An enemy projectile heading at f.
-  incomingProjectile(f) {
+  incomingProjectile(f,range=24) {
+    let best=null,soonest=Infinity;
     for (const o of this.projectiles.list) {
-      if (o.sustaining !== undefined || !o.vel || o.team === f.team) continue;
-      const dx = f.pos.x - o.pos.x, dz = f.pos.z - o.pos.z, D = Math.hypot(dx, dz);
-      if (D > 24 || D < 1) continue;
-      const vl = Math.hypot(o.vel.x, o.vel.z) || 1;
-      if ((o.vel.x * dx + o.vel.z * dz) / (D * vl) > 0.6) return o;
+      if (o.dead || o.sustaining !== undefined || !o.vel || o.team === f.team) continue;
+      const dx=f.pos.x-o.pos.x,dy=f.pos.y+5-o.pos.y,dz=f.pos.z-o.pos.z,D=Math.hypot(dx,dy,dz);
+      if(D>range||D<1)continue;
+      const speed2=o.vel.lengthSq(),arrival=(dx*o.vel.x+dy*o.vel.y+dz*o.vel.z)/Math.max(1,speed2);
+      const miss=Math.hypot(dx-o.vel.x*arrival,dy-o.vel.y*arrival,dz-o.vel.z*arrival);
+      if(arrival>0&&arrival<soonest&&miss<6+(o.radius||0)+(o.blast||0)){best=o;soonest=arrival;}
     }
-    return null;
+    return best;
   }
 
   // Soft body separation so fighters don't stack (skips grab pairs).
@@ -1616,47 +1694,44 @@ export class Game {
     // re-ranked and RE-LOCKED list[0] instead of releasing — the "stuck on" bug. And it had no front
     // cone, so it locked foes BEHIND you. Now: a FRONT-CONE list (never behind), rebuilt each press.
     const cam = this.world.camera, cf = _v.set(0, 0, 0); cam.getWorldDirection(cf);
-    const FRONT = 1.15;   // ~66° — you must be roughly LOOKING at a foe to lock it
+    const FRONT = Math.PI/18; // 10° from the actual crosshair, not a hemisphere magnet.
     const ang = (e) => {
-      const dx = e.pos.x - p.pos.x, dy = e.pos.y - p.pos.y, dz = e.pos.z - p.pos.z;
+      const dx = e.pos.x - cam.position.x, dy = e.pos.y+5.2 - cam.position.y, dz = e.pos.z - cam.position.z;
       const l = Math.hypot(dx, dy, dz) || 1;
       return Math.acos(Math.max(-1, Math.min(1, (dx * cf.x + dy * cf.y + dz * cf.z) / l)));
     };
-    const front = this.entities.filter(e => e !== p && e.alive && e.def && !e.isDummy &&
-      this.isFoe(p, e) && (e._vis == null || e._vis > 0.4) && ang(e) <= FRONT);
+    const front = this.entities.filter(e => e.def&&!e.isDummy&&lockAvailable(this,p,e)&&ang(e)<=FRONT);
     front.sort((a, b) => ang(a) - ang(b));
     const locked = (this.hardLock && this.hardLock.alive) ? this.hardLock : null;
-    let next;
-    if (!locked) next = front[0] || null;             // lock the one you're most nearly looking at
-    else {
-      const i = front.indexOf(locked);
-      // in view → the NEXT foe in view, or RELEASE past the last; turned away from your lock → RELEASE
-      next = i < 0 ? null : (i + 1 < front.length ? front[i + 1] : null);
-    }
+    // A following camera continually re-ranks its current foe first. Cycling that list can
+    // therefore lock forever. T is a toggle: acquire the viewed foe, or unconditionally release.
+    const next = locked ? null : (front[0] || null);
     this.hardLock = next;
     if (this.audio) { try { this.audio.ui && this.audio.ui(); } catch (err) {} }
     if (this.hud && this.hud.feed) this.hud.feed(next ? `TARGET · ${next.def.name}` : 'TARGET RELEASED');
     return next;
   }
 
+  validateLock(p){
+    const foe=this.hardLock;
+    if(foe&&!lockAvailable(this,p,foe)){
+      this.hardLock=null;
+    }
+  }
+
+  beginBodyContactFrame() { this._bodyContactFrame=beginBodyContactFrame(this.entities); }
+
   resolveBodies() {
     const E = this.entities;
+    resolveBodyContacts(E,this._bodyContactFrame);this._bodyContactFrame=null;
     for (let i = 0; i < E.length; i++) {
-      const a = E[i]; if (!a.alive) continue;
+      const a = E[i]; if (!a.alive || a._scoutVehicle || a._aircraftVehicle) continue;
       for (let j = i + 1; j < E.length; j++) {
-        const b = E[j]; if (!b.alive) continue;
+        const b = E[j]; if (!b.alive || b._scoutVehicle || b._aircraftVehicle) continue;
         if (a.grabbing === b || b.grabbing === a || a.grabbedBy === b || b.grabbedBy === a) continue;
-        // ⚠ TWO FLIERS PASS THROUGH EACH OTHER UNDER AN OPEN SKY. Robert: *"if I push the thing
-        // straight towards them, it'll just fly right in them."* Two bodies inside each other's radius
-        // are shoved apart every frame, which at cruise speed is an invisible wall you hit and slide
-        // off — and it is the other half of why a lock-on approach turned into an orbit. A swoop has
-        // to be able to go THROUGH the space someone is occupying and out the other side; that is the
-        // single most characteristic move in the reference. On the ground, and for anyone standing on
-        // it, the separation is unchanged — bodies still cannot share a square of pavement.
-        // ⚠ READER #5 (aaa-03 §1): two PowerWorld fliers pass THROUGH each other — a swoop's most
-        // characteristic move. `airborne` (gait) not `flying`, so a fighter standing on the floor
-        // collides normally. The `_openSky` gate is kept, so the city separation is byte-unchanged.
-        if (a._openSky && b._openSky && GAIT_OWNER[a.gait] === 'air' && GAIT_OWNER[b.gait] === 'air') continue;
+        // PowerWorld uses swept, posed core contact above. Preserve the legacy
+        // city ground solver without applying a second root-cylinder push.
+        if(a._openSky||b._openSky)continue;
         if (Math.abs(b.pos.y - a.pos.y) > 7) continue;
         const dx = b.pos.x - a.pos.x, dz = b.pos.z - a.pos.z, d = Math.hypot(dx, dz), min = a.radius + b.radius;
         if (d < min && d > 0.001) {
@@ -1665,6 +1740,7 @@ export class Game {
         }
       }
     }
+    for(const f of E)if(f.alive)syncChargePresentation(f);
   }
 
   // ---------- setup ----------
@@ -1738,6 +1814,9 @@ export class Game {
   // ONE list, called from all three. A new zone system adds its line HERE and is covered
   // everywhere, which is the whole point.
   clearTransients() {
+    this.ms?.frontline?.dispose();
+    this.ms?.zombies?.dispose();
+    this.ms?.desertLaw?.dispose();
     // the weather goes home with everything else that must not outlive a match (the reset law)
     if (this.weather && this.weather.reset) this.weather.reset();
     // ⚠ THE FRAME CLAIM goes home too (Wave 3 VIEW rider) — a camera claim that survives a reset is
@@ -1778,7 +1857,7 @@ export class Game {
     for (const d of (this._decoys || [])) {                       // holograms (brief T2.9)
       if (!d.grp) continue;
       this.scene.remove(d.grp);
-      d.grp.traverse(o => { if (o.material) o.material.dispose(); });
+      d.grp.traverse(o => { if (o.material) o.material.dispose(); if(o.userData._decoyGeometry||o.userData._snapshotGeometry)o.geometry.dispose(); });
     }
     this._decoys = [];
 
@@ -1854,10 +1933,11 @@ export class Game {
   setPlayerChar(charId) {
     if (!this.player) return;
     const def = ROSTER.find(r => r.id === charId); if (!def) return;
-    const { x, z } = this.player.pos; const y = this.player.pos.y;
+    const { x, z } = this.player.pos; const y = this.player.pos.y, cameraPreset=this.player._cameraPreset;
     this.scene.remove(this.player.obj); if (this.player.dispose) this.player.dispose();
     const i = this.entities.indexOf(this.player); if (i >= 0) this.entities.splice(i, 1);
     this.player = this.addFighter(def, { isPlayer: true, team: 0, x, z });
+    if(cameraPreset==='frontline')this.player._cameraPreset=cameraPreset;
     this.player.human = true; this.player.scheme = 'kbm';
     if (this.humans[0]) this.humans[0].fighter = this.player; else this.humans.push({ fighter: this.player, scheme: 'kbm' });
     this.player.pos.y = y;
@@ -1985,6 +2065,7 @@ export class Game {
   endMatch(result) {
     if (this.matchOver) return;
     this.matchOver = true; this.matchResult = result;
+    this.news?.endMatch(result);
     this.slowmo(0.35, 0.4); this.world.punch(0.8);
     // NOTE: a live recording keeps rolling behind the end screen (the final KO's ragdoll IS the
     // money shot) — it finalizes on its own clock into the same clips array the TV is playing.
@@ -2072,8 +2153,12 @@ export class Game {
   spawnDecoy(caster, dur = 5) {
     const g = new THREE.Group();
     const src = caster.obj;
-    const clone = src.clone(true);
+    const clone = snapshotHeroSkins(src.clone(true));
+    clone.position.set(0,0,0); // the outer group owns the decoy's world position
     clone.traverse(o => {
+      // Holograms freeze the presented pose. Static meshes may be shared, but
+      // a live limb-deformation buffer would keep bending with the caster.
+      if(o.geometry?.userData.deformsWithRig){o.geometry=o.geometry.clone();o.userData._decoyGeometry=true;}
       if (o.material) {
         o.material = o.material.clone();
         o.material.transparent = true; o.material.opacity = 0.62;
@@ -2082,9 +2167,9 @@ export class Game {
       if (o.isMesh) o.castShadow = false;                   // no proper contact shadow — the tell
     });
     g.add(clone);
-    g.position.copy(caster.pos); g.rotation.y = caster.facing;
+    g.position.copy(caster.pos); // the inner clone already carries full body rotation
     this.scene.add(g);
-    const d = { grp: g, t: dur, dur, owner: caster, pos: g.position, alive: true, isDecoy: true,
+    const d = { grp: g, t: dur, dur, owner: caster, pos: g.position, baseY:g.position.y, alive: true, isDecoy: true,
                 team: caster.team, def: caster.def, name: caster.name, radius: caster.radius || 3 };
     (this._decoys = this._decoys || []).push(d);
     this.vfx.ring(caster.pos.clone().setY(1), { color: caster.def.colors.accent, r0: 1, r1: 7, life: 0.3, flat: true, y: 0.5 });
@@ -2098,10 +2183,10 @@ export class Game {
       // slight colour separation + occasional frame-skip: it reads as a projection, not a body
       const skip = Math.random() < 0.03;
       d.grp.visible = !skip;
-      d.grp.position.y = d.pos.y + Math.sin(this.time * 9) * 0.06;
+      d.grp.position.y = d.baseY + Math.sin(this.time * 9) * 0.06;
       if (d.t <= 0) {
         this.scene.remove(d.grp);
-        d.grp.traverse(o => { if (o.material) o.material.dispose(); });
+        d.grp.traverse(o => { if (o.material) o.material.dispose(); if(o.userData._decoyGeometry||o.userData._snapshotGeometry)o.geometry.dispose(); });
         this.vfx.flash(d.pos.clone().setY(5), d.def.colors.accent, 6, 0.16);
         D.splice(i, 1);
       }
@@ -2257,6 +2342,7 @@ export class Game {
 
   areaDamage(caster, pos, radius, damage, power = 1, o = {}) {
     for (const f of this.entities) {
+      if(!caster)break;
       const foe = this.isFoe(caster, f);
       // TEAM DAMAGE (tournament ruling): with friendlyFire on, your splash catches your OWN side
       // at half strength. Melee and beams stay disciplined — explosions do not.
@@ -2274,6 +2360,16 @@ export class Game {
       if (ff && dealt >= 3 && this.hud && (this._ffFeedT || 0) <= this.time - 2.5) {
         this._ffFeedT = this.time;
         this.hud.feed(`⚠ FRIENDLY FIRE — ${caster.name} clipped ${f.name}`, '#ffb03a');
+      }
+    }
+    // Native constructs are separate finite-box receivers, not humanoid targets.
+    // A callback can exhaust an owner and remove several proxies synchronously.
+    if(Number.isFinite(radius)&&radius>0&&Number.isFinite(damage)&&damage>0&&caster){
+      for(const c of [...this.world.cover]){
+        if(!c.onConstructHit||c.construct?.dead)continue;
+        const at=new THREE.Vector3(clamp(pos.x,c.x-c.hx,c.x+c.hx),clamp(pos.y,c.bottom,c.top),clamp(pos.z,c.z-c.hz,c.z+c.hz));
+        const distance=at.distanceTo(pos);
+        if(distance<=radius)c.onConstructHit(damage*caster.powerBuff*(1-.6*clamp(distance/radius,0,1)),{src:caster,pos:at,lane:'splash'});
       }
     }
     this.worldImpact(pos, radius, power, caster);   // crater the ground + damage cover + street life
@@ -2297,17 +2393,24 @@ export class Game {
   // ---------- destructible environment ----------
   // A blast on the world: crater the ground (big hits only) and damage nearby cover.
   worldImpact(pos, radius, power = 1, src = null) {
-    if (pos.y < 6.5 && (power >= 1.25 || radius >= 14)) {
+    const groundY=this.world.heightAt?.(pos.x,pos.z)??0;
+    if (Math.abs(pos.y-groundY) < 6.5 && (power >= 1.25 || radius >= 14)) {
       this.world.crater(pos.x, pos.z, Math.min(radius * 0.45, 22), Math.min(power * 1.3, 5));
-      this.vfx.scorch(new THREE.Vector3(pos.x, 0.14, pos.z), Math.min(radius * 0.5, 24), '#161a22');  // scorched pit
+      this.vfx.scorch(new THREE.Vector3(pos.x, groundY+.14, pos.z), Math.min(radius * 0.5, 24), '#161a22');  // scorch resolves the crater's new floor
       this.cityStats.craters++;
     }
     // over WATER a blast reads as water — ripple rings, spray, and the right sound
     if (pos.y < 7 && this.world.waterAt && this.world.waterAt(pos.x, pos.z)) this.splash(pos, Math.min(2, power));
     if (this.news) this.news.onBlast(pos, radius, power);   // the crew ducks — or eats pavement
     this.noise(pos, Math.min(2.6, 0.9 + power * 0.6 + radius * 0.02), src);   // detonations carry
-    for (let i = this.world.cover.length - 1; i >= 0; i--) {
-      const c = this.world.cover[i]; if (c.hp == null || c.hp <= 0) continue;
+    // Destruction can recursively explode other props and splice several cover
+    // records. Snapshot this blast's candidates; dead records are skipped below.
+    const blastCover=this.world.cover.slice();
+    for (let i = blastCover.length - 1; i >= 0; i--) {
+      const c = blastCover[i]; if (c.construct || c.hp == null || c.hp <= 0) continue;
+      // Volumetric props opt into 3D blast distance. A detonation over a convoy
+      // must not hurt its vehicles merely because their map footprints overlap.
+      if(c.blastBounds&&c.blastBounds.distanceToPoint(pos)>radius)continue;
       const d = Math.hypot(pos.x - c.x, pos.z - c.z);
       if (d < radius + (c.r || 6)) { const fall = 1 - clamp((d - (c.r || 6)) / (radius + 1), 0, 1); this.damageBlock(c, power * 20 * fall, pos, src); }
     }
@@ -2318,7 +2421,7 @@ export class Game {
       if (d < radius + 5) { car.hp -= 12 + power * 10; if (car.hp <= 0) this._explodeCar(car, src); }
     }
     // the crowd reacts: scatter wide; anyone caught in the blast goes down (collateral)
-    if (this.peds && pos.y < 12) {
+    if (hasCivilians(this.modeId) && this.peds && pos.y < 12) {
       this.peds.scare(pos.x, pos.z, radius * 4);
       const downed = this.peds.blast(pos.x, pos.z, Math.max(6, radius * 0.85));
       if (downed) {
@@ -2345,6 +2448,8 @@ export class Game {
     this.areaDamage(src || this.player, pos, 14, 22, 2);   // hero-scale fireball — hurts fighters, craters, CHAINS to the next car
   }
   damageBlock(c, amt, pos, src = null) {
+    if(c.onConstructHit)return c.onConstructHit(amt,{src,pos,lane:'cover'});
+    if(c.construct)return;
     if (c.hp == null || c.hp <= 0 || amt <= 0) return;
     c.hp -= amt;
     if (src) c._breaker = src;                       // whoever was working on it owns what it does back
@@ -2430,12 +2535,13 @@ export class Game {
   }
 
   shatterBlock(c, src = null) {
+    if(c.construct)return;
     // ⚠ A COVER RECORD MAY OWN ITS OWN DEATH. The city's version below reads `c.mesh`, `c.crack` and
     // `c.y0` and calls `districtAt` — none of which a venue's hand-registered rock has, so a
     // destructible stage could not route through the one choke point without either faking those
     // fields or forking the function. One hook instead, checked first: no city cover carries
     // `onShatter`, so this line is inert everywhere except the dimension that sets it.
-    if (c.onShatter) { try { return c.onShatter(this, c); } catch (e) { return this.reportError(e, 'onShatter'); } }
+    if (c.onShatter) { try { return c.onShatter(this, c, src); } catch (e) { return this.reportError(e, 'onShatter'); } }
     this.cityStats.blocks++;
     if (this.news) this.news.highlight('building', 'STRUCTURE COLLAPSE — ' + this.world.districtAt(c.x, c.z), { dur: 2.6, priority: 2, focus: { x: c.x, y: 8, z: c.z } });
     const w = c.w || c.r * 1.6, h = c.h, d = c.d || c.r * 1.6;
@@ -2476,9 +2582,12 @@ export class Game {
     // THE DROP ECONOMY (manual §16): KO'd gear carriers leave a weapon on the street — 20s to
     // claim it. Held pickups fall too. Police sidearms join the economy the same way.
     if (!victim.isDummy) {
-      if (victim._gearHeld) this.dropGear(victim, true);
+      // Snapshot carried kit before dropGear restores a replaced primary for
+      // respawn. That backup was not carried and must not become a second drop.
+      const heldAb = victim._gearHeld?.ab;
       const gearAb = Object.values(victim.slots).map(s => s && s.def).find(d => d && d.gear);
-      if (gearAb && (this._drops || []).length < 10) this.spawnGearDrop(gearAb, victim.pos.x + (Math.random() * 5 - 2.5), victim.pos.z + (Math.random() * 5 - 2.5));
+      if (victim._gearHeld) this.dropGear(victim, true);
+      if (gearAb && gearAb !== heldAb && (this._drops || []).length < 10) this.spawnGearDrop(gearAb, victim.pos.x + (Math.random() * 5 - 2.5), victim.pos.z + (Math.random() * 5 - 2.5));
     }
     const src = victim.lastHitBy;
     const killer = (src && victim.lastHitT < 4 && src !== victim && src.def) ? src : null;
@@ -2516,8 +2625,9 @@ export class Game {
     // THE KO IS THE PANEL EVERY COMIC ENDS ON — one caption, one sound effect, and nothing else.
     if (this.comic && victim && victim.pos) {
       try {
-        this.comic.sfx(killer ? 'K.O.!' : 'DOWN!', victim.pos, { power: 1, red: true, size: 42, life: 1.3 });
-        if (this.isHuman(killer) || this.isHuman(victim)) {
+        const feedback=selectHitFeedback({knockedOut:true,healthLost:0,absorbed:{plate:0,armor:0,shield:0,nanite:0},guard:'none',deflected:false,statusesAdded:[]});
+        (this.comic.impact||this.comic.sfx).call(this.comic,killer?feedback.word:'DOWN!',victim.pos,{feedback,power:1,red:true,size:42,life:1.3});
+        if (combatView(this)!=='bfp'&&(this.isHuman(killer) || this.isHuman(victim))) {
           this.comic.caption((victim.name || 'THEY') + ' is down!', { where: 'top', red: !this.isHuman(killer), life: 2.4 });
         }
       } catch (e) { this.reportError && this.reportError(e, 'comic.ko'); }
@@ -2566,7 +2676,7 @@ export class Game {
       killer._mastery = killer._mastery || {};
       killer._mastery[killer._lastSlot] = (killer._mastery[killer._lastSlot] || 0) + 1;
     }
-    if (victim.def.police && this.police) this.police.onCopDown(killer);   // villainy squared
+    if (victim.def.police) (this.ms?.desertLaw||this.police)?.onCopDown(killer);
     // THE HERO SIDE — a CLEAN rival takedown (no civilians harmed, not a cop, not a civilian) by the
     // human player, in a country where vigilantism is legal, makes the crowd cheer instead of flee.
     if (killer && this.isHuman(killer) && !victim.def.police && !victim.isDummy && !killer.def.police
@@ -2576,12 +2686,12 @@ export class Game {
     // the news layer: log the knockdown, and the camera swings to the body
     if (!victim.isDummy && this.mode) {
       this.matchLog.push({ t: this.matchT, type: 'ko', v: victim.name, vid: victim.def.id, k: killer ? killer.name : null, kid: killer && killer.def ? killer.def.id : null, kind: victim._lastHitKind || 'blast', at: this.world.districtAt(victim.pos.x, victim.pos.z) });
-      if (this.news) this.news.highlight('ko', victim.name + ' IS DOWN' + (killer ? ' — ' + killer.name + ' STANDS' : ''), { dur: 3.4, priority: 3, focus: victim.pos });
+      if (this.news) this.news.highlight('ko', victim.name + ' IS DOWN' + (killer ? ' — ' + killer.name + ' STANDS' : ''), { dur: 3.4, priority: 3, focus: victim.pos,actor:killer,target:victim });
       if (this.audio.sample && (this.isHuman(victim) || (killer && this.isHuman(killer)))) this.audio.sample('sting.ko', { bus: 'music', gain: 0.8 });
       // the ledger: every registered-weapon knockdown moves the power rankings (AI or human pilot
       // alike) — friendly-fire KOs shame the feed but never touch the book
       if (killer && killer.def && killer.def.id && victim.def.id && killer.team !== victim.team && !killer.def.police && !victim.def.police
-        && !killer._controlled && !victim._controlled && this.modeId !== 'training') {
+        && !killer._controlled && !victim._controlled && !killer._frontlineClone && !victim._frontlineClone && !killer._encounterNPC && !victim._encounterNPC && this.modeId !== 'training') {
         koElo(killer.def.id, victim.def.id, [killer.def, victim.def]);   // a DOMINATED fighter's KOs are the controller's doing — the book stays honest
         // THE MEDICAL LEDGER (manual §18): some knockdowns leave a mark that outlives the match
         if (Math.random() < 0.3) {
@@ -2624,23 +2734,34 @@ export class Game {
     let newTier = tierOf(f.level);
     if (f.energyInfinite) newTier = Math.min(newTier, 2);
     const tiered = newTier > f.tier; f.tier = newTier;
+    const authored = formAt(f.def,f.level,f.energyInfinite);
+    if (authored.form || f.formLevel) f.applyForm(authored.form);
+    f.formLevel = authored.level; f.formName = authored.form?.name || '';
     if (!quiet) {
       const tc = TIER_COLORS[f.tier] || f.def.colors.accent;
+      const airborne = f.airborne;
       if (tiered) {
-        this.vfx.explode(f.pos.clone().setY(5), { color: tc, color2: '#fff', radius: 16, power: 1.8, scorch: false });
-        this.vfx.shockwave(f.pos.clone().setY(0.2), { color: tc, radius: 46, power: 1.6 });
-        this.vfx.lightning(f.pos.clone().setY(2), { color: tc, count: 6, radius: 16, height: 22 });
-        for (let i = 0; i < 60; i++) this.particles.spawn({ x: f.pos.x + rand(-3, 3), y: rand(0, 6), z: f.pos.z + rand(-3, 3), vx: rand(-3, 3), vy: rand(26, 50), vz: rand(-3, 3), life: 1.2, size: 3.6, color: [tc, '#fff'], drag: 0.5 });
+        this.vfx.explode(f.pos.clone().setY(f.pos.y + 5), { color: tc, color2: '#fff', radius: 16, power: 1.8, energyShell: airborne, scorch: false });
+        if (airborne) this.vfx.ring(f.pos.clone().setY(f.pos.y + 4), { color: tc, r0: 2, r1: 46, life: 0.6, flat: true });
+        else if (f.pos.y > 0.1) this.vfx.ring(f.pos.clone().setY(f.pos.y + 0.2), { color: tc, r0: 2, r1: 46, life: 0.6, flat: true });
+        else this.vfx.shockwave(f.pos.clone().setY(0.2), { color: tc, radius: 46, power: 1.6 });
+        this.vfx.lightning(f.pos.clone().setY(f.pos.y + 2), { color: tc, count: 6, radius: 16, height: 22 });
+        for (let i = 0; i < 60; i++) this.particles.spawn({ x: f.pos.x + rand(-3, 3), y: f.pos.y + rand(0, 6), z: f.pos.z + rand(-3, 3), vx: rand(-3, 3), vy: rand(26, 50), vz: rand(-3, 3), life: 1.2, size: 3.6, color: [tc, '#fff'], drag: 0.5 });
         this.world.punch(0.7); this.world.shake(1.8); this.audio.power(true); this.audio.boom(0.8, f.pos);
         f._yellCd = 0; this.heroYell(f, 1.6);   // the ascension SCREAM
         this.slowmo(0.3, 0.4);
         if (this.hud && (this.isHuman(f) || this.mode)) this.hud.announce('TIER ' + ['', 'I', 'II', 'III', 'MAX'][f.tier], f.name + ' ASCENDS', tc);
         // ASCENDING SPITS. Three arcs over half a second — the air can't hold it.
         if (this.audio.arc) for (let i = 0; i < 3; i++) this.later(() => this.audio.arc(1.1 + f.tier * 0.2, f.pos), i * 140);
-        if (this.news) this.news.highlight('tier', f.name + ' ASCENDS — POWER READINGS SPIKE', { dur: 2.4, priority: 2, focus: f.pos });
+        if (this.news) this.news.highlight('tier', f.name + ' ASCENDS — POWER READINGS SPIKE', { dur: 2.4, priority: 2, focus: f.pos,actor:f });
       } else {
-        this.vfx.explode(f.pos.clone().setY(5), { color: f.def.colors.accent, color2: '#fff', radius: 11, power: 1.1, scorch: false });
-        this.vfx.ring(f.pos.clone().setY(3), { color: f.def.colors.accent, r0: 2, r1: 24, life: 0.6, flat: true, y: 0.5 });
+        // Ordinary advancement is not an explosion. In the close combat view
+        // keep the body/target readable; reserve the transformation for tiers.
+        const close=this.world.camMode==='chase';
+        if(close){
+          for(let i=0;i<8;i++)this.particles.spawn({x:f.pos.x+rand(-2,2),y:f.pos.y+rand(1,5),z:f.pos.z+rand(-2,2),vx:0,vy:8,vz:0,life:.4,size:.45,color:[f.def.colors.accent],drag:.5});
+        }else this.vfx.explode(f.pos.clone().setY(f.pos.y + 5), { color: f.def.colors.accent, color2: '#fff', radius: 11, power: 1.1, energyShell: airborne, scorch: false });
+        this.vfx.ring(f.pos.clone().setY(f.pos.y + (airborne ? 3 : 0.5)), { color: f.def.colors.accent, r0: 2, r1: close?6:24, life: 0.6, flat: true,opacity:close?.35:.85 });
         this.audio.power(true);
         if (this.isHuman(f) && this.hud) this.hud.announce('LEVEL ' + f.level, `+6% DMG · +7% HP · +4% KI`, f.def.colors.accent);   // the delta card — SEE what leveling gave you
       }
@@ -2679,14 +2800,17 @@ export class Game {
   }
 
   // A launched fighter just hit a wall / the ground hard (entity._slam). Sell the crunch.
-  onSlam(f, dmg, kind) {
+  onSlam(f, dmg, kind, {ordinaryFall=false}={}) {
     const p = f.pos.clone().setY(f.pos.y + 4);
     this.vfx.impactStar(p, 8 + dmg * 0.35, '#ffffff', 0.18);
     this.particles.burst(f.pos.x, f.pos.y + 3, f.pos.z, { count: 14, speed: 24, life: 0.5, size: 3, color: ['#8a8f99', '#fff', f.def.colors.accent], up: 8, grav: 14, drag: 1.6 });
-    if (kind === 'ground') { this.vfx.shockwave(f.pos.clone().setY(0.2), { color: '#c9cfd9', radius: 14 + dmg, power: 0.9 }); this.world.crater(f.pos.x, f.pos.z, 6, 1.2); }
+    if (kind === 'ground' || kind === 'roof') {
+      this.vfx.shockwave(f.pos.clone().setY(f.pos.y+.2), { color: '#c9cfd9', radius: ordinaryFall?Math.min(16,4+dmg*.1):14+dmg, power: ordinaryFall?.3:.9 });
+      if(kind==='ground'&&!ordinaryFall)this.world.crater(f.pos.x, f.pos.z, 6, 1.2);
+    }
     this.world.shake(1.2); this.audio.impact(1.15, f.pos); this.audio.boom(0.35, f.pos);
     this.audio.grunt(f.def.voicePitch || 1, f.pos);   // pain is universal
-    if (this.hud) this.hud.damageNumber(f.pos, 'SLAM ' + Math.round(dmg), '#ffb03a', false);
+    if (this.hud) this.hud.damageNumber(f.pos, (ordinaryFall?'FALL ':'SLAM ') + Math.round(dmg), '#ffb03a', false);
     if (this.isHuman(f) && this.hud) this.hud.flashScreen('#ff8a5a', 0.12);
   }
 
@@ -2766,16 +2890,18 @@ export class Game {
     att.hitstop = Math.max(att.hitstop, 0.1);
     att.strikeCd = Math.max(att.strikeCd || 0, 0.55);
     att.meleeCharge = 0; att.strikeActive = 0; att.comboWin = 0;   // the chain is BROKEN
-    const imp = blk.pos.clone().set((att.pos.x + blk.pos.x) / 2, 5.8, (att.pos.z + blk.pos.z) / 2);
+    const imp = blk.pos.clone().add(att.pos).multiplyScalar(0.5); imp.y += 5.8;
     if (perfect) {
       blk.guardMeter = clamp(blk.guardMeter + 0.12, 0, 1);         // a clean parry refunds meter
-      this.vfx.impactStar(imp, 11, '#ffd24a', 0.22);
-      this.vfx.ring(imp, { color: '#ffd24a', r0: 1, r1: 11, life: 0.3 });
+      if (!o.contactFx) {
+        this.vfx.impactStar(imp, 11, '#ffd24a', 0.22);
+        this.vfx.ring(imp, { color: '#ffd24a', r0: 1, r1: 11, life: 0.3 });
+      }
       this.audio.impact(1.0, imp); this.audio.zap(980, imp);
       this.slowmo(0.09, 0.45); this.world.shake(0.9);
       if (this.hud) { this.hud.damageNumber(blk.pos, 'PARRY!', '#ffd24a', true); if (this.isHuman(blk)) this.hud.flashScreen('#ffd24a', 0.1); }
     } else {
-      this.vfx.impactStar(imp, 8, '#bfe0ff', 0.18);
+      if (!o.contactFx) this.vfx.impactStar(imp, 8, '#bfe0ff', 0.18);
       this.audio.zap(520, imp); this.audio.impact(0.55, imp);
       this.world.shake(0.5);
       if (this.hud && (this.isHuman(blk) || this.isHuman(att))) this.hud.damageNumber(att.pos, 'REPELLED', '#bfe0ff', true);
@@ -2798,7 +2924,25 @@ export class Game {
     return big ? 'WHUMP!' : 'BAP!';
   }
 
-  onHit(target, amount, opts = {}, blocked = false) {
+  presentHitOutcome(target,opts={},outcome){
+    if(!outcome||!target?.pos)return;
+    const feedback=selectHitFeedback(outcome),t=this.time||0,family=feedback.id;
+    const targetTimes=this._hitFeedbackTimes?.get(target)||new Map(),last=targetTimes.get(family)??-9;
+    const delay=outcome.attackClass==='bullet'?.32:.42;
+    if(t-last<=delay)return;
+    if(!this._hitFeedbackTimes)this._hitFeedbackTimes=new WeakMap();
+    targetTimes.set(family,t);this._hitFeedbackTimes.set(target,targetTimes);
+    if(this.hud&&feedback.label)this.hud.damageNumber(target.pos,feedback.label,
+      family==='guard-broken'?'#ff5a4a':family==='deflect'?'#ffd24a':'#e8e2d6',true);
+    if(this.comic&&feedback.word&&family!=='ko'){
+      const pl=this.player,near=!pl||(Math.abs(pl.pos.x-target.pos.x)<260&&Math.abs(pl.pos.z-target.pos.z)<260);
+      if(near)(this.comic.impact||this.comic.sfx).call(this.comic,feedback.word,target.pos,
+        {feedback,power:Math.min(1,Math.max(.25,(outcome.healthLost||0)/60)),red:family==='guard-broken'});
+    }
+  }
+
+  onHit(target, amount, opts = {}, blocked = false, outcome = null) {
+    this.ms?.frontline?.onHit(target, amount);
     const src = opts.src;
     // THE WHITE ROOM reads the choke point rather than modelling damage itself — see whiteroom.js.
     // The evasion drill's score is the same event seen from the other side: a hit that lands on YOU.
@@ -2840,17 +2984,22 @@ export class Game {
     // the comic layer's whole job; spend it on intent, not on arithmetic.
     // the ring scores off the choke point rather than watching the fight itself
     if (this._ring) this._ring.onHit(target, amount, opts, blocked);
-    if (this.comic && (amount >= 14 || opts.haymaker) && !blocked && !opts.dot && target && target.pos) {
+    const feedback=outcome&&selectHitFeedback(outcome);
+    if(outcome)Game.prototype.presentHitOutcome.call(this,target,opts,outcome);
+    if (this.comic && !outcome && !opts.dot && target && target.pos && (amount>=14||opts.haymaker)) {
       const pl = this.player;
       const near = !pl || (Math.abs(pl.pos.x - target.pos.x) < 260 && Math.abs(pl.pos.z - target.pos.z) < 260);
       const t = this.time || 0;
       // ⚠ the rate limit exists so a beam is not confetti — but it must not let a JAB eat the
       // haymaker's word 0.3s later. A committed blow always gets through.
-      if (near && (opts.haymaker || t - (this._sfxT || -9) > 0.42)) {
-        this._sfxT = t;
-        this.comic.sfx(this._sfxWord(amount, opts), target.pos,
-          { power: opts.haymaker ? 1 : Math.min(1, amount / 60),
-            red: !!(opts.slam || opts.haymaker || amount > 48) });
+      const family='legacy',urgent=opts.haymaker;
+      const targetTimes=this._hitFeedbackTimes?.get(target)||new Map(),last=targetTimes.get(family)??-9;
+      if (near && (urgent || t-last>(outcome?.attackClass==='bullet'?.32:.42))) {
+        if(!this._hitFeedbackTimes)this._hitFeedbackTimes=new WeakMap();
+        targetTimes.set(family,t);this._hitFeedbackTimes.set(target,targetTimes);
+        (this.comic.impact||this.comic.sfx).call(this.comic,feedback?.word||this._sfxWord(amount,opts),target.pos,
+          {feedback,power:opts.haymaker?1:Math.min(1,Math.max(.25,(outcome?.healthLost||amount)/60)),
+            red:!!(feedback?.id==='ko'||feedback?.id==='guard-broken'||opts.slam||opts.haymaker||amount>48)});
       }
     }
     if (this.lab) {
@@ -2871,7 +3020,7 @@ export class Game {
       }
     }
     // directional damage cue when the human player is hit
-    if (this.hud && this.hud.hitDirection && this.isHuman(target) && src && src !== target) this.hud.hitDirection(src.pos);
+    if (this.hud && this.hud.hitDirection && this.isHuman(target) && src && src !== target && (outcome?.healthLost??amount)>0) this.hud.hitDirection(src.pos);
     // A HELD BEAM on a raised guard calls onHit EVERY FRAME (blocked + dot). Even with the light
     // count now stable, spawning a flash mesh + a BLOCK number 60×/s is wasted churn and a strobe —
     // throttle the sustained-block cosmetics to ~8/s per target. One tell, not sixty.
@@ -2879,14 +3028,27 @@ export class Game {
     const showBlockFx = !beamBlock || (this.time - (target._blkFxT || -1) > 0.12);
     if (beamBlock && showBlockFx) target._blkFxT = this.time;
     if (this.hud) {
-      if (blocked) { if (showBlockFx) this.hud.damageNumber(target.pos, 'BLOCK', '#bfe0ff', true); }
-      else if (opts.dmgClass === 'slash' && amount >= 3) this.hud.damageNumber(target.pos, '⚔ ' + Math.round(amount), '#ffdcdc', false, true);   // claws/blades read as SLASH
-      else if (opts.dmgColor && amount >= 1) this.hud.damageNumber(target.pos, Math.round(amount), opts.dmgColor, true);   // DoT ticks keep their status colour
-      else if (amount >= 5) this.hud.damageNumber(target.pos, Math.round(amount), src === this.player ? '#ffe08a' : '#ff9a6a');
+      const shown=outcome?.healthLost??amount;
+      if (!outcome&&blocked) { if (showBlockFx) this.hud.damageNumber(target.pos, 'BLOCK', '#bfe0ff', true); }
+      else if (!outcome&&opts.dmgClass === 'slash' && shown >= 3) this.hud.damageNumber(target.pos, '⚔ ' + Math.round(shown), '#ffdcdc', false, true);
+      else if (!outcome&&opts.dmgColor && shown >= 1) this.hud.damageNumber(target.pos, Math.round(shown), opts.dmgColor, true);
+      else if (!outcome&&shown >= 5) this.hud.damageNumber(target.pos, Math.round(shown), src === this.player ? '#ffe08a' : '#ff9a6a');
     }
     // Danger Room: dummies log incoming damage for the live DPS meters
     if (target.isDummy && !blocked) { (target._dmgLog = target._dmgLog || []).push({ t: this.time, a: amount }); target._dmgTotal = (target._dmgTotal || 0) + amount; }
-    if (showBlockFx) this.vfx.flash(target.pos.clone().setY(5.6), blocked ? '#cfe6ff' : (target.def.colors.accent || '#fff'), blocked ? 3 : 2.4, 0.1);
+    // Swept fists own their close feedback. Real positive panel absorption also
+    // owns its metal contact, including residual HP, not a second body bubble.
+    const closeFeedback = target._openSky || this.modeId === 'powerworld';
+    if (showBlockFx && !(opts.contactFx && closeFeedback) && !(opts.naniteResult?.absorbed>0)) {
+      // Rifle chip should mark the actual contact, not hide half the hero in
+      // a white sphere. Keep committed/heavy hits and overhead City feedback.
+      const shown=outcome?.healthLost??amount,guarded=outcome?outcome.guard!=='none':blocked;
+      if(!outcome||shown>0){
+        const chip=closeFeedback&&opts.ballistic&&shown<(target.maxHp||100)*.06&&!opts.heavy&&!opts.haymaker;
+        const point=chip&&opts.contactPoint ? opts.contactPoint.clone() : target.pos.clone().setY(target.pos.y+5.6);
+        this.vfx.flash(point,guarded?'#cfe6ff':(target.def.colors.accent||'#fff'),chip?.55:guarded?3:2.4,.1);
+      }
+    }
     if (src === this.player && !blocked) {
       if (amount >= 5) { this.combo++; if (this.combo > this._p1MaxCombo) this._p1MaxCombo = this.combo; if (this.hud) this.hud.combo(this.combo); }
       this.comboT = 1.3;
@@ -2923,7 +3085,10 @@ export class Game {
     // (5) NEMESIS — whoever put you down last is marked, and beating them pays
     if (target && this.isHuman(target) && src && src.def && !src.def.police) target._lastAggressor = src;
     // ATTACKING THE POLICE escalates on its own — every hit on a badge books heat and hardens them.
-    if (!blocked && target && target.def && target.def.police && src && src.def && !src.def.police && this.police) this.police.onCopHurt(src, amount);
+    if(target?.def?.police&&src?.def&&!src.def.police){
+      if(this.ms?.desertLaw)this.ms.desertLaw.onCopHurt(src,blocked?(outcome?.guardAbsorbed||0):amount);
+      else if(!blocked)this.police?.onCopHurt(src,amount);
+    }
     // a solid hit is LOUD — nearby bots hear the scuffle and come looking (fair discovery)
     if (amount >= 10 && src && src !== target) this.noise(target.pos, Math.min(1.6, 0.5 + amount * 0.02), src);
     // the news desk's ledger: who dealt what, the biggest hit on record, and hot moments worth a camera
@@ -2933,7 +3098,10 @@ export class Game {
       if (src.stats) { src.stats.dmg += amount; if (amount > src.stats.big) { src.stats.big = amount; src.stats.bigKind = kind; } }
       if (target.stats) target.stats.taken += amount;
       if (amount > this.bigHit.amount) this.bigHit = { amount, by: src, kind, t: this.matchT };
-      if (amount >= 26 && this.news) this.news.highlight('bighit', src.name + (kind === 'fists' ? ' LANDS A MASSIVE BLOW' : ' — MASSIVE ENERGY DISCHARGE'), { dur: 2.1, priority: 1, focus: target.pos });
+      // A launch is worth filming even when toughness keeps its damage below
+      // the old 26 HP cutoff (Vega's native Rush Combo lands for 24).
+      const launchBlow=opts.strike&&!opts.dot&&amount>=12&&Math.hypot(opts.kb?.x||0,opts.kb?.y||0,opts.kb?.z||0)>=40;
+      if ((amount >= 26 || launchBlow) && this.news) this.news.highlight('bighit', src.name + (kind === 'fists' ? ' LANDS A MASSIVE BLOW' : ' — MASSIVE ENERGY DISCHARGE'), { dur: 2.1, priority: 1, focus: target.pos,actor:src,target });
     }
   }
 
@@ -2973,6 +3141,9 @@ export class Game {
     if (this._openPair === pr) this._openPair = null;
   }
   updatePortals(dt) {
+    // Final animated emitters precede world transfers; preparing projectile
+    // motion afterwards must not move a teleported shot back to its hand.
+    this.projectiles.resolveLaunches(this);
     for (let i = this.portals.length - 1; i >= 0; i--) {
       const pr = this.portals[i];
       pr.life -= dt;
@@ -3004,6 +3175,7 @@ export class Game {
       for (const f of this.entities) if (f.alive) tryHop(f, f.pos.y);
       for (const o of this.projectiles.list) if (o.vel && o.sustaining === undefined && !o.dead) tryHop(o, o.pos.y);
     }
+    for(const f of this.entities)if(f.alive)syncChargePresentation(f);
   }
 
   // ---------- items (gadgets outside the ability slots — no ki, one button) ----------
@@ -3160,14 +3332,25 @@ export class Game {
   }
 
   // ---------- fx helpers used by abilities ----------
-  spawnBeamFor(caster, def, p = 1) {
+  spawnBeamFor(caster, def, p = 1, investedKi = 0) {
     return this.projectiles.spawnBeam(caster, {
       radius: (def.radius || 1.6) * (def.chargeWidth ? (1 + (p - 1) * 0.6) : 1),
       tipSpeed: def.tipSpeed || 150, maxLen: def.maxLen || 120,
       dps: (def.dps || 60) * p, kiPerSec: def.kiPerSec || 22,
+      pushForce:def.pushForce??(def.faceOrigin?0:368),guardChip:def.guardChip,guardDrain:def.guardDrain,
+      sourceGlow:def.sourceGlow,sourceScale:def.sourceScale,impactGlow:def.impactGlow,
+      detonateRadius: (def.detonateRadius ?? Math.max(8,(def.radius||1.6)*8))*p,
+      detonateDamage: (def.detonateDamage ?? (def.dps||60)*.8)*p,
+      remoteDetonate: def.remoteDetonate===true,
+      pierceFighters:def.pierceFighters===true,
+      interceptBullets:def.interceptBullets===true,interceptKi:def.interceptKi,investedKi,
       color: def.color, color2: def.color2, power: (def.power || 1) * p, steer: def.steer,
       might: (def.might || (def.dps || 60) / 50) * p * (caster.def.beamMight || 1),   // char treats the budget differently
-      dtype: def.dtype, siphon: def.siphon, spiral: def.spiral, faceOrigin: def.faceOrigin,   // arcane beams drink ki; VEGA spirals; optic blasts fire from the FACE
+      dtype: def.dtype, siphon: def.siphon, spiral: def.spiral, faceOrigin: def.faceOrigin, chest: def.chest,
+      combinedHands:usesCombinedHands(caster,def),castHand:def.castHand,
+      // Character abilities own an articulated emitter. Low-level environmental
+      // streams may still be spawned without a fighter's animation channel.
+      poseLaunch:true,chargedRelease:!!def.charge,
       // THE BEAM ANATOMY (data/visual.js): BUILD is how much of it there is, TEMPER is what it is
       // doing inside. Both derived from the ability's own radius and material, both overridable.
       build: beamBuildOf(def), temper: beamTemperOf(def),
@@ -3182,14 +3365,14 @@ export class Game {
     }
   }
 
-  muzzleFlash(caster, color, scale = 1, off) {
-    const m = caster.muzzle(_v.clone()); if (off) m.add(off);
+  muzzleFlash(caster, color, scale = 1, off, at) {
+    const m = at?at.clone():caster.muzzle(_v.clone()); if (off) m.add(off);
     this.vfx.flash(m, color || '#fff', 4 * scale, 0.1);
     this.particles.burst(m.x, m.y, m.z, { count: 5, speed: 14, life: 0.22, size: 2.2 * scale, color: [color, '#fff'], dir: { x: caster.aim.x, z: caster.aim.z }, spread: 0.6 });
   }
 
   trail(caster, color) {
-    for (let i = 0; i < 5; i++) this.particles.spawn({ x: caster.pos.x + rand(-1, 1), y: 5 + rand(-3, 3), z: caster.pos.z + rand(-1, 1), vx: -caster.vel.x * 0.2, vy: 0, vz: -caster.vel.z * 0.2, life: 0.26, size: 3, color: [color, '#fff'], drag: 2, shrink: true });
+    for (let i = 0; i < 5; i++) this.particles.spawn({ x: caster.pos.x + rand(-1, 1), y: caster.pos.y + 5 + rand(-3, 3), z: caster.pos.z + rand(-1, 1), vx: -caster.vel.x * 0.2, vy: 0, vz: -caster.vel.z * 0.2, life: 0.26, size: 3, color: [color, '#fff'], drag: 2, shrink: true });
   }
 
   afterimage(caster) {
@@ -3208,24 +3391,96 @@ export class Game {
     while (this.minions.filter(m => m.owner === caster).length > (def.max || 6)) { const idx = this.minions.findIndex(m => m.owner === caster); this.minions[idx]._dispose(this); this.minions.splice(idx, 1); }
   }
 
-  spawnConstruct(caster, def) {
-    const c = new Construct(this, caster, def); this.constructs.push(c); return c;
+  spawnConstruct(caster, def, slotState = null) {
+    const existing=slotState&&constructForSlot(this,caster,slotState);
+    if(existing)return existing;
+    let placement=null;
+    if(def.construct==='tank'){
+      tankSettings(def);placement=tankPlacement(this,caster);
+      if(slotState)slotState.placementDenied=!placement;
+      if(!placement)return null;
+    }
+    const c = new Construct(this, caster, def, placement);
+    if(slotState){
+      c.slotKey=Object.keys(caster.slots||{}).find(key=>caster.slots[key]===slotState)??null;
+      c.slotState=slotState;slotState.active=c;
+    }
+    this.constructs.push(c); return c;
   }
 
   // ---------- control ----------
-  controlPlayer(dt) {
-    const p = this.player; if (!p || !p.alive) { if (p) { p.moveDir = { x: 0, z: 0 }; } this.lockTarget = null; return; }
-    const inp = this.input, m = inp.mouse, pad = this.humans.length < 2 ? this.pad : NULL_PAD;   // in 2P the pad drives P2
+  retireCombatViewInput(subject=this.player) {
+    if(subject){
+      if(subject._personCarry)this.melee.release(subject);
+      this.melee.clearInput(subject);this.melee.guard(subject,false);cancelHeldAttacks(subject);
+      subject.moveDir={x:0,z:0};subject.flyHeld=subject.descendHeld=subject.cruiseHeld=subject._scopeHeld=false;
+      resetMovementGears(subject);
+      if(this.netplay?.active)for(const key of Object.keys(subject.slots))this.netplay.queueSlot(key,4,subject.aim3);
+    }
+    const input=this.input;
+    if(input){
+      input.keys.clear();input.justPressed.clear();input.justReleased.clear();input.cancelVersion++;
+      Object.assign(input.mouse,{left:false,right:false,leftEdge:false,rightEdge:false,leftUp:false,rightUp:false,b3:false,b4:false,dx:0,dy:0});
+      input.wheel=input.wheelPrimary=input.wheelSecondary=0;input.pointerLock=false;
+    }
+    this.pad?.suppressCombatHeld?.();this._padAim=null;this._tapT=null;
+    this.hardLock=this.lockTarget=null;this._aimHit=null;this._aimFresh=false;
+    clearForegroundVisibility(this.world);this.world.clearFreeLook?.();this.world.snapChase();
+  }
 
-    // --- targeting: click a character to HARD-LOCK (red triangle → you face it); mouse still AIMs ---
+  prepareCombatView(inputDt) {
+    this.combatOverlayOpen=!!(this._armory||this.hud?.overlayOpen?.());
+    const active=combatLookActive(this),w=this.world;
+    const previous=this._combatControlOwner,changed=previous&&previous!==this.player;
+    const rigChanged=previous===this.player&&this._combatControlParts!==this.player?.parts;
+    const resumed=active&&previous&&!this._combatLookWasActive;
+    if((this._combatLookWasActive&&!active)||changed||resumed)this.retireCombatViewInput(previous);
+    else if(rigChanged){
+      // Authored forms replace presentation parts on the same living actor.
+      // Refresh rig-dependent view state without releasing its held attacks.
+      clearForegroundVisibility(w);w.snapChase();this._aimHit=null;this._aimFresh=false;
+    }
+    this._combatControlOwner=this.player;this._combatControlParts=this.player?.parts;this._combatLookWasActive=active;
+    if(!active&&combatView(this)==='bfp')this.pad?.suppressCombatHeld?.();
+    this._combatLockPressed=this.pad?.sampleCombatLock?.(active)??false;
+    if(this.input)this.input.pointerLock=active;
+    if(!active){w.clearFreeLook?.();return;}
+    this.validateLock(this.player);
+    // First entry must establish a real perspective eye even without a look
+    // delta. Subsequent zero-time solves only update the view, never gameplay.
+    if(w.camMode!=='chase'||!w._bfpCameraActive||!w._lookActive)w.chase(this.player,this.hardLock,0,'bfp');
+    const sight=w._sightZoom||1;
+    if(!w.freeLookInput(this.input,inputDt,sight))w.mouseLook(this.input.mouse.dx/sight,this.input.mouse.dy/sight);
+    // Native deadzone-normalized stick values; 2.4 radians/s at full throw.
+    // Convert to existing mouse-look units so pitch limits/inversion stay shared.
+    if(this.pad?.active){
+      const pixels=2.4*Math.max(0,Math.min(.05,inputDt||0))/(w._lookSens||.0024);
+      w.mouseLook(this.pad.rx*pixels/sight,this.pad.ry*pixels/sight);
+    }
+    w.chase(this.player,this.hardLock,0,'bfp');
+    w.camera.updateMatrixWorld(true);
+  }
+
+  onMovementPowerupReady(f) { return activatePowerUp(f,this); }
+
+  controlPlayer(dt, inputDt = dt) {
+    const p = this.player; if (!p || !p.alive) { if (p) { resetMovementGears(p);cancelHeldAttacksIfIncapacitated(p);p.moveDir = { x: 0, z: 0 }; } this.lockTarget = null; return; }
+    cancelHeldAttacksIfIncapacitated(p);
+    const inp = this.input, m = inp.mouse, pad = this.humans.length < 2 ? this.pad : NULL_PAD;   // in 2P the pad drives P2
+    const chase=combatView(this)==='bfp';
+    if(this.running===false||this.matchOver||this.mapCam||this.hud?.titleOpen||this.combatOverlayOpen){resetMovementGears(p);p.moveDir={x:0,z:0};return;}
+    if(this._pwStage?.aircraft?.piloting?.handleInput(inp,dt)){resetMovementGears(p);return;}
+    if(this._pwStage?.convoy?.driving?.handleInput(inp,dt)){resetMovementGears(p);return;}
+
+    // Chase view traces the actual camera centre; legacy view retains cursor aim.
     const a3 = this._aim3pt;
     let soft;
-    if (pad.active && pad.aiming) {
+    if (!chase && pad.active && pad.aiming) {
       const ax = this.right.x * pad.rx + this.fwd.x * (-pad.ry), az = this.right.z * pad.rx + this.fwd.z * (-pad.ry);
       soft = p.blindT > 0 ? null : this.pickTargetDir(p, ax, az);
       if (soft) soft.center(a3); else a3.set(p.pos.x + ax * 50, 6, p.pos.z + az * 50);
       this._padAim = { x: ax, z: az };                  // remember the heading for when the thumb lifts
-    } else if (pad.active && this._padAim) {
+    } else if (!chase && pad.active && this._padAim) {
       // ⚠ LIFTING THE AIM THUMB WAS AIMING AT THE TOP-LEFT CORNER OF THE SCREEN. `Input.mouse.clientX/Y`
       // initialise to 0 and are only ever written by a `mousemove` — which never fires on a touch
       // device — so the moment the stick was released this fell through to the mouse branch and
@@ -3236,8 +3491,8 @@ export class Game {
       const ax = this._padAim.x, az = this._padAim.z;
       soft = p.blindT > 0 ? null : this.pickTargetDir(p, ax, az);
       if (soft) soft.center(a3); else a3.set(p.pos.x + ax * 50, 6, p.pos.z + az * 50);
-    } else if (p._openSky) {
-      // ⚠ FREE AIM UNDER AN OPEN SKY IS THE CAMERA RAY, NEVER THE MAGNET (Robert, 2026-07-28: "target
+    } else if (chase) {
+      // ⚠ FREE AIM IN BFP VIEW IS THE CAMERA RAY, NEVER THE MAGNET (Robert, 2026-07-28: "target
       // seems to always be on"). `pickTarget` snaps the aim to the NEAREST foe and set `lockTarget`
       // every frame, so the hostile reticle was ALWAYS lit and the aim got yanked off where you look.
       // BFP aims where you LOOK; a SOFT target exists only when a foe is genuinely under the crosshair.
@@ -3245,15 +3500,18 @@ export class Game {
       // (the framing axis, 15° off) — and aim at the world point that ray reaches. A gentle assist
       // radius (`pad`) still nudges onto a foe near the reticle; the aggressive magnet is gone.
       const cam = this.world.camera;
-      cam.getWorldDirection(_camDir);
+      if(this.world.freeLooking)this.world.combatAimDirection(_camDir);
+      else cam.getWorldDirection(_camDir);
+      const rayOrigin=this.world.freeLooking?this.world.combatAimOrigin(_camOrigin):cam.position;
+      const firearmRange=firearmAimRange(p,AIM_MAX_D);
       this._aimHit = this.world.aimTrace(_aimOut, {
-        origin: cam.position, dir: _camDir, maxD: AIM_MAX_D,
+        origin: rayOrigin, dir: _camDir, maxD: firearmRange>AIM_MAX_D?firearmRange+rayOrigin.distanceTo(p.pos):AIM_MAX_D,
         foes: this.entities, ignore: p, blind: p.blindT > 0,   // honesty: unseen foes never stop the ray
         flung: this._flung,
         pad: SETTINGS.aimAssist === false ? 0 : (p.radius || 2.2) * 0.5,
       });
       a3.copy(_aimOut.point);
-      soft = (p.blindT <= 0 && this._aimHit && this._aimHit.hit === 'foe') ? this._aimHit.ent : null;
+      soft = (p.blindT <= 0 && this._aimHit?.hit === 'foe' && this.isFoe(p,this._aimHit.ent)) ? this._aimHit.ent : null;
     } else {
       soft = p.blindT > 0 ? null : this.pickTarget(p);             // BLIND: the aim magnet lets go
       if (soft) soft.center(a3);
@@ -3261,28 +3519,25 @@ export class Game {
     }
     // hard lock ONLY on a direct click ON a character (LMB is also fire — the old "any attack
     // click near a foe locks you" was the "faces one way while I aim another" bug)
-    // ⚠ FIRING NEVER LOCKS UNDER AN OPEN SKY (Robert 2026-07-28). In PowerWorld the ONLY way to lock
-    // is T (looking at a foe), so LMB/□ stay pure fire and you can't get stuck locked by shooting.
-    if (!p._openSky && m.leftEdge && this._hoverPick) this.hardLock = this._hoverPick;
-    else if (!p._openSky && pad.active && pad.pressed('lmb') && soft) this.hardLock = soft;   // iso city: pads keep soft
-    // ⚠ T IS A CYCLE UNDER AN OPEN SKY, AND A RELEASE EVERYWHERE ELSE. In a city you acquire by
-    // clicking a body with a mouse cursor and T lets go — that works because the camera is fixed and
-    // everything worth hitting is on screen. Behind a chase camera in an empty sky there is no cursor
-    // over anybody, so "click to lock" is unreachable and T-as-release had nothing to release: the
-    // whole targeting model was inherited from a game with a different camera.
-    if (inp.pressed('KeyT')) {
-      if (p._openSky) this.cycleLock(p);
+    // Firing never locks in BFP view: T, L1+R3 or the touch lock button owns that choice.
+    if (!chase && m.leftEdge && this._hoverPick) this.hardLock = this._hoverPick;
+    else if (!chase && pad.active && pad.pressed('lmb') && soft) this.hardLock = soft;   // iso city: pads keep soft
+    // T toggles the viewed target in BFP and releases a cursor-acquired legacy lock elsewhere.
+    if (inp.pressed('KeyT')||(chase&&this._combatLockPressed)) {
+      if (chase) this.cycleLock(p);
       else this.hardLock = null;
     }
     if (this.hardLock && !this.hardLock.alive) this.hardLock = null;
     if (p.blindT > 0) this.hardLock = null;                       // BLIND breaks the lock (manual §14)
+    if(chase)this.validateLock(p);
     this.lockTarget = soft;
     // ⚠ THE HARD LOCK OWNS THE AIM POINT (aaa-05 §8). Facing already follows the lock (below); the
     // aim point did NOT — it came from `soft` (the magnet), which is usually the same fighter but
-    // need not be, so you could be locked to A, facing A, and shooting at B. Under an open sky the
+    // need not be, so you could be locked to A, facing A, and shooting at B. In BFP view the
     // lock is an explicit "this is the target": it owns the point, the facing AND the crosshair, or
-    // "locked" means three things at once. Gated to `_openSky` — the iso city is proven untouched.
-    if (p._openSky && this.hardLock && this.hardLock.alive) this.hardLock.center(a3);
+    // "locked" means three things at once. The legacy cursor contract remains separate.
+    if (chase && this.hardLock && this.hardLock.alive) this.hardLock.center(a3);
+    p.aimWorld.copy(a3);p.hasAimWorld=true;
     this.aimPoint.copy(a3).setY(0);
     // pass 1 — a provisional direction from the body, only to resolve the flat `aim` the muzzle
     // needs, and to drive facing.
@@ -3295,9 +3550,8 @@ export class Game {
     // — a camera-independent residual of `3.4·sin θ` (2.94u at 60° pitch, a clean miss on a 2.2u
     // body). `faceDir` has just written `aim`, the only input `muzzle()` needs beyond `pos`, so this
     // is exact and not a one-frame lag. ⚠ Do NOT re-run `faceDir` — pass 1 owns facing; running it
-    // twice with two slightly different vectors makes the body yaw chase its own tail. Gated to
-    // `_openSky` (the city's near-level ground aim leaves the residual < 0.2u — a no-op, measured).
-    if (p._openSky) {
+    // twice with two slightly different vectors makes the body yaw chase its own tail.
+    if (chase) {
       p.muzzle(_muz);
       p.aim3.set(a3.x - _muz.x, a3.y - _muz.y, a3.z - _muz.z).normalize();
     }
@@ -3309,7 +3563,14 @@ export class Game {
     // ReferenceError**: the rally input was never evaluated, you could not get up, and the frame
     // failed at 60Hz behind the try/catch. Measured 1,800 throws in one duel. Declared once, here,
     // above every use.
-    const KM = keymap(SETTINGS.scheme);
+    const KM = meleeKeymap(p,keymap(SETTINGS.scheme));
+    const soldierControls=soldierControlsActive(p,this);
+    const directSelection=soldierControls&&selectSoldierAttack(p,inp);
+    const mouseCombat=sampleMouseCombat(p,inp,KM,inputDt,k=>pad.down(k)||inp.down(({q:'KeyQ',e:'KeyE',f:'KeyH',r:'KeyR'})[k]));
+    p._scopeHeld=mouseCombat.scope||(pad.down('scope')&&p.slots[mouseCombat.primary]?.def.type==='rifle'&&p.slots[mouseCombat.primary]?.def.scopeZoom>1);
+    if(firearmSightZoom(p)>1)p.slots[mouseCombat.primary]._poseUntil=p.animT+.18;
+    for(const key of mouseCombat.cancel){cancelHeldSlot(p,key);if(this.netplay?.active)this.netplay.queueSlot(key,4,p.aim3);}
+    if(directSelection||mouseCombat.changed.length)this.hud?.selectSlot(mouseCombat.primary,mouseCombat.secondary);
     // stunned while held or frozen solid — capable heroes auto-escape via the melee system
     if (p.grabbedBy || p.frozenT > 0) { p.moveDir = { x: 0, z: 0 }; return; }
     // SECOND WIND (manual §13): downed is a held breath — the only input that matters is the rally
@@ -3390,7 +3651,11 @@ export class Game {
         fwx = p._swoop.x; fwy = p._swoop.y; fwz = p._swoop.z;
       } else {
         p._swoop = null;
-        const cf = _v.set(0, 0, 0); this.world.camera.getWorldDirection(cf);
+        const cf = _v.set(0, 0, 0);
+        if (this.world._lookActive) {
+          const cp=Math.cos(this.world._lookPitch);
+          cf.set(Math.sin(this.world._lookYaw)*cp,Math.sin(this.world._lookPitch),Math.cos(this.world._lookYaw)*cp);
+        } else this.world.camera.getWorldDirection(cf);
         fwx = cf.x; fwy = cf.y; fwz = cf.z;
       }
       const rx = -fwz, rz = fwx, rl = Math.hypot(rx, rz) || 1;     // right, flattened
@@ -3407,7 +3672,11 @@ export class Game {
       if (dir.lengthSq() > 1) dir.normalize();
       p.moveDir = { x: dir.x, z: dir.z };
     } else {
-      const dir = _v.set(0, 0, 0).addScaledVector(this.fwd, iz).addScaledVector(this.right, ix);
+      const dir = _v.set(0, 0, 0);
+      if(chase){
+        const fx=Math.sin(this.world._lookYaw),fz=Math.cos(this.world._lookYaw);
+        dir.set(fx*iz-fz*ix,0,fz*iz+fx*ix);
+      }else dir.addScaledVector(this.fwd, iz).addScaledVector(this.right, ix);
       if (dir.lengthSq() > 1) dir.normalize();   // keep analog magnitude, cap at 1
       p.moveDir = { x: dir.x, z: dir.z };
     }
@@ -3418,17 +3687,18 @@ export class Game {
     // fixed ISOMETRIC camera — so in the aim-relative scheme (the default) and behind the chase
     // camera, a double-tap rolled along axes the movement no longer used: tap LEFT while aiming
     // south and the dodge went screen-left, not your left. The basis here now mirrors the moveDir
-    // branch above exactly: aim-relative when the scheme is, camera-forward under an open sky,
+    // branch above exactly: aim-relative when selected, camera-relative in BFP,
     // `this.fwd/right` only in the legacy camera scheme (where movement itself still uses them).
     if (!this._tapT) this._tapT = {};
     let bfx, bfz, brx, brz;                       // evade basis: fwd (bfx,bfz), right (brx,brz)
     if (p._openSky && GAIT_OWNER[p.gait] === 'air') {
-      const cf = _v.set(0, 0, 0); this.world.camera.getWorldDirection(cf);
-      const cl = Math.hypot(cf.x, cf.z) || 1; bfx = cf.x / cl; bfz = cf.z / cl;
+      const cb = this.world.camBasis;   // ⚠ camBasis, NOT getWorldDirection — the offset carries the spin bias (see the flight-forward note above)
+      const cl = Math.hypot(cb.x, cb.z) || 1; bfx = cb.x / cl; bfz = cb.z / cl;
       brx = -bfz; brz = bfx;
     } else {
       let fx = p.aim3.x, fz = p.aim3.z; const fl = Math.hypot(fx, fz);
       if (fl > 0.001 && SETTINGS.moveRelative !== 'camera') { bfx = fx / fl; bfz = fz / fl; brx = -bfz; brz = bfx; }
+      else if(chase){bfx=Math.sin(this.world._lookYaw);bfz=Math.cos(this.world._lookYaw);brx=-bfz;brz=bfx;}
       else { bfx = this.fwd.x; bfz = this.fwd.z; brx = this.right.x; brz = this.right.z; }
     }
     for (const [k1, k2, tx, tz] of TAP_DIRS) {
@@ -3443,7 +3713,11 @@ export class Game {
     }
     // flight + guard keys come from the active control scheme (Options → Control Scheme)
     p.flyHeld = inp.down(KM.up) || pad.down('fly');
-    p.descendHeld = inp.down(KM.down) || inp.down('ControlLeft') || inp.down('ControlRight') || pad.down('descend');
+    if(soldierControls){
+      if(inp.pressed('KeyZ')&&p.onFoot&&!p.flying&&!p.grabbedBy&&!p.guarding)p.prone=!p.prone;
+      if(inp.pressed('KeyC')||p.flyHeld)p.prone=false;
+    }
+    p.descendHeld = (soldierControls ? (p.onFoot?inp.down('KeyC'):inp.down(KM.down)) : inp.down(KM.down)) || inp.down('ControlLeft') || inp.down('ControlRight') || pad.down('descend');
     // THE JKA ROLL TRIGGER (aaa-02 §3.5 change 3): crouch PRESSED while already running on foot
     // fires the fighter's own evade kind ALONG THE RUN. Not a new move — a second door into
     // performEvade: a dodge you reach by already running is a different decision from one you reach
@@ -3454,50 +3728,79 @@ export class Game {
     // tops out at 33 — drag settles under the 36.7 walk clamp), which makes the roll a control
     // that exists and can never fire (the rung-nobody-can-reach law). JKA's 200 qu/s is ~80% of
     // ITS run speed (250), so the honest port is the RATIO: 0.8 × this fighter's own walk clamp.
-    if ((inp.pressed(KM.down) || pad.pressed('descend')) && p.onFoot) {
+    if (!soldierControls&&(inp.pressed(KM.down) || pad.pressed('descend')) && p.onFoot) {
       const rv = Math.hypot(p.vel.x, p.vel.z);
       if (rv >= p.speed * 1.08 * 0.8) performEvade(p, { x: p.vel.x / rv, z: p.vel.z / rv }, this);
     }
-    p.cruiseHeld = p.flying && (inp.down('ShiftLeft') || inp.down('ShiftRight'));   // held SHIFT in the air = sustained cruise
-    p.move(p.moveDir, dt);
+    const gearInput=updateMovementGears(p,{held:inp.down('ShiftLeft')||inp.down('ShiftRight')||pad.down('dash')||p._gearUiHeld,selectGear:p._gearUiHeld?p._gearUiSelection:undefined,cancelVersion:inp.cancelVersion},inputDt);
+    if(gearInput.powerupReady)this.onMovementPowerupReady?.(p);
+    const sprintInput={mouse:inp.mouse,down:code=>inp.down(code)||(code==='ShiftLeft'&&(pad.down('dash')||p._gearUiHeld))};
+    const sprint=soldierControls?soldierSprint(p,sprintInput,mouseCombat):1;
+    p.move(p.moveDir, dt, sprint);
+    if(p.grabbing&&inp.pressed('KeyJ')){
+      if(p._personCarry)this.melee.setdownPerson(p);else this.melee.liftPerson(p);
+    }
 
     // --- melee trifecta — Strike (tap=jab, HOLD=haymaker) · Grab · Guard (V/G/C+X+Mouse4, pad ▢/○/L1) ---
     const np = this.netplay && this.netplay.active ? this.netplay : null;
-    if (inp.pressed(KM.strike || 'KeyV') || pad.pressed('strike')) { this.melee.chargeStart(p); if (np) np.queueMelee('cs'); }
-    if (inp.released(KM.strike || 'KeyV') || pad.released('strike')) { this.melee.chargeRelease(p); if (np) np.queueMelee('cr'); }
+    if(KM.mouseMelee&&inp.pressed(KM.strike)&&canChangeMouseTool(p,inp)){
+      p._selSlot='melee';p._selSecondary='grab';this.hud?.selectSlot('melee','grab');this.hud?.feed('MELEE · LMB punch / heavy · RMB grab / throw · C block','#ffd24a');
+    }
+    const mouseMelee=!!KM.mouseMelee&&p._selSlot==='melee';
+    if ((!KM.mouseMelee&&inp.pressed(KM.strike || 'KeyV')) || pad.pressed('strike') || (mouseMelee&&m.leftEdge)) { this.melee.chargeStart(p); if (np) np.queueMelee('cs'); }
+    if ((!KM.mouseMelee&&inp.released(KM.strike || 'KeyV')) || pad.released('strike') || (mouseMelee&&m.leftUp)) { this.melee.chargeRelease(p); if (np) np.queueMelee('cr'); }
+    if(mouseCombat.secondary==='grab'&&mouseCombat.buttons.right.pressed){this.melee.grab(p);if(np)np.queueMelee('grab');}
     // G: carrying → THROW it · something heavy in reach → hoist it · otherwise the normal grab
-    if (inp.pressed(KM.grab || 'KeyG') || pad.pressed('grab')) {
+    if ((!soldierControls&&inp.pressed(KM.grab || 'KeyG')) || pad.pressed('grab')) {
       // THE G-CHAIN (altitude plan 3), in priority order. Four behaviours on one key is only
       // acceptable because the PROMPT shows which one is armed — see hud.interactPrompt.
       //   focused interactable ? interact : carrying ? throw : gear underfoot ? pick up
       //   : prop in reach ? hoist : melee grab
-      if (this.doInteract(p)) { /* the world answered */ }
+      if (p.grabbing) { this.melee.grab(p);if(np)np.queueMelee('grab'); }
+      else if (this.doInteract(p)) { /* the world answered */ }
       else if (p._carry) this.throwProp(p);
       else if (this.pickupGear(p)) {}                      // a weapon on the ground beats a hoist (manual §16)
       else if (!this.grabProp(p)) { this.melee.grab(p); if (np) np.queueMelee('grab'); }
     }
-    this.melee.guard(p, inp.down(KM.guard) || inp.mouse.b3 || inp.mouse.b4 || pad.down('guard'));
-    if (p._gearHeld) {                                  // the HELD weapon owns X while you carry it
-      const gi = { pressed: inp.pressed(KM.item), held: inp.down(KM.item), released: inp.released(KM.item), dt };
+    this.melee.guard(p, ((!soldierControls||KM.guard!=='KeyC')&&inp.down(KM.guard)) || inp.mouse.b3 || inp.mouse.b4 || pad.down('guard'));
+    if((!soldierControls&&inp.released(KM.grab||'KeyG'))||pad.released('grab')||(mouseCombat.secondary==='grab'&&mouseCombat.buttons.right.released))this.melee.releaseGrab(p);
+    if(soldierControls&&inp.pressed('KeyQ')&&p.items.length)this.useItem(p);
+    if(soldierControls&&inp.pressed('KeyE')&&!p.guarding&&!p.grabbedBy&&!p.frozenT&&!p.staggerT){
+      if(!this.doInteract(p))this.pickupGear(p);
+    }
+    if (p._gearHeld&&!p._gearHeld.primary) {             // issued primary fires through LMB
+      const gi = { pressed: inp.pressed(KM.item)||(chase&&pad.pressed('item')), held: inp.down(KM.item)||(chase&&pad.down('item')), released: inp.released(KM.item)||(chase&&pad.released('item')), dt };
       if (gi.pressed || gi.held || gi.released) runSlot(p, '_gear', gi, this);
       if (gi.held) this.drainGear(p, dt);
-    } else if (inp.pressed(KM.item) && p.items.length) this.useItem(p);   // the carried item (beacon: plant / recall)
+    } else if ((inp.pressed(KM.item)||(chase&&pad.pressed('item'))) && p.items.length) this.useItem(p);   // the carried item (beacon: plant / recall)
 
     // --- powers (keyboard/mouse OR gamepad) ---
     const busy = p.guarding || p.strikeActive > 0 || p.grabState || p.grabbing || p.meleeCharge > 0 || p.staggerT > 0;
+    const infantry=p.def.archetype==='soldier';
+    if(!busy&&(inp.pressed(infantry?'KeyR':'KeyY')||pad.pressed('reload')))requestReload(p,p._gearHeld&&!p._gearHeld.primary?'_gear':mouseCombat.primary,this);
     const orK = (code, a) => ({ pressed: inp.pressed(code) || pad.pressed(a), held: inp.down(code) || pad.down(a), released: inp.released(code) || pad.released(a) });
     const intents = {
-      lmb: { pressed: m.leftEdge || pad.pressed('lmb'), held: m.left || pad.down('lmb'), released: m.leftUp || pad.released('lmb') },
-      rmb: { pressed: m.rightEdge || pad.pressed('rmb'), held: m.right || pad.down('rmb'), released: m.rightUp || pad.released('rmb') },
+      lmb: { pressed: pad.pressed('lmb'), held: pad.down('lmb'), released: pad.released('lmb') },
+      rmb: { pressed: pad.pressed('rmb'), held: pad.down('rmb'), released: pad.released('rmb') },
       q: orK('KeyQ', 'q'), e: orK('KeyE', 'e'), r: orK('KeyR', 'r'), f: orK('KeyH', 'f'),   // 4th power lives on H — F toggles flight
-      shift: orK('ShiftLeft', 'dash'),
+      shift: {pressed:false,held:false,released:false}, // Legacy movement powers remain selectable attacks.
     };
-    // WHEEL-SELECT (PILOT/SOUTHPAW): the wheel PICKS a power and LMB FIRES it. Without this the
-    // wheel would only ever light a chip — a selection has to have a trigger, or it isn't a control.
-    if (KM.wheel === 'ability' && p._selSlot && p._selSlot !== 'lmb' && p.slots[p._selSlot]) {
-      const sel = p._selSlot, L = intents.lmb;
-      intents[sel] = { pressed: intents[sel].pressed || L.pressed, held: intents[sel].held || L.held, released: intents[sel].released || L.released };
-      intents.lmb = { pressed: false, held: false, released: false };
+    if(infantry)intents.r={pressed:pad.pressed('r'),held:pad.down('r'),released:pad.released('r')};
+    if(soldierControls){
+      intents.e={pressed:pad.pressed('e'),held:pad.down('e'),released:pad.released('e')};
+      // The tactical shortcuts use the existing authored kit and payment/action
+      // path. They never replace the player's selected primary or secondary.
+      intents.q={pressed:pad.pressed('q'),held:pad.down('q'),released:pad.released('q')};
+      if(inp.pressed('KeyG')){
+        const grenade=SLOT_KEYS.find(k=>{const d=p.slots[k]?.def;return d?.type==='projectile'&&d.gear&&d.canister&&d.grav>0;});
+        if(grenade)intents[grenade].pressed=true;
+        else this.hud?.feed('NO THROWABLE EQUIPPED','#ffd24a');
+      }
+    }
+    for(const [key,it] of Object.entries(mouseCombat.slots)){
+      const direct=intents[key];
+      for(const edge of ['pressed','held','released'])direct[edge]||=it[edge];
+      if(direct.held)direct.released=false;
     }
     // ⚠ THIS WAS A HARD-CODED `KeyF` AND BRAWLER PUTS THE JAB THERE — so in that scheme F both
     // punched and took off, which is exactly the collision `KEYMAPS`' own header forbids ("no two
@@ -3514,7 +3817,8 @@ export class Game {
 
   // Player 2 (gamepad): right-stick auto-aims, left-stick moves.
   controlPad(f, dt) {
-    if (!f || !f.alive || this.matchOver) { if (f) f.moveDir = { x: 0, z: 0 }; return; }
+    if (!f || !f.alive || this.matchOver || this.running===false || this.mapCam || this.hud?.titleOpen || this.combatOverlayOpen) { if (f) { resetMovementGears(f);cancelHeldAttacksIfIncapacitated(f);f.moveDir = { x: 0, z: 0 }; } return; }
+    cancelHeldAttacksIfIncapacitated(f);
     const pad = this.pad;
     if (f.grabbedBy || f.frozenT > 0) { f.moveDir = { x: 0, z: 0 }; return; }
     if (f.downedT > 0) {
@@ -3530,16 +3834,33 @@ export class Game {
       if (!tgt) { f.aim3.set(ax, 0.02, az).normalize(); f.faceDir(ax, az); }
     } else tgt = this.nearestFoe(f, f.pos, 200);
     if (tgt) { f.aim3.set(tgt.pos.x - f.pos.x, (tgt.pos.y + 5.2) - (f.pos.y + 5.8), tgt.pos.z - f.pos.z).normalize(); f.faceDir(tgt.pos.x - f.pos.x, tgt.pos.z - f.pos.z); }
+    if(tgt)tgt.center(f.aimWorld);else f.aimWorld.copy(f.pos).addScaledVector(f.aim3,500);
+    f.hasAimWorld=true;
     const dir = _v.set(0, 0, 0).addScaledVector(this.fwd, -pad.ly).addScaledVector(this.right, pad.lx);
     if (dir.lengthSq() > 1) dir.normalize();
-    f.moveDir = { x: dir.x, z: dir.z }; f.flyHeld = pad.down('fly'); f.descendHeld = pad.down('descend'); f.move(f.moveDir, dt);
+    f.moveDir = { x: dir.x, y:0, z: dir.z };
+    if(f._openSky && f.airborne && tgt) {
+      f.moveDir.y=clamp((tgt.pos.y-f.pos.y)/45,-.7,.7)*Math.hypot(dir.x,dir.z);
+      const len=Math.hypot(f.moveDir.x,f.moveDir.y,f.moveDir.z);
+      if(len>1){f.moveDir.x/=len;f.moveDir.y/=len;f.moveDir.z/=len;}
+    }
+    f.flyHeld = pad.down('fly'); f.descendHeld = pad.down('descend');
+    const gearInput=updateMovementGears(f,{held:pad.down('dash')||f._gearUiHeld,selectGear:f._gearUiHeld?f._gearUiSelection:undefined},dt);
+    if(gearInput.powerupReady)this.onMovementPowerupReady?.(f);
+    f.sprintHeld=f.def.archetype==='soldier'&&f.onFoot&&!f.flying&&!f.prone&&!f.crouching&&!f.guarding&&!f._firearmReload&&!pad.down('lmb')&&!pad.down('rmb')&&pad.down('dash');
+    f.move(f.moveDir, dt, f.sprintHeld?f.movementGear.profile.ground[0]:1);
     if (pad.pressed('strike')) this.melee.chargeStart(f);
     if (pad.released('strike')) this.melee.chargeRelease(f);
     if (pad.pressed('grab')) this.melee.grab(f);
     this.melee.guard(f, pad.down('guard'));
     const busy = f.guarding || f.strikeActive > 0 || f.grabState || f.grabbing || f.meleeCharge > 0 || f.staggerT > 0;
     const P = (a) => ({ pressed: pad.pressed(a), held: pad.down(a), released: pad.released(a) });
-    const it = { lmb: P('lmb'), rmb: P('rmb'), q: P('q'), e: P('e'), r: P('r'), f: P('f'), shift: P('dash') };
+    const it = { lmb: P('lmb'), rmb: P('rmb'), q: P('q'), e: P('e'), r: P('r'), f: P('f'), shift: {pressed:false,held:false,released:false} };
+    for(const [selected,trigger]of [[f._selSlot,'lmb'],[f._selSecondary,'rmb']])if(selected==='shift'){
+      for(const edge of ['pressed','held','released'])it.shift[edge]||=it[trigger][edge];
+      it[trigger]={pressed:false,held:false,released:false};
+    }
+    if(it.shift.held)it.shift.released=false;
     for (const k of SLOT_KEYS) if (f.slots[k]) feedSlot(this, f, k, it[k], busy, dt);
   }
 
@@ -3569,7 +3890,8 @@ export class Game {
       else { f.moveDir = { x: dx / d, z: dz / d }; f.faceDir(dx, dz); f.move(f.moveDir, dt); }
       return;
     }
-    if (!f.ai || !f.alive) { f.moveDir = { x: 0, z: 0 }; return; }
+    if (!f.ai || !f.alive) { cancelHeldAttacksIfIncapacitated(f);f.moveDir = { x: 0, z: 0 }; return; }
+    cancelHeldAttacksIfIncapacitated(f);
     if (f.grabbedBy || f.frozenT > 0) { f.moveDir = { x: 0, z: 0 }; return; }   // stunned while held / frozen
     // finish an AI haymaker wind-up
     if (f._aiCharge > 0) { f._aiCharge -= dt; if (f._aiCharge <= 0 || f.meleeCharge <= 0) { this.melee.chargeRelease(f); f._aiCharge = 0; } }
@@ -3580,11 +3902,24 @@ export class Game {
     // and hand-wander (fairness law). Never aim at the true body centre: that reads as an aimbot.
     if (it.aimAt) f.aim3.set(it.aimAt.x - f.pos.x, (it.aimAt.y + 5.2) - (f.pos.y + 5.8), it.aimAt.z - f.pos.z).normalize();
     else f.aim3.set(f.aim.x, 0, f.aim.z);
+    if(it.aimAt)f.aimWorld.set(it.aimAt.x,it.aimAt.y+5.2,it.aimAt.z);
+    else f.aimWorld.copy(f.pos).addScaledVector(f.aim3,500);
+    f.hasAimWorld=true;
     const dir = _v.set(it.move.x, 0, it.move.z); if (dir.lengthSq() > 1) dir.normalize();
     f.moveDir = { x: dir.x, z: dir.z };
     f.flyHeld = !!it.fly;
     f.descendHeld = f.flying && !it.fly;      // no longer wants to fly → sink back down and land
-    f.cruiseHeld = f.flying && !!it.fly;      // chasing through the air → open the throttle
+    const requestedGear=it.movementGear??(f.flying&&it.fly?1:0);
+    const gearInput=updateMovementGears(f,{held:requestedGear>0&&!f.movementGear?.blocked,selectGear:requestedGear||undefined},dt);
+    if(gearInput.powerupReady)this.onMovementPowerupReady?.(f);
+    if(f._openSky && f.airborne && it.target) {
+      // Visible-target height belongs in the same 3-D movement intent, not an always-on rise
+      // button. Once level with an opponent the bot hovers and strafes instead of oscillating.
+      f.moveDir.y=clamp((it.target.pos.y-f.pos.y)/32,-.8,.8);
+      const len=Math.hypot(f.moveDir.x,f.moveDir.y,f.moveDir.z);
+      if(len>1){f.moveDir.x/=len;f.moveDir.y/=len;f.moveDir.z/=len;}
+      f.flyHeld=false;f.descendHeld=false;
+    }
     f.move(f.moveDir, dt);
 
     // --- defensive reactions to incoming beams / projectiles ---
@@ -3605,7 +3940,7 @@ export class Game {
       const seen = fl && this.canSee(f, { pos: fl });
       if (seen) f._flungT = (f._flungT || 0) + dt; else f._flungT = 0;
       if (seen && f._flungT > (f.ai.reflex || 0.2) && f._flungShotCd <= 0 && !f.grabbing && !f.grabState && !f._carry) {
-        const k = ['lmb', 'rmb', 'q', 'e'].find(s => f.slots[s] && f.slots[s].cd <= 0 && SHOOTDOWN_TYPES.has(f.slots[s].def.type) && f.ki > (f.slots[s].def.cost || 0));
+        const k = ['lmb', 'rmb', 'q', 'e'].find(s => f.slots[s] && slotUnlocked(f,s) && f.slots[s].cd <= 0 && SHOOTDOWN_TYPES.has(f.slots[s].def.type) && f.ki > (f.slots[s].def.cost || 0));
         if (k) {
           // aim at where it IS — a prop is a big slow object and leading it is not the skill test here
           f.aim3.set(fl.x - f.pos.x, fl.y - (f.pos.y + 5.8), fl.z - f.pos.z).normalize();
@@ -3615,24 +3950,27 @@ export class Game {
         }
       }
     } else f._flungT = 0;
-    const threatened = !!(this.incomingBeam(f) || this.incomingProjectile(f));
-    if (threatened) f._threatT = (f._threatT || 0) + dt; else f._threatT = 0;
-    const reacted = f._threatT > (f.ai.reflex || 0.2);
+    const beamThreat=this.incomingBeam(f),projectileThreat=beamThreat?null:this.incomingProjectile(f,f.ai.seeRange);
+    // Observe early, act when the shot approaches. A new shot never inherits
+    // another shot's reaction timer, and misses at other altitudes are ignored.
+    const imminent=!projectileThreat||projectileThreat.pos.distanceTo(f.pos)/Math.max(1,projectileThreat.vel.length())<.55;
+    const reacted=f.ai.observeThreat(beamThreat||projectileThreat,dt,this,imminent);
+    if(f._guardThreat&&(f._guardThreat!==beamThreat||f.ai._threat!==beamThreat))f._guardThreat=null;
+    if(f._guardThreat&&!f.grabbing&&!f.grabState)f._guardT=Math.max(f._guardT||0,.3);
     if (!f.grabbing && !f.grabState && reacted) {
-      const beam = this.incomingBeam(f);
+      const beam = beamThreat;
       if (beam) {
-        f.faceDir(beam.caster.pos.x - f.pos.x, beam.caster.pos.z - f.pos.z);   // turn to face it (block/clash from the front)
-        const bk = ['lmb', 'rmb', 'r', 'e', 'q'].find(k => f.slots[k] && f.slots[k].def.type === 'beam' && f.slots[k].cd <= 0 && f.ki > 30);
-        if (bk && f._forceBeamT <= 0 && f._counterCd <= 0 && Math.random() < 0.7) { f._forceBeam = bk; f._forceBeamT = 1.1 + Math.random() * 1.3; f._counterCd = 3.5; } // counter-beam → CLASH
-        else if (f._forceBeamT <= 0) f._guardT = Math.max(f._guardT || 0, 0.32);                                                                                    // else block
+        const bk = ['lmb', 'rmb', 'r', 'e', 'q'].find(k => f.slots[k] && slotUnlocked(f,k) && f.slots[k].def.type === 'beam' && f.slots[k].cd <= 0 && f.ki > 30);
+        if (it.ready && bk && f._forceBeamT <= 0 && f._counterCd <= 0 && Math.random() < 0.45) { f._forceBeam = bk; f._forceBeamT = 1.1 + Math.random() * 1.3; f._counterCd = 3.5; }
+        else if (f._forceBeamT <= 0) {f._guardThreat=beam;f._guardT=Math.max(f._guardT||0,.85);}
       } else {
-        const proj = this.incomingProjectile(f);
+        const proj = projectileThreat;
         if (proj && f._forceBeamT <= 0) {
           // juke sideways with the hero's own evade tech, else block
           if (f.def.evade && f.evadeCd <= 0 && Math.random() < 0.35) {
             const vl = Math.hypot(proj.vel.x, proj.vel.z) || 1, side = Math.random() < 0.5 ? 1 : -1;
             performEvade(f, { x: (-proj.vel.z / vl) * side, z: (proj.vel.x / vl) * side }, this);
-          } else if (Math.random() < 0.3) f._guardT = Math.max(f._guardT || 0, 0.28);
+          } else if (Math.random() < 0.3) f._guardT = Math.max(f._guardT || 0, 0.65);
         }
       }
     }
@@ -3666,7 +4004,14 @@ export class Game {
         f.faceDir(best.pos.x - f.pos.x, best.pos.z - f.pos.z);
         f.aim3.set(best.pos.x - f.pos.x, (best.pos.y + 4.5) - (f.pos.y + 5.2), best.pos.z - f.pos.z).normalize();
       }
-      if (f._clinchAimT > Math.max(0.28, (f.ai.reflex || 0.2) * 1.7)) { f._clinchAimT = 0; this.melee.grab(f); }
+      if (!f._clinchFinisher && !f._clinchPunch && f.meleeCharge<=0 && f._aiCharge<=0 && f._clinchAimT > Math.max(0.28, (f.ai.reflex || 0.2) * 1.7)) {
+        f._clinchAimT=0;
+        // Strong grapplers drive a lone opponent down; a visible second target
+        // keeps the bowling-ball throw valuable. Short holds must finish now.
+        if(!best && f.strength>=7 && f.grabT>1.05 && !f._victimEscape) {
+          this.melee.chargeStart(f);f._aiCharge=.6/((f.sheet&&f.sheet.chargeRate)||1);
+        } else this.melee.grab(f);
+      }
       f.moveDir = { x: 0, z: 0 };
       return;   // wrestling IS the turn — no other actions while holding a body
     }
@@ -3681,8 +4026,8 @@ export class Game {
     // one melee strike per fight**, which is the whole of "melee is non-existent" and "the other
     // person can't get to me". Every one of the other twelve reads of this field in the codebase
     // already says `> 0`; this single site was the odd one out.
-    if (!f._forceBeam && !f.grabbing && !f.grabState && !(f.strikeActive > 0)) {
-      const foe = this.nearestFoe(f, f.pos, 16);
+    if (f.def.ai?.meleePolicy!=='ability' && !f._forceBeam && !f.grabbing && !f.grabState && !(f.strikeActive > 0)) {
+      const foe = it.ready ? it.target : null;
       const d = foe ? Math.hypot(foe.pos.x - f.pos.x, foe.pos.z - f.pos.z) : 99;
       f._meleeCd = (f._meleeCd || 0) - dt;
       // a turtling foe is worth stepping INTO grab range for (the bounce pushes bots out of it)
@@ -3720,7 +4065,7 @@ export class Game {
 
     const busy = f.guarding || f.strikeActive > 0 || f.grabState || f.grabbing || f.meleeCharge > 0 || f.staggerT > 0;
     // committed counter-beam (hold the beam slot → creates a beam battle)
-    if (f._forceBeam && f._forceBeamT > 0 && !busy) {
+    if (f._forceBeam && slotUnlocked(f,f._forceBeam) && f._forceBeamT > 0 && !busy) {
       const first = !f._forceBeamActive; f._forceBeamActive = true;
       runSlot(f, f._forceBeam, { pressed: first, held: true, released: false, dt }, this);
     } else {
@@ -3729,22 +4074,36 @@ export class Game {
     }
   }
 
+  // The body owns distance; camera right owns stereo. Copy into AudioBus before
+  // combat emits sound and again after the final camera solve for the next frame.
+  updateAudioListener() {
+    if (!this.player) return;
+    const camera=this.world.camera,pos=this.player.pos;
+    camera.updateMatrixWorld();
+    this.audio.listen(pos.x,pos.z,pos.y,_v.setFromMatrixColumn(camera.matrixWorld,0));
+  }
+
   // ---------- main update ----------
   update(dt) {
+    // Preparation owns no simulation time and must not first-use a cold shader
+    // through either camera. Input/frame cleanup remains owned by the boot loop.
+    if(this._frontlinePreparing){this.pad.update();this.audio.sweep();return;}
     dt = Math.min(dt, 0.05);   // parity floor 20fps (was 0.033/30fps — weak GPUs played in literal slow motion)
+    const inputDt = dt; // Selection gestures keep their response time during impact slow motion.
     this.pad.update();
+    this.prepareCombatView(inputDt);
     this.audio.sweep();   // kill orphaned sustained sounds (stuck-tone watchdog) — even on title/pause
     if (!this.running) {
       // THE MAP TOOL owns the camera while it is open — authoring a city is not a paused match,
       // and `follow` would drag the view back to the player every frame.
       if (this.mapCam) { this.world.orbit(this.mapCam); this.world.render(); return; }
+      if(combatView(this)==='bfp'&&this.world.camMode==='chase'){this.hud?.updateCrosshair?.(this);this.world.render();return;}
       this.world.follow(this.player ? _v.copy(this.player.pos).setY(6) : _v.set(0, 6, 0), dt);
       this.world.render(); return;
     }
     if (this._slowT > 0) { this._slowT -= dt; dt *= this._slowMul || 1; }   // impact slow-mo
     this.time += dt;
     if (this.mode && !this.matchOver) this.matchT += dt;   // the match clock the news report cites
-    if (this.player) this.audio.listen(this.player.pos.x, this.player.pos.z);   // proximity audio ears
 
     if (this.comboT > 0) { this.comboT -= dt; if (this.comboT <= 0) { this.combo = 0; if (this.hud) this.hud.combo(0); } }
     // style bleeds away when you stop fighting, and the two damage multipliers ride powerBuff
@@ -3758,15 +4117,19 @@ export class Game {
     if (this.mode && !this.matchOver) this.mode.tick(this, dt);
 
     // control: P1 (keyboard+mouse), P2+ (gamepad), everyone else = AI
-    this.controlPlayer(dt);
+    // View input and the zero-time eye solve ran once above, before any control.
+    this.updateAudioListener();
+    this.controlPlayer(dt, inputDt);
     for (let i = 1; i < this.humans.length; i++) this.controlPad(this.humans[i].fighter, dt);
     for (const f of this.entities) { if (this.isHuman(f)) continue; if (f.remote) this.controlRemote(f, dt); else this.controlBot(f, dt); }
 
+    this.melee.beginContactFrame();
+    this.beginBodyContactFrame();
     for (const f of this.entities) {
       if (!f._medChecked) {
         f._medChecked = true;
         // carry-over injuries from the book: small, capped, and announced (manual §18)
-        if (f.def && f.def.id && !f.def.police && !f.isDummy) {
+        if (f.def && f.def.id && !f.def.police && !f.isDummy && !f._frontlineClone && !f._encounterNPC) {
           const inj = injuryOf(f.def.id);
           if (inj) {
             f.maxHp = Math.round(f.maxHp * (1 - Math.min(0.08, inj.debuff || 0.05)));
@@ -3776,16 +4139,20 @@ export class Game {
           }
         }
       }
-      const wasAlive = f._wasAlive !== false;
       f.update(dt, this);
+    }
+    this.resolveBodies();
+    this.melee.endContactFrame();
+    for (const f of this.entities) {
+      const wasAlive = f._wasAlive !== false;
       if (wasAlive && f.state === 'ko') this.handleKO(f);
       f._wasAlive = f.state !== 'ko';
     }
     for (let i = this.entities.length - 1; i >= 0; i--) if (this.entities[i]._remove) { const e = this.entities[i]; this.scene.remove(e.obj); if (e.dispose) e.dispose(); this.entities.splice(i, 1); }  // survival dead removal
 
-    this.resolveBodies();
     this.updateItems(dt);
     this.updatePortals(dt);
+    settleConstructUpkeep(this,dt);
     this.projectiles.update(dt, this);
     for (let i = this.minions.length - 1; i >= 0; i--) if (!this.minions[i].update(dt, this)) this.minions.splice(i, 1);
     for (let i = this.constructs.length - 1; i >= 0; i--) if (!this.constructs[i].update(dt, this)) this.constructs.splice(i, 1);
@@ -3797,6 +4164,7 @@ export class Game {
     if (this.running && this.peds) this.peds.update(dt, this);
     if (this.police) this.police.update(dt);
     this.updateVision(dt);
+    for(const f of this.entities)if(f._scoutVehicle||f._aircraftVehicle)f.obj.visible=false;
     this.updateReticle(dt);
     this.updatePlayerMark(dt);
     this.updateSpacingRings();
@@ -3847,8 +4215,8 @@ export class Game {
     if (this.mode && !this.matchOver) { const over = this.mode.isOver(this); if (over) this.endMatch(over); }
 
     this.cameraDrive(dt);   // ⚠ the ONE arbiter — cinematic > chase view > the two-player fit
-    // ⚠ THE POWERWORLD CROSSHAIR IS PROJECTED HERE — after cameraDrive, in the SIM loop, and gated on
-    // `_openSky` so the iso city path is byte-unchanged (§2.0 rule 5). Two reasons it lives here and
+    this.updateAudioListener();
+    // The shared BFP crosshair is projected here after cameraDrive. Two reasons it lives here and
     // not in updateReticle or hud.update (aaa-05 §6.4):
     //   · AFTER cameraDrive: controlPlayer computes the aim point a frame before the camera moves;
     //     projecting it earlier uses a one-frame-stale camera, which reads as ~4px = 1.6u of error
@@ -3856,7 +4224,7 @@ export class Game {
     //   · in game.update, not hud.update: the reticle harness steps game.update by hand and never
     //     calls hud.update, so the mark has to move here for the gate to be measurable at all.
     const _pl = this.player;
-    if (_pl && _pl.alive && _pl._openSky) {
+    if (_pl && combatLookActive(this)) {
       // ⚠ REFRESH THE CAMERA MATRIX FIRST. cameraDrive set the camera POSITION and its quaternion via
       // lookAt, but matrixWorld — which getWorldDirection and screenPosOf's .project() both read — is
       // only rebuilt by updateMatrixWorld, normally in render() a frame later. Both the re-anchor and
@@ -3879,8 +4247,8 @@ export class Game {
         const _D = _depthM > 8 ? 4 : (_fwdDot > 0.05 ? clamp((30 - _depthM) / _fwdDot, 4, 4000) : 4);
         this._aim3pt.set(_muz.x + _pl.aim3.x * _D, _muz.y + _pl.aim3.y * _D, _muz.z + _pl.aim3.z * _D);
       }
-      if (this.hud && this.hud.updateCrosshair) this.hud.updateCrosshair(this);
     }
+    this.hud?.updateCrosshair?.(this);
     this._aimFresh = false;
     if (this.player) this.world.updateOcclusion(this.player.pos, dt);   // towers between lens and player go glassy
     if (this.news) this.news.update(dt);   // the crew shoots BEFORE the main pass — their POV render hides under it
@@ -3894,23 +4262,24 @@ export class Game {
    * `followHumans` overwrote the view unconditionally every frame. Both features looked dead.
    * (`world.orbitAngle`, which `updateSpectate` reads, is never assigned anywhere in the repo either.)
    *
-   * Priority, highest first: a cinematic or the map tool → the POWERWORLD chase view → the fit.
+   * Priority: cinematic/map owner → one-player BFP view → legacy/shared fit.
    */
   cameraDrive(dt) {
+    const view=combatView(this),active=combatLookActive(this);
+    if(!active)clearForegroundVisibility(this.world);
+    if(this.input)this.input.pointerLock=active;
     if (this.mapCam) { if (this.input) this.input.pointerLock = false; this.world.orbit(this.mapCam); return; }
-    if (this.ms && this.ms.chaseCam && this.player && this.player.alive) {
-      // ⚠ FLYING FOLLOWS THE MOUSE — BFP (Robert, 2026-07-28: "make sure flying follows the mouse and
-      // acts like BFP"). The chase camera already steers off its own mouse-look yaw/pitch, and unlocked
-      // flight forward IS the camera's getWorldDirection — but `mouseLook()` was never called and
-      // pointer-lock was never engaged (the deferred Wave-1 rider), so the mouse never touched the
-      // camera. Engage it here and feed the per-frame deltas; input.endFrame consumes/resets them.
-      if (this.input) { this.input.pointerLock = true; this.world.mouseLook(this.input.mouse.dx, this.input.mouse.dy); }
+    if (view==='bfp') {
+      // Input deltas were consumed once in the pre-control solve. This final solve
+      // follows the updated native body while preserving the same view owner.
+      if(!active&&this.world.camMode==='chase')return;
       // ⚠ FRAME THE FIGHT ONLY ON AN EXPLICIT HARD LOCK (T). An unlocked camera is YOURS to steer with
       // the mouse — a spectator cam that swings to whatever foe wanders within 220u was fighting the
       // mouse for control (the "I can't aim where I'm looking" feel). No lock → the mouse owns the view.
       let foe = (this.hardLock && this.hardLock.alive) ? this.hardLock : null;
       if (foe && this.fov && (foe._vis ?? 1) < 0.4) foe = null;
-      this.world.chase(this.player, foe, dt);
+      this.world.chase(this.player, foe, dt,'bfp');
+      if(!active)clearForegroundVisibility(this.world);
       return;
     }
     if (this.input) this.input.pointerLock = false;

@@ -2,16 +2,20 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<!-- ⚠ `viewport-fit=cover` IS LOAD-BEARING, NOT DECORATION. Without it iOS/iPadOS never reports a
-     safe area, so every `env(safe-area-inset-*)` in the project resolves to 0px — twelve call sites
-     across the HUD and the touch layer, all written specifically to keep controls clear of the
-     notch, the home indicator and the rounded corners. They were all silently no-ops on the exact
-     devices they exist for. -->
+<!-- ⚠ `viewport-fit=cover` IS LOAD-BEARING, NOT DECORATION — same as index.html. Without it iOS
+     never reports a safe area and every `env(safe-area-inset-*)` in the touch layer resolves to
+     0px, on the exact devices those rules exist for. -->
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-<title>WAR WORLD: ASCENDANTS</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230a0c12'/%3E%3Cpath d='M56 10 28 56h18l-8 34 34-48H54z' fill='%23f5b21a'/%3E%3C/svg%3E" />
+<title>POWERWORLD</title>
+<!-- The stage's own sky over its own rock — the same two colours `STAGE.sky`/`STAGE.rock` paint the
+     dimension with, so the tab icon and the world cannot drift apart. -->
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%231b6ea6'/%3E%3Cpath d='M10 78 34 40l16 22 12-16 18 32z' fill='%23c1a07c'/%3E%3Ccircle cx='72' cy='24' r='10' fill='%23fff3d6'/%3E%3C/svg%3E" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700;800&display=swap" rel="stylesheet" />
+<!-- ⚠ THE SAME FOUR SHEETS index.html LINKS, in the same order. `shell.css` was MOVED out of
+     index.html's inline <style> precisely so this page could have the base page and the touch layer
+     without a second copy of them. Nothing here is duplicated; the PowerWorld front door styles
+     itself from engine/pwTitle.js. -->
 <link rel="stylesheet" href="/src/styles/tokens.css" />
 <link rel="stylesheet" href="/src/styles/overlays.css" />
 <link rel="stylesheet" href="/src/styles/comic.css" />
@@ -20,7 +24,13 @@
 <body>
   <canvas id="game"></canvas>
   <div id="hud"></div>
-  <div id="title"></div>
-  <script type="module" src="/src/main.js"></script>
+  <!-- ⚠ #title STAYS, EMPTY, AND STARTS HIDDEN. The HUD constructor binds it and several shared
+       overlays call hide/showTitle on the way past, so removing it would be a null deref at boot.
+       But shell.css styles it as a full-viewport flex panel with a gradient and pointer-events:auto,
+       and PowerWorld never calls showTitle/hideTitle — its door is #pwTitle. Left at its CSS
+       default it covered the running match in a dark veil and ate every click. `display:none` here
+       kills it before first paint; engine/pwTitle.js repeats it defensively for any other mount. -->
+  <div id="title" style="display:none"></div>
+  <script type="module" src="/src/pw-main.js"></script>
 </body>
 </html>

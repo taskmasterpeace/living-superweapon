@@ -1,4 +1,7 @@
+import {migratePowerUpDef,migratePowerUpPicks,GENERIC_CUSTOM_POWER_UPS} from './power-up.js';
 import { flagFor } from './identities.js';
+import { carryAttackOverrides } from './attack-tuning.js';
+import {TELEPORT_TIERS} from './teleport-tuning.js';
 // THRESHOLD — ORIGIN, the character creator's rulebook. Point-buy D&D-for-superheroes:
 // attributes on the rank ladder with escalating costs, a catalog of engine-proven powers
 // (every ability config here is lifted from a shipped hero's kit — nothing unproven),
@@ -47,13 +50,15 @@ export const FLIGHT_TIERS = [
 export const GUARD_TYPES = [
   { v: 'block',   name: 'Block',   cost: 0,  d: 'standard frontal guard' },
   { v: 'barrier', name: 'Barrier', cost: 14, d: 'blocks ALL directions — drains ki' },
-  { v: 'deflect', name: 'Deflect', cost: 18, d: 'bullets & arrows bounce back at the shooter' },
+  { v: 'deflect', name: 'Deflect', cost: 18, d: 'front-facing shots return to sender — costs guard meter; grabs still beat it' },
 ];
 export const EVADE_KINDS = [
   { v: 'dash',   name: 'Dash',   cost: 0,  d: 'burst dash with i-frames' },
   { v: 'slide',  name: 'Slide',  cost: 0,  d: 'long frictionless slide' },
   { v: 'sprint', name: 'Sprint', cost: 4,  d: 'speed surge' },
-  { v: 'blink',  name: 'Blink',  cost: 10, d: 'short teleport' },
+  { v: 'blink-short', name: 'Snap Step', cost: 6, d: 'double-tap direction · 12u teleport · 6 ki · fast recovery' },
+  { v: 'blink',  name: 'Blink',  cost: 10, d: 'double-tap direction · 22u teleport · 8 ki · medium recovery' },
+  { v: 'blink-long', name: 'Rift Step', cost: 16, d: 'double-tap direction · 36u teleport · 14 ki · longer recovery' },
   { v: 'phase',  name: 'Phase',  cost: 14, d: 'slip through attacks (long i-frames)' },
 ];
 export const GIFTS = [
@@ -87,10 +92,10 @@ export const POWERS = [
   // movement tech — gear-priced per BALANCE.md (gear cheap, martial priced up)
   { id: 'grapnel',    name: 'Grapnel Line',   cat: 'gear', cost: 10, ab: { gear: true, type: 'grapple', name: 'Grapnel Line', cost: 8, cd: 1.1, range: 95, oneHand: true, color: '#ffd24a' } },
   // beams — hoses, never lasers
-  { id: 'heatray',    name: 'Energy Beam',       cat: 'beam', cost: 22, ab: { type: 'beam', name: 'Energy Beam', cost: 4, cd: 0.3, radius: 1.0, tipSpeed: 230, maxLen: 140, dps: 58, kiPerSec: 16, steer: 13, color: '#ff5a2a', color2: '#ffe08a' } },
-  { id: 'wavecannon', name: 'Heavy Beam',    cat: 'beam', cost: 30, ab: { type: 'beam', name: 'Heavy Beam', cost: 8, cd: 0.6, radius: 2.6, tipSpeed: 120, maxLen: 150, dps: 88, kiPerSec: 22, charge: true, maxCharge: 1.6, kiChargePerSec: 14, chargePower: 1.7, chargeWidth: true, steer: 9, color: '#7fd4ff', color2: '#eaffff' } },
-  { id: 'cryobeam',   name: 'Frost Beam',      cat: 'beam', cost: 18, ab: { type: 'beam', name: 'Frost Beam', cost: 5, cd: 0.4, radius: 1.6, tipSpeed: 170, maxLen: 130, dps: 46, kiPerSec: 18, steer: 10, color: '#7fd4ff', color2: '#eaffff' } },
-  { id: 'arcbeam',    name: 'Arc Beam',       cat: 'beam', cost: 20, ab: { type: 'beam', name: 'Arc Beam', cost: 4, cd: 0.3, radius: 1.0, tipSpeed: 250, maxLen: 140, dps: 58, kiPerSec: 16, steer: 15, color: '#eaffff', color2: '#ffe066' } },
+  { id: 'heatray',    name: 'Energy Beam',       cat: 'beam', cost: 22, ab: { type: 'beam', name: 'Energy Beam', cost: 4, cd: 0.3, radius: 1.0, tipSpeed: 994, maxLen: 140, dps: 58, kiPerSec: 16, steer: 13, color: '#ff5a2a', color2: '#ffe08a' } },
+  { id: 'wavecannon', name: 'Heavy Beam',    cat: 'beam', cost: 30, ab: { type: 'beam', name: 'Heavy Beam', cost: 8, cd: 0.6, radius: 2.6, tipSpeed: 518, maxLen: 150, dps: 88, kiPerSec: 22, charge: true, maxCharge: 1.6, kiChargePerSec: 14, chargePower: 1.7, chargeWidth: true, steer: 9, color: '#7fd4ff', color2: '#eaffff' } },
+  { id: 'cryobeam',   name: 'Frost Beam',      cat: 'beam', cost: 18, ab: { type: 'beam', name: 'Frost Beam', cost: 5, cd: 0.4, radius: 1.6, tipSpeed: 734, maxLen: 130, dps: 46, kiPerSec: 18, steer: 10, color: '#7fd4ff', color2: '#eaffff' } },
+  { id: 'arcbeam',    name: 'Arc Beam',       cat: 'beam', cost: 20, ab: { type: 'beam', name: 'Arc Beam', cost: 4, cd: 0.3, radius: 1.0, tipSpeed: 1080, maxLen: 140, dps: 58, kiPerSec: 16, steer: 15, color: '#eaffff', color2: '#ffe066' } },
   // blasts
   { id: 'kibolt',     name: 'Energy Bolt',        cat: 'blast', cost: 14, ab: { type: 'projectile', name: 'Energy Bolt', cost: 6, cd: 0.28, damage: 12, speed: 92, radius: 1.1, blast: 4.5, homing: 2, color: '#7fd4ff', color2: '#eaffff' } },
   { id: 'flare',      name: 'Homing Blast',  cat: 'blast', cost: 16, ab: { type: 'projectile', name: 'Homing Blast', cost: 8, cd: 0.5, damage: 18, speed: 78, radius: 1.5, blast: 7, homing: 2.4, color: '#ff8a3d', color2: '#ffd24a' } },
@@ -100,6 +105,8 @@ export const POWERS = [
   { id: 'boomaxe',    name: 'Returning Blade',  cat: 'blast', cost: 18, ab: { type: 'projectile', name: 'Returning Blade', cost: 10, cd: 0.9, damage: 22, speed: 110, radius: 1.3, blast: 6, boomerang: true, range: 62, color: '#7fd4ff', color2: '#fff' } },
   { id: 'volley',     name: 'Energy Volley',   cat: 'blast', cost: 18, ab: { type: 'volley', name: 'Energy Volley', cost: 3, interval: 0.07, damage: 7, speed: 112, radius: 0.85, blast: 3.6, spread: 0.1, color: '#6ea0ff', color2: '#eaffff' } },
   { id: 'bigbang',    name: 'Charged Orb',       cat: 'charge', cost: 26, ab: { type: 'charge', name: 'Charged Orb', cost: 6, cd: 1.0, kiPerSec: 12, maxCharge: 2.4, minR: 1.3, maxR: 6.2, dmgMin: 22, dmgMax: 84, maxBlast: 32, speedMin: 40, speedMax: 76, chargePower: 3, color: '#6ea0ff', color2: '#eaffff' } },
+  // Native forearm readiness/charge/emission gate; the shield stays private until interception works.
+  { id: 'nanite-cannon', name: 'Nanite Forearm Cannon', cat: 'charge', cost: 28, ab: { type: 'charge', name: 'Nanite Forearm Cannon', naniteForm: 'cannon', naniteAttachment: 'right-forearm', castStyle: 'palm', castHand: 'right', cost: 6, cd: 1.2, kiPerSec: 12, maxCharge: 1.8, minR: .55, maxR: 1.8, dmgMin: 20, dmgMax: 64, maxBlast: 18, speedMin: 65, speedMax: 105, chargePower: 2.2, color: '#ffd97a', color2: '#ffffff' } },
   // cones & fields
   { id: 'coldcone',   name: 'Frost Cone',  cat: 'cone', cost: 20, ab: { type: 'cone', name: 'Frost Cone', kiPerSec: 20, range: 38, arc: 1.15, dps: 26, cold: true, color: '#bfe9ff' } },
   { id: 'forcecone',  name: 'Force Cone',     cat: 'cone', cost: 16, ab: { type: 'cone', name: 'Force Cone', kiPerSec: 16, range: 32, arc: 1.25, dps: 16, push: 60, lift: 6, color: '#7fe6ff' } },
@@ -125,7 +132,7 @@ export const POWERS = [
   { id: 'smokebomb',  name: 'Smoke Bomb', cat: 'gear', cost: 8, ab: { gear: true, type: 'projectile', name: 'Smoke Bomb', cost: 6, cd: 1.6, damage: 4, speed: 70, radius: 1.2, blast: 5, grav: 8, canister: true, blind: { r: 14, dur: 2.8 }, color: '#8a8f99', color2: '#c9cfd9' } },
   // ---- TIER 1 (docs/POWERS_BRIEF.md Part Three): pure data, each honoring its written look ----
   { id: 'webline',    name: 'Web Line',           cat: 'mobility', cost: 8,  ab: { type: 'grapple', name: 'Web Line', cost: 5, cd: 0.7, range: 80, oneHand: true, web: true, color: '#e8e2d4' } },
-  { id: 'opticblast', name: 'Optic Blast',        cat: 'beam', cost: 24, ab: { type: 'beam', name: 'Optic Blast', cost: 4, cd: 0.25, radius: 0.55, tipSpeed: 260, maxLen: 150, dps: 62, kiPerSec: 17, steer: 14, faceOrigin: true, color: '#e01a2e', color2: '#ffffff' } },
+  { id: 'opticblast', name: 'Optic Blast',        cat: 'beam', cost: 24, ab: { type: 'beam', name: 'Optic Blast', cost: 4, cd: 0.25, radius: 0.55, tipSpeed: 3600, maxLen: 150, dps: 62, kiPerSec: 17, steer: 14, faceOrigin: true, color: '#e01a2e', color2: '#ffffff' } },
   { id: 'cardbarrage', name: 'Card Barrage',      cat: 'blast', cost: 16, ab: { type: 'volley', name: 'Card Barrage', cost: 3, interval: 0.09, damage: 8, speed: 118, radius: 0.8, blast: 4, spread: 0.14, card: true, dmgClass: 'slash', color: '#ff3b6b', color2: '#ffdcdc' } },
   { id: 'pumpkinbomb', name: 'Pumpkin Bomb',      cat: 'blast', cost: 16, ab: { type: 'projectile', name: 'Pumpkin Bomb', cost: 9, cd: 0.8, damage: 24, speed: 62, radius: 1.6, blast: 13, grav: 10, canister: true, pumpkin: true, shock: true, color: '#ff8a3d', color2: '#8fe08a' } },   // the carved face rides the shell
   { id: 'sonicscream', name: 'Sonic Scream',      cat: 'cone', cost: 18, ab: { type: 'cone', name: 'Sonic Scream', kiPerSec: 17, range: 36, arc: 1.1, dps: 14, push: 78, lift: 5, sonic: true, color: '#e8e2d4' } },
@@ -176,6 +183,7 @@ export const POWERS = [
   { id: 'mimicry',    name: 'Power Mimicry',      cat: 'command', cost: 36, ab: { type: 'mimic', name: 'Power Mimicry', cost: 15, cd: 30, range: 60, dur: 14, color: '#7fe6ff' } },
   { id: 'rideable',   name: 'Summon Rideable',    cat: 'move',    cost: 28, ab: { type: 'mount', name: 'Summon Rideable', cost: 12, cd: 24, speed: 96, dur: 26, color: '#1a1a1e', color2: '#ff6a1a' } },
   { id: 'shielddome', name: 'Energy Shield Bubble', cat: 'buff',  cost: 30, ab: { type: 'dome', name: 'Energy Shield Bubble', cost: 13, cd: 20, radius: 22, dur: 9, color: '#7fe6ff' } },
+  { id: 'nanite-shield', name: 'Nanite Forearm Shield', cat: 'buff', cost: 20, ab: { type: 'naniteShield', name: 'Nanite Forearm Shield', naniteForm: 'shield', naniteAttachment: 'left-forearm', cost: 0, cd: .2 } },
   { id: 'thermal',    name: 'Thermal Sense',      cat: 'buff',    cost: 20, ab: { type: 'vision', name: 'Thermal Sense', cost: 6, cd: 16, mode: 'thermal', dur: 10, color: '#ff8a3a' } },
   { id: 'xray',       name: 'X-Ray Sense',        cat: 'buff',    cost: 20, ab: { type: 'vision', name: 'X-Ray Sense', cost: 6, cd: 16, mode: 'xray', dur: 10, color: '#cfe6ff' } },
   { id: 'regenfac',   name: 'Regeneration Factor',cat: 'buff',    cost: 32, ab: { type: 'regen', name: 'Regeneration Factor', cost: 8, cd: 40, window: 4, hp: 0.45, color: '#8fe08a' } },
@@ -186,13 +194,14 @@ export const POWERS = [
   { id: 'willfist',   name: 'Force Fist',       cat: 'command', cost: 18, ab: { type: 'construct', name: 'Force Fist', cost: 14, cd: 5, construct: 'fist', duration: 11, color: '#5fe07a' } },
   { id: 'sentry',     name: 'Auto Turret',  cat: 'command', cost: 18, ab: { type: 'construct', name: 'Auto Turret', cost: 16, cd: 8, construct: 'turret', duration: 12, color: '#5fe07a' } },
   { id: 'wall',       name: 'Force Wall',   cat: 'command', cost: 12, ab: { type: 'construct', name: 'Force Wall', cost: 12, cd: 7, construct: 'wall', duration: 9, holdTrigger: true, color: '#7dff9e' } },
+  { id: 'willtank', name: 'Will Tank', cat: 'command', cost: 28, ab: { type: 'construct', name: 'Will Tank', construct: 'tank', cost: 24, cd: 8, duration: 12, moveSpeed: 12, turnRate: 1.8, damage: 18, interval: 1.2, speed: 90, range: 90, blast: 6, color: '#7dff9e' } },
   { id: 'tentacle',   name: 'Grasping Limbs',  cat: 'command', cost: 24, grants: { tentacles: true }, ab: { type: 'tentacle', name: 'Grasping Limbs', cost: 18, cd: 4.5, range: 36, holdT: 0.55, damage: 16, throwSpeed: 92, color: '#4affd4' } },
   { id: 'portal',     name: 'Portal Pair', cat: 'command', cost: 24, ab: { type: 'portal', name: 'Portal Pair', cost: 14, cd: 1.2, range: 85, dur: 14, colorA: '#ff8a2a', colorB: '#37c7ff' } },
   // support
   { id: 'powerbuff',  name: 'Power Surge',     cat: 'support', cost: 18, ab: { type: 'buff', name: 'Power Surge', cost: 26, cd: 20, mult: 1.6, dur: 11, color: '#ffe066', color2: '#fff' } },
   { id: 'huntersight', name: "Target Scan", cat: 'support', cost: 14, ab: { type: 'buff', name: "Target Scan", cost: 16, cd: 15, mult: 1.15, dur: 8, reveal: true, color: '#ffb03a', color2: '#fff' } },
   // ultimates — R slot only
-  { id: 'finalbeam',   name: 'Ultimate Beam', cat: 'beam', ult: true, cost: 34, ab: { type: 'beam', name: 'Ultimate Beam', cost: 24, cd: 14, radius: 3.4, tipSpeed: 150, maxLen: 170, dps: 130, kiPerSec: 30, charge: true, maxCharge: 2.0, kiChargePerSec: 20, chargePower: 2, chargeWidth: true, steer: 6, color: '#eaffa0', color2: '#ffffff' } },
+  { id: 'finalbeam',   name: 'Ultimate Beam', cat: 'beam', ult: true, cost: 34, ab: { type: 'beam', name: 'Ultimate Beam', cost: 24, cd: 14, radius: 3.4, tipSpeed: 648, maxLen: 170, dps: 130, kiPerSec: 30, charge: true, maxCharge: 2.0, kiChargePerSec: 20, chargePower: 2, chargeWidth: true, steer: 6, color: '#eaffa0', color2: '#ffffff' } },
   { id: 'meteorstorm', name: 'Orbital Barrage',  cat: 'artillery', ult: true, cost: 32, ab: { type: 'meteor', name: 'Orbital Barrage', cost: 34, cd: 18, count: 14, interval: 0.18, spread: 28, radius: 3, damage: 34, blast: 18, color: '#ff8a3d', color2: '#ffd24a' } },
   { id: 'growingorb',  name: 'Star Sphere',   cat: 'artillery', ult: true, cost: 32, ab: { type: 'growingorb', name: 'Star Sphere', cost: 20, cd: 16, minR: 5, maxR: 20, growRate: 8, kiPerSec: 16, color: '#9effcf', color2: '#eaffff' } },
   { id: 'overload',    name: 'Overload',      cat: 'support', ult: true, cost: 26, ab: { type: 'buff', name: 'Overload', cost: 30, cd: 22, mult: 1.7, dur: 12, heal: 40, color: '#ffd24a', color2: '#fff2c0' } },
@@ -252,7 +261,7 @@ const DOCTRINE_NAMES = { rusher: 'Rusher', beamer: 'Beam Artillery', artillery: 
 export function tally(picks) {
   const a = picks.attrs;
   const attrs = Object.values(a).reduce((s, v) => s + ATTR_COST[Math.max(1, Math.min(10, v))], 0);
-  const powers = Object.values(picks.slots).filter(Boolean).reduce((s, id) => s + (powerById(id)?.cost || 0), 0);
+  const powers = [...Object.values(picks.slots),picks.powerUp].filter(Boolean).reduce((s, id) => s + (powerById(id)?.cost || 0), 0);
   const traits =
     (FLIGHT_TIERS.find(f => f.v === picks.flightTier)?.cost || 0) +
     (GUARD_TYPES.find(g => g.v === picks.guardType)?.cost || 0) +
@@ -276,12 +285,14 @@ export function freshPicks() {
     attrs: { fgt: 4, agl: 4, mgt: 4, vig: 4, int: 4, awr: 4, res: 4 },
     flightTier: 0, guardType: 'block', evade: 'dash', meleeTiers: 3,
     gifts: [], talents: [], gadgets: [],
+    powerUp:null,powerUpSourceSlot:null,
     slots: { lmb: null, rmb: null, q: null, e: null, f: null, r: null },
   };
 }
 
 // ---- Assemble a ROSTER-compatible def from picks ----
 export function buildDef(picks, existingId) {
+  picks=migratePowerUpPicks(picks);
   const pal = PALETTES[picks.palette] || PALETTES[0];
   const t = tally(picks);
   const d = derived(picks.attrs);
@@ -316,11 +327,12 @@ export function buildDef(picks, existingId) {
     attrs: { ...picks.attrs }, talents: picks.talents.slice(0, 3),
     build: { ...(FRAMES[picks.frame]?.build || {}) },
     ...grants,
-    ai, evade: { kind: picks.evade },
+    ai, evade: TELEPORT_TIERS[picks.evade]?{...TELEPORT_TIERS[picks.evade]}:{ kind: picks.evade },
     items: picks.gadgets.map(gid => ({ ...(GADGETS.find(g => g.id === gid)?.item || {}) })).filter(i => i.kind),
     blurb: `${threat}-threat ${DOCTRINE_NAMES[ai.style] || 'fighter'} forged in ORIGIN. ` +
       Object.values(picks.slots).filter(Boolean).slice(0, 3).map(pid => powerById(pid).name).join(' · ') + '.',
     sig, abilities,
+    ...(picks.powerUp&&GENERIC_CUSTOM_POWER_UPS.includes(picks.powerUp)?{powerUp:{schema:1,sourceSlot:picks.powerUpSourceSlot??null,ability:{...powerById(picks.powerUp).ab}}}:{}),
   };
 }
 
@@ -328,10 +340,11 @@ export function buildDef(picks, existingId) {
 export function validate(picks) {
   const errs = [];
   if (!picks.name || !picks.name.trim()) errs.push('Name your weapon.');
-  if (!picks.slots.lmb || !picks.slots.rmb) errs.push('LMB and RMB powers are required.');
+  if (['lmb','rmb'].some(k=>!picks.slots[k]&&!(picks.powerUp&&picks.powerUpSourceSlot===k))) errs.push('LMB and RMB powers are required.');
+  if(picks.powerUp&&!GENERIC_CUSTOM_POWER_UPS.includes(picks.powerUp))errs.push('Choose an authored power-up form.');
   if (picks.slots.r && !powerById(picks.slots.r)?.ult) errs.push('R takes an ULTIMATE.');
   for (const k of ['lmb', 'rmb', 'q', 'e', 'f']) if (picks.slots[k] && powerById(picks.slots[k])?.ult) errs.push('Ultimates only fit the R slot.');
-  const ids = Object.values(picks.slots).filter(Boolean);
+  const ids = [...Object.values(picks.slots),picks.powerUp].filter(Boolean);
   if (new Set(ids).size !== ids.length) errs.push('Each power can only be taken once.');
   if (ids.includes('quiver') && !ids.includes('longbow')) errs.push('Quiver Switch needs the Longbow.');
   const b = BUDGETS.find(x => x.id === picks.budget);
@@ -343,28 +356,55 @@ export function validate(picks) {
 
 // ---- Persistence + roster install ----
 const LS_KEY = 'threshold_customs_v1';
-export function loadCustoms() {
-  try { return JSON.parse(localStorage.getItem(LS_KEY) || '[]').filter(c => c && c.def && c.def.id); }
+function readCustoms(storage) {
+  try {
+    const list = JSON.parse(storage.getItem(LS_KEY) || '[]');
+    if (!Array.isArray(list) || list.some(c => !c?.def?.id)) throw Error('Invalid records');
+    return list.map(c=>{const picks=migratePowerUpPicks(c.picks),id=picks?.powerUp,slot=picks?.powerUpSourceSlot;return {...c,picks,def:migratePowerUpDef(c.def,slot&&id?{slot,name:powerById(id)?.ab?.name}:undefined)};});
+  } catch (e) { throw Error(`Custom character storage could not be read; existing data was kept. ${e.message}`); }
+}
+export function loadCustoms(storage) {
+  try { return readCustoms(storage??localStorage); }
   catch { return []; }
 }
-function saveAll(list) { try { localStorage.setItem(LS_KEY, JSON.stringify(list)); } catch { /* storage full/blocked — play on */ } }
-export function saveCustom(picks, def, roster) {
-  const list = loadCustoms().filter(c => c.def.id !== def.id);
+function saveAll(list, storage=localStorage) { storage.setItem(LS_KEY, JSON.stringify(list)); }
+export function saveCustom(picks, def, roster, storage=localStorage) {
+  picks=migratePowerUpPicks(picks);
+  if(picks.powerUp&&picks.powerUpSourceSlot)def=migratePowerUpDef(def,{slot:picks.powerUpSourceSlot,name:powerById(picks.powerUp)?.ab?.name});
+  if (!def.isCustom || !def.id.startsWith('cx_') || roster.some(r => r.id===def.id && !r.isCustom)) throw Error('Cannot replace a shipped fighter.');
+  const records = readCustoms(storage), previous=records.find(c=>c.def.id===def.id);
+  const list = records.filter(c => c.def.id !== def.id);
+  // ORIGIN rebuilds gameplay from a recipe; a package may also carry authored presentation.
+  // Keep it when editing the kit, while allowing explicit ORIGIN palette choices to replace colors.
+  if(previous){
+    if(previous.def.model&&!def.model)def={...def,model:previous.def.model};
+    if(previous.def.frame&&!def.frame)def={...def,frame:previous.def.frame};
+    if(previous.def.model&&['palette','skin','cape'].every(k=>previous.picks?.[k]===picks[k]))def={...def,colors:previous.def.colors};
+    // ORIGIN rebuilds the kit from catalog picks. Carry Studio tuning only
+    // while the source attack identity still matches; a same-type replacement
+    // is still a different attack and must start at its own catalog values.
+    const livePrevious=roster.find(r=>r.id===def.id&&r.isCustom);
+    if(!def.effects&&(livePrevious?.effects||previous.def.effects))def={...def,effects:structuredClone(livePrevious?.effects||previous.def.effects)};
+    if(!def.progression&&(livePrevious?.progression||previous.def.progression))def={...def,progression:livePrevious?.progression||previous.def.progression};
+    def=carryAttackOverrides(livePrevious||previous.def,def);
+    const oldForm=(livePrevious||previous.def).powerUp;
+    if(oldForm&&def.powerUp&&previous.picks?.powerUp===picks.powerUp&&oldForm.ability.name===def.powerUp.ability.name)def={...def,powerUp:structuredClone(oldForm)};
+  }
   list.push({ v: 1, picks, def });
-  saveAll(list);
+  saveAll(list, storage);
   const i = roster.findIndex(r => r.id === def.id);
   if (i >= 0) roster[i] = def; else roster.push(def);
   return def;
 }
-export function deleteCustom(id, roster) {
-  saveAll(loadCustoms().filter(c => c.def.id !== id));
+export function deleteCustom(id, roster, storage=localStorage) {
+  if (!id.startsWith('cx_') || roster.some(r => r.id===id && !r.isCustom)) throw Error('Cannot delete a shipped fighter.');
+  saveAll(readCustoms(storage).filter(c => c.def.id !== id), storage);
   const i = roster.findIndex(r => r.id === id);
   if (i >= 0) roster.splice(i, 1);
 }
-export function installCustoms(roster) {
-  for (const c of loadCustoms()) {
+export function installCustoms(roster, storage) {
+  for (const c of loadCustoms(storage)) {
     try { if (!roster.some(r => r.id === c.def.id)) roster.push(c.def); }
     catch { /* one bad save never blocks boot */ }
   }
 }
-

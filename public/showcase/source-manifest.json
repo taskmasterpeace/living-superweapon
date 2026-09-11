@@ -1,0 +1,55 @@
+{
+  "title": "Living Superweapon — native gameplay showcase",
+  "output": "living-superweapon-gameplay.mp4",
+  "poster": "living-superweapon-poster.jpg",
+  "scope": "Work-in-progress gameplay from native-input Practice recordings. Targets are passive practice constructs, not hostile AI combat evidence.",
+  "audio": "Silent. Source clips contain video only; no music or sound effects were added.",
+  "editing": {
+    "speed": 1,
+    "transition": "0.30-second cross dissolves",
+    "resolution": "1280x720",
+    "fps": 25,
+    "codec": "H.264, CRF 22, yuv420p, faststart",
+    "alterations": "Trims, proportional downscale, letterbox where needed, text labels, dissolves, opening/closing fades. No generated footage, gameplay alterations, camera repositioning, or time remapping."
+  },
+  "clips": [
+    {
+      "source": "artifacts/surface-wake-native-06/native-flight-and-editor.webm",
+      "in": 9.0,
+      "out": 19.0,
+      "label": "FLIGHT / ALTITUDE",
+      "shows": "Running, takeoff, prone forward flight, turning and hovering above the practice ground.",
+      "evidence": "artifacts/surface-wake-native-06/results.json"
+    },
+    {
+      "source": "artifacts/fighter-environment-native-runup/native-environment-contact.webm",
+      "in": 7.0,
+      "out": 16.4,
+      "label": "BUILT WORLD / TRAVERSAL",
+      "shows": "Native keyboard flight across the existing environment toward a building and its rooftop.",
+      "evidence": "artifacts/fighter-environment-native-runup/results.json"
+    },
+    {
+      "source": "artifacts/precision-rifle-civilian-fix-native/precision-rifle.webm",
+      "in": 13.0,
+      "out": 27.0,
+      "label": "PRECISION FIRE",
+      "shows": "Aiming and rifle shots toward passive range targets, with in-game hit feedback.",
+      "evidence": "artifacts/precision-rifle-civilian-fix-native/results.json"
+    },
+    {
+      "source": "artifacts/beam-wave-short-diagnostic/native-beam-contact.webm",
+      "in": 13.5,
+      "out": 18.3,
+      "label": "SUSTAINED BEAM / IMPACT",
+      "shows": "A held beam contacting a passive practice target, damage feedback and the in-game KO camera.",
+      "evidence": "artifacts/beam-wave-short-diagnostic/results.json"
+    }
+  ],
+  "limitations": [
+    "Edited excerpts from separate recorded sessions; not one continuous match.",
+    "These recordings do not establish hostile-AI behavior, airborne melee, grapple or production network play.",
+    "Background aircraft can appear incidentally; aircraft gameplay is not featured.",
+    "Loading and editor portions of the source recordings are excluded."
+  ]
+}

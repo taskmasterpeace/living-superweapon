@@ -2,30 +2,37 @@
 // Every binding a scheme owns lives HERE (engine + help panel both read it), so a scheme can never
 // drift out of sync with what the game tells you the buttons are. ⚠ No two keys in one scheme may
 // collide — guard and gadget in particular (X was doing both jobs at once before this was data).
-//   CLASSIC  — what shipped: the wheel swaps hero.
+//   All layouts: wheel primary, RMB + wheel secondary; never wheel-swap heroes.
 //   PILOT    — the wheel picks the POWER you fire with LMB; hero swap moves to [ ]; Space/C flight.
 //   HYBRID   — PILOT's wheel + bracket swap, but guard/gadget stay on the old C/X muscle memory.
 export const KEYMAPS = {
+  arena: {
+    name:'ARENA',wheel:'ability',digitsSwap:false,mouseMelee:true,
+    up:'Space',down:'KeyZ',guard:'KeyC',item:'KeyX',strike:'KeyV',grab:'KeyG',fly:'KeyF',
+    upLabel:'SPACE',downLabel:'Z',guardLabel:'C / MOUSE4',itemLabel:'X',swapLabel:'[ ]',flyLabel:'F',
+    strikeLabel:'LMB (MELEE)',grabLabel:'RMB (MELEE) / G',
+    blurb:'Wheel selects the LMB attack. Hold RMB + wheel selects the RMB attack. V readies melee: LMB punch/heavy, RMB grab/throw. C blocks. Release after selecting, then click to fire. F flies; [ ] swaps hero.',
+  },
   classic: {
-    name: 'CLASSIC', wheel: 'hero', digitsSwap: true,
+    name: 'CLASSIC', wheel: 'ability', digitsSwap: true,
     up: 'Space', down: 'KeyZ', guard: 'KeyC', item: 'KeyX', strike: 'KeyV', grab: 'KeyG', fly: 'KeyF',
-    upLabel: 'SPACE', downLabel: 'Z', guardLabel: 'C / MOUSE4', itemLabel: 'X', swapLabel: 'WHEEL · 1–0', flyLabel: 'F',
+    upLabel: 'SPACE', downLabel: 'Z', guardLabel: 'C / MOUSE4', itemLabel: 'X', swapLabel: '[ ] · 1–0', flyLabel: 'F',
     strikeLabel: 'V', grabLabel: 'G',
-    blurb: 'What shipped. The wheel (and 1–0) swaps hero · Z descends · C guards · X gadget. SPACE JUMPS on the ground and flies in the air (hold past the apex to take off); Z also CROUCHES on foot.',
+    blurb: 'Wheel selects LMB attack; hold RMB + wheel selects RMB attack. Tap RMB to fire on release, hold to charge or sustain. V punches, G grabs, C guards, X gadget. [ ] or 1–0 swaps hero. SPACE jumps/rises; Z descends/crouches.',
   },
   pilot: {
     name: 'PILOT', wheel: 'ability', digitsSwap: false,
     up: 'Space', down: 'KeyC', guard: 'KeyX', item: 'KeyZ', strike: 'KeyV', grab: 'KeyG', fly: 'KeyF',
     upLabel: 'SPACE', downLabel: 'C', guardLabel: 'X / MOUSE4', itemLabel: 'Z', swapLabel: '[ ]', flyLabel: 'F',
     strikeLabel: 'V', grabLabel: 'G',
-    blurb: 'The wheel picks your POWER and LMB fires it · [ ] swaps hero · SPACE up, C down · X guards, Z gadget. SPACE JUMPS on the ground and flies in the air (hold past the apex to take off); C also CROUCHES on foot.',
+    blurb: 'Wheel selects LMB attack; RMB + wheel selects RMB attack. Release after selecting, then click to fire. [ ] swaps hero; SPACE up, C down; X guards, Z gadget.',
   },
   hybrid: {
     name: 'HYBRID', wheel: 'ability', digitsSwap: false,
     up: 'Space', down: 'KeyZ', guard: 'KeyC', item: 'KeyX', strike: 'KeyV', grab: 'KeyG', fly: 'KeyF',
     upLabel: 'SPACE', downLabel: 'Z', guardLabel: 'C / MOUSE4', itemLabel: 'X', swapLabel: '[ ]', flyLabel: 'F',
     strikeLabel: 'V', grabLabel: 'G',
-    blurb: 'PILOT’s wheel-select and [ ] hero swap, with guard and gadget left on C and X. SPACE JUMPS on the ground and flies in the air (hold past the apex to take off); Z also CROUCHES on foot.',
+    blurb: 'Wheel selects LMB attack; RMB + wheel selects RMB attack. [ ] swaps hero; C guards, X gadget. SPACE jumps/rises; Z descends/crouches.',
   },
   // ⚠ BRAWLER — Robert: *"i dont know how to do melee with my keyboard bro its hard."* He is right,
   // and the reason is physical: with fingers on WASD, STRIKE on V is reachable and GRAB on G is not.
@@ -40,7 +47,7 @@ export const KEYMAPS = {
     up: 'Space', down: 'KeyZ', guard: 'KeyC', item: 'KeyX', strike: 'KeyF', grab: 'KeyV', fly: 'KeyG',
     upLabel: 'SPACE', downLabel: 'Z', guardLabel: 'C / MOUSE4', itemLabel: 'X', swapLabel: '[ ]', flyLabel: 'G',
     strikeLabel: 'F', grabLabel: 'V',
-    blurb: 'For fist fights. The whole melee trifecta sits under your left hand — F punch, C guard, V grab — so you never leave WASD. SPACE JUMPS on the ground and flies in the air (hold past the apex to take off); Z also CROUCHES on foot.',
+    blurb: 'F punch, C guard, V grab. Wheel selects LMB attack; RMB + wheel selects RMB attack. Release after selecting, then click to fire. G flies; SPACE jumps/rises; Z descends/crouches; [ ] swaps hero.',
   },
 };
 // Resolve a stored scheme name (tolerates the early 'southpaw' build) to a live map.
@@ -64,7 +71,7 @@ export const SETTINGS = {
   shake: 1,         // screen-shake multiplier 0–1.5
   lookSens: 1,      // PowerWorld mouse-look sensitivity — a multiplier on the 0.0024 rad/px base (0–3)
   dmgNumbers: true, // floating damage numbers
-  hints: true,      // bottom-right controls hint panel
+  hints: false,     // F1 opens the full control reference; keep the fight unobscured by default.
   scheme: 'classic',// control layout: classic | pilot | southpaw (see KEYMAPS in hud.js)
   aimAssist: true,  // magnet targeting near the cursor (facing + attacks steer to the pick)
   spacingRings: false,  // THE SPACING UI (manual §38): your three strike reaches, drawn on the ground
@@ -78,15 +85,18 @@ export const SETTINGS = {
   // can take the whole look in one click and then argue with any single part of it.
   // ⚠ 'off' is a real preset and it is exactly the pipeline as it shipped — the pass disables itself
   // when nothing is on, so choosing OFF costs a uniform test, not a blit.
-  look: 'broadcast',
-  fxInk: 0.85, fxHalftone: 0.55, fxLevels: 0, fxGrain: 0.30,
+  look: 'hero',
+  fxInk: 0.16, fxHalftone: 0, fxLevels: 0, fxGrain: 0.025,
   fxTilt: 0, fxDither: 0.35, fxGrade: 1, fxImpact: true, fxSpeedLines: true,
-  fxVibrance: 0.35, fxSaturation: 0, fxRim: 0.8,
+  fxVibrance: 0.12, fxSaturation: 0, fxRim: 0.25,
   heroVoice: false, // DBZ yell/grunt/KO-wail synths — OFF by ruling ('no LSW talking')  // match cold-open: 'full' (cinematic, 1 of 10) | 'quick' (the card) | 'off'
 };
 
 export function loadSettings() {
   try { Object.assign(SETTINGS, JSON.parse(localStorage.getItem(LS) || '{}')); } catch { /* fresh */ }
+  // Refresh the old shipped look once; preserve deliberately selected alternative/custom looks.
+  if (!SETTINGS.heroLookRevision && SETTINGS.look === 'broadcast') SETTINGS.look='hero';
+  SETTINGS.heroLookRevision=1;
   return SETTINGS;
 }
 export function saveSettings() {
@@ -114,6 +124,8 @@ export function saveSettings() {
 // which is for the screenshot. Same reasoning as the LeFevre threat words and the recovery tiers —
 // this project prints a WORD wherever a number would make somebody do arithmetic.
 export const LOOK_PRESETS = {
+  hero:       { _n: 'HERO', _d: 'Clean character lighting, fine contours and restrained grain. Built for motion.', fetch: 8,
+                ink: 0.16, halftone: 0, levels: 0, grain: 0.025, tilt: 0, dither: 0.15, grade: 0.35, vibrance: 0.12, saturation: 0 },
   off:        { _n: 'OFF',        _d: 'The renderer as it ships. The pass switches itself off entirely.', fetch: 0,
                 ink: 0, halftone: 0, levels: 0, grain: 0, tilt: 0, dither: 0, grade: 0, vibrance: 0, saturation: 0 },
   street:     { _n: 'STREET',     _d: 'Bare metal for a weak GPU — colour only, no per-pixel work.', fetch: 0,

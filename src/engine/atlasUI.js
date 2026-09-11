@@ -4,6 +4,7 @@
 // The planner stays pure (data/cityplan.js — zero Three.js); this file is UI + world-driving only.
 // Styling lives in src/styles/overlays.css, linked by BOTH pages — never inject a copy here.
 import { cityList } from '../data/cities.js';
+import {unitsToMeters} from '../core/world-units.js';
 import { climateLine } from '../data/climate.js';
 import {
   generatePlan, applyPlanEdits, thresholdPlan, validatePlan, popLabel,
@@ -257,7 +258,7 @@ export function mountAtlas(host, opts = {}) {
             <div class="atstep">
               <span>CELL</span>
               <button class="atsm" data-step="C-8">−</button><b>${plan.cell}u</b><button class="atsm" data-step="C8">+</button>
-              <span class="atdim">${plan.arena * 2}u ACROSS · ${(plan.arena * 2 * 0.19).toFixed(0)}m</span>
+              <span class="atdim">${plan.arena * 2}u ACROSS · ${unitsToMeters(plan.arena * 2).toFixed(0)}m</span>
             </div>
             <div class="atstep">
               <span>PEOPLE</span>

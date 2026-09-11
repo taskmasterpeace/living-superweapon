@@ -1,8 +1,28 @@
+import {BeamGroundContact} from './beam-ground-contact.js';
 // WAR WORLD: ASCENDANTS — projectiles, beam-hoses (wave cannon), and spirit-bomb lobs.
 import { domeBlocks } from './systems2.js';
+import {hasCivilians} from '../data/modes.js';
+import {resolveThrowRelease} from './throwable-action.js';
 import { BUILD_LOOK, TEMPER_LOOK } from '../data/visual.js';
+import {createBeamMaterials,createBeamSourceMaterial} from './beam-surface.js';
+import { BeamCurve } from './beam-curve.js';
+import { beamPathsTouch, pinBeamContact } from './beam-contact.js';
+import {beamBodyContact} from './beam-body-contact.js';
+import { queueHitReaction } from './hit-reaction.js';
+import {handEmissionPosition,palmCastSide} from './hand-emission.js';
+import {firearmEmitter} from './weapon-emission.js';
+import {powerEmissionPosition} from './power-emission.js';
+import {naniteEmitter,hasNaniteCells,validNaniteContact} from './nanite-forearms.js';
+import {withNaniteDamageAdmission} from './damage-admission.js';
+import {naniteUseReason} from './nanite-pose.js';
+import { remoteInterrupted } from './remote-control.js';
+import {AXIAL_COFIRE_CONE} from './aim-limits.js';
+import { sweepSplitObstacle, coverBoxEntry, terrainEntry } from './projectile-contact.js';
+import { earliestOrdinaryContact, sweptPairTime, sweptBeamTime, priorityEnabled } from './attack-interception.js';
 import * as THREE from 'three';
-import { clamp, rand, TAU, PW_KB } from '../core/util.js';
+import {registerShieldContact} from './shield-surface.js';
+import { clamp, lerp, rand, TAU, PW_KB } from '../core/util.js';
+import {applyWebControl,canApplyWebControl} from './web-control.js';
 
 const UP = new THREE.Vector3(0, 1, 0);
 const _wind = new THREE.Vector3();
@@ -42,7 +62,6 @@ const GEO_ORB_HI = new THREE.SphereGeometry(1, 20, 16);
 const GEO_CYL = new THREE.CylinderGeometry(1, 1, 1, 16, 1, true);
 const MAT_CORE = new THREE.MeshBasicMaterial({ color: '#ffffff' });
 const MAT_GLOW_PROTO = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending, depthWrite: false });
-const MAT_BEAM_PROTO = new THREE.MeshBasicMaterial({ transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
 function glowMat(color, opacity = 0.5) { const m = MAT_GLOW_PROTO.clone(); m.color.set(color); m.opacity = opacity; return m; }
 // THE MARLETTA — a serene glowing face, painted once (canvas), billboarded on the projectile.
 let _faceTex = null;
@@ -92,11 +111,36 @@ const _AZ = new THREE.Vector3(0, 0, 1);   // bullets are built along +Z (see GEO
 class Projectile {
   constructor(game, caster, o) {
     this.game = game; this.caster = caster; this.team = caster.team;
+    this.launchCover=o.ballistic&&o.launchCover?.frontlineVehicle?o.launchCover:null;
+    this.launchCaster=this.launchCover?caster:null;
     this.pos = new THREE.Vector3().copy(o.pos);
+    this.handOrigin=o.handOrigin===-1||o.handOrigin===1?o.handOrigin:null;
+    this.emitterSocket=o.emitterSocket||null;
+    this._emitterDef=o.emitterDef||null;
+    this._powerOrigin=o.powerOrigin||null;
+    this.charged=!!o.powerOrigin;
+    this._launchFlash=o.launchFlash;
+    this._naniteRelease=o.naniteRelease||null;
+    this._launchResolved=false;
+    this._launchTarget=(this.handOrigin!==null||this._powerOrigin)&&o.launchTarget?o.launchTarget.clone():null;
+    this._launchSpread=Number.isFinite(o.launchSpread)?o.launchSpread:0;
+    this._launchPitch=Number.isFinite(o.launchPitch)?o.launchPitch:0;
     this.vel = new THREE.Vector3().copy(o.vel);
     this.radius = o.radius || 1.4;
     this.damage = o.damage || 12;
-    this.blast = (o.blast || this.radius * 2.4) * ((caster.sheet && caster.sheet.blastMult) || 1);   // Demolitionist widens it
+    this.collisionPriority = Number.isInteger(o.collisionPriority) && o.collisionPriority >= 0 && o.collisionPriority <= 16 ? o.collisionPriority : -1;
+    this.blast = (o.blast ?? this.radius * 2.4) * (o.blastScaled ? 1 : ((caster.sheet && caster.sheet.blastMult) || 1));   // children inherit the already-scaled parent
+    this.splitCount = Number.isInteger(o.splitCount) && o.splitCount>=2 && o.splitCount<=8 ? o.splitCount : 0;
+    this.splitSpread = clamp(Number.isFinite(o.splitSpread)?o.splitSpread:.55,0,1.4);
+    this.splitSpeed = clamp(Number.isFinite(o.splitSpeed)?o.splitSpeed:90,20,2000);
+    this.splitHoming = clamp(Number.isFinite(o.splitHoming)?o.splitHoming:3,0,100);
+    this._max = o.maxSpeed;                       // explicitly capped homing children; legacy shots unchanged
+    this._guidedSplit = o.guidedSplit===true;
+    if(this._guidedSplit){
+      this._homeDir=new THREE.Vector3();this._homeTarget=new THREE.Vector3();
+      this._homeRotation=new THREE.Quaternion();this._homeStep=new THREE.Quaternion();
+      this._homeEnd=new THREE.Vector3();this._obstacleContact={t:0,ground:false};
+    }
     this.boomerang = !!o.boomerang; this._return = false; this._range = o.range || 55; this._flown = 0; this._rehitT = 0;
     this.power = o.power || 1;                     // scales fx / shake
     this.vis = o.vis || null;                      // the visual contract profile (Phase Zero)
@@ -114,7 +158,8 @@ class Projectile {
     this.trailT = 0;
     this.dead = false;
 
-    this.arrow = !!o.arrow; this.payload = o.payload || null; this.blind = o.blind;
+    this.arrow = !!o.arrow; this.payload = o.payload || null; this.webControl=o.webControl||null; this.blind = o.blind;
+    this._webControlSourceEpoch=this.webControl?(caster._webControlEpoch||0):0;this._webControlInterrupted=false;
     this.bullet = !!o.bullet;                      // real ballistics read as METAL, not energy
     this.ballistic = !!o.ballistic; this.weapon = o.weapon || null;   // drives the armour/toughness scale
     this.dtype = o.dtype || null; this.siphon = o.siphon;              // damage type rides the projectile
@@ -131,6 +176,12 @@ class Projectile {
       this.obj.scale.setScalar(this.radius);
       this.obj.position.copy(this.pos); game.scene.add(this.obj);
       this.light = game.vfx.borrowLight(this.color, 4 * this.power, this.radius * 14);
+    } else if(this.webControl){
+      // A web shot is a traveling knot of filament, never an energy orb or explosive shell.
+      const knot=new THREE.Mesh(new THREE.IcosahedronGeometry(1,1),new THREE.MeshBasicMaterial({color:this.color,wireframe:true,transparent:true,opacity:.9}));
+      const ring=new THREE.Mesh(new THREE.TorusGeometry(1.25,.09,5,14),new THREE.MeshBasicMaterial({color:this.color2,transparent:true,opacity:.72,depthWrite:false}));
+      ring.rotation.x=Math.PI/2;this.obj=new THREE.Group();this.obj.add(knot,ring);this.obj.scale.setScalar(this.radius);this.obj.position.copy(this.pos);game.scene.add(this.obj);
+      this._spin=this.obj;this._ownMats=[knot.material,ring.material];this._ownGeos=[knot.geometry,ring.geometry];this._throwGeometry=null;this.light=null;
     } else if (this.bullet) {
       // A BULLET, not a ball of light: a tiny brass slug with a hot tracer streak drawn BEHIND it.
       // Stretched along travel, no bloom halo — it must not read like a ki blast.
@@ -142,8 +193,14 @@ class Projectile {
       // the flash (and gives rifles a proper tracer too). Base geo is 9u long, centred on z.
       const spd = this.vel ? this.vel.length() : 150;
       const st = Math.max(0.9, Math.min(2.6, spd / 90));    // ~1.7× for a 150u pellet, ~1.9× for a 170u rifle round
-      tracer.scale.set(1, 1, st);
-      tracer.position.z = -1.2 - 4.5 * st;         // wide end at the slug's tail, tapering into the streak behind
+      // The overhead city needs exaggerated rounds. At a third-person shoulder
+      // those same meshes become forearm-thick rods. Keep the readable streak
+      // length, but give open-sky heroes and clone rifles a compact cross-section.
+      // Collision radius, speed, damage and shared resource ownership are untouched.
+      const closeView=!!(caster._openSky||caster._frontlineClone||caster._frontlineVehicle);
+      if(closeView)slug.scale.set(.18,.18,.24);
+      tracer.scale.set(closeView?.16:1,closeView?.16:1,st);
+      tracer.position.z = -(closeView?.25:1.2) - 4.5 * st;
       this.obj = new THREE.Group(); this.obj.add(slug, tracer);
       this.obj.position.copy(this.pos); game.scene.add(this.obj);
       this._tracer = tracer; this._ownMats = [];       // slug + tracer mats are SHARED — never dispose
@@ -185,6 +242,11 @@ class Projectile {
       this.obj.scale.setScalar(Math.max(0.6, this.radius * 0.9));
       this.obj.position.copy(this.pos); game.scene.add(this.obj);
       this.light = null;
+    } else if (this.canister && o.throwMesh) {
+      // Transfer the exact shell from the final hand socket. No size/model pop
+      // at release; ordnance now owns its resources through impact or cleanup.
+      this.obj=o.throwMesh;game.scene.attach(this.obj);this.obj.position.copy(this.pos);
+      this._ownMats=[this.obj.material];this._throwGeometry=this.obj.geometry;this.light=null;
     } else if (this.canister) {
       // A GRENADE IS A SHELL, not a ki orb: drab body tumbling through the lob, blinking fuse LED
       // in the payload's colour — the one honest tell of what it will do when it lands.
@@ -233,14 +295,25 @@ class Projectile {
   }
 
   // The Marletta has ARRIVED: she stops, hangs in the air, trembles... then goes off.
-  _arm(game) {
-    this._armed = true; this._armT = this.armDelay;
+  _arm(game,hitGround=false) {
+    this._armed = true; this._armedGround=hitGround; this._armT = this.armDelay;
     this.vel.set(0, 0, 0);
     game.audio.zap(880); game.audio.zap(220); game.world.shake(0.3);
     game.vfx.ring(this.pos.clone(), { color: this.color, r0: this.radius, r1: this.radius * 4, life: 0.3 });
   }
 
-  update(dt, game) {
+  update(dt, game, substep=false) {
+    if(this.webControl&&!this._webControlInterrupted){
+      const source=this.caster;
+      if(!source?.alive||source._formDisposed||source._webControlEpoch!==this._webControlSourceEpoch||source.staggerT>0||source.stunT>0||source.frozenT>0||source.grabbedBy)this._webControlInterrupted=true;
+    }
+    if(this._guidedSplit && !substep){
+      // A fast child must not jump over a body or thin wall between rendered
+      // frames. The normal collision path runs at each short traveled interval.
+      const steps=Math.max(1,Math.ceil(dt*120),Math.ceil(this.vel.length()*dt/2));
+      for(let i=0;i<steps;i++)if(!this.update(dt/steps,game,true))return false;
+      return true;
+    }
     // A STUCK BOMB rides its host (brief T2.4): it conforms to the body instead of floating
     // beside it, and the fuse ACCELERATES so the blink rate is the warning.
     if (this._stuckTo) {
@@ -265,23 +338,131 @@ class Projectile {
       if (this._faceSpr) this._faceSpr.material.color.setRGB(1, 1 - k * 0.45, 1 - k * 0.65);   // serene → burning
       if (this.light) this.light.intensity = 4 * this.power * (1 + k * 2.5);
       if (Math.random() < 0.6) game.particles.spawn({ x: this.pos.x + rand(-1, 1) * this.radius * 2, y: this.pos.y + rand(-1, 1) * this.radius * 2, z: this.pos.z + rand(-1, 1) * this.radius * 2, vx: 0, vy: 3, vz: 0, life: 0.3, size: 2.2, color: [this.color, '#fff'], drag: 1, shrink: true });
-      if (this._armT <= 0) return this._impact(game, this.pos.y < 3);
+      if (this._armT <= 0) return this._impact(game, this._armedGround || (!game.world._ghTriangles && this.pos.y < 3));
       return true;
     }
+    if (!this.prepareMotion(dt, game)) return false;
+    if(this._guidedSplit){
+      this._homeEnd.copy(this.pos).addScaledVector(this.vel,dt);
+      if(sweepSplitObstacle(game.world,this.pos,this._homeEnd,this.radius,this._obstacleContact,this.ground)){
+        this.pos.lerp(this._homeEnd,this._obstacleContact.t);
+        if(this.ballistic&&this._obstacleContact.kind==='cover')this._obstacleContact.target.onConstructHit?.(this.damage*this.caster.powerBuff,{src:this.caster,pos:this.pos.clone(),lane:'projectile'});
+        return this._impact(game,this._obstacleContact.ground);
+      }
+      // Simple guided children retain the obstacle-first native route above.
+      // Only a live hostile module enrolls their remaining short interval in
+      // local contacts. Special payload/return families keep their old policy.
+      if(!this.stick&&!this.armDelay&&!this.boomerang&&!this.pierce&&(game.entities||[]).some(f=>game.isFoe(this.caster,f)&&hasNaniteCells(f))){
+        let left=dt;const ignored=new Set();
+        while(left>1e-12){
+          this._homeEnd.copy(this.pos).addScaledVector(this.vel,left);
+          const contact=earliestOrdinaryContact(this,this._homeEnd,left,game,ignored),elapsed=left*(contact?.t??1);
+          if(elapsed>0&&!this.advancePrepared(elapsed,game))return false;
+          left-=elapsed;
+          // Explicit none is important: a deferred generous body cylinder must
+          // not reappear through the old endpoint overlap fallback. Expiry was
+          // already considered on the same finite interval by the query.
+          if(!this.commitContact(game,contact||{kind:'none'}))return false;
+          if(!contact)break;
+          ignored.add(contact.target||contact.kind);
+        }
+        return true;
+      }
+    }
+    if (!this.advancePrepared(dt, game)) return false;
+    return this.commitContact(game);
+  }
+
+  resolveLaunch(game) {
+    if(this.dead)return;
+    // Input precedes Fighter._animate. Resolve once AFTER that final pose, before
+    // any swept collision/travel. Never drag already-emitted energy with the hand.
+    if((this.handOrigin!==null||this._powerOrigin)&&!this._launchResolved){
+      if(this._powerOrigin?.naniteForm==='cannon'){
+        const source=this._powerOrigin,emitter=naniteEmitter(this.caster,source.slot,source.epoch);
+        const reason=naniteUseReason(this.caster,source.slot,this._launchTarget),at=emitter?.socket.getWorldPosition(new THREE.Vector3());
+        const desired=at?(this._launchTarget?this._launchTarget.clone().sub(at):this.vel.clone()):null;
+        const tooClose=this._launchTarget&&desired&&desired.length()<=this.radius;
+        desired?.normalize();
+        if(reason||!emitter||!desired||tooClose||emitter.axis.angleTo(desired)>Math.PI/60){
+          if(this.caster.slots[source.slot])this.caster.slots[source.slot]._naniteDenied=reason||'obstructed';
+          if(game.isHuman?.(this.caster))game.hud?.feed(reason==='occupied'?'Forearm occupied':reason&&reason!=='obstructed'?`Cannon ${reason}`:'Muzzle obstructed','#d9b86b');
+          this._dispose(game);return;
+        }
+      }
+      this._launchResolved=true;
+      // Forms can replace a native weapon between input and the final pose.
+      // Reacquire its semantic attachment rather than sampling a retired rig.
+      const socket=this._emitterDef?firearmEmitter(this.caster,this._emitterDef).socket:this.emitterSocket;
+      if(this._powerOrigin){
+        powerEmissionPosition(this.caster,this._powerOrigin,this.pos,this._launchTarget);
+        const aperture=new THREE.Vector3(),contact={};
+        powerEmissionPosition(this.caster,{...this._powerOrigin,radius:0},aperture,this._launchTarget);
+        if(this._launchTarget){
+          const speed=this.vel.length(),aim=this._launchTarget.clone().sub(aperture);
+          if(aim.lengthSq()>1e-8)this.vel.copy(aim).setLength(speed);
+          this._launchTarget=null;
+        }
+        // Growing radius is not permission to relocate energy through a wall.
+        // The normal swept-contact step consumes a blocked launch immediately.
+        if(sweepSplitObstacle(game.world,aperture,this.pos,this.radius,contact,true,this.radius))this.pos.lerpVectors(aperture,this.pos,Math.max(0,contact.t-1e-5));
+      }
+      else if(socket)socket.getWorldPosition(this.pos);
+      else handEmissionPosition(this.caster,this.handOrigin,this.pos);
+      if(this._launchTarget){
+        const speed=this.vel.length();this._launchTarget.sub(this.pos);
+        if(this._launchTarget.lengthSq()>1e-8){
+          this.vel.copy(this._launchTarget).normalize().applyAxisAngle(UP,-this._launchSpread);
+          this.vel.y+=this._launchPitch;this.vel.setLength(speed);
+        }
+        this._launchTarget=null;
+      }
+      this.launchOrigin=this.pos.clone();this.obj.position.copy(this.pos);
+      if(this._naniteRelease){const cue=this._naniteRelease;game.audio.kiRelease(cue.sound,this.caster.pos);game.world.punch(cue.punch);game.world.shake(cue.shake);this._naniteRelease=null;}
+      if(this.light)this.light.position.copy(this.pos);
+      if(this._powerOrigin&&this._launchFlash)game.vfx.flash(this.pos,this._launchFlash.color,this._launchFlash.size,this._launchFlash.life);
+      else if(this._launchFlash!==false)game.muzzleFlash?.(this.caster,this._launchFlash?.color||this.color,this._launchFlash?.scale??.6,undefined,this.pos);
+      this.emitterSocket=null;this._emitterDef=null;this._powerOrigin=null;
+    }
+  }
+
+  // A steering interval is prepared once. The manager may commit several
+  // fractional advances without applying gravity, wind or homing again.
+  prepareMotion(dt, game) {
+    this.resolveLaunch(game);
+    if(this.dead)return false;
+    if(this._stuckTo){
+      const h=this._stuckTo;
+      this.pos.set(h.pos.x+this._stickOff.x,h.pos.y+this._stickOff.y,h.pos.z+this._stickOff.z);
+      return true;
+    }
+    if(this._armed)return true;
     if (this.grav) this.vel.y -= this.grav * dt;
     // ⚠ WIND ACTS ON MATTER, AND THERE IS NO `if (energy)` HERE. `windKind` is a LOOKUP into
     // WIND_DRAG (data/weather.js); a projectile whose kind is not in that table — every ki blast,
     // beam and orb in the game — gets a drag of zero and is untouched. Energy is exempt BY
     // CONSTRUCTION rather than by exception, which is the difference between a rule and a list
     // somebody has to maintain. A bullet visibly curves in a crosswind; a ki blast does not.
-    if (game.weather && game.weather.windSpeed > 0.01) {
+    if (game.weather && (game.weather.windSpeed > 0.01 || game.weather.layers?.size)) {
       const k = this.windKind || (this.ballistic ? 'ballistic' : this.arrow ? 'arrow'
         : this.canister ? 'canister' : this.blade ? 'blade' : null);
-      if (k) { game.weather.force(k, _wind); this.vel.addScaledVector(_wind, dt); }
+      if (k) { game.weather.force(k, _wind, this.pos); this.vel.addScaledVector(_wind, dt); }
     }
     if (this.homing) {
       const t = game.nearestFoe(this.caster, this.pos, 120);
-      if (t) { _v.copy(t.pos).setY(t.pos.y + 5).sub(this.pos).normalize().multiplyScalar(this.homing * dt * 60); this.vel.add(_v); const sp = this.vel.length(); this.vel.setLength(clamp(sp, 20, o_maxspeed(this))); }
+      if(t && this._guidedSplit){
+        this._homeTarget.copy(t.pos).y+=5;this._homeTarget.sub(this.pos);
+        const distance=this._homeTarget.length(),speed=this.vel.length();
+        if(distance>1e-8 && speed>1e-8){
+          this._homeTarget.multiplyScalar(1/distance);this._homeDir.copy(this.vel).multiplyScalar(1/speed);
+          this._homeRotation.setFromUnitVectors(this._homeDir,this._homeTarget);
+          // Terminal guidance sheds the cone's sideways momentum. A fixed
+          // central force (or fixed turn radius) can orbit a stationary target.
+          const response=this.homing*Math.max(1,speed/Math.max(distance,8));
+          this._homeStep.identity().slerp(this._homeRotation,1-Math.exp(-response*dt));
+          this.vel.copy(this._homeDir.applyQuaternion(this._homeStep)).multiplyScalar(speed);
+        }
+      }else if (t) { _v.copy(t.pos).setY(t.pos.y + 5).sub(this.pos).normalize().multiplyScalar(this.homing * dt * 60); this.vel.add(_v); const sp = this.vel.length(); this.vel.setLength(clamp(sp, 20, o_maxspeed(this))); }
     }
     // boomerang flight: out to range, then WHIP back to the thrower's hand (hits on both passes)
     if (this.boomerang) {
@@ -296,6 +477,11 @@ class Projectile {
         this.vel.lerp(_v.normalize().multiplyScalar(this.vel.length() * 1.02), Math.min(1, 8 * dt));
       }
     }
+    return true;
+  }
+
+  advancePrepared(dt, game) {
+    if(this._armed||this._stuckTo)return this.update(dt,game,true);
     this.pos.addScaledVector(this.vel, dt);
     this.obj.position.copy(this.pos);
     if (this.light) this.light.position.copy(this.pos);
@@ -318,7 +504,7 @@ class Projectile {
     }
     // Pedestrians aren't entities (they're one instanced mesh), so nothing ever collided with
     // them. A bullet has to: that's the whole point of the ballistic scale — lethal to people.
-    if (this.ballistic && game.peds && this.pos.y < 12 && this.pos.y > 0.2) {
+    if (this.ballistic && hasCivilians(game.modeId) && game.peds && this.pos.y < 12 && this.pos.y > 0.2) {
       const downed = game.peds.blast(this.pos.x, this.pos.z, 2.4);
       if (downed) {
         game.cityStats.civs += downed;
@@ -328,49 +514,82 @@ class Projectile {
       }
     }
     this.life -= dt;
+    return true;
+  }
+
+  commitContact(game, contact = null) {
+    if(contact?.kind==='fuse')return this._impact(game,this._armedGround || (!game.world._ghTriangles && this.pos.y<3));
     // collisions — delayed-blast payloads ARM instead of exploding on contact; boomerangs bounce home
-    if (this.pos.y <= this.radius * 0.5 && this.ground) {
-      if (this.boomerang) { this._return = true; this.pos.y = this.radius * 0.5 + 0.1; this.vel.y = Math.abs(this.vel.y) * 0.4; }
-      else if (this.armDelay && !this._armed) { this._arm(game); return true; }
-      else return this._impact(game, true);
+    if (contact ? contact.kind === 'ground' : this.pos.y <= this.radius * 0.5 && this.ground) {
+      if (this.boomerang) { this._return = true; this.pos.y = (game.world._ghTriangles?game.world.heightAt(this.pos.x,this.pos.z):0)+this.radius * 0.5 + 0.1; this.vel.y = Math.abs(this.vel.y) * 0.4; }
+      else if (this.armDelay && !this._armed) { this._arm(game,true); return true; }
+      else return this.webControl?this._webImpact(game):this._impact(game, true);
     }
-    for (const c of game.world.cover) {
-      if (Math.hypot(this.pos.x - c.x, this.pos.z - c.z) < c.r + this.radius && this.pos.y < c.h) {
+    for (const c of (contact ? contact.kind === 'cover' ? [contact.target] : [] : game.world.cover)) {
+      if(c===this.launchCover&&this.caster===this.launchCaster)continue;
+      if (contact || (c.projectileShape === 'box'
+        ? Number.isFinite(coverBoxEntry(this.pos, this.pos, c, this.radius, this.charged ? this.radius : 0))
+        : Math.hypot(this.pos.x - c.x, this.pos.z - c.z) < c.r + this.radius && this.pos.y < c.h)) {
+        if(this.ballistic)c.onConstructHit?.(this.damage*this.caster.powerBuff,{src:this.caster,pos:this.pos.clone(),lane:'projectile'});
         if (this.boomerang) { this._return = true; break; }
         if (this.armDelay && !this._armed) { this._arm(game); return true; }
         // RICOCHET (manual §19): reflect off the face, spend a bounce, leave a spark and a
         // visible directional KINK — straight segments, never a curve.
         if (this.bounces > 0) {
           this.bounces--;
-          const nx = this.pos.x - c.x, nz = this.pos.z - c.z, nl = Math.hypot(nx, nz) || 1;
-          const dot2 = (this.vel.x * nx + this.vel.z * nz) / nl;
-          this.vel.x -= 2 * dot2 * (nx / nl); this.vel.z -= 2 * dot2 * (nz / nl);
-          this.pos.x = c.x + (nx / nl) * (c.r + this.radius + 0.4);
-          this.pos.z = c.z + (nz / nl) * (c.r + this.radius + 0.4);
+          if (c.projectileShape === 'box') {
+            // Contact/separation must use the same shape. A radial bounce from
+            // an AABB face can eject INTO its corner and spend every bounce.
+            const hx = c.hx + this.radius, hz = c.hz + this.radius;
+            const top = (c.top ?? c.h) + (this.charged ? this.radius : 0);
+            const bottom=Number.isFinite(c.bottom)?c.bottom-(this.charged?this.radius:0):-Infinity;
+            const dx = Math.abs(Math.abs(this.pos.x - c.x) - hx);
+            const dz = Math.abs(Math.abs(this.pos.z - c.z) - hz);
+            const underside=Math.abs(this.pos.y-bottom)<Math.abs(this.pos.y-top);
+            const dy = Math.abs(this.pos.y - (underside?bottom:top));
+            const axis = dy < dx && dy < dz ? 'y' : dx <= dz ? 'x' : 'z';
+            const side = axis === 'y' ? (underside?-1:1) : Math.sign(this.pos[axis] - c[axis]) || 1;
+            this.vel[axis] = Math.abs(this.vel[axis]) * side;
+            this.pos[axis] = axis === 'y' ? (underside?bottom-.4:top+.4) : c[axis] + side * ((axis === 'x' ? hx : hz) + 0.4);
+          } else {
+            const nx = this.pos.x - c.x, nz = this.pos.z - c.z, nl = Math.hypot(nx, nz) || 1;
+            const dot2 = (this.vel.x * nx + this.vel.z * nz) / nl;
+            this.vel.x -= 2 * dot2 * (nx / nl); this.vel.z -= 2 * dot2 * (nz / nl);
+            this.pos.x = c.x + (nx / nl) * (c.r + this.radius + 0.4);
+            this.pos.z = c.z + (nz / nl) * (c.r + this.radius + 0.4);
+          }
           this.life = Math.max(this.life, 0.9);
           game.particles.burst(this.pos.x, this.pos.y, this.pos.z, { count: 4, speed: 16, life: 0.2, size: 1.1, color: ['#ffd97a', '#fff'], drag: 2.5 });
           game.audio.zap(700 + this.bounces * 120, this.pos);
           return true;
         }
-        return this._impact(game, true);
+        return this.webControl?this._webImpact(game):this._impact(game, !contact);
       }
     }
     // interior walls stop shots — corner warfare means the corner actually protects you
-    if (!this._return && game.world.hitInteriorWall && game.world.hitInteriorWall(this.pos.x, this.pos.y, this.pos.z, this.radius)) {
+    if (contact ? contact.kind === 'interior' : !this._return && game.world.hitInteriorWall && game.world.hitInteriorWall(this.pos.x, this.pos.y, this.pos.z, this.radius)) {
       if (this.boomerang) this._return = true;
       else if (this.armDelay && !this._armed) { this._arm(game); return true; }
-      else return this._impact(game, true);
+      else return this.webControl?this._webImpact(game):this._impact(game, !contact);
     }
     // ENERGY SHIELD BUBBLE (brief T3.15): hostile fire flattens on the dome; allied fire leaves.
-    if (game._domes && game._domes.length && domeBlocks(game, this)) return this._impact(game, false);
+    if (contact ? contact.kind === 'dome' : game._domes && game._domes.length) {
+      // The sweep lands exactly on the surface; sample infinitesimally inside
+      // for the existing inclusive point-query, without moving the visual hit.
+      const sample = contact ? {caster:this.caster,damage:this.damage,pos:this.pos.clone().lerp(new THREE.Vector3(contact.target.x,contact.target.y,contact.target.z),1e-10)} : this;
+      const shieldGame = contact ? {_domes:[contact.target],vfx:game.vfx,audio:game.audio} : game;
+      if (domeBlocks(shieldGame, sample)) return this.webControl?this._webImpact(game):this._impact(game, false);
+    }
     // ⚠ A THROWN CAR IS A TARGET (manual §47). Tested BEFORE the foe check on purpose: the interesting
     // case is the prop arriving at your face, so the shot has to meet the car before it meets you.
     // ⚠ `_flung` is only ever populated under an open sky, so in the city this is one length check on
     // an empty array — the whole feature is unreachable there rather than merely switched off.
-    if (game._flung && game._flung.length && game.hitFlung(this.caster, this.pos, this.radius + 1.5, this.damage * this.caster.powerBuff)) {
-      return this._impact(game, false);
+    if ((contact ? contact.kind === 'prop' : game._flung && game._flung.length) && game.hitFlung(this.caster,
+      contact ? this.pos.clone().lerp(new THREE.Vector3(contact.target.x,contact.target.y,contact.target.z),1e-10) : this.pos,
+      this.radius + 1.5, this.damage * this.caster.powerBuff)) {
+      return this.webControl?this._webImpact(game):this._impact(game, false);
     }
-    const foe = game.overlapFoe(this.caster, this.pos, this.radius + 1.5);
+    const foe = contact ? (contact.kind === 'foe' ? contact.target : null) : game.overlapFoe(this.caster, this.pos, this.radius + 1.5);
     if (foe) {
       if (this.boomerang) {   // clip them and keep flying — both passes hurt
         if (this._rehitT <= 0) {
@@ -392,23 +611,39 @@ class Projectile {
         if (game.hud && game.isHuman(foe)) game.hud.damageNumber(foe.pos, 'STUCK', '#ff8a3a', true);
         return true;
       }
-      // DEFLECT guard: bullets/bolts bounce right back at whoever fired them
-      if (foe.guarding && foe.staggerT <= 0 && foe.def.guardType === 'deflect' && !this._defl) {
-        const ddx = this.pos.x - foe.pos.x, ddz = this.pos.z - foe.pos.z, dd = Math.hypot(ddx, ddz) || 1;
+      const webAccepted=this.webControl&&!this._webControlInterrupted&&canApplyWebControl(foe,this.caster);
+      const hitOptions={src:this.caster,naniteContact:contact?.naniteContact,contactPoint:this.pos,ballistic:this.ballistic,weapon:this.weapon,dtype:this.dtype,siphon:this.siphon,
+        kb:_v.copy(this.vel).setY(0).setLength(this.damage*(this.ballistic?.12:.5)+(this.ballistic?2:8)).setComponent(1,this.ballistic?1:6),launch:this.ballistic?0:6+this.power*4,hitstop:this.ballistic?.02:.05};
+      return withNaniteDamageAdmission(foe,this.damage*this.caster.powerBuff,hitOptions,absorbs=>{
+      // DEFLECT guard: bullets/bolts bounce right back at whoever fired them.
+      // Only a positive, canonically admitted panel absorption preempts it.
+      if (!absorbs && foe.guarding && foe.staggerT <= 0 && foe.guardMeter+1e-9 >= 0.04 && foe.def.guardType === 'deflect' && !this._defl) {
+        // Use arrival direction: a fast shot can cross the body's center within
+        // one step, so its endpoint is not reliable evidence of FRONT or BACK.
+        const ddx = -this.vel.x, ddz = -this.vel.z, dd = Math.hypot(ddx, ddz) || 1;
         if ((ddx / dd) * foe.aim.x + (ddz / dd) * foe.aim.z > -0.15) {
           this._defl = true;
           const shooter = this.caster;
           this.caster = foe; this.team = foe.team; this.homing = Math.max(this.homing, 1.5);
+          if(this.webControl)this._webControlSourceEpoch=foe._webControlEpoch||0;
           if (shooter && shooter.alive) _v.copy(shooter.pos).setY(shooter.pos.y + 5).sub(this.pos).normalize().multiplyScalar(this.vel.length() * 1.08);
           else _v.copy(this.vel).multiplyScalar(-1);
           this.vel.copy(_v); this.life = Math.max(this.life, 1.4);
           foe.guardMeter = Math.max(0, foe.guardMeter - 0.04);
-          game.vfx.impactStar(this.pos.clone(), 6, '#ffd24a', 0.16); game.audio.zap(760);
-          if (game.hud) game.hud.damageNumber(foe.pos, 'DEFLECT', '#ffd24a', true);
+          foe._blocked=0.18;
+          registerShieldContact(foe,{contactPoint:this.pos});
+          if(foe.guardMeter<=1e-9){foe.guardMeter=0;foe.guarding=false;foe.staggerT=Math.max(foe.staggerT||0,0.7);foe.state='hit';foe.stateT=0;}
+          const guard=foe.guardMeter<=1e-9?'broken':'blocked';
+          game.presentHitOutcome?.(foe,hitOptions,Object.freeze({dtype:this.dtype||(this.ballistic?'ballistic':'energy'),
+            attackClass:this.ballistic?'bullet':'projectile',healthLost:0,absorbed:Object.freeze({plate:0,armor:0,shield:0,nanite:0}),
+            guard,deflected:true,knockedOut:false,statusesAdded:Object.freeze([]),
+            contact:Object.freeze({x:this.pos.x,y:this.pos.y,z:this.pos.z})}));
+          game.vfx.impactStar(this.pos.clone(), 6, '#ffd24a', 0.16); game.audio.zap(760,this.pos);
           return true;
         }
       }
-      foe.takeDamage(this.damage * this.caster.powerBuff, { src: this.caster, ballistic: this.ballistic, weapon: this.weapon, dtype: this.dtype, siphon: this.siphon, kb: _v.copy(this.vel).setY(0).setLength(this.damage * (this.ballistic ? 0.12 : 0.5) + (this.ballistic ? 2 : 8)).setComponent(1, this.ballistic ? 1 : 6), launch: this.ballistic ? 0 : 6 + this.power * 4, hitstop: this.ballistic ? 0.02 : 0.05 });
+      foe.takeDamage(this.damage * this.caster.powerBuff,hitOptions);
+      if(webAccepted&&foe.alive)applyWebControl(foe,this.caster,this.webControl);
       // ACID: corrodes the plate for 5s — the counter to the armour that stops bullets
       if (this.payload === 'acid') { foe.addDot({ dps: 6, dur: 5, color: '#c8e04a', kind: 'acid', corrode: 4, src: this.caster }); game.particles.burst(foe.pos.x, foe.pos.y + 5, foe.pos.z, { count: 9, speed: 11, life: 0.6, size: 2.8, color: ['#c8e04a', '#9ab030', '#e6f0a0'], up: 7, drag: 1.1 }); }
       else if (this.payload === 'poison') foe.addDot({ dps: 5, dur: 4, color: '#8fe08a', kind: 'poison', src: this.caster });
@@ -427,11 +662,13 @@ class Projectile {
         foe.addDot({ dps: 7, dur: 10, color: '#c8b84a', kind: 'acid', dtype: 'acid', corrode: 6, src: this.caster });
       }
       else if (this.payload === 'flame') { foe.addDot({ dps: 7, dur: 2.5, color: '#ff7a2a', kind: 'burn', src: this.caster }); game.particles.burst(foe.pos.x, foe.pos.y + 5, foe.pos.z, { count: 8, speed: 10, life: 0.5, size: 2.6, color: ['#ff7a2a', '#ffd24a'], up: 8, drag: 1.2 }); }
+      if(this.webControl)return this._webImpact(game);
       if (this.chain) this._arc(game, foe);
       if (this.pierce-- > 0) { game.vfx.flash(this.pos.clone(), this.color, this.radius * 2, 0.12); return true; }
       return this._impact(game, false, foe);
+      });
     }
-    if (this.life <= 0) { if (this.armDelay && !this._armed) { this._arm(game); return true; } return this._impact(game, false); }
+    if (contact ? contact.kind === 'expiry' : this.life <= 0) { if (this.armDelay && !this._armed) { this._arm(game); return true; } return this.webControl?this._webImpact(game):this._impact(game, false); }
     return true;
   }
 
@@ -474,14 +711,15 @@ class Projectile {
     game.addSingularity(p, r, dur, pull, this.caster, this.color);
   }
   _impact(game, hitGround) {
-    const p = this.pos.clone(); if (hitGround) p.y = 0.2;
+    if (this.dead) return false;
+    const p = this.pos.clone(); if (hitGround) p.y = (game.world._ghTriangles?game.world.heightAt(p.x,p.z):0)+0.2;
     if (this.singularity) this._singularity(game);   // it collapses INWARD (brief T2.6)
     if (this.blind) game.addSmoke(p.x, p.z, this.blind.r || 12, this.blind.dur || 2.6, this.caster);   // smoke owns this street corner
     // A BULLET IS NOT A BOMB: no fireball, no crater, no area damage — just a spark, a puff and
     // a very dead civilian if it found one. This is the scale that makes guns read as guns.
     if (this.ballistic) {
       game.particles.burst(p.x, p.y, p.z, { count: 4, speed: 14, life: 0.2, size: 1.1, color: ['#ffd97a', '#8b8577'], drag: 2.5 });
-      if (game.peds && p.y < 12) {
+      if (hasCivilians(game.modeId) && game.peds && p.y < 12) {
         const downed = game.peds.blast(p.x, p.z, 3.2);        // one shot, one pedestrian
         if (downed) {
           game.cityStats.civs += downed;
@@ -500,18 +738,54 @@ class Projectile {
       this._dispose(game);
       return false;
     }
-    game.vfx.explode(p, { color: this.color, color2: this.color2, radius: this.blast, power: this.power, scorch: hitGround && !(this.vis && this.vis.residue !== 'scorch') });
+    game.vfx.explode(p, { color: this.color, color2: this.color2, radius: this.blast, power: this.power, energyShell:!!(this._remoteBurst || this._guidedSplit), scorch: hitGround && !(this.vis && this.vis.residue !== 'scorch') });
     // the profile decides what the ground KEEPS — frost, sludge, debris, nothing
     if (hitGround && this.vis && this.vis.residue !== 'scorch') game.vfx.residue(p, this.vis.residue, this.blast * 0.6);
-    game.areaDamage(this.caster, p, this.blast, this.damage * 0.8, this.power);
+    game.areaDamage(this.caster, p, this.blast, this.damage * 0.8, this.power, {dtype:this.dtype});
     if (this.shock && hitGround) game.vfx.shockwave(p, { color: this.color, radius: this.blast * 2.2, power: this.power });
     if (this.face) {   // the Marletta goes off — a grief-shaped crater
-      game.vfx.shockwave(p.clone().setY(0.2), { color: this.color, radius: this.blast * 2.6, power: this.power });
+      game.vfx.shockwave(p.clone().setY((game.world._ghTriangles?game.world.heightAt(p.x,p.z):0)+0.2), { color: this.color, radius: this.blast * 2.6, power: this.power });
       game.vfx.lightning(p, { color: '#fff', count: 5, radius: this.blast, height: 14 });
       game.slowmo(0.2, 0.45); game.world.punch(0.7); if (game.hud) game.hud.flashScreen('#ffe8c0', 0.16);
     }
     game.audio.boom(clamp(this.power * 0.6, 0.2, 1.4), p);
     this._dispose(game); return false;
+  }
+  _webImpact(game){
+    game.vfx.ring(this.pos.clone(),{color:this.color,r0:.35,r1:2.6,life:.18});
+    game.particles.burst(this.pos.x,this.pos.y,this.pos.z,{count:7,speed:7,life:.28,size:.7,color:[this.color,this.color2],drag:2.4});
+    game.audio.hit(180,this.pos);this._dispose(game);return false;
+  }
+  // The ability layer owns who may activate this; the projectile owns its actual
+  // payload and current caster (including a deflection's transferred ownership).
+  detonate(game = this.game) {
+    if(this.dead)return false;
+    if(!this.splitCount){this._remoteBurst=true;return this._impact(game,false);}
+    const count=this.splitCount,forward=this.vel.clone();
+    if(forward.lengthSq()<1e-8)forward.copy(this.caster.aim3);
+    if(forward.lengthSq()<1e-8)forward.set(0,0,1);
+    forward.normalize();
+    const side=new THREE.Vector3().crossVectors(forward,Math.abs(forward.y)>.9?_AZ:UP).normalize();
+    const up=new THREE.Vector3().crossVectors(side,forward).normalize();
+    // Retire before emitting: repeat activation cannot duplicate children, and
+    // the parent's light is available to the ordinary projectile pool immediately.
+    this._dispose(game);
+    for(let i=0;i<count;i++){
+      const angle=TAU*i/count;
+      const vel=forward.clone().multiplyScalar(Math.cos(this.splitSpread))
+        .addScaledVector(side,Math.cos(angle)*Math.sin(this.splitSpread))
+        .addScaledVector(up,Math.sin(angle)*Math.sin(this.splitSpread)).multiplyScalar(this.splitSpeed);
+      game.projectiles.spawnProjectile(this.caster,{
+        pos:this.pos,vel,radius:this.radius/Math.cbrt(count),damage:this.damage/count,
+        blast:this.blast/Math.sqrt(count),blastScaled:true,power:this.power/Math.sqrt(count),
+        homing:this.splitHoming,maxSpeed:this.splitSpeed,guidedSplit:true,life:4,color:this.color,color2:this.color2,
+        collisionPriority:-1,
+        dtype:this.dtype,siphon:this.siphon,vis:this.vis,
+      });
+    }
+    game.vfx.ring(this.pos,{color:this.color,r0:this.radius*.5,r1:this.radius*2,life:.2});
+    game.particles.burst(this.pos.x,this.pos.y,this.pos.z,{count:count*2,speed:16,life:.2,size:this.radius*.6,color:[this.color,'#fff'],drag:3});
+    return false;
   }
   _dispose(game) {
     if (this.dead) return; this.dead = true; game.scene.remove(this.obj);
@@ -519,6 +793,8 @@ class Projectile {
     // materials (steel, brass, tracer) must NEVER be disposed here (index-guessing children[1]
     // used to dispose the SHARED tracer mat on every bullet impact, and crashed on nested groups)
     for (const m of this._ownMats || []) m.dispose();
+    for (const geometry of this._ownGeos || []) geometry.dispose();
+    this._throwGeometry?.dispose();
     if (this.light) game.vfx.returnLight(this.light);   // returnLight owns it — the light STAYS in the scene (see the light-count law)
   }
 }
@@ -528,6 +804,14 @@ function o_maxspeed(p) { return p._max || 90; }
 class BeamHose {
   constructor(game, caster, o) {
     this.game = game; this.caster = caster; this.team = caster.team;
+    this._combatReadability = !!caster._openSky;
+    this._sparkClock = 0;
+    this._contactNext = new WeakMap();
+    this.pierceFighters=o.pierceFighters===true;
+    this._bodyContact={fighter:null,point:new THREE.Vector3(),surface:new THREE.Vector3(),direction:new THREE.Vector3()};
+    this._constructPreclip={target:null,point:new THREE.Vector3(),arc:0};
+    this._constructBlockedPoint=new THREE.Vector3();
+    this._groundResidue=new BeamGroundContact();
     this.radius = o.radius || 1.6;             // beam thickness
     this.tipSpeed = o.tipSpeed || 150;         // how fast the tip races out (waterhose, not instant)
     // THE BEAM ANATOMY (data/visual.js). Two axes, and the engine holds no opinion about any
@@ -539,6 +823,14 @@ class BeamHose {
     this.temperName = o.temper || 'steady';
     this.maxLen = o.maxLen || 120;
     this.dps = o.dps || 60; this.dtype = o.dtype || null; this.siphon = o.siphon;   // an arcane beam SIPHONS
+    this.pushForce=o.pushForce??(o.faceOrigin?0:368);
+    this.guardChip=o.guardChip??.22;this.guardDrain=o.guardDrain??.28;
+    this.detonateRadius = o.detonateRadius ?? Math.max(8, this.radius * 8);
+    this.detonateDamage = o.detonateDamage ?? this.dps * .8;
+    this.remoteDetonate = o.remoteDetonate===true;
+    this.interceptBullets=o.interceptBullets===true;
+    this.interceptKi=Number.isFinite(o.interceptKi)&&o.interceptKi>=0?o.interceptKi:30;
+    this.investedKi=Number.isFinite(o.investedKi)&&o.investedKi>=0?o.investedKi:0;
     this.kiPerSec = o.kiPerSec || 22;
     this.color = o.color || '#8fe3ff'; this.color2 = o.color2 || '#eaffff';
     this.power = o.power || 1;
@@ -547,11 +839,26 @@ class BeamHose {
     this.clashLen = null; this.clashing = false; this._clashOther = null; this._clashT = 0.5;
     // THE BEAM VOICE — a sustained inharmonic/ring-mod stack that STRAINS when the beam is
     // losing a clash. Held for the beam's life and stopped in _dispose.
-    this._voice = this.game.audio.beamVoice ? this.game.audio.beamVoice(caster.pos) : null;
+    this._poseLaunch=!!(caster._openSky&&caster.parts?.rig&&(o.poseLaunch||o.faceOrigin||o.chest));
+    this._chargedRelease=!!o.chargedRelease;
+    this._launchReady=false;
+    this._voice = !this._poseLaunch&&this.game.audio.beamVoice ? this.game.audio.beamVoice(caster.pos) : null;
     this.tipDist = 0;
     this.dir = caster.aim3.clone().normalize();   // 3D — angles up/down toward the target's height
+    this._steerRotation = new THREE.Quaternion();
+    this._steerStep = new THREE.Quaternion();
+    this._stepDirection = new THREE.Vector3();
+    this._directionBatch = -1;
+    this._stepChest = null;
+    this._axialOrigin = new THREE.Vector3();
+    this._axialDirection = new THREE.Vector3();
+    this._axialRotation = new THREE.Quaternion();
+    this._axialStep = new THREE.Quaternion();
     this.muzzle = new THREE.Vector3();
+    this._clashContact = new THREE.Vector3();
+    this._clashOffset = new THREE.Vector3();
     this.sustaining = true;                    // held
+    this.emissionAge = 0;                      // actual emission lifetime, independent of pose ownership
     this.endT = 0; this.dead = false;
     this.blocked = false;
 
@@ -576,38 +883,86 @@ class BeamHose {
     this.NODES = 44;
     this.path = new Float32Array(this.NODES * 3);      // node 0 = at the muzzle, rising index = older
     this.pvel = new Float32Array(this.NODES * 3);
+    this._absorbed = new Array(this.NODES).fill(null);
+    this._curve=this._combatReadability?new BeamCurve(this.NODES):null;
     this.pn = 0;
     this._tmp = new THREE.Vector3(); this._tan = new THREE.Vector3();
     this._pa = new THREE.Vector3(); this._pb = new THREE.Vector3();
+    this._obstacleContact={};
+    this._bodySweep={path:new Float32Array(6),pn:2,caster,radius:this.radius};
+    this._sweepContact={point:new THREE.Vector3(),surface:new THREE.Vector3(),direction:new THREE.Vector3(),fighter:null};
+    this._packetContact={point:new THREE.Vector3(),surface:new THREE.Vector3(),direction:new THREE.Vector3(),fighter:null};
 
     // meshes: outer glow + bright core + tip. The two bodies are TUBES swept along the path now,
     // not cylinders — a cylinder cannot be bent.
-    const beamMat = (color, opacity) => { const m = MAT_BEAM_PROTO.clone(); m.color.set(color); m.opacity = opacity; return m; };
+    const materials=createBeamMaterials(this.color,this.color2,this._combatReadability,this.temper.n>0);
     this.RADIAL = 8;
-    this._glowGeo = this._tubeGeo(this.NODES, this.RADIAL);
-    this._coreGeo = this._tubeGeo(this.NODES, this.RADIAL);
-    this.glow = new THREE.Mesh(this._glowGeo, beamMat(this.color, 0.42));
-    this.core = new THREE.Mesh(this._coreGeo, beamMat(this.color2, 0.8));
+    this._glowGeo = this._tubeGeo((this._curve?.capacity||this.NODES)+1, this.RADIAL);
+    this._coreGeo = this._tubeGeo((this._curve?.capacity||this.NODES)+1, this.RADIAL, true);
+    this.glow = new THREE.Mesh(this._glowGeo, materials.glow);
+    this.core = new THREE.Mesh(this._coreGeo, materials.core);
     this.glow.frustumCulled = false; this.core.frustumCulled = false;
-    this.tip = new THREE.Mesh(GEO_ORB, glowMat(this.color2, 0.85));
+    this.tip = new THREE.Mesh(GEO_ORB, materials.tip);
     this.grp = new THREE.Group(); this.grp.add(this.glow, this.core, this.tip); game.scene.add(this.grp);
+    this.sourceGlow=o.sourceGlow??1;this.sourceScale=o.sourceScale??1;this.sourceLight=null;
+    this.impactGlow=o.impactGlow??1;
+    this.source=new THREE.Mesh(GEO_ORB,createBeamSourceMaterial(this.color));
+    this.source.visible=false;this.grp.add(this.source);
     // ⚠ ONE INSTANCED DETAIL LAYER, SHARED BY EVERY TEMPER. This started life as VEGA's
     // hard-coded 26-orb helix; generalising it was almost free and it is what lets seven tempers
     // exist for the cost of one draw call. A temper that says `n: 0` builds nothing at all.
     if (this.temper.n > 0) {
-      this.detail = new THREE.InstancedMesh(GEO_ORB, glowMat(this.color2, 0.9), this.temper.n);
+      this.detail = new THREE.InstancedMesh(GEO_ORB, materials.detail, this.temper.n);
       this.detail.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
       this.grp.add(this.detail);
       this._sm = new THREE.Matrix4(); this._sv = new THREE.Vector3();
     }
+    if(this._combatReadability) {
+      // In a rear combat view, double-sided additive tubes stack along the sight line and
+      // bleach the entire opponent. Keep a bright core inside a colored, single-sided shell.
+      // This changes presentation only: radius, streaming path, hit tests and clash power stay put.
+      this._surfaceTime=materials.time;
+      const eye=new THREE.Vector3();
+      for(const [mesh,reduction] of [[this.core,.64],[this.glow,.65],[this.tip,.55],[this.detail,.65]])if(mesh){
+        mesh.userData.beamOpacity=mesh.material.opacity;
+        mesh.onBeforeRender=(_renderer,_scene,camera)=>{
+          camera.getWorldPosition(eye);eye.sub(this.muzzle).normalize();
+          const k=clamp((Math.abs(eye.dot(this.dir))-.55)/.4,0,1),aligned=k*k*(3-2*k);
+          // Only an occupied axial sightline needs extra read-through. The
+          // surface shader boosts axial core density, so the free-flight fade
+          // alone still masked the defender's guard/reaction at contact.
+          const contactReduction=(this._bodyContact.fighter&&mesh===this.core) ? .84 : reduction;
+          mesh.material.opacity=(mesh.userData.beamOpacity??mesh.material.opacity)*(1-contactReduction*aligned);
+        };
+      }
+    }
     this.light = game.vfx.borrowLight(this.color, 5 * this.power, 60);
     this.faceOrigin = !!o.faceOrigin;   // OPTIC BLAST (brief Tier1 #2): eyes, not hands
-    caster.muzzle(this.muzzle, this.faceOrigin ? 1.1 : undefined, this.faceOrigin ? 8.3 : undefined);
+    this.chest = !this.faceOrigin && o.chest===true;
+    this.combinedHands=!this.faceOrigin&&!this.chest&&o.combinedHands===true;
+    this.castHand=o.castHand;this.castSide=palmCastSide(o);
+    this._otherPalm=new THREE.Vector3();
+    this.sampleMuzzle(this.muzzle);
+    this._launchResolved=false;
+    this._launchTarget=caster.hasAimWorld?caster.aimWorld.clone():null;
+    this._launchAim=caster.aim3.clone().normalize();
+    if(this._launchTarget)this.dir.copy(this._launchTarget).sub(this.muzzle).normalize();
+    // The fixed buffer represents TIME in flight, not the last N display frames.
+    // Leave room for the live hand anchor and a complete authored reach.
+    this._streamStep=this.maxLen/(this.tipSpeed*(this.NODES-3));
+    this._streamClock=0;
+    this._streamOrigin=this.muzzle.clone();this._streamDir=this.dir.clone();
+    this.pn=this._poseLaunch?0:2;
+    if(this._poseLaunch){this.grp.visible=false;this.light.intensity=0;}
+    for(let i=0;i<this.pn;i++){
+      this.muzzle.toArray(this.path,i*3);
+      this.pvel[i*3]=this.dir.x*this.tipSpeed;this.pvel[i*3+1]=this.dir.y*this.tipSpeed;this.pvel[i*3+2]=this.dir.z*this.tipSpeed;
+    }
   }
 
   // A tube of (nodes x radial) vertices, indexed once. Positions are rewritten every frame; the
   // index buffer never changes, so a bending beam costs one buffer upload.
-  _tubeGeo(nodes, radial) {
+  _tubeGeo(nodes, radial, surface = false) {
     const pos = new Float32Array(nodes * radial * 3);
     const idx = new Uint16Array((nodes - 1) * radial * 6);
     let k = 0;
@@ -616,12 +971,19 @@ class BeamHose {
         const r2 = (r + 1) % radial;
         const a = sg * radial + r, b = sg * radial + r2;
         const c = (sg + 1) * radial + r, d = (sg + 1) * radial + r2;
-        idx[k++] = a; idx[k++] = c; idx[k++] = b;
-        idx[k++] = b; idx[k++] = c; idx[k++] = d;
+        // _sweep builds its ring in the (e, tangent × e) basis. This order
+        // faces outward; the reversed order drew an inside-out single-sided hose.
+        idx[k++] = a; idx[k++] = b; idx[k++] = c;
+        idx[k++] = b; idx[k++] = d; idx[k++] = c;
       }
     }
     const g = new THREE.BufferGeometry();
     g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    if(this._combatReadability){
+      g.setAttribute('normal',new THREE.BufferAttribute(new Float32Array(nodes*radial*3),3));
+      if(surface)g.setAttribute('beamTangent',new THREE.BufferAttribute(new Float32Array(nodes*radial*3),3));
+      g.setAttribute('beamArc',new THREE.BufferAttribute(new Float32Array(nodes*radial),1));
+    }
     g.setIndex(new THREE.BufferAttribute(idx, 1));
     return g;
   }
@@ -630,18 +992,27 @@ class BeamHose {
   // recomputing the frame independently makes the tube TWIST visibly wherever the path bends, which
   // on a beam reads as the thing rotating about its own axis. Carrying the previous perpendicular
   // forward and re-orthogonalising it keeps the surface calm through a curve.
-  _sweep(geo, baseR, flare) {
+  _sweep(geo, baseR, flare, curve=this._curve?.update(this.path,Math.max(2,this.pn),this.sustaining?this.dir:null,this.radius)) {
     const pos = geo.attributes.position.array;
-    const N = this.NODES, R = this.RADIAL, pn = Math.max(2, this.pn);
-    const up = this._pa.set(0, 1, 0);
-    let ex = 0, ey = 0, ez = 0, first = true;
-    for (let i = 0; i < N; i++) {
-      const li = Math.min(i, pn - 1);                       // dead nodes collapse onto the last live one
+    const normal=geo.attributes.normal?.array,along=geo.attributes.beamArc?.array,tangent=geo.attributes.beamTangent?.array;
+    let arc=0;
+    const path=curve?.points||this.path;
+    const R = this.RADIAL, N=pos.length/(R*3), pn = curve?.count||Math.max(2, this.pn);
+    const length=curve?curve.length:this._arcLen(),receiver=this._bodyContact.fighter;
+    let ex = 0, ey = 0, ez = 0, ptx=0,pty=0,ptz=1, first = true;
+    for (let i = 0; i < pn; i++) {
+      const li = i;
       const o = li * 3;
-      const px = this.path[o], py = this.path[o + 1], pz = this.path[o + 2];
+      const px = path[o], py = path[o + 1], pz = path[o + 2];
+      if(i>0&&i<pn){const prev=(li-1)*3;arc+=Math.hypot(px-path[prev],py-path[prev+1],pz-path[prev+2]);}
       // tangent from the neighbouring live nodes
       const ia = Math.max(0, li - 1) * 3, ib = Math.min(pn - 1, li + 1) * 3;
-      let tx = this.path[ib] - this.path[ia], ty = this.path[ib + 1] - this.path[ia + 1], tz = this.path[ib + 2] - this.path[ia + 2];
+      let tx = path[ib] - path[ia], ty = path[ib + 1] - path[ia + 1], tz = path[ib + 2] - path[ia + 2];
+      if(curve){tx=curve.tangents[o];ty=curve.tangents[o+1];tz=curve.tangents[o+2];}
+      if(Math.hypot(tx,ty,tz)<1e-8){tx=this.dir.x;ty=this.dir.y;tz=this.dir.z;}
+      // A newborn packet can have neither travel nor aim yet. Repair only the
+      // render basis; never invent velocity or rewrite the physical stream.
+      if(Math.hypot(tx,ty,tz)<1e-8){tx=0;ty=0;tz=1;}
       let tl = Math.hypot(tx, ty, tz) || 1; tx /= tl; ty /= tl; tz /= tl;
       if (first) {
         // any perpendicular will do for the first ring
@@ -651,25 +1022,75 @@ class BeamHose {
         const el = Math.hypot(ex, ey, ez) || 1; ex /= el; ey /= el; ez /= el;
         first = false;
       } else {
-        // re-orthogonalise the carried perpendicular against the new tangent
-        const d = ex * tx + ey * ty + ez * tz;
-        ex -= tx * d; ey -= ty * d; ez -= tz * d;
+        // Shortest-arc parallel transport. Projection alone collapses a frame
+        // when its old perpendicular becomes the next tangent at a hard turn.
+        const dot=clamp(ptx*tx+pty*ty+ptz*tz,-1,1);
+        if(dot>-.999999){
+          const kx=pty*tz-ptz*ty,ky=ptz*tx-ptx*tz,kz=ptx*ty-pty*tx;
+          const vx=ky*ez-kz*ey,vy=kz*ex-kx*ez,vz=kx*ey-ky*ex;
+          ex+=vx+(ky*vz-kz*vy)/(1+dot);ey+=vy+(kz*vx-kx*vz)/(1+dot);ez+=vz+(kx*vy-ky*vx)/(1+dot);
+        }
+        const d = ex * tx + ey * ty + ez * tz;ex-=tx*d;ey-=ty*d;ez-=tz*d;
         const el = Math.hypot(ex, ey, ez) || 1; ex /= el; ey /= el; ez /= el;
       }
+      ptx=tx;pty=ty;ptz=tz;
       const fx = ty * ez - tz * ey, fy = tz * ex - tx * ez, fz = tx * ey - ty * ex;
       // ⚠ THE HEAD IS AT THE FAR END. Node 0 is at the hand and the oldest node is the tip, so the
       // bulge belongs at HIGH index — a DBZ beam is a spearhead with a thin shaft behind it.
-      const t = pn > 1 ? li / (pn - 1) : 0;
-      const rad = baseR * (0.78 + 0.55 * t * t) * flare;
+      const t = curve ? clamp(arc/Math.max(1e-8,length),0,1) : pn > 1 ? li / (pn - 1) : 0;
+      // Keep charged width downstream, but gather it into the actual emitter.
+      // A full-width first ring was a body-sized open collar in a rear view.
+      const opening=clamp(arc/Math.max(1,receiver?Math.min(3,baseR*3):baseR*3),0,1);
+      const nozzle=this._combatReadability ? .12+.88*opening*opening*(3-2*opening) : 1;
+      let rad = baseR * (0.78 + 0.55 * t * t) * flare * nozzle;
+      if(receiver){
+        // Pressure gathers onto the receiving surface; it must not flare wider
+        // than the body or show an open, torn aperture behind the impact.
+        const contactRadius=Math.min(baseR*.85,receiver.radius*(geo===this._coreGeo?.65:.9));
+        rad=contactRadius*nozzle;
+      }
+      if(curve)rad=Math.min(rad,curve.radii[i]);
       for (let r = 0; r < R; r++) {
         const a = (r / R) * Math.PI * 2, ca = Math.cos(a) * rad, sa = Math.sin(a) * rad;
         const w = (i * R + r) * 3;
         pos[w] = px + ex * ca + fx * sa;
         pos[w + 1] = py + ey * ca + fy * sa;
         pos[w + 2] = pz + ez * ca + fz * sa;
+        if(normal){
+          normal[w]=ex*Math.cos(a)+fx*Math.sin(a);normal[w+1]=ey*Math.cos(a)+fy*Math.sin(a);normal[w+2]=ez*Math.cos(a)+fz*Math.sin(a);
+          if(tangent){tangent[w]=tx;tangent[w+1]=ty;tangent[w+2]=tz;}
+          along[i*R+r]=arc;
+        }
       }
     }
-    geo.attributes.position.needsUpdate = true;
+    // Keep unused reserve finite/collapsed for inspection, but neither draw nor
+    // upload it. Subdivision count follows curvature, not maximum allocation.
+    let drawn=pn;
+    if(receiver){
+      const end=(pn-1)*3;
+      for(let r=0;r<R;r++){
+        const w=(pn*R+r)*3;
+        pos[w]=path[end];pos[w+1]=path[end+1];pos[w+2]=path[end+2];
+        if(normal){normal[w]=ptx;normal[w+1]=pty;normal[w+2]=ptz;}
+        if(tangent){tangent[w]=ptx;tangent[w+1]=pty;tangent[w+2]=ptz;}
+        if(along)along[pn*R+r]=arc;
+      }
+      drawn++;
+    }
+    const last=(drawn-1)*R*3;
+    for(let i=drawn;i<N;i++){
+      pos.copyWithin(i*R*3,last,last+R*3);
+      if(normal)normal.copyWithin(i*R*3,last,last+R*3);
+      if(tangent)tangent.copyWithin(i*R*3,last,last+R*3);
+    }
+    if(along)along.fill(arc,drawn*R);
+    geo.setDrawRange(0,Math.max(0,drawn-1)*R*6);
+    for(const attribute of Object.values(geo.attributes)){
+      // The renderer clears updateRanges after upload. Reuse the range object
+      // rather than allocating one for each attribute of each beam each frame.
+      const range=attribute._beamUploadRange ||= {start:0,count:0};range.count=drawn*R*attribute.itemSize;
+      attribute.clearUpdateRanges();attribute.updateRanges.push(range);attribute.needsUpdate=true;
+    }
   }
 
   /** Total arc length of the live path, and the point at a given arc distance. */
@@ -684,22 +1105,241 @@ class BeamHose {
 
   end() { this.sustaining = false; }
 
+  detonate(game = this.game) {
+    if (this.dead || this.pendingLaunch) return false;
+    // Oldest live packet is the traveling tip, even after the caster turns.
+    // Unfired preparations are excluded above; live paths begin at the real muzzle.
+    const i=Math.max(0,this.pn-1)*3;
+    const pos=this.pn>0?new THREE.Vector3().fromArray(this.path,i):this.muzzle.clone();
+    this.sustaining=false;
+    this._dispose(game);
+    game.vfx.explode(pos,{color:this.color,color2:this.color2,radius:this.detonateRadius,power:this.power,energyShell:true,scorch:false});
+    game.areaDamage(this.caster,pos,this.detonateRadius,this.detonateDamage,this.power,{dtype:this.dtype});
+    game.audio.boom(clamp(this.power*.6,.2,1.4),pos);
+    return false;
+  }
+
   // beam-battle power: character might × buff × how much of the ki budget is left ("energy put in")
   clashPower() { return this.might * this.caster.powerBuff * (0.35 + 0.65 * (this.caster.ki / this.caster.maxKi)); }
 
+  // Shared by the cast pose and simulation: predict new emission without advancing
+  // the stream. The pose runs first, then update samples its final hand socket.
+  sampleMuzzle(out){
+    const c=this.caster;
+    if(this.combinedHands&&c.parts?.rig){
+      c.parts.armL.children[2].getWorldPosition(out);c.parts.armR.children[2].getWorldPosition(this._otherPalm);
+      return out.add(this._otherPalm).multiplyScalar(.5);
+    }
+    if(!this.faceOrigin&&!this.chest&&this.castSide<0)return handEmissionPosition(c,-1,out);
+    return c.muzzle(out,this.faceOrigin?1.1:this.chest?1.2:undefined,this.faceOrigin?8.3:this.chest?5.4:undefined);
+  }
+
+  get pendingLaunch(){return this._poseLaunch&&!this._launchResolved;}
+
+  _handsBraced(ray){
+    const c=this.caster,p=c.parts;
+    // Read the final animated anatomy, not a timer. The wrist can already face
+    // the target while its shoulder is still hanging down or gathering energy.
+    if(c._combatAim?.source!=='hand')return false;
+    for(let i=0;i<2;i++){
+      if(!this.combinedHands&&i!==(this.castSide<0?0:1))continue;
+      // A disjoint stream can already be firing while this palm is still
+      // releasing its charge. Read this arm's history, not the body carrier.
+      if((c._combatAim.armChannels?.[i]?.gather??c._combatAim.gather)>.2)return false;
+      const arm=i?p.armR:p.armL,hand=arm.children[2];
+      // Paired palms converge on the captured point from different sockets.
+      // A nearby point cannot be parallel to both hands and the midpoint ray.
+      this._otherPalm.copy(ray);
+      if(this._launchTarget){
+        hand.getWorldPosition(this._axialDirection);
+        this._otherPalm.copy(this._launchTarget).sub(this._axialDirection).normalize();
+      }
+      arm.getWorldPosition(this._axialOrigin);
+      hand.getWorldPosition(this._axialDirection).sub(this._axialOrigin).normalize();
+      if(this._axialDirection.dot(this._otherPalm)<.75)return false;
+      hand.getWorldQuaternion(this._axialRotation);
+      this._axialDirection.set(0,-1,0).applyQuaternion(this._axialRotation);
+      if(this._axialDirection.dot(this._otherPalm)<.99)return false;
+      // Carried weapons retain their grip. Both procedural palms and weighted
+      // skin fingers use this openness driver and must open before emission.
+      if(!hand.userData.gripOccupied&&(hand.morphTargetInfluences?.[0]??1)<.7)return false;
+    }
+    return true;
+  }
+
+  resolveLaunch(game=this.game,dt=0){
+    if(this._launchResolved)return;
+    this.sampleMuzzle(this.muzzle);
+    if(this.pendingLaunch){
+      const c=this.caster;
+      this._launchReady=false;
+      if(!this.sustaining||!c.alive||remoteInterrupted(c)||c.guarding)return;
+      this.predictDirection(this._tmp,0,this.muzzle);
+      // A short, visible turn-to-fire preparation. No packet, voice, damage or
+      // sustain payment exists until the final animated emitter can face it.
+      if(this.faceOrigin||this.chest){
+        const source=this.faceOrigin?c.parts.head:c.parts.torso;
+        source.getWorldQuaternion(this._axialRotation);
+        this._axialDirection.set(0,0,1).applyQuaternion(this._axialRotation);
+        if(this._axialDirection.dot(this._tmp)<.995)return;
+      }else if(!this._handsBraced(this._tmp))return;
+      this._launchReady=true;
+      // The manager can sample readiness before contacts/portals, but only the
+      // beam's own payment turn may commit new energy. Another channel can
+      // spend the shared ki pool earlier in the reverse update order.
+      if(dt<=0)return;
+      if(!c.energyInfinite&&this.kiPerSec*dt>c.ki){game.onDrained?.(c,this);this._dispose(game);return;}
+      this.dir.copy(this._tmp);this.pn=2;this.grp.visible=true;
+      this._voice=this.game.audio.beamVoice?this.game.audio.beamVoice(c.pos):null;
+    }else{
+      if(this._launchTarget)this.dir.copy(this._launchTarget).sub(this.muzzle).normalize();
+      this._constrainAxial(this.dir,0);
+    }
+    this._launchResolved=true;this._launchTarget=null;
+    if(this._chargedRelease){game.world.punch(.9);game.world.shake(.8);}
+    // The first packets are born only after articulation. Constructor-time
+    // sockets describe the preceding pose, not this command's actual emitter.
+    this._streamOrigin.copy(this.muzzle);this._streamDir.copy(this.dir);
+    for(let i=0;i<this.pn;i++){
+      this.muzzle.toArray(this.path,i*3);
+      this.pvel[i*3]=this.dir.x*this.tipSpeed;this.pvel[i*3+1]=this.dir.y*this.tipSpeed;this.pvel[i*3+2]=this.dir.z*this.tipSpeed;
+    }
+  }
+
+  predictDirection(out, dt, emissionOrigin=this.muzzle) {
+    this._predictSteering(out,dt,emissionOrigin);
+    return this._constrainAxial(out,dt);
+  }
+
+  _predictSteering(out,dt,emissionOrigin=this.muzzle){
+    const c=this.caster;
+    if(!this._launchResolved)return this._launchTarget?out.copy(this._launchTarget).sub(emissionOrigin).normalize():out.copy(this._launchAim);
+    const aimed=c.hasAimWorld ? _v2.copy(c.aimWorld).sub(emissionOrigin).normalize() : _v2.copy(c.aim3).normalize();
+    const manager=this.game.projectiles;
+    out.copy(manager?._predictingBatch&&this._directionBatch===manager._directionBatch?this._stepDirection:this.dir);
+    if(aimed.lengthSq()>1e-8){
+      if(out.lengthSq()<=1e-8)out.copy(aimed);
+      else {
+        this._steerRotation.setFromUnitVectors(out,aimed);
+        this._steerStep.identity().slerp(this._steerRotation,clamp(1-Math.exp(-this.steer*dt),0,1));
+        out.applyQuaternion(this._steerStep).normalize();
+      }
+    }
+    return out;
+  }
+
+  _constrainAxial(out,dt){
+    const c=this.caster;
+    if(!this.faceOrigin||!c._openSky||!c.parts?.rig)return out;
+    // Only a live chest emission owns this support. A charging chest, hand
+    // power or released tail must not hold an independently firing head back.
+    const manager=this.game.projectiles;
+    const chest=manager?._predictingBatch&&this._directionBatch===manager._directionBatch?this._stepChest:this._findAxialSupport();
+    if(!chest)return out;
+    if(chest.pendingLaunch){
+      // A preparing chest is turning the carrier, not emitting its requested
+      // ray yet. Eyes can already fire within that carrier's actual neck cone.
+      chest.caster.parts.torso.getWorldQuaternion(this._axialRotation);
+      this._axialDirection.set(0,0,1).applyQuaternion(this._axialRotation);
+    }else{
+      chest.sampleMuzzle(this._axialOrigin);
+      chest._predictSteering(this._axialDirection,dt,this._axialOrigin);
+    }
+    const angle=this._axialDirection.angleTo(out);
+    if(angle>AXIAL_COFIRE_CONE){
+      this._axialRotation.setFromUnitVectors(this._axialDirection,out);
+      this._axialStep.identity().slerp(this._axialRotation,AXIAL_COFIRE_CONE/angle);
+      out.copy(this._axialDirection).applyQuaternion(this._axialStep).normalize();
+    }
+    return out;
+  }
+
+  _findAxialSupport(){
+    if(!this.faceOrigin||!this.caster._openSky||!this.caster.parts?.rig)return null;
+    for(const key in this.caster.slots){const s=this.caster.slots[key],b=s.active;if(s.def.chest&&!s.def.faceOrigin&&b instanceof BeamHose&&b.sustaining&&!b.dead)return b;}
+    return null;
+  }
+
+  clipReceivers(game=this.game){
+    this._bodyContact.fighter=null;this._bodyContact.naniteContact=null;
+    if(this.pierceFighters||this.pendingLaunch||this.pn<2||!beamBodyContact(this,game,this._bodyContact,1,true))return false;
+    const hit=this._bodyContact;
+    this.pn=hit.index+1;hit.point.toArray(this.path,hit.index*3);
+    this._absorbed[hit.index]=hit.fighter;
+    // Preserve every original pvel entry. An absorbed endpoint may resume
+    // traveling if the receiver leaves; it never learns a new direction.
+    return true;
+  }
+
+  _clipPacketReceiver(game,a,b){
+    if(this.pierceFighters)return null;
+    a.toArray(this._bodySweep.path,0);b.toArray(this._bodySweep.path,3);
+    if(!beamBodyContact(this._bodySweep,game,this._sweepContact,1,true))return null;
+    const hit=this._sweepContact,held=this._packetContact;
+    b.copy(hit.point);held.fighter=hit.fighter;held.naniteContact=hit.naniteContact;
+    held.point.copy(hit.point);held.surface.copy(hit.surface);held.direction.copy(hit.direction);
+    return hit.fighter;
+  }
+
+  clipForContacts(game=this.game){
+    // Receivers can enter an already-long stream between updates. Bound that
+    // stored field BEFORE clash payment or projectile interception can use its
+    // now-occluded tail. Normal update still owns emission, damage and VFX.
+    this._constructPreclip.target=null;
+    if(this.pendingLaunch||this.dead)return;
+    for(let i=1;i<this.pn;i++){
+      this._pa.fromArray(this.path,(i-1)*3);this._pb.fromArray(this.path,i*3);
+      if(this._clipStreamSegment(game.world,this._pa,this._pb,true)){
+        this._pb.toArray(this.path,i*3);this.pn=i+1;
+        if(this._obstacleContact.target?.onConstructHit){
+          this._constructPreclip.target=this._obstacleContact.target;
+          this._constructPreclip.point.copy(this._pb);this._constructPreclip.arc=this._arcLen();
+        }
+        break;
+      }
+    }
+    this.clipReceivers(game);
+  }
+
   update(dt, game) {
     const c = this.caster;
+    const constructPreclip=this._constructPreclip,constructTarget=constructPreclip.target;constructPreclip.target=null;
+    if(this.pendingLaunch&&(!this.sustaining||!c.alive||remoteInterrupted(c)||c.guarding)){this._dispose(game);return false;}
+    const firstEmission=this.pendingLaunch;
+    this.resolveLaunch(game,dt);
+    if(this.dead)return false;
+    if(this.pendingLaunch){c.state='cast';c.stateT=0;c._castPoseRanged=true;return true;}
+    // Remote sustain cannot outlive a broken casting stance. Previously frozen
+    // input skipped controlPlayer while this emitter kept paying/firing forever.
+    // Existing packets retain their path and finish through the ordinary fade.
+    if(this.remoteDetonate && remoteInterrupted(c))this.end();
     // ran out of ki mid-beam → the beam dies, but LOUDLY (fizzle cue), never silently
-    if (this.sustaining && c.alive && this.kiPerSec * dt > c.ki) { if (game.onDrained) game.onDrained(c); this.sustaining = false; }
+    if (this.sustaining && c.alive && !c.energyInfinite && this.kiPerSec * dt > c.ki) { if (game.onDrained) game.onDrained(c,this); this.sustaining = false; }
     if (this.sustaining && c.alive && c.spendKi(this.kiPerSec * dt)) {
-      c.state = 'cast'; c.stateT = 0;
-      c.muzzle(this.muzzle, this.faceOrigin ? 1.1 : undefined, this.faceOrigin ? 8.3 : undefined);
-      // steer beam toward the caster's 3D aim (eases up/down toward flyers or grounded targets)
-      this.dir.lerp(c.aim3, clamp(this.steer * dt, 0, 1)).normalize();
-      // slight vertical toward aim height not modeled; keep flat + muzzle height
+      this.emissionAge+=dt;
+      this.investedKi+=this.kiPerSec*dt;
+      c.state = 'cast'; c.stateT = 0;c._castPoseRanged=true;
+      this.sampleMuzzle(this.muzzle);
+      // Spherical steering also turns through an exact reversal. Normalized
+      // vector lerp stays stuck on the old axis when the inputs are antipodal.
+      // Only new emission turns; packets already in flight retain their velocity.
+      if(!firstEmission){
+        this.predictDirection(this.dir,dt);
+        // Planning still pursues the command through the hose's steering rate.
+        // Commit new axial energy only after the final anatomical pose exists.
+        // Never rotate the velocities of packets already in flight.
+        if(this._poseLaunch&&(this.faceOrigin||this.chest)&&c._combatPoseVersion!==this._emittedPoseVersion){
+          const source=this.faceOrigin?c.parts.head:c.parts.torso;
+          source.getWorldQuaternion(this._axialRotation);
+          this.dir.set(0,0,1).applyQuaternion(this._axialRotation).normalize();
+        }
+      }
+      // Simulation-only manager steps have no newly articulated source. Keep
+      // their ordinary steering semantics instead of replaying a stale pose.
+      this._emittedPoseVersion=c._combatPoseVersion;
       this.tipDist = Math.min(this.maxLen, this.tipDist + this.tipSpeed * dt);
-      // slow the caster while firing
-      c.vel.x *= 0.5; c.vel.z *= 0.5;
+      // Casting mobility belongs to Fighter.move's authored wish-speed scale,
+      // never per-beam velocity multiplication (which stacked and varied by Hz).
       // DRIVE THE VOICE. A beam that is LOSING a clash strains upward — the ring mod climbs and
       // the hiss opens, so you can hear which way a beam struggle is going without looking.
       if (this._voice) {
@@ -715,34 +1355,60 @@ class BeamHose {
 
     // ---- ADVANCE THE STREAM. Every emitted packet keeps travelling along the direction it was
     // born with; nothing already in flight is re-aimed. This loop is the whole feature.
+    this._packetContact.fighter=null;this._packetContact.naniteContact=null;
     for (let i = 0; i < this.pn; i++) {
       const o = i * 3;
-      this.path[o] += this.pvel[o] * dt;
-      this.path[o + 1] += this.pvel[o + 1] * dt;
-      this.path[o + 2] += this.pvel[o + 2] * dt;
+      this._pa.fromArray(this.path,o);
+      this._pb.copy(this._pa).addScaledVector(this._tmp.fromArray(this.pvel,o),dt);
+      // Spatial segment checks alone miss a released tail that moves completely
+      // across a thin wall between frames. Every packet must sweep its own trip.
+      this._clipStreamSegment(game.world,this._pa,this._pb);
+      this._absorbed[i]=this._clipPacketReceiver(game,this._pa,this._pb);
+      this._pb.toArray(this.path,o);
     }
-    // ---- EMIT at the hand, carrying the CURRENT aim. Shift the buffer down one and write node 0.
+    // ---- EMIT on a fixed time cadence. Node 0 is the live hand; nodes 1+ are
+    // independent packets. Per-frame insertion made a 150u beam only 43u at 120Hz.
+    // Interpolate births within this step, then advance each newborn by its age.
+    this._streamClock+=dt;
     if (this.sustaining) {
       const N = this.NODES;
-      if (this.pn < N) this.pn++;
-      for (let i = this.pn - 1; i > 0; i--) {
-        const d0 = i * 3, s0 = (i - 1) * 3;
-        this.path[d0] = this.path[s0]; this.path[d0 + 1] = this.path[s0 + 1]; this.path[d0 + 2] = this.path[s0 + 2];
-        this.pvel[d0] = this.pvel[s0]; this.pvel[d0 + 1] = this.pvel[s0 + 1]; this.pvel[d0 + 2] = this.pvel[s0 + 2];
+      while(this._streamClock+1e-10>=this._streamStep){
+        this._streamClock=Math.max(0,this._streamClock-this._streamStep);
+        if(this.pn<N)this.pn++;
+        for(let i=this.pn-1;i>1;i--){
+          const d0=i*3,s0=(i-1)*3;
+          this.path[d0]=this.path[s0];this.path[d0+1]=this.path[s0+1];this.path[d0+2]=this.path[s0+2];
+          this.pvel[d0]=this.pvel[s0];this.pvel[d0+1]=this.pvel[s0+1];this.pvel[d0+2]=this.pvel[s0+2];
+          this._absorbed[i]=this._absorbed[i-1];
+        }
+        const age=this._streamClock,t=clamp(1-age/(dt||1),0,1);
+        this._tmp.copy(this._streamDir).lerp(this.dir,t).normalize().multiplyScalar(this.tipSpeed);
+        this.pvel[3]=this._tmp.x;this.pvel[4]=this._tmp.y;this.pvel[5]=this._tmp.z;
+        this._pa.copy(this._streamOrigin).lerp(this.muzzle,t);
+        this._pb.copy(this._pa).addScaledVector(this._tmp,age);
+        this._clipStreamSegment(game.world,this._pa,this._pb);
+        this._absorbed[1]=this._clipPacketReceiver(game,this._pa,this._pb);
+        this._pb.toArray(this.path,3);
       }
       this.path[0] = this.muzzle.x; this.path[1] = this.muzzle.y; this.path[2] = this.muzzle.z;
+      this._absorbed[0]=null;
       this.pvel[0] = this.dir.x * this.tipSpeed;
       this.pvel[1] = this.dir.y * this.tipSpeed;
       this.pvel[2] = this.dir.z * this.tipSpeed;
+      this._streamOrigin.copy(this.muzzle);this._streamDir.copy(this.dir);
     } else if (this.pn > 2) {
       // released: the stream keeps flying and eats itself from the hand end, so a beam you stop
       // firing travels away instead of vanishing
-      for (let i = 0; i < this.pn - 1; i++) {
+      while(this._streamClock>=this._streamStep&&this.pn>2){
+       this._streamClock-=this._streamStep;
+       for (let i = 0; i < this.pn - 1; i++) {
         const d0 = i * 3, s0 = (i + 1) * 3;
         this.path[d0] = this.path[s0]; this.path[d0 + 1] = this.path[s0 + 1]; this.path[d0 + 2] = this.path[s0 + 2];
         this.pvel[d0] = this.pvel[s0]; this.pvel[d0 + 1] = this.pvel[s0 + 1]; this.pvel[d0 + 2] = this.pvel[s0 + 2];
+        this._absorbed[i]=this._absorbed[i+1];
+       }
+       this.pn--;
       }
-      this.pn--;
     }
     if (this.pn === 0) {                                  // first frame: seed a two-node stub
       this.path[0] = this.muzzle.x; this.path[1] = this.muzzle.y; this.path[2] = this.muzzle.z;
@@ -763,46 +1429,66 @@ class BeamHose {
     // ---- resolve blocking PER SEGMENT along the path. ⚠ This replaces a single ray from the
     // muzzle: a bent beam can pass a wall its own root is behind, and testing only the emission
     // direction would let it clip through geometry it visibly curves around.
-    this.blocked = false; let blockedCov = null;
+    this._groundResidue.begin(dt);
+    const groundClash=this.clashing||this.clashLen!=null;
+    this.blocked = false; let blockedCov = null,blockedPoint=null,blockedArc=0;
     for (let i = 1; i < this.pn && !this.blocked; i++) {
       const a0 = (i - 1) * 3, b0 = i * 3;
-      const ax = this.path[a0], ay = this.path[a0 + 1], az = this.path[a0 + 2];
-      const bx = this.path[b0], by = this.path[b0 + 1], bz = this.path[b0 + 2];
-      const sx = bx - ax, sz = bz - az, sl2 = sx * sx + sz * sz || 1;
-      for (const cov of game.world.cover) {
-        if (Math.min(ay, by) >= cov.h) continue;          // the beam passes over low cover
-        let t = ((cov.x - ax) * sx + (cov.z - az) * sz) / sl2;
-        t = t < 0 ? 0 : t > 1 ? 1 : t;
-        const px = ax + sx * t, pz = az + sz * t;
-        if (Math.hypot(px - cov.x, pz - cov.z) < cov.r + this.radius) {
-          this.pn = i; this.blocked = true; blockedCov = cov; break;
-        }
-      }
-      // ⚠ AND INTERIOR WALLS. Projectiles have honoured `hitInteriorWall` since interiors shipped;
-      // beams never did, and BACKLOG has carried "beams ignore interior walls" ever since. It was
-      // still true after the streaming rewrite because that loop only walks `world.cover` — which
-      // is deliberately NOT where interior walls live (they are never ordinary cover, so that a
-      // room cannot be shot down). A beam through the wall of a house you are standing behind is
-      // the one thing that makes corner warfare pointless.
-      // The wall test is a POINT query, so the segment is SAMPLED rather than tested at its ends:
-      // a node step is about 4 units and an interior wall is about 1 thick, so testing only the
-      // endpoints would let a beam step straight over it.
-      if (!this.blocked && game.world.hitInteriorWall) {
-        const sy = by - ay;
-        for (let k = 1; k <= 4; k++) {
-          const t = k / 4;
-          if (game.world.hitInteriorWall(ax + sx * t, ay + sy * t, az + sz * t, this.radius * 0.5)) {
-            this.pn = i; this.blocked = true; break;
-          }
+      this._pa.fromArray(this.path,a0);this._pb.fromArray(this.path,b0);
+      if(this._clipStreamSegment(game.world,this._pa,this._pb,true)){
+        this._pb.toArray(this.path,b0);this.pn=i+1;this.blocked=true;
+        // One nearest query across cover AND interiors: array order must never
+        // let the stream damage an object hidden behind an earlier wall.
+        if(this._obstacleContact.kind==='ground')this._groundResidue.capture(this._pb,this._arcLen());
+        if(this._obstacleContact.kind==='cover'){
+          blockedCov=this._obstacleContact.target;
+          if(blockedCov.onConstructHit){blockedPoint=this._constructBlockedPoint.copy(this._pb);blockedArc=this._arcLen();}
         }
       }
     }
     this.pn = Math.max(2, this.pn);
+    // The prepass can have used a larger Float32 skin on the untrimmed segment.
+    // Retain its proven surface only if this update still ends at the SAME arc
+    // and point. This never pulls a discarded far receiver to a new near tip.
+    if(!this.blocked&&constructTarget&&!constructTarget.construct.dead&&
+      this._tmp.fromArray(this.path,(this.pn-1)*3).distanceToSquared(constructPreclip.point)<1e-6&&
+      Math.abs(this._arcLen()-constructPreclip.arc)<1e-4){
+      this.blocked=true;blockedCov=constructTarget;blockedPoint=constructPreclip.point;blockedArc=constructPreclip.arc;
+    }
+    // Ordinary output is absorbed by the first physical receiver, not drawn
+    // through every body on the path. Only already-traveled energy can touch;
+    // leaving the lane frees a tip that must travel onward again.
+    let bodyHit=this.clipReceivers(game);
+    // The last released packets can collapse onto the same absorbing surface.
+    // That zero-length field has no segment to query, but this frame's swept
+    // contact is still real. Keep its compressed cap through the ordinary fade.
+    const held=this._packetContact;
+    if(!bodyHit&&held.fighter&&(!held.naniteContact||validNaniteContact(held.fighter,held.naniteContact))&&this._tmp.fromArray(this.path,(this.pn-1)*3).distanceToSquared(held.point)<1e-6){
+      const hit=this._bodyContact;hit.fighter=held.fighter;hit.naniteContact=held.naniteContact;
+      hit.point.copy(held.point);hit.surface.copy(held.surface);hit.direction.copy(held.direction);bodyHit=true;
+    }
+    if(bodyHit){
+      this.blocked=false;blockedCov=null;
+    }
     const tipI = (this.pn - 1) * 3;
     const tipPos = _v.set(this.path[tipI], this.path[tipI + 1], this.path[tipI + 2]);
     let len = this._arcLen();
+    // Once every released packet has been absorbed there is no moving energy
+    // left to render. Retaining a degenerate cap lets an advancing body swallow
+    // yesterday's contact point for the rest of the fade.
+    if(!this.sustaining&&bodyHit&&len<1e-5){this._dispose(game);return false;}
+    // Collision clipping wins over a previously established contact knot. A new
+    // wall (or a moving caster behind cover) must not turn the pin into tunneling.
+    if((this.blocked||bodyHit) && this.clashing){
+      this.clashing=false;this.clashLen=null;
+      const other=this._clashOther;this._clashOther=null;
+      if(other){other.clashing=false;other.clashLen=null;other._clashOther=null;}
+    }
     // beam-clash pins the struggle point: trim the path to that arc length rather than to a ray
-    if (this.clashLen != null) {
+    if(this.clashing){
+      pinBeamContact(this,this._clashContact);
+      tipPos.copy(this._clashContact);len=this._arcLen();
+    } else if (this.clashLen != null) {
       let a2 = 0, cut = this.pn;
       for (let i = 1; i < this.pn; i++) {
         const p0 = (i - 1) * 3, p1 = i * 3;
@@ -814,9 +1500,15 @@ class BeamHose {
       tipPos.set(this.path[ti], this.path[ti + 1], this.path[ti + 2]);
       len = this.clashLen;
     }
+    this._groundResidue.emit(game,tipPos,this._arcLen(),this.radius,this.sustaining,groundClash||bodyHit);
     len = Math.max(0.1, len);
     // sustained beams carve through cover
-    if (this.sustaining && blockedCov && blockedCov.hp > 0) {
+    if(this.sustaining&&dt>0&&blockedCov?.onConstructHit){
+      // A candidate farther along the hose can be discarded by a body or clash
+      // cutoff. Bill only the unchanged reached endpoint, never the aim ray.
+      if(blockedPoint.distanceToSquared(tipPos)<1e-6&&Math.abs(this._arcLen()-blockedArc)<1e-4)
+        blockedCov.onConstructHit(this.dps*c.powerBuff*dt,{src:c,pos:blockedPoint,lane:'beam'});
+    } else if (this.sustaining && blockedCov && blockedCov.hp > 0) {
       blockedCov.hp -= this.dps * 2 * dt;
       game.world.setBlockCracks(blockedCov);
       if (Math.random() < 0.4) game.particles.burst(tipPos.x, tipPos.y, tipPos.z, { count: 2, speed: 14, life: 0.3, size: 2.4, color: ['#3a3a44', this.color, '#fff'], drag: 2 });
@@ -826,11 +1518,35 @@ class BeamHose {
     // SWEEP the two tubes along the path. No orientation, no scale — the shape IS the path, which
     // is the point: a beam that has been swung has a bend in it and both layers carry it.
     const fade = this.sustaining ? 1 : Math.max(0, 1 - this.endT / 0.18);
+    if(this._surfaceTime)this._surfaceTime.value=game.time;
     const B = this.build;
-    this._sweep(this._coreGeo, this.radius * B.coreR, 1);
-    this._sweep(this._glowGeo, this.radius * 1.5 * (0.9 + Math.sin(game.time * 40) * 0.1), B.flare);
-    this.core.material.opacity = 0.95 * fade; this.glow.material.opacity = B.sheath * fade;
-    this.tip.position.copy(tipPos); this.tip.scale.setScalar(this.radius * 1.8 * B.tip * fade);
+    const renderCurve=this._curve?.update(this.path,Math.max(2,this.pn),this.sustaining?this.dir:null,this.radius);
+    this._sweep(this._coreGeo, this.radius * B.coreR, 1,renderCurve);
+    this._sweep(this._glowGeo, this.radius * 1.5 * (0.9 + Math.sin(game.time * 40) * 0.1), B.flare,renderCurve);
+    this.core.material.opacity = 0.95 * fade; this.glow.material.opacity = (this._combatReadability ? Math.max(.34,B.sheath) : B.sheath) * fade;
+    const tipRadius=this._combatReadability
+      ? Math.min(this.radius*Math.min(1.4,1.1*B.tip),this.radius*.3+Math.min(this.tipDist,len)*.3,len*.5)
+      : this.radius*1.8*B.tip;
+    // A launch bulb wider than its traveled distance swallowed the caster in rear view.
+    // Fit the CURRENT field, not accumulated tipDist: absorption can shorten a
+    // mature beam to a few units, then a departing/grazing body exposes its free
+    // tip again. Historical travel must not inflate a sphere around the caster.
+    // Retain charge-scaled width and the full hit volume.
+    this.tip.position.copy(tipPos); this.tip.scale.setScalar(tipRadius*fade);
+    this.tip.quaternion.identity();
+    if(bodyHit){
+      const hit=this._bodyContact,gap=hit.point.distanceTo(hit.surface);
+      // A compressed impact cap bridges the existing collision envelope to the
+      // near body surface. Its narrow depth/radial extent cannot bloom through
+      // the victim like the old far-end sphere. This is contact VFX, not new
+      // energy packets secretly extended beyond their traveled path.
+      this.tip.position.copy(hit.point).lerp(hit.surface,.5);
+      this._tmp.copy(hit.surface).sub(hit.point).normalize();
+      if(this._tmp.lengthSq()<1e-8)this._tmp.copy(hit.direction);
+      this.tip.quaternion.setFromUnitVectors(_AZ,this._tmp);
+      const spread=Math.min(this.radius*.75,hit.fighter.radius*.8);
+      this.tip.scale.set(spread,spread,gap*.5+Math.min(.25,this.radius*.15)).multiplyScalar(fade);
+    }
     if (this.detail) {
       // THE DETAIL LAYER, in WORLD space: two perpendiculars off the beam direction, then each
       // temper decides where along and around the beam its elements sit and how big they are.
@@ -838,7 +1554,7 @@ class BeamHose {
       // ⚠ THE DETAIL RIDES THE PATH, NOT THE AIM. It used to be placed as (muzzle + dir * t * L),
       // which is a straight line — so a bent beam had its helix, its kinks and its pressure rings
       // hanging in the air beside it. `along` is now an index into the live path.
-      const T = this.temper, N = T.n, R = this.radius * 2.1 * T.amp;
+      const T = this.temper, N = T.n, R = this.radius * (this._combatReadability ? .72 : 2.1) * T.amp;
       const clock = game.time * T.rate, kind = T.detail;
       const pathAt = (u) => {
         const f = Math.max(0, Math.min(1, u)) * (this.pn - 1);
@@ -887,7 +1603,12 @@ class BeamHose {
         let e1x = axy * d.z - 0 * d.y, e1y = 0 * d.x - axx * d.z, e1z = axx * d.y - axy * d.x;
         const e1l = Math.hypot(e1x, e1y, e1z) || 1; e1x /= e1l; e1y /= e1l; e1z /= e1l;
         const e2x = d.y * e1z - d.z * e1y, e2y = d.z * e1x - d.x * e1z, e2z = d.x * e1y - d.y * e1x;
-        this._sm.makeScale(sc, sc, sc);
+        const detailScale=sc*(this._combatReadability ? Math.min(1,this.radius) : 1);
+        if(this._combatReadability){
+          // Close-view detail is flow inside the sheath, not detached orbiting balls.
+          this._sm.makeRotationFromQuaternion(_q.setFromUnitVectors(_AZ,d));
+          this._sm.scale(this._sv.set(detailScale*.16,detailScale*.16,detailScale*.95));
+        }else this._sm.makeScale(detailScale, detailScale, detailScale);
         this._sm.setPosition(
           P.x + e1x * ca + e2x * sa,
           P.y + e1y * ca + e2y * sa,
@@ -895,20 +1616,59 @@ class BeamHose {
         this.detail.setMatrixAt(i, this._sm);
       }
       this.detail.instanceMatrix.needsUpdate = true;
-      this.detail.material.opacity = 0.9 * fade;
+      this.detail.material.opacity = (this._combatReadability ? .55 : .9) * fade;
     }
-    this.tip.material.opacity = 0.82 * fade;
+    this.tip.material.opacity = (this._combatReadability ? .5 : .82) * fade;
+    for(const mesh of [this.core,this.glow,this.tip,this.detail])if(mesh)mesh.userData.beamOpacity=mesh.material.opacity;
     this.light.position.copy(tipPos); this.light.intensity = 5 * this.power * fade;
+    this.light.distance=60;
+    if((bodyHit||this.blocked)&&this._combatReadability){
+      // Reuse the tip lamp at the physical surface. Placing it inside the
+      // collision envelope illuminates the far side and loses the impact.
+      // A short reach reveals the receiver without washing the whole field.
+      const inset=Math.min(.8,.3+this.radius*.12);
+      if(bodyHit){
+        const hit=this._bodyContact;this.light.position.copy(hit.surface).addScaledVector(hit.direction,-inset);
+      }else{
+        this._pa.fromArray(this.path,Math.max(0,this.pn-2)*3);
+        this._tan.copy(tipPos).sub(this._pa).normalize();
+        this.light.position.addScaledVector(this._tan,-inset);
+      }
+      this.light.intensity=Math.min(120,30*Math.sqrt(this.radius)*Math.min(2,this.power)*this.impactGlow)*fade;
+      this.light.distance=clamp(14+this.radius*6,16,42);
+    }
+    const sourceOn=this.sustaining&&c.alive&&this.emissionAge>0&&this.sourceGlow>0;
+    this.source.visible=sourceOn;
+    if(sourceOn){
+      const pulse=.95+.05*Math.sin(this.emissionAge*22);
+      // Optics stay a small aperture; charge-scaled hand/chest beams can have a
+      // larger bulb without swallowing the whole silhouette from behind.
+      const size=(this.faceOrigin?Math.min(.22,this.radius*.35):Math.min(1.6,this.radius*.65))*this.sourceScale;
+      this.source.position.copy(this.muzzle);this.source.scale.setScalar(size*pulse);
+      this.source.material.opacity=Math.min(.95,.75*this.sourceGlow);
+      // Optional source illumination may use an idle lamp, never steal a busy
+      // contact lamp or increase the scene's fixed shader light count.
+      if(this.sourceLight&&this.sourceLight.userData.vfxLease!==this._sourceLightLease)this.sourceLight=null;
+      if(!this.sourceLight&&(!game.vfx.lightPool||game.vfx.lightPool.length)){
+        this.sourceLight=game.vfx.borrowLight(this.color,0,26);this._sourceLightLease=this.sourceLight.userData.vfxLease;
+      }
+      if(this.sourceLight){this.sourceLight.position.copy(this.muzzle);this.sourceLight.intensity=40*this.sourceGlow*Math.min(2,this.power)*pulse;}
+    }else if(this.sourceLight){if(this.sourceLight.userData.vfxLease===this._sourceLightLease)game.vfx.returnLight(this.sourceLight);this.sourceLight=null;}
+
+    this._sparkClock+=dt;
+    const emitSparks=!this._combatReadability||this._sparkClock>=1/24;
+    if(emitSparks)this._sparkClock%=1/24;
 
     if (this.sustaining) {
       // damage along the beam
       for (const f of game.entities) {
         if (!game.isFoe(c, f)) continue;
+        if(!this.pierceFighters&&(!bodyHit||f!==this._bodyContact.fighter))continue;
         // ⚠ CLOSEST POINT ON THE WHOLE POLYLINE, not on one ray from the hand. The beam bends, so
         // the hitbox has to bend with it or the damage and the picture disagree — and the picture
         // is what the player is reading.
-        const fy = f.pos.y + 5.2;
-        let dd = 1e9, hx = 0, hy = 0, hz = 0;
+        const fy = f.pos.y + 5.2-(f._crouchPose?.drop||0);
+        let dd = 1e9, hx = 0, hy = 0, hz = 0, hdx = 0, hdy = 0, hdz = 0;
         for (let i = 1; i < this.pn; i++) {
           const a0 = (i - 1) * 3, b0 = i * 3;
           const ax = this.path[a0], ay = this.path[a0 + 1], az = this.path[a0 + 2];
@@ -918,28 +1678,72 @@ class BeamHose {
           t = t < 0 ? 0 : t > 1 ? 1 : t;
           const px = ax + sx * t, py = ay + sy * t, pz = az + sz * t;
           const d2 = Math.hypot(f.pos.x - px, fy - py, f.pos.z - pz);
-          if (d2 < dd) { dd = d2; hx = px; hy = py; hz = pz; }
+          if(d2<dd&&d2<this.radius+f.radius+1){
+            // Contact padding cannot reach through a nearby wall. Consider each
+            // candidate: a hidden nearest segment must not veto an exposed part
+            // of the same curved hose that legitimately wraps around cover.
+            this._pa.set(px,py,pz);this._pb.set(f.pos.x,fy,f.pos.z);
+            if(sweepSplitObstacle(game.world,this._pa,this._pb,0,this._obstacleContact,false))continue;
+            dd=d2;hx=px;hy=py;hz=pz;hdx=sx;hdy=sy;hdz=sz;
+          }
+        }
+        if(bodyHit&&f===this._bodyContact.fighter){
+          const hit=this._bodyContact;
+          // Analytic entry is exactly on the envelope. A Float32 round-trip
+          // must not turn this accepted contact into an every-other-frame miss.
+          dd=0;hx=hit.surface.x;hy=hit.surface.y;hz=hit.surface.z;
+          hdx=hit.direction.x;hdy=hit.direction.y;hdz=hit.direction.z;
         }
         if (dd < this.radius + f.radius + 1) {
           // src+dot so GUARD can block beams (drains guard over time)
-          f.takeDamage(this.dps * c.powerBuff * dt, { src: c, dot: true, dtype: this.dtype, siphon: this.siphon, hitstop: 0 });
+          // The hose already emits contact sparks below. Claim that feedback
+          // so PowerWorld's generic onHit flash does not stack a glowing sphere
+          // and point light on the opponent on every damage tick.
+          this._tmp.set(hx,hy,hz);
+          const damageOpts={src:c,dot:true,contactFx:true,contactPoint:this._tmp,dtype:this.dtype,siphon:this.siphon,hitstop:0,
+            beamDelta:dt,beamGuardChip:this.guardChip,beamGuardDrain:this.guardDrain,
+            naniteContact:bodyHit&&f===this._bodyContact.fighter?this._bodyContact.naniteContact:null};
+          const dealt=f.takeDamage(this.dps*c.powerBuff*dt,damageOpts);
+          // The damage result owns acceptance: Studio's onHit restores target
+          // health before this call returns. Remote authority and rejected
+          // immunity/phase hits cannot claim a local body-contact response.
+          const damaged=!f.remote&&Number.isFinite(dealt)&&dealt>0;
+          const metal=damageOpts.naniteResult?.integrity>0;
+          const guardContact=damageOpts.beamBlocked===true;
+          if((damaged||metal||guardContact)&&this.emissionAge+1e-8>=(this._contactNext.get(f)??0)){
+            const interval=.18;
+            this._contactNext.set(f,this.emissionAge+interval);
+            this._tmp.set(hx,hy,hz);this._tan.set(hdx,hdy,hdz).normalize();
+            if(metal)this._tan.copy(damageOpts.naniteContact.normal);
+            const color=metal?'#bdc2b8':guardContact?(f.def.guardType==='deflect'?'#ffd24a':'#bfe0ff'):this.color;
+            const power=clamp(dealt/Math.max(dt,1e-6)/80,.35,.8)*(guardContact?.65:1);
+            game.vfx.contact?.(this._tmp,this._tan,{color,power,pressure:true,radius:this.radius});
+            if(guardContact)game.audio.zap?.(620,this._tmp);
+            else game.audio.impact?.(.24+power*.25,this._tmp);
+            // Scale by a fixed contact window, not this display frame's tiny
+            // damage tick. Generic DoTs remain suppressed by the reaction seam.
+            if(damaged)queueHitReaction(f,dealt/Math.max(dt,1e-6)*interval,
+              {src:c,dot:true,beamContact:true,blocked:guardContact,kb:this._tan});
+          }
           // ---- THE PRESSURE LADDER (manual §9): what a beam DOES to you depends on who you are.
           // press = the beam's authority · hold = strength + a raised guard. The outcomes, weakest
           // to strongest: LAUNCHED off your feet → PUSHED sliding back → HOLD your ground →
           // WALK FORWARD INTO IT, eating the damage. The old constant shove died against move()'s
           // walk-speed clamp every frame — burstT lifts the clamp, which is what makes the slide real.
-          if (f.alive && f.state !== 'ko') {
-            const blocked = f.guarding && f.staggerT <= 0;
+          if ((damaged||guardContact) && f.alive && f.state !== 'ko' && this.pushForce>0) {
+            const blocked = guardContact;
             const press = Math.min((this.dps * c.powerBuff) / 24, 1.25);       // capped so the TOP of the roster can wade through anything
             const hold = (f.strength ?? 5) / 10 + (blocked ? 0.4 : 0) + (f.def.metal ? 0.15 : 0);
             if (hold < press * 0.85) {
-              const shove = (press * 0.85 - hold) * 46;
-              f.vel.x += this.dir.x * shove * dt * 8; f.vel.z += this.dir.z * shove * dt * 8;
+              const shove = (press * 0.85 - hold) * this.pushForce * (blocked?.2:1);
+              this._tan.set(hdx,hdy,hdz).normalize();
+              f.vel.addScaledVector(this._tan,shove*dt);
               f.burstT = Math.max(f.burstT || 0, 0.09);                        // the clamp-lift — same mechanism as the dash
               f._beamPressT = (f._beamPressT || 0) + dt;
               if (!blocked && press > hold * 1.8 && f._beamPressT > 0.45) {    // the weak get BLASTED off their feet
                 f._beamPressT = 0;
-                f.vel.x += this.dir.x * 34; f.vel.z += this.dir.z * 34; f.vel.y += 11;
+                const launchScale=Math.min(1,this.pushForce/368);
+                f.vel.addScaledVector(this._tan,34*launchScale); f.vel.y += 11*launchScale;
                 // ⚠ this writes launchT directly instead of going through takeDamage, so it has to
                 // know about the dimension's longer window itself or a beam-launch would brake three
                 // times sooner than a punch-launch in the same fight (manual §47).
@@ -949,7 +1753,7 @@ class BeamHose {
           }
           // the contact spark belongs at the CLOSEST POINT ON THE CURVE (hx/hy/hz), which is what
           // the per-segment search above returns — `px` was the old single-ray local and is gone.
-          game.particles.burst(hx, hy, hz, { count: 2, speed: 12, life: 0.3, size: 2, color: ['#fff', this.color], dir: { x: this.dir.x, z: this.dir.z }, spread: 1.4 });
+          if(damaged&&emitSparks)game.particles.burst(hx, hy, hz, { count: 2, speed: 12, life: this._combatReadability ? .16 : .3, size: this._combatReadability ? .7 : 2, color: guardContact?['#bfe0ff']:this._combatReadability?[this.color]:['#fff', this.color], dir: { x: -hdx, z: -hdz }, spread: 1.4 });
         }
       }
       // ⚠ A BEAM CUTS A THROWN CAR TOO (manual §47). The same one door as the projectile path, so a
@@ -960,16 +1764,26 @@ class BeamHose {
       if (game._flung && game._flung.length) game.hitFlung(c, this.tip.position, this.radius + 2.5, this.dps * c.powerBuff * dt);
       // tip fx + muzzle fx  (read tip from mesh — the damage loop reused the _v temp)
       const tp = this.tip.position;
-      if (Math.random() < 0.8) game.particles.burst(tp.x, tp.y, tp.z, { count: 3, speed: 16, life: 0.3, size: this.radius * 1.6, color: ['#fff', this.color, this.color2], drag: 3 });
-      game.particles.burst(this.muzzle.x, this.muzzle.y, this.muzzle.z, { count: 2, speed: 10, life: 0.25, size: this.radius, color: [this.color2, '#fff'], drag: 4 });
-      if (this.blocked) game.particles.burst(tp.x, tp.y, tp.z, { count: 4, speed: 20, life: 0.3, size: 2.4, color: ['#fff', this.color], dir: { x: -this.dir.x, z: -this.dir.z }, spread: 1.2 });
+      if (emitSparks&&Math.random() < 0.8) game.particles.burst(tp.x, tp.y, tp.z, { count: 3, speed: 16, life: 0.3, size: this._combatReadability?Math.min(1.1,this.radius*.4):this.radius*1.6, color: this._combatReadability?[this.color,this.color2]:['#fff',this.color,this.color2], drag: 3 });
+      if(emitSparks)game.particles.burst(this.muzzle.x, this.muzzle.y, this.muzzle.z, { count: 2, speed: 10, life: 0.25, size: this._combatReadability?Math.min(1,this.radius*.4):this.radius, color: this._combatReadability?[this.color,this.color2]:[this.color2,'#fff'], drag: 4 });
+      if (emitSparks&&this.blocked) game.particles.burst(tp.x, tp.y, tp.z, { count: 4, speed: 20, life: 0.3, size: this._combatReadability?1:2.4, color: ['#fff', this.color], dir: { x: -this.dir.x, z: -this.dir.z }, spread: 1.2 });
       if (Math.random() < 0.15) game.world.shake(0.1 * this.power);
     }
 
     if (!this.sustaining && this.endT >= 0.18) { this._dispose(game); return false; }
     return true;
   }
-  _dispose(game) { if (this.dead) return; this.dead = true; if (this._voice) { this._voice.stop(); this._voice = null; } game.scene.remove(this.grp); [this.glow, this.core, this.tip].forEach(m => m.material.dispose()); if (this.detail) this.detail.material.dispose(); if (this._glowGeo) this._glowGeo.dispose(); if (this._coreGeo) this._coreGeo.dispose(); game.vfx.returnLight(this.light); }   // the tubes are PER-BEAM geometry (the path is unique) and must be disposed; the orb/tip geo is shared   // geometry is shared; the light STAYS in the scene (light-count law)
+  _clipStreamSegment(world,a,b,storedPath=false){
+    // Packet endpoints are stored in Float32Array. A correctly stopped packet
+    // can round just outside its contact plane; include two ULPs in the spatial
+    // re-query on EVERY axis so rounding cannot flicker wall sparks or cover
+    // damage. Expanding XZ alone loses rounded roof/underside contacts.
+    // Temporal motion keeps the exact radius; the skin only retreats the path.
+    const skin=storedPath?Math.max(1e-5,Math.abs(a.x),Math.abs(a.y),Math.abs(a.z),Math.abs(b.x),Math.abs(b.y),Math.abs(b.z))*2**-22:0;
+    if(!sweepSplitObstacle(world,a,b,this.radius+skin,this._obstacleContact,!!world._ghTriangles,skin))return false;
+    b.lerpVectors(a,b,this._obstacleContact.t);return true;
+  }
+  _dispose(game) { if (this.dead) return; this.dead = true; this._groundResidue.reset(); if (this._voice) { this._voice.stop(); this._voice = null; } game.scene.remove(this.grp); [this.glow, this.core, this.tip,this.source].forEach(m => m.material.dispose()); if (this.detail) this.detail.material.dispose(); if (this._glowGeo) this._glowGeo.dispose(); if (this._coreGeo) this._coreGeo.dispose(); game.vfx.returnLight(this.light);if(this.sourceLight){if(this.sourceLight.userData.vfxLease===this._sourceLightLease)game.vfx.returnLight(this.sourceLight);this.sourceLight=null;} }   // Tube geometry is per beam; sphere geometry and the fixed scene light pool stay shared.
 }
 
 // ---- Star Sphere: grow a giant orb overhead, then hurl it ----
@@ -1001,13 +1815,15 @@ class GrowingOrb {
       for (let i = 0; i < 3; i++) { const a = rand(0, TAU), r = rand(20, 40); game.particles.spawn({ x: this.pos.x + Math.cos(a) * r, y: this.pos.y + rand(-10, 10), z: this.pos.z + Math.sin(a) * r, vx: -Math.cos(a) * 40, vz: -Math.sin(a) * 40, vy: 0, life: r / 40, size: 2.4, color: [this.color, this.color2], drag: 0.2 }); }
       if (!c.alive) this.launch();
     } else if (this.launched) {
-      this.pos.addScaledVector(this.vel, dt); this.life -= dt;
+      _v.copy(this.pos).addScaledVector(this.vel,dt);
+      const terrainTime=game.world._ghTriangles?terrainEntry(game.world,this.pos,_v,this.radius):Infinity;
+      this.pos.lerp(_v,Number.isFinite(terrainTime)?terrainTime:1); this.life -= dt;
       game.particles.burst(this.pos.x, this.pos.y, this.pos.z, { count: 5, speed: 14, life: 0.4, size: this.radius * 0.8, color: [this.color, this.color2, '#fff'], drag: 3 });
-      if (this.pos.y <= this.radius || this.life <= 0 || game.overlapFoe(c, this.pos, this.radius + 2)) {
-        const p = this.pos.clone(); p.y = Math.max(0.3, p.y);
+      if (Number.isFinite(terrainTime) || (!game.world._ghTriangles && this.pos.y <= this.radius) || this.life <= 0 || game.overlapFoe(c, this.pos, this.radius + 2)) {
+        const p = this.pos.clone(); if(!game.world._ghTriangles)p.y = Math.max(0.3, p.y);
         const power = 1 + this.charge01 * 2.4;
         game.vfx.explode(p, { color: this.color, color2: this.color2, radius: this.radius * 1.8, power, scorch: true });
-        game.vfx.shockwave(p.clone().setY(0.2), { color: this.color, radius: this.radius * 4 + 20, power });
+        game.vfx.shockwave(p.clone().setY((game.world._ghTriangles?game.world.heightAt(p.x,p.z):0)+0.2), { color: this.color, radius: this.radius * 4 + 20, power });
         game.areaDamage(c, p, this.radius * 3.2, 40 + this.charge01 * 90, power);
         game.audio.boom(1.2); game.world.punch(0.78);
         this._dispose(game); return false;
@@ -1021,24 +1837,135 @@ class GrowingOrb {
 }
 
 export class Projectiles {
-  constructor(game) { this.game = game; this.list = []; }
-  spawnProjectile(caster, o) { const p = new Projectile(this.game, caster, o); this.list.push(p); return p; }
-  spawnBeam(caster, o) { const b = new BeamHose(this.game, caster, o); this.list.push(b); return b; }
+  constructor(game) { this.game = game; this.list = []; this._nextShotId = 1; this._directionBatch=0;this._predictingBatch=false; }
+  spawnProjectile(caster, o) { const p = new Projectile(this.game, caster, o); p._contactId = this._nextShotId++; this.list.push(p); return p; }
+  spawnBeam(caster, o) { const b = new BeamHose(this.game, caster, o); b._contactId=this._nextShotId++; this.list.push(b); return b; }
   spawnGrowingOrb(caster, o) { const s = new GrowingOrb(this.game, caster, o); this.list.push(s); return s; }
+  resolveLaunches(game=this.game){
+    for(const f of game.entities||[])if(f._throwAction)resolveThrowRelease(f);
+    for(const shot of this.list)if(!shot.dead)shot.resolveLaunch?.(game);
+  }
+  retirePendingNaniteShots(caster,slot=null){
+    for(const shot of this.list)if(shot instanceof Projectile&&!shot.dead&&!shot._launchResolved&&shot.caster===caster&&shot._powerOrigin?.naniteForm==='cannon'&&(slot===null||shot._powerOrigin.slot===slot))shot._dispose(this.game);
+  }
   update(dt, game) {
+    this.resolveLaunches(game);
+    for(const p of this.list)if(p instanceof BeamHose)p.clipForContacts(game);
+    // Freeze support membership before costs or clashes can end a beam. The
+    // rendered pose already used that support this frame; it unwinds next frame.
+    this._directionBatch++;
+    for(const p of this.list)if(p instanceof BeamHose){p._stepChest=p._findAxialSupport();p._directionBatch=this._directionBatch;}
     this._beamClash(dt, game);
-    for (let i = this.list.length - 1; i >= 0; i--) { if (!this.list[i].update(dt, game)) this.list.splice(i, 1); }
+    // Preserve authoritative clash-axis adjustments, then make every steering
+    // prediction read the same unadvanced direction, independent of list order.
+    for(const p of this.list)if(p instanceof BeamHose)p._stepDirection.copy(p.dir);
+    this._predictingBatch=true;
+    try{
+    const beams=this.list.filter(p=>p instanceof BeamHose&&this._canIntercept(p,dt));
+    const localReceivers=(game.entities||[]).filter(hasNaniteCells);
+    const participating=this.list.filter(p=>p instanceof Projectile&&!p.dead&&(game.world._ghTriangles||priorityEnabled(p)||p.ballistic||p.charged||
+      (!p._guidedSplit&&!p.boomerang&&!p.stick&&!p.armDelay&&localReceivers.some(f=>game.isFoe(p.caster,f)))));
+    if(participating.length)this._projectileContacts(dt,game,participating,beams);
+    const prepared=new Set(participating);
+    for (let i = this.list.length - 1; i >= 0; i--) { const p=this.list[i]; if (p.dead || (!prepared.has(p) && !p.update(dt, game))) this.list.splice(i, 1); }
+    }finally{this._predictingBatch=false;}
+  }
+
+  _canIntercept(b,dt){
+    return b.interceptBullets&&!b.pendingLaunch&&!b.dead&&b.sustaining&&b.caster.alive&&!remoteInterrupted(b.caster)&&
+      b.investedKi>=b.interceptKi&&this._sustainAffordable(b,dt);
+  }
+
+  _sustainAffordable(beam,dt){
+    if(beam.caster.energyInfinite)return true;
+    let remaining=beam.caster.ki;
+    // Mirror the existing reverse update/payment order without spending or
+    // crediting energy speculatively. Growing orbs share this same ki pool.
+    for(let i=this.list.length-1;i>=0;i--){
+      const p=this.list[i];if(p.dead||p.caster!==beam.caster||!p.caster.alive)continue;
+      const pays=p instanceof BeamHose?p.sustaining&&(!p.pendingLaunch||p._launchReady)&&!(p.remoteDetonate&&remoteInterrupted(p.caster)):
+        p instanceof GrowingOrb&&p.charging&&p.radius<p.maxR;
+      if(!pays)continue;
+      const cost=p.kiPerSec*dt,affordable=remaining>=cost;
+      if(p===beam)return affordable;
+      if(affordable)remaining-=cost;
+    }
+    return false;
+  }
+
+  _projectileContacts(dt, game, shots, beams=[]) {
+    // Stable spawn order also fixes simultaneous multi-shot tie outcomes when
+    // list compaction or callers reorder the manager's public list.
+    shots.sort((a,b)=>a._contactId-b._contactId);
+    const ignored=new Map(shots.map(p=>[p,new Set()]));
+    const steps=Math.max(1,Math.ceil(dt*120)),step=dt/steps;
+    for(let slice=0;slice<steps;slice++){
+      let active=[];
+      for(const p of shots){
+        if(p.dead)continue;
+        if(p.prepareMotion(step,game))active.push(p);
+      }
+      let left=step;
+      while(active.length&&left>1e-12){
+        const ends=new Map(active.map(p=>[p,p._armed||p._stuckTo?p.pos.clone():p.pos.clone().addScaledVector(p.vel,left)]));
+        let event=null;
+        const offer=e=>{
+          if(!event||e.t<event.t-1e-10||(Math.abs(e.t-event.t)<=1e-10&&
+            (e.order<event.order||(e.order===event.order&&(e.a._contactId<event.a._contactId||
+              (e.a._contactId===event.a._contactId&&(e.b?e.b._contactId:0)<(event.b?event.b._contactId:0)))))))event=e;
+        };
+        for(const p of active){const c=earliestOrdinaryContact(p,ends.get(p),left,game,ignored.get(p));if(c)offer({...c,a:p,order:0});}
+        for(let i=0;i<active.length;i++)for(let j=i+1;j<active.length;j++){
+          const a=active[i],b=active[j];
+          if(a.caster.team===b.caster.team||!priorityEnabled(a)||!priorityEnabled(b))continue;
+          const t=sweptPairTime(a,ends.get(a),b,ends.get(b));
+          if(Number.isFinite(t))offer({t,a,b,order:1});
+        }
+        for(const p of active)if(p.ballistic)for(const beam of beams){
+          if(p.caster.team===beam.caster.team||!this._canIntercept(beam,dt))continue;
+          const t=sweptBeamTime(p,ends.get(p),beam,game.world);
+          if(Number.isFinite(t))offer({t,a:p,b:beam,kind:'beam',order:2});
+        }
+        const elapsed=left*(event?event.t:1);
+        for(const p of active)if(elapsed>0)p.advancePrepared(elapsed,game);
+        left-=elapsed;
+        if(!event)break;
+        const a=event.a,b=event.b;
+        if(!a.dead&&(!b||!b.dead)){
+          if(event.kind==='beam'){
+            a._dispose(game);
+            game.vfx.ring(a.pos.clone(),{color:b.color,r0:.2,r1:Math.min(3,b.radius+a.radius),life:.12});
+            game.onAttackIntercept?.({kind:'beam',a,b,pos:a.pos.clone(),retired:1});
+          }else if(b){
+            const at=a.pos.clone().add(b.pos).multiplyScalar(.5);
+            if(a.collisionPriority<=b.collisionPriority)a._dispose(game);
+            if(b.collisionPriority<=a.collisionPriority)b._dispose(game);
+            game.vfx.ring(at,{color:'#ffd24a',r0:.3,r1:Math.min(4,a.radius+b.radius),life:.14});
+            game.onAttackIntercept?.({kind:'priority',a,b,pos:at,retired:Number(a.dead)+Number(b.dead)});
+          }else{
+            a.commitContact(game,event);
+            // Piercing/bouncing/returning shots may continue, but one contact
+            // surface cannot repeatedly charge damage at t=0 in this frame.
+            ignored.get(a).add(event.target||event.kind);
+          }
+        }
+        active=active.filter(p=>!p.dead);
+      }
+    }
   }
 
   // DBZ-style beam struggle: opposing beams meet; the struggle point moves toward the weaker
   // (weakness = character might × power buff × remaining ki budget). Loser gets overpowered.
   _beamClash(dt, game) {
     const beams = [];
-    for (const o of this.list) if (o instanceof BeamHose && o.sustaining && !o.dead) beams.push(o);
-    for (const b of beams) { b.clashLen = null; b.clashing = false; }
+    for (const o of this.list) if (o instanceof BeamHose) {
+      o.clashLen = null; o.clashing = false;
+      if(o.sustaining && !o.pendingLaunch && !o.dead && o.caster.alive && !(o.remoteDetonate && remoteInterrupted(o.caster)))beams.push(o);
+      else o._clashOther=null;
+    }
     for (let i = 0; i < beams.length; i++) for (let j = i + 1; j < beams.length; j++) {
       const a = beams[i], b = beams[j];
-      if (a.team === b.team) continue;
+      if (a.team === b.team || !a.sustaining || !b.sustaining || a.clashing || b.clashing) continue;
       const D = a.muzzle.distanceTo(b.muzzle);
       if (D > (a.maxLen + b.maxLen) * 0.95 || D < 10) continue;
       // ⚠ THE CLASH WAS 2D AND `D` WAS 3D, WHICH SILENTLY KILLED IT IN THE AIR. The horizontal
@@ -1051,17 +1978,24 @@ export class Projectiles {
       const abx = (b.muzzle.x - a.muzzle.x) / D, abz = (b.muzzle.z - a.muzzle.z) / D;
       if (a.dir.x * abx + a.dir.y * aby + a.dir.z * abz < 0.4) continue;      // a must aim at b
       if (b.dir.x * -abx + b.dir.y * -aby + b.dir.z * -abz < 0.4) continue;   // b must aim at a
-      if (a._clashOther !== b) { a._clashT = 0.5; a._clashOther = b; b._clashOther = a; }
+      if (!beamPathsTouch(a,b,_v)) continue;
+      if (a._clashOther !== b) {
+        a._clashT = clamp(((_v.x-a.muzzle.x)*abx+(_v.y-a.muzzle.y)*aby+(_v.z-a.muzzle.z)*abz)/D,0,1);
+        a._clashOffset.copy(_v).sub(a._tmp.copy(a.muzzle).lerp(b.muzzle,a._clashT));
+        a._clashOther = b; b._clashOther = a;
+      }
       const pa = a.clashPower(), pb = b.clashPower(), tot = pa + pb || 1;
       a._clashT = clamp(a._clashT + ((pa - pb) / tot) * 0.85 * dt, 0, 1);
       const t = a._clashT;
+      b._clashT = 1-t;
       // ⚠ AND THE STRUGGLE POINT HAS TO RIDE THE SAME AXIS. `cy` was the MIDPOINT of the two
       // muzzles regardless of where the struggle actually sat, so a clash that a stronger fighter
       // was pushing uphill drew its collision flare at the wrong height. It interpolates by `t`
       // now, exactly like x and z.
-      const cx = a.muzzle.x + (b.muzzle.x - a.muzzle.x) * t,
-            cy = a.muzzle.y + (b.muzzle.y - a.muzzle.y) * t,
-            cz = a.muzzle.z + (b.muzzle.z - a.muzzle.z) * t;
+      const cx = a.muzzle.x + (b.muzzle.x - a.muzzle.x) * t + a._clashOffset.x,
+            cy = a.muzzle.y + (b.muzzle.y - a.muzzle.y) * t + a._clashOffset.y,
+            cz = a.muzzle.z + (b.muzzle.z - a.muzzle.z) * t + a._clashOffset.z;
+      a._clashContact.set(cx,cy,cz);b._clashContact.copy(a._clashContact);
       a.clashLen = D * t; b.clashLen = D * (1 - t); a.clashing = b.clashing = true;
       // ⚠ FLATTENING BOTH BEAMS TO y=0 was the other half of the same bug: even when a clash did
       // form between fighters at different heights, both beams snapped horizontal and no longer
@@ -1076,20 +2010,20 @@ export class Projectiles {
       if (t >= 0.94) this._overpower(b, a, game);
       else if (t <= 0.06) this._overpower(a, b, game);
     }
+    for(const b of beams)if(!b.clashing)b._clashOther=null;
   }
 
   _overpower(loser, winner, game) {
     const c = loser.caster;
     if (c && c.alive) {
-      const p = c.pos.clone().setY(6);
+      const p = c.pos.clone(); p.y += 5;
       game.vfx.explode(p, { color: winner.color, color2: '#fff', radius: 18, power: 2.2 });
-      game.vfx.shockwave(c.pos.clone().setY(0.2), { color: winner.color, radius: 44, power: 1.9 });
+      if(p.y<6.5)game.vfx.shockwave(c.pos.clone().setY(0.2), { color: winner.color, radius: 44, power: 1.9 });
       game.vfx.impact(p, { x: winner.dir.x, z: winner.dir.z }, { color: winner.color, power: 2 });
-      game.worldImpact(c.pos.clone().setY(0.4), 44, 2.2);
+      game.worldImpact(p, 44, 2.2, winner.caster);
       c.takeDamage(55 * winner.caster.powerBuff, { src: winner.caster, kb: { x: winner.dir.x * 80, y: 24, z: winner.dir.z * 80 }, hitstop: 0.16 });
       game.world.punch(0.62); game.world.shake(2.3); game.slowmo(0.16, 0.4); game.audio.boom(1.3, c.pos);
     }
     loser.end(); loser.clashLen = null; loser._clashOther = null; winner._clashOther = null;
   }
 }
-

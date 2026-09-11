@@ -61,12 +61,16 @@ export async function pwSuite(game, hud, opts = {}) {
     const FOEX = o.swoop ? 240 : 6, Y = o.swoop ? 24 : 0;
     let frame = 0, released = false, hitAt = null, start = null, maxD = 0, peak = 0, momAt = 0;
     game.controlPlayer = (dt) => {
-      if (!o.swoop) { p.aim.set(1, 0, 0); p.aim3.set(1, 0, 0); p.facing = 0; }
+      if (!o.swoop) { p.faceDir(1, 0); p.aim3.set(1, 0, 0); }
       else {
-        p.aim.set(1, 0, 0); p.aim3.set(1, 0, 0); p.facing = 0;
+        p.faceDir(1, 0); p.aim3.set(1, 0, 0);
         p.flying = true; p.cruiseHeld = true; p.ki = p.maxKi;
         p.move({ x: 1, z: 0 }, dt, 1);           // real flight, real speed, real momentum
       }
+      // +X aim requires +PI/2 yaw. The old zero yaw punched sideways across
+      // the torso; it accidentally landed with one procedural pose and missed
+      // smaller targets with source-authored body rotation. Drive the same
+      // heading contract as the player, without changing reach or hitboxes.
       // ⚠ FORCE THE WIND-UP (aaa-02 §4, the three-phase melee changed accumulation). `chargeStart`
       // then relying on melee.update to accumulate no longer works from a harness: `chargeUpdate`
       // zeroes `meleeCharge` on any frame `canAct` is false (a stub can't hold the strike input the

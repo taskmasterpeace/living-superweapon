@@ -1,0 +1,933 @@
+You have enough mechanics already. The missing piece is **a ruleset that makes every power level matter in the same battle**.
+
+Right now you have the ingredients for something much more interesting than “superheroes fighting”: **combined-arms warfare where living superweapons change the strategic rules of the battlefield.**
+
+I’d architect **Power World** around that.
+
+## 1. The core fantasy
+
+Don't balance Batman-level soldiers and Goku-level superweapons by pretending their damage numbers are comparable.
+
+That's the wrong problem.
+
+Make them occupy different layers of warfare.
+
+| Layer               | Battlefield role                                    |
+| ------------------- | --------------------------------------------------- |
+| Infantry            | capture, infiltrate, interrogate, sabotage, recover |
+| Enhanced soldiers   | elite infantry, anti-super tactics                  |
+| Vehicles            | mobility, fire support, logistics                   |
+| Tanks               | area control / anti-ground                          |
+| Helicopters         | transport / pursuit / anti-infantry                 |
+| Jets                | interception / bombing / anti-super                 |
+| Emplacements        | powerful defensive weapons                          |
+| Living Superweapons | battlefield-changing strategic assets               |
+
+A Superman-level character might annihilate 30 soldiers.
+
+But Superman **cannot simultaneously protect the cloning facility, stop a spy, intercept a bomber, retrieve biological material and defend three objectives**.
+
+That's where your game appears.
+
+---
+
+# 2. The lore system that ties everything together
+
+I'd make the cloning technology the center of the entire universe.
+
+### CLONE RESERVE
+
+Each faction owns a **Cloning Complex**.
+
+Instead of infinite respawning:
+
+**Clone Reserve: 250**
+
+Every ordinary soldier death:
+
+**−1 Clone**
+
+Enhanced soldier:
+
+**−3**
+
+Specialist:
+
+**−5**
+
+Living Superweapon:
+
+Doesn't consume normal clone stock. They're unique strategic units with their own regeneration/redeployment rules.
+
+Now death actually matters without forcing players to sit out.
+
+And destroying infrastructure can affect:
+
+* respawn speed
+* available classes
+* clone reserves
+* enhancements
+* vehicle crews
+
+Suddenly bombing a cloning laboratory has a military purpose.
+
+---
+
+# 3. Your blood idea should become a major system
+
+This may be one of the strongest ideas in the game.
+
+Don't call it simply blood.
+
+Call the gameplay resource something like:
+
+**GENETIC MATERIAL / BIO-MASS / WEAPON GENOME / POWER STRAIN**
+
+A living superweapon gets killed.
+
+The body becomes a temporary **strategic objective**.
+
+### Example
+
+**SUPERWEAPON KILLED**
+
+> BIOLOGICAL ASSET DOWN
+> Genome integrity: 94%
+> Enemy recovery team inbound.
+
+Now BOTH teams have different objectives.
+
+Enemy:
+
+**EXTRACT THE GENOME**
+
+Friendly:
+
+**DENY RECOVERY**
+
+And denial shouldn't just mean shooting the body.
+
+You have options.
+
+* Recover the body yourself.
+* Incinerate it.
+* Destroy it with artillery.
+* Airstrike the corpse.
+* Extract the genome first.
+* Carry the body away.
+* Contaminate the sample.
+* Defend it until degradation reaches 0%.
+
+That creates insane emergent moments.
+
+Imagine:
+
+A superweapon gets killed 2 km from base.
+
+Enemy helicopters arrive.
+
+Your soldiers establish a perimeter.
+
+A player jumps into an AA cannon.
+
+Enemy superweapon comes flying over the mountain.
+
+Friendly jet screams overhead.
+
+Some poor infantryman is physically dragging the corpse toward an armored vehicle.
+
+**That's your game.**
+
+---
+
+# 4. Enhanced soldiers
+
+Extracted genome goes back to:
+
+### GENETICS LAB
+
+The faction researches that superweapon.
+
+Suppose the dead character had:
+
+**Optical Energy Projection**
+
+Research eventually unlocks:
+
+**Optical Strain I**
+
+Your clone soldiers can now spawn with weak eye beams.
+
+Not superhero strength.
+
+More like:
+
+Normal rifle soldier:
+
+`Rifle + Grenade`
+
+Enhanced clone:
+
+`Rifle + weak optical beam`
+
+Further research:
+
+`Optical Strain II`
+
+Eventually specialized units appear.
+
+### Power inheritance should be imperfect.
+
+That matters enormously.
+
+Superweapon:
+
+████████████████████ **100%**
+
+Enhanced clone:
+
+███ **15%**
+
+So killing Superman doesn't give your entire army Superman.
+
+It gives your scientists enough biological information to manufacture **inferior derivatives**.
+
+That creates technological escalation during matches/campaigns.
+
+---
+
+# 5. The morality idea: don't make it morality
+
+Your GTA idea is good, but I'd change the framing.
+
+Don't call it Good/Evil.
+
+Make it:
+
+# ESCALATION
+
+The battlefield reacts to what you're doing.
+
+Killing enemy soldiers?
+
+Normal warfare.
+
+Massacring civilians?
+
+**Escalation increases.**
+
+Destroying civilian neighborhoods?
+
+Higher.
+
+Executing prisoners?
+
+Higher.
+
+Using superweapons indiscriminately?
+
+Much higher.
+
+Why should the player care?
+
+Because **escalation gives the opposing faction emergency authorization/resources.**
+
+Example:
+
+### ESCALATION 0
+
+Normal operations.
+
+### ESCALATION I — ALERT
+
+Enemy receives additional intelligence.
+
+### ESCALATION II — MOBILIZATION
+
+Enemy clone production +20%.
+
+### ESCALATION III — EMERGENCY POWERS
+
+Heavy weapons authorized.
+
+### ESCALATION IV — TOTAL WAR
+
+Additional living superweapon deployment authorized.
+
+### ESCALATION V — EXTINCTION RESPONSE
+
+Enemy gets access to weapons specifically designed to kill your strongest unit.
+
+That's much better than:
+
+> You killed civilians. −10 morality.
+
+You killed civilians?
+
+**Congratulations. You just convinced the enemy command to deploy something terrifying.**
+
+The consequence is gameplay.
+
+---
+
+# 6. Your "Protect the Scientist" mode
+
+This should absolutely exist, but I'd rename it:
+
+# BLACK SITE
+
+One faction secretly knows where **Dr. Elena Voss** is located.
+
+The defending team sees:
+
+**PROTECT VOSS**
+
+Attackers see:
+
+**LOCATE VOSS**
+
+The map contains perhaps:
+
+**20–30 compounds/houses.**
+
+But here's where it gets interesting.
+
+Attackers don't just search houses randomly.
+
+They gather **intelligence**.
+
+Potential intelligence sources:
+
+* civilians
+* captured soldiers
+* computers
+* phone records
+* vehicles
+* surveillance towers
+* radio intercepts
+* witnesses
+
+So attackers progressively narrow the search area.
+
+Initially:
+
+**SEARCH AREA: 6 km²**
+
+Intel discovered:
+
+**3 km²**
+
+More intelligence:
+
+**800 m**
+
+Eventually:
+
+**3 possible buildings**
+
+Now the defenders realize:
+
+> Shit. They're getting close.
+
+---
+
+# 7. Interrogation
+
+Don't turn this into a dialogue minigame.
+
+Keep it tactical.
+
+Approach NPC.
+
+**INTERROGATE — HOLD E — 8 seconds**
+
+You become vulnerable.
+
+Possible information:
+
+> "Military trucks came through yesterday."
+
+Map updates.
+
+Or:
+
+> "I saw soldiers near the water tower."
+
+Or:
+
+> "I don't know anything."
+
+And civilians shouldn't magically know whether they're "good or bad." They know **pieces of information** based on what they've plausibly observed.
+
+Much stronger simulation.
+
+---
+
+# 8. Killing civilians versus interrogation
+
+Now your escalation system becomes brilliant.
+
+Player can interrogate:
+
+**8 seconds**
+
+Or kill/search:
+
+**2 seconds**
+
+So brutality becomes **faster**.
+
+That's important.
+
+You aren't lecturing players.
+
+You're tempting them.
+
+Fast strategy:
+
+> Kick doors, kill everyone, search everything.
+
+Slow strategy:
+
+> Interrogate, investigate, gather intelligence.
+
+But brutality accelerates **enemy escalation**.
+
+That's an actual strategic decision.
+
+---
+
+# 9. Why attackers can't simply destroy every house
+
+This is exactly the loophole you identified.
+
+There should be several reasons.
+
+First, destroying a building may destroy the scientist, causing mission failure.
+
+Second, it destroys intelligence sources.
+
+Third, civilian casualties increase escalation.
+
+Fourth, indiscriminate destruction reveals attacker positions.
+
+Fifth, heavy weapons require authorization/ammunition.
+
+So you CAN level the neighborhood.
+
+The game doesn't put up an invisible wall.
+
+It says:
+
+> Fine.
+
+Then makes you live with the military consequences.
+
+That's far better game design.
+
+---
+
+# 10. Buildings and destruction
+
+Don't start with fully simulated skyscraper destruction.
+
+That will eat your project alive.
+
+Use **destruction tiers**.
+
+### Tier 0 — Static
+
+Mountains, terrain, major infrastructure.
+
+### Tier 1 — Props
+
+Walls, fences, doors, glass, trees.
+
+Fully destructible.
+
+### Tier 2 — Tactical structures
+
+Small houses, checkpoints, towers.
+
+Use predefined destruction states:
+
+`INTACT → DAMAGED → BREACHED → COLLAPSED`
+
+### Tier 3 — Major structures
+
+Bases, cloning facilities, research centers.
+
+Destroy components rather than entire geometry.
+
+Power generator.
+
+Radar.
+
+AA battery.
+
+Clone chamber.
+
+Communications.
+
+Vehicle depot.
+
+That gets you **80% of the tactical value of destruction without building a physics nightmare.**
+
+---
+
+# 11. What happens if you're inside a collapsing building?
+
+Don't simulate every brick.
+
+Trigger a structural collapse state.
+
+Player receives:
+
+**STRUCTURAL FAILURE**
+
+3-second warning if appropriate.
+
+Then depending upon character capability:
+
+Normal human:
+
+Likely incapacitated/killed.
+
+Armored soldier:
+
+Heavy damage.
+
+Superhuman:
+
+Damage based on durability.
+
+Flying character:
+
+Can escape through openings.
+
+Extreme superweapon:
+
+Might literally burst through the collapsing structure.
+
+That makes powers meaningful without requiring structural engineering simulation.
+
+---
+
+# 12. Game modes
+
+Now we can build modes that exploit the systems instead of generic Deathmatch.
+
+### BLACK SITE
+
+Find/protect the scientist.
+
+### GENOME
+
+Kill enemy superweapon → recover biological material → extract it.
+
+### CLONE WAR
+
+Destroy the enemy cloning infrastructure before your reserve reaches zero.
+
+### BROKEN ARROW
+
+A catastrophic experimental weapon crashes somewhere on a huge map. Both factions race to locate and recover it.
+
+### HUNT
+
+One player controls an extremely powerful living superweapon.
+
+Enemy team gets infantry, vehicles, aircraft and progressively stronger anti-super weapons.
+
+Think **monster hunt + military operation**.
+
+### EXTRACTION
+
+Capture an enemy living superweapon **alive**.
+
+Killing them fails or severely reduces the reward.
+
+Now tranquilizers, restraints, EMPs, suppression weapons and transport vehicles matter.
+
+### CONVOY
+
+Transport genetic material/scientist/superweapon across perhaps 10 km.
+
+Attackers choose where to ambush.
+
+Defenders choose route.
+
+Air reconnaissance becomes important.
+
+### AIR SUPERIORITY
+
+Jets + flying characters fight for control of airspace while ground teams capture radar/AA installations.
+
+### SIEGE
+
+One faction has a fortified mountain installation.
+
+Attackers have combined arms.
+
+Defenders have:
+
+AA
+artillery
+bunkers
+radar
+superweapon
+
+### INSURGENCY
+
+One faction possesses superior military power.
+
+Other faction blends into civilian settlements.
+
+Finding combatants becomes part of the problem.
+
+Escalation becomes extremely important.
+
+### LAST WEAPON
+
+Both factions begin without superweapons.
+
+There is **one dormant living weapon somewhere on the map.**
+
+Find it.
+
+Wake it.
+
+Convince/control/capture it.
+
+Now the entire balance of the match changes.
+
+---
+
+# 13. One mode I think could become Power World's signature
+
+## GODFALL
+
+Each team possesses:
+
+**1 Living Superweapon
+40–100 clones
+vehicles
+aircraft
+research facility**
+
+You win by destroying the enemy cloning core.
+
+But here's the twist.
+
+Superweapons are enormously powerful.
+
+When one dies:
+
+**its corpse becomes the most valuable object on the battlefield.**
+
+Enemy steals genome.
+
+Research begins.
+
+Enemy soldiers start acquiring derivative powers.
+
+Therefore every time you deploy your god-tier character you're making a strategic wager:
+
+> Can I exploit this power without allowing the enemy to acquire it?
+
+Now imagine your Superman-equivalent gets shot down **behind enemy lines**.
+
+Command immediately announces:
+
+> **WEAPON DOWN. GENETIC COMPROMISE IMMINENT.**
+
+You have maybe 4 minutes.
+
+Friendly commander has choices:
+
+**RECOVER**
+Send helicopters.
+
+**SECURE**
+Send infantry.
+
+**DENY**
+Call artillery.
+
+**STERILIZE**
+Send bomber.
+
+Meanwhile the enemy is desperately trying to extract a sample.
+
+That's a game.
+
+---
+
+# 14. Maps should be designed as military spaces, not arenas
+
+Your desert testing is actually smart because it forces you to solve scale before hiding problems behind city geometry.
+
+I would build the first real map around:
+
+## RED VALLEY
+
+Roughly **8×8 km** initially.
+
+![Image](https://images.openai.com/static-rsc-4/Fq06qDRxCxkCaPyCOiOlin8nqXN_cMP07knLjsFd8VgiXQjdwW5lVKcmHZk3E55LYYsSszLDcQFamrmR4slzHO2fRazeSampyqDgCt8e1JeTAH8R6VMQdUkP-T1atMSRAPY4j2NnWa0bvXJ9omIo2vd65iZv30tU29EIfU-Pr8UZGw852UGniS6EBc9NQzDB?purpose=fullsize)
+
+![Image](https://images.openai.com/static-rsc-4/nQv9ED4V92AZELVqrwNck3OidhwmdU19paShEdfEYc0h34erSs6Sa7GkqLJAw1dnjTbaAYTpmqhBKEBxH5cLZIKUhfqe8WTLUAdVlLLcjxTvaAnWCXhK-dTEf8_tTeAZYErEE8xBgJ6J-GfLzMEHRxEdPtxPudvH6ZfjG1RYAvBRZnnKpZOwMS41J3_Kx1wp?purpose=fullsize)
+
+![Image](https://images.openai.com/static-rsc-4/ejqT6hiZtRCf4P2OUk7VuT04qdaRXJIs01Yrl01pxQea5gnJTekNfXEVQOAAJ-Z-GxFeGnMOnqzYw1FVy4Lq8bmwuwWYLG8zS4NLDUVSWvGwX-sFjIw9ImoeRSUb0aKHseMm7eDH44u-X-_iSmgW9gZfXN-wFvWb5SmtWkVdPva5zu4kEFH1Mewb5Q2TX_pO?purpose=fullsize)
+
+![Image](https://images.openai.com/static-rsc-4/Eh55X2Azd8pdiNZaQj-6z64apTQmmBGPPMACdpQ2wwhSo5IckS6STWm18j0g36ORyAplz48zP7n4NVgZJpSTsYyLBXx6XTDApMbuWk8pmmnAGrlBy3FkT0GQEKhgw_RKRLlpvIuIYbI69T3zaKPx6wcYmst7hpPNfiRvZ9zjAlKk_AqW4yhr5cSsjDzIoIdB?purpose=fullsize)
+
+![Image](https://images.openai.com/static-rsc-4/qst0aaDAbvjOOJvyrpiyk9vXUnCicnrp_JiLrI3TYKvDIVecJ9N_x5_lJs6qHfpaVMv5lC0n4Fz2z1zOUEAdQspN7_Fid0nMxFduB65dkgfwH_2eIKJAB1ixpJ2Zz1y_f1QNz2mDOpSdatiWGirpQkP2o7uLZBfLdmDHrDHzga-oXwFIHoPaq8lwTFSTZ8gt?purpose=fullsize)
+
+![Image](https://images.openai.com/static-rsc-4/_wpS0CKXPlx7188-squi5xHC2NBWPK8IKv8DY4IWDqogVJy9344n2kzJLoAIR4itvFlFgGQ6BbxbAf6BfLuY0MEqIqahs4R2DHavhMDujHcSsWk87TYv0aT52J0sye4lC56IvnQemxpuIbRWi00dKILI2dU8SoL_gEYp_oNnhLM6OWD5j91SdWhdMbZuXbWk?purpose=fullsize)
+
+![Image](https://images.openai.com/static-rsc-4/8w8tOj6fQCLi0r3fNV-S5Yeh7dTK7jl5RnnN4Ceyov6oLpSVSX0lPUcyoG6iGK5GIwXMj6Uk1YyOUaudHaVt8IKzYIifHwhezu-M-sL_8Z0upzQ0j_WLtIOpUDZvVcGwPRduespHK2AuqmhzYAWoEzsBUbBEkP_2mnUTbc3NXHv_5h29y1qDBO8yXwRbKN63?purpose=fullsize)
+
+Important areas:
+
+**Alpha Base** — Team A cloning facility.
+
+**Bravo Base** — Team B cloning facility.
+
+**Airfield** — jets/helicopters.
+
+**Research Complex** — genome research.
+
+**Village** — civilians/intelligence.
+
+**Radar Mountain** — controls battlefield surveillance.
+
+**Canyon** — protected vehicle route.
+
+**Dry Lake** — huge open superweapon combat area.
+
+**SAM Ridge** — anti-air position.
+
+**Dam/Power Station** — strategic infrastructure.
+
+Now different characters naturally prefer different terrain.
+
+Sniper wants ridge.
+
+Tank wants valley.
+
+Infantry wants village.
+
+Helicopter wants canyon.
+
+Jet wants open airspace.
+
+Flying superweapon can go anywhere—but becomes visible to radar/SAM.
+
+---
+
+# 15. Your anti-aircraft idea becomes critical
+
+A flying superhero should be terrifying.
+
+But the ground shouldn't be helpless.
+
+Build a hierarchy.
+
+**Rifle**
+
+Almost useless against extreme supers.
+
+**Heavy machine gun**
+
+Useful against low-level flyers.
+
+**Autocannon**
+
+Dangerous.
+
+**Radar-guided AA**
+
+Very dangerous.
+
+**SAM**
+
+Potentially lethal.
+
+**Experimental anti-super cannon**
+
+Extremely dangerous but stationary and slow.
+
+Now Superman-level player sees:
+
+**MISSILE LOCK**
+
+They need to:
+
+dodge
+terrain-mask
+destroy radar
+attack SAM site
+send ground forces
+use countermeasures
+
+Suddenly your flying mechanic has strategic depth.
+
+---
+
+# 16. Power levels should be asymmetric
+
+I would actually classify characters.
+
+**Tier 0 — Human**
+
+Soldiers, snipers, pilots.
+
+**Tier 1 — Enhanced**
+
+Captain-America-ish.
+
+**Tier 2 — Tactical Superhuman**
+
+Spider-Man-ish.
+
+**Tier 3 — Heavy Superhuman**
+
+Iron-Man-ish.
+
+**Tier 4 — Strategic Weapon**
+
+Superman-ish.
+
+**Tier 5 — Catastrophic Weapon**
+
+Goku-ish.
+
+Tier 5 shouldn't just have:
+
+`50,000 HP`
+
+Their existence should change the match.
+
+Radar detects them.
+
+Command announces deployment.
+
+Enemy gets emergency capabilities.
+
+Something like:
+
+> **STRATEGIC ENERGY EVENT DETECTED**
+
+That should make everybody on the battlefield look up.
+
+---
+
+# 17. The questions we need to answer before you build more content
+
+This is where I would stop adding random weapons and start locking your design.
+
+1. **How many human players are you targeting per match?** 8? 16? 32? 64?
+
+2. Are the clone soldiers **players, AI, or both?**
+
+3. Can one player command AI clone squads?
+
+4. Does every player select a hero, or are superweapons scarce?
+
+5. Who controls aircraft? Players exclusively or AI too?
+
+6. Can superweapons pilot vehicles, or would that be pointless?
+
+7. Can a Superman-tier character pick up vehicles?
+
+8. Can they throw vehicles?
+
+9. Can they grab another flying player?
+
+10. Can they carry soldiers?
+
+11. Can players be captured instead of killed?
+
+12. How long should a normal match last: 15, 30, 45, 60 minutes?
+
+13. Is there persistent progression between matches?
+
+14. Is genome research match-specific or persistent?
+
+15. Can factions create custom hybrid soldiers from multiple genomes?
+
+16. Can enhancements fail or mutate?
+
+17. Can the enemy steal research rather than stealing a corpse?
+
+18. Can the cloning facility itself be infiltrated?
+
+19. Can enemy players disguise themselves as clones?
+
+20. Can you capture an enemy cloning facility?
+
+21. What happens when your clone reserve hits zero?
+
+22. Does the player then permanently die for that match?
+
+23. Can clones replenish through resources?
+
+24. Are civilians simulated continuously or spawned around objectives?
+
+25. Do civilians remember what they witnessed?
+
+26. Can civilians flee and report your position?
+
+27. Can civilians lie during interrogation?
+
+28. Can they support one faction?
+
+29. Can destroying civilian infrastructure create refugees?
+
+30. Does escalation affect only military reinforcements, or the world itself?
+
+31. Can both sides become equally brutal?
+
+32. Are there neutral factions?
+
+33. Are there police/local military forces separate from both teams?
+
+34. How much terrain can eye beams penetrate?
+
+35. Can beams cut through vehicles?
+
+36. Can powers destroy terrain?
+
+37. Can a Goku-tier blast permanently alter the battlefield?
+
+38. What exactly counts as cover against a superweapon?
+
+39. How do ordinary soldiers detect extremely fast characters?
+
+40. Does radar detect biological flyers?
+
+41. Does infrared?
+
+42. Can supers hide their energy signature?
+
+43. What happens when a sniper shoots a superweapon in the eye?
+
+44. Are powers governed by **energy**, cooldowns, stamina, or combinations?
+
+45. Can soldiers develop countermeasures after studying a power?
+
+46. Can powers interact—beam vs beam, shield vs missile, electricity vs vehicle, etc.?
+
+47. Can superweapons defect?
+
+48. Are they people with agency or literally government-owned biological weapons?
+
+49. Why are these factions fighting?
+
+50. **Most important:** what can an ordinary rifleman accomplish that your strongest superweapon cannot?
+
+That last answer determines whether **Power World becomes a genuinely interesting combined-arms game or just a superhero sandbox with tanks sitting around.**
+
+The strongest architecture I see is **Battlefield/Operation Flashpoint scale + Bid For Power mobility/combat + asymmetric superweapons + clone attrition + genome warfare + systemic escalation**. Three.js is capable of supporting the concept, but the simulation should stay separate from the Three.js scene graph so these rules don't become tangled into your rendering code.
+
+And I would build **GODFALL on RED VALLEY first**. One map, one complete mode, one clone loop, one superweapon corpse/genome loop, infantry + one tank + one helicopter + one AA emplacement. Don't build 15 modes yet. If that combination produces memorable battles, everything else can grow from it.

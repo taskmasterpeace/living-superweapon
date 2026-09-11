@@ -1,0 +1,42 @@
+{
+  "donor": "War World: Earth",
+  "weaponId": "rifle_kuchler_1",
+  "fictional": true,
+  "revision": "8e0fba7c8bce16637624dee52cc40d07d88dea3b",
+  "sourceFiles": [
+    {
+      "selected": "BRAND_STYLES.kuchler, frame, brandTell vents, buildRifleFam",
+      "path": "src/client/models/weapons.ts",
+      "sha256": "d531aaf3376325a73e11f4254420d4727aa8cb5eb375c67c10bcf0c61c627eb0"
+    },
+    {
+      "selected": "primitive/material semantics",
+      "path": "src/client/models/shared.ts",
+      "sha256": "39a4e570f30c5370c281130214d16a079c34fef748916394ed9eb5c9fb17da27"
+    }
+  ],
+  "sourceAxes": {
+    "up": "+Y",
+    "muzzle": "+X"
+  },
+  "targetAxes": {
+    "up": "+Y",
+    "sight": "+Z",
+    "muzzle": "-Y"
+  },
+  "calibration": {
+    "basis": "source X -> target -Y; source Y -> target Z; source Z -> target -X; subtract source grip before uniform scale",
+    "sourceLength": 1.1004,
+    "metersPerGameUnit": 0.19,
+    "lengthMeters": 0.82
+  },
+  "adaptations": [
+    "selected fictional Mk I geometry only",
+    "physical charging handle added for authored reload",
+    "static assembly merge; magazine and bolt preserved as named meshes",
+    "PowerWorld magazine, stock, holster and charging-handle sockets",
+    "Raw Earth side-offset grip/handguard anchors replaced by physical centered pistol-grip and rear handguard contacts after production viewer measurements"
+  ],
+  "license": "MIT",
+  "licenseNotice": "LICENSE.txt"
+}

@@ -1,0 +1,34 @@
+import {chromium} from 'playwright';
+import assert from 'node:assert/strict';
+import {mkdir,writeFile} from 'node:fs/promises';
+const out='artifacts/hero-sculpt/editor';await mkdir(out,{recursive:true});
+const browser=await chromium.launch(),page=await browser.newPage({viewport:{width:1440,height:1000}}),errors=[];
+page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
+try{
+ await page.goto('http://127.0.0.1:5180/studio.html?hero=sol');await page.waitForFunction(()=>window.STUDIO?.preview?.fighter);
+ await page.getByRole('button',{name:'Pause preview',exact:true}).click();
+ assert.equal(await page.getByLabel('Body definition value',{exact:true}).count(),1,'Body definition authoring is absent from the Model inspector');
+ const initial=await page.getByLabel('Body definition value',{exact:true}).inputValue();
+ const sample=()=>page.evaluate(()=>Array.from(STUDIO.preview.fighter.parts.torso.geometry.attributes.position.array));
+ const before=await sample();
+ await page.getByLabel('Body definition value',{exact:true}).fill('0');await page.getByLabel('Body definition value',{exact:true}).press('Tab');
+ const smooth=await sample();assert.notDeepEqual(smooth,before);
+ await page.getByRole('button',{name:'Undo',exact:true}).click();assert.equal(await page.getByLabel('Body definition value',{exact:true}).inputValue(),initial);assert.deepEqual(await sample(),before);
+ await page.getByLabel('Body definition value',{exact:true}).fill('1');await page.getByLabel('Body definition value',{exact:true}).press('Tab');
+ await page.getByRole('button',{name:'Save local',exact:true}).click();await page.reload();await page.waitForFunction(()=>window.STUDIO?.preview?.fighter);
+ assert.equal(Number(await page.getByLabel('Body definition value',{exact:true}).inputValue()),1);
+ assert.equal(await page.evaluate(()=>STUDIO.preview.fighter.def.model.definition),1);
+ await page.getByRole('tab',{name:'Progression',exact:true}).click();await page.getByRole('button',{name:'Add transformation form',exact:true}).click();
+ await page.getByLabel('Form level',{exact:true}).fill('4');await page.getByLabel('Form body definition',{exact:true}).fill('0.2');
+ await page.getByRole('button',{name:'Apply to draft',exact:true}).click();await page.getByLabel('Preview level',{exact:true}).selectOption('4');
+ assert.equal(await page.evaluate(()=>STUDIO.preview.fighter.def.model.definition),.2);
+ await page.getByLabel('Preview level',{exact:true}).selectOption('1');await page.getByRole('tab',{name:'Model',exact:true}).click();
+ await page.getByRole('button',{name:'Pause preview',exact:true}).click();
+ await page.getByLabel('Motion state',{exact:true}).selectOption('melee');
+ await page.getByLabel('Melee sequence',{exact:true}).selectOption('block');
+ await page.getByRole('button',{name:'Front view',exact:true}).click();
+ await page.screenshot({path:`${out}/desktop.png`});await page.setViewportSize({width:390,height:844});
+ assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);await page.screenshot({path:`${out}/mobile.png`,fullPage:true});
+ assert.deepEqual(errors,[]);await writeFile(`${out}/results.json`,JSON.stringify({savedDefinition:1,formDefinition:.2,undoGeometryRestored:true,errors},null,2));
+ console.log('PASS real body edit → Undo → Save/reload → transformation preview, 390px layout, zero browser errors');
+}finally{await browser.close();}

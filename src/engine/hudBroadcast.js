@@ -6,9 +6,11 @@
 
 import { esc } from './hudUtil.js';
 import { llmPunchUp, money, tapeRows, titleCase, writeBroadcast } from '../data/news.js';
+import {hydrateClipFrames} from './broadcast-frames.js';
 
 export const BroadcastMixin = {
   showEndScreen(result, g) {
+    globalThis.document?.body?.classList.add('report-open');
     if (this.game && this.game.touch) this.game.touch.show(false);   // thumbs off the report — rematch re-shows them
     if (g.matchReport) { this._showBroadcast(result, g); return; }
     const p = g.player;
@@ -79,14 +81,14 @@ export const BroadcastMixin = {
             <span class="sat" id="nSat"><i></i> Satellite desk update</span>
           </div>
           <div class="nhead" id="nHead">${esc(b.headline)}</div>
-          <div class="nsub">Special report · <b>${esc(b.district)}</b> · this ${esc(b.timeWord)}</div>
+          <div class="nsub">${rep.arena ? 'Arena report' : 'Special report'} · <b>${esc(b.district)}</b> · this ${esc(b.timeWord)}</div>
           <div class="nscript" id="nScript"></div>
           <div class="wcard" id="nWit" style="display:none"></div>
-          <div class="nboards">
+          <div class="nboards${rep.arena ? ' arena-report' : ''}">
             <div class="board"><div class="bh">Tale of the tape <em>OFFICIAL</em></div>${tapeHtml}</div>
-            <div class="board"><div class="bh">City desk <em>DAMAGE ASSESSMENT</em></div>${cityRows}
+            ${rep.arena ? '' : `<div class="board"><div class="bh">City desk <em>DAMAGE ASSESSMENT</em></div>${cityRows}
               <div class="citysum"><span class="cl">Early estimate</span><span class="cv">${esc(money(b.est))}</span></div>
-            </div>
+            </div>`}
           </div>
         </div>
       </div>
@@ -161,18 +163,13 @@ export const BroadcastMixin = {
       x.imageSmoothingEnabled = true;
       x.fillStyle = 'rgba(0,0,0,0.35)'; x.fillRect(0, 0, 640, 360);
     };
-    const load = (clip) => {
-      if (clip._imgs) return clip._ready;
-      clip._imgs = clip.frames.map((u) => { const im = new Image(); if (u && u[0] !== '#') im.src = u; return im; });   // '#enc…' = encoder never landed — leave it blank, drawImage skips incomplete images
-      clip._ready = Promise.all(clip._imgs.map((im) => im.decode ? im.decode().catch(() => {}) : 0));
-      return clip._ready;
-    };
+    const load = (clip) => hydrateClipFrames(clip);
     let ci = 0, mode = clips.length ? 'static' : 'nosignal', t0 = performance.now(), prev = null;
     let ph = 0, prevT = 0, wasSlow = false;   // float playhead — KO clips glide into slow motion at the moment of impact
     if (!clips.length) { tag.textContent = 'NO SIGNAL'; cap.innerHTML = 'Awaiting crew footage — <b>KMK 9</b>'; }
     const begin = (i) => {
       ci = i % clips.length; mode = 'static'; t0 = performance.now();
-      if (prev && prev !== clips[ci]) { prev._imgs = null; prev._ready = null; }   // keep one clip decoded at a time
+      if (prev && prev !== clips[ci]) { prev._imgs = null; prev._imageUrls=null; prev._ready = null; }   // keep one clip decoded at a time
       prev = clips[ci];
       load(clips[ci]);
       try { if (this.el.end.style.display !== 'none') this.game.audio.staticBurst(0.22); } catch {}
@@ -181,13 +178,20 @@ export const BroadcastMixin = {
     };
     const loop = (now) => {
       if (this._tvRun !== run || !cvs.isConnected) return;
+      if(clips[ci]?._dead){
+        const next=clips.findIndex(cl=>!cl._dead&&cl.frames.some(u=>u&&u[0]!=='#'));
+        if(next<0)mode='nosignal';else begin(next);
+      }
+      if(clips[ci]&&!clips[ci]._dead)load(clips[ci]);
       if (mode === 'nosignal') {
         drawStatic();
-        if (clips.length) begin(0);                       // the last shot just wrapped behind the end screen — roll it
+        const available=clips.findIndex(cl=>!cl._dead&&cl.frames.some(u=>u&&u[0]!=='#'));
+        if (available>=0) begin(available);
       } else if (mode === 'static') {
         drawStatic();
         const clip = clips[ci];
-        if (now - t0 > 340 && clip && clip._imgs && clip._imgs[0] && clip._imgs[0].complete) { mode = 'play'; ph = 0; prevT = now; wasSlow = false; }
+        const first=clip?._imgs?.findIndex(im=>im?.complete&&im.naturalWidth)||0;
+        if (now - t0 > 340 && first>=0 && clip?._imgs?.[first]?.naturalWidth) { mode = 'play'; ph = first; prevT = now; wasSlow = false; }
       } else {
         const clip = clips[ci];
         // slow-motion window: the exact moment of a KO / massive hit crawls at 0.38×, then back to speed
@@ -214,6 +218,4 @@ export const BroadcastMixin = {
     this._tvRaf = requestAnimationFrame(loop);
   },
 };
-
-
 

@@ -1,0 +1,1176 @@
+{
+  "scope": "Native normal-practice WEBLINE. Public Shift+N training targets. Camera aimed by mouse movement; Q fires the real selected Web Darts. No actor, pose, health, status, energy or simulation overrides.",
+  "errors": [],
+  "samples": [
+    {
+      "time": 3.1539000000000024,
+      "ki": 73.9881359999999,
+      "shot": "Web Darts",
+      "targets": [
+        {
+          "id": 2,
+          "hp": 116,
+          "web": true,
+          "remaining": 1.2,
+          "wrap": true,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 3,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 4,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 5,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 6,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 7,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 8,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        }
+      ],
+      "faults": []
+    },
+    {
+      "time": 3.5668000000000037,
+      "ki": 77.39043199999988,
+      "shot": "Web Darts",
+      "targets": [
+        {
+          "id": 2,
+          "hp": 116,
+          "web": true,
+          "remaining": 0.7871000000000001,
+          "wrap": true,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 3,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 4,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 5,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 6,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 7,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 8,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        }
+      ],
+      "faults": []
+    },
+    {
+      "time": 3.641800000000004,
+      "ki": 78.00843199999987,
+      "shot": "Web Darts",
+      "targets": [
+        {
+          "id": 2,
+          "hp": 116,
+          "web": true,
+          "remaining": 0.7121000000000002,
+          "wrap": true,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 3,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 4,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 5,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 6,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 7,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 8,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        }
+      ],
+      "faults": []
+    },
+    {
+      "time": 3.708500000000005,
+      "ki": 78.55803999999985,
+      "shot": "Web Darts",
+      "targets": [
+        {
+          "id": 2,
+          "hp": 116,
+          "web": true,
+          "remaining": 0.6453999999999995,
+          "wrap": true,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 3,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 4,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 5,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 6,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 7,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 8,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        }
+      ],
+      "faults": []
+    },
+    {
+      "time": 3.7794000000000048,
+      "ki": 79.14225599999982,
+      "shot": "Web Darts",
+      "targets": [
+        {
+          "id": 2,
+          "hp": 116,
+          "web": true,
+          "remaining": 0.5745,
+          "wrap": true,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 3,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 4,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 5,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 6,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 7,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 8,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        }
+      ],
+      "faults": []
+    },
+    {
+      "time": 3.8463000000000047,
+      "ki": 79.6935119999998,
+      "shot": "Web Darts",
+      "targets": [
+        {
+          "id": 2,
+          "hp": 116,
+          "web": true,
+          "remaining": 0.5076000000000005,
+          "wrap": true,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 3,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 4,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 5,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 6,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 7,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 8,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        }
+      ],
+      "faults": []
+    },
+    {
+      "time": 3.913000000000005,
+      "ki": 80.24311999999979,
+      "shot": "Web Darts",
+      "targets": [
+        {
+          "id": 2,
+          "hp": 116,
+          "web": true,
+          "remaining": 0.4408999999999998,
+          "wrap": true,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 3,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 4,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 5,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 6,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 7,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 8,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        }
+      ],
+      "faults": []
+    },
+    {
+      "time": 3.9881000000000033,
+      "ki": 80.86194399999978,
+      "shot": "Web Darts",
+      "targets": [
+        {
+          "id": 2,
+          "hp": 116,
+          "web": true,
+          "remaining": 0.36580000000000124,
+          "wrap": true,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 3,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 4,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 5,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 6,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 7,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 8,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        }
+      ],
+      "faults": []
+    },
+    {
+      "time": 4.054700000000004,
+      "ki": 81.41072799999976,
+      "shot": "Web Darts",
+      "targets": [
+        {
+          "id": 2,
+          "hp": 116,
+          "web": true,
+          "remaining": 0.29920000000000085,
+          "wrap": true,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 3,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 4,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 5,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 6,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 7,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 8,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        }
+      ],
+      "faults": []
+    },
+    {
+      "time": 4.117300000000004,
+      "ki": 81.92655199999976,
+      "shot": "Web Darts",
+      "targets": [
+        {
+          "id": 2,
+          "hp": 116,
+          "web": true,
+          "remaining": 0.23660000000000045,
+          "wrap": true,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 3,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 4,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 5,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 6,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 7,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 8,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        }
+      ],
+      "faults": []
+    },
+    {
+      "time": 4.188400000000004,
+      "ki": 82.51241599999976,
+      "shot": "Web Darts",
+      "targets": [
+        {
+          "id": 2,
+          "hp": 116,
+          "web": true,
+          "remaining": 0.16550000000000006,
+          "wrap": true,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 3,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 4,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 5,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 6,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 7,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 8,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        }
+      ],
+      "faults": []
+    },
+    {
+      "time": 4.259000000000004,
+      "ki": 83.09415999999976,
+      "shot": "Web Darts",
+      "targets": [
+        {
+          "id": 2,
+          "hp": 116,
+          "web": true,
+          "remaining": 0.0948999999999997,
+          "wrap": true,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 3,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 4,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 5,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 6,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 7,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 8,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        }
+      ],
+      "faults": []
+    },
+    {
+      "time": 4.321600000000003,
+      "ki": 83.60998399999973,
+      "shot": "Web Darts",
+      "targets": [
+        {
+          "id": 2,
+          "hp": 116,
+          "web": true,
+          "remaining": 0.03230000000000116,
+          "wrap": true,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 3,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 4,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 5,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 6,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 7,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 8,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        }
+      ],
+      "faults": []
+    },
+    {
+      "time": 4.388400000000004,
+      "ki": 84.16041599999973,
+      "shot": "Web Darts",
+      "targets": [
+        {
+          "id": 2,
+          "hp": 116,
+          "web": false,
+          "wrap": false,
+          "immune": 0.9706999999999989,
+          "grabbed": false
+        },
+        {
+          "id": 3,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 4,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 5,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 6,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 7,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 8,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        }
+      ],
+      "faults": []
+    },
+    {
+      "time": 4.446800000000005,
+      "ki": 84.6416319999997,
+      "shot": "Web Darts",
+      "targets": [
+        {
+          "id": 2,
+          "hp": 116,
+          "web": false,
+          "wrap": false,
+          "immune": 0.9122999999999992,
+          "grabbed": false
+        },
+        {
+          "id": 3,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 4,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 5,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 6,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 7,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 8,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        }
+      ],
+      "faults": []
+    },
+    {
+      "time": 4.509300000000006,
+      "ki": 85.15663199999968,
+      "shot": "Web Darts",
+      "targets": [
+        {
+          "id": 2,
+          "hp": 116,
+          "web": false,
+          "wrap": false,
+          "immune": 0.8497999999999992,
+          "grabbed": false
+        },
+        {
+          "id": 3,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 4,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 5,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 6,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 7,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        },
+        {
+          "id": 8,
+          "hp": 120,
+          "web": false,
+          "wrap": false,
+          "immune": 0,
+          "grabbed": false
+        }
+      ],
+      "faults": []
+    }
+  ],
+  "revision": "060ecac9d76ad0ba9b8444a819649e313b2d9cca",
+  "url": "http://127.0.0.1:5182/powerworld.html?hero=webline",
+  "audio": "Video contains no audio; sound lifecycle is tested separately.",
+  "before": {
+    "time": 2.820000000000001,
+    "ki": 78.23679999999986,
+    "shot": "Web Darts",
+    "targets": [
+      {
+        "id": 2,
+        "hp": 120,
+        "web": false,
+        "wrap": false,
+        "immune": 0,
+        "grabbed": false
+      },
+      {
+        "id": 3,
+        "hp": 120,
+        "web": false,
+        "wrap": false,
+        "immune": 0,
+        "grabbed": false
+      },
+      {
+        "id": 4,
+        "hp": 120,
+        "web": false,
+        "wrap": false,
+        "immune": 0,
+        "grabbed": false
+      },
+      {
+        "id": 5,
+        "hp": 120,
+        "web": false,
+        "wrap": false,
+        "immune": 0,
+        "grabbed": false
+      },
+      {
+        "id": 6,
+        "hp": 120,
+        "web": false,
+        "wrap": false,
+        "immune": 0,
+        "grabbed": false
+      },
+      {
+        "id": 7,
+        "hp": 120,
+        "web": false,
+        "wrap": false,
+        "immune": 0,
+        "grabbed": false
+      },
+      {
+        "id": 8,
+        "hp": 120,
+        "web": false,
+        "wrap": false,
+        "immune": 0,
+        "grabbed": false
+      }
+    ],
+    "faults": []
+  },
+  "wrapShot": "artifacts/power-pilot/web-final/web-contact.png",
+  "after": {
+    "time": 6.02330000000001,
+    "ki": 97.6319919999994,
+    "shot": "Web Darts",
+    "targets": [
+      {
+        "id": 2,
+        "hp": 116,
+        "web": false,
+        "wrap": false,
+        "immune": 0,
+        "grabbed": false
+      },
+      {
+        "id": 3,
+        "hp": 120,
+        "web": false,
+        "wrap": false,
+        "immune": 0,
+        "grabbed": false
+      },
+      {
+        "id": 4,
+        "hp": 120,
+        "web": false,
+        "wrap": false,
+        "immune": 0,
+        "grabbed": false
+      },
+      {
+        "id": 5,
+        "hp": 120,
+        "web": false,
+        "wrap": false,
+        "immune": 0,
+        "grabbed": false
+      },
+      {
+        "id": 6,
+        "hp": 120,
+        "web": false,
+        "wrap": false,
+        "immune": 0,
+        "grabbed": false
+      },
+      {
+        "id": 7,
+        "hp": 120,
+        "web": false,
+        "wrap": false,
+        "immune": 0,
+        "grabbed": false
+      },
+      {
+        "id": 8,
+        "hp": 120,
+        "web": false,
+        "wrap": false,
+        "immune": 0,
+        "grabbed": false
+      }
+    ],
+    "faults": []
+  },
+  "passed": true
+}

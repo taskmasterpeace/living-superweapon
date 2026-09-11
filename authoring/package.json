@@ -1,0 +1,27 @@
+{
+  "name": "powerworld-authoring",
+  "version": "0.1.0",
+  "private": true,
+  "description": "PowerWorld repeatable asset-authoring pipeline: recipes in, validated versioned asset packages out.",
+  "type": "module",
+  "bin": {
+    "pw-author": "./bin/authoring.js"
+  },
+  "scripts": {
+    "build": "node bin/authoring.js build",
+    "validate": "node bin/authoring.js validate",
+    "report": "node bin/authoring.js report",
+    "test": "node --test \"test/*.test.mjs\"",
+    "test:browser": "node test/browser/viewer.check.mjs"
+  },
+  "dependencies": {
+    "@gltf-transform/core": "4.5.0",
+    "@gltf-transform/extensions": "4.5.0",
+    "@gltf-transform/functions": "4.5.0",
+    "gltf-validator": "2.0.0-dev.3.10",
+    "three": "0.169.0"
+  },
+  "devDependencies": {
+    "playwright": "1.62.0"
+  }
+}

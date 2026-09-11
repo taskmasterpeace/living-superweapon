@@ -16,12 +16,25 @@
 // reference so the sky reads as far away. There is nothing decorative.
 // =================================================================================================
 import * as THREE from 'three';
+import {prepareFrontline} from './frontline-preparation.js';
 import { GROUND_LAYER } from '../core/util.js';
 import { setRim } from './figure.js';
 import { SETTINGS } from '../core/settings.js';
+import {FRONTLINE_GROUND_RADIUS,installFrontlineTerrain,restoreFrontlineSky} from './frontline-terrain.js';
+import {installFrontlineGround,restoreFrontlineGround,authorFrontlineRelief} from './frontline-ground.js';
+import {FRONTLINE_FORMATIONS,FRONTLINE_TALUS,FRONTLINE_FAR_BANDS} from './frontline-layout.js';
+import {FrontlineAircraft} from './frontline-aircraft.js';
+import {FrontlineConvoy} from './frontline-convoy.js';
+import {VehicleHUD} from './vehicle-hud.js';
+import {outpostReserved} from './frontline-outpost-layout.js';
+import {installFrontlineOutpost} from './frontline-outpost.js';
+import {installFrontlineLighting,restoreFrontlineLighting} from './frontline-lighting.js';
+import {daylightPreset} from '../data/daylight.js';
 
 export const STAGE = {
-  radius: 900,          // the ground disc. Generous: the chase loop needs somewhere to chase TO.
+  radius: 900,          // central combat/patrol area, independent of pursuit space
+  airspaceRadius: 32000,
+  outerGroundRadius: 50000, // covers every corner of the square playable extent
   spires: 15,           // slam targets, sparse on purpose
   boulders: 22,
   // ⚠ PINNED, AND THIS IS THE SINGLE BIGGEST THING IN THE LOOK. The stage used to let Earth's clock
@@ -32,13 +45,13 @@ export const STAGE = {
   // the moment you leave the floor.
   dayT: 0.2,            // a high sun, just off noon so the rock still has a lit and a shadowed face
   // The distant frame. ⚠ SPEED AND VASTNESS FIGHT EACH OTHER (manual §40, learned on the Earth
-  // crossing): vastness is a FAR frame that barely moves. These sit outside the play radius, are
-  // never cover, and exist only so the horizon is a place instead of a razor line.
+  // crossing): vastness is a FAR frame that barely moves. These sit outside the
+  // central combat area; their final asset bounds become cover before flight-space admission.
   // ⚠ FAR AND LOW, or they stop being a distance and become obstacles. At r 1150–1950 with heights to
   // 430 they LOOMED over the stage — a 730u-wide mesa 1,200u out fills a 74° frame, so the thing meant
   // to say "the world continues" said "you are in a bowl". Distance is the whole job: further out and
   // shorter reads as bigger country, which is the opposite of the instinct.
-  mesas: 18, mesaR: [2200, 3600], mesaH: [140, 320],
+  mesas: 18, mesaR: [2000, 5200], mesaH: [200, 520],
   // THE CLIMB TO SPACE — see `tick()`. Starts above the highest thing on the stage (a 210u spire) so a
   // rooftop fight never tints, and completes far enough up that getting there is a real commitment.
   spaceFrom: 430, spaceTo: 1500,
@@ -123,52 +136,84 @@ export class PowerWorldStage {
     const darkM = new THREE.MeshStandardMaterial({ color: STAGE.rockDark, roughness: 0.95, flatShading: true });
     this._mats.push(groundM, rockM, darkM);
 
-    // ---- THE FLOOR. A disc, not a box: a straight edge would read as a level boundary, and the
-    // whole point is that the horizon is far away and unremarkable.
-    const floor = add(new THREE.Mesh(new THREE.CircleGeometry(STAGE.radius, 64), groundM));
-    floor.rotation.x = -Math.PI / 2;
-    floor.position.y = GROUND_LAYER.shadow * 0.5;   // a rung from the ladder, never an invented number
-    floor.receiveShadow = true;
+    // Native craters and standing heights share the visible sand. The distant
+    // circular filler has a hole under this lattice, so depressions stay visible.
+    const floor = installFrontlineGround(this,groundM,STAGE.radius,FRONTLINE_GROUND_RADIUS,STAGE.outerGroundRadius);
 
-    // ---- SPIRES. Tall, thin, and REGISTERED AS COVER, because the reason they exist is that being
-    // hurled into one has to hurt — `onSlam` and `worldImpact` already do that work for free.
-    // ⚠ Deterministic placement (a fixed hash, not Math.random) so a stage is the same stage twice.
+    // ---- CANYON FORMATIONS. Broad connected shoulders flank an unobstructed
+    // forward battle corridor; every mass remains native destructible cover.
     let seed = 1337;
     const rnd = () => { seed = (seed * 1664525 + 1013904223) % 4294967296; return seed / 4294967296; };
-    for (let i = 0; i < STAGE.spires; i++) {
-      const a = (i / STAGE.spires) * Math.PI * 2 + rnd() * 0.4;
-      const r = 90 + rnd() * 470;
-      const x = Math.cos(a) * r, z = Math.sin(a) * r;
-      const h = 60 + rnd() * 150, w = 9 + rnd() * 16;
-      const m = add(new THREE.Mesh(new THREE.CylinderGeometry(w * 0.45, w, h, 6, 1), rnd() > STAGE.darkOdds ? rockM : darkM));
-      m.position.set(x, h / 2, z); m.rotation.y = rnd() * 3.14; m.castShadow = h > 90;
-      this._reg(x, z, w, w, h, m);
+    for (const [i,formation] of FRONTLINE_FORMATIONS.entries()) {
+      const {x,z,width,depth,height:h,yaw}=formation;
+      const geometry=new THREE.CylinderGeometry(.40,.5,h,8,1);geometry.scale(width,1,depth);
+      const m=add(new THREE.Mesh(geometry,i%4===0?darkM:rockM));
+      m.position.set(x,h/2,z);m.rotation.y=yaw;m.castShadow=true;m.userData.frontlineFormation=true;
+      m.userData.frontlineProfile=formation.profile;
+      // An explicit destructible interior budget keeps the established native
+      // HP/loot formulas while collision is measured from the full visible mass.
+      const core=14+(i%5)*2;this._reg(x,z,core,core,h,m);
     }
     // ---- BOULDERS. Low cover and, more importantly, scale: without something human-sized near the
     // camera a 900u disc reads as a small room.
     for (let i = 0; i < STAGE.boulders; i++) {
-      const a = rnd() * Math.PI * 2, r = 40 + rnd() * 520;
-      const x = Math.cos(a) * r, z = Math.sin(a) * r, s = 6 + rnd() * 13;
+      const talus=FRONTLINE_TALUS[i];
+      if(talus){
+        const {x,z,width,depth,height,yaw,variant}=talus;
+        const m=add(new THREE.Mesh(new THREE.BoxGeometry(width,height,depth),i%3?rockM:darkM));
+        m.position.set(x,height*.5,z);m.rotation.y=yaw;m.castShadow=true;
+        m.userData.frontlineBoulder=true;m.userData.frontlineTalus=variant;
+        this._reg(x,z,width*.5,depth*.5,height,m);continue;
+      }
+      const s=6+rnd()*13;let x,z;
+      for(let attempt=0;attempt<200;attempt++){
+        const a=rnd()*Math.PI*2,r=165+rnd()*550;x=Math.cos(a)*r;z=Math.sin(a)*r;
+        if(outpostReserved(x,z,s+16))continue;
+        if(this._cover.some(c=>Math.abs(x-c.x)<c.hx+s+15&&Math.abs(z-c.z)<c.hz+s+15))continue;
+        if(x>-310&&x<-150&&z>160&&z<520)continue;
+        if(Math.hypot(Math.max(0,Math.abs(x)-s*1.5),Math.max(0,Math.abs(z)-s*1.5))<130)continue;
+        break;
+      }
       const m = add(new THREE.Mesh(new THREE.IcosahedronGeometry(s, 0), rnd() > STAGE.darkOdds ? rockM : darkM));
       m.position.set(x, s * 0.55, z); m.rotation.set(rnd() * 3, rnd() * 3, rnd() * 3);
+      m.userData.frontlineBoulder=true;
       this._reg(x, z, s * 1.3, s * 1.3, s * 1.1, m);
     }
     this._scatterRubble(rnd);
     this._buildHorizon(add, rnd);
+    authorFrontlineRelief(this);
     this._buildClouds(add, rnd);
     W.scene.add(grp);
+    if(W.print){this._print0={...W.print.settings};W.print.apply({ink:0,halftone:0,levels:0,grain:0,tilt:0,grade:0,vibrance:0,saturation:0});}
+    this.frontlineReady=false;this.frontlineAssetsReady=false;this._airspaceOpen=false;this.frontlineRockCount=0;this.frontlineError=null;
+    if(W.renderer)this.frontlineLoading=installFrontlineTerrain(this,floor).then(()=>{
+      if(this.group===grp&&!this._enableAirspace())throw new Error('Flight-space ground is not ready');
+    }).catch(error=>{
+      // Retain the playable fallback geometry and expose the load failure.
+      if(this.group===grp)this.frontlineError=error.message;
+      console.error('Frontline terrain assets',error);
+    });
     this._skin();
     this._skinFighters();
+    // Commit structure collision before looking for vehicle parking. Asset
+    // timing must not decide whether a truck spawns inside a command post.
+    this.outpostError=null;
+    if(W.renderer)this.outpostLoading=installFrontlineOutpost(this).then(async()=>{
+      if(this.group!==grp)return;
+      this.convoy=new FrontlineConvoy(this);await this.convoy.loading;
+      if(this.group!==grp)return;
+      this.aircraft=new FrontlineAircraft(g);await this.aircraft.loading;
+    }).catch(error=>{if(this.group===grp)this.outpostError=error.message;});
+    if(W.renderer)this.vehicleHUD=new VehicleHUD(this);
     g._pwStage = this;
+    prepareFrontline(this);
     return this;
   }
 
   /**
-   * THE DISTANT FRAME — flat-topped mesas ringing the stage, outside the play radius.
-   *
-   * ⚠ NOT COVER, DELIBERATELY. The ropes make a boxing hall's seating unreachable and so it is not
-   * registered; here the arena bound does the same job. Registering scenery would buy nothing and cost
-   * collision, LOS, AI vision and a fog-raster entry each.
+   * THE DISTANT FRAME — flat-topped mesas ringing the central battlefield.
+   * Final collision is registered by _enableAirspace after the visible assets
+   * are adopted, before the old central boundary is opened for pursuit.
    *
    * ⚠ AERIAL PERSPECTIVE IS AUTHORED HERE, NOT LEFT TO FOG. The stage runs fog at 0.35× and at 1,500u
    * that is under 1% — the mesas would have come back as hard-edged solid rock, which reads as *near*
@@ -188,15 +233,13 @@ export class PowerWorldStage {
     // one geometry, scaled per mesa — a unit cylinder with a narrower top is a mesa
     const geo = new THREE.CylinderGeometry(0.72, 1, 1, 7, 1);
     this._geos.push(geo);
-    for (let i = 0; i < S.mesas; i++) {
-      const a = (i / S.mesas) * Math.PI * 2 + (rnd() - 0.5) * 0.34;
-      const r = S.mesaR[0] + rnd() * (S.mesaR[1] - S.mesaR[0]);
-      const h = S.mesaH[0] + rnd() * (S.mesaH[1] - S.mesaH[0]);
-      const w = h * (0.5 + rnd() * 0.8);
+    for (const formation of FRONTLINE_FAR_BANDS) {
+      const {x,z,width,depth,height:h,yaw,profile}=formation;
       const m = add(new THREE.Mesh(geo, far));
-      m.position.set(Math.cos(a) * r, h * 0.5 - 6, Math.sin(a) * r);
-      m.scale.set(w, h, w * (0.7 + rnd() * 0.6));
-      m.rotation.y = rnd() * 3.14;
+      m.userData.frontlineDistant=true;m.userData.frontlineProfile=profile;
+      m.position.set(x,h*.5,z);
+      m.scale.set(width*.5,h,depth*.5);
+      m.rotation.y=yaw;
     }
   }
 
@@ -238,6 +281,7 @@ export class PowerWorldStage {
     });
     this._mats.push(mat);
     const m = add(new THREE.Mesh(geo, mat));
+    this._cloudMesh=m;
     m.renderOrder = 1;
   }
 
@@ -276,7 +320,14 @@ export class PowerWorldStage {
    * stop the climb at. On Earth the atmosphere is a lid and leaving it is supposed to be a ceremony.
    */
   tick(p) {
+    this.aircraft?.update();
+    this.convoy?.update();
+    this.vehicleHUD?.update();
     this._skinFighters();      // late arrivals (a rival ordered with B, a respawn) get the treatment too
+    const print=this.g.world.print;
+    // Entry settings may be applied after stage.open. Keep this venue's clean
+    // render treatment local; close restores the caller's print settings.
+    if(print&&(print.settings.ink||print.settings.halftone||print.settings.levels||print.settings.grain||print.settings.grade))print.apply({ink:0,halftone:0,levels:0,grain:0,tilt:0,grade:0,vibrance:0,saturation:0});
     if (!p) return;
     const S = STAGE, y = p.pos.y;
     const t = (y - S.spaceFrom) / (S.spaceTo - S.spaceFrom);
@@ -311,7 +362,6 @@ export class PowerWorldStage {
    * is a uniform — the cheapest visual in the engine (see the look ladder: rim is 0 texture fetches).
    */
   _skinFighters() {
-    const bone = new THREE.Color('#d8d2c6');
     for (const e of this.g.entities) {
       const P = e.parts; if (!P || !P.mats || e._pwSkin) continue;
       const keep = {};
@@ -319,13 +369,11 @@ export class PowerWorldStage {
         const m = P.mats[k]; if (!m) continue;
         keep[k] = { c: m.color.clone(), r: m.roughness, mt: m.metalness,
                     e: m.emissive ? m.emissive.clone() : null, ei: m.emissiveIntensity };
-        m.color.lerp(bone, 0.3);                  // a third of the way — the FINISH does the rest
-        m.roughness = Math.min(1, m.roughness + 0.4);
-        m.metalness *= 0.25;
-        if (m.emissive) m.emissiveIntensity = (m.emissiveIntensity || 0) * 0.4;
+        // Preserve authored cloth/skin/metal distinctions and saturated costume colours.
+        // The old common bone tint flattened every character into the same mannequin finish.
       }
       e._pwSkin = keep;
-      setRim(P, 0.85);
+      setRim(P, SETTINGS.fxRim ?? 0.25);
     }
   }
 
@@ -360,10 +408,37 @@ export class PowerWorldStage {
    */
   _reg(x, z, hx, hz, top, mesh) {
     const W = this.g.world;
-    const w = hx, d = hz, h = top;
-    const hp = Math.round(70 + w * h * d * 0.0075);
+    // The constructor arguments are authored spans, but CylinderGeometry and
+    // IcosahedronGeometry take RADII. Those guesses left visible rock outside
+    // both body/camera boxes and projectile cylinders. Measure transformed
+    // vertices once at registration; no mesh queries enter the simulation loop.
+    // Keep the authored centre so resetTerrain restores the same mesh position.
+    const rubbleVolume = hx * hz * top;
+    let w = hx, d = hz, h = top, r = Math.max(w, d) * 0.6;
+    if (mesh) {
+      mesh.updateWorldMatrix(true, true);
+      const bounds = new THREE.Box3().setFromObject(mesh, true);
+      if (!bounds.isEmpty()) {
+        w = 2 * Math.max(Math.abs(bounds.min.x - x), Math.abs(bounds.max.x - x));
+        d = 2 * Math.max(Math.abs(bounds.min.z - z), Math.abs(bounds.max.z - z));
+        h = Math.max(0, bounds.max.y);
+        const point = new THREE.Vector3();
+        let radiusSq = 0;
+        mesh.traverse(o => {
+          const positions = o.geometry?.attributes.position;
+          if (!positions) return;
+          for (let i = 0; i < positions.count; i++) {
+            point.fromBufferAttribute(positions, i).applyMatrix4(o.matrixWorld);
+            radiusSq = Math.max(radiusSq, (point.x - x) ** 2 + (point.z - z) ** 2);
+          }
+        });
+        r = Math.sqrt(radiusSq);
+      }
+    }
+    const hp = Math.round(70 + rubbleVolume * 0.0075);
     const co = {
-      x, z, hx: hx * 0.5, hz: hz * 0.5, top, h, r: Math.max(w, d) * 0.6, w, d,
+      x, z, hx: w * 0.5, hz: d * 0.5, top: h, h, r, w, d, projectileShape: 'box',
+      rubbleVolume, // collision correction must not silently rebalance durability/loot
       hp, maxHp: hp, mesh, y0: mesh ? mesh.position.y : h / 2, destroyed: false,
       onShatter: (game, c) => this._shatter(game, c),
     };
@@ -387,7 +462,7 @@ export class PowerWorldStage {
     if (i >= 0) W.cover.splice(i, 1);
     c.destroyed = true;
     W.refreshFogBoxes && W.refreshFogBoxes();
-    const vol = (c.w || 8) * (c.d || 8) * (c.h || 20);
+    const vol = c.rubbleVolume ?? (c.w || 8) * (c.d || 8) * (c.h || 20);
     const top = rungFor(vol);
     // 2–4 pieces, the heaviest rung this mass earns plus lighter ones under it
     const n = 2 + (Math.random() * 3 | 0);
@@ -448,8 +523,12 @@ export class PowerWorldStage {
   _scatterRubble(rnd) {
     for (let rung = 0; rung < STAGE.loose.length; rung++) {
       for (let k = 0; k < STAGE.loose[rung]; k++) {
-        const a = rnd() * Math.PI * 2, r = 26 + rnd() * 300;   // clustered where the fight starts
-        this._rock(Math.cos(a) * r, Math.sin(a) * r, rung);
+        let x,z;
+        for(let attempt=0;attempt<100;attempt++){
+          const a=rnd()*Math.PI*2,r=26+rnd()*300;x=Math.cos(a)*r;z=Math.sin(a)*r;
+          if(!outpostReserved(x,z,RUBBLE[rung].s+3))break;
+        }
+        this._rock(x,z,rung);
       }
     }
   }
@@ -464,6 +543,8 @@ export class PowerWorldStage {
   _hideTheatre() {
     const g = this.g, W = g.world;
     this._arena0 = W.ARENA;
+    this._combatRadius0=Object.getOwnPropertyDescriptor(W,'combatRadius');
+    W.combatRadius=STAGE.radius;
     W.ARENA = STAGE.radius;                       // the sky is open and so is the ground
     this._hidden = [];
     const hide = (m) => { if (m && m.visible) { this._hidden.push(m); m.visible = false; } };
@@ -489,6 +570,27 @@ export class PowerWorldStage {
     if (W.scene.fog) { this._fog0 = W.scene.fog.density; W.scene.fog.density = this._fog0 * 0.35; }
   }
 
+  _enableAirspace() {
+    const W=this.g.world;
+    if(!this.group||!this.frontlineAssetsReady||!W._outerTerrain)return false;
+    if(this._airspaceOpen)return true;
+    const radius=STAGE.airspaceRadius;
+    for(const x of [-radius,radius])for(const z of [-radius,radius]){
+      if(!Number.isFinite(W._outerTerrain.heightAt(x,z)))return false;
+    }
+    // Measure adopted geometry, never the earlier cylindrical placeholders.
+    // Register after relief authoring so scenic colliders cannot reshape the valley.
+    this.group.traverse(mesh=>{
+      if(!mesh.isMesh||!mesh.userData.frontlineDistant||this._cover.some(c=>c.mesh===mesh))return;
+      mesh.updateWorldMatrix(true,true);
+      const box=new THREE.Box3().setFromObject(mesh,true),center=box.getCenter(new THREE.Vector3()),size=box.getSize(new THREE.Vector3());
+      this._reg(center.x,center.z,size.x*.5,size.z*.5,size.y,mesh);
+      this._cover[this._cover.length-1].frontlineDistant=true;
+    });
+    W.ARENA=radius;this._airspaceOpen=true;
+    W.refreshFogBoxes?.();return true;
+  }
+
   /** PowerWorld's own sky, written into the palette the day/night cycle already drives. */
   _skin() {
     const W = this.g.world, P = W._dnc, S = STAGE.sky;
@@ -509,7 +611,9 @@ export class PowerWorldStage {
     W.skyWorld = 'powerworld';
     // PIN THE LIGHT. See STAGE.dayT — the clock is a planet's rotation and there is no planet here.
     this._day0 = W.dayFixed ?? null; this._dayT0 = W.dayT;
-    W.dayFixed = STAGE.dayT;
+    this._daylight0 = W.powerworldDaylight;
+    this._lightColors0 = {ambient:W.amb?.color.clone(),rim:W.rim?.color.clone()};
+    this.setDaylight('day');
     // ⚠ AND THE DOME HAS TO CONTAIN THE STAGE. Its radius is 900 and so is the play radius, so a
     // fighter out at the rim and 400u up is OUTSIDE their own sky and it vanishes. depthWrite is off
     // and fog is off on that material, so scaling it is free.
@@ -521,14 +625,36 @@ export class PowerWorldStage {
     // little and the silhouettes gain everything, which is the trade the reference makes.
     // ⚠ MOVING a light is free. ADDING one is not (THE LIGHT-COUNT LAW — three.js bakes the visible
     // light count into every material's program key, so a new light recompiles the whole scene).
-    if (W.sunOff) { this._sun0 = W.sunOff.clone(); W.sunOff.set(150, 118, 96); }
+    installFrontlineLighting(this);
+  }
+
+  setDaylight(id) {
+    const preset=daylightPreset(id),W=this.g.world;
+    this.daylight=preset.id;
+    W.powerworldDaylight=preset.id;
+    W.dayFixed=preset.time;
+    if(this._frontlineSky){
+      this._frontlineSky.material.uniforms.uFrontlineDayMix.value=preset.skyMix;
+      W.scene.environmentIntensity=preset.environment;
+    }
   }
 
   close() {
     if (!this.group) return;
+    this.preparation?.cancel();this.preparation=null;
+    this.combatWarmup?.dispose();this.combatWarmup=null;
+    this.aircraft?.dispose();this.aircraft=null;
+    this.convoy?.dispose();this.convoy=null;
+    this.vehicleHUD?.dispose();this.vehicleHUD=null;
     const W = this.g.world;
+    restoreFrontlineGround(this);
+    restoreFrontlineSky(this);
+    restoreFrontlineLighting(this);
     this._unskinFighters();      // hand every fighter their own colours back before anything else
+    if(this._print0&&W.print){W.print.apply(this._print0);this._print0=null;}
     if (this._arena0 != null) { W.ARENA = this._arena0; this._arena0 = null; }
+    if(this._combatRadius0)Object.defineProperty(W,'combatRadius',this._combatRadius0);else delete W.combatRadius;
+    this._combatRadius0=null;this._airspaceOpen=false;this.frontlineAssetsReady=false;
     if (this._props) { W.cars = this._props.cars; W.planes = this._props.planes; W.rocks = this._props.rocks; W.treeSpots = this._props.trees; this._props = null; }
     // ⚠ our own cover records leave BOTH arrays before the originals come back, or the next match
     // inherits invisible rocks — the exact bug the venue paid for.
@@ -543,7 +669,7 @@ export class PowerWorldStage {
     if (W._fades) for (const co of this._cover) {
       const f = W._fades.get(co);
       if (!f) continue;
-      for (const [m, orig] of f.mats) { try { m.material.dispose(); m.material = orig; } catch (e) {} }
+      for (const [m, orig] of f.mats) { try { for(const material of Array.isArray(m.material)?m.material:[m.material])material.dispose(); m.material = orig; } catch (e) {} }
       W._fades.delete(co);
     }
     this._cover = [];
@@ -557,14 +683,18 @@ export class PowerWorldStage {
     // another dimension does not advance the clock at home, which is a ruling rather than an accident —
     // the alternative silently jumps the theatre you return to to PowerWorld's fixed noon.
     W.dayFixed = this._day0; if (this._dayT0 != null) W.dayT = this._dayT0;
+    W.powerworldDaylight=this._daylight0;
+    if(this._lightColors0?.ambient)W.amb.color.copy(this._lightColors0.ambient);
+    if(this._lightColors0?.rim)W.rim.color.copy(this._lightColors0.rim);
+    this._daylight0=undefined;this._lightColors0=null;
     this._day0 = this._dayT0 = null;
     if (this._skyScale0 != null && W.skyMesh) { W.skyMesh.scale.setScalar(this._skyScale0); this._skyScale0 = null; }
-    if (this._sun0 && W.sunOff) { W.sunOff.copy(this._sun0); this._sun0 = null; }
     W.setSpace(0);      // ⚠ leaving at altitude must not hand the next theatre a black sky full of stars
-    this.group.traverse(o => { if (o.geometry) o.geometry.dispose(); });
-    for (const g2 of this._geos) g2.dispose();
-    for (const t of this._texs) t.dispose();
-    for (const m of this._mats) m.dispose();
+    const geometries=new Set(this._geos);
+    this.group.traverse(o => { if (o.isInstancedMesh) o.dispose(); if (o.geometry) geometries.add(o.geometry); });
+    for (const geo of geometries) geo.dispose();
+    for (const t of new Set(this._texs)) t.dispose();
+    for (const m of new Set(this._mats)) m.dispose();
     W.scene.remove(this.group);
     this.group = null; this._mats = []; this._geos = []; this._texs = [];
     // ⚠ the shared rubble geometry/material were just disposed with the rest — hold a dead handle and

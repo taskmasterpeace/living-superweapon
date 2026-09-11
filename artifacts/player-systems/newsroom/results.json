@@ -1,0 +1,109 @@
+{
+  "kind": "Newsroom UI — staged valid archive fixtures plus separate native gameplay capture",
+  "stagedSetup": "Canvas-encoded PNG frames inserted through the production archive API; not gameplay evidence.",
+  "errors": [],
+  "consoleErrors": [],
+  "screenshots": [
+    "artifacts/player-systems/newsroom/desktop-1440x900.png",
+    "artifacts/player-systems/newsroom/landscape-844x390.png",
+    "artifacts/player-systems/newsroom/portrait-390x844.png",
+    "artifacts/player-systems/newsroom/native-gameplay-reload-playback.png"
+  ],
+  "nativeGameplay": {
+    "attempted": true,
+    "passed": true,
+    "setup": "Saved title choices select SARGE versus elite NOVA; native target lock, forward movement and mouse attack engage the real opponent. No clip or simulation-state injection.",
+    "live": {
+      "rec": null,
+      "clips": [
+        {
+          "title": "GUNSHIP DISABLED",
+          "tag": "car",
+          "heroIds": [
+            "nova",
+            "sarge"
+          ],
+          "frames": 30
+        }
+      ]
+    },
+    "archive": {
+      "heroId": "sarge",
+      "rows": [
+        {
+          "id": "46c5fc9c-0673-450c-8dd7-e898df37d801",
+          "matchId": "fc5a0faf-6724-4351-92bc-67d97b2e67f5",
+          "createdAt": 1789112169128,
+          "title": "GUNSHIP DISABLED",
+          "tag": "car",
+          "heroIds": [
+            "nova",
+            "sarge"
+          ],
+          "favorite": false,
+          "fps": 12,
+          "priority": 2,
+          "width": 640,
+          "height": 360,
+          "slow": false,
+          "slowFrom": 4,
+          "slowTo": 21,
+          "audio": false,
+          "shots": [
+            {
+              "frame": 4,
+              "kind": "impact"
+            },
+            {
+              "frame": 7,
+              "kind": "attacker"
+            },
+            {
+              "frame": 18,
+              "kind": "action"
+            }
+          ],
+          "t0": 4.71290000000001,
+          "tLabel": "0:05",
+          "shotBy": "T. NAKAMURA",
+          "bytes": 714034
+        }
+      ]
+    },
+    "title": "GUNSHIP DISABLED",
+    "evidence": "artifacts/player-systems/newsroom/native-gameplay-reload-playback.png",
+    "audio": false
+  },
+  "afterEdit": {
+    "id": "setup-sol-ko",
+    "matchId": "setup-one",
+    "createdAt": 1788939347832,
+    "title": "<b>SOL newsroom lead</b>",
+    "tag": "ko",
+    "heroIds": [
+      "sol",
+      "rage"
+    ],
+    "favorite": true,
+    "fps": 12,
+    "priority": 1,
+    "width": 320,
+    "height": 180,
+    "slow": false,
+    "slowFrom": 0,
+    "slowTo": 0,
+    "audio": false,
+    "shots": [],
+    "t0": 0,
+    "tLabel": "0:02",
+    "shotBy": "STAGED SETUP · KMK 9",
+    "bytes": 19335,
+    "frames": [
+      {},
+      {},
+      {}
+    ]
+  },
+  "backup": "artifacts/player-systems/newsroom/vega-impact.powerworld-news.json",
+  "pass": true
+}

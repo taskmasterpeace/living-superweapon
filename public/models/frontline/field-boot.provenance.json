@@ -1,0 +1,68 @@
+{
+  "name": "Original ceramic field boot",
+  "created": "2026-09-09",
+  "creator": "Original Blender-authored asset for Living Superweapon / War World",
+  "externalAssets": [],
+  "rights": "Original project geometry and material design. No third-party asset licensing obligations.",
+  "source": "tools/author-frontline-hero-armor.py",
+  "blenderSource": "assets-src/frontline-hero-armor/field-boot.blend",
+  "geometryBank": "src/data/field-boot-bank.json",
+  "bankSchema": "Flat position/normal/uv/index arrays; Three.js groups and materials arrays; bounds in native boot local space.",
+  "forward": "+Z",
+  "pivot": [
+    0,
+    0,
+    0
+  ],
+  "bounds": {
+    "min": [
+      -0.3120707,
+      -0.38,
+      -0.397
+    ],
+    "max": [
+      0.3120707,
+      0.3758609,
+      0.815
+    ]
+  },
+  "triangles": 3416,
+  "materialGroups": 3,
+  "materials": [
+    {
+      "name": "rubber",
+      "color": [
+        0.025,
+        0.03,
+        0.027
+      ],
+      "roughness": 0.8399999737739563,
+      "metalness": 0.019999999552965164
+    },
+    {
+      "name": "ceramic",
+      "color": [
+        0.67,
+        0.61,
+        0.48
+      ],
+      "roughness": 0.5400000214576721,
+      "metalness": 0.11999999731779099
+    },
+    {
+      "name": "hardware",
+      "color": [
+        0.24,
+        0.23,
+        0.19
+      ],
+      "roughness": 0.38999998569488525,
+      "metalness": 0.7200000286102295
+    }
+  ],
+  "bytes": 275740,
+  "sha256": "3156cf7e589ea623cffc7f86f6f8ded83e3af6d0fd238880ea5f257dc36d7105",
+  "texture": "None. Ceramic seams, flex ribs, fasteners and sole tread modeled in geometry.",
+  "rigContract": "Symmetric reusable left/right boot. Replaces geometry/materials on existing native boot driver; no new rig, skeleton, clips, controller or URL load at rig initialization.",
+  "limitations": "Rigid boot skin; no opening collar, independent toe flex, wear texture or baked AO. Runtime ceramic tint should follow the hero armor."
+}

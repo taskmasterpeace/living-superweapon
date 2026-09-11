@@ -1,0 +1,121 @@
+{
+  "name": "Original fitted field greaves",
+  "creator": "Original Blender-authored geometry for Living Superweapon / War World",
+  "source": "assets-src/frontline-greaves/author-greaves.py",
+  "blenderSource": "assets-src/frontline-greaves/field-greaves-candidate.blend",
+  "geometryBank": "src/data/field-greaves-bank.json",
+  "triangles": 3952,
+  "draws": 6,
+  "bytes": 205780,
+  "sha256": "d6aa60d5b2a62ed8b7cc105cb585aacf73945ff84a1d4ddc887cecd885b159f7",
+  "pieces": {
+    "greave_L": {
+      "triangles": 1976,
+      "vertices": 2770,
+      "groups": [
+        {
+          "start": 0,
+          "count": 2316,
+          "materialIndex": 0
+        },
+        {
+          "start": 2316,
+          "count": 2688,
+          "materialIndex": 1
+        },
+        {
+          "start": 5004,
+          "count": 924,
+          "materialIndex": 2
+        }
+      ],
+      "bounds": {
+        "min": [
+          -0.4562039,
+          -0.68,
+          -0.6047792
+        ],
+        "max": [
+          0.3403828,
+          0.6964907,
+          0.3295642
+        ]
+      },
+      "degenerateTriangles": 0,
+      "maxNormalError": 7.148352243468992e-8
+    },
+    "greave_R": {
+      "triangles": 1976,
+      "vertices": 2770,
+      "groups": [
+        {
+          "start": 0,
+          "count": 2316,
+          "materialIndex": 0
+        },
+        {
+          "start": 2316,
+          "count": 2688,
+          "materialIndex": 1
+        },
+        {
+          "start": 5004,
+          "count": 924,
+          "materialIndex": 2
+        }
+      ],
+      "bounds": {
+        "min": [
+          -0.3403826,
+          -0.68,
+          -0.6047791
+        ],
+        "max": [
+          0.4562039,
+          0.6964906,
+          0.3295644
+        ]
+      },
+      "degenerateTriangles": 0,
+      "maxNormalError": 7.329463269645231e-8
+    }
+  },
+  "materials": [
+    {
+      "name": "rubber",
+      "color": [
+        0.026,
+        0.028,
+        0.025
+      ],
+      "roughness": 0.8299999833106995,
+      "metalness": 0.02500000037252903
+    },
+    {
+      "name": "ceramic",
+      "color": [
+        1,
+        1,
+        1
+      ],
+      "roughness": 1,
+      "metalness": 1
+    },
+    {
+      "name": "hardware",
+      "color": [
+        0.33,
+        0.255,
+        0.135
+      ],
+      "roughness": 0.49000000953674316,
+      "metalness": 0.6800000071525574
+    }
+  ],
+  "rights": "Greave geometry, UVs and neutral masks are original project work. No downloaded or branded greave design.",
+  "reference": "Existing locally bundled Quaternius CC0 superhero-male anatomy was used for fitting/preview only and is not contained in this GLB or bank.",
+  "textures": [],
+  "pivot": "Each greave is centered at its existing native shin driver, +Y up, +Z forward. Positive transforms, no negative-scale mirror.",
+  "contract": "Synchronous scalar-material descendants on native shin meshes; no skeleton, animation, rig replacement, gameplay contact or Studio schema changes.",
+  "limitations": "Rigid shin shell. Does not change boot, knee, shoulder, belt, hand or hair anatomy. Native fit and lifecycle verification must accompany integration."
+}

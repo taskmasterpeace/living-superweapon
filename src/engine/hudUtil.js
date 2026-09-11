@@ -128,13 +128,17 @@ export function describeAbility(a) {
     case 'teleport': return 'blink to your aim (breaks grabs)';
     case 'dash': return 'quick i-frame dash';
     case 'summon': return 'summon seeker drones that fight for you';
-    case 'construct': return 'cursor-steered ' + (a.construct || 'solid-light') + ' construct';
+    case 'construct': {
+      const form=a.construct==='tank'?'ground-designated tank — holds to fire; close targets inside fixed barrel clearance are not fired on':a.construct==='wall'?'ground-placed protective wall':'cursor-steered '+(a.construct||'solid-light')+' construct';
+      const life=a.constructLifetime==='upkeep'?`continuous upkeep ${a.constructKiPerSec??12} ki/s; physical hits have no per-hit ki charge`:a.constructLifetime==='damage'?`damage-backed energy ${a.constructKiPerDamage??1} ki/hp received`:'';
+      return form+(life?` — ${life}; no timer; press again to dismiss`:'');
+    }
     case 'buff': return 'power-up' + (a.invuln ? ' + invincibility' : '') + (a.heal ? ' + heal' : '') + (a.spendAll ? ' (spends all ki)' : '');
     case 'meteor': return 'call down a meteor storm at your aim';
     case 'phase': return 'hold to go intangible — spends energy';
     case 'tentacle': return 'tentacles seize a foe, drag them in, and SLAM them into the nearest wall';
     case 'portal': return 'place a door, then its exit — anything that touches one comes out the other';
-    case 'rifle': return (a.interval > 0.2 ? 'heavy sidearm — hard-hitting shots' : 'full-auto tracer fire') + ' (ammo = ki)';
+    case 'rifle': return (a.interval > 0.2 ? 'deliberate fire — hard-hitting shots' : 'full-auto tracer fire') + (Number.isInteger(a.magazine)&&a.magazine>0?` (${a.magazine}-round magazine · reload)`:' (energy-fed)');
     case 'bow': return 'hold to draw — arrow speed & damage scale; payload from your quiver';
     case 'facebomb': return 'charge her up — she drifts to the target, lingers a heartbeat, then DETONATES';
     case 'mine': return 'plant proximity mines at your aim (up to 3) — they arm, blink, and erase';

@@ -11,10 +11,14 @@ import * as THREE from 'three';
 
 // ============================================================================================
 // 1 · WEATHER COMMAND — a real layer: rain, wind, cloud density, lightning.
-// Global, gradual (never a switch), and it MOVES things: rain bends with wind, debris and
-// smoke drift, and lightning lights whole building silhouettes.
+// Ambient weather evolves independently of bounded, owned storm domains. Rain bends
+// with wind, matter drifts, and warned lightning resolves through native receivers.
 // ============================================================================================
 import { STATES, WIND_DRAG, pickWeather } from '../data/weather.js';
+import {RainField} from './rain-field.js';
+import {WeatherLightning,weatherSurface} from './weather-lightning.js';
+import {WeatherVortex} from './weather-vortex.js';
+import {StormLayer,MAX_STORM_LAYERS} from './weather-layer.js';
 
 export class Weather {
   constructor(game) {
@@ -23,6 +27,9 @@ export class Weather {
     this._target = { rain: 0, wind: 0, cloud: 0 };
     this._mesh = null; this._boltT = 0; this._srcT = 0; this._src = null;
     this.stateId = 'clear'; this._hold = 0; this._natural = 'clear';
+    this.time=0;
+    this.layers=new Map();
+    this._thunder=null;this._rainVoice=null;this._thunderVoice=null;this._strikeSource=null;
   }
   // ⚠ EXTENDED IN PLACE, NOT REPLACED. I wrote a second Weather class beside this one and the
   // duplicate silently won the import — the exact failure `docs/SYSTEM_MAP.md` exists to prevent
@@ -33,6 +40,8 @@ export class Weather {
   /** The named state (data/weather.js). Other systems read this, never the raw numbers. */
   set(id, { hold = 0, instant = false } = {}) {
     const S = STATES[id]; if (!S) return this.stateId;
+    this._cancelStorm();this._src=null;this._srcT=0;
+    this._vortex?.dispose();this._vortex=null;this._vortexSpawned=false;
     this.stateId = id;
     this._target = { rain: S.rain, wind: S.wind, cloud: S.cloud };
     this.storm = S.thunder ? Math.max(this.storm, 0.7) : 0;
@@ -46,19 +55,39 @@ export class Weather {
    *  enough, because the honesty law already forbids acting on anything not earned by sight, radio
    *  or noise. A bot in a storm genuinely loses you, with no weather branch in ai.js. */
   get visMult() { const S = this.state; return 1 - (1 - S.vis) * Math.min(1, this.rain + this.cloud * 0.4); }
-  get windSpeed() { return this.wind * 42 * (1 + Math.sin(this._srcT * 0.7) * 0.28); }
+  get windSpeed() { return this.wind * 42 * (1 + Math.sin(this.time * 0.7) * 0.28); }
+
+  sampleBodyWind(pos,out){
+    if(this._vortex?.kind==='hurricane'){
+      this._vortex.sample(pos,out);
+      for(const layer of this.layers.values())layer.addWind(pos,out);
+      return out;
+    }
+    out.x=Math.cos(this.windDir)*this.windSpeed;out.y=0;out.z=Math.sin(this.windDir)*this.windSpeed;
+    if(this._vortex){
+      const v=this._vortex.sample(pos,this._windSample||(this._windSample={}));
+      out.x+=v.x;out.y+=v.y;out.z+=v.z;
+    }
+    for(const layer of this.layers.values())layer.addWind(pos,out);
+    return out;
+  }
 
   /**
    * Wind force on a moving thing, units/second. ⚠ `kind` is a LOOKUP in WIND_DRAG; a projectile
    * whose kind is not in that table — every ki blast, beam and orb — gets ZERO. Energy is exempt BY
    * CONSTRUCTION, never by an `if`. Callers pass a kind, never a boolean.
    */
-  force(kind, out) {
+  force(kind, out, pos=null) {
     const d = WIND_DRAG[kind];
     const o = out || { x: 0, y: 0, z: 0 };
-    if (!d || this.wind <= 0.002) { o.x = o.y = o.z = 0; return o; }
-    const a = this.windDir || 0, s = this.windSpeed * d;
+    if (!d) { o.x = o.y = o.z = 0; return o; }
+    const a = this.windDir || 0, s = this.wind > 0.002 ? this.windSpeed * d : 0;
     o.x = Math.cos(a) * s; o.y = 0; o.z = Math.sin(a) * s;
+    if(pos){
+      const local=this._layerForce||(this._layerForce={x:0,y:0,z:0});local.x=local.y=local.z=0;
+      for(const layer of this.layers.values())layer.addWind(pos,local);
+      o.x+=local.x*d;o.z+=local.z*d;
+    }
     return o;
   }
 
@@ -68,95 +97,102 @@ export class Weather {
     return this.set(this._natural, { instant: true });
   }
 
-  // a power (or a script) ASKS for weather; it arrives over `ramp` seconds, never instantly
-  command({ rain = 0, wind = 0, cloud = 0, storm = 0, dur = 12, src = null } = {}) {
-    // ⚠ AN ABILITY ASKS FOR A STATE, IT DOES NOT AUTHOR ONE — so a commanded storm and a natural
-    // storm are the same thing to every reader.
-    const want = storm >= 0.7 ? 'storm' : rain >= 0.6 ? 'rain' : rain > 0 ? 'drizzle'
-      : cloud >= 0.6 ? 'cloudy' : wind >= 0.6 ? 'storm' : 'fair';
-    this.stateId = want; this._hold = dur;
-    this._target = { rain, wind, cloud };
-    this.storm = storm; this._srcT = dur; this._src = src;
-    this.windDir = Math.random() * Math.PI * 2;
-    return this;
+  // Commands own bounded domains; set/clear remain the ambient control surface.
+  command(options={}) {
+    const src=options.src;
+    if(!StormLayer.accepts(src)||!this.layers.has(src)&&this.layers.size>=MAX_STORM_LAYERS)return null;
+    this.cancelCommand(src);
+    const layer=new StormLayer(this.g,options);this.layers.set(src,layer);return layer;
   }
-  clear() { this._target = { rain: 0, wind: 0, cloud: 0 }; this.storm = 0; this._src = null; }
+  cancelCommand(src){
+    const layer=this.layers.get(src);if(!layer)return false;
+    layer.dispose();this.layers.delete(src);return true;
+  }
+  clear() { this._target = { rain: 0, wind: 0, cloud: 0 }; this.storm = 0; this._src = null; this.stateId='clear';this._cancelStorm(); }
+
+  _cancelStorm(){
+    this._vortex?.dispose();this._vortex=null;this._vortexSpawned=false;
+    this._lightning?.cancel();this._thunder=null;this._strikeSource=null;this.g.world.weatherFlash=0;
+    this._thunderVoice?.stop();this._thunderVoice=null;
+  }
+
+  reset() {
+    this.clear();this.rain=this.wind=this.cloud=0;
+    this.g.world.weatherCloud=0;
+    this.time=0;this.g.world.weatherTime=0;
+    this._srcT=this._boltT=this._hold=0;this._natural='clear';this.dispose();
+  }
 
   _buildRain() {
-    const N = 1400;
-    const geo = new THREE.BufferGeometry();
-    const pos = new Float32Array(N * 3);
-    for (let i = 0; i < N; i++) {
-      pos[i * 3] = (Math.random() * 2 - 1) * 300;
-      pos[i * 3 + 1] = Math.random() * 220;
-      pos[i * 3 + 2] = (Math.random() * 2 - 1) * 300;
-    }
-    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-    const mat = new THREE.PointsMaterial({ color: '#a8c4d8', size: 1.1, transparent: true, opacity: 0.5, depthWrite: false });
-    const p = new THREE.Points(geo, mat);
-    p.frustumCulled = false;
-    this.g.scene.add(p);
-    this._mesh = p;
-    return p;
+    this._rainField=new RainField(this.g.world);
+    this._mesh=this._rainField.mesh;this.g.scene.add(this._mesh);
+    return this._mesh;
   }
   update(dt) {
+    this.time+=dt;this.g.world.weatherTime=this.time;
+    for(const [owner,layer] of this.layers){layer.update(dt);if(layer.disposed)this.layers.delete(owner);}
     const T = this._target;
-    if (this._srcT > 0) { this._srcT -= dt; if (this._srcT <= 0) this.clear(); }
     // GRADUAL — the brief is explicit that global weather must build, not switch
     this.rain += (T.rain - this.rain) * Math.min(1, dt * 0.55);
     this.wind += (T.wind - this.wind) * Math.min(1, dt * 0.4);
     this.cloud += (T.cloud - this.cloud) * Math.min(1, dt * 0.35);
+    this.g.world.weatherCloud=this.cloud;
+    if(['tornado','hurricane'].includes(this.stateId)&&this.cloud>.7&&this.g.player&&!this._vortexSpawned){
+      const p=this.g.player,kind=this.stateId,forward=p.aim||{x:0,z:1},distance=kind==='tornado'?150:380;
+      this._vortex=new WeatherVortex(this.g,{kind,x:p.pos.x+forward.x*distance,z:p.pos.z+forward.z*distance,
+        radius:kind==='tornado'?65:520,height:230,duration:kind==='tornado'?55:180});
+      this._vortexSpawned=true;
+      this.g.hud?.feed?.(kind==='tornado'?'TORNADO FORMING — take cover; stay out of the debris skirt.':'HURRICANE — strong eyewall winds. Seek solid shelter.','#e5bc72');
+    }
+    if(this._vortex){
+      this._vortex.update(dt);
+      if(this._vortex.age>=this._vortex.duration){this._vortex.dispose();this._vortex=null;this.set('storm');}
+    }
 
     if (this.rain > 0.02) {
       if (!this._mesh) this._buildRain();
-      const p = this._mesh;
-      p.visible = true;
-      p.material.opacity = 0.12 + this.rain * 0.5;
-      const arr = p.geometry.attributes.position.array;
-      const fall = (90 + this.rain * 120) * dt;
-      const wx = Math.cos(this.windDir) * this.wind * 40 * dt, wz = Math.sin(this.windDir) * this.wind * 40 * dt;
-      const cam = this.g.world.camera;
-      for (let i = 0; i < arr.length; i += 3) {
-        arr[i + 1] -= fall; arr[i] += wx; arr[i + 2] += wz;                 // RAIN BENDS WITH WIND
-        // the same law as the tether: a persistent buffer never takes a non-finite value
-        if (!Number.isFinite(arr[i]) || !Number.isFinite(arr[i + 1]) || !Number.isFinite(arr[i + 2])) { arr[i] = 0; arr[i + 1] = 200; arr[i + 2] = 0; }
-        if (arr[i + 1] < 0) {
-          arr[i + 1] = 200 + Math.random() * 30;
-          arr[i] = cam.position.x + (Math.random() * 2 - 1) * 280;
-          arr[i + 2] = cam.position.z + (Math.random() * 2 - 1) * 280;
-        }
-      }
-      p.geometry.attributes.position.needsUpdate = true;
+      this._rainField.update(dt,this.rain,this.wind,this.windDir);
     } else if (this._mesh) this._mesh.visible = false;
+    if(this.rain>.02){
+      const library=this.g.audio?.soundLibrary;
+      if(this._rainVoice&&library?.active&&!library.active.has(this._rainVoice))this._rainVoice=null;
+      this._rainVoice ||= this.g.audio?.soundLibrary?.play('weather-rain',{gain:.45});
+      const cam=this.g.world.camera?.position;
+      const sheltered=cam&&weatherSurface(this.g.world,cam.x,cam.z)>cam.y;
+      this._rainVoice?.set(this.rain*(sheltered ? .18 : 1));
+    }else{this._rainVoice?.stop();this._rainVoice=null;}
 
-    // WIND MOVES THE WORLD: loose debris and smoke drift, and fighters in the air get pushed
-    if (this.wind > 0.15) {
-      const wx = Math.cos(this.windDir) * this.wind, wz = Math.sin(this.windDir) * this.wind;
-      for (const f of this.g.entities) {
-        if (!f.alive || f.grounded) continue;
-        f.vel.x += wx * 14 * dt; f.vel.z += wz * 14 * dt;
-      }
-    }
-    // LIGHTNING lights the whole skyline, and can actually strike
-    if (this.storm > 0) {
+    // Body wind is integrated by Fighter before its swept collision pass.
+    // Lightning cannot arrive before its cloud ceiling. Natural bolts are
+    // spectacle; a weather-controller's damaging strike has a ground warning.
+    if (this.storm > 0 && this.cloud>.7) {
       this._boltT -= dt;
       if (this._boltT <= 0) {
-        this._boltT = 1.2 + Math.random() * (7 - this.storm * 4);
+        this._boltT = 4 + Math.random()*4;
         const px = (this.g.player ? this.g.player.pos.x : 0) + (Math.random() * 2 - 1) * 120;
         const pz = (this.g.player ? this.g.player.pos.z : 0) + (Math.random() * 2 - 1) * 120;
-        this.g.hud && this.g.hud.flashScreen && this.g.hud.flashScreen('#c8d8ff', 0.09);
-        this.g.vfx.lightning(new THREE.Vector3(px, 0, pz), { color: '#dfe9ff', count: 5, radius: 6, height: 120 });
-        this.g.later(() => this.g.audio.boom(0.85, { x: px, y: 0, z: pz }), 220 + Math.random() * 500);   // thunder must not outlive its storm
-        if (this.storm > 0.6 && this._src) this.g.areaDamage(this._src, new THREE.Vector3(px, 1, pz), 9, 26, 1.2, { dtype: 'energy', shock: true });
+        this._lightning ||= new WeatherLightning(this.g);
+        this._strikeSource=this.storm>.6?this._src:null;
+        this._lightning.start(new THREE.Vector3(px,weatherSurface(this.g.world,px,pz),pz),{warning:!!this._strikeSource,reduced:globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches===true});
       }
+    }
+    if(this._lightning?.update(dt)){
+      const pos=this._lightning.position.clone(),listener=this.g.world.camera?.position||pos;
+      this._thunder={pos,delay:.18+Math.min(1.8,pos.distanceTo(listener)/220)};
+      if(this._strikeSource&&this._strikeSource===this._src&&this._strikeSource.alive!==false)this.g.areaDamage(this._strikeSource,pos,9,26,1.2,{dtype:'energy',shock:true});
+      this._strikeSource=null;
+    }
+    this.g.world.weatherFlash=this._lightning?.flash||0;
+    if(this._thunder){
+      this._thunder.delay-=dt;
+      if(this._thunder.delay<=0){this._thunderVoice?.stop();this._thunderVoice=this.g.audio?.soundLibrary?.play('weather-thunder',{pos:this._thunder.pos});this._thunder=null;}
     }
   }
   dispose() {
-    if (this._mesh) {
-      this.g.scene.remove(this._mesh);
-      this._mesh.geometry.dispose(); this._mesh.material.dispose();
-      this._mesh = null;
-    }
+    for(const layer of this.layers.values())layer.dispose();this.layers.clear();
+    this._cancelStorm();this._rainVoice?.stop();this._rainVoice=null;
+    this._lightning?.dispose();this._lightning=null;
+    this._rainField?.dispose();this._rainField=null;this._mesh=null;
   }
 }
 
@@ -418,4 +454,3 @@ export class GravityZones {
   }
   clear() { this.list.length = 0; }
 }
-

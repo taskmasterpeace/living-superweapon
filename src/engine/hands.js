@@ -92,6 +92,12 @@ export function cycleHand(game, f, dir = 1) {
 
 /** What is in these hands right now, for the HUD. Never a number the player has to interpret. */
 export function handLabel(f) {
+  if(f?._gearHeld?.primary){
+    const held=f._gearHeld,cur={i:1,id:held.rowId,n:held.ab.name,kind:'primary',two:!held.ab.oneHand};
+    // Soldier primary is already shown in the native LMB/wheel HUD. Saved
+    // inventory choices are not additional issued weapons or number-key hands.
+    return {list:[cur],cur,two:cur.two};
+  }
   const list = handsOf(f);
   const s = list.find(x => x.i === (f._hand || 1)) || list[0];
   return { list, cur: s, two: !!s.two };
