@@ -19,7 +19,10 @@ try{
  await page.waitForSelector('#hSelect.on',{state:'visible'});
  const tempest=page.locator('#hSelect .scard').filter({hasText:'TEMPEST'}).first();
  if(await tempest.count())await tempest.click();
- await page.waitForTimeout(1200);
+ await page.waitForFunction(()=>{
+  const cards=document.querySelectorAll('#hSelect .scard');
+  return cards.length>0&&document.querySelectorAll('#hSelect .scard.portrait-ready').length===cards.length;
+ },null,{timeout:120000});
  await page.screenshot({path:`${out}/15-character-selection-live-preview.png`});
 
  await writeFile(`${out}/character-selection-capture-results.json`,JSON.stringify({base,viewport:[1600,900],errors},null,2));

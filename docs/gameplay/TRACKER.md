@@ -35,6 +35,8 @@ A repeatable 1600×900 browser capture pass now records 15 player-facing states 
 
 This evidence closes the missing visual-record gate for the merged slice. It does not by itself close native-input feel, balance, audio-mix, operation extraction, or the three inherited cloth failures still named above.
 
+Character selection follow-up: the bottom filmstrip now renders each fighter's procedural portrait instead of permanent letter placeholders. The selected portrait loads first; the remaining roster fills through a paced, code-split queue while initials remain as the failure/loading fallback. Browser coverage verifies initial selection, keyboard cycling, twelve populated cards around a distant selection and zero page errors; `15-character-selection-live-preview.png` records the fully populated visible strip.
+
 ## September 11 additions
 
 The creator added the desert preference and police-to-military escalation, explained the purpose of last-hit separation, requested a steerable spinning throw and supplied three clips plus a downloaded ESF installer. These are now part of the existing plan. Exact hit counts, timings, throw impulse/cost and hold controls remain tuning proposals. The reviewed videos have no audio stream and do not establish their game's build identity.
