@@ -107,6 +107,20 @@ Required joint acceptance for the speed work:
 
 ## Equipment ownership maintenance supporting clone scale
 
+### Native flight input finding (before gear implementation)
+
+The speed diagnostic now exercises `Game.controlPlayer` with a real SOL fighter and real ability payment, using staged input state (not browser-dispatched events). One forward-flight frame produces:
+
+| Input | Sustained cruise | Energy spent | Dash cooldown started |
+| --- | --- | ---: | --- |
+| Left Shift | Yes | 6.043 | Yes |
+| Right Shift | Yes | 0.043 | No |
+| Gamepad dash | No | 6.000 | Yes |
+
+This is a live controller asymmetry, not just a suspected source-code conflict. Left Shift feeds both `cruiseHeld` and the `shift` ability slot; Right Shift only feeds cruise; gamepad dash only feeds the ability slot. Adding a tap counter without changing ownership would retain double-action energy spending and unequal input behavior. The next flight-control change must explicitly route airborne gear selection separately from ground dash, use a shared keyboard/pad/touch intent, and cover release, overlays, landing and respawn. No gear behavior or new speed caps were installed by this diagnostic.
+
+Fresh existing regression run: `node --test tools/fighter-body-contact.test.mjs tools/fighter-environment-sweep.test.mjs tools/aircraft-piloting.test.mjs tools/world-units.test.mjs` passed **53/53**. Cases include opposing flyers, rendered core separation, thin cover at30/60/120Hz, terrain ridges, ceilings, roof landing and aircraft ownership. This is bounded CPU evidence; no claim of all collision arrangements, populated-battlefield performance or final high-speed flight feel. Node emitted its existing missing local-storage-path warning.
+
 The real carbine extraction allocated106 geometries beyond the loaded asset;104 received no disposal call. Many were transient CPU copies, so this is not a claim of104 retained GPU buffers. The loader snapshots original resources, while replacement receiver geometry and partial-extraction failure paths lacked explicit ownership.
 
 `authored-equipment.js` now reads indexed triangles directly and owns every generated split/remainder, including intermediate geometry and failed mounts. Measured generated count is4. Original asset resources retain their loader ownership, and repeated retirement does not dispose another live carbine. RED success-cleanup and partial-failure tests were observed before the fix; corrected malformed-bolt input then reproduced the intended failure.

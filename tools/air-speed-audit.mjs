@@ -8,6 +8,21 @@ import {METERS_PER_UNIT,unitsPerSecondToKmh} from '../src/core/world-units.js';
 
 const report={kind:'CPU controller diagnostic, staged conditions; no native input, rendering or performance claim',metersPerUnit:METERS_PER_UNIT,heroWishCap:{unitsPerSecond:PW_AIR.top,kmh:unitsPerSecondToKmh(PW_AIR.top)},heroes:[],aircraft:[]};
 const speed=v=>({unitsPerSecond:Number(v.toFixed(3)),kmh:Number(unitsPerSecondToKmh(v).toFixed(3))});
+// Exercise the real controller/slot payment boundary, not a source-text check.
+// This characterizes existing inputs; these numbers are not desired behavior.
+report.flightInputs=[];
+for(const input of ['ShiftLeft','ShiftRight','pad.dash']){
+ const fixture=mainCombatFixture({hero:'sol',mode:'powerworld'}),{p,g,pad}=fixture;
+ try{
+  Object.assign(p,{_openSky:true,flying:true,gait:'airborne'});p.pos.set(0,80,0);
+  fixture.w.chase(p,null,0,'bfp');
+  const initialKi=p.ki;
+  if(input==='pad.dash'){pad.active=true;pad.cur.dash=true;pad.ly=-1;}
+  else {g.input.keys.add('KeyW');g.input.keys.add(input);g.input.justPressed.add(input);}
+  fixture.control();
+  report.flightInputs.push({input,condition:'one staged input edge through native controlPlayer; no browser event dispatch',cruiseHeld:p.cruiseHeld,energySpent:Number((initialKi-p.ki).toFixed(3)),dashCooldown:Number((p.slots.shift?.cd||0).toFixed(3)),...speed(p.vel.length())});
+ }finally{fixture.close();}
+}
 for(const hero of ['sol','vega','kano'])for(const boost of [false,true]){
  const fixture=mainCombatFixture({hero}),f=fixture.p;
  try{
