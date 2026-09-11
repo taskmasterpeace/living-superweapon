@@ -274,6 +274,7 @@ export const TYPES = {
       g.projectiles.spawnProjectile(c, { vis: visOf(def),
         collisionPriority:def.collisionPriority,
         handOrigin:side,
+        dtype:def.dtype,
         launchTarget:c.hasAimWorld?c.aimWorld:null,launchSpread:spreadDraw,
         pos: m, vel: new THREE.Vector3(Math.cos(a)*Math.hypot(c.aim3.x,c.aim3.z), c.aim3.y, Math.sin(a)*Math.hypot(c.aim3.x,c.aim3.z)).setLength(def.speed || 105),
         radius: def.radius || 0.8, damage: def.damage || 6, blast: def.blast || 3.4, power: 0.5, color: def.color, color2: def.color2,
@@ -444,6 +445,7 @@ export const TYPES = {
           pos: orbPos, vel: c.aim3.clone().setLength(lerp(def.speedMax || 70, def.speedMin || 42, c01)),
           radius: lerp(def.minR || 1.3, def.maxR || 5, c01), damage: lerp(def.dmgMin || 20, def.dmgMax || 70, c01),
           blast: lerp(8, def.maxBlast || 26, c01), power, color: def.color, color2: def.color2, shock: true, ground: true,
+          dtype:def.dtype,
           splitCount:def.remoteDetonate?def.splitCount:0,splitSpread:def.splitSpread,splitSpeed:def.splitSpeed,splitHoming:def.splitHoming,
         });
         if(def.remoteDetonate)st.remoteShot=shot;
