@@ -11,3 +11,5 @@ Deletion witness removes the surviving record and proves both `list()` and `get(
 Limits: 360 frames, 24 MiB media, bounded JSON/base64 backup, 120-char titles, 250 MiB default budget.
 Concern: build has pre-existing Vite large-chunk/dynamic-import warnings only.
 Report: `.superpowers/sdd/2026-09-11-career-archive/task-1-report.md`
+Round-2 RED: sync-open retry asserted 2 attempts but saw 1; delayed flush produced `PromiseRejectionHandledWarning` and failed the test.
+Round-2 GREEN: 53/53 focused Node and 15/15 browser checks; rejected opens clear only their own cache entry and ownership+flush are observed together.

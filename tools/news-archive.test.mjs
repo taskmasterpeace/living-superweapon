@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {snapshotNewsClip} from '../src/engine/news-archive-adapter.js';
+import {persistNewsClip} from '../src/engine/news-archive-adapter.js';
+import {createNewsArchive} from '../src/core/news-archive.js';
 import {NewsFrameEncoder,revokeFrames} from '../src/engine/news-capture.js';
 import {archiveFieldFootage} from '../src/engine/field-footage.js';
 
@@ -34,4 +36,19 @@ test('encoder archive ownership survives onReady trimming the newly resolved liv
  encoder.capture({width:1,height:1},frames);const ownership=encoder.ownFrames(frames);
  finish(new Blob(['trim-owned'],{type:'image/webp'}));
  const blobs=await ownership;assert.equal(frames[0],null);assert.equal(await blobs[0].text(),'trim-owned');
+});
+
+test('a synchronous IndexedDB open failure is not cached across calls',async()=>{
+ let attempts=0;const archive=createNewsArchive({indexedDB:{open(){attempts++;throw Error('open exploded');}},dbName:'sync-open-failure'});
+ await assert.rejects(()=>archive.list(),/open exploded/);
+ await assert.rejects(()=>archive.list(),/open exploded/);
+ assert.equal(attempts,2,'the second call retries IndexedDB.open');
+});
+
+test('persist observes a rejected ownership claim while encoder flush is pending',async()=>{
+ let finish;const encoder={ownFrames:()=>Promise.reject(Error('null encoded frame')),flush:()=>new Promise(resolve=>{finish=resolve;})};
+ const saving=persistNewsClip({frames:[null]},encoder);
+ await new Promise(resolve=>setImmediate(resolve));
+ finish();
+ await assert.rejects(saving,/null encoded frame/);
 });
