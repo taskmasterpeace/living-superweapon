@@ -8,7 +8,7 @@ const PILOTS=[
  ['apex','Consume','drain'],
  ['vanguard','Thunderclap','fire'],
 ];
-const INTERRUPTS=['staggerT','stunT','frozenT','grabbedBy'];
+const INTERRUPTS=['staggerT','stunT','frozenT','grabbedBy','sleepT','downedT'];
 
 function fixture(hero){
  const x=mainCombatFixture({hero}),target=x.foe({z:18}),events=[];
@@ -67,6 +67,18 @@ for(const [hero,name,voice] of PILOTS){
     x.unchanged(before,label);
     assert.equal(x.p.slots.q._loop,null,`${label}: slot retained its sustain owner`);
     assert.deepEqual(x.events,[['start',voice],['stop',voice]],`${label}: sustain voice lifecycle`);
+    if(field==='downedT'&&controller!=='bot')assert.ok(x.p._swHold>0,`${label}: held recovery input was swallowed`);
+   }finally{x.close();}
+  }
+ });
+
+ test(`${name}: direct held admission rejects sleep and downed actors`,()=>{
+  for(const field of ['sleepT','downedT']){
+   const x=fixture(hero),before=x.effects();
+   try{
+    x.p[field]=1;runSlot(x.p,'q',{pressed:true,held:true,released:false,dt:DT},x.g);
+    x.unchanged(before,`${hero}.${field}`);assert.equal(x.p.slots.q._loop,undefined);
+    assert.deepEqual(x.events,[]);
    }finally{x.close();}
   }
  });

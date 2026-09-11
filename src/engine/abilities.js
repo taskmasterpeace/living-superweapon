@@ -117,7 +117,7 @@ export function cancelHeldAttacks(c) {
 // remain owned because cancelHeldSlot deliberately preserves launched remotes.
 // Hitstop is not incapacity here: a paid charge survives that brief time freeze.
 function heldAttacksIncapacitated(c) {
-  return c.alive===false||c.staggerT>0||c.stunT>0||c.frozenT>0||!!c.grabbedBy;
+  return c.alive===false||c.staggerT>0||c.stunT>0||c.frozenT>0||c.sleepT>0||c.downedT>0||!!c.grabbedBy;
 }
 export function cancelHeldAttacksIfIncapacitated(c) {
   if(!heldAttacksIncapacitated(c))return false;
