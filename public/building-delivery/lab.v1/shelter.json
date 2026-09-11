@@ -7,37 +7,37 @@
       "id": "interior_shelter",
       "aabb": {
         "min": [
-          -13.8,
+          -19.8,
           0,
-          -15.8
+          -21.8
         ],
         "max": [
-          13.8,
-          13.8,
-          15.8
+          19.8,
+          30.8,
+          21.8
         ]
       },
       "suppressesRain": true,
       "interiorAmbient": true,
       "cameraBoomShorten": true,
-      "note": "Under-roof interior volume. Rain suppressed, ambient transitions at openings, camera boom shortens (collision-safe) while the player is inside."
+      "note": "Under-roof interior (both storeys). Rain suppressed, ambient transitions at openings, chase boom shortens (collision-safe) while inside."
     }
   ],
   "roofVolume": {
     "id": "roof_deck",
     "aabb": {
       "min": [
-        -15,
-        15,
-        -17
+        -21,
+        32,
+        -23
       ],
       "max": [
-        15,
-        17.2,
-        17
+        21,
+        34.2,
+        23
       ]
     },
-    "standableTop": 15,
-    "note": "Accessible roof deck; standable surface at y=deckTop, parapet to pTop."
+    "standableTop": 32,
+    "note": "Accessible roof deck; standable at deckTop, parapet to parapetTop."
   }
 }

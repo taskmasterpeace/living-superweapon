@@ -47,11 +47,12 @@ export function generatePackage(recipePath = RECIPE_PATH) {
     units: model.units, axes: model.axes,
     note: 'Stable-ID collider pieces. `collider` = blocks movement/projectiles; `standable` = you can rest on its top (role floor/step/roof/prop); `breakable` pieces vanish when their breakGroup breaks (state "intact-only"). Decor pieces (collider:false, standable:false) are render-only and carry no physics. This is the AUTHORITATIVE physics description; the GLB nodes (same `node` names) are render only.',
     pieces: model.pieces.map((p) => ({
-      id: p.id, node: p.node, role: p.role, material: p.material,
+      id: p.id, node: p.node, level: p.level, role: p.role, material: p.material,
       collider: p.collider, standable: p.standable, breakable: p.breakable, breakGroup: p.breakGroup,
       state: p.state, hp: p.hp, dtype: p.dtype, aabb: p.aabb,
     })),
     breakGroups: model.breakGroups,
+    fadeNodesByLevel: model.fadeNodesByLevel,
     states: model.states,
   };
 
@@ -74,26 +75,28 @@ export function generatePackage(recipePath = RECIPE_PATH) {
     debris: model.debris,
   };
 
-  // ---- direct runtime subset (works TODAY on world.interiors) ---------------
+  // ---- direct runtime subset (GROUND FLOOR, works TODAY on world.interiors) --
   const S = model.storey, HX = recipe.footprint.width_x / 2, HZ = recipe.footprint.depth_z / 2;
-  // Project only floor-standing blockers (min.y ~ 0). Lintels (min.y > 0) are overhead and MUST be
-  // excluded from the 2D projection, or they would put a solid box across the doorway.
+  const groundTop = S.floorToFloor;   // ground-floor ceiling = the upper-floor slab top (single-storey `top` for the subset)
+  // Project only ground-floor floor-standing blockers (level 0, min.y ~ 0). Lintels (min.y > 0) are
+  // overhead and MUST be excluded, or they would put a solid box across a doorway.
   const groundWalls = model.pieces
-    .filter((p) => p.collider && p.role === 'blocker' && p.aabb.min[1] <= 0.01)
+    .filter((p) => p.collider && p.role === 'blocker' && p.level === 0 && p.aabb.min[1] <= 0.01)
     .map((p) => ({ id: p.id, breakGroup: p.breakGroup || undefined,
       x: (p.aabb.min[0] + p.aabb.max[0]) / 2, z: (p.aabb.min[2] + p.aabb.max[2]) / 2,
       hx: (p.aabb.max[0] - p.aabb.min[0]) / 2, hz: (p.aabb.max[2] - p.aabb.min[2]) / 2 }));
+  const fdO = model.openings.find((o) => o.id === 'front_door'), idO = model.openings.find((o) => o.id === 'interior_door_l0');
   const runtimeInterior = {
     id: recipe.id, version: recipe.version,
-    note: 'DIRECT-SUBSET projection onto the current runtime world.interiors contract (src/engine/world.js:95, entity.js:2085). The intact ground-floor shell + partition as vertical AABBs floor->top with door GAPS, roof top = deckTop. Lintels are intentionally omitted so no box sits across a doorway. Place by adding a world (x,z) centre and rotating by yaw; these coordinates are building-local.',
-    caveats: 'Single-storey subset only: it does NOT carry the stairs (no intermediate standable surfaces in this contract), the roof hatch as a hole, per-piece breakable state, floor pieces, or the breach opening as anything but a solid wall. Those need the extension seam in docs/building-delivery/INTEGRATION.md. To breach the flank at runtime, drop the wall whose `breakGroup` is "breach_panel" from `walls`.',
+    note: 'DIRECT-SUBSET projection of the GROUND FLOOR onto the current runtime world.interiors contract (src/engine/world.js:95, entity.js:2085): intact ground-floor shell + partition as vertical AABBs floor->top(=upper-floor slab) with door GAPS. Lintels are omitted so no box sits across a doorway. Place by adding a world (x,z) centre + yaw; coordinates are building-local.',
+    caveats: 'GROUND FLOOR ONLY. This single-storey contract cannot carry the upper floor, the inter-storey slab, the stairs (no intermediate standable surface), per-piece breakable state, floor/roof smash panels, or the roof-as-real-top. `top` here is the upper-floor slab (16u), NOT the roof (32u) — standing "on top" via this record would put you on the upper floor. The full two-story building needs the extension seam + per-camera fade in docs/building-delivery/INTEGRATION.md. To breach the ground flank, drop the wall whose `breakGroup` is "breach_panel".',
     interior: {
-      x: 0, z: 0, hx: HX, hz: HZ, top: S.deckTop_y,
-      rooms: model.rooms.length,
+      x: 0, z: 0, hx: HX, hz: HZ, top: groundTop,
+      levels: model.meta.levels, rooms: model.rooms.filter((r) => r.level === 0).length,
       walls: groundWalls.map(({ id, breakGroup, x, z, hx, hz }) => ({ x: r5(x), z: r5(z), hx: r5(hx), hz: r5(hz), id, ...(breakGroup ? { breakGroup } : {}) })),
       doorways: [
-        [r5(model.openings[0].center[0]), r5(HZ - recipe.footprint.wallThickness / 2)],
-        [r5(model.openings[1].center[0]), r5(recipe.partition.z)],
+        [r5(fdO.center[0]), r5(HZ - recipe.footprint.wallThickness / 2)],
+        [r5(idO.center[0]), r5(recipe.levels[0].partition.z)],
       ],
     },
   };
@@ -109,22 +112,26 @@ export function generatePackage(recipePath = RECIPE_PATH) {
   push(recipe.outputs.debris, jsonBuf(debris));
   push(recipe.outputs.runtimeInterior, jsonBuf(runtimeInterior));
 
+  const MPU = model.units.metersPerUnit, op = (id) => model.openings.find((o) => o.id === id);
   const dims = {
     footprint_u: { width_x: recipe.footprint.width_x, depth_z: recipe.footprint.depth_z, wallThickness: recipe.footprint.wallThickness },
-    bbox_u: model.bbox,
-    roofDeckTop_u: S.deckTop_y, ceilingUnderside_u: S.ceilingUnderside_y, parapetTop_u: S.parapetTop_y,
-    interiorClearHalf_u: S.interiorHalf,
-    footprint_m: { width: r5(recipe.footprint.width_x * model.units.metersPerUnit), depth: r5(recipe.footprint.depth_z * model.units.metersPerUnit) },
-    heightTotal_m: r5(S.parapetTop_y * model.units.metersPerUnit),
+    levels: model.meta.levels, floorToFloor_u: S.floorToFloor, perFloorCeiling_u: S.ceilingUnderside_y,
+    bbox_u: model.bbox, roofDeckTop_u: S.deckTop_y, parapetTop_u: S.parapetTop_y, interiorClearHalf_u: S.interiorHalf,
+    footprint_m: { width: r5(recipe.footprint.width_x * MPU), depth: r5(recipe.footprint.depth_z * MPU) },
+    heightTotal_m: r5(S.parapetTop_y * MPU), perFloorCeiling_m: r5(S.ceilingUnderside_y * MPU),
   };
   const R2 = model.fitting.fighterRadius_u, HEAD = model.fitting.standingHeadHeight_u;
-  const LHW = model.fitting.largeHeroMaxWidth_u, LHH = model.fitting.largeHeroMaxHeight_u;
+  const LHW = model.fitting.largeHeroMaxWidth_u, LHH = model.fitting.largeHeroMaxHeight_u, CAM = model.fitting.chaseCamComfortDia_u;
+  const roomInner = (id) => { const r = model.rooms.find((x) => x.id === id); return r ? { w: r5(r.aabb.max[0] - r.aabb.min[0]), d: r5(r.aabb.max[2] - r.aabb.min[2]) } : null; };
   const clearances = {
-    frontDoor_u: model.openings[0].clearance, interiorDoor_u: model.openings[1].clearance,
-    breachOpening_u: model.openings[2].clearance, roofHatch_u: { w: model.openings[3].clearance.w, d: model.openings[3].clearance.h },
-    fitsSoldier: model.openings[0].clearance.w >= 2 * R2 + 1 && model.openings[0].clearance.h >= HEAD,
-    fitsLargeHeroThroughBreach: model.openings[2].clearance.w >= LHW && model.openings[2].clearance.h >= LHH,
-    stair: { steps: model.stairs.steps.length, riser_u: model.stairs.rise, tread_u: model.stairs.tread, reachesDeck: model.stairs.reachesDeck, maxRiser_u: model.stairs.maxRiser },
+    frontDoor_u: op('front_door').clearance, interiorDoor_u: op('interior_door_l0').clearance,
+    breachOpening_u: op('breach_panel').clearance, upperWindow_u: op('window_front').clearance,
+    fitsSoldier: op('front_door').clearance.w >= 2 * R2 + 1 && op('front_door').clearance.h >= HEAD,
+    fitsLargeHeroThroughBreach: op('breach_panel').clearance.w >= LHW && op('breach_panel').clearance.h >= LHH,
+    stairs: model.stairs.map((s) => ({ id: s.id, from: s.from, to: s.to, steps: s.steps.length, riser_u: s.rise, tread_u: s.tread, reachesTop: s.reachesTop, maxRiser_u: s.maxRiser })),
+    chaseCamComfort: { ringDia_u: CAM, groundEntry: roomInner('ground_entry'), upperFront: roomInner('upper_front'),
+      groundEntryFits: (() => { const r = roomInner('ground_entry'); return !!r && r.w >= CAM && r.d >= CAM; })(),
+      upperFrontFits: (() => { const r = roomInner('upper_front'); return !!r && r.w >= CAM && r.d >= CAM; })() },
   };
 
   const manifest = {
@@ -133,7 +140,7 @@ export function generatePackage(recipePath = RECIPE_PATH) {
     provenance: recipe.provenance, license: recipe.license, generator: recipe.generator,
     units: model.units, axes: model.axes, fitting: model.fitting,
     dimensions: dims, clearances,
-    budgets: { ...stats, renderNodes: nodes.length, glbBytes: glb.length, colliderPieces: model.pieces.filter((p) => p.collider).length, breakables: Object.keys(recipe.breakables).length, rooms: model.rooms.length, openings: model.openings.length },
+    budgets: { ...stats, renderNodes: nodes.length, glbBytes: glb.length, levels: model.meta.levels, colliderPieces: model.pieces.filter((p) => p.collider).length, breakables: Object.keys(recipe.breakables).length, rooms: model.rooms.length, openings: model.openings.length, stairs: model.stairs.length },
     files: files.map((f) => ({ path: f.name, sha256: f.sha256, bytes: f.bytes, role: fileRole(f.name, recipe) })).sort((a, b) => a.path.localeCompare(b.path)),
     renderNodeList: nodes.map((n) => ({ node: n.name, pieces: n.pieces })),
     knownGaps: KNOWN_GAPS,
@@ -158,11 +165,12 @@ function fileRole(name, recipe) {
 }
 
 const KNOWN_GAPS = [
-  'Auto step-up: the current runtime moves by walk + jump + fly with no stair step-up (entity.js has no auto-climb). The stair GEOMETRY is walkable in proportion (riser <= 2.5u snap tolerance) but reaching the roof on foot needs either the movement step-up seam or jumping the steps; documented in INTEGRATION.md as an extension, validated geometrically by the fixture.',
-  'Multi-level colliders: world.interiors walls are single-storey floor->top columns. Stairs, the roof-as-second-level, breakable per-piece state, floor pieces and the breach opening are a superset needing the extension seam; the direct runtime-interior.json subset carries only the enterable ground floor.',
-  'Debris is a bounded SPEC (counts/sizes/lifetime/spawn volume), not baked chunk meshes; the runtime spawns them. No physics simulation of collapse is provided or implied.',
-  'The research case object itself is a FrontlineEncounter runtime entity; this package supplies the pedestal and the case_spawn waypoint, not the case.',
-  'Main task must verify native camera boom/cutaway, projectile collision, rain occlusion, AI pathing and destruction against this package in-engine; the standalone fixture proves geometry/clearance/LOS math only, not gameplay feel.',
+  'THIRD-PERSON VISIBILITY IS PER-CAMERA FADE, NOT ROOF REMOVAL. Indoors the runtime must fade only the geometry between the chase camera and the player (roof, the floor-slab above the player, near walls) — the storey you are in and lower storeys stay solid. Node names carry the level (fadeNodesByLevel in colliders.json) so this is storey-agnostic. The roof-off shot in the renders is an AUTHORING view only, never the gameplay model.',
+  'Multi-level colliders need the runtime extension: the current world.interiors is single-storey floor->top columns. The upper floor, the inter-storey slab, the stairs (no intermediate standable surface), per-piece breakable state, floor/roof smash panels, and the roof-as-real-top are a superset. runtime-interior.json carries only the GROUND FLOOR (its `top` is the upper-floor slab, not the roof). See INTEGRATION.md §B.',
+  'Auto step-up: the runtime moves by walk + jump + fly with no stair step-up. Both stair flights are walkable in proportion (riser <= 2.5u snap tolerance) and reach their level; climbing on foot needs the movement step-up seam (or jumping the steps / flight). Validated geometrically by the fixture.',
+  'Debris is a bounded SPEC (counts/sizes/lifetime/spawn volume), not baked chunk meshes; the runtime spawns them. No collapse simulation.',
+  'The research case object is a FrontlineEncounter runtime entity; this package supplies the pedestal and case_spawn waypoint, not the case. The dev viewer needs three.js (CDN) and is not a build input.',
+  'Main task must verify native camera boom/fade, projectile collision, rain occlusion, AI pathing and destruction in-engine; the standalone fixture proves geometry/clearance/LOS/fade-node math only, not gameplay feel.',
 ];
 
 // CLI — run only when invoked directly (not when imported by reproduce-lab.mjs).
@@ -170,8 +178,10 @@ const invokedDirectly = process.argv[1] && resolve(process.argv[1]) === fileURLT
 if (invokedDirectly) {
   const outArg = process.argv.indexOf('--out');
   const out = outArg >= 0 ? resolve(process.argv[outArg + 1]) : DEFAULT_OUT;
+  const recArg = process.argv.indexOf('--recipe');
+  const recipePath = recArg >= 0 ? resolve(process.argv[recArg + 1]) : RECIPE_PATH;
   mkdirSync(out, { recursive: true });
-  const { files, manifest } = generatePackage();
+  const { files, manifest } = generatePackage(recipePath);
   for (const f of files) writeFileSync(join(out, f.name), f.buffer);
   console.log(`built ${files.length} files -> ${out}`);
   console.log(`  packageHash ${manifest.packageHash}`);

@@ -28,9 +28,11 @@
 <div id="ui">
   <button data-shot="front">Front</button>
   <button data-shot="top">Top</button>
-  <button data-shot="inside">Inside</button>
-  <button data-shot="breach">Breach</button>
   <button data-shot="roof">Roof</button>
+  <button data-shot="breach">Breach</button>
+  <button data-shot="cut-ground">Cut: ground</button>
+  <button data-shot="cut-upper">Cut: upper</button>
+  <button data-shot="chase">Chase cam</button>
   <button id="orbit">Orbit</button>
   <button id="walk">Walkthrough</button>
   <button id="state">Breach state: OFF</button>
@@ -79,18 +81,21 @@ const ground = new THREE.Mesh(new THREE.PlaneGeometry(600, 600), new THREE.MeshS
 ground.rotation.x = -Math.PI / 2; ground.position.y = -0.05; ground.receiveShadow = true; scene.add(ground);
 
 const root = new THREE.Group(); scene.add(root);
-const breakable = [];   // nodes whose name starts with 'breakable.'
-const roofNodes = [];   // roof + parapet, hidden for the cutaway
-new GLTFLoader().load('./lab.glb', (gltf) => {
+const breakable = [];                 // breakable_* nodes (hidden when breached)
+// PER-STOREY fade groups — the third-person visibility model is "fade what's between the camera and
+// the player", never a global roof removal. These let the viewer peel a storey at a time.
+const peelGroups = { roof: [], upper: [], stair: [] };
+new GLTFLoader().load(P.get('glb') || './lab.glb', (gltf) => {
   gltf.scene.traverse((o) => {
     if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; }
-    const n = o.name || '';   // node names are dot-free (GLTFLoader sanitizes '.'→'_'); match verbatim
+    const n = o.name || '';           // dot-free node names (GLTFLoader sanitizes '.'→'_')
     if (n.startsWith('breakable_')) breakable.push(o);
-    if (n.startsWith('roof_') || n.startsWith('breakable_roof')) roofNodes.push(o);
+    if (n.startsWith('roof_') || n.startsWith('breakable_roof')) peelGroups.roof.push(o);
+    if (n.startsWith('shell_l1') || n.startsWith('floor_l1') || n.startsWith('breakable_upper') || n.startsWith('trim_l1')) peelGroups.upper.push(o);
+    if (n === 'stair') peelGroups.stair.push(o);
   });
   root.add(gltf.scene);
   applyState(P.get('state') === 'breached');
-  if (P.get('open')) applyOpen(true);
   applyShot(P.get('shot') || 'front');
   if (P.get('walk')) { walking = true; if (P.has('t')) { walkT = +P.get('t'); walking = false; setWalk(walkT); } }
 }, undefined, () => { document.getElementById('err').style.display = 'flex'; });
@@ -101,7 +106,7 @@ function silh(color, h, w) {
   const body = new THREE.Mesh(new THREE.CapsuleGeometry(w / 2, h - w, 6, 12), new THREE.MeshStandardMaterial({ color, transparent: true, opacity: 0.5, emissive: color, emissiveIntensity: 0.25 }));
   body.position.y = h / 2; body.castShadow = true; g.add(body); return g;
 }
-const soldier = silh('#7fe6ff', 9.6, 4.4); soldier.position.set(-6, 0, 20);     // at the front door
+const soldier = silh('#7fe6ff', 9.6, 4.4); const soldierHome = [-6, 0, 20]; soldier.position.set(...soldierHome);  // at the front door
 const hero = silh('#ffd24a', 12.5, 9.5); hero.position.set(22, 0, 9);           // outside the breach flank
 scene.add(soldier); scene.add(hero);
 
@@ -109,29 +114,33 @@ scene.add(soldier); scene.add(hero);
 const target = new THREE.Vector3(0, 7, 0);
 let orbiting = false, orbitA = 0.6, walking = false, walkT = 0;
 const SHOTS = {
-  front:  { pos: [-2, 13, 54], tgt: [-4, 7, 8] },
-  top:    { pos: [10, 62, 40], tgt: [0, 4, -2] },        // high 3/4 overview (a straight-down cam is degenerate)
-  inside: { pos: [-2, 30, 30], tgt: [-1, 2, -3], open: true },   // roof off, look down into the rooms
-  breach: { pos: [52, 12, 9], tgt: [6, 6, 9], state: true },
-  roof:   { pos: [-3, 33, 30], tgt: [0, 13, -4] },
+  front:        { pos: [-4, 24, 78], tgt: [-6, 15, 8] },                              // exterior: both floors, door + upper windows
+  top:          { pos: [18, 92, 56], tgt: [0, 8, -2] },                               // high 3/4 overview
+  roof:         { pos: [-4, 54, 50], tgt: [0, 30, -4] },                              // accessible roof deck
+  breach:       { pos: [70, 20, 11], tgt: [8, 10, 11], state: true },                 // breached flank, large hero
+  'cut-upper':  { pos: [-2, 50, 44], tgt: [-1, 18, -3], peel: ['roof'] },             // roof peeled -> upper floor
+  'cut-ground': { pos: [-2, 46, 44], tgt: [-1, 3, -3], peel: ['roof', 'upper', 'stair'] }, // roof + upper peeled -> ground floor
+  chase:        { pos: [-6, 11, 22], tgt: [-5, 4, -9], peel: ['roof', 'upper'], playerAt: [-6, 0, 6] }, // over-the-shoulder, ground floor
 };
-function applyOpen(on) { for (const m of roofNodes) m.visible = !on; }
+function applyPeel(levels) { for (const k of Object.keys(peelGroups)) { const on = levels && levels.includes(k); for (const m of peelGroups[k]) m.visible = !on; } }
 function applyShot(name) {
   const s = SHOTS[name] || SHOTS.front; orbiting = false; walking = false;
-  applyOpen(!!s.open);
+  applyPeel(s.peel || []);
+  if (s.playerAt) { soldier.position.set(...s.playerAt); hero.visible = false; } else { soldier.position.set(...soldierHome); hero.visible = true; }
   if (s.state) applyState(true);
   camera.position.set(...s.pos); target.set(...s.tgt); camera.lookAt(target);
   document.querySelectorAll('#ui [data-shot]').forEach((b) => b.classList.toggle('on', b.dataset.shot === name));
 }
-// walkthrough: outside -> front door -> entry -> case room -> up to the roof
+// walkthrough: a two-story TOUR — exterior front -> show the height -> peel the roof to see the
+// upper floor -> peel the upper floor to see the ground floor -> the roof deck. Each keyframe carries
+// the per-storey peel that reveals that beat (the third-person visibility model, storey by storey).
 const WALK = [
-  { p: [-6, 6, 52], t: [-6, 6, 20] },
-  { p: [-6, 6, 22], t: [-6, 6, 2] },
-  { p: [-6, 6, 6], t: [-6, 5.5, -8] },
-  { p: [-4, 6, -4], t: [0, 4, -10] },
-  { p: [6, 8, -6], t: [10, 12, -13] },
-  { p: [10, 16, -8], t: [4, 15, -6] },
-  { p: [2, 24, 6], t: [0, 14, -2] },
+  { p: [-4, 18, 88], t: [-6, 14, 8], peel: [] },
+  { p: [-9, 10, 58], t: [-9, 9, 12], peel: [] },
+  { p: [46, 30, 72], t: [0, 18, 0], peel: [] },
+  { p: [-2, 50, 44], t: [-1, 18, -3], peel: ['roof'] },
+  { p: [-2, 46, 44], t: [-1, 3, -3], peel: ['roof', 'upper', 'stair'] },
+  { p: [-4, 54, 50], t: [0, 30, -4], peel: [] },
 ];
 function setWalk(t) {
   const n = WALK.length - 1, f = Math.max(0, Math.min(0.9999, t)) * n, i = Math.floor(f), k = f - i;
@@ -140,6 +149,7 @@ function setWalk(t) {
   camera.position.set(lerp(a.p[0], b.p[0]), lerp(a.p[1], b.p[1]), lerp(a.p[2], b.p[2]));
   target.set(lerp(a.t[0], b.t[0]), lerp(a.t[1], b.t[1]), lerp(a.t[2], b.t[2]));
   camera.lookAt(target);
+  applyPeel(a.peel);
 }
 window.setWalk = setWalk;                 // for the screenshot driver
 window.setShot = applyShot;

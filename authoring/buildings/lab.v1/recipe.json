@@ -2,113 +2,93 @@
   "$schema": "../schema/building-recipe.schema.json",
   "id": "building.research-lab",
   "version": "v1",
-  "title": "Research Outpost Lab",
+  "title": "Research Outpost Lab (two-story)",
   "kind": "enterable-building",
-  "summary": "One small, reusable single-storey research lab that can also stand in a city block: front entrance, flank breach panel, case room, straight stair to an accessible roof, and a smash-through roof panel. Enterable, breakable in selected places, no invisible solid box across any opening.",
-  "provenance": {
-    "method": "procedural",
-    "author": "codex/enterable-building-pilot",
-    "created": "2026-09-11",
-    "externalAssets": "none",
-    "note": "Every vertex and collider is generated from this recipe by tools/building-delivery/build-lab.mjs. There is NO external, downloaded, licensed or paid asset input. The only build inputs are this recipe and the committed generator sources; a clean checkout rebuilds byte-identical outputs with Node alone."
-  },
-  "license": {
-    "spdx": "CC0-1.0",
-    "text": "Original procedural geometry and data. Dedicated to the public domain (CC0-1.0); usable without attribution or credential."
-  },
-  "generator": {
-    "entry": "tools/building-delivery/build-lab.mjs",
-    "runtime": "node",
-    "nodeVersionTested": "v25.8.0",
-    "dependencies": "none (pure Node stdlib; a hand-written GLB writer, no three.js, no gltf-transform)"
-  },
+  "summary": "A reusable, enterable TWO-STORY research lab for PowerWorld: ground floor (front entrance, flank breach panel, entry-lab + case room), an inter-storey floor slab (upper floor = lower ceiling), an upper floor (two rooms + windows), a switchback stair ground->upper->roof, and an accessible roof. Breakable front door, flank weak wall, one upper-floor panel and one roof panel; bounded debris. Stable-ID wall/floor/opening colliders with a level field, intact/breached states. No invisible box across any opening; per-camera fade (never global roof removal) is the third-person visibility model.",
+  "provenance": { "method": "procedural", "author": "codex/enterable-building-pilot", "created": "2026-09-11", "externalAssets": "none", "note": "Generated from this recipe by tools/building-delivery/build-lab.mjs. No external/licensed/paid asset input. A clean checkout rebuilds byte-identical with Node alone." },
+  "license": { "spdx": "CC0-1.0", "text": "Original procedural geometry and data. Dedicated to the public domain (CC0-1.0)." },
+  "generator": { "entry": "tools/building-delivery/build-lab.mjs", "runtime": "node", "nodeVersionTested": "v25.8.0", "dependencies": "none (pure Node stdlib; hand-written GLB writer)" },
 
   "units": {
-    "sourceUnit": "powerworld-world-unit",
-    "symbol": "u",
-    "metersPerUnit": 0.1875,
-    "gameConversion": "1:1 — the recipe is authored directly in PowerWorld world units, so no scale is applied at import. The metre figure is documentation only.",
-    "derivation": "Measured from the runtime, not guessed: src/engine/citytiles.js door metric `DH = 11.2 * M` is commented 'a 2.1m doorway', so 2.1 m / 11.2 u = 0.1875 m/u; the same file builds a 9.6u human = 1.8 m. 1 m = 5.3333 u."
+    "sourceUnit": "powerworld-world-unit", "symbol": "u", "metersPerUnit": 0.1875,
+    "gameConversion": "1:1 — authored directly in world units; metres are documentation only.",
+    "derivation": "Measured from runtime: src/engine/citytiles.js door() DH=11.2u = '2.1m' -> 0.1875 m/u; 9.6u human = 1.8m."
   },
-  "axes": {
-    "up": "+Y",
-    "front": "+Z",
-    "rightFlank": "+X",
-    "handedness": "right-handed (glTF 2.0)",
-    "note": "Building origin (0,0,0) is the ground-centre of the footprint, floor plane at y=0. The entrance faces +Z; the breach panel is on the +X flank. The runtime places the building by an (x,z) world centre and a yaw; these local axes rotate with that yaw."
-  },
+  "axes": { "up": "+Y", "front": "+Z", "rightFlank": "+X", "handedness": "right-handed (glTF 2.0)", "note": "Origin = footprint ground-centre, floor plane y=0. Entrance faces +Z; breach flank +X. Runtime places by a world (x,z) centre + yaw." },
 
   "fitting": {
-    "note": "Native fitting reference, measured from runtime source constants (the handoff's instruction: use native Sarge scale, do not guess a metre conversion). Cited so a reviewer can re-check.",
-    "fighterRadius_u": 2.2,
-    "fighterRadiusSource": "src/engine/entity.js:286 `this.radius = 2.2`",
-    "standingHeadHeight_u": 11.0,
-    "standingHeadHeightSource": "src/engine/entity.js:2098 interior ceiling clamp `bodyHeight = ... : 11`",
-    "soldierAndStandardHeroHeight_u": 9.6,
-    "soldierHeroHeightSource": "src/engine/citytiles.js metric comment '9.6u human = 1.8m'; soldiers (SARGE/MERC) are Fighters at the same radius and head height.",
-    "largeHeroMaxHeight_u": 12.5,
-    "largeHeroMaxWidth_u": 9.5,
-    "largeHeroSource": "CLAUDE.md frame audit — RAGE 12.47u tall, OLYMPUS 9.44u wide (wings). Collision radius stays 2.2u; the extra width/height is visual silhouette.",
-    "nativeDoorOpening_u": { "height": 11.2, "widthGap": 5.8 },
-    "nativeDoorSource": "src/engine/citytiles.js door() `DH = 11.2 * M`; bungalow() shell door gap `doorW = 5.8 * M`."
+    "note": "Native fitting reference measured from runtime source constants.",
+    "fighterRadius_u": 2.2, "fighterRadiusSource": "src/engine/entity.js:286 this.radius = 2.2",
+    "standingHeadHeight_u": 11.0, "standingHeadHeightSource": "src/engine/entity.js interior ceiling clamp bodyHeight ... : 11",
+    "soldierAndStandardHeroHeight_u": 9.6, "soldierHeroHeightSource": "citytiles metric comment; SARGE/MERC are Fighters at the same radius",
+    "largeHeroMaxHeight_u": 12.5, "largeHeroMaxWidth_u": 9.5, "largeHeroSource": "CLAUDE.md frame audit (RAGE 12.47u tall, OLYMPUS 9.44u wide)",
+    "chaseCamComfortDia_u": 12.0, "chaseCamNote": "Approx lateral room a third-person chase boom wants around the player indoors before it must collapse to shoulder-cam. Used by the fixture to check per-floor entry-room comfort.",
+    "nativeDoorOpening_u": { "height": 11.2, "widthGap": 5.8 }, "nativeDoorSource": "citytiles door() DH; bungalow doorW=5.8*M"
   },
 
-  "footprint": { "width_x": 30.0, "depth_z": 34.0, "wallThickness": 1.2 },
+  "footprint": { "width_x": 42.0, "depth_z": 46.0, "wallThickness": 1.2 },
   "storey": {
-    "roofDeckTop_y": 15.0,
-    "roofSlabThickness": 1.2,
-    "parapetHeight": 2.2,
-    "parapetThickness": 1.0,
-    "floorSlabThickness": 0.4,
-    "note": "Ceiling underside = roofDeckTop - roofSlabThickness = 13.8u (2.59 m): clears the 11u collision head with 2.8u margin and the 12.5u tall-hero silhouette with 1.3u margin."
-  },
-  "partition": { "z": 2.0, "note": "Interior wall across X separating the entry lab (front, +Z) from the case room (rear, -Z)." },
-
-  "openings": {
-    "front_door":     { "host": "wall.+Z", "centerX": -6.0, "width": 6.2, "height": 11.6, "sillY": 0.0, "route": "soldier", "note": "Standard entrance. Clears fighter body diameter 4.4u and 11u head. Breakable leaf (see breakables.front_door_leaf); the leaf never fills the collider opening — no closed box across the door." },
-    "interior_door":  { "host": "partition", "centerX": -6.0, "width": 6.2, "height": 11.6, "sillY": 0.0, "route": "soldier", "note": "Aligned with the front door on x=-6 so the soldier recover route is a straight shot front->entry->case." },
-    "breach_panel":   { "host": "wall.+X", "centerZ": 9.0, "width": 12.0, "height": 13.0, "sillY": 0.0, "route": "large-hero", "state": "opens-when-breached", "note": "The +X flank weak panel. Intact: filled by a breakable weak panel (blocks, marked with hazard stripes). Breached: a 12u x 13u hole clearing a large hero (9.5u wide, 12.5u tall)." },
-    "roof_hatch":     { "host": "roof", "centerX": 10.8, "centerZ": -13.5, "width": 6.0, "depth": 6.0, "route": "soldier", "note": "Permanent opening at the stair head; step out onto the deck." }
+    "clearHeight": 14.8, "slabThickness": 1.2, "floorSlabThickness": 0.4,
+    "parapetHeight": 2.2, "parapetThickness": 1.0,
+    "note": "Floor-to-floor = clearHeight + slabThickness = 16.0u. L0 floor y0, ceiling underside 14.8; L1 floor y16, ceiling underside 30.8; roof deck top 32.0; parapet top 34.2. Per-floor clear 14.8u (2.78m): clears the 11u collision head + the 12.5u silhouette + chase-cam headroom."
   },
 
-  "stair": {
-    "bayMinX": 7.8, "bayMaxX": 13.8, "startZ": 1.0, "descendAxis": "-Z",
-    "steps": 7, "note": "Straight flight in the case room's +X bay, floor to roofDeckTop (7 x 2.143u rise = 15.0u). tread and riser derived by the generator; riser <= native step-on snap tolerance 2.5u (src/engine/entity.js:2090 `it.top - 2.5`)."
-  },
+  "levels": [
+    {
+      "id": "ground", "floorIndex": 0,
+      "partition": { "z": 2.0, "door": { "centerX": -9.0, "width": 9.0, "height": 14.0 } },
+      "rooms": [ { "id": "ground_entry", "name": "Entry Lab (front)", "side": "front" }, { "id": "ground_case", "name": "Case Room (rear)", "side": "rear" } ],
+      "exterior": [
+        { "id": "front_door", "wall": "+Z", "center": -9.0, "width": 9.0, "height": 14.0, "sill": 0.0, "kind": "door", "breakGroup": "front_door_leaf", "connects": ["exterior", "ground_entry"], "route": "soldier" },
+        { "id": "breach_panel", "wall": "+X", "center": 11.0, "width": 17.0, "height": 15.0, "sill": 0.0, "kind": "breach", "breakGroup": "breach_panel", "connects": ["exterior", "ground_entry"], "route": "large-hero", "state": "opens-when-breached" }
+      ],
+      "casePedestal": { "x": 0.0, "z": -13.0, "width": 6.0, "depth": 6.0, "height": 2.2 }
+    },
+    {
+      "id": "upper", "floorIndex": 1,
+      "partition": { "z": 2.0, "door": { "centerX": -9.0, "width": 9.0, "height": 12.0 } },
+      "rooms": [ { "id": "upper_front", "name": "Upper Lab (front)", "side": "front" }, { "id": "upper_rear", "name": "Upper Store (rear)", "side": "rear" } ],
+      "exterior": [
+        { "id": "window_front", "wall": "+Z", "center": 8.0, "width": 7.0, "height": 7.0, "sill": 5.0, "kind": "window", "connects": ["exterior", "upper_front"], "route": "los" },
+        { "id": "window_flank", "wall": "-X", "center": -6.0, "width": 7.0, "height": 7.0, "sill": 5.0, "kind": "window", "connects": ["exterior", "upper_front"], "route": "los" }
+      ]
+    }
+  ],
 
-  "casePedestal": { "x": 0.0, "z": -10.0, "width": 5.0, "depth": 5.0, "height": 2.0, "note": "Low plinth in the rear case room where the FrontlineEncounter research case is staged. The case object itself is a runtime entity; this recipe supplies the plinth and the case_spawn waypoint." },
+  "stairs": [
+    { "id": "stair_a", "from": "ground", "to": "upper", "baseY": 0.0, "topY": 16.0, "bayMinX": 11.8, "bayMaxX": 19.8, "startZ": 1.0, "dir": -1, "steps": 7, "tread": 2.4, "topHole": { "centerX": 15.8, "centerZ": -14.6, "width": 8.0, "depth": 6.0 }, "note": "Ground -> upper, running -Z into the rear bay; head emerges through the upper-floor hole." },
+    { "id": "stair_b", "from": "upper", "to": "roof", "baseY": 16.0, "topY": 32.0, "bayMinX": 11.8, "bayMaxX": 19.8, "startZ": -15.8, "dir": 1, "steps": 7, "tread": 2.4, "topHole": { "centerX": 15.8, "centerZ": -1.0, "width": 8.0, "depth": 6.0 }, "note": "Upper -> roof, running +Z back toward the front (switchback in the same bay); head emerges through the roof hole." }
+  ],
+
+  "floorPanels": [
+    { "id": "upper_floor_panel", "level": 1, "centerX": -5.0, "centerZ": 11.0, "width": 10.0, "depth": 10.0, "breakGroup": "upper_floor_panel", "material": "roof_panel_weak", "note": "A breakable panel in the UPPER FLOOR over the ground entry-lab. A heavy hero smashes down through it from the upper floor into the ground floor (a 'selected floor piece')." }
+  ],
+  "roof": {
+    "weakPanel": { "id": "roof_weak_panel", "centerX": -5.0, "centerZ": -11.0, "width": 12.0, "depth": 12.0, "breakGroup": "roof_weak_panel", "note": "Breakable roof panel over the upper rear room; smash down from the roof into the upper floor." }
+  },
 
   "breakables": {
-    "front_door_leaf":  { "material": "door_leaf",  "hp": 90,  "dtype": "physical", "note": "The swinging leaf. Opening stays passable in every state; only the leaf mesh is removed on break.", "debris": { "chunks": 6, "sizeRange": [0.6, 1.6], "lifetimeS": 6, "triBudget": 96 } },
-    "breach_panel":     { "material": "weak_panel", "hp": 140, "dtype": "energy",   "note": "The flank weak wall. A superhero breaches it; ordinary structural walls (hp 1200) cannot be shot through.", "debris": { "chunks": 14, "sizeRange": [1.0, 3.0], "lifetimeS": 8, "triBudget": 168 } },
-    "roof_weak_panel":  { "material": "roof_panel_weak", "hp": 110, "dtype": "physical", "note": "A selected roof (floor-from-above) panel over the case room. A heavy hero smashes down through it into the case room; bounded debris, never whole-building collapse.", "debris": { "chunks": 10, "sizeRange": [1.0, 2.5], "lifetimeS": 8, "triBudget": 120 } }
+    "front_door_leaf":  { "material": "door_leaf",  "hp": 90,  "dtype": "physical", "note": "Ground front-door leaf; opening stays passable, only the leaf mesh breaks.", "debris": { "chunks": 6, "sizeRange": [0.6, 1.6], "lifetimeS": 6, "triBudget": 96 } },
+    "breach_panel":     { "material": "weak_panel", "hp": 140, "dtype": "energy",   "note": "Ground flank weak wall; a superhero breaches it; structural walls (hp 1200) cannot be shot through.", "debris": { "chunks": 14, "sizeRange": [1.0, 3.0], "lifetimeS": 8, "triBudget": 168 } },
+    "upper_floor_panel":{ "material": "roof_panel_weak", "hp": 110, "dtype": "physical", "note": "Upper-floor smash panel (floor-from-above into the ground floor).", "debris": { "chunks": 10, "sizeRange": [1.0, 2.5], "lifetimeS": 8, "triBudget": 120 } },
+    "roof_weak_panel":  { "material": "roof_panel_weak", "hp": 110, "dtype": "physical", "note": "Roof smash panel (into the upper floor).", "debris": { "chunks": 10, "sizeRange": [1.0, 2.5], "lifetimeS": 8, "triBudget": 120 } }
   },
 
-  "roofWeakPanel": { "centerX": -3.0, "centerZ": -8.0, "width": 10.0, "depth": 10.0, "note": "Location of the breakable roof panel (a 'selected floor piece') over the case room. 10x10u clears a large hero drop. Clear of the hatch and parapet." },
-
   "materials": {
-    "structural":      { "color": "#c7ad7e", "metallic": 0.0, "roughness": 0.92, "hp": 1200, "breakable": false, "dtype": "structural", "resist": { "ballistic": 0.12, "energy": 0.3, "physical": 0.45, "fire": 0.6 }, "note": "Desert sand render, load-bearing. Effectively unbreachable by fire; only scripted demolition removes it. This is what makes 'cannot shoot through intact walls' true." },
-    "weak_panel":      { "color": "#b89a63", "metallic": 0.0, "roughness": 0.9,  "hp": 140,  "breakable": true,  "dtype": "energy", "resist": { "ballistic": 0.8, "energy": 1.2, "physical": 1.4, "fire": 1.1 }, "hazardStripe": "#ff5a4a", "note": "Marked weak panel; hazard stripes read as 'hit here'." },
+    "structural":      { "color": "#c7ad7e", "metallic": 0.0, "roughness": 0.92, "hp": 1200, "breakable": false, "dtype": "structural", "resist": { "ballistic": 0.12, "energy": 0.3, "physical": 0.45, "fire": 0.6 }, "note": "Load-bearing desert sand; effectively unbreachable by fire — 'cannot shoot through intact walls'." },
+    "weak_panel":      { "color": "#b89a63", "metallic": 0.0, "roughness": 0.9,  "hp": 140,  "breakable": true,  "dtype": "energy", "resist": { "ballistic": 0.8, "energy": 1.2, "physical": 1.4, "fire": 1.1 }, "hazardStripe": "#ff5a4a" },
     "door_leaf":       { "color": "#34373f", "metallic": 0.55, "roughness": 0.5, "hp": 90,   "breakable": true,  "dtype": "physical" },
-    "door_frame":      { "color": "#ffd24a", "metallic": 0.4, "roughness": 0.4,  "hp": 1200, "breakable": false, "note": "Gold accent frame around the entrance (Impact bible: gold identifies deliberate readable things)." },
+    "door_frame":      { "color": "#ffd24a", "metallic": 0.4, "roughness": 0.4,  "hp": 1200, "breakable": false },
+    "floor_struct":    { "color": "#7a6a4f", "metallic": 0.0, "roughness": 0.9,  "hp": 1200, "breakable": false, "note": "Inter-storey floor slab (upper floor = lower ceiling)." },
     "roof_slab":       { "color": "#2a2c33", "metallic": 0.2, "roughness": 0.85, "hp": 1200, "breakable": false },
     "roof_panel_weak": { "color": "#3a3d46", "metallic": 0.2, "roughness": 0.85, "hp": 110,  "breakable": true,  "dtype": "physical", "hazardStripe": "#ff5a4a" },
     "parapet":         { "color": "#b79d70", "metallic": 0.0, "roughness": 0.92, "hp": 1200, "breakable": false },
-    "floor_slab":      { "color": "#6b6b66", "metallic": 0.05, "roughness": 0.95, "hp": 1200, "breakable": false, "note": "Thin ground slab, cosmetic; the standable floor is terrain at y=0." },
-    "hazard_stripe":   { "color": "#ff5a4a", "metallic": 0.0, "roughness": 0.6, "note": "Danger-red 'hit here' marking on breakable panels (Impact bible: coral is danger). Decor; hides with its break group." },
+    "floor_slab":      { "color": "#6b6b66", "metallic": 0.05, "roughness": 0.95, "hp": 1200, "breakable": false, "note": "Thin ground slab, cosmetic; terrain at y=0 is the real ground floor." },
+    "hazard_stripe":   { "color": "#ff5a4a", "metallic": 0.0, "roughness": 0.6 },
     "stair":           { "color": "#55575e", "metallic": 0.3, "roughness": 0.85, "hp": 1200, "breakable": false },
     "pedestal":        { "color": "#3a3d46", "metallic": 0.3, "roughness": 0.6,  "hp": 1200, "breakable": false },
-    "case_glow":       { "color": "#7fe6ff", "metallic": 0.0, "roughness": 0.3,  "emissive": "#7fe6ff", "note": "Cyan energy marker on the case plinth (Impact bible: cyan is energy)." }
+    "case_glow":       { "color": "#7fe6ff", "metallic": 0.0, "roughness": 0.3,  "emissive": "#7fe6ff" }
   },
 
-  "outputs": {
-    "renderMesh": "lab.glb",
-    "colliders": "colliders.json",
-    "openings": "openings.json",
-    "roomGraph": "room-graph.json",
-    "shelter": "shelter.json",
-    "debris": "debris.json",
-    "runtimeInterior": "runtime-interior.json",
-    "manifest": "manifest.json"
-  }
+  "outputs": { "renderMesh": "lab.glb", "colliders": "colliders.json", "openings": "openings.json", "roomGraph": "room-graph.json", "shelter": "shelter.json", "debris": "debris.json", "runtimeInterior": "runtime-interior.json", "manifest": "manifest.json" }
 }

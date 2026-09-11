@@ -3,99 +3,157 @@
   "version": "v1",
   "openings": [
     {
-      "id": "front_door",
+      "id": "interior_door_l0",
+      "level": 0,
       "connects": [
-        "exterior",
-        "entry_lab"
+        "ground_entry",
+        "ground_case"
       ],
       "axis": "+Z",
       "center": [
-        -6,
-        5.8,
-        16.4
-      ],
-      "clearance": {
-        "w": 6.2,
-        "h": 11.6
-      },
-      "sillY": 0,
-      "headY": 11.6,
-      "state": "always",
-      "route": "soldier"
-    },
-    {
-      "id": "interior_door",
-      "connects": [
-        "entry_lab",
-        "case_room"
-      ],
-      "axis": "+Z",
-      "center": [
-        -6,
-        5.8,
+        -9,
+        7,
         2
       ],
       "clearance": {
-        "w": 6.2,
-        "h": 11.6
+        "w": 9,
+        "h": 14
       },
       "sillY": 0,
-      "headY": 11.6,
+      "headY": 14,
       "state": "always",
-      "route": "soldier"
+      "route": "soldier",
+      "kind": "door"
+    },
+    {
+      "id": "front_door",
+      "level": 0,
+      "connects": [
+        "exterior",
+        "ground_entry"
+      ],
+      "axis": "+Z",
+      "center": [
+        -9,
+        7,
+        22.4
+      ],
+      "clearance": {
+        "w": 9,
+        "h": 14
+      },
+      "sillY": 0,
+      "headY": 14,
+      "state": "always",
+      "route": "soldier",
+      "breakGroup": "front_door_leaf",
+      "kind": "door"
     },
     {
       "id": "breach_panel",
+      "level": 0,
       "connects": [
         "exterior",
-        "entry_lab"
+        "ground_entry"
       ],
       "axis": "+X",
       "center": [
-        14.4,
-        6.5,
-        9
+        20.4,
+        7.5,
+        11
       ],
       "clearance": {
-        "w": 12,
-        "h": 13
+        "w": 17,
+        "h": 15
       },
       "sillY": 0,
-      "headY": 13,
+      "headY": 15,
       "state": "breached-only",
       "route": "large-hero",
-      "breakGroup": "breach_panel"
+      "breakGroup": "breach_panel",
+      "kind": "breach"
     },
     {
-      "id": "roof_hatch",
+      "id": "interior_door_l1",
+      "level": 1,
       "connects": [
-        "roof",
-        "case_room"
+        "upper_front",
+        "upper_rear"
       ],
-      "axis": "+Y",
+      "axis": "+Z",
       "center": [
-        10.8,
-        15,
-        -13.5
+        -9,
+        22,
+        2
       ],
       "clearance": {
-        "w": 6,
-        "h": 6
+        "w": 9,
+        "h": 12
       },
+      "sillY": 16,
+      "headY": 28,
       "state": "always",
-      "route": "soldier"
+      "route": "soldier",
+      "kind": "door"
     },
     {
-      "id": "roof_smash",
+      "id": "window_front",
+      "level": 1,
       "connects": [
-        "roof",
-        "case_room"
+        "exterior",
+        "upper_front"
+      ],
+      "axis": "+Z",
+      "center": [
+        8,
+        22,
+        22.4
+      ],
+      "clearance": {
+        "w": 7,
+        "h": 2
+      },
+      "sillY": 21,
+      "headY": 23,
+      "state": "always",
+      "route": "los",
+      "kind": "window"
+    },
+    {
+      "id": "window_flank",
+      "level": 1,
+      "connects": [
+        "exterior",
+        "upper_front"
+      ],
+      "axis": "-X",
+      "center": [
+        -20.4,
+        22,
+        -6
+      ],
+      "clearance": {
+        "w": 7,
+        "h": 2
+      },
+      "sillY": 21,
+      "headY": 23,
+      "state": "always",
+      "route": "los",
+      "kind": "window"
+    },
+    {
+      "id": "upper_floor_panel_smash",
+      "level": 1,
+      "connects": [
+        "upper_front",
+        "ground_entry"
       ],
       "axis": "+Y",
       "center": [
-        -3,
-        15,
-        -8
+        -5,
+        16,
+        11
       ],
       "clearance": {
         "w": 10,
@@ -103,7 +161,72 @@
       },
       "state": "breached-only",
       "route": "large-hero",
-      "breakGroup": "roof_weak_panel"
+      "breakGroup": "upper_floor_panel",
+      "kind": "smash"
+    },
+    {
+      "id": "roof_weak_panel_smash",
+      "level": "roof",
+      "connects": [
+        "roof",
+        "upper_rear"
+      ],
+      "axis": "+Y",
+      "center": [
+        -5,
+        32,
+        -11
+      ],
+      "clearance": {
+        "w": 12,
+        "h": 12
+      },
+      "state": "breached-only",
+      "route": "large-hero",
+      "breakGroup": "roof_weak_panel",
+      "kind": "smash"
+    },
+    {
+      "id": "stair_a",
+      "level": "ground",
+      "connects": [
+        "ground",
+        "upper"
+      ],
+      "axis": "+Y",
+      "center": [
+        15.8,
+        16,
+        -14.6
+      ],
+      "clearance": {
+        "w": 8,
+        "h": 6
+      },
+      "state": "always",
+      "route": "soldier",
+      "kind": "stair"
+    },
+    {
+      "id": "stair_b",
+      "level": "upper",
+      "connects": [
+        "upper",
+        "roof"
+      ],
+      "axis": "+Y",
+      "center": [
+        15.8,
+        32,
+        -1
+      ],
+      "clearance": {
+        "w": 8,
+        "h": 6
+      },
+      "state": "always",
+      "route": "soldier",
+      "kind": "stair"
     }
   ],
   "note": "Rooms as volumes, openings as edges (with clearance and state gate), plus navigation waypoints and named routes. Opening centres double as the runtime `doorways` nav points (src/engine/citytiles.js bungalow `doorways`)."

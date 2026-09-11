@@ -1,88 +1,89 @@
 {
   "id": "building.research-lab",
   "version": "v1",
-  "note": "DIRECT-SUBSET projection onto the current runtime world.interiors contract (src/engine/world.js:95, entity.js:2085). The intact ground-floor shell + partition as vertical AABBs floor->top with door GAPS, roof top = deckTop. Lintels are intentionally omitted so no box sits across a doorway. Place by adding a world (x,z) centre and rotating by yaw; these coordinates are building-local.",
-  "caveats": "Single-storey subset only: it does NOT carry the stairs (no intermediate standable surfaces in this contract), the roof hatch as a hole, per-piece breakable state, floor pieces, or the breach opening as anything but a solid wall. Those need the extension seam in docs/building-delivery/INTEGRATION.md. To breach the flank at runtime, drop the wall whose `breakGroup` is \"breach_panel\" from `walls`.",
+  "note": "DIRECT-SUBSET projection of the GROUND FLOOR onto the current runtime world.interiors contract (src/engine/world.js:95, entity.js:2085): intact ground-floor shell + partition as vertical AABBs floor->top(=upper-floor slab) with door GAPS. Lintels are omitted so no box sits across a doorway. Place by adding a world (x,z) centre + yaw; coordinates are building-local.",
+  "caveats": "GROUND FLOOR ONLY. This single-storey contract cannot carry the upper floor, the inter-storey slab, the stairs (no intermediate standable surface), per-piece breakable state, floor/roof smash panels, or the roof-as-real-top. `top` here is the upper-floor slab (16u), NOT the roof (32u) — standing \"on top\" via this record would put you on the upper floor. The full two-story building needs the extension seam + per-camera fade in docs/building-delivery/INTEGRATION.md. To breach the ground flank, drop the wall whose `breakGroup` is \"breach_panel\".",
   "interior": {
     "x": 0,
     "z": 0,
-    "hx": 15,
-    "hz": 17,
-    "top": 15,
+    "hx": 21,
+    "hz": 23,
+    "top": 16,
+    "levels": 2,
     "rooms": 2,
     "walls": [
       {
-        "x": -12.05,
-        "z": 16.4,
-        "hx": 2.95,
+        "x": -17.25,
+        "z": 22.4,
+        "hx": 3.75,
         "hz": 0.6,
         "id": "p000"
       },
       {
-        "x": 6.05,
-        "z": 16.4,
-        "hx": 8.95,
+        "x": 8.25,
+        "z": 22.4,
+        "hx": 12.75,
         "hz": 0.6,
         "id": "p001"
       },
       {
         "x": 0,
-        "z": -16.4,
-        "hx": 15,
+        "z": -22.4,
+        "hx": 21,
         "hz": 0.6,
         "id": "p003"
       },
       {
-        "x": -14.4,
-        "z": 0,
+        "x": 20.4,
+        "z": -10.25,
         "hx": 0.6,
-        "hz": 17,
+        "hz": 12.75,
         "id": "p004"
       },
       {
-        "x": 14.4,
-        "z": -7,
+        "x": 20.4,
+        "z": 21.25,
         "hx": 0.6,
-        "hz": 10,
+        "hz": 1.75,
         "id": "p005"
       },
       {
-        "x": 14.4,
-        "z": 16,
+        "x": -20.4,
+        "z": 0,
         "hx": 0.6,
-        "hz": 1,
+        "hz": 23,
         "id": "p006"
       },
       {
-        "x": -11.45,
+        "x": -16.65,
         "z": 2,
-        "hx": 2.35,
+        "hx": 3.15,
+        "hz": 0.6,
+        "id": "p007"
+      },
+      {
+        "x": 7.65,
+        "z": 2,
+        "hx": 12.15,
         "hz": 0.6,
         "id": "p008"
       },
       {
-        "x": 5.45,
-        "z": 2,
-        "hx": 8.35,
-        "hz": 0.6,
-        "id": "p009"
-      },
-      {
-        "x": 14.4,
-        "z": 9,
+        "x": 20.4,
+        "z": 11,
         "hx": 0.6,
-        "hz": 6,
+        "hz": 8.5,
         "id": "breach_panel",
         "breakGroup": "breach_panel"
       }
     ],
     "doorways": [
       [
-        -6,
-        16.4
+        -9,
+        22.4
       ],
       [
-        -6,
+        -9,
         2
       ]
     ]

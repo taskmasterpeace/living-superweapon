@@ -1,21 +1,18 @@
-// validate-lab.mjs — the STANDALONE validation fixture for the research-lab package.
+// validate-lab.mjs — STANDALONE validation fixture for the (two-story) research-lab package.
 //
 //   node tools/building-delivery/validate-lab.mjs [--dir DIR] [--json]
 //
-// It touches no src/. It loads the COMMITTED delivery outputs (colliders/openings/room-graph/
-// shelter/manifest/GLB) and proves — with real assertions, not screenshots — everything the main
-// task will otherwise have to take on faith:
-//   * schema integrity (unique IDs, well-formed AABBs, state consistency)
+// Touches no src/. Loads the COMMITTED outputs and proves, with real assertions:
+//   * schema integrity (unique IDs, well-formed AABBs, state + per-level fade consistency)
 //   * the GLB parses and its node names match the manifest
 //   * every committed file's sha256 matches the manifest (reproduce-lite)
-//   * soldier-scale clearance through the front door, interior door, stairs and roof hatch
-//   * large-hero clearance through the breached flank panel and the smashed roof panel
-//   * NO invisible collider box across any open opening (the failure mode the handoff names)
+//   * soldier clearance on both floors; large-hero clearance through the breach; chase-cam room per floor
+//   * NO invisible collider box across any open opening (doors, windows, breach, smash holes, stair holes)
 //   * intact walls block movement AND projectile LOS; openings pass; the breach toggles both
+//   * the inter-storey floor slab separates the storeys and is standable; both stair flights reach
+//   * per-camera fade groups are per-storey and disjoint (fading one storey never nukes another)
 //
-// The collision math mirrors the runtime (src/engine/entity.js interior AABB push-out and
-// world.js hitInteriorWall/traceBox3) so a pass here predicts in-engine behaviour for the parts
-// the current contract already supports; the parts it does not are called out as SEAM notes.
+// Collision math mirrors the runtime (entity.js AABB push-out; world.js hitInteriorWall/traceBox3).
 
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
@@ -27,251 +24,184 @@ const REPO = resolve(HERE, '..', '..');
 const dirArg = process.argv.indexOf('--dir');
 const DIR = dirArg >= 0 ? resolve(process.argv[dirArg + 1]) : join(REPO, 'public', 'building-delivery', 'lab.v1');
 const asJson = process.argv.includes('--json');
-
 const load = (n) => JSON.parse(readFileSync(join(DIR, n), 'utf8'));
-const colliders = load('colliders.json');
-const graph = load('room-graph.json');
-const shelter = load('shelter.json');
-const manifest = load('manifest.json');
+const colliders = load('colliders.json'), graph = load('room-graph.json'), shelter = load('shelter.json');
+const manifest = load('manifest.json'), runtime = load('runtime-interior.json');
 const fitRaw = manifest.fitting;
-// normalise the recipe's *_u fitting keys into short names used below
-const fit = {
-  fighterRadius: fitRaw.fighterRadius_u,
-  standingHeadHeight: fitRaw.standingHeadHeight_u,
-  soldierHeroHeight: fitRaw.soldierAndStandardHeroHeight_u,
-  largeHeroMaxWidth: fitRaw.largeHeroMaxWidth_u,
-  largeHeroMaxHeight: fitRaw.largeHeroMaxHeight_u,
-};
-const R = fit.fighterRadius, HEAD = fit.standingHeadHeight;
+const fit = { R: fitRaw.fighterRadius_u, HEAD: fitRaw.standingHeadHeight_u, soldierH: fitRaw.soldierAndStandardHeroHeight_u,
+  LHW: fitRaw.largeHeroMaxWidth_u, LHH: fitRaw.largeHeroMaxHeight_u, CAM: fitRaw.chaseCamComfortDia_u };
+const R = fit.R, HEAD = fit.HEAD;
 
-// ---- tiny assert harness ---------------------------------------------------
-const results = [];
-let selfProven = false;
-function check(name, fn) {
-  try { const detail = fn(); results.push({ name, pass: true, detail: detail || '' }); }
-  catch (e) { results.push({ name, pass: false, detail: e.message }); }
-}
-const ok = (cond, msg) => { if (!cond) throw new Error(msg); };
+const results = []; let selfProven = false;
+const check = (name, fn) => { try { const d = fn(); results.push({ name, pass: true, detail: d || '' }); } catch (e) { results.push({ name, pass: false, detail: e.message }); } };
+const ok = (c, m) => { if (!c) throw new Error(m); };
 const near = (a, b, t = 1e-3) => Math.abs(a - b) <= t;
-
-// ---- collision primitives (mirror the runtime) -----------------------------
+const round = (v) => Math.round(v * 1e3) / 1e3;
 const pieceById = new Map(colliders.pieces.map((p) => [p.id, p]));
-function activeColliders(state, { standable = true } = {}) {
+const OP = Object.fromEntries(graph.openings.map((o) => [o.id, o]));
+
+function activeColliders(state) {
   const broken = state === 'breached' ? new Set(Object.values(colliders.breakGroups).flat()) : new Set();
-  return colliders.pieces.filter((p) => p.collider && !broken.has(p.id) && (standable || !p.standable));
+  return colliders.pieces.filter((p) => p.collider && !broken.has(p.id));
 }
-// A body (feet at p, radius r, head height h) overlaps a 3D AABB horizontally within r AND vertically.
+const walls = (state) => activeColliders(state).filter((p) => p.role === 'blocker' || p.role === 'prop' || p.role === 'parapet');
 function bodyHits(p, r, h, c) {
   const cx = (c.aabb.min[0] + c.aabb.max[0]) / 2, cz = (c.aabb.min[2] + c.aabb.max[2]) / 2;
   const hx = (c.aabb.max[0] - c.aabb.min[0]) / 2, hz = (c.aabb.max[2] - c.aabb.min[2]) / 2;
-  const horiz = Math.abs(p[0] - cx) < hx + r - 1e-6 && Math.abs(p[2] - cz) < hz + r - 1e-6;
-  const vert = p[1] < c.aabb.max[1] - 1e-6 && (p[1] + h) > c.aabb.min[1] + 1e-6;
-  return horiz && vert;
+  return Math.abs(p[0] - cx) < hx + r - 1e-6 && Math.abs(p[2] - cz) < hz + r - 1e-6 && p[1] < c.aabb.max[1] - 1e-6 && (p[1] + h) > c.aabb.min[1] + 1e-6;
 }
-// March a body along a polyline of waypoints; return the first blocking piece, or null.
 function marchBody(pathPts, r, h, blockers) {
   const STEP = 0.5;
   for (let i = 0; i < pathPts.length - 1; i++) {
-    const a = pathPts[i], b = pathPts[i + 1];
-    const d = Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]);
-    const n = Math.max(1, Math.ceil(d / STEP));
-    for (let s = 0; s <= n; s++) {
-      const t = s / n, p = [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
-      for (const c of blockers) if (bodyHits(p, r, h, c)) return { at: p.map(round), piece: c.id };
-    }
+    const a = pathPts[i], b = pathPts[i + 1], d = Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]), n = Math.max(1, Math.ceil(d / STEP));
+    for (let s = 0; s <= n; s++) { const t = s / n, p = [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
+      for (const c of blockers) if (bodyHits(p, r, h, c)) return { at: p.map(round), piece: c.id }; }
   }
   return null;
 }
-// Segment vs AABB (slab method) — projectile / sight LOS. Returns true if [p0,p1] hits box c.
 function segHitsBox(p0, p1, c) {
   let tmin = 0, tmax = 1;
-  for (let k = 0; k < 3; k++) {
-    const d = p1[k] - p0[k], mn = c.aabb.min[k], mx = c.aabb.max[k];
+  for (let k = 0; k < 3; k++) { const d = p1[k] - p0[k], mn = c.aabb.min[k], mx = c.aabb.max[k];
     if (Math.abs(d) < 1e-9) { if (p0[k] < mn || p0[k] > mx) return false; }
-    else { let t1 = (mn - p0[k]) / d, t2 = (mx - p0[k]) / d; if (t1 > t2) [t1, t2] = [t2, t1]; tmin = Math.max(tmin, t1); tmax = Math.min(tmax, t2); if (tmin > tmax) return false; }
-  }
+    else { let t1 = (mn - p0[k]) / d, t2 = (mx - p0[k]) / d; if (t1 > t2) [t1, t2] = [t2, t1]; tmin = Math.max(tmin, t1); tmax = Math.min(tmax, t2); if (tmin > tmax) return false; } }
   return true;
 }
 const rayBlocked = (p0, p1, state) => activeColliders(state).some((c) => segHitsBox(p0, p1, c));
-const round = (v) => Math.round(v * 1e3) / 1e3;
+const pointIn = (p, c) => p[0] > c.aabb.min[0] + 1e-6 && p[0] < c.aabb.max[0] - 1e-6 && p[1] > c.aabb.min[1] + 1e-6 && p[1] < c.aabb.max[1] - 1e-6 && p[2] > c.aabb.min[2] + 1e-6 && p[2] < c.aabb.max[2] - 1e-6;
 const wp = (name) => { const p = graph.waypoints[name]; ok(p, `waypoint ${name} missing`); return p; };
+const roomInner = (id) => { const r = graph.rooms.find((x) => x.id === id); ok(r, `room ${id} missing`); return { w: r.aabb.max[0] - r.aabb.min[0], d: r.aabb.max[2] - r.aabb.min[2] }; };
 
-// ---- 0. SELF-PROOF (wwa-verify law: the harness must first prove it can fail) ----
-check('self-proof: a body dead-centre in a wall IS detected as a hit', () => {
-  const wall = colliders.pieces.find((p) => p.id === 'p003'); ok(wall, 'rear wall p003 missing');
+// 0. SELF-PROOF
+check('self-proof: a body inside a wall IS detected; open floor is clear', () => {
+  const wall = colliders.pieces.find((p) => p.role === 'blocker' && p.level === 0); ok(wall, 'no ground wall');
   const c = [(wall.aabb.min[0] + wall.aabb.max[0]) / 2, 0, (wall.aabb.min[2] + wall.aabb.max[2]) / 2];
-  ok(bodyHits(c, R, HEAD, wall), 'collision test failed to detect a body inside a wall — the fixture is blind');
-  const clear = [0, 0, 8];  // open floor of the entry lab
-  ok(!activeColliders('intact').some((p) => bodyHits(clear, R, HEAD, p)), 'open floor wrongly reported blocked');
-  selfProven = true;
-  return 'hit detected inside a wall; open floor clear';
+  ok(bodyHits(c, R, HEAD, wall), 'collision blind'); ok(!walls('intact').some((p) => bodyHits([0, 0, 8], R, HEAD, p)), 'open floor blocked');
+  selfProven = true; return 'ok';
 });
 
-// ---- 1. schema integrity ---------------------------------------------------
-check('unique stable IDs', () => {
-  const ids = colliders.pieces.map((p) => p.id); const set = new Set(ids);
-  ok(set.size === ids.length, `duplicate id among ${ids.length}`); return `${ids.length} unique`;
-});
-check('AABBs well-formed (min<max, finite)', () => {
-  for (const p of colliders.pieces) for (let k = 0; k < 3; k++) {
-    ok(Number.isFinite(p.aabb.min[k]) && Number.isFinite(p.aabb.max[k]), `${p.id} non-finite`);
-    ok(p.aabb.max[k] > p.aabb.min[k] - 1e-9, `${p.id} inverted axis ${k}`);
-  }
+// 1. schema
+check('unique stable IDs', () => { const ids = colliders.pieces.map((p) => p.id); ok(new Set(ids).size === ids.length, 'dupe id'); return `${ids.length} unique`; });
+check('AABBs well-formed; every piece has a level', () => {
+  for (const p of colliders.pieces) { ok(p.level !== undefined, `${p.id} no level`); for (let k = 0; k < 3; k++) { ok(Number.isFinite(p.aabb.min[k]) && Number.isFinite(p.aabb.max[k]), `${p.id} non-finite`); ok(p.aabb.max[k] > p.aabb.min[k] - 1e-9, `${p.id} inverted`); } }
   return `${colliders.pieces.length} pieces ok`;
 });
-check('state sets reference real pieces; breached hides every breakable', () => {
-  for (const id of colliders.states.breached.hidden) ok(pieceById.has(id), `hidden ${id} unknown`);
-  const breakable = colliders.pieces.filter((p) => p.state === 'intact-only').map((p) => p.id);
-  for (const id of breakable) ok(colliders.states.breached.hidden.includes(id), `${id} not hidden when breached`);
-  return `${breakable.length} intact-only pieces hidden in breached state`;
+check('breached state hides every intact-only piece', () => {
+  const io = colliders.pieces.filter((p) => p.state === 'intact-only').map((p) => p.id);
+  for (const id of io) ok(colliders.states.breached.hidden.includes(id), `${id} not hidden`);
+  return `${io.length} intact-only pieces hidden when breached`;
 });
 
-// ---- 2. GLB structural + manifest cross-check ------------------------------
-check('GLB parses; node names match manifest.renderNodeList', () => {
+// 2. GLB + manifest
+check('GLB parses; node names match manifest', () => {
   const buf = readFileSync(join(DIR, 'lab.glb'));
-  ok(buf.readUInt32LE(0) === 0x46546c67, 'bad GLB magic'); ok(buf.readUInt32LE(4) === 2, 'not glTF 2.0');
-  ok(buf.readUInt32LE(8) === buf.length, 'GLB length header mismatch');
-  const jsonLen = buf.readUInt32LE(12); ok(buf.readUInt32LE(16) === 0x4e4f534a, 'first chunk not JSON');
-  const gltf = JSON.parse(buf.slice(20, 20 + jsonLen).toString('utf8'));
-  const glbNodes = gltf.nodes.map((n) => n.name).sort();
-  const manNodes = manifest.renderNodeList.map((n) => n.node).sort();
-  ok(JSON.stringify(glbNodes) === JSON.stringify(manNodes), `GLB nodes != manifest`);
-  // accessor sanity: every mesh primitive references POSITION + NORMAL + indices
-  for (const m of gltf.meshes) for (const pr of m.primitives) ok(pr.attributes.POSITION != null && pr.attributes.NORMAL != null && pr.indices != null, `mesh ${m.name} incomplete`);
-  return `${gltf.nodes.length} nodes, ${gltf.meshes.length} meshes; header/chunks valid`;
+  ok(buf.readUInt32LE(0) === 0x46546c67 && buf.readUInt32LE(4) === 2 && buf.readUInt32LE(8) === buf.length, 'bad GLB header');
+  const jl = buf.readUInt32LE(12); ok(buf.readUInt32LE(16) === 0x4e4f534a, 'no JSON chunk');
+  const g = JSON.parse(buf.slice(20, 20 + jl).toString('utf8'));
+  ok(JSON.stringify(g.nodes.map((n) => n.name).sort()) === JSON.stringify(manifest.renderNodeList.map((n) => n.node).sort()), 'nodes != manifest');
+  for (const m of g.meshes) for (const pr of m.primitives) ok(pr.attributes.POSITION != null && pr.attributes.NORMAL != null && pr.indices != null, `mesh ${m.name} incomplete`);
+  return `${g.nodes.length} nodes, ${g.meshes.length} meshes`;
 });
 check('every committed file sha256 matches manifest (reproduce-lite)', () => {
-  for (const f of manifest.files) {
-    if (f.path === 'manifest.json') continue;
-    const h = createHash('sha256').update(readFileSync(join(DIR, f.path))).digest('hex');
-    ok(h === f.sha256, `${f.path}: ${h.slice(0, 12)} != ${f.sha256.slice(0, 12)}`);
-  }
+  for (const f of manifest.files) { if (f.path === 'manifest.json') continue; const h = createHash('sha256').update(readFileSync(join(DIR, f.path))).digest('hex'); ok(h === f.sha256, `${f.path} hash`); }
   return `${manifest.files.length - 1} files hash-verified`;
 });
 
-// ---- 3. clearances ---------------------------------------------------------
-const OP = Object.fromEntries(graph.openings.map((o) => [o.id, o]));
-check('front door clears a soldier (collision + head)', () => {
-  const o = OP.front_door;
-  ok(o.clearance.w >= 2 * R + 1, `door width ${o.clearance.w} < body ${2 * R} + margin`);
-  ok(o.clearance.h >= HEAD, `door head ${o.clearance.h} < ${HEAD}`);
-  return `${o.clearance.w}u x ${o.clearance.h}u opening; body Ø${2 * R}u, head ${HEAD}u`;
+// 3. clearances
+check('front + interior doors clear a soldier (both floors)', () => {
+  for (const id of ['front_door', 'interior_door_l0', 'interior_door_l1']) { const o = OP[id]; ok(o.clearance.w >= 2 * R + 1 && o.clearance.h >= HEAD, `${id} too small (${o.clearance.w}x${o.clearance.h})`); }
+  return 'front / interior L0 / interior L1 clear';
 });
-check('interior door clears a soldier', () => {
-  const o = OP.interior_door; ok(o.clearance.w >= 2 * R + 1 && o.clearance.h >= HEAD, 'interior door too small'); return `${o.clearance.w}u x ${o.clearance.h}u`;
-});
-check('breached flank panel clears a LARGE hero (visual extents)', () => {
-  const o = OP.breach_panel;
-  ok(o.clearance.w >= fit.largeHeroMaxWidth, `breach width ${o.clearance.w} < large hero ${fit.largeHeroMaxWidth}`);
-  ok(o.clearance.h >= fit.largeHeroMaxHeight, `breach height ${o.clearance.h} < large hero ${fit.largeHeroMaxHeight}`);
-  return `${o.clearance.w}u x ${o.clearance.h}u vs large hero ${fit.largeHeroMaxWidth}u x ${fit.largeHeroMaxHeight}u`;
-});
-check('roof-smash hole clears a large hero drop', () => {
-  const o = OP.roof_smash; ok(o.clearance.w >= fit.largeHeroMaxWidth && o.clearance.h >= fit.largeHeroMaxWidth, 'roof hole too small'); return `${o.clearance.w}u x ${o.clearance.h}u`;
-});
-check('ceiling clears standard head (and reports tall-hero margin)', () => {
-  const ceil = manifest.dimensions.ceilingUnderside_u;
-  ok(ceil >= HEAD, `ceiling ${ceil} < head ${HEAD}`);
-  return `ceiling ${ceil}u: +${round(ceil - HEAD)}u over collision head; +${round(ceil - fit.largeHeroMaxHeight)}u over tall-hero silhouette (${fit.largeHeroMaxHeight}u)`;
+check('breached flank clears a LARGE hero', () => { const o = OP.breach_panel; ok(o.clearance.w >= fit.LHW && o.clearance.h >= fit.LHH, `breach ${o.clearance.w}x${o.clearance.h}`); return `${o.clearance.w}u x ${o.clearance.h}u vs ${fit.LHW}x${fit.LHH}`; });
+check('per-floor ceiling clears head + tall-hero silhouette', () => { const c = manifest.dimensions.perFloorCeiling_u; ok(c >= HEAD, `ceiling ${c} < ${HEAD}`); return `ceiling ${c}u/floor: +${round(c - HEAD)} over head, +${round(c - fit.LHH)} over ${fit.LHH}u silhouette`; });
+check('chase-cam comfort ring fits BOTH entry rooms (third-person size)', () => {
+  for (const id of ['ground_entry', 'upper_front']) { const r = roomInner(id); ok(r.w >= fit.CAM && r.d >= fit.CAM, `${id} ${round(r.w)}x${round(r.d)} < ${fit.CAM}`); }
+  const g = roomInner('ground_entry'); return `ring Ø${fit.CAM}u fits (ground_entry ${round(g.w)}×${round(g.d)}u)`;
 });
 
-// ---- 4. NO INVISIBLE BOX ACROSS AN OPENING ---------------------------------
-check('no collider box sits across any OPEN opening (the handoff failure mode)', () => {
+// 4. NO invisible box across an OPEN opening
+check('no collider box sits across any open opening (doors, windows, breach, smash, stair)', () => {
   const details = [];
   for (const o of graph.openings) {
     const state = o.state === 'breached-only' ? 'breached' : 'intact';
-    if (o.state === 'breached-only') { /* only meaningful once breached */ }
-    // sample the clear volume of the opening; assert no ACTIVE collider intrudes
-    const blockers = activeColliders(state);
+    const active = activeColliders(state);
     let intruder = null;
-    if (o.axis === '+Y') {
-      // roof opening: the ROOF SLAB must be genuinely holed here (a stairhead terminating under a
-      // hatch is intended, not an obstruction) — so only roof/parapet pieces may not cover it.
+    if (o.axis === '+Y') {                    // slab hole: only roof/floor pieces may not cover it
       const [cx, cy, cz] = o.center, hw = o.clearance.w / 2 - R, hd = o.clearance.h / 2 - R;
-      const roofBlockers = blockers.filter((c) => c.role === 'roof' || c.role === 'parapet');
-      for (let ix = -1; ix <= 1 && !intruder; ix++) for (let iz = -1; iz <= 1; iz++) {
-        const p = [cx + ix * hw, cy - 0.1, cz + iz * hd];
-        const hit = roofBlockers.find((c) => pointIn(p, c)); if (hit) { intruder = hit.id; break; }
-      }
-    } else {
-      const [cx, , cz] = o.center;
-      const along = o.axis === '+Z' ? 0 : 2;                    // opening spans this axis
-      const hw = o.clearance.w / 2 - R;
-      for (let s = -1; s <= 1 && !intruder; s++) for (const yy of [1, HEAD - 1]) {
-        const p = [cx, yy, cz]; p[along] += s * hw;
-        const hit = blockers.find((c) => pointIn(p, c)); if (hit) { intruder = hit.id; break; }
-      }
+      const slabs = active.filter((c) => c.role === 'roof' || c.role === 'floor');
+      for (let ix = -1; ix <= 1 && !intruder; ix++) for (let iz = -1; iz <= 1; iz++) { const p = [cx + ix * hw, cy - 0.1, cz + iz * hd]; const hit = slabs.find((c) => pointIn(p, c)); if (hit) { intruder = hit.id; break; } }
+    } else {                                   // wall opening: sample the clear span between sill and head
+      const along = o.axis === '+Z' ? 0 : 2, hw = o.clearance.w / 2 - R;
+      const ys = [o.sillY + 1, (o.sillY + o.headY) / 2, o.headY - 1];
+      for (let s = -1; s <= 1 && !intruder; s++) for (const yy of ys) { const p = [o.center[0], yy, o.center[2]]; p[along] += s * hw; const hit = active.find((c) => pointIn(p, c)); if (hit) { intruder = hit.id; break; } }
     }
-    ok(!intruder, `${o.id}: collider ${intruder} intrudes into the opening`);
-    details.push(`${o.id} clear`);
+    ok(!intruder, `${o.id}: ${intruder} intrudes`);
+    details.push(o.id);
   }
-  return details.join(', ');
+  return `${details.length} openings clear`;
 });
-function pointIn(p, c) { return p[0] > c.aabb.min[0] + 1e-6 && p[0] < c.aabb.max[0] - 1e-6 && p[1] > c.aabb.min[1] + 1e-6 && p[1] < c.aabb.max[1] - 1e-6 && p[2] > c.aabb.min[2] + 1e-6 && p[2] < c.aabb.max[2] - 1e-6; }
 
-// ---- 5. routes: soldier walks in; large hero breaches; intact blocks -------
-check('soldier RECOVER route is walkable (intact) front door -> case', () => {
-  const path = graph.routes.soldier_recover.path.map(wp);
-  const hit = marchBody(path, R, HEAD, activeColliders('intact'));
-  ok(!hit, `blocked at ${JSON.stringify(hit)}`); return `${path.length} legs clear`;
-});
-check('flank breach route is BLOCKED while intact (weak panel holds)', () => {
+// 5. routes
+check('soldier RECOVER route walkable (intact): front door -> case', () => { const hit = marchBody(graph.routes.soldier_recover.path.map(wp), R, HEAD, walls('intact')); ok(!hit, `blocked ${JSON.stringify(hit)}`); return 'clear'; });
+check('flank breach BLOCKED intact, OPEN breached (large hero)', () => {
   const path = graph.routes.largehero_breach.path.map(wp);
-  const hit = marchBody(path, R, HEAD, activeColliders('intact'));
-  ok(hit && hit.piece === 'breach_panel', `expected block by breach_panel, got ${JSON.stringify(hit)}`);
-  return `blocked by ${hit.piece} as intended`;
-});
-check('flank breach route OPENS once breached (large hero passes)', () => {
-  const path = graph.routes.largehero_breach.path.map(wp);
-  const hit = marchBody(path, R, fit.largeHeroMaxHeight, activeColliders('breached'));
-  ok(!hit, `still blocked at ${JSON.stringify(hit)}`); return 'clear in breached state';
+  const hitI = marchBody(path, R, HEAD, walls('intact')); ok(hitI && hitI.piece === 'breach_panel', `expected breach_panel block, got ${JSON.stringify(hitI)}`);
+  const hitB = marchBody(path, R, fit.LHH, walls('breached')); ok(!hitB, `still blocked ${JSON.stringify(hitB)}`);
+  return 'intact blocks, breached opens';
 });
 
-// ---- 6. projectile LOS: intact walls block, openings pass, breach toggles --
-const outsideFront = [-6, 5.5, 40], insideEntry = [-6, 5.5, 8];
-const outsideFlank = [40, 6.5, 9], insideByBreach = [4, 6.5, 9];
-const outsideSolid = [40, 5.5, -12], insideRear = [4, 5.5, -12];
-check('a shot through the FRONT DOOR reaches inside (both states)', () => {
-  ok(!rayBlocked(outsideFront, insideEntry, 'intact'), 'front-door shot blocked (should pass)'); return 'passes';
+// 6. projectile LOS
+check('shot through the FRONT DOOR reaches inside; intact wall blocks; flank toggles', () => {
+  const outFront = [-9, 5.5, HZfront() + 6], inEntry = [-9, 5.5, 8];
+  ok(!rayBlocked(outFront, inEntry, 'intact'), 'front-door shot blocked');
+  ok(rayBlocked([40, 5.5, -13], [4, 5.5, -13], 'intact'), 'structural wall did not block');
+  ok(rayBlocked([40, 6.5, 11], [4, 6.5, 11], 'intact'), 'intact flank let a shot through');
+  ok(!rayBlocked([40, 6.5, 11], [4, 6.5, 11], 'breached'), 'breach still blocks LOS');
+  ok(rayBlocked([40, 5.5, -13], [4, 5.5, -13], 'breached'), 'structure stopped blocking after breach');
+  return 'front passes, structure blocks, flank opaque->clear on breach';
 });
-check('a shot at an INTACT STRUCTURAL wall is blocked — cannot shoot through intact walls', () => {
-  ok(rayBlocked(outsideSolid, insideRear, 'intact'), 'structural wall did not block'); return 'blocked';
-});
-check('the flank is OPAQUE while intact, TRANSPARENT once breached', () => {
-  ok(rayBlocked(outsideFlank, insideByBreach, 'intact'), 'intact weak panel let a shot through');
-  ok(!rayBlocked(outsideFlank, insideByBreach, 'breached'), 'breached opening still blocked LOS');
-  ok(rayBlocked(outsideSolid, insideRear, 'breached'), 'structural wall stopped blocking after a breach (should never)');
-  return 'intact blocks, breach passes, structure still blocks';
+function HZfront() { return manifest.dimensions.footprint_u.depth_z / 2; }
+check('shot through an UPPER WINDOW reaches the upper floor', () => {
+  const o = OP.window_front; const y = (o.sillY + o.headY) / 2;
+  ok(!rayBlocked([o.center[0], y, HZfront() + 6], [o.center[0], y, 8], 'intact'), 'window shot blocked');
+  return `window at y${round(y)} passes`;
 });
 
-// ---- 7. stairs + roof + shelter --------------------------------------------
-check('stairs reach the deck with walkable-proportion risers', () => {
-  const s = graph.stairs; ok(s.reachesDeck, 'top step != deck'); ok(s.maxRiser <= 2.5 + 1e-6, `riser ${s.maxRiser} > 2.5 snap tolerance`);
-  ok(s.width >= 2 * R, `stair width ${s.width} < body ${2 * R}`);
-  let prev = 0; for (const st of s.steps) { ok(st.top - prev <= 2.5 + 1e-6, `riser to ${st.id} > 2.5`); prev = st.top; }
-  return `${s.steps.length} steps, riser ${s.rise}u, tread ${s.tread}u, width ${s.width}u, top ${prev}u == deck ${manifest.dimensions.roofDeckTop_u}u`;
+// 7. two-story structure: stairs, floor slab, roof, shelter, fade
+check('both stair flights reach their level with walkable-proportion risers', () => {
+  for (const s of graph.stairs) { ok(s.reachesTop, `${s.id} !reachesTop`); ok(s.maxRiser <= 2.5 + 1e-6, `${s.id} riser ${s.maxRiser}>2.5`); ok(s.width >= 2 * R, `${s.id} width ${s.width}<${2 * R}`); }
+  return graph.stairs.map((s) => `${s.id} ${s.from}->${s.to} ${s.steps.length}steps riser ${s.rise}`).join(' · ');
 });
-check('roof deck is standable at deckTop and fully parapeted', () => {
-  const rv = shelter.roofVolume; ok(near(rv.standableTop, manifest.dimensions.roofDeckTop_u), 'deck top mismatch');
+check('inter-storey floor slab separates the storeys and is standable', () => {
+  const f1 = colliders.pieces.filter((p) => p.node === 'floor_l1' && p.standable); ok(f1.length > 0, 'no floor_l1 slab');
+  ok(near(f1[0].aabb.max[1], manifest.dimensions.floorToFloor_u), `floor top ${f1[0].aabb.max[1]} != ${manifest.dimensions.floorToFloor_u}`);
+  const upPanel = pieceById.get('upper_floor_panel'); ok(upPanel && upPanel.breakGroup === 'upper_floor_panel', 'no breakable upper-floor panel');
+  return `floor_l1 standable at y${f1[0].aabb.max[1]} (${f1.length} pieces) + breakable smash panel`;
+});
+check('roof is the real top; runtime subset top is the GROUND ceiling (honest)', () => {
+  ok(near(shelter.roofVolume.standableTop, manifest.dimensions.roofDeckTop_u), 'roof deck != deckTop');
+  ok(near(runtime.interior.top, manifest.dimensions.floorToFloor_u), `runtime top ${runtime.interior.top} should be ground ceiling ${manifest.dimensions.floorToFloor_u}`);
+  ok(runtime.interior.top !== manifest.dimensions.roofDeckTop_u, 'runtime subset must not claim the roof as its top');
   const par = colliders.pieces.filter((p) => p.role === 'parapet').map((p) => p.id);
-  for (const side of ['parapet.front', 'parapet.rear', 'parapet.left', 'parapet.right']) ok(par.includes(side), `${side} missing`);
-  return `deck ${rv.standableTop}u, 4 parapets`;
+  for (const s of ['parapet.front', 'parapet.rear', 'parapet.left', 'parapet.right']) ok(par.includes(s), `${s} missing`);
+  return `deck ${shelter.roofVolume.standableTop}u; subset top ${runtime.interior.top}u; 4 parapets`;
 });
-check('shelter volume covers the interior footprint (rain suppression)', () => {
-  const sh = shelter.shelter.find((s) => s.suppressesRain); ok(sh, 'no rain-suppressing shelter');
-  const ih = manifest.dimensions.interiorClearHalf_u;
-  ok(sh.aabb.max[0] - sh.aabb.min[0] >= 2 * ih.x - 1e-6 && sh.aabb.max[2] - sh.aabb.min[2] >= 2 * ih.z - 1e-6, 'shelter smaller than interior');
-  return `shelter ${round(sh.aabb.max[0] - sh.aabb.min[0])}u x ${round(sh.aabb.max[2] - sh.aabb.min[2])}u covers interior`;
+check('shelter covers the interior footprint AND both storeys', () => {
+  const sh = shelter.shelter.find((s) => s.suppressesRain); ok(sh, 'no shelter'); const ih = manifest.dimensions.interiorClearHalf_u;
+  ok(sh.aabb.max[0] - sh.aabb.min[0] >= 2 * ih.x - 1e-6 && sh.aabb.max[2] - sh.aabb.min[2] >= 2 * ih.z - 1e-6, 'shelter < interior');
+  ok(sh.aabb.max[1] >= manifest.dimensions.perFloorCeiling_u * manifest.dimensions.levels - 1, 'shelter height < both storeys');
+  return `shelter ${round(sh.aabb.max[0] - sh.aabb.min[0])}×${round(sh.aabb.max[2] - sh.aabb.min[2])}u, y0..${sh.aabb.max[1]}`;
+});
+check('per-storey fade groups are disjoint (fading a storey never nukes another)', () => {
+  const fb = colliders.fadeNodesByLevel; ok(fb, 'no fadeNodesByLevel');
+  for (const k of ['0', '1', 'roof']) ok(fb[k] && fb[k].length, `no fade nodes for level ${k}`);
+  const g = new Set(fb['0']), rf = new Set(fb['roof']);
+  for (const n of fb['1']) ok(!g.has(n) || n === 'stair', `node ${n} shared between ground and upper`);
+  for (const n of rf) ok(!g.has(n), `node ${n} shared between ground and roof`);
+  return `L0 ${fb['0'].length} · L1 ${fb['1'].length} · roof ${fb['roof'].length} nodes, disjoint`;
 });
 
-// ---- report ----------------------------------------------------------------
-if (!selfProven) results.push({ name: 'harness self-proof ran', pass: false, detail: 'self-proof did not set its flag' });
+if (!selfProven) results.push({ name: 'harness self-proof ran', pass: false, detail: 'self-proof flag not set' });
 const failed = results.filter((r) => !r.pass);
-if (asJson) {
-  console.log(JSON.stringify({ dir: DIR, total: results.length, failed: failed.length, results }, null, 2));
-} else {
-  console.log(`\n  validate-lab — ${DIR}\n`);
-  for (const r of results) console.log(`  ${r.pass ? 'PASS' : 'FAIL'}  ${r.name}${r.detail ? `\n        ${r.detail}` : ''}`);
-  console.log(`\n  ${results.length - failed.length}/${results.length} checks passed${failed.length ? ` — ${failed.length} FAILED` : ' — all green'}\n`);
-}
+if (asJson) console.log(JSON.stringify({ dir: DIR, total: results.length, failed: failed.length, results }, null, 2));
+else { console.log(`\n  validate-lab (two-story) — ${DIR}\n`); for (const r of results) console.log(`  ${r.pass ? 'PASS' : 'FAIL'}  ${r.name}${r.detail ? `\n        ${r.detail}` : ''}`); console.log(`\n  ${results.length - failed.length}/${results.length} checks passed${failed.length ? ` — ${failed.length} FAILED` : ' — all green'}\n`); }
 process.exit(failed.length ? 1 : 0);

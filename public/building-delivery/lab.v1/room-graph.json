@@ -4,137 +4,235 @@
   "note": "Rooms as volumes, openings as edges (with clearance and state gate), plus navigation waypoints and named routes. Opening centres double as the runtime `doorways` nav points (src/engine/citytiles.js bungalow `doorways`).",
   "rooms": [
     {
-      "id": "entry_lab",
+      "id": "ground_entry",
       "name": "Entry Lab (front)",
+      "level": 0,
+      "floorY": 0,
+      "ceilingY": 14.8,
       "aabb": {
         "min": [
-          -13.8,
+          -19.8,
           0,
           2.6
         ],
         "max": [
-          13.8,
-          13.8,
-          15.8
+          19.8,
+          14.8,
+          21.8
         ]
-      },
-      "floorY": 0,
-      "ceilingY": 13.8
+      }
     },
     {
-      "id": "case_room",
+      "id": "ground_case",
       "name": "Case Room (rear)",
+      "level": 0,
+      "floorY": 0,
+      "ceilingY": 14.8,
       "aabb": {
         "min": [
-          -13.8,
+          -19.8,
           0,
-          -15.8
+          -21.8
         ],
         "max": [
-          13.8,
-          13.8,
+          19.8,
+          14.8,
           1.4
         ]
-      },
-      "floorY": 0,
-      "ceilingY": 13.8
+      }
+    },
+    {
+      "id": "upper_front",
+      "name": "Upper Lab (front)",
+      "level": 1,
+      "floorY": 16,
+      "ceilingY": 30.8,
+      "aabb": {
+        "min": [
+          -19.8,
+          16,
+          2.6
+        ],
+        "max": [
+          19.8,
+          30.8,
+          21.8
+        ]
+      }
+    },
+    {
+      "id": "upper_rear",
+      "name": "Upper Store (rear)",
+      "level": 1,
+      "floorY": 16,
+      "ceilingY": 30.8,
+      "aabb": {
+        "min": [
+          -19.8,
+          16,
+          -21.8
+        ],
+        "max": [
+          19.8,
+          30.8,
+          1.4
+        ]
+      }
     }
   ],
   "openings": [
     {
-      "id": "front_door",
+      "id": "interior_door_l0",
+      "level": 0,
       "connects": [
-        "exterior",
-        "entry_lab"
+        "ground_entry",
+        "ground_case"
       ],
       "axis": "+Z",
       "center": [
-        -6,
-        5.8,
-        16.4
-      ],
-      "clearance": {
-        "w": 6.2,
-        "h": 11.6
-      },
-      "sillY": 0,
-      "headY": 11.6,
-      "state": "always",
-      "route": "soldier"
-    },
-    {
-      "id": "interior_door",
-      "connects": [
-        "entry_lab",
-        "case_room"
-      ],
-      "axis": "+Z",
-      "center": [
-        -6,
-        5.8,
+        -9,
+        7,
         2
       ],
       "clearance": {
-        "w": 6.2,
-        "h": 11.6
+        "w": 9,
+        "h": 14
       },
       "sillY": 0,
-      "headY": 11.6,
+      "headY": 14,
       "state": "always",
-      "route": "soldier"
+      "route": "soldier",
+      "kind": "door"
+    },
+    {
+      "id": "front_door",
+      "level": 0,
+      "connects": [
+        "exterior",
+        "ground_entry"
+      ],
+      "axis": "+Z",
+      "center": [
+        -9,
+        7,
+        22.4
+      ],
+      "clearance": {
+        "w": 9,
+        "h": 14
+      },
+      "sillY": 0,
+      "headY": 14,
+      "state": "always",
+      "route": "soldier",
+      "breakGroup": "front_door_leaf",
+      "kind": "door"
     },
     {
       "id": "breach_panel",
+      "level": 0,
       "connects": [
         "exterior",
-        "entry_lab"
+        "ground_entry"
       ],
       "axis": "+X",
       "center": [
-        14.4,
-        6.5,
-        9
+        20.4,
+        7.5,
+        11
       ],
       "clearance": {
-        "w": 12,
-        "h": 13
+        "w": 17,
+        "h": 15
       },
       "sillY": 0,
-      "headY": 13,
+      "headY": 15,
       "state": "breached-only",
       "route": "large-hero",
-      "breakGroup": "breach_panel"
+      "breakGroup": "breach_panel",
+      "kind": "breach"
     },
     {
-      "id": "roof_hatch",
+      "id": "interior_door_l1",
+      "level": 1,
       "connects": [
-        "roof",
-        "case_room"
+        "upper_front",
+        "upper_rear"
       ],
-      "axis": "+Y",
+      "axis": "+Z",
       "center": [
-        10.8,
-        15,
-        -13.5
+        -9,
+        22,
+        2
       ],
       "clearance": {
-        "w": 6,
-        "h": 6
+        "w": 9,
+        "h": 12
       },
+      "sillY": 16,
+      "headY": 28,
       "state": "always",
-      "route": "soldier"
+      "route": "soldier",
+      "kind": "door"
     },
     {
-      "id": "roof_smash",
+      "id": "window_front",
+      "level": 1,
       "connects": [
-        "roof",
-        "case_room"
+        "exterior",
+        "upper_front"
+      ],
+      "axis": "+Z",
+      "center": [
+        8,
+        22,
+        22.4
+      ],
+      "clearance": {
+        "w": 7,
+        "h": 2
+      },
+      "sillY": 21,
+      "headY": 23,
+      "state": "always",
+      "route": "los",
+      "kind": "window"
+    },
+    {
+      "id": "window_flank",
+      "level": 1,
+      "connects": [
+        "exterior",
+        "upper_front"
+      ],
+      "axis": "-X",
+      "center": [
+        -20.4,
+        22,
+        -6
+      ],
+      "clearance": {
+        "w": 7,
+        "h": 2
+      },
+      "sillY": 21,
+      "headY": 23,
+      "state": "always",
+      "route": "los",
+      "kind": "window"
+    },
+    {
+      "id": "upper_floor_panel_smash",
+      "level": 1,
+      "connects": [
+        "upper_front",
+        "ground_entry"
       ],
       "axis": "+Y",
       "center": [
-        -3,
-        15,
-        -8
+        -5,
+        16,
+        11
       ],
       "clearance": {
         "w": 10,
@@ -142,258 +240,496 @@
       },
       "state": "breached-only",
       "route": "large-hero",
-      "breakGroup": "roof_weak_panel"
+      "breakGroup": "upper_floor_panel",
+      "kind": "smash"
+    },
+    {
+      "id": "roof_weak_panel_smash",
+      "level": "roof",
+      "connects": [
+        "roof",
+        "upper_rear"
+      ],
+      "axis": "+Y",
+      "center": [
+        -5,
+        32,
+        -11
+      ],
+      "clearance": {
+        "w": 12,
+        "h": 12
+      },
+      "state": "breached-only",
+      "route": "large-hero",
+      "breakGroup": "roof_weak_panel",
+      "kind": "smash"
+    },
+    {
+      "id": "stair_a",
+      "level": "ground",
+      "connects": [
+        "ground",
+        "upper"
+      ],
+      "axis": "+Y",
+      "center": [
+        15.8,
+        16,
+        -14.6
+      ],
+      "clearance": {
+        "w": 8,
+        "h": 6
+      },
+      "state": "always",
+      "route": "soldier",
+      "kind": "stair"
+    },
+    {
+      "id": "stair_b",
+      "level": "upper",
+      "connects": [
+        "upper",
+        "roof"
+      ],
+      "axis": "+Y",
+      "center": [
+        15.8,
+        32,
+        -1
+      ],
+      "clearance": {
+        "w": 8,
+        "h": 6
+      },
+      "state": "always",
+      "route": "soldier",
+      "kind": "stair"
     }
   ],
   "waypoints": {
     "exterior_front": [
-      -6,
+      -9,
       0,
-      21
+      27
     ],
     "threshold_front_door": [
-      -6,
+      -9,
       0,
-      16.4
+      22.4
     ],
-    "entry_center": [
-      -6,
+    "ground_entry_center": [
+      -9,
       0,
-      8.9
+      11.9
     ],
-    "interior_doorway": [
-      -6,
+    "interior_door_l0": [
+      -9,
       0,
       2
     ],
-    "interior_door_inner": [
-      -6,
+    "interior_door_l0_inner": [
+      -9,
       0,
       -0.8000000000000003
     ],
-    "case_room_center": [
-      -6,
+    "ground_case_center": [
+      -9,
       0,
-      -5
+      -6.5
     ],
     "case_reach": [
-      -5.3,
+      -5.8,
       0,
-      -10
+      -13
     ],
     "case_spawn": [
       0,
-      2,
-      -10
+      2.2,
+      -13
     ],
     "breach_exterior": [
-      19,
+      25,
       0,
-      9
+      11
     ],
     "breach_threshold": [
-      14.4,
+      20.4,
       0,
-      9
+      11
     ],
-    "stair_base": [
-      10.8,
+    "stair_a_base": [
+      15.8,
       0,
-      -0.19999999999999996
+      2.2
     ],
-    "stair_top": [
-      10.8,
-      15,
-      -14.600000000000001
+    "stair_a_top": [
+      15.8,
+      16,
+      -14.6
     ],
-    "roof_hatch": [
-      10.8,
-      15,
-      -13.5
+    "upper_center": [
+      0,
+      16,
+      12.2
+    ],
+    "stair_b_base": [
+      15.8,
+      16,
+      -17
+    ],
+    "stair_b_top": [
+      15.8,
+      32,
+      -1
     ],
     "roof_center": [
       0,
-      15,
+      32,
       0
     ],
-    "roof_smash-top": [
-      -3,
-      15,
-      -8
+    "upper_floor_smash_top": [
+      -5,
+      16,
+      11
+    ],
+    "roof_smash_top": [
+      -5,
+      32,
+      -11
     ]
   },
   "routes": {
     "soldier_recover": {
-      "desc": "Front door to the case on foot (soldier, standard hero).",
+      "desc": "Front door to the case on foot (ground floor).",
       "state": "intact",
       "path": [
         "exterior_front",
         "threshold_front_door",
-        "entry_center",
-        "interior_doorway",
-        "interior_door_inner",
-        "case_room_center",
+        "ground_entry_center",
+        "interior_door_l0",
+        "interior_door_l0_inner",
+        "ground_case_center",
         "case_reach"
       ]
     },
-    "soldier_roof": {
-      "desc": "Interior to the roof via the stair and hatch.",
+    "soldier_upstairs": {
+      "desc": "Ground floor up the stair to the upper floor.",
       "state": "intact",
       "path": [
-        "entry_center",
-        "interior_doorway",
-        "case_room_center",
-        "stair_base",
-        "stair_top",
-        "roof_hatch",
+        "ground_entry_center",
+        "interior_door_l0",
+        "interior_door_l0_inner",
+        "stair_a_base",
+        "stair_a_top",
+        "upper_center"
+      ]
+    },
+    "soldier_roof": {
+      "desc": "Upper floor up the second flight to the roof.",
+      "state": "intact",
+      "path": [
+        "upper_center",
+        "stair_b_base",
+        "stair_b_top",
         "roof_center"
       ]
     },
     "largehero_breach": {
-      "desc": "Large hero breaches the flank panel and enters.",
+      "desc": "Large hero breaches the ground flank panel.",
       "state": "breached",
       "path": [
         "breach_exterior",
         "breach_threshold",
-        "entry_center"
+        "ground_entry_center"
       ]
     },
     "largehero_roofsmash": {
-      "desc": "Heavy hero smashes the roof panel and drops into the case room.",
+      "desc": "Heavy hero smashes the roof panel into the upper floor.",
       "state": "breached",
       "path": [
         "roof_center",
-        "roof_smash-top",
-        "case_room_center"
+        "roof_smash_top",
+        "upper_center"
+      ]
+    },
+    "largehero_floorsmash": {
+      "desc": "Heavy hero smashes the upper-floor panel into the ground floor.",
+      "state": "breached",
+      "path": [
+        "upper_center",
+        "upper_floor_smash_top",
+        "ground_entry_center"
       ]
     }
   },
-  "stairs": {
-    "steps": [
-      {
-        "id": "stair.step1",
-        "index": 1,
-        "top": 2.14286,
-        "aabb": {
-          "min": [
-            7.8,
-            0,
-            -1.4
-          ],
-          "max": [
-            13.8,
-            2.14286,
-            1
-          ]
+  "stairs": [
+    {
+      "id": "stair_a",
+      "from": "ground",
+      "to": "upper",
+      "steps": [
+        {
+          "id": "stair_a.step1",
+          "index": 1,
+          "top": 2.28571,
+          "aabb": {
+            "min": [
+              11.8,
+              0,
+              -1.4
+            ],
+            "max": [
+              19.8,
+              2.28571,
+              1
+            ]
+          }
+        },
+        {
+          "id": "stair_a.step2",
+          "index": 2,
+          "top": 4.57143,
+          "aabb": {
+            "min": [
+              11.8,
+              0,
+              -3.8
+            ],
+            "max": [
+              19.8,
+              4.57143,
+              -1.4
+            ]
+          }
+        },
+        {
+          "id": "stair_a.step3",
+          "index": 3,
+          "top": 6.85714,
+          "aabb": {
+            "min": [
+              11.8,
+              0,
+              -6.2
+            ],
+            "max": [
+              19.8,
+              6.85714,
+              -3.8
+            ]
+          }
+        },
+        {
+          "id": "stair_a.step4",
+          "index": 4,
+          "top": 9.14286,
+          "aabb": {
+            "min": [
+              11.8,
+              0,
+              -8.6
+            ],
+            "max": [
+              19.8,
+              9.14286,
+              -6.2
+            ]
+          }
+        },
+        {
+          "id": "stair_a.step5",
+          "index": 5,
+          "top": 11.42857,
+          "aabb": {
+            "min": [
+              11.8,
+              0,
+              -11
+            ],
+            "max": [
+              19.8,
+              11.42857,
+              -8.6
+            ]
+          }
+        },
+        {
+          "id": "stair_a.step6",
+          "index": 6,
+          "top": 13.71429,
+          "aabb": {
+            "min": [
+              11.8,
+              0,
+              -13.4
+            ],
+            "max": [
+              19.8,
+              13.71429,
+              -11
+            ]
+          }
+        },
+        {
+          "id": "stair_a.step7",
+          "index": 7,
+          "top": 16,
+          "aabb": {
+            "min": [
+              11.8,
+              0,
+              -15.8
+            ],
+            "max": [
+              19.8,
+              16,
+              -13.4
+            ]
+          }
         }
-      },
-      {
-        "id": "stair.step2",
-        "index": 2,
-        "top": 4.28571,
-        "aabb": {
-          "min": [
-            7.8,
-            0,
-            -3.8
-          ],
-          "max": [
-            13.8,
-            4.28571,
-            -1.4
-          ]
+      ],
+      "rise": 2.28571,
+      "tread": 2.4,
+      "width": 8,
+      "reachesTop": true,
+      "maxRiser": 2.28571,
+      "baseY": 0,
+      "topY": 16
+    },
+    {
+      "id": "stair_b",
+      "from": "upper",
+      "to": "roof",
+      "steps": [
+        {
+          "id": "stair_b.step1",
+          "index": 1,
+          "top": 18.28571,
+          "aabb": {
+            "min": [
+              11.8,
+              16,
+              -15.8
+            ],
+            "max": [
+              19.8,
+              18.28571,
+              -13.4
+            ]
+          }
+        },
+        {
+          "id": "stair_b.step2",
+          "index": 2,
+          "top": 20.57143,
+          "aabb": {
+            "min": [
+              11.8,
+              16,
+              -13.4
+            ],
+            "max": [
+              19.8,
+              20.57143,
+              -11
+            ]
+          }
+        },
+        {
+          "id": "stair_b.step3",
+          "index": 3,
+          "top": 22.85714,
+          "aabb": {
+            "min": [
+              11.8,
+              16,
+              -11
+            ],
+            "max": [
+              19.8,
+              22.85714,
+              -8.6
+            ]
+          }
+        },
+        {
+          "id": "stair_b.step4",
+          "index": 4,
+          "top": 25.14286,
+          "aabb": {
+            "min": [
+              11.8,
+              16,
+              -8.6
+            ],
+            "max": [
+              19.8,
+              25.14286,
+              -6.2
+            ]
+          }
+        },
+        {
+          "id": "stair_b.step5",
+          "index": 5,
+          "top": 27.42857,
+          "aabb": {
+            "min": [
+              11.8,
+              16,
+              -6.2
+            ],
+            "max": [
+              19.8,
+              27.42857,
+              -3.8
+            ]
+          }
+        },
+        {
+          "id": "stair_b.step6",
+          "index": 6,
+          "top": 29.71429,
+          "aabb": {
+            "min": [
+              11.8,
+              16,
+              -3.8
+            ],
+            "max": [
+              19.8,
+              29.71429,
+              -1.4
+            ]
+          }
+        },
+        {
+          "id": "stair_b.step7",
+          "index": 7,
+          "top": 32,
+          "aabb": {
+            "min": [
+              11.8,
+              16,
+              -1.4
+            ],
+            "max": [
+              19.8,
+              32,
+              1
+            ]
+          }
         }
-      },
-      {
-        "id": "stair.step3",
-        "index": 3,
-        "top": 6.42857,
-        "aabb": {
-          "min": [
-            7.8,
-            0,
-            -6.2
-          ],
-          "max": [
-            13.8,
-            6.42857,
-            -3.8
-          ]
-        }
-      },
-      {
-        "id": "stair.step4",
-        "index": 4,
-        "top": 8.57143,
-        "aabb": {
-          "min": [
-            7.8,
-            0,
-            -8.6
-          ],
-          "max": [
-            13.8,
-            8.57143,
-            -6.2
-          ]
-        }
-      },
-      {
-        "id": "stair.step5",
-        "index": 5,
-        "top": 10.71429,
-        "aabb": {
-          "min": [
-            7.8,
-            0,
-            -11
-          ],
-          "max": [
-            13.8,
-            10.71429,
-            -8.6
-          ]
-        }
-      },
-      {
-        "id": "stair.step6",
-        "index": 6,
-        "top": 12.85714,
-        "aabb": {
-          "min": [
-            7.8,
-            0,
-            -13.4
-          ],
-          "max": [
-            13.8,
-            12.85714,
-            -11
-          ]
-        }
-      },
-      {
-        "id": "stair.step7",
-        "index": 7,
-        "top": 15,
-        "aabb": {
-          "min": [
-            7.8,
-            0,
-            -15.8
-          ],
-          "max": [
-            13.8,
-            15,
-            -13.4
-          ]
-        }
-      }
-    ],
-    "rise": 2.14286,
-    "tread": 2.4,
-    "maxRiser": 2.14286,
-    "width": 6,
-    "reachesDeck": true
-  }
+      ],
+      "rise": 2.28571,
+      "tread": 2.4,
+      "width": 8,
+      "reachesTop": true,
+      "maxRiser": 2.28571,
+      "baseY": 16,
+      "topY": 32
+    }
+  ]
 }
