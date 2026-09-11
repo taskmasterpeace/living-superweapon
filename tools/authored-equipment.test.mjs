@@ -14,6 +14,64 @@ const fileFetch=async input=>{const url=new URL(String(input)),path=resolve(ROOT
 const realLoader=()=>createAuthoredAssetLoader({fetch:fileFetch,baseUrl:assetUrl});
 const at=o=>o.getWorldPosition(new THREE.Vector3());
 
+// Observe real BufferGeometry ownership; no replacement loader or fake mount.
+function geometryLedger(){
+ const created=new Set(),disposed=new Map(),proto=THREE.BufferGeometry.prototype;
+ const setAttribute=proto.setAttribute,dispose=proto.dispose;
+ proto.setAttribute=function(...args){created.add(this);return setAttribute.apply(this,args);};
+ proto.dispose=function(){disposed.set(this,(disposed.get(this)||0)+1);return dispose.call(this);};
+ return {created,disposed,restore(){proto.setAttribute=setAttribute;proto.dispose=dispose;}};
+}
+
+test('disposing an actual split carbine releases every generated geometry exactly once',async t=>{
+ const asset=await realLoader().loadEquipmentInstance('equipment.carbine@1'),originals=new Set();asset.root.traverse(o=>{if(o.geometry)originals.add(o.geometry);});
+ const ledger=geometryLedger();let mount;
+ try{
+  mount=createEquipmentMount(asset,{weaponKind:'rifle'});assert.ok(ledger.created.size>0);
+  t.diagnostic(`Split carbine created ${ledger.created.size} geometries beyond the loaded source`);
+  mount.userData.disposeEquipment();mount.userData.disposeEquipment();asset.dispose();
+  const leaks=[...ledger.created].filter(g=>ledger.disposed.get(g)!==1);
+  assert.equal(leaks.length,0,`${leaks.length}/${ledger.created.size} generated geometries were leaked or double-disposed`);
+  for(const geometry of originals)assert.equal(ledger.disposed.get(geometry),1,'loader still owns original geometry');
+  assert.equal(mount.parent,null);
+ }finally{mount?.userData.disposeEquipment();asset.dispose();ledger.restore();}
+});
+
+test('repeated clone equipment retirement leaves another loaded carbine intact',async()=>{
+ const loader=realLoader(),keeper=createEquipmentMount(await loader.loadEquipmentInstance('equipment.carbine@1'),{weaponKind:'rifle'});
+ const keeperGeometry=keeper.getObjectByName('weapon-magazine').geometry;let keeperDisposals=0;keeperGeometry.addEventListener('dispose',()=>keeperDisposals++);
+ try{
+  for(let i=0;i<8;i++){
+   const mount=createEquipmentMount(await loader.loadEquipmentInstance('equipment.carbine@1'),{weaponKind:'rifle'});
+   assert.notEqual(mount.getObjectByName('weapon-magazine').geometry,keeperGeometry);
+   mount.userData.disposeEquipment();assert.equal(keeperDisposals,0,'retiring another soldier must not dispose shared live equipment');
+  }
+  assert.ok(keeperGeometry.attributes.position.count>0);keeper.userData.disposeEquipment();assert.equal(keeperDisposals,1);
+ }finally{keeper.userData.disposeEquipment();}
+});
+
+test('a carbine rejected after magazine extraction cleans partial geometry and source ownership',async()=>{
+ const asset=await realLoader().loadEquipmentInstance('equipment.carbine@1');
+ // Remove the physical bolt from the real input by moving only its vertices.
+ // The magazine remains valid, so rejection happens after a successful split.
+ asset.root.traverse(o=>{if(!o.isMesh)return;const a=o.geometry.attributes.position,index=o.geometry.index,remove=new Set();
+  for(let i=0;i<(index?.count??a.count);i+=3){const ids=[0,1,2].map(k=>index?index.getX(i+k):i+k);
+   const center=ids.reduce((p,j)=>p.add(new THREE.Vector3().fromBufferAttribute(a,j)),new THREE.Vector3()).multiplyScalar(1/3);
+   if(center.x<-.2&&center.x>-.44&&center.y>-.23&&center.y<-.05&&center.z>-.04&&center.z<.13)ids.forEach(j=>remove.add(j));
+  }
+  for(const i of remove)a.setX(i,a.getX(i)-10);
+ });
+ const originals=new Set();asset.root.traverse(o=>{if(o.geometry)originals.add(o.geometry);});
+ const ledger=geometryLedger();let mount;
+ try{
+  assert.throws(()=>{mount=createEquipmentMount(asset,{weaponKind:'rifle'});},/physical magazine or charging-handle/);
+  assert.ok(ledger.created.size>0,'must reach partial extraction, not reject before allocation');
+  for(const geometry of ledger.created)assert.equal(ledger.disposed.get(geometry),1,'partial mount geometry must be released');
+  for(const geometry of originals)assert.equal(ledger.disposed.get(geometry),1,'failed mount must release source geometry');
+  assert.equal(asset.root.parent,null);
+ }finally{mount?.userData.disposeEquipment();asset.dispose();ledger.restore();}
+});
+
 test('actual carbine normalizes production grip and exposes physical action parts after mount reset',async()=>{
  const asset=await realLoader().loadEquipmentInstance('equipment.carbine@1'),mount=createEquipmentMount(asset,{weaponKind:'rifle'});
  try{

@@ -3,25 +3,27 @@ import {loadEquipmentInstance as defaultLoadEquipmentInstance} from './authored-
 import {mountHeldWeapon,unmountHeldWeapon} from './weapon-emission.js';
 
 const socketMatrix=socket=>new THREE.Matrix4().compose(new THREE.Vector3(...socket.position),new THREE.Quaternion(...socket.rotation),new THREE.Vector3(1,1,1));
-const copyTriangleAttributes=(geometry,keep)=>{
- const source=geometry.index?geometry.toNonIndexed():geometry,output=new THREE.BufferGeometry();
- for(const [name,attribute]of Object.entries(source.attributes)){
-  const values=[];for(let triangle=0;triangle<source.attributes.position.count/3;triangle++)if(keep(triangle,source))for(let corner=0;corner<3;corner++){const i=triangle*3+corner;for(let component=0;component<attribute.itemSize;component++)values.push(attribute.getComponent(i,component));}
+const copyTriangleAttributes=(geometry,keep,owned)=>{
+ const output=new THREE.BufferGeometry(),index=geometry.index;
+ owned.add(output);
+ for(const [name,attribute]of Object.entries(geometry.attributes)){
+  const values=[];for(let triangle=0;triangle<(index?.count??geometry.attributes.position.count)/3;triangle++)if(keep(triangle))for(let corner=0;corner<3;corner++){const i=index?index.getX(triangle*3+corner):triangle*3+corner;for(let component=0;component<attribute.itemSize;component++)values.push(attribute.getComponent(i,component));}
   output.setAttribute(name,new THREE.BufferAttribute(new attribute.array.constructor(values),attribute.itemSize,attribute.normalized));
  }
  output.computeBoundingBox();output.computeBoundingSphere();return output;
 };
-function extractGeometry(root,name,inside){
+function extractGeometry(root,name,inside,owned){
  let result=null;
  root.traverse(mesh=>{
   if(result||!mesh.isMesh)return;
-  const selected=[];for(let triangle=0;triangle<(mesh.geometry.index?.count??mesh.geometry.attributes.position.count)/3;triangle++){
-   const source=mesh.geometry.index?mesh.geometry.toNonIndexed():mesh.geometry,p=source.attributes.position;let x=0,y=0,z=0;
-   for(let corner=0;corner<3;corner++){const i=triangle*3+corner;x+=p.getX(i);y+=p.getY(i);z+=p.getZ(i);}if(inside(x/3,y/3,z/3))selected.push(triangle);
+  const selected=[],index=mesh.geometry.index,p=mesh.geometry.attributes.position;
+  for(let triangle=0;triangle<(index?.count??p.count)/3;triangle++){
+   let x=0,y=0,z=0;
+   for(let corner=0;corner<3;corner++){const i=index?index.getX(triangle*3+corner):triangle*3+corner;x+=p.getX(i);y+=p.getY(i);z+=p.getZ(i);}if(inside(x/3,y/3,z/3))selected.push(triangle);
   }
   if(!selected.length)return;const chosen=new Set(selected),old=mesh.geometry,part=mesh.clone(false);
-  part.geometry=copyTriangleAttributes(old,triangle=>chosen.has(triangle));part.name=name;part.userData.physicalEquipmentPart=true;
-  mesh.geometry=copyTriangleAttributes(old,triangle=>!chosen.has(triangle));mesh.parent.add(part);result=part;
+  part.geometry=copyTriangleAttributes(old,triangle=>chosen.has(triangle),owned);part.name=name;part.userData.physicalEquipmentPart=true;
+  mesh.geometry=copyTriangleAttributes(old,triangle=>!chosen.has(triangle),owned);mesh.parent.add(part);result=part;
  });
  return result;
 }
@@ -35,20 +37,24 @@ function stockFromGeometry(wrapper){
 
 export function createEquipmentMount(asset,{weaponKind}){
  const {root,manifest}=asset,wrapper=new THREE.Group();wrapper.name=`authored-${weaponKind}`;wrapper.userData.weaponKind=weaponKind;
+ // The loader owns its original resources. Every split, including intermediate
+ // remainders no longer in the graph, belongs to this mount instead.
+ const owned=new Set();let disposed=false;
+ wrapper.userData.disposeEquipment=()=>{if(disposed)return;disposed=true;for(const geometry of owned)geometry.dispose();owned.clear();asset.dispose();wrapper.removeFromParent();};
+ try{
  wrapper.userData.rifleContact=!!manifest.equipment?.twoHanded;wrapper.userData.twoHanded=!!manifest.equipment?.twoHanded;
  const sockets=new Map((manifest.sockets||[]).map(socket=>[socket.name,socket])),grip=sockets.get('grip');if(!grip)throw Error('Equipment package requires a primary grip socket.');
  const inverseGrip=socketMatrix(grip).invert();root.applyMatrix4(inverseGrip);wrapper.add(root);
  for(const [source,target]of [['grip','weapon-primary-grip'],['support','weapon-support-grip'],['muzzle','weapon-muzzle']])if(sockets.has(source))alias(wrapper,target,inverseGrip.clone().multiply(socketMatrix(sockets.get(source))));
- const extras=[];
  if(weaponKind==='rifle'){
-  const magazine=extractGeometry(root,'weapon-magazine',(x,y,z)=>Math.abs(x)<.18&&y>-.59&&y<-.09&&z>-.86&&z<-.18);
-  const bolt=extractGeometry(root,'weapon-charging-handle',(x,y,z)=>x<-.2&&x>-.44&&y>-.23&&y<-.05&&z>-.04&&z<.13);
+  const magazine=extractGeometry(root,'weapon-magazine',(x,y,z)=>Math.abs(x)<.18&&y>-.59&&y<-.09&&z>-.86&&z<-.18,owned);
+  const bolt=extractGeometry(root,'weapon-charging-handle',(x,y,z)=>x<-.2&&x>-.44&&y>-.23&&y<-.05&&z>-.04&&z<.13,owned);
   if(!magazine||!bolt)throw Error('Carbine GLB is missing physical magazine or charging-handle geometry.');
-  extras.push(magazine.geometry,bolt.geometry);const magGrip=alias(magazine,'magazine-grip',new THREE.Matrix4().identity());magGrip.position.set(0,-.21,0);
+  const magGrip=alias(magazine,'magazine-grip',new THREE.Matrix4().identity());magGrip.position.set(0,-.21,0);
   stockFromGeometry(wrapper);
  }
- let disposed=false;wrapper.userData.disposeEquipment=()=>{if(disposed)return;disposed=true;for(const geometry of extras)geometry.dispose();asset.dispose();wrapper.removeFromParent();};
  wrapper.userData.authoredEquipment=true;return wrapper;
+ }catch(error){wrapper.userData.disposeEquipment();throw error;}
 }
 
 const valid=(f,capture)=>!f._formDisposed&&f.alive!==false&&f.state!=='ko'&&f.parts===capture.parts&&f.parts?.rig===capture.rig&&f._equipmentLoadGeneration===capture.generation&&f._gearHeld===capture.gear;

@@ -68,3 +68,47 @@ This is an evidence inventory, not an approved implementation specification. The
 First-scenario alternatives were presented to the creator: Godfall Recovery (recommended), sealed-case Genome Raid, or Clone War. No answer has been received at this audit checkpoint. Do not treat the suggested choice or this audit as approval of new match rules. Continue relevant already-authorized infantry/control correctness work while the decision is open; do not repeat the same question every scheduled wake.
 
 The near-term milestone must preserve the full target: a recovery prototype is not a substitute for cloning infrastructure, faction escalation, military-scale maps, anti-air or the named modes. Those remain explicitly open above.
+
+## Creator reminder: hero / plane / missile speeds are a coupled priority
+
+The creator explicitly reiterated flight speed, plane speed and missile speed after this audit. Aircraft expansion is not the immediate implementation task, but their speed relationship is part of the shared foundation and must not be deferred out of the design.
+
+Added repeatable diagnostic: `node tools/air-speed-audit.mjs` → `artifacts/air-speed-audit/current.json`. It runs production velocity controllers in staged, unobstructed CPU fixtures; it is not a native input, rendering, collision-course or performance benchmark.
+
+At the existing `METERS_PER_UNIT = .19`:
+
+| Measured / configured current behavior | u/s | km/h |
+| --- | ---: | ---: |
+| Open-sky hero wish-speed ceiling (`PW_AIR.top`; not every hero reaches it) | 210 | 143.64 |
+| SOL, held cruise after5s, without staged afterburner ignition | 79.315 | 54.252 |
+| VEGA, same conditions | 73.775 | 50.462 |
+| KANO, same conditions | 80.482 | 55.049 |
+| Jet after20s full throttle, level air-start | 260 | 177.84 |
+| Helicopter after20s forward throttle | 80 | 54.72 |
+| Representative generic homing projectile at launch | 96 | 65.664 |
+| That projectile after its first target-guidance step | 90 | 61.56 |
+
+The homing result comes from `projectiles.js`'s legacy90u/s default maximum. It is NOT a military heat-seeking missile test. Aircraft presently fire cannon rounds; `AircraftCombat.pilotTrajectory` adds craft velocity to290u/s forward muzzle velocity. Preserve that distinction when comparing relative versus world speed.
+
+The inspected player controller has held-Shift cruise, not the requested successive-Shift speed gears. Some characters have timed afterburner ignition; that is not equivalent to selecting three gears. HUD flight currently distinguishes FLIGHT/BOOST, not a speed-gear or Mach state.
+
+Recommended relationship was presented as a selectable design question, not silently installed: combat → pursuit → top-tier supersonic; best flyers can exceed jets; powered missiles usually exceed both but have limited turning, acquisition, fuel/range and terrain visibility. An alternative permits brief extreme flyers to outrun missiles. Choice pending.
+
+Required joint acceptance for the speed work:
+
+- Shared physical units, per-character accessible speed gears and per-aircraft acceleration/top speed; no fake km/h/Mach labels or global speed inflation that also accelerates infantry.
+- Successive-Shift controls, braking/downshift, energy cost, insufficient-energy feedback, landing/KO/reset and AI/pad/touch parity; no conflict with ground evade or existing held attacks.
+- Acceleration, turn radius and stopping distance measured at each gear. Highest-speed flight must be distinct from near-instant combat strafing.
+- Chasing, overtaking and interception tested with native actors, including a head-on pass and a fleeing target. Show actual closure speed, not independent speedometer screenshots.
+- Missiles need a distinct motor/seeker contract: acquisition warning, field of view, tracking/turn limit, launch velocity policy, powered/coast phases, expiration/range, obstruction and loss/reacquisition behavior. Generic nearest-foe homing is not sufficient.
+- Sonic crossing audio/visual event must trigger on actual threshold crossing with hysteresis, not every frame or whenever BOOST is held. Keep targets readable; motion effects cannot hide missiles or hijack aim.
+- Raise speed only together with tested camera tracking, swept body/building/projectile collision, hit reactions, beam tip travel/steering and map traversal. Beams remain travelling hoses, not hitscan replacements.
+- Current aircraft integration subdivides travel into roughly2u steps; substantially higher speed increases work per frame. Measure the full collision workload at30/60/120Hz and representative battlefield load.
+
+## Equipment ownership maintenance supporting clone scale
+
+The real carbine extraction allocated106 geometries beyond the loaded asset;104 received no disposal call. Many were transient CPU copies, so this is not a claim of104 retained GPU buffers. The loader snapshots original resources, while replacement receiver geometry and partial-extraction failure paths lacked explicit ownership.
+
+`authored-equipment.js` now reads indexed triangles directly and owns every generated split/remainder, including intermediate geometry and failed mounts. Measured generated count is4. Original asset resources retain their loader ownership, and repeated retirement does not dispose another live carbine. RED success-cleanup and partial-failure tests were observed before the fix; corrected malformed-bolt input then reproduced the intended failure.
+
+Fresh verification:38 tests across authored equipment, aircraft piloting and world units pass; production build passes with existing chunk warnings. Equipment runtime wiring, native graphics-resource measurements and all-pose approval remain open. Speed diagnosis does not mean speed tuning has shipped.
