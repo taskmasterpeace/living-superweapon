@@ -36,7 +36,7 @@ import { bookInjury, injuryOf, healBout, koElo, matchElo } from '../data/ranking
 import { SETTINGS, keymap } from '../core/settings.js';
 import {canChangeMouseTool,sampleMouseCombat} from '../core/combat-selection.js';
 import {soldierControlsActive,selectSoldierAttack,soldierSprint} from '../core/soldier-controls.js';
-import {cancelHeldSlot,cancelHeldAttacks} from './abilities.js';
+import {cancelHeldSlot,cancelHeldAttacks,cancelHeldAttacksIfIncapacitated} from './abilities.js';
 import { BoxingRing, BOXING } from './boxingring.js';
 import { PowerWorldStage } from './powerworld.js';
 import { FrontlineEncounter } from './frontline-encounter.js';
@@ -3431,7 +3431,8 @@ export class Game {
   }
 
   controlPlayer(dt, inputDt = dt) {
-    const p = this.player; if (!p || !p.alive) { if (p) { p.moveDir = { x: 0, z: 0 }; } this.lockTarget = null; return; }
+    const p = this.player; if (!p || !p.alive) { if (p) { cancelHeldAttacksIfIncapacitated(p);p.moveDir = { x: 0, z: 0 }; } this.lockTarget = null; return; }
+    cancelHeldAttacksIfIncapacitated(p);
     const inp = this.input, m = inp.mouse, pad = this.humans.length < 2 ? this.pad : NULL_PAD;   // in 2P the pad drives P2
     const chase=combatView(this)==='bfp';
     if(this.running===false||this.matchOver||this.mapCam||this.hud?.titleOpen||this.combatOverlayOpen){p.moveDir={x:0,z:0};return;}
@@ -3776,7 +3777,8 @@ export class Game {
 
   // Player 2 (gamepad): right-stick auto-aims, left-stick moves.
   controlPad(f, dt) {
-    if (!f || !f.alive || this.matchOver) { if (f) f.moveDir = { x: 0, z: 0 }; return; }
+    if (!f || !f.alive || this.matchOver) { if (f) { cancelHeldAttacksIfIncapacitated(f);f.moveDir = { x: 0, z: 0 }; } return; }
+    cancelHeldAttacksIfIncapacitated(f);
     const pad = this.pad;
     if (f.grabbedBy || f.frozenT > 0) { f.moveDir = { x: 0, z: 0 }; return; }
     if (f.downedT > 0) {
@@ -3839,7 +3841,8 @@ export class Game {
       else { f.moveDir = { x: dx / d, z: dz / d }; f.faceDir(dx, dz); f.move(f.moveDir, dt); }
       return;
     }
-    if (!f.ai || !f.alive) { f.moveDir = { x: 0, z: 0 }; return; }
+    if (!f.ai || !f.alive) { cancelHeldAttacksIfIncapacitated(f);f.moveDir = { x: 0, z: 0 }; return; }
+    cancelHeldAttacksIfIncapacitated(f);
     if (f.grabbedBy || f.frozenT > 0) { f.moveDir = { x: 0, z: 0 }; return; }   // stunned while held / frozen
     // finish an AI haymaker wind-up
     if (f._aiCharge > 0) { f._aiCharge -= dt; if (f._aiCharge <= 0 || f.meleeCharge <= 0) { this.melee.chargeRelease(f); f._aiCharge = 0; } }

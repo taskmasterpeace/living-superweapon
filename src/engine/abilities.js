@@ -112,6 +112,17 @@ export function cancelHeldAttacks(c) {
   for(const key of Object.keys(c.slots))cancelHeldSlot(c,key);
   c._bowDrawT=0;
 }
+// Status controllers can return before producing a release edge. Retire the
+// fighter-owned preparations/sustains at that boundary; committed remote shots
+// remain owned because cancelHeldSlot deliberately preserves launched remotes.
+// Hitstop is not incapacity here: a paid charge survives that brief time freeze.
+function heldAttacksIncapacitated(c) {
+  return c.alive===false||c.staggerT>0||c.stunT>0||c.frozenT>0||!!c.grabbedBy;
+}
+export function cancelHeldAttacksIfIncapacitated(c) {
+  if(!heldAttacksIncapacitated(c))return false;
+  cancelHeldAttacks(c);return true;
+}
 export function clearSlotFx(c) {
   cancelThrowAction(c);
   cancelFirearmReload(c);
@@ -1209,6 +1220,13 @@ export const TYPES = {
 
 export function runSlot(c, key, inp, g) {
   const st = c.slots[key]; if (!st) return;
+  if(heldAttacksIncapacitated(c)){
+    // Direct authoring/replay calls do not pass through a controller. Retained
+    // contact handlers own their loop here; traveling beams keep their existing
+    // projectile-manager interruption and inspection-frame pointer contract.
+    if(st.def.type==='cone'||st.def.type==='lifedrain')cancelHeldSlot(c,key);
+    return;
+  }
   if(c._throwAction&&(inp.pressed||inp.held)&&!remoteAttack(c,st))return;
   if(c._firearmReload&&(inp.pressed||inp.held))return;
   st._handsBusy=false;
