@@ -1,18 +1,19 @@
 import {collectFootage,FootageTransport} from './field-footage.js';
 import {esc} from './hudUtil.js';
+import {getNewsArchive,loadArchivedClip} from './news-archive-adapter.js';
 import './field-footage.css';
 
 const clock=s=>`${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`;
 // One decoder, one timer, only while the selection screen is visible. No second WebGL render.
-export function createFieldFootage(game){
+export function createFieldFootage(game,{heroId='',onOpenNewsroom=()=>{}}={}){
  const el=document.createElement('section');el.className='field-footage';el.setAttribute('aria-label','KMK 9 field footage');
- const transport=new FootageTransport();let clips=[],timer=null,last=0,loaded='',wanted='',img=null,decoded='',refreshAt=0,drawn='',focusBefore=null,backdrop=null;
- el.innerHTML=`<header><span class="ff-station">9 <span>KMK</span></span><div><b>FIELD FOOTAGE</b><small>Your fight. Their angle.</small></div><span class="ff-count">0 CLIPS</span></header>
+ const transport=new FootageTransport();let clips=[],timer=null,last=0,loaded='',wanted='',img=null,decoded='',refreshAt=0,drawn='',focusBefore=null,backdrop=null,exactHero=heroId,archived=null,archiveToken=0;
+ el.innerHTML=`<header><span class="ff-station">9 <span>KMK</span></span><div><b>FIELD FOOTAGE</b><small>Your fight. Their angle.</small></div><span class="ff-count">0 CLIPS</span><button class="ff-newsroom" type="button" aria-label="Open newsroom">NEWSROOM →</button></header>
   <button class="ff-screen" aria-label="Expand field footage"><canvas width="640" height="360"></canvas><span class="ff-empty">NO FOOTAGE YET<small>The field crew captures major hits and knockouts.<br>Return here after combat to watch.</small></span><span class="ff-bug">KMK 9 · REPLAY</span><span class="ff-expand">⛶ EXPAND</span></button>
   <div class="ff-caption"><strong>Awaiting field report</strong><small class="ff-meta">Recorded in this browser session</small></div>
   <div class="ff-seek"><input type="range" min="0" max="0" value="0" step="1" aria-label="Scrub footage"><output>0:00 / 0:00</output></div>
   <div class="ff-controls"><button data-action="previous" aria-label="Previous clip" title="Previous clip">‹</button><button data-action="play" aria-label="Pause footage">Ⅱ</button><button data-action="next" aria-label="Next clip" title="Next clip">›</button><select aria-label="Playback speed"><option value="0.25">¼×</option><option value="0.5">½×</option><option value="1" selected>1×</option><option value="2">2×</option></select><button data-action="loop" aria-pressed="true" title="Loop current clip">Loop</button><button data-action="save" title="Save the displayed frame as a PNG">Save still</button><button data-action="close" class="ff-close" aria-label="Close expanded footage">Close ×</button></div>
-  <div class="ff-list" aria-label="Recorded clips"></div><footer>Silent camera footage · Session only <span>Space: play/pause · ← →: seek</span></footer>`;
+  <div class="ff-list" aria-label="Recorded clips"></div><footer><span class="ff-scope">Exact hero archive</span> · Silent footage stored on this device <span>Space: play/pause · ← →: seek</span></footer>`;
  const $=s=>el.querySelector(s),cv=$('canvas'),ctx=cv.getContext('2d'),range=$('input'),empty=$('.ff-empty');
  function resetImage(){img=null;loaded='';decoded='';wanted='';drawn='';ctx.clearRect(0,0,cv.width,cv.height);}
  function choose(c){transport.select(c||null);resetImage();refreshList();sync();}
@@ -22,8 +23,17 @@ export function createFieldFootage(game){
   for(const b of el.querySelectorAll('[data-clip]'))b.onclick=()=>choose(clips[+b.dataset.clip]);
  }
  function refresh(){
-  const next=collectFootage(game),changed=next.length!==clips.length||next.some((c,i)=>c!==clips[i]);clips=next;
+  const live=collectFootage(game).filter(c=>exactHero&&Array.isArray(c.heroIds)&&c.heroIds.includes(exactHero));
+  const next=archived?[archived]:live,changed=next.length!==clips.length||next.some((c,i)=>c!==clips[i]);clips=next;
   if(!clips.includes(transport.clip))choose(clips[0]);else if(changed)refreshList();
+ }
+ async function loadHero(id){
+  exactHero=id||'';const token=++archiveToken;archived?.release?.();archived=null;choose(null);
+  const hero=game?.defById?.(exactHero)||game?.constructor?.ROSTER?.find?.(d=>d.id===exactHero);
+  $('.ff-scope').textContent=exactHero?`Exact hero archive · ${(hero?.name||exactHero).toUpperCase()}`:'All footage';
+  if(!exactHero){refresh();return;}
+  try{const row=(await getNewsArchive().list({heroId:exactHero,limit:1}))[0];if(!row||token!==archiveToken)return;const clip=await loadArchivedClip(row.id);if(token!==archiveToken){clip?.release?.();return;}archived=clip;refresh();}
+  catch(error){if(token===archiveToken){console.warn('Selection archive',error);refresh();}}
  }
  function sync(){
   const c=transport.clip,has=!!c;
@@ -66,6 +76,7 @@ export function createFieldFootage(game){
  $('select').onchange=e=>{transport.rate=+e.target.value;};
  range.oninput=()=>{transport.seek(+range.value);transport.playing=false;tick();};
  $('[data-action="save"]').onclick=()=>{if(!drawn)return;const a=document.createElement('a');a.download=`KMK9-${(transport.clip?.tag||'field').replace(/[^a-z0-9-]/gi,'')}-${Math.floor(transport.frame)}.png`;a.href=cv.toDataURL('image/png');a.click();};
+ $('.ff-newsroom').onclick=()=>onOpenNewsroom();
  el.addEventListener('keydown',e=>{
   if(e.code==='Escape'&&el.classList.contains('expanded')){e.preventDefault();e.stopPropagation();collapse();return;}
   if(e.code==='Tab'&&el.classList.contains('expanded')){
@@ -77,5 +88,5 @@ export function createFieldFootage(game){
   if(e.code==='Space'){e.preventDefault();e.stopPropagation();transport.playing=!transport.playing;sync();}
   if(e.code==='ArrowLeft'||e.code==='ArrowRight'){e.preventDefault();e.stopPropagation();transport.seek(transport.frame+(e.code==='ArrowRight'?1:-1)*transport.fps);transport.playing=false;tick();}
  });
- return {el,open(){refresh();last=performance.now();if(!timer)timer=setInterval(tick,50);tick();},close(){clearInterval(timer);timer=null;collapse();resetImage();}};
+ return {el,setHero(id){if(id!==exactHero)loadHero(id);},open(){loadHero(exactHero);refresh();last=performance.now();if(!timer)timer=setInterval(tick,50);tick();},close(){archiveToken++;archived?.release?.();archived=null;clearInterval(timer);timer=null;collapse();resetImage();}};
 }

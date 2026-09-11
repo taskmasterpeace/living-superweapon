@@ -37,7 +37,7 @@ test('curated pilots retain their identity powers without duplicate beam or defe
 });
 
 test('empty curated slots are safe for Fighter construction, native dispatch, AI, HUD, and wheel choices',()=>{
- for(const [heroId,emptySlot] of [['webline','r'],['apex','r'],['vanguard','f']]){
+ for(const [heroId,emptySlot] of [['webline','r'],['apex','r'],['vanguard','f'],['decibel','r'],['talon','r'],['moses','r']]){
   const fighter=new Fighter(structuredClone(hero(heroId)));
   try{
    assert.equal(fighter.slots[emptySlot],undefined);assert.doesNotThrow(()=>runSlot(fighter,emptySlot,{pressed:true,held:true,released:false,dt:1/60},{}));
@@ -55,6 +55,9 @@ test('named pilot alternatives survive Studio profile save/load and can be undon
   ['webline','r','maximum-spider','Maximum Spider'],
   ['apex','r','perfect-wave','Perfect Wave'],
   ['vanguard','f','invincible','Invincible'],
+  ['decibel','r','canary-cry','THE CANARY CRY'],
+  ['talon','r','finale-routine','Finale Routine'],
+  ['moses','r','full-bond','FULL BOND'],
  ]){
   const def=hero(heroId),base=profileFromDef(def),selected=catalog.selectKitAlternative(base,heroId,slot,alternativeId),history=new DraftHistory(base);
   assert.deepEqual(base.kit,{});history.push(selected);

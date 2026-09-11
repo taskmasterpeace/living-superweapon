@@ -248,6 +248,7 @@ export class HUD {
       <div class="paused" id="hPaused"><div class="pwrap">
         <div class="t">PAUSED</div>
         <button data-p="resume">▶ Resume</button>
+        <button data-p="newsroom" class="ghost" aria-label="Newsroom">▣ Newsroom</button>
         <button data-p="codex" class="ghost">📁 Case File</button>
         <button data-p="options" class="ghost">⚙ Options</button>
         <button data-p="hud-layout" class="ghost hud-layout-button">HUD position & size</button>
@@ -310,6 +311,7 @@ export class HUD {
     this.el.paused.querySelectorAll('button').forEach(b => b.onclick = () => {
       const a = b.dataset.p;
       if (a === 'resume') { this.setPaused(false); this.onResume && this.onResume(); }
+      else if (a === 'newsroom') this.onNewsroom && this.onNewsroom();
       // 📁 CASE FILE — the ASCENDANTS Codex, opened for the hero you are piloting. The overlay is
       // data-driven and mode-agnostic (`showCodex(def)` reads only the def), so the SAME dossier
       // works in PowerWorld: the pause menu is the one entry point present in every mode and on the
@@ -2131,7 +2133,11 @@ export class HUD {
   update() {
     const g = this.game, p = g.player;this.syncCombatView(g);if (!p) return;
     if(g.modeId==='powerworld')this.playerStatusView?.update(p);
-    if(this._toolScheme!==(keymap(SETTINGS.scheme).mouseMelee===true))this.buildSlots(p.def);
+    // Bench/respawn/form transitions can replace the fighter without the menu's
+    // setHero path. Rebuild before reading cooldowns from a different slot set.
+    if(this._shownSlots!==p.slots||this._toolScheme!==(keymap(SETTINGS.scheme).mouseMelee===true)){
+      this.buildSlots(p.def);this._shownSlots=p.slots;
+    }
     const selection=selectedAttacks(p,keymap(SETTINGS.scheme)),tool=selection.primary+'|'+selection.secondary;
     if(this._toolKey!==tool){this._toolKey=tool;this.selectSlot(selection.primary,selection.secondary);}
     for(const side of ['primary','secondary']){

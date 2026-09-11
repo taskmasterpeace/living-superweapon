@@ -1,6 +1,15 @@
 // Deliberately unequipped pilot powers retained for Studio authoring.
 // These are exact source snapshots, not balance recommendations or runtime defaults.
 const CATALOG=Object.freeze({
+  decibel:Object.freeze({
+    r:Object.freeze([Object.freeze({id:'canary-cry',name:'THE CANARY CRY',ability:Object.freeze({type:'cone',name:'THE CANARY CRY',kiPerSec:34,range:52,arc:.9,dps:44,push:90,lift:8,sonic:true,color:'#ffe066'})})]),
+  }),
+  talon:Object.freeze({
+    r:Object.freeze([Object.freeze({id:'finale-routine',name:'Finale Routine',ability:Object.freeze({type:'rush',name:'Finale Routine',cost:18,cd:12,range:66,hits:9,interval:.07,damage:8,finisher:34,color:'#37c7ff'})})]),
+  }),
+  moses:Object.freeze({
+    r:Object.freeze([Object.freeze({id:'full-bond',name:'FULL BOND',ability:Object.freeze({type:'buff',name:'FULL BOND',cost:28,cd:20,mult:1.7,dur:10,heal:35,color:'#9dff5a',color2:'#ffffff'})})]),
+  }),
   webline:Object.freeze({
     r:Object.freeze([Object.freeze({id:'maximum-spider',name:'Maximum Spider',ability:Object.freeze({type:'rush',name:'Maximum Spider',cost:18,cd:12,range:70,hits:10,interval:.06,damage:8,finisher:36,color:'#eaffff'})})]),
   }),

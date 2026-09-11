@@ -169,6 +169,16 @@ Required evidence: native-input short clips of selection -> fight -> recovery ->
 
 ## 12. Authority and review
 
+### Latest creator update: city pursuit and defense
+
+- Preserve third-person city free play and the liked civilian incident -> police response -> pursuit/escape loop. Offer City Free Play alongside Recovery; reuse current escalation before adding tanks or new enforcement tiers. Interiors must support both contexts. Do not force city play into the outpost mission or remove its emergent fun.
+- First feel-review group: SOL and VEGA benchmarks, CHAINFIRE and TEMPEST newly liked, SARGE for infantry, WEBLINE as explicit repair pilot; retain APEX/VANGUARD defense/beam regression coverage. Full-roster audit still applies.
+- New defense direction: sustained frontal energy-backed guard should hold while affordable, draining from actual admitted attack pressure rather than a second hidden meter breaking early. No free energy regeneration while sustaining incoming pressure; no indefinite guard at zero energy. Preserve grabs as counterplay, directional exposure and clear depletion/break feedback. Define partial-payment and burst guard-crush rules with tests before changing damage math. This supersedes the old sustained guard-meter experience but is NOT implemented yet.
+- DECIBEL proposal: downward sonic propulsion launches DECIBEL upward with ground dust/ring and a distinct movement role. Resolve ground/ceiling clearance and resource cost; do not silently grant ordinary flight. If the creator meant launching targets instead, confirm before implementing. Keep this distinct from another damage cone.
+- Equip one super-soldier with finite-fuel jetpack movement; SARGE already has a Jump Jets gadget definition, so audit/reuse it first. No universal soldier flight. Fuel, cooldown/refill and clear powered ascent/landing; pack must be stowed and grounded before entering a vehicle. Native superhero flyers remain barred from driving.
+- Camera shoulder/range options exist; surface them clearly and preserve current preference. No mandatory default-camera replacement.
+- Building work is delegated through docs/handoffs/2026-09-11-enterable-buildings.md; main retains all runtime integration.
+
 This spec records approved direction plus clearly labeled proposed implementation details. Creating the spec does not mean runtime holds, fixes or layouts are shipped. TRENCH issue has been filed; hold implementation follows review. Creator confirmation of KANO/VEGA appearance mapping is outstanding. No other broad questionnaire blocks reading this plan.
 
 Parallel ownership at implementation: main owns combat/input/roster authority; separate assigned workers may own standalone audio UI, archive persistence/UI, or isolated outpost modules. No concurrent edits to shared orchestration without explicit boundaries. Preserve existing dirty files and external authoring work. Final integration review and actual gameplay acceptance remain with the main task.

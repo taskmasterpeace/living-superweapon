@@ -1142,10 +1142,9 @@ export class Fighter {
   // Returning early from block used to leave a living, guarding fighter at 0 HP.
   _resolveLethal(opts) {
     if(this.hp>0||this.state==='ko')return; // a nested riposte may already have resolved this death
-    // ---- SECOND WIND (manual §13): a human player's FIRST death this match becomes a DOWNED
-    // knee instead of a knockout. Time slows. STAY DOWN? Hold any attack to answer. Bots never
-    // get this — it is a player's drama, not a simulation rule.
-    if (this.hp <= 0 && !this._secondWindUsed && !this.isDummy && !this.remote
+    // Second Wind is an explicit authored opt-in. Default play must not turn a
+    // lethal hit into an unexplained 1-HP movement lock requiring a rally input.
+    if (this.def.secondWind === true && this.hp <= 0 && !this._secondWindUsed && !this.isDummy && !this.remote
         && this._game && this._game.isHuman(this)) {
       this._secondWindUsed = true;
       this.hp = 1; this.downedT = 2.4; this._swHold = 0;

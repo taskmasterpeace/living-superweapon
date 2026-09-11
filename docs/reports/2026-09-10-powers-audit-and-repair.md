@@ -1,5 +1,7 @@
 # Powers audit and repair — 2026-09-10
 
+> Updated 2026-09-11: the five activation rows below are historical, not still unresolved. All five native-input/no-input comparisons activate correctly. A newly exposed curated-kit HUD transition crash was reproduced and fixed. See [activation closure](2026-09-11-power-activation-closure.md). After the [second curation batch](2026-09-11-power-curation-batch-two.md), fresh full-roster verification passes 379/379 current slots. Repetition/feel review is NOT complete: 22 exact-definition groups and 24 within-character overlap candidates remain after six default removals; all six remain authoring alternatives.
+
 ## Outcome
 
 Audited **55 checked-in characters, 385 slots and 26 handler types**. Found **22 groups of identical mechanical definitions** after excluding names/colors/presentation profiles, and **30 same-kit family overlap candidates**. Static roster validation found no missing handlers/required-field violations. This does **not** establish that every power works in play.
@@ -119,4 +121,3 @@ Browser output: `artifacts/power-audit/activation-results.json`. Original combin
 3. Curate APEX and VANGUARD as the beam and defense pilot kits before applying the rule across 55 characters.
 4. Make each retained power prove its intended effect against unguarded, guarding, resistant and obstructed targets; test interruption, depletion, KO, form changes and cleanup.
 5. Review short actual gameplay captures and only then mark a power's feel/readability accepted. Aircraft expansion remains outside this pass.
-

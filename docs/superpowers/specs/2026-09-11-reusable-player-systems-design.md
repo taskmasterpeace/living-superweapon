@@ -75,7 +75,7 @@ Replace the 12-second scavenged-gun timer for inventory-managed equipment: ammun
 
 Starter loadouts are issued once per applicable profile/mission, not on every menu open. Sandbox/training can explicitly offer unlimited issuance; normal inventory cannot quietly create catalog weapons on demand. Legacy saved loadout IDs migrate into a draft, not retroactive unlimited ownership. Existing saves stay untouched until migration succeeds; unsupported data remains recoverable through export.
 
-Proposed defeat policy awaiting creator choice: keep owned gear, lose only unextracted mission loot. Do not implement destructive loss until that choice is resolved. No permadeath or equipment repair tax is inferred.
+Defeat policy selected by delegated designer decision (“you decide”): keep owned gear, lose only unextracted mission loot. Owned loadout equipment is not destroyed by defeat. No permadeath or equipment repair tax is inferred.
 
 ### UI and controls
 

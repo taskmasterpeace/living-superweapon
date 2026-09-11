@@ -712,7 +712,7 @@ export const ROSTER = [
       e: { type: 'projectile', name: 'Focused Note', cost: 7, cd: 0.4, damage: 16, speed: 130, radius: 0.9, blast: 5, color: '#ffe066', color2: '#fff' },
       f: { type: 'buff', name: 'Crescendo', cost: 22, cd: 16, mult: 1.5, dur: 9, color: '#ffe066', color2: '#fff' },
       shift: { type: 'dash', name: 'Staccato Step', cost: 4, cd: 0.5, power: 98, iframes: 0.28, color: '#ffe066' },
-      r: { type: 'cone', name: 'THE CANARY CRY', kiPerSec: 34, range: 52, arc: 0.9, dps: 44, push: 90, lift: 8, sonic: true, color: '#ffe066' },
+      // Second scream cone retained as a Studio alternative, not a second default.
     },
   },
   {
@@ -761,7 +761,7 @@ export const ROSTER = [
       e: { type: 'melee', name: 'Staff Sweep', gear: true, cost: 10, cd: 0.8, damage: 24, range: 13, arc: 1.15, lunge: 30, knock: 46, launch: 12, color: '#37c7ff' },
       f: { type: 'buff', name: 'Flow State', cost: 20, cd: 16, mult: 1.45, dur: 9, color: '#37c7ff', color2: '#fff' },
       shift: { type: 'dash', name: 'Tumbler', cost: 4, cd: 0.45, power: 102, iframes: 0.3, color: '#37c7ff' },
-      r: { type: 'rush', name: 'Finale Routine', cost: 18, cd: 12, range: 66, hits: 9, interval: 0.07, damage: 8, finisher: 34, color: '#37c7ff' },
+      // Finale Routine is an authoring alternative to the retained rush.
     },
   },
   // ═══════════════ THE ORIGINAL TEN (Consequences of Failure) ═══════════════
@@ -860,7 +860,7 @@ export const ROSTER = [
       e: { type: 'projectile', name: 'Bio Spike', cost: 7, cd: 0.4, damage: 15, speed: 100, radius: 1, blast: 5, homing: 2, color: '#9dff5a', color2: '#eaffea' },
       f: { type: 'buff', name: 'Regenerative Bond', cost: 20, cd: 16, mult: 1.35, dur: 9, heal: 45, color: '#9dff5a', color2: '#fff' },
       shift: { type: 'dash', name: 'Adaptive Slip', cost: 4, cd: 0.5, power: 98, iframes: 0.26, color: '#9dff5a' },
-      r: { type: 'buff', name: 'FULL BOND', cost: 28, cd: 20, mult: 1.7, dur: 10, heal: 35, color: '#9dff5a', color2: '#ffffff' },
+      // Keep one healing/damage buff; FULL BOND remains in Studio's catalog.
     },
   },
   {

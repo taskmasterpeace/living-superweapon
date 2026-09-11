@@ -196,7 +196,7 @@ body.phone #pwTitle h1{ font-size:34px; }
   let weatherPreset=['rain','storm','tornado','hurricane'].includes(prefs.weatherPreset)?prefs.weatherPreset:'clear';
 
   const save = () => { try { localStorage.setItem(PREF, JSON.stringify({ p1: selYou.id, p2: selFoe.id, two, ai, cameraPreset, daylight, weatherPreset })); } catch {} };
-  const footage = createFieldFootage(ctx.game);
+  const footage = createFieldFootage(ctx.game,{heroId:selYou.id,onOpenNewsroom:()=>ctx.openNewsroom?.({heroId:selYou.id})});
 
   // ---- the stage readout, every figure derived from the stage itself ----
   const loose = STAGE.loose.reduce((a, b) => a + b, 0);
@@ -214,6 +214,7 @@ body.phone #pwTitle h1{ font-size:34px; }
       <div class="pwtop">
         <a href="./studio.html">CHARACTER / POWER HARNESS ↗</a>
         <a href="./index.html" title="The full game — the city, the career, the registry">← WAR WORLD</a>
+        <button id="pwNewsroom" aria-label="Newsroom">▣ Newsroom</button>
         <button id="pwRank">📊 Rankings</button>
         <button id="pwOpt">⚙ Options</button>
         <button id="pwHow">❓ How to Play</button>
@@ -277,6 +278,7 @@ body.phone #pwTitle h1{ font-size:34px; }
         </div>
       </div>`;
 
+    footage.setHero(selYou.id);
     el.querySelector('#pwFootage').appendChild(footage.el);
     // ---- the roster grid ----
     const grid = el.querySelector('#pwRoster');
@@ -351,6 +353,7 @@ body.phone #pwTitle h1{ font-size:34px; }
     };
     for (const b of el.querySelectorAll('#pwAi button')) b.onclick = () => { if (two) return; ai = +b.dataset.ai; save(); render(); };
     el.querySelector('#pwOpt').onclick = () => hud.showOptions();
+    el.querySelector('#pwNewsroom').onclick = () => ctx.openNewsroom?.({heroId:selYou.id});
     el.querySelector('#pwHow').onclick = () => hud.showHowto();
     el.querySelector('#pwRank').onclick = () => hud.showRankings();
     el.querySelector('#pwGo').onclick = () => {
