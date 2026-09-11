@@ -248,6 +248,8 @@ function _stage(game, hud, heroId, slot, opts, errors, onErr, realUpdate) {
   // ---- a clean board every time. `clearTransients` is the ONE place that empties it (the reset
   // law) — anything a previous ability left behind would otherwise be counted as this one's work.
   clearCombat(game);
+  game.world.resetTerrain();
+  game.vfx.clearScorches();
   game.setPlayerChar(heroId);
   const p = game.player;
   if (!p) return { heroId, slot, ok: false, why: 'no player after setPlayerChar', errors };
@@ -270,12 +272,21 @@ function _stage(game, hud, heroId, slot, opts, errors, onErr, realUpdate) {
   const REACH = { strike: 7, grapple: 12, cone: 18, trap: 14, control: 20, movement: 26 };
   const targetDist = opts.dist ?? TYPE_DIST[ab.type] ??
     (ab.reach ? Math.max(4, ab.reach * 0.75) : (REACH[famFor] || 30));
+  const casterX = -targetDist / 2;
+  const targetX = targetDist / 2;
+  const groundAt = (x, z = 0) => game.world.heightAt ? game.world.heightAt(x, z) : 0;
+  const placeOnGround = (fighter, x, z = 0) => {
+    const y = groundAt(x, z);
+    fighter.pos.set(x, y, z);
+    fighter.groundY = y;
+    fighter.spawn?.copy(fighter.pos);
+  };
 
   // stand the caster still at the origin, facing +x, with a dummy downrange to actually hit
-  p.pos.set(-targetDist / 2, 0, 0);
+  placeOnGround(p, casterX);
   p.vel.set(0, 0, 0);
   p.aim.set(1, 0, 0); p.aim3.set(1, 0, 0);
-  game.aimPoint.set(targetDist / 2, 0, 0);
+  game.aimPoint.set(targetX, groundAt(targetX), 0);
   p.facing = 0;
   p.staggerT = 0; p.frozenT = 0; p.stunT = 0; p.downedT = 0;
   // ⚠ ONE TARGET, NOT A CROWD. Each call used to spawn another dummy and never remove the last, so
@@ -286,7 +297,8 @@ function _stage(game, hud, heroId, slot, opts, errors, onErr, realUpdate) {
     const e = game.entities[i];
     if (e && (e.isDummy || e._abilityFixture)) { try { e.dispose && e.dispose(); } catch (err) {} game.scene.remove(e.obj); game.entities.splice(i, 1); }
   }
-  const dummy = ab.type === 'mindcontrol' ? game.spawnRival('sol') : game.spawnDummy(targetDist / 2, 0);
+  const dummy = ab.type === 'mindcontrol' ? game.spawnRival('sol') : game.spawnDummy(targetX, 0);
+  if (dummy) placeOnGround(dummy, targetX);
   if (ab.type === 'mindcontrol') dummy._abilityFixture = true;
   if (ab.type === 'grapple' && !ab.reel) game.world.cover.push(opts.contextCover);
   if (dummy) { dummy.hp = dummy.maxHp; dummy.invuln = 0; }
@@ -332,12 +344,12 @@ function _stage(game, hud, heroId, slot, opts, errors, onErr, realUpdate) {
   // ==============================================================================================
   const runOnce = (doFire, photo) => {
     // the same starting conditions every time, so two rows of the report mean the same thing
-    p.pos.set(-targetDist / 2, 0, 0);
+    placeOnGround(p, casterX);
     p.vel.set(0, 0, 0);
     p.aim.set(1, 0, 0); p.aim3.set(1, 0, 0);
     p.facing = 0;
     p.staggerT = 0; p.frozenT = 0; p.stunT = 0; p.downedT = 0;
-    if (dummy) { dummy.hp = dummy.maxHp; dummy.invuln = 0; dummy.pos.set(targetDist / 2, 0, 0); }
+    if (dummy) { dummy.hp = dummy.maxHp; dummy.invuln = 0; placeOnGround(dummy, targetX); }
     topUp();
 
     const before = snapshot(game);
