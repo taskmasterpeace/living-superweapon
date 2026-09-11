@@ -73,6 +73,8 @@
     padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
   #touch .tzone{ position:absolute; bottom:0; top:34%; width:44%; pointer-events:auto; touch-action:none; }
   #touch .tzone-l{ left:0; } #touch .tzone-r{ right:0; }
+  /* System pause/menu buttons remain available; combat zones must not sit over dialogs. */
+  #touch.touch-menu .tpad,#touch.touch-menu .tzone{display:none!important;pointer-events:none!important;}
   #touch .tstick{ position:fixed; width:112px; height:112px; margin:-56px 0 0 -56px; border-radius:50%;
     border:2px solid var(--line-2); background:rgba(10,12,18,.28); opacity:0; transition:opacity .12s; pointer-events:none; }
   #touch .tstick.on{ opacity:.9; }

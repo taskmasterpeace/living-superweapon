@@ -7,6 +7,7 @@ import {createAuthoredAssetLoader} from '../src/engine/authored-assets.js';
 import {createEquipmentMount,loadFighterEquipment,replaceHeldEquipment,invalidateEquipmentLoads} from '../src/engine/authored-equipment.js';
 import {mainCombatFixture} from './helpers/main-combat-fixture.mjs';
 import {requestReload,updateFirearmReload} from '../src/engine/firearm-ammo.js';
+import {trunkProbe} from './helpers/trunk-probe.mjs';
 
 const ROOT=resolve('public/authored-assets'),assetUrl='https://assets.test/';
 const fileFetch=async input=>{const url=new URL(String(input)),path=resolve(ROOT,decodeURIComponent(url.pathname.replace(/^\//,'')));try{return new Response(await readFile(path),{status:200});}catch{return new Response('missing',{status:404});}};
@@ -54,7 +55,20 @@ for(const frame of [{scale:1,bulk:1},{scale:1.16,bulk:1.3},{scale:.92,bulk:.78}]
  const mount=createEquipmentMount(await realLoader().loadEquipmentInstance('equipment.carbine@1'),{weaponKind:'rifle'}),hand=f.parts.armR.children[2],old=hand.children.find(o=>o.userData.weaponKind==='rifle');old.visible=false;hand.add(mount);
  try{
   f.aimWorld.set(0,70,18);f.hasAimWorld=true;f.slots.lmb._poseUntil=Infinity;x.w.cover.push({x:0,z:4,hx:12,hz:.15,bottom:0,top:20});
-  for(let i=0;i<100;i++){f.animT+=1/60;f._animate(1/60);f.obj.updateMatrixWorld(true);}
+  const inside=trunkProbe(f.parts.torso);
+  for(let i=0;i<100;i++){
+   f.aimWorld.fromArray([[0,70,18],[0,0,12],[-20,18,18],[20,12,18]][Math.floor(i/25)]);
+   f.animT+=1/60;f._animate(1/60);f.obj.updateMatrixWorld(true);
+   const inverse=f.parts.torso.matrixWorld.clone().invert(),intrusions=[];
+   mount.traverseVisible(mesh=>{if(!mesh.isMesh)return;
+    for(let v=0;v<mesh.geometry.attributes.position.count;v++){
+     const p=mesh.getVertexPosition(v,new THREE.Vector3()).applyMatrix4(mesh.matrixWorld);
+     if(inside(p,inverse)){intrusions.push(mesh.name);break;}
+    }
+   });
+   assert.deepEqual(intrusions,[],`authored weapon enters actual torso at frame${i}`);
+   assert.ok(at(mount.getObjectByName('weapon-support-grip')).distanceTo(at(f.parts.armL.children[2]))<.05,`support contact lost during aim sweep at frame${i}`);
+  }
   const support=mount.getObjectByName('weapon-support-grip');assert.ok(f._riflePose?.active,'real rifle must retain the two-hand carrier');
   assert.ok(Number.isFinite(f._riflePose.primaryPullback)&&f._riflePose.primaryPullback>=0&&f._riflePose.primaryPullback<=.9*frame.scale,'carrier must publish its bounded whole-rifle reach correction');
   assert.ok(at(support).distanceTo(at(f.parts.armL.children[2]))<.05,'support hand must close without arm stretching');

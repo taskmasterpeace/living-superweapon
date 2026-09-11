@@ -21,9 +21,13 @@ try{
   assert.deepEqual(overlaps.collisions,[],`${width}×${height}: Loadout blocks combat controls`);
   await mkdir('artifacts/impact-loadout',{recursive:true});await page.screenshot({path:`artifacts/impact-loadout/touch-${width}.png`});
   await page.locator('#touch [data-b="start"]').tap();await page.waitForFunction(()=>!PW.game.running);
+  assert.equal(await page.locator('#touch .tpad').isVisible(),false,'combat pad must yield to paused menu');
+  assert.equal(await page.locator('#touch #tzR').isVisible(),false,'aim zone must not intercept paused menu');
   await page.locator('#pwInventoryMobile').tap();await page.locator('#hArm').waitFor({state:'visible'});
   await page.locator('#amX').tap();assert.equal(await page.evaluate(()=>PW.game.running),false);
-  await page.locator('#touch [data-b="start"]').tap();await page.waitForFunction(()=>PW.game.running);
+  await page.locator('#hPaused [data-p="resume"]').tap();await page.waitForFunction(()=>PW.game.running);
+  await page.waitForFunction(()=>document.querySelector('#touch .tpad').getBoundingClientRect().height>0);
+  assert.equal(await page.evaluate(()=>PW.game.touch._aim||PW.game.touch._move),null,'no held stick survives menu');
  }
- console.log('PASS portrait and landscape: Loadout clears visible combat pad and opens from native pause menu');
+ console.log('PASS portrait and landscape: paused combat pad/aim zones hidden, Loadout closes paused, native Resume tap restores controls without held sticks');
 }finally{await browser.close();}

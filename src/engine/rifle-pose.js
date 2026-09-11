@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import {reachArm} from './hero-rig.js';
 import {firearmEmitter,forearmOccupied} from './weapon-emission.js';
 import {rangedPoseChannels} from './cast-channels.js';
-import {constrainWeaponCover} from './weapon-cover.js';
+import {constrainWeaponCover,constrainWeaponTorso} from './weapon-cover.js';
 
 const point=new THREE.Vector3(),pole=new THREE.Vector3(),command=new THREE.Vector3(),direction=new THREE.Vector3();
 const readyDirection=new THREE.Vector3();
@@ -69,6 +69,17 @@ function aimWrist(f,emitter,aimWeight){
   // Full barrel frame: deterministic upright roll, not just a shortest-arc ray.
   barrelFrame(f);
   arm.getWorldQuaternion(parent).invert();emitter.hand.quaternion.copy(parent).multiply(gunRotation);
+ }
+}
+
+function clearAuthoredRifle(f,emitter,aimWeight){
+ for(let pass=0;pass<5;pass++){
+  f.parts.g.updateMatrixWorld(true);
+  const coverMoved=constrainWeaponCover(f,emitter,pole);
+  if(coverMoved)f.parts.g.updateMatrixWorld(true);
+  const torsoMoved=constrainWeaponTorso(f,emitter,pole);
+  if(!coverMoved&&!torsoMoved)break;
+  aimWrist(f,emitter,aimWeight);
  }
 }
 
@@ -158,12 +169,16 @@ export function animateRiflePose(f,dt){
  arm.parent.worldToLocal(point);
  // Ready already inherits the continuous authored stride. Filtering its grip
  // a second time lets the shoulders outrun the support hand at phase changes.
- if(!s.active||aimWeight<.001)s.grip.copy(point);else s.grip.lerp(point,1-Math.exp(-18*Math.max(0,dt)));
+ // The imported rigid rifle must follow the current shoulder frame. Filtering
+ // its grip separately leaves it in the previous frame on abrupt aim changes,
+ // outside the support arm's reachable workspace.
+ if(!s.active||aimWeight<.001||emitter.weapon.userData.authoredEquipment)s.grip.copy(point);else s.grip.lerp(point,1-Math.exp(-18*Math.max(0,dt)));
  s.active=true;
  s.primaryPullback=0;
  pole.set(side,-.8,.7).applyQuaternion(carrier);reachArm(arm,s.grip,side,1,pole);
  aimWrist(f,emitter,aimWeight);
- for(let i=0;i<5;i++){
+ if(emitter.weapon.userData.authoredEquipment)clearAuthoredRifle(f,emitter,aimWeight);
+ else for(let i=0;i<5;i++){
   if(!constrainWeaponCover(f,emitter,pole))break;
   aimWrist(f,emitter,aimWeight);
  }
@@ -181,7 +196,7 @@ export function animateRiflePose(f,dt){
    s.grip.copy(gripBase).add(reachShift);
    if(s.grip.distanceTo(arm.position)>primaryReach)continue;
    reachArm(arm,s.grip,side,1,pole);aimWrist(f,emitter,aimWeight);
-   for(let i=0;i<5;i++){if(!constrainWeaponCover(f,emitter,pole))break;aimWrist(f,emitter,aimWeight);}
+   clearAuthoredRifle(f,emitter,aimWeight);
    support.getWorldPosition(supportLocal);off.parent.worldToLocal(supportLocal);
    if(supportLocal.distanceTo(off.position)<=offReach){point.copy(supportLocal);s.primaryPullback=distance;break;}
   }

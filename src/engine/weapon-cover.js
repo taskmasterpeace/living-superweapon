@@ -5,6 +5,20 @@ import {sweepSplitObstacle} from './projectile-contact.js';
 const shoulder=new THREE.Vector3(),point=new THREE.Vector3(),grip=new THREE.Vector3(),offset=new THREE.Vector3(),delta=new THREE.Vector3(),shoulderLocal=new THREE.Vector3();
 const local=new THREE.Matrix4(),box=new THREE.Box3(),partBox=new THREE.Box3(),wrist=new THREE.Quaternion(),parent=new THREE.Quaternion(),contact={};
 const torsoInverse=new THREE.Matrix4(),meshToTorso=new THREE.Matrix4(),weaponBox=new THREE.Box3();
+const contactBoxes=new WeakMap();
+function rigidContactBoxes(geometry){
+ let boxes=contactBoxes.get(geometry);if(boxes)return boxes;
+ // Imported rifles batch disconnected barrel, stock and receiver pieces by
+ // material. One bounding box fills the empty space between those pieces and
+ // can push an otherwise reachable fore-end away from the support shoulder.
+ boxes=[];const a=geometry.attributes.position,index=geometry.index;
+ for(let i=0;i<(index?.count??a.count);i+=3){
+  const b=new THREE.Box3();
+  for(let k=0;k<3;k++)b.expandByPoint(new THREE.Vector3().fromBufferAttribute(a,index?index.getX(i+k):i+k));
+  boxes.push(b);
+ }
+ contactBoxes.set(geometry,boxes);return boxes;
+}
 
 // A wrist can rotate a clear forearm's attached stock/barrel back into the ribs.
 // Bound each rigid mesh separately in the torso's frame (including scale), then
@@ -19,7 +33,8 @@ export function constrainWeaponTorso(f,emitter,pole){
   if(!mesh.isMesh)return;
   const geometry=mesh.geometry;if(!geometry.boundingBox)geometry.computeBoundingBox();
   meshToTorso.multiplyMatrices(torsoInverse,mesh.matrixWorld);
-  weaponBox.copy(geometry.boundingBox).applyMatrix4(meshToTorso);
+  for(const bounds of weapon.userData.authoredEquipment?rigidContactBoxes(geometry):[geometry.boundingBox]){
+  weaponBox.copy(bounds).applyMatrix4(meshToTorso);
   const near=side<0?-weaponBox.max.x:weaponBox.min.x;
   const far=side<0?-weaponBox.min.x:weaponBox.max.x;
   const z=weaponBox.min.z>0?weaponBox.min.z:weaponBox.max.z<0?-weaponBox.max.z:0;
@@ -30,6 +45,7 @@ export function constrainWeaponTorso(f,emitter,pole){
    if(z>=depth)continue;
    const edge=width*Math.sqrt(1-z*z/(depth*depth));
    if(near<edge&&far>-edge)correction=Math.max(correction,edge-near+.025);
+  }
   }
  });
  if(correction<1e-5)return false;
