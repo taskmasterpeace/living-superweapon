@@ -28,6 +28,7 @@ import {findWebZipAnchor,beginWebZip} from './web-zip.js';
 import {clearRush,rushInterrupted,rushTargetValid,findRushTarget,rushLanding} from './rush-safety.js';
 import {usesThrowAction,beginThrowAction,cancelThrowAction} from './throwable-action.js';
 import {firearmLife} from './firearm-aim.js';
+import {clearWebControlsFromSource} from './web-control.js';
 export {remoteAttack} from './remote-control.js';
 
 const _v = new THREE.Vector3();
@@ -115,6 +116,7 @@ export function clearSlotFx(c) {
   cancelThrowAction(c);
   cancelFirearmReload(c);
   clearWebSnare(c);
+  clearWebControlsFromSource(c);
   c.releaseHang?.();
   cancelAbilityMeleePose(c);
   c._game?.projectiles?.retirePendingNaniteShots?.(c);
@@ -232,7 +234,7 @@ export const TYPES = {
         pos: m, vel: velocity.setLength(def.speed || 70),throwMesh,launchFlash:throwMesh?false:undefined,
         radius: def.radius || 1.4, damage: def.damage || 14, blast: def.blast || 5, power: def.power || 1,
         homing: def.homing || 0, color: def.color, color2: def.color2, grav: def.grav || 0, shock: def.shock,
-        arrow: def.arrow, payload: def.payload, blind: def.blind, boomerang: def.boomerang, range: def.range,
+        arrow: def.arrow, payload: def.payload, webControl:def.webControl, blind: def.blind, boomerang: def.boomerang, range: def.range,
         card: def.card, disc: def.disc, bounces: def.bounces, pumpkin: def.pumpkin,
         blade: def.blade, canister: def.canister,      // thrown steel / shells read as objects, not orbs
         dtype: def.dtype, siphon: def.siphon,          // the damage TYPE rides the shot
@@ -332,7 +334,11 @@ export const TYPES = {
         if (d > range || d < 0.1) continue;
         const dot = (dx / d) * c.aim.x + (dz / d) * c.aim.z;
         if (dot < Math.cos(arc)) continue;
-        f.takeDamage((def.dps || 26) * c.powerBuff * inp.dt, { src: c, dot: true, hitstop: 0, dtype: def.dtype || (def.cold ? 'cold' : 'energy') });
+        // Cones are volumes, not wallhacks. The same cover/interior sightline
+        // used by targeting decides whether this receiver is actually reached.
+        if(g.canSee&&!g.canSee(c,f))continue;
+        const dealt=f.takeDamage((def.dps || 26) * c.powerBuff * inp.dt, { src: c, dot: true, hitstop: 0, dtype: def.dtype || (def.cold ? 'cold' : 'energy') });
+        if(!(dealt>0))continue;
         if (def.cold) {
           f.vel.x *= 0.86; f.vel.z *= 0.86; f._chill = 0.5; f.speed = Math.max(8, (f.def.speed || 30) * 0.55);
           f.addFrost((def.frost || 0.5) * inp.dt, c);   // sustained cold ENCASES you in ice (strength breaks out)
@@ -1160,9 +1166,9 @@ export const TYPES = {
       c.state = 'cast'; c.stateT = 0;c._castPoseRanged=false;
       // THE SIPHON VOICE — a downward pull that swells when it finds a victim, fades on release.
       if (!st._loop) st._loop = g.audio.sustain ? g.audio.sustain('drain', c.pos) : null;
-      const foe = g.coneFoe(c, def.range || 26, def.arc || 0.9);
-      if (st._loop) st._loop.set(foe && !foe.phase ? 1.3 : 0.5, c.pos);
-      if (foe && !foe.phase) {
+      const foe = g.coneFoe(c, def.range || 26, def.arc || 0.9),reached=foe&&!foe.phase&&(!g.canSee||g.canSee(c,foe));
+      if (st._loop) st._loop.set(reached ? 1.3 : 0.5, c.pos);
+      if (reached) {
         const dealt = foe.takeDamage((def.dps || 22) * c.powerBuff * inp.dt, { src: c, dot: true, hitstop: 0 });
         if (dealt > 0) c.heal(dealt * (def.ratio || 0.6));
         if (Math.random() < 0.5) {

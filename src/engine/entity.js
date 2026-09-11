@@ -43,6 +43,7 @@ import { animateCombatAim, restoreCombatBase } from './combat-pose.js';
 import {advanceAbilityMeleePose,cancelInterruptedAbilityMeleePose} from './ability-melee-pose.js';
 import {restoreChestAim} from './chest-pose.js';
 import {restoreSpineAim} from './spine-pose.js';
+import {clearWebControl,clearWebControlsFromSource,updateWebControl,webControlMoveMultiplier} from './web-control.js';
 import {restoreGroundAimSupport} from './ground-aim-support.js';
 import { restoreAuthoredStrikeBase } from './strike-motion.js';
 import {animateHands} from './hero-hand.js';
@@ -409,6 +410,7 @@ export class Fighter {
     this._heavyT = 0; this._heavyP = 0; this._heavyHay = false;
     this.frost = 0; this.frozenT = 0; this._frostImmuneT = 0;   // cold buildup → encased in ice
     this._dots = [];            // damage-over-time stacks [{dps,t,color,kind,src}]
+    this._webControl=null;this._webControlImmune=0;this._webControls=new Set();this._webControlEpoch=0;
     this._quiverIdx = 0;        // archer payload selector (quiver ability cycles it)
     // ITEMS — gadgets a character CARRIES, outside the ability slots: no ki, cooldown-only,
     // one button (X). First kind: the teleport beacon (drop → fight elsewhere → recall to it).
@@ -565,6 +567,7 @@ export class Fighter {
     this._pendingForm=undefined;
     this.formName=form?.name??'';
     if(key===this._formKey)return true;
+    clearWebControl(this);clearWebControlsFromSource(this);
     // An imported base is temporary articulation, not the new model's bind.
     // Remove it before copying transforms into a replacement rig. The combat
     // snapshot also contains that imported base and must not reintroduce it.
@@ -668,6 +671,7 @@ export class Fighter {
 
   dispose() {
     if(this._formDisposed)return;
+    clearWebControl(this);clearWebControlsFromSource(this);
     this._formDisposed=true;
     invalidateFighterMotion(this);
     this.releaseHang();
@@ -1173,6 +1177,7 @@ export class Fighter {
   }
 
   _ko(opts = {}) {
+    clearWebControl(this);clearWebControlsFromSource(this);
     invalidateFighterMotion(this);
     retireNanites(this._nanites);presentNanites(this);
     if(this._game)retireOwnedConstructs(this._game,this,'owner-ko',true);
@@ -1333,6 +1338,7 @@ export class Fighter {
       }
     }
     if (this._sleepGrace > 0) this._sleepGrace -= dt;
+    updateWebControl(this,dt);
     if (this.sleepT > 0) {
       this.sleepT -= dt;
       this.staggerT = Math.max(this.staggerT, 0.12);            // the one pin — no actions while folded
@@ -2159,7 +2165,7 @@ export class Fighter {
     // the live movement INTENT, stamped for the physics pass (directional descent reads it)
     this._mvX = dir ? dir.x : 0; this._mvZ = dir ? dir.z : 0; this._mvT = 0.12;
     if (this.state === 'ko' || this.hitstop > 0 || this.grabbedBy || this.grabState === 'clinch' || this.staggerT > 0 || this.frozenT > 0 || this.stunT > 0 || this.hanging) return;   // hanging: your feet have nowhere to be
-    let s = this.speed * 1.08 * this.powerBuff * sprint * moodMult(this, 'speed', 1);   // ground feel pass 2026-07-24: +8% across the board
+    let s = this.speed * 1.08 * this.powerBuff * sprint * moodMult(this, 'speed', 1) * webControlMoveMultiplier(this);   // ground feel pass 2026-07-24: +8% across the board
     if (this._wounds && this._wounds.leg) s *= 1 - 0.09 * this._wounds.leg;   // the LIMP is real (manual §18)
     if (this.sprintT > 0) s *= this.sprintMult;   // double-tap sprint surge
     if (this.meleeCharge > 0) s *= 0.4;           // winding up a haymaker roots you

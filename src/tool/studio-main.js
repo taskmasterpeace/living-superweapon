@@ -19,6 +19,7 @@ import {progressionInspector,formDialogBody,editForm} from './studio-progression
 import {loadCatalog} from '../engine/authored-assets.js';
 import {catalogInspector,prepareCatalogSelection,watchCatalogRuntime} from './studio-catalog.js';
 import {loadFighterMotion} from '../engine/authored-character.js';
+import {applyKitAlternatives,kitAlternativeSlots,kitAlternativesFor,selectKitAlternative} from '../data/pilot-kit-alternatives.js';
 
 installCustoms(ROSTER);
 try {
@@ -106,17 +107,22 @@ $('#preview-sound').onclick=async()=>{
 function savedState(){const dirty=history.dirty;$('.save-state').textContent=dirty?'Unsaved draft':hasSaved?'Saved / local':'Shipped default';$('.save-state').classList.toggle('dirty',dirty);$('#undo').disabled=!history.canUndo;$('#redo').disabled=!history.canRedo;}
 function roster(){const q=$('.search').value.toLowerCase();$('.count').textContent=ROSTER.length;$('#edit-kit').disabled=!hero.isCustom;$('.roster').innerHTML=ROSTER.filter(d=>(d.name+' '+d.title).toLowerCase().includes(q)).map(d=>`<button class="hero-row" data-hero="${esc(d.id)}" aria-pressed="${d.id===hero.id}"><span class="hero-swatch" style="background:${esc(d.colors.primary)}"></span><span><b>${esc(d.name)}</b><small>${d.isCustom?'Custom · ':''}${esc(d.title)}</small></span></button>`).join('')||'<p class="empty">No matching fighters.</p>';}
 function reconciledProfile(def,p){
- const before=Object.keys(p.attacks||{}),attacks=reconcileAttackOverrides(def,p.attacks),kept=new Set(Object.keys(attacks));
+ const before=Object.keys(p.attacks||{}),effective=applyKitAlternatives(def,p.kit),attacks=reconcileAttackOverrides(effective,p.attacks);
+ // A tuned named alternative remains a dormant source snapshot while its slot
+ // is empty. Loading Studio must not erase that work from the draft merely
+ // because the deliberately unequipped shipped kit cannot apply it yet.
+ for(const slot of kitAlternativeSlots(def.id))if(!effective.abilities?.[slot]&&p.attacks?.[slot])attacks[slot]=JSON.parse(JSON.stringify(p.attacks[slot]));
+ const kept=new Set(Object.keys(attacks));
  return {profile:{...p,attacks},dropped:before.filter(slot=>!kept.has(slot))};
 }
-function selectHero(def){let p,dropped=[],saved=false;try{p=loadProfile(def.id);saved=!!p||!!def.isCustom;p||=profileFromDef(def);({profile:p,dropped}=reconciledProfile(def,p));applyProfile(def,p);status(dropped.length?`${def.name} loaded. Dropped stale attack tuning for ${dropped.map(slot=>slot.toUpperCase()).join(', ')} because the ORIGIN attack changed. Saved storage was not overwritten.`:`${def.name} loaded. Saved profiles apply when a game page loads; source files stay unchanged.`);}catch(e){p=profileFromDef(def);applyProfile(def,p);status(e.message,true);}preview.setProfile(def,p);hero=def;hasSaved=saved;if(!def.abilities?.[attackSlot])attackSlot=Object.keys(def.abilities||{})[0]||'';history=new DraftHistory(p);syncCombat();$('.hero-heading').innerHTML=`${esc(hero.name)}<small>${esc(hero.title)} / ${esc(hero.id)}</small>`;roster();inspector();savedState();}
+function selectHero(def){let p,dropped=[],saved=false;try{p=loadProfile(def.id);saved=!!p||!!def.isCustom;p||=profileFromDef(def);({profile:p,dropped}=reconciledProfile(def,p));applyProfile(def,p);status(dropped.length?`${def.name} loaded. Dropped stale attack tuning for ${dropped.map(slot=>slot.toUpperCase()).join(', ')} because the ORIGIN attack changed. Saved storage was not overwritten.`:`${def.name} loaded. Saved profiles apply when a game page loads; source files stay unchanged.`);}catch(e){p=profileFromDef(def);applyProfile(def,p);status(e.message,true);}preview.setProfile(def,p);hero=def;hasSaved=saved;const slots=new Set([...Object.keys(def.abilities||{}),...kitAlternativeSlots(def.id)]);if(!slots.has(attackSlot))attackSlot=Object.keys(def.abilities||{})[0]||kitAlternativeSlots(def.id)[0]||'';history=new DraftHistory(p);syncCombat();$('.hero-heading').innerHTML=`${esc(hero.name)}<small>${esc(hero.title)} / ${esc(hero.id)}</small>`;roster();inspector();savedState();}
 function mutate(path,value,rebuild=false){const p=history.value;if(path.startsWith('environment.'))p.environment??=profileFromDef(hero).environment;let part=p;const keys=path.split('.');for(const k of keys.slice(0,-1))part=part[k];part[keys.at(-1)]=value;try{applyProfile(hero,p);history.push(p);preview.setProfile(hero,p,rebuild);savedState();status('Draft updated. Save local to use it in the next game.');}catch(e){status(e.message,true);inspector();}}
 function numeric(path,label,bounds,value,degrees=false){const factor=degrees?180/Math.PI:1,min=degrees?Math.ceil(bounds[0]*factor*10)/10:bounds[0],max=degrees?Math.floor(bounds[1]*factor*10)/10:bounds[1],val=(value*factor).toFixed(degrees?1:2);return `<div class="property"><label>${label}${degrees?' · degrees':''}</label><div class="property-control"><input aria-label="${label}" data-path="${path}" data-factor="${factor}" type="range" min="${min}" max="${max}" step="${degrees?.1:.01}" value="${val}"><input aria-label="${label} value" data-path="${path}" data-factor="${factor}" type="number" min="${min}" max="${max}" step="${degrees?.1:.01}" value="${val}"></div></div>`;}
 function attackFingerprint(source){let h=2166136261;for(const char of attackIdentity(source))h=Math.imul(h^char.charCodeAt(0),16777619);return (h>>>0).toString(16).padStart(8,'0');}
 function attackNumber(field){const value=String(field.value),unit=field.unit?` <span>· ${esc(field.unit)}</span>`:'',inactive=field.disabled?' disabled':'',description=field.note?` aria-describedby="attack-note-${esc(field.key)}"`:'';return `<div class="property attack-property"><label>${esc(field.label)}${unit}</label><div class="property-control"><input aria-label="${esc(field.label)}" data-attack-key="${esc(field.key)}" type="range" min="${field.min}" max="${field.max}" step="any" data-increment="${field.step}" value="${esc(value)}"${inactive}${description}><input aria-label="${esc(field.label)} value" data-attack-key="${esc(field.key)}" type="number" min="${field.min}" max="${field.max}" step="any" data-increment="${field.step}" value="${esc(value)}"${inactive}${description}></div>${field.note?`<p class="help" id="attack-note-${esc(field.key)}">${esc(field.note)}</p>`:''}<p class="attack-field-error" role="alert" hidden></p></div>`;}
 function attackBoolean(field){return `<label class="attack-boolean"><input type="checkbox" data-attack-key="${esc(field.key)}" ${field.value?'checked':''}> <span>${esc(field.label)}</span></label>`;}
 function attackEnum(field){return `<div class="property attack-property"><label for="attack-${esc(field.key)}">${esc(field.label)}</label><select id="attack-${esc(field.key)}" data-attack-key="${esc(field.key)}">${field.options.map(option=>`<option value="${esc(option.value)}" ${option.value===field.value?'selected':''}>${esc(option.label)}</option>`).join('')}</select><p class="attack-field-error" role="alert" hidden></p></div>`;}
-function attackAuthorship(p){const count=Object.keys(p.attacks?.[attackSlot]?.values||{}).length;return count?`Authored override · ${count} field${count===1?'':'s'}`:hero.isCustom?'ORIGIN kit default':'Shipped default';}
+function attackAuthorship(p){const count=Object.keys(p.attacks?.[attackSlot]?.values||{}).length;if(count)return `Authored override · ${count} field${count===1?'':'s'}`;if(p.kit?.[attackSlot])return 'Named authoring alternative · not equipped by default';return hero.isCustom?'ORIGIN kit default':'Shipped default';}
 function updateAttackAuthorship(){const el=$('.attack-authorship');if(el)el.textContent=attackAuthorship(history.value);}
 function friendlyAttackError(message,key){
  if(['minR','maxR'].includes(key))return 'Minimum radius must be less than maximum radius.';
@@ -130,14 +136,15 @@ function focusAttackField(key,type,message=''){
  field.focus();
 }
 function attackInspector(p){
- const slots=Object.entries(hero.abilities||{}),ability=hero.abilities?.[attackSlot];
- if(!ability&&slots.length){attackSlot=slots[0][0];return attackInspector(p);}
- const source=attackSource(hero,attackSlot),fields=source?attackFields(hero,attackSlot,p.attacks):[];
- const selector=`<div class="property attack-selector"><label for="attack-slot">Attack slot</label><select id="attack-slot" aria-label="Attack slot">${slots.map(([slot,def])=>`<option value="${esc(slot)}" ${slot===attackSlot?'selected':''}>${slot.toUpperCase()} · ${esc(def.name||def.type)}</option>`).join('')}</select></div>`;
+ const editing=applyKitAlternatives(hero,p.kit),alternativeSlots=kitAlternativeSlots(hero.id),slotKeys=[...new Set([...Object.keys(hero.abilities||{}),...alternativeSlots])],slots=slotKeys.map(slot=>[slot,editing.abilities?.[slot]]),ability=editing.abilities?.[attackSlot];
+ if(!slotKeys.includes(attackSlot)&&slots.length){attackSlot=slots[0][0];return attackInspector(p);}
+ const alternatives=kitAlternativesFor(hero.id,attackSlot),source=attackSource(editing,attackSlot),fields=source?attackFields(editing,attackSlot,p.attacks):[];
+ const selector=`<div class="property attack-selector"><label for="attack-slot">Attack slot</label><select id="attack-slot" aria-label="Attack slot">${slots.map(([slot,def])=>`<option value="${esc(slot)}" ${slot===attackSlot?'selected':''}>${slot.toUpperCase()} · ${esc(def?.name||def?.type||'Empty default')}</option>`).join('')}</select></div>`;
+ const kitSelector=alternatives.length?`<div class="property kit-source-selector"><label for="kit-source">Kit source</label><select id="kit-source" aria-label="Kit source"><option value="" ${p.kit?.[attackSlot]?'':'selected'}>Empty default</option>${alternatives.map(option=>`<option value="${esc(option.id)}" ${p.kit?.[attackSlot]===option.id?'selected':''}>${esc(option.name)} · authoring alternative</option>`).join('')}</select><p class="help">This named previous definition is available for deliberate authoring, but is not equipped in the shipped kit.</p></div>`:'';
  const identity=ability?`<div class="attack-identity"><div><h2>${esc(ability.name||attackSlot.toUpperCase())}</h2><span>${esc(ability.type)}</span></div>${source?`<code title="Exact source identity">attack-v1 · ${attackFingerprint(source)}</code>`:'<code>unsupported source</code>'}</div><p class="attack-authorship">${esc(attackAuthorship(p))}</p>`:'';
  const note='<p class="attack-balance-note">Custom attack tuning is outside ORIGIN point balancing. Preview contact uses production defenses; these controls do not claim the result is balanced.</p>';
  const splitNote=fields.some(field=>field.key==='splitCount')?'<p class="help">Split children require <b>Second press detonates</b>. Zero keeps the ordinary remote burst; 2–8 retires the parent without burst damage and launches ordinary homing children.</p>':'';
- if(!source)return `<h2>Attack tuning</h2><p class="help">Inspect an actual kit slot. Supported attack values rebuild the same Fighter used by players and bots.</p>${selector}${identity}<div class="attack-fields"><p class="attack-unsupported">${esc(ability?.name||attackSlot.toUpperCase())} / ${esc(ability?.type||'empty')} is not tunable here. Supported: beam, projectile, volley, charge, and wall/tank constructs. Other construct forms keep their native timed behavior.</p></div>${note}`;
+ if(!source)return `<h2>Attack tuning</h2><p class="help">Inspect an actual kit slot. Supported attack values rebuild the same Fighter used by players and bots.</p>${selector}${kitSelector}${identity}<div class="attack-fields"><p class="attack-unsupported">${esc(ability?.name||attackSlot.toUpperCase())} / ${esc(ability?.type||'empty')} is not tunable here. Supported: beam, projectile, volley, charge, and wall/tank constructs. Other construct forms keep their native timed behavior.</p></div>${note}`;
  const interception=fields.find(field=>field.key==='interceptBullets');
  const traits=fields.filter(field=>field.kind==='boolean'&&field.key!=='interceptBullets');
  const contact=interception?`<div class="attack-booleans">${attackBoolean(interception)}</div><p class="help">Threshold counts paid entry, preparation and sustain ki. Only traveled beam contact absorbs a bullet.</p>`:'';
@@ -148,7 +155,7 @@ function attackInspector(p){
  const presentation=fields.filter(field=>field.kind==='enum'&&!field.key.startsWith('nanite')).map(attackEnum).join('');
  const constructHelp=source.type==='construct'?`<p class="help">Source-owned ${esc(source.construct)} · entry ${source.cost||0} ki · cooldown ${source.cd||0}s. Resource modes have no lifetime timer; press again to dismiss. Unused rate values stay saved when switching modes.${source.construct==='tank'?' The hull holds to fire. Fixed 14.5u barrel clearance requires target-center distance greater than 14.5 + target radius + 1u from the turret pivot (17.7u for a 2.2u target). Near targets or obstructed lanes suppress fire; the muzzle never moves invisibly.':''}</p>`:'';
  const originHelp=fields.some(field=>field.key==='emissionOrigin')?'<p class="help">Pose choices follow the emitter. Attack origin moves preparation and emission together; combined palms produce one attack, not double damage. Kit default restores the original emitter and pose. Incompatible poses reset to Automatic.</p>':'';
- return `<h2>Attack tuning</h2><p class="help">Edit only values consumed by this production attack. A committed change enters Undo history and rebuilds the live Fighter; local save never edits source files.</p>${selector}${identity}<div class="attack-fields">${formation}${presentation}${constructHelp}${originHelp}${contact}${fields.filter(field=>field.kind==='number'&&!field.key.startsWith('nanite')).map(attackNumber).join('')}${traits.length?`<h3>Attack traits</h3><div class="attack-booleans">${traits.map(attackBoolean).join('')}</div>`:''}</div>${splitNote}<button id="reset-attack" ${p.attacks?.[attackSlot]?'':'disabled'}>Reset attack slot</button>${note}`;
+ return `<h2>Attack tuning</h2><p class="help">Edit only values consumed by this production attack. A committed change enters Undo history and rebuilds the live Fighter; local save never edits source files.</p>${selector}${kitSelector}${identity}<div class="attack-fields">${formation}${presentation}${constructHelp}${originHelp}${contact}${fields.filter(field=>field.kind==='number'&&!field.key.startsWith('nanite')).map(attackNumber).join('')}${traits.length?`<h3>Attack traits</h3><div class="attack-booleans">${traits.map(attackBoolean).join('')}</div>`:''}</div>${splitNote}<button id="reset-attack" ${p.attacks?.[attackSlot]?'':'disabled'}>Reset attack slot</button>${note}`;
 }
 const flightLabels={hero:'One-fist lead',twin:'Two-fist spearhead',martial:'BFP arms-back',thruster:'Repulsor stance',hammer:'Weapon-led flight',glider:'Relaxed glide'};
 function menu(path,label,values,value){return `<div class="property"><label for="${path}">${label}</label><select id="${path}" data-path="${path}">${values.map(v=>`<option value="${v}" ${v===value?'selected':''}>${path==='model.body'?HERO_BODY_LABELS[v]:path==='model.flightStyle'?flightLabels[v]:v[0].toUpperCase()+v.slice(1)}</option>`).join('')}</select></div>`;}
@@ -224,15 +231,23 @@ $('.inspector-body').addEventListener('change',async e=>{const el=e.target;
   catch(error){status(`Field camera not saved: ${error.message}`,true);}return;
  }
  if(el.dataset.unlock){mutate('progression.unlocks.'+el.dataset.unlock,Number(el.value));inspector();return;}
+ if(el.id==='kit-source'){
+  try{
+   const p=validateProfile(selectKitAlternative(history.value,hero.id,attackSlot,el.value));
+   applyProfile(hero,p);history.push(p);preview.setProfile(hero,p,true);savedState();syncCombat();inspector();$('#kit-source')?.focus();
+   status(el.value?`${applyKitAlternatives(hero,p.kit).abilities[attackSlot].name} selected as an authoring alternative. Save local to install it.`:`${attackSlot.toUpperCase()} restored to the empty shipped default. Save local to keep the selection.`);
+  }catch(error){status(`Kit source not changed: ${error.message}`,true);inspector();}
+  return;
+ }
  if(el.id==='attack-slot'){
-  attackSlot=el.value;const ability=hero.abilities[attackSlot];let note='';
+  attackSlot=el.value;const editing=applyKitAlternatives(hero,history.value.kit),ability=editing.abilities[attackSlot];let note='';
   if(['beam','attack'].includes(preview.state)){
-   if(attackSource(hero,attackSlot)){
+   if(attackSource(editing,attackSlot)){
     if(preview.state==='beam'&&ability.type!=='beam'){setState('attack');note=' Switched to Attack sequence for this attack.';}
     else{preview.setCombat({slot:attackSlot});syncCombat();}
    }else{setState('hover');note=' This attack is not supported by the preview; the previous attack sequence stopped.';}
   }
-  inspector();$('#attack-slot').focus();status(`${ability.name} selected.${note} Draft data is unchanged.`);return;
+  inspector();$('#attack-slot').focus();status(`${ability?.name||'Empty default'} selected.${note} Draft data is unchanged.`);return;
  }
  if(el.dataset.attackKey){
   const isNumber=el.type==='range'||el.type==='number',key=el.dataset.attackKey,type=el.type;
@@ -240,16 +255,16 @@ $('.inspector-body').addEventListener('change',async e=>{const el=e.target;
    const message=`Enter ${el.getAttribute('min')}–${el.getAttribute('max')} for ${el.getAttribute('aria-label').replace(' value','')}.`;
    status(message,true);inspector();focusAttackField(key,type,message);return;
   }
-  const p=history.value,value=el.type==='checkbox'?el.checked:isNumber?Number(el.value):el.value;
+  const p=history.value,editing=applyKitAlternatives(hero,p.kit),value=el.type==='checkbox'?el.checked:isNumber?Number(el.value):el.value;
   try{
-   const currentPose=attackFields(hero,attackSlot,p.attacks).find(field=>field.key==='castStyle');
+   const currentPose=attackFields(editing,attackSlot,p.attacks).find(field=>field.key==='castStyle');
    const resetPose=['faceOrigin','chest'].includes(key)&&currentPose&&currentPose.value!=='auto';
    const patch={[key]:value,...(resetPose?{castStyle:'auto'}:{})};
-   p.attacks=setAttackOverride(p.attacks,hero,attackSlot,patch);applyProfile(hero,p);history.push(p);preview.setProfile(hero,p,true);savedState();syncCombat();
+   p.attacks=setAttackOverride(p.attacks,editing,attackSlot,patch);applyProfile(hero,p);history.push(p);preview.setProfile(hero,p,true);savedState();syncCombat();
    // Re-render from public metadata so derived defaults (beam burst radius/damage)
    // cannot lag behind the committed source fields. Restore the same editing affordance.
    inspector();focusAttackField(key,type);
-   status(`${hero.abilities[attackSlot].name} updated in the draft.${resetPose?' Emitter changed; attack pose reset to Automatic.':''} Save local to install it on the next game load.`);
+   status(`${editing.abilities[attackSlot].name} updated in the draft.${resetPose?' Emitter changed; attack pose reset to Automatic.':''} Save local to install it on the next game load.`);
   }catch(error){const message=friendlyAttackError(error.message,key);status(error.message,true);inspector();focusAttackField(key,type,message);}
   return;
  }
@@ -304,7 +319,7 @@ $('#preview-level').onchange=e=>{preview.setLevel(Number(e.target.value));if(tab
 $('.inspector-body').onclick=e=>{if(e.target.id==='camera-view')setView('game');if(e.target.id==='cycle-view'){setState('cycle');setView('game');}
  if(e.target.id==='swap-nanite-forearms'){try{const p=preview.swappedNaniteProfile(history.value);history.push(p);refresh();$('#swap-nanite-forearms').focus();status('Both forearms swapped in one draft step. Undo or Save local.');}catch(error){status(error.message,true);}return;}
  if(e.target.id==='camera-frontline'){dialog('Use front-line close framing?','<p>Replace only the camera in this draft. Character geometry, poses and controls stay unchanged. Undo restores the previous camera.</p>',[{label:'Apply close framing',primary:true,run:d=>{history.push(resetCamera(history.value,'frontline'));d.close();refresh();setView('game');$('#camera-frontline').focus();status('Front-line camera added to draft. Save local to use it in your next game.');}}]);return;}
- if(e.target.id==='reset-attack'){try{const p=history.value;p.attacks=resetAttackOverride(p.attacks,attackSlot);applyProfile(hero,p);history.push(p);preview.setProfile(hero,p,true);inspector();savedState();syncCombat();$('#reset-attack').focus();status(`${hero.abilities[attackSlot].name} restored to its ${hero.isCustom?'ORIGIN kit':'shipped'} default in the draft.`);}catch(error){status(`Not reset: ${error.message} Use Swap forearms to move an equipped pair together.`,true);}}
+ if(e.target.id==='reset-attack'){try{const p=history.value,ability=applyKitAlternatives(hero,p.kit).abilities[attackSlot];p.attacks=resetAttackOverride(p.attacks,attackSlot);applyProfile(hero,p);history.push(p);preview.setProfile(hero,p,true);inspector();savedState();syncCombat();$('#reset-attack').focus();status(`${ability?.name||attackSlot.toUpperCase()} restored to its ${p.kit?.[attackSlot]?'authoring alternative':hero.isCustom?'ORIGIN kit':'shipped'} default in the draft.`);}catch(error){status(`Not reset: ${error.message} Use Swap forearms to move an equipped pair together.`,true);}}
  if(e.target.id==='camera-preset'){dialog('Use the combat camera preset?','<p>Replace only the camera values in this draft. Your model, poses and flight tuning stay unchanged. Undo can restore your previous camera.</p>',[{label:'Apply camera preset',primary:true,run:d=>{history.push(resetCamera(history.value));d.close();refresh();setView('game');$('#camera-preset').focus();status('Combat camera added to draft. Save local to use it in your next game.');}}]);}};
 function syncViewControls(){
  const v=preview.view,solo=preview.isolated;

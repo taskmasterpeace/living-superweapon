@@ -217,7 +217,6 @@ export const ROSTER = [
       e: { type: 'teleport', name: 'Afterimage', cost: 12, cd: 1.4, range: 52, color: '#bfff6a' },
       f: { type: 'buff', name: 'Regenerate', cost: 20, cd: 16, mult: 1.3, dur: 8, heal: 46, color: '#9dff5a', color2: '#eaffea' },
       shift: { type: 'dash', name: 'Burst Step', cost: 5, cd: 0.5, power: 98, iframes: 0.24, color: '#bfff6a' },
-      r: { type: 'beam', material: 'air', name: 'Perfect Wave', cost: 24, cd: 14, radius: 3.4, tipSpeed: 648, maxLen: 170, dps: 128, kiPerSec: 30, charge: true, maxCharge: 2.0, kiChargePerSec: 20, chargePower: 2, chargeWidth: true, steer: 6, color: '#9dff5a', color2: '#ffffff' },
     },
   },
   {
@@ -245,13 +244,12 @@ export const ROSTER = [
     ai: { style: 'rusher', range: 24, aggro: 0.92, fly: 0.8 },
     evade: { kind: 'sprint', name: 'Blitz Run', mult: 1.75, dur: 1.4 },
     blurb: 'Bulletproof and airborne. Tackles across the sky, laser-visions from range, and turns briefly untouchable.',
-    sig: ['RMB Flying Tackle (air ram)', 'E Sky Combo (aerial rush)', 'F Invincible (i-frames)', 'LMB Eye Beam'],
+    sig: ['RMB Flying Tackle (air ram)', 'E Sky Combo (aerial rush)', 'R Unbreakable (i-frames)', 'LMB Eye Beam'],
     abilities: {
       lmb: { type: 'beam', name: 'Eye Beam', cost: 4, cd: 0.28, radius: 0.55, tipSpeed: 3600, maxLen: 150, dps: 56, kiPerSec: 16, steer: 13, faceOrigin: true, color: '#ff4a4a', color2: '#ffffff' },
       rmb: { type: 'melee', name: 'Flying Tackle', cost: 14, cd: 1.1, damage: 28, range: 13, arc: 0.7, lunge: 74, knock: 64, launch: 16, fly: true, color: '#ffd24a' },
       q: { type: 'cone', material: 'shock', name: 'Thunderclap', kiPerSec: 16, range: 30, arc: 1.2, dps: 16, push: 56, lift: 5, color: '#bfe0ff' },
       e: { type: 'rush', name: 'Sky Combo', cost: 16, cd: 2.0, range: 72, hits: 8, interval: 0.08, damage: 9, finisher: 32, color: '#ffd24a' },
-      f: { type: 'buff', name: 'Invincible', cost: 22, cd: 18, mult: 1.4, dur: 4, invuln: 2.5, color: '#ffd24a', color2: '#fff' },
       shift: { type: 'dash', name: 'Blitz', cost: 4, cd: 0.4, power: 126, iframes: 0.28, color: '#ffd24a' },
       r: { type: 'buff', name: 'Unbreakable', cost: 30, cd: 24, mult: 1.6, dur: 8, invuln: 2, heal: 40, color: '#ffd24a', color2: '#fff' },
     },
@@ -501,11 +499,10 @@ export const ROSTER = [
       // BALANCE 2026-07-23: the flurry was a 76-dmg button every 1.8s — the "spam wins" engine.
       // Trimmed to 6 hits on a 2.4s cycle; it's still his identity, it's no longer his whole game.
       rmb: { type: 'rush', name: 'Spider Flurry', cost: 16, cd: 2.4, range: 60, hits: 6, interval: 0.08, damage: 7, finisher: 25, color: '#eaffff' },
-      q: { type: 'volley', name: 'Web Darts', cost: 3, interval: 0.09, damage: 5, speed: 130, radius: 0.7, blast: 2.6, spread: 0.09, color: '#eaffff', color2: '#fff' },
+      q: { type: 'projectile', name: 'Web Darts', cost: 7, cd: 0.55, damage: 4, speed: 130, radius: 0.55, blast: 0, ground: false, color: '#eaffff', color2: '#fff', webControl: { duration: 1.2, moveMult: 0.45, immunity: 1 } },
       e: { type: 'melee', name: 'Sting Kick', cost: 9, cd: 0.8, damage: 22, range: 12, arc: 0.8, lunge: 46, knock: 44, launch: 14, fly: true, color: '#eaffff' },
       f: { type: 'buff', name: 'Danger Sense', cost: 18, cd: 16, mult: 1.3, dur: 7, invuln: 1, color: '#eaffff', color2: '#fff' },
       shift: { type: 'grapple', name: 'Web Zip', zip: true, cost: 6, cd: 0.65, range: 150, zipSpeed: 90, oneHand: true, color: '#eaffff' },
-      r: { type: 'rush', name: 'Maximum Spider', cost: 18, cd: 12, range: 70, hits: 10, interval: 0.06, damage: 8, finisher: 36, color: '#eaffff' },
     },
   },
   {

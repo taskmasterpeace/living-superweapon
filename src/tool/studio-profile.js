@@ -5,6 +5,7 @@ import { applyAttackOverrides, attackOverridesFromDef, validateAttackOverrides }
 import {validateEffects} from '../data/effects-profile.js';
 import {FRONTLINE_CAMERA} from '../data/camera-presets.js';
 import {mergeAuthoredSelection} from '../data/authored-selection.js';
+import {applyKitAlternatives,kitSelectionsFromDef,validateKitSelections} from '../data/pilot-kit-alternatives.js';
 
 export const STORAGE_KEY = 'lsw.studio.profiles.v1';
 export const LIMITS = {
@@ -58,7 +59,7 @@ function purple(hex) {
 }
 export function validateProfile(p) {
   record(p,'Profile');
-  allowed(p,['version','heroId','model','colors','frame','camera','motion','poses','wake','surfaceWake','attacks','progression','effects','environment'],'Profile');
+  allowed(p,['version','heroId','model','colors','frame','camera','motion','poses','wake','surfaceWake','attacks','progression','effects','environment','kit'],'Profile');
   if(p.version!==1)fail('Unsupported profile version. Import a version 1 Studio profile.');
   if(typeof p.heroId!=='string'||!/^[a-z0-9][a-z0-9_-]{0,79}$/.test(p.heroId))fail('Invalid hero ID.');
   record(p.model,'Model');
@@ -85,6 +86,7 @@ export function validateProfile(p) {
   const surfaceWake={...SURFACE_WAKE_DEFAULTS,...p.surfaceWake};
   if(p.surfaceWake!==undefined)numbers(p.surfaceWake,LIMITS.surfaceWake,'Surface wake');
   const attacks=validateAttackOverrides(p.attacks);
+  const kit=validateKitSelections(p.kit,p.heroId);
   const effects=validateEffects(p.effects);
   const progression=validateProgression(p.progression,p);
   record(p.poses,'Poses');allowed(p.poses,states,'Poses');for(const state of legacyStates)numbers(p.poses[state],LIMITS.pose,`Pose ${state}`);
@@ -100,11 +102,12 @@ export function validateProfile(p) {
     complete.surfaceWake=surfaceWake;
     for(const state of strafeStates)complete.poses[state] ??= copy(defaults[state]);
     complete.attacks=attacks;
+    complete.kit=kit;
     complete.progression=progression;
     complete.effects=effects;
     return complete;
   }
-  return {...p,attacks,progression,effects,surfaceWake};
+  return {...p,attacks,kit,progression,effects,surfaceWake};
 }
 function validateProgression(value,base){
   if(value===undefined)return {unlocks:{},forms:{}};
@@ -142,7 +145,7 @@ export function profileFromDef(def) {
     frame:frameOf(def),colors:{skin:'#e8c39a',...def.colors},camera:{...CAMERA_DEFAULTS,...model.camera},
     motion:{...MOTION_DEFAULTS,...model.motion},
     environment:{massKg:def.metal?162:90,windResistance:1+Math.max(0,(def.strength??5)-4)**2*.55,fallSafeSpeed:56,fallDamageScale:def.archetype==='soldier'?1:0,...def.environment},
-    wake:{...WAKE_DEFAULTS,...model.wake},surfaceWake:{...SURFACE_WAKE_DEFAULTS,...model.surfaceWake},effects:validateEffects(def.effects),attacks:attackOverridesFromDef(def),progression:copy(def.progression??{unlocks:{},forms:{}}),
+    wake:{...WAKE_DEFAULTS,...model.wake},surfaceWake:{...SURFACE_WAKE_DEFAULTS,...model.surfaceWake},effects:validateEffects(def.effects),attacks:attackOverridesFromDef(def),kit:kitSelectionsFromDef(def),progression:copy(def.progression??{unlocks:{},forms:{}}),
     poses:Object.fromEntries(states.map(state=>[state,{...poses[state],...model.poses?.[state]}]))};
 }
 // An explicit language change replaces authored targets; the UI warns before calling this.
@@ -160,7 +163,8 @@ export function applyProfile(def,profile) {
   profile=validateProfile(profile);
   if(def.id!==profile.heroId)fail('This profile belongs to a different hero.');
   const p=copy(profile);
-  return applyAttackOverrides({...def,...(p.environment?{environment:p.environment}:{}),frame:p.frame,colors:p.colors,effects:p.effects,progression:p.progression,model:{...def.model,...p.model,poses:p.poses,camera:p.camera,motion:p.motion,wake:p.wake,surfaceWake:p.surfaceWake}},p.attacks);
+  const selected=applyKitAlternatives(def,p.kit);
+  return applyAttackOverrides({...selected,...(p.environment?{environment:p.environment}:{}),frame:p.frame,colors:p.colors,effects:p.effects,progression:p.progression,model:{...def.model,...p.model,poses:p.poses,camera:p.camera,motion:p.motion,wake:p.wake,surfaceWake:p.surfaceWake}},p.attacks);
 }
 function readStore(storage) {
   let raw;
