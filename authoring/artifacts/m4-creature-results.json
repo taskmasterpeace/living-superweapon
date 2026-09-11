@@ -1,0 +1,126 @@
+{
+ "rows": [
+  {
+   "id": "creature.field-hound",
+   "kind": "creature",
+   "triangles": 2169,
+   "skinnedMeshes": 4,
+   "animations": [
+    "attack",
+    "idle",
+    "move"
+   ],
+   "bounds": {
+    "min": [
+     -1.205263161038527,
+     -0.07894736312721937,
+     -3.5684207740582923
+    ],
+    "max": [
+     1.205263161038527,
+     4.574924077485738,
+     4.268421097805627
+    ]
+   },
+   "sockets": 0,
+   "zones": 0
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.0249999999999998,
+   "armL": {
+    "reach": 3.5108594012404786,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "armR": {
+    "reach": 3.21908332311342,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "pivotHeight": 5.152,
+   "skinned": true,
+   "skinId": "superhero-male",
+   "frameScale": 1.12,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "superhero-male",
+   "frac": 0.15
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.02499999999999991,
+   "armL": {
+    "reach": 3.205250453341082,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "armR": {
+    "reach": 3.5413290523514824,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "pivotHeight": 5.152,
+   "skinned": true,
+   "skinId": "superhero-male",
+   "frameScale": 1.12,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "superhero-male",
+   "frac": 0.4
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.024999999999999578,
+   "armL": {
+    "reach": 3.5650409583080296,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "armR": {
+    "reach": 3.2827119379481586,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "pivotHeight": 5.152,
+   "skinned": true,
+   "skinId": "superhero-male",
+   "frameScale": 1.12,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "superhero-male",
+   "frac": 0.65
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.025000000000000355,
+   "armL": {
+    "reach": 3.4974753071115035,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "armR": {
+    "reach": 3.3029582578861794,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "pivotHeight": 5.152,
+   "skinned": true,
+   "skinId": "superhero-male",
+   "frameScale": 1.12,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "superhero-male",
+   "frac": 0.9
+  }
+ ],
+ "errors": []
+}

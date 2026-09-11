@@ -11,13 +11,14 @@ import * as THREE from 'three';
 
 // ============================================================================================
 // 1 · WEATHER COMMAND — a real layer: rain, wind, cloud density, lightning.
-// Global, gradual (never a switch), and it MOVES things: rain bends with wind, debris and
-// smoke drift, and lightning lights whole building silhouettes.
+// Ambient weather evolves independently of bounded, owned storm domains. Rain bends
+// with wind, matter drifts, and warned lightning resolves through native receivers.
 // ============================================================================================
 import { STATES, WIND_DRAG, pickWeather } from '../data/weather.js';
 import {RainField} from './rain-field.js';
 import {WeatherLightning,weatherSurface} from './weather-lightning.js';
 import {WeatherVortex} from './weather-vortex.js';
+import {StormLayer,MAX_STORM_LAYERS} from './weather-layer.js';
 
 export class Weather {
   constructor(game) {
@@ -27,6 +28,7 @@ export class Weather {
     this._mesh = null; this._boltT = 0; this._srcT = 0; this._src = null;
     this.stateId = 'clear'; this._hold = 0; this._natural = 'clear';
     this.time=0;
+    this.layers=new Map();
     this._thunder=null;this._rainVoice=null;this._thunderVoice=null;this._strikeSource=null;
   }
   // ⚠ EXTENDED IN PLACE, NOT REPLACED. I wrote a second Weather class beside this one and the
@@ -56,12 +58,17 @@ export class Weather {
   get windSpeed() { return this.wind * 42 * (1 + Math.sin(this.time * 0.7) * 0.28); }
 
   sampleBodyWind(pos,out){
-    if(this._vortex?.kind==='hurricane')return this._vortex.sample(pos,out);
+    if(this._vortex?.kind==='hurricane'){
+      this._vortex.sample(pos,out);
+      for(const layer of this.layers.values())layer.addWind(pos,out);
+      return out;
+    }
     out.x=Math.cos(this.windDir)*this.windSpeed;out.y=0;out.z=Math.sin(this.windDir)*this.windSpeed;
     if(this._vortex){
       const v=this._vortex.sample(pos,this._windSample||(this._windSample={}));
       out.x+=v.x;out.y+=v.y;out.z+=v.z;
     }
+    for(const layer of this.layers.values())layer.addWind(pos,out);
     return out;
   }
 
@@ -70,12 +77,17 @@ export class Weather {
    * whose kind is not in that table — every ki blast, beam and orb — gets ZERO. Energy is exempt BY
    * CONSTRUCTION, never by an `if`. Callers pass a kind, never a boolean.
    */
-  force(kind, out) {
+  force(kind, out, pos=null) {
     const d = WIND_DRAG[kind];
     const o = out || { x: 0, y: 0, z: 0 };
-    if (!d || this.wind <= 0.002) { o.x = o.y = o.z = 0; return o; }
-    const a = this.windDir || 0, s = this.windSpeed * d;
+    if (!d) { o.x = o.y = o.z = 0; return o; }
+    const a = this.windDir || 0, s = this.wind > 0.002 ? this.windSpeed * d : 0;
     o.x = Math.cos(a) * s; o.y = 0; o.z = Math.sin(a) * s;
+    if(pos){
+      const local=this._layerForce||(this._layerForce={x:0,y:0,z:0});local.x=local.y=local.z=0;
+      for(const layer of this.layers.values())layer.addWind(pos,local);
+      o.x+=local.x*d;o.z+=local.z*d;
+    }
     return o;
   }
 
@@ -85,18 +97,16 @@ export class Weather {
     return this.set(this._natural, { instant: true });
   }
 
-  // a power (or a script) ASKS for weather; it arrives over `ramp` seconds, never instantly
-  command({ rain = 0, wind = 0, cloud = 0, storm = 0, dur = 12, src = null } = {}) {
-    this._cancelStorm();
-    // ⚠ AN ABILITY ASKS FOR A STATE, IT DOES NOT AUTHOR ONE — so a commanded storm and a natural
-    // storm are the same thing to every reader.
-    const want = storm >= 0.7 ? 'storm' : rain >= 0.6 ? 'rain' : rain > 0 ? 'drizzle'
-      : cloud >= 0.6 ? 'cloudy' : wind >= 0.6 ? 'storm' : 'fair';
-    this.stateId = want; this._hold = dur;
-    this._target = { rain, wind, cloud };
-    this.storm = storm; this._srcT = dur; this._src = src;
-    this.windDir = Math.random() * Math.PI * 2;
-    return this;
+  // Commands own bounded domains; set/clear remain the ambient control surface.
+  command(options={}) {
+    const src=options.src;
+    if(!StormLayer.accepts(src)||!this.layers.has(src)&&this.layers.size>=MAX_STORM_LAYERS)return null;
+    this.cancelCommand(src);
+    const layer=new StormLayer(this.g,options);this.layers.set(src,layer);return layer;
+  }
+  cancelCommand(src){
+    const layer=this.layers.get(src);if(!layer)return false;
+    layer.dispose();this.layers.delete(src);return true;
   }
   clear() { this._target = { rain: 0, wind: 0, cloud: 0 }; this.storm = 0; this._src = null; this.stateId='clear';this._cancelStorm(); }
 
@@ -120,7 +130,7 @@ export class Weather {
   }
   update(dt) {
     this.time+=dt;this.g.world.weatherTime=this.time;
-    if (this._srcT > 0) { this._srcT -= dt; if (this._srcT <= 0) this.clear(); }
+    for(const [owner,layer] of this.layers){layer.update(dt);if(layer.disposed)this.layers.delete(owner);}
     const T = this._target;
     // GRADUAL — the brief is explicit that global weather must build, not switch
     this.rain += (T.rain - this.rain) * Math.min(1, dt * 0.55);
@@ -179,6 +189,7 @@ export class Weather {
     }
   }
   dispose() {
+    for(const layer of this.layers.values())layer.dispose();this.layers.clear();
     this._cancelStorm();this._rainVoice?.stop();this._rainVoice=null;
     this._lightning?.dispose();this._lightning=null;
     this._rainField?.dispose();this._rainField=null;this._mesh=null;

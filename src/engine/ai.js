@@ -293,6 +293,10 @@ export class AI {
     }
     if(hadAction)return out;
     if (lowHp) {
+      const form=b.powerUp;
+      if(form&&form.cd<=0&&form.activeT<=0&&b.ki>=(form.def.cost||0)&&slotUnlocked(b,form.sourceSlot||'_powerUp')){
+        out.movementGear=2;this.gcd=1;return out;
+      }
       const buff = (this.byType.buff || []).find(k => slotUnlocked(b,k) && b.slots[k].cd <= 0 && b.ki >= (b.slots[k].def.cost || 0));
       if (buff && chance(0.5)) { out.slots[buff].pressed = true; this.gcd = 1; return out; }
     }

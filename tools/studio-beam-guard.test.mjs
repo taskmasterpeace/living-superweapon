@@ -14,11 +14,12 @@ function run(defense,drain=.28){
  c.targetDefense=defense;c.reset(f,true,'beam');
  return {c,f,step(until){for(let t=1/60;t<=until+1e-8;t+=1/60)c.step(t,1/60);},close(){c.dispose();f.dispose();}};
 }
-test('Studio raised guard uses actual frontal chip and spends meter instead of merely posing the arms',()=>{
+test('Studio funded guard protects HP and spends energy and meter instead of merely posing the arms',()=>{
  const open=run('open'),guard=run('guard');try{
+  guard.c.target.ki=guard.c.target.maxKi=10000;const energy=guard.c.target.ki;
   open.step(2.5);guard.step(2.5);
-  assert.ok(open.c.damage>0&&guard.c.damage>0,'Both real streams reach the target');
-  assert.ok(guard.c.damage<open.c.damage*.35,`guard ${guard.c.damage} versus open ${open.c.damage}`);
+  assert.ok(open.c.damage>0);assert.equal(guard.c.damage,0,'Funded block protects all health');
+  assert.ok(guard.c.target.ki<energy,'The reached stream spends real energy');
   assert.ok(guard.c.target.guardMeter<.99&&guard.c.target.guardMeter>0);
   assert.equal(guard.c.target.guarding,true);assert.ok(guard.c.blockedContacts>0);
  }finally{open.close();guard.close();}

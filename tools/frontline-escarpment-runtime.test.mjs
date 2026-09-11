@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {sampleFrontlineRelief} from '../src/engine/frontline-ground.js';
+import {sampleFrontlineNaturalRelief,sampleFrontlineRelief} from '../src/engine/frontline-ground.js';
 import {FRONTLINE_FORMATIONS,FRONTLINE_FAR_BANDS} from '../src/engine/frontline-layout.js';
 import * as THREE from 'three';
 import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js';
@@ -11,18 +11,20 @@ import {FRONTLINE_ASSETS,FRONTLINE_GROUND_RADIUS,fitRockGeometry,replaceRockSkin
 const bytes=readFileSync('assets-src/frontline-convoy-bank-study/native-bed.f32');
 const bed=new Float32Array(bytes.buffer,bytes.byteOffset,bytes.byteLength/4),n=257,A=1028,step=2*A/256;
 const features=[{x:-245,z:40,rx:255,rz:225,height:10.5},{x:245,z:190,rx:255,rz:245,height:14.5}];
-test('reviewed interior is authoritative Float32 height, independent of recomposed formation fans',()=>{
- for(let r=0;r<n;r++)for(let c=0;c<n;c++)assert.equal(Math.fround(sampleFrontlineRelief(-A+c*step,-A+r*step,features)),bed[r*n+c],`source height ${r},${c}`);
+test('reviewed natural interior is authoritative Float32 height, independent of recomposed formation fans',()=>{
+ for(let r=0;r<n;r++)for(let c=0;c<n;c++)assert.equal(Math.fround(sampleFrontlineNaturalRelief(-A+c*step,-A+r*step,features)),bed[r*n+c],`source height ${r},${c}`);
 });
 test('off-grid authored bed uses native triangles and remains continuous at all exterior edges',()=>{
  for(const [c,r,u,v]of [[55,74,.2,.3],[60,90,.8,.7],[190,112,.1,.8]]){
   const i=r*n+c,a=bed[i],b=bed[i+1],d=bed[i+n],e=bed[i+n+1];
   const h=u+v<=1?a+(b-a)*u+(d-a)*v:e+(b-e)*(1-v)+(d-e)*(1-u);
-  assert.ok(Math.abs(sampleFrontlineRelief(-A+(c+u)*step,-A+(r+v)*step,features)-h)<1e-6);
+  assert.ok(Math.abs(sampleFrontlineNaturalRelief(-A+(c+u)*step,-A+(r+v)*step,features)-h)<1e-6);
  }
  for(const side of [-1,1])for(const t of [-.93,-.51,0,.37,.89])for(const axis of [0,1]){
-  const p=[t*A,t*A];p[axis]=side*A;const h=sampleFrontlineRelief(...p,features);p[axis]+=side*.00001;
-  assert.ok(Math.abs(sampleFrontlineRelief(...p,features)-h)<.0001,'Authored edge has a vertical crack');
+  for(const sample of [sampleFrontlineNaturalRelief,sampleFrontlineRelief]){
+   const p=[t*A,t*A];p[axis]=side*A;const h=sample(...p,features);p[axis]+=side*.00001;
+   assert.ok(Math.abs(sample(...p,features)-h)<.0001,'Natural or graded edge has a vertical crack');
+  }
  }
 });
 test('live formations match the reviewed role/profile composition',()=>{

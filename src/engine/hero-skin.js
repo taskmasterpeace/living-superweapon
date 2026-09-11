@@ -41,16 +41,16 @@ function suitMaterial(parts,points,model){
    ${model.surface==='field'?`#ifdef USE_MAP
    diffuseColor.rgb*=mix(vec3(1.0),texture2D(map,vMapUv).rgb,1.0-max(max(head,hand),boot));
    #endif`:''}`);
-  if(model.surface==='field'){
+  if(model.surface==='field'||mat.userData.heroFabric){
    shader.fragmentShader=shader.fragmentShader.replace('#include <normal_fragment_maps>',`vec3 fieldClothNormal=normal;
     ${THREE.ShaderChunk.normal_fragment_maps}
     normal=normalize(mix(fieldClothNormal,normal,1.0-max(max(head,hand),boot)));`);
-   if(model.body==='superhero-male')shader.fragmentShader=shader.fragmentShader.replace('#include <roughnessmap_fragment>','#include <roughnessmap_fragment>\nroughnessFactor=mix(.88,roughnessFactor,1.0-max(max(head,hand),boot));');
+   if(model.surface==='field'&&model.body==='superhero-male')shader.fragmentShader=shader.fragmentShader.replace('#include <roughnessmap_fragment>','#include <roughnessmap_fragment>\nroughnessFactor=mix(.88,roughnessFactor,1.0-max(max(head,hand),boot));');
   }
   shader.fragmentShader=shader.fragmentShader.replace('#include <emissivemap_fragment>',`#include <emissivemap_fragment>
    totalEmissiveRadiance=mix(mix(mix(skinEmissionSuit,skinEmissionLegs,waist),skinEmissionBoots,boot),skinEmissionFace,max(head,hand));`);
  };
- mat.customProgramCacheKey=()=> 'hero-source-suit-v5-garment-'+(model.surface??'standard')+'-'+(model.body??'procedural');
+ mat.customProgramCacheKey=()=> 'hero-source-suit-v6-fabric-'+(model.surface??'standard')+'-'+(model.body??'procedural')+'-'+!!mat.userData.heroFabric;
  return mat;
 }
 // Source axes describe anatomy (longitudinal and outward), not exporter Euler

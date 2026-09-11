@@ -21,7 +21,7 @@ import { heroModelOf } from '../data/hero-models.js';
 import { dressHero } from './hero-costume.js';
 import { bindLimbSurfaces } from './hero-limb-surface.js';
 import {bindHeroSkin} from './hero-skin.js';
-import {applyHeroSurface} from './hero-materials.js';
+import {applyHeroSurface,createCapeMaterial} from './hero-materials.js';
 import {createFieldBoot} from './field-boot.js';
 import {createFieldArmor} from './field-armor.js';
 import {createFieldGreave} from './field-greaves.js';
@@ -257,6 +257,7 @@ export function figure(def) {
   }
   // chest emblem
   const emblem = new THREE.Mesh(heroInsigniaGeometry(model.definition), glow);
+  emblem.visible=model.emblem!==false;
   emblem.position.set(0,.45,0);torso.add(emblem);
   // The belt is cut from this oval pelvis, not a circular hoop around it.
   const pelvis = new THREE.Mesh(anatomyGeometry([[-.65,.62,.45],[-.2,1.0,.57],[.55,.88,.52]]), suit2);
@@ -273,15 +274,17 @@ export function figure(def) {
   // hair/cowl (child of g; ragdoll pins it to the head)
   const cowl = new THREE.Mesh(anatomyGeometry([[.19,.75,.64],[.5,.73,.63],[.80,.49,.43],[.96,.03,.03]],16), hairMat);
   cowl.position.y = 8.75; cowl.scale.set(1,1.1,.88); g.add(cowl);
+  if(model.hair==='cropped')cowl.scale.y=.93;
+  if(model.hair==='none')cowl.visible=false;
   if (!b.helmet && !b.hood && !b.mane) {
     const backHair=new THREE.Mesh(new THREE.SphereGeometry(.78,14,12,Math.PI,Math.PI,0,Math.PI*.72),hairMat);
     backHair.name='hair-back';
-    backHair.position.z=-.04;head.add(backHair);
+    backHair.position.z=-.04;backHair.visible=model.hair!=='none';head.add(backHair);
     for(const side of [-1,1]) {
       const ear=new THREE.Mesh(new THREE.SphereGeometry(.19,8,8),skinMat);
       ear.scale.set(.65,1.2,.65);ear.position.set(side*.71,-.14,.04);head.add(ear);
     }
-    for(let i=0;i<5;i++) {
+    for(let i=0;i<(model.hair==='cropped'||model.hair==='none'?0:5);i++) {
       const spike = new THREE.Mesh(new THREE.ConeGeometry(.25,.72+(.5-Math.abs(i-2)*.15),5),hairMat);
       spike.position.set((i-2)*.25,.55,-.13);spike.rotation.z=-(i-2)*.18;spike.rotation.x=-.22;cowl.add(spike);
     }
@@ -405,7 +408,7 @@ export function figure(def) {
   // cape (optional)
   let cape = null;
   if (c.cape) {
-    cape = new THREE.Mesh(new THREE.PlaneGeometry(3.1, 5.2, 12, 16), new THREE.MeshStandardMaterial({ color: c.cape, roughness: 0.9, side: THREE.DoubleSide, metalness: 0 }));
+    cape = new THREE.Mesh(new THREE.PlaneGeometry(3.1, 5.2, 12, 16), createCapeMaterial(c.cape,model));
     cape.position.set(0, 5.1, -.85); cape.castShadow = true; g.add(cape);
   }
 

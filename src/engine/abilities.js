@@ -28,6 +28,7 @@ import {findWebZipAnchor,beginWebZip} from './web-zip.js';
 import {clearRush,rushInterrupted,rushTargetValid,findRushTarget,rushLanding} from './rush-safety.js';
 import {usesThrowAction,beginThrowAction,cancelThrowAction} from './throwable-action.js';
 import {firearmLife} from './firearm-aim.js';
+import {clearWebControlsFromSource} from './web-control.js';
 export {remoteAttack} from './remote-control.js';
 
 const _v = new THREE.Vector3();
@@ -85,6 +86,7 @@ function killOrb(c, st) {
 export function cancelHeldSlot(c,key) {
   c._game?.projectiles?.retirePendingNaniteShots?.(c,key);
   const st=c.slots[key];if(!st)return;
+  if(st.def.type==='weather')c._game?.weather?.cancelCommand?.(c);
   st._handsBusy=false;
   st._handsRetry=false;
   const existingCd=st.cd||0;
@@ -111,10 +113,23 @@ export function cancelHeldAttacks(c) {
   for(const key of Object.keys(c.slots))cancelHeldSlot(c,key);
   c._bowDrawT=0;
 }
+// Status controllers can return before producing a release edge. Retire the
+// fighter-owned preparations/sustains at that boundary; committed remote shots
+// remain owned because cancelHeldSlot deliberately preserves launched remotes.
+// Hitstop is not incapacity here: a paid charge survives that brief time freeze.
+function heldAttacksIncapacitated(c) {
+  return c.alive===false||c.staggerT>0||c.stunT>0||c.frozenT>0||c.sleepT>0||c.downedT>0||!!c.grabbedBy;
+}
+export function cancelHeldAttacksIfIncapacitated(c) {
+  if(!heldAttacksIncapacitated(c))return false;
+  cancelHeldAttacks(c);return true;
+}
 export function clearSlotFx(c) {
+  c._game?.weather?.cancelCommand?.(c);
   cancelThrowAction(c);
   cancelFirearmReload(c);
   clearWebSnare(c);
+  clearWebControlsFromSource(c);
   c.releaseHang?.();
   cancelAbilityMeleePose(c);
   c._game?.projectiles?.retirePendingNaniteShots?.(c);
@@ -232,7 +247,7 @@ export const TYPES = {
         pos: m, vel: velocity.setLength(def.speed || 70),throwMesh,launchFlash:throwMesh?false:undefined,
         radius: def.radius || 1.4, damage: def.damage || 14, blast: def.blast || 5, power: def.power || 1,
         homing: def.homing || 0, color: def.color, color2: def.color2, grav: def.grav || 0, shock: def.shock,
-        arrow: def.arrow, payload: def.payload, blind: def.blind, boomerang: def.boomerang, range: def.range,
+        arrow: def.arrow, payload: def.payload, webControl:def.webControl, blind: def.blind, boomerang: def.boomerang, range: def.range,
         card: def.card, disc: def.disc, bounces: def.bounces, pumpkin: def.pumpkin,
         blade: def.blade, canister: def.canister,      // thrown steel / shells read as objects, not orbs
         dtype: def.dtype, siphon: def.siphon,          // the damage TYPE rides the shot
@@ -274,6 +289,7 @@ export const TYPES = {
       g.projectiles.spawnProjectile(c, { vis: visOf(def),
         collisionPriority:def.collisionPriority,
         handOrigin:side,
+        dtype:def.dtype,
         launchTarget:c.hasAimWorld?c.aimWorld:null,launchSpread:spreadDraw,
         pos: m, vel: new THREE.Vector3(Math.cos(a)*Math.hypot(c.aim3.x,c.aim3.z), c.aim3.y, Math.sin(a)*Math.hypot(c.aim3.x,c.aim3.z)).setLength(def.speed || 105),
         radius: def.radius || 0.8, damage: def.damage || 6, blast: def.blast || 3.4, power: 0.5, color: def.color, color2: def.color2,
@@ -331,7 +347,11 @@ export const TYPES = {
         if (d > range || d < 0.1) continue;
         const dot = (dx / d) * c.aim.x + (dz / d) * c.aim.z;
         if (dot < Math.cos(arc)) continue;
-        f.takeDamage((def.dps || 26) * c.powerBuff * inp.dt, { src: c, dot: true, hitstop: 0, dtype: def.dtype || (def.cold ? 'cold' : 'energy') });
+        // Cones are volumes, not wallhacks. The same cover/interior sightline
+        // used by targeting decides whether this receiver is actually reached.
+        if(g.canSee&&!g.canSee(c,f))continue;
+        const dealt=f.takeDamage((def.dps || 26) * c.powerBuff * inp.dt, { src: c, dot: true, hitstop: 0, dtype: def.dtype || (def.cold ? 'cold' : 'energy') });
+        if(!(dealt>0))continue;
         if (def.cold) {
           f.vel.x *= 0.86; f.vel.z *= 0.86; f._chill = 0.5; f.speed = Math.max(8, (f.def.speed || 30) * 0.55);
           f.addFrost((def.frost || 0.5) * inp.dt, c);   // sustained cold ENCASES you in ice (strength breaks out)
@@ -444,6 +464,7 @@ export const TYPES = {
           pos: orbPos, vel: c.aim3.clone().setLength(lerp(def.speedMax || 70, def.speedMin || 42, c01)),
           radius: lerp(def.minR || 1.3, def.maxR || 5, c01), damage: lerp(def.dmgMin || 20, def.dmgMax || 70, c01),
           blast: lerp(8, def.maxBlast || 26, c01), power, color: def.color, color2: def.color2, shock: true, ground: true,
+          dtype:def.dtype,
           splitCount:def.remoteDetonate?def.splitCount:0,splitSpread:def.splitSpread,splitSpeed:def.splitSpeed,splitHoming:def.splitHoming,
         });
         if(def.remoteDetonate)st.remoteShot=shot;
@@ -552,6 +573,7 @@ export const TYPES = {
   buff(c, def, st, g, inp) {
     if (inp.pressed && ready(c, def, st)) {
       pay(c, def, st);
+      if(c.powerUp&&st!==c.powerUp)c.powerUp.activeT=0;
       // the three Tier-2 buff lanes ride the same activation
       if (def.siphonAura) c._siphon = { r: def.siphonAura.r || 22, dps: def.siphonAura.dps || 9, t: def.dur || 6, color: def.color || '#8a1d24' };
       if (def.hpPerSec) c._bloodBuff = { hps: def.hpPerSec, t: def.dur || 6 };
@@ -682,10 +704,15 @@ export const TYPES = {
 
   // 1 · WEATHER COMMAND — rain, wind, cloud and lightning, arriving GRADUALLY
   weather(c, def, st, g, inp) {
+    if(inp.pressed&&g.weather.layers?.has(c)){g.weather.cancelCommand(c);return;}
     if (inp.pressed && ready(c, def, st)) {
+      const center=g.isHuman?.(c)?g.aimPoint:c.pos.clone().addScaledVector(c.aim3||c.aim,def.range||100);
+      const layer=g.weather.command({rain:def.rain??.8,wind:def.wind??.6,cloud:def.cloud??.7,storm:def.storm??.5,dur:def.dur||14,radius:def.radius,range:def.range,kiPerSec:def.kiPerSec,center,src:c,slot:st});
+      if(!layer){g.hud?.feed?.('Storm limit reached','#d9b86b');return;}
+      // Cancel preparations on entry without cancelling the new domain itself.
+      for(const key of Object.keys(c.slots))if(c.slots[key]!==st)cancelHeldSlot(c,key);
       pay(c, def, st);
-      g.weather.command({ rain: def.rain ?? 0.8, wind: def.wind ?? 0.6, cloud: def.cloud ?? 0.7, storm: def.storm ?? 0.5, dur: def.dur || 14, src: c });
-      g.vfx.ring(c.pos.clone().setY(9), { color: def.color || '#9fd0ff', r0: 2, r1: 22, life: 0.6 });
+      g.vfx.ring(layer.center.clone(), { color: def.color || '#9fd0ff', r0: 2, r1: layer.radius, life: 0.6 });
       g.audio.blast(140, 0.5, c.pos);
       if (g.hud) g.hud.announce('WEATHER', 'the sky answers', def.color || '#9fd0ff');
     }
@@ -1158,9 +1185,9 @@ export const TYPES = {
       c.state = 'cast'; c.stateT = 0;c._castPoseRanged=false;
       // THE SIPHON VOICE — a downward pull that swells when it finds a victim, fades on release.
       if (!st._loop) st._loop = g.audio.sustain ? g.audio.sustain('drain', c.pos) : null;
-      const foe = g.coneFoe(c, def.range || 26, def.arc || 0.9);
-      if (st._loop) st._loop.set(foe && !foe.phase ? 1.3 : 0.5, c.pos);
-      if (foe && !foe.phase) {
+      const foe = g.coneFoe(c, def.range || 26, def.arc || 0.9),reached=foe&&!foe.phase&&(!g.canSee||g.canSee(c,foe));
+      if (st._loop) st._loop.set(reached ? 1.3 : 0.5, c.pos);
+      if (reached) {
         const dealt = foe.takeDamage((def.dps || 22) * c.powerBuff * inp.dt, { src: c, dot: true, hitstop: 0 });
         if (dealt > 0) c.heal(dealt * (def.ratio || 0.6));
         if (Math.random() < 0.5) {
@@ -1200,7 +1227,14 @@ export const TYPES = {
 };
 
 export function runSlot(c, key, inp, g) {
-  const st = c.slots[key]; if (!st) return;
+  const st = key==='_powerUp'?c.powerUp:c.slots[key]; if (!st) return;
+  if(heldAttacksIncapacitated(c)){
+    // Direct authoring/replay calls do not pass through a controller. Retained
+    // contact handlers own their loop here; traveling beams keep their existing
+    // projectile-manager interruption and inspection-frame pointer contract.
+    if(st.def.type==='cone'||st.def.type==='lifedrain')cancelHeldSlot(c,key);
+    return;
+  }
   if(c._throwAction&&(inp.pressed||inp.held)&&!remoteAttack(c,st))return;
   if(c._firearmReload&&(inp.pressed||inp.held))return;
   st._handsBusy=false;
@@ -1246,8 +1280,9 @@ export function runSlot(c, key, inp, g) {
     return;
   }
   // pressing an ability you can't afford → tell the player WHY nothing happened
-  if (!slotUnlocked(c,key)) {
-    if (inp.pressed && g.isHuman?.(c)) g.hud?.feed(`${st.def.name || 'Attack'} unlocks at level ${unlockLevel(c.def,key)}`, '#d9b86b');
+  const unlockKey=key==='_powerUp'?(st.sourceSlot||key):key;
+  if (!slotUnlocked(c,unlockKey)) {
+    if (inp.pressed && g.isHuman?.(c)) g.hud?.feed(`${st.def.name || 'Attack'} unlocks at level ${unlockLevel(c.def,unlockKey)}`, '#d9b86b');
     return;
   }
   if(st.def.naniteForm==='cannon'){
@@ -1276,7 +1311,7 @@ export function runSlot(c, key, inp, g) {
     inp={...inp,pressed:false,held:false};
   }
   const ownedConstruct=st.def.type==='construct'?constructForSlot(g,c,st):null;
-  if (inp.pressed && !ownedConstruct && (st.def.cost || 0) > c.ki && st.cd <= 0 && g.onNoKi) g.onNoKi(c, key);
+  if (inp.pressed && !ownedConstruct && !(st.def.type==='weather'&&g.weather?.layers?.has(c)) && (st.def.cost || 0) > c.ki && st.cd <= 0 && g.onNoKi) g.onNoKi(c, key);
   // stamp real input on the slot — held types (cones/phase/lifedrain) leave no cd/sustain
   // trace, so this is what the tutorial (and any future telemetry) watches
   if (inp.pressed || inp.held) { (c._slotUse || (c._slotUse = {}))[key] = true; if (inp.pressed) c._lastSlot = key; }   // _lastSlot feeds the mastery counter

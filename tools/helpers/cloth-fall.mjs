@@ -5,9 +5,12 @@ import {Ragdoll} from '../../src/engine/ragdoll.js';
 
 // Independent-review fixtures. Randomness is scoped to launch spin only;
 // source flight animation and production physics are not replaced by a pose.
-export function clothFall({seed=31,frame,cover=[]}={}){
+export function clothFall({seed=31,frame,cover=[],body='procedural'}={}){
  const fixed=seed===null;
- const f=new Fighter({...ROSTER.find(d=>d.id==='sol'),...(frame?{frame}:{})});
+ // Historical core-surface oracles inspect procedural torso/head meshes.
+ // Current weighted SOL has a separate visible-skin suite.
+ const def=ROSTER.find(d=>d.id==='sol');
+ const f=new Fighter({...def,model:{...def.model,body},...(frame?{frame}:{})});
  Object.assign(f,{animT:0,_openSky:true,flying:true,gait:'airborne',facing:.9,hasAimWorld:true});
  f.pos.set(20,50,-15);f.vel.set(14,0,45);f.aimWorld.set(65,25,90);
  for(let i=0;i<90;i++){f.animT+=1/60;f._animate(1/60);}f.obj.updateMatrixWorld(true);

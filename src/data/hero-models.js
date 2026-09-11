@@ -3,7 +3,7 @@
 export const HERO_BODY_LABELS={procedural:'Procedural modules','superhero-male':'Quaternius · Superhero male','superhero-female':'Quaternius · Superhero female'};
 export const HERO_BODIES=Object.keys(HERO_BODY_LABELS);
 export const HERO_MODELS = {
-  sol: { costume:'fitted', flightStyle:'hero', hairColor:'#172127' },
+  sol: { body:'superhero-male',surface:'standard',costume:'fitted', flightStyle:'hero', hairColor:'#172127' },
   kano: { costume:'martial', flightStyle:'martial', hairColor:'#14222a' },
   vega: { body:'superhero-male',costume:'plated',surface:'field',flightStyle:'hero',hairColor:'#252620' },
   titan: { costume:'plated', flightStyle:'thruster' },

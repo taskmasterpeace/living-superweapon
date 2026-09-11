@@ -1,3 +1,4 @@
+import {migratePowerUpDef} from './power-up.js';
 // WAR WORLD: ASCENDANTS — the roster as PURE DATA. Add a hero = add an entry here (52 and counting).
 // Slots: lmb, rmb, shift(mobility), q, e, f, r(ultimate). Colors follow house rules — NO purple.
 
@@ -217,7 +218,6 @@ export const ROSTER = [
       e: { type: 'teleport', name: 'Afterimage', cost: 12, cd: 1.4, range: 52, color: '#bfff6a' },
       f: { type: 'buff', name: 'Regenerate', cost: 20, cd: 16, mult: 1.3, dur: 8, heal: 46, color: '#9dff5a', color2: '#eaffea' },
       shift: { type: 'dash', name: 'Burst Step', cost: 5, cd: 0.5, power: 98, iframes: 0.24, color: '#bfff6a' },
-      r: { type: 'beam', material: 'air', name: 'Perfect Wave', cost: 24, cd: 14, radius: 3.4, tipSpeed: 648, maxLen: 170, dps: 128, kiPerSec: 30, charge: true, maxCharge: 2.0, kiChargePerSec: 20, chargePower: 2, chargeWidth: true, steer: 6, color: '#9dff5a', color2: '#ffffff' },
     },
   },
   {
@@ -245,13 +245,12 @@ export const ROSTER = [
     ai: { style: 'rusher', range: 24, aggro: 0.92, fly: 0.8 },
     evade: { kind: 'sprint', name: 'Blitz Run', mult: 1.75, dur: 1.4 },
     blurb: 'Bulletproof and airborne. Tackles across the sky, laser-visions from range, and turns briefly untouchable.',
-    sig: ['RMB Flying Tackle (air ram)', 'E Sky Combo (aerial rush)', 'F Invincible (i-frames)', 'LMB Eye Beam'],
+    sig: ['RMB Flying Tackle (air ram)', 'E Sky Combo (aerial rush)', 'R Unbreakable (i-frames)', 'LMB Eye Beam'],
     abilities: {
       lmb: { type: 'beam', name: 'Eye Beam', cost: 4, cd: 0.28, radius: 0.55, tipSpeed: 3600, maxLen: 150, dps: 56, kiPerSec: 16, steer: 13, faceOrigin: true, color: '#ff4a4a', color2: '#ffffff' },
       rmb: { type: 'melee', name: 'Flying Tackle', cost: 14, cd: 1.1, damage: 28, range: 13, arc: 0.7, lunge: 74, knock: 64, launch: 16, fly: true, color: '#ffd24a' },
       q: { type: 'cone', material: 'shock', name: 'Thunderclap', kiPerSec: 16, range: 30, arc: 1.2, dps: 16, push: 56, lift: 5, color: '#bfe0ff' },
       e: { type: 'rush', name: 'Sky Combo', cost: 16, cd: 2.0, range: 72, hits: 8, interval: 0.08, damage: 9, finisher: 32, color: '#ffd24a' },
-      f: { type: 'buff', name: 'Invincible', cost: 22, cd: 18, mult: 1.4, dur: 4, invuln: 2.5, color: '#ffd24a', color2: '#fff' },
       shift: { type: 'dash', name: 'Blitz', cost: 4, cd: 0.4, power: 126, iframes: 0.28, color: '#ffd24a' },
       r: { type: 'buff', name: 'Unbreakable', cost: 30, cd: 24, mult: 1.6, dur: 8, invuln: 2, heal: 40, color: '#ffd24a', color2: '#fff' },
     },
@@ -501,11 +500,10 @@ export const ROSTER = [
       // BALANCE 2026-07-23: the flurry was a 76-dmg button every 1.8s — the "spam wins" engine.
       // Trimmed to 6 hits on a 2.4s cycle; it's still his identity, it's no longer his whole game.
       rmb: { type: 'rush', name: 'Spider Flurry', cost: 16, cd: 2.4, range: 60, hits: 6, interval: 0.08, damage: 7, finisher: 25, color: '#eaffff' },
-      q: { type: 'volley', name: 'Web Darts', cost: 3, interval: 0.09, damage: 5, speed: 130, radius: 0.7, blast: 2.6, spread: 0.09, color: '#eaffff', color2: '#fff' },
+      q: { type: 'projectile', name: 'Web Darts', cost: 7, cd: 0.55, damage: 4, speed: 130, radius: 0.55, blast: 0, ground: false, color: '#eaffff', color2: '#fff', webControl: { duration: 1.2, moveMult: 0.45, immunity: 1 } },
       e: { type: 'melee', name: 'Sting Kick', cost: 9, cd: 0.8, damage: 22, range: 12, arc: 0.8, lunge: 46, knock: 44, launch: 14, fly: true, color: '#eaffff' },
       f: { type: 'buff', name: 'Danger Sense', cost: 18, cd: 16, mult: 1.3, dur: 7, invuln: 1, color: '#eaffff', color2: '#fff' },
       shift: { type: 'grapple', name: 'Web Zip', zip: true, cost: 6, cd: 0.65, range: 150, zipSpeed: 90, oneHand: true, color: '#eaffff' },
-      r: { type: 'rush', name: 'Maximum Spider', cost: 18, cd: 12, range: 70, hits: 10, interval: 0.06, damage: 8, finisher: 36, color: '#eaffff' },
     },
   },
   {
@@ -599,7 +597,7 @@ export const ROSTER = [
       rmb: { type: 'cone', name: 'Gale Force', kiPerSec: 16, range: 34, arc: 1.2, dps: 14, push: 58, lift: 7, color: '#bfeaff' },
       q: { type: 'volley', name: 'Hail Volley', cost: 3, interval: 0.09, damage: 6, speed: 118, radius: 0.8, blast: 3, spread: 0.1, color: '#bfeaff', color2: '#eaffff' },
       e: { type: 'cone', name: 'Flash Freeze', kiPerSec: 19, range: 30, arc: 1.1, dps: 18, cold: true, frost: 0.55, color: '#bfeaff' },
-      f: { type: 'buff', name: 'Eye of the Storm', cost: 24, cd: 18, mult: 1.5, dur: 10, color: '#bfeaff', color2: '#fff' },
+      f: { type: 'weather', name: 'Storm Domain', cost: 24, cd: 18, dur: 16, range: 100, radius: 65, kiPerSec: 5, rain: 1, wind: 1.1, cloud: 1, storm: 1, color: '#bfeaff', color2: '#fff' },
       shift: { type: 'dash', name: 'Tailwind', cost: 5, cd: 0.55, power: 98, iframes: 0.24, color: '#bfeaff' },
       r: { type: 'meteor', name: 'Stormfront', cost: 34, cd: 18, count: 14, interval: 0.16, spread: 30, radius: 3, damage: 33, blast: 18, color: '#bfeaff', color2: '#eaffff' },
     },
@@ -715,7 +713,7 @@ export const ROSTER = [
       e: { type: 'projectile', name: 'Focused Note', cost: 7, cd: 0.4, damage: 16, speed: 130, radius: 0.9, blast: 5, color: '#ffe066', color2: '#fff' },
       f: { type: 'buff', name: 'Crescendo', cost: 22, cd: 16, mult: 1.5, dur: 9, color: '#ffe066', color2: '#fff' },
       shift: { type: 'dash', name: 'Staccato Step', cost: 4, cd: 0.5, power: 98, iframes: 0.28, color: '#ffe066' },
-      r: { type: 'cone', name: 'THE CANARY CRY', kiPerSec: 34, range: 52, arc: 0.9, dps: 44, push: 90, lift: 8, sonic: true, color: '#ffe066' },
+      // Second scream cone retained as a Studio alternative, not a second default.
     },
   },
   {
@@ -764,7 +762,7 @@ export const ROSTER = [
       e: { type: 'melee', name: 'Staff Sweep', gear: true, cost: 10, cd: 0.8, damage: 24, range: 13, arc: 1.15, lunge: 30, knock: 46, launch: 12, color: '#37c7ff' },
       f: { type: 'buff', name: 'Flow State', cost: 20, cd: 16, mult: 1.45, dur: 9, color: '#37c7ff', color2: '#fff' },
       shift: { type: 'dash', name: 'Tumbler', cost: 4, cd: 0.45, power: 102, iframes: 0.3, color: '#37c7ff' },
-      r: { type: 'rush', name: 'Finale Routine', cost: 18, cd: 12, range: 66, hits: 9, interval: 0.07, damage: 8, finisher: 34, color: '#37c7ff' },
+      // Finale Routine is an authoring alternative to the retained rush.
     },
   },
   // ═══════════════ THE ORIGINAL TEN (Consequences of Failure) ═══════════════
@@ -863,7 +861,7 @@ export const ROSTER = [
       e: { type: 'projectile', name: 'Bio Spike', cost: 7, cd: 0.4, damage: 15, speed: 100, radius: 1, blast: 5, homing: 2, color: '#9dff5a', color2: '#eaffea' },
       f: { type: 'buff', name: 'Regenerative Bond', cost: 20, cd: 16, mult: 1.35, dur: 9, heal: 45, color: '#9dff5a', color2: '#fff' },
       shift: { type: 'dash', name: 'Adaptive Slip', cost: 4, cd: 0.5, power: 98, iframes: 0.26, color: '#9dff5a' },
-      r: { type: 'buff', name: 'FULL BOND', cost: 28, cd: 20, mult: 1.7, dur: 10, heal: 35, color: '#9dff5a', color2: '#ffffff' },
+      // Keep one healing/damage buff; FULL BOND remains in Studio's catalog.
     },
   },
   {
@@ -932,7 +930,7 @@ export const ROSTER = [
     },
   },
  ...MILITARY_ROSTER,
-];
+].map(def=>migratePowerUpDef(def));
 
 export const SLOT_ORDER = [
   { k: 'lmb', label: 'LMB' }, { k: 'rmb', label: 'RMB' }, { k: 'shift', label: 'SHIFT' },

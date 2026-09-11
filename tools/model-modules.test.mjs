@@ -4,7 +4,10 @@ import {figure} from '../src/engine/figure.js';
 import {ROSTER} from '../src/data/characters.js';
 import {anatomyGeometry} from '../src/engine/hero-rig.js';
 import {Vector3,Box3,Mesh,MeshBasicMaterial,Raycaster} from 'three';
-const sol=ROSTER.find(d=>d.id==='sol');
+// These are procedural geometry oracles; weighted-skin surface checks live in
+// hero-skin tests and must not probe the hidden procedural face underneath it.
+const sourceSol=ROSTER.find(d=>d.id==='sol');
+const sol={...sourceSol,model:{...sourceSol.model,body:'procedural',surface:'standard'}};
 
 test('open palms keep thumbs on the anatomical inside without adding finger draw calls',()=>{
  const p=figure(sol),v=new Vector3();

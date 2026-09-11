@@ -24,7 +24,25 @@
 //   abilitySuite(game, hud, opts)       → fire everything, return the pass/fail report
 import { ROSTER } from '../data/characters.js';
 import { TYPE_META } from '../engine/abilityMeta.js';
-import { runSlot } from '../engine/abilities.js';
+import { runSlot, TYPES } from '../engine/abilities.js';
+
+// Activation evidence is not combat effectiveness. In particular, terrain settling
+// is not proof that a shot fired, and an unregistered handler can never pass.
+export function collectAbilityEvidence(type, test) {
+  if(typeof TYPES[type]!=='function'||!TYPE_META[type])return [];
+  const evidence=[];
+  if(test.spawns>0)evidence.push('spawned');
+  if(test.dmg>.01)evidence.push('damaged');
+  const movement=['dash','teleport','grapple','rush','tentacle'].includes(type);
+  if(movement&&(test.ki>.01||test.cd)&&test.move>6)evidence.push('travelled');
+  if(test.flying)evidence.push('flight');
+  if(test.selfState)evidence.push('self-state');
+  if(test.scale>.02)evidence.push('resize');
+  if(test.buff>.01)evidence.push('buff');
+  if(test.quiver)evidence.push('quiver-changed');
+  if(test.context?.ok)evidence.push(test.context.kind+'-verified');
+  return evidence;
+}
 
 const DT = 1 / 60;
 // ⚠ SEVEN SLOTS, NOT SIX. `SLOT_ORDER` in data/characters.js includes `shift` (the kit's movement
@@ -230,6 +248,8 @@ function _stage(game, hud, heroId, slot, opts, errors, onErr, realUpdate) {
   // ---- a clean board every time. `clearTransients` is the ONE place that empties it (the reset
   // law) — anything a previous ability left behind would otherwise be counted as this one's work.
   clearCombat(game);
+  game.world.resetTerrain();
+  game.vfx.clearScorches();
   game.setPlayerChar(heroId);
   const p = game.player;
   if (!p) return { heroId, slot, ok: false, why: 'no player after setPlayerChar', errors };
@@ -252,12 +272,21 @@ function _stage(game, hud, heroId, slot, opts, errors, onErr, realUpdate) {
   const REACH = { strike: 7, grapple: 12, cone: 18, trap: 14, control: 20, movement: 26 };
   const targetDist = opts.dist ?? TYPE_DIST[ab.type] ??
     (ab.reach ? Math.max(4, ab.reach * 0.75) : (REACH[famFor] || 30));
+  const casterX = -targetDist / 2;
+  const targetX = targetDist / 2;
+  const groundAt = (x, z = 0) => game.world.heightAt ? game.world.heightAt(x, z) : 0;
+  const placeOnGround = (fighter, x, z = 0) => {
+    const y = groundAt(x, z);
+    fighter.pos.set(x, y, z);
+    fighter.groundY = y;
+    fighter.spawn?.copy(fighter.pos);
+  };
 
   // stand the caster still at the origin, facing +x, with a dummy downrange to actually hit
-  p.pos.set(-targetDist / 2, 0, 0);
+  placeOnGround(p, casterX);
   p.vel.set(0, 0, 0);
   p.aim.set(1, 0, 0); p.aim3.set(1, 0, 0);
-  game.aimPoint.set(targetDist / 2, 0, 0);
+  game.aimPoint.set(targetX, groundAt(targetX), 0);
   p.facing = 0;
   p.staggerT = 0; p.frozenT = 0; p.stunT = 0; p.downedT = 0;
   // ⚠ ONE TARGET, NOT A CROWD. Each call used to spawn another dummy and never remove the last, so
@@ -268,7 +297,8 @@ function _stage(game, hud, heroId, slot, opts, errors, onErr, realUpdate) {
     const e = game.entities[i];
     if (e && (e.isDummy || e._abilityFixture)) { try { e.dispose && e.dispose(); } catch (err) {} game.scene.remove(e.obj); game.entities.splice(i, 1); }
   }
-  const dummy = ab.type === 'mindcontrol' ? game.spawnRival('sol') : game.spawnDummy(targetDist / 2, 0);
+  const dummy = ab.type === 'mindcontrol' ? game.spawnRival('sol') : game.spawnDummy(targetX, 0);
+  if (dummy) placeOnGround(dummy, targetX);
   if (ab.type === 'mindcontrol') dummy._abilityFixture = true;
   if (ab.type === 'grapple' && !ab.reel) game.world.cover.push(opts.contextCover);
   if (dummy) { dummy.hp = dummy.maxHp; dummy.invuln = 0; }
@@ -314,12 +344,12 @@ function _stage(game, hud, heroId, slot, opts, errors, onErr, realUpdate) {
   // ==============================================================================================
   const runOnce = (doFire, photo) => {
     // the same starting conditions every time, so two rows of the report mean the same thing
-    p.pos.set(-targetDist / 2, 0, 0);
+    placeOnGround(p, casterX);
     p.vel.set(0, 0, 0);
     p.aim.set(1, 0, 0); p.aim3.set(1, 0, 0);
     p.facing = 0;
     p.staggerT = 0; p.frozenT = 0; p.stunT = 0; p.downedT = 0;
-    if (dummy) { dummy.hp = dummy.maxHp; dummy.invuln = 0; dummy.pos.set(targetDist / 2, 0, 0); }
+    if (dummy) { dummy.hp = dummy.maxHp; dummy.invuln = 0; placeOnGround(dummy, targetX); }
     topUp();
 
     const before = snapshot(game);
@@ -435,25 +465,12 @@ function _stage(game, hud, heroId, slot, opts, errors, onErr, realUpdate) {
     runOnce(true, true);
   }
 
-  // ⚠ EXECUTION IS REPORTED, NOT REQUIRED — and dropping it as a gate was a real correction. It
-  // cannot be measured honestly here anyway: a sustained power is topped up every held frame so it
-  // does not simply run dry, which erases the very ki-spend it would be judged on. A cone that
-  // dealt 26.9 damage was being failed for "not executing". And it is redundant: an unimplemented
-  // type and an inert buff both produce NO EFFECT, so effect alone already separates them.
+  // Energy is topped up during sustained tests, so spending is not a global gate.
+  // Movement-only evidence does require execution to exclude ordinary settling.
   const executed = test.ki > 0.01 || test.cd;
 
   // ---- DID ANYTHING ACTUALLY HAPPEN? — this is the whole test ----------------------------------
-  const evidence = [];
-  if (test.spawns > 0) evidence.push('spawned');
-  if (test.dmg > 0.01) evidence.push('damaged');
-  if (test.move > 6) evidence.push('travelled');     // a dash/teleport, not a fighter settling
-  if (test.flying) evidence.push('flight');
-  if (test.selfState) evidence.push('self-state');
-  if (test.scale > 0.02) evidence.push('resize');
-  if (test.buff > 0.01) evidence.push('buff');
-  if (test.quiver) evidence.push('quiver-changed');
-
-  if (test.context?.ok) evidence.push(test.context.kind + '-verified');
+  const evidence = collectAbilityEvidence(ab.type,test);
   const ok = errors.length === 0 && fired && evidence.length > 0 && (!test.context || test.context.ok);
   const needsContext = !ok && !errors.length && !test.context && !!CONTEXTUAL[ab.type];
 

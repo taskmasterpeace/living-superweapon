@@ -1,0 +1,3860 @@
+{
+  "scope": "Checked-in roster plus boot-derived damage types; no browser-local Studio/custom overrides",
+  "heroes": 55,
+  "slots": 385,
+  "types": {
+    "beam": 25,
+    "cone": 36,
+    "melee": 41,
+    "projectile": 42,
+    "volley": 14,
+    "dash": 54,
+    "buff": 51,
+    "rush": 18,
+    "teleport": 10,
+    "growingorb": 4,
+    "charge": 25,
+    "construct": 14,
+    "meteor": 9,
+    "summon": 4,
+    "nova": 2,
+    "lifedrain": 1,
+    "phase": 4,
+    "tentacle": 5,
+    "portal": 1,
+    "rifle": 17,
+    "bow": 1,
+    "quiver": 1,
+    "facebomb": 1,
+    "grapple": 2,
+    "mine": 2,
+    "mindcontrol": 1
+  },
+  "validationProblems": [],
+  "exactDuplicates": [
+    {
+      "slots": [
+        "kano.f",
+        "stormcall.f"
+      ]
+    },
+    {
+      "slots": [
+        "vega.shift",
+        "tempest.shift"
+      ]
+    },
+    {
+      "slots": [
+        "aurum.e",
+        "bulwark.e"
+      ]
+    },
+    {
+      "slots": [
+        "aurum.shift",
+        "kraken.shift"
+      ]
+    },
+    {
+      "slots": [
+        "nova.shift",
+        "pyre.shift"
+      ]
+    },
+    {
+      "slots": [
+        "rime.shift",
+        "trench.shift"
+      ]
+    },
+    {
+      "slots": [
+        "warden.q",
+        "graven.rmb"
+      ]
+    },
+    {
+      "slots": [
+        "warden.r",
+        "olympus.r"
+      ]
+    },
+    {
+      "slots": [
+        "apex.e",
+        "marshal.e"
+      ]
+    },
+    {
+      "slots": [
+        "specter.shift",
+        "kamaria.shift"
+      ]
+    },
+    {
+      "slots": [
+        "kraken.f",
+        "foundry.f"
+      ]
+    },
+    {
+      "slots": [
+        "sarge.shift",
+        "merc.shift"
+      ]
+    },
+    {
+      "slots": [
+        "kivuli.rmb",
+        "mystward.rmb",
+        "dune.rmb"
+      ]
+    },
+    {
+      "slots": [
+        "kivuli.q",
+        "marshal.q",
+        "kamaria.rmb"
+      ]
+    },
+    {
+      "slots": [
+        "ironclad.e",
+        "foundry.e"
+      ]
+    },
+    {
+      "slots": [
+        "ironclad.f",
+        "marshal.f"
+      ]
+    },
+    {
+      "slots": [
+        "ironclad.shift",
+        "stormcall.shift",
+        "graven.shift"
+      ]
+    },
+    {
+      "slots": [
+        "stormcall.q",
+        "olympus.q"
+      ]
+    },
+    {
+      "slots": [
+        "onyx.f",
+        "jawah.f"
+      ]
+    },
+    {
+      "slots": [
+        "tempest.f",
+        "graven.f"
+      ]
+    },
+    {
+      "slots": [
+        "decibel.shift",
+        "jawah.shift"
+      ]
+    },
+    {
+      "slots": [
+        "coldsnap.f",
+        "talon.f"
+      ]
+    }
+  ],
+  "sameKitFamilies": [
+    {
+      "hero": "vega",
+      "family": "beam",
+      "abilities": [
+        {
+          "slot": "rmb",
+          "name": "Violet Lance",
+          "definition": {
+            "type": "beam",
+            "name": "Violet Lance",
+            "cost": 8,
+            "cd": 0.6,
+            "radius": 1.45,
+            "tipSpeed": 583,
+            "maxLen": 150,
+            "dps": 80,
+            "kiPerSec": 22,
+            "charge": true,
+            "maxCharge": 1.4,
+            "kiChargePerSec": 16,
+            "chargePower": 1.5,
+            "chargeWidth": true,
+            "steer": 9,
+            "spiral": true,
+            "color": "#5a86ff",
+            "color2": "#bfd0ff",
+            "dtype": "energy"
+          }
+        },
+        {
+          "slot": "r",
+          "name": "Final Arc",
+          "definition": {
+            "type": "beam",
+            "material": "air",
+            "name": "Final Arc",
+            "cost": 24,
+            "cd": 14,
+            "radius": 3.4,
+            "tipSpeed": 648,
+            "maxLen": 170,
+            "dps": 130,
+            "kiPerSec": 30,
+            "charge": true,
+            "maxCharge": 2,
+            "kiChargePerSec": 20,
+            "chargePower": 2,
+            "chargeWidth": true,
+            "steer": 6,
+            "color": "#eaffa0",
+            "color2": "#ffffff",
+            "dtype": "physical"
+          }
+        }
+      ]
+    },
+    {
+      "hero": "hive",
+      "family": "summon",
+      "abilities": [
+        {
+          "slot": "lmb",
+          "name": "Drone Swarm",
+          "definition": {
+            "type": "summon",
+            "name": "Drone Swarm",
+            "cost": 16,
+            "cd": 4,
+            "count": 3,
+            "max": 6,
+            "duration": 12,
+            "damage": 7,
+            "interval": 0.7,
+            "speed": 82,
+            "color": "#ffdf7a",
+            "color2": "#fff",
+            "dtype": "energy"
+          }
+        },
+        {
+          "slot": "e",
+          "name": "Hunter Pack",
+          "definition": {
+            "type": "summon",
+            "name": "Hunter Pack",
+            "cost": 24,
+            "cd": 8,
+            "count": 2,
+            "max": 8,
+            "duration": 14,
+            "damage": 12,
+            "interval": 0.55,
+            "speed": 92,
+            "color": "#ffcf5a",
+            "color2": "#fff",
+            "dtype": "energy"
+          }
+        }
+      ]
+    },
+    {
+      "hero": "apex",
+      "family": "beam",
+      "abilities": [
+        {
+          "slot": "lmb",
+          "name": "Wave Cannon",
+          "definition": {
+            "type": "beam",
+            "material": "air",
+            "name": "Wave Cannon",
+            "cost": 8,
+            "cd": 0.6,
+            "radius": 2.4,
+            "tipSpeed": 540,
+            "maxLen": 150,
+            "dps": 84,
+            "kiPerSec": 22,
+            "charge": true,
+            "maxCharge": 1.6,
+            "kiChargePerSec": 14,
+            "chargePower": 1.6,
+            "chargeWidth": true,
+            "steer": 9,
+            "color": "#9dff5a",
+            "color2": "#eaffea",
+            "dtype": "physical"
+          }
+        },
+        {
+          "slot": "r",
+          "name": "Perfect Wave",
+          "definition": {
+            "type": "beam",
+            "material": "air",
+            "name": "Perfect Wave",
+            "cost": 24,
+            "cd": 14,
+            "radius": 3.4,
+            "tipSpeed": 648,
+            "maxLen": 170,
+            "dps": 128,
+            "kiPerSec": 30,
+            "charge": true,
+            "maxCharge": 2,
+            "kiChargePerSec": 20,
+            "chargePower": 2,
+            "chargeWidth": true,
+            "steer": 6,
+            "color": "#9dff5a",
+            "color2": "#ffffff",
+            "dtype": "physical"
+          }
+        }
+      ]
+    },
+    {
+      "hero": "vanguard",
+      "family": "buff",
+      "abilities": [
+        {
+          "slot": "f",
+          "name": "Invincible",
+          "definition": {
+            "type": "buff",
+            "name": "Invincible",
+            "cost": 22,
+            "cd": 18,
+            "mult": 1.4,
+            "dur": 4,
+            "invuln": 2.5,
+            "color": "#ffd24a",
+            "color2": "#fff",
+            "dtype": "energy"
+          }
+        },
+        {
+          "slot": "r",
+          "name": "Unbreakable",
+          "definition": {
+            "type": "buff",
+            "name": "Unbreakable",
+            "cost": 30,
+            "cd": 24,
+            "mult": 1.6,
+            "dur": 8,
+            "invuln": 2,
+            "heal": 40,
+            "color": "#ffd24a",
+            "color2": "#fff",
+            "dtype": "energy"
+          }
+        }
+      ]
+    },
+    {
+      "hero": "titan",
+      "family": "beam",
+      "abilities": [
+        {
+          "slot": "lmb",
+          "name": "Twin Cannon",
+          "definition": {
+            "type": "beam",
+            "material": "energy",
+            "name": "Twin Cannon",
+            "cost": 8,
+            "cd": 0.6,
+            "radius": 2.6,
+            "tipSpeed": 562,
+            "maxLen": 150,
+            "dps": 82,
+            "kiPerSec": 22,
+            "charge": true,
+            "maxCharge": 1.5,
+            "kiChargePerSec": 14,
+            "chargePower": 1.6,
+            "chargeWidth": true,
+            "steer": 8,
+            "color": "#ff9a2a",
+            "color2": "#ffe0b0",
+            "dtype": "energy"
+          }
+        },
+        {
+          "slot": "r",
+          "name": "Annihilator Array",
+          "definition": {
+            "type": "beam",
+            "material": "energy",
+            "name": "Annihilator Array",
+            "cost": 24,
+            "cd": 14,
+            "radius": 3.4,
+            "tipSpeed": 626,
+            "maxLen": 170,
+            "dps": 126,
+            "kiPerSec": 30,
+            "charge": true,
+            "maxCharge": 2,
+            "kiChargePerSec": 20,
+            "chargePower": 2,
+            "chargeWidth": true,
+            "steer": 6,
+            "color": "#ffb03a",
+            "color2": "#ffffff",
+            "dtype": "energy"
+          }
+        }
+      ]
+    },
+    {
+      "hero": "merc",
+      "family": "projectile",
+      "abilities": [
+        {
+          "slot": "e",
+          "name": "Thermal Detonator",
+          "definition": {
+            "type": "projectile",
+            "name": "Thermal Detonator",
+            "gear": true,
+            "cost": 9,
+            "cd": 0.9,
+            "damage": 26,
+            "speed": 55,
+            "radius": 1.2,
+            "blast": 14,
+            "grav": 11,
+            "shock": true,
+            "canister": true,
+            "color": "#8a8f6a",
+            "color2": "#ffd24a",
+            "dtype": "energy"
+          }
+        },
+        {
+          "slot": "r",
+          "name": "Rail Detonator",
+          "definition": {
+            "type": "projectile",
+            "name": "Rail Detonator",
+            "gear": true,
+            "cost": 26,
+            "cd": 8,
+            "damage": 38,
+            "speed": 95,
+            "radius": 1.4,
+            "blast": 16,
+            "homing": 2.6,
+            "shock": true,
+            "canister": true,
+            "color": "#ff8a3d",
+            "color2": "#ffd24a",
+            "dtype": "energy"
+          }
+        }
+      ]
+    },
+    {
+      "hero": "sandra",
+      "family": "rifle",
+      "abilities": [
+        {
+          "slot": "lmb",
+          "name": "Twin Pistols",
+          "definition": {
+            "type": "rifle",
+            "name": "Twin Pistols",
+            "gear": true,
+            "cost": 3,
+            "interval": 0.16,
+            "damage": 10,
+            "speed": 165,
+            "radius": 0.6,
+            "blast": 2.6,
+            "spread": 0.03,
+            "recoil": 1.2,
+            "color": "#ffb03a",
+            "color2": "#fff",
+            "dtype": "physical"
+          }
+        },
+        {
+          "slot": "rmb",
+          "name": "Suppressed SMG",
+          "definition": {
+            "type": "rifle",
+            "name": "Suppressed SMG",
+            "gear": true,
+            "cost": 2,
+            "interval": 0.07,
+            "damage": 4,
+            "speed": 175,
+            "radius": 0.5,
+            "blast": 2,
+            "spread": 0.06,
+            "recoil": 0.8,
+            "color": "#ffd97a",
+            "color2": "#fff",
+            "dtype": "physical"
+          }
+        }
+      ]
+    },
+    {
+      "hero": "ironclad",
+      "family": "beam",
+      "abilities": [
+        {
+          "slot": "rmb",
+          "name": "Unibeam",
+          "definition": {
+            "type": "beam",
+            "material": "energy",
+            "name": "Unibeam",
+            "cost": 8,
+            "cd": 0.6,
+            "radius": 2.4,
+            "tipSpeed": 583,
+            "maxLen": 150,
+            "dps": 78,
+            "kiPerSec": 22,
+            "charge": true,
+            "maxCharge": 1.5,
+            "kiChargePerSec": 14,
+            "chargePower": 1.5,
+            "chargeWidth": true,
+            "steer": 8,
+            "color": "#ffd97a",
+            "color2": "#fff",
+            "dtype": "energy"
+          }
+        },
+        {
+          "slot": "r",
+          "name": "Housewarming Party",
+          "definition": {
+            "type": "beam",
+            "name": "Housewarming Party",
+            "cost": 24,
+            "cd": 14,
+            "radius": 3.4,
+            "tipSpeed": 626,
+            "maxLen": 170,
+            "dps": 122,
+            "kiPerSec": 30,
+            "charge": true,
+            "maxCharge": 2,
+            "kiChargePerSec": 20,
+            "chargePower": 2,
+            "chargeWidth": true,
+            "steer": 6,
+            "color": "#ffe8c0",
+            "color2": "#ffffff",
+            "dtype": "energy"
+          }
+        }
+      ]
+    },
+    {
+      "hero": "webline",
+      "family": "rush",
+      "abilities": [
+        {
+          "slot": "rmb",
+          "name": "Spider Flurry",
+          "definition": {
+            "type": "rush",
+            "name": "Spider Flurry",
+            "cost": 16,
+            "cd": 2.4,
+            "range": 60,
+            "hits": 6,
+            "interval": 0.08,
+            "damage": 7,
+            "finisher": 25,
+            "color": "#eaffff",
+            "dtype": "energy"
+          }
+        },
+        {
+          "slot": "r",
+          "name": "Maximum Spider",
+          "definition": {
+            "type": "rush",
+            "name": "Maximum Spider",
+            "cost": 18,
+            "cd": 12,
+            "range": 70,
+            "hits": 10,
+            "interval": 0.06,
+            "damage": 8,
+            "finisher": 36,
+            "color": "#eaffff",
+            "dtype": "energy"
+          }
+        }
+      ]
+    },
+    {
+      "hero": "ripclaw",
+      "family": "melee",
+      "abilities": [
+        {
+          "slot": "lmb",
+          "name": "Ripping Claws",
+          "definition": {
+            "type": "melee",
+            "name": "Ripping Claws",
+            "cost": 8,
+            "cd": 0.55,
+            "damage": 19,
+            "range": 11,
+            "arc": 0.85,
+            "lunge": 40,
+            "knock": 34,
+            "launch": 6,
+            "dmgClass": "slash",
+            "color": "#ffe066",
+            "dtype": "energy"
+          }
+        },
+        {
+          "slot": "rmb",
+          "name": "Lunge Shred",
+          "definition": {
+            "type": "melee",
+            "name": "Lunge Shred",
+            "cost": 12,
+            "cd": 1,
+            "damage": 28,
+            "range": 13,
+            "arc": 0.75,
+            "lunge": 62,
+            "knock": 50,
+            "launch": 14,
+            "fly": true,
+            "dmgClass": "slash",
+            "color": "#ffe066",
+            "dtype": "energy"
+          }
+        }
+      ]
+    },
+    {
+      "hero": "ripclaw",
+      "family": "buff",
+      "abilities": [
+        {
+          "slot": "f",
+          "name": "Regeneration",
+          "definition": {
+            "type": "buff",
+            "name": "Regeneration",
+            "cost": 18,
+            "cd": 14,
+            "mult": 1.2,
+            "dur": 8,
+            "heal": 55,
+            "color": "#8fe08a",
+            "color2": "#fff",
+            "dtype": "energy"
+          }
+        },
+        {
+          "slot": "r",
+          "name": "Berserker Rage",
+          "definition": {
+            "type": "buff",
+            "name": "Berserker Rage",
+            "cost": 26,
+            "cd": 20,
+            "mult": 1.75,
+            "dur": 9,
+            "heal": 25,
+            "color": "#ffe066",
+            "color2": "#fff",
+            "dtype": "energy"
+          }
+        }
+      ]
+    },
+    {
+      "hero": "majesty",
+      "family": "beam",
+      "abilities": [
+        {
+          "slot": "lmb",
+          "name": "Photon Stream",
+          "definition": {
+            "type": "beam",
+            "material": "light",
+            "name": "Photon Stream",
+            "cost": 4,
+            "cd": 0.3,
+            "radius": 1.2,
+            "tipSpeed": 907,
+            "maxLen": 150,
+            "dps": 62,
+            "kiPerSec": 16,
+            "steer": 12,
+            "color": "#ffd24a",
+            "color2": "#fff2c0",
+            "dtype": "energy"
+          }
+        },
+        {
+          "slot": "r",
+          "name": "Supernova Lance",
+          "definition": {
+            "type": "beam",
+            "material": "light",
+            "name": "Supernova Lance",
+            "cost": 24,
+            "cd": 14,
+            "radius": 3.4,
+            "tipSpeed": 648,
+            "maxLen": 170,
+            "dps": 128,
+            "kiPerSec": 30,
+            "charge": true,
+            "maxCharge": 2,
+            "kiChargePerSec": 20,
+            "chargePower": 2,
+            "chargeWidth": true,
+            "steer": 6,
+            "color": "#ffe8c0",
+            "color2": "#ffffff",
+            "dtype": "energy"
+          }
+        }
+      ]
+    },
+    {
+      "hero": "tempest",
+      "family": "cone",
+      "abilities": [
+        {
+          "slot": "rmb",
+          "name": "Gale Force",
+          "definition": {
+            "type": "cone",
+            "name": "Gale Force",
+            "kiPerSec": 16,
+            "range": 34,
+            "arc": 1.2,
+            "dps": 14,
+            "push": 58,
+            "lift": 7,
+            "color": "#bfeaff",
+            "dtype": "energy"
+          }
+        },
+        {
+          "slot": "e",
+          "name": "Flash Freeze",
+          "definition": {
+            "type": "cone",
+            "name": "Flash Freeze",
+            "kiPerSec": 19,
+            "range": 30,
+            "arc": 1.1,
+            "dps": 18,
+            "cold": true,
+            "frost": 0.55,
+            "color": "#bfeaff",
+            "dtype": "cold"
+          }
+        }
+      ]
+    },
+    {
+      "hero": "aegis",
+      "family": "charge",
+      "abilities": [
+        {
+          "slot": "q",
+          "name": "Aegis Wave",
+          "definition": {
+            "type": "charge",
+            "name": "Aegis Wave",
+            "cost": 6,
+            "cd": 1,
+            "kiPerSec": 12,
+            "maxCharge": 2.2,
+            "minR": 1.4,
+            "maxR": 6,
+            "dmgMin": 22,
+            "dmgMax": 76,
+            "maxBlast": 30,
+            "speedMin": 42,
+            "speedMax": 70,
+            "chargePower": 2.8,
+            "color": "#ffd24a",
+            "color2": "#fff2c0",
+            "dtype": "energy"
+          }
+        },
+        {
+          "slot": "r",
+          "name": "Wrath of Themyscira",
+          "definition": {
+            "type": "charge",
+            "name": "Wrath of Themyscira",
+            "cost": 10,
+            "cd": 14,
+            "kiPerSec": 13,
+            "maxCharge": 2.3,
+            "minR": 1.8,
+            "maxR": 7,
+            "dmgMin": 26,
+            "dmgMax": 84,
+            "maxBlast": 36,
+            "speedMin": 36,
+            "speedMax": 62,
+            "chargePower": 3,
+            "color": "#ffd24a",
+            "color2": "#fff2c0",
+            "dtype": "energy"
+          }
+        }
+      ]
+    },
+    {
+      "hero": "olympus",
+      "family": "charge",
+      "abilities": [
+        {
+          "slot": "q",
+          "name": "Thunderbolt",
+          "definition": {
+            "type": "charge",
+            "name": "Thunderbolt",
+            "cost": 6,
+            "cd": 1,
+            "kiPerSec": 12,
+            "maxCharge": 2.2,
+            "minR": 1.5,
+            "maxR": 6.2,
+            "dmgMin": 24,
+            "dmgMax": 80,
+            "maxBlast": 32,
+            "speedMin": 42,
+            "speedMax": 70,
+            "chargePower": 2.9,
+            "color": "#ffe066",
+            "color2": "#fff",
+            "dtype": "energy"
+          }
+        },
+        {
+          "slot": "r",
+          "name": "JUDGMENT BOLT",
+          "definition": {
+            "type": "charge",
+            "name": "JUDGMENT BOLT",
+            "cost": 10,
+            "cd": 15,
+            "kiPerSec": 13,
+            "maxCharge": 2.4,
+            "minR": 2,
+            "maxR": 7.5,
+            "dmgMin": 28,
+            "dmgMax": 90,
+            "maxBlast": 40,
+            "speedMin": 34,
+            "speedMax": 58,
+            "chargePower": 3.2,
+            "color": "#ffe066",
+            "color2": "#ffffff",
+            "dtype": "energy"
+          }
+        }
+      ]
+    },
+    {
+      "hero": "circuit",
+      "family": "beam",
+      "abilities": [
+        {
+          "slot": "rmb",
+          "name": "White Noise Beam",
+          "definition": {
+            "type": "beam",
+            "material": "air",
+            "name": "White Noise Beam",
+            "cost": 8,
+            "cd": 0.6,
+            "radius": 2.2,
+            "tipSpeed": 605,
+            "maxLen": 150,
+            "dps": 76,
+            "kiPerSec": 22,
+            "charge": true,
+            "maxCharge": 1.5,
+            "kiChargePerSec": 14,
+            "chargePower": 1.5,
+            "chargeWidth": true,
+            "steer": 8,
+            "color": "#7fe6ff",
+            "color2": "#eaffff",
+            "dtype": "physical"
+          }
+        },
+        {
+          "slot": "r",
+          "name": "BOOYAH Cannon",
+          "definition": {
+            "type": "beam",
+            "material": "air",
+            "name": "BOOYAH Cannon",
+            "cost": 24,
+            "cd": 14,
+            "radius": 3.2,
+            "tipSpeed": 626,
+            "maxLen": 165,
+            "dps": 120,
+            "kiPerSec": 30,
+            "charge": true,
+            "maxCharge": 2,
+            "kiChargePerSec": 20,
+            "chargePower": 2,
+            "chargeWidth": true,
+            "steer": 6,
+            "color": "#7fe6ff",
+            "color2": "#ffffff",
+            "dtype": "physical"
+          }
+        }
+      ]
+    },
+    {
+      "hero": "decibel",
+      "family": "cone",
+      "abilities": [
+        {
+          "slot": "lmb",
+          "name": "Siren Scream",
+          "definition": {
+            "type": "cone",
+            "name": "Siren Scream",
+            "kiPerSec": 18,
+            "range": 36,
+            "arc": 1.05,
+            "dps": 22,
+            "push": 62,
+            "lift": 4,
+            "sonic": true,
+            "color": "#ffe066",
+            "dtype": "physical"
+          }
+        },
+        {
+          "slot": "r",
+          "name": "THE CANARY CRY",
+          "definition": {
+            "type": "cone",
+            "name": "THE CANARY CRY",
+            "kiPerSec": 34,
+            "range": 52,
+            "arc": 0.9,
+            "dps": 44,
+            "push": 90,
+            "lift": 8,
+            "sonic": true,
+            "color": "#ffe066",
+            "dtype": "physical"
+          }
+        }
+      ]
+    },
+    {
+      "hero": "talon",
+      "family": "melee",
+      "abilities": [
+        {
+          "slot": "lmb",
+          "name": "Escrima Cross",
+          "definition": {
+            "type": "melee",
+            "name": "Escrima Cross",
+            "gear": true,
+            "cost": 8,
+            "cd": 0.55,
+            "damage": 18,
+            "range": 11,
+            "arc": 0.9,
+            "lunge": 42,
+            "knock": 36,
+            "launch": 8,
+            "color": "#37c7ff",
+            "dtype": "energy"
+          }
+        },
+        {
+          "slot": "e",
+          "name": "Staff Sweep",
+          "definition": {
+            "type": "melee",
+            "name": "Staff Sweep",
+            "gear": true,
+            "cost": 10,
+            "cd": 0.8,
+            "damage": 24,
+            "range": 13,
+            "arc": 1.15,
+            "lunge": 30,
+            "knock": 46,
+            "launch": 12,
+            "color": "#37c7ff",
+            "dtype": "energy"
+          }
+        }
+      ]
+    },
+    {
+      "hero": "talon",
+      "family": "rush",
+      "abilities": [
+        {
+          "slot": "rmb",
+          "name": "Flying Grayson",
+          "definition": {
+            "type": "rush",
+            "name": "Flying Grayson",
+            "cost": 14,
+            "cd": 1.8,
+            "range": 58,
+            "hits": 7,
+            "interval": 0.08,
+            "damage": 8,
+            "finisher": 30,
+            "color": "#37c7ff",
+            "dtype": "energy"
+          }
+        },
+        {
+          "slot": "r",
+          "name": "Finale Routine",
+          "definition": {
+            "type": "rush",
+            "name": "Finale Routine",
+            "cost": 18,
+            "cd": 12,
+            "range": 66,
+            "hits": 9,
+            "interval": 0.07,
+            "damage": 8,
+            "finisher": 34,
+            "color": "#37c7ff",
+            "dtype": "energy"
+          }
+        }
+      ]
+    },
+    {
+      "hero": "abeo",
+      "family": "melee",
+      "abilities": [
+        {
+          "slot": "lmb",
+          "name": "Iron Palm",
+          "definition": {
+            "type": "melee",
+            "name": "Iron Palm",
+            "cost": 10,
+            "cd": 0.8,
+            "damage": 30,
+            "range": 12,
+            "arc": 0.85,
+            "lunge": 38,
+            "knock": 56,
+            "launch": 16,
+            "color": "#ffd97a",
+            "dtype": "energy"
+          }
+        },
+        {
+          "slot": "e",
+          "name": "Guard Break",
+          "definition": {
+            "type": "melee",
+            "name": "Guard Break",
+            "cost": 12,
+            "cd": 1.1,
+            "damage": 26,
+            "range": 12,
+            "arc": 0.75,
+            "lunge": 44,
+            "knock": 50,
+            "launch": 14,
+            "color": "#ffd97a",
+            "dtype": "energy"
+          }
+        }
+      ]
+    },
+    {
+      "hero": "jelani",
+      "family": "melee",
+      "abilities": [
+        {
+          "slot": "lmb",
+          "name": "Piston Blow",
+          "definition": {
+            "type": "melee",
+            "name": "Piston Blow",
+            "cost": 9,
+            "cd": 0.55,
+            "damage": 26,
+            "range": 11,
+            "arc": 0.8,
+            "lunge": 48,
+            "knock": 44,
+            "launch": 10,
+            "color": "#ffb03a",
+            "dtype": "energy"
+          }
+        },
+        {
+          "slot": "e",
+          "name": "Spear Tackle",
+          "definition": {
+            "type": "melee",
+            "name": "Spear Tackle",
+            "cost": 12,
+            "cd": 1,
+            "damage": 28,
+            "range": 13,
+            "arc": 0.7,
+            "lunge": 66,
+            "knock": 56,
+            "launch": 16,
+            "fly": true,
+            "color": "#ffb03a",
+            "dtype": "energy"
+          }
+        }
+      ]
+    },
+    {
+      "hero": "jelani",
+      "family": "rush",
+      "abilities": [
+        {
+          "slot": "rmb",
+          "name": "Blur Assault",
+          "definition": {
+            "type": "rush",
+            "name": "Blur Assault",
+            "cost": 14,
+            "cd": 1.8,
+            "range": 60,
+            "hits": 8,
+            "interval": 0.07,
+            "damage": 9,
+            "finisher": 32,
+            "color": "#ffb03a",
+            "dtype": "energy"
+          }
+        },
+        {
+          "slot": "r",
+          "name": "A Hundred Hands",
+          "definition": {
+            "type": "rush",
+            "name": "A Hundred Hands",
+            "cost": 18,
+            "cd": 12,
+            "range": 68,
+            "hits": 11,
+            "interval": 0.05,
+            "damage": 8,
+            "finisher": 34,
+            "color": "#ffb03a",
+            "dtype": "energy"
+          }
+        }
+      ]
+    },
+    {
+      "hero": "ramiro",
+      "family": "rifle",
+      "abilities": [
+        {
+          "slot": "lmb",
+          "name": "Riot Scattergun",
+          "definition": {
+            "type": "rifle",
+            "name": "Riot Scattergun",
+            "cost": 6,
+            "interval": 0.55,
+            "damage": 26,
+            "speed": 140,
+            "radius": 1.1,
+            "blast": 6,
+            "spread": 0.06,
+            "recoil": 4.5,
+            "color": "#ff5a4a",
+            "color2": "#fff",
+            "dtype": "physical"
+          }
+        },
+        {
+          "slot": "rmb",
+          "name": "Service Revolver",
+          "definition": {
+            "type": "rifle",
+            "name": "Service Revolver",
+            "cost": 4,
+            "interval": 0.3,
+            "damage": 14,
+            "speed": 155,
+            "radius": 0.7,
+            "blast": 3,
+            "spread": 0.015,
+            "recoil": 2,
+            "color": "#ffd97a",
+            "color2": "#fff",
+            "dtype": "physical"
+          }
+        }
+      ]
+    },
+    {
+      "hero": "jawah",
+      "family": "cone",
+      "abilities": [
+        {
+          "slot": "lmb",
+          "name": "Absorption Field",
+          "definition": {
+            "type": "cone",
+            "name": "Absorption Field",
+            "kiPerSec": 14,
+            "range": 32,
+            "arc": 1.15,
+            "dps": 12,
+            "push": 8,
+            "kiDrain": 14,
+            "color": "#8fe08a",
+            "dtype": "energy"
+          }
+        },
+        {
+          "slot": "e",
+          "name": "Returned Thunder",
+          "definition": {
+            "type": "cone",
+            "name": "Returned Thunder",
+            "kiPerSec": 18,
+            "range": 34,
+            "arc": 1,
+            "dps": 24,
+            "push": 56,
+            "color": "#d8d2c4",
+            "dtype": "energy"
+          }
+        }
+      ]
+    },
+    {
+      "hero": "moses",
+      "family": "buff",
+      "abilities": [
+        {
+          "slot": "f",
+          "name": "Regenerative Bond",
+          "definition": {
+            "type": "buff",
+            "name": "Regenerative Bond",
+            "cost": 20,
+            "cd": 16,
+            "mult": 1.35,
+            "dur": 9,
+            "heal": 45,
+            "color": "#9dff5a",
+            "color2": "#fff",
+            "dtype": "energy"
+          }
+        },
+        {
+          "slot": "r",
+          "name": "FULL BOND",
+          "definition": {
+            "type": "buff",
+            "name": "FULL BOND",
+            "cost": 28,
+            "cd": 20,
+            "mult": 1.7,
+            "dur": 10,
+            "heal": 35,
+            "color": "#9dff5a",
+            "color2": "#ffffff",
+            "dtype": "energy"
+          }
+        }
+      ]
+    },
+    {
+      "hero": "feral",
+      "family": "melee",
+      "abilities": [
+        {
+          "slot": "lmb",
+          "name": "Rend",
+          "definition": {
+            "type": "melee",
+            "name": "Rend",
+            "cost": 8,
+            "cd": 0.5,
+            "damage": 22,
+            "range": 11,
+            "arc": 0.9,
+            "lunge": 46,
+            "knock": 36,
+            "launch": 8,
+            "dmgClass": "slash",
+            "color": "#ffb03a",
+            "dtype": "energy"
+          }
+        },
+        {
+          "slot": "e",
+          "name": "Savage Lunge",
+          "definition": {
+            "type": "melee",
+            "name": "Savage Lunge",
+            "cost": 12,
+            "cd": 1,
+            "damage": 27,
+            "range": 13,
+            "arc": 0.75,
+            "lunge": 64,
+            "knock": 50,
+            "launch": 14,
+            "fly": true,
+            "dmgClass": "slash",
+            "color": "#ffb03a",
+            "dtype": "energy"
+          }
+        }
+      ]
+    },
+    {
+      "hero": "feral",
+      "family": "rush",
+      "abilities": [
+        {
+          "slot": "rmb",
+          "name": "Pack Hunt",
+          "definition": {
+            "type": "rush",
+            "name": "Pack Hunt",
+            "cost": 14,
+            "cd": 1.8,
+            "range": 58,
+            "hits": 7,
+            "interval": 0.08,
+            "damage": 9,
+            "finisher": 32,
+            "color": "#ffb03a",
+            "dtype": "energy"
+          }
+        },
+        {
+          "slot": "r",
+          "name": "NO CAGES",
+          "definition": {
+            "type": "rush",
+            "name": "NO CAGES",
+            "cost": 18,
+            "cd": 12,
+            "range": 66,
+            "hits": 10,
+            "interval": 0.06,
+            "damage": 8,
+            "finisher": 24,
+            "dmgClass": "slash",
+            "color": "#ffb03a",
+            "dtype": "energy"
+          }
+        }
+      ]
+    },
+    {
+      "hero": "breach",
+      "family": "projectile",
+      "abilities": [
+        {
+          "slot": "rmb",
+          "name": "Concussion Launcher",
+          "definition": {
+            "type": "projectile",
+            "name": "Concussion Launcher",
+            "gear": true,
+            "cost": 14,
+            "cd": 1.5,
+            "damage": 23,
+            "speed": 85,
+            "radius": 1.1,
+            "blast": 12,
+            "grav": 8,
+            "shock": true,
+            "canister": true,
+            "color": "#8c9e70",
+            "color2": "#efc66d",
+            "dtype": "energy"
+          }
+        },
+        {
+          "slot": "r",
+          "name": "Demolition Round",
+          "definition": {
+            "type": "projectile",
+            "name": "Demolition Round",
+            "gear": true,
+            "cost": 30,
+            "cd": 12,
+            "damage": 42,
+            "speed": 75,
+            "radius": 1.4,
+            "blast": 18,
+            "shock": true,
+            "canister": true,
+            "color": "#e69c48",
+            "color2": "#ffe3aa",
+            "dtype": "energy"
+          }
+        }
+      ]
+    },
+    {
+      "hero": "recon",
+      "family": "rifle:rifle",
+      "abilities": [
+        {
+          "slot": "lmb",
+          "name": "Scout Blaster",
+          "definition": {
+            "type": "rifle",
+            "weapon": "rifle",
+            "voice": "ar556",
+            "name": "Scout Blaster",
+            "gear": true,
+            "cost": 2,
+            "interval": 0.13,
+            "damage": 6,
+            "speed": 205,
+            "radius": 0.45,
+            "blast": 1.5,
+            "spread": 0.03,
+            "recoil": 1.4,
+            "color": "#ff7650",
+            "color2": "#ffe6c0",
+            "dtype": "physical"
+          }
+        },
+        {
+          "slot": "q",
+          "name": "Scoped Marksman Rifle",
+          "definition": {
+            "type": "rifle",
+            "weapon": "rifle",
+            "voice": "sniper762",
+            "name": "Scoped Marksman Rifle",
+            "gear": true,
+            "cost": 0,
+            "magazine": 5,
+            "reserveAmmo": 30,
+            "reloadTime": 2.6,
+            "scopeZoom": 4,
+            "life": 3,
+            "interval": 1.2,
+            "damage": 31,
+            "speed": 320,
+            "radius": 0.45,
+            "blast": 0,
+            "spread": 0.0015,
+            "recoil": 3.6,
+            "color": "#efc66d",
+            "color2": "#fff1cb",
+            "dtype": "physical"
+          }
+        }
+      ]
+    },
+    {
+      "hero": "recon",
+      "family": "projectile",
+      "abilities": [
+        {
+          "slot": "e",
+          "name": "Scout Grenade",
+          "definition": {
+            "type": "projectile",
+            "name": "Scout Grenade",
+            "gear": true,
+            "cost": 10,
+            "cd": 1.2,
+            "damage": 23,
+            "speed": 58,
+            "radius": 1.1,
+            "blast": 12,
+            "grav": 11,
+            "shock": true,
+            "canister": true,
+            "color": "#789690",
+            "color2": "#efc66d",
+            "dtype": "energy"
+          }
+        },
+        {
+          "slot": "r",
+          "name": "Anti-Armor Rocket",
+          "definition": {
+            "type": "projectile",
+            "name": "Anti-Armor Rocket",
+            "gear": true,
+            "cost": 30,
+            "cd": 12,
+            "damage": 39,
+            "speed": 100,
+            "radius": 1.1,
+            "blast": 15,
+            "shock": true,
+            "canister": true,
+            "color": "#e69c48",
+            "color2": "#ffe3aa",
+            "dtype": "energy"
+          }
+        }
+      ]
+    }
+  ],
+  "inventory": [
+    {
+      "key": "sol.lmb",
+      "name": "Heat Ray",
+      "type": "beam",
+      "dtype": "fire"
+    },
+    {
+      "key": "sol.rmb",
+      "name": "Arctic Breath",
+      "type": "cone",
+      "dtype": "cold"
+    },
+    {
+      "key": "sol.q",
+      "name": "Sky Smash",
+      "type": "melee",
+      "dtype": "energy"
+    },
+    {
+      "key": "sol.e",
+      "name": "Solar Flare",
+      "type": "projectile",
+      "dtype": "fire"
+    },
+    {
+      "key": "sol.f",
+      "name": "Heat Flurry",
+      "type": "volley",
+      "dtype": "fire"
+    },
+    {
+      "key": "sol.shift",
+      "name": "Super Dash",
+      "type": "dash",
+      "dtype": "energy"
+    },
+    {
+      "key": "sol.r",
+      "name": "Solar Overload",
+      "type": "buff",
+      "dtype": "fire"
+    },
+    {
+      "key": "kano.lmb",
+      "name": "Wave Cannon",
+      "type": "beam",
+      "dtype": "physical"
+    },
+    {
+      "key": "kano.rmb",
+      "name": "Comet Rush",
+      "type": "rush",
+      "dtype": "energy"
+    },
+    {
+      "key": "kano.q",
+      "name": "Ki Blast",
+      "type": "projectile",
+      "dtype": "energy"
+    },
+    {
+      "key": "kano.e",
+      "name": "Snap Transit",
+      "type": "teleport",
+      "dtype": "energy"
+    },
+    {
+      "key": "kano.f",
+      "name": "Ascend",
+      "type": "buff",
+      "dtype": "energy"
+    },
+    {
+      "key": "kano.shift",
+      "name": "Flash Step",
+      "type": "dash",
+      "dtype": "energy"
+    },
+    {
+      "key": "kano.r",
+      "name": "Star Sphere",
+      "type": "growingorb",
+      "dtype": "energy"
+    },
+    {
+      "key": "vega.lmb",
+      "name": "Volley",
+      "type": "volley",
+      "dtype": "energy"
+    },
+    {
+      "key": "vega.rmb",
+      "name": "Violet Lance",
+      "type": "beam",
+      "dtype": "energy"
+    },
+    {
+      "key": "vega.q",
+      "name": "Nova Burst",
+      "type": "charge",
+      "dtype": "energy"
+    },
+    {
+      "key": "vega.e",
+      "name": "Rush Combo",
+      "type": "melee",
+      "dtype": "energy"
+    },
+    {
+      "key": "vega.f",
+      "name": "Prince’s Pride",
+      "type": "buff",
+      "dtype": "energy"
+    },
+    {
+      "key": "vega.shift",
+      "name": "Burst Dash",
+      "type": "dash",
+      "dtype": "energy"
+    },
+    {
+      "key": "vega.r",
+      "name": "Final Arc",
+      "type": "beam",
+      "dtype": "physical"
+    },
+    {
+      "key": "aurum.lmb",
+      "name": "Will Fist",
+      "type": "construct",
+      "dtype": "energy"
+    },
+    {
+      "key": "aurum.rmb",
+      "name": "Will Hammer",
+      "type": "construct",
+      "dtype": "energy"
+    },
+    {
+      "key": "aurum.q",
+      "name": "Barrier",
+      "type": "construct",
+      "dtype": "energy"
+    },
+    {
+      "key": "aurum.e",
+      "name": "Sentry",
+      "type": "construct",
+      "dtype": "energy"
+    },
+    {
+      "key": "aurum.f",
+      "name": "Emerald Bolt",
+      "type": "projectile",
+      "dtype": "energy"
+    },
+    {
+      "key": "aurum.shift",
+      "name": "Will Surge",
+      "type": "dash",
+      "dtype": "energy"
+    },
+    {
+      "key": "aurum.r",
+      "name": "Overcharge Ring",
+      "type": "buff",
+      "dtype": "energy"
+    },
+    {
+      "key": "nova.lmb",
+      "name": "Star Lance",
+      "type": "beam",
+      "dtype": "energy"
+    },
+    {
+      "key": "nova.rmb",
+      "name": "Nova Core",
+      "type": "charge",
+      "dtype": "energy"
+    },
+    {
+      "key": "nova.q",
+      "name": "Plasma Orb",
+      "type": "projectile",
+      "dtype": "energy"
+    },
+    {
+      "key": "nova.e",
+      "name": "Solar Wind",
+      "type": "cone",
+      "dtype": "fire"
+    },
+    {
+      "key": "nova.f",
+      "name": "Ember Spray",
+      "type": "volley",
+      "dtype": "fire"
+    },
+    {
+      "key": "nova.shift",
+      "name": "Sun Step",
+      "type": "dash",
+      "dtype": "energy"
+    },
+    {
+      "key": "nova.r",
+      "name": "Meteor Storm",
+      "type": "meteor",
+      "dtype": "energy"
+    },
+    {
+      "key": "rime.lmb",
+      "name": "Frost Breath",
+      "type": "cone",
+      "dtype": "cold"
+    },
+    {
+      "key": "rime.rmb",
+      "name": "Shard Volley",
+      "type": "volley",
+      "dtype": "cold"
+    },
+    {
+      "key": "rime.q",
+      "name": "Ice Wall",
+      "type": "construct",
+      "dtype": "cold"
+    },
+    {
+      "key": "rime.e",
+      "name": "Cryo Beam",
+      "type": "beam",
+      "dtype": "cold"
+    },
+    {
+      "key": "rime.f",
+      "name": "Glacier Spike",
+      "type": "projectile",
+      "dtype": "energy"
+    },
+    {
+      "key": "rime.shift",
+      "name": "Ice Skate",
+      "type": "dash",
+      "dtype": "energy"
+    },
+    {
+      "key": "rime.r",
+      "name": "Absolute Zero",
+      "type": "charge",
+      "dtype": "cold"
+    },
+    {
+      "key": "volt.lmb",
+      "name": "Lightning Flurry",
+      "type": "rush",
+      "dtype": "energy"
+    },
+    {
+      "key": "volt.rmb",
+      "name": "Arc Beam",
+      "type": "beam",
+      "dtype": "energy"
+    },
+    {
+      "key": "volt.q",
+      "name": "Chain Bolt",
+      "type": "projectile",
+      "dtype": "energy"
+    },
+    {
+      "key": "volt.e",
+      "name": "Static Field",
+      "type": "cone",
+      "dtype": "energy"
+    },
+    {
+      "key": "volt.f",
+      "name": "Zap Step",
+      "type": "teleport",
+      "dtype": "energy"
+    },
+    {
+      "key": "volt.shift",
+      "name": "Blink",
+      "type": "dash",
+      "dtype": "energy"
+    },
+    {
+      "key": "volt.r",
+      "name": "Overclock",
+      "type": "buff",
+      "dtype": "energy"
+    },
+    {
+      "key": "warden.lmb",
+      "name": "Force Push",
+      "type": "cone",
+      "dtype": "energy"
+    },
+    {
+      "key": "warden.rmb",
+      "name": "Graviton",
+      "type": "projectile",
+      "dtype": "energy"
+    },
+    {
+      "key": "warden.q",
+      "name": "Singularity",
+      "type": "growingorb",
+      "dtype": "energy"
+    },
+    {
+      "key": "warden.e",
+      "name": "Anchor Slam",
+      "type": "melee",
+      "dtype": "energy"
+    },
+    {
+      "key": "warden.f",
+      "name": "Phase",
+      "type": "teleport",
+      "dtype": "energy"
+    },
+    {
+      "key": "warden.shift",
+      "name": "Slide",
+      "type": "dash",
+      "dtype": "energy"
+    },
+    {
+      "key": "warden.r",
+      "name": "Collapse",
+      "type": "charge",
+      "dtype": "energy"
+    },
+    {
+      "key": "hive.lmb",
+      "name": "Drone Swarm",
+      "type": "summon",
+      "dtype": "energy"
+    },
+    {
+      "key": "hive.rmb",
+      "name": "Sentinel",
+      "type": "construct",
+      "dtype": "energy"
+    },
+    {
+      "key": "hive.q",
+      "name": "Formic Sting",
+      "type": "projectile",
+      "dtype": "toxic"
+    },
+    {
+      "key": "hive.e",
+      "name": "Hunter Pack",
+      "type": "summon",
+      "dtype": "energy"
+    },
+    {
+      "key": "hive.f",
+      "name": "Scatter",
+      "type": "cone",
+      "dtype": "energy"
+    },
+    {
+      "key": "hive.shift",
+      "name": "Scramble",
+      "type": "dash",
+      "dtype": "energy"
+    },
+    {
+      "key": "hive.r",
+      "name": "Overmind",
+      "type": "buff",
+      "dtype": "energy"
+    },
+    {
+      "key": "pyre.lmb",
+      "name": "Fireball",
+      "type": "projectile",
+      "dtype": "fire"
+    },
+    {
+      "key": "pyre.rmb",
+      "name": "Flamethrower",
+      "type": "cone",
+      "dtype": "fire"
+    },
+    {
+      "key": "pyre.q",
+      "name": "Magma Bomb",
+      "type": "charge",
+      "dtype": "fire"
+    },
+    {
+      "key": "pyre.e",
+      "name": "Burning Fist",
+      "type": "melee",
+      "dtype": "fire"
+    },
+    {
+      "key": "pyre.f",
+      "name": "Cinder Burst",
+      "type": "volley",
+      "dtype": "energy"
+    },
+    {
+      "key": "pyre.shift",
+      "name": "Flare Dash",
+      "type": "dash",
+      "dtype": "energy"
+    },
+    {
+      "key": "pyre.r",
+      "name": "Rain of Fire",
+      "type": "meteor",
+      "dtype": "fire"
+    },
+    {
+      "key": "torch.lmb",
+      "name": "Flame Jet",
+      "type": "beam",
+      "dtype": "fire"
+    },
+    {
+      "key": "torch.rmb",
+      "name": "Fire Blast",
+      "type": "cone",
+      "dtype": "fire"
+    },
+    {
+      "key": "torch.q",
+      "name": "Fireball",
+      "type": "projectile",
+      "dtype": "fire"
+    },
+    {
+      "key": "torch.e",
+      "name": "Flaming Fist",
+      "type": "melee",
+      "dtype": "energy"
+    },
+    {
+      "key": "torch.f",
+      "name": "Ember Storm",
+      "type": "volley",
+      "dtype": "fire"
+    },
+    {
+      "key": "torch.shift",
+      "name": "Jet Dash",
+      "type": "dash",
+      "dtype": "energy"
+    },
+    {
+      "key": "torch.r",
+      "name": "Supernova",
+      "type": "nova",
+      "dtype": "energy"
+    },
+    {
+      "key": "apex.lmb",
+      "name": "Wave Cannon",
+      "type": "beam",
+      "dtype": "physical"
+    },
+    {
+      "key": "apex.rmb",
+      "name": "Tail Sweep",
+      "type": "melee",
+      "dtype": "energy"
+    },
+    {
+      "key": "apex.q",
+      "name": "Consume",
+      "type": "lifedrain",
+      "dtype": "energy"
+    },
+    {
+      "key": "apex.e",
+      "name": "Afterimage",
+      "type": "teleport",
+      "dtype": "energy"
+    },
+    {
+      "key": "apex.f",
+      "name": "Regenerate",
+      "type": "buff",
+      "dtype": "energy"
+    },
+    {
+      "key": "apex.shift",
+      "name": "Burst Step",
+      "type": "dash",
+      "dtype": "energy"
+    },
+    {
+      "key": "apex.r",
+      "name": "Perfect Wave",
+      "type": "beam",
+      "dtype": "physical"
+    },
+    {
+      "key": "specter.lmb",
+      "name": "Solar Beam",
+      "type": "beam",
+      "dtype": "fire"
+    },
+    {
+      "key": "specter.rmb",
+      "name": "Density Punch",
+      "type": "melee",
+      "dtype": "energy"
+    },
+    {
+      "key": "specter.q",
+      "name": "Intangibility",
+      "type": "phase",
+      "dtype": "energy"
+    },
+    {
+      "key": "specter.e",
+      "name": "Stone Bolt",
+      "type": "projectile",
+      "dtype": "energy"
+    },
+    {
+      "key": "specter.f",
+      "name": "Max Density",
+      "type": "buff",
+      "dtype": "energy"
+    },
+    {
+      "key": "specter.shift",
+      "name": "Phase Step",
+      "type": "dash",
+      "dtype": "energy"
+    },
+    {
+      "key": "specter.r",
+      "name": "Solar Nova",
+      "type": "charge",
+      "dtype": "fire"
+    },
+    {
+      "key": "vanguard.lmb",
+      "name": "Eye Beam",
+      "type": "beam",
+      "dtype": "energy"
+    },
+    {
+      "key": "vanguard.rmb",
+      "name": "Flying Tackle",
+      "type": "melee",
+      "dtype": "energy"
+    },
+    {
+      "key": "vanguard.q",
+      "name": "Thunderclap",
+      "type": "cone",
+      "dtype": "energy"
+    },
+    {
+      "key": "vanguard.e",
+      "name": "Sky Combo",
+      "type": "rush",
+      "dtype": "energy"
+    },
+    {
+      "key": "vanguard.f",
+      "name": "Invincible",
+      "type": "buff",
+      "dtype": "energy"
+    },
+    {
+      "key": "vanguard.shift",
+      "name": "Blitz",
+      "type": "dash",
+      "dtype": "energy"
+    },
+    {
+      "key": "vanguard.r",
+      "name": "Unbreakable",
+      "type": "buff",
+      "dtype": "energy"
+    },
+    {
+      "key": "kraken.lmb",
+      "name": "Abyssal Grab",
+      "type": "tentacle",
+      "dtype": "energy"
+    },
+    {
+      "key": "kraken.rmb",
+      "name": "Riptide Lash",
+      "type": "melee",
+      "dtype": "energy"
+    },
+    {
+      "key": "kraken.q",
+      "name": "Corrosive Ink",
+      "type": "cone",
+      "dtype": "acid"
+    },
+    {
+      "key": "kraken.e",
+      "name": "Abyss Bolt",
+      "type": "projectile",
+      "dtype": "energy"
+    },
+    {
+      "key": "kraken.f",
+      "name": "Deep Hunger",
+      "type": "buff",
+      "dtype": "energy"
+    },
+    {
+      "key": "kraken.shift",
+      "name": "Surge",
+      "type": "dash",
+      "dtype": "energy"
+    },
+    {
+      "key": "kraken.r",
+      "name": "Leviathan Maw",
+      "type": "charge",
+      "dtype": "energy"
+    },
+    {
+      "key": "rift.lmb",
+      "name": "Rift Ray",
+      "type": "beam",
+      "dtype": "magic"
+    },
+    {
+      "key": "rift.rmb",
+      "name": "Dimensional Door",
+      "type": "portal",
+      "dtype": "energy"
+    },
+    {
+      "key": "rift.q",
+      "name": "Fracture Bolt",
+      "type": "projectile",
+      "dtype": "energy"
+    },
+    {
+      "key": "rift.e",
+      "name": "Step Through",
+      "type": "teleport",
+      "dtype": "energy"
+    },
+    {
+      "key": "rift.f",
+      "name": "Untethered",
+      "type": "buff",
+      "dtype": "energy"
+    },
+    {
+      "key": "rift.shift",
+      "name": "Slip",
+      "type": "dash",
+      "dtype": "energy"
+    },
+    {
+      "key": "rift.r",
+      "name": "Event Horizon",
+      "type": "charge",
+      "dtype": "energy"
+    },
+    {
+      "key": "titan.lmb",
+      "name": "Twin Cannon",
+      "type": "beam",
+      "dtype": "energy"
+    },
+    {
+      "key": "titan.rmb",
+      "name": "Pulse Rifle",
+      "type": "rifle",
+      "dtype": "physical"
+    },
+    {
+      "key": "titan.q",
+      "name": "Reactor Burst",
+      "type": "charge",
+      "dtype": "energy"
+    },
+    {
+      "key": "titan.e",
+      "name": "Vent Blast",
+      "type": "cone",
+      "dtype": "energy"
+    },
+    {
+      "key": "titan.f",
+      "name": "Overdrive Core",
+      "type": "buff",
+      "dtype": "energy"
+    },
+    {
+      "key": "titan.shift",
+      "name": "Thruster Dash",
+      "type": "dash",
+      "dtype": "energy"
+    },
+    {
+      "key": "titan.r",
+      "name": "Annihilator Array",
+      "type": "beam",
+      "dtype": "energy"
+    },
+    {
+      "key": "sarge.lmb",
+      "name": "Service Carbine",
+      "type": "rifle",
+      "dtype": "physical"
+    },
+    {
+      "key": "sarge.rmb",
+      "name": "Frag Grenade",
+      "type": "projectile",
+      "dtype": "energy"
+    },
+    {
+      "key": "sarge.q",
+      "name": "Plasma Blade",
+      "type": "melee",
+      "dtype": "energy"
+    },
+    {
+      "key": "sarge.e",
+      "name": "Breaching Shotgun",
+      "type": "rifle",
+      "dtype": "physical"
+    },
+    {
+      "key": "sarge.f",
+      "name": "Stim Shot",
+      "type": "buff",
+      "dtype": "energy"
+    },
+    {
+      "key": "sarge.shift",
+      "name": "Combat Roll",
+      "type": "dash",
+      "dtype": "energy"
+    },
+    {
+      "key": "sarge.r",
+      "name": "Airstrike",
+      "type": "meteor",
+      "dtype": "energy"
+    },
+    {
+      "key": "merc.lmb",
+      "name": "Blaster Rifle",
+      "type": "rifle",
+      "dtype": "physical"
+    },
+    {
+      "key": "merc.rmb",
+      "name": "Charged Pistol",
+      "type": "charge",
+      "dtype": "energy"
+    },
+    {
+      "key": "merc.q",
+      "name": "Scatter Blaster",
+      "type": "rifle",
+      "dtype": "physical"
+    },
+    {
+      "key": "merc.e",
+      "name": "Thermal Detonator",
+      "type": "projectile",
+      "dtype": "energy"
+    },
+    {
+      "key": "merc.f",
+      "name": "Heavy Pistol",
+      "type": "rifle",
+      "dtype": "physical"
+    },
+    {
+      "key": "merc.shift",
+      "name": "Combat Roll",
+      "type": "dash",
+      "dtype": "energy"
+    },
+    {
+      "key": "merc.r",
+      "name": "Rail Detonator",
+      "type": "projectile",
+      "dtype": "energy"
+    },
+    {
+      "key": "kivuli.lmb",
+      "name": "Choking Veil",
+      "type": "cone",
+      "dtype": "toxic"
+    },
+    {
+      "key": "kivuli.rmb",
+      "name": "Solid Smoke",
+      "type": "construct",
+      "dtype": "energy"
+    },
+    {
+      "key": "kivuli.q",
+      "name": "Gas Form",
+      "type": "phase",
+      "dtype": "energy"
+    },
+    {
+      "key": "kivuli.e",
+      "name": "Creeping Cloud",
+      "type": "projectile",
+      "dtype": "toxic"
+    },
+    {
+      "key": "kivuli.f",
+      "name": "Second Wind",
+      "type": "buff",
+      "dtype": "energy"
+    },
+    {
+      "key": "kivuli.shift",
+      "name": "Vapor Slip",
+      "type": "dash",
+      "dtype": "energy"
+    },
+    {
+      "key": "kivuli.r",
+      "name": "Asphyxia",
+      "type": "charge",
+      "dtype": "toxic"
+    },
+    {
+      "key": "gale.lmb",
+      "name": "Longshot",
+      "type": "bow",
+      "dtype": "physical"
+    },
+    {
+      "key": "gale.rmb",
+      "name": "Concussion Shot",
+      "type": "projectile",
+      "dtype": "physical"
+    },
+    {
+      "key": "gale.q",
+      "name": "Switch Broadheads",
+      "type": "quiver",
+      "dtype": "energy"
+    },
+    {
+      "key": "gale.e",
+      "name": "Ranger Knife",
+      "type": "melee",
+      "dtype": "energy"
+    },
+    {
+      "key": "gale.f",
+      "name": "Deadeye",
+      "type": "buff",
+      "dtype": "energy"
+    },
+    {
+      "key": "gale.shift",
+      "name": "Tumble",
+      "type": "dash",
+      "dtype": "energy"
+    },
+    {
+      "key": "gale.r",
+      "name": "Arrow Storm",
+      "type": "volley",
+      "dtype": "physical"
+    },
+    {
+      "key": "stefanos.lmb",
+      "name": "Formed Charge",
+      "type": "projectile",
+      "dtype": "energy"
+    },
+    {
+      "key": "stefanos.rmb",
+      "name": "Mote Storm",
+      "type": "volley",
+      "dtype": "energy"
+    },
+    {
+      "key": "stefanos.q",
+      "name": "Concussive Form",
+      "type": "cone",
+      "dtype": "energy"
+    },
+    {
+      "key": "stefanos.e",
+      "name": "Pressure Sphere",
+      "type": "charge",
+      "dtype": "energy"
+    },
+    {
+      "key": "stefanos.f",
+      "name": "These Wounds Will Not Heal",
+      "type": "buff",
+      "dtype": "energy"
+    },
+    {
+      "key": "stefanos.shift",
+      "name": "Propelled Slip",
+      "type": "dash",
+      "dtype": "energy"
+    },
+    {
+      "key": "stefanos.r",
+      "name": "THE MARLETTA",
+      "type": "facebomb",
+      "dtype": "energy"
+    },
+    {
+      "key": "sandra.lmb",
+      "name": "Twin Pistols",
+      "type": "rifle",
+      "dtype": "physical"
+    },
+    {
+      "key": "sandra.rmb",
+      "name": "Suppressed SMG",
+      "type": "rifle",
+      "dtype": "physical"
+    },
+    {
+      "key": "sandra.q",
+      "name": "The Ring Sees",
+      "type": "buff",
+      "dtype": "energy"
+    },
+    {
+      "key": "sandra.e",
+      "name": "Pistol Whip",
+      "type": "melee",
+      "dtype": "energy"
+    },
+    {
+      "key": "sandra.f",
+      "name": "Tracker Round",
+      "type": "projectile",
+      "dtype": "energy"
+    },
+    {
+      "key": "sandra.shift",
+      "name": "Slip the Frame",
+      "type": "dash",
+      "dtype": "energy"
+    },
+    {
+      "key": "sandra.r",
+      "name": "Clean Extraction",
+      "type": "rush",
+      "dtype": "energy"
+    },
+    {
+      "key": "ironclad.lmb",
+      "name": "Repulsor Bolts",
+      "type": "rifle",
+      "dtype": "physical"
+    },
+    {
+      "key": "ironclad.rmb",
+      "name": "Unibeam",
+      "type": "beam",
+      "dtype": "energy"
+    },
+    {
+      "key": "ironclad.q",
+      "name": "Micro-Missiles",
+      "type": "projectile",
+      "dtype": "energy"
+    },
+    {
+      "key": "ironclad.e",
+      "name": "Flare Vent",
+      "type": "cone",
+      "dtype": "energy"
+    },
+    {
+      "key": "ironclad.f",
+      "name": "Overpower",
+      "type": "buff",
+      "dtype": "energy"
+    },
+    {
+      "key": "ironclad.shift",
+      "name": "Vector Thrust",
+      "type": "dash",
+      "dtype": "energy"
+    },
+    {
+      "key": "ironclad.r",
+      "name": "Housewarming Party",
+      "type": "beam",
+      "dtype": "energy"
+    },
+    {
+      "key": "rage.lmb",
+      "name": "Smash",
+      "type": "melee",
+      "dtype": "energy"
+    },
+    {
+      "key": "rage.rmb",
+      "name": "Thunder Clap",
+      "type": "cone",
+      "dtype": "energy"
+    },
+    {
+      "key": "rage.q",
+      "name": "Boulder",
+      "type": "projectile",
+      "dtype": "energy"
+    },
+    {
+      "key": "rage.e",
+      "name": "Rampage",
+      "type": "rush",
+      "dtype": "energy"
+    },
+    {
+      "key": "rage.f",
+      "name": "Fury Rising",
+      "type": "buff",
+      "dtype": "energy"
+    },
+    {
+      "key": "rage.shift",
+      "name": "Bull Charge",
+      "type": "dash",
+      "dtype": "energy"
+    },
+    {
+      "key": "rage.r",
+      "name": "WORLD BREAKER",
+      "type": "nova",
+      "dtype": "energy"
+    },
+    {
+      "key": "stormcall.lmb",
+      "name": "Axe Cleave",
+      "type": "melee",
+      "dtype": "energy"
+    },
+    {
+      "key": "stormcall.rmb",
+      "name": "Hurled Axe",
+      "type": "projectile",
+      "dtype": "physical"
+    },
+    {
+      "key": "stormcall.q",
+      "name": "Godblast",
+      "type": "charge",
+      "dtype": "energy"
+    },
+    {
+      "key": "stormcall.e",
+      "name": "Tempest Breath",
+      "type": "cone",
+      "dtype": "energy"
+    },
+    {
+      "key": "stormcall.f",
+      "name": "Wrath of the Sky",
+      "type": "buff",
+      "dtype": "energy"
+    },
+    {
+      "key": "stormcall.shift",
+      "name": "Bolt Dash",
+      "type": "dash",
+      "dtype": "energy"
+    },
+    {
+      "key": "stormcall.r",
+      "name": "SKYFALL",
+      "type": "meteor",
+      "dtype": "energy"
+    },
+    {
+      "key": "webline.lmb",
+      "name": "Web Snare",
+      "type": "tentacle",
+      "dtype": "energy"
+    },
+    {
+      "key": "webline.rmb",
+      "name": "Spider Flurry",
+      "type": "rush",
+      "dtype": "energy"
+    },
+    {
+      "key": "webline.q",
+      "name": "Web Darts",
+      "type": "volley",
+      "dtype": "energy"
+    },
+    {
+      "key": "webline.e",
+      "name": "Sting Kick",
+      "type": "melee",
+      "dtype": "energy"
+    },
+    {
+      "key": "webline.f",
+      "name": "Danger Sense",
+      "type": "buff",
+      "dtype": "energy"
+    },
+    {
+      "key": "webline.shift",
+      "name": "Web Zip",
+      "type": "grapple",
+      "dtype": "energy"
+    },
+    {
+      "key": "webline.r",
+      "name": "Maximum Spider",
+      "type": "rush",
+      "dtype": "energy"
+    },
+    {
+      "key": "ripclaw.lmb",
+      "name": "Ripping Claws",
+      "type": "melee",
+      "dtype": "energy"
+    },
+    {
+      "key": "ripclaw.rmb",
+      "name": "Lunge Shred",
+      "type": "melee",
+      "dtype": "energy"
+    },
+    {
+      "key": "ripclaw.q",
+      "name": "Berserker Slashes",
+      "type": "rush",
+      "dtype": "energy"
+    },
+    {
+      "key": "ripclaw.e",
+      "name": "Intimidate",
+      "type": "cone",
+      "dtype": "energy"
+    },
+    {
+      "key": "ripclaw.f",
+      "name": "Regeneration",
+      "type": "buff",
+      "dtype": "energy"
+    },
+    {
+      "key": "ripclaw.shift",
+      "name": "Pounce Step",
+      "type": "dash",
+      "dtype": "energy"
+    },
+    {
+      "key": "ripclaw.r",
+      "name": "Berserker Rage",
+      "type": "buff",
+      "dtype": "energy"
+    },
+    {
+      "key": "majesty.lmb",
+      "name": "Photon Stream",
+      "type": "beam",
+      "dtype": "energy"
+    },
+    {
+      "key": "majesty.rmb",
+      "name": "Star Barrage",
+      "type": "volley",
+      "dtype": "energy"
+    },
+    {
+      "key": "majesty.q",
+      "name": "Nova Fist",
+      "type": "charge",
+      "dtype": "energy"
+    },
+    {
+      "key": "majesty.e",
+      "name": "Comet Punch",
+      "type": "melee",
+      "dtype": "energy"
+    },
+    {
+      "key": "majesty.f",
+      "name": "BINARY",
+      "type": "buff",
+      "dtype": "energy"
+    },
+    {
+      "key": "majesty.shift",
+      "name": "Light Speed",
+      "type": "dash",
+      "dtype": "energy"
+    },
+    {
+      "key": "majesty.r",
+      "name": "Supernova Lance",
+      "type": "beam",
+      "dtype": "energy"
+    },
+    {
+      "key": "mystward.lmb",
+      "name": "Crimson Bands",
+      "type": "projectile",
+      "dtype": "magic"
+    },
+    {
+      "key": "mystward.rmb",
+      "name": "Seraphim Shield",
+      "type": "construct",
+      "dtype": "energy"
+    },
+    {
+      "key": "mystward.q",
+      "name": "Fold Space",
+      "type": "teleport",
+      "dtype": "energy"
+    },
+    {
+      "key": "mystward.e",
+      "name": "Eldritch Whip",
+      "type": "beam",
+      "dtype": "magic"
+    },
+    {
+      "key": "mystward.f",
+      "name": "Vishanti Ward",
+      "type": "buff",
+      "dtype": "energy"
+    },
+    {
+      "key": "mystward.shift",
+      "name": "Cloak Drift",
+      "type": "dash",
+      "dtype": "energy"
+    },
+    {
+      "key": "mystward.r",
+      "name": "Sigil Rain",
+      "type": "meteor",
+      "dtype": "energy"
+    },
+    {
+      "key": "onyx.lmb",
+      "name": "Kinetic Claws",
+      "type": "melee",
+      "dtype": "energy"
+    },
+    {
+      "key": "onyx.rmb",
+      "name": "Hunt Sequence",
+      "type": "rush",
+      "dtype": "energy"
+    },
+    {
+      "key": "onyx.q",
+      "name": "Kimoyo Dart",
+      "type": "projectile",
+      "dtype": "energy"
+    },
+    {
+      "key": "onyx.e",
+      "name": "Sonic Overload",
+      "type": "cone",
+      "dtype": "energy"
+    },
+    {
+      "key": "onyx.f",
+      "name": "Kinetic Release",
+      "type": "buff",
+      "dtype": "energy"
+    },
+    {
+      "key": "onyx.shift",
+      "name": "Shadow Step",
+      "type": "dash",
+      "dtype": "energy"
+    },
+    {
+      "key": "onyx.r",
+      "name": "Kinetic Burst",
+      "type": "charge",
+      "dtype": "energy"
+    },
+    {
+      "key": "chainfire.lmb",
+      "name": "Hellfire Chain",
+      "type": "tentacle",
+      "dtype": "fire"
+    },
+    {
+      "key": "chainfire.rmb",
+      "name": "Soul Furnace",
+      "type": "cone",
+      "dtype": "energy"
+    },
+    {
+      "key": "chainfire.q",
+      "name": "Brimstone Ball",
+      "type": "projectile",
+      "dtype": "energy"
+    },
+    {
+      "key": "chainfire.e",
+      "name": "Chain Lash",
+      "type": "melee",
+      "dtype": "energy"
+    },
+    {
+      "key": "chainfire.f",
+      "name": "Penance Stare",
+      "type": "buff",
+      "dtype": "energy"
+    },
+    {
+      "key": "chainfire.shift",
+      "name": "Hell Ride",
+      "type": "dash",
+      "dtype": "energy"
+    },
+    {
+      "key": "chainfire.r",
+      "name": "Rain of Hellfire",
+      "type": "meteor",
+      "dtype": "fire"
+    },
+    {
+      "key": "tempest.lmb",
+      "name": "Chain Lightning",
+      "type": "beam",
+      "dtype": "energy"
+    },
+    {
+      "key": "tempest.rmb",
+      "name": "Gale Force",
+      "type": "cone",
+      "dtype": "energy"
+    },
+    {
+      "key": "tempest.q",
+      "name": "Hail Volley",
+      "type": "volley",
+      "dtype": "energy"
+    },
+    {
+      "key": "tempest.e",
+      "name": "Flash Freeze",
+      "type": "cone",
+      "dtype": "cold"
+    },
+    {
+      "key": "tempest.f",
+      "name": "Eye of the Storm",
+      "type": "buff",
+      "dtype": "energy"
+    },
+    {
+      "key": "tempest.shift",
+      "name": "Tailwind",
+      "type": "dash",
+      "dtype": "energy"
+    },
+    {
+      "key": "tempest.r",
+      "name": "Stormfront",
+      "type": "meteor",
+      "dtype": "energy"
+    },
+    {
+      "key": "knightfall.lmb",
+      "name": "Blade Fan",
+      "type": "volley",
+      "dtype": "physical"
+    },
+    {
+      "key": "knightfall.rmb",
+      "name": "Cross Counter",
+      "type": "melee",
+      "dtype": "energy"
+    },
+    {
+      "key": "knightfall.q",
+      "name": "Smoke Vanish",
+      "type": "teleport",
+      "dtype": "energy"
+    },
+    {
+      "key": "knightfall.e",
+      "name": "Caustic Charges",
+      "type": "mine",
+      "dtype": "acid"
+    },
+    {
+      "key": "knightfall.f",
+      "name": "Grapnel Line",
+      "type": "grapple",
+      "dtype": "energy"
+    },
+    {
+      "key": "knightfall.shift",
+      "name": "Cape Slip",
+      "type": "dash",
+      "dtype": "energy"
+    },
+    {
+      "key": "knightfall.r",
+      "name": "Wing Support",
+      "type": "construct",
+      "dtype": "energy"
+    },
+    {
+      "key": "aegis.lmb",
+      "name": "God-Forged Blade",
+      "type": "melee",
+      "dtype": "energy"
+    },
+    {
+      "key": "aegis.rmb",
+      "name": "Golden Lasso",
+      "type": "tentacle",
+      "dtype": "energy"
+    },
+    {
+      "key": "aegis.q",
+      "name": "Aegis Wave",
+      "type": "charge",
+      "dtype": "energy"
+    },
+    {
+      "key": "aegis.e",
+      "name": "Shield Shout",
+      "type": "cone",
+      "dtype": "energy"
+    },
+    {
+      "key": "aegis.f",
+      "name": "Blessing of Ares",
+      "type": "buff",
+      "dtype": "energy"
+    },
+    {
+      "key": "aegis.shift",
+      "name": "War Stride",
+      "type": "dash",
+      "dtype": "energy"
+    },
+    {
+      "key": "aegis.r",
+      "name": "Wrath of Themyscira",
+      "type": "charge",
+      "dtype": "energy"
+    },
+    {
+      "key": "olympus.lmb",
+      "name": "Living Lightning",
+      "type": "beam",
+      "dtype": "energy"
+    },
+    {
+      "key": "olympus.rmb",
+      "name": "Thunder Fist",
+      "type": "melee",
+      "dtype": "energy"
+    },
+    {
+      "key": "olympus.q",
+      "name": "Thunderbolt",
+      "type": "charge",
+      "dtype": "energy"
+    },
+    {
+      "key": "olympus.e",
+      "name": "Static Storm",
+      "type": "volley",
+      "dtype": "energy"
+    },
+    {
+      "key": "olympus.f",
+      "name": "THE WORD",
+      "type": "buff",
+      "dtype": "energy"
+    },
+    {
+      "key": "olympus.shift",
+      "name": "Mercury Step",
+      "type": "dash",
+      "dtype": "energy"
+    },
+    {
+      "key": "olympus.r",
+      "name": "JUDGMENT BOLT",
+      "type": "charge",
+      "dtype": "energy"
+    },
+    {
+      "key": "marshal.lmb",
+      "name": "Alien Vision",
+      "type": "beam",
+      "dtype": "magic"
+    },
+    {
+      "key": "marshal.rmb",
+      "name": "Density Hammer",
+      "type": "melee",
+      "dtype": "energy"
+    },
+    {
+      "key": "marshal.q",
+      "name": "Ghost Body",
+      "type": "phase",
+      "dtype": "energy"
+    },
+    {
+      "key": "marshal.e",
+      "name": "Mind Skip",
+      "type": "teleport",
+      "dtype": "energy"
+    },
+    {
+      "key": "marshal.f",
+      "name": "Resolve of the Dead",
+      "type": "buff",
+      "dtype": "energy"
+    },
+    {
+      "key": "marshal.shift",
+      "name": "Wraith Dash",
+      "type": "dash",
+      "dtype": "energy"
+    },
+    {
+      "key": "marshal.r",
+      "name": "Dominion",
+      "type": "mindcontrol",
+      "dtype": "magic"
+    },
+    {
+      "key": "circuit.lmb",
+      "name": "Sonic Cannon",
+      "type": "rifle",
+      "dtype": "physical"
+    },
+    {
+      "key": "circuit.rmb",
+      "name": "White Noise Beam",
+      "type": "beam",
+      "dtype": "physical"
+    },
+    {
+      "key": "circuit.q",
+      "name": "Shock Grapple",
+      "type": "projectile",
+      "dtype": "energy"
+    },
+    {
+      "key": "circuit.e",
+      "name": "Overload Vent",
+      "type": "cone",
+      "dtype": "energy"
+    },
+    {
+      "key": "circuit.f",
+      "name": "System Surge",
+      "type": "buff",
+      "dtype": "energy"
+    },
+    {
+      "key": "circuit.shift",
+      "name": "Servo Burst",
+      "type": "dash",
+      "dtype": "energy"
+    },
+    {
+      "key": "circuit.r",
+      "name": "BOOYAH Cannon",
+      "type": "beam",
+      "dtype": "physical"
+    },
+    {
+      "key": "trench.lmb",
+      "name": "Trident Pierce",
+      "type": "melee",
+      "dtype": "energy"
+    },
+    {
+      "key": "trench.rmb",
+      "name": "The Drowned Court",
+      "type": "summon",
+      "dtype": "energy"
+    },
+    {
+      "key": "trench.q",
+      "name": "Riptide",
+      "type": "cone",
+      "dtype": "energy"
+    },
+    {
+      "key": "trench.e",
+      "name": "Harpoon Throw",
+      "type": "projectile",
+      "dtype": "energy"
+    },
+    {
+      "key": "trench.f",
+      "name": "King's Tide",
+      "type": "buff",
+      "dtype": "energy"
+    },
+    {
+      "key": "trench.shift",
+      "name": "Current Ride",
+      "type": "dash",
+      "dtype": "energy"
+    },
+    {
+      "key": "trench.r",
+      "name": "MAELSTROM",
+      "type": "growingorb",
+      "dtype": "energy"
+    },
+    {
+      "key": "decibel.lmb",
+      "name": "Siren Scream",
+      "type": "cone",
+      "dtype": "physical"
+    },
+    {
+      "key": "decibel.rmb",
+      "name": "Combat Cadence",
+      "type": "rush",
+      "dtype": "energy"
+    },
+    {
+      "key": "decibel.q",
+      "name": "Heel Turn",
+      "type": "melee",
+      "dtype": "energy"
+    },
+    {
+      "key": "decibel.e",
+      "name": "Focused Note",
+      "type": "projectile",
+      "dtype": "energy"
+    },
+    {
+      "key": "decibel.f",
+      "name": "Crescendo",
+      "type": "buff",
+      "dtype": "energy"
+    },
+    {
+      "key": "decibel.shift",
+      "name": "Staccato Step",
+      "type": "dash",
+      "dtype": "energy"
+    },
+    {
+      "key": "decibel.r",
+      "name": "THE CANARY CRY",
+      "type": "cone",
+      "dtype": "physical"
+    },
+    {
+      "key": "coldsnap.lmb",
+      "name": "Cold Gun",
+      "type": "rifle",
+      "dtype": "physical"
+    },
+    {
+      "key": "coldsnap.rmb",
+      "name": "Flash Frost",
+      "type": "cone",
+      "dtype": "cold"
+    },
+    {
+      "key": "coldsnap.q",
+      "name": "Glacier Wall",
+      "type": "construct",
+      "dtype": "energy"
+    },
+    {
+      "key": "coldsnap.e",
+      "name": "Cryo Charge",
+      "type": "projectile",
+      "dtype": "energy"
+    },
+    {
+      "key": "coldsnap.f",
+      "name": "Cold Read",
+      "type": "buff",
+      "dtype": "energy"
+    },
+    {
+      "key": "coldsnap.shift",
+      "name": "Getaway",
+      "type": "dash",
+      "dtype": "energy"
+    },
+    {
+      "key": "coldsnap.r",
+      "name": "Absolute Frost",
+      "type": "charge",
+      "dtype": "energy"
+    },
+    {
+      "key": "foundry.lmb",
+      "name": "Foundry Hammer",
+      "type": "melee",
+      "dtype": "energy"
+    },
+    {
+      "key": "foundry.rmb",
+      "name": "Hammer Toss",
+      "type": "projectile",
+      "dtype": "energy"
+    },
+    {
+      "key": "foundry.q",
+      "name": "Rivet Gun",
+      "type": "rifle",
+      "dtype": "physical"
+    },
+    {
+      "key": "foundry.e",
+      "name": "Forge Vent",
+      "type": "cone",
+      "dtype": "energy"
+    },
+    {
+      "key": "foundry.f",
+      "name": "Tempered",
+      "type": "buff",
+      "dtype": "energy"
+    },
+    {
+      "key": "foundry.shift",
+      "name": "Piston Drive",
+      "type": "dash",
+      "dtype": "energy"
+    },
+    {
+      "key": "foundry.r",
+      "name": "Orbital Forge",
+      "type": "meteor",
+      "dtype": "energy"
+    },
+    {
+      "key": "talon.lmb",
+      "name": "Escrima Cross",
+      "type": "melee",
+      "dtype": "energy"
+    },
+    {
+      "key": "talon.rmb",
+      "name": "Flying Grayson",
+      "type": "rush",
+      "dtype": "energy"
+    },
+    {
+      "key": "talon.q",
+      "name": "Wing-Ding Fan",
+      "type": "volley",
+      "dtype": "physical"
+    },
+    {
+      "key": "talon.e",
+      "name": "Staff Sweep",
+      "type": "melee",
+      "dtype": "energy"
+    },
+    {
+      "key": "talon.f",
+      "name": "Flow State",
+      "type": "buff",
+      "dtype": "energy"
+    },
+    {
+      "key": "talon.shift",
+      "name": "Tumbler",
+      "type": "dash",
+      "dtype": "energy"
+    },
+    {
+      "key": "talon.r",
+      "name": "Finale Routine",
+      "type": "rush",
+      "dtype": "energy"
+    },
+    {
+      "key": "abeo.lmb",
+      "name": "Iron Palm",
+      "type": "melee",
+      "dtype": "energy"
+    },
+    {
+      "key": "abeo.rmb",
+      "name": "Shockwave Stomp",
+      "type": "cone",
+      "dtype": "energy"
+    },
+    {
+      "key": "abeo.q",
+      "name": "Shrapnel Fist",
+      "type": "projectile",
+      "dtype": "energy"
+    },
+    {
+      "key": "abeo.e",
+      "name": "Guard Break",
+      "type": "melee",
+      "dtype": "energy"
+    },
+    {
+      "key": "abeo.f",
+      "name": "Tempered Oath",
+      "type": "buff",
+      "dtype": "energy"
+    },
+    {
+      "key": "abeo.shift",
+      "name": "Bulwark Rush",
+      "type": "dash",
+      "dtype": "energy"
+    },
+    {
+      "key": "abeo.r",
+      "name": "Foundation Breaker",
+      "type": "charge",
+      "dtype": "energy"
+    },
+    {
+      "key": "jelani.lmb",
+      "name": "Piston Blow",
+      "type": "melee",
+      "dtype": "energy"
+    },
+    {
+      "key": "jelani.rmb",
+      "name": "Blur Assault",
+      "type": "rush",
+      "dtype": "energy"
+    },
+    {
+      "key": "jelani.q",
+      "name": "Sonic Wake",
+      "type": "cone",
+      "dtype": "energy"
+    },
+    {
+      "key": "jelani.e",
+      "name": "Spear Tackle",
+      "type": "melee",
+      "dtype": "energy"
+    },
+    {
+      "key": "jelani.f",
+      "name": "Second Wind",
+      "type": "buff",
+      "dtype": "energy"
+    },
+    {
+      "key": "jelani.shift",
+      "name": "Afterburn",
+      "type": "dash",
+      "dtype": "fire"
+    },
+    {
+      "key": "jelani.r",
+      "name": "A Hundred Hands",
+      "type": "rush",
+      "dtype": "energy"
+    },
+    {
+      "key": "kamaria.lmb",
+      "name": "Veiled Edge",
+      "type": "melee",
+      "dtype": "energy"
+    },
+    {
+      "key": "kamaria.rmb",
+      "name": "Untouchable",
+      "type": "phase",
+      "dtype": "energy"
+    },
+    {
+      "key": "kamaria.q",
+      "name": "Veil Step",
+      "type": "teleport",
+      "dtype": "energy"
+    },
+    {
+      "key": "kamaria.e",
+      "name": "Phase Bolt",
+      "type": "projectile",
+      "dtype": "energy"
+    },
+    {
+      "key": "kamaria.f",
+      "name": "Half-Here",
+      "type": "buff",
+      "dtype": "energy"
+    },
+    {
+      "key": "kamaria.shift",
+      "name": "Slip Veil",
+      "type": "dash",
+      "dtype": "energy"
+    },
+    {
+      "key": "kamaria.r",
+      "name": "Ten Veils",
+      "type": "rush",
+      "dtype": "energy"
+    },
+    {
+      "key": "ramiro.lmb",
+      "name": "Riot Scattergun",
+      "type": "rifle",
+      "dtype": "physical"
+    },
+    {
+      "key": "ramiro.rmb",
+      "name": "Service Revolver",
+      "type": "rifle",
+      "dtype": "physical"
+    },
+    {
+      "key": "ramiro.q",
+      "name": "Nightstick",
+      "type": "melee",
+      "dtype": "energy"
+    },
+    {
+      "key": "ramiro.e",
+      "name": "Gas Canister",
+      "type": "projectile",
+      "dtype": "toxic"
+    },
+    {
+      "key": "ramiro.f",
+      "name": "My Son Goes Home",
+      "type": "buff",
+      "dtype": "energy"
+    },
+    {
+      "key": "ramiro.shift",
+      "name": "Duck & Cover",
+      "type": "dash",
+      "dtype": "energy"
+    },
+    {
+      "key": "ramiro.r",
+      "name": "Backup Called",
+      "type": "summon",
+      "dtype": "energy"
+    },
+    {
+      "key": "jawah.lmb",
+      "name": "Absorption Field",
+      "type": "cone",
+      "dtype": "energy"
+    },
+    {
+      "key": "jawah.rmb",
+      "name": "Dead-Air Palm",
+      "type": "melee",
+      "dtype": "energy"
+    },
+    {
+      "key": "jawah.q",
+      "name": "Null Wave",
+      "type": "projectile",
+      "dtype": "energy"
+    },
+    {
+      "key": "jawah.e",
+      "name": "Returned Thunder",
+      "type": "cone",
+      "dtype": "energy"
+    },
+    {
+      "key": "jawah.f",
+      "name": "Stored Decibels",
+      "type": "buff",
+      "dtype": "energy"
+    },
+    {
+      "key": "jawah.shift",
+      "name": "Hush",
+      "type": "dash",
+      "dtype": "energy"
+    },
+    {
+      "key": "jawah.r",
+      "name": "EVERY SOUND AT ONCE",
+      "type": "charge",
+      "dtype": "energy"
+    },
+    {
+      "key": "moses.lmb",
+      "name": "Atlas Tendrils",
+      "type": "tentacle",
+      "dtype": "energy"
+    },
+    {
+      "key": "moses.rmb",
+      "name": "Symbiont Fist",
+      "type": "melee",
+      "dtype": "energy"
+    },
+    {
+      "key": "moses.q",
+      "name": "Protocol Surge",
+      "type": "rush",
+      "dtype": "energy"
+    },
+    {
+      "key": "moses.e",
+      "name": "Bio Spike",
+      "type": "projectile",
+      "dtype": "energy"
+    },
+    {
+      "key": "moses.f",
+      "name": "Regenerative Bond",
+      "type": "buff",
+      "dtype": "energy"
+    },
+    {
+      "key": "moses.shift",
+      "name": "Adaptive Slip",
+      "type": "dash",
+      "dtype": "energy"
+    },
+    {
+      "key": "moses.r",
+      "name": "FULL BOND",
+      "type": "buff",
+      "dtype": "energy"
+    },
+    {
+      "key": "dune.lmb",
+      "name": "Sandblast",
+      "type": "cone",
+      "dtype": "energy"
+    },
+    {
+      "key": "dune.rmb",
+      "name": "Sand Rampart",
+      "type": "construct",
+      "dtype": "energy"
+    },
+    {
+      "key": "dune.q",
+      "name": "Fist of the Waste",
+      "type": "projectile",
+      "dtype": "energy"
+    },
+    {
+      "key": "dune.e",
+      "name": "Dust Sentry",
+      "type": "construct",
+      "dtype": "energy"
+    },
+    {
+      "key": "dune.f",
+      "name": "Hardpack",
+      "type": "buff",
+      "dtype": "energy"
+    },
+    {
+      "key": "dune.shift",
+      "name": "Grain Drift",
+      "type": "dash",
+      "dtype": "energy"
+    },
+    {
+      "key": "dune.r",
+      "name": "SANDSTORM",
+      "type": "meteor",
+      "dtype": "energy"
+    },
+    {
+      "key": "graven.lmb",
+      "name": "Gravity Shear",
+      "type": "cone",
+      "dtype": "energy"
+    },
+    {
+      "key": "graven.rmb",
+      "name": "Event Well",
+      "type": "growingorb",
+      "dtype": "energy"
+    },
+    {
+      "key": "graven.q",
+      "name": "Dense Star",
+      "type": "projectile",
+      "dtype": "energy"
+    },
+    {
+      "key": "graven.e",
+      "name": "Displacement",
+      "type": "teleport",
+      "dtype": "energy"
+    },
+    {
+      "key": "graven.f",
+      "name": "Zero-G Field",
+      "type": "buff",
+      "dtype": "energy"
+    },
+    {
+      "key": "graven.shift",
+      "name": "Slingshot",
+      "type": "dash",
+      "dtype": "energy"
+    },
+    {
+      "key": "graven.r",
+      "name": "SINGULARITY SEED",
+      "type": "charge",
+      "dtype": "energy"
+    },
+    {
+      "key": "bulwark.lmb",
+      "name": "Rampart Fist",
+      "type": "melee",
+      "dtype": "energy"
+    },
+    {
+      "key": "bulwark.rmb",
+      "name": "Bastion Wall",
+      "type": "construct",
+      "dtype": "energy"
+    },
+    {
+      "key": "bulwark.q",
+      "name": "Repulse Field",
+      "type": "cone",
+      "dtype": "energy"
+    },
+    {
+      "key": "bulwark.e",
+      "name": "Watchtower",
+      "type": "construct",
+      "dtype": "energy"
+    },
+    {
+      "key": "bulwark.f",
+      "name": "Hold the Line",
+      "type": "buff",
+      "dtype": "energy"
+    },
+    {
+      "key": "bulwark.shift",
+      "name": "Advance",
+      "type": "dash",
+      "dtype": "energy"
+    },
+    {
+      "key": "bulwark.r",
+      "name": "SIEGE END",
+      "type": "charge",
+      "dtype": "energy"
+    },
+    {
+      "key": "feral.lmb",
+      "name": "Rend",
+      "type": "melee",
+      "dtype": "energy"
+    },
+    {
+      "key": "feral.rmb",
+      "name": "Pack Hunt",
+      "type": "rush",
+      "dtype": "energy"
+    },
+    {
+      "key": "feral.q",
+      "name": "Apex Roar",
+      "type": "cone",
+      "dtype": "energy"
+    },
+    {
+      "key": "feral.e",
+      "name": "Savage Lunge",
+      "type": "melee",
+      "dtype": "energy"
+    },
+    {
+      "key": "feral.f",
+      "name": "Blood Frenzy",
+      "type": "buff",
+      "dtype": "energy"
+    },
+    {
+      "key": "feral.shift",
+      "name": "Predator Weave",
+      "type": "dash",
+      "dtype": "energy"
+    },
+    {
+      "key": "feral.r",
+      "name": "NO CAGES",
+      "type": "rush",
+      "dtype": "energy"
+    },
+    {
+      "key": "breach.lmb",
+      "name": "Breach Shotgun",
+      "type": "rifle",
+      "dtype": "physical"
+    },
+    {
+      "key": "breach.rmb",
+      "name": "Concussion Launcher",
+      "type": "projectile",
+      "dtype": "energy"
+    },
+    {
+      "key": "breach.q",
+      "name": "Shield Check",
+      "type": "melee",
+      "dtype": "energy"
+    },
+    {
+      "key": "breach.e",
+      "name": "Entry Charge",
+      "type": "mine",
+      "dtype": "energy"
+    },
+    {
+      "key": "breach.f",
+      "name": "Field Dressing",
+      "type": "buff",
+      "dtype": "energy"
+    },
+    {
+      "key": "breach.shift",
+      "name": "Entry Roll",
+      "type": "dash",
+      "dtype": "energy"
+    },
+    {
+      "key": "breach.r",
+      "name": "Demolition Round",
+      "type": "projectile",
+      "dtype": "energy"
+    },
+    {
+      "key": "recon.lmb",
+      "name": "Scout Blaster",
+      "type": "rifle",
+      "dtype": "physical"
+    },
+    {
+      "key": "recon.rmb",
+      "name": "Charged Sidearm",
+      "type": "charge",
+      "dtype": "energy"
+    },
+    {
+      "key": "recon.q",
+      "name": "Scoped Marksman Rifle",
+      "type": "rifle",
+      "dtype": "physical"
+    },
+    {
+      "key": "recon.e",
+      "name": "Scout Grenade",
+      "type": "projectile",
+      "dtype": "energy"
+    },
+    {
+      "key": "recon.f",
+      "name": "Trauma Patch",
+      "type": "buff",
+      "dtype": "energy"
+    },
+    {
+      "key": "recon.shift",
+      "name": "Scout Roll",
+      "type": "dash",
+      "dtype": "energy"
+    },
+    {
+      "key": "recon.r",
+      "name": "Anti-Armor Rocket",
+      "type": "projectile",
+      "dtype": "energy"
+    }
+  ]
+}

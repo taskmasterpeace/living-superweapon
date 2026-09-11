@@ -26,13 +26,16 @@ test(`shoulder tissue spans chest-to-arm across authored frame ${frame.bulk}/${f
  }finally{cleanup(p);}
 });
 
-function attached(p){
+function attached(p,context=''){
  for(const surface of p.rig.shoulderSurfaces){
   const a=p.torso.localToWorld(new Vector3(surface.side*.85,1.05,0));
   const b=surface.upper.localToWorld(new Vector3(0,.4,0));
   const center=a.lerp(b,.5),direction=new Vector3(0,0,1);
   const ray=new Raycaster(center.clone().addScaledVector(direction,8),direction.negate());
-  assert.ok(ray.intersectObject(surface.mesh).some(h=>Math.abs(h.distance-8)<2),'shoulder detached from final drivers');
+  // Authored-body heroes suppress the procedural render layer. This contract
+  // checks its deformation/restoration geometry even while that layer is hidden.
+  const hits=[];surface.mesh.raycast(ray,hits);
+  assert.ok(hits.some(h=>Math.abs(h.distance-8)<2),`shoulder detached from final drivers ${context} side=${surface.side}`);
   assert.ok(surface.mesh.geometry.attributes.position.array.every(Number.isFinite));
  }
 }
@@ -60,7 +63,7 @@ test('all roster shoulders survive ragdoll playback and restore their exact auth
   try{
    const before=f.parts.rig.shoulderSurfaces.map(s=>s.mesh.geometry.attributes.position.array.slice());
    const rag=new Ragdoll(f,new Vector3(35,22,-18));
-   for(let i=0;i<120;i++){rag.step(1/60,null);rag.apply(f);attached(f.parts);}
+   for(let i=0;i<120;i++){rag.step(1/60,null);rag.apply(f);attached(f.parts,`${def.id} frame=${i}`);}
    rag.restore();
    f.parts.rig.shoulderSurfaces.forEach((s,i)=>{
     const after=s.mesh.geometry.attributes.position.array;

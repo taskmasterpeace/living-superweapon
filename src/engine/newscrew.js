@@ -20,6 +20,7 @@ import { normalizeNewsCameraProfile, sampleNewsShot } from './news-camera.js';
 import { NewsFrameEncoder, newsFrameBytes, revokeFrames } from './news-capture.js';
 import { createNewsPerson, poseNewsPerson } from './news-figure.js';
 import {OUTPOST_PRESS_PARK} from './frontline-outpost-layout.js';
+import {persistNewsClip} from './news-archive-adapter.js';
 export { normalizeNewsCameraProfile, sampleNewsShot, NewsFrameEncoder, revokeFrames, createNewsPerson, poseNewsPerson };
 
 const W = 320, H = 180, FRAME_W = 640, FRAME_H = 360; // logical overlay / recorded frame
@@ -161,6 +162,7 @@ export class NewsCrew {
     this.grp.visible = this.enabled;
     this.clips = []; this._preroll = []; this.rec = null; this._onAirT = 0;
     this.t = 0; this._event = null; this._ending = null; this._finished = false;
+    this.matchId = globalThis.crypto?.randomUUID?.() || `match-${Date.now()}-${Math.random().toString(36).slice(2)}`;
     this._standupClips = 0; this._standupCd = 0; this.standupT = 0;
     this.downT = 0; this._downK = 0; this.duckT = 0; this._kick = 0; this._koFocus = null; this._lastEventT = 0;
     const crew = pickCrew(Date.now());
@@ -209,6 +211,7 @@ export class NewsCrew {
     if (opts.focus) { this._koFocus = { pos: opts.focus.clone ? opts.focus.clone() : new THREE.Vector3(opts.focus.x, opts.focus.y || 4, opts.focus.z), until: this.t + Math.min(dur, 2.2) }; }
     this._punchT = 0.45;
     if (this.rec) {
+      for (const fighter of [opts.actor, opts.target]) if (fighter?.def?.id) this.rec.heroIds.add(fighter.def.id);
       this.rec.until = Math.min(this.rec.started + 5.5, Math.max(this.rec.until, this.t + (priority >= this.rec.priority ? dur * 0.85 : dur * 0.35)));
       if (priority > this.rec.priority) {
         this.rec.priority = priority; this.rec.tag = tag; this.rec.title = title; this.rec.lt = this._ltFor(tag, title);
@@ -218,6 +221,8 @@ export class NewsCrew {
     }
     const fps = this.g.world._qTier === 0 ? Math.ceil((SLOWTAGS[tag] || 12) * 0.6) : (SLOWTAGS[tag] || 12);
     this.rec = {
+      id: globalThis.crypto?.randomUUID?.() || `clip-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      matchId: this.matchId, createdAt: Date.now(), heroIds: new Set([opts.actor?.def?.id, opts.target?.def?.id].filter(Boolean)),
       tag, title, priority, fps, slow,
       frames: this._preroll, until: this.t + Math.min(dur, 5.5), started: this.t, acc: 0, shots: [],
       t0: this.g.matchT || 0, lt: this._ltFor(tag, title),
@@ -513,10 +518,17 @@ export class NewsCrew {
     const r = this.rec; this.rec = null;
     if (!r) return;
     if (r.frames.length < 6) { revokeFrames(r.frames); return; }
-    this.clips.push({
+    const clip = {
+      id: r.id, matchId: r.matchId, createdAt: r.createdAt, heroIds: [...r.heroIds], favorite: false, audio: false,
       tag: r.tag, title: r.title, t0: r.t0, tLabel: fmtClock(r.t0), fps: r.fps, frames: r.frames, priority: r.priority, shotBy: this.operatorName,
       slow: !!r.slow, slowFrom: r.ev || 0, slowTo: (r.ev || 0) + Math.round(r.fps * 1.4),   // the TV slows THIS window
       shots: r.shots || [], width: FRAME_W, height: FRAME_H,
+      archiveState: 'saving', archiveError: '',
+    };
+    this.clips.push(clip);
+    // Archive acquires Blob ownership independently; the live reel remains bounded and revocable.
+    persistNewsClip(clip, this._encoder).then(()=>{clip.archiveState='saved';},error=>{
+      clip.archiveState='error';clip.archiveError=error?.message||String(error);
     });
     this._trimClips();
   }

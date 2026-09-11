@@ -3,9 +3,12 @@
 import * as THREE from 'three';
 import {firearmEmitter} from './weapon-emission.js';
 import {reachArm} from './hero-rig.js';
+import {authoredParts,samplePoseFrame,applyAuthoredPose} from './authored-pose.js';
+import {resolveMotionClip} from './motion-banks.js';
 
 const target=new THREE.Vector3(),start=new THREE.Vector3(),pole=new THREE.Vector3(),endPole=new THREE.Vector3();
 const rotation=new THREE.Quaternion(),parent=new THREE.Quaternion();
+const actionFrame=new Float64Array(45);
 const smooth=t=>{t=THREE.MathUtils.clamp(t,0,1);return t*t*(3-2*t);};
 const ramp=(t,a,b)=>smooth((t-a)/(b-a));
 
@@ -28,19 +31,22 @@ export function animateReloadPose(f){
  if(!s||s.rig!==p.rig||s.magazine!==magazine){
   resetReloadProps(f);
   s=f._reloadPose={rig:p.rig,magazine,bolt,magazineRest:magazine.position.clone(),boltRest:bolt.position.clone(),
-   base:[arm,...arm.children.slice(1,3)].map(part=>({part,position:new THREE.Vector3(),quaternion:new THREE.Quaternion()}))};
+   base:authoredParts(p).map(part=>({part,position:new THREE.Vector3(),quaternion:new THREE.Quaternion()}))};
  }
  for(const b of s.base){b.position.copy(b.part.position);b.quaternion.copy(b.part.quaternion);}s.applied=true;
  const t=THREE.MathUtils.clamp(r.elapsed/r.duration,0,1);
- // Local -Z points below the upright rifle. Draw straight out of the well,
- // then arc forward in the free hand and return before the insert cue at 65%.
- const draw=ramp(t,.2,.31)*(1-ramp(t,.49,.65));
- const handling=ramp(t,.31,.42)*(1-ramp(t,.44,.54));
+ const motion=r.motion??resolveMotionClip(f,'reload','reload');r.sourcePhase=t;
+ if(motion?.clip){samplePoseFrame(motion.clip,t,actionFrame,false);applyAuthoredPose(f,actionFrame,1,{legs:false,hips:false,support:false,body:false,head:false,armR:false});}
+ // Local -Z points below the upright rifle. Package event timing and cue
+ // dispatch share this action-owned timeline; fallback values are unchanged.
+ const timeline=r.timeline;
+ const draw=ramp(t,timeline.drawStart,timeline.drawFull)*(1-ramp(t,timeline.insertStart,timeline.insert));
+ const handling=ramp(t,timeline.handlingStart,timeline.handlingFull)*(1-ramp(t,timeline.handlingRelease,timeline.handlingEnd));
  magazine.position.copy(s.magazineRest);magazine.position.z-=draw*.7+handling*.1;magazine.position.y-=handling*.35;
- const charge=ramp(t,.78,.9)*(1-ramp(t,.9,.94));
+ const charge=ramp(t,timeline.boltStart,timeline.chamber)*(1-ramp(t,timeline.chamber,timeline.boltEnd));
  bolt.position.copy(s.boltRest);bolt.position.y+=charge*.26;
  const weight=ramp(t,0,.15)*(1-ramp(t,.92,1));
- const toBolt=ramp(t,.68,.78);
+ const toBolt=ramp(t,timeline.toBoltStart,timeline.toBoltEnd);
  magazine.getObjectByName('magazine-grip').getWorldPosition(target);
  bolt.getWorldPosition(start);target.lerp(start,toBolt);arm.parent.worldToLocal(target);
  hand.getWorldPosition(start);arm.parent.worldToLocal(start);target.lerp(start,1-weight);
@@ -48,7 +54,9 @@ export function animateReloadPose(f){
  // Keep the reload elbow outside the carrier, following its current blade.
  if(f._pronePose?.weight)endPole.set(side,0,0);
  else endPole.set(side,-.5,3).applyQuaternion(p.torso.quaternion);
- pole.lerp(endPole,weight);
+ // The imported support-arm plane remains visible while the final hand target
+ // stays authoritative at the physical magazine/bolt contact.
+ pole.lerp(endPole,weight*(motion?.clip?.frames?0.75:1));
  reachArm(arm,target,side,1,pole);
  arm.getWorldQuaternion(parent).invert();gun.getWorldQuaternion(rotation);
  hand.quaternion.slerp(parent.multiply(rotation),weight);

@@ -1,0 +1,53 @@
+import {chromium} from 'playwright';
+import assert from 'node:assert/strict';
+import {mkdir} from 'node:fs/promises';
+const base=process.env.LSW_TEST_URL||'http://127.0.0.1:5182';
+const out='artifacts/camera-options';await mkdir(out,{recursive:true});
+const browser=await chromium.launch();
+const context=await browser.newContext({viewport:{width:1440,height:900}});
+const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));page.setDefaultTimeout(45000);
+const enter=async()=>{
+ console.log('Entering native Sarge frontline');
+ await page.goto(base+'/powerworld.html');
+ await page.locator('#pwRoster .pwc[data-id="sarge"]').click();
+ await page.locator('#pwEncounter [data-encounter="frontline"]').click();
+ await page.locator('#pwCamera [data-camera="character"]').click();
+ await page.locator('#pwGo').click();
+ await page.waitForFunction(()=>window.PW?.game?.running&&PW.game.pwStage?.frontlineReady);
+};
+const options=async()=>{
+ await page.keyboard.press('Escape');await page.locator('#hPaused [data-p="options"]').click();
+ await page.locator('[data-camera-option="shoulder"]').waitFor();
+ assert.equal(await page.evaluate(()=>PW.hud.optionsEl.contains(document.activeElement)),true,'Options takes focus from pause menu');
+ await page.keyboard.press('Tab');
+ assert.equal(await page.evaluate(()=>PW.hud.optionsEl.contains(document.activeElement)&&!PW.hud.titleOpen),true,'First Tab stays in Options and does not open roster');
+};
+try{
+ await enter();await options();console.log('Opened native Options');
+ const authored=await page.evaluate(()=>JSON.stringify(PW.game.player.def.model?.camera));
+ const before=await page.evaluate(()=>({yaw:PW.game.world._lookYaw,pitch:PW.game.world._lookPitch,shots:PW.game.projectiles.list.filter(p=>p.caster===PW.game.player).length}));
+ await page.getByRole('button',{name:'Shoulder',exact:true}).click();
+ assert.ok(Math.abs(await page.evaluate(()=>PW.game.world.camera.fov)-68)<1e-6,'Immediate shoulder FOV');
+ await page.locator('#camera-fov').focus();await page.keyboard.press('End');
+ await page.locator('#camera-range').focus();await page.keyboard.press('Home');
+ assert.deepEqual(await page.evaluate(()=>JSON.parse(localStorage.getItem('lsw.camera-preferences.v1'))),{mode:'shoulder',fov:85,range:18});
+ const after=await page.evaluate(()=>({yaw:PW.game.world._lookYaw,pitch:PW.game.world._lookPitch,shots:PW.game.projectiles.list.filter(p=>p.caster===PW.game.player).length}));
+ assert.deepEqual(after,before,'Options clicks/keys must not look or shoot');
+ assert.equal(await page.evaluate(()=>JSON.stringify(PW.game.player.def.model?.camera)),authored);
+ await page.screenshot({path:out+'/options-desktop.png'});
+ await enter();assert.ok(Math.abs(await page.evaluate(()=>PW.game.world.camera.fov)-85)<1e-6,'Fresh page applies saved FOV');
+ await options();assert.equal(await page.locator('#camera-range').inputValue(),'18');
+ await page.getByRole('button',{name:'Reset camera',exact:true}).click();
+ assert.equal(await page.evaluate(()=>localStorage.getItem('lsw.camera-preferences.v1')),null);
+ assert.ok(Math.abs(await page.evaluate(()=>PW.game.world.camera.fov)-73.74)<1e-6,'Reset restores centered calibration');
+ await page.locator('[data-options-done]').click();await page.locator('#hPaused [data-p="resume"]').click();
+ await page.waitForFunction(()=>PW.game.input.pointerLock===true);
+ const yaw=await page.evaluate(()=>PW.game.world._lookYaw);
+ await page.mouse.move(700,420);await page.mouse.move(755,420,{steps:3});
+ await page.waitForFunction(y=>PW.game.world._lookYaw!==y,yaw);
+ await page.screenshot({path:out+'/resumed-desktop.png'});
+ await page.setViewportSize({width:390,height:844});await options();
+ await page.screenshot({path:out+'/options-mobile.png'});
+ assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,'No mobile horizontal overflow');
+ assert.deepEqual(errors,[]);console.log('PASS native Options buttons, keyboard bounds, no look/fire, immediate apply, fresh reload, reset, mouse-look resume, mobile overflow. Pointer-lock capture and near-cover real-input route NOT RUN.');
+}catch(error){console.error(error);throw error;}finally{await browser.close();}

@@ -10,6 +10,9 @@ import {Ragdoll} from '../src/engine/ragdoll.js';
 import {queueHitReaction} from '../src/engine/hit-reaction.js';
 
 const sol=ROSTER.find(d=>d.id==='sol');
+// These assertions inspect the procedural sculpt, which remains selectable
+// independently of SOL's stock weighted body.
+function sculpt(model){return {...sol,model:{body:'procedural',...model}};}
 function release(p){p.g.traverse(o=>{o.geometry?.dispose();for(const m of Array.isArray(o.material)?o.material:[o.material])m?.dispose();});}
 function depth(p,x,y,side=1){
  p.g.updateMatrixWorld(true);
@@ -19,7 +22,7 @@ function depth(p,x,y,side=1){
 }
 
 test('the actual torso separates the chest and back muscle planes instead of a blank convex barrel',()=>{
- const p=figure({...sol,model:{costume:'fitted',definition:1}});
+ const p=figure(sculpt({costume:'fitted',definition:1}));
  try{
   assert.ok(depth(p,.62,.55)>depth(p,0,.55)+.035,'the sternum must sit behind the pectoral planes');
   assert.ok(depth(p,.62,.55,-1)>depth(p,0,.55,-1)+.025,'the spine must sit behind the shoulder blades');
@@ -28,7 +31,7 @@ test('the actual torso separates the chest and back muscle planes instead of a b
 });
 
 test('definition changes the rendered body while preserving sockets, torso envelope and powers',()=>{
- const a=figure({...sol,model:{definition:0}}),b=figure({...sol,model:{definition:1}});
+ const a=figure(sculpt({definition:0})),b=figure(sculpt({definition:1}));
  try{
   assert.ok(Math.abs(depth(a,.62,.55)-depth(b,.62,.55))>.025,'body definition must affect the real surface');
   for(const key of ['head','torso','pelvis','armL','armR','legL','legR'])assert.deepEqual(a[key].position.toArray(),b[key].position.toArray(),`${key} socket moved`);
@@ -53,7 +56,7 @@ test('definition survives draft history, local save, JSON import and production 
 });
 
 test('appearance forms retain body definition without replacing the gameplay root or arm ownership',()=>{
- const f=new Fighter({...sol,model:{definition:0}}),root=f.obj,position=f.pos;
+ const f=new Fighter(sculpt({definition:0})),root=f.obj,position=f.pos;
  try{
   const before=depth(f.parts,.62,.55);f.applyForm({model:{definition:1}});
   assert.ok(Math.abs(depth(f.parts,.62,.55)-before)>.025);
@@ -72,7 +75,7 @@ test('the transformation editor writes numeric definition and can restore inheri
 
 test('the chest hem covers the pelvis instead of showing a sawtooth underwear edge above the belt',()=>{
  for(const definition of [0,.5,1]){
-  const p=figure({...sol,model:{definition}});p.g.updateMatrixWorld(true);
+  const p=figure(sculpt({definition}));p.g.updateMatrixWorld(true);
   try{for(const x of [-.4,-.2,0,.2,.4]){
    const ray=new Raycaster(p.torso.localToWorld(new Vector3(x,-1.35,3)),new Vector3(0,0,-1));
    assert.ok(ray.intersectObjects([p.torso,p.pelvis],false)[0]?.object===p.torso,`pelvis crosses chest hem: definition ${definition}, x ${x}`);
@@ -82,7 +85,7 @@ test('the chest hem covers the pelvis instead of showing a sawtooth underwear ed
 
 test('the martial neckline follows the sculpt instead of hovering on an obsolete chest plane',()=>{
  for(const definition of [0,1]){
-  const p=figure({...sol,model:{costume:'martial',definition}});p.g.updateMatrixWorld(true);
+  const p=figure(sculpt({costume:'martial',definition}));p.g.updateMatrixWorld(true);
   try{for(const y of [.2,.5,.8,1.12]){
    const origin=p.torso.localToWorld(new Vector3(0,y,3)),ray=new Raycaster(origin,new Vector3(0,0,-1));
    const garment=ray.intersectObject(p.torso.getObjectByName('martial-undershirt'),false)[0],body=ray.intersectObject(p.torso,false)[0];
@@ -106,7 +109,7 @@ function emblemContact(p,label){
  }
 }
 test('the insignia stays on the chest through charged windup, recoil, ragdoll and recovery',()=>{
- const f=new Fighter({...sol,model:{definition:1}});f._openSky=true;
+ const f=new Fighter(sculpt({definition:1}));f._openSky=true;
  try{
   emblemContact(f.parts,'bind');f.meleeCharge=1;
   for(let i=0;i<30;i++)f._animate(1/60);emblemContact(f.parts,'charged twist');
@@ -119,7 +122,7 @@ test('the insignia stays on the chest through charged windup, recoil, ragdoll an
 
 test('tactical and plated panels stay seated on both smooth and defined bodies',()=>{
  for(const costume of ['plated','tactical'])for(const definition of [0,1]){
-  const p=figure({...sol,model:{costume,definition}});p.g.updateMatrixWorld(true);
+  const p=figure(sculpt({costume,definition}));p.g.updateMatrixWorld(true);
   const mat=new MeshBasicMaterial({side:DoubleSide}),inverse=new Matrix4().copy(p.torso.matrixWorld).invert();
   const panels=p.torso.children.filter(o=>o.name==='costume-chest-panel'||o.geometry?.type==='BoxGeometry').map(o=>{const clone=new Mesh(o.geometry,mat);clone.applyMatrix4(new Matrix4().multiplyMatrices(inverse,o.matrixWorld));clone.updateMatrixWorld(true);return clone;});
   const body=new Mesh(p.torso.geometry);body.updateMatrixWorld(true);
@@ -135,7 +138,7 @@ test('tactical and plated panels stay seated on both smooth and defined bodies',
 });
 
 test('curved armor keeps a smooth normal field instead of visible triangulation diamonds',()=>{
- const p=figure({...sol,model:{costume:'plated',definition:1}});
+ const p=figure(sculpt({costume:'plated',definition:1}));
  try{for(const mesh of p.torso.children.filter(o=>o.name==='costume-chest-panel')){
   const pos=mesh.geometry.attributes.position,n=mesh.geometry.attributes.normal,seen=new Map();
   for(let i=0;i<pos.count;i++){
@@ -147,7 +150,7 @@ test('curved armor keeps a smooth normal field instead of visible triangulation 
 
 test('conforming armor has a bounded topology budget and no collapsed triangles',()=>{
  for(const costume of ['plated','tactical']){
-  const p=figure({...sol,model:{costume,definition:1}});let count=0;
+  const p=figure(sculpt({costume,definition:1}));let count=0;
   try{for(const m of p.torso.children.filter(o=>o.name==='costume-chest-panel')){
    const a=m.geometry.attributes.position,index=m.geometry.index,n=index?index.count:a.count;count+=n/3;
    for(let i=0;i<n;i+=3){const points=[0,1,2].map(j=>new Vector3().fromBufferAttribute(a,index?index.getX(i+j):i+j));
@@ -160,7 +163,7 @@ test('conforming armor has a bounded topology budget and no collapsed triangles'
 
 test('the conforming insignia has no radial shading seams between sector grids',()=>{
  for(const definition of [0,.5,1]){
-  const p=figure({...sol,model:{definition}}),seen=new Map();
+  const p=figure(sculpt({definition})),seen=new Map();
   try{
    const position=p.emblem.geometry.attributes.position,normals=p.emblem.geometry.attributes.normal;
    for(let i=0;i<position.count;i++){
@@ -174,7 +177,7 @@ test('the conforming insignia has no radial shading seams between sector grids',
 
 test('armor vertex normals stay in the outward hemisphere of their triangle',()=>{
  for(const costume of ['plated','tactical'])for(const definition of [0,1]){
-  const p=figure({...sol,model:{costume,definition}});
+  const p=figure(sculpt({costume,definition}));
   try{for(const m of p.torso.children.filter(o=>o.name==='costume-chest-panel')){
    const pos=m.geometry.attributes.position,n=m.geometry.attributes.normal,index=m.geometry.index;
    for(let i=0;i<index.count;i+=3){

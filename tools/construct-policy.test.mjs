@@ -193,6 +193,9 @@ test('native zero-time presentation neither debits nor advances construct state'
 test('native Game settles once after Fighter regen and before projectiles',t=>{
  const {g,f,spawn}=native(t),c=spawn('upkeep',{constructKiPerSec:10});f.ki=1;f.sheet.kiRegenMult=1;f._medChecked=true;
  Object.assign(g,{running:true,pad:{update(){}},audio:{...g.audio,sweep(){}},humans:[],minions:[],controlPlayer(){},controlBot(){},isHuman:()=>true,updateAudioListener(){},resolveBodies(){},updateItems(){},updatePortals(){},melee:new MeleeSystem(g)});
+ // StudioCombat does not own the full Game camera lifecycle. Exercise the real
+ // preparation entry point with this fixture's legacy view before simulation.
+ g.prepareCombatView=Game.prototype.prepareCombatView;
  const stop=new Error('stop at projectile boundary');g.projectiles.update=()=>{throw stop;};
  assert.throws(()=>Game.prototype.update.call(g,.05),e=>e===stop);
  assert.ok(Math.abs(f.ki-.9)<1e-9,`native 8/s regen then 10/s upkeep should leave .9, got ${f.ki}`);assert.equal(c.kiSpent,.5);

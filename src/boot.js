@@ -17,6 +17,7 @@
 // different gets its own front door module; the shared part is the engine, not the chrome.
 import * as THREE from 'three';
 import { Input } from './core/input.js';
+import {toggleMeleeMode} from './core/melee-mode.js';
 import {soldierControlsActive} from './core/soldier-controls.js';
 import {retireOpeningClips} from './engine/broadcast-frames.js';
 import {archiveFieldFootage} from './engine/field-footage.js';
@@ -51,6 +52,8 @@ import { org as loadOrg } from './data/org.js';
 import { openHQGlobe } from './engine/hqglobe.js';
 import { openArmory } from './engine/armoryUI.js';
 import { selectHand, cycleHand, handLabel, handsOf } from './engine/hands.js';
+import {NewsroomUI} from './engine/newsroom-ui.js';
+import {getNewsArchive} from './engine/news-archive-adapter.js';
 
 // WAR WORLD: ASCENDANTS — the full game. Every door, the city, the career, the registry.
 export const PROFILE_FULL = {
@@ -171,7 +174,29 @@ export function boot(P = PROFILE_FULL) {
 
   // the profile's own view of the boot — handed to openTitle/closeTitle so a front door module
   // never has to reach into this closure by hand.
-  const ctx = { game, hud, audio, input, soundscape, ROSTER, enter: (cfg) => enter(cfg), openMenu: () => openMenu(), profile: P };
+  const ctx = { game, hud, audio, input, soundscape, ROSTER, enter: (cfg) => enter(cfg), openMenu: () => openMenu(true), openNewsroom: (opts) => openNewsroom(opts), profile: P, resumeFromTitle:false };
+  let newsroomPrior=null;
+  const newsroom=new NewsroomUI({archive:getNewsArchive(),roster:ROSTER,onClose:()=>closeNewsroom()});
+
+  async function openNewsroom({heroId}={}){
+    if(newsroomPrior)return;
+    newsroomPrior={title:!!hud.titleOpen,paused:!!hud._paused,running:!!game.running};
+    clearCombatInput();
+    if(document.pointerLockElement)document.exitPointerLock?.();
+    if(newsroomPrior.title)P.closeTitle(ctx);
+    if(newsroomPrior.paused)hud.setPaused(false);
+    game.running=false;game.combatOverlayOpen=true;touch.show(false);document.body.classList.remove('playing');
+    await newsroom.show({heroId:heroId||game.player?.def?.id||game._lastCfg?.p1||''});
+    const failed=[...(game._fieldClips||[]),...(game.news?.clips||[])].find(clip=>clip?.archiveState==='error'||clip?.archiveError);
+    if(failed)newsroom.reportArchiveError(failed.archiveError||'Automatic saving failed.');
+  }
+  function closeNewsroom(){
+    const prior=newsroomPrior;if(!prior)return;
+    newsroom.hide();newsroomPrior=null;game.combatOverlayOpen=false;
+    if(prior.title){game.running=false;P.openTitle(ctx);return;}
+    game.running=prior.running;hud.setPaused(prior.paused);
+    if(prior.running){document.body.classList.add('playing');touch.show(isTouchDevice());}
+  }
 
   function enter(cfg) {
     audio.init(); audio.resume(); applySettings(game); soundscape.start();   // buses exist only after init
@@ -375,7 +400,17 @@ export function boot(P = PROFILE_FULL) {
     Object.assign(input.mouse,{left:false,right:false,leftEdge:false,rightEdge:false,leftUp:false,rightUp:false,b3:false,b4:false});
     input.wheel=input.wheelPrimary=input.wheelSecondary=0;
   }
-  function openMenu() { if(game._frontlinePreparing)game._pwStage?.close();clearCombatInput();soundscape.music('menu'); game.running = false; touch.show(false); document.body.classList.remove('playing'); hud.hideEndScreen(); P.openTitle(ctx); }
+  function openMenu(abandon=false) {
+    ctx.resumeFromTitle=!!(started&&!abandon&&!game.matchOver&&!game._frontlinePreparing&&game.player);
+    if(game._frontlinePreparing)game._pwStage?.close();
+    clearCombatInput();soundscape.music('menu');game.running=false;touch.show(false);
+    document.body.classList.remove('playing');hud.hideEndScreen();P.openTitle(ctx);
+  }
+  function resumeTitle(){
+    if(P.id==='powerworld'&&!ctx.resumeFromTitle)return;
+    clearCombatInput();game.running=true;hud.setPaused(false);P.closeTitle(ctx);soundscape.music('combat');
+    document.body.classList.add('playing');touch.show(isTouchDevice());
+  }
 
   // ---- ORIGIN: install saved customs, wire the forge ----
   // ⚠ Customs are installed on BOTH profiles — a forged fighter is a full roster citizen and must be
@@ -424,8 +459,9 @@ export function boot(P = PROFILE_FULL) {
     if (game._lastCfg && game._lastCfg.net) { openMenu(); hud.showOnline(); return; }   // online rematch = back to the lobby
     if (game._lastCfg) enter(game._lastCfg);
   };
-  hud.onMenu = () => { if (netplay.active) netplay.leave(); openMenu(); };
+  hud.onMenu = () => { if (netplay.active) netplay.leave(); openMenu(true); };
   hud.onResume = () => { game.running = true; hud.setPaused(false); };
+  hud.onNewsroom = () => openNewsroom({heroId:game.player?.def?.id});
   if (P.doors.tutorial) hud.onTutorial = () => enter({ mode: 'training', p1: 'sol', tutorial: true });   // SOL teaches every system
   hud.onTutorialSkip = () => tutorial.skip();
   // first-timers get the manual once (with the LEARN BY DOING funnel inside)
@@ -483,7 +519,19 @@ export function boot(P = PROFILE_FULL) {
     // (7) "/" jumps to the roster search instead of reaching for the mouse
     if (e.key === '/' && hud.titleOpen) { const q = document.querySelector('#fQ'); if (q) { e.preventDefault(); q.focus(); q.select(); return; } }
     if (!started) return;
-    if (e.code === 'Tab') { e.preventDefault(); if (!hud.titleOpen) openMenu(); else { game.running = true; P.closeTitle(ctx); } return; }
+    if(e.code==='Tab'&&game.modeId==='powerworld'&&!hud.titleOpen){
+      if(e.altKey||hud.overlayOpen())return;
+      e.preventDefault();
+      if(!e.repeat&&game.running&&!game.matchOver){
+        if(toggleMeleeMode(game.player,input)){
+          hud.selectSlot(game.player._selSlot,game.player._selSecondary);
+          hud.feed(game.player._tabMelee?'MELEE · LMB punch / hold heavy · RMB grab · TAB restore attacks':'ATTACKS RESTORED','#ffd24a');
+        }else hud.feed('Finish the current action and release both triggers to change mode.','#ffd24a');
+      }
+      return;
+    }
+    if(e.code==='F3'&&game.modeId==='powerworld'){e.preventDefault();if(!hud.titleOpen)openMenu();else resumeTitle();return;}
+    if (e.code === 'Tab') { if(hud.overlayOpen())return;e.preventDefault(); if (!hud.titleOpen) openMenu(); else resumeTitle(); return; }
     if (e.code === 'Escape' && game.player && !hud.titleOpen) { if(game.running)clearCombatInput();game.running = !game.running; hud.setPaused(!game.running); return; }
     if (game.running === false) return;
     // brackets swap hero in the non-classic schemes (the wheel is busy selecting powers there)
@@ -557,7 +605,7 @@ export function boot(P = PROFILE_FULL) {
     if (!started) return;
     const inMatch = !hud.titleOpen;   // cached flag — no getComputedStyle in the frame loop
     if (game.pad.pressed('start') && inMatch) { if(game.running)clearCombatInput();game.running = !game.running; hud.setPaused(!game.running); }
-    if (game.pad.pressed('select')) { if (inMatch) openMenu(); else { game.running = true; hud.setPaused(false); P.closeTitle(ctx); } }
+    if (game.pad.pressed('select')) { if (inMatch) openMenu(); else resumeTitle(); }
     if (inMatch && game.running && game.pad.pressed('swap')) cycleHero(1);
   }
 
@@ -595,7 +643,7 @@ export function boot(P = PROFILE_FULL) {
   window.addEventListener('unhandledrejection', (e) => game.reportError(e && e.reason, 'promise'));
 
   // expose for debugging + performance benchmarking
-  const handle = { dev, comic, game, hud, THREE, ROSTER, runSlot, performEvade, input, tutorial, netplay, uinav, soundscape, SETTINGS, KEYMAPS, playOpening, PW_KB, profile: P, enter, openMenu, loadPrefs, hands: { handsOf, selectHand, cycleHand, handLabel }, creator: { ui: creator, freshPicks, buildDef, tally, validate, saveCustom, deleteCustom, loadCustoms } };
+  const handle = { dev, comic, game, hud, newsroom, THREE, ROSTER, runSlot, performEvade, input, tutorial, netplay, uinav, soundscape, SETTINGS, KEYMAPS, playOpening, PW_KB, profile: P, enter, openMenu, openNewsroom, loadPrefs, hands: { handsOf, selectHand, cycleHand, handLabel }, creator: { ui: creator, freshPicks, buildDef, tally, validate, saveCustom, deleteCustom, loadCustoms } };
   handle.runBenchmark = (opts) => runBenchmark(game, hud, opts);
   // POWERWORLD's own suite (manual §47) — the throwable/destructible stage, the knockback dial, and
   // the city-is-unchanged control. Lazy so the bench never costs the boot a byte.

@@ -24,11 +24,12 @@ function fixture(run) {
  try{run({a,b,game,hits,m:game.melee});}finally{Math.random=random;a.dispose();b.dispose();}
 }
 
-test('holding block at range never silently enters a defenseless charge in PowerWorld',()=>fixture(({a,b,game,m,hits})=>{
- a._openSky=true;a.ki=0;b.pos.z=100;
+for(const openSky of [true,false])test(`holding block at range stays defensive for ${openSky?'air-capable':'grounded'} PowerWorld actors`,()=>fixture(({a,b,game,m,hits})=>{
+ a._openSky=openSky;game.modeId='powerworld';a.ki=0;b.pos.z=100;
  for(let i=0;i<60;i++){m.guard(a,true);a.update(1/60,game);}
  assert.equal(a.chargingKi,false);assert.equal(a.guarding,true);
  a.takeDamage(10,{src:b,hitstop:0});assert.equal(hits.at(-1).blocked,true);
+ assert.equal(a.hp,a.maxHp);
 }));
 test('disabled or occupied bodies cannot raise or retain block',()=>{
  for(const state of ['frozenT','stunT','sleepT','downedT','_carry'])fixture(({a,m})=>{
@@ -159,8 +160,18 @@ test('lethal chip through a block enters KO and credits its actual attacker',()=
  assert.equal(a.alive,false,'holding block cannot leave a living fighter at zero HP');
  assert.equal(a.lastHitBy,b);assert.ok(a.ragdoll,'the blocked KO uses the real ragdoll lifecycle');
 }));
-test('lethal blocked damage preserves the human-only Second Wind',()=>fixture(({a,b,m,game})=>{
- a.isDummy=false;game.isHuman=f=>f===a;a.hp=.1;m.guard(a,true);
+test('default human lethal damage enters KO without a forced rally lock',()=>{
+ for(const blocked of [false,true])fixture(({a,b,m,game})=>{
+  a.isDummy=false;game.isHuman=f=>f===a;a.hp=.1;
+  if(blocked)m.guard(a,true);
+  a.takeDamage(10,{src:b,strike:true});
+  assert.equal(a.alive,false);assert.equal(a.downedT,0);
+  assert.equal(a._secondWindUsed,false);assert.equal(a.lastHitBy,b);
+  assert.ok(a.ragdoll,'normal KO still presents its ragdoll');
+ });
+});
+test('explicit Second Wind trait preserves the human-only rally',()=>fixture(({a,b,m,game})=>{
+ a.def.secondWind=true;a.isDummy=false;game.isHuman=f=>f===a;a.hp=.1;m.guard(a,true);
  a.takeDamage(10,{src:b,strike:true});
  assert.ok(a.downedT>0);assert.equal(a.hp,1);assert.equal(a.guarding,false);assert.equal(a.alive,true);
  assert.equal(a.lastHitBy,b);assert.equal(a._secondWindUsed,true);

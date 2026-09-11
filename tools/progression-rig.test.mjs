@@ -22,6 +22,30 @@ function fixture(model={}){
 function apply(f,form){assert.equal(typeof f.applyForm,'function','Fighter must expose an in-place appearance swap');return f.applyForm(form);}
 function resources(root){const all=new Set();root.traverse(o=>{if(o.geometry)all.add(o.geometry);for(const m of [].concat(o.material||[]))all.add(m);});return all;}
 
+test('live sparse form animation selection preserves body and other weapon families',()=>{
+  const assets={body:'body.hero-standard@1',motion:{locomotion:'motion.hero-ual@1',reload:'motion.hero-ual@1'},equipment:{rifle:'equipment.carbine@1',pistol:'equipment.sidearm@1'}};
+  const x=fixture({assets});try{
+    apply(x.f,{model:{assets:{motion:{grenade:'motion.hero-ual2@1'},equipment:{pistol:'equipment.future-sidearm@2'}}}});
+    assert.deepEqual(x.f.def.model.assets,{
+      body:'body.hero-standard@1',motion:{locomotion:'motion.hero-ual@1',reload:'motion.hero-ual@1',grenade:'motion.hero-ual2@1'},
+      equipment:{rifle:'equipment.carbine@1',pistol:'equipment.future-sidearm@2'}
+    });
+    assert.equal(assets.equipment.pistol,'equipment.sidearm@1','form selection must not mutate the saved base');
+    apply(x.f,null);
+    assert.deepEqual(x.f.def.model.assets,assets,'returning to base restores the original references');
+  }finally{x.close();}
+});
+
+test('switching sparse forms resolves against the base, not the preceding form',()=>{
+  const x=fixture({assets:{motion:{locomotion:'motion.hero-ual@1'},equipment:{rifle:'equipment.carbine@1'}}});try{
+    apply(x.f,{model:{assets:{equipment:{rifle:'equipment.future-carbine@2'}}}});
+    apply(x.f,{model:{assets:{motion:{reload:'motion.hero-ual@1'}}}});
+    assert.deepEqual(x.f.def.model.assets,{
+      motion:{locomotion:'motion.hero-ual@1',reload:'motion.hero-ual@1'},equipment:{rifle:'equipment.carbine@1'}
+    });
+  }finally{x.close();}
+});
+
 test('live form swap preserves actor, root, transform, combat state and active references',()=>{
   const x=fixture();try{const {f,scene}=x,root=f.obj,pos=f.pos,parts=f.parts;
     f.hp=37;f.ki=0;f.drainedT=1.2;f.flying=true;f.gait='airborne';f.state='hit';f.hitstop=.1;f.hitFlash=.4;f.staggerT=.3;

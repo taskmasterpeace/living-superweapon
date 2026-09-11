@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from 'three';
 import {Game} from '../src/engine/game.js';
+import {OUTPOST_SCOUT_PARKS,OUTPOST_SCOUT_YAWS} from '../src/engine/frontline-outpost-layout.js';
 const mod=await import('../src/engine/frontline-convoy.js').catch(e=>{if(e.code==='ERR_MODULE_NOT_FOUND')return {};throw e;});
 const noop=()=>{};
 function fixture(){
@@ -15,7 +16,8 @@ function fixture(){
 test('convoy registers measured native damage/cover volumes and follows crater ground',async()=>{
  assert.equal(typeof mod.FrontlineConvoy,'function');const f=fixture(),convoy=new mod.FrontlineConvoy(f.stage,{loader:{loadAsync:async()=>f.asset}});await convoy.loading;
  assert.equal(convoy.vehicles.length,3);assert.equal(f.world.cover.length,3);
- assert.ok(convoy.vehicles.every(v=>v.cover.x<-170&&v.cover.z>180),'the convoy belongs on the right-hand battlefield approach, outside the entry pad');
+ assert.deepEqual(convoy.vehicles.map(v=>[v.cover.x,v.cover.z]),OUTPOST_SCOUT_PARKS,'Clear level ground must retain the authored outpost vehicle bays');
+ assert.ok(convoy.vehicles.every(v=>Math.hypot(v.cover.x,v.cover.z)>80),'Vehicle bays must leave the entry combat pocket clear');
  for(const v of convoy.vehicles){assert.equal(v.cover.hp,120);assert.ok(v.cover.blastBounds?.isBox3);assert.ok(v.cover.top>v.cover.bottom);assert.equal(v.mesh.position.y,4);}
  f.world.heightAt=()=>-1;convoy.update();assert.equal(convoy.vehicles[0].mesh.position.y,-1);assert.ok(Math.abs(convoy.vehicles[0].cover.bottom+1)<1e-5);
  convoy.dispose();assert.equal(f.world.cover.length,0);assert.equal(f.world.coverAll.length,0);assert.equal(f.game.scene.children.length,0);
@@ -34,7 +36,9 @@ test('only nearest optional encounter gunner fires; sparring, pause and disposal
  const convoy=new mod.FrontlineConvoy(f.stage,{loader:{loadAsync:async()=>f.asset}});await convoy.loading;
  const step=n=>{for(let i=0;i<n;i++){f.game.time+=1/60;convoy.update();}};
  step(200);assert.equal(shots.length,0,'Sparring remains unarmed');
- f.game.ms.frontline={};step(240);assert.equal(shots.length,3);assert.ok(shots.every(s=>s.source===convoy.vehicles[0].gunner.source));
+ const nearest=[...convoy.vehicles].sort((a,b)=>a.mesh.position.distanceToSquared(f.game.player.pos)-b.mesh.position.distanceToSquared(f.game.player.pos))[0];
+ assert.notEqual(nearest,convoy.vehicles[0],'The nearest station must be selected spatially, not by array order');
+ f.game.ms.frontline={};step(240);assert.equal(shots.length,3);assert.ok(shots.every(s=>s.source===nearest.gunner.source));
  f.game.paused=true;step(200);assert.equal(shots.length,3);f.game.paused=false;
  const sources=convoy.vehicles.map(v=>v.gunner.source);convoy.dispose();step(200);assert.equal(shots.length,3);assert.ok(sources.every(s=>!s.alive));
 });
@@ -80,12 +84,23 @@ test('parked scout chassis follows a sloped ground plane instead of floating lev
 });
 
 test('convoy parking rejects a sharp bank with no plausible four-wheel contact',async()=>{
- const f=fixture();f.world.heightAt=x=>12*Math.exp(-(((x+190)/12)**2));
+ const f=fixture();
+ const [bayX,bayZ]=OUTPOST_SCOUT_PARKS[0],yaw=OUTPOST_SCOUT_YAWS[0];
+ f.world.heightAt=x=>12*Math.exp(-(((x-bayX)/12)**2));
+ // Four rectangular wheel contacts are coplanar only when the opposing
+ // diagonal height sums agree. Their difference / 4 is unavoidable plane error.
+ const supportError=(x,z)=>{
+  const h=[[-4.9395,7.9],[4.9395,7.9],[-4.9395,-8.5],[4.9395,-8.5]].map(([dx,dz])=>
+   f.world.heightAt(x+Math.cos(yaw)*dx+Math.sin(yaw)*dz,z-Math.sin(yaw)*dx+Math.cos(yaw)*dz));
+  return Math.abs(h[0]-h[1]-h[2]+h[3])/4;
+ };
+ assert.ok(supportError(bayX,bayZ)>.75,'The authored bay must actually exceed the four-wheel plane tolerance');
  const convoy=new mod.FrontlineConvoy(f.stage,{loader:{loadAsync:async()=>f.asset}});await convoy.loading;
  try{
   assert.equal(convoy.ready,true);
   const first=convoy.vehicles[0];
-  assert.ok(Math.hypot(first.cover.x+190,first.cover.z-205)>1,'Do not park on the sharp original bank');
+  assert.ok(Math.hypot(first.cover.x-bayX,first.cover.z-bayZ)>1,'Do not park on the sharp original bank');
+  assert.ok(supportError(first.cover.x,first.cover.z)<=.75,'The alternate bay must support a rigid four-wheel contact plane');
   assert.ok(Math.hypot(first.mesh.quaternion.x,first.mesh.quaternion.z)<.14,'Find a gentle support surface instead');
  }finally{convoy.dispose();}
 });

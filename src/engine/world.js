@@ -16,6 +16,8 @@ import { clamp, damp, lerp, smoothstep, dampStiff, angleDiff, setBands, DECAL_LI
 import { reachOf } from '../data/martial.js';
 import { CAMERA_DEFAULTS } from '../data/flight-tuning.js';
 import {cameraProfileOf} from '../data/camera-presets.js';
+import {getCameraPreferences} from '../core/camera-settings.js';
+import {createFreeLook,advanceFreeLook,clearFreeLook} from '../core/free-look.js';
 import {resolveGroundCamera} from './camera-ground.js';
 import {firearmSightZoom} from './firearm-aim.js';
 import {terrainEntry} from './projectile-contact.js';
@@ -85,6 +87,7 @@ export class World {
     // game.cameraDrive — RIDER); consumed by chase() as the view axis when there is no lock target.
     this._lookYaw = 0; this._lookPitch = 0; this._lookActive = false;
     this._lookSens = 0.0024;   // rad per locked-pointer pixel
+    this._freeLook=createFreeLook();
 
     this._buildLights();
     this._buildSky();
@@ -1383,6 +1386,18 @@ export class World {
     this._lookActive = true;
   }
 
+  clearFreeLook(){if(this._freeLook)clearFreeLook(this._freeLook);}
+  freeLookInput(input,dt,sight=1){
+    const state=this._freeLook||(this._freeLook=createFreeLook());
+    advanceFreeLook(state,{held:input.down('AltLeft')||input.down('AltRight'),dx:input.mouse.dx/sight,dy:input.mouse.dy/sight,
+      dt,sensitivity:this._lookSens,cancelVersion:input.cancelVersion});
+    return state.held;
+  }
+  get freeLooking(){return !!(this._freeLook&&(this._freeLook.yaw||this._freeLook.pitch));}
+  combatAimDirection(out){
+    return this.freeLooking&&this._combatAimDirection?out.copy(this._combatAimDirection):this.camera.getWorldDirection(out);
+  }
+
   // ---- THE MAP TOOL CAMERA ---------------------------------------------------------------------
   // A free orbit/pan/zoom over the plan, for authoring rather than playing. The match camera is a
   // fixed isometric that eases toward the player; this one takes its direction straight from the
@@ -2582,7 +2597,7 @@ export class World {
   // Values are adapted to our rig, not copied Quake world units.
   _chaseBfp(subject,target,dt) {
     const c=this.setCameraMode('chase'),S=subject.pos,snap=this._chaseSnap;
-    const profile=cameraProfileOf(subject),value=key=>profile?.[key]??CAMERA_DEFAULTS[key];
+    const profile=cameraProfileOf(subject,this.game?.player===subject?getCameraPreferences():null),value=key=>profile?.[key]??CAMERA_DEFAULTS[key];
     this._camClaimTick(subject,dt); // Reap gameplay claims; they do not reframe this camera.
     if(!this._lookActive){this._lookYaw=subject.facing;this._lookPitch=0;this._lookActive=true;}
     if(subject._aircraftVehicle){
@@ -2632,6 +2647,16 @@ export class World {
     const kick=Math.min(PW_FX.shakeMaxDeg,this._shake*PW_FX.shakeDegPer)*Math.PI/180*Math.sin(this._shakeT*PW_FX.oct1Hz*Math.PI*2);
     this.camTarget.set(this.camPos.x+ax*100+ux*kick*100,this.camPos.y+ay*100+uy*kick*100,this.camPos.z+az*100+uz*kick*100);
     this._applyProj();c.position.copy(this.camPos);c.lookAt(this.camTarget);
+    // Preserve the normal, collision-resolved eye and shot ray before turning
+    // the head. camBasis and _lookYaw/Pitch still own movement and flight.
+    const aim=this._combatAimDirection||(this._combatAimDirection=new THREE.Vector3());
+    c.getWorldDirection(aim);
+    if(this.freeLooking){
+      const yaw=Math.atan2(aim.x,aim.z)+this._freeLook.yaw;
+      const pitch=clamp(Math.asin(clamp(aim.y,-1,1))+this._freeLook.pitch,-BFP_PITCH_MAX,BFP_PITCH_MAX),cp=Math.cos(pitch);
+      this.camTarget.set(c.position.x+Math.sin(yaw)*cp*100,c.position.y+Math.sin(pitch)*100,c.position.z+Math.cos(yaw)*cp*100);
+      c.lookAt(this.camTarget);
+    }
     this._combatLocked=!!target;
     this.sun.position.set(Math.round(S.x)+this.sunOff.x,S.y+5.4+this.sunOff.y,Math.round(S.z)+this.sunOff.z);
     this.sun.target.position.set(Math.round(S.x),S.y+5.4,Math.round(S.z));
@@ -2647,7 +2672,7 @@ export class World {
     if(this._bfpCameraActive)return this._chaseBfp(subject,target,dt);
     clearForegroundVisibility(this);
     const c = this.setCameraMode('chase');
-    const cameraProfile = cameraProfileOf(subject);
+    const cameraProfile = cameraProfileOf(subject,this.game?.player===subject?getCameraPreferences():null);
     const cameraValue = key => cameraProfile?.[key] ?? CAMERA_DEFAULTS[key];
     const combatView = !!subject._openSky;
     if(!target && !this._lookActive) {

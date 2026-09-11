@@ -66,6 +66,19 @@ test('a drawn arena bout does not invent a victor', () => {
   assert.match(writeBroadcast(rep).headline, /DRAW/);
 });
 
+test('operation defeat reports the failed objective without inventing an opposing winner', () => {
+  const g=fixture();g.entities.push(fighter('zombie','SHAMBLER',0,1));
+  const rep=buildReport(g,{win:false,title:'OVERRUN',operation:'outbreak',lines:['Wave 2 of 3 reached.']});
+  const b=writeBroadcast(rep),copy=b.script.map(s=>s.text).join(' ');
+  assert.equal(b.headline,'OVERRUN · POWERWORLD');assert.equal(b.kicker,'OPERATION FAILED');
+  assert.match(copy,/Wave 2 of 3 reached/);assert.doesNotMatch(copy,/without a declared winner/);
+  assert.equal(rep.winner,null);
+});
+test('operation victory reports extraction receipt rather than a duel victory', () => {
+  const g=fixture(),rep=buildReport(g,{win:true,title:'SAMPLE EXTRACTED',operation:'clone-recovery',lines:['Clone sample secured.']});
+  const b=writeBroadcast(rep);assert.equal(b.kicker,'OPERATION COMPLETE');
+  assert.equal(b.headline,'SAMPLE EXTRACTED · POWERWORLD');assert.match(b.script.map(s=>s.text).join(' '),/Clone sample secured/);
+});
 test('ordinary city duels retain district, police, witness and damage coverage', () => {
   const g = fixture('duel'), rep = buildReport(g, { win: true, title: 'VICTORY' });
   assert.equal(rep.kind, 'duel'); assert.equal(rep.winner.name, 'SOL');

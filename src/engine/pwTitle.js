@@ -31,10 +31,10 @@ const PREF = 'powerworld_prefs_v1';
 // The four rules of `_openSky` (manual §46). Named here because a player arriving on this page has
 // no way to know this dimension is different, and "one flag, four rules" is the actual design.
 const LAWS = [
-  ['flight', 'Every roster fighter flies here. Clone recovery soldiers stay grounded. Forward is where you look, in 3-D.'],
+  ['flight', 'Flyers climb, hover and dive. Grounded soldiers sprint and leap. Hold ALT to look around while keeping your travel and aim.'],
   ['range', 'A punch SENDS them. The same haymaker travels 15 body lengths against the city\'s two.'],
   ['power', 'The ground is ammunition — break a spire, pick up the rubble, throw it. Shoot theirs down.'],
-  ['threat', 'No civilians or police. A field camera crew captures major hits and the post-match report.'],
+  ['threat', 'Choose an encounter: practice, outbreak, clone recovery or escalating outpost security. The field press records major hits.'],
 ];
 
 /** How many of the 52 can lift this rung — the ladder's own justification, computed live. */
@@ -196,7 +196,7 @@ body.phone #pwTitle h1{ font-size:34px; }
   let weatherPreset=['rain','storm','tornado','hurricane'].includes(prefs.weatherPreset)?prefs.weatherPreset:'clear';
 
   const save = () => { try { localStorage.setItem(PREF, JSON.stringify({ p1: selYou.id, p2: selFoe.id, two, ai, cameraPreset, daylight, weatherPreset })); } catch {} };
-  const footage = createFieldFootage(ctx.game);
+  const footage = createFieldFootage(ctx.game,{heroId:selYou.id,onOpenNewsroom:()=>ctx.openNewsroom?.({heroId:selYou.id})});
 
   // ---- the stage readout, every figure derived from the stage itself ----
   const loose = STAGE.loose.reduce((a, b) => a + b, 0);
@@ -214,13 +214,14 @@ body.phone #pwTitle h1{ font-size:34px; }
       <div class="pwtop">
         <a href="./studio.html">CHARACTER / POWER HARNESS ↗</a>
         <a href="./index.html" title="The full game — the city, the career, the registry">← WAR WORLD</a>
+        <button id="pwNewsroom" aria-label="Newsroom">▣ Newsroom</button>
         <button id="pwRank">📊 Rankings</button>
         <button id="pwOpt">⚙ Options</button>
         <button id="pwHow">❓ How to Play</button>
       </div>
       <div class="pwhead">
         <h1>POWERWORLD</h1>
-        <div class="pwkick">The other dimension · open sky · nothing here is watching</div>
+        <div class="pwkick">Desert proving ground · open sky · power leaves a mark</div>
       </div>
       <div class="pwlaws">
         ${LAWS.map(([ic, t]) => `<div class="pwlaw">${icon(ic, 13)}<span>${t}</span></div>`).join('')}
@@ -241,11 +242,16 @@ body.phone #pwTitle h1{ font-size:34px; }
             <div class="pwseg" id="pwEncounter">
               <button data-encounter="sparring" class="${encounter === 'sparring' ? 'on' : ''}" aria-pressed="${encounter === 'sparring'}">Sparring</button>
               <button data-encounter="practice" class="${encounter === 'practice' ? 'on' : ''}" aria-pressed="${encounter === 'practice'}"${two ? ' disabled' : ''}>Free practice · 1P</button>
+              <button data-encounter="zombies" class="${encounter === 'zombies' ? 'on' : ''}" aria-pressed="${encounter === 'zombies'}"${two ? ' disabled' : ''}>Outbreak · 1P</button>
+              <button data-encounter="security" class="${encounter === 'security' ? 'on' : ''}" aria-pressed="${encounter === 'security'}"${two ? ' disabled' : ''}>Outpost response · 1P</button>
               <button data-encounter="frontline" class="${encounter === 'frontline' ? 'on' : ''}" aria-pressed="${encounter === 'frontline'}"${two ? ' disabled style="opacity:.35" title="Clone recovery is one-player only"' : ''}>Clone recovery · 1P</button>
             </div>
           </div>
-          ${encounter === 'frontline' ? '<div class="pwnote">Four ground-bound rifle clones guard a sealed sample. Defeat them, land by the amber case, then return to extraction. Research is not yet implemented. Opponent selection and difficulty apply to sparring.</div>' : ''}
+          ${encounter === 'frontline' ? '<div class="pwnote">Four rifle clones guard a sealed sample. Fight or bypass them, land by the amber case for 1.5 seconds, then return to extraction for 2 uninterrupted seconds. Damage interrupts either hold. Deliver the sample to complete the operation.</div>' : ''}
           ${encounter === 'practice' ? '<div class="pwnote">No hostile spawns. Learn your powers, drive the scouts or practice helicopter and jet landings. Health, energy and collision are unchanged. Press B when you want to add a rival.</div>' : ''}
+          ${encounter === 'zombies' ? '<div class="pwnote">Three finite waves of grounded zombies. Punch, throw or use your weapons; five seconds between waves gives you room to recover. Defeat every wave to contain the outbreak.</div>' : ''}
+          ${encounter === 'security' ? '<div class="pwnote">Two officers guard the outpost. Attacking them brings police backup, tactical units, federal agents and then military infantry. Disengage and create distance to cool the response. No crime is assigned for collecting a research case.</div>' : ''}
+          <div class="pwnote"><b>ALT</b> looks around without turning travel or aim. <b>TAB</b> readies melee: LMB punch / hold heavy, RMB grab. TAB restores your attacks. <b>F3</b> opens the roster.</div>
           <div class="pwrow"><span class="pwlbl" id="pwDaylightLabel">Lighting</span><div class="pwseg pwEnvironment" id="pwDaylight" role="group" aria-labelledby="pwDaylightLabel">
             ${Object.values(DAYLIGHT_PRESETS).map(p=>`<button type="button" data-daylight="${p.id}" class="${daylight===p.id?'on':''}" aria-pressed="${daylight===p.id}">${p.label}</button>`).join('')}
           </div></div>
@@ -277,6 +283,7 @@ body.phone #pwTitle h1{ font-size:34px; }
         </div>
       </div>`;
 
+    footage.setHero(selYou.id);
     el.querySelector('#pwFootage').appendChild(footage.el);
     // ---- the roster grid ----
     const grid = el.querySelector('#pwRoster');
@@ -351,6 +358,7 @@ body.phone #pwTitle h1{ font-size:34px; }
     };
     for (const b of el.querySelectorAll('#pwAi button')) b.onclick = () => { if (two) return; ai = +b.dataset.ai; save(); render(); };
     el.querySelector('#pwOpt').onclick = () => hud.showOptions();
+    el.querySelector('#pwNewsroom').onclick = () => ctx.openNewsroom?.({heroId:selYou.id});
     el.querySelector('#pwHow').onclick = () => hud.showHowto();
     el.querySelector('#pwRank').onclick = () => hud.showRankings();
     el.querySelector('#pwGo').onclick = () => {
@@ -363,8 +371,10 @@ body.phone #pwTitle h1{ font-size:34px; }
   function open() {
     // Finalize this session's current shot without transferring/revoking its frame URLs.
     ctx.game.news?.flush().catch(err=>console.warn('Field footage encoding',err));
-    ctx.game.ms?.frontline?.dispose();
-    if (ctx.game.ms?.frontline) delete ctx.game.ms.frontline;
+    for(const key of ctx.resumeFromTitle?[]:['frontline','zombies','desertLaw']){
+      ctx.game.ms?.[key]?.dispose();
+      if(ctx.game.ms?.[key])delete ctx.game.ms[key];
+    }
     render();
     // ⚠ `hud.titleOpen` is READ BY THE FRAME LOOP and by padSystem — a front door that does not set
     // it leaves the game thinking a match is live behind the menu (Escape pauses nothing, the pad's

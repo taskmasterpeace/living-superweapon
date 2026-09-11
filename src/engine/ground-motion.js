@@ -4,6 +4,7 @@ import {authoredParts,samplePoseFrame,blendPoseFrames,applyAuthoredPose} from '.
 import {GAIT} from '../core/util.js';
 import {exclusivePose,rangedPoseSlot} from './directional-pose.js';
 import {restoreJumpBase,supportJumpLanding} from './jump-motion.js';
+import {resolveMotionClip} from './motion-banks.js';
 
 export const GROUND_CLIPS=bank.clips;
 export const GROUND_SOURCE=bank.source;
@@ -50,11 +51,17 @@ export function animateGround(f,dt,combat=0){
  if(s.weight<.0001){s.take=null;return;}
  const pace=speed/scale,jog=smooth(8,14,pace),sprint=smooth(20,32,pace);
  const stride=lerp(lerp(10,15,jog),22,sprint)*scale;
- if(f.hitstop<=0)s.phase=((s.phase+Math.sign(forward)*speed/stride*dt)%1+1)%1;
- samplePoseFrame(bank.clips.walk,s.phase,frame);samplePoseFrame(bank.clips.jog,s.phase,nextFrame);blendPoseFrames(frame,nextFrame,jog);
- samplePoseFrame(bank.clips.sprint,s.phase,nextFrame);blendPoseFrames(frame,nextFrame,sprint);
- s.take=(sprint>.5?bank.clips.sprint:jog>.5?bank.clips.jog:bank.clips.walk).take;
- s.duration=(sprint>.5?bank.clips.sprint:jog>.5?bank.clips.jog:bank.clips.walk).duration;
+ const phaseBefore=s.phase,phaseDelta=f.hitstop<=0?Math.sign(forward)*speed/stride*dt:0;
+ if(f.hitstop<=0)s.phase=((s.phase+phaseDelta)%1+1)%1;
+ const walk=resolveMotionClip(f,'locomotion','walk')??{clip:bank.clips.walk,source:'bundled'};
+ const jogClip=resolveMotionClip(f,'locomotion','jog')??{clip:bank.clips.jog,source:'bundled'};
+ const sprintClip=resolveMotionClip(f,'locomotion','sprint')??{clip:bank.clips.sprint,source:'bundled'};
+ samplePoseFrame(walk.clip,s.phase,frame);samplePoseFrame(jogClip.clip,s.phase,nextFrame);blendPoseFrames(frame,nextFrame,jog);
+ samplePoseFrame(sprintClip.clip,s.phase,nextFrame);blendPoseFrames(frame,nextFrame,sprint);
+ const selected=sprint>.5?sprintClip:jog>.5?jogClip:walk;
+ s.take=selected.clip.take;s.duration=selected.clip.duration;s.source=selected;
+ s.contactSample={serial:(s.contactSample?.serial??0)+1,phaseBefore,phase:s.phase,phaseDelta,
+  weights:[(1-jog)*(1-sprint),jog*(1-sprint),sprint],scale};
  for(const b of s.base){b.position.copy(b.part.position);b.quaternion.copy(b.part.quaternion);}s.applied=true;
  applyAuthoredPose(f,frame,s.weight,{hips:true});
 }

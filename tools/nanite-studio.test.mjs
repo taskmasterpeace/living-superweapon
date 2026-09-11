@@ -81,7 +81,7 @@ for(const at of [.65,1.5,2.45,2.8,4.1,5.2,6.1,6.8,8])test(`canonical native forw
 test('native incoming source is hostile, owner has finite HP and real KO stops choreography',t=>{
  const {p,stage,advance}=fixture(t);p.seek(0);assert.equal(stage.incoming.isDummy,false);assert.ok(stage.incoming.maxHp<1000);assert.ok(p.fighter.maxHp<1000);
  assert.equal(stage.game.isFoe(stage.incoming,p.fighter),true);assert.equal(stage.game.isFoe(stage.target,p.fighter),false);
- advance(0,2.3);p.fighter.hp=1;advance(2.3,2.8);assert.equal(p.fighter.alive,false);assert.equal(stage.naniteStats().alive,false);
+ advance(0,2.3);p.fighter.hp=1;p.fighter.ki=0;advance(2.3,2.8);assert.equal(p.fighter.alive,false);assert.equal(stage.naniteStats().alive,false);
  const launches=stage.naniteStats().launches;advance(2.8,5.5);assert.equal(p.fighter.alive,false);assert.equal(stage.naniteStats().launches,launches);assert.equal(p.fighter.slots.lmb.charging,false);
 });
 test('partial native hitstop freezes a repair frame then resumes once',t=>{
@@ -90,9 +90,9 @@ test('partial native hitstop freezes a repair frame then resumes once',t=>{
  advance(2.8+1/60,2.8+2/60);near(damaged.reformT+damaged.quietT,before+1/60);
 });
 for(const form of ['cannon','shield'])test(`${form} alone has a real native contact sample and does not activate an unselected slot`,t=>{
- const {p,stage,advance}=fixture(t,{forms:[form]});p.seek(0);advance(0,3);
+ const {p,stage,advance}=fixture(t,{forms:[form]});p.seek(0);advance(0,2.3);const preContactKi=p.fighter.ki;advance(2.3,3);
  const stats=stage.naniteStats();assert.equal(stats.emitted,1);assert.ok(stats.contacts>0);assert.equal(stats.modules.length,1);
- if(form==='cannon'){assert.equal(stats.modules[0].absorbed,0);assert.ok(stats.bodyDamage>0);}else assert.equal(stats.launches,0);
+ if(form==='cannon'){assert.equal(stats.modules[0].absorbed,0);assert.equal(stats.bodyDamage,0,'funded open-sky guard protects health');assert.ok(stats.ki<preContactKi-10,`native impact bills energy beyond earlier cannon cost: ${preContactKi} → ${stats.ki}`);}else assert.equal(stats.launches,0);
 });
 test('native punch sample uses actual melee windup and first physical winner',t=>{
  const {p,stage,advance}=fixture(t,{forms:['shield']});stage.naniteSample='punch';p.seek(0);advance(0,2.37);
@@ -172,7 +172,7 @@ test('living source remains a stable normal-pose zero-step control after native 
 // Replacing the native ragdoll presentation with the living _animate carrier
 // corrupts driven world matrices even if clocks and cell telemetry stay equal.
 for(const body of ['procedural','superhero-male','superhero-female'])test(`KO ${body} zero-step and view inspection preserve the native ragdoll pose`,t=>{
- const {p,advance}=fixture(t);p.profile.model.body=body;p.seek(0);advance(0,2.3);p.fighter.hp=1;advance(2.3,2.8);
+ const {p,advance}=fixture(t);p.profile.model.body=body;p.seek(0);advance(0,2.3);p.fighter.hp=1;p.fighter.ki=0;advance(2.3,2.8);
  const f=p.fighter;assert.equal(f.alive,false);assert.ok(f.ragdoll);
  const before=ragdollPose(f),clock=ragdollClock(f);
  for(const inspect of [()=>p.step(0,false,false),()=>p.setView('front'),()=>p.setView('side'),()=>p.setView('rear'),()=>p.setView('orbit')]){
@@ -182,7 +182,7 @@ for(const body of ['procedural','superhero-male','superhero-female'])test(`KO ${
  sameSemantic(ragdollPose(f),endpoint,'ended native ragdoll matrices');assert.deepEqual(ragdollClock(f),endClock);
 });
 for(const body of ['procedural','superhero-male','superhero-female'])test(`KO ${body} seek endpoint matches its own authoritative native ragdoll without simulation`,t=>{
- const {p}=fixture(t);p.profile.model.body=body;p.def={...p.def,hp:1};p.seek(2.8);
+ const {p}=fixture(t);p.profile.model.body=body;p.def={...p.def,hp:1,ki:1};p.seek(2.8);
  const f=p.fighter;assert.equal(f.alive,false);assert.ok(f.ragdoll);
  const shown=ragdollPose(f),clock=ragdollClock(f);
  // Same physical points, no step: the native apply operation is the oracle,

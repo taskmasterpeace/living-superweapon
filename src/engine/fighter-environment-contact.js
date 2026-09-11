@@ -22,6 +22,28 @@ function boxContact(a,b,lx,hx,ly,hy,lz,hz,out){
   out.t=enter;out.axis=axis;out.normal=normal;return true;
 }
 
+// Read-only full-body clearance for a coupled carry or an aimed body path.
+// Unlike ordinary movement, carry cannot phase through geometry or resolve an
+// initial overlap by teleporting the held body to the far side.
+export function fighterPathFraction(f,world,a,b){
+  const r=f.radius||0,h=12*(f.sizeScale||1),hit={t:Infinity};
+  const box=(x,z,hx,hz,bottom,top)=>{
+    if(a.x>x-hx-r&&a.x<x+hx+r&&a.z>z-hz-r&&a.z<z+hz+r&&a.y>bottom-h&&a.y<top){hit.t=0;return;}
+    boxContact(a,b,x-hx-r,x+hx+r,bottom-h,top,z-hz-r,z+hz+r,hit);
+  };
+  for(const c of world.cover||[])if(!c.destroyed)box(c.x,c.z,c.hx??c.r,c.hz??c.r,c.frontlineAircraft&&Number.isFinite(c.bottom)?c.bottom:-Infinity,c.top??c.h);
+  for(const room of world.interiors||[]){
+    for(const wall of room.walls||[])box(wall.x,wall.z,wall.hx,wall.hz,-Infinity,room.top);
+    box(room.x,room.z,room.hx,room.hz,room.top-1,room.top);
+  }
+  if(world.heightAt)for(const [dx,dz]of [[0,0],[-r,-r],[-r,r],[r,-r],[r,r]]){
+    const p={x:a.x+dx,y:a.y,z:a.z+dz},q={x:b.x+dx,y:b.y,z:b.z+dz};
+    if(p.y>world.heightAt(p.x,p.z)+EPS)hit.t=Math.min(hit.t,terrainEntry(world,p,q));
+    else if(q.y<world.heightAt(q.x,q.z)-EPS)hit.t=0;
+  }
+  return Math.max(0,Math.min(1,hit.t));
+}
+
 // Three axis contacts suffice to constrain translation. Work depends on scene
 // candidates, not speed-dependent microsteps. Existing endpoint checks remain
 // responsible for initial overlaps, footing and the normal landing ceremony.

@@ -30,19 +30,20 @@ test(`composed ${source} spine stays connected and bounded through ${motion} rev
  }finally{x.close();}
 });
 
-for(const motion of ['strafe','fly'])for(const releaseAt of [1,12,75])
-test(`${motion} chest reversal releases smoothly at frame ${releaseAt}`,()=>{
- const x=spineCombatFixture({motion}),{f,dt}=x;
+for(const motion of ['strafe','fly'])for(const releaseAt of [1,12,75])for(const hz of [30,60,120])
+test(`${motion} chest reversal releases smoothly at frame ${releaseAt} at ${hz} Hz`,()=>{
+ const x=spineCombatFixture({motion,hz}),{f,dt}=x;
  try{
   for(let i=0;i<60;i++)x.step();x.start('lmb');for(let i=0;i<60;i++)x.step();x.aim(170,25);
   let previous=f.parts.pelvis.quaternion.clone().invert().multiply(f.parts.torso.quaternion);
   for(let i=0;i<240;i++){
    if(i===releaseAt)x.stop('lmb');x.step();
    const q=f.parts.pelvis.quaternion.clone().invert().multiply(f.parts.torso.quaternion);
-   assert.ok(q.angleTo(previous)<=12*dt+1e-5,`Release snapped at frame ${i}`);previous.copy(q);
+   assert.ok(q.angleTo(previous)<=12*dt+1e-5,`Release snapped ${q.angleTo(previous)} rad at frame ${i}`);previous.copy(q);
   }
   assert.ok(Math.abs(f._spinePose.bias)<.001,'Released attack left a heading offset');
   assert.ok(f._combatAim.weight<.0001,'Attack did not finish recovery');
+  assert.equal(f._spinePose.engaged,false,'Settled recovery must return ownership to the base pose');
  }finally{x.close();}
 });
 

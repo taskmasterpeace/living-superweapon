@@ -53,6 +53,17 @@ test('ground source phase is frame-rate independent and pauses with hitstop',()=
  }
  for(const q of samples)assert.ok(q.angleTo(samples[0])<.025,'Sampling at another frame rate cannot change the take phase');
 });
+for(const hz of [30,60,120])for(const sign of [-1,1])test(`ground contact observation retains the native signed phase at ${hz}Hz (${sign})`,()=>{
+ const f=fighter();f.vel.set(0,0,sign*15);
+ try{
+  tick(f,1/hz);const sample=f._groundMotion.contactSample;
+  assert.equal(Math.sign(sample.phaseDelta),sign);assert.ok(Math.abs(sample.phaseDelta-sign*15/15/hz)<1e-10);
+  assert.ok(Math.abs(sample.weights.reduce((a,b)=>a+b,0)-1)<1e-12);
+  const serial=sample.serial,phase=sample.phase;f.hitstop=.2;tick(f,1/hz);
+  assert.equal(f._groundMotion.contactSample.phaseDelta,0);assert.equal(f._groundMotion.contactSample.phase,phase);
+  assert.equal(f._groundMotion.contactSample.serial,serial+1,'presentation produces one observation, not another motion clock');
+ }finally{f.dispose();}
+});
 test('a planted source toe keeps the rendered walking boots near the floor',()=>{
  const f=fighter();f.vel.set(0,0,7.5);
  try{

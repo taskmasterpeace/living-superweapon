@@ -1,3 +1,4 @@
+import {BeamGroundContact} from './beam-ground-contact.js';
 // WAR WORLD: ASCENDANTS — projectiles, beam-hoses (wave cannon), and spirit-bomb lobs.
 import { domeBlocks } from './systems2.js';
 import {hasCivilians} from '../data/modes.js';
@@ -21,6 +22,7 @@ import { earliestOrdinaryContact, sweptPairTime, sweptBeamTime, priorityEnabled 
 import * as THREE from 'three';
 import {registerShieldContact} from './shield-surface.js';
 import { clamp, lerp, rand, TAU, PW_KB } from '../core/util.js';
+import {applyWebControl,canApplyWebControl} from './web-control.js';
 
 const UP = new THREE.Vector3(0, 1, 0);
 const _wind = new THREE.Vector3();
@@ -156,7 +158,8 @@ class Projectile {
     this.trailT = 0;
     this.dead = false;
 
-    this.arrow = !!o.arrow; this.payload = o.payload || null; this.blind = o.blind;
+    this.arrow = !!o.arrow; this.payload = o.payload || null; this.webControl=o.webControl||null; this.blind = o.blind;
+    this._webControlSourceEpoch=this.webControl?(caster._webControlEpoch||0):0;this._webControlInterrupted=false;
     this.bullet = !!o.bullet;                      // real ballistics read as METAL, not energy
     this.ballistic = !!o.ballistic; this.weapon = o.weapon || null;   // drives the armour/toughness scale
     this.dtype = o.dtype || null; this.siphon = o.siphon;              // damage type rides the projectile
@@ -173,6 +176,12 @@ class Projectile {
       this.obj.scale.setScalar(this.radius);
       this.obj.position.copy(this.pos); game.scene.add(this.obj);
       this.light = game.vfx.borrowLight(this.color, 4 * this.power, this.radius * 14);
+    } else if(this.webControl){
+      // A web shot is a traveling knot of filament, never an energy orb or explosive shell.
+      const knot=new THREE.Mesh(new THREE.IcosahedronGeometry(1,1),new THREE.MeshBasicMaterial({color:this.color,wireframe:true,transparent:true,opacity:.9}));
+      const ring=new THREE.Mesh(new THREE.TorusGeometry(1.25,.09,5,14),new THREE.MeshBasicMaterial({color:this.color2,transparent:true,opacity:.72,depthWrite:false}));
+      ring.rotation.x=Math.PI/2;this.obj=new THREE.Group();this.obj.add(knot,ring);this.obj.scale.setScalar(this.radius);this.obj.position.copy(this.pos);game.scene.add(this.obj);
+      this._spin=this.obj;this._ownMats=[knot.material,ring.material];this._ownGeos=[knot.geometry,ring.geometry];this._throwGeometry=null;this.light=null;
     } else if (this.bullet) {
       // A BULLET, not a ball of light: a tiny brass slug with a hot tracer streak drawn BEHIND it.
       // Stretched along travel, no bloom halo — it must not read like a ki blast.
@@ -294,6 +303,10 @@ class Projectile {
   }
 
   update(dt, game, substep=false) {
+    if(this.webControl&&!this._webControlInterrupted){
+      const source=this.caster;
+      if(!source?.alive||source._formDisposed||source._webControlEpoch!==this._webControlSourceEpoch||source.staggerT>0||source.stunT>0||source.frozenT>0||source.grabbedBy)this._webControlInterrupted=true;
+    }
     if(this._guidedSplit && !substep){
       // A fast child must not jump over a body or thin wall between rendered
       // frames. The normal collision path runs at each short traveled interval.
@@ -430,10 +443,10 @@ class Projectile {
     // beam and orb in the game — gets a drag of zero and is untouched. Energy is exempt BY
     // CONSTRUCTION rather than by exception, which is the difference between a rule and a list
     // somebody has to maintain. A bullet visibly curves in a crosswind; a ki blast does not.
-    if (game.weather && game.weather.windSpeed > 0.01) {
+    if (game.weather && (game.weather.windSpeed > 0.01 || game.weather.layers?.size)) {
       const k = this.windKind || (this.ballistic ? 'ballistic' : this.arrow ? 'arrow'
         : this.canister ? 'canister' : this.blade ? 'blade' : null);
-      if (k) { game.weather.force(k, _wind); this.vel.addScaledVector(_wind, dt); }
+      if (k) { game.weather.force(k, _wind, this.pos); this.vel.addScaledVector(_wind, dt); }
     }
     if (this.homing) {
       const t = game.nearestFoe(this.caster, this.pos, 120);
@@ -510,7 +523,7 @@ class Projectile {
     if (contact ? contact.kind === 'ground' : this.pos.y <= this.radius * 0.5 && this.ground) {
       if (this.boomerang) { this._return = true; this.pos.y = (game.world._ghTriangles?game.world.heightAt(this.pos.x,this.pos.z):0)+this.radius * 0.5 + 0.1; this.vel.y = Math.abs(this.vel.y) * 0.4; }
       else if (this.armDelay && !this._armed) { this._arm(game,true); return true; }
-      else return this._impact(game, true);
+      else return this.webControl?this._webImpact(game):this._impact(game, true);
     }
     for (const c of (contact ? contact.kind === 'cover' ? [contact.target] : [] : game.world.cover)) {
       if(c===this.launchCover&&this.caster===this.launchCaster)continue;
@@ -550,14 +563,14 @@ class Projectile {
           game.audio.zap(700 + this.bounces * 120, this.pos);
           return true;
         }
-        return this._impact(game, !contact);
+        return this.webControl?this._webImpact(game):this._impact(game, !contact);
       }
     }
     // interior walls stop shots — corner warfare means the corner actually protects you
     if (contact ? contact.kind === 'interior' : !this._return && game.world.hitInteriorWall && game.world.hitInteriorWall(this.pos.x, this.pos.y, this.pos.z, this.radius)) {
       if (this.boomerang) this._return = true;
       else if (this.armDelay && !this._armed) { this._arm(game); return true; }
-      else return this._impact(game, !contact);
+      else return this.webControl?this._webImpact(game):this._impact(game, !contact);
     }
     // ENERGY SHIELD BUBBLE (brief T3.15): hostile fire flattens on the dome; allied fire leaves.
     if (contact ? contact.kind === 'dome' : game._domes && game._domes.length) {
@@ -565,7 +578,7 @@ class Projectile {
       // for the existing inclusive point-query, without moving the visual hit.
       const sample = contact ? {caster:this.caster,damage:this.damage,pos:this.pos.clone().lerp(new THREE.Vector3(contact.target.x,contact.target.y,contact.target.z),1e-10)} : this;
       const shieldGame = contact ? {_domes:[contact.target],vfx:game.vfx,audio:game.audio} : game;
-      if (domeBlocks(shieldGame, sample)) return this._impact(game, false);
+      if (domeBlocks(shieldGame, sample)) return this.webControl?this._webImpact(game):this._impact(game, false);
     }
     // ⚠ A THROWN CAR IS A TARGET (manual §47). Tested BEFORE the foe check on purpose: the interesting
     // case is the prop arriving at your face, so the shot has to meet the car before it meets you.
@@ -574,7 +587,7 @@ class Projectile {
     if ((contact ? contact.kind === 'prop' : game._flung && game._flung.length) && game.hitFlung(this.caster,
       contact ? this.pos.clone().lerp(new THREE.Vector3(contact.target.x,contact.target.y,contact.target.z),1e-10) : this.pos,
       this.radius + 1.5, this.damage * this.caster.powerBuff)) {
-      return this._impact(game, false);
+      return this.webControl?this._webImpact(game):this._impact(game, false);
     }
     const foe = contact ? (contact.kind === 'foe' ? contact.target : null) : game.overlapFoe(this.caster, this.pos, this.radius + 1.5);
     if (foe) {
@@ -598,6 +611,7 @@ class Projectile {
         if (game.hud && game.isHuman(foe)) game.hud.damageNumber(foe.pos, 'STUCK', '#ff8a3a', true);
         return true;
       }
+      const webAccepted=this.webControl&&!this._webControlInterrupted&&canApplyWebControl(foe,this.caster);
       const hitOptions={src:this.caster,naniteContact:contact?.naniteContact,contactPoint:this.pos,ballistic:this.ballistic,weapon:this.weapon,dtype:this.dtype,siphon:this.siphon,
         kb:_v.copy(this.vel).setY(0).setLength(this.damage*(this.ballistic?.12:.5)+(this.ballistic?2:8)).setComponent(1,this.ballistic?1:6),launch:this.ballistic?0:6+this.power*4,hitstop:this.ballistic?.02:.05};
       return withNaniteDamageAdmission(foe,this.damage*this.caster.powerBuff,hitOptions,absorbs=>{
@@ -611,6 +625,7 @@ class Projectile {
           this._defl = true;
           const shooter = this.caster;
           this.caster = foe; this.team = foe.team; this.homing = Math.max(this.homing, 1.5);
+          if(this.webControl)this._webControlSourceEpoch=foe._webControlEpoch||0;
           if (shooter && shooter.alive) _v.copy(shooter.pos).setY(shooter.pos.y + 5).sub(this.pos).normalize().multiplyScalar(this.vel.length() * 1.08);
           else _v.copy(this.vel).multiplyScalar(-1);
           this.vel.copy(_v); this.life = Math.max(this.life, 1.4);
@@ -618,12 +633,17 @@ class Projectile {
           foe._blocked=0.18;
           registerShieldContact(foe,{contactPoint:this.pos});
           if(foe.guardMeter<=1e-9){foe.guardMeter=0;foe.guarding=false;foe.staggerT=Math.max(foe.staggerT||0,0.7);foe.state='hit';foe.stateT=0;}
+          const guard=foe.guardMeter<=1e-9?'broken':'blocked';
+          game.presentHitOutcome?.(foe,hitOptions,Object.freeze({dtype:this.dtype||(this.ballistic?'ballistic':'energy'),
+            attackClass:this.ballistic?'bullet':'projectile',healthLost:0,absorbed:Object.freeze({plate:0,armor:0,shield:0,nanite:0}),
+            guard,deflected:true,knockedOut:false,statusesAdded:Object.freeze([]),
+            contact:Object.freeze({x:this.pos.x,y:this.pos.y,z:this.pos.z})}));
           game.vfx.impactStar(this.pos.clone(), 6, '#ffd24a', 0.16); game.audio.zap(760,this.pos);
-          if (game.hud) game.hud.damageNumber(foe.pos, 'DEFLECT', '#ffd24a', true);
           return true;
         }
       }
       foe.takeDamage(this.damage * this.caster.powerBuff,hitOptions);
+      if(webAccepted&&foe.alive)applyWebControl(foe,this.caster,this.webControl);
       // ACID: corrodes the plate for 5s — the counter to the armour that stops bullets
       if (this.payload === 'acid') { foe.addDot({ dps: 6, dur: 5, color: '#c8e04a', kind: 'acid', corrode: 4, src: this.caster }); game.particles.burst(foe.pos.x, foe.pos.y + 5, foe.pos.z, { count: 9, speed: 11, life: 0.6, size: 2.8, color: ['#c8e04a', '#9ab030', '#e6f0a0'], up: 7, drag: 1.1 }); }
       else if (this.payload === 'poison') foe.addDot({ dps: 5, dur: 4, color: '#8fe08a', kind: 'poison', src: this.caster });
@@ -642,12 +662,13 @@ class Projectile {
         foe.addDot({ dps: 7, dur: 10, color: '#c8b84a', kind: 'acid', dtype: 'acid', corrode: 6, src: this.caster });
       }
       else if (this.payload === 'flame') { foe.addDot({ dps: 7, dur: 2.5, color: '#ff7a2a', kind: 'burn', src: this.caster }); game.particles.burst(foe.pos.x, foe.pos.y + 5, foe.pos.z, { count: 8, speed: 10, life: 0.5, size: 2.6, color: ['#ff7a2a', '#ffd24a'], up: 8, drag: 1.2 }); }
+      if(this.webControl)return this._webImpact(game);
       if (this.chain) this._arc(game, foe);
       if (this.pierce-- > 0) { game.vfx.flash(this.pos.clone(), this.color, this.radius * 2, 0.12); return true; }
       return this._impact(game, false, foe);
       });
     }
-    if (contact ? contact.kind === 'expiry' : this.life <= 0) { if (this.armDelay && !this._armed) { this._arm(game); return true; } return this._impact(game, false); }
+    if (contact ? contact.kind === 'expiry' : this.life <= 0) { if (this.armDelay && !this._armed) { this._arm(game); return true; } return this.webControl?this._webImpact(game):this._impact(game, false); }
     return true;
   }
 
@@ -720,7 +741,7 @@ class Projectile {
     game.vfx.explode(p, { color: this.color, color2: this.color2, radius: this.blast, power: this.power, energyShell:!!(this._remoteBurst || this._guidedSplit), scorch: hitGround && !(this.vis && this.vis.residue !== 'scorch') });
     // the profile decides what the ground KEEPS — frost, sludge, debris, nothing
     if (hitGround && this.vis && this.vis.residue !== 'scorch') game.vfx.residue(p, this.vis.residue, this.blast * 0.6);
-    game.areaDamage(this.caster, p, this.blast, this.damage * 0.8, this.power);
+    game.areaDamage(this.caster, p, this.blast, this.damage * 0.8, this.power, {dtype:this.dtype});
     if (this.shock && hitGround) game.vfx.shockwave(p, { color: this.color, radius: this.blast * 2.2, power: this.power });
     if (this.face) {   // the Marletta goes off — a grief-shaped crater
       game.vfx.shockwave(p.clone().setY((game.world._ghTriangles?game.world.heightAt(p.x,p.z):0)+0.2), { color: this.color, radius: this.blast * 2.6, power: this.power });
@@ -729,6 +750,11 @@ class Projectile {
     }
     game.audio.boom(clamp(this.power * 0.6, 0.2, 1.4), p);
     this._dispose(game); return false;
+  }
+  _webImpact(game){
+    game.vfx.ring(this.pos.clone(),{color:this.color,r0:.35,r1:2.6,life:.18});
+    game.particles.burst(this.pos.x,this.pos.y,this.pos.z,{count:7,speed:7,life:.28,size:.7,color:[this.color,this.color2],drag:2.4});
+    game.audio.hit(180,this.pos);this._dispose(game);return false;
   }
   // The ability layer owns who may activate this; the projectile owns its actual
   // payload and current caster (including a deflection's transferred ownership).
@@ -767,6 +793,7 @@ class Projectile {
     // materials (steel, brass, tracer) must NEVER be disposed here (index-guessing children[1]
     // used to dispose the SHARED tracer mat on every bullet impact, and crashed on nested groups)
     for (const m of this._ownMats || []) m.dispose();
+    for (const geometry of this._ownGeos || []) geometry.dispose();
     this._throwGeometry?.dispose();
     if (this.light) game.vfx.returnLight(this.light);   // returnLight owns it — the light STAYS in the scene (see the light-count law)
   }
@@ -784,6 +811,7 @@ class BeamHose {
     this._bodyContact={fighter:null,point:new THREE.Vector3(),surface:new THREE.Vector3(),direction:new THREE.Vector3()};
     this._constructPreclip={target:null,point:new THREE.Vector3(),arc:0};
     this._constructBlockedPoint=new THREE.Vector3();
+    this._groundResidue=new BeamGroundContact();
     this.radius = o.radius || 1.6;             // beam thickness
     this.tipSpeed = o.tipSpeed || 150;         // how fast the tip races out (waterhose, not instant)
     // THE BEAM ANATOMY (data/visual.js). Two axes, and the engine holds no opinion about any
@@ -1132,9 +1160,9 @@ class BeamHose {
       hand.getWorldQuaternion(this._axialRotation);
       this._axialDirection.set(0,-1,0).applyQuaternion(this._axialRotation);
       if(this._axialDirection.dot(this._otherPalm)<.99)return false;
-      // A carried weapon keeps its closed grip; source skins keep their own
-      // hand shapes. The procedural casting palm must visibly open first.
-      if(!p.skin&&!hand.userData.gripOccupied&&(hand.morphTargetInfluences?.[0]??1)<.7)return false;
+      // Carried weapons retain their grip. Both procedural palms and weighted
+      // skin fingers use this openness driver and must open before emission.
+      if(!hand.userData.gripOccupied&&(hand.morphTargetInfluences?.[0]??1)<.7)return false;
     }
     return true;
   }
@@ -1401,6 +1429,8 @@ class BeamHose {
     // ---- resolve blocking PER SEGMENT along the path. ⚠ This replaces a single ray from the
     // muzzle: a bent beam can pass a wall its own root is behind, and testing only the emission
     // direction would let it clip through geometry it visibly curves around.
+    this._groundResidue.begin(dt);
+    const groundClash=this.clashing||this.clashLen!=null;
     this.blocked = false; let blockedCov = null,blockedPoint=null,blockedArc=0;
     for (let i = 1; i < this.pn && !this.blocked; i++) {
       const a0 = (i - 1) * 3, b0 = i * 3;
@@ -1409,6 +1439,7 @@ class BeamHose {
         this._pb.toArray(this.path,b0);this.pn=i+1;this.blocked=true;
         // One nearest query across cover AND interiors: array order must never
         // let the stream damage an object hidden behind an earlier wall.
+        if(this._obstacleContact.kind==='ground')this._groundResidue.capture(this._pb,this._arcLen());
         if(this._obstacleContact.kind==='cover'){
           blockedCov=this._obstacleContact.target;
           if(blockedCov.onConstructHit){blockedPoint=this._constructBlockedPoint.copy(this._pb);blockedArc=this._arcLen();}
@@ -1469,6 +1500,7 @@ class BeamHose {
       tipPos.set(this.path[ti], this.path[ti + 1], this.path[ti + 2]);
       len = this.clashLen;
     }
+    this._groundResidue.emit(game,tipPos,this._arcLen(),this.radius,this.sustaining,groundClash||bodyHit);
     len = Math.max(0.1, len);
     // sustained beams carve through cover
     if(this.sustaining&&dt>0&&blockedCov?.onConstructHit){
@@ -1751,7 +1783,7 @@ class BeamHose {
     if(!sweepSplitObstacle(world,a,b,this.radius+skin,this._obstacleContact,!!world._ghTriangles,skin))return false;
     b.lerpVectors(a,b,this._obstacleContact.t);return true;
   }
-  _dispose(game) { if (this.dead) return; this.dead = true; if (this._voice) { this._voice.stop(); this._voice = null; } game.scene.remove(this.grp); [this.glow, this.core, this.tip,this.source].forEach(m => m.material.dispose()); if (this.detail) this.detail.material.dispose(); if (this._glowGeo) this._glowGeo.dispose(); if (this._coreGeo) this._coreGeo.dispose(); game.vfx.returnLight(this.light);if(this.sourceLight){if(this.sourceLight.userData.vfxLease===this._sourceLightLease)game.vfx.returnLight(this.sourceLight);this.sourceLight=null;} }   // Tube geometry is per beam; sphere geometry and the fixed scene light pool stay shared.
+  _dispose(game) { if (this.dead) return; this.dead = true; this._groundResidue.reset(); if (this._voice) { this._voice.stop(); this._voice = null; } game.scene.remove(this.grp); [this.glow, this.core, this.tip,this.source].forEach(m => m.material.dispose()); if (this.detail) this.detail.material.dispose(); if (this._glowGeo) this._glowGeo.dispose(); if (this._coreGeo) this._coreGeo.dispose(); game.vfx.returnLight(this.light);if(this.sourceLight){if(this.sourceLight.userData.vfxLease===this._sourceLightLease)game.vfx.returnLight(this.sourceLight);this.sourceLight=null;} }   // Tube geometry is per beam; sphere geometry and the fixed scene light pool stay shared.
 }
 
 // ---- Star Sphere: grow a giant orb overhead, then hurl it ----

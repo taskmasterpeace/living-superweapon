@@ -1,0 +1,489 @@
+{
+ "generated": "repeatable",
+ "catalog": true,
+ "packages": [
+  {
+   "dir": "public/authored-assets/body.hero-heavy/v1",
+   "ok": true,
+   "errors": [],
+   "warnings": [],
+   "id": "body.hero-heavy",
+   "version": 1,
+   "kind": "humanoid-body",
+   "budgets": {
+    "profile": "desktop",
+    "measured": {
+     "triangles": 14318,
+     "drawCalls": 3,
+     "materials": 3,
+     "bones": 65,
+     "textures": 1,
+     "bytes": 1984416
+    },
+    "limits": {
+     "triangles": 18825,
+     "drawCalls": 4,
+     "materials": 4,
+     "bones": 82,
+     "textures": 2,
+     "bytes": 2565382
+    }
+   },
+   "packageHash": "8487ba772735dff2f7856771e282f5198bade431b19048b5a4cea57f2cfb5a1e"
+  },
+  {
+   "dir": "public/authored-assets/body.hero-lean/v1",
+   "ok": true,
+   "errors": [],
+   "warnings": [],
+   "id": "body.hero-lean",
+   "version": 1,
+   "kind": "humanoid-body",
+   "budgets": {
+    "profile": "desktop",
+    "measured": {
+     "triangles": 15060,
+     "drawCalls": 3,
+     "materials": 3,
+     "bones": 65,
+     "textures": 1,
+     "bytes": 2052305
+    },
+    "limits": {
+     "triangles": 18825,
+     "drawCalls": 4,
+     "materials": 4,
+     "bones": 82,
+     "textures": 2,
+     "bytes": 2565382
+    }
+   },
+   "packageHash": "0a4d02f033c07356a515efb43fd4045a2862087afd812c0b0e107f3d1457bc02"
+  },
+  {
+   "dir": "public/authored-assets/body.hero-standard-female/v1",
+   "ok": true,
+   "errors": [],
+   "warnings": [],
+   "id": "body.hero-standard-female",
+   "version": 1,
+   "kind": "humanoid-body",
+   "budgets": {
+    "profile": "desktop",
+    "measured": {
+     "triangles": 15060,
+     "drawCalls": 3,
+     "materials": 3,
+     "bones": 65,
+     "textures": 1,
+     "bytes": 2052305
+    },
+    "limits": {
+     "triangles": 18825,
+     "drawCalls": 4,
+     "materials": 4,
+     "bones": 82,
+     "textures": 2,
+     "bytes": 2565382
+    }
+   },
+   "packageHash": "98009988fb704897790b9de70e5045cf5fba17e8a529d296085295eed09b6e11"
+  },
+  {
+   "dir": "public/authored-assets/body.hero-standard/v1",
+   "ok": true,
+   "errors": [],
+   "warnings": [],
+   "id": "body.hero-standard",
+   "version": 1,
+   "kind": "humanoid-body",
+   "budgets": {
+    "profile": "desktop",
+    "measured": {
+     "triangles": 14318,
+     "drawCalls": 3,
+     "materials": 3,
+     "bones": 65,
+     "textures": 1,
+     "bytes": 1984416
+    },
+    "limits": {
+     "triangles": 18825,
+     "drawCalls": 4,
+     "materials": 4,
+     "bones": 82,
+     "textures": 2,
+     "bytes": 2565382
+    }
+   },
+   "packageHash": "0aab2416dc8d79ccc05a4fc1daa82b12a6dd9174d272a8ef7df104acb63321fa"
+  },
+  {
+   "dir": "public/authored-assets/creature.field-hound/v1",
+   "ok": true,
+   "errors": [],
+   "warnings": [],
+   "id": "creature.field-hound",
+   "version": 1,
+   "kind": "creature",
+   "budgets": {
+    "profile": "desktop",
+    "measured": {
+     "triangles": 2169,
+     "drawCalls": 4,
+     "materials": 4,
+     "bones": 27,
+     "textures": 0,
+     "bytes": 199684
+    },
+    "limits": {
+     "triangles": 18825,
+     "drawCalls": 4,
+     "materials": 4,
+     "bones": 82,
+     "textures": 2,
+     "bytes": 2565382
+    }
+   },
+   "packageHash": "24719069b5407865d954dbbee45794381c379066c8b115ea6ad9b19699f806d1"
+  },
+  {
+   "dir": "public/authored-assets/equipment.carbine/v1",
+   "ok": true,
+   "errors": [],
+   "warnings": [],
+   "id": "equipment.carbine",
+   "version": 1,
+   "kind": "equipment",
+   "budgets": {
+    "profile": "desktop",
+    "measured": {
+     "triangles": 160,
+     "drawCalls": 3,
+     "materials": 3,
+     "bones": 0,
+     "textures": 0,
+     "bytes": 13968
+    },
+    "limits": {
+     "triangles": 5320,
+     "drawCalls": 8,
+     "materials": 4,
+     "bones": 1,
+     "textures": 1,
+     "bytes": 427570
+    }
+   },
+   "packageHash": "492f111e20cc043615096fa893dd04df33e160ccf7f60b69ddf016b04f3ff251"
+  },
+  {
+   "dir": "public/authored-assets/equipment.sidearm/v1",
+   "ok": true,
+   "errors": [],
+   "warnings": [],
+   "id": "equipment.sidearm",
+   "version": 1,
+   "kind": "equipment",
+   "budgets": {
+    "profile": "desktop",
+    "measured": {
+     "triangles": 116,
+     "drawCalls": 2,
+     "materials": 2,
+     "bones": 0,
+     "textures": 0,
+     "bytes": 10068
+    },
+    "limits": {
+     "triangles": 5320,
+     "drawCalls": 8,
+     "materials": 4,
+     "bones": 1,
+     "textures": 1,
+     "bytes": 427570
+    }
+   },
+   "packageHash": "2aef653d12f5bde3a7dbbf2b270e77c3f21332ca933e2724611c53e397f09c45"
+  },
+  {
+   "dir": "public/authored-assets/motion.cmu-walk-02/v1",
+   "ok": true,
+   "errors": [],
+   "warnings": [],
+   "id": "motion.cmu-walk-02",
+   "version": 1,
+   "kind": "humanoid-motion",
+   "budgets": {
+    "profile": "desktop",
+    "measured": {
+     "triangles": 0,
+     "drawCalls": 0,
+     "materials": 0,
+     "bones": 0,
+     "textures": 0,
+     "bytes": 72679
+    },
+    "limits": {
+     "triangles": 1,
+     "drawCalls": 1,
+     "materials": 1,
+     "bones": 1,
+     "textures": 1,
+     "bytes": 90940
+    }
+   },
+   "packageHash": "82b1be9eab4f4ef1b2efaead5c8a478c410b6f63acf9296affe5d1afcd011341"
+  },
+  {
+   "dir": "public/authored-assets/motion.hero-ual2/v1",
+   "ok": true,
+   "errors": [],
+   "warnings": [],
+   "id": "motion.hero-ual2",
+   "version": 1,
+   "kind": "humanoid-motion",
+   "budgets": {
+    "profile": "desktop",
+    "measured": {
+     "triangles": 0,
+     "drawCalls": 0,
+     "materials": 0,
+     "bones": 0,
+     "textures": 0,
+     "bytes": 171918
+    },
+    "limits": {
+     "triangles": 1,
+     "drawCalls": 1,
+     "materials": 1,
+     "bones": 1,
+     "textures": 1,
+     "bytes": 217832
+    }
+   },
+   "packageHash": "96e5ec5b9bd4e340c3514ea457a758282e2cbe6c9bbc3135ddc5076a6f43ebfe"
+  },
+  {
+   "dir": "public/authored-assets/motion.hero-ual/v1",
+   "ok": true,
+   "errors": [],
+   "warnings": [],
+   "id": "motion.hero-ual",
+   "version": 1,
+   "kind": "humanoid-motion",
+   "budgets": {
+    "profile": "desktop",
+    "measured": {
+     "triangles": 0,
+     "drawCalls": 0,
+     "materials": 0,
+     "bones": 0,
+     "textures": 0,
+     "bytes": 649560
+    },
+    "limits": {
+     "triangles": 1,
+     "drawCalls": 1,
+     "materials": 1,
+     "bones": 1,
+     "textures": 1,
+     "bytes": 832202
+    }
+   },
+   "packageHash": "3aa515b3c3ee58a46c9995736516aeff4cf69a3d3d0988988e2b5079bed6d3d7"
+  },
+  {
+   "dir": "public/authored-assets/prop.ammo-crate/v1",
+   "ok": true,
+   "errors": [],
+   "warnings": [],
+   "id": "prop.ammo-crate",
+   "version": 1,
+   "kind": "prop",
+   "budgets": {
+    "profile": "desktop",
+    "measured": {
+     "triangles": 532,
+     "drawCalls": 4,
+     "materials": 4,
+     "bones": 0,
+     "textures": 0,
+     "bytes": 27800
+    },
+    "limits": {
+     "triangles": 67793,
+     "drawCalls": 32,
+     "materials": 9,
+     "bones": 1,
+     "textures": 4,
+     "bytes": 3170030
+    }
+   },
+   "packageHash": "82669d20a5b586c456cde99a555b5769913c30d5ba36af660b74e48f1a7c31e8"
+  }
+ ],
+ "fixtures": [
+  {
+   "group": "valid",
+   "name": "fixture.motion",
+   "ok": true,
+   "codes": [],
+   "errors": []
+  },
+  {
+   "group": "invalid",
+   "name": "bad-posture",
+   "ok": false,
+   "codes": [
+    "clips"
+   ],
+   "errors": [
+    {
+     "code": "clips",
+     "path": "$.clips[0].posture",
+     "message": "posture start/end must be one of standing, crouch, prone, supine, airborne, transition"
+    }
+   ]
+  },
+  {
+   "group": "invalid",
+   "name": "budget-exceeded",
+   "ok": false,
+   "codes": [
+    "budget"
+   ],
+   "errors": [
+    {
+     "code": "budget",
+     "path": "$.budgets.measured.triangles",
+     "message": "2 exceeds the hard desktop limit 1"
+    }
+   ]
+  },
+  {
+   "group": "invalid",
+   "name": "duplicate-clip-id",
+   "ok": false,
+   "codes": [
+    "duplicate-id"
+   ],
+   "errors": [
+    {
+     "code": "duplicate-id",
+     "path": "$.clips[1].id",
+     "message": "duplicate clip id"
+    }
+   ]
+  },
+  {
+   "group": "invalid",
+   "name": "incompatible-version",
+   "ok": false,
+   "codes": [
+    "incompatible-version"
+   ],
+   "errors": [
+    {
+     "code": "incompatible-version",
+     "path": "$.formatVersion",
+     "message": "expected 1, got 2"
+    }
+   ]
+  },
+  {
+   "group": "invalid",
+   "name": "invalid-rig-mapping",
+   "ok": false,
+   "codes": [
+    "rig-mapping"
+   ],
+   "errors": [
+    {
+     "code": "rig-mapping",
+     "path": "$.rig.mapping.kneeL",
+     "message": "every humanoid slot must map to a named source joint"
+    },
+    {
+     "code": "rig-mapping",
+     "path": "$.rig.mapping",
+     "message": "two slots map to the same source joint"
+    }
+   ]
+  },
+  {
+   "group": "invalid",
+   "name": "missing-acceptance",
+   "ok": false,
+   "codes": [
+    "acceptance"
+   ],
+   "errors": [
+    {
+     "code": "acceptance",
+     "path": "$.acceptance",
+     "message": "acceptance record is required (visual status + blockers)"
+    }
+   ]
+  },
+  {
+   "group": "invalid",
+   "name": "missing-license",
+   "ok": false,
+   "codes": [
+    "license"
+   ],
+   "errors": [
+    {
+     "code": "license",
+     "path": "$.provenance.license",
+     "message": "license must be an SPDX identifier or Proprietary-Internal"
+    }
+   ]
+  },
+  {
+   "group": "invalid",
+   "name": "missing-muzzle",
+   "ok": false,
+   "codes": [
+    "missing-socket"
+   ],
+   "errors": [
+    {
+     "code": "missing-socket",
+     "path": "$.sockets",
+     "message": "equipment package is missing required socket \"muzzle\""
+    }
+   ]
+  },
+  {
+   "group": "invalid",
+   "name": "nan-frame",
+   "ok": false,
+   "codes": [
+    "nan-frame"
+   ],
+   "errors": [
+    {
+     "code": "nan-frame",
+     "path": "$.outputs[0]",
+     "message": "pose bank is not valid JSON: Unexpected token 'N', ...\".6,-0.8,0,NaN,-1,0,0\"... is not valid JSON"
+    }
+   ]
+  },
+  {
+   "group": "invalid",
+   "name": "unsafe-external-path",
+   "ok": false,
+   "codes": [
+    "unsafe-path"
+   ],
+   "errors": [
+    {
+     "code": "unsafe-path",
+     "path": "$.source.files[0].path",
+     "message": "path must not contain . or .. segments"
+    }
+   ]
+  }
+ ]
+}

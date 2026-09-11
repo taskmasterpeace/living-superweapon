@@ -29,6 +29,13 @@ for(const action of ['strike','chargeStart','grab'])test(`native ${action} takes
  assert.equal(a.state,'cast');assert.equal(a._castPoseRanged,false,'Native melee inherited the beam recovery owner');
 }));
 
+for(const openSky of [false,true])test(`a blocked jab cannot spend the hit-confirm window to cancel its punishable recovery (openSky ${openSky})`,()=>withFixture(({a,b,m,step})=>{
+  a._openSky=b._openSky=openSky;b.guarding=true;m.strike(a);m._resolveLight(a,openSky?b:null);step(.34);
+  assert.ok(a.strikeCd>0,'blocked jab still owes recovery');
+  assert.equal(a.mstate,null,'animation has released while punishment timer remains');
+  m.strike(a);assert.equal(a.mstate,null,'new punch cannot bypass the guarded-hit recovery');
+  step(.3);m.strike(a);assert.equal(a.mstate,'startup','a fresh punch is available after recovery');
+}));
 test('a tap late in recovery buffers the next light without cancelling recovery',()=>withFixture(({a,m,step})=>{
   m.strike(a);step(.22);assert.equal(a.mstate,'recover');const idx=a.strikeIdx;
   m.chargeStart(a);m.chargeRelease(a);assert.equal(a.mstate,'recover');step(.11);

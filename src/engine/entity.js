@@ -1,5 +1,10 @@
+import {migratePowerUpDef} from '../data/power-up.js';
+import {retireFighterEquipment} from './authored-equipment.js';
+import {createPowerUpState,advancePowerUp,retirePowerUp} from '../core/power-up-state.js';
 // WAR WORLD: ASCENDANTS — Fighter: articulated figure, stats, physics, flight, combat, ability state.
 import { moodMult } from './psyche.js';
+import {mergeAuthoredSelection} from '../data/authored-selection.js';
+import {loadFighterMotion,invalidateFighterMotion} from './authored-character.js';
 import {firearmAmmo,updateFirearmReload} from './firearm-ammo.js';
 import {advanceThrowAction,animateThrowAction,restoreThrowPose,cancelInterruptedThrow} from './throwable-action.js';
 import {animateReloadPose,restoreReloadPose} from './reload-presentation.js';
@@ -41,6 +46,7 @@ import { animateCombatAim, restoreCombatBase } from './combat-pose.js';
 import {advanceAbilityMeleePose,cancelInterruptedAbilityMeleePose} from './ability-melee-pose.js';
 import {restoreChestAim} from './chest-pose.js';
 import {restoreSpineAim} from './spine-pose.js';
+import {clearWebControl,clearWebControlsFromSource,updateWebControl,webControlMoveMultiplier} from './web-control.js';
 import {restoreGroundAimSupport} from './ground-aim-support.js';
 import { restoreAuthoredStrikeBase } from './strike-motion.js';
 import {animateHands} from './hero-hand.js';
@@ -59,8 +65,11 @@ import {poseNaniteForearms,restoreNanitePose} from './nanite-pose.js';
 import {animateRiflePose,restoreRiflePose} from './rifle-pose.js';
 import {updateWebZip,presentWebZip} from './web-zip.js';
 import {sweepFighterEnvironment} from './fighter-environment-contact.js';
+import {isTransportingPerson,personCarrySpeed,syncPersonCarry} from './person-carry.js';
 import {fallDamage,prepareWindBody,applyBodyWind,windMoveScale,windImpactSpeed,reconcileWindCarry} from './weather-body.js';
 import {unitsToMeters} from '../core/world-units.js';
+import {guardEnergyRate} from '../data/guard-energy.js';
+import {createMovementGears,resetMovementGears,movementGearBlocked,movementTravelScale,steerGroundGear} from '../core/movement-gears.js';
 
 // power tiers (Super-Saiyan-style): level 1–3 = I, 4–6 = II, 7–9 = III, 10 = MAX
 export function tierOf(level) { return level >= 10 ? 4 : level >= 7 ? 3 : level >= 4 ? 2 : 1; }
@@ -79,6 +88,8 @@ const appearanceKey = value => JSON.stringify(value, function(key,item){
 });
 function formAppearance(base,form){
   const model={...copyAppearance(base.model),...copyAppearance(form?.model)};
+  const assets=mergeAuthoredSelection(base.model.assets,form?.model?.assets);
+  if(assets!==undefined)model.assets=assets;
   if(base.model.wake||form?.model?.wake)model.wake={...base.model.wake,...form?.model?.wake};
   // Authored pose targets belong to their flight language. A form that chooses
   // another language starts from that language's defaults, unless it authors poses.
@@ -242,6 +253,7 @@ export function resistOf(def, sheet) {
 
 export class Fighter {
   constructor(def, opts = {}) {
+    def=migratePowerUpDef(def);
     this.id = _fid++;
     this.def = def;
     this.name = def.name;
@@ -326,6 +338,7 @@ export class Fighter {
     this.animT = Math.random() * 10;
 
     // per-slot ability runtime state
+    this.powerUp=createPowerUpState(def);
     this.slots = {};
     for (const k in def.abilities) this.slots[k] = { def: def.abilities[k], cd: 0, charging: false, chargeT: 0, active: null, sustainT: 0 };
     for(const slot of Object.values(this.slots))firearmAmmo(slot);
@@ -349,6 +362,7 @@ export class Fighter {
     this._grapple = null; this.hanging = null; this.gliding = false;   // grapnel line / ledge-hang / mechanical wings
     this.chargingKi = false; this._chargeT = 0; this._chargeScanT = 0; this._safeDist = 1e9;   // the POWER CHARGE (DBZ ruling)
     this.cruiseHeld = false;                                    // SHIFT while flying = sustained cruise
+    this.movementGear=createMovementGears();
     this.burstT = 0;            // dash-burst window — move() doesn't clamp velocity back to walk speed
     this._sprintThrough = false; this._sprintLightning = false;   // VOLT: run through cover, blue lightning wake
     // slam physics: launchT > 0 = recently knocked/thrown → wall/ground impacts hurt (dashing into walls doesn't)
@@ -405,6 +419,7 @@ export class Fighter {
     this._heavyT = 0; this._heavyP = 0; this._heavyHay = false;
     this.frost = 0; this.frozenT = 0; this._frostImmuneT = 0;   // cold buildup → encased in ice
     this._dots = [];            // damage-over-time stacks [{dps,t,color,kind,src}]
+    this._webControl=null;this._webControlImmune=0;this._webControls=new Set();this._webControlEpoch=0;
     this._quiverIdx = 0;        // archer payload selector (quiver ability cycles it)
     // ITEMS — gadgets a character CARRIES, outside the ability slots: no ki, cooldown-only,
     // one button (X). First kind: the teleport beacon (drop → fight elsewhere → recall to it).
@@ -414,6 +429,7 @@ export class Fighter {
     this.canPhase = !!def.phase;                                     // can spend energy to go intangible
     this.grabHeal = def.grabHeal || 0;                              // lifesteal on your throws
     this.teleEscape = def.teleEscape || Object.values(def.abilities || {}).some(a => a.type === 'teleport'); // blinks out of grabs
+    if(typeof document!=='undefined')loadFighterMotion(this);
   }
 
   // ⚠ READER #1 of the ten (aaa-03 §1). `grounded` was `onFloor && !flying`, which returns FALSE for a
@@ -560,6 +576,7 @@ export class Fighter {
     this._pendingForm=undefined;
     this.formName=form?.name??'';
     if(key===this._formKey)return true;
+    clearWebControl(this);clearWebControlsFromSource(this);
     // An imported base is temporary articulation, not the new model's bind.
     // Remove it before copying transforms into a replacement rig. The combat
     // snapshot also contains that imported base and must not reintroduce it.
@@ -611,6 +628,7 @@ export class Fighter {
       });
     }
     if(this._gearMesh&&this._gearMesh.parent!==root)root.add(this._gearMesh);
+    retireFighterEquipment(this,{preserveHeld:true});
     disposeHeroSkin(old);
     for(const resource of figureResources(oldRoots))this._retiredFormResources.add(resource);
     for(const child of oldRoots)child.removeFromParent();
@@ -630,6 +648,7 @@ export class Fighter {
     root.updateMatrixWorld(true);updateLimbSurfaces(next,true);updateHeroSkin(next);
     presentNanites(this);
     this._releaseFormResources();
+    if(typeof document!=='undefined')loadFighterMotion(this);
     return true;
   }
 
@@ -662,7 +681,11 @@ export class Fighter {
 
   dispose() {
     if(this._formDisposed)return;
+    retirePowerUp(this);
+    resetMovementGears(this);
+    clearWebControl(this);clearWebControlsFromSource(this);
     this._formDisposed=true;
+    invalidateFighterMotion(this);
     this.releaseHang();
     retireNanites(this._nanites);presentNanites(this);
     if(this._game)retireOwnedConstructs(this._game,this,'owner-removed');
@@ -684,6 +707,7 @@ export class Fighter {
     // but never their .map — so it has to be freed by name or every liftoff leaks a texture.
     if(this.parts?.altTag?.userData.tex)this._retiredFormResources.add(this.parts.altTag.userData.tex);
     if(this.parts?.eyeMark?.material.map)this._retiredFormResources.add(this.parts.eyeMark.material.map);
+    retireFighterEquipment(this);
     for(const resource of figureResources([this.obj]))this._retiredFormResources.add(resource);
     this._releaseFormResources();
     if (this._grapLine) { this._grapLine.geometry.dispose(); this._grapLine.material.dispose(); if (this._game) this._game.scene.remove(this._grapLine); this._grapLine = null; }
@@ -809,7 +833,12 @@ export class Fighter {
     const dtype = o.dtype || DOT_DTYPE[kind] || 'toxic';
     const same = this._dots.find(d => d.kind === kind);
     if (same) { same.t = Math.max(same.t, o.dur || 3); same.dps = Math.max(same.dps, o.dps || 4); same.src = o.src || same.src; }
-    else this._dots.push({ dps: o.dps || 4, t: o.dur || 3, color: o.color || '#8fe08a', kind, dtype, corrode: o.corrode, src: o.src || null });
+    else {
+      this._dots.push({ dps: o.dps || 4, t: o.dur || 3, color: o.color || '#8fe08a', kind, dtype, corrode: o.corrode, src: o.src || null });
+      this._game?.presentHitOutcome?.(this,{src:o.src},{dtype,attackClass:'status',healthLost:0,
+        absorbed:{plate:0,armor:0,shield:0,nanite:0},guard:'none',deflected:false,knockedOut:false,
+        statusesAdded:[kind==='burn'?'burning':kind],contact:null});
+    }
   }
 
   // ---- status: frost buildup → ENCASED IN ICE. Strength melts out faster; fire heroes resist;
@@ -827,6 +856,8 @@ export class Fighter {
       }
       // freeze duration: strength melts it — STR 10 ≈ 0.9s, STR 1 ≈ 2.4s
       this.frozenT = clamp(2.6 - this.strength * 0.17, 0.8, 2.6);
+      this._game?.presentHitOutcome?.(this,{src},{dtype:'cold',attackClass:'status',healthLost:0,
+        absorbed:{plate:0,armor:0,shield:0,nanite:0},guard:'none',deflected:false,knockedOut:false,statusesAdded:['frozen'],contact:null});
       if (src && src !== this) { this.lastHitBy = src; this.lastHitT = 0; }
       this.guarding = false; this.meleeCharge = 0; this.strikeActive = 0;
       this.flyHeld = false; this.descendHeld = false;
@@ -867,6 +898,21 @@ export class Fighter {
       return;
     }
     if (this.state === 'ko' || this.invuln > 0) return 0;
+    const resolvedStart={hp:this.hp,armor:this.armor||0,shield:this._shieldHp||0,
+      bleed:this._bleed>0,frozen:this.frozenT>0,dots:new Set((this._dots||[]).map(d=>d.kind))};
+    let resolvedDtype=null,resolvedPlate=0,resolvedNanite=0,resolvedGuard='none',resolvedDeflected=false,resolvedGuardEnergy=0,resolvedGuardAbsorbed=0;
+    const resolvedOutcome=()=>{
+      const statusesAdded=[];
+      if(!resolvedStart.bleed&&this._bleed>0)statusesAdded.push('bleeding');
+      if(!resolvedStart.frozen&&this.frozenT>0)statusesAdded.push('frozen');
+      for(const d of this._dots||[])if(!resolvedStart.dots.has(d.kind))statusesAdded.push(d.kind==='burn'?'burning':d.kind);
+      return Object.freeze({dtype:resolvedDtype,attackClass:opts.ballistic?'bullet':opts.strike?'melee':opts.dot?'sustained':'impact',
+        healthLost:Math.max(0,resolvedStart.hp-this.hp),absorbed:Object.freeze({plate:resolvedPlate,
+          armor:Math.max(0,resolvedStart.armor-(this.armor||0)),shield:Math.max(0,resolvedStart.shield-(this._shieldHp||0)),nanite:resolvedNanite}),
+        guard:resolvedGuard,guardEnergySpent:resolvedGuardEnergy,guardAbsorbed:resolvedGuardAbsorbed,
+        deflected:resolvedDeflected,knockedOut:this.state==='ko',statusesAdded:Object.freeze(statusesAdded),
+        contact:opts.contactPoint?Object.freeze({x:opts.contactPoint.x,y:opts.contactPoint.y,z:opts.contactPoint.z}):null});
+    };
     const admission=damageAdmission(this,amount,opts);
     // ⚠ MOOD REACHES THE FIGHT HERE, at the one place every damage source already passes through —
     // not at the ten call sites that multiply by powerBuff. An angry fighter hits harder and a sad
@@ -899,6 +945,7 @@ export class Fighter {
     // EVERY hit has a type. Callers that don't declare one get the sane default for what they are,
     // so no damage source in the game is ever untyped and resistances can't be silently skipped.
     const dtype = admission.dtype;
+    resolvedDtype=dtype;
     // ---- THE BALLISTIC SCALE: a gun is lethal to people and an annoyance to superweapons ----
     // A shotgun ends a pedestrian. Against a registered weapon it meets ARMOUR first (a plated
     // chassis eats the shot), then TOUGHNESS (a Might-10 frame barely notices lead). Energy,
@@ -907,6 +954,7 @@ export class Fighter {
       const plate = admission.plate;   // ACID eats the plate
       if (plate > 0) {
         const stopped = admission.stopped;
+        resolvedPlate=stopped;
         amount = admission.afterPlateAmount;
         if (this._game && stopped > 0.5 && Math.random() < 0.5) {      // sparks off the plate
           this._game.particles.burst(this.pos.x, this.pos.y + 5, this.pos.z, { count: 3, speed: 16, life: 0.22, size: 1.2, color: ['#ffd97a', '#c9c2b4'], drag: 2 });
@@ -915,7 +963,7 @@ export class Fighter {
       amount=admission.ballisticAmount; // STR 10 takes ~15% from bullets
       if (amount <= 0.4) {                                             // it simply did not get through
         this.hitFlash = Math.max(this.hitFlash, 0.35);
-        if (this._game) this._game.onHit(this, 0, opts, true);
+        if (this._game) this._game.onHit(this, 0, opts, true,resolvedOutcome());
         return 0;
       }
     }
@@ -960,13 +1008,31 @@ export class Fighter {
     if(localNanite&&!(this.phase&&!opts.unblockable&&!opts.trueDamage)){
       const cell=this._nanites.modules.get(opts.naniteContact.slot).cells[opts.naniteContact.cell],before=cell.hp;
       const result=damageNanite(this._nanites,opts.naniteContact,amount,localNanite.absorb);
+      resolvedNanite=result.absorbed;
       result.integrity=before-cell.hp;
       opts.naniteResult=result;amount=result.remaining;naniteFullBlock=result.absorbed>0&&amount===0;
       if(result.disabledSlot)cancelHeldSlot(this,result.disabledSlot);
       if(naniteFullBlock)opts.contactFx=true;
       if(result.integrity>0&&!opts.dot&&!opts.strike)this._game?.vfx?.contact(opts.naniteContact.point,opts.naniteContact.normal,{color:'#bdc2b8',power:.55});
     }
-    // shield cell gadget: an ablative pool eats hits before anything else
+    // A physical nanite panel intercepts first. Fighter guard then buys admitted
+    // damage with energy; only its unpaid remainder reaches personal HP pools.
+    const energyGuard=this._openSky||this._game?.modeId==='powerworld';
+    const guardDx=opts.src?opts.src.pos.x-this.pos.x:0,guardDz=opts.src?opts.src.pos.z-this.pos.z:0;
+    const guardDistance=Math.hypot(guardDx,guardDz)||1;
+    const guardInArc=this.def.guardType==='barrier'||guardDx/guardDistance*this.aim.x+guardDz/guardDistance*this.aim.z>-.15;
+    const paidGuard=energyGuard&&this.guarding&&this.staggerT<=0&&!this.chargingKi&&!this.phase&&!opts.unblockable&&!opts.trueDamage&&opts.src&&guardInArc;
+    const guardedAmount=amount;
+    let energyBreak=false;
+    if(paidGuard){
+      const rate=guardEnergyRate(this.def,opts),cost=Math.max(0,amount)*rate;
+      const paid=this.energyInfinite?cost:Math.min(Math.max(0,this.ki),cost);
+      if(!this.energyInfinite)this.ki=Math.max(0,this.ki-paid);
+      resolvedGuardEnergy=this.energyInfinite?0:paid;resolvedGuardAbsorbed=paid/rate;
+      amount=Math.max(0,amount-resolvedGuardAbsorbed);
+      energyBreak=!this.energyInfinite&&this.ki<=1e-8&&cost>0;
+    }
+    // Personal armor/shield pools receive only damage not already intercepted.
     // ROADMAP 4 · THE ARMOUR BAR eats the hit before HP does, and any hit resets the
     // out-of-combat repair timer. Bypassed by trueDamage, like every other pool.
     if (this.armor > 0 && !opts.trueDamage && amount > 0) {
@@ -976,11 +1042,11 @@ export class Fighter {
       if (this._game && eaten > 1) this._game.vfx.flash(this.pos.clone().setY(this.pos.y + 5), '#cfe6ff', 2.2, 0.08);
     }
 
-    if (this._shieldHp > 0 && !opts.trueDamage && !naniteFullBlock) {
+    if (this._shieldHp > 0 && !opts.trueDamage && !naniteFullBlock && amount > 0) {
       const soak = Math.min(this._shieldHp, amount);
       this._shieldHp -= soak; amount -= soak;
       if (this._game) this._game.particles.burst(this.pos.x, this.pos.y + 5.5, this.pos.z, { count: 5, speed: 16, life: 0.3, size: 1.8, color: ['#7fe6ff', '#fff'], drag: 1.4 });
-      if (amount <= 0.01) { if (this._game) this._game.onHit(this, 0, opts, true); return 0; }
+      if (amount <= 0.01 && !paidGuard) { if (this._game) this._game.onHit(this, 0, opts, true,resolvedOutcome()); return 0; }
     }
     // energy-intangible: strikes/projectiles pass through
     if (this.phase && !opts.unblockable && !opts.trueDamage) {
@@ -995,30 +1061,33 @@ export class Fighter {
       this.chargingKi = false; this._chargeT = 0; this.guarding = false;
       this.staggerT = Math.max(this.staggerT, 0.35);
     }
-    if (this.guarding && this.staggerT <= 0 && !opts.unblockable && opts.src) {
+    if (this.guarding && this.staggerT <= 0 && !opts.unblockable && !(energyGuard&&opts.trueDamage) && opts.src) {
       const dx = opts.src.pos.x - this.pos.x, dz = opts.src.pos.z - this.pos.z, d = Math.hypot(dx, dz) || 1;
       const inArc = this.def.guardType === 'barrier' || (dx / d) * this.aim.x + (dz / d) * this.aim.z > -0.15;
       if (inArc) {   // attacker in front arc (or omnidirectional barrier)
         const sh = this.def.guardStrong ? 0.55 : 1;                  // riot shield: harder block, tougher meter
         const beam=opts.dot&&Number.isFinite(opts.beamDelta)&&opts.beamDelta>=0;
         if(beam)opts.beamBlocked=true;
-        amount *= (opts.strike ? 0.12 : beam ? clamp(opts.beamGuardChip??.22,0,1) : opts.dot ? 0.5 : 0.42) * sh;
-        const drain=beam?Math.max(0,opts.beamGuardDrain??.28)*opts.beamDelta:opts.strike?.14:opts.dot?.012:.22;
+        if(!energyGuard)amount *= (opts.strike ? 0.12 : beam ? clamp(opts.beamGuardChip??.22,0,1) : opts.dot ? 0.5 : 0.42) * sh;
+        const crush=energyGuard&&opts.guardCrush;
+        const drain=crush?.55:beam?Math.max(0,opts.beamGuardDrain??.28)*opts.beamDelta:opts.strike?.14:opts.dot?.012:.22;
         this.guardMeter = clamp(this.guardMeter - drain * sh, 0, 1);
         // The reached beam segment owns its once-per-time pressure, including
         // authored zero push. Do not add a second frame-dependent guard impulse.
         const pb = beam ? 0 : opts.dot ? 0.8 : 5;
         this.vel.x -= (dx / d) * pb; this.vel.z -= (dz / d) * pb;     // braced BACKWARD, away from the attacker
         this.hitstop = Math.max(this.hitstop, opts.dot ? 0 : 0.03); this._blocked = 0.16;
-        if(amount>0&&!(opts.naniteResult?.absorbed>0))registerShieldContact(this,opts);
+        if(guardedAmount>0&&!(opts.naniteResult?.absorbed>0))registerShieldContact(this,opts);
         this.hp = clamp(this.hp - amount, 0, this.maxHp);
         if(amount>0&&opts.src!==this){this.lastHitBy=opts.src;this.lastHitT=0;}
-        if (this.guardMeter <= 0.001) { this.guarding = false; this.staggerT = 0.7; this.guardBreakT = 0.7; this.state = 'hit'; this.stateT = 0; } // guard break
+        if (this.guardMeter <= 0.001||energyBreak||crush) { this.guarding = false; this.staggerT = crush?.85:.7; this.guardBreakT = this.staggerT; this.state = 'hit'; this.stateT = 0; resolvedGuard='broken'; } // guard break
+        else resolvedGuard='blocked';
+        if(energyBreak)this._game?.onDrained?.(this);
         // A BLOCKED STRIKE REJECTS THE ATTACKER — bounce + recovery stagger (parry if the guard
         // was raised at the last instant). This is what stops melee spam against a raised guard.
-        if (opts.strike && this._game && this._game.onBlockedStrike) this._game.onBlockedStrike(opts.src, this, {contactFx:opts.contactFx});
+        if (opts.strike && !crush && this._game && this._game.onBlockedStrike) this._game.onBlockedStrike(opts.src, this, {contactFx:opts.contactFx});
         this._resolveLethal(opts);
-        if (this._game) this._game.onHit(this, amount, opts, true);
+        if (this._game) this._game.onHit(this, amount, opts, true,resolvedOutcome());
         return amount;
       }
     }
@@ -1066,7 +1135,7 @@ export class Fighter {
     // launched hard enough → walls and the ground become weapons for ~1.1s (slam damage in _physics)
     if (!opts.slam) {
       const kmag = opts.kb ? Math.hypot(opts.kb.x || 0, opts.kb.z || 0) : 0;
-      if (kmag > 30 || Math.abs(opts.launch || 0) > 12) this.launchT = this._chaseKb ? PW_KB.window : 1.1;   // |launch|: a dive-punch DOWN-force arms slam physics too (manual §10)
+      if (kmag > 30 || Math.abs(opts.launch || 0) > 12) {this._personThrow=null;this.launchT = this._chaseKb ? PW_KB.window : 1.1;}   // A new launch owns its own impact.
       if ((kmag > 14 || (opts.launch || 0) > 6) && (this.hanging || this._grapple)) this.releaseHang();   // knocked off the wall
     }
     // ---- BLEEDING (manual §12): heavy physical trauma and every slash-class weapon OPENS A WOUND.
@@ -1098,7 +1167,7 @@ export class Fighter {
     }
     this.state = 'hit'; this.stateT = 0;
     this._resolveLethal(opts);
-    if (this._game) this._game.onHit(this, amount, opts, false);
+    if (this._game) this._game.onHit(this, amount, opts, false,resolvedOutcome());
     return amount;
   }
 
@@ -1106,10 +1175,9 @@ export class Fighter {
   // Returning early from block used to leave a living, guarding fighter at 0 HP.
   _resolveLethal(opts) {
     if(this.hp>0||this.state==='ko')return; // a nested riposte may already have resolved this death
-    // ---- SECOND WIND (manual §13): a human player's FIRST death this match becomes a DOWNED
-    // knee instead of a knockout. Time slows. STAY DOWN? Hold any attack to answer. Bots never
-    // get this — it is a player's drama, not a simulation rule.
-    if (this.hp <= 0 && !this._secondWindUsed && !this.isDummy && !this.remote
+    // Second Wind is an explicit authored opt-in. Default play must not turn a
+    // lethal hit into an unexplained 1-HP movement lock requiring a rally input.
+    if (this.def.secondWind === true && this.hp <= 0 && !this._secondWindUsed && !this.isDummy && !this.remote
         && this._game && this._game.isHuman(this)) {
       this._secondWindUsed = true;
       this.hp = 1; this.downedT = 2.4; this._swHold = 0;
@@ -1141,6 +1209,9 @@ export class Fighter {
   }
 
   _ko(opts = {}) {
+    retirePowerUp(this);
+    clearWebControl(this);clearWebControlsFromSource(this);
+    invalidateFighterMotion(this);
     retireNanites(this._nanites);presentNanites(this);
     if(this._game)retireOwnedConstructs(this._game,this,'owner-ko',true);
     this._game?.melee?.clearInput(this);
@@ -1165,6 +1236,7 @@ export class Fighter {
     if (this._game) for (const e of this._game.entities) if (e.grabbedBy === this) { e.grabbedBy = null; if (e.state === 'hit') e.state = 'idle'; }   // tentacle holds die with the holder
     clearSlotFx(this);   // silence charge hums + remove orbs FIRST — clearing `charging` below orphans them otherwise (the stuck-tone bug)
     for (const k in this.slots) { const s = this.slots[k]; s.charging = false; s.active = null; s.chargeT = 0; s.sustainT = 0; }   // dying mid-generation leaves nothing armed
+    resetMovementGears(this);
     this.cruiseHeld = false;
     if (this._burnLoop) { this._burnLoop.stop(); this._burnLoop = null; }   // the dead don't burn (manual §20)
     if (this._grapLoop) { this._grapLoop.stop(); this._grapLoop = null; }
@@ -1182,18 +1254,21 @@ export class Fighter {
   // native calculation without advancing physics, status clocks or guard charge.
   regenerateKi(dt, anyCharge = Object.values(this.slots).some(s => s.charging || s.sustainT > 0)) {
     if (this.energyInfinite) this.ki = this.maxKi;
-    else this.ki = clamp(this.ki + (anyCharge ? 3 : 8) * this.sheet.kiRegenMult * moodMult(this, 'kiRegen', 1) * (1 - 0.07 * ((this._wounds && this._wounds.torso) || 0)) * dt, 0, this.maxKi);
+    else if(!((this._openSky||this._game?.modeId==='powerworld')&&this._blocked>0))this.ki = clamp(this.ki + (anyCharge ? 3 : 8) * this.sheet.kiRegenMult * moodMult(this, 'kiRegen', 1) * (1 - 0.07 * ((this._wounds && this._wounds.torso) || 0)) * dt, 0, this.maxKi);
   }
 
   // Launch impacts and vulnerable-body falls share one contact admission. An
   // ordinary self-powered wall touch remains harmless; wind-driven walls don't.
   _slam(game, speed, kind, axis=null) {
     if (!game || this._slamCd > 0 || this.state === 'ko' || speed < 30) return;
+    const personThrow=this._personThrow&&this._thrownT>0&&this._thrownBy===this._personThrow.owner&&this.lastHitBy===this._personThrow.owner?this._personThrow:null;
+    if(personThrow?.impacted)return;
     const ownedSpeed=this.launchT>0?speed:kind==='wall'?windImpactSpeed(this,axis):0;
     const landing=kind==='ground'||kind==='roof';
     const launchDamage=(landing?ownedSpeed>38:ownedSpeed>=30)?Math.min(32,(ownedSpeed-22)*.5):0;
     const dmg=Math.max(launchDamage,fallDamage(this,speed,kind));
     if(dmg<=0)return;
+    if(personThrow)personThrow.impacted=true;
     this._slamCd = 0.45;
     const src = this.launchT>0&&this.lastHitT < 3 ? this.lastHitBy : null;
     this.takeDamage(dmg, { src, slam: true, unblockable: true, hitstop: 0.1 });
@@ -1206,6 +1281,7 @@ export class Fighter {
   }
 
   update(dt, game) {
+    if(movementGearBlocked(this))resetMovementGears(this);
     cancelInterruptedThrow(this);
     updateFirearmReload(this,dt,game);
     cancelInterruptedRush(this);
@@ -1268,7 +1344,7 @@ export class Fighter {
       const AF = this.def.afterburner;
       // ⚠ READER #10 (aaa-03 §1): the burner is a FLIGHT system and must not stay lit on the floor.
       // `airborne` (gait) not `flying`, so a fighter standing on the PowerWorld floor cuts the burn.
-      if (AF && this.airborne && this.cruiseHeld && this.ki > 1 && !(this._openSky && this.guarding)) {   // ⚠ no burn behind a raised guard (aaa-01 lane AIR); `_openSky`-scoped so the city is unchanged
+      if (!this.movementGear?.managed && AF && this.airborne && this.cruiseHeld && this.ki > 1 && !(this._openSky && this.guarding)) {   // Semantic gears own their own travel budget.
         const was = this._burnT || 0;
         this._burnT = was + dt;
         if (was < 0.8 && this._burnT >= 0.8 && this._game) {   // ignition: one compression ring, then the wake
@@ -1300,6 +1376,7 @@ export class Fighter {
       }
     }
     if (this._sleepGrace > 0) this._sleepGrace -= dt;
+    updateWebControl(this,dt);
     if (this.sleepT > 0) {
       this.sleepT -= dt;
       this.staggerT = Math.max(this.staggerT, 0.12);            // the one pin — no actions while folded
@@ -1491,6 +1568,7 @@ export class Fighter {
       if (this.ki <= 0) { this.guarding = false; this.staggerT = 0.4; if (game && game.onDrained) game.onDrained(this); }
     }
     for (const k in this.slots) if (this.slots[k].cd > 0) this.slots[k].cd -= dt;
+    advancePowerUp(this,dt);
     // melee timers
     if (this.strikeCd > 0) this.strikeCd -= dt;
     if (this.comboWin > 0) this.comboWin -= dt;
@@ -1577,7 +1655,7 @@ export class Fighter {
       const was = this.chargingKi;
       // In PowerWorld this is the BLOCK button at every range, never a hidden
       // conversion to a defenseless stance. City power-charge rules stay intact.
-      this.chargingKi = !this._openSky && this._chargeT > 0.5 && this.ki < this.maxKi - 1 && !this.energyInfinite;
+      this.chargingKi = !this._openSky && game?.modeId!=='powerworld' && this._chargeT > 0.5 && this.ki < this.maxKi - 1 && !this.energyInfinite;
       if (this.chargingKi && !was && this._game.heroYell) { this._yellCd = 0; this._game.heroYell(this, 1.15); }
       this.ki = clamp(this.ki + (this.chargingKi ? 40 : 22) * this.sheet.kiRegenMult * dt, 0, this.maxKi);
       if (this.chargingKi && this._game.particles && Math.random() < dt * 16) {
@@ -1629,9 +1707,13 @@ export class Fighter {
       this._wounds = { arm: 0, leg: 0, torso: 0 }; this._woundT = { arm: 0, leg: 0, torso: 0 };   // a fresh body (manual §18)
       for (const it of this.items) if (it.state !== 'deployed') { it.charges = it.def.charges ?? 1; it.state = 'ready'; it.cd = 0; }   // fresh pouch each life
       this.state = 'idle'; this.invuln = 1.4; this.vel.set(0, 0, 0);
+      retirePowerUp(this);
+      resetMovementGears(this);
       reconcileWindCarry(this);
       resetNanites(this._nanites);
+      const motionGeneration=this._authoredMotionGeneration;
       if(this._pendingForm!==undefined)this.applyForm(this._pendingForm);
+      if(typeof document!=='undefined'&&motionGeneration===this._authoredMotionGeneration)loadFighterMotion(this);
       if (this.isDummy) this.pos.copy(this.spawn);
       else { this.pos.set(this.spawn.x, 0, this.spawn.z); }
       game.vfx.flash(this.pos.clone().setY(5), this.def.colors.accent, 8, 0.4);
@@ -1905,7 +1987,7 @@ export class Fighter {
     const bodyWind=prepareWindBody(this,game);
     const groundClass = !glide && !launched && this.launchT <= 0 && this._slideT <= 0 && this._thrownT <= 0 && this.gait === GAIT.GROUNDED;
     let dragF;
-    if (ownsFlightVelocity(this)||bodyWind.driven) {
+    if (ownsFlightVelocity(this)||bodyWind.driven||(groundClass&&this._gearGroundSteering)) {
       dragF = 1;
     } else if (glide && !launched && this.launchT <= 0 && this._airStop > 0) {
       const sp = Math.hypot(this.vel.x, this.vel.z);
@@ -2079,6 +2161,7 @@ export class Fighter {
     if(!this.onFoot||this.state==='ko')this.prone=false;
     this.crouching = !this.prone && this.onFoot && this.descendHeld && this.gait === GAIT.GROUNDED && this.state !== 'ko';
     reconcileWindCarry(this);
+    syncPersonCarry(this,game);
   }
 
   _wallContact(game,cover,speed,axis=null) {
@@ -2121,10 +2204,12 @@ export class Fighter {
   }
 
   move(dir, dt, sprint = 1) {
+    this._gearGroundSteering=false;
     // the live movement INTENT, stamped for the physics pass (directional descent reads it)
     this._mvX = dir ? dir.x : 0; this._mvZ = dir ? dir.z : 0; this._mvT = 0.12;
-    if (this.state === 'ko' || this.hitstop > 0 || this.grabbedBy || this.grabState === 'clinch' || this.staggerT > 0 || this.frozenT > 0 || this.stunT > 0 || this.hanging) return;   // hanging: your feet have nowhere to be
-    let s = this.speed * 1.08 * this.powerBuff * sprint * moodMult(this, 'speed', 1);   // ground feel pass 2026-07-24: +8% across the board
+    if (this.state === 'ko' || this.hitstop > 0 || this.grabbedBy || (this.grabState === 'clinch'&&!isTransportingPerson(this)) || this.staggerT > 0 || this.frozenT > 0 || this.stunT > 0 || this.hanging) return;   // hanging: your feet have nowhere to be
+    let s = this.speed * 1.08 * this.powerBuff * sprint * moodMult(this, 'speed', 1) * webControlMoveMultiplier(this);   // ground feel pass 2026-07-24: +8% across the board
+    s *= movementTravelScale(this,dir,dt,sprint);
     if (this._wounds && this._wounds.leg) s *= 1 - 0.09 * this._wounds.leg;   // the LIMP is real (manual §18)
     if (this.sprintT > 0) s *= this.sprintMult;   // double-tap sprint surge
     if (this.meleeCharge > 0) s *= 0.4;           // winding up a haymaker roots you
@@ -2148,7 +2233,7 @@ export class Fighter {
       // SHIFT held in the air = sustained CRUISE (not the burst dash) — costs a trickle of ki.
       // ⚠ SUPPRESSED WHILE GUARDING under an open sky (aaa-01 lane AIR): no cruise-boost or burn behind
       // a raised guard. Scoped to `_openSky` so city flight is byte-unchanged.
-      if (this.cruiseHeld && this.ki > 1 && !(this._openSky && this.guarding)) {
+      if (!this.movementGear?.managed && this.cruiseHeld && this.ki > 1 && !(this._openSky && this.guarding)) {
         s *= 1.5; this.ki = Math.max(0, this.ki - 2.6 * dt);
         // AFTERBURNER (brief Part Six, manual §15): past ignition the throttle opens all the way
         if (this.def.afterburner && this._burnT > 0.8) s *= (this.def.afterburner.mult || 2.1) / 1.5;
@@ -2156,7 +2241,7 @@ export class Fighter {
       // THE CAMERA'S OWN LIMIT (aaa-01 §5.5): open-sky wish speed caps at PW_AIR.top, derived from the
       // chase camera's eye-damp λ and distance clamp so two fighters closing stay in frame. Last, so it
       // bounds cruise + burner too.
-      if (this._openSky) s = Math.min(s, PW_AIR.top);
+      if (this._openSky&&!this.movementGear?.gear) s = Math.min(s, PW_AIR.top);
     }
     // the harbor: shallow water slows, deep water is a swim (flight lifts you out)
     if (!this.flying && this.pos.y < 2 && this._game && this._game.world.waterAt) {
@@ -2169,13 +2254,18 @@ export class Fighter {
     if (this.guarding) s *= 0.34;               // guarding slows you
     if (this.strikeActive > 0) s *= 0.5;
     s *= castingMoveScale(this);
+    s *= personCarrySpeed(this);
     s *= windMoveScale(this,this._game);
+    if(steerGroundGear(this,dir,s,dt)){
+      if(this.state==='idle'||this.state==='move')this.state=(dir.x||dir.z)?'move':'idle';
+      return;
+    }
     if (ownsFlightVelocity(this)) {
       // The committed punch step is an additive action channel. Hover braking
       // controls the player's motion without cancelling that short approach.
       const step=this._meleeMotion && (this.mstate==='startup'||this.mstate==='active') ? this._meleeMotion.step : null;
       if(step)this.vel.sub(step);
-      steerFlight(this, dir, s, dt);
+      steerFlight(this, dir, s, dt, this.movementGear?.managed?this.movementGear.profile:undefined);
       if(step)this.vel.add(step);
       if (this.state === 'idle' || this.state === 'move') this.state = (dir.x || dir.y || dir.z) ? 'move' : 'idle';
       return;

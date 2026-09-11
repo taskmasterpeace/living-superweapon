@@ -1,0 +1,46 @@
+{
+  "id": "equipment.kuchler-rifle",
+  "kind": "equipment",
+  "adapter": "procedural-prop",
+  "displayName": "Kuchler Mk I (fictional Earth rifle)",
+  "tags": [
+    "equipment",
+    "firearm",
+    "rifle",
+    "two-handed",
+    "procedural",
+    "earth-donor"
+  ],
+  "model": "model.js",
+  "mergeByMaterial": false,
+  "sources": [
+    "authoring/recipes/equipment/kuchler-rifle/model.js",
+    "authoring/recipes/equipment/kuchler-rifle/provenance.json",
+    "authoring/recipes/equipment/kuchler-rifle/LICENSE.txt"
+  ],
+  "equipment": {
+    "twoHanded": true,
+    "class": "firearm",
+    "hand": "right"
+  },
+  "provenance": {
+    "terms": "MIT. Complete copyright and permission notice is included in provenance.licenseNotice and in the hashed LICENSE.txt source.",
+    "license": "MIT",
+    "attribution": "Adapted selected fictional rifle_kuchler_1 builder from War World: Earth. Exact original file SHA256 and coordinate conversion recorded in hashed provenance.json. Not an AK74.",
+    "revision": "8e0fba7c8bce16637624dee52cc40d07d88dea3b",
+    "redistribution": "free",
+    "author": "Machine King Labs; PowerWorld adaptation",
+    "licenseNotice": "MIT License\r\n\r\nCopyright (c) 2026 Machine King Labs\r\n\r\nPermission is hereby granted, free of charge, to any person obtaining a copy\r\nof this software and associated documentation files (the \"Software\"), to deal\r\nin the Software without restriction, including without limitation the rights\r\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\r\ncopies of the Software, and to permit persons to whom the Software is\r\nfurnished to do so, subject to the following conditions:\r\n\r\nThe above copyright notice and this permission notice shall be included in all\r\ncopies or substantial portions of the Software.\r\n\r\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\r\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\r\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\r\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\r\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\r\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\r\nSOFTWARE."
+  },
+  "acceptance": {
+    "visual": "unapproved",
+    "note": "Fictional MIT donor. Production carrier passes three body frames through steep aim, cover and physical reload with support gap below 0.05u. Native armory issuance, muzzle firing and resource retirement pass. All 20 static viewer mounts pass grip/muzzle/holster; creator visual approval remains pending.",
+    "blockers": [
+      {
+        "id": "legacy-viewer-full-extension",
+        "owner": "authoring",
+        "summary": "Eight static authored-take viewer aim rows retain support gaps because that path omits the production rifle carrier. Production gameplay uses the tested shared-reach solver; viewer parity and creator visual review remain open."
+      }
+    ]
+  }
+}

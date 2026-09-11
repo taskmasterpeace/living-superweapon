@@ -184,7 +184,7 @@ export class DevConsole {
         c.lastPerformance=report;
         c.print('PERFORMANCE '+(report.fps==null?'no visible frames':report.fps.toFixed(1)+' FPS')+' · p95 '+(report.p95Ms?.toFixed(1)??'—')+'ms · worst '+(report.worstMs?.toFixed(1)??'—')+'ms');
         c.print('GPU '+report.gpu+'\nCanvas '+report.canvas.join('×')+' · quality '+report.quality+' · hidden frames '+report.hiddenFrames);
-        for(const [name,s] of Object.entries(report.sections))c.print(name+' mean '+s.meanMs.toFixed(2)+'ms / p95 '+s.p95Ms.toFixed(2)+'ms');
+        for(const [name,s] of Object.entries(report.sections))c.print(name+' mean '+s.meanMs.toFixed(2)+'ms / p95 '+s.p95Ms.toFixed(2)+'ms / max '+s.maxMs.toFixed(2)+'ms');
         c.print('Diagnostic only: CPU sections overlap; render submission time is not a GPU timer.');
         console.log('[POWERWORLD performance]',JSON.stringify(report));
       }).catch(e=>c.err('Performance capture failed: '+String(e)));

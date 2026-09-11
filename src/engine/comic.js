@@ -20,6 +20,7 @@
 
 import { SHAPES, buildShape, tailPath, TONES } from './balloon.js';
 import {Matrix4,Vector3} from 'three';
+import { SpeechPolicy, speechView } from './speech-policy.js';
 
 const LAYER_ID = 'comicLayer';
 
@@ -87,6 +88,7 @@ export class Comic {
   constructor(game) {
     this.g = game;
     this.items = [];
+    this._speech = new SpeechPolicy();
     this._point = new Vector3();
     this._viewMatrix = new Matrix4();
     this._clipCorners = Array.from({length:8},()=>new Vector3());
@@ -132,25 +134,29 @@ export class Comic {
     if (!text) return null;
     if (text.length > 180) text = text.slice(0, 177).replace(/\s+\S*$/, '') + '…';
 
-    // Field combat needs the firing corridor clear. Keep the same admitted
-    // dialogue and lifetime, but identify the speaker in the HUD, not a tail
-    // crossing the beam. City comic lettering deliberately retains its style.
+    const life = opts.life || Math.max(1.5, Math.min(6.5, 0.9 + text.length / 13));
+    let fieldView = null;
     if (this.g.modeId === 'powerworld') {
-      for (const it of this.items.filter(it => it.kind === 'field')) it.node.remove();
-      this.items = this.items.filter(it => it.kind !== 'field');
+      fieldView = speechView(this.g,speaker,tone,opts,this._speechPoint(speaker,opts.offY),innerWidth,innerHeight);
+      if (!fieldView || !this._speech.admit(speaker,text,tone,opts,performance.now()/1000,life)) return null;
+      for (const it of this.items.filter(it => it.speech)) it.node.remove();
+      this.items = this.items.filter(it => !it.speech);
+    }
+    if (fieldView?.mode === 'radio') {
       const node = document.createElement('div'); node.className = 'cmfield';
       const name = document.createElement('div'); name.className = 'cmfield-speaker';
-      name.textContent = speaker?.name || speaker?.def?.name || 'FIELD COMMS';
+      name.textContent = `${speaker?.name || speaker?.def?.name || 'FIELD COMMS'} · ${fieldView.direction} · ${tone === 'robot' ? 'RADIO' : 'SHOUT'}`;
       const line = document.createElement('div'); line.className = 'cmfield-text';
       line.textContent = text.replace(/\*+/g, '');
       node.appendChild(name); node.appendChild(line);
       node.style.visibility = 'hidden';
-      return this._add(node, opts.life || Math.max(1.5, Math.min(6.5, 0.9 + text.length / 13)),
-        {kind:'field', speaker, tone});
+      return this._add(node, life, {kind:'field', speaker, tone, speech:true, speechOpts:opts, name});
     }
 
     const node = document.createElement('div');
-    node.className = 'cmb t-' + tone;
+    node.className = 'cmb t-' + tone + (fieldView ? ' cm-local' : '');
+    node.dataset.speaker = speaker?.name || speaker?.def?.name || '';
+    node.setAttribute('aria-label',`${node.dataset.speaker}: ${text.replace(/\*+/g,'')}`);
 
     const span = document.createElement('div');
     span.className = 'cmtext';
@@ -211,8 +217,11 @@ export class Comic {
     svg.appendChild(tail); svg.appendChild(body);
     node.insertBefore(svg, span);
 
-    const life = opts.life || Math.max(1.5, Math.min(6.5, 0.9 + text.length / 13));
-    const it = this._add(node, life, { kind: 'bub', speaker, tone, offY: opts.offY, shape, svg, tail, body, noTail: !speaker });
+    const it = this._add(node, life, { kind: 'bub', speaker, tone, offY: opts.offY, shape, svg, tail, body, noTail: !speaker, speech:!!fieldView, speechOpts:opts });
+    if(fieldView){
+      const name=document.createElement('div');name.className='cm-local-speaker';name.textContent=node.dataset.speaker;node.appendChild(name);it.speakerLabel=name;
+      node.style.visibility='hidden';
+    }
     it._mounted = true;
     return it;
   }
@@ -260,6 +269,25 @@ export class Comic {
     node.style.fontSize = Math.round((opts.size || 32) * (0.75 + power * 0.55)) + 'px';
     node.innerHTML = (power > 0.75 ? '<div class="burst"></div>' : '') + markup(String(text).toUpperCase());
     return this._add(node, opts.life || 0.95, { kind: 'sfx', world: pos, drift: 0 });
+  }
+
+  impact(text,pos,opts={}) {
+    const it=this.sfx(text,pos,opts),feedback=opts.feedback;
+    if(feedback){
+      it.node.classList.add('impact-'+feedback.id);it.node.dataset.impact=feedback.id;it.node.setAttribute('aria-label',feedback.label||text);
+      const label=document.createElement('span');label.className='impact-label';label.textContent=feedback.label;it.node.appendChild(label);
+    }
+    return it;
+  }
+
+  _speechPoint(f,offY=0) {
+    if (!f?.pos) return null;
+    if (f.parts?.head) {
+      f.obj?.updateMatrixWorld(true);
+      f.parts.head.localToWorld(this._point.set(0,-.12,.7));this._point.y+=offY||0;
+      return this.g.world.screenPosOf(this._point.x,this._point.y,this._point.z);
+    }
+    return this.g.world.screenPosOf(f.pos.x,f.pos.y+11+(offY||0),f.pos.z);
   }
 
   // ⚠ THE SAFE AREA. A letterer works inside the panel's margins; balloons that drift under the
@@ -379,13 +407,19 @@ export class Comic {
     if(chase)this._combatOccupancy(taken);
     if(this.g.modeId==='powerworld'){
       // These field-only overlays are outside the old comic HUD inventory.
-      for(const el of [document.getElementById('frontlineObjective'),this.g.hud?.el?.fieldRecorder,this.g.hud?.el?.feed]){
+      for(const el of [document.getElementById('frontlineObjective'),document.querySelector('#hud .player-status'),this.g.hud?.el?.fieldRecorder,this.g.hud?.el?.feed]){
         if(!el||el.hidden)continue;
         const s=getComputedStyle(el);if(s.display==='none'||s.visibility==='hidden'||s.opacity==='0')continue;
         const r=el.getBoundingClientRect();if(r.width&&r.height)taken.push({x:r.x-8,y:r.y-8,w:r.width+16,h:r.height+16});
       }
     }
     for (const it of this.items) {
+      if(it.speech){
+        const view=speechView(this.g,it.speaker,it.tone,it.speechOpts,this._speechPoint(it.speaker,it.offY),sw,sh);
+        // No backlog: once hidden, departed or behind camera, local speech ends.
+        if(!view || (it.kind==='bub'&&view.mode!=='balloon')){it.node.remove();continue;}
+        if(it.name)it.name.textContent=`${it.speaker.name||it.speaker.def?.name||'FIELD COMMS'} · ${view.direction} · ${it.tone==='robot'?'RADIO':'SHOUT'}`;
+      }
       it.t -= dt;
       if (it.t <= 0) {
         if (!it._out) { it._out = 1; it.node.classList.add('out'); it.t = 0.2; live.push(it); continue; }
@@ -393,11 +427,6 @@ export class Comic {
         continue;
       }
       if (it.kind === 'field') {
-        const f=it.speaker;
-        const hidden=this.g.modeId!=='powerworld'||!this.g.running||this.g._frontlinePreparing||this.g.hud?.titleOpen||this.g.matchOver
-          ||(f&&(!f.alive||!f.pos||!f.obj?.visible||(!f.isPlayer&&this.g.fov&&(f._vis??1)<.35)
-            ||W.screenPosOf(f.pos.x,f.pos.y+11,f.pos.z).behind));
-        if(hidden){it.node.style.visibility='hidden';live.push(it);continue;}
         const w=it.node.offsetWidth,h=it.node.offsetHeight;
         const S={x0:16,y0:12,x1:sw-16,y1:Math.min(180,sh*.26)};
         const place=this._clearPlacement(it,(sw-w)/2,64,w,h,S,taken);
@@ -410,10 +439,7 @@ export class Comic {
         let sp = null;
         if (f) {
           // ⚠ THE TAIL POINTS AT THE MOUTH — head height, not the feet or the centre.
-          if(f.parts?.head){
-            f.parts.head.localToWorld(this._point.set(0,-.12,.7));this._point.y+=it.offY||0;
-            sp=W.screenPosOf(this._point.x,this._point.y,this._point.z);
-          }else sp=W.screenPosOf(f.pos.x,f.pos.y+11+(it.offY||0),f.pos.z);
+          sp=this._speechPoint(f,it.offY);
           if (sp.behind) { it.node.style.visibility = 'hidden'; live.push(it); continue; }
           it.node.style.visibility='';
           it.node.style.opacity = '';
@@ -458,10 +484,15 @@ export class Comic {
             const away = Math.hypot(rawX - bw / 2, rawY - bh / 2);
             if (away > reach || it.tone === 'narrate'||(chase&&!this._tailClear(x+bw/2,y+bh/2,sp,taken,it))) { it.tail.setAttribute('d', ''); }
             else {
-              const tx = Math.max(-80, Math.min(bw + 80, rawX));
-              const ty = Math.max(-80, Math.min(bh + 80, rawY));
+              const tx = it.speech ? rawX : Math.max(-80, Math.min(bw + 80, rawX));
+              const ty = it.speech ? rawY : Math.max(-80, Math.min(bh + 80, rawY));
               it.tail.setAttribute('d', tailPath(it.tone, bw, bh, tx, ty));
             }
+          }
+          if(it.speakerLabel){
+            const detached=!it.tail.getAttribute('d');it.node.classList.toggle('cm-detached',detached);
+            it.node.dataset.tailMode=detached?'speaker-label':'mouth';
+            it.speakerLabel.textContent=it.node.dataset.speaker+(detached?' · SPEAKING':'');
           }
         }
       } else if (it.kind === 'sfx' && it.world) {
@@ -520,5 +551,6 @@ export class Comic {
   clear() {
     for (const it of this.items) it.node.remove();
     this.items.length = 0;
+    this._speech.clear();
   }
 }

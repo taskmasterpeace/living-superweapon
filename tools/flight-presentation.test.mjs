@@ -31,7 +31,7 @@ before(async () => {
     await route.fulfill({response,body:source.replace('sweepFighterEnvironment(this,game,dt);',
       'this.pos.x+=this.vel.x*dt;this.pos.y+=this.vel.y*dt;this.pos.z+=this.vel.z*dt;')});
   });
-  await page.goto('http://127.0.0.1:5180/powerworld.html');
+  await page.goto(new URL('/powerworld.html',process.env.LSW_TEST_URL||'http://127.0.0.1:5180').href);
   await page.waitForFunction(()=>window.LSW?.game);
   await page.locator('#pwGo').click();
   await page.evaluate(()=>{
@@ -191,7 +191,9 @@ test('landing removes the flight-only leg spread',async()=>{
   const rolls=await page.evaluate(()=>{
     const f=LSW.game.player;f.vel.set(0,0,0);f.flying=true;f.gait='airborne';f._flightBrake=0;
     for(let i=0;i<180;i++)f._animate(1/120);
-    f.flying=false;f.gait='grounded';
+    // Landing is physical contact. Merely switching flight off at y=160 now
+    // correctly invokes the authored ballistic-fall pose, not grounded idle.
+    f.flying=false;f.gait='grounded';f.groundY=LSW.game.world.heightAt(f.pos.x,f.pos.z);f.pos.y=f.groundY;
     for(let i=0;i<360;i++)f._animate(1/120);
     const rolls=[f.parts.legL.rotation.z,f.parts.legR.rotation.z];f.flying=true;f.gait='airborne';
     return rolls;

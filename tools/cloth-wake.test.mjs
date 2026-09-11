@@ -6,7 +6,10 @@ import {ROSTER} from '../src/data/characters.js';
 import {Ragdoll} from '../src/engine/ragdoll.js';
 
 function landed(){
- const f=new Fighter(ROSTER.find(d=>d.id==='sol'));
+ // Includes direct procedural head-envelope mutation; weighted wake behavior
+ // is exercised against its live skin drivers in cloth-skin-contact.test.mjs.
+ const def=ROSTER.find(d=>d.id==='sol');
+ const f=new Fighter({...def,model:{...def.model,body:'procedural'}});
  Object.assign(f,{animT:0,_openSky:true,flying:true,gait:'airborne',facing:.9,hasAimWorld:true});
  f.pos.set(20,50,-15);f.vel.set(14,0,45);f.aimWorld.set(65,25,90);
  for(let i=0;i<90;i++){f.animT+=1/60;f._animate(1/60);}f.obj.updateMatrixWorld(true);

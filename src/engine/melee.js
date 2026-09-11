@@ -22,6 +22,8 @@ import { fistContact } from './melee-pose.js';
 import { sweepSplitObstacle } from './projectile-contact.js';
 import {resolveAbilityMeleeContact} from './ability-melee-contact.js';
 import {constrainRushBodies} from './ability-rush-body.js';
+import {fighterPathFraction} from './fighter-environment-contact.js';
+import {isTransportingPerson,beginPersonCarry,advancePersonCarry,personSetdownPoint,personThrowSpeed} from './person-carry.js';
 
 const _v = new THREE.Vector3();
 const INPUT_BUFFER = .18;
@@ -126,6 +128,7 @@ export class MeleeSystem {
   _endStrike(f, keepInput=false) { f.mstate = null; f.mId = null; f.mKind = null; f.mHay = false; f.strikeActive = 0; f._meleeMotion = null; if(!keepInput)this.clearInput(f); }
 
   _beginStrike(f, id, kind, p01 = 1, hay = false) {
+    f._meleeBlocked=false;
     const g = this.game, pace = (f.def && f.def.meleePace) || 1, S = STRIKES[id];
     f.mId = id; f.mKind = kind; f.mHay = hay; f.mP = p01;
     f.mstate = 'startup'; f.mT = S.startup / pace;
@@ -293,7 +296,9 @@ export class MeleeSystem {
         g.audio.meleeHit(1.2, imp, true);
       }
     }
-    if (f.strikeIdx<2) f.comboWin = 0.42;
+    f._meleeBlocked=blocked;
+    if(blocked)f.comboWin=0;
+    else if (f.strikeIdx<2) f.comboWin = 0.42;
   }
 
   _resolveHeavy(f, contact) {
@@ -313,9 +318,14 @@ export class MeleeSystem {
     const imp = local?local.point.clone():contact ? f._meleeMotion.impact.clone() : foe.pos.clone().add(f.pos).multiplyScalar(0.5).add(new THREE.Vector3(0,5.7,0));
     if (blocked && hay) {
       // GUARD CRUSH — the blocker stumbles back wide open; the crowd goes wild
+      if(foe._openSky||g.modeId==='powerworld'){
+        // A crush wins the next opening; it cannot bypass a funded energy block.
+        foe.takeDamage(dmg*.35,{src:f,strike:true,guardCrush:true,meleeMove:'crush',contactFx:!!contact,hitstop:.12*weight.stop});
+      }else{
       foe.guarding = false; foe.staggerT = 0.85; foe.guardBreakT = 0.85; foe.guardMeter = Math.max(0, foe.guardMeter - 0.55);
       foe.state = 'hit'; foe.stateT = 0;
       foe.takeDamage(dmg * 0.35, { src: f, meleeMove:'crush', contactFx: !!contact, unblockable: true, hitstop: .12*weight.stop, kb: { x: f.aim.x * 46*weight.push, y: 8, z: f.aim.z * 46*weight.push } });
+      }
       f.hitstop=Math.max(f.hitstop,.1*weight.stop);
       if (contact) g.vfx.contact(imp, f.aim3, {color:'#ffd24a',power:2.4});
       else { g.vfx.impactStar(imp, 12, '#ffd24a', 0.24); g.vfx.ring(imp, { color: '#ffd24a', r0: 1, r1: 12, life: 0.3 }); }
@@ -356,6 +366,7 @@ export class MeleeSystem {
   }
 
   grab(f) {
+    if(isTransportingPerson(f)&&this._canClinch(f)){f._personCarry.whirling=true;f._personCarry.throwArmed=true;return;}
     // A late throw input survives the body blow's contact pause/recovery. It
     // never cancels that animation, adds hold time, or survives a broken grab.
     if(this._canClinch(f,true)&&f._clinchPunch&&f._clinchPunch.t>=.3-INPUT_BUFFER){f._clinchThrowBuffer=INPUT_BUFFER;return;}
@@ -368,13 +379,37 @@ export class MeleeSystem {
 
   release(f) {
     if (!f) return;
-    const holder=f.grabbedBy||f;
+    const grabber=f.grabbedBy,holder=grabber||f;
+    const carried=holder._personCarry?.victim;
+    if(carried?.grabbedBy===holder){carried.grabbedBy=null;if(carried.state==='hit')carried.state='idle';}
+    holder._personCarry=null;
     this.clearInput(holder);holder._clinchFinisher=null;holder._clinchPunch=null;holder._clinchStrikeCd=0;
     holder._victimEscape=false;holder._clinchAimT=0;
     if (f.grabbing) { const v = f.grabbing; if (v) { v.grabbedBy = null; if (v.state === 'hit') v.state = 'idle'; } f.grabbing = null; }
-    if (f.grabbedBy) { const h = f.grabbedBy; if (h) { h.grabbing = null; h.grabState = null; h.grabT=0; } f.grabbedBy = null; }
+    if (grabber) { const h = grabber; if (h) { h.grabbing = null; h.grabState = null; h.grabT=0; } f.grabbedBy = null; }
     f.grabState = null; f.grabT = 0; f._victimEscape = false;
   }
+
+  liftPerson(f){
+    if(isTransportingPerson(f))return false;
+    if(!this._canClinch(f)||f._clinchPunch||f._clinchFinisher||f._carry||f.phase)return false;
+    const ratio=bodyWeight(f.grabbing.def)/liftCapacityOf(f.def);
+    if(ratio>1)return false;
+    beginPersonCarry(f,f.grabbing,ratio);
+    // One extension from the original contact; activation cannot restart it.
+    const spent=Math.max(f._clinchElapsed||0,(f._clinchMax||4)-f.grabT);
+    f.grabT=Math.max(0,Math.min(8,(f._clinchMax||4)*2)-spent);
+    this.game.hud?.feed?.('CARRY · move / flight · hold grab: whirl · release: throw · J: set down','#ffd24a');
+    return true;
+  }
+
+  setdownPerson(f){
+    const point=personSetdownPoint(f,this.game);if(!point)return false;
+    const v=f.grabbing;this.release(f);v.pos.copy(point);v.vel.set(0,0,0);
+    v.flying=false;v.flyHeld=false;v.gliding=false;v.launchT=0;v._thrownT=0;v._thrownBy=null;v._sync();return true;
+  }
+
+  releaseGrab(f){if(isTransportingPerson(f)&&f._personCarry.throwArmed)this._throw(f);}
 
   _throw(holder) {
     const g = this.game, v = holder.grabbing;
@@ -385,13 +420,15 @@ export class MeleeSystem {
     // PERSON VS PERSON BATTLES WEIGHT (manual §21): strength against body weight — ratio-logged so the
     // extremes stay playable.
     const wr = Math.max(0.45, Math.min(1.2, 0.75 + 0.15 * Math.log2(liftCapacityOf(holder.def) / Math.max(0.05, bodyWeight(v.def)))));
-    const spd = ((back ? 60 : 48) + str * 4.6) * wr;              // STRENGTH scales the hurl, WEIGHT resists it
+    const transport=isTransportingPerson(holder);
+    const spd = personThrowSpeed(holder,((back ? 60 : 48) + str * 4.6) * wr);
     const dir = _v.copy(holder.aim3); if (dir.lengthSq() < 0.01) dir.set(holder.aim.x, 0, holder.aim.z);
     dir.normalize();
     this.release(holder);holder.strikeCd=Math.max(holder.strikeCd,.35);
     v.state = 'idle';
     // AUTHORED velocity, not kb-scaled — the dotted preview integrates exactly this launch state.
-    v.vel.set(dir.x * spd, (dir.y + 0.22) * spd, dir.z * spd);   // flatter loft than props — a body is a bowling ball, not a mortar shell
+    v.vel.set(dir.x * spd, (dir.y + (transport?0:0.22)) * spd, dir.z * spd);
+    v._personThrow=transport?{owner:holder,impacted:false}:null;
     v.flying = false; v.flyHeld = false; v.gliding = false;
     v.launchT = 1.35; v._thrownT = 1.35; v._thrownBy = holder; if (v._thrownHit) v._thrownHit.clear();
     // A fatal throw must seed its ragdoll from this launch, not the former held velocity.
@@ -516,7 +553,7 @@ export class MeleeSystem {
     if(f.mstate==='active') {
       f.mT-=m.dt;m.dt=0;
       if(f.mT<=0) {
-        if(f.mKind==='light'&&f.strikeIdx<2&&f.comboWin<=0)f.comboWin=.32;
+        if(f.mKind==='light'&&f.strikeIdx<2&&f.comboWin<=0&&!f._meleeBlocked)f.comboWin=.32;
         f.mstate='recover';f.mT+=STRIKES[f.mId].recover/(f.def.meleePace||1);
       }
       f.strikeActive=this._commitRemaining(f);
@@ -547,7 +584,7 @@ export class MeleeSystem {
             f.mT -= dt;
             if (f.mT <= 0) {
               // the whiff-continue window (was set when a light strike ended without a combo already open)
-              if (f.mKind === 'light' && f.strikeIdx < 2 && f.comboWin <= 0) f.comboWin = 0.32;
+              if (f.mKind === 'light' && f.strikeIdx < 2 && f.comboWin <= 0 && !f._meleeBlocked) f.comboWin = 0.32;
               f.mstate = 'recover'; f.mT += S.recover / pace;
             }
           }
@@ -573,7 +610,7 @@ export class MeleeSystem {
       if (f.grabT <= 0) {
         // ⚠ a WRESTLER closes from further out — the style's whole identity is getting inside
         const foe = g.coneFoe(f, STRIKES.grab.reach + ((styleOf(f.def).grabBonus) || 0), 0.95);
-        if (foe && !foe.phase && foe.invuln <= 0 && !foe.grabbedBy && foe.alive) {
+        if (foe && !foe.phase && foe.invuln <= 0 && !foe.grabbedBy && foe.alive && fighterPathFraction({radius:0,sizeScale:1},g.world,f.center(new THREE.Vector3()),foe.center(new THREE.Vector3()))===1) {
           const bx = f.pos.x - foe.pos.x, bz = f.pos.z - foe.pos.z, bd = Math.hypot(bx, bz) || 1;
           const geoBehind = (bx / bd) * foe.aim.x + (bz / bd) * foe.aim.z < -0.2;
           // ⚠ THE VULNERABILITY RULE (martial.js §THE CLINCH): grabbing them during their RECOVERY
@@ -594,6 +631,7 @@ export class MeleeSystem {
           const cw = clinchWindow(f, foe, { attackerRank: rankOf(f.def), victimRank: rankOf(foe.def), wounds: w });
           f.grabT = Math.min(4, Math.max(0.2, cw.seconds * (behind ? 1.25 : 1)));   // a back clinch holds longer
           f._clinchMax = f.grabT;
+          f._clinchElapsed=0;f._clinchEscapeAt=f.grabT*.5;
           f._clinchFinisher=null;f._clinchPunch=null;f._clinchStrikeCd=0;
           if (g.isHuman(f) && g.hud) g.hud.feed('CLINCH — tap strike: body blow · hold strike: drive down · grab again: aimed throw', '#ff8a3a');
           f._victimEscape = !behind && ((foe.teleEscape && foe.ki > 14) || foe.canPhase);
@@ -605,10 +643,13 @@ export class MeleeSystem {
       const v = f.grabbing;
       if (!v || !v.alive || !f.alive || f.staggerT>0 || f.stunT>0 || f.frozenT>0) { this.release(f); return; }
       f.grabT -= dt;
+      f._clinchElapsed=(f._clinchElapsed||0)+dt;
       // Keep the grip inside actual arm reach. Root-space wobble fed back through
       // hard-lock facing and made the pair orbit; struggle belongs to the pose.
       const hoist=f._clinchFinisher?Math.sin(Math.min(1,f._clinchFinisher.t/f._clinchFinisher.duration)*Math.PI*.5)*3.5:0;
-      v.pos.x = f.pos.x + f.aim.x * 3.3; v.pos.z = f.pos.z + f.aim.z * 3.3; v.pos.y = f.pos.y+hoist;
+      if(isTransportingPerson(f)){
+        if(!advancePersonCarry(f,g,dt)){this.release(f);return;}
+      }else{v.pos.x = f.pos.x + f.aim.x * 3.3; v.pos.z = f.pos.z + f.aim.z * 3.3; v.pos.y = f.pos.y+hoist;}
       v.vel.set(0, 0, 0); v.state = 'hit'; v.stateT = 0; v.faceDir(-f.aim.x, -f.aim.z);
       if (Math.random() < dt * 7) g.particles.burst(v.pos.x, v.pos.y + 5.5, v.pos.z, { count: 2, speed: 9, life: 0.25, size: 1.6, color: ['#fff', v.def.colors.accent], drag: 2 });
       // thorns: being held hurts the holder
@@ -618,7 +659,7 @@ export class MeleeSystem {
         if (Math.random() < 0.35) g.particles.burst(f.pos.x, f.pos.y + 5.5, f.pos.z, { count: 2, speed: 12, life: 0.3, size: 2.2, color: [v.def.colors.accent, '#fff'] });
       }
       // front-grab escape (teleport / phase) at the midpoint
-      if (f._victimEscape && f.grabT <= (f._clinchMax || 0.4) * 0.5) {
+      if (f._victimEscape && (isTransportingPerson(f)?f._clinchElapsed>=f._clinchEscapeAt:f.grabT <= (f._clinchMax || 0.4) * 0.5)) {
         f._victimEscape = false;
         if (v.teleEscape && v.ki > 14) { v.ki -= 14; g.afterimage(v); v.pos.x -= f.aim.x * 22; v.pos.z -= f.aim.z * 22; v.invuln = 0.35; g.audio.teleport(); }
         else { v.invuln = 0.4; }

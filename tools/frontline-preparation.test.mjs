@@ -25,7 +25,7 @@ test('first-use combat effects are prepared without spawning attacks and remain 
   scene.traverse(o=>{if(o.material){compiled.push(o);materials.add(o.material);}if(o.geometry)geometries.add(o.geometry);});x.ready();
  };
  const task=prepareFrontline(x.stage,{ui,wait:async()=>x.ready()});assert.equal(await task.promise,true);
- assert.ok(compiled.some(o=>o.material.customProgramCacheKey()==='beam-surface-v5'),'Beam surface must compile before combat');
+ assert.ok(compiled.some(o=>o.material.customProgramCacheKey()==='beam-surface-v6'),'Beam surface must compile before combat');
  assert.ok(compiled.some(o=>o.material.customProgramCacheKey()==='beam-sheath-v1'),'Beam sheath must compile before combat');
  assert.ok(compiled.some(o=>o.isLineSegments&&o.material.vertexColors),'Charge strands need their actual color-attribute variant');
  assert.ok(compiled.some(o=>o.isInstancedMesh),'Instanced beam details need their own shader variant');

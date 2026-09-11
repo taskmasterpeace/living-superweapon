@@ -1,3 +1,4 @@
+import {migratePowerUpPicks,GENERIC_CUSTOM_POWER_UPS} from '../data/power-up.js';
 // THRESHOLD — ORIGIN: the character creator screen. D&D-for-superheroes point-buy over
 // the ranks.js sheet model. Ruling compliance (docs/DESIGN_DECISIONS.md): NOT named Foundry;
 // LIVE damage numbers beside every power pick; LeFevre threat auto-computed as you build.
@@ -163,7 +164,7 @@ export class CreatorUI {
 
   show({ edit, onDone, onCancel, presentationEditor=false } = {}) {
     this.onDone = onDone; this.onCancel = onCancel;
-    this.picks = edit ? JSON.parse(JSON.stringify(edit.picks)) : freshPicks();
+    this.picks = edit ? migratePowerUpPicks(JSON.parse(JSON.stringify(edit.picks))) : freshPicks();
     this.editingId = edit ? edit.def.id : null;
     this.selSlot = 'lmb';
     this.open = true;
@@ -313,15 +314,15 @@ export class CreatorUI {
     const tr = (list, cur, key) => `<div class="chips2">${list.map(o =>
       chip(o.v === cur, o.name, o.cost, `data-t="${key}" data-v="${o.v}" title="${o.d}"`)).join('')}</div>`;
     // powers
-    const slotRow = ['lmb', 'rmb', 'q', 'e', 'f', 'r'].map(k => {
-      const pid = P.slots[k], p = pid && powerById(pid);
+    const slotRow = ['lmb', 'rmb', 'q', 'e', 'f', 'r','powerUp'].map(k => {
+      const pid = k==='powerUp'?P.powerUp:P.slots[k], p = pid && powerById(pid);
       return `<div class="slotc${k === this.selSlot ? ' on' : ''}${k === 'r' ? ' ult' : ''}" data-s="${k}">
-        <div class="k">${k === 'lmb' ? 'LMB' : k === 'rmb' ? 'RMB' : k === 'r' ? 'R · ULT' : k.toUpperCase()}</div>
+        <div class="k">${k === 'lmb' ? 'LMB' : k === 'rmb' ? 'RMB' : k === 'r' ? 'R · ULT' : k==='powerUp'?'2× SHIFT HOLD':k.toUpperCase()}</div>
         <div class="pn${p ? '' : ' none'}">${p ? p.name : 'empty'}</div></div>`;
-    }).join('') + `<div class="slotc fixed"><div class="k">SHIFT</div><div class="pn">Burst Dash</div></div>`;
+    }).join('') + `<div class="slotc fixed"><div class="k">MOVEMENT</div><div class="pn">SHIFT gears · 2× move evade</div></div>`;
     const wantUlt = this.selSlot === 'r';
-    const cards = POWERS.filter(p => !!p.ult === wantUlt).map(p => {
-      const takenIn = Object.entries(P.slots).find(([, v]) => v === p.id);
+    const cards = POWERS.filter(p => this.selSlot==='powerUp'?GENERIC_CUSTOM_POWER_UPS.includes(p.id):!GENERIC_CUSTOM_POWER_UPS.includes(p.id)&&!!p.ult === wantUlt).map(p => {
+      const takenIn = Object.entries({...P.slots,powerUp:P.powerUp}).find(([, v]) => v === p.id);
       const mine = takenIn && takenIn[0] === this.selSlot;
       return `<div class="pcard${mine ? ' mine' : ''}${takenIn && !mine ? ' taken' : ''}" data-p="${p.id}">
         <div class="pn2"><b>${p.name}</b><span class="cost">${p.cost}p</span></div>
@@ -371,7 +372,8 @@ export class CreatorUI {
     root.querySelectorAll('.pcard').forEach(c => c.onclick = () => {
       const id = c.dataset.p;
       for (const k of Object.keys(P.slots)) if (P.slots[k] === id) P.slots[k] = null;   // move if armed elsewhere
-      P.slots[this.selSlot] = (P.slots[this.selSlot] === id) ? null : id;               // toggle in place
+      if(this.selSlot==='powerUp'){P.powerUp=P.powerUp===id?null:id;P.powerUpSourceSlot=null;}
+      else P.slots[this.selSlot] = (P.slots[this.selSlot] === id) ? null : id;               // toggle in place
       this.renderBuild(); this.renderSheet(); this.renderHeader();
     });
   }

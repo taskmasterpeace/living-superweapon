@@ -1,3 +1,4 @@
+import {migratePowerUpPicks,GENERIC_CUSTOM_POWER_UPS} from '../data/power-up.js';
 // Portable ORIGIN recipes + production presentation. No executable or arbitrary engine data.
 import {freshPicks,buildDef,validate,saveCustom,BUDGETS,POWERS,GIFTS,GADGETS,PALETTES,SKINS,FRAMES,EVADE_KINDS} from '../data/creator.js';
 import {TALENTS} from '../data/ranks.js';
@@ -21,7 +22,7 @@ export function validateCharacter(input){
   safe(input);fields(input,['format','version','sourceId','picks','profile'],'Character package');
   if(input.format!=='lsw-character'||input.version!==1)fail('Unsupported character package version.');
   if(typeof input.sourceId!=='string'||!/^cx_[a-zA-Z0-9_-]{1,90}$/.test(input.sourceId))fail('Character package needs a custom source ID.');
-  const p=input.picks;fields(p,Object.keys(freshPicks()),'ORIGIN recipe');
+  const p={powerUp:null,powerUpSourceSlot:null,...input.picks};fields(p,Object.keys(freshPicks()),'ORIGIN recipe');
   for(const [key,max] of Object.entries({name:14,title:26,realName:80,city:80,country:80})){
     if(typeof p[key]!=='string'||p[key].length>max||/[<>\u0000-\u001f]/.test(p[key]))fail(`${key} must be plain text, at most ${max} characters.`);
   }
@@ -36,12 +37,14 @@ export function validateCharacter(input){
     if(!Array.isArray(p[k])||p[k].length>max||new Set(p[k]).size!==p[k].length)fail(`Invalid ${k} selection.`);
     for(const v of p[k])member(v,allowed,k);
   }
+  member(p.powerUp,[null,...GENERIC_CUSTOM_POWER_UPS],'power-up');
+  member(p.powerUpSourceSlot,[null,'lmb','rmb','q','e','f','r'],'legacy power-up slot');
   fields(p.slots,['lmb','rmb','q','e','f','r'],'Power slots');
   for(const v of Object.values(p.slots))member(v,[null,...POWERS.map(a=>a.id)],'power');
   const errors=validate(p);if(errors.length)fail(errors.join(' '));
   const profile=validateProfile(input.profile);
   if(profile.heroId!==input.sourceId)fail('Presentation and character IDs do not match.');
-  return JSON.parse(JSON.stringify({...input,profile}));
+  return JSON.parse(JSON.stringify({...input,picks:migratePowerUpPicks(p),profile}));
 }
 export function exportCharacter(record,profile){
   if(!record?.def?.isCustom)fail('Select a custom ORIGIN character to export a complete package.');

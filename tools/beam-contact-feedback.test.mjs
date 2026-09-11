@@ -103,8 +103,8 @@ test('the field reaction fix does not change legacy isometric target presentatio
  const x=fixture();try{x.target._openSky=false;x.game.modeId='duel';for(let i=0;i<45;i++)x.step(1/60);assert.ok(x.target.hp<10000);assert.equal(x.target._hitReaction,undefined);}finally{x.close();}
 });
 
-test('zero-pressure beam damages without pushing or launching even a weak guarded target',()=>{
- const x=fixture({guard:true,options:{pushForce:0}});try{x.target.strength=1;for(let i=0;i<45;i++)x.step(1/60);assert.ok(x.target.hp<10000);assert.equal(x.target.vel.length(),0);assert.equal(x.target.launchT,0);}finally{x.close();}
+test('zero-pressure beam spends guard energy without pushing or launching even a weak target',()=>{
+ const x=fixture({guard:true,options:{pushForce:0}});try{x.target.strength=1;const energy=x.target.ki;for(let i=0;i<45;i++)x.step(1/60);assert.equal(x.target.hp,10000);assert.ok(x.target.ki<energy);assert.equal(x.target.vel.length(),0);assert.equal(x.target.launchT,0);}finally{x.close();}
 });
 test('turning the emitter cannot redirect pressure from already traveled straight energy',()=>{
  const x=fixture({options:{dps:60,steer:100}});try{x.target.strength=1;for(let i=0;i<20;i++)x.step(1/60);x.target.vel.set(0,0,0);x.caster.aim3.set(1,0,0);x.step(1/60);assert.ok(x.target.vel.z>0);assert.ok(Math.abs(x.target.vel.x)<.001,`old forward packet shoved sideways ${x.target.vel.x}`);}finally{x.close();}
@@ -154,7 +154,8 @@ test('guard contact preserves its authored shield brace, while a rear hit is a b
     assert.equal(rear.contacts[0].color,body.contacts[0].color,'A raised guard facing away did not block');
     assert.equal(shield.sounds[0].kind,'zap');assert.notEqual(body.sounds[0].kind,'zap');
     assert.equal(peaks[1],0,'An actual guard already owns its brace; automatic defense must not add another flinch');
-    assert.ok(Math.abs((10000-shield.target.hp)/.22-(10000-body.target.hp))<1e-6,'Frontal beam guard admits 22% chip');
+    assert.equal(shield.target.hp,10000,'Funded frontal beam guard protects HP');
+    assert.ok(shield.target.ki<shield.target.maxKi,'Frontal beam contact spends energy');
     assert.equal(shield.target.hitstop,0);assert.equal(shield.target.staggerT,0);
   }finally{for(const f of cases)f.close();}
 });

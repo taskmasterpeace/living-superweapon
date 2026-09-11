@@ -10,6 +10,7 @@ import {hydrateClipFrames} from './broadcast-frames.js';
 
 export const BroadcastMixin = {
   showEndScreen(result, g) {
+    globalThis.document?.body?.classList.add('report-open');
     if (this.game && this.game.touch) this.game.touch.show(false);   // thumbs off the report — rematch re-shows them
     if (g.matchReport) { this._showBroadcast(result, g); return; }
     const p = g.player;

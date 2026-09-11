@@ -26,16 +26,16 @@ function loadSurface(record){
   },undefined,fail);
  }catch(error){fail(error);}
 }
-function surfaceMap(url,configure){
- if(surfaceMaps.has(url))return surfaceMaps.get(url).texture;
+function surfaceMap(url,configure,key=url){
+ if(surfaceMaps.has(key))return surfaceMaps.get(key).texture;
  const texture=new THREE.Texture();configure(texture);
  const record={url,texture,generation:0,status:'new',error:null,promise:null,settle:null};
- surfaceMaps.set(url,record);surfaceRecords.set(texture,record);
+ surfaceMaps.set(key,record);surfaceRecords.set(texture,record);
  texture.addEventListener('dispose',()=>{
   if(record.status==='disposed')return;
   record.generation++;record.status='disposed';record.error=new Error(`Hero texture was disposed while preparing: ${url}`);
   record.settle?.({error:record.error});
-  if(surfaceMaps.get(url)===record)surfaceMaps.delete(url);
+  if(surfaceMaps.get(key)===record)surfaceMaps.delete(key);
  });
  loadSurface(record);return texture;
 }
@@ -68,9 +68,31 @@ function fieldWeave(){
  });
 }
 
+function fabricWeave(){
+ const url='./textures/hero/technical-weave-v1.png';
+ // The same audited image needs a separate sampler: changing fieldWeave's
+ // shared repeat/color-space would alter existing tactical characters.
+ return surfaceMap(url,texture=>{
+  texture.name='fitted-fabric-relief';texture.colorSpace=THREE.NoColorSpace;
+  texture.wrapS=texture.wrapT=THREE.RepeatWrapping;texture.repeat.set(1,1.5);texture.anisotropy=4;
+ },url+'|fitted-relief');
+}
+const fittedFabric=model=>model.body==='superhero-male'&&model.costume==='fitted'&&(model.surface??'standard')==='standard';
+export function createCapeMaterial(color,model){
+ const material=new THREE.MeshStandardMaterial({color,roughness:.9,side:THREE.DoubleSide,metalness:0});
+ if(fittedFabric(model)){material.bumpMap=fabricWeave();material.bumpScale=.005;}
+ return material;
+}
+
 // A presentation preset, usable by creator characters through their profile.
 // It never owns poses, sockets, collision or simulation scale.
 export function applyHeroSurface(materials,model){
+ if(fittedFabric(model)){
+  for(const material of [materials.suit,materials.suit2]){
+   material.bumpMap=fabricWeave();material.bumpScale=.003;material.roughness=.88;material.metalness=0;
+   material.userData.heroFabric=true;
+  }
+ }
  if(model.surface!=='field')return;
  const {suit,suit2,armor}=materials,tailored=model.body==='superhero-male',texture=tailored?garmentMap('garment-neutral-albedo'):fieldWeave();
  suit.color.multiplyScalar(.58);suit2.color.copy(suit.color);

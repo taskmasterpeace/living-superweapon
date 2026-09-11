@@ -1,0 +1,577 @@
+{
+ "rows": [
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.02790259200000017,
+   "armL": {
+    "reach": 3.4157893049794086,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "armR": {
+    "reach": 3.400531015011127,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "pivotHeight": 5.152,
+   "skinned": true,
+   "skinId": "superhero-male",
+   "frameScale": 1.12,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "superhero-male",
+   "clip": "walk",
+   "frac": 0.35,
+   "time": 0.46666655
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.02499999999999969,
+   "armL": {
+    "reach": 2.850477778448073,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "armR": {
+    "reach": 3.281549382436568,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "pivotHeight": 5.152,
+   "skinned": true,
+   "skinId": "superhero-male",
+   "frameScale": 1.12,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "superhero-male",
+   "clip": "crouch-idle",
+   "frac": 0.5,
+   "time": 1.4583335
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.024999999999999856,
+   "armL": {
+    "reach": 2.813105038002628,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "armR": {
+    "reach": 2.815461754560608,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "pivotHeight": 5.152,
+   "skinned": true,
+   "skinId": "superhero-male",
+   "frameScale": 1.12,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "superhero-male",
+   "clip": "reload",
+   "frac": 0.55,
+   "time": 0.91666685
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.025000000000000466,
+   "armL": {
+    "reach": 3.5588508097072675,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "armR": {
+    "reach": 3.3867927129341906,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "pivotHeight": 5.152,
+   "skinned": true,
+   "skinId": "superhero-male",
+   "frameScale": 1.12,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "superhero-male",
+   "clip": "aim-up",
+   "frac": 1,
+   "time": 0.166667
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.02790259200000017,
+   "armL": {
+    "reach": 3.4157893049794086,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "armR": {
+    "reach": 3.400531015011127,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "pivotHeight": 5.152,
+   "skinned": true,
+   "skinId": "superhero-female",
+   "frameScale": 1.12,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "superhero-female",
+   "clip": "walk",
+   "frac": 0.35,
+   "time": 0.46666655
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.02499999999999969,
+   "armL": {
+    "reach": 2.850477778448073,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "armR": {
+    "reach": 3.281549382436568,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "pivotHeight": 5.152,
+   "skinned": true,
+   "skinId": "superhero-female",
+   "frameScale": 1.12,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "superhero-female",
+   "clip": "crouch-idle",
+   "frac": 0.5,
+   "time": 1.4583335
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.024999999999999856,
+   "armL": {
+    "reach": 2.813105038002628,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "armR": {
+    "reach": 2.815461754560608,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "pivotHeight": 5.152,
+   "skinned": true,
+   "skinId": "superhero-female",
+   "frameScale": 1.12,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "superhero-female",
+   "clip": "reload",
+   "frac": 0.55,
+   "time": 0.91666685
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.025000000000000466,
+   "armL": {
+    "reach": 3.5588508097072675,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "armR": {
+    "reach": 3.3867927129341906,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "pivotHeight": 5.152,
+   "skinned": true,
+   "skinId": "superhero-female",
+   "frameScale": 1.12,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "superhero-female",
+   "clip": "aim-up",
+   "frac": 1,
+   "time": 0.166667
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.0270732799999997,
+   "armL": {
+    "reach": 2.4398495035567214,
+    "max": 2.5600000000000005,
+    "min": 0.07999999999999985
+   },
+   "armR": {
+    "reach": 2.428950725007948,
+    "max": 2.5600000000000005,
+    "min": 0.07999999999999985
+   },
+   "pivotHeight": 3.6799999999999997,
+   "skinned": true,
+   "skinId": "superhero-female",
+   "frameScale": 0.8,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "lean",
+   "clip": "walk",
+   "frac": 0.35,
+   "time": 0.46666655
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.024999999999999578,
+   "armL": {
+    "reach": 2.0360555560343383,
+    "max": 2.5600000000000005,
+    "min": 0.07999999999999985
+   },
+   "armR": {
+    "reach": 2.3439638445975484,
+    "max": 2.5600000000000005,
+    "min": 0.07999999999999985
+   },
+   "pivotHeight": 3.6799999999999997,
+   "skinned": true,
+   "skinId": "superhero-female",
+   "frameScale": 0.8,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "lean",
+   "clip": "crouch-idle",
+   "frac": 0.5,
+   "time": 1.4583335
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.02499999999999991,
+   "armL": {
+    "reach": 2.009360741430448,
+    "max": 2.5600000000000005,
+    "min": 0.07999999999999985
+   },
+   "armR": {
+    "reach": 2.011044110400434,
+    "max": 2.5600000000000005,
+    "min": 0.07999999999999985
+   },
+   "pivotHeight": 3.6799999999999997,
+   "skinned": true,
+   "skinId": "superhero-female",
+   "frameScale": 0.8,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "lean",
+   "clip": "reload",
+   "frac": 0.55,
+   "time": 0.91666685
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.024999999999999967,
+   "armL": {
+    "reach": 2.5420362926480466,
+    "max": 2.5600000000000005,
+    "min": 0.07999999999999985
+   },
+   "armR": {
+    "reach": 2.419137652095851,
+    "max": 2.5600000000000005,
+    "min": 0.07999999999999985
+   },
+   "pivotHeight": 3.6799999999999997,
+   "skinned": true,
+   "skinId": "superhero-female",
+   "frameScale": 0.8,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "lean",
+   "clip": "aim-up",
+   "frac": 1,
+   "time": 0.166667
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.02836907999999977,
+   "armL": {
+    "reach": 3.96475544327967,
+    "max": 4.16,
+    "min": 0.1299999999999999
+   },
+   "armR": {
+    "reach": 3.9470449281379154,
+    "max": 4.16,
+    "min": 0.1299999999999999
+   },
+   "pivotHeight": 5.9799999999999995,
+   "skinned": true,
+   "skinId": "superhero-male",
+   "frameScale": 1.3,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "heavy",
+   "clip": "walk",
+   "frac": 0.35,
+   "time": 0.46666655
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.02499999999999969,
+   "armL": {
+    "reach": 3.308590278555798,
+    "max": 4.16,
+    "min": 0.1299999999999999
+   },
+   "armR": {
+    "reach": 3.8089412474710156,
+    "max": 4.16,
+    "min": 0.1299999999999999
+   },
+   "pivotHeight": 5.9799999999999995,
+   "skinned": true,
+   "skinId": "superhero-male",
+   "frameScale": 1.3,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "heavy",
+   "clip": "crouch-idle",
+   "frac": 0.5,
+   "time": 1.4583335
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.0250000000000003,
+   "armL": {
+    "reach": 3.265211204824478,
+    "max": 4.16,
+    "min": 0.1299999999999999
+   },
+   "armR": {
+    "reach": 3.2679466794007053,
+    "max": 4.16,
+    "min": 0.1299999999999999
+   },
+   "pivotHeight": 5.9799999999999995,
+   "skinned": true,
+   "skinId": "superhero-male",
+   "frameScale": 1.3,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "heavy",
+   "clip": "reload",
+   "frac": 0.55,
+   "time": 0.91666685
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.025000000000000355,
+   "armL": {
+    "reach": 4.1308089755530775,
+    "max": 4.16,
+    "min": 0.1299999999999999
+   },
+   "armR": {
+    "reach": 3.931098684655757,
+    "max": 4.16,
+    "min": 0.1299999999999999
+   },
+   "pivotHeight": 5.9799999999999995,
+   "skinned": true,
+   "skinId": "superhero-male",
+   "frameScale": 1.3,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "heavy",
+   "clip": "aim-up",
+   "frac": 1,
+   "time": 0.166667
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.02790259200000017,
+   "armL": {
+    "reach": 3.4157893049794086,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "armR": {
+    "reach": 3.400531015011127,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "pivotHeight": 5.152,
+   "skinned": false,
+   "skinId": null,
+   "frameScale": 1.12,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "procedural",
+   "clip": "walk",
+   "frac": 0.35,
+   "time": 0.46666655
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.02499999999999969,
+   "armL": {
+    "reach": 2.850477778448073,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "armR": {
+    "reach": 3.281549382436568,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "pivotHeight": 5.152,
+   "skinned": false,
+   "skinId": null,
+   "frameScale": 1.12,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "procedural",
+   "clip": "crouch-idle",
+   "frac": 0.5,
+   "time": 1.4583335
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.024999999999999856,
+   "armL": {
+    "reach": 2.813105038002628,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "armR": {
+    "reach": 2.815461754560608,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "pivotHeight": 5.152,
+   "skinned": false,
+   "skinId": null,
+   "frameScale": 1.12,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "procedural",
+   "clip": "reload",
+   "frac": 0.55,
+   "time": 0.91666685
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.025000000000000466,
+   "armL": {
+    "reach": 3.5588508097072675,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "armR": {
+    "reach": 3.3867927129341906,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "pivotHeight": 5.152,
+   "skinned": false,
+   "skinId": null,
+   "frameScale": 1.12,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "procedural",
+   "clip": "aim-up",
+   "frac": 1,
+   "time": 0.166667
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.024999999999999578,
+   "armL": {
+    "reach": 2.986363057716739,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "armR": {
+    "reach": 3.3281753356538646,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "pivotHeight": 5.152,
+   "skinned": true,
+   "skinId": "superhero-male",
+   "frameScale": 1.12,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "superhero-male",
+   "clip": "grenade-throw",
+   "frac": 0.21247505311876327,
+   "time": 0.2833
+  },
+  {
+   "rootDrift": 0,
+   "rootY": 0,
+   "lowestFoot": 0.1446829759999998,
+   "armL": {
+    "reach": 3.583000000000001,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "armR": {
+    "reach": 3.583000000000001,
+    "max": 3.5840000000000005,
+    "min": 0.11199999999999988
+   },
+   "pivotHeight": 5.152,
+   "skinned": true,
+   "skinId": "superhero-male",
+   "frameScale": 1.12,
+   "heroId": "sol",
+   "hasWeaponR": false,
+   "hasWeaponL": false,
+   "body": "superhero-male",
+   "clip": "supine-rise",
+   "frac": 0,
+   "time": 0
+  }
+ ],
+ "errors": []
+}

@@ -75,6 +75,7 @@ export class TouchControls {
     for (const b of root.querySelectorAll('.tbtn')) {
       const id = b.dataset.b;
       const on = (e) => { e.preventDefault(); e.stopPropagation();if(!this.enabled)return;
+        if(this._menuMode&&id!=='start'&&id!=='select')return;
         if(this._fighter?.slots[id]?.def.type==='rifle'&&!this.cur.scope)this._fighter._selSlot=id;
         this.pressButton(id); b.classList.add('on');if(e.pointerId!=null)b.setPointerCapture(e.pointerId); };
       const off = (e) => { e.preventDefault(); e.stopPropagation(); this.releaseButton(id); b.classList.remove('on'); };
@@ -95,7 +96,7 @@ export class TouchControls {
     // --- the two thumb zones ---
     const zoneL = root.querySelector('#tzL'), zoneR = root.querySelector('#tzR');
     const start = (side) => (e) => {
-      if (!this.enabled) return;                 // menus must keep their native touch behaviour
+      if (!this.enabled || this._menuMode) return; // menus own gestures while combat is suspended
       e.preventDefault();
       const t = e.changedTouches ? e.changedTouches[0] : e;
       const st = { id: t.identifier ?? 'm', x0: t.clientX, y0: t.clientY };
@@ -201,6 +202,20 @@ export class TouchControls {
     const p = this.pad;
     if (!this.enabled) return;
     const g=this._fighter?._game;
+    const menu=!!g&&(!g.running||g.matchOver||g.hud?.titleOpen||g.combatOverlayOpen);
+    this._menuMode=menu;
+    this._root?.classList.toggle('touch-menu',menu);
+    if(menu){
+      // Clearing only axes is insufficient: a held finger can repopulate them
+      // on its next move after Resume. Retire the gesture and held action too.
+      this._move=this._aim=null;
+      this._stickL?.classList.remove('on');this._stickR?.classList.remove('on');
+      if(this._knobL)this._knobL.style.transform='';if(this._knobR)this._knobR.style.transform='';
+      for(const k of Object.keys(this.cur))if(k!=='start'&&k!=='select')delete this.cur[k];
+      for(const k of this._presses)if(k!=='start'&&k!=='select')this._presses.delete(k);
+      this.lx=this.ly=this.rx=this.ry=0;
+      this._root?.querySelectorAll('.tpad .on').forEach(b=>b.classList.remove('on'));
+    }
     if(g?.modeId==='powerworld'&&!combatLookActive(g)){
       for(const k of Object.keys(this.cur))if(k!=='start'&&k!=='select')delete this.cur[k];
       for(const k of this._presses)if(k!=='start'&&k!=='select')this._presses.delete(k);
