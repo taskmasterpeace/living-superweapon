@@ -2072,7 +2072,7 @@ export class Fighter {
     }
 
     // arena bounds — getting hurled into the border wall slams (and bounces)
-    const b = (this._game && this._game.world ? this._game.world.ARENA : ARENA_FALLBACK) - 4;   // per-city bounds (generated maps vary)
+    const b = game?._threatRoom?.active ? 300-this.radius : (this._game && this._game.world ? this._game.world.ARENA : ARENA_FALLBACK) - 4;   // per-city bounds (generated maps vary)
     // RING-OUT RULES (backlog): normally the border is a WALL you bounce off. Under ring-out
     // rules it stops holding you in — leaving the arena is how you lose, so the arena has to
     // let you leave. game.checkRingOut then does the honours.
@@ -2083,6 +2083,9 @@ export class Fighter {
       this.pos.x = clamp(this.pos.x, -b, b); this.pos.z = clamp(this.pos.z, -b, b);
     }
 
+    // The sealed training shell must also contain a burst that crosses an entire
+    // wall thickness in one physics step. Match its visible inner ceiling.
+    if(game?._threatRoom?.active){const ceiling=300-12*(this.sizeScale||1);if(this.pos.y>ceiling){this.pos.y=ceiling;this.vel.y=Math.min(0,this.vel.y);}}
     // Box3 (AABB) collision vs cover — walls block you, and you can stand on their tops
     this.onBlock = false;
     const ghost = this.sprintT > 0 && this._sprintThrough;   // VOLT sprints straight through cover

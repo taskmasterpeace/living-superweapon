@@ -68,7 +68,7 @@ export class ThreatDeployment {
       const repeatMarker=new THREE.Mesh(new THREE.TorusGeometry(3,.25,6,24),new THREE.MeshBasicMaterial({color:0x7fe6ff}));repeatMarker.rotation.x=Math.PI/2;repeatMarker.position.copy(trialPad).add(new THREE.Vector3(18,.3,15));this.group.add(repeatMarker);
       const marker=new THREE.Mesh(new THREE.TorusGeometry(8,.2,6,40),new THREE.MeshBasicMaterial({color:0xe9b83f}));marker.rotation.x=Math.PI/2;marker.position.copy(trialPad);marker.position.y+=.3;this.group.add(marker);
     }
-    this.roomReplayHandle=g.registerInteractable({id:"room-replay-screen",pos:new THREE.Vector3(85,5,125),r:18,label:"RECORDED COMBAT · MULTI-ANGLE REVIEW",verb:"WATCH REPLAY",priority:4,enabled:f=>f===g.player&&this.room?.active,onUse:()=>this.meleeTrial.openReview()});
+    this.roomReplayHandle=g.registerInteractable({id:"room-replay-screen",pos:new THREE.Vector3(85,5,-280),r:18,label:"RECORDED COMBAT · MULTI-ANGLE REVIEW",verb:"WATCH REPLAY",priority:4,enabled:f=>f===g.player&&this.room?.active,onUse:()=>this.meleeTrial.openReview()});
 
   }
   ready(){
@@ -85,7 +85,7 @@ export class ThreatDeployment {
   transfer(f){
     if(this.deployed.has(f))return;
     if(this.room?.active){
-      if(f!==this.g.player){f._roomReady=true;f._deploymentTarget=f.pos.clone();return;}
+      if(f!==this.g.player){f._roomReady=true;f._deploymentTarget=this.origin.clone().add(new THREE.Vector3(22+this.queue.indexOf(f)*12,0,-12));return;}
       if(this.queue.some(a=>a.alive&&!a._roomReady)){this.g.hud?.feed?.("Waiting for squad at the portal","#ffd24a");return;}
       this.practiceProps?.dispose();this.room.leave();
       for(const member of this.manifest)if(member.alive)this.transfer(member);

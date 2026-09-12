@@ -4410,7 +4410,7 @@ export class Game {
     this.hud?.updateCrosshair?.(this);
     this._aimFresh = false;
     if (this.player) this.world.updateOcclusion(this.player.pos, dt);   // towers between lens and player go glassy
-    if (this.news&&!this._threatRoom?.active) this.news.update(dt);   // the crew shoots BEFORE the main pass — their POV render hides under it
+    if (this.news) this.news.update(dt);   // the crew shoots BEFORE the main pass — their POV render hides under it
     this.world.render();
   }
 

@@ -381,6 +381,10 @@ export class NewsCrew {
   // ---------- per-frame ----------
   update(dt) {
     if (!this.enabled || this._finished) return;
+    if(this.g._threatRoom?.active){
+      this.grp.visible=false;this.t+=dt;const room=this.g._threatRoom,focus=this.g.player.pos.clone();const target=this.g.ms.threatLab?.meleeTrial?.target;if(target?.alive)focus.add(target.pos).multiplyScalar(.5);focus.y+=6;
+      this.cam.position.set(0,270,80);this.cam.lookAt(focus);this._shot={kind:'training-security'};room.securityCamera?.lookAt(focus);this._updateRecording(dt);return;
+    }
     this.grp.visible = true; // venue entry hides city scene children; the active crew owns this group
     this.t += dt;
     const g = this.g;
@@ -486,6 +490,11 @@ export class NewsCrew {
     // warm the news camera's shader path ONCE, at the top of the match — its POV compiles
     // programs the main camera never used, and a first-compile mid-fight is a visible hitch
     if (!this._warmed) { this._warmed = true; try { this._renderPOV(null); } catch (e) {} }
+    this._updateRecording(dt);
+  }
+
+  _updateRecording(dt) {
+    const g=this.g;
     if (this.rec) {
       this.rec.acc += dt;
       const int = 1 / this.rec.fps;

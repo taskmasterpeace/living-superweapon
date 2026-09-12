@@ -47,7 +47,18 @@ export class MeleeTrial {
   this.recording.bind([this.g.player,f]);
   this.g.hud?.feed?.(kind.toUpperCase()+' · '+trialLesson(kind,this.g.player.def),'#ffd24a');return f;
  }
+ startMachine(moving=false){
+  const f=this.start('stationary');this.machineMode=moving?'moving':'still';f.def={...f.def,name:'TRAINING MACHINE',metal:true};f.pos.set(140,0,-85);this.machineTime=0;
+  const machine=new THREE.Group();machine.name='training-machine';
+  const plate=new THREE.Mesh(new THREE.BoxGeometry(7,11,3),new THREE.MeshStandardMaterial({color:0x526879,metalness:.6,roughness:.5}));plate.position.y=8;machine.add(plate);
+  const bull=new THREE.Mesh(new THREE.TorusGeometry(2.2,.35,8,32),new THREE.MeshBasicMaterial({color:0xffd24a}));bull.position.set(0,9,1.6);machine.add(bull);
+  const base=new THREE.Mesh(new THREE.CylinderGeometry(3,4,2,12),new THREE.MeshStandardMaterial({color:0x283640}));base.position.y=1;machine.add(base);f.obj.add(machine);this.machine=machine;
+  for(const child of f.obj.children)child.visible=child===machine;this.recording.bind([this.g.player,f]);
+  this.g.hud?.feed?.('TARGET MACHINE · '+(moving?'LEFT / RIGHT motion':'STATIONARY')+' · native damage and armor · E at range station toggles mode','#ffd24a');return f;
+ }
  control(f,dt){
+  if(this.machine&&f===this.target){for(const child of f.obj.children)child.visible=child===this.machine;this.machineTime+=dt;if(f.alive&&!f.grabbedBy&&f.launchT<=0){const dx=this.machineMode==='moving'?Math.cos(this.machineTime*.6):0;f.faceDir(0,1);f.move(new THREE.Vector3(dx,0,0),dt,.5);}return;}
+
   if(!f.alive||f.grabbedBy||f.frozenT>0||f.staggerT>0||f.stunT>0||f.launchT>0){f.flyHeld=false;f.descendHeld=false;return;}
   this.elapsed+=dt;const dir=new THREE.Vector3().subVectors(this.g.player.pos,f.pos);dir.y=0;const d=dir.length();dir.normalize();f.faceDir(dir.x,dir.z);f.aim.copy(dir);f.aim3.copy(dir);
   this.g.melee.guard(f,this.kind==='guard');const move=new THREE.Vector3();
@@ -69,7 +80,7 @@ export class MeleeTrial {
    if(d>7&&!f.mstate)f.move(dir,dt,1);
   }
  }
- repeat(){return this.kind==='encounter'?this.startEncounter():this.start(this.kind||'stationary');}
+ repeat(){if(this.machine)return this.startMachine(this.machineMode==='moving');return this.kind==='encounter'?this.startEncounter():this.start(this.kind||'stationary');}
  capture(){if(this.target&&!this.review){
   const f=this.g.player;this.phaseKey??=[];
   for(const [actor,fighter]of [f,this.target].entries()){
@@ -132,9 +143,10 @@ export class MeleeTrial {
   const result=outcome?.guard==='broken'?'GUARD BROKEN':outcome?.guard==='blocked'?'BLOCK':blocked?'ABSORBED':opts.slam?'TERRAIN IMPACT':opts.meleeMove==='throw'?'THROW':'CONTACT';
   const label=(incoming?'YOU · ':'TARGET · ')+result+' · '+healthLost.toFixed(1)+' HP · '+energySpent.toFixed(1)+' guard energy';
   const record={trial:this.kind,time:this.elapsed,amount,blocked:!!blocked,hp:target.hp,playerKi:this.g.player.ki,healthLost,guardEnergySpent:energySpent,result,incoming,move:opts.meleeMove||'hit'};
+  if(this.machine&&healthLost>0)this.g.news?.highlight('bighit','TRAINING MACHINE · '+healthLost.toFixed(1)+' DAMAGE',{actor:opts.src,target,focus:target.pos,priority:1});
   this.records.push(record);if(this.records.length>100)this.records.shift();this.recording.mark(this.g.time,{...record,label,kind:'contact'});
   this.g.hud?.feed?.(label,'#ffd24a');
  }
- clear(){this.clearPreview();this.review?.close();this.review=null;this.recording.clear();const f=this.target;if(!f)return;retirePracticeActor(this.g,f);this.target=null;}
+ clear(){this.machine=null;this.machineMode=null;this.clearPreview();this.review?.close();this.review=null;this.recording.clear();const f=this.target;if(!f)return;retirePracticeActor(this.g,f);this.target=null;}
  dispose(){this.clear();}
 }
