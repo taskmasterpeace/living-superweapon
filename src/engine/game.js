@@ -2989,6 +2989,7 @@ export class Game {
   }
 
   onHit(target, amount, opts = {}, blocked = false, outcome = null) {
+    this.ms?.threatLab?.meleeTrial?.hit(target,amount,opts,blocked);
     if(this.modeId==='powerworld')presentMaterialHit(this,target,amount,opts,blocked,outcome);
     confirmCombatOutcome(this,target,opts,outcome);
     if(outcome?.healthLost>0&&!outcome.knockedOut&&!opts.dot)zombieSound(this,target,'hurt');
@@ -3789,12 +3790,12 @@ export class Game {
     }
     // flight + guard keys come from the active control scheme (Options → Control Scheme)
     p.flyHeld = inp.down(KM.up) || pad.down('fly');
-    if(soldierControls&&!modern){
+    if(p.def.archetype==='soldier'){
       if(inp.pressed('KeyZ')&&p.onFoot&&!p.flying&&!p.grabbedBy&&!p.guarding)p.prone=!p.prone;
       if(inp.pressed('KeyC')||p.flyHeld)p.prone=false;
     }
     p.descendHeld = (modern?(p.onFoot?inp.down('KeyC'):inp.down(KM.down)):(soldierControls ? (p.onFoot?inp.down('KeyC'):inp.down(KM.down)) : inp.down(KM.down))) || inp.down('ControlLeft') || inp.down('ControlRight') || pad.down('descend');
-    if(modern&&(inp.pressed('KeyZ')||pad.pressed('evade')))performEvade(p,Math.hypot(p.moveDir.x,p.moveDir.z)>.01?p.moveDir:p.aim,this);
+    if(modern&&pad.pressed('evade'))performEvade(p,Math.hypot(p.moveDir.x,p.moveDir.z)>.01?p.moveDir:p.aim,this);
     // THE JKA ROLL TRIGGER (aaa-02 §3.5 change 3): crouch PRESSED while already running on foot
     // fires the fighter's own evade kind ALONG THE RUN. Not a new move — a second door into
     // performEvade: a dodge you reach by already running is a different decision from one you reach
@@ -3954,6 +3955,7 @@ export class Game {
   }
 
   controlBot(f, dt) {
+    if(f._meleeTrial){f._meleeTrial.control(f,dt);return;}
     if(f._passengerTransport)return;
     // ⚠ MOOD CHANGES WHAT A BOT WANTS, NOT WHAT IT CAN DO. Anger pulls the preferred range in and
     // pushes aggression up; fear does the reverse; panic makes it erratic; a fleeing fighter simply

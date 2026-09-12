@@ -1,3 +1,4 @@
+import {MeleeTrial,MELEE_TRIALS} from './melee-trial.js';
 import * as THREE from 'three';
 import {SquadTransport} from './squad-transport.js';
 import {operationSound} from './operation-audio.js';
@@ -46,10 +47,17 @@ export class ThreatDeployment {
     this.handle=g.registerInteractable({id:'threat-lab-ready',pos:this.origin.clone().add(new THREE.Vector3(0,5,8)),r:20,label:'SQUAD DEPLOYMENT',verb:'READY',priority:3,enabled:f=>f===g.player&&this.state==='preparing',onUse:()=>this.ready()});
     this.reserveHandle=g.registerInteractable({id:'deployment-reserves',pos:this.destination.clone().add(new THREE.Vector3(0,5,0)),r:22,label:'SQUAD RESERVES',verb:'REINFORCE',priority:3,enabled:f=>f===g.player&&this.state==='field',onUse:()=>this.requestReplacement()});
     this.state='preparing';g.hud?.announce?.('THREAT LAB · Test your gear, then READY at the portal');
+    const trialPad=this.clearPad(this.origin.x+70,this.origin.z,18,[{x:this.origin.x,z:this.origin.z,r:28}]);
+    if(trialPad){
+      this.meleeTrial=new MeleeTrial(g,trialPad);
+      this.trialHandle=g.registerInteractable({id:'threat-melee-trial',pos:trialPad.clone().add(new THREE.Vector3(0,3,15)),r:12,label:'MELEE TRIAL · STATIONARY / RETREAT / GUARD / DODGE',verb:'NEXT TRIAL',priority:3,enabled:f=>f===g.player&&this.state==='preparing',onUse:()=>this.meleeTrial.start(MELEE_TRIALS[(this.meleeTrial.index+1)%MELEE_TRIALS.length])});
+      const marker=new THREE.Mesh(new THREE.TorusGeometry(8,.2,6,40),new THREE.MeshBasicMaterial({color:0xe9b83f}));marker.rotation.x=Math.PI/2;marker.position.copy(trialPad);marker.position.y+=.3;this.group.add(marker);
+    }
     const transportPad=this.clearPad(s.x-90,s.z+85,45,[{x:this.origin.x,z:this.origin.z,r:28}]);if(transportPad&&!stage.transport)stage.transport=new SquadTransport(stage,transportPad);
   }
   ready(){
     if(this.state!=='preparing')return;
+    this.meleeTrial?.dispose();
     this.queue=this.manifest.filter(f=>f!==this.g.player&&f.alive);this.state='deploying';
     // Preserve the spaced staging formation. Marching every waiting actor to a
     // fixed single-file slot creates opposing traffic as the queue advances.
@@ -100,6 +108,7 @@ export class ThreatDeployment {
     if(this.deployed.has(player)&&this.queue.every(f=>this.deployed.has(f))){this.state='field';this.queue=[];if(this.manifest.length>1&&this.manifest.every(f=>f.alive&&this.deployed.has(f)))operationSound(this.g,'op.squad.ready');for(const f of this.manifest)f._deploymentTarget=null;this.g.hud?.announce?.('SQUAD DEPLOYED');}
   }
   dispose(){
+    this.meleeTrial?.dispose();if(this.trialHandle)this.g.unregisterInteractable(this.trialHandle);
     for(const f of this.manifest||[])f._deploymentTarget=null;
     if(this.handle)this.g.unregisterInteractable(this.handle);
     if(this.reserveHandle)this.g.unregisterInteractable(this.reserveHandle);

@@ -2,7 +2,7 @@
 export const POWERWORLD_CONTROLS=Object.freeze({name:'POWERWORLD',wheel:'ability',digitsSwap:false,mouseMelee:false,independentCombat:true,
  up:'Space',down:'ControlLeft',guard:'KeyQ',item:'KeyX',strike:'KeyV',grab:'KeyE',fly:'KeyF',
  upLabel:'SPACE',downLabel:'CTRL',guardLabel:'Q / MOUSE4',itemLabel:'X',strikeLabel:'V',grabLabel:'E',flyLabel:'F',swapLabel:'F3',
- blurb:'V punch / hold heavy · Q guard · E interact / grab · C crouch · Z evade · TAB powers · I inventory'});
+ blurb:'V punch / hold heavy · Q guard · E interact / grab · C crouch · Z prone (soldier only) · double-tap direction dodge · TAB powers · I inventory'});
 
 // Acquisition and management are different gestures. Cancel/blur never throws.
 export function contextualGrab(game,f,input,dt){
