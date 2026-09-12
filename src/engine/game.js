@@ -1,4 +1,5 @@
 import {activatePowerUp} from './power-up.js';
+import {previewTraversalLeap} from './traversal-leap.js';
 import {refreshCombatPower} from '../core/power-up-state.js';
 import {ThreatDeployment} from './threat-deployment.js';
 import {ConvoyOperation} from './convoy-operation.js';
@@ -624,6 +625,14 @@ export class Game {
   updateThrowArc() {
     const arc = this.throwArc, p = this.player;
     if (!arc) return;
+    if(p?.alive&&this.running&&p._traversalLeap&&!p._traversalLeap.active){
+      if(!this._leapCue||this.time-(this._leapCueAt||0)>.08){this._leapCue=previewTraversalLeap(p,this.world);this._leapCueAt=this.time;}
+      const cue=this._leapCue;if(cue){arc.visible=true;this._arcRing.visible=cue.contact;this._arcRing.position.copy(cue.points.at(-1));this._arcRing.position.y+=.15;
+        this._arcDots.forEach((dot,i)=>{dot.visible=true;dot.position.copy(cue.points[Math.round(i*(cue.points.length-1)/(this._arcDots.length-1))]);dot.position.y+=.3;dot.material.color.set('#ffd24a');dot.material.opacity=.75;});
+        this.hud?.throwReach?.(`LEAP ${Math.round(cue.fraction*100)}% · ${Math.round(cue.cost)} ENERGY · RELEASE SPACE`);return;
+      }
+    }
+    if(this._leapCue){this._leapCue=null;this.hud?.throwReach?.('');}
     if(p?._personCarry?.friendly){arc.visible=false;this.hud?.throwReach?.('TEAMMATE · E RELEASE');this._carryCueShown=true;return;}
     const carryCue=p?.alive&&this.running&&!this.matchOver?personThrowCue(p,this):null;
     if(carryCue){

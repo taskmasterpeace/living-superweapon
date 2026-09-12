@@ -4,7 +4,7 @@ const b=await chromium.launch({headless:false}),c=await b.newContext({viewport:{
 try{
  await p.goto('http://127.0.0.1:5184/powerworld.html?hero=rage');await p.waitForTimeout(2500);await p.keyboard.press('Enter');await p.getByRole('button',{name:'Enter with squad',exact:true}).click();await p.waitForFunction(()=>window.PW?.game?.ms?.threatLab?.state==='preparing',{},{timeout:90000});
  await p.evaluate(()=>{const g=window.PW.game,f=g.player;f.pos.set(-600,g.world.heightAt(-600,-400),-400);f.vel.set(0,0,0);g.world._lookYaw=0;g.world._lookPitch=0;});await p.waitForTimeout(1000);
- const start=await p.evaluate(()=>window.PW.game.player.pos.toArray());await p.keyboard.down('w');await p.keyboard.down('Space');await p.waitForTimeout(750);await p.keyboard.up('Space');
+ const start=await p.evaluate(()=>window.PW.game.player.pos.toArray());await p.keyboard.down('w');await p.keyboard.down('Space');await p.waitForTimeout(750);await p.screenshot({path:out+'/rage-charge-preview.png'});await p.keyboard.up('Space');
  await p.waitForFunction(()=>window.PW.game.player._traversalLeap?.active,{},{timeout:10000});
  const launch=await p.evaluate(()=>{const f=window.PW.game.player;return {velocity:f.vel.toArray(),ki:f.ki,flying:f.flying,charge:f._traversalLeap.charge};});
  await p.waitForTimeout(1100);await p.screenshot({path:out+'/rage-leap.png'});await p.keyboard.up('w');await p.waitForTimeout(2500);
