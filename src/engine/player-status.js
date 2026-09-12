@@ -7,9 +7,9 @@ const resource=(value,max)=>{max=Math.max(1,finite(max,1));value=Math.max(0,Math
 export function playerStatus(p){
  const hp=resource(p.hp,p.maxHp),energy={...resource(p.ki,p.maxKi),infinite:!!p.energyInfinite},guard=resource(finite(p.guardMeter)*100,100),effects=[];
  const add=(id,label,glyph,t)=>{if(t>0)effects.push({id,label,glyph,remaining:Math.ceil(t)});};
- const condition=(id,label,glyph,t,hint)=>{if(t>0)effects.push({id,label,glyph,remaining:Math.ceil(t),hint,harmful:true});};
+ const condition=(id,label,glyph,t,hint,precision=1)=>{if(t>0)effects.push({id,label,glyph,remaining:Math.ceil(t*precision)/precision,hint,harmful:true});};
  const recovery=p.sheet?.ccRecover||1;
- condition('guard-break','Guard broken','defense',p.guardBreakT/recovery,'Guard unavailable · create distance');
+ condition('guard-break','Guard broken','defense',p.guardBreakT/recovery,'Guard unavailable · create distance',10);
  if(!(p.guardBreakT>0||p.sleepT>0||p.shockT>0||p.stunT>0||p.frozenT>0))condition('stagger','Staggered','threat',p.staggerT/recovery,'Recover before attacking');
  condition('sleep','Asleep','person',p.sleepT,'Damage wakes you');
  condition('shock','Shocked','energy',p.shockT,'Actions disabled');

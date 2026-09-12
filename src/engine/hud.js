@@ -1,4 +1,4 @@
-import {meleeEntryCue} from './melee-entry-cue.js';
+import {meleeEntryCue,meleeSequenceCue} from './melee-entry-cue.js';
 // WAR WORLD: ASCENDANTS — DOM HUD + character-select screen.
 import { CodexMixin } from './hudCodex.js';
 import {attackGuide,attackMatchup} from './combat-guide.js';
@@ -2174,7 +2174,7 @@ export class HUD {
     // ⚠ HOSTILE ONLY WHEN EXPLICITLY LOCKED (Robert 2026-07-28: "target doesn't turn off"). Lighting
     // the mark red on `aimHit==='foe'` meant it went red whenever ANY foe drifted under the centre —
     // which in a fight is always — so it never turned off. The T lock is the ONE toggle for the target.
-    const cue=el.dataset.aimMode?null:meleeEntryCue(g);if(cue){this._meleeCue.hidden=false;const label=cue.family.toUpperCase()+' · '+cue.range+'u';if(this._meleeCue.textContent!==label)this._meleeCue.textContent=label;}
+    const cue=el.dataset.aimMode?null:meleeEntryCue(g),sequence=el.dataset.aimMode?null:meleeSequenceCue(g);if(cue||sequence){this._meleeCue.hidden=false;const label=sequence||cue.family.toUpperCase()+' · '+cue.range+'u';if(this._meleeCue.textContent!==label)this._meleeCue.textContent=label;}
     const hot = !!locked;
     if (hot !== this._lkCls) { this._lkCls = hot; document.body.classList.toggle('pw-locked', hot); }
   }

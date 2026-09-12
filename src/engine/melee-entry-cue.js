@@ -8,3 +8,10 @@ export function meleeEntryCue(game){
  if(!target)return null;
  return {target,family:profile.family,range:profile.range};
 }
+
+// Sequence position describes the attempted strike, not a promised successful hit.
+export function meleeSequenceCue(game){
+ const f=game.player;if(game.modeId!=='powerworld'||!game.running||game.matchOver||!f?.alive||f.mKind!=='light'||!f.mstate||f.sleepT>0||f.downedT>0||f.staggerT>0||f.stunT>0||f.frozenT>0)return null;
+ const result=f._meleeBlocked?'BLOCKED':f.strikeHit?.size?'CONTACT':f.mstate==='recover'?'MISS':f.mstate==='startup'?'WIND-UP':'ACTIVE';
+ return 'STRIKE '+(f.strikeIdx+1)+'/3 · '+result;
+}
