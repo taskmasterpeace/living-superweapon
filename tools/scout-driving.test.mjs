@@ -53,7 +53,7 @@ test('native game-clock drive moves hull/cover/occupant together; brake and paus
  const f=await setup();try{
   assert.ok(f.convoy.driving);f.input('KeyJ');const start=f.v.mesh.position.clone();f.input('KeyW');f.step(90);
   assert.ok(f.v.mesh.position.distanceTo(start)>15);assert.equal(f.v.cover.x,f.v.mesh.position.x);assert.equal(f.v.cover.z,f.v.mesh.position.z);assert.ok(f.v.cover.blastBounds.containsPoint(f.v.mesh.position.clone().add(new T.Vector3(0,5,0))));
-  f.input('KeyW','KeyD');f.step(20);assert.ok(f.v.yaw>.25);f.input('Space');f.step(100);assert.ok(Math.abs(f.v.speed)<.01);
+  const yawBefore=f.v.yaw;f.input('KeyW','KeyD');f.step(20);assert.ok(f.v.yaw<yawBefore-.25,'D steers screen-right => yaw decreases');f.input('Space');f.step(100);assert.ok(Math.abs(f.v.speed)<.01);
   const stopped=f.v.mesh.position.clone();f.g.paused=true;f.input('KeyW');f.step(60);assert.deepEqual(f.v.mesh.position.toArray(),stopped.toArray());
  }finally{f.convoy.dispose();}
 });
@@ -83,4 +83,31 @@ test('entering cancels an existing native held beam and rejects dead actors',asy
   let ended=0;f.player.slots={lmb:{def:{type:'beam',cooldown:0},cd:0,active:{end(){ended++;}},charging:false}};
   f.input('KeyJ');assert.equal(ended,1);assert.equal(f.player.slots.lmb.active,null);
  }finally{f.convoy.dispose();}
+});
+// A variable-dt stepper: throttle/steer are set once by input() and persist, so
+// drive many frames at an arbitrary dt through the same real controller/convoy.
+function driveDt(f,dt,n){for(let i=0;i<n;i++){f.g.time+=dt;f.convoy.update();}}
+test('reset: exit and re-enter start from a clean stop with no carried momentum',async()=>{
+ const f=await setup();try{
+  f.input('KeyJ');f.input('KeyW','KeyD');f.step(60);
+  assert.ok(Math.abs(f.v.speed)>1,'built speed');assert.ok(Math.hypot(f.v.vx,f.v.vz)>1,'has world velocity');
+  f.input('KeyJ');                                   // exit
+  assert.equal(f.v.occupant,null);assert.equal(f.v.speed,0);assert.equal(f.v.vx,0);assert.equal(f.v.vz,0);assert.equal(f.v.yawVel,0);
+  f.g.input.justPressed.clear();f.player.pos.set(f.v.cover.x+f.v.cover.hx+3,4,f.v.cover.z);
+  f.input('KeyJ');                                   // re-enter the same hull
+  assert.equal(f.v.occupant,f.player);
+  assert.equal(f.v.speed,0,'re-enter starts stopped');assert.equal(f.v.vx,0);assert.equal(f.v.vz,0);assert.equal(f.v.yawVel,0);assert.equal(f.v.steerSmooth,0);
+ }finally{f.convoy.dispose();}
+});
+test('differing dt: a fixed throttle window travels a consistent distance at 30 vs 120 fps',async()=>{
+ const runs=[];
+ for(const dt of [1/30,1/120]){
+  const f=await setup();
+  f.convoy.driving.enter(f.v,f.player);const start={x:f.v.cover.x,z:f.v.cover.z};
+  f.g.input.keys=new Set(['KeyW']);f.convoy.driving.handleInput(f.g.input);   // hold W
+  driveDt(f,dt,Math.round(2/dt));
+  runs.push(Math.hypot(f.v.cover.x-start.x,f.v.cover.z-start.z));
+  f.convoy.dispose();
+ }
+ assert.ok(Math.abs(runs[0]-runs[1])<3,`2s of throttle is dt-stable: ${runs.map(r=>r.toFixed(2))}`);
 });
