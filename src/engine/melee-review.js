@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import {cloneReviewActor,applyReviewPose,reviewFrame} from './melee-recording.js';
-import {cinematicReviewShot} from './melee-review-camera.js';
+import {cinematicReviewShot,reviewGroupFrame} from './melee-review-camera.js';
 import {phaseLabel,reviewStates} from './melee-phase.js';
 import '../styles/melee-review.css';
 
@@ -31,7 +31,7 @@ export function openMeleeReview(game,recording,onClose=()=>{},{recover=false}={}
  for(const [id,label]of [['rear','Gameplay angle'],['front','Front'],['side','Side'],['overhead','Overhead'],['cinematic','Cinematic replay']]){
   const button=document.createElement('button');button.textContent=label;button.dataset.view=id;button.onclick=()=>{view=id;};dialog.querySelector('nav').append(button);
  }
- const focusLabel=document.createElement('label');focusLabel.textContent='Follow ';const subject=document.createElement('select');subject.setAttribute('aria-label','Review subject');subject.innerHTML='<option value="both">Both fighters</option><option value="0">You</option><option value="1">Target</option>';focusLabel.append(subject);dialog.querySelector('nav').append(focusLabel);
+ const focusLabel=document.createElement('label');focusLabel.textContent='Follow ';const subject=document.createElement('select');subject.setAttribute('aria-label','Review subject');subject.innerHTML='<option value="both">All fighters</option>'+copies.map((_,i)=>'<option value="'+i+'">'+(i===0?'You':i===1?'Target':'Teammate')+'</option>').join('');focusLabel.append(subject);dialog.querySelector('nav').append(focusLabel);
  function draw(now){
   if(closed)return;
   if(playing){time=Math.min(end,time+Math.min(.1,(now-last)/1000)*Number(speed.value));if(time===end){playing=false;play.textContent='Play';}}
@@ -39,10 +39,11 @@ export function openMeleeReview(game,recording,onClose=()=>{},{recover=false}={}
   copies.forEach((c,i)=>applyReviewPose(c.nodes,a.actors[i].pose,b.actors[i].pose,mix));
   const event=events.findLast(e=>e.time<=time&&e.kind==='contact');
   const separation=copies[0].model.position.distanceTo(copies[1].model.position);
-  const followImpact=view==='cinematic'&&subject.value==='both'&&separation>40&&event;
+  const followImpact=view==='cinematic'&&subject.value==='both'&&copies.length===2&&separation>40&&event;
   if(followImpact)center.copy(copies[event.incoming?0:1].model.position);
-  else if(subject.value==='both')center.copy(copies[0].model.position).add(copies[1].model.position).multiplyScalar(.5);else center.copy(copies[Number(subject.value)].model.position);center.y+=5;
-  const distance=followImpact?28:subject.value==='both'?Math.max(24,separation*1.1+14):22;
+  else if(subject.value==='both'){center.set(0,0,0);for(const c of copies)center.add(c.model.position);center.multiplyScalar(1/copies.length);}else center.copy(copies[Number(subject.value)].model.position);center.y+=5;
+  let distance=followImpact?28:subject.value==='both'?Math.max(24,separation*1.1+14):22;
+  if(subject.value==='both'&&copies.length>2){const group=reviewGroupFrame(copies.map(c=>c.model.position),camera.fov,stage.clientWidth/Math.max(1,stage.clientHeight));center.fromArray(group.center);distance=group.distance;}
   const shot=view==='cinematic'?cinematicReviewShot(events,time,start):null;
   stage.dataset.shot=shot?String(shot.index):'continuous';
   offset.set(...(shot?shot.offset:view==='front'?[.4,.35,1]:view==='side'?[1,.25,0]:view==='overhead'?[0,1,.015]:[.4,.3,-1])).normalize().multiplyScalar(distance);
@@ -50,8 +51,8 @@ export function openMeleeReview(game,recording,onClose=()=>{},{recover=false}={}
   const width=stage.clientWidth,height=stage.clientHeight;if(renderer.domElement.width!==Math.round(width*renderer.getPixelRatio())||renderer.domElement.height!==Math.round(height*renderer.getPixelRatio())){renderer.setSize(width,height,false);camera.aspect=width/height;camera.updateProjectionMatrix();}
   renderer.render(scene,camera);slider.value=time-start;dialog.querySelector('[data-clock]').textContent=`${(time-start).toFixed(2)} / ${(end-start).toFixed(2)} s`;
   const air=a.actors.findIndex(f=>f.airControl==='uncontrolled');
-  const states=reviewStates(a,events,time).map((f,i)=>`${i?'Target':'You'}: ${phaseLabel(f.phase)}${f.remaining>0?' ('+Math.round(f.remaining*1000)+'ms recorded)':''} · HP ${f.hp.toFixed(1)} · energy ${f.ki.toFixed(1)}`).join('     /     ');
-  dialog.querySelector('[data-readout]').textContent=(followImpact?'CAMERA FOLLOWING IMPACT · ':'')+(air>=0?`${air?'Target':'You'}: UNCONTROLLED AIRBORNE · `:'')+states+(event?' — Last hit: '+event.label:'');
+  const states=reviewStates(a,events,time).map((f,i)=>`${i===2?'Teammate':i?'Target':'You'}: ${phaseLabel(f.phase)}${f.remaining>0?' ('+Math.round(f.remaining*1000)+'ms recorded)':''} · HP ${f.hp.toFixed(1)} · energy ${f.ki.toFixed(1)}`).join('     /     ');
+  dialog.querySelector('[data-readout]').textContent=(followImpact?'CAMERA FOLLOWING IMPACT · ':'')+(air>=0?`${air===2?'Teammate':air?'Target':'You'}: UNCONTROLLED AIRBORNE · `:'')+states+(event?' — Last hit: '+event.label:'');
   for(const button of dialog.querySelectorAll('[data-view]'))button.setAttribute('aria-pressed',String(button.dataset.view===view));
   raf=requestAnimationFrame(draw);
  }

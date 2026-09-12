@@ -155,7 +155,7 @@ export class MeleeTrial {
   const healthLost=outcome?.healthLost??amount,energySpent=outcome?.guardEnergySpent??0;
   const result=outcome?.guard==='broken'?'GUARD BROKEN':outcome?.guard==='blocked'?'BLOCK':blocked?'ABSORBED':opts.slam?'TERRAIN IMPACT':opts.meleeMove==='throw'?'THROW':'CONTACT';
   const label=(incoming?'YOU · ':target===this.ally?'TEAMMATE · ':'TARGET · ')+result+' · '+healthLost.toFixed(1)+' HP · '+energySpent.toFixed(1)+' guard energy';
-  const record={trial:this.kind,time:this.elapsed,amount,blocked:!!blocked,hp:target.hp,playerKi:this.g.player.ki,healthLost,guardEnergySpent:energySpent,result,incoming,move:opts.meleeMove||'hit'};
+  const record={trial:this.kind,time:this.elapsed,amount,blocked:!!blocked,hp:target.hp,playerKi:this.g.player.ki,healthLost,guardEnergySpent:energySpent,result,incoming,actor:incoming?0:target===this.ally?2:1,move:opts.meleeMove||'hit'};
   if(this.machine)this.machineLastHit=record;this.g._threatRoom?.rangeDrill?.contact(target,opts.src,healthLost);
   if(this.machine&&healthLost>0)this.g.news?.highlight('bighit','TRAINING MACHINE · '+healthLost.toFixed(1)+' DAMAGE',{actor:opts.src,target,focus:target.pos,priority:1});
   this.records.push(record);if(this.records.length>100)this.records.shift();this.recording.mark(this.g.time,{...record,label,kind:'contact'});

@@ -27,3 +27,9 @@ test('trial captures both actors phase changes and native remaining timers',()=>
   t.repeat();x.g.time+=.05;t.capture();assert.ok(t.recording.events.some(e=>e.actor===1&&e.phase==='ready'));t.dispose();
  }finally{x.close();}
 });
+
+test('team contact updates teammate health rather than the opponent',()=>{
+ const frame={time:1,actors:[{hp:100,ki:90},{hp:100,ki:60},{hp:100,ki:80}]};
+ const result=reviewStates(frame,[{time:1.01,kind:'contact',actor:2,hp:72,playerKi:90}],1.01);
+ assert.equal(result[1].hp,100);assert.equal(result[2].hp,72);assert.equal(frame.actors[2].hp,100);
+});

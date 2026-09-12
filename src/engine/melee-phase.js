@@ -22,7 +22,7 @@ export function reviewStates(frame,events,time){
   if(e.time<frame.time||e.time>time)continue;
   if(e.kind==='phase'&&actors[e.actor])Object.assign(actors[e.actor],{phase:e.phase,remaining:e.remaining});
   if(e.kind==='contact'){
-   const target=actors[e.incoming?0:1];if(target&&Number.isFinite(e.hp))target.hp=e.hp;
+   const target=actors[e.actor??(e.incoming?0:1)];if(target&&Number.isFinite(e.hp))target.hp=e.hp;
    if(actors[0]&&Number.isFinite(e.playerKi))actors[0].ki=e.playerKi;
   }
  }
