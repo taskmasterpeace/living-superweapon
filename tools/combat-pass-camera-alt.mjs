@@ -10,6 +10,7 @@ try{
  await page.goto(process.env.PW_TEST_URL||'http://127.0.0.1:5182/powerworld.html',{waitUntil:'domcontentloaded',timeout:90000});await page.locator('#hSelect.on').waitFor();await page.waitForTimeout(1500);await page.keyboard.press('Enter');await page.getByRole('button',{name:'Enter with squad',exact:true}).click();
  await page.waitForFunction(()=>window.PW?.game?.ms?.threatLab?.state==='preparing',{}, {timeout:90000});await page.waitForTimeout(1000);await read('01-normal-spawn');
  await page.mouse.click(720,450,{button:'middle'});await page.waitForFunction(()=>!!document.pointerLockElement);await page.waitForTimeout(250);await page.keyboard.down('Space');await page.waitForTimeout(3500);await page.keyboard.up('Space');await page.waitForTimeout(1200);await read('02-hover');
+ await page.mouse.move(720,610,{steps:10});await page.keyboard.down('w');await page.waitForTimeout(650);await read('02b-forward-dive');await page.keyboard.up('w');await page.mouse.move(720,450,{steps:10});await page.waitForTimeout(300);
  await page.keyboard.down('w');await page.waitForTimeout(1000);await read('03-travel');
  await page.keyboard.down('AltLeft');await page.mouse.move(1100,400,{steps:12});await page.waitForTimeout(500);await read('04-alt-side');
  await page.mouse.move(1100,650,{steps:10});await page.waitForTimeout(500);await read('05-alt-down');
