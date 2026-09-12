@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import {cloneReviewActor,applyReviewPose,reviewFrame} from './melee-recording.js';
 import {cinematicReviewShot} from './melee-review-camera.js';
+import {phaseLabel,reviewStates} from './melee-phase.js';
 import '../styles/melee-review.css';
 
 export function openMeleeReview(game,recording,onClose=()=>{},{recover=false}={}){
@@ -49,7 +50,8 @@ export function openMeleeReview(game,recording,onClose=()=>{},{recover=false}={}
   const width=stage.clientWidth,height=stage.clientHeight;if(renderer.domElement.width!==Math.round(width*renderer.getPixelRatio())||renderer.domElement.height!==Math.round(height*renderer.getPixelRatio())){renderer.setSize(width,height,false);camera.aspect=width/height;camera.updateProjectionMatrix();}
   renderer.render(scene,camera);slider.value=time-start;dialog.querySelector('[data-clock]').textContent=`${(time-start).toFixed(2)} / ${(end-start).toFixed(2)} s`;
   const air=a.actors.findIndex(f=>f.airControl==='uncontrolled');
-  dialog.querySelector('[data-readout]').textContent=(followImpact?'CAMERA FOLLOWING IMPACT · ':'')+(air>=0?`${air?'Target':'You'}: UNCONTROLLED AIRBORNE · `:'')+(event?event.label:a.actors.map((f,i)=>`${i?'Target':'You'}: ${f.phase} · HP ${f.hp.toFixed(1)} · energy ${f.ki.toFixed(1)}`).join('     /     '));
+  const states=reviewStates(a,events,time).map((f,i)=>`${i?'Target':'You'}: ${phaseLabel(f.phase)}${f.remaining>0?' ('+Math.round(f.remaining*1000)+'ms recorded)':''} · HP ${f.hp.toFixed(1)} · energy ${f.ki.toFixed(1)}`).join('     /     ');
+  dialog.querySelector('[data-readout]').textContent=(followImpact?'CAMERA FOLLOWING IMPACT · ':'')+(air>=0?`${air?'Target':'You'}: UNCONTROLLED AIRBORNE · `:'')+states+(event?' — Last hit: '+event.label:'');
   for(const button of dialog.querySelectorAll('[data-view]'))button.setAttribute('aria-pressed',String(button.dataset.view===view));
   raf=requestAnimationFrame(draw);
  }

@@ -4,6 +4,7 @@ import {ROSTER} from '../data/characters.js';
 import {performEvade} from './abilities.js';
 import {MeleeRecording} from './melee-recording.js';
 import {openMeleeReview} from './melee-review.js';
+import {meleePhase,phaseLabel} from './melee-phase.js';
 export function meleeLesson(def){
  const combo=hasStrike(def,'jab')||hasStrike(def,'cross');
  return (combo?'V tap: punch; repeat for combo':'V tap: heavy slam')+' · hold/release V: charge heavy · Q: frontal guard · E: grab · double-tap direction: dodge';
@@ -51,8 +52,10 @@ export class MeleeTrial {
  }
  repeat(){return this.start(this.kind||'stationary');}
  capture(){if(this.target&&!this.review){
-  const f=this.g.player,phase=f.mstate||f.grabState||(f.staggerT>0?'staggered':f.strikeCd>0?'cooldown':f.guarding?'guard':'ready');
-  if(phase!==this.phaseKey){this.phaseKey=phase;this.recording.mark(this.g.time,{label:({recover:'Recovery',active:'Strike active',clinch:'Holding target',startup:'Wind-up',staggered:'Staggered',cooldown:'Attack cooldown',guard:'Guard raised',ready:'Ready'})[phase]||phase,kind:'phase'});}
+  const f=this.g.player;this.phaseKey??=[];
+  for(const [actor,fighter]of [f,this.target].entries()){
+   const state=meleePhase(fighter);if(state.phase!==this.phaseKey[actor]){this.phaseKey[actor]=state.phase;this.recording.mark(this.g.time,{label:`${actor?'Target':'You'} · ${phaseLabel(state.phase)}`,kind:'phase',actor,...state});}
+  }
   this.recording.capture(this.g.time);
   if(this.canRecoverKO()&&f.koT>=1&&typeof document!=='undefined')this.openReview();
  }}
