@@ -53,7 +53,7 @@ test('native game-clock drive moves hull/cover/occupant together; brake and paus
  const f=await setup();try{
   assert.ok(f.convoy.driving);f.input('KeyJ');const start=f.v.mesh.position.clone();f.input('KeyW');f.step(90);
   assert.ok(f.v.mesh.position.distanceTo(start)>15);assert.equal(f.v.cover.x,f.v.mesh.position.x);assert.equal(f.v.cover.z,f.v.mesh.position.z);assert.ok(f.v.cover.blastBounds.containsPoint(f.v.mesh.position.clone().add(new T.Vector3(0,5,0))));
-  f.input('KeyW','KeyD');f.step(20);assert.ok(f.v.yaw>.25);f.input('Space');f.step(100);assert.ok(Math.abs(f.v.speed)<.01);
+  const yawBefore=f.v.yaw;f.input('KeyW','KeyD');f.step(20);assert.ok(f.v.yaw<yawBefore-.25,'D steers screen-right => yaw decreases');f.input('Space');f.step(100);assert.ok(Math.abs(f.v.speed)<.01);
   const stopped=f.v.mesh.position.clone();f.g.paused=true;f.input('KeyW');f.step(60);assert.deepEqual(f.v.mesh.position.toArray(),stopped.toArray());
  }finally{f.convoy.dispose();}
 });

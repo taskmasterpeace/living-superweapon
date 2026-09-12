@@ -81,6 +81,15 @@ test('steering is speed-sensitive: tighter at a moderate speed than at top', ()=
  assert.ok(Math.abs(mod.rate)>Math.abs(fast.rate)*1.2,`tighter turn at moderate speed: ${Math.abs(mod.rate).toFixed(3)} > 1.2x ${Math.abs(fast.rate).toFixed(3)}`);
 });
 
+test('steering matches the screen: D (right,+1) turns the nose to world -X, A (left,-1) to +X', ()=>{
+ // Travel is x=sin(yaw), z=cos(yaw); screen-right under the chase cam is world -X,
+ // so steer-right MUST decrease yaw (move the nose toward -X). Guards the inversion bug.
+ const d=S(); sim(d,{throttle:1},1/60,1); sim(d,{throttle:1,steer:1},1/60,0.5);
+ assert.ok(d.yawVel<0 && Math.sin(d.yaw)<0, `D must steer toward -X (screen-right): yawVel ${d.yawVel.toFixed(3)}, noseX ${Math.sin(d.yaw).toFixed(3)}`);
+ const a=S(); sim(a,{throttle:1},1/60,1); sim(a,{throttle:1,steer:-1},1/60,0.5);
+ assert.ok(a.yawVel>0 && Math.sin(a.yaw)>0, `A must steer toward +X (screen-left): yawVel ${a.yawVel.toFixed(3)}, noseX ${Math.sin(a.yaw).toFixed(3)}`);
+});
+
 test('a standing scout cannot pivot in place (roll authority floor)', ()=>{
  const s=S();const y0=s.yaw;sim(s,{throttle:0,steer:1},1/60,0.5);
  assert.ok(Math.abs(s.yaw-y0)<0.12,`near-zero heading change at rest, got ${(s.yaw-y0).toFixed(3)}`);

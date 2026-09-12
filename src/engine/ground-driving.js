@@ -43,7 +43,7 @@ export const SCOUT_DRIVE={
  yawCapK:1.2,        // yaw velocity cap = turnRate*this
  rollFloor:0.05,     // a wheeled scout barely steers at a standstill; authority ramps with roll
  rollSpan:0.26,      // fraction of top speed at which roll authority reaches 1 (~17 u/s)
- lateralGrip:4.6,    // lateral velocity bleed (1/s): LOWER = real weight — the hull leans and slides a bit through a hard turn, then recovers
+ lateralGrip:8.0,    // lateral velocity bleed (1/s): higher = planted/predictable (a touch of lag, not a drift). Lower for a looser slide.
  stopEps:0.08,       // below this forward speed with no throttle, snap to rest
  maxDt:0.1,          // clamp a hitching frame (the sim honors nothing slower anyway)
 };
@@ -104,7 +104,11 @@ export function stepGroundDrive(state,intent,dt,tune=SCOUT_DRIVE){
 
  const roll=clamp(Math.abs(forward)/(top*t.rollSpan),t.rollFloor,1);
  const reverse=forward<-0.05?-1:1;                        // backing up inverts the wheel
- const wantedYaw=state.steerSmooth*t.turnRate*roll*reverse;
+ // ⚠ Steering sign: travel uses x=sin(yaw), z=cos(yaw), so +yaw moves the nose to
+ // world +X — but under the chase camera screen-RIGHT is world -X. So steer-right
+ // (D, steer>0) must DECREASE yaw. The negation makes A/D match the screen. (This
+ // was inverted in the original controller too; verified live against the camera.)
+ const wantedYaw=-state.steerSmooth*t.turnRate*roll*reverse;
  state.yawVel=approach(state.yawVel,wantedYaw,t.yawResponse*sdt);
  if(Math.abs(steerIn)<0.001)state.yawVel*=Math.exp(-t.yawDamping*sdt);
  const yawCap=t.turnRate*t.yawCapK;
