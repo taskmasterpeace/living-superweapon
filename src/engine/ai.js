@@ -296,7 +296,7 @@ export class AI {
       }
     }
     if(hadAction)return out;
-    if (lowHp) {
+    if (lowHp || b.powerUp?.def.timeField && d <= b.powerUp.def.timeField.radius*.85) {
       const form=b.powerUp;
       if(form&&form.cd<=0&&form.activeT<=0&&b.ki>=(form.def.cost||0)&&slotUnlocked(b,form.sourceSlot||'_powerUp')){
         out.movementGear=2;this.gcd=1;return out;

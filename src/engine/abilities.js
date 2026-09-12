@@ -578,6 +578,7 @@ export const TYPES = {
       pay(c, def, st);
       if(c.powerUp&&st!==c.powerUp)c.powerUp.activeT=0;
       // the three Tier-2 buff lanes ride the same activation
+      if(def.timeField)g.timeFields.add(c.pos,def.timeField.radius,def.timeField.dur||def.dur,def.timeField.scale,c,{follow:true,color:def.color});
       if (def.siphonAura) c._siphon = { r: def.siphonAura.r || 22, dps: def.siphonAura.dps || 9, t: def.dur || 6, color: def.color || '#8a1d24' };
       if (def.hpPerSec) c._bloodBuff = { hps: def.hpPerSec, t: def.dur || 6 };
       if (def.riposte) c._riposte = { t: def.riposte.window || def.dur || 2.2, dmg: def.riposte.dmg || 26, used: false };

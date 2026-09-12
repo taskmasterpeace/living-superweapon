@@ -241,15 +241,16 @@ export function updateSize(f, dt, game) {
 
 // ============================================================================================
 // 3 · TIME DILATION FIELD — a local time-scale bubble.
-// The world already has slow-motion hooks; this makes them SPATIAL. Inside the sphere everything
-// but the caster's side runs slow; crossing the boundary is readable because the trail stretches.
+// Fighter controllers and simulation consume this spatial clock; the caster is exempt.
+// Ordnance and world-owned effects still need their own collision-safe clock integration.
 // ============================================================================================
 export class TimeFields {
   constructor(game) { this.g = game; this.list = []; }
-  add(pos, r, dur, scale, src) {
-    const f = { x: pos.x, y: pos.y, z: pos.z, r, t: dur, dur, scale, src, mesh: null };
+  add(pos, r, dur, scale, src, options = {}) {
+    const f = { x: pos.x, y: pos.y, z: pos.z, r, t: dur, dur, scale: Math.max(.15,Math.min(1,scale)), src, follow: !!options.follow, mesh: null };
+    if(f.follow){for(const old of this.list)if(old.src===src&&old.follow)old.t=0;}
     const geo = new THREE.SphereGeometry(r, 18, 12);
-    const mat = new THREE.MeshBasicMaterial({ color: '#9fd0ff', transparent: true, opacity: 0.1, depthWrite: false, side: THREE.DoubleSide });
+    const mat = new THREE.MeshBasicMaterial({ color: options.color || '#9fd0ff', transparent: true, opacity: 0.1, depthWrite: false, side: THREE.DoubleSide });
     f.mesh = new THREE.Mesh(geo, mat);
     f.mesh.position.set(pos.x, pos.y, pos.z);
     this.g.scene.add(f.mesh);
@@ -261,8 +262,9 @@ export class TimeFields {
   scaleFor(fighter) {
     let s = 1;
     for (const f of this.list) {
-      if (fighter === f.src) continue;                 // the caster is who this is FOR
-      const dx = fighter.pos.x - f.x, dy = fighter.pos.y - f.y, dz = fighter.pos.z - f.z;
+      if (f.t<=0 || f.follow&&!f.src?.alive || fighter === f.src) continue;                 // the caster is who this is FOR
+      const center=f.follow?f.src.pos:f;
+      const dx = fighter.pos.x - center.x, dy = fighter.pos.y - center.y, dz = fighter.pos.z - center.z;
       if (dx * dx + dy * dy + dz * dz <= f.r * f.r) s = Math.min(s, f.scale);
     }
     return s;
@@ -270,8 +272,9 @@ export class TimeFields {
   update(dt) {
     for (let i = this.list.length - 1; i >= 0; i--) {
       const f = this.list[i]; f.t -= dt;
+      if(f.follow){if(!f.src?.alive)f.t=0;else{f.x=f.src.pos.x;f.y=f.src.pos.y;f.z=f.src.pos.z;f.mesh.position.set(f.x,f.y,f.z);}}
       const k = Math.max(0, f.t / f.dur);
-      if (f.mesh) { f.mesh.material.opacity = 0.06 + k * 0.09; f.mesh.scale.setScalar(0.9 + 0.1 * Math.sin(this.g.time * 3)); }
+      if (f.mesh) { f.mesh.material.opacity = 0.012 + k * 0.025; f.mesh.scale.setScalar(1); }
       // suspended matter: dust hangs inside the bubble
       if (Math.random() < dt * 12) {
         const a = Math.random() * Math.PI * 2, rr = f.r * Math.sqrt(Math.random());

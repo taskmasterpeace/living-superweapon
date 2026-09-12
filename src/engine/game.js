@@ -4264,9 +4264,10 @@ export class Game {
     // control: P1 (keyboard+mouse), P2+ (gamepad), everyone else = AI
     // View input and the zero-time eye solve ran once above, before any control.
     this.updateAudioListener();
-    this.controlPlayer(dt, inputDt);
-    for (let i = 1; i < this.humans.length; i++) this.controlPad(this.humans[i].fighter, dt);
-    for (const f of this.entities) { if (this.isHuman(f)) continue; if (f.remote) this.controlRemote(f, dt); else this.controlBot(f, dt); }
+    for(const f of this.entities)f._localTimeScale=this.timeFields.scaleFor(f);
+    this.controlPlayer(dt*(this.player?._localTimeScale??1), inputDt);
+    for (let i = 1; i < this.humans.length; i++) this.controlPad(this.humans[i].fighter, dt*(this.humans[i].fighter._localTimeScale??1));
+    for (const f of this.entities) { if (this.isHuman(f)) continue; if (f.remote) this.controlRemote(f, dt*(f._localTimeScale??1)); else this.controlBot(f, dt*(f._localTimeScale??1)); }
 
     this.melee.beginContactFrame();
     this.beginBodyContactFrame();
@@ -4285,7 +4286,7 @@ export class Game {
           }
         }
       }
-      f.update(dt, this);
+      f.update(dt*(f._localTimeScale??1), this);
       updateFlightSense(f,dt,this);
     }
     this.resolveBodies();
