@@ -2,7 +2,7 @@ import {chromium} from 'playwright';
 import {mkdir,writeFile} from 'node:fs/promises';
 import {meleeApproach} from '../src/data/melee-approaches.js';
 import {captureProvenance} from './capture-provenance.mjs';
-const out='artifacts/marketing/combat-pass-2026-09-12/ai-defense-'+(process.argv[2]||'ready');await mkdir(out,{recursive:true});
+const out=(process.env.PW_CAPTURE_ROOT||'artifacts/marketing/combat-pass-2026-09-12')+'/ai-defense-'+(process.argv[2]||'ready');await mkdir(out,{recursive:true});
 const sourceBefore=await captureProvenance();await writeFile(out+'/source-before.json',JSON.stringify(sourceBefore,null,2));
 const scenario=process.argv[3]||'grab',opponent=process.argv.find(a=>a.startsWith('--opponent='))?.split('=')[1]||(process.argv.includes('--air')?'kano':'webline');
 const browser=await chromium.launch({headless:false}),context=await browser.newContext({viewport:{width:1440,height:900},recordVideo:{dir:out}}),page=await context.newPage(),errors=[],rows=[];
@@ -11,7 +11,7 @@ page.on('pageerror',e=>errors.push(e.message));
 let mx=720,my=450,failure=null,lockRequested=false,lastDodge=-10;
 const read=()=>page.evaluate(()=>{const g=window.PW.game,p=g.player,v=g.entities.find(e=>e!==p&&e.team!==p.team&&e.alive);return {time:g.time,camera:g.world.camera.position.toArray(),lock:g.hardLock?.id??null,yaw:g.world._lookYaw,pitch:g.world._lookPitch,sens:g.world._lookSens,p:{id:p.id,hp:p.hp,ki:p.ki,evadeCd:p.evadeCd,invuln:p.invuln,velocity:p.vel.toArray(),pos:p.pos.toArray(),aim:p.aim3.toArray(),strike:p.mstate,charge:p.meleeCharge,cd:p.strikeCd,stagger:p.staggerT,alive:p.alive,grab:p.grabbing?.id,grabState:p.grabState,carry:!!p._personCarry,melee:p._tabMelee,combo:p.combo},v:v&&{id:v.id,hp:v.hp,pos:v.pos.toArray(),velocity:v.vel.toArray(),strike:v.mstate,approach:v._meleeMotion&&{family:v._meleeMotion.family,distance:v._meleeMotion.approachDistance,origin:v._meleeMotion.approachOrigin?.toArray()},creditedTo:v.lastHitBy?.id,impact:v._personThrow?.impacted,grabbed:!!v.grabbedBy},projectiles:g.projectiles.list.length};});
 try{
- await page.goto('http://127.0.0.1:5182/powerworld.html');await page.locator('#hSelect.on').waitFor();await page.waitForTimeout(1500);
+ await page.goto(process.env.PW_TEST_URL||'http://127.0.0.1:5182/powerworld.html',{waitUntil:'domcontentloaded',timeout:90000});await page.locator('#hSelect.on').waitFor();await page.waitForTimeout(1500);
  await page.keyboard.press('Escape');await page.locator('[data-pick="foe"]').click();await page.locator('#pwRoster [data-id="'+opponent+'"]').click();await page.locator('#pwAi [data-ai="0.85"]').click();await page.locator('#pwGo').click();
  await page.waitForFunction(()=>window.PW?.game?.running&&window.PW.game.time>.5,{}, {timeout:90000});await page.mouse.click(mx,my,{button:'middle'});
  if(process.argv.includes('--audio'))await page.evaluate(()=>{
@@ -52,11 +52,11 @@ try{
    }else await page.keyboard.down('q');
    await page.waitForTimeout(25);continue;
   }
-  if(scenario==='dodge'&&lockRequested){
+  if(scenario==='dodge'&&lockRequested&&distance<28){
    await page.keyboard.up('w');await page.keyboard.up('ShiftLeft');
    if(s.v.strike==='startup'&&s.time-lastDodge>1.5){
     lastDodge=s.time;await page.keyboard.down('d');await page.waitForTimeout(20);await page.keyboard.press('z');
-    rows.push({...await read(),phase:'evade-input'});await page.waitForTimeout(230);await page.keyboard.up('d');
+    rows.push({...await read(),phase:'evade-input'});await page.waitForTimeout(450);await page.keyboard.up('d');
     rows.push({...await read(),phase:'evade-result'});await page.screenshot({path:out+'/evade-'+i+'.png'});
    }
    await page.waitForTimeout(35);continue;
