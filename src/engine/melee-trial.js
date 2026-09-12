@@ -88,13 +88,13 @@ export class MeleeTrial {
   const a=this.attempt;a.result=a.contacts?'contact':'no contact';this.records.push(a);if(this.records.length>100)this.records.shift();
   this.g.hud?.feed?.(a.result.toUpperCase()+' · '+a.kind.toUpperCase()+' · '+(a.approach?'approach engaged':'no approach')+' · start '+a.distance.toFixed(1)+'u · recovery '+Math.round(a.recovery*1000)+'ms','#ffd24a');this.attempt=null;
  }
- grabContact(holder,victim){if(holder!==this.g.player||victim!==this.target)return;this.recording.mark(this.g.time,{label:'Grab connected',kind:'grab'});this.g.hud?.feed?.('GRAB CONNECTED · tap V: body blow · hold V: slam · E again: aimed throw · act before the hold expires','#ffd24a');}
+ grabContact(holder,victim){if(holder!==this.g.player||victim!==this.target)return;this.recording.mark(this.g.time,{label:'Grab connected',kind:'grab'});this.g.hud?.feed?.('GRAB CONNECTED · tap V: body blow · hold V: slam · move/fly: carry · hold E then release: aimed throw · tap E: set down/drop','#ffd24a');}
  hit(target,amount,opts,blocked,outcome=null){
   const incoming=target===this.g.player&&opts.src===this.target;
   if(!incoming&&target!==this.target)return;
   if(this.attempt&&opts.src===this.g.player)this.attempt.contacts++;
   const healthLost=outcome?.healthLost??amount,energySpent=outcome?.guardEnergySpent??0;
-  const result=outcome?.guard==='broken'?'GUARD BROKEN':outcome?.guard==='blocked'?'BLOCK':blocked?'ABSORBED':'CONTACT';
+  const result=outcome?.guard==='broken'?'GUARD BROKEN':outcome?.guard==='blocked'?'BLOCK':blocked?'ABSORBED':opts.slam?'TERRAIN IMPACT':opts.meleeMove==='throw'?'THROW':'CONTACT';
   const label=(incoming?'YOU · ':'TARGET · ')+result+' · '+healthLost.toFixed(1)+' HP · '+energySpent.toFixed(1)+' guard energy';
   const record={trial:this.kind,time:this.elapsed,amount,blocked:!!blocked,hp:target.hp,playerKi:this.g.player.ki,healthLost,guardEnergySpent:energySpent,result,incoming,move:opts.meleeMove||'hit'};
   this.records.push(record);if(this.records.length>100)this.records.shift();this.recording.mark(this.g.time,{...record,label,kind:'contact'});

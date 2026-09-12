@@ -29,6 +29,16 @@ test('practice restores the same player without issuing stock or refilling consu
  }finally{x.close();}
 });
 
+test('review distinguishes throw damage from subsequent terrain impact',()=>{
+ const x=mainCombatFixture({mode:'powerworld'});try{
+  const t=new MeleeTrial(x.g,new THREE.Vector3(0,0,15)),f=t.start();
+  t.hit(f,10,{src:x.p,meleeMove:'throw'},false,{healthLost:10});
+  t.hit(f,32,{src:x.p,slam:true},false,{healthLost:32});
+  assert.deepEqual(t.records.map(r=>r.result),['THROW','TERRAIN IMPACT']);
+  assert.deepEqual(t.records.map(r=>r.healthLost),[10,32]);t.dispose();
+ }finally{x.close();}
+});
+
 test('practice refill is unavailable in the field, during active powers, or after KO',()=>{
  const x=mainCombatFixture({mode:'powerworld'});try{
   const t=new MeleeTrial(x.g,new THREE.Vector3(0,0,15)),target=t.start();x.p.hp=12;
