@@ -58,6 +58,7 @@ import { animateCape, syncHeadCover, bendArm } from './hero-rig.js';
 import { updateLimbSurfaces } from './hero-limb-surface.js';
 import {updateHeroSkin,disposeHeroSkin} from './hero-skin.js';
 import { queueHitReaction, restoreHitReaction, animateHitReaction } from './hit-reaction.js';
+import {restoreLostControlPose,animateLostControlPose} from './lost-control-pose.js';
 import {createNaniteState,advanceNanites,resetNanites,retireNanites,damageNanite} from './nanite-state.js';
 import {claimNaniteContact} from './nanite-forearms.js';
 import {presentNanites} from './nanite-forearms.js';
@@ -554,7 +555,7 @@ export class Fighter {
     // A held pressure brace also owns the elbow/wrist, even without an imported
     // body channel. Restore the complete reaction before transferring any rig.
     restoreFreeLookHead(this);
-    restoreThrowPose(this);restoreReloadPose(this);restoreRiflePose(this);restorePronePose(this);restoreNanitePose(this);restoreHitReaction(this);
+    restoreLostControlPose(this);restoreThrowPose(this);restoreReloadPose(this);restoreRiflePose(this);restorePronePose(this);restoreNanitePose(this);restoreHitReaction(this);
     if(this._jumpMotion?.applied||this._groundTransition?.applied||(this._groundMotion?.applied&&this._groundMotion.rig===this.parts.rig)||(this._authoredStrike?.applied&&this._authoredStrike.rig===this.parts.rig)||this._directionalPose?.applied||this._chestPose?.applied||this._spinePose?.applied||this._groundAimSupport?.applied){
       restoreAuthoredStrikeBase(this);restoreCombatBase(this);restoreSpineAim(this);restoreChestAim(this);restoreGroundAimSupport(this);restoreDirectionalAim(this);restoreGroundBase(this);
       this._combatPoseBase=null;this._hitReactionBase=null;
@@ -1191,6 +1192,7 @@ export class Fighter {
   }
 
   _ko(opts = {}) {
+    const restorePose=this._lostControlPose?.applied?this._lostControlPose.nodes:[];this._lostControlPose=null;
     retirePowerUp(this);
     clearWebControl(this);clearWebControlsFromSource(this);
     invalidateFighterMotion(this);
@@ -1226,7 +1228,7 @@ export class Fighter {
     // become a ragdoll — carry the killing blow's knockback (+ a small pop) into the sim as launch
     if (this.canPhase) { for (const m of [this.parts.mats.suit, this.parts.mats.suit2]) { m.transparent = false; m.opacity = 1; } }
     const downward = opts.meleeMove === 'slam-release';
-    this.ragdoll = new Ragdoll(this, this.vel.clone().add(new THREE.Vector3(0, downward ? 0 : 12, 0)), { downward });
+    this.ragdoll = new Ragdoll(this, this.vel.clone().add(new THREE.Vector3(0, downward ? 0 : 12, 0)), { downward,restorePose });
     this.vel.set(0, 0, 0);
   }
 
@@ -2434,7 +2436,7 @@ export class Fighter {
     } else if (p.eyeMark && p.eyeMark.visible) p.eyeMark.visible = false;
     // face
     restoreFreeLookHead(this);
-    restoreThrowPose(this);restoreReloadPose(this);restoreRiflePose(this);restorePronePose(this);restoreNanitePose(this);restoreHitReaction(this);
+    restoreLostControlPose(this);restoreThrowPose(this);restoreReloadPose(this);restoreRiflePose(this);restorePronePose(this);restoreNanitePose(this);restoreHitReaction(this);
     restoreAuthoredStrikeBase(this);
     restoreCombatBase(this);
     restoreSpineAim(this);
@@ -2817,6 +2819,7 @@ export class Fighter {
     animateReloadPose(this);
     animateThrowAction(this);
     presentWebZip(this);
+    animateLostControlPose(this,dt);
     syncHeadCover(p);
     // Cloth reads the final carrier, including recoil, but cannot affect fist-speed damage.
     animateCape(p,this.animT,this.vel.length(),this.vel);

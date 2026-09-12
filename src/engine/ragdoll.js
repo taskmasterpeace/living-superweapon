@@ -57,7 +57,7 @@ const _a = new THREE.Vector3(), _b = new THREE.Vector3(), _m = new THREE.Vector3
 const _dir = new THREE.Vector3(), _up = new THREE.Vector3(0, 1, 0), _q = new THREE.Quaternion();
 
 export class Ragdoll {
-  constructor(fighter, impulse, { downward = false } = {}) {
+  constructor(fighter, impulse, { downward = false, restorePose = [] } = {}) {
     this.f = fighter;
     const p = fighter.parts;
     // meshes we drive, and their pivots (zeroed so children live in group-local space, then restored)
@@ -75,6 +75,12 @@ export class Ragdoll {
     // snapshot originals for a perfect restore
     this._snap = this.driven.map(m => ({ m, p: m.position.clone(), q: m.quaternion.clone(), s: m.scale.clone() }));
     this._pivotSnap = this.pivots.map(v => ({ v, p: v.position.clone(), r: v.rotation.clone(), s:v.scale.clone() }));
+    // Seed physics from the displayed pose below, but retire temporary visual
+    // carriers on respawn. Never pop out of a falling pose before taking the KO.
+    for(const base of restorePose){
+      const mesh=this._snap.find(s=>s.m===base.node);if(mesh){mesh.p.copy(base.position);mesh.q.copy(base.quaternion);}
+      const pivot=this._pivotSnap.find(s=>s.v===base.node);if(pivot){pivot.p.copy(base.position);pivot.r.setFromQuaternion(base.quaternion,pivot.r.order);}
+    }
 
     // Seed from the actual articulated pose, including body pitch and frame proportions.
     // A cruising KO must not pop upright or collapse every archetype onto one small skeleton.

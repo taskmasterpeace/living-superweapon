@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import {ShieldSurfaceMaterial} from './shield-surface.js';
+import {airControlState} from './lost-control-pose.js';
 
 // Bounded pose history, independent of input, damage and animation evaluation.
 // The hierarchy includes skinned bones as well as the procedural rig pivots.
@@ -12,7 +13,7 @@ export class MeleeRecording {
   // Keep the recorded rig stable when live contact effects add/remove children.
   // Each session owns a visual template, and indexes source node references.
   this.last=time;
-  const actors=this.actors.map(({fighter:f,nodes})=>({pose:Float32Array.from(nodes.flatMap(n=>[...n.position.toArray(),...n.quaternion.toArray(),...n.scale.toArray(),+n.visible,n.material?.opacity??1])),hp:f.hp,ki:f.ki,phase:f.mstate||f.grabState||(f.grabbedBy?'held':f.staggerT>0?'staggered':f.guarding?'guard':f.alive?'ready':'ko')}));
+  const actors=this.actors.map(({fighter:f,nodes})=>({pose:Float32Array.from(nodes.flatMap(n=>[...n.position.toArray(),...n.quaternion.toArray(),...n.scale.toArray(),+n.visible,n.material?.opacity??1])),hp:f.hp,ki:f.ki,airControl:f.pos?airControlState(f):'grounded',phase:f.mstate||f.grabState||(f.grabbedBy?'held':f.staggerT>0?'staggered':f.guarding?'guard':f.alive?'ready':'ko')}));
   this.frames.push({time,actors});while(this.frames.length>1&&time-this.frames[0].time>this.seconds)this.frames.shift();
   this.events=this.events.filter(e=>e.time>=this.frames[0].time);
  }
