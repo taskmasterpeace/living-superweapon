@@ -110,9 +110,9 @@ export class MeleeSystem {
     for(const f of this.game.entities)constrainRushBodies(f);
   }
 
-  canAct(f) { return f.alive && f.hitstop <= 0 && f.staggerT <= 0 && f.stunT <= 0 && !(f.frozenT > 0) && !f.grabbedBy && f.grabState !== 'clinch' && !f.hanging; }
+  canAct(f) { return f.alive && f.hitstop <= 0 && f.staggerT <= 0 && f.stunT <= 0 && !(f.frozenT > 0) && !(f.sleepT>0) && !(f.downedT>0) && !f.grabbedBy && f.grabState !== 'clinch' && !f.hanging; }
   clearInput(f) { f._meleeBuffer=null; f._meleeQueuedHeld=false; f.meleeCharge=0; f._clinchThrowBuffer=0; }
-  _canClinch(f, allowHitstop=false) { return f.alive && f.grabbing?.alive && f.grabState==='clinch' && (allowHitstop||f.hitstop<=0) && f.staggerT<=0 && f.stunT<=0 && !(f.frozenT>0) && !f._clinchFinisher; }
+  _canClinch(f, allowHitstop=false) { return f.alive && f.grabbing?.alive && f.grabState==='clinch' && (allowHitstop||f.hitstop<=0) && f.staggerT<=0 && f.stunT<=0 && !(f.frozenT>0) && !(f.sleepT>0) && !(f.downedT>0) && !f._clinchFinisher; }
 
   // A hard interrupt cancels an active/recover swing. ⚠ NOT hitstop — the attacker's OWN hit-freeze
   // must not cancel their active window (only a wind-up is cancelled by being hit; that is `canAct`).
@@ -692,7 +692,7 @@ export class MeleeSystem {
       }
     } else if (f.grabState === 'clinch') {
       const v = f.grabbing;
-      if (!v || !v.alive || !f.alive || f.staggerT>0 || f.stunT>0 || f.frozenT>0) { this.release(f); return; }
+      if (!v || !v.alive || !f.alive || f.staggerT>0 || f.stunT>0 || f.frozenT>0 || f.sleepT>0 || f.downedT>0) { this.release(f); return; }
       if(f._personCarry?.friendly){if(v.team!==f.team||!advancePersonCarry(f,g,dt))this.release(f);return;}
       f.grabT -= dt;
       f._clinchElapsed=(f._clinchElapsed||0)+dt;
