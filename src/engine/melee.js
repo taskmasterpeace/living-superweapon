@@ -155,7 +155,7 @@ export class MeleeSystem {
         const origin=f.center(new THREE.Vector3()),range=meleeApproach(f.def,f.airborne).range;
         point.add(lead);const offset=point.clone().sub(origin);if(offset.length()>range)point.copy(origin).add(offset.setLength(range));
       }
-      f._meleeMotion={side,point,previous:arm.children[2].getWorldPosition(new THREE.Vector3()),current:new THREE.Vector3(),impact:new THREE.Vector3(),dt:0};
+      f._meleeMotion={side,point,target:entry,previous:arm.children[2].getWorldPosition(new THREE.Vector3()),current:new THREE.Vector3(),impact:new THREE.Vector3(),dt:0};
     }
     // ⚠ THE STEP-IN SELLS THE REACH (the short-arms problem). `step` is a DISTANCE in data/martial.js;
     // STEP_IMPULSE converts it to the velocity impulse. jab 2.0×8 = the 16 that was hard-coded here.

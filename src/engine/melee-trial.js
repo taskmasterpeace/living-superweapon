@@ -1,6 +1,11 @@
+import {hasStrike,STRIKES} from '../data/martial.js';
 import * as THREE from 'three';
 import {ROSTER} from '../data/characters.js';
 import {performEvade} from './abilities.js';
+export function meleeLesson(def){
+ const combo=hasStrike(def,'jab')||hasStrike(def,'cross');
+ return (combo?'V tap: punch; repeat for combo':'V tap: heavy slam')+' · hold/release V: charge heavy · Q: frontal guard · E: grab · double-tap direction: dodge';
+}
 export const MELEE_TRIALS=['stationary','retreat','guard','dodge'];
 // Scripted decisions use native motion, defense and damage; no target teleporting.
 export class MeleeTrial {
@@ -11,7 +16,7 @@ export class MeleeTrial {
   const base=ROSTER.find(d=>d.id==='merc')||ROSTER[0];
   const f=this.g.addFighter({...base,name:'Trial '+kind,abilities:{},items:[],holo:true},{team:this.g.player.team===0?1:0,dummy:true,x:this.origin.x,z:this.origin.z});
   f.pos.y=this.g.world.heightAt(f.pos.x,f.pos.z);f._chaseKb=true;f._openSky=true;f.noRespawn=true;f._meleeTrial=this;this.target=f;this.startHp=f.hp;
-  this.g.hud?.feed?.(kind.toUpperCase()+' · V punch / hold heavy · Q guard · E grab · double-tap direction dodge','#ffd24a');return f;
+  this.g.hud?.feed?.(kind.toUpperCase()+' · '+meleeLesson(this.g.player.def),'#ffd24a');return f;
  }
  control(f,dt){
   if(!f.alive||f.grabbedBy||f.frozenT>0||f.staggerT>0)return;
@@ -23,12 +28,12 @@ export class MeleeTrial {
  repeat(){return this.start(this.kind||'stationary');}
  strikeStarted(f){
   if(f!==this.g.player||!this.target)return;
-  this.attempt={trial:this.kind,kind:f.mId,time:this.elapsed,contacts:0,approach:!!f._meleeMotion?.approachEnabled,distance:f.pos.distanceTo(this.target.pos)};
+  this.attempt={trial:this.kind,kind:f.mId,time:this.elapsed,contacts:0,approach:!!f._meleeMotion?.approachEnabled,distance:f.pos.distanceTo(this.target.pos),startup:STRIKES[f.mId].startup/(f.def.meleePace||1),active:STRIKES[f.mId].active/(f.def.meleePace||1),recovery:STRIKES[f.mId].recover/(f.def.meleePace||1)};
  }
  strikeEnded(f){
   if(f!==this.g.player||!this.attempt)return;
   const a=this.attempt;a.result=a.contacts?'contact':'no contact';this.records.push(a);if(this.records.length>100)this.records.shift();
-  this.g.hud?.feed?.(a.result.toUpperCase()+' · '+a.kind.toUpperCase()+' · '+(a.approach?'approach engaged':'no approach')+' · start '+a.distance.toFixed(1)+'u','#ffd24a');this.attempt=null;
+  this.g.hud?.feed?.(a.result.toUpperCase()+' · '+a.kind.toUpperCase()+' · '+(a.approach?'approach engaged':'no approach')+' · start '+a.distance.toFixed(1)+'u · recovery '+Math.round(a.recovery*1000)+'ms','#ffd24a');this.attempt=null;
  }
  hit(target,amount,opts,blocked){
   if(target!==this.target)return;

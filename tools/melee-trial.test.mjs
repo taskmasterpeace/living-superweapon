@@ -16,3 +16,4 @@ test('guard trial uses native guard and rejects unknown scenarios',()=>{
 test('repeat retains scenario and replaces damaged target without leaking unfinished attempts',()=>{
  const x=mainCombatFixture({mode:'powerworld'});try{const t=new MeleeTrial(x.g,new THREE.Vector3(0,0,15));const old=t.start('retreat');old.hp=1;t.attempt={contacts:0};const next=t.repeat();assert.equal(t.kind,'retreat');assert.equal(next.hp,next.maxHp);assert.equal(t.attempt,null);assert.equal(x.g.entities.length,2);t.dispose();}finally{x.close();}
 });
+test('lesson describes the actual RAGE tap instead of promising a jab combo',async()=>{const {meleeLesson}=await import('../src/engine/melee-trial.js');const x=mainCombatFixture({mode:'powerworld',hero:'rage'});try{assert.match(meleeLesson(x.p.def),/tap: heavy slam/);}finally{x.close();}});

@@ -2256,7 +2256,15 @@ export class Fighter {
       // The strike captured incoming momentum before this action took ownership.
       const step=approach.step,len=this.flying?step.length():Math.hypot(step.x,step.z),origin=approach.approachOrigin;
       if(len>.001){const x=step.x/len,y=this.flying?step.y/len:0,z=step.z/len,travel=(this.pos.x-origin.x)*x+(this.pos.y-origin.y)*y+(this.pos.z-origin.z)*z;
-        const speed=Math.min(len,Math.max(0,approach.approachDistance-travel)/Math.max(dt,.001));this.vel.x=x*speed;this.vel.z=z*speed;if(this.flying)this.vel.y=y*speed;return;}
+        let remaining=Math.max(0,approach.approachDistance-travel);
+        const target=approach.target;
+        if(target?.alive){
+          const dx=target.pos.x-this.pos.x,dy=this.flying?target.pos.y-this.pos.y:0,dz=target.pos.z-this.pos.z;
+          const forward=dx*x+dy*y+dz*z,lateral=Math.max(0,dx*dx+dy*dy+dz*dz-forward*forward),gap=(this.radius||2.2)+(target.radius||2.2)+.5;
+          // Brake before body separation pushes a straight approach sideways. Never turn toward a dodge.
+          if(forward>0&&lateral<gap*gap&&Math.abs(target.pos.y-this.pos.y)<gap)remaining=Math.min(remaining,Math.max(0,forward-gap));
+        }
+        const speed=Math.min(len,remaining/Math.max(dt,.001));this.vel.x=x*speed;this.vel.z=z*speed;if(this.flying)this.vel.y=y*speed;return;}
       this.vel.x=this.vel.z=0;if(this.flying)this.vel.y=0;return;
     }
     if(steerGroundGear(this,dir,s,dt)){
