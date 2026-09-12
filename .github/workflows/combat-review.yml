@@ -1,0 +1,45 @@
+name: combat-review
+
+on:
+  pull_request:
+    branches: [master]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: combat-review-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  contracts-and-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 25.8.0
+          cache: npm
+      - run: npm ci
+      - name: Combat, beam and camera contracts
+        run: >-
+          node --import ./tools/helpers/css-test-hook.mjs --test
+          tools/melee-depth.test.mjs
+          tools/energy-guard.test.mjs
+          tools/person-carry.test.mjs
+          tools/beam-charge-range.test.mjs
+          tools/beam-cover-contact.test.mjs
+          tools/beam-contact-feedback.test.mjs
+          tools/camera-settings.test.mjs
+          tools/ground-camera.test.mjs
+          tools/ground-camera-cover.test.mjs
+          tools/free-look-input.test.mjs
+          tools/flight-language.test.mjs
+          tools/flight-readability.test.mjs
+          tools/flight-wake.test.mjs
+          tools/flight-surface-wake.test.mjs
+          tools/movement-gears.test.mjs
+          tools/power-up-state.test.mjs
+      - name: Production bundle
+        run: npm run build
