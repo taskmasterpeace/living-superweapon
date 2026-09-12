@@ -69,3 +69,10 @@ Candidate: http://127.0.0.1:5184/powerworld.html . Local integration worktree; n
 - Recorded SARGE firing at the airborne machine: 21 contact events, 168 credited airborne samples, initial hit 5 HP, no page errors. Evidence: artifacts/marketing/air-range-fire-2026-09-12/air-rifle.webm, air-rifle.png, result.json. Controlled placement and scripted native aim/fire intent were used to isolate contact behavior; manual aiming and controller/touch acceptance remain open.
 - Three training-facility tests pass, including unarmored calibration admission. Production build passes with existing bundle-size and GLTF import warnings.
 - Remaining facility work includes timed scoring and stop/reset, native full flight course, team configuration, effect isolation between dimensions, target KO/grab presentation, actual beam/grenade range drills and controller/touch verification. The overall combat/movement goal is not complete.
+
+## Time/gravity dimension isolation
+- Threat Room now mounts separate native TimeFields and GravityZones lists. Desert field timers are suspended with their original objects preserved; training uses the same native behavior and costs.
+- Departure clears practice fields through their owning systems, releases their meshes/materials, restores desert lists and original field visibility after scene restoration. Repeated cleanup is safe.
+- Adversarial test uses native field systems to verify desert fields cannot slow/lift trainees, training fields still work, desert timers remain unchanged, practice geometry is disposed exactly once, and original lists are restored.
+- Native room browser check adds a real practice bubble then leaves: mesh detached, original list restored, practice field absent; no page errors. Production build passed with existing warnings.
+- This addresses time/gravity fields specifically. Portals, weather commands, carried actors and other transient effect collections still require complete dimension-boundary review; no claim of full isolation yet.
