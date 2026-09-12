@@ -15,6 +15,7 @@ import {snapshotHeroSkins} from './hero-skin.js';
 import {updateFlightSense} from './flight-sense.js';
 import {clearForegroundVisibility} from './foreground-visibility.js';
 import {combatView,combatLookActive} from './combat-view.js';
+import {followDeathBody} from './death-camera.js';
 import {meleeKeymap} from '../core/melee-mode.js';
 import {POWERWORLD_CONTROLS,contextualGrab} from '../core/powerworld-controls.js';
 import {presentMaterialHit} from './impact-material.js';
@@ -4390,6 +4391,7 @@ export class Game {
     if(this.input)this.input.pointerLock=active;
     if (this.mapCam) { if (this.input) this.input.pointerLock = false; this.world.orbit(this.mapCam); return; }
     if (view==='bfp') {
+      if(followDeathBody(this))return;
       // Input deltas were consumed once in the pre-control solve. This final solve
       // follows the updated native body while preserving the same view owner.
       if(!active&&this.world.camMode==='chase')return;

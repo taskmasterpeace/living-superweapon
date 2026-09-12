@@ -36,10 +36,15 @@ Characters share move families, with bounded speed/reach/approach differences. D
 
 Worker handoff should name the existing schema, owned content files, expected export format, required native tests and a short example. Audio worker remains on its existing audio-only branch; animation content can later use a separate branch with the same boundaries. Do not redirect the active sound worker into gameplay or animation changes.
 
-## Revised implementation order
+## Revised implementation order — combat and movement first
 
-1. Repair current camera/input/inventory blockers (#29) so ordinary play works.
-2. Make the other-dimensional Threat Room -> remote portal arrival -> flight/transport route playable, with the blood/lab return loop (#33).
-3. Add friendly carry and airborne catch, connected to recoverable falling (#34/#20). Preserve enemy combat rules.
-4. Establish the small animation-library authoring proof; use it for further melee variety (#21), alongside projectile/grenade/AI mobility work (#30).
-5. Expand assets, gadgets and audio through the demonstrated pipelines. Short native clips at milestones; no large tutorial or forced progression sequence added.
+1. Close camera/input blockers (#29/#37), then prove the core exchange: approach -> strike/combo -> block or dodge -> grab -> terrain throw (#14). Use shared animations and character settings, not bespoke sets.
+2. Build the Animation Library around existing content (#35), alongside these combat changes. Include search, filters, preview/scrubbing, timing markers, assignments, variant/revert tools and validation. Link it from the character hub; native attack profiles remain the balance authority.
+3. Tune fast firing and finite traveling beams (#15/#30). Projectiles inherit shooter movement, then receive per-attack speed tuning. Make damage/range/charge differences measurable in Threat Room trials (#6).
+4. Establish distinct movement families (#19/#32): agile pounce, heavy bound, anchored grapple/pull, flight and speedster trails. Prototype the bounded speed bubble (#36) after basic movement and projectile correctness.
+5. Connect friendly carry/catch (#34) and recoverable airborne reaction (#20), then the other-dimensional Threat Room portal -> remote arrival -> transport -> fight/blood/lab/upgrade loop (#33). The Threat Room test area can be introduced earlier as the combat test harness; full mission structure must not displace combat work.
+6. Expand vehicles, map assets, destruction and audio through the proven pipelines. Keep the active audio worker independent. Capture short native clips at meaningful milestones and distinguish staged previews from gameplay evidence.
+
+## Current checkpoint
+
+Animation Library #35 and speedster bubble #36 are scoped work, not implemented features. Death camera #37 has an orientation-only candidate and focused automated tests; native visual acceptance is still required. The camera stays at the death location and targets the ragdoll chest without changing FOV. No claim that the full combat/movement pass is complete.
