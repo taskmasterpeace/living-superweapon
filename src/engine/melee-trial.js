@@ -20,8 +20,18 @@ export class MeleeTrial {
   if(this.kind==='retreat'&&d<40&&f.pos.distanceTo(this.origin)<65)move.copy(dir).negate();f.move(move,dt,1);
   if(this.kind==='dodge'&&this.elapsed>=this.dodgeAt){this.dodgeAt=this.elapsed+1.5;performEvade(f,{x:-dir.z,z:dir.x},this.g);}
  }
+ strikeStarted(f){
+  if(f!==this.g.player||!this.target)return;
+  this.attempt={trial:this.kind,kind:f.mId,time:this.elapsed,contacts:0,approach:!!f._meleeMotion?.approachEnabled,distance:f.pos.distanceTo(this.target.pos)};
+ }
+ strikeEnded(f){
+  if(f!==this.g.player||!this.attempt)return;
+  const a=this.attempt;a.result=a.contacts?'contact':'no contact';this.records.push(a);if(this.records.length>100)this.records.shift();
+  this.g.hud?.feed?.(a.result.toUpperCase()+' · '+a.kind.toUpperCase()+' · '+(a.approach?'approach engaged':'no approach')+' · start '+a.distance.toFixed(1)+'u','#ffd24a');this.attempt=null;
+ }
  hit(target,amount,opts,blocked){
   if(target!==this.target)return;
+  if(this.attempt&&opts.src===this.g.player)this.attempt.contacts++;
   this.records.push({trial:this.kind,time:this.elapsed,amount,blocked:!!blocked,hp:target.hp,playerKi:this.g.player.ki});if(this.records.length>100)this.records.shift();
   this.g.hud?.feed?.((blocked?'BLOCK':'CONTACT')+' · HP lost '+Math.max(0,this.startHp-target.hp).toFixed(1)+' · energy now '+this.g.player.ki.toFixed(1),'#ffd24a');
  }

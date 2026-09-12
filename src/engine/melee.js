@@ -1,3 +1,4 @@
+import {meleeEntryTarget} from './melee-entry-target.js';
 import {meleeApproach} from '../data/melee-approaches.js';
 // WAR WORLD: ASCENDANTS — melee trifecta: Strike (beats Grab) · Grab (beats Guard) · Guard (beats Strike).
 // Per-character variants: teleport-escape & energy-intangibility break front grabs; thorns hurt the holder;
@@ -126,7 +127,7 @@ export class MeleeSystem {
     if (f.mstate === 'active')  return Math.max(0, f.mT) + S.recover / pace;
     return Math.max(0, f.mT);   // recover
   }
-  _endStrike(f, keepInput=false) { f.mstate = null; f.mId = null; f.mKind = null; f.mHay = false; f.strikeActive = 0; f._meleeMotion = null; if(!keepInput)this.clearInput(f); }
+  _endStrike(f, keepInput=false) { this.game.ms?.threatLab?.meleeTrial?.strikeEnded(f); f.mstate = null; f.mId = null; f.mKind = null; f.mHay = false; f.strikeActive = 0; f._meleeMotion = null; if(!keepInput)this.clearInput(f); }
 
   _beginStrike(f, id, kind, p01 = 1, hay = false) {
     f._meleeBlocked=false;
@@ -143,7 +144,8 @@ export class MeleeSystem {
     if(f._openSky&&f.parts.rig) {
       const side=kind==='heavy'||id==='cross'||f.strikeIdx%2===0?1:-1;
       const arm=side===1?f.parts.armR:f.parts.armL;
-      const point=f.hasAimWorld?f.aimWorld.clone():f.center(new THREE.Vector3()).addScaledVector(f.aim3,S.reach);
+      const entry=meleeEntryTarget(g,f,meleeApproach(f.def,f.airborne).range);
+      const point=entry?entry.center(new THREE.Vector3()):f.hasAimWorld?f.aimWorld.clone():f.center(new THREE.Vector3()).addScaledVector(f.aim3,S.reach);
       f._meleeMotion={side,point,previous:arm.children[2].getWorldPosition(new THREE.Vector3()),current:new THREE.Vector3(),impact:new THREE.Vector3(),dt:0};
     }
     // ⚠ THE STEP-IN SELLS THE REACH (the short-arms problem). `step` is a DISTANCE in data/martial.js;
