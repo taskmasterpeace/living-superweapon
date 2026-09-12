@@ -32,6 +32,8 @@ export default defineConfig({
         atlas: fileURLToPath(new URL('./atlas.html', import.meta.url)),
         powerworld: fileURLToPath(new URL('./powerworld.html', import.meta.url)),
         studio: fileURLToPath(new URL('./studio.html', import.meta.url)),
+        soundLibrary: fileURLToPath(new URL('./sound-library.html', import.meta.url)),
+        gadgetLibrary: fileURLToPath(new URL('./gadget-library.html', import.meta.url)),
         designDecisions: fileURLToPath(new URL('./design-decisions.html', import.meta.url)),
       },
     },

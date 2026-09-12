@@ -3,10 +3,12 @@ import {SPEAKER_PROFILES} from '../core/sound-library.js';
 import './sound-library.css';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function download(data,name){const url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
-export function mountSoundLibrary({host,backend,onOpen=()=>{}}){
+export function mountSoundLibrary({host,backend,onOpen=()=>{},page=false}){
  const library=backend.soundLibrary,button=document.createElement('button');button.id='open-sound-library';button.textContent='Sound Library';host.append(button);
- const dialog=document.createElement('dialog');dialog.className='sound-library';dialog.setAttribute('aria-label','Sound Library');document.body.append(dialog);
- dialog.innerHTML=`<header class="sl-header"><div><span class="sl-eyebrow">POWERWORLD / AUDIO WORKSHOP</span><h2>Sound Library</h2><p>Organize recordings. Assign sounds. Find what is missing.</p></div><button data-action="close" aria-label="Close Sound Library">Close</button></header>
+ if(!page){button.onclick=()=>{onOpen();location.href='sound-library.html';};return {library,open:()=>button.click()};}
+ button.remove();
+ const dialog=document.createElement('main');dialog.className='sound-library sound-library-page';dialog.setAttribute('aria-label','Sound Library');host.append(dialog);
+ dialog.innerHTML=`<header class="sl-header"><div><span class="sl-eyebrow">POWERWORLD / AUDIO WORKSHOP</span><h2>Sound Library</h2><p>Organize recordings. Assign sounds. Find what is missing.</p></div><a href="studio.html">Character Studio ↗</a></header>
  <div class="sl-summary"></div><div class="sl-toolbar"><button data-action="add">+ Add sound</button><select aria-label="Sound type"><option value="">One-shots + loops</option><option value="one-shot">One-shots</option><option value="loop">Loops</option></select><select aria-label="Recording status"><option value="">All recording states</option><option value="missing">No recording assigned</option><option value="assigned">Recording assigned</option><option value="inactive">Assigned but inactive</option></select></div><form class="sl-add" hidden><h3>Add sound entry</h3><label>Name <input name="label" required maxlength="100"></label><label>Category <input name="family" list="sl-families" required maxlength="40" value="ambient"></label><datalist id="sl-families"></datalist><label>Type <select name="type"><option value="one-shot">One-shot</option><option value="loop">Loop</option></select></label><label>Description / AI direction <textarea name="description" maxlength="1000"></textarea></label><p>New entries start with no recording and no gameplay connection. You can assign their recording to an existing game cue.</p><button type="submit">Save sound entry</button><button type="button" data-action="cancel-add">Cancel</button></form><div class="sl-browser"><nav class="sl-nav" aria-label="Sound cues"><input type="search" aria-label="Search sound cues" placeholder="Search cues or dialogue…"><select aria-label="Sound family"><option value="">All families</option>${[...new Set(library.cues.map(c=>c.family))].map(f=>`<option>${f}</option>`).join('')}</select><select aria-label="Cue wiring"><option value="">All wiring states</option><option value="native-replacement">Native replacement</option><option value="native-loop">Connected loop</option><option value="preview-only">Not connected</option></select><div class="sl-list"></div></nav><section class="sl-detail" aria-label="Selected sound cue"></section></div>
  <footer class="sl-footer"><button data-action="export">Export library + audio</button><label class="button">Import library<input type="file" accept="application/json,.json" aria-label="Import sound library" hidden></label><button data-action="brief">Export generation briefs</button><p class="sl-status" role="status">Play starts audio after your gesture. Recordings stay local; maximum 1 MiB each, 30 seconds, 4 MiB package.</p></footer>`;
  const $=s=>dialog.querySelector(s);let selected='light',busy=false;
@@ -35,7 +37,7 @@ export function mountSoundLibrary({host,backend,onOpen=()=>{}}){
  const refresh=()=>{updateFamilies();rows();details();};
  async function enable(){backend.init();if(!backend.ok)throw Error('Audio could not start');await library.ready();}
  async function act(fn){if(busy)return;busy=true;try{await fn();}catch(e){status(e.message,true);}finally{busy=false;}}
- button.onclick=()=>{onOpen();refresh();dialog.showModal();status(library.error||'Choose a cue, then Play. Preview-only labels identify sounds that are not connected to gameplay.');};
+ button.onclick=()=>{onOpen();refresh();status(library.error||'Choose a cue, then Play. Preview-only labels identify sounds that are not connected to gameplay.');};
  dialog.addEventListener('keydown',e=>e.stopPropagation());
  dialog.addEventListener('close',()=>library.stop());
  dialog.addEventListener('cancel',()=>library.stop());
@@ -57,7 +59,7 @@ export function mountSoundLibrary({host,backend,onOpen=()=>{}}){
    case 'edit':{const form=$('.sl-add'),c=library.cue(selected);form.dataset.edit=c.id;form.elements.label.value=c.label;form.elements.family.value=c.family;form.elements.type.value=c.loop?'loop':'one-shot';form.elements.description.value=c.description;form.hidden=false;form.elements.label.focus();break;}
    case 'add':delete $('.sl-add').dataset.edit;$('.sl-add').reset();$('.sl-add').hidden=false;$('.sl-add input').focus();break;
    case 'cancel-add':$('.sl-add').hidden=true;break;
-   case 'close':dialog.close();break;
+   case 'close':library.stop();break;
    case 'play':await enable();{const h=library.audition(selected,{source:'chosen-recording'});status(h?`Playing ${describeSource(selected)}${h.loop?' · loop until Stop':''}`:'Audio is muted or unavailable.');}break;
    case 'stop':library.stop();status('Stopped. All library voices are fading out.');break;
    case 'export':download(library.exportPackage(),'powerworld-sound-library.json');status('Portable library exported with embedded chosen recordings.');break;
@@ -71,5 +73,5 @@ export function mountSoundLibrary({host,backend,onOpen=()=>{}}){
   }
  }));
  addEventListener('pagehide',()=>library.stop());document.addEventListener('visibilitychange',()=>{if(document.hidden)library.stop();});
- return {library,dialog,open:()=>button.click()};
+ button.click();return {library,dialog,open:()=>button.click()};
 }
