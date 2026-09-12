@@ -77,6 +77,7 @@ export class MeleeTrial {
   f.hp=f.maxHp;f.ki=f.maxKi;f.guardMeter=1;f.armor=f.armorMax;
   f._wounds={arm:0,leg:0,torso:0};f._woundT={arm:0,leg:0,torso:0};
   f.state='idle';f.stateT=0;f.vel.set(0,0,0);
+  f._traversalLeap=null;
   if(f.parts.ice)f.parts.ice.visible=false;
   this.repeat();
   g.hud?.feed?.('PRACTICE RESET · Health, energy, armor and guard restored · target reset','#ffd24a');

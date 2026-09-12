@@ -459,6 +459,7 @@ export const ROSTER = [
   },
   {
     id: 'rage', origin: 'altered', name: 'RAGE', title: 'The Monster in the Man', role: 'Pure Strength', art: 'powergrap',
+    traversalLeap:{chargeTime:.65,cost:24,upMin:26,upMax:88,forwardMin:30,forwardMax:150,turnBudget:.3,turnRate:.5},
     colors: { primary: '#28bb39', secondary: '#3d485d', accent: '#92e68d', skin: '#5faf6a' },
     hp: 220, ki: 90, speed: 30, strength: 10, rank: 120, overdrive: 1.5, threat: 'Very High', flightTier: 0, meleeTiers: 2, yells: true, voicePitch: 0.55,
     ai: { style: 'bruiser', range: 16, aggro: 0.95, fly: 0 }, evade: { kind: 'leap', name: 'Rage Leap', up: 52, fwd: 74 },

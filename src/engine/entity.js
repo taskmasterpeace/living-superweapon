@@ -1,4 +1,5 @@
 import {migratePowerUpDef} from '../data/power-up.js';
+import {updateTraversalLeap,steerTraversalLeap,cancelInterruptedTraversalLeap} from './traversal-leap.js';
 import {buildingContact} from './building-contact.js';
 import {retireFighterEquipment} from './authored-equipment.js';
 import {createPowerUpState,advancePowerUp,retirePowerUp} from '../core/power-up-state.js';
@@ -1710,6 +1711,7 @@ export class Fighter {
   }
 
   _physics(dt, game) {
+    cancelInterruptedTraversalLeap(this);
     if(this._scoutVehicle||this._aircraftVehicle||this._passengerTransport)return; // Seat owns movement, not status/cooldown updates.
     if(updateWebZip(this,dt,game))return;
     if (this.remote) return;   // puppets are positioned by the wire (controlRemote), not local physics
@@ -1768,8 +1770,9 @@ export class Fighter {
       // "altitude is the mode switch" survives intact. The jump refuses while a hard landing recovers
       // (_landT gates JUMP and ROLL only, never strike/guard/grab — §2.4).
       const canFly = canUseFlight(this);
+      const leapManaged=updateTraversalLeap(this,dt,canFly);
       const rise = this.flyHeld && !this._flyPrev;
-      if (rise && !this.flying && this.onFoot && this._landT <= 0) {
+      if (!leapManaged && rise && !this.flying && this.onFoot && this._landT <= 0) {
         this.vel.y = Math.max(this.vel.y, JUMP_VEL);         // leave the ground under gravity — NOT flight
         this._jumpT = JUMP_VEL / GRAVITY;                    // ≈ time to apex; holding does not take off until it elapses
         this._liftFx = 0.18;
@@ -1978,6 +1981,8 @@ export class Fighter {
     let dragF;
     if (ownsFlightVelocity(this)||bodyWind.driven||(groundClass&&this._gearGroundSteering)) {
       dragF = 1;
+    } else if (this._traversalLeap?.active&&!launched) {
+      dragF=Math.exp(-.12*dt);
     } else if (glide && !launched && this.launchT <= 0 && this._airStop > 0) {
       const sp = Math.hypot(this.vel.x, this.vel.z);
       const control = Math.max(sp, this._airStop);
@@ -1995,7 +2000,7 @@ export class Fighter {
     if(this._windCarry){this._windCarry.x*=dragF;this._windCarry.z*=dragF;}
     applyBodyWind(this,bodyWind,dt);
     const windFrame=this._windFrameVelocity||(this._windFrameVelocity={x:0,z:0});windFrame.x=this.vel.x;windFrame.z=this.vel.z;
-    this.vel.y = ownsFlightVelocity(this) ? clamp(this.vel.y, -PW_AIR.top, PW_AIR.top) : clamp(this.vel.y, -160, 70);
+    this.vel.y = ownsFlightVelocity(this) ? clamp(this.vel.y, -PW_AIR.top, PW_AIR.top) : clamp(this.vel.y, -160, this._traversalLeap?.active?this.def.traversalLeap.upMax:70);
 
     const previousY=this.pos.y;
     sweepFighterEnvironment(this,game,dt);
@@ -2207,6 +2212,7 @@ export class Fighter {
     // the live movement INTENT, stamped for the physics pass (directional descent reads it)
     this._mvX = dir ? dir.x : 0; this._mvZ = dir ? dir.z : 0; this._mvT = 0.12;
     if (this.state === 'ko' || this.hitstop > 0 || this.grabbedBy || (this.grabState === 'clinch'&&!isTransportingPerson(this)) || this.staggerT > 0 || this.frozenT > 0 || this.stunT > 0 || this.hanging) return;   // hanging: your feet have nowhere to be
+    if(steerTraversalLeap(this,dir,dt))return;
     let s = this.speed * 1.08 * this.powerBuff * sprint * moodMult(this, 'speed', 1) * webControlMoveMultiplier(this);   // ground feel pass 2026-07-24: +8% across the board
     s *= movementTravelScale(this,dir,dt,sprint);
     if (this._wounds && this._wounds.leg) s *= 1 - 0.09 * this._wounds.leg;   // the LIMP is real (manual §18)
