@@ -1,0 +1,11 @@
+import {chromium} from 'playwright';import {mkdir,writeFile,copyFile} from 'node:fs/promises';
+const out='artifacts/marketing/melee-ko-review-2026-09-12';await mkdir(out,{recursive:true});
+const b=await chromium.launch({headless:false}),c=await b.newContext({viewport:{width:1280,height:720},recordVideo:{dir:out,size:{width:1280,height:720}}}),p=await c.newPage(),errors=[];p.on('pageerror',e=>errors.push(e.message));
+try{
+ await p.goto('http://127.0.0.1:5184/powerworld.html?hero=sol');await p.waitForTimeout(2500);await p.keyboard.press('Enter');await p.getByRole('button',{name:'Enter with squad',exact:true}).click();await p.waitForFunction(()=>window.PW?.game?.ms?.threatLab?.state==='preparing',{},{timeout:90000});
+ await p.evaluate(()=>{const g=window.PW.game,t=g.ms.threatLab.meleeTrial;t.start('defend');g.player.pos.copy(t.origin).add({x:0,y:0,z:-10});g.player.hp=1;window.__practicePlayer=g.player;window.__stockBefore=JSON.stringify(g.ms.threatLab.stock.remaining);});
+ await p.getByRole('button',{name:'Reset practice',exact:true}).waitFor({timeout:20000});await p.getByRole('button',{name:'Side',exact:true}).click();await p.screenshot({path:out+'/ko-review.png'});await p.waitForTimeout(1000);await p.getByRole('button',{name:'Reset practice',exact:true}).click();
+ const result=await p.evaluate(()=>{const g=window.PW.game;return {alive:g.player.alive,hp:g.player.hp,sameActor:g.player===window.__practicePlayer,stockUnchanged:JSON.stringify(g.ms.threatLab.stock.remaining)===window.__stockBefore,ragdoll:!!g.player.ragdoll,running:g.running,scenario:g.ms.threatLab.meleeTrial.kind};});
+ await p.keyboard.down('q');await p.waitForTimeout(1500);await p.keyboard.up('q');await p.screenshot({path:out+'/restored-practice.png'});
+ await writeFile(out+'/result.json',JSON.stringify({setup:'Controlled low-health ground placement; native trial opponent supplies lethal attack, automatic KO review, clicked reset and native Q guard',...result,errors},null,2));console.log(result,errors);if(!result.alive||!result.sameActor||!result.stockUnchanged||result.ragdoll||!result.running||errors.length)throw Error('Practice KO recovery failed');
+}finally{const path=await p.video().path();await c.close();await copyFile(path,out+'/melee-ko-review.webm');await b.close();}

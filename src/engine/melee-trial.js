@@ -54,22 +54,27 @@ export class MeleeTrial {
   const f=this.g.player,phase=f.mstate||f.grabState||(f.staggerT>0?'staggered':f.strikeCd>0?'cooldown':f.guarding?'guard':'ready');
   if(phase!==this.phaseKey){this.phaseKey=phase;this.recording.mark(this.g.time,{label:({recover:'Recovery',active:'Strike active',clinch:'Holding target',startup:'Wind-up',staggered:'Staggered',cooldown:'Attack cooldown',guard:'Guard raised',ready:'Ready'})[phase]||phase,kind:'phase'});}
   this.recording.capture(this.g.time);
+  if(this.canRecoverKO()&&f.koT>=1&&typeof document!=='undefined')this.openReview();
  }}
+ canRecoverKO(){const f=this.g.player;return this.g.ms?.threatLab?.state==='preparing'&&f?.state==='ko'&&f.lastHitBy===this.target&&this.g.entities.includes(f);}
  openReview(){
   if(this.review||this.g.ms?.threatLab?.state!=='preparing')return;
   if(this.recording.frames.length<2){this.g.hud?.feed?.('Start a melee trial, then return here to review the exchange','#ffd24a');return;}
-  this.review=openMeleeReview(this.g,this.recording,()=>{this.review=null;});
+  const recover=this.canRecoverKO();
+  this.review=openMeleeReview(this.g,this.recording,()=>{this.review=null;if(recover)this.resetPractice();},{recover});
  }
  resetPractice(){
   const g=this.g,f=g.player;
   // Preparation-only refill. Keep the actual player object, loadout and stock:
   // replacing the actor here would invalidate the deployment manifest.
-  if(g.ms?.threatLab?.state!=='preparing'||!f?.alive)return false;
+  const recover=this.canRecoverKO();
+  if(g.ms?.threatLab?.state!=='preparing'||(!f?.alive&&!recover))return false;
   if(f._mount||f._scoutVehicle||f._aircraftVehicle||f._passengerTransport||f._carry||f.hanging||f._grapple||Object.values(f.slots||{}).some(s=>s.active||s.charging||s.sustainT>0)){
    g.hud?.feed?.('Finish your power or leave the vehicle before resetting practice','#ffd24a');return false;
   }
   if((f.grabbing&&f.grabbing!==this.target)||(f.grabbedBy&&f.grabbedBy!==this.target))return false;
   this.attempt=null;
+  if(recover){f._updateKO(4,g,{practice:true});f._remove=false;f._wasAlive=true;f.lastHitBy=null;f.lastHitT=99;f.pos.copy(this.origin).add(new THREE.Vector3(0,0,-14));f.pos.y=g.world.heightAt(f.pos.x,f.pos.z);f.groundY=f.pos.y;f.koT=0;f.faceDir(0,1);f.aim3.set(0,0,1);g.world._lookYaw=0;g.world._lookPitch=0;g.world._chaseSnap=true;}
   if(f.grabbing||f.grabbedBy)g.melee.release(f.grabbing?f:f.grabbedBy);
   g.melee._endStrike(f);g.melee.guard(f,false);
   f.clearDot();f.clotBleed(null,true);

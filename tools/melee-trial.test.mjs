@@ -47,3 +47,15 @@ test('practice refill is unavailable in the field, during active powers, or afte
   x.p.state='ko';assert.equal(t.resetPractice(),false);assert.equal(x.p.hp,12);assert.equal(t.target,target);t.dispose();
  }finally{x.close();}
 });
+
+test('trainer KO restores the same rig without spending reserves or issuing consumables',()=>{
+ const x=mainCombatFixture({mode:'powerworld'});try{
+  const t=new MeleeTrial(x.g,new THREE.Vector3(0,0,15));const target=t.start('defend');
+  const stock={remaining:{soldier:2,lsw:3}},manifest=[x.p];x.g.ms.threatLab={state:'preparing',stock,manifest,meleeTrial:t};
+  x.p.noRespawn=true;x.p.items=[{charges:0,state:'cooldown',cd:8}];x.p.lastHitBy=target;x.p.hp=0;x.p._ko();
+  assert.ok(x.p.ragdoll);assert.ok(t.canRecoverKO());assert.ok(t.resetPractice());
+  assert.equal(x.p.ragdoll,null);assert.ok(x.p.alive);assert.equal(x.p.hp,x.p.maxHp);assert.equal(x.p.noRespawn,true);
+  assert.equal(x.p.items[0].charges,0);assert.equal(x.p.items[0].cd,8);assert.equal(manifest[0],x.p);assert.equal(x.g.humans[0].fighter,x.p);
+  assert.deepEqual(stock.remaining,{soldier:2,lsw:3});assert.equal(x.p._remove,false);assert.equal(t.kind,'defend');t.dispose();
+ }finally{x.close();}
+});

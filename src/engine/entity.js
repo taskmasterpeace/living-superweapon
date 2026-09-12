@@ -1684,19 +1684,19 @@ export class Fighter {
     if (this.state === 'cast' && (this.stateT += dt) > 0.28) this.state = 'idle';
   }
 
-  _updateKO(dt, game) {
+  _updateKO(dt, game, {practice=false}={}) {
     this.koT += dt;
     if (this.koT > (this.isDummy ? 2.2 : 3.4)) {
-      if (this.noRespawn) { this._remove = true; return; }   // survival/wave enemies stay dead
+      if (this.noRespawn&&!practice) { this._remove = true; return; }   // survival/wave enemies stay dead
       // put the figure hierarchy back exactly, then respawn
       if (this.ragdoll) { this.ragdoll.restore(); this.ragdoll = null; }
       // Keep the saved overlay base until _animate removes it, but discard the
       // dead life's aiming spring. A respawn is not a chest-attack recovery.
       this._chestPose?.rotation.identity();
       this.hp = this.maxHp; this.ki = this.maxKi * 0.4;
-      this._firearmReload=null;for(const slot of Object.values(this.slots)){slot.ammo=null;firearmAmmo(slot);}
+      this._firearmReload=null;if(!practice)for(const slot of Object.values(this.slots)){slot.ammo=null;firearmAmmo(slot);}
       this._wounds = { arm: 0, leg: 0, torso: 0 }; this._woundT = { arm: 0, leg: 0, torso: 0 };   // a fresh body (manual §18)
-      for (const it of this.items) if (it.state !== 'deployed') { it.charges = it.def.charges ?? 1; it.state = 'ready'; it.cd = 0; }   // fresh pouch each life
+      if(!practice)for (const it of this.items) if (it.state !== 'deployed') { it.charges = it.def.charges ?? 1; it.state = 'ready'; it.cd = 0; }   // fresh pouch each life
       this.state = 'idle'; this.invuln = 1.4; this.vel.set(0, 0, 0);
       retirePowerUp(this);
       resetMovementGears(this);

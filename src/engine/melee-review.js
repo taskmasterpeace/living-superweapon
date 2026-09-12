@@ -3,13 +3,14 @@ import {cloneReviewActor,applyReviewPose,reviewFrame} from './melee-recording.js
 import {cinematicReviewShot} from './melee-review-camera.js';
 import '../styles/melee-review.css';
 
-export function openMeleeReview(game,recording,onClose=()=>{}){
+export function openMeleeReview(game,recording,onClose=()=>{},{recover=false}={}){
  if(recording.frames.length<2||game.combatOverlayOpen)return null;
  const frames=recording.frames.slice(),start=frames[0].time,end=frames.at(-1).time;
  const previousRunning=game.running,focus=document.activeElement;
  const dialog=document.createElement('dialog');dialog.className='melee-review';dialog.setAttribute('aria-label','Threat Room combat review');
  dialog.innerHTML=`<header><div><h1>THREAT ROOM <span>Combat review</span></h1><p>Recorded poses · practice paused · effects and terrain are not replayed</p></div><button data-close>Return to practice</button></header><div class="melee-review-stage"></div><footer><nav aria-label="Review camera"></nav><div class="melee-review-transport"><button data-play>Play</button><label>Speed <select data-speed><option value="0.25">¼ speed</option><option value="0.5">½ speed</option><option value="1">Normal</option></select></label><label class="melee-review-timeline">Exchange <input data-time type="range" min="0" max="${end-start}" step="0.001" value="0"></label><output data-clock></output></div><p data-readout aria-live="off"></p></footer>`;
  document.body.append(dialog);
+ if(recover){dialog.querySelector('[data-close]').textContent='Reset practice';dialog.querySelector('header p').textContent='Training knockout · review your defense, then reset · reserves and consumables unchanged';}
  const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;
  const stage=dialog.querySelector('.melee-review-stage');stage.append(renderer.domElement);
  const scene=new THREE.Scene();scene.background=new THREE.Color('#101311');
