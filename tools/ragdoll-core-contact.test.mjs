@@ -60,3 +60,17 @@ for(const frame of [{},{scale:.65,bulk:1.65,head:.65,neck:1.6,broad:1.6,stance:1
   }
  }finally{f.dispose();}
 });
+
+for(const finite of [true,false])test('ragdoll below overhead slab remains in place; core='+finite,()=>{
+ const f=new Fighter(ROSTER.find(d=>d.id==='merc'));try{f.pos.set(80,12,-20);f.obj.position.copy(f.pos);f.obj.updateMatrixWorld(true);const rag=new Ragdoll(f,new T.Vector3());if(!finite)rag.coreContact=null;const world={ARENA:310,heightAt:()=>0,cover:[{x:0,z:0,hx:310,hz:310,bottom:300,top:304,finiteBuilding:true}]};
+ for(let i=0;i<30;i++)rag.step(1/60,{world});
+ assert.ok(Math.abs(rag.P.pelvis.pos.x-80)<10,'overhead slab shoved body sideways');assert.ok(Math.abs(rag.P.pelvis.pos.z+20)<10);
+ }finally{f.dispose();}
+});
+
+test('rigid head contacting slab underside is pushed down without lateral ejection',()=>{
+ const f=new Fighter(ROSTER.find(d=>d.id==='merc'));try{f.obj.updateMatrixWorld(true);const rag=new Ragdoll(f,new T.Vector3()),point=rag.P.head,contact=rag.coreContact;const bounds=new T.Box3();contact.measureBounds(contact.records.get('head'),bounds);const before=point.pos.clone(),bottom=point.pos.y+bounds.max.y-.2;
+ contact.coverContact('head',point,[{x:0,z:0,hx:310,hz:310,bottom,top:bottom+4}]);
+ assert.ok(Math.abs(point.pos.y-before.y+.2)<1e-6);assert.equal(point.pos.x,before.x);assert.equal(point.pos.z,before.z);
+ }finally{f.dispose();}
+});

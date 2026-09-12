@@ -90,3 +90,11 @@ test('practice ally KO does not call operation rewards or drop equipment',()=>{
   assert.equal(drops,0);assert.equal(rewards,0);t.clear();
  }finally{x.close();}
 });
+
+test('throw and impact timestamps use simulation time while target control is suspended',()=>{
+ const x=mainCombatFixture({mode:'powerworld'});try{const t=new MeleeTrial(x.g,new THREE.Vector3(0,0,15));x.g.time=20;const f=t.start();
+ x.g.time=21;t.hit(f,10,{src:x.p,meleeMove:'throw'},false,{healthLost:10});
+ x.g.time=21.4;t.hit(f,32,{src:x.p,slam:true},false,{healthLost:32});
+ assert.equal(t.records[0].time,1);assert.ok(Math.abs(t.records[1].time-1.4)<1e-8);t.dispose();
+ }finally{x.close();}
+});

@@ -140,7 +140,7 @@ export class MeleeTrial {
  strikeStarted(f){
   if(f!==this.g.player||!this.target)return;
   const profile=meleeApproach(f.def,f.airborne),entry=meleeEntryEligibility(this.g,f,this.target,profile.range);
-  this.attempt={entryReason:entry.reason,entryRange:profile.range,entryFamily:profile.family,trial:this.kind,kind:f.mId,time:this.elapsed,contacts:0,approach:!!f._meleeMotion?.approachEnabled,distance:f.pos.distanceTo(this.target.pos),startup:f._meleeMotion?.startupDuration??STRIKES[f.mId].startup/(f.def.meleePace||1),active:STRIKES[f.mId].active/(f.def.meleePace||1),recovery:STRIKES[f.mId].recover/(f.def.meleePace||1)};
+  this.attempt={entryReason:entry.reason,entryRange:profile.range,entryFamily:profile.family,trial:this.kind,kind:f.mId,time:Math.max(0,(this.g.time||0)-(this.startedAt||0)),contacts:0,approach:!!f._meleeMotion?.approachEnabled,distance:f.pos.distanceTo(this.target.pos),startup:f._meleeMotion?.startupDuration??STRIKES[f.mId].startup/(f.def.meleePace||1),active:STRIKES[f.mId].active/(f.def.meleePace||1),recovery:STRIKES[f.mId].recover/(f.def.meleePace||1)};
  }
  strikeEnded(f){
   if(f!==this.g.player||!this.attempt)return;
@@ -155,12 +155,12 @@ export class MeleeTrial {
   const healthLost=outcome?.healthLost??amount,energySpent=outcome?.guardEnergySpent??0;
   const result=outcome?.guard==='broken'?'GUARD BROKEN':outcome?.guard==='blocked'?'BLOCK':blocked?'ABSORBED':opts.slam?'TERRAIN IMPACT':opts.meleeMove==='throw'?'THROW':'CONTACT';
   const label=(incoming?'YOU · ':target===this.ally?'TEAMMATE · ':'TARGET · ')+result+' · '+healthLost.toFixed(1)+' HP · '+energySpent.toFixed(1)+' guard energy';
-  const record={trial:this.kind,time:this.elapsed,amount,blocked:!!blocked,hp:target.hp,playerKi:this.g.player.ki,healthLost,guardEnergySpent:energySpent,result,incoming,actor:incoming?0:target===this.ally?2:1,move:opts.meleeMove||'hit'};
+  const record={trial:this.kind,time:Math.max(0,(this.g.time||0)-(this.startedAt||0)),amount,blocked:!!blocked,hp:target.hp,playerKi:this.g.player.ki,healthLost,guardEnergySpent:energySpent,result,incoming,actor:incoming?0:target===this.ally?2:1,move:opts.meleeMove||'hit'};
   if(this.machine)this.machineLastHit=record;this.g._threatRoom?.rangeDrill?.contact(target,opts.src,healthLost);
   if(this.machine&&healthLost>0)this.g.news?.highlight('bighit','TRAINING MACHINE · '+healthLost.toFixed(1)+' DAMAGE',{actor:opts.src,target,focus:target.pos,priority:1});
   this.records.push(record);if(this.records.length>100)this.records.shift();this.recording.mark(this.g.time,{...record,label,kind:'contact'});
   this.g.hud?.feed?.(label,'#ffd24a');
  }
- clear(){this.machine=null;this.machineMode=null;this.clearPreview();this.review?.close();this.review=null;this.recording.clear();for(const f of [this.target,this.ally])if(f)retirePracticeActor(this.g,f);this.target=null;this.ally=null;}
+ clear(){this.startedAt=this.g.time||0;this.machine=null;this.machineMode=null;this.clearPreview();this.review?.close();this.review=null;this.recording.clear();for(const f of [this.target,this.ally])if(f)retirePracticeActor(this.g,f);this.target=null;this.ally=null;}
  dispose(){this.clear();}
 }

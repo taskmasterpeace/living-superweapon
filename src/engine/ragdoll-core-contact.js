@@ -103,7 +103,7 @@ export class RagdollCoreContact {
         const p=this.pose.points[key].pos,b=record.finalBounds,hx=c.hx??c.r,hz=c.hz??c.r;
         let near=-Infinity,far=Infinity,valid=true;
         for(const k of AXES){
-          const min=k==='x'?c.x-hx:k==='z'?c.z-hz:-Infinity,max=k==='x'?c.x+hx:k==='z'?c.z+hz:(c.top??c.h);
+          const min=k==='x'?c.x-hx:k==='z'?c.z-hz:(c.bottom??-Infinity),max=k==='x'?c.x+hx:k==='z'?c.z+hz:(c.top??c.h);
           if(k!==axis){if(p[k]+b.max[k]<=min+1e-8||p[k]+b.min[k]>=max-1e-8){valid=false;break;}continue;}
           const a=(min-p[k]-b.max[k])*sign,z=(max-p[k]-b.min[k])*sign;
           near=Math.min(a,z);far=Math.max(a,z);
@@ -127,8 +127,10 @@ export class RagdollCoreContact {
 
 function coverCorrection(p,bounds,c,out){
   const min=bounds.min,max=bounds.max,hx=c.hx??c.r,hz=c.hz??c.r,top=c.top??c.h;
-  if(p.x+max.x<c.x-hx||p.x+min.x>c.x+hx||p.z+max.z<c.z-hz||p.z+min.z>c.z+hz||p.y+min.y>top)return false;
+  if(p.x+max.x<c.x-hx||p.x+min.x>c.x+hx||p.z+max.z<c.z-hz||p.z+min.z>c.z+hz||p.y+min.y>top||p.y+max.y<(c.bottom??-Infinity))return false;
   let axis='y',move=top-p.y-min.y;
+  const underside=(c.bottom??-Infinity)-p.y-max.y;
+  if(Math.abs(underside)<Math.abs(move))move=underside;
   const left=c.x-hx-p.x-max.x,right=c.x+hx-p.x-min.x,back=c.z-hz-p.z-max.z,front=c.z+hz-p.z-min.z;
   if(Math.abs(left)<Math.abs(move)){axis='x';move=left;}
   if(Math.abs(right)<Math.abs(move)){axis='x';move=right;}

@@ -243,9 +243,11 @@ export class Ragdoll {
         const c = cover[i];
         const hx = (c.hx ?? c.r), hz = (c.hz ?? c.r), top = (c.top ?? c.h);
         const dx = pt.pos.x - c.x, dz = pt.pos.z - c.z;
-        if (Math.abs(dx) > hx + r || Math.abs(dz) > hz + r || pt.pos.y > top + r) continue;
+        if (Math.abs(dx) > hx + r || Math.abs(dz) > hz + r || pt.pos.y > top + r || pt.pos.y+r < (c.bottom??-Infinity)) continue;
         if (pt.pos.y > top - 0.6) { pt.pos.y = top + r; if (pt.prev.y < pt.pos.y) pt.prev.y = pt.pos.y; continue; }
         const ox = hx + r - Math.abs(dx), oz = hz + r - Math.abs(dz);
+        const under=pt.pos.y+r-(c.bottom??-Infinity);
+        if(under<Math.min(ox,oz)){pt.pos.y-=under;if(pt.prev.y>pt.pos.y)pt.prev.y=pt.pos.y;continue;}
         if (ox < oz) pt.pos.x += Math.sign(dx || 1) * ox; else pt.pos.z += Math.sign(dz || 1) * oz;
       }
     }
