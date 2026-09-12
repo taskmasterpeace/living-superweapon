@@ -1,3 +1,4 @@
+import {Fighter} from './entity.js';
 import {hasStrike,STRIKES} from '../data/martial.js';
 import * as THREE from 'three';
 import {ROSTER} from '../data/characters.js';
@@ -19,11 +20,21 @@ export function trialLesson(kind,def){
 // Scripted decisions use native motion, defense and damage; no target teleporting.
 export class MeleeTrial {
  constructor(g,origin){this.g=g;this.origin=origin.clone();this.records=[];this.index=-1;this.recording=new MeleeRecording();}
+ previewThreat(id){
+  if(this.g.ms?.threatLab?.state!=='preparing')return false;
+  const def=ROSTER.find(d=>d.id===id);if(!def)throw Error('Unknown threat character');
+  this.clear();this.selectedThreat=id;
+  const f=this.previewActor=new Fighter(def,{rimK:.14});f.pos.copy(this.origin);f.pos.y=this.g.world.heightAt(f.pos.x,f.pos.z);f.obj.position.copy(f.pos);f.faceDir(0,-1);this.g.scene.add(f.obj);
+  this.g.hud?.feed?.(def.name+' · '+(def.archetype==='soldier'?'SOLDIER':'LSW')+' · '+def.threat+' · preview only; start a drill to fight','#ffd24a');return f;
+ }
+ clearPreview(){if(this.previewActor){this.previewActor.obj.removeFromParent();this.previewActor.dispose();this.previewActor=null;}}
+ startSelected(){if(!this.selectedThreat)return false;return this.start(this.kind||'stationary');}
  start(kind='stationary'){
   if(!MELEE_TRIALS.includes(kind))throw Error('Unknown melee trial');
+  const selected=ROSTER.find(d=>d.id===this.selectedThreat);if((kind==='airborne'||kind==='air-defense')&&selected&&!(selected.flightTier>0)){this.g.hud?.feed?.('Choose a flying target for an airborne drill. This character stays grounded.','#ffd24a');return false;}
   this.clear();this.attempt=null;this.phaseKey=null;this.kind=kind;this.index=MELEE_TRIALS.indexOf(kind);this.elapsed=0;this.dodgeAt=1;this.attackAt=1;this.releaseAt=null;
-  const base=ROSTER.find(d=>d.id===(kind==='airborne'||kind==='air-defense'?'sol':'merc'))||ROSTER[0];
-  const f=this.g.addFighter({...base,name:'Trial '+kind,abilities:{},items:[],holo:true},{team:this.g.player.team===0?1:0,dummy:true,x:this.origin.x,z:this.origin.z});
+  const base=ROSTER.find(d=>d.id===this.selectedThreat)||ROSTER.find(d=>d.id===(kind==='airborne'||kind==='air-defense'?'sol':'merc'))||ROSTER[0];
+  const f=this.g.addFighter({...base,name:base.name+' · '+kind,abilities:{},items:[],holo:true},{team:this.g.player.team===0?1:0,dummy:true,x:this.origin.x,z:this.origin.z});
   f.pos.y=this.g.world.heightAt(f.pos.x,f.pos.z);f._chaseKb=true;f._openSky=true;f.noRespawn=true;f._meleeTrial=this;this.target=f;this.startHp=f.hp;
   this.recording.bind([this.g.player,f]);
   this.g.hud?.feed?.(kind.toUpperCase()+' · '+trialLesson(kind,this.g.player.def),'#ffd24a');return f;
@@ -115,6 +126,6 @@ export class MeleeTrial {
   this.records.push(record);if(this.records.length>100)this.records.shift();this.recording.mark(this.g.time,{...record,label,kind:'contact'});
   this.g.hud?.feed?.(label,'#ffd24a');
  }
- clear(){this.review?.close();this.review=null;this.recording.clear();const f=this.target;if(!f)return;if(f.grabbedBy)this.g.melee.release(f.grabbedBy);if(f.grabbing)this.g.melee.release(f);for(const key of ['hardLock','lockTarget'])if(this.g[key]===f)this.g[key]=null;f._meleeTrial=null;f.dispose();f.obj.removeFromParent();const i=this.g.entities.indexOf(f);if(i>=0)this.g.entities.splice(i,1);this.target=null;}
+ clear(){this.clearPreview();this.review?.close();this.review=null;this.recording.clear();const f=this.target;if(!f)return;if(f.grabbedBy)this.g.melee.release(f.grabbedBy);if(f.grabbing)this.g.melee.release(f);for(const key of ['hardLock','lockTarget'])if(this.g[key]===f)this.g[key]=null;f._meleeTrial=null;f.dispose();f.obj.removeFromParent();const i=this.g.entities.indexOf(f);if(i>=0)this.g.entities.splice(i,1);this.target=null;}
  dispose(){this.clear();}
 }

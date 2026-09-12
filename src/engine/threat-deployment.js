@@ -1,3 +1,4 @@
+import {ROSTER} from '../data/characters.js';
 import {MeleeTrial,MELEE_TRIALS} from './melee-trial.js';
 import * as THREE from 'three';
 import {SquadTransport} from './squad-transport.js';
@@ -51,6 +52,10 @@ export class ThreatDeployment {
     const trialPad=this.clearPad(this.origin.x+70,this.origin.z,18,[{x:this.origin.x,z:this.origin.z,r:28}]);
     if(trialPad){
       this.meleeTrial=new MeleeTrial(g,trialPad);
+      this.threatPickIndex=-1;
+      this.threatPickHandle=g.registerInteractable({id:'threat-pick-character',pos:trialPad.clone().add(new THREE.Vector3(-18,3,-15)),r:8,label:'PREVIEW ROSTER CHARACTER · NEXT',verb:'CHOOSE DRILL TARGET',priority:3,enabled:f=>f===g.player&&this.state==='preparing',onUse:()=>{this.threatPickIndex=(this.threatPickIndex+1)%ROSTER.length;this.meleeTrial.previewThreat(ROSTER[this.threatPickIndex].id);}});
+      this.threatStartHandle=g.registerInteractable({id:'threat-start-selected',pos:trialPad.clone().add(new THREE.Vector3(18,3,-15)),r:8,label:'USE PREVIEW CHARACTER IN CURRENT DRILL',verb:'START SELECTED DRILL',priority:3,enabled:f=>f===g.player&&this.state==='preparing'&&!!this.meleeTrial.selectedThreat,onUse:()=>this.meleeTrial.startSelected()});
+      for(const x of [-18,18]){const pad=new THREE.Mesh(new THREE.TorusGeometry(3,.25,6,24),new THREE.MeshBasicMaterial({color:0xffd24a}));pad.rotation.x=Math.PI/2;pad.position.copy(trialPad).add(new THREE.Vector3(x,.3,-15));this.group.add(pad);}
       this.trialReviewHandle=g.registerInteractable({id:'threat-melee-review',pos:trialPad.clone().add(new THREE.Vector3(-18,3,15)),r:8,label:'FRONT / SIDE / OVERHEAD · SLOW MOTION',verb:'REVIEW EXCHANGE',priority:3,enabled:f=>f===g.player&&this.state==='preparing',onUse:()=>this.meleeTrial.openReview()});
       const reviewMarker=new THREE.Mesh(new THREE.TorusGeometry(3,.25,6,24),new THREE.MeshBasicMaterial({color:0xe8e2d6}));reviewMarker.rotation.x=Math.PI/2;reviewMarker.position.copy(trialPad).add(new THREE.Vector3(-18,.3,15));this.group.add(reviewMarker);
       this.trialHandle=g.registerInteractable({id:'threat-melee-trial',pos:trialPad.clone().add(new THREE.Vector3(0,3,15)),r:12,label:'MELEE TRIAL · STATIONARY / RETREAT / GUARD / DODGE',verb:'NEXT TRIAL',priority:3,enabled:f=>f===g.player&&this.state==='preparing',onUse:()=>this.meleeTrial.start(MELEE_TRIALS[(this.meleeTrial.index+1)%MELEE_TRIALS.length])});
@@ -98,6 +103,7 @@ export class ThreatDeployment {
     return true;
   }
   update(){
+    if(this.threatPickHandle&&this.meleeTrial?.selectedThreat)this.threatPickHandle.label='PREVIEW · '+ROSTER.find(d=>d.id===this.meleeTrial.selectedThreat)?.name+' · NEXT CHARACTER';
     if(this.trialHandle&&this.meleeTrial)this.trialHandle.label='MELEE TRIAL · '+(this.meleeTrial.kind||'stationary').toUpperCase()+' · NEXT';
     if(this.trialRepeatHandle&&this.meleeTrial)this.trialRepeatHandle.label='RESTORE FIGHTER + '+(this.meleeTrial.kind||'stationary').toUpperCase()+' TARGET';
     if(this.reserveHandle&&this.stock){const r=this.stock.remaining;this.reserveHandle.label=`RESERVES · SOLDIER ${r.soldier} · LSW ${r.lsw}`;}
@@ -116,6 +122,7 @@ export class ThreatDeployment {
   }
   dispose(){
     this.practiceProps?.dispose();
+    if(this.threatPickHandle)this.g.unregisterInteractable(this.threatPickHandle);if(this.threatStartHandle)this.g.unregisterInteractable(this.threatStartHandle);
     if(this.trialReviewHandle)this.g.unregisterInteractable(this.trialReviewHandle);
     this.meleeTrial?.dispose();if(this.trialRepeatHandle)this.g.unregisterInteractable(this.trialRepeatHandle);if(this.trialHandle)this.g.unregisterInteractable(this.trialHandle);
     for(const f of this.manifest||[])f._deploymentTarget=null;

@@ -59,3 +59,14 @@ test('trainer KO restores the same rig without spending reserves or issuing cons
   assert.deepEqual(stock.remaining,{soldier:2,lsw:3});assert.equal(x.p._remove,false);assert.equal(t.kind,'defend');t.dispose();
  }finally{x.close();}
 });
+
+test('roster preview stays outside combat and selected drill retains native body without powers',()=>{
+ const x=mainCombatFixture({mode:'powerworld'});try{
+  x.g.ms={threatLab:{state:'preparing'}};const t=new MeleeTrial(x.g,new THREE.Vector3(0,0,15));
+  const preview=t.previewThreat('rage');assert.equal(preview.def.id,'rage');assert.ok(!x.g.entities.includes(preview));assert.ok(preview.obj.parent);
+  const second=t.previewThreat('vega');assert.equal(preview.obj.parent,null);assert.equal(x.g.entities.length,1);
+  const target=t.startSelected();assert.equal(second.obj.parent,null);assert.equal(target.def.id,'vega');assert.deepEqual(target.def.abilities,{});assert.ok(target.isDummy);assert.equal(x.g.entities.length,2);
+  const again=t.repeat();assert.equal(again.def.id,'vega');assert.equal(x.g.entities.length,2);
+  t.previewThreat('rage');assert.equal(x.g.entities.length,1);assert.equal(t.start('airborne'),false);t.dispose();assert.equal(t.previewActor,null);
+ }finally{x.close();}
+});
