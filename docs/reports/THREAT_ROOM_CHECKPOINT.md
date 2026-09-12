@@ -39,3 +39,11 @@ The low-rate miss came from predicted approach travel colliding with the defende
 Real RAGE tap and post-commit sideways evade regression passes at 20/30/60/120Hz. Browser controlled setup with native V input confirms the hit again: 38.475 damage, target HP 81.525, contact record, no page errors. The earlier 20Hz failure notes above are historical and superseded by this result.
 
 Teaching now derives tap instructions from hasStrike: RAGE says heavy slam, combo-capable profiles say punch/repeat combo. Attempt records include startup/active/recovery durations from native STRIKES and character pace; end feedback shows recovery duration. Forty-three relevant native contact, approach, trial and contract tests pass. Full player/prop reset, multi-angle replay, resource-spend accounting and the rest of the full goal remain unfinished.
+
+## Practice restoration checkpoint — 2026-09-12
+
+The cyan repeat station now offers RESET PRACTICE. During preparation it restores the living player's HP, energy, armor and guard, clears melee recovery and common damage conditions, and replaces the current trial target. It retains the player object referenced by humans and the deployment manifest; it does not issue replacements or refill gadget consumables. Reset refuses field use, KO, active powers, vehicle seating, carried props and unrelated person holds. Target cleanup releases a hold without simulating a break-free attack and clears both target locks.
+
+Validation: 45 combat/trial tests passed; after adding vehicle/carry guards the six trial tests passed again. Production build passed with existing chunk-size/import warnings. No new native video recorded for this reset-only checkpoint. Existing retreat-contact footage remains the latest gameplay evidence.
+
+Still pending: full prop/scenario reset, KO practice recovery, multi-angle pose replay and slow-motion controls. The preparation pad is not yet the separate-dimensional Threat Room. Broader combat/movement goal remains active.
