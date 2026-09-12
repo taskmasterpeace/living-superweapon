@@ -1,6 +1,6 @@
 import test from 'node:test';import assert from 'node:assert/strict';import * as THREE from 'three';
 import {mainCombatFixture} from './helpers/main-combat-fixture.mjs';import {MeleeTrial} from '../src/engine/melee-trial.js';import {performEvade} from '../src/engine/abilities.js';
-function run(hz,dodge=false){const x=mainCombatFixture({mode:'powerworld',hero:'rage'}),a=x.p,trial=new MeleeTrial(x.g,new THREE.Vector3(0,0,20)),b=trial.start('retreat');try{
+function run(hz,dodge=false,hero='rage',distance=20){const x=mainCombatFixture({mode:'powerworld',hero}),a=x.p,trial=new MeleeTrial(x.g,new THREE.Vector3(0,0,distance)),b=trial.start('retreat');try{
  x.g.audio={...x.g.audio,yell(){}};x.g.vfx.impact=()=>{};x.g.vfx.impactStar=()=>{};
  for(const f of [a,b]){f._openSky=true;f._chaseKb=true;f.invuln=0;f.gait='grounded';f.flying=false;f.hp=f.maxHp=1000;f._sync();}
  b.vel.z=30;a.hasAimWorld=true;b.center(a.aimWorld);a.aim3.set(0,0,1);a.faceDir(0,1);b.faceDir(0,-1);
@@ -13,3 +13,5 @@ for(const hz of [20,30,60,120]){test('RAGE catches walking retreat with native c
 
 
 
+
+for(const hz of [20,30,60,120])for(const distance of [20,27]){test('WEBLINE catches retreat from '+distance+'u at '+hz+'Hz',()=>assert.ok(run(hz,false,'webline',distance)>0));test('WEBLINE committed pounce permits dodge from '+distance+'u at '+hz+'Hz',()=>assert.equal(run(hz,true,'webline',distance),0));}

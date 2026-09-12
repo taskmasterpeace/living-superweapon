@@ -19,7 +19,8 @@ export function animateMelee(f) {
   if(f._openSky&&p.rig&&f.grabState==='clinch'&&f.grabbing){animateClinch(f);return;}
   if(!f._openSky||!p.rig||!m||!S||!f.mstate)return;
   const pace=f.def.meleePace||1;
-  const t=1-Math.max(0,f.mT)*pace/S[f.mstate];
+  const duration=f.mstate==='startup'?(m.startupDuration||S.startup/pace):S[f.mstate]/pace;
+  const t=1-Math.max(0,f.mT)/duration;
   const startup=f.mstate==='startup',recovery=f.mstate==='recover';
   const extension=startup?smooth((t-.55)/.45):recovery?1-smooth(t/.7):1;
   const weight=startup?smooth(t/.3):recovery?1-smooth((t-.55)/.45):1;

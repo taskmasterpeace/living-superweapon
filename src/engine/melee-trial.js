@@ -136,7 +136,7 @@ export class MeleeTrial {
  strikeStarted(f){
   if(f!==this.g.player||!this.target)return;
   const profile=meleeApproach(f.def,f.airborne),entry=meleeEntryEligibility(this.g,f,this.target,profile.range);
-  this.attempt={entryReason:entry.reason,entryRange:profile.range,entryFamily:profile.family,trial:this.kind,kind:f.mId,time:this.elapsed,contacts:0,approach:!!f._meleeMotion?.approachEnabled,distance:f.pos.distanceTo(this.target.pos),startup:STRIKES[f.mId].startup/(f.def.meleePace||1),active:STRIKES[f.mId].active/(f.def.meleePace||1),recovery:STRIKES[f.mId].recover/(f.def.meleePace||1)};
+  this.attempt={entryReason:entry.reason,entryRange:profile.range,entryFamily:profile.family,trial:this.kind,kind:f.mId,time:this.elapsed,contacts:0,approach:!!f._meleeMotion?.approachEnabled,distance:f.pos.distanceTo(this.target.pos),startup:f._meleeMotion?.startupDuration??STRIKES[f.mId].startup/(f.def.meleePace||1),active:STRIKES[f.mId].active/(f.def.meleePace||1),recovery:STRIKES[f.mId].recover/(f.def.meleePace||1)};
  }
  strikeEnded(f){
   if(f!==this.g.player||!this.attempt)return;

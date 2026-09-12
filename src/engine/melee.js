@@ -151,9 +151,12 @@ export class MeleeSystem {
         const lead=entry.vel.clone();if(!f.airborne)lead.y=0;
         // A retreat already underway accelerates toward ordinary gait speed during windup.
         if(lead.length()>1)lead.setLength(Math.max(lead.length(),entry.speed||0));
-        lead.clampLength(0,48).multiplyScalar(Math.min(.6,(S.startup+S.active*.5)/pace));
+        lead.clampLength(0,48);
+        const profile=meleeApproach(f.def,f.airborne),gap=point.distanceTo(f.center(new THREE.Vector3()));
+        const arrival=Math.max((S.startup+S.active*.5)/pace,Math.max(0,gap-3.8)/Math.max(1,profile.speed-lead.length()));
+        lead.multiplyScalar(Math.min(.6,arrival));
         const origin=f.center(new THREE.Vector3()),range=meleeApproach(f.def,f.airborne).range;
-        point.add(lead);const offset=point.clone().sub(origin);if(offset.length()>range)point.copy(origin).add(offset.setLength(range));
+        point.add(lead);const offset=point.clone().sub(origin);const budget=range+lead.length();if(offset.length()>budget)point.copy(origin).add(offset.setLength(budget));
       }
       f._meleeMotion={side,point,target:entry,previous:arm.children[2].getWorldPosition(new THREE.Vector3()),current:new THREE.Vector3(),impact:new THREE.Vector3(),dt:0};
     }
@@ -166,13 +169,16 @@ export class MeleeSystem {
       // player-earned momentum. Full 3D approach follows the committed aim.
       const approach=f._meleeMotion.point.clone().sub(f.center(new THREE.Vector3()));
       const profile=meleeApproach(f.def,f.airborne),distance=approach.length();
-      const eligible=distance<=profile.range&&distance>3.8;
-      lunge=Math.min(eligible?profile.speed:lunge,Math.max(0,distance-3.8)/(S.startup+S.active*.5)*pace);
+      const admitted=!!f._meleeMotion.target||distance<=profile.range;
+      const eligible=admitted&&distance>3.8;
+      if(eligible)f.mT=Math.max(f.mT,(distance-3.8)/profile.speed-S.active*.5/pace);
+      f._meleeMotion.startupDuration=f.mT;f.strikeActive=this._commitRemaining(f);
+      lunge=Math.min(eligible?profile.speed:lunge,Math.max(0,distance-3.8)/(f.mT+S.active*.5/pace));
       if(!f.airborne)approach.y=0;
       f._meleeMotion.step=approach.clone().normalize().multiplyScalar(lunge);
-      f._meleeMotion.approachOrigin=f.pos.clone();f._meleeMotion.approachEnabled=distance<=profile.range;
+      f._meleeMotion.approachOrigin=f.pos.clone();f._meleeMotion.approachEnabled=admitted;
       f._meleeMotion.approachDistance=eligible?Math.max(0,(f.flying?approach.length():Math.hypot(approach.x,approach.z))-3.8):0;
-      if(eligible&&!f.airborne&&profile.arc>0&&distance>9){f.vel.y=Math.max(f.vel.y,profile.arc);f.burstT=Math.max(f.burstT,S.startup+S.active);}
+      if(eligible&&!f.airborne&&profile.arc>0&&distance>9){f.vel.y=Math.max(f.vel.y,profile.arc);f.burstT=Math.max(f.burstT,f.mT+S.active/pace);}
       f._meleeMotion.family=profile.family;
       f.vel.add(f._meleeMotion.step);
     } else { f.vel.x += f.aim.x * lunge; f.vel.z += f.aim.z * lunge; }
