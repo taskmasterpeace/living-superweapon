@@ -1,11 +1,9 @@
-import {ROSTER} from '../data/characters.js';
-import {OPERATION_GADGETS} from '../data/operation-gadgets.js';
+import {gadgetCatalog} from '../data/gadget-catalog.js';
+
 import './workshop-page.css';
 const esc=s=>String(s??'—').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const records=new Map();
-function add(def,owner){const key=JSON.stringify(def);if(!records.has(key))records.set(key,{...def,owners:[]});records.get(key).owners.push(owner);}
-for(const d of OPERATION_GADGETS)add(d,'Threat Lab issue');for(const hero of ROSTER)for(const d of hero.items||[])add(d,hero.name);
-const rows=[...records.values()].sort((a,b)=>(a.name||a.kind).localeCompare(b.name||b.kind));
+const rows=gadgetCatalog().map(({def,owners})=>({...def,owners}));
+
 document.body.innerHTML='<nav class="workshop-nav"><a href="powerworld.html">POWERWORLD</a><a href="studio.html">Character Studio</a><a href="sound-library.html">Sound Library</a><a href="gadget-library.html" aria-current="page">Gadget Catalog</a></nav><main class="catalog-main"><h1>Gadget catalog</h1><p>Live definitions from character loadouts and Threat Lab issue. Search, compare and export a spreadsheet.</p><p>Read-only source view. Inventory equips and uses gadgets; this catalog does not change balance values.</p><div class="catalog-tools"><input aria-label="Search gadgets" placeholder="Search gadget, kind or character"><button id="export">Export CSV</button></div><p id="count" role="status"></p><div class="catalog-table"><table><thead><tr><th>Gadget / ID</th><th>Kind</th><th>Charges</th><th>Cooldown (s)</th><th>Configured effects</th><th>Issued to / carried by</th></tr></thead><tbody></tbody></table></div></main>';
 function effects(d){return Object.entries(d).filter(([k])=>!['id','name','kind','charges','cd','owners'].includes(k)).map(([k,v])=>k+': '+JSON.stringify(v)).join(' · ')||'—';}
 function filtered(){const q=document.querySelector('input').value.toLowerCase();return rows.filter(d=>JSON.stringify(d).toLowerCase().includes(q));}

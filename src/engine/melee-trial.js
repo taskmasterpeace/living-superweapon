@@ -37,27 +37,33 @@ export class MeleeTrial {
   f.pos.y=this.g.world.heightAt(f.pos.x,f.pos.z);f._openSky=true;f._chaseKb=true;f.faceDir(0,-1);this.target=f;this.startHp=f.hp;this.recording.bind([this.g.player,f]);
   this.g.hud?.feed?.('LIVE THREAT · '+f.def.name+' · Native powers and AI active. Reset practice to repeat.','#ffd24a');return f;
  }
- start(kind='stationary'){
+ start(kind='stationary',trainingDefinition=null){
   if(!MELEE_TRIALS.includes(kind))throw Error('Unknown melee trial');
   const selected=ROSTER.find(d=>d.id===this.selectedThreat);if((kind==='airborne'||kind==='air-defense')&&selected&&!(selected.flightTier>0)){this.g.hud?.feed?.('Choose a flying target for an airborne drill. This character stays grounded.','#ffd24a');return false;}
   this.clear();this.attempt=null;this.phaseKey=null;this.kind=kind;this.index=MELEE_TRIALS.indexOf(kind);this.elapsed=0;this.dodgeAt=1;this.attackAt=1;this.releaseAt=null;
-  const base=ROSTER.find(d=>d.id===this.selectedThreat)||ROSTER.find(d=>d.id===(kind==='airborne'||kind==='air-defense'?'sol':'merc'))||ROSTER[0];
+  const base=trainingDefinition||ROSTER.find(d=>d.id===this.selectedThreat)||ROSTER.find(d=>d.id===(kind==='airborne'||kind==='air-defense'?'sol':'merc'))||ROSTER[0];
   const f=this.g.addFighter({...base,name:base.name+' · '+kind,abilities:{},items:[],holo:true},{team:this.g.player.team===0?1:0,dummy:true,x:this.origin.x,z:this.origin.z});
   f.pos.y=this.g.world.heightAt(f.pos.x,f.pos.z);f._chaseKb=true;f._openSky=true;f.noRespawn=true;f._meleeTrial=this;this.target=f;this.startHp=f.hp;
   this.recording.bind([this.g.player,f]);
   this.g.hud?.feed?.(kind.toUpperCase()+' · '+trialLesson(kind,this.g.player.def),'#ffd24a');return f;
  }
- startMachine(moving=false){
-  const f=this.start('stationary');this.machineMode=moving?'moving':'still';f.def={...f.def,name:'TRAINING MACHINE',metal:true};f.pos.set(140,0,-85);this.machineTime=0;
+ startMachine(mode='still'){
+  mode=mode===true?'moving':mode===false?'still':mode;
+  if(!['still','moving','airborne'].includes(mode))throw Error('Unknown machine drill');
+  if(this.g.ms?.threatLab?.state!=='preparing')return false;
+  const machineDef={...ROSTER.find(d=>d.id==='merc'),name:'TRAINING MACHINE',metal:true,body:'metal'};const f=this.start('stationary',machineDef);
+  this.machineMode=mode;f.def={...f.def,name:'TRAINING MACHINE',metal:true};f.pos.set(140,0,-85);this.machineTime=0;this.machineLastHit=null;
+  if(mode==='airborne'){f.pos.y=2;f.vel.set(22,100,0);f.launchT=4;f.flying=false;}
+
   const machine=new THREE.Group();machine.name='training-machine';
   const plate=new THREE.Mesh(new THREE.BoxGeometry(7,11,3),new THREE.MeshStandardMaterial({color:0x526879,metalness:.6,roughness:.5}));plate.position.y=8;machine.add(plate);
   const bull=new THREE.Mesh(new THREE.TorusGeometry(2.2,.35,8,32),new THREE.MeshBasicMaterial({color:0xffd24a}));bull.position.set(0,9,1.6);machine.add(bull);
   const base=new THREE.Mesh(new THREE.CylinderGeometry(3,4,2,12),new THREE.MeshStandardMaterial({color:0x283640}));base.position.y=1;machine.add(base);f.obj.add(machine);this.machine=machine;
   for(const child of f.obj.children)child.visible=child===machine;this.recording.bind([this.g.player,f]);
-  this.g.hud?.feed?.('TARGET MACHINE · '+(moving?'LEFT / RIGHT motion':'STATIONARY')+' · native damage and armor · E at range station toggles mode','#ffd24a');return f;
+  this.g.hud?.feed?.('TARGET MACHINE · '+(mode==='airborne'?'AIRBORNE LAUNCH':mode==='moving'?'LEFT / RIGHT motion':'STATIONARY')+' · native damage and armor · E at range station toggles mode','#ffd24a');return f;
  }
  control(f,dt){
-  if(this.machine&&f===this.target){for(const child of f.obj.children)child.visible=child===this.machine;this.machineTime+=dt;if(f.alive&&!f.grabbedBy&&f.launchT<=0){const dx=this.machineMode==='moving'?Math.cos(this.machineTime*.6):0;f.faceDir(0,1);f.move(new THREE.Vector3(dx,0,0),dt,.5);}return;}
+  if(this.machine&&f===this.target){for(const child of f.obj.children)child.visible=child===this.machine;this.machineTime+=dt;this.elapsed+=dt;if(this.machineMode==='airborne')return;if(f.alive&&!f.grabbedBy&&f.launchT<=0){const dx=this.machineMode==='moving'?Math.cos(this.machineTime*.6):0;f.faceDir(0,1);f.move(new THREE.Vector3(dx,0,0),dt,.5);}return;}
 
   if(!f.alive||f.grabbedBy||f.frozenT>0||f.staggerT>0||f.stunT>0||f.launchT>0){f.flyHeld=false;f.descendHeld=false;return;}
   this.elapsed+=dt;const dir=new THREE.Vector3().subVectors(this.g.player.pos,f.pos);dir.y=0;const d=dir.length();dir.normalize();f.faceDir(dir.x,dir.z);f.aim.copy(dir);f.aim3.copy(dir);
@@ -80,7 +86,7 @@ export class MeleeTrial {
    if(d>7&&!f.mstate)f.move(dir,dt,1);
   }
  }
- repeat(){if(this.machine)return this.startMachine(this.machineMode==='moving');return this.kind==='encounter'?this.startEncounter():this.start(this.kind||'stationary');}
+ repeat(){if(this.machine)return this.startMachine(this.machineMode);return this.kind==='encounter'?this.startEncounter():this.start(this.kind||'stationary');}
  capture(){if(this.target&&!this.review){
   const f=this.g.player;this.phaseKey??=[];
   for(const [actor,fighter]of [f,this.target].entries()){
@@ -143,6 +149,7 @@ export class MeleeTrial {
   const result=outcome?.guard==='broken'?'GUARD BROKEN':outcome?.guard==='blocked'?'BLOCK':blocked?'ABSORBED':opts.slam?'TERRAIN IMPACT':opts.meleeMove==='throw'?'THROW':'CONTACT';
   const label=(incoming?'YOU · ':'TARGET · ')+result+' · '+healthLost.toFixed(1)+' HP · '+energySpent.toFixed(1)+' guard energy';
   const record={trial:this.kind,time:this.elapsed,amount,blocked:!!blocked,hp:target.hp,playerKi:this.g.player.ki,healthLost,guardEnergySpent:energySpent,result,incoming,move:opts.meleeMove||'hit'};
+  if(this.machine)this.machineLastHit=record;
   if(this.machine&&healthLost>0)this.g.news?.highlight('bighit','TRAINING MACHINE · '+healthLost.toFixed(1)+' DAMAGE',{actor:opts.src,target,focus:target.pos,priority:1});
   this.records.push(record);if(this.records.length>100)this.records.shift();this.recording.mark(this.g.time,{...record,label,kind:'contact'});
   this.g.hud?.feed?.(label,'#ffd24a');

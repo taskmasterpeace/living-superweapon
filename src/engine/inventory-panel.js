@@ -1,7 +1,8 @@
 import {portraitOf} from './player-status-portrait.js';
 import {equipmentPolicy} from './equipment-policy.js';
 import {firearmAmmo} from './firearm-ammo.js';
-import {OPERATION_GADGETS} from '../data/operation-gadgets.js';
+import {gadgetCatalog} from '../data/gadget-catalog.js';
+import {issueTrainingGadget} from './training-equipment.js';
 export function mountInventory(game){
  const dialog=document.createElement('dialog');dialog.className='pw-inventory';dialog.setAttribute('aria-label','Inventory');document.body.append(dialog);
  const style=document.createElement('style');style.textContent=`.pw-inventory{margin:auto;width:min(640px,92vw);max-height:85vh;overflow:auto;background:var(--ink,#11110f);color:var(--text,#eee6d6);padding:24px;border:1px solid var(--gold,#dfb347);border-radius:10px;font-family:var(--f-display,system-ui)}.pw-inventory::backdrop{background:#080909c9}.pw-inventory h2{color:var(--gold,#dfb347)}.pw-inventory section{padding:14px 0;border-top:1px solid #514b3d}.pw-inventory button{min-height:44px;margin:6px 8px 0 0;padding:10px 16px;background:#24231e;color:inherit;border:1px solid #716044;border-radius:6px;cursor:pointer}.pw-inventory button:hover{border-color:#dfb347}.pw-inventory button[aria-pressed=true]{background:#594522}.pw-inventory p{line-height:1.5}`;style.textContent+=`.pw-inventory{width:min(1180px,96vw);max-width:none;max-height:94dvh;padding:28px 32px;background:#101113;display:none;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 24px}.pw-inventory[open]{display:grid}.pw-inventory>h2,.pw-inventory>p,.pw-inventory>a,.pw-inventory>button{grid-column:1/-1}.pw-inventory h2{font-size:28px;letter-spacing:.06em;margin:0}.pw-inventory .inventory-portrait{width:100px;height:110px;object-fit:contain;grid-column:1/-1;justify-self:center}.pw-inventory>section{padding:16px;background:#191b1e;border:1px solid #414039;border-radius:6px}.pw-inventory .inventory-power{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px;align-items:center;margin:8px 0}.pw-inventory .inventory-power button{margin:0}.pw-inventory a{color:#ffd34f}.pw-inventory button:disabled{opacity:.4;cursor:default}.pw-inventory button:focus-visible{outline:2px solid #ffd34f;outline-offset:2px}@media(max-width:640px){.pw-inventory{grid-template-columns:1fr;padding:16px}}`;document.head.append(style);
@@ -20,9 +21,9 @@ export function mountInventory(game){
   if(game.ms?.threatLab?.state==='preparing'){
    const issue=el('section','');issue.append(el('h3','Threat Lab · mission issue'));
    issue.append(el('p','Choose either gadget slot. Issued gear replaces that slot for this attempt.'));
-   for(const def of OPERATION_GADGETS)for(let index=0;index<2;index++){
+   for(const {def} of gadgetCatalog())for(let index=0;index<2;index++){
     const b=el('button',`${def.name} → slot ${index+1}`);
-    b.onclick=()=>{const old=f.items[index];if(old?.state==='deployed'){game.hud?.feed('Recall the deployed gadget before replacing it','#d5bd80');return;}if(index>f.items.length){game.hud?.feed('Fill slot 1 first','#d5bd80');return;}f.items[index]={def,state:'ready',cd:0,pos:null,mesh:null,charges:def.charges};f._selectedGadget=index;render();};issue.append(b);
+    b.onclick=()=>{const result=issueTrainingGadget(game,f,def,index);if(!result.ok)game.hud?.feed(result.reason,'#d5bd80');render();};issue.append(b);
    }dialog.append(issue);
   }
   for(const [index,it] of items.entries()){
