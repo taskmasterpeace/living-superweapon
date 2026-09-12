@@ -70,3 +70,23 @@ test('native melee contact is replaced as a whole, without original punch layers
  a.meleeHit(1,null,false);a.meleeHit(2,{x:1,y:0,z:2},true);
  assert.equal(calls.length,2);assert.equal(calls[0][0],'light');assert.equal(calls[1][0],'heavy');
 });
+
+test('custom loop survives reload and transfer, reuse works, invalid catalog is atomic',async()=>{
+ const memory=new Map(),storage={getItem:k=>memory.get(k),setItem:(k,v)=>memory.set(k,v)},context={decodeAudioData:async()=>({duration:1})};
+ const a=new core.SoundLibrary({storage,context});
+ a.addCue({id:'custom.lab-fan',label:'Lab fan',family:'ambient',loop:true});
+ assert.equal(a.source('custom.lab-fan'),'synthesized-placeholder');
+ assert.equal(a.cue('custom.lab-fan').wiring,'preview-only');
+ const data=new Uint8Array(48);data[0]=82;
+ await a.bindRecording('custom.lab-fan',{name:'fan.wav',type:'audio/wav',size:48,arrayBuffer:async()=>data.buffer});
+ await a.reuseRecording('custom.lab-fan','weather-rain');
+ assert.equal(a.state.bindings['weather-rain'].name,'fan.wav');
+ const b=new core.SoundLibrary({storage,context});assert.equal(b.cue('custom.lab-fan').loop,true);
+ b.editCue('custom.lab-fan',{label:'Research fan'});assert.equal(b.state.bindings['custom.lab-fan'].name,'fan.wav');
+ const c=new core.SoundLibrary({storage:null,context});await c.importPackage(b.exportPackage());assert.equal(c.cue('custom.lab-fan').label,'Research fan');
+ const before=c.exportPackage();await assert.rejects(c.importPackage({...before,customCues:{'custom.wrong':{...c.cue('custom.lab-fan')}}}));assert.deepEqual(c.exportPackage(),before);
+ assert.throws(()=>c.addCue({id:'light',label:'Override',family:'melee',loop:false}));
+ assert.throws(()=>c.cue('__proto__'));
+ assert.ok(c.exportBrief().cues.some(x=>x.id==='custom.lab-fan'));
+ c.removeRecording('custom.lab-fan');assert.ok(c.state.bindings['weather-rain']);
+});

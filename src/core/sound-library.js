@@ -5,7 +5,7 @@ export const SPEAKER_PROFILES=Object.freeze({default:{speakerCooldown:18},vega:{
 const clone=v=>JSON.parse(JSON.stringify(v));
 const MAX_BYTES=1024*1024,MAX_PACKAGE=4*1024*1024;
 const storageDefault=()=>{try{return globalThis.window?.localStorage??null;}catch{return null;}};
-const getCue=id=>{const c=SOUND_CUE_BY_ID.get(id);if(!c)throw Error(`Unknown cue: ${id}`);return c;};
+const getCue=(id,custom={})=>{const c=SOUND_CUE_BY_ID.get(id)||(Object.hasOwn(custom,id)?custom[id]:null);if(!c)throw Error(`Unknown cue: ${id}`);return c;};
 export class SpeechGate {
  constructor(){this.reset();}
  reset(){this.lines=new Map();this.speakers=new Map();this.categories=new Map();this.lastBySpeaker=new Map();this.global=-Infinity;this.activeUntil=-Infinity;this.priority=0;}
@@ -41,13 +41,20 @@ function mediaBytes(binding){
  if(bytes.length<32||bytes.length>MAX_BYTES)throw Error('Invalid audio recording');
  return bytes;
 }
+function customCue(c){
+ if(!c||typeof c.id!=='string'||!/^custom\.[a-z0-9][a-z0-9-]{0,79}$/.test(c.id)||typeof c.label!=='string'||!c.label.trim()||c.label.length>100||typeof c.family!=='string'||!c.family.trim()||c.family.length>40||typeof c.loop!=='boolean')throw Error('Invalid custom sound entry');
+ const duration=c.duration??(c.loop?3:.5);if(!Number.isFinite(duration)||duration<=0||duration>30)throw Error('Duration must be 0–30 seconds');
+ const description=String(c.description||'').slice(0,1000);
+ return {id:c.id,label:c.label.trim(),family:c.family.trim(),loop:c.loop,duration,description,event:c.id,phase:c.loop?'sustain':'impact',bus:'sfx',spatial:'world-distance-and-pan',gain:.55,cooldown:.08,concurrency:c.loop?1:4,wiring:'preview-only',nativeMethod:null,nativeNote:'Custom sound entry. Assign its recording to an existing connected cue to use it in gameplay. This entry alone does not create an event.',generationPrompt:description+' Deliver an isolated '+(c.loop?'seamless loop':'one-shot')+'; no music or unrelated sounds.',placeholder:{frequency:150,endFrequency:80,noise:.5,wave:'sine',attack:.02}};
+}
 function validatePackage(data){
  if(typeof data==='string'){if(data.length>MAX_PACKAGE)throw Error('Package exceeds 4 MiB');data=JSON.parse(data);}
  if(!data||data.format!=='lsw.sound-library'||data.version!==1||!data.bindings||!data.settings||Array.isArray(data.bindings)||Array.isArray(data.settings))throw Error('Not a Sound Library v1 package');
  if(JSON.stringify(data).length>MAX_PACKAGE)throw Error('Package exceeds 4 MiB');
  const next={format:'lsw.sound-library',version:1,bindings:{},settings:{}};
- for(const [id,v] of Object.entries(data.settings)){getCue(id);next.settings[id]=settings(v);}
- for(const [id,b] of Object.entries(data.bindings)){getCue(id);mediaBytes(b);next.bindings[id]={name:b.name,type:b.type,data:b.data};}
+ if(data.customCues!==undefined){if(!data.customCues||Array.isArray(data.customCues)||typeof data.customCues!=='object'||Object.keys(data.customCues).length>200)throw Error('Invalid custom sound catalog');next.customCues={};for(const [id,c]of Object.entries(data.customCues)){const clean=customCue(c);if(id!==clean.id)throw Error('Sound ID mismatch');next.customCues[id]=clean;}}
+ for(const [id,v] of Object.entries(data.settings)){getCue(id,next.customCues);next.settings[id]=settings(v);}
+ for(const [id,b] of Object.entries(data.bindings)){getCue(id,next.customCues);mediaBytes(b);next.bindings[id]={name:b.name,type:b.type,data:b.data};}
  return next;
 }
 export class SoundLibrary {
@@ -55,6 +62,11 @@ export class SoundLibrary {
   this.audio=audio;this.context=context;this.output=output;this.storage=storage;this.state={format:'lsw.sound-library',version:1,bindings:{},settings:{}};this.buffers=new Map();this.active=new Set();this.events=[];this.gate=new SpeechGate();this.lastCue=new Map();this.lastPlayback=null;this.error='';this._loadSerial=0;
   try{const saved=storage?.getItem(SOUND_LIBRARY_KEY);if(saved)this.state=validatePackage(saved);}catch(e){this.error=`Saved audio was not loaded: ${e.message}`;}
  }
+ get cues(){return [...SOUND_CUES,...Object.values(this.state.customCues||{})];}
+ cue(id){return getCue(id,this.state.customCues);}
+ addCue(value){const c=customCue(value);if(this.cues.some(x=>x.id===c.id))throw Error('Sound ID already exists');const next=this.exportPackage();next.customCues={...next.customCues,[c.id]:c};this._commit(validatePackage(next));return c;}
+ editCue(id,value){if(!this.state.customCues?.[id])throw Error('Only custom entries can be renamed');const next=this.exportPackage();next.customCues[id]=customCue({...next.customCues[id],...value,id});this._commit(validatePackage(next));}
+ async reuseRecording(from,to){this.cue(from);this.cue(to);const b=this.state.bindings[from];if(!b)throw Error('Source has no recording assigned');const next=this.exportPackage();next.bindings[to]=clone(b);next.settings[to]={...next.settings[to],source:'chosen'};await this.importPackage(next);}
  get ctx(){return this.context||this.audio?.ctx;}
  async ready(){if(!this.ctx)throw Error('Start audio with Play or a browser gesture first');await this.ctx.resume?.();await this.prepare();return this;}
  async prepare(){
@@ -66,7 +78,7 @@ export class SoundLibrary {
   }
  }
  exportPackage(){return clone(this.state);}
- exportBrief(){return generationBrief();}
+ exportBrief(){const brief=generationBrief();brief.cues.push(...Object.values(this.state.customCues||{}).map(({id,family,event,generationPrompt,duration,loop,wiring})=>({id,family,event,generationPrompt,duration,loop,wiring})));return brief;}
  _commit(next,buffers=this.buffers){
   const text=JSON.stringify(next);if(text.length>MAX_PACKAGE)throw Error('Package exceeds 4 MiB');
   try{this.storage?.setItem(SOUND_LIBRARY_KEY,text);}catch{throw Error('Local audio storage is full or unavailable. Remove a recording or export the current library.');}
@@ -83,19 +95,19 @@ export class SoundLibrary {
   this._commit(next,buffers);this.stop();return this.exportPackage();
  }
  async bindRecording(id,file){
-  getCue(id);if(!file||file.size>MAX_BYTES)throw Error('Choose an audio recording up to 1 MiB');
+  this.cue(id);if(!file||file.size>MAX_BYTES)throw Error('Choose an audio recording up to 1 MiB');
   const bytes=new Uint8Array(await file.arrayBuffer());let text='';for(let i=0;i<bytes.length;i++)text+=String.fromCharCode(bytes[i]);
   const next=this.exportPackage();next.bindings[id]={name:file.name||'recording.wav',type:file.type||'audio/wav',data:btoa(text)};next.settings[id]={...next.settings[id],source:'chosen'};
   await this.importPackage(next);return this.state.bindings[id];
  }
- removeRecording(id){getCue(id);const next=this.exportPackage();delete next.bindings[id];this._commit(next);this.buffers.delete(id);this.stop();}
- setSettings(id,value){getCue(id);const next=this.exportPackage();next.settings[id]=settings({...next.settings[id],...value});this._commit(next);}
- source(id){getCue(id);return this.state.settings[id]?.source!=='placeholder'&&this.state.bindings[id]?'chosen-recording':'synthesized-placeholder';}
- eventGate(id,options){const result=this.gate.evaluate(getCue(id),options);this._record({id,...result,speaker:options?.speaker});return result;}
+ removeRecording(id){this.cue(id);const next=this.exportPackage();delete next.bindings[id];this._commit(next);this.buffers.delete(id);this.stop();}
+ setSettings(id,value){this.cue(id);const next=this.exportPackage();next.settings[id]=settings({...next.settings[id],...value});this._commit(next);}
+ source(id){this.cue(id);return this.state.settings[id]?.source!=='placeholder'&&this.state.bindings[id]?'chosen-recording':'synthesized-placeholder';}
+ eventGate(id,options){const result=this.gate.evaluate(this.cue(id),options);this._record({id,...result,speaker:options?.speaker});return result;}
  _record(e){this.events.push({...e,time:this.ctx?.currentTime??0});if(this.events.length>40)this.events.shift();}
  audition(id,options={}){this.stop();return this.play(id,{...options,audition:true});}
  play(id,{pos=null,gain=1,audition=false,source=null,loop:loopOverride,event=null}={}){
-  const cue=getCue(id),ctx=this.ctx;if(!ctx||ctx.state!=='running'||this.audio?.muted)return null;
+  const cue=this.cue(id),ctx=this.ctx;if(!ctx||ctx.state!=='running'||this.audio?.muted)return null;
   if(event){const decision=this.eventGate(id,event);if(!decision.accepted)return null;}
   const authored=this.state.settings[id]||{},loop=loopOverride??authored.loop??cue.loop,now=ctx.currentTime;
   if(!audition&&(now-(this.lastCue.get(id)??-Infinity)<cue.cooldown||[...this.active].filter(h=>h.id===id).length>=cue.concurrency)){this._record({id,accepted:false,reason:'sfx-cooldown-or-concurrency'});return null;}
