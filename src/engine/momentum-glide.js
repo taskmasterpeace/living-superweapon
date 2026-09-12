@@ -3,7 +3,10 @@ export function canMomentumGlide(f){
  const p=f.def.momentumGlide;return !!(p&&!f.flying&&!interrupted(f)&&f.flyHeld&&!f.descendHeld&&f.vel.y<2&&f.pos.y-(f.groundY||0)>2.5&&Math.hypot(f.vel.x,f.vel.z)>=p.minSpeed);
 }
 export function steerMomentumGlide(f,dir,dt){
- const p=f.def.momentumGlide;if(!p||!f._openSky||f.onFoot||f.flying||interrupted(f))return false;
+ // onFoot includes coyote-time jump permission after leaving a surface. It
+ // must not let the walking speed clamp consume a speedster's launch momentum.
+ const supported=f.onBlock||f.pos.y<=(f.groundY||0)+.02;
+ const p=f.def.momentumGlide;if(!p||!f._openSky||supported||f.flying||interrupted(f))return false;
  const speed=Math.hypot(f.vel.x,f.vel.z);if(speed<.01)return true;
  if(Math.hypot(dir?.x||0,dir?.z||0)>.01){
   const yaw=Math.atan2(f.vel.x,f.vel.z),wanted=Math.atan2(dir.x,dir.z),delta=Math.atan2(Math.sin(wanted-yaw),Math.cos(wanted-yaw));
