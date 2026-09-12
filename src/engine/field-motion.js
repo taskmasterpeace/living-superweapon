@@ -27,3 +27,14 @@ export function updateFieldProjectile(p,dt,game){
  }
  return true;
 }
+
+export function advanceFieldPacket(out,pos,vel,dt,fields,owner){
+ out.copy(pos);
+ let left=dt;
+ while(left>1e-12){
+  const clock=fieldMotion(fields,out,vel,owner,left);
+  out.addScaledVector(vel,clock.time*clock.scale);
+  left-=clock.time;
+ }
+ return out;
+}

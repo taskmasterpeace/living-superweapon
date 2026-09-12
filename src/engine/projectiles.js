@@ -1,4 +1,4 @@
-import {fieldMotion,updateFieldProjectile} from './field-motion.js';
+import {fieldMotion,updateFieldProjectile,advanceFieldPacket} from './field-motion.js';
 import {BeamGroundContact} from './beam-ground-contact.js';
 // WAR WORLD: ASCENDANTS — projectiles, beam-hoses (wave cannon), and spirit-bomb lobs.
 import { domeBlocks } from './systems2.js';
@@ -1308,6 +1308,18 @@ class BeamHose {
   update(dt, game) {
     const c = this.caster;
     const constructPreclip=this._constructPreclip,constructTarget=constructPreclip.target;constructPreclip.target=null;
+    // A spatial clock can hold energy up to 1/.15 times longer. Keep the same
+    // emission cadence and authored reach instead of dropping the slow tip.
+    if(game.timeFields?.list.length&&this.NODES===44){
+      const capacity=Math.ceil(44/.15),path=new Float32Array(capacity*3),velocity=new Float32Array(capacity*3);
+      path.set(this.path);velocity.set(this.pvel);this.path=path;this.pvel=velocity;
+      this._absorbed.length=capacity;this._absorbed.fill(null,44);this.NODES=capacity;
+      this._curve=this._combatReadability?new BeamCurve(capacity):null;
+      this._glowGeo.dispose();this._coreGeo.dispose();
+      this._glowGeo=this._tubeGeo((this._curve?.capacity||capacity)+1,this.RADIAL);
+      this._coreGeo=this._tubeGeo((this._curve?.capacity||capacity)+1,this.RADIAL,true);
+      this.glow.geometry=this._glowGeo;this.core.geometry=this._coreGeo;
+    }
     if(this.pendingLaunch&&(!this.sustaining||!c.alive||remoteInterrupted(c)||c.guarding)){this._dispose(game);return false;}
     const firstEmission=this.pendingLaunch;
     this.resolveLaunch(game,dt);
@@ -1363,7 +1375,7 @@ class BeamHose {
     for (let i = 0; i < this.pn; i++) {
       const o = i * 3;
       this._pa.fromArray(this.path,o);
-      this._pb.copy(this._pa).addScaledVector(this._tmp.fromArray(this.pvel,o),dt);
+      advanceFieldPacket(this._pb,this._pa,this._tmp.fromArray(this.pvel,o),dt,game.timeFields,c);
       // Spatial segment checks alone miss a released tail that moves completely
       // across a thin wall between frames. Every packet must sweep its own trip.
       this._clipStreamSegment(game.world,this._pa,this._pb);
@@ -1389,7 +1401,7 @@ class BeamHose {
         this._tmp.copy(this._streamDir).lerp(this.dir,t).normalize().multiplyScalar(this.tipSpeed);
         this.pvel[3]=this._tmp.x;this.pvel[4]=this._tmp.y;this.pvel[5]=this._tmp.z;
         this._pa.copy(this._streamOrigin).lerp(this.muzzle,t);
-        this._pb.copy(this._pa).addScaledVector(this._tmp,age);
+        advanceFieldPacket(this._pb,this._pa,this._tmp,age,game.timeFields,c);
         this._clipStreamSegment(game.world,this._pa,this._pb);
         this._absorbed[1]=this._clipPacketReceiver(game,this._pa,this._pb);
         this._pb.toArray(this.path,3);
