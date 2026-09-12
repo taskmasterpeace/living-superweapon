@@ -35,3 +35,12 @@ test('only the active defend trainer can attack, and only its practicing player'
  const x=setup('defend');try{const ally=x.foe({z:10,team:0});assert.equal(x.g.isFoe(x.b,x.p),true);assert.equal(x.g.isFoe(x.b,ally),false);x.g.ms.threatLab.state='field';assert.equal(x.g.isFoe(x.b,x.p),false);x.g.ms.threatLab.state='preparing';x.t.kind='guard';assert.equal(x.g.isFoe(x.b,x.p),false);}finally{x.finish();}
 });
 
+test('air-defense delivers native airborne contact into funded frontal guard',()=>{
+ const x=setup('air-defense');try{
+  for(const f of [x.p,x.b]){f.pos.y=26;f.flying=true;f._altTag=()=>{};f._sync();} // canvas altitude label only
+  const hp=x.p.hp;
+  for(let i=0;i<300;i++){const dt=1/60;x.g.time=i*dt;x.g.melee.beginContactFrame();x.g.beginBodyContactFrame();x.g.melee.guard(x.p,true);x.t.control(x.b,dt);x.p.move(new THREE.Vector3(),dt);x.p.update(dt,x.g);x.b.update(dt,x.g);x.g.resolveBodies();x.g.melee.endContactFrame();}
+  assert.ok(x.t.records.some(e=>e.incoming&&e.result==='BLOCK'));assert.equal(x.p.hp,hp);assert.equal(x.p.flying,true);
+ }finally{x.finish();}
+});
+

@@ -2191,7 +2191,7 @@ export class Game {
     if (!b || !b.alive || b === a) return false;
     if(a.isDummy){
       const lab=this.ms?.threatLab,trial=lab?.meleeTrial;
-      return !!(lab?.state==='preparing'&&trial?.kind==='defend'&&trial.target===a&&a._meleeTrial===trial&&b===this.player);
+      return !!(lab?.state==='preparing'&&['defend','air-defense'].includes(trial?.kind)&&trial.target===a&&a._meleeTrial===trial&&b===this.player);
     }
     if (a.fixation) return b === a.fixation;
     if (b.fixation && b.fixation !== a) return false;
