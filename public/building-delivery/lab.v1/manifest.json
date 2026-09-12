@@ -1,0 +1,377 @@
+{
+  "id": "building.research-lab",
+  "version": "v1",
+  "title": "Research Outpost Lab (two-story)",
+  "kind": "enterable-building",
+  "generatedBy": "tools/building-delivery/build-lab.mjs",
+  "deterministic": true,
+  "provenance": {
+    "method": "procedural",
+    "author": "codex/enterable-building-pilot",
+    "created": "2026-09-11",
+    "externalAssets": "none",
+    "note": "Generated from this recipe by tools/building-delivery/build-lab.mjs. No external/licensed/paid asset input. A clean checkout rebuilds byte-identical with Node alone."
+  },
+  "license": {
+    "spdx": "CC0-1.0",
+    "text": "Original procedural geometry and data. Dedicated to the public domain (CC0-1.0)."
+  },
+  "generator": {
+    "entry": "tools/building-delivery/build-lab.mjs",
+    "runtime": "node",
+    "nodeVersionTested": "v25.8.0",
+    "dependencies": "none (pure Node stdlib; hand-written GLB writer)"
+  },
+  "units": {
+    "sourceUnit": "powerworld-world-unit",
+    "symbol": "u",
+    "metersPerUnit": 0.1875,
+    "gameConversion": "1:1 — authored directly in world units; metres are documentation only.",
+    "derivation": "Measured from runtime: src/engine/citytiles.js door() DH=11.2u = '2.1m' -> 0.1875 m/u; 9.6u human = 1.8m."
+  },
+  "axes": {
+    "up": "+Y",
+    "front": "+Z",
+    "rightFlank": "+X",
+    "handedness": "right-handed (glTF 2.0)",
+    "note": "Origin = footprint ground-centre, floor plane y=0. Entrance faces +Z; breach flank +X. Runtime places by a world (x,z) centre + yaw."
+  },
+  "fitting": {
+    "note": "Native fitting reference measured from runtime source constants.",
+    "fighterRadius_u": 2.2,
+    "fighterRadiusSource": "src/engine/entity.js:286 this.radius = 2.2",
+    "standingHeadHeight_u": 11,
+    "standingHeadHeightSource": "src/engine/entity.js interior ceiling clamp bodyHeight ... : 11",
+    "soldierAndStandardHeroHeight_u": 9.6,
+    "soldierHeroHeightSource": "citytiles metric comment; SARGE/MERC are Fighters at the same radius",
+    "largeHeroMaxHeight_u": 12.5,
+    "largeHeroMaxWidth_u": 9.5,
+    "largeHeroSource": "CLAUDE.md frame audit (RAGE 12.47u tall, OLYMPUS 9.44u wide)",
+    "chaseCamComfortDia_u": 12,
+    "chaseCamNote": "Approx lateral room a third-person chase boom wants around the player indoors before it must collapse to shoulder-cam. Used by the fixture to check per-floor entry-room comfort.",
+    "nativeDoorOpening_u": {
+      "height": 11.2,
+      "widthGap": 5.8
+    },
+    "nativeDoorSource": "citytiles door() DH; bungalow doorW=5.8*M"
+  },
+  "dimensions": {
+    "footprint_u": {
+      "width_x": 42,
+      "depth_z": 46,
+      "wallThickness": 1.2
+    },
+    "levels": 2,
+    "floorToFloor_u": 16,
+    "perFloorCeiling_u": 14.8,
+    "bbox_u": {
+      "min": [
+        -22.1,
+        -0.4,
+        -23
+      ],
+      "max": [
+        21.22,
+        34.2,
+        23.1
+      ]
+    },
+    "roofDeckTop_u": 32,
+    "parapetTop_u": 34.2,
+    "interiorClearHalf_u": {
+      "x": 19.8,
+      "z": 21.8
+    },
+    "footprint_m": {
+      "width": 7.875,
+      "depth": 8.625
+    },
+    "heightTotal_m": 6.4125,
+    "perFloorCeiling_m": 2.775
+  },
+  "clearances": {
+    "frontDoor_u": {
+      "w": 9,
+      "h": 14
+    },
+    "interiorDoor_u": {
+      "w": 9,
+      "h": 14
+    },
+    "breachOpening_u": {
+      "w": 17,
+      "h": 15
+    },
+    "upperWindow_u": {
+      "w": 7,
+      "h": 2
+    },
+    "fitsSoldier": true,
+    "fitsLargeHeroThroughBreach": true,
+    "stairs": [
+      {
+        "id": "stair_a",
+        "from": "ground",
+        "to": "upper",
+        "steps": 7,
+        "riser_u": 2.28571,
+        "tread_u": 2.4,
+        "reachesTop": true,
+        "maxRiser_u": 2.28571
+      },
+      {
+        "id": "stair_b",
+        "from": "upper",
+        "to": "roof",
+        "steps": 7,
+        "riser_u": 2.28571,
+        "tread_u": 2.4,
+        "reachesTop": true,
+        "maxRiser_u": 2.28571
+      }
+    ],
+    "chaseCamComfort": {
+      "ringDia_u": 12,
+      "groundEntry": {
+        "w": 39.6,
+        "d": 19.2
+      },
+      "upperFront": {
+        "w": 39.6,
+        "d": 19.2
+      },
+      "groundEntryFits": true,
+      "upperFrontFits": true
+    }
+  },
+  "budgets": {
+    "drawCalls": 17,
+    "triangles": 888,
+    "vertices": 1776,
+    "materials": 17,
+    "renderNodes": 17,
+    "glbBytes": 64716,
+    "levels": 2,
+    "colliderPieces": 63,
+    "breakables": 4,
+    "rooms": 4,
+    "openings": 10,
+    "stairs": 2
+  },
+  "files": [
+    {
+      "path": "colliders.json",
+      "sha256": "f5f2868142e31e266e78284e4ce45c0d09416cb9402de6332be818b8cd023490",
+      "bytes": 43096,
+      "role": "colliders"
+    },
+    {
+      "path": "debris.json",
+      "sha256": "d2a9532a591c226cc2e743852e389e5d79939775b181db5430d13b20c8046eb4",
+      "bytes": 2192,
+      "role": "debris"
+    },
+    {
+      "path": "lab.glb",
+      "sha256": "c13d0740ad0b1d0ba16076a5865a2feac905fe6eb42f8a8c3cdc069d8c513e89",
+      "bytes": 64716,
+      "role": "render-mesh"
+    },
+    {
+      "path": "openings.json",
+      "sha256": "1b745879584ba522d9595da738224722bae99ae02e2f7cfa9156a0d75c53f49c",
+      "bytes": 4220,
+      "role": "openings"
+    },
+    {
+      "path": "room-graph.json",
+      "sha256": "c860950194d41d1b689248946667f551041b2bf69a3ea588aa241c040d0f8cc1",
+      "bytes": 13657,
+      "role": "room-graph"
+    },
+    {
+      "path": "runtime-interior.json",
+      "sha256": "d2b5fd878390a7cd5e590b919e955bcd977b2a4abd2718299e29469147991114",
+      "bytes": 2327,
+      "role": "runtime-subset"
+    },
+    {
+      "path": "shelter.json",
+      "sha256": "c2c7a9ad2e2ab0b1828db4be05dc388fbaac580d1dbf5cde69dc1c9c3fd97ada",
+      "bytes": 1094,
+      "role": "shelter"
+    }
+  ],
+  "renderNodeList": [
+    {
+      "node": "shell_l0",
+      "pieces": [
+        "p000",
+        "p001",
+        "p002",
+        "p003",
+        "p004",
+        "p005",
+        "p006",
+        "p007",
+        "p008",
+        "p009"
+      ]
+    },
+    {
+      "node": "breakable_front_door_leaf",
+      "pieces": [
+        "front_door_leaf"
+      ]
+    },
+    {
+      "node": "trim_l0",
+      "pieces": [
+        "front_door.frame.l",
+        "front_door.frame.r",
+        "front_door.frame.h"
+      ]
+    },
+    {
+      "node": "breakable_breach_panel",
+      "pieces": [
+        "breach_panel"
+      ]
+    },
+    {
+      "node": "breakable_breach_panel_stripe",
+      "pieces": [
+        "breach_panel.stripe0",
+        "breach_panel.stripe1",
+        "breach_panel.stripe2"
+      ]
+    },
+    {
+      "node": "case_pedestal",
+      "pieces": [
+        "case.pedestal"
+      ]
+    },
+    {
+      "node": "case_glow",
+      "pieces": [
+        "case.glow"
+      ]
+    },
+    {
+      "node": "shell_l1",
+      "pieces": [
+        "p010",
+        "p011",
+        "p012",
+        "p013",
+        "p014",
+        "p015",
+        "p016",
+        "p017",
+        "p018",
+        "p019",
+        "p020",
+        "p021",
+        "p022"
+      ]
+    },
+    {
+      "node": "floor_l1",
+      "pieces": [
+        "p023",
+        "p024",
+        "p025",
+        "p026",
+        "p027",
+        "p028",
+        "p029",
+        "p030",
+        "p031"
+      ]
+    },
+    {
+      "node": "breakable_upper_floor_panel",
+      "pieces": [
+        "upper_floor_panel"
+      ]
+    },
+    {
+      "node": "breakable_upper_floor_panel_mark",
+      "pieces": [
+        "upper_floor_panel.mark"
+      ]
+    },
+    {
+      "node": "roof_structural",
+      "pieces": [
+        "p032",
+        "p033",
+        "p034",
+        "p035",
+        "p036",
+        "p037",
+        "p038",
+        "p039",
+        "p040"
+      ]
+    },
+    {
+      "node": "breakable_roof_weak_panel",
+      "pieces": [
+        "roof_weak_panel"
+      ]
+    },
+    {
+      "node": "breakable_roof_weak_panel_mark",
+      "pieces": [
+        "roof_weak_panel.mark"
+      ]
+    },
+    {
+      "node": "roof_parapet",
+      "pieces": [
+        "parapet.front",
+        "parapet.rear",
+        "parapet.left",
+        "parapet.right"
+      ]
+    },
+    {
+      "node": "stair",
+      "pieces": [
+        "stair_a.step1",
+        "stair_a.step2",
+        "stair_a.step3",
+        "stair_a.step4",
+        "stair_a.step5",
+        "stair_a.step6",
+        "stair_a.step7",
+        "stair_b.step1",
+        "stair_b.step2",
+        "stair_b.step3",
+        "stair_b.step4",
+        "stair_b.step5",
+        "stair_b.step6",
+        "stair_b.step7"
+      ]
+    },
+    {
+      "node": "floor_l0",
+      "pieces": [
+        "floor.slab"
+      ]
+    }
+  ],
+  "knownGaps": [
+    "THIRD-PERSON VISIBILITY IS PER-CAMERA FADE, NOT ROOF REMOVAL. Indoors the runtime must fade only the geometry between the chase camera and the player (roof, the floor-slab above the player, near walls) — the storey you are in and lower storeys stay solid. Node names carry the level (fadeNodesByLevel in colliders.json) so this is storey-agnostic. The roof-off shot in the renders is an AUTHORING view only, never the gameplay model.",
+    "Multi-level colliders need the runtime extension: the current world.interiors is single-storey floor->top columns. The upper floor, the inter-storey slab, the stairs (no intermediate standable surface), per-piece breakable state, floor/roof smash panels, and the roof-as-real-top are a superset. runtime-interior.json carries only the GROUND FLOOR (its `top` is the upper-floor slab, not the roof). See INTEGRATION.md §B.",
+    "Auto step-up: the runtime moves by walk + jump + fly with no stair step-up. Both stair flights are walkable in proportion (riser <= 2.5u snap tolerance) and reach their level; climbing on foot needs the movement step-up seam (or jumping the steps / flight). Validated geometrically by the fixture.",
+    "Debris is a bounded SPEC (counts/sizes/lifetime/spawn volume), not baked chunk meshes; the runtime spawns them. No collapse simulation.",
+    "The research case object is a FrontlineEncounter runtime entity; this package supplies the pedestal and case_spawn waypoint, not the case. The dev viewer needs three.js (CDN) and is not a build input.",
+    "Main task must verify native camera boom/fade, projectile collision, rain occlusion, AI pathing and destruction in-engine; the standalone fixture proves geometry/clearance/LOS/fade-node math only, not gameplay feel."
+  ],
+  "integration": "See docs/building-delivery/INTEGRATION.md for the exact seam (direct subset + extension points).",
+  "_selfHashNote": "manifest hashes cover every OTHER output; this file is not self-hashed.",
+  "packageHash": "1eb4265dd4834d503667377a320b6bd143a2964a3a4c7b27f70007089e79a547"
+}

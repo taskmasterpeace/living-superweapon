@@ -1,0 +1,2239 @@
+{
+  "id": "building.research-lab",
+  "version": "v1",
+  "kind": "enterable-building",
+  "space": "building-local — origin at footprint ground-centre, floor plane y=0, +Y up, entrance faces +Z, breach flank +X. AABBs are min/max in world units (u).",
+  "units": {
+    "sourceUnit": "powerworld-world-unit",
+    "symbol": "u",
+    "metersPerUnit": 0.1875,
+    "gameConversion": "1:1 — authored directly in world units; metres are documentation only.",
+    "derivation": "Measured from runtime: src/engine/citytiles.js door() DH=11.2u = '2.1m' -> 0.1875 m/u; 9.6u human = 1.8m."
+  },
+  "axes": {
+    "up": "+Y",
+    "front": "+Z",
+    "rightFlank": "+X",
+    "handedness": "right-handed (glTF 2.0)",
+    "note": "Origin = footprint ground-centre, floor plane y=0. Entrance faces +Z; breach flank +X. Runtime places by a world (x,z) centre + yaw."
+  },
+  "note": "Stable-ID collider pieces. `collider` = blocks movement/projectiles; `standable` = you can rest on its top (role floor/step/roof/prop); `breakable` pieces vanish when their breakGroup breaks (state \"intact-only\"). Decor pieces (collider:false, standable:false) are render-only and carry no physics. This is the AUTHORITATIVE physics description; the GLB nodes (same `node` names) are render only.",
+  "pieces": [
+    {
+      "id": "p000",
+      "node": "shell_l0",
+      "level": 0,
+      "role": "blocker",
+      "material": "structural",
+      "collider": true,
+      "standable": false,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -21,
+          0,
+          21.8
+        ],
+        "max": [
+          -13.5,
+          14,
+          23
+        ]
+      }
+    },
+    {
+      "id": "p001",
+      "node": "shell_l0",
+      "level": 0,
+      "role": "blocker",
+      "material": "structural",
+      "collider": true,
+      "standable": false,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -4.5,
+          0,
+          21.8
+        ],
+        "max": [
+          21,
+          14,
+          23
+        ]
+      }
+    },
+    {
+      "id": "p002",
+      "node": "shell_l0",
+      "level": 0,
+      "role": "blocker",
+      "material": "structural",
+      "collider": true,
+      "standable": false,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -21,
+          14,
+          21.8
+        ],
+        "max": [
+          21,
+          14.8,
+          23
+        ]
+      }
+    },
+    {
+      "id": "p003",
+      "node": "shell_l0",
+      "level": 0,
+      "role": "blocker",
+      "material": "structural",
+      "collider": true,
+      "standable": false,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -21,
+          0,
+          -23
+        ],
+        "max": [
+          21,
+          14.8,
+          -21.8
+        ]
+      }
+    },
+    {
+      "id": "p004",
+      "node": "shell_l0",
+      "level": 0,
+      "role": "blocker",
+      "material": "structural",
+      "collider": true,
+      "standable": false,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          19.8,
+          0,
+          -23
+        ],
+        "max": [
+          21,
+          14.8,
+          2.5
+        ]
+      }
+    },
+    {
+      "id": "p005",
+      "node": "shell_l0",
+      "level": 0,
+      "role": "blocker",
+      "material": "structural",
+      "collider": true,
+      "standable": false,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          19.8,
+          0,
+          19.5
+        ],
+        "max": [
+          21,
+          14.8,
+          23
+        ]
+      }
+    },
+    {
+      "id": "p006",
+      "node": "shell_l0",
+      "level": 0,
+      "role": "blocker",
+      "material": "structural",
+      "collider": true,
+      "standable": false,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -21,
+          0,
+          -23
+        ],
+        "max": [
+          -19.8,
+          14.8,
+          23
+        ]
+      }
+    },
+    {
+      "id": "p007",
+      "node": "shell_l0",
+      "level": 0,
+      "role": "blocker",
+      "material": "structural",
+      "collider": true,
+      "standable": false,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -19.8,
+          0,
+          1.4
+        ],
+        "max": [
+          -13.5,
+          14,
+          2.6
+        ]
+      }
+    },
+    {
+      "id": "p008",
+      "node": "shell_l0",
+      "level": 0,
+      "role": "blocker",
+      "material": "structural",
+      "collider": true,
+      "standable": false,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -4.5,
+          0,
+          1.4
+        ],
+        "max": [
+          19.8,
+          14,
+          2.6
+        ]
+      }
+    },
+    {
+      "id": "p009",
+      "node": "shell_l0",
+      "level": 0,
+      "role": "blocker",
+      "material": "structural",
+      "collider": true,
+      "standable": false,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -19.8,
+          14,
+          1.4
+        ],
+        "max": [
+          19.8,
+          14.8,
+          2.6
+        ]
+      }
+    },
+    {
+      "id": "front_door_leaf",
+      "node": "breakable_front_door_leaf",
+      "level": 0,
+      "role": "decor",
+      "material": "door_leaf",
+      "collider": false,
+      "standable": false,
+      "breakable": true,
+      "breakGroup": "front_door_leaf",
+      "state": "intact-only",
+      "hp": 90,
+      "dtype": "physical",
+      "aabb": {
+        "min": [
+          -22.1,
+          0,
+          21.6
+        ],
+        "max": [
+          -13.7,
+          14,
+          22
+        ]
+      }
+    },
+    {
+      "id": "front_door.frame.l",
+      "node": "trim_l0",
+      "level": 0,
+      "role": "decor",
+      "material": "door_frame",
+      "collider": false,
+      "standable": false,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -14.1,
+          0,
+          21.7
+        ],
+        "max": [
+          -13.5,
+          14.6,
+          23.1
+        ]
+      }
+    },
+    {
+      "id": "front_door.frame.r",
+      "node": "trim_l0",
+      "level": 0,
+      "role": "decor",
+      "material": "door_frame",
+      "collider": false,
+      "standable": false,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -4.5,
+          0,
+          21.7
+        ],
+        "max": [
+          -3.9,
+          14.6,
+          23.1
+        ]
+      }
+    },
+    {
+      "id": "front_door.frame.h",
+      "node": "trim_l0",
+      "level": 0,
+      "role": "decor",
+      "material": "door_frame",
+      "collider": false,
+      "standable": false,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -14.1,
+          14,
+          21.7
+        ],
+        "max": [
+          -3.9,
+          14.6,
+          23.1
+        ]
+      }
+    },
+    {
+      "id": "breach_panel",
+      "node": "breakable_breach_panel",
+      "level": 0,
+      "role": "blocker",
+      "material": "weak_panel",
+      "collider": true,
+      "standable": false,
+      "breakable": true,
+      "breakGroup": "breach_panel",
+      "state": "intact-only",
+      "hp": 140,
+      "dtype": "energy",
+      "aabb": {
+        "min": [
+          19.8,
+          0,
+          2.5
+        ],
+        "max": [
+          21,
+          15,
+          19.5
+        ]
+      }
+    },
+    {
+      "id": "breach_panel.stripe0",
+      "node": "breakable_breach_panel_stripe",
+      "level": 0,
+      "role": "decor",
+      "material": "hazard_stripe",
+      "collider": false,
+      "standable": false,
+      "breakable": false,
+      "breakGroup": "breach_panel",
+      "state": "intact-only",
+      "hp": null,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          21.02,
+          1.5,
+          4.7875
+        ],
+        "max": [
+          21.22,
+          13.5,
+          6.5875
+        ]
+      }
+    },
+    {
+      "id": "breach_panel.stripe1",
+      "node": "breakable_breach_panel_stripe",
+      "level": 0,
+      "role": "decor",
+      "material": "hazard_stripe",
+      "collider": false,
+      "standable": false,
+      "breakable": false,
+      "breakGroup": "breach_panel",
+      "state": "intact-only",
+      "hp": null,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          21.02,
+          1.5,
+          10.1
+        ],
+        "max": [
+          21.22,
+          13.5,
+          11.9
+        ]
+      }
+    },
+    {
+      "id": "breach_panel.stripe2",
+      "node": "breakable_breach_panel_stripe",
+      "level": 0,
+      "role": "decor",
+      "material": "hazard_stripe",
+      "collider": false,
+      "standable": false,
+      "breakable": false,
+      "breakGroup": "breach_panel",
+      "state": "intact-only",
+      "hp": null,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          21.02,
+          1.5,
+          15.4125
+        ],
+        "max": [
+          21.22,
+          13.5,
+          17.2125
+        ]
+      }
+    },
+    {
+      "id": "case.pedestal",
+      "node": "case_pedestal",
+      "level": 0,
+      "role": "prop",
+      "material": "pedestal",
+      "collider": true,
+      "standable": true,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -3,
+          0,
+          -16
+        ],
+        "max": [
+          3,
+          2.2,
+          -10
+        ]
+      }
+    },
+    {
+      "id": "case.glow",
+      "node": "case_glow",
+      "level": 0,
+      "role": "decor",
+      "material": "case_glow",
+      "collider": false,
+      "standable": false,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": null,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -1.2,
+          2.2,
+          -14.2
+        ],
+        "max": [
+          1.2,
+          2.8,
+          -11.8
+        ]
+      }
+    },
+    {
+      "id": "p010",
+      "node": "shell_l1",
+      "level": 1,
+      "role": "blocker",
+      "material": "structural",
+      "collider": true,
+      "standable": false,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -21,
+          16,
+          21.8
+        ],
+        "max": [
+          21,
+          21,
+          23
+        ]
+      }
+    },
+    {
+      "id": "p011",
+      "node": "shell_l1",
+      "level": 1,
+      "role": "blocker",
+      "material": "structural",
+      "collider": true,
+      "standable": false,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -21,
+          21,
+          21.8
+        ],
+        "max": [
+          4.5,
+          23,
+          23
+        ]
+      }
+    },
+    {
+      "id": "p012",
+      "node": "shell_l1",
+      "level": 1,
+      "role": "blocker",
+      "material": "structural",
+      "collider": true,
+      "standable": false,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          11.5,
+          21,
+          21.8
+        ],
+        "max": [
+          21,
+          23,
+          23
+        ]
+      }
+    },
+    {
+      "id": "p013",
+      "node": "shell_l1",
+      "level": 1,
+      "role": "blocker",
+      "material": "structural",
+      "collider": true,
+      "standable": false,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -21,
+          23,
+          21.8
+        ],
+        "max": [
+          21,
+          30.8,
+          23
+        ]
+      }
+    },
+    {
+      "id": "p014",
+      "node": "shell_l1",
+      "level": 1,
+      "role": "blocker",
+      "material": "structural",
+      "collider": true,
+      "standable": false,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -21,
+          16,
+          -23
+        ],
+        "max": [
+          21,
+          30.8,
+          -21.8
+        ]
+      }
+    },
+    {
+      "id": "p015",
+      "node": "shell_l1",
+      "level": 1,
+      "role": "blocker",
+      "material": "structural",
+      "collider": true,
+      "standable": false,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          19.8,
+          16,
+          -23
+        ],
+        "max": [
+          21,
+          30.8,
+          23
+        ]
+      }
+    },
+    {
+      "id": "p016",
+      "node": "shell_l1",
+      "level": 1,
+      "role": "blocker",
+      "material": "structural",
+      "collider": true,
+      "standable": false,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -21,
+          16,
+          -23
+        ],
+        "max": [
+          -19.8,
+          21,
+          23
+        ]
+      }
+    },
+    {
+      "id": "p017",
+      "node": "shell_l1",
+      "level": 1,
+      "role": "blocker",
+      "material": "structural",
+      "collider": true,
+      "standable": false,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -21,
+          21,
+          -23
+        ],
+        "max": [
+          -19.8,
+          23,
+          -9.5
+        ]
+      }
+    },
+    {
+      "id": "p018",
+      "node": "shell_l1",
+      "level": 1,
+      "role": "blocker",
+      "material": "structural",
+      "collider": true,
+      "standable": false,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -21,
+          21,
+          -2.5
+        ],
+        "max": [
+          -19.8,
+          23,
+          23
+        ]
+      }
+    },
+    {
+      "id": "p019",
+      "node": "shell_l1",
+      "level": 1,
+      "role": "blocker",
+      "material": "structural",
+      "collider": true,
+      "standable": false,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -21,
+          23,
+          -23
+        ],
+        "max": [
+          -19.8,
+          30.8,
+          23
+        ]
+      }
+    },
+    {
+      "id": "p020",
+      "node": "shell_l1",
+      "level": 1,
+      "role": "blocker",
+      "material": "structural",
+      "collider": true,
+      "standable": false,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -19.8,
+          16,
+          1.4
+        ],
+        "max": [
+          -13.5,
+          28,
+          2.6
+        ]
+      }
+    },
+    {
+      "id": "p021",
+      "node": "shell_l1",
+      "level": 1,
+      "role": "blocker",
+      "material": "structural",
+      "collider": true,
+      "standable": false,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -4.5,
+          16,
+          1.4
+        ],
+        "max": [
+          19.8,
+          28,
+          2.6
+        ]
+      }
+    },
+    {
+      "id": "p022",
+      "node": "shell_l1",
+      "level": 1,
+      "role": "blocker",
+      "material": "structural",
+      "collider": true,
+      "standable": false,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -19.8,
+          28,
+          1.4
+        ],
+        "max": [
+          19.8,
+          30.8,
+          2.6
+        ]
+      }
+    },
+    {
+      "id": "p023",
+      "node": "floor_l1",
+      "level": 1,
+      "role": "floor",
+      "material": "floor_struct",
+      "collider": true,
+      "standable": true,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -21,
+          14.8,
+          -23
+        ],
+        "max": [
+          21,
+          16,
+          0.6
+        ]
+      }
+    },
+    {
+      "id": "p024",
+      "node": "floor_l1",
+      "level": 1,
+      "role": "floor",
+      "material": "floor_struct",
+      "collider": true,
+      "standable": true,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -21,
+          14.8,
+          0.6
+        ],
+        "max": [
+          -19.8,
+          16,
+          6
+        ]
+      }
+    },
+    {
+      "id": "p025",
+      "node": "floor_l1",
+      "level": 1,
+      "role": "floor",
+      "material": "floor_struct",
+      "collider": true,
+      "standable": true,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -11.8,
+          14.8,
+          0.6
+        ],
+        "max": [
+          21,
+          16,
+          6
+        ]
+      }
+    },
+    {
+      "id": "p026",
+      "node": "floor_l1",
+      "level": 1,
+      "role": "floor",
+      "material": "floor_struct",
+      "collider": true,
+      "standable": true,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -21,
+          14.8,
+          6
+        ],
+        "max": [
+          -19.8,
+          16,
+          16
+        ]
+      }
+    },
+    {
+      "id": "p027",
+      "node": "floor_l1",
+      "level": 1,
+      "role": "floor",
+      "material": "floor_struct",
+      "collider": true,
+      "standable": true,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -11.8,
+          14.8,
+          6
+        ],
+        "max": [
+          -10,
+          16,
+          16
+        ]
+      }
+    },
+    {
+      "id": "p028",
+      "node": "floor_l1",
+      "level": 1,
+      "role": "floor",
+      "material": "floor_struct",
+      "collider": true,
+      "standable": true,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          0,
+          14.8,
+          6
+        ],
+        "max": [
+          21,
+          16,
+          16
+        ]
+      }
+    },
+    {
+      "id": "p029",
+      "node": "floor_l1",
+      "level": 1,
+      "role": "floor",
+      "material": "floor_struct",
+      "collider": true,
+      "standable": true,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -21,
+          14.8,
+          16
+        ],
+        "max": [
+          -19.8,
+          16,
+          18.6
+        ]
+      }
+    },
+    {
+      "id": "p030",
+      "node": "floor_l1",
+      "level": 1,
+      "role": "floor",
+      "material": "floor_struct",
+      "collider": true,
+      "standable": true,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -11.8,
+          14.8,
+          16
+        ],
+        "max": [
+          21,
+          16,
+          18.6
+        ]
+      }
+    },
+    {
+      "id": "p031",
+      "node": "floor_l1",
+      "level": 1,
+      "role": "floor",
+      "material": "floor_struct",
+      "collider": true,
+      "standable": true,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -21,
+          14.8,
+          18.6
+        ],
+        "max": [
+          21,
+          16,
+          23
+        ]
+      }
+    },
+    {
+      "id": "upper_floor_panel",
+      "node": "breakable_upper_floor_panel",
+      "level": 1,
+      "role": "floor",
+      "material": "roof_panel_weak",
+      "collider": true,
+      "standable": true,
+      "breakable": true,
+      "breakGroup": "upper_floor_panel",
+      "state": "intact-only",
+      "hp": 110,
+      "dtype": "physical",
+      "aabb": {
+        "min": [
+          -10,
+          14.8,
+          6
+        ],
+        "max": [
+          0,
+          16,
+          16
+        ]
+      }
+    },
+    {
+      "id": "upper_floor_panel.mark",
+      "node": "breakable_upper_floor_panel_mark",
+      "level": 1,
+      "role": "decor",
+      "material": "hazard_stripe",
+      "collider": false,
+      "standable": false,
+      "breakable": false,
+      "breakGroup": "upper_floor_panel",
+      "state": "intact-only",
+      "hp": null,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -10,
+          16,
+          6
+        ],
+        "max": [
+          -8.6,
+          16.12,
+          16
+        ]
+      }
+    },
+    {
+      "id": "p032",
+      "node": "roof_structural",
+      "level": "roof",
+      "role": "roof",
+      "material": "roof_slab",
+      "collider": true,
+      "standable": true,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -21,
+          30.8,
+          -23
+        ],
+        "max": [
+          21,
+          32,
+          -19.6
+        ]
+      }
+    },
+    {
+      "id": "p033",
+      "node": "roof_structural",
+      "level": "roof",
+      "role": "roof",
+      "material": "roof_slab",
+      "collider": true,
+      "standable": true,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -21,
+          30.8,
+          -19.6
+        ],
+        "max": [
+          -19.8,
+          32,
+          -17
+        ]
+      }
+    },
+    {
+      "id": "p034",
+      "node": "roof_structural",
+      "level": "roof",
+      "role": "roof",
+      "material": "roof_slab",
+      "collider": true,
+      "standable": true,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -11.8,
+          30.8,
+          -19.6
+        ],
+        "max": [
+          21,
+          32,
+          -17
+        ]
+      }
+    },
+    {
+      "id": "p035",
+      "node": "roof_structural",
+      "level": "roof",
+      "role": "roof",
+      "material": "roof_slab",
+      "collider": true,
+      "standable": true,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -21,
+          30.8,
+          -17
+        ],
+        "max": [
+          -19.8,
+          32,
+          -5
+        ]
+      }
+    },
+    {
+      "id": "p036",
+      "node": "roof_structural",
+      "level": "roof",
+      "role": "roof",
+      "material": "roof_slab",
+      "collider": true,
+      "standable": true,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -11.8,
+          30.8,
+          -17
+        ],
+        "max": [
+          -11,
+          32,
+          -5
+        ]
+      }
+    },
+    {
+      "id": "p037",
+      "node": "roof_structural",
+      "level": "roof",
+      "role": "roof",
+      "material": "roof_slab",
+      "collider": true,
+      "standable": true,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          1,
+          30.8,
+          -17
+        ],
+        "max": [
+          21,
+          32,
+          -5
+        ]
+      }
+    },
+    {
+      "id": "p038",
+      "node": "roof_structural",
+      "level": "roof",
+      "role": "roof",
+      "material": "roof_slab",
+      "collider": true,
+      "standable": true,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -21,
+          30.8,
+          -5
+        ],
+        "max": [
+          -19.8,
+          32,
+          -1.6
+        ]
+      }
+    },
+    {
+      "id": "p039",
+      "node": "roof_structural",
+      "level": "roof",
+      "role": "roof",
+      "material": "roof_slab",
+      "collider": true,
+      "standable": true,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -11.8,
+          30.8,
+          -5
+        ],
+        "max": [
+          21,
+          32,
+          -1.6
+        ]
+      }
+    },
+    {
+      "id": "p040",
+      "node": "roof_structural",
+      "level": "roof",
+      "role": "roof",
+      "material": "roof_slab",
+      "collider": true,
+      "standable": true,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -21,
+          30.8,
+          -1.6
+        ],
+        "max": [
+          21,
+          32,
+          23
+        ]
+      }
+    },
+    {
+      "id": "roof_weak_panel",
+      "node": "breakable_roof_weak_panel",
+      "level": "roof",
+      "role": "roof",
+      "material": "roof_panel_weak",
+      "collider": true,
+      "standable": true,
+      "breakable": true,
+      "breakGroup": "roof_weak_panel",
+      "state": "intact-only",
+      "hp": 110,
+      "dtype": "physical",
+      "aabb": {
+        "min": [
+          -11,
+          30.8,
+          -17
+        ],
+        "max": [
+          1,
+          32,
+          -5
+        ]
+      }
+    },
+    {
+      "id": "roof_weak_panel.mark",
+      "node": "breakable_roof_weak_panel_mark",
+      "level": "roof",
+      "role": "decor",
+      "material": "hazard_stripe",
+      "collider": false,
+      "standable": false,
+      "breakable": false,
+      "breakGroup": "roof_weak_panel",
+      "state": "intact-only",
+      "hp": null,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -11,
+          32,
+          -17
+        ],
+        "max": [
+          -9.6,
+          32.12,
+          -5
+        ]
+      }
+    },
+    {
+      "id": "parapet.front",
+      "node": "roof_parapet",
+      "level": "roof",
+      "role": "parapet",
+      "material": "parapet",
+      "collider": true,
+      "standable": false,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -21,
+          32,
+          22
+        ],
+        "max": [
+          21,
+          34.2,
+          23
+        ]
+      }
+    },
+    {
+      "id": "parapet.rear",
+      "node": "roof_parapet",
+      "level": "roof",
+      "role": "parapet",
+      "material": "parapet",
+      "collider": true,
+      "standable": false,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -21,
+          32,
+          -23
+        ],
+        "max": [
+          21,
+          34.2,
+          -22
+        ]
+      }
+    },
+    {
+      "id": "parapet.left",
+      "node": "roof_parapet",
+      "level": "roof",
+      "role": "parapet",
+      "material": "parapet",
+      "collider": true,
+      "standable": false,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -21,
+          32,
+          -22
+        ],
+        "max": [
+          -20,
+          34.2,
+          22
+        ]
+      }
+    },
+    {
+      "id": "parapet.right",
+      "node": "roof_parapet",
+      "level": "roof",
+      "role": "parapet",
+      "material": "parapet",
+      "collider": true,
+      "standable": false,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          20,
+          32,
+          -22
+        ],
+        "max": [
+          21,
+          34.2,
+          22
+        ]
+      }
+    },
+    {
+      "id": "stair_a.step1",
+      "node": "stair",
+      "level": "ground",
+      "role": "step",
+      "material": "stair",
+      "collider": true,
+      "standable": true,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -19.8,
+          0,
+          15.6
+        ],
+        "max": [
+          -11.8,
+          2.28571,
+          18
+        ]
+      }
+    },
+    {
+      "id": "stair_a.step2",
+      "node": "stair",
+      "level": "ground",
+      "role": "step",
+      "material": "stair",
+      "collider": true,
+      "standable": true,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -19.8,
+          0,
+          13.2
+        ],
+        "max": [
+          -11.8,
+          4.57143,
+          15.6
+        ]
+      }
+    },
+    {
+      "id": "stair_a.step3",
+      "node": "stair",
+      "level": "ground",
+      "role": "step",
+      "material": "stair",
+      "collider": true,
+      "standable": true,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -19.8,
+          0,
+          10.8
+        ],
+        "max": [
+          -11.8,
+          6.85714,
+          13.2
+        ]
+      }
+    },
+    {
+      "id": "stair_a.step4",
+      "node": "stair",
+      "level": "ground",
+      "role": "step",
+      "material": "stair",
+      "collider": true,
+      "standable": true,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -19.8,
+          0,
+          8.4
+        ],
+        "max": [
+          -11.8,
+          9.14286,
+          10.8
+        ]
+      }
+    },
+    {
+      "id": "stair_a.step5",
+      "node": "stair",
+      "level": "ground",
+      "role": "step",
+      "material": "stair",
+      "collider": true,
+      "standable": true,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -19.8,
+          0,
+          6
+        ],
+        "max": [
+          -11.8,
+          11.42857,
+          8.4
+        ]
+      }
+    },
+    {
+      "id": "stair_a.step6",
+      "node": "stair",
+      "level": "ground",
+      "role": "step",
+      "material": "stair",
+      "collider": true,
+      "standable": true,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -19.8,
+          0,
+          3.6
+        ],
+        "max": [
+          -11.8,
+          13.71429,
+          6
+        ]
+      }
+    },
+    {
+      "id": "stair_a.step7",
+      "node": "stair",
+      "level": "ground",
+      "role": "step",
+      "material": "stair",
+      "collider": true,
+      "standable": true,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -19.8,
+          0,
+          1.2
+        ],
+        "max": [
+          -11.8,
+          16,
+          3.6
+        ]
+      }
+    },
+    {
+      "id": "stair_b.step1",
+      "node": "stair",
+      "level": "upper",
+      "role": "step",
+      "material": "stair",
+      "collider": true,
+      "standable": true,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -19.8,
+          16,
+          -19
+        ],
+        "max": [
+          -11.8,
+          18.28571,
+          -16.6
+        ]
+      }
+    },
+    {
+      "id": "stair_b.step2",
+      "node": "stair",
+      "level": "upper",
+      "role": "step",
+      "material": "stair",
+      "collider": true,
+      "standable": true,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -19.8,
+          16,
+          -16.6
+        ],
+        "max": [
+          -11.8,
+          20.57143,
+          -14.2
+        ]
+      }
+    },
+    {
+      "id": "stair_b.step3",
+      "node": "stair",
+      "level": "upper",
+      "role": "step",
+      "material": "stair",
+      "collider": true,
+      "standable": true,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -19.8,
+          16,
+          -14.2
+        ],
+        "max": [
+          -11.8,
+          22.85714,
+          -11.8
+        ]
+      }
+    },
+    {
+      "id": "stair_b.step4",
+      "node": "stair",
+      "level": "upper",
+      "role": "step",
+      "material": "stair",
+      "collider": true,
+      "standable": true,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -19.8,
+          16,
+          -11.8
+        ],
+        "max": [
+          -11.8,
+          25.14286,
+          -9.4
+        ]
+      }
+    },
+    {
+      "id": "stair_b.step5",
+      "node": "stair",
+      "level": "upper",
+      "role": "step",
+      "material": "stair",
+      "collider": true,
+      "standable": true,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -19.8,
+          16,
+          -9.4
+        ],
+        "max": [
+          -11.8,
+          27.42857,
+          -7
+        ]
+      }
+    },
+    {
+      "id": "stair_b.step6",
+      "node": "stair",
+      "level": "upper",
+      "role": "step",
+      "material": "stair",
+      "collider": true,
+      "standable": true,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -19.8,
+          16,
+          -7
+        ],
+        "max": [
+          -11.8,
+          29.71429,
+          -4.6
+        ]
+      }
+    },
+    {
+      "id": "stair_b.step7",
+      "node": "stair",
+      "level": "upper",
+      "role": "step",
+      "material": "stair",
+      "collider": true,
+      "standable": true,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -19.8,
+          16,
+          -4.6
+        ],
+        "max": [
+          -11.8,
+          32,
+          -2.2
+        ]
+      }
+    },
+    {
+      "id": "floor.slab",
+      "node": "floor_l0",
+      "level": 0,
+      "role": "decor",
+      "material": "floor_slab",
+      "collider": false,
+      "standable": false,
+      "breakable": false,
+      "breakGroup": null,
+      "state": "always",
+      "hp": 1200,
+      "dtype": "structural",
+      "aabb": {
+        "min": [
+          -19.8,
+          -0.4,
+          -21.8
+        ],
+        "max": [
+          19.8,
+          0,
+          21.8
+        ]
+      }
+    }
+  ],
+  "breakGroups": {
+    "front_door_leaf": [
+      "front_door_leaf"
+    ],
+    "breach_panel": [
+      "breach_panel",
+      "breach_panel.stripe0",
+      "breach_panel.stripe1",
+      "breach_panel.stripe2"
+    ],
+    "upper_floor_panel": [
+      "upper_floor_panel",
+      "upper_floor_panel.mark"
+    ],
+    "roof_weak_panel": [
+      "roof_weak_panel",
+      "roof_weak_panel.mark"
+    ]
+  },
+  "fadeNodesByLevel": {
+    "0": [
+      "breakable_breach_panel",
+      "breakable_breach_panel_stripe",
+      "breakable_front_door_leaf",
+      "case_glow",
+      "case_pedestal",
+      "floor_l0",
+      "shell_l0",
+      "trim_l0"
+    ],
+    "1": [
+      "breakable_upper_floor_panel",
+      "breakable_upper_floor_panel_mark",
+      "floor_l1",
+      "shell_l1"
+    ],
+    "roof": [
+      "breakable_roof_weak_panel",
+      "breakable_roof_weak_panel_mark",
+      "roof_parapet",
+      "roof_structural"
+    ],
+    "ground": [
+      "stair"
+    ],
+    "upper": [
+      "stair"
+    ]
+  },
+  "states": {
+    "intact": {
+      "desc": "Nothing broken.",
+      "visible": [
+        "p000",
+        "p001",
+        "p002",
+        "p003",
+        "p004",
+        "p005",
+        "p006",
+        "p007",
+        "p008",
+        "p009",
+        "front_door_leaf",
+        "front_door.frame.l",
+        "front_door.frame.r",
+        "front_door.frame.h",
+        "breach_panel",
+        "breach_panel.stripe0",
+        "breach_panel.stripe1",
+        "breach_panel.stripe2",
+        "case.pedestal",
+        "case.glow",
+        "p010",
+        "p011",
+        "p012",
+        "p013",
+        "p014",
+        "p015",
+        "p016",
+        "p017",
+        "p018",
+        "p019",
+        "p020",
+        "p021",
+        "p022",
+        "p023",
+        "p024",
+        "p025",
+        "p026",
+        "p027",
+        "p028",
+        "p029",
+        "p030",
+        "p031",
+        "upper_floor_panel",
+        "upper_floor_panel.mark",
+        "p032",
+        "p033",
+        "p034",
+        "p035",
+        "p036",
+        "p037",
+        "p038",
+        "p039",
+        "p040",
+        "roof_weak_panel",
+        "roof_weak_panel.mark",
+        "parapet.front",
+        "parapet.rear",
+        "parapet.left",
+        "parapet.right",
+        "stair_a.step1",
+        "stair_a.step2",
+        "stair_a.step3",
+        "stair_a.step4",
+        "stair_a.step5",
+        "stair_a.step6",
+        "stair_a.step7",
+        "stair_b.step1",
+        "stair_b.step2",
+        "stair_b.step3",
+        "stair_b.step4",
+        "stair_b.step5",
+        "stair_b.step6",
+        "stair_b.step7",
+        "floor.slab"
+      ],
+      "colliders": [
+        "p000",
+        "p001",
+        "p002",
+        "p003",
+        "p004",
+        "p005",
+        "p006",
+        "p007",
+        "p008",
+        "p009",
+        "breach_panel",
+        "case.pedestal",
+        "p010",
+        "p011",
+        "p012",
+        "p013",
+        "p014",
+        "p015",
+        "p016",
+        "p017",
+        "p018",
+        "p019",
+        "p020",
+        "p021",
+        "p022",
+        "p023",
+        "p024",
+        "p025",
+        "p026",
+        "p027",
+        "p028",
+        "p029",
+        "p030",
+        "p031",
+        "upper_floor_panel",
+        "p032",
+        "p033",
+        "p034",
+        "p035",
+        "p036",
+        "p037",
+        "p038",
+        "p039",
+        "p040",
+        "roof_weak_panel",
+        "parapet.front",
+        "parapet.rear",
+        "parapet.left",
+        "parapet.right",
+        "stair_a.step1",
+        "stair_a.step2",
+        "stair_a.step3",
+        "stair_a.step4",
+        "stair_a.step5",
+        "stair_a.step6",
+        "stair_a.step7",
+        "stair_b.step1",
+        "stair_b.step2",
+        "stair_b.step3",
+        "stair_b.step4",
+        "stair_b.step5",
+        "stair_b.step6",
+        "stair_b.step7"
+      ],
+      "openOpenings": [
+        "interior_door_l0",
+        "front_door",
+        "interior_door_l1",
+        "window_front",
+        "window_flank",
+        "stair_a",
+        "stair_b"
+      ]
+    },
+    "breached": {
+      "desc": "All breakables broken.",
+      "hidden": [
+        "front_door_leaf",
+        "breach_panel",
+        "breach_panel.stripe0",
+        "breach_panel.stripe1",
+        "breach_panel.stripe2",
+        "upper_floor_panel",
+        "upper_floor_panel.mark",
+        "roof_weak_panel",
+        "roof_weak_panel.mark"
+      ],
+      "colliders": [
+        "p000",
+        "p001",
+        "p002",
+        "p003",
+        "p004",
+        "p005",
+        "p006",
+        "p007",
+        "p008",
+        "p009",
+        "case.pedestal",
+        "p010",
+        "p011",
+        "p012",
+        "p013",
+        "p014",
+        "p015",
+        "p016",
+        "p017",
+        "p018",
+        "p019",
+        "p020",
+        "p021",
+        "p022",
+        "p023",
+        "p024",
+        "p025",
+        "p026",
+        "p027",
+        "p028",
+        "p029",
+        "p030",
+        "p031",
+        "p032",
+        "p033",
+        "p034",
+        "p035",
+        "p036",
+        "p037",
+        "p038",
+        "p039",
+        "p040",
+        "parapet.front",
+        "parapet.rear",
+        "parapet.left",
+        "parapet.right",
+        "stair_a.step1",
+        "stair_a.step2",
+        "stair_a.step3",
+        "stair_a.step4",
+        "stair_a.step5",
+        "stair_a.step6",
+        "stair_a.step7",
+        "stair_b.step1",
+        "stair_b.step2",
+        "stair_b.step3",
+        "stair_b.step4",
+        "stair_b.step5",
+        "stair_b.step6",
+        "stair_b.step7"
+      ],
+      "openOpenings": [
+        "interior_door_l0",
+        "front_door",
+        "breach_panel",
+        "interior_door_l1",
+        "window_front",
+        "window_flank",
+        "upper_floor_panel_smash",
+        "roof_weak_panel_smash",
+        "stair_a",
+        "stair_b"
+      ]
+    }
+  }
+}

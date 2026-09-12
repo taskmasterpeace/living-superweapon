@@ -1,0 +1,43 @@
+{
+  "id": "building.research-lab",
+  "version": "v1",
+  "note": "Roof + shelter volumes. `interior_shelter` suppresses rain, transitions interior ambient at openings, and asks the camera to shorten its boom (collision-safe) while the player is inside. `roofVolume.standableTop` is the accessible roof deck height.",
+  "shelter": [
+    {
+      "id": "interior_shelter",
+      "aabb": {
+        "min": [
+          -19.8,
+          0,
+          -21.8
+        ],
+        "max": [
+          19.8,
+          30.8,
+          21.8
+        ]
+      },
+      "suppressesRain": true,
+      "interiorAmbient": true,
+      "cameraBoomShorten": true,
+      "note": "Under-roof interior (both storeys). Rain suppressed, ambient transitions at openings, chase boom shortens (collision-safe) while inside."
+    }
+  ],
+  "roofVolume": {
+    "id": "roof_deck",
+    "aabb": {
+      "min": [
+        -21,
+        32,
+        -23
+      ],
+      "max": [
+        21,
+        34.2,
+        23
+      ]
+    },
+    "standableTop": 32,
+    "note": "Accessible roof deck; standable at deckTop, parapet to parapetTop."
+  }
+}

@@ -1,0 +1,103 @@
+{
+  "id": "building.research-lab",
+  "version": "v1",
+  "note": "Bounded debris per breakable. Chunk counts, size ranges, tri budget and lifetime are suggestions; spawnAABB is the volume the breaking piece occupied. Never a whole-building shatter.",
+  "debris": [
+    {
+      "forBreakGroup": "front_door_leaf",
+      "chunks": 6,
+      "sizeRange": [
+        0.6,
+        1.6
+      ],
+      "lifetimeS": 6,
+      "triBudget": 96,
+      "dtype": "physical",
+      "spawnAABB": {
+        "min": [
+          -22.1,
+          0,
+          21.6
+        ],
+        "max": [
+          -13.7,
+          14,
+          22
+        ]
+      },
+      "note": "Bounded debris for front_door_leaf; 6 chunks, <= 96 tris, 6s. Never whole-building collapse."
+    },
+    {
+      "forBreakGroup": "breach_panel",
+      "chunks": 14,
+      "sizeRange": [
+        1,
+        3
+      ],
+      "lifetimeS": 8,
+      "triBudget": 168,
+      "dtype": "energy",
+      "spawnAABB": {
+        "min": [
+          19.8,
+          0,
+          2.5
+        ],
+        "max": [
+          21,
+          15,
+          19.5
+        ]
+      },
+      "note": "Bounded debris for breach_panel; 14 chunks, <= 168 tris, 8s. Never whole-building collapse."
+    },
+    {
+      "forBreakGroup": "upper_floor_panel",
+      "chunks": 10,
+      "sizeRange": [
+        1,
+        2.5
+      ],
+      "lifetimeS": 8,
+      "triBudget": 120,
+      "dtype": "physical",
+      "spawnAABB": {
+        "min": [
+          -10,
+          14.8,
+          6
+        ],
+        "max": [
+          0,
+          16,
+          16
+        ]
+      },
+      "note": "Bounded debris for upper_floor_panel; 10 chunks, <= 120 tris, 8s. Never whole-building collapse."
+    },
+    {
+      "forBreakGroup": "roof_weak_panel",
+      "chunks": 10,
+      "sizeRange": [
+        1,
+        2.5
+      ],
+      "lifetimeS": 8,
+      "triBudget": 120,
+      "dtype": "physical",
+      "spawnAABB": {
+        "min": [
+          -11,
+          30.8,
+          -17
+        ],
+        "max": [
+          1,
+          32,
+          -5
+        ]
+      },
+      "note": "Bounded debris for roof_weak_panel; 10 chunks, <= 120 tris, 8s. Never whole-building collapse."
+    }
+  ]
+}
