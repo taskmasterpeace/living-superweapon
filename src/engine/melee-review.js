@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import {cloneReviewActor,applyReviewPose,reviewFrame} from './melee-recording.js';
+import {cinematicReviewShot} from './melee-review-camera.js';
 import '../styles/melee-review.css';
 
 export function openMeleeReview(game,recording,onClose=()=>{}){
@@ -25,7 +26,7 @@ export function openMeleeReview(game,recording,onClose=()=>{}){
  const events=recording.events.filter(e=>e.time>=start&&e.time<=end);
  const marks=document.createElement('nav');marks.className='melee-review-events';marks.setAttribute('aria-label','Recorded combat events');dialog.querySelector('footer').append(marks);
  for(const event of events){const button=document.createElement('button');button.textContent=`${(event.time-start).toFixed(2)}s · ${event.kind==='contact'?event.result:event.label}`;button.title=event.label;button.onclick=()=>{time=event.time;playing=false;play.textContent='Play';};marks.append(button);}
- for(const [id,label]of [['rear','Gameplay angle'],['front','Front'],['side','Side'],['overhead','Overhead']]){
+ for(const [id,label]of [['rear','Gameplay angle'],['front','Front'],['side','Side'],['overhead','Overhead'],['cinematic','Cinematic replay']]){
   const button=document.createElement('button');button.textContent=label;button.dataset.view=id;button.onclick=()=>{view=id;};dialog.querySelector('nav').append(button);
  }
  const focusLabel=document.createElement('label');focusLabel.textContent='Follow ';const subject=document.createElement('select');subject.setAttribute('aria-label','Review subject');subject.innerHTML='<option value="both">Both fighters</option><option value="0">You</option><option value="1">Target</option>';focusLabel.append(subject);dialog.querySelector('nav').append(focusLabel);
@@ -34,15 +35,20 @@ export function openMeleeReview(game,recording,onClose=()=>{}){
   if(playing){time=Math.min(end,time+Math.min(.1,(now-last)/1000)*Number(speed.value));if(time===end){playing=false;play.textContent='Play';}}
   last=now;const {a,b,mix}=reviewFrame(frames,time);
   copies.forEach((c,i)=>applyReviewPose(c.nodes,a.actors[i].pose,b.actors[i].pose,mix));
-  if(subject.value==='both')center.copy(copies[0].model.position).add(copies[1].model.position).multiplyScalar(.5);else center.copy(copies[Number(subject.value)].model.position);center.y+=5;
-  const distance=subject.value==='both'?Math.max(24,copies[0].model.position.distanceTo(copies[1].model.position)*1.1+14):22;
-  offset.set(...(view==='front'?[.4,.35,1]:view==='side'?[1,.25,0]:view==='overhead'?[0,1,.015]:[.4,.3,-1])).normalize().multiplyScalar(distance);
+  const event=events.findLast(e=>e.time<=time&&e.kind==='contact');
+  const separation=copies[0].model.position.distanceTo(copies[1].model.position);
+  const followImpact=view==='cinematic'&&subject.value==='both'&&separation>40&&event;
+  if(followImpact)center.copy(copies[event.incoming?0:1].model.position);
+  else if(subject.value==='both')center.copy(copies[0].model.position).add(copies[1].model.position).multiplyScalar(.5);else center.copy(copies[Number(subject.value)].model.position);center.y+=5;
+  const distance=followImpact?28:subject.value==='both'?Math.max(24,separation*1.1+14):22;
+  const shot=view==='cinematic'?cinematicReviewShot(events,time,start):null;
+  stage.dataset.shot=shot?String(shot.index):'continuous';
+  offset.set(...(shot?shot.offset:view==='front'?[.4,.35,1]:view==='side'?[1,.25,0]:view==='overhead'?[0,1,.015]:[.4,.3,-1])).normalize().multiplyScalar(distance);
   offset.applyAxisAngle(new THREE.Vector3(0,1,0),yaw);camera.position.copy(center).add(offset);camera.lookAt(center);
   const width=stage.clientWidth,height=stage.clientHeight;if(renderer.domElement.width!==Math.round(width*renderer.getPixelRatio())||renderer.domElement.height!==Math.round(height*renderer.getPixelRatio())){renderer.setSize(width,height,false);camera.aspect=width/height;camera.updateProjectionMatrix();}
   renderer.render(scene,camera);slider.value=time-start;dialog.querySelector('[data-clock]').textContent=`${(time-start).toFixed(2)} / ${(end-start).toFixed(2)} s`;
-  const event=events.findLast(e=>e.time<=time&&e.kind==='contact');
   const air=a.actors.findIndex(f=>f.airControl==='uncontrolled');
-  dialog.querySelector('[data-readout]').textContent=(air>=0?`${air?'Target':'You'}: UNCONTROLLED AIRBORNE · `:'')+(event?event.label:a.actors.map((f,i)=>`${i?'Target':'You'}: ${f.phase} · HP ${f.hp.toFixed(1)} · energy ${f.ki.toFixed(1)}`).join('     /     '));
+  dialog.querySelector('[data-readout]').textContent=(followImpact?'CAMERA FOLLOWING IMPACT · ':'')+(air>=0?`${air?'Target':'You'}: UNCONTROLLED AIRBORNE · `:'')+(event?event.label:a.actors.map((f,i)=>`${i?'Target':'You'}: ${f.phase} · HP ${f.hp.toFixed(1)} · energy ${f.ki.toFixed(1)}`).join('     /     '));
   for(const button of dialog.querySelectorAll('[data-view]'))button.setAttribute('aria-pressed',String(button.dataset.view===view));
   raf=requestAnimationFrame(draw);
  }
