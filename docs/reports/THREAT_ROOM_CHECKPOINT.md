@@ -25,3 +25,9 @@ Browser trace now proves one real V-tap heavy contact against the walking trial:
 Fixed missing strikeStarted telemetry callback; trial now reports approach engaged, starting distance and contact/no-contact per attempt. Native browser screenshot and WebM capture updated in artifacts/marketing/melee-threat-room-2026-09-12. This is controlled positioning plus native input, not walking-entry proof.
 
 Outstanding regression: current real-tap test passes retreat at 30/60/120Hz and sideways evade at 20/30/60/120Hz; retreat at 20Hz fails. Do not mark retreat reliability complete or merge to release. Investigate low-rate active contact sampling and differences between fixture movement initialization and native controls. Previous 43-test pass occurred before final lead tuning; do not cite it as final green acceptance. Next: resolve that failure, then add explicit repeat/reset and multi-angle review to the station.
+
+## Repeat-target checkpoint
+
+Added a separate cyan-ring reset interaction next to the trial selector. It repeats the current stationary/retreat/guard/dodge scenario, restores the target through native replacement and clears an unfinished attempt. Labels show the current scenario. The portal cleanup unregisters both interactions. Five trial/deployment tests pass. This resets the target only; full player/prop reset and multi-angle review are still outstanding.
+
+The 20Hz regression remains reproducible: pre-contact body separation displaces actors laterally while the heavy fist passes the predicted point. A midpoint lead experiment did not fix it and was reverted. Preserve the real-tap failing test for the next investigation; do not replace it with the earlier passing direct-jab path. Native 30/60/120Hz tap contact and post-commit dodge evidence remains scoped as recorded above.

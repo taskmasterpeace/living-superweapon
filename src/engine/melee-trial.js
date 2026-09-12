@@ -7,7 +7,7 @@ export class MeleeTrial {
  constructor(g,origin){this.g=g;this.origin=origin.clone();this.records=[];this.index=-1;}
  start(kind='stationary'){
   if(!MELEE_TRIALS.includes(kind))throw Error('Unknown melee trial');
-  this.clear();this.kind=kind;this.index=MELEE_TRIALS.indexOf(kind);this.elapsed=0;this.dodgeAt=1;
+  this.clear();this.attempt=null;this.kind=kind;this.index=MELEE_TRIALS.indexOf(kind);this.elapsed=0;this.dodgeAt=1;
   const base=ROSTER.find(d=>d.id==='merc')||ROSTER[0];
   const f=this.g.addFighter({...base,name:'Trial '+kind,abilities:{},items:[],holo:true},{team:this.g.player.team===0?1:0,dummy:true,x:this.origin.x,z:this.origin.z});
   f.pos.y=this.g.world.heightAt(f.pos.x,f.pos.z);f._chaseKb=true;f._openSky=true;f.noRespawn=true;f._meleeTrial=this;this.target=f;this.startHp=f.hp;
@@ -20,6 +20,7 @@ export class MeleeTrial {
   if(this.kind==='retreat'&&d<40&&f.pos.distanceTo(this.origin)<65)move.copy(dir).negate();f.move(move,dt,1);
   if(this.kind==='dodge'&&this.elapsed>=this.dodgeAt){this.dodgeAt=this.elapsed+1.5;performEvade(f,{x:-dir.z,z:dir.x},this.g);}
  }
+ repeat(){return this.start(this.kind||'stationary');}
  strikeStarted(f){
   if(f!==this.g.player||!this.target)return;
   this.attempt={trial:this.kind,kind:f.mId,time:this.elapsed,contacts:0,approach:!!f._meleeMotion?.approachEnabled,distance:f.pos.distanceTo(this.target.pos)};
