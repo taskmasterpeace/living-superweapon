@@ -654,6 +654,7 @@ export class MeleeSystem {
           const cw = clinchWindow(f, foe, { attackerRank: rankOf(f.def), victimRank: rankOf(foe.def), wounds: w });
           f.grabT = Math.min(4, Math.max(0.2, cw.seconds * (behind ? 1.25 : 1)));   // a back clinch holds longer
           f._clinchMax = f.grabT;
+          g.ms?.threatLab?.meleeTrial?.grabContact(f,foe);
           f._clinchElapsed=0;f._clinchEscapeAt=f.grabT*.5;
           f._clinchFinisher=null;f._clinchPunch=null;f._clinchStrikeCd=0;
           if (g.isHuman(f) && g.hud) g.hud.feed('CLINCH — tap strike: body blow · hold strike: drive down · grab again: aimed throw', '#ff8a3a');

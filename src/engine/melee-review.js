@@ -18,9 +18,13 @@ export function openMeleeReview(game,recording,onClose=()=>{}){
  const bounds=new THREE.Box3();for(const frame of frames)for(const actor of frame.actors)bounds.expandByPoint(new THREE.Vector3().fromArray(actor.pose));
  const base=bounds.getCenter(new THREE.Vector3()),span=Math.max(24,bounds.getSize(new THREE.Vector3()).length()+14);
  const grid=new THREE.GridHelper(Math.max(80,span*2),20,0x786344,0x292c27);grid.position.set(base.x,bounds.min.y,base.z);scene.add(grid);
- const yaw=new THREE.Euler().setFromQuaternion(new THREE.Quaternion().fromArray(frames[0].actors[0].pose,3),'YXZ').y;
+ const entryDirection=new THREE.Vector3().fromArray(frames[0].actors[1].pose).sub(new THREE.Vector3().fromArray(frames[0].actors[0].pose));
+ const yaw=Math.atan2(entryDirection.x,entryDirection.z);
  let view='side',time=start,playing=false,last=performance.now(),raf,closed=false;
  const slider=dialog.querySelector('[data-time]'),play=dialog.querySelector('[data-play]'),speed=dialog.querySelector('[data-speed]');
+ const events=recording.events.filter(e=>e.time>=start&&e.time<=end);
+ const marks=document.createElement('nav');marks.className='melee-review-events';marks.setAttribute('aria-label','Recorded combat events');dialog.querySelector('footer').append(marks);
+ for(const event of events){const button=document.createElement('button');button.textContent=`${(event.time-start).toFixed(2)}s · ${event.kind==='contact'?event.result:event.label}`;button.title=event.label;button.onclick=()=>{time=event.time;playing=false;play.textContent='Play';};marks.append(button);}
  for(const [id,label]of [['rear','Gameplay angle'],['front','Front'],['side','Side'],['overhead','Overhead']]){
   const button=document.createElement('button');button.textContent=label;button.dataset.view=id;button.onclick=()=>{view=id;};dialog.querySelector('nav').append(button);
  }
@@ -35,7 +39,8 @@ export function openMeleeReview(game,recording,onClose=()=>{}){
   offset.applyAxisAngle(new THREE.Vector3(0,1,0),yaw);camera.position.copy(center).add(offset);camera.lookAt(center);
   const width=stage.clientWidth,height=stage.clientHeight;if(renderer.domElement.width!==Math.round(width*renderer.getPixelRatio())||renderer.domElement.height!==Math.round(height*renderer.getPixelRatio())){renderer.setSize(width,height,false);camera.aspect=width/height;camera.updateProjectionMatrix();}
   renderer.render(scene,camera);slider.value=time-start;dialog.querySelector('[data-clock]').textContent=`${(time-start).toFixed(2)} / ${(end-start).toFixed(2)} s`;
-  dialog.querySelector('[data-readout]').textContent=a.actors.map((f,i)=>`${i?'Target':'You'}: ${f.phase} · HP ${f.hp.toFixed(1)} · energy ${f.ki.toFixed(1)}`).join('     /     ');
+  const event=events.findLast(e=>e.time<=time&&e.kind==='contact');
+  dialog.querySelector('[data-readout]').textContent=event?event.label:a.actors.map((f,i)=>`${i?'Target':'You'}: ${f.phase} · HP ${f.hp.toFixed(1)} · energy ${f.ki.toFixed(1)}`).join('     /     ');
   for(const button of dialog.querySelectorAll('[data-view]'))button.setAttribute('aria-pressed',String(button.dataset.view===view));
   raf=requestAnimationFrame(draw);
  }

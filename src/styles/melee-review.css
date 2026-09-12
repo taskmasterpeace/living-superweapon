@@ -13,4 +13,5 @@
 .melee-review nav,.melee-review-transport{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .melee-review nav{margin-bottom:10px}.melee-review-transport label{display:flex;align-items:center;gap:8px}.melee-review-timeline{flex:1}.melee-review input{flex:1;min-width:80px;accent-color:var(--gold)}
 .melee-review output{font-variant-numeric:tabular-nums;min-width:120px}.melee-review footer{border-top:1px solid var(--line)}
+.melee-review .melee-review-events{flex-wrap:nowrap;overflow-x:auto;margin:8px 0 0;max-width:100%}.melee-review-events button{white-space:nowrap;font-size:12px;padding:6px 10px;flex:none}
 @media(max-height:550px){.melee-review header,.melee-review footer{padding:6px 12px}.melee-review header p{display:none}.melee-review h1{font-size:20px}.melee-review nav{margin-bottom:4px}.melee-review footer p{font-size:12px}.melee-review button{padding:7px 10px}}

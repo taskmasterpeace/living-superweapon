@@ -2187,7 +2187,11 @@ export class Game {
   // fixation (police tunnel vision): a fixated fighter ONLY fights its fixation, and nobody
   // else's targeting minds the badge — heroes who keep civilians safe never trade with cops.
   isFoe(a, b) {
-    if (!b || !b.alive || b === a || a.isDummy) return false;
+    if (!b || !b.alive || b === a) return false;
+    if(a.isDummy){
+      const lab=this.ms?.threatLab,trial=lab?.meleeTrial;
+      return !!(lab?.state==='preparing'&&trial?.kind==='defend'&&trial.target===a&&a._meleeTrial===trial&&b===this.player);
+    }
     if (a.fixation) return b === a.fixation;
     if (b.fixation && b.fixation !== a) return false;
     return b.team !== a.team || b.isDummy;
@@ -2989,7 +2993,7 @@ export class Game {
   }
 
   onHit(target, amount, opts = {}, blocked = false, outcome = null) {
-    this.ms?.threatLab?.meleeTrial?.hit(target,amount,opts,blocked);
+    this.ms?.threatLab?.meleeTrial?.hit(target,amount,opts,blocked,outcome);
     if(this.modeId==='powerworld')presentMaterialHit(this,target,amount,opts,blocked,outcome);
     confirmCombatOutcome(this,target,opts,outcome);
     if(outcome?.healthLost>0&&!outcome.knockedOut&&!opts.dot)zombieSound(this,target,'hurt');
