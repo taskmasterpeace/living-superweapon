@@ -1,6 +1,6 @@
 import {chromium} from 'playwright';
 import {mkdir,writeFile,copyFile} from 'node:fs/promises';
-const friendly=process.argv.includes('--friendly'),grab=friendly||process.argv.includes('--grab');const out=`artifacts/marketing/${friendly?'friendly-carry':grab?'airborne-throw':'airborne-trial'}-2026-09-12`;await mkdir(out,{recursive:true});
+const catchFall=process.argv.includes('--catch'),friendly=catchFall||process.argv.includes('--friendly'),grab=friendly||process.argv.includes('--grab');const out=`artifacts/marketing/${catchFall?'friendly-catch':friendly?'friendly-carry':grab?'airborne-throw':'airborne-trial'}-2026-09-12`;await mkdir(out,{recursive:true});
 const browser=await chromium.launch({headless:false}),context=await browser.newContext({viewport:{width:1280,height:720},recordVideo:{dir:out,size:{width:1280,height:720}}});
 const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
 try{
@@ -10,8 +10,11 @@ try{
  await page.keyboard.down('Space');await page.waitForFunction(()=>{const g=window.PW.game;return g.player.flying&&g.player.pos.y-g.world.heightAt(g.player.pos.x,g.player.pos.z)>=24;},{},{timeout:30000});await page.keyboard.up('Space');
  await page.waitForFunction(()=>{const t=window.PW.game.ms.threatLab.meleeTrial;return t.target.flying&&!t.target.flyHeld;},{},{timeout:30000});
  if(grab){
+  if(catchFall)await page.waitForFunction(()=>Math.abs(window.PW.game.player.vel.y)<2,{},{timeout:10000});
   if(friendly)await page.evaluate(()=>{const g=window.PW.game,t=g.ms.threatLab.meleeTrial.target;t.team=g.player.team;t.isDummy=false;});
+  if(catchFall)await page.evaluate(()=>{const g=window.PW.game,t=g.ms.threatLab.meleeTrial.target;t.pos.y=g.player.pos.y+4;t.flying=false;t.flyHeld=false;t.vel.y=-28;t.launchT=1;window._catchStart={y:t.pos.y,vy:t.vel.y};window._catchTrace=[];const update=g.melee.update;g.melee.update=function(f,dt){if(f===g.player&&f.grabState==='startup')window._catchTrace.push({p:f.pos.toArray(),v:t.pos.toArray(),aim:f.aim3.toArray(),dt,grabT:f.grabT});return update.call(this,f,dt);};});
   await page.keyboard.press('e');await page.waitForFunction(()=>!!window.PW.game.player._personCarry,{},{timeout:10000});
+  if(catchFall)await page.evaluate(()=>{const g=window.PW.game,t=g.ms.threatLab.meleeTrial.target;window._catchResult={start:window._catchStart,y:t.pos.y,vy:t.vel.y,held:t.grabbedBy===g.player};});
   if(friendly){await page.keyboard.press('v');await page.waitForTimeout(500);await page.screenshot({path:out+'/friendly-carry.png'});}
   await page.evaluate(()=>{window.PW.game.world._lookPitch=-.9;});
   await page.keyboard.down('e');await page.waitForTimeout(450);await page.keyboard.up('e');
@@ -26,7 +29,8 @@ try{
  report.errors=errors;
  if(grab)report.setup='Controlled ground placement and downward camera aim; native Space takeoff, E grab, hold/release E throw';
  if(friendly)report.setup='Controlled ally team/ground placement; native Space takeoff, E pickup, V harmless attempt and E release';
+ if(catchFall){report.setup='Controlled descending ally setup at -28u/s; native E startup/contact catches the falling actor';report.catch=await page.evaluate(()=>window._catchResult);if(!report.catch.held||report.catch.vy!==0)throw Error('Falling catch failed');}
  await writeFile(out+'/result.json',JSON.stringify(report,null,2));
  console.log(JSON.stringify(report));
  if(errors.length||(friendly?report.target.hp!==130:!report.records.some(r=>r.healthLost>0)))throw Error('Aerial native outcome not proven');
-}finally{const path=await page.video().path();await context.close();await copyFile(path,out+'/sol-airborne-trial.webm');await browser.close();}
+}catch(e){console.log(JSON.stringify(await page.evaluate(()=>({trace:window._catchTrace,start:window._catchStart}))));throw e;}finally{const path=await page.video().path();await context.close();await copyFile(path,out+'/sol-airborne-trial.webm');await browser.close();}

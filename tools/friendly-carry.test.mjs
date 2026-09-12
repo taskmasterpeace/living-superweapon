@@ -20,3 +20,12 @@ for(const hz of [30,60,120])test(`friendly midair catch, nonviolent carry and sa
 test('enemy hit retires friendly landing protection',()=>{
  const x=mainCombatFixture({mode:'powerworld'});try{const v=x.foe();v.invuln=0;v._friendlyLanding=true;v.takeDamage(1,{src:x.p,hitstop:0});assert.equal(v._friendlyLanding,false);}finally{x.close();}
 });
+
+test('second player can leave friendly carry with the controller grab button',()=>{
+ const x=mainCombatFixture({hero:'sol',mode:'powerworld'});try{
+  delete x.g.isFoe;x.p.team=1;const v=x.foe({z:4,team:1});v.invuln=0;
+  x.g.melee.grab(x.p);for(let i=0;i<15;i++)x.g.melee.update(x.p,1/60);
+  assert.equal(v.grabbedBy,x.p);x.pad.cur={grab:true};x.pad.prev={};
+  x.g.controlPad(v,1/60);assert.equal(v.grabbedBy,null);assert.equal(x.p.grabbing,null);assert.equal(v._friendlyLanding,true);
+ }finally{x.close();}
+});

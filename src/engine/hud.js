@@ -554,8 +554,8 @@ export class HUD {
         grp('FLIGHT & SYSTEM', [['A / CROSS','jump / rise'],['D-PAD UP','toggle flight'],['D-PAD DOWN','crouch / descend'],['MENU / OPTIONS','pause']]);return;
     }
     if(this.game?.modeId==='powerworld'&&!P){
-      el.innerHTML=grp('MOVE & AIM', [['WASD','move'],['MOUSE','aim'],['ALT (HOLD)','look around without changing travel or attack aim'],['T','focus / release target'],['C (HOLD)','crouch'],['Z','evade'],['SHIFT','tap, release, then hold again for faster movement']])+
-        grp('MELEE & INTERACT', [['V','tap: strike and approach · hold: heavy'],['Q / MOUSE4','hold guard · same on ground and in air'],['E','interact / grab · move to carry'],['E (CARRYING)','hold to aim throw · release to throw · tap to let go']])+
+      el.innerHTML=grp('MOVE & AIM', [['WASD','move'],['MOUSE','aim'],['ALT (HOLD)','look around without changing travel or attack aim'],['T','focus / release target'],['C (HOLD)','crouch'],['Z','prone · soldier class only'],['DOUBLE-TAP WASD','dodge in that direction'],['SHIFT','tap, release, then hold again for faster movement']])+
+        grp('MELEE & INTERACT', [['V','tap: strike and approach · hold: heavy'],['Q / MOUSE4','hold guard · same on ground and in air'],['E','interact / grab · move to carry'],['E (CARRYING)','enemy: hold, aim, release to throw · tap to drop; teammate: release safely']])+
         grp('POWERS & EQUIPMENT', [['LMB / RMB','primary / secondary attack'],['WHEEL','select primary'],['TAB + WHEEL','select secondary'],['TAB (HOLD)','power picker'],['1–4','additional powers'],['X','use gadget · hold for gadget picker'],['I','inventory'],['R','reload equipped firearm']])+
         grp('FLIGHT & SYSTEM', [['F','toggle flight when supported'],['SPACE','jump / rise'],['CTRL','descend'],['F3','character roster'],['ESC','pause'],['F1','this panel']]);
       return;
@@ -782,7 +782,7 @@ export class HUD {
     el.style.display = 'flex';
     const soldier=f.def.archetype==='soldier'&&(f._openSky||g.modeId==='powerworld');
     if(soldier&&g.modeId!=='powerworld'&&verb!=='interact'){el.style.display='none';return;}
-    const action=g.modeId==='powerworld'&&(f.grabbing||f._carry)?'HOLD: AIM THROW · TAP: RELEASE':(LABEL[verb]||verb).toUpperCase();
+    const action=f._personCarry?.friendly?'RELEASE TEAMMATE':g.modeId==='powerworld'&&(f.grabbing||f._carry)?'HOLD: AIM THROW · TAP: RELEASE':(LABEL[verb]||verb).toUpperCase();
     el.innerHTML = `<b style="color:var(--gold,#ffd24a)">${g.touch?.enabled?'TAP':g.modeId==='powerworld'||soldier?'E':'G'}</b><span>${action}</span>` +
       (h && verb === 'interact' ? `<span style="color:var(--text-5,#8b8577)">— ${String(h.label).toUpperCase()}</span>` : '');
   }

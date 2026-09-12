@@ -3916,6 +3916,7 @@ export class Game {
     if (!f || !f.alive || this.matchOver || this.running===false || this.mapCam || this.hud?.titleOpen || this.combatOverlayOpen) { if (f) { resetMovementGears(f);cancelHeldAttacksIfIncapacitated(f);f.moveDir = { x: 0, z: 0 }; } return; }
     cancelHeldAttacksIfIncapacitated(f);
     const pad = this.pad;
+    if(f.grabbedBy?._personCarry?.friendly&&pad.pressed('grab')){this.melee.release(f.grabbedBy);f.moveDir={x:0,z:0};return;}
     if (f.grabbedBy || f.frozenT > 0) { f.moveDir = { x: 0, z: 0 }; return; }
     if (f.downedT > 0) {
       f.moveDir = { x: 0, z: 0 };
