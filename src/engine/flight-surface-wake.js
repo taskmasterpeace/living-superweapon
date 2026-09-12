@@ -41,7 +41,7 @@ export class FlightSurfaceWake{
  }
  static canEmit(world,f){
   const cfg=f.def.model?.surfaceWake||{},speed=Math.hypot(f.vel.x,f.vel.z),min=cfg.minSpeed??SURFACE_WAKE_DEFAULTS.minSpeed;
-  if(!f.alive||!f.airborne||!f._openSky||!f.obj.visible||!f.obj.parent||(f._vis??1)<.35||!finite(f.pos)||!finite(f.vel)||speed<=min||(cfg.intensity??SURFACE_WAKE_DEFAULTS.intensity)<=0)return false;
+  if(!f.alive||(!f.airborne&&!f.def.movementTrail)||f.launchT>0||f.staggerT>0||f.stunT>0||f.frozenT>0||f.grabbedBy||!f._openSky||!f.obj.visible||!f.obj.parent||(f._vis??1)<.35||!finite(f.pos)||!finite(f.vel)||speed<=min||(cfg.intensity??SURFACE_WAKE_DEFAULTS.intensity)<=0)return false;
   const ground=world.heightAt?.(f.pos.x,f.pos.z),agl=f.pos.y-ground;
   return Number.isFinite(ground)&&agl>=0&&agl<(cfg.maxHeight??SURFACE_WAKE_DEFAULTS.maxHeight)&&!!dustSurfaces[world.surfaceAt?.(f.pos.x,f.pos.z)];
  }

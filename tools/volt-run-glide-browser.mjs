@@ -12,7 +12,7 @@ try{
   if(!route)throw Error('No clear flat route');f.pos.set(route.x,route.y,route.z);f.vel.set(0,0,0);w._lookYaw=0;w._lookPitch=0;return route;});console.log('route',route);await p.waitForTimeout(500);
  await p.keyboard.down('w');await p.keyboard.press('Shift');await p.keyboard.down('Shift');await p.waitForTimeout(1000);
  const sample=()=>p.evaluate(()=>{const f=window.PW.game.player;return {position:f.pos.toArray(),velocity:f.vel.toArray(),ki:f.ki,flying:f.flying,gliding:f.gliding,onFoot:f.onFoot};});
- const run=await sample();console.log('run',JSON.stringify(run));
+ const run=await sample();console.log('run',JSON.stringify(run));await p.screenshot({path:out+'/running-trail.png'});
  await p.evaluate(()=>{const f=window.PW.game.player,original=f.update;window.__glideTrace=[];f.update=function(...args){const result=original.apply(this,args);if(window.__glideTrace.length<180)window.__glideTrace.push({y:f.pos.y,ground:f.groundY,speed:Math.hypot(f.vel.x,f.vel.z),vy:f.vel.y,held:f.flyHeld,glide:f.gliding,stun:f.staggerT,foot:f.onFoot});return result;};});
  await p.keyboard.down('Space');
  await p.waitForFunction(()=>window.PW.game.player.gliding,{},{timeout:5000});const glide=await sample();await p.screenshot({path:out+'/run-glide.png'});

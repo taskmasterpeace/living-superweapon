@@ -15,7 +15,7 @@ export class FlightWake {
     this.previousWidth=new THREE.Vector3();
     this.footL=new THREE.Vector3();this.footR=new THREE.Vector3();
     const geometry=new THREE.BufferGeometry(),vertices=new Float32Array(CAPACITY*12),colors=new Float32Array(CAPACITY*12),alpha=new Float32Array(CAPACITY*4),edges=new Float32Array(CAPACITY*4),indices=[];
-    const palette=fighter.def.afterburner?.wake||['#fff','#ffd24a'];
+    const palette=fighter.def.afterburner?.wake||(fighter.def.movementTrail?['#fff',fighter.def.colors.accent]:['#fff','#ffd24a']);
     for(let i=0;i<CAPACITY;i++)for(let lane=0;lane<2;lane++){
       const color=new THREE.Color(palette[lane%palette.length]);
       for(let edge=0;edge<2;edge++){const j=i*4+lane*2+edge;edges[j]=edge?1:-1;color.toArray(colors,j*3);}
@@ -42,13 +42,15 @@ export class FlightWake {
     if(this.disposed)return true;
     if(!finite(this.fighter.pos)||!finite(this.fighter.vel)||!Number.isFinite(dt)){this.mesh.visible=false;return true;}
     const f=this.fighter,h=this.history,speed=f.vel.length(),visible=f.obj.visible&&(f._vis??1)>=.35;
-    const settings={...WAKE_DEFAULTS,...f.def.model?.wake};
+    const settings={...WAKE_DEFAULTS,...f.def.movementTrail,...f.def.model?.wake};
     // The wake is the speed readout in the world: slow flight leaves a short
     // ribbon, while committing to the highest gear holds a much longer trail.
     const speedScale=Math.min(1,Math.max(0,(speed-30)/140)),LIFE=settings.life*(.65+1.35*speedScale);
     for(let i=0;i<this.n;i++)this.age[i]+=dt;
     while(this.n&&this.age[0]>=LIFE){h.copyWithin(0,6);this.age.copyWithin(0,1);this.strength.copyWithin(0,1);this.spread.copyWithin(0,1);this.n--;}
-    const active=visible&&f.obj.parent&&f.alive&&f._openSky&&f.airborne&&speed>30&&settings.intensity>0;
+    const controlled=!(f.launchT>0||f.staggerT>0||f.stunT>0||f.frozenT>0||f.grabbedBy||f._scoutVehicle||f._aircraftVehicle);
+    const movingFamily=f.flying||f.gliding||!!f.def.movementTrail;
+    const active=visible&&f.obj.parent&&f.alive&&f._openSky&&controlled&&movingFamily&&speed>30&&settings.intensity>0;
     if(!visible)this.n=0;
     if(active){
       const strength=Math.min(1,Math.max(0,(speed-25)/35)),spread=(f.cruiseHeld?1.3:1)*(1+.5*speedScale);

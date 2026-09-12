@@ -116,6 +116,7 @@ export const ROSTER = [
   {
     id: 'volt', origin: 'altered', name: 'VOLT', title: 'The Overclock', role: 'Speed / Lightning',
     momentumGlide:{minSpeed:70,sink:10,drag:.25,turnRate:.65,kiPerSec:14},
+    movementTrail:{life:.24,width:.16,intensity:.68},
     colors: { primary: '#ebff2d', secondary: '#38314a', accent: '#e4ffff', skin: '#e8c39a' },
     hp: 100, ki: 120, speed: 44, thorns: 7, strength: 3, rank: 12, overdrive: 1.6, threat: 'Moderate', flightTier: 0, yells: true, voicePitch: 1.15, meleePace: 1.5,
     ai: { style: 'rusher', range: 18, aggro: 0.95, fly: 0 },

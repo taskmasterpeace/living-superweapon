@@ -37,3 +37,18 @@ test('curved near-axial ribbons keep adjacent edges on the same side',()=>fixtur
  wake.update(1/120);const p=wake.mesh.geometry.attributes.position;
  for(let i=1;i<wake.n;i++){let dot=0;for(let k=0;k<3;k++)dot+=(p.array[i*12+3+k]-p.array[i*12+k])*(p.array[(i-1)*12+3+k]-p.array[(i-1)*12+k]);assert.ok(dot>=0,`ribbon swapped edges at ${i}`);}
 }));
+
+test('authored runner trail follows the feet and expires after lost control',()=>fixture(({f,vfx})=>{
+ f.def={...f.def,movementTrail:{life:.24,width:.16,intensity:.68}};
+ f.flying=false;f.gait='grounded';f.pos.set(0,0,0);f.cruiseHeld=false;
+ vfx.flightWake(f);const wake=f._flightWake;
+ for(let i=0;i<60;i++){f.pos.z+=110/60;f.obj.position.copy(f.pos);f.obj.updateMatrixWorld(true);vfx.update(1/60);}
+ assert.ok(wake.n>2&&wake.mesh.visible,'ground running must leave a visible ribbon');
+ const tail=(wake.n-1)*6;
+ assert.ok(Math.abs(wake.history[tail+2]-f.pos.z)<5,'newest sample must stay near feet');
+ const p=wake.mesh.geometry.attributes.position;
+ const edgeWidth=Math.hypot(p.getX(1)-p.getX(0),p.getY(1)-p.getY(0),p.getZ(1)-p.getZ(0));
+ assert.ok(edgeWidth<.6,'runner profile must stay narrow');
+ f.launchT=2;for(let i=0;i<60;i++)vfx.update(1/60);
+ assert.ok(wake.disposed,'uncontrolled body must stop emitting and retire trail');
+}));

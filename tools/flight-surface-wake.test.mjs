@@ -11,6 +11,13 @@ function fixture(overrides={}){
  const wake=new FlightSurfaceWake(world,f);return{world,f,wake};
 }
 function travel(x,seconds=1,hz=60){for(let i=0;i<seconds*hz;i++){x.f.pos.addScaledVector(x.f.vel,1/hz);x.wake.update(1/hz);}}
+
+test('speedster surface trail works on sand while running and stops on knockback',()=>{
+ const x=fixture({airborne:false,def:{movementTrail:{},model:{}}});try{
+  x.f.pos.y=0;travel(x);assert.ok(x.wake.active>0);
+  const emitted=x.wake.emitted;x.f.launchT=2;travel(x);assert.equal(x.wake.emitted,emitted);
+ }finally{x.wake.dispose();}
+});
 test('fast low flight leaves widening ground-attached dust behind the hero',()=>{
  const x=fixture();try{travel(x);assert.ok(x.wake.active>20);const particles=x.wake.puffs.filter(p=>p.life>0);
   assert.ok(particles.every(p=>p.z<x.f.pos.z&&p.ground===0));

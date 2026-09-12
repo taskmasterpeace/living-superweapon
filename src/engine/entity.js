@@ -1322,7 +1322,7 @@ export class Fighter {
       }
     }
     // Ordinary open-sky travel has a continuous slipstream too; boost controls its emphasis.
-    if(this._game&&this._openSky&&this.airborne&&this.alive){
+    if(this._game&&this._openSky&&(this.airborne||this.def.movementTrail)&&this.alive){
       this._game.vfx.surfaceWake?.(this);
       if(this.vel.lengthSq()>900&&(this.def.model?.wake?.intensity??1)>0)this._game.vfx.flightWake(this);
     }
