@@ -14,5 +14,16 @@ export class PracticeProps {
   for(const {ref,position,rotation}of this.entries){ref.carried=false;ref.dead=false;ref.x=position.x;ref.z=position.z;ref.mesh.position.copy(position);ref.mesh.quaternion.copy(rotation);ref.mesh.visible=true;}
   return true;
  }
- dispose(){for(const {ref}of this.entries){ref.mesh.removeFromParent();const i=this.game.world.rocks.indexOf(ref);if(i>=0)this.game.world.rocks.splice(i,1);}this.entries=[];}
+ dispose(){
+  // Retire session-owned carries and in-flight callbacks silently: setting a
+  // thrown record dead would trigger its explosion on the next VFX update.
+  for(const f of this.game.entities)if(this.owns(f._carry?.sourceRef)){
+   f._carry.mesh?.removeFromParent();f._carry=null;f.speed=f.def.speed||30;
+  }
+  const fx=this.game.vfx?.fx;
+  if(fx)for(let i=fx.length-1;i>=0;i--)if(this.owns(fx[i].sourceRef)){
+   fx[i].dispose?.();fx.splice(i,1);
+  }
+  for(const {ref}of this.entries){ref.mesh.removeFromParent();const i=this.game.world.rocks.indexOf(ref);if(i>=0)this.game.world.rocks.splice(i,1);}this.entries=[];
+ }
 }

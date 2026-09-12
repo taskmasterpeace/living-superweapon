@@ -1012,6 +1012,8 @@ export class Game {
     if (flung) { if (!this._flung) this._flung = []; this._flung.push(flung); }
     this.audio.boom(0.4, f.pos); this.heroYell(f, 1.1);
     this.vfx._add({
+      sourceRef:c.sourceRef, // authoring owner supports silent practice-session retirement
+
       update: (dt) => {
         t += dt; vel.y -= 62 * dt;
         previous.copy(mesh.position);

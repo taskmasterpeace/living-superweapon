@@ -12,3 +12,17 @@ test('practice rocks restore their own native records without duplication or sha
   let disposed=false;ref.mesh.geometry.addEventListener('dispose',()=>disposed=true);props.dispose();assert.deepEqual(world.rocks,[unrelated]);assert.equal(disposed,false);
  }finally{props.dispose();stage._geos.forEach(g=>g.dispose());stage._mats.forEach(m=>m.dispose());}
 });
+test('leaving retires owned carries and airborne callbacks without touching other props',()=>{
+ const scene=new THREE.Scene(),world={rocks:[],heightAt:()=>0},game={world,entities:[],_flung:[],vfx:{fx:[]}};
+ const stage=Object.assign(Object.create(PowerWorldStage.prototype),{g:game,group:new THREE.Group(),_geos:[],_mats:[]});
+ const props=new PracticeProps(stage,new THREE.Vector3()),ref=props.entries[0].ref;
+ const mesh=new THREE.Group();scene.add(mesh);
+ const fighter={def:{speed:40},speed:20,_carry:{sourceRef:ref,mesh}};
+ const unrelated={sourceRef:{},dispose(){throw Error('foreign effect retired');}};
+ let retired=0;
+ game.entities=[fighter];game.vfx.fx=[unrelated,{sourceRef:ref,dispose(){retired++;}}];
+ props.dispose();props.dispose();
+ assert.equal(fighter._carry,null);assert.equal(fighter.speed,40);assert.equal(mesh.parent,null);
+ assert.equal(retired,1);assert.deepEqual(game.vfx.fx,[unrelated]);
+ stage._geos.forEach(g=>g.dispose());stage._mats.forEach(m=>m.dispose());
+});
