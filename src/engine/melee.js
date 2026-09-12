@@ -150,7 +150,7 @@ export class MeleeSystem {
         // Lead only the movement observed at commitment. Never chase a later dodge.
         const lead=entry.vel.clone();if(!f.airborne)lead.y=0;
         // A retreat already underway accelerates toward ordinary gait speed during windup.
-        if(lead.length()>1)lead.setLength(Math.max(lead.length(),entry.speed||0));
+        if(!f.airborne&&lead.length()>1)lead.setLength(Math.max(lead.length(),entry.speed||0));
         lead.clampLength(0,48);
         const profile=meleeApproach(f.def,f.airborne),gap=point.distanceTo(f.center(new THREE.Vector3()));
         const arrival=Math.max((S.startup+S.active*.5)/pace,Math.max(0,gap-3.8)/Math.max(1,profile.speed-lead.length()));
