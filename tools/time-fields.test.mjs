@@ -12,7 +12,7 @@ for(const hz of [30,60,120])test(`native Overclock pays once and slows fighter s
  const {g,p,foe,dispose}=mainCombatFixture({hero:'volt'});const t=g.timeFields=new TimeFields(g),f=foe({z:12});
  try{g.heroYell=()=>{};const ki=p.ki;assert.ok(activatePowerUp(p,g));assert.equal(p.ki,ki-p.powerUp.def.cost);assert.equal(t.list.length,1);assert.equal(activatePowerUp(p,g),false);
  const before=f.animT;for(let i=0;i<hz;i++)f.update(t.scaleFor(f)/hz,g);assert.ok(Math.abs(f.animT-before-.4)<.001);
- f.pos.set(0,0,100);const outside=f.animT;for(let i=0;i<hz;i++)f.update(t.scaleFor(f)/hz,g);assert.ok(Math.abs(f.animT-outside-1)<.001);
+ f.pos.set(0,0,150);const outside=f.animT;for(let i=0;i<hz;i++)f.update(t.scaleFor(f)/hz,g);assert.ok(Math.abs(f.animT-outside-1)<.001);
  }finally{t.clear();p.dispose();f.dispose();}
 });
 

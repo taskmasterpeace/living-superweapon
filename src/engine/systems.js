@@ -1,3 +1,4 @@
+import {speedFieldMaterial} from './time-field-material.js';
 // TIER THREE — the engine systems from docs/POWERS_BRIEF.md Part Five.
 //
 // The brief's framing: *"Each of these requires a new engine system. Each system should unlock
@@ -249,8 +250,8 @@ export class TimeFields {
   add(pos, r, dur, scale, src, options = {}) {
     const f = { x: pos.x, y: pos.y, z: pos.z, r, t: dur, dur, scale: Math.max(.15,Math.min(1,scale)), src, follow: !!options.follow, mesh: null };
     if(f.follow){for(const old of this.list)if(old.src===src&&old.follow)old.t=0;}
-    const geo = new THREE.SphereGeometry(r, 18, 12);
-    const mat = new THREE.MeshBasicMaterial({ color: options.color || '#9fd0ff', transparent: true, opacity: 0.1, depthWrite: false, side: THREE.DoubleSide });
+    const geo = new THREE.SphereGeometry(r, options.style==='speed'?40:18, options.style==='speed'?24:12);
+    const mat = options.style==='speed'?speedFieldMaterial(options.color):new THREE.MeshBasicMaterial({ color: options.color || '#9fd0ff', transparent: true, opacity: 0.1, depthWrite: false, side: THREE.DoubleSide });
     f.mesh = new THREE.Mesh(geo, mat);
     f.mesh.position.set(pos.x, pos.y, pos.z);
     this.g.scene.add(f.mesh);
@@ -275,7 +276,7 @@ export class TimeFields {
       const f = this.list[i]; f.t -= dt;
       if(f.follow){if(!f.src?.alive)f.t=0;else{f.x=f.src.pos.x;f.y=f.src.pos.y;f.z=f.src.pos.z;f.mesh.position.set(f.x,f.y,f.z);}}
       const k = Math.max(0, f.t / f.dur);
-      if (f.mesh) { f.mesh.material.opacity = 0.012 + k * 0.025; f.mesh.scale.setScalar(1); }
+      if (f.mesh) { f.mesh.material.opacity = 0.012 + k * 0.025; f.mesh.scale.setScalar(1);if(f.mesh.material.uniforms){f.mesh.material.uniforms.uTime.value=this.g.time;f.mesh.material.uniforms.uFade.value=Math.min(1,f.t/.4);} }
       // suspended matter: dust hangs inside the bubble
       if (Math.random() < dt * 12) {
         const a = Math.random() * Math.PI * 2, rr = f.r * Math.sqrt(Math.random());

@@ -578,7 +578,7 @@ export const TYPES = {
       pay(c, def, st);
       if(c.powerUp&&st!==c.powerUp)c.powerUp.activeT=0;
       // the three Tier-2 buff lanes ride the same activation
-      if(def.timeField)g.timeFields.add(c.pos,def.timeField.radius,def.timeField.dur||def.dur,def.timeField.scale,c,{follow:true,color:def.color});
+      if(def.timeField)g.timeFields.add(c.pos,def.timeField.radius,def.timeField.dur||def.dur,def.timeField.scale,c,{follow:true,color:def.timeField.color||def.color,style:def.timeField.style});
       if (def.siphonAura) c._siphon = { r: def.siphonAura.r || 22, dps: def.siphonAura.dps || 9, t: def.dur || 6, color: def.color || '#8a1d24' };
       if (def.hpPerSec) c._bloodBuff = { hps: def.hpPerSec, t: def.dur || 6 };
       if (def.riposte) c._riposte = { t: def.riposte.window || def.dur || 2.2, dmg: def.riposte.dmg || 26, used: false };
@@ -589,13 +589,17 @@ export const TYPES = {
       c.buffName = def.name || 'Power boost';
       if (def.heal) c.heal(def.heal);
       c.invuln = Math.max(c.invuln, def.invuln || 0.6);   // "invincible" heroes pass big invuln windows
+      const speedField=def.timeField?.style==='speed';
+      if(speedField)g.vfx.ring(c.pos.clone().setY(c.pos.y+.1),{color:def.timeField.color,r0:3,r1:18,life:.25,flat:true,y:c.pos.y+.1});
+      else {
       g.vfx.explode(c.pos.clone().setY(5), { color: def.color, color2: def.color2 || '#fff', radius: 14, power: 1.4, scorch: false });
       g.vfx.shockwave(c.pos.clone().setY(0.2), { color: def.color, radius: 40, power: 1.4 });
       g.vfx.ring(c.pos.clone().setY(3), { color: def.color, r0: 2, r1: 30, life: 0.6, flat: true, y: 0.5 });
-      g.world.punch(0.72); g.world.shake(1.4); g.audio.power(true); g.audio.boom(0.7, c.pos);
+      }
+      g.world.punch(speedField?.2:.72); g.world.shake(1.4); g.audio.power(true); g.audio.boom(0.7, c.pos);
       if (c.def.yells) { c._yellCd = 0; g.heroYell(c, 1.4); }   // the transformation ROAR
       // rising aura pillar
-      for (let i = 0; i < 40; i++) g.particles.spawn({ x: c.pos.x + rand(-3, 3), y: rand(0, 6), z: c.pos.z + rand(-3, 3), vx: rand(-3, 3), vy: rand(20, 40), vz: rand(-3, 3), life: 1.0, size: 3.4, color: [def.color, def.color2 || '#fff'], drag: 0.6 });
+      if(!speedField)for (let i = 0; i < 40; i++) g.particles.spawn({ x: c.pos.x + rand(-3, 3), y: rand(0, 6), z: c.pos.z + rand(-3, 3), vx: rand(-3, 3), vy: rand(20, 40), vz: rand(-3, 3), life: 1.0, size: 3.4, color: [def.color, def.color2 || '#fff'], drag: 0.6 });
     }
   },
 

@@ -1307,6 +1307,7 @@ class BeamHose {
 
   update(dt, game) {
     const c = this.caster;
+    const sourceScale=game.timeFields?.scaleFor(c)??1,sourceDt=dt*sourceScale;
     const constructPreclip=this._constructPreclip,constructTarget=constructPreclip.target;constructPreclip.target=null;
     // A spatial clock can hold energy up to 1/.15 times longer. Keep the same
     // emission cadence and authored reach instead of dropping the slow tip.
@@ -1322,7 +1323,7 @@ class BeamHose {
     }
     if(this.pendingLaunch&&(!this.sustaining||!c.alive||remoteInterrupted(c)||c.guarding)){this._dispose(game);return false;}
     const firstEmission=this.pendingLaunch;
-    this.resolveLaunch(game,dt);
+    this.resolveLaunch(game,sourceDt);
     if(this.dead)return false;
     if(this.pendingLaunch){c.state='cast';c.stateT=0;c._castPoseRanged=true;return true;}
     // Remote sustain cannot outlive a broken casting stance. Previously frozen
@@ -1330,17 +1331,17 @@ class BeamHose {
     // Existing packets retain their path and finish through the ordinary fade.
     if(this.remoteDetonate && remoteInterrupted(c))this.end();
     // ran out of ki mid-beam → the beam dies, but LOUDLY (fizzle cue), never silently
-    if (this.sustaining && c.alive && !c.energyInfinite && this.kiPerSec * dt > c.ki) { if (game.onDrained) game.onDrained(c,this); this.sustaining = false; }
-    if (this.sustaining && c.alive && c.spendKi(this.kiPerSec * dt)) {
-      this.emissionAge+=dt;
-      this.investedKi+=this.kiPerSec*dt;
+    if (this.sustaining && c.alive && !c.energyInfinite && this.kiPerSec * sourceDt > c.ki) { if (game.onDrained) game.onDrained(c,this); this.sustaining = false; }
+    if (this.sustaining && c.alive && c.spendKi(this.kiPerSec * sourceDt)) {
+      this.emissionAge+=sourceDt;
+      this.investedKi+=this.kiPerSec*sourceDt;
       c.state = 'cast'; c.stateT = 0;c._castPoseRanged=true;
       this.sampleMuzzle(this.muzzle);
       // Spherical steering also turns through an exact reversal. Normalized
       // vector lerp stays stuck on the old axis when the inputs are antipodal.
       // Only new emission turns; packets already in flight retain their velocity.
       if(!firstEmission){
-        this.predictDirection(this.dir,dt);
+        this.predictDirection(this.dir,sourceDt);
         // Planning still pursues the command through the hose's steering rate.
         // Commit new axial energy only after the final anatomical pose exists.
         // Never rotate the velocities of packets already in flight.
@@ -1353,7 +1354,7 @@ class BeamHose {
       // Simulation-only manager steps have no newly articulated source. Keep
       // their ordinary steering semantics instead of replaying a stale pose.
       this._emittedPoseVersion=c._combatPoseVersion;
-      this.tipDist = Math.min(this.maxLen, this.tipDist + this.tipSpeed * dt);
+      this.tipDist = Math.min(this.maxLen, this.tipDist + this.tipSpeed * sourceDt);
       // Casting mobility belongs to Fighter.move's authored wish-speed scale,
       // never per-beam velocity multiplication (which stacked and varied by Hz).
       // DRIVE THE VOICE. A beam that is LOSING a clash strains upward — the ring mod climbs and
@@ -1385,7 +1386,7 @@ class BeamHose {
     // ---- EMIT on a fixed time cadence. Node 0 is the live hand; nodes 1+ are
     // independent packets. Per-frame insertion made a 150u beam only 43u at 120Hz.
     // Interpolate births within this step, then advance each newborn by its age.
-    this._streamClock+=dt;
+    this._streamClock+=this.sustaining?sourceDt:dt;
     if (this.sustaining) {
       const N = this.NODES;
       while(this._streamClock+1e-10>=this._streamStep){
@@ -1397,7 +1398,7 @@ class BeamHose {
           this.pvel[d0]=this.pvel[s0];this.pvel[d0+1]=this.pvel[s0+1];this.pvel[d0+2]=this.pvel[s0+2];
           this._absorbed[i]=this._absorbed[i-1];
         }
-        const age=this._streamClock,t=clamp(1-age/(dt||1),0,1);
+        const age=this._streamClock/sourceScale,t=clamp(1-age/(dt||1),0,1);
         this._tmp.copy(this._streamDir).lerp(this.dir,t).normalize().multiplyScalar(this.tipSpeed);
         this.pvel[3]=this._tmp.x;this.pvel[4]=this._tmp.y;this.pvel[5]=this._tmp.z;
         this._pa.copy(this._streamOrigin).lerp(this.muzzle,t);
@@ -1902,7 +1903,7 @@ export class Projectiles {
       const pays=p instanceof BeamHose?p.sustaining&&(!p.pendingLaunch||p._launchReady)&&!(p.remoteDetonate&&remoteInterrupted(p.caster)):
         p instanceof GrowingOrb&&p.charging&&p.radius<p.maxR;
       if(!pays)continue;
-      const cost=p.kiPerSec*dt,affordable=remaining>=cost;
+      const cost=p.kiPerSec*dt*(p instanceof BeamHose?(this.game.timeFields?.scaleFor(p.caster)??1):1),affordable=remaining>=cost;
       if(p===beam)return affordable;
       if(affordable)remaining-=cost;
     }
