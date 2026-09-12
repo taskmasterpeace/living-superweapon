@@ -964,10 +964,10 @@ export class Game {
     mesh.castShadow = true; this.scene.add(mesh);
     // the hurl the arc will preview — computed ONCE here so the preview can never lie
     const spd = 74 * Math.max(0.5, Math.min(1.25, 0.5 + 0.16 * Math.log2(Math.max(0.6, ratio))));
-    f._carry = { kind: t.kind, mesh, t: 0, w: t.w, spd, ratio, size: t.ref && t.ref.s };
+    f._carry = { kind: t.kind, mesh, sourceRef:t.ref, t: 0, w: t.w, spd, ratio, size: t.ref && t.ref.s };
     f.speed = (f.def.speed || 30) * Math.max(0.42, Math.min(0.93, 1 - 0.45 / Math.max(0.9, ratio)));   // weight on your back is speed off your feet
     this.audio.impact(t.kind === 'plane' ? 1.1 : 0.7, f.pos); this.world.shake(t.kind === 'plane' ? 1.1 : 0.5);
-    if (this.isHuman(f) && this.hud) this.hud.feed(`Hoisted a ${t.kind} (~${t.w}t) — press G again to THROW`, '#ff8a3a');
+    if (this.isHuman(f) && this.hud) this.hud.feed(`Hoisted a ${t.kind} (~${t.w}t) — press E again to THROW`, '#ff8a3a');
     return true;
   }
   throwProp(f,drop=false) {
@@ -998,7 +998,7 @@ export class Game {
     // stays empty, every reader early-outs on `.length`, and a thrown car behaves exactly as it did.
     const flung = f._openSky ? {
       x: pos.x, y: pos.y, z: pos.z, r: R * 0.62, kind: c.kind, w: c.w || 0.5,
-      hp: 16 + (c.w || 0.5) * 20, by: f, team: f.team, dead: false, shot: false,
+      hp: 16 + (c.w || 0.5) * 20, by: f, team: f.team, sourceRef:c.sourceRef, dead: false, shot: false,
     } : null;
     if (flung) { if (!this._flung) this._flung = []; this._flung.push(flung); }
     this.audio.boom(0.4, f.pos); this.heroYell(f, 1.1);

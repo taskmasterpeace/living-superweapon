@@ -4,6 +4,7 @@ import {SquadTransport} from './squad-transport.js';
 import {operationSound} from './operation-audio.js';
 import {DeploymentStock} from './deployment-stock.js';
 import {createDeploymentAnchor} from './deployment-anchor.js';
+import {PracticeProps} from './practice-props.js';
 
 // One preparation session owns its portal, interaction and finite manifest.
 // Actors retain their normal movement/collision on the approach to the portal.
@@ -43,7 +44,7 @@ export class ThreatDeployment {
     this.surface=new THREE.Mesh(new THREE.CircleGeometry(9.5,40),portalMaterial);this.surface.position.copy(ring.position);this.group.add(this.surface);
     const pad=new THREE.Mesh(new THREE.CylinderGeometry(28,28,.35,40),new THREE.MeshStandardMaterial({color:0x514b3b,roughness:1}));pad.position.copy(this.origin);pad.position.y+=.1;this.group.add(pad);
     // Same native rock owner as desert pickups: lift restrictions and throw damage apply.
-    stage._rock(this.origin.x-18,this.origin.z+22,0);stage._rock(this.origin.x+18,this.origin.z+22,1);
+    this.practiceProps=new PracticeProps(stage,this.origin);
     this.handle=g.registerInteractable({id:'threat-lab-ready',pos:this.origin.clone().add(new THREE.Vector3(0,5,8)),r:20,label:'SQUAD DEPLOYMENT',verb:'READY',priority:3,enabled:f=>f===g.player&&this.state==='preparing',onUse:()=>this.ready()});
     this.reserveHandle=g.registerInteractable({id:'deployment-reserves',pos:this.destination.clone().add(new THREE.Vector3(0,5,0)),r:22,label:'SQUAD RESERVES',verb:'REINFORCE',priority:3,enabled:f=>f===g.player&&this.state==='field',onUse:()=>this.requestReplacement()});
     this.state='preparing';g.hud?.announce?.('THREAT LAB · Test your gear, then READY at the portal');
@@ -114,6 +115,7 @@ export class ThreatDeployment {
     if(this.deployed.has(player)&&this.queue.every(f=>this.deployed.has(f))){this.state='field';this.queue=[];if(this.manifest.length>1&&this.manifest.every(f=>f.alive&&this.deployed.has(f)))operationSound(this.g,'op.squad.ready');for(const f of this.manifest)f._deploymentTarget=null;this.g.hud?.announce?.('SQUAD DEPLOYED');}
   }
   dispose(){
+    this.practiceProps?.dispose();
     if(this.trialReviewHandle)this.g.unregisterInteractable(this.trialReviewHandle);
     this.meleeTrial?.dispose();if(this.trialRepeatHandle)this.g.unregisterInteractable(this.trialRepeatHandle);if(this.trialHandle)this.g.unregisterInteractable(this.trialHandle);
     for(const f of this.manifest||[])f._deploymentTarget=null;

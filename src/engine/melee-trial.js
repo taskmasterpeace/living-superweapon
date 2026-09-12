@@ -72,6 +72,8 @@ export class MeleeTrial {
   // replacing the actor here would invalidate the deployment manifest.
   const recover=this.canRecoverKO();
   if(g.ms?.threatLab?.state!=='preparing'||(!f?.alive&&!recover))return false;
+  const props=g.ms.threatLab.practiceProps;
+  if(props?.busy()){g.hud?.feed?.('Release the practice rock and let the throw finish before resetting','#ffd24a');return false;}
   if(f._mount||f._scoutVehicle||f._aircraftVehicle||f._passengerTransport||f._carry||f.hanging||f._grapple||Object.values(f.slots||{}).some(s=>s.active||s.charging||s.sustainT>0)){
    g.hud?.feed?.('Finish your power or leave the vehicle before resetting practice','#ffd24a');return false;
   }
@@ -87,8 +89,9 @@ export class MeleeTrial {
   f.state='idle';f.stateT=0;f.vel.set(0,0,0);
   f._traversalLeap=null;
   if(f.parts.ice)f.parts.ice.visible=false;
+  props?.reset();
   this.repeat();
-  g.hud?.feed?.('PRACTICE RESET · Health, energy, armor and guard restored · target reset','#ffd24a');
+  g.hud?.feed?.('PRACTICE RESET · Health, energy, armor and guard restored · target and practice rocks reset','#ffd24a');
   return true;
  }
  strikeStarted(f){
