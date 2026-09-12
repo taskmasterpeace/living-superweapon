@@ -2,6 +2,18 @@ import * as THREE from 'three';
 import {fighterPathFraction} from './fighter-environment-contact.js';
 
 export const isTransportingPerson=f=>!!(f?._personCarry&&f._personCarry.victim===f.grabbing&&f.grabbing?.grabbedBy===f&&f.grabState==='clinch');
+export function friendlyPickupTarget(f,g,reach){
+ if(g.modeId!=='powerworld'||f.team==null)return null;
+ const origin=f.center(new THREE.Vector3()),aim=f.aim3.clone().normalize();let found=null,best=reach;
+ for(const v of g.entities){
+  if(v===f||!v.alive||v.isDummy||v.team!==f.team||v.grabbedBy||v.grabbing||v._mount||v._aircraftVehicle||v._passengerTransport||v._scoutVehicle||v.phase)continue;
+  const delta=v.center(new THREE.Vector3()).sub(origin),distance=delta.length();
+  if(distance>best||distance<.001||delta.normalize().dot(aim)<.58)continue;
+  if(fighterPathFraction({radius:0,sizeScale:1},g.world,origin,v.center(new THREE.Vector3()))<1)continue;
+  found=v;best=distance;
+ }
+ return found;
+}
 export const personCarrySpeed=f=>isTransportingPerson(f)?f._personCarry.speedScale:1;
 export const personThrowSpeed=(f,base)=>isTransportingPerson(f)?Math.min(180,base*(1.35+.75*Math.min(1,f._personCarry.whirlT/1.2))):base;
 export function personThrowCue(f,g){

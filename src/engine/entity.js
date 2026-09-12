@@ -855,6 +855,7 @@ export class Fighter {
   }
 
   takeDamage(amount, opts = {}) {
+    if(amount>0&&opts.src&&opts.src.team!==this.team)this._friendlyLanding=false;
     const localNanite=claimNaniteContact(this,opts.naniteContact,opts);delete opts.naniteResult;
     // DUPLICATES (brief T3.4) share ONE health pool: damage to any copy is damage to the
     // original, and a pulse travels through every active duplicate so the link is visible.
@@ -2043,6 +2044,7 @@ export class Fighter {
         if (game && game.audio && game.audio.land) game.audio.land(Math.min(2.2, -impact / 38), this.body, this.pos);
       }
       if (impact < -30) this._slam(game, -impact, 'ground');    // admission evaluates authored fall resistance
+      this._friendlyLanding=false;
     }
     // ⚠ THERE IS NO CEILING IN POWERWORLD. Robert: *"there is no ceiling."* On Earth the lid is the
     // atmosphere and leaving it is a whole ceremony (manual §17 — a lit afterburner, the DEPART offer);
@@ -2099,6 +2101,7 @@ export class Fighter {
         const impact=this.vel.y;
         this.pos.y = top; if (this.vel.y < 0) this.vel.y = 0; this.onBlock = true; this.flying = false;
         if(impact < -30)this._slam(game,-impact,'roof');
+        this._friendlyLanding=false;
       } else if (this.pos.y < top - 0.5) {
         const spd = Math.hypot(this.vel.x, this.vel.z);
         if (ox < oz) { this.pos.x += Math.sign(dx || 1) * ox; this.vel.x *= -0.3; }   // push out + bounce
@@ -2127,6 +2130,7 @@ export class Fighter {
         const impact=this.vel.y;
         this.pos.y = it.top; if (this.vel.y < 0) this.vel.y = 0; this.onBlock = true; this.flying = false;
         if(impact < -30)this._slam(game,-impact,'roof');
+        this._friendlyLanding=false;
         continue;                                        // standing on the roof
       }
       if (this.pos.y >= it.top - 0.5) continue;          // flying above it

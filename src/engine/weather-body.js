@@ -4,6 +4,7 @@ const finite=(v,fallback)=>Number.isFinite(v)?v:fallback;
 
 export function fallDamage(f,speed,kind){
  if(kind!=='ground'&&kind!=='roof')return 0;
+ if(f._friendlyLanding&&!(f.launchT>0))return 0;
  const e=f.def.environment||{};
  const scale=Math.max(0,finite(e.fallDamageScale,f.def.archetype==='soldier'?1:0));
  const safe=Math.max(0,finite(e.fallSafeSpeed,56));

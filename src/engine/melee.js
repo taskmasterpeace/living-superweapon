@@ -25,7 +25,7 @@ import { sweepSplitObstacle } from './projectile-contact.js';
 import {resolveAbilityMeleeContact} from './ability-melee-contact.js';
 import {constrainRushBodies} from './ability-rush-body.js';
 import {fighterPathFraction} from './fighter-environment-contact.js';
-import {isTransportingPerson,beginPersonCarry,advancePersonCarry,personSetdownPoint,personThrowSpeed} from './person-carry.js';
+import {isTransportingPerson,beginPersonCarry,advancePersonCarry,personSetdownPoint,personThrowSpeed,friendlyPickupTarget} from './person-carry.js';
 
 const _v = new THREE.Vector3();
 const INPUT_BUFFER = .18;
@@ -207,6 +207,7 @@ export class MeleeSystem {
   // --- charged melee (Street Fighter hold): tap = jab combo · short hold = straight · long hold = HAYMAKER.
   // def.meleeTiers: 3 (default, all three) · 2 (jab + haymaker only) · 1 (taps too — pure jab character).
   chargeStart(f) {
+    if(f._personCarry?.friendly)return;
     if(this._canClinch(f)) { if(!(f._clinchStrikeCd>0))f.meleeCharge=.001; return; }
     if (this._hardInterrupt(f) || f._carry || f.guarding || f.grabState || f.meleeCharge > 0) return;
     // A held input waits for recovery; it never charges invisibly behind a swing.
@@ -386,7 +387,7 @@ export class MeleeSystem {
   }
 
   grab(f) {
-    if(isTransportingPerson(f)&&this._canClinch(f)){f._personCarry.whirling=true;f._personCarry.throwArmed=true;return;}
+    if(isTransportingPerson(f)&&this._canClinch(f)){f._personCarry.whirling=!f._personCarry.friendly;f._personCarry.throwArmed=true;return;}
     // A late throw input survives the body blow's contact pause/recovery. It
     // never cancels that animation, adds hold time, or survives a broken grab.
     if(this._canClinch(f,true)&&f._clinchPunch&&f._clinchPunch.t>=.3-INPUT_BUFFER){f._clinchThrowBuffer=INPUT_BUFFER;return;}
@@ -401,6 +402,7 @@ export class MeleeSystem {
     if (!f) return;
     const grabber=f.grabbedBy,holder=grabber||f;
     const carried=holder._personCarry?.victim;
+    if(carried&&holder._personCarry.friendly){carried._friendlyLanding=true;carried.launchT=0;carried._thrownT=0;carried._thrownBy=null;}
     const departing=holder.grabbing;if(departing&&this.game.modeId==='powerworld')departing._regrabUntil=(this.game.time||0)+.65;
     if(carried?.grabbedBy===holder){carried.grabbedBy=null;if(carried.state==='hit')carried.state='idle';}
     holder._personCarry=null;
@@ -434,6 +436,7 @@ export class MeleeSystem {
 
   _throw(holder) {
     const g = this.game, v = holder.grabbing;
+    if(holder._personCarry?.friendly){if(!this.setdownPerson(holder))this.release(holder);return;}
     if (!v) { this.release(holder); return; }
     const back = holder.grabMode === 'back';
     const str = holder.def.strength ?? 5;
@@ -463,6 +466,7 @@ export class MeleeSystem {
   }
 
   _bodyBlow(f) {
+    if(f._personCarry?.friendly)return;
     if(f._clinchStrikeCd>0 || f._clinchPunch)return;
     f._clinchStrikeCd=.42;
     f.grabT=Math.max(0,f.grabT-.16); // Every extra blow risks losing the hold.
@@ -483,6 +487,7 @@ export class MeleeSystem {
   }
 
   _slamFinish(f) {
+    if(f._personCarry?.friendly)return;
     const v=f.grabbing,g=this.game;if(!v)return;
     const str=strengthOf(f),back=f.grabMode==='back';
     const wr=Math.max(.45,Math.min(1.2,.75+.15*Math.log2(liftCapacityOf(f.def)/Math.max(.05,bodyWeight(v.def)))));
@@ -632,7 +637,19 @@ export class MeleeSystem {
       f.grabT -= dt;
       if (f.grabT <= 0) {
         // ⚠ a WRESTLER closes from further out — the style's whole identity is getting inside
-        const foe = g.coneFoe(f, STRIKES.grab.reach + ((styleOf(f.def).grabBonus) || 0), 0.95);
+        const reach=STRIKES.grab.reach+((styleOf(f.def).grabBonus)||0);
+        const hostile=g.coneFoe(f,reach,0.95);
+        const ally=!hostile&&friendlyPickupTarget(f,g,reach);
+        if(ally&&bodyWeight(ally.def)<=liftCapacityOf(f.def)){
+          this._endStrike(ally);ally.guarding=false;ally.meleeCharge=0;
+          f.grabbing=ally;ally.grabbedBy=f;f.grabState='clinch';f.grabMode='friendly';f.grabT=8;f._clinchMax=8;
+          f._victimEscape=false;f._clinchPunch=null;f._clinchFinisher=null;
+          ally.launchT=0;ally._thrownT=0;ally._thrownBy=null;ally.vel.set(0,0,0);
+          beginPersonCarry(f,ally,bodyWeight(ally.def)/liftCapacityOf(f.def));f._personCarry.friendly=true;
+          g.hud?.feed?.('TEAMMATE CARRIED · move/fly · E: release safely · attacks cannot hurt your passenger','#ffd24a');
+          return;
+        }
+        const foe=hostile;
         if (foe && (foe._regrabUntil||0)<=(g.time||0) && !foe.phase && foe.invuln <= 0 && !foe.grabbedBy && foe.alive && fighterPathFraction({radius:0,sizeScale:1},g.world,f.center(new THREE.Vector3()),foe.center(new THREE.Vector3()))===1) {
           const bx = f.pos.x - foe.pos.x, bz = f.pos.z - foe.pos.z, bd = Math.hypot(bx, bz) || 1;
           const geoBehind = (bx / bd) * foe.aim.x + (bz / bd) * foe.aim.z < -0.2;
@@ -666,6 +683,7 @@ export class MeleeSystem {
     } else if (f.grabState === 'clinch') {
       const v = f.grabbing;
       if (!v || !v.alive || !f.alive || f.staggerT>0 || f.stunT>0 || f.frozenT>0) { this.release(f); return; }
+      if(f._personCarry?.friendly){if(v.team!==f.team||!advancePersonCarry(f,g,dt))this.release(f);return;}
       f.grabT -= dt;
       f._clinchElapsed=(f._clinchElapsed||0)+dt;
       // Keep the grip inside actual arm reach. Root-space wobble fed back through

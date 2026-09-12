@@ -624,6 +624,7 @@ export class Game {
   updateThrowArc() {
     const arc = this.throwArc, p = this.player;
     if (!arc) return;
+    if(p?._personCarry?.friendly){arc.visible=false;this.hud?.throwReach?.('TEAMMATE · E RELEASE');this._carryCueShown=true;return;}
     const carryCue=p?.alive&&this.running&&!this.matchOver?personThrowCue(p,this):null;
     if(carryCue){
       // A short direction cue, clipped by the actual full-body clearance query.
@@ -3649,6 +3650,7 @@ export class Game {
     // stunned while held or frozen solid — capable heroes auto-escape via the melee system
     if (p.grabbedBy || p.frozenT > 0) {
       if(modern&&p.grabbedBy&&p.frozenT<=0){const holder=p.grabbedBy;
+        if(holder._personCarry?.friendly&&(inp.pressed('KeyE')||pad.pressed('grab'))){this.melee.release(holder);return;}
         if((inp.pressed('KeyE')||pad.pressed('grab'))&&holder.grabMode==='front'&&(holder._clinchElapsed||0)<.3)this.melee._breakFree(holder);
         else if(inp.down('KeyE')||pad.down('grab'))holder.grabT-=inputDt*Math.min(2,Math.max(.5,(p.def.strength||5)/(holder.def.strength||5)));
       }
