@@ -1,10 +1,9 @@
 import * as THREE from 'three';
-import bank from '../data/strike-bank.json' with {type:'json'};
-import heavyBank from '../data/heavy-strike-bank.json' with {type:'json'};
+import {STRIKE_CLIPS,strikeClipFor} from '../data/strike-markers.js';
 import {authoredParts,samplePoseFrame,mirrorPoseFrame,applyAuthoredPose} from './authored-pose.js';
 import {GAIT} from '../core/util.js';
 
-export const STRIKE_CLIPS={...bank.clips,...heavyBank.clips};
+export {STRIKE_CLIPS};
 const frame=new Float64Array(45),lerp=THREE.MathUtils.lerp;
 export function restoreAuthoredStrikeBase(f){
  const s=f._authoredStrike;if(!s?.applied||s.rig!==f.parts.rig)return;
@@ -12,7 +11,7 @@ export function restoreAuthoredStrikeBase(f){
  s.applied=false;s.take=null;
 }
 export function animateAuthoredStrike(f,t,weight){
- const p=f.parts,clip=STRIKE_CLIPS[f.mId],heavy=f.mId==='power';
+ const p=f.parts,clip=strikeClipFor(f.def,f.mId),heavy=f.mId==='power';
  const preference=heavy?f.def.model?.heavyStrikes:f.def.model?.strikes;
  // This take is bare-handed. Preserve weapon swings until a matching source
  // exists; a sword/axe is not a fist and a shield needs its own counterbalance.

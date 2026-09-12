@@ -1,21 +1,6 @@
-import {resolveAnimationClip} from '../data/animation-catalog.js';
+import {validateMarkerDraft} from '../data/strike-markers.js';
+export {markerDraft,validateMarkerDraft,clipWithMarkers} from '../data/strike-markers.js';
 export const ANIMATION_DRAFT_KEY='powerworld.animation-markers.v1';
-export function markerDraft(id,start,end) {
- const source=resolveAnimationClip(id);
- if(!source||source.mode!=='strike')throw Error('Select an authored strike to edit contact markers.');
- if(!Number.isFinite(start)||!Number.isFinite(end)||start<0||end<=start||end>source.duration)throw Error('Contact start must precede end, within the clip duration.');
- return {version:1,id,take:source.take,duration:source.duration,sourceContactStart:source.contactStart,sourceContactEnd:source.contactEnd,contactStart:start,contactEnd:end};
-}
-export function validateMarkerDraft(draft) {
- if(!draft||draft.version!==1)throw Error('Unsupported animation draft version.');
- const valid=markerDraft(draft.id,draft.contactStart,draft.contactEnd);
- for(const key of ['take','duration','sourceContactStart','sourceContactEnd'])if(draft[key]!==valid[key])throw Error('Source animation changed. Rebase the markers against the current clip.');
- return valid;
-}
-export function clipWithMarkers(draft) {
- const valid=validateMarkerDraft(draft);
- return {...resolveAnimationClip(valid.id),contactStart:valid.contactStart,contactEnd:valid.contactEnd};
-}
 export function readMarkerDrafts(storage) {
  const value=storage.getItem(ANIMATION_DRAFT_KEY);if(!value)return {};
  const parsed=JSON.parse(value);if(!parsed||Array.isArray(parsed)||typeof parsed!=='object')throw Error('Invalid animation draft storage.');
