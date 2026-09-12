@@ -69,6 +69,12 @@ export class ThreatRoom {
   for(let d=0;d<=150;d+=25)this.label(d+'u',140,.18,65-d,20,5,-Math.PI/2);
 
  }
+ mountTrainingConsole(handle,title,x,z){
+  handle.pos.set(x+8,3,z);handle.r=10;
+  const base=new THREE.Mesh(new THREE.BoxGeometry(8,8,16),new THREE.MeshStandardMaterial({color:0x344653,roughness:.7}));base.position.set(x,4,z);this.group.add(base);
+  this.g.world.cover.push({x,z,hx:4,hz:8,bottom:0,top:8,h:8,finiteBuilding:true,projectileShape:'box',threatRoom:true});
+  this.label(title,x+4.1,6,z,15,2.2,0,true).rotation.y=Math.PI/2;this.label('E / '+handle.verb,x+4.1,10,z,19,2.5,0,true).rotation.y=Math.PI/2;
+ }
  label(text,x,y,z,width,height,rx=0,plaque=false){const c=document.createElement('canvas');c.width=1024;c.height=128;const ctx=c.getContext('2d');if(plaque){ctx.fillStyle='#152633';ctx.fillRect(0,0,1024,128);}ctx.fillStyle=plaque?'#f3fbff':'#263d4c';ctx.font='600 52px sans-serif';ctx.textAlign='center';ctx.fillText(text,512,80);const tex=new THREE.CanvasTexture(c);tex.colorSpace=THREE.SRGBColorSpace;const m=new THREE.Mesh(new THREE.PlaneGeometry(width,height),new THREE.MeshBasicMaterial({map:tex,transparent:true,side:THREE.DoubleSide,depthWrite:false}));m.position.set(x,y,z);m.rotation.x=rx;this.group.add(m);return m;}
  screen(x,y,z,width,height){const canvas=document.createElement('canvas');canvas.width=768;canvas.height=432;const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;const mesh=new THREE.Mesh(new THREE.PlaneGeometry(width,height),new THREE.MeshBasicMaterial({map:texture}));mesh.position.set(x,y,z);this.group.add(mesh);return {canvas,texture,mesh};}
  update(dt){if(!this.active)return;this.rangeDrill.update(dt,this.g.ms.threatLab?.meleeTrial?.target);if(this._drillState!==this.rangeDrill.state){this._drillState=this.rangeDrill.state;const d=this.rangeDrill;if(d.state==='finished')this.g.hud?.feed?.(d.reason+' · '+d.damage.toFixed(1)+' DAMAGE · '+d.contacts+' CONTACTS · '+d.elapsed.toFixed(1)+'s','#ffd24a');}for(const [o]of this.hidden)o.visible=false;const g=this.g,speed=unitsPerSecondToKmh(g.player.vel.length());if(g.player.alive&&g.player.flying&&g.player.launchT<=0)this.peak=Math.max(this.peak,speed);this.flightHud.hidden=!g.player.flying;this.flightHud.textContent=Math.round(speed)+' km/h · TOP '+Math.round(this.peak)+' · RINGS '+this.ringIndex+'/6 · LAPS '+this.laps;
