@@ -779,12 +779,14 @@ export class HUD {
     const g = this.game;
     const verb = g && g.interactVerb && f ? g.interactVerb(f) : null;
     const LABEL = { interact: h ? h.verb : 'INTERACT', throw: 'THROW', hurl: 'HURL THEM', hoist: 'HOIST', grab: 'GRAB' };
-    if (!f || !g || !g.running || !verb || (verb === 'grab' && !h)) { el.style.display = 'none'; return; }
+    const grab=verb==='grab'&&g.modeId==='powerworld'&&g.melee.canBeginGrab(f)?g.melee.grabTarget(f):null;
+    if (!f || !g || !g.running || !verb || (verb === 'grab' && !grab)) { el.style.display = 'none'; return; }
     el.style.display = 'flex';
     const soldier=f.def.archetype==='soldier'&&(f._openSky||g.modeId==='powerworld');
     if(soldier&&g.modeId!=='powerworld'&&verb!=='interact'){el.style.display='none';return;}
-    const action=f._personCarry?.friendly?'RELEASE TEAMMATE':g.modeId==='powerworld'&&(f.grabbing||f._carry)?'HOLD: AIM THROW · TAP: RELEASE':(LABEL[verb]||verb).toUpperCase();
+    const action=grab?(grab.friendly?'CARRY TEAMMATE':'GRAB OPPONENT'):f._personCarry?.friendly?'RELEASE TEAMMATE':g.modeId==='powerworld'&&(f.grabbing||f._carry)?'HOLD: AIM THROW · TAP: RELEASE':(LABEL[verb]||verb).toUpperCase();
     el.innerHTML = `<b style="color:var(--gold,#ffd24a)">${g.touch?.enabled?'TAP':g.modeId==='powerworld'||soldier?'E':'G'}</b><span>${action}</span>` +
+      (grab?'<span>'+String(grab.fighter.name).replace(/[<>&]/g,'')+'</span>':'')+
       (h && verb === 'interact' ? `<span style="color:var(--text-5,#8b8577)">— ${String(h.label).toUpperCase()}</span>` : '');
   }
 

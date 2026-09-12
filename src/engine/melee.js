@@ -392,13 +392,19 @@ export class MeleeSystem {
     f.guarding = !!on && f.alive;
   }
 
+  canBeginGrab(f){return this.canAct(f)&&!f._carry&&!f.grabbing&&!f.grabState&&!f.mstate&&!f.guarding&&f.strikeCd<=0&&!(f.sleepT>0)&&!(f.downedT>0);}
+  grabTarget(f){
+    const g=this.game,reach=STRIKES.grab.reach+(styleOf(f.def).grabBonus||0),hostile=g.coneFoe(f,reach,.95);
+    if(!hostile){const ally=friendlyPickupTarget(f,g,reach);return ally&&bodyWeight(ally.def)<=liftCapacityOf(f.def)?{fighter:ally,friendly:true}:null;}
+    return (hostile._regrabUntil||0)<=(g.time||0)&&!hostile.phase&&hostile.invuln<=0&&!hostile.grabbedBy&&hostile.alive&&fighterPathFraction({radius:0,sizeScale:1},g.world,f.center(new THREE.Vector3()),hostile.center(new THREE.Vector3()))===1?{fighter:hostile,friendly:false}:null;
+  }
   grab(f) {
     if(isTransportingPerson(f)&&this._canClinch(f)){f._personCarry.whirling=!f._personCarry.friendly;f._personCarry.throwArmed=true;return;}
     // A late throw input survives the body blow's contact pause/recovery. It
     // never cancels that animation, adds hold time, or survives a broken grab.
     if(this._canClinch(f,true)&&f._clinchPunch&&f._clinchPunch.t>=.3-INPUT_BUFFER){f._clinchThrowBuffer=INPUT_BUFFER;return;}
     if (this._canClinch(f) && !f._clinchPunch) { this._throw(f); return; }
-    if (!this.canAct(f) || f._carry || f.grabbing || f.grabState || f.mstate || f.guarding || f.strikeCd>0) return;
+    if (!this.canBeginGrab(f)) return;
     this.clearInput(f);
     f.grabState = 'startup'; f.grabT = STRIKES.grab.startup; f.state = 'cast'; f.stateT = 0;f._castPoseRanged=false;
     this.game.audio.swing('fist',f.pos);
@@ -643,10 +649,8 @@ export class MeleeSystem {
       f.grabT -= dt;
       if (f.grabT <= 0) {
         // ⚠ a WRESTLER closes from further out — the style's whole identity is getting inside
-        const reach=STRIKES.grab.reach+((styleOf(f.def).grabBonus)||0);
-        const hostile=g.coneFoe(f,reach,0.95);
-        const ally=!hostile&&friendlyPickupTarget(f,g,reach);
-        if(ally&&bodyWeight(ally.def)<=liftCapacityOf(f.def)){
+        const candidate=this.grabTarget(f),hostile=candidate&&!candidate.friendly?candidate.fighter:null,ally=candidate?.friendly?candidate.fighter:null;
+        if(ally){
           this._endStrike(ally);ally.guarding=false;ally.meleeCharge=0;
           f.grabbing=ally;ally.grabbedBy=f;f.grabState='clinch';f.grabMode='friendly';f.grabT=8;f._clinchMax=8;
           f._victimEscape=false;f._clinchPunch=null;f._clinchFinisher=null;
@@ -656,7 +660,7 @@ export class MeleeSystem {
           return;
         }
         const foe=hostile;
-        if (foe && (foe._regrabUntil||0)<=(g.time||0) && !foe.phase && foe.invuln <= 0 && !foe.grabbedBy && foe.alive && fighterPathFraction({radius:0,sizeScale:1},g.world,f.center(new THREE.Vector3()),foe.center(new THREE.Vector3()))===1) {
+        if (foe) {
           const bx = f.pos.x - foe.pos.x, bz = f.pos.z - foe.pos.z, bd = Math.hypot(bx, bz) || 1;
           const geoBehind = (bx / bd) * foe.aim.x + (bz / bd) * foe.aim.z < -0.2;
           // ⚠ THE VULNERABILITY RULE (martial.js §THE CLINCH): grabbing them during their RECOVERY
