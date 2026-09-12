@@ -2644,6 +2644,15 @@ export class Game {
   handleKO(victim) {
 
     try { this.startKoCam(victim); } catch (e) {}   // ROADMAP 18 · camera drama
+    const practice=this.ms?.threatLab?.state==='preparing'&&this.ms.threatLab.meleeTrial;
+    if(practice&&(practice.ownsThreat(victim)||(victim===this.player&&practice.ownsThreat(victim.lastHitBy)))) {
+      // Training keeps native KO/ragdoll presentation without campaign rewards,
+      // dropped equipment, trauma, stock changes or operation kill callbacks.
+      this.audio.cry(victim.def.voicePitch||1,victim.pos);
+      this.slowmo(.45,.34);
+      this.hud?.showKO?.(victim===this.player?'PRACTICE DOWN':'THREAT DEFEATED',victim.name,'#ffd24a');
+      return;
+    }
     // THE DROP ECONOMY (manual §16): KO'd gear carriers leave a weapon on the street — 20s to
     // claim it. Held pickups fall too. Police sidearms join the economy the same way.
     if (!victim.isDummy) {
@@ -3123,7 +3132,7 @@ export class Game {
       if (amount >= 5) { this.combo++; if (this.combo > this._p1MaxCombo) this._p1MaxCombo = this.combo; if (this.hud) this.hud.combo(this.combo); }
       this.comboT = 1.3;
     }
-    if (src && !blocked && this.isHuman(src) && amount >= 1) this.grantXp(src, amount * 0.35);   // XP for landing damage
+    if (src && !blocked && this.isHuman(src) && amount >= 1 && !(this.ms?.threatLab?.state==='preparing'&&this.ms.threatLab.meleeTrial?.ownsThreat(target))) this.grantXp(src, amount * 0.35);   // XP for landing damage
 
     // ---------- DEPTH HOOKS (cheap systems that reward how you fight, not just that you win) ----------
     if (src && !blocked && amount >= 1 && this.isHuman(src) && !target.isDummy) {

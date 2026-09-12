@@ -1,3 +1,4 @@
+import {retirePracticeActor} from './practice-actor-retirement.js';
 import {Fighter} from './entity.js';
 import {hasStrike,STRIKES} from '../data/martial.js';
 import * as THREE from 'three';
@@ -28,7 +29,14 @@ export class MeleeTrial {
   this.g.hud?.feed?.(def.name+' · '+(def.archetype==='soldier'?'SOLDIER':'LSW')+' · '+def.threat+' · preview only; start a drill to fight','#ffd24a');return f;
  }
  clearPreview(){if(this.previewActor){this.previewActor.obj.removeFromParent();this.previewActor.dispose();this.previewActor=null;}}
- startSelected(){if(!this.selectedThreat)return false;return this.start(this.kind||'stationary');}
+ startSelected(){if(!this.selectedThreat)return false;return this.start(this.kind==='encounter'?'stationary':this.kind||'stationary');}
+ startEncounter(){
+  if(!this.selectedThreat||this.g.ms?.threatLab?.state!=='preparing'||!this.g.player.alive)return false;
+  this.clear();this.attempt=null;this.phaseKey=null;this.kind='encounter';this.elapsed=0;
+  const f=this.g.spawnEnemy(this.selectedThreat,{team:this.g.player.team===0?1:0,x:this.origin.x,z:this.origin.z,noRespawn:true});
+  f.pos.y=this.g.world.heightAt(f.pos.x,f.pos.z);f._openSky=true;f._chaseKb=true;f.faceDir(0,-1);this.target=f;this.startHp=f.hp;this.recording.bind([this.g.player,f]);
+  this.g.hud?.feed?.('LIVE THREAT · '+f.def.name+' · Native powers and AI active. Reset practice to repeat.','#ffd24a');return f;
+ }
  start(kind='stationary'){
   if(!MELEE_TRIALS.includes(kind))throw Error('Unknown melee trial');
   const selected=ROSTER.find(d=>d.id===this.selectedThreat);if((kind==='airborne'||kind==='air-defense')&&selected&&!(selected.flightTier>0)){this.g.hud?.feed?.('Choose a flying target for an airborne drill. This character stays grounded.','#ffd24a');return false;}
@@ -61,7 +69,7 @@ export class MeleeTrial {
    if(d>7&&!f.mstate)f.move(dir,dt,1);
   }
  }
- repeat(){return this.start(this.kind||'stationary');}
+ repeat(){return this.kind==='encounter'?this.startEncounter():this.start(this.kind||'stationary');}
  capture(){if(this.target&&!this.review){
   const f=this.g.player;this.phaseKey??=[];
   for(const [actor,fighter]of [f,this.target].entries()){
@@ -70,7 +78,8 @@ export class MeleeTrial {
   this.recording.capture(this.g.time);
   if(this.canRecoverKO()&&f.koT>=1&&typeof document!=='undefined')this.openReview();
  }}
- canRecoverKO(){const f=this.g.player;return this.g.ms?.threatLab?.state==='preparing'&&f?.state==='ko'&&f.lastHitBy===this.target&&this.g.entities.includes(f);}
+ ownsThreat(f){const seen=new Set();while(f&&!seen.has(f)){if(f===this.target)return true;seen.add(f);f=f._dupeOf;}return false;}
+ canRecoverKO(){const f=this.g.player;return this.g.ms?.threatLab?.state==='preparing'&&f?.state==='ko'&&this.ownsThreat(f.lastHitBy)&&this.g.entities.includes(f);}
  openReview(){
   if(this.review||this.g.ms?.threatLab?.state!=='preparing')return;
   if(this.recording.frames.length<2){this.g.hud?.feed?.('Start a melee trial, then return here to review the exchange','#ffd24a');return;}
@@ -126,6 +135,6 @@ export class MeleeTrial {
   this.records.push(record);if(this.records.length>100)this.records.shift();this.recording.mark(this.g.time,{...record,label,kind:'contact'});
   this.g.hud?.feed?.(label,'#ffd24a');
  }
- clear(){this.clearPreview();this.review?.close();this.review=null;this.recording.clear();const f=this.target;if(!f)return;if(f.grabbedBy)this.g.melee.release(f.grabbedBy);if(f.grabbing)this.g.melee.release(f);for(const key of ['hardLock','lockTarget'])if(this.g[key]===f)this.g[key]=null;f._meleeTrial=null;f.dispose();f.obj.removeFromParent();const i=this.g.entities.indexOf(f);if(i>=0)this.g.entities.splice(i,1);this.target=null;}
+ clear(){this.clearPreview();this.review?.close();this.review=null;this.recording.clear();const f=this.target;if(!f)return;retirePracticeActor(this.g,f);this.target=null;}
  dispose(){this.clear();}
 }
