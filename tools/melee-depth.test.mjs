@@ -24,6 +24,18 @@ function fixture(strength=5) {
 }
 function withFixture(fn,str=5){const x=fixture(str);try{return fn(x);}finally{x.close();}}
 
+test('field finisher carries below heavy-launch threshold; guard and city keep their rules',()=>withFixture(({a,b})=>{
+ const hit={src:a,dtype:'physical',finisher:true,kb:{x:0,y:8,z:20},hitstop:0};
+ b._chaseKb=true;b._openSky=true;b.guarding=true;b.ki=100;b.guardMeter=1;
+ b.takeDamage(8,hit);assert.equal(b.launchT,0);assert.equal(b.hp,10000);
+ b.guarding=false;b.invuln=0;b.vel.set(0,0,0);b.takeDamage(8,hit);
+ assert.ok(b.launchT>=.55);const normal=b.vel.z;
+ b.launchT=0;b.vel.set(0,0,0);b.invuln=0;b.strength=10;b.takeDamage(8,hit);
+ assert.ok(b.vel.z<normal,'strength still resists displacement');
+ b.launchT=0;b.vel.set(0,0,0);b.invuln=0;b._chaseKb=false;b.takeDamage(8,hit);
+ assert.equal(b.launchT,0,'city finisher does not enter the new carry');
+}));
+
 test('PowerWorld jab-only third beat creates a spacing finisher without a custom cross',()=>withFixture(({a,b,m,hits})=>{
  a._openSky=true;a.strikeIdx=0;a.mId='jab';a.strikeHit=new Set();m._resolveLight(a);
  const light=Math.hypot(hits[0].o.kb.x,hits[0].o.kb.z);b.invuln=0;a.strikeIdx=2;a.strikeHit=new Set();m._resolveLight(a);

@@ -1112,7 +1112,12 @@ export class Fighter {
     // launched hard enough → walls and the ground become weapons for ~1.1s (slam damage in _physics)
     if (!opts.slam) {
       const kmag = opts.kb ? Math.hypot(opts.kb.x || 0, opts.kb.z || 0) : 0;
-      if (kmag > 30 || Math.abs(opts.launch || 0) > 12) {this._personThrow=null;this.launchT = this._chaseKb ? PW_KB.window : 1.1;}   // A new launch owns its own impact.
+      if (kmag > 30 || Math.abs(opts.launch || 0) > 12) {this._personThrow=null;this.launchT = this._chaseKb ? PW_KB.window : 1.1;}
+      else if (this._chaseKb && opts.finisher && amount > 0 && kmag > 0) {
+        // A connected combo ender needs a short carry even below heavy-launch strength.
+        // Funded guards return before this point; retain the normal resistance-scaled impulse.
+        this._personThrow=null;this.launchT=Math.max(this.launchT,.55);
+      }   // A new launch owns its own impact.
       if ((kmag > 14 || (opts.launch || 0) > 6) && (this.hanging || this._grapple)) this.releaseHang();   // knocked off the wall
     }
     // ---- BLEEDING (manual §12): heavy physical trauma and every slash-class weapon OPENS A WOUND.
