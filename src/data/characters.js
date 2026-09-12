@@ -130,7 +130,7 @@ export const ROSTER = [
       e: { type: 'cone', material: 'shock', name: 'Static Field', shockDuration:.8, kiPerSec: 16, range: 28, arc: 1.3, dps: 20, push: 40, color: '#ffe066' },
       f: { type: 'teleport', name: 'Zap Step', cost: 8, cd: 0.8, range: 44, color: '#eaffff' },
       shift: { type: 'dash', name: 'Blink', cost: 3, cd: 0.35, power: 130, iframes: 0.28, color: '#eaffff' },
-      r: { type: 'buff', name: 'Overclock', cost: 26, cd: 18, mult: 1.8, dur: 9, timeField:{radius:112,scale:.4,dur:5,style:'speed',color:'#7fd4ff'}, color: '#ffd21a', color2: '#fff' },
+      r: { type: 'buff', name: 'Overclock', cost: 26, cd: 18, mult: 1.8, dur: 9, timeField:{radius:112,scale:.25,dur:5,style:'speed',color:'#7fd4ff'}, color: '#ffd21a', color2: '#fff' },
     },
   },
   {
