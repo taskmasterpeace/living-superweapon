@@ -86,16 +86,18 @@ Measured with `tools/operation-driving.mjs` — the **real** `ScoutDriving` driv
 `FrontlineConvoy` (`_ground`/`_surface`/`_clear` + the swept move) on a stub flat world. Units are
 engine units (u) and seconds (s); no real-world units are invented.
 
-| Trial | BEFORE (`6161ec1`) | AFTER | Deliverable |
+| Trial | BEFORE (`6161ec1`) | AFTER (shipped) | Deliverable |
 |---|---|---|---|
-| Accel to 90 % of top | 1.97 s / 46.8 u | **1.23 s / 29.3 u** | responsive acceleration |
-| Brake (Space) 52→0 | 0.95 s / 24.2 u | **0.82 s / 20.7 u** | controlled braking |
-| Reverse (S) cap | −18 u/s | −18 u/s (kept) | controlled reverse |
-| **S from full forward** | 2.17 s just to stop | **0.93 s to stop**, then −18 | S brakes *then* reverses |
-| Steer @ 52 u/s | 0.90 rad/s flat, r = 57.8 u (on-rails) | **0.71 rad/s, r = 72.9 u** (heading ≠ travel) | speed-sensitive steering |
-| Steer @ ~18 u/s | (same 0.90 flat) | **~1.3 rad/s, r ≈ 13 u** | nimble at low speed |
-| dt straight-distance spread (30/60/120 fps, 2 s) | 0.51 u | 0.56 u | no large frame-time dependence |
-| dt curved-path spread (1.5 s hard turn) | 0.65 u | 1.51 u (0.7 %) | no large frame-time dependence |
+| Top speed | 52 u/s | **64 u/s** | quicker scout (travel-time knob, see above) |
+| Accel to 90 % of top | 1.97 s / 46.8 u | **1.20 s / 35.0 u** | responsive acceleration |
+| Brake (Space) top→0 | 0.95 s / 24.2 u | **0.87 s / 27.1 u** | meaty, planted stop |
+| Reverse (S) cap | −18 u/s | **−22 u/s** | controlled reverse |
+| **S from full forward** | 2.17 s just to stop | **1.02 s to stop**, then −22 | S brakes *then* reverses |
+| Steer @ top | 0.90 rad/s flat, r = 57.8 u (on-rails) | **1.02 rad/s, r = 62.8 u** (responsive + heading ≠ travel) | speed-sensitive steering |
+| Steer @ ~18 u/s | (same 0.90 flat) | **~1.5 rad/s, tight** | eager at low speed |
+| Traction (lateral grip) | infinite (velocity = heading, on-rails) | **finite (grip 4.6)** — the hull leans/slides through a hard turn, then recovers | real weight |
+| dt straight-distance spread (30/60/120 fps, 2 s) | 0.51 u | 0.72 u | no large frame-time dependence |
+| dt curved-path spread (1.5 s hard turn) | 0.65 u | 2.37 u (~1 %) | no large frame-time dependence |
 | Collision @ 1/30 & 1/120 | −3.7 u (stops short), speed 0 | −3.7 u (stops short), speed 0 | no tunneling |
 
 Behaviour **preserved**: the ≤1.25 u swept move + `_surface`/`_clear` anti-tunnel guard (unchanged),
@@ -108,14 +110,22 @@ never solved by passing through cover or changing the map.
 ## Tuning values (`SCOUT_DRIVE` in `ground-driving.js`)
 
 ```
-topSpeed 52   reverseSpeed 18   accel 38   reverseAccel 26   opposeDecel 56   brakeDecel 64
-coastDrag 0.85   turnRate 1.55   highSpeedSteer 0.46   steerResponse 7.0   steerReturn 9.5
-yawResponse 9.0   yawDamping 6.0   yawCapK 1.15   rollFloor 0.05   rollSpan 0.28
-lateralGrip 8.5   stopEps 0.08   maxDt 0.1
+topSpeed 64   reverseSpeed 22   accel 48   reverseAccel 30   opposeDecel 64   brakeDecel 74
+coastDrag 0.8   turnRate 1.7   highSpeedSteer 0.6   steerResponse 9.0   steerReturn 11.0
+yawResponse 11.0   yawDamping 6.0   yawCapK 1.2   rollFloor 0.05   rollSpan 0.26
+lateralGrip 4.6   stopEps 0.08   maxDt 0.1
 ```
 
+Live tuning: the controller reads this object every frame and `ground-driving.js` exposes it as
+`window.SCOUT_DRIVE`, so a field can be dialled in the browser console with no reload
+(`SCOUT_DRIVE.accel = 60`, `SCOUT_DRIVE.lateralGrip = 3`).
+
 `rollFloor 0.05` is a deliberate wheeled-vehicle choice: a *parked* scout cannot pivot in place
-(turn authority ramps with roll speed, reaching full by ~15 u/s), unlike a tank.
+(turn authority ramps with roll speed, reaching full by ~17 u/s), unlike a tank.
+
+**⚠ Top speed raised 52 → 64 u/s (a scout should feel quick).** This is a travel-time knob main
+owns for the desert routes; drop it back to `52` in `SCOUT_DRIVE.topSpeed` if route pacing needs it.
+The handling model is independent of the number.
 
 ---
 

@@ -27,26 +27,31 @@ const approach=(value,target,amount)=>value<target?Math.min(target,value+amount)
 // The one bounded scout profile. Tuning lives here so a test and the controller
 // read the SAME numbers (they cannot drift).
 export const SCOUT_DRIVE={
- topSpeed:52,        // forward cap (u/s) — unchanged from the audited controller
- reverseSpeed:18,    // reverse cap (u/s)
- accel:38,           // forward drive rate toward target (u/s^2) — punchier than the old flat 24
- reverseAccel:26,    // rate building reverse speed from rest
- opposeDecel:56,     // rate when throttle opposes travel (S while rolling forward brakes, then reverses)
- brakeDecel:64,      // Space handbrake decel (u/s^2) — firm, keeps the ~0.8s stop
- coastDrag:0.85,     // exponential coast bleed (1/s) when no throttle and no brake
- turnRate:1.55,      // max yaw rate at low speed (rad/s); speed cuts authority from here
- highSpeedSteer:0.46,// steer authority retained at top speed (speed-sensitive steering)
- steerResponse:7.0,  // how fast steer input builds (1/s)
- steerReturn:9.5,    // how fast steer self-centers on release (1/s)
- yawResponse:9.0,    // how fast yaw velocity eases to wanted (1/s)
+ topSpeed:64,        // forward cap (u/s) — raised for a scout that feels quick (was 52; ⚠ travel-time knob, see handoff)
+ reverseSpeed:22,    // reverse cap (u/s)
+ accel:48,           // forward drive rate toward target (u/s^2) — punchy launch (was flat 24)
+ reverseAccel:30,    // rate building reverse speed from rest
+ opposeDecel:64,     // rate when throttle opposes travel (S while rolling forward brakes, then reverses)
+ brakeDecel:74,      // Space handbrake decel (u/s^2) — meaty, planted stop
+ coastDrag:0.8,      // exponential coast bleed (1/s) when no throttle and no brake — long, weighty roll
+ turnRate:1.7,       // max yaw rate at low speed (rad/s); eager turn-in
+ highSpeedSteer:0.6, // steer authority kept at top speed — responsive fast, not sluggish
+ steerResponse:9.0,  // how fast steer input builds (1/s) — connected/immediate
+ steerReturn:11.0,   // how fast steer self-centers on release (1/s)
+ yawResponse:11.0,   // how fast yaw velocity eases to wanted (1/s)
  yawDamping:6.0,     // yaw velocity bleed with no steer input (1/s) — straightens out
- yawCapK:1.15,       // yaw velocity cap = turnRate*this
+ yawCapK:1.2,        // yaw velocity cap = turnRate*this
  rollFloor:0.05,     // a wheeled scout barely steers at a standstill; authority ramps with roll
- rollSpan:0.28,      // fraction of top speed at which roll authority reaches 1 (~15 u/s)
- lateralGrip:8.5,    // lateral velocity bleed (1/s): high = planted, low = drifty
+ rollSpan:0.26,      // fraction of top speed at which roll authority reaches 1 (~17 u/s)
+ lateralGrip:4.6,    // lateral velocity bleed (1/s): LOWER = real weight — the hull leans and slides a bit through a hard turn, then recovers
  stopEps:0.08,       // below this forward speed with no throttle, snap to rest
  maxDt:0.1,          // clamp a hitching frame (the sim honors nothing slower anyway)
 };
+
+// Live dev-tuning hook: the controller reads this SAME object every frame, so
+// mutating a field in the browser console takes effect on the next frame — no
+// reload. e.g. `SCOUT_DRIVE.accel = 60`, `SCOUT_DRIVE.lateralGrip = 3`.
+try { if (typeof window !== 'undefined') window.SCOUT_DRIVE = SCOUT_DRIVE; } catch {}
 
 // Ensure the persistent fields the model needs exist and are finite. Called on
 // enter and defensively at the top of the step.
