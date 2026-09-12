@@ -4037,7 +4037,7 @@ export class Game {
     f.moveDir = { x: dir.x, z: dir.z };
     f.flyHeld = !!it.fly;
     f.descendHeld = f.flying && !it.fly;      // no longer wants to fly → sink back down and land
-    const requestedGear=it.movementGear??(f.flying&&it.fly?1:0);
+    const requestedGear=it.movementGear??(f.def.momentumGlide&&it.target&&f.onFoot&&f.ki>20&&f.pos.distanceTo(it.target.pos)>40?2:f.flying&&it.fly?1:0);
     const gearInput=updateMovementGears(f,{held:requestedGear>0&&!f.movementGear?.blocked,selectGear:requestedGear||undefined},dt);
     if(gearInput.powerupReady)this.onMovementPowerupReady?.(f);
     if(f._openSky && f.airborne && it.target) {
@@ -4046,7 +4046,7 @@ export class Game {
       f.moveDir.y=clamp((it.target.pos.y-f.pos.y)/32,-.8,.8);
       const len=Math.hypot(f.moveDir.x,f.moveDir.y,f.moveDir.z);
       if(len>1){f.moveDir.x/=len;f.moveDir.y/=len;f.moveDir.z/=len;}
-      f.flyHeld=false;f.descendHeld=false;
+      f.flyHeld=!!f.def.momentumGlide&&Math.hypot(f.vel.x,f.vel.z)>=f.def.momentumGlide.minSpeed;f.descendHeld=false;
     }
     f.move(f.moveDir, dt);
 

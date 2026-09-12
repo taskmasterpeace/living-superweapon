@@ -115,9 +115,10 @@ export const ROSTER = [
   },
   {
     id: 'volt', origin: 'altered', name: 'VOLT', title: 'The Overclock', role: 'Speed / Lightning',
+    momentumGlide:{minSpeed:70,sink:10,drag:.25,turnRate:.65,kiPerSec:14},
     colors: { primary: '#ebff2d', secondary: '#38314a', accent: '#e4ffff', skin: '#e8c39a' },
-    hp: 100, ki: 120, speed: 44, thorns: 7, strength: 3, rank: 12, overdrive: 1.6, threat: 'Moderate', flightTier: 1, yells: true, voicePitch: 1.15, meleePace: 1.5,
-    ai: { style: 'rusher', range: 18, aggro: 0.95, fly: 0.35 },
+    hp: 100, ki: 120, speed: 44, thorns: 7, strength: 3, rank: 12, overdrive: 1.6, threat: 'Moderate', flightTier: 0, yells: true, voicePitch: 1.15, meleePace: 1.5,
+    ai: { style: 'rusher', range: 18, aggro: 0.95, fly: 0 },
     evade: { kind: 'sprint', name: 'Mach Sprint', mult: 1.95, dur: 1.3, through: true, lightning: true, cost: 7 },
     blurb: 'Faster than you can track. Grab him and the current bites back. Lightning flurries, arc-beams, and Overclock.',
     sig: ['LMB Lightning Flurry', 'RMB Arc Beam', 'SHIFT Blink', 'R Overclock'],

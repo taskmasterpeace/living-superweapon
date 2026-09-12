@@ -1,4 +1,5 @@
 import {migratePowerUpDef} from '../data/power-up.js';
+import {canMomentumGlide,steerMomentumGlide} from './momentum-glide.js';
 import {updateTraversalLeap,steerTraversalLeap,cancelInterruptedTraversalLeap} from './traversal-leap.js';
 import {buildingContact} from './building-contact.js';
 import {retireFighterEquipment} from './authored-equipment.js';
@@ -1922,7 +1923,9 @@ export class Fighter {
         // MECHANICAL WINGS (def.glider — KNIGHTFALL's cape, the ORIGIN gift): falling with the
         // ascend key held spreads them. Fall clamps to a glide, air control grows (move()),
         // the flight pose banks. No magic: gravity still owns you; landing or descend folds them.
-        if (this.def.glider && this.flyHeld && this.vel.y < 2 && !this.descendHeld && this.pos.y > (this.groundY || 0) + 2.5) {
+        if(canMomentumGlide(this)&&this.spendKi(this.def.momentumGlide.kiPerSec*dt)){
+          this.gliding=true;this.vel.y=Math.max(this.vel.y-60*dt,-this.def.momentumGlide.sink);
+        } else if (this.def.glider && this.flyHeld && this.vel.y < 2 && !this.descendHeld && this.pos.y > (this.groundY || 0) + 2.5) {
           this.gliding = true;
           this.vel.y = Math.max(this.vel.y - 60 * dt, -8);
         } else {
@@ -1981,6 +1984,8 @@ export class Fighter {
     let dragF;
     if (ownsFlightVelocity(this)||bodyWind.driven||(groundClass&&this._gearGroundSteering)) {
       dragF = 1;
+    } else if (this.gliding&&this.def.momentumGlide&&!launched) {
+      dragF=Math.exp(-this.def.momentumGlide.drag*dt);
     } else if (this._traversalLeap?.active&&!launched) {
       dragF=Math.exp(-.12*dt);
     } else if (glide && !launched && this.launchT <= 0 && this._airStop > 0) {
@@ -2213,6 +2218,7 @@ export class Fighter {
     this._mvX = dir ? dir.x : 0; this._mvZ = dir ? dir.z : 0; this._mvT = 0.12;
     if (this.state === 'ko' || this.hitstop > 0 || this.grabbedBy || (this.grabState === 'clinch'&&!isTransportingPerson(this)) || this.staggerT > 0 || this.frozenT > 0 || this.stunT > 0 || this.hanging) return;   // hanging: your feet have nowhere to be
     if(steerTraversalLeap(this,dir,dt))return;
+    if(steerMomentumGlide(this,dir,dt))return;
     let s = this.speed * 1.08 * this.powerBuff * sprint * moodMult(this, 'speed', 1) * webControlMoveMultiplier(this);   // ground feel pass 2026-07-24: +8% across the board
     s *= movementTravelScale(this,dir,dt,sprint);
     if (this._wounds && this._wounds.leg) s *= 1 - 0.09 * this._wounds.leg;   // the LIMP is real (manual §18)
