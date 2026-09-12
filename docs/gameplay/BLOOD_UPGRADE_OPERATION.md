@@ -6,15 +6,9 @@
 
 The primary playable operation is fight -> collect blood -> return to the lab -> get upgraded -> fight again. Escort/ambush are later operation variants, not the first completion target. Replacement soldiers/clones are finite; exhausting them must matter to defeat. This is a design decision, not a claim that this operation is already implemented.
 
-## Recommended first complete run (proposed, not yet approved numbers)
+## Simplified deployment — creator correction
 
-1. Prepare at the lab. Show current fighter, live allies, soldier replacements and LSW replacements separately. Choose legal gear; explain blood collection in a short practice encounter.
-2. Fight a marked encounter and secure a usable blood sample through the actual sample interaction. Do not award samples for unrelated hits or process the same sample twice.
-3. Return the sample to the visible lab intake. Show sample source, condition and research earned. Choose one of a few character-compatible upgrades and show its before/after effect. Preserve Soldier/LSW equipment rules and the separate movement-tier controls; research is not a return to level-up powers in the weapon bar.
-4. Leave to fight a stronger or tactically different encounter. Repeat the research loop for two upgrade milestones in the initial short run.
-5. Win by defeating a clearly marked final encounter unlocked by those milestones and returning to the lab for debrief. Every objective names the current step. Killing random enemies or collecting blood indefinitely is not itself a finite win condition.
-
-The two milestones/final encounter structure is a recommendation; the creator has only locked the core loop and finite replacement premise. Tune duration after native playtest.
+LSWs start in the other-dimensional Threat Room, walk through a portal to a distant field staging point, then fly, board transport or get carried toward the action. Fight, collect blood, return to lab, upgrade and repeat. No required tutorial or two-upgrade/final-boss structure. See THREAT_ROOM_CARRY_ANIMATION_PLAN.md. The earlier proposed milestone win condition was rejected; finite victory remains undecided.
 
 ## Replacement and defeat proposal
 
@@ -30,8 +24,8 @@ The two milestones/final encounter structure is a recommendation; the creator ha
 
 Show carried sample and its condition without covering combat. At the stationary intake, use a full research screen. Freshness can influence yield, but the short first run should not punish learning with hidden timers. Do not advance degradation while paused or inside blocking menus. A dropped/lost sample must be recoverable or replaceable through another encounter; avoid unwinnable dead ends.
 
-State flow: preparing -> field encounter -> sample secured -> lab processing -> upgrade choice -> field encounter -> final encounter -> return/debrief. Defeat may interrupt according to the reserve rule. Each processed sample/reward is recorded once; death/retry and save/reload must not duplicate upgrades, consume extra stock or reset exhausted reserves accidentally.
+State flow: Threat Room -> portal/field staging -> travel -> fight -> sample secured -> lab processing -> upgrade -> fight again. Defeat may interrupt according to the reserve rule. Each processed sample/reward is recorded once; death/retry and save/reload must not duplicate upgrades, consume extra stock or reset exhausted reserves accidentally.
 
 ## Evidence required
 
-Native start-to-win capture, death with reserves, last-life warning, defeat with no valid replacement, rejected spawn retry without double spending, sample drop/recovery/expiry, no duplicate research on repeated interaction, consecutive run and save/reload. UI shows the same counts that the replacement owner uses. No forced outcomes or injected inventory in the acceptance run.
+Native Threat Room-to-field-to-lab-to-next-fight capture, death with reserves, last-life warning, defeat with no valid replacement, rejected spawn retry without double spending, sample drop/recovery/expiry, no duplicate research on repeated interaction, consecutive run and save/reload. UI shows the same counts that the replacement owner uses. No forced outcomes or injected inventory in the acceptance run.

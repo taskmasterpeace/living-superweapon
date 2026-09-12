@@ -1,0 +1,45 @@
+# Threat Room, deployment and reusable combat authoring
+
+2026-09-12 creator correction. This supersedes the proposed two-upgrade/final-encounter structure. Design plan, not implemented gameplay.
+
+## Simple playable experience
+
+LSW side starts together in an other-dimensional Threat Room. The player can move and try actions there. No mandatory tutorial speech, checklist or staged explanation. When ready, walk through the portal into the gameplay world, at a staging point far from the combat area. Teammates follow through the existing readiness/deployment system; avoid spawning them directly in combat.
+
+Travel from that point by flight, boarding the jet/transport, or being carried by a flying teammate. Grounded LSWs must have usable transport options too. The transport should be visible and reachable from the arrival point, with real passenger seats and clear boarding interaction. Do not interpret this requirement as proof that every current vehicle already supports LSW passengers correctly.
+
+Then: fight -> get blood -> return to the lab -> upgrade -> fight again. Preserve that loop without imposing two research milestones or a final boss. The LSW Threat Room is the other-dimensional home/staging space; the exact lab return placement/portal connection should be tested in a simple layout. Soldier spawning remains its existing separate cloning/deployment path, pending any later creator change.
+
+Confirmed defeat is unchanged: no player-controlled fighter alive and no eligible replacement remaining. No new victory checklist is imposed. A finite victory condition can be decided after the repeatable loop is fun; do not let undefined victory prevent a playable repeatable session.
+
+## Carry, drop and airborne rescue
+
+Creator wants E/contextual grabbing of teammates as well as other people, flying with them, letting go and catching a falling person again. Friendly carry is transport/rescue, not a hostile clinch. Friendly damage remains disabled.
+
+Implementation recommendation: reuse the person-carry owner/attachment/release path, but provide separate friendly admission and damage policy. Do not just remove isFoe from hostile grab selection: enemy grab attacks, thorns, struggle, execution and impact damage must not leak into friendly transport. Give a carried teammate a release control; never trap them indefinitely. Keep enemy grab escape and strength rules.
+
+Catch a falling person through the same contextual action with a bounded acquisition range, valid line of sight, carry capacity and swept relative-motion contact. Catch transfers motion into carry and clears the victim's pending fall-impact state without teleporting through terrain. No guaranteed catch from arbitrary distance. Prevent dual holders and clean up on death, portal transition, vehicle boarding and reset. Catching and landing must not both apply the same impact.
+
+Dropping starts an airborne state with visible reaction: arms flail/tumble during uncontrolled falling, then blend back to controllable flight/falling when recovery permits. A conscious flyer can recover once stun/control restrictions end; no need to wait for ground contact. This is distinct from permanent KO ragdoll. Reuse #20.
+
+Falling damage is a new proposal, not yet a locked universal rule. Recommend measuring landing impact velocity and using character durability/landing capability, not a fixed height rule for every hero. Ordinary controlled superhero landing is distinct from forced impact. Any proposed friendly drop damage must preserve the creator's no-friendly-damage rule rather than introducing indirect team damage. For the first carry prototype, friendly dropping/catching should be non-damaging until that policy is explicitly settled.
+
+## Repeatable authoring — same principle as audio
+
+Build on existing src/data/martial.js, melee-approaches.js, strike-bank.json and heavy-strike-bank.json; shared animation import/retargeting and native MeleeSystem remain authoritative.
+
+A reusable move entry should have: stable ID, label/category, source clip/procedural recipe, compatible rig, stance/airborne support, windup/contact/recovery markers, allowed approach/root displacement, reach, preferred hand or weapon socket, and references to impact/guard/miss audio/VFX events. Store gameplay balance in the existing attack profile rather than inventing a second damage authority inside clips.
+
+An Animation Library should let us browse jabs, hooks, uppercuts, kicks, heavies, grabs, carries, throws and falling/recovery; preview, scrub, adjust timing and assign moves to compatible character profiles. Show missing clip, incompatible rig, missing contact marker and unassigned audio separately. Play real hit/block/miss examples through the native combat path. A nice preview alone is not a functioning attack.
+
+Characters share move families, with bounded speed/reach/approach differences. Do not hand-author a unique punch set for every character. Start with one light punch, one heavy strike and one carry/fall/recovery family as pipeline proof, then add variants through the same import/validate/assign/test/export steps.
+
+Worker handoff should name the existing schema, owned content files, expected export format, required native tests and a short example. Audio worker remains on its existing audio-only branch; animation content can later use a separate branch with the same boundaries. Do not redirect the active sound worker into gameplay or animation changes.
+
+## Revised implementation order
+
+1. Repair current camera/input/inventory blockers (#29) so ordinary play works.
+2. Make the other-dimensional Threat Room -> remote portal arrival -> flight/transport route playable, with the blood/lab return loop (#33).
+3. Add friendly carry and airborne catch, connected to recoverable falling (#34/#20). Preserve enemy combat rules.
+4. Establish the small animation-library authoring proof; use it for further melee variety (#21), alongside projectile/grenade/AI mobility work (#30).
+5. Expand assets, gadgets and audio through the demonstrated pipelines. Short native clips at milestones; no large tutorial or forced progression sequence added.

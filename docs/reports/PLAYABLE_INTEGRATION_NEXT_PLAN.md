@@ -2,6 +2,10 @@
 
 2026-09-12. Integration branch: codex/playable-integration, based on the reviewed combat branch, including its existing audio, driving and building merges plus latest standalone library, inventory and squad-screen commits. This is a development baseline, not a merged release to master. The old dirty D:/lsw checkout and local raw evidence/reference files are preserved separately; do not overwrite newer reviewed runtime fixes with older working copies.
 
+## Latest simplification
+
+Creator rejected the proposed advanced milestone structure. LSWs start in an other-dimensional Threat Room, portal to a remote field staging point, then fly, board transport or get carried. Friendly carry and airborne rescue plus a reusable Animation Library are planned in ../gameplay/THREAT_ROOM_CARRY_ANIMATION_PLAN.md. No mandatory tutorial or final-boss condition. The blood/lab/upgrade loop and reserve defeat rule remain. This correction takes precedence over the older detailed onboarding recommendations below.
+
 ## Locked decisions
 
 - C crouch. Double-tap movement direction is the primary dodge gesture. Shift remains sprint/speed tiers. Existing Z shortcut may remain optional; remove it from required onboarding rather than spending a primary button on it. Prone must retain rear-side third person.
