@@ -7,6 +7,20 @@ import {FlightWake} from '../src/engine/flight-wake.js';
 import {animateHands} from '../src/engine/hero-hand.js';
 import {profileFromDef,resetFlightStyle,applyProfile,validateProfile} from '../src/tool/studio-profile.js';
 const base=ROSTER.find(d=>d.id==='kano');
+test('forward dives point down while backward descent stays attack-ready',()=>{
+ const f=new Fighter(ROSTER.find(d=>d.id==='sol'));
+ try{
+  Object.assign(f,{_openSky:true,flying:true,gait:'airborne',_flyPose:1});
+  f.faceDir(0,1);f.vel.set(0,-60,90);
+  for(let i=0;i<120;i++){f.animT=i/60;f._animate(1/60);}
+  assert.equal(f._flightPoseState,'forward');
+  assert.ok(f.parts.g.rotation.x>1.6,'forward descent must tip below level cruise');
+  f.vel.set(0,-60,-90);
+  for(let i=0;i<120;i++){f.animT+=1/60;f._animate(1/60);}
+  assert.equal(f._flightPoseState,'backward');
+  assert.ok(Math.abs(f.parts.g.rotation.x)<.3,'backward descent must not invert the fighter');
+ }finally{f.dispose();}
+});
 test('six authored languages produce distinct production flight silhouettes and preserve weapon grips',()=>{
  const signatures=[];
  for(const style of ['hero','twin','martial','thruster','hammer','glider']){
