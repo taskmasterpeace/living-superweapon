@@ -146,6 +146,15 @@ export class MeleeSystem {
       const arm=side===1?f.parts.armR:f.parts.armL;
       const entry=meleeEntryTarget(g,f,meleeApproach(f.def,f.airborne).range);
       const point=entry?entry.center(new THREE.Vector3()):f.hasAimWorld?f.aimWorld.clone():f.center(new THREE.Vector3()).addScaledVector(f.aim3,S.reach);
+      if(entry){
+        // Lead only the movement observed at commitment. Never chase a later dodge.
+        const lead=entry.vel.clone();if(!f.airborne)lead.y=0;
+        // A retreat already underway accelerates toward ordinary gait speed during windup.
+        if(lead.length()>1)lead.setLength(Math.max(lead.length(),entry.speed||0));
+        lead.clampLength(0,48).multiplyScalar(Math.min(.6,(S.startup+S.active*.5)/pace));
+        const origin=f.center(new THREE.Vector3()),range=meleeApproach(f.def,f.airborne).range;
+        point.add(lead);const offset=point.clone().sub(origin);if(offset.length()>range)point.copy(origin).add(offset.setLength(range));
+      }
       f._meleeMotion={side,point,previous:arm.children[2].getWorldPosition(new THREE.Vector3()),current:new THREE.Vector3(),impact:new THREE.Vector3(),dt:0};
     }
     // ⚠ THE STEP-IN SELLS THE REACH (the short-arms problem). `step` is a DISTANCE in data/martial.js;
@@ -167,6 +176,7 @@ export class MeleeSystem {
       f._meleeMotion.family=profile.family;
       f.vel.add(f._meleeMotion.step);
     } else { f.vel.x += f.aim.x * lunge; f.vel.z += f.aim.z * lunge; }
+    g.ms?.threatLab?.meleeTrial?.strikeStarted(f);
     if (kind === 'heavy') {
       g.audio.swing(hay ? 'blunt' : this._swingKind(f), f.pos);
       if (hay) { if (f.def.yells) g.heroYell(f, 0.9); else g.audio.grunt(f.def.voicePitch || 1, f.pos); }   // the battle shout
@@ -529,7 +539,8 @@ export class MeleeSystem {
         const end=other.pos.clone().sub(f.pos),a0=frame?.targets.get(f)?.position,b0=frame?.targets.get(other)?.position;
         const start=a0&&b0?b0.clone().sub(a0):end;
         const delta=end.clone().sub(start),t=delta.lengthSq()?THREE.MathUtils.clamp(-start.dot(delta)/delta.lengthSq(),0,1):0;
-        if(start.clone().addScaledVector(delta,t).length()>STRIKES[f.mId].reach)continue;
+        // Broad phase includes the target body radius; the fist sweep below still proves contact.
+        if(start.clone().addScaledVector(delta,t).length()>STRIKES[f.mId].reach+(other.radius||0))continue;
         for(const key of ['torso','head','pelvis']) {
           const t=fistContact(from,current,other.parts?.[key],.42,point,oldPart(other,key));
           if(t<first){first=t;foe=other;m.impact.copy(point);m.naniteContact=null;}
