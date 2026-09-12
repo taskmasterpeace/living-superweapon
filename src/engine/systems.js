@@ -259,12 +259,13 @@ export class TimeFields {
     return f;
   }
   // the multiplier a given fighter is currently living under
-  scaleFor(fighter) {
+  scaleFor(fighter) { return this.scaleAt(fighter.pos,fighter); }
+  scaleAt(pos,owner) {
     let s = 1;
     for (const f of this.list) {
-      if (f.t<=0 || f.follow&&!f.src?.alive || fighter === f.src) continue;                 // the caster is who this is FOR
+      if (f.t<=0 || f.follow&&!f.src?.alive || owner === f.src) continue;                 // the caster is who this is FOR
       const center=f.follow?f.src.pos:f;
-      const dx = fighter.pos.x - center.x, dy = fighter.pos.y - center.y, dz = fighter.pos.z - center.z;
+      const dx = pos.x - center.x, dy = pos.y - center.y, dz = pos.z - center.z;
       if (dx * dx + dy * dy + dz * dz <= f.r * f.r) s = Math.min(s, f.scale);
     }
     return s;

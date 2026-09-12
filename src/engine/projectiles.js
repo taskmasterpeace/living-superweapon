@@ -1,3 +1,4 @@
+import {fieldMotion,updateFieldProjectile} from './field-motion.js';
 import {BeamGroundContact} from './beam-ground-contact.js';
 // WAR WORLD: ASCENDANTS — projectiles, beam-hoses (wave cannon), and spirit-bomb lobs.
 import { domeBlocks } from './systems2.js';
@@ -1870,7 +1871,7 @@ export class Projectiles {
       (!p._guidedSplit&&!p.boomerang&&!p.stick&&!p.armDelay&&localReceivers.some(f=>game.isFoe(p.caster,f)))));
     if(participating.length)this._projectileContacts(dt,game,participating,beams);
     const prepared=new Set(participating);
-    for (let i = this.list.length - 1; i >= 0; i--) { const p=this.list[i]; if (p.dead || (!prepared.has(p) && !p.update(dt, game))) this.list.splice(i, 1); }
+    for (let i = this.list.length - 1; i >= 0; i--) { const p=this.list[i]; if (p.dead || (!prepared.has(p) && !(p instanceof Projectile?updateFieldProjectile(p,dt,game):p.update(dt,game)))) this.list.splice(i, 1); }
     }finally{this._predictingBatch=false;}
   }
 
@@ -1906,18 +1907,20 @@ export class Projectiles {
       let active=[];
       for(const p of shots){
         if(p.dead)continue;
-        if(p.prepareMotion(step,game))active.push(p);
+        if(p.prepareMotion(step*(game.timeFields?.scaleAt(p.pos,p.caster)??1),game))active.push(p);
       }
       let left=step;
       while(active.length&&left>1e-12){
-        const ends=new Map(active.map(p=>[p,p._armed||p._stuckTo?p.pos.clone():p.pos.clone().addScaledVector(p.vel,left)]));
+        const clocks=new Map(active.map(p=>[p,fieldMotion(game.timeFields,p.pos,p.vel,p.caster,left)]));
+        const interval=Math.min(left,...Array.from(clocks.values(),c=>c.time));
+        const ends=new Map(active.map(p=>[p,p._armed||p._stuckTo?p.pos.clone():p.pos.clone().addScaledVector(p.vel,interval*clocks.get(p).scale)]));
         let event=null;
         const offer=e=>{
           if(!event||e.t<event.t-1e-10||(Math.abs(e.t-event.t)<=1e-10&&
             (e.order<event.order||(e.order===event.order&&(e.a._contactId<event.a._contactId||
               (e.a._contactId===event.a._contactId&&(e.b?e.b._contactId:0)<(event.b?event.b._contactId:0)))))))event=e;
         };
-        for(const p of active){const c=earliestOrdinaryContact(p,ends.get(p),left,game,ignored.get(p));if(c)offer({...c,a:p,order:0});}
+        for(const p of active){const c=earliestOrdinaryContact(p,ends.get(p),interval*clocks.get(p).scale,game,ignored.get(p));if(c)offer({...c,a:p,order:0});}
         for(let i=0;i<active.length;i++)for(let j=i+1;j<active.length;j++){
           const a=active[i],b=active[j];
           if(a.caster.team===b.caster.team||!priorityEnabled(a)||!priorityEnabled(b))continue;
@@ -1929,10 +1932,10 @@ export class Projectiles {
           const t=sweptBeamTime(p,ends.get(p),beam,game.world);
           if(Number.isFinite(t))offer({t,a:p,b:beam,kind:'beam',order:2});
         }
-        const elapsed=left*(event?event.t:1);
-        for(const p of active)if(elapsed>0)p.advancePrepared(elapsed,game);
+        const elapsed=interval*(event?event.t:1);
+        for(const p of active)if(elapsed>0)p.advancePrepared(elapsed*clocks.get(p).scale,game);
         left-=elapsed;
-        if(!event)break;
+        if(!event)continue;
         const a=event.a,b=event.b;
         if(!a.dead&&(!b||!b.dead)){
           if(event.kind==='beam'){
