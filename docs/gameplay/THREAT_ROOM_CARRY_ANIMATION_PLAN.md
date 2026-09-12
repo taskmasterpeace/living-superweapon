@@ -48,3 +48,16 @@ Worker handoff should name the existing schema, owned content files, expected ex
 ## Current checkpoint
 
 Animation Library #35 and speedster bubble #36 are scoped work, not implemented features. Death camera #37 has an orientation-only candidate and focused automated tests; native visual acceptance is still required. The camera stays at the death location and targets the ragdoll chest without changing FOV. No claim that the full combat/movement pass is complete.
+
+## Danger Room clarification — 2026-09-12
+
+The creator means an in-world encounter simulator, not merely a training station or a research upgrade screen. In the other-dimensional staging space, choose a threat (a character, soldier group, or authored encounter), preview the actual chosen threats, then enter the room and fight them. Reconfigure and repeat. Existing melee drills are presets within this experience, not its whole identity. The battlefield blood/research lab is a separate purpose even if navigation connects them.
+
+Implementation sequence:
+1. A versioned scenario definition references real character/gadget/prop registries: stable ID, label, enemy composition and count, team, behavior preset, spawn markers and practice resource policy. No duplicate copies of character stats.
+2. Preparing/preview/active/review/reset states owned by one encounter controller. Preview actors cannot attack or spend reserves. Entering starts native AI, combat and physics. Only scenario-owned actors, props and effects are removed/reset; unrelated squad and campaign resources are preserved.
+3. Choose and inspect threats from the existing roster with class and LeFevre classification. Show exact composition before entry. Initially use existing content; new registered threats become selectable without adding individual UI buttons.
+4. Native fight supports player-controlled experimentation and optional teaching presets. Multi-angle review is available afterward; cinematic contact cuts are optional review/experiment mode, never mandatory cuts that obscure normal combat.
+5. Replay the same scenario from its saved definition, record outcome/events and short native footage, and test two consecutive runs plus cancel/reset/KO cleanup. Connect this room to the staging portal after its encounter lifecycle works.
+
+Animation pipeline status: runtime banks/importers and reusable procedural families exist; the standalone browse/preview/scrub/edit/assign/validate/export library remains unfinished under #35. Its first deliverable must inventory current content and reconcile source counts, then prove one shared punch variant through edit, native hit/block/miss, assignment and revert. Preview and gameplay must use the same entry. Keep damage/energy/reach in existing attack profiles. Do not require unique animation sets per hero.
