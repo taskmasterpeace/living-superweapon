@@ -64,7 +64,7 @@ test('a blocked next wave waits without partial spawns and resumes when open gro
 for(const scenarioSeed of [20260911,1,42])test(`a grounded zombie acquires and damages through native AI, melee and contact (seed ${scenarioSeed})`,()=>{
  const random=Math.random;let seed=scenarioSeed;
  Math.random=()=>((seed=(Math.imul(seed,1664525)+1013904223)>>>0)/4294967296);
- const x=mainCombatFixture({mode:'powerworld'});let zombie;
+ const x=mainCombatFixture({mode:'powerworld'});let zombie;const vocalCalls=[];x.g.audio={...x.g.audio,sample:id=>{vocalCalls.push(id);return true;}};
  try{
   x.g.ms.chaseCam=true;x.p._openSky=true;x.p.hp=x.p.maxHp=1000;x.p.team=0;
   zombie=new Fighter(zombieDefinition(),{team:1,x:0,z:7});zombie._game=x.g;zombie._openSky=true;zombie.ai=new AI(zombie,.7);zombie.faceDir(0,-1);zombie.aim3.set(0,0,-1);
@@ -76,6 +76,6 @@ for(const scenarioSeed of [20260911,1,42])test(`a grounded zombie acquires and d
    x.g.controlBot(zombie,dt);x.g.melee.beginContactFrame();x.g.beginBodyContactFrame();
    for(const f of x.g.entities)f.update(dt,x.g);x.g.resolveBodies();x.g.melee.endContactFrame();
   }
-  assert.ok(x.p.hp<1000,`Telegraphed native melee must connect: ${JSON.stringify({pos:zombie.pos.toArray(),player:x.p.pos.toArray(),aim:zombie.aim3.toArray(),sees:zombie.ai._sees,ready:zombie.ai._targetReady,mstate:zombie.mstate,ability:zombie._abilityMeleePose,slot:zombie.slots.lmb.cd,teams:[x.p.team,zombie.team]})}`);assert.equal(zombie.flying,false);assert.equal(zombie.flightTier,0);
+  assert.ok(x.p.hp<1000,`Telegraphed native melee must connect: ${JSON.stringify({pos:zombie.pos.toArray(),player:x.p.pos.toArray(),aim:zombie.aim3.toArray(),sees:zombie.ai._sees,ready:zombie.ai._targetReady,mstate:zombie.mstate,ability:zombie._abilityMeleePose,slot:zombie.slots.lmb.cd,teams:[x.p.team,zombie.team]})}`);assert.equal(zombie.flying,false);assert.equal(zombie.flightTier,0);assert.ok(vocalCalls.includes('op.zombie.alert'));assert.ok(vocalCalls.includes('op.zombie.attack'));assert.ok(vocalCalls.filter(id=>id==='op.zombie.alert').length<5);
  }finally{x.close();Math.random=random;}
 });

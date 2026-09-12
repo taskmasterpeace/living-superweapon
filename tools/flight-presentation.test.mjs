@@ -1,4 +1,4 @@
-// Production flight, rig and camera regressions. Start Vite on 5180 before running.
+// Production flight, rig and camera regressions. Set LSW_TEST_URL for the live Vite port.
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { chromium } from 'playwright';
@@ -24,6 +24,7 @@ let browser, page;
 before(async () => {
   browser=await chromium.launch({headless:true});
   page=await browser.newPage({viewport:{width:1440,height:900}});
+  page.setDefaultTimeout(15000);
   // Diagnostic comparison only: use the pre-sweep integration in this isolated
   // browser response, without changing the live checkout or serving runtime.
   if(process.argv.includes('--endpoint-baseline'))await page.route('**/src/engine/entity.js*',async route=>{
@@ -33,6 +34,7 @@ before(async () => {
   });
   await page.goto(new URL('/powerworld.html',process.env.LSW_TEST_URL||'http://127.0.0.1:5180').href);
   await page.waitForFunction(()=>window.LSW?.game);
+  if(await page.locator('#hSelect.on').isVisible())await page.keyboard.press('Escape');
   await page.locator('#pwGo').click();
   await page.evaluate(()=>{
     const g=LSW.game;g.update=()=>{};g.startMode('powerworld',{p1:'sol',p2:'kano',twoPlayer:false});

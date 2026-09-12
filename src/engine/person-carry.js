@@ -12,6 +12,13 @@ export function personThrowCue(f,g){
   return {from,end,blocked:fraction<1,height:6*(v.sizeScale||1)};
 }
 export function beginPersonCarry(f,v,massRatio){
+  // The held body is now the payload. Tracking its orbit would steer both
+  // camera and throw aim in a feedback loop while the player whirls it.
+  const g=f._game;
+  if(g?.isHuman(f)){
+    if(g.hardLock===v)g.hardLock=null;
+    if(g.lockTarget===v)g.lockTarget=null;
+  }
   f._personCarry={victim:v,speedScale:Math.max(.45,1-.5*massRatio),angle:0,whirlT:0,whirling:false,
     holder:f.pos.clone(),held:v.pos.clone(),cancelVersion:f._game?.input?.cancelVersion};
 }

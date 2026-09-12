@@ -1,0 +1,170 @@
+{
+  "version": 1,
+  "status": "armor and cabin refinement; runtime verification required",
+  "metersPerUnit": 0.1875,
+  "exportAxes": "X right, Y up, -Z forward",
+  "rearOpening": {
+    "width": 14,
+    "height": 16,
+    "floor": 5.7
+  },
+  "aisleWidth": 9.4,
+  "referenceActorHeight": 10,
+  "seats": [
+    {
+      "id": "passenger_0",
+      "position": [
+        -6.8,
+        3.9,
+        12
+      ],
+      "role": "passenger",
+      "anchor": "seated actor root",
+      "yaw": 3.141592653589793
+    },
+    {
+      "id": "passenger_1",
+      "position": [
+        -6.8,
+        3.9,
+        0
+      ],
+      "role": "passenger",
+      "anchor": "seated actor root",
+      "yaw": 3.141592653589793
+    },
+    {
+      "id": "passenger_2",
+      "position": [
+        -6.8,
+        3.9,
+        -12
+      ],
+      "role": "passenger",
+      "anchor": "seated actor root",
+      "yaw": 3.141592653589793
+    },
+    {
+      "id": "passenger_3",
+      "position": [
+        6.8,
+        3.9,
+        12
+      ],
+      "role": "passenger",
+      "anchor": "seated actor root",
+      "yaw": 3.141592653589793
+    },
+    {
+      "id": "passenger_4",
+      "position": [
+        6.8,
+        3.9,
+        0
+      ],
+      "role": "passenger",
+      "anchor": "seated actor root",
+      "yaw": 3.141592653589793
+    },
+    {
+      "id": "passenger_5",
+      "position": [
+        6.8,
+        3.9,
+        -12
+      ],
+      "role": "passenger",
+      "anchor": "seated actor root",
+      "yaw": 3.141592653589793
+    }
+  ],
+  "triangles": 6612,
+  "meshNodes": 11,
+  "materials": 5,
+  "collisionPolicy": "author runtime shell proxies; never use a solid fuselage box",
+  "ramp": {
+    "node": "rear_ramp_hinge",
+    "closedAngle": -1.852,
+    "openAngle": 0,
+    "entry": [
+      0,
+      0,
+      40
+    ],
+    "walk": {
+      "width": 14,
+      "startZ": 38,
+      "endZ": 20,
+      "startY": 0.5,
+      "endY": 5.7,
+      "steps": 18
+    }
+  },
+  "boundsNominal": {
+    "width": 62,
+    "length": 73,
+    "height": 33
+  },
+  "collisionShell": [
+    {
+      "center": [
+        -10.5,
+        13.5,
+        0
+      ],
+      "half": [
+        0.5,
+        8,
+        20
+      ]
+    },
+    {
+      "center": [
+        10.5,
+        13.5,
+        0
+      ],
+      "half": [
+        0.5,
+        8,
+        20
+      ]
+    },
+    {
+      "center": [
+        0,
+        23,
+        0
+      ],
+      "half": [
+        11,
+        0.6,
+        20
+      ]
+    },
+    {
+      "center": [
+        0,
+        5,
+        0
+      ],
+      "half": [
+        11,
+        0.7,
+        20
+      ]
+    },
+    {
+      "center": [
+        0,
+        12,
+        -27
+      ],
+      "half": [
+        11,
+        7,
+        7
+      ]
+    }
+  ]
+}

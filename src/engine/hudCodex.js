@@ -8,6 +8,7 @@
 import { CF_BUILD, agoStr, cfAbilityRows, cfCounterNotes, esc, fileDate, fileNoOf, isSynthDef } from './hudUtil.js';
 import { ROSTER } from '../data/characters.js';
 import { DTYPES, DTYPE_INFO, resistOf } from './entity.js';
+import {damageSymbol} from './damage-symbols.js';
 import { VIS_MEANING, VIS_SOURCE, VIS_SHAPE, VIS_TRAIL, VIS_IMPACT, VIS_RESIDUE, VIS_MATERIAL, VIS_TELL,
          BEAM_BUILDS, BEAM_TEMPERS, BUILD_MEANING, TEMPER_MEANING, visOf, beamBuildOf, beamTemperOf } from '../data/visual.js';
 import { POWERS as CATALOG_POWERS } from '../data/creator.js';
@@ -276,7 +277,7 @@ export const CodexMixin = {
       ${axisBlock}
       <div class="dgsec">BEAMS GET TWO MORE</div>
       <div class="dgsub">A beam is an outer <b>sheath</b> around a brighter inner <b>core</b> — that
-        part was always true. What it did not have was a form: 25 beams and only VEGA's helix. Two
+        part was always true. What it did not have was a form: 25 beams and only VEGAS's helix. Two
         axes now multiply into the variety, rather than one list of hand-picked shapes.</div>
       ${beamBlock}
       ${gapBlock}
@@ -303,7 +304,7 @@ export const CodexMixin = {
       const weak = tables.filter(x => x.r[t] > 1.05).map(nameOf);
       const cap = (a, n = 6) => a.length > n ? a.slice(0, n).join(' · ') + ` +${a.length - n}` : (a.join(' · ') || '—');
       return `<div class="dgrow">
-        <div class="dgtag" style="--dc:${info.c}">${info.label}</div>
+        <div class="dgtag" style="--dc:${info.c}">${damageSymbol(t,20)} ${info.label}</div>
         <div class="dgbody">
           <div class="dgnote">${esc(info.note)}</div>
           <div class="dgline"><b>IMMUNE</b><span>${esc(cap(immune))}</span></div>
@@ -344,7 +345,3 @@ export const CodexMixin = {
     el.style.display = 'flex';
   },
 };
-
-
-
-

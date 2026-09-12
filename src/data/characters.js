@@ -42,7 +42,7 @@ export const ROSTER = [
     },
   },
   {
-    id: 'vega', origin: 'alien', name: 'VEGA', title: 'Fallen Prince', role: 'Charge Artillery',
+    id: 'vega', origin: 'alien', name: 'VEGAS', title: 'Fallen Prince', role: 'Charge Artillery',
     colors: { primary: '#e0243a', secondary: '#d3d9bc', accent: '#ffbc24', skin: '#5b3829' },
     hp: 120, ki: 130, speed: 33, beamMight: 1.25, strength: 7, rank: 40, overdrive: 1.2, threat: 'Very High', yells: true, voicePitch: 0.95,
     ai: { style: 'beamer', range: 40, aggro: 0.9, fly: 0.4 },
@@ -124,8 +124,8 @@ export const ROSTER = [
     abilities: {
       lmb: { type: 'rush', material: 'shock', name: 'Lightning Flurry', cost: 10, cd: 1.1, range: 60, hits: 12, interval: 0.05, damage: 6, finisher: 30, color: '#eaffff' },
       rmb: { type: 'beam', material: 'shock', name: 'Arc Beam', cost: 4, cd: 0.3, radius: 1.0, tipSpeed: 1080, maxLen: 140, dps: 58, kiPerSec: 16, steer: 15, color: '#eaffff', color2: '#ffe066' },
-      q: { type: 'projectile', material: 'shock', name: 'Chain Bolt', cost: 6, cd: 0.35, damage: 14, speed: 120, radius: 1.0, blast: 5, homing: 3.4, color: '#ffe066', color2: '#eaffff' },
-      e: { type: 'cone', material: 'shock', name: 'Static Field', kiPerSec: 16, range: 28, arc: 1.3, dps: 20, push: 40, color: '#ffe066' },
+      q: { type: 'projectile', material: 'shock', name: 'Chain Bolt', shockDuration:1.1, cost: 6, cd: 0.35, damage: 14, speed: 120, radius: 1.0, blast: 5, homing: 3.4, color: '#ffe066', color2: '#eaffff' },
+      e: { type: 'cone', material: 'shock', name: 'Static Field', shockDuration:.8, kiPerSec: 16, range: 28, arc: 1.3, dps: 20, push: 40, color: '#ffe066' },
       f: { type: 'teleport', name: 'Zap Step', cost: 8, cd: 0.8, range: 44, color: '#eaffff' },
       shift: { type: 'dash', name: 'Blink', cost: 3, cd: 0.35, power: 130, iframes: 0.28, color: '#eaffff' },
       r: { type: 'buff', name: 'Overclock', cost: 26, cd: 18, mult: 1.8, dur: 9, color: '#ffd21a', color2: '#fff' },

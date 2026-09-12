@@ -79,6 +79,16 @@ test('operation victory reports extraction receipt rather than a duel victory', 
   const b=writeBroadcast(rep);assert.equal(b.kicker,'OPERATION COMPLETE');
   assert.equal(b.headline,'SAMPLE EXTRACTED · POWERWORLD');assert.match(b.script.map(s=>s.text).join(' '),/Clone sample secured/);
 });
+
+for(const win of [true,false])test(`research convoy ${win?'delivery':'partial failure'} keeps authoritative outcome and rewards`,()=>{
+ const lines=[win?'Scientist and cargo delivered.':'Scientist lost. Live recovery failed.',win?'Supplies +70 · Research +30':'Supplies +20 · Research +15'];
+ const rep=buildReport(fixture(),{win,title:win?'RESEARCH SECURED':'OPERATION FAILED',operation:'research-convoy',lines});
+ const b=writeBroadcast(rep),copy=JSON.stringify(b);
+ for(const line of lines)assert.ok(copy.includes(line));
+ assert.equal(rep.operation.id,'research-convoy');assert.match(b.ticker[1],/^OPERATION TIME/);
+ assert.doesNotMatch(copy,/WINS.*BOUT|versus|arena action|BOUT TIME/);
+ if(!win)assert.equal(rep.winner,null);
+});
 test('ordinary city duels retain district, police, witness and damage coverage', () => {
   const g = fixture('duel'), rep = buildReport(g, { win: true, title: 'VICTORY' });
   assert.equal(rep.kind, 'duel'); assert.equal(rep.winner.name, 'SOL');

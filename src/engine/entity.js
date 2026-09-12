@@ -1,4 +1,5 @@
 import {migratePowerUpDef} from '../data/power-up.js';
+import {buildingContact} from './building-contact.js';
 import {retireFighterEquipment} from './authored-equipment.js';
 import {createPowerUpState,advancePowerUp,retirePowerUp} from '../core/power-up-state.js';
 // WAR WORLD: ASCENDANTS — Fighter: articulated figure, stats, physics, flight, combat, ability state.
@@ -71,6 +72,7 @@ import {fallDamage,prepareWindBody,applyBodyWind,windMoveScale,windImpactSpeed,r
 import {unitsToMeters} from '../core/world-units.js';
 import {guardEnergyRate} from '../data/guard-energy.js';
 import {createMovementGears,resetMovementGears,movementGearBlocked,movementTravelScale,steerGroundGear} from '../core/movement-gears.js';
+import {clearFlightFeet,poseFlightFeet} from './flight-feet.js';
 
 // power tiers (Super-Saiyan-style): level 1–3 = I, 4–6 = II, 7–9 = III, 10 = MAX
 export function tierOf(level) { return level >= 10 ? 4 : level >= 7 ? 3 : level >= 4 ? 2 : 1; }
@@ -215,40 +217,8 @@ export const ALT_BANDS = [
 // applied at the takeDamage choke point, so a defence can never be bypassed by a new ability
 // forgetting about it. Missing entry = 1.0 = full damage.
 const _BLOOD = new THREE.Color('#3a0d0d');   // the suit-darkening target — bleeding's palette, nobody else's
-export const DTYPES = ['physical', 'ballistic', 'energy', 'fire', 'cold', 'toxic', 'acid', 'magic'];
-export const DTYPE_INFO = {
-  physical:  { label: 'PHYSICAL',  c: '#e8e2d4', note: 'Fists, slams, thrown cars. The baseline — almost nothing resists it.' },
-  ballistic: { label: 'BALLISTIC', c: '#c9b98a', note: 'Bullets. Meets ARMOUR then TOUGHNESS — lethal to people, an annoyance to superweapons.' },
-  energy:    { label: 'ENERGY',    c: '#7fd8ff', note: 'Ki blasts and beams. The universal currency; few resistances.' },
-  fire:      { label: 'FIRE',      c: '#ff7a2a', note: 'Burns over time. Strong against flesh, weak against plate.' },
-  cold:      { label: 'COLD',      c: '#bfeaff', note: 'Builds FROST until the target is encased. Fire-blooded heroes shrug it off.' },
-  toxic:     { label: 'TOXIC',     c: '#8fe08a', note: 'Poison and gas. Needs a metabolism — machines are immune.' },
-  acid:      { label: 'ACID',      c: '#c8e04a', note: 'CORRODES ARMOUR for its duration. Weak on bare flesh, devastating on a plated chassis.' },
-  magic:     { label: 'MAGIC',     c: '#ff7a5a', note: 'Attacks the WILL and SIPHONS energy — drains their ki straight into the caster. Resisted by RESOLVE.' },
-};
-// Derived so no hero has to be hand-authored to be correct. `def.resist` always wins.
-// ⚠ Every resistance must cut BOTH ways (manual §3): metal resists toxic and fire, and is WEAK
-// to acid. A resistance with no matching weakness is just a nerf, not a system.
-// which damage type each damage-over-time kind lands as
-export const DOT_DTYPE = { poison: 'toxic', gas: 'toxic', burn: 'fire', acid: 'acid' };
-export function resistOf(def, sheet) {
-  const r = { physical: 1, ballistic: 1, energy: 1, fire: 1, cold: 1, toxic: 1, acid: 1, magic: 1 };
-  // MAGIC is resisted by RESOLVE — the will stat finally defends something. Cuts both ways:
-  // an iron-willed fighter shrugs it off, a fragile one takes MORE than baseline.
-  // ⚠ CENTRED ON THE ROSTER'S ACTUAL MEDIAN (res 6, range 5-9). Centring on 5 made the curve
-  // top out at 1.0, so NOTHING in the game was weak to magic — a resistance with no matching
-  // weakness is just a nerf (manual §3). Now roughly half the cast is soft to it.
-  const res = (sheet && sheet.attrs && sheet.attrs.res) || 6;
-  r.magic = Math.max(0.55, Math.min(1.3, 1.45 - res * 0.07));
-  if (def.warded) r.magic *= 0.5;
-  if (def.metal) { r.toxic = 0; r.fire = 0.6; r.acid = 1.6; }
-  else if ((def.armor || 0) > 0) { r.acid = 1.4; }
-  else r.acid = 0.7;                                    // bare flesh: acid is the WRONG tool
-  if (def.frostResist) r.cold = 0.45;
-  if (def.fireBlood) r.fire = 0.35;
-  if (!def.person || !def.person.n) r.toxic = Math.min(r.toxic, 0.25);   // synthetics barely metabolise
-  return Object.assign(r, def.resist || {});
-}
+import {DTYPES, DTYPE_INFO, DOT_DTYPE, resistOf} from '../data/damage-types.js';
+export {DTYPES, DTYPE_INFO, DOT_DTYPE, resistOf};
 
 // per-hero silhouette flourishes (all mounted on driven meshes so the ragdoll carries them).
 
@@ -798,10 +768,13 @@ export class Fighter {
   // shock is the one that MACHINES cannot shrug off (a robot has no metabolism to resist it,
   // but it does have circuits). Metal takes 1.6x duration; flesh resists it.
   addShock(dur, src) {
-    if (this.isDummy || this._shockImmune > 0) return;
+    if (this.isDummy || this.state==='ko' || this.invuln>0 || this._shockImmune > 0) return;
     const machine = this.def.metal || this.body === 'metal';
     const d = dur * (machine ? 1.6 : 0.55) / ((this.sheet && this.sheet.ccRecover) || 1);
     this.shockT = Math.max(this.shockT || 0, d);
+    this.staggerT=Math.max(this.staggerT||0,.05);
+    this.guarding=false;this.flying=false;this.flyHeld=false;
+    this._game?.melee?.clearInput(this);
     this._shockImmune = 3;
     if (this._game) {
       this._game.ui('damageNumber', this.pos, machine ? 'SYSTEMS DOWN' : 'SHOCKED', '#bfe9ff', true);
@@ -901,14 +874,16 @@ export class Fighter {
     }
     if (this.state === 'ko' || this.invuln > 0) return 0;
     const resolvedStart={hp:this.hp,armor:this.armor||0,shield:this._shieldHp||0,
-      bleed:this._bleed>0,frozen:this.frozenT>0,dots:new Set((this._dots||[]).map(d=>d.kind))};
+      bleed:this._bleed>0,frozen:this.frozenT>0,stun:this.stunT>0,corrode:this._corrode>0,dots:new Set((this._dots||[]).map(d=>d.kind))};
     let resolvedDtype=null,resolvedPlate=0,resolvedNanite=0,resolvedGuard='none',resolvedDeflected=false,resolvedGuardEnergy=0,resolvedGuardAbsorbed=0;
     const resolvedOutcome=()=>{
       const statusesAdded=[];
       if(!resolvedStart.bleed&&this._bleed>0)statusesAdded.push('bleeding');
       if(!resolvedStart.frozen&&this.frozenT>0)statusesAdded.push('frozen');
+      if(!resolvedStart.stun&&this.stunT>0)statusesAdded.push('stunned');
+      if(!resolvedStart.corrode&&this._corrode>0)statusesAdded.push('corroded');
       for(const d of this._dots||[])if(!resolvedStart.dots.has(d.kind))statusesAdded.push(d.kind==='burn'?'burning':d.kind);
-      return Object.freeze({dtype:resolvedDtype,attackClass:opts.ballistic?'bullet':opts.strike?'melee':opts.dot?'sustained':'impact',
+      return Object.freeze({dtype:resolvedDtype,resistance:admission.resistance??1,attackClass:opts.ballistic?'bullet':opts.strike?'melee':opts.dot?'sustained':'impact',
         healthLost:Math.max(0,resolvedStart.hp-this.hp),absorbed:Object.freeze({plate:resolvedPlate,
           armor:Math.max(0,resolvedStart.armor-(this.armor||0)),shield:Math.max(0,resolvedStart.shield-(this._shieldHp||0)),nanite:resolvedNanite}),
         guard:resolvedGuard,guardEnergySpent:resolvedGuardEnergy,guardAbsorbed:resolvedGuardAbsorbed,
@@ -975,7 +950,7 @@ export class Fighter {
       if (rz !== 1) {
         amount = admission.amount;
         if (rz === 0) {                                  // outright immune — say so, don't fail silently
-          if (this._game && this._game.hud && Math.random() < 0.25) this._game.ui('damageNumber', this.pos, 'IMMUNE', '#9fb2c9', true);
+          this._game?.presentHitOutcome?.(this,opts,resolvedOutcome());
           return 0;
         }
       }
@@ -1232,7 +1207,7 @@ export class Fighter {
     if(this.parts.guardArc){this.parts.guardArc.visible=false;this.parts.guardArc.material.clearHits?.();}
     this.frozenT = 0; this.frost = 0; this.stunT = 0; resetBurstWindow(this); this._dots.length = 0; this.meleeCharge = 0; this._heavyT = 0;
     this.clotBleed(null, true);   // the dead stop bleeding (and the suit un-tints for the respawn)
-    this.sleepT = 0; this.blindT = 0; this._sleepK = 0; this.downedT = 0;
+    this.sleepT = 0; this.blindT = 0; this._sleepK = 0; this.downedT = 0;this.shockT=0;this._shockImmune=0;
     if (this.parts.ice) this.parts.ice.visible = false;
     if (this._game && (this.grabbing || this.grabbedBy)) this._game.melee.release(this.grabbing ? this : this.grabbedBy);
     if (this._game) for (const e of this._game.entities) if (e.grabbedBy === this) { e.grabbedBy = null; if (e.state === 'hit') e.state = 'idle'; }   // tentacle holds die with the holder
@@ -1529,6 +1504,9 @@ export class Fighter {
         d._acc = (d._acc || 0) + d.dps * dt; d._tick = (d._tick || 0) + dt;
         if (d._tick >= 0.5) {
           this.takeDamage(d._acc, { src: d.src, dot: true, hitstop: 0, dtype: d.dtype || 'toxic', dmgColor: d.color, corrode: d.corrode, corrodeDur: d.t });
+          // A lethal tick calls _ko(), which clears the whole stack. Stop before
+          // the next stale index (or an expiry splice) touches the emptied list.
+          if (this.state === 'ko') break;
           d._acc = 0; d._tick = 0;
         }
         if (game && Math.random() < 0.25) game.particles.spawn({ x: this.pos.x + (Math.random() * 3 - 1.5), y: this.pos.y + 4 + Math.random() * 4, z: this.pos.z + (Math.random() * 3 - 1.5), vx: 0, vy: 5, vz: 0, life: 0.5, size: 2, color: d.color, drag: 1, shrink: true });
@@ -1559,9 +1537,10 @@ export class Fighter {
         game.melee._endStrike(this);
         if(this.grabbing || this.grabState)game.melee.release(this);
       }
-      this.frozenT -= dt * this.sheet.ccRecover;
       this.guarding = false; this.meleeCharge = 0;
-      if (this.frozenT <= 0) this._thaw(false);
+      // _thaw needs a live freeze to retire it and grant refreeze immunity.
+      if (this.frozenT <= dt * this.sheet.ccRecover) this._thaw(false);
+      else this.frozenT -= dt * this.sheet.ccRecover;
       this._physics(dt, game); this._animate(dt); this._sync(); return;
     }
     // Green-Lantern-style barrier guards run on ki, not just the guard meter (out-drains base regen)
@@ -1723,7 +1702,7 @@ export class Fighter {
   }
 
   _physics(dt, game) {
-    if(this._scoutVehicle||this._aircraftVehicle)return; // Seat owns movement, not status/cooldown updates.
+    if(this._scoutVehicle||this._aircraftVehicle||this._passengerTransport)return; // Seat owns movement, not status/cooldown updates.
     if(updateWebZip(this,dt,game))return;
     if (this.remote) return;   // puppets are positioned by the wire (controlRemote), not local physics
     // The holder owns a clinched victim's transform; gravity/deck servos cannot
@@ -2100,6 +2079,13 @@ export class Fighter {
       const dx = this.pos.x+bodyOX - c.x, dz = this.pos.z+bodyOZ - c.z;
       const ox = hx - Math.abs(dx), oz = hz - Math.abs(dz);
       if (ox <= 0 || oz <= 0) continue;                    // no horizontal overlap
+      if(c.finiteBuilding){
+        const headHeight=lowBounds?lowBounds.max.y:12*(this.sizeScale||1);
+        const contact=buildingContact({feet:this.pos.y,previousFeet:previousY,headHeight,velocityY:this.vel.y,flying:this.flying,launched:this.launchT>0},c);
+        if(contact==='below'||contact==='above')continue;
+        if(contact==='ceiling'){this.pos.y=c.bottom-headHeight;this.vel.y=Math.min(0,this.vel.y);continue;}
+        if(contact==='step'){this.pos.y=top;this.vel.y=Math.max(0,this.vel.y);this.onBlock=true;continue;}
+      }
       // land on top — hovering fighters can perch on a block when they sink onto it
       const crossedTop=previousY>=top && this.pos.y<=top;
       if ((crossedTop || (this.pos.y>=top-.05 && this.pos.y<=top+.05)) && this.vel.y <= 2 && !this.flyHeld && (!this.flying || this.descendHeld)) {
@@ -2258,6 +2244,16 @@ export class Fighter {
     s *= castingMoveScale(this);
     s *= personCarrySpeed(this);
     s *= windMoveScale(this,this._game);
+    const approach=this._meleeMotion;
+    if(this._openSky&&approach?.approachEnabled&&(this.mstate==='startup'||this.mstate==='active')){
+      // A committed flight entry brakes cruise momentum just like a grounded
+      // step, but along all three axes. Physics still owns wall/ground contact.
+      // The strike captured incoming momentum before this action took ownership.
+      const step=approach.step,len=this.flying?step.length():Math.hypot(step.x,step.z),origin=approach.approachOrigin;
+      if(len>.001){const x=step.x/len,y=this.flying?step.y/len:0,z=step.z/len,travel=(this.pos.x-origin.x)*x+(this.pos.y-origin.y)*y+(this.pos.z-origin.z)*z;
+        const speed=Math.min(len,Math.max(0,approach.approachDistance-travel)/Math.max(dt,.001));this.vel.x=x*speed;this.vel.z=z*speed;if(this.flying)this.vel.y=y*speed;return;}
+      this.vel.x=this.vel.z=0;if(this.flying)this.vel.y=0;return;
+    }
     if(steerGroundGear(this,dir,s,dt)){
       if(this.state==='idle'||this.state==='move')this.state=(dir.x||dir.z)?'move':'idle';
       return;
@@ -2343,7 +2339,8 @@ export class Fighter {
   }
 
   _animate(dt) {
-    if(this._scoutVehicle||this._aircraftVehicle)return; // Seat owns articulation while Fighter.update stays live.
+    clearFlightFeet(this);
+    if(this._scoutVehicle||this._aircraftVehicle||this._passengerTransport)return; // Seat owns articulation while Fighter.update stays live.
     const p = this.parts; const moving = Math.hypot(this.vel.x, this.vel.z) > 4;
     // STUN HALO: the cartoon law — stars orbiting the head mean "scrambled, no control"
     if (this.stunT > 0) {
@@ -2812,6 +2809,7 @@ export class Fighter {
     animateCape(p,this.animT,this.vel.length(),this.vel);
     updateLimbSurfaces(p);
     poseWebSnare(this);
+    poseFlightFeet(this,dt);
     updateHeroSkin(p);
     presentNanites(this);
     syncChargePresentation(this);
@@ -2821,13 +2819,3 @@ export class Fighter {
 
   _sync() { if(this.ragdoll)updateHeroSkin(this.parts); updateWebSnareVisual(this); }
 }
-
-
-
-
-
-
-
-
-
-

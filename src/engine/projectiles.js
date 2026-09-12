@@ -162,7 +162,7 @@ class Projectile {
     this._webControlSourceEpoch=this.webControl?(caster._webControlEpoch||0):0;this._webControlInterrupted=false;
     this.bullet = !!o.bullet;                      // real ballistics read as METAL, not energy
     this.ballistic = !!o.ballistic; this.weapon = o.weapon || null;   // drives the armour/toughness scale
-    this.dtype = o.dtype || null; this.siphon = o.siphon;              // damage type rides the projectile
+    this.dtype = o.dtype || null; this.siphon = o.siphon; this.shockDuration=o.shockDuration||0;
     this.blade = !!o.blade; this.canister = !!o.canister; this.card = !!o.card; this.disc = !!o.disc; this.pumpkin = !!o.pumpkin;
     this.bounces = o.bounces || 0;   // RICOCHET ROUNDS (manual §19): reflections left before this shot is spent
     this.face = !!o.face; this.armDelay = o.armDelay || 0; this._armed = false; this._armT = 0;
@@ -577,8 +577,8 @@ class Projectile {
       // The sweep lands exactly on the surface; sample infinitesimally inside
       // for the existing inclusive point-query, without moving the visual hit.
       const sample = contact ? {caster:this.caster,damage:this.damage,pos:this.pos.clone().lerp(new THREE.Vector3(contact.target.x,contact.target.y,contact.target.z),1e-10)} : this;
-      const shieldGame = contact ? {_domes:[contact.target],vfx:game.vfx,audio:game.audio} : game;
-      if (domeBlocks(shieldGame, sample)) return this.webControl?this._webImpact(game):this._impact(game, false);
+      // Preserve the real game clock/audio owner for per-dome hit throttling.
+      if (domeBlocks(game, sample, contact?.target)) return this.webControl?this._webImpact(game):this._impact(game, false);
     }
     // ⚠ A THROWN CAR IS A TARGET (manual §47). Tested BEFORE the foe check on purpose: the interesting
     // case is the prop arriving at your face, so the shot has to meet the car before it meets you.
@@ -642,9 +642,11 @@ class Projectile {
           return true;
         }
       }
-      foe.takeDamage(this.damage * this.caster.powerBuff,hitOptions);
+      const dealt=foe.takeDamage(this.damage * this.caster.powerBuff,hitOptions);
+      if(dealt>0&&this.shockDuration>0)foe.addShock(this.shockDuration,this.caster);
       if(webAccepted&&foe.alive)applyWebControl(foe,this.caster,this.webControl);
       // ACID: corrodes the plate for 5s — the counter to the armour that stops bullets
+      if(dealt>0){
       if (this.payload === 'acid') { foe.addDot({ dps: 6, dur: 5, color: '#c8e04a', kind: 'acid', corrode: 4, src: this.caster }); game.particles.burst(foe.pos.x, foe.pos.y + 5, foe.pos.z, { count: 9, speed: 11, life: 0.6, size: 2.8, color: ['#c8e04a', '#9ab030', '#e6f0a0'], up: 7, drag: 1.1 }); }
       else if (this.payload === 'poison') foe.addDot({ dps: 5, dur: 4, color: '#8fe08a', kind: 'poison', src: this.caster });
       else if (this.payload === 'sleep') { foe.addSleep(2.6, this.caster); game.particles.burst(foe.pos.x, foe.pos.y + 6, foe.pos.z, { count: 7, speed: 6, life: 0.7, size: 2.2, color: ['#ffe9b0', '#fff'], up: 5, drag: 1.6 }); }
@@ -662,6 +664,7 @@ class Projectile {
         foe.addDot({ dps: 7, dur: 10, color: '#c8b84a', kind: 'acid', dtype: 'acid', corrode: 6, src: this.caster });
       }
       else if (this.payload === 'flame') { foe.addDot({ dps: 7, dur: 2.5, color: '#ff7a2a', kind: 'burn', src: this.caster }); game.particles.burst(foe.pos.x, foe.pos.y + 5, foe.pos.z, { count: 8, speed: 10, life: 0.5, size: 2.6, color: ['#ff7a2a', '#ffd24a'], up: 8, drag: 1.2 }); }
+      }
       if(this.webControl)return this._webImpact(game);
       if (this.chain) this._arc(game, foe);
       if (this.pierce-- > 0) { game.vfx.flash(this.pos.clone(), this.color, this.radius * 2, 0.12); return true; }

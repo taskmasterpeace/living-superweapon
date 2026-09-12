@@ -27,6 +27,7 @@ for(const hz of [30,60,120])test(`quick holds select I, II and III with one stat
  assert.equal(ready,1,'Second held press becomes ready once at .45 seconds');
  for(let i=0;i<hz;i++)assert.equal(step(f,true,dt).powerupReady,false);
  step(f,false,dt);step(f,true,dt);assert.equal(f.movementGear.gear,3);
+ for(let i=1;i<=hz;i++)assert.equal(step(f,true,dt).powerupReady,false,'Tier III must not retry the second-hold power-up');
  assert.equal(f.flying,undefined);assert.equal(f.level,undefined);assert.equal(f.powerBuff,undefined);assert.equal(f.ki,100);
  step(f,false,dt);assert.equal(f.movementGear.gear,0);assert.equal(f.cruiseHeld,false);
 });
@@ -40,7 +41,9 @@ test('timeout starts at I, key repeat cannot advance and unsupported III reports
 
 test('explicit controller or touch selection uses the same capability and hold-time admission',()=>{
  const f=actor('rime');step(f,true,.1,{selectGear:3});assert.equal(f.movementGear.gear,2);assert.equal(f.movementGear.limited,true);
- assert.equal(step(f,true,.35,{selectGear:3}).powerupReady,true);
+ assert.equal(step(f,true,.35,{selectGear:3}).powerupReady,false,'Selecting III is travel, not power-up');
+ assert.equal(step(f,true,.1,{selectGear:2}).powerupReady,false);
+ assert.equal(step(f,true,.35,{selectGear:2}).powerupReady,true,'Selecting II retains its deliberate hold admission');
  step(f,false);assert.equal(f.movementGear.gear,0);
 });
 
@@ -60,7 +63,7 @@ test('authoring extra soldier stage always yields finite travel multipliers',()=
 });
 test('explicit semantic stage selection can change while held without replaying key edges',()=>{
  const f=actor();step(f,true,.1,{selectGear:1});step(f,true,.1,{selectGear:3});assert.equal(f.movementGear.gear,3);
- assert.equal(step(f,true,.35,{selectGear:3}).powerupReady,true);assert.equal(step(f,true,.5,{selectGear:3}).powerupReady,false);
+ assert.equal(step(f,true,.35,{selectGear:3}).powerupReady,false);assert.equal(step(f,true,.5,{selectGear:3}).powerupReady,false);
 });
 
 test('capability resolution reuses stable definitions and refreshes replaced settings or sprint tuning',()=>{

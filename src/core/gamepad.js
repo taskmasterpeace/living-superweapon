@@ -23,6 +23,7 @@ const MAP = {
   start: 9, select: 8,     // pause / roster
 };
 
+const POWERWORLD_MAP={lmb:7,rmb:6,guard:4,grab:5,strike:2,evade:1,fly:0,descend:13,dash:10,lock:11,item:3,flightToggle:12,cyclePrimary:14,cycleSecondary:15,start:9,select:8};
 export class Gamepad {
   constructor() {
     this.connected = false; this.active = false; this._everUsed = false;
@@ -49,11 +50,31 @@ export class Gamepad {
     // ability slots, which is right in a match and useless in a menu.
     this.btn.length = b.length;
     for (let i = 0; i < b.length; i++) this.btn[i] = !!(b[i] && b[i].pressed);
-    for (const k in MAP) this.cur[k] = !!(b[MAP[k]] && b[MAP[k]].pressed);
+    const map=this.powerworld?POWERWORLD_MAP:MAP;
+    for (const k in map) this.cur[k] = !!(b[map[k]] && b[map[k]].pressed);
+    if(this.powerworld){
+      this.cur.reload=!!(this.cur.descend&&this.cur.strike);
+      if(this.cur.reload)(this._combatSuppressed??=new Set()).add('strike');
+    }
     const anyBtn = Object.values(this.cur).some(Boolean);
     const anyStick = Math.abs(this.lx) + Math.abs(this.ly) + Math.abs(this.rx) + Math.abs(this.ry) > 0;
     if (anyBtn || anyStick) this._everUsed = true;
     this.active = this._everUsed;       // once a pad is used, treat it as the active input device
+  }
+
+  // View tap opens inventory; a hold owns independent look until release.
+  sampleViewGesture(dt,allowed){
+    this.inventoryRequested=false;this.viewFreeLook=false;
+    if(!this.powerworld||!this.connected||!allowed){this._viewAge=0;this._viewConsumed=true;return;}
+    if(this.pressed('select')){this._viewAge=0;this._viewConsumed=false;}
+    if(this.down('select')&&!this._viewConsumed){
+      this._viewAge=(this._viewAge||0)+Math.max(0,dt);
+      if(this._viewAge>=.28)this.viewFreeLook=true;
+    }
+    if(this.released('select')){
+      this.inventoryRequested=!this._viewConsumed&&(this._viewAge||0)<.28;
+      this._viewAge=0;this._viewConsumed=true;
+    }
   }
 
   // Sample after physical/touch input is merged. A chord owns R3 until its
@@ -63,7 +84,7 @@ export class Gamepad {
     if(held)for(const key of held)if(!this.cur[key]&&!this.prev[key])held.delete(key);
     if(!active)return false;
     if(this.pressed('lock'))return true;
-    if(this.down('guard')&&this.pressed('item')){
+    if(!this.powerworld&&this.down('guard')&&this.pressed('item')){
       (this._combatSuppressed??=new Set()).add('item');return true;
     }
     return false;

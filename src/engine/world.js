@@ -1,5 +1,6 @@
 // WAR WORLD: ASCENDANTS — 3D world: renderer, scene, iso camera, lights, arena, bloom.
 import { FogMixin } from './fog.js';
+import {flightTurbulence} from './flight-sense.js';
 import { RoadMixin } from './roads.js';
 import { Wildlife } from './wildlife.js';
 import * as THREE from 'three';
@@ -18,7 +19,8 @@ import { CAMERA_DEFAULTS } from '../data/flight-tuning.js';
 import {cameraProfileOf} from '../data/camera-presets.js';
 import {getCameraPreferences} from '../core/camera-settings.js';
 import {createFreeLook,advanceFreeLook,clearFreeLook,FREE_LOOK_DEFAULTS} from '../core/free-look.js';
-import {resolveGroundCamera} from './camera-ground.js';
+import {resolveGroundCamera,traceCameraGround} from './camera-ground.js';
+import {frameFreeLook} from './free-look-framing.js';
 import {firearmSightZoom} from './firearm-aim.js';
 import {terrainEntry} from './projectile-contact.js';
 import {updateForegroundVisibility,clearForegroundVisibility} from './foreground-visibility.js';
@@ -1558,7 +1560,7 @@ export class World {
     // `pad = 0` this is BYTE-IDENTICAL to the old ray-vs-box (bottom stays the literal 0), so
     // updateOcclusion and aimTrace are unchanged; the camera passes `CAM_PAD` so it stops that far off
     // a wall on ANY approach, not only where the look→eye segment crosses a face.
-    const hx = hxr + pad, hz = hzr + pad, top = topr + pad, bot = c.frontlineAircraft&&Number.isFinite(c.bottom)?c.bottom-pad:pad ? -pad : 0;
+    const hx = hxr + pad, hz = hzr + pad, top = topr + pad, bot = (c.frontlineAircraft||c.finiteBuilding)&&Number.isFinite(c.bottom)?c.bottom-pad:pad ? -pad : 0;
     let tmin = 0, tmax = 1;
     const axes = [[x0, x1 - x0, c.x - hx, c.x + hx], [y0, y1 - y0, bot, top], [z0, z1 - z0, c.z - hz, c.z + hz]];
     for (const [p0, d, mn, mx] of axes) {
@@ -2125,6 +2127,7 @@ export class World {
     for (const c of this.coverAll) {
       c.hp = c.maxHp; c.destroyed = false;
       if(c.frontlineAircraft)continue; // Dynamic flight owner retains its pose on terrain reset.
+      if(c.finiteBuilding){c.onReset?.();continue;} // Authored nodes remain local to the building root.
       c.mesh.visible = true; c.mesh.position.set(c.x, c.y0, c.z); c.mesh.scale.set(1, 1, 1);
       if (c.crack) { c.crack.visible = false; c.crack.material.opacity = 0; c.crack.position.copy(c.mesh.position); c.crack.scale.set(1, 1, 1); }
     }
@@ -2600,7 +2603,8 @@ export class World {
   // Values are adapted to our rig, not copied Quake world units.
   _chaseBfp(subject,target,dt) {
     const c=this.setCameraMode('chase'),S=subject.pos,snap=this._chaseSnap;
-    const profile=cameraProfileOf(subject,this.game?.player===subject?getCameraPreferences():null),value=key=>profile?.[key]??CAMERA_DEFAULTS[key];
+    const passenger=subject._passengerTransport;
+    const profile=cameraProfileOf(subject,this.game?.player===subject?getCameraPreferences():null),value=key=>(passenger?({range:65,height:18,shoulder:22})[key]:undefined)??profile?.[key]??CAMERA_DEFAULTS[key];
     this._camClaimTick(subject,dt); // Reap gameplay claims; they do not reframe this camera.
     if(!this._lookActive){this._lookYaw=subject.facing;this._lookPitch=0;this._lookActive=true;}
     if(subject._aircraftVehicle){
@@ -2609,6 +2613,7 @@ export class World {
       this._lookPitch=damp(this._lookPitch,aircraft.kind==='jet'?(aircraft.pitch||0)*.6:0,5,dt);
       target=null;
     }
+    if(passenger){this._lookYaw=passenger.model.rotation.y+Math.PI;this._lookPitch=-.12;target=null;}
     const a=this._flightAnchor||(this._flightAnchor=new THREE.Vector3());
     // Movement already accelerates/brakes in physics. A second translation
     // spring makes the fighter slide under the reticle and adds braking lag.
@@ -2623,7 +2628,10 @@ export class World {
       // below screen center: shrinking lift to force perfect centering stacks
       // the bodies and pitches a level fight toward the floor. Bound only the
       // parallax correction, not the viewing angle toward high/low opponents.
-      const focusDistance=Math.max(distance,lift*1.5,.001);
+      // Below boom distance, accept an off-centre target instead of turning a
+      // level exchange into an overhead view. Keep vertical target tracking;
+      // only the raised-eye parallax correction is bounded by the authored boom.
+      const focusDistance=Math.max(distance,value('range')*sight,lift*1.5,.001);
       const yaw=horizontal>.001?Math.atan2(dx,dz):this._lookYaw;
       // At the nadir, keep the raised boom and horizon rather than rolling
       // through -90 degrees to force perfect centering. The projected lock
@@ -2663,11 +2671,17 @@ export class World {
       const easedSide=Math.sin(Math.abs(side)*Math.PI*.5)*Math.sign(side);
       const sideShift=FREE_LOOK_DEFAULTS.sideShift*easedSide,backShift=FREE_LOOK_DEFAULTS.backShift*Math.abs(easedSide);
       c.position.x+=cy*sideShift-ax*backShift;c.position.y-=ay*backShift;c.position.z-=sy*sideShift+az*backShift;
+      // The normal boom was resolved before independent look. Sweep this
+      // additional shoulder displacement too, including the near-plane pad.
+      const eye=this._combatAimOrigin;
+      const slideT=Math.min(this._camNearestT(eye.x,eye.y,eye.z,c.position.x,c.position.y,c.position.z,pad),traceCameraGround(this,eye,c.position,pad));
+      if(slideT<1)c.position.lerpVectors(eye,c.position,Math.max(0,slideT-1e-5));
       this.camPos.copy(c.position);
       const focus=this._freeLookFocus||(this._freeLookFocus=new THREE.Vector3());
       if(target&&target.alive)focus.copy(a).lerp(target.center(this._combatFocus||(this._combatFocus=new THREE.Vector3())),FREE_LOOK_DEFAULTS.targetWeight);
       else focus.copy(a).addScaledVector(aim,Math.max(12,range*.65));
       focus.y+=Math.tan(this._freeLook.pitch)*Math.max(8,c.position.distanceTo(focus));
+      frameFreeLook(c,subject,focus);
       this.camTarget.copy(focus);c.lookAt(this.camTarget);
     }
     this._combatLocked=!!target;
@@ -3157,7 +3171,7 @@ export class World {
     const _axx = _rgx * _ct + _ugx * _st, _axy = _ugy * _st, _axz = _rgz * _ct + _ugz * _st;
     const _TAU = Math.PI * 2, _t = this._shakeT;
     const _w = PW_FX.oct1Mix * Math.sin(_TAU * PW_FX.oct1Hz * _t) + (1 - PW_FX.oct1Mix) * Math.sin(_TAU * PW_FX.oct2Hz * _t + 1.9);
-    const _ang = _A * _w;
+    const _ang = _A * _w + flightTurbulence(subject,this._shakeT);
     const jx = _axx * _ang * _D, jy = _axy * _ang * _D, jz = _axz * _ang * _D;
     this._applyProj();
     c.position.set(this.camPos.x, this.camPos.y, this.camPos.z);
@@ -3267,6 +3281,3 @@ function raySphere(O, R, cx, cy, cz, r, maxT) {
   const t = -b - s >= 0 ? -b - s : -b + s;
   return (t >= 0 && t <= maxT) ? t : -1;
 }
-
-
-

@@ -94,8 +94,9 @@ test('resolved automatic deflections coalesce per target and do not call damage 
   assert.deepEqual(words,['DEFLECT!','DEFLECT!']);
 });
 
-test('Comic.impact renders a visible semantic label and family hook',()=>{
-  const nodes=[];globalThis.document={body:{classList:{contains:()=>false}},createElement(){return {className:'',style:{setProperty(){}},dataset:{},children:[],classList:{add(v){this.value=v;}},appendChild(n){this.children.push(n);},setAttribute(k,v){this[k]=v;}};}};
+test('Comic.impact renders a visible semantic label and family hook',t=>{
+  const previousDocument=globalThis.document;t.after(()=>{if(previousDocument===undefined)delete globalThis.document;else globalThis.document=previousDocument;});
+  const nodes=[];globalThis.document={createTextNode:text=>({textContent:text}),body:{classList:{contains:()=>false}},createElement(){return {className:'',style:{setProperty(){}},dataset:{},children:[],classList:{add(v){this.value=v;}},append(n){this.children.push(n);this.textContent=(this.textContent||'')+(n.textContent||'');},appendChild(n){this.children.push(n);},setAttribute(k,v){this[k]=v;}};}};
   const comic={sfx(){const node=document.createElement('div');nodes.push(node);return{node};}};
   Comic.prototype.impact.call(comic,'TINK!',new Vector3(),{feedback:selectHitFeedback(baseOutcome({absorbed:{plate:4,armor:0,shield:0,nanite:0}}))});
   assert.equal(nodes[0].classList.value,'impact-armor-hit');assert.equal(nodes[0].children[0].textContent,'ARMOR HIT · 4 ABS');
@@ -122,7 +123,7 @@ test('real Game.onHit presents resolved burn tick HP instead of suppressing it',
   const numbers=[],target={pos:new Vector3(),maxHp:100,hp:97,def:{colors:{accent:'#fff'}}},game={time:2,player:null,
     hud:{damageNumber(_p,text){numbers.push(text);}},comic:null,isHuman:()=>false,vfx:{flash(){}},particles:{burst(){}},noise(){}};
   Game.prototype.onHit.call(game,target,3,{dot:true,dtype:'fire',src:{}},false,baseOutcome({attackClass:'sustained',dtype:'fire',healthLost:3}));
-  assert.deepEqual(numbers,['HIT · 3 HP']);
+  assert.deepEqual(numbers,['FIRE HIT · 3 HP']);
 });
 
 test('priority words retain independently resolved absorption and HP quantities',()=>{

@@ -13,6 +13,8 @@ import {combatLookActive} from '../engine/combat-view.js';
 import {attackIcon} from '../engine/attack-icons.js';
 import {icon} from '../engine/icons.js';
 import {firearmStatus} from '../engine/firearm-ammo.js';
+import {attackGuide} from '../engine/combat-guide.js';
+import {damageSymbol} from '../engine/damage-symbols.js';
 
 export function isTouchDevice() {
   return (('ontouchstart' in window) || navigator.maxTouchPoints > 0) &&
@@ -31,9 +33,10 @@ const BTNS = [
   ['item', '◈', 'tb-item'],
   ['lock', '◎', 'tb-lock'],
   ['scope', 'Sight', 'tb-scope'], ['reload', 'Reload', 'tb-reload'],
+  ['transportDepart', 'Depart', 'tb-passenger'], ['transportExit', 'Exit', 'tb-passenger'],
 ];
 // system buttons map onto the pad actions main.js's padSystem() already listens for
-const SYS = [['start', '⏸'], ['select', '☰']];
+const SYS = [['start', '⏸'], ['select', '☰'], ['inventory', '▣']];
 
 export class TouchControls {
   constructor(pad) {
@@ -61,6 +64,24 @@ export class TouchControls {
       </div>`;
     document.body.appendChild(root);
     this._root = root;
+    const orientation=document.createElement('dialog');
+    orientation.setAttribute('aria-label','Landscape required');
+    orientation.style.cssText='position:fixed;inset:0;margin:0;width:100vw;height:100dvh;max-width:none;max-height:none;box-sizing:border-box;border:0;background:#10110f;color:#eee6d6;padding:32px;text-align:center;font-family:var(--f-display,system-ui)';
+    orientation.innerHTML='<div style="display:grid;place-content:center;height:100%;gap:16px"><div style="font-size:64px;color:#ffd24a" aria-hidden="true">↻</div><h2 style="color:#ffd24a;margin:0">TURN TO LANDSCAPE</h2><p>Rotate your phone to play PowerWorld.<br>Your operation is paused while you turn.</p></div>';
+    orientation.addEventListener('cancel',e=>e.preventDefault());document.body.append(orientation);
+    this._orientationDialog=orientation;
+    this._orientationChange=()=>{
+      const portrait=window.innerHeight>window.innerWidth;
+      if(this.portrait===portrait)return;
+      this.portrait=portrait;
+      this._move=this._aim=null;this.cur={};this._presses.clear();this.lx=this.ly=this.rx=this.ry=0;
+      this.pad.cur={};this.pad.prev={};this.pad._tprev={};this.pad.lx=this.pad.ly=this.pad.rx=this.pad.ry=0;
+      this._fighter?._game?.retireCombatViewInput();
+      this._root.querySelectorAll('.on').forEach(el=>el.classList.remove('on'));
+      if(portrait&&!orientation.open)orientation.showModal();else if(!portrait&&orientation.open)orientation.close();
+    };
+    window.addEventListener('resize',this._orientationChange);this._orientationChange();
+    root.querySelector('[data-b="inventory"]').setAttribute('aria-label','Open inventory');
     this._lockButton=root.querySelector('[data-b="lock"]');
     this._lockButton.setAttribute('aria-label','Lock or release viewed target');
     this._lockButton.title='Lock / release target';this._lockButton.style.display='none';
@@ -75,10 +96,12 @@ export class TouchControls {
     for (const b of root.querySelectorAll('.tbtn')) {
       const id = b.dataset.b;
       const on = (e) => { e.preventDefault(); e.stopPropagation();if(!this.enabled)return;
-        if(this._menuMode&&id!=='start'&&id!=='select')return;
+        if(b.disabled||this._menuMode&&id!=='start'&&id!=='select')return;
         if(this._fighter?.slots[id]?.def.type==='rifle'&&!this.cur.scope)this._fighter._selSlot=id;
         this.pressButton(id); b.classList.add('on');if(e.pointerId!=null)b.setPointerCapture(e.pointerId); };
-      const off = (e) => { e.preventDefault(); e.stopPropagation(); this.releaseButton(id); b.classList.remove('on'); };
+      const off = (e) => { e.preventDefault(); e.stopPropagation();const held=this.cur[id];this.releaseButton(id); b.classList.remove('on');
+        if(id==='inventory'&&held&&!this._menuMode){this.cancelButton(id);this._fighter?._game?.inventoryPanel?.open();}
+      };
       b.addEventListener('pointerdown', on);
       b.addEventListener('pointerup', off);
       const cancel=e=>{e.preventDefault();e.stopPropagation();this.cancelButton(id);b.classList.remove('on');};
@@ -142,10 +165,22 @@ export class TouchControls {
   updateAccess(fighter){
     if(!this._abilityButtons||!fighter)return;
     this._fighter=fighter;
+    const transport=fighter._passengerTransport;
+    this._root.classList.toggle('touch-passenger',!!transport);
+    for(const id of ['transportDepart','transportExit']){
+      const b=this._root.querySelector(`[data-b="${id}"]`);b.hidden=!transport;
+      b.disabled=!!transport&&(transport.state!=='parked'||id==='transportDepart'&&!(fighter._game.ms.squad?.members||[]).every(f=>!f.alive||transport.passengers.has(f)));
+      b.setAttribute('aria-label',id==='transportDepart'?'Depart for depot':'Exit parked transport');
+    }
     const frontline=fighter._game?.modeId==='powerworld';this._root.classList.toggle('frontline-touch',frontline);
     if(frontline){
       const labels={strike:['fighting','Punch'],guard:['defense','Block'],grab:['strength','Grab'],dash:['mobility','Evade'],fly:['flight','Rise'],descend:['flight','Descend'],item:['intellect','Gadget'],lock:['range','Lock'],scope:['range','Sight'],reload:['agility','Reload']};
       for(const [id,[glyph,label]]of Object.entries(labels)){const b=this._root.querySelector(`[data-b="${id}"]`);if(b._label!==label){b._label=label;b.querySelector('.touch-art').innerHTML=icon(glyph,18);b.querySelector('.touch-name').textContent=label;b.setAttribute('aria-label',label);}}
+      const focus=fighter._game?._focus;
+      const action=fighter.grabbing?'Throw':focus&&!focus.dead&&focus.enabled(fighter)?String(focus.verb):fighter._carry?'Throw':'Grab';
+      const interact=this._root.querySelector('[data-b="grab"]');
+      interact.querySelector('.touch-name').textContent=action;
+      interact.setAttribute('aria-label',action);
       const selected=fighter.slots[fighter._selSlot||'lmb']?.def,rifle=selected?.type==='rifle';
       this._root.querySelector('[data-b="scope"]').hidden=!(rifle&&selected.scopeZoom>1);
       this._root.querySelector('[data-b="reload"]').hidden=!rifle;
@@ -162,8 +197,11 @@ export class TouchControls {
       const slot=fighter.slots[key],locked=!!slot&&!slotUnlocked(fighter,key)&&!remoteAttack(fighter,slot),level=unlockLevel(fighter.def,key);
       const label=slot?.def.name||key.toUpperCase(),status=label+'|'+locked+'|'+level+'|'+frontline;
       if(frontline){
-        const state=firearmStatus(fighter,key)||(slot?.cd>.05?slot.cd.toFixed(1)+'s':slot?.charging?'CHARGING':'');
-        const node=entry.button.querySelector('.touch-state');if(node.textContent!==state)node.textContent=state;
+        const payload=slot?.def.type==='bow'?(slot.def.payloads||['explosive','flame','poison'])[(fighter._quiverIdx||0)%(slot.def.payloads?.length||3)]:undefined;
+        const guide=attackGuide(slot?.def,payload);
+        const fact=[guide.types[0]?.toUpperCase(),guide.effects[0]].filter(Boolean).join(' · ');
+        const state=firearmStatus(fighter,key)||(slot?.cd>.05?slot.cd.toFixed(1)+'s':slot?.charging?'CHARGING':fact);
+        const node=entry.button.querySelector('.touch-state');if(node._state!==state){node._state=state;node.innerHTML=state===fact?damageSymbol(guide.types[0],14):'';node.append(document.createTextNode(state));}
         entry.button.hidden=!slot;
       }
       if(entry.status===status)continue;entry.status=status;
@@ -200,8 +238,14 @@ export class TouchControls {
   // so every existing `pad.down/pressed/released` check just works.
   apply() {
     const p = this.pad;
+    if(this.portrait){p.cur={};p.prev={};p._tprev={};p.lx=p.ly=p.rx=p.ry=0;return;}
     if (!this.enabled) return;
     const g=this._fighter?._game;
+    if(this._fighter?._passengerTransport){
+      this._move=this._aim=null;this.lx=this.ly=this.rx=this.ry=0;
+      for(const k of Object.keys(this.cur))if(!['start','select','transportDepart','transportExit'].includes(k))delete this.cur[k];
+      for(const k of this._presses)if(!['start','select','transportDepart','transportExit'].includes(k))this._presses.delete(k);
+    }
     const menu=!!g&&(!g.running||g.matchOver||g.hud?.titleOpen||g.combatOverlayOpen);
     this._menuMode=menu;
     this._root?.classList.toggle('touch-menu',menu);

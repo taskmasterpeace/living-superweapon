@@ -6,7 +6,7 @@ export function applyAbilityMeleeHit(c,def,st,g,foe,contact=null){
  if(st.hit.has(foe.id))return;
  st.hit.add(foe.id);
  const blocked=foe.guarding&&foe.staggerT<=0;
- foe.takeDamage((def.damage||20)*c.powerBuff,{src:c,strike:true,dmgClass:def.dmgClass,kb:new THREE.Vector3().copy(c.aim).setLength(def.knock||40).setY(0),launch:def.launch||12,hitstop:.13});
+ foe.takeDamage((def.damage||20)*c.powerBuff,{src:c,strike:true,dtype:def.dtype,dmgClass:def.dmgClass,kb:new THREE.Vector3().copy(c.aim).setLength(def.knock||40).setY(0),launch:def.launch||12,hitstop:.13});
  c.hitstop=Math.max(c.hitstop,.08);
  const imp=contact?.clone()||foe.pos.clone().set((c.pos.x+foe.pos.x)/2,(c.pos.y+foe.pos.y)/2+5.7,(c.pos.z+foe.pos.z)/2);
  if(blocked){g.vfx.impactStar(imp,7,'#bfe0ff',.16);g.world.shake(.4);g.audio.zap(520);}

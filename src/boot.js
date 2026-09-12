@@ -429,6 +429,7 @@ export function boot(P = PROFILE_FULL) {
   console.log('[THRESHOLD] visual profiles applied to', applyProfiles(ROSTER).applied, 'abilities');
   const creator = P.doors.forge ? new CreatorUI(ROSTER) : null;
   function afterForge(def, { test } = {}) {
+    if(def)applyDtypes([def]); // A newly forged kit uses the same combat rules as a loaded one.
     hud.buildTitle(enter);                                  // rebuild so the new card exists
     if (def && test) { enter({ mode: 'training', p1: def.id }); hud.feed(def.name + ' enters the Danger Room', def.colors.accent); }
     else hud.showTitle();
@@ -503,6 +504,7 @@ export function boot(P = PROFILE_FULL) {
   try { audio.muted = localStorage.getItem('threshold_muted') === '1'; } catch {}
 
   addEventListener('keydown', (e) => {
+    if(game.powerPicker?.isOpen||game.inventoryPanel?.isOpen){if(e.code==='Escape'){e.preventDefault();game.powerPicker?.close();game.inventoryPanel?.close();}return;}
     if(game._frontlinePreparing){if(e.code==='Escape'){e.preventDefault();openMenu();}return;}
     if (e.code === 'Escape' && hud.overlayOpen()) { hud.closeOverlays(); return; }   // options/how-to first
     // ⚠ THE CONSOLE EATS THE KEYBOARD WHILE IT IS FOCUSED. Without this, typing `hero sol` also
@@ -522,12 +524,7 @@ export function boot(P = PROFILE_FULL) {
     if(e.code==='Tab'&&game.modeId==='powerworld'&&!hud.titleOpen){
       if(e.altKey||hud.overlayOpen())return;
       e.preventDefault();
-      if(!e.repeat&&game.running&&!game.matchOver){
-        if(toggleMeleeMode(game.player,input)){
-          hud.selectSlot(game.player._selSlot,game.player._selSecondary);
-          hud.feed(game.player._tabMelee?'MELEE · LMB punch / hold heavy · RMB grab · TAB restore attacks':'ATTACKS RESTORED','#ffd24a');
-        }else hud.feed('Finish the current action and release both triggers to change mode.','#ffd24a');
-      }
+      if(!e.repeat&&game.running&&!game.matchOver)game.powerPicker?.open();
       return;
     }
     if(e.code==='F3'&&game.modeId==='powerworld'){e.preventDefault();if(!hud.titleOpen)openMenu();else resumeTitle();return;}
@@ -535,7 +532,7 @@ export function boot(P = PROFILE_FULL) {
     if (e.code === 'Escape' && game.player && !hud.titleOpen) { if(game.running)clearCombatInput();game.running = !game.running; hud.setPaused(!game.running); return; }
     if (game.running === false) return;
     // brackets swap hero in the non-classic schemes (the wheel is busy selecting powers there)
-    const KM = keymap(SETTINGS.scheme);
+    const KM = game.modeId==='powerworld'?{...keymap(SETTINGS.scheme),digitsSwap:false}:keymap(SETTINGS.scheme);
     if (KM.wheel !== 'hero') {
       if (e.code === 'BracketRight') { cycleHero(1); return; }
       if (e.code === 'BracketLeft') { cycleHero(-1); return; }
@@ -605,7 +602,8 @@ export function boot(P = PROFILE_FULL) {
     if (!started) return;
     const inMatch = !hud.titleOpen;   // cached flag — no getComputedStyle in the frame loop
     if (game.pad.pressed('start') && inMatch) { if(game.running)clearCombatInput();game.running = !game.running; hud.setPaused(!game.running); }
-    if (game.pad.pressed('select')) { if (inMatch) openMenu(); else resumeTitle(); }
+    if(game.pad.powerworld&&game.pad.inventoryRequested&&inMatch)game.inventoryPanel?.open();
+    if (game.pad.pressed('select')&&(!game.pad.powerworld||!inMatch)) { if (inMatch) openMenu(); else resumeTitle(); }
     if (inMatch && game.running && game.pad.pressed('swap')) cycleHero(1);
   }
 

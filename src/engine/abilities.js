@@ -21,6 +21,7 @@ import {naniteUseReason} from './nanite-pose.js';
 import {toggleNanite} from './nanite-state.js';
 import {beginAbilityMeleePose,cancelAbilityMeleePose} from './ability-melee-pose.js';
 import {applyAbilityMeleeHit} from './ability-melee-hit.js';
+import {zombieSound} from './zombie-audio.js';
 import {beginWebSnare,clearWebSnare} from './web-snare.js';
 import {attackIdentity} from '../data/attack-tuning.js';
 import {forearmOccupied} from './weapon-emission.js';
@@ -184,6 +185,7 @@ export const TYPES = {
     if (inp.pressed && ready(c, def, st)) {
       pay(c, def, st); st.t = def.active || 0.24; st.hit = new Set(); c.punchPose = 1; c.state = 'cast'; c.stateT = 0;c._castPoseRanged=false;
       beginAbilityMeleePose(c,st);
+      zombieSound(g,c,'attack');
       c.vel.x += c.aim.x * (def.lunge || 46); c.vel.z += c.aim.z * (def.lunge || 46);
       if (def.fly) { c.vel.y += 8; }
       c.invuln = Math.max(c.invuln, 0.12);
@@ -214,7 +216,7 @@ export const TYPES = {
           g.onBlockedStrike(c, f, { stagger: 0.55, push: 46 });
         } else {
           const last = st.combo === 1;
-          f.takeDamage((last ? (def.finisher || 30) : (def.damage || 9)) * c.powerBuff, { src: c, strike: true, dmgClass: def.dmgClass, kb: _v.copy(c.aim).setLength(last ? 60 : 6).setY(0), launch: last ? 20 : 2, hitstop: last ? 0.1 : 0.03 });
+          f.takeDamage((last ? (def.finisher || 30) : (def.damage || 9)) * c.powerBuff, { src: c, strike: true, dtype:def.dtype, dmgClass: def.dmgClass, kb: _v.copy(c.aim).setLength(last ? 60 : 6).setY(0), launch: last ? 20 : 2, hitstop: last ? 0.1 : 0.03 });
           const impact=f.center(new THREE.Vector3());
           g.vfx.impact(impact,c.aim3||c.aim,{color:def.color||c.def.colors.accent,power:last?1.2:.65});
           g.trail(c, def.color || c.def.colors.accent); g.audio.hit(260 + st.combo * 20,impact);
@@ -250,7 +252,7 @@ export const TYPES = {
         arrow: def.arrow, payload: def.payload, webControl:def.webControl, blind: def.blind, boomerang: def.boomerang, range: def.range,
         card: def.card, disc: def.disc, bounces: def.bounces, pumpkin: def.pumpkin,
         blade: def.blade, canister: def.canister,      // thrown steel / shells read as objects, not orbs
-        dtype: def.dtype, siphon: def.siphon,          // the damage TYPE rides the shot
+        dtype: def.dtype, siphon: def.siphon, shockDuration:def.shockDuration,
         splitCount:def.remoteDetonate?def.splitCount:0,splitSpread:def.splitSpread,splitSpeed:def.splitSpeed,splitHoming:def.splitHoming,
       });
       if(def.remoteDetonate)st.remoteShot=shot;
@@ -352,6 +354,7 @@ export const TYPES = {
         if(g.canSee&&!g.canSee(c,f))continue;
         const dealt=f.takeDamage((def.dps || 26) * c.powerBuff * inp.dt, { src: c, dot: true, hitstop: 0, dtype: def.dtype || (def.cold ? 'cold' : 'energy') });
         if(!(dealt>0))continue;
+        if(def.shockDuration>0)f.addShock(def.shockDuration,c);
         if (def.cold) {
           f.vel.x *= 0.86; f.vel.z *= 0.86; f._chill = 0.5; f.speed = Math.max(8, (f.def.speed || 30) * 0.55);
           f.addFrost((def.frost || 0.5) * inp.dt, c);   // sustained cold ENCASES you in ice (strength breaks out)
@@ -581,6 +584,8 @@ export const TYPES = {
       if (def.spendAll) { c.ki = 0; }
       if (def.reveal) c._revealT = def.dur || 8;   // Its Voice: every camera is her eye — fog hides nothing
       c.powerBuff = def.mult || 1.6; c.buffT = def.dur || 10;
+      c._buffBasePower=c.powerBuff;
+      c.buffName = def.name || 'Power boost';
       if (def.heal) c.heal(def.heal);
       c.invuln = Math.max(c.invuln, def.invuln || 0.6);   // "invincible" heroes pass big invuln windows
       g.vfx.explode(c.pos.clone().setY(5), { color: def.color, color2: def.color2 || '#fff', radius: 14, power: 1.4, scorch: false });
@@ -641,7 +646,7 @@ export const TYPES = {
         let kb;
         if (tx != null) { const d = Math.hypot(tx - foe.pos.x, tz - foe.pos.z) || 1; kb = { x: (tx - foe.pos.x) / d * spd, y: 10, z: (tz - foe.pos.z) / d * spd }; }
         else kb = { x: c.aim.x * spd * 0.7, y: 30, z: c.aim.z * spd * 0.7 };
-        foe.takeDamage((def.damage || 14) * c.powerBuff, { src: c, unblockable: true, hitstop: 0.12, kb });
+        foe.takeDamage((def.damage || 14) * c.powerBuff, { src: c, dtype:def.dtype, unblockable: true, hitstop: 0.12, kb });
         if (c.grabHeal) c.heal((def.damage || 14) * c.grabHeal);
         g.vfx.impact(foe.pos.clone().setY(5.6), { x: kb.x, z: kb.z }, { color: def.color || c.def.colors.accent, power: 1.7 });
         g.world.shake(1.4); g.world.punch(0.72); g.audio.impact(1.3); g.slowmo(0.1, 0.45);
@@ -690,7 +695,7 @@ export const TYPES = {
         g.projectiles.spawnProjectile(c, { vis: visOf(def),
           pos: m, vel: c.aim3.clone().setLength(lerp(90, def.speedMax || 210, t)),
           radius: 0.7, damage: lerp(def.dmgMin || 7, def.dmgMax || 26, t), blast: payload === 'explosive' ? (def.blast || 11) : 1.2,
-          power: payload === 'explosive' ? 1.1 : 0.4, arrow: true, payload, life: 2.2,
+          power: payload === 'explosive' ? 1.1 : 0.4, arrow: true, payload, dtype:def.dtype||'physical', life: 2.2,
           color: PAYLOAD_COLORS[payload] || '#d8d2c4', color2: '#fff', shock: payload === 'explosive',
         });
         if (st._loop) { st._loop.stop(); st._loop = null; }   // release the tension
@@ -903,7 +908,7 @@ export const TYPES = {
           launchFlash:i===0?{color:'#ffcf6a',scale:cls==='shotgun'?.9:.55}:false,
           radius: def.radius || 0.55, damage: def.damage || 5, blast: def.blast ?? 2.2, power: 0.35,
           color: def.color, color2: def.color2, life: firearmLife({...def,weapon:cls}) * (aimed ? (def.stance.rangeMult ?? 1.8) : 1),
-          bullet: true, ballistic: true, weapon: cls, bounces: def.bounces,
+          bullet: true, ballistic: true, dtype:def.dtype, weapon: cls, bounces: def.bounces,
         });
       }
       if (aimed) st.cd = (def.interval || 0.5) * (def.stance.rateMult ?? 2.4);   // a settled shot is a SLOW shot
@@ -1188,7 +1193,7 @@ export const TYPES = {
       const foe = g.coneFoe(c, def.range || 26, def.arc || 0.9),reached=foe&&!foe.phase&&(!g.canSee||g.canSee(c,foe));
       if (st._loop) st._loop.set(reached ? 1.3 : 0.5, c.pos);
       if (reached) {
-        const dealt = foe.takeDamage((def.dps || 22) * c.powerBuff * inp.dt, { src: c, dot: true, hitstop: 0 });
+        const dealt = foe.takeDamage((def.dps || 22) * c.powerBuff * inp.dt, { src: c, dot: true, hitstop: 0, dtype: def.dtype, siphon: def.siphon });
         if (dealt > 0) c.heal(dealt * (def.ratio || 0.6));
         if (Math.random() < 0.5) {
           const t = Math.random();
@@ -1395,6 +1400,3 @@ export function performEvade(c, dir, g) {
 }
 
 export function abilityLabel(def) { return def.name; }
-
-
-

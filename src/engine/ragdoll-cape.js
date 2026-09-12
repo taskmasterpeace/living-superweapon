@@ -17,7 +17,7 @@ export class RagdollCape {
     this.proposalNormal=new THREE.Vector3();this.projected=new THREE.Vector3();
     this.faceTargets=Array.from({length:3},()=>new THREE.Vector3());this.proposalTargets=Array.from({length:3},()=>new THREE.Vector3());
     this.mobility=new Float64Array(3);
-    this.coverProbe=new THREE.Triangle();this.coverBefore=new THREE.Triangle();this.coverStamp=0;
+    this.coverProbe=new THREE.Triangle();this.coverBefore=new THREE.Triangle();this.coverProbeBox=new THREE.Box3();this.coverStamp=0;
     this.dt=1/120;this.started=false;this.still=0;this.asleep=false;
     this.mesh.updateWorldMatrix(true,false);
     for(let i=0;i<a.count;i++){
@@ -225,13 +225,16 @@ export class RagdollCape {
     const stamp=++this.coverStamp,before=this.coverBefore,after=this.coverProbe;
     for(let i=0;i<points.length;i++){
       const p=points[i],target=targets[i];if(p.pos.distanceToSquared(target)<1e-16)continue;
-      for(const cover of this.covers)if(!cover.box.containsPoint(p.pos)&&segmentHitsBox(p.pos,target,cover.box))return false;
+      for(const cover of this.covers)if(!segmentOutside(p.pos,target,cover.box)&&!cover.box.containsPoint(p.pos)&&segmentHitsBox(p.pos,target,cover.box))return false;
       for(const face of p.faces||[]){
         if(face.coverStamp===stamp)continue;face.coverStamp=stamp;
         before.set(face[0].pos,face[1].pos,face[2].pos);
         const a=points.indexOf(face[0]),b=points.indexOf(face[1]),c=points.indexOf(face[2]);
         after.set(a<0?face[0].pos:targets[a],b<0?face[1].pos:targets[b],c<0?face[2].pos:targets[c]);
-        for(const cover of this.covers)if(cover.box.intersectsTriangle(after)&&!cover.box.intersectsTriangle(before))return false;
+        // Exact broad phase: a triangle cannot enter a box outside its bounds.
+        // Most battlefield cover is far from this cloth contact proposal.
+        this.coverProbeBox.makeEmpty().expandByPoint(after.a).expandByPoint(after.b).expandByPoint(after.c);
+        for(const cover of this.covers)if(cover.box.intersectsBox(this.coverProbeBox)&&cover.box.intersectsTriangle(after)&&!cover.box.intersectsTriangle(before))return false;
       }
     }
     return true;

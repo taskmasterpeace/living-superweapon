@@ -1,4 +1,8 @@
 import {activatePowerUp} from './power-up.js';
+import {refreshCombatPower} from '../core/power-up-state.js';
+import {ThreatDeployment} from './threat-deployment.js';
+import {ConvoyOperation} from './convoy-operation.js';
+import {startThreatScan,updateThreatScan,clearScannerPanel} from './threat-scanner.js';
 import {replaceHeldEquipment,disposeHeldEquipment} from './authored-equipment.js';
 // WAR WORLD: ASCENDANTS — game orchestrator: entities, control, combat helpers, main update.
 import { updateDomes, updateReshaped, domeBlocks, releasePossession } from './systems2.js';
@@ -6,10 +10,14 @@ import { traumatise, inflict } from '../data/medical.js';
 import { setVisionMode } from './systems2.js';
 import { Weather, TimeFields, GravityZones, setSize, banish } from './systems.js';
 import * as THREE from 'three';
+import {meleeApproach} from '../data/melee-approaches.js';
 import {snapshotHeroSkins} from './hero-skin.js';
+import {updateFlightSense} from './flight-sense.js';
 import {clearForegroundVisibility} from './foreground-visibility.js';
 import {combatView,combatLookActive} from './combat-view.js';
 import {meleeKeymap} from '../core/melee-mode.js';
+import {POWERWORLD_CONTROLS,contextualGrab} from '../core/powerworld-controls.js';
+import {presentMaterialHit} from './impact-material.js';
 import { World } from './world.js';
 import { Particles3D } from './particles3d.js';
 import { VFX } from './vfx.js';
@@ -38,12 +46,13 @@ import { districtRow } from '../data/districts.js';
 import { hasCity, hasCivilians } from '../data/modes.js';
 import { bookInjury, injuryOf, healBout, koElo, matchElo } from '../data/rankings.js';
 import { SETTINGS, keymap } from '../core/settings.js';
-import {canChangeMouseTool,sampleMouseCombat} from '../core/combat-selection.js';
+import {canChangeMouseTool,sampleMouseCombat,selectedAttacks} from '../core/combat-selection.js';
 import {soldierControlsActive,selectSoldierAttack,soldierSprint} from '../core/soldier-controls.js';
 import {cancelHeldSlot,cancelHeldAttacks,cancelHeldAttacksIfIncapacitated} from './abilities.js';
 import { BoxingRing, BOXING } from './boxingring.js';
 import { PowerWorldStage } from './powerworld.js';
 import { FrontlineEncounter } from './frontline-encounter.js';
+import {equipmentPolicy,selectedGadget} from './equipment-policy.js';
 import {ZombieEncounter} from './zombie-encounter.js';
 import {DesertSecurity} from './desert-security.js';
 import { STRIKES } from '../data/martial.js';
@@ -58,6 +67,8 @@ import {firearmAimRange,firearmSightZoom} from './firearm-aim.js';
 import { tierOf, TIER_COLORS } from './entity.js';
 import {formAt,slotUnlocked} from '../data/progression.js';
 import {selectHitFeedback} from './hit-feedback.js';
+import {confirmCombatOutcome} from './combat-confirmation.js';
+import {zombieSound} from './zombie-audio.js';
 
 const _v = new THREE.Vector3();
 // ⚠ THE RETICLE NEVER LIES (docs/powerworld/aaa-05-reticle.md). `_muz` is the muzzle point for the
@@ -69,7 +80,7 @@ const _camDir = new THREE.Vector3();
 const _camOrigin = new THREE.Vector3();
 const _aimOut = { point: new THREE.Vector3(), dist: 0, hit: null, ent: null };
 function lockAvailable(g,p,e){
-  return e!==p&&e.alive&&!e.phase&&!e._banished&&!e._inert&&!(p.blindT>0)&&
+  return e!==p&&e!==p._personCarry?.victim&&e.alive&&!e.phase&&!e._banished&&!e._inert&&!(p.blindT>0)&&
     (e._vis??1)>.4&&g.isFoe(p,e)&&p.pos.distanceToSquared(e.pos)<=AIM_MAX_D*AIM_MAX_D&&g.canSee(p,e);
 }
 const SLOT_KEYS = ['lmb', 'rmb', 'q', 'e', 'r', 'f', 'shift'];
@@ -263,7 +274,9 @@ const MODE_IMPL = {
       const hs = g.humans.map(h => h.fighter).filter(Boolean);
       if (hs[0]) hs[0].pos.set(-40, 0, -40);
       if(!o.twoPlayer&&hs[0]&&o.cameraPreset==='frontline')hs[0]._cameraPreset='frontline';
-      if (o.encounter === 'frontline' && !o.twoPlayer) {
+      if (o.encounter === 'threatLab' && !o.twoPlayer) {
+        g.ms.threatLab=new ThreatDeployment(g);
+      } else if (o.encounter === 'frontline' && !o.twoPlayer) {
         g.ms.frontline = new FrontlineEncounter(g);
       } else if(o.encounter==='zombies'&&!o.twoPlayer){
         g.ms.zombies=new ZombieEncounter(g);
@@ -275,6 +288,15 @@ const MODE_IMPL = {
         g.ms.practice=true;
       } else g.ms.enemy = o && o.twoPlayer ? hs[1]
         : g.spawnEnemy((o && (o.enemy || o.p2)) || null, { x: 40, z: 40, aiLevel: (o && o.aiLevel) || 1.25 });
+      if(o.squad&&!o.twoPlayer){
+        const squad=validateSquad({...o.squad,p1:hs[0].def.id},ROSTER);
+        g.ms.squad={...squad,members:[]};
+        [...squad.companions,...Array(squad.soldiers).fill('sarge')].forEach((id,i)=>{
+          const member=g.spawnEnemy(id,{team:hs[0].team,x:-55+(i%3)*15,z:-57-Math.floor(i/3)*15,aiLevel:1.15});
+          member._squadLeader=hs[0];g.ms.squad.members.push(member);
+          if(o.encounter==='threatLab')member.noRespawn=true;
+        });
+      }
       for (const e of g.entities) if (e.def && !e.isDummy && !e._frontlineClone) {
         e._chaseKb = true;   // a knockback CARRIES here — see entity._physics
         // Free altitude and presentation rules; flight permission remains per character.
@@ -295,6 +317,12 @@ const MODE_IMPL = {
       g.ms.frontline?.update(dt);
       g.ms.zombies?.update(dt);
       g.ms.desertLaw?.update(dt);
+      g.ms.threatLab?.update(dt);
+      if(g.ms.threatLab?.state==='field'&&!g.ms.convoyOperation)g.ms.convoyOperation=new ConvoyOperation(g);
+      g.ms.convoyOperation?.update(dt);
+      g.pwStage?.transport?.update(dt);
+      for(const f of g.entities)if(f._threatScan)updateThreatScan(g,f,dt);
+      if(!g.player?._threatScan)clearScannerPanel(g);
     },
     onKO() {},
     isOver() { return null; },          // a proving ground, like free roam — you leave when you like
@@ -786,7 +814,7 @@ export class Game {
       pos: o.pos, r: o.r ?? 9, band: o.band ?? 0, label: o.label || 'USE',
       verb: o.verb || 'INTERACT', priority: o.priority || 0,
       enabled: o.enabled || (() => true), onFocus: o.onFocus || null, onUse: o.onUse || null,
-      cityOwned: !!o.cityOwned, dead: false,
+      cityOwned: !!o.cityOwned, dead: false, requiresFacing: o.requiresFacing !== false,
     };
     (this.interactables = this.interactables || []).push(h);
     return h;
@@ -814,8 +842,12 @@ export class Game {
       const dx = h.pos.x - p.pos.x, dz = h.pos.z - p.pos.z;
       const d = Math.hypot(dx, dz);
       if (d > h.r) continue;
-      const facing = d < 0.001 ? 1 : (dx / d) * p.aim.x + (dz / d) * p.aim.z;   // FACING matters
-      if (facing < 0.1) continue;
+      // In the shoulder view, interact with what the camera faces. A nearby
+      // wall can put the weapon's convergence point behind the actor.
+      const viewFacing=combatLookActive(this)&&this.world._lookActive;
+      const ax=viewFacing?Math.sin(this.world._lookYaw):p.aim.x,az=viewFacing?Math.cos(this.world._lookYaw):p.aim.z;
+      const facing = d < 0.001 ? 1 : (dx / d) * ax + (dz / d) * az;
+      if (h.requiresFacing !== false && facing < 0.1) continue;
       const score = h.priority * 10 + facing * 6 - d * 0.25;
       if (score > bs) { bs = score; best = h; }
     }
@@ -876,8 +908,9 @@ export class Game {
       const dx = rk.x - f.pos.x, dz = rk.z - f.pos.z;
       consider(dx * dx + dz * dz, { kind: 'rock', ref: rk, x: rk.x, z: rk.z, w: rk.w || PROP_WEIGHT.rock });
     }
+    for(const tree of this.world.treeSpots||[]){if(!tree.createCarry||tree.dead||tree.carried)continue;const dx=tree.x-f.pos.x,dz=tree.z-f.pos.z;consider(dx*dx+dz*dz,{kind:'tree',ref:tree,x:tree.x,z:tree.z,w:PROP_WEIGHT.tree});}
     const G = this.world.grass;                                     // street trees (instanced)
-    if (G && this.world._gPos) for (let i = 0; i < G.count; i++) {
+    if (G?.visible && this.world._gPos) for (let i = 0; i < G.count; i++) {
       if (!this.world._gOn[i]) continue;
       const gx = this.world._gPos[i * 2], gz = this.world._gPos[i * 2 + 1];
       const dx = gx - f.pos.x, dz = gz - f.pos.z;
@@ -910,6 +943,7 @@ export class Game {
       fus.rotation.z = Math.PI / 2;
       const wing = new THREE.Mesh(new THREE.BoxGeometry(4, 0.9, 36), new THREE.MeshStandardMaterial({ color: '#c9ced4', roughness: 0.5, metalness: 0.3 }));
       mesh = new THREE.Group(); mesh.add(fus, wing);
+    } else if(t.kind==='tree'&&t.ref?.createCarry){mesh=t.ref.createCarry();
     } else {
       this.world.flattenGrass(t.x, t.z, 0.5);                        // pull it out of the ground
       const trunk = new THREE.Mesh(new THREE.CylinderGeometry(1.0, 1.5, 14, 6), new THREE.MeshStandardMaterial({ color: '#5a4630', roughness: 0.9, flatShading: true }));
@@ -925,10 +959,10 @@ export class Game {
     if (this.isHuman(f) && this.hud) this.hud.feed(`Hoisted a ${t.kind} (~${t.w}t) — press G again to THROW`, '#ff8a3a');
     return true;
   }
-  throwProp(f) {
+  throwProp(f,drop=false) {
     const c = f._carry; if (!c) return;
     f._carry = null; f.speed = f.def.speed || 30;
-    const spd = c.spd || 74, dir = f.aim3;   // the speed the arc promised (weight ratio, manual §21)
+    const spd = drop?0:(c.spd || 74), dir = f.aim3;
     const vel = new THREE.Vector3(dir.x * spd, (dir.y + 0.34) * spd, dir.z * spd);
     const pos = f.muzzle(new THREE.Vector3(), 5, 6.4);
     const mesh = c.mesh; mesh.position.copy(pos);
@@ -938,7 +972,7 @@ export class Game {
     // the whole ladder cosmetic. Anchored on the city stone (0.5t → 14) and capped, so no boulder
     // one-shots. The `ratio` multiplier below still rewards throwing something light for you.
     const rockBase = Math.min(90, 14 * Math.pow(Math.max(0.05, c.w || 0.5) / 0.5, 0.45));
-    const dmg = ((c.kind === 'plane' ? 60 : c.kind === 'car' ? 34 : c.kind === 'rock' ? rockBase : 22) + str * 3) * Math.min(1.6, 0.75 + 0.25 * Math.min(3, c.ratio || 1));
+    const dmg = drop?0:((c.kind === 'plane' ? 60 : c.kind === 'car' ? 34 : c.kind === 'rock' ? rockBase : 22) + str * 3) * Math.min(1.6, 0.75 + 0.25 * Math.min(3, c.ratio || 1));
     let spin = rand(-5, 5), t = 0;
     // a car is 24u long and a tree is 20u tall — they need a hitbox to match, and a tall one:
     // `overlapFoe`'s ±9u vertical window let a lobbed car sail clean over someone's head.
@@ -1338,6 +1372,7 @@ export class Game {
       if (q < bd) { bd = q; best = d; }
     }
     if (!best) return false;
+    if(!equipmentPolicy(f).personalWeapons){if(this.isHuman(f))this.hud?.feed(equipmentPolicy(f).weaponReason,'#ffd24a');return false;}
     if (f._gearHeld) this.dropGear(f, false);              // hands are a slot: swap, don't stack
     const prof = weaponProficiency(f.def);
     const ab = best.ab;
@@ -1346,15 +1381,16 @@ export class Game {
       dmgMin: ab.dmgMin != null ? +(ab.dmgMin * prof).toFixed(2) : ab.dmgMin,
       dmgMax: ab.dmgMax != null ? +(ab.dmgMax * prof).toFixed(2) : ab.dmgMax,
       spread: ab.spread != null ? +(ab.spread / prof).toFixed(4) : ab.spread };   // proficiency shows in the HANDS
-    f._gearHeld = { ab: eff, base: ab, t: 12, prof };
+    f._gearHeld = { ab: eff, base: ab, t: Infinity, prof };
     f.slots._gear = { def: eff, cd: 0, chargeT: 0, sustainT: 0 };
+    firearmAmmo(f.slots._gear);
     const hand = buildWeapon(this._gearKind(ab), { armor: new THREE.MeshStandardMaterial({ color: '#565c66', roughness: 0.45, metalness: 0.7 }) });
     mountHeldWeapon(f,hand);
     this.scene.remove(best.mesh);
     best.mesh.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material) o.material.dispose(); });
     this._drops.splice(this._drops.indexOf(best), 1);
     this.audio.impact(0.5, f.pos);
-    if (this.isHuman(f) && this.hud) this.hud.feed(`SCAVENGED: ${ab.name} ×${prof.toFixed(2)} — X fires it, ~12s of trigger time`, '#ffd24a');
+    if (this.isHuman(f) && this.hud) this.hud.feed(`SCAVENGED: ${ab.name} ×${prof.toFixed(2)} — X fires it`, '#ffd24a');
     return true;
   }
   /**
@@ -1366,6 +1402,7 @@ export class Game {
    */
   equipFrom(f, row, {primary=false}={}) {
     if (!f || !row || !row.ab) return null;
+    if(!equipmentPolicy(f).personalWeapons){if(this.isHuman(f))this.hud?.feed(equipmentPolicy(f).weaponReason,'#ffd24a');return null;}
     if (f._gearHeld) this.dropGear(f, false);
     const prof = weaponProficiency(f.def);
     const ab = row.ab;
@@ -1374,8 +1411,7 @@ export class Game {
       dmgMin: ab.dmgMin != null ? +(ab.dmgMin * prof).toFixed(2) : ab.dmgMin,
       dmgMax: ab.dmgMax != null ? +(ab.dmgMax * prof).toFixed(2) : ab.dmgMax,
       spread: ab.spread != null ? +(ab.spread / prof).toFixed(4) : ab.spread };
-    // ⚠ NO `t` TIMER. A picked-up weapon is scavenged and expires in 12s; something you CHOSE in the
-    // armory is yours for the match. Same held-object, two lifetimes, one field apart.
+    // Issued and scavenged equipment share the same persistent lifetime.
     f._gearHeld = { ab: eff, base: ab, t: Infinity, prof, chosen: true, rowId: row.id, primary };
     f.slots._gear = { def: eff, cd: 0, chargeT: 0, sustainT: 0 };
     firearmAmmo(f.slots._gear);
@@ -1526,6 +1562,7 @@ export class Game {
 
   canSee(a, b) {
     for (const c of this.world.cover) {
+      if(c.finiteBuilding){if(this.world.traceBox3(a.pos.x,a.pos.y+5,a.pos.z,b.pos.x,b.pos.y+5,b.pos.z,c)>=0)return false;continue;}
       if (Math.min(a.pos.y, b.pos.y) + 5 > (c.top ?? c.h)) continue;              // both above the block → seen over it
       if (this._segBox(a.pos.x, a.pos.z, b.pos.x, b.pos.z, c.x, c.z, (c.hx ?? c.r) + 1, (c.hz ?? c.r) + 1)) return false;
     }
@@ -1700,7 +1737,9 @@ export class Game {
       const l = Math.hypot(dx, dy, dz) || 1;
       return Math.acos(Math.max(-1, Math.min(1, (dx * cf.x + dy * cf.y + dz * cf.z) / l)));
     };
-    const front = this.entities.filter(e => e.def&&!e.isDummy&&lockAvailable(this,p,e)&&ang(e)<=FRONT);
+    // Practice targets teach the same focus controls as live opponents. The
+    // shared availability check still rejects carried, hidden and invalid targets.
+    const front = this.entities.filter(e => e.def&&lockAvailable(this,p,e)&&ang(e)<=FRONT);
     front.sort((a, b) => ang(a) - ang(b));
     const locked = (this.hardLock && this.hardLock.alive) ? this.hardLock : null;
     // A following camera continually re-ranks its current foe first. Cycling that list can
@@ -1725,9 +1764,9 @@ export class Game {
     const E = this.entities;
     resolveBodyContacts(E,this._bodyContactFrame);this._bodyContactFrame=null;
     for (let i = 0; i < E.length; i++) {
-      const a = E[i]; if (!a.alive || a._scoutVehicle || a._aircraftVehicle) continue;
+      const a = E[i]; if (!a.alive || a._scoutVehicle || a._aircraftVehicle || a._passengerTransport) continue;
       for (let j = i + 1; j < E.length; j++) {
-        const b = E[j]; if (!b.alive || b._scoutVehicle || b._aircraftVehicle) continue;
+        const b = E[j]; if (!b.alive || b._scoutVehicle || b._aircraftVehicle || b._passengerTransport) continue;
         if (a.grabbing === b || b.grabbing === a || a.grabbedBy === b || b.grabbedBy === a) continue;
         // PowerWorld uses swept, posed core contact above. Preserve the legacy
         // city ground solver without applying a second root-cylinder push.
@@ -1814,6 +1853,9 @@ export class Game {
   // ONE list, called from all three. A new zone system adds its line HERE and is covered
   // everywhere, which is the whole point.
   clearTransients() {
+    clearScannerPanel(this);
+    this.ms?.threatLab?.dispose();
+    this.ms?.convoyOperation?.dispose();
     this.ms?.frontline?.dispose();
     this.ms?.zombies?.dispose();
     this.ms?.desertLaw?.dispose();
@@ -2064,6 +2106,7 @@ export class Game {
   }
   endMatch(result) {
     if (this.matchOver) return;
+    clearScannerPanel(this);
     this.matchOver = true; this.matchResult = result;
     this.news?.endMatch(result);
     this.slowmo(0.35, 0.4); this.world.punch(0.8);
@@ -2691,7 +2734,7 @@ export class Game {
       // the ledger: every registered-weapon knockdown moves the power rankings (AI or human pilot
       // alike) — friendly-fire KOs shame the feed but never touch the book
       if (killer && killer.def && killer.def.id && victim.def.id && killer.team !== victim.team && !killer.def.police && !victim.def.police
-        && !killer._controlled && !victim._controlled && !killer._frontlineClone && !victim._frontlineClone && !killer._encounterNPC && !victim._encounterNPC && this.modeId !== 'training') {
+        && !killer._controlled && !victim._controlled && !killer._frontlineClone && !victim._frontlineClone && !killer._encounterNPC && !victim._encounterNPC && this.modeId !== 'training' && !this.ms?.threatLab) {
         koElo(killer.def.id, victim.def.id, [killer.def, victim.def]);   // a DOMINATED fighter's KOs are the controller's doing — the book stays honest
         // THE MEDICAL LEDGER (manual §18): some knockdowns leave a mark that outlives the match
         if (Math.random() < 0.3) {
@@ -2703,7 +2746,8 @@ export class Game {
         }
       }
     }
-    this.audio.cry(victim.def.voicePitch || 1, victim.pos);   // the falling wail
+    if(victim.def.vocalFamily==='zombie')zombieSound(this,victim,'death');
+    else this.audio.cry(victim.def.voicePitch || 1, victim.pos);   // the falling wail
     this.noise(victim.pos, 2.2, null);                        // a death scream carries across the district
     // KO flourish — slowmo + banner when a human is involved (avoids spam in bot-vs-bot rumble)
     const involvesHuman = this.isHuman(victim) || (killer && this.isHuman(killer));
@@ -2926,7 +2970,7 @@ export class Game {
 
   presentHitOutcome(target,opts={},outcome){
     if(!outcome||!target?.pos)return;
-    const feedback=selectHitFeedback(outcome),t=this.time||0,family=feedback.id;
+    const feedback={...selectHitFeedback(outcome),dtype:outcome.dtype},t=this.time||0,family=feedback.id;
     const targetTimes=this._hitFeedbackTimes?.get(target)||new Map(),last=targetTimes.get(family)??-9;
     const delay=outcome.attackClass==='bullet'?.32:.42;
     if(t-last<=delay)return;
@@ -2942,6 +2986,9 @@ export class Game {
   }
 
   onHit(target, amount, opts = {}, blocked = false, outcome = null) {
+    if(this.modeId==='powerworld')presentMaterialHit(this,target,amount,opts,blocked,outcome);
+    confirmCombatOutcome(this,target,opts,outcome);
+    if(outcome?.healthLost>0&&!outcome.knockedOut&&!opts.dot)zombieSound(this,target,'hurt');
     this.ms?.frontline?.onHit(target, amount);
     const src = opts.src;
     // THE WHITE ROOM reads the choke point rather than modelling damage itself — see whiteroom.js.
@@ -3181,19 +3228,27 @@ export class Game {
   // ---------- items (gadgets outside the ability slots — no ki, one button) ----------
   // Teleport beacon: press once to PLANT it where you stand, press again — from anywhere — to
   // snap back to it. Bait-and-swap: plant, push in shooting, then vanish back to your spot.
-  useItem(f) {
+  useItem(f,index=f?._selectedGadget??0) {
     if (f.noPowers) { if (this.isHuman(f) && this.hud) this.hud.feed('PURE BOXING — no gadgets', '#8b8577'); return; }
-    const it = f.items && f.items[0]; if (!it) return;
+    const it = selectedGadget(f,index); if (!it) return;
+    const research=this.ms?.threatLab&&f.team===this.player?.team?(this.campaign?.effects()??{}):{};
     const acc = f.def.colors.accent;
     if (it.state === 'cooldown' || it.state === 'spent') { if (this.isHuman(f) && this.hud) this.hud.feed(it.state === 'spent' ? 'No charges left' : 'Recharging…', '#8b8577'); return; }
     // one-shot gadgets (medkit / flashbang / jump jets / shield cell) — charges, then a recharge gap
     if (it.def.kind !== 'beacon') {
       const spend = () => {
         it.charges = (it.charges ?? it.def.charges ?? 1) - 1;
-        if (it.charges > 0) { it.state = 'cooldown'; it.cd = (it.def.cd || 8) * (f.sheet ? f.sheet.cdMult : 1); }
+        if (it.charges > 0) { it.state = 'cooldown'; it.cd = (it.def.cd || 8) * (f.sheet ? f.sheet.cdMult : 1) * (it.def.kind==='scanner'?(research.scannerCooldownMult??1):1); }
         else it.state = 'spent';   // out until respawn refills the pouch
       };
       switch (it.def.kind) {
+        case 'scanner':startThreatScan(this,f,it,spend);break;
+        case 'repair':{
+          const v=this.pwStage?.convoy?.vehicles.find(v=>!v.destroyed&&v.cover.hp<v.cover.maxHp&&v.mesh.position.distanceTo(f.pos)<30);
+          if(!v){if(this.isHuman(f))this.hud?.feed('Repair: approach a damaged vehicle','#d5bd80');break;}
+          const cost=Math.ceil(10*(research.repairCostMult??1));
+          try{const receipt=this.campaign?.spend(crypto.randomUUID(),cost);if(!receipt?.accepted){this.hud?.feed(`Repair requires ${cost} supplies`,'#d5bd80');break;}v.cover.hp=Math.min(v.cover.maxHp,v.cover.hp+(it.def.repair||40));spend();this.hud?.feed(`Vehicle repaired · −${cost} supplies`,'#d5bd80');}catch(e){this.hud?.feed(`Repair save failed: ${e.message}`,'#d5bd80');}break;
+        }
         // ---- THE ARMORY'S GEAR (2026-07-26) -------------------------------------------------
         // ⚠ VISION IS A DEVICE YOU CARRY, not a permanent stat. Night vision, the motion tracker
         // and the thermal scope all route through the ONE vision-mode system that already exists,
@@ -3270,7 +3325,7 @@ export class Game {
           if (!f.flying) f.toggleFlight();
           this.audio.zap(560, f.pos); this.audio.power(true); spend(); break;
         case 'shieldpack':
-          f._shieldHp = it.def.shield || 45;
+          f._shieldHp = (it.def.shield || 45)*(research.shieldHpMult??1);
           this.vfx.ring(f.pos.clone().setY(5.4), { color: '#7fe6ff', r0: 3, r1: 7, life: 0.4 });
           this.audio.zap(700, f.pos); spend(); break;
       }
@@ -3409,9 +3464,9 @@ export class Game {
   }
 
   // ---------- control ----------
-  retireCombatViewInput(subject=this.player) {
+  retireCombatViewInput(subject=this.player,{preserveCarry=false}={}) {
     if(subject){
-      if(subject._personCarry)this.melee.release(subject);
+      if(subject._personCarry){if(preserveCarry){subject._personCarry.throwArmed=false;subject._personCarry.whirling=false;}else this.melee.release(subject);}
       this.melee.clearInput(subject);this.melee.guard(subject,false);cancelHeldAttacks(subject);
       subject.moveDir={x:0,z:0};subject.flyHeld=subject.descendHeld=subject.cruiseHeld=subject._scopeHeld=false;
       resetMovementGears(subject);
@@ -3420,6 +3475,10 @@ export class Game {
     const input=this.input;
     if(input){
       input.keys.clear();input.justPressed.clear();input.justReleased.clear();input.cancelVersion++;
+      // The deferred pointer-lock event belongs to this already-retired input
+      // epoch; it must not cancel a preserved menu carry a second time.
+      if(input.mouse.locked)input._retiredPointerLock=true;
+      if(preserveCarry&&subject?._personCarry)subject._personCarry.cancelVersion=input.cancelVersion;
       Object.assign(input.mouse,{left:false,right:false,leftEdge:false,rightEdge:false,leftUp:false,rightUp:false,b3:false,b4:false,dx:0,dy:0});
       input.wheel=input.wheelPrimary=input.wheelSecondary=0;input.pointerLock=false;
     }
@@ -3429,12 +3488,12 @@ export class Game {
   }
 
   prepareCombatView(inputDt) {
-    this.combatOverlayOpen=!!(this._armory||this.hud?.overlayOpen?.());
+    this.combatOverlayOpen=!!(this._armory||this.hud?.overlayOpen?.()||this.inventoryPanel?.isOpen||this.powerPicker?.isOpen);
     const active=combatLookActive(this),w=this.world;
     const previous=this._combatControlOwner,changed=previous&&previous!==this.player;
     const rigChanged=previous===this.player&&this._combatControlParts!==this.player?.parts;
     const resumed=active&&previous&&!this._combatLookWasActive;
-    if((this._combatLookWasActive&&!active)||changed||resumed)this.retireCombatViewInput(previous);
+    if((this._combatLookWasActive&&!active)||changed||resumed)this.retireCombatViewInput(previous,{preserveCarry:!changed&&this.running&&!this.hud?.titleOpen});
     else if(rigChanged){
       // Authored forms replace presentation parts on the same living actor.
       // Refresh rig-dependent view state without releasing its held attacks.
@@ -3450,11 +3509,13 @@ export class Game {
     // delta. Subsequent zero-time solves only update the view, never gameplay.
     if(w.camMode!=='chase'||!w._bfpCameraActive||!w._lookActive)w.chase(this.player,this.hardLock,0,'bfp');
     const sight=w._sightZoom||1;
-    if(!w.freeLookInput(this.input,inputDt,sight))w.mouseLook(this.input.mouse.dx/sight,this.input.mouse.dy/sight);
+    const padLook=this.pad?.active&&this.pad.viewFreeLook;
+    const pixels=2.4*Math.max(0,Math.min(.05,inputDt||0))/(w._lookSens||.0024);
+    const lookInput=padLook?{...this.input,down:code=>code==='AltLeft'||this.input.down(code),mouse:{...this.input.mouse,dx:this.input.mouse.dx+this.pad.rx*pixels,dy:this.input.mouse.dy+this.pad.ry*pixels}}:this.input;
+    if(!w.freeLookInput(lookInput,inputDt,sight))w.mouseLook(this.input.mouse.dx/sight,this.input.mouse.dy/sight);
     // Native deadzone-normalized stick values; 2.4 radians/s at full throw.
     // Convert to existing mouse-look units so pitch limits/inversion stay shared.
-    if(this.pad?.active){
-      const pixels=2.4*Math.max(0,Math.min(.05,inputDt||0))/(w._lookSens||.0024);
+    if(this.pad?.active&&!padLook){
       w.mouseLook(this.pad.rx*pixels/sight,this.pad.ry*pixels/sight);
     }
     w.chase(this.player,this.hardLock,0,'bfp');
@@ -3469,6 +3530,7 @@ export class Game {
     const inp = this.input, m = inp.mouse, pad = this.humans.length < 2 ? this.pad : NULL_PAD;   // in 2P the pad drives P2
     const chase=combatView(this)==='bfp';
     if(this.running===false||this.matchOver||this.mapCam||this.hud?.titleOpen||this.combatOverlayOpen){resetMovementGears(p);p.moveDir={x:0,z:0};return;}
+    if(this._pwStage?.transport?.handleInput(inp,dt)){resetMovementGears(p);return;}
     if(this._pwStage?.aircraft?.piloting?.handleInput(inp,dt)){resetMovementGears(p);return;}
     if(this._pwStage?.convoy?.driving?.handleInput(inp,dt)){resetMovementGears(p);return;}
 
@@ -3506,7 +3568,7 @@ export class Game {
       const firearmRange=firearmAimRange(p,AIM_MAX_D);
       this._aimHit = this.world.aimTrace(_aimOut, {
         origin: rayOrigin, dir: _camDir, maxD: firearmRange>AIM_MAX_D?firearmRange+rayOrigin.distanceTo(p.pos):AIM_MAX_D,
-        foes: this.entities, ignore: p, blind: p.blindT > 0,   // honesty: unseen foes never stop the ray
+        foes: p._personCarry?this.entities.filter(e=>e!==p._personCarry.victim):this.entities, ignore: p, blind: p.blindT > 0,   // A carried payload must not intercept its owner's throw aim.
         flung: this._flung,
         pad: SETTINGS.aimAssist === false ? 0 : (p.radius || 2.2) * 0.5,
       });
@@ -3563,16 +3625,27 @@ export class Game {
     // ReferenceError**: the rally input was never evaluated, you could not get up, and the frame
     // failed at 60Hz behind the try/catch. Measured 1,800 throws in one duel. Declared once, here,
     // above every use.
-    const KM = meleeKeymap(p,keymap(SETTINGS.scheme));
+    const modern=this.modeId==='powerworld';
+    const KM = modern?POWERWORLD_CONTROLS:meleeKeymap(p,keymap(SETTINGS.scheme));
+    inp.independentCombat=modern;
+    if(modern&&!this.powerPicker?.updatePad){for(const [action,field,list] of [['cyclePrimary','_selSlot','primaryChoices'],['cycleSecondary','_selSecondary','secondaryChoices']])if(pad.pressed(action)&&!pad.down('lmb')&&!pad.down('rmb')){
+      const choices=selectedAttacks(p,KM)[list],i=choices.indexOf(p[field]);if(choices.length){cancelHeldSlot(p,p[field]);p[field]=choices[(i+1+choices.length)%choices.length];this.hud?.selectSlot(p._selSlot,p._selSecondary);}
+    }}
     const soldierControls=soldierControlsActive(p,this);
-    const directSelection=soldierControls&&selectSoldierAttack(p,inp);
-    const mouseCombat=sampleMouseCombat(p,inp,KM,inputDt,k=>pad.down(k)||inp.down(({q:'KeyQ',e:'KeyE',f:'KeyH',r:'KeyR'})[k]));
+    const directSelection=!modern&&soldierControls&&selectSoldierAttack(p,inp);
+    const mouseCombat=sampleMouseCombat(p,inp,KM,inputDt,k=>pad.down(k)||inp.down((modern?{q:'Digit1',e:'Digit2',f:'Digit3',r:'Digit4'}:{q:'KeyQ',e:'KeyE',f:'KeyH',r:'KeyR'})[k]));
     p._scopeHeld=mouseCombat.scope||(pad.down('scope')&&p.slots[mouseCombat.primary]?.def.type==='rifle'&&p.slots[mouseCombat.primary]?.def.scopeZoom>1);
     if(firearmSightZoom(p)>1)p.slots[mouseCombat.primary]._poseUntil=p.animT+.18;
     for(const key of mouseCombat.cancel){cancelHeldSlot(p,key);if(this.netplay?.active)this.netplay.queueSlot(key,4,p.aim3);}
     if(directSelection||mouseCombat.changed.length)this.hud?.selectSlot(mouseCombat.primary,mouseCombat.secondary);
     // stunned while held or frozen solid — capable heroes auto-escape via the melee system
-    if (p.grabbedBy || p.frozenT > 0) { p.moveDir = { x: 0, z: 0 }; return; }
+    if (p.grabbedBy || p.frozenT > 0) {
+      if(modern&&p.grabbedBy&&p.frozenT<=0){const holder=p.grabbedBy;
+        if((inp.pressed('KeyE')||pad.pressed('grab'))&&holder.grabMode==='front'&&(holder._clinchElapsed||0)<.3)this.melee._breakFree(holder);
+        else if(inp.down('KeyE')||pad.down('grab'))holder.grabT-=inputDt*Math.min(2,Math.max(.5,(p.def.strength||5)/(holder.def.strength||5)));
+      }
+      p.moveDir = { x: 0, z: 0 }; return;
+    }
     // SECOND WIND (manual §13): downed is a held breath — the only input that matters is the rally
     if (p.downedT > 0) {
       p.moveDir = { x: 0, z: 0 };
@@ -3666,7 +3739,7 @@ export class Game {
     } else {
     let fx = p.aim3.x, fz = p.aim3.z;
     const fl = Math.hypot(fx, fz);
-    if (fl > 0.001 && SETTINGS.moveRelative !== 'camera') {
+    if (!chase && fl > 0.001 && SETTINGS.moveRelative !== 'camera') {
       fx /= fl; fz /= fl;
       const dir = _v.set(fx * iz - fz * ix, 0, fz * iz + fx * ix);
       if (dir.lengthSq() > 1) dir.normalize();
@@ -3697,7 +3770,7 @@ export class Game {
       brx = -bfz; brz = bfx;
     } else {
       let fx = p.aim3.x, fz = p.aim3.z; const fl = Math.hypot(fx, fz);
-      if (fl > 0.001 && SETTINGS.moveRelative !== 'camera') { bfx = fx / fl; bfz = fz / fl; brx = -bfz; brz = bfx; }
+      if (!chase && fl > 0.001 && SETTINGS.moveRelative !== 'camera') { bfx = fx / fl; bfz = fz / fl; brx = -bfz; brz = bfx; }
       else if(chase){bfx=Math.sin(this.world._lookYaw);bfz=Math.cos(this.world._lookYaw);brx=-bfz;brz=bfx;}
       else { bfx = this.fwd.x; bfz = this.fwd.z; brx = this.right.x; brz = this.right.z; }
     }
@@ -3713,11 +3786,12 @@ export class Game {
     }
     // flight + guard keys come from the active control scheme (Options → Control Scheme)
     p.flyHeld = inp.down(KM.up) || pad.down('fly');
-    if(soldierControls){
+    if(soldierControls&&!modern){
       if(inp.pressed('KeyZ')&&p.onFoot&&!p.flying&&!p.grabbedBy&&!p.guarding)p.prone=!p.prone;
       if(inp.pressed('KeyC')||p.flyHeld)p.prone=false;
     }
-    p.descendHeld = (soldierControls ? (p.onFoot?inp.down('KeyC'):inp.down(KM.down)) : inp.down(KM.down)) || inp.down('ControlLeft') || inp.down('ControlRight') || pad.down('descend');
+    p.descendHeld = (modern?(p.onFoot?inp.down('KeyC'):inp.down(KM.down)):(soldierControls ? (p.onFoot?inp.down('KeyC'):inp.down(KM.down)) : inp.down(KM.down))) || inp.down('ControlLeft') || inp.down('ControlRight') || pad.down('descend');
+    if(modern&&(inp.pressed('KeyZ')||pad.pressed('evade')))performEvade(p,Math.hypot(p.moveDir.x,p.moveDir.z)>.01?p.moveDir:p.aim,this);
     // THE JKA ROLL TRIGGER (aaa-02 §3.5 change 3): crouch PRESSED while already running on foot
     // fires the fighter's own evade kind ALONG THE RUN. Not a new move — a second door into
     // performEvade: a dodge you reach by already running is a different decision from one you reach
@@ -3728,7 +3802,7 @@ export class Game {
     // tops out at 33 — drag settles under the 36.7 walk clamp), which makes the roll a control
     // that exists and can never fire (the rung-nobody-can-reach law). JKA's 200 qu/s is ~80% of
     // ITS run speed (250), so the honest port is the RATIO: 0.8 × this fighter's own walk clamp.
-    if (!soldierControls&&(inp.pressed(KM.down) || pad.pressed('descend')) && p.onFoot) {
+    if (!modern&&!soldierControls&&(inp.pressed(KM.down) || pad.pressed('descend')) && p.onFoot) {
       const rv = Math.hypot(p.vel.x, p.vel.z);
       if (rv >= p.speed * 1.08 * 0.8) performEvade(p, { x: p.vel.x / rv, z: p.vel.z / rv }, this);
     }
@@ -3737,7 +3811,7 @@ export class Game {
     const sprintInput={mouse:inp.mouse,down:code=>inp.down(code)||(code==='ShiftLeft'&&(pad.down('dash')||p._gearUiHeld))};
     const sprint=soldierControls?soldierSprint(p,sprintInput,mouseCombat):1;
     p.move(p.moveDir, dt, sprint);
-    if(p.grabbing&&inp.pressed('KeyJ')){
+    if(!modern&&p.grabbing&&inp.pressed('KeyJ')){
       if(p._personCarry)this.melee.setdownPerson(p);else this.melee.liftPerson(p);
     }
 
@@ -3751,7 +3825,8 @@ export class Game {
     if ((!KM.mouseMelee&&inp.released(KM.strike || 'KeyV')) || pad.released('strike') || (mouseMelee&&m.leftUp)) { this.melee.chargeRelease(p); if (np) np.queueMelee('cr'); }
     if(mouseCombat.secondary==='grab'&&mouseCombat.buttons.right.pressed){this.melee.grab(p);if(np)np.queueMelee('grab');}
     // G: carrying → THROW it · something heavy in reach → hoist it · otherwise the normal grab
-    if ((!soldierControls&&inp.pressed(KM.grab || 'KeyG')) || pad.pressed('grab')) {
+    if(modern)contextualGrab(this,p,{pressed:inp.pressed('KeyE')||pad.pressed('grab'),held:inp.down('KeyE')||pad.down('grab'),released:inp.released('KeyE')||pad.released('grab'),version:inp.cancelVersion},inputDt);
+    if (!modern&&((!soldierControls&&inp.pressed(KM.grab || 'KeyG')) || pad.pressed('grab'))) {
       // THE G-CHAIN (altitude plan 3), in priority order. Four behaviours on one key is only
       // acceptable because the PROMPT shows which one is armed — see hud.interactPrompt.
       //   focused interactable ? interact : carrying ? throw : gear underfoot ? pick up
@@ -3762,13 +3837,19 @@ export class Game {
       else if (this.pickupGear(p)) {}                      // a weapon on the ground beats a hoist (manual §16)
       else if (!this.grabProp(p)) { this.melee.grab(p); if (np) np.queueMelee('grab'); }
     }
-    this.melee.guard(p, ((!soldierControls||KM.guard!=='KeyC')&&inp.down(KM.guard)) || inp.mouse.b3 || inp.mouse.b4 || pad.down('guard'));
-    if((!soldierControls&&inp.released(KM.grab||'KeyG'))||pad.released('grab')||(mouseCombat.secondary==='grab'&&mouseCombat.buttons.right.released))this.melee.releaseGrab(p);
-    if(soldierControls&&inp.pressed('KeyQ')&&p.items.length)this.useItem(p);
-    if(soldierControls&&inp.pressed('KeyE')&&!p.guarding&&!p.grabbedBy&&!p.frozenT&&!p.staggerT){
+    this.melee.guard(p, ((!soldierControls||KM.guard!=='KeyC')&&inp.down(KM.guard)) || inp.mouse.b3 || (!modern&&inp.mouse.b4) || pad.down('guard'));
+    if(!modern&&((!soldierControls&&inp.released(KM.grab||'KeyG'))||pad.released('grab')||(mouseCombat.secondary==='grab'&&mouseCombat.buttons.right.released)))this.melee.releaseGrab(p);
+    if(!modern&&soldierControls&&inp.pressed('KeyQ')&&p.items.length)this.useItem(p);
+    if(!modern&&soldierControls&&inp.pressed('KeyE')&&!p.guarding&&!p.grabbedBy&&!p.frozenT&&!p.staggerT){
       if(!this.doInteract(p))this.pickupGear(p);
     }
-    if (p._gearHeld&&!p._gearHeld.primary) {             // issued primary fires through LMB
+    if(modern){
+      if(p._gadgetInputVersion!==inp.cancelVersion){p._gadgetInputVersion=inp.cancelVersion;p._gadgetPickerUsed=true;p._gadgetHold=0;}
+      if(inp.pressed(KM.item)||pad.pressed('item')){p._gadgetHold=0;p._gadgetPickerUsed=false;}
+      if(inp.down(KM.item)||pad.down('item')){p._gadgetHold=(p._gadgetHold||0)+inputDt;if(p._gadgetHold>=.3&&!p._gadgetPickerUsed){p._gadgetPickerUsed=true;this.inventoryPanel?.open();}}
+      if((inp.released(KM.item)||pad.released('item'))&&!p._gadgetPickerUsed&&p.items.length)this.useItem(p);
+    }
+    else if (p._gearHeld&&!p._gearHeld.primary) {             // issued primary fires through LMB
       const gi = { pressed: inp.pressed(KM.item)||(chase&&pad.pressed('item')), held: inp.down(KM.item)||(chase&&pad.down('item')), released: inp.released(KM.item)||(chase&&pad.released('item')), dt };
       if (gi.pressed || gi.held || gi.released) runSlot(p, '_gear', gi, this);
       if (gi.held) this.drainGear(p, dt);
@@ -3780,13 +3861,17 @@ export class Game {
     if(!busy&&(inp.pressed(infantry?'KeyR':'KeyY')||pad.pressed('reload')))requestReload(p,p._gearHeld&&!p._gearHeld.primary?'_gear':mouseCombat.primary,this);
     const orK = (code, a) => ({ pressed: inp.pressed(code) || pad.pressed(a), held: inp.down(code) || pad.down(a), released: inp.released(code) || pad.released(a) });
     const intents = {
-      lmb: { pressed: pad.pressed('lmb'), held: pad.down('lmb'), released: pad.released('lmb') },
-      rmb: { pressed: pad.pressed('rmb'), held: pad.down('rmb'), released: pad.released('rmb') },
-      q: orK('KeyQ', 'q'), e: orK('KeyE', 'e'), r: orK('KeyR', 'r'), f: orK('KeyH', 'f'),   // 4th power lives on H — F toggles flight
-      shift: {pressed:false,held:false,released:false}, // Legacy movement powers remain selectable attacks.
+      lmb: { pressed: !modern&&pad.pressed('lmb'), held: !modern&&pad.down('lmb'), released: !modern&&pad.released('lmb') },
+      rmb: { pressed: !modern&&pad.pressed('rmb'), held: !modern&&pad.down('rmb'), released: !modern&&pad.released('rmb') },
+      q: orK(modern?'Digit1':'KeyQ', 'q'), e: orK(modern?'Digit2':'KeyE', 'e'), r: orK(modern?'Digit4':'KeyR', 'r'), f: orK(modern?'Digit3':'KeyH', 'f'),
+      shift: {pressed:false,held:false,released:false},
+      _gear:{pressed:false,held:false,released:false},
     };
-    if(infantry)intents.r={pressed:pad.pressed('r'),held:pad.down('r'),released:pad.released('r')};
-    if(soldierControls){
+    if(infantry&&!modern)intents.r={pressed:pad.pressed('r'),held:pad.down('r'),released:pad.released('r')};
+    if(modern)for(const [action,key] of [['lmb',mouseCombat.primary],['rmb',mouseCombat.secondary]])if(intents[key]){
+      intents[key].pressed||=pad.pressed(action);intents[key].held||=pad.down(action);intents[key].released||=pad.released(action);
+    }
+    if(soldierControls&&!modern){
       intents.e={pressed:pad.pressed('e'),held:pad.down('e'),released:pad.released('e')};
       // The tactical shortcuts use the existing authored kit and payment/action
       // path. They never replace the player's selected primary or secondary.
@@ -3806,13 +3891,14 @@ export class Game {
     // punched and took off, which is exactly the collision `KEYMAPS`' own header forbids ("no two
     // keys in one scheme may collide"). The law was unenforceable because the binding lived outside
     // the table. It is a scheme field now; BRAWLER flies on G, which its own grab move freed up.
-    if (inp.pressed(KM.fly || 'KeyF')) p.toggleFlight();   // flight is a MODE: press on, press off
+    if (inp.pressed(KM.fly || 'KeyF')||(modern&&pad.pressed('flightToggle'))) p.toggleFlight();
     if (np) for (const k of SLOT_KEYS) {          // stream ability intents to the other machine
       if (!p.slots[k]) continue;
       if (intents[k].pressed) np.queueSlot(k, 1, p.aim3);
       else if (intents[k].released) np.queueSlot(k, 3, p.aim3);
     }
     for (const k of SLOT_KEYS) if (p.slots[k]) feedSlot(this, p, k, intents[k], busy, dt);
+    if(modern&&p.slots._gear){feedSlot(this,p,'_gear',intents._gear,busy,dt);if(intents._gear.held)this.drainGear(p,dt);}
   }
 
   // Player 2 (gamepad): right-stick auto-aims, left-stick moves.
@@ -3865,6 +3951,7 @@ export class Game {
   }
 
   controlBot(f, dt) {
+    if(f._passengerTransport)return;
     // ⚠ MOOD CHANGES WHAT A BOT WANTS, NOT WHAT IT CAN DO. Anger pulls the preferred range in and
     // pushes aggression up; fear does the reverse; panic makes it erratic; a fleeing fighter simply
     // leaves. None of it grants an ability or bends the physics — the honesty and fairness laws
@@ -3896,6 +3983,25 @@ export class Game {
     // finish an AI haymaker wind-up
     if (f._aiCharge > 0) { f._aiCharge -= dt; if (f._aiCharge <= 0 || f.meleeCharge <= 0) { this.melee.chargeRelease(f); f._aiCharge = 0; } }
     const it = f.ai.intent(dt, this);
+    const deployment=f._deploymentTarget;
+    const leader=f._squadLeader;
+    if(deployment){
+      const dx=deployment.x-f.pos.x,dz=deployment.z-f.pos.z,d=Math.hypot(dx,dz);
+      it.move=d>2?{x:dx/d,z:dz/d}:{x:0,z:0};it.aimDir=it.move;it.fly=false;it.slots={};it.target=null;
+    }
+    if(!deployment&&leader?.alive&&!it.target){
+      const dx=leader.pos.x-f.pos.x,dz=leader.pos.z-f.pos.z,d=Math.hypot(dx,dz);
+      it.move=d>22?{x:dx/d,z:dz/d}:{x:0,z:0};
+      if(d>22)it.aimDir=it.move;
+      const motion=leader.moveDir,moving=motion&&Math.hypot(motion.x,motion.z)>.2;
+      if(moving&&d<14&&d>.01&&(-dx*motion.x-dz*motion.z)/d>.25){
+        // Idle followers must yield the leader's travel lane instead of making
+        // a solid wall at their follow-distance stop point.
+        const side=this.entities.indexOf(f)%2?1:-1;
+        it.move={x:motion.z*side,z:-motion.x*side};
+      }
+      it.fly=f.flightTier>0&&(leader.pos.y>f.pos.y+8||leader.flying&&d>22);
+    }
     if (it.aimDir) f.faceDir(it.aimDir.x, it.aimDir.z);
     // 3D aim. ⚠ `it.target` is ONLY set when the AI can actually see the foe (honesty law), and
     // `it.aimAt` is where it BELIEVES it should shoot — the target's centre plus its own lead error
@@ -3976,16 +4082,16 @@ export class Game {
     }
 
     // items: bots use their gadgets like players would
-    if (f.items.length) {
-      const it = f.items[0], k = it.def.kind;
+    for (let itemIndex=0;itemIndex<f.items.length;itemIndex++) {
+      const it = selectedGadget(f,itemIndex); if(!it)continue; const k = it.def.kind;
       if (k === 'beacon') {   // plant healthy, BAIL when it turns
-        if (it.state === 'ready' && f.hp > f.maxHp * 0.55 && Math.random() < 0.005) this.useItem(f);
-        else if (it.state === 'deployed' && (f.hp < (f._beaconHp || f.maxHp) - 28 || (f.hp < f.maxHp * 0.3 && Math.random() < 0.05))) this.useItem(f);
+        if (it.state === 'ready' && f.hp > f.maxHp * 0.55 && Math.random() < 0.005) this.useItem(f,itemIndex);
+        else if (it.state === 'deployed' && (f.hp < (f._beaconHp || f.maxHp) - 28 || (f.hp < f.maxHp * 0.3 && Math.random() < 0.05))) this.useItem(f,itemIndex);
       } else if (it.state === 'ready') {
-        if (k === 'medkit' && f.hp < f.maxHp * 0.5) this.useItem(f);
-        else if (k === 'shieldpack' && f.hp < f.maxHp * 0.6 && f._shieldHp <= 0) this.useItem(f);
-        else if (k === 'flashbang' && this.nearestFoe(f, f.pos, 18) && Math.random() < 0.03) this.useItem(f);
-        else if (k === 'jetcell' && f._jetT <= 0) { const foe = this.nearestFoe(f, f.pos, 90); if (foe && foe.pos.y > 14 && Math.random() < 0.02) this.useItem(f); }
+        if (k === 'medkit' && f.hp < f.maxHp * 0.5) this.useItem(f,itemIndex);
+        else if (k === 'shieldpack' && f.hp < f.maxHp * 0.6 && f._shieldHp <= 0) this.useItem(f,itemIndex);
+        else if (k === 'flashbang' && this.nearestFoe(f, f.pos, 18) && Math.random() < 0.03) this.useItem(f,itemIndex);
+        else if (k === 'jetcell' && f._jetT <= 0) { const foe = this.nearestFoe(f, f.pos, 90); if (foe && foe.pos.y > 14 && Math.random() < 0.02) this.useItem(f,itemIndex); }
       }
     }
 
@@ -4032,13 +4138,20 @@ export class Game {
       f._meleeCd = (f._meleeCd || 0) - dt;
       // a turtling foe is worth stepping INTO grab range for (the bounce pushes bots out of it)
       const turtleReach = foe && foe.guarding && (foe._guardUpT ?? 0) > 0.35 ? 13.5 : 11;
-      if (foe && d < turtleReach && f._meleeCd <= 0) {
+      const approachReach=f._openSky?meleeApproach(f.def,f.airborne).range:turtleReach;
+      const approachDistance=foe?f.pos.distanceTo(foe.pos):Infinity;
+      if (foe && (d < turtleReach || approachDistance < approachReach) && f._meleeCd <= 0) {
         f._meleeCd = 0.45 + Math.random() * 0.7;
         const style = f.ai && f.ai.style, r = Math.random();
         // THE TRIFECTA, READ LIVE: a turtling foe gets GRABBED or HAYMAKERED, never jabbed at.
         // (Bots used to spam strikes into a raised shield forever — now they solve it.)
         const turtling = foe.guarding && (foe._guardUpT ?? 0) > 0.35;
-        if (turtling) {
+        if(d>=turtleReach){
+          // Use the same committed strike entry as humans. A distant guard does
+          // not authorize a longer grab; the defender can block this approach.
+          this.melee.strike(f);
+        }
+        else if (turtling) {
           if (r < 0.55) this.melee.grab(f);                                    // grab beats guard
           else if (!f._aiCharge && (f.def.meleeTiers ?? 3) >= 2) { this.melee.chargeStart(f); f._aiCharge = 0.6 + Math.random() * 0.5; f._meleeCd = 1.1; }   // or CRUSH it
           else this.melee.grab(f);
@@ -4090,7 +4203,10 @@ export class Game {
     if(this._frontlinePreparing){this.pad.update();this.audio.sweep();return;}
     dt = Math.min(dt, 0.05);   // parity floor 20fps (was 0.033/30fps — weak GPUs played in literal slow motion)
     const inputDt = dt; // Selection gestures keep their response time during impact slow motion.
-    this.pad.update();
+    this.pad.powerworld=this.modeId==='powerworld'&&this.humans?.length!==2;this.pad.update();
+    this.pad.sampleViewGesture?.(inputDt,this.running&&this.player?.alive&&!this.combatOverlayOpen&&!this.hud?.titleOpen);
+    this.powerPicker?.updatePad(inputDt);
+    if(this.touch?.portrait){this.audio.sweep();this.world.render();return;}
     this.prepareCombatView(inputDt);
     this.audio.sweep();   // kill orphaned sustained sounds (stuck-tone watchdog) — even on title/pause
     if (!this.running) {
@@ -4112,7 +4228,7 @@ export class Game {
       if (f._styleT > 0) { f._styleT -= dt; } else if (f.style > 0) f.style = Math.max(0, f.style - dt * 14);
       if (f._airT > 0) f._airT -= dt;
       const bonus = (f._lastStand ? 0.2 : 0) + ((f._clean || 0) >= 12 ? 0.1 : 0);
-      f.powerBuff = (f.buffT > 0 ? f.powerBuff : f.levelMult) * (1 + bonus);
+      refreshCombatPower(f,bonus);
     }
     if (this.mode && !this.matchOver) this.mode.tick(this, dt);
 
@@ -4129,7 +4245,8 @@ export class Game {
       if (!f._medChecked) {
         f._medChecked = true;
         // carry-over injuries from the book: small, capped, and announced (manual §18)
-        if (f.def && f.def.id && !f.def.police && !f.isDummy && !f._frontlineClone && !f._encounterNPC) {
+        // Campaign replacements use campaign stock, not sanctioned-arena medical penalties.
+        if (!this.ms?.threatLab && f.def && f.def.id && !f.def.police && !f.isDummy && !f._frontlineClone && !f._encounterNPC) {
           const inj = injuryOf(f.def.id);
           if (inj) {
             f.maxHp = Math.round(f.maxHp * (1 - Math.min(0.08, inj.debuff || 0.05)));
@@ -4140,6 +4257,7 @@ export class Game {
         }
       }
       f.update(dt, this);
+      updateFlightSense(f,dt,this);
     }
     this.resolveBodies();
     this.melee.endContactFrame();
@@ -4310,3 +4428,4 @@ export { ROSTER };
 
 
 
+import {validateSquad} from './squad-config.js';

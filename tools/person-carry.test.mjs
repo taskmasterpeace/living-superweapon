@@ -5,11 +5,11 @@ import {mainCombatFixture} from './helpers/main-combat-fixture.mjs';
 import {SETTINGS,keymap} from '../src/core/settings.js';
 import {personThrowCue} from '../src/engine/person-carry.js';
 
-function fixture({hero='sol',height=0,hz=60}={}){
+function fixture({hero='sol',height=0,hz=60,victimTraits={}}={}){
  const x=mainCombatFixture({hero,mode:'powerworld'});x.g.ms.chaseCam=true;x.p._openSky=true;x.p.invuln=0;
  x.g.vfx._itex=new THREE.Texture(); // Texture output only; native VFX/throw/damage remain active.
  x.g.audio={...x.g.audio,yell:()=>{}};
- const v=x.foe({z:4,y:height});v.invuln=0;v.faceDir(0,-1);x.p.pos.y=height;
+ const v=x.foe({z:4,y:height});Object.assign(v,victimTraits);v.invuln=0;v.faceDir(0,-1);x.p.pos.y=height;
  x.control(0);x.g.melee.grab(x.p);for(let i=0;i<Math.ceil(.2*hz);i++)x.g.melee.update(x.p,1/hz);
  assert.equal(x.p.grabbing,v,'Native grab failed');
  const tick=()=>{x.g.melee.update(x.p,1/hz);x.p._physics(1/hz,x.g);v._physics(1/hz,x.g);};
@@ -54,20 +54,12 @@ test('native grab release remains armed when cover arrests the whirl',()=>{
  }finally{x.close();}
 });
 
-test('native keyboard grab press/release whirls then throws a lifted person',()=>{
- const x=fixture();try{
-  x.lift();const key=keymap(SETTINGS.scheme).grab||'KeyG';x.g.input.keys.add(key);x.g.input.justPressed.add(key);x.control(0);
-  assert.equal(x.p._personCarry.whirling,true);x.g.input.endFrame();
-  x.g.input.keys.delete(key);x.g.input.justReleased.add(key);x.control(0);assert.equal(x.p.grabbing===null,true);assert.ok(x.v.launchT>0);
- }finally{x.close();}
-});
-
-test('soldier selected RMB grab whirls/releases while G retains grenade ownership',()=>{
- const x=fixture({hero:'sarge'});try{
-  x.v.def={...x.v.def,strength:1,hp:100,metal:false};x.p._tabMelee=true;x.p._selSlot='melee';x.p._selSecondary='grab';
-  x.lift();x.g.input.justPressed.add('KeyG');x.control(0);assert.equal(x.p._personCarry.whirling,false);
-  x.g.input.endFrame();x.g.input.mouse.right=x.g.input.mouse.rightEdge=true;x.control(.16);assert.equal(x.p._personCarry.whirling,true);
-  x.g.input.endFrame();x.g.input.mouse.right=false;x.g.input.mouse.rightUp=true;x.control(0);assert.equal(x.p.grabbing===null,true);assert.ok(x.v.launchT>0);
+for(const hero of ['sol','sarge'])test(hero+' contextual E hold whirls and releases through native controls',()=>{
+ const x=fixture({hero});try{
+  if(hero==='sarge')x.v.def={...x.v.def,strength:1,hp:100,metal:false};
+  x.lift();x.g.input.keys.add('KeyE');x.g.input.justPressed.add('KeyE');x.control(.1);x.g.input.endFrame();
+  x.control(.1);x.g.input.endFrame();x.control(.1);assert.equal(x.p._personCarry.whirling,true);x.g.input.endFrame();
+  x.g.input.keys.delete('KeyE');x.g.input.justReleased.add('KeyE');x.control(0);assert.equal(x.p.grabbing,null);assert.ok(x.v.launchT>0);
  }finally{x.close();}
 });
 
@@ -118,12 +110,36 @@ for(const hz of [30,60,120])test(`native downward release strikes real terrain o
   assert.equal(hits,1);assert.equal(x.v.lastHitBy,x.p);assert.ok(x.v.pos.y>=0);assert.equal(x.v.grabbedBy===null,true);
  }finally{x.close();}
 });
-test('native J lifts and sets down without changing the normal grab action',()=>{
- const x=fixture();try{
-  x.g.input.justPressed.add('KeyJ');x.control(0);assert.ok(x.p._personCarry,'J did not lift');
-  x.g.input.endFrame();x.g.input.justPressed.add('KeyJ');x.control(0);
-  assert.equal(x.p.grabbing===null,true);assert.equal(x.v.grabbedBy===null,true);assert.equal(x.p._personCarry,null);
-  assert.ok(Math.abs(x.v.pos.y)<1e-6);assert.equal(x.v.launchT,0);assert.ok(x.v.vel.length()<1e-6);
+test('opening a menu preserves carry across the next simulation tick while disarming throw',()=>{
+ const x=fixture();try{x.lift();x.g.melee.grab(x.p);x.g.retireCombatViewInput(x.p,{preserveCarry:true});x.tick();
+  assert.equal(x.p.grabbing,x.v);assert.equal(x.v.grabbedBy,x.p);assert.equal(x.p._personCarry.whirling,false);assert.equal(x.p._personCarry.throwArmed,false);
+ }finally{x.close();}
+});
+
+for(const canPhase of [false,true])test(`front teleport escape rechecks its energy; phase fallback=${canPhase}`,()=>{
+ const x=fixture({victimTraits:{teleEscape:true,canPhase,ki:100}});try{
+  assert.equal(x.p._victimEscape,true,'Front contact must admit the trait escape');
+  x.lift();x.v.ki=5;const midpoint=x.p._clinchEscapeAt;
+  for(let i=0;i<300&&x.p._clinchElapsed<=midpoint&&x.p.grabbing;i++)x.tick();
+  assert.ok(!x.p.grabbing||x.p._clinchElapsed>=midpoint,'Escape clock must reach its midpoint');
+  assert.equal(x.v.ki,5,'Failed teleport cannot spend unavailable energy');
+  if(canPhase){assert.equal(x.p.grabbing,null);assert.ok(x.v.invuln>0);}
+  else{
+   assert.equal(x.p.grabbing===x.v,true,'Insufficient teleport energy must not grant an unauthored phase escape');
+   assert.equal(x.v.invuln,0);
+   for(let i=0;i<600&&x.p.grabbing;i++)x.tick();
+   assert.equal(x.p.grabbing,null,'Ordinary bounded restraint must still expire');
+   assert.equal(x.v.grabbedBy,null);
+  }
+ }finally{x.close();}
+});
+
+test('lifting a locked victim hands throw aiming back to the camera',()=>{
+ const x=fixture({height:30});try{
+  x.g.hardLock=x.v;x.g.lockTarget=x.v;x.lift();
+  assert.equal(x.g.hardLock===null,true,'Carried victim retained camera lock');
+  x.g.hardLock=x.v;x.g.validateLock(x.p);
+  assert.equal(x.g.hardLock===null,true,'Carried victim could be re-acquired');
  }finally{x.close();}
 });
 test('ground-only soldier can carry an admitted person but never acquires flight',()=>{

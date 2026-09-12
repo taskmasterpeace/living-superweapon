@@ -27,6 +27,11 @@ test('surface changes stop new emission; existing dust settles and resources sta
   x.f.pos.z+=5000;x.wake.update(1/60);assert.ok(x.wake.puffs.filter(p=>p.life>0).every(p=>p.z<1400||p.z>6200),'Teleport must not paint a connecting dust line');
  }finally{x.wake.dispose();}
 });
+test('high-speed dust is visible within the camera-near ground region',()=>{
+ const x=fixture();try{x.f.vel.z=200;travel(x,1);const a=x.wake.mesh.geometry.attributes;let nearby=false;
+ for(let i=0;i<x.wake.puffs.length;i++)if(a.iAlpha.getX(i)>.05&&Math.abs(a.iCenter.getZ(i)-x.f.pos.z)<14)nearby=true;
+ assert.ok(nearby,'dust only became visible after passing behind the camera');}finally{x.wake.dispose();}
+});
 test('spatial emission has matching density at 30 and 120Hz',()=>{
  const a=fixture(),b=fixture();try{travel(a,1,30);travel(b,1,120);assert.ok(Math.abs(a.wake.emitted-b.wake.emitted)<=4);}finally{a.wake.dispose();b.wake.dispose();}
 });

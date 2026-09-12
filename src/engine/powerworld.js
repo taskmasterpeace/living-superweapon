@@ -17,6 +17,7 @@
 // =================================================================================================
 import * as THREE from 'three';
 import {prepareFrontline} from './frontline-preparation.js';
+import {installResearchLab} from './research-lab.js';
 import { GROUND_LAYER } from '../core/util.js';
 import { setRim } from './figure.js';
 import { SETTINGS } from '../core/settings.js';
@@ -199,6 +200,8 @@ export class PowerWorldStage {
     // timing must not decide whether a truck spawns inside a command post.
     this.outpostError=null;
     if(W.renderer)this.outpostLoading=installFrontlineOutpost(this).then(async()=>{
+      if(this.group!==grp)return;
+      await installResearchLab(this);
       if(this.group!==grp)return;
       this.convoy=new FrontlineConvoy(this);await this.convoy.loading;
       if(this.group!==grp)return;
@@ -643,6 +646,8 @@ export class PowerWorldStage {
     if (!this.group) return;
     this.preparation?.cancel();this.preparation=null;
     this.combatWarmup?.dispose();this.combatWarmup=null;
+    this.researchLab?.dispose();this.researchLab=null;
+    this.transport?.dispose();this.transport=null;
     this.aircraft?.dispose();this.aircraft=null;
     this.convoy?.dispose();this.convoy=null;
     this.vehicleHUD?.dispose();this.vehicleHUD=null;

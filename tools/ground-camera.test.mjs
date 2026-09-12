@@ -23,6 +23,22 @@ function fixture({height=0,aspect=1.6}={}){
  return {w,f,camera,step,close(){f.dispose();}};
 }
 
+test('close level lock keeps a back-side view instead of pitching down over the heads',()=>{
+ const x=fixture(),foe=new Fighter(ROSTER.find(d=>d.id==='circuit'));
+ try{
+  foe._openSky=true;foe.pos.set(0,0,8);
+  for(let i=0;i<120;i++)x.w.chase(x.f,foe,1/60);
+  x.camera.updateMatrixWorld(true);
+  assert.ok(Math.abs(x.w._lookPitch)<25*Math.PI/180,'a level melee target must not force a steep overhead view');
+  assert.ok(Math.abs(x.camera.fov-73.74)<.01,'retain the existing lens');
+  assert.ok(x.f.center(new THREE.Vector3()).project(x.camera).x<-.1,'default eye sits to the right, leaving the player left of aim');
+  for(const f of [x.f,foe]){
+   const center=f.center(new THREE.Vector3()).project(x.camera);
+   assert.ok(Math.abs(center.x)<.9&&Math.abs(center.y)<.9&&center.z<1,'both bodies stay inside the view');
+  }
+ }finally{foe.dispose();x.close();}
+});
+
 for(const height of [0,18])for(const pitch of [45,60,79,89])test(`ground camera retains upper-body orientation cues at ${pitch} degrees on height ${height}`,()=>{
  const x=fixture({height}),{w,f,camera}=x;
  try{
@@ -43,14 +59,14 @@ for(const height of [0,18])for(const pitch of [45,60,79,89])test(`ground camera 
  }finally{x.close();}
 });
 
-test('unobstructed BFP framing remains centered and fixed through free airborne pitch',()=>{
+test('unobstructed rear-side framing remains fixed through free airborne pitch',()=>{
  const x=fixture(),{w,f,camera}=x;
  try{
   f.pos.y=220;f.flying=true;f.gait='airborne';
   for(const pitch of [-89,-65,0,65,89]){
    x.step(pitch);const offset=camera.position.clone().sub(f.pos).sub(new THREE.Vector3(0,5.4,0));
    const forward=camera.getWorldDirection(new THREE.Vector3()),up=new THREE.Vector3(0,1,0).applyQuaternion(camera.quaternion),right=new THREE.Vector3(1,0,0).applyQuaternion(camera.quaternion);
-   assert.ok(Math.abs(-offset.dot(forward)-25.5)<1e-6);assert.ok(Math.abs(offset.dot(up)-9)<1e-6);assert.ok(Math.abs(offset.dot(right))<1e-6);
+   assert.ok(Math.abs(-offset.dot(forward)-25.5)<1e-6);assert.ok(Math.abs(offset.dot(up)-9)<1e-6);assert.ok(Math.abs(offset.dot(right)-6)<1e-6);
    assert.equal(camera.fov,73.74);assert.ok(Math.abs(w._lookPitch-pitch*Math.PI/180)<1e-10);
   }
  }finally{x.close();}
@@ -64,7 +80,7 @@ for(const hz of [30,60,120])test(`ground-clearance entry and exit have no discon
    const pitch=89*Math.sin(Math.PI*i/(hz*4));w._lookPitch=pitch*Math.PI/180;w.chase(f,null,1/hz);camera.updateMatrixWorld(true);
    assert.ok(camera.position.distanceTo(previous)*hz<140,`Terrain response jumps at ${pitch}: ${previous.toArray()} → ${camera.position.toArray()}`);previous.copy(camera.position);
   }
-  assert.ok(camera.position.distanceTo(new THREE.Vector3(0,14.4,-25.5))<1e-6,'Release kept a lateral offset');
+  assert.ok(camera.position.distanceTo(new THREE.Vector3(-6,14.4,-25.5))<1e-6,'Release failed to restore the authored shoulder offset');
  }finally{x.close();}
 });
 

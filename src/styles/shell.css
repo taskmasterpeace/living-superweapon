@@ -88,6 +88,13 @@
     background:rgba(10,12,18,.5); color:var(--text); font-family:var(--f-display); font-weight:800; font-size:19px;
     display:flex; align-items:center; justify-content:center; backdrop-filter:blur(3px); user-select:none; }
   #touch .tbtn.on{ background:var(--gold); color:var(--on-gold); border-color:var(--gold); transform:scale(.94); }
+  #touch .tbtn[hidden]{display:none!important;}
+  #touch.touch-passenger .tzone,#touch.touch-passenger .tpad>.tbtn:not(.tb-passenger){display:none!important;}
+  #touch.touch-passenger .tpad{display:flex;gap:12px;}
+  #touch .tb-passenger{width:88px;min-height:56px;border-radius:10px;font-size:15px;}
+  #touch .tb-passenger:disabled{opacity:.45;}
+  body.is-touch .convoy-objective{top:112px!important;max-width:300px!important;font-size:12px!important;padding:6px 10px!important;}
+  #touch.touch-passenger .tb-passenger{width:88px!important;height:56px!important;min-height:56px!important;}
   #touch .tbtn.locked{position:relative;opacity:.8;border-style:dashed;}
   #touch .touch-unlock{position:absolute;bottom:3px;left:3px;right:3px;border-radius:4px;background:rgba(20,17,11,.92);color:var(--gold);font:700 10px Inter,system-ui,sans-serif;line-height:14px;pointer-events:none;}
   #touch .tbtn.tsm{ width:46px; height:46px; font-size:16px; }

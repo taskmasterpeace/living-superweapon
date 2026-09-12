@@ -31,7 +31,7 @@ export function fighterPathFraction(f,world,a,b){
     if(a.x>x-hx-r&&a.x<x+hx+r&&a.z>z-hz-r&&a.z<z+hz+r&&a.y>bottom-h&&a.y<top){hit.t=0;return;}
     boxContact(a,b,x-hx-r,x+hx+r,bottom-h,top,z-hz-r,z+hz+r,hit);
   };
-  for(const c of world.cover||[])if(!c.destroyed)box(c.x,c.z,c.hx??c.r,c.hz??c.r,c.frontlineAircraft&&Number.isFinite(c.bottom)?c.bottom:-Infinity,c.top??c.h);
+  for(const c of world.cover||[])if(!c.destroyed)box(c.x,c.z,c.hx??c.r,c.hz??c.r,(c.frontlineAircraft||c.finiteBuilding)&&Number.isFinite(c.bottom)?c.bottom:-Infinity,c.top??c.h);
   for(const room of world.interiors||[]){
     for(const wall of room.walls||[])box(wall.x,wall.z,wall.hx,wall.hz,-Infinity,room.top);
     box(room.x,room.z,room.hx,room.hz,room.top-1,room.top);
@@ -60,8 +60,11 @@ export function sweepFighterEnvironment(f,game,dt){
     const hit={t:Infinity,axis:null,normal:0,cover:null,terrain:false};
     if(!ghost)for(const c of world.cover||[]){
       if(c.destroyed)continue;
+      // The endpoint building-contact pass owns small authored step-ups.
+      // Sweeping their vertical riser first would make an otherwise legal step a wall.
+      if(c.buildingRole==='step'&&c.standable&&!f.flying&&!(f.launchT>0)&&f.vel.y<=2&&c.top-a.y>=0&&c.top-a.y<=2.5)continue;
       const hx=c.hx??c.r,hz=c.hz??c.r;
-      const bottom=c.frontlineAircraft&&Number.isFinite(c.bottom)?c.bottom-height:-Infinity;
+      const bottom=(c.frontlineAircraft||c.finiteBuilding)&&Number.isFinite(c.bottom)?c.bottom-height:-Infinity;
       if(boxContact(a,b,c.x-hx-maxX,c.x+hx-minX,bottom,(c.top??c.h)-bottomY,c.z-hz-maxZ,c.z+hz-minZ,hit))hit.cover=c;
     }
     if(!wallGhost)for(const room of world.interiors||[]){

@@ -47,7 +47,8 @@ export class FlightSurfaceWake{
  }
  _emit(x,z,y,fx,fz,speed,age){
   const settings={...SURFACE_WAKE_DEFAULTS,...this.fighter.def.model?.surfaceWake};
-  x-=fx*(5+Math.min(6,speed*.025));z-=fz*(5+Math.min(6,speed*.025));
+  // Birth under the passing body; a delayed, rear-offset puff falls behind the chase camera.
+  x-=fx*1.2;z-=fz*1.2;
   const ground=this.world.heightAt(x,z),agl=y-ground,surface=dustSurfaces[this.world.surfaceAt?.(x,z)]||0;
   if(!Number.isFinite(ground)||agl<0||agl>=settings.maxHeight||!surface)return;
   // Never pull sand through the floor of a building, vehicle or rock ledge.
@@ -80,7 +81,7 @@ export class FlightSurfaceWake{
    const age=p.age,drift=(1-Math.exp(-age*.8))/.8;
    a.iCenter.setXYZ(i,p.x+p.vx*drift,p.ground+.6+age*1.6,p.z+p.vz*drift);
    a.iSize.setX(i,5+age*9);a.iSeed.setX(i,p.seed);
-   a.iAlpha.setX(i,.4*p.strength*smooth(age/.13)*smooth(p.life/(p.duration*.65)));
+   a.iAlpha.setX(i,.4*p.strength*smooth(age/.03)*smooth(p.life/(p.duration*.65)));
   }
   for(const key of ['iCenter','iSize','iAlpha','iSeed'])a[key].needsUpdate=true;
   this.mesh.visible=this.active>0&&f.obj.visible&&(f._vis??1)>=.35;

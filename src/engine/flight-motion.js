@@ -15,7 +15,14 @@ export function steerFlight(f, dir, speed, dt, responseProfile) {
   const motion = f.def?.model?.motion;
   const key = moving ? (f.cruiseHeld ? 'boostAcceleration' : 'acceleration') : 'braking';
   const turning=moving&&oldSpeed>1&&(v.x*x+v.y*y+v.z*z)/oldSpeed<.8;
-  const response = motion?.[key] ?? (turning?responseProfile?.turning:responseProfile?.[key]) ?? MOTION_DEFAULTS[key];
+  let response = motion?.[key] ?? (turning?responseProfile?.turning:responseProfile?.[key]) ?? MOTION_DEFAULTS[key];
+  const gear=f.movementGear?.gear||0,surge=f._flightSurge??={gear:0,time:1,entrySpeed:0};
+  if(moving&&gear>surge.gear&&f._openSky){surge.time=0;surge.entrySpeed=oldSpeed;}
+  surge.gear=gear;surge.time+=dt;
+  if(moving&&gear&&f._openSky&&surge.time<.55){
+   if(surge.time<.12){speed=Math.max(speed*.16,surge.entrySpeed*.86);response=14;}
+   else response*=2.2; // Short gather, then positive acceleration into the existing terminal speed.
+  }
   const blend = 1 - Math.exp(-response * dt);
   v.x += (x * speed - v.x) * blend;
   v.y += (y * speed - v.y) * blend;

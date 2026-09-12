@@ -1,3 +1,4 @@
+import {meleeApproach} from '../data/melee-approaches.js';
 // WAR WORLD: ASCENDANTS — melee trifecta: Strike (beats Grab) · Grab (beats Guard) · Guard (beats Strike).
 // Per-character variants: teleport-escape & energy-intangibility break front grabs; thorns hurt the holder;
 // grabHeal lifesteals throws. Back-grabs (from behind, OR during the victim's RECOVERY) are guaranteed and hit harder.
@@ -153,9 +154,15 @@ export class MeleeSystem {
       // wind-up. Budget the added step to the approach, without erasing any
       // player-earned momentum. Full 3D approach follows the committed aim.
       const approach=f._meleeMotion.point.clone().sub(f.center(new THREE.Vector3()));
-      lunge=Math.min(lunge,Math.max(0,approach.length()-3.8)/(S.startup+S.active*.5)*pace);
+      const profile=meleeApproach(f.def,f.airborne),distance=approach.length();
+      const eligible=distance<=profile.range&&distance>3.8;
+      lunge=Math.min(eligible?profile.speed:lunge,Math.max(0,distance-3.8)/(S.startup+S.active*.5)*pace);
       if(!f.airborne)approach.y=0;
-      f._meleeMotion.step=approach.normalize().multiplyScalar(lunge);
+      f._meleeMotion.step=approach.clone().normalize().multiplyScalar(lunge);
+      f._meleeMotion.approachOrigin=f.pos.clone();f._meleeMotion.approachEnabled=distance<=profile.range;
+      f._meleeMotion.approachDistance=eligible?Math.max(0,(f.flying?approach.length():Math.hypot(approach.x,approach.z))-3.8):0;
+      if(eligible&&!f.airborne&&profile.arc>0&&distance>9){f.vel.y=Math.max(f.vel.y,profile.arc);f.burstT=Math.max(f.burstT,S.startup+S.active);}
+      f._meleeMotion.family=profile.family;
       f.vel.add(f._meleeMotion.step);
     } else { f.vel.x += f.aim.x * lunge; f.vel.z += f.aim.z * lunge; }
     if (kind === 'heavy') {
@@ -263,7 +270,8 @@ export class MeleeSystem {
     const foe = contact || g.coneFoe(f, f.strikeIdx === 2 ? STRIKES.cross.reach : STRIKES.jab.reach, 0.75);
     if (!(foe && f.strikeHit && !f.strikeHit.has(foe.id))) return;
     f.strikeHit.add(foe.id);
-    const fin = f.strikeIdx === 2 && f.mId === 'cross';
+    // A jab-only style still needs the shared spacing finisher in PowerWorld.
+    const fin = f.strikeIdx === 2 && (f._openSky || f.mId === 'cross');
     // MOMENTUM (air) / MEASURED SWING (ground): an arriving punch is a different animal. BLOCKED hits
     // stay at BASE — the multiplier raises the reward, never what a raised guard has to eat.
     const mom = swingMult(f), dive = f._momDive && (f._momSpd || 0) > 20;
@@ -275,7 +283,7 @@ export class MeleeSystem {
     const hs = (fin ? .12 : .065) * weight.stop;
     const local=contact?f._meleeMotion.naniteContact:null;
     const imp = local?local.point.clone():contact ? f._meleeMotion.impact.clone() : foe.pos.clone().add(f.pos).multiplyScalar(0.5).add(new THREE.Vector3(0,5.7,0));
-    const damageOpts={ src: f, naniteContact:local,strike: true, meleeMove:'light', contactFx: !!contact, hitstop: hs,
+    const damageOpts={ src: f, naniteContact:local,strike: true, meleeMove:'light',finisher:fin, contactFx: !!contact, hitstop: hs,
       dmgClass: this._swingKind(f) === 'blade' ? 'slash' : undefined,   // claw/blade kits jab with STEEL — wounds (manual §12)
       kb: { x: f.aim.x * (fin ? 20 : 8) * kbs * weight.push, y: (fin ? 8 : 2) * kbs, z: f.aim.z * (fin ? 20 : 8) * kbs * weight.push },
       launch: dive && !blocked ? -(34 + (f._momSpd || 0) * 0.45) : 0 };   // DIVE PUNCH
@@ -381,6 +389,7 @@ export class MeleeSystem {
     if (!f) return;
     const grabber=f.grabbedBy,holder=grabber||f;
     const carried=holder._personCarry?.victim;
+    const departing=holder.grabbing;if(departing&&this.game.modeId==='powerworld')departing._regrabUntil=(this.game.time||0)+.65;
     if(carried?.grabbedBy===holder){carried.grabbedBy=null;if(carried.state==='hit')carried.state='idle';}
     holder._personCarry=null;
     this.clearInput(holder);holder._clinchFinisher=null;holder._clinchPunch=null;holder._clinchStrikeCd=0;
@@ -399,7 +408,7 @@ export class MeleeSystem {
     // One extension from the original contact; activation cannot restart it.
     const spent=Math.max(f._clinchElapsed||0,(f._clinchMax||4)-f.grabT);
     f.grabT=Math.max(0,Math.min(8,(f._clinchMax||4)*2)-spent);
-    this.game.hud?.feed?.('CARRY · move / flight · hold grab: whirl · release: throw · J: set down','#ffd24a');
+    this.game.hud?.feed?.('CARRY · move / flight · hold E: aim throw · release: throw · tap E: release','#ffd24a');
     return true;
   }
 
@@ -531,17 +540,18 @@ export class MeleeSystem {
         }
       }
       const obstacle={};
-      if(sweepSplitObstacle(this.game.world||{},from,current,.42,obstacle,false,.42)&&obstacle.t<=first&&obstacle.target?.onConstructHit){
+      if(sweepSplitObstacle(this.game.world||{},from,current,.42,obstacle,false,.42)&&obstacle.t<=first&&(obstacle.target?.onConstructHit||obstacle.target?.frontlineVehicle||obstacle.target?.frontlineAircraft)){
         const impact=from.clone().lerp(current,obstacle.t),construct=obstacle.target.construct;
         const origin=frame?.targets.get(f)?.position?.clone().lerp(f.pos,obstacle.t)||f.pos;
         if(impact.distanceTo(origin)<=STRIKES[f.mId].reach){
           // Consume the same swing before a synchronous ki collapse can remove
           // the proxy. Objects never enter guard/counter/Fighter resolution.
-          f.strikeHit.add(construct);m.impact.copy(impact);foe=null;m.naniteContact=null;
+          f.strikeHit.add(construct||obstacle.target);m.impact.copy(impact);foe=null;m.naniteContact=null;
           const wound=1-.08*(f._wounds?.arm||0),jab=f.sheet?.jabMult||1,mom=swingMult(f);
           const heavy=f.mKind!=='light',weight=punchWeight(f,heavy),fin=f.strikeIdx===2&&f.mId==='cross';
           const damage=(heavy?(f.mHay?20+f.mP*14:13)*(f.mHay?1:jab):(fin?17:8)*jab)*weight.damage*f.powerBuff*wound*mom;
-          construct.receiveHit(damage,{src:f,pos:impact,lane:'melee'});
+          if(construct)construct.receiveHit(damage,{src:f,pos:impact,lane:'melee'});
+          else {this.game.damageBlock(obstacle.target,damage,impact,f);this.game.vfx.contact(impact,f.aim3,{color:'#ffd18a',power:heavy?1.5:.7});}
           f.hitstop=Math.max(f.hitstop,(heavy?(f.mHay?.17:.09):(fin?.108:.039))*weight.stop);
           this.game.audio.meleeHit(heavy?1.3:.65,impact,heavy);
           if(!heavy&&f.strikeIdx<2)f.comboWin=.42;
@@ -610,7 +620,7 @@ export class MeleeSystem {
       if (f.grabT <= 0) {
         // ⚠ a WRESTLER closes from further out — the style's whole identity is getting inside
         const foe = g.coneFoe(f, STRIKES.grab.reach + ((styleOf(f.def).grabBonus) || 0), 0.95);
-        if (foe && !foe.phase && foe.invuln <= 0 && !foe.grabbedBy && foe.alive && fighterPathFraction({radius:0,sizeScale:1},g.world,f.center(new THREE.Vector3()),foe.center(new THREE.Vector3()))===1) {
+        if (foe && (foe._regrabUntil||0)<=(g.time||0) && !foe.phase && foe.invuln <= 0 && !foe.grabbedBy && foe.alive && fighterPathFraction({radius:0,sizeScale:1},g.world,f.center(new THREE.Vector3()),foe.center(new THREE.Vector3()))===1) {
           const bx = f.pos.x - foe.pos.x, bz = f.pos.z - foe.pos.z, bd = Math.hypot(bx, bz) || 1;
           const geoBehind = (bx / bd) * foe.aim.x + (bz / bd) * foe.aim.z < -0.2;
           // ⚠ THE VULNERABILITY RULE (martial.js §THE CLINCH): grabbing them during their RECOVERY
@@ -661,11 +671,16 @@ export class MeleeSystem {
       // front-grab escape (teleport / phase) at the midpoint
       if (f._victimEscape && (isTransportingPerson(f)?f._clinchElapsed>=f._clinchEscapeAt:f.grabT <= (f._clinchMax || 0.4) * 0.5)) {
         f._victimEscape = false;
-        if (v.teleEscape && v.ki > 14) { v.ki -= 14; g.afterimage(v); v.pos.x -= f.aim.x * 22; v.pos.z -= f.aim.z * 22; v.invuln = 0.35; g.audio.teleport(); }
-        else { v.invuln = 0.4; }
-        g.vfx.flash(v.pos.clone().setY(v.pos.y + 5), v.def.colors.accent, 6, 0.2);
-        this.release(f);v.state='idle';
-        return;
+        // Admission was sampled at contact. Recheck the actual escape at its
+        // commitment point: lost teleport energy cannot invent a phase trait.
+        const teleport=v.teleEscape && v.ki > 14;
+        if(teleport || v.canPhase){
+          if (teleport) { v.ki -= 14; g.afterimage(v); v.pos.x -= f.aim.x * 22; v.pos.z -= f.aim.z * 22; v.invuln = 0.35; g.audio.teleport(); }
+          else { v.invuln = 0.4; }
+          g.vfx.flash(v.pos.clone().setY(v.pos.y + 5), v.def.colors.accent, 6, 0.2);
+          this.release(f);v.state='idle';
+          return;
+        }
       }
       if (f.grabT <= 0) {this._breakFree(f);return;}
       if(f._clinchPunch) {

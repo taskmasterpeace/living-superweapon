@@ -313,6 +313,7 @@ body:not(.playing) #frontlineObjective,body:not(.playing) #zombieObjective,body:
 @media (max-width:640px){ #hEstablish .eststats{ grid-template-columns:1fr 1fr } }
 /* --- THE DAMAGE CODEX --- */
 .lswovl .dgbox{ max-width:64rem; }
+#hDamage{ z-index:65; }
 .lswovl .dgsub{ font-size:var(--t-sm); color:var(--text-3); line-height:1.62; margin-bottom:14px; }
 .lswovl .dgsec{ font-family:var(--f-mono); font-size:var(--t-micro); letter-spacing:var(--tr-wider); color:var(--text-5);
   border-top:1px dashed var(--line-gold); padding-top:10px; margin:16px 0 8px; }
@@ -325,7 +326,7 @@ body:not(.playing) #frontlineObjective,body:not(.playing) #zombieObjective,body:
 .lswovl .dgline b{ flex:0 0 62px; color:var(--text-5); letter-spacing:var(--tr-wide); font-weight:400; }
 .lswovl .dgline span{ color:var(--text-3); min-width:0; overflow-wrap:anywhere; }
 .lswovl .dgline.dgw span{ color:var(--danger); }
-@media (max-width:680px){ .lswovl .dgrow{ flex-direction:column; gap:6px; } .lswovl .dgtag{ align-self:stretch; } }
+@media (max-width:680px){ .lswovl .dgrow{ flex-direction:column; gap:6px; } .lswovl .dgtag{ flex:0 0 auto; align-self:flex-start; padding:7px 10px; } }
 .lswovl .hsec .ht{ font-size:var(--t-sm); letter-spacing:.18em; color:var(--gold-pale); text-transform:uppercase; margin-bottom:5px; }
 .lswovl .hsec .hb{ font-size:var(--t-md); color:var(--text-2); line-height:1.65; }
 .lswovl .hsec .hb b{ color:var(--gold); }
@@ -1025,6 +1026,8 @@ body.combat-chase:not(.phone):not(.tablet) #hud .cityplate{
   font-size:10px; line-height:1.4; letter-spacing:.03em; overflow-wrap:anywhere; padding:7px 10px;
 }
 body.combat-chase:not(.phone):not(.tablet) #hud .feed{ top:160px; max-width:260px; }
+body.scanner-active.combat-chase #hud .feed{top:300px;max-width:260px}
+body.transport-passenger #hud .slots,body.transport-passenger #hInteract{display:none!important}
 
 /* The rear-view fighter owns the bottom center. Readouts form one right-hand dock;
    optional hands/charge rows participate in flow instead of covering the power row.

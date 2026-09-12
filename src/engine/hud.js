@@ -1,5 +1,8 @@
 // WAR WORLD: ASCENDANTS — DOM HUD + character-select screen.
 import { CodexMixin } from './hudCodex.js';
+import {attackGuide,attackMatchup} from './combat-guide.js';
+import {damageBadges} from './damage-symbols.js';
+import {playerStatus} from './player-status.js';
 import {unitsToMeters} from '../core/world-units.js';
 import {firearmStatus} from './firearm-ammo.js';
 import {firearmSightZoom} from './firearm-aim.js';
@@ -204,7 +207,7 @@ export class HUD {
       <div class="panel feed" id="hFeed"></div>
       <div class="panel foe" id="hFoe" style="display:none">
         <div class="fn" id="foeName">RIVAL</div>
-        <div class="bar"><i class="fhpF" id="foeHp" style="width:100%"></i></div>
+        <div class="bar"><i class="fhpF" id="foeHp" style="width:100%"></i></div><div class="foe-conditions"></div>
       </div>
       <div class="status-dock">
       <div class="panel pl">
@@ -534,7 +537,7 @@ export class HUD {
   // Rebuilt whenever the control scheme changes so it always shows YOUR bindings, not defaults.
   buildHintBody() {
     const el = this.root.querySelector('#hHintBody'); if (!el) return;
-    const K = keymap(SETTINGS.scheme);
+    const K = this.game?.modeId==='powerworld'?{...keymap(SETTINGS.scheme),strikeLabel:'V',grabLabel:'E',guardLabel:'Q / MOUSE4',guard:'KeyQ',downLabel:'CTRL',itemLabel:'X',digitsSwap:false}:keymap(SETTINGS.scheme);
     const soldier=this.game?.player?.def.archetype==='soldier'&&(this.game.modeId==='powerworld'||this.game.player._openSky);
     const grp = (title, rows) => `<div class="hgrp"><div class="hgt">${title}</div>${rows.filter(Boolean).map(([k, d]) => `<div class="hgr"><b>${k}</b><span>${d}</span></div>`).join('')}</div>`;
     const wheelSel = K.wheel === 'ability';
@@ -544,6 +547,19 @@ export class HUD {
     const P = padActive(pad);
     const G = (a) => glyph(a, pad);
     this._hintPad = P;                                   // so armHintTimer can re-render on change
+    if(this.game?.modeId==='powerworld'&&P&&this.game.humans?.length!==2){
+      el.innerHTML=grp('MOVE & AIM', [['LEFT / RIGHT STICK','move / look'],['R3','focus / release target'],['VIEW / TOUCHPAD HOLD','independent free look with right stick'],['L3','tap, then hold again for movement gears'],['B / CIRCLE','evade']])+
+        grp('COMBAT', [['X / SQUARE','strike · hold heavy'],['LB / L1','guard'],['RB / R1','interact / grab · hold again and release to throw'],['RT / R2 · LT / L2','primary · secondary power']])+
+        grp('POWERS & EQUIPMENT', [['D-PAD LEFT / RIGHT','tap: cycle · hold: power picker'],['RIGHT STICK (PICKER)','choose · release D-pad to assign · B cancels'],['Y / TRIANGLE','gadget · hold for inventory'],['D-PAD DOWN + X / SQUARE','reload equipped firearm'],['VIEW / TOUCHPAD TAP','inventory']])+
+        grp('FLIGHT & SYSTEM', [['A / CROSS','jump / rise'],['D-PAD UP','toggle flight'],['D-PAD DOWN','crouch / descend'],['MENU / OPTIONS','pause']]);return;
+    }
+    if(this.game?.modeId==='powerworld'&&!P){
+      el.innerHTML=grp('MOVE & AIM', [['WASD','move'],['MOUSE','aim'],['ALT (HOLD)','look around without changing travel or attack aim'],['T','focus / release target'],['C (HOLD)','crouch'],['Z','evade'],['SHIFT','tap, release, then hold again for faster movement']])+
+        grp('MELEE & INTERACT', [['V','tap: strike and approach · hold: heavy'],['Q / MOUSE4','hold guard · same on ground and in air'],['E','interact / grab · move to carry'],['E (CARRYING)','hold to aim throw · release to throw · tap to let go']])+
+        grp('POWERS & EQUIPMENT', [['LMB / RMB','primary / secondary attack'],['WHEEL','select primary'],['TAB + WHEEL','select secondary'],['TAB (HOLD)','power picker'],['1–4','additional powers'],['X','use gadget · hold for gadget picker'],['I','inventory'],['R','reload equipped firearm']])+
+        grp('FLIGHT & SYSTEM', [['F','toggle flight when supported'],['SPACE','jump / rise'],['CTRL','descend'],['F3','character roster'],['ESC','pause'],['F1','this panel']]);
+      return;
+    }
     el.innerHTML = P
       ? grp('MOVE & AIM', [[G('move'), 'move'], [G('aim'), 'aim'], combatView(this.game)==='bfp'?['L1 + R3','lock / release target']:null, [G('dash'), 'tap, then hold for movement gears'], ['2×FLICK', 'evade']]) +
         grp('MELEE', [[G('strike'), 'tap = jab · HOLD = haymaker'], [G('grab'), 'grab · hoist a car/tree'], [G('guard'), 'guard (hold)']]) +
@@ -765,8 +781,9 @@ export class HUD {
     if (!f || !g || !g.running || !verb || (verb === 'grab' && !h)) { el.style.display = 'none'; return; }
     el.style.display = 'flex';
     const soldier=f.def.archetype==='soldier'&&(f._openSky||g.modeId==='powerworld');
-    if(soldier&&verb!=='interact'){el.style.display='none';return;}
-    el.innerHTML = `<b style="color:var(--gold,#ffd24a)">${soldier?'E':'G'}</b><span>${(LABEL[verb] || verb).toUpperCase()}</span>` +
+    if(soldier&&g.modeId!=='powerworld'&&verb!=='interact'){el.style.display='none';return;}
+    const action=g.modeId==='powerworld'&&(f.grabbing||f._carry)?'HOLD: AIM THROW · TAP: RELEASE':(LABEL[verb]||verb).toUpperCase();
+    el.innerHTML = `<b style="color:var(--gold,#ffd24a)">${g.touch?.enabled?'TAP':g.modeId==='powerworld'||soldier?'E':'G'}</b><span>${action}</span>` +
       (h && verb === 'interact' ? `<span style="color:var(--text-5,#8b8577)">— ${String(h.label).toUpperCase()}</span>` : '');
   }
 
@@ -1061,12 +1078,24 @@ export class HUD {
       <div class="hsec"><div class="ht">Gadgets & The Meter</div><div class="hb"><b>X</b> uses your carried gadget (beacon, medkit, flashbang…) · low ki opens <em>OVERDRIVE</em> — your fists refill the tank · leveling up climbs <em>TIERS</em>: your aura and your meter literally grow</div></div>
       <div class="hsec"><div class="ht">Attacks & The Rest</div><div class="hb"><b>WHEEL</b> selects LMB attack · <b>RMB + WHEEL</b> selects RMB attack (release, then fire) · <b>[ ]</b> swaps hero · <b>TAB</b> melee / restore attacks in PowerWorld; roster in City · <b>F3</b> PowerWorld roster · <b>B</b> rival · <b>ESC</b> pause · <b>M</b> mute · 🎮 sticks move/aim · R2/L2 powers · ▢ ○ melee · L1 guard · ✕ fly</div></div>
       <div class="hsec"><div class="ht">The Golden Rule</div><div class="hb">The LeFevre threat scale is real — a Street-tier human <em>should</em> lose to a Cosmic superweapon. Lopsided is honest. Pick your fights, or forge your own weapon in <b>ORIGIN</b>.</div></div>
-      <div class="hsec"><div class="ht">Damage Types</div><div class="hb">Every hit has a <em>type</em> — physical, ballistic, energy, fire, cold, toxic, acid — and every fighter resists them differently. A machine <em>cannot</em> be poisoned; <b>ACID</b> eats the armour that stops bullets. Open the codex for the full table.</div></div>
+      <div class="hsec"><div class="ht">Damage Types</div><div class="hb">Every hit has a <em>type</em> — physical, ballistic, energy, fire, cold, toxic, acid, magic — and every fighter resists them differently. A machine <em>cannot</em> be poisoned; <b>ACID</b> eats the armour that stops bullets. Character selection shows your resistances and weaknesses. Your selected attacks show damage type; hit feedback says RESISTED, VULNERABLE or IMMUNE. Magic attacks drain energy and are resisted by Resolve.</div></div>
+      <div class="hsec"><div class="ht">Conditions & Recovery</div><div class="hb"><b>BLEEDING:</b> movement reopens wounds; remain still for four seconds to clot. <b>BLIND:</b> leave smoke; lock and aim assistance are unavailable. <b>SLEEP:</b> damage wakes the victim; machines cannot sleep. <b>STUN / SHOCK:</b> actions stop and flyers fall; recovery gives a brief immunity window. Shock lasts longer on machines. <b>FROST:</b> leave the cold before buildup reaches full; frozen targets can be shattered by a heavy hit. <b>CORRODED:</b> armor is weakened, so avoid gunfire. Burning and poison keep dealing damage until their timers expire or are purged. Guard break creates a short opening: create distance before re-engaging.</div></div>
       <button class="odone" id="howtoDmg">☣ Open the Damage Codex</button>
       <button class="odone" id="howtoVis">◈ Open the Visual Language</button>
       <button class="odone" id="howtoTut">🎓 Play the Tutorial — learn by doing</button>
       <button class="odone oghost">Got It — Let's Fight</button>
     </div>`;
+    if(this.game?.modeId==='powerworld'){
+      const copy={
+        'Move & Aim':'WASD moves · mouse aims · T focuses/releases the viewed target · hold ALT to look around while preserving travel and attack aim · C crouches · Z evades.',
+        'Powers':'LMB / RMB fire the selected attacks · WHEEL selects primary · TAB + WHEEL selects secondary · hold TAB for the power picker · 1–4 use additional powers. Hold chargeable attacks to build power, then release. Watch your energy.',
+        'The Melee Triangle':'V taps strike and approach; hold V for a heavy attack. Q / Mouse4 guards on ground or in air. E interacts or grabs. Strike can interrupt a grab; grab threatens guard; guard stops frontal strikes using energy. Watch the guard meter and recovery openings.',
+        'Flight':'F toggles supported flight · SPACE jumps or rises · CTRL descends · release rise to hover when supported. Tap SHIFT, release, then hold again for faster movement. Character movement capabilities set the available speed tiers.',
+        'Gadgets & The Meter':'X uses the selected gadget; hold X to open its picker. I opens inventory. R reloads an equipped firearm. Movement tiers do not occupy power slots.',
+        'Attacks & The Rest':'E grabs a valid target; move to carry. While carrying, hold E to aim a throw and release to throw; tap E to let go. F3 opens character selection · ESC pauses · F1 shows the controls.'
+      };
+      for(const section of this.howtoEl.querySelectorAll('.hsec')){const text=copy[section.querySelector('.ht')?.textContent];if(text)section.querySelector('.hb').textContent=text;}
+    }
     const seen = () => { try { localStorage.setItem('threshold_howto_seen', '1'); } catch {} this.howtoEl.style.display = 'none'; };
     this.howtoEl.querySelector('.oghost').onclick = seen;
     this.howtoEl.querySelector('#howtoDmg').onclick = () => this.showDamage();
@@ -1986,7 +2015,7 @@ export class HUD {
   buildSlots(def) {
     this.el.slots.innerHTML = '';
     this.slotEls = {};
-    this._toolScheme=keymap(SETTINGS.scheme).mouseMelee===true;this._toolKey=null;
+    this._toolScheme=this.game?.modeId!=='powerworld'&&keymap(SETTINGS.scheme).mouseMelee===true;this._toolKey=null;
     // THESIS: two readable triggers lead; the compact kit remains available underneath.
     // OWN-WORLD: existing warm dark/gold combat dock, original attack silhouettes.
     // STORY/FIRST VIEW: identify LMB and RMB at a glance without covering the fighter.
@@ -1995,7 +2024,7 @@ export class HUD {
     this.triggerEls={};
     for(const side of ['primary','secondary']){
       const el=document.createElement('div');el.className='trigger-attack';el.dataset.trigger=side;
-      el.innerHTML=`<span class="trigger-bind">${side==='primary'?'LMB':'RMB'}<small>${side==='primary'?'WHEEL':'RMB + WHEEL'}</small></span><span class="trigger-art"></span><span class="trigger-name"></span><span class="trigger-status"></span>`;
+      el.innerHTML=`<span class="trigger-bind">${side==='primary'?'LMB':'RMB'}<small>${side==='primary'?'WHEEL':this.game?.modeId==='powerworld'?'TAB + WHEEL':'RMB + WHEEL'}</small></span><span class="trigger-art"></span><span class="trigger-name"></span><span class="trigger-damage"></span><span class="trigger-status"></span>`;
       pair.appendChild(el);this.triggerEls[side]=el;
     }
     this.el.slots.appendChild(pair);
@@ -2008,7 +2037,7 @@ export class HUD {
     for (const { k, label } of SLOT_ORDER) {
       const a = def.abilities[k]; if (!a) continue;
       const tactical=def.archetype==='soldier'&&(this.game?.modeId==='powerworld'||this.game?.player?._openSky);
-      const binding=k==='shift'?'WHEEL':tactical?String(['lmb','rmb','q','e','f','r'].indexOf(k)+1):def.archetype==='soldier'&&k==='r'?'WHEEL':label;
+      const binding=this.game?.modeId==='powerworld'?({q:'1',e:'2',f:'3',r:'4',shift:'WHEEL'}[k]||label):k==='shift'?'WHEEL':tactical?String(['lmb','rmb','q','e','f','r'].indexOf(k)+1):def.archetype==='soldier'&&k==='r'?'WHEEL':label;
       const d = document.createElement('div');
       d.className = 'slot' + (k === 'r' ? ' ult' : '');
       // ⚠ THE CHIP NOW SAYS WHAT IT IS. A name alone ("Heat Ray", "Prince's Pride") does not tell you
@@ -2165,6 +2194,11 @@ export class HUD {
       const status=side==='secondary'&&p._mouseCombat?.blocked?'RELEASE TO READY':sight?(p._firearmReload?'LOWERED · RELOADING':firearmSightZoom(p)>1?'AIMING · LMB FIRE':p._scopeHeld?'SIGHT UNAVAILABLE':'HOLD TO AIM'):locked?`LEVEL ${unlockLevel(p.def,k)}`:firearmStatus(p,k)||(st?._handsBusy?'HANDS OCCUPIED':st?._handsRetry?'RELEASE TO RETRY':st?.charging?'CHARGING':active?.pendingLaunch?'ALIGNING':active?.sustaining?'FIRING':st?.cd>.05?`${st.cd.toFixed(1)}s`:st&&p.ki<attackEntryCost(def)?'LOW ENERGY':k==='melee'?'TAP / HOLD HEAVY':k==='grab'?'GRAB / THROW':'READY');
       if(el._def!==def||el._sightName!==sightName){el._def=def;el._sightName=sightName;el.querySelector('.trigger-art').innerHTML=sight?icon('range',26):attackIcon(def);el.querySelector('.trigger-name').textContent=sightName||def.name;el.title=sight?'Hold RMB to aim this rifle; LMB fires. RMB + wheel still selects the secondary for other primary attacks.':def.name+' — '+(st?describeAbility(def):status);}
       if(el._status!==status){el._status=status;el.querySelector('.trigger-status').textContent=status;el.classList.toggle('unavailable',!!locked||status==='LOW ENERGY'||status==='HANDS OCCUPIED'||status==='RELEASE TO RETRY');}
+      const payload=def.type==='bow'?(def.payloads||['explosive','flame','poison'])[(p._quiverIdx||0)%(def.payloads?.length||3)]:undefined;
+      const target=visibleTarget(g,g.hardLock)?g.hardLock:visibleTarget(g,g.lockTarget)?g.lockTarget:null;
+      const match=attackMatchup(def,target,payload);
+      const damage=sight?'':attackGuide(def,payload).label+(match?' / '+match:'');
+      if(el._damage!==damage){el._damage=damage;const node=el.querySelector('.trigger-damage'),guide=attackGuide(def,payload);node.innerHTML=sight?'':damageBadges(guide.types);if(!sight)node.append(document.createTextNode((guide.effects.length?' · '+guide.effects.join(' · '):'')+(match?' / '+match:'')));}
     }
     // syncCombatView above is the HUD-side cleanup safety net for paused/menu
     // frames; updateCrosshair owns position and lock colour in the native game loop.
@@ -2246,6 +2280,8 @@ export class HUD {
       const vil = g.police && g.police.wantedLevel(foe) > 0 ? '  ·  🚨 VILLAIN' : '';
       this.el.foeName.textContent = foe.name + '  ·  Lv' + foe.level + '  ·  ' + (foe.def.title || '') + vil;
       this.el.foeHp.style.width = clamp(foe.hp / foe.maxHp * 100, 0, 100) + '%';
+      const conditions=playerStatus(foe).effects.filter(e=>e.harmful).map(e=>e.label+(e.remaining?' '+e.remaining+'s':'')).join(' · ');
+      const node=this.el.foe.querySelector('.foe-conditions');if(node&&node.textContent!==conditions)node.textContent=conditions;
     } else this.el.foe.style.display = 'none';
     // the wanted meter — the city has opinions about who hurts humans
     if (g.police) {
@@ -2375,7 +2411,3 @@ export class HUD {
 // mixins so `this` still means the HUD and every existing call site is untouched. The shared
 // helpers they all needed went to hudUtil.js FIRST, which is what keeps this acyclic.
 Object.assign(HUD.prototype, CodexMixin, BroadcastMixin, TitleMixin, SelectMixin);
-
-
-
-

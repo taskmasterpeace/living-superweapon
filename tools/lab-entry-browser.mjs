@@ -1,0 +1,20 @@
+import {chromium} from 'playwright';
+import {mkdir,writeFile} from 'node:fs/promises';
+const out='artifacts/marketing/lab-entry';await mkdir(out,{recursive:true});
+const browser=await chromium.launch({headless:false}),context=await browser.newContext({viewport:{width:1440,height:900},recordVideo:{dir:out,size:{width:1440,height:900}}}),page=await context.newPage(),errors=[];
+page.on('pageerror',e=>errors.push(e.message));
+try{
+ await page.goto('http://127.0.0.1:5182/powerworld.html');await page.locator('#hSelect.on').waitFor();await page.waitForTimeout(1200);await page.keyboard.press('Enter');await page.getByRole('button',{name:'Enter with squad',exact:true}).click();
+ await page.waitForFunction(()=>window.PW?.game?.ms?.threatLab?.state==='preparing',{}, {timeout:90000});await page.waitForTimeout(1200);
+
+ await page.keyboard.press('g');await page.keyboard.down('w');await page.waitForTimeout(850);await page.keyboard.up('w');
+ await page.waitForFunction(()=>window.PW.game.ms.convoyOperation?.depot?.sites.length>0,{}, {timeout:30000});
+
+ await page.evaluate(()=>{const g=window.PW.game,s=g.pwStage.researchLab.site;g.player.pos.set(s.x-9,s.y,s.z+32);g.player.vel.set(0,0,0);g.player.flying=false;g.world._lookYaw=Math.PI;g.world._lookPitch=0;g.player.faceDir(0,-1);});
+ await page.waitForTimeout(600);await page.keyboard.press('g');await page.waitForTimeout(500);console.log(await page.evaluate(()=>({focus:window.PW.game._focus?.id,verb:window.PW.game._focus?.verb})));
+ if(await page.evaluate(()=>window.PW.game.pwStage.researchLab.doorHandle.verb==='OPEN'))await page.keyboard.press('g');await page.waitForTimeout(400);await page.screenshot({path:out+'/door.png'});
+ await page.keyboard.down('w');for(let n=0;n<40;n++){await page.waitForTimeout(60);if(await page.evaluate(()=>window.PW.game.player.pos.z<window.PW.game.pwStage.researchLab.site.z+1))break;}await page.keyboard.up('w');await page.waitForTimeout(500);await page.screenshot({path:out+'/inside.png'});
+ await page.keyboard.down('d');for(let n=0;n<50;n++){await page.waitForTimeout(100);if(n%10===0)console.log(await page.evaluate(()=>{const f=window.PW.game.player;return {pos:f.pos.toArray(),vel:f.vel.toArray(),move:f.moveDir,aim:f.aim,state:f.state,stagger:f.staggerT,frozen:f.frozenT};}));if(await page.evaluate(()=>window.PW.game.player.pos.x>=window.PW.game.ms.convoyOperation.cacheMesh.position.x-3))break;}await page.keyboard.up('d');await page.waitForTimeout(350);await page.evaluate(()=>{const g=window.PW.game,t=g.ms.convoyOperation.cacheMesh.position,p=g.player.pos;g.world._lookYaw=Math.atan2(t.x-p.x,t.z-p.z);});await page.waitForTimeout(400);await page.keyboard.press('g');await page.waitForTimeout(300);await page.screenshot({path:out+'/cache.png'});
+ const result=await page.evaluate(()=>{const g=window.PW.game,s=g.pwStage.researchLab.site;return {player:g.player.pos.toArray(),site:s,door:g.pwStage.researchLab.doorHandle.verb,aim:g.player.aim,cacheEnabled:g.interactables.find(h=>h.id==='research-cache')?.enabled(g.player),cache:g.ms.convoyOperation.cache,radius:g.player.radius,blocks:g.world.cover.filter(c=>Math.abs(c.x-g.player.pos.x)<(c.hx??c.r)+g.player.radius+.02&&Math.abs(c.z-g.player.pos.z)<(c.hz??c.r)+g.player.radius+.02).map(c=>({id:c.buildingPieceId,bottom:c.bottom,top:c.top,finite:c.finiteBuilding,x:c.x,z:c.z,hx:c.hx,hz:c.hz})),focus:g._focus?.id};});
+ await writeFile(out+'/result.json',JSON.stringify({kind:'Staged lab approach then native G interactions and W entrance movement',result,errors},null,2));console.log(result);if(!result.cache)throw Error('Cache not collected');await page.evaluate(()=>{const g=window.PW.game;g.ms.convoyOperation.scientist.takeDamage(10000,{src:g.player,dtype:'physical'});});await page.getByText('Supplies +0 · Research +15',{exact:true}).waitFor();const settled=await page.evaluate(()=>window.PW.game.campaign.snapshot());if(settled.research!==15)throw Error('Cache reward wrong');await writeFile(out+'/settlement.json',JSON.stringify(settled,null,2));await page.screenshot({path:out+'/cache-reward.png'});if(errors.length)throw Error(errors.join('\n'));
+}finally{await context.close();await browser.close();}

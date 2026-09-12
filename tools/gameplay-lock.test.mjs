@@ -13,6 +13,11 @@ function fixture(angle=0,range=80){
 test('T deliberately acquires a near-crosshair foe and always releases on its next press',()=>{
  const f=fixture(4);assert.equal(f.acquire(),f.foe);assert.equal(f.acquire(),null);
 });
+test('practice dummy supports the same explicit focus and release as a combat target',()=>{
+ const f=fixture(4);f.foe.isDummy=true;
+ assert.equal(f.acquire(),f.foe);assert.equal(f.acquire(),null);
+ f.g.canSee=()=>false;assert.equal(f.acquire(),null);
+});
 for(const angle of [20,60,100])test(`T cannot acquire a foe ${angle} degrees away from the crosshair`,()=>{
  const f=fixture(angle);assert.equal(f.acquire(),null);
 });

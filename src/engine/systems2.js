@@ -3,6 +3,7 @@
 // readable tell and a counter for each, and every one cleans up after itself.
 import * as THREE from 'three';
 import {snapshotHeroSkins} from './hero-skin.js';
+import {operationSound} from './operation-audio.js';
 
 // ============================================================================================
 // 4 · DUPLICATES — true AI clones that SHARE ONE HEALTH POOL.
@@ -354,12 +355,13 @@ export function domeAt(game, pos, r, dur, owner) {
   m.position.copy(pos); game.scene.add(m);
   const d = { x: pos.x, y: pos.y, z: pos.z, r, t: dur, owner, mesh: m, hp: 260 };
   (game._domes = game._domes || []).push(d);
-  game.audio.zap(520, pos);
+  if(!operationSound(game,'op.shield.deploy',pos,d))game.audio.zap(520, pos);
   return d;
 }
 // a projectile asks the dome whether it may pass: ALLIED fire leaves, hostile fire flattens
-export function domeBlocks(game, proj) {
-  for (const d of (game._domes || [])) {
+export function domeBlocks(game, proj, contactedDome = null) {
+  for (const d of (contactedDome ? [contactedDome] : (game._domes || []))) {
+    if(d.hp<=0||d.t<=0)continue;
     const dx = proj.pos.x - d.x, dy = proj.pos.y - d.y, dz = proj.pos.z - d.z;
     const dist = Math.hypot(dx, dy, dz);
     if (dist > d.r) continue;
@@ -367,7 +369,7 @@ export function domeBlocks(game, proj) {
     d.hp -= proj.damage || 8;
     // small light petals where allied fire leaves; a flat stress pattern where hostile fire hits
     game.vfx.ring(proj.pos.clone(), { color: d.owner.def.colors.accent, r0: 0.5, r1: 3.5, life: 0.22 });
-    game.audio.zap(700, proj.pos);
+    if(d.hp>0){if(game.audio?.sample)operationSound(game,'op.shield.hit',proj.pos,d);else game.audio.zap(700,proj.pos);}
     return true;
   }
   return false;
@@ -378,6 +380,7 @@ export function updateDomes(game, dt) {
     const d = D[i]; d.t -= dt;
     d.mesh.material.opacity = 0.1 + 0.08 * Math.abs(Math.sin(game.time * 2)) * Math.max(0, d.hp / 260);
     if (d.t <= 0 || d.hp <= 0) {
+      operationSound(game,'op.shield.collapse',d.mesh.position,d);
       game.vfx.ring(new THREE.Vector3(d.x, d.y, d.z), { color: d.owner.def.colors.accent, r0: d.r, r1: 1, life: 0.35 });
       game.scene.remove(d.mesh); d.mesh.geometry.dispose(); d.mesh.material.dispose();
       D.splice(i, 1);

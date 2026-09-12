@@ -81,7 +81,8 @@ export const BroadcastMixin = {
             <span class="sat" id="nSat"><i></i> Satellite desk update</span>
           </div>
           <div class="nhead" id="nHead">${esc(b.headline)}</div>
-          <div class="nsub">${rep.arena ? 'Arena report' : 'Special report'} · <b>${esc(b.district)}</b> · this ${esc(b.timeWord)}</div>
+          <div class="nsub">${rep.operation ? 'Operation report' : rep.arena ? 'Arena report' : 'Special report'} · <b>${esc(b.district)}</b> · this ${esc(b.timeWord)}</div>
+          ${result.operation?`<section class="board" aria-label="Operation outcome"><div class="bh">${esc(result.title)} <em>MISSION RECEIPT</em></div>${(result.lines||[]).map(line=>`<p style="padding:0 14px;line-height:1.5">${esc(line)}</p>`).join('')}</section>`:''}
           <div class="nscript" id="nScript"></div>
           <div class="wcard" id="nWit" style="display:none"></div>
           <div class="nboards${rep.arena ? ' arena-report' : ''}">
@@ -218,4 +219,3 @@ export const BroadcastMixin = {
     this._tvRaf = requestAnimationFrame(loop);
   },
 };
-

@@ -83,7 +83,7 @@ export function buildReport(g, result) {
     // The proving ground has a sports crew, not a city desk. Its cached city plan, counters
     // and police state belong to the theatre underneath it and are not facts about this bout.
     rep.arena = true;
-    if(['outbreak','clone-recovery'].includes(result.operation))rep.operation={id:result.operation,lines:(result.lines||[]).filter(line=>typeof line==='string').slice(0,8)};
+    if(['outbreak','clone-recovery','research-convoy'].includes(result.operation))rep.operation={id:result.operation,lines:(result.lines||[]).filter(line=>typeof line==='string').slice(0,8)};
     rep.district = md === 'powerworld' ? 'POWERWORLD' : 'ASCENDANCE ARENA';
     rep.place = null; rep.city = { civs: 0, cars: 0, blocks: 0, craters: 0, cops: 0 };
     rep.policeEv = []; rep.responseS = 0;
@@ -279,7 +279,7 @@ function writeArenaBroadcast(rep) {
   const rng = mulberry((rep.clock * 1000 + (W?.name.length || 5)) | 0);
   const headline = rep.operation ? `${rep.title} · ${D}` : rep.draw ? `DRAW IN ${D}` : W && L ? `${W.name} DEFEATS ${L.name} IN ${D}`
     : W ? `${W.name} WINS ${D} BOUT` : `${D} SESSION COMPLETE`;
-  const participants = names.length === 2 ? `${names[0]} versus ${names[1]}.`
+  const participants = rep.operation ? `Personnel recorded in the operation: ${names.join(', ') || 'none'}.` : names.length === 2 ? `${names[0]} versus ${names[1]}.`
     : names.length ? `${names.length} combatants took part: ${names.join(', ')}.` : 'No combatants were recorded.';
   const decision = rep.operation ? `The operation ${rep.win?'succeeded':'failed'} at ${fmtClock(rep.clock)}. ${rep.operation.lines.join(' ')}` : rep.draw ? `The bout ended in a draw at ${fmtClock(rep.clock)}.`
     : W ? `${W.name} takes the result after ${fmtClock(rep.clock)} of arena action.`
@@ -295,7 +295,7 @@ function writeArenaBroadcast(rep) {
   script.push({ who: rep.reporter, text: `From ${D} — ${titleCase(rep.reporter)}, KMK 9 Action News. Back to the desk.` });
   return {
     headline, kicker: rep.operation ? (rep.win?'OPERATION COMPLETE':'OPERATION FAILED') : rep.draw ? 'ARENA DRAW' : W ? 'ARENA RESULT' : 'ARENA REPORT', script,
-    ticker: [headline, `BOUT TIME ${fmtClock(rep.clock)}`, `PARTICIPANTS: ${names.join(' · ') || 'NONE RECORDED'}`, 'KMK 9 — FIELD COVERAGE'],
+    ticker: [headline, `${rep.operation?'OPERATION':'BOUT'} TIME ${fmtClock(rep.clock)}`, ...(rep.operation?rep.operation.lines.slice(0,2):[]), `PARTICIPANTS: ${names.join(' · ') || 'NONE RECORDED'}`, 'KMK 9 — FIELD COVERAGE'],
     witness: null, est: 0, district: D, timeWord: timeWord(rep.dayT), clockStr: clockStr(rep.dayT),
     anchorName: pick(rng, ANCHORS),
   };

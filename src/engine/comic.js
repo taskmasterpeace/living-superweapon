@@ -1,3 +1,4 @@
+import {damageSymbol} from './damage-symbols.js';
 // THE COMIC LAYER — captions, speech balloons and sound effects, anchored to the fight.
 //
 // Robert: "do the caption layer, obsess over details, and find a comic book font for speech
@@ -275,7 +276,7 @@ export class Comic {
     const it=this.sfx(text,pos,opts),feedback=opts.feedback;
     if(feedback){
       it.node.classList.add('impact-'+feedback.id);it.node.dataset.impact=feedback.id;it.node.setAttribute('aria-label',feedback.label||text);
-      const label=document.createElement('span');label.className='impact-label';label.textContent=feedback.label;it.node.appendChild(label);
+      const label=document.createElement('span');label.className='impact-label';label.innerHTML=damageSymbol(feedback.dtype,17);label.append(document.createTextNode(feedback.label));it.node.appendChild(label);
     }
     return it;
   }

@@ -1,0 +1,5 @@
+import {test} from 'node:test';import assert from 'node:assert/strict';import {buildingContact} from '../src/engine/building-contact.js';
+const actor={feet:0,previousFeet:0,headHeight:11,velocityY:0,flying:false,launched:false};
+test('upper slab leaves ground-floor clearance and catches rising heads',()=>{const p={bottom:15,top:16,standable:true};assert.equal(buildingContact(actor,p),'below');assert.equal(buildingContact({...actor,feet:5,previousFeet:3,velocityY:15},p),'ceiling');});
+test('descending actor lands on a slab',()=>{assert.equal(buildingContact({...actor,feet:15.8,previousFeet:16.2,velocityY:-3},{bottom:15,top:16,standable:true}),'land');});
+test('step-up is limited to steps, height and unlaunched ground movement',()=>{const p={bottom:0,top:2.3,standable:true,buildingRole:'step'};assert.equal(buildingContact(actor,p),'step');assert.equal(buildingContact({...actor,launched:true},p),'wall');assert.equal(buildingContact(actor,{...p,top:4}),'wall');assert.equal(buildingContact(actor,{...p,buildingRole:'blocker'}),'wall');});

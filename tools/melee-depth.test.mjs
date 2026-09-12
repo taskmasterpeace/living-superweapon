@@ -24,6 +24,12 @@ function fixture(strength=5) {
 }
 function withFixture(fn,str=5){const x=fixture(str);try{return fn(x);}finally{x.close();}}
 
+test('PowerWorld jab-only third beat creates a spacing finisher without a custom cross',()=>withFixture(({a,b,m,hits})=>{
+ a._openSky=true;a.strikeIdx=0;a.mId='jab';a.strikeHit=new Set();m._resolveLight(a);
+ const light=Math.hypot(hits[0].o.kb.x,hits[0].o.kb.z);b.invuln=0;a.strikeIdx=2;a.strikeHit=new Set();m._resolveLight(a);
+ assert.equal(hits.length,2);assert.equal(hits[1].o.finisher,true);assert.ok(Math.hypot(hits[1].o.kb.x,hits[1].o.kb.z)>light*2);
+}));
+
 for(const action of ['strike','chargeStart','grab'])test(`native ${action} takes pose ownership from a released ranged attack`,()=>withFixture(({a,m})=>{
  a._castPoseRanged=true;m[action](a);
  assert.equal(a.state,'cast');assert.equal(a._castPoseRanged,false,'Native melee inherited the beam recovery owner');
@@ -100,6 +106,13 @@ test('catching an exposed windup or recovery rewards a counter; idle and guard d
   assert.equal(base.labels.length,0);
 });
 test('heavy startup grants no free invulnerability',()=>withFixture(({a,m})=>{m._beginHeavy(a,'power',1,true);assert.equal(a.invuln,0);}));
+
+test('a resolved strike interrupts grab startup before it can mature into a hold',()=>withFixture(({a,b,m,step})=>{
+ m.grab(a);assert.equal(a.grabState,'startup');const hp=a.hp;
+ b.mId='jab';b.mKind='light';b.strikeIdx=0;b.strikeHit=new Set();m._resolveLight(b);
+ assert.ok(a.hp<hp,'the counter must resolve real damage');assert.equal(a.grabState,null);
+ step(.4);assert.equal(a.grabbing,null);assert.equal(b.grabbedBy,null);
+}));
 test('clinch tap delivers a body blow with a cooldown and spends hold time',()=>withFixture(({a,b,m,clinch,step})=>{
   clinch();const t=a.grabT,hp=b.hp;m.chargeStart(a);m.chargeRelease(a);
   assert.equal(b.hp,hp,'body blow has a visible windup');step(.15);

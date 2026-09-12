@@ -1,4 +1,7 @@
 import {CAMERA_DEFAULTS} from './flight-tuning.js';
+// PowerWorld's default is a right rear-quarter view. A positive shoulder moves
+// the eye camera-right, leaving the player to the left of the aiming area.
+export const POWERWORLD_BACKSIDE_CAMERA=Object.freeze({...CAMERA_DEFAULTS,shoulder:6});
 
 // An explicit close presentation option, not a replacement for calibrated BFP.
 export const FRONTLINE_CAMERA=Object.freeze({...CAMERA_DEFAULTS,range:20,height:6,shoulder:3.5,fov:68});
@@ -21,5 +24,5 @@ export function cameraProfileOf(subject,preference=null){
   for(const key of ['fov','range'])if(Number.isFinite(preference[key]))profile[key]=preference[key];
   return profile;
  }
- return subject._cameraPreset==='frontline'?FRONTLINE_CAMERA:subject.def?.model?.camera;
+ return subject._cameraPreset==='frontline'?FRONTLINE_CAMERA:subject.def?.model?.camera||(subject._openSky?POWERWORLD_BACKSIDE_CAMERA:undefined);
 }

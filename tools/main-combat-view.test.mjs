@@ -9,6 +9,18 @@ import {HUD} from '../src/engine/hud.js';
 const policyPath=new URL('../src/engine/combat-view.js',import.meta.url);
 const policy=existsSync(policyPath)?await import(policyPath):{};
 const state=()=>({modeId:'freeroam',running:true,mode:{},ms:{roam:true},player:{alive:true},humans:[{}],hud:{titleOpen:false}});
+
+test('native modal retains combat ownership and disarms rather than drops carried person',()=>{
+ const fixture=mainCombatFixture({mode:'powerworld'}),{g,p}=fixture;
+ try{
+  g.powerPicker={isOpen:true};g.prepareCombatView(1/60);
+  assert.equal(g.combatOverlayOpen,true);assert.equal(g.input.pointerLock,false);
+  const carry={throwArmed:true,whirling:true};p._personCarry=carry;
+  g.retireCombatViewInput(p,{preserveCarry:true});
+  assert.equal(p._personCarry,carry);assert.equal(carry.throwArmed,false);assert.equal(carry.whirling,false);
+  p._personCarry=null;
+ }finally{fixture.close();}
+});
 test('city view policy is independent of fighter/world simulation identity',()=>{
  assert.equal(typeof policy.combatView,'function','Missing camera-only view policy');
  const g=state(),before=structuredClone(g);

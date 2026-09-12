@@ -8,6 +8,7 @@
 import { SLOT_ORDER } from '../data/characters.js';
 import { visLine, visOf } from '../data/visual.js';
 import { identityOf } from '../data/identities.js';
+import {attackGuide} from './combat-guide.js';
 
 export const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
@@ -115,6 +116,10 @@ export function describeEvade(ev) {
 }
 
 export function describeAbility(a) {
+  const facts=attackGuide(a).label;
+  return describeAbilityAction(a)+(facts?' — '+facts:'');
+}
+function describeAbilityAction(a) {
   if (a.type === 'grapple') return `Grapnel line — reel to rooftops or ledge-hang (${a.range || 95}u)`;
   switch (a.type) {
     case 'beam': return (a.charge ? 'Chargeable ' : '') + 'steerable energy beam' + (a.radius > 2 ? ' (wide)' : ' (thin)');

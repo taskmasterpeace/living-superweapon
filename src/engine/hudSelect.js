@@ -1,3 +1,5 @@
+import {damageBadges,damageSymbol} from './damage-symbols.js';
+import {createFieldFootage} from './field-footage-view.js';
 // SELECT YOUR CHARACTER — the arena-fighter select screen (DBZ filmstrip), Steam-Deck first.
 //
 // A horizontal filmstrip of the 52 roster as accent CARDS, scrolling so the selection stays
@@ -25,7 +27,8 @@ import { identityOf } from '../data/identities.js';
 import { icon } from './icons.js';
 import { glyph, padActive } from '../core/glyphs.js';
 import { profileOf, visOf } from '../data/visual.js';
-import { describeAbility, slotFacts } from './hudUtil.js';
+import { describeAbility, slotFacts, esc } from './hudUtil.js';
+import {attackGuide,resistanceGuide} from './combat-guide.js';
 
 // 1u ≈ 0.19m (TRUE 1:1 SCALE, CLAUDE.md); the hero is 9.6u = 1.8m. Everything the studio draws is in
 // world units, so the figure and a power's footprint stand at their real relative sizes by construction.
@@ -58,6 +61,13 @@ const SEL_CSS = `
   color:var(--gold,#ffd24a);border:1px solid var(--line-gold,rgba(245,178,26,.35));border-radius:20px;padding:5px 14px;text-transform:uppercase}
 #hSelect .selstage{flex:1;display:flex;align-items:center;gap:24px;padding:0 40px;min-height:0}
 #hSelect .selcvwrap{position:relative;flex:1.15;height:100%;display:flex;align-items:center;justify-content:center;min-width:0}
+#hSelect .selchannel{position:absolute;inset:4% 0 8%;pointer-events:none;overflow:hidden;opacity:.42;mask-image:radial-gradient(ellipse,#000 25%,transparent 72%)}
+#hSelect .selchannel .field-footage{width:100%;height:100%;border:0;background:none;padding:0}
+#hSelect .selchannel .field-footage>*{display:none}
+#hSelect .selchannel .field-footage .ff-screen{display:block;width:100%;height:100%;border:0;border-radius:0;background:none}
+#hSelect .selchannel canvas{width:100%;height:100%;object-fit:cover}
+#hSelect .selchannel .ff-empty,#hSelect .selchannel .ff-expand,#hSelect .selchannel .ff-bug{display:none}
+#hSelect.powon .selchannel{display:none}
 #hSelect .selaura{position:absolute;left:50%;top:50%;width:78%;height:88%;transform:translate(-50%,-50%);
   border-radius:50%;filter:blur(6px);pointer-events:none;opacity:.9;animation:selpulse 3.4s ease-in-out infinite}
 @keyframes selpulse{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.06)}}
@@ -79,7 +89,12 @@ const SEL_CSS = `
   color:var(--text-2,#c9c2b4);background:var(--surface,rgba(8,10,16,.55));border:1px solid var(--line,rgba(255,255,255,.08));
   border-left:3px solid var(--pc,#ffd24a);border-radius:8px;padding:8px 12px}
 #hSelect .selchip svg{flex:none;opacity:.85}
+#hSelect .selcombat{display:flex;flex-wrap:wrap;gap:5px;font-size:12px;line-height:1.4}
+#hSelect .selcombat span{padding:3px 5px;background:var(--surface-1,#171b20);border-left:2px solid var(--pc)}
+#hSelect .selcombat .weak{border-color:#ff9a73}
+#hSelect .selcombat strong{flex-basis:100%;letter-spacing:.06em;color:var(--text-3,#b4afa3)}
 #hSelect .selchip.lead{color:var(--text,#e8e2d6);font-weight:700}
+
 #hSelect .selstrip{position:relative;height:150px;margin-top:4px;overflow:hidden;
   -webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);
   mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)}
@@ -160,6 +175,42 @@ const SEL_CSS = `
 #hSelect.powon .selstrip,#hSelect.powon .selbar{opacity:.32;filter:saturate(.5);pointer-events:none;transition:opacity .25s}
 #hSelect .selgrid{position:absolute;left:16px;top:14px;z-index:3;font-family:var(--f-mono,monospace);font-size:10px;
   letter-spacing:.12em;color:var(--text-5,#8b8577);background:rgba(6,7,11,.5);border-radius:6px;padding:4px 9px;pointer-events:none}
+@media(max-width:600px){
+ #hSelect .seltop{padding:16px 16px 8px;flex-wrap:wrap;gap:8px;flex-shrink:0;}
+ #hSelect .seltitle{font-size:21px;letter-spacing:.06em;}
+ #hSelect .selkick{display:none;}
+ #hSelect .selmode{font-size:9px;padding:4px 8px;}
+ #hSelect .selstage{flex-direction:column;align-items:stretch;overflow-y:auto;gap:8px;padding:0 16px 12px;}
+ #hSelect .selcvwrap{flex:none;height:210px;width:100%;}
+ #hSelect .selinfo{flex:none;max-width:none;gap:8px;padding:0;}
+ #hSelect .selname{font-size:34px;}
+ #hSelect .selttl{font-size:12px;}
+ #hSelect .selbadges{gap:4px;}
+ #hSelect .selbadge{font-size:10px;padding:4px 6px;}
+ #hSelect .selchips{gap:4px;margin:0;}
+ #hSelect .selchip{font-size:12px;padding:6px;}
+ #hSelect .selstrip{height:114px;min-height:114px;flex-shrink:0;}
+ #hSelect .scard{width:64px;height:88px;}
+ #hSelect .selbar{gap:9px;padding:10px 8px;flex-wrap:wrap;flex-shrink:0;font-size:10px;}
+}
+@media (orientation:landscape) and (max-height:600px){
+ body.is-touch #hSelect .seltop{flex:none;height:38px;box-sizing:border-box;padding:8px 18px;align-items:center}
+ body.is-touch #hSelect .seltitle{font-size:20px;letter-spacing:.08em;white-space:nowrap}
+ body.is-touch #hSelect .selkick{display:none}
+ body.is-touch #hSelect .selstage{flex:1;min-height:0;padding:0 18px;gap:18px;overflow:hidden}
+ body.is-touch #hSelect .selcvwrap{height:100%;flex:1}
+ body.is-touch #hSelect .selinfo{align-self:stretch;flex:1;overflow-y:auto;min-height:0;gap:6px;padding:6px 4px}
+ body.is-touch #hSelect .selname{font-size:30px}
+ body.is-touch #hSelect .selfile{font-size:9px}
+ body.is-touch #hSelect .selttl{font-size:11px}
+ body.is-touch #hSelect .selbadge{font-size:9px;padding:3px 6px}
+ body.is-touch #hSelect .selchip{padding:5px 8px;font-size:11px}
+ body.is-touch #hSelect .selstrip{flex:none;height:90px;min-height:90px;margin:0}
+ body.is-touch #hSelect .selstripInner{top:12px}
+ body.is-touch #hSelect .scard{width:56px;height:68px}
+ body.is-touch #hSelect .scard.on{transform:scale(1.08) translateY(-3px)}
+ body.is-touch #hSelect .selbar{flex:none;gap:12px;padding:4px 12px;font-size:10px;letter-spacing:.04em}
+}
 `;
 
 // One WebGLRenderer + scene, built lazily, reused for the whole session. figure(def) is pure
@@ -185,6 +236,7 @@ export const SelectMixin = {
     if (this.root) { this._selRootVis = this.root.style.visibility; this.root.style.visibility = 'hidden'; }   // no stray HUD hint bleeding through
     if (this.game && this.game.uinav) this.game.uinav.enabled = false;   // we own the pad while open
     this._selSelect(this._sel.idx, true);
+    this._sel.channel.open();
     this._selResize();
     this._selLoop();
   },
@@ -193,6 +245,7 @@ export const SelectMixin = {
     if (!this._sel) return;
     if (this._powOpen) this._selPowersClose();   // never leave the studio open under the closed screen
     this._selOpen = false;
+    this._sel.channel.close();
     this._sel.el.classList.remove('on');
     if (this.title) this.title.style.visibility = this._selTitleVis || 'visible';
     if (this.root) this.root.style.visibility = this._selRootVis || 'visible';
@@ -211,6 +264,7 @@ export const SelectMixin = {
       </div>
       <div class="selstage">
         <div class="selcvwrap">
+          <div class="selchannel" aria-hidden="true" inert></div>
           <div class="selaura" id="selAura"></div>
           <div class="selfloor"></div>
           <canvas id="selCv"></canvas>
@@ -220,6 +274,8 @@ export const SelectMixin = {
       <div class="selstrip"><div class="selstripInner" id="selStrip"></div></div>
       <div class="selbar" id="selBar"></div>`;
     document.body.appendChild(el);
+    const channel=createFieldFootage(this.game);
+    el.querySelector('.selchannel').appendChild(channel.el);
     const strip = el.querySelector('#selStrip');
     const cards = ROSTER.map((d, i) => {
       const c = d.colors || {};
@@ -241,6 +297,7 @@ export const SelectMixin = {
       return card;
     });
     this._sel = {
+      channel,
       el, strip, cards, info: el.querySelector('#selInfo'), aura: el.querySelector('#selAura'),
       mode: el.querySelector('#selMode'), bar: el.querySelector('#selBar'),
       cv: el.querySelector('#selCv'), idx: 0, three: null, padPrev: {},
@@ -271,6 +328,16 @@ export const SelectMixin = {
   },
 
   _selBar() {
+    if(this.game?.touch){
+      this._sel.bar.innerHTML='';
+      for(const [label,action] of [['Previous character',()=>this._selStep(-1)],['Select character',()=>this._selConfirm()],['Next character',()=>this._selStep(1)]]){
+        const button=document.createElement('button');button.type='button';button.textContent=label;
+        button.style.cssText='min-height:44px;padding:8px 14px;border:1px solid #bd9637;border-radius:6px;background:#151510;color:#ffd24a;font:inherit;cursor:pointer';
+        if(label==='Select character'){button.style.background='#ffd24a';button.style.color='#151510';}
+        button.onclick=action;this._sel.bar.append(button);
+      }
+      return;
+    }
     const pad = this.game && this.game.pad;
     const on = padActive(pad);
     const g = (a) => glyph(a, pad);
@@ -310,6 +377,7 @@ export const SelectMixin = {
   _selSelect(i, immediate) {
     const S = this._sel; S.idx = i;
     const def = ROSTER[i];
+    S.channel.setHero(def.id);
     this.selectedHero = def.id;
     // depth falloff: the selection blooms, its two neighbours each side read as "nearer", the rest recede
     S.cards.forEach((c, k) => {
@@ -353,6 +421,8 @@ export const SelectMixin = {
       + `<div class="selchips">`
         + facts.map(([ic, t, lead]) => `<div class="selchip${lead ? ' lead' : ''}">${icon(ic, 15)}<span>${t}</span></div>`).join('')
       + `</div>`
+      + `<div class="selcombat"><strong>DAMAGE & CONDITIONS</strong><span>${damageBadges([...new Set(Object.values(def.abilities||{}).flatMap(a=>attackGuide(a).types))])} ${esc([...new Set(Object.values(def.abilities||{}).flatMap(a=>attackGuide(a).effects))].join(' · '))}</span></div>`
+      + `<div class="selcombat"><strong>RESISTANCES & WEAKNESSES</strong>${resistanceGuide(def).map(r=>`<span class="${r.kind}">${damageSymbol(r.type)} ${esc(r.label)}</span>`).join('')||'<span>Standard damage from all types</span>'}</div>`
       + `<div class="selpowbtn" id="selPowBtn">${icon('might', 14)} POWERS · 1:1 SCALE</div>`;
     const btn = info.querySelector('#selPowBtn');
     if (btn) btn.onclick = () => this._selPowersOpen();

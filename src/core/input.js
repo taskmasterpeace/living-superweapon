@@ -59,28 +59,30 @@ export class Input {
       this._lastCX=this._lastCY=null;this.mouse.dx=this.mouse.dy=0;
       // Esc/Alt-Tab can release capture without a window blur. Cancel only an
       // acquired lock: a denied request must retain the cursor-delta fallback.
-      if(wasLocked&&!this.mouse.locked)this.cancel();
+      if(wasLocked&&!this.mouse.locked){if(!this._retiredPointerLock)this.cancel();this._retiredPointerLock=false;}
     });
     canvas.addEventListener('mouseleave',()=>{this._lastCX=this._lastCY=null;});
     canvas.addEventListener('mousedown', (e) => {
       // arm the lock only when the chase view asked for it — a click in the city never grabs the pointer
-      if (this.pointerLock && document.pointerLockElement !== canvas) { try { canvas.requestPointerLock(); } catch (_) {} }
+      if (this.pointerLock && document.pointerLockElement !== canvas) { try { canvas.requestPointerLock()?.catch?.(()=>{}); } catch (_) {} }
       setMouse(e); this.anyGesture = true;
       if (e.button === 0) { this.mouse.left = true; this.mouse.leftEdge = true; }
       if (e.button === 2) { this.mouse.right = true; this.mouse.rightEdge = true; }
       if (e.button === 3) { this.mouse.b3 = true; e.preventDefault(); }        // side buttons → guard
       if (e.button === 4) { this.mouse.b4 = true; e.preventDefault(); }
+      if(e.button===4&&this.independentCombat){this.keys.add('KeyV');this.justPressed.add('KeyV');}
     });
     addEventListener('mouseup', (e) => {
       if (e.button === 0) { this.mouse.left = false; this.mouse.leftUp = true; }
       if (e.button === 2) { this.mouse.right = false; this.mouse.rightUp = true; }
       if (e.button === 3) this.mouse.b3 = false;
       if (e.button === 4) this.mouse.b4 = false;
+      if(e.button===4&&this.independentCombat){this.keys.delete('KeyV');this.justReleased.add('KeyV');}
     });
     canvas.addEventListener('contextmenu', (e) => e.preventDefault());
     canvas.addEventListener('wheel', (e) => {
       const direction=Math.sign(e.deltaY);this.wheel+=direction;
-      if(this.mouse.right||(e.buttons&2))this.wheelSecondary+=direction;else this.wheelPrimary+=direction;
+      if(this.independentCombat?this.down('Tab'):(this.mouse.right||(e.buttons&2)))this.wheelSecondary+=direction;else this.wheelPrimary+=direction;
       e.preventDefault();
     }, { passive: false });
     addEventListener('blur', () => this.cancel());

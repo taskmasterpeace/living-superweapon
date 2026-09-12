@@ -7,6 +7,11 @@ import {VFX} from '../src/engine/vfx.js';
 import {Particles3D} from '../src/engine/particles3d.js';
 function fixture(run){const scene=new Scene(),camera=new PerspectiveCamera(60,16/9,.1,1000);camera.position.set(0,160,-30);const f=new Fighter(ROSTER.find(d=>d.id==='sol')),p=new Particles3D(scene,32),vfx=new VFX({scene,camera},p);scene.add(f.obj);Object.assign(f,{_openSky:true,flying:true,gait:'airborne',cruiseHeld:true,_burnT:2});f.pos.set(0,160,0);f.vel.set(0,0,110);try{run({f,vfx,camera});}finally{f.dispose();vfx.update(1);p.geo.dispose();p.mat.dispose();}}
 function trail(f,vfx){vfx.flightWake(f);for(let i=0;i<20;i++){f.pos.z+=1;vfx.update(1/120);}return f._flightWake;}
+
+test('newest near-body wake remains readable after a long flight',()=>fixture(({f,vfx})=>{
+ const wake=trail(f,vfx);for(let i=0;i<300;i++){f.pos.z+=2;vfx.update(1/120);}
+ const alpha=wake.mesh.geometry.attributes.aAlpha;assert.ok(alpha.getX((wake.n-1)*4)>.15,'near-body wake was tapered away');
+}));
 test('non-finite fighter motion cannot poison wake geometry or retain an effect forever',()=>fixture(({f,vfx})=>{
  const wake=trail(f,vfx);f.pos.x=NaN;for(let i=0;i<60;i++)vfx.update(1/60);
  assert.ok(Array.from(wake.mesh.geometry.attributes.position.array).every(Number.isFinite),'invalid upstream position reached GPU vertices');

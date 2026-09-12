@@ -5,6 +5,8 @@ import { HOLD_TYPES, holdTimeFor } from './abilityMeta.js';
 import { rand, chance, pick } from '../core/util.js';
 import {remoteAttack,remoteInRange} from './remote-control.js';
 import {slotUnlocked} from '../data/progression.js';
+import {updateSquadReport} from './squad-reports.js';
+import {zombieAwareness} from './zombie-audio.js';
 
 // HOLD + holdTime derive from TYPE_META — ONE registration point per type (review item 2).
 const HOLD = HOLD_TYPES;
@@ -174,6 +176,8 @@ export class AI {
       this._lastSeen = false;
     }
 
+    updateSquadReport(this,game,real,sees);
+    zombieAwareness(game,b,sees);
     if (!sees) {
       // ⚠ THE HONESTY LAW: with no line of sight the bot knows NOTHING about where the foe is.
       // It may only act on BELIEF — a remembered sighting, a noise it heard, a teammate's call.

@@ -7,6 +7,41 @@ import {mainCombatFixture} from './helpers/main-combat-fixture.mjs';
 import {createFreeLook,advanceFreeLook,FREE_LOOK_DEFAULTS} from '../src/core/free-look.js';
 
 const view=w=>w.camera.getWorldDirection(new THREE.Vector3());
+for(const interior of [false,true])for(const air of [false,true])for(const sign of [-1,1])test(`Alt shoulder slide respects nearby cover: interior=${interior}, air=${air}, side=${sign}`,()=>{
+ const x=setup('sol',air);try{
+  x.p.obj.position.copy(x.p.pos);x.p.obj.updateMatrixWorld(true);
+  const eye=x.w.camera.position.clone();
+  const wall={x:eye.x+sign*5,z:eye.z,hx:.5,hz:10,top:200};
+  if(interior)x.w.interiors.push({top:200,walls:[wall]});else x.w.cover.push(wall);
+  x.control(0);const base=x.w.camera.position.clone(),aim=x.p.aim3.clone();
+  assert.ok(base.distanceTo(eye)<.01,'Fixture obstructed the original camera');
+  x.g.input.keys.add('AltLeft');x.g.input.mouse.dx=-sign*1000;x.control(1/60);
+  const camera=x.w.camera;
+  assert.ok(x.w._camNearestT(...base.toArray(),...camera.position.toArray(),.8)>=1-1e-6,'Alt camera crossed the side wall');
+  assert.ok(camera.position.distanceTo(base)>.1,'Obstacle disabled free-look slide entirely');
+  assert.ok(x.p.aim3.angleTo(aim)<1e-7,'Wall-constrained view changed combat aim');
+  x.g.input.endFrame();x.g.input.keys.delete('AltLeft');
+  let previous=camera.position.clone();
+  for(let i=0;i<90;i++){
+   x.control(1/60);
+   assert.ok(x.w._camNearestT(...base.toArray(),...camera.position.toArray(),.8)>=1-1e-6,'Release crossed the wall');
+   assert.ok(camera.position.distanceTo(previous)<1,'Release snapped beside the obstacle');previous.copy(camera.position);
+  }
+  assert.ok(camera.position.distanceTo(base)<.01,'Release did not recover its original eye');
+ }finally{x.close();}
+});
+for(const air of [false,true])for(const dy of [-250,250])test(`vertical Alt framing retains the rig: air=${air}, dy=${dy}`,()=>{
+ const x=setup('sol',air);try{
+  x.p.obj.position.copy(x.p.pos);x.p.obj.updateMatrixWorld(true);
+  const aim=x.p.aim3.clone(),fov=x.w.camera.fov;
+  x.g.input.keys.add('AltLeft');x.g.input.mouse.dx=-380;x.g.input.mouse.dy=dy;x.control(1/60);
+  x.w.camera.updateMatrixWorld(true);
+  const anchors=[x.p.parts.head,x.p.parts.legL.userData.boot,x.p.parts.legR.userData.boot];
+  for(const part of anchors){const point=part.getWorldPosition(new THREE.Vector3()).project(x.w.camera);
+   assert.ok(Math.abs(point.y)<.92,`Rig anchor clipped at ${point.y}`);}
+  assert.equal(x.w.camera.fov,fov);assert.ok(x.p.aim3.angleTo(aim)<1e-7);
+ }finally{x.close();}
+});
 function setup(hero='sarge',air=false){
  const x=mainCombatFixture({hero,mode:'powerworld'});x.g.ms.chaseCam=true;x.p._openSky=true;
  if(air){x.p.gait='airborne';x.p.flying=true;x.p.pos.y=80;}

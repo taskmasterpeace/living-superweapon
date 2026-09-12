@@ -3,7 +3,7 @@ import {WAKE_DEFAULTS} from '../data/flight-tuning.js';
 
 // World-space slipstreams. Bounded spatial samples preserve the travelled
 // curve without turning old energy into a beam that swings with the fighter.
-const CAPACITY=128,SPACING=.75;
+const CAPACITY=256,SPACING=.75;
 const finite=v=>Number.isFinite(v.x)&&Number.isFinite(v.y)&&Number.isFinite(v.z);
 export class FlightWake {
   constructor(world,fighter){
@@ -51,7 +51,7 @@ export class FlightWake {
     const active=visible&&f.obj.parent&&f.alive&&f._openSky&&f.airborne&&speed>30&&settings.intensity>0;
     if(!visible)this.n=0;
     if(active){
-      const strength=Math.min(1,Math.max(0,(speed-25)/35)),spread=f.cruiseHeld?1.3:1;
+      const strength=Math.min(1,Math.max(0,(speed-25)/35)),spread=(f.cruiseHeld?1.3:1)*(1+.5*speedScale);
       this.idle=0;this.direction.copy(f.vel).normalize();
       f.parts.legL.userData.boot.getWorldPosition(this.footL);f.parts.legR.userData.boot.getWorldPosition(this.footR);
       this.point.copy(this.footL).add(this.footR).multiplyScalar(.5).addScaledVector(this.direction,-.35);
@@ -76,11 +76,11 @@ export class FlightWake {
       if(i===0)this.previousWidth.set(h[j+3],h[j+4],h[j+5]);
       if(this.width.dot(this.previousWidth)<0)this.width.negate();
       this.previousWidth.copy(this.width);
-      const life=Math.max(0,1-this.age[i]/LIFE),taper=Math.sin(Math.PI*(i+.5)/Math.max(1,this.n));
+      const life=Math.max(0,1-this.age[i]/LIFE),taper=Math.sin(Math.PI*.5*(i+.5)/Math.max(1,this.n));
       for(let lane=0;lane<2;lane++)for(let edge=0;edge<2;edge++){
         const index=i*4+lane*2+edge,side=lane?1:-1,w=(edge?1:-1)*settings.width*(.4+.6*life)*taper*this.spread[i];
         p.setXYZ(index,h[j]+h[j+3]*side*2.2+this.width.x*w,h[j+1]+h[j+4]*side*2.2+this.width.y*w,h[j+2]+h[j+5]*side*2.2+this.width.z*w);
-        a.setX(index,settings.intensity*life*taper*this.strength[i]);
+        a.setX(index,Math.min(1,settings.intensity*life*taper*this.strength[i]*(1+.25*speedScale)));
       }
     }
     geometry.setDrawRange(0,Math.max(0,this.n-1)*12);this.mesh.visible=visible&&this.n>1;

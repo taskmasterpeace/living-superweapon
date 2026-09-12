@@ -1,5 +1,6 @@
 import {playerStatus} from './player-status.js';
 import {icon} from './icons.js';
+import {damageSymbol,CONDITION_DAMAGE} from './damage-symbols.js';
 import {HUD_LAYOUT_KEY,hudLayout,hudLayoutPosition,nudgeHudLayout} from './hud-layout.js';
 
 export class PlayerStatusView{
@@ -49,8 +50,14 @@ export class PlayerStatusView{
    const text=key==='guard'&&broken?'⛨ GUARD BREAK':v.infinite?'∞ CORE':`${v.value} / ${v.max}`;
    if(m._text!==text){m._text=text;m.querySelector('strong').textContent=text;m.setAttribute('aria-valuetext',text);}
   }
-  const effects=s.effects.map(e=>`${e.id}:${e.remaining}:${e.label}`).join('|');
-  if(effects!==this.effects){this.effects=effects;this.nodes.effects.replaceChildren();for(const e of s.effects){const el=document.createElement('span');el.className='ps-effect';el.title=e.label;el.setAttribute('aria-label',e.label+(e.remaining?` ${e.remaining} seconds`:''));el.innerHTML=icon(e.glyph,13);if(e.id==='speed')el.append(document.createTextNode(e.label.replace('Speed ','')));if(e.remaining)el.append(document.createTextNode(' '+e.remaining+'s'));this.nodes.effects.appendChild(el);}}
+  const effects=s.effects.map(e=>`${e.id}:${e.remaining}:${e.label}:${e.hint||''}`).join('|');
+  if(effects!==this.effects){this.effects=effects;this.nodes.effects.replaceChildren();for(const e of s.effects){
+   const el=document.createElement('span');el.className='ps-effect'+(e.harmful?' ps-condition':'');el.dataset.effect=e.id;
+   const label=e.label+(e.remaining?` · ${e.remaining}s`:'');el.title=label+(e.hint?' — '+e.hint:'');el.setAttribute('aria-label',el.title);
+   el.innerHTML=damageSymbol(CONDITION_DAMAGE[e.id],15)||icon(e.glyph,13);el.append(document.createTextNode(label));this.nodes.effects.appendChild(el);
+  }
+  const hint=s.effects.find(e=>e.hint)?.hint||'';
+  if(hint){const help=document.createElement('span');help.className='ps-recovery';help.textContent=hint;this.nodes.effects.appendChild(help);}}
   this.nodes.flight.hidden=!s.flight;if(s.flight){this.nodes.flight.textContent=`${s.flight.label} · ${s.flight.speed} km/h`;this.nodes.flight.style.setProperty('--flight-speed',s.flight.ratio);}
   const portraitKey=p.def.id+'|'+p._formKey;
   if(portraitKey!==this.portraitKey){this.portraitKey=portraitKey;this.image.alt=s.name+' — '+s.form;this.image.hidden=true;

@@ -686,6 +686,11 @@ export const DTYPE_FOR_MATERIAL = {
 export function dtypeOf(a) {
   if (!a) return 'energy';
   if (a.dtype) return a.dtype;
+  // Contact semantics precede the generic visual fallback. Steel bullets still
+  // use ballistic armour; an ordinary fist is physical, not a generic energy FX.
+  if (a.type === 'rifle') return 'ballistic';
+  if (!a.material && !a.vis?.material && !a.cold && !a.frost && !a.freeze && !a.sonic &&
+      ['melee', 'rush', 'grab', 'bow', 'tentacle'].includes(a.type)) return 'physical';
   return DTYPE_FOR_MATERIAL[materialOf({ ...a, ...(a.vis || {}) })] || 'energy';
 }
 // Stamp the derived type onto every ability ONCE at boot — the same pattern as
@@ -725,5 +730,3 @@ export function validateVis(roster) {
   }
   return problems;
 }
-
-

@@ -21,6 +21,7 @@ test('native second held gesture pays and activates a dedicated power-up exactly
  x.g.input.keys.clear();x.control();x.g.input.keys.add('ShiftLeft');for(let i=0;i<60;i++){x.control();x.g.input.endFrame();}
  assert.equal(f.ki,70);assert.equal(f.powerBuff,1.7);assert.equal(f.hp,f.maxHp-20);assert.ok(f.powerUp.cd>0);assert.ok(f.powerUp.activeT>0);assert.equal(f.flightTier,3);
  x.g.onMovementPowerupReady(f);assert.equal(f.ki,70,'Cooldown must block repeated requests');
+ assert.equal(f.buffName,'Solar Overload','existing status HUD identifies the active authored form');
  const power=f.powerBuff;runSlot(f,'r',{pressed:true,held:true,dt:1/60},x.g);assert.equal(f.powerBuff,power);assert.equal(f.ki,70);
  }finally{x.close();}
 });
@@ -32,10 +33,20 @@ test('native dedicated action retains energy denial, incapacity, boxing and old 
  }finally{x.close();}
 });
 import {advancePowerUp,powerUpStatus} from '../src/core/power-up-state.js';
+import {refreshCombatPower} from '../src/core/power-up-state.js';
+
+test('last stand and clean-combo bonuses do not compound during a form',()=>{
+ const f={buffT:12,powerBuff:1.7,levelMult:1.1};
+ for(let frame=0;frame<720;frame++)assert.equal(refreshCombatPower(f,.3),1.7*1.3);
+ assert.equal(refreshCombatPower(f,0),1.7,'losing the bonus restores the active form value');
+ f.buffT=0;assert.equal(refreshCombatPower(f,.2),1.1*1.2);
+ f.buffT=10;f.powerBuff=1.6;assert.equal(refreshCombatPower(f,.1),1.6*1.1,'next form establishes its own base');
+});
 test('form HUD separates ready, active, cooldown, empty energy and unsupported; KO retires active form',()=>{
  const x=mainCombatFixture({hero:'kano',mode:'powerworld'}),f=x.p;
  try{x.g.audio={...x.g.audio,yell(){}};f.ki=100;assert.equal(powerUpStatus(f).kind,'ready');x.g.onMovementPowerupReady(f);assert.equal(powerUpStatus(f).kind,'active');advancePowerUp(f,12);assert.equal(powerUpStatus(f).kind,'cooldown');advancePowerUp(f,30);f.ki=0;assert.equal(powerUpStatus(f).kind,'energy');assert.equal(powerUpStatus({}).kind,'unsupported');
  f.ki=100;x.g.onMovementPowerupReady(f);assert.ok(f.powerUp.activeT>0);f._ko();assert.equal(f.powerUp.activeT,0);
+ assert.equal(f.buffT,0,'KO clears the actual active form duration');assert.equal(f.powerBuff,f.levelMult,'KO clears form damage, not only its HUD timer');assert.equal(f.buffName,'');assert.equal(f._buffBasePower,null);
  }finally{x.close();}
 });
 import {AI} from '../src/engine/ai.js';

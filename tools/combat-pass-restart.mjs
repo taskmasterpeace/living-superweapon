@@ -1,0 +1,14 @@
+import {chromium} from 'playwright';import {mkdir,writeFile} from 'node:fs/promises';import assert from 'node:assert/strict';
+const out='artifacts/marketing/combat-pass-2026-09-12/beam-match-restart';await mkdir(out,{recursive:true});
+const b=await chromium.launch({headless:false}),c=await b.newContext({viewport:{width:1440,height:900},recordVideo:{dir:out}}),p=await c.newPage(),v=p.video(),r={errors:[],rounds:[]};p.on('pageerror',e=>r.errors.push(e.message));
+const read=()=>p.evaluate(()=>{const g=PW.game;return {id:g.player.id,beams:g.projectiles.list.filter(b=>b.constructor.name==='BeamHose').length,freeLights:g.vfx.lightPool.length,sceneLights:g.scene.children.filter(o=>o.isPointLight).length,active:!!g.player.slots.rmb.active,charging:!!g.player.slots.rmb.charging,keys:[...g.input.keys]};});
+async function enter(){if(await p.locator('#hSelect.on').isVisible())await p.keyboard.press('Escape');await p.locator('#pwRoster [data-id="vega"]').click();await p.locator('[data-encounter="practice"]').click();await p.locator('#pwGo').click();await p.waitForFunction(()=>PW.game.running&&PW.game.time>.5,null,{timeout:90000});await p.waitForTimeout(600);}
+try{
+ await p.goto('http://127.0.0.1:5182/powerworld.html');await p.locator('#hSelect.on').waitFor();await enter();
+ await p.keyboard.press('F1');await p.waitForTimeout(150);r.help=await p.locator('#hHintBody').textContent();assert.match(r.help,/TAB \+ WHEEL/);assert.match(r.help,/inventory/);assert.doesNotMatch(r.help,/melee \/ restore/);await p.screenshot({path:out+'/controls.png'});await p.keyboard.press('F1');
+ for(let i=0;i<2;i++){
+  await p.mouse.click(720,450,{button:'middle'});await p.mouse.down({button:'right'});await p.waitForTimeout(500);await p.mouse.up({button:'right'});await p.waitForFunction(()=>!!PW.game.player.slots.rmb.active);const active=await read();
+  await p.keyboard.press('Escape');await p.locator('#hPaused [data-p="howto"]').click();await p.waitForTimeout(100);r.howto=await p.locator('.obox').filter({has:p.getByText('How to Play',{exact:true})}).textContent();assert.match(r.howto,/TAB \+ WHEEL/);assert.doesNotMatch(r.howto,/back-grabs can't be escaped/);await p.screenshot({path:out+'/howto.png'});await p.getByRole('button',{name:"Got It — Let's Fight",exact:true}).click();
+  await p.locator('#hPaused [data-p="menu"]').click();await p.waitForTimeout(300);await enter();await p.waitForTimeout(1200);const after=await read();assert.equal(after.beams,0);assert.equal(after.active,false);assert.equal(after.charging,false);assert.equal(after.freeLights,after.sceneLights);assert.equal(after.keys.length,0);r.rounds.push({active,after});
+ }r.passed=!r.errors.length;
+}catch(e){r.failure=String(e);process.exitCode=1;}finally{await p.screenshot({path:out+'/final.png'}).catch(()=>{});await writeFile(out+'/result.json',JSON.stringify(r,null,2));await c.close();await v.saveAs(out+'/native-restart.webm');await b.close();console.log(JSON.stringify(r));}

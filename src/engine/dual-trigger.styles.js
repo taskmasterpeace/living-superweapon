@@ -9,7 +9,7 @@ export const DUAL_TRIGGER_CSS=`
 #hud .trigger-art{grid-row:2/4;align-self:center;}
 #hud .attack-icon{width:28px;height:28px;flex-shrink:0;display:block;}
 #hud .trigger-name{font:600 var(--t-body)/1.25 var(--f-display);overflow-wrap:anywhere;}
-#hud .trigger-status{font:500 var(--t-label)/1.2 var(--f-display);color:var(--text-2);min-height:12px;}
+#hud .trigger-status{grid-column:2;font:500 var(--t-label)/1.2 var(--f-display);color:var(--text-2);min-height:12px;}
 #hud .trigger-attack.unavailable .trigger-status{color:var(--danger-2);}
 #hud .slot .attack-icon{width:24px;height:24px;margin:0 auto 4px;color:var(--gold-pale,#e8cf92);}
 #hud .slot.sel{outline:2px solid var(--gold);outline-offset:0;}

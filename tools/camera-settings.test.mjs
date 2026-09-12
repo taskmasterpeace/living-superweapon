@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {CAMERA_STORAGE_KEY,CAMERA_OPTION_LIMITS,normalizeCameraPreferences,loadCameraPreferences,setCameraPreferences,resetCameraPreferences} from '../src/core/camera-settings.js';
-import {cameraProfileOf,FRONTLINE_CAMERA} from '../src/data/camera-presets.js';
+import {cameraProfileOf,FRONTLINE_CAMERA,POWERWORLD_BACKSIDE_CAMERA} from '../src/data/camera-presets.js';
 import {CAMERA_DEFAULTS} from '../src/data/flight-tuning.js';
 import {LIMITS} from '../src/tool/studio-profile.js';
 import * as THREE from 'three';
@@ -9,6 +9,15 @@ import {World} from '../src/engine/world.js';
 import {Fighter} from '../src/engine/entity.js';
 import {ROSTER} from '../src/data/characters.js';
 const store=()=>{const data=new Map();return {getItem:k=>data.get(k),setItem:(k,v)=>data.set(k,v),removeItem:k=>data.delete(k)};};
+
+test('PowerWorld defaults to rear-quarter framing while explicit centered preference stays centered',()=>{
+ const subject={_openSky:true,def:{}};
+ assert.equal(cameraProfileOf(subject),POWERWORLD_BACKSIDE_CAMERA);
+ assert.equal(cameraProfileOf(subject).fov,CAMERA_DEFAULTS.fov);
+ assert.ok(cameraProfileOf(subject).shoulder>0);
+ assert.equal(cameraProfileOf(subject,{mode:'centered'}).shoulder,0);
+ assert.equal(cameraProfileOf({def:{}}),undefined,'city default remains independent');
+});
 test('invalid storage is ignored and numeric values use Studio bounds',()=>{
  const s=store();for(const value of ['broken','[]','null','{"mode":"unknown"}']){s.setItem(CAMERA_STORAGE_KEY,value);assert.equal(loadCameraPreferences(s),null);}
  assert.deepEqual(normalizeCameraPreferences({mode:'shoulder',fov:999,range:-1}),{mode:'shoulder',fov:85,range:18});

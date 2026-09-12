@@ -34,7 +34,9 @@ export function updateMovementGears(f,input={},dt=0){
  }
  s.held=true;s.gear=Math.min(s.sequence,profile.maxGear);s.limited=s.sequence>profile.maxGear;
  s.holdTime+=elapsed;
- if(s.sequence>=2&&!s.ready&&s.holdTime+1e-9>=POWERUP_HOLD){s.ready=true;powerupReady=true;}
+ // Power-up belongs to the second held press. Advancing to travel stage III
+ // must not retry an active form and show a denial for a successful gear change.
+ if(s.sequence===2&&!s.ready&&s.holdTime+1e-9>=POWERUP_HOLD){s.ready=true;powerupReady=true;}
  f.cruiseHeld=!!f.flying&&s.gear>0;
  return {powerupReady};
 }

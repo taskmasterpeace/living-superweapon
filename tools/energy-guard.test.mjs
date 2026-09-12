@@ -61,6 +61,15 @@ test('infinite core cannot be drained but still has a breakable guard meter',()=
 test('rear hits and unblockable grabs bypass the energy shield',()=>{
  for(const opts of [{src:{pos:new Vector3(0,0,-20)}},{unblockable:true}]){const x=fixture();try{x.hit(30,opts);assert.equal(x.f.hp,970);assert.equal(x.f.ki,100);}finally{x.close();}}
 });
+
+for(const flying of [false,true])for(const rear of [false,true])test(`${flying?'air':'ground'} guard admits only frontal energy-funded contact (${rear?'rear':'front'})`,()=>{
+ const x=fixture();try{
+  x.f.flying=flying;x.f.pos.set(0,flying?80:0,0);
+  x.hit(30,{strike:true,src:{pos:new Vector3(0,x.f.pos.y,rear?-20:20)}});
+  assert.equal(x.f.hp,rear?970:1000);assert.equal(x.f.ki,rear?100:70);
+  assert.equal(x.f.flying,flying,'blocking must not change locomotion mode');
+ }finally{x.close();}
+});
 test('legacy city chip rules remain explicit outside PowerWorld',()=>{
  const x=fixture({openSky:false});try{x.hit(30,{strike:true});assert.ok(Math.abs(x.f.hp-996.4)<1e-8);assert.equal(x.f.ki,100);}finally{x.close();}
 });

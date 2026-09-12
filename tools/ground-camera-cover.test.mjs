@@ -117,7 +117,7 @@ test('first terrain contact behind cover does not change framing discontinuously
 for(const hz of [30,60,120])test(`combined cover/terrain entry, release and lateral exit remain continuous at ${hz} Hz`,()=>{
  const x=fixture(),{w,f,camera}=x,pad=1.4035490833866233,previous=new THREE.Vector3();
  try{
-  w.cover=[{x:0,z:-12,hx:4,hz:2,top:12}];x.step(0);previous.copy(camera.position);
+  w.cover=[{x:0,z:-12,hx:4,hz:2,top:12}];x.step(0);previous.copy(camera.position);const initial=camera.position.clone();
   for(let i=1;i<=hz*8;i++){
    w._lookPitch=89*Math.sin(Math.PI*i/(hz*8))*Math.PI/180;
    w.chase(f,null,1/hz);camera.updateMatrixWorld(true);
@@ -127,7 +127,7 @@ for(const hz of [30,60,120])test(`combined cover/terrain entry, release and late
    previous.copy(camera.position);
   }
   for(let i=0;i<hz;i++)w.chase(f,null,1/hz);
-  assert.ok(Math.abs(camera.position.x)<1e-6,'Release left a shoulder correction');
+  assert.ok(camera.position.distanceTo(initial)<1e-6,'Release failed to restore the original cover-contracted shoulder view');
   w.cover=[{x:0,z:-5,hx:1,hz:1,top:14}];w._lookYaw=-.4814386090661966;w._lookPitch=Math.PI/4;f.pos.x=-10;w.snapChase();w.chase(f,null,1/hz);previous.copy(camera.position);
   for(let i=1;i<=hz*8;i++){
    f.pos.x=-10+20*i/(hz*8);w.chase(f,null,1/hz);camera.updateMatrixWorld(true);
@@ -143,7 +143,7 @@ test('collision arc correction resets on camera snap and new subject',()=>{
  try{
   w._lookYaw=-.4814386090661966;w.cover=[{x:0,z:-5,hx:1,hz:1,top:14}];f.pos.x=-.001;x.step(45);
   w.cover=[];w.snapChase();x.step(0);
-  const ideal=new THREE.Vector3(f.pos.x-Math.sin(w._lookYaw)*25.5,14.4,-Math.cos(w._lookYaw)*25.5);
+  const ideal=new THREE.Vector3(f.pos.x-Math.sin(w._lookYaw)*25.5-Math.cos(w._lookYaw)*6,14.4,-Math.cos(w._lookYaw)*25.5+Math.sin(w._lookYaw)*6);
   assert.ok(camera.position.distanceTo(ideal)<1e-6,'Snap inherited a collision correction');
   w.cover=[{x:0,z:-5,hx:1,hz:1,top:14}];x.step(45);w.cover=[];w._lookPitch=0;
   w.chase(y.f,null,1/60);ideal.x-=f.pos.x;assert.ok(camera.position.distanceTo(ideal)<1e-6,'Another subject inherited a collision correction');

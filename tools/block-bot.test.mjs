@@ -48,6 +48,15 @@ test('bots cannot start point-blank melee before acquisition or without sight',(
   assert.equal(!!a.mstate,false);assert.equal(!!a.grabState,false);assert.equal(a.meleeCharge,0);
  });
 });
+
+for(const [family,distance,expected] of [['pounce',24,true],['bound',30,true],['step',24,false],['pounce',45,false]])
+test(`native bot ${family} approach at ${distance} uses the shared strike admission`,()=>fixture(({a,b,game})=>{
+ a._openSky=true;a.def.meleeApproach=family;a.noPowers=true;b.pos.z=distance;
+ a.ai=new AI(a,1);a.ai.style='rusher';a.ai.intent=()=>({ready:true,target:b,aimAt:{x:0,y:0,z:distance},aimDir:{x:0,z:1},move:{x:0,z:0},slots:{},fly:false});
+ Game.prototype.controlBot.call(game,a,1/60);
+ assert.equal(!!a.mstate,expected);assert.equal(!!a.grabState,false,'Approach must not extend grab range');
+ if(expected){assert.equal(a._meleeMotion.family,family);assert.ok(a._meleeMotion.approachDistance<=distance);assert.equal(a._meleeMotion.point.z,distance);}
+}));
 test('the emitted aim point turns with the bot, including during held attacks',()=>fixture(({a,b,game})=>{
  a.ai=new AI(a,1);b.pos.z=20;for(let i=0;i<60;i++)a.ai.intent(1/60,game);
  b.pos.set(20,0,0);const out=a.ai.intent(1/60,game);
