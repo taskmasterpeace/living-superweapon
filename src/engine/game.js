@@ -4266,6 +4266,7 @@ export class Game {
     }
     this.resolveBodies();
     this.melee.endContactFrame();
+    this.ms?.threatLab?.meleeTrial?.capture();
     for (const f of this.entities) {
       const wasAlive = f._wasAlive !== false;
       if (wasAlive && f.state === 'ko') this.handleKO(f);

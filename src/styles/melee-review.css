@@ -1,0 +1,16 @@
+.melee-review{position:fixed;inset:0;width:100vw;height:100dvh;max-width:none;max-height:none;margin:0;padding:0;border:0;background:var(--ink);color:var(--text);font:14px Inter,system-ui,sans-serif;overflow:hidden}
+.melee-review[open]{display:grid;grid-template-rows:auto minmax(0,1fr) auto}
+.melee-review header,.melee-review footer{padding:14px 24px;background:var(--ink)}
+.melee-review header{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}
+.melee-review h1{margin:0;color:var(--gold);font:700 26px var(--f-display)}
+.melee-review h1 span{color:var(--text);font-size:20px;margin-left:16px}
+.melee-review p{margin:5px 0 0;color:var(--text-2)}
+.melee-review-stage{min-height:0;position:relative}.melee-review canvas{width:100%;height:100%;display:block}
+.melee-review button,.melee-review select{font:inherit;color:var(--text);background:var(--surface-hi);border:1px solid var(--line-2);border-radius:var(--r-2);padding:10px 14px;cursor:pointer;min-height:44px}
+.melee-review button:hover,.melee-review select:hover{border-color:var(--gold)}
+.melee-review button:focus-visible,.melee-review select:focus-visible,.melee-review input:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+.melee-review button[aria-pressed=true]{background:var(--gold);color:var(--on-gold);border-color:var(--gold)}
+.melee-review nav,.melee-review-transport{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.melee-review nav{margin-bottom:10px}.melee-review-transport label{display:flex;align-items:center;gap:8px}.melee-review-timeline{flex:1}.melee-review input{flex:1;min-width:80px;accent-color:var(--gold)}
+.melee-review output{font-variant-numeric:tabular-nums;min-width:120px}.melee-review footer{border-top:1px solid var(--line)}
+@media(max-height:550px){.melee-review header,.melee-review footer{padding:6px 12px}.melee-review header p{display:none}.melee-review h1{font-size:20px}.melee-review nav{margin-bottom:4px}.melee-review footer p{font-size:12px}.melee-review button{padding:7px 10px}}

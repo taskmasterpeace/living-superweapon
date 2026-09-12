@@ -50,6 +50,8 @@ export class ThreatDeployment {
     const trialPad=this.clearPad(this.origin.x+70,this.origin.z,18,[{x:this.origin.x,z:this.origin.z,r:28}]);
     if(trialPad){
       this.meleeTrial=new MeleeTrial(g,trialPad);
+      this.trialReviewHandle=g.registerInteractable({id:'threat-melee-review',pos:trialPad.clone().add(new THREE.Vector3(-18,3,15)),r:8,label:'FRONT / SIDE / OVERHEAD · SLOW MOTION',verb:'REVIEW EXCHANGE',priority:3,enabled:f=>f===g.player&&this.state==='preparing',onUse:()=>this.meleeTrial.openReview()});
+      const reviewMarker=new THREE.Mesh(new THREE.TorusGeometry(3,.25,6,24),new THREE.MeshBasicMaterial({color:0xe8e2d6}));reviewMarker.rotation.x=Math.PI/2;reviewMarker.position.copy(trialPad).add(new THREE.Vector3(-18,.3,15));this.group.add(reviewMarker);
       this.trialHandle=g.registerInteractable({id:'threat-melee-trial',pos:trialPad.clone().add(new THREE.Vector3(0,3,15)),r:12,label:'MELEE TRIAL · STATIONARY / RETREAT / GUARD / DODGE',verb:'NEXT TRIAL',priority:3,enabled:f=>f===g.player&&this.state==='preparing',onUse:()=>this.meleeTrial.start(MELEE_TRIALS[(this.meleeTrial.index+1)%MELEE_TRIALS.length])});
       this.trialRepeatHandle=g.registerInteractable({id:'threat-melee-repeat',pos:trialPad.clone().add(new THREE.Vector3(18,3,15)),r:8,label:'RESTORE FIGHTER AND MELEE TARGET',verb:'RESET PRACTICE',priority:3,enabled:f=>f===g.player&&this.state==='preparing',onUse:()=>this.meleeTrial.resetPractice()});
       const repeatMarker=new THREE.Mesh(new THREE.TorusGeometry(3,.25,6,24),new THREE.MeshBasicMaterial({color:0x7fe6ff}));repeatMarker.rotation.x=Math.PI/2;repeatMarker.position.copy(trialPad).add(new THREE.Vector3(18,.3,15));this.group.add(repeatMarker);
@@ -112,6 +114,7 @@ export class ThreatDeployment {
     if(this.deployed.has(player)&&this.queue.every(f=>this.deployed.has(f))){this.state='field';this.queue=[];if(this.manifest.length>1&&this.manifest.every(f=>f.alive&&this.deployed.has(f)))operationSound(this.g,'op.squad.ready');for(const f of this.manifest)f._deploymentTarget=null;this.g.hud?.announce?.('SQUAD DEPLOYED');}
   }
   dispose(){
+    if(this.trialReviewHandle)this.g.unregisterInteractable(this.trialReviewHandle);
     this.meleeTrial?.dispose();if(this.trialRepeatHandle)this.g.unregisterInteractable(this.trialRepeatHandle);if(this.trialHandle)this.g.unregisterInteractable(this.trialHandle);
     for(const f of this.manifest||[])f._deploymentTarget=null;
     if(this.handle)this.g.unregisterInteractable(this.handle);

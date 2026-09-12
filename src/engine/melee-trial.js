@@ -2,6 +2,8 @@ import {hasStrike,STRIKES} from '../data/martial.js';
 import * as THREE from 'three';
 import {ROSTER} from '../data/characters.js';
 import {performEvade} from './abilities.js';
+import {MeleeRecording} from './melee-recording.js';
+import {openMeleeReview} from './melee-review.js';
 export function meleeLesson(def){
  const combo=hasStrike(def,'jab')||hasStrike(def,'cross');
  return (combo?'V tap: punch; repeat for combo':'V tap: heavy slam')+' · hold/release V: charge heavy · Q: frontal guard · E: grab · double-tap direction: dodge';
@@ -9,13 +11,14 @@ export function meleeLesson(def){
 export const MELEE_TRIALS=['stationary','retreat','guard','dodge'];
 // Scripted decisions use native motion, defense and damage; no target teleporting.
 export class MeleeTrial {
- constructor(g,origin){this.g=g;this.origin=origin.clone();this.records=[];this.index=-1;}
+ constructor(g,origin){this.g=g;this.origin=origin.clone();this.records=[];this.index=-1;this.recording=new MeleeRecording();}
  start(kind='stationary'){
   if(!MELEE_TRIALS.includes(kind))throw Error('Unknown melee trial');
   this.clear();this.attempt=null;this.kind=kind;this.index=MELEE_TRIALS.indexOf(kind);this.elapsed=0;this.dodgeAt=1;
   const base=ROSTER.find(d=>d.id==='merc')||ROSTER[0];
   const f=this.g.addFighter({...base,name:'Trial '+kind,abilities:{},items:[],holo:true},{team:this.g.player.team===0?1:0,dummy:true,x:this.origin.x,z:this.origin.z});
   f.pos.y=this.g.world.heightAt(f.pos.x,f.pos.z);f._chaseKb=true;f._openSky=true;f.noRespawn=true;f._meleeTrial=this;this.target=f;this.startHp=f.hp;
+  this.recording.bind([this.g.player,f]);
   this.g.hud?.feed?.(kind.toUpperCase()+' · '+meleeLesson(this.g.player.def),'#ffd24a');return f;
  }
  control(f,dt){
@@ -26,6 +29,12 @@ export class MeleeTrial {
   if(this.kind==='dodge'&&this.elapsed>=this.dodgeAt){this.dodgeAt=this.elapsed+1.5;performEvade(f,{x:-dir.z,z:dir.x},this.g);}
  }
  repeat(){return this.start(this.kind||'stationary');}
+ capture(){if(this.target&&!this.review)this.recording.capture(this.g.time);}
+ openReview(){
+  if(this.review||this.g.ms?.threatLab?.state!=='preparing')return;
+  if(this.recording.frames.length<2){this.g.hud?.feed?.('Start a melee trial, then return here to review the exchange','#ffd24a');return;}
+  this.review=openMeleeReview(this.g,this.recording,()=>{this.review=null;});
+ }
  resetPractice(){
   const g=this.g,f=g.player;
   // Preparation-only refill. Keep the actual player object, loadout and stock:
@@ -63,6 +72,6 @@ export class MeleeTrial {
   this.records.push({trial:this.kind,time:this.elapsed,amount,blocked:!!blocked,hp:target.hp,playerKi:this.g.player.ki});if(this.records.length>100)this.records.shift();
   this.g.hud?.feed?.((blocked?'BLOCK':'CONTACT')+' · HP lost '+Math.max(0,this.startHp-target.hp).toFixed(1)+' · energy now '+this.g.player.ki.toFixed(1),'#ffd24a');
  }
- clear(){const f=this.target;if(!f)return;if(f.grabbedBy)this.g.melee.release(f.grabbedBy);if(f.grabbing)this.g.melee.release(f);for(const key of ['hardLock','lockTarget'])if(this.g[key]===f)this.g[key]=null;f._meleeTrial=null;f.dispose();f.obj.removeFromParent();const i=this.g.entities.indexOf(f);if(i>=0)this.g.entities.splice(i,1);this.target=null;}
+ clear(){this.review?.close();this.review=null;this.recording.clear();const f=this.target;if(!f)return;if(f.grabbedBy)this.g.melee.release(f.grabbedBy);if(f.grabbing)this.g.melee.release(f);for(const key of ['hardLock','lockTarget'])if(this.g[key]===f)this.g[key]=null;f._meleeTrial=null;f.dispose();f.obj.removeFromParent();const i=this.g.entities.indexOf(f);if(i>=0)this.g.entities.splice(i,1);this.target=null;}
  dispose(){this.clear();}
 }
