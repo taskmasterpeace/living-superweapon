@@ -10,7 +10,7 @@
 - Sort/filter class, role, movement and LeFevre threat separately. Threat is hierarchy, not a promise of victory or a substitute for matchups.
 - Portable gadgets keep character/target visible. A fixed lab/terminal may open a full workbench. Power/gadget/weapon comparison is progressive: roster -> character -> kit -> exact ability.
 - Team dome rule remains allies shoot outward / incoming shots stopped / everyone may enter on foot. Personal shield and team dome are separate items.
-- First complete operation LOCKED: fight -> collect blood -> lab -> upgrade -> fight again. Finite replacement lives underpin defeat. See ../gameplay/BLOOD_UPGRADE_OPERATION.md; precise defeat timing remains under interview. Escort/ambush follow later.
+- First complete operation LOCKED: fight -> collect blood -> lab -> upgrade -> fight again. Finite replacement lives underpin defeat. See ../gameplay/BLOOD_UPGRADE_OPERATION.md; defeat occurs when no player-controlled fighter is alive and no eligible replacement remains. Escort/ambush follow later.
 
 ## What was wrong with distance?
 

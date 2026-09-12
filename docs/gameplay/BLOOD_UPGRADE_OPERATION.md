@@ -22,7 +22,7 @@ The two milestones/final encounter structure is a recommendation; the creator ha
 - Spend exactly one eligible replacement when a replacement is successfully admitted. Define queued fabrication explicitly; prevent duplicate charge on retries and prevent free respawn.
 - Soldier and LSW stocks remain separately displayed and cannot silently substitute for each other. Existing setup reserves currently describe lost allies; audit player respawn too before claiming they enforce the loss condition.
 - Do not replenish reserves merely because the lab upgraded the player. Blood research and replacement lives are separate resources for this slice. Reserve purchases or earned lives would be an explicit later balancing rule.
-- Recommended defeat: no player-controlled fighter alive and no eligible replacement remains. If squad possession is introduced later, surviving controllable allies may change this rule. Whether to wait for all allied squad deaths is pending the creator's clickable answer.
+- LOCKED defeat: no player-controlled fighter remains alive AND no eligible replacement remains. Creator confirmed this in the clickable interview. Surviving AI-only allies do not postpone defeat.
 - While waiting for a valid replacement, show the cost, remaining stock and spawn state. Stock zero means LAST LIFE while still alive; defeat occurs only at the selected terminal condition.
 - The lab should be a reliable processing/recovery hub in the first slice. Base destruction is not an extra unapproved defeat condition.
 
