@@ -1,5 +1,5 @@
 import {activatePowerUp} from './power-up.js';
-import {previewTraversalLeap} from './traversal-leap.js';
+import {previewTraversalLeap,driveTraversalLeapAI} from './traversal-leap.js';
 import {refreshCombatPower} from '../core/power-up-state.js';
 import {ThreatDeployment} from './threat-deployment.js';
 import {ConvoyOperation} from './convoy-operation.js';
@@ -4023,6 +4023,7 @@ export class Game {
       }
       it.fly=f.flightTier>0&&(leader.pos.y>f.pos.y+8||leader.flying&&d>22);
     }
+    const chargingLeap=!deployment&&driveTraversalLeapAI(f,it,this,dt);
     if (it.aimDir) f.faceDir(it.aimDir.x, it.aimDir.z);
     // 3D aim. ⚠ `it.target` is ONLY set when the AI can actually see the foe (honesty law), and
     // `it.aimAt` is where it BELIEVES it should shoot — the target's centre plus its own lead error
@@ -4048,6 +4049,8 @@ export class Game {
       f.flyHeld=false;f.descendHeld=false;
     }
     f.move(f.moveDir, dt);
+
+    if(chargingLeap)return; // The committed traversal gesture owns this brief windup.
 
     // --- defensive reactions to incoming beams / projectiles ---
     // ⚠ FAIRNESS: a bot must not answer a threat on the frame it appears. `_reactT` is its reflex

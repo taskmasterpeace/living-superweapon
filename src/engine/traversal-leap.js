@@ -51,3 +51,36 @@ export function steerTraversalLeap(f,dir,dt){
  }
  return true;
 }
+
+export function planTraversalLeap(f,target,world){
+ if(!f.def.traversalLeap||!target?.alive)return null;
+ const dx=target.pos.x-f.pos.x,dz=target.pos.z-f.pos.z,distance=Math.hypot(dx,dz);
+ if(distance<45||distance>400)return null;
+ const probe=Object.create(f);probe._mvX=dx/distance;probe._mvZ=dz/distance;
+ let best=null;
+ for(const fraction of [.15,.25,.4,.55,.7,.85,1]){
+  if(fraction*f.def.traversalLeap.cost>f.ki)continue;
+  probe._traversalLeap={charge:fraction*f.def.traversalLeap.chargeTime,active:false};
+  const cue=previewTraversalLeap(probe,world);if(!cue?.contact)continue;
+  const end=cue.points.at(-1),ground=world.heightAt(end.x,end.z);
+  if(Math.abs(end.y-ground)>3)continue; // Do not deliberately land against a vertical wall.
+  const error=Math.hypot(end.x-target.pos.x,end.z-target.pos.z);
+  if(error>Math.min(35,distance*.35))continue;
+  if(!best||error<best.error)best={error,chargeTime:fraction*f.def.traversalLeap.chargeTime,move:{x:dx/distance,z:dz/distance}};
+ }
+ return best;
+}
+export function driveTraversalLeapAI(f,it,g,dt){
+ if(!f.def.traversalLeap||!f._openSky||f.flightTier>0||f.flying||blocked(f)){f._aiTraversalLeap=null;return false;}
+ if(f._traversalLeap?.active){f._aiTraversalLeap=null;return false;}
+ let plan=f._aiTraversalLeap;
+ if(!plan&&f.onFoot&&(g.time||0)>=(f._aiLeapNext||0)&&it.target&&g.canSee(f,it.target)){
+  f._aiLeapNext=(g.time||0)+2;plan=planTraversalLeap(f,it.target,g.world);
+  if(plan){plan.remaining=plan.chargeTime;f._aiTraversalLeap=plan;}
+ }
+ if(!plan)return false;
+ // Commit a visible target direction, not continuous target homing.
+ it.move=plan.move;it.aimDir=plan.move;it.slots={};it.fly=plan.remaining>0;plan.remaining-=dt;
+ if(!it.fly)f._aiTraversalLeap=null;
+ return true;
+}
