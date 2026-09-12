@@ -383,7 +383,7 @@ export class NewsCrew {
     if (!this.enabled || this._finished) return;
     if(this.g._threatRoom?.active){
       this.grp.visible=false;this.t+=dt;const room=this.g._threatRoom,focus=this.g.player.pos.clone();const target=this.g.ms.threatLab?.meleeTrial?.target;if(target?.alive)focus.add(target.pos).multiplyScalar(.5);focus.y+=6;
-      this.cam.position.set(0,270,80);this.cam.lookAt(focus);this._shot={kind:'training-security'};room.securityCamera?.lookAt(focus);this._updateRecording(dt);return;
+      this.cam.position.set(0,270,80);this.cam.lookAt(focus);const spread=target?.alive?target.pos.distanceTo(this.g.player.pos):0;this.cam.fov=THREE.MathUtils.clamp(THREE.MathUtils.radToDeg(2*Math.atan((20+spread*.65)/this.cam.position.distanceTo(focus))),8,65);this.cam.updateProjectionMatrix();this._shot={kind:'training-security'};room.securityCamera?.lookAt(focus);this._updateRecording(dt);return;
     }
     this.grp.visible = true; // venue entry hides city scene children; the active crew owns this group
     this.t += dt;
