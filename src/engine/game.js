@@ -1,4 +1,5 @@
 import {activatePowerUp} from './power-up.js';
+import {thrownPropContact,thrownPropShape,previewPropThrow} from './thrown-prop-contact.js';
 import {previewTraversalLeap,driveTraversalLeapAI} from './traversal-leap.js';
 import {refreshCombatPower} from '../core/power-up-state.js';
 import {ThreatDeployment} from './threat-deployment.js';
@@ -647,6 +648,12 @@ export class Game {
       this.hud?.throwReach?.(carryCue.blocked?'THROW DIRECTION · COVER':'THROW DIRECTION');this._carryCueShown=true;return;
     }
     if(this._carryCueShown){this._carryCueShown=false;this.hud?.throwReach?.('');}
+    if(p?.alive&&p._carry&&this.running&&!this.matchOver){
+      if(!this._propCue||this._propCueOwner!==p._carry||this.time-this._propCueAt>.08){this._propCue=previewPropThrow(p,this);this._propCueOwner=p._carry;this._propCueAt=this.time;}
+      const cue=this._propCue;arc.visible=true;this._arcRing.visible=!!cue.contact;this._arcRing.position.copy(cue.points.at(-1));
+      this._arcDots.forEach((dot,i)=>{dot.visible=true;dot.position.copy(cue.points[Math.round(i*(cue.points.length-1)/(this._arcDots.length-1))]);dot.material.opacity=.7*(1-.6*i/this._arcDots.length);dot.material.color.set('#ffd24a');});return;
+    }
+    this._propCue=null;this._propCueOwner=null;
     // A grenade in the inventory is not an aiming gesture. Hide this legacy
     // predictive aid in third person; thrown props/clinch retain deliberate aim.
     if(p?._openSky&&!p._carry&&!(p.grabState==='clinch'&&p.grabbing)){
@@ -967,7 +974,7 @@ export class Game {
     f._carry = { kind: t.kind, mesh, sourceRef:t.ref, t: 0, w: t.w, spd, ratio, size: t.ref && t.ref.s };
     f.speed = (f.def.speed || 30) * Math.max(0.42, Math.min(0.93, 1 - 0.45 / Math.max(0.9, ratio)));   // weight on your back is speed off your feet
     this.audio.impact(t.kind === 'plane' ? 1.1 : 0.7, f.pos); this.world.shake(t.kind === 'plane' ? 1.1 : 0.5);
-    if (this.isHuman(f) && this.hud) this.hud.feed(`Hoisted a ${t.kind} (~${t.w}t) — press E again to THROW`, '#ff8a3a');
+    if (this.isHuman(f) && this.hud) this.hud.feed(`Hoisted a ${t.kind} (~${t.w}t) — hold E, aim, then release to THROW`, '#ff8a3a');
     return true;
   }
   throwProp(f,drop=false) {
@@ -988,7 +995,8 @@ export class Game {
     // a car is 24u long and a tree is 20u tall — they need a hitbox to match, and a tall one:
     // `overlapFoe`'s ±9u vertical window let a lobbed car sail clean over someone's head.
     const R = c.kind === 'plane' ? 22 : c.kind === 'car' ? 13 : c.kind === 'rock' ? Math.max(7, (c.size || 2.8) * 2.1) : 10;
-    const RV = c.kind === 'plane' ? 20 : c.kind === 'car' ? 16 : c.kind === 'rock' ? Math.max(10, (c.size || 2.8) * 2.8) : 14;
+    const collisionShape=thrownPropShape(c);
+    const previous=new THREE.Vector3();
     // ⚠ THE FLUNG RECORD IS WHAT MAKES IT SHOOTABLE. Robert: *"the other person could be throwing
     // little energy blasts at whatever you're throwing at them before it hit them."* Until now a
     // thrown prop was a CLOSURE inside a vfx entry — a mesh nothing else in the engine could see, so
@@ -1005,18 +1013,15 @@ export class Game {
     this.vfx._add({
       update: (dt) => {
         t += dt; vel.y -= 62 * dt;
+        previous.copy(mesh.position);
         mesh.position.addScaledVector(vel, dt);
         mesh.rotation.z += spin * dt; mesh.rotation.x += spin * 0.5 * dt;
         if (flung) { flung.x = mesh.position.x; flung.y = mesh.position.y; flung.z = mesh.position.z; }
-        let foe = null;
-        for (const e of this.entities) {
-          if (!this.isFoe(f, e)) continue;
-          const dx = e.pos.x - mesh.position.x, dz = e.pos.z - mesh.position.z;
-          if (Math.hypot(dx, dz) < R + e.radius && Math.abs((e.pos.y + 5) - mesh.position.y) < RV) { foe = e; break; }
-        }
-        const grounded = mesh.position.y <= 1.2;
+        const contact=thrownPropContact(this,f,previous,mesh.position,collisionShape);
+        if(contact)mesh.position.lerpVectors(previous,mesh.position,contact.t);
+        const foe=contact?.kind==='fighter'?contact.target:null;
         const shot = !!(flung && flung.dead);
-        if (foe || grounded || shot || t > 4) {
+        if (contact || shot || t > 4) {
           const p = mesh.position.clone(); p.y = Math.max(0.4, p.y);
           // SHOT OUT OF THE AIR: it never reaches anybody. The blast still happens where it broke —
           // an intercept a body-length from your face is meant to be a bad intercept.
@@ -4455,3 +4460,4 @@ export { ROSTER };
 
 
 import {validateSquad} from './squad-config.js';
+
