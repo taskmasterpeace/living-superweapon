@@ -51,8 +51,8 @@ export class MeleeTrial {
   mode=mode===true?'moving':mode===false?'still':mode;
   if(!['still','moving','airborne'].includes(mode))throw Error('Unknown machine drill');
   if(this.g.ms?.threatLab?.state!=='preparing')return false;
-  const machineDef={...ROSTER.find(d=>d.id==='merc'),name:'TRAINING MACHINE',metal:true,body:'metal'};const f=this.start('stationary',machineDef);
-  this.machineMode=mode;f.def={...f.def,name:'TRAINING MACHINE',metal:true};f.pos.set(140,0,-85);this.machineTime=0;this.machineLastHit=null;
+  const machineDef={...ROSTER.find(d=>d.id==='merc'),name:'TRAINING MACHINE',metal:true,body:'metal',armor:0};const f=this.start('stationary',machineDef);
+  f.armor=f.armorMax=0;this.machineMode=mode;f.def={...f.def,name:'TRAINING MACHINE',metal:true};f.pos.set(140,0,-85);this.machineTime=0;this.machineLastHit=null;
   if(mode==='airborne'){f.pos.y=2;f.vel.set(22,100,0);f.launchT=4;f.flying=false;}
 
   const machine=new THREE.Group();machine.name='training-machine';
