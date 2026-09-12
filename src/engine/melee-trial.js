@@ -1,3 +1,5 @@
+import {meleeEntryEligibility} from './melee-entry-target.js';
+import {meleeApproach} from '../data/melee-approaches.js';
 import {retirePracticeActor} from './practice-actor-retirement.js';
 import {Fighter} from './entity.js';
 import {hasStrike,STRIKES} from '../data/martial.js';
@@ -133,12 +135,13 @@ export class MeleeTrial {
  }
  strikeStarted(f){
   if(f!==this.g.player||!this.target)return;
-  this.attempt={trial:this.kind,kind:f.mId,time:this.elapsed,contacts:0,approach:!!f._meleeMotion?.approachEnabled,distance:f.pos.distanceTo(this.target.pos),startup:STRIKES[f.mId].startup/(f.def.meleePace||1),active:STRIKES[f.mId].active/(f.def.meleePace||1),recovery:STRIKES[f.mId].recover/(f.def.meleePace||1)};
+  const profile=meleeApproach(f.def,f.airborne),entry=meleeEntryEligibility(this.g,f,this.target,profile.range);
+  this.attempt={entryReason:entry.reason,entryRange:profile.range,entryFamily:profile.family,trial:this.kind,kind:f.mId,time:this.elapsed,contacts:0,approach:!!f._meleeMotion?.approachEnabled,distance:f.pos.distanceTo(this.target.pos),startup:STRIKES[f.mId].startup/(f.def.meleePace||1),active:STRIKES[f.mId].active/(f.def.meleePace||1),recovery:STRIKES[f.mId].recover/(f.def.meleePace||1)};
  }
  strikeEnded(f){
   if(f!==this.g.player||!this.attempt)return;
   const a=this.attempt;a.result=a.contacts?'contact':'no contact';this.records.push(a);if(this.records.length>100)this.records.shift();
-  this.g.hud?.feed?.(a.result.toUpperCase()+' · '+a.kind.toUpperCase()+' · '+(a.approach?'approach engaged':'no approach')+' · start '+a.distance.toFixed(1)+'u · recovery '+Math.round(a.recovery*1000)+'ms','#ffd24a');this.attempt=null;
+  this.g.hud?.feed?.(a.result.toUpperCase()+' · '+a.kind.toUpperCase()+' · '+(a.approach?'approach engaged':a.entryReason+' · '+a.entryFamily+' '+a.entryRange+'u')+' · start '+a.distance.toFixed(1)+'u · recovery '+Math.round(a.recovery*1000)+'ms','#ffd24a');this.attempt=null;
  }
  grabContact(holder,victim){if(holder!==this.g.player||victim!==this.target)return;this.recording.mark(this.g.time,{label:'Grab connected',kind:'grab'});this.g.hud?.feed?.('GRAB CONNECTED · tap V: body blow · hold V: slam · move/fly: carry · hold E then release: aimed throw · tap E: set down/drop','#ffd24a');}
  hit(target,amount,opts,blocked,outcome=null){
