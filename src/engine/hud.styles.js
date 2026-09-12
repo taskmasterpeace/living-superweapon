@@ -1092,6 +1092,8 @@ body.combat-chase #hCross[data-aim-mode="aircraft"]::after{
   white-space:nowrap;color:var(--gold);font:600 10px/1.2 Inter,system-ui,sans-serif;
   letter-spacing:.08em;text-shadow:0 1px 3px #000,0 0 3px #000;
 }
+#hCross .melee-entry-cue{position:absolute;left:0;top:24px;transform:translateX(-50%);white-space:nowrap;padding:3px 6px;background:#14232bea;color:#a8e9f3;border-bottom:1px solid #a8e9f3;font:600 10px/1.2 Inter,system-ui,sans-serif;letter-spacing:.06em;pointer-events:none;}
+#hCross .melee-entry-cue[hidden]{display:none;}
 /* LOCKED — the crosshair says so, in the one colour that already means "hostile" everywhere else. */
 /* Locked aim brackets the shot point. Shape distinguishes lock even without
    color; its open center leaves the opponent's face/torso readable. */

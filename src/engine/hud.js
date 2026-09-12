@@ -1,3 +1,4 @@
+import {meleeEntryCue} from './melee-entry-cue.js';
 // WAR WORLD: ASCENDANTS — DOM HUD + character-select screen.
 import { CodexMixin } from './hudCodex.js';
 import {attackGuide,attackMatchup} from './combat-guide.js';
@@ -2106,6 +2107,7 @@ export class HUD {
   updateCrosshair(g) {
     if(!this.syncCombatView(g))return;
     const el = this.el.cross; if (!el) return;
+    if(!this._meleeCue){this._meleeCue=document.createElement('span');this._meleeCue.className='melee-entry-cue';el.append(this._meleeCue);}this._meleeCue.hidden=true;
     const aircraft=g.player?._aircraftVehicle;
     if(aircraft){
       const aim=aircraft.combat?.pilotAim?.(),s=this._csp||(this._csp={x:0,y:0,behind:false});
@@ -2170,6 +2172,7 @@ export class HUD {
     // ⚠ HOSTILE ONLY WHEN EXPLICITLY LOCKED (Robert 2026-07-28: "target doesn't turn off"). Lighting
     // the mark red on `aimHit==='foe'` meant it went red whenever ANY foe drifted under the centre —
     // which in a fight is always — so it never turned off. The T lock is the ONE toggle for the target.
+    const cue=el.dataset.aimMode?null:meleeEntryCue(g);if(cue){this._meleeCue.hidden=false;const label=cue.family.toUpperCase()+' · '+cue.range+'u';if(this._meleeCue.textContent!==label)this._meleeCue.textContent=label;}
     const hot = !!locked;
     if (hot !== this._lkCls) { this._lkCls = hot; document.body.classList.toggle('pw-locked', hot); }
   }
