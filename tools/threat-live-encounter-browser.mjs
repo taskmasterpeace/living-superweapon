@@ -3,7 +3,7 @@ const out='artifacts/marketing/threat-live-encounter-2026-09-12';await mkdir(out
 try{
  await p.goto('http://127.0.0.1:5184/powerworld.html?hero=vega');await p.waitForTimeout(2500);await p.keyboard.press('Enter');await p.getByRole('button',{name:'Enter with squad',exact:true}).click();await p.waitForFunction(()=>window.PW?.game?.ms?.threatLab?.threatFightHandle,{},{timeout:90000});
  const approach=async key=>{await p.evaluate(key=>{const g=window.PW.game,h=g.ms.threatLab[key],f=g.player;f.pos.copy(h.pos);f.pos.y=g.world.heightAt(f.pos.x,f.pos.z);f.vel.set(0,0,0);g.world._lookYaw=0;g.world._lookPitch=.15;},key);await p.waitForTimeout(250);};
- await approach('threatPickHandle');await p.keyboard.press('e');await p.waitForFunction(()=>window.PW.game.ms.threatLab.meleeTrial.previewActor);
+ await approach('threatPickHandle');await p.keyboard.press('e');await p.getByRole('button',{name:'Preview in room',exact:true}).click();await p.waitForFunction(()=>window.PW.game.ms.threatLab.meleeTrial.previewActor);
  await approach('threatFightHandle');await p.keyboard.press('e');await p.waitForFunction(()=>window.PW.game.ms.threatLab.meleeTrial.kind==='encounter');
  await p.evaluate(()=>{const g=window.PW.game;window.testThreat=g.ms.threatLab.meleeTrial.target;window.testSamples=[];window.testTimer=setInterval(()=>{window.testSamples.push({hp:g.player.hp,targetHp:window.testThreat.hp,shots:g.projectiles.list.filter(s=>s.caster===window.testThreat&&!s.dead).length,state:g.player.state,ki:window.testThreat.ki});},100);});
  await p.waitForTimeout(2600);await p.screenshot({path:out+'/fight.png'});

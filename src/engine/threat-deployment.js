@@ -1,3 +1,5 @@
+import {ThreatRoom} from './threat-room.js';
+import {openThreatSelector} from './threat-selector.js';
 import {ROSTER} from '../data/characters.js';
 import {MeleeTrial,MELEE_TRIALS} from './melee-trial.js';
 import * as THREE from 'three';
@@ -32,13 +34,14 @@ export class ThreatDeployment {
     const counts={soldier:0,lsw:0};for(const f of this.manifest)counts[f.def.archetype==='soldier'?'soldier':'lsw']++;
     // Initial bodies consume stock too. Replacement issuance is a separate action.
     this.stock=new DeploymentStock({soldier:counts.soldier+(counts.soldier?(g.ms.squad.soldierReserves??2):0),lsw:counts.lsw+(counts.lsw?(g.ms.squad.lswReserves??2):0)});
-    this.manifest.forEach((f,i)=>{f.pos.copy(this.origin).add(new THREE.Vector3((i%3-1)*12,1,16+Math.floor(i/3)*12));f.vel.set(0,0,0);f.flying=false;});
-    const dx=this.origin.x-g.player.pos.x,dz=this.origin.z-g.player.pos.z;
+    this.room=new ThreatRoom(g,this.manifest);this.origin=new THREE.Vector3(0,0,160);
+    this.manifest.forEach((f,i)=>{f.pos.copy(this.origin).add(new THREE.Vector3((i%3-1)*12,1,-32-Math.floor(i/3)*12));f.vel.set(0,0,0);f.flying=false;});
+    const dx=0,dz=-1;
     g.world._lookYaw=Math.atan2(dx,dz);g.world._lookPitch=0;g.player.faceDir(dx,dz);
     this.group=new THREE.Group();this.group.name='threat-lab-deployment';g.scene.add(this.group);
     this.anchors={};
     const kinds=['soldier','lsw'].filter(kind=>counts[kind]);
-    kinds.forEach((kind,i)=>{const anchor=createDeploymentAnchor(kind);anchor.position.copy(this.destination);if(kinds.length>1)anchor.position.x+=(i?1:-1)*16;this.group.add(anchor);this.anchors[kind]=anchor;});
+    kinds.forEach((kind,i)=>{const anchor=createDeploymentAnchor(kind);anchor.position.copy(this.destination);if(kinds.length>1)anchor.position.x+=(i?1:-1)*16;this.group.add(anchor);this.anchors[kind]=anchor;anchor.visible=false;});
     const portalMaterial=new THREE.MeshBasicMaterial({color:0xe9b83f,transparent:true,opacity:.35,side:THREE.DoubleSide,depthWrite:false});
     const ring=new THREE.Mesh(new THREE.TorusGeometry(10,.55,8,40),new THREE.MeshStandardMaterial({color:0xdfb54f,emissive:0x735014,roughness:.55}));
     ring.position.copy(this.origin).y+=11;this.group.add(ring);
@@ -49,13 +52,13 @@ export class ThreatDeployment {
     this.handle=g.registerInteractable({id:'threat-lab-ready',pos:this.origin.clone().add(new THREE.Vector3(0,5,8)),r:20,label:'SQUAD DEPLOYMENT',verb:'READY',priority:3,enabled:f=>f===g.player&&this.state==='preparing',onUse:()=>this.ready()});
     this.reserveHandle=g.registerInteractable({id:'deployment-reserves',pos:this.destination.clone().add(new THREE.Vector3(0,5,0)),r:22,label:'SQUAD RESERVES',verb:'REINFORCE',priority:3,enabled:f=>f===g.player&&this.state==='field',onUse:()=>this.requestReplacement()});
     this.state='preparing';g.hud?.announce?.('THREAT LAB · Test your gear, then READY at the portal');
-    const trialPad=this.clearPad(this.origin.x+70,this.origin.z,18,[{x:this.origin.x,z:this.origin.z,r:28}]);
+    const trialPad=new THREE.Vector3(0,0,-50);
     if(trialPad){
       this.meleeTrial=new MeleeTrial(g,trialPad);
       this.threatPickIndex=-1;
       this.threatFightHandle=g.registerInteractable({id:'threat-full-encounter',pos:trialPad.clone().add(new THREE.Vector3(0,3,-24)),r:8,label:'SELECTED CHARACTER · FULL POWERS AND AI',verb:'START LIVE THREAT',priority:3,enabled:f=>f===g.player&&this.state==='preparing'&&!!this.meleeTrial.selectedThreat,onUse:()=>this.meleeTrial.startEncounter()});
       const livePad=new THREE.Mesh(new THREE.TorusGeometry(4,.3,6,32),new THREE.MeshBasicMaterial({color:0xff5a4a}));livePad.rotation.x=Math.PI/2;livePad.position.copy(trialPad).add(new THREE.Vector3(0,.3,-24));this.group.add(livePad);
-      this.threatPickHandle=g.registerInteractable({id:'threat-pick-character',pos:trialPad.clone().add(new THREE.Vector3(-18,3,-15)),r:8,label:'PREVIEW ROSTER CHARACTER · NEXT',verb:'CHOOSE DRILL TARGET',priority:3,enabled:f=>f===g.player&&this.state==='preparing',onUse:()=>{this.threatPickIndex=(this.threatPickIndex+1)%ROSTER.length;this.meleeTrial.previewThreat(ROSTER[this.threatPickIndex].id);}});
+      this.threatPickHandle=g.registerInteractable({id:'threat-pick-character',pos:trialPad.clone().add(new THREE.Vector3(-18,3,-15)),r:8,label:'PORTRAITS · SEARCH · TEACHING OR LIVE FIGHT',verb:'CHOOSE THREAT',priority:3,enabled:f=>f===g.player&&this.state==='preparing',onUse:()=>{this.threatSelector=openThreatSelector(g,this.meleeTrial,()=>{this.threatSelector=null;});}});
       this.threatStartHandle=g.registerInteractable({id:'threat-start-selected',pos:trialPad.clone().add(new THREE.Vector3(18,3,-15)),r:8,label:'USE PREVIEW CHARACTER IN CURRENT DRILL',verb:'START SELECTED DRILL',priority:3,enabled:f=>f===g.player&&this.state==='preparing'&&!!this.meleeTrial.selectedThreat,onUse:()=>this.meleeTrial.startSelected()});
       for(const x of [-18,18]){const pad=new THREE.Mesh(new THREE.TorusGeometry(3,.25,6,24),new THREE.MeshBasicMaterial({color:0xffd24a}));pad.rotation.x=Math.PI/2;pad.position.copy(trialPad).add(new THREE.Vector3(x,.3,-15));this.group.add(pad);}
       this.trialReviewHandle=g.registerInteractable({id:'threat-melee-review',pos:trialPad.clone().add(new THREE.Vector3(-18,3,15)),r:8,label:'FRONT / SIDE / OVERHEAD · SLOW MOTION',verb:'REVIEW EXCHANGE',priority:3,enabled:f=>f===g.player&&this.state==='preparing',onUse:()=>this.meleeTrial.openReview()});
@@ -65,11 +68,12 @@ export class ThreatDeployment {
       const repeatMarker=new THREE.Mesh(new THREE.TorusGeometry(3,.25,6,24),new THREE.MeshBasicMaterial({color:0x7fe6ff}));repeatMarker.rotation.x=Math.PI/2;repeatMarker.position.copy(trialPad).add(new THREE.Vector3(18,.3,15));this.group.add(repeatMarker);
       const marker=new THREE.Mesh(new THREE.TorusGeometry(8,.2,6,40),new THREE.MeshBasicMaterial({color:0xe9b83f}));marker.rotation.x=Math.PI/2;marker.position.copy(trialPad);marker.position.y+=.3;this.group.add(marker);
     }
-    const transportPad=this.clearPad(s.x-90,s.z+85,45,[{x:this.origin.x,z:this.origin.z,r:28}]);if(transportPad&&!stage.transport)stage.transport=new SquadTransport(stage,transportPad);
+    this.roomReplayHandle=g.registerInteractable({id:"room-replay-screen",pos:new THREE.Vector3(85,5,125),r:18,label:"RECORDED COMBAT · MULTI-ANGLE REVIEW",verb:"WATCH REPLAY",priority:4,enabled:f=>f===g.player&&this.room?.active,onUse:()=>this.meleeTrial.openReview()});
+
   }
   ready(){
     if(this.state!=='preparing')return;
-    this.meleeTrial?.dispose();
+    this.threatSelector?.close();this.meleeTrial?.dispose();
     this.queue=this.manifest.filter(f=>f!==this.g.player&&f.alive);this.state='deploying';
     // Preserve the spaced staging formation. Marching every waiting actor to a
     // fixed single-file slot creates opposing traffic as the queue advances.
@@ -80,6 +84,14 @@ export class ThreatDeployment {
   }
   transfer(f){
     if(this.deployed.has(f))return;
+    if(this.room?.active){
+      if(f!==this.g.player){f._roomReady=true;f._deploymentTarget=f.pos.clone();return;}
+      if(this.queue.some(a=>a.alive&&!a._roomReady)){this.g.hud?.feed?.("Waiting for squad at the portal","#ffd24a");return;}
+      this.practiceProps?.dispose();this.room.leave();
+      for(const member of this.manifest)if(member.alive)this.transfer(member);
+      const site=this.g.pwStage.researchLab.site,pad=this.clearPad(site.x-90,site.z+85,45);if(pad&&!this.g.pwStage.transport)this.g.pwStage.transport=new SquadTransport(this.g.pwStage,pad);
+      this.group.visible=true;for(const child of this.group.children)child.visible=false;for(const anchor of Object.values(this.anchors))anchor.visible=true;this.g.world._chaseSnap=true;return;
+    }
     const i=this.manifest.indexOf(f);
     if(i<0||!f.alive)return;
     if(!this.stock.commit(f,f.def.archetype==='soldier'?'soldier':'lsw')){this.g.hud?.feed?.('Deployment stock exhausted','#d5bd80');return;}
@@ -104,8 +116,9 @@ export class ThreatDeployment {
     g.hud?.feed?.(old.def.id.toUpperCase()+' redeployed · '+this.stock.remaining[kind]+' '+kind.toUpperCase()+' reserves left','#d5bd80');
     return true;
   }
-  update(){
-    if(this.threatPickHandle&&this.meleeTrial?.selectedThreat)this.threatPickHandle.label='PREVIEW · '+ROSTER.find(d=>d.id===this.meleeTrial.selectedThreat)?.name+' · NEXT CHARACTER';
+  update(dt=1/60){
+    this.room?.update(dt);
+    if(this.threatPickHandle&&this.meleeTrial?.selectedThreat)this.threatPickHandle.label='PREVIEW · '+ROSTER.find(d=>d.id===this.meleeTrial.selectedThreat)?.name+' · OPEN LIBRARY';
     if(this.trialHandle&&this.meleeTrial)this.trialHandle.label='MELEE TRIAL · '+(this.meleeTrial.kind||'stationary').toUpperCase()+' · NEXT';
     if(this.trialRepeatHandle&&this.meleeTrial)this.trialRepeatHandle.label='RESTORE FIGHTER + '+(this.meleeTrial.kind||'stationary').toUpperCase()+' TARGET';
     if(this.reserveHandle&&this.stock){const r=this.stock.remaining;this.reserveHandle.label=`RESERVES · SOLDIER ${r.soldier} · LSW ${r.lsw}`;}
@@ -116,13 +129,14 @@ export class ThreatDeployment {
     }
     if(this.state!=='deploying')return;
     this.queue=this.queue.filter(f=>f.alive&&!this.deployed.has(f));
-    const next=this.queue[0];
+    const next=this.queue.find(f=>!f._roomReady);
     if(next){next._deploymentTarget=this.origin;if(Math.hypot(next.pos.x-this.origin.x,next.pos.z-this.origin.z)<5&&Math.abs(next.pos.y-this.origin.y)<12)this.transfer(next);}
     const player=this.g.player;
     if(player.alive&&!this.deployed.has(player)&&Math.hypot(player.pos.x-this.origin.x,player.pos.z-this.origin.z)<5&&Math.abs(player.pos.y-this.origin.y)<12)this.transfer(player);
     if(this.deployed.has(player)&&this.queue.every(f=>this.deployed.has(f))){this.state='field';this.queue=[];if(this.manifest.length>1&&this.manifest.every(f=>f.alive&&this.deployed.has(f)))operationSound(this.g,'op.squad.ready');for(const f of this.manifest)f._deploymentTarget=null;this.g.hud?.announce?.('SQUAD DEPLOYED');}
   }
   dispose(){
+    this.threatSelector?.close();if(this.roomReplayHandle)this.g.unregisterInteractable(this.roomReplayHandle);
     this.practiceProps?.dispose();
     if(this.threatFightHandle)this.g.unregisterInteractable(this.threatFightHandle);if(this.threatPickHandle)this.g.unregisterInteractable(this.threatPickHandle);if(this.threatStartHandle)this.g.unregisterInteractable(this.threatStartHandle);
     if(this.trialReviewHandle)this.g.unregisterInteractable(this.trialReviewHandle);
@@ -130,6 +144,6 @@ export class ThreatDeployment {
     for(const f of this.manifest||[])f._deploymentTarget=null;
     if(this.handle)this.g.unregisterInteractable(this.handle);
     if(this.reserveHandle)this.g.unregisterInteractable(this.reserveHandle);
-    this.group?.traverse(o=>{o.geometry?.dispose();o.material?.dispose();});this.group?.removeFromParent();this.state='disposed';
+    this.group?.traverse(o=>{o.geometry?.dispose();o.material?.dispose();});this.group?.removeFromParent();this.room?.dispose();this.state='disposed';
   }
 }

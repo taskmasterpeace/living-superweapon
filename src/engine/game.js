@@ -316,6 +316,7 @@ const MODE_IMPL = {
       // (The structurally better fix is a `plan.bandsLocked` early return inside fitBands, which
       // belongs with the stage work — noted in docs/POWERWORLD.md.)
       if (BANDS.ceiling < 900) { BANDS.ceiling = 900; BANDS.sky = Math.max(BANDS.sky, 420); }
+      if(g._threatRoom?.active){g.ms.threatLab?.update(dt);return;}
       if (g._pwStage) g._pwStage.tick(g.player);      // the climb to space — one fraction of altitude
       g.ms.frontline?.update(dt);
       g.ms.zombies?.update(dt);
@@ -4338,7 +4339,7 @@ export class Game {
     this.checkRingOut(dt);
     this.updateSpectate();
     this.updateDecoys(dt);
-    this.weather.update(dt);
+    if(!this._threatRoom?.active)this.weather.update(dt);
     this.timeFields.update(dt);
     this.gravityZones.update(dt);
     updateDomes(this, dt);
@@ -4409,7 +4410,7 @@ export class Game {
     this.hud?.updateCrosshair?.(this);
     this._aimFresh = false;
     if (this.player) this.world.updateOcclusion(this.player.pos, dt);   // towers between lens and player go glassy
-    if (this.news) this.news.update(dt);   // the crew shoots BEFORE the main pass — their POV render hides under it
+    if (this.news&&!this._threatRoom?.active) this.news.update(dt);   // the crew shoots BEFORE the main pass — their POV render hides under it
     this.world.render();
   }
 

@@ -2090,7 +2090,7 @@ export class Fighter {
     const bodyHX=lowBounds?(lowBounds.max.x-lowBounds.min.x)*.5:this.radius,bodyHZ=lowBounds?(lowBounds.max.z-lowBounds.min.z)*.5:this.radius;
     const bodyOX=lowBounds?(lowBounds.max.x+lowBounds.min.x)*.5:0,bodyOZ=lowBounds?(lowBounds.max.z+lowBounds.min.z)*.5:0;
     for (const c of game.world.cover) {
-      if (ghost) break;
+      if (ghost&&!c.threatRoom) continue;
       // Aircraft are finite hulls, never invisible ground-to-sky columns.
       if(c.frontlineAircraft&&this.pos.y+(lowBounds?lowBounds.max.y:12*(this.sizeScale||1))<c.bottom)continue;
       const hx = (c.hx ?? c.r) + bodyHX, hz = (c.hz ?? c.r) + bodyHZ, top = c.top ?? c.h;

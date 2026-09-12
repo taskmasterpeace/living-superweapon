@@ -2416,7 +2416,7 @@ export class World {
         if (d < this._refreshMs) this._refreshMs = this._refreshMs * 0.7 + d * 0.3;        // snap to a faster floor
         else this._refreshMs = Math.min(26, Math.min(d, this._refreshMs + 0.06));          // creep up to a slower one
       }
-      this.updateDayNight(d / 1000);                            // the sun keeps its own schedule
+      if(!this._threatRoom?.active)this.updateDayNight(d / 1000);                            // the sun keeps its own schedule
     }
     this._lastRender = now;
     // THE SKY IS A DIRECTION, NOT A PLACE. The dome used to sit parked at the origin, so any
@@ -3226,7 +3226,7 @@ export class World {
     this.composer.setPixelRatio(pr);   // THE tier bug: EffectComposer caches its construction-time
     this.composer.setSize(innerWidth, innerHeight);   // ratio — tiers never actually shrank the scene pass
     this.bloom.setSize(innerWidth * 0.5, innerHeight * 0.5);
-    this.bloom.strength = t === 2 ? 0.66 : t === 1 ? 0.55 : 0.42;
+    this.bloom.strength = this._threatRoom?.active ? .12 : t === 2 ? 0.66 : t === 1 ? 0.55 : 0.42;
     this.bloom.enabled = t > 0;                       // potato tier: drop the whole bloom chain
     // City chase retains its cheap contact shadows. Open-sky combat now moves
     // the shadow volume with the airborne fighter, so body self-shadow remains
