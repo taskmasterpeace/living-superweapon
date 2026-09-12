@@ -1489,6 +1489,7 @@ class BeamHose {
     }
     const tipI = (this.pn - 1) * 3;
     const tipPos = _v.set(this.path[tipI], this.path[tipI + 1], this.path[tipI + 2]);
+    const tipDt=dt*(game.timeFields?.scaleAt(tipPos,c)??1);
     let len = this._arcLen();
     // Once every released packet has been absorbed there is no moving energy
     // left to render. Retaining a degenerate cap lets an advancing body swallow
@@ -1524,9 +1525,9 @@ class BeamHose {
       // A candidate farther along the hose can be discarded by a body or clash
       // cutoff. Bill only the unchanged reached endpoint, never the aim ray.
       if(blockedPoint.distanceToSquared(tipPos)<1e-6&&Math.abs(this._arcLen()-blockedArc)<1e-4)
-        blockedCov.onConstructHit(this.dps*c.powerBuff*dt,{src:c,pos:blockedPoint,lane:'beam'});
+        blockedCov.onConstructHit(this.dps*c.powerBuff*tipDt,{src:c,pos:blockedPoint,lane:'beam'});
     } else if (this.sustaining && blockedCov && blockedCov.hp > 0) {
-      blockedCov.hp -= this.dps * 2 * dt;
+      blockedCov.hp -= this.dps * 2 * tipDt;
       game.world.setBlockCracks(blockedCov);
       if (Math.random() < 0.4) game.particles.burst(tipPos.x, tipPos.y, tipPos.z, { count: 2, speed: 14, life: 0.3, size: 2.4, color: ['#3a3a44', this.color, '#fff'], drag: 2 });
       if (blockedCov.hp <= 0) game.shatterBlock(blockedCov, this.caster);   // a beam that cuts a fuel tank owns what comes out of it
@@ -1717,29 +1718,31 @@ class BeamHose {
           // so PowerWorld's generic onHit flash does not stack a glowing sphere
           // and point light on the opponent on every damage tick.
           this._tmp.set(hx,hy,hz);
+          const contactDt=dt*(game.timeFields?.scaleAt(this._tmp,c)??1);
           const damageOpts={src:c,dot:true,contactFx:true,contactPoint:this._tmp,dtype:this.dtype,siphon:this.siphon,hitstop:0,
-            beamDelta:dt,beamGuardChip:this.guardChip,beamGuardDrain:this.guardDrain,
+            beamDelta:contactDt,beamGuardChip:this.guardChip,beamGuardDrain:this.guardDrain,
             naniteContact:bodyHit&&f===this._bodyContact.fighter?this._bodyContact.naniteContact:null};
-          const dealt=f.takeDamage(this.dps*c.powerBuff*dt,damageOpts);
+          const dealt=f.takeDamage(this.dps*c.powerBuff*contactDt,damageOpts);
           // The damage result owns acceptance: Studio's onHit restores target
           // health before this call returns. Remote authority and rejected
           // immunity/phase hits cannot claim a local body-contact response.
+          const contactClock=(this._contactClock??=new Map()),contactAge=(contactClock.get(f)??0)+contactDt;contactClock.set(f,contactAge);
           const damaged=!f.remote&&Number.isFinite(dealt)&&dealt>0;
           const metal=damageOpts.naniteResult?.integrity>0;
           const guardContact=damageOpts.beamBlocked===true;
-          if((damaged||metal||guardContact)&&this.emissionAge+1e-8>=(this._contactNext.get(f)??0)){
+          if((damaged||metal||guardContact)&&contactAge+1e-8>=(this._contactNext.get(f)??0)){
             const interval=.18;
-            this._contactNext.set(f,this.emissionAge+interval);
+            this._contactNext.set(f,contactAge+interval);
             this._tmp.set(hx,hy,hz);this._tan.set(hdx,hdy,hdz).normalize();
             if(metal)this._tan.copy(damageOpts.naniteContact.normal);
             const color=metal?'#bdc2b8':guardContact?(f.def.guardType==='deflect'?'#ffd24a':'#bfe0ff'):this.color;
-            const power=clamp(dealt/Math.max(dt,1e-6)/80,.35,.8)*(guardContact?.65:1);
+            const power=clamp(dealt/Math.max(contactDt,1e-6)/80,.35,.8)*(guardContact?.65:1);
             game.vfx.contact?.(this._tmp,this._tan,{color,power,pressure:true,radius:this.radius});
             if(guardContact)game.audio.zap?.(620,this._tmp);
             else game.audio.impact?.(.24+power*.25,this._tmp);
             // Scale by a fixed contact window, not this display frame's tiny
             // damage tick. Generic DoTs remain suppressed by the reaction seam.
-            if(damaged)queueHitReaction(f,dealt/Math.max(dt,1e-6)*interval,
+            if(damaged)queueHitReaction(f,dealt/Math.max(contactDt,1e-6)*interval,
               {src:c,dot:true,beamContact:true,blocked:guardContact,kb:this._tan});
           }
           // ---- THE PRESSURE LADDER (manual §9): what a beam DOES to you depends on who you are.
@@ -1754,9 +1757,9 @@ class BeamHose {
             if (hold < press * 0.85) {
               const shove = (press * 0.85 - hold) * this.pushForce * (blocked?.2:1);
               this._tan.set(hdx,hdy,hdz).normalize();
-              f.vel.addScaledVector(this._tan,shove*dt);
+              f.vel.addScaledVector(this._tan,shove*contactDt);
               f.burstT = Math.max(f.burstT || 0, 0.09);                        // the clamp-lift — same mechanism as the dash
-              f._beamPressT = (f._beamPressT || 0) + dt;
+              f._beamPressT = (f._beamPressT || 0) + contactDt;
               if (!blocked && press > hold * 1.8 && f._beamPressT > 0.45) {    // the weak get BLASTED off their feet
                 f._beamPressT = 0;
                 const launchScale=Math.min(1,this.pushForce/368);
@@ -1778,7 +1781,7 @@ class BeamHose {
       // TIP ONLY, not the whole polyline: a sustained beam sweeping across the sky would otherwise
       // shear anything that drifted near any part of its length, and the shot you want to reward is
       // the one you PUT on the object. Empty array in the city; one length check.
-      if (game._flung && game._flung.length) game.hitFlung(c, this.tip.position, this.radius + 2.5, this.dps * c.powerBuff * dt);
+      if (game._flung && game._flung.length) game.hitFlung(c, this.tip.position, this.radius + 2.5, this.dps * c.powerBuff * tipDt);
       // tip fx + muzzle fx  (read tip from mesh — the damage loop reused the _v temp)
       const tp = this.tip.position;
       if (emitSparks&&Math.random() < 0.8) game.particles.burst(tp.x, tp.y, tp.z, { count: 3, speed: 16, life: 0.3, size: this._combatReadability?Math.min(1.1,this.radius*.4):this.radius*1.6, color: this._combatReadability?[this.color,this.color2]:['#fff',this.color,this.color2], drag: 3 });
@@ -2004,7 +2007,8 @@ export class Projectiles {
         a._clashOther = b; b._clashOther = a;
       }
       const pa = a.clashPower(), pb = b.clashPower(), tot = pa + pb || 1;
-      a._clashT = clamp(a._clashT + ((pa - pb) / tot) * 0.85 * dt, 0, 1);
+      const sa=game.timeFields?.scaleAt(_v,a.caster)??1,sb=game.timeFields?.scaleAt(_v,b.caster)??1;
+      a._clashT = clamp(a._clashT + ((pa*sa - pb*sb) / tot) * 0.85 * dt, 0, 1);
       const t = a._clashT;
       b._clashT = 1-t;
       // ⚠ AND THE STRUGGLE POINT HAS TO RIDE THE SAME AXIS. `cy` was the MIDPOINT of the two
@@ -2020,7 +2024,7 @@ export class Projectiles {
       // form between fighters at different heights, both beams snapped horizontal and no longer
       // pointed at each other or at their own struggle point. Aim them along the real 3D axis.
       a.dir.set(abx, aby, abz).normalize(); b.dir.set(-abx, -aby, -abz).normalize();
-      a.caster.ki = Math.max(0, a.caster.ki - 8 * dt); b.caster.ki = Math.max(0, b.caster.ki - 8 * dt);
+      a.caster.ki = Math.max(0, a.caster.ki - 8 * dt*(game.timeFields?.scaleFor(a.caster)??1)); b.caster.ki = Math.max(0, b.caster.ki - 8 * dt*(game.timeFields?.scaleFor(b.caster)??1));
       const rad = 2.5 + Math.min(pa, pb) * 0.5;
       game.particles.burst(cx, cy, cz, { count: 5, speed: 26, life: 0.32, size: 3.2, color: ['#fff', a.color, b.color], drag: 2, up: 3 });
       if (Math.random() < 0.4) game.vfx.flash(_v.set(cx, cy, cz), '#fff', rad, 0.08);
