@@ -4,6 +4,7 @@ import { POSE_DEFAULTS, poseDefaultsForStyle } from '../data/flight-tuning.js';
 import { rangedPoseChannels } from './cast-channels.js';
 import { exclusivePose } from './directional-pose.js';
 import { usesFlightPose } from './jump-motion.js';
+import { ridingBoard } from './board-flight.js';
 
 const JOINTS = Object.keys(POSE_DEFAULTS.hover);
 const CRUISE_PITCH={hero:1.26,twin:1.3,martial:1.18,thruster:1.3,hammer:1.06,glider:1.36};
@@ -13,7 +14,7 @@ const CRUISE_PITCH={hero:1.26,twin:1.3,martial:1.18,thruster:1.3,hammer:1.06,gli
 export function animateFlight(f, dt, combat = 0) {
   const p = f.parts, rig = p.rig;
   if (!rig) return;
-  const airborne = usesFlightPose(f);
+  const airborne = usesFlightPose(f), riding = ridingBoard(f);
   // Contact stops simulation travel. Preserve the committed aerial silhouette
   // through punch recovery without inventing physics velocity to hold the pose.
   const contactMotion=f._abilityMeleePose,heldTravel=contactMotion?.contactVelocity;
@@ -69,6 +70,7 @@ export function animateFlight(f, dt, combat = 0) {
   if (!f._openSky) roll = clamp(roll, -.5, .5);
   pitch=lerp(pitch,.08,lateral);
   roll=lerp(roll,clamp(roll,-.28,.28),lateral);
+  if(riding){pitch=clamp(Math.atan2(-velocity.y,Math.max(20,horizontal))*.24+.12,-.22,.36);roll=clamp(roll,-.22,.22);}
   p.g.rotation.x = damp(p.g.rotation.x, airborne ? pitch * travel - brake * .2 : 0, 11, dt);
   p.g.rotation.z = damp(p.g.rotation.z, airborne ? roll * travel : 0, 10, dt);
   if (p.groundRig) { p.groundRig.rotation.x=-p.g.rotation.x; p.groundRig.rotation.z=-p.g.rotation.z; }
@@ -91,11 +93,12 @@ export function animateFlight(f, dt, combat = 0) {
     }
     pose[key] = damp(pose[key], lerp(hover, target, mix), 12, dt);
   }
+  if(riding){pose.hipL=pose.hipR=-.22;pose.kneeL=pose.kneeR=.44;}
   const flight = f._flyPose || 0, weight = flight * (1-combatWeight);
   // A ranged action claims its emitter and upper-body carrier, not the legs.
   // Keep the authored flight base through release; full-body owners retain
   // their existing suppression so kicks, grabs and guard still win.
-  const legWeight=ranged||f._abilityMeleePose?flight:weight;
+  const legWeight=riding?1:ranged||f._abilityMeleePose?flight:weight;
   p.legL.rotation.x=lerp(p.legL.rotation.x,pose.hipL,legWeight);
   p.legR.rotation.x=lerp(p.legR.rotation.x,pose.hipR,legWeight);
   // Legs extend along -Y: left needs negative roll to spread outward. The inverse signs
@@ -106,6 +109,7 @@ export function animateFlight(f, dt, combat = 0) {
   p.legR.rotation.z=ranged?.08*legWeight:damp(p.legR.rotation.z,.08*weight,12,dt);
   p.legL.userData.knee.rotation.x=lerp(p.legL.userData.knee.rotation.x,pose.kneeL,legWeight);
   p.legR.userData.knee.rotation.x=lerp(p.legR.userData.knee.rotation.x,pose.kneeR,legWeight);
+  if(riding){p.legL.rotation.z=-.08;p.legR.rotation.z=.08;}
   p.armL.rotation.x=lerp(p.armL.rotation.x,pose.armLx,weight);
   p.armR.rotation.x=lerp(p.armR.rotation.x,pose.armRx,weight);
   p.armL.rotation.z=lerp(p.armL.rotation.z,pose.armLz,weight);

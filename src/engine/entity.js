@@ -40,6 +40,7 @@ import { clearSlotFx,cancelHeldSlot } from './abilities.js';
 import {retireOwnedConstructs} from './construct-policy.js';
 import { steerFlight, ownsFlightVelocity } from './flight-motion.js';
 import { animateFlight } from './flight-pose.js';
+import { ridingBoard, syncFlightBoard } from './board-flight.js';
 import {animateGround,restoreGroundBase,animateGroundTransition} from './ground-motion.js';
 import {animateCrouchPose,restoreCrouchPose,updateCrouchBounds} from './crouch-pose.js';
 import {animatePronePose,restorePronePose,updateProneBounds} from './prone-pose.js';
@@ -1599,10 +1600,8 @@ export class Fighter {
         b.visible = false; this.obj.add(b); this.parts.iceBoard = b;
       }
       const board = this.parts.iceBoard;
-      board.visible = this.flying;
-      if (this.flying) {
-        board.position.set(0, 0.35, 0.4);
-        board.rotation.x = Math.sin(this.animT * 2.6) * 0.05;
+      board.visible = ridingBoard(this);
+      if (board.visible) {
         if (game && flySpd > 8 && Math.random() < 0.7) game.particles.spawn({ x: this.pos.x - this.vel.x * 0.06, y: this.pos.y + 0.5, z: this.pos.z - this.vel.z * 0.06, vx: -this.vel.x * 0.1, vy: -2, vz: -this.vel.z * 0.1, life: 0.7, size: 2.4, color: ['#bfeaff', '#eaffff'], drag: 0.8, shrink: true });
       }
     }
@@ -2842,6 +2841,7 @@ export class Fighter {
     updateLimbSurfaces(p);
     poseWebSnare(this);
     poseFlightFeet(this,dt);
+    syncFlightBoard(this);
     updateHeroSkin(p);
     presentNanites(this);
     syncChargePresentation(this);
