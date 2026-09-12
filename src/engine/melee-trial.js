@@ -33,10 +33,13 @@ export class MeleeTrial {
  clearPreview(){if(this.previewActor){this.previewActor.obj.removeFromParent();this.previewActor.dispose();this.previewActor=null;}}
  startSelected(){if(!this.selectedThreat)return false;return this.start(this.kind==='encounter'?'stationary':this.kind||'stationary');}
  startEncounter(){
+  if(this.selectedAlly&&!ROSTER.some(d=>d.id===this.selectedAlly))return false;
   if(!this.selectedThreat||this.g.ms?.threatLab?.state!=='preparing'||!this.g.player.alive)return false;
   this.clear();this.attempt=null;this.phaseKey=null;this.kind='encounter';this.elapsed=0;
   const f=this.g.spawnEnemy(this.selectedThreat,{team:this.g.player.team===0?1:0,x:this.origin.x,z:this.origin.z,noRespawn:true});
-  f.pos.y=this.g.world.heightAt(f.pos.x,f.pos.z);f._openSky=true;f._chaseKb=true;f.faceDir(0,-1);this.target=f;this.startHp=f.hp;this.recording.bind([this.g.player,f]);
+  f.pos.y=this.g.world.heightAt(f.pos.x,f.pos.z);f._openSky=true;f._chaseKb=true;f.faceDir(0,-1);this.target=f;this.startHp=f.hp;
+  if(this.selectedAlly){const a=this.ally=this.g.spawnEnemy(this.selectedAlly,{team:this.g.player.team,x:this.origin.x+24,z:this.origin.z-30,noRespawn:true});a.pos.y=this.g.world.heightAt(a.pos.x,a.pos.z);a._openSky=true;a._chaseKb=true;a._squadLeader=this.g.player;}
+  this.recording.bind([this.g.player,f,...(this.ally?[this.ally]:[])]);
   this.g.hud?.feed?.('LIVE THREAT · '+f.def.name+' · Native powers and AI active. Reset practice to repeat.','#ffd24a');return f;
  }
  start(kind='stationary',trainingDefinition=null){
@@ -91,12 +94,13 @@ export class MeleeTrial {
  repeat(){if(this.machine)return this.startMachine(this.machineMode);return this.kind==='encounter'?this.startEncounter():this.start(this.kind||'stationary');}
  capture(){if(this.target&&!this.review){
   const f=this.g.player;this.phaseKey??=[];
-  for(const [actor,fighter]of [f,this.target].entries()){
-   const state=meleePhase(fighter);if(state.phase!==this.phaseKey[actor]){this.phaseKey[actor]=state.phase;this.recording.mark(this.g.time,{label:`${actor?'Target':'You'} · ${phaseLabel(state.phase)}`,kind:'phase',actor,...state});}
+  for(const [actor,fighter]of [f,this.target,...(this.ally?[this.ally]:[])].entries()){
+   const state=meleePhase(fighter);if(state.phase!==this.phaseKey[actor]){this.phaseKey[actor]=state.phase;this.recording.mark(this.g.time,{label:`${actor===2?'Teammate':actor?'Target':'You'} · ${phaseLabel(state.phase)}`,kind:'phase',actor,...state});}
   }
   this.recording.capture(this.g.time);
   if(this.canRecoverKO()&&f.koT>=1&&typeof document!=='undefined')this.openReview();
  }}
+ ownsPracticeActor(f){const seen=new Set();while(f&&!seen.has(f)){if(f===this.target||f===this.ally)return true;seen.add(f);f=f._dupeOf;}return false;}
  ownsThreat(f){const seen=new Set();while(f&&!seen.has(f)){if(f===this.target)return true;seen.add(f);f=f._dupeOf;}return false;}
  canRecoverKO(){const f=this.g.player;return this.g.ms?.threatLab?.state==='preparing'&&f?.state==='ko'&&this.ownsThreat(f.lastHitBy)&&this.g.entities.includes(f);}
  openReview(){
@@ -146,17 +150,17 @@ export class MeleeTrial {
  grabContact(holder,victim){if(holder!==this.g.player||victim!==this.target)return;this.recording.mark(this.g.time,{label:'Grab connected',kind:'grab'});this.g.hud?.feed?.('GRAB CONNECTED · tap V: body blow · hold V: slam · move/fly: carry · hold E then release: aimed throw · tap E: set down/drop','#ffd24a');}
  hit(target,amount,opts,blocked,outcome=null){
   const incoming=target===this.g.player&&opts.src===this.target;
-  if(!incoming&&target!==this.target)return;
+  if(!incoming&&target!==this.target&&target!==this.ally)return;
   if(this.attempt&&opts.src===this.g.player)this.attempt.contacts++;
   const healthLost=outcome?.healthLost??amount,energySpent=outcome?.guardEnergySpent??0;
   const result=outcome?.guard==='broken'?'GUARD BROKEN':outcome?.guard==='blocked'?'BLOCK':blocked?'ABSORBED':opts.slam?'TERRAIN IMPACT':opts.meleeMove==='throw'?'THROW':'CONTACT';
-  const label=(incoming?'YOU · ':'TARGET · ')+result+' · '+healthLost.toFixed(1)+' HP · '+energySpent.toFixed(1)+' guard energy';
+  const label=(incoming?'YOU · ':target===this.ally?'TEAMMATE · ':'TARGET · ')+result+' · '+healthLost.toFixed(1)+' HP · '+energySpent.toFixed(1)+' guard energy';
   const record={trial:this.kind,time:this.elapsed,amount,blocked:!!blocked,hp:target.hp,playerKi:this.g.player.ki,healthLost,guardEnergySpent:energySpent,result,incoming,move:opts.meleeMove||'hit'};
   if(this.machine)this.machineLastHit=record;this.g._threatRoom?.rangeDrill?.contact(target,opts.src,healthLost);
   if(this.machine&&healthLost>0)this.g.news?.highlight('bighit','TRAINING MACHINE · '+healthLost.toFixed(1)+' DAMAGE',{actor:opts.src,target,focus:target.pos,priority:1});
   this.records.push(record);if(this.records.length>100)this.records.shift();this.recording.mark(this.g.time,{...record,label,kind:'contact'});
   this.g.hud?.feed?.(label,'#ffd24a');
  }
- clear(){this.machine=null;this.machineMode=null;this.clearPreview();this.review?.close();this.review=null;this.recording.clear();const f=this.target;if(!f)return;retirePracticeActor(this.g,f);this.target=null;}
+ clear(){this.machine=null;this.machineMode=null;this.clearPreview();this.review?.close();this.review=null;this.recording.clear();for(const f of [this.target,this.ally])if(f)retirePracticeActor(this.g,f);this.target=null;this.ally=null;}
  dispose(){this.clear();}
 }

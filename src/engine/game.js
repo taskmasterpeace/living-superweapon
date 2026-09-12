@@ -2648,7 +2648,7 @@ export class Game {
 
     try { this.startKoCam(victim); } catch (e) {}   // ROADMAP 18 · camera drama
     const practice=this.ms?.threatLab?.state==='preparing'&&this.ms.threatLab.meleeTrial;
-    if(practice&&(practice.ownsThreat(victim)||(victim===this.player&&practice.ownsThreat(victim.lastHitBy)))) {
+    if(practice&&(practice.ownsPracticeActor(victim)||(victim===this.player&&practice.ownsThreat(victim.lastHitBy)))) {
       // Training keeps native KO/ragdoll presentation without campaign rewards,
       // dropped equipment, trauma, stock changes or operation kill callbacks.
       this.audio.cry(victim.def.voicePitch||1,victim.pos);

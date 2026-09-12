@@ -70,3 +70,23 @@ test('roster preview stays outside combat and selected drill retains native body
   t.previewThreat('rage');assert.equal(x.g.entities.length,1);assert.equal(t.start('airborne'),false);t.dispose();assert.equal(t.previewActor,null);
  }finally{x.close();}
 });
+
+test('live practice teammate uses native AI and stays outside campaign deployment',()=>{
+ const x=mainCombatFixture({mode:'powerworld'});try{
+  const t=new MeleeTrial(x.g,new THREE.Vector3(0,0,15)),manifest=[x.p],stock={remaining:{lsw:3,soldier:2}};
+  x.g.ms.threatLab={state:'preparing',meleeTrial:t,manifest,stock};t.selectedThreat='rage';t.selectedAlly='kano';
+  t.startEncounter();const ally=t.ally,enemy=t.target;
+  assert.ok(ally.ai);assert.equal(ally.team,x.p.team);assert.ok(x.g.isFoe(ally,enemy));assert.equal(x.g.isFoe(x.p,ally),false);
+  assert.equal(ally.noRespawn,true);assert.equal(t.recording.actors.length,3);assert.equal(t.ownsPracticeActor(ally),true);assert.equal(t.ownsThreat(ally),false);
+  t.repeat();assert.notEqual(t.ally,ally);assert.ok(!x.g.entities.includes(ally));assert.deepEqual(manifest,[x.p]);assert.deepEqual(stock.remaining,{lsw:3,soldier:2});
+  t.clear();assert.deepEqual(x.g.entities,[x.p]);assert.equal(t.ally,null);
+ }finally{x.close();}
+});
+
+test('practice ally KO does not call operation rewards or drop equipment',()=>{
+ const x=mainCombatFixture({mode:'powerworld'});try{
+  const t=new MeleeTrial(x.g,new THREE.Vector3(0,0,15));x.g.ms.threatLab={state:'preparing',meleeTrial:t};t.selectedThreat='rage';t.selectedAlly='merc';t.startEncounter();
+  x.g.audio={...x.g.audio,cry:()=>{}};let drops=0,rewards=0;x.g.spawnGearDrop=()=>drops++;x.g.dropGear=()=>drops++;x.g.grantXp=()=>rewards++;x.g.handleKO(t.ally);
+  assert.equal(drops,0);assert.equal(rewards,0);t.clear();
+ }finally{x.close();}
+});
