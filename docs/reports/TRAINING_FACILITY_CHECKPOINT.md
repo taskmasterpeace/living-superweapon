@@ -637,3 +637,10 @@ This is one hostile airborne throw sequence. Friendly catch, defensive escapes, 
 - First run against default MERC recorded actual contact but its shared action observer timed out during initial rendering. Preserved failed evidence; this was not evidence of a gameplay miss. Second run foregrounds the page and waits for actual simulation readiness, and compares the intended KANO opponent.
 - Re-ran the RAGE Studio case AFTER the preceding commit's idle-phase reset. It now passes: 46.8u, 38.475 damage, one contact, exact repeated-seek position/outcome. JELANI and SOL also pass. RAGE restored to `tools/studio-approach-browser.mjs` acceptance scope. No new range/damage tuning was needed. This resolves the recorded authoring case, not all possible distances/targets/dodges.
 - Captured native and Studio clips/stills. Registry tests: 4 passed; tool-only changes this turn. Full goal remains active.
+
+### September 13 — saved appearances in Animation Library
+- Animation Library now resolves selected and held characters through the same validated Studio profile application used elsewhere. Previously both previews constructed raw roster definitions, ignoring saved outfit/body/colors.
+- Shows whether each preview uses saved Studio appearance or shipped appearance. Invalid/unreadable saved profiles retain their data and show a visible fallback explanation; the library remains usable.
+- Added a read-only appearance snapshot to the existing animationLibrary inspection object. Browser acceptance seeds isolated saved profiles for VEGAS/MERC, verifies both previews, then corrupts storage and checks the notice and exact data preservation. No user's live storage edited.
+- `tools/animation-appearance-browser.mjs` passed with zero page errors; saved-pair screenshot inspected (black/gold VEGAS and black MERC). Build passed with existing import/chunk warnings. Evidence: `artifacts/marketing/animation-appearance-2026-09-13/`.
+- Reload or reselect the character to pick up another page's edits. This is appearance parity for the library, not full character-creator completeness or combat simulation in the pose viewer.
