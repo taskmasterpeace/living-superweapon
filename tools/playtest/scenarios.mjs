@@ -1,4 +1,5 @@
 export const scenarios=Object.freeze({
+ 'melee-guard':{script:'guard-drill-browser.mjs',capture:'silent video and screenshots',description:'Hold native guard against the trainer; require frontal contact with energy spent and no health loss.'},
  'melee-instructions':{script:'approach-teaching-browser.mjs',capture:'screenshots',description:'Open the Threat Room console, read character-specific instructions and start walking-retreat practice.'},
  'melee-retreat':{script:'jelani-entry-browser.mjs',capture:'silent video and screenshots',description:'JELANI targets and strikes a retreating trainer with native T/V input.'},
  'webline-chain':{script:'webline-chain-browser.mjs',capture:'silent video and screenshots',description:'WEBLINE selects Web Zip, pulls to an anchor, holds and jumps off with native input.'}
