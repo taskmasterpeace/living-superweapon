@@ -54,3 +54,7 @@ Scenario authors can import `performAction(page, 'strike', {holdMs:80})` from to
 ## Native charge and guard crush
 
 `--scenario melee-guard-crush` uses the existing guard script against a blocking trainer. It requires actual GUARD BROKEN contact, positive guard-energy spending and no health leak through funded guard. `performAction(page,'strike',{until:'melee-charged'})` holds native V until the real meleeCharge reaches 0.6, observes only, then releases; the wait is capped at 10 seconds and failures still release input. The action log records chargeAtRelease. Fixed real-time holds remain available for taps. This avoids treating browser startup stalls as sufficient in-game charge. It does not set charge or call the attack handler directly.
+
+## Grab bypass and intentional release
+
+`--scenario melee-grab-guard` uses the same guard scenario script. It waits for the trainer's real guard and natural spawn-immunity expiration, sends E, checks reciprocal holder/victim references, captures the hold, then taps E to release. The release check requires more than one simulation second left on the grab before input and release within 0.75 seconds, so automatic expiry cannot substitute for the interaction. Shared snapshots now include grabbing/grabbedBy IDs and grabState. Front-grab escape, interrupting a grab startup, aerial carry/catch and throws remain separate gates.

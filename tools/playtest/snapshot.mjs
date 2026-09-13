@@ -5,7 +5,7 @@ export function snapshotBrowser(){
  const vec=v=>v?[num(v.x),num(v.y),num(v.z)]:null;
  const player=g.player,origin=player?.pos;
  const near=p=>origin&&p?Math.hypot(p.x-origin.x,(p.y||0)-origin.y,p.z-origin.z):Infinity;
- const actor=a=>a?{id:a.id??null,hero:text(a.def?.id),class:text(a.def?.archetype),pos:vec(a.pos),velocity:vec(a.vel),hp:num(a.hp),energy:num(a.ki),alive:!!a.alive,flying:!!a.flying,meleeState:text(a.mstate),guarding:!!a.guarding,launchTime:num(a.launchT),selectedPower:text(a._selSlot),approach:a._meleeMotion?{family:text(a._meleeMotion.family),point:vec(a._meleeMotion.point)}:null}:null;
+ const actor=a=>a?{id:a.id??null,hero:text(a.def?.id),class:text(a.def?.archetype),pos:vec(a.pos),velocity:vec(a.vel),hp:num(a.hp),energy:num(a.ki),alive:!!a.alive,flying:!!a.flying,meleeState:text(a.mstate),guarding:!!a.guarding,grabbing:a.grabbing?.id??null,grabbedBy:a.grabbedBy?.id??null,grabState:text(a.grabState),launchTime:num(a.launchT),selectedPower:text(a._selSlot),approach:a._meleeMotion?{family:text(a._meleeMotion.family),point:vec(a._meleeMotion.point)}:null}:null;
  const colliders=(g.world?.cover||[]).map((c,index)=>({c,index,d:origin?Math.hypot(Math.max(0,Math.abs(c.x-origin.x)-(c.hx||0)),Math.max(0,Math.abs(c.z-origin.z)-(c.hz||0))):Infinity})).filter(x=>x.d<=120).sort((a,b)=>a.d-b.d);
  const trial=g.ms?.threatLab?.meleeTrial;
  return {version:1,available:true,time:num(g.time),units:'position: world units; velocity: world units/second',running:!!g.running,overlay:!!g.combatOverlayOpen,player:actor(player),target:actor(trial?.target),
