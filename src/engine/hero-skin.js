@@ -136,7 +136,12 @@ export function bindHeroSkin(parts,def){
    const sourceWorld=new THREE.Matrix4().fromArray(j.matrix),q=new THREE.Quaternion().setFromRotationMatrix(sourceWorld);
    const direction=new THREE.Vector3(0,1,0).applyQuaternion(q),curlAxis=new THREE.Vector3().crossVectors(direction,up).normalize().applyQuaternion(q.clone().invert());
    const digit=Number(j.name.split('_')[1]),amount=j.name.startsWith('thumb')?[0,.35,.65,.65][digit]??0:[0,1.1,1.35,1.1][digit]??0;
-   records.push({i,parent:j.parent,position,quaternion,scale,curlAxis,amount,hand:j.name.endsWith('_r')?parts.armL.children[2]:parts.armR.children[2]});
+   const side=j.name.endsWith('_r')?'r':'l';
+   // A thumb also opposes across the palm. Curl alone leaves it sticking out
+   // beside the fist. Use the anatomical hand axis, not exporter Euler axes;
+   // this skin-only adjustment leaves the hand/weapon/contact driver untouched.
+   const oppositionAxis=j.name==='thumb_01_'+side?points['hand_'+side].clone().sub(points['middle_01_'+side]).normalize().applyQuaternion(q.clone().invert()):null;
+   records.push({i,parent:j.parent,position,quaternion,scale,curlAxis,amount,oppositionAxis,opposition:side==='r'?-.9:.9,hand:side==='r'?parts.armL.children[2]:parts.armR.children[2]});
   }else{
    if(!binding)throw new Error(`Unsupported catalog body joint: ${j.name}`);
    // Native transform inheritance, not cached world-space matrices: physics
@@ -196,7 +201,9 @@ export function updateHeroSkin(parts){
   const bone=skin.skeleton.bones[r.i];
   if(!r.driver){
    const closed=1-(r.hand.morphTargetInfluences?.[0]??0);
-   rotation.copy(r.quaternion).multiply(axisRotation.setFromAxisAngle(r.curlAxis,r.amount*closed));
+   rotation.copy(r.quaternion);
+   if(r.oppositionAxis)rotation.multiply(axisRotation.setFromAxisAngle(r.oppositionAxis,r.opposition*closed));
+   rotation.multiply(axisRotation.setFromAxisAngle(r.curlAxis,r.amount*closed));
    bone.matrix.compose(r.position,rotation,r.scale);
   }
  }
