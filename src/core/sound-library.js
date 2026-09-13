@@ -85,14 +85,25 @@ export class SoundLibrary {
   this.state=next;this.buffers=buffers;
  }
  async importPackage(data){
-  const next=validatePackage(data),buffers=new Map();
+  const previous=this.state,next=validatePackage(data),buffers=new Map();
   if(Object.keys(next.bindings).length&&!this.ctx)throw Error('Press Play to enable audio before importing recordings');
   for(const [id,b] of Object.entries(next.bindings)){
    let buffer;try{buffer=await this.ctx.decodeAudioData(mediaBytes(b).buffer);}catch{throw Error(`Cannot decode ${b.name}; previous library was kept`);}
    if(!Number.isFinite(buffer.duration)||buffer.duration<=0||buffer.duration>30)throw Error('Recordings must be at most 30 seconds');
    buffers.set(id,{data:b.data,buffer});
   }
+  if(this.state!==previous)throw Error('Library changed while importing; retry with the current library.');
   this._commit(next,buffers);this.stop();return this.exportPackage();
+ }
+ async addMissingRecordings(data){
+  const incoming=validatePackage(data),next=this.exportPackage();let added=0;
+  for(const [id,binding]of Object.entries(incoming.bindings)){
+   if(next.bindings[id])continue;
+   if(incoming.customCues?.[id]&&!next.customCues?.[id])next.customCues={...next.customCues,[id]:incoming.customCues[id]};
+   next.bindings[id]=binding;next.settings[id]={...incoming.settings[id],...next.settings[id]};added++;
+  }
+  if(added)await this.importPackage(next);
+  return {added,kept:Object.keys(incoming.bindings).length-added};
  }
  async bindRecording(id,file){
   this.cue(id);if(!file||file.size>MAX_BYTES)throw Error('Choose an audio recording up to 1 MiB');
