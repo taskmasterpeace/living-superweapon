@@ -20,6 +20,8 @@ export class ThreatDeployment {
       if(reserved.some(p=>Math.hypot(px-p.x,pz-p.z)<r+p.r+8))continue;
       if(Math.abs(px)>w.ARENA-r||Math.abs(pz)>w.ARENA-r)continue;
       if(w.cover.some(c=>Math.abs(px-c.x)<(c.hx??c.r??0)+r&&Math.abs(pz-c.z)<(c.hz??c.r??0)+r))continue;
+      // Crown bounds must clear the whole pad, not just the narrow trunk collider.
+      if(w.treeSpots?.some(t=>!t.dead&&!t.carried&&Math.hypot(px-t.x,pz-t.z)<r+11*(t.scale||1)))continue;
       const y=w.heightAt(px,pz),ys=[[r,0],[-r,0],[0,r],[0,-r]].map(([dx,dz])=>w.heightAt(px+dx,pz+dz));
       if(Number.isFinite(y)&&ys.every(v=>Math.abs(v-y)<1.5))return new THREE.Vector3(px,y,pz);
     }

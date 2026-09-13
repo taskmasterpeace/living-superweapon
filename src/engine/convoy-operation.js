@@ -27,7 +27,7 @@ export class ConvoyOperation{
   if(!this.route){this.routeError('No drivable laboratory route.');return;}
   this.destination=end;this.routeIndex=1;this.buildRoute();
   this.depot=new IndustrialDepot(g,end,this.route);
-  this.woodland=new WoodlandCorridor(g,this.route,[{...deploy.origin,r:30},{...deploy.destination,r:30}]);
+  this.woodland=new WoodlandCorridor(g,this.route,[{...deploy.origin,r:30},{...deploy.destination,r:30},...(stage.transport?.origin?[{...stage.transport.origin,r:60}]:[])]);
   this.events=[];
   const base=ROSTER.find(d=>d.id==='sarge');
   this.scientist=g.addFighter({...base,id:'operation-scientist',name:'RESEARCH SCIENTIST',abilities:{},items:[],hp:80,colors:{primary:'#dfdac6',secondary:'#454c52',accent:'#e7c56a'},flightTier:0},{team:this.assignment==='escort'?g.player.team:1,x:lab.x+12,z:lab.z+34});
