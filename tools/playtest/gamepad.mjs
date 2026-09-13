@@ -12,3 +12,8 @@ export async function gamepadButton(page,index,held){
  if(!Number.isInteger(index)||index<0||index>16)throw new Error('Invalid gamepad index');
  await page.evaluate(({index,held})=>{const state=globalThis.__PW_TEST_GAMEPAD;if(!state)throw new Error('Emulated gamepad is not installed');state.buttons[index]={pressed:held,touched:held,value:held?1:0};state.timestamp=performance.now();},{index,held});
 }
+
+export async function gamepadMove(page,x,y){
+ if(![x,y].every(v=>Number.isFinite(v)&&v>=-1&&v<=1))throw new Error('Stick axes must be finite values from -1 to 1');
+ await page.evaluate(({x,y})=>{const s=globalThis.__PW_TEST_GAMEPAD;if(!s)throw new Error('Emulated gamepad is not installed');s.axes[0]=x;s.axes[1]=y;s.timestamp=performance.now();},{x,y});
+}

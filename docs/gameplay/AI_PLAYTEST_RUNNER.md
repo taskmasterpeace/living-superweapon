@@ -107,3 +107,11 @@ Replacement native-input evidence (all passed with zero browser errors):
 - artifacts/playtest/2026-09-13T05-36-41.503Z-gamepad-guard: actual controller guard through contact.
 
 Each includes a silent clip, screenshots, action log and observed state. This corrects test wiring, not gameplay balance. Physical devices and movement/multitouch remain unverified. Movement adapter expansion was deferred this turn to repair this evidence defect first.
+
+## Controller movement during combat — 2026-09-13
+
+Run `node tools/playtest/run.mjs --scenario moving-strike`. This controller-only scenario stages SOL and a stationary trainer once, then holds a rightward left stick while charging melee through the native controller polling. It records frame-by-frame position, charge and parsed stick/button states. It requires actual movement while charging and neutral inputs afterward; it does not claim target contact.
+
+Shared `performAction` now accepts `{scheme:'pad',move:[x,y]}` alongside an attack. Axes must be finite in [-1,1]. The stick remains held during the action and is reset on completion or failure. --controls advertises this option. No actor position, parsed controller state or combat outcome is written by the adapter.
+
+Evidence: artifacts/playtest/2026-09-13T05-39-12.605Z-moving-strike. Native run passed: 7.1932 units displaced during observed simultaneous movement/charge, charge 0.71656 at release, neutral stick/button afterward, no browser errors. Silent video, screenshot and 111 observation frames saved. Eleven scoped tests passed, including cleanup after a charge timeout and invalid-axis rejection. Physical controllers, right-stick aiming, combined touch gestures and operation checkpoint migration remain open.

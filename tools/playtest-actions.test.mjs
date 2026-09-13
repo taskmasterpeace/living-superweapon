@@ -5,3 +5,14 @@ test('stalled simulation releases held input and records failure',async()=>{cons
 test('unavailable runtime and invalid actions cannot send input',async()=>{const p=fake({ready:false});await assert.rejects(performAction(p,'strike'));await assert.rejects(performAction(p,'constructor'));await assert.rejects(performAction(p,'strike',{holdMs:Infinity}));assert.deepEqual(p.calls,[]);});
 
 test('charge condition timeout releases input and cannot count as charged success',async()=>{const p=fake({advance:false});await assert.rejects(performAction(p,'strike',{until:'melee-charged'}));assert.deepEqual(p.calls,['down:v','up:v']);assert.equal(actionHistory(p)[0].status,'failed');const other=fake();await assert.rejects(performAction(other,'guard',{until:'melee-charged'}));assert.deepEqual(other.calls,[]);});
+
+test('combined stick and attack releases both inputs after charge timeout',async()=>{
+ const p=fake({advance:false}),original=p.evaluate;
+ p.evaluate=async(fn,arg)=>{if(arg&&Object.hasOwn(arg,'x')){p.calls.push(['axes',arg.x,arg.y]);return;}if(arg&&Object.hasOwn(arg,'index')){p.calls.push(['button',arg.index,arg.held]);return;}return original(fn,arg);};
+ await assert.rejects(performAction(p,'strike',{scheme:'pad',move:[1,0],until:'melee-charged'}));
+ assert.deepEqual(p.calls,[['axes',1,0],['button',2,true],['button',2,false],['axes',0,0]]);
+ const r=actionHistory(p)[0];assert.equal(r.status,'failed');assert(r.released&&r.movementReleased);
+});
+test('invalid or incompatible stick input is rejected before input dispatch',async()=>{
+ for(const options of [{move:[1,0]},{scheme:'pad',move:[NaN,0]},{scheme:'pad',move:[2,0]},{scheme:'pad',move:[0]}]){const p=fake();await assert.rejects(performAction(p,'strike',options));assert.deepEqual(p.calls,[]);}
+});
