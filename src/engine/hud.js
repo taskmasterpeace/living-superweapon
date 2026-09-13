@@ -782,10 +782,15 @@ export class HUD {
     const grab=verb==='grab'&&g.modeId==='powerworld'&&g.melee.canBeginGrab(f)?g.melee.grabTarget(f):null;
     if (!f || !g || !g.running || !verb || (verb === 'grab' && !grab)) { el.style.display = 'none'; return; }
     el.style.display = 'flex';
+    el.style.left=g.touch?.enabled?'33%':'50%';
+    el.style.maxWidth=g.touch?.enabled?'52vw':'';
+    el.style.letterSpacing=g.touch?.enabled?'.03em':'.12em';
     const soldier=f.def.archetype==='soldier'&&(f._openSky||g.modeId==='powerworld');
     if(soldier&&g.modeId!=='powerworld'&&verb!=='interact'){el.style.display='none';return;}
-    const action=grab?(grab.friendly?'CARRY TEAMMATE':'GRAB OPPONENT'):f._personCarry?.friendly?'RELEASE TEAMMATE':g.modeId==='powerworld'&&(f.grabbing||f._carry)?'HOLD: AIM THROW · TAP: RELEASE':(LABEL[verb]||verb).toUpperCase();
-    el.innerHTML = `<b style="color:var(--gold,#ffd24a)">${g.touch?.enabled?'TAP':g.modeId==='powerworld'||soldier?'E':'G'}</b><span>${action}</span>` +
+    const managing=g.modeId==='powerworld'&&(f.grabbing||f._carry);
+    const action=grab?(grab.friendly?'CARRY TEAMMATE':'GRAB OPPONENT'):f._personCarry?.friendly?'TAP: RELEASE TEAMMATE':managing?'HOLD: AIM · RELEASE: THROW · TAP: DROP':(LABEL[verb]||verb).toUpperCase();
+    const button=g.touch?.enabled?(managing?'THROW':'TAP'):g.pad?.active?'GRAB':g.modeId==='powerworld'||soldier?'E':'G';
+    el.innerHTML = `<b style="color:var(--gold,#ffd24a)">${button}</b><span>${action}</span>` +
       (grab?'<span>'+String(grab.fighter.name).replace(/[<>&]/g,'')+'</span>':'')+
       (h && verb === 'interact' ? `<span style="color:var(--text-5,#8b8577)">— ${String(h.label).toUpperCase()}</span>` : '');
   }
