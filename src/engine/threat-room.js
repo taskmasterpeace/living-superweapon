@@ -63,7 +63,9 @@ export class ThreatRoom {
   this.securityCamera=new THREE.Mesh(new THREE.BoxGeometry(5,4,9),new THREE.MeshStandardMaterial({color:0x263b48}));this.securityCamera.position.set(0,270,80);this.group.add(this.securityCamera);
   this.rings=[];this.ringIndex=0;this.laps=0;
   for(let i=0;i<6;i++){const ring=new THREE.Mesh(new THREE.TorusGeometry(16,.7,8,48),new THREE.MeshBasicMaterial({color:i===0?0xffd24a:0x6caabb}));ring.position.set(0,35+i*22,100-i*60);this.group.add(ring);this.rings.push(ring);}
-  this.label('FLIGHT COURSE  /  FOLLOW THE GOLD RING',0,27,115,110,7);
+  // Keep instructions beside the lane: a text plane across the approach fills
+  // the chase camera as the player flies through it.
+  this.label('FLIGHT COURSE / FOLLOW THE GOLD RING',-85,46,115,65,5,0,true);
   this.station=g.registerInteractable({id:'room-target-range',pos:new THREE.Vector3(140,3,91),r:12,label:'TARGET · STILL / MOVING / AIRBORNE',verb:'START TARGET RANGE',priority:4,enabled:f=>f===g.player&&g.ms.threatLab?.state==='preparing',onUse:()=>{const t=g.ms.threatLab.meleeTrial;this.rangeMode=((this.rangeMode??-1)+1)%3;t.startMachine(['still','moving','airborne'][this.rangeMode]);}});
   this.label('E / TARGET RANGE',140,6,83.1,10,2,0,true);
   this.rangeDisplay=this.screen(140,30,-110,62,26);this.rangeDrill=new RangeDrill();

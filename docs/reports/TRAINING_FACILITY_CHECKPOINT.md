@@ -296,3 +296,9 @@ Candidate: http://127.0.0.1:5184/powerworld.html . Local integration worktree; n
 - Validation: 13 focused flight/combat audio tests pass. Build passed before the final negative-timer comparison correction; that correction has a regression test. Native keyboard F/Space/W/Control test passed with imported recordings, no page errors and zero remaining flight/hover handles after landing.
 - Evidence: artifacts/marketing/flight-audio-2026-09-12/flight.webm, flight.png, result.json. Browser video documents controls and runtime; it is not an audio listening review. Initial Space-only capture did not take off; corrected harness uses the flight toggle.
 - Limitations: player only; NPC flight audio remains unassigned. Native screenshot exposes oversized flight-course lettering close to camera; separate visual follow-up required. Physical iPhone remains unverified. Full goal remains active.
+
+## Flight-course signage correction — 2026-09-12
+- Removed the oversized floating instruction plane from the first ring approach. Its instruction now sits above the telemetry board beside the lane, as a compact plaque. Ring geometry, collision and timing are unchanged.
+- Native flight-camera screenshot inspected: the formerly screen-filling text no longer crosses the player or ring. F/Space/W/Control flight-audio capture also passed with no page errors and no lingering flight loops after landing.
+- Full course check: normal flight input after documented initial position/camera staging crossed all six ordered rings, counted one lap, left the player alive and generated zero page errors. This is course acceptance, not a claim that every movement or full goal requirement is complete.
+- Evidence: artifacts/marketing/flight-lane-signage-2026-09-12/flight.png, flight.webm, result.json; artifacts/marketing/flight-course-2026-09-12/flight-course.webm, lap.png, result.json.

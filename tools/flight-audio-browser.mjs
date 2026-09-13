@@ -1,7 +1,7 @@
 import {chromium} from 'playwright';
 import {mkdir,writeFile,copyFile} from 'node:fs/promises';
 import assert from 'node:assert/strict';
-const out='artifacts/marketing/flight-audio-2026-09-12';await mkdir(out,{recursive:true});
+const out=process.env.PW_CAPTURE_OUT||'artifacts/marketing/flight-audio-2026-09-12';await mkdir(out,{recursive:true});
 const b=await chromium.launch({headless:false}),c=await b.newContext({viewport:{width:1280,height:800},recordVideo:{dir:out}}),p=await c.newPage(),errors=[];p.on('pageerror',e=>errors.push(e.message));
 try{
  await p.goto('http://127.0.0.1:5184/sound-library.html');await p.getByRole('button',{name:'Add AI audio pack',exact:true}).click();await p.waitForFunction(()=>Object.keys(AUDIO_WORKSHOP.library.state.bindings).length===37);
