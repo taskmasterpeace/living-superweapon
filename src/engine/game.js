@@ -1765,7 +1765,12 @@ export class Game {
     };
     // Practice targets teach the same focus controls as live opponents. The
     // shared availability check still rejects carried, hidden and invalid targets.
-    const front = this.entities.filter(e => e.def&&lockAvailable(this,p,e)&&ang(e)<=FRONT);
+    // The raised shoulder ray cannot pass through a body inside its lateral offset.
+    // At touching distance, admit a narrow forward body cone as well. Range and
+    // cone remain bounded; shared visibility/LOS checks still apply to both paths.
+    const closeFront=e=>{const dx=e.pos.x-p.pos.x,dy=e.pos.y-p.pos.y,dz=e.pos.z-p.pos.z,d=Math.hypot(dx,dy,dz);
+      return d>0&&d<=3*((p.radius||2.2)+(e.radius||2.2))&&(dx*cf.x+dy*cf.y+dz*cf.z)/d>=Math.SQRT1_2;};
+    const front = this.entities.filter(e => e.def&&lockAvailable(this,p,e)&&(ang(e)<=FRONT||closeFront(e)));
     front.sort((a, b) => ang(a) - ang(b));
     const locked = (this.hardLock && this.hardLock.alive) ? this.hardLock : null;
     // A following camera continually re-ranks its current foe first. Cycling that list can

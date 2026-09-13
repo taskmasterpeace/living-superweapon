@@ -40,3 +40,7 @@ test('lock validation clears an occluded target before it can own this frame\'s 
  const f=fixture();f.acquire();f.g.canSee=()=>false;
  Game.prototype.validateLock.call(f.g,f.p);assert.equal(f.g.hardLock,null);
 });
+
+test('raised shoulder camera can acquire a visible close opponent ahead of the fighter',()=>{const f=fixture(0,6);f.g.world.camera.position.set(8,30,-25);f.g.world.camera.lookAt(8,30,10);f.g.world.camera.updateMatrixWorld(true);assert.equal(f.acquire(),f.foe);assert.equal(f.acquire(),null);});
+for(const angle of [70,120,180])test(`close parallax allowance rejects ${angle}-degree side/rear target`,()=>{const f=fixture(angle,6);f.g.world.camera.position.set(8,30,-25);f.g.world.camera.lookAt(8,30,10);f.g.world.camera.updateMatrixWorld(true);assert.equal(f.acquire(),null);});
+test('close parallax allowance retains visibility and obstruction checks',()=>{const f=fixture(0,6);f.g.world.camera.position.set(8,30,-25);f.g.world.camera.lookAt(8,30,10);f.g.world.camera.updateMatrixWorld(true);f.g.canSee=()=>false;assert.equal(f.acquire(),null);f.g.canSee=()=>true;f.foe._vis=0;assert.equal(f.acquire(),null);});
