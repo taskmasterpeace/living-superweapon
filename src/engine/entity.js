@@ -1,4 +1,5 @@
 import {fallingGravity,thrownDrag} from './body-ballistics.js';
+import {animateHeldGrip} from './held-grip-pose.js';
 import {stopFlightAudio} from './flight-sense.js';
 import {migratePowerUpDef} from '../data/power-up.js';
 import {canMomentumGlide,steerMomentumGlide} from './momentum-glide.js';
@@ -2846,6 +2847,7 @@ export class Fighter {
     syncHeadCover(p);
     // Cloth reads the final carrier, including recoil, but cannot affect fist-speed damage.
     animateCape(p,this.animT,this.vel.length(),this.vel);
+    animateHeldGrip(this);
     updateLimbSurfaces(p);
     poseWebSnare(this);
     poseFlightFeet(this,dt);
