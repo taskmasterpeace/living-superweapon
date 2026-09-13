@@ -11,3 +11,14 @@ for(const scheme of ['kbm','pad','touch'])test(`one scheme-aware native grab mes
  }finally{x.close();}
 });
 test('live drill prompts are brief; detailed lessons remain separate',()=>{for(const scheme of ['kbm','pad','touch'])for(const kind of ['stationary','retreat','guard','dodge','defend','airborne','air-defense']){const text=trialPrompt(kind,scheme);assert(text.length<100);if(scheme!=='kbm')assert.doesNotMatch(text,/\b[VQE]\b/);}});
+
+test('teaching uses authored reach, shared attack controls and honest lock counterplay',async()=>{
+ const {approachLesson}=await import('../src/engine/combat-lesson-controls.js');
+ const def={id:'sol',flightTier:3,combat:{groundApproach:'tackle'}};
+ for(const scheme of ['kbm','pad','touch']){
+  const ground=approachLesson(def,scheme),air=approachLesson(def,scheme,true);
+  assert.match(ground,/60u/);assert.match(ground,/tackle/);assert.match(air,/80u/);assert.match(ground,/does not need a power slot/);assert.match(ground,/sideways dodge or cover/);
+  if(scheme!=='kbm')assert.doesNotMatch(ground,/\b[VTQE]\b/);
+ }
+ assert.match(approachLesson({id:'sarge',flightTier:0},'kbm'),/10u/);
+});

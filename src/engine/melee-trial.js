@@ -1,4 +1,4 @@
-import {meleeLessonScheme,trialPrompt} from './combat-lesson-controls.js';
+import {meleeLessonScheme,trialPrompt,approachLesson} from './combat-lesson-controls.js';
 import {meleeEntryEligibility} from './melee-entry-target.js';
 import {meleeApproach} from '../data/melee-approaches.js';
 import {retirePracticeActor} from './practice-actor-retirement.js';
@@ -26,7 +26,7 @@ export function trialLesson(kind,def,scheme='kbm'){
  if(scheme==='touch')text=text.replaceAll('tap V','tap Punch').replaceAll('Tap V','Tap Punch').replaceAll('hold Q','hold Block').replaceAll('E grab','Grab').replaceAll('F/Space','Rise').replaceAll('double-tap sideways','use Evade sideways');
  if(scheme==='pad')text=text.replaceAll('tap V','tap Strike').replaceAll('Tap V','Tap Strike').replaceAll('hold Q','hold Guard').replaceAll('E grab','Grab').replaceAll('F/Space','Fly / Rise').replaceAll('double-tap sideways','use Evade sideways');
  if(kind==='defend'||kind==='air-defense'||kind==='guard')text+=' '+GUARD_LESSON;
- return text+' '+meleeLesson(def,scheme);
+ return approachLesson(def,scheme,['airborne','air-defense'].includes(kind))+' '+text+' '+meleeLesson(def,scheme);
 }
 export {meleeLessonScheme,grabLesson} from './combat-lesson-controls.js';
 // Scripted decisions use native motion, defense and damage; no target teleporting.
