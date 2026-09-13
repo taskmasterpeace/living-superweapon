@@ -164,3 +164,10 @@ No unfinished fleet assets are imported by this repair.
 - Native update regression now includes 20 guard frames between two attacks on both soldiers, bat/great blade, ground/air. Previously all eight cases lost support during guard or its release. All pass after the shared guard pose change.
 - 24 grip/presentation checks plus 29 energy/Studio guard checks pass; build passed with existing bundle warnings. New recorded reviews: artifacts/marketing/weapon-guard-merc and weapon-guard-sarge. These are Studio native-code rehearsals, not live opponent acceptance.
 
+
+### Bow attachment foundation
+- Replaced the disconnected legacy torus/string with a continuous bow limb, physical handle and named primary grip, limb-tip and nock sockets. String endpoints meet the limb tips.
+- Bow grip now uses the shared cylindrical palm alignment on either hand while remaining excluded from melee weapon selection. GALE retains the bow on the left and knife as the melee weapon.
+- Three new regressions failed before the repair; 12 bow/grip/wrist tests now pass. Production build passed.
+- Still required: drawing hand/string contact, temporary knife stowing, release/arrow origin, interruption and complete visual motion review. This model correction does not claim the bow draw is finished.
+

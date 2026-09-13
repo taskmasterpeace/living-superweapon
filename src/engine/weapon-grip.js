@@ -13,7 +13,7 @@ export function meleeWeaponFor(f,preferredSide=1){
 }
 export function alignWeaponGrip(weapon,side=1){
  if(weapon.userData.weaponKind==='claws'){weapon.position.set(0,0,0);weapon.rotation.set(0,0,0);weapon.userData.gripKind='knuckle';return true;}
- const center=centers[weapon.userData.weaponKind];
+ const center=weapon.userData.weaponKind==='bow'?[0,0,.32]:centers[weapon.userData.weaponKind];
  if(!center)return false;
  weapon.rotation.set(0,0,-side*Math.PI/2);
  weapon.position.copy(new THREE.Vector3(...center).applyQuaternion(weapon.quaternion).negate()).add(new THREE.Vector3(0,-.25,.12));

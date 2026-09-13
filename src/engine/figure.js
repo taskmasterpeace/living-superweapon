@@ -569,10 +569,20 @@ export function buildWeapon(kind, m) {
       break;
     }
     case 'bow': {
-      // vertical arc + string — held out in the off hand; the draw pose does the rest
-      const arc = add(new THREE.Mesh(new THREE.TorusGeometry(1.7, 0.09, 6, 20, Math.PI * 1.16), m.armor), 0, -0.6, 0.2);
-      arc.rotation.z = Math.PI * 0.92;
-      add(new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 3.1, 4), m.armor), 0.42, -0.6, 0.2);   // string
+      // Limbs, palm grip and string share one frame. The string's middle point
+      // is reserved for the draw hand; its endpoints remain on the limb tips.
+      const path=new THREE.CatmullRomCurve3([
+        new THREE.Vector3(0,-1.9,-.35),new THREE.Vector3(0,-1,.18),
+        new THREE.Vector3(0,0,.32),new THREE.Vector3(0,1,.18),new THREE.Vector3(0,1.9,-.35),
+      ]);
+      add(new THREE.Mesh(new THREE.TubeGeometry(path,24,.09,6,false),m.armor),0,0,0);
+      add(new THREE.Mesh(new THREE.CylinderGeometry(.13,.13,.65,8),m.armor),0,0,.32);
+      for(const [name,y,z]of [['weapon-primary-grip',0,.32],['bow-tip-top',1.9,-.35],['bow-tip-bottom',-1.9,-.35],['bow-nock',0,-.35]]){
+        const socket=new THREE.Object3D();socket.name=name;socket.position.set(0,y,z);g.add(socket);
+      }
+      const string=new THREE.Line(new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(0,1.9,-.35),new THREE.Vector3(0,0,-.35),new THREE.Vector3(0,-1.9,-.35),
+      ]),new THREE.LineBasicMaterial({color:'#d8d2c4'}));string.name='bow-string';g.add(string);
       break;
     }
     case 'rifle':
