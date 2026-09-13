@@ -1,3 +1,4 @@
+import {FieldResearch} from './field-research.js';
 import {activatePowerUp} from './power-up.js';
 import {thrownPropContact,thrownPropShape,previewPropThrow} from './thrown-prop-contact.js';
 import {previewTraversalLeap,driveTraversalLeapAI} from './traversal-leap.js';
@@ -325,11 +326,13 @@ const MODE_IMPL = {
       g.ms.threatLab?.update(dt);
       if(g.ms.threatLab?.state==='field'&&!g.ms.convoyOperation)g.ms.convoyOperation=new ConvoyOperation(g);
       g.ms.convoyOperation?.update(dt);
+      if(g.ms.threatLab?.state==='field')g.ms.fieldResearch??=new FieldResearch(g);
+      g.ms.fieldResearch?.update(dt);
       g.pwStage?.transport?.update(dt);
       for(const f of g.entities)if(f._threatScan)updateThreatScan(g,f,dt);
       if(!g.player?._threatScan)clearScannerPanel(g);
     },
-    onKO() {},
+    onKO(g,v,k) { g.ms.fieldResearch?.onKO(v,k); },
     isOver() { return null; },          // a proving ground, like free roam — you leave when you like
     hud: (g) => ({ type: 'powerworld' }),
   },
@@ -1883,6 +1886,7 @@ export class Game {
     clearScannerPanel(this);
     this.ms?.threatLab?.dispose();
     this.ms?.convoyOperation?.dispose();
+    this.ms?.fieldResearch?.dispose();
     this.ms?.frontline?.dispose();
     this.ms?.zombies?.dispose();
     this.ms?.desertLaw?.dispose();
