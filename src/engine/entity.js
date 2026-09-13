@@ -39,7 +39,7 @@ import { heroModelOf } from '../data/hero-models.js';
 import {canUseFlight} from './mobility-policy.js';
 import {loadSoldierEquipment} from './clone-equipment.js';
 import {updateSoldierLoadoutPresentation} from './soldier-loadout-presentation.js';
-import {restoreBowEquipment} from './bow-pose.js';
+import {restoreBowEquipment,updateBowAttachments} from './bow-pose.js';
 import { clearSlotFx,cancelHeldSlot } from './abilities.js';
 import {retireOwnedConstructs} from './construct-policy.js';
 import { steerFlight, ownsFlightVelocity } from './flight-motion.js';
@@ -2860,6 +2860,7 @@ export class Fighter {
     // Cloth reads the final carrier, including recoil, but cannot affect fist-speed damage.
     animateCape(p,this.animT,this.vel.length(),this.vel);
     animateHeldGrip(this);
+    updateBowAttachments(this);
     updateLimbSurfaces(p);
     poseWebSnare(this);
     poseFlightFeet(this,dt);

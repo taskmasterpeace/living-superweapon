@@ -192,3 +192,11 @@ No unfinished fleet assets are imported by this repair.
 - Direct slot admission now cancels an existing bow draw when incapacitated. Sleep/downed presentation also refuses to reapply the draw.
 - Eight interruption cases cover explicit cancellation, stagger, stun, freeze, grabbed, sleep, downed and KO. They assert immediate knife restoration, one sustain stop and no delayed arrow on release. Bow and held-action regression set passed (25 before the three additional status cases; all eight interruption cases pass). Build passed.
 
+
+### Bow pitch and final attachment frame
+- Both arm targets now follow aim in the body frame, including upward/downward pitch. The string and nocked arrow are recomputed after final hand/torso adjustments.
+- Arrow alignment uses the inverse world matrix instead of a rotation-only approximation, preserving direction through nonuniform model scaling.
+- Three body variants pass lowered/level/raised aim with string contact and rendered shaft direction checks; all 15 bow aim/draw/interruption/release tests pass. Build passed.
+- Recorded native draw/aim sweep/release: artifacts/marketing/bow-aim-review/bow-draw.webm. Restarted the stopped local Vite server on 5184 for capture.
+- Full extreme-angle/body-clearance, cover and form-change release review remain outstanding.
+
