@@ -1,0 +1,174 @@
+{
+  "format": "lsw.sfx-veh.manifest",
+  "version": 1,
+  "license": "CC0 (Car Sound Effects Pack, 100 CC0 metal+wood, 100 CC0 SFX — all OpenGameArt, public domain). Note: car pack is low-bitrate phone audio.",
+  "counts": {
+    "cues": 11,
+    "files": 19
+  },
+  "cues": [
+    {
+      "cue": "veh.start",
+      "spec": "Ignition: starter cranks, engine catches and settles to idle. Fires when the player starts the vehicle.",
+      "loop": false,
+      "takes": 1
+    },
+    {
+      "cue": "veh.idle",
+      "spec": "Steady low engine rumble while running/parked — a seamless LOOP under the vehicle.",
+      "loop": true,
+      "takes": 2
+    },
+    {
+      "cue": "veh.accel",
+      "spec": "RPM climbs — the boost / pull-away when the player hits the gas.",
+      "loop": false,
+      "takes": 2
+    },
+    {
+      "cue": "veh.off",
+      "spec": "Engine powers down and dies. Fires on stop/exit.",
+      "loop": false,
+      "takes": 1
+    },
+    {
+      "cue": "veh.door.open",
+      "spec": "Handle + hinge, door swings open. Fires when entering.",
+      "loop": false,
+      "takes": 1
+    },
+    {
+      "cue": "veh.door.close",
+      "spec": "Door thunks shut, latch clicks. Fires when seated / exiting.",
+      "loop": false,
+      "takes": 1
+    },
+    {
+      "cue": "veh.hood",
+      "spec": "Hood/bonnet metal creak + latch (open/close).",
+      "loop": false,
+      "takes": 2
+    },
+    {
+      "cue": "veh.trunk",
+      "spec": "Trunk/boot lid opens.",
+      "loop": false,
+      "takes": 1
+    },
+    {
+      "cue": "veh.horn",
+      "spec": "Car horn honk.",
+      "loop": false,
+      "takes": 1
+    },
+    {
+      "cue": "veh.brake",
+      "spec": "Handbrake / parking-brake ratchet pull.",
+      "loop": false,
+      "takes": 1
+    },
+    {
+      "cue": "veh.impact",
+      "spec": "Collision / crash — metal crunch + debris. Fires on vehicle damage. (from metal SFX; a real car-crash pack would be better.)",
+      "loop": false,
+      "takes": 6
+    }
+  ],
+  "files": [
+    {
+      "cue": "veh.start",
+      "take": 1,
+      "stem": "veh_start_01"
+    },
+    {
+      "cue": "veh.idle",
+      "take": 1,
+      "stem": "veh_idle_01"
+    },
+    {
+      "cue": "veh.idle",
+      "take": 2,
+      "stem": "veh_idle_02"
+    },
+    {
+      "cue": "veh.accel",
+      "take": 1,
+      "stem": "veh_accel_01"
+    },
+    {
+      "cue": "veh.accel",
+      "take": 2,
+      "stem": "veh_accel_02"
+    },
+    {
+      "cue": "veh.off",
+      "take": 1,
+      "stem": "veh_off_01"
+    },
+    {
+      "cue": "veh.door.open",
+      "take": 1,
+      "stem": "veh_door_open_01"
+    },
+    {
+      "cue": "veh.door.close",
+      "take": 1,
+      "stem": "veh_door_close_01"
+    },
+    {
+      "cue": "veh.hood",
+      "take": 1,
+      "stem": "veh_hood_01"
+    },
+    {
+      "cue": "veh.hood",
+      "take": 2,
+      "stem": "veh_hood_02"
+    },
+    {
+      "cue": "veh.trunk",
+      "take": 1,
+      "stem": "veh_trunk_01"
+    },
+    {
+      "cue": "veh.horn",
+      "take": 1,
+      "stem": "veh_horn_01"
+    },
+    {
+      "cue": "veh.brake",
+      "take": 1,
+      "stem": "veh_brake_01"
+    },
+    {
+      "cue": "veh.impact",
+      "take": 1,
+      "stem": "veh_impact_01"
+    },
+    {
+      "cue": "veh.impact",
+      "take": 2,
+      "stem": "veh_impact_02"
+    },
+    {
+      "cue": "veh.impact",
+      "take": 3,
+      "stem": "veh_impact_03"
+    },
+    {
+      "cue": "veh.impact",
+      "take": 4,
+      "stem": "veh_impact_04"
+    },
+    {
+      "cue": "veh.impact",
+      "take": 5,
+      "stem": "veh_impact_05"
+    },
+    {
+      "cue": "veh.impact",
+      "take": 6,
+      "stem": "veh_impact_06"
+    }
+  ]
+}
