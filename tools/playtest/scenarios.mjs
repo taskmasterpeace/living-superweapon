@@ -1,4 +1,5 @@
 export const scenarios=Object.freeze({
+ 'practice-prop-reset':{schemes:['kbm'],script:'practice-props-browser.mjs',capture:'silent video and screenshots',description:'Pick up and throw a practice rock, walk to the console and restore it without duplication.'},
  'practice-injury-reset':{schemes:['kbm'],config:{injury:true},script:'reset-practice-browser.mjs',capture:'silent video and screenshots',description:'Take real trainer hits and use the reset console three times; restore health without spending reserves or leaking targets.'},
  'practice-reset':{schemes:['kbm'],script:'reset-practice-browser.mjs',capture:'silent video and screenshots',description:'Spend energy and reset at the native console three times; preserve player and reserves, retire old targets.'},
  'moving-strike':{schemes:['pad','touch'],config:{scheme:'pad'},script:'moving-strike-browser.mjs',capture:'silent video and screenshots',description:'Hold controller movement while charging melee; require actual movement during charge and clean input release.'},

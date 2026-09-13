@@ -155,3 +155,11 @@ Run `node tools/playtest/run.mjs --report`. It writes artifacts/playtest/report.
 The index qualifies recorded passes when results are absent, browser errors occur, shared action history is missing, input schemes disagree, release is unconfirmed or checkout identity was not verified. Recorded running status explicitly does not prove a live process. It does not promote historical runs to current-build acceptance.
 
 Generated locally: 31 runs, 22 with evidence caveats (including older adapter mismatches). Five report/runner tests passed. This JSON index is for AI/local tooling; no new game UI or standalone dashboard was added. Remaining #41 work includes operation checkpoint migration, more cleanup cases and deeper live action eligibility.
+
+## Native prop throw and restoration — 2026-09-13
+
+`node tools/playtest/run.mjs --scenario practice-prop-reset` now uses the shared evidence/diagnostics runner. One explicitly recorded setup places a practice rock and player near the console. Native E picks it up, held E waits for actual contextual throw arming, release throws it, W walks to the visible reset prompt, and E restores the rock. No direct reset call or second teleport occurs. The W walk uses browser keyboard input and is described in staging; shared action history records the three E gestures.
+
+Passed: artifacts/playtest/2026-09-13T06-01-57.441Z-practice-prop-reset. Same rock record restored, count unchanged, visible and uncarried, no outstanding owned flight/carry; no browser errors. Clip/screenshots and carrying/final snapshots saved. The earlier 06-01-05 run passed restoration but used a wall-clock hold; the replacement explicitly proves throw arming. Eleven scoped tests passed, including release on failed arming.
+
+Shared performAction accepts until:'grab-armed' only for grab. It waits for the real input gesture state, without injecting it. This proves completed-throw restoration; reset denial during flight and impact/damage/aim accuracy remain distinct cases. Existing owner tests cover denial separately; do not label this native denial coverage.
