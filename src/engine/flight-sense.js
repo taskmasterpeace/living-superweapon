@@ -1,4 +1,17 @@
 import {movementProfile} from '../data/movement-gears.js';
+export function stopFlightAudio(f){f._flightAudio?.stop();f._flightAudio=null;}
+export function updateFlightAudio(f,g){
+ const library=g.audio?.soundLibrary;
+ const active=f===g.player&&f.alive&&f.flying&&f.airborne&&!(f.launchT>0)&&!f.grabbedBy&&!f._scoutVehicle&&!f._aircraftVehicle;
+ if(!active||!library||g.audio.muted){stopFlightAudio(f);return;}
+ const speed=f.vel.length(),previous=f._flightAudio;
+ // Hysteresis keeps small hover drift from repeatedly restarting both recordings.
+ const id=speed>(previous?.id==='flight'?5:9)?'flight':'hover';
+ if(previous&&(previous.id!==id||!library.active.has(previous)))stopFlightAudio(f);
+ if(library.source(id)!=='chosen-recording'||!library.buffers.has(id)){stopFlightAudio(f);return;}
+ f._flightAudio??=library.play(id,{pos:f.pos,loop:true});
+ f._flightAudio?.set(id==='hover'?.35:Math.min(1,.35+speed/240),f.pos);
+}
 let motionPreference;
 export function flightTurbulence(f,time){
  motionPreference??=globalThis.matchMedia?.('(prefers-reduced-motion: reduce)')||{matches:false};
@@ -8,6 +21,7 @@ export function flightTurbulence(f,time){
  return strength*.0025*(Math.sin(time*37)*.65+Math.sin(time*59)*.35);
 }
 export function updateFlightSense(f,dt,g){
+ updateFlightAudio(f,g);
  const s=f._flightSense??={sonic:false,cooldown:0,booms:0};s.cooldown=Math.max(0,s.cooldown-dt);
  const p=movementProfile(f),top=(f.def.speed||30)*p.air[p.maxGear-1];
  const active=f.alive&&f._openSky&&f.flying&&f.airborne&&p.maxGear===3;

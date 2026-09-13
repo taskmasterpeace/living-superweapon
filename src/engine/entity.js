@@ -1,4 +1,5 @@
 import {fallingGravity,thrownDrag} from './body-ballistics.js';
+import {stopFlightAudio} from './flight-sense.js';
 import {migratePowerUpDef} from '../data/power-up.js';
 import {canMomentumGlide,steerMomentumGlide} from './momentum-glide.js';
 import {updateTraversalLeap,steerTraversalLeap,cancelInterruptedTraversalLeap} from './traversal-leap.js';
@@ -657,6 +658,7 @@ export class Fighter {
   }
 
   dispose() {
+    stopFlightAudio(this);
     if(this._formDisposed)return;
     retirePowerUp(this);
     resetMovementGears(this);
@@ -1198,6 +1200,7 @@ export class Fighter {
   }
 
   _ko(opts = {}) {
+    stopFlightAudio(this);
     const restorePose=this._lostControlPose?.applied?this._lostControlPose.nodes:[];this._lostControlPose=null;
     retirePowerUp(this);
     clearWebControl(this);clearWebControlsFromSource(this);
