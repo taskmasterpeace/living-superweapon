@@ -612,3 +612,9 @@ Passed: artifacts/playtest/2026-09-13T06-09-43.274Z-air-guard. Silent clip and s
 Passed artifacts/playtest/2026-09-13T06-14-11.061Z-air-throw: separation 6.0759u before grab; 10 throw damage followed by 32 terrain-impact damage; victim HP 130 -> 120 -> 88; no remaining grab/carry references and no browser errors. Carry/impact screenshots and silent clip saved. Earlier 06-11-53 and 06-12-53 failures preserved: fixed descent timing did not reliably align heights; the corrected harness observes and adjusts without actor teleportation. Four runner tests passed.
 
 This is one hostile airborne throw sequence. Friendly catch, defensive escapes, varied body weights and repeat/KO cleanup are separate coverage. No gameplay numbers or controls changed.
+
+### September 13 — shared-runner sample/lab checkpoint
+- Added `research-checkpoint` to the local AI runner. Uses native KO → collect → walk → open lab → walk inside → analyze after one disclosed setup phase. No acceptance-time teleports or second-enemy staging.
+- First native run passed: `artifacts/playtest/2026-09-13T06-23-14.992Z-research-checkpoint/`. Energy capacity 120→130, rank 0→1, carried sample consumed, same player and unchanged reserves; zero captured browser errors. Four runner tests passed.
+- Captured silent video plus sample/door/upgrade stills and common action/state bundles. Upgrade still inspected; faded-wall interior camera framing remains awkward. Capture exists but full clip visual quality is not certified.
+- Scope: isolated operation segment, not transport route, subsequent fight, balance or physical-device acceptance. T lock/W walk are disclosed direct browser input; V/E use shared actions. No game source changed.

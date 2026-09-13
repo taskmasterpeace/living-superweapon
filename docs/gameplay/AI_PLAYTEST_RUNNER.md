@@ -21,7 +21,7 @@ Register a fixed script filename, description and capture type in `tools/playtes
 
 ## Current status — September 13, 2026
 
-The runner has 16 registered scenarios. Use --list for the live registry and supported schemes, --controls for canonical controls and action adapters, and --report to index saved evidence. Ground guard variants support keyboard/mouse, emulated gamepad and browser touch; moving-strike supports simultaneous gamepad/touch movement and charge. Aerial approach, guard and terrain throw currently use keyboard/mouse.
+The runner has 17 registered scenarios. Use --list for the live registry and supported schemes, --controls for canonical controls and action adapters, and --report to index saved evidence. Ground guard variants support keyboard/mouse, emulated gamepad and browser touch; moving-strike supports simultaneous gamepad/touch movement and charge. Aerial approach, guard and terrain throw currently use keyboard/mouse.
 
 Server checkout identity, bounded snapshots, native action history, logged setup separated from acceptance, and local evidence indexing are implemented. Three-cycle health/energy resets and practice-rock throw/reset have native acceptance evidence. This does not establish cleanup of every collider, projectile, sound loop or listener.
 
@@ -40,7 +40,7 @@ Choose ONE scenario relevant to the change. Read its result, observed-state and 
 
 ### Remaining acceptance, in order
 
-1. Migrate one operation segment to the shared runner with a disclosed pre-action checkpoint, real interactions and resource assertions. Existing standalone operation evidence is not this migration.
+1. Research checkpoint migration is now implemented (see Native research checkpoint below). Extend to other operation stages only when a relevant defect needs isolation; final integrated route acceptance remains separate.
 2. Add targeted low-energy, interrupted-action and thin-wall scenarios with explicit failure categories. Reuse current fixtures/actions/diagnostics rather than writing another test engine.
 3. Extend read-only observations for mission state, vehicle seats, stable authored collider/anchor IDs and actual interaction rejection reasons. Current nearby collider indices are not stable IDs.
 4. Measure reset conservation of projectiles, colliders, audio loops and listeners in addition to the already-observed actor/prop/resource checks.
@@ -212,3 +212,9 @@ Passed: artifacts/playtest/2026-09-13T06-09-43.274Z-air-guard. Silent clip and s
 Passed artifacts/playtest/2026-09-13T06-14-11.061Z-air-throw: separation 6.0759u before grab; 10 throw damage followed by 32 terrain-impact damage; victim HP 130 -> 120 -> 88; no remaining grab/carry references and no browser errors. Carry/impact screenshots and silent clip saved. Earlier 06-11-53 and 06-12-53 failures preserved: fixed descent timing did not reliably align heights; the corrected harness observes and adjusts without actor teleportation. Four runner tests passed.
 
 This is one hostile airborne throw sequence. Friendly catch, defensive escapes, varied body weights and repeat/KO cleanup are separate coverage. No gameplay numbers or controls changed.
+
+## Native research checkpoint
+
+`node tools/playtest/run.mjs --scenario research-checkpoint` now covers one operation segment: a native strike defeats a disclosed stationary one-HP enemy, E collects its sample, W approaches the lab, E opens the door, W enters and E analyzes. Setup places the player at the portal and lab approach before acceptance; no position, health or target changes occur after that boundary. T and W remain explicit browser inputs outside shared action history, with walking released in finally; strike and interactions use the common adapter.
+
+The September 13 run `2026-09-13T06-23-14.992Z-research-checkpoint` passed: capacity 120→130, research rank 0→1, sample consumed, same player and unchanged reserve stock, no browser errors. It records sample/door/upgrade stills, a silent clip and diagnostic/action evidence. The upgrade still was inspected: the interior camera sees through faded walls and is not polished marketing framing. This is not full transport/fight-again, balanced-enemy or physical-device acceptance. The registry now has 17 scenarios.
