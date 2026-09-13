@@ -178,3 +178,11 @@ No unfinished fleet assets are imported by this repair.
 - Three body variants pass 65 draw frames and release restoration; combined bow/weapon-support checks: 14 passed. Build passed. Recorded artifacts/marketing/bow-draw-review/bow-draw.webm and phase stills; this rehearses the native animation clock, not input-to-projectile firing.
 - Remaining bow work: nocked arrow, release origin and aim alignment, full interrupt/control-path and multi-angle review. No claim of complete bow combat acceptance.
 
+
+### Nocked arrow and native release
+- Added a visible shaft/head/fletching while drawing. Its center supplies the bow-launch socket, and the arrow disappears from the bow on release.
+- Native bow release now resolves from that semantic socket after the final pose, aims toward the commanded point and travels independently afterward. Charge/payment/damage behavior is preserved.
+- Seven bow checks pass. Firearm suite: 41 passed; the remaining stale IRONCLAD pickup fixture violated soldier equipment policy. Replaced it with MERC and verified the corrected case passes. Build passed with existing warnings.
+- Bow review recording now invokes the native bow ability, release and projectile update, replacing the earlier animation-clock-only capture.
+- Still required: upward/downward draw alignment and cover clearance, interruption/KO/form timing, all views and payload presentation. The current body brace does not yet track arbitrary pitch through the full bow plane.
+

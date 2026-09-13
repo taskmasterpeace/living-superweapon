@@ -583,6 +583,11 @@ export function buildWeapon(kind, m) {
       const string=new THREE.Line(new THREE.BufferGeometry().setFromPoints([
         new THREE.Vector3(0,1.9,-.35),new THREE.Vector3(0,0,-.35),new THREE.Vector3(0,-1.9,-.35),
       ]),new THREE.LineBasicMaterial({color:'#d8d2c4'}));string.name='bow-string';g.add(string);
+      const arrow=new THREE.Group();arrow.name='bow-arrow';arrow.visible=false;
+      arrow.add(new THREE.Mesh(new THREE.CylinderGeometry(.09,.09,3,6),new THREE.MeshStandardMaterial({color:'#8a6a3a',roughness:.8})));
+      const head=new THREE.Mesh(new THREE.ConeGeometry(.24,.7,6),new THREE.MeshStandardMaterial({color:'#d8d2c4',roughness:.5}));head.position.y=1.6;arrow.add(head);
+      const flet=new THREE.Mesh(new THREE.ConeGeometry(.3,.8,4),head.material);flet.position.y=-1.3;arrow.add(flet);
+      const launch=new THREE.Object3D();launch.name='bow-launch';arrow.add(launch);g.add(arrow);
       break;
     }
     case 'rifle':

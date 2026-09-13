@@ -13,6 +13,7 @@ import {TELEPORT_TIERS} from '../data/teleport-tuning.js';
 import {teleportDestination} from './teleport-destination.js';
 import {handEmissionPosition,volleyPattern,volleySides,attackEntryCost} from './hand-emission.js';
 import {firearmEmitter} from './weapon-emission.js';
+import {bowEmitter} from './bow-pose.js';
 import {firearmAmmo,emptyFirearm,cancelFirearmReload} from './firearm-ammo.js';
 import {energyShellMaterial} from './energy-burst-material.js';
 import {conflictingHandSlot} from './cast-channels.js';
@@ -696,8 +697,9 @@ export const TYPES = {
         pay(c, def, st);
         const payloads = def.payloads || ['explosive', 'flame', 'poison'];
         const payload = payloads[c._quiverIdx % payloads.length];
-        const m = c.muzzle(_v.clone(), 3.8, 5.9);
+        const emitter=bowEmitter(c),m=emitter?.socket?.getWorldPosition(new THREE.Vector3())||c.muzzle(_v.clone(),3.8,5.9);
         g.projectiles.spawnProjectile(c, { vis: visOf(def),
+          ...(emitter?.socket?{emitterSocket:emitter.socket,emitterDef:def,handOrigin:emitter.side,launchTarget:c.hasAimWorld?c.aimWorld:null,launchFlash:false}:{}),
           pos: m, vel: c.aim3.clone().setLength(lerp(90, def.speedMax || 210, t)),
           radius: 0.7, damage: lerp(def.dmgMin || 7, def.dmgMax || 26, t), blast: payload === 'explosive' ? (def.blast || 11) : 1.2,
           power: payload === 'explosive' ? 1.1 : 0.4, arrow: true, payload, dtype:def.dtype||'physical', life: 2.2,

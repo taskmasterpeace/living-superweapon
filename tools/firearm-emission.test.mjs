@@ -99,15 +99,15 @@ test('chosen gear mounts on the driven grip, replaces native gear, fires and res
 });
 
 test('a held gun survives form replacement without disposed geometry or stale grips',()=>{
- const {f,g,animate,close}=fixture('ironclad');
+ const {f,g,animate,close}=fixture('merc');
  try{
   g.dropGear=Game.prototype.dropGear;g._gearKind=Game.prototype._gearKind;
-  Game.prototype.equipFrom.call(g,f,{ab:{type:'rifle',weapon:'pistol',name:'Held sidearm',cost:1,spread:0,recoil:0}});
+  assert.ok(Game.prototype.equipFrom.call(g,f,{ab:{type:'rifle',weapon:'pistol',name:'Held sidearm',cost:1,spread:0,recoil:0}}),'soldier must accept the held sidearm');
   const gun=f._gearMesh;let disposals=0;gun.traverse(o=>o.geometry?.addEventListener('dispose',()=>disposals++));
   f.applyForm({frame:{scale:1.2}});assert.ok(gun.parent===f.parts.armR.children[2]);assert.equal(disposals,0);
   runSlot(f,'_gear',{pressed:true,held:true,released:false,dt:1/60},g);animate();const shot=g.projectiles.list.at(-1);shot.resolveLaunch(g);
   assert.ok(shot.pos.distanceTo(gun.getObjectByName('weapon-muzzle').getWorldPosition(new THREE.Vector3()))<1e-5);
-  g.dropGear(f,false);assert.equal(f.parts.armR.children[2].userData.gripOccupied,false);assert.ok(disposals>0);
+  g.dropGear(f,false);assert.equal(f.parts.armR.children[2].userData.gripOccupied,true,'native rifle grip is restored');assert.ok(disposals>0);
  }finally{if(f._gearHeld)Game.prototype.dropGear.call(g,f,false);close();}
 });
 
@@ -261,3 +261,4 @@ test(`${id} ${weapon} ${motion}: equipped geometry clears a thin wall through ap
   assert.deepEqual(bodyCrossings.slice(0,5),[],'cover retraction cannot bury the gun or arm inside the torso');
  }finally{close();}
 });
+

@@ -12,6 +12,7 @@ import {beamBodyContact} from './beam-body-contact.js';
 import { queueHitReaction } from './hit-reaction.js';
 import {handEmissionPosition,palmCastSide} from './hand-emission.js';
 import {firearmEmitter} from './weapon-emission.js';
+import {bowEmitter} from './bow-pose.js';
 import {powerEmissionPosition} from './power-emission.js';
 import {naniteEmitter,hasNaniteCells,validNaniteContact} from './nanite-forearms.js';
 import {withNaniteDamageAdmission} from './damage-admission.js';
@@ -394,7 +395,7 @@ class Projectile {
       this._launchResolved=true;
       // Forms can replace a native weapon between input and the final pose.
       // Reacquire its semantic attachment rather than sampling a retired rig.
-      const socket=this._emitterDef?firearmEmitter(this.caster,this._emitterDef).socket:this.emitterSocket;
+      const socket=this._emitterDef?.type==='bow'?bowEmitter(this.caster)?.socket:this._emitterDef?firearmEmitter(this.caster,this._emitterDef).socket:this.emitterSocket;
       if(this._powerOrigin){
         powerEmissionPosition(this.caster,this._powerOrigin,this.pos,this._launchTarget);
         const aperture=new THREE.Vector3(),contact={};

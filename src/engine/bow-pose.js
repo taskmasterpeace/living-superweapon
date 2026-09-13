@@ -1,6 +1,15 @@
 import * as T from 'three';
 import {reachArm} from './hero-rig.js';
 const point=new T.Vector3(),rest=new T.Vector3(),finger=new T.Vector3();
+const aim=new T.Vector3(),rotation=new T.Quaternion(),up=new T.Vector3(0,1,0);
+export function bowEmitter(f){
+ for(const side of [-1,1]){
+  const hand=(side<0?f.parts?.armL:f.parts?.armR)?.children[2];
+  const weapon=hand?.children.find(o=>o.visible&&o.userData.weaponKind==='bow');
+  if(weapon)return {side,weapon,socket:weapon.getObjectByName('bow-launch')};
+ }
+ return null;
+}
 export function restoreBowEquipment(f){
  const state=f._bowEquipment;if(!state)return;
  for(const [mesh,visible]of state.hidden)mesh.visible=visible;
@@ -8,6 +17,7 @@ export function restoreBowEquipment(f){
  state.string.geometry.attributes.position.setXYZ(1,0,0,-.35);
  state.string.geometry.attributes.position.needsUpdate=true;
  state.string.geometry.computeBoundingSphere();f._bowEquipment=null;
+ state.string.parent.getObjectByName('bow-arrow').visible=false;
 }
 // Draw contact is expressed through the same arm carriers as other weapon holds.
 // Only presentation is owned here; the ability retains charge and release timing.
@@ -34,5 +44,10 @@ export function animateBowDraw(f){
  f.obj.updateMatrixWorld(true);finger.set(0,-.25,.12);hand.localToWorld(finger);bow.worldToLocal(finger);
  string.geometry.attributes.position.setXYZ(1,finger.x,finger.y,finger.z);
  string.geometry.attributes.position.needsUpdate=true;string.geometry.computeBoundingSphere();
+ const arrow=bow.getObjectByName('bow-arrow');
+ bow.getWorldQuaternion(rotation).invert();aim.copy(f.aim3).applyQuaternion(rotation).normalize();
+ if(aim.lengthSq()<.5)aim.set(0,0,1);
+ arrow.position.copy(finger).addScaledVector(aim,1.5);arrow.quaternion.setFromUnitVectors(up,aim);
+ arrow.visible=f._bowDrawT>0;
  return true;
 }
