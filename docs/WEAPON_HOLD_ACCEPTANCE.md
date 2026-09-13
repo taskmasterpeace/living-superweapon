@@ -71,6 +71,14 @@ two-handed weapon families still require review.
 
 ## Still required before claiming every hold finished
 
+Claw clearance measurement supersedes the suspected chest penetration noted
+below: `tools/claw-clearance.test.mjs` samples both complete blade sets against
+the torso collision geometry with their full padded contact radius. Two
+accepted alternating attacks, their active windows and recovery are explicitly
+asserted. All three body types pass grounded and airborne (6 checks). No rake
+path change was justified by this evidence. This is torso-carrier clearance,
+not triangle-level clothing/skin or every flight orientation acceptance.
+
 Paired-claw follow-up: shared mounting now creates an off-hand set, stows native
 off-hand weapons and removes/restores both sides on unmount. Accepted equipped
 attacks alternate right/left; contact uses the selected hand's geometry and
