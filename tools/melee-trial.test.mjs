@@ -132,3 +132,11 @@ test('throw and impact timestamps use simulation time while target control is su
  assert.equal(t.records[0].time,1);assert.ok(Math.abs(t.records[1].time-1.4)<1e-8);t.dispose();
  }finally{x.close();}
 });
+
+test('training replay keeps the resolved guard failure cause',()=>{
+ const x=mainCombatFixture({mode:'powerworld'});try{
+ const t=new MeleeTrial(x.g,new THREE.Vector3(0,0,6));x.g.ms.threatLab={state:'preparing',meleeTrial:t};const target=t.start();
+ t.hit(target,0,{src:x.p,strike:true},true,{healthLost:0,guardEnergySpent:30,guard:'broken',guardBreakReason:'heavy-crush'});
+ assert.equal(t.records.at(-1).guardBreakReason,'heavy-crush');assert.match(t.recording.events.at(-1).label,/HEAVY CRUSH/);t.dispose();
+ }finally{x.close();}
+});

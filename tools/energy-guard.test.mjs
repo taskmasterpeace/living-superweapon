@@ -88,3 +88,13 @@ for(const openSky of [true,false])test(`blocked pressure suppresses ordinary ene
   x.f._blocked=0;x.f.regenerateKi(1/60);assert.ok(x.f.ki>paid,'quiet recovery still works');
  }finally{x.close();}
 });
+
+for(const [name,energy,meter,opts,reason] of [
+ ['exhaustion',12,1,{},'energy-exhausted'],
+ ['crush',100,1,{strike:true,guardCrush:true},'heavy-crush'],
+ ['meter',100,.01,{},'meter-depleted']
+])test('resolved guard explains '+name+' from actual contact',()=>{
+ const x=fixture({energy});try{let outcome;x.f.guardMeter=meter;x.f._game={onHit(_f,_a,_o,_b,r){outcome=r;}};x.hit(30,opts);
+ assert.equal(outcome.guard,'broken');assert.equal(outcome.guardBreakReason,reason);
+ }finally{x.close();}
+});

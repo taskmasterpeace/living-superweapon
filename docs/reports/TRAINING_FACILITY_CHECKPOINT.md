@@ -618,3 +618,9 @@ This is one hostile airborne throw sequence. Friendly catch, defensive escapes, 
 - First native run passed: `artifacts/playtest/2026-09-13T06-23-14.992Z-research-checkpoint/`. Energy capacity 120→130, rank 0→1, carried sample consumed, same player and unchanged reserves; zero captured browser errors. Four runner tests passed.
 - Captured silent video plus sample/door/upgrade stills and common action/state bundles. Upgrade still inspected; faded-wall interior camera framing remains awkward. Capture exists but full clip visual quality is not certified.
 - Scope: isolated operation segment, not transport route, subsequent fight, balance or physical-device acceptance. T lock/W walk are disclosed direct browser input; V/E use shared actions. No game source changed.
+
+### September 13 — explain why guard broke
+- Actual damage resolution now includes `guardBreakReason`: heavy-crush, energy-exhausted or meter-depleted. When conditions coincide, the display prioritizes heavy crush, then exhausted energy, then the meter. This changes explanation only, not damage, energy or recovery timing.
+- Threat Room contact feed and recorded review label show HEAVY CRUSH / ENERGY EMPTY / GUARD METER EMPTY beside actual HP and energy spent. Shared diagnostic trial records retain the reason for AI evaluation.
+- 42 energy-guard/trial tests passed, including native damage cases for all three reasons and preservation in replay events. Production build passed (existing chunk-size/GLTF import warnings).
+- Native `melee-guard-crush` runner passed in `artifacts/playtest/2026-09-13T06-27-05.358Z-melee-guard-crush/`; now asserts the actual heavy-crush reason as well as funded HP protection. Captured still and silent clip. Browser proof covers heavy crush; exhaustion/meter causes are verified by damage-system tests, not new browser scenarios.

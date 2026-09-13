@@ -884,7 +884,7 @@ export class Fighter {
     if (this.state === 'ko' || this.invuln > 0) return 0;
     const resolvedStart={hp:this.hp,armor:this.armor||0,shield:this._shieldHp||0,
       bleed:this._bleed>0,frozen:this.frozenT>0,stun:this.stunT>0,corrode:this._corrode>0,dots:new Set((this._dots||[]).map(d=>d.kind))};
-    let resolvedDtype=null,resolvedPlate=0,resolvedNanite=0,resolvedGuard='none',resolvedDeflected=false,resolvedGuardEnergy=0,resolvedGuardAbsorbed=0;
+    let resolvedDtype=null,resolvedPlate=0,resolvedNanite=0,resolvedGuard='none',resolvedDeflected=false,resolvedGuardEnergy=0,resolvedGuardAbsorbed=0,resolvedGuardBreakReason=null;
     const resolvedOutcome=()=>{
       const statusesAdded=[];
       if(!resolvedStart.bleed&&this._bleed>0)statusesAdded.push('bleeding');
@@ -895,7 +895,7 @@ export class Fighter {
       return Object.freeze({dtype:resolvedDtype,resistance:admission.resistance??1,attackClass:opts.ballistic?'bullet':opts.strike?'melee':opts.dot?'sustained':'impact',
         healthLost:Math.max(0,resolvedStart.hp-this.hp),absorbed:Object.freeze({plate:resolvedPlate,
           armor:Math.max(0,resolvedStart.armor-(this.armor||0)),shield:Math.max(0,resolvedStart.shield-(this._shieldHp||0)),nanite:resolvedNanite}),
-        guard:resolvedGuard,guardEnergySpent:resolvedGuardEnergy,guardAbsorbed:resolvedGuardAbsorbed,
+        guard:resolvedGuard,guardBreakReason:resolvedGuardBreakReason,guardEnergySpent:resolvedGuardEnergy,guardAbsorbed:resolvedGuardAbsorbed,
         deflected:resolvedDeflected,knockedOut:this.state==='ko',statusesAdded:Object.freeze(statusesAdded),
         contact:opts.contactPoint?Object.freeze({x:opts.contactPoint.x,y:opts.contactPoint.y,z:opts.contactPoint.z}):null});
     };
@@ -1066,7 +1066,7 @@ export class Fighter {
         if(guardedAmount>0&&!(opts.naniteResult?.absorbed>0))registerShieldContact(this,opts);
         this.hp = clamp(this.hp - amount, 0, this.maxHp);
         if(amount>0&&opts.src!==this){this.lastHitBy=opts.src;this.lastHitT=0;}
-        if (this.guardMeter <= 0.001||energyBreak||crush) { this.guarding = false; this.staggerT = crush?.85:.7; this.guardBreakT = this.staggerT; this.state = 'hit'; this.stateT = 0; resolvedGuard='broken'; } // guard break
+        if (this.guardMeter <= 0.001||energyBreak||crush) { this.guarding = false; this.staggerT = crush?.85:.7; this.guardBreakT = this.staggerT; this.state = 'hit'; this.stateT = 0; resolvedGuard='broken'; resolvedGuardBreakReason=crush?'heavy-crush':energyBreak?'energy-exhausted':'meter-depleted'; } // guard break
         else resolvedGuard='blocked';
         if(resolvedGuard==='broken')this._game?.audio?.soundLibrary?.native?.('guard-break',{pos:this.pos});
         if(energyBreak)this._game?.onDrained?.(this);
