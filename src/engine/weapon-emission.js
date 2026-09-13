@@ -40,10 +40,12 @@ export function unmountHeldWeapon(f,game=f._game,commitPending=true){
  }
  const mount=f._heldMount;
  if(mount){
+  if(mount.off){mount.off.hand.userData.gripOccupied=mount.off.occupied;mount.off.hand.userData.gripKind=mount.off.gripKind;}
   for(const [object,visible]of mount.hidden)object.visible=visible;
   mount.hand.userData.gripOccupied=mount.occupied;mount.hand.userData.gripKind=mount.gripKind;f._heldMount=null;
  }
  f._gearMesh?.removeFromParent();
+ f._gearPair?.removeFromParent();f._gearPair=null;
 }
 
 export function mountHeldWeapon(f,weapon,transferring=false){
@@ -52,11 +54,17 @@ export function mountHeldWeapon(f,weapon,transferring=false){
   const hidden=[];
   // A two-handed item owns the supporting hand too. Stow its native weapon
   // through the same reversible mount record, rather than denying the grip.
-  if(weapon.userData.twoHanded)for(const object of f.parts.armL.children[2].children)
+  if(weapon.userData.twoHanded||weapon.userData.paired)for(const object of f.parts.armL.children[2].children)
     if(object.userData.weaponKind){hidden.push([object,object.visible]);object.visible=false;}
  for(const object of hand.children)if(object.userData.weaponKind){hidden.push([object,object.visible]);object.visible=false;}
  f._heldMount={hand,hidden,occupied:hand.userData.gripOccupied,gripKind:hand.userData.gripKind};
  delete weapon._gripCoverBounds;
  hand.userData.gripOccupied=true;weapon.position.set(0,0,0);weapon.rotation.set(0,0,0);hand.add(weapon);f._gearMesh=weapon;
   hand.userData.gripKind=alignWeaponGrip(weapon,1)?weapon.userData.gripKind:undefined;
+ if(weapon.userData.paired){
+  const other=f.parts.armL.children[2],pair=weapon.clone(true);
+  pair.userData.paired=false;alignWeaponGrip(pair,-1);
+  f._heldMount.off={hand:other,occupied:other.userData.gripOccupied,gripKind:other.userData.gripKind};
+  other.userData.gripOccupied=true;other.userData.gripKind=pair.userData.gripKind;other.add(pair);f._gearPair=pair;
+ }
 }

@@ -13,10 +13,11 @@ const smooth=t=>{t=THREE.MathUtils.clamp(t,0,1);return t*t*(3-2*t);};
 export function beginAbilityMeleePose(f,slot){
  if(!f._openSky||!f.parts.rig)return;
  f._abilityMeleePose={slot,elapsed:0,active:slot.t,recovery:.30,direction:f.aim3.clone().normalize(),physicalContact:slot.def.contact==='fist',contactPending:false};
- const weapon=slot.def.gear&&slot===f.slots._gear?f._gearMesh:null;
+ let weapon=slot.def.gear&&slot===f.slots._gear?f._gearMesh:null,side=1;
+ if(weapon?.userData.paired&&f._gearPair){side=slot._weaponSide===1?-1:1;slot._weaponSide=side;if(side<0)weapon=f._gearPair;}
  slot.weaponContact=!!(weapon&&snapshotWeaponSurface(weapon));
  if(slot.weaponContact){
-  const m=f._abilityMeleePose;m.weapon=weapon;m.side=1;m.physicalContact=true;m.startup=Math.min(.07,m.active*.3);
+  const m=f._abilityMeleePose;m.weapon=weapon;m.side=side;m.physicalContact=true;m.startup=Math.min(.07,m.active*.3);
   m.point=f.hasAimWorld?f.aimWorld.clone():f.center(new THREE.Vector3()).addScaledVector(m.direction,slot.def.range||slot.def.reach||11);
   m.weaponPrevious=snapshotWeaponSurface(weapon);
  }

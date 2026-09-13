@@ -510,8 +510,10 @@ export function buildWeapon(kind, m) {
       break;
     }
     case 'claws': {                                    // three blades PAST the knuckles, not a held thing
+      g.userData.paired=true;
+      const clawMetal=new THREE.MeshStandardMaterial({color:'#bcc9ce',roughness:.4,metalness:.5});
       for (let i = -1; i <= 1; i++) {
-        const c2 = add(new THREE.Mesh(new THREE.BoxGeometry(0.07, 1.5, 0.16), m.metal || m.armor), i * 0.22, -0.95, 0.04);
+        const c2 = add(new THREE.Mesh(new THREE.BoxGeometry(0.07, 1.5, 0.16), clawMetal), i * 0.22, -0.95, 0.04);
         c2.rotation.z = i * 0.10; c2.castShadow = true;
       }
       break;

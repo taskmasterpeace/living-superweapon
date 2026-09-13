@@ -9,6 +9,7 @@ import {snapshotWeaponSurface} from '../src/engine/melee-weapon-contact.js';
 import {resolveAbilityMeleeContact} from '../src/engine/ability-melee-contact.js';
 import {bladeById,armoryList} from '../src/data/armory.js';
 import {unmountHeldWeapon} from '../src/engine/weapon-emission.js';
+import {beginAbilityMeleePose} from '../src/engine/ability-melee-pose.js';
 
 for(const kind of ['bat','claws'])for(const state of ['hit','miss','startup','recovery','hidden','detached','stunned'])test(`equipped ${kind} slot: ${state}`,()=>{
  const f=new Fighter(structuredClone(ROSTER.find(d=>d.id==='merc'))),b=new Fighter(structuredClone(ROSTER.find(d=>d.id==='kano')));
@@ -47,4 +48,24 @@ for(const kind of ['bat','claws'])for(const state of ['hit','miss','startup','re
 test('bat catalog and pickup retain the same model identity',()=>{
  const row=bladeById('bat');assert.ok(row);assert.ok(armoryList().some(r=>r.id==='bat'));
  assert.equal(Game.prototype._gearKind(row.ab),row.mesh);
+});
+
+test('paired claws alternate actual attack hands and remove both mounts',()=>{
+ const f=new Fighter(structuredClone(ROSTER.find(d=>d.id==='merc'))),b=new Fighter(structuredClone(ROSTER.find(d=>d.id==='kano')));
+ const g={isHuman:()=>false,entities:[f,b],isFoe:(a,b)=>a!==b,world:{cover:[],interiors:[],shake(){},punch(){}},audio:{zap(){},impact(){},boom(){}},vfx:{impact(){},impactStar(){}},slowmo(){}};
+ try{
+  f._openSky=true;f.aim.set(0,0,1);f.aim3.copy(f.aim);b.invuln=0;
+  Game.prototype.equipFrom.call(g,f,bladeById('claws'),{primary:true});
+  const pair=f._gearPair;assert.equal(pair.parent,f.parts.armL.children[2]);
+  const st=f.slots.lmb;let hits=0;b.takeDamage=()=>hits++;
+  for(const side of [1,-1,1]){
+   st.t=.24;st.hit=new Set();beginAbilityMeleePose(f,st);const m=f._abilityMeleePose;
+   assert.equal(m.side,side);assert.equal(m.weapon,side<0?pair:f._gearMesh);
+   m.elapsed=.1;m.contactPending=true;f._animate(1/60);f.obj.updateMatrixWorld(true);b.obj.updateMatrixWorld(true);
+   const tip=snapshotWeaponSurface(m.weapon).points[0];b.pos.add(tip.sub(b.parts.torso.getWorldPosition(new T.Vector3())));b.obj.updateMatrixWorld(true);
+   resolveAbilityMeleeContact(f,g);
+  }
+  assert.equal(hits,3,'both hand surfaces must authorize their own hits');
+  unmountHeldWeapon(f,g);assert.equal(pair.parent,null);assert.equal(f._gearPair,null);
+ }finally{f.dispose();b.dispose();}
 });

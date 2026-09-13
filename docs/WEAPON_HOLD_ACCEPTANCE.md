@@ -71,6 +71,15 @@ two-handed weapon families still require review.
 
 ## Still required before claiming every hold finished
 
+Paired-claw follow-up: shared mounting now creates an off-hand set, stows native
+off-hand weapons and removes/restores both sides on unmount. Accepted equipped
+attacks alternate right/left; contact uses the selected hand's geometry and
+history. A right-left-right contact/removal regression passes (16 equipped
+tests, build passed). Updated `claws-review/equipment-swaps.webm` records two
+native slot attacks, with a brighter steel material. Left-side close-body
+clearance still needs tuning: the blades sweep very close to the chest in the
+frame-83 view. Bilateral equipment is implemented; final visual approval is not.
+
 Claw contact update: claws use a knuckle attachment (no cylinder-handle roll)
 and a shared rake pose. Each of the three rendered blades supplies its own
 line of padded contact samples. Equipped claw hit/miss, startup/recovery,

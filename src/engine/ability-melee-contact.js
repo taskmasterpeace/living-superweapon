@@ -11,11 +11,12 @@ export function resolveAbilityMeleeContact(f,g,frame=null){
  const m=f._abilityMeleePose;if(!m?.physicalContact||!m.contactPending)return;
  m.contactPending=false;
  if(!f.alive||f.staggerT>0||f.stunT>0||f.frozenT>0||f.grabbedBy||f.guarding)return;
- const current=f.parts.armR.children[2].getWorldPosition(new THREE.Vector3());
+ const hand=(m.side===-1?f.parts.armL:f.parts.armR).children[2];
+ const current=hand.getWorldPosition(new THREE.Vector3());
  const history=frame?.fists.get(f),sameRig=history?.rig===f.parts.rig;
- const from=history?(sameRig?history.right:current):(m.previous||current);
+ const from=history?(sameRig?(m.side===-1?history.left:history.right):current):(m.previous||current);
  m.previous=current.clone();
- const weaponSweep=m.weapon?.parent===f.parts.armR.children[2]?weaponContactSweeps(m.weapon,history?(sameRig?history.weapon:null):m.weaponPrevious):null;
+ const weaponSweep=m.weapon?.parent===hand?weaponContactSweeps(m.weapon,history?(sameRig?history.weapon:null):m.weaponPrevious):null;
  const sweeps=m.weapon?(weaponSweep?.sweeps||[]):[{from,to:current,radius:.42}];
  m.weaponPrevious=weaponSweep?.snapshot??null;
  if(m.elapsed<(m.startup||.045)||m.elapsed>=m.active)return;
