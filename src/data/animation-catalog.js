@@ -11,6 +11,12 @@ export const ANIMATION_BANKS = [
   {id:'locomotion',category:'Locomotion',bank:locomotion,runtime:'src/engine/ground-motion.js'},
   {id:'jump',category:'Jump and landing',bank:jumps,runtime:'src/engine/jump-motion.js'},
 ];
+export const PROCEDURAL_ANIMATIONS=Object.freeze([
+ {id:'native/hostile-hold',label:'Hostile grab hold',friendly:false},
+ {id:'native/friendly-carry',label:'Friendly carry hold',friendly:true},
+].map(e=>Object.freeze({...e,key:e.id.split('/')[1],kind:'procedural',category:'Paired holds',duration:2,frames:0,loop:true,
+ runtime:'src/engine/entity.js _animate + src/engine/person-carry.js',take:'Native procedural hold',source:{author:'PowerWorld runtime'},
+ contact:null,issues:[],warnings:['Hold pose only — startup, escape and throw are reviewed in the Threat Room'],audioStatus:'not-audited'})));
 
 export function validateAnimationClip(clip,category) {
   const issues=[];
@@ -49,7 +55,7 @@ export function buildAnimationCatalog(banks=ANIMATION_BANKS) {
       warnings:source.id==='locomotion'&&key!=='idle'?['foot-contact-markers-not-authored']:[],
     });
   }
-  return {version:1,entries};
+  return {version:1,entries,procedural:PROCEDURAL_ANIMATIONS};
 }
 
 export function resolveAnimationClip(id,banks=ANIMATION_BANKS) {
