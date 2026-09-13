@@ -13,15 +13,42 @@ Choose one relevant scenario. Do not run every scenario after an unrelated edit.
 
 Each invocation creates a unique `artifacts/playtest/<timestamp>-<scenario>/` folder. `run.json` contains status, runner checkout/revision, tracked changes, scenario, input scheme and error details. `result.json` comes from the scenario and must explicitly pass without browser errors. Screenshots and silent clips stay beside these files. A missing result is a failure; old runs cannot supply a stale pass. Inspect the clip before claiming visual quality. A running manifest alone is not evidence of a live process.
 
-These three scenarios reuse existing native keyboard/mouse browser scripts. Initial character/target placement is staged and disclosed. They do not replace combat damage with a simulated success. Their normal direct script commands still work; the runner redirects output using PW_PLAYTEST_OUT. Output folders are independent, but do not run simultaneous GPU-heavy captures when measuring performance.
+The initial three scenarios reuse existing native keyboard/mouse browser scripts. Initial character/target placement is staged and disclosed. They do not replace combat damage with a simulated success. Their normal direct script commands still work; the runner redirects output using PW_PLAYTEST_OUT. Output folders are independent, but do not run simultaneous GPU-heavy captures when measuring performance.
 
 ## Adding a scenario
 
 Register a fixed script filename, description and capture type in `tools/playtest/scenarios.mjs`. The script must honor PW_PLAYTEST_OUT, close its browser in finally, bound its waits, write result.json only after explicit assertions, and disclose every fixture intervention. Keep native actions separate from setup. Throw on failure. Include state/contact screenshots or a short clip and bounded diagnostics appropriate to the failure. Never accept an arbitrary script path from CLI input.
 
-## Remaining #41 work
+## Current status — September 13, 2026
 
-This is a migration entry point, not the completed runtime bridge. The runner's git revision is NOT proof of which revision the server serves (`serverRevisionVerified:false`). Runtime fingerprint handshake, schema-driven live controls, bounded observation/event/collider bundles, enforcement of fixture/acceptance separation, shared checkpoint resets, operation migration, controller and touch adapters remain open. Current registry supports keyboard/mouse only. Do not claim iPhone, controller, balanced operation or full roster acceptance from these scenarios. No production game code or cloud CI is added by this runner.
+The runner has 16 registered scenarios. Use --list for the live registry and supported schemes, --controls for canonical controls and action adapters, and --report to index saved evidence. Ground guard variants support keyboard/mouse, emulated gamepad and browser touch; moving-strike supports simultaneous gamepad/touch movement and charge. Aerial approach, guard and terrain throw currently use keyboard/mouse.
+
+Server checkout identity, bounded snapshots, native action history, logged setup separated from acceptance, and local evidence indexing are implemented. Three-cycle health/energy resets and practice-rock throw/reset have native acceptance evidence. This does not establish cleanup of every collider, projectile, sound loop or listener.
+
+### Quick handoff for another AI
+
+Run in D:/lsw/.worktrees/combat-release-review, with that checkout served on port 5184:
+
+```sh
+node tools/playtest/run.mjs --controls
+node tools/playtest/run.mjs --list
+node tools/playtest/run.mjs --scenario melee-guard --scheme touch
+node tools/playtest/run.mjs --report
+```
+
+Choose ONE scenario relevant to the change. Read its result, observed-state and action history; inspect its captured still/clip before making visual claims. Preserve failed runs and the live process handle. Do not rerun the full transport route for an isolated combat failure. A staged checkpoint pass does not replace final operation acceptance.
+
+### Remaining acceptance, in order
+
+1. Migrate one operation segment to the shared runner with a disclosed pre-action checkpoint, real interactions and resource assertions. Existing standalone operation evidence is not this migration.
+2. Add targeted low-energy, interrupted-action and thin-wall scenarios with explicit failure categories. Reuse current fixtures/actions/diagnostics rather than writing another test engine.
+3. Extend read-only observations for mission state, vehicle seats, stable authored collider/anchor IDs and actual interaction rejection reasons. Current nearby collider indices are not stable IDs.
+4. Measure reset conservation of projectiles, colliders, audio loops and listeners in addition to the already-observed actor/prop/resource checks.
+5. Complete contextual action discovery and capture native menu/lock/aim actions in shared history. Emulated device acceptance is not physical controller/iPhone validation.
+6. Version scenario capabilities and support declared seed/checkpoint/timeout options where needed. These are proposed options, not currently accepted CLI flags. There is no automatic server launch or arbitrary live action API.
+7. Strengthen provenance beyond checkout/tracked-diff identity to loaded modules and untracked assets; verify production exclusion of any future bridge. Keep capture/history bounded and run locally.
+
+The sections below are a chronological implementation record. Later entries supersede earlier limitations; use the current status above and the actual --list/--controls output for handoff.
 
 ## Server identity and control discovery update
 
