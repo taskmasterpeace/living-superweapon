@@ -2,6 +2,7 @@ import {grabLesson,meleeLessonScheme} from './combat-lesson-controls.js';
 import {personThrowLaunch,THROW_WINDOW} from './person-throw-trajectory.js';
 import {meleeEntryTarget} from './melee-entry-target.js';
 import {meleeApproach} from '../data/melee-approaches.js';
+import {meleeWeaponFor} from './weapon-grip.js';
 // WAR WORLD: ASCENDANTS — melee trifecta: Strike (beats Grab) · Grab (beats Guard) · Guard (beats Strike).
 // Per-character variants: teleport-escape & energy-intangibility break front grabs; thorns hurt the holder;
 // grabHeal lifesteals throws. Back-grabs (from behind, OR during the victim's RECOVERY) are guaranteed and hit harder.
@@ -144,7 +145,8 @@ export class MeleeSystem {
     f._momSpd = Math.hypot(f.vel.x, f.vel.y, f.vel.z);
     f._momDive = !!(f.flying && (f.descendHeld || f.vel.y < -14));
     if(f._openSky&&f.parts.rig) {
-      const side=kind==='heavy'||id==='cross'||f.strikeIdx%2===0?1:-1;
+      const preferredSide=kind==='heavy'||id==='cross'||f.strikeIdx%2===0?1:-1;
+      const equipped=meleeWeaponFor(f,preferredSide),side=equipped?.side??preferredSide;
       const arm=side===1?f.parts.armR:f.parts.armL;
       const entry=meleeEntryTarget(g,f,meleeApproach(f.def,f.airborne).range);
       const point=entry?entry.center(new THREE.Vector3()):f.hasAimWorld?f.aimWorld.clone():f.center(new THREE.Vector3()).addScaledVector(f.aim3,S.reach);
@@ -166,7 +168,7 @@ export class MeleeSystem {
         const origin=f.center(new THREE.Vector3()),range=meleeApproach(f.def,f.airborne).range;
         point.add(lead);const offset=point.clone().sub(origin);const budget=range+lead.length();if(offset.length()>budget)point.copy(origin).add(offset.setLength(budget));
       }
-      f._meleeMotion={side,point,target:entry,previous:arm.children[2].getWorldPosition(new THREE.Vector3()),current:new THREE.Vector3(),impact:new THREE.Vector3(),dt:0};
+      f._meleeMotion={side,weapon:equipped?.weapon??null,point,target:entry,previous:arm.children[2].getWorldPosition(new THREE.Vector3()),current:new THREE.Vector3(),impact:new THREE.Vector3(),dt:0};
     }
     // ⚠ THE STEP-IN SELLS THE REACH (the short-arms problem). `step` is a DISTANCE in data/martial.js;
     // STEP_IMPULSE converts it to the velocity impulse. jab 2.0×8 = the 16 that was hard-coded here.

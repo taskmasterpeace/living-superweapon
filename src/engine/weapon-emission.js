@@ -1,6 +1,7 @@
 // A weapon is selected by its actual attachment, not by a guessed hand offset.
 // Body powers never call this: carrying a gun cannot relocate an eye/chest beam.
 import {updateSoldierLoadoutPresentation} from './soldier-loadout-presentation.js';
+import {alignWeaponGrip} from './weapon-grip.js';
 export function forearmOccupied(arm){
  const hand=arm?.children[2];return !!hand&&(!!hand.userData.gripOccupied||hand.children.some(o=>o.visible&&o.userData.weaponKind));
 }
@@ -40,7 +41,7 @@ export function unmountHeldWeapon(f,game=f._game,commitPending=true){
  const mount=f._heldMount;
  if(mount){
   for(const [object,visible]of mount.hidden)object.visible=visible;
-  mount.hand.userData.gripOccupied=mount.occupied;f._heldMount=null;
+  mount.hand.userData.gripOccupied=mount.occupied;mount.hand.userData.gripKind=mount.gripKind;f._heldMount=null;
  }
  f._gearMesh?.removeFromParent();
 }
@@ -50,7 +51,8 @@ export function mountHeldWeapon(f,weapon,transferring=false){
  const hand=f.parts?.armR?.children[2];if(!hand)return;
  const hidden=[];
  for(const object of hand.children)if(object.userData.weaponKind){hidden.push([object,object.visible]);object.visible=false;}
- f._heldMount={hand,hidden,occupied:hand.userData.gripOccupied};
+ f._heldMount={hand,hidden,occupied:hand.userData.gripOccupied,gripKind:hand.userData.gripKind};
  delete weapon._gripCoverBounds;
  hand.userData.gripOccupied=true;weapon.position.set(0,0,0);weapon.rotation.set(0,0,0);hand.add(weapon);f._gearMesh=weapon;
+ hand.userData.gripKind=alignWeaponGrip(weapon,1)?'cylinder':undefined;
 }

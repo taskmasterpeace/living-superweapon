@@ -15,7 +15,7 @@ export function animateAuthoredStrike(f,t,weight){
  const preference=heavy?f.def.model?.heavyStrikes:f.def.model?.strikes;
  // This take is bare-handed. Preserve weapon swings until a matching source
  // exists; a sword/axe is not a fist and a shield needs its own counterbalance.
- const armed=heavy&&[p.armL,p.armR].some(arm=>arm.userData.shield||arm.children[2].userData.gripOccupied);
+ const armed=!!f._meleeMotion?.weapon||(heavy&&[p.armL,p.armR].some(arm=>arm.userData.shield||arm.children[2].userData.gripOccupied));
  if(!clip||preference==='procedural'||armed||weight<=0||f.stunT>0||f.staggerT>0||f.frozenT>0||f.grabbedBy)return false;
  let s=f._authoredStrike;
  if(!s||s.rig!==p.rig)s=f._authoredStrike={rig:p.rig,applied:false,take:null,base:authoredParts(p).map(part=>({part,position:part.position.clone(),quaternion:part.quaternion.clone()}))};

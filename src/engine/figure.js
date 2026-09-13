@@ -10,6 +10,7 @@
 // boot}`, and the ragdoll drives those meshes in WORLD space assuming `g.scale === 1`. Any
 // new detail must mount on a DRIVEN mesh, never as an extra pivot child.
 import * as THREE from 'three';
+import {alignWeaponGrip} from './weapon-grip.js';
 import {ShieldSurfaceMaterial} from './shield-surface.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { anatomyGeometry, bindHeroRig } from './hero-rig.js';
@@ -380,7 +381,11 @@ export function figure(def) {
     }
     const wk = side === -1 ? b.weaponL : b.weaponR;   // any registry weapon in either hand
     fist.userData.gripOccupied=!!wk||!!(b.gun&&side===1)||!!(b.blade&&side===-1);
-    if (wk) fist.add(buildWeapon(wk, { armor, glow, visorMat }));
+    if (wk) {
+      const weapon=buildWeapon(wk, { armor, glow, visorMat });
+      if(alignWeaponGrip(weapon,side))fist.userData.gripKind='cylinder';
+      fist.add(weapon);
+    }
     g.add(pivot);
     return pivot;
   };
