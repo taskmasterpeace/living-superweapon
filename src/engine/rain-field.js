@@ -15,7 +15,7 @@ export class RainField {
     const ground=this.world.heightAt?.(x,z),base=Number.isFinite(ground)?ground:0;
     let height=base;
     for(const c of this.covers){
-      if(c.destroyed)continue;
+      if(c.destroyed||c.weatherTransparent)continue;
       if(Math.abs(x-c.x)<=(c.hx??c.r??0)&&Math.abs(z-c.z)<=(c.hz??c.r??0))height=Math.max(height,c.top);
     }
     return height;

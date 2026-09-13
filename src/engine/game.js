@@ -4345,7 +4345,8 @@ export class Game {
     this.checkRingOut(dt);
     this.updateSpectate();
     this.updateDecoys(dt);
-    if(!this._threatRoom?.active)this.weather.update(dt);
+    if(this._threatRoom?.active)this.weather.updateDomains(dt);
+    else this.weather.update(dt);
     this.timeFields.update(dt);
     this.gravityZones.update(dt);
     updateDomes(this, dt);

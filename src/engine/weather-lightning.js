@@ -4,7 +4,7 @@ import * as THREE from 'three';
 export function weatherSurface(world,x,z){
  const h=world.heightAt?.(x,z);let y=Number.isFinite(h)?h:0;
  for(const list of [world.cover,world.interiors])for(const c of list||[]){
-  if(!c.destroyed&&Number.isFinite(c.top)&&Math.abs(x-c.x)<=(c.hx??c.r??0)&&Math.abs(z-c.z)<=(c.hz??c.r??0))y=Math.max(y,c.top);
+  if(!c.destroyed&&!c.weatherTransparent&&Number.isFinite(c.top)&&Math.abs(x-c.x)<=(c.hx??c.r??0)&&Math.abs(z-c.z)<=(c.hz??c.r??0))y=Math.max(y,c.top);
  }
  return y+.04;
 }

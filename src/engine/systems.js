@@ -129,9 +129,12 @@ export class Weather {
     this._mesh=this._rainField.mesh;this.g.scene.add(this._mesh);
     return this._mesh;
   }
+  updateDomains(dt) {
+    for(const [owner,layer] of this.layers){layer.update(dt);if(layer.disposed)this.layers.delete(owner);}
+  }
   update(dt) {
     this.time+=dt;this.g.world.weatherTime=this.time;
-    for(const [owner,layer] of this.layers){layer.update(dt);if(layer.disposed)this.layers.delete(owner);}
+    this.updateDomains(dt);
     const T = this._target;
     // GRADUAL — the brief is explicit that global weather must build, not switch
     this.rain += (T.rain - this.rain) * Math.min(1, dt * 0.55);
