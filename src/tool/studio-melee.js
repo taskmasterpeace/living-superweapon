@@ -1,8 +1,9 @@
+import {meleeApproach} from '../data/melee-approaches.js';
 import * as THREE from 'three';
 import {MeleeSystem} from '../engine/melee.js';
 import {Game} from '../engine/game.js';
 
-export const MELEE_SEQUENCES={combo:'Light combination',heavy:'Charged heavy',crush:'Heavy vs guard',block:'Block incoming punch',break:'Receive guard-breaking heavy',body:'Body blow → throw',throw:'Clinch → aimed throw',slam:'Clinch → drive down'};
+export const MELEE_SEQUENCES={combo:'Light combination',approach:'Approach → punch',heavy:'Charged heavy',crush:'Heavy vs guard',block:'Block incoming punch',break:'Receive guard-breaking heavy',body:'Body blow → throw',throw:'Clinch → aimed throw',slam:'Clinch → drive down'};
 export const defensiveSequence=sequence=>sequence==='block'||sequence==='break';
 const still=new THREE.Vector3();
 
@@ -15,8 +16,9 @@ export function resetMelee(stage) {
     trail:()=>{},heroYell:()=>{},afterimage:()=>{},onSlam:Game.prototype.onSlam});
   stage.meleeSequence??='combo';
   const grounded=stage.meleeStage==='grounded',height=grounded?0:80;
-  f.pos.set(0,height,0);t.pos.set(0,height,4.8);
+  f.pos.set(0,height,0);t.pos.set(0,height,stage.meleeSequence==='approach'?meleeApproach(f.def,!grounded).range*.65:4.8);
   for(const actor of [f,t]) {
+    actor.animT=0; // Fixed idle phase keeps body contact reproducible when scrubbing.
     actor.vel.set(0,0,0);actor.invuln=0;actor.flying=!grounded;actor.gait=grounded?'grounded':'airborne';actor._flyPose=grounded?0:1;actor.hitstop=0;actor._chaseKb=true;
     actor.isDummy=true;actor.hasAimWorld=true;actor._animate(1);actor.obj.updateMatrixWorld(true);
   }
@@ -40,6 +42,8 @@ export function stepMelee(stage,time,dt) {
       t.faceDir(f.pos.x-t.pos.x,f.pos.z-t.pos.z);
       if(crossed(.7))g.melee.chargeStart(t);
       if(crossed(sequence==='block'?.745:1.45))g.melee.chargeRelease(t);
+    } else if(sequence==='approach') {
+      if(crossed(.3))g.melee.chargeStart(f);if(crossed(.345))g.melee.chargeRelease(f);
     } else if(sequence==='combo')for(const start of [.3,.72,1.14]) {
       if(crossed(start))g.melee.chargeStart(f);if(crossed(start+.045))g.melee.chargeRelease(f);
     }

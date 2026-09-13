@@ -624,3 +624,10 @@ This is one hostile airborne throw sequence. Friendly catch, defensive escapes, 
 - Threat Room contact feed and recorded review label show HEAVY CRUSH / ENERGY EMPTY / GUARD METER EMPTY beside actual HP and energy spent. Shared diagnostic trial records retain the reason for AI evaluation.
 - 42 energy-guard/trial tests passed, including native damage cases for all three reasons and preservation in replay events. Production build passed (existing chunk-size/GLTF import warnings).
 - Native `melee-guard-crush` runner passed in `artifacts/playtest/2026-09-13T06-27-05.358Z-melee-guard-crush/`; now asserts the actual heavy-crush reason as well as funded HP protection. Captured still and silent clip. Browser proof covers heavy crush; exhaustion/meter causes are verified by damage-system tests, not new browser scenarios.
+
+### September 13 — native approach authoring rehearsal
+- Character Studio melee sequences now include Approach → punch, staging a target at 65% of the character's shared ground/air approach range. Uses the existing production melee/physics rehearsal, not a new trajectory simulation. Animation Library remains a pose catalog; live rehearsal belongs to Studio.
+- Corrected Studio's obsolete C/G directions to PowerWorld Q guard/E interaction and energy-first guard. Existing close-range rehearsals retain their default.
+- Fixed random idle phase in rehearsal resets; it caused small contact-position differences across seeks. No global RNG change or gameplay balance change.
+- `tools/studio-approach-browser.mjs`: JELANI 39u, SOL 26u both approach, contact and damage; repeated seeks match exactly after the idle reset. Captured video/stills; JELANI still inspected. Build passed with existing import/chunk warnings.
+- Known failure: initial RAGE 46.8u rehearsal approached but missed (zero damage/contact). Kept `rage-observed.json`, reported to #14, and explicitly excluded RAGE from the passing two-character scope. Native Threat Room reproduction and a correction remain next; no full-roster/airborne claim. Earlier strict seek failure led to the real idle reset fix, not a tolerance relaxation.
