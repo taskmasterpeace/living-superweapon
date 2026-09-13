@@ -483,6 +483,14 @@ export function buildWeapon(kind, m) {
   g.name='weapon-'+kind;g.userData.weaponKind=kind;
   const add = (mesh, x, y, z, rx = 0, rz = 0) => { mesh.position.set(x, y, z); mesh.rotation.x = rx; mesh.rotation.z = rz; g.add(mesh); return mesh; };
   switch (kind) {
+    case 'bat': {
+      const wood=new THREE.MeshStandardMaterial({color:'#b78a50',roughness:.72});
+      const profile=[[-4,0],[-3.94,.18],[-3.75,.24],[-2.6,.24],[-1.45,.17],[-.85,.09],[.64,.09],[.7,.15],[.86,.15],[.9,0]].map(([y,r])=>new THREE.Vector2(r,y));
+      const body=new THREE.Mesh(new THREE.LatheGeometry(profile,12),wood);body.castShadow=true;g.add(body);
+      const support=new THREE.Object3D();support.name='weapon-support-grip';support.position.set(0,-.65,0);g.add(support);
+      g.userData.twoHanded=true;
+      break;
+    }
     // ---- THE ARMORY'S OWN SILHOUETTES (2026-07-26). Built along the arm's -Y axis like every
     // other weapon here, so the poses and the ragdoll carry them for free.
     case 'katana': {                                   // long single edge + a guard + a wrapped hilt

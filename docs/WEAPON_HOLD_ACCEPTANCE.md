@@ -19,6 +19,11 @@ master objective. This checklist does not replace or narrow that objective.
 - Weapon surface samples sweep with the live weapon transform during active
   frames, using the same moving-target snapshot as fists. Hidden, detached
   or interrupted weapons cannot leave an active damage path behind.
+- Bat is now a registered procedural model with a support socket, native
+  swing and barrel contact. The off-hand solves to that socket in ready,
+  windup, active and recovery poses. It is not yet a selectable armory item.
+- Spear has a committed-direction thrust. Its elbow plane keeps the shaft
+  aligned without bending the wrist; extension stays inside that solution.
 
 ## Verified scope
 
@@ -41,12 +46,13 @@ not full armed-motion acceptance.
 - Full motion review of every registry weapon: idle, aim, attack, recovery,
   flight, block, grip transitions, equipment removal and ragdoll/respawn.
 - Approve and tune full slash/chop sequences, and add bat swing and spear
-  thrust. Spear still uses the generic procedural reach; bat is preview-only.
+  thrust to the complete weapon review, including aerial and blocked motions.
 - Extend surface-contact verification to thin obstacles, frame-rate variation,
   every weapon and whole-body collision/guard scenarios.
 - Two-hand support and weapon-specific support sockets, checked against the
   rendered hands and clothing throughout the motion.
-- Bat must graduate from inspection prop to registered gameplay equipment.
+- Bat still needs armory/inventory authoring and the ability-slot melee path
+  reconciled with native strike contact before it is offered as equipment.
 - Visual review across body proportions, including thumb placement and wrist
   roll. Passing alignment math alone cannot establish a convincing hold.
 

@@ -1,6 +1,7 @@
 // Contact samples in the same local frame as buildWeapon geometry. These are
 // physical blade/head surfaces, not a range cone around the wielder.
 export const MELEE_WEAPON_SURFACES={
+ bat:{from:[0,-1.5,0],to:[0,-3.75,0],radius:.24},
  sword:{from:[0,-.65,.16],to:[0,-3.55,.16],radius:.25},
  katana:{from:[0,-.25,0],to:[0,-3.55,0],radius:.16},
  knife:{from:[0,-.35,.16],to:[0,-1.55,.16],radius:.18},

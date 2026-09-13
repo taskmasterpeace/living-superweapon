@@ -4,7 +4,7 @@ import {reachArm} from './hero-rig.js';
 import {animateGuard} from './guard-pose.js';
 import {animateAuthoredStrike} from './strike-motion.js';
 import {animateAbilityMeleePose} from './ability-melee-pose.js';
-import {animateWeaponStrike} from './melee-weapon-pose.js';
+import {animateWeaponStrike,animateWeaponReady} from './melee-weapon-pose.js';
 
 const point=new THREE.Vector3(),guard=new THREE.Vector3(),direction=new THREE.Vector3(),elbowPole=new THREE.Vector3();
 const rotation=new THREE.Quaternion(),inverse=new THREE.Quaternion();
@@ -18,6 +18,7 @@ export function animateMelee(f) {
   const p=f.parts,m=f._meleeMotion,S=STRIKES[f.mId];
   if(f._openSky&&p.rig&&f.poseGuard>.001&&!f.mstate&&!f.grabState){animateGuard(f);return;}
   if(f._openSky&&p.rig&&f.grabState==='clinch'&&f.grabbing){animateClinch(f);return;}
+  if(f._openSky&&p.rig&&!f.mstate&&animateWeaponReady(f))return;
   if(!f._openSky||!p.rig||!m||!S||!f.mstate)return;
   const pace=f.def.meleePace||1;
   const duration=f.mstate==='startup'?(m.startupDuration||S.startup/pace):S[f.mstate]/pace;
