@@ -169,3 +169,10 @@ test('environment response survives profile export and rejects invalid mass',()=
  assert.deepEqual(applied.environment,p.environment);
  p.environment.massKg=0;assert.throws(()=>studio.validateProfile(p),/massKg/);
 });
+
+test('emblem selection roundtrips into native figures without editing combat stats',async()=>{
+ const {Fighter}=await import('../src/engine/entity.js');const def=structuredClone(ROSTER.find(d=>d.id==='vega'));const initial=studio.profileFromDef(def);assert.equal(initial.model.insignia,'V');
+ for(const choice of ['hex','V','none']){const p=structuredClone(initial);p.model.insignia=choice;const store=storage();studio.saveProfile(p,store);const saved=studio.loadProfile(def.id,store),applied=studio.applyProfile(def,saved);const f=new Fighter(applied);try{assert.equal(f.parts.emblem.visible,choice==='hex');assert.equal(!!f.parts.insigniaFront,choice==='V');assert.equal(!!f.parts.insigniaBack,choice==='V');assert.equal(applied.hp,def.hp);assert.deepEqual(applied.abilities,def.abilities);}finally{f.dispose();}}
+ const legacy=structuredClone(initial);delete legacy.model.insignia;assert.doesNotThrow(()=>studio.validateProfile(legacy));const f=new Fighter(studio.applyProfile(def,legacy));try{assert.ok(f.parts.insigniaFront&&f.parts.insigniaBack);}finally{f.dispose();}
+ initial.model.insignia='arbitrary';assert.throws(()=>studio.validateProfile(initial),/emblem/i);
+});

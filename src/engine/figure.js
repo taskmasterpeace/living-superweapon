@@ -257,7 +257,7 @@ export function figure(def) {
   }
   // chest emblem
   const emblem = new THREE.Mesh(heroInsigniaGeometry(model.definition), glow);
-  emblem.visible=model.emblem!==false&&!model.insignia;
+  emblem.visible=model.insignia==='hex'||(model.emblem!==false&&!model.insignia);
   emblem.position.set(0,.45,0);torso.add(emblem);
   let insigniaFront=null,insigniaBack=null;
   if(model.insignia==='V'){

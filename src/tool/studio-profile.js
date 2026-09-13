@@ -64,7 +64,8 @@ export function validateProfile(p) {
   if(p.version!==1)fail('Unsupported profile version. Import a version 1 Studio profile.');
   if(typeof p.heroId!=='string'||!/^[a-z0-9][a-z0-9_-]{0,79}$/.test(p.heroId))fail('Invalid hero ID.');
   record(p.model,'Model');
-  allowed(p.model,['costume','flightStyle','hairColor','locomotion','strikes','heavyStrikes','strikeMarkers','definition','body','surface','assets'],'Model');
+  allowed(p.model,['costume','flightStyle','hairColor','insignia','locomotion','strikes','heavyStrikes','strikeMarkers','definition','body','surface','assets'],'Model');
+  if(p.model.insignia!==undefined&&!['hex','V','none'].includes(p.model.insignia))fail('Unknown emblem. Choose hex, V or none.');
   validateAssets(p.model.assets);
   validateStrikeMarkers(p.model.strikeMarkers);
   if(p.model.surface!==undefined&&!['standard','field'].includes(p.model.surface))fail('Unknown material surface.');
@@ -143,7 +144,7 @@ function mergeModel(base={},patch={}){
 export function profileFromDef(def) {
   const model=heroModelOf(def);
   const poses=poseDefaultsForStyle(model.flightStyle);
-  return {version:1,heroId:def.id,model:{body:model.body??'procedural',surface:model.surface??'standard',costume:model.costume,flightStyle:model.flightStyle,hairColor:model.hairColor,definition:model.definition,locomotion:model.locomotion??'authored',strikes:model.strikes??'authored',heavyStrikes:model.heavyStrikes??'authored',...(model.assets===undefined?{}:{assets:copy(model.assets)}),...(model.strikeMarkers===undefined?{}:{strikeMarkers:copy(model.strikeMarkers)})},
+  return {version:1,heroId:def.id,model:{insignia:model.insignia??(model.emblem===false?'none':'hex'),body:model.body??'procedural',surface:model.surface??'standard',costume:model.costume,flightStyle:model.flightStyle,hairColor:model.hairColor,definition:model.definition,locomotion:model.locomotion??'authored',strikes:model.strikes??'authored',heavyStrikes:model.heavyStrikes??'authored',...(model.assets===undefined?{}:{assets:copy(model.assets)}),...(model.strikeMarkers===undefined?{}:{strikeMarkers:copy(model.strikeMarkers)})},
     frame:frameOf(def),colors:{skin:'#e8c39a',...def.colors},camera:{...CAMERA_DEFAULTS,...model.camera},
     motion:{...MOTION_DEFAULTS,...model.motion},
     environment:{massKg:def.metal?162:90,windResistance:1+Math.max(0,(def.strength??5)-4)**2*.55,fallSafeSpeed:56,fallDamageScale:def.archetype==='soldier'?1:0,...def.environment},
