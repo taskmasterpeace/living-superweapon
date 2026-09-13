@@ -1822,15 +1822,19 @@ export class Game {
   // the void exactly like the throw this method exists to contain.
   later(fn, ms) {
     const gen = this._gen | 0;
+    const room=this._threatRoom?.active?this._threatRoom:null;
     const id = setTimeout(() => {
       try {
         if (this._timers) this._timers.delete(id);
+        room?._effectTimers?.delete(id);
         if ((this._gen | 0) !== gen) return;          // the match this belonged to is over
+        if(room&&(!room.active||this._threatRoom!==room))return;
         fn();
       } catch (e) { try { this.reportError(e, 'later'); } catch (e2) {} }
     }, ms);
     if (!this._timers) this._timers = new Set();
     this._timers.add(id);
+    if(room)(room._effectTimers ||= new Set()).add(id);
     return id;
   }
 

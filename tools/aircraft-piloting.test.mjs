@@ -25,6 +25,16 @@ function arm(f){
  return ()=>{f.actor.combat.dispose();hull.geometry.dispose();hull.material.dispose();};
 }
 
+test('training cannot board hidden desert aircraft or consume the station E key',()=>{
+ const f=setup('jet');f.player.def.archetype='soldier';f.player._openSky=true;
+ f.game._threatRoom={active:true};f.game.input.justPressed.add('KeyE');
+ assert.equal(f.pilot.nearest(f.player),null);assert.equal(f.pilot.enter(f.actor,f.player),false);
+ assert.equal(f.pilot.handleInput(f.game.input),false);assert.ok(f.game.input.justPressed.has('KeyE'));
+ assert.equal(f.pilot.vehicle,null);assert.equal(f.actor.occupant,undefined);
+ f.game._threatRoom.active=false;
+ assert.equal(f.pilot.nearest(f.player),f.actor);assert.equal(f.pilot.handleInput(f.game.input),true);
+ assert.equal(f.actor.occupant,f.player);
+});
 test('soldier E boards a parked jet but becomes rudder after boarding, never exit',()=>{
  const f=setup('jet');f.player.def.archetype='soldier';f.player._openSky=true;
  f.game.input.justPressed.add('KeyE');f.game.input.keys.add('KeyE');assert.equal(f.pilot.handleInput(f.game.input),true);assert.equal(f.actor.occupant,f.player);

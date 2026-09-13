@@ -7,7 +7,7 @@ import {soldierControlsActive} from '../core/soldier-controls.js';
 // airspeed-dependent fixed-wing lift share native terrain and cover collision.
 export class AircraftPiloting {
  constructor(support){this.support=support;this.game=support.game;this.vehicle=null;this.throttle=0;this.steer=0;this.rudder=0;this.collective=0;this.fire=false;this._next=new Vector3();this._exit=new Vector3();}
- get blocked(){const g=this.game;return g.paused||g.running===false||g.matchOver||g.hud?.titleOpen||g.combatOverlayOpen||g._frontlinePreparing;}
+ get blocked(){const g=this.game;return g.paused||g.running===false||g.matchOver||g.hud?.titleOpen||g.combatOverlayOpen||g._frontlinePreparing||g._threatRoom?.active;}
  handleInput(input){
   if(this.blocked){this.throttle=this.steer=this.rudder=this.collective=0;this.fire=false;return !!this.vehicle;}
   const p=this.game.player;
@@ -29,6 +29,7 @@ export class AircraftPiloting {
   this.fire=!!(input?.down?.('Mouse0')||input?.mouse?.left||input?.mouse?.leftEdge);return true;
  }
  nearest(p){
+  if(this.game._threatRoom?.active)return null;
   if(!p?.alive||!canPilotVehicle(p)||p.flying||p._scoutVehicle||p.grabbedBy||p.grabbing||p.staggerT>0||p.frozenT>0)return null;
   let best=null,distance=Infinity;
   for(const a of this.support.actors){
@@ -43,6 +44,7 @@ export class AircraftPiloting {
   for(let i=0;i<=steps;i++)if(!this._clear(p.pos.x+dx*i/steps,p.pos.y+4,p.pos.z+dz*i/steps,p.radius||2,a))return false;return true;
  }
  enter(a,p){
+  if(this.game._threatRoom?.active)return false;
   if(!p?.alive||!canPilotVehicle(p)||!a.parked||a.occupant||a.destroyed||a.combat?.dead)return false;
   cancelHeldAttacks(p);a.occupant=p;a._occupantVisible=p.obj.visible;this.vehicle=a;p._aircraftVehicle=a;
   a.velocity??=new Vector3();a.speed=0;a.pitch=0;a.roll=0;a.yaw??=a.wrapper.rotation.y;a.velocity.set(0,0,0);
