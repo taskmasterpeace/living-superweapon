@@ -1,3 +1,4 @@
+import {playtestIdentityPlugin} from './tools/playtest/identity.mjs';
 import { defineConfig } from 'vite';
 import { fileURLToPath, URL } from 'node:url';
 
@@ -8,6 +9,7 @@ import { fileURLToPath, URL } from 'node:url';
 // the packaged app, so this is safe for web too — do not "tidy" it back to '/'.
 export default defineConfig({
   base: './',
+  plugins: [playtestIdentityPlugin()],
   server: { port: 5180, strictPort: false },
   build: {
     outDir: 'dist',

@@ -22,3 +22,11 @@ Register a fixed script filename, description and capture type in `tools/playtes
 ## Remaining #41 work
 
 This is a migration entry point, not the completed runtime bridge. The runner's git revision is NOT proof of which revision the server serves (`serverRevisionVerified:false`). Runtime fingerprint handshake, schema-driven live controls, bounded observation/event/collider bundles, enforcement of fixture/acceptance separation, shared checkpoint resets, operation migration, controller and touch adapters remain open. Current registry supports keyboard/mouse only. Do not claim iPhone, controller, balanced operation or full roster acceptance from these scenarios. No production game code or cloud CI is added by this runner.
+
+## Server identity and control discovery update
+
+`node tools/playtest/run.mjs --controls` prints the actual shared POWERWORLD_CONTROLS registry, rather than a copied bindings table. This is canonical combat mapping, not exhaustive live context/device discovery (seat roles, UI focus and controller/touch adapters still need that work).
+
+The runner now requires the loopback-only Vite `/__pw_playtest_identity` endpoint before running a scenario. It verifies real worktree path, HEAD and tracked working-diff hash, then checks again after the scenario. Missing/mismatched identity fails the run. The endpoint is dev-server-only, uncached and rejects non-GET/non-loopback requests. Restart an older dev server if the endpoint is missing; do not bypass the check.
+
+This supersedes the earlier `serverRevisionVerified:false` limitation for new successful runs. The handshake verifies checkout and tracked edits, not the browser's entire loaded module graph or untracked asset contents. Untracked files and mid-run hot reload still need stronger content provenance before full #41 completion.
