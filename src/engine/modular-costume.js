@@ -6,8 +6,8 @@ export const MODULAR_FRAMES={hero:[1,1,1],heavy:[1.38,.92,1.18],agile:[.83,.98,.
 export const MODULAR_RECIPES={
  vegas:{name:'Vegas · black and old gold',frame:'hero',hair:'none',skin:'#633b28',primary:'#161a1b',secondary:'#b18a3b',trim:'#252a29',emblemColor:'#d5b15c',emblem:'V',cape:false,armor:false,shoulders:true,muscle:1.15},
  mage:{name:'Ascendant · robed caster',frame:'agile',anatomy:'female',hair:'bun',skin:'#78462e',primary:'#e8e5d6',secondary:'#b52e23',trim:'#20272b',emblemColor:'#b52e23',emblem:'triangle',cape:false,robe:true,sleeves:true,collar:true,gauntlets:false,knees:false,armor:false,shoulders:false,gloves:'bare',muscle:.9},
- infected:{infection:'fever',tornClothes:true,name:'Infected · civilian',frame:'hero',hair:'swept',skin:'#a8aa85',primary:'#b5b49a',secondary:'#74352b',trim:'#303830',emblemColor:'#74352b',emblem:'none',cape:false,armor:false,shoulders:false,gauntlets:false,knees:false,belt:false,gloves:'bare',bareArms:true,muscle:.85,eyeColor:'#e4e5b2',eyeGlow:true,expression:'angry'},
- infectedHeavy:{infection:'fever',tornClothes:true,name:'Infected · heavy',frame:'heavy',hair:'none',skin:'#a8aa85',primary:'#555a49',secondary:'#74352b',trim:'#303830',emblemColor:'#74352b',emblem:'none',cape:false,armor:false,shoulders:false,gauntlets:false,knees:false,belt:false,gloves:'bare',bareArms:true,muscle:1.3,eyeColor:'#e4e5b2',eyeGlow:true,expression:'angry'},
+ infected:{infection:'rupture',tornClothes:false,name:'Infected · civilian',frame:'hero',hair:'swept',skin:'#a8aa85',primary:'#505958',secondary:'#74352b',trim:'#303830',emblemColor:'#74352b',emblem:'none',cape:false,armor:false,shoulders:false,gauntlets:false,knees:false,belt:false,gloves:'bare',bareArms:true,muscle:.85,eyeColor:'#e4e5b2',eyeGlow:true,expression:'angry'},
+ infectedHeavy:{infection:'rupture',tornClothes:false,name:'Infected · heavy',frame:'heavy',hair:'none',skin:'#a8aa85',primary:'#555a49',secondary:'#74352b',trim:'#303830',emblemColor:'#74352b',emblem:'none',cape:false,armor:false,shoulders:false,gauntlets:false,knees:false,belt:false,gloves:'bare',bareArms:true,muscle:1.3,eyeColor:'#e4e5b2',eyeGlow:true,expression:'angry'},
  base:{name:'Base character',frame:'hero',anatomy:'male',hair:'none',skin:'#b18b6d',primary:'#89928b',secondary:'#89928b',trim:'#89928b',emblemColor:'#e7d5a2',emblem:'none',cape:false,armor:false,shoulders:false,gauntlets:false,knees:false,belt:false,backpack:false,gloves:'bare',muscle:1},
  female:{name:'Base character · female',frame:'agile',anatomy:'female',hair:'bun',skin:'#78462e',primary:'#89928b',secondary:'#89928b',trim:'#89928b',emblemColor:'#e7d5a2',emblem:'none',cape:false,armor:false,shoulders:false,gauntlets:false,knees:false,belt:false,backpack:false,gloves:'bare',muscle:1},
  hero:{name:'Ascendant',frame:'hero',hair:'swept',skin:'#b18b6d',primary:'#dce0d9',secondary:'#b52e23',trim:'#20272b',emblemColor:'#b52e23',emblem:'triangle',cape:true,armor:false,shoulders:true,muscle:1},
@@ -51,7 +51,7 @@ export function applyModularRecipe(meshes,recipe){
   if(['vest','backpack','pouches'].includes(slot))m.visible=!!r.armor;
   if(slot==='backpack')m.visible=r.backpack??!!r.armor;
   if(slot==='belt')m.visible=!!r.belt;
-  if(slot==='pouches')m.visible=!!r.armor&&!!r.belt&&r.beltStyle==='utility';
+  if(slot==='pouches')m.visible=!!r.belt&&r.beltStyle==='utility';
   if(slot==='knees')m.visible=!!r.knees;
   if(slot==='gauntlets')m.visible=!!r.gauntlets&&!r.sleeves&&r.gloves!=='boxing';
   if(slot==='forearms')m.visible=(!r.gauntlets||r.gloves==='boxing')&&!r.sleeves;
@@ -75,7 +75,7 @@ export function applyModularRecipe(meshes,recipe){
    let map=null;const infected=INFECTION_STYLES[r.infection];
    if(m.material.name==='suit'&&r.pattern!=='solid'){map=outfitTexture(r);if(map)m.material.color.set('#ffffff');}
    const exposed=m.material.name==='skin'||(['arms','deltoids','forearms'].includes(slot)&&r.bareArms)||(['hands','handTips'].includes(slot)&&(r.gloves==='bare'||(r.gloves==='fingerless'&&slot==='handTips')));
-   if(infected&&exposed){map=infectionTexture(r.infection);m.material.color.set(infected.skin);}
+   if(infected&&exposed){map=infectionTexture(r.infection);m.material.color.set(infected.skin);}else if(infected&&['suit','accent','dark'].includes(m.material.name)&&slot!=='hair'){m.material.color.lerp(new T.Color('#777d78'),.38);}
    if(m.material.map!==map){m.material.map=map;m.material.needsUpdate=true;}
   }
   const waist=m.morphTargetDictionary?.waistNarrow;if(waist!==undefined)m.morphTargetInfluences[waist]=(r.anatomy??(r.frame==='agile'?'female':'male'))==='female'?1:0;

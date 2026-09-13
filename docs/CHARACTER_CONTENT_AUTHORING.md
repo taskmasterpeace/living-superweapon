@@ -86,3 +86,10 @@ Healthy native flight remains procedural. The infected studio overlay points bot
 The review exporter preserves existing edits by default. Use the workbook to specify each character's look, sprint and flight before replacing the roster. Before photos are archived; after photos must be captured from the implemented candidate, never fabricated.
 
 Measured visible presets are roughly 1,026–1,852 triangles and 16–26 scene draw calls. This is a geometry audit, not a crowd performance benchmark. Prefer contact/baked shading first; optional screen-space AO needs a representative crowd GPU test.
+
+## Clothing upload and infected readability follow-up
+Clothing uploads now accept PNG/JPEG/WebP up to 12 MB, decode before applying, and normalize to at most 512 pixels while preserving aspect ratio. The stored WebP fits the existing recipe format. Feedback is beside the button; a decode failure preserves the last valid pattern. tools/infected-upload-review.mjs verifies a 2200-pixel JPEG, actual loaded fabric texture, recipe validation, and visible decode errors.
+
+Rupture is now the default infected preset: stronger branching crimson marks, raised-looking painted lesions, red eye surrounds and mouth staining, pale eyes and gray skin. Garment colors are muted and default torn clothing is off. This is a surface change on the existing model, with no extra colliders or geometry. Compare infected-before-strengthening.png and infected-stronger-rupture.png under artifacts/marketing/modular-character. Healthy and infected flight poses are unchanged.
+
+Wardrobe follow-up: five reusable cape silhouettes (full, short, split-tail, one-shoulder, high-collar), with an authored horizontal bend row and limited pose deformation. Avoid a cloth-physics rewrite. Keep chest armor, belt/pouches, backpack and cape independent, with explicit compatibility rules. These cape variants remain planned.
