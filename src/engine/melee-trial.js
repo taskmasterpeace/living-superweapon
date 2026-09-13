@@ -1,3 +1,4 @@
+import {meleeLessonScheme,trialPrompt} from './combat-lesson-controls.js';
 import {meleeEntryEligibility} from './melee-entry-target.js';
 import {meleeApproach} from '../data/melee-approaches.js';
 import {retirePracticeActor} from './practice-actor-retirement.js';
@@ -27,20 +28,16 @@ export function trialLesson(kind,def,scheme='kbm'){
  if(kind==='defend'||kind==='air-defense'||kind==='guard')text+=' '+GUARD_LESSON;
  return text+' '+meleeLesson(def,scheme);
 }
-export const meleeLessonScheme=g=>g.touch?.enabled?'touch':g.pad?.active&&!g.touch?.enabled?'pad':'kbm';
-export function grabLesson(scheme='kbm'){
- const strike=scheme==='touch'?'Punch':scheme==='pad'?'Strike':'V',grab=scheme==='kbm'?'E':scheme==='touch'?'Throw':'Grab';
- return `GRAB CONNECTED · tap ${strike}: body blow · hold ${strike}: slam · move/fly: carry · hold ${grab} then release: aimed throw · tap ${grab}: set down/drop`;
-}
+export {meleeLessonScheme,grabLesson} from './combat-lesson-controls.js';
 // Scripted decisions use native motion, defense and damage; no target teleporting.
 export class MeleeTrial {
  constructor(g,origin){this.g=g;this.origin=origin.clone();this.records=[];this.index=-1;this.recording=new MeleeRecording();}
- previewThreat(id){
+ previewThreat(id,announce=true){
   if(this.g.ms?.threatLab?.state!=='preparing')return false;
   const def=ROSTER.find(d=>d.id===id);if(!def)throw Error('Unknown threat character');
   this.clear();this.selectedThreat=id;
   const f=this.previewActor=new Fighter(def,{rimK:.14});f.pos.copy(this.origin);f.pos.y=this.g.world.heightAt(f.pos.x,f.pos.z);f.obj.position.copy(f.pos);f.faceDir(0,-1);this.g.scene.add(f.obj);
-  this.g.hud?.feed?.(def.name+' · '+(def.archetype==='soldier'?'SOLDIER':'LSW')+' · '+def.threat+' · preview only; start a drill to fight','#ffd24a');return f;
+  if(announce)this.g.hud?.feed?.(def.name+' · '+(def.archetype==='soldier'?'SOLDIER':'LSW')+' · '+def.threat+' · preview only; start a drill to fight','#ffd24a');return f;
  }
  clearPreview(){if(this.previewActor){this.previewActor.obj.removeFromParent();this.previewActor.dispose();this.previewActor=null;}}
  startSelected(){if(!this.selectedThreat)return false;return this.start(this.kind==='encounter'?'stationary':this.kind||'stationary');}
@@ -62,7 +59,7 @@ export class MeleeTrial {
   const f=this.g.addFighter({...base,name:base.name+' · '+kind,abilities:{},items:[],holo:true},{team:this.g.player.team===0?1:0,dummy:true,x:this.origin.x,z:this.origin.z});
   f.pos.y=this.g.world.heightAt(f.pos.x,f.pos.z);f._chaseKb=true;f._openSky=true;f.noRespawn=true;f._meleeTrial=this;this.target=f;this.startHp=f.hp;
   this.recording.bind([this.g.player,f]);
-  this.g.hud?.feed?.(kind.toUpperCase()+' · '+trialLesson(kind,this.g.player.def,meleeLessonScheme(this.g)),'#ffd24a');return f;
+  this.g.hud?.feed?.(trialPrompt(kind,meleeLessonScheme(this.g)),'#ffd24a');return f;
  }
  startMachine(mode='still'){
   mode=mode===true?'moving':mode===false?'still':mode;
@@ -167,7 +164,7 @@ export class MeleeTrial {
   this.recording.mark(this.g.time,{kind:'strike-result',actor:0,label:a.kind.toUpperCase()+' · '+a.reason,result:a.result,reason:a.reason});
   this.g.hud?.feed?.(a.reason+' · '+a.kind.toUpperCase()+' · start '+a.distance.toFixed(1)+'u · recovery '+Math.round(a.recovery*1000)+'ms'+(hint?' · '+hint:''),'#ffd24a');this.attempt=null;
  }
- grabContact(holder,victim){if(holder!==this.g.player||victim!==this.target)return;this.recording.mark(this.g.time,{label:'Grab connected',kind:'grab'});this.g.hud?.feed?.(grabLesson(meleeLessonScheme(this.g)),'#ffd24a');}
+ grabContact(holder,victim){if(holder!==this.g.player||victim!==this.target)return;this.recording.mark(this.g.time,{label:'Grab connected',kind:'grab'});}
  hit(target,amount,opts,blocked,outcome=null){
   const incoming=target===this.g.player&&opts.src===this.target;
   if(!incoming&&target!==this.target&&target!==this.ally)return;

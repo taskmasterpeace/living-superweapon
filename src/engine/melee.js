@@ -1,3 +1,4 @@
+import {grabLesson,meleeLessonScheme} from './combat-lesson-controls.js';
 import {personThrowLaunch,THROW_WINDOW} from './person-throw-trajectory.js';
 import {meleeEntryTarget} from './melee-entry-target.js';
 import {meleeApproach} from '../data/melee-approaches.js';
@@ -676,7 +677,7 @@ export class MeleeSystem {
           g.ms?.threatLab?.meleeTrial?.grabContact(f,foe);
           f._clinchElapsed=0;f._clinchEscapeAt=f.grabT*.5;
           f._clinchFinisher=null;f._clinchPunch=null;f._clinchStrikeCd=0;
-          if (g.isHuman(f) && g.hud) g.hud.feed(g.modeId==='powerworld'?'CLINCH — tap V: body blow · hold V: drive down · hold E, aim, release: throw · tap E: drop/set down':'CLINCH — tap strike: body blow · hold strike: drive down · grab again: aimed throw', '#ff8a3a');
+          if (g.isHuman(f) && g.hud) g.hud.feed(g.modeId==='powerworld'?grabLesson(meleeLessonScheme(g)):'CLINCH — tap strike: body blow · hold strike: drive down · grab again: aimed throw', '#ff8a3a');
           f._victimEscape = !behind && ((foe.teleEscape && foe.ki > 14) || foe.canPhase);
           if(!g.audio.soundLibrary?.native?.('grab',{pos:foe.pos}))g.audio.hit(150);
           g.world.shake(0.5);

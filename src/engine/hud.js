@@ -2074,7 +2074,8 @@ export class HUD {
   }
 
   feed(text, color = 'var(--gold)') {
-    const d = document.createElement('div'); d.textContent = text; d.style.color = color;
+    const d = document.createElement('div'); d.textContent = text;
+    d.style.cssText='background:#111820e8;padding:5px 8px;margin-bottom:4px;border-left:2px solid currentColor;border-radius:4px;font-size:13px;line-height:1.4';d.style.color = color;
     this.el.feed.prepend(d); this.feedLines.push(d);
     setTimeout(() => { d.style.transition = 'opacity .5s'; d.style.opacity = '0'; setTimeout(() => d.remove(), 500); }, 2600);
     while (this.el.feed.children.length > 5) this.el.feed.lastChild.remove();
