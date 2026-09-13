@@ -8,7 +8,7 @@ import {fileURLToPath,pathToFileURL} from 'node:url';
 import path from 'node:path';
 const args=process.argv.slice(2);
 if(args.length===1&&args[0]==='--controls'){
- console.log(JSON.stringify({version:1,source:'src/core/powerworld-controls.js',scope:'Canonical PowerWorld combat bindings; not live device/context discovery',controls:POWERWORLD_CONTROLS,playtestActions:actionCatalog(),playtestGamepadActions:actionCatalog('pad'),playtestTouchActions:actionCatalog('touch'),combinedMovement:{scheme:'pad',option:'move:[x,y]',range:[-1,1],axes:'left stick, positive x right, positive y backward',release:'returns to neutral when action ends or fails'}},null,2));
+ console.log(JSON.stringify({version:1,source:'src/core/powerworld-controls.js',scope:'Canonical PowerWorld combat bindings; not live device/context discovery',controls:POWERWORLD_CONTROLS,playtestActions:actionCatalog(),playtestGamepadActions:actionCatalog('pad'),playtestTouchActions:actionCatalog('touch'),combinedMovement:{schemes:['pad','touch'],option:'move:[x,y]',range:[-1,1],axes:'left stick, positive x right, positive y backward',release:'returns to neutral when action ends or fails'}},null,2));
 }else if(args.length===1&&args[0]==='--list'){
  console.log(JSON.stringify({version:1,schemes:['kbm','pad','touch'],server:'http://127.0.0.1:5184',staged:true,scenarios},null,2));
 }else{
