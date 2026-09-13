@@ -131,3 +131,11 @@ Run `node tools/playtest/run.mjs --scenario practice-reset`. One recorded setup 
 Passed evidence: artifacts/playtest/2026-09-13T05-50-14.086Z-practice-reset; three cycles, silent clip, screenshot, snapshots and action history. Six runner/fixture tests passed. Failed attempts retained at 05-46-29 and 05-47-42 (incorrect assumption that each missed heavy spends energy), and 05-48-55 (firing before cooldown). The first failure was initially suspected to be sampling timing; the later trace showed the melee-cost assumption was wrong. These are harness corrections; no combat balance or reset gameplay changed.
 
 This proves native console reset after completed beam bursts. It does not yet prove HP restoration after injury, KO recovery, carried/thrown prop cleanup, live encounter summons, or reset while powers remain active. Those remain separate cases. Reset currently preserves power cooldown; the harness waits for readiness rather than modifying it.
+
+## Injury reset and stale drill records fixed — 2026-09-13
+
+New command: `node tools/playtest/run.mjs --scenario practice-injury-reset`. It shares the console-reset script but starts the native defending trainer and waits for real incoming health damage before each E reset. No damage or resource injection.
+
+The first run (artifacts/playtest/2026-09-13T05-52-14.732Z-practice-injury-reset) exposed a gameplay defect: MeleeTrial.clear retired actors and recordings but retained old hit records. After reset, a previous hit could be mistaken for current-attempt activity. New drills now clear their per-attempt records. The regression test asserts this alongside target replacement and interrupted-attempt cleanup.
+
+Passed replacement: artifacts/playtest/2026-09-13T05-53-56.075Z-practice-injury-reset. Three fresh injury/reset cycles restored health to 130, kept the player/deployment manifest/reserves, and replaced the target with no actor accumulation. Silent video, screenshot and snapshots saved. Fifteen melee-trial tests passed; production build passed with existing chunk-size/import warnings. Previous failed evidence retained. KO, carried/thrown props and active-power reset cases remain separate.

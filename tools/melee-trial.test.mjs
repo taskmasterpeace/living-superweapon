@@ -48,7 +48,7 @@ test('guard trial uses native guard and rejects unknown scenarios',()=>{
  const x=mainCombatFixture({mode:'powerworld'});try{const t=new MeleeTrial(x.g,new THREE.Vector3(0,0,15));const f=t.start('guard');t.control(f,1/60);assert.equal(f.guarding,true);assert.throws(()=>t.start('invalid'));assert.equal(t.target,f);t.dispose();}finally{x.close();}
 });
 test('repeat retains scenario and replaces damaged target without leaking unfinished attempts',()=>{
- const x=mainCombatFixture({mode:'powerworld'});try{const t=new MeleeTrial(x.g,new THREE.Vector3(0,0,15));const old=t.start('retreat');old.hp=1;t.attempt={contacts:0};const next=t.repeat();assert.equal(t.kind,'retreat');assert.equal(next.hp,next.maxHp);assert.equal(t.attempt,null);assert.equal(x.g.entities.length,2);t.dispose();}finally{x.close();}
+ const x=mainCombatFixture({mode:'powerworld'});try{const t=new MeleeTrial(x.g,new THREE.Vector3(0,0,15));const old=t.start('retreat');old.hp=1;t.records.push({healthLost:12,incoming:true});t.attempt={contacts:0};const next=t.repeat();assert.deepEqual(t.records,[]);assert.equal(t.kind,'retreat');assert.equal(next.hp,next.maxHp);assert.equal(t.attempt,null);assert.equal(x.g.entities.length,2);t.dispose();}finally{x.close();}
 });
 test('lesson describes the actual RAGE tap instead of promising a jab combo',async()=>{const {meleeLesson}=await import('../src/engine/melee-trial.js');const x=mainCombatFixture({mode:'powerworld',hero:'rage'});try{assert.match(meleeLesson(x.p.def),/tap: heavy slam/);}finally{x.close();}});
 

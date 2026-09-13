@@ -177,6 +177,6 @@ export class MeleeTrial {
   this.records.push(record);if(this.records.length>100)this.records.shift();this.recording.mark(this.g.time,{...record,label,kind:'contact'});
   this.g.hud?.feed?.(label,'#ffd24a');
  }
- clear(){this.startedAt=this.g.time||0;this.machine=null;this.machineMode=null;this.clearPreview();this.review?.close();this.review=null;this.recording.clear();for(const f of [this.target,this.ally])if(f)retirePracticeActor(this.g,f);this.target=null;this.ally=null;}
+ clear(){this.records.length=0;this.startedAt=this.g.time||0;this.machine=null;this.machineMode=null;this.clearPreview();this.review?.close();this.review=null;this.recording.clear();for(const f of [this.target,this.ally])if(f)retirePracticeActor(this.g,f);this.target=null;this.ally=null;}
  dispose(){this.clear();}
 }
