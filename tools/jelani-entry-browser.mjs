@@ -2,7 +2,7 @@ import {chromium} from 'playwright';
 import {mkdir,writeFile,copyFile} from 'node:fs/promises';
 import assert from 'node:assert/strict';
 const late=process.argv.includes('--late-retreat');
-const out='artifacts/marketing/jelani-entry-2026-09-13'+(late?'-late':'');await mkdir(out,{recursive:true});
+const out=process.env.PW_PLAYTEST_OUT||('artifacts/marketing/jelani-entry-2026-09-13'+(late?'-late':''));await mkdir(out,{recursive:true});
 const b=await chromium.launch({headless:false}),c=await b.newContext({viewport:{width:1280,height:800},recordVideo:{dir:out}}),p=await c.newPage(),errors=[];p.on('pageerror',e=>errors.push(e.message));
 try{
  await p.goto('http://127.0.0.1:5184/powerworld.html?hero=jelani');await p.waitForTimeout(2500);await p.keyboard.press('Enter');await p.getByRole('button',{name:'Enter with squad',exact:true}).click();await p.waitForFunction(()=>PW.game._threatRoom?.active,null,{timeout:90000});
