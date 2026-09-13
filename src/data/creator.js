@@ -384,6 +384,12 @@ export function saveCustom(picks, def, roster, storage=localStorage) {
     // while the source attack identity still matches; a same-type replacement
     // is still a different attack and must start at its own catalog values.
     const livePrevious=roster.find(r=>r.id===def.id&&r.isCustom);
+    // Recipe edits own powers, not independently authored entry or landing rules.
+    // Copy retained profiles so the new draft cannot mutate the old record.
+    for(const key of ['combat','environment'])if(def[key]===undefined){
+      const authored=livePrevious?.[key]??previous.def[key];
+      if(authored!==undefined)def={...def,[key]:structuredClone(authored)};
+    }
     if(!def.effects&&(livePrevious?.effects||previous.def.effects))def={...def,effects:structuredClone(livePrevious?.effects||previous.def.effects)};
     if(!def.progression&&(livePrevious?.progression||previous.def.progression))def={...def,progression:livePrevious?.progression||previous.def.progression};
     def=carryAttackOverrides(livePrevious||previous.def,def);

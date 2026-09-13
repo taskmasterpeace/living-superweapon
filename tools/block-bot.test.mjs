@@ -193,3 +193,10 @@ test('mutual lethal ripostes resolve each KO exactly once',()=>fixture(({a,b,m})
  a.takeDamage(10,{src:b,strike:true});
  assert.deepEqual(counts,[1,1]);assert.equal(a.alive,false);assert.equal(b.alive,false);
 }));
+
+test('bot approach consumes the authored profile field through native control',()=>fixture(({a,b,game})=>{
+ a._openSky=true;a.def.combat={groundApproach:'tackle'};a.noPowers=true;b.pos.z=54;
+ a.ai=new AI(a,1);a.ai.style='rusher';a.ai.intent=()=>({ready:true,target:b,aimAt:{x:0,y:0,z:54},aimDir:{x:0,z:1},move:{x:0,z:0},slots:{},fly:false});
+ Game.prototype.controlBot.call(game,a,1/60);
+ assert.equal(a._meleeMotion?.family,'tackle');assert.equal(a.mstate,'startup');assert.equal(!!a.grabState,false);
+}));

@@ -52,3 +52,13 @@ test('denied localStorage access does not prevent shipped roster boot',()=>{
  try{const roster=[];assert.doesNotThrow(()=>installCustoms(roster));assert.deepEqual(roster,[]);}
  finally{if(old)Object.defineProperty(globalThis,'localStorage',old);else delete globalThis.localStorage;}
 });
+
+test('imported approach and environment survive recipe edits and a second export',()=>{
+ const picks=recipe(),def=buildDef(picks,'cx_starling'),profile=profileFromDef(def);profile.combat.groundApproach='tackle';profile.environment.massKg=240;
+ const s=store(),roster=[],rec=pkg.importCharacter(pkg.exportCharacter({picks,def},profile),roster,s);
+ const edited={...rec.picks,title:'Edited powers'};saveCustom(edited,buildDef(edited,rec.def.id),roster,s);
+ assert.equal(roster[0].combat?.groundApproach,'tackle');assert.equal(roster[0].environment?.massKg,240);
+ const reloaded=[];installCustoms(reloaded,s);assert.equal(reloaded[0].combat.groundApproach,'tackle');
+ const second=pkg.exportCharacter({picks:edited,def:reloaded[0]},profileFromDef(reloaded[0]));const round=pkg.importCharacter(second,[],store());assert.equal(round.def.combat.groundApproach,'tackle');assert.equal(round.def.environment.massKg,240);
+ const replacement={...buildDef(edited,rec.def.id),combat:{groundApproach:'step'},environment:{...profile.environment,massKg:100}};saveCustom(edited,replacement,roster,s);assert.equal(roster[0].combat.groundApproach,'step');assert.equal(roster[0].environment.massKg,100);
+});
