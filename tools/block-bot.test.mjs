@@ -55,7 +55,7 @@ test(`native bot ${family} approach at ${distance} uses the shared strike admiss
  a.ai=new AI(a,1);a.ai.style='rusher';a.ai.intent=()=>({ready:true,target:b,aimAt:{x:0,y:0,z:distance},aimDir:{x:0,z:1},move:{x:0,z:0},slots:{},fly:false});
  Game.prototype.controlBot.call(game,a,1/60);
  assert.equal(!!a.mstate,expected);assert.equal(!!a.grabState,false,'Approach must not extend grab range');
- if(expected){assert.equal(a._meleeMotion.family,family);assert.ok(a._meleeMotion.approachDistance<=distance);assert.equal(a._meleeMotion.point.z,distance);}
+ if(expected){assert.equal(a._meleeMotion.family,family);assert.ok(a._meleeMotion.approachDistance<=distance+12);assert.ok(a._meleeMotion.point.z>=distance&&a._meleeMotion.point.z<=distance+12);assert.equal(a._meleeMotion.point.x,0);}
 }));
 test('the emitted aim point turns with the bot, including during held attacks',()=>fixture(({a,b,game})=>{
  a.ai=new AI(a,1);b.pos.z=20;for(let i=0;i<60;i++)a.ai.intent(1/60,game);

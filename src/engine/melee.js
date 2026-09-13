@@ -149,14 +149,20 @@ export class MeleeSystem {
       const entry=meleeEntryTarget(g,f,meleeApproach(f.def,f.airborne).range);
       const point=entry?entry.center(new THREE.Vector3()):f.hasAimWorld?f.aimWorld.clone():f.center(new THREE.Vector3()).addScaledVector(f.aim3,S.reach);
       if(entry){
-        // Lead only the movement observed at commitment. Never chase a later dodge.
+        // Commit once. Moving targets get observed lead; a still grounded target
+        // gets a bounded straight-ahead step budget for starting ordinary retreat.
+        // Neither case changes direction after a dodge.
         const lead=entry.vel.clone();if(!f.airborne)lead.y=0;
         // A retreat already underway accelerates toward ordinary gait speed during windup.
         if(!f.airborne&&lead.length()>1)lead.setLength(Math.max(lead.length(),entry.speed||0));
+        const reserve=!f.airborne&&lead.length()<=1&&point.distanceTo(f.center(new THREE.Vector3()))>9;
+        if(reserve){
+          lead.copy(point).sub(f.center(new THREE.Vector3())).setY(0).normalize().multiplyScalar(Math.min(48,entry.speed||0));
+        }
         lead.clampLength(0,48);
         const profile=meleeApproach(f.def,f.airborne),gap=point.distanceTo(f.center(new THREE.Vector3()));
         const arrival=Math.max((S.startup+S.active*.5)/pace,Math.max(0,gap-3.8)/Math.max(1,profile.speed-lead.length()));
-        lead.multiplyScalar(Math.min(.6,arrival));
+        lead.multiplyScalar(Math.min(reserve?.25:.6,arrival));
         const origin=f.center(new THREE.Vector3()),range=meleeApproach(f.def,f.airborne).range;
         point.add(lead);const offset=point.clone().sub(origin);const budget=range+lead.length();if(offset.length()>budget)point.copy(origin).add(offset.setLength(budget));
       }

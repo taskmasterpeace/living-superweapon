@@ -415,3 +415,13 @@ Evidence: `artifacts/marketing/jelani-entry-2026-09-13/result.json`, `approach.p
 Checks: melee-retreat + melee-trial 64 passed; block-bot + melee-entry-target + melee-depth 64 passed; combat-pass-contracts 8 passed earlier this pass. JELANI retreat/contact and post-commit sideways dodge checked at 30/60/120Hz; AI controller admission tested at 54u and rejection at 70u using a supplied intent (not full autonomous JELANI tactics). Build passed with existing chunk/import warnings. New reusable capture runner: `tools/jelani-entry-browser.mjs`.
 
 Remaining: shoulder tackle contact/pose authoring, legacy ability integration, full AI tactical use, contact timing for newly initiated retreat, and full roster balance. Original goal stays active.
+
+## September 13 — bounded retreat allowance, verification remains partial
+
+Reproduced late walking retreat misses in the native simulation for JELANI, SOL and RAGE. Shared melee now budgets straight-ahead continuation when committing at a still target from over 9u: up to 0.25 seconds of target ordinary speed, capped at 48u/s (12u maximum). This is calculated once at commitment; the endpoint never follows subsequent lateral dodge movement. Existing admission range, speed cap, body braking, physical fist contact, energy/damage and aerial lead rules remain the owners. Moving-target lead retains its existing 0.6s cap.
+
+113 approach/admission/AI/block/contract tests passed. 77 depth/flight/trial/moving-contact tests passed. Extended late-retreat range cases to 50u for JELANI/RAGE/WEBLINE and 35u SOL: all 24 focused cases passed at 30/60/120Hz. Another three tests with retreat starting 50ms after commitment passed. Production build passed with existing warnings.
+
+Native browser evidence: `artifacts/marketing/jelani-entry-2026-09-13-late/result.json` and `jelani-entry.webm`. Verified target speed zero and player startup before changing the training scenario from stationary to retreat, then native target controller and physics. 50u JELANI entry, one physical hit (10.9957 damage), no flight, no page errors. Capture runner now has `--late-retreat` and a bounded per-frame observer/failure dump.
+
+IMPORTANT LIMIT: an earlier browser attempt with the same gameplay code missed; the subsequent instrumented run passed. This is useful progress and a captured success, NOT proof that the native timing edge is fully resolved. Keep issue #14 and the full goal open. Remaining work should diagnose frame/control ordering from a failed trace, not repeatedly rerun the full operation. Do not treat the training activation change from the previous milestone as a complete gameplay fix. Full timing-independent acceptance is pending.
