@@ -9,15 +9,19 @@ for(const hero of ['sarge','merc'])for(const kind of ['bat','nodachi'])for(const
  try{
   f._openSky=true;f.flying=flying;f.gait=flying?'airborne':'grounded';f.pos.set(0,flying?80:0,0);f.aim.set(0,0,1);f.aim3.copy(f.aim);
   Game.prototype.equipFrom.call(g,f,bladeById(kind),{primary:true});
-  let worst=0,at=0,active=0;
+  let worst=0,at=0,active=0,guardFrames=0;
   for(let i=0;i<120;i++){
-   const st=f.slots.lmb;TYPES.melee(f,st.def,st,g,{pressed:i===10||i===70,dt:1/60});f.update(1/60,g);f.obj.updateMatrixWorld(true);
+   f.guarding=i>=40&&i<60;
+   const st=f.slots.lmb;TYPES.melee(f,st.def,st,g,{pressed:i===10||i===90,dt:1/60});f.update(1/60,g);f.obj.updateMatrixWorld(true);
    const m=f._abilityMeleePose;if(m&&m.elapsed>=m.startup&&m.elapsed<m.active)active++;
    const grip=f.parts.armL.children[2].localToWorld(new T.Vector3(0,-.25,.12));
    const socket=f._gearMesh.getObjectByName('weapon-support-grip').getWorldPosition(new T.Vector3());
-   const gap=grip.distanceTo(socket);if(gap>worst){worst=gap;at=i;}
+   if(f.guarding)guardFrames++;
+   // SARGE deliberately releases the support hand to raise his real shield.
+   if(!f.parts.armL.userData.shield){const gap=grip.distanceTo(socket);if(gap>worst){worst=gap;at=i;}}
   }
   assert.ok(active>=12,'two accepted swings must reach active frames');
+  assert.equal(guardFrames,20);
   assert.ok(worst<.12,`support gap ${worst} at frame ${at}`);
  }finally{c.dispose();f.dispose();}
 });

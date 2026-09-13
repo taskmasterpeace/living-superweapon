@@ -20,10 +20,18 @@ function thrustElbow(arm,point,direction,side){
  return pole.copy(point).addScaledVector(projected,c).addScaledVector(lateral,Math.sqrt(Math.max(0,v*v-c*c))).sub(arm.position);
 }
 
-function readyTwoHanded(f,weapon,side){
+function readyTwoHanded(f,weapon,side,guard=0){
  const arm=side===1?f.parts.armR:f.parts.armL,s=f.parts.rig.pivotHeight/4.6;
- handPoint.set(-side*.2*s,arm.position.y-1.1*s,2*s);reachArm(arm,handPoint,side);
+ handPoint.set(-side*.2*s,arm.position.y+(-1.1+.65*guard)*s,(2+.2*guard)*s);reachArm(arm,handPoint,side);
  return supportWeaponGrip(f,weapon,side);
+}
+export function animateWeaponGuard(f,weight){
+ const held=meleeWeaponFor(f);if(!held?.weapon.userData.twoHanded)return false;
+ const off=held.side===1?f.parts.armL:f.parts.armR;
+ // A raised shield owns its arm. Otherwise brace the actual two-handed item,
+ // including the release blend, rather than closing two empty boxing fists.
+ if(off.userData.shield||off.children[2].children.some(o=>o.visible&&o.userData.weaponKind))return false;
+ return readyTwoHanded(f,held.weapon,held.side,weight);
 }
 export function animateWeaponReady(f){
  if(f.mstate||f.grabState||f._carry||f.hanging||f.guarding||f.poseGuard>.02||f.stunT>0||f.staggerT>0||f.frozenT>0||f.grabbedBy||!f.alive)return false;

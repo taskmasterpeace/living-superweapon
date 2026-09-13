@@ -158,3 +158,9 @@ No unfinished fleet assets are imported by this repair.
 - New native-update regression covers SARGE and MERC, bat and nodachi, ground and airborne, ready plus two accepted attacks and recovery (120 frames each). All eight keep support contact within 0.12 units. With body-family and soldier presentation checks: 24 passed.
 - This extends supported motion evidence; it does not certify all camera angles, guard transitions or every registry weapon.
 
+
+### Two-handed guard and return
+- Two-handed weapons now use a supported defensive hold instead of empty-hand boxing targets. A visible forearm shield keeps its own arm; when stowed, the support grip resumes during guard release.
+- Native update regression now includes 20 guard frames between two attacks on both soldiers, bat/great blade, ground/air. Previously all eight cases lost support during guard or its release. All pass after the shared guard pose change.
+- 24 grip/presentation checks plus 29 energy/Studio guard checks pass; build passed with existing bundle warnings. New recorded reviews: artifacts/marketing/weapon-guard-merc and weapon-guard-sarge. These are Studio native-code rehearsals, not live opponent acceptance.
+

@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import {reachArm} from './hero-rig.js';
+import {animateWeaponGuard} from './melee-weapon-pose.js';
 
 const point=new THREE.Vector3(),elbowPole=new THREE.Vector3();
 const turn=new THREE.Quaternion(),pivot=new THREE.Vector3();
@@ -40,6 +41,7 @@ export function animateGuard(f) {
    rotation.setFromUnitVectors(down,point);arm.children[2].quaternion.slerp(rotation,w);
   }
  }
+ animateWeaponGuard(f,w);
  // Upright aerial resistance: one long leg and one counterbalancing knee, not
  // a running cycle or two knees pulled up into a seated hover.
  if(f.airborne) {
