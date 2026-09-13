@@ -89,7 +89,7 @@ export class MeleeTrial {
    f.flyHeld=altitude<height-1;f.descendHeld=altitude>height+3;
    f.aim3.subVectors(this.g.player.pos,f.pos).normalize();
   }
-  if(this.kind==='retreat'&&d<40&&f.pos.distanceTo(this.origin)<65)move.copy(dir).negate();f.move(move,dt,1);
+  if(this.kind==='retreat'&&d<Math.max(40,meleeApproach(this.g.player.def,this.g.player.airborne).range+5)&&f.pos.distanceTo(this.origin)<65)move.copy(dir).negate();f.move(move,dt,1);
   if(this.kind==='dodge'&&this.elapsed>=this.dodgeAt){this.dodgeAt=this.elapsed+1.5;performEvade(f,{x:-dir.z,z:dir.x},this.g);}
   if(this.kind==='defend'||this.kind==='air-defense'){
    if(this.kind==='air-defense'&&(!f.flying||!this.g.player.airborne||Math.abs(f.pos.y-this.g.player.pos.y)>8))return;

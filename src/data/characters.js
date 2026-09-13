@@ -786,7 +786,7 @@ export const ROSTER = [
     },
   },
   {
-    id: 'jelani', origin: 'altered', name: 'JELANI', title: 'Spear of the Hand', role: 'Strength-Speed',
+    id: 'jelani', meleeApproach: 'tackle', origin: 'altered', name: 'JELANI', title: 'Spear of the Hand', role: 'Strength-Speed',
     colors: { primary: '#f6052e', secondary: '#313f4a', accent: '#ffb649', skin: '#5a3a28' },
     hp: 135, ki: 115, speed: 46, strength: 9, rank: 64, overdrive: 1.4, threat: 'High', flightTier: 0, yells: true, voicePitch: 1.0,
     ai: { style: 'rusher', range: 14, aggro: 0.95, fly: 0 }, evade: { kind: 'sprint', name: 'Warpath', mult: 1.85, dur: 1.4 },

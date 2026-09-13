@@ -34,6 +34,11 @@ export function animateMelee(f) {
     if(f.mId==='power')p.body.rotation.x+=(-.09*(1-extension)+.12*extension)*weight;
   }
   p.g.updateMatrixWorld(true);
+  // Shared low tackle entry; native fist contact still owns damage.
+  if(m.family==='tackle'&&m.approachDistance>9&&startup){
+    p.body.rotation.x+=.38*Math.sin(Math.PI*THREE.MathUtils.clamp(t,0,1))*weight;
+    p.g.updateMatrixWorld(true);
+  }
   point.copy(m.point);p.body.worldToLocal(point);
   if(authored){arm.children[2].getWorldPosition(guard);p.body.worldToLocal(guard);}
   else guard.copy(arm.position).add(new THREE.Vector3(side*.25*scale,-.7*scale,(f.mId==='power'?-.35:.65)*scale));

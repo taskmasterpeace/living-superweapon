@@ -49,7 +49,7 @@ test('bots cannot start point-blank melee before acquisition or without sight',(
  });
 });
 
-for(const [family,distance,expected] of [['pounce',54,true],['bound',66,true],['step',24,false],['pounce',75,false]])
+for(const [family,distance,expected] of [['tackle',54,true],['tackle',70,false],['pounce',54,true],['bound',66,true],['step',24,false],['pounce',75,false]])
 test(`native bot ${family} approach at ${distance} uses the shared strike admission`,()=>fixture(({a,b,game})=>{
  a._openSky=true;a.def.meleeApproach=family;a.noPowers=true;b.pos.z=distance;
  a.ai=new AI(a,1);a.ai.style='rusher';a.ai.intent=()=>({ready:true,target:b,aimAt:{x:0,y:0,z:distance},aimDir:{x:0,z:1},move:{x:0,z:0},slots:{},fly:false});

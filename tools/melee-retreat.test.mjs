@@ -15,7 +15,17 @@ for(const hz of [20,30,60,120]){test('RAGE catches walking retreat with native c
 
 
 for(const hz of [20,30,60,120])for(const distance of [20,27]){test('WEBLINE catches retreat from '+distance+'u at '+hz+'Hz',()=>assert.ok(run(hz,false,'webline',distance)>0));test('WEBLINE committed pounce permits dodge from '+distance+'u at '+hz+'Hz',()=>assert.equal(run(hz,true,'webline',distance),0));}
-for(const hz of [30,60,120])for(const [hero,distance]of [['sol',35],['webline',55],['rage',65]]){
+for(const hz of [30,60,120])for(const [hero,distance]of [['sol',35],['webline',55],['rage',65],['jelani',50]]){
  test(`${hero} long approach catches retreat at ${distance}u / ${hz}Hz`,()=>assert.ok(run(hz,false,hero,distance)>0));
  test(`${hero} long approach allows sideways dodge at ${hz}Hz`,()=>assert.equal(run(hz,true,hero,distance),0));
 }
+
+test('retreat trainer starts walking before a long-range character commits',()=>{
+ const x=mainCombatFixture({mode:'powerworld',hero:'jelani'});
+ try{
+  const trial=new MeleeTrial(x.g,new THREE.Vector3(0,0,50)),b=trial.start('retreat');
+  b._openSky=true;b._chaseKb=true;b.gait='grounded';b.invuln=0;
+  trial.control(b,1/30);
+  assert.ok(b.vel.z>0,'trainer should retreat at 50u, not wait for the old 40u boundary');
+ }finally{x.close();}
+});
