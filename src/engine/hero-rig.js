@@ -57,6 +57,24 @@ export function bendArm(arm, angle) {
 const reach = new THREE.Vector3(), restReach = new THREE.Vector3(), elbowAxis = new THREE.Vector3();
 const pole = new THREE.Vector3(), cross = new THREE.Vector3();
 const reachRotation = new THREE.Quaternion(), twistRotation = new THREE.Quaternion();
+const handAxis=new THREE.Vector3(),thumbAxis=new THREE.Vector3(),gripZ=new THREE.Vector3(),gripBasis=new THREE.Matrix4(),gripRotation=new THREE.Quaternion();
+// Elbow placement leaves forearm roll ambiguous. A closed fist uses a neutral
+// thumbs-up grip, independent of the elbow pole; armed/casting pose owners can
+// supply their own wrist frame. Never change the hand position or bone lengths.
+export function orientNeutralGrip(arm,side,weight=1){
+  const hand=arm.children[2];
+  if(hand.userData.gripOccupied&&hand.userData.gripKind!=='cylinder')return;
+  gripRotation.copy(arm.quaternion).multiply(hand.quaternion);
+  handAxis.set(0,1,0).applyQuaternion(gripRotation).normalize();
+  thumbAxis.set(0,1,0).addScaledVector(handAxis,-handAxis.y);
+  const horizontal=thumbAxis.length();
+  if(horizontal<.15)return; // vertical forearms have no unique thumbs-up roll
+  thumbAxis.normalize().multiplyScalar(-side);
+  gripZ.crossVectors(thumbAxis,handAxis).normalize();
+  gripRotation.setFromRotationMatrix(gripBasis.makeBasis(thumbAxis,handAxis,gripZ));
+  gripRotation.premultiply(twistRotation.copy(arm.quaternion).invert());
+  hand.quaternion.slerp(gripRotation,weight*THREE.MathUtils.smoothstep(horizontal,.15,.5));
+}
 // Two-bone reach in the arm parent's space. The elbow pole chooses an outward bend,
 // while bendArm keeps all existing hand/weapon and ragdoll contracts intact.
 export function reachArm(arm, point, side, weight = 1, elbowPole = null) {
@@ -74,6 +92,7 @@ export function reachArm(arm, point, side, weight = 1, elbowPole = null) {
   reachRotation.premultiply(twistRotation.setFromAxisAngle(reach,twist));
   arm.quaternion.slerp(reachRotation,weight);
   bendArm(arm,THREE.MathUtils.lerp(-arm.children[1].rotation.x,angle,weight));
+  orientNeutralGrip(arm,side,weight);
 }
 
 const inverse = new THREE.Quaternion(), center = new THREE.Vector3();
