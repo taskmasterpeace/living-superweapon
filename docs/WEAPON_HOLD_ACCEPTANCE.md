@@ -71,6 +71,14 @@ two-handed weapon families still require review.
 
 ## Still required before claiming every hold finished
 
+Catalog lifecycle: all seven BLADES rows now carry an explicit `ab.weapon`
+matching their registered mesh. Native equip → drop → pickup → removal is
+covered by `tools/melee-equipment-lifecycle.test.mjs`, including slot restoration,
+scene removal, hand attachment and immutable catalog data. Combined with
+equipped contact and firearm loadout regression: 23 tests passed. This fixes
+katana/tomahawk/baton/claw fallback misidentification; it does not certify their
+animations or claim the great blade already has a unique two-handed model.
+
 Inventory acceptance update: `tools/melee-inventory-browser.mjs` passed real
 keyboard/mouse Inventory → Open armory → Blades → bat LMB assignment → Equip →
 Escape → mouse attack in PowerWorld as SARGE. Native pose ownership confirms
