@@ -1,50 +1,74 @@
+import {setModularExpression,setModularMuscle} from '../engine/modular-face.js';
+import {setModularCostume} from '../engine/modular-character.js';
+import {MODULAR_RECIPES,applyModularRecipe,applyModularFrame,applyModularHeadScale,validateModularRecipe} from '../engine/modular-costume.js';
 import * as T from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
-import {Fighter,buildWeapon} from '../engine/entity.js';
+import {Fighter} from '../engine/entity.js';
 import {ROSTER} from '../data/characters.js';
-import {STRIKE_CLIPS} from '../data/strike-markers.js';
-import {authoredParts,samplePoseFrame,applyAuthoredPose} from '../engine/authored-pose.js';
-import {animateWeaponStrike,animateWeaponReady} from '../engine/melee-weapon-pose.js';
-import {alignWeaponGrip} from '../engine/weapon-grip.js';
-import {updateLimbSurfaces} from '../engine/hero-limb-surface.js';
-import {updateHeroSkin} from '../engine/hero-skin.js';
-
-const renderer=new T.WebGLRenderer({canvas:document.querySelector('#view'),antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.shadowMap.enabled=true;renderer.outputColorSpace=T.SRGBColorSpace;renderer.toneMapping=T.ACESFilmicToneMapping;
-const scene=new T.Scene();scene.background=new T.Color('#253035');
-scene.add(new T.HemisphereLight('#ecf5ff','#5e5143',2.2));
-const key=new T.DirectionalLight('#fff0d3',3);key.position.set(8,15,12);scene.add(key);
-const rim=new T.DirectionalLight('#b8dcea',2);rim.position.set(-8,8,-8);scene.add(rim);
-const floor=new T.Mesh(new T.PlaneGeometry(80,80),new T.MeshStandardMaterial({color:'#394447',roughness:1}));floor.rotation.x=-Math.PI/2;floor.position.y=-.06;scene.add(floor);scene.add(new T.GridHelper(40,20,'#887954','#495557'));
-const camera=new T.PerspectiveCamera(42,1,.1,150);camera.position.set(12,8,17);const orbit=new OrbitControls(camera,renderer.domElement);orbit.target.set(0,4.7,0);orbit.update();
-let f,weapon,base,motion='punch',phase=0,playing=true,last=performance.now(),angle=0;
-const frame=new Float64Array(45),clip=STRIKE_CLIPS.cross,original=structuredClone(ROSTER.find(d=>d.id==='vega'));
-function rebuild(){
- if(f){scene.remove(f.obj);f.dispose();}
- const def=structuredClone(original);def.colors={...def.colors,primary:document.querySelector('#color').value,secondary:'#b3954a',accent:'#e2bf59'};
- def.model={...def.model,body:'superhero-male',costume:document.querySelector('#costume').value,insignia:'V',equipment:null};
- def.build={...(def.build||{}),weaponL:null,weaponR:null,gun:null,blade:null};
- f=new Fighter(def);f._openSky=true;f.flying=false;f.gait='grounded';f.pos.set(0,0,0);scene.add(f.obj);f._animate(0);
- weapon=buildWeapon('sword',{});alignWeaponGrip(weapon,1);f.parts.armR.children[2].add(weapon);
- base=authoredParts(f.parts).map(part=>({part,p:part.position.clone(),q:part.quaternion.clone(),s:part.scale.clone()}));
- draw();
+import {createModularFlightAdapter} from '../engine/modular-flight.js';
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+async function main(){
+const renderer=new T.WebGLRenderer({canvas:document.querySelector('#view'),antialias:true,preserveDrawingBuffer:true});renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=1.3;
+const scene=new T.Scene();scene.background=new T.Color('#353c38');scene.add(new T.HemisphereLight('#f5f4e8','#5d6553',2));
+for(const [pos,color] of [[[5,9,9],'#fff3dd'],[[-5,4,-5],'#d0e2e6']]){const l=new T.DirectionalLight(color,2.5);l.position.set(...pos);scene.add(l);}
+const floor=new T.Mesh(new T.PlaneGeometry(100,100),new T.MeshStandardMaterial({color:'#343b34',roughness:1}));floor.rotation.x=-Math.PI/2;floor.position.y=-.01;scene.add(floor);scene.add(new T.GridHelper(40,40,'#62644c','#434b41'));
+const camera=new T.PerspectiveCamera(38,1,.01,200);camera.position.set(8,4.5,12);const orbit=new OrbitControls(camera,renderer.domElement);orbit.target.set(0,2.7,0);orbit.update();
+const gltf=await new GLTFLoader().loadAsync('/models/modular-hero/modular-hero.glb');const actor=gltf.scene;actor.scale.setScalar(3);scene.add(actor);
+const mixer=new T.AnimationMixer(actor);let motion='Idle_Loop',phase=0,playing=true,last=performance.now(),angle=0;
+const meshes=[];actor.traverse(o=>{if(o.isMesh){meshes.push(o);o.frustumCulled=false;o.material=o.material.clone();o.material.side=T.DoubleSide;}});
+const native=new Fighter(ROSTER.find(d=>d.id==='vega'));native._openSky=true;native.obj.visible=false;scene.add(native.obj);native._animate(0);
+const height=native.parts.head.position.y+.8*native.parts.head.scale.y;actor.scale.setScalar(height/1.8325);camera.position.set(14,8,22);orbit.target.set(0,height/2,0);orbit.update();
+const flightAdapter=createModularFlightAdapter(actor,native);
+setModularCostume(meshes);setModularExpression(meshes);
+let recipe={...MODULAR_RECIPES.hero},size=1;
+const colorFields={color:'primary',secondary:'secondary',trim:'trim',emblemColor:'emblemColor',skin:'skin',hairColor:'hairColor',eyeColor:'eyeColor'};
+function applyRecipe(sync=false){
+ applyModularRecipe(meshes,recipe);applyModularFrame(actor,recipe.frame,height/1.8325*size);
+ if(sync){
+  for(const [id,key]of Object.entries(colorFields))document.getElementById(id).value=recipe[key]||({hairColor:'#171b19',eyeColor:'#29221b'}[key]);
+  for(const key of ['hair','frame','emblem','expression','muscle'])document.getElementById(key).value=recipe[key]??(key==='expression'?'neutral':1);
+  for(const key of ['cape','armor','visor','eyepatch','eyeGlow'])document.getElementById(key).checked=!!recipe[key];
+ }
 }
+applyRecipe(true);
+const find=n=>actor.getObjectByName(T.PropertyBinding.sanitizeNodeName(n));const hand=find('DEF-hand.R');const sword=new T.Group();sword.name='review-sword';
+const steel=new T.MeshStandardMaterial({color:'#cdd5ce',metalness:.65,roughness:.28});const gold=new T.MeshStandardMaterial({color:'#bba365',metalness:.5,roughness:.4});
+const grip=new T.Mesh(new T.CylinderGeometry(.016,.016,.15,8),new T.MeshStandardMaterial({color:'#262b29'}));sword.add(grip);
+const guard=new T.Mesh(new T.BoxGeometry(.20,.025,.035),gold);guard.position.y=.075;sword.add(guard);
+const blade=new T.Mesh(new T.BoxGeometry(.046,.72,.014),steel);blade.position.y=.445;sword.add(blade);
+const tip=new T.Mesh(new T.ConeGeometry(.024,.08,4),steel);tip.position.y=.845;sword.add(tip);
+hand.add(sword);sword.position.set(0,.075,.028);sword.rotation.set(Math.PI/2,0,0);
+let flightHands='fist';
+function sourcePose(name,t){const clip=gltf.animations.find(c=>c.name===name);mixer.stopAllAction();flightAdapter.reset();const action=mixer.clipAction(clip);action.reset().setLoop(T.LoopOnce,1);action.clampWhenFinished=true;action.play();mixer.setTime(t*clip.duration);return clip;}
 function draw(){
- for(const b of base){b.part.position.copy(b.p);b.part.quaternion.copy(b.q);b.part.scale.copy(b.s);}
- weapon.visible=motion!=='punch';f.parts.armR.children[2].userData.gripOccupied=weapon.visible;f.parts.armR.children[2].userData.gripKind=weapon.visible?'cylinder':undefined;
- if(motion==='punch'){samplePoseFrame(clip,phase,frame,false);applyAuthoredPose(f,frame,1,{hips:true});}
- else if(motion==='sword'){
-  const state=phase<.3?'startup':phase<.65?'active':'recovery',t=phase<.3?phase/.3:phase<.65?(phase-.3)/.35:(phase-.65)/.35;
-  animateWeaponStrike(f,t,1,{weapon,side:1,point:new T.Vector3(0,5,5)},state);
- }else animateWeaponReady(f);
- f.obj.updateMatrixWorld(true);updateLimbSurfaces(f.parts);updateHeroSkin(f.parts);
- document.querySelector('#status').textContent=`${motion==='punch'?clip.take+' · source pose':motion==='sword'?'Procedural slash · source replacement pending':'Shared palm socket'} | ${(phase*100).toFixed(0)}%`;
+ const flight=motion.startsWith('flight');
+ if(flight){
+  sourcePose(flightHands==='open'?'A_TPose':'Punch_Cross',flightHands==='open'?0:.4);
+  native.flying=true;native.gait='airborne';native.pos.set(0,3,0);native.vel.set(0,motion==='flightRise'?30:0,motion==='flightHover'?0:70);native.cruiseHeld=motion==='flightBoost';native.animT=phase*8;
+  native._animate(1/60);flightAdapter.update();
+ }else sourcePose(motion,phase);
+ applyModularHeadScale(actor,recipe.frame);
+ sword.visible=motion.startsWith('Sword');actor.updateMatrixWorld(true);
+ document.querySelector('#status').textContent=flight?'Native procedural flight · '+flightHands+' hands':motion+' · original authored clip · '+(phase*100).toFixed(0)+'%';
  renderer.render(scene,camera);
 }
-for(const b of document.querySelectorAll('[data-motion]'))b.onclick=()=>{motion=b.dataset.motion;phase=0;playing=true;document.querySelector('#pause').textContent='Pause';for(const e of document.querySelectorAll('[data-motion]'))e.classList.toggle('active',e===b);draw();};
+for(const b of document.querySelectorAll('[data-motion]'))b.onclick=()=>{motion=b.dataset.motion;phase=0;playing=true;for(const button of document.querySelectorAll('[data-motion]'))button.classList.toggle('active',button===b);draw();};
 document.querySelector('#pause').onclick=()=>{playing=!playing;document.querySelector('#pause').textContent=playing?'Pause':'Play';};
-document.querySelector('#scrub').oninput=e=>{playing=false;phase=+e.target.value;document.querySelector('#pause').textContent='Play';draw();};
-document.querySelector('#costume').onchange=rebuild;document.querySelector('#color').onchange=rebuild;
-document.querySelector('#angle').onclick=()=>{const a=++angle*Math.PI/2;camera.position.set(Math.sin(a)*18,7,Math.cos(a)*18);orbit.update();draw();};
-function resize(){renderer.setSize(innerWidth,innerHeight);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();}addEventListener('resize',resize);resize();rebuild();
-window.FOUNDATION={set(m,p=0){motion=m;phase=p;playing=false;draw();},get fighter(){return f;},get weapon(){return weapon;},draw};
-function tick(now){const dt=Math.min(.05,(now-last)/1000);last=now;if(playing){phase=(phase+dt/(motion==='punch'?clip.duration+0.5:1.5))%1;document.querySelector('#scrub').value=phase;}orbit.update();draw();requestAnimationFrame(tick);}requestAnimationFrame(tick);
+document.querySelector('#scrub').oninput=e=>{playing=false;phase=+e.target.value;draw();};
+document.querySelector('#costume').onchange=e=>{recipe={...MODULAR_RECIPES[e.target.value==='soldier'?'mercenary':e.target.value]};if(e.target.value==='soldier')Object.assign(recipe,{helmet:true,hair:'none'});applyRecipe(true);draw();};
+for(const [id,key]of Object.entries(colorFields))document.getElementById(id).oninput=e=>{recipe[key]=e.target.value;applyRecipe();draw();};
+document.querySelector('#angle').onclick=()=>{const a=++angle*Math.PI/2;camera.position.set(Math.sin(a)*24,8,Math.cos(a)*24);orbit.update();draw();};
+document.querySelector('#hands').onchange=e=>{flightHands=e.target.value;draw();};
+document.querySelector('#size').onchange=e=>{size=+e.target.value;applyRecipe();draw();};
+for(const key of ['hair','frame','emblem','expression'])document.getElementById(key).onchange=e=>{recipe[key]=e.target.value;applyRecipe();draw();};
+document.querySelector('#muscle').oninput=e=>{recipe.muscle=+e.target.value;setModularMuscle(meshes,recipe.muscle);draw();};
+for(const key of ['cape','armor','visor','eyepatch','eyeGlow'])document.getElementById(key).onchange=e=>{recipe[key]=e.target.checked;applyRecipe();draw();};
+document.querySelector('#exportRecipe').onclick=()=>{const blob=new Blob([JSON.stringify({schema:1,skeleton:'ual-deform-v1',body:'faceted-v1',...recipe,size},null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='powerworld-character-recipe.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);document.querySelector('#recipeStatus').textContent='Recipe exported. Reuses the shared rig, modules and clips.';};
+document.querySelector('#importRecipe').onclick=()=>document.querySelector('#recipeFile').click();
+document.querySelector('#recipeFile').onchange=async e=>{try{const file=e.target.files[0];if(!file)return;if(file.size>20000)throw Error('Recipe is too large');const next=validateModularRecipe(JSON.parse(await file.text()));recipe=next;size=next.size??1;delete recipe.size;const select=document.querySelector('#costume');select.querySelector('[value=imported]')?.remove();const option=new Option(next.name,'imported',true,true);option.disabled=true;select.add(option);const sizeSelect=document.querySelector('#size');if(!Array.from(sizeSelect.options).some(o=>+o.value===size))sizeSelect.add(new Option('Imported height',String(size)));sizeSelect.value=String(size);applyRecipe(true);draw();document.querySelector('#recipeStatus').textContent='Imported '+recipe.name;}catch(error){document.querySelector('#recipeStatus').textContent=error.message;}finally{e.target.value='';}};
+function resize(){const w=Math.max(320,innerWidth-340);renderer.setSize(w,innerHeight);camera.aspect=w/innerHeight;camera.updateProjectionMatrix();}addEventListener('resize',resize);resize();draw();
+window.FOUNDATION={actor,meshes,mixer,orbit,native,flightAdapter,clips:gltf.animations,hand,sword,scene,camera,renderer,get recipe(){return {...recipe,size};},set(m,p=0){motion=({punch:'Punch_Cross',sword:'Sword_Attack',hold:'Sword_Idle'})[m]||m;phase=p;playing=false;document.querySelector("#pause").textContent="Play";for(const b of document.querySelectorAll("[data-motion]"))b.classList.toggle("active",b.dataset.motion===motion);document.querySelector("#scrub").value=phase;draw();},draw};
+function tick(now){const dt=Math.min(.05,(now-last)/1000);last=now;if(playing){phase=(phase+dt/((motion.startsWith('flight')?8:gltf.animations.find(c=>c.name===motion).duration)+.35))%1;document.querySelector('#scrub').value=phase;}orbit.update();draw();requestAnimationFrame(tick);}requestAnimationFrame(tick);
+
+}
+main().catch(error=>{console.error(error);document.querySelector("#status").textContent="Character failed to load: "+error.message;});

@@ -1,3 +1,4 @@
+import {loadModularCharacter} from './modular-character.js';
 import {fallingGravity,thrownDrag} from './body-ballistics.js';
 import {animateHeldGrip} from './held-grip-pose.js';
 import {stopFlightAudio} from './flight-sense.js';
@@ -408,7 +409,7 @@ export class Fighter {
     this.canPhase = !!def.phase;                                     // can spend energy to go intangible
     this.grabHeal = def.grabHeal || 0;                              // lifesteal on your throws
     this.teleEscape = def.teleEscape || Object.values(def.abilities || {}).some(a => a.type === 'teleport'); // blinks out of grabs
-    if(typeof document!=='undefined')loadFighterMotion(this);
+    if(typeof document!=='undefined'){loadFighterMotion(this);this._modularReady=loadModularCharacter(this).catch(error=>{this._modularError=error.message;console.error('Modular character',error);});}
   }
 
   // ⚠ READER #1 of the ten (aaa-03 §1). `grounded` was `onFloor && !flying`, which returns FALSE for a
@@ -633,7 +634,7 @@ export class Fighter {
     root.updateMatrixWorld(true);updateLimbSurfaces(next,true);updateHeroSkin(next);
     presentNanites(this);
     this._releaseFormResources();
-    if(typeof document!=='undefined')loadFighterMotion(this);
+    if(typeof document!=='undefined'){loadFighterMotion(this);this._modularReady=loadModularCharacter(this).catch(error=>{this._modularError=error.message;console.error('Modular character',error);});}
     return true;
   }
 
@@ -665,6 +666,7 @@ export class Fighter {
   }
 
   dispose() {
+    this._modularEpoch=(this._modularEpoch||0)+1;this._modularCharacter?.dispose();this._modularCharacter=null;
     restoreBowEquipment(this);
     stopFlightAudio(this);
     if(this._formDisposed)return;
@@ -2870,7 +2872,8 @@ export class Fighter {
     syncChargePresentation(this);
     updateCrouchBounds(this);
     updateProneBounds(this);
+    this._modularCharacter?.update();
   }
 
-  _sync() { if(this.ragdoll)updateHeroSkin(this.parts); updateWebSnareVisual(this); }
+  _sync() { if(this.ragdoll){updateHeroSkin(this.parts);this._modularCharacter?.update();} updateWebSnareVisual(this); }
 }
