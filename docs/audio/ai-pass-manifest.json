@@ -31,6 +31,11 @@
    "gain": 0.4
   },
   {
+   "cue": "blast",
+   "file": "../../public/audio/ai-pass/blast.wav",
+   "gain": 0.55
+  },
+  {
    "cue": "release",
    "file": "../../public/audio/ai-pass/release.wav",
    "gain": 0.55
@@ -43,6 +48,11 @@
   {
    "cue": "deflect",
    "file": "../../public/audio/ai-pass/deflect.wav",
+   "gain": 0.55
+  },
+  {
+   "cue": "shield-lower",
+   "file": "../../public/audio/ai-pass/shield-lower.wav",
    "gain": 0.55
   },
   {
@@ -139,6 +149,16 @@
    "cue": "weather-rain",
    "file": "../../public/audio/ai-pass/weather-rain.wav",
    "gain": 0.4
+  },
+  {
+   "cue": "record-start",
+   "file": "../../public/audio/ai-pass/record-start.wav",
+   "gain": 0.55
+  },
+  {
+   "cue": "objective",
+   "file": "../../public/audio/ai-pass/objective.wav",
+   "gain": 0.55
   },
   {
    "cue": "sample-recovery",
