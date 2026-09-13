@@ -217,3 +217,8 @@ No unfinished fleet assets are imported by this repair.
 - Added tools/melee-held-ko.test.mjs covering all seven BLADES rows through an accepted native weapon swing, KO and 220 native Fighter update frames into respawn.
 - All seven pass: old attack pose retires immediately; the same held mesh remains on the restored hand with unchanged local grip transform; paired claws remain mounted; bat and nodachi regain measured support contact.
 - No production change was needed. This closes the armory KO/respawn lifecycle check, not anatomical appearance during every ragdoll frame or complete visual roster acceptance.
+
+### Immediate fingers-on-handle transition
+- Reproduced equipment appearing in a partly open ordinary hand: first-frame open weight remained 0.7165 after bat/claw pickup. Casting variant already closed immediately; ordinary open/glide variant did not.
+- Shared animateHands now closes any occupied grip immediately, independent of palm variant. Unoccupied hand transitions retain their smooth blend.
+- Four pickup regressions plus bow draw, two-handed ground/air guard and armory KO tests: 22 passed. Production build passed with existing warnings.

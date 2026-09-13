@@ -118,6 +118,8 @@ export function animateHands(f,dt) {
         hand.traverse(o=>{if(o._gripCoverBounds)delete o._gripCoverBounds;});
       }
     }
-    hand.morphTargetInfluences[0]=damp(hand.morphTargetInfluences[0],open,20,dt);
+    // Equipment is already visible this frame. Close its finger channel now,
+    // including pickups from the ordinary glide/open-palm variant.
+    hand.morphTargetInfluences[0]=hand.userData.gripOccupied?0:damp(hand.morphTargetInfluences[0],open,20,dt);
   }
 }
