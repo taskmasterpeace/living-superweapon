@@ -1,4 +1,5 @@
 export const scenarios=Object.freeze({
+ 'air-throw':{schemes:['kbm'],config:{throwTarget:true},script:'air-approach-browser.mjs',capture:'silent video and screenshots',description:'Take off, grab the airborne trainer and throw down; require throw damage, terrain impact and released ownership.'},
  'air-guard':{schemes:['kbm'],config:{defense:true},script:'air-approach-browser.mjs',capture:'silent video and screenshots',description:'Take off, face the airborne trainer and block a real incoming punch with energy-first defense.'},
  'air-approach':{schemes:['kbm'],script:'air-approach-browser.mjs',capture:'silent video and screenshots',description:'Take off with native input, target a hovering trainer and connect an aerial melee approach from outside fist reach.'},
  'practice-prop-reset':{schemes:['kbm'],script:'practice-props-browser.mjs',capture:'silent video and screenshots',description:'Pick up and throw a practice rock, walk to the console and restore it without duplication.'},
