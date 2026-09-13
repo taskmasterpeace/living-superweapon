@@ -690,7 +690,7 @@ export class Fighter {
     retireFighterEquipment(this);
     for(const resource of figureResources([this.obj]))this._retiredFormResources.add(resource);
     this._releaseFormResources();
-    if (this._grapLine) { this._grapLine.geometry.dispose(); this._grapLine.material.dispose(); if (this._game) this._game.scene.remove(this._grapLine); this._grapLine = null; }
+    if (this._grapLine) { this._grapLine.userData.disposeChain?.(); this._grapLine.geometry.dispose(); this._grapLine.material.dispose(); if (this._game) this._game.scene.remove(this._grapLine); this._grapLine = null; }
     if (this.tentacles) { for (const t of this.tentacles) t.dispose(); this.tentacles = null; }
     clearSlotFx(this);   // stop charge hums + orbs — a disposed mid-charge fighter must not ring into the next match
     for (const k in this.slots) {

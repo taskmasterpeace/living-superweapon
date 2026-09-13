@@ -391,3 +391,9 @@ Fixed lab-doorway yielding: idle companions check side clearance and use forward
 Creator feedback: stop repeated transport round trips and return effort to combat/movement. No further automatic transport soak/repeat pass without a new relevant defect. Next architectural transport work should consolidate shared seats, entry/exit anchors, occupancy swaps and vehicle roles across vehicles using authored definitions. Current Z seat cycling is verified for the squad transport; a universal vehicle implementation is not yet complete. Preserve this distinction.
 
 Player guide: docs/gameplay/PLAYABLE_RECOVERY_LOOP.md.
+
+## 2026-09-12 — WEBLINE chain tether
+
+Replaced the thin-only web-zip presentation with interlocking metallic chain links from the posed reaching hand to the actual anchor. Shared renderer src/engine/tether-chain.js uses one InstancedMesh, capped at 128 links, with alternating link orientation and length adaptation. The existing thin core remains subdued. Anchor admission, energy, pulling speed, swept collision and wall-hold rules are unchanged. Release hides the tether for reuse; character disposal frees the chain geometry/material.
+
+Validation: 11 tether/web-zip tests passed, including 30/60/120Hz travel, obstruction, destroyed anchors, cooldown cancellation, hand placement and bounded chain disposal. Production build passed. Native Threat Room capture selected Web Zip with the mouse wheel, used LMB to pull into a wall hold, and Space to leap off. Initial position/camera staged; no motion injection during traversal. 128 links observed, released=true, zero page errors. Evidence: artifacts/marketing/webline-chain-2026-09-12/{chain.webm,chain-pull.png,wall-hold.png,result.json}. Existing old harness used obsolete Shift activation; current Shift remains speed control. AI grapple strategy and controller/touch native proof remain outside this presentation checkpoint. No transport runs performed in this turn.

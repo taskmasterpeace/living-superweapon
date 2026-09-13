@@ -1,3 +1,4 @@
+import {updateTetherChain} from './tether-chain.js';
 import * as THREE from 'three';
 import {handEmissionPosition} from './hand-emission.js';
 import {reachArm} from './hero-rig.js';
@@ -86,5 +87,6 @@ export function presentWebZip(f){
   f._grapLine=new THREE.Line(geometry,new THREE.LineBasicMaterial({color:G.color,transparent:true,opacity:.95}));f._grapLine.frustumCulled=false;f._game.scene.add(f._grapLine);}
  handEmissionPosition(f,1,hand);const positions=f._grapLine.geometry.attributes.position;
  positions.setXYZ(0,hand.x,hand.y,hand.z);positions.setXYZ(1,G.x,G.y,G.z);positions.needsUpdate=true;
- f._grapLine.material.color.set(G.color);f._grapLine.visible=true;return true;
+ next.set(G.x,G.y,G.z);updateTetherChain(f._grapLine,hand,next,G.color);
+ f._grapLine.material.opacity=.25;f._grapLine.material.color.set(G.color);f._grapLine.visible=true;return true;
 }
