@@ -1986,8 +1986,12 @@ export class Fighter {
     // creeping down an exponential tail. Everything else keeps the exact exponential it was tuned with.
     const bodyWind=prepareWindBody(this,game);
     const groundClass = !glide && !launched && this.launchT <= 0 && this._slideT <= 0 && this._thrownT <= 0 && this.gait === GAIT.GROUNDED;
+    // move() already budgets and brakes a committed entry. Applying walking
+    // friction again shortens its authored distance according to frame length.
+    const meleeDriven=this._openSky&&this._meleeMotion?.approachEnabled&&
+      (this.mstate==='startup'||this.mstate==='active')&&!launched&&this.launchT<=0;
     let dragF;
-    if (ownsFlightVelocity(this)||bodyWind.driven||(groundClass&&this._gearGroundSteering)) {
+    if (meleeDriven||ownsFlightVelocity(this)||bodyWind.driven||(groundClass&&this._gearGroundSteering)) {
       dragF = 1;
     } else if (this.gliding&&this.def.momentumGlide&&!launched) {
       dragF=Math.exp(-this.def.momentumGlide.drag*dt);
