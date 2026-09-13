@@ -1,4 +1,5 @@
 export const scenarios=Object.freeze({
+ 'gamepad-guard':{script:'guard-drill-browser.mjs',config:{scheme:'pad'},capture:'silent video and screenshots',description:'Browser-emulated controller through native polling: frontal guard protects health.'},
  'melee-grab-guard':{script:'guard-drill-browser.mjs',config:{attack:'grab'},capture:'silent video and screenshots',description:'Acquire a guarding trainer with native E, then release without lingering ownership.'},
  'melee-guard-crush':{script:'guard-drill-browser.mjs',config:{attack:'heavy'},capture:'silent video and screenshots',description:'Charge a native heavy into frontal guard; require real guard break and recovery.'},
  'melee-guard-rear':{script:'guard-drill-browser.mjs',config:{facing:'rear'},capture:'silent video and screenshots',description:'Hold native guard facing away; require rear contact to hurt health without guard absorption.'},

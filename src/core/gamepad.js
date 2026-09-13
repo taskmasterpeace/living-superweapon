@@ -23,7 +23,7 @@ const MAP = {
   start: 9, select: 8,     // pause / roster
 };
 
-const POWERWORLD_MAP={lmb:7,rmb:6,guard:4,grab:5,strike:2,evade:1,fly:0,descend:13,dash:10,lock:11,item:3,flightToggle:12,cyclePrimary:14,cycleSecondary:15,start:9,select:8};
+export const POWERWORLD_MAP={lmb:7,rmb:6,guard:4,grab:5,strike:2,evade:1,fly:0,descend:13,dash:10,lock:11,item:3,flightToggle:12,cyclePrimary:14,cycleSecondary:15,start:9,select:8};
 export class Gamepad {
   constructor() {
     this.connected = false; this.active = false; this._everUsed = false;
