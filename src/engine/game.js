@@ -1,3 +1,4 @@
+import {squadYieldMove} from './squad-yield.js';
 import {FieldResearch} from './field-research.js';
 import {activatePowerUp} from './power-up.js';
 import {thrownPropContact,thrownPropShape,previewPropThrow} from './thrown-prop-contact.js';
@@ -4055,7 +4056,9 @@ export class Game {
         // Idle followers must yield the leader's travel lane instead of making
         // a solid wall at their follow-distance stop point.
         const side=this.entities.indexOf(f)%2?1:-1;
-        it.move={x:motion.z*side,z:-motion.x*side};
+        const door=this.pwStage?.researchLab?.doorHandle?.pos;
+        const atDoor=door&&Math.hypot(f.pos.x-door.x,f.pos.z-door.z)<16;
+        it.move=atDoor?(squadYieldMove(f,leader,this.world.cover,side)||{x:0,z:0}):{x:motion.z*side,z:-motion.x*side};
       }
       it.fly=f.flightTier>0&&(leader.pos.y>f.pos.y+8||leader.flying&&d>22);
     }

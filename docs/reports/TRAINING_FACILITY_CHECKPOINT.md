@@ -381,3 +381,13 @@ Candidate: http://127.0.0.1:5184/powerworld.html . Local integration worktree; n
 - Reference correction: creator means BohemiaInteractive/CWR, Arma: Cold War Assault Remastered: https://github.com/bohemiainteractive/cwr. README identifies the Poseidon engine/game source, originally Operation Flashpoint: Cold War Crisis, subsequently renamed. This is the specific reference for future large-battlefield/vehicle study. Reading the README does not establish that its handling code has been ported or audited. Design takeaway remains meaningful distance, terrain and transport routes.
 
 Verification: 12 focused gate/seat/route/ramp tests passed and production build passed (existing chunk-size warnings). Native capture script tools/seat-circuit-browser.mjs uses F/W with script-steered camera headings after initial placement; E boarding and Z seat cycling after field/cabin staging. Media in artifacts/marketing/seat-circuit-2026-09-12. Controller/touch seat cycling and manual flight remain future work. Broader combat/movement goal remains active.
+
+## 2026-09-12 — Integrated recovery checkpoint; stop repetitive transport passes
+
+Final native capture: artifacts/marketing/squad-field-recovery-complete-2026-09-12/result.json reports passed=true. Five companions boarded and returned; native combat yielded a sample, collection and transport returned it to the lab, native E analysis granted research rank 1 (+10 capacity, 120 to 130), then the player walked out and native combat produced another sample. Capacity later reached 135 through existing combat progression, not a second research upgrade. Initial portal/ramp positions and two one-HP enemies were staged; camera steering was scripted. This proves the recorded mechanical route, not balance, every parking variation, or controller/touch acceptance.
+
+Fixed lab-doorway yielding: idle companions check side clearance and use forward clearance when a frame prevents stepping aside. Scope is the lab entrance; existing transport-ramp yielding is preserved. Nine focused research/yield tests and production build passed. The harness now waits for the real door/terminal prompts after facing them, avoiding false interaction failures.
+
+Creator feedback: stop repeated transport round trips and return effort to combat/movement. No further automatic transport soak/repeat pass without a new relevant defect. Next architectural transport work should consolidate shared seats, entry/exit anchors, occupancy swaps and vehicle roles across vehicles using authored definitions. Current Z seat cycling is verified for the squad transport; a universal vehicle implementation is not yet complete. Preserve this distinction.
+
+Player guide: docs/gameplay/PLAYABLE_RECOVERY_LOOP.md.
