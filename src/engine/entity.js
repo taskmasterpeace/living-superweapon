@@ -39,6 +39,7 @@ import { heroModelOf } from '../data/hero-models.js';
 import {canUseFlight} from './mobility-policy.js';
 import {loadSoldierEquipment} from './clone-equipment.js';
 import {updateSoldierLoadoutPresentation} from './soldier-loadout-presentation.js';
+import {restoreBowEquipment} from './bow-pose.js';
 import { clearSlotFx,cancelHeldSlot } from './abilities.js';
 import {retireOwnedConstructs} from './construct-policy.js';
 import { steerFlight, ownsFlightVelocity } from './flight-motion.js';
@@ -566,6 +567,7 @@ export class Fighter {
       restoreAuthoredStrikeBase(this);restoreCombatBase(this);restoreSpineAim(this);restoreChestAim(this);restoreGroundAimSupport(this);restoreDirectionalAim(this);restoreGroundBase(this);
       this._combatPoseBase=null;this._hitReactionBase=null;
     }
+    restoreBowEquipment(this);
     const def={...this.def,model:appearance.model,frame:appearance.frame,colors:appearance.colors},old=this.parts,next=figure(def),root=this.obj;
     const newRoots=[...next.g.children],oldRoots=this._figureRoots;
     const rim=old.mats.suit?._rimU?.uRimK.value??this._game?.world?._rimK??.8;
@@ -663,6 +665,7 @@ export class Fighter {
   }
 
   dispose() {
+    restoreBowEquipment(this);
     stopFlightAudio(this);
     if(this._formDisposed)return;
     retirePowerUp(this);

@@ -5,6 +5,7 @@ import {animateGuard} from './guard-pose.js';
 import {animateAuthoredStrike} from './strike-motion.js';
 import {animateAbilityMeleePose} from './ability-melee-pose.js';
 import {animateWeaponStrike,animateWeaponReady} from './melee-weapon-pose.js';
+import {animateBowDraw} from './bow-pose.js';
 
 const point=new THREE.Vector3(),guard=new THREE.Vector3(),direction=new THREE.Vector3(),elbowPole=new THREE.Vector3();
 const rotation=new THREE.Quaternion(),inverse=new THREE.Quaternion();
@@ -13,8 +14,10 @@ const smooth=t=>{t=THREE.MathUtils.clamp(t,0,1);return t*t*(3-2*t);};
 
 // Applied after the combat layer snapshots its base. That layer removes these
 // quaternions on the next frame; flat-FK hand/forearm transforms are reset by flight.
-export function animateMelee(f) {
-  if(animateAbilityMeleePose(f))return;
+  export function animateMelee(f) {
+    const bow=animateBowDraw(f);
+    if(animateAbilityMeleePose(f))return;
+    if(bow)return;
   const p=f.parts,m=f._meleeMotion,S=STRIKES[f.mId];
   if(f._openSky&&p.rig&&f.poseGuard>.001&&!f.mstate&&!f.grabState){animateGuard(f);return;}
   if(f._openSky&&p.rig&&f.grabState==='clinch'&&f.grabbing){animateClinch(f);return;}

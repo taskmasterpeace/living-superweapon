@@ -171,3 +171,10 @@ No unfinished fleet assets are imported by this repair.
 - Three new regressions failed before the repair; 12 bow/grip/wrist tests now pass. Production build passed.
 - Still required: drawing hand/string contact, temporary knife stowing, release/arrow origin, interruption and complete visual motion review. This model correction does not claim the bow draw is finished.
 
+
+### Bow draw hand and stowing
+- Added a shared bow draw pose using fixed-length arm solving. The string's middle follows the actual drawing fingers; the limbs retain their endpoint attachments.
+- Drawing temporarily stows the other hand's weapon and restores its original visibility and grip metadata when the pose ends. Form replacement and disposal also restore this record.
+- Three body variants pass 65 draw frames and release restoration; combined bow/weapon-support checks: 14 passed. Build passed. Recorded artifacts/marketing/bow-draw-review/bow-draw.webm and phase stills; this rehearses the native animation clock, not input-to-projectile firing.
+- Remaining bow work: nocked arrow, release origin and aim alignment, full interrupt/control-path and multi-angle review. No claim of complete bow combat acceptance.
+

@@ -1,0 +1,38 @@
+import * as T from 'three';
+import {reachArm} from './hero-rig.js';
+const point=new T.Vector3(),rest=new T.Vector3(),finger=new T.Vector3();
+export function restoreBowEquipment(f){
+ const state=f._bowEquipment;if(!state)return;
+ for(const [mesh,visible]of state.hidden)mesh.visible=visible;
+ state.hand.userData.gripOccupied=state.occupied;state.hand.userData.gripKind=state.kind;
+ state.string.geometry.attributes.position.setXYZ(1,0,0,-.35);
+ state.string.geometry.attributes.position.needsUpdate=true;
+ state.string.geometry.computeBoundingSphere();f._bowEquipment=null;
+}
+// Draw contact is expressed through the same arm carriers as other weapon holds.
+// Only presentation is owned here; the ability retains charge and release timing.
+export function animateBowDraw(f){
+ const p=f.parts,w=Math.min(1,Math.max(0,f._bowDraw||0));
+ if(!f._openSky||!p.rig||!f.alive||w<.001||f.guarding||f.poseGuard>.02||f.staggerT>0||f.stunT>0||f.frozenT>0||f.grabbedBy||f.grabState||f.mstate||f._abilityMeleePose){restoreBowEquipment(f);return false;}
+ let bow,side;
+ for(const s of [-1,1]){const h=(s<0?p.armL:p.armR).children[2];const b=h.children.find(o=>o.visible&&o.userData.weaponKind==='bow');if(b){bow=b;side=s;break;}}
+ const string=bow?.getObjectByName('bow-string');if(!string){restoreBowEquipment(f);return false;}
+ const arm=side<0?p.armL:p.armR,draw=side<0?p.armR:p.armL,hand=draw.children[2];
+ if(f._bowEquipment?.hand!==hand)restoreBowEquipment(f);
+ if(!f._bowEquipment){
+  const hidden=hand.children.filter(o=>o.userData.weaponKind).map(o=>[o,o.visible]);
+  f._bowEquipment={hand,string,hidden,occupied:hand.userData.gripOccupied,kind:hand.userData.gripKind};
+ }
+ for(const [mesh]of f._bowEquipment.hidden)mesh.visible=false;
+ hand.userData.gripOccupied=false;hand.userData.gripKind=undefined;
+ const s=p.rig.pivotHeight/4.6;
+ point.set(side*1.2*s,p.head.position.y-1.1*s,3.2*s);reachArm(arm,point,side);
+ f.obj.updateMatrixWorld(true);
+ rest.set(0,0,-.35);bow.localToWorld(rest);draw.parent.worldToLocal(rest);
+ point.set(-side*.65*s,p.head.position.y-.8*s,.65*s).lerp(rest,1-w);
+ reachArm(draw,point,-side);
+ f.obj.updateMatrixWorld(true);finger.set(0,-.25,.12);hand.localToWorld(finger);bow.worldToLocal(finger);
+ string.geometry.attributes.position.setXYZ(1,finger.x,finger.y,finger.z);
+ string.geometry.attributes.position.needsUpdate=true;string.geometry.computeBoundingSphere();
+ return true;
+}
