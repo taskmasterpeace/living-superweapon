@@ -30,3 +30,9 @@ This is a migration entry point, not the completed runtime bridge. The runner's 
 The runner now requires the loopback-only Vite `/__pw_playtest_identity` endpoint before running a scenario. It verifies real worktree path, HEAD and tracked working-diff hash, then checks again after the scenario. Missing/mismatched identity fails the run. The endpoint is dev-server-only, uncached and rejects non-GET/non-loopback requests. Restart an older dev server if the endpoint is missing; do not bypass the check.
 
 This supersedes the earlier `serverRevisionVerified:false` limitation for new successful runs. The handshake verifies checkout and tracked edits, not the browser's entire loaded module graph or untracked asset contents. Untracked files and mid-run hot reload still need stronger content provenance before full #41 completion.
+
+## Bounded diagnostic snapshots
+
+All three registered scripts now use tools/playtest/diagnostics.mjs. Successful runs write observed-state.json; caught failures attempt failure.json and failure.png before closing the browser. The bundle retains the original error, last 40 captured console/page errors, player/target resources and motion, up to 24 nearby actors, up to 32 nearby cover colliders, current interaction focus and last 20 drill records. Numeric values are explicit world units. It does not invoke interaction callbacks, alter actors or step the simulation.
+
+Collider snapshotIndex refers to the current cover list only; it is not a stable authored ID. Missing optional class/id fields remain null instead of inferred values. Missing renderer/runtime is reported explicitly. Existing scenario videos and custom diagnostics remain. This is not yet a timeline of input actions, a full collider debugger, aircraft-seat observation or a live control/action bridge; those are still #41 work.
