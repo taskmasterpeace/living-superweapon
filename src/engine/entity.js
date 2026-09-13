@@ -1,3 +1,4 @@
+import {fallingGravity,thrownDrag} from './body-ballistics.js';
 import {migratePowerUpDef} from '../data/power-up.js';
 import {canMomentumGlide,steerMomentumGlide} from './momentum-glide.js';
 import {updateTraversalLeap,steerTraversalLeap,cancelInterruptedTraversalLeap} from './traversal-leap.js';
@@ -1931,7 +1932,7 @@ export class Fighter {
           this.gliding = false;
           // GRAVITY INVERSION (brief T3.19): the zone flips the sign of the ONE line that
           // actually pulls bodies down, so a ceiling really can become a floor.
-          this.vel.y -= 60 * dt * (game.gravityZones ? game.gravityZones.gravityFor(this) : 1);
+          this.vel.y -= fallingGravity(this,game) * dt;
         }
       } else this.gliding = false;
       }
@@ -1998,7 +1999,7 @@ export class Fighter {
       const control = Math.max(sp, STOP_SPEED * (this.prone ? .18 : 1));
       dragF = sp > 1e-4 ? Math.max(0, sp - control * 6 * dt) / sp : 0;
     } else {
-      dragF = Math.exp((launched ? -PW_KB.drag : this._slideT > 0 || this._thrownT > 0 ? -1.3 : glide ? -AIR_DRAG : -6) * dt);
+      dragF = Math.exp((launched || this._thrownT > 0 ? -thrownDrag(this) : this._slideT > 0 ? -1.3 : glide ? -AIR_DRAG : -6) * dt);
     }
     this.vel.x *= dragF; this.vel.z *= dragF;
     if(this._windCarry){this._windCarry.x*=dragF;this._windCarry.z*=dragF;}

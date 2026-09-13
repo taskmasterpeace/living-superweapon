@@ -16,13 +16,6 @@ export function friendlyPickupTarget(f,g,reach){
 }
 export const personCarrySpeed=f=>isTransportingPerson(f)?f._personCarry.speedScale:1;
 export const personThrowSpeed=(f,base)=>isTransportingPerson(f)?Math.min(180,base*(1.35+.75*Math.min(1,f._personCarry.whirlT/1.2))):base;
-export function personThrowCue(f,g){
-  if(!isTransportingPerson(f))return null;
-  const v=f.grabbing,from=v.pos.clone(),dir=f.aim3.clone();if(dir.lengthSq()<.01)dir.copy(f.aim);dir.normalize();
-  const end=from.clone().addScaledVector(dir,45),fraction=fighterPathFraction(v,g.world,from,end);
-  end.lerpVectors(from,end,fraction);
-  return {from,end,blocked:fraction<1,height:6*(v.sizeScale||1)};
-}
 export function beginPersonCarry(f,v,massRatio){
   // The held body is now the payload. Tracking its orbit would steer both
   // camera and throw aim in a feedback loop while the player whirls it.

@@ -1,3 +1,4 @@
+import {personThrowLaunch,THROW_WINDOW} from './person-throw-trajectory.js';
 import {meleeEntryTarget} from './melee-entry-target.js';
 import {meleeApproach} from '../data/melee-approaches.js';
 // WAR WORLD: ASCENDANTS — melee trifecta: Strike (beats Grab) · Grab (beats Guard) · Guard (beats Strike).
@@ -25,7 +26,7 @@ import { sweepSplitObstacle } from './projectile-contact.js';
 import {resolveAbilityMeleeContact} from './ability-melee-contact.js';
 import {constrainRushBodies} from './ability-rush-body.js';
 import {fighterPathFraction} from './fighter-environment-contact.js';
-import {isTransportingPerson,beginPersonCarry,advancePersonCarry,personSetdownPoint,personThrowSpeed,friendlyPickupTarget} from './person-carry.js';
+import {isTransportingPerson,beginPersonCarry,advancePersonCarry,personSetdownPoint,friendlyPickupTarget} from './person-carry.js';
 
 const _v = new THREE.Vector3();
 const INPUT_BUFFER = .18;
@@ -450,23 +451,14 @@ export class MeleeSystem {
     const g = this.game, v = holder.grabbing;
     if(holder._personCarry?.friendly){if(!this.setdownPerson(holder))this.release(holder);return;}
     if (!v) { this.release(holder); return; }
-    const back = holder.grabMode === 'back';
-    const str = holder.def.strength ?? 5;
-    const dmg = (back ? 16 : 10) * holder.powerBuff;
-    // PERSON VS PERSON BATTLES WEIGHT (manual §21): strength against body weight — ratio-logged so the
-    // extremes stay playable.
-    const wr = Math.max(0.45, Math.min(1.2, 0.75 + 0.15 * Math.log2(liftCapacityOf(holder.def) / Math.max(0.05, bodyWeight(v.def)))));
-    const transport=isTransportingPerson(holder);
-    const spd = personThrowSpeed(holder,((back ? 60 : 48) + str * 4.6) * wr);
-    const dir = _v.copy(holder.aim3); if (dir.lengthSq() < 0.01) dir.set(holder.aim.x, 0, holder.aim.z);
-    dir.normalize();
+    const {back,transport,direction:dir,damage:dmg,velocity}=personThrowLaunch(holder,v);
     this.release(holder);holder.strikeCd=Math.max(holder.strikeCd,.35);
     v.state = 'idle';
     // AUTHORED velocity, not kb-scaled — the dotted preview integrates exactly this launch state.
-    v.vel.set(dir.x * spd, (dir.y + (transport?0:0.22)) * spd, dir.z * spd);
+    v.vel.copy(velocity);
     v._personThrow=transport?{owner:holder,impacted:false}:null;
     v.flying = false; v.flyHeld = false; v.gliding = false;
-    v.launchT = 1.35; v._thrownT = 1.35; v._thrownBy = holder; if (v._thrownHit) v._thrownHit.clear();
+    v.launchT = THROW_WINDOW; v._thrownT = THROW_WINDOW; v._thrownBy = holder; if (v._thrownHit) v._thrownHit.clear();
     // A fatal throw must seed its ragdoll from this launch, not the former held velocity.
     v.takeDamage(dmg, { src: holder, strike: true, meleeMove:'throw', unblockable: true, hitstop: 0 });
     if (holder.grabHeal) holder.heal(dmg * holder.grabHeal);

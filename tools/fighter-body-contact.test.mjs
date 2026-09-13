@@ -84,3 +84,10 @@ test('hovering legs cannot pass through the head of a grounded fighter',()=>{
   assert.ok(t.a.pos.x<0,'Hovering approach must remain on the near side');
  }finally{t.close();}
 });
+
+test('released person clears thrower once, then ordinary body collision resumes',()=>{
+ const t=fixture();try{t.a.pos.x=0;t.b.pos.x=0;t.b._personThrow={owner:t.a};t.b._thrownT=1.35;t.begin();t.b.pos.x=1;t.end();assert.equal(t.b.pos.x,1);assert.equal(t.a.pos.x,0);
+ t.begin();t.b.pos.x=30;t.end();assert.equal(t.b._personThrow.bodyCleared,true);
+ t.begin();t.b.pos.x=-30;t.b.vel.x=-100;t.end();assert.ok(t.b.pos.x>t.a.pos.x,'cleared throw tunneled back through owner');
+ }finally{t.close();}
+});

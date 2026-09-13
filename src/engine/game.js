@@ -34,7 +34,8 @@ import { Minion, Construct } from './summons.js';
 import {constructForSlot,settleConstructUpkeep} from './construct-policy.js';
 import {tankPlacement,tankSettings} from './construct-tank.js';
 import { MeleeSystem } from './melee.js';
-import {personThrowCue} from './person-carry.js';
+import {isTransportingPerson} from './person-carry.js';
+import {previewPersonThrow} from './person-throw-trajectory.js';
 import {beginBodyContactFrame,resolveBodyContacts} from './fighter-body-contact.js';
 import { Pedestrians } from './pedestrians.js';
 import { NewsCrew } from './newscrew.js';
@@ -636,18 +637,21 @@ export class Game {
     }
     if(this._leapCue){this._leapCue=null;this.hud?.throwReach?.('');}
     if(p?._personCarry?.friendly){arc.visible=false;this.hud?.throwReach?.('TEAMMATE · E RELEASE');this._carryCueShown=true;return;}
-    const carryCue=p?.alive&&this.running&&!this.matchOver?personThrowCue(p,this):null;
-    if(carryCue){
-      // A short direction cue, clipped by the actual full-body clearance query.
-      // It deliberately makes no ballistic landing promise; native flight owns
-      // gravity, wind, changing terrain and the subsequent impact.
-      arc.visible=true;this._arcRing.visible=false;
-      for(let i=0;i<this._arcDots.length;i++){
-        const d=this._arcDots[i];d.visible=true;d.position.lerpVectors(carryCue.from,carryCue.end,(i+1)/this._arcDots.length);
-        d.position.y+=carryCue.height;d.material.opacity=.65*(1-i/this._arcDots.length*.65);d.material.color.set('#ffd24a');
+    if(p?.alive&&this.running&&!this.matchOver&&isTransportingPerson(p)){
+      if(!this._personCue||this._personCueOwner!==p.grabbing||this.time-this._personCueAt>.05){this._personCue=previewPersonThrow(p,this);this._personCueOwner=p.grabbing;this._personCueAt=this.time;}
+      const cue=this._personCue;arc.visible=!!cue;this._arcRing.visible=!!cue?.contact;
+      if(cue){
+        const last=cue.points.at(-1);this._arcRing.position.copy(last);this._arcRing.position.y+=.15;
+        this._arcRing.material.color.set('#ffd24a');
+        for(let i=0;i<this._arcDots.length;i++){
+          const d=this._arcDots[i];d.visible=cue.points.length>1;d.position.copy(cue.points[Math.round(i*(cue.points.length-1)/(this._arcDots.length-1))]);
+          d.position.y+=.25;d.material.opacity=.75*(1-i/this._arcDots.length*.5);d.material.color.set('#ffd24a');
+        }
+        this.hud?.throwReach?.(cue.reason);
       }
-      this.hud?.throwReach?.(carryCue.blocked?'THROW DIRECTION · COVER':'THROW DIRECTION');this._carryCueShown=true;return;
+      this._carryCueShown=true;return;
     }
+    this._personCue=null;this._personCueOwner=null;
     if(this._carryCueShown){this._carryCueShown=false;this.hud?.throwReach?.('');}
     if(p?.alive&&p._carry&&this.running&&!this.matchOver){
       if(!this._propCue||this._propCueOwner!==p._carry||this.time-this._propCueAt>.08){this._propCue=previewPropThrow(p,this);this._propCueOwner=p._carry;this._propCueAt=this.time;}

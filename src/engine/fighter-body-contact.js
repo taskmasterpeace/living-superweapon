@@ -4,6 +4,18 @@ const axes=['x','y','z'],partBox=new Box3(),skin=.015;
 function solid(f){return f.alive&&!f.phase&&!(f.sprintT>0&&f._sprintThrough)&&!f._scoutVehicle&&!f._aircraftVehicle&&!f._banished;}
 function joined(a,b){return a.grabbing===b||b.grabbing===a||a.grabbedBy===b||b.grabbedBy===a;}
 
+// A released payload begins inside the carrier's contact envelope. Let that
+// pair separate once; collisions with everyone else remain active throughout.
+function clearingThrow(a,ar,b,br){
+ for(const [victim,vr,owner,or]of [[a,ar,b,br],[b,br,a,ar]]){
+  const token=victim._personThrow;
+  if(token?.owner!==owner||token.bodyCleared||!(victim._thrownT>0))continue;
+  for(const k of axes)if(victim.pos[k]+vr.local.max[k]<owner.pos[k]+or.local.min[k]||victim.pos[k]+vr.local.min[k]>owner.pos[k]+or.local.max[k]){token.bodyCleared=true;break;}
+  return true;
+ }
+ return false;
+}
+
 // Solid core and legs: weapons and reaching fists must not become invisible
 // body walls, but dangling boots cannot pass through somebody's head either.
 // World-space bounds follow the real prone/hover orientation and authored size.
@@ -83,6 +95,7 @@ export function resolveBodyContacts(entities,frame){
  for(let i=0;i<entities.length;i++)for(let j=i+1;j<entities.length;j++){
   const a=entities[i],b=entities[j];
   if(!(a._openSky||b._openSky)||!records.has(a)||!records.has(b)||joined(a,b))continue;
+  if(clearingThrow(a,records.get(a),b,records.get(b)))continue;
   pairs.push([a,records.get(a),b,records.get(b)]);
  }
  // Revisit contacts after an earlier collision changes a path (a short line of

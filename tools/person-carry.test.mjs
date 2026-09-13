@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import * as THREE from 'three';
 import {mainCombatFixture} from './helpers/main-combat-fixture.mjs';
 import {SETTINGS,keymap} from '../src/core/settings.js';
-import {personThrowCue} from '../src/engine/person-carry.js';
+import {previewPersonThrow} from '../src/engine/person-throw-trajectory.js';
 
 function fixture({hero='sol',height=0,hz=60,victimTraits={}}={}){
  const x=mainCombatFixture({hero,mode:'powerworld'});x.g.ms.chaseCam=true;x.p._openSky=true;x.p.invuln=0;
@@ -94,11 +94,11 @@ for(const boundary of ['blur','pause','owner'])test(`${boundary} releases carrie
 test('native carry direction cue clips the full body at cover and survives Alt without redirecting',()=>{
  const x=fixture({height:30});try{
   x.lift();x.tick();x.p.aim3.set(0,0,1);x.w.cover.push({x:0,z:15,hx:30,hz:.03,top:100});
-  const cue=personThrowCue(x.p,x.g);assert.equal(cue.blocked,true);assert.ok(Math.abs(cue.end.z-(14.97-x.v.radius))<1e-6);
+  const cue=previewPersonThrow(x.p,x.g);assert.equal(cue.contact,true);assert.ok(Math.abs(cue.points.at(-1).z-(14.97-x.v.radius))<2e-5);
   x.g._buildThrowArc();x.g.updateThrowArc();assert.equal(x.g.throwArc.visible,true);
-  assert.ok(x.g._arcDots.at(-1).position.clone().setY(cue.end.y).distanceTo(cue.end)<1e-6);
-  x.control(0);const original=x.p.aim3.clone(),originalCue=personThrowCue(x.p,x.g);x.g.input.keys.add('AltLeft');x.g.input.mouse.dx=200;x.control(0);
-  assert.ok(x.p.aim3.angleTo(original)<1e-6);const after=personThrowCue(x.p,x.g);assert.ok(after.end.distanceTo(originalCue.end)<1e-6);
+  assert.ok(x.g._arcDots.at(-1).position.clone().setY(cue.points.at(-1).y).distanceTo(cue.points.at(-1))<1e-6);
+  x.control(0);const original=x.p.aim3.clone(),originalCue=previewPersonThrow(x.p,x.g);x.g.input.keys.add('AltLeft');x.g.input.mouse.dx=200;x.control(0);
+  assert.ok(x.p.aim3.angleTo(original)<1e-6);const after=previewPersonThrow(x.p,x.g);assert.ok(after.points.at(-1).distanceTo(originalCue.points.at(-1))<1e-6);
  }finally{x.close();}
 });
 
@@ -190,4 +190,21 @@ for(const why of ['depletion','holder-hit','victim-KO','holder-dispose','victim-
   if(why==='victim-release')x.g.melee.release(x.v);
   assert.equal(x.p.grabbing===null,true);assert.equal(x.v.grabbedBy===null,true);assert.equal(x.p._personCarry,null);
  }finally{x.close();}
+});
+
+for(const hz of [30,60,120])for(const wall of [false,true])test('person trajectory matches native first impact '+hz+'Hz wall='+wall,async()=>{
+ const {previewPersonThrow}=await import('../src/engine/person-throw-trajectory.js');const x=fixture({height:35,hz});try{assert.ok(x.lift());x.v.hp=10000;x.p.aim3.set(0,wall?0:-.65,1).normalize();if(wall)x.w.cover.push({x:0,z:22,hx:40,hz:.1,bottom:0,top:90,finiteBuilding:true});
+ const before={pos:x.v.pos.toArray(),vel:x.v.vel.toArray(),ki:x.p.ki,hp:x.v.hp};const cue=previewPersonThrow(x.p,x.g,{dt:1/hz});assert.ok(cue.contact);assert.deepEqual({pos:x.v.pos.toArray(),vel:x.v.vel.toArray(),ki:x.p.ki,hp:x.v.hp},before);
+ let impact;const original=x.g.onSlam;x.g.onSlam=function(f,...args){impact??=f.pos.clone();return original.call(this,f,...args);};x.g.melee._throw(x.p);
+ for(let i=0;i<hz*1.35&&!impact;i++)x.v.update(1/hz,x.g);assert.ok(impact,'no native impact');assert.ok(cue.points.at(-1).distanceTo(impact)<1.5,'preview/native error '+cue.points.at(-1).distanceTo(impact));
+ }finally{x.close();}
+});
+
+test('trajectory samples wind/gravity without changing field state and stops at recovery',()=>{
+ const x=fixture({height:200});try{x.lift();x.p.aim3.set(0,1,0);x.g.gravityZones={gravityFor:()=>-1};x.g.weather={wind:1,windSpeed:30,windDir:0};
+ const fields=JSON.stringify(x.g.weather),before=x.v.pos.clone(),cue=previewPersonThrow(x.p,x.g);assert.equal(cue.contact,false);assert.equal(cue.reason,'CONTROL RECOVERY');assert.ok(cue.points.at(-1).y>before.y);assert.ok(cue.points.at(-1).x>before.x);assert.equal(JSON.stringify(x.g.weather),fields);assert.ok(x.v.pos.equals(before));
+ }finally{x.close();}
+});
+test('potential fatal release does not claim an ordinary body trajectory',()=>{
+ const x=fixture({height:30});try{x.lift();x.v.hp=1;const cue=previewPersonThrow(x.p,x.g);assert.equal(cue.contact,false);assert.equal(cue.points.length,1);assert.equal(cue.reason,'RELEASE MAY KO');}finally{x.close();}
 });
