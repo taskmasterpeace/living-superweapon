@@ -155,9 +155,9 @@ export const BLADES = [
     d: 'Not meant to kill. Meant to make somebody stop, and it staggers rather than cuts.',
     ab: { type: 'melee', name: 'Riot Baton', weapon: 'baton', gear: true, oneHand: true, dtype: 'physical',
           cost: 0, cd: 0.34, damage: 9, reach: 10, arc: 1.5, stagger: 0.5, color: '#2a2e36' } },
-  { id: 'nodachi', n: 'GREAT BLADE', mesh: 'katana', hero: true,
+  { id: 'nodachi', n: 'GREAT BLADE', mesh: 'nodachi', hero: true,
     d: 'Two hands, enormous reach, and a wind-up you can read from across the street.',
-    ab: { type: 'melee', name: 'Great Blade', weapon: 'katana', gear: true, dmgClass: 'slash', dtype: 'physical',
+    ab: { type: 'melee', name: 'Great Blade', weapon: 'nodachi', gear: true, dmgClass: 'slash', dtype: 'physical',
           cost: 0, cd: 0.78, damage: 34, reach: 19, arc: 1.35, color: '#eef4fa' } },
 ];
 

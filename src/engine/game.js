@@ -1258,7 +1258,7 @@ export class Game {
 
   // ---------- THE GEAR SYSTEM (manual §16): powers are what you ARE, gear is what you HOLD ----------
   _gearKind(ab) {
-    if(ab.type==='melee'&&['bat','baton','sword','katana','knife','axe','spear','claws'].includes(ab.weapon))return ab.weapon;
+    if(ab.type==='melee'&&['bat','baton','sword','katana','nodachi','knife','axe','spear','claws'].includes(ab.weapon))return ab.weapon;
     const n = (ab.name || '').toLowerCase();
     if (ab.type === 'bow' || ab.type === 'quiver') return 'bow';
     if (/shotgun/.test(n)) return 'shotgun';

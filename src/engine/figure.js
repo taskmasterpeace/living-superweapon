@@ -493,6 +493,15 @@ export function buildWeapon(kind, m) {
     }
     // ---- THE ARMORY'S OWN SILHOUETTES (2026-07-26). Built along the arm's -Y axis like every
     // other weapon here, so the poses and the ragdoll carry them for free.
+    case 'nodachi': {
+      const outline=new THREE.Shape();outline.moveTo(-.19,-1.1);outline.lineTo(.19,-1.1);outline.lineTo(.19,-5.25);outline.lineTo(0,-5.6);outline.lineTo(-.19,-5.3);outline.closePath();
+      const geometry=new THREE.ExtrudeGeometry(outline,{depth:.12,bevelEnabled:false,steps:1});geometry.rotateY(Math.PI/2);geometry.translate(-.06,0,0);
+      const blade=add(new THREE.Mesh(geometry,new THREE.MeshStandardMaterial({color:'#b9c5c9',roughness:.38,metalness:.55})),0,0,0);blade.castShadow=true;
+      add(new THREE.Mesh(new THREE.BoxGeometry(.6,.12,.6),m.armor),0,-1.04,0);
+      add(new THREE.Mesh(new THREE.BoxGeometry(.22,1.65,.25),m.suit2||m.armor),0,-.2,0);
+      const support=new THREE.Object3D();support.name='weapon-support-grip';support.position.set(0,-.6,0);g.add(support);g.userData.twoHanded=true;
+      break;
+    }
     case 'katana': {                                   // long single edge + a guard + a wrapped hilt
       const bl = add(new THREE.Mesh(new THREE.BoxGeometry(0.10, 3.4, 0.30), m.metal || m.armor), 0, -1.9, 0);
       bl.castShadow = true;

@@ -6,7 +6,7 @@ import {meleeWeaponFor} from './weapon-grip.js';
 const handPoint=new THREE.Vector3(),blade=new THREE.Vector3(),axis=new THREE.Vector3(),x=new THREE.Vector3(),z=new THREE.Vector3();
 const q=new THREE.Quaternion(),inverse=new THREE.Quaternion(),basis=new THREE.Matrix4();
 const smooth=t=>{t=THREE.MathUtils.clamp(t,0,1);return t*t*(3-2*t);};
-const families={bat:'swing',sword:'slash',katana:'slash',knife:'slash',axe:'chop',baton:'slash',spear:'thrust'};
+const families={bat:'swing',nodachi:'swing',sword:'slash',katana:'slash',knife:'slash',axe:'chop',baton:'slash',spear:'thrust'};
 const delta=new THREE.Vector3(),projected=new THREE.Vector3(),lateral=new THREE.Vector3(),pole=new THREE.Vector3();
 // Choose a reachable elbow plane for a shaft held across the fingers. A spear
 // cannot aim straight by bending the wrist sideways around an arbitrary elbow.

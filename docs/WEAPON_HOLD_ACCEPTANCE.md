@@ -71,6 +71,16 @@ two-handed weapon families still require review.
 
 ## Still required before claiming every hold finished
 
+Great blade update: `nodachi` now owns a distinct tapered blade, extended hilt,
+support socket and shared two-handed swing. Contact samples match its longer
+blade. Catalog and pickup retain `nodachi` instead of substituting `katana`.
+The existing bat support suite now checks both weapons on all three body types,
+through startup/active/recovery and ready (13 tests with lifecycle suite passed).
+Recorded native equipped swing on MERC:
+`artifacts/marketing/great-blade-review/equipment-swaps.webm`; stills include
+`nodachi-23.png` and `nodachi-60.png`. These are Studio equipment rehearsals;
+aerial, shield and interruption acceptance is still outstanding.
+
 Catalog lifecycle: all seven BLADES rows now carry an explicit `ab.weapon`
 matching their registered mesh. Native equip → drop → pickup → removal is
 covered by `tools/melee-equipment-lifecycle.test.mjs`, including slot restoration,

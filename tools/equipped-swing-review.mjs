@@ -1,6 +1,6 @@
 import {chromium} from 'playwright';
 import {mkdir,writeFile} from 'node:fs/promises';
-const out='artifacts/marketing/equipped-swing-review';await mkdir(out,{recursive:true});
+const ids=process.argv.slice(2),out=ids.length?'artifacts/marketing/great-blade-review':'artifacts/marketing/equipped-swing-review';await mkdir(out,{recursive:true});
 const browser=await chromium.launch({headless:true});
 const context=await browser.newContext({viewport:{width:1280,height:900},recordVideo:{dir:out}}),page=await context.newPage();
 await page.goto('http://127.0.0.1:5184/studio.html?hero=merc');
@@ -14,7 +14,7 @@ await page.evaluate(async()=>{
  g.dropGear=(...args)=>Game.prototype.dropGear.call(g,...args);
  window.review={v,f,g,TYPES,bladeById,equip:Game.prototype.equipFrom,results:[]};
 });
-for(const id of ['bat','tomahawk','katana','bat']){
+for(const id of ids.length?ids:['bat','tomahawk','katana','bat']){
  await page.evaluate(id=>{const r=review;r.equip.call(r.g,r.f,r.bladeById(id),{primary:true});r.f._abilityMeleePose=null;r.f.state='idle';},id);
  for(let i=0;i<65;i++){
   const sample=await page.evaluate(i=>{
