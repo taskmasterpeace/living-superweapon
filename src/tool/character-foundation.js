@@ -81,4 +81,3 @@ function tick(now){const dt=Math.min(.05,(now-last)/1000);last=now;if(playing&&m
 
 }
 main().catch(error=>{console.error(error);document.querySelector("#status").textContent="Character failed to load: "+error.message;});
-

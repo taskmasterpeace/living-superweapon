@@ -114,4 +114,3 @@ test('base anatomy has no compulsory gear; glove styles and body-wide muscle are
  setModularMuscle(meshes,1.3);for(const slot of ['torso','deltoids','arms'])assert.ok(meshes.filter(m=>m.userData.slot===slot).some(m=>m.morphTargetInfluences[m.morphTargetDictionary.muscleLarge]>.99),slot);
  const cape=meshes.find(m=>m.userData.slot==='cape');for(const speed of [0,80,999]){animateModularCape(meshes,3,speed);assert.ok(cape.morphTargetInfluences[cape.morphTargetDictionary.capeBend]<=.4);}
 });
-
