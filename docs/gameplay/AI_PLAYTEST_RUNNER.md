@@ -58,3 +58,9 @@ Scenario authors can import `performAction(page, 'strike', {holdMs:80})` from to
 ## Grab bypass and intentional release
 
 `--scenario melee-grab-guard` uses the same guard scenario script. It waits for the trainer's real guard and natural spawn-immunity expiration, sends E, checks reciprocal holder/victim references, captures the hold, then taps E to release. The release check requires more than one simulation second left on the grab before input and release within 0.75 seconds, so automatic expiry cannot substitute for the interaction. Shared snapshots now include grabbing/grabbedBy IDs and grabState. Front-grab escape, interrupting a grab startup, aerial carry/catch and throws remain separate gates.
+
+## Shared melee setup and acceptance phase
+
+`stageMelee(page,{trial:'guard',distance:8,facing:'front'})` in tools/playtest/fixtures.mjs is the shared registered melee setup. It validates allowed drills, bounded distance and facing, requires the preparing Threat Room, creates the native drill and positions the player/camera once. It logs the requested setup and actual actor IDs. The explicit clearTargetInvulnerability option exists for the pre-existing retreat fixture; its use is recorded, never silently applied to all drills.
+
+The first named action locks the session into acceptance. Further stageMelee calls reject before evaluating browser code; a failed setup blocks named actions. Shared snapshots contain phase and fixture history. Guard variants and JELANI initial setup use this owner. This is a tooling contract, not a sandbox around arbitrary page.evaluate: legacy late-retreat behavior injection remains a separately disclosed direct-script probe, not a registered clean acceptance scenario. Console, WEBLINE and operation fixture migration remain open.

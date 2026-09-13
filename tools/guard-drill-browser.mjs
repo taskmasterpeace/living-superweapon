@@ -1,3 +1,4 @@
+import {stageMelee} from './playtest/fixtures.mjs';
 import {chromium} from 'playwright';
 import {mkdir,writeFile,copyFile} from 'node:fs/promises';
 import assert from 'node:assert/strict';
@@ -8,7 +9,8 @@ const out=process.env.PW_PLAYTEST_OUT||'artifacts/marketing/guard-drill';await m
 const browser=await chromium.launch({headless:false}),context=await browser.newContext({viewport:{width:1280,height:800},recordVideo:{dir:out}}),page=await context.newPage(),diagnostics=observeErrors(page);
 try{
  await page.goto('http://127.0.0.1:5184/powerworld.html?hero=sol');await page.waitForTimeout(2500);await page.keyboard.press('Enter');await page.getByRole('button',{name:'Enter with squad',exact:true}).click();await page.waitForFunction(()=>PW.game._threatRoom?.active,null,{timeout:90000});
- await page.evaluate(({facing,attack})=>{const g=PW.game,t=g.ms.threatLab.meleeTrial;t.origin.set(0,0,0);t.start(attack!=='defend'?'guard':'defend');g.player.pos.set(0,0,attack==='grab'?6:attack==='heavy'?8:14);g.player.vel.set(0,0,0);g.world._lookYaw=facing==='rear'?0:Math.PI;g.world._lookPitch=0;const dir=facing==='rear'?1:-1;g.player.faceDir(0,dir);g.player.aim3.set(0,0,dir);window.guardObservation=[];let count=0;function observe(){const g=PW.game;guardObservation.push({time:g.time,guard:(attack!=='defend'?g.ms.threatLab.meleeTrial.target:g.player).guarding,incoming:g.ms.threatLab.meleeTrial.records.filter(r=>attack!=='defend'?!r.incoming:r.incoming).length});if(guardObservation.length>120)guardObservation.shift();if(++count<600&&!guardObservation.at(-1).incoming)requestAnimationFrame(observe);}requestAnimationFrame(observe);},{facing,attack});
+ await stageMelee(page,{trial:attack!=='defend'?'guard':'defend',distance:attack==='grab'?6:attack==='heavy'?8:14,facing});
+ await page.evaluate(({attack})=>{window.guardObservation=[];let count=0;function observe(){const g=PW.game;guardObservation.push({time:g.time,guard:(attack!=='defend'?g.ms.threatLab.meleeTrial.target:g.player).guarding,incoming:g.ms.threatLab.meleeTrial.records.filter(r=>attack!=='defend'?!r.incoming:r.incoming).length});if(guardObservation.length>120)guardObservation.shift();if(++count<600&&!guardObservation.at(-1).incoming)requestAnimationFrame(observe);}requestAnimationFrame(observe);},{facing,attack});
  let records=[],grab=null;
  if(attack==='grab'){
   await page.waitForFunction(()=>{const t=PW.game.ms.threatLab.meleeTrial.target;return t.guarding&&t.invuln<=0;},null,{timeout:10000});

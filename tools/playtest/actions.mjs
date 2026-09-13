@@ -1,3 +1,4 @@
+import {beginAcceptance} from './session.mjs';
 import {POWERWORLD_CONTROLS} from '../../src/core/powerworld-controls.js';
 const histories=new WeakMap(),active=new WeakSet();
 export const actionCatalog=()=>Object.fromEntries(['strike','guard','grab','item','fly','up','down'].map(name=>[name,{device:'keyboard',code:POWERWORLD_CONTROLS[name]}]).concat([['primary',{device:'mouse',button:'left'}],['secondary',{device:'mouse',button:'right'}]]));
@@ -8,6 +9,7 @@ export async function performAction(page,name,{holdMs=80,until=null}={}){
  if(!Number.isFinite(holdMs)||holdMs<20||holdMs>1500)throw new Error('holdMs must be 20–1500 milliseconds');
  if(until!==null&&(until!=='melee-charged'||name!=='strike'))throw new Error('Unsupported action release condition');
  if(active.has(page))throw new Error('Concurrent action rejected; await the current action');
+ beginAcceptance(page);
  const history=histories.get(page)||[];histories.set(page,history);
  const record={action:name,holdMs:until?null:holdMs,until,requestedAt:new Date().toISOString(),status:'pending'};history.push(record);if(history.length>64)history.shift();active.add(page);
  const key=binding.code?.replace(/^Key/,'').toLowerCase();
