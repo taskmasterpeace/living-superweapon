@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 const out='artifacts/marketing/studio-approach-2026-09-13';await mkdir(out,{recursive:true});
 const b=await chromium.launch({headless:false}),c=await b.newContext({viewport:{width:1440,height:1000},recordVideo:{dir:out}}),p=await c.newPage(),errors=[],rows=[];p.on('pageerror',e=>errors.push(e.message));
 try{
- for(const hero of ['jelani','sol']){
+ for(const hero of ['jelani','rage','sol']){
   await p.goto('http://127.0.0.1:5184/studio.html?hero='+hero);await p.waitForFunction(()=>window.STUDIO?.preview?.fighter);
   await p.getByRole('button',{name:'Pause preview',exact:true}).click();
   await p.getByLabel('Motion state',{exact:true}).selectOption('melee');
