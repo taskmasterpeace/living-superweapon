@@ -503,3 +503,20 @@ Exported existing POWERWORLD_MAP without changing its values; shared test action
 ## 2026-09-13 — Landscape touch through shared native action helper (#41/#5)
 
 Added touchButton adapter using visible #touch data-b controls and Chromium touchStart/touchEnd; rejects hidden/disabled controls. Shared actions now support touch without keyboard substitution. touch-guard uses 844x390 browser touch plus actual menu taps, then shared melee fixture and Block. Passed: 0 health, 7.1344 energy, no errors. Six action/touch tests passed; evidence artifacts/playtest/2026-09-13T05-24-57.892Z-touch-guard includes silent clip and result/state. Screenshot visually inspected at native size: visible character/status and touch controls. No new game UI claims or physical iPhone acceptance. Tools-only change; no repeated production build. Multitouch/sticks/full operation and wider adapter coverage remain open.
+
+## Select an input scheme for the same scenario
+
+Use the shared runner from this checkout:
+
+```sh
+node tools/playtest/run.mjs --list
+node tools/playtest/run.mjs --controls
+node tools/playtest/run.mjs --scenario melee-grab-guard --scheme touch
+node tools/playtest/run.mjs --scenario melee-guard-crush --scheme pad
+```
+
+The registry lists supported schemes per scenario. The four melee guard/counterplay scenarios support kbm, pad and touch; the instruction, retreat and chain scenarios currently support kbm only. Omit --scheme for keyboard/mouse, except the existing gamepad-guard and touch-guard aliases which retain their defaults. Invalid schemes and unsupported combinations fail before opening a browser. Scenario attack/facing settings remain intact when changing inputs.
+
+Verified locally on 2026-09-13: touch grab/release (reciprocal ownership, clean intentional release) and controller charged-heavy guard break. Evidence folders: artifacts/playtest/2026-09-13T05-31-57.737Z-melee-grab-guard and artifacts/playtest/2026-09-13T05-32-31.673Z-melee-guard-crush. Each contains run metadata, results, snapshots, screenshots and a silent clip. Four runner tests passed. These use the actual input adapters with staged training setup; browser-emulated devices are not physical-device acceptance.
+
+Remaining #41 work includes contextual control discovery, movement sticks and multi-touch, operation checkpoint migration, reset/cleanup checks and stronger asset/module identity. No transport route was replayed for this change.
