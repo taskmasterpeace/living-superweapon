@@ -1065,6 +1065,7 @@ export class Fighter {
         if(amount>0&&opts.src!==this){this.lastHitBy=opts.src;this.lastHitT=0;}
         if (this.guardMeter <= 0.001||energyBreak||crush) { this.guarding = false; this.staggerT = crush?.85:.7; this.guardBreakT = this.staggerT; this.state = 'hit'; this.stateT = 0; resolvedGuard='broken'; } // guard break
         else resolvedGuard='blocked';
+        if(resolvedGuard==='broken')this._game?.audio?.soundLibrary?.native?.('guard-break',{pos:this.pos});
         if(energyBreak)this._game?.onDrained?.(this);
         // A BLOCKED STRIKE REJECTS THE ATTACKER — bounce + recovery stagger (parry if the guard
         // was raised at the last instant). This is what stops melee spam against a raised guard.

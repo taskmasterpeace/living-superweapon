@@ -678,7 +678,8 @@ export class MeleeSystem {
           f._clinchFinisher=null;f._clinchPunch=null;f._clinchStrikeCd=0;
           if (g.isHuman(f) && g.hud) g.hud.feed(g.modeId==='powerworld'?'CLINCH — tap V: body blow · hold V: drive down · hold E, aim, release: throw · tap E: drop/set down':'CLINCH — tap strike: body blow · hold strike: drive down · grab again: aimed throw', '#ff8a3a');
           f._victimEscape = !behind && ((foe.teleEscape && foe.ki > 14) || foe.canPhase);
-          g.audio.hit(150); g.world.shake(0.5);
+          if(!g.audio.soundLibrary?.native?.('grab',{pos:foe.pos}))g.audio.hit(150);
+          g.world.shake(0.5);
           g.vfx.ring(foe.pos.clone().setY(foe.pos.y + 5), { color: f.def.colors.accent, r0: 1, r1: 7, life: 0.3 });
         } else { f.grabState = null; f.strikeCd = 0.35; }
       }
