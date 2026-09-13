@@ -212,3 +212,8 @@ No unfinished fleet assets are imported by this repair.
 - Captured MERC bat, tomahawk and katana sequences from all four close views in artifacts/marketing/weapon-close-{front,left,right,rear}. All four browser runs completed.
 - Inspected front bat active phase, front axe recovery and right-side sword active phase. Hands are substantially more legible than overview recordings. Axe and sword geometry still read as rough placeholders; these captures are not final visual acceptance or opponent-contact proof.
 - Further review should use these close views to judge whole motion and costume clearance, alongside the existing simulation checks.
+
+### Armory melee KO and respawn acceptance
+- Added tools/melee-held-ko.test.mjs covering all seven BLADES rows through an accepted native weapon swing, KO and 220 native Fighter update frames into respawn.
+- All seven pass: old attack pose retires immediately; the same held mesh remains on the restored hand with unchanged local grip transform; paired claws remain mounted; bat and nodachi regain measured support contact.
+- No production change was needed. This closes the armory KO/respawn lifecycle check, not anatomical appearance during every ragdoll frame or complete visual roster acceptance.
