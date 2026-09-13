@@ -3396,6 +3396,7 @@ export class Game {
       grp.position.set(f.pos.x, Math.max(0, f.pos.y), f.pos.z);
       this.scene.add(grp);
       it.mesh = grp; it.pos = grp.position.clone(); it.state = 'deployed';
+      it._trainingRoom=this._threatRoom?.active?this._threatRoom:null;
       f._beaconHp = f.hp;   // AI remembers how healthy she was when she planted it
       this.vfx.ring(it.pos.clone().setY(0.5), { color: acc, r0: 1, r1: 9, life: 0.4, flat: true, y: 0.5 });
       this.audio.zap(520); this.audio.zap(760);
@@ -3411,6 +3412,7 @@ export class Game {
       this.particles.burst(f.pos.x, 4, f.pos.z, { count: 16, speed: 22, life: 0.4, size: 2.4, color: ['#fff', acc] });
       if (it.mesh) { this.scene.remove(it.mesh); it.mesh.traverse(o => { if (o.material) o.material.dispose(); if (o.geometry) o.geometry.dispose(); }); it.mesh = null; }
       it.pos = null; it.state = 'cooldown'; it.cd = it.def.cd || 3;
+      it._trainingRoom=null;
     }
   }
   updateItems(dt) {
