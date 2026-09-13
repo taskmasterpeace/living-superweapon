@@ -123,3 +123,11 @@ Run `node tools/playtest/run.mjs --scenario moving-strike --scheme touch`. The s
 Evidence: artifacts/playtest/2026-09-13T05-42-09.664Z-moving-strike. Passed: 7.2666 units of actual displacement during simultaneous stick/charge observations, charge 0.64528 at release, neutral inputs afterward, no browser errors. Silent clip and screenshot saved; landscape screenshot inspected. Fifteen scoped tests passed, including separate-finger release and invalid-axis rejection.
 
 This adds reusable two-thumb input for local AI testing; physical iPhone validation, camera/aim gestures, target-contact tests while moving, checkpoint/reset matrices and operation migration remain. Earlier controller-only movement documentation is superseded by this additional touch support.
+
+## Native practice reset regression — 2026-09-13
+
+Run `node tools/playtest/run.mjs --scenario practice-reset`. One recorded setup positions the player at the real reset console and a nearby stationary trainer. The scenario fires three beam bursts through native input, waits for power completion/cooldown, presses E at the console and checks energy/health restoration, stable player identity, unchanged reserve stock/deployment manifest, constant actor count and removal of each previous target. No repeated travel or injected reset outcomes.
+
+Passed evidence: artifacts/playtest/2026-09-13T05-50-14.086Z-practice-reset; three cycles, silent clip, screenshot, snapshots and action history. Six runner/fixture tests passed. Failed attempts retained at 05-46-29 and 05-47-42 (incorrect assumption that each missed heavy spends energy), and 05-48-55 (firing before cooldown). The first failure was initially suspected to be sampling timing; the later trace showed the melee-cost assumption was wrong. These are harness corrections; no combat balance or reset gameplay changed.
+
+This proves native console reset after completed beam bursts. It does not yet prove HP restoration after injury, KO recovery, carried/thrown prop cleanup, live encounter summons, or reset while powers remain active. Those remain separate cases. Reset currently preserves power cooldown; the harness waits for readiness rather than modifying it.

@@ -1,4 +1,5 @@
 export const scenarios=Object.freeze({
+ 'practice-reset':{schemes:['kbm'],script:'reset-practice-browser.mjs',capture:'silent video and screenshots',description:'Spend energy and reset at the native console three times; preserve player and reserves, retire old targets.'},
  'moving-strike':{schemes:['pad','touch'],config:{scheme:'pad'},script:'moving-strike-browser.mjs',capture:'silent video and screenshots',description:'Hold controller movement while charging melee; require actual movement during charge and clean input release.'},
  'touch-guard':{schemes:['kbm','pad','touch'],script:'guard-drill-browser.mjs',config:{scheme:'touch'},capture:'silent video and screenshots',description:'Landscape browser touch menus and Block control; require energy-first frontal defense.'},
  'gamepad-guard':{schemes:['kbm','pad','touch'],script:'guard-drill-browser.mjs',config:{scheme:'pad'},capture:'silent video and screenshots',description:'Browser-emulated controller through native polling: frontal guard protects health.'},
