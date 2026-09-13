@@ -19,6 +19,7 @@ if(args.length===1&&args[0]==='--controls'){
  const git=(...a)=>execFileSync('git',a,{cwd:root,encoding:'utf8'}).trim();
  const metadata={version:1,scenario:id,startedAt:new Date().toISOString(),runnerRevision:git('rev-parse','HEAD'),runnerWorktree:root,trackedChanges:git('diff','--name-only'),server:'http://127.0.0.1:5184',serverRevisionVerified:false,scheme:'keyboard/mouse',staged:true,capture:scenario.capture};
  process.env.PW_PLAYTEST_OUT=out;
+ process.env.PW_PLAYTEST_CONFIG=JSON.stringify(scenario.config||{});metadata.config=scenario.config||{};
  await writeFile(path.join(out,'run.json'),JSON.stringify({...metadata,status:'running'},null,2));
  console.log('Evidence: '+out);
  try{

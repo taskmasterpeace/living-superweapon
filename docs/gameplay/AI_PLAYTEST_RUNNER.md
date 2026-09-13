@@ -46,3 +46,7 @@ Scenario authors can import `performAction(page, 'strike', {holdMs:80})` from to
 ## Guard outcome scenario
 
 `node tools/playtest/run.mjs --scenario melee-guard` stages the existing defend drill, faces the trainer and uses the named native guard action. It requires an actual incoming record with blocked=true, healthLost=0 and guardEnergySpent>0. A miss or spawn invulnerability cannot satisfy it. Setup does not inject damage, energy, immunity or outcomes. It captures a silent clip, a post-contact still and a shared state/action bundle. This covers one funded frontal light strike only; rear hits, energy depletion, grab bypass and heavy crush need their own scenarios.
+
+## Parameterized counterplay
+
+`--scenario melee-guard-rear` uses the same guard script with registry-owned `{facing:'rear'}` configuration. Both variants record bounded pre-contact guard observations. Rear mode requires guard active immediately before actual contact, health damage and no energy absorption; front mode requires zero health loss and positive guard-energy spending. Configuration is included in run.json; no arbitrary CLI script paths are accepted. This pattern permits explicit scenario variants without duplicating the test controller.
