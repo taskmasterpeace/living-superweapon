@@ -1,3 +1,4 @@
+import {driveWebZipAI} from './web-zip.js';
 import {squadYieldMove} from './squad-yield.js';
 import {FieldResearch} from './field-research.js';
 import {activatePowerUp} from './power-up.js';
@@ -4062,7 +4063,8 @@ export class Game {
       }
       it.fly=f.flightTier>0&&(leader.pos.y>f.pos.y+8||leader.flying&&d>22);
     }
-    const chargingLeap=!deployment&&driveTraversalLeapAI(f,it,this,dt);
+    const webTraversal=!deployment&&driveWebZipAI(f,it,this);
+    const chargingLeap=!deployment&&!webTraversal&&driveTraversalLeapAI(f,it,this,dt);
     if (it.aimDir) f.faceDir(it.aimDir.x, it.aimDir.z);
     // 3D aim. ⚠ `it.target` is ONLY set when the AI can actually see the foe (honesty law), and
     // `it.aimAt` is where it BELIEVES it should shoot — the target's centre plus its own lead error
