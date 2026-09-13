@@ -222,3 +222,9 @@ No unfinished fleet assets are imported by this repair.
 - Reproduced equipment appearing in a partly open ordinary hand: first-frame open weight remained 0.7165 after bat/claw pickup. Casting variant already closed immediately; ordinary open/glide variant did not.
 - Shared animateHands now closes any occupied grip immediately, independent of palm variant. Unoccupied hand transitions retain their smooth blend.
 - Four pickup regressions plus bow draw, two-handed ground/air guard and armory KO tests: 22 passed. Production build passed with existing warnings.
+
+### Confirmed unresolved: equipment during person holds
+- Native MERC equip bat -> melee.grab -> 20 melee updates reaches clinch with the correct receiver, but the bat remains visible and the grabbing hand remains gripOccupied. Reproduced locally with artifacts/held-grab-audit.mjs.
+- animateHeldGrip reaches both hands toward the receiver without managing held weapon visibility. This is an equipment/presentation ownership conflict, not evidence that the grab failed.
+- Required shared repair: temporarily stow equipment on hands actually supporting the person, preserve a genuinely active free-hand attack, and restore exact equipment state on release, cancellation, KO and form replacement. Coordinate with soldier visibility and bow stowing so separate per-frame owners cannot unhide the same mesh.
+- Add native grab/release coverage for one-handed, two-handed and paired equipment, plus visual person/weapon contact review. Do not mark all holds accepted until resolved.
