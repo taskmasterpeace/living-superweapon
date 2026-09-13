@@ -206,3 +206,9 @@ No unfinished fleet assets are imported by this repair.
 - A bow extending through nearby cover releases on the near side. Arrows now use the existing swept projectile contact path even in worlds without native terrain triangles, preventing thin-wall tunneling.
 - Verification: 20 bow draw, aim, interruption and release tests passed. Thin interior wall protects a receiver at 30/60/120 Hz. Production build passed with existing chunk/import warnings.
 - This closes the demonstrated bow release failure; it does not claim all roster grips or the broader goal complete.
+
+### Repeatable close weapon reviews
+- Capture runner accepts --view=front|left|right|rear|overview and --out=PATH. Camera selection is recorded with phase samples, allowing the same native sequence to be reproduced without overwriting prior evidence.
+- Captured MERC bat, tomahawk and katana sequences from all four close views in artifacts/marketing/weapon-close-{front,left,right,rear}. All four browser runs completed.
+- Inspected front bat active phase, front axe recovery and right-side sword active phase. Hands are substantially more legible than overview recordings. Axe and sword geometry still read as rough placeholders; these captures are not final visual acceptance or opponent-contact proof.
+- Further review should use these close views to judge whole motion and costume clearance, alongside the existing simulation checks.
