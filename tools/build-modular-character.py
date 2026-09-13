@@ -67,12 +67,20 @@ for s in [-1,1]:hairball('Afro.side'+str(s),(s*.132,.035,1.695),(.060,.07,.065),
 hairball('Bun.cap',(0,.017,1.78),(.125,.12,.080),'bun',2)
 hairball('Bun.top',(0,.025,1.89),(.08,.08,.075),'bun',2)
 hairball('Braids.cap',(0,.022,1.785),(.12,.115,.06),'braids',2)
+for s in [-1,1]:
+ # Fitted temporal panels cover the exposed side scalp and join the crown.
+ o=mesh('Braids.side'+str(s),[(s*x,y,z) for x,y,z in [(.108,-.072,1.66),(.113,.085,1.65),(.126,.106,1.77),(.116,-.079,1.795),(.119,-.072,1.66),(.126,.085,1.65),(.136,.106,1.77),(.127,-.079,1.795)]],[(0,1,2,3),(4,7,6,5),(0,4,5,1),(1,5,6,2),(2,6,7,3),(3,7,4,0)],'DEF-head','dark','hair');o['variant']='braids'
 for i in range(7):
- x=(i-3)*.033;o=rings('Braid.'+str(i),[(1.48,.015,.018),(1.65,.019,.02),(1.78,.015,.018)],'DEF-head','dark','hair');o.location=(x,.102+abs(i-3)*.004,0);o['variant']='braids'
+ x=(i-3)*.033;o=rings('Braid.'+str(i),[(1.48,.015,.018),(1.65,.019,.02),(1.78,.015,.018)],'DEF-head','dark','hair')
+ # Sweep away from the head/back in the reference pose; no collision system.
+ for v in o.data.vertices:v.co.y+={1.48:.178,1.65:.150,1.78:.132}[round(v.co.z,2)]+abs(i-3)*.002
+ o.location.x=x;o['variant']='braids'
 box('Visor',(0,-.111,1.702),(.225,.022,.042),'DEF-head','accent','visor',.006)
 for s in [-1,1]:box('Visor.temple'+str(s),(s*.112,-.009,1.702),(.018,.20,.033),'DEF-head','accent','visor',.004)
 box('Eyepatch',(-.050,-.120,1.704),(.078,.018,.060),'DEF-head','dark','eyepatch',.008)
-box('Eyepatch.band',(0,.005,1.724),(.227,.20,.013),'DEF-head','dark','eyepatch',.003)
+box('Eyepatch.band.front',(0,-.125,1.716),(.230,.012,.013),'DEF-head','dark','eyepatch',.002)
+for s in [-1,1]:box('Eyepatch.band.side'+str(s),(s*.111,-.013,1.716),(.013,.224,.013),'DEF-head','dark','eyepatch',.002)
+box('Eyepatch.band.back',(0,.099,1.716),(.230,.013,.013),'DEF-head','dark','eyepatch',.002)
 for s in [-1,1]:
  for dz in [-.022,.022]:box('Glasses.rim', (s*.052,-.119,1.704+dz),(.082,.012,.008),'DEF-head','dark','glasses',0)
  for dx in [-.038,.038]:box('Glasses.edge',(s*.052+dx,-.119,1.704),(.008,.012,.049),'DEF-head','dark','glasses',0)
@@ -108,6 +116,7 @@ for side in ['L','R']:
    influence=[0,1,.65,0][i//8];v.co.x*=1+(scale-1)*influence;v.co.y*=1+(scale-1)*influence
  shaped_segment('Gauntlet.'+side,'DEF-forearm.'+side,[(0,.09,.092),(.16,.097,.098),(.73,.075,.077),(1,.053,.057)],'accent','gauntlets')
  shaped_segment('Forearm.'+side,'DEF-forearm.'+side,[(0,.059,.062),(.35,.063,.065),(1,.044,.045)],'suit','forearms')
+ shaped_segment('Wristband.'+side,'DEF-forearm.'+side,[(.78,.052,.054),(.98,.049,.051)],'accent','wristbands')
  shoulder=shaped_segment('Deltoid.'+side,'DEF-upper_arm.'+side,[(-.13,.035,.045),(0,.072,.080),(.17,.086,.088),(.30,.085,.085)],'suit','deltoids')
  shoulder.shape_key_add(name='Basis')
  for name,scale in [('muscleSmall',.87),('muscleLarge',1.15)]:
@@ -118,12 +127,19 @@ for side in ['L','R']:
  box('Pauldron.'+side,b.head_local+Vector((s*.032,0,.025)),(.19,.20,.16),'DEF-upper_arm.'+side,'accent','shoulders',.035)
  segment('Thigh.'+side,'DEF-thigh.'+side,.165,.18,'suit','legs')
  shaped_segment('Boot.shaft.'+side,'DEF-shin.'+side,[(0,.065,.072),(.60,.059,.063),(1,.052,.060)],'dark','boots')
+ shaped_segment('Calf.'+side,'DEF-shin.'+side,[(0,.065,.072),(.40,.064,.069),(.82,.046,.052),(1,.045,.051)],'suit','calves')
  knee=rig.data.bones['DEF-shin.'+side].head_local
  box('Knee.'+side,knee+Vector((0,-.075,0)),(.13,.055,.12),'DEF-shin.'+side,'accent','knees',.018)
  foot=rig.data.bones['DEF-foot.'+side].head_local
  mesh('Boot.foot.'+side,[(foot.x+x,y,z) for x,y,z in [(-.055,.073,.022),(.055,.073,.022),(.07,-.175,.022),(-.07,-.175,.022),(-.052,.063,.135),(.052,.063,.135),(.064,-.164,.069),(-.064,-.164,.069)]],[(0,3,2,1),(4,5,6,7),(0,1,5,4),(1,2,6,5),(2,3,7,6),(3,0,4,7)],'DEF-foot.'+side,'dark','boots')
+ mesh('Shoe.'+side,[(foot.x+x,y,z) for x,y,z in [(-.056,.075,.022),(.056,.075,.022),(.073,-.182,.022),(-.073,-.182,.022),(-.053,.065,.109),(.053,.065,.109),(.067,-.167,.075),(-.067,-.167,.075)]],[(0,3,2,1),(4,5,6,7),(0,1,5,4),(1,2,6,5),(2,3,7,6),(3,0,4,7)],'DEF-foot.'+side,'dark','shoes')
  hand=rig.data.bones['DEF-hand.'+side];mid=hand.head_local+Vector((s*.057,0,0))
  box('Palm.'+side,mid,(.116,.083,.042),'DEF-hand.'+side,'dark','hands',.01)
+ # Broad padded mitten, connected thumb lobe and cuff: an optional equipment
+ # silhouette. All three pieces follow the hand; original fingers stay intact.
+ box('BoxingGlove.mitten.'+side,mid+Vector((s*.033,0,.002)),(.180,.117,.089),'DEF-hand.'+side,'accent','boxingGloves',.022)
+ box('BoxingGlove.thumb.'+side,mid+Vector((s*.005,-.052,-.013)),(.091,.053,.064),'DEF-hand.'+side,'accent','boxingGloves',.016)
+ box('BoxingGlove.cuff.'+side,hand.head_local+Vector((s*.010,0,0)),(.052,.103,.067),'DEF-hand.'+side,'accent','boxingGloves',.009)
  for finger in ['f_middle','thumb']:
   for n in range(1,4):
    bone=f'DEF-{finger}.{n:02d}.{side}'
@@ -173,6 +189,21 @@ cape.shape_key_add(name='Basis');key=cape.shape_key_add(name='capeBend')
 for v in key.data:
  t=max(0,(1.46-v.co.z)/1.15);v.co.y+=.20*t*t;v.co.z+=.055*t*t
 cape.data.materials[0].use_backface_culling=False
+# Tiling UVs are generated before animation evaluation, in the same reference
+# coordinates across separate pieces. Preserve authored expression/emblem UVs.
+bpy.context.view_layer.update()
+texture_period=.25
+for o in parts:
+ if o.get('slot') in ['expression','emblem','emblemBack']:continue
+ uv=o.data.uv_layers.active or o.data.uv_layers.new(name='UVMap')
+ normal_matrix=o.matrix_world.to_3x3().inverted().transposed()
+ for polygon in o.data.polygons:
+  normal=normal_matrix@polygon.normal;axis=max(range(3),key=lambda i:abs(normal[i]))
+  axes=[i for i in range(3) if i!=axis]
+  for loop_index in polygon.loop_indices:
+   point=o.matrix_world@o.data.vertices[o.data.loops[loop_index].vertex_index].co
+   uv.data[loop_index].uv=(point[axes[0]]/texture_period,point[axes[1]]/texture_period)
+ o['textureProjection']='reference-dominant-normal';o['texturePeriodMeters']=texture_period
 rig.data.pose_position='POSE';bpy.context.scene.render.fps=30
 # Actions are exported directly; no direction-vector sampling or wrist reconstruction.
 rig.animation_data_create();rig.animation_data.action=next(a for a in bpy.data.actions if a.name=='Idle_Loop')
@@ -186,6 +217,14 @@ module_names=[o.name for o in parts]
 # Preserve editable pieces in .blend, batch matching material/slot for runtime.
 groups={}
 for o in parts:groups.setdefault((o['slot'],o.data.materials[0].name,o.get('variant','')),[]).append(o)
+slot_contract={slot:{'materials':sorted({mat for s,mat,v in groups if s==slot}),'variants':sorted({v for s,mat,v in groups if s==slot and v})} for slot in sorted({s for s,mat,v in groups})}
+slot_contract['wristbands']['requires']=['forearms']
+slot_contract['boxingGloves']['replaces']=['hands','handTips']
+slot_contract['boxingGloves']['excludes']=['wristbands','gauntlets']
+slot_contract['shoes']['requires']=['calves'];slot_contract['shoes']['excludes']=['boots']
+slot_contract['boots']['excludes']=['shoes','calves']
+assert triangles<=4500,('optional geometry triangle budget exceeded',triangles)
+assert len(groups)<=48,('runtime group budget exceeded',len(groups))
 for (slot,mat,variant),objects in groups.items():
  bpy.ops.object.select_all(action='DESELECT')
  for o in objects:o.select_set(True)
@@ -193,5 +232,5 @@ for (slot,mat,variant),objects in groups.items():
  bpy.ops.object.join();objects[0].name='module.'+slot+'.'+mat+('.'+variant if variant else '')
 bpy.ops.export_scene.gltf(filepath=os.path.join(out,'modular-hero.glb'),export_format='GLB',export_animations=True,export_animation_mode='ACTIONS',export_extras=True,export_skins=True,export_yup=True)
 with open(source,'rb') as f:source_hash=hashlib.sha256(f.read()).hexdigest()
-with open(os.path.join(out,'manifest.json'),'w') as f:json.dump({'schema':1,'skeleton':'ual-deform-v1','source':'assets-src/modular-character/source/AnimationLibrary_Godot_Standard.gltf','sourceHash':source_hash,'sourceAuthor':'Quaternius','sourceLicense':'CC0-1.0','units':'meters','height':1.8325,'triangles':triangles,'modules':module_names,'runtimeGroups':len(groups),'clips':sorted(keep),'style':'faceted modular; original geometry'},f,indent=2)
+with open(os.path.join(out,'manifest.json'),'w') as f:json.dump({'schema':1,'skeleton':'ual-deform-v1','source':'assets-src/modular-character/source/AnimationLibrary_Godot_Standard.gltf','sourceHash':source_hash,'sourceAuthor':'Quaternius','sourceLicense':'CC0-1.0','units':'meters','height':1.8325,'triangles':triangles,'modules':module_names,'runtimeGroups':len(groups),'slotContract':slot_contract,'texturePeriodMeters':texture_period,'clips':sorted(keep),'style':'faceted modular; original geometry'},f,indent=2)
 print('CHARACTER_BUILT',triangles,'triangles',len(module_names),'editable pieces',len(groups),'runtime groups')

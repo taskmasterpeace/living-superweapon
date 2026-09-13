@@ -36,7 +36,7 @@ test('flight adapter preserves source bone lengths and cannot mutate fighter con
  f.dispose();
 });
 test('runtime groups retain modular slots, valid weights and a bounded triangle budget',async()=>{
- const g=await output();let count=0,tris=0;const slots=new Set();g.scene.traverse(o=>{if(!o.isMesh)return;count++;slots.add(o.userData.slot);assert.ok(o.isSkinnedMesh,o.name);tris+=(o.geometry.index?.count??o.geometry.attributes.position.count)/3;const w=o.geometry.attributes.skinWeight;for(let i=0;i<w.count;i++)assert.ok(Math.abs(w.getX(i)+w.getY(i)+w.getZ(i)+w.getW(i)-1)<1e-5);});assert.ok(count<=42,count);assert.ok(tris<4000,tris);for(const s of ['hands','torso','cape','hair','emblem'])assert.ok(slots.has(s),s);
+ const g=await output();let count=0,tris=0;const slots=new Set();g.scene.traverse(o=>{if(!o.isMesh)return;count++;slots.add(o.userData.slot);assert.ok(o.isSkinnedMesh,o.name);tris+=(o.geometry.index?.count??o.geometry.attributes.position.count)/3;const w=o.geometry.attributes.skinWeight;for(let i=0;i<w.count;i++)assert.ok(Math.abs(w.getX(i)+w.getY(i)+w.getZ(i)+w.getW(i)-1)<1e-5);});assert.ok(count<=48,count);assert.ok(tris<=4500,tris);for(const s of ['hands','torso','cape','hair','emblem'])assert.ok(slots.has(s),s);
 });
 test('native sword contact geometry follows the authored palm and restores on teardown',async()=>{
  const def=structuredClone(ROSTER.find(d=>d.id==='vega'));def.model={...def.model,body:'faceted-v1'};const f=new Fighter(def);f._animate(0);

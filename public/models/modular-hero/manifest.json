@@ -7,7 +7,7 @@
   "sourceLicense": "CC0-1.0",
   "units": "meters",
   "height": 1.8325,
-  "triangles": 3256,
+  "triangles": 3876,
   "modules": [
     "Torso.chest",
     "Torso.waist",
@@ -32,6 +32,8 @@
     "Bun.cap",
     "Bun.top",
     "Braids.cap",
+    "Braids.side-1",
+    "Braids.side1",
     "Braid.0",
     "Braid.1",
     "Braid.2",
@@ -43,7 +45,10 @@
     "Visor.temple-1",
     "Visor.temple1",
     "Eyepatch",
-    "Eyepatch.band",
+    "Eyepatch.band.front",
+    "Eyepatch.band.side-1",
+    "Eyepatch.band.side1",
+    "Eyepatch.band.back",
     "Glasses.rim",
     "Glasses.rim.001",
     "Glasses.edge",
@@ -72,13 +77,19 @@
     "UpperArm.L",
     "Gauntlet.L",
     "Forearm.L",
+    "Wristband.L",
     "Deltoid.L",
     "Pauldron.L",
     "Thigh.L",
     "Boot.shaft.L",
+    "Calf.L",
     "Knee.L",
     "Boot.foot.L",
+    "Shoe.L",
     "Palm.L",
+    "BoxingGlove.mitten.L",
+    "BoxingGlove.thumb.L",
+    "BoxingGlove.cuff.L",
     "Mitten.DEF-f_middle.01.L",
     "Mitten.DEF-f_middle.02.L",
     "Mitten.DEF-f_middle.03.L",
@@ -88,13 +99,19 @@
     "UpperArm.R",
     "Gauntlet.R",
     "Forearm.R",
+    "Wristband.R",
     "Deltoid.R",
     "Pauldron.R",
     "Thigh.R",
     "Boot.shaft.R",
+    "Calf.R",
     "Knee.R",
     "Boot.foot.R",
+    "Shoe.R",
     "Palm.R",
+    "BoxingGlove.mitten.R",
+    "BoxingGlove.thumb.R",
+    "BoxingGlove.cuff.R",
     "Mitten.DEF-f_middle.01.R",
     "Mitten.DEF-f_middle.02.R",
     "Mitten.DEF-f_middle.03.R",
@@ -118,7 +135,246 @@
     "Torn.hem.R",
     "Cape"
   ],
-  "runtimeGroups": 39,
+  "runtimeGroups": 43,
+  "slotContract": {
+    "arms": {
+      "materials": [
+        "suit"
+      ],
+      "variants": []
+    },
+    "backpack": {
+      "materials": [
+        "dark"
+      ],
+      "variants": []
+    },
+    "belt": {
+      "materials": [
+        "accent",
+        "dark"
+      ],
+      "variants": []
+    },
+    "boots": {
+      "materials": [
+        "dark"
+      ],
+      "variants": [],
+      "excludes": [
+        "shoes",
+        "calves"
+      ]
+    },
+    "boxingGloves": {
+      "materials": [
+        "accent"
+      ],
+      "variants": [],
+      "replaces": [
+        "hands",
+        "handTips"
+      ],
+      "excludes": [
+        "wristbands",
+        "gauntlets"
+      ]
+    },
+    "calves": {
+      "materials": [
+        "suit"
+      ],
+      "variants": []
+    },
+    "cape": {
+      "materials": [
+        "accent"
+      ],
+      "variants": []
+    },
+    "collar": {
+      "materials": [
+        "suit"
+      ],
+      "variants": []
+    },
+    "deltoids": {
+      "materials": [
+        "suit"
+      ],
+      "variants": []
+    },
+    "emblem": {
+      "materials": [
+        "face"
+      ],
+      "variants": []
+    },
+    "emblemBack": {
+      "materials": [
+        "face"
+      ],
+      "variants": []
+    },
+    "expression": {
+      "materials": [
+        "face"
+      ],
+      "variants": []
+    },
+    "eyepatch": {
+      "materials": [
+        "dark"
+      ],
+      "variants": []
+    },
+    "forearms": {
+      "materials": [
+        "suit"
+      ],
+      "variants": []
+    },
+    "gauntlets": {
+      "materials": [
+        "accent"
+      ],
+      "variants": []
+    },
+    "glasses": {
+      "materials": [
+        "dark"
+      ],
+      "variants": []
+    },
+    "hair": {
+      "materials": [
+        "dark"
+      ],
+      "variants": [
+        "afro",
+        "braids",
+        "bun",
+        "swept"
+      ]
+    },
+    "handTips": {
+      "materials": [
+        "dark"
+      ],
+      "variants": []
+    },
+    "hands": {
+      "materials": [
+        "dark"
+      ],
+      "variants": []
+    },
+    "head": {
+      "materials": [
+        "dark",
+        "skin"
+      ],
+      "variants": []
+    },
+    "helmet": {
+      "materials": [
+        "dark"
+      ],
+      "variants": []
+    },
+    "knees": {
+      "materials": [
+        "accent"
+      ],
+      "variants": []
+    },
+    "legs": {
+      "materials": [
+        "suit"
+      ],
+      "variants": []
+    },
+    "pouches": {
+      "materials": [
+        "metal"
+      ],
+      "variants": []
+    },
+    "robe": {
+      "materials": [
+        "accent",
+        "dark",
+        "suit"
+      ],
+      "variants": []
+    },
+    "shoes": {
+      "materials": [
+        "dark"
+      ],
+      "variants": [],
+      "requires": [
+        "calves"
+      ],
+      "excludes": [
+        "boots"
+      ]
+    },
+    "shoulders": {
+      "materials": [
+        "accent"
+      ],
+      "variants": []
+    },
+    "sleeves": {
+      "materials": [
+        "suit"
+      ],
+      "variants": []
+    },
+    "tornClothes": {
+      "materials": [
+        "suit"
+      ],
+      "variants": []
+    },
+    "torso": {
+      "materials": [
+        "dark",
+        "suit"
+      ],
+      "variants": []
+    },
+    "vest": {
+      "materials": [
+        "dark",
+        "metal"
+      ],
+      "variants": []
+    },
+    "visor": {
+      "materials": [
+        "accent"
+      ],
+      "variants": []
+    },
+    "waist": {
+      "materials": [
+        "dark"
+      ],
+      "variants": []
+    },
+    "wristbands": {
+      "materials": [
+        "accent"
+      ],
+      "variants": [],
+      "requires": [
+        "forearms"
+      ]
+    }
+  },
+  "texturePeriodMeters": 0.25,
   "clips": [
     "A_TPose",
     "Death01",

@@ -68,3 +68,21 @@ npm run build
 ```
 
 Set `LSW_TEST_URL=http://127.0.0.1:5184` for engine/browser checks. Keep Vite source stable while the tests run. Native full-roster migration, creature gameplay/AI and paired contact actions are outstanding, not implied by workshop playback.
+
+## Shared pipeline update: wardrobe and full skeleton motion
+
+Run `node tools/verify-character-pipeline.mjs` with the development server at port 5184. This runs the focused checks and records a single browser review. Pass `--rebuild` to regenerate the Blender asset and mapped motion bank first. It does not rewrite the roster or edited review workbook.
+
+The COH-inspired contract is a saved recipe over a stable skeleton: anatomy/frame, body proportions, region slots, four outfit color channels, skin/hair/eyes, accessories and front/back insignia. Modules share fitting rules rather than becoming separate character rigs. Female anatomy is supported. Boxing gloves replace hands/hand tips and exclude gauntlets/wristbands; shoes use calves and exclude boots; wristbands require exposed forearms. See the generated manifest's slotContract. Broad mix-and-match compatibility still requires pose review; do not promise every future garment is clipping-free.
+
+Outfit pattern uploads accept PNG/WebP up to 1 MB and 2048 pixels per dimension. Prefer a seamless 512×512 image. New garment UVs use a 0.25-meter tile period; patternScale controls repetition. Skin infection marks use the existing surface, avoiding overlapping transparent geometry. Transparent chest/back insignia remains a separate upload. Gilt is an original black/gold pattern, not a copied fashion logo.
+
+`tools/build-modular-motion-bank.mjs` retains full authored tracks, including wrists/hands. It proves source/target hierarchy and rest/bind compatibility before mapping 53 matching joints on the same anatomical side. The optional bank contains 29 clips; it is about 14.8 MB JSON and must remain lazy-loaded. In Animation Library choose Load full-skeleton motions. These use the modular Vegas reference body; they are source-motion review, not per-roster gameplay assignments. The Character Foundation source-take selector uses the same bank. Do not route this rig through the old reduced segment-direction pose format, which loses hand detail.
+
+Current preview coverage includes bat, axe, sword/shield, boxing mitts, zombie idle/walk/scratch, roll, LayToIdle, sword guard, climbing and slide candidates. Bat and axe currently demonstrate the shared one-handed sword swing: dedicated combat bat/axe and two-handed grips remain unapproved. Source clip availability is not combat readiness. Contact timing, interruption, simulation displacement, recovery, weapon fit and AI usage need explicit gameplay assignments.
+
+Healthy native flight remains procedural. The infected studio overlay points both arms toward world down and preserves bone translations. Live infected state selection remains separate. The side-shooting dive is still a planned action: Sprint + lateral movement + Jump; consume that chord once and suppress accidental flight takeoff until Jump release. A grounded living recovery may use an approved get-up clip; KO never automatically plays one. See ANIMATION_INTEGRATION_AUDIT.md for state ownership and missing footage.
+
+The review exporter preserves existing edits by default. Use the workbook to specify each character's look, sprint and flight before replacing the roster. Before photos are archived; after photos must be captured from the implemented candidate, never fabricated.
+
+Measured visible presets are roughly 1,026–1,852 triangles and 16–26 scene draw calls. This is a geometry audit, not a crowd performance benchmark. Prefer contact/baked shading first; optional screen-space AO needs a representative crowd GPU test.

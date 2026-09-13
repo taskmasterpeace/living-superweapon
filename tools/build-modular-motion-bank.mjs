@@ -1,0 +1,30 @@
+// Full source joint tracks only. No reduced directional pose-bank conversion.
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import {createHash} from 'node:crypto';
+import * as T from 'three';
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+const root=path.resolve(import.meta.dirname,'..');
+globalThis.ProgressEvent??=class{constructor(type,init){this.type=type;Object.assign(this,init);}};
+const source1='assets-src/modular-character/source/AnimationLibrary_Godot_Standard.gltf';
+const source2='assets-src/modular-character/source/UAL2_Standard.glb';
+async function load(file){const bytes=await fs.readFile(path.join(root,file));let input;if(file.endsWith('.gltf')){const doc=JSON.parse(bytes);for(const b of doc.buffers){const raw=await fs.readFile(path.join(root,path.dirname(file),b.uri));b.uri='data:application/octet-stream;base64,'+raw.toString('base64');}input=JSON.stringify(doc);}else input=bytes.buffer.slice(bytes.byteOffset,bytes.byteOffset+bytes.byteLength);const scene=await new GLTFLoader().parseAsync(input,'');scene.scene.updateMatrixWorld(true);return {...scene,file,sha256:createHash('sha256').update(bytes).digest('hex')};}
+const fixed={root:'root',pelvis:'DEF-hips',spine_01:'DEF-spine.001',spine_02:'DEF-spine.002',spine_03:'DEF-spine.003',neck_01:'DEF-neck',Head:'DEF-head'};
+const limbs={clavicle:'shoulder',upperarm:'upper_arm',lowerarm:'forearm',hand:'hand',thigh:'thigh',calf:'shin',foot:'foot',ball:'toe'};
+function mapped(name){if(fixed[name])return fixed[name];if(name.includes('leaf'))return null;const m=name.match(/^(.*)_([lr])$/);if(!m)return null;const [,part,side]=m;let out=limbs[part];if(!out){const f=part.match(/^(index|middle|pinky|ring|thumb)_(\d+)$/);if(!f)return null;out=(f[1]==='thumb'?'thumb':'f_'+f[1])+'.'+f[2];}return 'DEF-'+out+'.'+side.toUpperCase();}
+const sanitize=T.PropertyBinding.sanitizeNodeName;
+function skeleton(g){let found;g.scene.traverse(o=>{if(o.isSkinnedMesh&&!found)found=o.skeleton;});if(!found)throw Error('No source skeleton: '+g.file);return found;}
+const maxDelta=(a,b)=>Math.max(...a.map((v,i)=>Math.abs(v-b[i])));
+function prove(source,target,rename){const ss=skeleton(source),ts=skeleton(target),report={source:source.file,target:target.file,mapped:0,omitted:[],errors:[],maxLocal:0,maxWorld:0,maxInverseBind:0};for(let i=0;i<ss.bones.length;i++){const b=ss.bones[i],name=rename(b.name);if(!name){report.omitted.push(b.name);continue;}const ti=ts.bones.findIndex(n=>n.name===sanitize(name));if(ti<0){report.errors.push('Missing target '+name);continue;}const t=ts.bones[ti];report.mapped++;report.maxLocal=Math.max(report.maxLocal,maxDelta(b.matrix.elements,t.matrix.elements));report.maxWorld=Math.max(report.maxWorld,maxDelta(b.matrixWorld.elements,t.matrixWorld.elements));report.maxInverseBind=Math.max(report.maxInverseBind,maxDelta(ss.boneInverses[i].elements,ts.boneInverses[ti].elements));if(b.parent?.isBone&&rename(b.parent.name)!==t.parent?.name&&sanitize(rename(b.parent.name)||'')!==t.parent?.name)report.errors.push('Parent mismatch '+name);}report.tolerance=1e-4;for(const field of ['maxLocal','maxWorld','maxInverseBind'])if(report[field]>report.tolerance)report.errors.push(field+' exceeds tolerance');report.compatible=!report.errors.length;return report;}
+const [ual1,ual2,target]=await Promise.all([load(source1),load(source2),load('public/models/modular-hero/modular-hero.glb')]);
+// Loader sanitizes DEF names (dots become underscores). Match both raw and loaded names.
+const ual1Names=new Map(skeleton(ual1).bones.map(b=>[b.name,b.name]));
+const toDef=n=>{const raw=mapped(n);return raw?sanitize(raw):null;};
+const proofs=[prove(ual2,ual1,toDef),prove(ual1,target,n=>ual1Names.get(n))];
+const requested2=['Zombie_Idle_Loop','Zombie_Walk_Fwd_Loop','Zombie_Scratch','Idle_Shield_Loop','Shield_OneShot','Shield_Dash','Idle_Shield_Break','Sword_Block','Sword_Dash','Sword_Regular_A','Sword_Regular_A_Rec','Sword_Regular_B','Sword_Regular_B_Rec','Sword_Regular_C','Sword_Regular_Combo','Sword_Heavy_Combo','TreeChopping_Loop','LayToIdle','Hit_Knockback','Melee_Hook','Melee_Hook_Rec','ClimbUp_1m','NinjaJump_Idle_Loop','NinjaJump_Start','NinjaJump_Land','Slide_Start','Slide_Loop','Slide_Exit'];
+const entries=[],rejected=[];
+for(const [src,names,rename,ok]of [[ual1,['Roll'],n=>ual1Names.get(n),proofs[1].compatible],[ual2,requested2,toDef,proofs.every(p=>p.compatible)]])for(const take of names){const original=src.animations.find(c=>c.name===take);if(!original||!ok){rejected.push({take,source:src.file,reason:!original?'missing-source-take':'bind-proof-failed'});continue;}const clip=original.clone(),omittedTracks=[];clip.tracks=clip.tracks.flatMap(track=>{const binding=T.PropertyBinding.parseTrackName(track.name),bone=rename(binding.nodeName);if(!bone){omittedTracks.push(track.name);return [];}const copy=track.clone();copy.name=bone+'.'+binding.propertyName;return [copy];});entries.push({id:(src===ual1?'ual1/':'ual2/')+take,take,source:{file:src.file,sha256:src.sha256,license:'CC0-1.0'},duration:original.duration,loop:take.endsWith('_Loop'),status:'source-mapped-unreviewed',rootMotionPolicy:'Tracks preserve original source values; runtime must anchor actor to simulation and never apply source root trajectory to fighter position.',omittedTracks,clip:T.AnimationClip.toJSON(clip)});}
+const output={version:1,format:'Three.AnimationClip.toJSON',proofs,entries,rejected,gaps:['No dedicated bat combat','TreeChopping_Loop is not approved combat axe motion','No sideways firing dive','No dual-pistol or shotgun source clips','No infected flight','No prone get-up'],acceptance:'Bind and source-track mapping proof only; visual and gameplay acceptance pending.'};
+await fs.writeFile(path.join(root,'public/models/modular-hero/motion-bank.json'),JSON.stringify(output)+'\n');
+console.log(JSON.stringify({proofs,entries:entries.length,rejected:rejected.length},null,2));
+if(rejected.length)process.exitCode=1;

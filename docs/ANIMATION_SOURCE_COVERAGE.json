@@ -1,0 +1,465 @@
+{
+  "auditedOn": "2026-09-13",
+  "evidence": "Source glTF/GLB animation arrays and accessor time maxima; inventory only, not visual or gameplay acceptance.",
+  "sources": [
+    {
+      "path": "assets-src/modular-character/source/AnimationLibrary_Godot_Standard.gltf",
+      "sha256": "0ff075c7ad6855c5c2c37a171592ee8f0d6ab2f58259e2be77a9b63dd8027765",
+      "clipCount": 46,
+      "clips": [
+        {
+          "take": "A_TPose",
+          "durationSeconds": 0.16666666666666666,
+          "channelCount": 159
+        },
+        {
+          "take": "Crouch_Fwd_Loop",
+          "durationSeconds": 2,
+          "channelCount": 159
+        },
+        {
+          "take": "Crouch_Idle_Loop",
+          "durationSeconds": 2.9166666666666665,
+          "channelCount": 159
+        },
+        {
+          "take": "Dance_Loop",
+          "durationSeconds": 1,
+          "channelCount": 159
+        },
+        {
+          "take": "Death01",
+          "durationSeconds": 2.375,
+          "channelCount": 159
+        },
+        {
+          "take": "Driving_Loop",
+          "durationSeconds": 1.6666666666666667,
+          "channelCount": 159
+        },
+        {
+          "take": "Fixing_Kneeling",
+          "durationSeconds": 5.166666666666667,
+          "channelCount": 159
+        },
+        {
+          "take": "Hit_Chest",
+          "durationSeconds": 0.3333333333333333,
+          "channelCount": 159
+        },
+        {
+          "take": "Hit_Head",
+          "durationSeconds": 0.4166666666666667,
+          "channelCount": 159
+        },
+        {
+          "take": "Idle_Loop",
+          "durationSeconds": 2.5,
+          "channelCount": 159
+        },
+        {
+          "take": "Idle_Talking_Loop",
+          "durationSeconds": 2.9166666666666665,
+          "channelCount": 159
+        },
+        {
+          "take": "Idle_Torch_Loop",
+          "durationSeconds": 1.25,
+          "channelCount": 159
+        },
+        {
+          "take": "Interact",
+          "durationSeconds": 2,
+          "channelCount": 159
+        },
+        {
+          "take": "Jog_Fwd_Loop",
+          "durationSeconds": 0.9166666666666666,
+          "channelCount": 159
+        },
+        {
+          "take": "Jump_Land",
+          "durationSeconds": 1.25,
+          "channelCount": 159
+        },
+        {
+          "take": "Jump_Loop",
+          "durationSeconds": 2.5,
+          "channelCount": 159
+        },
+        {
+          "take": "Jump_Start",
+          "durationSeconds": 1.3333333333333333,
+          "channelCount": 159
+        },
+        {
+          "take": "PickUp_Table",
+          "durationSeconds": 0.8333333333333334,
+          "channelCount": 159
+        },
+        {
+          "take": "Pistol_Aim_Down",
+          "durationSeconds": 0.16666666666666666,
+          "channelCount": 159
+        },
+        {
+          "take": "Pistol_Aim_Neutral",
+          "durationSeconds": 0.16666666666666666,
+          "channelCount": 159
+        },
+        {
+          "take": "Pistol_Aim_Up",
+          "durationSeconds": 0.16666666666666666,
+          "channelCount": 159
+        },
+        {
+          "take": "Pistol_Idle_Loop",
+          "durationSeconds": 1.6666666666666667,
+          "channelCount": 159
+        },
+        {
+          "take": "Pistol_Reload",
+          "durationSeconds": 1.6666666666666667,
+          "channelCount": 159
+        },
+        {
+          "take": "Pistol_Shoot",
+          "durationSeconds": 0.625,
+          "channelCount": 159
+        },
+        {
+          "take": "Punch_Cross",
+          "durationSeconds": 1,
+          "channelCount": 159
+        },
+        {
+          "take": "Punch_Enter",
+          "durationSeconds": 0.8333333333333334,
+          "channelCount": 159
+        },
+        {
+          "take": "Punch_Jab",
+          "durationSeconds": 0.8333333333333334,
+          "channelCount": 159
+        },
+        {
+          "take": "Push_Loop",
+          "durationSeconds": 2.6666666666666665,
+          "channelCount": 159
+        },
+        {
+          "take": "Roll",
+          "durationSeconds": 1.4583333333333333,
+          "channelCount": 159
+        },
+        {
+          "take": "Roll_RM",
+          "durationSeconds": 1.4583333333333333,
+          "channelCount": 159
+        },
+        {
+          "take": "Sitting_Enter",
+          "durationSeconds": 1.2916666666666667,
+          "channelCount": 159
+        },
+        {
+          "take": "Sitting_Exit",
+          "durationSeconds": 1,
+          "channelCount": 159
+        },
+        {
+          "take": "Sitting_Idle_Loop",
+          "durationSeconds": 1.6666666666666667,
+          "channelCount": 159
+        },
+        {
+          "take": "Sitting_Talking_Loop",
+          "durationSeconds": 2.9166666666666665,
+          "channelCount": 159
+        },
+        {
+          "take": "Spell_Simple_Enter",
+          "durationSeconds": 0.5,
+          "channelCount": 159
+        },
+        {
+          "take": "Spell_Simple_Exit",
+          "durationSeconds": 0.4166666666666667,
+          "channelCount": 159
+        },
+        {
+          "take": "Spell_Simple_Idle_Loop",
+          "durationSeconds": 2.0833333333333335,
+          "channelCount": 159
+        },
+        {
+          "take": "Spell_Simple_Shoot",
+          "durationSeconds": 0.5,
+          "channelCount": 159
+        },
+        {
+          "take": "Sprint_Loop",
+          "durationSeconds": 0.6666666666666666,
+          "channelCount": 159
+        },
+        {
+          "take": "Swim_Fwd_Loop",
+          "durationSeconds": 1.3333333333333333,
+          "channelCount": 159
+        },
+        {
+          "take": "Swim_Idle_Loop",
+          "durationSeconds": 3.3333333333333335,
+          "channelCount": 159
+        },
+        {
+          "take": "Sword_Attack",
+          "durationSeconds": 1.5,
+          "channelCount": 159
+        },
+        {
+          "take": "Sword_Attack_RM",
+          "durationSeconds": 1.5,
+          "channelCount": 159
+        },
+        {
+          "take": "Sword_Idle",
+          "durationSeconds": 1.6666666666666667,
+          "channelCount": 159
+        },
+        {
+          "take": "Walk_Formal_Loop",
+          "durationSeconds": 1.3333333333333333,
+          "channelCount": 159
+        },
+        {
+          "take": "Walk_Loop",
+          "durationSeconds": 1.3333333333333333,
+          "channelCount": 159
+        }
+      ]
+    },
+    {
+      "path": "D:/lsw/assets-src/quaternius/library-2/UAL2_Standard.glb",
+      "sha256": "8cee20ab1bc55130092447e810e26df22dd2803eccc54f52137a7d54d7ab88a8",
+      "clipCount": 43,
+      "clips": [
+        {
+          "take": "A_TPose",
+          "durationSeconds": 2.5,
+          "channelCount": 195
+        },
+        {
+          "take": "Chest_Open",
+          "durationSeconds": 1.3666666666666667,
+          "channelCount": 195
+        },
+        {
+          "take": "ClimbUp_1m",
+          "durationSeconds": 0.6666666666666666,
+          "channelCount": 195
+        },
+        {
+          "take": "Consume",
+          "durationSeconds": 1.3333333333333333,
+          "channelCount": 195
+        },
+        {
+          "take": "Farm_Harvest",
+          "durationSeconds": 2.5,
+          "channelCount": 195
+        },
+        {
+          "take": "Farm_PlantSeed",
+          "durationSeconds": 2.7666666666666666,
+          "channelCount": 195
+        },
+        {
+          "take": "Farm_Watering",
+          "durationSeconds": 3.8,
+          "channelCount": 195
+        },
+        {
+          "take": "Hit_Knockback",
+          "durationSeconds": 0.8333333333333334,
+          "channelCount": 195
+        },
+        {
+          "take": "Idle_FoldArms_Loop",
+          "durationSeconds": 2.5,
+          "channelCount": 195
+        },
+        {
+          "take": "Idle_Lantern_Loop",
+          "durationSeconds": 2.5,
+          "channelCount": 195
+        },
+        {
+          "take": "Idle_No_Loop",
+          "durationSeconds": 2.5,
+          "channelCount": 195
+        },
+        {
+          "take": "Idle_Rail_Call",
+          "durationSeconds": 2.5,
+          "channelCount": 195
+        },
+        {
+          "take": "Idle_Rail_Loop",
+          "durationSeconds": 2.5,
+          "channelCount": 195
+        },
+        {
+          "take": "Idle_Shield_Break",
+          "durationSeconds": 1.0666666666666667,
+          "channelCount": 195
+        },
+        {
+          "take": "Idle_Shield_Loop",
+          "durationSeconds": 2.5,
+          "channelCount": 195
+        },
+        {
+          "take": "Idle_TalkingPhone_Loop",
+          "durationSeconds": 2.933333333333333,
+          "channelCount": 195
+        },
+        {
+          "take": "LayToIdle",
+          "durationSeconds": 1.5333333333333334,
+          "channelCount": 195
+        },
+        {
+          "take": "Melee_Hook",
+          "durationSeconds": 0.4666666666666667,
+          "channelCount": 195
+        },
+        {
+          "take": "Melee_Hook_Rec",
+          "durationSeconds": 0.6,
+          "channelCount": 195
+        },
+        {
+          "take": "NinjaJump_Idle_Loop",
+          "durationSeconds": 2,
+          "channelCount": 195
+        },
+        {
+          "take": "NinjaJump_Land",
+          "durationSeconds": 1.2666666666666666,
+          "channelCount": 195
+        },
+        {
+          "take": "NinjaJump_Start",
+          "durationSeconds": 0.9666666666666667,
+          "channelCount": 195
+        },
+        {
+          "take": "OverhandThrow",
+          "durationSeconds": 1.3333333333333333,
+          "channelCount": 195
+        },
+        {
+          "take": "Shield_Dash",
+          "durationSeconds": 1.1,
+          "channelCount": 195
+        },
+        {
+          "take": "Shield_OneShot",
+          "durationSeconds": 0.8333333333333334,
+          "channelCount": 195
+        },
+        {
+          "take": "Slide_Exit",
+          "durationSeconds": 0.5,
+          "channelCount": 195
+        },
+        {
+          "take": "Slide_Loop",
+          "durationSeconds": 2,
+          "channelCount": 195
+        },
+        {
+          "take": "Slide_Start",
+          "durationSeconds": 0.8333333333333334,
+          "channelCount": 195
+        },
+        {
+          "take": "Sword_Block",
+          "durationSeconds": 1.2333333333333334,
+          "channelCount": 195
+        },
+        {
+          "take": "Sword_Dash",
+          "durationSeconds": 1.5666666666666667,
+          "channelCount": 195
+        },
+        {
+          "take": "Sword_Heavy_Combo",
+          "durationSeconds": 4.333333333333333,
+          "channelCount": 195
+        },
+        {
+          "take": "Sword_Regular_A",
+          "durationSeconds": 0.43333333333333335,
+          "channelCount": 195
+        },
+        {
+          "take": "Sword_Regular_A_Rec",
+          "durationSeconds": 0.9666666666666667,
+          "channelCount": 195
+        },
+        {
+          "take": "Sword_Regular_B",
+          "durationSeconds": 0.5333333333333333,
+          "channelCount": 195
+        },
+        {
+          "take": "Sword_Regular_B_Rec",
+          "durationSeconds": 1.0333333333333334,
+          "channelCount": 195
+        },
+        {
+          "take": "Sword_Regular_C",
+          "durationSeconds": 2,
+          "channelCount": 195
+        },
+        {
+          "take": "Sword_Regular_Combo",
+          "durationSeconds": 3,
+          "channelCount": 195
+        },
+        {
+          "take": "TreeChopping_Loop",
+          "durationSeconds": 0.9666666666666667,
+          "channelCount": 195
+        },
+        {
+          "take": "Walk_Carry_Loop",
+          "durationSeconds": 2,
+          "channelCount": 195
+        },
+        {
+          "take": "Yes",
+          "durationSeconds": 2.5,
+          "channelCount": 195
+        },
+        {
+          "take": "Zombie_Idle_Loop",
+          "durationSeconds": 1.3333333333333333,
+          "channelCount": 195
+        },
+        {
+          "take": "Zombie_Scratch",
+          "durationSeconds": 1.8,
+          "channelCount": 195
+        },
+        {
+          "take": "Zombie_Walk_Fwd_Loop",
+          "durationSeconds": 1.3333333333333333,
+          "channelCount": 195
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+# Infected concepts v1
+Generated with GPT Image on 2026-09-13. File: infected-directions-v1.png.
+Prompt brief: three clearly different infected art directions on the same bald, capeless low-poly modular male body in charcoal and gold, consistent angular block style and joined fingers. A Fever: gray-brown skin, white eyes, dark sockets, restrained crimson veins, torn sleeve. B Rupture: gray skin, localized red fissures, damaged shoulder armor. C Hollow: sunken white eyes, slack mouth, torn clothes. Include head closeups, surface swatches and a horizontal head-first flying silhouette with both arms hanging straight toward the ground. No exposed organs or graphic gore. This sheet is visual direction, not a rigged asset or approved roster redesign.
+Implementation currently offers simplified surface treatments for these directions; review the actual moving model separately.
