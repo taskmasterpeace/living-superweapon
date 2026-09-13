@@ -210,7 +210,9 @@ const SEL_CSS = `
  body.is-touch #hSelect .selchip{padding:5px 8px;font-size:11px}
  body.is-touch #hSelect .selstrip{flex:none;height:90px;min-height:90px;margin:0}
  body.is-touch #hSelect .selstripInner{top:12px}
- body.is-touch #hSelect .scard{width:56px;height:68px}
+ body.is-touch #hSelect .scard{width:84px;height:68px}
+ body.is-touch #hSelect .scard .snm{font-size:9px;padding:3px 3px 4px}
+ body.is-touch #hSelect .scard .sidentity{font-size:8px;line-height:1.15;margin-top:2px}
  body.is-touch #hSelect .scard.on{transform:scale(1.08) translateY(-3px)}
  body.is-touch #hSelect .selbar{flex:none;gap:12px;padding:4px 12px;font-size:10px;letter-spacing:.04em}
 }
