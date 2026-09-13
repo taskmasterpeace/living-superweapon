@@ -76,6 +76,17 @@
       "role": "passenger",
       "anchor": "seated actor root",
       "yaw": 3.141592653589793
+    },
+    {
+      "id": "pilot",
+      "position": [
+        0,
+        3.9,
+        -15
+      ],
+      "role": "pilot",
+      "anchor": "seated actor root",
+      "yaw": 3.141592653589793
     }
   ],
   "triangles": 6612,

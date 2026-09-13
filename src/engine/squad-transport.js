@@ -8,9 +8,13 @@ const BASE='./models/squad-transport/';
 export class SquadTransport{
  constructor(stage,position){
   this.stage=stage;this.g=stage.g;this.state='loading';this.passengers=new Map();this.covers=[];this.home=position.clone();this.origin=position.clone();this.stop='lab';this.handles=[];this.disposed=false;
-  this.loading=Promise.all([new GLTFLoader().loadAsync(BASE+'transport.v1.glb'),fetch(BASE+'manifest.json').then(r=>r.json())]).then(([asset,manifest])=>{
-   if(this.disposed){this.disposeAsset(asset.scene);return;}
+  this.loading=Promise.all([new GLTFLoader().loadAsync(BASE+'transport.v1.glb'),fetch(BASE+'manifest.json').then(r=>r.json()),new GLTFLoader().loadAsync(BASE+'seat.v1.glb')]).then(([asset,manifest,pilotAsset])=>{
+   if(this.disposed){this.disposeAsset(asset.scene);this.disposeAsset(pilotAsset.scene);return;}
    this.model=asset.scene;this.manifest=manifest;this.model.position.copy(position);this.model.name='squad-passenger-transport';this.g.scene.add(this.model);
+   const pilot=manifest.seats.find(s=>s.role==='pilot');if(pilot){
+    const chair=pilotAsset.scene;chair.name='pilot-station';chair.position.set(0,5.7,-15);
+    const console=new THREE.Mesh(new THREE.BoxGeometry(5,2,2),new THREE.MeshStandardMaterial({color:0x263b48}));console.position.set(0,4.3,-4);chair.add(console);this.model.add(chair);
+   }else this.disposeAsset(pilotAsset.scene);
    this.hinge=this.model.getObjectByName(manifest.ramp.node);this.model.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;}});
    this.originalMaterials=new Set();
    this.model.traverse(o=>{
@@ -69,7 +73,7 @@ export class SquadTransport{
   cancelHeldAttacks(f);f._passengerPose=[];
   for(const part of [f.parts.legL,f.parts.legR,f.parts.armL,f.parts.armR,f.parts.legL?.userData.knee,f.parts.legR?.userData.knee])if(part)f._passengerPose.push([part,part.rotation.clone()]);
   f._passengerTransport=this;f._deploymentTarget=null;f.flying=false;f.flyHeld=f.descendHeld=false;f.guarding=false;f.moveDir={x:0,z:0};this.passengers.set(f,seat);this.sync();
-  if(f===this.g.player){document.body.classList.add('transport-passenger');this.g.retireCombatViewInput();this.g.hud?.announce?.(`PASSENGER · Enter: ${this.stop==='depot'?'return to lab':'fly to depot'} · J: exit while parked`);}
+  if(f===this.g.player){document.body.classList.add('transport-passenger');this.g.retireCombatViewInput();this.g.hud?.announce?.(`PASSENGER · Enter: ${this.stop==='depot'?'return to lab':'fly to depot'} · Z: change seat · J: exit while parked`);}
   return true;
  }
  cancelBoarding(){for(const f of this.g.ms?.squad?.members||[])if(f._deploymentTarget&&(f._deploymentTarget===this.entry||f._deploymentTarget===this.cabin))f._deploymentTarget=null;}
@@ -101,10 +105,21 @@ export class SquadTransport{
   this.from=this.model.position.clone();this.to=dest;this.elapsed=0;this.duration=Math.max(12,this.from.distanceTo(this.to)/60);
   this.cruise=Math.max(this.from.y,this.to.y)+100;
   for(let i=0;i<=60;i++){const x=this.from.x+(this.to.x-this.from.x)*i/60,z=this.from.z+(this.to.z-this.from.z)*i/60;for(const dx of [-35,0,35])this.cruise=Math.max(this.cruise,this.g.world.heightAt(x+dx,z)+70);}
-  this.model.rotation.y=Math.atan2(this.from.x-this.to.x,this.from.z-this.to.z);this.state='closing';return true;
+  this.travelYaw=Math.atan2(this.from.x-this.to.x,this.from.z-this.to.z);this.model.rotation.y=this.travelYaw;
+  const lab=this.g.pwStage?.researchLab?.site;this.parkingYaw=returning&&lab?Math.atan2(lab.x-this.to.x,lab.z-this.to.z):this.travelYaw;
+  this.state='closing';return true;
+ }
+ cycleSeat(f){
+  const current=this.passengers.get(f);if(!current||!f.alive||this.state==='destroyed')return false;
+  const seats=this.manifest.seats,index=seats.findIndex(s=>s.id===current.id),next=seats[(index+1)%seats.length];if(!next||next===current)return false;
+  const occupant=[...this.passengers].find(([other,seat])=>other!==f&&seat.id===next.id)?.[0];
+  if(occupant)this.passengers.set(occupant,current);
+  this.passengers.set(f,next);this.sync();this.g.world._chaseSnap=true;
+  this.g.hud?.announce?.((next.role==='pilot'?'PILOT SEAT · Autopilot route':'PASSENGER SEAT')+' · Z: change seat · J: exit when parked');return true;
  }
  handleInput(input){
   const f=this.g.player;if(f?._passengerTransport!==this)return false;
+  if(input.pressed?.('KeyZ')){input.justPressed?.delete('KeyZ');this.cycleSeat(f);}
   if(input.pressed?.('KeyJ')||this.g.pad?.pressed('transportExit')){input.justPressed?.delete('KeyJ');if(!this.exit(f))this.g.hud?.feed('Remain seated until landing','#d5bd80');}
   if(input.pressed?.('Enter')||this.g.pad?.pressed('transportDepart')){input.justPressed?.delete('Enter');this.launch();}
   return true;
@@ -121,6 +136,7 @@ export class SquadTransport{
   if(this.state==='flying'){
    this.elapsed+=dt;const t=Math.min(1,this.elapsed/this.duration),travel=Math.max(0,Math.min(1,(t-.2)/.6)),smooth=travel*travel*(3-2*travel);this.model.position.lerpVectors(this.from,this.to,smooth);
    this.model.position.y=t<.2?THREE.MathUtils.lerp(this.from.y,this.cruise,t/.2):t>.8?THREE.MathUtils.lerp(this.cruise,this.to.y,(t-.8)/.2):this.cruise;
+   if(this.parkingYaw!==undefined&&this.travelYaw!==undefined){const turn=Math.max(0,Math.min(1,(t-.8)/.2)),delta=Math.atan2(Math.sin(this.parkingYaw-this.travelYaw),Math.cos(this.parkingYaw-this.travelYaw));this.model.rotation.y=this.travelYaw+delta*turn*turn*(3-2*turn);}
    if(t===1){this.state='opening';this.elapsed=0;this.home.copy(this.to);this.stop=this.pendingStop||this.stop;}
   }
   if(this.state==='opening'){this.elapsed+=dt;if(this.hinge)this.hinge.rotation.x=this.manifest.ramp.closedAngle*(1-Math.min(1,this.elapsed/1.2));if(this.elapsed>=1.2){this.state='parked';this.g.hud?.announce?.(`LANDED · ${this.stop==='lab'?'RESEARCH LAB':'DEPOT'} · J: exit · Enter: ${this.stop==='lab'?'depot':'return to lab'}`);}}

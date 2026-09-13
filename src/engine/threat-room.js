@@ -1,6 +1,6 @@
 import {retireTrainingBeacons} from './training-beacons.js';
 import {TrainingHazardScope} from './training-hazard-scope.js';
-import {crossedFlightRings} from './flight-course.js';
+import {crossedFlightRings,facilityFlightCourse} from './flight-course.js';
 import {meleeEntryEligibility} from './melee-entry-target.js';
 import {meleeApproach} from '../data/melee-approaches.js';
 import {RangeDrill} from './range-drill.js';
@@ -62,7 +62,7 @@ export class ThreatRoom {
   this.flightHud=document.createElement('div');this.flightHud.setAttribute('aria-label','Training flight telemetry');this.flightHud.style.cssText='position:fixed;top:18px;left:50%;transform:translateX(-50%);padding:10px 18px;background:#152633e8;color:#e8f8ff;border-bottom:2px solid #ffd24a;font:600 16px system-ui;pointer-events:none;z-index:45';document.body.append(this.flightHud);
   this.securityCamera=new THREE.Mesh(new THREE.BoxGeometry(5,4,9),new THREE.MeshStandardMaterial({color:0x263b48}));this.securityCamera.position.set(0,270,80);this.group.add(this.securityCamera);
   this.rings=[];this.ringIndex=0;this.laps=0;
-  for(let i=0;i<6;i++){const ring=new THREE.Mesh(new THREE.TorusGeometry(16,.7,8,48),new THREE.MeshBasicMaterial({color:i===0?0xffd24a:0x6caabb}));ring.position.set(0,35+i*22,100-i*60);this.group.add(ring);this.rings.push(ring);}
+  for(const [i,gate]of facilityFlightCourse().entries()){const ring=new THREE.Mesh(new THREE.TorusGeometry(16,.7,8,48),new THREE.MeshBasicMaterial({color:i===0?0xffd24a:0x6caabb}));ring.position.set(gate.position.x,gate.position.y,gate.position.z);ring.userData.flightNormal=new THREE.Vector3(gate.normal.x,gate.normal.y,gate.normal.z).normalize();ring.quaternion.setFromUnitVectors(new THREE.Vector3(0,0,1),ring.userData.flightNormal);this.group.add(ring);this.rings.push(ring);}
   // Keep instructions beside the lane: a text plane across the approach fills
   // the chase camera as the player flies through it.
   this.label('FLIGHT COURSE / FOLLOW THE GOLD RING',-85,46,115,65,5,0,true);
@@ -86,7 +86,7 @@ export class ThreatRoom {
  }
  label(text,x,y,z,width,height,rx=0,plaque=false){const c=document.createElement('canvas');c.width=1024;c.height=128;const ctx=c.getContext('2d');if(plaque){ctx.fillStyle='#152633';ctx.fillRect(0,0,1024,128);}ctx.fillStyle=plaque?'#f3fbff':'#263d4c';ctx.font='600 52px sans-serif';ctx.textAlign='center';ctx.fillText(text,512,80);const tex=new THREE.CanvasTexture(c);tex.colorSpace=THREE.SRGBColorSpace;const m=new THREE.Mesh(new THREE.PlaneGeometry(width,height),new THREE.MeshBasicMaterial({map:tex,transparent:true,side:THREE.DoubleSide,depthWrite:false}));m.position.set(x,y,z);m.rotation.x=rx;this.group.add(m);return m;}
  screen(x,y,z,width,height){const canvas=document.createElement('canvas');canvas.width=768;canvas.height=432;const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;const mesh=new THREE.Mesh(new THREE.PlaneGeometry(width,height),new THREE.MeshBasicMaterial({map:texture}));mesh.position.set(x,y,z);this.group.add(mesh);return {canvas,texture,mesh};}
- update(dt){if(!this.active)return;this.rangeDrill.update(dt,this.g.ms.threatLab?.meleeTrial?.target);if(this._drillState!==this.rangeDrill.state){this._drillState=this.rangeDrill.state;const d=this.rangeDrill;if(d.state==='finished')this.g.hud?.feed?.(d.reason+' · '+d.damage.toFixed(1)+' DAMAGE · '+d.contacts+' CONTACTS · '+d.elapsed.toFixed(1)+'s','#ffd24a');}for(const [o]of this.hidden)o.visible=false;const g=this.g,speed=unitsPerSecondToKmh(g.player.vel.length());if(g.player.alive&&g.player.flying&&g.player.launchT<=0)this.peak=Math.max(this.peak,speed);this.flightHud.hidden=!g.player.flying;this.flightHud.textContent=Math.round(speed)+' km/h · TOP '+Math.round(this.peak)+' · RINGS '+this.ringIndex+'/6 · LAPS '+this.laps;
+ update(dt){if(!this.active)return;this.rangeDrill.update(dt,this.g.ms.threatLab?.meleeTrial?.target);if(this._drillState!==this.rangeDrill.state){this._drillState=this.rangeDrill.state;const d=this.rangeDrill;if(d.state==='finished')this.g.hud?.feed?.(d.reason+' · '+d.damage.toFixed(1)+' DAMAGE · '+d.contacts+' CONTACTS · '+d.elapsed.toFixed(1)+'s','#ffd24a');}for(const [o]of this.hidden)o.visible=false;const g=this.g,speed=unitsPerSecondToKmh(g.player.vel.length());if(g.player.alive&&g.player.flying&&g.player.launchT<=0)this.peak=Math.max(this.peak,speed);this.flightHud.hidden=!g.player.flying;this.flightHud.textContent=Math.round(speed)+' km/h · TOP '+Math.round(this.peak)+' · RINGS '+this.ringIndex+'/'+this.rings.length+' · LAPS '+this.laps;
   const pos=g.player.pos;
   if(this.lastFlightPos&&g.player.alive&&g.player.flying&&g.player.launchT<=0){for(const index of crossedFlightRings(this.rings,this.ringIndex,this.lastFlightPos,pos)){this.rings[index].material.color.setHex(0x6caabb);this.ringIndex=(index+1)%this.rings.length;if(this.ringIndex===0){this.laps++;g.hud?.feed?.('FLIGHT COURSE COMPLETE · '+this.laps+' laps','#ffd24a');}}this.rings[this.ringIndex].material.color.setHex(0xffd24a);}
   this.lastFlightPos=pos.clone();this.clock=(this.clock||0)+dt;if(this.clock<.1)return;this.clock=0;

@@ -160,6 +160,8 @@ for (owner,cut,material),objects in buckets.items():
 mesh_objects=[o for o in bpy.context.scene.objects if o.type=='MESH']
 triangles=sum(sum(len(p.vertices)-2 for p in o.data.polygons) for o in mesh_objects)
 assert triangles<10000
+# Runtime mounts a shared chair and console here; manual flight is a later pass.
+seats.append({'id':'pilot','position':[0,3.9,-15],'role':'pilot','anchor':'seated actor root','yaw':math.pi})
 manifest={'version':1,'status':'armor and cabin refinement; runtime verification required','metersPerUnit':.1875,'exportAxes':'X right, Y up, -Z forward','rearOpening':{'width':14,'height':16,'floor':5.7},'aisleWidth':9.4,'referenceActorHeight':10,'seats':seats,'triangles':triangles,'meshNodes':len(mesh_objects),'materials':5,'collisionPolicy':'author runtime shell proxies; never use a solid fuselage box','ramp':'rear only; slope 5.2/18','boundsNominal':{'width':62,'length':73,'height':33}}
 manifest['ramp']={'node':'rear_ramp_hinge','closedAngle':-1.852,'openAngle':0,'entry':[0,0,40]}
 manifest['ramp']['walk']={'width':14,'startZ':38,'endZ':20,'startY':.5,'endY':5.7,'steps':18}
