@@ -1,3 +1,4 @@
+import {GROUND_APPROACH_FAMILIES} from '../data/melee-approaches.js';
 import {validateStrikeMarkers} from '../data/strike-markers.js';
 import { frameOf } from '../engine/figure.js';
 import { heroModelOf,HERO_BODIES } from '../data/hero-models.js';
@@ -60,9 +61,12 @@ function purple(hex) {
 }
 export function validateProfile(p) {
   record(p,'Profile');
-  allowed(p,['version','heroId','model','colors','frame','camera','motion','poses','wake','surfaceWake','attacks','progression','effects','environment','kit'],'Profile');
+  allowed(p,['version','heroId','model','colors','frame','camera','motion','poses','wake','surfaceWake','attacks','progression','effects','environment','kit','combat'],'Profile');
   if(p.version!==1)fail('Unsupported profile version. Import a version 1 Studio profile.');
   if(typeof p.heroId!=='string'||!/^[a-z0-9][a-z0-9_-]{0,79}$/.test(p.heroId))fail('Invalid hero ID.');
+  const combat={groundApproach:'auto',...p.combat};
+  if(p.combat!==undefined){record(p.combat,'Combat');allowed(p.combat,['groundApproach'],'Combat');}
+  if(!GROUND_APPROACH_FAMILIES.includes(combat.groundApproach))fail('Unknown melee approach family.');
   record(p.model,'Model');
   allowed(p.model,['costume','flightStyle','hairColor','insignia','locomotion','strikes','heavyStrikes','strikeMarkers','definition','body','surface','assets'],'Model');
   if(p.model.insignia!==undefined&&!['hex','V','none'].includes(p.model.insignia))fail('Unknown emblem. Choose hex, V or none.');
@@ -107,10 +111,10 @@ export function validateProfile(p) {
     complete.attacks=attacks;
     complete.kit=kit;
     complete.progression=progression;
-    complete.effects=effects;
+    complete.effects=effects;complete.combat=combat;
     return complete;
   }
-  return {...p,attacks,kit,progression,effects,surfaceWake};
+  return {...p,attacks,kit,progression,effects,surfaceWake,combat};
 }
 function validateProgression(value,base){
   if(value===undefined)return {unlocks:{},forms:{}};
@@ -144,7 +148,7 @@ function mergeModel(base={},patch={}){
 export function profileFromDef(def) {
   const model=heroModelOf(def);
   const poses=poseDefaultsForStyle(model.flightStyle);
-  return {version:1,heroId:def.id,model:{insignia:model.insignia??(model.emblem===false?'none':'hex'),body:model.body??'procedural',surface:model.surface??'standard',costume:model.costume,flightStyle:model.flightStyle,hairColor:model.hairColor,definition:model.definition,locomotion:model.locomotion??'authored',strikes:model.strikes??'authored',heavyStrikes:model.heavyStrikes??'authored',...(model.assets===undefined?{}:{assets:copy(model.assets)}),...(model.strikeMarkers===undefined?{}:{strikeMarkers:copy(model.strikeMarkers)})},
+  return {version:1,heroId:def.id,combat:{groundApproach:def.combat?.groundApproach??'auto'},model:{insignia:model.insignia??(model.emblem===false?'none':'hex'),body:model.body??'procedural',surface:model.surface??'standard',costume:model.costume,flightStyle:model.flightStyle,hairColor:model.hairColor,definition:model.definition,locomotion:model.locomotion??'authored',strikes:model.strikes??'authored',heavyStrikes:model.heavyStrikes??'authored',...(model.assets===undefined?{}:{assets:copy(model.assets)}),...(model.strikeMarkers===undefined?{}:{strikeMarkers:copy(model.strikeMarkers)})},
     frame:frameOf(def),colors:{skin:'#e8c39a',...def.colors},camera:{...CAMERA_DEFAULTS,...model.camera},
     motion:{...MOTION_DEFAULTS,...model.motion},
     environment:{massKg:def.metal?162:90,windResistance:1+Math.max(0,(def.strength??5)-4)**2*.55,fallSafeSpeed:56,fallDamageScale:def.archetype==='soldier'?1:0,...def.environment},
@@ -167,7 +171,7 @@ export function applyProfile(def,profile) {
   if(def.id!==profile.heroId)fail('This profile belongs to a different hero.');
   const p=copy(profile);
   const selected=applyKitAlternatives(def,p.kit);
-  return applyAttackOverrides({...selected,...(p.environment?{environment:p.environment}:{}),frame:p.frame,colors:p.colors,effects:p.effects,progression:p.progression,model:{...def.model,...p.model,poses:p.poses,camera:p.camera,motion:p.motion,wake:p.wake,surfaceWake:p.surfaceWake}},p.attacks);
+  return applyAttackOverrides({...selected,combat:p.combat,...(p.environment?{environment:p.environment}:{}),frame:p.frame,colors:p.colors,effects:p.effects,progression:p.progression,model:{...def.model,...p.model,poses:p.poses,camera:p.camera,motion:p.motion,wake:p.wake,surfaceWake:p.surfaceWake}},p.attacks);
 }
 function readStore(storage) {
   let raw;

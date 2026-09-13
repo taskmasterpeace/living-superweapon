@@ -176,3 +176,15 @@ test('emblem selection roundtrips into native figures without editing combat sta
  const legacy=structuredClone(initial);delete legacy.model.insignia;assert.doesNotThrow(()=>studio.validateProfile(legacy));const f=new Fighter(studio.applyProfile(def,legacy));try{assert.ok(f.parts.insigniaFront&&f.parts.insigniaBack);}finally{f.dispose();}
  initial.model.insignia='arbitrary';assert.throws(()=>studio.validateProfile(initial),/emblem/i);
 });
+
+test('shared ground approach assignment roundtrips without changing flight or source roster',async()=>{
+ const {meleeApproach}=await import('../src/data/melee-approaches.js');const def=base(),p=studio.profileFromDef(def),s=storage();p.combat.groundApproach='tackle';studio.saveProfile(p,s);
+ const applied=studio.applyProfile(def,studio.loadProfile(def.id,s));assert.equal(meleeApproach(applied,false).family,'tackle');assert.equal(meleeApproach(applied,true).family,'flight');assert.equal(applied.flightTier,def.flightTier);assert.equal(def.combat,undefined);
+ p.combat.groundApproach='auto';assert.equal(meleeApproach(studio.applyProfile(def,p)).family,meleeApproach(def).family);
+ const grounded=structuredClone(ROSTER.find(x=>x.id==='jelani')),gp=studio.profileFromDef(grounded);gp.combat.groundApproach='bound';assert.equal(meleeApproach(studio.applyProfile(grounded,gp),true).family,'bound');assert.equal(grounded.flightTier,0);
+});
+test('older profiles keep native melee defaults and invalid families are rejected',async()=>{
+ const {meleeApproach}=await import('../src/data/melee-approaches.js');const def=structuredClone(ROSTER.find(x=>x.id==='jelani')),p=studio.profileFromDef(def);delete p.combat;
+ assert.equal(meleeApproach(studio.applyProfile(def,p)).family,'tackle');assert.equal(p.combat,undefined);
+ for(const bad of [null,[],{groundApproach:'flight'},{groundApproach:'teleport'},{groundApproach:'tackle',speed:999}])assert.throws(()=>studio.validateProfile({...p,combat:bad}));
+});
