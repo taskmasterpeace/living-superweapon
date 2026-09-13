@@ -152,3 +152,9 @@ No unfinished fleet assets are imported by this repair.
 - Regression reproduced premature disposal, then passed after the shared transfer fix. Bat, claws and nodachi each survive three form changes, remount onto the new hands, and release held resources exactly once when dropped.
 - 36 focused equipment/contact/presentation tests pass. This proves equipment lifecycle behavior, not complete visual approval of every weapon hold.
 
+
+### Equipped two-hand contact on soldiers
+- Fixed presentation order: soldier equipment visibility and shield occupancy now update before combat grip solving. Previously SARGE's first equipped bat/great-blade frame left the support hand more than 3 units from its handle.
+- New native-update regression covers SARGE and MERC, bat and nodachi, ground and airborne, ready plus two accepted attacks and recovery (120 frames each). All eight keep support contact within 0.12 units. With body-family and soldier presentation checks: 24 passed.
+- This extends supported motion evidence; it does not certify all camera angles, guard transitions or every registry weapon.
+

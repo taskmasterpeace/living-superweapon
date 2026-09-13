@@ -2657,6 +2657,8 @@ export class Fighter {
     animateGroundTransition(this,dt);
     animateCrouchPose(this,dt);
     animateDirectionalAim(this,dt);
+    // Grip solvers must see this frame's free hands, including a stowed shield.
+    updateSoldierLoadoutPresentation(this);
     animateCombatAim(this, dt);
     animateFreeLookHead(this);
     animateHands(this,dt);
@@ -2845,7 +2847,6 @@ export class Fighter {
     // so being hit cannot secretly increase the victim's next melee damage.
     animateHitReaction(this, dt);
     poseNaniteForearms(this,dt);
-    updateSoldierLoadoutPresentation(this);
     animatePronePose(this,dt);
     animateRiflePose(this,dt);
     animateReloadPose(this);
