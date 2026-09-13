@@ -9,16 +9,26 @@ import {performEvade} from './abilities.js';
 import {MeleeRecording} from './melee-recording.js';
 import {openMeleeReview} from './melee-review.js';
 import {meleePhase,phaseLabel} from './melee-phase.js';
-export function meleeLesson(def){
+export function meleeLesson(def,scheme='kbm'){
  const combo=hasStrike(def,'jab')||hasStrike(def,'cross');
+ if(scheme==='touch')return (combo?'Tap Punch; repeat for combo':'Tap Punch: heavy slam')+' · hold/release Punch: charged heavy · hold Block: frontal guard · Grab: grab or interact · Evade: dodge';
+ if(scheme==='pad')return (combo?'Tap Strike; repeat for combo':'Tap Strike: heavy slam')+' · hold/release Strike: charged heavy · hold Guard: frontal guard · Grab: grab or interact · Evade: dodge';
  return (combo?'V tap: punch; repeat for combo':'V tap: heavy slam')+' · hold/release V: charge heavy · Q: frontal guard · E: grab · double-tap direction: dodge';
 }
 export const MELEE_TRIALS=['stationary','retreat','guard','dodge','defend','airborne','air-defense'];
-export function trialLesson(kind,def){
+export function trialLesson(kind,def,scheme='kbm'){
  const lesson={stationary:'Face the target and tap V inside your approach range.',retreat:'Tap V to commit an approach. Walking retreat should not outrun the entry; a sideways dodge can.',guard:'This target blocks. Try a punch, charged heavy, then E grab: compare energy absorption and guard break.',dodge:'This target dodges sideways. Time your approach after its dodge rather than expecting the strike to home.',defend:'Face the incoming fighter and hold Q. Funded frontal guard spends energy before health. Release and reposition between attacks.'};
  lesson.airborne='The target takes off and hovers. Fly up with F/Space, face it and tap V for an aerial approach; try E grab and an aimed throw. Grounded fighters need a reachable target: this drill does not grant flight.';
  lesson['air-defense']='Fly up to the trainer. Face its approach and hold Q to block; release and double-tap sideways between punches. Watch energy spent and recovery in the review. It waits for you to reach the air.';
- return lesson[kind]+' '+meleeLesson(def);
+ let text=lesson[kind];
+ if(scheme==='touch')text=text.replaceAll('tap V','tap Punch').replaceAll('Tap V','Tap Punch').replaceAll('hold Q','hold Block').replaceAll('E grab','Grab').replaceAll('F/Space','Rise').replaceAll('double-tap sideways','use Evade sideways');
+ if(scheme==='pad')text=text.replaceAll('tap V','tap Strike').replaceAll('Tap V','Tap Strike').replaceAll('hold Q','hold Guard').replaceAll('E grab','Grab').replaceAll('F/Space','Fly / Rise').replaceAll('double-tap sideways','use Evade sideways');
+ return text+' '+meleeLesson(def,scheme);
+}
+export const meleeLessonScheme=g=>g.touch?.enabled?'touch':g.pad?.active&&!g.touch?.enabled?'pad':'kbm';
+export function grabLesson(scheme='kbm'){
+ const strike=scheme==='touch'?'Punch':scheme==='pad'?'Strike':'V',grab=scheme==='kbm'?'E':scheme==='touch'?'Throw':'Grab';
+ return `GRAB CONNECTED · tap ${strike}: body blow · hold ${strike}: slam · move/fly: carry · hold ${grab} then release: aimed throw · tap ${grab}: set down/drop`;
 }
 // Scripted decisions use native motion, defense and damage; no target teleporting.
 export class MeleeTrial {
@@ -50,7 +60,7 @@ export class MeleeTrial {
   const f=this.g.addFighter({...base,name:base.name+' · '+kind,abilities:{},items:[],holo:true},{team:this.g.player.team===0?1:0,dummy:true,x:this.origin.x,z:this.origin.z});
   f.pos.y=this.g.world.heightAt(f.pos.x,f.pos.z);f._chaseKb=true;f._openSky=true;f.noRespawn=true;f._meleeTrial=this;this.target=f;this.startHp=f.hp;
   this.recording.bind([this.g.player,f]);
-  this.g.hud?.feed?.(kind.toUpperCase()+' · '+trialLesson(kind,this.g.player.def),'#ffd24a');return f;
+  this.g.hud?.feed?.(kind.toUpperCase()+' · '+trialLesson(kind,this.g.player.def,meleeLessonScheme(this.g)),'#ffd24a');return f;
  }
  startMachine(mode='still'){
   mode=mode===true?'moving':mode===false?'still':mode;
@@ -155,7 +165,7 @@ export class MeleeTrial {
   this.recording.mark(this.g.time,{kind:'strike-result',actor:0,label:a.kind.toUpperCase()+' · '+a.reason,result:a.result,reason:a.reason});
   this.g.hud?.feed?.(a.reason+' · '+a.kind.toUpperCase()+' · start '+a.distance.toFixed(1)+'u · recovery '+Math.round(a.recovery*1000)+'ms'+(hint?' · '+hint:''),'#ffd24a');this.attempt=null;
  }
- grabContact(holder,victim){if(holder!==this.g.player||victim!==this.target)return;this.recording.mark(this.g.time,{label:'Grab connected',kind:'grab'});this.g.hud?.feed?.('GRAB CONNECTED · tap V: body blow · hold V: slam · move/fly: carry · hold E then release: aimed throw · tap E: set down/drop','#ffd24a');}
+ grabContact(holder,victim){if(holder!==this.g.player||victim!==this.target)return;this.recording.mark(this.g.time,{label:'Grab connected',kind:'grab'});this.g.hud?.feed?.(grabLesson(meleeLessonScheme(this.g)),'#ffd24a');}
  hit(target,amount,opts,blocked,outcome=null){
   const incoming=target===this.g.player&&opts.src===this.target;
   if(!incoming&&target!==this.target&&target!==this.ally)return;

@@ -2,7 +2,21 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from 'three';
 import {mainCombatFixture} from './helpers/main-combat-fixture.mjs';
-import {MeleeTrial} from '../src/engine/melee-trial.js';
+import {MeleeTrial,trialLesson,grabLesson,meleeLessonScheme,MELEE_TRIALS} from '../src/engine/melee-trial.js';
+
+test('touch and controller lessons use their action names instead of keyboard prompts',()=>{
+ const x=mainCombatFixture({mode:'powerworld'});try{
+  for(const kind of MELEE_TRIALS){
+   assert.doesNotMatch(trialLesson(kind,x.p.def,'touch'),/\b[VQE]\b|F\/Space/);
+   assert.match(trialLesson(kind,x.p.def,'touch'),/Punch/);
+   assert.match(trialLesson(kind,x.p.def,'pad'),/Strike/);
+  }
+  assert.match(grabLesson('touch'),/hold Throw then release/);assert.match(grabLesson('kbm'),/hold E then release/);
+  assert.equal(meleeLessonScheme({touch:{enabled:true},pad:{active:true}}),'touch');
+  assert.equal(meleeLessonScheme({touch:{enabled:false},pad:{active:true}}),'pad');
+  assert.equal(meleeLessonScheme({pad:{active:false}}),'kbm');
+ }finally{x.close();}
+});
 
 test('beam contact during a missed punch cannot turn the swing report into contact',()=>{
  const x=mainCombatFixture({mode:'powerworld'});try{
