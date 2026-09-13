@@ -71,6 +71,15 @@ two-handed weapon families still require review.
 
 ## Still required before claiming every hold finished
 
+Inventory acceptance update: `tools/melee-inventory-browser.mjs` passed real
+keyboard/mouse Inventory → Open armory → Blades → bat LMB assignment → Equip →
+Escape → mouse attack in PowerWorld as SARGE. Native pose ownership confirms
+the attack used the bat. No page errors. Recording and two screenshots are in
+`artifacts/marketing/melee-inventory-review/`. Build passed. This does not prove
+target damage or every inventory item; those retain their separate checks.
+The old firearm-only issuance gate now accepts catalog melee weapons, with
+soldier restrictions unchanged. Inventory has an explicit route to the armory.
+
 - Full motion review of every registry weapon: idle, aim, attack, recovery,
   flight, block, grip transitions, equipment removal and ragdoll/respawn.
 - Approve and tune full slash/chop sequences, and add bat swing and spear

@@ -10,12 +10,14 @@ import {runSlot} from '../src/engine/abilities.js';
 import {firearmAmmo,requestReload,updateFirearmReload} from '../src/engine/firearm-ammo.js';
 import * as armory from '../src/engine/armoryUI.js';
 
-test('issuance rejects stale, dead, non-soldier and non-firearm requests',()=>{
+test('issuance accepts catalog weapons and rejects stale, dead, non-soldier and unknown requests',()=>{
  assert.equal(typeof armory.loadoutIssueError,'function');
  const f={alive:true,def:{archetype:'soldier'},slots:{}},g={player:f,entities:[f]};
  assert.equal(armory.loadoutIssueError(g,f,'m24'),null);
  assert.ok(armory.loadoutIssueError(g,{...f},'m24'));
- assert.ok(armory.loadoutIssueError(g,f,'katana'));
+ assert.equal(armory.loadoutIssueError(g,f,'katana'),null);
+ assert.equal(armory.loadoutIssueError(g,f,'bat'),null);
+ assert.ok(armory.loadoutIssueError(g,f,'nonexistent'));
  f.alive=false;assert.ok(armory.loadoutIssueError(g,f,'m24'));
  f.alive=true;f.def.archetype='hero';assert.ok(armory.loadoutIssueError(g,f,'m24'));
 });

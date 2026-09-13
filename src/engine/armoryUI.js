@@ -17,7 +17,7 @@
 // its own crack/body/tail/mech profile precisely so twelve weapons are twelve weapons and not one
 // bang twelve times. That work is already paid for and was, until now, only audible by being shot.
 // =================================================================================================
-import { FIREARMS, BLADES, GEAR, LOADOUTS, weaponById, gearById, firearmById } from '../data/armory.js';
+import { FIREARMS, BLADES, GEAR, LOADOUTS, weaponById, gearById } from '../data/armory.js';
 
 const LS = 'threshold_loadout_v1';
 
@@ -75,11 +75,11 @@ export function loadLoadout() {
 export function saveLoadout(l) { try { localStorage.setItem(LS, JSON.stringify(l)); } catch (e) {} return l; }
 
 export function loadoutIssueError(game,actor,id){
-  if(!actor||actor!==game?.player||!game.entities?.includes(actor))return 'Enter a match with a soldier to issue a firearm.';
+  if(!actor||actor!==game?.player||!game.entities?.includes(actor))return 'Enter a match with a soldier to issue a weapon.';
   if(!actor.alive||actor.state==='ko'||actor.downedT>0||game.matchOver)return 'Cannot issue while down or after the match.';
-  if(actor.def?.archetype!=='soldier')return 'Firearm issuance requires a soldier.';
+  if(actor.def?.archetype!=='soldier')return 'Weapon issuance requires a soldier.';
   if(actor._carry||actor.grabbedBy||actor.grabbing||actor._aircraftVehicle||actor._scoutVehicle)return 'Leave the current action or vehicle before issuing.';
-  if(!firearmById(id))return 'Select a firearm for LMB first.';
+  if(!weaponById(id))return 'Select a weapon for LMB first.';
   return null;
 }
 
@@ -236,13 +236,13 @@ export function openArmory(game, hud) {
       <div class="amslot"><b>RMB</b><span>${load.rmb ? (weaponById(load.rmb) || {}).n || load.rmb : '—'}</span></div>
       <div class="amslot"><b>Gear</b><span>${load.gear.length ? load.gear.map(g => (gearById(g) || {}).n || g).join(', ') : '—'}</span></div>
       <div class="amnote" role="status" id="amIssueStatus">${issueNotice}</div>
-      <div class="ambtns"><button id="amIssue" ${loadoutIssueError(game,actor,load.lmb)?'disabled':''}>Equip selected firearm · LMB</button></div>
-      <div class="amnote">${loadoutIssueError(game,actor,load.lmb)||'Replaces your primary firearm. LMB fires · R reloads · wheel selects attacks. Other saved slots are not issued here.'}</div>`;
+      <div class="ambtns"><button id="amIssue" ${loadoutIssueError(game,actor,load.lmb)?'disabled':''}>Equip selected weapon · LMB</button></div>
+      <div class="amnote">${loadoutIssueError(game,actor,load.lmb)||(weaponById(load.lmb)?.ab.type==='melee'?'Replaces your primary weapon. LMB swings · connect with the weapon, then recover.':'Replaces your primary firearm. LMB fires · R reloads · wheel selects attacks.')+' Other saved slots are not issued here.'}</div>`;
     rail.querySelector('#amIssue').onclick=()=>{
       const error=loadoutIssueError(game,actor,load.lmb);
       if(error){issueNotice=error;renderRail();return;}
       game.retireCombatViewInput?.(actor);
-      const row=firearmById(load.lmb),issued=game.equipFrom(actor,row,{primary:true});
+      const row=weaponById(load.lmb),issued=game.equipFrom(actor,row,{primary:true});
       issueNotice=issued?`EQUIPPED — ${row.n} · LMB`:'Issuance failed. Your current weapon is unchanged.';
       if(issued){hud?.buildSlots?.({...actor.def,abilities:{...actor.def.abilities,lmb:actor.slots.lmb.def}});hud?.selectSlot?.('lmb',actor._selSecondary);}
       renderRail();
