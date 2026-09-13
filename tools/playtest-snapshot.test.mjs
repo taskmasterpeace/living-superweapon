@@ -6,3 +6,14 @@ test('failure bundle preserves original error when browser capture is unavailabl
  const {saveSnapshot}=await import('./playtest/diagnostics.mjs');const {mkdtemp,readFile,rm}=await import('node:fs/promises');const {tmpdir}=await import('node:os');const path=await import('node:path');const dir=await mkdtemp(path.join(tmpdir(),'pw-diagnostics-'));
  try{const page={evaluate:async()=>{throw new Error('page closed');},screenshot:async()=>{throw new Error('no renderer');}};await saveSnapshot(page,dir,{error:new Error('Expected melee contact'),errors:[]});const data=JSON.parse(await readFile(path.join(dir,'failure.json'),'utf8'));assert.equal(data.error.message,'Expected melee contact');assert.equal(data.observationError,'page closed');assert.equal(data.screenshotError,'no renderer');}finally{await rm(dir,{recursive:true,force:true});}
 });
+test('context distinguishes managed objects from focus and reports real cooldowns without claiming eligibility',()=>{
+ const old=globalThis.PW;try{
+ const f={alive:true,pos:{x:0,y:0,z:0},slots:{lmb:{def:{name:'Heat Ray',type:'beam',cost:4,kiPerSec:16},cd:.25}},items:[{kind:'beacon',charges:0,cd:8,state:'cooldown'}]};
+ globalThis.PW={game:{running:true,player:f,_focus:{id:'reset',verb:'RESET PRACTICE',enabled(){throw Error('Do not call');}}}};
+ let c=snapshotBrowser().inputContext;assert.equal(c.interaction.mode,'focused-interaction');assert.equal(c.powers[0].cooldown,.25);assert.equal(c.gadgets[0].charges,0);
+ f.grabbing={id:9};c=snapshotBrowser().inputContext;assert.equal(c.interaction.mode,'manage-person');assert.equal(c.interaction.target,9);
+ delete f.grabbing;f._carry={kind:'rock'};assert.equal(snapshotBrowser().inputContext.interaction.mode,'manage-prop');
+ delete f._carry;delete PW.game._focus;assert.equal(snapshotBrowser().inputContext.interaction.eligibility.startsWith('unresolved'),true);
+ PW.game.combatOverlayOpen=true;assert.equal(snapshotBrowser().inputContext.reason,'overlay');
+ }finally{globalThis.PW=old;}
+});

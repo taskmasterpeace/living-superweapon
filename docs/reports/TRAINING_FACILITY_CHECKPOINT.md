@@ -566,3 +566,11 @@ New command: `node tools/playtest/run.mjs --scenario practice-injury-reset`. It 
 The first run (artifacts/playtest/2026-09-13T05-52-14.732Z-practice-injury-reset) exposed a gameplay defect: MeleeTrial.clear retired actors and recordings but retained old hit records. After reset, a previous hit could be mistaken for current-attempt activity. New drills now clear their per-attempt records. The regression test asserts this alongside target replacement and interrupted-attempt cleanup.
 
 Passed replacement: artifacts/playtest/2026-09-13T05-53-56.075Z-practice-injury-reset. Three fresh injury/reset cycles restored health to 130, kept the player/deployment manifest/reserves, and replaced the target with no actor accumulation. Silent video, screenshot and snapshots saved. Fifteen melee-trial tests passed; production build passed with existing chunk-size/import warnings. Previous failed evidence retained. KO, carried/thrown props and active-power reset cases remain separate.
+
+## Context in AI snapshots — 2026-09-13
+
+Every shared snapshot/failure report now includes inputContext: observed suspension reason, contextual interaction mode, bounded power cooldown/charge/activity/cost data and gadget stock/cooldown state. Held people/props take precedence over focused panels, matching contextual grab handling. Focus is explicitly last-observed and rechecked by gameplay; without focus, pickup/grab eligibility remains unresolved rather than fabricated. No enabled/onUse/gameplay callbacks execute during observation.
+
+Power slotId values are DATA identifiers, not keyboard keys (q does not mean press Q; Q guards). Use --controls and the selected action binding. Context is observation, not a promise that an action is eligible while stunned, out of range or otherwise restricted.
+
+Native grab/release passed at artifacts/playtest/2026-09-13T05-56-23.590Z-melee-grab-guard. Its snapshots showed manage-person while holding target 2 and acquire after release, plus actual SOL power costs. Those captured artifacts used the initial field name key; final schema names it slotId to avoid keyboard ambiguity. Four snapshot tests passed, including priority, cooldowns, suspension and no-callback guarantees. This is part of #41, not full live discovery or action eligibility coverage.
