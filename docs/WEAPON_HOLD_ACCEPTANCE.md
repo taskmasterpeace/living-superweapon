@@ -186,3 +186,9 @@ No unfinished fleet assets are imported by this repair.
 - Bow review recording now invokes the native bow ability, release and projectile update, replacing the earlier animation-clock-only capture.
 - Still required: upward/downward draw alignment and cover clearance, interruption/KO/form timing, all views and payload presentation. The current body brace does not yet track arbitrary pitch through the full bow plane.
 
+
+### Immediate bow interruption cleanup
+- Cancellation now clears the draw blend, restores hidden equipment and resets the string immediately, including paused/focus-loss paths. KO cleanup cancels the bow slot and its sustain loop; repeated cleanup remains idempotent.
+- Direct slot admission now cancels an existing bow draw when incapacitated. Sleep/downed presentation also refuses to reapply the draw.
+- Eight interruption cases cover explicit cancellation, stagger, stun, freeze, grabbed, sleep, downed and KO. They assert immediate knife restoration, one sustain stop and no delayed arrow on release. Bow and held-action regression set passed (25 before the three additional status cases; all eight interruption cases pass). Build passed.
+

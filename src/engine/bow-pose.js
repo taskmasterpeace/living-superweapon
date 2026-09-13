@@ -23,7 +23,7 @@ export function restoreBowEquipment(f){
 // Only presentation is owned here; the ability retains charge and release timing.
 export function animateBowDraw(f){
  const p=f.parts,w=Math.min(1,Math.max(0,f._bowDraw||0));
- if(!f._openSky||!p.rig||!f.alive||w<.001||f.guarding||f.poseGuard>.02||f.staggerT>0||f.stunT>0||f.frozenT>0||f.grabbedBy||f.grabState||f.mstate||f._abilityMeleePose){restoreBowEquipment(f);return false;}
+ if(!f._openSky||!p.rig||!f.alive||w<.001||f.guarding||f.poseGuard>.02||f.staggerT>0||f.stunT>0||f.frozenT>0||f.sleepT>0||f.downedT>0||f.grabbedBy||f.grabState||f.mstate||f._abilityMeleePose){restoreBowEquipment(f);return false;}
  let bow,side;
  for(const s of [-1,1]){const h=(s<0?p.armL:p.armR).children[2];const b=h.children.find(o=>o.visible&&o.userData.weaponKind==='bow');if(b){bow=b;side=s;break;}}
  const string=bow?.getObjectByName('bow-string');if(!string){restoreBowEquipment(f);return false;}

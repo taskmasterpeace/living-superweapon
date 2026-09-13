@@ -13,7 +13,7 @@ import {TELEPORT_TIERS} from '../data/teleport-tuning.js';
 import {teleportDestination} from './teleport-destination.js';
 import {handEmissionPosition,volleyPattern,volleySides,attackEntryCost} from './hand-emission.js';
 import {firearmEmitter} from './weapon-emission.js';
-import {bowEmitter} from './bow-pose.js';
+import {bowEmitter,restoreBowEquipment} from './bow-pose.js';
 import {firearmAmmo,emptyFirearm,cancelFirearmReload} from './firearm-ammo.js';
 import {energyShellMaterial} from './energy-burst-material.js';
 import {conflictingHandSlot} from './cast-channels.js';
@@ -106,7 +106,7 @@ export function cancelHeldSlot(c,key) {
     if(st._loop){st._loop.stop();st._loop=null;}
     if(st.def.type==='beam'&&st.active&&(!st.def.remoteDetonate||st.active.pendingLaunch)){st.active.end();st.active=null;cooldown(c,st.def,st);}
   st.cd=Math.max(existingCd,st.cd||0);
-  if(st.def.type==='bow')c._bowDrawT=0;
+  if(st.def.type==='bow'){c._bowDrawT=0;c._bowDraw=0;restoreBowEquipment(c);}
   if(c.state==='charge'&&!Object.values(c.slots).some(s=>s.charging||s.building||s.drawing||s.active?.charging))c.state='idle';
 }
 export function cancelHeldAttacks(c) {
@@ -137,6 +137,7 @@ export function clearSlotFx(c) {
   c._game?.projectiles?.retirePendingNaniteShots?.(c);
   for (const k in c.slots) {
     const s = c.slots[k];
+    if(s.def.type==='bow')cancelHeldSlot(c,k);
     if(s.def.type==='rush')clearRush(s);
     if(s.def.type==='melee'){s.t=0;s.hit?.clear();}
     s._handsBusy=false;
@@ -1244,7 +1245,7 @@ export function runSlot(c, key, inp, g) {
     // Direct authoring/replay calls do not pass through a controller. Retained
     // contact handlers own their loop here; traveling beams keep their existing
     // projectile-manager interruption and inspection-frame pointer contract.
-    if(st.def.type==='cone'||st.def.type==='lifedrain')cancelHeldSlot(c,key);
+    if(st.def.type==='cone'||st.def.type==='lifedrain'||st.def.type==='bow')cancelHeldSlot(c,key);
     return;
   }
   if(c._throwAction&&(inp.pressed||inp.held)&&!remoteAttack(c,st))return;
