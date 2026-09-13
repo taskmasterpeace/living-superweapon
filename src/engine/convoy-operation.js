@@ -1,3 +1,4 @@
+import {sampleObjective} from './sample-objective.js';
 import * as THREE from 'three';
 import {planConvoyRoute} from './convoy-route.js';
 import {ROSTER} from '../data/characters.js';
@@ -131,7 +132,7 @@ export class ConvoyOperation{
    else {const desired=Math.atan2(dx,dz),angle=Math.atan2(Math.sin(desired-v.yaw),Math.cos(desired-v.yaw));const before=v.mesh.position.clone();this.convoy.driving.advance(v,{throttle:Math.abs(v.speed)>18?0:.55,steer:Math.max(-1,Math.min(1,angle*2)),brake:Math.abs(angle)>1&&Math.abs(v.speed)>8},dt);this.blockedFor=v.mesh.position.distanceTo(before)<.01?this.blockedFor+dt:0;if(this.blockedFor>4)this.stop();}
   }
   if(this.cargoOwner===p&&this.scientistLeader===p&&!f._scoutVehicle&&Math.hypot(p.pos.x-this.destination.x,p.pos.z-this.destination.z)<24&&f.pos.distanceTo(p.pos)<24){this.finish(true,'Scientist and recovered cargo extracted.');return;}
-  if(this.hud)this.hud.textContent=`${this.assignment.toUpperCase()} · ${this.state.toUpperCase()} — ${this.state==='waiting'?'Find and escort the scientist at the lab':this.state==='loaded'?'DISPATCH at the convoy':this.state==='disabled'?'Convoy stopped: escort the scientist and secure the cargo':this.state==='travel'?'Convoy moving to the depot': 'Escort scientist to convoy'} · ${operationGuidance(this)} · Cargo ${this.cargoOwner?'secured':'aboard'} · Scientist ${Math.ceil(f.hp)} HP`;
+  if(this.hud)this.hud.textContent=sampleObjective(this.g,operationGuidance(this))||`${this.assignment.toUpperCase()} · ${this.state.toUpperCase()} — ${this.state==='waiting'?'Find and escort the scientist at the lab':this.state==='loaded'?'DISPATCH at the convoy':this.state==='disabled'?'Convoy stopped: escort the scientist and secure the cargo':this.state==='travel'?'Convoy moving to the depot': 'Escort scientist to convoy'} · ${operationGuidance(this)} · Cargo ${this.cargoOwner?'secured':'aboard'} · Scientist ${Math.ceil(f.hp)} HP`;
  }
  followScientist(dt){
   const f=this.scientist,v=this.vehicle;
