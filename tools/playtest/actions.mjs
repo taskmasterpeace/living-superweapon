@@ -2,13 +2,14 @@ import {POWERWORLD_CONTROLS} from '../../src/core/powerworld-controls.js';
 const histories=new WeakMap(),active=new WeakSet();
 export const actionCatalog=()=>Object.fromEntries(['strike','guard','grab','item','fly','up','down'].map(name=>[name,{device:'keyboard',code:POWERWORLD_CONTROLS[name]}]).concat([['primary',{device:'mouse',button:'left'}],['secondary',{device:'mouse',button:'right'}]]));
 export const actionHistory=page=>(histories.get(page)||[]).map(x=>({...x}));
-export async function performAction(page,name,{holdMs=80}={}){
+export async function performAction(page,name,{holdMs=80,until=null}={}){
  const binding=actionCatalog()[name];
  if(!Object.hasOwn(actionCatalog(),name))throw new Error('Unknown playtest action: '+name);
  if(!Number.isFinite(holdMs)||holdMs<20||holdMs>1500)throw new Error('holdMs must be 20–1500 milliseconds');
+ if(until!==null&&(until!=='melee-charged'||name!=='strike'))throw new Error('Unsupported action release condition');
  if(active.has(page))throw new Error('Concurrent action rejected; await the current action');
  const history=histories.get(page)||[];histories.set(page,history);
- const record={action:name,holdMs,requestedAt:new Date().toISOString(),status:'pending'};history.push(record);if(history.length>64)history.shift();active.add(page);
+ const record={action:name,holdMs:until?null:holdMs,until,requestedAt:new Date().toISOString(),status:'pending'};history.push(record);if(history.length>64)history.shift();active.add(page);
  const key=binding.code?.replace(/^Key/,'').toLowerCase();
  const keyName=binding.code?.startsWith('Key')?key:binding.code;
  const down=()=>binding.device==='mouse'?page.mouse.down({button:binding.button}):page.keyboard.down(keyName);
@@ -17,7 +18,7 @@ export async function performAction(page,name,{holdMs=80}={}){
  try{
   const before=await page.evaluate(()=>{const g=globalThis.PW?.game;return {ready:!!(g?.running&&g.player?.alive&&!g.combatOverlayOpen),time:g?.time};});
   if(!before.ready||!Number.isFinite(before.time))throw new Error('Gameplay input unavailable: paused, overlay, no living player or no runtime');
-  record.simulationBefore=before.time;await down();sent=true;await page.waitForTimeout(holdMs);
+  record.simulationBefore=before.time;await down();sent=true;if(until==='melee-charged'){await page.waitForFunction(()=>globalThis.PW?.game?.player?.meleeCharge>=.6,null,{timeout:10000,polling:100});record.chargeAtRelease=await page.evaluate(()=>PW.game.player.meleeCharge);}else await page.waitForTimeout(holdMs);
   await up();sent=false;record.released=true;
   await page.waitForFunction(t=>globalThis.PW?.game?.time>t,before.time,{timeout:5000,polling:100});
   record.simulationAfter=await page.evaluate(()=>PW.game.time);record.status='dispatched';

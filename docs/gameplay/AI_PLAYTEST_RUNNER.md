@@ -50,3 +50,7 @@ Scenario authors can import `performAction(page, 'strike', {holdMs:80})` from to
 ## Parameterized counterplay
 
 `--scenario melee-guard-rear` uses the same guard script with registry-owned `{facing:'rear'}` configuration. Both variants record bounded pre-contact guard observations. Rear mode requires guard active immediately before actual contact, health damage and no energy absorption; front mode requires zero health loss and positive guard-energy spending. Configuration is included in run.json; no arbitrary CLI script paths are accepted. This pattern permits explicit scenario variants without duplicating the test controller.
+
+## Native charge and guard crush
+
+`--scenario melee-guard-crush` uses the existing guard script against a blocking trainer. It requires actual GUARD BROKEN contact, positive guard-energy spending and no health leak through funded guard. `performAction(page,'strike',{until:'melee-charged'})` holds native V until the real meleeCharge reaches 0.6, observes only, then releases; the wait is capped at 10 seconds and failures still release input. The action log records chargeAtRelease. Fixed real-time holds remain available for taps. This avoids treating browser startup stalls as sufficient in-game charge. It does not set charge or call the attack handler directly.
