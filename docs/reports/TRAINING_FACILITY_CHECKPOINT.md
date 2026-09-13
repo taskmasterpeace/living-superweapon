@@ -302,3 +302,11 @@ Candidate: http://127.0.0.1:5184/powerworld.html . Local integration worktree; n
 - Native flight-camera screenshot inspected: the formerly screen-filling text no longer crosses the player or ring. F/Space/W/Control flight-audio capture also passed with no page errors and no lingering flight loops after landing.
 - Full course check: normal flight input after documented initial position/camera staging crossed all six ordered rings, counted one lap, left the player alive and generated zero page errors. This is course acceptance, not a claim that every movement or full goal requirement is complete.
 - Evidence: artifacts/marketing/flight-lane-signage-2026-09-12/flight.png, flight.webm, result.json; artifacts/marketing/flight-course-2026-09-12/flight-course.webm, lap.png, result.json.
+
+## Animation worker intake and in-library handoff — 2026-09-12
+- Added unit-direction and unit-quaternion validation to the shared native animation catalog. Previously finite zero-filled limb/rotation data passed; a regression was observed failing before the validation fix. Existing 10 clips remain valid.
+- Added read-only tools/validate-animation-bank.mjs for candidate banks, with per-clip JSON diagnostics and nonzero exit status on invalid data. It does not install content or change balance.
+- Expanded ANIMATION_CONTENT_WORKER_HANDOFF.md with the exact native 45-number frame layout, basis/normalization guidance, categories, command and honest boundaries. Download authoring guide is now available directly in Animation Library; bundled from the same document to avoid a second stale copy.
+- Verification: 10 catalog/draft/attention tests passed; current-bank CLI and full 10-clip catalog export passed; npm run build passed with existing bundle warnings. Native browser downloaded and inspected the guide, played Jab from back and side cameras, and reported no page errors. Screenshot inspected.
+- Evidence: artifacts/marketing/animation-authoring-guide-2026-09-12/authoring.webm, library.png, authoring-guide.md, result.json.
+- Remaining: procedural motion families are still outside this catalog; paired grab authoring and actual audio audit linkage are not complete. The goal remains active. This is data validation and workflow evidence, not approval of every motion or body-size combination.

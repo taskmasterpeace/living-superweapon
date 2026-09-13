@@ -26,8 +26,31 @@
 - node authoring/bin/authoring.js build authoring/recipes/motion/hero-ual/recipe.json
 - node authoring/bin/authoring.js validate
 - node tools/export-animation-catalog.mjs
+- node tools/validate-animation-bank.mjs src/data/strike-bank.json Melee
 - node --test tools/animation-catalog.test.mjs
 - node --import ./tools/helpers/css-test-hook.mjs --test tools/strike-marker-assignment.test.mjs
 - npm run build
 
 Use the target recipe path for your new content and scope tests to the actual consumer. Validate authoring catalog and native animation catalog separately; they are not yet one universal registry. Do not claim FBX support merely because a generic retarget function exists: inspect the source-loading adapter or convert through a documented reproducible step.
+
+## Native bank frame contract
+
+Run `node tools/validate-animation-bank.mjs <your-bank.json> "Melee"` before registering a bank. Other accepted categories are `Locomotion` and `Jump and landing`. Exit code 1 means invalid data; the JSON report lists issues per clip. This command reads files and never installs or overwrites content.
+
+A bank contains a non-empty `clips` object keyed by stable clip names. Each clip needs a positive duration in seconds and at least two equally spaced frames. Every frame has exactly 45 finite numbers:
+
+| Indices | Meaning |
+| --- | --- |
+| 0–2 / 3–5 | Left upper-arm / forearm unit direction |
+| 6–8 / 9–11 | Right upper-arm / forearm unit direction |
+| 12–14 / 15–17 | Left thigh / shin unit direction |
+| 18–20 / 21–23 | Right thigh / shin unit direction |
+| 24–27 | Pelvis quaternion, x/y/z/w |
+| 28–31 | Body quaternion, x/y/z/w |
+| 32–35 | Head quaternion, x/y/z/w |
+| 36–39 / 40–43 | Left / right boot quaternion, x/y/z/w |
+| 44 | Foot-suspension scalar consumed by the native support solver |
+
+Directions and quaternions must have unit length (the validator allows 0.01 rounding tolerance). Zero-filled poses are invalid. Use the existing retarget recipe to produce the correct target basis; do not paste source joint translations into these direction slots. Melee clips also require `contactStart` and `contactEnd` in seconds, ordered within duration. Native simulation still owns movement and attack balance.
+
+Passing data validation is not motion approval. Watch the full clip and loop seam on multiple body sizes, then verify the native contact, interruption and recovery cases above. Current library coverage is the four imported banks; procedural flight, grabbing and other runtime poses still require separate catalog adapters. Audio audit badges remain unaudited until actual assignments and playback are verified.

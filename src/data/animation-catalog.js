@@ -17,6 +17,13 @@ export function validateAnimationClip(clip,category) {
   if(!Number.isFinite(clip.duration)||clip.duration<=0)issues.push('invalid-duration');
   if(!Array.isArray(clip.frames)||clip.frames.length<2)issues.push('missing-frames');
   else if(clip.frames.some(f=>!Array.isArray(f)||f.length!==45||!f.every(Number.isFinite)))issues.push('invalid-pose-frame');
+  else {
+    // Playback interpolates unit directions and quaternions. Finite numbers
+    // alone cannot establish a usable skeletal pose; allow export rounding.
+    const unit=(f,start,count)=>Math.abs(Math.hypot(...f.slice(start,start+count))-1)<=.01;
+    if(clip.frames.some(f=>[0,3,6,9,12,15,18,21].some(i=>!unit(f,i,3))))issues.push('invalid-limb-direction');
+    if(clip.frames.some(f=>[24,28,32,36,40].some(i=>!unit(f,i,4))))issues.push('invalid-joint-rotation');
+  }
   if(category==='Melee') {
     if(!Number.isFinite(clip.contactStart)||!Number.isFinite(clip.contactEnd))issues.push('missing-contact-markers');
     else if(clip.contactStart<0||clip.contactEnd<clip.contactStart||clip.contactEnd>clip.duration)issues.push('invalid-contact-markers');

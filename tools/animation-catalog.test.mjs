@@ -21,3 +21,11 @@ test('invalid frames and contact windows are surfaced rather than silently repai
  assert.equal(resolveAnimationClip('missing/clip'),null);
  assert.equal(buildAnimationCatalog().entries.find(e=>e.id==='locomotion/walk').audioStatus,'not-audited');
 });
+test('rejects unusable directions and rotations even when all 45 values are finite',()=>{
+ const source=resolveAnimationClip('strike/jab');
+ const broken=(offset,count)=>({...source,frames:source.frames.map(f=>{const copy=[...f];copy.fill(0,offset,offset+count);return copy;})});
+ assert.ok(validateAnimationClip(broken(0,3),'Melee').includes('invalid-limb-direction'));
+ assert.ok(validateAnimationClip(broken(24,4),'Melee').includes('invalid-joint-rotation'));
+ const stretched={...source,frames:source.frames.map(f=>f.map((v,i)=>i<3?v*2:v))};
+ assert.ok(validateAnimationClip(stretched,'Melee').includes('invalid-limb-direction'));
+});
