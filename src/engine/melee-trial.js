@@ -15,6 +15,7 @@ export function meleeLesson(def,scheme='kbm'){
  if(scheme==='pad')return (combo?'Tap Strike; repeat for combo':'Tap Strike: heavy slam')+' · hold/release Strike: charged heavy · hold Guard: frontal guard · Grab: grab or interact · Evade: dodge';
  return (combo?'V tap: punch; repeat for combo':'V tap: heavy slam')+' · hold/release V: charge heavy · Q: frontal guard · E: grab · double-tap direction: dodge';
 }
+export const GUARD_LESSON='Hold guard while facing the attacker: it stays up through ordinary blocked hits. Energy pays for damage; an empty energy pool lets unpaid damage through. The guard meter also wears down. Heavy guard crush breaks it; grabs bypass it. You cannot guard while attacking, carrying, stunned or recovering from a break. Release to recover the guard meter; turn or dodge attacks from behind.';
 export const MELEE_TRIALS=['stationary','retreat','guard','dodge','defend','airborne','air-defense'];
 export function trialLesson(kind,def,scheme='kbm'){
  const lesson={stationary:'Face the target and tap V inside your approach range.',retreat:'Tap V to commit an approach. Walking retreat should not outrun the entry; a sideways dodge can.',guard:'This target blocks. Try a punch, charged heavy, then E grab: compare energy absorption and guard break.',dodge:'This target dodges sideways. Time your approach after its dodge rather than expecting the strike to home.',defend:'Face the incoming fighter and hold Q. Funded frontal guard spends energy before health. Release and reposition between attacks.'};
@@ -23,6 +24,7 @@ export function trialLesson(kind,def,scheme='kbm'){
  let text=lesson[kind];
  if(scheme==='touch')text=text.replaceAll('tap V','tap Punch').replaceAll('Tap V','Tap Punch').replaceAll('hold Q','hold Block').replaceAll('E grab','Grab').replaceAll('F/Space','Rise').replaceAll('double-tap sideways','use Evade sideways');
  if(scheme==='pad')text=text.replaceAll('tap V','tap Strike').replaceAll('Tap V','Tap Strike').replaceAll('hold Q','hold Guard').replaceAll('E grab','Grab').replaceAll('F/Space','Fly / Rise').replaceAll('double-tap sideways','use Evade sideways');
+ if(kind==='defend'||kind==='air-defense'||kind==='guard')text+=' '+GUARD_LESSON;
  return text+' '+meleeLesson(def,scheme);
 }
 export const meleeLessonScheme=g=>g.touch?.enabled?'touch':g.pad?.active&&!g.touch?.enabled?'pad':'kbm';

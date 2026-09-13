@@ -1,6 +1,6 @@
 import test from 'node:test';import assert from 'node:assert/strict';import * as THREE from 'three';
 import {mainCombatFixture} from './helpers/main-combat-fixture.mjs';import {performEvade} from '../src/engine/abilities.js';
-function run(hz,dy=0,dodge=false,wall=false,drift=0){const x=mainCombatFixture({mode:'powerworld',hero:'sol'}),a=x.p,b=x.foe({y:40+dy,z:24});try{
+function run(hz,dy=0,dodge=false,wall=false,drift=0,distance=24){const x=mainCombatFixture({mode:'powerworld',hero:'sol'}),a=x.p,b=x.foe({y:40+dy,z:distance});try{
  x.g.audio={...x.g.audio,yell(){}};x.g.vfx.impact=()=>{};x.g.vfx.impactStar=()=>{};a.pos.set(0,40,0);a._altTag=()=>{};
  for(const f of [a,b]){f._openSky=true;f._chaseKb=true;f.invuln=0;f.flying=true;f.hp=f.maxHp=1000;f.vel.set(0,0,0);f._sync();}
  if(wall)x.w.cover.push({x:0,z:12,hx:12,hz:2,bottom:0,top:100,h:100,finiteBuilding:true,projectileShape:'box'});
@@ -17,3 +17,8 @@ for(const hz of [30,60,120]){test('air dodge escapes at '+hz+'Hz',()=>assert.equ
 
 
 for(const hz of [30,60,120])test('air entry follows observed descending drift at '+hz+'Hz',()=>assert.ok(run(hz,-10,false,false,-12).damage>0));
+for(const hz of [30,60,120]){
+ test('long aerial closing burst connects at 70u / '+hz+'Hz',()=>assert.ok(run(hz,0,false,false,0,70).damage>0));
+ test('long aerial closing burst remains dodgeable at '+hz+'Hz',()=>assert.equal(run(hz,0,true,false,0,70).damage,0));
+ test('long aerial closing burst cannot pass through walls at '+hz+'Hz',()=>assert.equal(run(hz,0,false,true,0,70).damage,0));
+}

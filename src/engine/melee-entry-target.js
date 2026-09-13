@@ -18,6 +18,8 @@ export function meleeEntryEligibility(game,f,target,range){
 // Select only at strike start. Once committed, dodging changes the outcome, not the aim.
 export function meleeEntryTarget(game,f,range){
  if(f.blindT>0)return null;
+ const locked=f===game.player?game.hardLock:null;
+ if(locked&&meleeEntryEligibility(game,f,locked,range).eligible)return locked;
  let result=null,best=-Infinity;
  for(const target of game.entities||[]){
   const {eligible,distance,alignment}=meleeEntryEligibility(game,f,target,range);if(!eligible)continue;

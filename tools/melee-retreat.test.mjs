@@ -15,3 +15,7 @@ for(const hz of [20,30,60,120]){test('RAGE catches walking retreat with native c
 
 
 for(const hz of [20,30,60,120])for(const distance of [20,27]){test('WEBLINE catches retreat from '+distance+'u at '+hz+'Hz',()=>assert.ok(run(hz,false,'webline',distance)>0));test('WEBLINE committed pounce permits dodge from '+distance+'u at '+hz+'Hz',()=>assert.equal(run(hz,true,'webline',distance),0));}
+for(const hz of [30,60,120])for(const [hero,distance]of [['sol',35],['webline',55],['rage',65]]){
+ test(`${hero} long approach catches retreat at ${distance}u / ${hz}Hz`,()=>assert.ok(run(hz,false,hero,distance)>0));
+ test(`${hero} long approach allows sideways dodge at ${hz}Hz`,()=>assert.equal(run(hz,true,hero,distance),0));
+}

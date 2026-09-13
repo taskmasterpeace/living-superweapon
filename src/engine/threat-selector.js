@@ -1,6 +1,6 @@
 import {ROSTER} from '../data/characters.js';
 import {portraitOf} from './player-status-portrait.js';
-import {MELEE_TRIALS} from './melee-trial.js';
+import {MELEE_TRIALS,GUARD_LESSON} from './melee-trial.js';
 import '../styles/threat-selector.css';
 const names={stationary:'Stationary target',retreat:'Walking retreat',guard:'Blocking target',dodge:'Dodging target',defend:'Practice your guard',airborne:'Airborne target','air-defense':'Aerial defense'};
 export function openThreatSelector(game,trial,onClose=()=>{}){
@@ -8,6 +8,7 @@ export function openThreatSelector(game,trial,onClose=()=>{}){
  const previous=game.running,focus=document.activeElement;let selected=trial.selectedThreat||ROSTER[0].id,closed=false;
  const dialog=document.createElement('dialog');dialog.className='threat-selector';dialog.setAttribute('aria-label','Choose a Threat Room opponent');
  dialog.innerHTML=`<header><div><small>THREAT ROOM / OPPONENT LIBRARY</small><h1>CHOOSE YOUR THREAT</h1><p>Preview a character, learn a defense, or face their full powers.</p></div><button data-close>Back to room</button></header><div class="threat-browser"><section><div class="threat-search"><label>Find a character<input type="search" placeholder="Name, role or threat…"></label><label>Class<select data-class><option value="all">All characters</option><option value="soldier">Soldier</option><option value="lsw">Living superweapon</option></select></label></div><p data-count aria-live="polite"></p><div class="threat-cards" aria-label="Characters"></div></section><aside><img data-portrait alt=""><small data-identity></small><h2 data-name></h2><p data-role></p><p data-kit></p><label>Teaching drill<select data-drill></select></label><p>Drills use the selected body and scripted behavior. Full-power fights use its normal AI and abilities.</p><p data-ally-label></p><button data-ally>Use selected as practice teammate</button><button data-no-ally>Practice without teammate</button><button data-preview>Preview in room</button><button data-stop>Stop current threat</button><button data-teach>Start teaching drill</button><button data-fight>Fight full-power opponent</button><p data-status role="status"></p></aside></div>`;
+ const help=document.createElement('details');const summary=document.createElement('summary');summary.textContent='How blocking works';const explanation=document.createElement('p');explanation.textContent=GUARD_LESSON;help.append(summary,explanation);dialog.querySelector('aside').append(help);
  document.body.append(dialog);const $=s=>dialog.querySelector(s),grid=$('.threat-cards'),portraits=new Map();
  const observer=new IntersectionObserver(entries=>{for(const entry of entries)if(entry.isIntersecting){observer.unobserve(entry.target);const def=ROSTER.find(d=>d.id===entry.target.dataset.hero);try{const url=portraits.get(def.id)||portraitOf(def);portraits.set(def.id,url);entry.target.src=url;}catch{entry.target.alt=def.name;}}},{root:grid,rootMargin:'40px'});
  const portrait=def=>{const img=document.createElement('img');img.alt='';img.dataset.hero=def.id;if(portraits.has(def.id))img.src=portraits.get(def.id);else observer.observe(img);return img;};
