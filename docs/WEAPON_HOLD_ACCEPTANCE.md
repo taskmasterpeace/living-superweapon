@@ -146,3 +146,9 @@ soldier restrictions unchanged. Inventory has an explicit route to the armory.
   roll. Passing alignment math alone cannot establish a convincing hold.
 
 No unfinished fleet assets are imported by this repair.
+
+### Paired equipment survives body replacement
+- Fixed paired-claw resources entering the retired body resource set during form changes. Both mounts now leave the old rig before its resources are collected.
+- Regression reproduced premature disposal, then passed after the shared transfer fix. Bat, claws and nodachi each survive three form changes, remount onto the new hands, and release held resources exactly once when dropped.
+- 36 focused equipment/contact/presentation tests pass. This proves equipment lifecycle behavior, not complete visual approval of every weapon hold.
+

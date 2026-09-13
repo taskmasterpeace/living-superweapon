@@ -607,6 +607,10 @@ export class Fighter {
       });
     }
     if(this._gearMesh&&this._gearMesh.parent!==root)root.add(this._gearMesh);
+    // Paired equipment shares the primary item's buffers. Preserve both mounts
+    // before collecting the retired body, or its off-hand copy marks live gear
+    // for disposal during the next temporary detach/remount.
+    if(this._gearPair&&this._gearPair.parent!==root)root.add(this._gearPair);
     retireFighterEquipment(this,{preserveHeld:true});
     disposeHeroSkin(old);
     for(const resource of figureResources(oldRoots))this._retiredFormResources.add(resource);
