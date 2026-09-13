@@ -644,3 +644,9 @@ This is one hostile airborne throw sequence. Friendly catch, defensive escapes, 
 - Added a read-only appearance snapshot to the existing animationLibrary inspection object. Browser acceptance seeds isolated saved profiles for VEGAS/MERC, verifies both previews, then corrupts storage and checks the notice and exact data preservation. No user's live storage edited.
 - `tools/animation-appearance-browser.mjs` passed with zero page errors; saved-pair screenshot inspected (black/gold VEGAS and black MERC). Build passed with existing import/chunk warnings. Evidence: `artifacts/marketing/animation-appearance-2026-09-13/`.
 - Reload or reselect the character to pick up another page's edits. This is appearance parity for the library, not full character-creator completeness or combat simulation in the pose viewer.
+
+### September 13 — character-specific marker selection
+- Animation Library now reloads source/assigned marker times when switching characters. Previously the fields could retain a prior character's values and never loaded the selected character's saved assignment.
+- Precedence is explicit: shared local draft preview, otherwise selected character assignment, otherwise source clip. Draft preview is labeled as requiring assignment. Discard local draft restores the assignment; remove assignment refreshes fields to draft/source without retaining stale timing.
+- Native authoring UI test `tools/animation-marker-selection-browser.mjs` passed selection isolation, reload, draft precedence, discard and unassign. Captured assigned-markers still inspected; zero page errors. Updated older UI test's renamed button. Build passed with existing import/chunk warnings.
+- This corrects authoring state and source-pose marker preview; live attack duration/damage rules remain owned by combat. Evidence: `artifacts/marketing/animation-marker-selection-2026-09-13/`.
