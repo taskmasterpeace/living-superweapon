@@ -105,7 +105,7 @@ export class MeleeSystem {
         rig:f.parts.rig,
         left:f.parts.armL.children[2].getWorldPosition(new THREE.Vector3()),
         right:f.parts.armR.children[2].getWorldPosition(new THREE.Vector3()),
-        weapon:snapshotWeaponSurface(f._meleeMotion?.weapon),
+        weapon:snapshotWeaponSurface(f._meleeMotion?.weapon||f._abilityMeleePose?.weapon),
       });
     }
   }

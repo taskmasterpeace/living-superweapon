@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 import {reachArm} from './hero-rig.js';
+import {animateWeaponStrike} from './melee-weapon-pose.js';
+import {snapshotWeaponSurface} from './melee-weapon-contact.js';
 
 const point=new THREE.Vector3(),guard=new THREE.Vector3(),direction=new THREE.Vector3();
 const inverse=new THREE.Quaternion(),rotation=new THREE.Quaternion(),forward=new THREE.Vector3(0,0,1);
@@ -11,6 +13,13 @@ const smooth=t=>{t=THREE.MathUtils.clamp(t,0,1);return t*t*(3-2*t);};
 export function beginAbilityMeleePose(f,slot){
  if(!f._openSky||!f.parts.rig)return;
  f._abilityMeleePose={slot,elapsed:0,active:slot.t,recovery:.30,direction:f.aim3.clone().normalize(),physicalContact:slot.def.contact==='fist',contactPending:false};
+ const weapon=slot.def.gear&&slot===f.slots._gear?f._gearMesh:null;
+ slot.weaponContact=!!(weapon&&snapshotWeaponSurface(weapon));
+ if(slot.weaponContact){
+  const m=f._abilityMeleePose;m.weapon=weapon;m.side=1;m.physicalContact=true;m.startup=Math.min(.07,m.active*.3);
+  m.point=f.hasAimWorld?f.aimWorld.clone():f.center(new THREE.Vector3()).addScaledVector(m.direction,slot.def.range||slot.def.reach||11);
+  m.weaponPrevious=snapshotWeaponSurface(weapon);
+ }
 }
 export function cancelAbilityMeleePose(f){
  const motion=f._abilityMeleePose;
@@ -28,6 +37,12 @@ export function advanceAbilityMeleePose(f,dt){
 }
 export function animateAbilityMeleePose(f){
  const motion=f._abilityMeleePose,p=f.parts;if(!motion||!p.rig)return false;
+ if(motion.weapon){
+  const phase=motion.elapsed<motion.startup?'startup':motion.elapsed<motion.active?'active':'recover';
+  const t=phase==='startup'?motion.elapsed/motion.startup:phase==='active'?(motion.elapsed-motion.startup)/(motion.active-motion.startup):(motion.elapsed-motion.active)/motion.recovery;
+  const weight=phase==='recover'?1-smooth((t-.55)/.45):1;
+  return animateWeaponStrike(f,THREE.MathUtils.clamp(t,0,1),weight,motion,phase);
+ }
  // The rushing ability can contact on its first simulation tick. Native
  // hitstop deliberately does not advanceActionPose, so the old elapsed-only
  // envelope froze a retracted hand while the victim flew away. The hit set is

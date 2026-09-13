@@ -131,6 +131,10 @@ export const FIREARMS = [
 // ⚠ `slash` is load-bearing: it is what opens WOUNDS (manual §12) and what makes the swing audio
 // pick the metallic shing instead of the airy whoosh. A katana that did `physical` would be a bat.
 export const BLADES = [
+  { id: 'bat', n: 'BASEBALL BAT', mesh: 'bat',
+    d: 'A two-handed wooden bat. Sweep the barrel through the target, then recover your grip.',
+    ab: { type: 'melee', name: 'Baseball Bat', weapon: 'bat', gear: true, dtype: 'physical',
+          cost: 0, cd: 0.55, damage: 18, reach: 12, active: 0.3, color: '#bb874e' } },
   { id: 'katana', n: 'KATANA', mesh: 'katana', hero: true,
     d: 'A long single edge. Reach and a deep cut — it wounds where a fist only bruises.',
     ab: { type: 'melee', name: 'Katana', gear: true, dmgClass: 'slash', dtype: 'physical',

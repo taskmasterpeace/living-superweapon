@@ -41,6 +41,21 @@ not triangle-accurate collision.
 heavy startup on three body types, grounded and airborne. This is one phase,
 not full armed-motion acceptance.
 
+## Equipped melee integration
+
+Registered held melee weapons now use the shared slash/chop/swing/thrust pose
+and sampled weapon contact through the ability slot. Item damage, cost and
+cooldown remain authoritative. Hidden or detached weapons cannot fall back to
+the legacy cone. Startup and recovery cannot authorize physical hits.
+The baseball bat is now an armory row, with an explicit model identity retained
+by the pickup resolver. Existing class equipment restrictions still apply.
+
+`tools/equipped-melee-contact.test.mjs` uses native `equipFrom` and `TYPES.melee`
+to verify hit, miss, startup, recovery, hiding, detachment, stun, single-hit
+payment and cooldown. Together with ability pose/Studio, bat support and native
+weapon contact/hand tests: 30 tests passed; production build passed.
+This is simulation evidence, not a completed inventory-to-combat visual review.
+
 ## Still required before claiming every hold finished
 
 - Full motion review of every registry weapon: idle, aim, attack, recovery,
@@ -51,8 +66,8 @@ not full armed-motion acceptance.
   every weapon and whole-body collision/guard scenarios.
 - Two-hand support and weapon-specific support sockets, checked against the
   rendered hands and clothing throughout the motion.
-- Bat still needs armory/inventory authoring and the ability-slot melee path
-  reconciled with native strike contact before it is offered as equipment.
+- Capture the actual inventory-to-equipped attack flow and inspect its hand
+  transitions, including swapping to and from two-handed equipment.
 - Visual review across body proportions, including thumb placement and wrist
   roll. Passing alignment math alone cannot establish a convincing hold.
 

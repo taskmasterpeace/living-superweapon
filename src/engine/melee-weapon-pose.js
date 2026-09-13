@@ -33,13 +33,13 @@ export function animateWeaponReady(f){
 
 // Procedural weapon families use native strike phases. Pose owns joints only;
 // the simulation's committed target, movement and contact remain authoritative.
-export function animateWeaponStrike(f,t,weight){
- const m=f._meleeMotion,kind=m?.weapon?.userData.weaponKind,family=families[kind];
+export function animateWeaponStrike(f,t,weight,m=f._meleeMotion,phase=f.mstate){
+ const kind=m?.weapon?.userData.weaponKind,family=families[kind];
  if(!family||!m.weapon.visible)return false;
  const p=f.parts,side=m.side,arm=side===1?p.armR:p.armL,off=side===1?p.armL:p.armR;
  if(m.weapon.userData.twoHanded)readyTwoHanded(f,m.weapon,side);
  const s=p.rig.pivotHeight/4.6;
- const u=f.mstate==='startup'?.3*smooth(t):f.mstate==='active'?.3+.4*smooth(t):.7+.3*smooth(t);
+ const u=phase==='startup'?.3*smooth(t):phase==='active'?.3+.4*smooth(t):.7+.3*smooth(t);
  const angle=Math.PI*u;
  if(family==='swing'){
   p.body.rotation.y+=side*.65*Math.cos(angle)*weight;
@@ -50,7 +50,7 @@ export function animateWeaponStrike(f,t,weight){
   handPoint.set(side*(.25+1.7*Math.cos(angle))*s,arm.position.y-1.5*s,(1.2+.8*Math.sin(angle))*s);
   blade.set(side*Math.cos(angle),.15,Math.sin(angle));
  }else if(family==='thrust'){
-  const extension=f.mstate==='startup'?.15*smooth(t):f.mstate==='active'?.15+.85*smooth(t):1-smooth(t);
+  const extension=phase==='startup'?.15*smooth(t):phase==='active'?.15+.85*smooth(t):1-smooth(t);
   handPoint.set(side*.9*s,arm.position.y-2*s,(.55+.6*extension)*s);
   f.obj.updateMatrixWorld(true);
   if(!m.weaponDirection){blade.copy(handPoint);p.body.localToWorld(blade);m.weaponDirection=m.point.clone().sub(blade).normalize();}

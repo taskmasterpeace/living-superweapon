@@ -177,7 +177,7 @@ export const TYPES = {
       const contact=c._abilityMeleePose?.physicalContact&&c._abilityMeleePose.slot===st;
       if(contact)c._abilityMeleePose.contactPending=true;
       // Losing/cancelling a physical pose must never reinstate the old cone.
-      const foe = def.contact==='fist'&&c._openSky?null:g.coneFoe(c, def.range || 11, def.arc || 0.7);
+      const foe = (def.contact==='fist'||st.weaponContact)&&c._openSky?null:g.coneFoe(c, def.range || 11, def.arc || 0.7);
       if (foe && !st.hit.has(foe.id)) {
         applyAbilityMeleeHit(c,def,st,g,foe);
       }
