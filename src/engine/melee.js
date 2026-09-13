@@ -3,6 +3,7 @@ import {personThrowLaunch,THROW_WINDOW} from './person-throw-trajectory.js';
 import {meleeEntryTarget} from './melee-entry-target.js';
 import {meleeApproach} from '../data/melee-approaches.js';
 import {meleeWeaponFor} from './weapon-grip.js';
+import {snapshotWeaponSurface,weaponContactSweeps} from './melee-weapon-contact.js';
 // WAR WORLD: ASCENDANTS — melee trifecta: Strike (beats Grab) · Grab (beats Guard) · Guard (beats Strike).
 // Per-character variants: teleport-escape & energy-intangibility break front grabs; thorns hurt the holder;
 // grabHeal lifesteals throws. Back-grabs (from behind, OR during the victim's RECOVERY) are guaranteed and hit harder.
@@ -104,6 +105,7 @@ export class MeleeSystem {
         rig:f.parts.rig,
         left:f.parts.armL.children[2].getWorldPosition(new THREE.Vector3()),
         right:f.parts.armR.children[2].getWorldPosition(new THREE.Vector3()),
+        weapon:snapshotWeaponSurface(f._meleeMotion?.weapon),
       });
     }
   }
@@ -169,6 +171,7 @@ export class MeleeSystem {
         point.add(lead);const offset=point.clone().sub(origin);const budget=range+lead.length();if(offset.length()>budget)point.copy(origin).add(offset.setLength(budget));
       }
       f._meleeMotion={side,weapon:equipped?.weapon??null,point,target:entry,previous:arm.children[2].getWorldPosition(new THREE.Vector3()),current:new THREE.Vector3(),impact:new THREE.Vector3(),dt:0};
+      f._meleeMotion.weaponPrevious=snapshotWeaponSurface(equipped?.weapon);
     }
     // ⚠ THE STEP-IN SELLS THE REACH (the short-arms problem). `step` is a DISTANCE in data/martial.js;
     // STEP_IMPULSE converts it to the velocity impulse. jab 2.0×8 = the 16 that was hard-coded here.
@@ -548,9 +551,13 @@ export class MeleeSystem {
     const arm=m.side===1?f.parts.armR:f.parts.armL;
     const current=arm.children[2].getWorldPosition(m.current);
     const from=history?(sameRig?history[m.side===1?'right':'left']:current):m.previous;
+    const weaponSweep=m.weapon?.parent===arm.children[2]?weaponContactSweeps(m.weapon,history?(sameRig?history.weapon:null):m.weaponPrevious):null;
+    const sweeps=m.weapon?(weaponSweep?.sweeps||[]):[{from,to:current,radius:.42}];
     if(f.mstate==='active'&&!f.strikeHit.size) {
-      let first=Infinity,foe=null;m.naniteContact=null;
+      let first=Infinity,foe=null,surfaceHit=null;m.naniteContact=null;
       const point=new THREE.Vector3();
+      for(const sweep of sweeps){
+      const {from,to:current,radius}=sweep;
       for(const other of this.game.entities) {
         if(!this.game.isFoe(f,other)||!other.alive||other.invuln>0)continue;
         // Authored reach remains an outer bound, never a substitute for contact.
@@ -560,19 +567,25 @@ export class MeleeSystem {
         // Broad phase includes the target body radius; the fist sweep below still proves contact.
         if(start.clone().addScaledVector(delta,t).length()>STRIKES[f.mId].reach+(other.radius||0))continue;
         for(const key of ['torso','head','pelvis']) {
-          const t=fistContact(from,current,other.parts?.[key],.42,point,oldPart(other,key));
+          const t=fistContact(from,current,other.parts?.[key],radius,point,oldPart(other,key));
           if(t<first){first=t;foe=other;m.impact.copy(point);m.naniteContact=null;}
         }
         const local={},previous=history&&sameRig?frame?.targets.get(other)?.nanites:null;
-        if(naniteContact(other,from,current,.42,local,previous)&&local.t<first){
+        if(naniteContact(other,from,current,radius,local,previous)&&local.t<first){
           const cover={};if(!sweepSplitObstacle(this.game.world||{},from,local.naniteContact.point,0,cover,false)){
             first=local.t;foe=other;m.impact.copy(from).lerp(current,local.t);m.naniteContact=local.naniteContact;
           }
         }
       }
       const obstacle={};
-      if(sweepSplitObstacle(this.game.world||{},from,current,.42,obstacle,false,.42)&&obstacle.t<=first&&(obstacle.target?.onConstructHit||obstacle.target?.frontlineVehicle||obstacle.target?.frontlineAircraft)){
-        const impact=from.clone().lerp(current,obstacle.t),construct=obstacle.target.construct;
+      if(sweepSplitObstacle(this.game.world||{},from,current,radius,obstacle,false,radius)&&obstacle.t<=first&&(m.weapon||obstacle.target?.onConstructHit||obstacle.target?.frontlineVehicle||obstacle.target?.frontlineAircraft)){
+        first=obstacle.t;foe=null;m.naniteContact=null;
+        surfaceHit={obstacle,impact:from.clone().lerp(current,obstacle.t)};
+      }
+      }
+      if(surfaceHit&&surfaceHit.obstacle.t<=first){
+        const {obstacle,impact}=surfaceHit;
+        const construct=obstacle.target?.construct;
         const origin=frame?.targets.get(f)?.position?.clone().lerp(f.pos,obstacle.t)||f.pos;
         if(impact.distanceTo(origin)<=STRIKES[f.mId].reach){
           // Consume the same swing before a synchronous ki collapse can remove
@@ -582,7 +595,7 @@ export class MeleeSystem {
           const heavy=f.mKind!=='light',weight=punchWeight(f,heavy),fin=f.strikeIdx===2&&f.mId==='cross';
           const damage=(heavy?(f.mHay?20+f.mP*14:13)*(f.mHay?1:jab):(fin?17:8)*jab)*weight.damage*f.powerBuff*wound*mom;
           if(construct)construct.receiveHit(damage,{src:f,pos:impact,lane:'melee'});
-          else {this.game.damageBlock(obstacle.target,damage,impact,f);this.game.vfx.contact(impact,f.aim3,{color:'#ffd18a',power:heavy?1.5:.7});}
+          else {if(obstacle.target?.onConstructHit||obstacle.target?.frontlineVehicle||obstacle.target?.frontlineAircraft)this.game.damageBlock(obstacle.target,damage,impact,f);this.game.vfx?.contact(impact,f.aim3,{color:'#ffd18a',power:heavy?1.5:.7});}
           f.hitstop=Math.max(f.hitstop,(heavy?(f.mHay?.17:.09):(fin?.108:.039))*weight.stop);
           this.game.audio.meleeHit(heavy?1.3:.65,impact,heavy);
           if(!heavy&&f.strikeIdx<2)f.comboWin=.42;
@@ -590,6 +603,7 @@ export class MeleeSystem {
       }
       if(foe){if(f.mKind==='light')this._resolveLight(f,foe);else this._resolveHeavy(f,foe);}
     }
+    m.weaponPrevious=weaponSweep?.snapshot??null;
     m.previous.copy(current);
     if(f.mstate==='active') {
       f.mT-=m.dt;m.dt=0;

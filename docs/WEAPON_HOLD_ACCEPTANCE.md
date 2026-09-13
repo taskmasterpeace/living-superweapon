@@ -12,12 +12,26 @@ master objective. This checklist does not replace or narrow that objective.
 - Native strikes choose a visible melee weapon's hand. Dual weapons follow
   the existing alternating hand preference; hidden weapons are excluded.
 - Equipped melee strikes do not select a bare-knuckle authored animation.
+- First procedural slash/chop families are connected to native strike phases.
+  Sword/katana/knife/baton use slash; axe uses chop. These are original
+  procedural motions, not imported source animation. Full visual acceptance
+  and two-handed variants remain outstanding.
+- Weapon surface samples sweep with the live weapon transform during active
+  frames, using the same moving-target snapshot as fists. Hidden, detached
+  or interrupted weapons cannot leave an active damage path behind.
 
 ## Verified scope
 
 `tools/melee-weapon-hand.test.mjs` reproduces AEGIS's wrong-hand attack through
 StudioCombat before the fix and checks the production strike afterward.
 It also checks dual-knife selection and hidden-weapon exclusion.
+Native sword and axe rehearsal sequences must produce real damage against a
+stationary target. Only canvas impact artwork is omitted in the Node test;
+browser review captures retain it.
+`tools/melee-weapon-contact.test.mjs` verifies blade-only reach (fist misses),
+phase gating, moving targets, interruption, hiding and detachment. Surface
+samples are padded approximations of the registered blade/head geometry,
+not triangle-accurate collision.
 `tools/armed-weapon-fit.test.mjs` checks STORMCALL axe/trunk intersections at
 heavy startup on three body types, grounded and airborne. This is one phase,
 not full armed-motion acceptance.
@@ -26,10 +40,10 @@ not full armed-motion acceptance.
 
 - Full motion review of every registry weapon: idle, aim, attack, recovery,
   flight, block, grip transitions, equipment removal and ragdoll/respawn.
-- Distinct reusable bat swing, axe chop and sword slash; current procedural
-  fallback remains a punch reach and is not an approved weapon animation.
-- Weapon surface sweeps during the active interval. Current ordinary melee
-  contact is still a fist sweep; do not describe its damage as blade contact.
+- Approve and tune full slash/chop sequences, and add bat swing and spear
+  thrust. Spear still uses the generic procedural reach; bat is preview-only.
+- Extend surface-contact verification to thin obstacles, frame-rate variation,
+  every weapon and whole-body collision/guard scenarios.
 - Two-hand support and weapon-specific support sockets, checked against the
   rendered hands and clothing throughout the motion.
 - Bat must graduate from inspection prop to registered gameplay equipment.

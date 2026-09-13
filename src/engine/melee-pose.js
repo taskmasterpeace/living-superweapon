@@ -4,6 +4,7 @@ import {reachArm} from './hero-rig.js';
 import {animateGuard} from './guard-pose.js';
 import {animateAuthoredStrike} from './strike-motion.js';
 import {animateAbilityMeleePose} from './ability-melee-pose.js';
+import {animateWeaponStrike} from './melee-weapon-pose.js';
 
 const point=new THREE.Vector3(),guard=new THREE.Vector3(),direction=new THREE.Vector3(),elbowPole=new THREE.Vector3();
 const rotation=new THREE.Quaternion(),inverse=new THREE.Quaternion();
@@ -24,6 +25,7 @@ export function animateMelee(f) {
   const startup=f.mstate==='startup',recovery=f.mstate==='recover';
   const extension=startup?smooth((t-.55)/.45):recovery?1-smooth(t/.7):1;
   const weight=startup?smooth(t/.3):recovery?1-smooth((t-.55)/.45):1;
+  if(animateWeaponStrike(f,THREE.MathUtils.clamp(t,0,1),weight))return;
   const side=m.side,arm=side===1?p.armR:p.armL,off=side===1?p.armL:p.armR;
   const scale=p.rig.pivotHeight/4.6;
   // Counter-rotation sells the cross/power without moving the entity root or stretching limbs.

@@ -9,7 +9,7 @@ function posedStormcall(body,stage){
   const scene=new THREE.Scene(),world={scene,cover:[],ARENA:240,heightAt:()=>0,shake(){},punch(){}};
   const combat=new StudioCombat(scene,world),def=structuredClone(ROSTER.find(hero=>hero.id==='stormcall'));
   def.model={...def.model,body};
-  const fighter=new Fighter(def);scene.add(fighter.obj);
+  const fighter=new Fighter(def);fighter._openSky=true;scene.add(fighter.obj);
   combat.meleeSequence='heavy';combat.meleeStage=stage;combat.reset(fighter,true,'melee');
   for(let frame=1;frame<=Math.round(1.12*60);frame++)combat.step(frame/60,1/60);
   combat.step(1.12,0);fighter.obj.updateMatrixWorld(true);
