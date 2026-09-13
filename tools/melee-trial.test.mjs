@@ -3,6 +3,26 @@ import assert from 'node:assert/strict';
 import * as THREE from 'three';
 import {mainCombatFixture} from './helpers/main-combat-fixture.mjs';
 import {MeleeTrial} from '../src/engine/melee-trial.js';
+
+test('beam contact during a missed punch cannot turn the swing report into contact',()=>{
+ const x=mainCombatFixture({mode:'powerworld'});try{
+  const t=new MeleeTrial(x.g,new THREE.Vector3(0,0,70));x.g.ms.threatLab={state:'preparing',meleeTrial:t};const target=t.start();
+  x.g.melee._beginStrike(x.p,'jab','light');t.hit(target,5,{src:x.p,dot:true},false,{healthLost:5});
+  x.g.melee._endStrike(x.p,true);const result=t.records.at(-1);
+  assert.equal(result.contacts,0);assert.equal(result.result,'no contact');assert.equal(result.reason,'OUT OF ENTRY RANGE');
+  assert.equal(t.recording.events.at(-1).kind,'strike-result');t.dispose();
+ }finally{x.close();}
+});
+
+test('native interrupted windup reports loss of control; real resolved punch reports contact',()=>{
+ const x=mainCombatFixture({mode:'powerworld'});try{
+  const t=new MeleeTrial(x.g,new THREE.Vector3(0,0,6));x.g.ms.threatLab={state:'preparing',meleeTrial:t};const target=t.start();
+  x.g.melee._beginStrike(x.p,'jab','light');x.p.staggerT=.5;x.g.melee.update(x.p,.01);
+  assert.equal(t.records.at(-1).result,'interrupted');assert.equal(t.records.at(-1).reason,'INTERRUPTED');
+  x.g.vfx.impact=()=>{};x.p.staggerT=0;x.p.strikeCd=0;x.g.melee._beginStrike(x.p,'jab','light');x.g.melee._resolveLight(x.p);x.g.melee._endStrike(x.p,true);
+  assert.equal(t.records.at(-1).result,'contact');assert.equal(t.records.at(-1).contacts,1);t.dispose();
+ }finally{x.close();}
+});
 test('trial replacement owns one native target; disposal preserves player',()=>{
  const x=mainCombatFixture({mode:'powerworld'});try{const t=new MeleeTrial(x.g,new THREE.Vector3(0,0,15));
  const a=t.start();assert.equal(x.g.entities.length,2);const b=t.start('retreat');assert.notEqual(a,b);assert.equal(x.g.entities.length,2);assert.ok(!x.g.entities.includes(a));

@@ -128,7 +128,7 @@ export class MeleeSystem {
     if (f.mstate === 'active')  return Math.max(0, f.mT) + S.recover / pace;
     return Math.max(0, f.mT);   // recover
   }
-  _endStrike(f, keepInput=false) { this.game.ms?.threatLab?.meleeTrial?.strikeEnded(f); f.mstate = null; f.mId = null; f.mKind = null; f.mHay = false; f.strikeActive = 0; f._meleeMotion = null; if(!keepInput)this.clearInput(f); }
+  _endStrike(f, keepInput=false) { this.game.ms?.threatLab?.meleeTrial?.strikeEnded(f,{interrupted:this._hardInterrupt(f)}); f.mstate = null; f.mId = null; f.mKind = null; f.mHay = false; f.strikeActive = 0; f._meleeMotion = null; if(!keepInput)this.clearInput(f); }
 
   _beginStrike(f, id, kind, p01 = 1, hay = false) {
     f._meleeBlocked=false;

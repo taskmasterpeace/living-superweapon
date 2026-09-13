@@ -142,16 +142,23 @@ export class MeleeTrial {
   const profile=meleeApproach(f.def,f.airborne),entry=meleeEntryEligibility(this.g,f,this.target,profile.range);
   this.attempt={entryReason:entry.reason,entryRange:profile.range,entryFamily:profile.family,trial:this.kind,kind:f.mId,time:Math.max(0,(this.g.time||0)-(this.startedAt||0)),contacts:0,approach:!!f._meleeMotion?.approachEnabled,distance:f.pos.distanceTo(this.target.pos),startup:f._meleeMotion?.startupDuration??STRIKES[f.mId].startup/(f.def.meleePace||1),active:STRIKES[f.mId].active/(f.def.meleePace||1),recovery:STRIKES[f.mId].recover/(f.def.meleePace||1)};
  }
- strikeEnded(f){
+ strikeEnded(f,{interrupted=false}={}){
   if(f!==this.g.player||!this.attempt)return;
-  const a=this.attempt;a.result=a.contacts?'contact':'no contact';this.records.push(a);if(this.records.length>100)this.records.shift();
-  this.g.hud?.feed?.(a.result.toUpperCase()+' · '+a.kind.toUpperCase()+' · '+(a.approach?'approach engaged':a.entryReason+' · '+a.entryFamily+' '+a.entryRange+'u')+' · start '+a.distance.toFixed(1)+'u · recovery '+Math.round(a.recovery*1000)+'ms','#ffd24a');this.attempt=null;
+  const a=this.attempt;
+  // Native strikeHit owns the swing result. Concurrent projectiles, beams and
+  // throws can hit during its lifetime without making this punch connect.
+  a.contacts=f.strikeHit?.has(this.target?.id)?1:0;
+  a.interrupted=!!interrupted;a.result=a.contacts?'contact':interrupted?'interrupted':'no contact';
+  a.reason=a.contacts?(f._meleeBlocked?'BLOCKED':'TARGET CONTACT'):interrupted?'INTERRUPTED':!a.approach?a.entryReason:'FIST DID NOT CONNECT';
+  this.records.push(a);if(this.records.length>100)this.records.shift();
+  const hint=interrupted?'Wait for control to return, then approach again.':!a.contacts&&!a.approach?'Face the target and move into the shown approach range.':!a.contacts?'Re-aim after the target moves; an approach does not guarantee a hit.':'';
+  this.recording.mark(this.g.time,{kind:'strike-result',actor:0,label:a.kind.toUpperCase()+' · '+a.reason,result:a.result,reason:a.reason});
+  this.g.hud?.feed?.(a.reason+' · '+a.kind.toUpperCase()+' · start '+a.distance.toFixed(1)+'u · recovery '+Math.round(a.recovery*1000)+'ms'+(hint?' · '+hint:''),'#ffd24a');this.attempt=null;
  }
  grabContact(holder,victim){if(holder!==this.g.player||victim!==this.target)return;this.recording.mark(this.g.time,{label:'Grab connected',kind:'grab'});this.g.hud?.feed?.('GRAB CONNECTED · tap V: body blow · hold V: slam · move/fly: carry · hold E then release: aimed throw · tap E: set down/drop','#ffd24a');}
  hit(target,amount,opts,blocked,outcome=null){
   const incoming=target===this.g.player&&opts.src===this.target;
   if(!incoming&&target!==this.target&&target!==this.ally)return;
-  if(this.attempt&&opts.src===this.g.player)this.attempt.contacts++;
   const healthLost=outcome?.healthLost??amount,energySpent=outcome?.guardEnergySpent??0;
   const result=outcome?.guard==='broken'?'GUARD BROKEN':outcome?.guard==='blocked'?'BLOCK':blocked?'ABSORBED':opts.slam?'TERRAIN IMPACT':opts.meleeMove==='throw'?'THROW':'CONTACT';
   const label=(incoming?'YOU · ':target===this.ally?'TEAMMATE · ':'TARGET · ')+result+' · '+healthLost.toFixed(1)+' HP · '+energySpent.toFixed(1)+' guard energy';
