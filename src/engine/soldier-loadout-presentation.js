@@ -17,7 +17,8 @@ export function updateSoldierLoadoutPresentation(f) {
    otherGrip:!!hand.userData.gripOccupied&&!weapons.length};
  }
  const {arm,hand,weapons,shield}=state;
- const slash=f._abilityMeleePose?.slot?.def?.dmgClass==='slash';
+ // A held axe/sword/claw attack must not summon the native off-hand sword.
+ const slash=!f._abilityMeleePose?.weapon&&f._abilityMeleePose?.slot?.def?.dmgClass==='slash';
  const pistol=Object.values(f.slots).some(slot=>slot.def.type==='rifle'&&
   (slot.def.weapon||(slot.def.interval&&slot.def.interval<.2?'rifle':'pistol'))==='pistol'&&
   (slot._poseUntil??-1)>=f.animT);

@@ -30,6 +30,10 @@ export function firearmEmitter(f,def,{includeStowed=false}={}){
 }
 
 export function unmountHeldWeapon(f,game=f._game,commitPending=true){
+ const attack=f._abilityMeleePose;
+ if(attack?.weapon&&(attack.weapon===f._gearMesh||attack.weapon===f._gearPair)){
+  attack.slot.t=0;f._abilityMeleePose=null;
+ }
  // A paid final shot can precede expiry/disarm in the same input interval.
  // Removal is the last visible pose of this attachment: commit pending rounds
  // before detaching it, rather than interpreting its local coordinates as world.

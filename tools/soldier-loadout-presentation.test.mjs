@@ -5,7 +5,22 @@ import {ROSTER} from '../src/data/characters.js';
 import {forearmOccupied,firearmEmitter} from '../src/engine/weapon-emission.js';
 import {updateSoldierLoadoutPresentation} from '../src/engine/soldier-loadout-presentation.js';
 import {TYPES} from '../src/engine/abilities.js';
+import {Game} from '../src/engine/game.js';
+import {bladeById} from '../src/data/armory.js';
+import {beginAbilityMeleePose} from '../src/engine/ability-melee-pose.js';
+import {unmountHeldWeapon} from '../src/engine/weapon-emission.js';
 const make=id=>new Fighter(structuredClone(ROSTER.find(d=>d.id===id)));
+
+for(const id of ['claws','nodachi','katana','tomahawk'])test(`SARGE equipped ${id} does not draw an unrelated sword and unmount cancels its attack`,()=>{
+ const f=make('sarge');try{
+  f._openSky=true;updateSoldierLoadoutPresentation(f);
+  const sword=f.parts.armL.children[2].children.find(w=>w.userData.weaponKind==='sword');
+  const g={isHuman:()=>false};Game.prototype.equipFrom.call(g,f,bladeById(id),{primary:true});
+  const st=f.slots.lmb;st.t=.24;beginAbilityMeleePose(f,st);updateSoldierLoadoutPresentation(f);
+  assert.equal(sword.visible,false,'only the equipped slash weapon should appear');
+  assert.ok(f._abilityMeleePose);unmountHeldWeapon(f,g);assert.equal(f._abilityMeleePose,null);assert.equal(st.t,0);
+ }finally{f.dispose();}
+});
 test('SARGE stows sword and riot shield for two-hand rifle support, restores only active equipment',()=>{
  const f=make('sarge');try{const arm=f.parts.armL,shield=arm.userData.shield,sword=arm.children[2].children.find(o=>o.userData.weaponKind==='sword');
   updateSoldierLoadoutPresentation(f);assert.equal(sword.visible,false);assert.equal(shield.visible,false);assert.equal(arm.userData.shield,null);assert.equal(forearmOccupied(arm),false);

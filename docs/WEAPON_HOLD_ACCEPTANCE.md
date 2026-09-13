@@ -71,6 +71,13 @@ two-handed weapon families still require review.
 
 ## Still required before claiming every hold finished
 
+Equipment ownership repair: soldier presentation no longer interprets every
+equipped slashing attack as permission to reveal the native off-hand sword.
+Unmounting an actively attacking held weapon now retires its pose and slot
+window together. Four SARGE cases (claws, great blade, katana, tomahawk) verify
+both rules; native sword/pistol/shield presentation remains covered. Combined
+presentation, equipped contact and lifecycle tests: 33 passed.
+
 Claw clearance measurement supersedes the suspected chest penetration noted
 below: `tools/claw-clearance.test.mjs` samples both complete blade sets against
 the torso collision geometry with their full padded contact radius. Two
