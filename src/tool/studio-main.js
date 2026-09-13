@@ -1,3 +1,4 @@
+import {mountFavorites} from './library-favorites.js';
 import {ROSTER} from '../data/characters.js';
 import {usesThrowAction} from '../engine/throwable-action.js';
 import {EFFECT_FIELDS} from '../data/effects-profile.js';
@@ -105,7 +106,9 @@ $('#preview-sound').onclick=async()=>{
  status(ready?'Local combat recordings enabled. Play a sequence; pause and scrubbing stay silent. No character dialogue recordings are installed.':'Audio could not start. The preview still works; try Sound again.',!ready);
 };
 function savedState(){const dirty=history.dirty;$('.save-state').textContent=dirty?'Unsaved draft':hasSaved?'Saved / local':'Shipped default';$('.save-state').classList.toggle('dirty',dirty);$('#undo').disabled=!history.canUndo;$('#redo').disabled=!history.canRedo;}
-function roster(){const q=$('.search').value.toLowerCase();$('.count').textContent=ROSTER.length;$('#edit-kit').disabled=!hero.isCustom;$('.roster').innerHTML=ROSTER.filter(d=>(d.name+' '+d.title).toLowerCase().includes(q)).map(d=>`<button class="hero-row" data-hero="${esc(d.id)}" aria-pressed="${d.id===hero.id}"><span class="hero-swatch" style="background:${esc(d.colors.primary)}"></span><span><b>${esc(d.name)}</b><small>${d.isCustom?'Custom · ':''}${esc(d.title)}</small></span></button>`).join('')||'<p class="empty">No matching fighters.</p>';}
+const favoritesHost=document.createElement('div');$('.search').after(favoritesHost);
+const favorites=mountFavorites({host:favoritesHost,kind:'characters',selected:()=>hero.id,onChange:()=>roster()});
+function roster(){favorites.sync();const q=$('.search').value.toLowerCase();$('.count').textContent=ROSTER.length;$('#edit-kit').disabled=!hero.isCustom;$('.roster').innerHTML=ROSTER.filter(d=>favorites.matches(d.id)&&(d.name+' '+d.title).toLowerCase().includes(q)).map(d=>`<button class="hero-row" data-hero="${esc(d.id)}" aria-pressed="${d.id===hero.id}"><span class="hero-swatch" style="background:${esc(d.colors.primary)}"></span><span><b>${esc(d.name)}</b><small>${d.isCustom?'Custom · ':''}${esc(d.title)}</small></span></button>`).join('')||'<p class="empty">No matching fighters.</p>';}
 function reconciledProfile(def,p){
  const before=Object.keys(p.attacks||{}),effective=applyKitAlternatives(def,p.kit),attacks=reconcileAttackOverrides(effective,p.attacks);
  // A tuned named alternative remains a dormant source snapshot while its slot
