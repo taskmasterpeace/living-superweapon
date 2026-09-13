@@ -1,4 +1,5 @@
 import {damageBadges,damageSymbol} from './damage-symbols.js';
+import {characterIdentityView} from './character-identity-view.js';
 import {createFieldFootage} from './field-footage-view.js';
 // SELECT YOUR CHARACTER — the arena-fighter select screen (DBZ filmstrip), Steam-Deck first.
 //
@@ -109,6 +110,8 @@ const SEL_CSS = `
   background:linear-gradient(180deg,transparent,rgba(0,0,0,.88));text-shadow:0 1px 2px #000;line-height:1;z-index:3}
 #hSelect .scard .ssil{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);font-size:44px;font-weight:900;
   color:rgba(255,255,255,.22);text-shadow:0 2px 6px rgba(0,0,0,.4);transition:opacity .18s}
+#hSelect .scard .sidentity{display:block;font-size:8px;line-height:1.25;margin-top:3px;font-weight:600;color:#e1e5e8;text-transform:none;letter-spacing:0}
+#hSelect .selidentity{font-size:14px;color:#bfeaff;font-weight:700;letter-spacing:.035em}
 #hSelect .scard .sportrait{position:absolute;inset:5px 4px 15px;width:calc(100% - 8px);height:calc(100% - 20px);
   object-fit:contain;object-position:center bottom;opacity:0;z-index:1;filter:drop-shadow(0 5px 5px rgba(0,0,0,.7));transition:opacity .18s}
 #hSelect .scard.portrait-ready .sportrait{opacity:1}
@@ -278,6 +281,7 @@ export const SelectMixin = {
     el.querySelector('.selchannel').appendChild(channel.el);
     const strip = el.querySelector('#selStrip');
     const cards = ROSTER.map((d, i) => {
+      const identity=characterIdentityView(d);
       const c = d.colors || {};
       const tc = THREAT_COLORS[d.threat] || 'var(--text-4)';
       const card = document.createElement('div');
@@ -291,7 +295,8 @@ export const SelectMixin = {
         + `<span class="sfno">${String(i + 1).padStart(2, '0')}</span>`
         + `<span class="sdot" style="color:${tc};background:${tc}"></span>`
         + `<span class="ssil">${(d.name || '?')[0]}</span>`
-        + `<span class="snm">${d.name}</span>`;
+        + `<span class="snm">${d.name}<span class="sidentity">${esc(identity.classLabel)} · ${esc(identity.shortMovement)}</span></span>`;
+      card.title=d.name+' · '+identity.classLabel+' · '+identity.movement;
       card.onclick = () => { if (this._sel.idx === i) this._selConfirm(); else this._selSelect(i); };
       strip.appendChild(card);
       return card;
@@ -403,6 +408,7 @@ export const SelectMixin = {
   },
 
   _selInfo(def) {
+    const identity=characterIdentityView(def);
     const acc = (def.colors && def.colors.accent) || '#ffd24a';
     const tc = THREAT_COLORS[def.threat] || 'var(--text-4)';
     const rk = rankOf(def), rb = rankBandOf(rk);
@@ -414,6 +420,7 @@ export const SelectMixin = {
       `<div class="selfile">FILE ${String(this._sel.idx + 1).padStart(3, '0')} · ${(idn.co || '—').toUpperCase()} <span class="selflag">${idn.f || ''}</span></div>`
       + `<div class="selname" style="color:${acc}">${def.name}</div>`
       + `<div class="selttl">${def.title || ''} · ${def.role || ''}</div>`
+      + `<div class="selidentity">${esc(identity.classLabel)} · ${esc(identity.movement)}</div>`
       + `<div class="selbadges">`
         + (def.threat ? `<span class="selbadge" style="color:${tc};border-color:${tc}66;background:${tc}18">${icon('threat', 12)} ${def.threat}</span>` : '')
         + `<span class="selbadge" style="color:${acc};border-color:${acc}66;background:${acc}14">${icon('might', 12)} ${rb.name} · RK ${rk}</span>`
@@ -422,6 +429,7 @@ export const SelectMixin = {
         + facts.map(([ic, t, lead]) => `<div class="selchip${lead ? ' lead' : ''}">${icon(ic, 15)}<span>${t}</span></div>`).join('')
       + `</div>`
       + `<div class="selcombat"><strong>DAMAGE & CONDITIONS</strong><span>${damageBadges([...new Set(Object.values(def.abilities||{}).flatMap(a=>attackGuide(a).types))])} ${esc([...new Set(Object.values(def.abilities||{}).flatMap(a=>attackGuide(a).effects))].join(' · '))}</span></div>`
+      + `<div class="selcombat"><strong>STARTING ATTACKS</strong>${['lmb','rmb'].filter(k=>def.abilities?.[k]).map(k=>{const a=def.abilities[k],facts=slotFacts(a,visOf);return `<span>${esc(a.name||k)} · ${esc(facts.kind)}</span>`;}).join('')}</div>`
       + `<div class="selcombat"><strong>RESISTANCES & WEAKNESSES</strong>${resistanceGuide(def).map(r=>`<span class="${r.kind}">${damageSymbol(r.type)} ${esc(r.label)}</span>`).join('')||'<span>Standard damage from all types</span>'}</div>`
       + `<div class="selpowbtn" id="selPowBtn">${icon('might', 14)} POWERS · 1:1 SCALE</div>`;
     const btn = info.querySelector('#selPowBtn');
