@@ -49,7 +49,11 @@ export function unmountHeldWeapon(f,game=f._game,commitPending=true){
 export function mountHeldWeapon(f,weapon,transferring=false){
  unmountHeldWeapon(f,f._game,!transferring);
  const hand=f.parts?.armR?.children[2];if(!hand)return;
- const hidden=[];
+  const hidden=[];
+  // A two-handed item owns the supporting hand too. Stow its native weapon
+  // through the same reversible mount record, rather than denying the grip.
+  if(weapon.userData.twoHanded)for(const object of f.parts.armL.children[2].children)
+    if(object.userData.weaponKind){hidden.push([object,object.visible]);object.visible=false;}
  for(const object of hand.children)if(object.userData.weaponKind){hidden.push([object,object.visible]);object.visible=false;}
  f._heldMount={hand,hidden,occupied:hand.userData.gripOccupied,gripKind:hand.userData.gripKind};
  delete weapon._gripCoverBounds;

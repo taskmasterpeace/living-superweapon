@@ -8,6 +8,7 @@ import {TYPES} from '../src/engine/abilities.js';
 import {snapshotWeaponSurface} from '../src/engine/melee-weapon-contact.js';
 import {resolveAbilityMeleeContact} from '../src/engine/ability-melee-contact.js';
 import {bladeById,armoryList} from '../src/data/armory.js';
+import {unmountHeldWeapon} from '../src/engine/weapon-emission.js';
 
 for(const state of ['hit','miss','startup','recovery','hidden','detached','stunned'])test(`equipped bat slot: ${state}`,()=>{
  const f=new Fighter(structuredClone(ROSTER.find(d=>d.id==='merc'))),b=new Fighter(structuredClone(ROSTER.find(d=>d.id==='kano')));
@@ -17,6 +18,9 @@ for(const state of ['hit','miss','startup','recovery','hidden','detached','stunn
   for(const x of [f,b]){x._openSky=true;x.invuln=0;x._animate(1);}
   f.aim.set(0,0,1);f.aim3.copy(f.aim);
   Game.prototype.equipFrom.call(g,f,{id:'bat-test',mesh:'bat',ab:{type:'melee',gear:true,cost:4,cd:.6,damage:18,reach:15}},{primary:true});
+  const offhandWeapons=f.parts.armL.children[2].children.filter(o=>o.userData.weaponKind);
+  assert.ok(offhandWeapons.length,'MERC has native off-hand equipment');
+  assert.ok(offhandWeapons.every(o=>!o.visible),'two-handed mount must stow off-hand equipment');
   const st=f.slots.lmb,energy=f.ki;
   TYPES.melee(f,st.def,st,g,{pressed:true,dt:1/60});
   assert.equal(st,f.slots._gear);assert.ok(st.weaponContact);
@@ -35,6 +39,8 @@ for(const state of ['hit','miss','startup','recovery','hidden','detached','stunn
   assert.equal(f.ki,paid,'contact must not pay twice');
   TYPES.melee(f,st.def,st,g,{pressed:true,dt:0});assert.equal(f.ki,paid,'cooldown rejects another press');
   if(state==='detached')f.parts.armR.children[2].add(f._gearMesh);
+  const saved=f._heldMount.hidden.map(([o,visible])=>[o,visible]);unmountHeldWeapon(f,g);
+  for(const [o,visible]of saved)assert.equal(o.visible,visible,'unmount restores exact previous visibility');
  }finally{f.dispose();b.dispose();}
 });
 

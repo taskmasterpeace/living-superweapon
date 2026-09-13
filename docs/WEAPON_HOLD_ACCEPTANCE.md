@@ -56,6 +56,19 @@ payment and cooldown. Together with ability pose/Studio, bat support and native
 weapon contact/hand tests: 30 tests passed; production build passed.
 This is simulation evidence, not a completed inventory-to-combat visual review.
 
+`tools/equipped-swing-review.mjs` records MERC equipping bat, tomahawk, katana
+and bat again via native `equipFrom`, attacking through `TYPES.melee`, and
+advancing the real Fighter update in Studio. Captures live under
+`artifacts/marketing/equipped-swing-review/`, including `equipment-swaps.webm`.
+This is an equipment-code rehearsal, not mouse-driven inventory acceptance.
+The first capture setup incorrectly retained hover and then omitted physics;
+the saved final recording uses grounded gait and the native update.
+
+Two-handed mounts now stow the other hand's native weapon in the reversible
+mount record. Tests check stowing and exact restoration alongside the equipped
+contact cases (11 focused tests passed). Shield compatibility and all other
+two-handed weapon families still require review.
+
 ## Still required before claiming every hold finished
 
 - Full motion review of every registry weapon: idle, aim, attack, recovery,
