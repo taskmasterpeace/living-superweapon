@@ -7,7 +7,7 @@ import {transportRampBounds,transportRampPanelBounds} from './transport-ramp.js'
 const BASE='./models/squad-transport/';
 export class SquadTransport{
  constructor(stage,position){
-  this.stage=stage;this.g=stage.g;this.state='loading';this.passengers=new Map();this.covers=[];this.home=position.clone();this.handles=[];this.disposed=false;
+  this.stage=stage;this.g=stage.g;this.state='loading';this.passengers=new Map();this.covers=[];this.home=position.clone();this.origin=position.clone();this.stop='lab';this.handles=[];this.disposed=false;
   this.loading=Promise.all([new GLTFLoader().loadAsync(BASE+'transport.v1.glb'),fetch(BASE+'manifest.json').then(r=>r.json())]).then(([asset,manifest])=>{
    if(this.disposed){this.disposeAsset(asset.scene);return;}
    this.model=asset.scene;this.manifest=manifest;this.model.position.copy(position);this.model.name='squad-passenger-transport';this.g.scene.add(this.model);
@@ -69,7 +69,7 @@ export class SquadTransport{
   cancelHeldAttacks(f);f._passengerPose=[];
   for(const part of [f.parts.legL,f.parts.legR,f.parts.armL,f.parts.armR,f.parts.legL?.userData.knee,f.parts.legR?.userData.knee])if(part)f._passengerPose.push([part,part.rotation.clone()]);
   f._passengerTransport=this;f._deploymentTarget=null;f.flying=false;f.flyHeld=f.descendHeld=false;f.guarding=false;f.moveDir={x:0,z:0};this.passengers.set(f,seat);this.sync();
-  if(f===this.g.player){document.body.classList.add('transport-passenger');this.g.retireCombatViewInput();this.g.hud?.announce?.('PASSENGER · Enter: fly to depot · J: exit while parked');}
+  if(f===this.g.player){document.body.classList.add('transport-passenger');this.g.retireCombatViewInput();this.g.hud?.announce?.(`PASSENGER · Enter: ${this.stop==='depot'?'return to lab':'fly to depot'} · J: exit while parked`);}
   return true;
  }
  cancelBoarding(){for(const f of this.g.ms?.squad?.members||[])if(f._deploymentTarget&&(f._deploymentTarget===this.entry||f._deploymentTarget===this.cabin))f._deploymentTarget=null;}
@@ -95,7 +95,9 @@ export class SquadTransport{
   if(this.state!=='parked'||!this.passengers.has(this.g.player))return false;
   if((this.g.ms.squad?.members||[]).some(f=>f.alive&&!this.passengers.has(f))){this.g.hud?.feed('Waiting for your squad to board','#d5bd80');return false;}
   const goal=this.g.ms.convoyOperation?.destination;if(!goal){this.g.hud?.feed('Deploy through the portal first to establish the operation route','#d5bd80');return false;}
-  const dest=this.g.ms.threatLab.clearPad(goal.x+70,goal.z,45);if(!dest)return false;
+  const returning=this.stop==='depot',target=returning?this.origin:{x:goal.x+70,z:goal.z};
+  const dest=this.g.ms.threatLab.clearPad(target.x,target.z,45);if(!dest){this.g.hud?.feed('No clear landing area · departure unavailable','#d5bd80');return false;}
+  this.pendingStop=returning?'lab':'depot';
   this.from=this.model.position.clone();this.to=dest;this.elapsed=0;this.duration=Math.max(12,this.from.distanceTo(this.to)/60);
   this.cruise=Math.max(this.from.y,this.to.y)+100;
   for(let i=0;i<=60;i++){const x=this.from.x+(this.to.x-this.from.x)*i/60,z=this.from.z+(this.to.z-this.from.z)*i/60;for(const dx of [-35,0,35])this.cruise=Math.max(this.cruise,this.g.world.heightAt(x+dx,z)+70);}
@@ -119,9 +121,9 @@ export class SquadTransport{
   if(this.state==='flying'){
    this.elapsed+=dt;const t=Math.min(1,this.elapsed/this.duration),travel=Math.max(0,Math.min(1,(t-.2)/.6)),smooth=travel*travel*(3-2*travel);this.model.position.lerpVectors(this.from,this.to,smooth);
    this.model.position.y=t<.2?THREE.MathUtils.lerp(this.from.y,this.cruise,t/.2):t>.8?THREE.MathUtils.lerp(this.cruise,this.to.y,(t-.8)/.2):this.cruise;
-   if(t===1){this.state='opening';this.elapsed=0;this.home.copy(this.to);}
+   if(t===1){this.state='opening';this.elapsed=0;this.home.copy(this.to);this.stop=this.pendingStop||this.stop;}
   }
-  if(this.state==='opening'){this.elapsed+=dt;if(this.hinge)this.hinge.rotation.x=this.manifest.ramp.closedAngle*(1-Math.min(1,this.elapsed/1.2));if(this.elapsed>=1.2){this.state='parked';this.g.hud?.announce?.('TRANSPORT LANDED · J to disembark');}}
+  if(this.state==='opening'){this.elapsed+=dt;if(this.hinge)this.hinge.rotation.x=this.manifest.ramp.closedAngle*(1-Math.min(1,this.elapsed/1.2));if(this.elapsed>=1.2){this.state='parked';this.g.hud?.announce?.(`LANDED · ${this.stop==='lab'?'RESEARCH LAB':'DEPOT'} · J: exit · Enter: ${this.stop==='lab'?'depot':'return to lab'}`);}}
   this.sync();
  }
  destroy(){if(this.state==='destroyed')return;this.cancelBoarding();this.state='destroyed';for(const f of [...this.passengers.keys()]){this.exit(f,true);f.takeDamage(40,{dtype:'physical'});f.launchT=1;}this.model.visible=false;this.removeCover();}

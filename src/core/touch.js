@@ -170,7 +170,7 @@ export class TouchControls {
     for(const id of ['transportDepart','transportExit']){
       const b=this._root.querySelector(`[data-b="${id}"]`);b.hidden=!transport;
       b.disabled=!!transport&&(transport.state!=='parked'||id==='transportDepart'&&!(fighter._game.ms.squad?.members||[]).every(f=>!f.alive||transport.passengers.has(f)));
-      b.setAttribute('aria-label',id==='transportDepart'?'Depart for depot':'Exit parked transport');
+      b.setAttribute('aria-label',id==='transportDepart'?(transport?.stop==='depot'?'Return to research lab':'Depart for depot'):'Exit parked transport');
     }
     const frontline=fighter._game?.modeId==='powerworld';this._root.classList.toggle('frontline-touch',frontline);
     if(frontline){
