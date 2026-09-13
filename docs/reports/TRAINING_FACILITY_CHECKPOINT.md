@@ -574,3 +574,11 @@ Every shared snapshot/failure report now includes inputContext: observed suspens
 Power slotId values are DATA identifiers, not keyboard keys (q does not mean press Q; Q guards). Use --controls and the selected action binding. Context is observation, not a promise that an action is eligible while stunned, out of range or otherwise restricted.
 
 Native grab/release passed at artifacts/playtest/2026-09-13T05-56-23.590Z-melee-grab-guard. Its snapshots showed manage-person while holding target 2 and acquire after release, plus actual SOL power costs. Those captured artifacts used the initial field name key; final schema names it slotId to avoid keyboard ambiguity. Four snapshot tests passed, including priority, cooldowns, suspension and no-callback guarantees. This is part of #41, not full live discovery or action eligibility coverage.
+
+## Local evidence index — 2026-09-13
+
+Run `node tools/playtest/run.mjs --report`. It writes artifacts/playtest/report.json with historical runs, requested input scheme, recorded status, source revision/dirty files, staged scope, failure messages and absolute paths to videos/screenshots/diagnostics. No browser launch or gameplay replay is needed.
+
+The index qualifies recorded passes when results are absent, browser errors occur, shared action history is missing, input schemes disagree, release is unconfirmed or checkout identity was not verified. Recorded running status explicitly does not prove a live process. It does not promote historical runs to current-build acceptance.
+
+Generated locally: 31 runs, 22 with evidence caveats (including older adapter mismatches). Five report/runner tests passed. This JSON index is for AI/local tooling; no new game UI or standalone dashboard was added. Remaining #41 work includes operation checkpoint migration, more cleanup cases and deeper live action eligibility.

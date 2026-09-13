@@ -16,7 +16,7 @@ export function selectScenario(id){if(!Object.hasOwn(scenarios,id))throw new Err
 export function validateResult(result){if(result?.passed!==true)throw new Error('Scenario did not produce an explicit passing result.');if(result.errors?.length)throw new Error('Scenario reported browser errors.');return result;}
 
 export function parseRunArgs(args){
- if(![2,4].includes(args.length)||args[0]!=='--scenario'||(args.length===4&&args[2]!=='--scheme'))throw new Error('Usage: node tools/playtest/run.mjs --list | --controls | --scenario <id> [--scheme kbm|pad|touch]');
+ if(![2,4].includes(args.length)||args[0]!=='--scenario'||(args.length===4&&args[2]!=='--scheme'))throw new Error('Usage: node tools/playtest/run.mjs --list | --controls | --report | --scenario <id> [--scheme kbm|pad|touch]');
  const id=args[1],scenario=selectScenario(id),scheme=args[3]??scenario.config?.scheme??'kbm';
  if(!scenario.schemes.includes(scheme))throw new Error('Unsupported scheme '+scheme+' for '+id+'. Supported: '+scenario.schemes.join(', '));
  return {id,scenario,config:{...scenario.config,scheme}};
