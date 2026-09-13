@@ -200,3 +200,9 @@ No unfinished fleet assets are imported by this repair.
 - Recorded native draw/aim sweep/release: artifacts/marketing/bow-aim-review/bow-draw.webm. Restarted the stopped local Vite server on 5184 for capture.
 - Full extreme-angle/body-clearance, cover and form-change release review remain outstanding.
 
+
+### Bow release lifecycle and close cover
+- Native release reacquires the current bow socket when a form changes during drawing or on the release frame; the paid arrow then travels independently.
+- A bow extending through nearby cover releases on the near side. Arrows now use the existing swept projectile contact path even in worlds without native terrain triangles, preventing thin-wall tunneling.
+- Verification: 20 bow draw, aim, interruption and release tests passed. Thin interior wall protects a receiver at 30/60/120 Hz. Production build passed with existing chunk/import warnings.
+- This closes the demonstrated bow release failure; it does not claim all roster grips or the broader goal complete.

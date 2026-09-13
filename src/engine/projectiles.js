@@ -411,6 +411,13 @@ class Projectile {
       }
       else if(socket)socket.getWorldPosition(this.pos);
       else handEmissionPosition(this.caster,this.handOrigin,this.pos);
+      if(this._emitterDef?.type==='bow'){
+        // A held bow may extend into close cover. Resolve its launch on the
+        // near side so visual reach cannot become shooting through a wall.
+        const origin=this.caster.center(new THREE.Vector3()),contact={};
+        if(sweepSplitObstacle(game.world,origin,this.pos,this.radius,contact,true,this.radius))
+          this.pos.lerpVectors(origin,this.pos,Math.max(0,contact.t-1e-5));
+      }
       if(this._launchTarget){
         const speed=this.vel.length();this._launchTarget.sub(this.pos);
         if(this._launchTarget.lengthSq()>1e-8){
@@ -1884,7 +1891,7 @@ export class Projectiles {
     try{
     const beams=this.list.filter(p=>p instanceof BeamHose&&this._canIntercept(p,dt));
     const localReceivers=(game.entities||[]).filter(hasNaniteCells);
-    const participating=this.list.filter(p=>p instanceof Projectile&&!p.dead&&(game.world._ghTriangles||priorityEnabled(p)||p.ballistic||p.charged||
+    const participating=this.list.filter(p=>p instanceof Projectile&&!p.dead&&(game.world._ghTriangles||priorityEnabled(p)||p.ballistic||p.arrow||p.charged||
       (!p._guidedSplit&&!p.boomerang&&!p.stick&&!p.armDelay&&localReceivers.some(f=>game.isFoe(p.caster,f)))));
     if(participating.length)this._projectileContacts(dt,game,participating,beams);
     const prepared=new Set(participating);
