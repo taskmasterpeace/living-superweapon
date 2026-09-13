@@ -12,7 +12,7 @@ export async function performAction(page,name,{holdMs=80,until=null,scheme='kbm'
  const binding=actionCatalog(scheme)[name];
  if(!Object.hasOwn(actionCatalog(scheme),name))throw new Error('Unknown playtest action: '+name);
  if(!Number.isFinite(holdMs)||holdMs<20||holdMs>1500)throw new Error('holdMs must be 20–1500 milliseconds');
- if(until!==null&&!((until==='melee-charged'&&name==='strike')||(until==='grab-armed'&&name==='grab')))throw new Error('Unsupported action release condition');
+ if(until!==null&&!((until==='melee-charged'&&name==='strike')||(until==='grab-armed'&&name==='grab')||(until==='flight-height'&&name==='up')))throw new Error('Unsupported action release condition');
  if(active.has(page))throw new Error('Concurrent action rejected; await the current action');
  beginAcceptance(page);
  const history=histories.get(page)||[];histories.set(page,history);
@@ -26,7 +26,7 @@ export async function performAction(page,name,{holdMs=80,until=null,scheme='kbm'
  try{
   const before=await page.evaluate(()=>{const g=globalThis.PW?.game;return {ready:!!(g?.running&&g.player?.alive&&!g.combatOverlayOpen),time:g?.time};});
   if(!before.ready||!Number.isFinite(before.time))throw new Error('Gameplay input unavailable: paused, overlay, no living player or no runtime');
-  record.simulationBefore=before.time;if(move){moving=true;await setMove(...move);}await down();sent=true;if(until==='melee-charged'){await page.waitForFunction(()=>globalThis.PW?.game?.player?.meleeCharge>=.6,null,{timeout:10000,polling:100});record.chargeAtRelease=await page.evaluate(()=>PW.game.player.meleeCharge);}else if(until==='grab-armed'){await page.waitForFunction(()=>globalThis.PW?.game?.player?._contextGrab?.armed===true,null,{timeout:10000,polling:50});record.throwArmed=true;}else await page.waitForTimeout(holdMs);
+  record.simulationBefore=before.time;if(move){moving=true;await setMove(...move);}await down();sent=true;if(until==='melee-charged'){await page.waitForFunction(()=>globalThis.PW?.game?.player?.meleeCharge>=.6,null,{timeout:10000,polling:100});record.chargeAtRelease=await page.evaluate(()=>PW.game.player.meleeCharge);}else if(until==='grab-armed'){await page.waitForFunction(()=>globalThis.PW?.game?.player?._contextGrab?.armed===true,null,{timeout:10000,polling:50});record.throwArmed=true;}else if(until==='flight-height'){await page.waitForFunction(()=>{const g=globalThis.PW?.game,f=g?.player;return f?.flying&&f.pos.y-g.world.heightAt(f.pos.x,f.pos.z)>=24;},null,{timeout:30000,polling:50});record.flightHeightReached=true;}else await page.waitForTimeout(holdMs);
   await up();sent=false;record.released=true;if(moving){await setMove(0,0);moving=false;record.movementReleased=true;}
   await page.waitForFunction(t=>globalThis.PW?.game?.time>t,before.time,{timeout:5000,polling:100});
   record.simulationAfter=await page.evaluate(()=>PW.game.time);record.status='dispatched';

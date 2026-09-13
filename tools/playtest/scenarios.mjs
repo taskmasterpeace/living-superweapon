@@ -1,4 +1,5 @@
 export const scenarios=Object.freeze({
+ 'air-approach':{schemes:['kbm'],script:'air-approach-browser.mjs',capture:'silent video and screenshots',description:'Take off with native input, target a hovering trainer and connect an aerial melee approach from outside fist reach.'},
  'practice-prop-reset':{schemes:['kbm'],script:'practice-props-browser.mjs',capture:'silent video and screenshots',description:'Pick up and throw a practice rock, walk to the console and restore it without duplication.'},
  'practice-injury-reset':{schemes:['kbm'],config:{injury:true},script:'reset-practice-browser.mjs',capture:'silent video and screenshots',description:'Take real trainer hits and use the reset console three times; restore health without spending reserves or leaking targets.'},
  'practice-reset':{schemes:['kbm'],script:'reset-practice-browser.mjs',capture:'silent video and screenshots',description:'Spend energy and reset at the native console three times; preserve player and reserves, retire old targets.'},
