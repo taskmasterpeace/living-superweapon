@@ -1,3 +1,4 @@
+import {actionCatalog} from './actions.mjs';
 import {POWERWORLD_CONTROLS} from '../../src/core/powerworld-controls.js';
 import {checkoutIdentity,assertSameCheckout} from './identity.mjs';
 import {scenarios,selectScenario,validateResult} from './scenarios.mjs';
@@ -7,7 +8,7 @@ import {fileURLToPath,pathToFileURL} from 'node:url';
 import path from 'node:path';
 const args=process.argv.slice(2);
 if(args.length===1&&args[0]==='--controls'){
- console.log(JSON.stringify({version:1,source:'src/core/powerworld-controls.js',scope:'Canonical PowerWorld combat bindings; not live device/context discovery',controls:POWERWORLD_CONTROLS},null,2));
+ console.log(JSON.stringify({version:1,source:'src/core/powerworld-controls.js',scope:'Canonical PowerWorld combat bindings; not live device/context discovery',controls:POWERWORLD_CONTROLS,playtestActions:actionCatalog()},null,2));
 }else if(args.length===1&&args[0]==='--list'){
  console.log(JSON.stringify({version:1,scheme:'keyboard/mouse',server:'http://127.0.0.1:5184',staged:true,scenarios},null,2));
 }else{

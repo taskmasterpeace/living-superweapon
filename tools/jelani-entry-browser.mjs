@@ -1,3 +1,4 @@
+import {performAction} from './playtest/actions.mjs';
 import {observeErrors,saveSnapshot} from './playtest/diagnostics.mjs';
 import {chromium} from 'playwright';
 import {mkdir,writeFile,copyFile} from 'node:fs/promises';
@@ -9,7 +10,7 @@ try{
  await p.goto('http://127.0.0.1:5184/powerworld.html?hero=jelani');await p.waitForTimeout(2500);await p.keyboard.press('Enter');await p.getByRole('button',{name:'Enter with squad',exact:true}).click();await p.waitForFunction(()=>PW.game._threatRoom?.active,null,{timeout:90000});
  await p.evaluate(late=>{const g=PW.game,a=g.player,t=g.ms.threatLab.meleeTrial;t.origin.set(0,0,0);const v=t.start(late?'stationary':'retreat');a.pos.set(0,0,50);a.vel.set(0,0,0);v.invuln=0;g.world._lookYaw=Math.PI;g.world._lookPitch=0;a.faceDir(0,-1);a.aim3.set(0,0,-1);window.entryStart={hp:v.hp,pos:a.pos.toArray(),hero:a.def.id};},late);
  await p.evaluate(()=>{window.entryFrames=[];function capture(){const g=PW.game,a=g.player,t=g.ms.threatLab.meleeTrial.target,m=a._meleeMotion;if(entryFrames.length<300){entryFrames.push({time:g.time,pos:a.pos.toArray(),target:t.pos.toArray(),velocity:t.vel.toArray(),state:a.mstate,mT:a.mT,point:m?.point.toArray(),step:m?.step.toArray()});requestAnimationFrame(capture);}}requestAnimationFrame(capture);});
- await p.waitForTimeout(250);await p.keyboard.press('t');await p.keyboard.press('v');
+ await p.waitForTimeout(250);await p.keyboard.press('t');await performAction(p,'strike');
 
  await p.waitForFunction(()=>PW.game.player._meleeMotion?.family==='tackle',null,{timeout:2000});if(late)await p.evaluate(()=>{const g=PW.game;window.lateStart={state:g.player.mstate,targetSpeed:g.ms.threatLab.meleeTrial.target.vel.length(),point:g.player._meleeMotion.point.toArray()};g.ms.threatLab.meleeTrial.kind='retreat';});await p.screenshot({path:out+'/approach.png'});
  await p.waitForFunction(()=>PW.game.ms.threatLab.meleeTrial.target.hp<entryStart.hp,null,{timeout:5000});await p.waitForTimeout(700);await p.screenshot({path:out+'/contact.png'});
