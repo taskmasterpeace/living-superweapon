@@ -171,3 +171,9 @@ Shared performAction accepts until:'grab-armed' only for grab. It waits for the 
 Passed evidence: artifacts/playtest/2026-09-13T06-06-50.314Z-air-approach. Silent clip/screenshot, action history and snapshots retained. Twelve scoped action/runner tests passed. New up release condition flight-height waits for the native state and releases input on timeout.
 
 Failed runs at 06-04-26 and 06-05-18 attempted lock with the trainer below the crosshair. The first was initially suspected to be input sampling; the screenshot and target-cone code showed the real aiming issue. The corrected scenario uses real mouse aiming, preserving the targeting cone. This proves a single hover-target aerial approach; aerial evasion, throws, guard and physical device testing remain distinct cases.
+
+## Airborne guard check — 2026-09-13
+
+`node tools/playtest/run.mjs --scenario air-guard` shares the native takeoff/aim script with air-approach, starts the air-defense trainer, then holds Q facing it. It requires both fighters airborne before the defense phase, a new incoming BLOCK record, zero health damage for that contact, positive guard-energy absorption and continued player flight. Target lock is not a guard requirement.
+
+Passed: artifacts/playtest/2026-09-13T06-09-43.274Z-air-guard. Silent clip and snapshot saved, no browser errors. The first attempt at 06-08-51 incorrectly required lock acquisition against an approaching trainer; preserved as failed evidence. The defense route now tests facing/guard directly, without altering gameplay targeting or injecting defense state. This does not establish uninterrupted protection during setup or all-angle guard; it verifies a funded frontal airborne block. Native air-approach retains its lock requirement.
