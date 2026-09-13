@@ -49,9 +49,8 @@ def shaped_segment(name,bone,profile,mat,slot):
  o.location=b.head_local;o.rotation_mode='QUATERNION';o.rotation_quaternion=Vector((0,0,1)).rotation_difference(direction.normalized());return o
 rings('Torso.chest',[(1.16,.145,.092),(1.34,.215,.107),(1.44,.215,.099),(1.49,.115,.082)],'DEF-spine.003','suit','torso')
 rings('Torso.waist',[(1.00,.135,.085),(1.17,.15,.096)],'DEF-spine.001','dark','torso')
-box('Abdominal.panel',(0,-.092,1.125),(.16,.008,.16),'DEF-spine.001','suit','torso',.003)
 rings('Pelvis',[(.85,.12,.09),(.98,.155,.105),(1.04,.14,.092)],'DEF-hips','dark','waist')
-box('Belt',(0,-.008,1.025),(.31,.21,.055),'DEF-hips','dark','belt')
+rings('Belt',[(.998,.158,.113),(1.05,.158,.113)],'DEF-hips','dark','belt')
 box('Buckle',(0,-.12,1.025),(.065,.025,.045),'DEF-hips','accent','belt',.005)
 box('Neck',(0,0,1.53),(.10,.10,.11),'DEF-neck','dark','head')
 box('Head',(0,-.008,1.67),(.215,.18,.25),'DEF-head','skin','head',.021)
@@ -74,6 +73,11 @@ box('Visor',(0,-.111,1.702),(.225,.022,.042),'DEF-head','accent','visor',.006)
 for s in [-1,1]:box('Visor.temple'+str(s),(s*.112,-.009,1.702),(.018,.20,.033),'DEF-head','accent','visor',.004)
 box('Eyepatch',(-.050,-.120,1.704),(.078,.018,.060),'DEF-head','dark','eyepatch',.008)
 box('Eyepatch.band',(0,.005,1.724),(.227,.20,.013),'DEF-head','dark','eyepatch',.003)
+for s in [-1,1]:
+ for dz in [-.022,.022]:box('Glasses.rim', (s*.052,-.119,1.704+dz),(.082,.012,.008),'DEF-head','dark','glasses',0)
+ for dx in [-.038,.038]:box('Glasses.edge',(s*.052+dx,-.119,1.704),(.008,.012,.049),'DEF-head','dark','glasses',0)
+ box('Glasses.temple',(s*.114,-.012,1.705),(.012,.20,.008),'DEF-head','dark','glasses',0)
+box('Glasses.bridge',(0,-.119,1.708),(.026,.012,.008),'DEF-head','dark','glasses',0)
 face=mesh('Face.expression',[(-.092,-.103,1.585),(.092,-.103,1.585),(.092,-.103,1.755),(-.092,-.103,1.755)],[(0,1,2,3)],'DEF-head','face','expression')
 uv=face.data.uv_layers.new(name='UVMap')
 for i,co in enumerate([(0,0),(1,0),(1,1),(0,1)]):uv.data[i].uv=co
@@ -85,19 +89,31 @@ box('Field.pack',(0,.19,1.27),(.27,.16,.30),'DEF-spine.003','dark','backpack',.0
 for s in [-1,1]:
  box('Field.strap'+str(s),(s*.125,-.167,1.34),(.045,.022,.28),'DEF-spine.003','metal','vest',.003)
  for j in range(2):box('Pouch'+str(s)+str(j),(s*(.09+j*.095),-.13,1.006),(.075,.065,.105),'DEF-hips','metal','pouches',.008)
-emblem=mesh('Emblem.patch',[(-.094,-.184,1.265),(.094,-.184,1.265),(.094,-.184,1.44),(-.094,-.184,1.44)],[(0,1,2,3)],'DEF-spine.003','face','emblem')
-uv=emblem.data.uv_layers.new(name='UVMap')
-for i,co in enumerate([(0,0),(1,0),(1,1),(0,1)]):uv.data[i].uv=co
+for slot,y in [('emblem',-.110),('emblemBack',.109)]:
+ emblem=mesh(slot+'.patch',[(-.074,y,1.30),(.074,y,1.30),(.074,y,1.42),(-.074,y,1.42)],[(0,1,2,3)],'DEF-spine.003','face',slot)
+ uv=emblem.data.uv_layers.new(name='UVMap')
+ for i,co in enumerate([(0,0),(1,0),(1,1),(0,1)] if slot=='emblem' else [(1,0),(0,0),(0,1),(1,1)]):uv.data[i].uv=co
+ emblem.shape_key_add(name='Basis')
+ for name,dy in [('onGear',-.043 if slot=='emblem' else .163),('waistNarrow',-.016 if slot=='emblem' else 0),('muscleSmall',.011 if slot=='emblem' else -.011),('muscleLarge',-.020 if slot=='emblem' else .020)]:
+  key=emblem.shape_key_add(name=name)
+  for v in key.data:v.co.y+=dy
 for side in ['L','R']:
  s=1 if side=='L' else -1
- arm=shaped_segment('UpperArm.'+side,'DEF-upper_arm.'+side,[(0,.073,.075),(.20,.086,.086),(.48,.094,.092),(.70,.080,.078),(1,.059,.062)],'suit','arms')
+ arm=shaped_segment('UpperArm.'+side,'DEF-upper_arm.'+side,[(.30,.085,.085),(.48,.094,.092),(.70,.080,.078),(1,.059,.062)],'suit','arms')
  # Morph only the middle rings: shoulder and elbow seam vertices never move.
  arm.shape_key_add(name='Basis')
  for name,scale in [('muscleSmall',.76),('muscleLarge',1.30)]:
   key=arm.shape_key_add(name=name)
   for i,v in enumerate(key.data):
-   influence=[0,.75,1,.65,0][i//8];v.co.x*=1+(scale-1)*influence;v.co.y*=1+(scale-1)*influence
+   influence=[0,1,.65,0][i//8];v.co.x*=1+(scale-1)*influence;v.co.y*=1+(scale-1)*influence
  shaped_segment('Gauntlet.'+side,'DEF-forearm.'+side,[(0,.09,.092),(.16,.097,.098),(.73,.075,.077),(1,.053,.057)],'accent','gauntlets')
+ shaped_segment('Forearm.'+side,'DEF-forearm.'+side,[(0,.059,.062),(.35,.063,.065),(1,.044,.045)],'suit','forearms')
+ shoulder=shaped_segment('Deltoid.'+side,'DEF-upper_arm.'+side,[(-.13,.035,.045),(0,.072,.080),(.17,.086,.088),(.30,.085,.085)],'suit','deltoids')
+ shoulder.shape_key_add(name='Basis')
+ for name,scale in [('muscleSmall',.87),('muscleLarge',1.15)]:
+  key=shoulder.shape_key_add(name=name)
+  for i,v in enumerate(key.data):
+   weight=[0,.8,1,0][i//8];v.co.x*=1+(scale-1)*weight;v.co.y*=1+(scale-1)*weight
  b=rig.data.bones['DEF-upper_arm.'+side]
  box('Pauldron.'+side,b.head_local+Vector((s*.032,0,.025)),(.19,.20,.16),'DEF-upper_arm.'+side,'accent','shoulders',.035)
  segment('Thigh.'+side,'DEF-thigh.'+side,.165,.18,'suit','legs')
@@ -113,22 +129,49 @@ for side in ['L','R']:
    bone=f'DEF-{finger}.{n:02d}.{side}'
    # One joined four-finger block, plus a separate thumb. No individual digits.
    b=rig.data.bones[bone];a=b.head_local;c=b.tail_local;v=c-a
-   o=box('Mitten.'+bone,(a+c)*.5,(.027,.077 if finger!='thumb' else .027,v.length+.012),bone,'dark','hands',0);o.rotation_mode='QUATERNION';o.rotation_quaternion=Vector((0,0,1)).rotation_difference(v.normalized())
+   o=box('Mitten.'+bone,(a+c)*.5,(.027,.077 if finger!='thumb' else .027,v.length+.012),bone,'dark','handTips' if n>=2 else 'hands',0);o.rotation_mode='QUATERNION';o.rotation_quaternion=Vector((0,0,1)).rotation_difference(v.normalized())
  # Palm grip socket is exported as a bone child with a stable transform.
  sock=bpy.data.objects.new('socket.grip.'+side,None);bpy.context.collection.objects.link(sock);sock.parent=rig;sock.parent_type='BONE';sock.parent_bone='DEF-hand.'+side
  sock.matrix_world.translation=mid+Vector((0,0,-.025));sock['slot']='weapon';sock['side']=side
 # Cape is a modular mesh rigidly weighted to the chest, not simulated physics.
+# Split robe panels follow each thigh, leaving a real opening for long strides.
+# Flared sleeves follow the forearm; they share the canonical rest-pose contract.
+for side in ['L','R']:
+ s=1 if side=='L' else -1
+ for name,y in [('front',-.13),('back',.13)]:
+  mesh('Robe.'+name+'.'+side,[(s*.06,y,1.035),(s*.16,y,1.035),(s*.29,y*1.55,.20),(s*.082,y*1.6,.20)],[(0,1,2,3)],'DEF-thigh.'+side,'suit','robe')
+  mesh('Robe.trim.'+name+'.'+side,[(s*.025,y,1.035),(s*.06,y,1.035),(s*.082,y*1.6,.20),(s*.035,y*1.6,.20)],[(0,1,2,3)],'DEF-thigh.'+side,'accent','robe')
+ mesh('Robe.side.'+side,[(s*.16,-.13,1.035),(s*.16,.13,1.035),(s*.29,.20,.20),(s*.29,-.20,.20)],[(0,1,2,3)],'DEF-thigh.'+side,'dark','robe')
+ shaped_segment('Sleeve.'+side,'DEF-forearm.'+side,[(0,.075,.078),(.4,.09,.094),(1,.16,.165)],'suit','sleeves')
+rings('Robe.collar',[(1.45,.16,.13),(1.53,.18,.145),(1.57,.15,.12)],'DEF-spine.003','suit','collar')
+# Ragged lower shirt tabs; discrete silhouette pieces share the hips/thighs.
+for side in ['L','R']:
+ s=1 if side=='L' else -1
+ mesh('Torn.hem.'+side,[(s*.015,-.115,1.035),(s*.155,-.115,1.035),(s*.17,-.122,.85),(s*.10,-.128,.91),(s*.045,-.125,.84)],[(0,1,2,3,4)],'DEF-thigh.'+side,'suit','tornClothes')
 for o in parts:
+ if o.get('slot') in ['waist','belt','pouches']:
+  o.shape_key_add(name='Basis');key=o.shape_key_add(name='waistNarrow')
+  for v in key.data:
+   world=o.matrix_world@v.co;world.x*=1.12;v.co=o.matrix_world.inverted()@world
  if o.get('slot')=='torso':
   o.shape_key_add(name='Basis');key=o.shape_key_add(name='waistNarrow')
   for v in key.data:
    world=o.matrix_world@v.co
    # The shoulder seam stays broad while the waist tapers inward.
    t=max(0,min(1,(1.35-world.z)/.20));v.co.x*=1-.24*t
+   if world.y<0 and 1.25<world.z<1.44:v.co.y*=1.14
+  for name,scale in [('muscleSmall',.9),('muscleLarge',1.12)]:
+   key=o.shape_key_add(name=name)
+   for v in key.data:
+    world=o.matrix_world@v.co;t=max(0,min(1,(world.z-1.15)/.16))*max(0,min(1,(1.49-world.z)/.07))
+    v.co.x*=1+(scale-1)*t;v.co.y*=1+(scale-1)*1.5*t
 verts=[]
 for z,w,y in [(1.46,.17,.12),(1.16,.20,.17),(.72,.25,.24),(.31,.28,.29)]:
- for col in [-1,0,1]:verts.append((w*col,y+(.055 if col==0 else 0),z+(.028 if col==0 else 0)))
-cape=mesh('Cape',verts,[(r*3+c,r*3+c+1,(r+1)*3+c+1,(r+1)*3+c) for r in range(3) for c in range(2)],'DEF-spine.003','accent','cape')
+ for i,col in enumerate([-1,-.5,0,.5,1]):verts.append((w*col,y+(.050 if i%2 else .012),z+(.025 if i%2 else 0)))
+cape=mesh('Cape',verts,[(r*5+c,r*5+c+1,(r+1)*5+c+1,(r+1)*5+c) for r in range(3) for c in range(4)],'DEF-spine.003','accent','cape')
+cape.shape_key_add(name='Basis');key=cape.shape_key_add(name='capeBend')
+for v in key.data:
+ t=max(0,(1.46-v.co.z)/1.15);v.co.y+=.20*t*t;v.co.z+=.055*t*t
 cape.data.materials[0].use_backface_culling=False
 rig.data.pose_position='POSE';bpy.context.scene.render.fps=30
 # Actions are exported directly; no direction-vector sampling or wrist reconstruction.

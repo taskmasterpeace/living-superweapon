@@ -31,11 +31,11 @@ export function setModularExpression(meshes,id='neutral',options={}){
 }
 export function setModularMuscle(meshes,amount=1){
  if(!Number.isFinite(amount)||amount<.8||amount>1.3)throw Error('Muscle amount must be 0.8–1.3');
- for(const m of meshes)if(m.userData.slot==='arms'){
+ for(const m of meshes)if(['arms','deltoids','torso'].includes(m.userData.slot)){
   // Authored morph deltas are local to the mesh. Runtime bindMatrixInverse
   // includes scene scale and must never be used to rewrite rest vertices.
   const small=m.morphTargetDictionary?.muscleSmall,large=m.morphTargetDictionary?.muscleLarge;
-  if(small===undefined||large===undefined)throw Error('Arm module lacks authored muscle morphs');
+  if(small===undefined||large===undefined)continue;
   m.morphTargetInfluences[small]=amount<1?(1-amount)/.2:0;
   m.morphTargetInfluences[large]=amount>1?(amount-1)/.3:0;
   m.userData.muscleAmount=amount;

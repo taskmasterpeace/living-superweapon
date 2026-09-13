@@ -16,6 +16,7 @@ import { RagdollCape } from './ragdoll-cape.js';
 import { RagdollCoreContact } from './ragdoll-core-contact.js';
 import { RagdollNeckLimit } from './ragdoll-neck-limit.js';
 import { RagdollArmSeam } from './ragdoll-arm-seam.js';
+import { RagdollJointLimits } from './ragdoll-joint-limits.js';
 import { clamp } from '../core/util.js';
 import { ARENA as ARENA_FALLBACK } from './world.js';   // ⚠ review item 7: the FROZEN flagship value.
 // It is a last-resort default ONLY — every live read must go through world.ARENA, which is
@@ -57,7 +58,7 @@ const _a = new THREE.Vector3(), _b = new THREE.Vector3(), _m = new THREE.Vector3
 const _dir = new THREE.Vector3(), _up = new THREE.Vector3(0, 1, 0), _q = new THREE.Quaternion();
 
 export class Ragdoll {
-  constructor(fighter, impulse, { downward = false, restorePose = [] } = {}) {
+  constructor(fighter, impulse, { downward = false, restorePose = [], jointLimits = fighter.def.model?.body==='faceted-v1' } = {}) {
     this.f = fighter;
     const p = fighter.parts;
     // meshes we drive, and their pivots (zeroed so children live in group-local space, then restored)
@@ -111,6 +112,7 @@ export class Ragdoll {
     this.limbPose=joints?new RagdollLimbPose(p,this.P):null;
     this.coreContact=this.corePose?new RagdollCoreContact(p,this.corePose,GROUND_R):null;
     this.neckLimit=this.corePose?new RagdollNeckLimit(this.corePose,p):null;
+    this.jointLimits=jointLimits?new RagdollJointLimits(this.P):null;
     this.armSeam=p.cape&&this.limbPose?new RagdollArmSeam(this.corePose,this.limbPose,p):null;
 
     // launch: base knockback + upward pop + a somersault spin in the launch direction
@@ -131,7 +133,7 @@ export class Ragdoll {
       const vz = base.z + _b.z + (Math.random() - 0.5) * 5;
       pt.prev.set(pt.pos.x - vx * dt0, pt.pos.y - vy * dt0, pt.pos.z - vz * dt0);
     }
-    this.capePose=p.cape?.userData.rest?new RagdollCape(p,_a.subVectors(this.P.chest.pos,this.P.chest.prev).multiplyScalar(60)):null;
+    this.capePose=!jointLimits&&p.cape?.userData.rest?new RagdollCape(p,_a.subVectors(this.P.chest.pos,this.P.chest.prev).multiplyScalar(60)):null;
     this._clothDt=0;this._clothWorld=null;
     // precompute rest lengths
     this.rest = BONES.map(([a, b, s]) => {
@@ -175,7 +177,7 @@ export class Ragdoll {
         A.pos.x += _dir.x * fa; A.pos.y += _dir.y * fa; A.pos.z += _dir.z * fa;
         B.pos.x -= _dir.x * fb; B.pos.y -= _dir.y * fb; B.pos.z -= _dir.z * fb;
       }
-      this.neckLimit?.solve();this.armSeam?.solve();
+      this.jointLimits?.solve();this.neckLimit?.solve();this.armSeam?.solve();
       this._collide(game);
     }
     // Final contact must see the completed joint orientation. Correcting just

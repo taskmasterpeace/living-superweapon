@@ -1,4 +1,4 @@
-import {applyModularRecipe,MODULAR_RECIPES} from './modular-costume.js';
+import {applyModularRecipe,MODULAR_RECIPES,animateModularCape} from './modular-costume.js';
 import * as T from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {clone} from 'three/addons/utils/SkeletonUtils.js';
@@ -10,7 +10,7 @@ import {heroModelOf} from '../data/hero-models.js';
 
 let asset;
 export const MODULAR_BODY='faceted-v1';
-export const MODULAR_SLOTS=['head','hair','visor','expression','torso','waist','belt','arms','gauntlets','shoulders','legs','boots','knees','hands','cape','emblem','helmet','vest','backpack','eyepatch','pouches'];
+export const MODULAR_SLOTS=['tornClothes','robe','sleeves','collar','glasses','deltoids','forearms','handTips','emblemBack','head','hair','visor','expression','torso','waist','belt','arms','gauntlets','shoulders','legs','boots','knees','hands','cape','emblem','helmet','vest','backpack','eyepatch','pouches'];
 export function modularAsset(){return asset??=new GLTFLoader().loadAsync('/models/modular-hero/modular-hero.glb').catch(e=>{asset=null;throw e;});}
 export function setModularCostume(meshes,{soldier=false,primary='#dce0d9',accent='#b52e23',skin='#b18b6d',cape=true,visor=false}={}){
  return applyModularRecipe(meshes,{...MODULAR_RECIPES[soldier?'mercenary':'hero'],primary:soldier?'#657151':primary,secondary:soldier?'#46543a':accent,skin,cape:!soldier&&cape,visor,hair:soldier?'none':'swept',helmet:soldier});
@@ -38,11 +38,13 @@ export async function loadModularCharacter(f,{load=modularAsset}={}){
  for(const root of [parts.torso,parts.pelvis,parts.head,parts.armL,parts.armR,parts.legL,parts.legR,parts.cape,parts.cowl])if(root)hide(root);
  if(parts.skin)for(const mesh of Object.values(parts.skin.meshes||{}))if(mesh?.isMesh)hide(mesh);
  setModularCostume(c.meshes,{primary:f.def.colors.primary,accent:f.def.colors.accent||f.def.colors.secondary,cape:!f.def.metal,soldier:heroModelOf(f.def).equipment==='soldier'});
+ if(f.def.id==='vega')applyModularRecipe(c.meshes,MODULAR_RECIPES.vegas);
  let drivenWeapon=null,weaponBase=null;
  const restoreWeapon=()=>{if(drivenWeapon&&weaponBase){weaponBase.decompose(drivenWeapon.position,drivenWeapon.quaternion,drivenWeapon.scale);drivenWeapon=null;weaponBase=null;}};
  const dispose=c.dispose.bind(c);c.dispose=()=>{restoreWeapon();for(const [o,mask]of hidden)o.layers.mask=mask;dispose();};
  c.update=()=>{
   restoreWeapon();
+  animateModularCape(c.meshes,f.animT||0,f.vel.length());
   adapter.reset();
   const held=meleeWeaponFor(f),sourcedSword=held&&['sword','katana','knife'].includes(held.weapon.userData.weaponKind)&&!held.weapon.userData.twoHanded;
   // Busy native poses retain responsive aim/guard/grab and weapon attachments.

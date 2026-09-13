@@ -2860,7 +2860,7 @@ export class Fighter {
     animateLostControlPose(this,dt);
     syncHeadCover(p);
     // Cloth reads the final carrier, including recoil, but cannot affect fist-speed damage.
-    animateCape(p,this.animT,this.vel.length(),this.vel);
+    if(!this._modularCharacter)animateCape(p,this.animT,this.vel.length(),this.vel);
     animateHeldGrip(this);
     updateBowAttachments(this);
     updateLimbSurfaces(p);

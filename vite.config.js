@@ -35,6 +35,7 @@ export default defineConfig({
         powerworld: fileURLToPath(new URL('./powerworld.html', import.meta.url)),
         studio: fileURLToPath(new URL('./studio.html', import.meta.url)),
         characterFoundation: fileURLToPath(new URL('./character-foundation.html', import.meta.url)),
+        creatureFoundation: fileURLToPath(new URL('./creature-foundation.html', import.meta.url)),
         soundLibrary: fileURLToPath(new URL('./sound-library.html', import.meta.url)),
         animationLibrary: fileURLToPath(new URL('./animation-library.html', import.meta.url)),
         gadgetLibrary: fileURLToPath(new URL('./gadget-library.html', import.meta.url)),

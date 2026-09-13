@@ -7,7 +7,7 @@ import {Fighter,buildWeapon} from '../src/engine/entity.js';
 import {loadModularCharacter} from '../src/engine/modular-character.js';
 import {alignWeaponGrip,WEAPON_GRIP_CENTERS} from '../src/engine/weapon-grip.js';
 import {FACE_EXPRESSIONS,setModularMuscle} from '../src/engine/modular-face.js';
-import {MODULAR_RECIPES,applyModularRecipe,validateModularRecipe} from '../src/engine/modular-costume.js';
+import {MODULAR_RECIPES,applyModularRecipe,validateModularRecipe,animateModularCape} from '../src/engine/modular-costume.js';
 import {ROSTER} from '../src/data/characters.js';
 import {createModularFlightAdapter} from '../src/engine/modular-flight.js';
 globalThis.ProgressEvent??=class{constructor(type,data){Object.assign(this,{type},data);}};
@@ -36,7 +36,7 @@ test('flight adapter preserves source bone lengths and cannot mutate fighter con
  f.dispose();
 });
 test('runtime groups retain modular slots, valid weights and a bounded triangle budget',async()=>{
- const g=await output();let count=0,tris=0;const slots=new Set();g.scene.traverse(o=>{if(!o.isMesh)return;count++;slots.add(o.userData.slot);assert.ok(o.isSkinnedMesh,o.name);tris+=(o.geometry.index?.count??o.geometry.attributes.position.count)/3;const w=o.geometry.attributes.skinWeight;for(let i=0;i<w.count;i++)assert.ok(Math.abs(w.getX(i)+w.getY(i)+w.getZ(i)+w.getW(i)-1)<1e-5);});assert.ok(count<=30,count);assert.ok(tris<3000,tris);for(const s of ['hands','torso','cape','hair','emblem'])assert.ok(slots.has(s),s);
+ const g=await output();let count=0,tris=0;const slots=new Set();g.scene.traverse(o=>{if(!o.isMesh)return;count++;slots.add(o.userData.slot);assert.ok(o.isSkinnedMesh,o.name);tris+=(o.geometry.index?.count??o.geometry.attributes.position.count)/3;const w=o.geometry.attributes.skinWeight;for(let i=0;i<w.count;i++)assert.ok(Math.abs(w.getX(i)+w.getY(i)+w.getZ(i)+w.getW(i)-1)<1e-5);});assert.ok(count<=42,count);assert.ok(tris<4000,tris);for(const s of ['hands','torso','cape','hair','emblem'])assert.ok(slots.has(s),s);
 });
 test('native sword contact geometry follows the authored palm and restores on teardown',async()=>{
  const def=structuredClone(ROSTER.find(d=>d.id==='vega'));def.model={...def.model,body:'faceted-v1'};const f=new Fighter(def);f._animate(0);
@@ -95,3 +95,23 @@ test('portable recipe validates colors, size, attachments and frame before apply
  const r=validateModularRecipe(JSON.parse(JSON.stringify(raw)));assert.equal(r.eyepatch,true);assert.equal(r.frame,'agile');assert.equal(r.eyeColor,'#f2ce71');assert.equal(r.size,.85);
  for(const change of [{frame:'invalid'},{size:NaN},{skin:'not-a-color'},{hair:'unknown'},{muscle:9},{visor:'yes'}])assert.throws(()=>validateModularRecipe({...raw,...change}));
 });
+
+test('Vegas stays bald and capeless; female insignia and robe modules preserve fitted surfaces',async()=>{
+ const g=await output(),meshes=[];g.scene.traverse(o=>{if(o.isMesh)meshes.push(o);});
+ applyModularRecipe(meshes,MODULAR_RECIPES.vegas);
+ assert.equal(MODULAR_RECIPES.vegas.hair,'none');assert.equal(MODULAR_RECIPES.vegas.cape,false);
+ assert.ok(meshes.filter(m=>['hair','cape'].includes(m.userData.slot)).every(m=>!m.visible));
+ applyModularRecipe(meshes,MODULAR_RECIPES.mage);
+ for(const slot of ['robe','sleeves','collar'])assert.ok(meshes.some(m=>m.userData.slot===slot&&m.visible),slot);
+ assert.ok(meshes.filter(m=>m.userData.slot==='gauntlets').every(m=>!m.visible),'sleeves replace overlapping gauntlets');
+ const patch=meshes.find(m=>m.userData.slot==='emblem');assert.equal(patch.morphTargetInfluences[patch.morphTargetDictionary.waistNarrow],1);
+ for(const source of [MODULAR_RECIPES.mage,MODULAR_RECIPES.vegas]){const r=validateModularRecipe({schema:1,skeleton:'ual-deform-v1',body:'faceted-v1',...source});assert.equal(r.cape,source.cape);assert.equal(r.hair,source.hair);}
+});
+test('base anatomy has no compulsory gear; glove styles and body-wide muscle are independent',async()=>{
+ const g=await output(),meshes=[];g.scene.traverse(o=>{if(o.isMesh)meshes.push(o);});applyModularRecipe(meshes,MODULAR_RECIPES.base);
+ for(const slot of ['cape','gauntlets','knees','belt','shoulders','backpack'])assert.ok(meshes.filter(m=>m.userData.slot===slot).every(m=>!m.visible),slot);
+ for(const glove of ['bare','full','fingerless']){applyModularRecipe(meshes,{...MODULAR_RECIPES.base,gloves:glove,gloveColor:'#123456'});for(const m of meshes.filter(m=>['hands','handTips'].includes(m.userData.slot)))assert.equal('#'+m.material.color.getHexString(),glove==='bare'||(glove==='fingerless'&&m.userData.slot==='handTips')?MODULAR_RECIPES.base.skin:'#123456');}
+ setModularMuscle(meshes,1.3);for(const slot of ['torso','deltoids','arms'])assert.ok(meshes.filter(m=>m.userData.slot===slot).some(m=>m.morphTargetInfluences[m.morphTargetDictionary.muscleLarge]>.99),slot);
+ const cape=meshes.find(m=>m.userData.slot==='cape');for(const speed of [0,80,999]){animateModularCape(meshes,3,speed);assert.ok(cape.morphTargetInfluences[cape.morphTargetDictionary.capeBend]<=.4);}
+});
+

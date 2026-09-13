@@ -78,3 +78,15 @@ The workshop exports and imports JSON with `schema:1`, `skeleton:ual-deform-v1`,
 The muscle bug was reproduced with an unchanged slider value: it moved rest vertices by up to 1.26 source units because `bindMatrixInverse` included scene scale. Authored local morphs replace that calculation. The regression test runs at nonuniform world scale and verifies that shoulder/elbow seam vertices remain stationary.
 
 Review commands: `node tools/modular-recipes-review.mjs` captures four recipes and motion; `node tools/modular-recipe-roundtrip.mjs` verifies export/import plus expression and eye/headgear controls. Evidence is under `artifacts/marketing/modular-character/`, including `modular-recipes.webm` and `mercenary-example.json`.
+
+## September 13: base-body and creature checkpoint
+
+Current details supersede the early prototype counts above. The humanoid asset is 3,256 optional triangles in 39 material/slot groups. Base male/female, body-wide muscle, wrap belt, optional clothing/armor, glove colors and joined-finger fingerless gloves are implemented. Cape uses a bounded lower-panel bend; it does not run the legacy cloth solver. The new body's ragdoll has bounded knees/elbows in addition to the neck constraint, with a drop-inspection mode. Full anatomical twist limits remain future work.
+
+Transparent PNG/WebP insignia upload is visible in the workshop and roundtrips through recipe JSON. Front/back body and gear mounts are separate. Female chest fit now keeps the emblem visible; robe trim uses adjacent surfaces instead of overlapping polygons. Vegas is bald, black/old gold and capeless in the workshop and opt-in native modular renderer. Existing native models are not migrated wholesale.
+
+Robe panels, flared sleeves, collar, torn shirt tabs and glasses are optional. Infected presets are appearance studies using the humanoid library, not completed zombie AI/animation kits. The quadruped workshop contains Wolf/Husky with 12 original Quaternius clips each; the GLB packager preserves original animation bytes rather than baking shortened tracks. Source comparison: 840 landmark samples, zero position/duration error. Distinct run/trot, knockdown/get-up and paired pounce are still missing.
+
+Character/flight/profile/ragdoll regression suite: 59 passing. Browser clothing/animal review and transparent emblem roundtrip pass. Source fidelity is separately checked by `node tools/quadruped-source-review.mjs`. Footage: `artifacts/marketing/modular-character/creature-and-clothing-review.webm`.
+
+The family/wardrobe handoff is `docs/CHARACTER_CONTENT_AUTHORING.md`. Outstanding digitigrade rigs, alien quadruped art, creature gameplay, full wardrobe and complete native outfit persistence are tracked with concrete approaches in https://github.com/taskmasterpeace/powerworld/issues/56. Do not describe these as completed merely because preview animals animate.

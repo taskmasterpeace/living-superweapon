@@ -1,0 +1,89 @@
+{
+  "schema": 1,
+  "animals": [
+    {
+      "id": "wolf",
+      "file": "wolf.glb",
+      "family": "quadruped",
+      "skeleton": "quaternius-animal-v1",
+      "author": "Quaternius",
+      "license": "CC0-1.0",
+      "source": "https://quaternius.com/packs/ultimateanimatedanimals.html",
+      "sourceSha256": "cc02e9d128b5715f352ee8bea086f97a35f1d875d240de99b0f9f2775c37d415",
+      "clips": [
+        "Attack",
+        "Death",
+        "Eating",
+        "Gallop",
+        "Gallop_Jump",
+        "Idle",
+        "Idle_2",
+        "Idle_2_HeadLow",
+        "Idle_HitReact1",
+        "Idle_HitReact2",
+        "Jump_ToIdle",
+        "Walk"
+      ],
+      "sourceBoundsZUp": {
+        "min": [
+          -0.9510578513145447,
+          -2.561190366744995,
+          -1.0
+        ],
+        "max": [
+          0.9510578513145447,
+          2.9918973445892334,
+          2.670809745788574
+        ]
+      },
+      "triangles": 2042,
+      "gaps": [
+        "paired pounce victim",
+        "knockdown recovery",
+        "dedicated trot/run clip"
+      ]
+    },
+    {
+      "id": "husky",
+      "file": "husky.glb",
+      "family": "quadruped",
+      "skeleton": "quaternius-animal-v1",
+      "author": "Quaternius",
+      "license": "CC0-1.0",
+      "source": "https://quaternius.com/packs/ultimateanimatedanimals.html",
+      "sourceSha256": "0cfd85ddfcc5c07caf1bdeb296b21017b0da4c8558a92086daf4a172e0bf8d97",
+      "clips": [
+        "Attack",
+        "Death",
+        "Eating",
+        "Gallop",
+        "Gallop_Jump",
+        "Idle",
+        "Idle_2",
+        "Idle_2_HeadLow",
+        "Idle_HitReact1",
+        "Idle_HitReact2",
+        "Jump_ToIdle",
+        "Walk"
+      ],
+      "sourceBoundsZUp": {
+        "min": [
+          -0.9510578513145447,
+          -2.4149322509765625,
+          -1.0
+        ],
+        "max": [
+          0.9510578513145447,
+          1.4742637872695923,
+          3.194108486175537
+        ]
+      },
+      "triangles": 2080,
+      "gaps": [
+        "paired pounce victim",
+        "knockdown recovery",
+        "dedicated trot/run clip"
+      ]
+    }
+  ]
+}

@@ -28,3 +28,7 @@ The workshop now includes athletic Ascendant, broad Black mercenary, agile Black
 Muscle uses authored local morphs with pinned shoulder/elbow seams; the old scene-scale vertex rewrite was removed. The regression test reproduces the original scale conditions. Visible recipe geometry: Ascendant 1,348 triangles; heavy mercenary 1,932; agile mercenary 1,824; robot 1,280. The whole optional-parts asset contains 2,836 triangles.
 
 Portable recipe export/import is verified. Full native Studio profile persistence for these outfit recipes remains separate. Current expressions are manually selected; the existing Psyche runtime can supply emotion events in a future integration. New gallery: artifacts/marketing/modular-character/index.html; motion: modular-recipes.webm; portrait: mercenary-portrait.png.
+
+## Latest checkpoint
+
+See `CHARACTER_CONTENT_AUTHORING.md` and the September 13 addendum in `MODULAR_CHARACTER_PIPELINE.md` for current implementation and verified limits. The earlier four-recipe/rigid-cape/count notes above are historical. Vegas is now bald and capeless. Female emblem and robe trim intersections are repaired. The animal workshop preserves the exact original clips; creature gameplay and digitigrade bodies remain tracked in issue #56. No fleet work was imported.
