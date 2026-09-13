@@ -6,7 +6,7 @@ import {meleeWeaponFor} from './weapon-grip.js';
 const handPoint=new THREE.Vector3(),blade=new THREE.Vector3(),axis=new THREE.Vector3(),x=new THREE.Vector3(),z=new THREE.Vector3();
 const q=new THREE.Quaternion(),inverse=new THREE.Quaternion(),basis=new THREE.Matrix4();
 const smooth=t=>{t=THREE.MathUtils.clamp(t,0,1);return t*t*(3-2*t);};
-const families={bat:'swing',nodachi:'swing',sword:'slash',katana:'slash',knife:'slash',axe:'chop',baton:'slash',spear:'thrust'};
+const families={claws:'rake',bat:'swing',nodachi:'swing',sword:'slash',katana:'slash',knife:'slash',axe:'chop',baton:'slash',spear:'thrust'};
 const delta=new THREE.Vector3(),projected=new THREE.Vector3(),lateral=new THREE.Vector3(),pole=new THREE.Vector3();
 // Choose a reachable elbow plane for a shaft held across the fingers. A spear
 // cannot aim straight by bending the wrist sideways around an arbitrary elbow.
@@ -45,7 +45,7 @@ export function animateWeaponStrike(f,t,weight,m=f._meleeMotion,phase=f.mstate){
   p.body.rotation.y+=side*.65*Math.cos(angle)*weight;
   handPoint.set(side*(-.2+.3*Math.cos(angle))*s,arm.position.y-1.1*s,(1.25+.2*Math.sin(angle))*s);
   blade.set(side*Math.cos(angle),.15,Math.sin(angle));
- }else if(family==='slash'){
+ }else if(family==='slash'||family==='rake'){
   p.body.rotation.y+=side*.3*Math.cos(angle)*weight;
   handPoint.set(side*(.25+1.7*Math.cos(angle))*s,arm.position.y-1.5*s,(1.2+.8*Math.sin(angle))*s);
   blade.set(side*Math.cos(angle),.15,Math.sin(angle));
@@ -73,7 +73,7 @@ export function animateWeaponStrike(f,t,weight,m=f._meleeMotion,phase=f.mstate){
  const hand=arm.children[2];q.copy(arm.quaternion).multiply(hand.quaternion);
  axis.set(0,1,0).applyQuaternion(q).normalize();
  blade.addScaledVector(axis,-blade.dot(axis));
- if(blade.lengthSq()>.001){
+ if(family!=='rake'&&blade.lengthSq()>.001){
   x.copy(blade).normalize().multiplyScalar(-side);z.crossVectors(x,axis).normalize();
   q.setFromRotationMatrix(basis.makeBasis(x,axis,z));q.premultiply(inverse.copy(arm.quaternion).invert());
   hand.quaternion.slerp(q,weight);

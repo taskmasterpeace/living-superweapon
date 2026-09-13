@@ -71,6 +71,16 @@ two-handed weapon families still require review.
 
 ## Still required before claiming every hold finished
 
+Claw contact update: claws use a knuckle attachment (no cylinder-handle roll)
+and a shared rake pose. Each of the three rendered blades supplies its own
+line of padded contact samples. Equipped claw hit/miss, startup/recovery,
+hidden/detached/stunned and payment/cooldown checks pass; 25 tests with sword
+contact and grip regressions passed. Studio clip:
+`artifacts/marketing/claws-review/equipment-swaps.webm`.
+The current catalog equips one right-hand set; the description's paired-hand
+set is not yet fulfilled. Material/readability and close-up bilateral review
+are also still required. Do not treat this as complete claw presentation.
+
 Great blade update: `nodachi` now owns a distinct tapered blade, extended hilt,
 support socket and shared two-handed swing. Contact samples match its longer
 blade. Catalog and pickup retain `nodachi` instead of substituting `katana`.

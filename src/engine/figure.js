@@ -383,7 +383,7 @@ export function figure(def) {
     fist.userData.gripOccupied=!!wk||!!(b.gun&&side===1)||!!(b.blade&&side===-1);
     if (wk) {
       const weapon=buildWeapon(wk, { armor, glow, visorMat });
-      if(alignWeaponGrip(weapon,side))fist.userData.gripKind='cylinder';
+      if(alignWeaponGrip(weapon,side))fist.userData.gripKind=weapon.userData.gripKind;
       fist.add(weapon);
     }
     g.add(pivot);

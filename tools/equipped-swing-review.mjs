@@ -1,6 +1,6 @@
 import {chromium} from 'playwright';
 import {mkdir,writeFile} from 'node:fs/promises';
-const ids=process.argv.slice(2),out=ids.length?'artifacts/marketing/great-blade-review':'artifacts/marketing/equipped-swing-review';await mkdir(out,{recursive:true});
+const ids=process.argv.slice(2),out=ids.length?`artifacts/marketing/${ids.includes('claws')?'claws':'great-blade'}-review`:'artifacts/marketing/equipped-swing-review';await mkdir(out,{recursive:true});
 const browser=await chromium.launch({headless:true});
 const context=await browser.newContext({viewport:{width:1280,height:900},recordVideo:{dir:out}}),page=await context.newPage();
 await page.goto('http://127.0.0.1:5184/studio.html?hero=merc');

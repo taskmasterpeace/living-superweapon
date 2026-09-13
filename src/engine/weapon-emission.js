@@ -58,5 +58,5 @@ export function mountHeldWeapon(f,weapon,transferring=false){
  f._heldMount={hand,hidden,occupied:hand.userData.gripOccupied,gripKind:hand.userData.gripKind};
  delete weapon._gripCoverBounds;
  hand.userData.gripOccupied=true;weapon.position.set(0,0,0);weapon.rotation.set(0,0,0);hand.add(weapon);f._gearMesh=weapon;
- hand.userData.gripKind=alignWeaponGrip(weapon,1)?'cylinder':undefined;
+  hand.userData.gripKind=alignWeaponGrip(weapon,1)?weapon.userData.gripKind:undefined;
 }
