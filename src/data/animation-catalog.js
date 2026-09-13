@@ -50,3 +50,14 @@ export function resolveAnimationClip(id,banks=ANIMATION_BANKS) {
   return banks.find(b=>b.id===id.slice(0,slash))?.bank.clips?.[id.slice(slash+1)]??null;
 }
 
+// Validation, missing data and unverified audio are different authoring states.
+export function animationAttention(entry){
+ const issues=entry.issues||[],warnings=entry.warnings||[];
+ const badges=[];
+ if(issues.length)badges.push({kind:'invalid',label:issues.includes('missing-frames')?'Missing animation frames':'Invalid animation data'});
+ if(warnings.length)badges.push({kind:'motion',label:'Motion needs review'});
+ if(entry.audioStatus==='missing')badges.push({kind:'audio-missing',label:'Audio missing'});
+ else if(entry.audioStatus!=='verified')badges.push({kind:'audio-unverified',label:'Audio not audited'});
+ return badges;
+}
+
