@@ -8,7 +8,7 @@ import {fileURLToPath,pathToFileURL} from 'node:url';
 import path from 'node:path';
 const args=process.argv.slice(2);
 if(args.length===1&&args[0]==='--controls'){
- console.log(JSON.stringify({version:1,source:'src/core/powerworld-controls.js',scope:'Canonical PowerWorld combat bindings; not live device/context discovery',controls:POWERWORLD_CONTROLS,playtestActions:actionCatalog(),playtestGamepadActions:actionCatalog('pad')},null,2));
+ console.log(JSON.stringify({version:1,source:'src/core/powerworld-controls.js',scope:'Canonical PowerWorld combat bindings; not live device/context discovery',controls:POWERWORLD_CONTROLS,playtestActions:actionCatalog(),playtestGamepadActions:actionCatalog('pad'),playtestTouchActions:actionCatalog('touch')},null,2));
 }else if(args.length===1&&args[0]==='--list'){
  console.log(JSON.stringify({version:1,scheme:'keyboard/mouse',server:'http://127.0.0.1:5184',staged:true,scenarios},null,2));
 }else{
@@ -17,7 +17,7 @@ if(args.length===1&&args[0]==='--controls'){
  process.chdir(root);
  const out=path.join(root,'artifacts/playtest',new Date().toISOString().replaceAll(':','-')+'-'+id);await mkdir(out,{recursive:true});
  const git=(...a)=>execFileSync('git',a,{cwd:root,encoding:'utf8'}).trim();
- const metadata={version:1,scenario:id,startedAt:new Date().toISOString(),runnerRevision:git('rev-parse','HEAD'),runnerWorktree:root,trackedChanges:git('diff','--name-only'),server:'http://127.0.0.1:5184',serverRevisionVerified:false,scheme:scenario.config?.scheme==='pad'?'browser-emulated gamepad combat; keyboard menus':'keyboard/mouse',staged:true,capture:scenario.capture};
+ const metadata={version:1,scenario:id,startedAt:new Date().toISOString(),runnerRevision:git('rev-parse','HEAD'),runnerWorktree:root,trackedChanges:git('diff','--name-only'),server:'http://127.0.0.1:5184',serverRevisionVerified:false,scheme:scenario.config?.scheme==='touch'?'browser-emulated landscape touch':scenario.config?.scheme==='pad'?'browser-emulated gamepad combat; keyboard menus':'keyboard/mouse',staged:true,capture:scenario.capture};
  process.env.PW_PLAYTEST_OUT=out;
  process.env.PW_PLAYTEST_CONFIG=JSON.stringify(scenario.config||{});metadata.config=scenario.config||{};
  await writeFile(path.join(out,'run.json'),JSON.stringify({...metadata,status:'running'},null,2));

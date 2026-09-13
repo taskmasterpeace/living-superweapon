@@ -70,3 +70,9 @@ The first named action locks the session into acceptance. Further stageMelee cal
 `--scenario gamepad-guard` uses an emulated standard browser gamepad for combat through the real Gamepad.update polling/edge path. Keyboard still handles startup menus; this is not full controller-only onboarding or physical-device acceptance. `installEmulatedGamepad(page)` runs before navigation in an isolated test page. `performAction(...,{scheme:'pad'})` toggles only raw virtual button states; it does not call combat handlers or modify the game's parsed pad state. The adapter reuses exported POWERWORLD_MAP; --controls lists mapped test actions for both schemes. Shared snapshot session metadata identifies emulation.
 
 Only the guard scenario has current native browser evidence under this adapter. Press/hold/release mapping for guard/strike/grab has focused polling tests. More controller scenarios, stick aim/movement, menu navigation, disconnect cleanup and real hardware remain required.
+
+## Landscape browser touch adapter
+
+`--scenario touch-guard` runs at 844×390 with hasTouch/isMobile enabled, taps character/squad menus, and presses the actual visible Block control via Chromium Input.dispatchTouchEvent. The shared helper resolves the current button bounds, rejects hidden/disabled controls and sends touchEnd after the hold. It never calls Touch.pressButton or injects parsed touch state. --controls exposes supported touch action IDs; separate fly-toggle is intentionally absent because Rise is the current touch action. Concurrent/multifinger gestures remain unsupported by this initial helper.
+
+Touch combat and native gamepad emulation are separate adapters. Browser touch success does not prove Safari/iPhone hardware behavior, virtual-stick aiming, multitouch, portrait/background recovery or the full operation. More shared scenarios need these adapters.

@@ -1,12 +1,13 @@
+import {touchButton} from './touch.mjs';
 import {POWERWORLD_MAP} from '../../src/core/gamepad.js';
 import {gamepadButton} from './gamepad.mjs';
 import {beginAcceptance} from './session.mjs';
 import {POWERWORLD_CONTROLS} from '../../src/core/powerworld-controls.js';
 const histories=new WeakMap(),active=new WeakSet();
-export const actionCatalog=(scheme='kbm')=>scheme==='pad'?Object.fromEntries(Object.entries({strike:'strike',guard:'guard',grab:'grab',item:'item',fly:'flightToggle',up:'fly',down:'descend',primary:'lmb',secondary:'rmb'}).map(([name,key])=>[name,{device:'gamepad',button:POWERWORLD_MAP[key]}])):Object.fromEntries(['strike','guard','grab','item','fly','up','down'].map(name=>[name,{device:'keyboard',code:POWERWORLD_CONTROLS[name]}]).concat([['primary',{device:'mouse',button:'left'}],['secondary',{device:'mouse',button:'right'}]]));
+export const actionCatalog=(scheme='kbm')=>scheme==='touch'?Object.fromEntries(Object.entries({strike:'strike',guard:'guard',grab:'grab',item:'item',up:'fly',down:'descend',primary:'lmb',secondary:'rmb'}).map(([name,id])=>[name,{device:'touch',id}])):scheme==='pad'?Object.fromEntries(Object.entries({strike:'strike',guard:'guard',grab:'grab',item:'item',fly:'flightToggle',up:'fly',down:'descend',primary:'lmb',secondary:'rmb'}).map(([name,key])=>[name,{device:'gamepad',button:POWERWORLD_MAP[key]}])):Object.fromEntries(['strike','guard','grab','item','fly','up','down'].map(name=>[name,{device:'keyboard',code:POWERWORLD_CONTROLS[name]}]).concat([['primary',{device:'mouse',button:'left'}],['secondary',{device:'mouse',button:'right'}]]));
 export const actionHistory=page=>(histories.get(page)||[]).map(x=>({...x}));
 export async function performAction(page,name,{holdMs=80,until=null,scheme='kbm'}={}){
- if(!['kbm','pad'].includes(scheme))throw new Error('Unsupported playtest input scheme');
+ if(!['kbm','pad','touch'].includes(scheme))throw new Error('Unsupported playtest input scheme');
  const binding=actionCatalog(scheme)[name];
  if(!Object.hasOwn(actionCatalog(scheme),name))throw new Error('Unknown playtest action: '+name);
  if(!Number.isFinite(holdMs)||holdMs<20||holdMs>1500)throw new Error('holdMs must be 20–1500 milliseconds');
@@ -17,8 +18,8 @@ export async function performAction(page,name,{holdMs=80,until=null,scheme='kbm'
  const record={action:name,scheme,holdMs:until?null:holdMs,until,requestedAt:new Date().toISOString(),status:'pending'};history.push(record);if(history.length>64)history.shift();active.add(page);
  const key=binding.code?.replace(/^Key/,'').toLowerCase();
  const keyName=binding.code?.startsWith('Key')?key:binding.code;
- const down=()=>binding.device==='gamepad'?gamepadButton(page,binding.button,true):binding.device==='mouse'?page.mouse.down({button:binding.button}):page.keyboard.down(keyName);
- const up=()=>binding.device==='gamepad'?gamepadButton(page,binding.button,false):binding.device==='mouse'?page.mouse.up({button:binding.button}):page.keyboard.up(keyName);
+ const down=()=>binding.device==='touch'?touchButton(page,binding.id,true):binding.device==='gamepad'?gamepadButton(page,binding.button,true):binding.device==='mouse'?page.mouse.down({button:binding.button}):page.keyboard.down(keyName);
+ const up=()=>binding.device==='touch'?touchButton(page,binding.id,false):binding.device==='gamepad'?gamepadButton(page,binding.button,false):binding.device==='mouse'?page.mouse.up({button:binding.button}):page.keyboard.up(keyName);
  let sent=false;
  try{
   const before=await page.evaluate(()=>{const g=globalThis.PW?.game;return {ready:!!(g?.running&&g.player?.alive&&!g.combatOverlayOpen),time:g?.time};});
