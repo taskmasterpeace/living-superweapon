@@ -15,3 +15,5 @@ Tests: tools/zombie-locational-damage.test.mjs verifies native receiver behavior
 Deferred noncritical fall polish: https://github.com/taskmasterpeace/living-superweapon/issues/17
 
 Priority: single-person pickups, hostile grabs, punches, kicks, lunges and Dec-52 hound/rat/mech motion. Two-person rescue is removed from current scope.
+
+A disabled arm now prevents the existing two-handed grab and invalidates an active clinch. The healthy arm can still attack; both disabled arms still block claw damage. Regression failed before the change. Fifty-six zombie/carry tests and build pass. A future one-handed zombie grab would need a distinct pose and rule, not reuse the current two-handed grip.

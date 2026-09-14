@@ -28,3 +28,5 @@ export function poseZombieInjuries(f){
   if(l['leg'+side]?.disabled&&leg){leg.rotation.x=-.18;leg.userData.knee.rotation.x=.65;}
  }
 }
+
+export function zombieCannotGrab(f){return !!(f._zombieLimbs?.armL?.disabled||f._zombieLimbs?.armR?.disabled);}

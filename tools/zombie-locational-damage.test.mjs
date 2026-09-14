@@ -32,3 +32,10 @@ test('disabled arms stop claw damage and disabled legs retain a permanent slowdo
  for(const zone of ['armL','armR','legL'])for(let i=0;i<4;i++)shot(f,zone);
  f.staggerT=0;let hits=0;applyAbilityMeleeHit(f,{},{hit:new Set()},{},{id:'target',takeDamage(){hits++;}});assert.equal(hits,0);assert.equal(zombieLegSpeed(f),.35);assert.equal(f.hp,100);f.dispose();
 });
+
+test('one disabled arm prevents two-handed grabs but preserves healthy-arm combat',async()=>{
+ const {MeleeSystem}=await import('../src/engine/melee.js');const f=new Fighter(zombieDefinition()),m=new MeleeSystem({});
+ f.hitstop=0;f.staggerT=0;f.stunT=0;f.strikeCd=0;assert.ok(m.canBeginGrab(f));
+ for(let i=0;i<4;i++)shot(f,'armL');f.staggerT=0;f.hitstop=0;f.state='idle';
+ assert.ok(m.canAct(f),'healthy arm remains usable');assert.equal(m.canBeginGrab(f),false,'two-handed grab needs both arms');f.dispose();
+});

@@ -1,5 +1,5 @@
 import {beginPersonThrowPose,advancePersonThrowPose} from './person-throw-pose.js';
-import {zombieArmsDisabled} from './zombie-locational-damage.js';
+import {zombieArmsDisabled,zombieCannotGrab} from './zombie-locational-damage.js';
 import {grabLesson,meleeLessonScheme} from './combat-lesson-controls.js';
 import {personThrowLaunch,THROW_WINDOW} from './person-throw-trajectory.js';
 import {meleeEntryTarget} from './melee-entry-target.js';
@@ -407,7 +407,7 @@ export class MeleeSystem {
     f.guarding = !!on && f.alive;
   }
 
-  canBeginGrab(f){return this.canAct(f)&&!f._carry&&!f.grabbing&&!f.grabState&&!f.mstate&&!f.guarding&&f.strikeCd<=0&&!(f.sleepT>0)&&!(f.downedT>0);}
+  canBeginGrab(f){return !zombieCannotGrab(f)&&this.canAct(f)&&!f._carry&&!f.grabbing&&!f.grabState&&!f.mstate&&!f.guarding&&f.strikeCd<=0&&!(f.sleepT>0)&&!(f.downedT>0);}
   grabTarget(f){
     const g=this.game,reach=STRIKES.grab.reach+(styleOf(f.def).grabBonus||0),hostile=g.coneFoe(f,reach,.95);
     if(!hostile){const ally=friendlyPickupTarget(f,g,reach);return ally&&bodyWeight(ally.def)<=liftCapacityOf(f.def)?{fighter:ally,friendly:true}:null;}
@@ -712,7 +712,7 @@ export class MeleeSystem {
       }
     } else if (f.grabState === 'clinch') {
       const v = f.grabbing;
-      if (!v || !v.alive || !f.alive || f.staggerT>0 || f.stunT>0 || f.frozenT>0 || f.sleepT>0 || f.downedT>0) { this.release(f); return; }
+      if (!v || !v.alive || !f.alive || zombieCannotGrab(f) || f.staggerT>0 || f.stunT>0 || f.frozenT>0 || f.sleepT>0 || f.downedT>0) { this.release(f); return; }
       if(f._personCarry?.friendly){if(v.team!==f.team||!advancePersonCarry(f,g,dt))this.release(f);return;}
       f.grabT -= dt;
       f._clinchElapsed=(f._clinchElapsed||0)+dt;
