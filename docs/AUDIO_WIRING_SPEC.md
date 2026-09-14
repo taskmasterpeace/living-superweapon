@@ -21,6 +21,10 @@ _Branch **`codex/audio-all`**. This is the meticulous, do-it-in-order guide to w
 
 ---
 
+## 0.5 ⚠ TWO audio systems — vehicles/weather/aircraft/reloads use the OTHER one
+
+Most of the game uses the sample bank (Path A) above. But **vehicles, aircraft, weather, reloads and the scout gun call a SECOND system** — the SoundLibrary (`audio.soundLibrary.play('hyphen-id')`, `src/core/sound-library.js`) — which plays a **placeholder oscillator by default.** Pasting `veh.*` into the sample bank does NOT fix them. For those rows (§2.10 vehicles, §2.12 weather, and the aircraft/scout-gun/reload call sites), you must **re-point the call site** from `audio.soundLibrary.play('scout-gunshot')` to `audio.sample('wpn.saw', {pos})`, or bind the recording into the SoundLibrary. See `docs/AUDIO_GAP_ANALYSIS.md` §0 and §4 for the exact call sites (`scout-gunner.js`, `frontline-aircraft.js`, `systems.js`, `firearm-ammo.js`, …). Everything else in this spec is a normal Path-A bank paste.
+
 ## 1. The dedupe rule (do this first, it decides which rows you use)
 
 Several things are covered by BOTH a real CC0 take and an AI (ai-pass) take. **Robert's ruling: use the REAL CC0 for these; they graded "top tier".** The AI batch's unique value is the powers/flight/distant/gear layer nothing else has.
