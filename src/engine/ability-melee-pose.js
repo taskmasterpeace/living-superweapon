@@ -62,7 +62,7 @@ export function animateAbilityMeleePose(f){
  // Flight already supplies travel lean and trailing legs; do not force a
  // standing boxer silhouette or add visual translation to simulation roots.
  p.g.updateMatrixWorld(true);
- const arm=p.armR,off=p.armL;
+ const injuredRight=f._zombieLimbs?.armR?.disabled,arm=injuredRight?p.armL:p.armR,off=injuredRight?p.armR:p.armL;
  if(motion.physicalContact){
   // Punch across the shoulder toward the aiming ray, not on a parallel ray
   // offset by the full shoulder width (which misses a centered human chest).

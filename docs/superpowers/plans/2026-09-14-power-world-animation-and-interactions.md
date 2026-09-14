@@ -1,3 +1,5 @@
+> PRIORITY OVERRIDE: Robert removed two-person rescue from scope. Prioritize single-person pickup, hostile grabs, punches/kicks/lunges, zombie locational damage and reactions, and Dec-52 rat/hound/mech animation. Any two-payload references below are superseded, not acceptance requirements. Noncritical stalls become GitHub issues and work moves on.
+
 
 ## Preserved user references
 - ../../reference/animation-2026-09-14/fall-reference.png

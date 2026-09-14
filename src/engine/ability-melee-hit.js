@@ -1,9 +1,10 @@
+import {zombieArmsDisabled} from './zombie-locational-damage.js';
 import * as THREE from 'three';
 
 // Shared legacy ability payload. Contact policy chooses IF/WHERE it lands;
 // this preserves the tuned damage, launch, chip/guard and impact feedback.
 export function applyAbilityMeleeHit(c,def,st,g,foe,contact=null){
- if(st.hit.has(foe.id))return;
+ if(st.hit.has(foe.id)||zombieArmsDisabled(c)||(c.def.zombieProfile&&c.staggerT>0))return;
  st.hit.add(foe.id);
  const blocked=foe.guarding&&foe.staggerT<=0;
  foe.takeDamage((def.damage||20)*c.powerBuff,{src:c,strike:true,dtype:def.dtype,dmgClass:def.dmgClass,kb:new THREE.Vector3().copy(c.aim).setLength(def.knock||40).setY(0),launch:def.launch||12,hitstop:.13});

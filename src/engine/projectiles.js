@@ -621,7 +621,7 @@ class Projectile {
         return true;
       }
       const webAccepted=this.webControl&&!this._webControlInterrupted&&canApplyWebControl(foe,this.caster);
-      const hitOptions={src:this.caster,naniteContact:contact?.naniteContact,contactPoint:this.pos,ballistic:this.ballistic,weapon:this.weapon,dtype:this.dtype,siphon:this.siphon,
+      const hitOptions={src:this.caster,zone:contact?.zone,naniteContact:contact?.naniteContact,contactPoint:this.pos,ballistic:this.ballistic,weapon:this.weapon,dtype:this.dtype,siphon:this.siphon,
         kb:_v.copy(this.vel).setY(0).setLength(this.damage*(this.ballistic?.12:.5)+(this.ballistic?2:8)).setComponent(1,this.ballistic?1:6),launch:this.ballistic?0:6+this.power*4,hitstop:this.ballistic?.02:.05};
       return withNaniteDamageAdmission(foe,this.damage*this.caster.powerBuff,hitOptions,absorbs=>{
       // DEFLECT guard: bullets/bolts bounce right back at whoever fired them.

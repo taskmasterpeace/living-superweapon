@@ -1,3 +1,4 @@
+import {zombieArmsDisabled} from './zombie-locational-damage.js';
 import {grabLesson,meleeLessonScheme} from './combat-lesson-controls.js';
 import {personThrowLaunch,THROW_WINDOW} from './person-throw-trajectory.js';
 import {meleeEntryTarget} from './melee-entry-target.js';
@@ -115,7 +116,7 @@ export class MeleeSystem {
     for(const f of this.game.entities)constrainRushBodies(f);
   }
 
-  canAct(f) { return f.alive && f.hitstop <= 0 && f.staggerT <= 0 && f.stunT <= 0 && !(f.frozenT > 0) && !(f.sleepT>0) && !(f.downedT>0) && !f.grabbedBy && f.grabState !== 'clinch' && !f.hanging; }
+  canAct(f) { return !zombieArmsDisabled(f) && f.alive && f.hitstop <= 0 && f.staggerT <= 0 && f.stunT <= 0 && !(f.frozenT > 0) && !(f.sleepT>0) && !(f.downedT>0) && !f.grabbedBy && f.grabState !== 'clinch' && !f.hanging; }
   clearInput(f) { f._meleeBuffer=null; f._meleeQueuedHeld=false; f.meleeCharge=0; f._clinchThrowBuffer=0; }
   _canClinch(f, allowHitstop=false) { return f.alive && f.grabbing?.alive && f.grabState==='clinch' && (allowHitstop||f.hitstop<=0) && f.staggerT<=0 && f.stunT<=0 && !(f.frozenT>0) && !(f.sleepT>0) && !(f.downedT>0) && !f._clinchFinisher; }
 

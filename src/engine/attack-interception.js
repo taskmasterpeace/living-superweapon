@@ -1,3 +1,4 @@
+import {anatomicalBulletContact} from './anatomical-bullet-contact.js';
 import {sweepSplitObstacle,coverBoxEntry,terrainEntry} from './projectile-contact.js';
 import {naniteContact} from './nanite-forearms.js';
 import {proneBoxTime,proneSurface} from './prone-pose.js';
@@ -76,7 +77,9 @@ export function earliestOrdinaryContact(p,end,dt,game,ignored=new Set()) {
     if(!game.isFoe(p.caster,f))continue;
     // Match overlapFoe's actual upright cylinder, including its height band.
     const top=f._crouchPose?.top??14;
-    const time=f._pronePose?.weight?proneBoxTime(f,a,end,p.radius):cylinderTime(a,end,f.pos.x,f.pos.z,p.radius+1.5+f.radius,f.pos.y-4,f.pos.y+top);
+    let time=f._pronePose?.weight?proneBoxTime(f,a,end,p.radius):cylinderTime(a,end,f.pos.x,f.pos.z,p.radius+1.5+f.radius,f.pos.y-4,f.pos.y+top);
+    const anatomical=p.ballistic&&f.def?.zombieProfile?anatomicalBulletContact(f,a,end,p.radius):null;
+    if(p.ballistic&&f.def?.zombieProfile)time=anatomical?.t??Infinity;
     const local={};
     if(!p.stick&&!p.armDelay&&!p.boomerang&&!(p._guidedSplit&&p.pierce)&&!ignored.has(f)&&naniteContact(f,a,end,p.radius,local,null,time>=0&&time<=1)){
       if(local.t<best&&!sweepSplitObstacle(world,a,local.naniteContact.point,0,paddingCover,false)){
@@ -94,7 +97,7 @@ export function earliestOrdinaryContact(p,end,dt,game,ignored=new Set()) {
       bodyPoint.x=f.pos.x+dx*ratio;bodyPoint.z=f.pos.z+dz*ratio;
       bodyPoint.y=Math.max(f.pos.y,Math.min(f.pos.y+Math.min(10,top),contactPoint.y));
       if(f._pronePose?.weight)proneSurface(f,contactPoint,bodyPoint);
-      if(!sweepSplitObstacle(world,contactPoint,bodyPoint,0,paddingCover,false))offer(time,'foe',f);
+      if(!sweepSplitObstacle(world,contactPoint,bodyPoint,0,paddingCover,false)){offer(time,'foe',f);if(result.target===f&&anatomical)result.zone=anatomical.zone;}
     }
   }
   if(p.life<=dt)offer(Math.max(0,p.life/dt),'expiry');

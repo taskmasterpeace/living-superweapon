@@ -1,3 +1,4 @@
+import {zombieRifleHit,zombieLegSpeed,poseZombieInjuries} from './zombie-locational-damage.js';
 import {loadModularCharacter} from './modular-character.js';
 import {fallingGravity,thrownDrag} from './body-ballistics.js';
 import {animateHeldGrip} from './held-grip-pose.js';
@@ -890,6 +891,7 @@ export class Fighter {
       if (opts.src) { this.lastHitBy = opts.src; this.lastHitT = 0; }
       return;
     }
+    const zombieHit=zombieRifleHit(this,amount,opts);if(zombieHit!==null)return zombieHit;
     if (this.state === 'ko' || this.invuln > 0) return 0;
     const resolvedStart={hp:this.hp,armor:this.armor||0,shield:this._shieldHp||0,
       bleed:this._bleed>0,frozen:this.frozenT>0,stun:this.stunT>0,corrode:this._corrode>0,dots:new Set((this._dots||[]).map(d=>d.kind))};
@@ -1709,7 +1711,8 @@ export class Fighter {
       this._chestPose?.rotation.identity();
       this.hp = this.maxHp; this.ki = this.maxKi * 0.4;
       this._firearmReload=null;if(!practice)for(const slot of Object.values(this.slots)){slot.ammo=null;firearmAmmo(slot);}
-      this._wounds = { arm: 0, leg: 0, torso: 0 }; this._woundT = { arm: 0, leg: 0, torso: 0 };   // a fresh body (manual §18)
+      this._zombieLimbs=null;
+    this._wounds = { arm: 0, leg: 0, torso: 0 }; this._woundT = { arm: 0, leg: 0, torso: 0 };   // a fresh body (manual §18)
       if(!practice)for (const it of this.items) if (it.state !== 'deployed') { it.charges = it.def.charges ?? 1; it.state = 'ready'; it.cd = 0; }   // fresh pouch each life
       this.state = 'idle'; this.invuln = 1.4; this.vel.set(0, 0, 0);
       retirePowerUp(this);
@@ -2242,6 +2245,7 @@ export class Fighter {
     if(steerMomentumGlide(this,dir,dt))return;
     let s = this.speed * 1.08 * this.powerBuff * sprint * moodMult(this, 'speed', 1) * webControlMoveMultiplier(this);   // ground feel pass 2026-07-24: +8% across the board
     s *= movementTravelScale(this,dir,dt,sprint);
+    s *= zombieLegSpeed(this);
     if (this._wounds && this._wounds.leg) s *= 1 - 0.09 * this._wounds.leg;   // the LIMP is real (manual §18)
     if (this.sprintT > 0) s *= this.sprintMult;   // double-tap sprint surge
     if (this.meleeCharge > 0) s *= 0.4;           // winding up a haymaker roots you
@@ -2872,6 +2876,7 @@ export class Fighter {
     syncChargePresentation(this);
     updateCrouchBounds(this);
     updateProneBounds(this);
+    poseZombieInjuries(this);
     this._modularCharacter?.update();
   }
 

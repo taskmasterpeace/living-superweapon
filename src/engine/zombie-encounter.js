@@ -19,7 +19,7 @@ export class ZombieEncounter{
   catch(error){if(error.code!=='ENCOUNTER_NO_SPAWN')throw error;this.phase='blocked';this.rest=1;this.render();return false;}
   this.wave=next;this.phase='combat';
   for(const p of used){
-   const f=this.game.addFighter(zombieDefinition(this.wave-1),{team:1,x:p.x,z:p.z});
+   const f=this.game.addFighter(zombieDefinition(this.wave-1,{sprinter:(this.game.random?.()??Math.random())<.01}),{team:1,x:p.x,z:p.z});
    f.pos.copy(p);f.groundY=p.y;f.obj.position.copy(p);f._encounterNPC=true;f._chaseKb=true;f._openSky=true;f.noRespawn=true;f.ai=new AI(f,.7);
    f.faceDir(this.game.player.pos.x-p.x,this.game.player.pos.z-p.z);
    this.units.push(f);
