@@ -3,6 +3,7 @@ import * as T from 'three';
 // Authored actor units (before actor.scale). Legacy buildWeapon meshes use a
 // different, -Y native-rig basis, so they cannot use this palm socket directly.
 export const MODULAR_WEAPON_CLIP_FAMILIES=Object.freeze({
+  dualKatana:Object.freeze({label:'Dual katana grip preview',clips:['Sword_Idle'],gaps:['Dedicated dual wield attack animation']}),
   none:Object.freeze({label:'Unarmed',clips:['Idle_Loop','Punch_Jab','Punch_Cross'],gaps:[]}),
   spear:Object.freeze({label:'Spear grip preview',clips:['Sword_Idle'],gaps:['Dedicated spear thrust']}),
   sword:Object.freeze({label:'Authored sword',clips:['Sword_Idle','Sword_Attack'],gaps:[]}),
@@ -26,6 +27,7 @@ export function createModularWeaponPreview(actor){
     // Exact existing workshop sword grip; preserve authored hand articulation.
     group.position.set(0,.075,.028);group.rotation.set(Math.PI/2,0,0);right.add(group);weapons[kind]=group;
   }
+  const dual=new T.Group();right.add(dual);weapons.dualKatana=dual;const off=new T.Group();left.add(off);for(const group of [dual,off]){group.position.set(0,.075,.028);group.rotation.x=Math.PI/2;mesh(group,new T.CylinderGeometry(.018,.018,.20,6),dark);mesh(group,new T.BoxGeometry(.10,.02,.065),gold,0,.11);const shape=new T.Shape();shape.moveTo(-.018,.12);shape.lineTo(.018,.12);shape.quadraticCurveTo(.025,.66,.11,.91);shape.lineTo(.065,.86);shape.quadraticCurveTo(-.016,.60,-.018,.12);mesh(group,new T.ExtrudeGeometry(shape,{depth:.012,bevelEnabled:false}),steel,0,0,-.006);}dual.userData.clipFamily=MODULAR_WEAPON_CLIP_FAMILIES.dualKatana;
   const spear=weapons.spear;mesh(spear,new T.CylinderGeometry(.014,.014,1.6,6),wood,0,.45);mesh(spear,new T.ConeGeometry(.05,.22,4),steel,0,1.36);
   const sword=weapons.sword;
   mesh(sword,new T.CylinderGeometry(.016,.016,.15,8),dark);
@@ -62,9 +64,9 @@ export function createModularWeaponPreview(actor){
       if(updated.weapon!=='none'&&!Object.hasOwn(weapons,updated.weapon))throw new Error(`Unknown preview weapon: ${updated.weapon}`);
       state={weapon:updated.weapon,shield:!!updated.shield,shieldStyle:updated.shieldStyle||'round'};for(const o of roundParts)o.visible=state.shieldStyle==='round';kite.visible=state.shieldStyle==='kite';riot.visible=state.shieldStyle==='riot';
       for(const [kind,group] of Object.entries(weapons))group.visible=kind===state.weapon;
-      shield.visible=state.shield;return {...state};
+      off.visible=state.weapon==='dualKatana';shield.visible=state.shield&&!off.visible;return {...state};
     },
-    dispose(){if(disposed)return;disposed=true;for(const group of [...Object.values(weapons),shield])group.removeFromParent();for(const g of geometries)g.dispose();for(const m of materials)m.dispose();},
+    dispose(){if(disposed)return;disposed=true;for(const group of [...Object.values(weapons),shield,off])group.removeFromParent();for(const g of geometries)g.dispose();for(const m of materials)m.dispose();},
   };
   api.set();return api;
 }

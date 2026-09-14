@@ -1,7 +1,7 @@
 {
   "name": "BREACH · signature candidate",
   "frame": "hero",
-  "hair": "swept",
+  "hair": "none",
   "skin": "#8c6042",
   "primary": "#4c5846",
   "secondary": "#858b64",
@@ -12,6 +12,7 @@
   "armor": true,
   "shoulders": false,
   "muscle": 1,
+  "headwear": "tactical",
   "shieldStyle": "riot",
   "anatomy": "male",
   "infection": "none",
@@ -27,7 +28,7 @@
   "knees": false,
   "belt": true,
   "backpack": false,
-  "helmet": true,
+  "helmet": false,
   "patternScale": 1,
   "size": 1,
   "rosterId": "breach"

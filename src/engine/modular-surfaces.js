@@ -24,7 +24,8 @@ export function outfitTexture(recipe){
  if(recipe.pattern==='custom'){
   if(!recipe.patternImage)return null;
   t=new T.TextureLoader().load(recipe.patternImage);
-  }else if(recipe.pattern==='stripes'||recipe.pattern==='pinstripe'){
+  }else if(recipe.pattern==='denim'){const c=document.createElement('canvas');c.width=c.height=256;const x=c.getContext('2d');x.fillStyle='#294762';x.fillRect(0,0,256,256);x.strokeStyle='#41617a';x.lineWidth=1;for(let i=-256;i<512;i+=4){x.beginPath();x.moveTo(i,0);x.lineTo(i+256,256);x.stroke();}t=new T.CanvasTexture(c);
+ }else if(recipe.pattern==='stripes'||recipe.pattern==='pinstripe'){
   const c=document.createElement('canvas');c.width=c.height=256;const x=c.getContext('2d');x.fillStyle=recipe.primary;x.fillRect(0,0,256,256);x.fillStyle=recipe.secondary;
   for(let i=0;i<256;i+=64)recipe.pattern==='stripes'?x.fillRect(0,i,256,32):x.fillRect(i,0,3,256);t=new T.CanvasTexture(c);
  }else{
