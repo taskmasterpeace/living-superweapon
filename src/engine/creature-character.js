@@ -1,8 +1,10 @@
 import * as T from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {metersToUnits} from '../core/world-units.js';
+import {createThermavariActor} from './thermavari-character.js';
 
 export const CREATURE_RECIPES={
+ thermavari:{name:'Thermavari Hunter · articulated study',asset:'thermavari',heightMeters:2.286,family:'thermavari',skeleton:'thermavari-pivots-v1'},
  husky:{name:'Dog · Husky',asset:'husky',shoulderMeters:.60},
  wolf:{name:'Wolf',asset:'wolf',shoulderMeters:.85},
  hunter:{name:'Hunter hound · size study',asset:'wolf',shoulderMeters:1.35,tint:'#62694c'},
@@ -11,6 +13,7 @@ export const CREATURE_RECIPES={
 // substituting a death or jump animation for those gameplay states.
 export const QUADRUPED_ACTIONS={idle:'Idle',walk:'Walk',sprint:'Gallop',jump:'Gallop_Jump',land:'Jump_ToIdle',attack:'Attack',hit:'Idle_HitReact1',death:'Death',run:null,knockdown:null,recover:null,pounceVictim:null};
 export async function createCreatureActor(recipe){
+ if(recipe.asset==='thermavari')return createThermavariActor();
  if(!['wolf','husky'].includes(recipe.asset))throw Error('Unsupported creature asset');
  if(!(recipe.shoulderMeters>=.3&&recipe.shoulderMeters<=2))throw Error('Shoulder height must be 0.3–2 metres');
  const gltf=await new GLTFLoader().loadAsync('/models/quadrupeds/'+recipe.asset+'.glb');
