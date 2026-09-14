@@ -15,12 +15,15 @@ Browser review of flailing candidate revealed arm articulation still needs refin
 The studio statistics are base definition data. Rank lift table values are not an alternative runtime capacity rule. See docs/combat-states-and-damage-report.md for ordered defense resolution and known stun recovery scaling issue.
 
 ## Next work, in order
-1. Complete full-phase visual review and correct full-body local-axis articulation; actual flight scenario context.
-2. Extend pose-state regressions to real moving wall contacts and carried victims; verify geometry clearance, not just preserved rotation.
-3. Build actual rescue and hand-occupancy contract; two payloads, vehicle lifting, safe releases, failure feedback.
-4. Dedicated kicks and weapon-family clips, paired entries/attacks/throws, timing and contact tests.
-5. Actual Thermavari digitigrade rig and second creature, weapons and gaits.
-6. Meter/HUD, fire/gas/swarm runtime integration and studio library organization from the complete plan.
+1. Single-person pickup and hostile grab: grounded and flying entry, hold, free-hand action where supported, throw and release. Validate contact and interruption in gameplay.
+2. Punches, kicks and lunges: review and assign usable full-body clips with explicit startup, contact and control-return timings. Library candidates alone do not satisfy gameplay integration.
+3. Zombie locomotion, claw/grab, stagger, disabled-arm and crippled-leg reactions; preserve the rifle locational-damage contract.
+4. Extend weapon-family actions and Dec-52 motion, then Thermavari and the second creature.
+5. Meter/HUD, fire/gas/swarm integration and studio organization remain subsequent work.
+
+Two-person rescue and two-payload carrying are removed from scope. Avoid prolonged noncritical polish: record the defect and acceptance criteria in a GitHub issue, then advance another priority. Existing visual follow-ups: #17 falling, #19 grab partner reactions, #21 ground-pickup contact. Dec-52 gameplay actor integration is tracked in #20.
+
+Latest focused verification: 63 tests passed across zombie locational damage, zombie encounters and single-person carry. These cover native contact, cover obstruction, limb disablement, lift admission, transport and release at multiple tick rates; they do not establish visual approval of all candidate clips.
 
 Nothing in this checkpoint marks the overall objective complete. Keep all scope in docs/superpowers/plans/2026-09-14-power-world-animation-and-interactions.md.
 
