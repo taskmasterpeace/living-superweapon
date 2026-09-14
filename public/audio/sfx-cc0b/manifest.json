@@ -1,0 +1,757 @@
+{
+  "format": "lsw.sfx-cc0b.manifest",
+  "version": 1,
+  "note": "Round 2 — remaining SFX gaps. Real CC/CC0 recordings; ricochet+whizby are synth (no CC0 source). Sources per file.",
+  "counts": {
+    "cues": 13,
+    "files": 80
+  },
+  "cues": [
+    {
+      "cue": "step.gravel",
+      "cat": "Footsteps — surfaces",
+      "label": "Footstep — gravel",
+      "mapsTo": "new footstep surface",
+      "takes": 10,
+      "license": "CC-BY 3.0 — congusbongus (Footsteps on different surfaces) / CC0 1.0 (public domain)"
+    },
+    {
+      "cue": "step.metal",
+      "cat": "Footsteps — surfaces",
+      "label": "Footstep — metal grating",
+      "mapsTo": "new footstep surface",
+      "takes": 8,
+      "license": "CC-BY 3.0 — congusbongus (Footsteps on different surfaces)"
+    },
+    {
+      "cue": "step.water",
+      "cat": "Footsteps — surfaces",
+      "label": "Footstep — water/puddle",
+      "mapsTo": "new footstep surface",
+      "takes": 5,
+      "license": "CC-BY 3.0 — congusbongus (Footsteps on different surfaces)"
+    },
+    {
+      "cue": "step.mud",
+      "cat": "Footsteps — surfaces",
+      "label": "Footstep — mud (only 1 CC0 found)",
+      "mapsTo": "new footstep surface",
+      "takes": 1,
+      "license": "CC0 1.0 (public domain)"
+    },
+    {
+      "cue": "step.tile",
+      "cat": "Footsteps — surfaces",
+      "label": "Footstep — tile/polished (bonus)",
+      "mapsTo": "bonus surface",
+      "takes": 5,
+      "license": "CC-BY 3.0 — congusbongus (Footsteps on different surfaces)"
+    },
+    {
+      "cue": "vehicle.door",
+      "cat": "Vehicle",
+      "label": "Vehicle — door",
+      "mapsTo": "vehicle door open/close",
+      "takes": 4,
+      "license": "CC0 1.0 (public domain)"
+    },
+    {
+      "cue": "vehicle.boost",
+      "cat": "Vehicle",
+      "label": "Vehicle — boost/accelerate",
+      "mapsTo": "vehicle boost",
+      "takes": 4,
+      "license": "CC0 1.0 (public domain)"
+    },
+    {
+      "cue": "vehicle.impact",
+      "cat": "Vehicle",
+      "label": "Vehicle — impact/crash (metal)",
+      "mapsTo": "vehicle damage",
+      "takes": 8,
+      "license": "CC0 1.0 (public domain)"
+    },
+    {
+      "cue": "blade.slash",
+      "cat": "Blade / slash",
+      "label": "Blade — slash / whoosh",
+      "mapsTo": "blade swing (variety)",
+      "takes": 8,
+      "license": "CC0 1.0 (public domain)"
+    },
+    {
+      "cue": "slash.flesh",
+      "cat": "Blade / slash",
+      "label": "Slash into flesh (squish)",
+      "mapsTo": "blade-into-flesh (NEW)",
+      "takes": 5,
+      "license": "CC0 1.0 (public domain)"
+    },
+    {
+      "cue": "shell.casings",
+      "cat": "Ballistic",
+      "label": "Shell casings (brass-ish metal tinks, approx)",
+      "mapsTo": "casings on ground (NEW)",
+      "takes": 10,
+      "license": "CC0 1.0 (public domain)"
+    },
+    {
+      "cue": "ricochet",
+      "cat": "Ballistic — SYNTH (no CC0 found)",
+      "label": "Ricochet / whine-off",
+      "mapsTo": "ricochet (NEW)",
+      "takes": 6,
+      "license": "original synth — no CC0 source found (fallback)"
+    },
+    {
+      "cue": "whizby",
+      "cat": "Ballistic — SYNTH (no CC0 found)",
+      "label": "Whiz-by / supersonic crack",
+      "mapsTo": "whiz-by (NEW)",
+      "takes": 6,
+      "license": "original synth — no CC0 source found (fallback)"
+    }
+  ],
+  "files": [
+    {
+      "cue": "step.gravel",
+      "take": 1,
+      "stem": "step_gravel_01",
+      "source": "footsurf/footsteps/gravel/0.ogg",
+      "pack": "Footsteps on different surfaces (OpenGameArt)",
+      "license": "CC-BY 3.0 — congusbongus (Footsteps on different surfaces)"
+    },
+    {
+      "cue": "step.gravel",
+      "take": 2,
+      "stem": "step_gravel_02",
+      "source": "footsurf/footsteps/gravel/1.ogg",
+      "pack": "Footsteps on different surfaces (OpenGameArt)",
+      "license": "CC-BY 3.0 — congusbongus (Footsteps on different surfaces)"
+    },
+    {
+      "cue": "step.gravel",
+      "take": 3,
+      "stem": "step_gravel_03",
+      "source": "footsurf/footsteps/gravel/2.ogg",
+      "pack": "Footsteps on different surfaces (OpenGameArt)",
+      "license": "CC-BY 3.0 — congusbongus (Footsteps on different surfaces)"
+    },
+    {
+      "cue": "step.gravel",
+      "take": 4,
+      "stem": "step_gravel_04",
+      "source": "footsurf/footsteps/gravel/3.ogg",
+      "pack": "Footsteps on different surfaces (OpenGameArt)",
+      "license": "CC-BY 3.0 — congusbongus (Footsteps on different surfaces)"
+    },
+    {
+      "cue": "step.gravel",
+      "take": 5,
+      "stem": "step_gravel_05",
+      "source": "footsurf/footsteps/gravel/4.ogg",
+      "pack": "Footsteps on different surfaces (OpenGameArt)",
+      "license": "CC-BY 3.0 — congusbongus (Footsteps on different surfaces)"
+    },
+    {
+      "cue": "step.gravel",
+      "take": 6,
+      "stem": "step_gravel_06",
+      "source": "footsurf/footsteps/gravel/5.ogg",
+      "pack": "Footsteps on different surfaces (OpenGameArt)",
+      "license": "CC-BY 3.0 — congusbongus (Footsteps on different surfaces)"
+    },
+    {
+      "cue": "step.gravel",
+      "take": 7,
+      "stem": "step_gravel_07",
+      "source": "footsurf/footsteps/gravel/6.ogg",
+      "pack": "Footsteps on different surfaces (OpenGameArt)",
+      "license": "CC-BY 3.0 — congusbongus (Footsteps on different surfaces)"
+    },
+    {
+      "cue": "step.gravel",
+      "take": 8,
+      "stem": "step_gravel_08",
+      "source": "footsurf/footsteps/gravel/7.ogg",
+      "pack": "Footsteps on different surfaces (OpenGameArt)",
+      "license": "CC-BY 3.0 — congusbongus (Footsteps on different surfaces)"
+    },
+    {
+      "cue": "step.gravel",
+      "take": 9,
+      "stem": "step_gravel_09",
+      "source": "footsurf/footsteps/gravel/8.ogg",
+      "pack": "Footsteps on different surfaces (OpenGameArt)",
+      "license": "CC-BY 3.0 — congusbongus (Footsteps on different surfaces)"
+    },
+    {
+      "cue": "step.gravel",
+      "take": 10,
+      "stem": "step_gravel_10",
+      "source": "diffsteps/gravel.ogg",
+      "pack": "Different steps wood/stone/leaves/gravel/mud (OpenGameArt)",
+      "license": "CC0 1.0 (public domain)"
+    },
+    {
+      "cue": "step.metal",
+      "take": 1,
+      "stem": "step_metal_01",
+      "source": "footsurf/footsteps/metal/0.ogg",
+      "pack": "Footsteps on different surfaces (OpenGameArt)",
+      "license": "CC-BY 3.0 — congusbongus (Footsteps on different surfaces)"
+    },
+    {
+      "cue": "step.metal",
+      "take": 2,
+      "stem": "step_metal_02",
+      "source": "footsurf/footsteps/metal/1.ogg",
+      "pack": "Footsteps on different surfaces (OpenGameArt)",
+      "license": "CC-BY 3.0 — congusbongus (Footsteps on different surfaces)"
+    },
+    {
+      "cue": "step.metal",
+      "take": 3,
+      "stem": "step_metal_03",
+      "source": "footsurf/footsteps/metal/2.ogg",
+      "pack": "Footsteps on different surfaces (OpenGameArt)",
+      "license": "CC-BY 3.0 — congusbongus (Footsteps on different surfaces)"
+    },
+    {
+      "cue": "step.metal",
+      "take": 4,
+      "stem": "step_metal_04",
+      "source": "footsurf/footsteps/metal/3.ogg",
+      "pack": "Footsteps on different surfaces (OpenGameArt)",
+      "license": "CC-BY 3.0 — congusbongus (Footsteps on different surfaces)"
+    },
+    {
+      "cue": "step.metal",
+      "take": 5,
+      "stem": "step_metal_05",
+      "source": "footsurf/footsteps/metal/4.ogg",
+      "pack": "Footsteps on different surfaces (OpenGameArt)",
+      "license": "CC-BY 3.0 — congusbongus (Footsteps on different surfaces)"
+    },
+    {
+      "cue": "step.metal",
+      "take": 6,
+      "stem": "step_metal_06",
+      "source": "footsurf/footsteps/metal/5.ogg",
+      "pack": "Footsteps on different surfaces (OpenGameArt)",
+      "license": "CC-BY 3.0 — congusbongus (Footsteps on different surfaces)"
+    },
+    {
+      "cue": "step.metal",
+      "take": 7,
+      "stem": "step_metal_07",
+      "source": "footsurf/footsteps/metal/6.ogg",
+      "pack": "Footsteps on different surfaces (OpenGameArt)",
+      "license": "CC-BY 3.0 — congusbongus (Footsteps on different surfaces)"
+    },
+    {
+      "cue": "step.metal",
+      "take": 8,
+      "stem": "step_metal_08",
+      "source": "footsurf/footsteps/metal/7.ogg",
+      "pack": "Footsteps on different surfaces (OpenGameArt)",
+      "license": "CC-BY 3.0 — congusbongus (Footsteps on different surfaces)"
+    },
+    {
+      "cue": "step.water",
+      "take": 1,
+      "stem": "step_water_01",
+      "source": "footsurf/footsteps/water/0.ogg",
+      "pack": "Footsteps on different surfaces (OpenGameArt)",
+      "license": "CC-BY 3.0 — congusbongus (Footsteps on different surfaces)"
+    },
+    {
+      "cue": "step.water",
+      "take": 2,
+      "stem": "step_water_02",
+      "source": "footsurf/footsteps/water/1.ogg",
+      "pack": "Footsteps on different surfaces (OpenGameArt)",
+      "license": "CC-BY 3.0 — congusbongus (Footsteps on different surfaces)"
+    },
+    {
+      "cue": "step.water",
+      "take": 3,
+      "stem": "step_water_03",
+      "source": "footsurf/footsteps/water/2.ogg",
+      "pack": "Footsteps on different surfaces (OpenGameArt)",
+      "license": "CC-BY 3.0 — congusbongus (Footsteps on different surfaces)"
+    },
+    {
+      "cue": "step.water",
+      "take": 4,
+      "stem": "step_water_04",
+      "source": "footsurf/footsteps/water/3.ogg",
+      "pack": "Footsteps on different surfaces (OpenGameArt)",
+      "license": "CC-BY 3.0 — congusbongus (Footsteps on different surfaces)"
+    },
+    {
+      "cue": "step.water",
+      "take": 5,
+      "stem": "step_water_05",
+      "source": "footsurf/footsteps/water/4.ogg",
+      "pack": "Footsteps on different surfaces (OpenGameArt)",
+      "license": "CC-BY 3.0 — congusbongus (Footsteps on different surfaces)"
+    },
+    {
+      "cue": "step.mud",
+      "take": 1,
+      "stem": "step_mud_01",
+      "source": "diffsteps/mud02.ogg",
+      "pack": "Different steps wood/stone/leaves/gravel/mud (OpenGameArt)",
+      "license": "CC0 1.0 (public domain)"
+    },
+    {
+      "cue": "step.tile",
+      "take": 1,
+      "stem": "step_tile_01",
+      "source": "footsurf/footsteps/tile/0.ogg",
+      "pack": "Footsteps on different surfaces (OpenGameArt)",
+      "license": "CC-BY 3.0 — congusbongus (Footsteps on different surfaces)"
+    },
+    {
+      "cue": "step.tile",
+      "take": 2,
+      "stem": "step_tile_02",
+      "source": "footsurf/footsteps/tile/1.ogg",
+      "pack": "Footsteps on different surfaces (OpenGameArt)",
+      "license": "CC-BY 3.0 — congusbongus (Footsteps on different surfaces)"
+    },
+    {
+      "cue": "step.tile",
+      "take": 3,
+      "stem": "step_tile_03",
+      "source": "footsurf/footsteps/tile/2.ogg",
+      "pack": "Footsteps on different surfaces (OpenGameArt)",
+      "license": "CC-BY 3.0 — congusbongus (Footsteps on different surfaces)"
+    },
+    {
+      "cue": "step.tile",
+      "take": 4,
+      "stem": "step_tile_04",
+      "source": "footsurf/footsteps/tile/3.ogg",
+      "pack": "Footsteps on different surfaces (OpenGameArt)",
+      "license": "CC-BY 3.0 — congusbongus (Footsteps on different surfaces)"
+    },
+    {
+      "cue": "step.tile",
+      "take": 5,
+      "stem": "step_tile_05",
+      "source": "footsurf/footsteps/tile/4.ogg",
+      "pack": "Footsteps on different surfaces (OpenGameArt)",
+      "license": "CC-BY 3.0 — congusbongus (Footsteps on different surfaces)"
+    },
+    {
+      "cue": "vehicle.door",
+      "take": 1,
+      "stem": "vehicle_door_01",
+      "source": "car/Car_Door_Open.ogg",
+      "pack": "Car Sound Effects Pack (OpenGameArt)",
+      "license": "CC0 1.0 (public domain)"
+    },
+    {
+      "cue": "vehicle.door",
+      "take": 2,
+      "stem": "vehicle_door_02",
+      "source": "car/Car_Door_Close.ogg",
+      "pack": "Car Sound Effects Pack (OpenGameArt)",
+      "license": "CC0 1.0 (public domain)"
+    },
+    {
+      "cue": "vehicle.door",
+      "take": 3,
+      "stem": "vehicle_door_03",
+      "source": "car/Car_Hood_Close.ogg",
+      "pack": "Car Sound Effects Pack (OpenGameArt)",
+      "license": "CC0 1.0 (public domain)"
+    },
+    {
+      "cue": "vehicle.door",
+      "take": 4,
+      "stem": "vehicle_door_04",
+      "source": "car/Car_Trunk_Open.ogg",
+      "pack": "Car Sound Effects Pack (OpenGameArt)",
+      "license": "CC0 1.0 (public domain)"
+    },
+    {
+      "cue": "vehicle.boost",
+      "take": 1,
+      "stem": "vehicle_boost_01",
+      "source": "car/Car_Acceleration.ogg",
+      "pack": "Car Sound Effects Pack (OpenGameArt)",
+      "license": "CC0 1.0 (public domain)"
+    },
+    {
+      "cue": "vehicle.boost",
+      "take": 2,
+      "stem": "vehicle_boost_02",
+      "source": "car/Car_Acceleration_2.ogg",
+      "pack": "Car Sound Effects Pack (OpenGameArt)",
+      "license": "CC0 1.0 (public domain)"
+    },
+    {
+      "cue": "vehicle.boost",
+      "take": 3,
+      "stem": "vehicle_boost_03",
+      "source": "car/Car_Engine_Start_Up.ogg",
+      "pack": "Car Sound Effects Pack (OpenGameArt)",
+      "license": "CC0 1.0 (public domain)"
+    },
+    {
+      "cue": "vehicle.boost",
+      "take": 4,
+      "stem": "vehicle_boost_04",
+      "source": "car/Car_Engine_Loop.ogg",
+      "pack": "Car Sound Effects Pack (OpenGameArt)",
+      "license": "CC0 1.0 (public domain)"
+    },
+    {
+      "cue": "vehicle.impact",
+      "take": 1,
+      "stem": "vehicle_impact_01",
+      "source": "metalwood/metal_hit_01.ogg",
+      "pack": "100 CC0 metal and wood SFX (OpenGameArt)",
+      "license": "CC0 1.0 (public domain)"
+    },
+    {
+      "cue": "vehicle.impact",
+      "take": 2,
+      "stem": "vehicle_impact_02",
+      "source": "metalwood/metal_hit_02.ogg",
+      "pack": "100 CC0 metal and wood SFX (OpenGameArt)",
+      "license": "CC0 1.0 (public domain)"
+    },
+    {
+      "cue": "vehicle.impact",
+      "take": 3,
+      "stem": "vehicle_impact_03",
+      "source": "metalwood/metal_hit_03.ogg",
+      "pack": "100 CC0 metal and wood SFX (OpenGameArt)",
+      "license": "CC0 1.0 (public domain)"
+    },
+    {
+      "cue": "vehicle.impact",
+      "take": 4,
+      "stem": "vehicle_impact_04",
+      "source": "metalwood/metal_hit_04.ogg",
+      "pack": "100 CC0 metal and wood SFX (OpenGameArt)",
+      "license": "CC0 1.0 (public domain)"
+    },
+    {
+      "cue": "vehicle.impact",
+      "take": 5,
+      "stem": "vehicle_impact_05",
+      "source": "metalwood/metal_falling_01.ogg",
+      "pack": "100 CC0 metal and wood SFX (OpenGameArt)",
+      "license": "CC0 1.0 (public domain)"
+    },
+    {
+      "cue": "vehicle.impact",
+      "take": 6,
+      "stem": "vehicle_impact_06",
+      "source": "metalwood/metal_falling_02.ogg",
+      "pack": "100 CC0 metal and wood SFX (OpenGameArt)",
+      "license": "CC0 1.0 (public domain)"
+    },
+    {
+      "cue": "vehicle.impact",
+      "take": 7,
+      "stem": "vehicle_impact_07",
+      "source": "metalwood/metal_sheet_01.ogg",
+      "pack": "100 CC0 metal and wood SFX (OpenGameArt)",
+      "license": "CC0 1.0 (public domain)"
+    },
+    {
+      "cue": "vehicle.impact",
+      "take": 8,
+      "stem": "vehicle_impact_08",
+      "source": "metalwood/metal_sheet_03.ogg",
+      "pack": "100 CC0 metal and wood SFX (OpenGameArt)",
+      "license": "CC0 1.0 (public domain)"
+    },
+    {
+      "cue": "blade.slash",
+      "take": 1,
+      "stem": "blade_slash_01",
+      "source": "swishes/swishes/swish-1.wav",
+      "pack": "Swishes Sound Pack (OpenGameArt)",
+      "license": "CC0 1.0 (public domain)"
+    },
+    {
+      "cue": "blade.slash",
+      "take": 2,
+      "stem": "blade_slash_02",
+      "source": "swishes/swishes/swish-2.wav",
+      "pack": "Swishes Sound Pack (OpenGameArt)",
+      "license": "CC0 1.0 (public domain)"
+    },
+    {
+      "cue": "blade.slash",
+      "take": 3,
+      "stem": "blade_slash_03",
+      "source": "swishes/swishes/swish-3.wav",
+      "pack": "Swishes Sound Pack (OpenGameArt)",
+      "license": "CC0 1.0 (public domain)"
+    },
+    {
+      "cue": "blade.slash",
+      "take": 4,
+      "stem": "blade_slash_04",
+      "source": "swishes/swishes/swish-5.wav",
+      "pack": "Swishes Sound Pack (OpenGameArt)",
+      "license": "CC0 1.0 (public domain)"
+    },
+    {
+      "cue": "blade.slash",
+      "take": 5,
+      "stem": "blade_slash_05",
+      "source": "swishes/swishes/swish-7.wav",
+      "pack": "Swishes Sound Pack (OpenGameArt)",
+      "license": "CC0 1.0 (public domain)"
+    },
+    {
+      "cue": "blade.slash",
+      "take": 6,
+      "stem": "blade_slash_06",
+      "source": "swishes/swishes/swish-9.wav",
+      "pack": "Swishes Sound Pack (OpenGameArt)",
+      "license": "CC0 1.0 (public domain)"
+    },
+    {
+      "cue": "blade.slash",
+      "take": 7,
+      "stem": "blade_slash_07",
+      "source": "swishes/swishes/swish-11.wav",
+      "pack": "Swishes Sound Pack (OpenGameArt)",
+      "license": "CC0 1.0 (public domain)"
+    },
+    {
+      "cue": "blade.slash",
+      "take": 8,
+      "stem": "blade_slash_08",
+      "source": "swishes/swishes/swish-13.wav",
+      "pack": "Swishes Sound Pack (OpenGameArt)",
+      "license": "CC0 1.0 (public domain)"
+    },
+    {
+      "cue": "slash.flesh",
+      "take": 1,
+      "stem": "slash_flesh_01",
+      "source": "owlish/Impacts/fruit1.wav",
+      "pack": "Owlish Media Sound Effects (OpenGameArt)",
+      "license": "CC0 1.0 (public domain)"
+    },
+    {
+      "cue": "slash.flesh",
+      "take": 2,
+      "stem": "slash_flesh_02",
+      "source": "owlish/Impacts/fruit2.wav",
+      "pack": "Owlish Media Sound Effects (OpenGameArt)",
+      "license": "CC0 1.0 (public domain)"
+    },
+    {
+      "cue": "slash.flesh",
+      "take": 3,
+      "stem": "slash_flesh_03",
+      "source": "owlish/Impacts/fruit3.wav",
+      "pack": "Owlish Media Sound Effects (OpenGameArt)",
+      "license": "CC0 1.0 (public domain)"
+    },
+    {
+      "cue": "slash.flesh",
+      "take": 4,
+      "stem": "slash_flesh_04",
+      "source": "owlish/Impacts/slap2.wav",
+      "pack": "Owlish Media Sound Effects (OpenGameArt)",
+      "license": "CC0 1.0 (public domain)"
+    },
+    {
+      "cue": "slash.flesh",
+      "take": 5,
+      "stem": "slash_flesh_05",
+      "source": "owlish/Impacts/hit.wav",
+      "pack": "Owlish Media Sound Effects (OpenGameArt)",
+      "license": "CC0 1.0 (public domain)"
+    },
+    {
+      "cue": "shell.casings",
+      "take": 1,
+      "stem": "shell_casings_01",
+      "source": "metalwood/keys_01.ogg",
+      "pack": "100 CC0 metal and wood SFX (OpenGameArt)",
+      "license": "CC0 1.0 (public domain)"
+    },
+    {
+      "cue": "shell.casings",
+      "take": 2,
+      "stem": "shell_casings_02",
+      "source": "metalwood/keys_02.ogg",
+      "pack": "100 CC0 metal and wood SFX (OpenGameArt)",
+      "license": "CC0 1.0 (public domain)"
+    },
+    {
+      "cue": "shell.casings",
+      "take": 3,
+      "stem": "shell_casings_03",
+      "source": "metalwood/keys_03.ogg",
+      "pack": "100 CC0 metal and wood SFX (OpenGameArt)",
+      "license": "CC0 1.0 (public domain)"
+    },
+    {
+      "cue": "shell.casings",
+      "take": 4,
+      "stem": "shell_casings_04",
+      "source": "metalwood/keys_04.ogg",
+      "pack": "100 CC0 metal and wood SFX (OpenGameArt)",
+      "license": "CC0 1.0 (public domain)"
+    },
+    {
+      "cue": "shell.casings",
+      "take": 5,
+      "stem": "shell_casings_05",
+      "source": "metalwood/keys_05.ogg",
+      "pack": "100 CC0 metal and wood SFX (OpenGameArt)",
+      "license": "CC0 1.0 (public domain)"
+    },
+    {
+      "cue": "shell.casings",
+      "take": 6,
+      "stem": "shell_casings_06",
+      "source": "metalwood/keys_06.ogg",
+      "pack": "100 CC0 metal and wood SFX (OpenGameArt)",
+      "license": "CC0 1.0 (public domain)"
+    },
+    {
+      "cue": "shell.casings",
+      "take": 7,
+      "stem": "shell_casings_07",
+      "source": "metalwood/keys_07.ogg",
+      "pack": "100 CC0 metal and wood SFX (OpenGameArt)",
+      "license": "CC0 1.0 (public domain)"
+    },
+    {
+      "cue": "shell.casings",
+      "take": 8,
+      "stem": "shell_casings_08",
+      "source": "100cc0/metal_01.ogg",
+      "pack": "100 CC0 SFX (OpenGameArt)",
+      "license": "CC0 1.0 (public domain)"
+    },
+    {
+      "cue": "shell.casings",
+      "take": 9,
+      "stem": "shell_casings_09",
+      "source": "100cc0/metal_04.ogg",
+      "pack": "100 CC0 SFX (OpenGameArt)",
+      "license": "CC0 1.0 (public domain)"
+    },
+    {
+      "cue": "shell.casings",
+      "take": 10,
+      "stem": "shell_casings_10",
+      "source": "100cc0/metal_07.ogg",
+      "pack": "100 CC0 SFX (OpenGameArt)",
+      "license": "CC0 1.0 (public domain)"
+    },
+    {
+      "cue": "ricochet",
+      "take": 1,
+      "stem": "ricochet_01",
+      "source": "D:/lsw/.worktrees/audio-sfx-gaps/authoring/audio/sfx-gaps/masters/sfx_ricochet_01.wav",
+      "pack": "authoring/audio/sfx-gaps (synth)",
+      "license": "original synth — no CC0 source found (fallback)"
+    },
+    {
+      "cue": "ricochet",
+      "take": 2,
+      "stem": "ricochet_02",
+      "source": "D:/lsw/.worktrees/audio-sfx-gaps/authoring/audio/sfx-gaps/masters/sfx_ricochet_02.wav",
+      "pack": "authoring/audio/sfx-gaps (synth)",
+      "license": "original synth — no CC0 source found (fallback)"
+    },
+    {
+      "cue": "ricochet",
+      "take": 3,
+      "stem": "ricochet_03",
+      "source": "D:/lsw/.worktrees/audio-sfx-gaps/authoring/audio/sfx-gaps/masters/sfx_ricochet_03.wav",
+      "pack": "authoring/audio/sfx-gaps (synth)",
+      "license": "original synth — no CC0 source found (fallback)"
+    },
+    {
+      "cue": "ricochet",
+      "take": 4,
+      "stem": "ricochet_04",
+      "source": "D:/lsw/.worktrees/audio-sfx-gaps/authoring/audio/sfx-gaps/masters/sfx_ricochet_04.wav",
+      "pack": "authoring/audio/sfx-gaps (synth)",
+      "license": "original synth — no CC0 source found (fallback)"
+    },
+    {
+      "cue": "ricochet",
+      "take": 5,
+      "stem": "ricochet_05",
+      "source": "D:/lsw/.worktrees/audio-sfx-gaps/authoring/audio/sfx-gaps/masters/sfx_ricochet_05.wav",
+      "pack": "authoring/audio/sfx-gaps (synth)",
+      "license": "original synth — no CC0 source found (fallback)"
+    },
+    {
+      "cue": "ricochet",
+      "take": 6,
+      "stem": "ricochet_06",
+      "source": "D:/lsw/.worktrees/audio-sfx-gaps/authoring/audio/sfx-gaps/masters/sfx_ricochet_06.wav",
+      "pack": "authoring/audio/sfx-gaps (synth)",
+      "license": "original synth — no CC0 source found (fallback)"
+    },
+    {
+      "cue": "whizby",
+      "take": 1,
+      "stem": "whizby_01",
+      "source": "D:/lsw/.worktrees/audio-sfx-gaps/authoring/audio/sfx-gaps/masters/sfx_whizby_01.wav",
+      "pack": "authoring/audio/sfx-gaps (synth)",
+      "license": "original synth — no CC0 source found (fallback)"
+    },
+    {
+      "cue": "whizby",
+      "take": 2,
+      "stem": "whizby_02",
+      "source": "D:/lsw/.worktrees/audio-sfx-gaps/authoring/audio/sfx-gaps/masters/sfx_whizby_02.wav",
+      "pack": "authoring/audio/sfx-gaps (synth)",
+      "license": "original synth — no CC0 source found (fallback)"
+    },
+    {
+      "cue": "whizby",
+      "take": 3,
+      "stem": "whizby_03",
+      "source": "D:/lsw/.worktrees/audio-sfx-gaps/authoring/audio/sfx-gaps/masters/sfx_whizby_03.wav",
+      "pack": "authoring/audio/sfx-gaps (synth)",
+      "license": "original synth — no CC0 source found (fallback)"
+    },
+    {
+      "cue": "whizby",
+      "take": 4,
+      "stem": "whizby_04",
+      "source": "D:/lsw/.worktrees/audio-sfx-gaps/authoring/audio/sfx-gaps/masters/sfx_whizby_04.wav",
+      "pack": "authoring/audio/sfx-gaps (synth)",
+      "license": "original synth — no CC0 source found (fallback)"
+    },
+    {
+      "cue": "whizby",
+      "take": 5,
+      "stem": "whizby_05",
+      "source": "D:/lsw/.worktrees/audio-sfx-gaps/authoring/audio/sfx-gaps/masters/sfx_whizby_05.wav",
+      "pack": "authoring/audio/sfx-gaps (synth)",
+      "license": "original synth — no CC0 source found (fallback)"
+    },
+    {
+      "cue": "whizby",
+      "take": 6,
+      "stem": "whizby_06",
+      "source": "D:/lsw/.worktrees/audio-sfx-gaps/authoring/audio/sfx-gaps/masters/sfx_whizby_06.wav",
+      "pack": "authoring/audio/sfx-gaps (synth)",
+      "license": "original synth — no CC0 source found (fallback)"
+    }
+  ]
+}
