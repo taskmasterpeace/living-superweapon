@@ -8,9 +8,9 @@ const neck={...stance,'DEF-spine003':[-.08,0,0],'DEF-upper_armL':[1.5,0,-.18],'D
 const entry=joints=>Object.fromEntries(Object.entries(joints).map(([name,a])=>[name,a.map(x=>x*.45)]));
 const make=(hold,hand='right')=>({duration:1.4,loop:false,hand,markers:{contact:.42,release:1.05,controlReturn:1.3},poses:[{time:0,joints:{}},{time:.15,joints:entry(hold)},{time:.3,joints:hold},{time:.75,joints:hold},{time:1.3/1.4,joints:{}},{time:1,joints:{}}]});
 export const GRAB_BODY_STUDIES={
- 'Paired grab':make(front),
- 'Front clinch entry':make(front),
- 'Rear body lock entry':make(rear),
- 'Side grab entry':make(side),
- 'Neck hold / free right hand':make(neck,'left'),
+ 'Paired grab':{...make(front),contactStyle:'front'},
+ 'Front clinch entry':{...make(front),contactStyle:'front'},
+ 'Rear body lock entry':{...make(rear),contactStyle:'rear'},
+ 'Side grab entry':{...make(side),contactStyle:'side'},
+ 'Neck hold / free right hand':{...make(neck,'left'),contactStyle:'neck'},
 };

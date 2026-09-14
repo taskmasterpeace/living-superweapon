@@ -68,6 +68,20 @@ test('grab studies compile full-body holds and preserve the free-hand choice',as
   if(name.startsWith('Neck'))assert.equal(m.hand,'left');
  }
 });
+test('directional grab previews keep partners upright and align the selected socket at different sizes',async()=>{
+ const g=await loadActual(),actor=g.scene,scene=new T.Scene();scene.add(actor);const pose={},bones=[];
+ actor.traverse(o=>{if(o.isBone){pose[o.name]=o.quaternion.toArray();bones.push(o.name);}});
+ const r=createContactRehearsal(actor,scene),partner=scene.getObjectByName('Interaction partner preview');
+ for(const [name,style]of [['Front clinch entry','front'],['Rear body lock entry','rear'],['Side grab entry','side'],['Neck hold / free right hand','neck']])for(const size of [.6,1.6]){
+  const m=validateAsset({...base,motion:actionDraft(name,pose)},bones).motion;assert.equal(m.contactStyle,style);
+  r.set('partner',size,true);r.update(.6,m);scene.updateMatrixWorld(true);
+  assert.ok(new T.Vector3(0,1,0).applyQuaternion(partner.quaternion).y>.999,'partner rolled sideways');
+  const hand=actor.getObjectByName(m.hand==='left'?'DEF-handL':'DEF-handR').getWorldPosition(new T.Vector3());
+  const socket=partner.getObjectByName(style==='neck'?'DEF-neck':'DEF-spine003').getWorldPosition(new T.Vector3());
+  assert.ok(hand.distanceTo(socket)<1e-6,'grip drifted with partner size');
+ }
+ r.dispose();
+});
 
 test('full-body loop studies close every joint and animate both arms and legs',async()=>{
  const {FULL_BODY_STUDIES,fullBodyStudy}=await import('../src/engine/character-full-body-studies.js');

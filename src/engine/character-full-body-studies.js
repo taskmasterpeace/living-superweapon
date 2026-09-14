@@ -29,5 +29,5 @@ export function fullBodyStudy(name,base){
   if(!pose[bone])throw Error('Missing full-body study bone '+bone);
   pose[bone]=new T.Quaternion().fromArray(pose[bone]).multiply(new T.Quaternion().setFromEuler(new T.Euler(...angles))).normalize().toArray();
  }return {time:key.time*d.duration,pose};});
- return {name,duration:d.duration,loop:d.loop,hand:d.hand||'right',base:'Idle_Loop',source:'Power World full-body authored study; visual review pending',status:'candidate',markers:d.markers||{contact:0,release:0,controlReturn:d.duration},keys};
+ return {contactStyle:d.contactStyle||'carry',name,duration:d.duration,loop:d.loop,hand:d.hand||'right',base:'Idle_Loop',source:'Power World full-body authored study; visual review pending',status:'candidate',markers:d.markers||{contact:0,release:0,controlReturn:d.duration},keys};
 }

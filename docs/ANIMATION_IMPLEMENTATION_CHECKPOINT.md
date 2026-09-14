@@ -78,3 +78,8 @@ Partner and prop release previews now sample the exact authored release frame ra
 
 Front clinch, rear body lock, side grab and left-hand neck hold are selectable in the authoring panel. The old Paired grab name now resolves to the full-body front study. Six keys cover entry, contact at .42 s, sustained hold, release at 1.05 s, control return at 1.3 s and base recovery by 1.4 s. Neck hold retains explicit left-hand metadata so the right hand is free. Thirteen authoring tests pass; production build passes. Browser contact silhouette inspected for neck hold. These are editable candidates, not approved gameplay clips. Upright/directional partner alignment, dynamic contact and full sequence acceptance remain outstanding; the current partner rehearsal still uses its generic carry orientation.
 
+
+## Directional partner preview contract
+
+Validated contactStyle metadata (carry/front/rear/side/neck) survives asset and clip export. Grab studies select upright partner facing and neck or upper-torso socket; legacy carry keeps its horizontal orientation. Fourteen authoring tests pass, including small/large partner socket alignment; build passes. Browser neck-hold review exposed inherited partner limb posing that still needs a dedicated victim animation channel, tracked in https://github.com/taskmasterpeace/living-superweapon/issues/19. These previews remain candidates, not visually approved interaction clips.
+
