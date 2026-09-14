@@ -4,7 +4,8 @@ import {mainCombatFixture} from './helpers/main-combat-fixture.mjs';import {Mele
 test('phase priority exposes interruption and distinguishes combo permission from cooldown',()=>{
  assert.equal(meleePhase({state:'ko',mstate:'active'}).phase,'ko');
  assert.equal(meleePhase({grabbedBy:{},mstate:'active'}).phase,'held');
- assert.equal(meleePhase({stunT:.5,mstate:'startup'}).phase,'staggered');
+ assert.equal(meleePhase({stunT:.5,mstate:'startup'}).phase,'stunned');
+ for(const [timer,phase]of [['sleepT','asleep'],['downedT','downed'],['shockT','shocked'],['staggerT','staggered']])assert.deepEqual(meleePhase({[timer]:.7,mstate:'active'}),{phase,remaining:.7});
  assert.deepEqual(meleePhase({mstate:'recover',mT:.2}),{phase:'recover',remaining:.2});
  assert.equal(meleePhase({strikeCd:.3,comboWin:.2}).phase,'combo');
  assert.equal(meleePhase({strikeCd:.3,comboWin:0}).phase,'cooldown');
@@ -23,7 +24,7 @@ test('trial captures both actors phase changes and native remaining timers',()=>
   assert.ok(t.recording.events.some(e=>e.actor===1&&e.phase==='startup'));
   assert.ok(t.recording.events.some(e=>e.actor===0&&e.phase==='ready'));
   assert.ok(t.recording.frames.at(-1).actors[1].remaining<=initial);
-  f.stunT=.5;x.g.time+=.05;t.capture();assert.equal(t.recording.frames.at(-1).actors[1].phase,'staggered');
+  f.stunT=.5;x.g.time+=.05;t.capture();assert.equal(t.recording.frames.at(-1).actors[1].phase,'stunned');
   t.repeat();x.g.time+=.05;t.capture();assert.ok(t.recording.events.some(e=>e.actor===1&&e.phase==='ready'));t.dispose();
  }finally{x.close();}
 });

@@ -134,3 +134,8 @@ The actual-rig regression failed when the healthy arm was overwritten; 25 modula
 Authored motion JSON, compiled clip metadata and the editor's separate clip export now preserve optional `visualReview: {rejected, note}`. The catalog reads the validated motion's review instead of separate display-only data. Ground pickup's issue #21 rejection therefore travels with handoffs. All exports remain candidates; a non-rejected note does not grant gameplay approval.
 
 The production-catalog regression failed before the fix because compiled metadata lost the rejection. Sixteen catalog/authoring tests and build pass.
+# Distinct combat review status labels
+
+The melee recorder/review now distinguishes Stunned, Staggered, Asleep, Knocked down, Frozen and Shocked with each displayed condition's own remaining timer. Previously stun was mislabeled as stagger and sleep/knockdown could show Ready. Existing KO/held priority remains intact; overlapping conditions display one priority condition, not a claim that all conditions have ended when that timer expires.
+
+For authors: recovery is the remaining commitment after your own attack; stagger is an imposed interruption from a hit; stun is a separate disabling status. The displayed labels read native timers and do not change the rules or durations. Thirteen phase/recording/incapacitation tests and build pass; two tests failed before the correction.
