@@ -160,6 +160,9 @@ for side in ['L','R']:
  mesh('Robe.side.'+side,[(s*.16,-.13,1.035),(s*.16,.13,1.035),(s*.29,.20,.20),(s*.29,-.20,.20)],[(0,1,2,3)],'DEF-thigh.'+side,'dark','robe')
  shaped_segment('Sleeve.'+side,'DEF-forearm.'+side,[(0,.075,.078),(.4,.09,.094),(1,.16,.165)],'suit','sleeves')
 rings('Robe.collar',[(1.45,.16,.13),(1.53,.18,.145),(1.57,.15,.12)],'DEF-spine.003','suit','collar')
+# Shoulder yoke bridges the open chest/back over the shirt.
+for side in [-1,1]:
+ mesh('Coat.yoke'+str(side),[(side*.065,-.115,1.49),(side*.21,-.115,1.46),(side*.21,.12,1.46),(side*.065,.10,1.49)],[(0,1,2,3)],'DEF-spine.003','suit','coat')
 # Lab coat: open chest, split knee-length tails and fitted sleeves. No cloth solver.
 for side in ['L','R']:
  s=1 if side=='L' else -1
@@ -180,6 +183,13 @@ box('Coat.badge.border',(.13,-.137,1.34),(.07,.008,.076),'DEF-spine.003','dark',
 box('Coat.badge.card',(.13,-.144,1.34),(.053,.006,.059),'DEF-spine.003','suit','coat',0)
 box('Coat.pen',(.14,-.15,1.385),(.012,.009,.044),'DEF-spine.003','accent','coat',0)
 
+# Short jacket uses the same coat shell and reference skeleton.
+for o in parts:
+ if o.get('slot')=='coat':
+  o.shape_key_add(name='Basis');key=o.shape_key_add(name='coatShort')
+  for v in key.data:
+   if o.name.startswith('Coat.tail') and v.co.z<1.05:v.co.z=1.05-(1.05-v.co.z)*.24
+   if o.name.startswith('Coat.badge') or o.name=='Coat.pen':v.co=key.data[0].co.copy()
 # Ragged lower shirt tabs; discrete silhouette pieces share the hips/thighs.
 for side in ['L','R']:
  s=1 if side=='L' else -1
@@ -208,6 +218,14 @@ cape=mesh('Cape',verts,[(r*5+c,r*5+c+1,(r+1)*5+c+1,(r+1)*5+c) for r in range(3) 
 cape.shape_key_add(name='Basis');key=cape.shape_key_add(name='capeBend')
 for v in key.data:
  t=max(0,(1.46-v.co.z)/1.15);v.co.y+=.20*t*t;v.co.z+=.055*t*t
+for style in ['short','split','shoulder','pointed']:
+ key=cape.shape_key_add(name='cape_'+style)
+ for v in key.data:
+  t=max(0,(1.46-v.co.z)/1.15)
+  if style=='short':v.co.z=1.46-(1.46-v.co.z)*.52
+  elif style=='split' and abs(v.co.x)<.05:v.co.z+=.24*t
+  elif style=='shoulder':v.co.x=v.co.x*.52+.12
+  elif style=='pointed':v.co.z+=abs(v.co.x)*.65*t
 cape.data.materials[0].use_backface_culling=False
 # Tiling UVs are generated before animation evaluation, in the same reference
 # coordinates across separate pieces. Preserve authored expression/emblem UVs.

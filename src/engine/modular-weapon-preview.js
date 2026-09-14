@@ -4,6 +4,7 @@ import * as T from 'three';
 // different, -Y native-rig basis, so they cannot use this palm socket directly.
 export const MODULAR_WEAPON_CLIP_FAMILIES=Object.freeze({
   none:Object.freeze({label:'Unarmed',clips:['Idle_Loop','Punch_Jab','Punch_Cross'],gaps:[]}),
+  spear:Object.freeze({label:'Spear grip preview',clips:['Sword_Idle'],gaps:['Dedicated spear thrust']}),
   sword:Object.freeze({label:'Authored sword',clips:['Sword_Idle','Sword_Attack'],gaps:[]}),
   bat:Object.freeze({label:'Shared one-handed slash preview',clips:['Sword_Idle','Sword_Attack'],gaps:['Dedicated baseball bat swing','Two-handed bat grip / animation']}),
   axe:Object.freeze({label:'Shared one-handed slash preview',clips:['Sword_Idle','Sword_Attack'],gaps:['Dedicated axe swing','Two-handed axe grip / animation']}),
@@ -19,12 +20,13 @@ export function createModularWeaponPreview(actor){
   const steel=material('#cdd5ce',.65,.28),gold=material('#bba365',.5,.4),dark=material('#262b29'),wood=material('#a36a38'),face=material('#385d68',.35);
   function mesh(group,geometry,mat,x=0,y=0,z=0){geometries.add(geometry);const m=new T.Mesh(geometry,mat);m.position.set(x,y,z);group.add(m);return m;}
   const weapons={};
-  for(const kind of ['sword','bat','axe']){
+  for(const kind of ['sword','bat','axe','spear']){
     const group=new T.Group();group.name=`review-${kind}`;group.userData.weaponKind=kind;
     group.userData.gripKind='cylinder';group.userData.clipFamily=MODULAR_WEAPON_CLIP_FAMILIES[kind];
     // Exact existing workshop sword grip; preserve authored hand articulation.
     group.position.set(0,.075,.028);group.rotation.set(Math.PI/2,0,0);right.add(group);weapons[kind]=group;
   }
+  const spear=weapons.spear;mesh(spear,new T.CylinderGeometry(.014,.014,1.6,6),wood,0,.45);mesh(spear,new T.ConeGeometry(.05,.22,4),steel,0,1.36);
   const sword=weapons.sword;
   mesh(sword,new T.CylinderGeometry(.016,.016,.15,8),dark);
   mesh(sword,new T.BoxGeometry(.20,.025,.035),gold,0,.075);
@@ -50,14 +52,15 @@ export function createModularWeaponPreview(actor){
   const plate=mesh(shield,new T.CylinderGeometry(.31,.31,.035,8),gold,0,.04,-.075);plate.rotation.x=Math.PI/2;
   const inset=mesh(shield,new T.CylinderGeometry(.273,.273,.039,8),face,0,.04,-.083);inset.rotation.x=Math.PI/2;
   mesh(shield,new T.SphereGeometry(.068,8,4),steel,0,.04,-.11).scale.z=.5;
-  let state={weapon:'none',shield:false},disposed=false;
+  const roundParts=shield.children.slice(1);const kite=new T.Group(),riot=new T.Group();shield.add(kite,riot);const sh=new T.Shape();sh.moveTo(-.29,.35);sh.lineTo(.29,.35);sh.lineTo(.31,-.14);sh.lineTo(0,-.52);sh.lineTo(-.31,-.14);sh.closePath();mesh(kite,new T.ExtrudeGeometry(sh,{depth:.04,bevelEnabled:false}),steel,0,.1,-.13);mesh(riot,new T.BoxGeometry(.64,.95,.04),dark,0,.02,-.12);mesh(riot,new T.BoxGeometry(.47,.12,.045),face,0,.30,-.145);
+  let state={weapon:'none',shield:false,shieldStyle:'round'},disposed=false;
   const api={weapons,shield,clipFamilies:MODULAR_WEAPON_CLIP_FAMILIES,
     get state(){return {...state};},
     set(next={}){
       if(disposed)throw new Error('Modular weapon preview is disposed');
       const updated={...state,...next};
       if(updated.weapon!=='none'&&!Object.hasOwn(weapons,updated.weapon))throw new Error(`Unknown preview weapon: ${updated.weapon}`);
-      state={weapon:updated.weapon,shield:!!updated.shield};
+      state={weapon:updated.weapon,shield:!!updated.shield,shieldStyle:updated.shieldStyle||'round'};for(const o of roundParts)o.visible=state.shieldStyle==='round';kite.visible=state.shieldStyle==='kite';riot.visible=state.shieldStyle==='riot';
       for(const [kind,group] of Object.entries(weapons))group.visible=kind===state.weapon;
       shield.visible=state.shield;return {...state};
     },

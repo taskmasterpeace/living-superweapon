@@ -7,7 +7,7 @@
   "sourceLicense": "CC0-1.0",
   "units": "meters",
   "height": 1.8325,
-  "triangles": 4122,
+  "triangles": 4126,
   "modules": [
     "Torso.chest",
     "Torso.waist",
@@ -131,6 +131,8 @@
     "Robe.side.R",
     "Sleeve.R",
     "Robe.collar",
+    "Coat.yoke-1",
+    "Coat.yoke1",
     "Coat.front.L",
     "Coat.lapel.L",
     "Coat.side.L",

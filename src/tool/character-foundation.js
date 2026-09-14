@@ -1,3 +1,5 @@
+import {generateDeck52Mercenary} from '../data/hero-signature-recipes.js';
+import {createSignatureParts} from '../engine/modular-signature-parts.js';
 import {addModularMotions,poseInfectedFlight} from '../engine/modular-motions.js';
 import {readCostumeImage} from '../engine/modular-surfaces.js';
 import {createModularWeaponPreview} from '../engine/modular-weapon-preview.js';
@@ -27,14 +29,15 @@ setModularCostume(meshes);setModularExpression(meshes);
 let recipe={...MODULAR_RECIPES.base},size=1;
 const colorFields={color:'primary',secondary:'secondary',trim:'trim',emblemColor:'emblemColor',skin:'skin',hairColor:'hairColor',eyeColor:'eyeColor',gloveColor:'gloveColor'};
 function applyRecipe(sync=false){
- recipe=applyModularRecipe(meshes,recipe);applyModularFrame(actor,recipe.frame,height/1.8325*size);
+ if(recipe.emblem&&!Array.from(document.querySelector('#emblem').options).some(o=>o.value===recipe.emblem))document.querySelector('#emblem').add(new Option('Signature · '+recipe.emblem.replace('sig-',''),recipe.emblem));recipe=applyModularRecipe(meshes,recipe);applyModularFrame(actor,recipe.frame,height/1.8325*size);
  if(sync){
   for(const [id,key]of Object.entries(colorFields))document.getElementById(id).value=recipe[key]||({hairColor:'#171b19',eyeColor:'#29221b'}[key]);
-  for(const key of ['patternScale','infection','pattern','footwear','beltStyle','hair','frame','emblem','emblemPlacement','expression','muscle','anatomy','gloves'])document.getElementById(key).value=recipe[key]??(key==='expression'?'neutral':key==='anatomy'?(recipe.frame==='agile'?'female':'male'):1);
-  for(const key of ['coat','wristbands','tornClothes','robe','sleeves','collar','glasses','cape','armor','visor','eyepatch','eyeGlow','gauntlets','shoulders','knees','belt','backpack'])document.getElementById(key).checked=!!recipe[key];
+  for(const key of ['tattooRegion','capeStyle','headwear','wings','coatStyle','patternRegion','shieldStyle','patternScale','infection','pattern','footwear','beltStyle','hair','frame','emblem','emblemPlacement','expression','muscle','anatomy','gloves'])document.getElementById(key).value=recipe[key]??(key==='tattooRegion'?'upperArmL':key==='capeStyle'?'full':['headwear','wings'].includes(key)?'none':key==='coatStyle'?'long':key==='patternRegion'?'all':key==='shieldStyle'?'round':key==='expression'?'neutral':key==='anatomy'?(recipe.frame==='agile'?'female':'male'):1);
+  for(const key of ['beard','claws','tentacles','wristBlasters','lasso','kilt','metallic','shimmer','coat','wristbands','tornClothes','robe','sleeves','collar','glasses','cape','armor','visor','eyepatch','eyeGlow','gauntlets','shoulders','knees','belt','backpack'])document.getElementById(key).checked=!!recipe[key];
  }
 }
 applyRecipe(true);
+const signatureParts=createSignatureParts(actor);
 const equipment=createModularWeaponPreview(actor),hand=actor.getObjectByName('DEF-handR'),sword=equipment.weapons.sword;let weapon='none',withShield=false;
 let flightHands='fist';
 let ragdoll=null,dropTime=0;
@@ -52,7 +55,8 @@ function draw(){
   native._animate(1/60);flightAdapter.update();if(recipe.infection!=='none')poseInfectedFlight(actor);
  }else sourcePose(motion,phase);
  applyModularHeadScale(actor,recipe.frame);animateModularCape(meshes,performance.now()/1000,motion.startsWith("flight")?60:0);
- equipment.set({weapon:weapon==='none'&&motion.startsWith('Sword')?'sword':weapon,shield:withShield});actor.updateMatrixWorld(true);
+ signatureParts.set(recipe);signatureParts.update(performance.now()/1000,flight);
+ equipment.set({shieldStyle:recipe.shieldStyle||'round',weapon:weapon==='none'&&motion.startsWith('Sword')?'sword':weapon,shield:withShield});actor.updateMatrixWorld(true);
  document.querySelector('#status').textContent=motion==='ragdoll'?'Ragdoll · bounded elbows and knees · neck constraint':flight?'Native procedural flight · '+flightHands+' hands':motion+' · original authored clip · '+(phase*100).toFixed(0)+'%';
  if(['bat','axe'].includes(weapon)&&motion==='Sword_Attack')document.querySelector('#status').textContent+=' · shared one-handed slash, dedicated '+weapon+' swing pending';
  renderer.render(scene,camera);
@@ -60,14 +64,14 @@ function draw(){
 for(const b of document.querySelectorAll('[data-motion]'))b.onclick=()=>{if(ragdoll){ragdoll.restore();ragdoll=null;native.pos.set(0,0,0);native.obj.position.set(0,0,0);camera.position.set(14,8,22);orbit.target.set(0,height/2,0);orbit.update();}motion=b.dataset.motion;phase=0;playing=true;document.querySelector('#pause').textContent='Pause';for(const button of document.querySelectorAll('[data-motion]'))button.classList.toggle('active',button===b);draw();};
 document.querySelector('#pause').onclick=()=>{playing=!playing;document.querySelector('#pause').textContent=playing?'Pause':'Play';};
 document.querySelector('#scrub').oninput=e=>{playing=false;phase=+e.target.value;draw();};
-document.querySelector('#costume').onchange=e=>{recipe={...MODULAR_RECIPES[e.target.value==='soldier'?'mercenary':e.target.value]};if(e.target.value==='soldier')Object.assign(recipe,{helmet:true,hair:'none'});applyRecipe(true);draw();};
+document.querySelector('#costume').onchange=e=>{recipe={...MODULAR_RECIPES[e.target.value==='soldier'?'mercenary':e.target.value]};weapon=recipe.weapon||'none';withShield=!!recipe.shield;document.querySelector('#weapon').value=weapon;document.querySelector('#shield').checked=withShield;if(e.target.value==='soldier')Object.assign(recipe,{helmet:true,hair:'none'});applyRecipe(true);draw();};
 for(const [id,key]of Object.entries(colorFields))document.getElementById(id).oninput=e=>{recipe[key]=e.target.value;applyRecipe();draw();};
 document.querySelector('#angle').onclick=()=>{const a=++angle*Math.PI/2;camera.position.set(Math.sin(a)*24,8,Math.cos(a)*24);orbit.update();draw();};
 document.querySelector('#hands').onchange=e=>{flightHands=e.target.value;draw();};
 document.querySelector('#size').onchange=e=>{size=+e.target.value;applyRecipe();draw();};
-for(const key of ['infection','pattern','footwear','beltStyle','hair','frame','emblem','emblemPlacement','expression','anatomy','gloves'])document.getElementById(key).onchange=e=>{recipe[key]=e.target.value;applyRecipe();draw();};
+for(const key of ['headwear','wings','coatStyle','patternRegion','shieldStyle','infection','pattern','footwear','beltStyle','hair','frame','emblem','emblemPlacement','expression','anatomy','gloves'])document.getElementById(key).onchange=e=>{recipe[key]=e.target.value;applyRecipe();draw();};
 document.querySelector('#muscle').oninput=e=>{recipe.muscle=+e.target.value;applyRecipe();draw();};
-for(const key of ['coat','wristbands','tornClothes','robe','sleeves','collar','glasses','cape','armor','visor','eyepatch','eyeGlow','gauntlets','shoulders','knees','belt','backpack'])document.getElementById(key).onchange=e=>{recipe[key]=e.target.checked;applyRecipe();draw();};
+for(const key of ['beard','claws','tentacles','wristBlasters','lasso','kilt','metallic','shimmer','coat','wristbands','tornClothes','robe','sleeves','collar','glasses','cape','armor','visor','eyepatch','eyeGlow','gauntlets','shoulders','knees','belt','backpack'])document.getElementById(key).onchange=e=>{recipe[key]=e.target.checked;applyRecipe();draw();};
 document.querySelector('#exportRecipe').onclick=()=>{const blob=new Blob([JSON.stringify({schema:1,skeleton:'ual-deform-v1',body:'faceted-v1',...recipe,size},null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='powerworld-character-recipe.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);document.querySelector('#recipeStatus').textContent='Recipe exported. Reuses the shared rig, modules and clips.';};
 document.querySelector('#importRecipe').onclick=()=>document.querySelector('#recipeFile').click();
 document.querySelector('#recipeFile').onchange=async e=>{try{const file=e.target.files[0];if(!file)return;if(file.size>3200000)throw Error('Recipe is too large');const next=validateModularRecipe(JSON.parse(await file.text()));recipe=next;size=next.size??1;delete recipe.size;const select=document.querySelector('#costume');select.querySelector('[value=imported]')?.remove();const option=new Option(next.name,'imported',true,true);option.disabled=true;select.add(option);const sizeSelect=document.querySelector('#size');if(!Array.from(sizeSelect.options).some(o=>+o.value===size))sizeSelect.add(new Option('Imported height',String(size)));sizeSelect.value=String(size);applyRecipe(true);draw();document.querySelector('#recipeStatus').textContent='Imported '+recipe.name;}catch(error){document.querySelector('#recipeStatus').textContent=error.message;}finally{e.target.value='';}};
@@ -76,11 +80,14 @@ document.querySelector('#emblemFile').onchange=async e=>{try{const file=e.target
 document.querySelector('#weapon').onchange=e=>{weapon=e.target.value;draw();};
 document.querySelector('#shield').onchange=e=>{withShield=e.target.checked;draw();};
 document.querySelector('#patternScale').oninput=e=>{recipe.patternScale=+e.target.value;applyRecipe();draw();};
-document.querySelector('#uploadPattern').onclick=()=>document.querySelector('#patternFile').click();
+document.querySelector('#generateMercenary').onclick=()=>{const seedInput=document.querySelector('#mercenarySeed');if(!seedInput.reportValidity())return;recipe=generateDeck52Mercenary(+seedInput.value);const id='generated-mercenary';MODULAR_RECIPES[id]=recipe;const select=document.querySelector('#costume');select.querySelector('[value="'+id+'"]')?.remove();select.add(new Option(recipe.name,id,true,true));weapon='none';withShield=false;document.querySelector('#weapon').value='none';document.querySelector('#shield').checked=false;applyRecipe(true);draw();};
+ document.querySelector('#applyRegionColor').onclick=()=>{recipe.regionColors={...recipe.regionColors,[document.querySelector('#colorRegion').value]:document.querySelector('#regionColor').value};applyRecipe();draw();};document.querySelector('#resetRegionColor').onclick=()=>{if(recipe.regionColors)delete recipe.regionColors[document.querySelector('#colorRegion').value];applyRecipe();draw();};
+ document.querySelector('#uploadTattoo').onclick=()=>document.querySelector('#tattooFile').click();document.querySelector('#tattooFile').onchange=async e=>{try{if(!e.target.files[0])return;recipe.tattooImage=await readCostumeImage(e.target.files[0]);applyRecipe(true);draw();document.querySelector('#tattooStatus').textContent='Tattoo applied. Use transparent artwork; upper-arm placement needs exposed arms.';}catch(error){document.querySelector('#tattooStatus').textContent=error.message;}finally{e.target.value='';}};document.querySelector('#clearTattoo').onclick=()=>{delete recipe.tattooImage;applyRecipe();draw();};
+ document.querySelector('#uploadPattern').onclick=()=>document.querySelector('#patternFile').click();
 document.querySelector('#patternFile').onchange=async e=>{try{if(!e.target.files[0])return;document.querySelector('#patternStatus').textContent='Preparing image…';recipe.patternImage=await readCostumeImage(e.target.files[0]);recipe.pattern='custom';applyRecipe(true);draw();document.querySelector('#patternStatus').textContent='Pattern applied to fabric and saved in the recipe. Armor retains its own color.';}catch(error){document.querySelector('#patternStatus').textContent=error.message;}finally{e.target.value='';}};
 document.querySelector('#sourceTake').onchange=e=>{document.querySelector('[data-motion=Idle_Loop]').click();motion=e.target.value;phase=0;playing=true;draw();};
 const bank=await addModularMotions(gltf);for(const e of bank.entries)document.querySelector('#sourceTake').add(new Option(e.take,e.take));document.querySelector('#sourceTake').disabled=false;
-const params=new URLSearchParams(location.search);const requestedRecipe=params.get('recipe');if(MODULAR_RECIPES[requestedRecipe]){recipe={...MODULAR_RECIPES[requestedRecipe]};document.querySelector('#costume').value=requestedRecipe;applyRecipe(true);}const requestedTake=params.get('clip');if(gltf.animations.some(c=>c.name===requestedTake)){motion=requestedTake;document.querySelector('#sourceTake').value=motion;}
+const params=new URLSearchParams(location.search);for(const [id,r] of Object.entries(MODULAR_RECIPES))if(!document.querySelector('#costume option[value="'+id+'"]'))document.querySelector('#costume').add(new Option(r.name,id));const requestedRecipe=params.get('recipe');if(MODULAR_RECIPES[requestedRecipe]){recipe={...MODULAR_RECIPES[requestedRecipe]};weapon=recipe.weapon||'none';withShield=!!recipe.shield;document.querySelector('#weapon').value=weapon;document.querySelector('#shield').checked=withShield;document.querySelector('#costume').value=requestedRecipe;applyRecipe(true);}const requestedTake=params.get('clip');if(gltf.animations.some(c=>c.name===requestedTake)){motion=requestedTake;document.querySelector('#sourceTake').value=motion;}
 function resize(){const w=Math.max(320,innerWidth-340);renderer.setSize(w,innerHeight);camera.aspect=w/innerHeight;camera.updateProjectionMatrix();}addEventListener('resize',resize);resize();draw();
 window.FOUNDATION={actor,meshes,mixer,orbit,native,flightAdapter,equipment,clips:gltf.animations,hand,sword,scene,camera,renderer,get recipe(){return {...recipe,size};},set(m,p=0){motion=({punch:'Punch_Cross',sword:'Sword_Attack',hold:'Sword_Idle'})[m]||m;phase=p;playing=false;document.querySelector("#pause").textContent="Play";for(const b of document.querySelectorAll("[data-motion]"))b.classList.toggle("active",b.dataset.motion===motion);document.querySelector("#scrub").value=phase;draw();},draw};
 function tick(now){const dt=Math.min(.05,(now-last)/1000);last=now;if(playing&&motion!=='ragdoll'){phase=(phase+dt/((motion.startsWith('flight')?8:gltf.animations.find(c=>c.name===motion).duration)+.35))%1;document.querySelector('#scrub').value=phase;}orbit.update();draw();requestAnimationFrame(tick);}requestAnimationFrame(tick);

@@ -1,0 +1,27 @@
+import * as T from 'three';
+// Rigid accessories share the canonical bind frame. Animation moves their bones;
+// wings/tentacles add bounded presentation motion without changing simulation.
+export function createSignatureParts(actor){
+ const groups=[],materials=[],geometries=[],moving=[];let signature='';
+ const mat=(color,metalness=0)=>{const m=new T.MeshStandardMaterial({color,metalness,roughness:metalness?.3:.7,flatShading:true});materials.push(m);return m;};
+ const box=(g,size,pos,m)=>{const geo=new T.BoxGeometry(...size);geometries.push(geo);const o=new T.Mesh(geo,m);o.position.set(...pos);g.add(o);return o;};
+ function mount(name){const bone=actor.getObjectByName(T.PropertyBinding.sanitizeNodeName(name));if(!bone)throw Error('Missing signature bone '+name);const g=new T.Group();actor.updateMatrixWorld(true);let inv;actor.traverse(o=>{const i=o.skeleton?.bones.indexOf(bone);if(i>=0)inv=o.skeleton.boneInverses[i];});if(!inv)throw Error('Missing bind inverse '+name);g.matrix.copy(inv).multiply(new T.Matrix4().makeScale(1,1,-1));g.matrixAutoUpdate=false;bone.add(g);groups.push(g);return g;}
+ function clear(){for(const g of groups){g.traverse(o=>o.userData.signatureTexture?.dispose());g.removeFromParent();}for(const g of geometries)g.dispose();for(const m of materials)m.dispose();groups.length=materials.length=geometries.length=moving.length=0;}
+ function build(r){const k=JSON.stringify([r.headwear,r.beard,r.claws,r.wings,r.tentacles,r.wristBlasters,r.lasso,r.kilt,r.secondary,r.trim,r.hairColor,r.metallic,r.tattooImage,r.tattooRegion]);if(k===signature)return;signature=k;clear();const dark=mat(r.trim||'#20272b'),accent=mat(r.secondary||'#b59651',r.metallic?.8:0),hair=mat(r.hairColor||'#292822'),steel=mat('#c6d2d7',.8);
+ if(r.headwear&&r.headwear!=='none'){const g=mount('DEF-head');
+ if(r.headwear==='cap'){box(g,[.245,.08,.21],[0,1.8,0],dark);box(g,[.19,.015,.12],[0,1.77,.145],dark);}
+ if(['hood','speed','helmet'].includes(r.headwear)){box(g,[.25,.035,.23],[0,1.80,0],dark);for(const s of [-1,1])box(g,[.028,.24,.22],[s*.125,1.68,0],dark);box(g,[.25,.23,.035],[0,1.68,-.151],dark);box(g,[.19,.035,.02],[0,1.71,-.178],accent);if(r.headwear==='speed')for(const s of [-1,1]){const fin=box(g,[.022,.11,.19],[s*.13,1.8,.035],accent);fin.rotation.x=-.3;}}
+ if(r.headwear==='mask')box(g,[.22,.10,.025],[0,1.62,-.12],dark);
+ if(r.headwear==='skull'){const bone=mat('#d7c9a4');box(g,[.23,.11,.025],[0,1.71,-.12],bone);for(const s of [-1,1])box(g,[.055,.04,.03],[s*.053,1.71,-.14],dark);box(g,[.10,.04,.023],[0,1.6,-.13],bone);for(let i=-2;i<=2;i++)box(g,[.008,.035,.03],[i*.019,1.60,-.14],dark);}
+ }
+ if(r.tattooImage){const region=r.tattooRegion||'upperArmL';const tex=new T.TextureLoader().load(r.tattooImage);tex.colorSpace=T.SRGBColorSpace;const ink=new T.MeshStandardMaterial({map:tex,transparent:true,alphaTest:.08,depthWrite:false,side:T.DoubleSide,polygonOffset:true,polygonOffsetFactor:-2});materials.push(ink);const geo=new T.PlaneGeometry(.12,.13);geometries.push(geo);const mark=new T.Mesh(geo,ink);mark.userData.signatureTexture=tex;
+ if(region==='chest'){const g=mount('DEF-spine.003');mark.position.set(0,1.36,-.126);g.add(mark);}else{const bone=actor.getObjectByName(T.PropertyBinding.sanitizeNodeName('DEF-upper_arm.'+(region==='upperArmR'?'R':'L'))),g=new T.Group();bone.add(g);groups.push(g);mark.position.set(0,.14,.096);g.add(mark);}}
+ if(r.beard){const g=mount('DEF-head');box(g,[.19,.10,.035],[0,1.565,-.096],hair);for(const s of [-1,1])box(g,[.025,.13,.05],[s*.105,1.62,-.068],hair);}
+ if(r.claws||r.wristBlasters)for(const side of ['L','R']){const bone=actor.getObjectByName(T.PropertyBinding.sanitizeNodeName('DEF-hand.'+side)),g=new T.Group();bone.add(g);groups.push(g);if(r.claws){for(const x of [-.025,.025]){const curve=new T.CatmullRomCurve3([new T.Vector3(x,.04,.03),new T.Vector3(x,.18,.025),new T.Vector3(x,.31,-.01),new T.Vector3(x,.38,-.04)]);const geo=new T.TubeGeometry(curve,5,.008,4,false);geometries.push(geo);g.add(new T.Mesh(geo,steel));}}if(r.wristBlasters)box(g,[.035,.14,.032],[0,-.04,-.035],accent);}
+ if(r.lasso){const g=mount('DEF-hips'),geo=new T.TorusGeometry(.12,.009,4,12);geometries.push(geo);const o=new T.Mesh(geo,mat('#dfb342',.5));o.position.set(.20,.98,0);o.rotation.y=Math.PI/2;g.add(o);}
+ if(r.kilt){const kiltMat=mat(r.kiltColor||'#ac2730');for(const side of ['L','R']){const g=mount('DEF-thigh.'+side),s=side==='L'?1:-1;box(g,[.17,.24,.025],[s*.1,.9,.13],kiltMat);box(g,[.17,.24,.025],[s*.1,.9,-.13],kiltMat);}}
+ if(r.wings&&r.wings!=='none'){const g=mount('DEF-spine.003');for(const s of [-1,1]){const hinge=new T.Group();hinge.position.set(s*.11,1.38,.16);g.add(hinge);for(let i=0;i<6;i++){const f=box(hinge,[.13,.54-i*.045,.035],[s*(.15+i*.105),.20-i*.07,.015*i],r.wings==='angel'?mat(i%2?'#e0dbcb':'#fff1d7'):steel);f.rotation.z=s*(-.5-i*.08);}moving.push({o:hinge,kind:'wing',s});}}
+ if(r.tentacles){const g=mount('DEF-spine.003');for(let i=0;i<4;i++){const s=i%2?1:-1,pivot=new T.Group();pivot.position.set(s*.12,1.28,.15);g.add(pivot);for(let j=0;j<5;j++){const o=box(pivot,[.07,.17,.065],[s*(j*.10),-.12-j*.10,.07+j*.065],accent);o.rotation.z=s*.6;}moving.push({o:pivot,kind:'tentacle',s,i});}}
+ }
+ return {set:build,update(t,flight=false){for(const m of moving){if(m.kind==='wing'){m.o.rotation.y=m.s*(flight?.45+Math.sin(t*5)*.4:1.15);m.o.rotation.z=m.s*.12;}else m.o.rotation.x=Math.sin(t*1.7+m.i)*.14;}},dispose:clear};
+}
