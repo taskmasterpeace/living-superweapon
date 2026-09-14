@@ -5,16 +5,28 @@ import {mainCombatFixture} from './helpers/main-combat-fixture.mjs';
 import {SETTINGS,keymap} from '../src/core/settings.js';
 import {previewPersonThrow} from '../src/engine/person-throw-trajectory.js';
 
-function fixture({hero='sol',height=0,hz=60,victimTraits={}}={}){
+function fixture({hero='sol',height=0,hz=60,victimTraits={},rear=false}={}){
  const x=mainCombatFixture({hero,mode:'powerworld'});x.g.ms.chaseCam=true;x.p._openSky=true;x.p.invuln=0;
  x.g.vfx._itex=new THREE.Texture(); // Texture output only; native VFX/throw/damage remain active.
  x.g.audio={...x.g.audio,yell:()=>{}};
- const v=x.foe({z:4,y:height});Object.assign(v,victimTraits);v.invuln=0;v.faceDir(0,-1);x.p.pos.y=height;
+ const v=x.foe({z:4,y:height});Object.assign(v,victimTraits);v.invuln=0;v.faceDir(0,rear?1:-1);x.p.pos.y=height;
  x.control(0);x.g.melee.grab(x.p);for(let i=0;i<Math.ceil(.2*hz);i++)x.g.melee.update(x.p,1/hz);
  assert.equal(x.p.grabbing,v,'Native grab failed');
  const tick=()=>{x.g.melee.update(x.p,1/hz);x.p._physics(1/hz,x.g);v._physics(1/hz,x.g);};
  return {...x,v,tick,hz,lift(){assert.equal(typeof x.g.melee.liftPerson,'function','Missing transport carry');return x.g.melee.liftPerson(x.p);}};
 }
+for(const hz of [30,60,120])test(`rear aerial capture preserves downward throw aim at ${hz} Hz`,()=>{
+ const x=fixture({hz,height:35,rear:true});
+ try{
+  assert.equal(x.p.grabMode,'back');assert.equal(x.lift(),true);
+  x.p.flying=true;x.p.gait='airborne';x.p.aim3.set(.2,-1,.1).normalize();
+  x.g.melee.grab(x.p);const before=x.v.pos.clone();
+  x.g.melee.releaseGrab(x.p);
+  assert.equal(x.p.grabbing,null);assert.equal(x.v.grabbedBy,null);
+  assert.ok(x.v.vel.y<0);assert.ok(x.v.vel.angleTo(x.p.aim3)<1e-7);
+  assert.ok(before.distanceTo(x.v.pos)<1e-7,'throw must not teleport victim');
+ }finally{x.close();}
+});
 for(const hz of [30,60,120])test(`native grab transports both original fighters and takes off at ${hz} Hz`,()=>{
  const x=fixture({hz});try{
   const {p,v,g}=x,ids=[p,v],hp=v.hp,team=v.team;assert.equal(x.lift(),true);

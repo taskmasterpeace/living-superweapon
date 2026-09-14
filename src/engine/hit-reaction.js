@@ -8,6 +8,7 @@ const keys=['torso','head','cowl','armL','armR']; // chest-local insignia follow
 const omega=22, direction=new THREE.Vector3(), axis=new THREE.Vector3();
 const inverse=new THREE.Quaternion(), turn=new THREE.Quaternion(), pivot=new THREE.Vector3();
 const bracePoint=new THREE.Vector3(),bracePole=new THREE.Vector3(),incoming=new THREE.Vector3();
+const headAxis=new THREE.Vector3(),headTurn=new THREE.Quaternion();
 
 function snapshot(f){
  const base=f._hitReactionCache ||= Object.fromEntries(keys.map(k=>[k,{position:new THREE.Vector3(),quaternion:new THREE.Quaternion()}]));
@@ -40,6 +41,7 @@ export function queueHitReaction(f,amount,opts) {
     return;
   }
   let amplitude=THREE.MathUtils.clamp(Math.sqrt(amount/24)*.24*(1.2-.04*f.strength),.06,.36);
+  state.headGain=opts.zone==='head'?.65:(opts.dtype==='energy'||opts.blast)?.4:0;
   state.velocity.addScaledVector(direction.normalize(),amplitude*omega*Math.E).clampLength(0,22);
 }
 
@@ -75,6 +77,9 @@ export function animateHitReaction(f,dt) {
   const pressure=beam&&!busy?beam.weight:0;
   p.body.getWorldQuaternion(inverse).invert();
   direction.copy(s.offset).applyQuaternion(inverse);
+  // Impulse only: continuous beam pressure must not repeatedly snap the head.
+  headAxis.set(direction.z-direction.y*.7,0,-direction.x);
+  const headAngle=Math.min(.12,headAxis.length()*(s.headGain||0));
   if(pressure&&!channels.dominant){
     incoming.copy(beam.direction).applyQuaternion(inverse);
     direction.addScaledVector(incoming,(.036+.07*beam.strain)*pressure);
@@ -91,6 +96,12 @@ export function animateHitReaction(f,dt) {
     for(const key of keys){
       const part=p[key];part.position.sub(pivot).applyQuaternion(turn).add(pivot);part.quaternion.premultiply(turn);
     }
+  }
+  if(headAngle>1e-7&&!busy){
+    headTurn.setFromAxisAngle(headAxis.normalize(),headAngle);
+    p.head.quaternion.premultiply(headTurn);
+    p.cowl.position.sub(p.head.position).applyQuaternion(headTurn).add(p.head.position);
+    p.cowl.quaternion.premultiply(headTurn);
   }
   if(!pressure)return;
   // Active emission keeps the body part it owns. The empty off-hand may brace,
