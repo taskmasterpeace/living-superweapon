@@ -1,3 +1,4 @@
+import {requireRecordingModels} from './recording-models.js';
 import {createCanvasClipRecorder} from './canvas-clip-recorder.js';
 // THE DEV CONSOLE — a command line inside the game.
 //
@@ -193,6 +194,7 @@ export class DevConsole {
       if(this.liveClip?.active)throw Error('A clip is already recording');
       const save=(blob,name)=>{const url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download=name;link.click();setTimeout(()=>URL.revokeObjectURL(url),10000);};
       const actor=this.g.player,trial=this.g.ms?.threatLab?.meleeTrial;
+      const models=requireRecordingModels([actor,trial?.target]);
       this.liveClip=createCanvasClipRecorder(document.getElementById('game'),{onComplete:async(blob,meta)=>{
         meta.final={hp:actor.hp,targetHp:trial?.target?.hp};
         if(import.meta.env.DEV){try{const response=await fetch('/__capture',{method:'POST',headers:{'Content-Type':blob.type,'X-Capture-Metadata':encodeURIComponent(JSON.stringify(meta))},body:blob});if(!response.ok)throw Error(await response.text());c.ok('Saved '+(await response.json()).path);}catch(e){c.err('Local archive failed: '+e.message);}}
@@ -205,7 +207,7 @@ export class DevConsole {
         close.onclick=dispose;preview.addEventListener('cancel',dispose);preview.append(title,video,close);document.body.append(preview);preview.showModal();
         c.ok('Live action clip recorded; inspect the video before accepting it');
       },onError:e=>c.err(e.message)});
-      c.toggle(false);this.liveClip.start({kind:'live-gameplay',audio:false,seconds,hero:actor.def.id,scenario:trial?.kind,initial:{hp:actor.hp,targetHp:trial?.target?.hp},time:this.g.time});
+      c.toggle(false);this.liveClip.start({kind:'live-gameplay',audio:false,seconds,models,recordedAt:new Date().toISOString(),hero:actor.def.id,scenario:trial?.kind,initial:{hp:actor.hp,targetHp:trial?.target?.hp},time:this.g.time});
       const recording=this.liveClip;setTimeout(()=>recording.stop(),seconds*1000);
     });
 
