@@ -12,7 +12,9 @@ Implementation authorized by Robert's request to proceed while he sleeps. No fur
 ## Evidence and limits
 Two regressions were observed failing before fixes: native wall hold lost to idle; hollow infection did not change exposed skin. Both pass after fixes. Combined targeted suite: 37 passed. Full-body studies compile against actual rig; loop endpoints and bilateral limb changes tested.
 Browser review of flailing candidate revealed arm articulation still needs refinement. NOT visually approved and NOT connected to gameplay. Other new candidates have not received full phase/angle review. These are a starting point, not finished falling clips.
-The studio statistics are base definition data. Rank lift table values are not an alternative runtime capacity rule. See docs/combat-states-and-damage-report.md for ordered defense resolution and known stun recovery scaling issue.
+The studio statistics are base definition data. Rank lift table values are not an alternative runtime capacity rule. See docs/combat-states-and-damage-report.md for ordered defense resolution and stun duration rules.
+
+Stun recovery correction: the duration bonus was applied at both entry and countdown, shortening a recovery-2 stun to .425 seconds. Countdown now consumes simulation seconds, preserving the entry-scaled .85-second duration. Six nonbaseline regressions failed before the fix; all 29 stun, burst-window and melee-incapacitation tests pass afterward, and the production build passes. Flight still drops on stun and recovery still grants four seconds of immunity. This is a gameplay timing correction, not visual approval of the falling/stunned animation candidates.
 
 ## Next work, in order
 1. Single-person pickup and hostile grab: grounded and flying entry, hold, free-hand action where supported, throw and release. Validate contact and interruption in gameplay.

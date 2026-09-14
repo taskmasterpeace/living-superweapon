@@ -1557,8 +1557,9 @@ export class Fighter {
     advanceBurstWindow(this,dt);
     if (this._stunImmune > 0) this._stunImmune -= dt;
     if (this.stunT > 0) {
-      const rec = (this.sheet && this.sheet.ccRecover) || 1;
-      this.stunT -= dt * rec;
+      // applyStun already scales the duration by recovery. This is remaining
+      // simulation seconds; scaling the countdown again squares the bonus.
+      this.stunT = Math.max(0, this.stunT - dt);
       if (this.stunT <= 0) { this._stunImmune = 4; }   // no chain-stunning
     }
     if (this.frozenT > 0) {

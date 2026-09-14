@@ -102,7 +102,7 @@ The city AI has belief/perception fields rather than one combined combat-state e
 
 ## Implementation mismatches and gaps worth fixing or documenting
 
-- **Stun recovery applies twice.** `applyStun` initializes `1.7 / ccRecover`; update then subtracts `dt × ccRecover`. Effective simulation duration is approximately `1.7 / ccRecover²`, not `1.7 / ccRecover`. At recovery 2 it is .425 seconds. Freeze, sleep and shock use other timing patterns, so a generic status-duration explanation is misleading.
+- **Stun recovery applies once.** `applyStun` initializes `1.7 / ccRecover` simulation seconds; update subtracts `dt`. At recovery 2 it lasts .85 seconds, followed by four seconds of stun immunity. Hitstop pauses the character update. Freeze, sleep and shock retain their own timing rules. Regression coverage checks recovery .5, 1 and 2 at 30/60/120 Hz.
 - **Phase is late.** Magic siphon, acid corrosion and personal armor/shield depletion can happen before phase rejects HP damage. The phase comment promises pass-through; the actual ordering does not promise no side effects. Invulnerability, by contrast, rejects early.
 - **True damage is not universally unmodified damage.** It bypasses personal pools, phase and PowerWorld guard but still passes mood, type resistance, magic/acid effects and other earlier logic. City guard can still affect a true-damage hit if it is not separately unblockable. Bleeding supplies both flags.
 - **Ballistic type and ballistic processing are separate metadata.** `dtype:'ballistic'` alone does not trigger passive plate/toughness; `ballistic:true` does. Native bullet call sites must consistently supply the flag. The type badge alone cannot prove this treatment.
