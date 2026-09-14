@@ -1,0 +1,508 @@
+{
+  "schemaVersion": 1,
+  "units": "seconds unless otherwise named",
+  "caveats": [
+    "Runtime timings are baseline at meleePace=1. Character pace scales phase durations.",
+    "A travelling melee approach can extend startup. Hitstop pauses the phase clock; interrupts and legal cancels can end commitment early.",
+    "Base damage is definition data, not final HP loss; momentum, rank, defenses and attack-specific resolution still apply.",
+    "Candidate markers do not create hitboxes, release a projectile, or grant control in gameplay.",
+    "Looping studies have no automatic gameplay control-return time. Rejected studies remain blocked from assignment.",
+    "Two-person rescue is excluded. Pickup and grab studies target one other person or one object."
+  ],
+  "runtime": [
+    {
+      "id": "jab",
+      "name": "JAB",
+      "status": "gameplay",
+      "startup": 0.1,
+      "active": 0.06,
+      "recovery": 0.14,
+      "controlReturn": 0.3,
+      "baseDamage": 4,
+      "reachWorldUnits": 11,
+      "cancels": [
+        "cross",
+        "grab",
+        "dash"
+      ]
+    },
+    {
+      "id": "cross",
+      "name": "CROSS",
+      "status": "gameplay",
+      "startup": 0.16,
+      "active": 0.07,
+      "recovery": 0.22,
+      "controlReturn": 0.45,
+      "baseDamage": 8,
+      "reachWorldUnits": 9,
+      "cancels": [
+        "grab"
+      ]
+    },
+    {
+      "id": "power",
+      "name": "POWER",
+      "status": "gameplay",
+      "startup": 0.34,
+      "active": 0.09,
+      "recovery": 0.4,
+      "controlReturn": 0.83,
+      "baseDamage": 18,
+      "reachWorldUnits": 7,
+      "cancels": []
+    },
+    {
+      "id": "grab",
+      "name": "GRAB",
+      "status": "gameplay",
+      "startup": 0.18,
+      "active": 0.1,
+      "recovery": 0.3,
+      "controlReturn": 0.58,
+      "baseDamage": 0,
+      "reachWorldUnits": 8,
+      "cancels": []
+    }
+  ],
+  "candidates": [
+    {
+      "name": "Front kick / right",
+      "status": "candidate",
+      "duration": 0.85,
+      "loop": false,
+      "hand": null,
+      "contactStyle": null,
+      "markers": {
+        "contact": 0.3655,
+        "release": 0.4335,
+        "controlReturn": 0.85
+      },
+      "visualReview": null,
+      "editorUrl": "/character-foundation.html?study=Front%20kick%20%2F%20right"
+    },
+    {
+      "name": "Front kick / left",
+      "status": "candidate",
+      "duration": 0.85,
+      "loop": false,
+      "hand": null,
+      "contactStyle": null,
+      "markers": {
+        "contact": 0.3655,
+        "release": 0.4335,
+        "controlReturn": 0.85
+      },
+      "visualReview": null,
+      "editorUrl": "/character-foundation.html?study=Front%20kick%20%2F%20left"
+    },
+    {
+      "name": "Roundhouse kick / right",
+      "status": "candidate",
+      "duration": 1,
+      "loop": false,
+      "hand": null,
+      "contactStyle": null,
+      "markers": {
+        "contact": 0.48,
+        "release": 0.5599999999999999,
+        "controlReturn": 1
+      },
+      "visualReview": null,
+      "editorUrl": "/character-foundation.html?study=Roundhouse%20kick%20%2F%20right"
+    },
+    {
+      "name": "Roundhouse kick / left",
+      "status": "candidate",
+      "duration": 1,
+      "loop": false,
+      "hand": null,
+      "contactStyle": null,
+      "markers": {
+        "contact": 0.48,
+        "release": 0.5599999999999999,
+        "controlReturn": 1
+      },
+      "visualReview": null,
+      "editorUrl": "/character-foundation.html?study=Roundhouse%20kick%20%2F%20left"
+    },
+    {
+      "name": "Knee strike / right",
+      "status": "candidate",
+      "duration": 0.7,
+      "loop": false,
+      "hand": null,
+      "contactStyle": null,
+      "markers": {
+        "contact": 0.27999999999999997,
+        "release": 0.336,
+        "controlReturn": 0.7
+      },
+      "visualReview": null,
+      "editorUrl": "/character-foundation.html?study=Knee%20strike%20%2F%20right"
+    },
+    {
+      "name": "Knee strike / left",
+      "status": "candidate",
+      "duration": 0.7,
+      "loop": false,
+      "hand": null,
+      "contactStyle": null,
+      "markers": {
+        "contact": 0.27999999999999997,
+        "release": 0.336,
+        "controlReturn": 0.7
+      },
+      "visualReview": null,
+      "editorUrl": "/character-foundation.html?study=Knee%20strike%20%2F%20left"
+    },
+    {
+      "name": "Throwing axe",
+      "status": "candidate",
+      "duration": 1.05,
+      "loop": false,
+      "hand": "right",
+      "contactStyle": null,
+      "markers": {
+        "contact": 0,
+        "release": 0.48,
+        "controlReturn": 0.95
+      },
+      "visualReview": null,
+      "editorUrl": "/character-foundation.html?study=Throwing%20axe"
+    },
+    {
+      "name": "Throwing axe / left",
+      "status": "candidate",
+      "duration": 1.05,
+      "loop": false,
+      "hand": "left",
+      "contactStyle": null,
+      "markers": {
+        "contact": 0,
+        "release": 0.48,
+        "controlReturn": 0.95
+      },
+      "visualReview": null,
+      "editorUrl": "/character-foundation.html?study=Throwing%20axe%20%2F%20left"
+    },
+    {
+      "name": "Boomerang throw",
+      "status": "candidate",
+      "duration": 1.1,
+      "loop": false,
+      "hand": "right",
+      "contactStyle": null,
+      "markers": {
+        "contact": 0,
+        "release": 0.5,
+        "controlReturn": 1
+      },
+      "visualReview": null,
+      "editorUrl": "/character-foundation.html?study=Boomerang%20throw"
+    },
+    {
+      "name": "Boomerang throw / left",
+      "status": "candidate",
+      "duration": 1.1,
+      "loop": false,
+      "hand": "left",
+      "contactStyle": null,
+      "markers": {
+        "contact": 0,
+        "release": 0.5,
+        "controlReturn": 1
+      },
+      "visualReview": null,
+      "editorUrl": "/character-foundation.html?study=Boomerang%20throw%20%2F%20left"
+    },
+    {
+      "name": "Paired grab",
+      "status": "candidate",
+      "duration": 1.4,
+      "loop": false,
+      "hand": "right",
+      "contactStyle": "front",
+      "markers": {
+        "contact": 0.42,
+        "release": 1.05,
+        "controlReturn": 1.3
+      },
+      "visualReview": null,
+      "editorUrl": "/character-foundation.html?study=Paired%20grab"
+    },
+    {
+      "name": "Front clinch entry",
+      "status": "candidate",
+      "duration": 1.4,
+      "loop": false,
+      "hand": "right",
+      "contactStyle": "front",
+      "markers": {
+        "contact": 0.42,
+        "release": 1.05,
+        "controlReturn": 1.3
+      },
+      "visualReview": null,
+      "editorUrl": "/character-foundation.html?study=Front%20clinch%20entry"
+    },
+    {
+      "name": "Rear body lock entry",
+      "status": "candidate",
+      "duration": 1.4,
+      "loop": false,
+      "hand": "right",
+      "contactStyle": "rear",
+      "markers": {
+        "contact": 0.42,
+        "release": 1.05,
+        "controlReturn": 1.3
+      },
+      "visualReview": null,
+      "editorUrl": "/character-foundation.html?study=Rear%20body%20lock%20entry"
+    },
+    {
+      "name": "Side grab entry",
+      "status": "candidate",
+      "duration": 1.4,
+      "loop": false,
+      "hand": "right",
+      "contactStyle": "side",
+      "markers": {
+        "contact": 0.42,
+        "release": 1.05,
+        "controlReturn": 1.3
+      },
+      "visualReview": null,
+      "editorUrl": "/character-foundation.html?study=Side%20grab%20entry"
+    },
+    {
+      "name": "Neck hold / free right hand",
+      "status": "candidate",
+      "duration": 1.4,
+      "loop": false,
+      "hand": "left",
+      "contactStyle": "neck",
+      "markers": {
+        "contact": 0.42,
+        "release": 1.05,
+        "controlReturn": 1.3
+      },
+      "visualReview": null,
+      "editorUrl": "/character-foundation.html?study=Neck%20hold%20%2F%20free%20right%20hand"
+    },
+    {
+      "name": "Ground pickup",
+      "status": "rejected",
+      "duration": 1.5,
+      "loop": false,
+      "hand": "both",
+      "contactStyle": null,
+      "markers": {
+        "contact": 0.45,
+        "release": 1.2,
+        "controlReturn": 1.5
+      },
+      "visualReview": {
+        "rejected": true,
+        "note": "Issue #21: foot support/root height and payload hand placement failed visual review."
+      },
+      "editorUrl": "/character-foundation.html?study=Ground%20pickup"
+    },
+    {
+      "name": "Flying pickup",
+      "status": "candidate",
+      "duration": 1.2,
+      "loop": false,
+      "hand": "both",
+      "contactStyle": null,
+      "markers": {
+        "contact": 0.35,
+        "release": 0.95,
+        "controlReturn": 1.2
+      },
+      "visualReview": null,
+      "editorUrl": "/character-foundation.html?study=Flying%20pickup"
+    },
+    {
+      "name": "Flailing fall",
+      "status": "candidate",
+      "duration": 1.4,
+      "loop": true,
+      "hand": null,
+      "contactStyle": null,
+      "markers": {
+        "contact": null,
+        "release": null,
+        "controlReturn": null
+      },
+      "visualReview": null,
+      "editorUrl": "/character-foundation.html?study=Flailing%20fall"
+    },
+    {
+      "name": "Curled backward fall",
+      "status": "candidate",
+      "duration": 1.5,
+      "loop": false,
+      "hand": null,
+      "contactStyle": null,
+      "markers": {
+        "contact": null,
+        "release": null,
+        "controlReturn": null
+      },
+      "visualReview": null,
+      "editorUrl": "/character-foundation.html?study=Curled%20backward%20fall"
+    },
+    {
+      "name": "Disoriented ground stun",
+      "status": "candidate",
+      "duration": 2,
+      "loop": true,
+      "hand": null,
+      "contactStyle": null,
+      "markers": {
+        "contact": null,
+        "release": null,
+        "controlReturn": null
+      },
+      "visualReview": null,
+      "editorUrl": "/character-foundation.html?study=Disoriented%20ground%20stun"
+    },
+    {
+      "name": "Dart throw",
+      "status": "candidate",
+      "duration": 0.65,
+      "loop": false,
+      "hand": null,
+      "contactStyle": null,
+      "markers": {
+        "contact": 0.05,
+        "release": 0.28,
+        "controlReturn": 0.55
+      },
+      "visualReview": null,
+      "editorUrl": "/character-foundation.html?study=Dart%20throw"
+    },
+    {
+      "name": "Robot idle",
+      "status": "candidate",
+      "duration": 2,
+      "loop": false,
+      "hand": null,
+      "contactStyle": null,
+      "markers": {
+        "contact": 0,
+        "release": 0,
+        "controlReturn": 0
+      },
+      "visualReview": null,
+      "editorUrl": "/character-foundation.html?study=Robot%20idle"
+    },
+    {
+      "name": "Air stagger",
+      "status": "candidate",
+      "duration": 0.7,
+      "loop": false,
+      "hand": null,
+      "contactStyle": null,
+      "markers": {
+        "contact": 0.05,
+        "release": 0.2,
+        "controlReturn": 0.65
+      },
+      "visualReview": null,
+      "editorUrl": "/character-foundation.html?study=Air%20stagger"
+    },
+    {
+      "name": "Air stunned",
+      "status": "candidate",
+      "duration": 2,
+      "loop": false,
+      "hand": null,
+      "contactStyle": null,
+      "markers": {
+        "contact": 0,
+        "release": 1.5,
+        "controlReturn": 2
+      },
+      "visualReview": null,
+      "editorUrl": "/character-foundation.html?study=Air%20stunned"
+    },
+    {
+      "name": "Shock",
+      "status": "candidate",
+      "duration": 0.6,
+      "loop": false,
+      "hand": null,
+      "contactStyle": null,
+      "markers": {
+        "contact": 0,
+        "release": 0.4,
+        "controlReturn": 0.6
+      },
+      "visualReview": null,
+      "editorUrl": "/character-foundation.html?study=Shock"
+    },
+    {
+      "name": "Drowsy",
+      "status": "candidate",
+      "duration": 2.5,
+      "loop": false,
+      "hand": null,
+      "contactStyle": null,
+      "markers": {
+        "contact": 0,
+        "release": 2,
+        "controlReturn": 2.5
+      },
+      "visualReview": null,
+      "editorUrl": "/character-foundation.html?study=Drowsy"
+    },
+    {
+      "name": "Blind flight",
+      "status": "candidate",
+      "duration": 1,
+      "loop": false,
+      "hand": null,
+      "contactStyle": null,
+      "markers": {
+        "contact": 0.1,
+        "release": 0.7,
+        "controlReturn": 1
+      },
+      "visualReview": null,
+      "editorUrl": "/character-foundation.html?study=Blind%20flight"
+    },
+    {
+      "name": "Burn / acid",
+      "status": "candidate",
+      "duration": 1,
+      "loop": false,
+      "hand": null,
+      "contactStyle": null,
+      "markers": {
+        "contact": 0.15,
+        "release": 0.7,
+        "controlReturn": 0.9
+      },
+      "visualReview": null,
+      "editorUrl": "/character-foundation.html?study=Burn%20%2F%20acid"
+    },
+    {
+      "name": "Poison / gas",
+      "status": "candidate",
+      "duration": 1.3,
+      "loop": false,
+      "hand": null,
+      "contactStyle": null,
+      "markers": {
+        "contact": 0.1,
+        "release": 0.9,
+        "controlReturn": 1.2
+      },
+      "visualReview": null,
+      "editorUrl": "/character-foundation.html?study=Poison%20%2F%20gas"
+    }
+  ]
+}
