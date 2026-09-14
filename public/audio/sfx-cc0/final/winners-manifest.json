@@ -1,0 +1,563 @@
+{
+  "format": "lsw.sfx-cc0.winners",
+  "version": 1,
+  "pickedBy": "Robert",
+  "date": "2026-09-13",
+  "provenance": "Real recordings, all CC0 / public domain (OpenGameArt). Sources per file. No AI, no synth.",
+  "license": "CC0 1.0 (public domain) throughout — see packs.",
+  "packs": {
+    "firearm": "The Free Firearm Sound Library — OpenGameArt, CC0",
+    "owlish": "Owlish Media Sound Effects — OpenGameArt, CC0",
+    "sfx100": "100 CC0 SFX — OpenGameArt, CC0",
+    "reload": "Gun reload sounds — OpenGameArt, CC0"
+  },
+  "counts": {
+    "sounds": 19,
+    "files": 34
+  },
+  "integration": {
+    "note": "Paste `sampleBankManifest` into src/core/samples.js MANIFEST (files load as audio/<stem>.mp3). wpn.* entries REPLACE the weak AI arsenal guns; impact.*/melee.*/step.* are new families to wire on the matching events. Per-sound gain is a starting point.",
+    "sampleBankManifest": {
+      "wpn.pump": {
+        "f": [
+          "sfx-cc0/final/sfx_shotgun_fire_a"
+        ],
+        "g": 0.55
+      },
+      "wpn.pump.rack": {
+        "f": [
+          "sfx-cc0/final/sfx_shotgun_pump_a"
+        ],
+        "g": 0.55
+      },
+      "wpn.ak": {
+        "f": [
+          "sfx-cc0/final/gun_ak_a",
+          "sfx-cc0/final/gun_ak_b"
+        ],
+        "g": 0.55
+      },
+      "wpn.m16": {
+        "f": [
+          "sfx-cc0/final/gun_ar15_a"
+        ],
+        "g": 0.55
+      },
+      "wpn.smg": {
+        "f": [
+          "sfx-cc0/final/gun_smg_a"
+        ],
+        "g": 0.55
+      },
+      "wpn.saw": {
+        "f": [
+          "sfx-cc0/final/gun_smg2_a"
+        ],
+        "g": 0.55
+      },
+      "wpn.pistol": {
+        "f": [
+          "sfx-cc0/final/gun_pistol2_a"
+        ],
+        "g": 0.55
+      },
+      "wpn.bolt": {
+        "f": [
+          "sfx-cc0/final/gun_bolt_a"
+        ],
+        "g": 0.55
+      },
+      "wpn.battle": {
+        "f": [
+          "sfx-cc0/final/gun_battle_a"
+        ],
+        "g": 0.55
+      },
+      "impact.glass": {
+        "f": [
+          "sfx-cc0/final/sfx_impact_glass_a",
+          "sfx-cc0/final/sfx_impact_glass_b",
+          "sfx-cc0/final/sfx_impact_glass_c"
+        ],
+        "g": 0.7
+      },
+      "impact.metal": {
+        "f": [
+          "sfx-cc0/final/sfx_impact_metal_a"
+        ],
+        "g": 0.7
+      },
+      "impact.wood": {
+        "f": [
+          "sfx-cc0/final/sfx_impact_wood_a"
+        ],
+        "g": 0.7
+      },
+      "impact.concrete": {
+        "f": [
+          "sfx-cc0/final/sfx_impact_concrete_a",
+          "sfx-cc0/final/sfx_impact_concrete_b",
+          "sfx-cc0/final/sfx_impact_concrete_c"
+        ],
+        "g": 0.7
+      },
+      "impact.water": {
+        "f": [
+          "sfx-cc0/final/sfx_impact_water_a",
+          "sfx-cc0/final/sfx_impact_water_b",
+          "sfx-cc0/final/sfx_impact_water_c"
+        ],
+        "g": 0.7
+      },
+      "impact.flesh": {
+        "f": [
+          "sfx-cc0/final/sfx_impact_flesh_a",
+          "sfx-cc0/final/sfx_impact_flesh_b"
+        ],
+        "g": 0.7
+      },
+      "melee.flesh": {
+        "f": [
+          "sfx-cc0/final/sfx_punch_flesh_a",
+          "sfx-cc0/final/sfx_punch_flesh_b"
+        ],
+        "g": 0.7
+      },
+      "step.concrete2": {
+        "f": [
+          "sfx-cc0/final/sfx_step_concrete_a",
+          "sfx-cc0/final/sfx_step_concrete_b",
+          "sfx-cc0/final/sfx_step_concrete_c",
+          "sfx-cc0/final/sfx_step_concrete_d"
+        ],
+        "g": 0.4
+      },
+      "step.grass2": {
+        "f": [
+          "sfx-cc0/final/sfx_step_grass_a",
+          "sfx-cc0/final/sfx_step_grass_b",
+          "sfx-cc0/final/sfx_step_grass_c",
+          "sfx-cc0/final/sfx_step_grass_d"
+        ],
+        "g": 0.4
+      },
+      "step.dirt": {
+        "f": [
+          "sfx-cc0/final/sfx_step_dirt_a"
+        ],
+        "g": 0.4
+      }
+    }
+  },
+  "winners": [
+    {
+      "cue": "sfx.shotgun.fire",
+      "sample": "wpn.pump",
+      "mapsTo": "arsenal wpn-pump / wpn-auto12 (REPLACE the weak AI shotgun)",
+      "files": [
+        "sfx-cc0/final/sfx_shotgun_fire_a"
+      ],
+      "sources": [
+        {
+          "take": "01",
+          "source": "firearm/Prepared SFX Library/Mossberg/N_26P.wav",
+          "pack": "The Free Firearm Sound Library — OpenGameArt, CC0",
+          "dur": 1.3
+        }
+      ]
+    },
+    {
+      "cue": "sfx.shotgun.pump",
+      "sample": "wpn.pump.rack",
+      "mapsTo": "shotgun rack/cock (NEW — none existed)",
+      "files": [
+        "sfx-cc0/final/sfx_shotgun_pump_a"
+      ],
+      "sources": [
+        {
+          "take": "01",
+          "source": "reload_shotguncock_0.wav",
+          "pack": "Gun reload sounds — OpenGameArt, CC0",
+          "dur": 0.424
+        }
+      ]
+    },
+    {
+      "cue": "gun.ak",
+      "sample": "wpn.ak",
+      "mapsTo": "arsenal wpn-ak (REPLACE)",
+      "files": [
+        "sfx-cc0/final/gun_ak_a",
+        "sfx-cc0/final/gun_ak_b"
+      ],
+      "sources": [
+        {
+          "take": "02",
+          "source": "firearm/Prepared SFX Library/AK-47/C_28P.wav",
+          "pack": "The Free Firearm Sound Library — OpenGameArt, CC0",
+          "dur": 1.1
+        },
+        {
+          "take": "04",
+          "source": "firearm/Prepared SFX Library/AK-47/C_31P.wav",
+          "pack": "The Free Firearm Sound Library — OpenGameArt, CC0",
+          "dur": 1.1
+        }
+      ]
+    },
+    {
+      "cue": "gun.ar15",
+      "sample": "wpn.m16",
+      "mapsTo": "arsenal wpn-m16 (REPLACE)",
+      "files": [
+        "sfx-cc0/final/gun_ar15_a"
+      ],
+      "sources": [
+        {
+          "take": "01",
+          "source": "firearm/Prepared SFX Library/AR-15/D_24P.wav",
+          "pack": "The Free Firearm Sound Library — OpenGameArt, CC0",
+          "dur": 1.1
+        }
+      ]
+    },
+    {
+      "cue": "gun.smg",
+      "sample": "wpn.smg",
+      "mapsTo": "arsenal wpn-mp5 / wpn-pdw (REPLACE)",
+      "files": [
+        "sfx-cc0/final/gun_smg_a"
+      ],
+      "sources": [
+        {
+          "take": "04",
+          "source": "firearm/Prepared SFX Library/Carl Gustav M45/G_31P.wav",
+          "pack": "The Free Firearm Sound Library — OpenGameArt, CC0",
+          "dur": 1.1
+        }
+      ]
+    },
+    {
+      "cue": "gun.smg2",
+      "sample": "wpn.saw",
+      "mapsTo": "arsenal wpn-saw / wpn-machinepistol (REPLACE)",
+      "files": [
+        "sfx-cc0/final/gun_smg2_a"
+      ],
+      "sources": [
+        {
+          "take": "04",
+          "source": "firearm/Prepared SFX Library/PPSh/P_30P.wav",
+          "pack": "The Free Firearm Sound Library — OpenGameArt, CC0",
+          "dur": 1.1
+        }
+      ]
+    },
+    {
+      "cue": "gun.pistol2",
+      "sample": "wpn.pistol",
+      "mapsTo": "arsenal wpn-p9 / wpn-machinepistol (REPLACE)",
+      "files": [
+        "sfx-cc0/final/gun_pistol2_a"
+      ],
+      "sources": [
+        {
+          "take": "01",
+          "source": "firearm/Prepared SFX Library/Bersa/F_41P.wav",
+          "pack": "The Free Firearm Sound Library — OpenGameArt, CC0",
+          "dur": 1.1
+        }
+      ]
+    },
+    {
+      "cue": "gun.bolt",
+      "sample": "wpn.bolt",
+      "mapsTo": "arsenal wpn-m24 (REPLACE)",
+      "files": [
+        "sfx-cc0/final/gun_bolt_a"
+      ],
+      "sources": [
+        {
+          "take": "02",
+          "source": "firearm/Prepared SFX Library/Mosin Nagant/M_26P.wav",
+          "pack": "The Free Firearm Sound Library — OpenGameArt, CC0",
+          "dur": 1.1
+        }
+      ]
+    },
+    {
+      "cue": "gun.battle",
+      "sample": "wpn.battle",
+      "mapsTo": "arsenal wpn-battle (REPLACE)",
+      "files": [
+        "sfx-cc0/final/gun_battle_a"
+      ],
+      "sources": [
+        {
+          "take": "02",
+          "source": "firearm/Prepared SFX Library/SKS/U_19P.wav",
+          "pack": "The Free Firearm Sound Library — OpenGameArt, CC0",
+          "dur": 1.1
+        }
+      ]
+    },
+    {
+      "cue": "sfx.impact.glass",
+      "sample": "impact.glass",
+      "mapsTo": "bullet impact — glass (NEW family)",
+      "files": [
+        "sfx-cc0/final/sfx_impact_glass_a",
+        "sfx-cc0/final/sfx_impact_glass_b",
+        "sfx-cc0/final/sfx_impact_glass_c"
+      ],
+      "sources": [
+        {
+          "take": "01",
+          "source": "100cc0/glass_01.ogg",
+          "pack": "100 CC0 SFX — OpenGameArt, CC0",
+          "dur": 0.38
+        },
+        {
+          "take": "02",
+          "source": "100cc0/glass_02.ogg",
+          "pack": "100 CC0 SFX — OpenGameArt, CC0",
+          "dur": 0.357
+        },
+        {
+          "take": "05",
+          "source": "100cc0/glass_05.ogg",
+          "pack": "100 CC0 SFX — OpenGameArt, CC0",
+          "dur": 0.893
+        }
+      ]
+    },
+    {
+      "cue": "sfx.impact.metal",
+      "sample": "impact.metal",
+      "mapsTo": "bullet impact — metal (NEW family)",
+      "files": [
+        "sfx-cc0/final/sfx_impact_metal_a"
+      ],
+      "sources": [
+        {
+          "take": "03",
+          "source": "100cc0/metal_05.ogg",
+          "pack": "100 CC0 SFX — OpenGameArt, CC0",
+          "dur": 0.823
+        }
+      ]
+    },
+    {
+      "cue": "sfx.impact.wood",
+      "sample": "impact.wood",
+      "mapsTo": "bullet impact — wood (NEW family)",
+      "files": [
+        "sfx-cc0/final/sfx_impact_wood_a"
+      ],
+      "sources": [
+        {
+          "take": "03",
+          "source": "100cc0/wooden_03.ogg",
+          "pack": "100 CC0 SFX — OpenGameArt, CC0",
+          "dur": 0.386
+        }
+      ]
+    },
+    {
+      "cue": "sfx.impact.concrete",
+      "sample": "impact.concrete",
+      "mapsTo": "bullet impact — concrete/stone (NEW family)",
+      "files": [
+        "sfx-cc0/final/sfx_impact_concrete_a",
+        "sfx-cc0/final/sfx_impact_concrete_b",
+        "sfx-cc0/final/sfx_impact_concrete_c"
+      ],
+      "sources": [
+        {
+          "take": "01",
+          "source": "100cc0/slam_01.ogg",
+          "pack": "100 CC0 SFX — OpenGameArt, CC0",
+          "dur": 0.469
+        },
+        {
+          "take": "03",
+          "source": "100cc0/slam_04.ogg",
+          "pack": "100 CC0 SFX — OpenGameArt, CC0",
+          "dur": 0.297
+        },
+        {
+          "take": "04",
+          "source": "100cc0/hit_01.ogg",
+          "pack": "100 CC0 SFX — OpenGameArt, CC0",
+          "dur": 0.256
+        }
+      ]
+    },
+    {
+      "cue": "sfx.impact.water",
+      "sample": "impact.water",
+      "mapsTo": "bullet impact — water (NEW family)",
+      "files": [
+        "sfx-cc0/final/sfx_impact_water_a",
+        "sfx-cc0/final/sfx_impact_water_b",
+        "sfx-cc0/final/sfx_impact_water_c"
+      ],
+      "sources": [
+        {
+          "take": "01",
+          "source": "100cc0/splash_01.ogg",
+          "pack": "100 CC0 SFX — OpenGameArt, CC0",
+          "dur": 0.733
+        },
+        {
+          "take": "02",
+          "source": "100cc0/splash_02.ogg",
+          "pack": "100 CC0 SFX — OpenGameArt, CC0",
+          "dur": 0.64
+        },
+        {
+          "take": "03",
+          "source": "owlish/Impacts/gulp1.wav",
+          "pack": "Owlish Media Sound Effects — OpenGameArt, CC0",
+          "dur": 0.434
+        }
+      ]
+    },
+    {
+      "cue": "sfx.impact.flesh",
+      "sample": "impact.flesh",
+      "mapsTo": "bullet impact — flesh (NEW family)",
+      "files": [
+        "sfx-cc0/final/sfx_impact_flesh_a",
+        "sfx-cc0/final/sfx_impact_flesh_b"
+      ],
+      "sources": [
+        {
+          "take": "04",
+          "source": "owlish/Impacts/slap2.wav",
+          "pack": "Owlish Media Sound Effects — OpenGameArt, CC0",
+          "dur": 0.466
+        },
+        {
+          "take": "05",
+          "source": "owlish/Impacts/hit.wav",
+          "pack": "Owlish Media Sound Effects — OpenGameArt, CC0",
+          "dur": 0.332
+        }
+      ]
+    },
+    {
+      "cue": "sfx.punch.flesh",
+      "sample": "melee.flesh",
+      "mapsTo": "bare-fist body hit (NEW family)",
+      "files": [
+        "sfx-cc0/final/sfx_punch_flesh_a",
+        "sfx-cc0/final/sfx_punch_flesh_b"
+      ],
+      "sources": [
+        {
+          "take": "03",
+          "source": "owlish/Impacts/slap2.wav",
+          "pack": "Owlish Media Sound Effects — OpenGameArt, CC0",
+          "dur": 0.466
+        },
+        {
+          "take": "04",
+          "source": "owlish/Impacts/hit.wav",
+          "pack": "Owlish Media Sound Effects — OpenGameArt, CC0",
+          "dur": 0.332
+        }
+      ]
+    },
+    {
+      "cue": "sfx.step.concrete",
+      "sample": "step.concrete2",
+      "mapsTo": "footstep concrete (UPGRADE of existing step.concrete)",
+      "files": [
+        "sfx-cc0/final/sfx_step_concrete_a",
+        "sfx-cc0/final/sfx_step_concrete_b",
+        "sfx-cc0/final/sfx_step_concrete_c",
+        "sfx-cc0/final/sfx_step_concrete_d"
+      ],
+      "sources": [
+        {
+          "take": "01",
+          "source": "owlish/Footsteps/hard-footstep1.wav",
+          "pack": "Owlish Media Sound Effects — OpenGameArt, CC0",
+          "dur": 0.469
+        },
+        {
+          "take": "02",
+          "source": "owlish/Footsteps/hard-footstep2.wav",
+          "pack": "Owlish Media Sound Effects — OpenGameArt, CC0",
+          "dur": 0.384
+        },
+        {
+          "take": "03",
+          "source": "owlish/Footsteps/hard-footstep3.wav",
+          "pack": "Owlish Media Sound Effects — OpenGameArt, CC0",
+          "dur": 0.458
+        },
+        {
+          "take": "04",
+          "source": "owlish/Footsteps/hard-footstep4.wav",
+          "pack": "Owlish Media Sound Effects — OpenGameArt, CC0",
+          "dur": 0.528
+        }
+      ]
+    },
+    {
+      "cue": "sfx.step.grass",
+      "sample": "step.grass2",
+      "mapsTo": "footstep grass (UPGRADE of existing step.grass)",
+      "files": [
+        "sfx-cc0/final/sfx_step_grass_a",
+        "sfx-cc0/final/sfx_step_grass_b",
+        "sfx-cc0/final/sfx_step_grass_c",
+        "sfx-cc0/final/sfx_step_grass_d"
+      ],
+      "sources": [
+        {
+          "take": "01",
+          "source": "owlish/Footsteps/grassy-footstep2.wav",
+          "pack": "Owlish Media Sound Effects — OpenGameArt, CC0",
+          "dur": 0.399
+        },
+        {
+          "take": "02",
+          "source": "owlish/Footsteps/grassy-footstep3.wav",
+          "pack": "Owlish Media Sound Effects — OpenGameArt, CC0",
+          "dur": 0.41
+        },
+        {
+          "take": "03",
+          "source": "owlish/Footsteps/grassy-footstep4.wav",
+          "pack": "Owlish Media Sound Effects — OpenGameArt, CC0",
+          "dur": 0.426
+        },
+        {
+          "take": "04",
+          "source": "owlish/Footsteps/gassy-footstep1.wav",
+          "pack": "Owlish Media Sound Effects — OpenGameArt, CC0",
+          "dur": 0.524
+        }
+      ]
+    },
+    {
+      "cue": "sfx.step.dirt",
+      "sample": "step.dirt",
+      "mapsTo": "footstep dirt (NEW family)",
+      "files": [
+        "sfx-cc0/final/sfx_step_dirt_a"
+      ],
+      "sources": [
+        {
+          "take": "01",
+          "source": "owlish/Footsteps/gassy-footstep1.wav",
+          "pack": "Owlish Media Sound Effects — OpenGameArt, CC0",
+          "dur": 0.524
+        }
+      ]
+    }
+  ]
+}

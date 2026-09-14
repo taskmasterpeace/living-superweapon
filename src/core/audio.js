@@ -1,3 +1,4 @@
+import {FIREARM_RECORDINGS} from '../data/firearm-recordings.js';
 // WAR WORLD: ASCENDANTS — the sound engine. Discrete SFX are REAL recordings (core/samples.js,
 // Kenney CC0, /public/audio — still fully offline); the synth bodies below remain as cold-cache
 // fallbacks and as the crafted voices samples can't replace (ki sustain, siren, splash, arcs).
@@ -860,14 +861,11 @@ export class AudioBus {
   }
   // gunshot: a real firearm report — sharp transient crack, body thump, and a tail of room slap.
   // Deliberately NOT the `zap`/`blast` synth: guns must not sound like energy weapons.
-  gunshot(power = 1, pos = null, voice = null) {
+  gunshot(power = 1, pos = null, voice = null, voiceKey = null) {
     if (!this.ok || this.muted) return;
-    // ⚠ EVERY FIREARM GETS ITS OWN VOICE, and it has to, because the point of carrying twelve
-    // weapons is being able to hear which one is shooting at you. The CC0 library has no true
-    // gunfire, so a shared "bang.ogg" across an AK, an MP5 and a .50 would make them indistinct —
-    // worse than the synth, not better. The recorded plate-crack stays as the TRANSIENT (it is a
-    // real recording and reads as an impact), pitched by the weapon's own crack figure, and the
-    // body, tail and ACTION are built underneath it from the profile.
+    const recorded=FIREARM_RECORDINGS[voiceKey];
+    if(recorded&&this.sample(recorded,{pos,gain:Math.min(1.2,Math.max(.1,fin(power,1)))}))return;
+    // Preserve the procedural voice when the recording is absent or still loading.
     const V = voice || { crack: 1, body: 138, tail: 0.20, mech: 0.26 };
     const pg = this._pg(pos, 200 * (0.45 + V.crack * 0.55));
     if (!pg) return;

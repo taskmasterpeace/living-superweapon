@@ -1,3 +1,4 @@
+import {FIREARM_SAMPLES} from '../data/firearm-recordings.js';
 
 // THE AUDIO LAW (audio.js): WebAudio throws on a non-finite AudioParam, and an exception
 // inside a setter is an exception inside the FRAME LOOP. Every value that reaches an
@@ -35,7 +36,7 @@ function route(a,src,g,bus,pos) {
 // electric arcs, the KMK 9 news sting, and the sustained KI energy voice (ring-mod + partials
 // + crackle — a generic engine loop would be a downgrade; fire cones DO get a real roar).
 
-export const MANIFEST = {
+export const MANIFEST = {...FIREARM_SAMPLES,
   // ---- fists, bodies, the ground ----
   'punch.med': { f: ['impactPunch_medium_000', 'impactPunch_medium_001', 'impactPunch_medium_002', 'impactPunch_medium_003', 'impactPunch_medium_004'], g: 0.9, reach: 150 },
   'punch.heavy': { f: ['impactPunch_heavy_000', 'impactPunch_heavy_001', 'impactPunch_heavy_002', 'impactPunch_heavy_003', 'impactPunch_heavy_004'], g: 1.0, reach: 170 },
@@ -129,7 +130,7 @@ export const MANIFEST = {
 };
 
 // decoded at init so the first punch of a match is never a synth fallback
-export const HOT_SET = [
+export const HOT_SET = [...Object.keys(FIREARM_SAMPLES),
   'punch.med', 'punch.heavy', 'hit.soft', 'land.flesh', 'land.metal', 'land.soft', 'boom',
   'ki.blast', 'ki.zap', 'ki.release', 'swing.fist', 'swing.blade', 'gun.crack', 'boom.deep',
   'ui.click', 'ui.select', 'ui.error', 'ui.key', 'ui.confirm', 'ui.toggle', 'fx.glitch',

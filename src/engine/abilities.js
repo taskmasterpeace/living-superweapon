@@ -925,7 +925,7 @@ export const TYPES = {
       // ⚠ THE WEAPON'S OWN VOICE, not a guess from three classes. `def.voice` is a profile from
       // data/armory.js; without one we fall back to the class so every existing kit is unchanged.
       const vc = def.voice ? VOICES[def.voice] : null;
-      g.audio.gunshot(cls === 'shotgun' ? 1.5 : cls === 'pistol' ? 1.25 : 0.8, c.pos, vc);   // a CRACK, not a zap
+      g.audio.gunshot(cls === 'shotgun' ? 1.5 : cls === 'pistol' ? 1.25 : 0.8, c.pos, vc, def.voice);   // a CRACK, not a zap
       // ⚠ EVERY SHOT IS HEARD, and the suppressed ones are heard LESS. Writing this as
       // `if (def.quiet) g.noise(...)` was backwards and nearly shipped: gunfire did not broadcast
       // at all before this (only the HIT did), so gating on `quiet` would have made a suppressed
