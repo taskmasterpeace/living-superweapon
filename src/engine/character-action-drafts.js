@@ -3,6 +3,21 @@ import {FULL_BODY_STUDIES,fullBodyStudy} from './character-full-body-studies.js'
 import {clone} from 'three/addons/utils/SkeletonUtils.js';
 import {samplePose,sampleBodyPosition} from './character-authoring.js';
 import {groundStudyKeys} from './grounded-study.js';
+// Production modular-hero arm bind rotations. These poses were authored against
+// A_TPose; do not add them to Idle_Loop's already-lowered arms (crosses wrists).
+const pickupArmReference={
+ 'DEF-upper_armL':[.180269539,.683849871,-.179836527,.683747888],
+ 'DEF-upper_armR':[.180269584,-.683849990,.179836467,.683747709],
+ 'DEF-forearmL':[.017182229,-.000020216,.000000561,.999852419],
+ 'DEF-forearmR':[.017182352,.000020466,-.000000349,.999852419],
+};
+// Multi-joint status candidates: hands stay on the visible front of the body.
+const cough=(bend)=>({'DEF-spine003':[bend,0,0],'DEF-neck':[-.12,0,0],'DEF-upper_armR':[.785,1.475,.475],'DEF-forearmR':[1.56,.5,1],'DEF-upper_armL':[1,.49,-1.09],'DEF-forearmL':[.89,.13,-.42]});
+const pat=(high)=>({'DEF-spine003':[.08,0,high?.06:-.06],'DEF-neck':[.12,0,0],'DEF-upper_armR':[.715,-1.24,-.94],'DEF-forearmR':[high?1.75:1.55,-.37,-.5],'DEF-upper_armL':[1,.49,-1.09],'DEF-forearmL':[.89,.13,-.42]});
+const statusPoses={
+ 'Poison / gas':[{time:0,joints:cough(.02)},{time:.25,joints:cough(.2)},{time:.5,joints:cough(.07)},{time:.75,joints:cough(.18)},{time:1,joints:{}}],
+ 'Burn / acid':[{time:0,joints:pat(false)},{time:.25,joints:pat(true)},{time:.5,joints:pat(false)},{time:.75,joints:pat(true)},{time:1,joints:{}}],
+};
 export const ACTION_DRAFTS={
  ...FULL_BODY_STUDIES,
  'Dart throw':{duration:.65,contact:.05,release:.28,controlReturn:.55,joint:'DEF-forearmR',axis:'x',angle:-1.1},
@@ -16,8 +31,16 @@ export const ACTION_DRAFTS={
  'Poison / gas':{duration:1.3,contact:.1,release:.9,controlReturn:1.2,joint:'DEF-spine003',axis:'x',angle:.3},
 };
 export function actionDraft(name,pose,actor=null){
- if(FULL_BODY_STUDIES[name]){const m=fullBodyStudy(name,pose);return actor&&FULL_BODY_STUDIES[name].grounded?groundStudyKeys(actor,m):m;}
- const d=ACTION_DRAFTS[name];if(!d)throw Error('Unknown draft');const middle=structuredClone(pose),q=new T.Quaternion().fromArray(middle[d.joint]||[0,0,0,1]);q.multiply(new T.Quaternion().setFromAxisAngle(new T.Vector3(...({x:[1,0,0],y:[0,1,0],z:[0,0,1]}[d.axis])),d.angle));middle[d.joint]=q.toArray();
+ if(FULL_BODY_STUDIES[name]){const pickup=name==='Ground pickup'||name==='Flying pickup',m=fullBodyStudy(name,pickup?{...pose,...pickupArmReference}:pose);if(pickup)m.keys.at(-1).pose=structuredClone(pose);return actor&&FULL_BODY_STUDIES[name].grounded?groundStudyKeys(actor,m):m;}
+ const d=ACTION_DRAFTS[name];if(!d)throw Error('Unknown draft');
+ if(statusPoses[name]){
+  const keys=statusPoses[name].map(k=>{const next=structuredClone(pose);for(const [bone,angles]of Object.entries(k.joints)){
+   if(!next[bone])throw Error('Missing status study bone '+bone);
+   next[bone]=new T.Quaternion().fromArray(pickupArmReference[bone]||next[bone]).multiply(new T.Quaternion().setFromEuler(new T.Euler(...angles))).normalize().toArray();
+  }return {time:k.time*d.duration,pose:next};});
+  return {name,duration:d.duration,base:'Idle_Loop',source:'Power World multi-joint status study; visual review pending',status:'candidate',markers:{contact:d.contact,release:d.release,controlReturn:d.controlReturn},keys};
+ }
+const middle=structuredClone(pose),q=new T.Quaternion().fromArray(middle[d.joint]||[0,0,0,1]);q.multiply(new T.Quaternion().setFromAxisAngle(new T.Vector3(...({x:[1,0,0],y:[0,1,0],z:[0,0,1]}[d.axis])),d.angle));middle[d.joint]=q.toArray();
  return {name,duration:d.duration,base:'Idle_Loop',source:'Power World procedural blocking study; needs animation polish',status:'candidate',markers:{contact:d.contact,release:Math.min(d.release,d.controlReturn),controlReturn:d.controlReturn},keys:[{time:0,pose:structuredClone(pose)},{time:d.duration*.45,pose:middle},{time:d.duration,pose:structuredClone(pose)}]};
 }
 /** Preview contact only: authority owns approach, reach eligibility and release velocity. */
