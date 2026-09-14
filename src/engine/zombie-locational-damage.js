@@ -20,6 +20,7 @@ export function zombieRifleHit(f,amount,opts){
  return lost;
 }
 export function zombieLegSpeed(f){const l=f._zombieLimbs;return l?.legL?.disabled||l?.legR?.disabled? .35:1;}
+export function zombieHasDisabledLimb(f){return Object.values(f._zombieLimbs||{}).some(limb=>limb.disabled);}
 export function zombieArmsDisabled(f){return !!(f._zombieLimbs?.armL?.disabled&&f._zombieLimbs?.armR?.disabled);}
 export function poseZombieInjuries(f){
  const l=f._zombieLimbs;if(!l||f.ragdoll)return;

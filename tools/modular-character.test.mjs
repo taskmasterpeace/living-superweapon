@@ -127,6 +127,17 @@ test('modular body preserves native interaction and jump owners instead of repla
  f.dispose();
 });
 
+test('non-disabling zombie limb hits do not permanently replace authored locomotion',async()=>{
+ const f=new Fighter(structuredClone(ROSTER.find(d=>d.id==='vega')));f._animate(0);f.state='idle';f.animT=.3;f.vel.set(0,0,10);
+ const c=await loadModularCharacter(f,{load:async()=>{const g=await output(),bank=JSON.parse(await fs.readFile('public/models/modular-hero/motion-bank.json','utf8'));for(const e of bank.entries)g.animations.push(T.AnimationClip.parse(e.clip));return g;}});
+ f.def.vocalFamily='zombie';c.update();
+ const bone=c.actor.getObjectByName('DEF-upper_armL'),normal=bone.quaternion.clone();
+ f._zombieLimbs={armR:{hits:1,disabled:false}};f.parts.armR.rotation.x=-2;f.obj.updateMatrixWorld(true);c.update();
+ assert.ok(normal.angleTo(bone.quaternion)<1e-6,'a historical limb hit replaced the zombie walk');
+ f._zombieLimbs.armR.disabled=true;c.update();assert.ok(normal.angleTo(bone.quaternion)>.1,'disabled limb must retain injury presentation');
+ f.dispose();
+});
+
 test('recent ranged poses retain native aim only until their timer expires',async()=>{
  const f=new Fighter(structuredClone(ROSTER.find(d=>d.id==='vega')));f._animate(0);f.state='idle';f.animT=10;
  f.slots={primary:{def:{type:'projectile'},_poseUntil:10.3}};

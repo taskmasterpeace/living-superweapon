@@ -13,6 +13,7 @@ import {meleeWeaponFor,WEAPON_GRIP_CENTERS} from './weapon-grip.js';
 import {setModularExpression} from './modular-face.js';
 import {heroModelOf} from '../data/hero-models.js';
 import {rangedPoseChannels} from './cast-channels.js';
+import {zombieHasDisabledLimb} from './zombie-locational-damage.js';
 
 let asset;
 export const MODULAR_BODY='faceted-v1';
@@ -61,7 +62,7 @@ export async function loadModularCharacter(f,{load=modularAsset}={}){
   // Contact-authored strikes own both handedness and the committed target pose.
   const contactStrike=!!(f.mstate&&f._meleeMotion&&!sourcedSword);
   const rangedRecovery=!f.mstate&&!!rangedPoseChannels(f).dominant;
-  const interaction=!!(contactStrike||rangedRecovery||f._firearmReload||f._throwAction||f._personThrowPose||f._zombieLimbs||f._grapple||f.hanging||f._carry||f.grabState||f.meleeCharge>0||f.crouching||f._jumpMotion?.applied||f.downedT>0||f.launchT>0||f._slideT>0);
+  const interaction=!!(contactStrike||rangedRecovery||f._firearmReload||f._throwAction||f._personThrowPose||zombieHasDisabledLimb(f)||f._grapple||f.hanging||f._carry||f.grabState||f.meleeCharge>0||f.crouching||f._jumpMotion?.applied||f.downedT>0||f.launchT>0||f._slideT>0);
   const native=interaction||incapacitated||f.flying||f.gliding||f.ragdoll||f.grabbing||f.grabbedBy||f.guarding||(f.state==='cast'&&!f.mstate)||(f._meleeMotion?.weapon&&!sourcedSword);
   const airStrike=!interaction&&!incapacitated&&(f.flying||f.gliding)&&f.mstate&&!f.ragdoll&&!f.grabbing&&!f.grabbedBy&&(!held||sourcedSword);
   if((!native||airStrike)&&f.mstate&&STRIKES[f.mId]){

@@ -121,3 +121,6 @@ This addresses pose contamination only. Issue #19 remains open for distinct vict
 # Pickup visual rejection
 
 Browser playback review found that Ground pickup at 0.45 s lacks adequate body lowering/foot support and at 1.20 s brings the support hands near the face. It is rejected for gameplay assignment and the shared catalog now displays the failed review. Issue #21 tracks body support authoring and payload hand contact. Compilation tests are not evidence of visual acceptance. Flying pickup remains unreviewed. Catalog test and build pass after the review-label change.
+# Zombie locomotion after non-disabling limb damage
+
+A stored limb-hit counter no longer forces the modular zombie into native pose adaptation forever. After the hit/stagger ends, zombies with no disabled limb resume their authored idle/walk/sprint. Actually disabled limbs still retain the injury presentation. A production-rig/motion-bank regression failed before the change; 25 modular/zombie tests and build pass. Disabled-limb gait polish and full encounter visual review remain open.
