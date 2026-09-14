@@ -140,3 +140,13 @@ test('training replay keeps the resolved guard failure cause',()=>{
  assert.equal(t.records.at(-1).guardBreakReason,'heavy-crush');assert.match(t.recording.events.at(-1).label,/HEAVY CRUSH/);t.dispose();
  }finally{x.close();}
 });
+
+test('practice bag is modular and replaces KO after delay while retaining damage records',()=>{
+ const x=mainCombatFixture({mode:'powerworld'});try{
+  const t=new MeleeTrial(x.g,new THREE.Vector3(0,0,15));x.g.ms.threatLab={state:'preparing',meleeTrial:t};
+  const f=t.startBag('guard',true);assert.equal(f.def.model.body,'faceted-v1');assert.equal(t.kind,'airborne');
+  t.hit(f,12,{src:x.p},false,{healthLost:12});f.state='ko';x.g.time=10;t.capture();assert.equal(t.target,f);
+  x.g.time=14;t.capture();assert.notEqual(t.target,f);assert.equal(t.records[0].healthLost,12);assert.equal(t.bag.difficulty,'guard');
+  assert.equal(x.g.entities.length,2);t.dispose();
+ }finally{x.close();}
+});

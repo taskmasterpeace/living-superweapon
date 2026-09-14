@@ -178,6 +178,11 @@ export class DevConsole {
       for (const k of names) c.print('  ' + k.name.padEnd(10) + k.help);
     });
     this.cmd('clear', 'clear the log', () => { this.out.innerHTML = ''; });
+    this.cmd('bag','bag passive|guard|sparring [hover] — white modular practice opponent',(a,c)=>{
+      const trial=this.g.ms?.threatLab?.meleeTrial;if(!trial)throw Error('Enter Threat Room first');
+      const f=trial.startBag(a[0]||'passive',a[1]==='hover');if(!f)throw Error('Training only before deployment');
+      const p=this.g.player;p.pos.copy(trial.origin);p.pos.z-=6;p.pos.y=this.g.world.heightAt(p.pos.x,p.pos.z);p.vel.set(0,0,0);p.faceDir(0,1);p.aim3.set(0,0,1);this.g.world._lookYaw=0;this.g.world._lookPitch=0;this.g.world._chaseSnap=true;c.toggle(false);
+    });
     this.cmd('trial', 'trial stationary|airborne|review — Threat Room teaching drill', (a,c)=>{
       const trial=this.g.ms?.threatLab?.meleeTrial;
       if(!trial||this.g.ms.threatLab.state!=='preparing')throw Error('Enter the Threat Room first');

@@ -32,6 +32,17 @@ export {meleeLessonScheme,grabLesson} from './combat-lesson-controls.js';
 // Scripted decisions use native motion, defense and damage; no target teleporting.
 export class MeleeTrial {
  constructor(g,origin){this.g=g;this.origin=origin.clone();this.records=[];this.index=-1;this.recording=new MeleeRecording();}
+ startBag(difficulty='passive',hover=false){
+  if(this.g.ms?.threatLab?.state!=='preparing')return false;
+  if(!['passive','guard','sparring'].includes(difficulty))throw Error('Choose passive, guard or sparring');
+  this.selectedThreat=null;
+  const base=ROSTER.find(d=>d.id==='sol');
+  const kind=hover?(difficulty==='sparring'?'air-defense':'airborne'):(difficulty==='guard'?'guard':difficulty==='sparring'?'defend':'stationary');
+  const f=this.start(kind,{...base,id:'practice-bag',name:'TRAINING OPPONENT',hp:250,model:{...base.model,body:'faceted-v1'},colors:{...base.colors,primary:'#eeeeee',secondary:'#dddddd',accent:'#bbbbbb'},metal:false});
+  this.bag={difficulty,hover,resetT:0};
+  f._modularReady?.then(()=>{if(this.target!==f)return;for(const mesh of f._modularCharacter?.meshes||[]){if(mesh.name.toLowerCase().includes('expression'))continue;mesh.material.color.set('#eeeeee');mesh.material.map=null;mesh.material.needsUpdate=true;}});
+  return f;
+ }
  previewThreat(id,announce=true){
   if(this.g.ms?.threatLab?.state!=='preparing')return false;
   const def=ROSTER.find(d=>d.id===id);if(!def)throw Error('Unknown threat character');
@@ -80,8 +91,9 @@ export class MeleeTrial {
   if(this.machine&&f===this.target){for(const child of f.obj.children)child.visible=child===this.machine;this.machineTime+=dt;this.elapsed+=dt;if(this.machineMode==='airborne')return;if(f.alive&&!f.grabbedBy&&f.launchT<=0){const dx=this.machineMode==='moving'?Math.cos(this.machineTime*.6):0;f.faceDir(0,1);f.move(new THREE.Vector3(dx,0,0),dt,.5);}return;}
 
   if(!f.alive||f.grabbedBy||f.frozenT>0||f.staggerT>0||f.stunT>0||f.launchT>0){f.flyHeld=false;f.descendHeld=false;return;}
+  if(this.bag?.difficulty==='guard'&&this.bag.hover)this.g.melee.guard(f,true);
   this.elapsed+=dt;const dir=new THREE.Vector3().subVectors(this.g.player.pos,f.pos);dir.y=0;const d=dir.length();dir.normalize();f.faceDir(dir.x,dir.z);f.aim.copy(dir);f.aim3.copy(dir);
-  this.g.melee.guard(f,this.kind==='guard');const move=new THREE.Vector3();
+  this.g.melee.guard(f,this.kind==='guard'||this.bag?.difficulty==='guard');const move=new THREE.Vector3();
   if(this.kind==='airborne'||this.kind==='air-defense'){
    // Native held rise performs jump -> takeoff; native flight then owns hover.
    const altitude=f.pos.y-this.g.world.heightAt(f.pos.x,f.pos.z);
@@ -89,6 +101,7 @@ export class MeleeTrial {
    f.flyHeld=altitude<height-1;f.descendHeld=altitude>height+3;
    f.aim3.subVectors(this.g.player.pos,f.pos).normalize();
   }
+  if(this.bag&&this.bag.difficulty!=='sparring'&&f.pos.distanceTo(this.origin)>12){move.subVectors(this.origin,f.pos);move.y=0;move.normalize();}
   if(this.kind==='retreat'&&d<Math.max(40,meleeApproach(this.g.player.def,this.g.player.airborne).range+5)&&f.pos.distanceTo(this.origin)<65)move.copy(dir).negate();f.move(move,dt,1);
   if(this.kind==='dodge'&&this.elapsed>=this.dodgeAt){this.dodgeAt=this.elapsed+1.5;performEvade(f,{x:-dir.z,z:dir.x},this.g);}
   if(this.kind==='defend'||this.kind==='air-defense'){
@@ -102,6 +115,11 @@ export class MeleeTrial {
  }
  repeat(){if(this.machine)return this.startMachine(this.machineMode);return this.kind==='encounter'?this.startEncounter():this.start(this.kind||'stationary');}
  capture(){if(this.target&&!this.review){
+  if(this.bag&&!this.target.alive){
+   this.bag.resetT??=0;if(!this.bag.resetAt)this.bag.resetAt=this.g.time+3;
+   if(this.g.time>=this.bag.resetAt){const {difficulty,hover}=this.bag,records=this.records.slice();this.startBag(difficulty,hover);this.records=records;this.g.hud?.feed?.('Training opponent reset · previous damage retained','#eeeeee');return;}
+  }
+
   const f=this.g.player;this.phaseKey??=[];
   for(const [actor,fighter]of [f,this.target,...(this.ally?[this.ally]:[])].entries()){
    const state=meleePhase(fighter);if(state.phase!==this.phaseKey[actor]){this.phaseKey[actor]=state.phase;this.recording.mark(this.g.time,{label:`${actor===2?'Teammate':actor?'Target':'You'} · ${phaseLabel(state.phase)}`,kind:'phase',actor,...state});}
@@ -179,6 +197,6 @@ export class MeleeTrial {
   this.records.push(record);if(this.records.length>100)this.records.shift();this.recording.mark(this.g.time,{...record,label,kind:'contact'});
   this.g.hud?.feed?.(label,'#ffd24a');
  }
- clear(){this.records.length=0;this.startedAt=this.g.time||0;this.machine=null;this.machineMode=null;this.clearPreview();this.review?.close();this.review=null;this.recording.clear();for(const f of [this.target,this.ally])if(f)retirePracticeActor(this.g,f);this.target=null;this.ally=null;}
+ clear(){this.bag=null;this.records.length=0;this.startedAt=this.g.time||0;this.machine=null;this.machineMode=null;this.clearPreview();this.review?.close();this.review=null;this.recording.clear();for(const f of [this.target,this.ally])if(f)retirePracticeActor(this.g,f);this.target=null;this.ally=null;}
  dispose(){this.clear();}
 }
