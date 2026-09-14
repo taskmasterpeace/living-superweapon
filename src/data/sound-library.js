@@ -75,6 +75,7 @@ const additions=[
 const extended=additions.map(args=>cue(...args));
 const dialogue=DIALOGUE_CANDIDATES.map(c=>cue(`dialogue.${c.personality.toLowerCase().replaceAll(' ','-')}.${c.event.toLowerCase()}`,`${c.personality} / ${c.event}`,'dialogue','line',`Original dialogue performance: “${c.line}” Character style: ${c.personality}. Natural, concise battlefield delivery.`, 'voice',1.3,false,
  {line:c.line,personality:c.personality,event:c.event,category:c.event,priority:['KO','guard-break','energy-drained'].includes(c.event)?3:1,expiry:3,lineCooldown:45,categoryCooldown:12,nativeNote:'Preview-only dialogue candidate. The synthesized marker is nonverbal and does not speak this line.'}));
-export const SOUND_CUES=Object.freeze([...sourceCues,...extended,...dialogue].map(Object.freeze));
+export const SOUND_CUES=Object.freeze([...sourceCues,...extended,...dialogue].map(c=>Object.freeze(
+ ['nanite-form','nanite-break','nanite-reform'].includes(c.id)?{...c,wiring:'native-replacement',nativeMethod:'updateNaniteAudio',nativeNote:'One spatial cue per observed formation, cell break or completed repair transition; simultaneous cell changes coalesce.'}:c)));
 export const SOUND_CUE_BY_ID=new Map(SOUND_CUES.map(c=>[c.id,c]));
 export function generationBrief(){return {format:'lsw.sound-generation-brief',version:1,cues:SOUND_CUES.map(({id,family,phase,event,generationPrompt,duration,loop,line,personality,wiring})=>({id,family,phase,event,generationPrompt,duration,loop,line,personality,wiring})),beamReferences:BEAM_SOUND_DIRECTIONS};}

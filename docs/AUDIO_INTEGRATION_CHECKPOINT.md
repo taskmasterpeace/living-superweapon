@@ -25,3 +25,8 @@ Licensed ai-pass magnum and M107 reports now resolve from the existing magnum/am
 ## Additive AI package precedence
 
 The existing 37-cue embedded AI package remains available in the workshop. Add missing now preserves six bundled defaults (including the preferred CC0 light/heavy impacts), adding 31 other entries to an empty custom library. Repeat imports are no-ops; existing bindings/settings and atomic decode behavior remain intact. Eighteen pack/SoundLibrary tests and build pass. Importing preview-only entries does not wire them to gameplay.
+
+## Nanite gameplay transitions
+
+Approved ai-pass nanite form, break and reform MP3s now ship as bundled defaults. Fighter updates observe active module/cell transitions and emit spatial cues once; simultaneous cells coalesce, retired/locked/hidden modules stay silent. User bindings retain precedence. This connects existing forearm module gameplay, not the still-pending Dec-52 animal actor integration. Twenty-four audio import, mapping and nanite state/transition tests pass; production build passes. Live mix review remains outstanding.
+

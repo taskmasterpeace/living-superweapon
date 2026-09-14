@@ -69,6 +69,7 @@ import {updateHeroSkin,disposeHeroSkin} from './hero-skin.js';
 import { queueHitReaction, restoreHitReaction, animateHitReaction } from './hit-reaction.js';
 import {restoreLostControlPose,animateLostControlPose} from './lost-control-pose.js';
 import {createNaniteState,advanceNanites,resetNanites,retireNanites,damageNanite} from './nanite-state.js';
+import {updateNaniteAudio} from './nanite-audio.js';
 import {claimNaniteContact} from './nanite-forearms.js';
 import {presentNanites} from './nanite-forearms.js';
 import {slotUnlocked} from '../data/progression.js';
@@ -1678,7 +1679,7 @@ export class Fighter {
     // Source/bridge clocks must see the hold before its timer is consumed.
     if (this.hitstop > 0) { this._animate(dt); this.hitstop -= dt; this._sync(); return; }
 
-    if(this._nanites)advanceNanites(this._nanites,dt,new Set(Object.keys(this.slots).filter(key=>slotUnlocked(this,key))));
+    if(this._nanites){advanceNanites(this._nanites,dt,new Set(Object.keys(this.slots).filter(key=>slotUnlocked(this,key))));updateNaniteAudio(this);}
 
     this._physics(dt, game);
 
