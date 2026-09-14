@@ -2,10 +2,11 @@
 // water). Real CC/CC0 loops. Wind variants are EQ-processed from one real recording (not synth).
 //   node tools/sfx-ambient.mjs  ->  public/audio/sfx-amb/*.mp3 + manifest.json + artifacts/sfx-amb/pick.html
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve, join } from 'node:path';
+import { toWav16, SR } from '../authoring/audio/sfx-gaps/synth.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const SRC = join(ROOT, 'authoring', 'audio', 'sfx-gaps', 'cc0-src');
@@ -32,11 +33,34 @@ const CUR = [
   { cue: 'amb.water', loop: true, spec: 'WATER / pump — flowing water + industrial pump beds.',
     srcs: [{ file: lp('water_flowing'), license: CC0 }, { file: lp('pump_01'), license: CC0 }, { file: lp('pump_02'), license: CC0 }] },
 ];
-// loops: keep the full body (seamless in game); only convert format (+ optional EQ). No trim/fade.
+// read a canonical PCM16 mono WAV -> Float32
+function readWav(buf) {
+  let p = 12; while (p + 8 <= buf.length) { const id = buf.toString('ascii', p, p + 4), sz = buf.readUInt32LE(p + 4);
+    if (id === 'data') { const n = sz >> 1, o = new Float32Array(n); for (let i = 0; i < n; i++) o[i] = buf.readInt16LE(p + 8 + i * 2) / 32768; return o; } p += 8 + sz + (sz & 1); }
+  return new Float32Array(0);
+}
+// crossfade-wrap: blend the tail over the head so out[0] flows continuously from out[end] (equal-power),
+// then repeat so the audition plays seamless internal loops (game should use buffer-loop / loopStart-End).
+function seamless(pcm, cfSec = 0.3, reps = 3) {
+  const L = pcm.length, cf = Math.min(Math.round(cfSec * SR), Math.floor(L * 0.25));
+  if (cf < 8) return pcm;
+  const one = new Float32Array(L - cf);
+  for (let i = 0; i < L - cf; i++) one[i] = pcm[i];
+  for (let i = 0; i < cf; i++) { const w = i / cf; one[i] = pcm[i] * Math.sqrt(w) + pcm[L - cf + i] * Math.sqrt(1 - w); }
+  const out = new Float32Array(one.length * reps);
+  for (let r = 0; r < reps; r++) out.set(one, r * one.length);
+  return out;
+}
+// loops: decode (+EQ) -> crossfade-wrap for a truly seamless loop -> mp3
 function convert(src, dst, filter) {
-  const base = ['-y', '-hide_banner', '-loglevel', 'error', '-i', src, '-ac', '1', '-ar', '44100', '-b:a', '96k', '-map_metadata', '-1', '-codec:a', 'libmp3lame', dst];
-  if (filter) base.splice(6, 0, '-af', filter);
-  execFileSync('ffmpeg', base);
+  const tmp = dst.replace(/\.mp3$/, '.tmp.wav'), tmp2 = dst.replace(/\.mp3$/, '.seam.wav');
+  const dec = ['-y', '-hide_banner', '-loglevel', 'error', '-i', src, '-t', '4.2', '-ac', '1', '-ar', '44100', '-c:a', 'pcm_s16le', tmp];
+  if (filter) dec.splice(8, 0, '-af', filter);
+  execFileSync('ffmpeg', dec);
+  const pcm = readWav(readFileSync(tmp));
+  writeFileSync(tmp2, toWav16(seamless(pcm, 0.3, 2)));
+  execFileSync('ffmpeg', ['-y', '-hide_banner', '-loglevel', 'error', '-i', tmp2, '-ac', '1', '-ar', '44100', '-b:a', '96k', '-map_metadata', '-1', '-codec:a', 'libmp3lame', dst]);
+  rmSync(tmp, { force: true }); rmSync(tmp2, { force: true });
 }
 async function main() {
   await mkdir(OUT, { recursive: true }); await mkdir(ART, { recursive: true });
