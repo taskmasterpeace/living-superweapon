@@ -7,7 +7,7 @@
   "sourceLicense": "CC0-1.0",
   "units": "meters",
   "height": 1.8325,
-  "triangles": 3876,
+  "triangles": 4122,
   "modules": [
     "Torso.chest",
     "Torso.waist",
@@ -131,11 +131,36 @@
     "Robe.side.R",
     "Sleeve.R",
     "Robe.collar",
+    "Coat.front.L",
+    "Coat.lapel.L",
+    "Coat.side.L",
+    "Coat.tail.front.L",
+    "Coat.tail.back.L",
+    "Coat.tail.side.L",
+    "Coat.upperSleeve.L",
+    "Coat.lowerSleeve.L",
+    "Coat.front.R",
+    "Coat.lapel.R",
+    "Coat.side.R",
+    "Coat.tail.front.R",
+    "Coat.tail.back.R",
+    "Coat.tail.side.R",
+    "Coat.upperSleeve.R",
+    "Coat.lowerSleeve.R",
+    "Coat.waist.front-1",
+    "Coat.waist.side-1",
+    "Coat.waist.front1",
+    "Coat.waist.side1",
+    "Coat.waist.back",
+    "Coat.back",
+    "Coat.badge.border",
+    "Coat.badge.card",
+    "Coat.pen",
     "Torn.hem.L",
     "Torn.hem.R",
     "Cape"
   ],
-  "runtimeGroups": 43,
+  "runtimeGroups": 46,
   "slotContract": {
     "arms": {
       "materials": [
@@ -189,6 +214,14 @@
     "cape": {
       "materials": [
         "accent"
+      ],
+      "variants": []
+    },
+    "coat": {
+      "materials": [
+        "accent",
+        "dark",
+        "suit"
       ],
       "variants": []
     },

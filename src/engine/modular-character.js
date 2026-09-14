@@ -10,7 +10,7 @@ import {heroModelOf} from '../data/hero-models.js';
 
 let asset;
 export const MODULAR_BODY='faceted-v1';
-export const MODULAR_SLOTS=['wristbands','boxingGloves','calves','shoes','tornClothes','robe','sleeves','collar','glasses','deltoids','forearms','handTips','emblemBack','head','hair','visor','expression','torso','waist','belt','arms','gauntlets','shoulders','legs','boots','knees','hands','cape','emblem','helmet','vest','backpack','eyepatch','pouches'];
+export const MODULAR_SLOTS=['coat','wristbands','boxingGloves','calves','shoes','tornClothes','robe','sleeves','collar','glasses','deltoids','forearms','handTips','emblemBack','head','hair','visor','expression','torso','waist','belt','arms','gauntlets','shoulders','legs','boots','knees','hands','cape','emblem','helmet','vest','backpack','eyepatch','pouches'];
 export function modularAsset(){return asset??=new GLTFLoader().loadAsync('/models/modular-hero/modular-hero.glb').catch(e=>{asset=null;throw e;});}
 export function setModularCostume(meshes,{soldier=false,primary='#dce0d9',accent='#b52e23',skin='#b18b6d',cape=true,visor=false}={}){
  return applyModularRecipe(meshes,{...MODULAR_RECIPES[soldier?'mercenary':'hero'],primary:soldier?'#657151':primary,secondary:soldier?'#46543a':accent,skin,cape:!soldier&&cape,visor,hair:soldier?'none':'swept',helmet:soldier});

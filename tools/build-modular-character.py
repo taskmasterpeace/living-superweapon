@@ -160,6 +160,26 @@ for side in ['L','R']:
  mesh('Robe.side.'+side,[(s*.16,-.13,1.035),(s*.16,.13,1.035),(s*.29,.20,.20),(s*.29,-.20,.20)],[(0,1,2,3)],'DEF-thigh.'+side,'dark','robe')
  shaped_segment('Sleeve.'+side,'DEF-forearm.'+side,[(0,.075,.078),(.4,.09,.094),(1,.16,.165)],'suit','sleeves')
 rings('Robe.collar',[(1.45,.16,.13),(1.53,.18,.145),(1.57,.15,.12)],'DEF-spine.003','suit','collar')
+# Lab coat: open chest, split knee-length tails and fitted sleeves. No cloth solver.
+for side in ['L','R']:
+ s=1 if side=='L' else -1
+ mesh('Coat.front.'+side,[(s*.055,-.122,1.46),(s*.21,-.122,1.44),(s*.16,-.12,1.04),(s*.045,-.12,1.04)],[(0,1,2,3)],'DEF-spine.003','suit','coat')
+ mesh('Coat.lapel.'+side,[(s*.05,-.139,1.47),(s*.14,-.139,1.40),(s*.055,-.139,1.30)],[(0,1,2)],'DEF-spine.003','suit','coat')
+ mesh('Coat.side.'+side,[(s*.21,-.122,1.44),(s*.21,.122,1.44),(s*.16,.12,1.04),(s*.16,-.12,1.04)],[(0,1,2,3)],'DEF-spine.003','suit','coat')
+ for label,y in [('front',-.14),('back',.14)]:
+  mesh('Coat.tail.'+label+'.'+side,[(s*.025,y,1.05),(s*.17,y,1.05),(s*.205,y*1.15,.55),(s*.025,y*1.15,.55)],[(0,1,2,3)],'DEF-thigh.'+side,'suit','coat')
+ mesh('Coat.tail.side.'+side,[(s*.17,-.14,1.05),(s*.17,.14,1.05),(s*.205,.161,.55),(s*.205,-.161,.55)],[(0,1,2,3)],'DEF-thigh.'+side,'suit','coat')
+ shaped_segment('Coat.upperSleeve.'+side,'DEF-upper_arm.'+side,[(0,.092,.094),(.5,.098,.099),(1,.065,.068)],'suit','coat')
+ shaped_segment('Coat.lowerSleeve.'+side,'DEF-forearm.'+side,[(0,.069,.072),(.45,.068,.07),(1,.051,.054)],'suit','coat')
+for side in [-1,1]:
+ mesh('Coat.waist.front'+str(side),[(side*.025,-.15,1.18),(side*.17,-.15,1.18),(side*.17,-.15,1.00),(side*.025,-.15,1.00)],[(0,1,2,3)],'DEF-spine.001','suit','coat')
+ mesh('Coat.waist.side'+str(side),[(side*.17,-.15,1.18),(side*.17,.15,1.18),(side*.17,.15,1.00),(side*.17,-.15,1.00)],[(0,1,2,3)],'DEF-spine.001','suit','coat')
+mesh('Coat.waist.back',[(-.17,.15,1.18),(.17,.15,1.18),(.17,.15,1.00),(-.17,.15,1.00)],[(0,1,2,3)],'DEF-spine.001','suit','coat')
+mesh('Coat.back',[(-.21,.122,1.44),(.21,.122,1.44),(.16,.12,1.04),(-.16,.12,1.04)],[(0,1,2,3)],'DEF-spine.003','suit','coat')
+box('Coat.badge.border',(.13,-.137,1.34),(.07,.008,.076),'DEF-spine.003','dark','coat',0)
+box('Coat.badge.card',(.13,-.144,1.34),(.053,.006,.059),'DEF-spine.003','suit','coat',0)
+box('Coat.pen',(.14,-.15,1.385),(.012,.009,.044),'DEF-spine.003','accent','coat',0)
+
 # Ragged lower shirt tabs; discrete silhouette pieces share the hips/thighs.
 for side in ['L','R']:
  s=1 if side=='L' else -1

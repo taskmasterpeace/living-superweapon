@@ -24,6 +24,9 @@ export function outfitTexture(recipe){
  if(recipe.pattern==='custom'){
   if(!recipe.patternImage)return null;
   t=new T.TextureLoader().load(recipe.patternImage);
+  }else if(recipe.pattern==='stripes'||recipe.pattern==='pinstripe'){
+  const c=document.createElement('canvas');c.width=c.height=256;const x=c.getContext('2d');x.fillStyle=recipe.primary;x.fillRect(0,0,256,256);x.fillStyle=recipe.secondary;
+  for(let i=0;i<256;i+=64)recipe.pattern==='stripes'?x.fillRect(0,i,256,32):x.fillRect(i,0,3,256);t=new T.CanvasTexture(c);
  }else{
   const c=document.createElement('canvas');c.width=c.height=256;const x=c.getContext('2d');x.fillStyle=recipe.primary;x.fillRect(0,0,256,256);x.strokeStyle=recipe.secondary;x.lineWidth=5;
   // Original angular filigree and key border; no brand logos or copied print.

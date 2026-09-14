@@ -4,6 +4,8 @@ import {INFECTION_STYLES,infectionTexture,outfitTexture} from './modular-surface
 
 export const MODULAR_FRAMES={hero:[1,1,1],heavy:[1.38,.92,1.18],agile:[.83,.98,.88],machine:[1.20,1.08,1.12]};
 export const MODULAR_RECIPES={
+ scientist:{name:'Scientist · laboratory coat',frame:'hero',anatomy:'male',hair:'swept',hairColor:'#493322',skin:'#c79c72',primary:'#30383c',secondary:'#bb2929',trim:'#252b2e',emblemColor:'#eee9df',emblem:'none',coat:true,glasses:true,cape:false,armor:false,backpack:false,shoulders:false,gauntlets:false,knees:false,belt:false,gloves:'bare',footwear:'shoes',muscle:.85},
+ striped:{name:'Striped explorer · fabric example',frame:'hero',hair:'swept',skin:'#c79c72',primary:'#e8e6d9',secondary:'#c62b31',trim:'#263443',pattern:'stripes',emblem:'none',cape:false,armor:false,shoulders:false,gauntlets:false,knees:false,belt:false,gloves:'bare',muscle:.85},
  vegas:{name:'Vegas · black and old gold',frame:'hero',hair:'none',skin:'#633b28',primary:'#161a1b',secondary:'#b18a3b',trim:'#252a29',emblemColor:'#d5b15c',emblem:'V',cape:false,armor:false,shoulders:true,muscle:1.15},
  mage:{name:'Ascendant · robed caster',frame:'agile',anatomy:'female',hair:'bun',skin:'#78462e',primary:'#e8e5d6',secondary:'#b52e23',trim:'#20272b',emblemColor:'#b52e23',emblem:'triangle',cape:false,robe:true,sleeves:true,collar:true,gauntlets:false,knees:false,armor:false,shoulders:false,gloves:'bare',muscle:.9},
  infected:{infection:'rupture',tornClothes:false,name:'Infected · civilian',frame:'hero',hair:'swept',skin:'#a8aa85',primary:'#505958',secondary:'#74352b',trim:'#303830',emblemColor:'#74352b',emblem:'none',cape:false,armor:false,shoulders:false,gauntlets:false,knees:false,belt:false,gloves:'bare',bareArms:true,muscle:.85,eyeColor:'#e4e5b2',eyeGlow:true,expression:'angry'},
@@ -18,10 +20,10 @@ export const MODULAR_RECIPES={
 export function validateModularRecipe(input){
  if(!input||input.schema!==1||input.skeleton!=='ual-deform-v1'||input.body!=='faceted-v1')throw Error('Expected a version 1 faceted character recipe');
  const r={...MODULAR_RECIPES.hero};
- const enums={frame:Object.keys(MODULAR_FRAMES),anatomy:['male','female'],infection:Object.keys(INFECTION_STYLES),pattern:['solid','gilt','custom'],beltStyle:['plain','utility'],footwear:['boots','shoes'],gloves:['bare','full','fingerless','boxing'],emblemPlacement:['front','back','both'],hair:['swept','afro','bun','braids','none'],emblem:['triangle','shield','bolt','star','V','none','custom'],expression:['neutral','happy','angry','talkA','talkB','surprised','sad']};
+ const enums={frame:Object.keys(MODULAR_FRAMES),anatomy:['male','female'],infection:Object.keys(INFECTION_STYLES),pattern:['solid','gilt','stripes','pinstripe','custom'],beltStyle:['plain','utility'],footwear:['boots','shoes'],gloves:['bare','full','fingerless','boxing'],emblemPlacement:['front','back','both'],hair:['swept','afro','bun','braids','none'],emblem:['triangle','shield','bolt','star','V','none','custom'],expression:['neutral','happy','angry','talkA','talkB','surprised','sad']};
  for(const [key,values]of Object.entries(enums))if(input[key]!==undefined){if(!values.includes(input[key]))throw Error('Invalid '+key);r[key]=input[key];}
  for(const key of ['primary','secondary','trim','emblemColor','skin','hairColor','eyeColor','gloveColor'])if(input[key]!==undefined){if(!/^#[0-9a-f]{6}$/i.test(input[key]))throw Error('Invalid '+key+' color');r[key]=input[key];}
- for(const key of ['wristbands','tornClothes','cape','robe','sleeves','collar','glasses','armor','shoulders','gauntlets','knees','belt','backpack','bareArms','helmet','visor','eyepatch','eyeGlow'])if(input[key]!==undefined){if(typeof input[key]!=='boolean')throw Error('Invalid '+key);r[key]=input[key];}
+ for(const key of ['coat','wristbands','tornClothes','cape','robe','sleeves','collar','glasses','armor','shoulders','gauntlets','knees','belt','backpack','bareArms','helmet','visor','eyepatch','eyeGlow'])if(input[key]!==undefined){if(typeof input[key]!=='boolean')throw Error('Invalid '+key);r[key]=input[key];}
  if(input.emblemImage!==undefined){if(typeof input.emblemImage!=='string'||input.emblemImage.length>1500000||!/^data:image\/(png|webp);base64,[A-Za-z0-9+/=]+$/.test(input.emblemImage))throw Error('Expected a small PNG or WebP emblem');r.emblemImage=input.emblemImage;}
  if(input.patternImage!==undefined){if(typeof input.patternImage!=='string'||input.patternImage.length>1500000||!/^data:image\/(png|webp);base64,[A-Za-z0-9+/=]+$/.test(input.patternImage))throw Error('Expected a small PNG or WebP pattern');r.patternImage=input.patternImage;}
  for(const [key,min,max]of [['patternScale',.5,4],['muscle',.8,1.3],['size',.85,1.25]])if(input[key]!==undefined){if(!Number.isFinite(input[key])||input[key]<min||input[key]>max)throw Error('Invalid '+key);r[key]=input[key];}
@@ -46,6 +48,8 @@ export function applyModularRecipe(meshes,recipe){
   if(!m.userData.recipeMaterialOwned){m.material=m.material.clone();m.userData.recipeMaterialOwned=true;}
   const slot=m.userData.slot;m.visible=true;
   if(slot==='hair')m.visible=m.userData.variant===r.hair;
+  if(slot==='coat')m.visible=!!r.coat;
+  if(r.coat&&['arms','deltoids','forearms','gauntlets','sleeves','robe','collar','shoulders'].includes(slot))m.visible=false;
   if(slot==='cape')m.visible=!!r.cape;
   if(['tornClothes','robe','sleeves','collar','glasses'].includes(slot))m.visible=!!r[slot];
   if(['vest','backpack','pouches'].includes(slot))m.visible=!!r.armor;
@@ -65,15 +69,17 @@ export function applyModularRecipe(meshes,recipe){
   if(slot==='visor')m.visible=!!r.visor;
   if(slot==='eyepatch')m.visible=!!r.eyepatch;
   if(slot==='glasses'&&r.visor)m.visible=false;
+  if(r.coat&&['arms','deltoids','forearms','gauntlets','sleeves','robe','collar','shoulders'].includes(slot))m.visible=false;
   const colors={suit:r.primary,accent:r.secondary,dark:r.trim,metal:r.emblemColor,skin:r.skin};
   if(colors[m.material.name])m.material.color.set(colors[m.material.name]);
   if(slot==='hair')m.material.color.set(r.hairColor||'#171b19');
   if(['arms','deltoids','forearms'].includes(slot)&&r.bareArms)m.material.color.set(r.skin);
   if(['hands','handTips'].includes(slot))m.material.color.set(r.gloves==='bare'||(r.gloves==='fingerless'&&slot==='handTips')?r.skin:r.gloveColor);
   if(slot==='boxingGloves')m.material.color.set(r.gloveColor);
+  if(slot==='coat'&&m.material.name==='suit')m.material.color.set('#eeeae2');
   if(!['expression','emblem','emblemBack'].includes(slot)&&typeof document!=='undefined'){
    let map=null;const infected=INFECTION_STYLES[r.infection];
-   if(m.material.name==='suit'&&r.pattern!=='solid'){map=outfitTexture(r);if(map)m.material.color.set('#ffffff');}
+   if(slot!=='coat'&&m.material.name==='suit'&&r.pattern!=='solid'){map=outfitTexture(r);if(map)m.material.color.set('#ffffff');}
    const exposed=m.material.name==='skin'||(['arms','deltoids','forearms'].includes(slot)&&r.bareArms)||(['hands','handTips'].includes(slot)&&(r.gloves==='bare'||(r.gloves==='fingerless'&&slot==='handTips')));
    if(infected&&exposed){map=infectionTexture(r.infection);m.material.color.set(infected.skin);}else if(infected&&['suit','accent','dark'].includes(m.material.name)&&slot!=='hair'){m.material.color.lerp(new T.Color('#777d78'),.38);}
    if(m.material.map!==map){m.material.map=map;m.material.needsUpdate=true;}
