@@ -56,6 +56,18 @@ test('partner release is identical after direct seek and sequential playback',as
  for(const [name,q]of Object.entries(pose))assert.deepEqual(actor.getObjectByName(name).quaternion.toArray(),q,'seek changed source pose');
  r.dispose();
 });
+test('grab studies compile full-body holds and preserve the free-hand choice',async()=>{
+ const g=await loadActual(),pose={},bones=[];g.scene.traverse(o=>{if(o.isBone){pose[o.name]=o.quaternion.toArray();bones.push(o.name);}});
+ for(const name of ['Front clinch entry','Rear body lock entry','Side grab entry','Neck hold / free right hand']){
+  const m=validateAsset({...base,motion:actionDraft(name,pose)},bones).motion;
+  const clip=compileAuthoredMotion({...base,motion:m});assert.ok(clip.validate());
+  assert.ok(m.markers.release-m.markers.contact>.5,'hold must survive more than a single contact frame');
+  const held=m.keys.find(k=>Math.abs(k.time-m.markers.contact)<1e-6).pose;
+  for(const bone of ['DEF-spine003','DEF-upper_armL','DEF-upper_armR','DEF-thighL','DEF-shinL'])assert.notDeepEqual(held[bone],pose[bone],name+' lacks '+bone+' motion');
+  assert.deepEqual(m.keys.at(-1).pose,pose,'recovery should return to the captured base');
+  if(name.startsWith('Neck'))assert.equal(m.hand,'left');
+ }
+});
 
 test('full-body loop studies close every joint and animate both arms and legs',async()=>{
  const {FULL_BODY_STUDIES,fullBodyStudy}=await import('../src/engine/character-full-body-studies.js');

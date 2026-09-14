@@ -73,3 +73,8 @@ Added quarter/half/normal playback, pause/resume, 60 fps frame stepping, and exa
 
 Partner and prop release previews now sample the exact authored release frame rather than the last visited frame. Direct seeks, backward scrubs and sequential playback therefore share the same release origin. Partner torso alignment includes its scale; temporary source sampling restores the actor's current pose. The real exported rig regression failed before the fix; all twelve authoring tests and production build pass. Preview release trajectories remain illustrative, not gameplay throw physics.
 
+
+## Full-body grab blocking studies
+
+Front clinch, rear body lock, side grab and left-hand neck hold are selectable in the authoring panel. The old Paired grab name now resolves to the full-body front study. Six keys cover entry, contact at .42 s, sustained hold, release at 1.05 s, control return at 1.3 s and base recovery by 1.4 s. Neck hold retains explicit left-hand metadata so the right hand is free. Thirteen authoring tests pass; production build passes. Browser contact silhouette inspected for neck hold. These are editable candidates, not approved gameplay clips. Upright/directional partner alignment, dynamic contact and full sequence acceptance remain outstanding; the current partner rehearsal still uses its generic carry orientation.
+
