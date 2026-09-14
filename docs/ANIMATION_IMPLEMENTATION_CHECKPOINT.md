@@ -118,3 +118,6 @@ These are candidate authored studies, not approved mocap or assigned gameplay an
 Grab rehearsal now restores the partner from the selected motion's first-key pose on each sample. It no longer inherits the editor's current attacking limbs or overwrites the imported leg rotations with an arbitrary Euler angle. A regression created the preview from a raised-leg attack and failed before the fix; all 16 authoring/pickup tests and build now pass.
 
 This addresses pose contamination only. Issue #19 remains open for distinct victim resistance, suspended hold and release reactions, plus visual approval. A supplied first-key pose must itself be a suitable reference; the tool does not invent an approved victim animation.
+# Pickup visual rejection
+
+Browser playback review found that Ground pickup at 0.45 s lacks adequate body lowering/foot support and at 1.20 s brings the support hands near the face. It is rejected for gameplay assignment and the shared catalog now displays the failed review. Issue #21 tracks body support authoring and payload hand contact. Compilation tests are not evidence of visual acceptance. Flying pickup remains unreviewed. Catalog test and build pass after the review-label change.
