@@ -2874,12 +2874,12 @@ export class Fighter {
     poseWebSnare(this);
     poseFlightFeet(this,dt);
     syncFlightBoard(this);
+    poseZombieInjuries(this);
     updateHeroSkin(p);
     presentNanites(this);
     syncChargePresentation(this);
     updateCrouchBounds(this);
     updateProneBounds(this);
-    poseZombieInjuries(this);
     this._modularCharacter?.update();
     anchorStatusIndicators(this);
   }

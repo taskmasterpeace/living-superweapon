@@ -1,4 +1,5 @@
 import {queueHitReaction} from './hit-reaction.js';
+import {bendArm} from './hero-rig.js';
 // Explicit encounter rule; other bodies and weapon classes keep normal defenses.
 export function zombieRifleHit(f,amount,opts){
  if(f.def.zombieProfile!=='common'&&f.def.zombieProfile!=='sprinter')return null;
@@ -24,7 +25,12 @@ export function zombieArmsDisabled(f){return !!(f._zombieLimbs?.armL?.disabled&&
 export function poseZombieInjuries(f){
  const l=f._zombieLimbs;if(!l||f.ragdoll)return;
  for(const side of ['L','R']){const arm=f.parts['arm'+side],leg=f.parts['leg'+side];
-  if(l['arm'+side]?.disabled&&arm){arm.rotation.set(.15,0,side==='L'?-.12:.12);}
+  if(l['arm'+side]?.disabled&&arm){
+   arm.rotation.set(.15,0,side==='L'?-.12:.12);
+   // The forearm and hand are flat FK children, not descendants of the
+   // upper-arm mesh. Lowering the shoulder alone leaves a stale attack bend.
+   bendArm(arm,.12);
+  }
   if(l['leg'+side]?.disabled&&leg){leg.rotation.x=-.18;leg.userData.knee.rotation.x=.65;}
  }
 }

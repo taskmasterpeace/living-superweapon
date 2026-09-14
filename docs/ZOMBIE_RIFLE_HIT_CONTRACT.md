@@ -16,4 +16,6 @@ Deferred noncritical fall polish: https://github.com/taskmasterpeace/living-supe
 
 Priority: single-person pickups, hostile grabs, punches, kicks, lunges and Dec-52 hound/rat/mech motion. Two-person rescue is removed from current scope.
 
+Disabled-arm presentation now resets the elbow and hand through the shared fixed-length FK helper instead of lowering only the shoulder. This prevents the previous attack's bent elbow from persisting. Injury articulation runs before native skin synchronization and modular conversion. Both real-rig regressions failed before the fix; 27 injury, locational-damage and modular tests pass, and production build passes. Full moving visual review remains outstanding.
+
 A disabled arm now prevents the existing two-handed grab and invalidates an active clinch. The healthy arm can still attack; both disabled arms still block claw damage. Regression failed before the change. Fifty-six zombie/carry tests and build pass. A future one-handed zombie grab would need a distinct pose and rule, not reuse the current two-handed grip.
