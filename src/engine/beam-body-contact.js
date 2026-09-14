@@ -99,6 +99,17 @@ export function beamBodyContact(beam,game,out,padding=1,surfaceStop=false){
         }
         continue;
       }
+      if(fighter.bodyBounds){
+        let enter=0,leave=1;const bounds=fighter.bodyBounds,r=beam.radius;
+        for(const [axis,start,delta]of [['x',ax,dx],['y',ay,dy],['z',az,dz]]){
+          const lo=fighter.pos[axis]+bounds.min[axis]-r,hi=fighter.pos[axis]+bounds.max[axis]+r;
+          if(Math.abs(delta)<1e-9){if(start<lo||start>hi)leave=-1;continue;}
+          const a=(lo-start)/delta,b=(hi-start)/delta;enter=Math.max(enter,Math.min(a,b));leave=Math.min(leave,Math.max(a,b));
+        }
+        if(enter>leave||enter>=out.t)continue;
+        const t=exposedEntry(game.world,ax,ay,az,dx,dy,dz,enter,Math.min(leave,out.t));if(t>=out.t)continue;
+        out.fighter=fighter;out.naniteContact=null;out.index=i;out.t=t;out.point.copy(point);out.surface.copy(point);contactDirection(beam,i,fighter,dx,dy,dz,length2,out.direction);continue;
+      }
       const cx=fighter.pos.x,cy=fighter.pos.y+5.2-(fighter._crouchPose?.drop||0),cz=fighter.pos.z;
       const x=ax-cx,y=ay-cy,z=az-cz,r=beam.radius+fighter.radius+padding;
       const c=x*x+y*y+z*z-r*r,along=x*dx+y*dy+z*dz;

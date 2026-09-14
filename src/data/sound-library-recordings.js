@@ -3,6 +3,7 @@ export const SOUND_LIBRARY_SAMPLES={
  grab:'library.grab',
  'guard-break':'library.guard-break',
  'flashbang-detonate':'gear.flashbang','shieldpack-hit':'gear.shield.hit',
+ 'bullet-hit-flesh':'impact.flesh','bullet-hit-metal':'impact.metal','bullet-hit-stone':'impact.concrete',
  flight:'library.flight',
  'grenade-prepare':'library.grenade-prepare',
  'vehicle-explosion':'boom',
@@ -12,6 +13,9 @@ export const SOUND_LIBRARY_SAMPLES={
  'weather-domain-thunder':'library.thunder','weather-thunder':'library.thunder','grenade-release':'library.grenade-release',
 };
 export const LIBRARY_SAMPLES={
+ 'impact.flesh':{f:['sfx-cc0/final/sfx_impact_flesh_a','sfx-cc0/final/sfx_impact_flesh_b'],g:.7,reach:150},
+ 'impact.metal':{f:['sfx-cc0/final/sfx_impact_metal_a'],g:.7,reach:150},
+ 'impact.concrete':{f:['sfx-cc0/final/sfx_impact_concrete_a','sfx-cc0/final/sfx_impact_concrete_b','sfx-cc0/final/sfx_impact_concrete_c'],g:.7,reach:150},
  'library.guard-break':{f:['ai-pass/guard-break'],g:.55,reach:150},
  'library.flight':{f:['ai-pass/final/flight-loop'],g:.4,loop:true,reach:180},
  'gear.ifak':{f:['ai-pass/final/gear-ifak'],g:.55,reach:80},

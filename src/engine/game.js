@@ -1,3 +1,4 @@
+import {beginPropPickup,updatePropPickup} from './prop-pickup.js';
 import {canReceiveShot} from './shot-contact-eligibility.js';
 import {animateCarriedObjectGrip} from './held-grip-pose.js';
 import {updateLimbSurfaces} from './hero-limb-surface.js';
@@ -986,14 +987,16 @@ export class Game {
     // the hurl the arc will preview — computed ONCE here so the preview can never lie
     const spd = 74 * Math.max(0.5, Math.min(1.25, 0.5 + 0.16 * Math.log2(Math.max(0.6, ratio))));
     f._carry = { kind: t.kind, mesh, sourceRef:t.ref, t: 0, w: t.w, spd, ratio, size: t.ref && t.ref.s };
-    carriedPropPosition(f,f._carry,mesh.position);
+    const source=t.ref?.mesh?.getWorldPosition(new THREE.Vector3())||new THREE.Vector3(t.x,this.world.heightAt?.(t.x,t.z)||0,t.z);
+    beginPropPickup(f,f._carry,source);
     f.speed = (f.def.speed || 30) * Math.max(0.42, Math.min(0.93, 1 - 0.45 / Math.max(0.9, ratio)));   // weight on your back is speed off your feet
     this.audio.impact(t.kind === 'plane' ? 1.1 : 0.7, f.pos); this.world.shake(t.kind === 'plane' ? 1.1 : 0.5);
-    if (this.isHuman(f) && this.hud) this.hud.feed(`Hoisted a ${t.kind} (~${t.w}t) — hold E, aim, then release to THROW`, '#ff8a3a');
+    if (this.isHuman(f) && this.hud) this.hud.feed(`Lifting a ${t.kind} (~${t.w}t) — hold E until overhead, aim, release to THROW; early release drops`, '#ff8a3a');
     return true;
   }
   throwProp(f,drop=false) {
     const c = f._carry; if (!c) return;
+    drop=drop||!!c.pickup; // Releasing before the lift completes drops at the current contact.
     const pos = propReleasePosition(f);
     f._carry = null; f.speed = f.def.speed || 30;
     const spd = drop?0:(c.spd || 74), dir = f.aim3;
@@ -1509,9 +1512,11 @@ export class Game {
   updateCarry(dt) {
     for (const f of this.entities) {
       const c = f._carry; if (!c) continue;
-      if (!f.alive) { this.scene.remove(c.mesh); f._carry = null; f.speed = f.def.speed || 30; continue; }
+      if (!f.alive) { this.throwProp(f,true); continue; }
       c.t += dt;
-      carriedPropPosition(f,c,c.mesh.position);
+      const pickup=updatePropPickup(f,c,dt);
+      if(pickup==='interrupted'){this.throwProp(f,true);continue;}
+      if(!pickup)carriedPropPosition(f,c,c.mesh.position);
       c.mesh.rotation.y = f.facing + Math.PI / 2;
       c.mesh.rotation.z = Math.sin(c.t * 2.2) * 0.05;
       if(animateCarriedObjectGrip(f)){updateLimbSurfaces(f.parts);updateHeroSkin(f.parts);f._modularCharacter?.update();}
@@ -2316,7 +2321,7 @@ export class Game {
     for(const f of this.entities){
       if(!canReceiveShot(this,caster,f))continue;
       const d=Math.hypot(f.pos.x-pos.x,f.pos.z-pos.z);
-      if(d<radius+f.radius&&Math.abs(pos.y-(f.pos.y+5))<9&&d<distance){best=f;distance=d;}
+      if(d<radius+f.radius&&(f.bodyBounds?pos.y>=f.pos.y+f.bodyBounds.min.y-radius&&pos.y<=f.pos.y+f.bodyBounds.max.y+radius:Math.abs(pos.y-(f.pos.y+5))<9)&&d<distance){best=f;distance=d;}
     }
     return best;
   }
@@ -2325,7 +2330,7 @@ export class Game {
     for (const f of this.entities) {
       if (!this.isFoe(caster, f)) continue;
       const dx = f.pos.x - pos.x, dz = f.pos.z - pos.z;
-      if (Math.hypot(dx, dz) < radius + f.radius && Math.abs(pos.y - (f.pos.y + 5)) < 9) return f;
+      if (Math.hypot(dx, dz) < radius + f.radius && (f.bodyBounds?pos.y>=f.pos.y+f.bodyBounds.min.y-radius&&pos.y<=f.pos.y+f.bodyBounds.max.y+radius:Math.abs(pos.y - (f.pos.y + 5)) < 9)) return f;
     }
     return null;
   }

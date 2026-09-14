@@ -1,3 +1,4 @@
+import {createDec52Encounter} from './dec52-encounter.js';
 import {meleeLessonScheme,trialPrompt,approachLesson} from './combat-lesson-controls.js';
 import {meleeEntryEligibility} from './melee-entry-target.js';
 import {meleeApproach} from '../data/melee-approaches.js';
@@ -33,6 +34,14 @@ export {meleeLessonScheme,grabLesson} from './combat-lesson-controls.js';
 // Scripted decisions use native motion, defense and damage; no target teleporting.
 export class MeleeTrial {
  constructor(g,origin){this.g=g;this.origin=origin.clone();this.records=[];this.index=-1;this.recording=new MeleeRecording();}
+ async startCreature({loader}={}){
+  if(this.g.ms?.threatLab?.state!=='preparing')throw Error('Enter Threat Room first');
+  this.clear();const epoch=this._creatureEpoch,origin=this.origin.clone();origin.y=this.g.world.heightAt(origin.x,origin.z);
+  const encounter=await createDec52Encounter(this.g,{origin,target:()=>this.g.player,loader});
+  if(this._creatureEpoch!==epoch||this.g.ms?.threatLab?.state!=='preparing'){retirePracticeActor(this.g,encounter.fighter);return null;}
+  this.creature=encounter;this.kind='creature-hound';this.target=encounter.fighter;this.target._meleeTrial=this;this.startHp=this.target.hp;
+  this.recording.bind([this.g.player,this.target]);this.g.hud?.feed?.('DEC-52 HOUND - live health, movement and bite contact - reset practice to repeat','#ffd24a');return this.target;
+ }
  prepareAerialDemo(kind='grab'){
   if(!['grab','stun'].includes(kind))throw Error('Choose grab or stun demonstration');
   const g=this.g,p=g.player;
@@ -100,6 +109,7 @@ export class MeleeTrial {
   this.g.hud?.feed?.('TARGET MACHINE · '+(mode==='airborne'?'AIRBORNE LAUNCH':mode==='moving'?'LEFT / RIGHT motion':'STATIONARY')+' · native damage and armor · E at range station toggles mode','#ffd24a');return f;
  }
  control(f,dt){
+  if(this.creature&&f===this.target){this.creature.control(dt);return;}
   if(this.demo&&(this.demo.active||this.demo.phase==='ready')&&f===this.target){this.demo.controlTarget(f,dt);return;}
   if(this.machine&&f===this.target){for(const child of f.obj.children)child.visible=child===this.machine;this.machineTime+=dt;this.elapsed+=dt;if(this.machineMode==='airborne')return;if(f.alive&&!f.grabbedBy&&f.launchT<=0){const dx=this.machineMode==='moving'?Math.cos(this.machineTime*.6):0;f.faceDir(0,1);f.move(new THREE.Vector3(dx,0,0),dt,.5);}return;}
 
@@ -126,7 +136,7 @@ export class MeleeTrial {
    if(d>7&&!f.mstate)f.move(dir,dt,1);
   }
  }
- repeat(){if(this.machine)return this.startMachine(this.machineMode);return this.kind==='encounter'?this.startEncounter():this.start(this.kind||'stationary');}
+ repeat(){if(this.kind==='creature-hound')return this.startCreature().catch(e=>this.g.hud?.feed?.(e.message,'#ff7755'));if(this.machine)return this.startMachine(this.machineMode);return this.kind==='encounter'?this.startEncounter():this.start(this.kind||'stationary');}
  capture(){if(this.target&&!this.review){
   if(this.demo?.active&&!this.g.player?.alive)this.demo.stop('Demonstration stopped: player defeated');
   if(this.demo?.outcome==='complete')return;
@@ -212,6 +222,6 @@ export class MeleeTrial {
   this.records.push(record);if(this.records.length>100)this.records.shift();this.recording.mark(this.g.time,{...record,label,kind:'contact'});
   this.g.hud?.feed?.(label,'#ffd24a');
  }
- clear(){if(this.demo?.active)this.demo.stop();this.demo=null;this.bag=null;this.records.length=0;this.startedAt=this.g.time||0;this.machine=null;this.machineMode=null;this.clearPreview();this.review?.close();this.review=null;this.recording.clear();for(const f of [this.target,this.ally])if(f)retirePracticeActor(this.g,f);this.target=null;this.ally=null;}
+ clear(){this._creatureEpoch=(this._creatureEpoch||0)+1;this.creature=null;if(this.demo?.active)this.demo.stop();this.demo=null;this.bag=null;this.records.length=0;this.startedAt=this.g.time||0;this.machine=null;this.machineMode=null;this.clearPreview();this.review?.close();this.review=null;this.recording.clear();for(const f of [this.target,this.ally])if(f)retirePracticeActor(this.g,f);this.target=null;this.ally=null;}
  dispose(){this.clear();}
 }

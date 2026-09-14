@@ -16,7 +16,7 @@ test('fall candidates keep wrists anterior and elbows flexed on the real rig at 
   const base={};actor.traverse(o=>{if(o.isBone)base[o.name]=o.quaternion.toArray();});
   const position=name=>actor.getObjectByName(name).getWorldPosition(new T.Vector3());
   const root=actor.position.clone();
-  for(const name of ['Flailing fall','Curled backward fall']){
+  for(const name of ['Flailing fall','Curled backward fall','Disoriented ground stun']){
    const motion=fullBodyStudy(name,base);
    for(const phase of [.25,.5,.75,1]){
     for(const [bone,q]of Object.entries(samplePose(motion,phase*motion.duration)))actor.getObjectByName(bone).quaternion.fromArray(q);

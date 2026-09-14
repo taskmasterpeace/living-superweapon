@@ -20,7 +20,8 @@ export function propReleasePosition(f,out=new Vector3()){
 export function thrownPropShape(c){return {radius:c.kind==='rock'?(c.size||2.8):c.kind==='plane'?4:c.kind==='car'?5:2.5,hitRadius:c.kind==='plane'?22:c.kind==='car'?13:c.kind==='rock'?Math.max(7,(c.size||2.8)*2.1):10,hitHeight:c.kind==='plane'?20:c.kind==='car'?16:c.kind==='rock'?Math.max(10,(c.size||2.8)*2.8):14};}
 export function previewPropThrow(f,game){
  const c=f._carry;if(!c)return null;
- const pos=propReleasePosition(f),vel=f.aim3.clone().multiplyScalar(c.spd||74);vel.y+=.34*(c.spd||74);
+ const speed=c.pickup?0:(c.spd||74);
+ const pos=propReleasePosition(f),vel=f.aim3.clone().multiplyScalar(speed);vel.y+=.34*speed;
  const points=[pos.clone()],shape=thrownPropShape(c);let contact=null;
  for(let i=0;i<240;i++){vel.y-=62/60;const next=pos.clone().addScaledVector(vel,1/60);contact=thrownPropContact(game,f,pos,next,shape);if(contact)next.lerpVectors(pos,next,contact.t);points.push(next);pos.copy(next);if(contact)break;}
  return {points,contact};

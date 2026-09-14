@@ -37,7 +37,7 @@ export const FULL_BODY_STUDIES={
  ]},
  'Flailing fall':{duration:1.4,loop:true,poses:[0,1,2,3,4].map(i=>({time:i/4,joints:flail(i*Math.PI/2)}))},
  'Curled backward fall':{duration:1.5,loop:false,poses:[{time:0,joints:{}},{time:.2,joints:curled},{time:.65,joints:{...curled,'DEF-upper_armL':[.85,0,-.6],'DEF-shinR':[1.5,0,0]}},{time:1,joints:curled}]},
- 'Disoriented ground stun':{duration:2,loop:true,poses:[0,1,2,3,4].map(i=>({time:i/4,joints:{'DEF-spine003':[.12,Math.sin(i*Math.PI/2)*.12,Math.sin(i*Math.PI/2)*.15],'DEF-neck':[.35,Math.sin(i*Math.PI/2)*.2,0],'DEF-upper_armL':[-.3,0,-.25],'DEF-upper_armR':[-.5,0,.35],'DEF-forearmL':[-.5,0,0],'DEF-forearmR':[-.8,0,0]}}))}
+ 'Disoriented ground stun':{duration:2,loop:true,poses:[0,1,2,3,4].map(i=>({time:i/4,joints:{'DEF-spine003':[.12,Math.sin(i*Math.PI/2)*.12,Math.sin(i*Math.PI/2)*.15],'DEF-neck':[.35,Math.sin(i*Math.PI/2)*.2,0],'DEF-upper_armL':[.3,0,-.25],'DEF-upper_armR':[.5,0,.35],'DEF-forearmL':[.5,0,0],'DEF-forearmR':[.8,0,0]}}))}
 };
 export function fullBodyStudy(name,base){
  const d=FULL_BODY_STUDIES[name];if(!d)throw Error('Unknown full-body study '+name);

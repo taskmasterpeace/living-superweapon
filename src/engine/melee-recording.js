@@ -3,22 +3,24 @@ import {ShieldSurfaceMaterial} from './shield-surface.js';
 import {airControlState} from './lost-control-pose.js';
 import {meleePhase} from './melee-phase.js';
 
+const sourceRoot=f=>f._creatureActor?.root||f.obj;
+
 // Bounded pose history, independent of input, damage and animation evaluation.
 // The hierarchy includes skinned bones as well as the procedural rig pivots.
 export class MeleeRecording {
  constructor({seconds=8,hz=30}={}){this.seconds=seconds;this.interval=1/hz;this.frames=[];this.events=[];this.actors=[];this.last=-Infinity;}
  mark(time,event){this.events.push({...event,time});if(this.events.length>128)this.events.shift();}
- bind(actors){this.clear();this.actors=actors.map(f=>{const nodes=[];f.obj.traverse(n=>nodes.push(n));return {fighter:f,root:f.obj,modular:f._modularCharacter,epoch:f._modularEpoch,nodes,template:cloneReviewActor(f.obj)};});}
+ bind(actors){this.clear();this.actors=actors.map(f=>{const root=sourceRoot(f),nodes=[];root.traverse(n=>nodes.push(n));return {fighter:f,root,modular:f._modularCharacter,epoch:f._modularEpoch,nodes,template:cloneReviewActor(root)};});}
  capture(time){
   // Binding may precede asynchronous model attachment. Never publish fallback
   // frames while a modular actor is expected, including a failed load.
-  if(this.actors.some(({fighter:f})=>f._modularReady&&!f._modularCharacter)){
+  if(this.actors.some(({fighter:f})=>f._modularReady&&!f._modularCharacter&&!f._creatureActor)){
    this.frames=[];this.events=[];this.last=-Infinity;
    this.status=this.actors.some(({fighter:f})=>f._modularError)?'model-load-failed':'waiting-for-models';return;
   }
   // A model replacement changes traversal indices. Start one coherent history
   // for all actors; transient VFX children do not trigger this reset.
-  if(this.actors.some(a=>a.root!==a.fighter.obj||a.modular!==a.fighter._modularCharacter||a.epoch!==a.fighter._modularEpoch)){
+  if(this.actors.some(a=>a.root!==sourceRoot(a.fighter)||a.modular!==a.fighter._modularCharacter||a.epoch!==a.fighter._modularEpoch)){
    const fighters=this.actors.map(a=>a.fighter);this.bind(fighters);
   }
   this.status='ready';

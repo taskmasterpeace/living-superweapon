@@ -193,6 +193,11 @@ export class DevConsole {
       p.faceDir(0,1);p.aim3.set(0,0,1);this.g.world._lookYaw=0;this.g.world._lookPitch=0;this.g.world._chaseSnap=true;
       c.toggle(false);
     });
+    this.cmd('creature','creature hound - live Dec-52 Threat Room encounter',(a,c)=>{
+      if(a[0]!=='hound')throw Error('Use creature hound');
+      const trial=this.g.ms?.threatLab?.meleeTrial;if(!trial)throw Error('Enter Threat Room first');
+      trial.startCreature().then(f=>{if(f){c.ok('Dec-52 hound ready');c.toggle(false);}}).catch(e=>c.err(e.message));
+    });
     this.cmd('demo','demo prepare [grab|stun] | play | record | stop — native aerial demonstrations',(a,c)=>{
       const trial=this.g.ms?.threatLab?.meleeTrial;if(!trial)throw Error('Enter Threat Room first');
       if(a[0]==='prepare'){const kind=a[1]||'grab';trial.prepareAerialDemo(kind);c.ok('Current-model '+kind+' scenario prepared. Use demo record after models load.');return;}

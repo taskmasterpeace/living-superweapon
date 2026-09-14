@@ -1,0 +1,104 @@
+{
+  "sourceCommit": "f659822ae8cbd081fc00a697731527b1b6e6da17",
+  "sourceManifest": "public/audio/sfx-cc0/final/winners-manifest.json",
+  "license": "CC0 1.0 (public domain) throughout — see packs.",
+  "provenance": "Real recordings, all CC0 / public domain (OpenGameArt). Sources per file. No AI, no synth.",
+  "pickedBy": "Robert",
+  "winners": [
+    {
+      "cue": "sfx.impact.metal",
+      "sample": "impact.metal",
+      "mapsTo": "bullet impact — metal (NEW family)",
+      "files": [
+        "sfx-cc0/final/sfx_impact_metal_a"
+      ],
+      "sources": [
+        {
+          "take": "03",
+          "source": "100cc0/metal_05.ogg",
+          "pack": "100 CC0 SFX — OpenGameArt, CC0",
+          "dur": 0.823
+        }
+      ]
+    },
+    {
+      "cue": "sfx.impact.concrete",
+      "sample": "impact.concrete",
+      "mapsTo": "bullet impact — concrete/stone (NEW family)",
+      "files": [
+        "sfx-cc0/final/sfx_impact_concrete_a",
+        "sfx-cc0/final/sfx_impact_concrete_b",
+        "sfx-cc0/final/sfx_impact_concrete_c"
+      ],
+      "sources": [
+        {
+          "take": "01",
+          "source": "100cc0/slam_01.ogg",
+          "pack": "100 CC0 SFX — OpenGameArt, CC0",
+          "dur": 0.469
+        },
+        {
+          "take": "03",
+          "source": "100cc0/slam_04.ogg",
+          "pack": "100 CC0 SFX — OpenGameArt, CC0",
+          "dur": 0.297
+        },
+        {
+          "take": "04",
+          "source": "100cc0/hit_01.ogg",
+          "pack": "100 CC0 SFX — OpenGameArt, CC0",
+          "dur": 0.256
+        }
+      ]
+    },
+    {
+      "cue": "sfx.impact.flesh",
+      "sample": "impact.flesh",
+      "mapsTo": "bullet impact — flesh (NEW family)",
+      "files": [
+        "sfx-cc0/final/sfx_impact_flesh_a",
+        "sfx-cc0/final/sfx_impact_flesh_b"
+      ],
+      "sources": [
+        {
+          "take": "04",
+          "source": "owlish/Impacts/slap2.wav",
+          "pack": "Owlish Media Sound Effects — OpenGameArt, CC0",
+          "dur": 0.466
+        },
+        {
+          "take": "05",
+          "source": "owlish/Impacts/hit.wav",
+          "pack": "Owlish Media Sound Effects — OpenGameArt, CC0",
+          "dur": 0.332
+        }
+      ]
+    }
+  ],
+  "files": [
+    {
+      "path": "public/audio/sfx-cc0/final/sfx_impact_metal_a.mp3",
+      "sha256": "db3a3753d7efc655193bb92614135760e5e994a4003b11019ca04c356356f253"
+    },
+    {
+      "path": "public/audio/sfx-cc0/final/sfx_impact_concrete_a.mp3",
+      "sha256": "89a4623c41ffbd00db687dda53c4fd6e608414bd18e2f4cfa6b00f395c891aa3"
+    },
+    {
+      "path": "public/audio/sfx-cc0/final/sfx_impact_concrete_b.mp3",
+      "sha256": "06470d05acb67d2bf51e801e9038376a6a8ad2e7df9ac22581f4354defd28127"
+    },
+    {
+      "path": "public/audio/sfx-cc0/final/sfx_impact_concrete_c.mp3",
+      "sha256": "8234e5a8144e594e0f2c160faf99406276c2f5f0ed874b943fa34114a8f2845a"
+    },
+    {
+      "path": "public/audio/sfx-cc0/final/sfx_impact_flesh_a.mp3",
+      "sha256": "a4e9519c912aa0095a68202e6d6455da485757dfd9f21522cd32c819001ece16"
+    },
+    {
+      "path": "public/audio/sfx-cc0/final/sfx_impact_flesh_b.mp3",
+      "sha256": "ef034456b7c72e94bb80376e42d0f715e7ab128c4b98fbc030c202845702c982"
+    }
+  ]
+}

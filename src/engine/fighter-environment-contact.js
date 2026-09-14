@@ -26,7 +26,7 @@ function boxContact(a,b,lx,hx,ly,hy,lz,hz,out){
 // Unlike ordinary movement, carry cannot phase through geometry or resolve an
 // initial overlap by teleporting the held body to the far side.
 export function fighterPathFraction(f,world,a,b){
-  const r=f.radius||0,h=12*(f.sizeScale||1),hit={t:Infinity};
+  const r=f.radius||0,h=f.bodyBounds?.max.y??12*(f.sizeScale||1),hit={t:Infinity};
   const box=(x,z,hx,hz,bottom,top)=>{
     if(a.x>x-hx-r&&a.x<x+hx+r&&a.z>z-hz-r&&a.z<z+hz+r&&a.y>bottom-h&&a.y<top){hit.t=0;return;}
     boxContact(a,b,x-hx-r,x+hx+r,bottom-h,top,z-hz-r,z+hz+r,hit);

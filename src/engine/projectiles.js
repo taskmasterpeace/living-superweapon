@@ -1,3 +1,4 @@
+import {ballisticContactAudio} from './ballistic-contact-audio.js';
 import {canReceiveShot} from './shot-contact-eligibility.js';
 import {fieldMotion,updateFieldProjectile,advanceFieldPacket} from './field-motion.js';
 import {BeamGroundContact} from './beam-ground-contact.js';
@@ -653,6 +654,7 @@ class Projectile {
         }
       }
       const dealt=foe.takeDamage(this.damage * this.caster.powerBuff,hitOptions);
+      ballisticContactAudio(game,this,foe,dealt);
       if(dealt>0&&this.shockDuration>0)foe.addShock(this.shockDuration,this.caster);
       if(webAccepted&&foe.alive)applyWebControl(foe,this.caster,this.webControl);
       // ACID: corrodes the plate for 5s — the counter to the armour that stops bullets
@@ -1694,7 +1696,7 @@ class BeamHose {
         // ⚠ CLOSEST POINT ON THE WHOLE POLYLINE, not on one ray from the hand. The beam bends, so
         // the hitbox has to bend with it or the damage and the picture disagree — and the picture
         // is what the player is reading.
-        const fy = f.pos.y + 5.2-(f._crouchPose?.drop||0);
+        const fy = f.pos.y + (f.bodyBounds?(f.bodyBounds.min.y+f.bodyBounds.max.y)/2:5.2-(f._crouchPose?.drop||0));
         let dd = 1e9, hx = 0, hy = 0, hz = 0, hdx = 0, hdy = 0, hdz = 0;
         for (let i = 1; i < this.pn; i++) {
           const a0 = (i - 1) * 3, b0 = i * 3;
@@ -1704,6 +1706,7 @@ class BeamHose {
           let t = ((f.pos.x - ax) * sx + (fy - ay) * sy + (f.pos.z - az) * sz) / sl2;
           t = t < 0 ? 0 : t > 1 ? 1 : t;
           const px = ax + sx * t, py = ay + sy * t, pz = az + sz * t;
+          if(f.bodyBounds&&(py<f.pos.y+f.bodyBounds.min.y-this.radius||py>f.pos.y+f.bodyBounds.max.y+this.radius))continue;
           const d2 = Math.hypot(f.pos.x - px, fy - py, f.pos.z - pz);
           if(d2<dd&&d2<this.radius+f.radius+1){
             // Contact padding cannot reach through a nearby wall. Consider each

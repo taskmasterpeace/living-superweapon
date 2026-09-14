@@ -39,8 +39,10 @@ function route(a,src,g,bus,pos) {
 
 export const MANIFEST = {...FIREARM_SAMPLES,...LIBRARY_SAMPLES,
   // ---- fists, bodies, the ground ----
-  'punch.med': { f: ['impactPunch_medium_000', 'impactPunch_medium_001', 'impactPunch_medium_002', 'impactPunch_medium_003', 'impactPunch_medium_004'], g: 0.9, reach: 150 },
-  'punch.heavy': { f: ['impactPunch_heavy_000', 'impactPunch_heavy_001', 'impactPunch_heavy_002', 'impactPunch_heavy_003', 'impactPunch_heavy_004'], g: 1.0, reach: 170 },
+  // The direct impact() fallback must use the same selected real body-contact
+  // recordings as meleeHit(), not bypass them through the older punch bank.
+  'punch.med': { f: ['sfx-cc0/final/sfx_punch_flesh_a', 'sfx-cc0/final/sfx_punch_flesh_b'], g: 0.7, reach: 150 },
+  'punch.heavy': { f: ['sfx-cc0/final/sfx_punch_flesh_a', 'sfx-cc0/final/sfx_punch_flesh_b'], g: 0.85, reach: 170 },
   'hit.soft': { f: ['impactGeneric_light_000', 'impactGeneric_light_001', 'impactGeneric_light_002', 'impactGeneric_light_003', 'impactGeneric_light_004'], g: 0.7, reach: 110 },
   'land.flesh': { f: ['impactSoft_heavy_000', 'impactSoft_heavy_001', 'impactSoft_heavy_002', 'impactSoft_heavy_003', 'impactSoft_heavy_004'], g: 0.8, reach: 120 },
   'land.soft': { f: ['impactSoft_medium_000', 'impactSoft_medium_001', 'impactSoft_medium_002', 'impactSoft_medium_003', 'impactSoft_medium_004'], g: 0.6, reach: 90 },
@@ -73,7 +75,7 @@ export const MANIFEST = {...FIREARM_SAMPLES,...LIBRARY_SAMPLES,
 
   // ---- steel and string ----
   'swing.fist': { f: ['cloth1', 'cloth2', 'cloth3', 'cloth4'], g: 0.55, reach: 80, rj: 0.12 },
-  'swing.blade': { f: ['knifeSlice', 'knifeSlice2', 'drawKnife1', 'drawKnife2', 'drawKnife3'], g: 0.6, reach: 100, rj: 0.08 },
+  'swing.blade': { f: ['knifeSlice', 'knifeSlice2'], g: 0.6, reach: 100, rj: 0.08 },
   'chop': { f: ['chop'], g: 0.7, reach: 110 },
   'bow.twang': { f: ['pluck_001', 'pluck_002'], g: 0.7, reach: 110 },
   'bow.creak': { f: ['creak1', 'creak2', 'creak3'], g: 0.5, reach: 60 },

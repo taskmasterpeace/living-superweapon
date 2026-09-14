@@ -1,0 +1,40 @@
+{
+  "sourceCommit": "f659822ae8cbd081fc00a697731527b1b6e6da17",
+  "sourceManifest": "public/audio/sfx-cc0/final/winners-manifest.json",
+  "license": "CC0 1.0 (public domain) throughout — see packs.",
+  "pickedBy": "Robert",
+  "winner": {
+    "cue": "sfx.punch.flesh",
+    "sample": "melee.flesh",
+    "mapsTo": "bare-fist body hit (NEW family)",
+    "files": [
+      "sfx-cc0/final/sfx_punch_flesh_a",
+      "sfx-cc0/final/sfx_punch_flesh_b"
+    ],
+    "sources": [
+      {
+        "take": "03",
+        "source": "owlish/Impacts/slap2.wav",
+        "pack": "Owlish Media Sound Effects — OpenGameArt, CC0",
+        "dur": 0.466
+      },
+      {
+        "take": "04",
+        "source": "owlish/Impacts/hit.wav",
+        "pack": "Owlish Media Sound Effects — OpenGameArt, CC0",
+        "dur": 0.332
+      }
+    ]
+  },
+  "files": [
+    {
+      "path": "public/audio/sfx-cc0/final/sfx_punch_flesh_a.mp3",
+      "sha256": "b84664e31f0746847fc9341e78a743b2cc2ba2b4ab362bcc88fcfcb5c04fcfe9"
+    },
+    {
+      "path": "public/audio/sfx-cc0/final/sfx_punch_flesh_b.mp3",
+      "sha256": "ef034456b7c72e94bb80376e42d0f715e7ab128c4b98fbc030c202845702c982"
+    }
+  ],
+  "integration": "Existing real flesh punch recordings reused for direct punch.med/punch.heavy fallback banks. Heavy gain differs; no new heavy recording claimed."
+}

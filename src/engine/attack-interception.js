@@ -77,8 +77,8 @@ export function earliestOrdinaryContact(p,end,dt,game,ignored=new Set()) {
   for(const f of game.entities||[]){
     if(!canReceiveShot(game,p.caster,f))continue;
     // Match overlapFoe's actual upright cylinder, including its height band.
-    const top=f._crouchPose?.top??14;
-    let time=f._pronePose?.weight?proneBoxTime(f,a,end,p.radius):cylinderTime(a,end,f.pos.x,f.pos.z,p.radius+1.5+f.radius,f.pos.y-4,f.pos.y+top);
+    const top=f.bodyBounds?.max.y??f._crouchPose?.top??14;
+    let time=f._pronePose?.weight?proneBoxTime(f,a,end,p.radius):cylinderTime(a,end,f.pos.x,f.pos.z,p.radius+1.5+f.radius,f.pos.y+(f.bodyBounds?.min.y??-4),f.pos.y+top);
     const anatomical=p.ballistic&&f.def?.zombieProfile?anatomicalBulletContact(f,a,end,p.radius):null;
     if(p.ballistic&&f.def?.zombieProfile)time=anatomical?.t??Infinity;
     const local={};

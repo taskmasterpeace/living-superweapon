@@ -13,8 +13,8 @@ export function animateCarriedObjectGrip(f){
  for(const [arm,side]of [[p.armL,-1],[p.armR,1]]){
   arm.getWorldPosition(target);mesh.worldToLocal(target);
   target.x=THREE.MathUtils.clamp(target.x,c.gripBounds.min.x,c.gripBounds.max.x);
-  target.z=THREE.MathUtils.clamp(target.z,c.gripBounds.min.z,c.gripBounds.max.z);target.y=c.gripBounds.min.y;
-  mesh.localToWorld(target);arm.parent.worldToLocal(target);reachArm(arm,target,side);
+  target.z=THREE.MathUtils.clamp(target.z,c.gripBounds.min.z,c.gripBounds.max.z);target.y=c.pickup?THREE.MathUtils.clamp(target.y,c.gripBounds.min.y,c.gripBounds.max.y):c.gripBounds.min.y;
+  mesh.localToWorld(target);arm.parent.worldToLocal(target);reachArm(arm,target,side,c.pickup?THREE.MathUtils.smoothstep(c.pickup.age/c.pickup.duration,0,.3):1);
  }
  return true;
 }

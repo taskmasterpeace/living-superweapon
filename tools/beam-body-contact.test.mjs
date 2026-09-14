@@ -191,3 +191,9 @@ test('an enemy-held teammate stops the beam before its holder, without becoming 
  assert.equal(f.hit(),true);assert.equal(f.out.fighter,held);
  holder.grabbing=null;assert.equal(f.hit(),true);assert.equal(f.out.fighter,holder);
 });
+
+test('opt-in quadruped bounds reject beams above its back and accept torso height',()=>{
+ const body=receiver(0,20,{radius:8,bodyBounds:new THREE.Box3(new THREE.Vector3(-2,0,-5),new THREE.Vector3(2,4,5))});
+ assert.equal(fixture([[0,8,0],[0,8,40]],[body],.2).hit(),false);
+ assert.equal(fixture([[0,2,0],[0,2,40]],[body],.2).hit(),true);
+});

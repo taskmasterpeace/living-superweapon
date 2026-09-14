@@ -2124,7 +2124,7 @@ export class Fighter {
     // Box3 (AABB) collision vs cover — walls block you, and you can stand on their tops
     this.onBlock = false;
     const ghost = this.sprintT > 0 && this._sprintThrough;   // VOLT sprints straight through cover
-    const lowBounds=this._pronePose?.weight?this._pronePose.bounds:null;
+    const lowBounds=this.bodyBounds||(this._pronePose?.weight?this._pronePose.bounds:null);
     const bodyHX=lowBounds?(lowBounds.max.x-lowBounds.min.x)*.5:this.radius,bodyHZ=lowBounds?(lowBounds.max.z-lowBounds.min.z)*.5:this.radius;
     const bodyOX=lowBounds?(lowBounds.max.x+lowBounds.min.x)*.5:0,bodyOZ=lowBounds?(lowBounds.max.z+lowBounds.min.z)*.5:0;
     for (const c of game.world.cover) {

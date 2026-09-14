@@ -84,7 +84,9 @@ test('grab studies compile full-body holds and preserve the free-hand choice',as
  for(const name of ['Front clinch entry','Rear body lock entry','Side grab entry','Neck hold / free right hand']){
   const m=validateAsset({...base,motion:actionDraft(name,pose)},bones).motion;
   const clip=compileAuthoredMotion({...base,motion:m});assert.ok(clip.validate());
-  assert.ok(m.markers.release-m.markers.contact>.5,'hold must survive more than a single contact frame');
+  assert.ok(m.markers.release-m.markers.contact>=.3,'hold must last at least nine frames at30Hz');
+  const midpoint=samplePose(m,(m.markers.contact+m.markers.release)/2),contact=samplePose(m,m.markers.contact);
+  for(const bone of Object.keys(contact))assert.ok(new T.Quaternion().fromArray(midpoint[bone]).normalize().angleTo(new T.Quaternion().fromArray(contact[bone]).normalize())<1e-6,'contact pose must persist until release');
   const held=m.keys.find(k=>Math.abs(k.time-m.markers.contact)<1e-6).pose;
   for(const bone of ['DEF-spine003','DEF-upper_armL','DEF-upper_armR','DEF-thighL','DEF-shinL'])assert.notDeepEqual(held[bone],pose[bone],name+' lacks '+bone+' motion');
   assert.deepEqual(m.keys.at(-1).pose,pose,'recovery should return to the captured base');
@@ -97,11 +99,16 @@ test('directional grab previews keep partners upright and align the selected soc
  const r=createContactRehearsal(actor,scene),partner=scene.getObjectByName('Interaction partner preview');
  for(const [name,style]of [['Front clinch entry','front'],['Rear body lock entry','rear'],['Side grab entry','side'],['Neck hold / free right hand','neck']])for(const size of [.6,1.6]){
   const m=validateAsset({...base,motion:actionDraft(name,pose)},bones).motion;assert.equal(m.contactStyle,style);
-  r.set('partner',size,true);r.update(.6,m);scene.updateMatrixWorld(true);
+  r.set('partner',size,true);r.update((m.markers.contact+m.markers.release)/2,m);scene.updateMatrixWorld(true);
   assert.ok(new T.Vector3(0,1,0).applyQuaternion(partner.quaternion).y>.999,'partner rolled sideways');
   const hand=actor.getObjectByName(m.hand==='left'?'DEF-handL':'DEF-handR').getWorldPosition(new T.Vector3());
   const socket=partner.getObjectByName(style==='neck'?'DEF-neck':'DEF-spine003').getWorldPosition(new T.Vector3());
   assert.ok(hand.distanceTo(socket)<1e-6,'grip drifted with partner size');
+  const releasedAt=m.markers.release;
+  r.update(releasedAt,m);scene.updateMatrixWorld(true);const releaseRoot=partner.position.clone();
+  r.update(releasedAt+.1,m);scene.updateMatrixWorld(true);
+  assert.ok(Math.abs(partner.position.z-releaseRoot.z-.3)<1e-6,'released partner must travel forward');
+  assert.ok(Math.abs(partner.position.y-releaseRoot.y+.049)<1e-6,'released partner must fall rather than remain attached');
  }
  r.dispose();
 });

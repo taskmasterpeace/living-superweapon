@@ -26,7 +26,9 @@ SoundLibrary user bindings can override these defaults; this table describes a c
 
 Jetcell activation still uses zap/power audio in `src/engine/game.js`; no verified replacement was selected in this bounded pass. Flashbang detonation now uses confirmed `gear-flashbang` IMPACT through the `flashbang-detonate` SoundLibrary cue, retaining its zap plus impact fallback. Personal shield absorption now emits `shieldpack-hit` using confirmed `gear-shield` IMPACT at the actual positive shield soak in `Fighter.takeDamage`. Both preserve chosen recordings and explicit source preferences; shield activation remains a distinct cue.
 
-Other requested wiring families such as impacts, blades, distant fire and vehicle lifecycle sounds require separate current-call-site audits; this report makes no blanket claim that they are absent or complete.
+Damaging ballistic fighter contacts now play the selected real CC0 flesh, metal or concrete/stone recording based on the fighter's explicit body material. The hook is in `Projectile.update` immediately after resolved damage and before piercing continues. It does not guess materials for cover/terrain, unknown bodies or energy beings, and does not emit a penetration sound for blocked/immune zero-damage contacts. Six source files and their Robert-selected winner rows are preserved in `public/audio/sfx-cc0/final/ballistic-body.provenance.json`. Source is real CC0 OpenGameArt audio, not the rejected DSP copies or overlapping AI takes. User bindings remain available through three `bullet-hit-*` SoundLibrary cues.
+
+Cover/terrain bullet impacts, blades, distant fire and vehicle lifecycle sounds require separate current-call-site audits; this report makes no blanket claim that they are absent or complete.
 
 ## Verification boundary
 
@@ -35,3 +37,5 @@ Other requested wiring families such as impacts, blades, distant fire and vehicl
 `tools/gadget-activation-audio.test.mjs` plus `tools/medkit-audio.test.mjs`: 14 tests passed. Actual item activation preserves jamming duration/shield HP, spends one charge, plays exactly one selected sample or the original fallback, and stays silent for spent/cooldown/no-powers rejection. Imported gadget hashes and preload membership are checked.
 
 `tools/flashbang-shield-audio.test.mjs` plus SoundLibrary recording tests: 12 passed. Covers recorded/fallback flashbang paths, spent silence, shield full/partial absorption, overflow, true-damage bypass, no-shield silence, exact confirmed IMPACT source hashes and user source preferences.
+
+`tools/ballistic-contact-audio.test.mjs`: five tests pass, including actual fast projectile-manager contacts against all three explicit body materials with piercing retained, zero-damage/unknown-body exclusions, CC0 winner provenance hashes and preload/source preferences.

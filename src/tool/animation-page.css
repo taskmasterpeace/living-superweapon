@@ -4,3 +4,6 @@
 .authoring-badge{display:block;width:fit-content;margin-top:7px;padding:3px 6px;border:1px solid var(--line-2);border-radius:4px;font-size:10px;line-height:1.3;color:var(--text-2)}.authoring-badge[data-kind=invalid],.authoring-badge[data-kind=audio-missing]{color:#ffb29a;border-color:#9d533a}.authoring-badge[data-kind=motion]{color:var(--gold);border-color:var(--line-gold)}
 
 .equipment-panel{border-bottom:1px solid var(--line);padding-bottom:12px;margin-bottom:18px}.equipment-panel h3{margin-top:16px}.equipment-panel label{margin-top:10px}.equipment-panel select{display:block;width:100%;margin-top:5px}
+
+.camera{flex-wrap:wrap;right:16px}
+main.preview-expanded{position:fixed;inset:0;z-index:20;height:100dvh;display:grid;grid-template-columns:1fr;background:var(--ink);overflow:auto}main.preview-expanded>.catalog,main.preview-expanded>.details,main.preview-expanded #appearance-status{display:none}main.preview-expanded>.viewer{display:flex;flex-direction:column;min-height:100%;height:100%}main.preview-expanded .stagebar{padding:12px 24px}main.preview-expanded #stage{flex:1;height:auto;min-height:260px}
