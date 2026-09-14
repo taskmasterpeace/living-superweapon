@@ -17,3 +17,7 @@ Sixteen audio tests pass, including local file presence, chosen/placeholder prec
 ## Workshop audition
 
 Bundled recordings now appear in workshop source labels, counts and recording filters. Play recording is enabled for them and waits for local decode; audition does not change saved custom bindings or explicit placeholder preference. Switching selection while decoding cancels that audition. Browser verified the light punch's Play recording action reaches Playing Bundled recording. Seventeen audio tests and build pass. This checks playback wiring, not subjective mix quality.
+
+## Additional firearm and footstep recordings
+
+Licensed ai-pass magnum and M107 reports now resolve from the existing magnum/amr50 voice keys. Imported the source arsenal manifest for provenance. Concrete and grass ground footstep events now use the approved four-variant CC0 sets; cadence and spatial settings remain unchanged. Eleven focused audio tests pass and build passes. Suppressed PDW remains on its existing suppressed voice; auto shotgun retains the approved pump recording as permitted by the wiring specification. Listening and the remaining weapon/vehicle/power mappings are still open.

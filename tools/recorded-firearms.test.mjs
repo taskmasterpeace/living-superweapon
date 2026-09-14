@@ -18,3 +18,9 @@ test('every mapped gun is banked, preloaded and backed by a local MP3',async()=>
 test('muted and uninitialized audio never trigger recordings',()=>{
  for(const flags of [{ok:false,muted:false},{ok:true,muted:true}])AudioBus.prototype.gunshot.call({...flags,sample:()=>{throw Error('not audible');}},1,null,null,'ar556');
 });
+test('approved ground footstep variants exist and replace prior sample families',async()=>{
+ for(const cue of ['step.concrete','step.grass']){assert.equal(MANIFEST[cue].f.length,4);for(const stem of MANIFEST[cue].f){assert.ok(stem.startsWith('sfx-cc0/final/'));await access('public/audio/'+stem+'.mp3');}}
+});
+test('magnum and anti-materiel voices select their licensed recordings',()=>{
+ for(const [voice,cue] of [['magnum','wpn.magnum'],['amr50','wpn.m107']]){let played;AudioBus.prototype.gunshot.call({ok:true,muted:false,sample:n=>{played=n;return true;}},1,null,null,voice);assert.equal(played,cue);}
+});

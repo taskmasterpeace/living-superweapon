@@ -48,8 +48,8 @@ export const MANIFEST = {...FIREARM_SAMPLES,...LIBRARY_SAMPLES,
   'metal.hit': { f: ['impactMetal_light_000', 'impactMetal_light_001', 'impactMetal_light_002', 'impactMetal_light_003', 'impactMetal_light_004'], g: 0.8, reach: 130 },
   'metal.med': { f: ['impactMetal_medium_000', 'impactMetal_medium_001', 'impactMetal_medium_002', 'impactMetal_medium_003', 'impactMetal_medium_004'], g: 0.85, reach: 140 },
   'parry': { f: ['impactBell_heavy_000', 'impactBell_heavy_001'], g: 0.7, reach: 160 },
-  'step.concrete': { f: ['footstep_concrete_000', 'footstep_concrete_001', 'footstep_concrete_002', 'footstep_concrete_003', 'footstep_concrete_004'], g: 0.4, reach: 55, rj: 0.1 },
-  'step.grass': { f: ['footstep_grass_000', 'footstep_grass_001', 'footstep_grass_002', 'footstep_grass_003', 'footstep_grass_004'], g: 0.4, reach: 55, rj: 0.1 },
+  'step.concrete': { f: ['sfx-cc0/final/sfx_step_concrete_a', 'sfx-cc0/final/sfx_step_concrete_b', 'sfx-cc0/final/sfx_step_concrete_c', 'sfx-cc0/final/sfx_step_concrete_d'], g: 0.4, reach: 55, rj: 0.1 },
+  'step.grass': { f: ['sfx-cc0/final/sfx_step_grass_a', 'sfx-cc0/final/sfx_step_grass_b', 'sfx-cc0/final/sfx_step_grass_c', 'sfx-cc0/final/sfx_step_grass_d'], g: 0.4, reach: 55, rj: 0.1 },
 
   // ---- the city breaking ----
   'boom': { f: ['explosionCrunch_000', 'explosionCrunch_001', 'explosionCrunch_002', 'explosionCrunch_003', 'explosionCrunch_004'], g: 1.0, reach: 250 },
