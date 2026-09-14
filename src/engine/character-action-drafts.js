@@ -30,8 +30,10 @@ export function createContactRehearsal(actor,scene){
  return {set(next,scale=1,flying=false){mode=next;partnerScale=scale;air=flying;if(mode==='none'){prop.visible=false;other.visible=false;}},update(time,motion){
   prop.visible=mode==='prop';other.visible=mode==='partner';if(mode==='none')return;
   const hand=actor.getObjectByName(motion?.hand==='left'?'DEF-handL':'DEF-handR');if(!hand||!motion)return;actor.updateMatrixWorld(true);
+  const otherHand=motion.hand==='both'?actor.getObjectByName('DEF-handL'):null;
+  const handContact=out=>{hand.getWorldPosition(out);if(otherHand)out.lerp(otherHand.getWorldPosition(new T.Vector3()),.5);return out;};
   const contactStyle=motion.contactStyle||'carry',socketName=contactStyle==='neck'?'DEF-neck':'DEF-spine003';
-  const target=mode==='prop'?prop:other,handPos=hand.getWorldPosition(new T.Vector3());
+  const target=mode==='prop'?prop:other,handPos=handContact(new T.Vector3());
   if(mode==='partner'){
    // Start from the study's reference pose, not the editor's current attack frame.
    // Absolute assignment makes direct seeks and repeated samples deterministic.
@@ -50,7 +52,7 @@ export function createContactRehearsal(actor,scene){
    const saved=[];for(const [name,q]of Object.entries(motion.keys?.length?samplePose(motion,motion.markers.release):{})){const bone=actor.getObjectByName(name);if(bone){saved.push([bone,bone.quaternion.clone()]);bone.quaternion.fromArray(q);}}
    const hips=actor.getObjectByName('DEF-hips'),savedHips=hips?.position.clone(),bodyPosition=motion.keys?.length?sampleBodyPosition(motion,motion.markers.release):null;
    if(bodyPosition&&hips)hips.position.fromArray(bodyPosition);
-   actor.updateMatrixWorld(true);hand.getWorldPosition(handPos);
+   actor.updateMatrixWorld(true);handContact(handPos);
    for(const [bone,q]of saved)bone.quaternion.copy(q);if(savedHips)hips.position.copy(savedHips);actor.updateMatrixWorld(true);
    target.position.copy(handPos);
    if(mode==='partner'){other.updateMatrixWorld(true);const socket=other.getObjectByName(socketName);if(socket)target.position.sub(socket.getWorldPosition(new T.Vector3()).sub(other.position));}

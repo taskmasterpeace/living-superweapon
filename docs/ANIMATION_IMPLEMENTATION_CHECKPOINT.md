@@ -152,3 +152,8 @@ The release rehearsal samples the exact release-time body position and restores 
 Grounded studies can now bake hip-position keys from the production rig's foot anchors, preserving their baseline support plane at each authored key and restoring the editor actor afterward. Ground pickup uses this in both the shared catalog and editor. Its support arms were lowered from the face toward the waist. Browser contact/release inspection confirmed the new lowering and support silhouette.
 
 Seventeen actual-rig/catalog/authoring tests and build pass. The ground-pickup rejection remains: foot-anchor alignment is not sole-volume contact, between-key foot planting and payload grip still need review, and the full sequence is not approved for gameplay. Issue #21 remains open.
+# Two-handed pickup contact metadata
+
+Ground and flying pickup now declare `hand: both`; validation and clip metadata preserve that alongside left/right actions. Contact rehearsal centers the object at the midpoint of both hand sockets, including its sampled release origin, instead of attaching a two-handed load to the right hand. Existing one-handed throws and neck holds keep their selected hand.
+
+The actual-rig contact regression failed before the change. Eighteen authoring/catalog/pickup tests and build pass. This is a contact-preview and authoring contract, not a new gameplay carry mode; hand-to-payload surface alignment remains part of #21.

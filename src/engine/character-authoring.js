@@ -14,7 +14,7 @@ export function validateAsset(input,bones){
   return {name:String(p.name||'Part').slice(0,60),bone:p.bone,shape:p.shape,color:p.color,position:vector(p.position,3,-3,3,'position'),rotation:vector(p.rotation,3,-Math.PI*2,Math.PI*2,'rotation'),size:vector(p.size,3,.001,3,'size')};
  });
  if(input.motion){
-  const m=input.motion;if(m.hand!==undefined&&!['left','right'].includes(m.hand))throw Error('Invalid motion hand');const d=finite(m.duration,.1,30,'duration');
+  const m=input.motion;if(m.hand!==undefined&&!['left','right','both'].includes(m.hand))throw Error('Invalid motion hand');const d=finite(m.duration,.1,30,'duration');
   if(m.contactStyle!==undefined&&!['carry','front','rear','side','neck'].includes(m.contactStyle))throw Error('Invalid contact style');
   let visualReview;
   if(m.visualReview!==undefined){

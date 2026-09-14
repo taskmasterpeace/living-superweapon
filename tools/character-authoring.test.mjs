@@ -44,6 +44,16 @@ test('small carrier and large partner preserve hand-to-torso contact',async()=>{
  const g=await loadActual(),scene=new T.Scene(),actor=g.scene;actor.scale.setScalar(.6);scene.add(actor);const r=createContactRehearsal(actor,scene),m={markers:{contact:.3,release:.8}};r.set('partner',1.6,true);r.update(.5,m);scene.updateMatrixWorld(true);
  const partner=scene.getObjectByName('Interaction partner preview'),a=actor.getObjectByName('DEF-handR').getWorldPosition(new T.Vector3()),b=partner.getObjectByName('DEF-spine003').getWorldPosition(new T.Vector3());assert.ok(a.distanceTo(b)<1e-6);r.dispose();assert.equal(scene.getObjectByName('Interaction partner preview'),undefined);
 });
+
+test('two-handed object pickup centers its load between both hands',async()=>{
+ const g=await loadActual(),scene=new T.Scene(),actor=g.scene,pose={},bones=[];scene.add(actor);
+ actor.traverse(o=>{if(o.isBone){pose[o.name]=o.quaternion.toArray();bones.push(o.name);}});
+ const m=validateAsset({...base,motion:actionDraft('Ground pickup',pose,actor)},bones).motion;
+ assert.equal(m.hand,'both');
+ const r=createContactRehearsal(actor,scene);r.set('prop');r.update(m.markers.contact,m);
+ const prop=scene.children.find(o=>o.isMesh),middle=actor.getObjectByName('DEF-handL').getWorldPosition(new T.Vector3()).lerp(actor.getObjectByName('DEF-handR').getWorldPosition(new T.Vector3()),.5);
+ assert.ok(prop.position.distanceTo(middle)<1e-6,'load was anchored to only one hand');r.dispose();
+});
 test('grab partner does not inherit the editor actor attack pose',async()=>{
  const g=await loadActual(),actor=g.scene,scene=new T.Scene();scene.add(actor);const pose={};
  actor.traverse(o=>{if(o.isBone)pose[o.name]=o.quaternion.toArray();});
