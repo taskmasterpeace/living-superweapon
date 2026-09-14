@@ -15,11 +15,10 @@
 // writing a rule about it — and why `pierce` on the anti-materiel rifle is the interesting stat
 // rather than raw damage.
 //
-// ⚠ SOUND IS SYNTHESIZED, AND THAT IS A DECISION. The CC0 sample library has no true gunfire
-// (documented in the sample-bank notes), so every firearm here carries a VOICE PROFILE instead —
-// calibre, action, barrel, and the room slap — and audio.gunshot builds the report from it. A
-// generic "bang.ogg" on twelve weapons would be worse than the synth, because the whole point of
-// having twelve is that you can hear which one is shooting at you.
+// Firearm voice keys select bundled recordings through data/firearm-recordings.js.
+// Audio.gunshot retains the profiles below as fallbacks when a matching recording
+// is absent or not decoded. Not every suppressed/reload cue has a verified take.
+// See docs/AUDIO_REMAINING_RUNTIME_GAPS_2026-09-14.md for current integration status.
 
 // -------------------------------------------------------------------------------------------------
 // VOICE PROFILES. `crack` is the supersonic transient (brightness), `body` the chest thump in Hz,

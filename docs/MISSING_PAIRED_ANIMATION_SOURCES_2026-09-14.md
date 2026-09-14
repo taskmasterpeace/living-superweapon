@@ -1,6 +1,6 @@
 # Missing paired animation sources — 14 September 2026
 
-Recommendation: review the **Silent Grab & Hostage** preview first. It explicitly lists rear-control and victim-struggle files, filling the current gap more directly than another solo fighting pack. No purchase or paid download was performed. This is listing verification, not frame-by-frame visual acceptance.
+Current direction: **reuse and adapt our existing motion first**, per the user's subsequent review. See `REUSE_FIRST_FLIGHT_MELEE_PLAN_2026-09-14.md`. These external sources remain optional references if that work leaves a concrete gap. Silent Grab & Hostage explicitly lists rear-control and victim-struggle files. No purchase or paid download was performed. This is listing verification, not frame-by-frame visual acceptance.
 
 ## 1. Raise Creation — Silent Grab & Hostage Animation Pack
 
