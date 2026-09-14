@@ -1,3 +1,4 @@
+import {SOUND_LIBRARY_SAMPLES} from '../data/sound-library-recordings.js';
 import {SOUND_CUES,SOUND_CUE_BY_ID,generationBrief} from '../data/sound-library.js';
 
 export const SOUND_LIBRARY_KEY='lsw.sound-library.v1';
@@ -113,7 +114,7 @@ export class SoundLibrary {
  }
  removeRecording(id){this.cue(id);const next=this.exportPackage();delete next.bindings[id];this._commit(next);this.buffers.delete(id);this.stop();}
  setSettings(id,value){this.cue(id);const next=this.exportPackage();next.settings[id]=settings({...next.settings[id],...value});this._commit(next);}
- source(id){this.cue(id);return this.state.settings[id]?.source!=='placeholder'&&this.state.bindings[id]?'chosen-recording':'synthesized-placeholder';}
+ source(id){this.cue(id);if(this.state.settings[id]?.source==='placeholder')return 'synthesized-placeholder';return this.state.bindings[id]?'chosen-recording':SOUND_LIBRARY_SAMPLES[id]?'bundled-recording':'synthesized-placeholder';}
  eventGate(id,options){const result=this.gate.evaluate(this.cue(id),options);this._record({id,...result,speaker:options?.speaker});return result;}
  _record(e){this.events.push({...e,time:this.ctx?.currentTime??0});if(this.events.length>40)this.events.shift();}
  audition(id,options={}){this.stop();return this.play(id,{...options,audition:true});}
@@ -122,7 +123,7 @@ export class SoundLibrary {
   if(event){const decision=this.eventGate(id,event);if(!decision.accepted)return null;}
   const authored=this.state.settings[id]||{},loop=loopOverride??authored.loop??cue.loop,now=ctx.currentTime;
   if(!audition&&(now-(this.lastCue.get(id)??-Infinity)<cue.cooldown||[...this.active].filter(h=>h.id===id).length>=cue.concurrency)){this._record({id,accepted:false,reason:'sfx-cooldown-or-concurrency'});return null;}
-  const selected=source||this.source(id),decoded=this.buffers.get(id),recording=selected==='chosen-recording'&&decoded?.data===this.state.bindings[id]?.data?decoded.buffer:null;
+  const selected=source||this.source(id),decoded=this.buffers.get(id),recording=selected==='chosen-recording'&&decoded?.data===this.state.bindings[id]?.data?decoded.buffer:selected==='bundled-recording'?this.audio?.sampleBuffer?.(SOUND_LIBRARY_SAMPLES[id]):null;
   if(selected==='chosen-recording'&&!recording){this._record({id,accepted:false,reason:'recording-not-decoded'});return null;}
   const reach=cue.reach??150;
   const out=ctx.createGain(),baseLevel=Math.max(0,Math.min(1,Number.isFinite(gain)?gain:1))*(authored.gain??cue.gain),level=baseLevel*(audition?1:(this.audio?._pg?.(pos,reach)??1));
@@ -139,7 +140,7 @@ export class SoundLibrary {
   }
   let stopped=false;
   const cleanup=()=>{this.active.delete(handle);this.audio?._sus?.delete(handle);for(const n of [...sources,...nodes,out])try{n.disconnect();}catch{}};
-  const handle={id,source:recording?'chosen-recording':'synthesized-placeholder',name:recording?this.state.bindings[id].name:null,loop,last:performance.now(),
+  const handle={id,source:recording?selected:'synthesized-placeholder',name:recording?(selected==='bundled-recording'?SOUND_LIBRARY_SAMPLES[id]:this.state.bindings[id].name):null,loop,last:performance.now(),
    stop:()=>{
     if(stopped)return;stopped=true;const t=ctx.currentTime;
     out.gain.cancelScheduledValues(t);out.gain.setTargetAtTime(.00001,t,.015);
@@ -157,6 +158,6 @@ export class SoundLibrary {
   this.active.add(handle);this.lastCue.set(id,now);this.lastPlayback={id,source:handle.source,name:handle.name,loop,time:now,native:!audition};this._record({...this.lastPlayback,accepted:true,reason:'playing'});return handle;
  }
  // Synchronous native contact: never queue a stale hit while decoding a file.
- native(id,options={}){if(this.source(id)!=='chosen-recording'||!this.buffers.has(id))return false;try{this.play(id,{...options,loop:false});return true;}catch(e){this.error=e.message;return false;}}
+ native(id,options={}){const selected=this.source(id);if(selected==='bundled-recording'){if(!this.audio?.sampleBuffer?.(SOUND_LIBRARY_SAMPLES[id]))return false;}else if(selected!=='chosen-recording'||!this.buffers.has(id))return false;try{this.play(id,{...options,loop:false});return true;}catch(e){this.error=e.message;return false;}}
  stop(){for(const h of [...this.active])h.stop();}
 }

@@ -3,18 +3,9 @@ import {FIREARM_RECORDINGS} from '../data/firearm-recordings.js';
 // Kenney CC0, /public/audio — still fully offline); the synth bodies below remain as cold-cache
 // fallbacks and as the crafted voices samples can't replace (ki sustain, siren, splash, arcs).
 //
-// ================================ THE AUDIO CONTRACT ============================================
-// (aaa-07-audio.md §0 / POWERWORLD_AAA §1.9 — stated once because two rulings looked contradictory.)
-//   Every sound in this game is either (a) a CC0 recording we hold on disk, or (b) DSP we wrote,
-//   driven by parameters the engine already computes, usually layered on top of (a). NOTHING is
-//   ever produced by an AI audio model, and NO sound is ever fetched at runtime.
-// `gunshot()` (below) is the proof and the template: a recorded plate transient + three generated
-// layers from four scalars per weapon → 13 weapons, 13 signatures, zero AI, zero per-weapon assets.
-// `data/sfx.js` generalises that to all 364 powers (ATTACK × GRAIN × BODY × TAIL). The provenance of
-// every recorded family is the checked-in ledger `docs/AUDIO_SOURCES.md` — a ledger is the only
-// enforceable form of "no AI sounds". Hero VOICE lines are OUT unless a human records them
-// (`heroVoice` is false by default); no AI-TTS bark pipeline is used or planned.
-// ===============================================================================================
+// Approved CC0 recordings win overlapping cues; licensed ai-pass recordings are allowed.
+// See AUDIO_WIRING_SPEC.md and AUDIO_INTEGRATION_CHECKPOINT.md for mapping and provenance.
+// Bundled files are fetched locally and decoded lazily; procedural audio covers cold caches.
 //
 // THE MIX. Everything used to connect straight to a single master gain, so there was no way to
 // turn the music down without turning the punches down. There is now a real bus structure:
@@ -85,6 +76,11 @@ export class AudioBus {
     if (!this.ctx) return false;
     if (!this._bank) { this._bank = new SampleBank(this); this._bank.preload(HOT_SET); }
     return this._bank.play(name, o);
+  }
+  sampleBuffer(name) {
+    if(!this.ctx)return null;
+    if(!this._bank){this._bank=new SampleBank(this);this._bank.preload(HOT_SET);}
+    return this._bank.buffer(name);
   }
   sampleLoop(name, o) {
     if (!this.ctx) return null;

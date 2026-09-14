@@ -7,3 +7,9 @@ Implemented: approved CC0 AK, M16, SMG, SAW, pistol, bolt rifle, battle rifle an
 Verification: four tests exercise recording selection, no duplicate synth shot, cold-cache fallback, mute gating, bank/preload membership and file existence. Production build passes. Listening in live gameplay is still required for mix approval.
 
 Outstanding: ai-pass import and mapping, other CC0 event mappings, SoundLibrary vehicle/weather/scout/reload path, loop lifetime and positioning review, ambient choices and the source gap analysis. ElevenLabs license clearance was supplied by the user; do not reopen that gate. Animation priorities remain pickups, grabs, punches, kicks and lunges; two-person rescue remains excluded.
+
+## Bundled SoundLibrary defaults
+
+SoundLibrary now resolves approved bundled samples through the shared decoded sample bank. Current defaults: CC0 light/heavy body impact and scout gunshot; licensed ai-pass rain, storm-domain rain/thunder, and grenade release. User bindings and explicit placeholder selection take precedence. Existing SoundLibrary cooldowns, event gating, positional playback and loop watchdog remain the owners. Native replacement waits for decoded data without queuing a stale impact.
+
+Sixteen audio tests pass, including local file presence, chosen/placeholder precedence, synchronous fallback and actual buffer loop cleanup. Build passes. Remaining: listening/mix review, bundled-source presentation and audition in Sound Library UI, additional ai-pass mappings and vehicle/aircraft/reload recordings. No claim that the whole audio package is integrated.
