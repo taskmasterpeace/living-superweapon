@@ -31,7 +31,15 @@ export function createContactRehearsal(actor,scene){
   const hand=actor.getObjectByName(motion?.hand==='left'?'DEF-handL':'DEF-handR');if(!hand||!motion)return;actor.updateMatrixWorld(true);
   const contactStyle=motion.contactStyle||'carry',socketName=contactStyle==='neck'?'DEF-neck':'DEF-spine003';
   const target=mode==='prop'?prop:other,handPos=hand.getWorldPosition(new T.Vector3());
-  if(mode==='partner'){other.scale.copy(actor.scale).multiplyScalar(partnerScale);for(const name of ['DEF-thighL','DEF-thighR','DEF-shinL','DEF-shinR']){const b=other.getObjectByName(name);if(b)b.rotation.x=.3;}other.quaternion.copy(actor.quaternion).multiply(new T.Quaternion().setFromAxisAngle(contactStyle==='carry'?new T.Vector3(0,0,1):new T.Vector3(0,1,0),contactStyle==='carry'||contactStyle==='side'?Math.PI/2:contactStyle==='rear'?0:Math.PI));}
+  if(mode==='partner'){
+   // Start from the study's reference pose, not the editor's current attack frame.
+   // Absolute assignment makes direct seeks and repeated samples deterministic.
+   for(const [name,q]of Object.entries(motion.keys?.[0]?.pose||{})){
+    const bone=other.getObjectByName(name);if(bone?.isBone)bone.quaternion.fromArray(q);
+   }
+   other.scale.copy(actor.scale).multiplyScalar(partnerScale);
+   other.quaternion.copy(actor.quaternion).multiply(new T.Quaternion().setFromAxisAngle(contactStyle==='carry'?new T.Vector3(0,0,1):new T.Vector3(0,1,0),contactStyle==='carry'||contactStyle==='side'?Math.PI/2:contactStyle==='rear'?0:Math.PI));
+  }
   const root=actor.getWorldPosition(new T.Vector3());target.position.copy(root).add(new T.Vector3(1.7,air?2:0,1.5));
   if(time<motion.markers.release){const approach=target.position.clone(),u=Math.min(1,time/Math.max(.001,motion.markers.contact)),smooth=u*u*(3-2*u);target.position.copy(handPos);if(mode==='partner'){
    // Align partner upper torso to the carrier hand; scale does not change the contact.

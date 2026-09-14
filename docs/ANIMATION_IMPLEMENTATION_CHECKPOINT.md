@@ -113,3 +113,8 @@ Regression: six real-fighter phase/status cases; four failed before the fix. Nin
 Ground pickup and Flying pickup now use six-key full-body sequences instead of a single spine/arm rotation. Both arms reach and fold into support; ground pickup flexes hips/knees, while flying pickup trails the legs. They are available through the shared animation catalog and character editor under the existing names.
 
 These are candidate authored studies, not approved mocap or assigned gameplay animations. Payload IK, grounded support/root-height adjustment and multi-angle playback review remain required before assignment. Their contact/release markers describe the preview, not a forced duration for a gameplay carry. The real-rig regression failed on the old idle left arm and now passes; shared catalog validation and build pass.
+# Deterministic partner base pose
+
+Grab rehearsal now restores the partner from the selected motion's first-key pose on each sample. It no longer inherits the editor's current attacking limbs or overwrites the imported leg rotations with an arbitrary Euler angle. A regression created the preview from a raised-leg attack and failed before the fix; all 16 authoring/pickup tests and build now pass.
+
+This addresses pose contamination only. Issue #19 remains open for distinct victim resistance, suspended hold and release reactions, plus visual approval. A supplied first-key pose must itself be a suitable reference; the tool does not invent an approved victim animation.

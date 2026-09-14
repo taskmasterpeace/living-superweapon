@@ -44,6 +44,19 @@ test('small carrier and large partner preserve hand-to-torso contact',async()=>{
  const g=await loadActual(),scene=new T.Scene(),actor=g.scene;actor.scale.setScalar(.6);scene.add(actor);const r=createContactRehearsal(actor,scene),m={markers:{contact:.3,release:.8}};r.set('partner',1.6,true);r.update(.5,m);scene.updateMatrixWorld(true);
  const partner=scene.getObjectByName('Interaction partner preview'),a=actor.getObjectByName('DEF-handR').getWorldPosition(new T.Vector3()),b=partner.getObjectByName('DEF-spine003').getWorldPosition(new T.Vector3());assert.ok(a.distanceTo(b)<1e-6);r.dispose();assert.equal(scene.getObjectByName('Interaction partner preview'),undefined);
 });
+test('grab partner does not inherit the editor actor attack pose',async()=>{
+ const g=await loadActual(),actor=g.scene,scene=new T.Scene();scene.add(actor);const pose={};
+ actor.traverse(o=>{if(o.isBone)pose[o.name]=o.quaternion.toArray();});
+ const m=actionDraft('Front clinch entry',pose);
+ actor.getObjectByName('DEF-thighL').rotation.set(-2,.5,.8);
+ actor.getObjectByName('DEF-upper_armR').rotation.set(2,1,.5);
+ const r=createContactRehearsal(actor,scene);r.set('partner');r.update(.6,m);
+ const partner=scene.getObjectByName('Interaction partner preview');
+ for(const name of ['DEF-thighL','DEF-upper_armR'])assert.ok(new T.Quaternion().fromArray(pose[name]).angleTo(partner.getObjectByName(name).quaternion)<1e-6,name+' inherited the active attack');
+ const q=partner.getObjectByName('DEF-thighL').quaternion.clone();r.update(.1,m);r.update(.6,m);
+ assert.ok(q.angleTo(partner.getObjectByName('DEF-thighL').quaternion)<1e-6,'pose accumulates across seeks');r.dispose();
+});
+
 test('modular defaults retain explicit alternative body choice',()=>{assert.equal(heroModelOf({id:'vega'}).body,'faceted-v1');assert.equal(heroModelOf({id:'vega',model:{body:'procedural'}}).body,'procedural');});
 test('partner release is identical after direct seek and sequential playback',async()=>{
  const g=await loadActual(),scene=new T.Scene(),actor=g.scene;scene.add(actor);
