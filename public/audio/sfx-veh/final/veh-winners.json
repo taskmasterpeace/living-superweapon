@@ -1,0 +1,65 @@
+{
+  "format": "lsw.sfx-veh.winners",
+  "license": "CC0 (car pack, metal SFX — OpenGameArt)",
+  "counts": {
+    "sounds": 11,
+    "files": 15
+  },
+  "winners": [
+    {
+      "cue": "veh.start",
+      "sample": "veh.start",
+      "files": 1
+    },
+    {
+      "cue": "veh.idle",
+      "sample": "veh.idle",
+      "files": 1
+    },
+    {
+      "cue": "veh.accel",
+      "sample": "veh.accel",
+      "files": 2
+    },
+    {
+      "cue": "veh.off",
+      "sample": "veh.off",
+      "files": 1
+    },
+    {
+      "cue": "veh.door.open",
+      "sample": "veh.door.open",
+      "files": 1
+    },
+    {
+      "cue": "veh.door.close",
+      "sample": "veh.door.close",
+      "files": 1
+    },
+    {
+      "cue": "veh.hood",
+      "sample": "veh.hood",
+      "files": 2
+    },
+    {
+      "cue": "veh.trunk",
+      "sample": "veh.trunk",
+      "files": 1
+    },
+    {
+      "cue": "veh.horn",
+      "sample": "veh.horn",
+      "files": 1
+    },
+    {
+      "cue": "veh.brake",
+      "sample": "veh.brake",
+      "files": 1
+    },
+    {
+      "cue": "veh.impact",
+      "sample": "veh.impact",
+      "files": 3
+    }
+  ]
+}

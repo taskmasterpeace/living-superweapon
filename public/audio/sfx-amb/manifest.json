@@ -1,0 +1,237 @@
+{
+  "format": "lsw.sfx-amb.manifest",
+  "version": 1,
+  "note": "Ambient/zone loops. All CC0 except amb.wind = CC-BY InspectorJ/AntumDeluge (attribute).",
+  "counts": {
+    "cues": 7,
+    "files": 25
+  },
+  "cues": [
+    {
+      "cue": "amb.wind",
+      "loop": true,
+      "spec": "WIND bed — the audio indicator for the wind that pushes you around. 3 flavours from one real recording (raw / distant-soft / gusty-bright).",
+      "takes": 3,
+      "license": "CC-BY 3.0 — InspectorJ / AntumDeluge (Wind Loop, OpenGameArt)"
+    },
+    {
+      "cue": "amb.rain",
+      "loop": true,
+      "spec": "RAIN bed for a rainy theatre.",
+      "takes": 2,
+      "license": "CC0 1.0 (30 CC0 SFX loops — OpenGameArt)"
+    },
+    {
+      "cue": "gen.hum",
+      "loop": true,
+      "spec": "GENERATOR / reactor hum — steady electrical/machine loop under a generator you can hit. 6 options.",
+      "takes": 6,
+      "license": "CC0 1.0 (30 CC0 SFX loops — OpenGameArt)"
+    },
+    {
+      "cue": "amb.machinery",
+      "loop": true,
+      "spec": "MACHINERY / industrial zone bed (factory, works district). 5 options.",
+      "takes": 5,
+      "license": "CC0 1.0 (30 CC0 SFX loops — OpenGameArt)"
+    },
+    {
+      "cue": "amb.bed",
+      "loop": true,
+      "spec": "General AMBIENT zone atmosphere (room tone / open air). 3 options.",
+      "takes": 3,
+      "license": "CC0 1.0 (30 CC0 SFX loops — OpenGameArt)"
+    },
+    {
+      "cue": "amb.alarm",
+      "loop": true,
+      "spec": "ALARM / warning loop — base breach, generator overload, red alert. 3 options.",
+      "takes": 3,
+      "license": "CC0 1.0 (30 CC0 SFX loops — OpenGameArt)"
+    },
+    {
+      "cue": "amb.water",
+      "loop": true,
+      "spec": "WATER / pump — flowing water + industrial pump beds.",
+      "takes": 3,
+      "license": "CC0 1.0 (30 CC0 SFX loops — OpenGameArt)"
+    }
+  ],
+  "files": [
+    {
+      "cue": "amb.wind",
+      "take": 1,
+      "stem": "amb_wind_01",
+      "license": "CC-BY 3.0 — InspectorJ / AntumDeluge (Wind Loop, OpenGameArt)",
+      "filter": ""
+    },
+    {
+      "cue": "amb.wind",
+      "take": 2,
+      "stem": "amb_wind_02",
+      "license": "CC-BY 3.0 — InspectorJ / AntumDeluge (Wind Loop, OpenGameArt)",
+      "filter": "lowpass=f=1100"
+    },
+    {
+      "cue": "amb.wind",
+      "take": 3,
+      "stem": "amb_wind_03",
+      "license": "CC-BY 3.0 — InspectorJ / AntumDeluge (Wind Loop, OpenGameArt)",
+      "filter": "highpass=f=280,volume=2dB"
+    },
+    {
+      "cue": "amb.rain",
+      "take": 1,
+      "stem": "amb_rain_01",
+      "license": "CC0 1.0 (30 CC0 SFX loops — OpenGameArt)",
+      "filter": ""
+    },
+    {
+      "cue": "amb.rain",
+      "take": 2,
+      "stem": "amb_rain_02",
+      "license": "CC0 1.0 (30 CC0 SFX loops — OpenGameArt)",
+      "filter": "lowpass=f=2200"
+    },
+    {
+      "cue": "gen.hum",
+      "take": 1,
+      "stem": "gen_hum_01",
+      "license": "CC0 1.0 (30 CC0 SFX loops — OpenGameArt)",
+      "filter": ""
+    },
+    {
+      "cue": "gen.hum",
+      "take": 2,
+      "stem": "gen_hum_02",
+      "license": "CC0 1.0 (30 CC0 SFX loops — OpenGameArt)",
+      "filter": ""
+    },
+    {
+      "cue": "gen.hum",
+      "take": 3,
+      "stem": "gen_hum_03",
+      "license": "CC0 1.0 (30 CC0 SFX loops — OpenGameArt)",
+      "filter": ""
+    },
+    {
+      "cue": "gen.hum",
+      "take": 4,
+      "stem": "gen_hum_04",
+      "license": "CC0 1.0 (30 CC0 SFX loops — OpenGameArt)",
+      "filter": ""
+    },
+    {
+      "cue": "gen.hum",
+      "take": 5,
+      "stem": "gen_hum_05",
+      "license": "CC0 1.0 (30 CC0 SFX loops — OpenGameArt)",
+      "filter": ""
+    },
+    {
+      "cue": "gen.hum",
+      "take": 6,
+      "stem": "gen_hum_06",
+      "license": "CC0 1.0 (30 CC0 SFX loops — OpenGameArt)",
+      "filter": ""
+    },
+    {
+      "cue": "amb.machinery",
+      "take": 1,
+      "stem": "amb_machinery_01",
+      "license": "CC0 1.0 (30 CC0 SFX loops — OpenGameArt)",
+      "filter": ""
+    },
+    {
+      "cue": "amb.machinery",
+      "take": 2,
+      "stem": "amb_machinery_02",
+      "license": "CC0 1.0 (30 CC0 SFX loops — OpenGameArt)",
+      "filter": ""
+    },
+    {
+      "cue": "amb.machinery",
+      "take": 3,
+      "stem": "amb_machinery_03",
+      "license": "CC0 1.0 (30 CC0 SFX loops — OpenGameArt)",
+      "filter": ""
+    },
+    {
+      "cue": "amb.machinery",
+      "take": 4,
+      "stem": "amb_machinery_04",
+      "license": "CC0 1.0 (30 CC0 SFX loops — OpenGameArt)",
+      "filter": ""
+    },
+    {
+      "cue": "amb.machinery",
+      "take": 5,
+      "stem": "amb_machinery_05",
+      "license": "CC0 1.0 (30 CC0 SFX loops — OpenGameArt)",
+      "filter": ""
+    },
+    {
+      "cue": "amb.bed",
+      "take": 1,
+      "stem": "amb_bed_01",
+      "license": "CC0 1.0 (30 CC0 SFX loops — OpenGameArt)",
+      "filter": ""
+    },
+    {
+      "cue": "amb.bed",
+      "take": 2,
+      "stem": "amb_bed_02",
+      "license": "CC0 1.0 (30 CC0 SFX loops — OpenGameArt)",
+      "filter": ""
+    },
+    {
+      "cue": "amb.bed",
+      "take": 3,
+      "stem": "amb_bed_03",
+      "license": "CC0 1.0 (30 CC0 SFX loops — OpenGameArt)",
+      "filter": ""
+    },
+    {
+      "cue": "amb.alarm",
+      "take": 1,
+      "stem": "amb_alarm_01",
+      "license": "CC0 1.0 (30 CC0 SFX loops — OpenGameArt)",
+      "filter": ""
+    },
+    {
+      "cue": "amb.alarm",
+      "take": 2,
+      "stem": "amb_alarm_02",
+      "license": "CC0 1.0 (30 CC0 SFX loops — OpenGameArt)",
+      "filter": ""
+    },
+    {
+      "cue": "amb.alarm",
+      "take": 3,
+      "stem": "amb_alarm_03",
+      "license": "CC0 1.0 (30 CC0 SFX loops — OpenGameArt)",
+      "filter": ""
+    },
+    {
+      "cue": "amb.water",
+      "take": 1,
+      "stem": "amb_water_01",
+      "license": "CC0 1.0 (30 CC0 SFX loops — OpenGameArt)",
+      "filter": ""
+    },
+    {
+      "cue": "amb.water",
+      "take": 2,
+      "stem": "amb_water_02",
+      "license": "CC0 1.0 (30 CC0 SFX loops — OpenGameArt)",
+      "filter": ""
+    },
+    {
+      "cue": "amb.water",
+      "take": 3,
+      "stem": "amb_water_03",
+      "license": "CC0 1.0 (30 CC0 SFX loops — OpenGameArt)",
+      "filter": ""
+    }
+  ]
+}
