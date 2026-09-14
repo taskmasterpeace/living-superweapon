@@ -119,7 +119,7 @@ test('modular body preserves native interaction and jump owners instead of repla
  const def=structuredClone(ROSTER.find(d=>d.id==='vega'));const f=new Fighter(def);f._animate(0);
  const c=await loadModularCharacter(f,{load:output});
  const arm=c.actor.getObjectByName(T.PropertyBinding.sanitizeNodeName('DEF-upper_arm.L'));
- for(const state of [{hanging:{}},{_grapple:{zip:true}},{_carry:{}},{_jumpMotion:{applied:true,mode:'fall'}},{meleeCharge:.5},{crouching:true}]){
+ for(const state of [{_firearmReload:{elapsed:.5}},{_throwAction:{elapsed:.2}}, {hanging:{}},{_grapple:{zip:true}},{_carry:{}},{_jumpMotion:{applied:true,mode:'fall'}},{meleeCharge:.5},{crouching:true}]){
   Object.assign(f,state);f.parts.armR.rotation.x=-1.2;f.obj.updateMatrixWorld(true);c.update();const first=arm.quaternion.clone();
   f.parts.armR.rotation.x=-2;f.obj.updateMatrixWorld(true);c.update();assert.ok(first.angleTo(arm.quaternion)>.4,JSON.stringify(state)+' discarded native pose');
   for(const key of Object.keys(state))f[key]=null;

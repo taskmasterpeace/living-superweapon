@@ -43,3 +43,9 @@ Replaced the single-arm boomerang study with full-body anticipation/release/foll
 ## Live person-throw release recovery
 
 The hostile person-throw path now captures the holder's actual arm pose before release and blends it back over 0.3 seconds. Modular rendering preserves this visual owner. No launch velocity, damage, control lock or friendly setdown changes. New actions/guard/incapacitation cancel recovery and hitstop freezes its clock. Fifty-one person carry, friendly carry and release-pose tests pass; build passes. Live visual transition review remains required; this is continuity from an existing pose, not a newly imported throw animation.
+
+## Grounded reload and throwable ownership
+
+Fixed grounded modular reload/throw poses being overwritten by idle playback: live _firearmReload and _throwAction now retain the native articulation through the shared adapter. Regression failed on reload before the fix; fourteen modular and sixteen reload/throwable tests pass afterward. Build passes. This restores existing action poses; full visual weapon-contact acceptance remains outstanding.
+
+Missing phase-specific reload audio is tracked at https://github.com/taskmasterpeace/living-superweapon/issues/18; existing event timing and fallback remain in place.
