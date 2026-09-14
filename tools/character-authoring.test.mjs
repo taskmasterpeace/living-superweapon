@@ -53,3 +53,14 @@ test('full-body loop studies close every joint and animate both arms and legs',a
  for(const [name,d]of Object.entries(FULL_BODY_STUDIES)){const m=fullBodyStudy(name,pose);assert.ok(m.keys.length>=4);if(d.loop)for(const n of names)assert.ok(new T.Quaternion().fromArray(m.keys[0].pose[n]).angleTo(new T.Quaternion().fromArray(m.keys.at(-1).pose[n]))<1e-6,n);}
  const m=fullBodyStudy('Flailing fall',pose);for(const n of ['DEF-upper_armL','DEF-upper_armR','DEF-thighL','DEF-thighR'])assert.ok(new T.Quaternion().fromArray(m.keys[0].pose[n]).angleTo(new T.Quaternion().fromArray(m.keys[1].pose[n]))>.2,n);
 });
+
+test('kick candidates distinguish chamber, contact and recovery for both legs',async()=>{
+ const {COMBAT_BODY_STUDIES}=await import('../src/engine/character-combat-studies.js');
+ for(const [name,d]of Object.entries(COMBAT_BODY_STUDIES)){
+  assert.equal(d.poses[0].time,0);assert.equal(d.poses.at(-1).time,1);assert.deepEqual(d.poses.at(-1).joints,{});
+  assert.ok(d.markers.contact<d.markers.release&&d.markers.release<d.markers.controlReturn,name);
+  for(let i=1;i<d.poses.length;i++)assert.ok(d.poses[i].time>d.poses[i-1].time,name);
+  const side=name.endsWith('right')?'R':'L';assert.ok(d.poses[2].joints['DEF-thigh'+side][0]<-1);
+  assert.ok(Object.keys(d.poses[2].joints).length>=7,name);
+ }
+});

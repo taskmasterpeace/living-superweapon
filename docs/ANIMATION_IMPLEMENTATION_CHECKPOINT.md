@@ -29,3 +29,9 @@ Nothing in this checkpoint marks the overall objective complete. Keep all scope 
 Fixed a renderer ownership gap: a committed native melee motion was overwritten by generic modular jab/cross playback, losing the chosen hand and contact solver adjustments. Unarmed contact-driven strikes now use the shared native-to-modular adapter on ground and in flight. The native pipeline still samples its authored light/heavy take and finishes against the committed contact point. Existing source-driven one-handed swords retain their separate attachment path.
 
 Regression failed on ground jab startup before the fix. Afterward, 60 tests pass across modular-character, authored-strike, heavy-strike, melee-flight-entry and moving-melee. Run with `node --import ./tools/helpers/character-css-loader.mjs --test` followed by those tools/*.test.mjs paths. Source ingestion now reads the actual assets-src/modular-character/source location. Production build passes. This proves ownership and simulation regressions; full visual combat review and missing kick/lunge/grab variants remain outstanding.
+
+## Kick library candidates
+
+Added six editable full-body studies: front kick, roundhouse and knee strike, each left/right. Each has chamber, contact, retraction and return keys with explicit timing markers. Existing action-study selector and clip export consume them. These are original procedural key poses, not imported/approved martial arts takes. Browser contact inspection caught reversed guard arms; corrected their local rotation direction and rechecked the front-kick contact view. Ten authoring tests pass and production build passes.
+
+Still required: complete sequence visual review on multiple bodies, foot support/contact targets, tuning against actual reach, interruption blending and gameplay assignment. Do not treat these candidates as completed combat moves. Recovered Mixamo roundhouse assets remain a separate retarget/review source.
