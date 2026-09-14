@@ -59,7 +59,13 @@ export function installAuthoring({actor,scene,camera,orbit,getRecipe,setRecipe,c
  $('bone').onchange=run(editPart);$('joint-bone').onchange=syncJoint;
  const readTiming=()=>{const duration=+$('duration').value,markers=Object.fromEntries(['contact','release','controlReturn'].map(k=>[k,+$(k).value]));return {duration,markers};};
  $('base').onchange=()=>{active=false;setMotion($('base').value,0);};
- $('study-load').onclick=run(()=>{asset=validateAsset({...asset,motion:actionDraft($('study').value,capture())},bones);$('name').value=asset.motion.name;$('duration').value=asset.motion.duration;$('time').max=asset.motion.duration;for(const [k,v] of Object.entries(asset.motion.markers))$(k).value=v;active=true;playing=true;time=0;working={};refreshKeys();status('Editable blocking study loaded');});
+ $('study-load').onclick=run(()=>{
+  // End the previous draft before drawing the source; otherwise draw reapplies
+  // its last pose and every new study accumulates the previous joint rotations.
+  active=false;playing=false;working={};setMotion($('base').value,0);
+  const motion={...actionDraft($('study').value,capture()),base:$('base').value};
+  asset=validateAsset({...asset,motion},bones);$('name').value=asset.motion.name;$('duration').value=asset.motion.duration;$('time').max=asset.motion.duration;for(const [k,v] of Object.entries(asset.motion.markers))$(k).value=v;active=true;playing=true;time=0;working={};refreshKeys();status('Editable blocking study loaded from '+asset.motion.base);
+ });
  $('start').onclick=run(()=>{const timing=readTiming();asset=validateAsset({...asset,motion:{...timing,name:$('name').value,base:$('base').value,keys:[{time:0,pose:capture()}]}},bones);time=0;active=true;playing=false;$('time').max=timing.duration;refreshKeys();syncJoint();status('Draft started. Pose a bone, move the time slider, then capture.');});
  let working={};
  for(let i=0;i<3;i++)$('joint-'+i).oninput=()=>{if(!active){status('Start a draft first');return;}playing=false;const name=$('joint-bone').value,b=actor.getObjectByName(name);b.rotation.set(...[0,1,2].map(j=>+$('joint-'+j).value*Math.PI/180));working[name]=b.quaternion.toArray();};
