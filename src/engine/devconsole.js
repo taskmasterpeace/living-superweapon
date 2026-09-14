@@ -1,3 +1,4 @@
+import {createCanvasClipRecorder} from './canvas-clip-recorder.js';
 // THE DEV CONSOLE — a command line inside the game.
 //
 // Robert, 2026-07-25: "had nova did shift space and nothing happened… let me have a button in game
@@ -176,6 +177,38 @@ export class DevConsole {
       for (const k of names) c.print('  ' + k.name.padEnd(10) + k.help);
     });
     this.cmd('clear', 'clear the log', () => { this.out.innerHTML = ''; });
+    this.cmd('trial', 'trial stationary|airborne|review — Threat Room teaching drill', (a,c)=>{
+      const trial=this.g.ms?.threatLab?.meleeTrial;
+      if(!trial||this.g.ms.threatLab.state!=='preparing')throw Error('Enter the Threat Room first');
+      if(a[0]==='review'){c.toggle(false);trial.openReview();return;}
+      if(!['stationary','airborne'].includes(a[0]))throw Error('Use trial stationary, trial airborne, or trial review');
+      trial.start(a[0]);const p=this.g.player;
+      p.pos.copy(trial.origin);p.pos.z-=6;p.pos.y=this.g.world.heightAt(p.pos.x,p.pos.z);p.vel.set(0,0,0);
+      p.faceDir(0,1);p.aim3.set(0,0,1);this.g.world._lookYaw=0;this.g.world._lookPitch=0;this.g.world._chaseSnap=true;
+      c.toggle(false);
+    });
+    this.cmd('record', 'record <seconds 1–30> — silent live canvas clip, excludes HUD/menus', (a,c)=>{
+      const seconds=Number(a[0]);if(!Number.isFinite(seconds)||seconds<1||seconds>30)throw Error('Choose 1–30 seconds');
+      if(!this.g.running||!this.g.player?.alive)throw Error('Prepare a live scenario first');
+      if(this.liveClip?.active)throw Error('A clip is already recording');
+      const save=(blob,name)=>{const url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download=name;link.click();setTimeout(()=>URL.revokeObjectURL(url),10000);};
+      const actor=this.g.player,trial=this.g.ms?.threatLab?.meleeTrial;
+      this.liveClip=createCanvasClipRecorder(document.getElementById('game'),{onComplete:async(blob,meta)=>{
+        meta.final={hp:actor.hp,targetHp:trial?.target?.hp};
+        if(import.meta.env.DEV){try{const response=await fetch('/__capture',{method:'POST',headers:{'Content-Type':blob.type,'X-Capture-Metadata':encodeURIComponent(JSON.stringify(meta))},body:blob});if(!response.ok)throw Error(await response.text());c.ok('Saved '+(await response.json()).path);}catch(e){c.err('Local archive failed: '+e.message);}}
+
+        save(blob,'powerworld-live-action.webm');save(new Blob([JSON.stringify(meta,null,2)],{type:'application/json'}),'powerworld-live-action.json');
+        const preview=document.createElement('dialog'),video=document.createElement('video'),close=document.createElement('button');
+        const url=URL.createObjectURL(blob);video.src=url;video.controls=true;video.style.cssText='display:block;max-width:85vw;max-height:75vh';
+        const title=document.createElement('p');title.textContent='Live action take · '+meta.hero+' · '+meta.scenario+' · silent · review required';
+        close.textContent='Close video';const dispose=()=>{video.pause();URL.revokeObjectURL(url);preview.remove();};
+        close.onclick=dispose;preview.addEventListener('cancel',dispose);preview.append(title,video,close);document.body.append(preview);preview.showModal();
+        c.ok('Live action clip recorded; inspect the video before accepting it');
+      },onError:e=>c.err(e.message)});
+      c.toggle(false);this.liveClip.start({kind:'live-gameplay',audio:false,seconds,hero:actor.def.id,scenario:trial?.kind,initial:{hp:actor.hp,targetHp:trial?.target?.hp},time:this.g.time});
+      const recording=this.liveClip;setTimeout(()=>recording.stop(),seconds*1000);
+    });
+
 
     this.cmd('perf', 'measure 8 seconds of live FPS, frame spikes, GPU and CPU sections; keep playing', (a,c) => {
       if(G()._performanceCapture)return c.warn('A performance capture is already running.');
