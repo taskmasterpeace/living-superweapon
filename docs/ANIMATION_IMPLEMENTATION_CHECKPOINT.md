@@ -63,3 +63,8 @@ Modular bodies now retain native ranged aiming while the shared cast channel rep
 
 The surviving left-arm attack now mirrors torso twist, chamber, approach arc, elbow pole and grip orientation after right-arm loss. Previously it selected the left arm but retained right-arm geometry. Real Fighter chamber regression failed before the fix. Thirty-five locational damage, zombie encounter and equipped melee tests pass; production build passes. Full visual clip acceptance remains outstanding.
 
+
+## Studio motion inspection controls
+
+Added quarter/half/normal playback, pause/resume, 60 fps frame stepping, and exact contact/release/control-return seeks to the editable animation panel. These controls only change preview time; exported duration and markers retain their authored seconds. Browser review of Front kick / right confirmed contact at 0.37 seconds, next frame at 0.38, and control return at 0.85. Production build passes. This improves candidate review and is not approval of the kick's gameplay contact.
+
