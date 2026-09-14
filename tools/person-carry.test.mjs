@@ -239,3 +239,15 @@ test('grab approach cannot step through a thin wall',()=>{
   assert.ok(x.p.pos.z-z<=.17+1e-6);
  }finally{x.close();}
 });
+
+for(const hz of [30,60,120])test(`repeated grab input cannot multiply a carried throw at ${hz}Hz`,()=>{
+ const x=fixture({hz,height:35,rear:true});try{
+  assert.equal(x.lift(),true);const hold=x.p.grabT;
+  for(let i=0;i<12;i++)x.g.melee.grab(x.p);
+  assert.equal(x.p.grabT,hold,'Spam must not extend restraint');
+  x.p.aim3.set(0,-1,0);x.g.melee.releaseGrab(x.p);
+  const velocity=x.v.vel.clone(),hp=x.v.hp;
+  for(let i=0;i<12;i++){x.g.melee.grab(x.p);x.g.melee.releaseGrab(x.p);}
+  assert.equal(x.v.grabbedBy,null);assert.ok(x.v.vel.equals(velocity));assert.equal(x.v.hp,hp);
+ }finally{x.close();}
+});
