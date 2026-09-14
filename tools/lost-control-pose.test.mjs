@@ -7,6 +7,15 @@ import {airControlState,animateLostControlPose,restoreLostControlPose} from '../
 test('air control states distinguish launch, ordinary fall, powered flight, attachment and KO',()=>{
  const x=mainCombatFixture({mode:'powerworld',height:0});try{const f=x.p;assert.equal(airControlState(f),'grounded');f.pos.y=80;assert.equal(airControlState(f),'falling');f.flying=true;assert.equal(airControlState(f),'flight');f.launchT=1;assert.equal(airControlState(f),'uncontrolled');f.grabbedBy={};assert.equal(airControlState(f),'attached');f.state='ko';assert.equal(airControlState(f),'ko');}finally{x.close();}
 });
+test('sleep falls limp and frozen bodies reject the flailing overlay',()=>{
+ const x=mainCombatFixture({mode:'powerworld'});try{const f=x.p;f._openSky=true;f.pos.y=80;f.hitstop=0;f.sleepT=3;
+ animateLostControlPose(f,1);const sleep=f.parts.armR.quaternion.clone();restoreLostControlPose(f);
+ f.sleepT=0;f.stunT=3;f._lostControlPose=null;animateLostControlPose(f,1);
+ assert.ok(sleep.angleTo(f.parts.armR.quaternion)>.5,'sleep reused the stun flail');restoreLostControlPose(f);
+ f.frozenT=3;const base=f.parts.armR.quaternion.clone();animateLostControlPose(f,.1);
+ assert.equal(airControlState(f),'frozen');assert.equal(f._lostControlPose.weight,0);assert.ok(base.equals(f.parts.armR.quaternion));
+ }finally{x.close();}
+});
 test('lost-control presentation moves the shared rig without altering physics or resources, and restores exactly',()=>{
  const x=mainCombatFixture({mode:'powerworld'});try{const f=x.p;f._openSky=true;f.pos.y=80;f.launchT=1;f.hitstop=0;
  const pos=f.pos.clone(),vel=f.vel.clone(),hp=f.hp,ki=f.ki,base=f.parts.armR.quaternion.clone(),root=f.obj.quaternion.clone();

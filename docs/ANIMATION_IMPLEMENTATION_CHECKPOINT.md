@@ -93,3 +93,8 @@ Animation Library now loads 29 editable studies alongside 31 mapped source clips
 
 Existing stun stars and sleep dots now follow the final animated head instead of a fixed standing height, including ragdoll sync when those indicators exist. Seventeen status-anchor/modular tests pass and build passes. Indicator creation/lifetime remains in the existing status presentation; full airborne status visual review remains outstanding.
 
+
+## Sleep versus stun in airborne lost control
+
+Sleeping airborne characters now use relaxed arms, slight knee bend and a stable limp tilt instead of the active stun/launch flail. Frozen airborne state immediately yields articulation to the existing freeze presentation. Physics, fall damage and resource timing are unchanged. Regression failed before the change; twenty-one lost-control/modular tests and production build pass. Full live sequence visual review remains outstanding.
+

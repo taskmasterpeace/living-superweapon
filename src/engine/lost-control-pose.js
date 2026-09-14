@@ -7,6 +7,7 @@ export function airControlState(f){
  if(!f.alive||f.ragdoll)return 'ko';
  if(f.grabbedBy||f.hanging||f._passengerTransport||f._aircraftVehicle||f._scoutVehicle)return 'attached';
  if(f.pos.y-(f.groundY||0)<1)return 'grounded';
+ if(f.frozenT>0)return 'frozen';
  if(f.launchT>0||f.stunT>0||f.staggerT>0||f.sleepT>0||f.downedT>0)return 'uncontrolled';
  return f.flying?'flight':'falling';
 }
@@ -33,21 +34,21 @@ export function animateLostControlPose(f,dt){
  if(active)s.time+=step;
  const target=active?MathUtils.clamp((f.pos.y-(f.groundY||0)-1)/7,0,1):0;
  s.weight=MathUtils.damp(s.weight,target,active?14:12,step);
- if(state==='ko'||state==='attached'||state==='grounded'||exclusive)s.weight=0;
+ if(state==='ko'||state==='attached'||state==='grounded'||state==='frozen'||exclusive)s.weight=0;
  if(s.weight<.001){s.weight=0;s.time=0;return;}
  for(const e of s.nodes){e.position.copy(e.node.position);e.quaternion.copy(e.node.quaternion);}s.applied=true;
- const p=f.parts,t=s.time,w=s.weight;
+ const p=f.parts,t=s.time,w=s.weight,limp=f.sleepT>0;
  for(const [i,side]of ['L','R'].entries()){
   const phase=t*8+i*2.3,arm=p['arm'+side],leg=p['leg'+side],sign=i?-1:1;
-  arm.rotation.x=MathUtils.lerp(arm.rotation.x,-1.8+Math.sin(phase)*.7,w);
-  arm.rotation.z=MathUtils.lerp(arm.rotation.z,sign*(.8+Math.sin(phase*.7)*.3),w);
-  bendArm(arm,.65+Math.sin(phase+1)*.25);
+  arm.rotation.x=MathUtils.lerp(arm.rotation.x,limp?-.12:-1.8+Math.sin(phase)*.7,w);
+  arm.rotation.z=MathUtils.lerp(arm.rotation.z,limp?sign*.14:sign*(.8+Math.sin(phase*.7)*.3),w);
+  bendArm(arm,limp?.15:.65+Math.sin(phase+1)*.25);
   for(const part of arm.children.slice(1,3)){const base=s.nodes.find(e=>e.node===part);part.position.lerpVectors(base.position,part.position,w);turn.copy(part.quaternion);part.quaternion.copy(base.quaternion).slerp(turn,w);}
-  leg.rotation.x=MathUtils.lerp(leg.rotation.x,Math.sin(phase+2)*.65,w);
+  leg.rotation.x=MathUtils.lerp(leg.rotation.x,limp?-.1:Math.sin(phase+2)*.65,w);
   leg.rotation.z=MathUtils.lerp(leg.rotation.z,sign*.2,w);
-  const knee=leg.userData.knee;if(knee)knee.rotation.x=MathUtils.lerp(knee.rotation.x,.7+Math.sin(phase)*.3,w);
+  const knee=leg.userData.knee;if(knee)knee.rotation.x=MathUtils.lerp(knee.rotation.x,limp?.2:.7+Math.sin(phase)*.3,w);
  }
  // Rotate the body parts about the pelvis; ground shadows and physics stay put.
- turn.setFromEuler(euler.set((.55+Math.sin(t*4)*.5)*w,Math.sin(t*2.8)*.2*w,Math.sin(t*3.3+.6)*.55*w));
+ turn.setFromEuler(limp?euler.set(.75*w,0,.12*w):euler.set((.55+Math.sin(t*4)*.5)*w,Math.sin(t*2.8)*.2*w,Math.sin(t*3.3+.6)*.55*w));
  for(const key of bodyKeys){const part=p[key];if(!part)continue;part.position.sub(pivot).applyQuaternion(turn).add(pivot);part.quaternion.premultiply(turn);}
 }
