@@ -53,3 +53,8 @@ Missing phase-specific reload audio is tracked at https://github.com/taskmasterp
 ## Infected passive flight
 
 Connected the existing workshop infected-flight arm overlay to the modular gameplay renderer for sick/hollow appearance recipes during passive unarmed flight/gliding. Combat, held weapons, grabs/carry, reload/throw, guard, incapacitation, active ability channels and injury poses retain ownership. Overlay does not move joint positions or change flight simulation. Fifteen modular tests pass and build passes. This is appearance-driven (saved recipe), not a new infection progression mechanic; live visual review remains outstanding.
+
+## Ranged recovery ownership
+
+Modular bodies now retain native ranged aiming while the shared cast channel reports an active recovery, even after state returns to idle. Expired timers restore normal idle playback; melee ownership remains unchanged. The regression failed before the fix. All sixteen modular tests and production build pass. This preserves existing aiming animation; visual weapon contact review remains outstanding.
+

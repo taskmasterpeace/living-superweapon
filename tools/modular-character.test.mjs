@@ -127,6 +127,19 @@ test('modular body preserves native interaction and jump owners instead of repla
  f.dispose();
 });
 
+test('recent ranged poses retain native aim only until their timer expires',async()=>{
+ const f=new Fighter(structuredClone(ROSTER.find(d=>d.id==='vega')));f._animate(0);f.state='idle';f.animT=10;
+ f.slots={primary:{def:{type:'projectile'},_poseUntil:10.3}};
+ const c=await loadModularCharacter(f,{load:output});
+ const arm=c.actor.getObjectByName(T.PropertyBinding.sanitizeNodeName('DEF-upper_arm.L'));
+ const difference=()=>{f.parts.armR.rotation.x=-1.2;f.obj.updateMatrixWorld(true);c.update();const first=arm.quaternion.clone();f.parts.armR.rotation.x=-2;f.obj.updateMatrixWorld(true);c.update();return first.normalize().angleTo(arm.quaternion.clone().normalize());};
+ assert.ok(difference()>.4,'recent shot lost native aiming pose');
+ f.slots.primary._poseUntil=9;f._rangedPose={slot:'primary',until:10.3};
+ assert.ok(difference()>.4,'shared ranged recovery lost native aiming pose');
+ f.animT=11;const expired=difference();assert.ok(expired<1e-5,'expired ranged pose prevented idle: '+expired);
+ f.dispose();
+});
+
 test('hollow infection changes exposed skin, preserves complexion differences and reverses cleanly',async()=>{
  const g=await output(),meshes=[];g.scene.traverse(o=>{if(o.isMesh)meshes.push(o);});
  const head=meshes.find(m=>m.userData.slot==='head'&&m.material.name==='skin');assert.ok(head);
@@ -156,3 +169,5 @@ test('infected flight overlay yields to combat, carried objects and incapacitati
  for(const state of [{mstate:'startup'},{_carry:{}},{grabbing:{}},{_firearmReload:{}},{_throwAction:{}},{stunT:1},{guarding:true}])assert.equal(canPoseInfectedFlight({...f,...state},'hollow'),false);
  const g=await output(),before=[];g.scene.traverse(o=>{if(o.isBone)before.push([o,o.position.clone()]);});poseInfectedFlight(g.scene);for(const [o,p]of before)assert.ok(o.position.equals(p),'overlay moved '+o.name);
 });
+
+
