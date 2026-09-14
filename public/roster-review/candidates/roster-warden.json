@@ -27,6 +27,7 @@
   "knees": false,
   "belt": false,
   "backpack": false,
+  "bareArms": true,
   "patternScale": 1,
   "size": 1,
   "rosterId": "warden"

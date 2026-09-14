@@ -23,6 +23,7 @@
   "hairColor": "#f4eee4",
   "eyeColor": "#af8495",
   "gloveColor": "#20272b",
+  "mustache": true,
   "gauntlets": false,
   "knees": false,
   "belt": false,

@@ -48,13 +48,18 @@ export function createModularWeaponPreview(actor){
   mesh(axe,new T.ExtrudeGeometry(bladeShape,{depth:.045,bevelEnabled:false}),steel,0,0,-.0225);
   mesh(axe,new T.BoxGeometry(.065,.14,.06),gold,0,.635);
   const shield=new T.Group();shield.name='review-shield';shield.userData.clipFamily=MODULAR_WEAPON_CLIP_FAMILIES.shield;
-  shield.position.set(0,.075,.028);shield.rotation.set(Math.PI/2,0,0);left.add(shield);
-  // Grip remains in the palm; the plate sits beyond the knuckles.
-  mesh(shield,new T.CylinderGeometry(.018,.018,.14,8),dark);
+  // Authored left-hand +X points inward and +Y runs down the fingers.
+  // Put the plate outside the back of the fist (-X), with its top toward
+  // the wrist (-Y). The sword palm rotation makes the shield a flat tray.
+  shield.position.set(0,.075,.028);shield.rotation.set(0,Math.PI/2,Math.PI);left.add(shield);
+  // Keep the handle across the palm (hand Z), behind the outward plate.
+  mesh(shield,new T.CylinderGeometry(.018,.018,.14,8),dark).rotation.z=Math.PI/2;
   const plate=mesh(shield,new T.CylinderGeometry(.31,.31,.035,8),gold,0,.04,-.075);plate.rotation.x=Math.PI/2;
   const inset=mesh(shield,new T.CylinderGeometry(.273,.273,.039,8),face,0,.04,-.083);inset.rotation.x=Math.PI/2;
   mesh(shield,new T.SphereGeometry(.068,8,4),steel,0,.04,-.11).scale.z=.5;
   const roundParts=shield.children.slice(1);const kite=new T.Group(),riot=new T.Group();shield.add(kite,riot);const sh=new T.Shape();sh.moveTo(-.29,.35);sh.lineTo(.29,.35);sh.lineTo(.31,-.14);sh.lineTo(0,-.52);sh.lineTo(-.31,-.14);sh.closePath();mesh(kite,new T.ExtrudeGeometry(sh,{depth:.04,bevelEnabled:false}),steel,0,.1,-.13);mesh(riot,new T.BoxGeometry(.64,.95,.04),dark,0,.02,-.12);mesh(riot,new T.BoxGeometry(.47,.12,.045),face,0,.30,-.145);
+  // Rear grip brackets join the palm handle to each style's plate.
+  for(const x of [-.06,.06])mesh(shield,new T.BoxGeometry(.025,.025,.11),dark,x,0,-.055);
   let state={weapon:'none',shield:false,shieldStyle:'round'},disposed=false;
   const api={weapons,shield,clipFamilies:MODULAR_WEAPON_CLIP_FAMILIES,
     get state(){return {...state};},

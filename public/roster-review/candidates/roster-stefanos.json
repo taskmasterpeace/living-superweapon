@@ -3,8 +3,8 @@
   "frame": "hero",
   "hair": "slicked",
   "skin": "#d8b088",
-  "primary": "#252d36",
-  "secondary": "#c7c2b3",
+  "primary": "#242b35",
+  "secondary": "#dedfd5",
   "trim": "#181f28",
   "emblemColor": "#ffd557",
   "emblem": "none",
@@ -15,13 +15,15 @@
   "coatStyle": "short",
   "anatomy": "male",
   "infection": "none",
-  "pattern": "pinstripe",
+  "pattern": "solid",
   "beltStyle": "plain",
-  "footwear": "boots",
+  "footwear": "shoes",
   "gloves": "full",
   "emblemPlacement": "front",
   "hairColor": "#101314",
   "gloveColor": "#20272b",
+  "businessSuit": true,
+  "mustache": true,
   "beard": true,
   "coat": true,
   "gauntlets": false,
@@ -30,5 +32,9 @@
   "backpack": false,
   "patternScale": 1,
   "size": 1,
+  "regionColors": {
+    "legs": "#242b35",
+    "calves": "#242b35"
+  },
   "rosterId": "stefanos"
 }

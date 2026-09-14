@@ -8,7 +8,7 @@
   "trim": "#252b30",
   "emblemColor": "#758193",
   "emblem": "none",
-  "cape": true,
+  "cape": false,
   "armor": false,
   "shoulders": false,
   "muscle": 1,

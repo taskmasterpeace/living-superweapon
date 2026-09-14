@@ -21,6 +21,7 @@
   "emblemPlacement": "front",
   "hairColor": "#181414",
   "gloveColor": "#20272b",
+  "mustache": true,
   "beard": true,
   "gauntlets": false,
   "knees": false,

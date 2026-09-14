@@ -27,6 +27,6 @@
   "belt": false,
   "backpack": false,
   "patternScale": 1,
-  "size": 1,
+  "size": 1.15,
   "rosterId": "kraken"
 }

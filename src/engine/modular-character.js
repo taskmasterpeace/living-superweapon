@@ -1,3 +1,5 @@
+import {createTailoring} from './modular-tailoring.js';
+import {createImagePlacements} from './modular-image-placements.js';
 import {createSignatureParts} from './modular-signature-parts.js';
 import {applyModularRecipe,MODULAR_RECIPES,animateModularCape} from './modular-costume.js';
 import * as T from 'three';
@@ -39,13 +41,13 @@ export async function loadModularCharacter(f,{load=modularAsset}={}){
  for(const root of [parts.torso,parts.pelvis,parts.head,parts.armL,parts.armR,parts.legL,parts.legR,parts.cape,parts.cowl])if(root)hide(root);
  if(parts.skin)for(const mesh of Object.values(parts.skin.meshes||{}))if(mesh?.isMesh)hide(mesh);
  setModularCostume(c.meshes,{primary:f.def.colors.primary,accent:f.def.colors.accent||f.def.colors.secondary,cape:!f.def.metal,soldier:heroModelOf(f.def).equipment==='soldier'});
- const signatureRecipe=MODULAR_RECIPES['roster-'+f.def.id];const signatureParts=createSignatureParts(c.actor);if(signatureRecipe){applyModularRecipe(c.meshes,signatureRecipe);signatureParts.set(signatureRecipe);}
+ const signatureRecipe=MODULAR_RECIPES['roster-'+f.def.id];const signatureParts=createSignatureParts(c.actor),tailoring=createTailoring(c.actor),imagePlacements=createImagePlacements(c.actor);if(signatureRecipe){applyModularRecipe(c.meshes,signatureRecipe);signatureParts.set(signatureRecipe);tailoring.set(signatureRecipe);imagePlacements.set(signatureRecipe);}
  let drivenWeapon=null,weaponBase=null;
  const restoreWeapon=()=>{if(drivenWeapon&&weaponBase){weaponBase.decompose(drivenWeapon.position,drivenWeapon.quaternion,drivenWeapon.scale);drivenWeapon=null;weaponBase=null;}};
- const dispose=c.dispose.bind(c);c.dispose=()=>{signatureParts.dispose();restoreWeapon();for(const [o,mask]of hidden)o.layers.mask=mask;dispose();};
+ const dispose=c.dispose.bind(c);c.dispose=()=>{signatureParts.dispose();tailoring.dispose();imagePlacements.dispose();restoreWeapon();for(const [o,mask]of hidden)o.layers.mask=mask;dispose();};
  c.update=()=>{
   restoreWeapon();
-  animateModularCape(c.meshes,f.animT||0,f.vel.length());signatureParts.update(f.animT||0,!!f.flying);
+  animateModularCape(c.meshes,f.animT||0,f.vel.length());signatureParts.update(f.animT||0,!!f.flying);imagePlacements.update(f.animT||0,!!f.flying);
   adapter.reset();
   const held=meleeWeaponFor(f),sourcedSword=held&&['sword','katana','knife'].includes(held.weapon.userData.weaponKind)&&!held.weapon.userData.twoHanded;
   // Busy native poses retain responsive aim/guard/grab and weapon attachments.

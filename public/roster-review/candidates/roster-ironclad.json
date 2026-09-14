@@ -4,7 +4,7 @@
   "hair": "none",
   "skin": "#8a919c",
   "primary": "#586878",
-  "secondary": "#c1cbd2",
+  "secondary": "#bb7838",
   "trim": "#252b30",
   "emblemColor": "#ffdb81",
   "emblem": "none",
@@ -22,6 +22,7 @@
   "emblemPlacement": "front",
   "hairColor": "#222420",
   "gloveColor": "#20272b",
+  "centerPanel": true,
   "metallic": true,
   "gauntlets": true,
   "knees": false,
@@ -29,5 +30,9 @@
   "backpack": false,
   "patternScale": 1,
   "size": 1,
+  "regionColors": {
+    "arms": "#455d71",
+    "legs": "#2b3c4b"
+  },
   "rosterId": "ironclad"
 }
