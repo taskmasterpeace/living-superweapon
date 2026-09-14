@@ -2,6 +2,8 @@
 
 _Branch: **`codex/audio-all`**. Everything below is on this one branch now. 2026-09-14._
 
+> **Wiring another AI through it?** Hand it **`docs/AUDIO_WIRING_SPEC.md`** — the per-sound, per-event checklist. Gaps to source: **`docs/AUDIO_GAP_ANALYSIS.md`**.
+
 ---
 
 ## Plain version (read this first)
@@ -14,10 +16,10 @@ There is **one thing to clear before any of the AI batch can ship** — see the 
 
 ---
 
-## ⚠ The one gate before shipping
+## License status
 
-- **The AI batch (`ai-pass`) is AI-generated (ElevenLabs).** Confirm commercial / in-game license **before it ships in a build.** Until that's confirmed, ship only the CC0 / owned batches (everything else here is clean).
-- **Attribution required** — these must appear on the options/credits screen when used:
+- **The AI batch (`ai-pass`) is AI-generated (ElevenLabs) — license CLEARED to ship** (Robert confirmed, 2026-09-14). No gate; wire it like the rest.
+- **Attribution still required** — these must appear on the options/credits screen when used:
   - `amb.wind` — CC-BY, InspectorJ / AntumDeluge (Wind Loop, OpenGameArt)
   - footstep surfaces (gravel/metal/water/mud) — CC-BY, congusbongus
   - Everything else is **CC0** (public domain) or **owned** (operation-v1 is our own DSP synthesis).
