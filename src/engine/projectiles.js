@@ -1,3 +1,4 @@
+import {canReceiveShot} from './shot-contact-eligibility.js';
 import {fieldMotion,updateFieldProjectile,advanceFieldPacket} from './field-motion.js';
 import {BeamGroundContact} from './beam-ground-contact.js';
 // WAR WORLD: ASCENDANTS — projectiles, beam-hoses (wave cannon), and spirit-bomb lobs.
@@ -598,7 +599,7 @@ class Projectile {
       this.radius + 1.5, this.damage * this.caster.powerBuff)) {
       return this.webControl?this._webImpact(game):this._impact(game, false);
     }
-    const foe = contact ? (contact.kind === 'foe' ? contact.target : null) : game.overlapFoe(this.caster, this.pos, this.radius + 1.5);
+    const foe = contact ? (contact.kind === 'foe' ? contact.target : null) : (game.overlapShot||game.overlapFoe).call(game,this.caster, this.pos, this.radius + 1.5);
     if (foe) {
       if (this.boomerang) {   // clip them and keep flying — both passes hurt
         if (this._rehitT <= 0) {
@@ -1688,7 +1689,7 @@ class BeamHose {
     if (this.sustaining) {
       // damage along the beam
       for (const f of game.entities) {
-        if (!game.isFoe(c, f)) continue;
+        if (!canReceiveShot(game,c,f)) continue;
         if(!this.pierceFighters&&(!bodyHit||f!==this._bodyContact.fighter))continue;
         // ⚠ CLOSEST POINT ON THE WHOLE POLYLINE, not on one ray from the hand. The beam bends, so
         // the hitbox has to bend with it or the damage and the picture disagree — and the picture

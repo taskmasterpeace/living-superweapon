@@ -1,3 +1,4 @@
+import {canReceiveShot} from './shot-contact-eligibility.js';
 import * as THREE from 'three';
 import {sweepSplitObstacle} from './projectile-contact.js';
 import {naniteContact} from './nanite-forearms.js';
@@ -79,7 +80,7 @@ export function beamBodyContact(beam,game,out,padding=1,surfaceStop=false){
     for(const fighter of game.entities){
       // Banishment removes the body from this world; hurt invulnerability and
       // possession's abandoned (_inert) body do not remove physical solidity.
-      if(!fighter.alive||fighter.phase||fighter._banished||!game.isFoe(beam.caster,fighter))continue;
+      if(!fighter.alive||fighter.phase||fighter._banished||!canReceiveShot(game,beam.caster,fighter))continue;
       const local={},from=new THREE.Vector3(ax,ay,az),to=new THREE.Vector3(path[b],path[b+1],path[b+2]);
       if(!beam.pierceFighters&&naniteContact(fighter,from,to,beam.radius,local,null,true)){
         if(local.t<out.t&&!sweepSplitObstacle(game.world,from,local.naniteContact.point,0,obstacle,false)){

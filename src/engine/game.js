@@ -1,3 +1,4 @@
+import {canReceiveShot} from './shot-contact-eligibility.js';
 import {animateCarriedObjectGrip} from './held-grip-pose.js';
 import {updateLimbSurfaces} from './hero-limb-surface.js';
 import {updateHeroSkin} from './hero-skin.js';
@@ -2297,6 +2298,16 @@ export class Game {
       if (!this.isFoe(caster, f)) continue;
       const dx = f.pos.x - pos.x, dz = f.pos.z - pos.z; const d = dx * dx + dz * dz;
       if (d < bd) { bd = d; best = f; }
+    }
+    return best;
+  }
+
+  overlapShot(caster,pos,radius){
+    let best=null,distance=Infinity;
+    for(const f of this.entities){
+      if(!canReceiveShot(this,caster,f))continue;
+      const d=Math.hypot(f.pos.x-pos.x,f.pos.z-pos.z);
+      if(d<radius+f.radius&&Math.abs(pos.y-(f.pos.y+5))<9&&d<distance){best=f;distance=d;}
     }
     return best;
   }

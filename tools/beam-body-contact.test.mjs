@@ -183,3 +183,11 @@ test('surface stop cannot use its lateral envelope through an adjacent thin wall
   assert.equal(f.hit(1,true),false);
   f.game.world.interiors.length=0;assert.equal(f.hit(1,true),true);close(f.out.point.z,20);
 });
+
+test('an enemy-held teammate stops the beam before its holder, without becoming an AI foe',()=>{
+ const holder=receiver(0,20),held=receiver(0,10,{team:1});holder.grabbing=held;held.grabbedBy=holder;
+ const f=fixture([[0,5.2,0],[0,5.2,30]],[holder,held]);
+ assert.equal(f.game.isFoe(f.beam.caster,held),false);
+ assert.equal(f.hit(),true);assert.equal(f.out.fighter,held);
+ holder.grabbing=null;assert.equal(f.hit(),true);assert.equal(f.out.fighter,holder);
+});

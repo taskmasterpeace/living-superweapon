@@ -1,3 +1,4 @@
+import {canReceiveShot} from './shot-contact-eligibility.js';
 import {anatomicalBulletContact} from './anatomical-bullet-contact.js';
 import {sweepSplitObstacle,coverBoxEntry,terrainEntry} from './projectile-contact.js';
 import {naniteContact} from './nanite-forearms.js';
@@ -74,7 +75,7 @@ export function earliestOrdinaryContact(p,end,dt,game,ignored=new Set()) {
     offer(sphereTime(a,end,fl,fl.r+p.radius+1.5),'prop',fl);
   }
   for(const f of game.entities||[]){
-    if(!game.isFoe(p.caster,f))continue;
+    if(!canReceiveShot(game,p.caster,f))continue;
     // Match overlapFoe's actual upright cylinder, including its height band.
     const top=f._crouchPose?.top??14;
     let time=f._pronePose?.weight?proneBoxTime(f,a,end,p.radius):cylinderTime(a,end,f.pos.x,f.pos.z,p.radius+1.5+f.radius,f.pos.y-4,f.pos.y+top);

@@ -2,7 +2,7 @@ import {meleeApproach} from '../data/melee-approaches.js';
 export const meleeLessonScheme=g=>g.touch?.enabled?'touch':g.pad?.active?'pad':'kbm';
 export function grabLesson(scheme='kbm'){
  const strike=scheme==='touch'?'Punch':scheme==='pad'?'Strike':'V',grab=scheme==='kbm'?'E':scheme==='touch'?'Throw':'Grab';
- return `GRAB CONNECTED · tap ${strike}: body blow · hold ${strike}: slam · move/fly: carry · hold ${grab} then release: aimed throw · tap ${grab}: set down/drop`;
+ return `GRAB CONNECTED · tap ${strike}: body blow · hold ${strike}: slam · move/fly: carry · hold ${grab} then release: aimed throw · tap ${grab}: set down/drop · Held enemies can be hit by their teammates: bodies intercept shots`;
 }
 export function trialPrompt(kind,scheme='kbm'){
  const strike=scheme==='touch'?'Punch':scheme==='pad'?'Strike':'V',guard=scheme==='touch'?'Block':scheme==='pad'?'Guard':'Q';
