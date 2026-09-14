@@ -13,7 +13,7 @@ import {meleeWeaponFor,WEAPON_GRIP_CENTERS} from './weapon-grip.js';
 import {setModularExpression} from './modular-face.js';
 import {heroModelOf} from '../data/hero-models.js';
 import {rangedPoseChannels} from './cast-channels.js';
-import {zombieHasDisabledLimb} from './zombie-locational-damage.js';
+import {zombieLegSpeed} from './zombie-locational-damage.js';
 
 let asset;
 export const MODULAR_BODY='faceted-v1';
@@ -62,7 +62,7 @@ export async function loadModularCharacter(f,{load=modularAsset}={}){
   // Contact-authored strikes own both handedness and the committed target pose.
   const contactStrike=!!(f.mstate&&f._meleeMotion&&!sourcedSword);
   const rangedRecovery=!f.mstate&&!!rangedPoseChannels(f).dominant;
-  const interaction=!!(contactStrike||rangedRecovery||f._firearmReload||f._throwAction||f._personThrowPose||zombieHasDisabledLimb(f)||f._grapple||f.hanging||f._carry||f.grabState||f.meleeCharge>0||f.crouching||f._jumpMotion?.applied||f.downedT>0||f.launchT>0||f._slideT>0);
+  const interaction=!!(contactStrike||rangedRecovery||f._firearmReload||f._throwAction||f._personThrowPose||zombieLegSpeed(f)<1||f._grapple||f.hanging||f._carry||f.grabState||f.meleeCharge>0||f.crouching||f._jumpMotion?.applied||f.downedT>0||f.launchT>0||f._slideT>0);
   const native=interaction||incapacitated||f.flying||f.gliding||f.ragdoll||f.grabbing||f.grabbedBy||f.guarding||(f.state==='cast'&&!f.mstate)||(f._meleeMotion?.weapon&&!sourcedSword);
   const airStrike=!interaction&&!incapacitated&&(f.flying||f.gliding)&&f.mstate&&!f.ragdoll&&!f.grabbing&&!f.grabbedBy&&(!held||sourcedSword);
   if((!native||airStrike)&&f.mstate&&STRIKES[f.mId]){
@@ -74,6 +74,7 @@ export async function loadModularCharacter(f,{load=modularAsset}={}){
   }else if(native){c.pose('Punch_Cross',.4);adapter.update();}
   else if(sourcedSword)c.pose('Sword_Idle',(f.animT/c.clips.get('Sword_Idle').duration)%1);
   else{const speed=Math.hypot(f.vel.x,f.vel.z);const name=f.def.vocalFamily==='zombie'?(speed>25?'Infected_Sprint_Loop':speed>2?'Zombie_Walk_Fwd_Loop':'Zombie_Idle_Loop'):speed>25?'Sprint_Loop':speed>2?'Walk_Loop':'Idle_Loop';const mechanical=signatureRecipe?.frame==='machine'&&speed<=2;c.pose(name,mechanical?0:(f.animT/c.clips.get(name).duration)%1);if(mechanical){const head=c.actor.getObjectByName('DEF-head');if(head)head.rotation.y+=Math.sin(f.animT*.8)*.12;}}
+  if(!native){const disabledArms=['armL','armR'].filter(side=>f._zombieLimbs?.[side]?.disabled);if(disabledArms.length)adapter.update({regions:disabledArms});}
   if(!held&&canPoseInfectedFlight(f,signatureRecipe?.infection))poseInfectedFlight(c.actor);
   if(sourcedSword&&(!native||airStrike)){
    // Drive the actual weapon, not a decorative duplicate. Native weapon

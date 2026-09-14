@@ -132,9 +132,12 @@ test('non-disabling zombie limb hits do not permanently replace authored locomot
  const c=await loadModularCharacter(f,{load:async()=>{const g=await output(),bank=JSON.parse(await fs.readFile('public/models/modular-hero/motion-bank.json','utf8'));for(const e of bank.entries)g.animations.push(T.AnimationClip.parse(e.clip));return g;}});
  f.def.vocalFamily='zombie';c.update();
  const bone=c.actor.getObjectByName('DEF-upper_armL'),normal=bone.quaternion.clone();
+ const healthy=c.actor.getObjectByName('DEF-upper_armR'),healthyPose=healthy.quaternion.clone(),thigh=c.actor.getObjectByName('DEF-thighL'),walkPose=thigh.quaternion.clone();
  f._zombieLimbs={armR:{hits:1,disabled:false}};f.parts.armR.rotation.x=-2;f.obj.updateMatrixWorld(true);c.update();
  assert.ok(normal.angleTo(bone.quaternion)<1e-6,'a historical limb hit replaced the zombie walk');
  f._zombieLimbs.armR.disabled=true;c.update();assert.ok(normal.angleTo(bone.quaternion)>.1,'disabled limb must retain injury presentation');
+ assert.ok(healthyPose.angleTo(healthy.quaternion)<1e-6,'disabled arm replaced the healthy arm animation');
+ assert.ok(walkPose.angleTo(thigh.quaternion)<1e-6,'disabled arm replaced the walking legs');
  f.dispose();
 });
 

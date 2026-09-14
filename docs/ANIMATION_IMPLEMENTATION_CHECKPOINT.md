@@ -124,3 +124,8 @@ Browser playback review found that Ground pickup at 0.45 s lacks adequate body l
 # Zombie locomotion after non-disabling limb damage
 
 A stored limb-hit counter no longer forces the modular zombie into native pose adaptation forever. After the hit/stagger ends, zombies with no disabled limb resume their authored idle/walk/sprint. Actually disabled limbs still retain the injury presentation. A production-rig/motion-bank regression failed before the change; 25 modular/zombie tests and build pass. Disabled-limb gait polish and full encounter visual review remain open.
+# Regional disabled-arm animation
+
+Disabled zombie arms now use a regional native-pose overlay after authored locomotion. The healthy arm, torso and walking legs retain the source clip. The shared native-to-modular adapter accepts explicit native arm regions, preserving its existing left/right mapping and joint lengths. Incapacitated actors and crippled legs continue through their existing full native presentation.
+
+The actual-rig regression failed when the healthy arm was overwritten; 25 modular/zombie tests and build pass. Multi-angle visual review of injury transitions remains required.
