@@ -9,3 +9,8 @@ Tests on actual rat, hound and mech GLBs verify target joint existence, finite t
 ## Continuous playback
 
 The shared Dec-52 animator now exposes advance(action, dt, options) with short crossfades, looping locomotion, clamped one-shots, explicit restart and scrubbing-to-playback continuity. The family workshop uses this player. Removed its per-frame joint reset during playback, which conflicted with mixer caching; manual bend is restored before the next sample. Tests on the real hound cover blend entry continuity, one-shot clamp/replay and unchanged simulation root; all four Dec-52 tests pass and build passes. Gameplay actor loading and visual gait acceptance remain open.
+
+## Workshop replay controls
+
+Added quarter/half/normal playback, explicit restart, elapsed-time display, and correct Play/Pause state after one-shot completion or scrubbing. Restart calls the shared animator restart option; changing motion resets its playback. Existing four real-model animator tests and production build pass. Browser hound bite completion/replay checked. This remains workshop playback, not Dec-52 gameplay actor integration.
+
