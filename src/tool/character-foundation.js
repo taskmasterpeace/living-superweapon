@@ -27,14 +27,14 @@ const height=native.parts.head.position.y+.8*native.parts.head.scale.y;actor.sca
 const flightAdapter=createModularFlightAdapter(actor,native);
 setModularCostume(meshes);setModularExpression(meshes);
 let recipe={...MODULAR_RECIPES.base},size=1;
-for(const name of ['dreadlocks','mohawk','fade','buzz','spiky','ponytail'])document.querySelector('#hair').add(new Option(name,name));
+for(const name of ['dreadlocks','mohawk','fade','buzz','spiky','ponytail','slicked','bob'])document.querySelector('#hair').add(new Option(name,name));
 const colorFields={color:'primary',secondary:'secondary',trim:'trim',emblemColor:'emblemColor',skin:'skin',hairColor:'hairColor',eyeColor:'eyeColor',gloveColor:'gloveColor'};
 function applyRecipe(sync=false){
  if(recipe.emblem&&!Array.from(document.querySelector('#emblem').options).some(o=>o.value===recipe.emblem))document.querySelector('#emblem').add(new Option('Signature · '+recipe.emblem.replace('sig-',''),recipe.emblem));recipe=applyModularRecipe(meshes,recipe);applyModularFrame(actor,recipe.frame,height/1.8325*size);
  if(sync){
   for(const [id,key]of Object.entries(colorFields))document.getElementById(id).value=recipe[key]||({hairColor:'#171b19',eyeColor:'#29221b'}[key]);
   for(const key of ['aura','auraState','clawStyle','tattooRegion','capeStyle','headwear','wings','coatStyle','patternRegion','shieldStyle','patternScale','infection','pattern','footwear','beltStyle','hair','frame','emblem','emblemPlacement','expression','muscle','anatomy','gloves'])document.getElementById(key).value=recipe[key]??(key==='aura'?'none':key==='auraState'?'always':key==='clawStyle'?'paired':key==='tattooRegion'?'upperArmL':key==='capeStyle'?'full':['headwear','wings'].includes(key)?'none':key==='coatStyle'?'long':key==='patternRegion'?'all':key==='shieldStyle'?'round':key==='expression'?'neutral':key==='anatomy'?(recipe.frame==='agile'?'female':'male'):1);
-  for(const key of ['skirt','beard','claws','tentacles','wristBlasters','lasso','kilt','metallic','shimmer','coat','wristbands','tornClothes','robe','sleeves','collar','glasses','cape','armor','visor','eyepatch','eyeGlow','gauntlets','shoulders','knees','belt','backpack'])document.getElementById(key).checked=!!recipe[key];
+  for(const key of ['centerPanel','skirt','beard','claws','tentacles','wristBlasters','lasso','kilt','metallic','shimmer','coat','wristbands','tornClothes','robe','sleeves','collar','glasses','cape','armor','visor','eyepatch','eyeGlow','gauntlets','shoulders','knees','belt','backpack'])document.getElementById(key).checked=!!recipe[key];
  }
 }
 applyRecipe(true);
