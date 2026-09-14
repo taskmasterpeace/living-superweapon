@@ -34,3 +34,8 @@ Six real-model library/adapter tests and build pass. These are named-pivot candi
 Added four remote-mech candidates: fire-left, fire-right (0.5 s each), claw-left and claw-right (0.7 s each). Each articulates its selected shoulder/elbow with anticipation and recovery; exported metadata includes the hand and a proposed contact marker. They appear only for the mech in the family workshop.
 
 The animation adapter consumes a new accepted `attackToken` with `attackKind: fire | claw` and `hand: left | right`; omitted fields default to right-arm fire. Rat/hound attacks still use bite. Hit reaction retains priority for a simultaneous hit event. Seven real-model library/adapter tests and build pass. These clips do not emit projectiles or damage and remain visually unapproved; issue #20 still owns their game-actor connection.
+# Firing aim and repeatable scrub correction
+
+The mech firing studies now aim near shoulder height with a short elbow recoil beginning at the .20-second contact marker, then return to rest. Head aim follows the selected hand. Real-model tests cover both sides, forward reach, recoil retraction and return pose.
+
+Browser inspection also exposed LoopOnce endpoint clamping leaving the scrub action paused: seeking backward displayed the end pose. Absolute seeks now re-enable the action. Both regressions failed before correction; nine Dec-52 library/driver tests and the production build pass. Browser review confirmed level aim, recovery, endpoint and return-to-midpoint after endpoint seeking. These remain candidate articulation studies: actual weapon modules/projectiles and gameplay actor integration are still outstanding under issue #20; this is not full visual approval.

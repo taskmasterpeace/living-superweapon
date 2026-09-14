@@ -19,9 +19,10 @@ export function buildDec52Clips(actor,family){
     const u=i/32,t=u*Math.PI*2,n=node.name,left=n.includes('--1'),front=n.endsWith('-true'),quad=family!=='mech';let x=0,y=0,z=0;
     if(meta.attack){
      const selected=left===(meta.hand==='left'),ready=smooth(u/.3)*(1-smooth((u-.62)/.38)),strike=smooth((u-.28)/.18)*(1-smooth((u-.62)/.38));
-     if(selected&&n.includes('shoulder')){x=meta.attack==='fire'?-1.35*ready+.15*strike:-.5*ready-1.1*strike;z=(left?-1:1)*.12*ready;}
-     if(selected&&n.includes('elbow'))x=meta.attack==='fire'?.2*ready:.85*(ready-strike);
-     if(n==='nanite-head')y=(left?-.08:.08)*ready;
+     const recoil=smooth((u-.4)/.05)*(1-smooth((u-.45)/.15));
+     if(selected&&n.includes('shoulder')){x=meta.attack==='fire'?-1.65*ready+.05*recoil:-.5*ready-1.1*strike;z=(left?-1:1)*.12*ready;}
+     if(selected&&n.includes('elbow'))x=meta.attack==='fire'?.12*ready+.45*recoil:.85*(ready-strike);
+     if(n==='nanite-head')y=(meta.hand==='left'?-.08:.08)*ready;
     }else if(id==='walk'||id==='run'){
      // Diagonal pairs, not the old same-phase front and rear legs.
      const phase=t+(left?Math.PI:0)+(quad&&front?Math.PI:0),s=Math.sin(phase),amp=id==='run'?.5:.28;
@@ -78,6 +79,9 @@ export function createDec52Animator(actor,family){
  const find=id=>clips.find(c=>c.userData.action===id);
  return {clips,pose(id,time){const clip=find(id);if(!clip)return false;
   if(active!==clip||mode!=='scrub'){mixer.stopAllAction();fading=[];const action=mixer.clipAction(clip);action.reset().setLoop(T.LoopOnce,1);action.clampWhenFinished=true;action.play();active=clip;mode='scrub';}
+  // LoopOnce clamps by pausing the action. Re-enable it for every absolute
+  // seek, including seeking backward after inspecting the endpoint.
+  const action=mixer.clipAction(clip);action.paused=false;action.enabled=true;
   mixer.setTime(T.MathUtils.clamp(time,0,clip.duration));actor.updateMatrixWorld(true);return true;
  },advance(id,dt,{restart=false,blend=.12}={}){
   if(!Number.isFinite(dt)||dt<0||!Number.isFinite(blend)||blend<0)throw Error('Invalid Dec-52 playback time');
