@@ -1,0 +1,12 @@
+{
+  "sourceCheckout": "D:/lsw",
+  "sourceCommit": "e28a8cb",
+  "designation": "Dec-52",
+  "rigFamily": "rigid named pivots; not UAL humanoid",
+  "versions": {
+    "mech": 6,
+    "rat": 4,
+    "hound": 4,
+    "cloud": 2
+  }
+}

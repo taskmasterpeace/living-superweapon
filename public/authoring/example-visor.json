@@ -1,0 +1,4 @@
+{
+ "schema":"powerworld-authoring-v1","rig":"ual-deform-v1","name":"Example visor",
+ "parts":[{"name":"Visor","bone":"DEF-head","shape":"box","color":"#24383d","position":[0,0.12,0.11],"rotation":[0,0,0],"size":[0.25,0.06,0.035]}],"motion":null
+}

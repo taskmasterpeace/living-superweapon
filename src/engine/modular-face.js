@@ -9,7 +9,9 @@ export function faceTexture(id='neutral',eyeColor='#171e1b',infection='none'){
  const cacheKey=id+eyeColor+infection;if(textures.has(cacheKey))return textures.get(cacheKey);
  const canvas=document.createElement('canvas');canvas.width=canvas.height=256;const x=canvas.getContext('2d'),s=FACE_EXPRESSIONS[id];x.lineCap='round';
  for(const cx of [69,187]){
-  if(infection!=='none'){x.fillStyle='#3b2026';x.fillRect(cx-34,66,68,46);x.fillStyle='#a82937';x.fillRect(cx-30,73,60,36);}
+  if(infection==='hollow'){x.fillStyle='#111516';x.fillRect(cx-32,69,64,38);continue;}
+  if(infection==='fever'){x.fillStyle='#765b56';x.fillRect(cx-28,99,56,8);}
+  if(infection==='rupture'){x.fillStyle='#3b2026';x.fillRect(cx-34,66,68,46);x.fillStyle='#a82937';x.fillRect(cx-30,73,60,36);}
   x.fillStyle='#f4efe0';x.fillRect(cx-26,78,52,s.wide?32:25);x.fillStyle=eyeColor;x.fillRect(cx-7,78,15,s.wide?31:25);
   x.strokeStyle='#171e1b';x.lineWidth=7;x.beginPath();const left=cx<128,tilt=s.brows==='angry'?(left?10:-10):s.brows==='sad'?(left?-9:9):0;x.moveTo(cx-26,65-tilt);x.lineTo(cx+26,65+tilt);x.stroke();
  }
@@ -17,7 +19,7 @@ export function faceTexture(id='neutral',eyeColor='#171e1b',infection='none'){
  if(s.mouth==='open'||s.mouth==='round'){x.ellipse(128,199,s.mouth==='round'?13:19,22,0,0,Math.PI*2);x.fill();}
  else if(s.mouth==='wide'){x.roundRect(95,184,66,24,5);x.fill();x.fillStyle='#f4efe0';x.fillRect(101,186,54,6);}
  else {x.moveTo(96,196);x.quadraticCurveTo(128,s.mouth==='smile'?220:s.mouth==='frown'?178:196,160,196);x.stroke();}
- if(infection!=='none'){
+ if(infection==='rupture'){
   x.strokeStyle=infection==='rupture'?'#c92134':'#743e35';x.lineWidth=infection==='rupture'?10:5;
   for(const points of [[[23,0],[38,31],[20,48],[40,63]],[[233,132],[210,146],[220,172],[196,186]]]){x.beginPath();points.forEach(([a,b],i)=>i?x.lineTo(a,b):x.moveTo(a,b));x.stroke();}
   x.fillStyle='#982635';x.fillRect(85,171,87,54);x.fillRect(113,219,20,28);x.fillStyle='#312d29';x.beginPath();x.moveTo(89,174);x.lineTo(167,180);x.lineTo(158,222);x.lineTo(95,216);x.fill();x.fillStyle='#bdbbab';x.fillRect(101,181,49,7);

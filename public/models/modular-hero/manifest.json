@@ -306,7 +306,6 @@
     },
     "head": {
       "materials": [
-        "dark",
         "skin"
       ],
       "variants": []
@@ -326,6 +325,12 @@
     "legs": {
       "materials": [
         "suit"
+      ],
+      "variants": []
+    },
+    "neck": {
+      "materials": [
+        "skin"
       ],
       "variants": []
     },

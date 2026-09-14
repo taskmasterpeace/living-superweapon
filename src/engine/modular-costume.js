@@ -1,3 +1,5 @@
+import {CHARACTER_BONES} from '../data/character-bones.js';
+import {validateAsset} from './character-authoring.js';
 import {HERO_SIGNATURE_RECIPES} from '../data/hero-signature-recipes.js';
 import * as T from 'three';
 import {setModularExpression,setModularMuscle} from './modular-face.js';
@@ -6,12 +8,13 @@ import {INFECTION_STYLES,infectionTexture,outfitTexture} from './modular-surface
 export const MODULAR_FRAMES={hero:[1,1,1],heavy:[1.38,.92,1.18],agile:[.83,.98,.88],machine:[1.20,1.08,1.12]};
 export const MODULAR_RECIPES={
  ...HERO_SIGNATURE_RECIPES,
+ alien:{name:'Alien - humanoid authoring base',frame:'agile',hair:'none',skin:'#78877a',primary:'#263536',secondary:'#c76231',trim:'#141e20',emblemColor:'#e1a45a',emblem:'none',headwear:'insect',neckStyle:'skin',outfit:'bodysuit',cape:false,armor:false,shoulders:false,belt:false,knees:false,gloves:'bare',eyeColor:'#ffa147',eyeGlow:true,footwear:'shoes',authoredAsset:{schema:'powerworld-authoring-v1',rig:'ual-deform-v1',name:'Alien sensory fins',parts:[{name:'Left sensory fin',shape:'box',bone:'DEF-head',color:'#42575a',position:[-.13,.16,0],rotation:[0,0,.35],size:[.035,.22,.055]},{name:'Right sensory fin',shape:'box',bone:'DEF-head',color:'#42575a',position:[.13,.16,0],rotation:[0,0,-.35],size:[.035,.22,.055]}],motion:null}},
  scientist:{name:'Scientist · laboratory coat',frame:'hero',anatomy:'male',hair:'swept',hairColor:'#493322',skin:'#c79c72',primary:'#30383c',secondary:'#bb2929',trim:'#252b2e',emblemColor:'#eee9df',emblem:'none',coat:true,glasses:true,cape:false,armor:false,backpack:false,shoulders:false,gauntlets:false,knees:false,belt:false,gloves:'bare',footwear:'shoes',muscle:.85},
  striped:{name:'Striped explorer · fabric example',frame:'hero',hair:'swept',skin:'#c79c72',primary:'#e8e6d9',secondary:'#c62b31',trim:'#263443',pattern:'stripes',emblem:'none',cape:false,armor:false,shoulders:false,gauntlets:false,knees:false,belt:false,gloves:'bare',muscle:.85},
- vegas:{name:'Vegas · black and old gold',frame:'hero',hair:'none',skin:'#633b28',primary:'#161a1b',secondary:'#b18a3b',trim:'#252a29',emblemColor:'#d5b15c',emblem:'V',cape:false,armor:false,shoulders:true,muscle:1.15},
+ vegas:{outfit:'bodysuit',belt:false,knees:false,name:'Vegas · black and old gold',frame:'hero',hair:'none',skin:'#633b28',primary:'#161a1b',secondary:'#b18a3b',trim:'#252a29',emblemColor:'#d5b15c',emblem:'vegasLogo',cape:false,armor:false,shoulders:true,muscle:1.15},
  mage:{name:'Ascendant · robed caster',frame:'agile',anatomy:'female',hair:'bun',skin:'#78462e',primary:'#e8e5d6',secondary:'#b52e23',trim:'#20272b',emblemColor:'#b52e23',emblem:'triangle',cape:false,robe:true,sleeves:true,collar:true,gauntlets:false,knees:false,armor:false,shoulders:false,gloves:'bare',muscle:.9},
- infected:{infection:'rupture',tornClothes:false,name:'Infected · civilian',frame:'hero',hair:'swept',skin:'#a8aa85',primary:'#505958',secondary:'#74352b',trim:'#303830',emblemColor:'#74352b',emblem:'none',cape:false,armor:false,shoulders:false,gauntlets:false,knees:false,belt:false,gloves:'bare',bareArms:true,muscle:.85,eyeColor:'#e4e5b2',eyeGlow:true,expression:'angry'},
- infectedHeavy:{infection:'rupture',tornClothes:false,name:'Infected · heavy',frame:'heavy',hair:'none',skin:'#a8aa85',primary:'#555a49',secondary:'#74352b',trim:'#303830',emblemColor:'#74352b',emblem:'none',cape:false,armor:false,shoulders:false,gauntlets:false,knees:false,belt:false,gloves:'bare',bareArms:true,muscle:1.3,eyeColor:'#e4e5b2',eyeGlow:true,expression:'angry'},
+ infected:{infection:'hollow',tornClothes:false,name:'Infected · civilian',frame:'hero',hair:'swept',skin:'#a8aa85',primary:'#505958',secondary:'#74352b',trim:'#303830',emblemColor:'#74352b',emblem:'none',cape:false,armor:false,shoulders:false,gauntlets:false,knees:false,belt:false,gloves:'bare',bareArms:true,muscle:.85,eyeColor:'#e4e5b2',eyeGlow:true,expression:'angry'},
+ infectedHeavy:{infection:'hollow',tornClothes:false,name:'Infected · heavy',frame:'heavy',hair:'none',skin:'#a8aa85',primary:'#555a49',secondary:'#74352b',trim:'#303830',emblemColor:'#74352b',emblem:'none',cape:false,armor:false,shoulders:false,gauntlets:false,knees:false,belt:false,gloves:'bare',bareArms:true,muscle:1.3,eyeColor:'#e4e5b2',eyeGlow:true,expression:'angry'},
  base:{name:'Base character',frame:'hero',anatomy:'male',hair:'none',skin:'#b18b6d',primary:'#89928b',secondary:'#89928b',trim:'#89928b',emblemColor:'#e7d5a2',emblem:'none',cape:false,armor:false,shoulders:false,gauntlets:false,knees:false,belt:false,backpack:false,gloves:'bare',muscle:1},
  female:{name:'Base character · female',frame:'agile',anatomy:'female',hair:'bun',skin:'#78462e',primary:'#89928b',secondary:'#89928b',trim:'#89928b',emblemColor:'#e7d5a2',emblem:'none',cape:false,armor:false,shoulders:false,gauntlets:false,knees:false,belt:false,backpack:false,gloves:'bare',muscle:1},
  hero:{name:'Ascendant',frame:'hero',hair:'swept',skin:'#b18b6d',primary:'#dce0d9',secondary:'#b52e23',trim:'#20272b',emblemColor:'#b52e23',emblem:'triangle',cape:true,armor:false,shoulders:true,muscle:1},
@@ -22,7 +25,8 @@ export const MODULAR_RECIPES={
 export function validateModularRecipe(input){
  if(!input||input.schema!==1||input.skeleton!=='ual-deform-v1'||input.body!=='faceted-v1')throw Error('Expected a version 1 faceted character recipe');
  const r={...MODULAR_RECIPES.hero};
- const enums={collarStyle:['classic','flared','low'],hoodie:['none','short','long'],handModule:['none','cannon'],auraOrigin:['body','fists','head'],glowRegion:['none','trim','suit','accent'],clawStyle:['paired','singleBone'],aura:['none','swarm','gravity','sparks'],auraState:['always','flight','attack'],tattooRegion:['chest','upperArmL','upperArmR','face','headBack','headLeft','headRight','headTop','wholeHead'],capeStyle:['full','short','split','shoulder','pointed'],headwear:['none','cap','baseball','hood','speed','helmet','mask','skull','tactical','domino','insect','greathelm','circlet'],wings:['none','angel','armor'],coatStyle:['long','short'],shieldStyle:['round','kite','riot'],weapon:['none','sword','bat','axe','spear','dualKatana'],frame:Object.keys(MODULAR_FRAMES),anatomy:['male','female'],infection:Object.keys(INFECTION_STYLES),patternRegion:['all','torso','arms','legs'],pattern:['solid','gilt','stripes','pinstripe','denim','space','custom'],beltStyle:['plain','utility','sash','double'],footwear:['boots','shoes','sandals'],gloves:['bare','full','fingerless','boxing'],emblemPlacement:['front','back','both','cape','shoeLeft','shoeRight'],hair:['swept','afro','bun','braids','none','dreadlocks','mohawk','fade','buzz','spiky','ponytail','slicked','bob','long','mullet','parted','rainbow'],emblem:['triangle','shield','bolt','star','V','web','ring','deck52','deck52Black','deck52Color','ugandaCrane','none','custom',...Object.values(HERO_SIGNATURE_RECIPES).map(r=>r.emblem),...Object.values(HERO_SIGNATURE_RECIPES).filter(r=>r.rosterId).map(r=>'sig-'+r.rosterId)],expression:['neutral','happy','angry','talkA','talkB','surprised','sad']};
+ if(input.authoredAsset)r.authoredAsset=validateAsset(input.authoredAsset,CHARACTER_BONES);
+ const enums={neckStyle:['skin','uniform'],outfit:['separates','bodysuit'],collarStyle:['classic','flared','low'],hoodie:['none','short','long'],handModule:['none','cannon'],auraOrigin:['body','fists','head'],glowRegion:['none','trim','suit','accent'],clawStyle:['paired','singleBone'],aura:['none','swarm','gravity','sparks'],auraState:['always','flight','attack'],tattooRegion:['chest','upperArmL','upperArmR','face','headBack','headLeft','headRight','headTop','wholeHead'],capeStyle:['full','short','split','shoulder','pointed'],headwear:['none','cap','baseball','hood','speed','helmet','mask','skull','tactical','domino','insect','greathelm','circlet'],wings:['none','angel','armor'],coatStyle:['long','short'],shieldStyle:['round','kite','riot'],weapon:['none','sword','bat','axe','spear','dualKatana'],frame:Object.keys(MODULAR_FRAMES),anatomy:['male','female'],infection:Object.keys(INFECTION_STYLES),patternRegion:['all','torso','arms','legs'],pattern:['solid','gilt','stripes','pinstripe','denim','space','custom'],beltStyle:['plain','utility','sash','double'],footwear:['boots','shoes','sandals'],gloves:['bare','full','fingerless','boxing'],emblemPlacement:['front','back','both','cape','shoeLeft','shoeRight'],hair:['swept','afro','bun','braids','none','dreadlocks','mohawk','fade','buzz','spiky','ponytail','slicked','bob','long','mullet','parted','rainbow'],emblem:['triangle','shield','bolt','star','V','web','ring','vegasLogo','deck52','deck52Black','deck52Color','ugandaCrane','none','custom',...Object.values(HERO_SIGNATURE_RECIPES).map(r=>r.emblem),...Object.values(HERO_SIGNATURE_RECIPES).filter(r=>r.rosterId).map(r=>'sig-'+r.rosterId)],expression:['neutral','happy','angry','talkA','talkB','surprised','sad']};
  for(const [key,values]of Object.entries(enums))if(input[key]!==undefined){if(!values.includes(input[key]))throw Error('Invalid '+key);r[key]=input[key];}
  for(const key of ['primary','secondary','trim','emblemColor','skin','hairColor','eyeColor','gloveColor'])if(input[key]!==undefined){if(!/^#[0-9a-f]{6}$/i.test(input[key]))throw Error('Invalid '+key+' color');r[key]=input[key];}
  for(const key of ['goldChain','businessSuit','mustache','unlitBlack','centerPanel','skirt','beard','claws','tentacles','wristBlasters','lasso','kilt','metallic','shimmer','shield','coat','wristbands','tornClothes','cape','robe','sleeves','collar','glasses','armor','shoulders','gauntlets','knees','belt','backpack','bareArms','helmet','visor','eyepatch','eyeGlow'])if(input[key]!==undefined){if(typeof input[key]!=='boolean')throw Error('Invalid '+key);r[key]=input[key];}
@@ -37,10 +41,10 @@ export function validateModularRecipe(input){
  r.name=typeof input.name==='string'?input.name.slice(0,60):'Imported character';return r;
 }
 const emblemTextures=new Map();
-export function emblemPreservesColor(id){return ['custom','deck52','deck52Black','deck52Color'].includes(id);}
+export function emblemPreservesColor(id){return ['custom','vegasLogo','deck52','deck52Black','deck52Color'].includes(id);}
 export function emblemTexture(id){
  if(emblemTextures.has(id))return emblemTextures.get(id);
- if(!['triangle','shield','bolt','star','V','web','ring','deck52','deck52Black','deck52Color','none'].includes(id)&&!Object.values(HERO_SIGNATURE_RECIPES).some(r=>r.emblem===id||'sig-'+r.rosterId===id))throw Error('Unknown emblem: '+id);
+ if(!['triangle','shield','bolt','star','V','web','ring','vegasLogo','deck52','deck52Black','deck52Color','none'].includes(id)&&!Object.values(HERO_SIGNATURE_RECIPES).some(r=>r.emblem===id||'sig-'+r.rosterId===id))throw Error('Unknown emblem: '+id);
  const c=document.createElement('canvas');c.width=c.height=256;const x=c.getContext('2d');x.fillStyle='#fff';x.beginPath();
  const poly=points=>{points.forEach(([a,b],i)=>i?x.lineTo(a,b):x.moveTo(a,b));x.closePath();x.fill();};
  if(id.startsWith('sig-')){const h=[...id].reduce((a,c)=>(a*31+c.charCodeAt(0))>>>0,0);x.strokeStyle='#fff';x.lineWidth=14;const count=3+h%4;for(let i=0;i<count;i++){const a=i*Math.PI*2/count;x.beginPath();x.moveTo(128+35*Math.cos(a),128+35*Math.sin(a));x.lineTo(128+99*Math.cos(a),128+99*Math.sin(a));x.stroke();}poly([[128,72],[170,128],[128,184],[86,128]]);}
@@ -54,13 +58,13 @@ export function emblemTexture(id){
  if(id==='web'){x.strokeStyle='#fff';x.lineWidth=8;for(let i=0;i<8;i++){const a=i*Math.PI/4;x.beginPath();x.moveTo(128,128);x.lineTo(128+105*Math.cos(a),128+105*Math.sin(a));x.stroke();}for(const radius of [38,70,103]){x.beginPath();x.arc(128,128,radius,0,Math.PI*2);x.stroke();}}
  if(id==='V')poly([[29,40],[78,40],[128,165],[178,40],[227,40],[150,224],[106,224]]);
  const t=new T.CanvasTexture(c);t.flipY=false;t.colorSpace=T.SRGBColorSpace;emblemTextures.set(id,t);
- if(['deck52','deck52Black','deck52Color'].includes(id)){
+ if(['vegasLogo','deck52','deck52Black','deck52Color'].includes(id)){
   const img=new Image();t.userData.ready=new Promise((resolve,reject)=>{
    img.onload=()=>{const scan=document.createElement('canvas');scan.width=img.width;scan.height=img.height;const sx=scan.getContext('2d');sx.drawImage(img,0,0);const pixels=sx.getImageData(0,0,img.width,img.height).data;let left=img.width,top=img.height,right=0,bottom=0;
     for(let y=0;y<img.height;y++)for(let xx=0;xx<img.width;xx++)if(pixels[(y*img.width+xx)*4+3]>32){left=Math.min(left,xx);right=Math.max(right,xx);top=Math.min(top,y);bottom=Math.max(bottom,y);}
     const w=right-left+1,h=bottom-top+1,k=240/Math.max(w,h);x.clearRect(0,0,256,256);x.drawImage(img,left,top,w,h,(256-w*k)/2,(256-h*k)/2,w*k,h*k);t.needsUpdate=true;resolve(t);
    };img.onerror=()=>reject(new Error('Deck 52 emblem failed to load'));
-  });img.src='/assets/emblems/deck52/'+({deck52:'white',deck52Black:'black',deck52Color:'color'}[id])+'.png';
+  });img.src=id==='vegasLogo'?'/assets/emblems/vegas.png':'/assets/emblems/deck52/'+({deck52:'white',deck52Black:'black',deck52Color:'color'}[id])+'.png';
  }
  return t;
 }
@@ -99,6 +103,8 @@ export function applyModularRecipe(meshes,recipe){
   if(r.coat&&slot==='torso')m.visible=false;if(slot==='collar'&&r.collarStyle&&r.collarStyle!=='classic')m.visible=false;
   const colors={suit:r.primary,accent:r.secondary,dark:r.trim,metal:r.emblemColor,skin:r.skin};
   if(colors[m.material.name])m.material.color.set(colors[m.material.name]);
+  if(slot==='neck'||m.name==='Neck')m.material.color.set(r.neckStyle==='uniform'?r.primary:r.skin);
+  if(r.outfit==='bodysuit'&&['torso','waist','legs','calves','arms','forearms','deltoids'].includes(slot))m.material.color.set(r.primary);
   if(r.regionColors?.[slot])m.material.color.set(r.regionColors[slot]);
   m.material.metalness=r.metallic&&['suit','accent','dark'].includes(m.material.name)?.72:0;m.material.roughness=r.metallic?.3:.78;
   if(slot==='hair')m.material.color.set(r.hairColor||'#171b19');
@@ -109,9 +115,9 @@ export function applyModularRecipe(meshes,recipe){
   if(slot==='coat'&&m.material.name==='suit')m.material.color.set(r.coatStyle==='short'?r.primary:'#eeeae2');
   if(!['expression','emblem','emblemBack'].includes(slot)&&typeof document!=='undefined'){
    let map=null;const infected=INFECTION_STYLES[r.infection];
-   if(slot!=='coat'&&m.material.name==='suit'&&r.pattern!=='solid'&&(!r.patternRegion||r.patternRegion==='all'||({torso:['torso'],arms:['arms','forearms','deltoids'],legs:['legs','calves']}[r.patternRegion]||[]).includes(slot))){map=outfitTexture(r);if(map)m.material.color.set('#ffffff');}
+   if(slot!=='coat'&&(m.material.name==='suit'||(r.outfit==='bodysuit'&&['torso','waist','legs','calves','arms','forearms','deltoids'].includes(slot)))&&r.pattern!=='solid'&&(!r.patternRegion||r.patternRegion==='all'||({torso:['torso'],arms:['arms','forearms','deltoids'],legs:['legs','calves','waist']}[r.patternRegion]||[]).includes(slot))){map=outfitTexture(r);if(map)m.material.color.set('#ffffff');}
    const exposed=m.material.name==='skin'||(['arms','deltoids','forearms'].includes(slot)&&r.bareArms)||(['hands','handTips'].includes(slot)&&(r.gloves==='bare'||(r.gloves==='fingerless'&&slot==='handTips')));
-   if(infected&&exposed){map=infectionTexture(r.infection);m.material.color.set(infected.skin);}else if(infected&&['suit','accent','dark'].includes(m.material.name)&&slot!=='hair'){m.material.color.lerp(new T.Color('#777d78'),.38);}
+   if(infected&&exposed&&r.infection!=='hollow'){map=infectionTexture(r.infection);m.material.color.set(infected.skin);}else if(infected&&['suit','accent','dark'].includes(m.material.name)&&slot!=='hair'){m.material.color.lerp(new T.Color('#777d78'),.38);}
    if(m.material.map!==map){m.material.map=map;m.material.needsUpdate=true;}
   }
   const glowMatch=r.glowRegion==='trim'?m.material.name==='dark':m.material.name===r.glowRegion;if(r.glowRegion&&r.glowRegion!=='none'&&glowMatch){m.material.emissive.copy(m.material.color);m.material.emissiveIntensity=r.glowStrength??1;}
@@ -128,7 +134,7 @@ export function applyModularRecipe(meshes,recipe){
   }
  }
  setModularMuscle(meshes,r.muscle);
- if(typeof document!=='undefined')setModularExpression(meshes,r.expression||'neutral',{eyeColor:r.infection!=='none'?'#f5f4dc':r.eyeColor||'#29221b',glow:r.infection!=='none'||!!r.eyeGlow,infection:r.infection});
+ if(typeof document!=='undefined')setModularExpression(meshes,r.expression||'neutral',{eyeColor:r.infection!=='none'?'#f5f4dc':r.eyeColor||'#29221b',glow:r.infection==='hollow'?false:!!r.eyeGlow,infection:r.infection});
  return r;
 }
 export function customEmblemTexture(data){

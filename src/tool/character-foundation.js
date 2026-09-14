@@ -1,3 +1,5 @@
+import {createAuthoredParts} from '../engine/character-authoring.js';
+import {installAuthoring} from './character-authoring-panel.js';
 import {organizeCreator} from './creator-organizer.js';
 import {createTailoring} from '../engine/modular-tailoring.js';
 import {createImagePlacements} from '../engine/modular-image-placements.js';
@@ -42,11 +44,13 @@ function applyRecipe(sync=false){
  }
 }
 applyRecipe(true);
+const recipeParts=createAuthoredParts(actor);
 const signatureParts=createSignatureParts(actor),tailoring=createTailoring(actor),imagePlacements=createImagePlacements(actor);
 const equipment=createModularWeaponPreview(actor),hand=actor.getObjectByName('DEF-handR'),sword=equipment.weapons.sword;let weapon='none',withShield=false;
 let flightHands='fist';
 let ragdoll=null,dropTime=0;
 function sourcePose(name,t){const clip=gltf.animations.find(c=>c.name===name);mixer.stopAllAction();flightAdapter.reset();const action=mixer.clipAction(clip);action.reset().setLoop(T.LoopOnce,1);action.clampWhenFinished=true;action.play();mixer.setTime(t*clip.duration);return clip;}
+let authoring=null,authoringLast=performance.now();
 function draw(){
  const flight=motion.startsWith('flight');
  if(motion==='ragdoll'){
@@ -60,10 +64,11 @@ function draw(){
   native._animate(1/60);flightAdapter.update();if(recipe.infection!=='none')poseInfectedFlight(actor);
  }else sourcePose(motion,phase);
  applyModularHeadScale(actor,recipe.frame);animateModularCape(meshes,performance.now()/1000,motion.startsWith("flight")?60:0);
- tailoring.set(recipe);imagePlacements.set(recipe);imagePlacements.update(performance.now()/1000,flight);signatureParts.set(recipe);signatureParts.update(performance.now()/1000,flight,/Attack|Punch/.test(motion)?'attack':'idle');
+ recipeParts.set(recipe.authoredAsset||{parts:[]});tailoring.set(recipe);imagePlacements.set(recipe);imagePlacements.update(performance.now()/1000,flight);signatureParts.set(recipe);signatureParts.update(performance.now()/1000,flight,/Attack|Punch/.test(motion)?'attack':'idle');
  equipment.set({shieldStyle:recipe.shieldStyle||'round',weapon:weapon==='none'&&motion.startsWith('Sword')?'sword':weapon,shield:withShield});actor.updateMatrixWorld(true);
  document.querySelector('#status').textContent=motion==='ragdoll'?'Ragdoll · bounded hips, spine, elbows and knees · ground settling':flight?'Native procedural flight · '+flightHands+' hands':motion+' · original authored clip · '+(phase*100).toFixed(0)+'%';
  if(['bat','axe'].includes(weapon)&&motion==='Sword_Attack')document.querySelector('#status').textContent+=' · shared one-handed slash, dedicated '+weapon+' swing pending';
+ const authoringNow=performance.now();authoring?.update(Math.min(.05,(authoringNow-authoringLast)/1000));authoringLast=authoringNow;
  renderer.render(scene,camera);
 }
 for(const b of document.querySelectorAll('[data-motion]'))b.onclick=()=>{if(ragdoll){ragdoll.restore();ragdoll=null;native.pos.set(0,0,0);native.obj.position.set(0,0,0);camera.position.set(14,8,22);orbit.target.set(0,height/2,0);orbit.update();}motion=b.dataset.motion;phase=0;playing=true;document.querySelector('#pause').textContent='Pause';for(const button of document.querySelectorAll('[data-motion]'))button.classList.toggle('active',button===b);draw();};
@@ -81,7 +86,7 @@ for(const key of ['bust','emblemScale','glowStrength'])document.getElementById(k
  document.querySelector('#clearTattooLayers').onclick=()=>{recipe.tattoos=[];document.querySelector('#tattooLayersStatus').textContent='Saved layers removed';draw();};
  document.querySelector('#muscle').oninput=e=>{recipe.muscle=+e.target.value;applyRecipe();draw();};
 for(const key of ['goldChain','businessSuit','mustache','unlitBlack','centerPanel','skirt','beard','claws','tentacles','wristBlasters','lasso','kilt','metallic','shimmer','coat','wristbands','tornClothes','robe','sleeves','collar','glasses','cape','armor','visor','eyepatch','eyeGlow','gauntlets','shoulders','knees','belt','backpack'])document.getElementById(key).onchange=e=>{recipe[key]=e.target.checked;applyRecipe();draw();};
-document.querySelector('#exportRecipe').onclick=()=>{const blob=new Blob([JSON.stringify({schema:1,skeleton:'ual-deform-v1',body:'faceted-v1',...recipe,size},null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='powerworld-character-recipe.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);document.querySelector('#recipeStatus').textContent='Recipe exported. Reuses the shared rig, modules and clips.';};
+document.querySelector('#exportRecipe').onclick=()=>{const blob=new Blob([JSON.stringify({schema:1,skeleton:'ual-deform-v1',body:'faceted-v1',...FOUNDATION.recipe},null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='powerworld-character-recipe.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);document.querySelector('#recipeStatus').textContent='Recipe exported. Reuses the shared rig, modules and clips.';};
 document.querySelector('#importRecipe').onclick=()=>document.querySelector('#recipeFile').click();
 document.querySelector('#recipeFile').onchange=async e=>{try{const file=e.target.files[0];if(!file)return;if(file.size>14000000)throw Error('Recipe is too large');const next=validateModularRecipe(JSON.parse(await file.text()));recipe=next;size=next.size??1;delete recipe.size;const select=document.querySelector('#costume');select.querySelector('[value=imported]')?.remove();const option=new Option(next.name,'imported',true,true);option.disabled=true;select.add(option);const sizeSelect=document.querySelector('#size');if(!Array.from(sizeSelect.options).some(o=>+o.value===size))sizeSelect.add(new Option('Imported height',String(size)));sizeSelect.value=String(size);applyRecipe(true);draw();document.querySelector('#recipeStatus').textContent='Imported '+recipe.name;}catch(error){document.querySelector('#recipeStatus').textContent=error.message;}finally{e.target.value='';}};
 document.querySelector('#uploadEmblem').onclick=()=>document.querySelector('#emblemFile').click();
@@ -98,8 +103,9 @@ document.querySelector('#sourceTake').onchange=e=>{document.querySelector('[data
 const bank=await addModularMotions(gltf);for(const e of bank.entries)document.querySelector('#sourceTake').add(new Option(e.take,e.take));document.querySelector('#sourceTake').disabled=false;
 const params=new URLSearchParams(location.search);for(const [id,r] of Object.entries(MODULAR_RECIPES))if(!document.querySelector('#costume option[value="'+id+'"]'))document.querySelector('#costume').add(new Option(r.name,id));const requestedRecipe=params.get('recipe');if(MODULAR_RECIPES[requestedRecipe]){recipe={...MODULAR_RECIPES[requestedRecipe]};weapon=recipe.weapon||'none';withShield=!!recipe.shield;document.querySelector('#weapon').value=weapon;document.querySelector('#shield').checked=withShield;document.querySelector('#costume').value=requestedRecipe;applyRecipe(true);}const requestedTake=params.get('clip');if(gltf.animations.some(c=>c.name===requestedTake)){motion=requestedTake;document.querySelector('#sourceTake').value=motion;}
 function resize(){const w=Math.max(320,innerWidth-340);renderer.setSize(w,innerHeight);camera.aspect=w/innerHeight;camera.updateProjectionMatrix();}addEventListener('resize',resize);resize();draw();
-window.FOUNDATION={get ragdoll(){return ragdoll;},actor,meshes,mixer,orbit,native,flightAdapter,equipment,clips:gltf.animations,hand,sword,scene,camera,renderer,get recipe(){return {...recipe,size};},set(m,p=0){motion=({punch:'Punch_Cross',sword:'Sword_Attack',hold:'Sword_Idle'})[m]||m;phase=p;playing=false;document.querySelector("#pause").textContent="Play";for(const b of document.querySelectorAll("[data-motion]"))b.classList.toggle("active",b.dataset.motion===motion);document.querySelector("#scrub").value=phase;draw();},draw};
+window.FOUNDATION={get ragdoll(){return ragdoll;},actor,meshes,mixer,orbit,native,flightAdapter,equipment,clips:gltf.animations,hand,sword,scene,camera,renderer,get recipe(){return {...recipe,size,...(authoring?.asset?{authoredAsset:authoring.asset}: {})};},set(m,p=0){motion=({punch:'Punch_Cross',sword:'Sword_Attack',hold:'Sword_Idle'})[m]||m;phase=p;playing=false;document.querySelector("#pause").textContent="Play";for(const b of document.querySelectorAll("[data-motion]"))b.classList.toggle("active",b.dataset.motion===motion);document.querySelector("#scrub").value=phase;draw();},draw};
 organizeCreator({getRecipe:()=>FOUNDATION.recipe,ROSTER});
+authoring=installAuthoring({actor,scene,camera,orbit,getRecipe:()=>FOUNDATION.recipe,setRecipe:r=>{recipe=r;applyRecipe(true);draw();},clips:gltf.animations,setMotion:(m,p)=>FOUNDATION.set(m,p),ROSTER});
 function tick(now){const dt=Math.min(.05,(now-last)/1000);last=now;if(playing&&motion!=='ragdoll'){phase=(phase+dt/((motion.startsWith('flight')?8:gltf.animations.find(c=>c.name===motion).duration)+.35))%1;document.querySelector('#scrub').value=phase;}orbit.update();draw();requestAnimationFrame(tick);}requestAnimationFrame(tick);
 
 }

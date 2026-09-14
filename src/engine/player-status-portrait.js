@@ -15,3 +15,10 @@ export function portraitOf(def){
  p.g.traverse(o=>{if(o.geometry)resources.add(o.geometry);if(o.material)for(const m of Array.isArray(o.material)?o.material:[o.material])resources.add(m);});
  for(const r of resources)r.dispose();return url;
 }
+export async function modularPortraitOf(def){
+ const {createModularPresentation}=await import('./modular-presentation.js');
+ const c=await createModularPresentation(def);renderer??=new THREE.WebGLRenderer({alpha:true,antialias:true,preserveDrawingBuffer:true});renderer.setSize(208,240,false);renderer.setPixelRatio(1);renderer.setClearColor(0,0);
+ const scene=new THREE.Scene();scene.add(c.actor);scene.add(new THREE.HemisphereLight('#e9f0ec','#433b2b',2));const key=new THREE.DirectionalLight('#fff4e1',3);key.position.set(3,8,10);scene.add(key);
+ const camera=new THREE.OrthographicCamera(-.24,.24,.28,-.28,.01,30);camera.position.set(.035,1.61,4);camera.lookAt(0,1.61,0);
+ renderer.render(scene,camera);const url=renderer.domElement.toDataURL('image/png');c.dispose();return url;
+}

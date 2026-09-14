@@ -6,7 +6,7 @@ const directions={
  ironclad:{frame:'machine',headwear:'helmet',hair:'none',metallic:true,shoulders:true,gauntlets:true,cape:false,primary:'#586878',secondary:'#c1cbd2'},
 
  sol:{cape:true,regionColors:{legs:'#173da0',calves:'#173da0'},wristbands:true,wristBlasters:true},
- vega:{hair:'none',skin:'#633b28',primary:'#161a1b',secondary:'#b18a3b',trim:'#252a29',emblemColor:'#d5b15c',emblem:'V',cape:false,pattern:'gilt'},
+ vega:{outfit:'bodysuit',belt:false,knees:false,hair:'none',skin:'#633b28',primary:'#161a1b',secondary:'#b18a3b',trim:'#252a29',emblemColor:'#d5b15c',emblem:'vegasLogo',cape:false,pattern:'gilt'},
  aegis:{frame:'hero',metallic:true,primary:'#bac2c7',secondary:'#ad8b47',trim:'#293b50',weapon:'sword',shield:true,shieldStyle:'kite',lasso:true,emblem:'shield'},
  apex:{hair:'spiky',hairColor:'#66e82c',primary:'#182c24',secondary:'#80c339',emblem:'star',frame:'heavy'},
  aurum:{emblemColor:'#d6d9dc',primary:'#eff0e9',secondary:'#babfbe',trim:'#535d63',skin:'#d7dbda',collar:true,shimmer:true,emblem:'star',coat:true,coatStyle:'short'},

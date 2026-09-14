@@ -1,3 +1,5 @@
+import {createModularPresentation} from './modular-presentation.js';
+import {heroModelOf} from '../data/hero-models.js';
 import {damageBadges,damageSymbol} from './damage-symbols.js';
 import {characterIdentityView} from './character-identity-view.js';
 import {createFieldFootage} from './field-footage-view.js';
@@ -361,7 +363,7 @@ export const SelectMixin = {
     card.dataset.portraitRequested='true';
     image.onload=()=>card.classList.add('portrait-ready');
     image.onerror=()=>{delete card.dataset.portraitRequested;card.classList.remove('portrait-ready');};
-    import('./player-status-portrait.js').then(module=>module.portraitOf(ROSTER[i])).then(url=>{image.src=url;})
+    import('./player-status-portrait.js').then(module=>module.modularPortraitOf(ROSTER[i])).then(url=>{image.src=url;})
       .catch(error=>{image.onerror();console.warn('Character-select portrait unavailable',ROSTER[i]?.id,error);});
   },
 
@@ -484,9 +486,16 @@ export const SelectMixin = {
     T.fig = P; T.base = -0.42;
     T.enterT = 0;                        // drives the entrance (scale-up + lift + aura flash)
     T.scene.add(P.g);
+    if(heroModelOf(def).body==='faceted-v1')createModularPresentation(def).then(c=>{
+      if(T.fig!==P){c.dispose();return;}
+      c.actor.scale.setScalar((P.head.position.y+.8*P.head.scale.y)/1.8325);
+      for(const child of P.g.children)child.visible=false;
+      P.g.add(c.actor);P.g.userData.disposeModular=()=>c.dispose();P.g.userData.animateModular=c.animate;
+    }).catch(error=>console.warn('Modular selection preview',error.message));
   },
 
   _selDispose(obj) {
+    obj.userData.disposeModular?.();delete obj.userData.disposeModular;
     const resources=new Set();
     obj.traverse(o => {
       if (o.geometry) for(const geometry of o.geometry.palmVariants||[o.geometry])resources.add(geometry);
@@ -526,6 +535,7 @@ export const SelectMixin = {
         T.fig.g.scale.setScalar(0.9 + 0.1 * e);
         if (this._sel.aura) this._sel.aura.style.opacity = String(0.55 + 0.35 * e);
       }
+      T.fig?.g.userData.animateModular?.(T.t);
       T.renderer.render(T.scene, T.cam);
     }
     requestAnimationFrame(() => this._selLoop());

@@ -34,6 +34,7 @@ export default defineConfig({
         atlas: fileURLToPath(new URL('./atlas.html', import.meta.url)),
         powerworld: fileURLToPath(new URL('./powerworld.html', import.meta.url)),
         studio: fileURLToPath(new URL('./studio.html', import.meta.url)),
+        characterFamilies: fileURLToPath(new URL('./character-families.html', import.meta.url)),
         characterFoundation: fileURLToPath(new URL('./character-foundation.html', import.meta.url)),
         creatureFoundation: fileURLToPath(new URL('./creature-foundation.html', import.meta.url)),
         soundLibrary: fileURLToPath(new URL('./sound-library.html', import.meta.url)),
