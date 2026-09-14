@@ -1,6 +1,7 @@
+import {createCanvasClipRecorder} from './canvas-clip-recorder.js';
 import * as THREE from 'three';
 import {cloneReviewActor,applyReviewPose,reviewFrame} from './melee-recording.js';
-import {cinematicReviewShot,reviewGroupFrame} from './melee-review-camera.js';
+import {cinematicReviewShot,reviewGroupFrame,throwReviewShot} from './melee-review-camera.js';
 import {phaseLabel,reviewStates} from './melee-phase.js';
 import '../styles/melee-review.css';
 
@@ -28,13 +29,22 @@ export function openMeleeReview(game,recording,onClose=()=>{},{recover=false}={}
  const events=recording.events.filter(e=>e.time>=start&&e.time<=end);
  const marks=document.createElement('nav');marks.className='melee-review-events';marks.setAttribute('aria-label','Recorded combat events');dialog.querySelector('footer').append(marks);
  for(const event of events){const button=document.createElement('button');button.textContent=`${(event.time-start).toFixed(2)}s · ${event.kind==='contact'?event.result:event.label}`;button.title=event.label;button.onclick=()=>{time=event.time;playing=false;play.textContent='Play';};marks.append(button);}
- for(const [id,label]of [['rear','Gameplay angle'],['front','Front'],['side','Side'],['overhead','Overhead'],['cinematic','Cinematic replay']]){
+ for(const [id,label]of [['rear','Gameplay angle'],['front','Front'],['side','Side'],['overhead','Overhead'],['cinematic','Cinematic replay'],['throw','Throw follow']]){
   const button=document.createElement('button');button.textContent=label;button.dataset.view=id;button.onclick=()=>{view=id;};dialog.querySelector('nav').append(button);
  }
  const focusLabel=document.createElement('label');focusLabel.textContent='Follow ';const subject=document.createElement('select');subject.setAttribute('aria-label','Review subject');subject.innerHTML='<option value="both">All fighters</option>'+copies.map((_,i)=>'<option value="'+i+'">'+(i===0?'You':i===1?'Target':'Teammate')+'</option>').join('');focusLabel.append(subject);dialog.querySelector('nav').append(focusLabel);
- function draw(now){
+ const captureButton=document.createElement('button');captureButton.textContent='Record action clip';dialog.querySelector('footer').append(captureButton);
+ const download=(blob,name)=>{const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
+ const capture=createCanvasClipRecorder(renderer.domElement,{onComplete:(blob,metadata)=>{download(blob,'powerworld-combat-review.webm');download(new Blob([JSON.stringify(metadata,null,2)],{type:'application/json'}),'powerworld-combat-review.json');captureButton.textContent='Record action clip';},onError:e=>{captureButton.textContent='Recording failed';captureButton.title=e.message;}});
+ captureButton.disabled=!capture.supported;
+ captureButton.onclick=()=>{
+  if(capture.active){capture.stop();return;}
+  try{time=start;playing=false;draw(performance.now(),false);capture.start({kind:'pose-review',terrainAndEffects:false,camera:view,subject:subject.value,speed:Number(speed.value),start,end,actors:recording.actors.map(a=>a.fighter.def?.id),events});playing=true;last=performance.now();play.textContent='Pause';captureButton.textContent='Stop recording';}
+  catch(e){captureButton.title=e.message;captureButton.textContent='Recording unavailable';}
+ };
+ function draw(now,schedule=true){
   if(closed)return;
-  if(playing){time=Math.min(end,time+Math.min(.1,(now-last)/1000)*Number(speed.value));if(time===end){playing=false;play.textContent='Play';}}
+  if(playing){time=Math.min(end,time+Math.min(.1,(now-last)/1000)*Number(speed.value));if(time===end){playing=false;play.textContent='Play';if(capture.active)capture.stop();}}
   last=now;const {a,b,mix}=reviewFrame(frames,time);
   copies.forEach((c,i)=>applyReviewPose(c.nodes,a.actors[i].pose,b.actors[i].pose,mix));
   const event=events.findLast(e=>e.time<=time&&e.kind==='contact');
@@ -48,15 +58,16 @@ export function openMeleeReview(game,recording,onClose=()=>{},{recover=false}={}
   stage.dataset.shot=shot?String(shot.index):'continuous';
   offset.set(...(shot?shot.offset:view==='front'?[.4,.35,1]:view==='side'?[1,.25,0]:view==='overhead'?[0,1,.015]:[.4,.3,-1])).normalize().multiplyScalar(distance);
   offset.applyAxisAngle(new THREE.Vector3(0,1,0),yaw);camera.position.copy(center).add(offset);camera.lookAt(center);
+  if(view==='throw'){const shot=throwReviewShot(frames,time);if(shot&&copies[shot.actor]){center.copy(copies[shot.actor].model.position);center.y+=5;camera.position.copy(center).add(new THREE.Vector3(...shot.offset));camera.position.y=Math.max(bounds.min.y+3,camera.position.y);camera.lookAt(center);stage.dataset.shot='throw-'+shot.actor;}}
   const width=stage.clientWidth,height=stage.clientHeight;if(renderer.domElement.width!==Math.round(width*renderer.getPixelRatio())||renderer.domElement.height!==Math.round(height*renderer.getPixelRatio())){renderer.setSize(width,height,false);camera.aspect=width/height;camera.updateProjectionMatrix();}
   renderer.render(scene,camera);slider.value=time-start;dialog.querySelector('[data-clock]').textContent=`${(time-start).toFixed(2)} / ${(end-start).toFixed(2)} s`;
   const air=a.actors.findIndex(f=>f.airControl==='uncontrolled');
   const states=reviewStates(a,events,time).map((f,i)=>`${i===2?'Teammate':i?'Target':'You'}: ${phaseLabel(f.phase)}${f.remaining>0?' ('+Math.round(f.remaining*1000)+'ms recorded)':''} · HP ${f.hp.toFixed(1)} · energy ${f.ki.toFixed(1)}`).join('     /     ');
   dialog.querySelector('[data-readout]').textContent=(followImpact?'CAMERA FOLLOWING IMPACT · ':'')+(air>=0?`${air===2?'Teammate':air?'Target':'You'}: UNCONTROLLED AIRBORNE · `:'')+states+(event?' — Last hit: '+event.label:'');
   for(const button of dialog.querySelectorAll('[data-view]'))button.setAttribute('aria-pressed',String(button.dataset.view===view));
-  raf=requestAnimationFrame(draw);
+  if(schedule)raf=requestAnimationFrame(draw);
  }
- function close(){if(closed)return;closed=true;cancelAnimationFrame(raf);window.removeEventListener('keydown',keys,true);game.combatOverlayOpen=false;game.running=previousRunning;game.retireCombatViewInput?.();dialog.close();dialog.remove();copies.forEach(c=>c.dispose());grid.geometry.dispose();grid.material.dispose();renderer.dispose();focus?.focus?.();onClose();}
+ function close(){if(closed)return;capture.stop(false);closed=true;cancelAnimationFrame(raf);window.removeEventListener('keydown',keys,true);game.combatOverlayOpen=false;game.running=previousRunning;game.retireCombatViewInput?.();dialog.close();dialog.remove();copies.forEach(c=>c.dispose());grid.geometry.dispose();grid.material.dispose();renderer.dispose();focus?.focus?.();onClose();}
  function keys(e){e.stopImmediatePropagation();if(e.code==='Escape'){e.preventDefault();close();}if(e.code==='Space'){e.preventDefault();play.click();}}
  play.onclick=()=>{if(time>=end)time=start;playing=!playing;play.textContent=playing?'Pause':'Play';};slider.oninput=()=>{time=start+Number(slider.value);playing=false;play.textContent='Play';};dialog.querySelector('[data-close]').onclick=close;dialog.addEventListener('cancel',e=>{e.preventDefault();close();});
  game.retireCombatViewInput?.();game.combatOverlayOpen=true;game.running=false;document.exitPointerLock?.();window.addEventListener('keydown',keys,true);dialog.showModal();play.focus();raf=requestAnimationFrame(draw);

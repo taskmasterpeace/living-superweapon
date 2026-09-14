@@ -1,5 +1,23 @@
 // Editorial replay only: never drives the live gameplay camera or simulation.
 const ANGLES=[[1,.3,-.65],[1,.22,.55],[1,.65,.05]];
+// Deterministic editorial camera: find the latest moving thrown actor rather
+// than retaining mutable playback state (backward scrubbing must match).
+export function throwReviewShot(frames,time){
+ let selected=null;
+ for(const frame of frames){
+  if(frame.time>time)break;
+  frame.actors.forEach((actor,index)=>{
+   const v=actor.velocity;
+   if(actor.thrown&&v?.length===3&&v.every(Number.isFinite)&&Math.hypot(...v)>1)selected={actor:index,velocity:v};
+  });
+ }
+ if(!selected)return null;
+ const v=selected.velocity,s=Math.hypot(...v),forward=v.map(n=>n/s);
+ const horizontal=Math.hypot(forward[0],forward[2]);
+ const side=horizontal>.001?[forward[2]/horizontal,0,-forward[0]/horizontal]:[1,0,0];
+ const offset=forward.map((n,i)=>n*18+side[i]*16+(i===1?5:0));
+ return {actor:selected.actor,offset};
+}
 export function cinematicReviewShot(events,time,start=0){
  let last=start-.4,index=0;
  for(const event of events){

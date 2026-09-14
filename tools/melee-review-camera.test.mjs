@@ -1,6 +1,16 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {cinematicReviewShot} from '../src/engine/melee-review-camera.js';
+import {cinematicReviewShot,throwReviewShot} from '../src/engine/melee-review-camera.js';
+
+test('throw follow uses recorded flight direction and is stable under backward seeks',()=>{
+ const frames=[{time:0,actors:[{},{}]},{time:1,actors:[{}, {thrown:true,velocity:[0,-100,0]}]},{time:2,actors:[{}, {thrown:false,velocity:[0,0,0]}]}];
+ const before=JSON.stringify(frames);
+ assert.equal(throwReviewShot(frames,.5),null);
+ const shot=throwReviewShot(frames,1.5);assert.equal(shot.actor,1);assert.ok(shot.offset[1]<0);assert.ok(shot.offset[0]>0);
+ assert.deepEqual(throwReviewShot(frames,2),shot);
+ assert.deepEqual(throwReviewShot(frames,1.5),shot);
+ assert.equal(JSON.stringify(frames),before);
+});
 test('contact edits are deterministic when scrubbing and rapid hits do not flicker',()=>{
  const events=[{time:1,kind:'phase'},{time:1.1,kind:'contact'},{time:1.15,kind:'contact'},{time:1.7,kind:'contact'}];
  assert.equal(cinematicReviewShot(events,1).index,0);

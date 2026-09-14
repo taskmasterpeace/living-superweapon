@@ -14,7 +14,7 @@ export class MeleeRecording {
   // Keep the recorded rig stable when live contact effects add/remove children.
   // Each session owns a visual template, and indexes source node references.
   this.last=time;
-  const actors=this.actors.map(({fighter:f,nodes})=>({pose:Float32Array.from(nodes.flatMap(n=>[...n.position.toArray(),...n.quaternion.toArray(),...n.scale.toArray(),+n.visible,n.material?.opacity??1])),hp:f.hp,ki:f.ki,airControl:f.pos?airControlState(f):'grounded',...meleePhase(f)}));
+  const actors=this.actors.map(({fighter:f,nodes})=>({pose:Float32Array.from(nodes.flatMap(n=>[...n.position.toArray(),...n.quaternion.toArray(),...n.scale.toArray(),+n.visible,n.material?.opacity??1])),hp:f.hp,ki:f.ki,thrown:!!(f._thrownT>0&&f._thrownBy),velocity:f.vel?.toArray?.()||[0,0,0],airControl:f.pos?airControlState(f):'grounded',...meleePhase(f)}));
   this.frames.push({time,actors});while(this.frames.length>1&&time-this.frames[0].time>this.seconds)this.frames.shift();
   this.events=this.events.filter(e=>e.time>=this.frames[0].time);
  }
