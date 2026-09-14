@@ -1,17 +1,18 @@
 {
   "name": "AEGIS · signature candidate",
   "frame": "agile",
-  "hair": "braids",
+  "hair": "ponytail",
   "skin": "#d8b088",
-  "primary": "#bac2c7",
-  "secondary": "#ad8b47",
-  "trim": "#293b50",
+  "primary": "#203d5a",
+  "secondary": "#c8ad61",
+  "trim": "#3b4853",
   "emblemColor": "#ffd557",
   "emblem": "shield",
   "cape": false,
-  "armor": false,
-  "shoulders": false,
+  "armor": true,
+  "shoulders": true,
   "muscle": 0.95,
+  "headwear": "tactical",
   "shieldStyle": "kite",
   "weapon": "sword",
   "anatomy": "female",
@@ -32,5 +33,9 @@
   "backpack": false,
   "patternScale": 1,
   "size": 1,
+  "regionColors": {
+    "arms": "#a1afb5",
+    "gauntlets": "#a1afb5"
+  },
   "rosterId": "aegis"
 }

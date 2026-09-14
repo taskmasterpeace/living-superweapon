@@ -3,7 +3,7 @@
   "source": "src/data/characters.js (ROSTER, including military; migrated power-ups included)",
   "archiveSource": "artifacts/character-review/characters.json",
   "count": 55,
-  "powerCount": 379,
+  "powerCount": 380,
   "ranking": "Descending declared base speed / strength. Competition ties: 1, 1, 3. Missing values are unranked. Speed excludes flight gears, buffs, dash, teleport and runtime modifiers. Strength is not overall combat power; no DPS-based overall ranking.",
   "audit": {
     "bow": [
@@ -91,7 +91,7 @@
           "fly": true,
           "color": "#ffd24a",
           "damageEvidence": [
-            "Not declared; no element inferred from name or color"
+            "physical (engine default)"
           ]
         },
         {
@@ -221,7 +221,7 @@
           "color": "#7fd4ff",
           "color2": "#eaffff",
           "damageEvidence": [
-            "Not declared; no element inferred from name or color"
+            "energy (engine default)"
           ]
         },
         {
@@ -389,7 +389,7 @@
           "color": "#5a86ff",
           "color2": "#bfd0ff",
           "damageEvidence": [
-            "Not declared; no element inferred from name or color"
+            "energy (engine default)"
           ]
         },
         {
@@ -429,7 +429,7 @@
           "launch": 12,
           "color": "#6ea0ff",
           "damageEvidence": [
-            "Not declared; no element inferred from name or color"
+            "physical (engine default)"
           ]
         },
         {
@@ -466,7 +466,7 @@
           "color": "#eaffa0",
           "color2": "#ffffff",
           "damageEvidence": [
-            "Not declared; no element inferred from name or color"
+            "energy (engine default)"
           ]
         },
         {
@@ -674,7 +674,7 @@
           "color": "#ffd24a",
           "color2": "#fff2c0",
           "damageEvidence": [
-            "Not declared; no element inferred from name or color"
+            "energy (engine default)"
           ]
         },
         {
@@ -1020,7 +1020,7 @@
           "color": "#eaffff",
           "color2": "#ffe066",
           "damageEvidence": [
-            "Not declared; no element inferred from name or color"
+            "energy (engine default)"
           ]
         },
         {
@@ -1207,7 +1207,7 @@
           "launch": 20,
           "color": "#7fe6ff",
           "damageEvidence": [
-            "Not declared; no element inferred from name or color"
+            "physical (engine default)"
           ]
         },
         {
@@ -1679,7 +1679,7 @@
           "fly": true,
           "color": "#ffd24a",
           "damageEvidence": [
-            "Not declared; no element inferred from name or color"
+            "physical (engine default)"
           ]
         },
         {
@@ -1764,7 +1764,7 @@
         "name": "Afterimage",
         "range": 22
       },
-      "afterCandidate": "candidates/roster-apex.png?v=1789352213782.3047",
+      "afterCandidate": "candidates/roster-apex.png?v=1789353039118.639",
       "images": {
         "front": "images/apex-front.png",
         "rear": "images/apex-rear.png"
@@ -1792,7 +1792,7 @@
           "color": "#9dff5a",
           "color2": "#eaffea",
           "damageEvidence": [
-            "Not declared; no element inferred from name or color"
+            "energy (engine default)"
           ]
         },
         {
@@ -1809,7 +1809,7 @@
           "launch": 16,
           "color": "#bfff6a",
           "damageEvidence": [
-            "Not declared; no element inferred from name or color"
+            "physical (engine default)"
           ]
         },
         {
@@ -1823,7 +1823,7 @@
           "ratio": 0.6,
           "color": "#9dff5a",
           "damageEvidence": [
-            "Not declared; no element inferred from name or color"
+            "energy (engine default)"
           ]
         },
         {
@@ -1939,7 +1939,7 @@
           "launch": 20,
           "color": "#ffe066",
           "damageEvidence": [
-            "Not declared; no element inferred from name or color"
+            "physical (engine default)"
           ]
         },
         {
@@ -2077,7 +2077,7 @@
           "color": "#ff4a4a",
           "color2": "#ffffff",
           "damageEvidence": [
-            "Not declared; no element inferred from name or color"
+            "energy (engine default)"
           ]
         },
         {
@@ -2095,7 +2095,7 @@
           "fly": true,
           "color": "#ffd24a",
           "damageEvidence": [
-            "Not declared; no element inferred from name or color"
+            "physical (engine default)"
           ]
         },
         {
@@ -2384,7 +2384,7 @@
           "color": "#ff8a2a",
           "color2": "#ffd9b0",
           "damageEvidence": [
-            "Not declared; no element inferred from name or color"
+            "energy (engine default)"
           ]
         },
         {
@@ -2540,7 +2540,7 @@
           "color": "#ff9a2a",
           "color2": "#ffe0b0",
           "damageEvidence": [
-            "Not declared; no element inferred from name or color"
+            "energy (engine default)"
           ]
         },
         {
@@ -2633,7 +2633,7 @@
           "color": "#ffb03a",
           "color2": "#ffffff",
           "damageEvidence": [
-            "Not declared; no element inferred from name or color"
+            "energy (engine default)"
           ]
         },
         {
@@ -3591,7 +3591,7 @@
           "launch": 8,
           "color": "#ffb03a",
           "damageEvidence": [
-            "Not declared; no element inferred from name or color"
+            "physical (engine default)"
           ]
         },
         {
@@ -3720,7 +3720,7 @@
           "color": "#ffd97a",
           "color2": "#fff",
           "damageEvidence": [
-            "Not declared; no element inferred from name or color"
+            "energy (engine default)"
           ]
         },
         {
@@ -3787,7 +3787,7 @@
           "color": "#ffe8c0",
           "color2": "#ffffff",
           "damageEvidence": [
-            "Not declared; no element inferred from name or color"
+            "energy (engine default)"
           ]
         },
         {
@@ -3859,7 +3859,7 @@
           "launch": 20,
           "color": "#8fe08a",
           "damageEvidence": [
-            "Not declared; no element inferred from name or color"
+            "physical (engine default)"
           ]
         },
         {
@@ -4229,7 +4229,7 @@
           "fly": true,
           "color": "#eaffff",
           "damageEvidence": [
-            "Not declared; no element inferred from name or color"
+            "physical (engine default)"
           ]
         },
         {
@@ -4466,7 +4466,7 @@
           "color": "#ffd24a",
           "color2": "#fff2c0",
           "damageEvidence": [
-            "Not declared; no element inferred from name or color"
+            "energy (engine default)"
           ]
         },
         {
@@ -4523,7 +4523,7 @@
           "fly": true,
           "color": "#ffd24a",
           "damageEvidence": [
-            "Not declared; no element inferred from name or color"
+            "physical (engine default)"
           ]
         },
         {
@@ -4560,7 +4560,7 @@
           "color": "#ffe8c0",
           "color2": "#ffffff",
           "damageEvidence": [
-            "Not declared; no element inferred from name or color"
+            "energy (engine default)"
           ]
         },
         {
@@ -4589,12 +4589,12 @@
     },
     {
       "id": "mystward",
-      "name": "MYSTWARD",
+      "name": "MAELSTROM",
       "title": "Keeper of the Seals",
       "role": "Mystic Defender",
       "archetype": null,
       "origin": "spiritual",
-      "blurb": "Doors, wards, and sigils. He was a surgeon once; now he closes wounds in the world. The whip drinks the power right out of you.",
+      "blurb": "A Black male wizard of doors, wards, and sigils. He was a surgeon once; now he closes wounds in the world. The whip drinks the power right out of you.",
       "speed": 31,
       "strength": 4,
       "speedRank": 39,
@@ -4613,7 +4613,7 @@
         "cd": 0.7,
         "iframes": 0.18
       },
-      "afterCandidate": "candidates/roster-mystward.png?v=1789352216716.1672",
+      "afterCandidate": "candidates/roster-mystward.png?v=1789353039452.0671",
       "images": {
         "front": "images/mystward-front.png",
         "rear": "images/mystward-rear.png"
@@ -4632,8 +4632,8 @@
           "blast": 4.5,
           "homing": 2.6,
           "dtype": "magic",
-          "color": "#ff7a5a",
-          "color2": "#ffd9b0",
+          "color": "#9a4ae0",
+          "color2": "#e8d0ff",
           "damageEvidence": [
             "magic (declared dtype)"
           ]
@@ -4647,7 +4647,7 @@
           "construct": "wall",
           "duration": 9,
           "holdTrigger": true,
-          "color": "#ffb03a",
+          "color": "#b06aff",
           "damageEvidence": [
             "Not declared; no element inferred from name or color"
           ]
@@ -4659,7 +4659,7 @@
           "cost": 11,
           "cd": 1.3,
           "range": 54,
-          "color": "#ffb03a",
+          "color": "#b06aff",
           "damageEvidence": [
             "Not declared; no element inferred from name or color"
           ]
@@ -4679,8 +4679,8 @@
           "steer": 13,
           "dtype": "magic",
           "siphon": 1.1,
-          "color": "#ffb03a",
-          "color2": "#ffd9b0",
+          "color": "#b06aff",
+          "color2": "#e8d0ff",
           "damageEvidence": [
             "magic (declared dtype)"
           ]
@@ -4694,8 +4694,8 @@
           "mult": 1.4,
           "dur": 9,
           "invuln": 1,
-          "color": "#ffb03a",
-          "color2": "#fff",
+          "color": "#b06aff",
+          "color2": "#e8d0ff",
           "damageEvidence": [
             "Not declared; no element inferred from name or color"
           ]
@@ -4708,7 +4708,7 @@
           "cd": 0.55,
           "power": 96,
           "iframes": 0.28,
-          "color": "#ffb03a",
+          "color": "#b06aff",
           "damageEvidence": [
             "Not declared; no element inferred from name or color"
           ]
@@ -4725,18 +4725,18 @@
           "radius": 3,
           "damage": 32,
           "blast": 17,
-          "color": "#ffb03a",
-          "color2": "#ffd9b0",
+          "color": "#b06aff",
+          "color2": "#e8d0ff",
           "damageEvidence": [
             "Not declared; no element inferred from name or color"
           ]
         }
       ],
       "colors": {
-        "primary": "#c00f0f",
-        "secondary": "#3d485d",
-        "accent": "#ffb649",
-        "skin": "#d8b088"
+        "primary": "#7138a8",
+        "secondary": "#30184f",
+        "accent": "#b06aff",
+        "skin": "#5a3a28"
       },
       "model": "{\"costume\":\"fitted\",\"flightStyle\":\"martial\",\"hairColor\":\"#17242b\",\"definition\":0.85}",
       "gear": "{\"hood\":1,\"collar\":1,\"coat\":1}"
@@ -5099,7 +5099,7 @@
           "color": "#bfeaff",
           "color2": "#fff",
           "damageEvidence": [
-            "Not declared; no element inferred from name or color"
+            "energy (engine default)"
           ]
         },
         {
@@ -5275,7 +5275,7 @@
           "launch": 8,
           "color": "#ffd24a",
           "damageEvidence": [
-            "Not declared; no element inferred from name or color"
+            "physical (engine default)"
           ]
         },
         {
@@ -5396,7 +5396,7 @@
         "kind": "dash",
         "name": "Amazon Step"
       },
-      "afterCandidate": "candidates/roster-aegis.png?v=1789352217516.0247",
+      "afterCandidate": "candidates/roster-aegis.png?v=1789353039634.9087",
       "images": {
         "front": "images/aegis-front.png",
         "rear": "images/aegis-rear.png"
@@ -5577,7 +5577,7 @@
           "color": "#ffe066",
           "color2": "#fff",
           "damageEvidence": [
-            "Not declared; no element inferred from name or color"
+            "energy (engine default)"
           ]
         },
         {
@@ -5594,7 +5594,7 @@
           "launch": 16,
           "color": "#ffe066",
           "damageEvidence": [
-            "Not declared; no element inferred from name or color"
+            "physical (engine default)"
           ]
         },
         {
@@ -5761,7 +5761,7 @@
           "launch": 18,
           "color": "#7fd4ff",
           "damageEvidence": [
-            "Not declared; no element inferred from name or color"
+            "physical (engine default)"
           ]
         },
         {
@@ -5907,7 +5907,7 @@
           "color": "#7fe6ff",
           "color2": "#eaffff",
           "damageEvidence": [
-            "Not declared; no element inferred from name or color"
+            "energy (engine default)"
           ]
         },
         {
@@ -5975,7 +5975,7 @@
           "color": "#7fe6ff",
           "color2": "#ffffff",
           "damageEvidence": [
-            "Not declared; no element inferred from name or color"
+            "energy (engine default)"
           ]
         },
         {
@@ -6230,7 +6230,7 @@
           "launch": 10,
           "color": "#ffe066",
           "damageEvidence": [
-            "Not declared; no element inferred from name or color"
+            "physical (engine default)"
           ]
         },
         {
@@ -6486,7 +6486,7 @@
           "launch": 18,
           "color": "#c9cfd9",
           "damageEvidence": [
-            "Not declared; no element inferred from name or color"
+            "physical (engine default)"
           ]
         },
         {
@@ -6639,7 +6639,7 @@
           "launch": 8,
           "color": "#37c7ff",
           "damageEvidence": [
-            "Not declared; no element inferred from name or color"
+            "physical (engine default)"
           ]
         },
         {
@@ -6691,7 +6691,7 @@
           "launch": 12,
           "color": "#37c7ff",
           "damageEvidence": [
-            "Not declared; no element inferred from name or color"
+            "physical (engine default)"
           ]
         },
         {
@@ -6776,7 +6776,7 @@
           "launch": 16,
           "color": "#ffd97a",
           "damageEvidence": [
-            "Not declared; no element inferred from name or color"
+            "physical (engine default)"
           ]
         },
         {
@@ -6824,7 +6824,7 @@
           "launch": 14,
           "color": "#ffd97a",
           "damageEvidence": [
-            "Not declared; no element inferred from name or color"
+            "physical (engine default)"
           ]
         },
         {
@@ -6932,7 +6932,7 @@
           "launch": 10,
           "color": "#ffb03a",
           "damageEvidence": [
-            "Not declared; no element inferred from name or color"
+            "physical (engine default)"
           ]
         },
         {
@@ -6980,7 +6980,7 @@
           "fly": true,
           "color": "#ffb03a",
           "damageEvidence": [
-            "Not declared; no element inferred from name or color"
+            "physical (engine default)"
           ]
         },
         {
@@ -7258,7 +7258,7 @@
           "launch": 8,
           "color": "#ff5a4a",
           "damageEvidence": [
-            "Not declared; no element inferred from name or color"
+            "physical (engine default)"
           ]
         },
         {
@@ -7396,7 +7396,7 @@
           "launch": 10,
           "color": "#8fe08a",
           "damageEvidence": [
-            "Not declared; no element inferred from name or color"
+            "physical (engine default)"
           ]
         },
         {
@@ -7492,10 +7492,10 @@
       "id": "moses",
       "name": "MOSES APIO",
       "title": "The Atlas Protocol",
-      "role": "Symbiont Host",
+      "role": "Gas / Solid Constructs",
       "archetype": null,
-      "origin": "symbiotic",
-      "blurb": "COF canon: a young Mbarara mechanic bonded to the Atlas Protocol symbiont — it watches, it regenerates, it reaches.",
+      "origin": "altered",
+      "blurb": "The Atlas Protocol: Moses Apio commands living purple gas that chokes, blinds, and turns solid on command. Hardened vapor forms a wall or a striking fist.",
       "speed": 35,
       "strength": 7,
       "speedRank": 16,
@@ -7508,9 +7508,9 @@
       "flightVisual": "martial",
       "evade": {
         "kind": "phase",
-        "name": "Symbiont Shift"
+        "name": "Vapor Slip"
       },
-      "afterCandidate": "candidates/roster-moses.png?v=1789352219451.1406",
+      "afterCandidate": "candidates/roster-moses.png?v=1789353144897.799",
       "images": {
         "front": "images/moses-front.png",
         "rear": "images/moses-rear.png"
@@ -7519,48 +7519,46 @@
       "powers": [
         {
           "slot": "LMB",
-          "type": "tentacle",
-          "name": "Atlas Tendrils",
-          "cost": 16,
-          "cd": 4.5,
+          "type": "cone",
+          "name": "Choking Veil",
+          "dtype": "toxic",
+          "kiPerSec": 17,
           "range": 34,
-          "holdT": 0.55,
-          "damage": 14,
-          "throwSpeed": 88,
-          "color": "#9dff5a",
+          "arc": 1.15,
+          "dps": 14,
+          "push": 6,
+          "gasDot": {
+            "dps": 7,
+            "dur": 2.6,
+            "color": "#9a4ae0",
+            "kind": "gas"
+          },
+          "color": "#9a4ae0",
           "damageEvidence": [
-            "Not declared; no element inferred from name or color"
+            "toxic (declared dtype)",
+            "gas effect (declared gasDot)"
           ]
         },
         {
           "slot": "RMB",
-          "type": "melee",
-          "name": "Symbiont Fist",
-          "cost": 10,
-          "cd": 0.8,
-          "damage": 25,
-          "range": 12,
-          "arc": 0.85,
-          "lunge": 44,
-          "knock": 46,
-          "launch": 12,
-          "color": "#9dff5a",
+          "type": "construct",
+          "name": "Solid Vapor",
+          "cost": 12,
+          "cd": 6,
+          "construct": "wall",
+          "duration": 9,
+          "holdTrigger": true,
+          "color": "#9a4ae0",
           "damageEvidence": [
             "Not declared; no element inferred from name or color"
           ]
         },
         {
           "slot": "Q",
-          "type": "rush",
-          "name": "Protocol Surge",
-          "cost": 14,
-          "cd": 2,
-          "range": 56,
-          "hits": 6,
-          "interval": 0.09,
-          "damage": 9,
-          "finisher": 30,
-          "color": "#9dff5a",
+          "type": "phase",
+          "name": "Gas Form",
+          "kiPerSec": 17,
+          "color": "#b06aff",
           "damageEvidence": [
             "Not declared; no element inferred from name or color"
           ]
@@ -7568,31 +7566,35 @@
         {
           "slot": "E",
           "type": "projectile",
-          "name": "Bio Spike",
-          "cost": 7,
-          "cd": 0.4,
-          "damage": 15,
-          "speed": 100,
-          "radius": 1,
-          "blast": 5,
-          "homing": 2,
-          "color": "#9dff5a",
-          "color2": "#eaffea",
+          "name": "Blinding Cloud",
+          "dtype": "toxic",
+          "cost": 8,
+          "cd": 0.5,
+          "damage": 12,
+          "speed": 54,
+          "radius": 1.9,
+          "blast": 9,
+          "homing": 1.6,
+          "payload": "gas",
+          "blind": {
+            "r": 12,
+            "dur": 2.2
+          },
+          "color": "#9a4ae0",
+          "color2": "#e8d0ff",
           "damageEvidence": [
-            "Not declared; no element inferred from name or color"
+            "toxic (declared dtype)"
           ]
         },
         {
           "slot": "H",
-          "type": "buff",
-          "name": "Regenerative Bond",
-          "cost": 20,
-          "cd": 16,
-          "mult": 1.35,
-          "dur": 9,
-          "heal": 45,
-          "color": "#9dff5a",
-          "color2": "#fff",
+          "type": "construct",
+          "name": "Hardened Vapor Fist",
+          "cost": 14,
+          "cd": 5,
+          "construct": "fist",
+          "duration": 11,
+          "color": "#9a4ae0",
           "damageEvidence": [
             "Not declared; no element inferred from name or color"
           ]
@@ -7600,21 +7602,44 @@
         {
           "slot": "SHIFT",
           "type": "dash",
-          "name": "Adaptive Slip",
-          "cost": 4,
-          "cd": 0.5,
+          "name": "Vapor Slip",
+          "cost": 5,
+          "cd": 0.55,
           "power": 98,
           "iframes": 0.26,
-          "color": "#9dff5a",
+          "color": "#b06aff",
           "damageEvidence": [
             "Not declared; no element inferred from name or color"
+          ]
+        },
+        {
+          "slot": "R",
+          "type": "charge",
+          "name": "Asphyxia",
+          "dtype": "toxic",
+          "cost": 8,
+          "cd": 14,
+          "kiPerSec": 12,
+          "maxCharge": 2.3,
+          "minR": 1.8,
+          "maxR": 7,
+          "dmgMin": 22,
+          "dmgMax": 78,
+          "maxBlast": 36,
+          "speedMin": 32,
+          "speedMax": 56,
+          "chargePower": 3,
+          "color": "#9a4ae0",
+          "color2": "#e8d0ff",
+          "damageEvidence": [
+            "toxic (declared dtype)"
           ]
         }
       ],
       "colors": {
-        "primary": "#28bb39",
-        "secondary": "#2b3247",
-        "accent": "#a4ff65",
+        "primary": "#7138a8",
+        "secondary": "#30184f",
+        "accent": "#b06aff",
         "skin": "#5a3a28"
       },
       "model": "{\"costume\":\"fitted\",\"flightStyle\":\"martial\",\"hairColor\":\"#17242b\",\"definition\":0.85}",
@@ -7945,7 +7970,7 @@
         "name": "Groundbreak",
         "power": 88
       },
-      "afterCandidate": "candidates/roster-bulwark.png?v=1789352219900.937",
+      "afterCandidate": "candidates/roster-bulwark.png?v=1789353039933.7915",
       "images": {
         "front": "images/bulwark-front.png",
         "rear": "images/bulwark-rear.png"
@@ -7966,7 +7991,7 @@
           "launch": 16,
           "color": "#c9cfd9",
           "damageEvidence": [
-            "Not declared; no element inferred from name or color"
+            "physical (engine default)"
           ]
         },
         {
@@ -8309,7 +8334,7 @@
           "launch": 3,
           "color": "#efc66d",
           "damageEvidence": [
-            "Not declared; no element inferred from name or color"
+            "physical (engine default)"
           ]
         },
         {

@@ -20,6 +20,7 @@ function damage(a){
   if(a.gasDot)tags.push('gas effect (declared gasDot)');
   if(a.payloads)tags.push(`payload options: ${a.payloads.join(', ')} (declared; sleep is control)`);
   if(a.dot)tags.push(`DoT: ${JSON.stringify(a.dot)} (declared)`);
+  if(!tags.length&&['beam','lifedrain'].includes(a.type))tags.push('energy (engine default)');if(!tags.length&&a.type==='melee')tags.push('physical (engine default)');
   return tags.length?tags:['Not declared; no element inferred from name or color'];
 }
 const characters=ROSTER.map(d=>{
