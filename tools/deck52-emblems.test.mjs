@@ -1,0 +1,4 @@
+import {chromium} from 'playwright';import assert from 'node:assert/strict';
+const b=await chromium.launch(),p=await b.newPage();const errors=[];p.on('pageerror',e=>errors.push(e.message));await p.goto('http://127.0.0.1:5184/character-foundation.html?recipe=deck52');await p.waitForFunction(()=>window.FOUNDATION);
+for(const id of ['deck52','deck52Black','deck52Color']){await p.selectOption('#emblem',id);const result=await p.evaluate(async(id)=>{const m=await import('/src/engine/modular-costume.js');const t=m.emblemTexture(id);await t.userData.ready;const pixels=t.image.getContext('2d').getImageData(0,0,256,256).data;let visible=0;for(let i=3;i<pixels.length;i+=4)if(pixels[i]>32)visible++;return {id:FOUNDATION.recipe.emblem,visible,preserve:m.emblemPreservesColor(id)};},id);assert.equal(result.id,id);assert.ok(result.visible>1000);assert.equal(result.preserve,true);console.log(result);}
+assert.deepEqual(errors,[]);await b.close();

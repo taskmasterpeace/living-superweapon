@@ -22,7 +22,7 @@ export const MODULAR_RECIPES={
 export function validateModularRecipe(input){
  if(!input||input.schema!==1||input.skeleton!=='ual-deform-v1'||input.body!=='faceted-v1')throw Error('Expected a version 1 faceted character recipe');
  const r={...MODULAR_RECIPES.hero};
- const enums={collarStyle:['classic','flared','low'],hoodie:['none','short','long'],handModule:['none','cannon'],auraOrigin:['body','fists','head'],glowRegion:['none','trim','suit','accent'],clawStyle:['paired','singleBone'],aura:['none','swarm','gravity','sparks'],auraState:['always','flight','attack'],tattooRegion:['chest','upperArmL','upperArmR','face','headBack','headLeft','headRight','headTop','wholeHead'],capeStyle:['full','short','split','shoulder','pointed'],headwear:['none','cap','baseball','hood','speed','helmet','mask','skull','tactical','domino','insect','greathelm','circlet'],wings:['none','angel','armor'],coatStyle:['long','short'],shieldStyle:['round','kite','riot'],weapon:['none','sword','bat','axe','spear','dualKatana'],frame:Object.keys(MODULAR_FRAMES),anatomy:['male','female'],infection:Object.keys(INFECTION_STYLES),patternRegion:['all','torso','arms','legs'],pattern:['solid','gilt','stripes','pinstripe','denim','space','custom'],beltStyle:['plain','utility','sash','double'],footwear:['boots','shoes','sandals'],gloves:['bare','full','fingerless','boxing'],emblemPlacement:['front','back','both','cape','shoeLeft','shoeRight'],hair:['swept','afro','bun','braids','none','dreadlocks','mohawk','fade','buzz','spiky','ponytail','slicked','bob','long','mullet','parted','rainbow'],emblem:['triangle','shield','bolt','star','V','web','ring','deck52','ugandaCrane','none','custom',...Object.values(HERO_SIGNATURE_RECIPES).map(r=>r.emblem),...Object.values(HERO_SIGNATURE_RECIPES).filter(r=>r.rosterId).map(r=>'sig-'+r.rosterId)],expression:['neutral','happy','angry','talkA','talkB','surprised','sad']};
+ const enums={collarStyle:['classic','flared','low'],hoodie:['none','short','long'],handModule:['none','cannon'],auraOrigin:['body','fists','head'],glowRegion:['none','trim','suit','accent'],clawStyle:['paired','singleBone'],aura:['none','swarm','gravity','sparks'],auraState:['always','flight','attack'],tattooRegion:['chest','upperArmL','upperArmR','face','headBack','headLeft','headRight','headTop','wholeHead'],capeStyle:['full','short','split','shoulder','pointed'],headwear:['none','cap','baseball','hood','speed','helmet','mask','skull','tactical','domino','insect','greathelm','circlet'],wings:['none','angel','armor'],coatStyle:['long','short'],shieldStyle:['round','kite','riot'],weapon:['none','sword','bat','axe','spear','dualKatana'],frame:Object.keys(MODULAR_FRAMES),anatomy:['male','female'],infection:Object.keys(INFECTION_STYLES),patternRegion:['all','torso','arms','legs'],pattern:['solid','gilt','stripes','pinstripe','denim','space','custom'],beltStyle:['plain','utility','sash','double'],footwear:['boots','shoes','sandals'],gloves:['bare','full','fingerless','boxing'],emblemPlacement:['front','back','both','cape','shoeLeft','shoeRight'],hair:['swept','afro','bun','braids','none','dreadlocks','mohawk','fade','buzz','spiky','ponytail','slicked','bob','long','mullet','parted','rainbow'],emblem:['triangle','shield','bolt','star','V','web','ring','deck52','deck52Black','deck52Color','ugandaCrane','none','custom',...Object.values(HERO_SIGNATURE_RECIPES).map(r=>r.emblem),...Object.values(HERO_SIGNATURE_RECIPES).filter(r=>r.rosterId).map(r=>'sig-'+r.rosterId)],expression:['neutral','happy','angry','talkA','talkB','surprised','sad']};
  for(const [key,values]of Object.entries(enums))if(input[key]!==undefined){if(!values.includes(input[key]))throw Error('Invalid '+key);r[key]=input[key];}
  for(const key of ['primary','secondary','trim','emblemColor','skin','hairColor','eyeColor','gloveColor'])if(input[key]!==undefined){if(!/^#[0-9a-f]{6}$/i.test(input[key]))throw Error('Invalid '+key+' color');r[key]=input[key];}
  for(const key of ['goldChain','businessSuit','mustache','unlitBlack','centerPanel','skirt','beard','claws','tentacles','wristBlasters','lasso','kilt','metallic','shimmer','shield','coat','wristbands','tornClothes','cape','robe','sleeves','collar','glasses','armor','shoulders','gauntlets','knees','belt','backpack','bareArms','helmet','visor','eyepatch','eyeGlow'])if(input[key]!==undefined){if(typeof input[key]!=='boolean')throw Error('Invalid '+key);r[key]=input[key];}
@@ -37,9 +37,10 @@ export function validateModularRecipe(input){
  r.name=typeof input.name==='string'?input.name.slice(0,60):'Imported character';return r;
 }
 const emblemTextures=new Map();
+export function emblemPreservesColor(id){return ['custom','deck52','deck52Black','deck52Color'].includes(id);}
 export function emblemTexture(id){
  if(emblemTextures.has(id))return emblemTextures.get(id);
- if(!['triangle','shield','bolt','star','V','web','ring','deck52','none'].includes(id)&&!Object.values(HERO_SIGNATURE_RECIPES).some(r=>r.emblem===id||'sig-'+r.rosterId===id))throw Error('Unknown emblem: '+id);
+ if(!['triangle','shield','bolt','star','V','web','ring','deck52','deck52Black','deck52Color','none'].includes(id)&&!Object.values(HERO_SIGNATURE_RECIPES).some(r=>r.emblem===id||'sig-'+r.rosterId===id))throw Error('Unknown emblem: '+id);
  const c=document.createElement('canvas');c.width=c.height=256;const x=c.getContext('2d');x.fillStyle='#fff';x.beginPath();
  const poly=points=>{points.forEach(([a,b],i)=>i?x.lineTo(a,b):x.moveTo(a,b));x.closePath();x.fill();};
  if(id.startsWith('sig-')){const h=[...id].reduce((a,c)=>(a*31+c.charCodeAt(0))>>>0,0);x.strokeStyle='#fff';x.lineWidth=14;const count=3+h%4;for(let i=0;i<count;i++){const a=i*Math.PI*2/count;x.beginPath();x.moveTo(128+35*Math.cos(a),128+35*Math.sin(a));x.lineTo(128+99*Math.cos(a),128+99*Math.sin(a));x.stroke();}poly([[128,72],[170,128],[128,184],[86,128]]);}
@@ -49,10 +50,19 @@ export function emblemTexture(id){
  if(id==='bolt')poly([[139,18],[49,142],[114,142],[88,238],[207,103],[143,103]]);
  if(id==='star')poly(Array.from({length:10},(_,i)=>{const a=i*Math.PI/5-Math.PI/2,r=i%2?43:105;return[128+Math.cos(a)*r,128+Math.sin(a)*r];}));
  if(id==='ring'){x.strokeStyle='#fff';x.lineWidth=20;x.arc(128,128,79,0,Math.PI*2);x.stroke();}
- if(id==='deck52'){x.font='bold 100px sans-serif';x.textAlign='center';x.fillText('52',128,164);}
+
  if(id==='web'){x.strokeStyle='#fff';x.lineWidth=8;for(let i=0;i<8;i++){const a=i*Math.PI/4;x.beginPath();x.moveTo(128,128);x.lineTo(128+105*Math.cos(a),128+105*Math.sin(a));x.stroke();}for(const radius of [38,70,103]){x.beginPath();x.arc(128,128,radius,0,Math.PI*2);x.stroke();}}
  if(id==='V')poly([[29,40],[78,40],[128,165],[178,40],[227,40],[150,224],[106,224]]);
- const t=new T.CanvasTexture(c);t.flipY=false;t.colorSpace=T.SRGBColorSpace;emblemTextures.set(id,t);return t;
+ const t=new T.CanvasTexture(c);t.flipY=false;t.colorSpace=T.SRGBColorSpace;emblemTextures.set(id,t);
+ if(['deck52','deck52Black','deck52Color'].includes(id)){
+  const img=new Image();t.userData.ready=new Promise((resolve,reject)=>{
+   img.onload=()=>{const scan=document.createElement('canvas');scan.width=img.width;scan.height=img.height;const sx=scan.getContext('2d');sx.drawImage(img,0,0);const pixels=sx.getImageData(0,0,img.width,img.height).data;let left=img.width,top=img.height,right=0,bottom=0;
+    for(let y=0;y<img.height;y++)for(let xx=0;xx<img.width;xx++)if(pixels[(y*img.width+xx)*4+3]>32){left=Math.min(left,xx);right=Math.max(right,xx);top=Math.min(top,y);bottom=Math.max(bottom,y);}
+    const w=right-left+1,h=bottom-top+1,k=240/Math.max(w,h);x.clearRect(0,0,256,256);x.drawImage(img,left,top,w,h,(256-w*k)/2,(256-h*k)/2,w*k,h*k);t.needsUpdate=true;resolve(t);
+   };img.onerror=()=>reject(new Error('Deck 52 emblem failed to load'));
+  });img.src='/assets/emblems/deck52/'+({deck52:'white',deck52Black:'black',deck52Color:'color'}[id])+'.png';
+ }
+ return t;
 }
 export function applyModularRecipe(meshes,recipe){
  const r={infection:'none',pattern:'solid',patternScale:1,footwear:'boots',beltStyle:'utility',gauntlets:true,knees:true,belt:true,gloves:'full',gloveColor:'#20272b',emblemPlacement:'front',...MODULAR_RECIPES.hero,...recipe};
@@ -114,7 +124,7 @@ export function applyModularRecipe(meshes,recipe){
    const back=slot==='emblemBack',gear=back?(r.backpack??r.armor):r.armor;
    m.visible=r.emblem!=='none'&&(r.emblem!=='custom'||!!r.emblemImage)&&(r.emblemPlacement==='both'||r.emblemPlacement===(back?'back':'front'));
    for(const [key,value]of Object.entries({onGear:gear?1:0,muscleSmall:!gear&&r.muscle<1?(1-r.muscle)/.2:0,muscleLarge:!gear&&r.muscle>1?(r.muscle-1)/.3:0}))if(m.morphTargetDictionary?.[key]!==undefined)m.morphTargetInfluences[m.morphTargetDictionary[key]]=value;
-   if(typeof document!=='undefined'){m.material.map=r.emblem==='custom'?customEmblemTexture(r.emblemImage):emblemTexture(r.emblem);m.material.transparent=true;m.material.alphaTest=.05;m.material.depthWrite=false;m.material.color.set(r.emblem==='custom'?'#ffffff':r.emblemColor);m.material.needsUpdate=true;}
+   if(typeof document!=='undefined'){m.material.map=r.emblem==='custom'?customEmblemTexture(r.emblemImage):emblemTexture(r.emblem);m.material.transparent=true;m.material.alphaTest=.05;m.material.depthWrite=false;m.material.color.set(emblemPreservesColor(r.emblem)?'#ffffff':r.emblemColor);m.material.needsUpdate=true;}
   }
  }
  setModularMuscle(meshes,r.muscle);

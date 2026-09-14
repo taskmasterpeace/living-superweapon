@@ -1,5 +1,5 @@
 import * as T from 'three';
-import {emblemTexture,customEmblemTexture} from './modular-costume.js';
+import {emblemTexture,customEmblemTexture,emblemPreservesColor} from './modular-costume.js';
 
 // Coordinates match the authored faceted body: Y up, front -Z. Mounting through
 // the inverse bind frame keeps markings attached without editing the skeleton.
@@ -73,7 +73,7 @@ export function createImagePlacements(actor){
     layers.forEach(tattoo);
     if(['cape','shoeLeft','shoeRight'].includes(r.emblemPlacement)&&r.emblem&&r.emblem!=='none'&&(r.emblemPlacement!=='cape'||r.cape)){
      const map=r.emblem==='custom'?customEmblemTexture(r.emblemImage):emblemTexture(r.emblem);
-     if(map){const mat=material(map,r.emblemColor||'#ffffff'),scale=T.MathUtils.clamp(Number.isFinite(r.emblemScale)?r.emblemScale:1,.25,2);
+     if(map){const mat=material(map,emblemPreservesColor(r.emblem)?'#ffffff':r.emblemColor||'#ffffff'),scale=T.MathUtils.clamp(Number.isFinite(r.emblemScale)?r.emblemScale:1,.25,2);
       if(r.emblemPlacement==='cape')cape(mat,r,scale);
       else{
        const side=r.emblemPlacement==='shoeLeft'?'L':'R',group=mount('DEF-foot.'+side);
