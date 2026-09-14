@@ -78,3 +78,7 @@ npm run build
 The tests cover the actual exported neck, suit coverage, exact bones, all 13 compiled studies, wrong-rig rejection, attachment cleanup, small/large contact, recipe persistence, native source tracks and zombie AI/contact/wave lifecycle. Browser checks cover editor controls and the corrected modular selection screen. A passing build or one screenshot does not approve every animation.
 
 Transfer the scoped commit(s) from this branch into the team's target branch after checking its worktree. Do not merge the entire fleet branch just to get Dec-52: the four required packages are already copied here with provenance. Browser saved recipes need JSON export/import when changing ports or machines.
+
+Local delivery commit: `4499c5e` (Add modular character parts and animation authoring tools). This document's later bookkeeping commit only records that reference. To transfer the implementation, cherry-pick `4499c5e` onto the team's reviewed target branch from a clean target worktree; resolve any shared character/selection changes rather than overwriting them. No merge into the separate fleet checkout was performed.
+
+Final verification: 37 tests passed. Production build passed. Browser checks exercised part creation, draft start/play, separate animation-bone selection, modular character selection, Dec-52 hound preview, and game launch without captured runtime errors. No claim is made that the 13 procedural studies are production-approved combat animations.
