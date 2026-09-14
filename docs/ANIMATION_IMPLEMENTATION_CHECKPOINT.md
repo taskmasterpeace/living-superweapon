@@ -49,3 +49,7 @@ The hostile person-throw path now captures the holder's actual arm pose before r
 Fixed grounded modular reload/throw poses being overwritten by idle playback: live _firearmReload and _throwAction now retain the native articulation through the shared adapter. Regression failed on reload before the fix; fourteen modular and sixteen reload/throwable tests pass afterward. Build passes. This restores existing action poses; full visual weapon-contact acceptance remains outstanding.
 
 Missing phase-specific reload audio is tracked at https://github.com/taskmasterpeace/living-superweapon/issues/18; existing event timing and fallback remain in place.
+
+## Infected passive flight
+
+Connected the existing workshop infected-flight arm overlay to the modular gameplay renderer for sick/hollow appearance recipes during passive unarmed flight/gliding. Combat, held weapons, grabs/carry, reload/throw, guard, incapacitation, active ability channels and injury poses retain ownership. Overlay does not move joint positions or change flight simulation. Fifteen modular tests pass and build passes. This is appearance-driven (saved recipe), not a new infection progression mechanic; live visual review remains outstanding.

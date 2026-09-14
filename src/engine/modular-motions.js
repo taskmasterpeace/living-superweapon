@@ -17,3 +17,10 @@ export function poseInfectedFlight(actor){
   b.quaternion.copy(b.parent.getWorldQuaternion(new T.Quaternion()).invert().multiply(q));b.updateMatrixWorld(true);
  }
 }
+// Appearance overlay is allowed only when no action owns the hands.
+export function canPoseInfectedFlight(f,infection){
+ return ['sick','hollow'].includes(infection)&&(f.flying||f.gliding)&&!f.ragdoll&&!['hit','ko','cast'].includes(f.state)&&
+ ![f.stunT,f.staggerT,f.frozenT,f.sleepT,f.shockT].some(v=>v>0)&&
+ ![f.mstate,f.grabbing,f.grabbedBy,f.grabState,f.guarding,f._carry,f._grapple,f.hanging,f._firearmReload,f._throwAction,f._personThrowPose,f._zombieLimbs].some(Boolean)&&
+ !(f.meleeCharge>0)&&!(f.strikeActive>0)&&!Object.values(f.slots||{}).some(s=>s.active||s.charging||s.drawing||s.building);
+}

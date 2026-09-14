@@ -149,3 +149,10 @@ test('contact-driven strikes retain selected native arm through ground and air p
  }
  f.dispose();
 });
+
+test('infected flight overlay yields to combat, carried objects and incapacitation',async()=>{
+ const {canPoseInfectedFlight,poseInfectedFlight}=await import('../src/engine/modular-motions.js');
+ const f={flying:true,state:'idle',slots:{}};assert.equal(canPoseInfectedFlight(f,'hollow'),true);assert.equal(canPoseInfectedFlight(f,'none'),false);
+ for(const state of [{mstate:'startup'},{_carry:{}},{grabbing:{}},{_firearmReload:{}},{_throwAction:{}},{stunT:1},{guarding:true}])assert.equal(canPoseInfectedFlight({...f,...state},'hollow'),false);
+ const g=await output(),before=[];g.scene.traverse(o=>{if(o.isBone)before.push([o,o.position.clone()]);});poseInfectedFlight(g.scene);for(const [o,p]of before)assert.ok(o.position.equals(p),'overlay moved '+o.name);
+});
