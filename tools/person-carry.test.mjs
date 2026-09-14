@@ -5,6 +5,7 @@ import {mainCombatFixture} from './helpers/main-combat-fixture.mjs';
 import {SETTINGS,keymap} from '../src/core/settings.js';
 import {previewPersonThrow} from '../src/engine/person-throw-trajectory.js';
 
+function finishThrow(x){for(let i=0;i<Math.ceil(.2*x.hz)+1&&x.p._personThrowWindup;i++)x.g.melee.update(x.p,1/x.hz);}
 function fixture({hero='sol',height=0,hz=60,victimTraits={},rear=false}={}){
  const x=mainCombatFixture({hero,mode:'powerworld'});x.g.ms.chaseCam=true;x.p._openSky=true;x.p.invuln=0;
  x.g.vfx._itex=new THREE.Texture(); // Texture output only; native VFX/throw/damage remain active.
@@ -21,10 +22,10 @@ for(const hz of [30,60,120])test(`rear aerial capture preserves downward throw a
   assert.equal(x.p.grabMode,'back');assert.equal(x.lift(),true);
   x.p.flying=true;x.p.gait='airborne';x.p.aim3.set(.2,-1,.1).normalize();
   x.g.melee.grab(x.p);const before=x.v.pos.clone();
-  x.g.melee.releaseGrab(x.p);
+  x.g.melee.releaseGrab(x.p);finishThrow(x);
   assert.equal(x.p.grabbing,null);assert.equal(x.v.grabbedBy,null);
   assert.ok(x.v.vel.y<0);assert.ok(x.v.vel.angleTo(x.p.aim3)<1e-7);
-  assert.ok(before.distanceTo(x.v.pos)<1e-7,'throw must not teleport victim');
+  assert.ok(x.v.pos.distanceTo(x.p.pos)<10,'windup retains held position');
  }finally{x.close();}
 });
 for(const hz of [30,60,120])test(`native grab transports both original fighters and takes off at ${hz} Hz`,()=>{
@@ -46,9 +47,9 @@ for(const hz of [30,60,120])test(`native whirl and 3D release feed exactly one c
   assert.ok(Math.abs(x.v.pos.x-before.x)>1,'Whirl did not move the actual victim');
   assert.ok(x.p._personCarry.whirlT<=1.2);
   x.p.aim3.set(0,-.2,1).normalize();const aim=x.p.aim3.clone(),at=x.v.pos.clone();
-  x.g.melee.releaseGrab(x.p);assert.equal(x.p.grabbing===null,true);assert.equal(x.v.grabbedBy===null,true);
+  x.g.melee.releaseGrab(x.p);finishThrow(x);assert.equal(x.p.grabbing===null,true);assert.equal(x.v.grabbedBy===null,true);
   assert.ok(x.v.vel.angleTo(aim)<1e-7,'Fastthrow loft replaced the 3D aim');assert.ok(x.v.vel.length()>90&&x.v.vel.length()<=180);
-  assert.ok(x.v.pos.distanceTo(at)<1e-7,'Release teleported the victim');
+  assert.ok(x.v.pos.distanceTo(x.p.pos)<10,'windup retains held position');
   x.w.cover.push({x:0,z:15,hx:30,hz:.03,top:100});
   let impacts=0;const original=x.g.onSlam;x.g.onSlam=function(...args){impacts++;return original.apply(this,args);};
   for(let i=0;i<hz;i++)x.v.update(1/hz,x.g);
@@ -61,7 +62,7 @@ test('native grab release remains armed when cover arrests the whirl',()=>{
   assert.equal(x.lift(),true);x.p.flying=true;x.p.gait='airborne';
   x.w.cover.push({x:3.1,z:0,hx:.05,hz:10,top:60});x.g.melee.grab(x.p);
   for(let i=0;i<30;i++)x.tick();
-  assert.ok(x.v.pos.x+x.v.radius<3.06);x.g.melee.releaseGrab(x.p);
+  assert.ok(x.v.pos.x+x.v.radius<3.06);x.g.melee.releaseGrab(x.p);finishThrow(x);
   assert.equal(x.p.grabbing===null,true,'Blocked whirl swallowed the release');assert.ok(x.v.launchT>0);
  }finally{x.close();}
 });
@@ -71,7 +72,7 @@ for(const hero of ['sol','sarge'])test(hero+' contextual E hold whirls and relea
   if(hero==='sarge')x.v.def={...x.v.def,strength:1,hp:100,metal:false};
   x.lift();x.g.input.keys.add('KeyE');x.g.input.justPressed.add('KeyE');x.control(.1);x.g.input.endFrame();
   x.control(.1);x.g.input.endFrame();x.control(.1);assert.equal(x.p._personCarry.whirling,true);x.g.input.endFrame();
-  x.g.input.keys.delete('KeyE');x.g.input.justReleased.add('KeyE');x.control(0);assert.equal(x.p.grabbing,null);assert.ok(x.v.launchT>0);
+  x.g.input.keys.delete('KeyE');x.g.input.justReleased.add('KeyE');x.control(0);finishThrow(x);assert.equal(x.p.grabbing,null);assert.ok(x.v.launchT>0);
  }finally{x.close();}
 });
 
@@ -89,7 +90,7 @@ test('lost holder target clears the original victim identity rather than orphani
 
 test('a later independent launch retires the previous carry impact token',()=>{
  const x=fixture({height:30});try{
-  x.lift();x.g.melee.grab(x.p);x.g.melee.releaseGrab(x.p);x.v._personThrow.impacted=true;
+  x.lift();x.g.melee.grab(x.p);x.g.melee.releaseGrab(x.p);finishThrow(x);x.v._personThrow.impacted=true;
   x.v.takeDamage(1,{src:x.p,kb:{x:70,z:0},hitstop:0});assert.equal(x.v._personThrow===null,true);assert.ok(x.v.launchT>0);
  }finally{x.close();}
 });
@@ -116,7 +117,7 @@ test('native carry direction cue clips the full body at cover and survives Alt w
 
 for(const hz of [30,60,120])test(`native downward release strikes real terrain once at ${hz} Hz`,()=>{
  const x=fixture({hz,height:8});try{
-  x.lift();x.tick();x.p.aim3.set(0,-1,0);x.g.melee.grab(x.p);x.g.melee.releaseGrab(x.p);
+  x.lift();x.tick();x.p.aim3.set(0,-1,0);x.g.melee.grab(x.p);x.g.melee.releaseGrab(x.p);finishThrow(x);
   let hits=0;const original=x.g.onSlam;x.g.onSlam=function(...args){hits++;return original.apply(this,args);};
   for(let i=0;i<hz;i++)x.v.update(1/hz,x.g);
   assert.equal(hits,1);assert.equal(x.v.lastHitBy,x.p);assert.ok(x.v.pos.y>=0);assert.equal(x.v.grabbedBy===null,true);
@@ -206,8 +207,8 @@ for(const why of ['depletion','holder-hit','victim-KO','holder-dispose','victim-
 
 for(const hz of [30,60,120])for(const wall of [false,true])test('person trajectory matches native first impact '+hz+'Hz wall='+wall,async()=>{
  const {previewPersonThrow}=await import('../src/engine/person-throw-trajectory.js');const x=fixture({height:35,hz});try{assert.ok(x.lift());x.v.hp=10000;x.p.aim3.set(0,wall?0:-.65,1).normalize();if(wall)x.w.cover.push({x:0,z:22,hx:40,hz:.1,bottom:0,top:90,finiteBuilding:true});
- const before={pos:x.v.pos.toArray(),vel:x.v.vel.toArray(),ki:x.p.ki,hp:x.v.hp};const cue=previewPersonThrow(x.p,x.g,{dt:1/hz});assert.ok(cue.contact);assert.deepEqual({pos:x.v.pos.toArray(),vel:x.v.vel.toArray(),ki:x.p.ki,hp:x.v.hp},before);
- let impact;const original=x.g.onSlam;x.g.onSlam=function(f,...args){impact??=f.pos.clone();return original.call(this,f,...args);};x.g.melee._throw(x.p);
+ const before={pos:x.v.pos.toArray(),vel:x.v.vel.toArray(),ki:x.p.ki,hp:x.v.hp};let cue=previewPersonThrow(x.p,x.g,{dt:1/hz});assert.ok(cue.contact);assert.deepEqual({pos:x.v.pos.toArray(),vel:x.v.vel.toArray(),ki:x.p.ki,hp:x.v.hp},before);
+ let impact;const original=x.g.onSlam;x.g.onSlam=function(f,...args){impact??=f.pos.clone();return original.call(this,f,...args);};const commit=x.g.melee._commitThrow.bind(x.g.melee);x.g.melee._commitThrow=f=>{cue=previewPersonThrow(f,x.g,{dt:1/hz});return commit(f);};x.g.melee._throw(x.p);finishThrow(x);
  for(let i=0;i<hz*1.35&&!impact;i++)x.v.update(1/hz,x.g);assert.ok(impact,'no native impact');assert.ok(cue.points.at(-1).distanceTo(impact)<1.5,'preview/native error '+cue.points.at(-1).distanceTo(impact));
  }finally{x.close();}
 });
@@ -245,9 +246,45 @@ for(const hz of [30,60,120])test(`repeated grab input cannot multiply a carried 
   assert.equal(x.lift(),true);const hold=x.p.grabT;
   for(let i=0;i<12;i++)x.g.melee.grab(x.p);
   assert.equal(x.p.grabT,hold,'Spam must not extend restraint');
-  x.p.aim3.set(0,-1,0);x.g.melee.releaseGrab(x.p);
+  x.p.aim3.set(0,-1,0);x.g.melee.releaseGrab(x.p);finishThrow(x);
   const velocity=x.v.vel.clone(),hp=x.v.hp;
-  for(let i=0;i<12;i++){x.g.melee.grab(x.p);x.g.melee.releaseGrab(x.p);}
+  for(let i=0;i<12;i++){x.g.melee.grab(x.p);x.g.melee.releaseGrab(x.p);finishThrow(x);}
   assert.equal(x.v.grabbedBy,null);assert.ok(x.v.vel.equals(velocity));assert.equal(x.v.hp,hp);
  }finally{x.close();}
 });
+
+for(const transport of [false,true])test(`ordinary throw anticipation attached, hitstop and current aim transport=${transport}`,()=>{
+ const x=fixture({height:30,rear:true});try{
+  if(transport)x.lift();const hp=x.v.hp;x.g.melee._throw(x.p);const pending=x.p._personThrowWindup;
+  assert.ok(pending);assert.equal(x.v.grabbedBy,x.p);assert.equal(x.v.hp,hp);
+  x.g.melee.update(x.p,.08);assert.equal(x.v.grabbedBy,x.p);x.g.melee._throw(x.p);assert.equal(x.p._personThrowWindup,pending);assert.equal(pending.elapsed,.08);
+  x.p.hitstop=.1;x.g.melee.update(x.p,.1);assert.equal(pending.elapsed,.08);x.p.hitstop=0;
+  x.p.aim3.set(1,-1,0).normalize();x.g.melee.update(x.p,.12);assert.equal(x.v.grabbedBy,null);assert.equal(x.p._personThrowWindup,null);assert.ok(x.v.launchT>0);assert.ok(x.v.hp<hp);
+  if(transport)assert.ok(x.v.vel.angleTo(x.p.aim3)<1e-7);
+ }finally{x.close();}
+});
+for(const reason of ['stun','ko','invalid'])test(`throw windup cancels ${reason}`,()=>{const x=fixture();try{
+ x.g.melee._throw(x.p);const hp=x.v.hp;
+ if(reason==='stun')x.p.stunT=1;if(reason==='ko')x.p.state='ko';if(reason==='invalid')x.v.grabbedBy=null;
+ x.g.melee.update(x.p,.25);assert.equal(x.p._personThrowWindup,null);assert.equal(x.p.grabbing,null);assert.equal(x.v.hp,hp);assert.ok(!(x.v.launchT>0));
+ }finally{x.close();}});
+
+
+test('release accepts null and victim-side release clears holder anticipation',()=>{const x=fixture();try{x.g.melee.release(null);x.g.melee._throw(x.p);assert.ok(x.p._personThrowWindup);x.g.melee.release(x.v);assert.equal(x.p._personThrowWindup,null);assert.equal(x.p.grabbing,null);assert.equal(x.v.grabbedBy,null);}finally{x.close();}});
+
+test('production frozen windup does not integrate torso rotation and cancellation restores baseline',()=>{const x=fixture();try{
+ const f=x.p;f.parts.torso.rotation.set(0,0,0);x.g.melee._throw(f);f._personThrowWindup.elapsed=.1;f.hitstop=1;
+ f._animate(1/60);const first=f.parts.torso.quaternion.clone();for(let i=0;i<24;i++)f._animate(1/60);assert.ok(f.parts.torso.quaternion.angleTo(first)<1e-7,'windup accumulated during hitstop');
+ x.g.melee.release(x.v);assert.ok(f.parts.torso.quaternion.angleTo(new THREE.Quaternion())<1e-7);f._animate(1/60);assert.ok(Math.abs(f.parts.torso.rotation.x)<1e-7);
+ }finally{x.close();}});
+test('release torso overlay does not accumulate on repeated frozen production frames',()=>{const x=fixture();try{
+ const f=x.p;f.parts.torso.rotation.set(0,0,0);x.g.melee._throw(f);f._personThrowWindup.elapsed=.1;f._animate(1/60);x.g.melee.update(f,.1);assert.ok(f._personThrowPose);f.hitstop=1;
+ f._animate(1/60);const first=f.parts.torso.quaternion.clone();for(let i=0;i<24;i++)f._animate(1/60);assert.ok(f.parts.torso.quaternion.angleTo(first)<1e-7,'recovery accumulated');
+ f.stunT=1;x.g.melee.update(f,1/60);assert.equal(f._personThrowPose,null);assert.ok(Math.abs(f.parts.torso.rotation.x)<1e-7);
+ }finally{x.close();}});
+
+test('throw overlay preserves native idle torso yaw damping baseline',()=>{const x=fixture(),control=fixture();try{
+ x.p.parts.torso.rotation.set(0,.3,0);control.p.parts.torso.rotation.set(0,.3,0);x.g.melee._throw(x.p);x.p._personThrowWindup.elapsed=.1;
+ for(let i=0;i<12;i++){x.p._animate(1/60);control.p._animate(1/60);}
+ x.g.melee.release(x.v);assert.ok(Math.abs(x.p.parts.torso.rotation.y-control.p.parts.torso.rotation.y)<1e-7);
+ }finally{x.close();control.close();}});

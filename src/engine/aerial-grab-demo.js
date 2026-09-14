@@ -24,7 +24,12 @@ export class AerialGrabDemo {
   }else if(this.phase==='carry'){
    if(p.grabbing!==v){this.stop('Demonstration failed: hold interrupted');return true;}
    move.set(0,.3,1);
-   if(this.time>.65){p.aim3.set(0,-1,0);g.melee.grab(p);g.melee.releaseGrab(p);g.world._lookPitch=-.65;this.next('impact','Aimed downward release');}
+   if(this.time>.65){p.aim3.set(0,-1,0);g.melee.grab(p);g.melee.releaseGrab(p);g.world._lookPitch=-.65;this.next('release','Attached throw anticipation');}
+  }else if(this.phase==='release'){
+   if(p.grabbing!==v){
+    if(v._thrownBy!==p){this.stop('Demonstration failed: throw interrupted before release');return true;}
+    this.next('impact','Aimed downward release');
+   }else if(this.time>1){this.stop('Demonstration failed: throw did not release');return true;}
   }else if(this.phase==='impact'){
    if(v.hp<this.hp&&v.pos.y<=g.world.heightAt(v.pos.x,v.pos.z)+.1){this.damage=this.hp-v.hp;this.next('recovery','Terrain impact: '+this.damage.toFixed(1)+' health lost');}
   }else if(this.phase==='recovery'&&this.time>.15&&g.melee.canAct(v)){

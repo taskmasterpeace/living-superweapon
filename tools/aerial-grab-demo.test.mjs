@@ -15,6 +15,8 @@ for(const hz of [30,60,120])test(`repeatable demo executes native capture, carry
   for(let i=0;i<hz*13&&demo.active;i++){g.time+=dt;demo.update(dt);demo.controlTarget(v,dt);g.beginBodyContactFrame();p.update(dt,g);v.update(dt,g);g.resolveBodies();}
   assert.equal(demo.phase,'complete',JSON.stringify(demo.summary()));assert.ok(demo.damage>0);assert.ok(g.melee.canAct(v));assert.equal(v.lastHitBy,p);
   assert.ok(demo.events.some(e=>e.label==='Rear hold / moving carry'));assert.ok(demo.events.some(e=>e.label==='Aimed downward release'));
+  const anticipation=demo.events.find(e=>e.label==='Attached throw anticipation'),release=demo.events.find(e=>e.label==='Aimed downward release');
+  assert.ok(anticipation&&release.time-anticipation.time>=.2-dt,'release evidence must follow the attached windup');
   assert.equal(demo.summary().outcome,'complete');assert.equal(demo.frameCamera(),false,'camera must relinquish control when demonstration ends');
  }finally{x.close();}
 });

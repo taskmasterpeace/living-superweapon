@@ -30,6 +30,16 @@ Damaging ballistic fighter contacts now play the selected real CC0 flesh, metal 
 
 Cover/terrain bullet impacts, blades, distant fire and vehicle lifecycle sounds require separate current-call-site audits; this report makes no blanket claim that they are absent or complete.
 
+## Physical block and Sandra follow-up
+
+Ordinary fist-on-flesh blocked jabs now call `blockedJabAudio` from the existing `MeleeSystem` block branch. The new `physical-jab-block` cue reuses the selected real CC0 body punch at reduced gain; if not handled, it falls back to physical `AudioBus.impact`, not the energy zap. Barrier, blade and metal-defender contacts retain their existing behavior. Explicit user recordings remain authoritative.
+
+Sandra's **Twin Pistols** now specify `voice: pistol9`. Previously their absent voice key bypassed the real firearm recording lookup in `AudioBus.gunshot`; they now select preloaded `wpn.pistol`. Damage, interval and shot classification are unchanged. Her **Suppressed SMG** still lacks a verified matching suppressed take; no unsuppressed recording was relabeled as suppressed. No Sandra dialogue recordings or character-specific spoken response routing were added. Ring/Tracker/extraction audio and future dialogue require separate semantic review.
+
+Cold decode remains open under GitHub issue #25: `HOT_SET` starts loading asynchronously when the sample bank is created; playback is not globally gated on readiness. Missing or not-yet-decoded samples can still reach procedural fallback. These fixes do not blanket-disable legitimate energy synthesis and do not claim an in-game listening review.
+
+`tools/sandra-block-audio.test.mjs`, `tools/punch-fallback-recording.test.mjs` and `tools/sound-library-recordings.test.mjs`: 14 passed. Checks cover physical block recording versus physical fallback, retained barrier/blade behavior, authored preferences, Sandra's real pistol selection and unchanged damage/interval, and source/preload checks.
+
 ## Verification boundary
 
 `tools/flight-audio.test.mjs`, `tools/flight-guard-recordings.test.mjs` and `tools/sound-library-recordings.test.mjs`: 21 tests passed after the flight/guard integration. They cover imported hashes, manifest identity, decode gating, authored preferences, hysteresis and cleanup. FFprobe verified the 16-second flight and 0.45-second guard-break files. These are structural/runtime checks, not an assertion that every sound has passed a listening review in a full match.

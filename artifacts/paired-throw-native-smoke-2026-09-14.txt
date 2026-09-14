@@ -1,0 +1,16 @@
+Observed through the in-app browser at http://127.0.0.1:5185/ on 2026-09-14.
+Native Threat Room console commands: demo prepare grab; demo play; demo status.
+Current faceted modular actors visible at scenario start. No video recorded.
+
+complete · complete · 48.0 damage
+0.00s · Native takeoff / rear approach
+0.23s · Reaching for rear capture
+0.41s · Rear hold / moving carry
+1.07s · Attached throw anticipation
+1.27s · Aimed downward release
+1.43s · Terrain impact: 48.0 health lost
+2.63s · Recovery finished / control returned
+
+Damage is total health lost across the throw sequence, not isolated impact-only damage.
+The console result verifies native completion. The start screenshot and final console result were inspected;
+the brief .20s anticipation and .30s follow-through were not frame-by-frame visually approved.

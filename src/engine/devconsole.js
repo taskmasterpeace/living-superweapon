@@ -198,12 +198,13 @@ export class DevConsole {
       const trial=this.g.ms?.threatLab?.meleeTrial;if(!trial)throw Error('Enter Threat Room first');
       trial.startCreature().then(f=>{if(f){c.ok('Dec-52 hound ready');c.toggle(false);}}).catch(e=>c.err(e.message));
     });
-    this.cmd('demo','demo prepare [grab|stun] | play | record | stop — native aerial demonstrations',(a,c)=>{
+    this.cmd('demo','demo prepare [grab|stun] | play | status | record | stop — native aerial demonstrations',(a,c)=>{
       const trial=this.g.ms?.threatLab?.meleeTrial;if(!trial)throw Error('Enter Threat Room first');
       if(a[0]==='prepare'){const kind=a[1]||'grab';trial.prepareAerialDemo(kind);c.ok('Current-model '+kind+' scenario prepared. Use demo record after models load.');return;}
       const demo=trial.demo;if(!demo)throw Error('Run demo prepare first');
+      if(a[0]==='status'){const s=demo.summary();c.ok(`${s.phase} · ${s.outcome} · ${s.damage.toFixed(1)} damage`);for(const e of s.events)c.ok(`${e.time.toFixed(2)}s · ${e.label}`);return;}
       if(a[0]==='stop'){demo.stop();c.toggle(false);return;}
-      if(!['play','record'].includes(a[0]))throw Error('Use demo prepare, play, record or stop');
+      if(!['play','record'].includes(a[0]))throw Error('Use demo prepare, play, status, record or stop');
       if(demo.phase!=='ready')throw Error('Run demo prepare to reset the scenario');
       requireRecordingModels([this.g.player,trial.target]);
       if(a[0]==='record'){this.cmds.get('record').run(['12'],c);const clip=this.liveClip;demo.onFinish=()=>clip.stop();}

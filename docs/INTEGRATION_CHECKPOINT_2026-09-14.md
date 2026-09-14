@@ -21,9 +21,9 @@ The complete extra audio collection remains available for later authoring. Files
 ## Unfinished, explicitly tracked
 
 - [#21](https://github.com/taskmasterpeace/living-superweapon/issues/21): deep pickup support and actual modular hand contact. Measured overhead rock wrist gap about .5–.6 world units; do not call the new lift contact-complete.
-- [#26](https://github.com/taskmasterpeace/living-superweapon/issues/26): attached person-throw anticipation, release marker and follow-through. Immediate release plus a .3-second arm blend explains the current dropped appearance.
+- [#26](https://github.com/taskmasterpeace/living-superweapon/issues/26): attached person-throw anticipation, release marker and directional arm follow-through are now implemented; broader visual acceptance remains. See `PAIRED_THROW_AUDIO_CHECKPOINT_2026-09-14.md` for the subsequent checkpoint.
 - [#19](https://github.com/taskmasterpeace/living-superweapon/issues/19): paired victim resistance/choke/grab reactions. No named paired wrestling/choke family was confirmed in the full downloaded packs.
-- [#25](https://github.com/taskmasterpeace/living-superweapon/issues/25): ordinary blocked-punch energy zap and cold-load synth fallbacks. Reload/dry-fire is #18; ambient decisions are #16.
+- [#25](https://github.com/taskmasterpeace/living-superweapon/issues/25): ordinary flesh/fist blocked-punch zap now routes to a physical recording. Cold-load synth fallbacks remain; Sandra's pistol routing is fixed and her suppressed-SMG recording gap is #27. Reload/dry-fire is #18; ambient decisions are #16.
 - Hound is opt-in via Threat Room console `creature hound`; wider Dec-52 deployment, anatomy-specific grabs and complete creature behavior remain separate work (#20).
 
 Next implementation order and the proposed hand/weapon/action vocabulary: `SUPERHERO_COMBAT_NEXT_STEPS_2026-09-14.md`. Exact source take coverage: `ANIMATION_PACK_INVENTORY_2026-09-14.md` and `artifacts/animation-pack-audit-20260914/inventory.json`.

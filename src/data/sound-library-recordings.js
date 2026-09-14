@@ -1,6 +1,7 @@
 // Approved defaults. User-authored SoundLibrary bindings take precedence.
 export const SOUND_LIBRARY_SAMPLES={
  grab:'library.grab',
+ 'physical-jab-block':'library.melee',
  'guard-break':'library.guard-break',
  'flashbang-detonate':'gear.flashbang','shieldpack-hit':'gear.shield.hit',
  'bullet-hit-flesh':'impact.flesh','bullet-hit-metal':'impact.metal','bullet-hit-stone':'impact.concrete',

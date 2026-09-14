@@ -1,3 +1,4 @@
+import {restorePersonThrowOverlay} from './person-throw-pose.js';
 import {beginImpactRecovery,updateImpactRecovery,poseImpactRecovery} from './impact-recovery.js';
 import {resolvePhysicalStats} from '../data/physical-stats.js';
 import {zombieRifleHit,zombieLegSpeed,poseZombieInjuries} from './zombie-locational-damage.js';
@@ -2408,6 +2409,7 @@ export class Fighter {
   }
 
   _animate(dt) {
+    restorePersonThrowOverlay(this);
     clearFlightFeet(this);
     if(this._scoutVehicle||this._aircraftVehicle||this._passengerTransport)return; // Seat owns articulation while Fighter.update stays live.
     const p = this.parts; const moving = Math.hypot(this.vel.x, this.vel.z) > 4;

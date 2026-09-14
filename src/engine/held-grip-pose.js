@@ -1,3 +1,4 @@
+import {animatePersonThrowWindup} from './person-throw-pose.js';
 import * as THREE from 'three';
 import {reachArm} from './hero-rig.js';
 const target=new THREE.Vector3(),holderLocal=new THREE.Vector3();
@@ -34,6 +35,7 @@ export function animateHeldGrip(f){
  if(animateCarriedObjectGrip(f))return;
  const v=f.grabbing;
  if(!f.parts.rig||!v?.parts?.rig||v.grabbedBy!==f||f.grabState!=='clinch'||f._clinchFinisher)return;
+ animatePersonThrowWindup(f);
  f.obj.updateMatrixWorld(true);v.obj.updateMatrixWorld(true);
  for(const [i,arm,side]of [[0,f.parts.armL,-1],[1,f.parts.armR,1]]){
   // The free hand keeps its native body-punch or active ranged channel.

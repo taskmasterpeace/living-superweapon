@@ -433,7 +433,7 @@ export const ROSTER = [
     blurb: 'The first Jackal. Hunts living superweapons for a living — twin pistols, a ring that sees through every camera on Earth, and a beacon she plants BEFORE the fight starts.',
     sig: ['X Extraction Beacon (plant → recall to it)', 'LMB Twin Pistols', 'Q The Ring Sees (wallhack)', 'R Clean Extraction'],
     abilities: {
-      lmb: { type: 'rifle', name: 'Twin Pistols', gear: true, cost: 3, interval: 0.16, damage: 10, speed: 165, radius: 0.6, blast: 2.6, spread: 0.03, recoil: 1.2, color: '#ffb03a', color2: '#fff' },
+      lmb: { type: 'rifle', name: 'Twin Pistols', voice: 'pistol9', gear: true, cost: 3, interval: 0.16, damage: 10, speed: 165, radius: 0.6, blast: 2.6, spread: 0.03, recoil: 1.2, color: '#ffb03a', color2: '#fff' },
       rmb: { type: 'rifle', name: 'Suppressed SMG', gear: true, cost: 2, interval: 0.07, damage: 4, speed: 175, radius: 0.5, blast: 2, spread: 0.06, recoil: 0.8, color: '#ffd97a', color2: '#fff' },
       q: { type: 'buff', name: 'The Ring Sees', cost: 16, cd: 15, mult: 1.15, dur: 8, reveal: true, color: '#ffb03a', color2: '#fff' },
       e: { type: 'melee', name: 'Pistol Whip', gear: true, cost: 8, cd: 0.8, damage: 18, range: 11, arc: 0.85, lunge: 34, knock: 42, launch: 8, color: '#ffb03a' },

@@ -1,5 +1,6 @@
+import {blockedJabAudio} from './blocked-jab-audio.js';
 import {meleeReleaseChoice,MELEE_CHARGE_MAX} from './melee-charge-meter.js';
-import {beginPersonThrowPose,advancePersonThrowPose} from './person-throw-pose.js';
+import {beginPersonThrowPose,advancePersonThrowPose,restorePersonThrowOverlay} from './person-throw-pose.js';
 import {zombieArmsDisabled,zombieCannotGrab} from './zombie-locational-damage.js';
 import {grabLesson,meleeLessonScheme} from './combat-lesson-controls.js';
 import {personThrowLaunch,THROW_WINDOW} from './person-throw-trajectory.js';
@@ -120,7 +121,7 @@ export class MeleeSystem {
 
   canAct(f) { return !zombieArmsDisabled(f) && f.alive && f.hitstop <= 0 && f.staggerT <= 0 && f.stunT <= 0 && !(f.frozenT > 0) && !(f.sleepT>0) && !(f.downedT>0) && !f.grabbedBy && f.grabState !== 'clinch' && !f.hanging; }
   clearInput(f) { f._meleeBuffer=null; f._meleeQueuedHeld=false; f.meleeCharge=0; f._clinchThrowBuffer=0; }
-  _canClinch(f, allowHitstop=false) { return f.alive && f.grabbing?.alive && f.grabState==='clinch' && (allowHitstop||f.hitstop<=0) && f.staggerT<=0 && f.stunT<=0 && !(f.frozenT>0) && !(f.sleepT>0) && !(f.downedT>0) && !f._clinchFinisher; }
+  _canClinch(f, allowHitstop=false) { return f.alive && f.grabbing?.alive && f.grabState==='clinch' && (allowHitstop||f.hitstop<=0) && f.staggerT<=0 && f.stunT<=0 && !(f.frozenT>0) && !(f.sleepT>0) && !(f.downedT>0) && !f._clinchFinisher && !f._personThrowWindup; }
 
   // A hard interrupt cancels an active/recover swing. ⚠ NOT hitstop — the attacker's OWN hit-freeze
   // must not cancel their active window (only a wind-up is cancelled by being hit; that is `canAct`).
@@ -317,7 +318,7 @@ export class MeleeSystem {
     if (blocked) {
       if (contact) g.vfx.contact(imp, damageOpts.naniteResult?.integrity>0?local.normal:f.aim3, {color:damageOpts.naniteResult?.integrity>0?'#bdc2b8':(foe._guardUpT ?? 99)<.22?'#ffd24a':'#bfe0ff',power:(foe._guardUpT ?? 99)<.22?1.3:.55});
       else g.vfx.impactStar(imp, 7, '#bfe0ff', 0.16);
-      g.world.shake(0.35); g.audio.zap(520, imp); f.strikeCd = Math.max(f.strikeCd, 0.5); f.hitstop = Math.max(f.hitstop, 0.09);
+      g.world.shake(0.35); blockedJabAudio(g.audio,this._swingKind(f),foe,imp); f.strikeCd = Math.max(f.strikeCd, 0.5); f.hitstop = Math.max(f.hitstop, 0.09);
     }   // jab blocked → punishable
     else {
       const fp = (0.6 + 0.4 * mom) * weight.stop;
@@ -421,7 +422,11 @@ export class MeleeSystem {
 
   release(f) {
     if (!f) return;
+    restorePersonThrowOverlay(f);
+    f._personThrowWindup=null;
     const grabber=f.grabbedBy,holder=grabber||f;
+    restorePersonThrowOverlay(holder);
+    holder._personThrowWindup=null;
     const carried=holder._personCarry?.victim;
     if(carried&&holder._personCarry.friendly){carried._friendlyLanding=true;carried.launchT=0;carried._thrownT=0;carried._thrownBy=null;}
     const departing=holder.grabbing;if(departing&&this.game.modeId==='powerworld')departing._regrabUntil=(this.game.time||0)+.65;
@@ -462,8 +467,16 @@ export class MeleeSystem {
     const g = this.game, v = holder.grabbing;
     if(holder._personCarry?.friendly){if(!this.setdownPerson(holder))this.release(holder);return;}
     if (!v) { this.release(holder); return; }
+    if(holder._personThrowWindup)return;
+    if(!this._canClinch(holder))return;
+    holder._personThrowWindup={victim:v,elapsed:0,duration:.2};
+    if(holder._personCarry)holder._personCarry.whirling=false;
+  }
+  _commitThrow(holder) {
+    const g=this.game,v=holder.grabbing;
+    if(!v||holder._personThrowWindup?.victim!==v)return;
     const {back,transport,direction:dir,damage:dmg,velocity}=personThrowLaunch(holder,v);
-    beginPersonThrowPose(holder);
+    beginPersonThrowPose(holder,dir);
     this.release(holder);holder.strikeCd=Math.max(holder.strikeCd,.35);
     v.state = 'idle';
     // AUTHORED velocity, not kb-scaled — the dotted preview integrates exactly this launch state.
@@ -727,8 +740,9 @@ export class MeleeSystem {
       const v = f.grabbing;
       if (!v || !v.alive || !f.alive || zombieCannotGrab(f) || f.staggerT>0 || f.stunT>0 || f.frozenT>0 || f.sleepT>0 || f.downedT>0) { this.release(f); return; }
       if(f._personCarry?.friendly){if(v.team!==f.team||!advancePersonCarry(f,g,dt))this.release(f);return;}
-      f.grabT -= dt;
-      f._clinchElapsed=(f._clinchElapsed||0)+dt;
+      const holdDt=f._personThrowWindup&&f.hitstop>0?0:dt;
+      f.grabT -= holdDt;
+      f._clinchElapsed=(f._clinchElapsed||0)+holdDt;
       // Keep the grip inside actual arm reach. Root-space wobble fed back through
       // hard-lock facing and made the pair orbit; struggle belongs to the pose.
       const hoist=f._clinchFinisher?Math.sin(Math.min(1,f._clinchFinisher.t/f._clinchFinisher.duration)*Math.PI*.5)*3.5:0;
@@ -758,6 +772,12 @@ export class MeleeSystem {
         }
       }
       if (f.grabT <= 0) {this._breakFree(f);return;}
+      if(f._personThrowWindup){
+        if(f._personThrowWindup.victim!==v||v.grabbedBy!==f){this.release(f);return;}
+        if(!(f.hitstop>0))f._personThrowWindup.elapsed+=dt;
+        if(f._personThrowWindup.elapsed+1e-8>=f._personThrowWindup.duration){this._commitThrow(f);return;}
+        return;
+      }
       if(f._clinchPunch) {
         const punch=f._clinchPunch;punch.t+=dt;
         if(punch.t>=.12&&!punch.hit&&!punch.previous){punch.hit=true;this._clinchImpact(f);}
