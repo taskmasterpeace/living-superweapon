@@ -129,3 +129,8 @@ A stored limb-hit counter no longer forces the modular zombie into native pose a
 Disabled zombie arms now use a regional native-pose overlay after authored locomotion. The healthy arm, torso and walking legs retain the source clip. The shared native-to-modular adapter accepts explicit native arm regions, preserving its existing left/right mapping and joint lengths. Incapacitated actors and crippled legs continue through their existing full native presentation.
 
 The actual-rig regression failed when the healthy arm was overwritten; 25 modular/zombie tests and build pass. Multi-angle visual review of injury transitions remains required.
+# Portable visual-review notes
+
+Authored motion JSON, compiled clip metadata and the editor's separate clip export now preserve optional `visualReview: {rejected, note}`. The catalog reads the validated motion's review instead of separate display-only data. Ground pickup's issue #21 rejection therefore travels with handoffs. All exports remain candidates; a non-rejected note does not grant gameplay approval.
+
+The production-catalog regression failed before the fix because compiled metadata lost the rejection. Sixteen catalog/authoring tests and build pass.

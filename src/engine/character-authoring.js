@@ -16,13 +16,19 @@ export function validateAsset(input,bones){
  if(input.motion){
   const m=input.motion;if(m.hand!==undefined&&!['left','right'].includes(m.hand))throw Error('Invalid motion hand');const d=finite(m.duration,.1,30,'duration');
   if(m.contactStyle!==undefined&&!['carry','front','rear','side','neck'].includes(m.contactStyle))throw Error('Invalid contact style');
+  let visualReview;
+  if(m.visualReview!==undefined){
+   const r=m.visualReview;
+   if(!r||typeof r.rejected!=='boolean'||typeof r.note!=='string'||r.note.length>1000)throw Error('Invalid visual review');
+   visualReview={rejected:r.rejected,note:r.note};
+  }
   const markers={};for(const key of ['contact','release','controlReturn'])markers[key]=finite(m.markers?.[key],0,d,key);
   if(markers.contact>markers.release||markers.release>markers.controlReturn)throw Error('Markers must be contact ≤ release ≤ control return');
   if(!Array.isArray(m.keys)||m.keys.length<1||m.keys.length>240)throw Error('Use 1–240 keyframes');
   let previous=-1;
   const keys=m.keys.map(k=>{const time=finite(k.time,0,d,'key time');if(time<=previous)throw Error('Keyframe times must increase');previous=time;
    const pose={};for(const [bone,q] of Object.entries(k.pose||{})){if(!bones.includes(bone))throw Error('Unknown pose bone '+bone);const a=vector(q,4,-1,1,'quaternion'),len=Math.hypot(...a);if(Math.abs(len-1)>.01)throw Error('Quaternion must be normalized');pose[bone]=a;}return {time,pose};});
-  out.motion={contactStyle:m.contactStyle||'carry',hand:m.hand||'right',name:String(m.name||out.name).slice(0,80),duration:d,loop:!!m.loop,base:String(m.base||'Idle_Loop').slice(0,100),markers,keys,status:'candidate',source:String(m.source||'Hand authored in Power World').slice(0,240)};
+  out.motion={...(visualReview?{visualReview}:{}),contactStyle:m.contactStyle||'carry',hand:m.hand||'right',name:String(m.name||out.name).slice(0,80),duration:d,loop:!!m.loop,base:String(m.base||'Idle_Loop').slice(0,100),markers,keys,status:'candidate',source:String(m.source||'Hand authored in Power World').slice(0,240)};
  }return out;
 }
 export function samplePose(m,time){
@@ -51,5 +57,5 @@ export function compileAuthoredMotion(asset){
  const m=asset.motion;if(!m)throw Error('Asset has no motion');
  const names=new Set(m.keys.flatMap(k=>Object.keys(k.pose)));
  const tracks=[...names].map(name=>new T.QuaternionKeyframeTrack(name+'.quaternion',m.keys.map(k=>k.time),m.keys.flatMap(k=>samplePose(m,k.time)[name]||[0,0,0,1])));
- const clip=new T.AnimationClip(m.name,m.duration,tracks);clip.userData={rig:RIG,source:m.source,status:'candidate',markers:m.markers,hand:m.hand,contactStyle:m.contactStyle};return clip;
+ const clip=new T.AnimationClip(m.name,m.duration,tracks);clip.userData={...(m.visualReview?{visualReview:{...m.visualReview}}:{}),rig:RIG,source:m.source,status:'candidate',markers:m.markers,hand:m.hand,contactStyle:m.contactStyle};return clip;
 }
