@@ -1,0 +1,189 @@
+{
+ "sounds": [
+  {
+   "cue": "grab",
+   "file": "../../public/audio/ai-pass/grab.wav",
+   "gain": 0.55
+  },
+  {
+   "cue": "guard-break",
+   "file": "../../public/audio/ai-pass/guard-break.wav",
+   "gain": 0.55
+  },
+  {
+   "cue": "heavy",
+   "file": "../../public/audio/ai-pass/heavy.wav",
+   "gain": 0.55
+  },
+  {
+   "cue": "light",
+   "file": "../../public/audio/ai-pass/light.wav",
+   "gain": 0.55
+  },
+  {
+   "cue": "miss",
+   "file": "../../public/audio/ai-pass/miss.wav",
+   "gain": 0.55
+  },
+  {
+   "cue": "beam-clash",
+   "file": "../../public/audio/ai-pass/beam-clash.wav",
+   "gain": 0.4
+  },
+  {
+   "cue": "blast",
+   "file": "../../public/audio/ai-pass/blast.wav",
+   "gain": 0.55
+  },
+  {
+   "cue": "release",
+   "file": "../../public/audio/ai-pass/release.wav",
+   "gain": 0.55
+  },
+  {
+   "cue": "shutdown",
+   "file": "../../public/audio/ai-pass/shutdown.wav",
+   "gain": 0.55
+  },
+  {
+   "cue": "deflect",
+   "file": "../../public/audio/ai-pass/deflect.wav",
+   "gain": 0.55
+  },
+  {
+   "cue": "shield-lower",
+   "file": "../../public/audio/ai-pass/shield-lower.wav",
+   "gain": 0.55
+  },
+  {
+   "cue": "shield-raise",
+   "file": "../../public/audio/ai-pass/shield-raise.wav",
+   "gain": 0.55
+  },
+  {
+   "cue": "teleport",
+   "file": "../../public/audio/ai-pass/teleport.wav",
+   "gain": 0.75
+  },
+  {
+   "cue": "construct",
+   "file": "../../public/audio/ai-pass/construct.wav",
+   "gain": 0.55
+  },
+  {
+   "cue": "construct-fracture",
+   "file": "../../public/audio/ai-pass/construct-fracture.wav",
+   "gain": 0.55
+  },
+  {
+   "cue": "nanite-break",
+   "file": "../../public/audio/ai-pass/nanite-break.wav",
+   "gain": 0.55
+  },
+  {
+   "cue": "nanite-form",
+   "file": "../../public/audio/ai-pass/nanite-form.wav",
+   "gain": 0.55
+  },
+  {
+   "cue": "nanite-reform",
+   "file": "../../public/audio/ai-pass/nanite-reform.wav",
+   "gain": 0.4
+  },
+  {
+   "cue": "blast-impact",
+   "file": "../../public/audio/ai-pass/blast-impact.wav",
+   "gain": 0.55
+  },
+  {
+   "cue": "grenade-release",
+   "file": "../../public/audio/ai-pass/grenade-release.wav",
+   "gain": 0.55
+  },
+  {
+   "cue": "gun",
+   "file": "../../public/audio/ai-pass/gun.wav",
+   "gain": 0.55
+  },
+  {
+   "cue": "flight",
+   "file": "../../public/audio/ai-pass/flight.wav",
+   "gain": 0.4
+  },
+  {
+   "cue": "hover",
+   "file": "../../public/audio/ai-pass/hover.wav",
+   "gain": 0.4
+  },
+  {
+   "cue": "landing",
+   "file": "../../public/audio/ai-pass/landing.wav",
+   "gain": 0.55
+  },
+  {
+   "cue": "run",
+   "file": "../../public/audio/ai-pass/run.wav",
+   "gain": 0.55
+  },
+  {
+   "cue": "walk",
+   "file": "../../public/audio/ai-pass/walk.wav",
+   "gain": 0.55
+  },
+  {
+   "cue": "flyby",
+   "file": "../../public/audio/ai-pass/flyby.wav",
+   "gain": 0.55
+  },
+  {
+   "cue": "weather-domain-rain",
+   "file": "../../public/audio/ai-pass/weather-domain-rain.wav",
+   "gain": 0.4
+  },
+  {
+   "cue": "weather-domain-thunder",
+   "file": "../../public/audio/ai-pass/weather-domain-thunder.wav",
+   "gain": 0.55
+  },
+  {
+   "cue": "weather-rain",
+   "file": "../../public/audio/ai-pass/weather-rain.wav",
+   "gain": 0.4
+  },
+  {
+   "cue": "record-start",
+   "file": "../../public/audio/ai-pass/record-start.wav",
+   "gain": 0.55
+  },
+  {
+   "cue": "objective",
+   "file": "../../public/audio/ai-pass/objective.wav",
+   "gain": 0.55
+  },
+  {
+   "cue": "sample-recovery",
+   "file": "../../public/audio/ai-pass/sample-recovery.wav",
+   "gain": 0.55
+  },
+  {
+   "cue": "research-loop",
+   "file": "../../public/audio/ai-pass/research-loop.wav",
+   "gain": 0.4
+  },
+  {
+   "cue": "research-start",
+   "file": "../../public/audio/ai-pass/research-start.wav",
+   "gain": 0.55
+  },
+  {
+   "cue": "research-unlock",
+   "file": "../../public/audio/ai-pass/research-unlock.wav",
+   "gain": 0.55
+  },
+  {
+   "cue": "ui-select",
+   "file": "../../public/audio/ai-pass/ui-select.wav",
+   "gain": 0.55
+  }
+ ]
+}

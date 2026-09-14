@@ -1,0 +1,520 @@
+{
+ "format": "lsw.world-sfx",
+ "version": 1,
+ "count": 27,
+ "sounds": [
+  {
+   "category": "BALLISTIC AMBIENCE",
+   "cue": "ricochet",
+   "file": "final/ricochet.wav",
+   "moment": "IMPACT",
+   "kind": "oneshot",
+   "gain": 0.55,
+   "maps_to": "bullet ricochet off a surface",
+   "status": "confirmed",
+   "dur": 1.1,
+   "sr": 32000,
+   "ch": 1,
+   "bytes": 70478,
+   "source_take": "ricochet__t2.wav"
+  },
+  {
+   "category": "BALLISTIC AMBIENCE",
+   "cue": "whizby",
+   "file": "final/whizby.wav",
+   "moment": "AIR",
+   "kind": "oneshot",
+   "gain": 0.55,
+   "maps_to": "near-miss bullet pass-by",
+   "status": "confirmed",
+   "dur": 0.6,
+   "sr": 32000,
+   "ch": 1,
+   "bytes": 38478,
+   "source_take": "whizby__t1.wav",
+   "variants": [
+    {
+     "file": "final/whizby-v2.wav",
+     "take": "whizby__t2"
+    }
+   ]
+  },
+  {
+   "category": "MOVEMENT & FLIGHT",
+   "cue": "flight-loop",
+   "file": "final/flight-loop.wav",
+   "moment": "LOOP",
+   "kind": "loop",
+   "gain": 0.4,
+   "maps_to": "superhero flight \u2014 loop while flying",
+   "status": "confirmed",
+   "dur": 16.0,
+   "sr": 22050,
+   "ch": 1,
+   "bytes": 705678,
+   "source_take": "flight-loop__t1.wav"
+  },
+  {
+   "category": "MOVEMENT & FLIGHT",
+   "cue": "land-hero",
+   "file": "final/land-hero.wav",
+   "moment": "IMPACT",
+   "kind": "oneshot",
+   "gain": 0.55,
+   "maps_to": "heavy hero landing impact",
+   "status": "confirmed",
+   "dur": 1.6,
+   "sr": 32000,
+   "ch": 1,
+   "bytes": 102478,
+   "source_take": "land-hero__t2.wav"
+  },
+  {
+   "category": "MOVEMENT & FLIGHT",
+   "cue": "scuttle-loop",
+   "file": "final/scuttle-loop.wav",
+   "moment": "LOOP",
+   "kind": "loop",
+   "gain": 0.4,
+   "maps_to": "spider-mine movement \u2014 loop while scuttling",
+   "status": "confirmed",
+   "dur": 16.0,
+   "sr": 22050,
+   "ch": 1,
+   "bytes": 705678,
+   "source_take": "scuttle-loop__t1.wav"
+  },
+  {
+   "category": "POWERS / CHARGING",
+   "cue": "charge-bolt",
+   "file": "final/charge-bolt.wav",
+   "moment": "ACTION",
+   "kind": "oneshot",
+   "gain": 0.55,
+   "maps_to": "charge-up: energy bolt (build-up)",
+   "status": "confirmed",
+   "dur": 1.5,
+   "sr": 32000,
+   "ch": 1,
+   "bytes": 96078,
+   "source_take": "charge-bolt__t1.wav",
+   "variants": [
+    {
+     "file": "final/charge-bolt-v2.wav",
+     "take": "charge-bolt__t2"
+    }
+   ]
+  },
+  {
+   "category": "POWERS / CHARGING",
+   "cue": "charge-beam",
+   "file": "final/charge-beam.wav",
+   "moment": "ACTION",
+   "kind": "oneshot",
+   "gain": 0.55,
+   "maps_to": "charge-up: big beam (build-up)",
+   "status": "confirmed",
+   "dur": 2.0,
+   "sr": 32000,
+   "ch": 1,
+   "bytes": 128078,
+   "source_take": "charge-beam__t1.wav"
+  },
+  {
+   "category": "POWERS / CHARGING",
+   "cue": "charge-aura",
+   "file": "final/charge-aura.wav",
+   "moment": "ACTION",
+   "kind": "oneshot",
+   "gain": 0.55,
+   "maps_to": "charge-up: ki aura (build-up)",
+   "status": "confirmed",
+   "dur": 2.0,
+   "sr": 32000,
+   "ch": 1,
+   "bytes": 128078,
+   "source_take": "charge-aura__t2.wav"
+  },
+  {
+   "category": "POWERS / CHARGING",
+   "cue": "charge-release",
+   "file": "final/charge-release.wav",
+   "moment": "FIRE",
+   "kind": "oneshot",
+   "gain": 0.55,
+   "maps_to": "charged attack release / launch",
+   "status": "confirmed",
+   "dur": 1.3,
+   "sr": 32000,
+   "ch": 1,
+   "bytes": 83278,
+   "source_take": "charge-release__t1.wav",
+   "variants": [
+    {
+     "file": "final/charge-release-v2.wav",
+     "take": "charge-release__t2"
+    }
+   ]
+  },
+  {
+   "category": "DISTANT (far-away)",
+   "cue": "distant-rifle",
+   "file": "final/distant-rifle.wav",
+   "moment": "FIRE",
+   "kind": "oneshot",
+   "gain": 0.55,
+   "maps_to": "far gunshot \u2014 play + speed-of-sound delay by distance",
+   "status": "confirmed",
+   "dur": 2.4,
+   "sr": 32000,
+   "ch": 1,
+   "bytes": 153678,
+   "source_take": "distant-rifle__t1.wav",
+   "variants": [
+    {
+     "file": "final/distant-rifle-v2.wav",
+     "take": "distant-rifle__t2"
+    }
+   ]
+  },
+  {
+   "category": "MELEE HANDLING",
+   "cue": "block-parry",
+   "file": "final/block-parry.wav",
+   "moment": "IMPACT",
+   "kind": "oneshot",
+   "gain": 0.55,
+   "maps_to": "blade clash / parry",
+   "status": "confirmed",
+   "dur": 0.9,
+   "sr": 32000,
+   "ch": 1,
+   "bytes": 57678,
+   "source_take": "block-parry__t1.wav",
+   "variants": [
+    {
+     "file": "final/block-parry-v2.wav",
+     "take": "block-parry__t2"
+    }
+   ]
+  },
+  {
+   "category": "MELEE HANDLING",
+   "cue": "draw-blade",
+   "file": "final/draw-blade.wav",
+   "moment": "ACTION",
+   "kind": "oneshot",
+   "gain": 0.55,
+   "maps_to": "draw / unsheathe blade",
+   "status": "confirmed",
+   "dur": 0.9,
+   "sr": 32000,
+   "ch": 1,
+   "bytes": 57678,
+   "source_take": "draw-blade__t1.wav",
+   "variants": [
+    {
+     "file": "final/draw-blade-v2.wav",
+     "take": "draw-blade__t2"
+    }
+   ]
+  },
+  {
+   "category": "FOOTSTEPS",
+   "cue": "step-concrete",
+   "file": "final/step-concrete.wav",
+   "moment": "ACTION",
+   "kind": "oneshot",
+   "gain": 0.55,
+   "maps_to": "footstep on concrete (trigger per animation step)",
+   "status": "confirmed",
+   "dur": 0.26,
+   "sr": 48000,
+   "ch": 1,
+   "bytes": 25038,
+   "source_take": "step-concrete__t1.wav",
+   "variants": [
+    {
+     "file": "final/step-concrete-v2.wav",
+     "take": "step-concrete__t2"
+    }
+   ]
+  },
+  {
+   "category": "FOOTSTEPS",
+   "cue": "step-dirt",
+   "file": "final/step-dirt.wav",
+   "moment": "ACTION",
+   "kind": "oneshot",
+   "gain": 0.55,
+   "maps_to": "footstep on dirt/sand (per step)",
+   "status": "confirmed",
+   "dur": 0.26,
+   "sr": 48000,
+   "ch": 1,
+   "bytes": 25038,
+   "source_take": "step-dirt__t1.wav",
+   "variants": [
+    {
+     "file": "final/step-dirt-v2.wav",
+     "take": "step-dirt__t2"
+    }
+   ]
+  },
+  {
+   "category": "FOOTSTEPS",
+   "cue": "step-gravel",
+   "file": "final/step-gravel.wav",
+   "moment": "ACTION",
+   "kind": "oneshot",
+   "gain": 0.55,
+   "maps_to": "footstep on gravel (per step)",
+   "status": "confirmed",
+   "dur": 0.26,
+   "sr": 48000,
+   "ch": 1,
+   "bytes": 25038,
+   "source_take": "step-gravel__t1.wav",
+   "variants": [
+    {
+     "file": "final/step-gravel-v2.wav",
+     "take": "step-gravel__t2"
+    }
+   ]
+  },
+  {
+   "category": "BULLET IMPACTS",
+   "cue": "hit-flesh",
+   "file": "final/hit-flesh.wav",
+   "moment": "IMPACT",
+   "kind": "oneshot",
+   "gain": 0.55,
+   "maps_to": "bullet impact on flesh",
+   "status": "confirmed",
+   "dur": 0.9,
+   "sr": 32000,
+   "ch": 1,
+   "bytes": 57678,
+   "source_take": "hit-flesh__rb.wav"
+  },
+  {
+   "category": "BULLET IMPACTS",
+   "cue": "hit-metal",
+   "file": "final/hit-metal.wav",
+   "moment": "IMPACT",
+   "kind": "oneshot",
+   "gain": 0.55,
+   "maps_to": "bullet impact on metal",
+   "status": "confirmed",
+   "dur": 1.1,
+   "sr": 32000,
+   "ch": 1,
+   "bytes": 70478,
+   "source_take": "hit-metal__rc.wav"
+  },
+  {
+   "category": "BULLET IMPACTS",
+   "cue": "hit-dirt",
+   "file": "final/hit-dirt.wav",
+   "moment": "IMPACT",
+   "kind": "oneshot",
+   "gain": 0.55,
+   "maps_to": "bullet impact on dirt/sand",
+   "status": "confirmed",
+   "dur": 0.8,
+   "sr": 32000,
+   "ch": 1,
+   "bytes": 51278,
+   "source_take": "hit-dirt__ra.wav",
+   "variants": [
+    {
+     "file": "final/hit-dirt-v2.wav",
+     "take": "hit-dirt__rc"
+    }
+   ]
+  },
+  {
+   "category": "BULLET IMPACTS",
+   "cue": "hit-wood",
+   "file": "final/hit-wood.wav",
+   "moment": "IMPACT",
+   "kind": "oneshot",
+   "gain": 0.55,
+   "maps_to": "bullet impact on wood",
+   "status": "confirmed",
+   "dur": 0.8,
+   "sr": 32000,
+   "ch": 1,
+   "bytes": 51278,
+   "source_take": "hit-wood__rb.wav"
+  },
+  {
+   "category": "MOVEMENT & FLIGHT",
+   "cue": "flight-boost",
+   "file": "final/flight-boost.wav",
+   "moment": "AIR",
+   "kind": "oneshot",
+   "gain": 0.55,
+   "maps_to": "flight acceleration burst",
+   "status": "confirmed",
+   "dur": 1.1,
+   "sr": 32000,
+   "ch": 1,
+   "bytes": 70478,
+   "source_take": "flight-boost__r1.wav",
+   "variants": [
+    {
+     "file": "final/flight-boost-v2.wav",
+     "take": "flight-boost__r2"
+    },
+    {
+     "file": "final/flight-boost-v3.wav",
+     "take": "flight-boost__r3"
+    }
+   ]
+  },
+  {
+   "category": "MELEE HANDLING",
+   "cue": "sheathe-blade",
+   "file": "final/sheathe-blade.wav",
+   "moment": "ACTION",
+   "kind": "oneshot",
+   "gain": 0.55,
+   "maps_to": "sheathe / put blade away",
+   "status": "confirmed",
+   "dur": 0.9,
+   "sr": 32000,
+   "ch": 1,
+   "bytes": 57678,
+   "source_take": "sheathe-blade__r2.wav"
+  },
+  {
+   "category": "FOOTSTEPS",
+   "cue": "step-water",
+   "file": "final/step-water.wav",
+   "moment": "ACTION",
+   "kind": "oneshot",
+   "gain": 0.55,
+   "maps_to": "footstep in shallow water (per step)",
+   "status": "confirmed",
+   "dur": 0.4,
+   "sr": 48000,
+   "ch": 1,
+   "bytes": 38478,
+   "source_take": "step-water__c1.wav",
+   "variants": [
+    {
+     "file": "final/step-water-v2.wav",
+     "take": "step-water__c2"
+    }
+   ]
+  },
+  {
+   "category": "FOOTSTEPS",
+   "cue": "step-wood",
+   "file": "final/step-wood.wav",
+   "moment": "ACTION",
+   "kind": "oneshot",
+   "gain": 0.55,
+   "maps_to": "footstep on wood (per step)",
+   "status": "confirmed",
+   "dur": 0.34,
+   "sr": 48000,
+   "ch": 1,
+   "bytes": 32718,
+   "source_take": "step-wood__c1.wav",
+   "variants": [
+    {
+     "file": "final/step-wood-v2.wav",
+     "take": "step-wood__c2"
+    }
+   ]
+  },
+  {
+   "category": "BULLET IMPACTS",
+   "cue": "hit-glass",
+   "file": "final/hit-glass.wav",
+   "moment": "IMPACT",
+   "kind": "oneshot",
+   "gain": 0.55,
+   "maps_to": "bullet impact / shatter on glass",
+   "status": "confirmed",
+   "dur": 1.2,
+   "sr": 32000,
+   "ch": 1,
+   "bytes": 76878,
+   "source_take": "hit-glass__c1.wav",
+   "variants": [
+    {
+     "file": "final/hit-glass-v2.wav",
+     "take": "hit-glass__c2"
+    }
+   ]
+  },
+  {
+   "category": "BULLET IMPACTS",
+   "cue": "hit-water",
+   "file": "final/hit-water.wav",
+   "moment": "IMPACT",
+   "kind": "oneshot",
+   "gain": 0.55,
+   "maps_to": "bullet impact on water",
+   "status": "confirmed",
+   "dur": 0.9,
+   "sr": 32000,
+   "ch": 1,
+   "bytes": 57678,
+   "source_take": "hit-water__c2.wav"
+  },
+  {
+   "category": "BULLET IMPACTS",
+   "cue": "hit-concrete",
+   "file": "final/hit-concrete.wav",
+   "moment": "IMPACT",
+   "kind": "oneshot",
+   "gain": 0.55,
+   "maps_to": "bullet impact on concrete",
+   "status": "confirmed",
+   "dur": 0.9,
+   "sr": 32000,
+   "ch": 1,
+   "bytes": 57678,
+   "source_take": "hit-concrete__c2.wav"
+  },
+  {
+   "category": "DISTANT (far-away)",
+   "cue": "distant-explosion",
+   "file": "final/distant-explosion.wav",
+   "moment": "IMPACT",
+   "kind": "oneshot",
+   "gain": 0.55,
+   "maps_to": "far explosion (play + distance delay)",
+   "status": "confirmed",
+   "dur": 2.6,
+   "sr": 32000,
+   "ch": 1,
+   "bytes": 166478,
+   "source_take": "distant-explosion__c1.wav"
+  },
+  {
+   "category": "FOOTSTEPS",
+   "cue": "step-metal",
+   "file": null,
+   "moment": "ACTION",
+   "kind": "oneshot",
+   "gain": 0.55,
+   "maps_to": "footstep on metal grate",
+   "status": "external \u2014 Robert is supplying a metal-grate sound"
+  },
+  {
+   "category": "BALLISTIC AMBIENCE",
+   "cue": "casing",
+   "file": null,
+   "moment": "ACTION",
+   "kind": "oneshot",
+   "gain": 0.55,
+   "maps_to": "shell casing drop",
+   "status": "external/pending \u2014 AI takes rejected; source a CC0 sample"
+  }
+ ]
+}
