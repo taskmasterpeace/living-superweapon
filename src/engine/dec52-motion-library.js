@@ -1,5 +1,5 @@
 import * as T from 'three';
-export const DEC52_MOTIONS={idle:{duration:3,loop:true},walk:{duration:1.2,loop:true},run:{duration:.65,loop:true},bite:{duration:.65,loop:false},jump:{duration:1.1,loop:false},sniff:{duration:2,loop:true},flight:{duration:2,loop:true}};
+export const DEC52_MOTIONS={idle:{duration:3,loop:true},walk:{duration:1.2,loop:true},run:{duration:.65,loop:true},bite:{duration:.65,loop:false},jump:{duration:1.1,loop:false},sniff:{duration:2,loop:true},flight:{duration:2,loop:true},hit:{duration:.4,loop:false},shutdown:{duration:1.2,loop:false}};
 const smooth=x=>{x=T.MathUtils.clamp(x,0,1);return x*x*(3-2*x);};
 /** Named-pivot library shared by the workshop and future runtime actors.
  * In-place locomotion. Jump is articulation only; physics owns displacement.
@@ -37,6 +37,19 @@ export function buildDec52Clips(actor,family){
      if(n.includes('knee'))x=.5*(load+land)+.8*tuck;
      if(n==='nanite-head')x=-.12*tuck;
      if(n.includes('shoulder'))x=-.8*tuck;
+    }else if(id==='hit'){
+     const recoil=smooth(u/.2)*(1-smooth((u-.25)/.75));
+     if(n==='nanite-head'){x=-.3*recoil;z=.12*recoil;}
+     if(n.includes('knee'))x=.25*recoil;
+     if(n.includes('shoulder'))x=-.22*recoil;
+     if(n==='nanite-tail')y=.3*recoil;
+    }else if(id==='shutdown'){
+     const settle=smooth(u);
+     if(n==='nanite-head')x=.4*settle;
+     if(n.includes('hip'))x=(quad?(front?-.25:.25):-.25)*settle;
+     if(n.includes('knee'))x=.7*settle;
+     if(n.includes('shoulder'))x=.25*settle;
+     if(n==='nanite-tail')x=.2*settle;
     }else if(id==='sniff'){
      if(n==='nanite-head'){x=.18+.06*Math.sin(t*3);y=.25*Math.sin(t);}
      if(n==='nanite-tail')y=Math.sin(t)*.2;

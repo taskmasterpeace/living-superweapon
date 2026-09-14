@@ -24,3 +24,8 @@ Integration remains incomplete: an actual Dec-52 gameplay actor must supply coll
 
 Runtime audit: createCreatureActor has only a workshop caller. Actual creature gameplay registration and collision are absent; tracked at https://github.com/taskmasterpeace/living-superweapon/issues/20. The animation adapter is ready for that integration, but does not itself make Dec-52 playable.
 
+# Hit reaction and shutdown candidates
+
+Rat, hound and remote mech now include a 0.4-second hit reaction and 1.2-second shutdown articulation, available in the family workshop and exported library. The state adapter accepts `hitToken` for an accepted hit, gives it priority over a simultaneous attack/jump, and plays shutdown once while `dead` remains true. Hitstop pauses that playback; the terminal shutdown pose does not restart every frame. Root displacement, collision and damage remain caller-owned.
+
+Six real-model library/adapter tests and build pass. These are named-pivot candidates, not approved collapse/ragdoll clips. Full visual review and the gameplay actor connection in issue #20 remain open.
