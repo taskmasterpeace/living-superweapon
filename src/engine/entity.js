@@ -1,5 +1,6 @@
 import {zombieRifleHit,zombieLegSpeed,poseZombieInjuries} from './zombie-locational-damage.js';
 import {loadModularCharacter} from './modular-character.js';
+import {anchorStatusIndicators} from './status-indicator-anchor.js';
 import {fallingGravity,thrownDrag} from './body-ballistics.js';
 import {animateHeldGrip} from './held-grip-pose.js';
 import {stopFlightAudio} from './flight-sense.js';
@@ -2879,7 +2880,8 @@ export class Fighter {
     updateProneBounds(this);
     poseZombieInjuries(this);
     this._modularCharacter?.update();
+    anchorStatusIndicators(this);
   }
 
-  _sync() { if(this.ragdoll){updateHeroSkin(this.parts);this._modularCharacter?.update();} updateWebSnareVisual(this); }
+  _sync() { if(this.ragdoll){updateHeroSkin(this.parts);this._modularCharacter?.update();anchorStatusIndicators(this);} updateWebSnareVisual(this); }
 }

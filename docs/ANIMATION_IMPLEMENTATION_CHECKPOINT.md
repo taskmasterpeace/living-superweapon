@@ -88,3 +88,8 @@ Validated contactStyle metadata (carry/front/rear/side/neck) survives asset and 
 
 Animation Library now loads 29 editable studies alongside 31 mapped source clips. Both views use the same ACTION_DRAFTS definitions; entries show source, duration, contact, release, control return and hand, retain candidate warnings, support existing search/favorites/export, and link directly to the selected study in Character Foundation. One real-rig catalog test passes, production build passes, and browser review verified the 29-study filter and neck-hold editor handoff. This is library/authoring integration; it does not assign candidates as gameplay attacks.
 
+
+## Status indicator head anchoring
+
+Existing stun stars and sleep dots now follow the final animated head instead of a fixed standing height, including ragdoll sync when those indicators exist. Seventeen status-anchor/modular tests pass and build passes. Indicator creation/lifetime remains in the existing status presentation; full airborne status visual review remains outstanding.
+
