@@ -103,3 +103,8 @@ Sleeping airborne characters now use relaxed arms, slight knee bend and a stable
 
 A shared carry grip pass now aims both native arms at the carried object's local underside bounds. Bounds are cached per payload; the existing fixed-length arm solver remains authoritative. Game.updateCarry reapplies contact after moving the payload, then updates limb surfaces and the modular renderer. Seventeen grip/modular tests and build pass. This does not move the payload or change lift eligibility. Irregular silhouettes, unreachable large-object hold offsets, pickup anticipation and full visual ground/flight review remain outstanding; bounds are a support approximation, not surface collision.
 
+# Sleep and knockdown interrupt committed melee
+
+The native melee state machine now cancels startup, active contact and recovery when sleep or knockdown begins, and clears queued attacks. Previously only startup checked these statuses, allowing an active punch to persist while its owner was incapacitated. This also lets the lost-control presentation take ownership instead of being suppressed by a stale strike.
+
+Regression: six real-fighter phase/status cases; four failed before the fix. Nineteen incapacitation, phase, heavy-strike and moving-contact tests pass, and the production build passes. This is a gameplay cancellation fix; it does not approve new kick clips or complete the broader animation integration.

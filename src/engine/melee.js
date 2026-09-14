@@ -123,7 +123,7 @@ export class MeleeSystem {
 
   // A hard interrupt cancels an active/recover swing. ⚠ NOT hitstop — the attacker's OWN hit-freeze
   // must not cancel their active window (only a wind-up is cancelled by being hit; that is `canAct`).
-  _hardInterrupt(f) { return !f.alive || f.staggerT > 0 || f.stunT > 0 || f.frozenT > 0 || f.grabbedBy || f.grabState === 'clinch' || f.hanging; }
+  _hardInterrupt(f) { return !f.alive || f.staggerT > 0 || f.stunT > 0 || f.frozenT > 0 || f.sleepT > 0 || f.downedT > 0 || f.grabbedBy || f.grabState === 'clinch' || f.hanging; }
 
   // -- the phase-machine primitives -----------------------------------------------------------------
   _commitRemaining(f) {
