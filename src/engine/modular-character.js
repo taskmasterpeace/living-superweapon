@@ -40,6 +40,8 @@ export async function loadModularCharacter(f,{load=modularAsset}={}){
  const c=createModularActor(gltf);c.actor.name='modular-character';
  const height=parts.head.position.y+.8*parts.head.scale.y;c.actor.scale.setScalar(height/1.8325);f.obj.add(c.actor);c.pose('A_TPose',0);
  const adapter=createModularFlightAdapter(c.actor,f),hidden=[];
+ // Authoring previews have already sampled the native rig; do not replace it with idle.
+ c.poseFromNative=()=>{adapter.reset();adapter.update();};
  const keep=o=>o.userData.weaponKind||o.name.startsWith('flight-');
  const hide=o=>{if(keep(o))return;if(o.isMesh){hidden.push([o,o.layers.mask]);o.layers.disable(0);}for(const child of o.children)hide(child);};
  for(const root of [parts.torso,parts.pelvis,parts.head,parts.armL,parts.armR,parts.legL,parts.legR,parts.cape,parts.cowl])if(root)hide(root);
