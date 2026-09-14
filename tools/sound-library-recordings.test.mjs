@@ -28,6 +28,13 @@ test('native recording stays synchronous and yields to fallback until decoded',(
  const {lib,sources}=fixture();assert.equal(lib.native('light'),true);assert.equal(sources.length,1);
  lib.state.bindings.light={name:'custom.mp3',data:'test'};lib.buffers.set('light',{data:'test',buffer:{duration:1}});assert.equal(lib.source('light'),'chosen-recording');
 });
+
+test('successful grab cue has a bundled capture recording with no synth duplicate',()=>{
+ const {lib,sources}=fixture();
+ assert.equal(lib.source('grab'),'bundled-recording');
+ assert.equal(lib.native('grab',{pos:{x:1,y:2,z:3}}),true);
+ assert.equal(sources.length,1);assert.equal(sources[0].loop,false);
+});
 test('vehicle destruction uses an existing explosion recording without a placeholder oscillator',()=>{
  const {lib,sources,buffer}=fixture();const h=lib.play('vehicle-explosion',{pos:{x:0,y:0,z:0}});
  assert.equal(SOUND_LIBRARY_SAMPLES['vehicle-explosion'],'boom');assert.equal(h.source,'bundled-recording');assert.equal(sources.length,1);assert.equal(sources[0].buffer,buffer);assert.equal(sources[0].loop,false);h.stop();

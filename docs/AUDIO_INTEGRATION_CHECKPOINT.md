@@ -1,5 +1,9 @@
 # Audio integration checkpoint
 
+## Successful grab capture recording
+
+The existing successful-enemy-capture event now uses the approved ai-pass `grab.mp3` from local `codex/audio-all` as its bundled default. Failed attempts retain their existing silence; no extra event was added. Custom recordings and explicit placeholder choices still win. Twelve recording/import tests and build pass; live listening remains pending. Add-missing import now preserves ten bundled cues and adds 27 of the 37 package entries.
+
 Source package: local branch codex/audio-all at 40ad34d. Its wiring, integration and gap documents are copied here as source requirements; their claims about complete asset availability refer to that source branch, not this integration checkpoint.
 
 Implemented: approved CC0 AK, M16, SMG, SAW, pistol, bolt rifle, battle rifle and shotgun reports. The existing firearm ability passes its voice key to AudioBus.gunshot; the recording leads when decoded, otherwise existing procedural audio handles the shot. Mapped reports are preloaded. The suppressed PDW, magnum and anti-materiel rifle remain on their existing voices pending suitable recordings. The approved CC0 final folder and its provenance manifest are present; non-firearm files in that folder are not yet wired by this change.
