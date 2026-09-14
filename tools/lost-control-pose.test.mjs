@@ -49,3 +49,7 @@ test('stunned airborne body uses limp reaction rather than conscious flailing',(
  assert.ok(stunned.angleTo(f.parts.armR.quaternion)>.5);
  }finally{x.close();}
 });
+
+test('stunned fall stays limp immediately above terrain instead of straightening early',()=>{
+ const x=mainCombatFixture({mode:'powerworld'});try{const f=x.p;f.hitstop=0;f.stunT=3;f.pos.y=f.groundY+.2;animateLostControlPose(f,1);assert.equal(airControlState(f),'uncontrolled');assert.ok(f._lostControlPose.weight>.99);restoreLostControlPose(f);f.pos.y=f.groundY;animateLostControlPose(f,.1);assert.equal(f._lostControlPose.weight,0);}finally{x.close();}
+});

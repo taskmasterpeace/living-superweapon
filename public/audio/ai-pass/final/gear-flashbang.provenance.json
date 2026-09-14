@@ -1,0 +1,21 @@
+{
+  "sourceCommit": "f659822ae8cbd081fc00a697731527b1b6e6da17",
+  "sourcePath": "public/audio/ai-pass/final/gear-flashbang.mp3",
+  "sha256": "e74988a53bea5176cc126037894f6a8dbcf862d0d183151d9f6a2127fa179f79",
+  "sourceManifest": "public/audio/ai-pass/final/arsenal-manifest.json",
+  "manifestEntry": {
+    "cue": "gear-flashbang",
+    "file": "final/gear-flashbang.wav",
+    "moment": "IMPACT",
+    "kind": "oneshot",
+    "gain": 0.55,
+    "maps_to": "GEAR 'flashbang'",
+    "status": "confirmed",
+    "dur": 0.7,
+    "sr": 48000,
+    "ch": 1,
+    "bytes": 67278,
+    "source_take": "gear-flashbang__1.wav"
+  },
+  "rights": "ElevenLabs AI-pass asset imported with user authorization; do not relabel as CC0."
+}

@@ -1048,6 +1048,7 @@ export class Fighter {
     if (this._shieldHp > 0 && !opts.trueDamage && !naniteFullBlock && amount > 0) {
       const soak = Math.min(this._shieldHp, amount);
       this._shieldHp -= soak; amount -= soak;
+      this._game?.audio?.soundLibrary?.native?.('shieldpack-hit',{pos:this.pos});
       if (this._game) this._game.particles.burst(this.pos.x, this.pos.y + 5.5, this.pos.z, { count: 5, speed: 16, life: 0.3, size: 1.8, color: ['#7fe6ff', '#fff'], drag: 1.4 });
       if (amount <= 0.01 && !paidGuard) { if (this._game) this._game.onHit(this, 0, opts, true,resolvedOutcome()); return 0; }
     }
@@ -2084,6 +2085,9 @@ export class Fighter {
         if (game && game.audio && game.audio.land) game.audio.land(Math.min(2.2, -impact / 38), this.body, this.pos);
       }
       if (impact < -30) this._slam(game, -impact, 'ground');    // admission evaluates authored fall resistance
+      // A genuinely airborne incapacitated arrival stays down through its status,
+      // then uses the same nonlethal get-up as a thrown landing. No extra damage.
+      if(previousY>this.groundY+.05&&impact<0&&(this.stunT>0||this.sleepT>0)&&!this._impactRecovery)beginImpactRecovery(this);
       this._friendlyLanding=false;
     }
     // ⚠ THERE IS NO CEILING IN POWERWORLD. Robert: *"there is no ceiling."* On Earth the lid is the

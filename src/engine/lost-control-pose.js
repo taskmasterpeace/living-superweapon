@@ -6,7 +6,7 @@ const turn=new Quaternion(),euler=new Euler(),pivot=new Vector3(0,5,0);
 export function airControlState(f){
  if(!f.alive||f.ragdoll)return 'ko';
  if(f.grabbedBy||f.hanging||f._passengerTransport||f._aircraftVehicle||f._scoutVehicle)return 'attached';
- if(f.pos.y-(f.groundY||0)<1)return 'grounded';
+ if(f.pos.y-(f.groundY||0)<=.05)return 'grounded';
  if(f.frozenT>0)return 'frozen';
  if(f.launchT>0||f.stunT>0||f.staggerT>0||f.sleepT>0||f.downedT>0)return 'uncontrolled';
  return f.flying?'flight':'falling';
@@ -32,7 +32,7 @@ export function animateLostControlPose(f,dt){
  }
  const step=f.hitstop>0?0:Math.max(0,dt),active=state==='uncontrolled'&&!exclusive;
  if(active)s.time+=step;
- const target=active?MathUtils.clamp((f.pos.y-(f.groundY||0)-1)/7,0,1):0;
+ const target=active?1:0;
  s.weight=MathUtils.damp(s.weight,target,active?14:12,step);
  if(state==='ko'||state==='attached'||state==='grounded'||state==='frozen'||exclusive)s.weight=0;
  if(s.weight<.001){s.weight=0;s.time=0;return;}

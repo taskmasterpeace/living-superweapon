@@ -6,7 +6,7 @@ import {driveWebZipAI} from './web-zip.js';
 import {squadYieldMove} from './squad-yield.js';
 import {FieldResearch} from './field-research.js';
 import {activatePowerUp} from './power-up.js';
-import {thrownPropContact,thrownPropShape,previewPropThrow} from './thrown-prop-contact.js';
+import {thrownPropContact,thrownPropShape,previewPropThrow,propWithinVerticalReach,propReleasePosition,carriedPropPosition} from './thrown-prop-contact.js';
 import {previewTraversalLeap,driveTraversalLeapAI} from './traversal-leap.js';
 import {refreshCombatPower} from '../core/power-up-state.js';
 import {ThreatDeployment} from './threat-deployment.js';
@@ -915,7 +915,7 @@ export class Game {
     let best = null, bd = R * R;
     f._tooHeavyProp = null;
     const consider = (d, rec) => {
-      if (d >= bd) return;
+      if (d >= bd || !propWithinVerticalReach(f,rec,this.world,R)) return;
       if (cap >= rec.w) { bd = d; best = rec; }
       else if (!f._tooHeavyProp || d < f._tooHeavyProp._d) f._tooHeavyProp = { kind: rec.kind, w: rec.w, _d: d };
     };
@@ -986,6 +986,7 @@ export class Game {
     // the hurl the arc will preview — computed ONCE here so the preview can never lie
     const spd = 74 * Math.max(0.5, Math.min(1.25, 0.5 + 0.16 * Math.log2(Math.max(0.6, ratio))));
     f._carry = { kind: t.kind, mesh, sourceRef:t.ref, t: 0, w: t.w, spd, ratio, size: t.ref && t.ref.s };
+    carriedPropPosition(f,f._carry,mesh.position);
     f.speed = (f.def.speed || 30) * Math.max(0.42, Math.min(0.93, 1 - 0.45 / Math.max(0.9, ratio)));   // weight on your back is speed off your feet
     this.audio.impact(t.kind === 'plane' ? 1.1 : 0.7, f.pos); this.world.shake(t.kind === 'plane' ? 1.1 : 0.5);
     if (this.isHuman(f) && this.hud) this.hud.feed(`Hoisted a ${t.kind} (~${t.w}t) — hold E, aim, then release to THROW`, '#ff8a3a');
@@ -993,10 +994,10 @@ export class Game {
   }
   throwProp(f,drop=false) {
     const c = f._carry; if (!c) return;
+    const pos = propReleasePosition(f);
     f._carry = null; f.speed = f.def.speed || 30;
     const spd = drop?0:(c.spd || 74), dir = f.aim3;
     const vel = new THREE.Vector3(dir.x * spd, (dir.y + 0.34) * spd, dir.z * spd);
-    const pos = f.muzzle(new THREE.Vector3(), 5, 6.4);
     const mesh = c.mesh; mesh.position.copy(pos);
     const str = f.strength ?? 5;
     // A ROCK'S BITE IS ITS TONNAGE. Every other prop has one size, so one number is honest for it;
@@ -1510,8 +1511,7 @@ export class Game {
       const c = f._carry; if (!c) continue;
       if (!f.alive) { this.scene.remove(c.mesh); f._carry = null; f.speed = f.def.speed || 30; continue; }
       c.t += dt;
-      const h = c.kind === 'plane' ? 17 : c.kind === 'car' ? 13 : c.kind === 'rock' ? 11.5 : 15;
-      c.mesh.position.set(f.pos.x - f.aim.x * 1.5, f.pos.y + h + Math.sin(c.t * 3) * 0.3, f.pos.z - f.aim.z * 1.5);
+      carriedPropPosition(f,c,c.mesh.position);
       c.mesh.rotation.y = f.facing + Math.PI / 2;
       c.mesh.rotation.z = Math.sin(c.t * 2.2) * 0.05;
       if(animateCarriedObjectGrip(f)){updateLimbSurfaces(f.parts);updateHeroSkin(f.parts);f._modularCharacter?.update();}
@@ -3390,7 +3390,7 @@ export class Game {
         case 'flashbang': {
           this.vfx.flash(f.pos.clone().setY(6), '#ffffff', 16, 0.3);
           if (this.hud && this.isHuman(f)) this.hud.flashScreen('#fff', 0.2);
-          this.audio.zap(1200, f.pos); this.audio.impact(0.7, f.pos);
+          if(!this.audio.soundLibrary?.native?.('flashbang-detonate',{pos:f.pos})){this.audio.zap(1200, f.pos);this.audio.impact(0.7, f.pos);}
           for (const e of this.entities) {
             if (!this.isFoe(f, e)) continue;
             const d = Math.hypot(e.pos.x - f.pos.x, e.pos.z - f.pos.z);

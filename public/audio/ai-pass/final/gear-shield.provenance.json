@@ -1,0 +1,21 @@
+{
+  "sourceCommit": "f659822ae8cbd081fc00a697731527b1b6e6da17",
+  "sourcePath": "public/audio/ai-pass/final/gear-shield.mp3",
+  "sha256": "5c6f0c0686bd036a98f385efb365001900891e119caffd3583285d70b9ea9dac",
+  "sourceManifest": "public/audio/ai-pass/final/arsenal-manifest.json",
+  "manifestEntry": {
+    "cue": "gear-shield",
+    "file": "final/gear-shield.wav",
+    "moment": "IMPACT",
+    "kind": "oneshot",
+    "gain": 0.55,
+    "maps_to": "GEAR 'shield' impact",
+    "status": "confirmed",
+    "dur": 0.4,
+    "sr": 48000,
+    "ch": 1,
+    "bytes": 38478,
+    "source_take": "gear-shield__1.wav"
+  },
+  "rights": "ElevenLabs AI-pass asset imported with user authorization; do not relabel as CC0."
+}

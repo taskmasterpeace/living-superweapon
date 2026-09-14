@@ -24,7 +24,7 @@ test('native throw retires at raised ground and emits damage at contact',()=>{
  const x=mainCombatFixture({mode:'powerworld',height:50});let mesh;
  try{
   x.w._ghTriangles=true;x.p._openSky=true;x.p.pos.y=50;x.p.aim3.set(0,-1,0);
-  mesh=new THREE.Mesh(new THREE.DodecahedronGeometry(2),new THREE.MeshBasicMaterial());x.g.scene.add(mesh);
+  mesh=new THREE.Mesh(new THREE.DodecahedronGeometry(2),new THREE.MeshBasicMaterial());x.g.scene.add(mesh);mesh.position.set(0,61.5,-1.5);
   x.p._carry={kind:'rock',mesh,w:.12,spd:90,size:2,ratio:2};let impact;
   x.g.areaDamage=(_f,p)=>{impact=p.clone();};x.g.heroYell=()=>{};
   const cue=previewPropThrow(x.p,x.g);assert.ok(cue.contact);assert.ok(x.p._carry,'preview is read-only');

@@ -1,3 +1,4 @@
+import impactGetup from '../data/impact-getup-clip.json' with {type:'json'};
 import {animateModularHeldGrip,animateModularHeldReceiver} from './modular-held-pose.js';
 import {addModularMotions,canPoseInfectedFlight,poseInfectedFlight} from './modular-motions.js';
 import {createAuthoredParts,readCharacterRecipe} from './character-authoring.js';
@@ -38,7 +39,7 @@ export async function loadModularCharacter(f,{load=modularAsset}={}){
  if(heroModelOf(f.def).body!==MODULAR_BODY)return;
  const parts=f.parts,epoch=f._modularEpoch=(f._modularEpoch||0)+1;
  const gltf=await load();if(f.def.vocalFamily==='zombie')await addModularMotions(gltf);if(f._formDisposed||f.parts!==parts||f._modularEpoch!==epoch)return;
- const c=createModularActor(gltf);c.actor.name='modular-character';
+ const c=createModularActor(gltf);c.clips.set('Impact_Getup',T.AnimationClip.parse(impactGetup.clip));c.actor.name='modular-character';
  const height=parts.head.position.y+.8*parts.head.scale.y;c.actor.scale.setScalar(height/1.8325);f.obj.add(c.actor);c.pose('A_TPose',0);
  const adapter=createModularFlightAdapter(c.actor,f),hidden=[];
  // Authoring previews have already sampled the native rig; do not replace it with idle.
@@ -86,6 +87,15 @@ export async function loadModularCharacter(f,{load=modularAsset}={}){
   else if(sourcedSword)c.pose('Sword_Idle',(f.animT/c.clips.get('Sword_Idle').duration)%1);
   else{const speed=Math.hypot(f.vel.x,f.vel.z);const name=f.def.vocalFamily==='zombie'?(speed>25?'Infected_Sprint_Loop':speed>2?'Zombie_Walk_Fwd_Loop':'Zombie_Idle_Loop'):speed>25?'Sprint_Loop':speed>2?'Walk_Loop':'Idle_Loop';const mechanical=signatureRecipe?.frame==='machine'&&speed<=2;c.pose(name,mechanical?0:(f.animT/c.clips.get(name).duration)%1);if(mechanical){const head=c.actor.getObjectByName('DEF-head');if(head)head.rotation.y+=Math.sin(f.animT*.8)*.12;}}
   if(!native){const disabledArms=['armL','armR'].filter(side=>f._zombieLimbs?.[side]?.disabled);if(disabledArms.length)adapter.update({regions:disabledArms});}
+  if(f._impactRecovery){
+   const r=f._impactRecovery,u=T.MathUtils.clamp((r.elapsed-.25)/.85,0,1);
+   // Preserve current native end pose for a short final blend back to control.
+   const native=[];c.actor.traverse(o=>{if(o.isBone)native.push([o,o.position.clone(),o.quaternion.clone()]);});
+   c.pose('Impact_Getup',u);
+   const blend=1-T.MathUtils.smoothstep(r.contactAge??r.elapsed,0,.15)*(1-T.MathUtils.smoothstep(u,.8,1));
+   for(const [bone,position,q]of native){bone.position.lerp(position,blend);bone.quaternion.slerp(q,blend);}
+   c.actor.updateWorldMatrix(true,true);
+  }
   animateModularHeldReceiver(f,c.actor);animateModularHeldGrip(f,c.actor);
   if(!held&&canPoseInfectedFlight(f,signatureRecipe?.infection))poseInfectedFlight(c.actor);
   if(sourcedSword&&(!native||airStrike)){

@@ -24,7 +24,7 @@ SoundLibrary user bindings can override these defaults; this table describes a c
 
 ## Recordings exist, but activation hooks still need work
 
-`src/engine/game.js` still uses a generic zap plus impact for flashbang activation and zap/power audio for jetcell activation. These are direct Audio calls, so adding SoundLibrary assignments alone would not change them. Dedicated flashbang takes are listed in the supplied wiring specification; selection and event semantics still need verification before integration. The confirmed `gear-shield` impact take remains separate from the now-complete shieldpack activation integration and needs an actual shield-hit hook audit.
+Jetcell activation still uses zap/power audio in `src/engine/game.js`; no verified replacement was selected in this bounded pass. Flashbang detonation now uses confirmed `gear-flashbang` IMPACT through the `flashbang-detonate` SoundLibrary cue, retaining its zap plus impact fallback. Personal shield absorption now emits `shieldpack-hit` using confirmed `gear-shield` IMPACT at the actual positive shield soak in `Fighter.takeDamage`. Both preserve chosen recordings and explicit source preferences; shield activation remains a distinct cue.
 
 Other requested wiring families such as impacts, blades, distant fire and vehicle lifecycle sounds require separate current-call-site audits; this report makes no blanket claim that they are absent or complete.
 
@@ -33,3 +33,5 @@ Other requested wiring families such as impacts, blades, distant fire and vehicl
 `tools/flight-audio.test.mjs`, `tools/flight-guard-recordings.test.mjs` and `tools/sound-library-recordings.test.mjs`: 21 tests passed after the flight/guard integration. They cover imported hashes, manifest identity, decode gating, authored preferences, hysteresis and cleanup. FFprobe verified the 16-second flight and 0.45-second guard-break files. These are structural/runtime checks, not an assertion that every sound has passed a listening review in a full match.
 
 `tools/gadget-activation-audio.test.mjs` plus `tools/medkit-audio.test.mjs`: 14 tests passed. Actual item activation preserves jamming duration/shield HP, spends one charge, plays exactly one selected sample or the original fallback, and stays silent for spent/cooldown/no-powers rejection. Imported gadget hashes and preload membership are checked.
+
+`tools/flashbang-shield-audio.test.mjs` plus SoundLibrary recording tests: 12 passed. Covers recorded/fallback flashbang paths, spent silence, shield full/partial absorption, overflow, true-damage bypass, no-shield silence, exact confirmed IMPACT source hashes and user source preferences.

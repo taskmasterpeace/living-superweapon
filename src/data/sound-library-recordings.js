@@ -2,6 +2,7 @@
 export const SOUND_LIBRARY_SAMPLES={
  grab:'library.grab',
  'guard-break':'library.guard-break',
+ 'flashbang-detonate':'gear.flashbang','shieldpack-hit':'gear.shield.hit',
  flight:'library.flight',
  'grenade-prepare':'library.grenade-prepare',
  'vehicle-explosion':'boom',
@@ -16,6 +17,8 @@ export const LIBRARY_SAMPLES={
  'gear.ifak':{f:['ai-pass/final/gear-ifak'],g:.55,reach:80},
  'gear.jammer':{f:['ai-pass/final/gear-jammer'],g:.55,reach:100},
  'gear.shield.activate':{f:['ai-pass/shield-raise'],g:.55,reach:100},
+ 'gear.flashbang':{f:['ai-pass/final/gear-flashbang'],g:.55,reach:150},
+ 'gear.shield.hit':{f:['ai-pass/final/gear-shield'],g:.55,reach:150},
  'library.grenade-prepare':{f:['ai-pass/final/evt-grenade-pin'],g:.55,reach:80},
  'library.grab':{f:['ai-pass/grab'],g:.55,reach:150},
  ...Object.fromEntries(['nanite-form','nanite-break','nanite-reform'].map(id=>['library.'+id,{f:['ai-pass/'+id],g:.55,reach:150}])),

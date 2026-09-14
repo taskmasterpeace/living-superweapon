@@ -1,9 +1,26 @@
 import {sweepSplitObstacle} from './projectile-contact.js';
-import {Vector3} from 'three';
+import {Box3,Vector3} from 'three';
+const pickupBounds=new Box3();
+// Retain the established horizontal range; vertical reach must also meet it.
+export function propWithinVerticalReach(f,rec,world,reach=22){
+ pickupBounds.makeEmpty();
+ const meshes=rec.ref?.meshes||(rec.ref?.mesh?[rec.ref.mesh]:[]);
+ for(const mesh of meshes){mesh.updateWorldMatrix(true,true);pickupBounds.expandByObject(mesh);}
+ const base=world.heightAt?.(rec.x,rec.z)||0;
+ const low=pickupBounds.isEmpty()?base:pickupBounds.min.y,high=pickupBounds.isEmpty()?base+(rec.kind==='tree'?20:4):pickupBounds.max.y;
+ const handHeight=f.pos.y+5.4;return handHeight>=low-reach&&handHeight<=high+reach;
+}
+export function carriedPropPosition(f,c,out=new Vector3()){
+ const h=c.kind==='plane'?17:c.kind==='car'?13:c.kind==='rock'?11.5:15;
+ return out.set(f.pos.x-f.aim.x*1.5,f.pos.y+h+Math.sin((c.t||0)*3)*.3,f.pos.z-f.aim.z*1.5);
+}
+export function propReleasePosition(f,out=new Vector3()){
+ const mesh=f._carry?.mesh;return mesh?mesh.getWorldPosition(out):f.muzzle(out,5,6.4);
+}
 export function thrownPropShape(c){return {radius:c.kind==='rock'?(c.size||2.8):c.kind==='plane'?4:c.kind==='car'?5:2.5,hitRadius:c.kind==='plane'?22:c.kind==='car'?13:c.kind==='rock'?Math.max(7,(c.size||2.8)*2.1):10,hitHeight:c.kind==='plane'?20:c.kind==='car'?16:c.kind==='rock'?Math.max(10,(c.size||2.8)*2.8):14};}
 export function previewPropThrow(f,game){
  const c=f._carry;if(!c)return null;
- const pos=f.muzzle(new Vector3(),5,6.4),vel=f.aim3.clone().multiplyScalar(c.spd||74);vel.y+=.34*(c.spd||74);
+ const pos=propReleasePosition(f),vel=f.aim3.clone().multiplyScalar(c.spd||74);vel.y+=.34*(c.spd||74);
  const points=[pos.clone()],shape=thrownPropShape(c);let contact=null;
  for(let i=0;i<240;i++){vel.y-=62/60;const next=pos.clone().addScaledVector(vel,1/60);contact=thrownPropContact(game,f,pos,next,shape);if(contact)next.lerpVectors(pos,next,contact.t);points.push(next);pos.copy(next);if(contact)break;}
  return {points,contact};
