@@ -114,3 +114,25 @@ test('base anatomy has no compulsory gear; glove styles and body-wide muscle are
  setModularMuscle(meshes,1.3);for(const slot of ['torso','deltoids','arms'])assert.ok(meshes.filter(m=>m.userData.slot===slot).some(m=>m.morphTargetInfluences[m.morphTargetDictionary.muscleLarge]>.99),slot);
  const cape=meshes.find(m=>m.userData.slot==='cape');for(const speed of [0,80,999]){animateModularCape(meshes,3,speed);assert.ok(cape.morphTargetInfluences[cape.morphTargetDictionary.capeBend]<=.4);}
 });
+
+test('modular body preserves native interaction and jump owners instead of replacing them with idle',async()=>{
+ const def=structuredClone(ROSTER.find(d=>d.id==='vega'));const f=new Fighter(def);f._animate(0);
+ const c=await loadModularCharacter(f,{load:output});
+ const arm=c.actor.getObjectByName(T.PropertyBinding.sanitizeNodeName('DEF-upper_arm.L'));
+ for(const state of [{hanging:{}},{_grapple:{zip:true}},{_carry:{}},{_jumpMotion:{applied:true,mode:'fall'}},{meleeCharge:.5},{crouching:true}]){
+  Object.assign(f,state);f.parts.armR.rotation.x=-1.2;f.obj.updateMatrixWorld(true);c.update();const first=arm.quaternion.clone();
+  f.parts.armR.rotation.x=-2;f.obj.updateMatrixWorld(true);c.update();assert.ok(first.angleTo(arm.quaternion)>.4,JSON.stringify(state)+' discarded native pose');
+  for(const key of Object.keys(state))f[key]=null;
+ }
+ f.dispose();
+});
+
+test('hollow infection changes exposed skin, preserves complexion differences and reverses cleanly',async()=>{
+ const g=await output(),meshes=[];g.scene.traverse(o=>{if(o.isMesh)meshes.push(o);});
+ const head=meshes.find(m=>m.userData.slot==='head'&&m.material.name==='skin');assert.ok(head);
+ const recipe={...MODULAR_RECIPES.base,skin:'#633b28',infection:'none'};
+ applyModularRecipe(meshes,recipe);const normal=head.material.color.clone();
+ applyModularRecipe(meshes,{...recipe,infection:'hollow'});const infected=head.material.color.clone();assert.notEqual(normal.getHex(),infected.getHex());
+ applyModularRecipe(meshes,{...recipe,skin:'#e0b895',infection:'hollow'});assert.notEqual(head.material.color.getHex(),infected.getHex());
+ applyModularRecipe(meshes,recipe);assert.equal(head.material.color.getHex(),normal.getHex());
+});

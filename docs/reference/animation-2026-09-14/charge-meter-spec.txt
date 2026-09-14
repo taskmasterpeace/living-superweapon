@@ -1,0 +1,183 @@
+Yes. Then the design should **define the system and deliberately leave character-specific combat behavior to the existing game data/code** rather than inventing universal rules.
+
+Here’s how I’d write the request for the developers:
+
+# Adaptive Segmented Charge Meter
+
+Design a reusable **segmented charge-meter system** for combat. Before implementing it, analyze the existing character, combat, attack, martial-arts, boxing, guard/block, stun, balance, knockback, grab, damage, and related state systems. Use the actual game architecture to determine which existing states and attributes should interact with charging. Do not invent duplicate systems where the game already has them.
+
+## Core Idea
+
+When the player **holds an attack button**, show a visible charge meter representing the attack being prepared.
+
+Instead of one continuous generic bar, divide the meter into **meaningful charge regions**.
+
+Example:
+
+`[ 1 ][ 2 ][ 3 ][ 4 ][ 5 ][ 6 ]`
+
+Moving into a new region represents crossing an actual combat threshold—not simply making a bar look fuller.
+
+A tap remains a quick/light attack. Holding begins progressing through the available charge regions.
+
+## Charge Regions Are Fighter-Dependent
+
+Do **not** assume every character gets six regions.
+
+The number, size, speed, thresholds, and effects of the regions should come from the fighter's existing combat designation, martial-arts ability, attack configuration, stats, or whatever equivalent systems already exist in the codebase.
+
+A highly trained martial artist might have:
+
+`[ 1 ][ 2 ][ 3 ][ 4 ][ 5 ][ 6 ]`
+
+Another fighter might have:
+
+`[ 1 ][ 2 ][ 3 ]`
+
+A boxer, soldier, super-powered character, or untrained fighter may behave differently.
+
+The system needs to support those differences rather than forcing every character through the same charging rules.
+
+## What a Region Means
+
+Analyze the existing game and determine what crossing charge thresholds should legitimately modify.
+
+Possible examples include:
+
+* attack damage
+* impact
+* knockback
+* balance disruption
+* stun
+* guard pressure
+* recovery
+* attack commitment
+* special martial-arts properties
+* character-specific effects
+
+These are **examples, not requirements**. Map charge levels to systems that actually exist.
+
+Importantly, fighter designation matters.
+
+A martial artist may gain sophisticated effects at higher charge thresholds that a boxer does not. A boxer should not automatically inherit martial-arts mechanics simply because both characters can charge an attack.
+
+## Timing and Skill
+
+Explore whether fighter skill should also affect **how the meter behaves**, not merely its maximum power.
+
+Think about the timing feedback of an NBA 2K shot meter, but applied to fighting.
+
+Potential variables include:
+
+`charge speed → region size → timing difficulty → available regions → maximum charge`
+
+Do not automatically assume faster filling is better.
+
+A highly skilled fighter could potentially have more control, different timing windows, additional charge stages, or other advantages supported by the game's existing systems.
+
+Determine the appropriate implementation from the actual combat model.
+
+## The Meter Shows Potential; Contact Shows Outcome
+
+Keep these concepts separate.
+
+### Before contact
+
+The charge meter answers:
+
+**“What am I preparing?”**
+
+The player can visually understand how much of the attack has been charged and which threshold has been reached.
+
+### After contact
+
+Combat feedback answers:
+
+**“What actually happened?”**
+
+For example, the attacker could reach a high charge region, but the defender might block the attack.
+
+Instead of blindly displaying a large floating damage number, the feedback should communicate the resolved interaction.
+
+Examples:
+
+**BLOCKED**
+
+**GUARD DAMAGED**
+
+**STUN**
+
+**BALANCE LOST**
+
+**42 DAMAGE**
+
+Again, use the game's real terminology and states rather than these placeholders where appropriate.
+
+This creates a readable sequence:
+
+**CHARGE → RELEASE → CONTACT → DEFENSE/RESOLUTION → FEEDBACK**
+
+## Defense Must Matter
+
+Charge level represents **attack potential**, not guaranteed damage.
+
+If a defender blocks, guards, evades, counters, absorbs, or otherwise responds using an existing mechanic, resolve that interaction first.
+
+Then display feedback describing the actual result.
+
+For example:
+
+`Region 5 attack → defender blocks → combat system resolves interaction → appropriate block/guard/balance feedback`
+
+The player should understand both:
+
+**“I delivered a powerful attack.”**
+
+and
+
+**“The opponent successfully dealt with it.”**
+
+## Separate Existing Controls
+
+Do not collapse unrelated combat controls into this meter.
+
+If grab is already a separate input, keep it separate.
+
+If block/guard is separate, keep it separate.
+
+The charge system should integrate with those mechanics during **combat resolution**, not replace their controls.
+
+## Implementation Goal
+
+Build this as a **data-driven reusable component**, not something hard-coded for one fighter.
+
+Ideally the game should be able to describe a fighter/attack using something conceptually similar to:
+
+**Fighter → Combat Designation → Attack → Charge Profile → Thresholds → Effects**
+
+Then new characters can receive different charging behavior through configuration rather than requiring a new charge system every time.
+
+## Developer Analysis Required
+
+Before implementation, inspect the codebase and fill in the blanks:
+
+1. What fighter/combat designations currently exist?
+2. What attack states already exist?
+3. What guard/block states exist?
+4. What stun, balance, knockback, stagger, recovery, or related states exist?
+5. Which stats currently determine melee effectiveness?
+6. How are martial artists differentiated from boxers and other fighters today?
+7. Which existing systems should charge thresholds modify?
+8. How is attack-versus-defense resolution currently calculated?
+9. What combat feedback already exists?
+10. Where should the reusable charge profile live architecturally?
+
+Then propose the final mapping using the **actual game systems**.
+
+The important design principle is:
+
+> **The meter should expose the depth already present in the combat system. It should not create arbitrary mechanics simply to make six sections of a bar do something.**
+
+The result should make charging an attack readable, tactical, character-specific, and scalable across the entire roster.
+
+That last principle is the part I’d protect. **Six segments shouldn’t mean six arbitrary damage multipliers.** If your martial-arts system already distinguishes fighters, the meter becomes a visual interface into that system. That will make a master martial artist actually *feel* different from a boxer instead of merely having better numbers.

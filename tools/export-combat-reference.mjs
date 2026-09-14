@@ -1,0 +1,14 @@
+import fs from 'node:fs/promises';
+import {ROSTER} from '../src/data/characters.js';
+import {bakeSheet,ATTR_DEFS} from '../src/data/ranks.js';
+import {STRIKES,styleOf} from '../src/data/martial.js';
+import {rankOf,liftLbOfRank} from '../src/data/scale.js';
+import {DTYPE_INFO,resistOf} from '../src/data/damage-types.js';
+const rows=ROSTER.map(def=>{const sheet=bakeSheet(def);return {id:def.id,name:def.name,rank:rankOf(def),rankLiftLb:liftLbOfRank(rankOf(def)),style:styleOf(def).n,allowedStrikes:styleOf(def).strikes,baseHp:def.hp,baseSpeed:def.speed,flightTier:def.flightTier||0,meleePace:def.meleePace||1,meleeTiers:def.meleeTiers??3,sheet,resistances:resistOf(def,sheet)};});
+const data={generatedAt:new Date().toISOString(),scope:'Base definitions, before runtime progression, buffs, wounds and mode modifiers. Rank lift is the rank-table reference, not a substitute for runtime liftCapacityOf.',attributes:ATTR_DEFS,damageTypes:DTYPE_INFO,strikes:STRIKES,characters:rows};
+let md='# Power World combat reference\n\nGenerated '+data.generatedAt+'\n\n'+data.scope+'\n\n## Attributes\n\n'+ATTR_DEFS.map(a=>'- **'+a.name+'**: '+a.does).join('\n');
+md+='\n\n## Attack timing\n\nTimes are base seconds; runtime pace and overrides apply. Damage is pre-resolution.\n\n| Move | Startup | Active | Recovery | Base damage |\n|---|---:|---:|---:|---:|\n'+Object.values(STRIKES).map(s=>`| ${s.n} | ${s.startup} | ${s.active} | ${s.recover} | ${s.dmg} |`).join('\n');
+md+='\n\n## Roster base attributes\n\n| Character | Style | Fighting | Agility | Might | Vigor | Intellect | Awareness | Resolve | Charge rate | Recovery rate |\n|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|\n'+rows.map(r=>`| ${r.name} | ${r.style} | ${ATTR_DEFS.map(a=>r.sheet.attrs[a.k]).join(' | ')} | ${r.sheet.chargeRate} | ${r.sheet.ccRecover.toFixed(2)} |`).join('\n');
+md+='\n\n## Damage and defense\n\n'+Object.entries(DTYPE_INFO).map(([id,d])=>`- **${d.label}** (${id}): ${d.note}`).join('\n');
+md+='\n\nThe complete ordered receiver audit is in docs/combat-states-and-damage-report.md. Guard, equipment shields, personal armor, resistance and health are different layers. Attack damage is not final HP loss. Stun, stagger, frozen and sleep use simulation timers, not clip length. The full JSON includes base derived multipliers and per-character resistance multipliers.\n';
+await fs.mkdir('public/authoring',{recursive:true});await fs.writeFile('public/authoring/combat-reference.json',JSON.stringify(data,null,2));await fs.writeFile('public/authoring/combat-reference.md',md);console.log(rows.length+' character sheets exported');

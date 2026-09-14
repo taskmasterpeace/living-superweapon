@@ -1,5 +1,41 @@
 [
   {
+    "id": "flailing-fall",
+    "name": "Flailing fall",
+    "url": "/authoring/studies/flailing-fall.json",
+    "status": "blocking candidate",
+    "markers": {
+      "contact": 0,
+      "release": 0,
+      "controlReturn": 1.4
+    },
+    "duration": 1.4
+  },
+  {
+    "id": "curled-backward-fall",
+    "name": "Curled backward fall",
+    "url": "/authoring/studies/curled-backward-fall.json",
+    "status": "blocking candidate",
+    "markers": {
+      "contact": 0,
+      "release": 0,
+      "controlReturn": 1.5
+    },
+    "duration": 1.5
+  },
+  {
+    "id": "disoriented-ground-stun",
+    "name": "Disoriented ground stun",
+    "url": "/authoring/studies/disoriented-ground-stun.json",
+    "status": "blocking candidate",
+    "markers": {
+      "contact": 0,
+      "release": 0,
+      "controlReturn": 2
+    },
+    "duration": 2
+  },
+  {
     "id": "dart-throw",
     "name": "Dart throw",
     "url": "/authoring/studies/dart-throw.json",

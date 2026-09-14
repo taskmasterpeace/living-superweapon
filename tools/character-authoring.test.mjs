@@ -45,3 +45,11 @@ test('small carrier and large partner preserve hand-to-torso contact',async()=>{
  const partner=scene.getObjectByName('Interaction partner preview'),a=actor.getObjectByName('DEF-handR').getWorldPosition(new T.Vector3()),b=partner.getObjectByName('DEF-spine003').getWorldPosition(new T.Vector3());assert.ok(a.distanceTo(b)<1e-6);r.dispose();assert.equal(scene.getObjectByName('Interaction partner preview'),undefined);
 });
 test('modular defaults retain explicit alternative body choice',()=>{assert.equal(heroModelOf({id:'vega'}).body,'faceted-v1');assert.equal(heroModelOf({id:'vega',model:{body:'procedural'}}).body,'procedural');});
+
+test('full-body loop studies close every joint and animate both arms and legs',async()=>{
+ const {FULL_BODY_STUDIES,fullBodyStudy}=await import('../src/engine/character-full-body-studies.js');
+ const names=['DEF-hips','DEF-spine003','DEF-neck','DEF-upper_armL','DEF-upper_armR','DEF-forearmL','DEF-forearmR','DEF-thighL','DEF-thighR','DEF-shinL','DEF-shinR'];
+ const pose=Object.fromEntries(names.map(n=>[n,[0,0,0,1]]));
+ for(const [name,d]of Object.entries(FULL_BODY_STUDIES)){const m=fullBodyStudy(name,pose);assert.ok(m.keys.length>=4);if(d.loop)for(const n of names)assert.ok(new T.Quaternion().fromArray(m.keys[0].pose[n]).angleTo(new T.Quaternion().fromArray(m.keys.at(-1).pose[n]))<1e-6,n);}
+ const m=fullBodyStudy('Flailing fall',pose);for(const n of ['DEF-upper_armL','DEF-upper_armR','DEF-thighL','DEF-thighR'])assert.ok(new T.Quaternion().fromArray(m.keys[0].pose[n]).angleTo(new T.Quaternion().fromArray(m.keys[1].pose[n]))>.2,n);
+});

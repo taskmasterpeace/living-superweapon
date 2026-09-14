@@ -1,0 +1,3143 @@
+{
+  "generatedAt": "2026-09-14T08:04:38.735Z",
+  "scope": "Base definitions, before runtime progression, buffs, wounds and mode modifiers. Rank lift is the rank-table reference, not a substitute for runtime liftCapacityOf.",
+  "attributes": [
+    {
+      "k": "fgt",
+      "name": "Fighting",
+      "does": "melee & strike damage"
+    },
+    {
+      "k": "agl",
+      "name": "Agility",
+      "does": "evade recovery"
+    },
+    {
+      "k": "mgt",
+      "name": "Might",
+      "does": "knockback resistance · throws · slams"
+    },
+    {
+      "k": "vig",
+      "name": "Vigor",
+      "does": "health pool · durability"
+    },
+    {
+      "k": "int",
+      "name": "Intellect",
+      "does": "ability & gadget cooldowns"
+    },
+    {
+      "k": "awr",
+      "name": "Awareness",
+      "does": "vision range"
+    },
+    {
+      "k": "res",
+      "name": "Resolve",
+      "does": "ki & guard recovery · status recovery"
+    }
+  ],
+  "damageTypes": {
+    "physical": {
+      "label": "PHYSICAL",
+      "c": "#e8e2d4",
+      "note": "Fists, slams, thrown cars. The baseline — almost nothing resists it."
+    },
+    "ballistic": {
+      "label": "BALLISTIC",
+      "c": "#c9b98a",
+      "note": "Bullets. Meets ARMOUR then TOUGHNESS — lethal to people, an annoyance to superweapons."
+    },
+    "energy": {
+      "label": "ENERGY",
+      "c": "#7fd8ff",
+      "note": "Ki blasts and beams. The universal currency; few resistances."
+    },
+    "fire": {
+      "label": "FIRE",
+      "c": "#ff7a2a",
+      "note": "Heat damage. Flame payloads also burn over time; metal and fire-blooded fighters resist fire."
+    },
+    "cold": {
+      "label": "COLD",
+      "c": "#bfeaff",
+      "note": "Cold damage. Attacks marked FREEZE also build frost or encase the target. Frost-resistant fighters take less cold damage."
+    },
+    "toxic": {
+      "label": "TOXIC",
+      "c": "#8fe08a",
+      "note": "Poison and gas. Needs a metabolism — machines are immune."
+    },
+    "acid": {
+      "label": "ACID",
+      "c": "#c8e04a",
+      "note": "CORRODES ARMOUR for its duration. Weak on bare flesh, devastating on a plated chassis."
+    },
+    "magic": {
+      "label": "MAGIC",
+      "c": "#ff7a5a",
+      "note": "Attacks the WILL and SIPHONS energy — drains their ki straight into the caster. Resisted by RESOLVE."
+    }
+  },
+  "strikes": {
+    "jab": {
+      "n": "JAB",
+      "reach": 11,
+      "startup": 0.1,
+      "active": 0.06,
+      "recover": 0.14,
+      "dmg": 4,
+      "step": 2,
+      "cancels": [
+        "cross",
+        "grab",
+        "dash"
+      ],
+      "color": "#7fe6ff",
+      "blk": {
+        "startup": "tight",
+        "active": "tight",
+        "recover": "no"
+      }
+    },
+    "cross": {
+      "n": "CROSS",
+      "reach": 9,
+      "startup": 0.16,
+      "active": 0.07,
+      "recover": 0.22,
+      "dmg": 8,
+      "step": 3,
+      "cancels": [
+        "grab"
+      ],
+      "color": "#ffd24a",
+      "blk": {
+        "startup": "tight",
+        "active": "no",
+        "recover": "no"
+      }
+    },
+    "power": {
+      "n": "POWER",
+      "reach": 7,
+      "startup": 0.34,
+      "active": 0.09,
+      "recover": 0.4,
+      "dmg": 18,
+      "step": 4.5,
+      "cancels": [],
+      "color": "#c8564a",
+      "blk": {
+        "startup": "no",
+        "active": "no",
+        "recover": "no"
+      }
+    },
+    "grab": {
+      "n": "GRAB",
+      "reach": 8,
+      "startup": 0.18,
+      "active": 0.1,
+      "recover": 0.3,
+      "dmg": 0,
+      "step": 2.4,
+      "cancels": [],
+      "color": "#5fbf7a",
+      "blk": {
+        "startup": "no",
+        "active": "no",
+        "recover": "no"
+      }
+    }
+  },
+  "characters": [
+    {
+      "id": "sol",
+      "name": "SOL",
+      "rank": 66,
+      "rankLiftLb": 65861.76210441029,
+      "style": "MUAY THAI",
+      "allowedStrikes": [
+        "jab",
+        "cross",
+        "power"
+      ],
+      "baseHp": 130,
+      "baseSpeed": 34,
+      "flightTier": 3,
+      "meleePace": 1,
+      "meleeTiers": 3,
+      "sheet": {
+        "attrs": {
+          "mgt": 8,
+          "agl": 5,
+          "fgt": 7,
+          "vig": 6,
+          "int": 4,
+          "awr": 4,
+          "res": 6
+        },
+        "talents": [
+          "brawler",
+          "survivor"
+        ],
+        "cdMult": 0.961,
+        "spreadMult": 1,
+        "blastMult": 1,
+        "evadeCdMult": 0.92,
+        "ccRecover": 1.03,
+        "healMult": 1,
+        "odWindow": 0.35,
+        "sumDurMult": 1,
+        "jabMult": 1.04,
+        "chargeRate": 1.2,
+        "predator": false,
+        "kiRegenMult": 1.03,
+        "visMult": 0.9600000000000001
+      },
+      "resistances": {
+        "physical": 1,
+        "ballistic": 1,
+        "energy": 1,
+        "fire": 1,
+        "cold": 0.45,
+        "toxic": 0.25,
+        "acid": 0.7,
+        "magic": 1.0299999999999998
+      }
+    },
+    {
+      "id": "kano",
+      "name": "KANO",
+      "rank": 39,
+      "rankLiftLb": 2204.62,
+      "style": "ACROBATIC",
+      "allowedStrikes": [
+        "jab",
+        "cross"
+      ],
+      "baseHp": 115,
+      "baseSpeed": 36,
+      "flightTier": 0,
+      "meleePace": 1,
+      "meleeTiers": 3,
+      "sheet": {
+        "attrs": {
+          "mgt": 7,
+          "agl": 6,
+          "fgt": 6,
+          "vig": 5,
+          "int": 4,
+          "awr": 5,
+          "res": 7
+        },
+        "talents": [
+          "martial",
+          "survivor"
+        ],
+        "cdMult": 0.961,
+        "spreadMult": 1,
+        "blastMult": 1,
+        "evadeCdMult": 0.9,
+        "ccRecover": 1.06,
+        "healMult": 1,
+        "odWindow": 0.35,
+        "sumDurMult": 1,
+        "jabMult": 1.1424,
+        "chargeRate": 1,
+        "predator": false,
+        "kiRegenMult": 1.06,
+        "visMult": 1
+      },
+      "resistances": {
+        "physical": 1,
+        "ballistic": 1,
+        "energy": 1,
+        "fire": 1,
+        "cold": 1,
+        "toxic": 0.25,
+        "acid": 0.7,
+        "magic": 0.96
+      }
+    },
+    {
+      "id": "vega",
+      "name": "VEGAS",
+      "rank": 40,
+      "rankLiftLb": 2775.452141349657,
+      "style": "MUAY THAI",
+      "allowedStrikes": [
+        "jab",
+        "cross",
+        "power"
+      ],
+      "baseHp": 120,
+      "baseSpeed": 33,
+      "flightTier": 0,
+      "meleePace": 1,
+      "meleeTiers": 3,
+      "sheet": {
+        "attrs": {
+          "mgt": 7,
+          "agl": 5,
+          "fgt": 6,
+          "vig": 6,
+          "int": 3,
+          "awr": 5,
+          "res": 7
+        },
+        "talents": [
+          "demolitions",
+          "brawler"
+        ],
+        "cdMult": 0.974,
+        "spreadMult": 1,
+        "blastMult": 1.18,
+        "evadeCdMult": 0.92,
+        "ccRecover": 1.06,
+        "healMult": 1,
+        "odWindow": 0.25,
+        "sumDurMult": 1,
+        "jabMult": 1.02,
+        "chargeRate": 1.2,
+        "predator": false,
+        "kiRegenMult": 1.06,
+        "visMult": 1
+      },
+      "resistances": {
+        "physical": 1,
+        "ballistic": 1,
+        "energy": 1,
+        "fire": 1,
+        "cold": 1,
+        "toxic": 0.25,
+        "acid": 0.7,
+        "magic": 0.96
+      }
+    },
+    {
+      "id": "aurum",
+      "name": "AURUM",
+      "rank": 20,
+      "rankLiftLb": 428.70938501451724,
+      "style": "BOXING",
+      "allowedStrikes": [
+        "jab",
+        "cross",
+        "power"
+      ],
+      "baseHp": 125,
+      "baseSpeed": 32,
+      "flightTier": 0,
+      "meleePace": 1,
+      "meleeTiers": 3,
+      "sheet": {
+        "attrs": {
+          "mgt": 5,
+          "agl": 6,
+          "fgt": 4,
+          "vig": 6,
+          "int": 5,
+          "awr": 5,
+          "res": 7
+        },
+        "talents": [
+          "commander",
+          "tactician"
+        ],
+        "cdMult": 0.83424,
+        "spreadMult": 1,
+        "blastMult": 1,
+        "evadeCdMult": 0.9,
+        "ccRecover": 1.06,
+        "healMult": 1,
+        "odWindow": 0.25,
+        "sumDurMult": 1.3,
+        "jabMult": 0.98,
+        "chargeRate": 1,
+        "predator": false,
+        "kiRegenMult": 1.06,
+        "visMult": 1
+      },
+      "resistances": {
+        "physical": 1,
+        "ballistic": 1,
+        "energy": 1,
+        "fire": 1,
+        "cold": 1,
+        "toxic": 0.25,
+        "acid": 0.7,
+        "magic": 0.96
+      }
+    },
+    {
+      "id": "nova",
+      "name": "NOVA",
+      "rank": 22,
+      "rankLiftLb": 492.4577653379665,
+      "style": "BOXING",
+      "allowedStrikes": [
+        "jab",
+        "cross",
+        "power"
+      ],
+      "baseHp": 110,
+      "baseSpeed": 33,
+      "flightTier": 0,
+      "meleePace": 1,
+      "meleeTiers": 3,
+      "sheet": {
+        "attrs": {
+          "mgt": 5,
+          "agl": 5,
+          "fgt": 4,
+          "vig": 5,
+          "int": 3,
+          "awr": 5,
+          "res": 7
+        },
+        "talents": [
+          "demolitions"
+        ],
+        "cdMult": 0.974,
+        "spreadMult": 1,
+        "blastMult": 1.18,
+        "evadeCdMult": 0.92,
+        "ccRecover": 1.06,
+        "healMult": 1,
+        "odWindow": 0.25,
+        "sumDurMult": 1,
+        "jabMult": 0.98,
+        "chargeRate": 1,
+        "predator": false,
+        "kiRegenMult": 1.06,
+        "visMult": 1
+      },
+      "resistances": {
+        "physical": 1,
+        "ballistic": 1,
+        "energy": 1,
+        "fire": 1,
+        "cold": 1,
+        "toxic": 0.25,
+        "acid": 0.7,
+        "magic": 0.96
+      }
+    },
+    {
+      "id": "rime",
+      "name": "RIME",
+      "rank": 16,
+      "rankLiftLb": 324.9009585424942,
+      "style": "BOXING",
+      "allowedStrikes": [
+        "jab",
+        "cross",
+        "power"
+      ],
+      "baseHp": 115,
+      "baseSpeed": 31,
+      "flightTier": 2,
+      "meleePace": 1,
+      "meleeTiers": 3,
+      "sheet": {
+        "attrs": {
+          "mgt": 5,
+          "agl": 6,
+          "fgt": 3,
+          "vig": 5,
+          "int": 5,
+          "awr": 5,
+          "res": 7
+        },
+        "talents": [
+          "tactician",
+          "ironwill"
+        ],
+        "cdMult": 0.83424,
+        "spreadMult": 1,
+        "blastMult": 1,
+        "evadeCdMult": 0.9,
+        "ccRecover": 1.51,
+        "healMult": 1,
+        "odWindow": 0.25,
+        "sumDurMult": 1,
+        "jabMult": 0.96,
+        "chargeRate": 1,
+        "predator": false,
+        "kiRegenMult": 1.06,
+        "visMult": 1
+      },
+      "resistances": {
+        "physical": 1,
+        "ballistic": 1,
+        "energy": 1,
+        "fire": 1,
+        "cold": 1,
+        "toxic": 0.25,
+        "acid": 0.7,
+        "magic": 0.96
+      }
+    },
+    {
+      "id": "volt",
+      "name": "VOLT",
+      "rank": 12,
+      "rankLiftLb": 246.22888266898326,
+      "style": "BOXING",
+      "allowedStrikes": [
+        "jab",
+        "cross",
+        "power"
+      ],
+      "baseHp": 100,
+      "baseSpeed": 44,
+      "flightTier": 0,
+      "meleePace": 1.5,
+      "meleeTiers": 3,
+      "sheet": {
+        "attrs": {
+          "mgt": 4,
+          "agl": 8,
+          "fgt": 5,
+          "vig": 5,
+          "int": 3,
+          "awr": 4,
+          "res": 6
+        },
+        "talents": [
+          "acrobat",
+          "martial"
+        ],
+        "cdMult": 0.974,
+        "spreadMult": 1,
+        "blastMult": 1,
+        "evadeCdMult": 0.602,
+        "ccRecover": 1.03,
+        "healMult": 1,
+        "odWindow": 0.25,
+        "sumDurMult": 1,
+        "jabMult": 1.12,
+        "chargeRate": 1,
+        "predator": false,
+        "kiRegenMult": 1.03,
+        "visMult": 0.9600000000000001
+      },
+      "resistances": {
+        "physical": 1,
+        "ballistic": 1,
+        "energy": 1,
+        "fire": 1,
+        "cold": 1,
+        "toxic": 0.25,
+        "acid": 0.7,
+        "magic": 1.0299999999999998
+      }
+    },
+    {
+      "id": "warden",
+      "name": "WARDEN",
+      "rank": 51,
+      "rankLiftLb": 25075.600568165755,
+      "style": "MUAY THAI",
+      "allowedStrikes": [
+        "jab",
+        "cross",
+        "power"
+      ],
+      "baseHp": 140,
+      "baseSpeed": 30,
+      "flightTier": 2,
+      "meleePace": 1,
+      "meleeTiers": 2,
+      "sheet": {
+        "attrs": {
+          "mgt": 7,
+          "agl": 5,
+          "fgt": 7,
+          "vig": 7,
+          "int": 4,
+          "awr": 4,
+          "res": 6
+        },
+        "talents": [
+          "brawler",
+          "ironwill"
+        ],
+        "cdMult": 0.961,
+        "spreadMult": 1,
+        "blastMult": 1,
+        "evadeCdMult": 0.92,
+        "ccRecover": 1.48,
+        "healMult": 1,
+        "odWindow": 0.25,
+        "sumDurMult": 1,
+        "jabMult": 1.04,
+        "chargeRate": 1.2,
+        "predator": false,
+        "kiRegenMult": 1.03,
+        "visMult": 0.9600000000000001
+      },
+      "resistances": {
+        "physical": 1,
+        "ballistic": 1,
+        "energy": 1,
+        "fire": 1,
+        "cold": 1,
+        "toxic": 0.25,
+        "acid": 0.7,
+        "magic": 1.0299999999999998
+      }
+    },
+    {
+      "id": "hive",
+      "name": "HIVE",
+      "rank": 11,
+      "rankLiftLb": 229.73967099940702,
+      "style": "BOXING",
+      "allowedStrikes": [
+        "jab",
+        "cross",
+        "power"
+      ],
+      "baseHp": 105,
+      "baseSpeed": 32,
+      "flightTier": 1,
+      "meleePace": 1,
+      "meleeTiers": 3,
+      "sheet": {
+        "attrs": {
+          "mgt": 3,
+          "agl": 5,
+          "fgt": 3,
+          "vig": 5,
+          "int": 6,
+          "awr": 5,
+          "res": 7
+        },
+        "talents": [
+          "commander",
+          "tactician"
+        ],
+        "cdMult": 0.8228000000000001,
+        "spreadMult": 1,
+        "blastMult": 1,
+        "evadeCdMult": 0.92,
+        "ccRecover": 1.06,
+        "healMult": 1,
+        "odWindow": 0.25,
+        "sumDurMult": 1.3,
+        "jabMult": 0.96,
+        "chargeRate": 1,
+        "predator": false,
+        "kiRegenMult": 1.06,
+        "visMult": 1
+      },
+      "resistances": {
+        "physical": 1,
+        "ballistic": 1,
+        "energy": 1,
+        "fire": 1,
+        "cold": 1,
+        "toxic": 0.25,
+        "acid": 0.7,
+        "magic": 0.96
+      }
+    },
+    {
+      "id": "pyre",
+      "name": "PYRE",
+      "rank": 45,
+      "rankLiftLb": 8776.75030345651,
+      "style": "MUAY THAI",
+      "allowedStrikes": [
+        "jab",
+        "cross",
+        "power"
+      ],
+      "baseHp": 135,
+      "baseSpeed": 32,
+      "flightTier": 2,
+      "meleePace": 1,
+      "meleeTiers": 3,
+      "sheet": {
+        "attrs": {
+          "mgt": 8,
+          "agl": 6,
+          "fgt": 6,
+          "vig": 6,
+          "int": 3,
+          "awr": 5,
+          "res": 6
+        },
+        "talents": [
+          "demolitions",
+          "survivor"
+        ],
+        "cdMult": 0.974,
+        "spreadMult": 1,
+        "blastMult": 1.18,
+        "evadeCdMult": 0.9,
+        "ccRecover": 1.03,
+        "healMult": 1,
+        "odWindow": 0.35,
+        "sumDurMult": 1,
+        "jabMult": 1.02,
+        "chargeRate": 1,
+        "predator": false,
+        "kiRegenMult": 1.03,
+        "visMult": 1
+      },
+      "resistances": {
+        "physical": 1,
+        "ballistic": 1,
+        "energy": 1,
+        "fire": 1,
+        "cold": 0.45,
+        "toxic": 0.25,
+        "acid": 0.7,
+        "magic": 1.0299999999999998
+      }
+    },
+    {
+      "id": "torch",
+      "name": "TORCH",
+      "rank": 16,
+      "rankLiftLb": 324.9009585424942,
+      "style": "BOXING",
+      "allowedStrikes": [
+        "jab",
+        "cross",
+        "power"
+      ],
+      "baseHp": 105,
+      "baseSpeed": 40,
+      "flightTier": 3,
+      "meleePace": 1,
+      "meleeTiers": 3,
+      "sheet": {
+        "attrs": {
+          "mgt": 5,
+          "agl": 7,
+          "fgt": 5,
+          "vig": 5,
+          "int": 3,
+          "awr": 4,
+          "res": 7
+        },
+        "talents": [
+          "acrobat",
+          "demolitions"
+        ],
+        "cdMult": 0.974,
+        "spreadMult": 1,
+        "blastMult": 1.18,
+        "evadeCdMult": 0.616,
+        "ccRecover": 1.06,
+        "healMult": 1,
+        "odWindow": 0.25,
+        "sumDurMult": 1,
+        "jabMult": 1,
+        "chargeRate": 1,
+        "predator": false,
+        "kiRegenMult": 1.06,
+        "visMult": 0.9600000000000001
+      },
+      "resistances": {
+        "physical": 1,
+        "ballistic": 1,
+        "energy": 1,
+        "fire": 1,
+        "cold": 0.45,
+        "toxic": 0.25,
+        "acid": 0.7,
+        "magic": 0.96
+      }
+    },
+    {
+      "id": "apex",
+      "name": "APEX",
+      "rank": 62,
+      "rankLiftLb": 50909.41952707944,
+      "style": "JUDO",
+      "allowedStrikes": [
+        "jab",
+        "cross"
+      ],
+      "baseHp": 145,
+      "baseSpeed": 32,
+      "flightTier": 0,
+      "meleePace": 1,
+      "meleeTiers": 3,
+      "sheet": {
+        "attrs": {
+          "mgt": 9,
+          "agl": 7,
+          "fgt": 7,
+          "vig": 7,
+          "int": 3,
+          "awr": 4,
+          "res": 6
+        },
+        "talents": [
+          "predator",
+          "survivor"
+        ],
+        "cdMult": 0.974,
+        "spreadMult": 1,
+        "blastMult": 1,
+        "evadeCdMult": 0.88,
+        "ccRecover": 1.03,
+        "healMult": 1,
+        "odWindow": 0.35,
+        "sumDurMult": 1,
+        "jabMult": 1.04,
+        "chargeRate": 1,
+        "predator": true,
+        "kiRegenMult": 1.03,
+        "visMult": 0.9600000000000001
+      },
+      "resistances": {
+        "physical": 1,
+        "ballistic": 1,
+        "energy": 1,
+        "fire": 1,
+        "cold": 1,
+        "toxic": 0.25,
+        "acid": 0.7,
+        "magic": 1.0299999999999998
+      }
+    },
+    {
+      "id": "specter",
+      "name": "SPECTER",
+      "rank": 34,
+      "rankLiftLb": 1328.042168005218,
+      "style": "ACROBATIC",
+      "allowedStrikes": [
+        "jab",
+        "cross"
+      ],
+      "baseHp": 120,
+      "baseSpeed": 34,
+      "flightTier": 0,
+      "meleePace": 1,
+      "meleeTiers": 3,
+      "sheet": {
+        "attrs": {
+          "mgt": 6,
+          "agl": 7,
+          "fgt": 6,
+          "vig": 6,
+          "int": 3,
+          "awr": 5,
+          "res": 7
+        },
+        "talents": [
+          "ironwill",
+          "tactician"
+        ],
+        "cdMult": 0.85712,
+        "spreadMult": 1,
+        "blastMult": 1,
+        "evadeCdMult": 0.88,
+        "ccRecover": 1.51,
+        "healMult": 1,
+        "odWindow": 0.25,
+        "sumDurMult": 1,
+        "jabMult": 1.02,
+        "chargeRate": 1,
+        "predator": false,
+        "kiRegenMult": 1.06,
+        "visMult": 1
+      },
+      "resistances": {
+        "physical": 1,
+        "ballistic": 1,
+        "energy": 1,
+        "fire": 1,
+        "cold": 1,
+        "toxic": 0.25,
+        "acid": 0.7,
+        "magic": 0.96
+      }
+    },
+    {
+      "id": "vanguard",
+      "name": "VANGUARD",
+      "rank": 95,
+      "rankLiftLb": 163592.9307140929,
+      "style": "POWER GRAPPLING",
+      "allowedStrikes": [
+        "power"
+      ],
+      "baseHp": 150,
+      "baseSpeed": 42,
+      "flightTier": 0,
+      "meleePace": 1,
+      "meleeTiers": 2,
+      "sheet": {
+        "attrs": {
+          "mgt": 10,
+          "agl": 6,
+          "fgt": 8,
+          "vig": 7,
+          "int": 3,
+          "awr": 4,
+          "res": 6
+        },
+        "talents": [
+          "brawler",
+          "ironwill"
+        ],
+        "cdMult": 0.974,
+        "spreadMult": 1,
+        "blastMult": 1,
+        "evadeCdMult": 0.9,
+        "ccRecover": 1.48,
+        "healMult": 1,
+        "odWindow": 0.25,
+        "sumDurMult": 1,
+        "jabMult": 1.06,
+        "chargeRate": 1.2,
+        "predator": false,
+        "kiRegenMult": 1.03,
+        "visMult": 0.9600000000000001
+      },
+      "resistances": {
+        "physical": 1,
+        "ballistic": 1,
+        "energy": 1,
+        "fire": 1,
+        "cold": 1,
+        "toxic": 0.25,
+        "acid": 0.7,
+        "magic": 1.0299999999999998
+      }
+    },
+    {
+      "id": "kraken",
+      "name": "KRAKEN",
+      "rank": 55,
+      "rankLiftLb": 32440.425653788483,
+      "style": "WRESTLING",
+      "allowedStrikes": [
+        "jab"
+      ],
+      "baseHp": 140,
+      "baseSpeed": 29,
+      "flightTier": 1,
+      "meleePace": 1,
+      "meleeTiers": 2,
+      "sheet": {
+        "attrs": {
+          "mgt": 9,
+          "agl": 5,
+          "fgt": 7,
+          "vig": 7,
+          "int": 3,
+          "awr": 4,
+          "res": 6
+        },
+        "talents": [
+          "brawler",
+          "predator"
+        ],
+        "cdMult": 0.974,
+        "spreadMult": 1,
+        "blastMult": 1,
+        "evadeCdMult": 0.92,
+        "ccRecover": 1.03,
+        "healMult": 1,
+        "odWindow": 0.25,
+        "sumDurMult": 1,
+        "jabMult": 1.04,
+        "chargeRate": 1.2,
+        "predator": true,
+        "kiRegenMult": 1.03,
+        "visMult": 0.9600000000000001
+      },
+      "resistances": {
+        "physical": 1,
+        "ballistic": 1,
+        "energy": 1,
+        "fire": 1,
+        "cold": 1,
+        "toxic": 0.25,
+        "acid": 0.7,
+        "magic": 1.0299999999999998
+      }
+    },
+    {
+      "id": "rift",
+      "name": "RIFT",
+      "rank": 12,
+      "rankLiftLb": 246.22888266898326,
+      "style": "ACROBATIC",
+      "allowedStrikes": [
+        "jab",
+        "cross"
+      ],
+      "baseHp": 110,
+      "baseSpeed": 34,
+      "flightTier": 2,
+      "meleePace": 1,
+      "meleeTiers": 3,
+      "sheet": {
+        "attrs": {
+          "mgt": 3,
+          "agl": 7,
+          "fgt": 3,
+          "vig": 5,
+          "int": 4,
+          "awr": 5,
+          "res": 7
+        },
+        "talents": [
+          "tactician",
+          "acrobat"
+        ],
+        "cdMult": 0.84568,
+        "spreadMult": 1,
+        "blastMult": 1,
+        "evadeCdMult": 0.616,
+        "ccRecover": 1.06,
+        "healMult": 1,
+        "odWindow": 0.25,
+        "sumDurMult": 1,
+        "jabMult": 0.96,
+        "chargeRate": 1,
+        "predator": false,
+        "kiRegenMult": 1.06,
+        "visMult": 1
+      },
+      "resistances": {
+        "physical": 1,
+        "ballistic": 1,
+        "energy": 1,
+        "fire": 1,
+        "cold": 1,
+        "toxic": 0.25,
+        "acid": 0.7,
+        "magic": 0.96
+      }
+    },
+    {
+      "id": "titan",
+      "name": "TITAN",
+      "rank": 79,
+      "rankLiftLb": 121095.42724917665,
+      "style": "POWER GRAPPLING",
+      "allowedStrikes": [
+        "power"
+      ],
+      "baseHp": 165,
+      "baseSpeed": 29,
+      "flightTier": 2,
+      "meleePace": 1,
+      "meleeTiers": 2,
+      "sheet": {
+        "attrs": {
+          "mgt": 9,
+          "agl": 4,
+          "fgt": 6,
+          "vig": 9,
+          "int": 5,
+          "awr": 6,
+          "res": 9
+        },
+        "talents": [
+          "marksman",
+          "demolitions"
+        ],
+        "cdMult": 0.948,
+        "spreadMult": 0.55,
+        "blastMult": 1.18,
+        "evadeCdMult": 0.94,
+        "ccRecover": 1.12,
+        "healMult": 1,
+        "odWindow": 0.25,
+        "sumDurMult": 1,
+        "jabMult": 1.02,
+        "chargeRate": 1,
+        "predator": false,
+        "kiRegenMult": 1.12,
+        "visMult": 1.04
+      },
+      "resistances": {
+        "physical": 1,
+        "ballistic": 1,
+        "energy": 1,
+        "fire": 0.6,
+        "cold": 1,
+        "toxic": 0,
+        "acid": 1.6,
+        "magic": 0.8199999999999998
+      }
+    },
+    {
+      "id": "sarge",
+      "name": "SARGE",
+      "rank": 24,
+      "rankLiftLb": 565.685424949238,
+      "style": "MILITARY CQC",
+      "allowedStrikes": [
+        "jab",
+        "power"
+      ],
+      "baseHp": 125,
+      "baseSpeed": 33,
+      "flightTier": 0,
+      "meleePace": 1,
+      "meleeTiers": 3,
+      "sheet": {
+        "attrs": {
+          "mgt": 5,
+          "agl": 4,
+          "fgt": 6,
+          "vig": 6,
+          "int": 7,
+          "awr": 6,
+          "res": 5
+        },
+        "talents": [
+          "marksman",
+          "tactician",
+          "medic"
+        ],
+        "cdMult": 0.8113600000000001,
+        "spreadMult": 0.55,
+        "blastMult": 1,
+        "evadeCdMult": 0.94,
+        "ccRecover": 1,
+        "healMult": 1.25,
+        "odWindow": 0.25,
+        "sumDurMult": 1,
+        "jabMult": 1.02,
+        "chargeRate": 1,
+        "predator": false,
+        "kiRegenMult": 1,
+        "visMult": 1.04
+      },
+      "resistances": {
+        "physical": 1,
+        "ballistic": 1,
+        "energy": 1,
+        "fire": 1,
+        "cold": 1,
+        "toxic": 0.25,
+        "acid": 0.7,
+        "magic": 1.0999999999999999
+      }
+    },
+    {
+      "id": "merc",
+      "name": "MERC",
+      "rank": 22,
+      "rankLiftLb": 492.4577653379665,
+      "style": "MILITARY CQC",
+      "allowedStrikes": [
+        "jab",
+        "power"
+      ],
+      "baseHp": 120,
+      "baseSpeed": 34,
+      "flightTier": 0,
+      "meleePace": 1,
+      "meleeTiers": 3,
+      "sheet": {
+        "attrs": {
+          "mgt": 5,
+          "agl": 6,
+          "fgt": 4,
+          "vig": 6,
+          "int": 7,
+          "awr": 6,
+          "res": 6
+        },
+        "talents": [
+          "marksman"
+        ],
+        "cdMult": 0.922,
+        "spreadMult": 0.55,
+        "blastMult": 1,
+        "evadeCdMult": 0.9,
+        "ccRecover": 1.03,
+        "healMult": 1,
+        "odWindow": 0.25,
+        "sumDurMult": 1,
+        "jabMult": 0.98,
+        "chargeRate": 1,
+        "predator": false,
+        "kiRegenMult": 1.03,
+        "visMult": 1.04
+      },
+      "resistances": {
+        "physical": 1,
+        "ballistic": 1,
+        "energy": 1,
+        "fire": 1,
+        "cold": 1,
+        "toxic": 0.25,
+        "acid": 0.7,
+        "magic": 1.0299999999999998
+      }
+    },
+    {
+      "id": "kivuli",
+      "name": "KIVULI",
+      "rank": 15,
+      "rankLiftLb": 303.1433133020796,
+      "style": "ACROBATIC",
+      "allowedStrikes": [
+        "jab",
+        "cross"
+      ],
+      "baseHp": 115,
+      "baseSpeed": 33,
+      "flightTier": 2,
+      "meleePace": 1,
+      "meleeTiers": 3,
+      "sheet": {
+        "attrs": {
+          "mgt": 4,
+          "agl": 7,
+          "fgt": 3,
+          "vig": 5,
+          "int": 6,
+          "awr": 4,
+          "res": 7
+        },
+        "talents": [
+          "predator",
+          "tactician"
+        ],
+        "cdMult": 0.8228000000000001,
+        "spreadMult": 1,
+        "blastMult": 1,
+        "evadeCdMult": 0.88,
+        "ccRecover": 1.06,
+        "healMult": 1,
+        "odWindow": 0.25,
+        "sumDurMult": 1,
+        "jabMult": 0.96,
+        "chargeRate": 1,
+        "predator": true,
+        "kiRegenMult": 1.06,
+        "visMult": 0.9600000000000001
+      },
+      "resistances": {
+        "physical": 1,
+        "ballistic": 1,
+        "energy": 1,
+        "fire": 1,
+        "cold": 1,
+        "toxic": 0.25,
+        "acid": 0.7,
+        "magic": 0.96
+      }
+    },
+    {
+      "id": "gale",
+      "name": "GALE",
+      "rank": 14,
+      "rankLiftLb": 282.842712474619,
+      "style": "MILITARY CQC",
+      "allowedStrikes": [
+        "jab",
+        "power"
+      ],
+      "baseHp": 105,
+      "baseSpeed": 36,
+      "flightTier": 0,
+      "meleePace": 1,
+      "meleeTiers": 3,
+      "sheet": {
+        "attrs": {
+          "mgt": 4,
+          "agl": 6,
+          "fgt": 5,
+          "vig": 5,
+          "int": 6,
+          "awr": 6,
+          "res": 5
+        },
+        "talents": [
+          "marksman",
+          "acrobat",
+          "predator"
+        ],
+        "cdMult": 0.935,
+        "spreadMult": 0.55,
+        "blastMult": 1,
+        "evadeCdMult": 0.63,
+        "ccRecover": 1,
+        "healMult": 1,
+        "odWindow": 0.25,
+        "sumDurMult": 1,
+        "jabMult": 1,
+        "chargeRate": 1,
+        "predator": true,
+        "kiRegenMult": 1,
+        "visMult": 1.04
+      },
+      "resistances": {
+        "physical": 1,
+        "ballistic": 1,
+        "energy": 1,
+        "fire": 1,
+        "cold": 1,
+        "toxic": 0.25,
+        "acid": 0.7,
+        "magic": 1.0999999999999999
+      }
+    },
+    {
+      "id": "stefanos",
+      "name": "KING STEFANOS",
+      "rank": 25,
+      "rankLiftLb": 606.2866266041592,
+      "style": "BOXING",
+      "allowedStrikes": [
+        "jab",
+        "cross",
+        "power"
+      ],
+      "baseHp": 120,
+      "baseSpeed": 33,
+      "flightTier": 3,
+      "meleePace": 1,
+      "meleeTiers": 3,
+      "sheet": {
+        "attrs": {
+          "mgt": 6,
+          "agl": 6,
+          "fgt": 4,
+          "vig": 6,
+          "int": 3,
+          "awr": 5,
+          "res": 7
+        },
+        "talents": [
+          "demolitions",
+          "ironwill"
+        ],
+        "cdMult": 0.974,
+        "spreadMult": 1,
+        "blastMult": 1.18,
+        "evadeCdMult": 0.9,
+        "ccRecover": 1.51,
+        "healMult": 1,
+        "odWindow": 0.25,
+        "sumDurMult": 1,
+        "jabMult": 0.98,
+        "chargeRate": 1,
+        "predator": false,
+        "kiRegenMult": 1.06,
+        "visMult": 1
+      },
+      "resistances": {
+        "physical": 1,
+        "ballistic": 1,
+        "energy": 1,
+        "fire": 1,
+        "cold": 1,
+        "toxic": 0.25,
+        "acid": 0.7,
+        "magic": 0.96
+      }
+    },
+    {
+      "id": "sandra",
+      "name": "SANDRA",
+      "rank": 24,
+      "rankLiftLb": 565.685424949238,
+      "style": "JUDO",
+      "allowedStrikes": [
+        "jab",
+        "cross"
+      ],
+      "baseHp": 115,
+      "baseSpeed": 37,
+      "flightTier": 0,
+      "meleePace": 1,
+      "meleeTiers": 3,
+      "sheet": {
+        "attrs": {
+          "mgt": 5,
+          "agl": 5,
+          "fgt": 6,
+          "vig": 5,
+          "int": 7,
+          "awr": 9,
+          "res": 5
+        },
+        "talents": [
+          "marksman",
+          "predator",
+          "tactician"
+        ],
+        "cdMult": 0.8113600000000001,
+        "spreadMult": 0.55,
+        "blastMult": 1,
+        "evadeCdMult": 0.92,
+        "ccRecover": 1,
+        "healMult": 1,
+        "odWindow": 0.25,
+        "sumDurMult": 1,
+        "jabMult": 1.02,
+        "chargeRate": 1,
+        "predator": true,
+        "kiRegenMult": 1,
+        "visMult": 1.1600000000000001
+      },
+      "resistances": {
+        "physical": 1,
+        "ballistic": 1,
+        "energy": 1,
+        "fire": 1,
+        "cold": 1,
+        "toxic": 0.25,
+        "acid": 0.7,
+        "magic": 1.0999999999999999
+      }
+    },
+    {
+      "id": "ironclad",
+      "name": "IRONCLAD",
+      "rank": 48,
+      "rankLiftLb": 17511.919128378457,
+      "style": "MUAY THAI",
+      "allowedStrikes": [
+        "jab",
+        "cross",
+        "power"
+      ],
+      "baseHp": 135,
+      "baseSpeed": 30,
+      "flightTier": 3,
+      "meleePace": 1,
+      "meleeTiers": 3,
+      "sheet": {
+        "attrs": {
+          "mgt": 7,
+          "agl": 5,
+          "fgt": 4,
+          "vig": 8,
+          "int": 5,
+          "awr": 6,
+          "res": 7
+        },
+        "talents": [
+          "tactician",
+          "demolitions"
+        ],
+        "cdMult": 0.83424,
+        "spreadMult": 1,
+        "blastMult": 1.18,
+        "evadeCdMult": 0.92,
+        "ccRecover": 1.06,
+        "healMult": 1,
+        "odWindow": 0.25,
+        "sumDurMult": 1,
+        "jabMult": 0.98,
+        "chargeRate": 1,
+        "predator": false,
+        "kiRegenMult": 1.06,
+        "visMult": 1.04
+      },
+      "resistances": {
+        "physical": 1,
+        "ballistic": 1,
+        "energy": 1,
+        "fire": 0.6,
+        "cold": 1,
+        "toxic": 0,
+        "acid": 1.6,
+        "magic": 0.96
+      }
+    },
+    {
+      "id": "rage",
+      "name": "RAGE",
+      "rank": 120,
+      "rankLiftLb": 193698.35631900342,
+      "style": "POWER GRAPPLING",
+      "allowedStrikes": [
+        "power"
+      ],
+      "baseHp": 220,
+      "baseSpeed": 30,
+      "flightTier": 0,
+      "meleePace": 1,
+      "meleeTiers": 2,
+      "sheet": {
+        "attrs": {
+          "mgt": 10,
+          "agl": 6,
+          "fgt": 8,
+          "vig": 10,
+          "int": 3,
+          "awr": 4,
+          "res": 5
+        },
+        "talents": [
+          "brawler",
+          "survivor"
+        ],
+        "cdMult": 0.974,
+        "spreadMult": 1,
+        "blastMult": 1,
+        "evadeCdMult": 0.9,
+        "ccRecover": 1,
+        "healMult": 1,
+        "odWindow": 0.35,
+        "sumDurMult": 1,
+        "jabMult": 1.06,
+        "chargeRate": 1.2,
+        "predator": false,
+        "kiRegenMult": 1,
+        "visMult": 0.9600000000000001
+      },
+      "resistances": {
+        "physical": 1,
+        "ballistic": 1,
+        "energy": 1,
+        "fire": 1,
+        "cold": 1,
+        "toxic": 0.25,
+        "acid": 0.7,
+        "magic": 1.0999999999999999
+      }
+    },
+    {
+      "id": "stormcall",
+      "name": "STORMCALL",
+      "rank": 78,
+      "rankLiftLb": 118840.08247017239,
+      "style": "MILITARY CQC",
+      "allowedStrikes": [
+        "jab",
+        "power"
+      ],
+      "baseHp": 160,
+      "baseSpeed": 31,
+      "flightTier": 3,
+      "meleePace": 1,
+      "meleeTiers": 3,
+      "sheet": {
+        "attrs": {
+          "mgt": 9,
+          "agl": 5,
+          "fgt": 7,
+          "vig": 7,
+          "int": 4,
+          "awr": 4,
+          "res": 7
+        },
+        "talents": [
+          "brawler",
+          "demolitions"
+        ],
+        "cdMult": 0.961,
+        "spreadMult": 1,
+        "blastMult": 1.18,
+        "evadeCdMult": 0.92,
+        "ccRecover": 1.06,
+        "healMult": 1,
+        "odWindow": 0.25,
+        "sumDurMult": 1,
+        "jabMult": 1.04,
+        "chargeRate": 1.2,
+        "predator": false,
+        "kiRegenMult": 1.06,
+        "visMult": 0.9600000000000001
+      },
+      "resistances": {
+        "physical": 1,
+        "ballistic": 1,
+        "energy": 1,
+        "fire": 1,
+        "cold": 1,
+        "toxic": 0.25,
+        "acid": 0.7,
+        "magic": 0.96
+      }
+    },
+    {
+      "id": "webline",
+      "name": "WEBLINE",
+      "rank": 42,
+      "rankLiftLb": 4398.795204826691,
+      "style": "WRESTLING",
+      "allowedStrikes": [
+        "jab"
+      ],
+      "baseHp": 100,
+      "baseSpeed": 42,
+      "flightTier": 0,
+      "meleePace": 1,
+      "meleeTiers": 3,
+      "sheet": {
+        "attrs": {
+          "mgt": 7,
+          "agl": 5,
+          "fgt": 6,
+          "vig": 5,
+          "int": 4,
+          "awr": 4,
+          "res": 6
+        },
+        "talents": [
+          "acrobat",
+          "martial"
+        ],
+        "cdMult": 0.961,
+        "spreadMult": 1,
+        "blastMult": 1,
+        "evadeCdMult": 0.644,
+        "ccRecover": 1.03,
+        "healMult": 1,
+        "odWindow": 0.25,
+        "sumDurMult": 1,
+        "jabMult": 1.1424,
+        "chargeRate": 1,
+        "predator": false,
+        "kiRegenMult": 1.03,
+        "visMult": 0.9600000000000001
+      },
+      "resistances": {
+        "physical": 1,
+        "ballistic": 1,
+        "energy": 1,
+        "fire": 1,
+        "cold": 1,
+        "toxic": 0.25,
+        "acid": 0.7,
+        "magic": 1.0299999999999998
+      }
+    },
+    {
+      "id": "ripclaw",
+      "name": "RIPCLAW",
+      "rank": 40,
+      "rankLiftLb": 2775.452141349657,
+      "style": "MILITARY CQC",
+      "allowedStrikes": [
+        "jab",
+        "power"
+      ],
+      "baseHp": 155,
+      "baseSpeed": 35,
+      "flightTier": 0,
+      "meleePace": 1,
+      "meleeTiers": 3,
+      "sheet": {
+        "attrs": {
+          "mgt": 7,
+          "agl": 4,
+          "fgt": 6,
+          "vig": 7,
+          "int": 4,
+          "awr": 4,
+          "res": 5
+        },
+        "talents": [
+          "martial",
+          "survivor",
+          "predator"
+        ],
+        "cdMult": 0.961,
+        "spreadMult": 1,
+        "blastMult": 1,
+        "evadeCdMult": 0.94,
+        "ccRecover": 1,
+        "healMult": 1,
+        "odWindow": 0.35,
+        "sumDurMult": 1,
+        "jabMult": 1.1424,
+        "chargeRate": 1,
+        "predator": true,
+        "kiRegenMult": 1,
+        "visMult": 0.9600000000000001
+      },
+      "resistances": {
+        "physical": 1,
+        "ballistic": 1,
+        "energy": 1,
+        "fire": 1,
+        "cold": 1,
+        "toxic": 0.25,
+        "acid": 0.7,
+        "magic": 1.0999999999999999
+      }
+    },
+    {
+      "id": "majesty",
+      "name": "MAJESTY",
+      "rank": 92,
+      "rankLiftLb": 154621.5899716903,
+      "style": "MUAY THAI",
+      "allowedStrikes": [
+        "jab",
+        "cross",
+        "power"
+      ],
+      "baseHp": 130,
+      "baseSpeed": 34,
+      "flightTier": 3,
+      "meleePace": 1,
+      "meleeTiers": 3,
+      "sheet": {
+        "attrs": {
+          "mgt": 10,
+          "agl": 6,
+          "fgt": 7,
+          "vig": 6,
+          "int": 3,
+          "awr": 5,
+          "res": 7
+        },
+        "talents": [
+          "demolitions",
+          "ironwill"
+        ],
+        "cdMult": 0.974,
+        "spreadMult": 1,
+        "blastMult": 1.18,
+        "evadeCdMult": 0.9,
+        "ccRecover": 1.51,
+        "healMult": 1,
+        "odWindow": 0.25,
+        "sumDurMult": 1,
+        "jabMult": 1.04,
+        "chargeRate": 1,
+        "predator": false,
+        "kiRegenMult": 1.06,
+        "visMult": 1
+      },
+      "resistances": {
+        "physical": 1,
+        "ballistic": 1,
+        "energy": 1,
+        "fire": 1,
+        "cold": 1,
+        "toxic": 0.25,
+        "acid": 0.7,
+        "magic": 0.96
+      }
+    },
+    {
+      "id": "mystward",
+      "name": "MAELSTROM",
+      "rank": 14,
+      "rankLiftLb": 282.842712474619,
+      "style": "ACROBATIC",
+      "allowedStrikes": [
+        "jab",
+        "cross"
+      ],
+      "baseHp": 115,
+      "baseSpeed": 31,
+      "flightTier": 2,
+      "meleePace": 1,
+      "meleeTiers": 3,
+      "sheet": {
+        "attrs": {
+          "mgt": 4,
+          "agl": 7,
+          "fgt": 3,
+          "vig": 5,
+          "int": 5,
+          "awr": 5,
+          "res": 8
+        },
+        "talents": [
+          "tactician",
+          "commander"
+        ],
+        "cdMult": 0.83424,
+        "spreadMult": 1,
+        "blastMult": 1,
+        "evadeCdMult": 0.88,
+        "ccRecover": 1.09,
+        "healMult": 1,
+        "odWindow": 0.25,
+        "sumDurMult": 1.3,
+        "jabMult": 0.96,
+        "chargeRate": 1,
+        "predator": false,
+        "kiRegenMult": 1.0899999999999999,
+        "visMult": 1
+      },
+      "resistances": {
+        "physical": 1,
+        "ballistic": 1,
+        "energy": 1,
+        "fire": 1,
+        "cold": 1,
+        "toxic": 0.25,
+        "acid": 0.7,
+        "magic": 0.8899999999999999
+      }
+    },
+    {
+      "id": "onyx",
+      "name": "ONYX",
+      "rank": 41,
+      "rankLiftLb": 3494.0872299636203,
+      "style": "MILITARY CQC",
+      "allowedStrikes": [
+        "jab",
+        "power"
+      ],
+      "baseHp": 135,
+      "baseSpeed": 38,
+      "flightTier": 0,
+      "meleePace": 1,
+      "meleeTiers": 3,
+      "sheet": {
+        "attrs": {
+          "mgt": 7,
+          "agl": 6,
+          "fgt": 6,
+          "vig": 6,
+          "int": 4,
+          "awr": 4,
+          "res": 6
+        },
+        "talents": [
+          "martial",
+          "acrobat",
+          "predator"
+        ],
+        "cdMult": 0.961,
+        "spreadMult": 1,
+        "blastMult": 1,
+        "evadeCdMult": 0.63,
+        "ccRecover": 1.03,
+        "healMult": 1,
+        "odWindow": 0.25,
+        "sumDurMult": 1,
+        "jabMult": 1.1424,
+        "chargeRate": 1,
+        "predator": true,
+        "kiRegenMult": 1.03,
+        "visMult": 0.9600000000000001
+      },
+      "resistances": {
+        "physical": 1,
+        "ballistic": 1,
+        "energy": 1,
+        "fire": 1,
+        "cold": 1,
+        "toxic": 0.25,
+        "acid": 0.7,
+        "magic": 1.0299999999999998
+      }
+    },
+    {
+      "id": "chainfire",
+      "name": "CHAINFIRE",
+      "rank": 43,
+      "rankLiftLb": 5537.75506463465,
+      "style": "WRESTLING",
+      "allowedStrikes": [
+        "jab"
+      ],
+      "baseHp": 140,
+      "baseSpeed": 31,
+      "flightTier": 1,
+      "meleePace": 1,
+      "meleeTiers": 3,
+      "sheet": {
+        "attrs": {
+          "mgt": 7,
+          "agl": 5,
+          "fgt": 6,
+          "vig": 7,
+          "int": 4,
+          "awr": 4,
+          "res": 6
+        },
+        "talents": [
+          "predator",
+          "ironwill"
+        ],
+        "cdMult": 0.961,
+        "spreadMult": 1,
+        "blastMult": 1,
+        "evadeCdMult": 0.92,
+        "ccRecover": 1.48,
+        "healMult": 1,
+        "odWindow": 0.25,
+        "sumDurMult": 1,
+        "jabMult": 1.02,
+        "chargeRate": 1,
+        "predator": true,
+        "kiRegenMult": 1.03,
+        "visMult": 0.9600000000000001
+      },
+      "resistances": {
+        "physical": 1,
+        "ballistic": 1,
+        "energy": 1,
+        "fire": 1,
+        "cold": 0.45,
+        "toxic": 0.25,
+        "acid": 0.7,
+        "magic": 1.0299999999999998
+      }
+    },
+    {
+      "id": "tempest",
+      "name": "TEMPEST",
+      "rank": 15,
+      "rankLiftLb": 303.1433133020796,
+      "style": "BOXING",
+      "allowedStrikes": [
+        "jab",
+        "cross",
+        "power"
+      ],
+      "baseHp": 115,
+      "baseSpeed": 32,
+      "flightTier": 3,
+      "meleePace": 1,
+      "meleeTiers": 3,
+      "sheet": {
+        "attrs": {
+          "mgt": 5,
+          "agl": 6,
+          "fgt": 3,
+          "vig": 5,
+          "int": 3,
+          "awr": 5,
+          "res": 7
+        },
+        "talents": [
+          "tactician"
+        ],
+        "cdMult": 0.85712,
+        "spreadMult": 1,
+        "blastMult": 1,
+        "evadeCdMult": 0.9,
+        "ccRecover": 1.06,
+        "healMult": 1,
+        "odWindow": 0.25,
+        "sumDurMult": 1,
+        "jabMult": 0.96,
+        "chargeRate": 1,
+        "predator": false,
+        "kiRegenMult": 1.06,
+        "visMult": 1
+      },
+      "resistances": {
+        "physical": 1,
+        "ballistic": 1,
+        "energy": 1,
+        "fire": 1,
+        "cold": 1,
+        "toxic": 0.25,
+        "acid": 0.7,
+        "magic": 0.96
+      }
+    },
+    {
+      "id": "knightfall",
+      "name": "KNIGHTFALL",
+      "rank": 29,
+      "rankLiftLb": 800,
+      "style": "BOXING",
+      "allowedStrikes": [
+        "jab",
+        "cross",
+        "power"
+      ],
+      "baseHp": 125,
+      "baseSpeed": 37,
+      "flightTier": 0,
+      "meleePace": 1,
+      "meleeTiers": 3,
+      "sheet": {
+        "attrs": {
+          "mgt": 6,
+          "agl": 5,
+          "fgt": 6,
+          "vig": 6,
+          "int": 8,
+          "awr": 4,
+          "res": 5
+        },
+        "talents": [
+          "tactician",
+          "martial",
+          "marksman"
+        ],
+        "cdMult": 0.7999200000000001,
+        "spreadMult": 0.55,
+        "blastMult": 1,
+        "evadeCdMult": 0.92,
+        "ccRecover": 1,
+        "healMult": 1,
+        "odWindow": 0.25,
+        "sumDurMult": 1,
+        "jabMult": 1.1424,
+        "chargeRate": 1,
+        "predator": false,
+        "kiRegenMult": 1,
+        "visMult": 0.9600000000000001
+      },
+      "resistances": {
+        "physical": 1,
+        "ballistic": 1,
+        "energy": 1,
+        "fire": 1,
+        "cold": 1,
+        "toxic": 0.25,
+        "acid": 0.7,
+        "magic": 1.0999999999999999
+      }
+    },
+    {
+      "id": "aegis",
+      "name": "AEGIS",
+      "rank": 76,
+      "rankLiftLb": 114454.62476793838,
+      "style": "WRESTLING",
+      "allowedStrikes": [
+        "jab"
+      ],
+      "baseHp": 155,
+      "baseSpeed": 35,
+      "flightTier": 2,
+      "meleePace": 1,
+      "meleeTiers": 3,
+      "sheet": {
+        "attrs": {
+          "mgt": 10,
+          "agl": 6,
+          "fgt": 7,
+          "vig": 7,
+          "int": 3,
+          "awr": 4,
+          "res": 6
+        },
+        "talents": [
+          "brawler",
+          "martial",
+          "ironwill"
+        ],
+        "cdMult": 0.974,
+        "spreadMult": 1,
+        "blastMult": 1,
+        "evadeCdMult": 0.9,
+        "ccRecover": 1.48,
+        "healMult": 1,
+        "odWindow": 0.25,
+        "sumDurMult": 1,
+        "jabMult": 1.1648,
+        "chargeRate": 1.2,
+        "predator": false,
+        "kiRegenMult": 1.03,
+        "visMult": 0.9600000000000001
+      },
+      "resistances": {
+        "physical": 1,
+        "ballistic": 1,
+        "energy": 1,
+        "fire": 1,
+        "cold": 1,
+        "toxic": 0.25,
+        "acid": 0.7,
+        "magic": 1.0299999999999998
+      }
+    },
+    {
+      "id": "olympus",
+      "name": "OLYMPUS",
+      "rank": 68,
+      "rankLiftLb": 74911.9231090051,
+      "style": "MUAY THAI",
+      "allowedStrikes": [
+        "jab",
+        "cross",
+        "power"
+      ],
+      "baseHp": 150,
+      "baseSpeed": 33,
+      "flightTier": 3,
+      "meleePace": 1,
+      "meleeTiers": 3,
+      "sheet": {
+        "attrs": {
+          "mgt": 9,
+          "agl": 6,
+          "fgt": 7,
+          "vig": 7,
+          "int": 3,
+          "awr": 4,
+          "res": 7
+        },
+        "talents": [
+          "brawler",
+          "survivor"
+        ],
+        "cdMult": 0.974,
+        "spreadMult": 1,
+        "blastMult": 1,
+        "evadeCdMult": 0.9,
+        "ccRecover": 1.06,
+        "healMult": 1,
+        "odWindow": 0.35,
+        "sumDurMult": 1,
+        "jabMult": 1.04,
+        "chargeRate": 1.2,
+        "predator": false,
+        "kiRegenMult": 1.06,
+        "visMult": 0.9600000000000001
+      },
+      "resistances": {
+        "physical": 1,
+        "ballistic": 1,
+        "energy": 1,
+        "fire": 1,
+        "cold": 1,
+        "toxic": 0.25,
+        "acid": 0.7,
+        "magic": 0.96
+      }
+    },
+    {
+      "id": "marshal",
+      "name": "MARSHAL",
+      "rank": 50,
+      "rankLiftLb": 23512.160794914107,
+      "style": "ACROBATIC",
+      "allowedStrikes": [
+        "jab",
+        "cross"
+      ],
+      "baseHp": 140,
+      "baseSpeed": 33,
+      "flightTier": 3,
+      "meleePace": 1,
+      "meleeTiers": 3,
+      "sheet": {
+        "attrs": {
+          "mgt": 7,
+          "agl": 7,
+          "fgt": 6,
+          "vig": 7,
+          "int": 3,
+          "awr": 4,
+          "res": 7
+        },
+        "talents": [
+          "ironwill",
+          "martial"
+        ],
+        "cdMult": 0.974,
+        "spreadMult": 1,
+        "blastMult": 1,
+        "evadeCdMult": 0.88,
+        "ccRecover": 1.51,
+        "healMult": 1,
+        "odWindow": 0.25,
+        "sumDurMult": 1,
+        "jabMult": 1.1424,
+        "chargeRate": 1,
+        "predator": false,
+        "kiRegenMult": 1.06,
+        "visMult": 0.9600000000000001
+      },
+      "resistances": {
+        "physical": 1,
+        "ballistic": 1,
+        "energy": 1,
+        "fire": 1,
+        "cold": 1,
+        "toxic": 0.25,
+        "acid": 0.7,
+        "magic": 0.96
+      }
+    },
+    {
+      "id": "circuit",
+      "name": "CIRCUIT",
+      "rank": 52,
+      "rankLiftLb": 26743.001178786042,
+      "style": "MUAY THAI",
+      "allowedStrikes": [
+        "jab",
+        "cross",
+        "power"
+      ],
+      "baseHp": 155,
+      "baseSpeed": 28,
+      "flightTier": 2,
+      "meleePace": 1,
+      "meleeTiers": 2,
+      "sheet": {
+        "attrs": {
+          "mgt": 7,
+          "agl": 4,
+          "fgt": 5,
+          "vig": 9,
+          "int": 5,
+          "awr": 6,
+          "res": 9
+        },
+        "talents": [
+          "marksman",
+          "tactician"
+        ],
+        "cdMult": 0.83424,
+        "spreadMult": 0.55,
+        "blastMult": 1,
+        "evadeCdMult": 0.94,
+        "ccRecover": 1.12,
+        "healMult": 1,
+        "odWindow": 0.25,
+        "sumDurMult": 1,
+        "jabMult": 1,
+        "chargeRate": 1,
+        "predator": false,
+        "kiRegenMult": 1.12,
+        "visMult": 1.04
+      },
+      "resistances": {
+        "physical": 1,
+        "ballistic": 1,
+        "energy": 1,
+        "fire": 0.6,
+        "cold": 1,
+        "toxic": 0,
+        "acid": 1.6,
+        "magic": 0.8199999999999998
+      }
+    },
+    {
+      "id": "trench",
+      "name": "TRENCH",
+      "rank": 58,
+      "rankLiftLb": 39351.6497854318,
+      "style": "MILITARY CQC",
+      "allowedStrikes": [
+        "jab",
+        "power"
+      ],
+      "baseHp": 160,
+      "baseSpeed": 33,
+      "flightTier": 0,
+      "meleePace": 1,
+      "meleeTiers": 3,
+      "sheet": {
+        "attrs": {
+          "mgt": 8,
+          "agl": 4,
+          "fgt": 6,
+          "vig": 7,
+          "int": 6,
+          "awr": 4,
+          "res": 6
+        },
+        "talents": [
+          "commander",
+          "brawler"
+        ],
+        "cdMult": 0.935,
+        "spreadMult": 1,
+        "blastMult": 1,
+        "evadeCdMult": 0.94,
+        "ccRecover": 1.03,
+        "healMult": 1,
+        "odWindow": 0.25,
+        "sumDurMult": 1.3,
+        "jabMult": 1.02,
+        "chargeRate": 1.2,
+        "predator": false,
+        "kiRegenMult": 1.03,
+        "visMult": 0.9600000000000001
+      },
+      "resistances": {
+        "physical": 1,
+        "ballistic": 1,
+        "energy": 1,
+        "fire": 1,
+        "cold": 1,
+        "toxic": 0.25,
+        "acid": 0.7,
+        "magic": 1.0299999999999998
+      }
+    },
+    {
+      "id": "decibel",
+      "name": "DECIBEL",
+      "rank": 19,
+      "rankLiftLb": 400,
+      "style": "BOXING",
+      "allowedStrikes": [
+        "jab",
+        "cross",
+        "power"
+      ],
+      "baseHp": 110,
+      "baseSpeed": 37,
+      "flightTier": 0,
+      "meleePace": 1,
+      "meleeTiers": 3,
+      "sheet": {
+        "attrs": {
+          "mgt": 5,
+          "agl": 7,
+          "fgt": 6,
+          "vig": 5,
+          "int": 3,
+          "awr": 4,
+          "res": 6
+        },
+        "talents": [
+          "martial",
+          "acrobat"
+        ],
+        "cdMult": 0.974,
+        "spreadMult": 1,
+        "blastMult": 1,
+        "evadeCdMult": 0.616,
+        "ccRecover": 1.03,
+        "healMult": 1,
+        "odWindow": 0.25,
+        "sumDurMult": 1,
+        "jabMult": 1.1424,
+        "chargeRate": 1,
+        "predator": false,
+        "kiRegenMult": 1.03,
+        "visMult": 0.9600000000000001
+      },
+      "resistances": {
+        "physical": 1,
+        "ballistic": 1,
+        "energy": 1,
+        "fire": 1,
+        "cold": 1,
+        "toxic": 0.25,
+        "acid": 0.7,
+        "magic": 1.0299999999999998
+      }
+    },
+    {
+      "id": "coldsnap",
+      "name": "COLDSNAP",
+      "rank": 15,
+      "rankLiftLb": 303.1433133020796,
+      "style": "BOXING",
+      "allowedStrikes": [
+        "jab",
+        "cross",
+        "power"
+      ],
+      "baseHp": 115,
+      "baseSpeed": 32,
+      "flightTier": 0,
+      "meleePace": 1,
+      "meleeTiers": 3,
+      "sheet": {
+        "attrs": {
+          "mgt": 5,
+          "agl": 6,
+          "fgt": 3,
+          "vig": 5,
+          "int": 6,
+          "awr": 6,
+          "res": 6
+        },
+        "talents": [
+          "marksman",
+          "tactician"
+        ],
+        "cdMult": 0.8228000000000001,
+        "spreadMult": 0.55,
+        "blastMult": 1,
+        "evadeCdMult": 0.9,
+        "ccRecover": 1.03,
+        "healMult": 1,
+        "odWindow": 0.25,
+        "sumDurMult": 1,
+        "jabMult": 0.96,
+        "chargeRate": 1,
+        "predator": false,
+        "kiRegenMult": 1.03,
+        "visMult": 1.04
+      },
+      "resistances": {
+        "physical": 1,
+        "ballistic": 1,
+        "energy": 1,
+        "fire": 1,
+        "cold": 1,
+        "toxic": 0.25,
+        "acid": 0.7,
+        "magic": 1.0299999999999998
+      }
+    },
+    {
+      "id": "foundry",
+      "name": "CRUCIBLE",
+      "rank": 72,
+      "rankLiftLb": 96913.91700046383,
+      "style": "POWER GRAPPLING",
+      "allowedStrikes": [
+        "power"
+      ],
+      "baseHp": 165,
+      "baseSpeed": 27,
+      "flightTier": 1,
+      "meleePace": 1,
+      "meleeTiers": 2,
+      "sheet": {
+        "attrs": {
+          "mgt": 9,
+          "agl": 4,
+          "fgt": 8,
+          "vig": 9,
+          "int": 5,
+          "awr": 5,
+          "res": 6
+        },
+        "talents": [
+          "demolitions",
+          "brawler"
+        ],
+        "cdMult": 0.948,
+        "spreadMult": 1,
+        "blastMult": 1.18,
+        "evadeCdMult": 0.94,
+        "ccRecover": 1.03,
+        "healMult": 1,
+        "odWindow": 0.25,
+        "sumDurMult": 1,
+        "jabMult": 1.06,
+        "chargeRate": 1.2,
+        "predator": false,
+        "kiRegenMult": 1.03,
+        "visMult": 1
+      },
+      "resistances": {
+        "physical": 1,
+        "ballistic": 1,
+        "energy": 1,
+        "fire": 0.6,
+        "cold": 1,
+        "toxic": 0,
+        "acid": 1.6,
+        "magic": 1.0299999999999998
+      }
+    },
+    {
+      "id": "talon",
+      "name": "TALON",
+      "rank": 26,
+      "rankLiftLb": 649.8019170849884,
+      "style": "BOXING",
+      "allowedStrikes": [
+        "jab",
+        "cross",
+        "power"
+      ],
+      "baseHp": 115,
+      "baseSpeed": 40,
+      "flightTier": 0,
+      "meleePace": 1,
+      "meleeTiers": 3,
+      "sheet": {
+        "attrs": {
+          "mgt": 5,
+          "agl": 5,
+          "fgt": 6,
+          "vig": 5,
+          "int": 6,
+          "awr": 4,
+          "res": 6
+        },
+        "talents": [
+          "acrobat",
+          "martial",
+          "medic"
+        ],
+        "cdMult": 0.935,
+        "spreadMult": 1,
+        "blastMult": 1,
+        "evadeCdMult": 0.644,
+        "ccRecover": 1.03,
+        "healMult": 1.25,
+        "odWindow": 0.25,
+        "sumDurMult": 1,
+        "jabMult": 1.1424,
+        "chargeRate": 1,
+        "predator": false,
+        "kiRegenMult": 1.03,
+        "visMult": 0.9600000000000001
+      },
+      "resistances": {
+        "physical": 1,
+        "ballistic": 1,
+        "energy": 1,
+        "fire": 1,
+        "cold": 1,
+        "toxic": 0.25,
+        "acid": 0.7,
+        "magic": 1.0299999999999998
+      }
+    },
+    {
+      "id": "abeo",
+      "name": "ABEO",
+      "rank": 74,
+      "rankLiftLb": 110231,
+      "style": "POWER GRAPPLING",
+      "allowedStrikes": [
+        "power"
+      ],
+      "baseHp": 175,
+      "baseSpeed": 27,
+      "flightTier": 0,
+      "meleePace": 1,
+      "meleeTiers": 2,
+      "sheet": {
+        "attrs": {
+          "mgt": 9,
+          "agl": 4,
+          "fgt": 8,
+          "vig": 10,
+          "int": 4,
+          "awr": 4,
+          "res": 6
+        },
+        "talents": [
+          "ironwill",
+          "brawler"
+        ],
+        "cdMult": 0.961,
+        "spreadMult": 1,
+        "blastMult": 1,
+        "evadeCdMult": 0.94,
+        "ccRecover": 1.48,
+        "healMult": 1,
+        "odWindow": 0.25,
+        "sumDurMult": 1,
+        "jabMult": 1.06,
+        "chargeRate": 1.2,
+        "predator": false,
+        "kiRegenMult": 1.03,
+        "visMult": 0.9600000000000001
+      },
+      "resistances": {
+        "physical": 1,
+        "ballistic": 1,
+        "energy": 1,
+        "fire": 0.6,
+        "cold": 1,
+        "toxic": 0,
+        "acid": 1.6,
+        "magic": 1.0299999999999998
+      }
+    },
+    {
+      "id": "jelani",
+      "name": "JELANI",
+      "rank": 64,
+      "rankLiftLb": 57904.95728144633,
+      "style": "MUAY THAI",
+      "allowedStrikes": [
+        "jab",
+        "cross",
+        "power"
+      ],
+      "baseHp": 135,
+      "baseSpeed": 46,
+      "flightTier": 0,
+      "meleePace": 1,
+      "meleeTiers": 3,
+      "sheet": {
+        "attrs": {
+          "mgt": 9,
+          "agl": 8,
+          "fgt": 7,
+          "vig": 6,
+          "int": 3,
+          "awr": 4,
+          "res": 6
+        },
+        "talents": [
+          "martial",
+          "acrobat",
+          "survivor"
+        ],
+        "cdMult": 0.974,
+        "spreadMult": 1,
+        "blastMult": 1,
+        "evadeCdMult": 0.602,
+        "ccRecover": 1.03,
+        "healMult": 1,
+        "odWindow": 0.35,
+        "sumDurMult": 1,
+        "jabMult": 1.1648,
+        "chargeRate": 1,
+        "predator": false,
+        "kiRegenMult": 1.03,
+        "visMult": 0.9600000000000001
+      },
+      "resistances": {
+        "physical": 1,
+        "ballistic": 1,
+        "energy": 1,
+        "fire": 1,
+        "cold": 1,
+        "toxic": 0.25,
+        "acid": 0.7,
+        "magic": 1.0299999999999998
+      }
+    },
+    {
+      "id": "kamaria",
+      "name": "KAMARIA",
+      "rank": 21,
+      "rankLiftLb": 459.47934199881405,
+      "style": "ACROBATIC",
+      "allowedStrikes": [
+        "jab",
+        "cross"
+      ],
+      "baseHp": 115,
+      "baseSpeed": 36,
+      "flightTier": 2,
+      "meleePace": 1,
+      "meleeTiers": 3,
+      "sheet": {
+        "attrs": {
+          "mgt": 5,
+          "agl": 8,
+          "fgt": 6,
+          "vig": 5,
+          "int": 3,
+          "awr": 4,
+          "res": 7
+        },
+        "talents": [
+          "acrobat",
+          "ironwill"
+        ],
+        "cdMult": 0.974,
+        "spreadMult": 1,
+        "blastMult": 1,
+        "evadeCdMult": 0.602,
+        "ccRecover": 1.51,
+        "healMult": 1,
+        "odWindow": 0.25,
+        "sumDurMult": 1,
+        "jabMult": 1.02,
+        "chargeRate": 1,
+        "predator": false,
+        "kiRegenMult": 1.06,
+        "visMult": 0.9600000000000001
+      },
+      "resistances": {
+        "physical": 1,
+        "ballistic": 1,
+        "energy": 1,
+        "fire": 1,
+        "cold": 1,
+        "toxic": 0.25,
+        "acid": 0.7,
+        "magic": 0.96
+      }
+    },
+    {
+      "id": "ramiro",
+      "name": "RAMIRO",
+      "rank": 33,
+      "rankLiftLb": 1200.017251079302,
+      "style": "BJJ",
+      "allowedStrikes": [
+        "jab"
+      ],
+      "baseHp": 140,
+      "baseSpeed": 31,
+      "flightTier": 0,
+      "meleePace": 1,
+      "meleeTiers": 3,
+      "sheet": {
+        "attrs": {
+          "mgt": 7,
+          "agl": 6,
+          "fgt": 6,
+          "vig": 7,
+          "int": 8,
+          "awr": 5,
+          "res": 5
+        },
+        "talents": [
+          "marksman",
+          "ironwill"
+        ],
+        "cdMult": 0.909,
+        "spreadMult": 0.55,
+        "blastMult": 1,
+        "evadeCdMult": 0.9,
+        "ccRecover": 1.45,
+        "healMult": 1,
+        "odWindow": 0.25,
+        "sumDurMult": 1,
+        "jabMult": 1.02,
+        "chargeRate": 1,
+        "predator": false,
+        "kiRegenMult": 1,
+        "visMult": 1
+      },
+      "resistances": {
+        "physical": 1,
+        "ballistic": 1,
+        "energy": 1,
+        "fire": 1,
+        "cold": 1,
+        "toxic": 0.25,
+        "acid": 0.7,
+        "magic": 1.0999999999999999
+      }
+    },
+    {
+      "id": "jawah",
+      "name": "JAWAH MATU",
+      "rank": 23,
+      "rankLiftLb": 527.8031643091576,
+      "style": "ACROBATIC",
+      "allowedStrikes": [
+        "jab",
+        "cross"
+      ],
+      "baseHp": 125,
+      "baseSpeed": 34,
+      "flightTier": 0,
+      "meleePace": 1,
+      "meleeTiers": 3,
+      "sheet": {
+        "attrs": {
+          "mgt": 6,
+          "agl": 8,
+          "fgt": 6,
+          "vig": 6,
+          "int": 3,
+          "awr": 4,
+          "res": 7
+        },
+        "talents": [
+          "ironwill",
+          "predator"
+        ],
+        "cdMult": 0.974,
+        "spreadMult": 1,
+        "blastMult": 1,
+        "evadeCdMult": 0.86,
+        "ccRecover": 1.51,
+        "healMult": 1,
+        "odWindow": 0.25,
+        "sumDurMult": 1,
+        "jabMult": 1.02,
+        "chargeRate": 1,
+        "predator": true,
+        "kiRegenMult": 1.06,
+        "visMult": 0.9600000000000001
+      },
+      "resistances": {
+        "physical": 1,
+        "ballistic": 1,
+        "energy": 1,
+        "fire": 1,
+        "cold": 1,
+        "toxic": 0.25,
+        "acid": 0.7,
+        "magic": 0.96
+      }
+    },
+    {
+      "id": "moses",
+      "name": "MOSES APIO",
+      "rank": 46,
+      "rankLiftLb": 11049.273989993568,
+      "style": "ACROBATIC",
+      "allowedStrikes": [
+        "jab",
+        "cross"
+      ],
+      "baseHp": 140,
+      "baseSpeed": 35,
+      "flightTier": 1,
+      "meleePace": 1,
+      "meleeTiers": 3,
+      "sheet": {
+        "attrs": {
+          "mgt": 7,
+          "agl": 6,
+          "fgt": 4,
+          "vig": 7,
+          "int": 6,
+          "awr": 4,
+          "res": 6
+        },
+        "talents": [
+          "survivor",
+          "medic"
+        ],
+        "cdMult": 0.935,
+        "spreadMult": 1,
+        "blastMult": 1,
+        "evadeCdMult": 0.9,
+        "ccRecover": 1.03,
+        "healMult": 1.25,
+        "odWindow": 0.35,
+        "sumDurMult": 1,
+        "jabMult": 0.98,
+        "chargeRate": 1,
+        "predator": false,
+        "kiRegenMult": 1.03,
+        "visMult": 0.9600000000000001
+      },
+      "resistances": {
+        "physical": 1,
+        "ballistic": 1,
+        "energy": 1,
+        "fire": 1,
+        "cold": 1,
+        "toxic": 0.25,
+        "acid": 0.7,
+        "magic": 1.0299999999999998
+      }
+    },
+    {
+      "id": "dune",
+      "name": "DUNE",
+      "rank": 32,
+      "rankLiftLb": 1084.3340953931713,
+      "style": "BJJ",
+      "allowedStrikes": [
+        "jab"
+      ],
+      "baseHp": 130,
+      "baseSpeed": 30,
+      "flightTier": 0,
+      "meleePace": 1,
+      "meleeTiers": 3,
+      "sheet": {
+        "attrs": {
+          "mgt": 6,
+          "agl": 4,
+          "fgt": 4,
+          "vig": 6,
+          "int": 6,
+          "awr": 5,
+          "res": 7
+        },
+        "talents": [
+          "commander",
+          "demolitions"
+        ],
+        "cdMult": 0.935,
+        "spreadMult": 1,
+        "blastMult": 1.18,
+        "evadeCdMult": 0.94,
+        "ccRecover": 1.06,
+        "healMult": 1,
+        "odWindow": 0.25,
+        "sumDurMult": 1.3,
+        "jabMult": 0.98,
+        "chargeRate": 1,
+        "predator": false,
+        "kiRegenMult": 1.06,
+        "visMult": 1
+      },
+      "resistances": {
+        "physical": 1,
+        "ballistic": 1,
+        "energy": 1,
+        "fire": 1,
+        "cold": 1,
+        "toxic": 0.25,
+        "acid": 0.7,
+        "magic": 0.96
+      }
+    },
+    {
+      "id": "graven",
+      "name": "GRAVEN",
+      "rank": 31,
+      "rankLiftLb": 979.8029398115938,
+      "style": "ACROBATIC",
+      "allowedStrikes": [
+        "jab",
+        "cross"
+      ],
+      "baseHp": 130,
+      "baseSpeed": 29,
+      "flightTier": 2,
+      "meleePace": 1,
+      "meleeTiers": 3,
+      "sheet": {
+        "attrs": {
+          "mgt": 6,
+          "agl": 5,
+          "fgt": 4,
+          "vig": 6,
+          "int": 4,
+          "awr": 5,
+          "res": 7
+        },
+        "talents": [
+          "tactician",
+          "demolitions"
+        ],
+        "cdMult": 0.84568,
+        "spreadMult": 1,
+        "blastMult": 1.18,
+        "evadeCdMult": 0.92,
+        "ccRecover": 1.06,
+        "healMult": 1,
+        "odWindow": 0.25,
+        "sumDurMult": 1,
+        "jabMult": 0.98,
+        "chargeRate": 1,
+        "predator": false,
+        "kiRegenMult": 1.06,
+        "visMult": 1
+      },
+      "resistances": {
+        "physical": 1,
+        "ballistic": 1,
+        "energy": 1,
+        "fire": 1,
+        "cold": 1,
+        "toxic": 0.25,
+        "acid": 0.7,
+        "magic": 0.96
+      }
+    },
+    {
+      "id": "bulwark",
+      "name": "BULWARK",
+      "rank": 70,
+      "rankLiftLb": 85205.67996636873,
+      "style": "POWER GRAPPLING",
+      "allowedStrikes": [
+        "power"
+      ],
+      "baseHp": 195,
+      "baseSpeed": 25,
+      "flightTier": 0,
+      "meleePace": 1,
+      "meleeTiers": 2,
+      "sheet": {
+        "attrs": {
+          "mgt": 9,
+          "agl": 4,
+          "fgt": 8,
+          "vig": 10,
+          "int": 8,
+          "awr": 4,
+          "res": 7
+        },
+        "talents": [
+          "ironwill",
+          "commander",
+          "medic"
+        ],
+        "cdMult": 0.909,
+        "spreadMult": 1,
+        "blastMult": 1,
+        "evadeCdMult": 0.94,
+        "ccRecover": 1.51,
+        "healMult": 1.25,
+        "odWindow": 0.25,
+        "sumDurMult": 1.3,
+        "jabMult": 1.06,
+        "chargeRate": 1,
+        "predator": false,
+        "kiRegenMult": 1.06,
+        "visMult": 0.9600000000000001
+      },
+      "resistances": {
+        "physical": 1,
+        "ballistic": 1,
+        "energy": 1,
+        "fire": 1,
+        "cold": 1,
+        "toxic": 0.25,
+        "acid": 0.7,
+        "magic": 0.96
+      }
+    },
+    {
+      "id": "feral",
+      "name": "FERAL",
+      "rank": 44,
+      "rankLiftLb": 6971.620575160413,
+      "style": "MILITARY CQC",
+      "allowedStrikes": [
+        "jab",
+        "power"
+      ],
+      "baseHp": 145,
+      "baseSpeed": 43,
+      "flightTier": 0,
+      "meleePace": 1,
+      "meleeTiers": 3,
+      "sheet": {
+        "attrs": {
+          "mgt": 8,
+          "agl": 8,
+          "fgt": 6,
+          "vig": 7,
+          "int": 3,
+          "awr": 4,
+          "res": 6
+        },
+        "talents": [
+          "martial",
+          "predator",
+          "survivor"
+        ],
+        "cdMult": 0.974,
+        "spreadMult": 1,
+        "blastMult": 1,
+        "evadeCdMult": 0.86,
+        "ccRecover": 1.03,
+        "healMult": 1,
+        "odWindow": 0.35,
+        "sumDurMult": 1,
+        "jabMult": 1.1424,
+        "chargeRate": 1,
+        "predator": true,
+        "kiRegenMult": 1.03,
+        "visMult": 0.9600000000000001
+      },
+      "resistances": {
+        "physical": 1,
+        "ballistic": 1,
+        "energy": 1,
+        "fire": 1,
+        "cold": 1,
+        "toxic": 0.25,
+        "acid": 0.7,
+        "magic": 1.0299999999999998
+      }
+    },
+    {
+      "id": "breach",
+      "name": "BREACH",
+      "rank": 24,
+      "rankLiftLb": 565.685424949238,
+      "style": "MILITARY CQC",
+      "allowedStrikes": [
+        "jab",
+        "power"
+      ],
+      "baseHp": 135,
+      "baseSpeed": 30,
+      "flightTier": 0,
+      "meleePace": 1,
+      "meleeTiers": 2,
+      "sheet": {
+        "attrs": {
+          "mgt": 5,
+          "agl": 5,
+          "fgt": 7,
+          "vig": 7,
+          "int": 7,
+          "awr": 5,
+          "res": 5
+        },
+        "talents": [
+          "marksman",
+          "martial"
+        ],
+        "cdMult": 0.922,
+        "spreadMult": 0.55,
+        "blastMult": 1,
+        "evadeCdMult": 0.92,
+        "ccRecover": 1,
+        "healMult": 1,
+        "odWindow": 0.25,
+        "sumDurMult": 1,
+        "jabMult": 1.1648,
+        "chargeRate": 1,
+        "predator": false,
+        "kiRegenMult": 1,
+        "visMult": 1
+      },
+      "resistances": {
+        "physical": 1,
+        "ballistic": 1,
+        "energy": 1,
+        "fire": 1,
+        "cold": 1,
+        "toxic": 0.25,
+        "acid": 0.7,
+        "magic": 1.0999999999999999
+      }
+    },
+    {
+      "id": "recon",
+      "name": "RECON",
+      "rank": 23,
+      "rankLiftLb": 527.8031643091576,
+      "style": "MILITARY CQC",
+      "allowedStrikes": [
+        "jab",
+        "power"
+      ],
+      "baseHp": 110,
+      "baseSpeed": 36,
+      "flightTier": 0,
+      "meleePace": 1,
+      "meleeTiers": 2,
+      "sheet": {
+        "attrs": {
+          "mgt": 6,
+          "agl": 6,
+          "fgt": 5,
+          "vig": 5,
+          "int": 6,
+          "awr": 6,
+          "res": 6
+        },
+        "talents": [
+          "marksman"
+        ],
+        "cdMult": 0.935,
+        "spreadMult": 0.55,
+        "blastMult": 1,
+        "evadeCdMult": 0.9,
+        "ccRecover": 1.03,
+        "healMult": 1,
+        "odWindow": 0.25,
+        "sumDurMult": 1,
+        "jabMult": 1,
+        "chargeRate": 1,
+        "predator": false,
+        "kiRegenMult": 1.03,
+        "visMult": 1.04
+      },
+      "resistances": {
+        "physical": 1,
+        "ballistic": 1,
+        "energy": 1,
+        "fire": 1,
+        "cold": 1,
+        "toxic": 0.25,
+        "acid": 0.7,
+        "magic": 1.0299999999999998
+      }
+    }
+  ]
+}

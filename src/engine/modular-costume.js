@@ -113,6 +113,10 @@ export function applyModularRecipe(meshes,recipe){
   if(slot==='boxingGloves')m.material.color.set(r.gloveColor);
   if(r.hoodie==='long'&&['arms','deltoids','forearms'].includes(slot))m.material.color.set(r.primary);if(r.hoodie==='short'&&['arms','deltoids'].includes(slot))m.material.color.set(r.primary);if(r.hoodie==='short'&&slot==='forearms')m.material.color.set(r.skin);
   if(slot==='coat'&&m.material.name==='suit')m.material.color.set(r.coatStyle==='short'?r.primary:'#eeeae2');
+  // Illness changes exposed skin independently of canvas texture availability.
+  // Blend from the selected complexion so different citizens retain identity.
+  const exposedSkin=(slot==='neck'?r.neckStyle!=='uniform':m.material.name==='skin')||(['arms','deltoids','forearms'].includes(slot)&&r.bareArms&&r.hoodie!=='long')||(['hands','handTips'].includes(slot)&&(r.gloves==='bare'||(r.gloves==='fingerless'&&slot==='handTips')));
+  if(r.infection==='hollow'&&exposedSkin)m.material.color.lerp(new T.Color(INFECTION_STYLES.hollow.skin),.55);
   if(!['expression','emblem','emblemBack'].includes(slot)&&typeof document!=='undefined'){
    let map=null;const infected=INFECTION_STYLES[r.infection];
    if(slot!=='coat'&&(m.material.name==='suit'||(r.outfit==='bodysuit'&&['torso','waist','legs','calves','arms','forearms','deltoids'].includes(slot)))&&r.pattern!=='solid'&&(!r.patternRegion||r.patternRegion==='all'||({torso:['torso'],arms:['arms','forearms','deltoids'],legs:['legs','calves','waist']}[r.patternRegion]||[]).includes(slot))){map=outfitTexture(r);if(map)m.material.color.set('#ffffff');}
