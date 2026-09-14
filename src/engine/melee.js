@@ -536,6 +536,10 @@ export class MeleeSystem {
     const history=frame?.fists.get(f),sameRig=history?.rig===f.parts.rig;
     const oldPart=(other,key)=>{if(history&&!sameRig)return null;const old=frame?.targets.get(other)?.parts[key];return old?.part===other.parts?.[key]?old.matrix:null;};
     const punch=f._clinchPunch,v=f.grabbing;
+    // Another actor can interrupt the holder after update, before deferred
+    // contacts resolve. Retire the hold before a stale fist can deal damage.
+    // Hitstop alone is allowed: the attacker's own impact freeze is not CC.
+    if(punch&&(!this._canClinch(f,true)||v?.grabbedBy!==f||zombieCannotGrab(f))){this.release(f);return;}
     if(punch?.previous && v) {
       const current=f.parts.armR.children[2].getWorldPosition(new THREE.Vector3());
       if(punch.t>=.1 && punch.t<=.23 && !punch.hit) {

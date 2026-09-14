@@ -17,6 +17,8 @@ The studio statistics are base definition data. Rank lift table values are not a
 Stun recovery correction: the duration bonus was applied at both entry and countdown, shortening a recovery-2 stun to .425 seconds. Countdown now consumes simulation seconds, preserving the entry-scaled .85-second duration. Six nonbaseline regressions failed before the fix; all 29 stun, burst-window and melee-incapacitation tests pass afterward, and the production build passes. Flight still drops on stun and recovery still grants four seconds of immunity. This is a gameplay timing correction, not visual approval of the falling/stunned animation candidates.
 
 ## Next work, in order
+
+Clinch contact interruption: deferred body-blow contacts now recheck the holder's control status and reciprocal grab before applying damage. A same-frame stun, stagger, freeze, sleep or knockdown releases both participants and cancels the punch. Five native contact regressions failed before the fix; 56 clinch, incapacitation and person-carry tests pass after it, plus the production build. Hitstop alone remains allowed. This closes a damage/hold lifecycle gap; it does not add new grab styles.
 1. Single-person pickup and hostile grab: grounded and flying entry, hold, free-hand action where supported, throw and release. Validate contact and interruption in gameplay.
 2. Punches, kicks and lunges: review and assign usable full-body clips with explicit startup, contact and control-return timings. Library candidates alone do not satisfy gameplay integration.
 3. Zombie locomotion, claw/grab, stagger, disabled-arm and crippled-leg reactions; preserve the rifle locational-damage contract.
