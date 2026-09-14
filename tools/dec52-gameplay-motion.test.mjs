@@ -21,3 +21,13 @@ test('Dec-52 hit interrupts attack and shutdown completes without restarting',as
   assert.ok(root.equals(g.scene.position));a.dispose();
  }
 });
+
+test('remote mech selects accepted ranged and claw attacks by hand',async()=>{
+ const b=await fs.readFile('public/models/dec52/mech/model.glb'),g=await new GLTFLoader().parseAsync(b.buffer.slice(b.byteOffset,b.byteOffset+b.byteLength),'');
+ const a=createDec52GameplayMotion(g.scene,'mech');let token=0;
+ for(const kind of ['fire','claw'])for(const hand of ['left','right']){
+  const state={attackToken:++token,attackKind:kind,hand};
+  assert.equal(a.update(state,.1).action,kind+'-'+hand);assert.equal(a.update(state,2).finished,true);assert.equal(a.update(state,.1).action,'idle');
+ }
+ a.dispose();
+});

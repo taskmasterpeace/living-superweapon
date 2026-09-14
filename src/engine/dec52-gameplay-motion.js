@@ -17,7 +17,10 @@ export function createDec52GameplayMotion(actor,family,{runSpeed=4}={}){
   shuttingDown=false;
   if(state.incapacitated){oneShot=null;attackToken=state.attackToken;jumpToken=state.jumpToken;hitToken=state.hitToken;return last;}
   if(state.hitstop)return last;
-  if(state.attackToken!=null&&state.attackToken!==attackToken){attackToken=state.attackToken;if(available.has('bite'))oneShot={id:'bite',restart:true};}
+  if(state.attackToken!=null&&state.attackToken!==attackToken){attackToken=state.attackToken;
+   const id=family==='mech'?(state.attackKind==='claw'?'claw':'fire')+'-'+(state.hand==='left'?'left':'right'):'bite';
+   if(available.has(id))oneShot={id,restart:true};
+  }
   if(state.jumpToken!=null&&state.jumpToken!==jumpToken){jumpToken=state.jumpToken;if(!oneShot&&available.has('jump'))oneShot={id:'jump',restart:true};}
   if(state.hitToken!=null&&state.hitToken!==hitToken){hitToken=state.hitToken;if(available.has('hit'))oneShot={id:'hit',restart:true};}
   const speed=Math.hypot(state.velocity?.x||0,state.velocity?.z||0);

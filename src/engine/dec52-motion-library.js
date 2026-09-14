@@ -1,6 +1,7 @@
 import * as T from 'three';
 export const DEC52_MOTIONS={idle:{duration:3,loop:true},walk:{duration:1.2,loop:true},run:{duration:.65,loop:true},bite:{duration:.65,loop:false},jump:{duration:1.1,loop:false},sniff:{duration:2,loop:true},flight:{duration:2,loop:true},hit:{duration:.4,loop:false},shutdown:{duration:1.2,loop:false}};
 const smooth=x=>{x=T.MathUtils.clamp(x,0,1);return x*x*(3-2*x);};
+for(const hand of ['left','right'])for(const attack of ['fire','claw'])DEC52_MOTIONS[attack+'-'+hand]={duration:attack==='fire'?.5:.7,loop:false,hand,attack,contact:attack==='fire'?.2:.3};
 /** Named-pivot library shared by the workshop and future runtime actors.
  * In-place locomotion. Jump is articulation only; physics owns displacement.
  * No scene traversal, materials or geometry allocations during playback.
@@ -11,11 +12,17 @@ export function buildDec52Clips(actor,family){
  const clips=[];
  for(const [id,meta]of Object.entries(DEC52_MOTIONS)){
   if(family==='cloud'||(family==='mech'&&['bite','sniff'].includes(id)))continue;
+  if(meta.attack&&family!=='mech')continue;
   const tracks=[];
   for(const node of nodes){const times=[],values=[];
    for(let i=0;i<=32;i++){
     const u=i/32,t=u*Math.PI*2,n=node.name,left=n.includes('--1'),front=n.endsWith('-true'),quad=family!=='mech';let x=0,y=0,z=0;
-    if(id==='walk'||id==='run'){
+    if(meta.attack){
+     const selected=left===(meta.hand==='left'),ready=smooth(u/.3)*(1-smooth((u-.62)/.38)),strike=smooth((u-.28)/.18)*(1-smooth((u-.62)/.38));
+     if(selected&&n.includes('shoulder')){x=meta.attack==='fire'?-1.35*ready+.15*strike:-.5*ready-1.1*strike;z=(left?-1:1)*.12*ready;}
+     if(selected&&n.includes('elbow'))x=meta.attack==='fire'?.2*ready:.85*(ready-strike);
+     if(n==='nanite-head')y=(left?-.08:.08)*ready;
+    }else if(id==='walk'||id==='run'){
      // Diagonal pairs, not the old same-phase front and rear legs.
      const phase=t+(left?Math.PI:0)+(quad&&front?Math.PI:0),s=Math.sin(phase),amp=id==='run'?.5:.28;
      if(n.includes('hip'))x=s*amp;
@@ -63,7 +70,7 @@ export function buildDec52Clips(actor,family){
    }
    tracks.push(new T.QuaternionKeyframeTrack(node.name+'.quaternion',times,values));
   }
-  const clip=new T.AnimationClip('Dec-52 '+family+' / '+id,meta.duration,tracks);clip.userData={family,action:id,loop:meta.loop,status:'candidate',source:'Power World named-pivot authoring',inPlace:true,contact:id==='bite'?.3*meta.duration:null};clips.push(clip);
+  const clip=new T.AnimationClip('Dec-52 '+family+' / '+id,meta.duration,tracks);clip.userData={family,action:id,loop:meta.loop,status:'candidate',source:'Power World named-pivot authoring',inPlace:true,hand:meta.hand,contact:meta.contact??(id==='bite'?.3*meta.duration:null)};clips.push(clip);
  }return clips;
 }
 export function createDec52Animator(actor,family){

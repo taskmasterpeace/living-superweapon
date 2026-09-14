@@ -29,3 +29,8 @@ Runtime audit: createCreatureActor has only a workshop caller. Actual creature g
 Rat, hound and remote mech now include a 0.4-second hit reaction and 1.2-second shutdown articulation, available in the family workshop and exported library. The state adapter accepts `hitToken` for an accepted hit, gives it priority over a simultaneous attack/jump, and plays shutdown once while `dead` remains true. Hitstop pauses that playback; the terminal shutdown pose does not restart every frame. Root displacement, collision and damage remain caller-owned.
 
 Six real-model library/adapter tests and build pass. These are named-pivot candidates, not approved collapse/ragdoll clips. Full visual review and the gameplay actor connection in issue #20 remain open.
+# Remote mech handed attacks
+
+Added four remote-mech candidates: fire-left, fire-right (0.5 s each), claw-left and claw-right (0.7 s each). Each articulates its selected shoulder/elbow with anticipation and recovery; exported metadata includes the hand and a proposed contact marker. They appear only for the mech in the family workshop.
+
+The animation adapter consumes a new accepted `attackToken` with `attackKind: fire | claw` and `hand: left | right`; omitted fields default to right-arm fire. Rat/hound attacks still use bite. Hit reaction retains priority for a simultaneous hit event. Seven real-model library/adapter tests and build pass. These clips do not emit projectiles or damage and remain visually unapproved; issue #20 still owns their game-actor connection.
