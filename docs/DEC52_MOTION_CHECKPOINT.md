@@ -14,3 +14,10 @@ The shared Dec-52 animator now exposes advance(action, dt, options) with short c
 
 Added quarter/half/normal playback, explicit restart, elapsed-time display, and correct Play/Pause state after one-shot completion or scrubbing. Restart calls the shared animator restart option; changing motion resets its playback. Existing four real-model animator tests and production build pass. Browser hound bite completion/replay checked. This remains workshop playback, not Dec-52 gameplay actor integration.
 
+
+## Game-state animation adapter
+
+createDec52GameplayMotion(actor, family, {runSpeed}) now maps metre-per-second velocity, flying/searching flags and accepted attackToken/jumpToken identifiers to the shared named-pivot clips. Hitstop freezes playback; incapacitation cancels queued one-shots; repeated tokens do not repeat a bite. It does not move the actor or apply damage. Five actual-model driver/library tests and build pass.
+
+Integration remains incomplete: an actual Dec-52 gameplay actor must supply collision/body dimensions, accepted action tokens, velocity converted to metres per second and incapacitation states, then call update once per simulation tick. Mech weapon fire and cloud formation need their own presentation channels; no bite is invented for unsupported families. No ordinary humanoid actor was silently replaced with mismatched animal hitboxes.
+
