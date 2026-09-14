@@ -57,7 +57,9 @@ export async function loadModularCharacter(f,{load=modularAsset}={}){
   // Busy native poses retain responsive aim/guard/grab and weapon attachments.
   // Bare-handed grounded strikes use full authored clips on this skeleton.
   const incapacitated=f.state==='hit'||f.state==='ko'||f.stunT>0||f.staggerT>0||f.frozenT>0||f.sleepT>0||f.shockT>0;
-  const interaction=!!(f._zombieLimbs||f._grapple||f.hanging||f._carry||f.grabState||f.meleeCharge>0||f.crouching||f._jumpMotion?.applied||f.downedT>0||f.launchT>0||f._slideT>0);
+  // Contact-authored strikes own both handedness and the committed target pose.
+  const contactStrike=!!(f.mstate&&f._meleeMotion&&!sourcedSword);
+  const interaction=!!(contactStrike||f._zombieLimbs||f._grapple||f.hanging||f._carry||f.grabState||f.meleeCharge>0||f.crouching||f._jumpMotion?.applied||f.downedT>0||f.launchT>0||f._slideT>0);
   const native=interaction||incapacitated||f.flying||f.gliding||f.ragdoll||f.grabbing||f.grabbedBy||f.guarding||(f.state==='cast'&&!f.mstate)||(f._meleeMotion?.weapon&&!sourcedSword);
   const airStrike=!interaction&&!incapacitated&&(f.flying||f.gliding)&&f.mstate&&!f.ragdoll&&!f.grabbing&&!f.grabbedBy&&(!held||sourcedSword);
   if((!native||airStrike)&&f.mstate&&STRIKES[f.mId]){

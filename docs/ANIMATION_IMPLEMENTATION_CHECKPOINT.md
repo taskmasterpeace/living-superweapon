@@ -23,3 +23,9 @@ The studio statistics are base definition data. Rank lift table values are not a
 6. Meter/HUD, fire/gas/swarm runtime integration and studio library organization from the complete plan.
 
 Nothing in this checkpoint marks the overall objective complete. Keep all scope in docs/superpowers/plans/2026-09-14-power-world-animation-and-interactions.md.
+
+## Contact-driven modular strikes (2026-09-14)
+
+Fixed a renderer ownership gap: a committed native melee motion was overwritten by generic modular jab/cross playback, losing the chosen hand and contact solver adjustments. Unarmed contact-driven strikes now use the shared native-to-modular adapter on ground and in flight. The native pipeline still samples its authored light/heavy take and finishes against the committed contact point. Existing source-driven one-handed swords retain their separate attachment path.
+
+Regression failed on ground jab startup before the fix. Afterward, 60 tests pass across modular-character, authored-strike, heavy-strike, melee-flight-entry and moving-melee. Run with `node --import ./tools/helpers/character-css-loader.mjs --test` followed by those tools/*.test.mjs paths. Source ingestion now reads the actual assets-src/modular-character/source location. Production build passes. This proves ownership and simulation regressions; full visual combat review and missing kick/lunge/grab variants remain outstanding.

@@ -4,7 +4,7 @@ import {createHash} from 'node:crypto';
 import * as THREE from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 
-const root=new URL('../../assets-src/quaternius/',import.meta.url);
+const root=new URL('../../assets-src/modular-character/source/',import.meta.url);
 const names={hip:'DEF-hips',chest:'DEF-spine.003',head:'DEF-head',
  shoulderL:'DEF-upper_arm.L',elbowL:'DEF-forearm.L',handL:'DEF-hand.L',
  shoulderR:'DEF-upper_arm.R',elbowR:'DEF-forearm.R',handR:'DEF-hand.R',
@@ -28,7 +28,7 @@ export async function loadSource(){
  return {gltf,nodes,mixer:new THREE.AnimationMixer(gltf.scene),hashes:{gltf:sha(json),bin:sha(bin)}};
 }
 export async function loadHeavySource(){
- const bytes=await readFile(new URL('library-2/UAL2_Standard.glb',root));
+ const bytes=await readFile(new URL('UAL2_Standard.glb',root));
  const gltf=await new GLTFLoader().parseAsync(bytes.buffer.slice(bytes.byteOffset,bytes.byteOffset+bytes.byteLength),'');
  const mapped={hip:'pelvis',chest:'spine_03',head:'Head',
   shoulderL:'upperarm_r',elbowL:'lowerarm_r',handL:'hand_r',shoulderR:'upperarm_l',elbowR:'lowerarm_l',handR:'hand_l',

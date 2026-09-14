@@ -136,3 +136,16 @@ test('hollow infection changes exposed skin, preserves complexion differences an
  applyModularRecipe(meshes,{...recipe,skin:'#e0b895',infection:'hollow'});assert.notEqual(head.material.color.getHex(),infected.getHex());
  applyModularRecipe(meshes,recipe);assert.equal(head.material.color.getHex(),normal.getHex());
 });
+
+test('contact-driven strikes retain selected native arm through ground and air phases',async()=>{
+ const def=structuredClone(ROSTER.find(d=>d.id==='vega'));const f=new Fighter(def);f._animate(0);
+ const c=await loadModularCharacter(f,{load:output});
+ const arm=c.actor.getObjectByName(T.PropertyBinding.sanitizeNodeName('DEF-upper_arm.L'));
+ for(const flying of [false,true])for(const id of ['jab','cross','power'])for(const phase of ['startup','active','recover']){
+  f.flying=flying;f.mId=id;f.mstate=phase;f.mT=.04;f._meleeMotion={side:1,point:new T.Vector3(0,5,8)};
+  f.parts.armR.rotation.x=-1.2;f.obj.updateMatrixWorld(true);c.update();const first=arm.quaternion.clone();
+  f.parts.armR.rotation.x=-2;f.obj.updateMatrixWorld(true);c.update();
+  assert.ok(first.angleTo(arm.quaternion)>.4,`${flying?'air':'ground'} ${id} ${phase} discarded contact arm`);
+ }
+ f.dispose();
+});
