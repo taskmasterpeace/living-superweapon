@@ -18,3 +18,22 @@ for(const hz of [30,60,120])test(`repeatable demo executes native capture, carry
   assert.equal(demo.summary().outcome,'complete');assert.equal(demo.frameCamera(),false,'camera must relinquish control when demonstration ends');
  }finally{x.close();}
 });
+
+import fs from 'node:fs/promises';
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+import {loadModularCharacter} from '../src/engine/modular-character.js';
+import {AerialStunDemo} from '../src/engine/aerial-grab-demo.js';
+globalThis.ProgressEvent??=class{};
+for(const hz of [30,60,120])test(`modular airborne stun demo uses gravity and restores control ${hz}Hz`,async()=>{
+ const x=mainCombatFixture({hero:'sol',mode:'powerworld'}),{g,p}=x,dt=1/hz;
+ try{
+  g.ms={chaseCam:true,threatLab:{state:'preparing'}};g.vfx._itex=new T.Texture();g.audio={...g.audio,yell:()=>{}};
+  p._openSky=true;p.invuln=0;p._altTag=()=>{};
+  const v=x.foe({z:12,y:18});v._openSky=true;v.invuln=0;v._altTag=()=>{};v.toggleFlight();
+  const b=await fs.readFile('public/models/modular-hero/modular-hero.glb');
+  for(const f of [p,v]){f.def={...f.def,model:{...f.def.model,body:'faceted-v1'}};await loadModularCharacter(f,{load:()=>new GLTFLoader().parseAsync(b.buffer.slice(b.byteOffset,b.byteOffset+b.byteLength),'')});}
+  const demo=new AerialStunDemo({g,target:v,recording:{mark(){}}});demo.start();let downward=false;
+  for(let i=0;i<hz*13&&demo.active;i++){g.time+=dt;demo.update(dt);demo.controlTarget(v,dt);p.update(dt,g);v.update(dt,g);downward||=v.stunT>0&&v.vel.y<0;}
+  assert.equal(demo.outcome,'complete',JSON.stringify(demo.summary()));assert.ok(demo.flightReleased&&demo.limpObserved&&downward);assert.ok(v.alive&&g.melee.canAct(v));assert.ok(v.pos.y<=.1);assert.equal(v._modularCharacter.actor.visible,true);
+ }finally{x.close();}
+});

@@ -1,0 +1,7 @@
+{
+  "sourceCommit": "f659822ae8cbd081fc00a697731527b1b6e6da17",
+  "sourcePath": "public/audio/ai-pass/guard-break.mp3",
+  "sha256": "458c1960d47ad54f6459567f71a1bf9f5292f1555de60867c82b7d5edfc867ae",
+  "selectionEvidence": "Current public/audio/ai-pass/library.json binds guard-break.wav as chosen, gain .55, loop false; that library is not present on source branch.",
+  "rights": "ElevenLabs AI-pass asset imported with user authorization; do not relabel as CC0."
+}

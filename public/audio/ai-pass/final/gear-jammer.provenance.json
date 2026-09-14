@@ -1,0 +1,21 @@
+{
+  "sourceCommit": "f659822ae8cbd081fc00a697731527b1b6e6da17",
+  "sourcePath": "public/audio/ai-pass/final/gear-jammer.mp3",
+  "sha256": "71829a49ba414a7c43269b6aa0cd659d457687ee3169890684d60aef5777f49f",
+  "sourceManifest": "public/audio/ai-pass/final/arsenal-manifest.json",
+  "manifestEntry": {
+    "cue": "gear-jammer",
+    "file": "final/gear-jammer.wav",
+    "moment": "ACTION",
+    "kind": "oneshot",
+    "gain": 0.55,
+    "maps_to": "GEAR 'jammer' activate",
+    "status": "confirmed",
+    "dur": 1.1,
+    "sr": 32000,
+    "ch": 1,
+    "bytes": 70478,
+    "source_take": "gear-jammer-deploy__2.wav"
+  },
+  "rights": "ElevenLabs AI-pass asset imported with user authorization; do not relabel as CC0."
+}

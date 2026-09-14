@@ -1,4 +1,5 @@
 import {movementProfile} from '../data/movement-gears.js';
+import {SOUND_LIBRARY_SAMPLES} from '../data/sound-library-recordings.js';
 export function stopFlightAudio(f){f._flightAudio?.stop();f._flightAudio=null;}
 export function updateFlightAudio(f,g){
  const library=g.audio?.soundLibrary;
@@ -8,7 +9,9 @@ export function updateFlightAudio(f,g){
  // Hysteresis keeps small hover drift from repeatedly restarting both recordings.
  const id=speed>(previous?.id==='flight'?5:9)?'flight':'hover';
  if(previous&&(previous.id!==id||!library.active.has(previous)))stopFlightAudio(f);
- if(library.source(id)!=='chosen-recording'||!library.buffers.has(id)){stopFlightAudio(f);return;}
+ const selected=library.source(id);
+ const ready=selected==='chosen-recording'?library.buffers.has(id):selected==='bundled-recording'&&!!g.audio.sampleBuffer?.(SOUND_LIBRARY_SAMPLES[id]);
+ if(!ready){stopFlightAudio(f);return;}
  f._flightAudio??=library.play(id,{pos:f.pos,loop:true});
  f._flightAudio?.set(id==='hover'?.35:Math.min(1,.35+speed/240),f.pos);
 }

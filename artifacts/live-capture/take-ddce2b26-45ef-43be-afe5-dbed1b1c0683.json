@@ -1,0 +1,59 @@
+{
+  "kind": "live-gameplay",
+  "audio": false,
+  "seconds": 12,
+  "models": [
+    {
+      "id": "sol",
+      "body": "faceted-v1",
+      "loadedModular": true,
+      "error": null
+    },
+    {
+      "id": "kano",
+      "body": "faceted-v1",
+      "loadedModular": true,
+      "error": null
+    }
+  ],
+  "recordedAt": "2026-09-14T20:13:11.408Z",
+  "hero": "sol",
+  "scenario": "stationary",
+  "initial": {
+    "hp": 130,
+    "targetHp": 115
+  },
+  "time": 36.077400000000374,
+  "final": {
+    "hp": 130,
+    "targetHp": 115
+  },
+  "actualSeconds": 3.298599999964237,
+  "demonstration": {
+    "kind": "native-airborne-stun-demonstration",
+    "phase": "complete",
+    "outcome": "complete",
+    "damage": 0,
+    "events": [
+      {
+        "time": 0,
+        "label": "Airborne stun: native status demonstration"
+      },
+      {
+        "time": 0.3502000000000118,
+        "label": "Stunned: flight relinquished to gravity"
+      },
+      {
+        "time": 1.121800000000016,
+        "label": "Ground reached: 0.0 health lost under native fall rules"
+      },
+      {
+        "time": 1.9559999999999984,
+        "label": "Stun recovery finished / control returned"
+      }
+    ],
+    "flightReleased": true,
+    "limpObserved": true
+  },
+  "scenarioReplaced": false
+}

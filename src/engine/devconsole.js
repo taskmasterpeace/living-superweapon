@@ -193,9 +193,9 @@ export class DevConsole {
       p.faceDir(0,1);p.aim3.set(0,0,1);this.g.world._lookYaw=0;this.g.world._lookPitch=0;this.g.world._chaseSnap=true;
       c.toggle(false);
     });
-    this.cmd('demo','demo prepare|play|record|stop — native aerial grab / throw demonstration',(a,c)=>{
+    this.cmd('demo','demo prepare [grab|stun] | play | record | stop — native aerial demonstrations',(a,c)=>{
       const trial=this.g.ms?.threatLab?.meleeTrial;if(!trial)throw Error('Enter Threat Room first');
-      if(a[0]==='prepare'){trial.prepareAerialDemo();c.ok('Current-model rear aerial scenario prepared. Use demo record after models load.');return;}
+      if(a[0]==='prepare'){const kind=a[1]||'grab';trial.prepareAerialDemo(kind);c.ok('Current-model '+kind+' scenario prepared. Use demo record after models load.');return;}
       const demo=trial.demo;if(!demo)throw Error('Run demo prepare first');
       if(a[0]==='stop'){demo.stop();c.toggle(false);return;}
       if(!['play','record'].includes(a[0]))throw Error('Use demo prepare, play, record or stop');

@@ -24,3 +24,17 @@ test('removal, control transfer, missing recording and library stop are safe',()
  x.g.audio.muted=true;updateFlightAudio(x.f,x.g);assert.equal(x.active.size,0);
 });
 test('expired launch timer permits controlled flight audio',()=>{const x=fixture();x.f.launchT=-.01;updateFlightAudio(x.f,x.g);assert.equal(x.active.size,1);});
+
+test('bundled flight waits for decode, uses one loop and yields to explicit placeholder',()=>{
+ const x=fixture();x.speed(20);x.g.audio.soundLibrary.source=()=> 'bundled-recording';
+ x.g.audio.sampleBuffer=()=>null;updateFlightAudio(x.f,x.g);assert.equal(x.events.length,0);
+ x.g.audio.sampleBuffer=name=>{assert.equal(name,'library.flight');return {};};
+ updateFlightAudio(x.f,x.g);updateFlightAudio(x.f,x.g);assert.deepEqual(x.events,['flight']);assert.equal(x.active.size,1);
+ x.g.audio.soundLibrary.source=()=> 'synthesized-placeholder';updateFlightAudio(x.f,x.g);assert.equal(x.active.size,0);
+});
+
+test('chosen flight recording stays authoritative even with a bundled fallback available',()=>{
+ const x=fixture();x.speed(20);x.g.audio.sampleBuffer=()=>assert.fail('chosen source must not use bundled buffer');
+ updateFlightAudio(x.f,x.g);assert.deepEqual(x.events,['flight']);
+ x.g.audio.soundLibrary.buffers.clear();updateFlightAudio(x.f,x.g);assert.equal(x.active.size,0);
+});

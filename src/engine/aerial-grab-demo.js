@@ -44,3 +44,26 @@ export class AerialGrabDemo {
  }
  summary(){return {kind:'native-controller-demonstration',phase:this.phase,outcome:this.outcome||'incomplete',damage:this.damage||0,events:this.events};}
 }
+
+// Isolated status demonstration: no synthetic projectile, hit or damage. The
+// production stun API relinquishes flight; gravity and fall rules determine impact.
+export class AerialStunDemo extends AerialGrabDemo {
+ start(){this.trial.recording.bind?.([this.g.player,this.trial.target]);this.active=true;this.phase='hover';this.time=0;this.elapsed=0;this.events=[];this.hp=this.trial.target.hp;this.mark('Airborne stun: native status demonstration');}
+ update(dt){
+  if(!this.active)return false;
+  const v=this.trial.target;
+  if(this.g.ms?.threatLab?.state!=='preparing'||!v?.alive||!this.g.player.alive){this.stop('Stun demonstration stopped: actor unavailable');return false;}
+  this.time+=dt;this.elapsed+=dt;
+  if(this.elapsed>12){this.stop('Stun demonstration failed: timed out in '+this.phase);return true;}
+  if(this.phase==='hover'&&this.time>=.35){
+   if(!v.flying){this.stop('Stun demonstration requires an airborne flying target');return true;}
+   v.applyStun();this.flightReleased=!v.flying&&!v.gliding;this.next('fall','Stunned: flight relinquished to gravity');
+  }else if(this.phase==='fall'){
+   this.limpObserved||=v.stunT>0&&v._lostControlPose?.weight>.1;
+   if(v.pos.y<=this.g.world.heightAt(v.pos.x,v.pos.z)+.1){this.damage=this.hp-v.hp;this.next('recovery',`Ground reached: ${this.damage.toFixed(1)} health lost under native fall rules`);}
+  }else if(this.phase==='recovery'&&this.time>.15&&this.g.melee.canAct(v)){this.next('complete','Stun recovery finished / control returned');}
+  else if(this.phase==='complete'&&this.time>1.25){this.active=false;this.outcome='complete';this.onFinish?.();}
+  this.g.player.move(new Vector3(),dt);return true;
+ }
+ summary(){return {...super.summary(),kind:'native-airborne-stun-demonstration',flightReleased:!!this.flightReleased,limpObserved:!!this.limpObserved};}
+}

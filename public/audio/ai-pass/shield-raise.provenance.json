@@ -1,0 +1,7 @@
+{
+  "sourceCommit": "f659822ae8cbd081fc00a697731527b1b6e6da17",
+  "sourcePath": "public/audio/ai-pass/shield-raise.mp3",
+  "sha256": "f25526b9ccfd6dc72c4ffa54bb4a35f06da64cdb11a1c9f06fd15ac4ed91b096",
+  "selectionEvidence": "Current public/audio/ai-pass/library.json binds shield-raise.wav as chosen, gain .55, loop false. Reused for shieldpack activation, not gear-shield (which is an impact cue).",
+  "rights": "ElevenLabs AI-pass asset imported with user authorization; do not relabel as CC0."
+}

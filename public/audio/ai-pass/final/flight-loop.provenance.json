@@ -1,0 +1,22 @@
+{
+  "sourceCommit": "f659822ae8cbd081fc00a697731527b1b6e6da17",
+  "sourcePath": "public/audio/ai-pass/final/flight-loop.mp3",
+  "sha256": "82790be937eb243013c2dba4a5a0a6e052686e01f1d84121877789dec1425155",
+  "sourceManifest": "public/audio/ai-pass/final/world-sfx-manifest.json",
+  "manifestEntry": {
+    "category": "MOVEMENT & FLIGHT",
+    "cue": "flight-loop",
+    "file": "final/flight-loop.wav",
+    "moment": "LOOP",
+    "kind": "loop",
+    "gain": 0.4,
+    "maps_to": "superhero flight — loop while flying",
+    "status": "confirmed",
+    "dur": 16,
+    "sr": 22050,
+    "ch": 1,
+    "bytes": 705678,
+    "source_take": "flight-loop__t1.wav"
+  },
+  "rights": "ElevenLabs AI-pass asset imported with user authorization; do not relabel as CC0."
+}

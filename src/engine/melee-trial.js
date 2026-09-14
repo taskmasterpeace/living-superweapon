@@ -10,7 +10,7 @@ import {performEvade} from './abilities.js';
 import {MeleeRecording} from './melee-recording.js';
 import {openMeleeReview} from './melee-review.js';
 import {meleePhase,phaseLabel} from './melee-phase.js';
-import {AerialGrabDemo} from './aerial-grab-demo.js';
+import {AerialGrabDemo,AerialStunDemo} from './aerial-grab-demo.js';
 export function meleeLesson(def,scheme='kbm'){
  const combo=hasStrike(def,'jab')||hasStrike(def,'cross');
  if(scheme==='touch')return (combo?'Tap Punch; repeat for combo':'Tap Punch: heavy slam')+' · hold/release Punch: charged heavy · hold Block: frontal guard · Grab: grab or interact · Evade: dodge';
@@ -33,15 +33,16 @@ export {meleeLessonScheme,grabLesson} from './combat-lesson-controls.js';
 // Scripted decisions use native motion, defense and damage; no target teleporting.
 export class MeleeTrial {
  constructor(g,origin){this.g=g;this.origin=origin.clone();this.records=[];this.index=-1;this.recording=new MeleeRecording();}
- prepareAerialDemo(){
+ prepareAerialDemo(kind='grab'){
+  if(!['grab','stun'].includes(kind))throw Error('Choose grab or stun demonstration');
   const g=this.g,p=g.player;
   if(g.ms?.threatLab?.state!=='preparing'||!p?.alive||!(p.def.flightTier>0))throw Error('Choose a flying character in the Threat Room');
   if(p.grabbing||p.grabbedBy||p._carry||p._mount||p.mstate||!g.melee.canAct(p))throw Error('Finish the current action before preparing the demonstration');
   const v=this.start('stationary',ROSTER.find(d=>d.id==='kano'));
   p.pos.copy(this.origin).add(new THREE.Vector3(0,0,-12));p.pos.y=g.world.heightAt(p.pos.x,p.pos.z);p.vel.set(0,0,0);p.flying=false;p.flyHeld=false;p.faceDir(0,1);p.aim3.set(0,0,1);
-  v.pos.y=g.world.heightAt(v.pos.x,v.pos.z)+8;v.faceDir(0,1);v.toggleFlight();v.invuln=0;
+  v.pos.y=g.world.heightAt(v.pos.x,v.pos.z)+(kind==='stun'?18:8);v.faceDir(0,1);v.toggleFlight();v.invuln=0;
   p.invuln=0;g.world._lookYaw=0;g.world._lookPitch=0;g.world._chaseSnap=true;
-  this.recording.seconds=15;this.demo=new AerialGrabDemo(this);return this.demo;
+  this.recording.seconds=15;this.demo=kind==='stun'?new AerialStunDemo(this):new AerialGrabDemo(this);return this.demo;
  }
  startBag(difficulty='passive',hover=false){
   if(this.g.ms?.threatLab?.state!=='preparing')return false;

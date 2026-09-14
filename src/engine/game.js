@@ -3378,7 +3378,8 @@ export class Game {
           // back on their own sight — a real tactical effect that never makes them blind or stupid.
           for (const e of this.entities) if (e.ai) e.ai._jammedT = (it.def.dur || 12);
           this.vfx.ring(f.pos.clone().setY(4), { color: '#7fe6ff', r0: 3, r1: 30, life: 0.6, flat: true, y: 1 });
-          this.audio.zap(180, f.pos); spend(); break;
+          if(!this.audio.sample('gear.jammer',{pos:f.pos}))this.audio.zap(180, f.pos);
+          spend(); break;
         }
         case 'medkit':
           f.heal(it.def.heal || 40);
@@ -3407,7 +3408,8 @@ export class Game {
         case 'shieldpack':
           f._shieldHp = (it.def.shield || 45)*(research.shieldHpMult??1);
           this.vfx.ring(f.pos.clone().setY(5.4), { color: '#7fe6ff', r0: 3, r1: 7, life: 0.4 });
-          this.audio.zap(700, f.pos); spend(); break;
+          if(!this.audio.sample('gear.shield.activate',{pos:f.pos}))this.audio.zap(700, f.pos);
+          spend(); break;
       }
       return;
     }

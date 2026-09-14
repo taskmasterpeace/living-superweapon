@@ -1,6 +1,8 @@
 // Approved defaults. User-authored SoundLibrary bindings take precedence.
 export const SOUND_LIBRARY_SAMPLES={
  grab:'library.grab',
+ 'guard-break':'library.guard-break',
+ flight:'library.flight',
  'grenade-prepare':'library.grenade-prepare',
  'vehicle-explosion':'boom',
  'nanite-form':'library.nanite-form','nanite-break':'library.nanite-break','nanite-reform':'library.nanite-reform',
@@ -9,7 +11,11 @@ export const SOUND_LIBRARY_SAMPLES={
  'weather-domain-thunder':'library.thunder','weather-thunder':'library.thunder','grenade-release':'library.grenade-release',
 };
 export const LIBRARY_SAMPLES={
+ 'library.guard-break':{f:['ai-pass/guard-break'],g:.55,reach:150},
+ 'library.flight':{f:['ai-pass/final/flight-loop'],g:.4,loop:true,reach:180},
  'gear.ifak':{f:['ai-pass/final/gear-ifak'],g:.55,reach:80},
+ 'gear.jammer':{f:['ai-pass/final/gear-jammer'],g:.55,reach:100},
+ 'gear.shield.activate':{f:['ai-pass/shield-raise'],g:.55,reach:100},
  'library.grenade-prepare':{f:['ai-pass/final/evt-grenade-pin'],g:.55,reach:80},
  'library.grab':{f:['ai-pass/grab'],g:.55,reach:150},
  ...Object.fromEntries(['nanite-form','nanite-break','nanite-reform'].map(id=>['library.'+id,{f:['ai-pass/'+id],g:.55,reach:150}])),
