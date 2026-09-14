@@ -35,6 +35,14 @@ test('successful grab cue has a bundled capture recording with no synth duplicat
  assert.equal(lib.native('grab',{pos:{x:1,y:2,z:3}}),true);
  assert.equal(sources.length,1);assert.equal(sources[0].loop,false);
 });
+
+test('grenade preparation plays the bundled pin pull without an oscillator',()=>{
+ const {lib,sources}=fixture();
+ const h=lib.play('grenade-prepare',{pos:{x:1,y:2,z:3}});
+ assert.equal(h.source,'bundled-recording');
+ assert.equal(SOUND_LIBRARY_SAMPLES['grenade-prepare'],'library.grenade-prepare');
+ assert.equal(sources.length,1);assert.equal(sources[0].loop,false);h.stop();
+});
 test('vehicle destruction uses an existing explosion recording without a placeholder oscillator',()=>{
  const {lib,sources,buffer}=fixture();const h=lib.play('vehicle-explosion',{pos:{x:0,y:0,z:0}});
  assert.equal(SOUND_LIBRARY_SAMPLES['vehicle-explosion'],'boom');assert.equal(h.source,'bundled-recording');assert.equal(sources.length,1);assert.equal(sources[0].buffer,buffer);assert.equal(sources[0].loop,false);h.stop();

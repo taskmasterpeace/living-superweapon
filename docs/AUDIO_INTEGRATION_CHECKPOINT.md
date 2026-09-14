@@ -1,5 +1,9 @@
 # Audio integration checkpoint
 
+## Grenade preparation recording
+
+The accepted `beginThrowAction` preparation cue now uses the approved ai-pass `final/evt-grenade-pin.mp3` recording from local `codex/audio-all`, with source provenance in the imported arsenal manifest. Existing action admission, cooldown, spatial playback and custom-source precedence are retained; no extra gameplay event was added. Nineteen recording/throwable tests and the production build pass. Listening/mix review is still required.
+
 ## Successful grab capture recording
 
 The existing successful-enemy-capture event now uses the approved ai-pass `grab.mp3` from local `codex/audio-all` as its bundled default. Failed attempts retain their existing silence; no extra event was added. Custom recordings and explicit placeholder choices still win. Twelve recording/import tests and build pass; live listening remains pending. Add-missing import now preserves ten bundled cues and adds 27 of the 37 package entries.

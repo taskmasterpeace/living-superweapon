@@ -1,6 +1,7 @@
 // Approved defaults. User-authored SoundLibrary bindings take precedence.
 export const SOUND_LIBRARY_SAMPLES={
  grab:'library.grab',
+ 'grenade-prepare':'library.grenade-prepare',
  'vehicle-explosion':'boom',
  'nanite-form':'library.nanite-form','nanite-break':'library.nanite-break','nanite-reform':'library.nanite-reform',
  light:'library.melee',heavy:'library.melee','scout-gunshot':'wpn.saw',
@@ -8,6 +9,7 @@ export const SOUND_LIBRARY_SAMPLES={
  'weather-domain-thunder':'library.thunder','grenade-release':'library.grenade-release',
 };
 export const LIBRARY_SAMPLES={
+ 'library.grenade-prepare':{f:['ai-pass/final/evt-grenade-pin'],g:.55,reach:80},
  'library.grab':{f:['ai-pass/grab'],g:.55,reach:150},
  ...Object.fromEntries(['nanite-form','nanite-break','nanite-reform'].map(id=>['library.'+id,{f:['ai-pass/'+id],g:.55,reach:150}])),
  'library.melee':{f:['sfx-cc0/final/sfx_punch_flesh_a','sfx-cc0/final/sfx_punch_flesh_b'],g:.7,reach:150},
