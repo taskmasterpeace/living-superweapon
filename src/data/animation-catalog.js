@@ -13,6 +13,7 @@ export const ANIMATION_BANKS = [
 ];
 export const PROCEDURAL_ANIMATIONS=Object.freeze([
  {id:'native/hostile-hold',label:'Hostile grab hold',friendly:false},
+ {id:'native/rear-hostile-hold',label:'Rear hostile neck hold',friendly:false,holdMode:'back'},
  {id:'native/friendly-carry',label:'Friendly carry hold',friendly:true},
 ].map(e=>Object.freeze({...e,key:e.id.split('/')[1],kind:'procedural',category:'Paired holds',duration:2,frames:0,loop:true,
  runtime:'src/engine/entity.js _animate + src/engine/person-carry.js',take:'Native procedural hold',source:{author:'PowerWorld runtime'},

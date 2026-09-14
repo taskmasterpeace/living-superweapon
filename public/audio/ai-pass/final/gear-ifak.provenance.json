@@ -1,0 +1,22 @@
+{
+  "sourceCommit": "f659822ae8cbd081fc00a697731527b1b6e6da17",
+  "sourcePath": "public/audio/ai-pass/final/gear-ifak.mp3",
+  "sha256": "cf787f530238a8e428addc327884a6eb2ab366ed2e24f60a3975367ba0abc7d6",
+  "sourceManifest": "public/audio/ai-pass/final/arsenal-manifest.json",
+  "manifestEntry": {
+    "cue": "gear-ifak",
+    "file": "final/gear-ifak.wav",
+    "moment": "ACTION",
+    "kind": "oneshot",
+    "gain": 0.55,
+    "maps_to": "GEAR 'ifak' use",
+    "status": "confirmed",
+    "dur": 0.9,
+    "sr": 32000,
+    "ch": 1,
+    "bytes": 57678,
+    "source_take": "gear-ifak-r2__2.wav"
+  },
+  "rights": "AI-pass asset imported with user authorization. Source manifest contains no explicit license declaration; do not relabel as CC0.",
+  "integration": "Recorded medkit/IFAK activation. Original WAV metadata retained above; this imported asset is the branch MP3 conversion."
+}

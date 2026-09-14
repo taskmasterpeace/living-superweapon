@@ -1,5 +1,7 @@
 # 🕳️ AUDIO GAP ANALYSIS — what's still missing / weak
 
+> **Integration status on `codex/playable-integration` (14 September 2026):** The original `codex/audio-all` inventory below is a source-branch handoff, not a current wiring audit. Firearm/scout shots, melee impacts, concrete/grass steps, rain/domain thunder and vehicle explosions already have bundled mappings. Medkit activation now uses the confirmed `gear.ifak` recording imported from `codex/audio-all`, with provenance beside the MP3. Reload/dry-fire phases, jet/rotor loops, ordinary weather thunder/vortex and several other gadget events still require integration or source selection. Check `src/data/firearm-recordings.js`, `src/data/sound-library-recordings.js` and the actual event caller before adding or replacing a mapping. Extra source recordings remain in their library; this pass does not merge the entire divergent audio branch.
+
 _Branch **`codex/audio-all`**. Companion to `docs/AUDIO_WIRING_SPEC.md` (how to wire what we HAVE) and `docs/AUDIO_INTEGRATION.md` (overview). Verified against the live engine, 2026-09-14._
 
 > Plain version: most of the game's sound is **on the shelf but not switched on**. On top of that there's a real shopping list of sounds that don't exist anywhere yet. This doc is that shopping list, plus the one structural gotcha that explains why things sound wrong today.

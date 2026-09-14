@@ -1,5 +1,7 @@
 # 🔊 AUDIO WIRING SPEC — hand this to the integrator AI
 
+> **Integration status on `codex/playable-integration` (14 September 2026):** The original `codex/audio-all` inventory below is a source-branch handoff, not a current wiring audit. Firearm/scout shots, melee impacts, concrete/grass steps, rain/domain thunder and vehicle explosions already have bundled mappings. Medkit activation now uses the confirmed `gear.ifak` recording imported from `codex/audio-all`, with provenance beside the MP3. Reload/dry-fire phases, jet/rotor loops, ordinary weather thunder/vortex and several other gadget events still require integration or source selection. Check `src/data/firearm-recordings.js`, `src/data/sound-library-recordings.js` and the actual event caller before adding or replacing a mapping. Extra source recordings remain in their library; this pass does not merge the entire divergent audio branch.
+
 _Branch **`codex/audio-all`**. This is the meticulous, do-it-in-order guide to wire every sound into the game. Companion to `docs/AUDIO_INTEGRATION.md` (overview) and `docs/AUDIO_GAP_ANALYSIS.md` (what's still missing). 2026-09-14._
 
 > **Task for the integrator:** for each row in the tables below, (1) add the sample to the bank, (2) hook it at the named game event. Work top to bottom. Every file already exists on this branch as a ready `.mp3`. Nothing here needs new art or new recordings except the handful in the gap doc.

@@ -1,3 +1,4 @@
+import {animateModularHeldGrip,animateModularHeldReceiver} from './modular-held-pose.js';
 import {addModularMotions,canPoseInfectedFlight,poseInfectedFlight} from './modular-motions.js';
 import {createAuthoredParts,readCharacterRecipe} from './character-authoring.js';
 import {createTailoring} from './modular-tailoring.js';
@@ -45,8 +46,11 @@ export async function loadModularCharacter(f,{load=modularAsset}={}){
   adapter.reset();
   // Native drivers cover the body and wrists, but contain no finger tracks.
   // Sample authored fingers first; the adapter leaves those joints intact.
-  c.pose(take,phase);adapter.update();
+  c.pose(take,phase);adapter.update();animateModularHeldReceiver(f,c.actor);animateModularHeldGrip(f,c.actor);
  };
+ // A second contact pass after all actors have posed removes entity-order lag
+ // without resampling animation or applying receiver reactions twice.
+ c.syncHeldContact=()=>animateModularHeldGrip(f,c.actor);
  const keep=o=>o.userData.weaponKind||o.name.startsWith('flight-');
  const hide=o=>{if(keep(o))return;if(o.isMesh){hidden.push([o,o.layers.mask]);o.layers.disable(0);}for(const child of o.children)hide(child);};
  for(const root of [parts.torso,parts.pelvis,parts.head,parts.armL,parts.armR,parts.legL,parts.legR,parts.cape,parts.cowl])if(root)hide(root);
@@ -82,6 +86,7 @@ export async function loadModularCharacter(f,{load=modularAsset}={}){
   else if(sourcedSword)c.pose('Sword_Idle',(f.animT/c.clips.get('Sword_Idle').duration)%1);
   else{const speed=Math.hypot(f.vel.x,f.vel.z);const name=f.def.vocalFamily==='zombie'?(speed>25?'Infected_Sprint_Loop':speed>2?'Zombie_Walk_Fwd_Loop':'Zombie_Idle_Loop'):speed>25?'Sprint_Loop':speed>2?'Walk_Loop':'Idle_Loop';const mechanical=signatureRecipe?.frame==='machine'&&speed<=2;c.pose(name,mechanical?0:(f.animT/c.clips.get(name).duration)%1);if(mechanical){const head=c.actor.getObjectByName('DEF-head');if(head)head.rotation.y+=Math.sin(f.animT*.8)*.12;}}
   if(!native){const disabledArms=['armL','armR'].filter(side=>f._zombieLimbs?.[side]?.disabled);if(disabledArms.length)adapter.update({regions:disabledArms});}
+  animateModularHeldReceiver(f,c.actor);animateModularHeldGrip(f,c.actor);
   if(!held&&canPoseInfectedFlight(f,signatureRecipe?.infection))poseInfectedFlight(c.actor);
   if(sourcedSword&&(!native||airStrike)){
    // Drive the actual weapon, not a decorative duplicate. Native weapon

@@ -32,7 +32,7 @@ import { sweepSplitObstacle } from './projectile-contact.js';
 import {resolveAbilityMeleeContact} from './ability-melee-contact.js';
 import {constrainRushBodies} from './ability-rush-body.js';
 import {fighterPathFraction} from './fighter-environment-contact.js';
-import {isTransportingPerson,beginPersonCarry,advancePersonCarry,personSetdownPoint,friendlyPickupTarget} from './person-carry.js';
+import {isTransportingPerson,beginPersonCarry,advancePersonCarry,personSetdownPoint,friendlyPickupTarget,orientHeldPerson,heldPairDistance} from './person-carry.js';
 
 const _v = new THREE.Vector3();
 const INPUT_BUFFER = .18;
@@ -734,8 +734,8 @@ export class MeleeSystem {
       const hoist=f._clinchFinisher?Math.sin(Math.min(1,f._clinchFinisher.t/f._clinchFinisher.duration)*Math.PI*.5)*3.5:0;
       if(isTransportingPerson(f)){
         if(!advancePersonCarry(f,g,dt)){this.release(f);return;}
-      }else{v.pos.x = f.pos.x + f.aim.x * 3.3; v.pos.z = f.pos.z + f.aim.z * 3.3; v.pos.y = f.pos.y+hoist;}
-      v.vel.set(0, 0, 0); v.state = 'hit'; v.stateT = 0; v.faceDir(-f.aim.x, -f.aim.z);
+      }else{const distance=heldPairDistance(f,v);v.pos.x = f.pos.x + f.aim.x * distance; v.pos.z = f.pos.z + f.aim.z * distance; v.pos.y = f.pos.y+hoist;}
+      v.vel.set(0, 0, 0); v.state = 'hit'; v.stateT = 0; orientHeldPerson(f,v);
       if (Math.random() < dt * 7) g.particles.burst(v.pos.x, v.pos.y + 5.5, v.pos.z, { count: 2, speed: 9, life: 0.25, size: 1.6, color: ['#fff', v.def.colors.accent], drag: 2 });
       // thorns: being held hurts the holder
       if (v.thorns) {

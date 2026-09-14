@@ -15,6 +15,26 @@ export function friendlyPickupTarget(f,g,reach){
  return found;
 }
 export const personCarrySpeed=f=>isTransportingPerson(f)?f._personCarry.speedScale:1;
+// Use the synchronous rig's rest dimensions, never an asynchronously loaded
+// mesh or animated head position. This keeps contact spacing stable while the
+// receiver struggles. Calibrated against the current modular body's fixed arms.
+export function heldPairDistance(f,v){
+ const height=a=>a.parts?.rig?.rest?.head?Math.max(1,(a.parts.rig.rest.head.y+.8*a.parts.head.scale.y)*(a.sizeScale||1)):null;
+ const a=height(f),b=height(v);
+ if(!a||!b)return 3.3;
+ const smaller=Math.min(a,b);
+ // Taller receivers consume more of the arm's reach vertically. Bring the
+ // pair closer, within the measured core-clearance envelope; never stretch.
+ return Math.max(smaller*.14,(f.grabMode==='back'?.18:.24)*smaller-.30*Math.max(0,b-a));
+}
+// Rear neck holds and underarm carries retain the receiver's forward-facing
+// orientation. Front clinches face the holder. Include the carried orbit so a
+// spinning throw cannot turn the receiver back toward a stale aim direction.
+export function orientHeldPerson(f,v){
+ const angle=isTransportingPerson(f)?f._personCarry.angle:0,c=Math.cos(angle),s=Math.sin(angle);
+ const sign=f.grabMode==='back'||f.grabMode==='friendly'?1:-1;
+ v.faceDir(sign*(f.aim.x*c+f.aim.z*s),sign*(f.aim.z*c-f.aim.x*s));
+}
 export const personThrowSpeed=(f,base)=>isTransportingPerson(f)?Math.min(180,base*(1.35+.75*Math.min(1,f._personCarry.whirlT/1.2))):base;
 export function beginPersonCarry(f,v,massRatio){
   // The held body is now the payload. Tracking its orbit would steer both
@@ -31,12 +51,13 @@ export function syncPersonCarry(f,g){
   if(!isTransportingPerson(f))return false;
   const s=f._personCarry,v=s.victim,c=Math.cos(s.angle),n=Math.sin(s.angle);
   const dx=f.aim.x*c+f.aim.z*n,dz=f.aim.z*c-f.aim.x*n;
-  const target=new THREE.Vector3(f.pos.x+dx*3.3,f.pos.y+1.8,f.pos.z+dz*3.3);
+  const distance=heldPairDistance(f,v);
+  const target=new THREE.Vector3(f.pos.x+dx*distance,f.pos.y+1.8,f.pos.z+dz*distance);
   const t=Math.min(fighterPathFraction(f,g.world,s.holder,f.pos),fighterPathFraction(v,g.world,s.held,target));
   const safe=t<1?Math.max(0,t-1e-5):1;
   f.pos.lerpVectors(s.holder,f.pos,safe);v.pos.lerpVectors(s.held,target,safe);
   if(t<1)f.vel.set(0,0,0);
-  v.vel.set(0,0,0);v.state='hit';v.faceDir(-dx,-dz);
+  v.vel.set(0,0,0);v.state='hit';orientHeldPerson(f,v);
   s.holder.copy(f.pos);s.held.copy(v.pos);v._sync();
   return t===1;
 }

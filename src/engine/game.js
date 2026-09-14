@@ -3384,7 +3384,8 @@ export class Game {
           f.heal(it.def.heal || 40);
           this.vfx.ring(f.pos.clone().setY(5), { color: '#8fe08a', r0: 2, r1: 8, life: 0.4 });
           this.particles.burst(f.pos.x, f.pos.y + 5, f.pos.z, { count: 12, speed: 10, life: 0.6, size: 2.2, color: ['#8fe08a', '#fff'], up: 10, drag: 1 });
-          this.audio.zap(820, f.pos); spend(); break;
+          if(!this.audio.sample('gear.ifak',{pos:f.pos}))this.audio.zap(820, f.pos);
+          spend(); break;
         case 'flashbang': {
           this.vfx.flash(f.pos.clone().setY(6), '#ffffff', 16, 0.3);
           if (this.hud && this.isHuman(f)) this.hud.flashScreen('#fff', 0.2);
@@ -4351,6 +4352,7 @@ export class Game {
       updateFlightSense(f,dt,this);
     }
     this.resolveBodies();
+    for(const f of this.entities)if(f.grabbing)f._modularCharacter?.syncHeldContact?.();
     this.melee.endContactFrame();
     this.ms?.threatLab?.meleeTrial?.capture();
     for (const f of this.entities) {

@@ -9,6 +9,7 @@ export const SOUND_LIBRARY_SAMPLES={
  'weather-domain-thunder':'library.thunder','grenade-release':'library.grenade-release',
 };
 export const LIBRARY_SAMPLES={
+ 'gear.ifak':{f:['ai-pass/final/gear-ifak'],g:.55,reach:80},
  'library.grenade-prepare':{f:['ai-pass/final/evt-grenade-pin'],g:.55,reach:80},
  'library.grab':{f:['ai-pass/grab'],g:.55,reach:150},
  ...Object.fromEntries(['nanite-form','nanite-break','nanite-reform'].map(id=>['library.'+id,{f:['ai-pass/'+id],g:.55,reach:150}])),

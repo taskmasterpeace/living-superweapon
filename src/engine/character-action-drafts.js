@@ -14,7 +14,18 @@ const pickupArmReference={
 // Multi-joint status candidates: hands stay on the visible front of the body.
 const cough=(bend)=>({'DEF-spine003':[bend,0,0],'DEF-neck':[-.12,0,0],'DEF-upper_armR':[.785,1.475,.475],'DEF-forearmR':[1.56,.5,1],'DEF-upper_armL':[1,.49,-1.09],'DEF-forearmL':[.89,.13,-.42]});
 const pat=(high)=>({'DEF-spine003':[.08,0,high?.06:-.06],'DEF-neck':[.12,0,0],'DEF-upper_armR':[.715,-1.24,-.94],'DEF-forearmR':[high?1.75:1.55,-.37,-.5],'DEF-upper_armL':[1,.49,-1.09],'DEF-forearmL':[.89,.13,-.42]});
+// Air stun is a slack whole-body candidate, not a standing neck nod. Small
+// asymmetric changes suggest drag; world trajectory/velocity remain simulation-owned.
+const airLimp=(phase)=>({
+ 'DEF-hips':[.75+Math.sin(phase)*.08,0,.12],
+ 'DEF-spine003':[.16,0,-.07],'DEF-neck':[.45,Math.sin(phase)*.08,0],
+ 'DEF-upper_armR':[.85,-.25,.85],'DEF-forearmR':[.75+Math.sin(phase)*.1,-.1,.25],
+ 'DEF-upper_armL':[1.05,.3,-.65],'DEF-forearmL':[.9-Math.sin(phase)*.1,.1,-.2],
+ 'DEF-thighR':[-.3,0,.12],'DEF-shinR':[.65+Math.sin(phase)*.12,0,0],
+ 'DEF-thighL':[-.15,0,-.08],'DEF-shinL':[.4-Math.sin(phase)*.08,0,0],
+});
 const statusPoses={
+ 'Air stunned':[0,1,2,3,4].map(i=>({time:i/4,joints:airLimp(i*Math.PI/2)})),
  'Poison / gas':[{time:0,joints:cough(.02)},{time:.25,joints:cough(.2)},{time:.5,joints:cough(.07)},{time:.75,joints:cough(.18)},{time:1,joints:{}}],
  'Burn / acid':[{time:0,joints:pat(false)},{time:.25,joints:pat(true)},{time:.5,joints:pat(false)},{time:.75,joints:pat(true)},{time:1,joints:{}}],
 };
