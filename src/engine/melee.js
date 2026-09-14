@@ -21,7 +21,7 @@ import {snapshotWeaponSurface,weaponContactSweeps} from './melee-weapon-contact.
 // ⚠ THE THESIS, ONE LINE: BFP momentum in the air, JKA measured swing on the ground — `swingMult`
 // selects by `onFoot` (aaa-02-ground.md §4.6). When `!onFoot` it is EXACTLY `momentumMult`, so the air
 // game and the city (where `onFoot` is not yet set) are byte-identical. Blocked hits take neither.
-import { liftCapacityOf, bodyWeight } from './entity.js';
+import { LB_PER_TON, liftCapacityOf, bodyWeight } from './entity.js';
 import {naniteContact,snapshotNaniteContactFrame} from './nanite-forearms.js';
 import { rankOf } from '../data/scale.js';
 import { STRIKES, STEP_IMPULSE, styleOf, hasStrike, blockStateOf, guardArcOf, clinchWindow } from '../data/martial.js';
@@ -422,6 +422,9 @@ export class MeleeSystem {
     if (!this.canBeginGrab(f)) return;
     this.clearInput(f);
     f.grabState = 'startup'; f.grabT = STRIKES.grab.startup; f.state = 'cast'; f.stateT = 0;f._castPoseRanged=false;
+    f._grabApproach=(f.aim3||f.aim).clone();
+    if(!f.airborne)f._grabApproach.y=0;
+    f._grabApproach.normalize();
     this.game.audio.swing('fist',f.pos);
   }
 
@@ -444,7 +447,10 @@ export class MeleeSystem {
     if(isTransportingPerson(f))return false;
     if(!this._canClinch(f)||f._clinchPunch||f._clinchFinisher||f._carry||f.phase)return false;
     const ratio=bodyWeight(f.grabbing.def)/liftCapacityOf(f.def);
-    if(ratio>1)return false;
+    if(ratio>1){
+      this.game.hud?.feed?.(`TOO HEAVY · person: ${Math.round(bodyWeight(f.grabbing.def)*LB_PER_TON).toLocaleString()} lb · your limit: ${Math.round(liftCapacityOf(f.def)*LB_PER_TON).toLocaleString()} lb`,'#ffd24a');
+      return false;
+    }
     beginPersonCarry(f,f.grabbing,ratio);
     // One extension from the original contact; activation cannot restart it.
     const spent=Math.max(f._clinchElapsed||0,(f._clinchMax||4)-f.grabT);
@@ -669,6 +675,18 @@ export class MeleeSystem {
     // --- grab state machine ---
     if (f.grabState === 'startup') {
       if(!this.canAct(f)){this.release(f);return;}
+      if(f._grabApproach){
+        const distance=1.5*Math.min(dt,Math.max(0,f.grabT))/STRIKES.grab.startup;
+        let step=distance;
+        for(const other of this.game.entities||[]){
+          if(other===f||!other.alive||Math.abs(other.pos.y-f.pos.y)>12)continue;
+          const delta=other.pos.clone().sub(f.pos),ahead=delta.dot(f._grabApproach);
+          if(ahead>0&&delta.length()-ahead<(f.radius+other.radius))step=Math.min(step,Math.max(0,delta.length()-f.radius-other.radius-.25));
+        }
+        const end=f.pos.clone().addScaledVector(f._grabApproach,step);
+        const fraction=fighterPathFraction(f,this.game.world,f.pos,end);
+        f.pos.lerp(end,Math.max(0,fraction-1e-5));
+      }
       f.grabT -= dt;
       if (f.grabT <= 0) {
         // ⚠ a WRESTLER closes from further out — the style's whole identity is getting inside

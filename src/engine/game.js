@@ -33,7 +33,7 @@ import { Particles3D } from './particles3d.js';
 import { VFX } from './vfx.js';
 import { Projectiles } from './projectiles.js';
 import {beamThreatTime} from './beam-threat.js';
-import { buildWeapon, weaponProficiency, PROP_WEIGHT, liftCapacityOf, bodyWeight, Fighter } from './entity.js';
+import { buildWeapon, weaponProficiency, PROP_WEIGHT, LB_PER_TON, liftCapacityOf, bodyWeight, Fighter } from './entity.js';
 import {mountHeldWeapon} from './weapon-emission.js';
 import { AI } from './ai.js';
 import { BaseRoom } from './baseroom.js';
@@ -955,7 +955,7 @@ export class Game {
     const t = this.propInReach(f);
     if (!t) {
       const th = f._tooHeavyProp;
-      if (th && this.isHuman(f) && this.hud) this.hud.feed(`TOO HEAVY — the ${th.kind} is ~${th.w}t; you lift ~${liftCapacityOf(f.def).toFixed(1)}t`, '#8b8577');
+      if (th && this.isHuman(f) && this.hud) this.hud.feed(`TOO HEAVY — ${th.kind}: ${Math.round(th.w*LB_PER_TON).toLocaleString()} lb · your limit: ${Math.round(liftCapacityOf(f.def)*LB_PER_TON).toLocaleString()} lb`, '#8b8577');
       return false;
     }
     const cap = liftCapacityOf(f.def), ratio = cap / t.w;

@@ -28,11 +28,11 @@ export const rankColor = (v) => (RANKS[Math.max(1, Math.min(10, Math.round(v)))]
 export const ATTR_DEFS = [
   { k: 'fgt', name: 'Fighting',  does: 'melee & strike damage' },
   { k: 'agl', name: 'Agility',   does: 'evade recovery' },
-  { k: 'mgt', name: 'Might',     does: 'knockback resistance · throws · slams' },
-  { k: 'vig', name: 'Vigor',     does: 'health pool · durability' },
-  { k: 'int', name: 'Intellect', does: 'ability & gadget cooldowns' },
-  { k: 'awr', name: 'Awareness', does: 'vision range' },
-  { k: 'res', name: 'Resolve',   does: 'ki & guard recovery · status recovery' },
+  { k: 'mgt', name: 'Strength',     does: 'knockback resistance · throws · slams' },
+  { k: 'vig', name: 'Resilience',     does: 'health pool · durability' },
+  { k: 'int', name: 'Intelligence', does: 'ability & gadget cooldowns' },
+  { k: 'awr', name: 'Perception', does: 'vision range' },
+  { k: 'res', name: 'Mental Fortitude',   does: 'ki & guard recovery · status recovery' },
 ];
 
 const cl = (v) => Math.max(1, Math.min(10, Math.round(v)));

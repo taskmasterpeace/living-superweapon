@@ -183,6 +183,7 @@ export const strengthRank = (str) => rankOf({ strength: str ?? 5 });
 // what makes "you have to be strong enough to grab them" a real rule instead of a number someone
 // chose — RAGE cannot be scooped up by a fighter who cannot lift his mass.
 export function bodyWeight(def) {
+  if(Number.isFinite(def?.weightLb)&&def.weightLb>0)return def.weightLb/LB_PER_TON;
   const str = (def && def.strength) ?? 5;
   const lb = 120                                   // a light adult, before anything else
     + str * 11                                     // muscle scales with the rank

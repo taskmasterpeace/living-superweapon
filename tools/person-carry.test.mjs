@@ -220,3 +220,22 @@ test('trajectory samples wind/gravity without changing field state and stops at 
 test('potential fatal release does not claim an ordinary body trajectory',()=>{
  const x=fixture({height:30});try{x.lift();x.v.hp=1;const cue=previewPersonThrow(x.p,x.g);assert.equal(cue.contact,false);assert.equal(cue.points.length,1);assert.equal(cue.reason,'RELEASE MAY KO');}finally{x.close();}
 });
+
+test('a missed grab commits a short forward step',()=>{
+ const x=mainCombatFixture({hero:'sol',mode:'powerworld'});
+ try{
+  x.p.aim3.set(0,0,1);x.p.aim.set(0,0,1);const z=x.p.pos.z;
+  x.g.melee.grab(x.p);x.g.melee.update(x.p,.09);
+  assert.ok(x.p.pos.z>z,'grab should move forward');assert.ok(x.p.pos.z-z<=1.5);
+ }finally{x.close();}
+});
+
+test('grab approach cannot step through a thin wall',()=>{
+ const x=mainCombatFixture({hero:'sol',mode:'powerworld'});
+ try{
+  x.p.aim3.set(0,0,1);x.p.aim.set(0,0,1);const z=x.p.pos.z;
+  x.w.cover.push({x:x.p.pos.x,z:z+x.p.radius+.2,hx:20,hz:.03,top:100});
+  x.g.melee.grab(x.p);x.g.melee.update(x.p,.18);
+  assert.ok(x.p.pos.z-z<=.17+1e-6);
+ }finally{x.close();}
+});

@@ -1,4 +1,4 @@
-import {Fighter} from '../src/engine/entity.js';
+import {bodyWeight,LB_PER_TON,Fighter} from '../src/engine/entity.js';
 import test from 'node:test';import assert from 'node:assert/strict';
 import {ROSTER} from '../src/data/characters.js';
 import {deriveAttrs} from '../src/data/ranks.js';
@@ -18,4 +18,9 @@ test('stock HP and strength balance is preserved',()=>{
 test('production Fighter receives the same explicit physical stats as its sheet',()=>{
  const f=new Fighter({...ROSTER[0],attrs:{mgt:4,vig:8}});
  try{assert.equal(f.strength,4);assert.equal(f.maxHp,142);assert.equal(f.sheet.attrs.mgt,4);assert.equal(f.sheet.attrs.vig,8);}finally{f.dispose();}
+});
+
+test('authored weight in pounds is the actual lifting weight',()=>{
+ assert.equal(bodyWeight({weightLb:245})*LB_PER_TON,245);
+ assert.ok(bodyWeight({weightLb:-1,strength:3,hp:100})>0);
 });
