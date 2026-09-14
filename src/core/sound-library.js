@@ -99,7 +99,7 @@ export class SoundLibrary {
  async addMissingRecordings(data){
   const incoming=validatePackage(data),next=this.exportPackage();let added=0;
   for(const [id,binding]of Object.entries(incoming.bindings)){
-   if(next.bindings[id])continue;
+   if(next.bindings[id]||SOUND_LIBRARY_SAMPLES[id])continue;
    if(incoming.customCues?.[id]&&!next.customCues?.[id])next.customCues={...next.customCues,[id]:incoming.customCues[id]};
    next.bindings[id]=binding;next.settings[id]={...incoming.settings[id],...next.settings[id]};added++;
   }

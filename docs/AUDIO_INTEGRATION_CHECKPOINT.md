@@ -21,3 +21,7 @@ Bundled recordings now appear in workshop source labels, counts and recording fi
 ## Additional firearm and footstep recordings
 
 Licensed ai-pass magnum and M107 reports now resolve from the existing magnum/amr50 voice keys. Imported the source arsenal manifest for provenance. Concrete and grass ground footstep events now use the approved four-variant CC0 sets; cadence and spatial settings remain unchanged. Eleven focused audio tests pass and build passes. Suppressed PDW remains on its existing suppressed voice; auto shotgun retains the approved pump recording as permitted by the wiring specification. Listening and the remaining weapon/vehicle/power mappings are still open.
+
+## Additive AI package precedence
+
+The existing 37-cue embedded AI package remains available in the workshop. Add missing now preserves six bundled defaults (including the preferred CC0 light/heavy impacts), adding 31 other entries to an empty custom library. Repeat imports are no-ops; existing bindings/settings and atomic decode behavior remain intact. Eighteen pack/SoundLibrary tests and build pass. Importing preview-only entries does not wire them to gameplay.
