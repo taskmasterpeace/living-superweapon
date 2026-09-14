@@ -32,7 +32,7 @@ export const ATTR_DEFS = [
   { k: 'vig', name: 'Resilience',     does: 'health pool · durability' },
   { k: 'int', name: 'Intelligence', does: 'ability & gadget cooldowns' },
   { k: 'awr', name: 'Perception', does: 'vision range' },
-  { k: 'res', name: 'Mental Fortitude',   does: 'ki & guard recovery · status recovery' },
+  { k: 'res', name: 'Mental',   does: 'ki & guard recovery · status recovery' },
 ];
 
 const cl = (v) => Math.max(1, Math.min(10, Math.round(v)));

@@ -1122,6 +1122,27 @@ export class Game {
   // THE AIMED THROW's highest expression (manual §11): a hurled BODY that passes through another
   // fighter hits them too — both take damage, both are launched, both credited to the thrower.
   // A raised guard BRACES against the incoming body instead (blocked = no launch).
+  thrownBodyImpact(v,e) {
+    const by=v._thrownBy,spd=v.vel.length();
+    if (!(v._thrownT>0)||!v.alive||!e.alive||e===v||e===by||spd<24) return;
+    if(by&&!this.isFoe(by,e))return;
+    v._thrownHit ||= new Set();
+    if(v._thrownHit.has(e.id))return;
+        v._thrownHit.add(e.id);
+        const hit = Math.min(30, 8 + spd * 0.22);
+        const kx = v.vel.x / (spd || 1), kz = v.vel.z / (spd || 1);
+        e.takeDamage(hit, { src: by || v, slam: true, hitstop: 0.1, kb: { x: kx * spd * 0.55, y: 6, z: kz * spd * 0.55 }, launch: 10 });
+        if (!(e._blocked > 0)) e.launchT = Math.max(e.launchT, 1.0);   // struck clean → they chain into walls too
+        v.takeDamage(hit * 0.6, { src: by || v, slam: true, unblockable: true, hitstop: 0.1 });
+        v.vel.multiplyScalar(0.55);
+        const imp = e.pos.clone().setY(e.pos.y + 5.6);
+        this.vfx.impactStar(imp, 10, '#ffffff', 0.2);
+        this.vfx.ring(imp, { color: '#ff8a3a', r0: 1, r1: 10, life: 0.3 });
+        this.world.shake(1.3); this.audio.impact(1.25, imp); this.audio.boom(0.4, imp);
+        if (this.hud) this.hud.damageNumber(e.pos, 'BOWLED ' + Math.round(hit), '#ff8a3a', false);
+        this.noise(imp, 1.1, by || v);
+  }
+
   updateThrownBodies(dt) {
     for (const v of this.entities) {
       if (!(v._thrownT > 0)) continue;
@@ -1136,19 +1157,7 @@ export class Game {
         if (by && !this.isFoe(by, e)) continue;              // you bowl at the OTHER side
         const dx = e.pos.x - v.pos.x, dz = e.pos.z - v.pos.z;
         if (Math.hypot(dx, dz) > e.radius + v.radius + 1.4 || Math.abs(e.pos.y - v.pos.y) > 9) continue;
-        v._thrownHit.add(e.id);
-        const hit = Math.min(30, 8 + spd * 0.22);
-        const kx = v.vel.x / (spd || 1), kz = v.vel.z / (spd || 1);
-        e.takeDamage(hit, { src: by || v, slam: true, hitstop: 0.1, kb: { x: kx * spd * 0.55, y: 6, z: kz * spd * 0.55 }, launch: 10 });
-        if (!(e._blocked > 0)) e.launchT = Math.max(e.launchT, 1.0);   // struck clean → they chain into walls too
-        v.takeDamage(hit * 0.6, { src: by || v, slam: true, unblockable: true, hitstop: 0.1 });
-        v.vel.multiplyScalar(0.55);
-        const imp = e.pos.clone().setY(e.pos.y + 5.6);
-        this.vfx.impactStar(imp, 10, '#ffffff', 0.2);
-        this.vfx.ring(imp, { color: '#ff8a3a', r0: 1, r1: 10, life: 0.3 });
-        this.world.shake(1.3); this.audio.impact(1.25, imp); this.audio.boom(0.4, imp);
-        if (this.hud) this.hud.damageNumber(e.pos, 'BOWLED ' + Math.round(hit), '#ff8a3a', false);
-        this.noise(imp, 1.1, by || v);
+        this.thrownBodyImpact(v,e);
       }
     }
   }
@@ -1801,7 +1810,7 @@ export class Game {
 
   resolveBodies() {
     const E = this.entities;
-    resolveBodyContacts(E,this._bodyContactFrame);this._bodyContactFrame=null;
+    resolveBodyContacts(E,this._bodyContactFrame,(a,b)=>{Game.prototype.thrownBodyImpact.call(this,a,b);Game.prototype.thrownBodyImpact.call(this,b,a);});this._bodyContactFrame=null;
     for (let i = 0; i < E.length; i++) {
       const a = E[i]; if (!a.alive || a._scoutVehicle || a._aircraftVehicle || a._passengerTransport) continue;
       for (let j = i + 1; j < E.length; j++) {

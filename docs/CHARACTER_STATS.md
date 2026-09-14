@@ -4,7 +4,7 @@ Generated from current roster definitions and bakeSheet. Regenerate with `node t
 
 Attributes use a 1–10 ladder. Displayed Might matches resolved combat strength. Explicit Might/Vigor overrides resolve to actor strength/HP; stock HP and strength remain authored. Fine-grained rank remains the separate lifting-capacity axis. Fighting-based grab timing and Agility-based grab approach remain proposed, not installed.
 
-| Character | Fighting | Agility | Strength | Resilience | Intelligence | Perception | Mental Fortitude | Base HP | Base energy |
+| Character | Fighting | Agility | Strength | Resilience | Intelligence | Perception | Mental | Base HP | Base energy |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | SOL | 7 | 5 | 8 | 6 | 4 | 4 | 6 | 130 | 120 |
 | KANO | 6 | 6 | 6 | 5 | 4 | 5 | 7 | 115 | 130 |

@@ -82,7 +82,7 @@ function resolve(a,ar,b,br,c){
  }
 }
 
-export function resolveBodyContacts(entities,frame){
+export function resolveBodyContacts(entities,frame,onContact){
  const records=new Map();
  for(const f of entities)if(solid(f)){
   const current=coreBounds(f,new Box3()),old=frame?.get(f);
@@ -105,6 +105,6 @@ export function resolveBodyContacts(entities,frame){
   for(const pair of pairs){const c=contact(...pair);if(c)hits.push({pair,c});}
   if(!hits.length)break;
   hits.sort((a,b)=>a.c.t-b.c.t);
-  for(const {pair} of hits){const c=contact(...pair);if(c)resolve(...pair,c);}
+  for(const {pair} of hits){const c=contact(...pair);if(c){onContact?.(pair[0],pair[2]);resolve(...pair,c);}}
  }
 }

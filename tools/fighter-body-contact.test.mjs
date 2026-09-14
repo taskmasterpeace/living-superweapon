@@ -14,7 +14,7 @@ function fixture(){
  const a=new Fighter(structuredClone(ROSTER.find(d=>d.id==='kano'))),b=new Fighter(structuredClone(ROSTER.find(d=>d.id==='kano')));
  for(const f of [a,b]){f._openSky=true;f.flying=true;f.gait='airborne';f.pos.y=80;}
  a.pos.x=-20;b.pos.x=20;
- const g={entities:[a,b],world:{cover:[],interiors:[],ARENA:900,heightAt:()=>0}};
+ const g={entities:[a,b],isFoe:()=>true,vfx:{impactStar(){},ring(){}},audio:{impact(){},boom(){}},noise(){},world:{cover:[],interiors:[],ARENA:900,shake(){},heightAt:()=>0}};
  return {a,b,g,begin(){Game.prototype.beginBodyContactFrame?.call(g);},end(){Game.prototype.resolveBodies.call(g);},close(){a.dispose();b.dispose();}};
 }
 // Break caught: the old two-airborne exemption, or endpoint-only separation,
@@ -89,5 +89,19 @@ test('released person clears thrower once, then ordinary body collision resumes'
  const t=fixture();try{t.a.pos.x=0;t.b.pos.x=0;t.b._personThrow={owner:t.a};t.b._thrownT=1.35;t.begin();t.b.pos.x=1;t.end();assert.equal(t.b.pos.x,1);assert.equal(t.a.pos.x,0);
  t.begin();t.b.pos.x=30;t.end();assert.equal(t.b._personThrow.bodyCleared,true);
  t.begin();t.b.pos.x=-30;t.b.vel.x=-100;t.end();assert.ok(t.b.pos.x>t.a.pos.x,'cleared throw tunneled back through owner');
+ }finally{t.close();}
+});
+
+for(const hz of [30,60,120])test(`thrown body crossing registers damage before collision stops it at ${hz}Hz`,()=>{
+ const t=fixture();try{
+  const owner={};t.a.pos.x=-8;t.b.pos.x=0;t.a._thrownT=2;t.a._thrownBy=owner;
+  let victimHits=0,targetHits=0;
+  t.a.takeDamage=()=>victimHits++;t.b.takeDamage=()=>targetHits++;
+  Object.assign(t.g,{isFoe:()=>true,vfx:{impactStar(){},ring(){}},audio:{impact(){},boom(){}},noise(){}});
+  t.g.world.shake=()=>{};
+  t.begin();t.a.pos.x+=2400/hz;t.a.vel.x=2400;t.end();
+  assert.equal(targetHits,1);assert.equal(victimHits,1);
+  assert.ok(t.a.pos.x<t.b.pos.x,'Payload must stay on approach side');
+  t.begin();t.end();assert.equal(targetHits,1,'Repeated contact cannot charge damage twice');
  }finally{t.close();}
 });
