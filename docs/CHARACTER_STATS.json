@@ -41,7 +41,7 @@
     "speed": 36,
     "flightTier": 0,
     "attrs": {
-      "mgt": 7,
+      "mgt": 6,
       "agl": 6,
       "fgt": 6,
       "vig": 5,
@@ -176,7 +176,7 @@
     "speed": 31,
     "flightTier": 2,
     "attrs": {
-      "mgt": 5,
+      "mgt": 4,
       "agl": 6,
       "fgt": 3,
       "vig": 5,
@@ -210,7 +210,7 @@
     "speed": 44,
     "flightTier": 0,
     "attrs": {
-      "mgt": 4,
+      "mgt": 3,
       "agl": 8,
       "fgt": 5,
       "vig": 5,
@@ -244,7 +244,7 @@
     "speed": 30,
     "flightTier": 2,
     "attrs": {
-      "mgt": 7,
+      "mgt": 8,
       "agl": 5,
       "fgt": 7,
       "vig": 7,
@@ -312,7 +312,7 @@
     "speed": 32,
     "flightTier": 2,
     "attrs": {
-      "mgt": 8,
+      "mgt": 7,
       "agl": 6,
       "fgt": 6,
       "vig": 6,
@@ -346,7 +346,7 @@
     "speed": 40,
     "flightTier": 3,
     "attrs": {
-      "mgt": 5,
+      "mgt": 4,
       "agl": 7,
       "fgt": 5,
       "vig": 5,
@@ -380,7 +380,7 @@
     "speed": 32,
     "flightTier": 0,
     "attrs": {
-      "mgt": 9,
+      "mgt": 8,
       "agl": 7,
       "fgt": 7,
       "vig": 7,
@@ -448,7 +448,7 @@
     "speed": 42,
     "flightTier": 0,
     "attrs": {
-      "mgt": 10,
+      "mgt": 9,
       "agl": 6,
       "fgt": 8,
       "vig": 7,
@@ -482,7 +482,7 @@
     "speed": 29,
     "flightTier": 1,
     "attrs": {
-      "mgt": 9,
+      "mgt": 8,
       "agl": 5,
       "fgt": 7,
       "vig": 7,
@@ -584,7 +584,7 @@
     "speed": 33,
     "flightTier": 0,
     "attrs": {
-      "mgt": 5,
+      "mgt": 4,
       "agl": 4,
       "fgt": 6,
       "vig": 6,
@@ -619,7 +619,7 @@
     "speed": 34,
     "flightTier": 0,
     "attrs": {
-      "mgt": 5,
+      "mgt": 3,
       "agl": 6,
       "fgt": 4,
       "vig": 6,
@@ -686,7 +686,7 @@
     "speed": 36,
     "flightTier": 0,
     "attrs": {
-      "mgt": 4,
+      "mgt": 3,
       "agl": 6,
       "fgt": 5,
       "vig": 5,
@@ -721,7 +721,7 @@
     "speed": 33,
     "flightTier": 3,
     "attrs": {
-      "mgt": 6,
+      "mgt": 5,
       "agl": 6,
       "fgt": 4,
       "vig": 6,
@@ -755,7 +755,7 @@
     "speed": 37,
     "flightTier": 0,
     "attrs": {
-      "mgt": 5,
+      "mgt": 4,
       "agl": 5,
       "fgt": 6,
       "vig": 5,
@@ -892,7 +892,7 @@
     "speed": 42,
     "flightTier": 0,
     "attrs": {
-      "mgt": 7,
+      "mgt": 6,
       "agl": 5,
       "fgt": 6,
       "vig": 5,
@@ -926,7 +926,7 @@
     "speed": 35,
     "flightTier": 0,
     "attrs": {
-      "mgt": 7,
+      "mgt": 6,
       "agl": 4,
       "fgt": 6,
       "vig": 7,
@@ -961,7 +961,7 @@
     "speed": 34,
     "flightTier": 3,
     "attrs": {
-      "mgt": 10,
+      "mgt": 8,
       "agl": 6,
       "fgt": 7,
       "vig": 6,
@@ -1098,7 +1098,7 @@
     "speed": 32,
     "flightTier": 3,
     "attrs": {
-      "mgt": 5,
+      "mgt": 4,
       "agl": 6,
       "fgt": 3,
       "vig": 5,
@@ -1131,7 +1131,7 @@
     "speed": 37,
     "flightTier": 0,
     "attrs": {
-      "mgt": 6,
+      "mgt": 5,
       "agl": 5,
       "fgt": 6,
       "vig": 6,
@@ -1166,7 +1166,7 @@
     "speed": 35,
     "flightTier": 2,
     "attrs": {
-      "mgt": 10,
+      "mgt": 9,
       "agl": 6,
       "fgt": 7,
       "vig": 7,
@@ -1201,7 +1201,7 @@
     "speed": 33,
     "flightTier": 3,
     "attrs": {
-      "mgt": 9,
+      "mgt": 8,
       "agl": 6,
       "fgt": 7,
       "vig": 7,
@@ -1235,7 +1235,7 @@
     "speed": 33,
     "flightTier": 3,
     "attrs": {
-      "mgt": 7,
+      "mgt": 8,
       "agl": 7,
       "fgt": 6,
       "vig": 7,
@@ -1269,7 +1269,7 @@
     "speed": 28,
     "flightTier": 2,
     "attrs": {
-      "mgt": 7,
+      "mgt": 8,
       "agl": 4,
       "fgt": 5,
       "vig": 9,
@@ -1337,7 +1337,7 @@
     "speed": 37,
     "flightTier": 0,
     "attrs": {
-      "mgt": 5,
+      "mgt": 4,
       "agl": 7,
       "fgt": 6,
       "vig": 5,
@@ -1371,7 +1371,7 @@
     "speed": 32,
     "flightTier": 0,
     "attrs": {
-      "mgt": 5,
+      "mgt": 3,
       "agl": 6,
       "fgt": 3,
       "vig": 5,
@@ -1577,7 +1577,7 @@
     "speed": 31,
     "flightTier": 0,
     "attrs": {
-      "mgt": 7,
+      "mgt": 6,
       "agl": 6,
       "fgt": 6,
       "vig": 7,
@@ -1611,7 +1611,7 @@
     "speed": 34,
     "flightTier": 0,
     "attrs": {
-      "mgt": 6,
+      "mgt": 5,
       "agl": 8,
       "fgt": 6,
       "vig": 6,
@@ -1782,7 +1782,7 @@
     "speed": 43,
     "flightTier": 0,
     "attrs": {
-      "mgt": 8,
+      "mgt": 7,
       "agl": 8,
       "fgt": 6,
       "vig": 7,
@@ -1817,7 +1817,7 @@
     "speed": 30,
     "flightTier": 0,
     "attrs": {
-      "mgt": 5,
+      "mgt": 4,
       "agl": 5,
       "fgt": 7,
       "vig": 7,
@@ -1851,7 +1851,7 @@
     "speed": 36,
     "flightTier": 0,
     "attrs": {
-      "mgt": 6,
+      "mgt": 3,
       "agl": 6,
       "fgt": 5,
       "vig": 5,

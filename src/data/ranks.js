@@ -1,3 +1,4 @@
+import {resolvePhysicalStats} from './physical-stats.js';
 // THRESHOLD — the tabletop layer. Seven ranked attributes on one universal ladder, talents
 // (trained perks with real mechanical hooks), and derivation from hero data so every existing
 // character gets a full sheet automatically. Inspired by the SHAPE of classic tabletop supers
@@ -39,15 +40,14 @@ const cl = (v) => Math.max(1, Math.min(10, Math.round(v)));
 // Derive a full 7-attribute sheet from what the hero data already says — explicit
 // def.attrs entries override any derived value (that's the creator's dial).
 export function deriveAttrs(def) {
+  def=resolvePhysicalStats(def);
   const A = Object.values(def.abilities || {});
   const types = A.map(a => a.type);
-  // ⚠ MIGHT READS THE RANK LADDER, not the raw 1-10. A hero with an explicit `def.rank` (the
-  // whole point of the ladder) would otherwise show a MIGHT that contradicts their own case
-  // file — the sheet is supposed to be derived from the engine, so it derives from the axis
-  // the engine actually lifts and throws with.
+  // Fighting retains its existing rank-derived baseline. Displayed Might uses
+  // resolved combat strength; the finer lifting rank remains a separate axis.
   const str = strengthFromRank(rankOf(def));
   const out = {
-    mgt: cl(str),
+    mgt: cl(def.strength),
     agl: cl((def.speed || 30) / 46 * 7 + (def.evade && (def.evade.kind === 'blink' || def.evade.kind === 'phase') ? 1.5 : 0)),
     fgt: cl(2.5 + (types.includes('melee') || types.includes('rush') ? 2 : 0) + ((def.meleeTiers ?? 3) === 2 ? 1 : 0) + str / 4),
     vig: cl((def.hp || 100) / 150 * 7 + (def.metal ? 1.5 : 0) + (def.guardStrong ? 0.5 : 0)),
@@ -55,15 +55,11 @@ export function deriveAttrs(def) {
     awr: cl(3 + ((def.ai && def.ai.range) || 30) / 25 + (A.some(a => a.reveal) ? 3 : 0) + (types.includes('bow') || types.includes('rifle') ? 1 : 0)),
     res: cl((def.ki || 100) / 140 * 7 + (def.guardType === 'barrier' ? 1 : 0) + (def.energyInfinite ? 2 : 0)),
   };
-  // ⚠ AGE IS A COLUMN SHIFT, and it goes through the SAME ladder everything else does — RANKS
-  // above IS the column, so one rung of it is one CS. A 41-year-old veteran is not a worse
-  // fighter; MIGHT and AGILITY come down and INTELLECT goes up, which is the whole reason the
-  // bands were authored as three separate numbers instead of one penalty.
-  // ⚠ It is applied BEFORE `def.attrs`, so an authored value always wins. The creator's dial
-  // must not be quietly overwritten by a birthday.
+  // Age still modifies Agility/Intellect. Do not apply a display-only Might
+  // shift: physical strength must agree with the actual actor value.
   const am = ageMods(def);
-  if (!am.ageless) { out.mgt = cl(out.mgt + am.mgt); out.agl = cl(out.agl + am.agl); out.int = cl(out.int + am.int); }
-  return Object.assign(out, def.attrs || {});
+  if (!am.ageless) { out.agl = cl(out.agl + am.agl); out.int = cl(out.int + am.int); }
+  return {...out,...def.attrs,mgt:cl(def.strength)};
 }
 
 // ---- Talents: trained perks with teeth. Each maps to one engine hook. ----

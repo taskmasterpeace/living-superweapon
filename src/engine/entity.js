@@ -1,3 +1,4 @@
+import {resolvePhysicalStats} from '../data/physical-stats.js';
 import {zombieRifleHit,zombieLegSpeed,poseZombieInjuries} from './zombie-locational-damage.js';
 import {loadModularCharacter} from './modular-character.js';
 import {anchorStatusIndicators} from './status-indicator-anchor.js';
@@ -236,6 +237,7 @@ export {DTYPES, DTYPE_INFO, DOT_DTYPE, resistOf};
 
 export class Fighter {
   constructor(def, opts = {}) {
+    def=resolvePhysicalStats(def);
     def=migratePowerUpDef(def);
     this.id = _fid++;
     this.def = def;
