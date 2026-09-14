@@ -1,3 +1,4 @@
+import {beginImpactRecovery,updateImpactRecovery,poseImpactRecovery} from './impact-recovery.js';
 import {resolvePhysicalStats} from '../data/physical-stats.js';
 import {zombieRifleHit,zombieLegSpeed,poseZombieInjuries} from './zombie-locational-damage.js';
 import {loadModularCharacter} from './modular-character.js';
@@ -1282,6 +1283,7 @@ export class Fighter {
     this._slamCd = 0.45;
     const src = this.launchT>0&&this.lastHitT < 3 ? this.lastHitBy : null;
     this.takeDamage(dmg, { src, slam: true, unblockable: true, hitstop: 0.1 });
+    if(personThrow&&landing)beginImpactRecovery(this);
     // T8: somebody drove me into geometry. `_updateGait` consumes this next frame and, IF the impact
     // left me staggered, calls it CRASH — the 'none' owner. A slam that neither staggers nor stuns
     // just keeps my grammar (F1: an involuntary arrival never cancels flight). NOTE `_slam` does NOT
@@ -1291,6 +1293,7 @@ export class Fighter {
   }
 
   update(dt, game) {
+    updateImpactRecovery(this,dt);
     if(movementGearBlocked(this))resetMovementGears(this);
     cancelInterruptedThrow(this);
     updateFirearmReload(this,dt,game);
@@ -2862,7 +2865,7 @@ export class Fighter {
     // so being hit cannot secretly increase the victim's next melee damage.
     animateHitReaction(this, dt);
     poseNaniteForearms(this,dt);
-    animatePronePose(this,dt);
+    if(!poseImpactRecovery(this))animatePronePose(this,dt);
     animateRiflePose(this,dt);
     animateReloadPose(this);
     animateThrowAction(this);

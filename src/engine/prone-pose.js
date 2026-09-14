@@ -7,13 +7,13 @@ export function restorePronePose(f){
  if(s.rig===f.parts.rig)for(const b of s.base){b.part.position.copy(b.position);b.part.quaternion.copy(b.quaternion);}
  s.applied=false;
 }
-export function animatePronePose(f,dt){
+export function animatePronePose(f,dt,recoveryWeight=null){
  const p=f.parts;if(!p.rig||!f._openSky)return;let s=f._pronePose;
- if(!s&&!f.prone)return;
+ if(!s&&!f.prone&&recoveryWeight===null)return;
  if(!s||s.rig!==p.rig)s=f._pronePose={rig:p.rig,weight:0,phase:0,drop:0,bounds:new T.Box3(),center:new T.Vector3(),
   base:[p.body,p.torso,p.head,p.cowl,p.legL,p.legR,p.legL.userData.knee,p.legR.userData.knee,p.legL.userData.boot,p.legR.userData.boot].map(part=>({part,position:new T.Vector3(),quaternion:new T.Quaternion()}))};
- const eligible=f.gait==='grounded'&&!f.flying&&!f.gliding&&f.alive&&!f.grabbedBy&&!f.hanging&&!f.ragdoll;
- s.weight=eligible?T.MathUtils.damp(s.weight,f.prone?1:0,8,Math.max(0,dt)):0;s.drop=0;
+ const eligible=(recoveryWeight!==null||f.gait==='grounded')&&!f.flying&&!f.gliding&&f.alive&&!f.grabbedBy&&!f.hanging&&!f.ragdoll;
+ s.weight=eligible?(recoveryWeight??T.MathUtils.damp(s.weight,f.prone?1:0,8,Math.max(0,dt))):0;s.drop=0;
  if(s.weight<.0001){s.weight=0;s.bounds.makeEmpty();return;}
  for(const b of s.base){b.position.copy(b.part.position);b.quaternion.copy(b.part.quaternion);}s.applied=true;
  const w=s.weight,h=p.rig.pivotHeight,scale=h/4.6,angle=1.48;

@@ -3612,6 +3612,7 @@ export class Game {
     const inp = this.input, m = inp.mouse, pad = this.humans.length < 2 ? this.pad : NULL_PAD;   // in 2P the pad drives P2
     const chase=combatView(this)==='bfp';
     if(this.running===false||this.matchOver||this.mapCam||this.hud?.titleOpen||this.combatOverlayOpen){resetMovementGears(p);p.moveDir={x:0,z:0};return;}
+    if(this.ms?.threatLab?.meleeTrial?.demo?.update(dt))return;
     if(this._pwStage?.transport?.handleInput(inp,dt)){resetMovementGears(p);return;}
     if(this._pwStage?.aircraft?.piloting?.handleInput(inp,dt)){resetMovementGears(p);return;}
     if(this._pwStage?.convoy?.driving?.handleInput(inp,dt)){resetMovementGears(p);return;}
@@ -4482,6 +4483,7 @@ export class Game {
     if(!active)clearForegroundVisibility(this.world);
     if(this.input)this.input.pointerLock=active;
     if (this.mapCam) { if (this.input) this.input.pointerLock = false; this.world.orbit(this.mapCam); return; }
+    if(this.ms?.threatLab?.meleeTrial?.demo?.frameCamera()){clearForegroundVisibility(this.world);return;}
     if (view==='bfp') {
       if(followDeathBody(this))return;
       // Input deltas were consumed once in the pre-control solve. This final solve

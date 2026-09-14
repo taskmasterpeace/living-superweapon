@@ -103,7 +103,7 @@ export class DevConsole {
     this.open = force === undefined ? !this.open : !!force;
     this.el.style.display = this.open ? 'block' : 'none';
     this.btn.style.opacity = this.open ? '1' : '.55';
-    if (this.open) { this.in.focus(); if (!this._greeted) { this._greeted = 1; this.print('WAR WORLD console — type `help`'); } }
+    if (this.open) { this.in.focus(); if (!this._greeted) { this._greeted = 1; this.print('POWER WORLD console — type `help`'); } }
     else this.in.blur();
     return this.open;
   }
@@ -193,15 +193,26 @@ export class DevConsole {
       p.faceDir(0,1);p.aim3.set(0,0,1);this.g.world._lookYaw=0;this.g.world._lookPitch=0;this.g.world._chaseSnap=true;
       c.toggle(false);
     });
+    this.cmd('demo','demo prepare|play|record|stop — native aerial grab / throw demonstration',(a,c)=>{
+      const trial=this.g.ms?.threatLab?.meleeTrial;if(!trial)throw Error('Enter Threat Room first');
+      if(a[0]==='prepare'){trial.prepareAerialDemo();c.ok('Current-model rear aerial scenario prepared. Use demo record after models load.');return;}
+      const demo=trial.demo;if(!demo)throw Error('Run demo prepare first');
+      if(a[0]==='stop'){demo.stop();c.toggle(false);return;}
+      if(!['play','record'].includes(a[0]))throw Error('Use demo prepare, play, record or stop');
+      if(demo.phase!=='ready')throw Error('Run demo prepare to reset the scenario');
+      requireRecordingModels([this.g.player,trial.target]);
+      if(a[0]==='record'){this.cmds.get('record').run(['12'],c);const clip=this.liveClip;demo.onFinish=()=>clip.stop();}
+      demo.start();c.toggle(false);
+    });
     this.cmd('record', 'record <seconds 1–30> — silent live canvas clip, excludes HUD/menus', (a,c)=>{
       const seconds=Number(a[0]);if(!Number.isFinite(seconds)||seconds<1||seconds>30)throw Error('Choose 1–30 seconds');
       if(!this.g.running||!this.g.player?.alive)throw Error('Prepare a live scenario first');
       if(this.liveClip?.active)throw Error('A clip is already recording');
       const save=(blob,name)=>{const url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download=name;link.click();setTimeout(()=>URL.revokeObjectURL(url),10000);};
-      const actor=this.g.player,trial=this.g.ms?.threatLab?.meleeTrial;
-      const models=requireRecordingModels([actor,trial?.target]);
+      const actor=this.g.player,trial=this.g.ms?.threatLab?.meleeTrial,target=trial?.target,demonstration=trial?.demo,wallStarted=performance.now();
+      const models=requireRecordingModels([actor,target]);
       this.liveClip=createCanvasClipRecorder(document.getElementById('game'),{onComplete:async(blob,meta)=>{
-        meta.final={hp:actor.hp,targetHp:trial?.target?.hp};
+        meta.final={hp:actor.hp,targetHp:target?.hp};meta.actualSeconds=(performance.now()-wallStarted)/1000;meta.demonstration=demonstration?.summary();meta.scenarioReplaced=trial?.target!==target||trial?.demo!==demonstration;
         if(import.meta.env.DEV){try{const response=await fetch('/__capture',{method:'POST',headers:{'Content-Type':blob.type,'X-Capture-Metadata':encodeURIComponent(JSON.stringify(meta))},body:blob});if(!response.ok)throw Error(await response.text());c.ok('Saved '+(await response.json()).path);}catch(e){c.err('Local archive failed: '+e.message);}}
 
         save(blob,'powerworld-live-action.webm');save(new Blob([JSON.stringify(meta,null,2)],{type:'application/json'}),'powerworld-live-action.json');

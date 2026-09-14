@@ -6,7 +6,7 @@ export const SOUND_LIBRARY_SAMPLES={
  'nanite-form':'library.nanite-form','nanite-break':'library.nanite-break','nanite-reform':'library.nanite-reform',
  light:'library.melee',heavy:'library.melee','scout-gunshot':'wpn.saw',
  'weather-rain':'library.rain','weather-domain-rain':'library.domain-rain',
- 'weather-domain-thunder':'library.thunder','grenade-release':'library.grenade-release',
+ 'weather-domain-thunder':'library.thunder','weather-thunder':'library.thunder','grenade-release':'library.grenade-release',
 };
 export const LIBRARY_SAMPLES={
  'gear.ifak':{f:['ai-pass/final/gear-ifak'],g:.55,reach:80},

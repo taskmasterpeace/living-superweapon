@@ -59,6 +59,8 @@ export function animateReloadPose(f){
  pole.lerp(endPole,weight*(motion?.clip?.frames?0.75:1));
  reachArm(arm,target,side,1,pole);
  arm.getWorldQuaternion(parent).invert();gun.getWorldQuaternion(rotation);
- hand.quaternion.slerp(parent.multiply(rotation),weight);
+// Upright magazine palm alignment rolls the low prone hand through the floor.
+ // Keep the grounded wrist orientation while the contact solver moves its grip.
+ if(!f._pronePose?.weight)hand.quaternion.slerp(parent.multiply(rotation),weight);
  if(hand.morphTargetInfluences)hand.morphTargetInfluences[0]=0;
 }

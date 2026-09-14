@@ -8,8 +8,20 @@ import {meleePhase} from './melee-phase.js';
 export class MeleeRecording {
  constructor({seconds=8,hz=30}={}){this.seconds=seconds;this.interval=1/hz;this.frames=[];this.events=[];this.actors=[];this.last=-Infinity;}
  mark(time,event){this.events.push({...event,time});if(this.events.length>128)this.events.shift();}
- bind(actors){this.clear();this.actors=actors.map(f=>{const nodes=[];f.obj.traverse(n=>nodes.push(n));return {fighter:f,nodes,template:cloneReviewActor(f.obj)};});}
+ bind(actors){this.clear();this.actors=actors.map(f=>{const nodes=[];f.obj.traverse(n=>nodes.push(n));return {fighter:f,root:f.obj,modular:f._modularCharacter,epoch:f._modularEpoch,nodes,template:cloneReviewActor(f.obj)};});}
  capture(time){
+  // Binding may precede asynchronous model attachment. Never publish fallback
+  // frames while a modular actor is expected, including a failed load.
+  if(this.actors.some(({fighter:f})=>f._modularReady&&!f._modularCharacter)){
+   this.frames=[];this.events=[];this.last=-Infinity;
+   this.status=this.actors.some(({fighter:f})=>f._modularError)?'model-load-failed':'waiting-for-models';return;
+  }
+  // A model replacement changes traversal indices. Start one coherent history
+  // for all actors; transient VFX children do not trigger this reset.
+  if(this.actors.some(a=>a.root!==a.fighter.obj||a.modular!==a.fighter._modularCharacter||a.epoch!==a.fighter._modularEpoch)){
+   const fighters=this.actors.map(a=>a.fighter);this.bind(fighters);
+  }
+  this.status='ready';
   if(time-this.last<this.interval-1e-6||!this.actors.length)return;
   // Keep the recorded rig stable when live contact effects add/remove children.
   // Each session owns a visual template, and indexes source node references.
@@ -29,7 +41,7 @@ export function cloneReviewActor(root){
  function copy(n){
   const m=n.material?(Array.isArray(n.material)?n.material.map(material):material(n.material)):null;
   const c=n.isSkinnedMesh?new THREE.SkinnedMesh(n.geometry,m):n.isMesh?new THREE.Mesh(n.geometry,m):n.isBone?new THREE.Bone():n.isSprite?new THREE.Sprite(m):new THREE.Object3D();
-  c.name=n.name;c.position.copy(n.position);c.quaternion.copy(n.quaternion);c.scale.copy(n.scale);c.visible=n.visible;c.renderOrder=n.renderOrder;c.frustumCulled=false;
+  c.name=n.name;c.position.copy(n.position);c.quaternion.copy(n.quaternion);c.scale.copy(n.scale);c.visible=n.visible;c.layers.mask=n.layers.mask;c.renderOrder=n.renderOrder;c.frustumCulled=false;
   if(n.morphTargetInfluences)c.morphTargetInfluences=[...n.morphTargetInfluences];
   map.set(n,c);for(const child of n.children)c.add(copy(child));return c;
  }

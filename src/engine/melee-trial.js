@@ -10,6 +10,7 @@ import {performEvade} from './abilities.js';
 import {MeleeRecording} from './melee-recording.js';
 import {openMeleeReview} from './melee-review.js';
 import {meleePhase,phaseLabel} from './melee-phase.js';
+import {AerialGrabDemo} from './aerial-grab-demo.js';
 export function meleeLesson(def,scheme='kbm'){
  const combo=hasStrike(def,'jab')||hasStrike(def,'cross');
  if(scheme==='touch')return (combo?'Tap Punch; repeat for combo':'Tap Punch: heavy slam')+' · hold/release Punch: charged heavy · hold Block: frontal guard · Grab: grab or interact · Evade: dodge';
@@ -32,6 +33,16 @@ export {meleeLessonScheme,grabLesson} from './combat-lesson-controls.js';
 // Scripted decisions use native motion, defense and damage; no target teleporting.
 export class MeleeTrial {
  constructor(g,origin){this.g=g;this.origin=origin.clone();this.records=[];this.index=-1;this.recording=new MeleeRecording();}
+ prepareAerialDemo(){
+  const g=this.g,p=g.player;
+  if(g.ms?.threatLab?.state!=='preparing'||!p?.alive||!(p.def.flightTier>0))throw Error('Choose a flying character in the Threat Room');
+  if(p.grabbing||p.grabbedBy||p._carry||p._mount||p.mstate||!g.melee.canAct(p))throw Error('Finish the current action before preparing the demonstration');
+  const v=this.start('stationary',ROSTER.find(d=>d.id==='kano'));
+  p.pos.copy(this.origin).add(new THREE.Vector3(0,0,-12));p.pos.y=g.world.heightAt(p.pos.x,p.pos.z);p.vel.set(0,0,0);p.flying=false;p.flyHeld=false;p.faceDir(0,1);p.aim3.set(0,0,1);
+  v.pos.y=g.world.heightAt(v.pos.x,v.pos.z)+8;v.faceDir(0,1);v.toggleFlight();v.invuln=0;
+  p.invuln=0;g.world._lookYaw=0;g.world._lookPitch=0;g.world._chaseSnap=true;
+  this.recording.seconds=15;this.demo=new AerialGrabDemo(this);return this.demo;
+ }
  startBag(difficulty='passive',hover=false){
   if(this.g.ms?.threatLab?.state!=='preparing')return false;
   if(!['passive','guard','sparring'].includes(difficulty))throw Error('Choose passive, guard or sparring');
@@ -88,6 +99,7 @@ export class MeleeTrial {
   this.g.hud?.feed?.('TARGET MACHINE · '+(mode==='airborne'?'AIRBORNE LAUNCH':mode==='moving'?'LEFT / RIGHT motion':'STATIONARY')+' · native damage and armor · E at range station toggles mode','#ffd24a');return f;
  }
  control(f,dt){
+  if(this.demo&&(this.demo.active||this.demo.phase==='ready')&&f===this.target){this.demo.controlTarget(f,dt);return;}
   if(this.machine&&f===this.target){for(const child of f.obj.children)child.visible=child===this.machine;this.machineTime+=dt;this.elapsed+=dt;if(this.machineMode==='airborne')return;if(f.alive&&!f.grabbedBy&&f.launchT<=0){const dx=this.machineMode==='moving'?Math.cos(this.machineTime*.6):0;f.faceDir(0,1);f.move(new THREE.Vector3(dx,0,0),dt,.5);}return;}
 
   if(!f.alive||f.grabbedBy||f.frozenT>0||f.staggerT>0||f.stunT>0||f.launchT>0){f.flyHeld=false;f.descendHeld=false;return;}
@@ -115,6 +127,8 @@ export class MeleeTrial {
  }
  repeat(){if(this.machine)return this.startMachine(this.machineMode);return this.kind==='encounter'?this.startEncounter():this.start(this.kind||'stationary');}
  capture(){if(this.target&&!this.review){
+  if(this.demo?.active&&!this.g.player?.alive)this.demo.stop('Demonstration stopped: player defeated');
+  if(this.demo?.outcome==='complete')return;
   if(this.bag&&!this.target.alive){
    this.bag.resetT??=0;if(!this.bag.resetAt)this.bag.resetAt=this.g.time+3;
    if(this.g.time>=this.bag.resetAt){const {difficulty,hover}=this.bag,records=this.records.slice();this.startBag(difficulty,hover);this.records=records;this.g.hud?.feed?.('Training opponent reset · previous damage retained','#eeeeee');return;}
@@ -197,6 +211,6 @@ export class MeleeTrial {
   this.records.push(record);if(this.records.length>100)this.records.shift();this.recording.mark(this.g.time,{...record,label,kind:'contact'});
   this.g.hud?.feed?.(label,'#ffd24a');
  }
- clear(){this.bag=null;this.records.length=0;this.startedAt=this.g.time||0;this.machine=null;this.machineMode=null;this.clearPreview();this.review?.close();this.review=null;this.recording.clear();for(const f of [this.target,this.ally])if(f)retirePracticeActor(this.g,f);this.target=null;this.ally=null;}
+ clear(){if(this.demo?.active)this.demo.stop();this.demo=null;this.bag=null;this.records.length=0;this.startedAt=this.g.time||0;this.machine=null;this.machineMode=null;this.clearPreview();this.review?.close();this.review=null;this.recording.clear();for(const f of [this.target,this.ally])if(f)retirePracticeActor(this.g,f);this.target=null;this.ally=null;}
  dispose(){this.clear();}
 }

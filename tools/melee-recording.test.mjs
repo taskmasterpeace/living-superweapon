@@ -28,3 +28,13 @@ test('review skeleton binds to copied bones instead of the live skeleton',()=>{
  const root=new THREE.Group(),bone=new THREE.Bone();root.add(bone);const mesh=new THREE.SkinnedMesh(new THREE.BufferGeometry(),new THREE.MeshBasicMaterial());root.add(mesh);mesh.bind(new THREE.Skeleton([bone]));
  const copy=cloneReviewActor(root),cm=copy.nodes.find(n=>n.isSkinnedMesh);assert.notEqual(cm.skeleton.bones[0],bone);assert.ok(copy.nodes.includes(cm.skeleton.bones[0]));copy.dispose();mesh.geometry.dispose();mesh.material.dispose();
 });
+
+test('review preserves disabled legacy render layers and enabled modular layers',()=>{
+ const root=new THREE.Group(),legacy=new THREE.Mesh(new THREE.BoxGeometry(),new THREE.MeshBasicMaterial()),current=new THREE.Mesh(new THREE.BoxGeometry(),new THREE.MeshBasicMaterial());
+ legacy.name='legacy';legacy.layers.disable(0);legacy.layers.enable(3);current.name='current';current.layers.enable(2);root.add(legacy,current);
+ const copy=cloneReviewActor(root);
+ assert.equal(copy.model.getObjectByName('legacy').layers.mask,legacy.layers.mask);
+ assert.equal(copy.model.getObjectByName('current').layers.mask,current.layers.mask);
+ assert.equal(copy.model.getObjectByName('legacy').layers.test(new THREE.Layers()),false,'hidden legacy body cannot appear in default camera');
+ copy.dispose();legacy.geometry.dispose();legacy.material.dispose();current.geometry.dispose();current.material.dispose();
+});
