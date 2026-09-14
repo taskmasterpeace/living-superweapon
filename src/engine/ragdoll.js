@@ -104,7 +104,7 @@ export class Ragdoll {
     for (const k in REST) {
       const r = REST[k];
       const pos = joints?.[k] || new THREE.Vector3(o.x + r[0], o.y + r[1], o.z + r[2]);
-      this.P[k] = { pos, prev: pos.clone(), w: r[3] };
+      this.P[k] = { pos, prev: pos.clone(), stepStart: pos.clone(), w: r[3] };
       com.add(pos); n++;
     }
     com.multiplyScalar(1 / n);
@@ -156,13 +156,16 @@ export class Ragdoll {
     dt = clamp(dt, 1 / 140, 1 / 45);
     const dt2 = dt * dt;
     let energy = 0;
+    const damping = this._grounded ? DAMP * Math.exp(-30 * dt) : DAMP;
+    this._grounded = false;
     // integrate
     for (const k in this.P) {
       const pt = this.P[k];
-      const vx = (pt.pos.x - pt.prev.x) * DAMP, vy = (pt.pos.y - pt.prev.y) * DAMP, vz = (pt.pos.z - pt.prev.z) * DAMP;
+      pt.stepStart.copy(pt.pos);
+      const vx = (pt.pos.x - pt.prev.x) * damping, vy = (pt.pos.y - pt.prev.y) * damping, vz = (pt.pos.z - pt.prev.z) * damping;
       pt.prev.copy(pt.pos);
       pt.pos.x += vx; pt.pos.y += vy + GRAV * this.gravMul * dt2 * pt.w; pt.pos.z += vz;
-      energy += vx * vx + vy * vy + vz * vz;
+
     }
     // satisfy constraints
     for (let it = 0; it < ITER; it++) {
@@ -182,10 +185,29 @@ export class Ragdoll {
     }
     // Final contact must see the completed joint orientation. Correcting just
     // one anchor can rotate a different core mesh back through an earlier wall.
-    this.neckLimit?.solve();this.armSeam?.solve();
+    this.jointLimits?.solve();this.neckLimit?.solve();this.armSeam?.solve();
     this.coreContact?.settleIsland(game?.world);
+    // A raised platform is support too; final core bounds include its real volume.
+    if (!this._grounded) for (const key in this.P) {
+      const pos = this.P[key].pos;
+      const bottom = pos.y + (this.coreContact?.supports.get(key)?.finalBounds.min.y ?? -(GROUND_R[key] || DEFAULT_R));
+      if (bottom <= (game?.world?.heightAt?.(pos.x,pos.z) ?? 0) + .01) this._grounded = true;
+      for (const c of game?.world?.cover || []) if (Math.abs(bottom - (c.top ?? c.h)) < .01 && Math.abs(pos.x - c.x) <= (c.hx ?? c.r) && Math.abs(pos.z - c.z) <= (c.hz ?? c.r)) this._grounded = true;
+    }
+    // Coulomb friction acts on the completed island translation as well as
+    // predicted Verlet velocity, otherwise joint projection can propel a corpse.
+    if (this._grounded) {
+      let dx=0,dz=0,count=0;
+      for (const key in this.P) { const pt=this.P[key];dx+=pt.pos.x-pt.stepStart.x;dz+=pt.pos.z-pt.stepStart.z;count++; }
+      dx/=count;dz/=count;
+      const length=Math.hypot(dx,dz),fraction=length>1e-9?Math.min(1,Math.abs(GRAV)*this.gravMul*dt2*.8/length):0;
+      for (const key in this.P) { const pt=this.P[key];pt.pos.x-=dx*fraction;pt.pos.z-=dz*fraction; }
+      this.coreContact?.settleIsland(game?.world);
+    }
+    // Measure completed motion: constraint corrections are not kinetic energy.
+    for (const key in this.P) { const pt = this.P[key]; energy += pt.pos.distanceToSquared(pt.stepStart); }
     // sleep when it settles (holds the final pose, frees the CPU)
-    if (energy < 0.03) { if ((this._still += dt) > 0.45) this.asleep = true; } else this._still = 0;
+    if (this._grounded && energy < 0.03 * (dt * 60) ** 2) { if ((this._still += dt) > 0.45) this.asleep = true; } else this._still = 0;
   }
 
   _collide(game) {
@@ -213,17 +235,20 @@ export class Ragdoll {
       }
       // ground — the TERRAIN, so bodies settle into quarry pits and craters instead of on thin air
       const gy = hAt ? hAt(pt.pos.x, pt.pos.z) : 0;
-      if (pt.pos.y < gy + groundRadius) {
+      if (pt.pos.y <= gy + groundRadius + 1e-6) {
+        this._grounded = true;
         // first hard core-impact BREAKS the ground — crater/dust scaled by the fighter's strength
         const drop = pt.prev.y - pt.pos.y;
         if (!this._impacted && drop > 0.5 && (k === 'chest' || k === 'pelvis' || k === 'head')) {
           this._impacted = true;
           if (game && game.onRagdollImpact) game.onRagdollImpact(this.f, drop * 60, pt.pos);
         }
+        const normalVelocity = Math.max(0, pt.pos.y - pt.prev.y);
         pt.pos.y = gy + groundRadius;
+        pt.prev.y = pt.pos.y - normalVelocity;
         pt.prev.x += (pt.pos.x - pt.prev.x) * GROUND_FRICTION;   // friction: bleed horizontal speed
         pt.prev.z += (pt.pos.z - pt.prev.z) * GROUND_FRICTION;
-        if (pt.prev.y < pt.pos.y) pt.prev.y = pt.pos.y;          // no downward rebound through floor
+
       }
       // arena walls
       pt.pos.x = clamp(pt.pos.x, -bound, bound);

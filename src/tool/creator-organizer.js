@@ -4,7 +4,7 @@ const STORAGE_KEY = 'power-world.creator-review.v1';
 const GROUPS = [
   ['Body', 'frame anatomy muscle size bust skin infection metallic shimmer mercenarySeed generateMercenary'],
   ['Hair & face', 'hair hairColor eyeColor eyeGlow expression beard mustache'],
-  ['Clothes & colors', 'color secondary trim pattern patternScale uploadPattern patternFile patternStatus coat tornClothes robe sleeves collar cape armor capeStyle centerPanel skirt coatStyle colorRegion regionColor applyRegionColor resetRegionColor patternRegion kilt hoodie businessSuit unlitBlack footwear gloves gloveColor'],
+  ['Clothes & colors', 'color secondary trim pattern patternScale uploadPattern patternFile patternStatus coat tornClothes robe sleeves collar collarStyle cape armor capeStyle centerPanel skirt coatStyle colorRegion regionColor applyRegionColor resetRegionColor patternRegion kilt hoodie businessSuit unlitBlack footwear gloves gloveColor'],
   ['Accessories', 'goldChain shoulders gauntlets knees belt backpack beltStyle wristbands glasses visor eyepatch clawStyle headwear wings shieldStyle claws tentacles wristBlasters lasso handModule'],
   ['Tattoos & emblems', 'emblemColor emblem emblemPlacement uploadEmblem emblemFile tattooRegion uploadTattoo tattooFile clearTattoo tattooStatus emblemScale exampleTattoo pinTattoo clearTattooLayers tattooLayersStatus'],
   ['Auras', 'aura auraState auraOrigin glowRegion glowStrength'],

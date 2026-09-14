@@ -13,3 +13,19 @@ test('hinge flexion is bounded during core rotations and collapsed endpoints rec
   for(const s of limit.chains){const u=new T.Vector3().subVectors(p[s.b].pos,p[s.a].pos).normalize(),v=new T.Vector3().subVectors(p[s.c].pos,p[s.b].pos).normalize();assert.ok(u.angleTo(v)<=150*Math.PI/180+1e-6);assert.ok(p[s.b].pos.toArray().every(Number.isFinite));}
  }
 });
+
+ test('hips reject folded-back thighs and crossed legs in the moving torso frame',()=>{
+ const p=fixture(),limit=new RagdollJointLimits(p);
+ p.kneeL.pos.set(1,2,0);p.ftL.pos.set(1,3,0);p.kneeR.pos.set(-1,2,0);p.ftR.pos.set(-1,3,0);
+ limit.solve();
+ for(const side of ['L','R']){
+  const sign=side==='L'?-1:1,hip=p['hi'+side].pos,knee=p['knee'+side].pos,foot=p['ft'+side].pos;
+  assert.ok((knee.x-hip.x)*sign>=-1e-6,'thigh crossed inward');
+  assert.ok((foot.x-hip.x)*sign>=-1e-6,'shin crossed inward');
+  assert.ok(new T.Vector3().subVectors(knee,hip).normalize().dot(new T.Vector3(0,-1,0))>=Math.cos(100*Math.PI/180)-1e-6,'thigh folded into chest');
+ }
+});
+ test('hip span cannot twist independently through the trunk',()=>{
+ const p=fixture(),limit=new RagdollJointLimits(p);p.hiL.pos.set(.5,1,0);p.hiR.pos.set(-.5,1,0);limit.solve();
+ assert.ok(new T.Vector3().subVectors(p.hiR.pos,p.hiL.pos).normalize().dot(new T.Vector3(1,0,0))>=Math.cos(Math.PI/6)-1e-6);
+});
