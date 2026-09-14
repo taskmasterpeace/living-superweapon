@@ -21,3 +21,6 @@ createDec52GameplayMotion(actor, family, {runSpeed}) now maps metre-per-second v
 
 Integration remains incomplete: an actual Dec-52 gameplay actor must supply collision/body dimensions, accepted action tokens, velocity converted to metres per second and incapacitation states, then call update once per simulation tick. Mech weapon fire and cloud formation need their own presentation channels; no bite is invented for unsupported families. No ordinary humanoid actor was silently replaced with mismatched animal hitboxes.
 
+
+Runtime audit: createCreatureActor has only a workshop caller. Actual creature gameplay registration and collision are absent; tracked at https://github.com/taskmasterpeace/living-superweapon/issues/20. The animation adapter is ready for that integration, but does not itself make Dec-52 playable.
+

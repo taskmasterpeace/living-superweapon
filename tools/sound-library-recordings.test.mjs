@@ -28,6 +28,10 @@ test('native recording stays synchronous and yields to fallback until decoded',(
  const {lib,sources}=fixture();assert.equal(lib.native('light'),true);assert.equal(sources.length,1);
  lib.state.bindings.light={name:'custom.mp3',data:'test'};lib.buffers.set('light',{data:'test',buffer:{duration:1}});assert.equal(lib.source('light'),'chosen-recording');
 });
+test('vehicle destruction uses an existing explosion recording without a placeholder oscillator',()=>{
+ const {lib,sources,buffer}=fixture();const h=lib.play('vehicle-explosion',{pos:{x:0,y:0,z:0}});
+ assert.equal(SOUND_LIBRARY_SAMPLES['vehicle-explosion'],'boom');assert.equal(h.source,'bundled-recording');assert.equal(sources.length,1);assert.equal(sources[0].buffer,buffer);assert.equal(sources[0].loop,false);h.stop();
+});
 test('audition prepares bundled audio without changing saved source preferences',async()=>{
  const requested=[];const lib=new SoundLibrary({storage:null,audio:{prepareSample:async id=>{requested.push(id);return {};}}});
  lib.setSettings('scout-gunshot',{source:'placeholder'});const before=lib.exportPackage();

@@ -1,5 +1,6 @@
 // Approved defaults. User-authored SoundLibrary bindings take precedence.
 export const SOUND_LIBRARY_SAMPLES={
+ 'vehicle-explosion':'boom',
  'nanite-form':'library.nanite-form','nanite-break':'library.nanite-break','nanite-reform':'library.nanite-reform',
  light:'library.melee',heavy:'library.melee','scout-gunshot':'wpn.saw',
  'weather-rain':'library.rain','weather-domain-rain':'library.domain-rain',

@@ -30,3 +30,8 @@ The existing 37-cue embedded AI package remains available in the workshop. Add m
 
 Approved ai-pass nanite form, break and reform MP3s now ship as bundled defaults. Fighter updates observe active module/cell transitions and emit spatial cues once; simultaneous cells coalesce, retired/locked/hidden modules stay silent. User bindings retain precedence. This connects existing forearm module gameplay, not the still-pending Dec-52 animal actor integration. Twenty-four audio import, mapping and nanite state/transition tests pass; production build passes. Live mix review remains outstanding.
 
+
+## Vehicle destruction
+
+The live vehicle-explosion SoundLibrary cue now resolves to the existing bundled boom recordings. FrontlineConvoy.destroy and aircraft-combat already emit that cue; neither caller needs a duplicate sound. User bindings and explicit placeholder preferences retain precedence. Eleven SoundLibrary/import tests pass and build passes. Live listening/mix review remains outstanding.
+
