@@ -64,3 +64,12 @@ test('kick candidates distinguish chamber, contact and recovery for both legs',a
   assert.ok(Object.keys(d.poses[2].joints).length>=7,name);
  }
 });
+
+test('left throw preserves hand metadata through export and contact rehearsal',async()=>{
+ const g=await loadActual(),pose={},bones=[];g.scene.traverse(o=>{if(o.isBone){bones.push(o.name);pose[o.name]=o.quaternion.toArray();}});
+ const asset=validateAsset({...base,motion:actionDraft('Boomerang throw / left',pose)},bones);
+ assert.equal(asset.motion.hand,'left');assert.equal(compileAuthoredMotion(asset).userData.hand,'left');
+ assert.throws(()=>validateAsset({...base,motion:{...asset.motion,hand:'middle'}},bones),/hand/);
+ const scene=new T.Scene();scene.add(g.scene);const r=createContactRehearsal(g.scene,scene);r.set('prop');r.update(.2,asset.motion);scene.updateMatrixWorld(true);
+ const prop=scene.children.find(o=>o.isMesh),hand=g.scene.getObjectByName('DEF-handL').getWorldPosition(new T.Vector3());assert.ok(prop.position.distanceTo(hand)<1e-6);r.dispose();
+});

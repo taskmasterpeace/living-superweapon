@@ -4,7 +4,6 @@ import {clone} from 'three/addons/utils/SkeletonUtils.js';
 export const ACTION_DRAFTS={
  ...FULL_BODY_STUDIES,
  'Dart throw':{duration:.65,contact:.05,release:.28,controlReturn:.55,joint:'DEF-forearmR',axis:'x',angle:-1.1},
- 'Boomerang throw':{duration:1.1,contact:.05,release:.5,controlReturn:.95,joint:'DEF-upper_armR',axis:'z',angle:1.3},
  'Ground pickup':{duration:1.2,contact:.45,release:1.2,controlReturn:1,joint:'DEF-spine003',axis:'x',angle:.55},
  'Flying pickup':{duration:.9,contact:.35,release:.9,controlReturn:.9,joint:'DEF-upper_armR',axis:'x',angle:-.9},
  'Paired grab':{duration:1.4,contact:.45,release:1.1,controlReturn:1.3,joint:'DEF-upper_armR',axis:'x',angle:-1.1},
@@ -31,7 +30,7 @@ export function createContactRehearsal(actor,scene){
  let mode='none',partnerScale=1,air=false,lastTime=-1,releasePosition=null;
  return {set(next,scale=1,flying=false){if(mode!==next||partnerScale!==scale){releasePosition=null;lastTime=-1;}mode=next;partnerScale=scale;air=flying;if(mode==='none'){prop.visible=false;other.visible=false;}},update(time,motion){
   prop.visible=mode==='prop';other.visible=mode==='partner';if(mode==='none')return;
-  const hand=actor.getObjectByName('DEF-handR');if(!hand||!motion)return;actor.updateMatrixWorld(true);
+  const hand=actor.getObjectByName(motion?.hand==='left'?'DEF-handL':'DEF-handR');if(!hand||!motion)return;actor.updateMatrixWorld(true);
   if(time<lastTime)releasePosition=null;lastTime=time;
   const held=time>=motion.markers.contact&&time<motion.markers.release;
   const target=mode==='prop'?prop:other,handPos=hand.getWorldPosition(new T.Vector3());

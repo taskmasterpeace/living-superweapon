@@ -35,3 +35,7 @@ Regression failed on ground jab startup before the fix. Afterward, 60 tests pass
 Added six editable full-body studies: front kick, roundhouse and knee strike, each left/right. Each has chamber, contact, retraction and return keys with explicit timing markers. Existing action-study selector and clip export consume them. These are original procedural key poses, not imported/approved martial arts takes. Browser contact inspection caught reversed guard arms; corrected their local rotation direction and rechecked the front-kick contact view. Ten authoring tests pass and production build passes.
 
 Still required: complete sequence visual review on multiple bodies, foot support/contact targets, tuning against actual reach, interruption blending and gameplay assignment. Do not treat these candidates as completed combat moves. Recovered Mixamo roundhouse assets remain a separate retarget/review source.
+
+## Throwing studies and hand metadata
+
+Replaced the single-arm boomerang study with full-body anticipation/release/follow-through keys, added overhead axe throwing, and supplied left-handed versions of both. Authored motion now validates and preserves left/right hand selection through clip metadata/export; prop/partner rehearsal uses that hand instead of always using the right hand. Eleven authoring tests pass, including actual-rig compilation and left-hand prop contact; build passes. Full visual weapon-contact review and gameplay assignment remain outstanding. These studies are still explicitly candidates.
