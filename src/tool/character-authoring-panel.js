@@ -1,6 +1,6 @@
 import {ACTION_DRAFTS,actionDraft,createContactRehearsal} from '../engine/character-action-drafts.js';
 import * as T from 'three';
-import {compileAuthoredMotion,AUTHORING_SCHEMA,RIG,validateAsset,samplePose,createAuthoredParts,saveCharacterRecipe,readCharacterRecipe,recipeEnvelope} from '../engine/character-authoring.js';
+import {compileAuthoredMotion,AUTHORING_SCHEMA,RIG,validateAsset,samplePose,sampleBodyPosition,createAuthoredParts,saveCharacterRecipe,readCharacterRecipe,recipeEnvelope} from '../engine/character-authoring.js';
 import {validateModularRecipe} from '../engine/modular-costume.js';
 export function installAuthoring({actor,scene,camera,orbit,getRecipe,setRecipe,clips,setMotion,ROSTER}){
  const bones=[];actor.traverse(o=>{if(o.isBone)bones.push(o.name);});
@@ -26,6 +26,7 @@ export function installAuthoring({actor,scene,camera,orbit,getRecipe,setRecipe,c
  <label>Animation bone<select id="au-joint-bone"></select></label><small>Rotate the selected bone, then capture a key. These are local joint rotations, not character movement.</small>
  ${['x','y','z'].map((a,i)=>`<label>Joint ${a.toUpperCase()} (degrees)<input id="au-joint-${i}" type="range" min="-180" max="180" step="1" value="0"></label>`).join('')}
  <label>Time (seconds)<input id="au-time" type="range" min="0" max="1" step=".01" value="0"></label><output id="au-clock">0.00 s</output>
+ <label>Hip height (rig metres)<input id="au-body-y" type="number" min="-5" max="5" step=".01" value="0"></label><small>Visual body height for crouches and lifts. Capture a key to save it; gameplay position stays separate.</small>
  <label>Review speed<select id="au-speed"><option value=".25">Quarter speed</option><option value=".5">Half speed</option><option value="1" selected>Normal speed</option></select></label>
  <div class="buttons"><button id="au-pause">Pause / resume</button><button id="au-prev-frame">Previous frame</button><button id="au-next-frame">Next frame</button></div>
  <div class="buttons"><button id="au-seek-contact">Go to contact</button><button id="au-seek-release">Go to release</button><button id="au-seek-controlReturn">Go to control return</button></div>
@@ -54,6 +55,9 @@ export function installAuthoring({actor,scene,camera,orbit,getRecipe,setRecipe,c
  const editPart=()=>{if(selected<0)return;const p={...asset.parts[selected],bone:$('bone').value,shape:$('shape').value,color:$('color').value};for(const k of ['position','size','rotation'])p[k]=[0,1,2].map(i=>+$(k+'-'+i).value*(k==='rotation'?Math.PI/180:1));const next={...asset,parts:asset.parts.map((v,i)=>i===selected?p:v)};asset=validateAsset(next,bones);mount.set(asset);};
  for(const id of ['shape','color',...['position','size','rotation'].flatMap(k=>[0,1,2].map(i=>k+'-'+i))])$(id).oninput=run(editPart);
  const capture=()=>Object.fromEntries(bones.map(n=>[n,actor.getObjectByName(n).quaternion.toArray()]));
+ const captureBody=()=>actor.getObjectByName('DEF-hips').position.toArray();
+ actor.updateMatrixWorld(true);
+ const bodyUp=new T.Vector3(0,1,0).transformDirection(actor.getObjectByName('DEF-hips').parent.matrixWorld.clone().invert());
  const refreshKeys=()=>{$('keys').replaceChildren();for(const k of asset.motion?.keys||[])$('keys').add(new Option(k.time.toFixed(2)+' s',String(k.time)));};
  const syncJoint=()=>{const b=actor.getObjectByName($('joint-bone').value);for(let i=0;i<3;i++)$('joint-'+i).value=b.rotation[['x','y','z'][i]]*180/Math.PI;};
  $('bone').onchange=run(editPart);$('joint-bone').onchange=syncJoint;
@@ -62,27 +66,29 @@ export function installAuthoring({actor,scene,camera,orbit,getRecipe,setRecipe,c
  $('study-load').onclick=run(()=>{
   // End the previous draft before drawing the source; otherwise draw reapplies
   // its last pose and every new study accumulates the previous joint rotations.
-  active=false;playing=false;working={};setMotion($('base').value,0);
+  active=false;playing=false;working={};workingBody=null;setMotion($('base').value,0);
   const motion={...actionDraft($('study').value,capture()),base:$('base').value};
-  asset=validateAsset({...asset,motion},bones);$('name').value=asset.motion.name;$('duration').value=asset.motion.duration;$('time').max=asset.motion.duration;for(const [k,v] of Object.entries(asset.motion.markers))$(k).value=v;active=true;playing=true;time=0;working={};refreshKeys();status('Editable blocking study loaded from '+asset.motion.base);
+  motion.keys=motion.keys.map(k=>({...k,bodyPosition:captureBody()}));
+  asset=validateAsset({...asset,motion},bones);$('name').value=asset.motion.name;$('duration').value=asset.motion.duration;$('time').max=asset.motion.duration;for(const [k,v] of Object.entries(asset.motion.markers))$(k).value=v;active=true;playing=true;time=0;working={};workingBody=null;refreshKeys();status('Editable blocking study loaded from '+asset.motion.base);
  });
- $('start').onclick=run(()=>{const timing=readTiming();asset=validateAsset({...asset,motion:{...timing,name:$('name').value,base:$('base').value,keys:[{time:0,pose:capture()}]}},bones);time=0;active=true;playing=false;$('time').max=timing.duration;refreshKeys();syncJoint();status('Draft started. Pose a bone, move the time slider, then capture.');});
- let working={};
+ $('start').onclick=run(()=>{const timing=readTiming();asset=validateAsset({...asset,motion:{...timing,name:$('name').value,base:$('base').value,keys:[{time:0,pose:capture(),bodyPosition:captureBody()}]}},bones);time=0;active=true;playing=false;$('time').max=timing.duration;refreshKeys();syncJoint();status('Draft started. Pose a bone, move the time slider, then capture.');});
+ let working={},workingBody=null;
+ $('body-y').oninput=run(()=>{if(!active||!asset.motion)throw Error('Start a draft first');const y=Number($('body-y').value);if(!Number.isFinite(y)||y < -5||y > 5)throw Error('Hip height must be between -5 and 5');playing=false;const p=new T.Vector3().fromArray(captureBody());workingBody=p.addScaledVector(bodyUp,y-p.dot(bodyUp)).toArray();});
  for(let i=0;i<3;i++)$('joint-'+i).oninput=()=>{if(!active){status('Start a draft first');return;}playing=false;const name=$('joint-bone').value,b=actor.getObjectByName(name);b.rotation.set(...[0,1,2].map(j=>+$('joint-'+j).value*Math.PI/180));working[name]=b.quaternion.toArray();};
  $('duration').onchange=()=>{const d=+$('duration').value;if(d>=.1&&d<=30){$('time').max=d;time=Math.min(time,d);}};
- $('time').oninput=()=>{time=+$('time').value;playing=false;};
- $('key').onclick=run(()=>{if(!asset.motion)throw Error('Start a draft first');const keys=asset.motion.keys.filter(k=>Math.abs(k.time-time)>.005);keys.push({time,pose:capture()});keys.sort((a,b)=>a.time-b.time);asset=validateAsset({...asset,motion:{...asset.motion,...readTiming(),keys}},bones);working={};refreshKeys();status('Captured '+time.toFixed(2)+' seconds');});
- $('keys').onchange=()=>{time=+$('keys').value;$('time').value=time;working={};playing=false;};
+ $('time').oninput=()=>{time=+$('time').value;playing=false;working={};workingBody=null;};
+ $('key').onclick=run(()=>{if(!asset.motion)throw Error('Start a draft first');const keys=asset.motion.keys.filter(k=>Math.abs(k.time-time)>.005);const bodyPosition=captureBody();for(const k of keys)if(!k.bodyPosition)k.bodyPosition=[...bodyPosition];keys.push({time,pose:capture(),bodyPosition});keys.sort((a,b)=>a.time-b.time);asset=validateAsset({...asset,motion:{...asset.motion,...readTiming(),keys}},bones);working={};workingBody=null;refreshKeys();status('Captured '+time.toFixed(2)+' seconds');});
+ $('keys').onchange=()=>{time=+$('keys').value;$('time').value=time;working={};workingBody=null;playing=false;};
  $('delete-key').onclick=run(()=>{if(!asset.motion||asset.motion.keys.length<=1)throw Error('Keep at least one key');const t=+$('keys').value;asset.motion.keys=asset.motion.keys.filter(k=>k.time!==t);refreshKeys();});
- $('play').onclick=run(()=>{if(!asset.motion)throw Error('Capture a draft first');asset=validateAsset({...asset,motion:{...asset.motion,...readTiming()}},bones);working={};active=true;playing=true;time=0;});
- const seek=t=>{if(!asset.motion)throw Error('Load or capture a draft first');active=true;playing=false;working={};time=T.MathUtils.clamp(t,0,asset.motion.duration);$('time').value=time;};
- $('pause').onclick=run(()=>{if(!asset.motion)throw Error('Load or capture a draft first');active=true;playing=!playing;if(playing&&time>=asset.motion.duration)time=0;working={};status(playing?'Draft resumed':'Draft paused');});
+ $('play').onclick=run(()=>{if(!asset.motion)throw Error('Capture a draft first');asset=validateAsset({...asset,motion:{...asset.motion,...readTiming()}},bones);working={};workingBody=null;active=true;playing=true;time=0;});
+ const seek=t=>{if(!asset.motion)throw Error('Load or capture a draft first');active=true;playing=false;working={};workingBody=null;time=T.MathUtils.clamp(t,0,asset.motion.duration);$('time').value=time;};
+ $('pause').onclick=run(()=>{if(!asset.motion)throw Error('Load or capture a draft first');active=true;playing=!playing;if(playing&&time>=asset.motion.duration)time=0;working={};workingBody=null;status(playing?'Draft resumed':'Draft paused');});
  $('prev-frame').onclick=run(()=>seek(time-1/60));$('next-frame').onclick=run(()=>seek(time+1/60));
  for(const marker of ['contact','release','controlReturn'])$('seek-'+marker).onclick=run(()=>{asset=validateAsset({...asset,motion:{...asset.motion,...readTiming()}},bones);seek(asset.motion.markers[marker]);});
- $('stop').onclick=()=>{active=false;playing=false;working={};status('Returned to source / flight preview');};
+ $('stop').onclick=()=>{active=false;playing=false;working={};workingBody=null;status('Returned to source / flight preview');};
  $('export').onclick=run(()=>{asset.name=$('name').value;const out=validateAsset(asset,bones);const url=URL.createObjectURL(new Blob([JSON.stringify(out,null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download='powerworld-authoring-asset.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);status('Exported parts, keys, timing and rig contract.');});
  $('clip-export').onclick=run(()=>{const clip=compileAuthoredMotion(validateAsset(asset,bones)),data={visualReview:asset.motion.visualReview,rig:RIG,status:'candidate',source:asset.motion.source,markers:asset.motion.markers,hand:asset.motion.hand,contactStyle:asset.motion.contactStyle,clip:T.AnimationClip.toJSON(clip)},url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download='powerworld-animation-clip.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);status('Exported Three.js clip and separate timing metadata');});
- $('import').onclick=()=>$('file').click();$('file').onchange=async()=>{try{const f=$('file').files[0];if(!f)return;if(f.size>4000000)throw Error('Asset exceeds 4 MB');const next=validateAsset(JSON.parse(await f.text()),bones);asset=next;selected=asset.parts.length-1;$('name').value=asset.name;refreshParts();syncPart();refreshKeys();active=!!asset.motion;playing=false;time=0;working={};if(asset.motion){$('duration').value=asset.motion.duration;$('time').max=asset.motion.duration;for(const [k,v] of Object.entries(asset.motion.markers))$(k).value=v;}status('Imported validated candidate.');}catch(e){status(e.message);}finally{$('file').value='';}};
+ $('import').onclick=()=>$('file').click();$('file').onchange=async()=>{try{const f=$('file').files[0];if(!f)return;if(f.size>4000000)throw Error('Asset exceeds 4 MB');const next=validateAsset(JSON.parse(await f.text()),bones);asset=next;selected=asset.parts.length-1;$('name').value=asset.name;refreshParts();syncPart();refreshKeys();active=!!asset.motion;playing=false;time=0;working={};workingBody=null;if(asset.motion){$('duration').value=asset.motion.duration;$('time').max=asset.motion.duration;for(const [k,v] of Object.entries(asset.motion.markers))$(k).value=v;}status('Imported validated candidate.');}catch(e){status(e.message);}finally{$('file').value='';}};
  for(const [id,pos] of Object.entries({front:[0,0,1],back:[0,0,-1],side:[1,0,0],top:[0,1,.001]}))$(id).onclick=()=>{const distance=camera.position.distanceTo(orbit.target);camera.position.copy(orbit.target).add(new T.Vector3(...pos).multiplyScalar(distance));orbit.update();};
  $('neck').onchange=()=>setRecipe({...getRecipe(),neckStyle:$('neck').value});$('outfit').onchange=()=>setRecipe({...getRecipe(),outfit:$('outfit').value,...($('outfit').value==='bodysuit'?{belt:false,knees:false}: {})});$('skin').onchange=()=>{if($('skin').value)setRecipe({...getRecipe(),skin:$('skin').value});};
  $('save').onclick=run(()=>{const r=validateModularRecipe(recipeEnvelope(getRecipe()));saveCharacterRecipe($('roster').value,r);status('Saved '+$('roster').selectedOptions[0].textContent+' on this browser address. Export for backup.');});
@@ -90,6 +96,6 @@ export function installAuthoring({actor,scene,camera,orbit,getRecipe,setRecipe,c
  const requestedStudy=new URLSearchParams(location.search).get('study');if(requestedStudy&&Object.hasOwn(ACTION_DRAFTS,requestedStudy)){details.open=true;$('study').value=requestedStudy;$('study-load').click();}
  return {get asset(){return asset.parts.length||asset.motion?asset:null;},update(dt){rehearsal.set(active?$('contact-mode').value:'none',+$('partner-size').value,$('air').checked);if(!active||!asset.motion)return;const m=asset.motion;if(playing){const step=dt*+$('speed').value;time=m.loop?(time+step)%m.duration:Math.min(m.duration,time+step);if(!m.loop&&time===m.duration)playing=false;}
   document.querySelector('#status').textContent=m.name+' | authored candidate | '+time.toFixed(2)+' / '+m.duration.toFixed(2)+' s'+(m.loop?' | loop':'');
-  const pose={...samplePose(m,time),...working};for(const [name,q] of Object.entries(pose))actor.getObjectByName(name)?.quaternion.fromArray(q);actor.updateMatrixWorld(true);rehearsal.update(time,m);$('time').value=time;$('clock').textContent=time.toFixed(2)+' s · '+(time<m.markers.contact?'Startup':time<m.markers.release?'Contact / held':time<m.markers.controlReturn?'Recovery':'Control returned');
+  const pose={...samplePose(m,time),...working};for(const [name,q] of Object.entries(pose))actor.getObjectByName(name)?.quaternion.fromArray(q);const bodyPosition=workingBody||sampleBodyPosition(m,time);if(bodyPosition)actor.getObjectByName('DEF-hips').position.fromArray(bodyPosition);$('body-y').value=actor.getObjectByName('DEF-hips').position.dot(bodyUp).toFixed(3);actor.updateMatrixWorld(true);rehearsal.update(time,m);$('time').value=time;$('clock').textContent=time.toFixed(2)+' s · '+(time<m.markers.contact?'Startup':time<m.markers.release?'Contact / held':time<m.markers.controlReturn?'Recovery':'Control returned');
  }};
 }

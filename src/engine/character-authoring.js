@@ -25,9 +25,11 @@ export function validateAsset(input,bones){
   const markers={};for(const key of ['contact','release','controlReturn'])markers[key]=finite(m.markers?.[key],0,d,key);
   if(markers.contact>markers.release||markers.release>markers.controlReturn)throw Error('Markers must be contact ≤ release ≤ control return');
   if(!Array.isArray(m.keys)||m.keys.length<1||m.keys.length>240)throw Error('Use 1–240 keyframes');
+  const bodyTrack=m.keys.some(k=>k.bodyPosition!==undefined);
+  if(bodyTrack&&!bones.includes('DEF-hips'))throw Error('Body position requires DEF-hips');
   let previous=-1;
   const keys=m.keys.map(k=>{const time=finite(k.time,0,d,'key time');if(time<=previous)throw Error('Keyframe times must increase');previous=time;
-   const pose={};for(const [bone,q] of Object.entries(k.pose||{})){if(!bones.includes(bone))throw Error('Unknown pose bone '+bone);const a=vector(q,4,-1,1,'quaternion'),len=Math.hypot(...a);if(Math.abs(len-1)>.01)throw Error('Quaternion must be normalized');pose[bone]=a;}return {time,pose};});
+   const pose={};for(const [bone,q] of Object.entries(k.pose||{})){if(!bones.includes(bone))throw Error('Unknown pose bone '+bone);const a=vector(q,4,-1,1,'quaternion'),len=Math.hypot(...a);if(Math.abs(len-1)>.01)throw Error('Quaternion must be normalized');pose[bone]=a;}return {time,pose,...(bodyTrack?{bodyPosition:vector(k.bodyPosition,3,-5,5,'body position')}: {})};});
   out.motion={...(visualReview?{visualReview}:{}),contactStyle:m.contactStyle||'carry',hand:m.hand||'right',name:String(m.name||out.name).slice(0,80),duration:d,loop:!!m.loop,base:String(m.base||'Idle_Loop').slice(0,100),markers,keys,status:'candidate',source:String(m.source||'Hand authored in Power World').slice(0,240)};
  }return out;
 }
@@ -37,7 +39,15 @@ export function samplePose(m,time){
  const f=b.time>a.time?(t-a.time)/(b.time-a.time):0,pose={};
  for(const name of new Set([...Object.keys(a.pose),...Object.keys(b.pose)])){
   const q=a.pose[name]||b.pose[name],r=b.pose[name]||q;pose[name]=new T.Quaternion().fromArray(q).slerp(new T.Quaternion().fromArray(r),f).toArray();
- }return pose;
+}return pose;
+}
+// Absolute local hip translation in source-rig metres; never an entity transform.
+export function sampleBodyPosition(m,time){
+ if(!m.keys[0].bodyPosition)return null;
+ const t=T.MathUtils.clamp(time,0,m.duration);let a=m.keys[0],b=a;
+ for(const key of m.keys){if(key.time<=t)a=key;if(key.time>=t){b=key;break;}b=key;}
+ const alpha=b.time>a.time?(t-a.time)/(b.time-a.time):0;
+ return a.bodyPosition.map((v,i)=>T.MathUtils.lerp(v,b.bodyPosition[i],alpha));
 }
 export function createAuthoredParts(actor){
  let mounted=[],signature='';return {set(asset){const next=JSON.stringify(asset.parts);if(signature===next)return;this.dispose();signature=next;for(const p of asset.parts){const bone=actor.getObjectByName(p.bone);if(!bone)continue;
@@ -57,5 +67,6 @@ export function compileAuthoredMotion(asset){
  const m=asset.motion;if(!m)throw Error('Asset has no motion');
  const names=new Set(m.keys.flatMap(k=>Object.keys(k.pose)));
  const tracks=[...names].map(name=>new T.QuaternionKeyframeTrack(name+'.quaternion',m.keys.map(k=>k.time),m.keys.flatMap(k=>samplePose(m,k.time)[name]||[0,0,0,1])));
+ if(m.keys[0].bodyPosition)tracks.push(new T.VectorKeyframeTrack('DEF-hips.position',m.keys.map(k=>k.time),m.keys.flatMap(k=>k.bodyPosition)));
  const clip=new T.AnimationClip(m.name,m.duration,tracks);clip.userData={...(m.visualReview?{visualReview:{...m.visualReview}}:{}),rig:RIG,source:m.source,status:'candidate',markers:m.markers,hand:m.hand,contactStyle:m.contactStyle};return clip;
 }

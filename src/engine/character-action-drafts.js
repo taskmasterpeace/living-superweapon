@@ -1,7 +1,7 @@
 import * as T from 'three';
 import {FULL_BODY_STUDIES,fullBodyStudy} from './character-full-body-studies.js';
 import {clone} from 'three/addons/utils/SkeletonUtils.js';
-import {samplePose} from './character-authoring.js';
+import {samplePose,sampleBodyPosition} from './character-authoring.js';
 export const ACTION_DRAFTS={
  ...FULL_BODY_STUDIES,
  'Dart throw':{duration:.65,contact:.05,release:.28,controlReturn:.55,joint:'DEF-forearmR',axis:'x',angle:-1.1},
@@ -47,8 +47,10 @@ export function createContactRehearsal(actor,scene){
   }target.position.lerp(approach,1-smooth);}else if(time>=motion.markers.release){
    // Sample the exact release pose, independent of playback or scrub history.
    const saved=[];for(const [name,q]of Object.entries(motion.keys?.length?samplePose(motion,motion.markers.release):{})){const bone=actor.getObjectByName(name);if(bone){saved.push([bone,bone.quaternion.clone()]);bone.quaternion.fromArray(q);}}
+   const hips=actor.getObjectByName('DEF-hips'),savedHips=hips?.position.clone(),bodyPosition=motion.keys?.length?sampleBodyPosition(motion,motion.markers.release):null;
+   if(bodyPosition&&hips)hips.position.fromArray(bodyPosition);
    actor.updateMatrixWorld(true);hand.getWorldPosition(handPos);
-   for(const [bone,q]of saved)bone.quaternion.copy(q);actor.updateMatrixWorld(true);
+   for(const [bone,q]of saved)bone.quaternion.copy(q);if(savedHips)hips.position.copy(savedHips);actor.updateMatrixWorld(true);
    target.position.copy(handPos);
    if(mode==='partner'){other.updateMatrixWorld(true);const socket=other.getObjectByName(socketName);if(socket)target.position.sub(socket.getWorldPosition(new T.Vector3()).sub(other.position));}
    const elapsed=time-motion.markers.release;target.position.add(new T.Vector3(0,-4.9*elapsed*elapsed,elapsed*3));

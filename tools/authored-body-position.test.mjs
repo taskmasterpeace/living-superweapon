@@ -1,0 +1,22 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import * as T from 'three';
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+import {validateAsset,compileAuthoredMotion} from '../src/engine/character-authoring.js';
+globalThis.ProgressEvent??=class{constructor(type,data){Object.assign(this,{type},data);}};
+test('body keyframes lower production hips without moving the actor root',async()=>{
+ const bytes=await fs.readFile('public/models/modular-hero/modular-hero.glb');
+ const g=await new GLTFLoader().parseAsync(bytes.buffer.slice(bytes.byteOffset,bytes.byteOffset+bytes.byteLength),'');
+ const bones=[],pose={};g.scene.traverse(o=>{if(o.isBone){bones.push(o.name);pose[o.name]=o.quaternion.toArray();}});
+ const hips=g.scene.getObjectByName('DEF-hips'),start=hips.position.toArray();g.scene.updateMatrixWorld(true);
+ const up=new T.Vector3(0,1,0).transformDirection(hips.parent.matrixWorld.clone().invert()),lower=hips.position.clone().addScaledVector(up,-.3).toArray(),worldStart=hips.getWorldPosition(new T.Vector3());
+ const input={schema:'powerworld-authoring-v1',rig:'ual-deform-v1',parts:[],motion:{duration:1,markers:{contact:.5,release:.8,controlReturn:1},keys:[{time:0,pose,bodyPosition:start},{time:.5,pose,bodyPosition:lower},{time:1,pose,bodyPosition:start}]}};
+ const asset=validateAsset(input,bones),clip=compileAuthoredMotion(asset),root=g.scene.position.clone();
+ const mixer=new T.AnimationMixer(g.scene);mixer.clipAction(clip).setLoop(T.LoopOnce,1).play();mixer.setTime(.25);
+ assert.ok(Math.abs(hips.getWorldPosition(new T.Vector3()).y-(worldStart.y-.15))<1e-5,'hips did not follow authored lowering');
+ assert.ok(g.scene.position.equals(root),'body motion moved the actor root');
+ mixer.setTime(.75);assert.ok(Math.abs(hips.getWorldPosition(new T.Vector3()).y-(worldStart.y-.15))<1e-5);
+ const invalid=structuredClone(input);delete invalid.motion.keys[1].bodyPosition;
+ assert.throws(()=>validateAsset(invalid,bones),/body position/i);
+});

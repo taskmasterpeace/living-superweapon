@@ -142,3 +142,8 @@ For authors: recovery is the remaining commitment after your own attack; stagger
 # Repeatable study loading
 
 Loading an action study now ends the previous draft, samples the selected Base clip at zero, and records that base clip name. It no longer adds the new study's rotations to the previous draft's current frame. The running editor was checked by visiting Ground pickup contact, advancing to release, reloading and returning to contact: the contact silhouette remained consistent. Build passes. Ground pickup is still rejected for support/hand placement under #21; this fixes repeatability, not its choreography or missing body-height authoring.
+# Body-height authoring
+
+The editor now exposes Hip height (rig metres), captures it with each key, interpolates it when scrubbing, and exports a DEF-hips.position track. The control projects through the imported rig parent's actual up axis; UAL local Y is not vertical. Body keys store absolute parent-local `bodyPosition: [x,y,z]`; all keys must supply this field when the track exists. Legacy rotation-only assets remain valid.
+
+The release rehearsal samples the exact release-time body position and restores the actor after measuring hand contact. The actor/entity root remains separate from visual hips. Browser verification captured a lowered contact key, sought to recovery and returned to confirm the saved height. Sixteen production-rig/authoring tests and build pass. This supplies the missing tool; ground-pickup choreography remains rejected until foot and payload contacts are re-authored and reviewed.
