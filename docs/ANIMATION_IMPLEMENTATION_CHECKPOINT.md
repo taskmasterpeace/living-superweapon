@@ -39,3 +39,7 @@ Still required: complete sequence visual review on multiple bodies, foot support
 ## Throwing studies and hand metadata
 
 Replaced the single-arm boomerang study with full-body anticipation/release/follow-through keys, added overhead axe throwing, and supplied left-handed versions of both. Authored motion now validates and preserves left/right hand selection through clip metadata/export; prop/partner rehearsal uses that hand instead of always using the right hand. Eleven authoring tests pass, including actual-rig compilation and left-hand prop contact; build passes. Full visual weapon-contact review and gameplay assignment remain outstanding. These studies are still explicitly candidates.
+
+## Live person-throw release recovery
+
+The hostile person-throw path now captures the holder's actual arm pose before release and blends it back over 0.3 seconds. Modular rendering preserves this visual owner. No launch velocity, damage, control lock or friendly setdown changes. New actions/guard/incapacitation cancel recovery and hitstop freezes its clock. Fifty-one person carry, friendly carry and release-pose tests pass; build passes. Live visual transition review remains required; this is continuity from an existing pose, not a newly imported throw animation.

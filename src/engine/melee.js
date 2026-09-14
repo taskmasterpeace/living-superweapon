@@ -1,3 +1,4 @@
+import {beginPersonThrowPose,advancePersonThrowPose} from './person-throw-pose.js';
 import {zombieArmsDisabled} from './zombie-locational-damage.js';
 import {grabLesson,meleeLessonScheme} from './combat-lesson-controls.js';
 import {personThrowLaunch,THROW_WINDOW} from './person-throw-trajectory.js';
@@ -465,6 +466,7 @@ export class MeleeSystem {
     if(holder._personCarry?.friendly){if(!this.setdownPerson(holder))this.release(holder);return;}
     if (!v) { this.release(holder); return; }
     const {back,transport,direction:dir,damage:dmg,velocity}=personThrowLaunch(holder,v);
+    beginPersonThrowPose(holder);
     this.release(holder);holder.strikeCd=Math.max(holder.strikeCd,.35);
     v.state = 'idle';
     // AUTHORED velocity, not kb-scaled — the dotted preview integrates exactly this launch state.
@@ -617,6 +619,7 @@ export class MeleeSystem {
   }
 
   update(f, dt) {
+    advancePersonThrowPose(f,dt);
     const g = this.game;
     if(this._hardInterrupt(f) && f.grabState!=='clinch')this.clearInput(f);
     f._clinchStrikeCd=Math.max(0,(f._clinchStrikeCd||0)-dt);

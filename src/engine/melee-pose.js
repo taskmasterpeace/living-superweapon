@@ -1,3 +1,4 @@
+import {animatePersonThrowPose} from './person-throw-pose.js';
 import * as THREE from 'three';
 import {STRIKES} from '../data/martial.js';
 import {reachArm} from './hero-rig.js';
@@ -18,6 +19,7 @@ const smooth=t=>{t=THREE.MathUtils.clamp(t,0,1);return t*t*(3-2*t);};
     const bow=animateBowDraw(f);
     if(animateAbilityMeleePose(f))return;
     if(bow)return;
+    if(animatePersonThrowPose(f))return;
   const p=f.parts,m=f._meleeMotion,S=STRIKES[f.mId];
   if(f._openSky&&p.rig&&f.poseGuard>.001&&!f.mstate&&!f.grabState){animateGuard(f);return;}
   if(f._openSky&&p.rig&&f.grabState==='clinch'&&f.grabbing){animateClinch(f);return;}
