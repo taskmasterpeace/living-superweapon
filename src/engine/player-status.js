@@ -20,7 +20,7 @@ export function playerStatus(p){
  if(p.frost>0&&!(p.frozenT>0))effects.push({id:'frost',label:`Frost ${Math.round(p.frost*100)}%`,glyph:'defense',remaining:null,harmful:true,hint:'Leave cold to prevent freezing'});
  add('power',p.buffName||'Power boost','power',p.buffT);
  condition('frozen','Frozen','defense',p.frozenT/recovery,'Heavy hits shatter ice');
- condition('stun','Stunned','threat',p.stunT/recovery,'Actions disabled · recover before attacking');
+ condition('stun','Stunned','threat',p.stunT,'Actions disabled · recover before attacking');
  add('chill','Slowed','agility',p._chill);
  add('drained','Drained','energy',p.drainedT);
  add('speed',`Speed +${Math.round(((p.sprintMult||1)-1)*100)}%`,'mobility',p.sprintT);

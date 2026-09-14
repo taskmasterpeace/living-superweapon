@@ -111,3 +111,36 @@ test('differing dt: a fixed throttle window travels a consistent distance at 30 
  }
  assert.ok(Math.abs(runs[0]-runs[1])<3,`2s of throttle is dt-stable: ${runs.map(r=>r.toFixed(2))}`);
 });
+
+test('shared advance samples uphill grade and animates accepted wheel travel for mission drivers',async()=>{
+ const speeds=[];
+ for(const slope of [-.1,0,.1]){
+  const f=await setup();try{
+   const v=f.v;v.yaw=0;const z=v.cover.z;f.world.heightAt=(_x,pz)=>4+(pz-z)*slope;v.terrain=[];f.convoy._ground(v);
+   for(const name of ['FL','FR','RL','RR']){const wheel=new T.Group();wheel.name='wheels_'+name;v.mesh.add(wheel);}
+   for(let n=0;n<30;n++)f.convoy.driving.advance(v,{throttle:1,steer:0,brake:false},1/60);
+   speeds.push(v.speed);assert.ok(Math.abs(v._wheelSpin)>.01);assert.ok(Math.abs(v.mesh.getObjectByName('wheels_RL').quaternion.x)>.01);
+   assert.equal(v.occupant,null,'mission advance needs no player occupant');
+  }finally{f.convoy.dispose();}
+ }
+ assert.ok(speeds[0]>speeds[1]&&speeds[1]>speeds[2],`downhill / flat / uphill: ${speeds}`);
+});
+test('grade reverses with heading, invalid samples stay finite, and brake holds a slope',async()=>{
+ const f=await setup();try{
+  f.world.heightAt=(_x,z)=>z*.1;f.v.yaw=0;assert.ok(Math.abs(f.convoy.driving._grade(f.v)-.1)<1e-8);
+  f.v.yaw=Math.PI;assert.ok(Math.abs(f.convoy.driving._grade(f.v)+.1)<1e-8);
+  f.world.heightAt=()=>NaN;assert.equal(f.convoy.driving._grade(f.v),0);
+  f.world.heightAt=(_x,z)=>4+(z-f.v.cover.z)*.1;f.v.terrain=[];f.convoy._ground(f.v);
+  const before=f.v.mesh.position.clone();f.convoy.driving.advance(f.v,{throttle:0,steer:0,brake:true},1/60);
+  assert.equal(f.v.speed,0);assert.equal(f.v.mesh.position.distanceTo(before),0);
+ }finally{f.convoy.dispose();}
+});
+test('wheel steering returns on exit without resetting accumulated roll',async()=>{
+ const f=await setup();try{
+  for(const name of ['FL','FR','RL','RR']){const wheel=new T.Group();wheel.name='wheels_'+name;f.v.mesh.add(wheel);}
+  f.input('KeyJ');f.input('KeyW','KeyD');f.step(15);
+  const rear=f.v.mesh.getObjectByName('wheels_RL'),front=f.v.mesh.getObjectByName('wheels_FL');
+  assert.ok(front.quaternion.angleTo(rear.quaternion)>.01);
+  const roll=f.v._wheelSpin;f.convoy.driving.exit();assert.equal(f.v._wheelSpin,roll);assert.ok(front.quaternion.angleTo(rear.quaternion)<1e-7);
+ }finally{f.convoy.dispose();}
+});

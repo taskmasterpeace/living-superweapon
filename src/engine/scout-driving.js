@@ -1,4 +1,4 @@
-import {Vector3} from 'three';
+import {Vector3,Quaternion} from 'three';
 import {cancelHeldAttacks} from './abilities.js';
 import {canPilotVehicle} from './mobility-policy.js';
 import {soldierControlsActive} from '../core/soldier-controls.js';
@@ -6,6 +6,7 @@ import {SCOUT_DRIVE,stepGroundDrive,haltDrive} from './ground-driving.js';
 
 // Deliberately bounded arcade ground driving: no suspension, seat animation,
 // ramming damage or player gun input. Native actor remains the chase target.
+const AXLE=new Vector3(1,0,0),UP=new Vector3(0,1,0),spinQ=new Quaternion(),steerQ=new Quaternion();
 const WHEELS=[[-4.9395,7.9],[4.9395,7.9],[-4.9395,-8.5],[4.9395,-8.5]];
 export class ScoutDriving {
  constructor(convoy){this.convoy=convoy;this.game=convoy.game;this.vehicle=null;this.throttle=0;this.steer=0;this.brake=false;this._exit=new Vector3();}
@@ -54,6 +55,24 @@ export class ScoutDriving {
   if(Math.max(...heights)-Math.min(...heights)>5)return null;
   return heights.reduce((a,b)=>a+b,0)/4;
  }
+ // Wheelbase grade sampled in the vehicle's heading, positive uphill.
+ _grade(v){
+  const w=this.game.world,s=Math.sin(v.yaw),c=Math.cos(v.yaw);
+  const h=(dx,dz)=>w.heightAt?.(v.cover.x+c*dx+s*dz,v.cover.z-s*dx+c*dz)??0;
+  const grade=(h(...WHEELS[0])+h(...WHEELS[1])-h(...WHEELS[2])-h(...WHEELS[3]))/(2*16.4);
+  return Number.isFinite(grade)?grade:0;
+ }
+ // Cosmetic rotation reads accepted displacement, so a blocked car does not spin tires.
+ _wheels(v,distance=0){
+  if(!v.mesh?.getObjectByName)return;
+  if(!v._driveWheels)v._driveWheels=['FL','FR','RL','RR'].map(name=>{
+   const node=v.mesh.getObjectByName('wheels_'+name);return node?{node,rest:node.quaternion.clone(),front:name[0]==='F'}:null;
+  });
+  v._wheelSpin=((v._wheelSpin||0)+distance/Math.max(.001,.65*Math.abs(v.mesh.scale?.x||1)))%(Math.PI*2);
+  spinQ.setFromAxisAngle(AXLE,v._wheelSpin);
+  steerQ.setFromAxisAngle(UP,-(v.steerSmooth||0)*.5);
+  for(const wheel of v._driveWheels){if(!wheel)continue;wheel.node.quaternion.copy(wheel.rest);if(wheel.front)wheel.node.quaternion.multiply(steerQ);wheel.node.quaternion.multiply(spinQ);}
+ }
  update(dt){
   const v=this.vehicle;if(!v)return;
   if(v.destroyed||!v.occupant?.alive||v.occupant!==this.game.player||v.occupant._formDisposed){this.exit(true);return;}
@@ -70,14 +89,17 @@ export class ScoutDriving {
  advance(v,intent,dt){
   if(v.destroyed||!Number.isFinite(dt)||dt<=0)return;
   dt=Math.min(dt,.1);
-  stepGroundDrive(v,intent,dt,SCOUT_DRIVE);
+  stepGroundDrive(v,{...intent,grade:this._grade(v)},dt,SCOUT_DRIVE);
+  let travelled=0;
   const dx=v.vx*dt,dz=v.vz*dt,dist=Math.hypot(dx,dz);
   const steps=Math.max(1,Math.ceil(dist/1.25)),sx=dx/steps,sz=dz/steps;
   for(let i=0;i<steps;i++){
    const x=v.cover.x+sx,z=v.cover.z+sz,h=this._surface(x,z,v.yaw),r=v.driveRadius;
    if(h===null||Math.abs(h-v.ground)>3||!this._clear(x,z,r,v.cover,v.cover.bottom,v.cover.top)){haltDrive(v);break;}
+   travelled+=Math.hypot(sx,sz);
    v.cover.x=x;v.cover.z=z;v.mesh.position.x=x;v.mesh.position.z=z;v.terrain=[];
   }
+  this._wheels(v,travelled*Math.sign(v.speed||((dx*Math.sin(v.yaw)+dz*Math.cos(v.yaw)))));
   this.convoy._ground(v);
  }
  exit(force=false){
@@ -93,6 +115,7 @@ export class ScoutDriving {
   if(!found)this._exit.set(v.cover.x,v.cover.top+.2,v.cover.z);
   p.pos.copy(this._exit);p.obj.position.copy(p.pos);p.vel.set(0,0,0);p.obj.visible=v._occupantVisible!==false;p._scoutVehicle=null;v.occupant=null;v.speed=0;v.vx=0;v.vz=0;v.yawVel=0;v.steerSmooth=0;
   v.cover.noCam=v._priorNoCam;this.game.world._chaseSnap=true;
+  this._wheels(v,0);
   this.vehicle=null;this.throttle=this.steer=0;this.brake=false;return true;
  }
  dispose(){this.exit(true);}

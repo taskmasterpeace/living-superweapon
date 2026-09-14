@@ -239,6 +239,8 @@ export class MeleeSystem {
   chargeUpdate(f, dt) {
     if (f.meleeCharge <= 0) return;
     if (!this.canAct(f) && !this._canClinch(f)) { f.meleeCharge = 0; return; }
+    // Preparation and its displayed region pause together during impact hitstop.
+    if (f.hitstop > 0) return;
     f.meleeCharge = Math.min(MELEE_CHARGE_MAX, f.meleeCharge + dt * ((f.sheet && f.sheet.chargeRate) || 1));   // Brawlers wind up faster
     const g = this.game;
     if (f.meleeCharge > 0.3 && Math.random() < f.meleeCharge * 0.5) {

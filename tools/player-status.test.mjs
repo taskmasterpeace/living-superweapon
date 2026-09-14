@@ -11,3 +11,5 @@ test('guard break persists through regeneration and small nonzero break threshol
 test('real sprint multiplier appears with remaining duration',()=>{const p=fighter();p.sprintT=1.8;p.sprintMult=1.6;assert.deepEqual(playerStatus(p).effects,[{id:'speed',label:'Speed +60%',glyph:'mobility',remaining:2}]);});
 
 test('guard-break countdown uses actual recovery rate at tenth-second precision',()=>{const p=fighter();p.guardBreakT=.7;p.sheet={ccRecover:2};assert.equal(playerStatus(p).effects.find(e=>e.id==='guard-break').remaining,.4);p.guardBreakT=.1;assert.equal(playerStatus(p).effects.find(e=>e.id==='guard-break').remaining,.1);p.guardBreakT=0;assert.ok(!playerStatus(p).effects.some(e=>e.id==='guard-break'));});
+
+test('stun timer is already wall-clock seconds and must not be recovered twice',()=>{const p=fighter();p.sheet={ccRecover:2};p.stunT=1.2;assert.equal(playerStatus(p).effects.find(e=>e.id==='stun').remaining,2);});

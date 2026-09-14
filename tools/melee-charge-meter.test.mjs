@@ -25,3 +25,5 @@ test('native release and advertised region agree across styles and thresholds',(
  }
 });
 
+
+test('hitstop freezes preparation without changing selected region',()=>{const system=Object.create(MeleeSystem.prototype);system.canAct=()=>true;system.game={particles:{spawn(){}},world:{shake(){}}};const f={def:{art:'boxing',colors:{}},muzzle:()=>({x:0,y:0,z:0}),meleeCharge:.54,hitstop:.1};system.chargeUpdate(f,.03);assert.equal(f.meleeCharge,.54);assert.equal(meleeChargeState(f).active.id,'cross');});

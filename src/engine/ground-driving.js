@@ -33,6 +33,7 @@ export const SCOUT_DRIVE={
  reverseAccel:26,    // rate building reverse speed from rest
  opposeDecel:56,     // rate when throttle opposes travel (S while rolling forward brakes, then reverses)
  brakeDecel:64,      // Space handbrake decel (u/s^2) — firm, keeps the ~0.8s stop
+ slopePull:58,      // gravity along heading per unit grade; flat handling remains unchanged
  coastDrag:0.85,     // exponential coast bleed (1/s) when no throttle and no brake
  turnRate:1.55,      // max yaw rate at low speed (rad/s); speed cuts authority from here
  highSpeedSteer:0.46,// steer authority retained at top speed (speed-sensitive steering)
@@ -87,6 +88,9 @@ export function stepGroundDrive(state,intent,dt,tune=SCOUT_DRIVE){
   const rate=opposing?t.opposeDecel:(throttle>0?t.accel:t.reverseAccel);
   forward=approach(forward,targetFwd,rate*sdt);
  }
+ const grade=clamp(Number.isFinite(intent.grade)?intent.grade:0,-.35,.35);
+ // A held handbrake keeps a stopped vehicle planted instead of creeping downhill.
+ if(!brake)forward-=grade*(t.slopePull??0)*sdt;
  forward=clamp(forward,-t.reverseSpeed,top);
 
  // --- Steering (smoothed, speed-sensitive, roll-limited, reverse-aware) -------
