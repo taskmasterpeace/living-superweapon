@@ -83,3 +83,8 @@ Front clinch, rear body lock, side grab and left-hand neck hold are selectable i
 
 Validated contactStyle metadata (carry/front/rear/side/neck) survives asset and clip export. Grab studies select upright partner facing and neck or upper-torso socket; legacy carry keeps its horizontal orientation. Fourteen authoring tests pass, including small/large partner socket alignment; build passes. Browser neck-hold review exposed inherited partner limb posing that still needs a dedicated victim animation channel, tracked in https://github.com/taskmasterpeace/living-superweapon/issues/19. These previews remain candidates, not visually approved interaction clips.
 
+
+## Shared study catalog integration
+
+Animation Library now loads 29 editable studies alongside 31 mapped source clips. Both views use the same ACTION_DRAFTS definitions; entries show source, duration, contact, release, control return and hand, retain candidate warnings, support existing search/favorites/export, and link directly to the selected study in Character Foundation. One real-rig catalog test passes, production build passes, and browser review verified the 29-study filter and neck-hold editor handoff. This is library/authoring integration; it does not assign candidates as gameplay attacks.
+
