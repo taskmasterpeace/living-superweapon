@@ -1,0 +1,76 @@
+{
+  "format": "lsw.sfx-amb.winners",
+  "version": 1,
+  "pickedBy": "Robert",
+  "date": "2026-09-14",
+  "provenance": "Real recordings. amb.wind = CC-BY InspectorJ/AntumDeluge (attribute); everything else CC0 (OpenGameArt). No AI, no synth. Loops crossfade-wrapped (seamless).",
+  "counts": {
+    "sounds": 2,
+    "files": 3
+  },
+  "pendingCues": [
+    "amb.wind",
+    "amb.rain",
+    "gen.hum",
+    "amb.alarm",
+    "amb.water"
+  ],
+  "integration": {
+    "note": "Ambient beds are LOOPS — paste `sampleBankManifest` into src/core/samples.js MANIFEST with loop:true and drive them via audio.sampleLoop(name) off the zone/district bed, NOT one-shot. Per-sound gain is a quiet starting point. Multiple files on one sample = alternate.",
+    "sampleBankManifest": {
+      "amb.machinery": {
+        "f": [
+          "sfx-amb/final/amb_machinery_a"
+        ],
+        "g": 0.4,
+        "loop": true
+      },
+      "amb.bed": {
+        "f": [
+          "sfx-amb/final/amb_bed_a",
+          "sfx-amb/final/amb_bed_b"
+        ],
+        "g": 0.35,
+        "loop": true
+      }
+    }
+  },
+  "winners": [
+    {
+      "cue": "amb.machinery",
+      "sample": "amb.machinery",
+      "mapsTo": "INDUSTRIAL / works-district zone bed",
+      "files": [
+        "sfx-amb/final/amb_machinery_a"
+      ],
+      "sources": [
+        {
+          "take": "05",
+          "license": "CC0 1.0 (30 CC0 SFX loops — OpenGameArt)",
+          "filter": ""
+        }
+      ]
+    },
+    {
+      "cue": "amb.bed",
+      "sample": "amb.bed",
+      "mapsTo": "general AMBIENT zone atmosphere (room tone / open air)",
+      "files": [
+        "sfx-amb/final/amb_bed_a",
+        "sfx-amb/final/amb_bed_b"
+      ],
+      "sources": [
+        {
+          "take": "01",
+          "license": "CC0 1.0 (30 CC0 SFX loops — OpenGameArt)",
+          "filter": ""
+        },
+        {
+          "take": "02",
+          "license": "CC0 1.0 (30 CC0 SFX loops — OpenGameArt)",
+          "filter": ""
+        }
+      ]
+    }
+  ]
+}
