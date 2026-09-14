@@ -54,9 +54,24 @@ export function buildDec52Clips(actor,family){
  }return clips;
 }
 export function createDec52Animator(actor,family){
- const clips=buildDec52Clips(actor,family),mixer=new T.AnimationMixer(actor);let active=null;
- return {clips,pose(id,time){const clip=clips.find(c=>c.userData.action===id);if(!clip)return false;
-  if(active!==clip){mixer.stopAllAction();const action=mixer.clipAction(clip);action.reset().setLoop(T.LoopOnce,1);action.clampWhenFinished=true;action.play();active=clip;}
+ const clips=buildDec52Clips(actor,family),mixer=new T.AnimationMixer(actor);let active=null,mode='scrub',fading=[];
+ const find=id=>clips.find(c=>c.userData.action===id);
+ return {clips,pose(id,time){const clip=find(id);if(!clip)return false;
+  if(active!==clip||mode!=='scrub'){mixer.stopAllAction();fading=[];const action=mixer.clipAction(clip);action.reset().setLoop(T.LoopOnce,1);action.clampWhenFinished=true;action.play();active=clip;mode='scrub';}
   mixer.setTime(T.MathUtils.clamp(time,0,clip.duration));actor.updateMatrixWorld(true);return true;
- },dispose(){mixer.stopAllAction();mixer.uncacheRoot(actor);}};
+ },advance(id,dt,{restart=false,blend=.12}={}){
+  if(!Number.isFinite(dt)||dt<0||!Number.isFinite(blend)||blend<0)throw Error('Invalid Dec-52 playback time');
+  const clip=find(id);if(!clip)return null;
+  if(active!==clip||mode!=='play'||restart){
+   const old=active&&mode==='play'?mixer.clipAction(active):null;
+   const time=mode==='scrub'&&active===clip&&!restart?mixer.clipAction(clip).time:0;
+   if(mode!=='play'){mixer.stopAllAction();fading=[];}
+   const action=mixer.clipAction(clip);action.reset().setLoop(clip.userData.loop?T.LoopRepeat:T.LoopOnce,clip.userData.loop?Infinity:1);action.clampWhenFinished=true;action.time=time;action.play();
+   fading=fading.filter(f=>f.action!==action);
+   if(old&&old!==action){if(blend){old.crossFadeTo(action,blend,false);fading.push({action:old,left:blend});}else old.stop();}
+   active=clip;mode='play';
+  }
+  mixer.update(dt);for(const f of fading){f.left-=dt;if(f.left<=0)f.action.stop();}fading=fading.filter(f=>f.left>0);actor.updateMatrixWorld(true);
+  const action=mixer.clipAction(clip);return {action:id,time:action.time,phase:action.time/clip.duration,finished:!clip.userData.loop&&action.time>=clip.duration};
+ },dispose(){mixer.stopAllAction();fading=[];mixer.uncacheRoot(actor);}};
 }

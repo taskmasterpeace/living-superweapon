@@ -8,3 +8,10 @@ for(const family of ['rat','hound','mech'])test(family+' clips retain pivots, lo
  if(family!=='mech'){animator.pose('walk',.3);const front=g.scene.getObjectByName('nanite-hip--1-true'),rear=g.scene.getObjectByName('nanite-hip--1-false');assert.ok(front.rotation.x*rear.rotation.x<0,'front/rear on same side must alternate');}
  animator.dispose();
 });
+test('continuous player blends, clamps one-shots, restarts and preserves simulation root',async()=>{
+ const b=await fs.readFile('public/models/dec52/hound/model.glb'),g=await new GLTFLoader().parseAsync(b.buffer.slice(b.byteOffset,b.byteOffset+b.byteLength),'');
+ const a=createDec52Animator(g.scene,'hound'),root=g.scene.position.clone();a.advance('walk',.3);const hip=g.scene.getObjectByName('nanite-hip--1-true'),before=hip.quaternion.clone();a.advance('run',0);assert.ok(before.angleTo(hip.quaternion)<1e-5,'transition snaps at entry');
+ for(let i=0;i<30;i++)a.advance('run',1/60);assert.ok(root.equals(g.scene.position));
+ assert.equal(a.advance('bite',1).finished,true);assert.equal(a.advance('bite',1).finished,true);assert.equal(a.advance('bite',0,{restart:true}).finished,false);
+ a.pose('walk',.4);assert.ok(Math.abs(a.advance('walk',0).time-.4)<1e-6);assert.throws(()=>a.advance('walk',NaN));a.dispose();
+});
