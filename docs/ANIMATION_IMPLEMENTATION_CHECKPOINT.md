@@ -98,3 +98,8 @@ Existing stun stars and sleep dots now follow the final animated head instead of
 
 Sleeping airborne characters now use relaxed arms, slight knee bend and a stable limp tilt instead of the active stun/launch flail. Frozen airborne state immediately yields articulation to the existing freeze presentation. Physics, fall damage and resource timing are unchanged. Regression failed before the change; twenty-one lost-control/modular tests and production build pass. Full live sequence visual review remains outstanding.
 
+
+## Carried object hand support
+
+A shared carry grip pass now aims both native arms at the carried object's local underside bounds. Bounds are cached per payload; the existing fixed-length arm solver remains authoritative. Game.updateCarry reapplies contact after moving the payload, then updates limb surfaces and the modular renderer. Seventeen grip/modular tests and build pass. This does not move the payload or change lift eligibility. Irregular silhouettes, unreachable large-object hold offsets, pickup anticipation and full visual ground/flight review remain outstanding; bounds are a support approximation, not surface collision.
+

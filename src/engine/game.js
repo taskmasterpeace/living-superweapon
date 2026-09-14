@@ -1,3 +1,6 @@
+import {animateCarriedObjectGrip} from './held-grip-pose.js';
+import {updateLimbSurfaces} from './hero-limb-surface.js';
+import {updateHeroSkin} from './hero-skin.js';
 import {driveWebZipAI} from './web-zip.js';
 import {squadYieldMove} from './squad-yield.js';
 import {FieldResearch} from './field-research.js';
@@ -1501,6 +1504,7 @@ export class Game {
       c.mesh.position.set(f.pos.x - f.aim.x * 1.5, f.pos.y + h + Math.sin(c.t * 3) * 0.3, f.pos.z - f.aim.z * 1.5);
       c.mesh.rotation.y = f.facing + Math.PI / 2;
       c.mesh.rotation.z = Math.sin(c.t * 2.2) * 0.05;
+      if(animateCarriedObjectGrip(f)){updateLimbSurfaces(f.parts);updateHeroSkin(f.parts);f._modularCharacter?.update();}
     }
   }
 
