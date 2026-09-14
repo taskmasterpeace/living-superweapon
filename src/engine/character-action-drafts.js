@@ -1,6 +1,7 @@
 import * as T from 'three';
 import {FULL_BODY_STUDIES,fullBodyStudy} from './character-full-body-studies.js';
 import {clone} from 'three/addons/utils/SkeletonUtils.js';
+import {samplePose} from './character-authoring.js';
 export const ACTION_DRAFTS={
  ...FULL_BODY_STUDIES,
  'Dart throw':{duration:.65,contact:.05,release:.28,controlReturn:.55,joint:'DEF-forearmR',axis:'x',angle:-1.1},
@@ -27,19 +28,25 @@ export function createContactRehearsal(actor,scene){
  const other=clone(actor);other.name='Interaction partner preview';other.visible=false;scene.add(other);
  // Remove added accessories copied from the current editor; only the shared rig is needed.
  other.traverse(o=>{if(o.isMesh)o.frustumCulled=false;});
- let mode='none',partnerScale=1,air=false,lastTime=-1,releasePosition=null;
- return {set(next,scale=1,flying=false){if(mode!==next||partnerScale!==scale){releasePosition=null;lastTime=-1;}mode=next;partnerScale=scale;air=flying;if(mode==='none'){prop.visible=false;other.visible=false;}},update(time,motion){
+ let mode='none',partnerScale=1,air=false;
+ return {set(next,scale=1,flying=false){mode=next;partnerScale=scale;air=flying;if(mode==='none'){prop.visible=false;other.visible=false;}},update(time,motion){
   prop.visible=mode==='prop';other.visible=mode==='partner';if(mode==='none')return;
   const hand=actor.getObjectByName(motion?.hand==='left'?'DEF-handL':'DEF-handR');if(!hand||!motion)return;actor.updateMatrixWorld(true);
-  if(time<lastTime)releasePosition=null;lastTime=time;
-  const held=time>=motion.markers.contact&&time<motion.markers.release;
   const target=mode==='prop'?prop:other,handPos=hand.getWorldPosition(new T.Vector3());
   if(mode==='partner'){other.scale.copy(actor.scale).multiplyScalar(partnerScale);for(const name of ['DEF-thighL','DEF-thighR','DEF-shinL','DEF-shinR']){const b=other.getObjectByName(name);if(b)b.rotation.x=.3;}other.quaternion.copy(actor.quaternion).multiply(new T.Quaternion().setFromAxisAngle(new T.Vector3(0,0,1),Math.PI/2));}
   const root=actor.getWorldPosition(new T.Vector3());target.position.copy(root).add(new T.Vector3(1.7,air?2:0,1.5));
   if(time<motion.markers.release){const approach=target.position.clone(),u=Math.min(1,time/Math.max(.001,motion.markers.contact)),smooth=u*u*(3-2*u);target.position.copy(handPos);if(mode==='partner'){
    // Align partner upper torso to the carrier hand; scale does not change the contact.
    const socket=other.getObjectByName('DEF-spine003');other.updateMatrixWorld(true);if(socket){const offset=socket.getWorldPosition(new T.Vector3()).sub(other.position);other.position.sub(offset);}
-  }target.position.lerp(approach,1-smooth);releasePosition=target.position.clone();}else if(time>=motion.markers.release){const elapsed=time-motion.markers.release;target.position.copy(releasePosition||handPos).add(new T.Vector3(0,-4.9*elapsed*elapsed,elapsed*3));}
+  }target.position.lerp(approach,1-smooth);}else if(time>=motion.markers.release){
+   // Sample the exact release pose, independent of playback or scrub history.
+   const saved=[];for(const [name,q]of Object.entries(motion.keys?.length?samplePose(motion,motion.markers.release):{})){const bone=actor.getObjectByName(name);if(bone){saved.push([bone,bone.quaternion.clone()]);bone.quaternion.fromArray(q);}}
+   actor.updateMatrixWorld(true);hand.getWorldPosition(handPos);
+   for(const [bone,q]of saved)bone.quaternion.copy(q);actor.updateMatrixWorld(true);
+   target.position.copy(handPos);
+   if(mode==='partner'){other.updateMatrixWorld(true);const socket=other.getObjectByName('DEF-spine003');if(socket)target.position.sub(socket.getWorldPosition(new T.Vector3()).sub(other.position));}
+   const elapsed=time-motion.markers.release;target.position.add(new T.Vector3(0,-4.9*elapsed*elapsed,elapsed*3));
+  }
   target.updateMatrixWorld(true);
  },dispose(){prop.removeFromParent();prop.geometry.dispose();prop.material.dispose();other.removeFromParent();}};
 }

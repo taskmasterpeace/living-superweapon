@@ -45,6 +45,17 @@ test('small carrier and large partner preserve hand-to-torso contact',async()=>{
  const partner=scene.getObjectByName('Interaction partner preview'),a=actor.getObjectByName('DEF-handR').getWorldPosition(new T.Vector3()),b=partner.getObjectByName('DEF-spine003').getWorldPosition(new T.Vector3());assert.ok(a.distanceTo(b)<1e-6);r.dispose();assert.equal(scene.getObjectByName('Interaction partner preview'),undefined);
 });
 test('modular defaults retain explicit alternative body choice',()=>{assert.equal(heroModelOf({id:'vega'}).body,'faceted-v1');assert.equal(heroModelOf({id:'vega',model:{body:'procedural'}}).body,'procedural');});
+test('partner release is identical after direct seek and sequential playback',async()=>{
+ const g=await loadActual(),scene=new T.Scene(),actor=g.scene;scene.add(actor);
+ const pose={};actor.traverse(o=>{if(o.isBone)pose[o.name]=o.quaternion.toArray();});
+ const motion=actionDraft('Paired grab',pose),r=createContactRehearsal(actor,scene);r.set('partner',1.5,true);
+ const partner=scene.getObjectByName('Interaction partner preview');
+ r.update(motion.markers.release+.1,motion);const direct=partner.position.clone();
+ r.update(.1,motion);r.update(motion.markers.release-.01,motion);r.update(motion.markers.release+.1,motion);
+ assert.ok(partner.position.distanceTo(direct)<1e-6,'release depends on the previously visited frame');
+ for(const [name,q]of Object.entries(pose))assert.deepEqual(actor.getObjectByName(name).quaternion.toArray(),q,'seek changed source pose');
+ r.dispose();
+});
 
 test('full-body loop studies close every joint and animate both arms and legs',async()=>{
  const {FULL_BODY_STUDIES,fullBodyStudy}=await import('../src/engine/character-full-body-studies.js');

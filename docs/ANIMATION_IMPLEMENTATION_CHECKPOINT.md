@@ -68,3 +68,8 @@ The surviving left-arm attack now mirrors torso twist, chamber, approach arc, el
 
 Added quarter/half/normal playback, pause/resume, 60 fps frame stepping, and exact contact/release/control-return seeks to the editable animation panel. These controls only change preview time; exported duration and markers retain their authored seconds. Browser review of Front kick / right confirmed contact at 0.37 seconds, next frame at 0.38, and control return at 0.85. Production build passes. This improves candidate review and is not approval of the kick's gameplay contact.
 
+
+## Deterministic contact release review
+
+Partner and prop release previews now sample the exact authored release frame rather than the last visited frame. Direct seeks, backward scrubs and sequential playback therefore share the same release origin. Partner torso alignment includes its scale; temporary source sampling restores the actor's current pose. The real exported rig regression failed before the fix; all twelve authoring tests and production build pass. Preview release trajectories remain illustrative, not gameplay throw physics.
+
