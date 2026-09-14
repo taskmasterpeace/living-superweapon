@@ -111,6 +111,14 @@ body:not(.playing) #frontlineObjective,body:not(.playing) #zombieObjective,body:
 #hud .foearrow u{ position:absolute; left:-5px; top:-24px; width:0; height:0; border-left:6px solid transparent; border-right:6px solid transparent; border-bottom:11px solid var(--danger); transform-origin:5px 17px; }
 #hud .foearrow span{ position:absolute; left:16px; top:-8px; font-size:var(--t-label); font-weight:800; letter-spacing:.1em; color:var(--danger-2); text-shadow:0 1px 3px #000; white-space:nowrap; }
 #hud .foearrow.on{ opacity:.95; }
+#hud .melee-charge{left:50%;transform:translateX(-50%);bottom:120px;width:280px;padding:8px 10px;}
+#hud .melee-charge-title{font:600 12px var(--font-display,'Rajdhani',sans-serif);letter-spacing:.06em;margin-bottom:5px;color:var(--gold);}
+#hud .melee-charge-track{position:relative;height:14px;background:#211e18;border:1px solid #aa884855;overflow:hidden;border-radius:3px;}
+#hud .melee-charge-track > i{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,#dca936aa,#ff6935cc);pointer-events:none;}
+#hud .melee-charge-regions{position:absolute;inset:0;display:flex;z-index:1;}
+#hud .melee-charge-regions span{height:100%;box-sizing:border-box;border-right:2px solid #fff9;}
+#hud .melee-charge-regions span:last-child{border-right:0;}
+body.phone #hud .melee-charge{bottom:48vh;}
 #hud .charge{ left:50%; transform:translateX(-50%); bottom:96px; width:280px; height:10px; display:none; }
 #hud .charge > i{ background:linear-gradient(90deg,var(--gold),#ff5a2a); }
 #hud .feed{ left:18px; top:16px; padding:6px 10px; font-size:var(--t-body); color:#cbb; display:flex; flex-direction:column; gap:2px; background:transparent; border:none; }

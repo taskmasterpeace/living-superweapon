@@ -1,3 +1,4 @@
+import {meleeReleaseChoice,MELEE_CHARGE_MAX} from './melee-charge-meter.js';
 import {beginPersonThrowPose,advancePersonThrowPose} from './person-throw-pose.js';
 import {zombieArmsDisabled,zombieCannotGrab} from './zombie-locational-damage.js';
 import {grabLesson,meleeLessonScheme} from './combat-lesson-controls.js';
@@ -238,7 +239,7 @@ export class MeleeSystem {
   chargeUpdate(f, dt) {
     if (f.meleeCharge <= 0) return;
     if (!this.canAct(f) && !this._canClinch(f)) { f.meleeCharge = 0; return; }
-    f.meleeCharge = Math.min(1.3, f.meleeCharge + dt * ((f.sheet && f.sheet.chargeRate) || 1));   // Brawlers wind up faster
+    f.meleeCharge = Math.min(MELEE_CHARGE_MAX, f.meleeCharge + dt * ((f.sheet && f.sheet.chargeRate) || 1));   // Brawlers wind up faster
     const g = this.game;
     if (f.meleeCharge > 0.3 && Math.random() < f.meleeCharge * 0.5) {
       const m = f.muzzle(_v, 2.2, 5.6);
@@ -255,23 +256,11 @@ export class MeleeSystem {
       return;
     }
     if (t <= 0 || !this.canAct(f)) return;
-    const tiers = f.def.meleeTiers ?? 3;
-    const canJab = hasStrike(f.def, 'jab'), canCross = hasStrike(f.def, 'cross'), canPower = hasStrike(f.def, 'power');
-    if (t < 0.18 || tiers === 1) {                                                      // TAP → jab combo
-      if (canJab || canCross) return this.strike(f);
-      if (canPower) return this._beginHeavy(f, 'power', 0.5, true);                      // pure slammer: a tap is a slam
-      return;
-    }
-    if (t < 0.55 && tiers >= 3) {                                                        // STRAIGHT (a cross)
-      if (canCross) return this._beginHeavy(f, 'cross', 0.45, false);
-      if (canJab) return this.strike(f);
-      if (canPower) return this._beginHeavy(f, 'power', 0.5, true);
-      return;
-    }
-    // HAYMAKER (a power) — fall to the heaviest strike the style actually has
-    if (canPower) return this._beginHeavy(f, 'power', Math.min(1, t), true);
-    if (canCross) return this._beginHeavy(f, 'cross', 0.45, false);
-    if (canJab) return this.strike(f);
+    const choice=meleeReleaseChoice(f.def,t);
+    if(choice==='combo')return this.strike(f);
+    if(choice==='slam')return this._beginHeavy(f,'power',.5,true);
+    if(choice==='cross')return this._beginHeavy(f,'cross',.45,false);
+    if(choice==='power')return this._beginHeavy(f,'power',Math.min(1,t),true);
   }
   _beginHeavy(f, id, p01, hay) { f.strikeCd = hay ? 0.7 : 0.45; this._beginStrike(f, id, 'heavy', p01, hay); }
 

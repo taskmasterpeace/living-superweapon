@@ -43,9 +43,11 @@ export class FlightWake {
     if(!finite(this.fighter.pos)||!finite(this.fighter.vel)||!Number.isFinite(dt)){this.mesh.visible=false;return true;}
     const f=this.fighter,h=this.history,speed=f.vel.length(),visible=f.obj.visible&&(f._vis??1)>=.35;
     const settings={...WAKE_DEFAULTS,...f.def.movementTrail,...f.def.model?.wake};
-    // The wake is the speed readout in the world: slow flight leaves a short
-    // ribbon, while committing to the highest gear holds a much longer trail.
-    const speedScale=Math.min(1,Math.max(0,(speed-30)/140)),LIFE=settings.life*(.65+1.35*speedScale);
+    // Leave the boots unobscured and bound airborne ribbons in world space,
+    // so higher gears do not turn them into long beams. Runner profiles stay authored.
+    const airborneWake=f.flying||f.gliding;
+    const speedScale=Math.min(1,Math.max(0,(speed-30)/140));
+    const LIFE=airborneWake?Math.min(settings.life*(.65+.35*speedScale),32/Math.max(1,speed)):settings.life*(.65+1.35*speedScale);
     for(let i=0;i<this.n;i++)this.age[i]+=dt;
     while(this.n&&this.age[0]>=LIFE){h.copyWithin(0,6);this.age.copyWithin(0,1);this.strength.copyWithin(0,1);this.spread.copyWithin(0,1);this.n--;}
     const controlled=!(f.launchT>0||f.staggerT>0||f.stunT>0||f.frozenT>0||f.grabbedBy||f._scoutVehicle||f._aircraftVehicle);
@@ -56,7 +58,7 @@ export class FlightWake {
       const strength=Math.min(1,Math.max(0,(speed-25)/35)),spread=(f.cruiseHeld?1.3:1)*(1+.5*speedScale);
       this.idle=0;this.direction.copy(f.vel).normalize();
       f.parts.legL.userData.boot.getWorldPosition(this.footL);f.parts.legR.userData.boot.getWorldPosition(this.footR);
-      this.point.copy(this.footL).add(this.footR).multiplyScalar(.5).addScaledVector(this.direction,-.35);
+      this.point.copy(this.footL).add(this.footR).multiplyScalar(.5).addScaledVector(this.direction,airborneWake?-3:-.35);
       this.right.copy(this.footR).sub(this.footL).multiplyScalar(.5/2.2);
       if(!finite(this.point)||!finite(this.right)){this.mesh.visible=false;return true;}
       if(this.n){

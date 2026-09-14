@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {Scene,PerspectiveCamera} from 'three';
+import {Scene,PerspectiveCamera,Vector3} from 'three';
 import {Fighter} from '../src/engine/entity.js';
 import {ROSTER} from '../src/data/characters.js';
 import {VFX} from '../src/engine/vfx.js';
@@ -52,3 +52,20 @@ test('authored runner trail follows the feet and expires after lost control',()=
  f.launchT=2;for(let i=0;i<60;i++)vfx.update(1/60);
  assert.ok(wake.disposed,'uncontrolled body must stop emitting and retire trail');
 }));
+
+
+test('airborne ribbons leave clear space behind both boots and stay short at high gears',()=>{
+ for(const speed of [55,110,400])for(const hz of [30,60,120])fixture(({f,vfx})=>{
+  f.vel.set(0,0,speed);vfx.flightWake(f);const wake=f._flightWake;
+  for(let i=0;i<hz;i++){
+   f.pos.z+=speed/hz;f.obj.position.copy(f.pos);f.obj.updateMatrixWorld(true);vfx.update(1/hz);
+  }
+  const left=new Vector3(),right=new Vector3();
+  f.parts.legL.userData.boot.getWorldPosition(left);f.parts.legR.userData.boot.getWorldPosition(right);
+  const bootZ=(left.z+right.z)*.5, newest=(wake.n-1)*6;
+  assert.ok(wake.n>1&&wake.mesh.visible,'flight ribbon should remain visible');
+  assert.ok(bootZ-wake.history[newest+2]>=2.99,'ribbon must leave boot clearance');
+  assert.ok(bootZ-wake.history[newest+2]<3.8,'clearance must not drift with frame rate');
+  assert.ok(wake.history[newest+2]-wake.history[2]<=33,'higher gear must not produce an oversized ribbon');
+ });
+});

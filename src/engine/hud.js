@@ -1,3 +1,4 @@
+import {meleeChargeState,MELEE_CHARGE_MAX} from './melee-charge-meter.js';
 import {meleeEntryCue,meleeSequenceCue} from './melee-entry-cue.js';
 // WAR WORLD: ASCENDANTS — DOM HUD + character-select screen.
 import { CodexMixin } from './hudCodex.js';
@@ -234,6 +235,7 @@ export class HUD {
           <div class="hintbody" id="hHintBody"></div>
         </div>
         <div class="panel hands" id="hHands" style="display:none"><div class="hhl">HANDS</div><div class="hrow" id="hHandsRow"></div></div>
+        <div class="panel melee-charge" id="hMeleeCharge" role="meter" aria-label="Melee charge" aria-valuemin="0" aria-valuemax="100" style="display:none"><div class="melee-charge-title"></div><div class="melee-charge-track"><div class="melee-charge-regions"></div><i></i></div></div>
         <div class="panel charge" id="hCharge"><i style="width:0%"></i></div>
         <div class="panel slots" id="hSlots"></div>
       </div>
@@ -284,6 +286,7 @@ export class HUD {
       name: this.root.querySelector('#plName'), role: this.root.querySelector('#plRole'),
       hp: this.root.querySelector('#plHp'), ki: this.root.querySelector('#plKi'), gd: this.root.querySelector('#plGd'),
       kiBar: this.root.querySelector('#kiBar'), kiState: this.root.querySelector('#kiState'), kiOver: this.root.querySelector('#kiOver'),
+      meleeCharge: this.root.querySelector('#hMeleeCharge'),
       charge: this.root.querySelector('#hCharge'), chargeI: this.root.querySelector('#hCharge > i'),
       slots: this.root.querySelector('#hSlots'),
       combo: this.root.querySelector('#hCombo'), comboN: this.root.querySelector('#hComboN'),
@@ -2281,6 +2284,22 @@ export class HUD {
     }
     if (charging > 0) { this.el.charge.style.display = 'block'; this.el.chargeI.style.width = clamp(charging / maxCharge * 100, 0, 100) + '%'; }
     else this.el.charge.style.display = 'none';
+
+    const meter=this.el.meleeCharge;
+    if(meter){
+      meter.style.display=p.meleeCharge>0?'block':'none';
+      if(p.meleeCharge>0){
+        const state=meleeChargeState(p),signature=JSON.stringify(state.regions);
+        if(meter._regions!==signature){
+          meter._regions=signature;
+          meter.querySelector('.melee-charge-regions').innerHTML=state.regions.map(r=>`<span style="width:${(r.end-r.start)/MELEE_CHARGE_MAX*100}%" title="${r.label}"></span>`).join('');
+        }
+        meter.querySelector('.melee-charge-track > i').style.width=`${state.progress*100}%`;
+        meter.querySelector('.melee-charge-title').textContent=`MELEE · RELEASE: ${state.active.label.toUpperCase()}`;
+        meter.setAttribute('aria-valuenow',Math.round(state.progress*100));
+        meter.setAttribute('aria-valuetext',`Release: ${state.active.label}`);
+      }
+    }
 
     // target health bar — the foe you're locked on / aiming at, only while visible
     let foe = null;

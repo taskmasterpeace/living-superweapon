@@ -10,8 +10,8 @@ test('air control states distinguish launch, ordinary fall, powered flight, atta
 test('sleep falls limp and frozen bodies reject the flailing overlay',()=>{
  const x=mainCombatFixture({mode:'powerworld'});try{const f=x.p;f._openSky=true;f.pos.y=80;f.hitstop=0;f.sleepT=3;
  animateLostControlPose(f,1);const sleep=f.parts.armR.quaternion.clone();restoreLostControlPose(f);
- f.sleepT=0;f.stunT=3;f._lostControlPose=null;animateLostControlPose(f,1);
- assert.ok(sleep.angleTo(f.parts.armR.quaternion)>.5,'sleep reused the stun flail');restoreLostControlPose(f);
+ f.sleepT=0;f.launchT=3;f._lostControlPose=null;animateLostControlPose(f,1);
+ assert.ok(sleep.angleTo(f.parts.armR.quaternion)>.5,'sleep reused conscious flailing');restoreLostControlPose(f);
  f.frozenT=3;const base=f.parts.armR.quaternion.clone();animateLostControlPose(f,.1);
  assert.equal(airControlState(f),'frozen');assert.equal(f._lostControlPose.weight,0);assert.ok(base.equals(f.parts.armR.quaternion));
  }finally{x.close();}
@@ -41,3 +41,11 @@ test('native nonfatal launch animates lost control; lethal damage hands over to 
 });
 
 
+
+test('stunned airborne body uses limp reaction rather than conscious flailing',()=>{
+ const x=mainCombatFixture({mode:'powerworld'});try{const f=x.p;f._openSky=true;f.pos.y=80;f.hitstop=0;f.stunT=3;
+ animateLostControlPose(f,1);const stunned=f.parts.armR.quaternion.clone();restoreLostControlPose(f);
+ f.stunT=0;f.launchT=3;f._lostControlPose=null;animateLostControlPose(f,1);
+ assert.ok(stunned.angleTo(f.parts.armR.quaternion)>.5);
+ }finally{x.close();}
+});

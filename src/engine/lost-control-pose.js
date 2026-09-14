@@ -37,7 +37,7 @@ export function animateLostControlPose(f,dt){
  if(state==='ko'||state==='attached'||state==='grounded'||state==='frozen'||exclusive)s.weight=0;
  if(s.weight<.001){s.weight=0;s.time=0;return;}
  for(const e of s.nodes){e.position.copy(e.node.position);e.quaternion.copy(e.node.quaternion);}s.applied=true;
- const p=f.parts,t=s.time,w=s.weight,limp=f.sleepT>0;
+ const p=f.parts,t=s.time,w=s.weight,limp=f.sleepT>0||f.stunT>0;
  for(const [i,side]of ['L','R'].entries()){
   const phase=t*8+i*2.3,arm=p['arm'+side],leg=p['leg'+side],sign=i?-1:1;
   arm.rotation.x=MathUtils.lerp(arm.rotation.x,limp?-.12:-1.8+Math.sin(phase)*.7,w);

@@ -49,6 +49,7 @@
   --sh-gold:0 4px 0 var(--gold-shadow);
 
   /* — fonts — */
+  --f-body:"Inter",system-ui,-apple-system,sans-serif;
   --f-display:"Rajdhani","Inter",system-ui,sans-serif;
   --f-mono:"Cascadia Mono",Consolas,ui-monospace,monospace;
 }
