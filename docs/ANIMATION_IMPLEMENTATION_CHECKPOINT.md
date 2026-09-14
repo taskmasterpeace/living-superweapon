@@ -108,3 +108,8 @@ A shared carry grip pass now aims both native arms at the carried object's local
 The native melee state machine now cancels startup, active contact and recovery when sleep or knockdown begins, and clears queued attacks. Previously only startup checked these statuses, allowing an active punch to persist while its owner was incapacitated. This also lets the lost-control presentation take ownership instead of being suppressed by a stale strike.
 
 Regression: six real-fighter phase/status cases; four failed before the fix. Nineteen incapacitation, phase, heavy-strike and moving-contact tests pass, and the production build passes. This is a gameplay cancellation fix; it does not approve new kick clips or complete the broader animation integration.
+# Full-body pickup studies
+
+Ground pickup and Flying pickup now use six-key full-body sequences instead of a single spine/arm rotation. Both arms reach and fold into support; ground pickup flexes hips/knees, while flying pickup trails the legs. They are available through the shared animation catalog and character editor under the existing names.
+
+These are candidate authored studies, not approved mocap or assigned gameplay animations. Payload IK, grounded support/root-height adjustment and multi-angle playback review remain required before assignment. Their contact/release markers describe the preview, not a forced duration for a gameplay carry. The real-rig regression failed on the old idle left arm and now passes; shared catalog validation and build pass.

@@ -5,8 +5,6 @@ import {samplePose} from './character-authoring.js';
 export const ACTION_DRAFTS={
  ...FULL_BODY_STUDIES,
  'Dart throw':{duration:.65,contact:.05,release:.28,controlReturn:.55,joint:'DEF-forearmR',axis:'x',angle:-1.1},
- 'Ground pickup':{duration:1.2,contact:.45,release:1.2,controlReturn:1,joint:'DEF-spine003',axis:'x',angle:.55},
- 'Flying pickup':{duration:.9,contact:.35,release:.9,controlReturn:.9,joint:'DEF-upper_armR',axis:'x',angle:-.9},
  'Robot idle':{duration:2,contact:0,release:0,controlReturn:0,joint:'DEF-head',axis:'y',angle:.18},
  'Air stagger':{duration:.7,contact:.05,release:.2,controlReturn:.65,joint:'DEF-spine003',axis:'x',angle:-.5},
  'Air stunned':{duration:2,contact:0,release:1.5,controlReturn:2,joint:'DEF-neck',axis:'x',angle:.8},
