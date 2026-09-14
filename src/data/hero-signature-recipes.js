@@ -1,7 +1,8 @@
 import {ROSTER} from './characters.js';
 const directions={
+ bulwark:{headwear:'greathelm',hair:'none',frame:'heavy',metallic:true,shoulders:true,primary:'#344656',secondary:'#bfb69a',trim:'#36424b',cape:false},
  graven:{frame:'heavy',headwear:'hood',hair:'none',robe:true,collar:true,cape:false,primary:'#302442',secondary:'#976fb5',aura:'gravity',auraState:'always'},
- hive:{frame:'agile',hair:'mohawk',headwear:'domino',cape:false,armor:true,primary:'#26382c',secondary:'#d5ad35',aura:'swarm',auraState:'always'},
+ hive:{frame:'agile',hair:'none',headwear:'insect',cape:false,armor:true,primary:'#26382c',secondary:'#d5ad35',aura:'swarm',auraState:'always'},
  ironclad:{frame:'machine',headwear:'helmet',hair:'none',metallic:true,shoulders:true,gauntlets:true,cape:false,primary:'#586878',secondary:'#c1cbd2'},
 
  sol:{cape:true,regionColors:{legs:'#173da0',calves:'#173da0'},wristbands:true,wristBlasters:true},
@@ -16,11 +17,11 @@ const directions={
  stormcall:{weapon:'axe',cape:true,emblem:'bolt'},
  foundry:{metallic:true,primary:'#a4afb8',secondary:'#ac4e25',weapon:'axe',emblem:'shield'},
  coldsnap:{primary:'#cce7ed',secondary:'#819ab0',hair:'swept',emblem:'star'},
- dune:{frame:'heavy',hair:'none',beard:true,collar:true,coat:true,coatStyle:'long',cape:false,primary:'#78543b',secondary:'#bb8b58',skin:'#a07654',emblem:'triangle'},
- decibel:{frame:'agile',hair:'ponytail',muscle:.85,cape:false,footwear:'shoes',primary:'#ebe0cb',secondary:'#b52728',bareArms:true,gloves:'bare',gauntlets:false,belt:true,emblem:'none'},
+ dune:{headwear:'hood',trim:'#7d634b',frame:'heavy',hair:'none',beard:false,collar:true,coat:true,coatStyle:'long',cape:false,primary:'#78543b',secondary:'#bb8b58',skin:'#a07654',emblem:'triangle'},
+ decibel:{frame:'agile',hair:'ponytail',hairColor:'#914831',muscle:.85,cape:false,footwear:'shoes',primary:'#ebe0cb',secondary:'#b52728',bareArms:true,gloves:'bare',gauntlets:false,belt:true,emblem:'none'},
  feral:{clawStyle:'singleBone',hair:'mohawk',hairColor:'#442d1d',claws:true,primary:'#734d30',secondary:'#ac612d',bareArms:true,gauntlets:false,emblem:'none'},
  gale:{eyepatch:true,hair:'braids',primary:'#254936',secondary:'#b7a575',coat:true,coatStyle:'short',emblem:'bolt'},
- jawah:{hair:'buzz',frame:'hero',bareArms:true,muscle:1.25,cape:false,skin:'#eaded8',hairColor:'#f4eee4',eyeColor:'#af8495',primary:'#dad6ca',secondary:'#675668'},
+ jawah:{headwear:'circlet',hair:'none',frame:'hero',bareArms:true,muscle:1.25,cape:false,skin:'#eaded8',hairColor:'#f4eee4',eyeColor:'#af8495',primary:'#dad6ca',secondary:'#675668'},
  kano:{primary:'#d86828',secondary:'#24588b',hair:'swept',hairColor:'#161916',bareArms:true,gauntlets:false,gloves:'bare',emblem:'none'},
  stefanos:{coat:true,coatStyle:'short',beard:true,primary:'#252d36',secondary:'#c7c2b3',trim:'#181f28',pattern:'pinstripe',emblem:'none'},
  knightfall:{weapon:'dualKatana',beltStyle:'plain',emblemColor:'#758193',headwear:'hood',hair:'none',primary:'#171d28',secondary:'#596478',cape:true,emblem:'triangle'},

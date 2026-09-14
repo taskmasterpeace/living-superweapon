@@ -1,7 +1,7 @@
 {
   "name": "JAWAH MATU · signature candidate",
   "frame": "hero",
-  "hair": "buzz",
+  "hair": "none",
   "skin": "#eaded8",
   "primary": "#dad6ca",
   "secondary": "#675668",
@@ -12,6 +12,7 @@
   "armor": false,
   "shoulders": false,
   "muscle": 1.25,
+  "headwear": "circlet",
   "anatomy": "male",
   "infection": "none",
   "pattern": "solid",

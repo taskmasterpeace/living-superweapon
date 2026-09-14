@@ -1,7 +1,7 @@
 {
   "name": "HIVE · signature candidate",
   "frame": "agile",
-  "hair": "mohawk",
+  "hair": "none",
   "skin": "#d8b98a",
   "primary": "#26382c",
   "secondary": "#d5ad35",
@@ -14,7 +14,7 @@
   "muscle": 1,
   "aura": "swarm",
   "auraState": "always",
-  "headwear": "domino",
+  "headwear": "insect",
   "anatomy": "male",
   "infection": "none",
   "pattern": "solid",

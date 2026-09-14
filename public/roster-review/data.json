@@ -35,7 +35,7 @@
         "kind": "dash",
         "name": "Solar Step"
       },
-      "afterCandidate": "candidates/roster-sol.png",
+      "afterCandidate": "candidates/roster-sol.png?v=1789347458525.1057",
       "images": {
         "front": "images/sol-front.png",
         "rear": "images/sol-rear.png"
@@ -193,7 +193,7 @@
         "name": "Instant Step",
         "range": 24
       },
-      "afterCandidate": "candidates/roster-kano.png",
+      "afterCandidate": "candidates/roster-kano.png?v=1789347458657.4492",
       "images": {
         "front": "images/kano-front.png",
         "rear": "images/kano-rear.png"
@@ -344,7 +344,7 @@
         "kind": "dash",
         "name": "Royal Sidestep"
       },
-      "afterCandidate": "candidates/roster-vega.png",
+      "afterCandidate": "candidates/roster-vega.png?v=1789347474161.111",
       "images": {
         "front": "images/vega-front.png",
         "rear": "images/vega-rear.png"
@@ -515,7 +515,7 @@
         "kind": "dash",
         "name": "Will Surge"
       },
-      "afterCandidate": "candidates/roster-aurum.png",
+      "afterCandidate": "candidates/roster-aurum.png?v=1789347474405.8938",
       "images": {
         "front": "images/aurum-front.png",
         "rear": "images/aurum-rear.png"
@@ -651,7 +651,7 @@
         "kind": "dash",
         "name": "Star Step"
       },
-      "afterCandidate": "candidates/roster-nova.png",
+      "afterCandidate": "candidates/roster-nova.png?v=1789347474576.0642",
       "images": {
         "front": "images/nova-front.png",
         "rear": "images/nova-rear.png"
@@ -817,7 +817,7 @@
         "slideT": 0.7,
         "power": 135
       },
-      "afterCandidate": "candidates/roster-rime.png",
+      "afterCandidate": "candidates/roster-rime.png?v=1789347474724.179",
       "images": {
         "front": "images/rime-front.png",
         "rear": "images/rime-rear.png"
@@ -980,7 +980,7 @@
         "lightning": true,
         "cost": 7
       },
-      "afterCandidate": "candidates/roster-volt.png",
+      "afterCandidate": "candidates/roster-volt.png?v=1789347474872.7112",
       "images": {
         "front": "images/volt-front.png",
         "rear": "images/volt-rear.png"
@@ -1137,7 +1137,7 @@
         "name": "Gravity Shift",
         "power": 92
       },
-      "afterCandidate": "candidates/roster-warden.png",
+      "afterCandidate": "candidates/roster-warden.png?v=1789347475021.5508",
       "images": {
         "front": "images/warden-front.png",
         "rear": "images/warden-rear.png"
@@ -1289,7 +1289,7 @@
         "kind": "dash",
         "name": "Scramble"
       },
-      "afterCandidate": "candidates/roster-hive.png",
+      "afterCandidate": "candidates/roster-hive.png?v=1789350122934.4248",
       "images": {
         "front": "images/hive-front.png",
         "rear": "images/hive-rear.png"
@@ -1438,7 +1438,7 @@
         "kind": "dash",
         "name": "Flare Step"
       },
-      "afterCandidate": "candidates/roster-pyre.png",
+      "afterCandidate": "candidates/roster-pyre.png?v=1789347475337.775",
       "images": {
         "front": "images/pyre-front.png",
         "rear": "images/pyre-rear.png"
@@ -1604,7 +1604,7 @@
         "mult": 1.7,
         "dur": 1.6
       },
-      "afterCandidate": "candidates/roster-torch.png",
+      "afterCandidate": "candidates/roster-torch.png?v=1789347475507.267",
       "images": {
         "front": "images/torch-front.png",
         "rear": "images/torch-rear.png"
@@ -1764,7 +1764,7 @@
         "name": "Afterimage",
         "range": 22
       },
-      "afterCandidate": "candidates/roster-apex.png",
+      "afterCandidate": "candidates/roster-apex.png?v=1789349762030.5676",
       "images": {
         "front": "images/apex-front.png",
         "rear": "images/apex-rear.png"
@@ -1898,7 +1898,7 @@
         "kind": "phase",
         "name": "Ghost Slip"
       },
-      "afterCandidate": "candidates/roster-specter.png",
+      "afterCandidate": "candidates/roster-specter.png?v=1789347475828.2988",
       "images": {
         "front": "images/specter-front.png",
         "rear": "images/specter-rear.png"
@@ -2054,7 +2054,7 @@
         "mult": 1.75,
         "dur": 1.4
       },
-      "afterCandidate": "candidates/roster-vanguard.png",
+      "afterCandidate": "candidates/roster-vanguard.png?v=1789347476028.25",
       "images": {
         "front": "images/vanguard-front.png",
         "rear": "images/vanguard-rear.png"
@@ -2194,7 +2194,7 @@
         "slideT": 0.6,
         "power": 120
       },
-      "afterCandidate": "candidates/roster-kraken.png",
+      "afterCandidate": "candidates/roster-kraken.png?v=1789347476258.5942",
       "images": {
         "front": "images/kraken-front.png",
         "rear": "images/kraken-rear.png"
@@ -2361,7 +2361,7 @@
         "cd": 1.5,
         "iframes": 0.3
       },
-      "afterCandidate": "candidates/roster-rift.png",
+      "afterCandidate": "candidates/roster-rift.png?v=1789347476422.5476",
       "images": {
         "front": "images/rift-front.png",
         "rear": "images/rift-rear.png"
@@ -2512,7 +2512,7 @@
         "power": 100,
         "dtype": "fire"
       },
-      "afterCandidate": "candidates/roster-titan.png",
+      "afterCandidate": "candidates/roster-titan.png?v=1789347476573.0977",
       "images": {
         "front": "images/titan-front.png",
         "rear": "images/titan-rear.png"
@@ -2685,7 +2685,7 @@
         "up": 48,
         "fwd": 68
       },
-      "afterCandidate": "candidates/roster-sarge.png",
+      "afterCandidate": "candidates/roster-sarge.png?v=1789347476724.3628",
       "images": {
         "front": "images/sarge-front.png",
         "rear": "images/sarge-rear.png"
@@ -2859,7 +2859,7 @@
         "cd": 0.9,
         "iframes": 0.18
       },
-      "afterCandidate": "candidates/roster-merc.png",
+      "afterCandidate": "candidates/roster-merc.png?v=1789349665238.2705",
       "images": {
         "front": "images/merc-front.png",
         "rear": "images/merc-rear.png"
@@ -3030,7 +3030,7 @@
         "kind": "phase",
         "name": "Mist Walk"
       },
-      "afterCandidate": "candidates/roster-kivuli.png",
+      "afterCandidate": "candidates/roster-kivuli.png?v=1789347477059.0515",
       "images": {
         "front": "images/kivuli-front.png",
         "rear": "images/kivuli-rear.png"
@@ -3191,7 +3191,7 @@
         "up": 42,
         "fwd": 60
       },
-      "afterCandidate": "candidates/roster-gale.png",
+      "afterCandidate": "candidates/roster-gale.png?v=1789347477223.8286",
       "images": {
         "front": "images/gale-front.png",
         "rear": "images/gale-rear.png"
@@ -3355,7 +3355,7 @@
         "kind": "dash",
         "name": "Propulsion Step"
       },
-      "afterCandidate": "candidates/roster-stefanos.png",
+      "afterCandidate": "candidates/roster-stefanos.png?v=1789347477407.7815",
       "images": {
         "front": "images/stefanos-front.png",
         "rear": "images/stefanos-rear.png"
@@ -3516,7 +3516,7 @@
         "cost": 4,
         "cd": 0.55
       },
-      "afterCandidate": "candidates/roster-sandra.png",
+      "afterCandidate": "candidates/roster-sandra.png?v=1789347477587.08",
       "images": {
         "front": "images/sandra-front.png",
         "rear": "images/sandra-rear.png"
@@ -3674,7 +3674,7 @@
         "kind": "dash",
         "name": "Thruster Slip"
       },
-      "afterCandidate": "candidates/roster-ironclad.png",
+      "afterCandidate": "candidates/roster-ironclad.png?v=1789349665436.5752",
       "images": {
         "front": "images/ironclad-front.png",
         "rear": "images/ironclad-rear.png"
@@ -3838,7 +3838,7 @@
         "up": 52,
         "fwd": 74
       },
-      "afterCandidate": "candidates/roster-rage.png",
+      "afterCandidate": "candidates/roster-rage.png?v=1789347477905.412",
       "images": {
         "front": "images/rage-front.png",
         "rear": "images/rage-rear.png"
@@ -3990,7 +3990,7 @@
         "kind": "dash",
         "name": "Storm Step"
       },
-      "afterCandidate": "candidates/roster-stormcall.png",
+      "afterCandidate": "candidates/roster-stormcall.png?v=1789347478094.4236",
       "images": {
         "front": "images/stormcall-front.png",
         "rear": "images/stormcall-rear.png"
@@ -4153,7 +4153,7 @@
         "up": 46,
         "fwd": 70
       },
-      "afterCandidate": "candidates/roster-webline.png",
+      "afterCandidate": "candidates/roster-webline.png?v=1789347673015.3162",
       "images": {
         "front": "images/webline-front.png",
         "rear": "images/webline-rear.png"
@@ -4294,7 +4294,7 @@
         "kind": "dash",
         "name": "Feral Weave"
       },
-      "afterCandidate": "candidates/roster-ripclaw.png",
+      "afterCandidate": "candidates/roster-ripclaw.png?v=1789347478510.2395",
       "images": {
         "front": "images/ripclaw-front.png",
         "rear": "images/ripclaw-rear.png"
@@ -4443,7 +4443,7 @@
         "kind": "dash",
         "name": "Photon Slip"
       },
-      "afterCandidate": "candidates/roster-majesty.png",
+      "afterCandidate": "candidates/roster-majesty.png?v=1789349762198.9631",
       "images": {
         "front": "images/majesty-front.png",
         "rear": "images/majesty-rear.png"
@@ -4613,7 +4613,7 @@
         "cd": 0.7,
         "iframes": 0.18
       },
-      "afterCandidate": "candidates/roster-mystward.png",
+      "afterCandidate": "candidates/roster-mystward.png?v=1789347478857.4116",
       "images": {
         "front": "images/mystward-front.png",
         "rear": "images/mystward-rear.png"
@@ -4765,7 +4765,7 @@
         "up": 42,
         "fwd": 66
       },
-      "afterCandidate": "candidates/roster-onyx.png",
+      "afterCandidate": "candidates/roster-onyx.png?v=1789347673198.9187",
       "images": {
         "front": "images/onyx-front.png",
         "rear": "images/onyx-rear.png"
@@ -4919,7 +4919,7 @@
         "name": "Burnout",
         "dtype": "fire"
       },
-      "afterCandidate": "candidates/roster-chainfire.png",
+      "afterCandidate": "candidates/roster-chainfire.png?v=1789347479172.6624",
       "images": {
         "front": "images/chainfire-front.png",
         "rear": "images/chainfire-rear.png"
@@ -5076,7 +5076,7 @@
         "kind": "dash",
         "name": "Wind Shear"
       },
-      "afterCandidate": "candidates/roster-tempest.png",
+      "afterCandidate": "candidates/roster-tempest.png?v=1789347479336.1665",
       "images": {
         "front": "images/tempest-front.png",
         "rear": "images/tempest-rear.png"
@@ -5234,7 +5234,7 @@
         "up": 44,
         "fwd": 64
       },
-      "afterCandidate": "candidates/roster-knightfall.png",
+      "afterCandidate": "candidates/roster-knightfall.png?v=1789349665868.8984",
       "images": {
         "front": "images/knightfall-front.png",
         "rear": "images/knightfall-rear.png"
@@ -5396,7 +5396,7 @@
         "kind": "dash",
         "name": "Amazon Step"
       },
-      "afterCandidate": "candidates/roster-aegis.png",
+      "afterCandidate": "candidates/roster-aegis.png?v=1789347479624.213",
       "images": {
         "front": "images/aegis-front.png",
         "rear": "images/aegis-rear.png"
@@ -5554,7 +5554,7 @@
         "kind": "dash",
         "name": "Bolt Step"
       },
-      "afterCandidate": "candidates/roster-olympus.png",
+      "afterCandidate": "candidates/roster-olympus.png?v=1789347479804.1016",
       "images": {
         "front": "images/olympus-front.png",
         "rear": "images/olympus-rear.png"
@@ -5719,7 +5719,7 @@
         "kind": "phase",
         "name": "Ghost Drift"
       },
-      "afterCandidate": "candidates/roster-marshal.png",
+      "afterCandidate": "candidates/roster-marshal.png?v=1789347479989.5032",
       "images": {
         "front": "images/marshal-front.png",
         "rear": "images/marshal-rear.png"
@@ -5861,7 +5861,7 @@
         "kind": "dash",
         "name": "Boost Vector"
       },
-      "afterCandidate": "candidates/roster-circuit.png",
+      "afterCandidate": "candidates/roster-circuit.png?v=1789347673614.5127",
       "images": {
         "front": "images/circuit-front.png",
         "rear": "images/circuit-rear.png"
@@ -6027,7 +6027,7 @@
         "slideT": 0.65,
         "power": 128
       },
-      "afterCandidate": "candidates/roster-trench.png",
+      "afterCandidate": "candidates/roster-trench.png?v=1789347480320.7",
       "images": {
         "front": "images/trench-front.png",
         "rear": "images/trench-rear.png"
@@ -6177,7 +6177,7 @@
         "kind": "dash",
         "name": "Offbeat"
       },
-      "afterCandidate": "candidates/roster-decibel.png",
+      "afterCandidate": "candidates/roster-decibel.png?v=1789350047620.8728",
       "images": {
         "front": "images/decibel-front.png",
         "rear": "images/decibel-rear.png"
@@ -6310,7 +6310,7 @@
         "slideT": 0.6,
         "power": 122
       },
-      "afterCandidate": "candidates/roster-coldsnap.png",
+      "afterCandidate": "candidates/roster-coldsnap.png?v=1789347480641.604",
       "images": {
         "front": "images/coldsnap-front.png",
         "rear": "images/coldsnap-rear.png"
@@ -6465,7 +6465,7 @@
         "up": 46,
         "fwd": 62
       },
-      "afterCandidate": "candidates/roster-foundry.png",
+      "afterCandidate": "candidates/roster-foundry.png?v=1789347480794.0728",
       "images": {
         "front": "images/foundry-front.png",
         "rear": "images/foundry-rear.png"
@@ -6617,7 +6617,7 @@
         "up": 44,
         "fwd": 66
       },
-      "afterCandidate": "candidates/roster-talon.png",
+      "afterCandidate": "candidates/roster-talon.png?v=1789347480957.1277",
       "images": {
         "front": "images/talon-front.png",
         "rear": "images/talon-rear.png"
@@ -6755,7 +6755,7 @@
         "up": 40,
         "fwd": 58
       },
-      "afterCandidate": "candidates/roster-abeo.png",
+      "afterCandidate": "candidates/roster-abeo.png?v=1789347481105.2512",
       "images": {
         "front": "images/abeo-front.png",
         "rear": "images/abeo-rear.png"
@@ -6911,7 +6911,7 @@
         "mult": 1.85,
         "dur": 1.4
       },
-      "afterCandidate": "candidates/roster-jelani.png",
+      "afterCandidate": "candidates/roster-jelani.png?v=1789349762564.8352",
       "images": {
         "front": "images/jelani-front.png",
         "rear": "images/jelani-rear.png"
@@ -7060,7 +7060,7 @@
         "kind": "phase",
         "name": "Through the Veil"
       },
-      "afterCandidate": "candidates/roster-kamaria.png",
+      "afterCandidate": "candidates/roster-kamaria.png?v=1789347481391.3584",
       "images": {
         "front": "images/kamaria-front.png",
         "rear": "images/kamaria-rear.png"
@@ -7200,7 +7200,7 @@
         "kind": "dash",
         "name": "Lawman's Roll"
       },
-      "afterCandidate": "candidates/roster-ramiro.png",
+      "afterCandidate": "candidates/roster-ramiro.png?v=1789347481540.0288",
       "images": {
         "front": "images/ramiro-front.png",
         "rear": "images/ramiro-rear.png"
@@ -7360,7 +7360,7 @@
         "kind": "phase",
         "name": "Soundless Step"
       },
-      "afterCandidate": "candidates/roster-jawah.png",
+      "afterCandidate": "candidates/roster-jawah.png?v=1789350047801.8064",
       "images": {
         "front": "images/jawah-front.png",
         "rear": "images/jawah-rear.png"
@@ -7510,7 +7510,7 @@
         "kind": "phase",
         "name": "Symbiont Shift"
       },
-      "afterCandidate": "candidates/roster-moses.png",
+      "afterCandidate": "candidates/roster-moses.png?v=1789347481860.3455",
       "images": {
         "front": "images/moses-front.png",
         "rear": "images/moses-rear.png"
@@ -7644,7 +7644,7 @@
         "slideT": 0.65,
         "power": 126
       },
-      "afterCandidate": "candidates/roster-dune.png",
+      "afterCandidate": "candidates/roster-dune.png?v=1789350047987.4558",
       "images": {
         "front": "images/dune-front.png",
         "rear": "images/dune-rear.png"
@@ -7795,7 +7795,7 @@
         "name": "Mass Shift",
         "range": 22
       },
-      "afterCandidate": "candidates/roster-graven.png",
+      "afterCandidate": "candidates/roster-graven.png?v=1789349666603.39",
       "images": {
         "front": "images/graven-front.png",
         "rear": "images/graven-rear.png"
@@ -7945,7 +7945,7 @@
         "name": "Groundbreak",
         "power": 88
       },
-      "afterCandidate": "candidates/roster-bulwark.png",
+      "afterCandidate": "candidates/roster-bulwark.png?v=1789350048170.6543",
       "images": {
         "front": "images/bulwark-front.png",
         "rear": "images/bulwark-rear.png"
@@ -8094,7 +8094,7 @@
         "up": 46,
         "fwd": 72
       },
-      "afterCandidate": "candidates/roster-feral.png",
+      "afterCandidate": "candidates/roster-feral.png?v=1789349762865.8232",
       "images": {
         "front": "images/feral-front.png",
         "rear": "images/feral-rear.png"
@@ -8245,7 +8245,7 @@
         "kind": "dash",
         "name": "Entry Roll"
       },
-      "afterCandidate": "candidates/roster-breach.png",
+      "afterCandidate": "candidates/roster-breach.png?v=1789349666885.1301",
       "images": {
         "front": "images/breach-front.png",
         "rear": "images/breach-rear.png"
@@ -8407,7 +8407,7 @@
         "kind": "dash",
         "name": "Scout Roll"
       },
-      "afterCandidate": "candidates/roster-recon.png",
+      "afterCandidate": "candidates/roster-recon.png?v=1789347482906.1519",
       "images": {
         "front": "images/recon-front.png",
         "rear": "images/recon-rear.png"
