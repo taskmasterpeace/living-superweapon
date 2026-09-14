@@ -3,6 +3,16 @@ import assert from 'node:assert/strict';
 import {Fighter} from '../src/engine/entity.js';
 import {zombieDefinition} from '../src/data/zombie-encounter.js';
 const shot=(f,zone)=>f.takeDamage(9,{ballistic:true,weapon:'rifle',zone});
+test('healthy left claw chambers outside its own ribs after right arm loss',async()=>{
+ const T=await import('three');const {beginAbilityMeleePose,animateAbilityMeleePose}=await import('../src/engine/ability-melee-pose.js');
+ const f=new Fighter(zombieDefinition());f._openSky=true;f._animate(0);
+ f._zombieLimbs={armR:{disabled:true}};
+ const slot={def:{contact:'fist'},t:.24,hit:new Set()};beginAbilityMeleePose(f,slot);f._abilityMeleePose.elapsed=.03;
+ animateAbilityMeleePose(f);f.obj.updateMatrixWorld(true);
+ const hand=f.parts.armL.children[2].getWorldPosition(new T.Vector3());f.parts.body.worldToLocal(hand);
+ assert.ok(hand.x<f.parts.armL.position.x-.2,'left claw chamber crossed inside shoulder');
+ f.dispose();
+});
 test('common zombie rifle headshot is lethal, torso requires two hits',()=>{
  const head=new Fighter(zombieDefinition());head.invuln=3;shot(head,'head');assert.equal(head.state,'ko');head.dispose();
  const body=new Fighter(zombieDefinition());shot(body,'torso');assert.equal(body.hp,50);shot(body,'torso');assert.equal(body.state,'ko');body.dispose();

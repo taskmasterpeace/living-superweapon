@@ -58,3 +58,8 @@ Connected the existing workshop infected-flight arm overlay to the modular gamep
 
 Modular bodies now retain native ranged aiming while the shared cast channel reports an active recovery, even after state returns to idle. Expired timers restore normal idle playback; melee ownership remains unchanged. The regression failed before the fix. All sixteen modular tests and production build pass. This preserves existing aiming animation; visual weapon contact review remains outstanding.
 
+
+## Injured zombie claw handedness
+
+The surviving left-arm attack now mirrors torso twist, chamber, approach arc, elbow pole and grip orientation after right-arm loss. Previously it selected the left arm but retained right-arm geometry. Real Fighter chamber regression failed before the fix. Thirty-five locational damage, zombie encounter and equipped melee tests pass; production build passes. Full visual clip acceptance remains outstanding.
+

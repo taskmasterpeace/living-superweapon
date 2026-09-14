@@ -58,11 +58,12 @@ export function animateAbilityMeleePose(f){
  const weight=smooth(t/.025)*(1-smooth((release-.5)/.5));
  const extension=smooth((t-.045)/.075)*(1-smooth(release/.7));
  const scale=p.rig.pivotHeight/4.6;
- p.body.rotation.y+=(.30-.62*extension)*weight;
+ const injuredRight=f._zombieLimbs?.armR?.disabled,side=injuredRight?-1:1;
+ p.body.rotation.y+=side*(.30-.62*extension)*weight;
  // Flight already supplies travel lean and trailing legs; do not force a
  // standing boxer silhouette or add visual translation to simulation roots.
  p.g.updateMatrixWorld(true);
- const injuredRight=f._zombieLimbs?.armR?.disabled,arm=injuredRight?p.armL:p.armR,off=injuredRight?p.armR:p.armL;
+ const arm=injuredRight?p.armL:p.armR,off=injuredRight?p.armR:p.armL;
  if(motion.physicalContact){
   // Punch across the shoulder toward the aiming ray, not on a parallel ray
   // offset by the full shoulder width (which misses a centered human chest).
@@ -71,13 +72,13 @@ export function animateAbilityMeleePose(f){
  p.body.worldToLocal(point);
  // Keep the chamber outside the ribs by a fist radius. A pivot-only margin
  // could let the curled glove nick the breathing torso during recovery.
- guard.copy(arm.position).add(direction.set(.75,-.7,-.6).multiplyScalar(scale));point.lerp(guard,1-extension);
+ guard.copy(arm.position).add(direction.set(side*.75,-.7,-.6).multiplyScalar(scale));point.lerp(guard,1-extension);
  // The fist travels around the ribs before crossing toward the aim ray. A
  // straight chamber-to-ray interpolation cut the glove through the chest at
  // low extension, even though both endpoint poses were outside the torso.
- if(motion.physicalContact)point.x+=Math.sin(Math.PI*extension)*1.2*scale;
- reachArm(arm,point,1,weight);
- guard.copy(off.position).add(direction.set(-.55,-.9,.85).multiplyScalar(scale));reachArm(off,guard,-1,weight);
+ if(motion.physicalContact)point.x+=side*Math.sin(Math.PI*extension)*1.2*scale;
+ reachArm(arm,point,side,weight);
+ guard.copy(off.position).add(direction.set(-side*.55,-.9,.85).multiplyScalar(scale));reachArm(off,guard,-side,weight);
  p.head.parent.getWorldQuaternion(inverse).invert();direction.copy(motion.direction).applyQuaternion(inverse);
  direction.z=Math.max(.2,direction.z);direction.normalize();rotation.setFromUnitVectors(forward,direction);
  p.head.quaternion.slerp(rotation,weight*.65);p.cowl.quaternion.copy(p.head.quaternion);
