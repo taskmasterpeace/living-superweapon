@@ -2,6 +2,7 @@ import * as T from 'three';
 import {FULL_BODY_STUDIES,fullBodyStudy} from './character-full-body-studies.js';
 import {clone} from 'three/addons/utils/SkeletonUtils.js';
 import {samplePose,sampleBodyPosition} from './character-authoring.js';
+import {groundStudyKeys} from './grounded-study.js';
 export const ACTION_DRAFTS={
  ...FULL_BODY_STUDIES,
  'Dart throw':{duration:.65,contact:.05,release:.28,controlReturn:.55,joint:'DEF-forearmR',axis:'x',angle:-1.1},
@@ -14,8 +15,8 @@ export const ACTION_DRAFTS={
  'Burn / acid':{duration:1,contact:.15,release:.7,controlReturn:.9,joint:'DEF-upper_armR',axis:'z',angle:.65},
  'Poison / gas':{duration:1.3,contact:.1,release:.9,controlReturn:1.2,joint:'DEF-spine003',axis:'x',angle:.3},
 };
-export function actionDraft(name,pose){
- if(FULL_BODY_STUDIES[name])return fullBodyStudy(name,pose);
+export function actionDraft(name,pose,actor=null){
+ if(FULL_BODY_STUDIES[name]){const m=fullBodyStudy(name,pose);return actor&&FULL_BODY_STUDIES[name].grounded?groundStudyKeys(actor,m):m;}
  const d=ACTION_DRAFTS[name];if(!d)throw Error('Unknown draft');const middle=structuredClone(pose),q=new T.Quaternion().fromArray(middle[d.joint]||[0,0,0,1]);q.multiply(new T.Quaternion().setFromAxisAngle(new T.Vector3(...({x:[1,0,0],y:[0,1,0],z:[0,0,1]}[d.axis])),d.angle));middle[d.joint]=q.toArray();
  return {name,duration:d.duration,base:'Idle_Loop',source:'Power World procedural blocking study; needs animation polish',status:'candidate',markers:{contact:d.contact,release:Math.min(d.release,d.controlReturn),controlReturn:d.controlReturn},keys:[{time:0,pose:structuredClone(pose)},{time:d.duration*.45,pose:middle},{time:d.duration,pose:structuredClone(pose)}]};
 }

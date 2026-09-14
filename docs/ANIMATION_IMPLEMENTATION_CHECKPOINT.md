@@ -147,3 +147,8 @@ Loading an action study now ends the previous draft, samples the selected Base c
 The editor now exposes Hip height (rig metres), captures it with each key, interpolates it when scrubbing, and exports a DEF-hips.position track. The control projects through the imported rig parent's actual up axis; UAL local Y is not vertical. Body keys store absolute parent-local `bodyPosition: [x,y,z]`; all keys must supply this field when the track exists. Legacy rotation-only assets remain valid.
 
 The release rehearsal samples the exact release-time body position and restores the actor after measuring hand contact. The actor/entity root remains separate from visual hips. Browser verification captured a lowered contact key, sought to recovery and returned to confirm the saved height. Sixteen production-rig/authoring tests and build pass. This supplies the missing tool; ground-pickup choreography remains rejected until foot and payload contacts are re-authored and reviewed.
+# Ground-pickup body-support pass
+
+Grounded studies can now bake hip-position keys from the production rig's foot anchors, preserving their baseline support plane at each authored key and restoring the editor actor afterward. Ground pickup uses this in both the shared catalog and editor. Its support arms were lowered from the face toward the waist. Browser contact/release inspection confirmed the new lowering and support silhouette.
+
+Seventeen actual-rig/catalog/authoring tests and build pass. The ground-pickup rejection remains: foot-anchor alignment is not sole-volume contact, between-key foot planting and payload grip still need review, and the full sequence is not approved for gameplay. Issue #21 remains open.

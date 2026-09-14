@@ -4,7 +4,7 @@ import {AUTHORING_SCHEMA,RIG,validateAsset,compileAuthoredMotion} from './charac
 export function characterStudyCatalog(actor){
  const pose={},bones=[];actor.traverse(o=>{if(o.isBone){pose[o.name]=o.quaternion.toArray();bones.push(o.name);}});
  return Object.keys(ACTION_DRAFTS).map(name=>{
-  const asset=validateAsset({schema:AUTHORING_SCHEMA,rig:RIG,name,parts:[],motion:actionDraft(name,pose)},bones),m=asset.motion,clip=compileAuthoredMotion(asset);
+  const asset=validateAsset({schema:AUTHORING_SCHEMA,rig:RIG,name,parts:[],motion:actionDraft(name,pose,actor)},bones),m=asset.motion,clip=compileAuthoredMotion(asset);
   const review=m.visualReview;
   return {clip,entry:{id:'study:'+name,key:name,take:name,label:name,category:'Editable studies',kind:'modular',duration:m.duration,frames:m.keys.length,
    contact:{start:m.markers.contact,end:m.markers.release},markers:m.markers,hand:m.hand,contactStyle:m.contactStyle,

@@ -67,8 +67,8 @@ export function installAuthoring({actor,scene,camera,orbit,getRecipe,setRecipe,c
   // End the previous draft before drawing the source; otherwise draw reapplies
   // its last pose and every new study accumulates the previous joint rotations.
   active=false;playing=false;working={};workingBody=null;setMotion($('base').value,0);
-  const motion={...actionDraft($('study').value,capture()),base:$('base').value};
-  motion.keys=motion.keys.map(k=>({...k,bodyPosition:captureBody()}));
+  const motion={...actionDraft($('study').value,capture(),actor),base:$('base').value};
+  motion.keys=motion.keys.map(k=>({...k,bodyPosition:k.bodyPosition||captureBody()}));
   asset=validateAsset({...asset,motion},bones);$('name').value=asset.motion.name;$('duration').value=asset.motion.duration;$('time').max=asset.motion.duration;for(const [k,v] of Object.entries(asset.motion.markers))$(k).value=v;active=true;playing=true;time=0;working={};workingBody=null;refreshKeys();status('Editable blocking study loaded from '+asset.motion.base);
  });
  $('start').onclick=run(()=>{const timing=readTiming();asset=validateAsset({...asset,motion:{...timing,name:$('name').value,base:$('base').value,keys:[{time:0,pose:capture(),bodyPosition:captureBody()}]}},bones);time=0;active=true;playing=false;$('time').max=timing.duration;refreshKeys();syncJoint();status('Draft started. Pose a bone, move the time slider, then capture.');});
