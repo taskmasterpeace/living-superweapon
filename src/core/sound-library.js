@@ -114,6 +114,8 @@ export class SoundLibrary {
  }
  removeRecording(id){this.cue(id);const next=this.exportPackage();delete next.bindings[id];this._commit(next);this.buffers.delete(id);this.stop();}
  setSettings(id,value){this.cue(id);const next=this.exportPackage();next.settings[id]=settings({...next.settings[id],...value});this._commit(next);}
+ recordingSource(id){this.cue(id);return this.state.bindings[id]?'chosen-recording':SOUND_LIBRARY_SAMPLES[id]?'bundled-recording':null;}
+ async prepareAudition(id){const selected=this.recordingSource(id);if(selected==='bundled-recording')await this.audio?.prepareSample?.(SOUND_LIBRARY_SAMPLES[id]);else if(selected==='chosen-recording')await this.ready();return selected;}
  source(id){this.cue(id);if(this.state.settings[id]?.source==='placeholder')return 'synthesized-placeholder';return this.state.bindings[id]?'chosen-recording':SOUND_LIBRARY_SAMPLES[id]?'bundled-recording':'synthesized-placeholder';}
  eventGate(id,options){const result=this.gate.evaluate(this.cue(id),options);this._record({id,...result,speaker:options?.speaker});return result;}
  _record(e){this.events.push({...e,time:this.ctx?.currentTime??0});if(this.events.length>40)this.events.shift();}

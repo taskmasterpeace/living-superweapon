@@ -168,6 +168,7 @@ export class SampleBank {
     return p;
   }
   preload(names) { for (const n of names) { const m = MANIFEST[n]; if (m) for (const f of m.f) this.load(f); } }
+  async prepare(name) {const m=MANIFEST[name];if(!m)return null;await Promise.all(m.f.map(f=>this.load(f)));return this.buffer(name);}
   buffer(name) {const m=MANIFEST[name];return m?this._pick(m):null;}
   _pick(m) {
     const f = m.f[(Math.random() * m.f.length) | 0];

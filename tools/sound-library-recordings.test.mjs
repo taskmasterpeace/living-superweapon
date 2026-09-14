@@ -28,3 +28,8 @@ test('native recording stays synchronous and yields to fallback until decoded',(
  const {lib,sources}=fixture();assert.equal(lib.native('light'),true);assert.equal(sources.length,1);
  lib.state.bindings.light={name:'custom.mp3',data:'test'};lib.buffers.set('light',{data:'test',buffer:{duration:1}});assert.equal(lib.source('light'),'chosen-recording');
 });
+test('audition prepares bundled audio without changing saved source preferences',async()=>{
+ const requested=[];const lib=new SoundLibrary({storage:null,audio:{prepareSample:async id=>{requested.push(id);return {};}}});
+ lib.setSettings('scout-gunshot',{source:'placeholder'});const before=lib.exportPackage();
+ assert.equal(await lib.prepareAudition('scout-gunshot'),'bundled-recording');assert.deepEqual(requested,['wpn.saw']);assert.deepEqual(lib.exportPackage(),before);
+});

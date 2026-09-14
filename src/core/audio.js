@@ -77,6 +77,10 @@ export class AudioBus {
     if (!this._bank) { this._bank = new SampleBank(this); this._bank.preload(HOT_SET); }
     return this._bank.play(name, o);
   }
+  async prepareSample(name) {
+    this.sampleBuffer(name);
+    return this._bank?.prepare(name)??null;
+  }
   sampleBuffer(name) {
     if(!this.ctx)return null;
     if(!this._bank){this._bank=new SampleBank(this);this._bank.preload(HOT_SET);}

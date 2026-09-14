@@ -13,3 +13,7 @@ Outstanding: ai-pass import and mapping, other CC0 event mappings, SoundLibrary 
 SoundLibrary now resolves approved bundled samples through the shared decoded sample bank. Current defaults: CC0 light/heavy body impact and scout gunshot; licensed ai-pass rain, storm-domain rain/thunder, and grenade release. User bindings and explicit placeholder selection take precedence. Existing SoundLibrary cooldowns, event gating, positional playback and loop watchdog remain the owners. Native replacement waits for decoded data without queuing a stale impact.
 
 Sixteen audio tests pass, including local file presence, chosen/placeholder precedence, synchronous fallback and actual buffer loop cleanup. Build passes. Remaining: listening/mix review, bundled-source presentation and audition in Sound Library UI, additional ai-pass mappings and vehicle/aircraft/reload recordings. No claim that the whole audio package is integrated.
+
+## Workshop audition
+
+Bundled recordings now appear in workshop source labels, counts and recording filters. Play recording is enabled for them and waits for local decode; audition does not change saved custom bindings or explicit placeholder preference. Switching selection while decoding cancels that audition. Browser verified the light punch's Play recording action reaches Playing Bundled recording. Seventeen audio tests and build pass. This checks playback wiring, not subjective mix quality.
