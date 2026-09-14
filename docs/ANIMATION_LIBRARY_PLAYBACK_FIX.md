@@ -9,3 +9,9 @@ Added Grappling hook deploy and hang, an editable six-key full-body candidate wi
 Validation: eight catalog, real modular-model pose/seek and paired-preview tests passed. Browser inspection on port 5185 showed Vegas jab extending at 0.27 seconds, the hostile pair, and the grappling overhead pose at 0.60 seconds. Build passed. This is preview verification, not a completed aerial grab/throw gameplay demonstration.
 
 User direction retained: extra audio should remain available for later selection in Sound Library; do not discard it during selective runtime integration. No universal sweep or airborne sweep was added. Regional input design remains unresolved pending playable comparison.
+
+## Finger-pose correction
+
+The initial adapter preview reset the fingers to their open bind pose because native body drivers do not contain finger tracks. Preview playback now samples the source take before applying native body/wrist drivers, preserving authored finger articulation. Combined/unavailable source takes use Punch_Cross for melee and Idle_Loop otherwise as explicit hand-pose fallbacks. Hand geometry and gameplay playback were not changed.
+
+Browser review showed the jab fist closed at 0.27 seconds. Twenty visible-model, source-skeleton and paired-preview tests passed, including finger-joint equivalence and deterministic seeking. Production build passed.

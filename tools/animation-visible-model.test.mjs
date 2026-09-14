@@ -15,7 +15,12 @@ test('sampled library jab moves visible modular hand and direct seeking is repea
  const c=await loadModularCharacter(Object.assign(f,{def:{...f.def,model:{body:'faceted-v1'}}}),{load:async()=>gltf});
  const base=[];f.obj.traverse(o=>{if(o!==c.actor&&!c.actor.getObjectById(o.id))base.push({o,p:o.position.clone(),q:o.quaternion.clone(),s:o.scale.clone()});});
  const clip=resolveAnimationClip('strike/jab'),frame=new Float64Array(45);
- const sample=t=>{for(const b of base){b.o.position.copy(b.p);b.o.quaternion.copy(b.q);b.o.scale.copy(b.s);}samplePoseFrame(clip,t,frame,false);applyAuthoredPose(f,frame,1,{legs:true,hips:true,support:true});c.poseFromNative();return c.actor.getObjectByName('DEF-handL').quaternion.clone().normalize();};
+ const sample=t=>{for(const b of base){b.o.position.copy(b.p);b.o.quaternion.copy(b.q);b.o.scale.copy(b.s);}samplePoseFrame(clip,t,frame,false);applyAuthoredPose(f,frame,1,{legs:true,hips:true,support:true});c.poseFromNative({take:clip.take,phase:t});return c.actor.getObjectByName('DEF-handL').quaternion.clone().normalize();};
+ const fingers=[];c.actor.traverse(o=>{if(o.isBone&&/f_index|f_middle|f_ring|f_pinky|thumb/.test(o.name))fingers.push(o);});
+ assert.ok(fingers.length>=20,'finger bones missing');
+ c.pose(clip.take,.32);const sourceFingers=fingers.map(b=>b.quaternion.clone());
+ sample(.32);
+ for(let i=0;i<fingers.length;i++)assert.ok(fingers[i].quaternion.clone().normalize().angleTo(sourceFingers[i].clone().normalize())<1e-6,`lost source finger pose: ${fingers[i].name}`);
  const start=sample(0),contact=sample(.32),again=sample(0);
  assert.ok(start.angleTo(contact)>.1,'visible hand remains static');assert.ok(start.angleTo(again)<1e-6,'scrubbing depends on previous pose '+start.angleTo(again));f.dispose();
 });
