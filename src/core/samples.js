@@ -1,5 +1,6 @@
 import {LIBRARY_SAMPLES} from '../data/sound-library-recordings.js';
 import {FIREARM_SAMPLES} from '../data/firearm-recordings.js';
+import {VEHICLE_SAMPLES} from '../data/vehicle-recordings.js';
 
 // THE AUDIO LAW (audio.js): WebAudio throws on a non-finite AudioParam, and an exception
 // inside a setter is an exception inside the FRAME LOOP. Every value that reaches an
@@ -37,7 +38,7 @@ function route(a,src,g,bus,pos) {
 // electric arcs, the KMK 9 news sting, and the sustained KI energy voice (ring-mod + partials
 // + crackle — a generic engine loop would be a downgrade; fire cones DO get a real roar).
 
-export const MANIFEST = {...FIREARM_SAMPLES,...LIBRARY_SAMPLES,
+export const MANIFEST = {...FIREARM_SAMPLES,...LIBRARY_SAMPLES,...VEHICLE_SAMPLES,
   // ---- fists, bodies, the ground ----
   // The direct impact() fallback must use the same selected real body-contact
   // recordings as meleeHit(), not bypass them through the older punch bank.
@@ -133,7 +134,7 @@ export const MANIFEST = {...FIREARM_SAMPLES,...LIBRARY_SAMPLES,
 };
 
 // decoded at init so the first punch of a match is never a synth fallback
-export const HOT_SET = [...Object.keys(FIREARM_SAMPLES),...Object.keys(LIBRARY_SAMPLES),
+export const HOT_SET = [...Object.keys(FIREARM_SAMPLES),...Object.keys(LIBRARY_SAMPLES),...Object.keys(VEHICLE_SAMPLES),
   'punch.med', 'punch.heavy', 'hit.soft', 'land.flesh', 'land.metal', 'land.soft', 'boom',
   'ki.blast', 'ki.zap', 'ki.release', 'swing.fist', 'swing.blade', 'gun.crack', 'boom.deep',
   'ui.click', 'ui.select', 'ui.error', 'ui.key', 'ui.confirm', 'ui.toggle', 'fx.glitch',
@@ -169,7 +170,10 @@ export class SampleBank {
     this.pend.set(file, p);
     return p;
   }
-  preload(names) { for (const n of names) { const m = MANIFEST[n]; if (m) for (const f of m.f) this.load(f); } }
+  preload(names) {
+    const files=new Set(names.flatMap(n=>MANIFEST[n]?.f??[]));
+    return Promise.all([...files].map(f=>this.load(f)));
+  }
   async prepare(name) {const m=MANIFEST[name];if(!m)return null;await Promise.all(m.f.map(f=>this.load(f)));return this.buffer(name);}
   buffer(name) {const m=MANIFEST[name];return m?this._pick(m):null;}
   _pick(m) {

@@ -260,10 +260,18 @@ export class MeleeSystem {
     }
     if (t <= 0 || !this.canAct(f)) return;
     const choice=meleeReleaseChoice(f.def,t);
-    if(choice==='combo')return this.strike(f);
-    if(choice==='slam')return this._beginHeavy(f,'power',.5,true);
-    if(choice==='cross')return this._beginHeavy(f,'cross',.45,false);
-    if(choice==='power')return this._beginHeavy(f,'power',Math.min(1,t),true);
+    // Synchronous review evidence only: charge has already reset, and only a
+    // successfully started native strike may snapshot this release decision.
+    const hadReview=Object.hasOwn(f,'_meleeReleaseReview'),previousReview=f._meleeReleaseReview;
+    f._meleeReleaseReview={charge:t,choice};
+    try {
+      if(choice==='combo')return this.strike(f);
+      if(choice==='slam')return this._beginHeavy(f,'power',.5,true);
+      if(choice==='cross')return this._beginHeavy(f,'cross',.45,false);
+      if(choice==='power')return this._beginHeavy(f,'power',Math.min(1,t),true);
+    } finally {
+      if(hadReview)f._meleeReleaseReview=previousReview;else delete f._meleeReleaseReview;
+    }
   }
   _beginHeavy(f, id, p01, hay) { f.strikeCd = hay ? 0.7 : 0.45; this._beginStrike(f, id, 'heavy', p01, hay); }
 

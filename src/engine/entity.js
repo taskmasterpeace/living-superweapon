@@ -1737,7 +1737,7 @@ export class Fighter {
 
   _physics(dt, game) {
     cancelInterruptedTraversalLeap(this);
-    if(this._scoutVehicle||this._aircraftVehicle||this._passengerTransport)return; // Seat owns movement, not status/cooldown updates.
+    if(this._scoutVehicle||this._aircraftVehicle||this._fleetVehicle||this._passengerTransport)return; // Seat owns movement, not status/cooldown updates.
     if(updateWebZip(this,dt,game))return;
     if (this.remote) return;   // puppets are positioned by the wire (controlRemote), not local physics
     // The holder owns a clinched victim's transform; gravity/deck servos cannot
@@ -2410,7 +2410,7 @@ export class Fighter {
   _animate(dt) {
     restorePersonThrowOverlay(this);
     clearFlightFeet(this);
-    if(this._scoutVehicle||this._aircraftVehicle||this._passengerTransport)return; // Seat owns articulation while Fighter.update stays live.
+    if(this._scoutVehicle||this._aircraftVehicle||this._fleetVehicle||this._passengerTransport)return; // Seat owns articulation while Fighter.update stays live.
     const p = this.parts; const moving = Math.hypot(this.vel.x, this.vel.z) > 4;
     // STUN HALO: the cartoon law — stars orbiting the head mean "scrambled, no control"
     if (this.stunT > 0) {

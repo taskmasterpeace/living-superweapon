@@ -12,11 +12,13 @@ import {MeleeRecording} from './melee-recording.js';
 import {openMeleeReview} from './melee-review.js';
 import {meleePhase,phaseLabel} from './melee-phase.js';
 import {AerialGrabDemo,AerialStunDemo} from './aerial-grab-demo.js';
+import {meleeChargeRegions,meleeChargeState} from './melee-charge-meter.js';
 export function meleeLesson(def,scheme='kbm'){
  const combo=hasStrike(def,'jab')||hasStrike(def,'cross');
- if(scheme==='touch')return (combo?'Tap Punch; repeat for combo':'Tap Punch: heavy slam')+' · hold/release Punch: charged heavy · hold Block: frontal guard · Grab: grab or interact · Evade: dodge';
- if(scheme==='pad')return (combo?'Tap Strike; repeat for combo':'Tap Strike: heavy slam')+' · hold/release Strike: charged heavy · hold Guard: frontal guard · Grab: grab or interact · Evade: dodge';
- return (combo?'V tap: punch; repeat for combo':'V tap: heavy slam')+' · hold/release V: charge heavy · Q: frontal guard · E: grab · double-tap direction: dodge';
+ const regions=meleeChargeRegions(def),charge=' · hold/release '+(scheme==='touch'?'Punch':scheme==='pad'?'Strike':'V')+': '+regions.map(r=>r.label+' '+r.start.toFixed(2)+'–'+r.end.toFixed(2)).join(' → ')+' charge units (charge rate changes hold time)';
+ if(scheme==='touch')return (combo?'Tap Punch; repeat for combo':'Tap Punch: heavy slam')+charge+' · hold Block: frontal guard · Grab: grab or interact · Evade: dodge';
+ if(scheme==='pad')return (combo?'Tap Strike; repeat for combo':'Tap Strike: heavy slam')+charge+' · hold Guard: frontal guard · Grab: grab or interact · Evade: dodge';
+ return (combo?'V tap: punch; repeat for combo':'V tap: heavy slam')+charge+' · Q: frontal guard · E: grab · double-tap direction: dodge';
 }
 export const GUARD_LESSON='Hold guard while facing the attacker: it stays up through ordinary blocked hits. Energy pays for damage; an empty energy pool lets unpaid damage through. The guard meter also wears down. Heavy guard crush breaks it; grabs bypass it. You cannot guard while attacking, carrying, stunned or recovering from a break. Release to recover the guard meter; turn or dodge attacks from behind.';
 export const MELEE_TRIALS=['stationary','retreat','guard','dodge','defend','airborne','air-defense'];
@@ -146,12 +148,23 @@ export class MeleeTrial {
   }
 
   const f=this.g.player;this.phaseKey??=[];
+  this.captureCharge(f);
   for(const [actor,fighter]of [f,this.target,...(this.ally?[this.ally]:[])].entries()){
-   const state=meleePhase(fighter);if(state.phase!==this.phaseKey[actor]){this.phaseKey[actor]=state.phase;this.recording.mark(this.g.time,{label:`${actor===2?'Teammate':actor?'Target':'You'} · ${phaseLabel(state.phase)}`,kind:'phase',actor,...state});}
+   const state=meleePhase(fighter);if(state.phase!==this.phaseKey[actor]){this.phaseKey[actor]=state.phase;this.recording.mark(this.g.time,{label:`${actor===2?'Teammate':actor?'Target':'You'} · ${state.phase==='charging'?'Preparing strike':phaseLabel(state.phase)}`,kind:'phase',actor,...state});}
   }
   this.recording.capture(this.g.time);
   if(this.canRecoverKO()&&f.koT>=1&&typeof document!=='undefined')this.openReview();
  }}
+ captureCharge(f){
+  if(!(f.meleeCharge>0)){this.chargeRegionKey=null;return;}
+  const state=meleeChargeState(f),region=state.active;
+  const key=state.regions.map(r=>r.id).join('/')+':'+region.id;
+  if(key===this.chargeRegionKey)return;
+  this.chargeRegionKey=key;
+  const label='RELEASE REGION · '+region.label.toUpperCase()+' · '+state.charge.toFixed(2)+' charge';
+  this.recording.mark(this.g.time,{kind:'charge-region',actor:0,label,releaseChoice:region.id,charge:state.charge});
+  this.g.hud?.feed?.(label,'#ffd24a');
+ }
  ownsPracticeActor(f){const seen=new Set();while(f&&!seen.has(f)){if(f===this.target||f===this.ally)return true;seen.add(f);f=f._dupeOf;}return false;}
  ownsThreat(f){const seen=new Set();while(f&&!seen.has(f)){if(f===this.target)return true;seen.add(f);f=f._dupeOf;}return false;}
  canRecoverKO(){const f=this.g.player;return this.g.ms?.threatLab?.state==='preparing'&&f?.state==='ko'&&this.ownsThreat(f.lastHitBy)&&this.g.entities.includes(f);}
@@ -193,6 +206,12 @@ export class MeleeTrial {
   if(f!==this.g.player||!this.target)return;
   const profile=meleeApproach(f.def,f.airborne),entry=meleeEntryEligibility(this.g,f,this.target,profile.range);
   this.attempt={entryReason:entry.reason,entryRange:profile.range,entryFamily:profile.family,trial:this.kind,kind:f.mId,time:Math.max(0,(this.g.time||0)-(this.startedAt||0)),contacts:0,approach:!!f._meleeMotion?.approachEnabled,distance:f.pos.distanceTo(this.target.pos),startup:f._meleeMotion?.startupDuration??STRIKES[f.mId].startup/(f.def.meleePace||1),active:STRIKES[f.mId].active/(f.def.meleePace||1),recovery:STRIKES[f.mId].recover/(f.def.meleePace||1)};
+  const release=f._meleeReleaseReview;
+  Object.assign(this.attempt,{releaseCharge:release?.charge??null,releaseChoice:release?.choice??null,strikeKind:f.mKind,context:f.airborne?'air':'ground'});
+  this.chargeRegionKey=null;
+  const label=(release?'RELEASE '+release.charge.toFixed(2)+' · '+release.choice.toUpperCase():'DIRECT / BUFFERED')+' → '+f.mId.toUpperCase()+' · '+f.mKind.toUpperCase()+' · '+this.attempt.context.toUpperCase();
+  this.recording.mark(this.g.time,{...this.attempt,kind:'strike-start',actor:0,attack:f.mId,label});
+  this.g.hud?.feed?.(label,'#ffd24a');
  }
  strikeEnded(f,{interrupted=false}={}){
   if(f!==this.g.player||!this.attempt)return;
@@ -204,7 +223,7 @@ export class MeleeTrial {
   a.reason=a.contacts?(f._meleeBlocked?'BLOCKED':'TARGET CONTACT'):interrupted?'INTERRUPTED':!a.approach?a.entryReason:'FIST DID NOT CONNECT';
   this.records.push(a);if(this.records.length>100)this.records.shift();
   const hint=interrupted?'Wait for control to return, then approach again.':!a.contacts&&!a.approach?'Face the target and move into the shown approach range.':!a.contacts?'Re-aim after the target moves; an approach does not guarantee a hit.':'';
-  this.recording.mark(this.g.time,{kind:'strike-result',actor:0,label:a.kind.toUpperCase()+' · '+a.reason,result:a.result,reason:a.reason});
+  this.recording.mark(this.g.time,{...a,kind:'strike-result',actor:0,attack:a.kind,label:a.kind.toUpperCase()+' · '+a.reason,result:a.result,reason:a.reason});
   this.g.hud?.feed?.(a.reason+' · '+a.kind.toUpperCase()+' · start '+a.distance.toFixed(1)+'u · recovery '+Math.round(a.recovery*1000)+'ms'+(hint?' · '+hint:''),'#ffd24a');this.attempt=null;
  }
  grabContact(holder,victim){if(holder!==this.g.player||victim!==this.target)return;this.recording.mark(this.g.time,{label:'Grab connected',kind:'grab'});}
@@ -222,6 +241,6 @@ export class MeleeTrial {
   this.records.push(record);if(this.records.length>100)this.records.shift();this.recording.mark(this.g.time,{...record,label,kind:'contact'});
   this.g.hud?.feed?.(label,'#ffd24a');
  }
- clear(){this._creatureEpoch=(this._creatureEpoch||0)+1;this.creature=null;if(this.demo?.active)this.demo.stop();this.demo=null;this.bag=null;this.records.length=0;this.startedAt=this.g.time||0;this.machine=null;this.machineMode=null;this.clearPreview();this.review?.close();this.review=null;this.recording.clear();for(const f of [this.target,this.ally])if(f)retirePracticeActor(this.g,f);this.target=null;this.ally=null;}
+ clear(){this.chargeRegionKey=null;this._creatureEpoch=(this._creatureEpoch||0)+1;this.creature=null;if(this.demo?.active)this.demo.stop();this.demo=null;this.bag=null;this.records.length=0;this.startedAt=this.g.time||0;this.machine=null;this.machineMode=null;this.clearPreview();this.review?.close();this.review=null;this.recording.clear();for(const f of [this.target,this.ally])if(f)retirePracticeActor(this.g,f);this.target=null;this.ally=null;}
  dispose(){this.clear();}
 }

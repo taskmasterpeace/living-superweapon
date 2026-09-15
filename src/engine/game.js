@@ -22,6 +22,12 @@ import { setVisionMode } from './systems2.js';
 import { Weather, TimeFields, GravityZones, setSize, banish } from './systems.js';
 import * as THREE from 'three';
 import {meleeApproach} from '../data/melee-approaches.js';
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+import {FleetPilot} from './fleet-pilot.js';
+import {classOf as fleetClassOf, envelopeFor as fleetEnvelopeFor, drives as fleetDrives} from '../data/fleet-handling.js';
+import {initVehicleState} from './vehicle-pilot.js';
+import {bindVehicleParts} from './vehicle-rig.js';
+import {sculptSimArena, restoreSimArena, bayPos, buildSimWalls, buildSimWater, buildSimSkyRings, buildSimRing, buildSimBoxRing, buildSimMaze, buildSimDefenses, buildSimGate, buildSimDesert, clearSimObstructions, teardownSimProps, SKY_RING_R, SIM as VEHICLE_SIM, AA as SIM_AA} from './vehicle-sim.js';
 import {snapshotHeroSkins} from './hero-skin.js';
 import {updateFlightSense} from './flight-sense.js';
 import {clearForegroundVisibility} from './foreground-visibility.js';
@@ -1576,13 +1582,15 @@ export class Game {
   // ---------- field of vision ----------
   updateVision(dt) {
     const p = this.player;
-    if (!p || !this.fov) { for (const e of this.entities) { e._vis = 1; if (e.obj) e.obj.visible = true; } this.world.setFogEnabled(false); return; }
+    const piloting = e => e._fleetVehicle || e._aircraftVehicle || e._scoutVehicle;   // the driver's body rides hidden — you see the vehicle, not them
+    if (!p || !this.fov) { for (const e of this.entities) { e._vis = 1; if (e.obj) e.obj.visible = !piloting(e); } this.world.setFogEnabled(false); return; }
     this.world.setFogEnabled(true);
     const h2 = this.humans[1] && this.humans[1].fighter;
     this.world.updateFog(p.pos.x, p.pos.z, p.aim.x, p.aim.z, p.def.colors.accent, (h2 && h2.alive) ? h2.pos : null);
     for (const e of this.entities) {
       if (e._banished) { e.obj.visible = false; continue; }   // BANISHED: they are not on this field at all
       if (e._inert) { e.obj.visible = false; continue; }      // POSSESSED AWAY: the body is left behind, not here
+      if (piloting(e)) { e._vis = 1; e.obj.visible = false; continue; }   // PILOTING a vehicle — known at the seat, but the body is not drawn
       if (this.isHuman(e) || e.team === p.team) { e._vis = 1; e.obj.visible = true; continue; }   // your own side is always visible (incl. AI partners)
       let see = this._humanSees(p, e) || (h2 && h2.alive && this._humanSees(h2, e));
       if (!see) { const d = Math.hypot(e.pos.x - p.pos.x, e.pos.z - p.pos.z); if (d < this.visReveal && this._bright(e)) see = true; }
@@ -1911,6 +1919,7 @@ export class Game {
   // ONE list, called from all three. A new zone system adds its line HERE and is covered
   // everywhere, which is the whole point.
   clearTransients() {
+    this._simDeployGeneration = (this._simDeployGeneration || 0) + 1;
     clearScannerPanel(this);
     this.ms?.threatLab?.dispose();
     this.ms?.convoyOperation?.dispose();
@@ -1931,6 +1940,12 @@ export class Game {
     if (this._bands0) { Object.assign(BANDS, this._bands0); this._bands0 = null; }
     if (this._ring) this._ring.close();
     if (this._pwStage) this._pwStage.close();   // POWERWORLD's stage is a transient like any other
+    if (this._fleetPilot) { this._fleetPilot.dispose(); this._fleetPilot = null; }
+    if (this._fleetActors) { for (const a of this._fleetActors) if (a.wrapper) { this.scene.remove(a.wrapper); a.wrapper.traverse(o => o.geometry?.dispose?.()); } this._fleetActors = null; }
+    teardownSimProps(this);   // dispose the sim's walls + water, unregister the wall cover
+    if (this._simUndo) { restoreSimArena(this.world, this._simUndo); this._simUndo = null; }   // the sim arena's terrain is a transient — put the land back
+    this._simActive = false; this._simVehicle = null; this._simFleet = null; this._simIndex = 0; this._simPrevActor = null; this._simFoe = null; this._simInRing = false; this._simRingScore = 0; this._simAir = 12; this._simDrownT = 0; this._simMissiles = null;
+    document.getElementById('simWarp')?.remove();
     document.body.classList.remove('powerworld');   // and the class goes home with it (the reset law)
     if (this._fov0 != null) { this.fov = this._fov0; this._fov0 = null; }   // and so is a suspended fog of war
     if (this.lab) { try { this.lab.close(); } catch (e) {} this.lab = null; }   // the white room is a transient too
@@ -2082,6 +2097,133 @@ export class Game {
     return n;
   }
 
+  // THE VEHICLE SIMULATOR — the Threat Lab's proving ground. Sculpt the arena ONCE (a base on
+  // high ground, a cliff down to a valley, a water basin; the stage spires are the mountains),
+  // print the chosen fleet vehicle at the bay, and drop the player there. Board (J) to drive it;
+  // every drivable model runs the same course. `LSW.game.deployVehicleSim('humvee')` — the console
+  // and any key binding reach the same method. The terrain is a transient (restored in clearTransients).
+  async deployVehicleSim(id = null) {
+    // PUT THE PROVING GROUND ON THE DESERT MAP (Robert: "put this on the same map as our desert
+    // place"). The desert IS the PowerWorld stage — so enter it first if we're anywhere else, then
+    // build the outpost on it. PowerWorld already reserves an outpost zone for exactly this, and
+    // "PowerWorld → Shift+V" is the proven path; a `practice` encounter keeps it a quiet proving
+    // ground (no rival auto-spawn). Already on the desert → no switch.
+    if (this.modeId !== 'powerworld' || this._threatRoom?.active) this.startMode('powerworld', { p1: this.player?.def?.id || 'sol', encounter: 'practice' });
+    const generation = this._gen | 0, request = this._simDeployGeneration = (this._simDeployGeneration || 0) + 1;
+    const current = () => generation === (this._gen | 0) && request === this._simDeployGeneration;
+    if (!this._simUndo) this._simUndo = sculptSimArena(this.world);
+    if (!this._simCleared) this._simCleared = clearSimObstructions(this);     // clear spires clipping the structures FIRST
+    if (this.modeId !== 'powerworld' && !this._simDesert) this._simDesert = buildSimDesert(this, THREE);   // fallback desert horizon only when NOT on the PowerWorld stage (the stage brings its own)
+    if (!this._simWalls) this._simWalls = buildSimWalls(this, THREE);         // the walled base
+    if (!this._simGate) this._simGate = buildSimGate(this, THREE);           // the gate at the entrance
+    if (!this._simWater) this._simWater = buildSimWater(this, THREE);         // the water you can see
+    if (!this._simSkyRings) this._simSkyRings = buildSimSkyRings(this, THREE);// the fly-through course for planes
+    if (!this._simRing) this._simRing = buildSimRing(this, THREE);           // the OCTAGON (UFC, full combat)
+    if (!this._simBoxRing) this._simBoxRing = buildSimBoxRing(this, THREE);   // the SQUARE boxing ring (punches only)
+    if (!this._simMaze) this._simMaze = buildSimMaze(this, THREE);           // the mech/tank maze
+    if (!this._simDefenses) this._simDefenses = buildSimDefenses(this, THREE);// the anti-air emplacements
+    // the drivable roster (base models only), built once — this is what the L-key cycles through
+    if (!this._simFleet) {
+      if (!this._fleetCat) { try { const r = await fetch('./reference-fleet/catalog.json'); this._fleetCat = await r.json(); } catch {} }
+      if (!current()) return null;
+      this._simFleet = (this._fleetCat?.models || []).filter(m => fleetDrives(m) && !/-(damaged|destroyed)$/.test(m.id)).map(m => m.id);
+    }
+    if (id == null) id = this._simFleet[this._simIndex || 0] || 'humvee';
+    const idx = this._simFleet.indexOf(id); if (idx >= 0) this._simIndex = idx;
+    // SWAP, DON'T STACK — dispose the previously printed vehicle (and dismount first)
+    if (this._simVehicle) {
+      const old = this._simVehicle;
+      if (this._fleetPilot?.actor === old) this._fleetPilot.exit();
+      if (old.wrapper) { this.scene.remove(old.wrapper); old.wrapper.traverse(o => o.geometry?.dispose?.()); }
+      const i = this._fleetActors ? this._fleetActors.indexOf(old) : -1; if (i >= 0) this._fleetActors.splice(i, 1);
+      this._simVehicle = null;
+    }
+    // back to the bay
+    const bay = bayPos(this.world), p = this.player;
+    if (p) { p.pos.x = bay.x; p.pos.z = bay.z; p.pos.y = bay.y; p.vel?.set?.(0, 0, 0); p.obj?.position?.copy?.(p.pos); }
+    const a = await this.spawnFleetVehicle(id, { x: bay.x + 10, z: bay.z }, { simRequest: request });
+    if (!current()) {
+      // A newer request can start between spawn's completion and this continuation.
+      if (a) {
+        this.scene.remove(a.wrapper); a.wrapper.traverse(o => o.geometry?.dispose?.());
+        const i = this._fleetActors?.indexOf(a) ?? -1; if (i >= 0) this._fleetActors.splice(i, 1);
+      }
+      return null;
+    }
+    if (a) this._simVehicle = a;
+    this._simActive = true;
+    this.hud?.feed?.(`SIM · ${(a?.name || id).toUpperCase()} PRINTED — J board · ${VEHICLE_SIM.menuKey.replace('Key', '')} swap · K octagon · P boxing`, '#7fe6ff');
+    return a;
+  }
+
+  // Cycle the printed vehicle (the sim menu's core action — Robert's "give you a different vehicle
+  // and you start off back at the bay"). Only in the sim; wired to the L key in controlPlayer.
+  simSwap(dir = 1) {
+    if (!this._simActive || !this._simFleet?.length) return;
+    this._simIndex = ((this._simIndex || 0) + dir + this._simFleet.length) % this._simFleet.length;
+    this.deployVehicleSim(this._simFleet[this._simIndex]);
+  }
+
+  // The board → warp beat: a brief VR-boot flash so getting in a printed vehicle reads as being
+  // teleported into the simulation. A DOM overlay (no shader), cyan-holo, non-purple; fades itself.
+  _simWarpFx() {
+    if (typeof document === 'undefined') return;
+    let el = document.getElementById('simWarp');
+    if (!el) { el = document.createElement('div'); el.id = 'simWarp'; el.style.transition = 'opacity .7s ease .15s'; document.body.appendChild(el); }
+    el.style.cssText += ';position:fixed;inset:0;z-index:14000;pointer-events:none;display:grid;place-items:center;'
+      + 'background:radial-gradient(circle at 50% 46%, rgba(96,224,255,.30), rgba(6,12,20,.92) 72%);'
+      + 'color:#c7ecff;font-family:Rajdhani,system-ui,sans-serif;';
+    el.innerHTML = '<div style="text-align:center;letter-spacing:.42em"><div style="font-size:13px;opacity:.72">SIMULATION</div>'
+      + '<div style="font-size:30px;font-weight:600;margin-top:8px">ONLINE</div></div>';
+    el.style.opacity = '1'; void el.offsetWidth;   // reflow so the fade re-runs on a repeat board
+    requestAnimationFrame(() => { el.style.opacity = '0'; });
+  }
+
+  // Teleport into the OCTAGON on foot (Robert: "teleport to participate in a tournament... you stay
+  // inside a ring, flight off, you fight" — the round cage "should be for UFC stuff"). FULL combat:
+  // powers stay on (clear the pure-boxing flag in case they came from the boxing ring). Drops any
+  // vehicle, warps to the canvas; the per-frame check keeps flight off while inside the cage.
+  simEnterRing() {
+    if (!this._simActive || !this._simRing) return;
+    if (this._fleetPilot?.actor) this._fleetPilot.exit();
+    const R = this._simRing, p = this.player;
+    if (p) {
+      p.pos.x = R.cx; p.pos.z = R.cz - 28; p.pos.y = R.top + 2;
+      p.flying = false; p.flyHeld = false; p.descendHeld = false; p.vel?.set?.(0, 0, 0);
+      p.noPowers = false; p._boxRing = false;   // the octagon is full combat
+      p.obj?.position?.copy?.(p.pos); if (p.obj) p.obj.visible = true;
+    }
+    // a sparring opponent on the far side of the canvas — the fight (Robert: "you fight inside the ring")
+    if (!this._simFoe || !this._simFoe.alive) this._simFoe = this.spawnRival();
+    const foe = this._simFoe;
+    if (foe) { foe.pos.x = R.cx; foe.pos.z = R.cz + 28; foe.pos.y = R.top + 2; foe.flying = false; foe.flyHeld = false; foe.vel?.set?.(0, 0, 0); foe.noPowers = false; foe._boxRing = false; foe.obj?.position?.copy?.(foe.pos); }
+    this._simInRing = true; this.world && (this.world._chaseSnap = true);
+    this._simWarpFx();
+    this.hud?.feed?.('THE OCTAGON — FLIGHT OFF · full combat inside the cage', '#ff8b63');
+  }
+
+  // Teleport into the SQUARE boxing ring — PUNCHES ONLY (Robert: "boxing only where you can only do
+  // punches"). Same warp as the octagon, but sets `noPowers` on both fighters (the pure-boxing flag:
+  // fists only, no abilities or gadgets). The per-frame check keeps it set while inside the ropes and
+  // clears it once they leave; teardown clears it too, so it never outlives the sim.
+  simEnterBoxRing() {
+    if (!this._simActive || !this._simBoxRing) return;
+    if (this._fleetPilot?.actor) this._fleetPilot.exit();
+    const R = this._simBoxRing, p = this.player;
+    if (p) {
+      p.pos.x = R.cx; p.pos.z = R.cz - 12; p.pos.y = R.top + 2;
+      p.flying = false; p.flyHeld = false; p.descendHeld = false; p.vel?.set?.(0, 0, 0);
+      p.noPowers = true; p._boxRing = true;
+      p.obj?.position?.copy?.(p.pos); if (p.obj) p.obj.visible = true;
+    }
+    if (!this._simFoe || !this._simFoe.alive) this._simFoe = this.spawnRival();
+    const foe = this._simFoe;
+    if (foe) { foe.pos.x = R.cx; foe.pos.z = R.cz + 12; foe.pos.y = R.top + 2; foe.flying = false; foe.flyHeld = false; foe.vel?.set?.(0, 0, 0); foe.noPowers = true; foe._boxRing = true; foe.obj?.position?.copy?.(foe.pos); }
+    this._simInRing = true; this.world && (this.world._chaseSnap = true);
+    this._simWarpFx();
+    this.hud?.feed?.('BOXING RING — PUNCHES ONLY · no powers inside the ropes', '#ff8b63');
+  }
+
   spawnRival(charId) {
     const pick = charId ? ROSTER.find(r => r.id === charId) : ROSTER[(Math.random() * ROSTER.length) | 0];
     const ang = rand(0, TAU), r = 60;
@@ -2089,6 +2231,55 @@ export class Game {
     b.ai = new AI(b, 1);
     this.vfx.flash(b.pos.clone().setY(5), pick.colors.accent, 10, 0.4);
     return b;
+  }
+
+  // Spawn ANY reference-fleet catalog model as a boardable, drivable vehicle: walk up +
+  // J to board (FleetPilot), WASD to drive it on its class stepper. Agent-native seam:
+  // `LSW.game.spawnFleetVehicle('tank')`. Powerworld/freeroam frame it in 3rd person.
+  async spawnFleetVehicle(id, pos = {}, { simRequest } = {}) {
+    const generation = this._gen | 0;
+    const current = () => generation === (this._gen | 0) && (simRequest == null || simRequest === this._simDeployGeneration);
+    if (!this._fleetCat) { try { const r = await fetch('./reference-fleet/catalog.json'); this._fleetCat = await r.json(); } catch { this.hud?.feed?.('fleet catalog unavailable', '#ff8b63'); return null; } }
+    if (!current()) return null;
+    const row = this._fleetCat?.models?.find(m => m.id === id);
+    if (!row) { this.hud?.feed?.(`no fleet model "${id}"`, '#ff8b63'); return null; }
+    if (!fleetDrives(row)) { this.hud?.feed?.(`${id} does not drive (${fleetClassOf(row)})`, '#ff8b63'); return null; }
+    this._fleetLoader ??= new GLTFLoader(); this._fleetGLB ??= new Map();
+    if (!this._fleetGLB.has(row.url)) this._fleetGLB.set(row.url, this._fleetLoader.loadAsync(row.url));
+    let gltf; try { gltf = await this._fleetGLB.get(row.url); } catch { this.hud?.feed?.(`could not load ${id}`, '#ff8b63'); return null; }
+    if (!current()) return null;
+    const model = gltf.scene.clone(true);   // reference-fleet GLBs are authored at game scale (catalog dims = game units) — no ×5 (that factor is only for the small frontline jet/heli GLBs)
+    // Swapping disposes instance geometry. Keep the cached GLB and other active
+    // clones intact; immutable materials/textures remain owned by the cache.
+    model.traverse(o => { if (o.geometry) o.geometry = o.geometry.clone(); });
+    const box = new THREE.Box3().setFromObject(model), size = box.getSize(new THREE.Vector3()), c = box.getCenter(new THREE.Vector3());
+    model.position.set(-c.x, -box.min.y, -c.z);                      // feet at the wrapper origin, centred in XZ
+    model.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+    const wrapper = new THREE.Group(); wrapper.rotation.order = 'YXZ'; wrapper.add(model); this.scene.add(wrapper);
+    const cls = fleetClassOf(row), p = this.player;
+    const px = pos.x ?? (p ? p.pos.x + 34 : 34), pz = pos.z ?? (p ? p.pos.z : 0);
+    const gy = this.world?.heightAt ? (this.world.heightAt(px, pz) ?? 0) : 0;
+    const actor = {
+      id, name: row.name || id, cls, env: fleetEnvelopeFor(row),
+      motion: initVehicleState(cls, p?.aim ? Math.atan2(p.aim.x, p.aim.z) : 0),
+      pos: { x: px, y: gy, z: pz }, wrapper, model,
+      // Collision circle = the BEAM (shorter horizontal extent), never the diagonal: a diagonal
+      // radius is ~the wingspan/length, so a long hull (a transport plane, a bomber) overlapped
+      // scatter within it and clear() zeroed its takeoff roll every frame — an undrivable deadlock.
+      // Beam approximates the fuselage that actually needs clearance, so it rolls out and flies.
+      bodyRadius: Math.max(6, Math.min(size.x, size.z) * .5), groundOffset: 0, span: Math.max(size.x, size.z) * .5,
+      giant: Math.max(size.x, size.z) * .5 > 200,   // carrier/mothership: a platform that rides over the scatter, not a body that bumps it
+      ready: true, occupant: null,
+    };
+    if (cls === 'fixedwing') {   // a plane boards INTO flight — a heavy transport can't taxi out of a spire field, and a fly-game jet is airborne, not parked (a deck launch is its own future mode that ground-starts on purpose)
+      const alt = gy + 40; actor.pos.y = alt; actor.motion.speed = (actor.env?.top || 100) * .55;
+    }
+    wrapper.position.set(actor.pos.x, actor.pos.y, actor.pos.z);
+    actor.parts = bindVehicleParts(model);   // turret/rotor/wheels/control surfaces, driven each frame by rigParts
+    (this._fleetActors ??= []).push(actor);
+    this._fleetPilot ??= new FleetPilot(this);
+    this.hud?.feed?.(`${(row.name || id).toUpperCase()} DEPLOYED — WALK UP + J TO BOARD`, '#7fe6ff');
+    return actor;
   }
 
   // ---------- modes & players ----------
@@ -3624,6 +3815,10 @@ export class Game {
     if(this._pwStage?.transport?.handleInput(inp,dt)){resetMovementGears(p);return;}
     if(this._pwStage?.aircraft?.piloting?.handleInput(inp,dt)){resetMovementGears(p);return;}
     if(this._pwStage?.convoy?.driving?.handleInput(inp,dt)){resetMovementGears(p);return;}
+    if(this._simActive&&inp.pressed?.('KeyK')){inp.justPressed?.delete?.('KeyK');this.simEnterRing();resetMovementGears(p);return;}
+    if(this._simActive&&inp.pressed?.('KeyP')){inp.justPressed?.delete?.('KeyP');this.simEnterBoxRing();resetMovementGears(p);return;}
+    if(this._simActive&&inp.pressed?.(VEHICLE_SIM.menuKey)){inp.justPressed?.delete?.(VEHICLE_SIM.menuKey);this.simSwap(1);resetMovementGears(p);return;}
+    if(this._fleetPilot?.handleInput(inp,dt)){resetMovementGears(p);return;}
 
     // Chase view traces the actual camera centre; legacy view retains cursor aim.
     const a3 = this._aim3pt;
@@ -4331,6 +4526,81 @@ export class Game {
       refreshCombatPower(f,bonus);
     }
     if (this.mode && !this.matchOver) this.mode.tick(this, dt);
+    this._fleetPilot?.update(dt);   // generic fleet-vehicle driving (exists only once one is spawned)
+    if (this._simActive) {   // board a printed vehicle → warp into the simulation (Robert's "teleported somewhere else, looks like VR")
+      const cur = this._fleetPilot?.actor || null;
+      if (cur && cur !== this._simPrevActor) this._simWarpFx();
+      this._simPrevActor = cur;
+      // NO FLYING inside EITHER combat ring, for everyone in it (Robert: "do not allow the fly") —
+      // refuse the state each frame, not an altitude clamp. And the SQUARE boxing ring is PUNCHES
+      // ONLY: set `noPowers` while inside its ropes and restore powers once out (the octagon is full
+      // combat, so it never sets the flag).
+      const R = this._simRing, BR = this._simBoxRing;
+      if (R || BR) {
+        for (const e of this.entities) {
+          if (!e || !e.alive) continue;
+          const inOcta = R && Math.hypot(e.pos.x - R.cx, e.pos.z - R.cz) < R.r && e.pos.y < R.top + 60 && e.pos.y > R.top - 30;
+          const inBox = BR && Math.abs(e.pos.x - BR.cx) < BR.hx && Math.abs(e.pos.z - BR.cz) < BR.hz && e.pos.y < BR.top + 60 && e.pos.y > BR.top - 30;
+          if ((inOcta || inBox) && e.flying) { e.flying = false; if (e.vel) e.vel.y = Math.min(e.vel.y, 0); }
+          if (inBox) { e.noPowers = true; e._boxRing = true; }
+          else if (e._boxRing) { e.noPowers = false; e._boxRing = false; }   // left the ropes → powers back
+          if (e === this.player) this._simInRing = inOcta || inBox;
+        }
+      }
+      // SKY-RING FLY-THROUGH — the gate lights and counts when a plane flies through it (Robert's
+      // "little circles to fly through for the planes"). Test the piloted flier, or the player flying.
+      const rings = this._simSkyRings, a = this._fleetPilot?.actor;
+      const fp = (a && (a.cls === 'fixedwing' || a.cls === 'rotor')) ? a.pos : (this.player?.flying ? this.player.pos : null);
+      if (rings && fp) {
+        for (const ring of rings.meshes) {
+          const dx = fp.x - ring.position.x, dy = fp.y - ring.position.y, dxy = Math.hypot(dx, dy), nearZ = Math.abs(fp.z - ring.position.z) < 12;
+          if (dxy < SKY_RING_R + 3 && nearZ && !ring.userData.passed) {
+            ring.userData.passed = true; ring.userData.mat.emissive.setHex(0x1a7a1a); ring.userData.mat.color.setHex(0x3ad13a);
+            this._simRingScore = (this._simRingScore || 0) + 1;
+            this.hud?.feed?.(`RING ${this._simRingScore} / ${rings.meshes.length} CLEARED`, '#7fe66f');
+          } else if (ring.userData.passed && dxy > 60) {   // re-arm once you fly clear, so the course can be re-run
+            ring.userData.passed = false; ring.userData.mat.emissive.setHex(0x5a3a00); ring.userData.mat.color.setHex(0xffb020);
+          }
+        }
+      }
+      // AA turrets TRACK the nearest airborne target as menacing set dressing — they swivel to face
+      // it and do NOT fire (the missile behaviour was removed by request). `a` is the piloted flier.
+      const defs = this._simDefenses;
+      const airY = VEHICLE_SIM.baseY + SIM_AA.minY;
+      const aTgt = [];   // {pos} — the airborne things a turret may track
+      if (a && (a.cls === 'fixedwing' || a.cls === 'rotor') && a.pos.y > airY) aTgt.push({ pos: a.pos });
+      for (const e of this.entities) if (e && e.alive && e.flying && e.pos.y > airY) aTgt.push({ pos: e.pos });
+      if (defs && defs.turrets) {
+        for (const turret of defs.turrets) {
+          const tp = turret.position;
+          let best = null, bd = SIM_AA.range * SIM_AA.range;
+          for (const t of aTgt) { const d = (t.pos.x - tp.x) ** 2 + (t.pos.z - tp.z) ** 2; if (d < bd) { bd = d; best = t; } }
+          if (best) {
+            const yaw = Math.atan2(best.pos.x - tp.x, best.pos.z - tp.z);
+            let dyaw = yaw - turret.rotation.y; while (dyaw > Math.PI) dyaw -= 2 * Math.PI; while (dyaw < -Math.PI) dyaw += 2 * Math.PI;
+            turret.rotation.y += dyaw * Math.min(1, dt * 3);   // ease onto the target — tracking only, no fire
+          }
+        }
+      }
+      // WATER — go under it and you have to BREATHE (Robert: "you go under it, you gotta breathe").
+      // Air drains below the surface; empty = drowning damage. No swim mechanics, just the air clock.
+      const water = this._simWater, pw = this.player;
+      if (water && pw && pw.alive) {
+        const under = pw.pos.y < water.y && Math.abs(pw.pos.x - water.cx) < water.hw && Math.abs(pw.pos.z - water.cz) < water.hd && !pw._fleetVehicle;
+        if (under) {
+          const wasLow = (this._simAir ?? 12) > 4;
+          this._simAir = Math.max(0, (this._simAir ?? 12) - dt);
+          if (wasLow && this._simAir <= 4) this.hud?.feed?.('AIR LOW — get to the surface', '#5aa0ff');
+          if (this._simAir <= 0) {
+            this._simDrownT = (this._simDrownT || 0) + dt;
+            if (this._simDrownT >= 0.6) { this._simDrownT = 0; pw.takeDamage?.(8, { dtype: 'physical', hitstop: 0 }); this.hud?.feed?.('DROWNING', '#5aa0ff'); }
+          }
+        } else {
+          this._simAir = Math.min(12, (this._simAir ?? 12) + dt * 2);   // catch your breath at the surface
+          this._simDrownT = 0;
+        }
+      }
+    }
 
     // control: P1 (keyboard+mouse), P2+ (gamepad), everyone else = AI
     // View input and the zero-time eye solve ran once above, before any control.

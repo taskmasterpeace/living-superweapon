@@ -1,0 +1,139 @@
+{
+  "identity": {
+    "version": 1,
+    "worktree": "D:\\lsw\\.worktrees\\combat-release-review",
+    "branch": "codex/playable-integration",
+    "revision": "4bb4d54f1fcb9315f8c4008c6e2376e6ea5f417e",
+    "trackedDiffHash": "454bb70fcd057062c0a28cb4aca50ddd2e85916ccdb0c2aceb75d563ab6bb6e3",
+    "newSourceHash": "c75fa92155379493dc6745cbf0066f6ce480615e850f78c55dfe4826d399a852"
+  },
+  "errors": [],
+  "vehicles": [
+    {
+      "id": "motorcycle",
+      "cls": "wheeled",
+      "before": {
+        "x": 10,
+        "y": 48,
+        "z": -12
+      },
+      "after": {
+        "x": -14.113578576265875,
+        "y": 48,
+        "z": -111.39579123008127
+      },
+      "moved": 102.27897137734448,
+      "exitCleared": true,
+      "finite": true
+    },
+    {
+      "id": "tank",
+      "cls": "tracked",
+      "before": {
+        "x": 10,
+        "y": 48,
+        "z": -12
+      },
+      "after": {
+        "x": 6.935932263841976,
+        "y": 48,
+        "z": -40.028012185535424
+      },
+      "moved": 28.19499916943228,
+      "exitCleared": true,
+      "finite": true
+    },
+    {
+      "id": "mech-light",
+      "cls": "mech",
+      "before": {
+        "x": 10,
+        "y": 48,
+        "z": -12
+      },
+      "after": {
+        "x": -6.945505104301747,
+        "y": 48,
+        "z": -54.189467150611314
+      },
+      "moved": 45.465385533309046,
+      "exitCleared": true,
+      "finite": true
+    },
+    {
+      "id": "helicopter",
+      "cls": "rotor",
+      "before": {
+        "x": 10,
+        "y": 48,
+        "z": -12
+      },
+      "after": {
+        "x": 3.0269543654086144,
+        "y": 62.566013519473806,
+        "z": -99.78772813072077
+      },
+      "moved": 89.26072666982344,
+      "exitCleared": true,
+      "finite": true
+    },
+    {
+      "id": "jet-a",
+      "cls": "fixedwing",
+      "before": {
+        "x": 10,
+        "y": 88,
+        "z": -12
+      },
+      "after": {
+        "x": 50.288226057847986,
+        "y": 105.73918484540596,
+        "z": -278.25016262098256
+      },
+      "moved": 269.86472339594036,
+      "exitCleared": true,
+      "finite": true
+    }
+  ],
+  "evidence": "Native squad entry and Shift+V; scripted five-model spawn/boarding/control fixtures",
+  "sim": {
+    "mode": "powerworld",
+    "active": true,
+    "vehicle": "motorcycle",
+    "structures": [
+      {
+        "name": "Walls",
+        "present": true
+      },
+      {
+        "name": "Water",
+        "present": true
+      },
+      {
+        "name": "Ring",
+        "present": true
+      },
+      {
+        "name": "BoxRing",
+        "present": true
+      },
+      {
+        "name": "Maze",
+        "present": true
+      },
+      {
+        "name": "Gate",
+        "present": true
+      },
+      {
+        "name": "Defenses",
+        "present": true
+      }
+    ]
+  },
+  "audio": {
+    "prepared": true,
+    "decoded": 245,
+    "total": 245
+  }
+}

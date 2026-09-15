@@ -1,0 +1,154 @@
+{
+  "metersPerUnit": 0.19,
+  "acceptance": "Model candidates; gameplay integration pending",
+  "models": [
+    {
+      "id": "motorcycle",
+      "name": "Pursuit motorcycle",
+      "group": "Ground",
+      "reference": 5,
+      "length": 2.35,
+      "note": "Sport fairing · low clip-ons · raised tail · wide rear tire",
+      "url": "./authored-assets/prop.reference-motorcycle/v6/model.glb",
+      "dimensions": {
+        "min": [
+          -2.14351,
+          0,
+          -6.18421
+        ],
+        "max": [
+          2.14351,
+          6.60348,
+          6.18421
+        ]
+      },
+      "budget": {
+        "triangles": 852,
+        "drawCalls": 14,
+        "materials": 7,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 95660
+      }
+    },
+    {
+      "id": "tank",
+      "sealedCrew": true,
+      "name": "Battle tank",
+      "group": "Ground",
+      "reference": 3,
+      "length": 8.1,
+      "note": "Tracked hull · independent turret and barrel",
+      "url": "./authored-assets/prop.reference-tank/v7/model.glb",
+      "dimensions": {
+        "min": [
+          -10.55295,
+          0,
+          -16.61652
+        ],
+        "max": [
+          10.55295,
+          17.60768,
+          26.01506
+        ]
+      },
+      "budget": {
+        "triangles": 1868,
+        "drawCalls": 15,
+        "materials": 5,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 258216
+      }
+    },
+    {
+      "id": "mech-light",
+      "name": "Light mech · outrider",
+      "group": "Mechs",
+      "reference": null,
+      "length": 3.2,
+      "dimension": "height",
+      "note": "Fast quadruped · twin machine guns · eight empty missile cells",
+      "url": "./authored-assets/prop.reference-mech-light/v6/model.glb",
+      "dimensions": {
+        "min": [
+          -8.5906,
+          0,
+          -6.08422
+        ],
+        "max": [
+          8.66069,
+          16.84211,
+          9.12965
+        ]
+      },
+      "budget": {
+        "triangles": 2384,
+        "drawCalls": 21,
+        "materials": 2,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 340476
+      }
+    },
+    {
+      "id": "helicopter",
+      "hiddenCrew": true,
+      "name": "Attack helicopter",
+      "group": "Aircraft",
+      "reference": null,
+      "length": 12.6,
+      "note": "Tandem canopy · four-blade rotor · tail rotor · missile stub wings",
+      "url": "./authored-assets/prop.reference-helicopter/v8/model.glb",
+      "dimensions": {
+        "min": [
+          -25.20957,
+          0,
+          -44.4825
+        ],
+        "max": [
+          25.20957,
+          18.0631,
+          21.83328
+        ]
+      },
+      "budget": {
+        "triangles": 4236,
+        "drawCalls": 32,
+        "materials": 3,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 594428
+      }
+    },
+    {
+      "id": "jet-a",
+      "name": "Strike jet",
+      "group": "Aircraft",
+      "reference": 1,
+      "length": 14,
+      "note": "Broad wings · moving control surfaces · six removable missiles",
+      "url": "./authored-assets/prop.reference-jet-a/v15/model.glb",
+      "dimensions": {
+        "min": [
+          -35.51383,
+          0,
+          -34.18556
+        ],
+        "max": [
+          35.51383,
+          30.13083,
+          39.49865
+        ]
+      },
+      "budget": {
+        "triangles": 3132,
+        "drawCalls": 28,
+        "materials": 3,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 444540
+      }
+    }
+  ]
+}

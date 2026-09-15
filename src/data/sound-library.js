@@ -1,4 +1,5 @@
 import {AUDIO_CUES,DIALOGUE_CANDIDATES,BEAM_SOUND_DIRECTIONS} from './audio-cues.js';
+import {VEHICLE_RECORDINGS,VEHICLE_SAMPLES} from './vehicle-recordings.js';
 
 // Original directions remain the authority; this layer adds playable authoring recipes.
 const recipes={
@@ -76,7 +77,16 @@ const additions=[
  ['ui-confirm','UI confirmation','ui','confirm','Two clear warm upward notes and a tiny tactile closure.','ui',.22],
  ['ui-denied','UI denied','ui','denied','Short low descending pair that signals an unavailable choice.','warning',.22],
 ];
-const extended=additions.map(args=>cue(...args));
+const vehicleCues=Object.entries(VEHICLE_RECORDINGS).map(([id,sample])=>{
+ const {loop,reach}=VEHICLE_SAMPLES[sample];
+ const live=['vehicle-start','vehicle-idle','vehicle-accel','vehicle-off','vehicle-brake'].includes(id);
+ return cue(id,`Vehicle / ${sample.slice(4).replaceAll('.',' ')}`,'vehicles',sample.slice(4),
+  `Selected real CC0 vehicle ${sample.slice(4).replaceAll('.',' ')} recording.`,loop?'engine':'metal',2,loop,
+  {reach,wiring:live?(loop?'native-loop':'native-replacement'):'recording-ready',nativeMethod:live?'FleetAudio':null,
+   nativeNote:live?'Wheeled fleet pilot lifecycle cue. Recorded idle is owned until exit or suspension; acceleration and moving brake are transition events.':
+    'Bundled locked recording ready for vehicle lifecycle integration; a catalog entry alone does not emit a gameplay event.'});
+});
+const extended=[...additions.map(args=>cue(...args)),...vehicleCues];
 const dialogue=DIALOGUE_CANDIDATES.map(c=>cue(`dialogue.${c.personality.toLowerCase().replaceAll(' ','-')}.${c.event.toLowerCase()}`,`${c.personality} / ${c.event}`,'dialogue','line',`Original dialogue performance: “${c.line}” Character style: ${c.personality}. Natural, concise battlefield delivery.`, 'voice',1.3,false,
  {line:c.line,personality:c.personality,event:c.event,category:c.event,priority:['KO','guard-break','energy-drained'].includes(c.event)?3:1,expiry:3,lineCooldown:45,categoryCooldown:12,nativeNote:'Preview-only dialogue candidate. The synthesized marker is nonverbal and does not speak this line.'}));
 export const SOUND_CUES=Object.freeze([...sourceCues,...extended,...dialogue].map(c=>Object.freeze(

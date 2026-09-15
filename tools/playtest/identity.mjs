@@ -1,21 +1,24 @@
 import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
-import {realpath} from 'node:fs/promises';
+import {realpath,readFile} from 'node:fs/promises';
+import path from 'node:path';
 import {createHash} from 'node:crypto';
 const exec=promisify(execFile);
 export async function checkoutIdentity(root){
  const worktree=await realpath(root),git=async(...args)=>(await exec('git',args,{cwd:worktree,maxBuffer:32*1024*1024})).stdout;
- const [revision,diff]=await Promise.all([git('rev-parse','HEAD'),git('diff','HEAD','--binary')]);
- return {version:1,worktree,revision:revision.trim(),trackedDiffHash:createHash('sha256').update(diff).digest('hex')};
+ const [revision,diff,branch,untracked]=await Promise.all([git('rev-parse','HEAD'),git('diff','HEAD','--binary'),git('branch','--show-current'),git('ls-files','--others','--exclude-standard','-z','--','src','public')]);
+ const sourceHash=createHash('sha256');
+ for(const file of untracked.split('\0').filter(Boolean).sort())sourceHash.update(file+'\0').update(await readFile(path.join(worktree,file)));
+ return {version:1,worktree,branch:branch.trim()||'detached',revision:revision.trim(),trackedDiffHash:createHash('sha256').update(diff).digest('hex'),newSourceHash:sourceHash.digest('hex')};
 }
 export function assertSameCheckout(expected,actual){
  const normalize=p=>process.platform==='win32'?p.replaceAll('\\','/').toLowerCase():p;
- if(actual?.version!==1||typeof actual.worktree!=='string'||normalize(expected.worktree)!==normalize(actual.worktree)||expected.revision!==actual.revision||expected.trackedDiffHash!==actual.trackedDiffHash)
+ if(actual?.version!==1||typeof actual.worktree!=='string'||normalize(expected.worktree)!==normalize(actual.worktree)||expected.revision!==actual.revision||expected.trackedDiffHash!==actual.trackedDiffHash||expected.newSourceHash!==actual.newSourceHash)
   throw new Error('Playtest server checkout mismatch. Start the dev server from this worktree; no scenario was accepted.');
  return actual;
 }
 export function playtestIdentityPlugin(readIdentity=checkoutIdentity){
- return {name:'powerworld-local-playtest-identity',apply:'serve',configureServer(server){
+ return {name:'powerworld-local-playtest-identity',apply:'serve',transformIndexHtml(){return [{tag:'script',attrs:{type:'module',src:'/tools/playtest/build-badge.mjs'},injectTo:'body'}];},configureServer(server){
   server.middlewares.use(async(req,res,next)=>{
    if(req.url!=='/__pw_playtest_identity')return next();
    const peer=req.socket.remoteAddress;

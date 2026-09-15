@@ -554,6 +554,14 @@ export function boot(P = PROFILE_FULL) {
         hud.feed('Sim Construct deployed (Shift+N = firing range)', '#7fe6ff');
       }
     }
+    // Shift+V = THE VEHICLE SIMULATOR (the improved Threat Lab). Sculpts the proving ground and
+    // 3D-prints a vehicle at the bay: J boards + drives the course, L swaps the vehicle and
+    // respawns you at the bay. Same dimensions as the firing range.
+    if (e.code === 'KeyV' && e.shiftKey && (game.modeId === 'training' || game.modeId === 'freeroam' || game.modeId === 'powerworld') && game.player) {
+      e.preventDefault();input.keys.delete('KeyV');input.justPressed.delete('KeyV');input.justReleased.delete('KeyV');
+      if(!e.repeat)game.deployVehicleSim().catch(error=>{console.error('Proving ground deployment failed',error);hud.feed('Proving ground could not open — check the build report','#ff8b63');});
+      return;
+    }
     // THE WHITE ROOM — N is the dummy's temperament: a bag that stands still, or a partner that
     // fights back. The same attack measures differently against a raised guard, which is the point.
     if (e.code === 'KeyN' && game.modeId === 'lab' && game.lab) {

@@ -1,0 +1,497 @@
+{
+ "format": "pw-asset-package",
+ "formatVersion": 1,
+ "id": "prop.reference-mech-light",
+ "version": 6,
+ "kind": "prop",
+ "displayName": "Light mech · outrider",
+ "tags": [
+  "reference-fleet",
+  "mechs"
+ ],
+ "rig": {
+  "skeleton": "none"
+ },
+ "sockets": [
+  {
+   "name": "entry",
+   "parent": "mech-torso",
+   "position": [
+    0,
+    0,
+    6.78206
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "entry-pilot",
+   "parent": "mech-light",
+   "position": [
+    -12.01166,
+    0.50371,
+    -1.13034
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "foot-0",
+   "parent": "mech-ankle-0",
+   "position": [
+    0,
+    -1.10774,
+    0.45214
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "foot-1",
+   "parent": "mech-ankle-1",
+   "position": [
+    0,
+    -1.10774,
+    0.45214
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "foot-2",
+   "parent": "mech-ankle-2",
+   "position": [
+    0,
+    -1.10774,
+    0.45214
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "foot-3",
+   "parent": "mech-ankle-3",
+   "position": [
+    0,
+    -1.10774,
+    0.45214
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "mg-muzzle-left",
+   "parent": "mech-mg-pitch-left",
+   "position": [
+    0,
+    0,
+    5.6065
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "mg-muzzle-right",
+   "parent": "mech-mg-pitch-right",
+   "position": [
+    0,
+    0,
+    5.6065
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "missile-cell-left-0-0",
+   "parent": "mech-silo-left",
+   "position": [
+    -0.97209,
+    -0.81385,
+    2.80325
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "missile-cell-left-0-1",
+   "parent": "mech-silo-left",
+   "position": [
+    0.97209,
+    -0.81385,
+    2.80325
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "missile-cell-left-1-0",
+   "parent": "mech-silo-left",
+   "position": [
+    -0.97209,
+    0.81385,
+    2.80325
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "missile-cell-left-1-1",
+   "parent": "mech-silo-left",
+   "position": [
+    0.97209,
+    0.81385,
+    2.80325
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "missile-cell-right-0-0",
+   "parent": "mech-silo-right",
+   "position": [
+    -0.97209,
+    -0.81385,
+    2.80325
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "missile-cell-right-0-1",
+   "parent": "mech-silo-right",
+   "position": [
+    0.97209,
+    -0.81385,
+    2.80325
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "missile-cell-right-1-0",
+   "parent": "mech-silo-right",
+   "position": [
+    -0.97209,
+    0.81385,
+    2.80325
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "missile-cell-right-1-1",
+   "parent": "mech-silo-right",
+   "position": [
+    0.97209,
+    0.81385,
+    2.80325
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-eye-pilot",
+   "parent": "socket-seat-pilot",
+   "position": [
+    0,
+    5,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-torso-pilot",
+   "parent": "socket-seat-pilot",
+   "position": [
+    0,
+    2.52632,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "pilot-seat",
+   "parent": "mech-seat-pilot",
+   "position": [
+    0,
+    0.36171,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "seat-pilot",
+   "parent": "socket-pilot-seat",
+   "position": [
+    0,
+    0,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  }
+ ],
+ "bounds": {
+  "min": [
+   -8.5906,
+   0,
+   -6.08422
+  ],
+  "max": [
+   8.66069,
+   16.84211,
+   9.12965
+  ]
+ },
+ "materials": [
+  {
+   "name": "fleet-painted-parts"
+  },
+  {
+   "name": "fleet-glass"
+  }
+ ],
+ "lods": [
+  {
+   "level": 0,
+   "output": "model.glb",
+   "triangles": 2384
+  }
+ ],
+ "units": {
+  "lengthUnit": "game-unit",
+  "metersPerUnit": 0.19,
+  "up": "+Y",
+  "forward": "+Z",
+  "handedness": "right",
+  "sourceConversion": {
+   "scale": 1,
+   "yawDegrees": 0,
+   "mirrorX": false,
+   "sourceUp": "+Y",
+   "sourceForward": "+Z",
+   "note": "authored directly in game units along the engine weapon axis (-Y toward the muzzle)"
+  }
+ },
+ "budgets": {
+  "profile": "desktop",
+  "measured": {
+   "triangles": 2384,
+   "drawCalls": 21,
+   "materials": 2,
+   "bones": 0,
+   "textures": 0,
+   "bytes": 340476
+  },
+  "limits": {
+   "triangles": 67793,
+   "drawCalls": 32,
+   "materials": 9,
+   "bones": 1,
+   "textures": 4,
+   "bytes": 3170030
+  }
+ },
+ "structural": {
+  "validator": "2.0.0-dev.3.10",
+  "errors": 0,
+  "warnings": 0
+ },
+ "provenance": {
+  "author": "Machine King Labs",
+  "license": "proprietary",
+  "terms": "Original model geometry authored for this project from creator-supplied concept references; reference redistribution rights are not independently verified.",
+  "redistribution": "internal",
+  "attribution": "Creator-supplied September 12, 2026 concepts."
+ },
+ "source": {
+  "adapter": "procedural-prop@1",
+  "files": [
+   {
+    "path": "authoring/recipes/reference-fleet/static-batch.js",
+    "sha256": "a5f089984d2ecd7c1f7629ca54774358795581652fce0614e6f759687e3fde55"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/expedition.js",
+    "sha256": "6f63f1b21a2f9f4f5dee888687f72a9980c164fd5c39e3681df434e91eb8f6a1"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/nanite-forms.js",
+    "sha256": "16095e80dcea845fcbd30f91886fa2b94f580dea9feeb7dcc56ad43e7fffd8c1"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/models.js",
+    "sha256": "4a8f1396bb3b10b9535462e88cf45cd0da59648ea7a925f39ca12fcd452d69ee"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/logistics.js",
+    "sha256": "63757f47844ba6c567174bccd2e682471031eb5ed68b6b71fe9893a1beef537d"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/ordnance.js",
+    "sha256": "ab2369438732b8cf9036d2645705dd15c0eb77ccfef7b72212bd41039c805372"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/condition.js",
+    "sha256": "ab8180853faf5c8bb13470a82a84c806f54b96993c7b1806cf562d7fd9754f67"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/air-mobility.js",
+    "sha256": "778f8f67a4f9560fbe8ce38828766c385b7ce739eafda7d84eb652fe9b439f77"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/damage.js",
+    "sha256": "0c34abc49ebe1feacfbe9ef6cc1f850ea12cab5bf5dbcfb7ecef54976a7affef"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/defense.js",
+    "sha256": "b3e912db260966d8936526b89e678358f3376b4a32c090e097d1046f3f2c710a"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/mechs.js",
+    "sha256": "4aa82d05f85799cba45040e179b5215cded994d368d313f534b1cc3d19c574c4"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/drone-tank.js",
+    "sha256": "ffb9bc81e598700abce165ce4ee960d8a1d133d52fecba4ef9f80f6aa4d144ff"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/crew-interiors.js",
+    "sha256": "0048d0e741b0d7a7704e8fccd13cc53c6b4b298f5bd26704489f8aa57474802d"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/spider-mine.js",
+    "sha256": "cfa4f246a18744c2dd9ee1418906d323a700c47e3a5ecfe333ad6ef33fc6c424"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/mech-light/model.js",
+    "sha256": "ac99852cc0e547682b00b0b092c0425367f7e50be639f8689b4540aa9ba0e155"
+   },
+   {
+    "path": "assets-src/reference-fleet/references/mech-0.webp",
+    "sha256": "7c846bd2b1c09ac9f67b0851ade0dd677bc2fe60391e8e7d2311d7c8f287bf51"
+   },
+   {
+    "path": "assets-src/reference-fleet/references/mech-1.webp",
+    "sha256": "5569537f6ad9111c8eab0cd37986efcc31881b65fd5f5f7fae2038f6b62d894a"
+   },
+   {
+    "path": "assets-src/reference-fleet/references/mech-2.webp",
+    "sha256": "fa9bb4377dd7ae6bcb84afa31992f9931c5c17c42c7eab3c21f8064ce250bf11"
+   }
+  ],
+  "recipe": {
+   "path": "authoring/recipes/reference-fleet/mech-light/recipe.json",
+   "sha256": "127a94499b265854bb0d33fe6e8ca371c1d8b39dc427a58aa0e42363895ab1ca"
+  }
+ },
+ "tool": {
+  "name": "powerworld-authoring",
+  "version": "0.1.0",
+  "three": "0.169.0",
+  "adapterVersion": 1
+ },
+ "build": {
+  "options": {},
+  "cacheKey": "da8aca4ae6ea989bb41f4375c21379d7f3f3acf9fe6ce3deb60ff5c4d3e54c9f",
+  "contentHash": "f9095d719ae2f0aaa9c1635490977c487702b7213241d6fec2fb112538e73627",
+  "profile": "desktop"
+ },
+ "acceptance": {
+  "visual": "unapproved",
+  "blockers": [],
+  "note": "Fast quadruped · twin machine guns · eight empty missile cells; model and scale candidate, no handling or live equipment integration."
+ },
+ "outputs": [
+  {
+   "path": "model.glb",
+   "role": "glb",
+   "sha256": "ac21d3c40643cf7a4212d2f3c9061c40db5cec42293201e0e8590819c149437a",
+   "bytes": 340476
+  }
+ ],
+ "packageHash": "dd038983fea018bccdec0f6077011975bf3b62fcd8f212f59ea299b0145c6be7"
+}

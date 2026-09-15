@@ -2613,6 +2613,12 @@ export class World {
       this._lookPitch=damp(this._lookPitch,aircraft.kind==='jet'?(aircraft.pitch||0)*.6:0,5,dt);
       target=null;
     }
+    if(subject._fleetVehicle){
+      const motion=subject._fleetVehicle.motion;
+      this._lookYaw=snap?motion.yaw:this._lookYaw+angleDiff(this._lookYaw,motion.yaw)*(1-Math.exp(-5*dt));
+      this._lookPitch=damp(this._lookPitch,subject._fleetVehicle.cls==='fixedwing'?(motion.pitch||0)*.6:0,5,dt);
+      target=null;
+    }
     if(passenger){this._lookYaw=passenger.model.rotation.y+Math.PI;this._lookPitch=-.12;target=null;}
     const a=this._flightAnchor||(this._flightAnchor=new THREE.Vector3());
     // Movement already accelerates/brakes in physics. A second translation

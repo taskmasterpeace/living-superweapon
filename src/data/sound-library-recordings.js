@@ -1,5 +1,7 @@
 // Approved defaults. User-authored SoundLibrary bindings take precedence.
+import {VEHICLE_RECORDINGS} from './vehicle-recordings.js';
 export const SOUND_LIBRARY_SAMPLES={
+ ...VEHICLE_RECORDINGS,
  grab:'library.grab',
  'physical-jab-block':'library.melee',
  'guard-break':'library.guard-break',

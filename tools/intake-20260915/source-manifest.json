@@ -1,0 +1,241 @@
+{
+  "sourceArchive": "C:/Users/taskm/OneDrive/Documents/Unreal Projects/MyProject/Content/CloseCombatAnimSet/Source Files.rar",
+  "archiveSha256": "edccd9d6d2d2eded41a724b642a09d02bc0dcc0b9cb77f0e7752c9b4afdddc4f",
+  "packs": [
+    {
+      "id": "close-combat-source",
+      "files": [
+        {
+          "path": "C:/Users/taskm/Documents/PowerWorldAssets/animations/2026-09-15-closecombat-intake/Animations/Attacks_Blocks/NinjaBlockHit.fbx",
+          "bytes": 642928,
+          "sha256": "354e12a6f83234a1554429031a854f41919a4a58784639fa971d0edf03816ad5"
+        },
+        {
+          "path": "C:/Users/taskm/Documents/PowerWorldAssets/animations/2026-09-15-closecombat-intake/Animations/Attacks_Blocks/NinjaBlockIntro.fbx",
+          "bytes": 642512,
+          "sha256": "dec7fb50d84159aa3e1fc8bceb430f244428a89d344ba0d01d656639295f6b41"
+        },
+        {
+          "path": "C:/Users/taskm/Documents/PowerWorldAssets/animations/2026-09-15-closecombat-intake/Animations/Attacks_Blocks/NinjaBlockLoop.fbx",
+          "bytes": 757168,
+          "sha256": "b57a58f1d4030ccdbc057e92c2d28f93502761e80939d732b11c632d1a9b2a56"
+        },
+        {
+          "path": "C:/Users/taskm/Documents/PowerWorldAssets/animations/2026-09-15-closecombat-intake/Animations/Attacks_Blocks/NinjaCutDownKick.fbx",
+          "bytes": 827616,
+          "sha256": "117ecee269794a41acec3901917d7d8059e1707e5388123d358857e0e7025842"
+        },
+        {
+          "path": "C:/Users/taskm/Documents/PowerWorldAssets/animations/2026-09-15-closecombat-intake/Animations/Attacks_Blocks/NinjaLeftHook.fbx",
+          "bytes": 729392,
+          "sha256": "89c30dafee798876c84515a668d1dabbe16cbb32b6f586c507dcf334fb82a7d2"
+        },
+        {
+          "path": "C:/Users/taskm/Documents/PowerWorldAssets/animations/2026-09-15-closecombat-intake/Animations/Attacks_Blocks/NinjaLeftJab.fbx",
+          "bytes": 691184,
+          "sha256": "cf1e9308156a34856e19ef447b58ce146213156d986e85cd13fdf082cdd5353d"
+        },
+        {
+          "path": "C:/Users/taskm/Documents/PowerWorldAssets/animations/2026-09-15-closecombat-intake/Animations/Attacks_Blocks/NinjaLowRightThaiKick.fbx",
+          "bytes": 799024,
+          "sha256": "b58ee83163c71740fae1e8280703065dc93980519f4af3b3dfa8490ea9a60fae"
+        },
+        {
+          "path": "C:/Users/taskm/Documents/PowerWorldAssets/animations/2026-09-15-closecombat-intake/Animations/Attacks_Blocks/NinjaObliqueKick.fbx",
+          "bytes": 833760,
+          "sha256": "98ee2420261724908053f8ea77e35d3d2af7255c590c382bbbff88a984079a9f"
+        },
+        {
+          "path": "C:/Users/taskm/Documents/PowerWorldAssets/animations/2026-09-15-closecombat-intake/Animations/Attacks_Blocks/NinjaRightCross.fbx",
+          "bytes": 837472,
+          "sha256": "d8b2c5b6d3dc91e9105e8b0bdf3f33e5d03c4921a1a74aad42e460cd126dfe93"
+        },
+        {
+          "path": "C:/Users/taskm/Documents/PowerWorldAssets/animations/2026-09-15-closecombat-intake/Animations/Attacks_Blocks/NinjaRightUppercut.fbx",
+          "bytes": 691728,
+          "sha256": "5fd2d05ee484c085d3b72d4bb39ed4f1a26b16a7bc44203d183aa23cba701793"
+        },
+        {
+          "path": "C:/Users/taskm/Documents/PowerWorldAssets/animations/2026-09-15-closecombat-intake/Animations/Attacks_Blocks/NinjaSpinningBackfist.fbx",
+          "bytes": 940560,
+          "sha256": "09075d0f843821578f23ad287e9a5317bba2e397d0fba60eeee6a1fde7accd63"
+        },
+        {
+          "path": "C:/Users/taskm/Documents/PowerWorldAssets/animations/2026-09-15-closecombat-intake/Animations/Attacks_Blocks/NinjaStraightKick.fbx",
+          "bytes": 979584,
+          "sha256": "27fede9c7be7f940a0719d13f3e6bf2bcec9ede2edaffc97a65aa217c380fb5c"
+        },
+        {
+          "path": "C:/Users/taskm/Documents/PowerWorldAssets/animations/2026-09-15-closecombat-intake/Animations/Attacks_Blocks/NinjaWheelKick.fbx",
+          "bytes": 791936,
+          "sha256": "1540aa781ae5c8f28d14ac0c99b1290d29e9d4262ffc5f9743484b69b72b11ac"
+        },
+        {
+          "path": "C:/Users/taskm/Documents/PowerWorldAssets/animations/2026-09-15-closecombat-intake/Animations/Evades/NinjaBackEvade.fbx",
+          "bytes": 660096,
+          "sha256": "daaaaca6be4996cf6d4a4bb2b1ffebdf1e50b1c28d29f299fd747aef45d00d23"
+        },
+        {
+          "path": "C:/Users/taskm/Documents/PowerWorldAssets/animations/2026-09-15-closecombat-intake/Animations/Evades/NinjaFrontEvade.fbx",
+          "bytes": 655504,
+          "sha256": "60db127d8885de5ae195eac7cac7567e0a63b9670b737d940aa64218b9a733be"
+        },
+        {
+          "path": "C:/Users/taskm/Documents/PowerWorldAssets/animations/2026-09-15-closecombat-intake/Animations/Evades/NinjaHeadEvade.fbx",
+          "bytes": 798208,
+          "sha256": "ba65a40eb6a6302151c3fd54d50ee4ba46510d65815f5560e5a6cee3690c7a72"
+        },
+        {
+          "path": "C:/Users/taskm/Documents/PowerWorldAssets/animations/2026-09-15-closecombat-intake/Animations/Evades/NinjaLArmEvade.fbx",
+          "bytes": 797856,
+          "sha256": "175455aed7e4daa1c2fecb255473c8b40331a6aa2f4bf8953c6006a4ce28ff53"
+        },
+        {
+          "path": "C:/Users/taskm/Documents/PowerWorldAssets/animations/2026-09-15-closecombat-intake/Animations/Evades/NinjaLeftEvade.fbx",
+          "bytes": 1052256,
+          "sha256": "28e061151b0cc79181864ae003d00df69c00a3b0ef8e9551ef253eaf1b1bb282"
+        },
+        {
+          "path": "C:/Users/taskm/Documents/PowerWorldAssets/animations/2026-09-15-closecombat-intake/Animations/Evades/NinjaLLegEvade.fbx",
+          "bytes": 870000,
+          "sha256": "d86d473f113a222ee16498de39a64257b54089ad98f2a3aa50c3c2893fbaad1b"
+        },
+        {
+          "path": "C:/Users/taskm/Documents/PowerWorldAssets/animations/2026-09-15-closecombat-intake/Animations/Evades/NinjaRArmEvade.fbx",
+          "bytes": 801536,
+          "sha256": "9546e3e12591d03b8744df6cb6bae20f0c46d874938323ddf45f0dbe4762c711"
+        },
+        {
+          "path": "C:/Users/taskm/Documents/PowerWorldAssets/animations/2026-09-15-closecombat-intake/Animations/Evades/NinjaRightEvade.fbx",
+          "bytes": 1050064,
+          "sha256": "750df8cf81bf8cb68270cd189d440190f639eeb95137c5255e36270710a7f509"
+        },
+        {
+          "path": "C:/Users/taskm/Documents/PowerWorldAssets/animations/2026-09-15-closecombat-intake/Animations/Evades/NinjaRLegEvade.fbx",
+          "bytes": 727120,
+          "sha256": "8ebaae5241036e46ad17dc60f971a05889bd6ebdb2ab3e4c326d394c68c9ed94"
+        },
+        {
+          "path": "C:/Users/taskm/Documents/PowerWorldAssets/animations/2026-09-15-closecombat-intake/Animations/Evades/NinjaTorsoBackEvade.fbx",
+          "bytes": 762416,
+          "sha256": "194bd6683ef6f78f1b7e3f9d9ee7cfa873e18d32b169f28161bde8c82a697d2d"
+        },
+        {
+          "path": "C:/Users/taskm/Documents/PowerWorldAssets/animations/2026-09-15-closecombat-intake/Animations/Evades/NinjaTorsoEvade.fbx",
+          "bytes": 798112,
+          "sha256": "63955462af3d51ac729f214e97986aa113f81c0e60bf2de13762a394fc38f783"
+        },
+        {
+          "path": "C:/Users/taskm/Documents/PowerWorldAssets/animations/2026-09-15-closecombat-intake/Animations/Hit Reactions_Knockdowns/NinjaHeadHit_01.fbx",
+          "bytes": 940944,
+          "sha256": "f816245ca36979bae17f4ab943105b04faf3cc1500768adbc1f0a478dac8affa"
+        },
+        {
+          "path": "C:/Users/taskm/Documents/PowerWorldAssets/animations/2026-09-15-closecombat-intake/Animations/Hit Reactions_Knockdowns/NinjaKnockdownBack.fbx",
+          "bytes": 906528,
+          "sha256": "60ef2d1a4801ea003a139df70e8dd5b22c943d6beb1339532835b0b6949b2122"
+        },
+        {
+          "path": "C:/Users/taskm/Documents/PowerWorldAssets/animations/2026-09-15-closecombat-intake/Animations/Hit Reactions_Knockdowns/NinjaKnockdownStomach.fbx",
+          "bytes": 837168,
+          "sha256": "912810d69e8b12d0ad3d869063ebe5c9f2a549256a1347b815407097ca66e37a"
+        },
+        {
+          "path": "C:/Users/taskm/Documents/PowerWorldAssets/animations/2026-09-15-closecombat-intake/Animations/Hit Reactions_Knockdowns/NinjaLArmHit_01.fbx",
+          "bytes": 975648,
+          "sha256": "9c38a9f3927d97c91571c64d5ae1586e411a99795b43a2d9233164b7db48cc37"
+        },
+        {
+          "path": "C:/Users/taskm/Documents/PowerWorldAssets/animations/2026-09-15-closecombat-intake/Animations/Hit Reactions_Knockdowns/NinjaLLegHit_01.fbx",
+          "bytes": 864848,
+          "sha256": "59bd22b942e7046a93c7befd6142f3dfa367d3305b0664d8240a172cd6d9e780"
+        },
+        {
+          "path": "C:/Users/taskm/Documents/PowerWorldAssets/animations/2026-09-15-closecombat-intake/Animations/Hit Reactions_Knockdowns/NinjaRArmHit_01.fbx",
+          "bytes": 977504,
+          "sha256": "031ddb85b793f4d1d4214ffc6a299f4d1fcb9052b9dcf46304d261091a417c8e"
+        },
+        {
+          "path": "C:/Users/taskm/Documents/PowerWorldAssets/animations/2026-09-15-closecombat-intake/Animations/Hit Reactions_Knockdowns/NinjaRLegHit_01.fbx",
+          "bytes": 865712,
+          "sha256": "88d624d204cc78d3b39464a10228bc1abf02524039cd861ab7e670a8f07b6ace"
+        },
+        {
+          "path": "C:/Users/taskm/Documents/PowerWorldAssets/animations/2026-09-15-closecombat-intake/Animations/Hit Reactions_Knockdowns/NinjaTorsoBackHit_01.fbx",
+          "bytes": 801232,
+          "sha256": "d4098eed57b1b6409445616cfcfd6011584c0215044b2a3a7d0f988b250d8c46"
+        },
+        {
+          "path": "C:/Users/taskm/Documents/PowerWorldAssets/animations/2026-09-15-closecombat-intake/Animations/Hit Reactions_Knockdowns/NinjaTorsoHit_01.fbx",
+          "bytes": 975040,
+          "sha256": "69aa3d74a37e410c9f2ad776799f5bf67871524f41e9bef533a1c6a0eaa9fd44"
+        },
+        {
+          "path": "C:/Users/taskm/Documents/PowerWorldAssets/animations/2026-09-15-closecombat-intake/Animations/Locomotion/NinjaIdle.fbx",
+          "bytes": 781696,
+          "sha256": "10024314592215ed24a7c90aab4f8bbc50e6e5a0ee870be8d12bdc0bb39168e7"
+        },
+        {
+          "path": "C:/Users/taskm/Documents/PowerWorldAssets/animations/2026-09-15-closecombat-intake/Animations/Locomotion/NinjaJog.fbx",
+          "bytes": 608336,
+          "sha256": "b34e841078c81bf9fd705e6cf052bedad045f3aa9cb076f2fad44fe3e715333c"
+        },
+        {
+          "path": "C:/Users/taskm/Documents/PowerWorldAssets/animations/2026-09-15-closecombat-intake/Animations/Locomotion/NinjaJumpFalling.fbx",
+          "bytes": 720160,
+          "sha256": "5eb6600909fde8b859e822263e45bc89dbc011f0a86e2a3fd1683197706d65f3"
+        },
+        {
+          "path": "C:/Users/taskm/Documents/PowerWorldAssets/animations/2026-09-15-closecombat-intake/Animations/Locomotion/NinjaJumpLand.fbx",
+          "bytes": 802848,
+          "sha256": "f80983d082047905d0f07125e8462a19b48fa756ccbeaceb3675ce4f26691eef"
+        },
+        {
+          "path": "C:/Users/taskm/Documents/PowerWorldAssets/animations/2026-09-15-closecombat-intake/Animations/Locomotion/NinjaJumpUp.fbx",
+          "bytes": 573504,
+          "sha256": "8ab9378614548b9c1f3063757fe4c7d5d97983a9fcc0e7f7c5a59527a600b97a"
+        },
+        {
+          "path": "C:/Users/taskm/Documents/PowerWorldAssets/animations/2026-09-15-closecombat-intake/Animations/Locomotion/NinjaRun.fbx",
+          "bytes": 697840,
+          "sha256": "1ebe2ee055ed9139de5dd9248bb9a381075f40bbf23c1f1d2986f2dec47d048c"
+        },
+        {
+          "path": "C:/Users/taskm/Documents/PowerWorldAssets/animations/2026-09-15-closecombat-intake/Animations/Locomotion/NinjaRunBackwards.fbx",
+          "bytes": 622560,
+          "sha256": "7308fb030ad738e11a94533a2bb5a066334514896c72d679c125a9de6428931c"
+        },
+        {
+          "path": "C:/Users/taskm/Documents/PowerWorldAssets/animations/2026-09-15-closecombat-intake/Animations/Locomotion/NinjaRunLeft.fbx",
+          "bytes": 608368,
+          "sha256": "e1d5880835118647b0c294a930267e086cec39cf49b0b46019f1955044896c77"
+        },
+        {
+          "path": "C:/Users/taskm/Documents/PowerWorldAssets/animations/2026-09-15-closecombat-intake/Animations/Locomotion/NinjaRunRight.fbx",
+          "bytes": 608368,
+          "sha256": "879150de97e3eaf01357b12ca342b448a347d705f70f4361677ca6c07ad4008a"
+        },
+        {
+          "path": "C:/Users/taskm/Documents/PowerWorldAssets/animations/2026-09-15-closecombat-intake/Animations/Locomotion/NinjaStrafeLeft.fbx",
+          "bytes": 804176,
+          "sha256": "1deea4069e86ebcfd494f96825767037eefab933aa288241ea42dd9cd141442d"
+        },
+        {
+          "path": "C:/Users/taskm/Documents/PowerWorldAssets/animations/2026-09-15-closecombat-intake/Animations/Locomotion/NinjaStrafeRight.fbx",
+          "bytes": 804304,
+          "sha256": "f5488cff4ac2c4a8bf142bf6142ff2b0fd0b047f6d48147ef2dc11682d925a8a"
+        },
+        {
+          "path": "C:/Users/taskm/Documents/PowerWorldAssets/animations/2026-09-15-closecombat-intake/Animations/Locomotion/NinjaWalk.fbx",
+          "bytes": 806016,
+          "sha256": "b44a448aadd4c26de2c0bea80d1d151c21514d0873c030a4257810dd545d31d5"
+        },
+        {
+          "path": "C:/Users/taskm/Documents/PowerWorldAssets/animations/2026-09-15-closecombat-intake/Animations/Locomotion/NinjaWalkBackwards.fbx",
+          "bytes": 678432,
+          "sha256": "2bff48feaf446076f55610133d74f7deec3079366c68e400cde53c6350794592"
+        }
+      ]
+    }
+  ]
+}

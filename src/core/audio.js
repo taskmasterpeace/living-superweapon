@@ -72,9 +72,14 @@ export class AudioBus {
   }
   // THE SAMPLE LAYER — real recorded audio, tried FIRST by every discrete SFX below; the old
   // synth bodies remain as fallbacks for a cold cache (never silent — the energy-clarity law).
+  prepareSamples() {
+    if (!this.ctx) return Promise.resolve([]);
+    if (!this._bank) this._bank = new SampleBank(this);
+    return this._samplesReady ??= this._bank.preload(HOT_SET);
+  }
   sample(name, o) {
     if (!this.ctx) return false;
-    if (!this._bank) { this._bank = new SampleBank(this); this._bank.preload(HOT_SET); }
+    this.prepareSamples();
     return this._bank.play(name, o);
   }
   async prepareSample(name) {
@@ -83,12 +88,12 @@ export class AudioBus {
   }
   sampleBuffer(name) {
     if(!this.ctx)return null;
-    if(!this._bank){this._bank=new SampleBank(this);this._bank.preload(HOT_SET);}
+    this.prepareSamples();
     return this._bank.buffer(name);
   }
   sampleLoop(name, o) {
     if (!this.ctx) return null;
-    if (!this._bank) { this._bank = new SampleBank(this); this._bank.preload(HOT_SET); }
+    this.prepareSamples();
     return this._bank.loop(name, o);
   }
   // distance → gain multiplier. reach = how far this sound family carries (units to near-silence).
@@ -142,6 +147,9 @@ export class AudioBus {
       }
       this._busLevel = { ...BUS_DEFAULT };
       this.ok = true;
+      // Start at the unlock gesture, before the first gameplay sound. Callers
+      // entering a match may await prepareSamples() to avoid the cold decode race.
+      this.prepareSamples();
       this.soundLibrary.prepare().catch(() => {});
     } catch (e) { this.ok = false; }
   }

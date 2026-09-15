@@ -1,0 +1,23 @@
+{
+  "sourceBranch": "codex/audio-all",
+  "sourceCommit": "f659822ae8cbd081fc00a697731527b1b6e6da17",
+  "license": "CC0 (car pack, metal SFX — OpenGameArt)",
+  "selection": "public/audio/sfx-veh/final/veh-winners.json",
+  "files": {
+    "veh_door_close_a.mp3": "4b2d9f1be251739f236ceff843b65fe7ec1479665cd73cfa9803fed710ccfa2b",
+    "veh_idle_a.mp3": "61bac8d8f4e12fe778bcb3c58fc4403720161c69a9aa200b6481b0a12af8f27f",
+    "veh_hood_b.mp3": "8aebc8e3bf7f92ff12409a1380066e45d2424fbb3a238ea88d8f4ec8147fe651",
+    "veh_accel_a.mp3": "75be51d00c49be42036e7e26481ab10244816376266e768eed626ea91560204c",
+    "veh_start_a.mp3": "5bd3f0c33556c35ec354ceec34b2d5ffb089f245399c435432c22bdf3d10592e",
+    "veh_off_a.mp3": "48d9adf2162b72a131faa86e42c0b4e63a280a7e299637ca8e707cf0239fbcc9",
+    "veh_horn_a.mp3": "720ca4289465ca9f144760721b93657db0efcca6afe187764dd1960e63a21fc0",
+    "veh_impact_c.mp3": "89a4623c41ffbd00db687dda53c4fd6e608414bd18e2f4cfa6b00f395c891aa3",
+    "veh_brake_a.mp3": "4500e8b9564397532ebb32cb9b99c9fd93c73344708d763a6b52b3dbe415de4c",
+    "veh_impact_a.mp3": "1bc760c7f46a8ed7e10eb70abbe4a927b82cc42434d8b02c7cf603e5398c0e61",
+    "veh_door_open_a.mp3": "58a728dc2058d350007a6791503753ec7887310d81f359f103bdbc55caa5810f",
+    "veh_impact_b.mp3": "42fc2b52f51e167bfdee806952b883031bddd89a799d3960ab27a210922cb9e8",
+    "veh_trunk_a.mp3": "873fe193a80ce472dc6e9ed8c7223385485b6e77d0c7a0b6754c06c7fbcd7eb9",
+    "veh_accel_b.mp3": "13e2f347dc54d3e390d8c2f909b70f44fa63986b03c73fdaec9e0403a681bee8",
+    "veh_hood_a.mp3": "fd4da413c54fc887677c80593e2ef50d91b2d23bae85d5560e99f31a4c2d49f3"
+  }
+}
