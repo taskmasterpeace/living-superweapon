@@ -9,6 +9,9 @@ import { FleetAudio } from './fleet-audio.js';
 import {FleetControlsHud,fleetControls} from './fleet-controls.js';
 import {canUseFlight} from './mobility-policy.js';
 import {sessionOf,seatBusy,SEAT_DRIVER} from './vehicle-session.js';
+import {turretSlewIntent,wrapAngle} from './vehicle-weapons.js';
+
+const AIMED = new Set(['tracked','mech']);   // classes whose mount the mouse aims
 
 const busy=seatBusy;
 function boardReason(game,a,p){
@@ -73,6 +76,16 @@ export class FleetPilot {
     }
     if (!this.actor) return false;
     const d = code => !!input?.down?.(code), cls = this.actor.cls;
+    // THE MOUSE AIMS THE MOUNT (tracked turret / mech torso). Ordinary mouse
+    // look is already suppressed while seated (game.js), so the deltas are free;
+    // Alt keeps the freelook and therefore never moves the gun. The aim is a
+    // WORLD yaw/pitch — a turning hull does not drag the gun off target.
+    if (AIMED.has(cls) && this._aim && !d('AltLeft') && !d('AltRight')) {
+      const mx = input?.mouse?.dx || 0, my = input?.mouse?.dy || 0, sens = this.game.world?._lookSens || .0024;
+      this._aim.yaw = wrapAngle(this._aim.yaw + mx * sens);
+      const e = this.actor.env;
+      this._aim.pitch = Math.max(e.turretPitchMin ?? -0.6, Math.min(e.turretPitchMax ?? 0.6, this._aim.pitch - my * sens * .7));
+    }
     // Steering taps never trigger an aerobatic maneuver.
     const barrel = 0;
     this._c = {
@@ -105,6 +118,9 @@ export class FleetPilot {
     const claim=sessionOf(this.game,a).claim(SEAT_DRIVER,p,{source:'player'});
     if(claim){this.game.hud?.feed?.(claim,'#ffce75');return false;}
     this.actor = a;
+    // open with the gun where the mount is actually pointing — no snap on entry
+    const m = a.motion;
+    this._aim = AIMED.has(a.cls) ? { yaw: wrapAngle((m.yaw || 0) + (m.turretYaw ?? m.torsoYaw ?? 0)), pitch: m.turretPitch || 0 } : null;
     this._c = null; this.game.world && (this.game.world._chaseSnap = true);
     this._seat();
     this._hud.update(a,{canSwitchVehicle:!!this.game._simActive});
@@ -120,7 +136,9 @@ export class FleetPilot {
     if (a.destroyed || !a.occupant?.alive || a.occupant !== this.game.player) { this.exit({force:true}); return; }
     if (this._blocked() || !(dt > 0)) { this._audio.pause(); return; }
     this._audio.update(this._c || {});
-    driveActor(a, fleetIntent(a.cls, this._c || {}), dt, this.game.world);
+    const intent = fleetIntent(a.cls, this._c || {});
+    if (this._aim) Object.assign(intent, turretSlewIntent(a.cls, a.motion, a.env, this._aim, dt));
+    driveActor(a, intent, dt, this.game.world);
     if(this._c)this._c.gearToggle=false;
     this._hud.update(a,{canSwitchVehicle:!!this.game._simActive});
     this._seat();
@@ -137,7 +155,7 @@ export class FleetPilot {
     // session keeps the seat position rather than teleport through a wall.
     if(destination&&!(destination.air&&!canUseFlight(p)))a.session?.release(SEAT_DRIVER,{destination});
     else a.session?.release(SEAT_DRIVER,{});
-    this.actor = null; this._c = null; this.game.world && (this.game.world._chaseSnap = true);
+    this.actor = null; this._c = null; this._aim = null; this.game.world && (this.game.world._chaseSnap = true);
     return true;
   }
 
