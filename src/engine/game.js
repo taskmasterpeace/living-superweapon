@@ -1606,7 +1606,7 @@ export class Game {
   // ---------- field of vision ----------
   updateVision(dt) {
     const p = this.player;
-    const piloting = e => e._fleetVehicle || e._aircraftVehicle || e._scoutVehicle;   // the driver's body rides hidden — you see the vehicle, not them
+    const piloting = e => (e._fleetVehicle && !e._fleetVehicle.env?.openSeat) || e._aircraftVehicle || e._scoutVehicle;   // a CLOSED hull hides its driver — an open saddle (motorcycle/ATV/board) shows the rider
     if (!p || !this.fov) { for (const e of this.entities) { e._vis = 1; if (e.obj) e.obj.visible = !piloting(e) && !e._highwallRetiredBody; } this.world.setFogEnabled(false); return; }
     this.world.setFogEnabled(!this.world.surfaceSight);
     const h2 = this.humans[1] && this.humans[1].fighter;

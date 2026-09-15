@@ -12,6 +12,7 @@
 // AircraftPiloting…). A session is pure occupancy + restoration, so it is
 // headlessly testable with stub fighters.
 import { cancelHeldAttacks } from './abilities.js';
+import { isOpenSeat, poseRider, unposeRider } from './vehicle-rider.js';
 
 export const SEAT_DRIVER = 'driver';
 export const SEAT_GUNNER = 'gunner';
@@ -66,7 +67,9 @@ export class VehicleSession {
     f.flying = f.flyHeld = f.descendHeld = f.guarding = f.prone = f.crouching = f.sprintHeld = false;
     if (f.moveDir) f.moveDir = { x: 0, z: 0 };
     f.vel?.set?.(0, 0, 0);
-    if (f.obj) f.obj.visible = false;
+    // an OPEN seat (motorcycle/ATV/hoverboard) keeps the rider VISIBLE and
+    // posed on the saddle; a closed hull hides the crew
+    if (f.obj && !isOpenSeat(this.actor)) f.obj.visible = false;
     f._fleetVehicle = this.actor; f._fleetSeat = seat; f._occVisible = stash.visible;
     this.seats.set(seat, { fighter: f, source, stash });
     if (seat === SEAT_DRIVER) this.actor.occupant = f;     // legacy alias every existing reader uses
@@ -87,6 +90,7 @@ export class VehicleSession {
       if ('air' in destination) f.flying = !!destination.air && f.alive;
       f.groundY = this.game?.world?.heightAt?.(destination.x, destination.z) ?? 0;
     }
+    if (isOpenSeat(this.actor)) unposeRider(f);
     if (f.obj) { f.obj.position?.copy?.(f.pos); f.obj.visible = rec.stash.visible !== false; }
     f.vel?.set?.(0, 0, 0);
     f._fleetVehicle = null; f._fleetSeat = null;
@@ -102,9 +106,10 @@ export class VehicleSession {
     for (const [seat, rec] of [...this.seats]) {
       const f = rec.fighter;
       if (!f.alive || this.actor.destroyed) { this.release(seat); continue; }
+      f.vel?.set?.(0, 0, 0);
+      if (isOpenSeat(this.actor)) { poseRider(this.actor, f); continue; }
       const y = this.actor.pos.y + (this.actor.groundOffset || 2);
       f.pos?.set ? f.pos.set(this.actor.pos.x, y, this.actor.pos.z) : (f.pos.x = this.actor.pos.x, f.pos.y = y, f.pos.z = this.actor.pos.z);
-      f.vel?.set?.(0, 0, 0);
       if (f.obj) { f.obj.position?.copy?.(f.pos); f.obj.visible = false; }
     }
   }

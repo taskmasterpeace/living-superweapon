@@ -37,8 +37,8 @@ export const VEHICLE_ENVELOPES = {
   'humvee':         { cls:'wheeled', name:'Armored utility',      top:47, reverse:16, accel:32, brake:58, coast:.8,  grip:9,   turnRate:1.35, hiSteer:.44, slopePull:46, maxGrade:.58, windK:.05, lean:0 },
   'cargo-transport':{ cls:'wheeled', name:'Armored cargo',        top:38, reverse:12, accel:20, brake:46, coast:.7,  grip:9.5, turnRate:1.0,  hiSteer:.4,  slopePull:52, maxGrade:.5,  windK:.05, lean:0 },
   'mobile-fabricator':{cls:'wheeled',name:'Mobile fabricator',    top:26, reverse:9,  accel:12, brake:34, coast:.6,  grip:10,  turnRate:.7,   hiSteer:.4,  slopePull:56, maxGrade:.42, windK:.05, lean:0 },
-  'motorcycle':     { cls:'wheeled', name:'Pursuit motorcycle',   top:91, reverse:8,  accel:52, brake:70, coast:.9,  grip:6.2, turnRate:2.1,  hiSteer:.5,  slopePull:40, maxGrade:.66, windK:.10, lean:.55, airSteer:.22, barrel:true, rollRate:8 },
-  'atv':            { cls:'wheeled', name:'ATV',                  top:66, reverse:14, accel:44, brake:60, coast:.9,  grip:7.5, turnRate:1.9,  hiSteer:.52, slopePull:38, maxGrade:.85, windK:.08, lean:.3,  airSteer:.28, barrel:true, rollRate:7 },
+  'motorcycle':     { cls:'wheeled', name:'Pursuit motorcycle',   top:91, reverse:8,  accel:52, brake:70, coast:.9,  grip:6.2, turnRate:2.1,  hiSteer:.5,  slopePull:40, maxGrade:.66, windK:.10, lean:.55, airSteer:.22, barrel:true, rollRate:8, openSeat:true, saddleH:.6 },
+  'atv':            { cls:'wheeled', name:'ATV',                  top:66, reverse:14, accel:44, brake:60, coast:.9,  grip:7.5, turnRate:1.9,  hiSteer:.52, slopePull:38, maxGrade:.85, windK:.08, lean:.3,  airSteer:.28, barrel:true, rollRate:7, openSeat:true, saddleH:.6 },
 
   // ---- GROUND · tracked (pivot turns; the TURRET is its own channel) ---------
   'tank':      { cls:'tracked', name:'Battle tank',         top:36, reverse:14, accel:14, brake:30, pivot:1.1, moveTurn:.55, slopePull:34, maxGrade:.7, windK:0, turretRate:1.4, turretPitchRate:.8, turretPitchMin:-.14, turretPitchMax:.35 },
@@ -46,7 +46,7 @@ export const VEHICLE_ENVELOPES = {
   'aa-tank':   { cls:'tracked', name:'Anti-air missile tank',top:34, reverse:13, accel:13, brake:28, pivot:1.0, moveTurn:.5,  slopePull:34, maxGrade:.68,windK:0, turretRate:1.9, turretPitchRate:1.5, turretPitchMin:-.05,turretPitchMax:1.35 },
 
   // ---- GROUND · hover (ground-effect, drifty, rides the wind) ----------------
-  'hoverboard':     { cls:'hover', name:'Thrust hoverboard',    top:108, accel:60, brake:44, grip:2.6, turnRate:2.4, hoverH:2.2, bob:.4, bobHz:2.4, windK:.55, lean:.5, barrel:true, rollRate:8.5 },
+  'hoverboard':     { cls:'hover', name:'Thrust hoverboard',    top:108, accel:60, brake:44, grip:2.6, turnRate:2.4, hoverH:2.2, bob:.4, bobHz:2.4, windK:.55, lean:.5, barrel:true, rollRate:8.5, openSeat:true, saddleH:1 },
   'hover-transport':{ cls:'hover', name:'Armed hover transport',top:58,  accel:26, brake:30, grip:3.4, turnRate:1.1, hoverH:3.4, bob:.5, bobHz:1.6, windK:.4,  lean:.14, barrel:true, rollRate:5 },
 
   // ---- MECHS (walkers: POWER-DOWN is a real state; the TORSO twists free) ----
