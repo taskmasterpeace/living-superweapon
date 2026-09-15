@@ -48,6 +48,7 @@ export class VehicleHull {
     const damage = Math.min(this.cover.hp, amount);
     this.cover.hp -= damage;
     this.actor.disabled = this.cover.hp > 0 && this.cover.hp < this.cover.maxHp * this.disabledAt;
+    this.actor.flinchT = Math.min(.5, .18 + damage * .01);   // impact reaction: the rig rocks the torso/hull for a beat
     const p = this.actor.pos;
     this.game.particles?.burst?.(p.x, p.y + (this.actor.bodyHeight || 8) * .5, p.z, { count: 5, speed: 9, life: .3, size: 1.4, color: ['#ffd28a', '#5a5148'], up: 3, grav: 8 });
     if (this.actor.occupant === this.game.player) this.game.hud?.feed?.(`HULL ${Math.round(100 * this.cover.hp / this.cover.maxHp)}%${this.actor.disabled ? ' — DRIVETRAIN DAMAGED' : ''}`, '#ff8b63');

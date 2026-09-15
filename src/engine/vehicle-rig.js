@@ -49,6 +49,10 @@ export function rigParts(actor, dt) {
     p.barrel.position.z = (p.barrel.userData._restPZ ?? 0) - actor.recoilT * .9;
   }
   if (p.torso) p.torso.rotation.y = (p.torso.userData._restY || 0) + (m.torsoYaw || 0);
+  // IMPACT REACTION — a hull hit rocks the torso back and recovers; pure
+  // presentation (set by VehicleHull.hit), the sim never reads it
+  if (p.torso && (actor.flinchT || 0) > 0) { actor.flinchT = Math.max(0, actor.flinchT - dt); p.torso.rotation.x = (p.torso.userData._restX || 0) - actor.flinchT * .35; }
+  else if (p.torso && actor.flinchT === 0) { p.torso.rotation.x = p.torso.userData._restX || 0; actor.flinchT = null; }
   // The authored walker has four joint chains. Preserve its bent rest pose;
   // diagonal pairs alternate, and the ankle cancels the upper-chain rotation.
   if (cls === 'mech' && p.legs) {
