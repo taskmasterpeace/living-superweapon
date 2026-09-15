@@ -1,0 +1,49 @@
+{
+  "method": "Native Highwall; fixed inspection starting points. AI movement uses controlBot/Fighter.update. Diagnostic architecture views explicitly disable player concealment.",
+  "distance": {
+    "distance": 900,
+    "visible": true,
+    "range": "Infinity"
+  },
+  "tower": {
+    "arrived": true,
+    "position": [
+      -28,
+      48,
+      -265.2978378932479
+    ],
+    "samples": [
+      [
+        -28,
+        0,
+        -154.0552
+      ],
+      [
+        -28,
+        27,
+        -212.56683789324867
+      ]
+    ]
+  },
+  "bunker": {
+    "arrived": true,
+    "position": [
+      241.62516529139296,
+      12,
+      240.89158203782563
+    ],
+    "samples": [
+      [
+        235.007096182381,
+        0,
+        291.94525802163224
+      ]
+    ]
+  },
+  "terminal": {
+    "focus": "monitor",
+    "target": 320
+  },
+  "engineErrors": [],
+  "errors": []
+}

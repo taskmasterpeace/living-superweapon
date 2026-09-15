@@ -17,6 +17,6 @@ export const HIGHWALL_SCENARIOS=Object.freeze({
  intercept:{title:'Flyer interception',goal:'Approach the opposing flyer above the eastern field.',soldiers:0,zombies:0},
 });
 export function zombieSpawns(count){
- const xs=[-188,-170,-152,-110,-92,-74,-266,-248],zs=[122,140,158,-10,8,26,-118,-100,-82,-250,-232,-214];
+ const xs=[-188,-170,-152,-110,-92,-74,-266,-248],zs=[122,110,158,-10,8,26,-118,-100,-82,-250,-232,-214];
  return Array.from({length:count},(_,i)=>({x:xs[i%xs.length],z:zs[Math.floor(i/xs.length)],sprinter:i%8===7}));
 }

@@ -23,28 +23,40 @@ export function highwallLayout({gateClosed=true,revision=1}={}){
  };
  const wall=(id,x,z,length,axis='z')=>{
   const halves=Math.max(1,Math.round(length/16)),total=halves*16;let along=-total/2,index=0;
-  while(along<total/2){const span=total/2-along>=128?128:Math.min(32,total/2-along),center=along+span/2;
-   place(`${id}-${index++}`,span===128?'tall-long-wall':span===16?'tall-half-wall':'tall-wall',x+(axis==='x'?center:0),z+(axis==='z'?center:0),{height:HIGHWALL_HEIGHT,rotation:axis==='x'?0:90});
+  while(along<total/2){const span=Math.min(128,total/2-along),center=along+span/2;
+   place(`${id}-${index++}`,span>=64?'tall-long-wall':span===16?'tall-half-wall':'tall-wall',x+(axis==='x'?center:0),z+(axis==='z'?center:0),{span,height:HIGHWALL_HEIGHT,rotation:axis==='x'?0:90});
    along+=span;
    if(along<total/2)place(`${id}-support-${index}`,'tall-pillar',x+(axis==='x'?along:0),z+(axis==='z'?along:0),{height:HIGHWALL_HEIGHT+2,rotation:axis==='x'?0:90});
   }
   for(const side of[-1,1])place(`${id}-end-${side}`,'tall-end-cap',x+(axis==='x'?side*total/2:0),z+(axis==='z'?side*total/2:0),{height:HIGHWALL_HEIGHT,rotation:axis==='x'?0:90});
  };
- // Repeated vertical spines, with generous transverse junctions and loops.
- for(const [i,x]of[-286,-130].entries()){
-  for(const[j,z]of[-220,-100,20,140].entries()){
-   wall(`spine-${i}-${j}`,x,z,72);
+ // Courtyard circuit: four exits per room, offset cover, and long outer flanks.
+ const courtyards=[
+  {id:'west-watch',x:-410,z:-230,width:160,depth:180},
+  {id:'north-yard',x:-200,z:-230,width:160,depth:180},
+  {id:'west-market',x:-410,z:60,width:160,depth:180},
+  {id:'south-rally',x:-210,z:230,width:160,depth:180},
+  {id:'motor-yard',x:270,z:-210,width:180,depth:180},
+  {id:'east-crossing',x:270,z:40,width:180,depth:160},
+ ];
+ for(const court of courtyards){
+  const {id,x,z,width,depth}=court,gap=64;
+  for(const side of[-1,1])for(const end of[-1,1]){
+   const run=(width-gap)/2;
+   wall(id+'-front-'+side+'-'+end,x+end*(gap/2+run/2),z+side*depth/2,run,'x');
+   const leg=(depth-gap)/2;
+   wall(id+'-side-'+side+'-'+end,x+side*width/2,z+end*(gap/2+leg/2),leg);
   }
+  // Two offset islands break the direct center shot but leave multiple approaches.
+  place(id+'-cover-a','barricade',x-24,z-24,{rotation:90});
+  place(id+'-cover-b','sandbag-barrier',x+24,z+24);
  }
- for(const [i,[x,z,len]]of[[-247,-160,78],[-169,-40,78],[-91,80,78],[-247,200,78],[-91,-280,78]].entries())wall(`cross-${i}`,x,z,len,'x');
  // Armored north/south lane and wide crossing: physical screens leave exits.
  for(const z of[-230,-110,110,230])wall(`lane-west-${z}`,-4,z,52);
  for(const z of[-205,125,245])wall(`lane-east-${z}`,132,z,66);
- wall('field-screen',245,80,126,'x');
+
  // Perimeter and watchtower kit establish a compound, rather than isolated test panels.
  // Tower windows are real openings between authored posts; these have no scripted guards.
- // Spacious western extension: large right-angle rooms with alternating exits.
- for(const [i,[x,z,rotation]] of [[-436,-210,0],[-436,80,180],[-270,320,180]].entries())place('large-corner-'+i,'tall-long-corner',x,z,{height:HIGHWALL_HEIGHT,rotation});
  // Outer perimeter is twice main-wall height and long-panel length.
  // South access remains an explicit 128u opening, never an invisible border.
  const border=(id,x,z,span,rotation=0)=>place(id,'border-wall',x,z,{span,height:HIGHWALL_HEIGHT*2,rotation});
@@ -79,7 +91,7 @@ export function highwallLayout({gateClosed=true,revision=1}={}){
  if(gateClosed)box('service-gate',-169,80,70,6,HIGHWALL_HEIGHT,0,'gate');
  const signs=[
   {text:'HIGHWALL',sub:'COMBINED ARMS / SECTOR 01',x:50,z:275,y:29,w:100},
-  {text:'01 / LABYRINTH',sub:'INFANTRY LOOPS',x:-247,z:194,y:29,w:62},
+  {text:'01 / LABYRINTH',sub:'COURTYARD CIRCUIT',x:-247,z:194,y:29,w:62},
   {text:'02 / ARMORED',sub:'CONNECTED THROUGH ROUTE',x:66,z:-272,y:29,w:84},
   {text:'03 / SHELTER',sub:'INFANTRY ONLY',x:-28,z:62,y:18,w:35},
   {text:'04 / OPEN SKY',sub:'AIR APPROACH / EXPOSED',x:240,z:75,y:30,w:88},
@@ -87,9 +99,10 @@ export function highwallLayout({gateClosed=true,revision=1}={}){
  // Freestanding route boards have physical supports, rather than floating in space.
  for(const [i,s]of signs.entries())for(const side of[-1,1])box(`sign-support-${i}-${side}`,s.x+side*(s.w/2-2),s.z,2,2,s.y+s.w/8,0,'post');
  for(const module of modules)pieces.push(...fortificationPlacement(module).solids);
- return {version:3,revision,seed:1701,bounds:{...HIGHWALL_BOUNDS},pieces,modules,signs,
+ return {version:4,revision,seed:1701,bounds:{...HIGHWALL_BOUNDS},pieces,modules,signs,courtyards,
+  spawnAreas:courtyards.map(c=>({id:c.id,x:c.x,z:c.z,radius:18,team:c.id==='south-rally'||c.id==='west-market'?0:1})),
   zones:[{id:'infantry',x:-169,z:-40,width:300,depth:490},{id:'armor',x:66,z:0,width:100,depth:570},{id:'air',x:233,z:-110,width:168,depth:320}],
-  blue:[{x:-247,z:240},{x:-229,z:240},{x:-247,z:222},{x:-229,z:222}],
-  red:[{x:-169,z:0},{x:-151,z:0},{x:-169,z:-18},{x:-151,z:-18}],
+  blue:[{x:-210,z:230},{x:-194,z:230},{x:-410,z:60},{x:-394,z:60}],
+  red:[{x:-200,z:-230},{x:-184,z:-230},{x:270,z:-210},{x:286,z:-210}],
   tank:{x:66,z:210},controlPost:{x:235,z:292},airStarts:[{x:212,y:90,z:200},{x:212,y:90,z:-215}],objective:{x:-169,z:140}};
 }
