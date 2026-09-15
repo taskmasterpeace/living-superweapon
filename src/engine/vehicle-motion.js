@@ -156,7 +156,10 @@ export function stepRotor(s, i, dt, e, ctx) {
   s.rockT += dt;
   if (s.spool >= 1) {
     const gain = 1 - Math.exp(-e.accelK * dt), th = clamp(i.throttle || 0, -1, 1);
-    const tx = Math.sin(s.yaw) * th * e.top, tz = Math.cos(s.yaw) * th * e.top;
+    // LATERAL TRANSLATION — a helicopter slides sideways (right = +strafe) at
+    // reduced authority; the same target-velocity model as forward flight.
+    const sf = clamp(i.strafe || 0, -1, 1) * .72;
+    const tx = (Math.sin(s.yaw) * th + Math.cos(s.yaw) * sf) * e.top, tz = (Math.cos(s.yaw) * th - Math.sin(s.yaw) * sf) * e.top;
     const ax = (tx - s.vx) * gain, az = (tz - s.vz) * gain;
     s.vx += ax; s.vz += az;
     s.vy = ease(s.vy, clamp(i.lift || 0, -1, 1) * (i.lift > 0 ? e.climb : e.sinkMax), 2, dt);
@@ -164,7 +167,7 @@ export function stepRotor(s, i, dt, e, ctx) {
     // lean INTO the acceleration + the subtle hover rock
     const c = Math.cos(s.yaw), sn = Math.sin(s.yaw), fwdA = (sn * ax + c * az) / Math.max(dt, 1e-4);
     s.tiltX = ease(s.tiltX, clamp(fwdA * e.leanK, -e.lean, e.lean) + Math.sin(s.rockT * Math.PI * 2 * e.rockHz) * e.rock, 5, dt);
-    s.tiltZ = ease(s.tiltZ, -clamp(i.steer || 0, -1, 1) * e.lean * .6 + Math.cos(s.rockT * Math.PI * 2 * e.rockHz * .77) * e.rock * .6, 5, dt);
+    s.tiltZ = ease(s.tiltZ, -clamp(i.steer || 0, -1, 1) * e.lean * .6 - sf * e.lean * .8 + Math.cos(s.rockT * Math.PI * 2 * e.rockHz * .77) * e.rock * .6, 5, dt);
   } else { s.vx *= Math.exp(-3 * dt); s.vz *= Math.exp(-3 * dt); s.vy = Math.min(0, s.vy); s.tiltX = ease(s.tiltX, 0, 3, dt); s.tiltZ = ease(s.tiltZ, 0, 3, dt); }
   barrelRoll(s, i, e, dt, s.spool >= 1);  // a heli can roll once it's spooled up
   fin(s, ['yaw', 'vx', 'vy', 'vz', 'spool', 'tiltX', 'tiltZ', 'rollSpin', 'rollDir']); return s;

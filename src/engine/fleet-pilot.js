@@ -53,7 +53,7 @@ export function fleetExitPosition(game,a,p){
 // drive on W/S; aircraft keep flight-sim mapping (throttle R/F, pitch W/S, bank A/D).
 export function fleetIntent(cls, c) {
   if (cls === 'fixedwing') return { throttle: c.throttle, steer: c.bank, rudder: c.bank, pitch: c.pitch, barrel: 0, gearToggle:c.gearToggle, parked: false };
-  if (cls === 'rotor') return { throttle: c.fwd, steer: c.turn, lift: c.lift, barrel: c.barrel, on: true };
+  if (cls === 'rotor') return { throttle: c.fwd, steer: c.turn, lift: c.lift, strafe: c.strafe, barrel: c.barrel, on: true };
   if (cls === 'tracked') return { throttle: c.fwd, steer: c.turn, brake: c.brake, turretX: c.aimX, turretY: c.aimY };
   if (cls === 'mech') return { throttle: c.fwd, steer: c.turn, brake: c.brake, torsoX: c.aimX, powerOn: true };
   if (cls === 'hover' || cls === 'ship') return { throttle: c.fwd, steer: c.turn, brake: c.brake };
@@ -95,6 +95,7 @@ export class FleetPilot {
       throttle: Number(d('KeyR')) - Number(d('KeyF')),      // aircraft throttle
       pitch: Number(d('KeyS')) - Number(d('KeyW')),          // aircraft collective
       lift: Number(d('Space')) - Number(d('ControlLeft') || d('KeyZ')),
+      strafe: Number(d('KeyE')) - Number(d('KeyQ')),
       brake: d('Space'),
       aimX: 0, aimY: 0, barrel, gearToggle:!!input?.pressed?.('KeyG'),
       fire: !!input?.mouse?.left,

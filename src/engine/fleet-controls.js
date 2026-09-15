@@ -1,6 +1,6 @@
 export const fleetControls = (cls,{canSwitchVehicle=false,armed=false}={}) => (cls==='fixedwing'
  ? 'W/S nose down/up · A/D bank · R/F throttle +/− · G landing gear · Alt + mouse look · J exit'
- : cls==='rotor' ? 'W/S forward/back · A/D turn · Space rise · Ctrl descend'+(armed?' · LMB fire':'')+' · Alt + mouse look · J exit'
+ : cls==='rotor' ? 'W/S forward/back · A/D turn · Q/E strafe · Space rise · Ctrl descend'+(armed?' · LMB fire':'')+' · Alt + mouse look · J exit'
  : (cls==='tracked'||cls==='mech' ? 'W/S drive · A/D steer · Space brake · mouse aim'+(armed?' · LMB fire · R reload':'')+' · Alt + mouse look · J exit'
  : 'W/S drive · A/D steer · Space brake · Alt + mouse look · J exit'))+(canSwitchVehicle?' · L next vehicle':'');
 export function suppressFleetShortcut(game,code){return !!(game._simActive||game.player?._fleetVehicle)&&['KeyB','KeyN','BracketLeft','BracketRight','Tab'].includes(code);}
