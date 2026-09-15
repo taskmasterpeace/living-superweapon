@@ -9,6 +9,9 @@ The source manifest records archive/file SHA-256 hashes and preserves Unity impo
 These are purchased sources, not additions to the existing CC0 bank.
 No new clip has been assigned to gameplay by this intake step.
 
+For existing versus proposed mechanics, vampires, aliens and dogs, see the
+[animation unlock audit](ANIMATION_UNLOCK_AUDIT_2026-09-14.md).
+
 | Source archive | Pack | FBX files |
 | --- | --- | ---: |
 | kg.zip | Knockdown & Get-Up | 85 |

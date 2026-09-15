@@ -1,5 +1,11 @@
 # Dec-52 and Thermavari runtime animation audit — 2026-09-14
 
+> Historical snapshot: the Dec-52 hound integration findings below have been
+> superseded by `dec52-encounter.js` and its Threat Room caller. See
+> [the later animation unlock audit](ANIMATION_UNLOCK_AUDIT_2026-09-14.md) for
+> current call-site evidence and six passing focused tests. Other body families
+> are not automatically integrated by that hound adapter.
+
 Scope: existing character animation paths in this worktree. This is a source/call-site audit plus automated asset tests, not visual gameplay acceptance.
 
 ## Current integration
