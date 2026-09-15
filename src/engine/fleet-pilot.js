@@ -9,7 +9,7 @@ import { FleetAudio } from './fleet-audio.js';
 import {FleetControlsHud,fleetControls} from './fleet-controls.js';
 import {canUseFlight} from './mobility-policy.js';
 import {sessionOf,seatBusy,SEAT_DRIVER} from './vehicle-session.js';
-import {turretSlewIntent,wrapAngle} from './vehicle-weapons.js';
+import {turretSlewIntent,wrapAngle,attachMount,fireVehicleWeapon} from './vehicle-weapons.js';
 
 const AIMED = new Set(['tracked','mech']);   // classes whose mount the mouse aims
 
@@ -97,6 +97,8 @@ export class FleetPilot {
       lift: Number(d('Space')) - Number(d('ControlLeft') || d('KeyZ')),
       brake: d('Space'),
       aimX: 0, aimY: 0, barrel, gearToggle:!!input?.pressed?.('KeyG'),
+      fire: !!input?.mouse?.left,
+      reload: cls !== 'fixedwing' && !!input?.pressed?.('KeyR'),
     };
     return true;
   }
@@ -123,9 +125,10 @@ export class FleetPilot {
     this._aim = AIMED.has(a.cls) ? { yaw: wrapAngle((m.yaw || 0) + (m.turretYaw ?? m.torsoYaw ?? 0)), pitch: m.turretPitch || 0 } : null;
     this._c = null; this.game.world && (this.game.world._chaseSnap = true);
     this._seat();
+    attachMount(a);
     this._hud.update(a,{canSwitchVehicle:!!this.game._simActive});
     this._audio.enter(a);
-    this.game.hud?.feed?.(`${(a.name || a.id).toUpperCase()} — ${fleetControls(a.cls,{canSwitchVehicle:!!this.game._simActive})}`, '#ffce75');
+    this.game.hud?.feed?.(`${(a.name || a.id).toUpperCase()} — ${fleetControls(a.cls,{canSwitchVehicle:!!this.game._simActive,armed:!!a.weapon})}`, '#ffce75');
     return true;
   }
 
@@ -139,6 +142,18 @@ export class FleetPilot {
     const intent = fleetIntent(a.cls, this._c || {});
     if (this._aim) Object.assign(intent, turretSlewIntent(a.cls, a.motion, a.env, this._aim, dt));
     driveActor(a, intent, dt, this.game.world);
+    // the mounted weapon: same fire path the AI crew uses (vehicle-weapons.js)
+    const w = attachMount(a);
+    if (w) {
+      w.update(dt);
+      if (this._c?.reload && w.reloadNow()) this.game.hud?.feed?.(`${w.spec.label || 'GUN'} — RELOADING`, '#ffce75');
+      if (this._c?.fire) {
+        const wasDry = w.dry;
+        fireVehicleWeapon(this.game, a, a.occupant);
+        if (wasDry && !this._saidDry) { this._saidDry = true; this.game.hud?.feed?.(`${w.spec.label || 'GUN'} DRY — no rounds remain`, '#ff8b63'); }
+        if (!wasDry) this._saidDry = false;
+      }
+    }
     if(this._c)this._c.gearToggle=false;
     this._hud.update(a,{canSwitchVehicle:!!this.game._simActive});
     this._seat();
