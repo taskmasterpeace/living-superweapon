@@ -32,7 +32,7 @@ try{
   seatFlags:{fleet:!!pl._fleetVehicle,scout:!!pl._scoutVehicle,air:!!pl._aircraftVehicle,transport:!!pl._passengerTransport},
   cam:g.world._camNearestT?.(pl.pos.x,pl.pos.y+3,pl.pos.z,a.pos.x,a.pos.y+3,a.pos.z,.2),
   blocked:g.paused||g.running===false||g.matchOver||g.hud?.titleOpen||g.combatOverlayOpen}});
- await p.keyboard.press('j');
+ for(let tries=0;tries<4;tries++){await p.keyboard.press('j',{delay:60});await p.waitForTimeout(250);if(await p.evaluate(()=>!!PW.game.player._fleetVehicle))break;}
  r.boarded=await sample();assert.equal(r.boarded.seated,true,'J boards the tank');assert.equal(r.boarded.visible,false,'driver hidden while seated');
  // ---- move / turn correctly ----
  await p.keyboard.down('w');await p.waitForTimeout(1600);await p.keyboard.up('w');

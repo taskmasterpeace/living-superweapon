@@ -27,12 +27,12 @@ faction/sensing rules). AI vehicles must use the same intent interfaces — no m
 | 4 | Tank firing / ammo / reload | accepted (headless + browser) | vehicle-fire gate (4) + Gate A browser run |
 | 5 | Tank target/damage integration (enemy awareness) | accepted (headless + browser) | vehicle-hull gate (5) + Gate A: hull 420→281 under AI shells; infantry belief err 0u |
 | 6 | Tank AI intent (drive/aim/fire through same paths) | accepted (headless + browser) | vehicle-ai gate (6) + Gate A: AI tank drove 128u and shelled the player |
-| 7 | Motorcycle presentation/handling (visible rider, lean) | todo | — |
-| 8 | Helicopter completion (+1 mounted weapon) | todo | — |
-| 9 | AA + missile interception (Gate B) | todo | — |
-| 10 | Jet envelope (throttle/stall/landing) | todo | — |
-| 11 | Mech locomotion (physics owns travel) | todo | — |
-| 12 | Fleet catalog/status UI (honest per-capability states) | todo | — |
+| 7 | Motorcycle presentation/handling (visible rider, lean) | accepted (headless + browser) | vehicle-rider gate (5) + artifacts/fleet-rider (rider visible, roll==lean) |
+| 8 | Helicopter completion (+1 mounted weapon) | accepted (headless) | vehicle-helicopter gate (3): hover assist, strafe, landing, chin gun via shared mount |
+| 9 | AA + missile interception (Gate B) | accepted (headless + browser) | aa-missile gate (7) + artifacts/fleet-gate-b (tracked, launched, guided, real damage) |
+| 10 | Jet envelope (throttle/stall/landing) | accepted (headless) | vehicle-jet gate (5): recoverable stall, landing/rollout/takeoff, belly-crash hull cost |
+| 11 | Mech locomotion (physics owns travel) | accepted (headless) | vehicle-mech gate (6): stride↔travel lock, rig-never-moves-body, impact flinch |
+| 12 | Fleet catalog/status UI (honest per-capability states) | accepted (headless) | fleet-catalog-status gate (6); Asset Library renders the ledger |
 
 States: `todo · in-progress · accepted · blocked(reason)`.
 Never mark accepted on compilation alone — needs the story's playable/headless verification.
@@ -63,6 +63,43 @@ error 0u) → J exit restores character control. 0 page errors.
 - Fleet input remains keyboard/mouse only (pad/mobile unclaimed, as before).
 - No verified aircraft/rotor engine recordings (pre-existing; fleet-audio still wheeled-only).
 
+## GATE B — ACCEPTED (2026-09-15)
+Browser evidence in `artifacts/fleet-gate-b/`, harness `tools/fleet-gate-b-browser.mjs`.
+Three real BASE AA emplacements (team 0, hostile flyers only — the earlier no-missiles-at-the-
+player ruling holds) legitimately detected a hostile flyer, tracked within traverse limits,
+launched 2 actual missiles (ammo spent), guidance converged, 34.9 real HP of damage flowed
+through areaDamage. 0 page errors. Headless: 7-test aa-missile gate incl. a hard-jink MISS
+resolved through real geometry and destroyed-emplacement silence.
+
+## GATE C — per-vehicle handoff
+Final state: 198/198 across all 30 fleet suites; production build green; Gate A re-confirmed
+on the finished branch. Reproducible scenario for every accepted vehicle: dev server
+`npx vite --port 5193 --strictPort --host 127.0.0.1` → powerworld.html → select → Enter with
+squad → Shift+V → `PW.game.deployVehicleSim('<id>')` → J board. Controls are printed live by
+the fleet HUD (and derived in fleet-controls.js). Per-capability truth for EVERY catalog row is
+`fleetStatusTable()` (fleet-catalog-status.js) — rendered in the Asset Library — and it is the
+authoritative Gate C table: each vehicle's movement/camera/seats/weapon/damage/AI/animation/
+audio state with the gate that proved it and every honest gap.
+- tank: full loop + AI operation (Gate A). AI spawn: `PW.game.spawnAIVehicle('tank',{x,z},{team:1})`.
+- motorcycle/atv/hoverboard: open seat, visible posed rider, lean-follow; no weapon (stated).
+- helicopter: full control set incl. Q/E strafe + assisted hover + chin gun; audio honestly
+  silent until a recording is bound.
+- jet-a: playable envelope incl. recoverable stall + landing/rollout/takeoff + crash policy;
+  arcade/hybrid — no aerodynamic-simulation claim.
+- mech-light: locomotion law pinned (physics owns travel); terrain foot-IK open.
+- AA fixed + tower configs: genuine emplacements over the shared missile family.
+
+## Shared-interface changes needing mainline integration review
+- `vehicle-session.js` — the seat/ownership contract; FleetPilot routes through it. The scout/
+  aircraft/transport families still use their own enter/exit and SHOULD migrate next.
+- `canSee` gains a one-line fleet-hull exemption (a hull never hides its own crew).
+- `fighter-body-contact.solid()` now excludes `_fleetVehicle` occupants (was an oversight).
+- `stepWheeled` departure test is rate-aware; `terrain()` support = highest contact + rollable
+  grade (the contact/support conflict fix) — any external caller of driveActor inherits this.
+- `areaDamage` untouched; hulls ride the existing construct-splash loop.
+- The sim AA turrets are now REAL emplacements (team 0); `AA` in vehicle-sim.js keeps only
+  passive-tracking numbers.
+
 ## Blockers
 - **Push blocked**: no GitHub credentials on this machine (`gh auth login` not configured,
   terminal prompts disabled). All work is committed locally on `fleet/vehicle-combat`.
@@ -76,3 +113,9 @@ error 0u) → J exit restores character control. 0 page errors.
   layouts, player|ai source, death-inside + destroyed-vehicle release, one restore path).
   FleetPilot enter/exit/seat routed through it. fighter-body-contact solid() now excludes
   _fleetVehicle occupants (was an oversight vs scout/aircraft). Sweep 144/144.
+- 2026-09-15: stories 3–6 (turret aim, fire/ammo/reload, hull damage + perception, AI operator);
+  Gate A accepted in the browser (two real defects caught there: giant-hull map blanket, missing
+  launchCaster on the self-collision skip).
+- 2026-09-15: stories 7–12 (visible rider, helicopter completion, missile family + genuine AA →
+  Gate B browser-accepted, jet envelope, mech locomotion law, honest fleet ledger). Final:
+  198/198 across 30 suites, build green, Gate A re-confirmed on the finished branch.
