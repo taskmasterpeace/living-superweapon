@@ -1,0 +1,1192 @@
+{
+ "version": 1,
+ "mission": "War World death presentation set (Mac asset lab)",
+ "source": "public/models/modular-hero/warworld-motion-bank.json",
+ "calibration": {
+  "restForward": [
+   0,
+   0,
+   1
+  ],
+  "note": "forward derived from rest-pose toe direction; face classification from hips-frame belly axis vs world up"
+ },
+ "handoffRecommendations": {
+  "note": "Recommendations for the runtime death resolver; this lab does not change runtime ragdoll physics.",
+  "playClipFully": "Play the selected death clip to completion, then hand the final pose to settled physics.",
+  "blendMs": 120,
+  "maxAngularVelocityRadS": 6,
+  "settledLinearDamping": 0.92,
+  "settledAngularDamping": 0.95,
+  "groundedEndings": "Clips ending face-up/down at hips height < 0.35 can settle with minimal ragdoll energy (angular velocity clamp 2 rad/s).",
+  "airborneChain": "death.airborne.fall -> fall.loop (hold while airborne) -> impact on ground contact; hand off to ragdoll only after impact completes.",
+  "interruption": "If the body is displaced mid-clip (explosion, vehicle), abandon the clip and use full ragdoll from the current sampled pose."
+ },
+ "limitations": [
+  "Only two authored human deaths are on this machine; the 85-file Knockdown & Get-Up purchased pack (Windows PC, docs/PURCHASED_ANIMATION_INTAKE_2026-09-14.md) is required for the full 12-20 clip directional set.",
+  "Direction/face fields are computed from source motion on the actual rig, not yet visually accepted."
+ ],
+ "clips": [
+  {
+   "bankId": "ual1full/Death01",
+   "semantic": "death.a",
+   "take": "Death01",
+   "duration": 2.4000000953674316,
+   "context": "grounded",
+   "role": "death-or-down",
+   "pairedGetup": null,
+   "fall": {
+    "displacement": 0.46,
+    "angleDeg": 179.1,
+    "direction": "backward"
+   },
+   "endPose": {
+    "t": 2.4,
+    "hipsHeight": 0.063,
+    "headHeight": 0.165,
+    "bellyUpDot": 0.968,
+    "face": "up",
+    "keyBones": {
+     "DEF-hips": {
+      "position": [
+       0.01,
+       0.0627,
+       -0.5462
+      ],
+      "quaternion": [
+       -0.6264,
+       -0.0902,
+       0.0866,
+       0.7694
+      ]
+     },
+     "DEF-head": {
+      "position": [
+       0.002,
+       0.1654,
+       -1.1901
+      ],
+      "quaternion": [
+       -0.8178,
+       -0.1074,
+       0.0439,
+       0.5636
+      ]
+     },
+     "DEF-handL": {
+      "position": [
+       0.4059,
+       0.0304,
+       -1.3755
+      ],
+      "quaternion": [
+       -0.4767,
+       -0.523,
+       0.5806,
+       0.4026
+      ]
+     },
+     "DEF-handR": {
+      "position": [
+       -0.4874,
+       0.0544,
+       -1.591
+      ],
+      "quaternion": [
+       0.6668,
+       -0.5144,
+       0.3626,
+       -0.3991
+      ]
+     },
+     "DEF-footL": {
+      "position": [
+       0.222,
+       0.069,
+       0.2447
+      ],
+      "quaternion": [
+       0.4153,
+       -0.0703,
+       -0.184,
+       0.8881
+      ]
+     },
+     "DEF-footR": {
+      "position": [
+       -0.1679,
+       0.0816,
+       0.2215
+      ],
+      "quaternion": [
+       0.4353,
+       0.0519,
+       0.368,
+       0.82
+      ]
+     }
+    }
+   },
+   "phases": [
+    {
+     "t": 0,
+     "hipsHeight": 0.877,
+     "face": "upright"
+    },
+    {
+     "t": 0.6,
+     "hipsHeight": 0.667,
+     "face": "upright"
+    },
+    {
+     "t": 1.2,
+     "hipsHeight": 0.079,
+     "face": "up"
+    },
+    {
+     "t": 1.8,
+     "hipsHeight": 0.063,
+     "face": "up"
+    },
+    {
+     "t": 2.4,
+     "hipsHeight": 0.063,
+     "face": "up"
+    }
+   ],
+   "status": "source-mapped-unreviewed"
+  },
+  {
+   "bankId": "ual1full/Death02",
+   "semantic": "death.b",
+   "take": "Death02",
+   "duration": 2.4666666984558105,
+   "context": "grounded",
+   "role": "death-or-down",
+   "pairedGetup": null,
+   "fall": {
+    "displacement": 0.972,
+    "angleDeg": 0.2,
+    "direction": "forward"
+   },
+   "endPose": {
+    "t": 2.467,
+    "hipsHeight": 0.215,
+    "headHeight": 0.09,
+    "bellyUpDot": -0.986,
+    "face": "down",
+    "keyBones": {
+     "DEF-hips": {
+      "position": [
+       0.0061,
+       0.2151,
+       0.8858
+      ],
+      "quaternion": [
+       0.8291,
+       -0.0354,
+       -0.035,
+       0.5568
+      ]
+     },
+     "DEF-head": {
+      "position": [
+       0.0069,
+       0.0899,
+       1.5235
+      ],
+      "quaternion": [
+       0.6701,
+       0.3091,
+       0.2986,
+       0.6052
+      ]
+     },
+     "DEF-handL": {
+      "position": [
+       0.4333,
+       0.0345,
+       0.8667
+      ],
+      "quaternion": [
+       0.6422,
+       0.5286,
+       -0.4692,
+       -0.2967
+      ]
+     },
+     "DEF-handR": {
+      "position": [
+       -0.4222,
+       0.0525,
+       0.8757
+      ],
+      "quaternion": [
+       -0.537,
+       0.5759,
+       -0.5526,
+       0.2733
+      ]
+     },
+     "DEF-footL": {
+      "position": [
+       0.2206,
+       0.06,
+       0.0884
+      ],
+      "quaternion": [
+       -0.7407,
+       -0.2601,
+       0.1781,
+       0.5933
+      ]
+     },
+     "DEF-footR": {
+      "position": [
+       -0.2547,
+       0.0631,
+       0.117
+      ],
+      "quaternion": [
+       0.6951,
+       -0.4493,
+       0.4055,
+       -0.3878
+      ]
+     }
+    }
+   },
+   "phases": [
+    {
+     "t": 0,
+     "hipsHeight": 0.877,
+     "face": "upright"
+    },
+    {
+     "t": 0.617,
+     "hipsHeight": 0.369,
+     "face": "side"
+    },
+    {
+     "t": 1.233,
+     "hipsHeight": 0.297,
+     "face": "down"
+    },
+    {
+     "t": 1.85,
+     "hipsHeight": 0.229,
+     "face": "down"
+    },
+    {
+     "t": 2.467,
+     "hipsHeight": 0.215,
+     "face": "down"
+    }
+   ],
+   "status": "source-mapped-unreviewed"
+  },
+  {
+   "bankId": "ual2full/Hit_Knockback",
+   "semantic": "shared.knockdown.rear",
+   "take": "Hit_Knockback",
+   "duration": 0.8333333134651184,
+   "context": "grounded",
+   "role": "death-or-down",
+   "pairedGetup": "shared.getup.supine",
+   "fall": {
+    "displacement": 0.048,
+    "angleDeg": -175.2,
+    "direction": "in-place"
+   },
+   "endPose": {
+    "t": 0.833,
+    "hipsHeight": 0.057,
+    "headHeight": 0.147,
+    "bellyUpDot": 1,
+    "face": "up",
+    "keyBones": {
+     "DEF-hips": {
+      "position": [
+       0.0013,
+       0.0573,
+       -0.2322
+      ],
+      "quaternion": [
+       -0.6058,
+       -0.0115,
+       -0.0048,
+       0.7955
+      ]
+     },
+     "DEF-head": {
+      "position": [
+       0.0166,
+       0.147,
+       -0.8818
+      ],
+      "quaternion": [
+       -0.7676,
+       -0.0115,
+       -0.0047,
+       0.6408
+      ]
+     },
+     "DEF-handL": {
+      "position": [
+       0.3479,
+       -0.0025,
+       -0.2314
+      ],
+      "quaternion": [
+       -0.2539,
+       0.6928,
+       0.6495,
+       -0.1833
+      ]
+     },
+     "DEF-handR": {
+      "position": [
+       -0.4523,
+       0.0333,
+       -0.293
+      ],
+      "quaternion": [
+       -0.1397,
+       0.7421,
+       0.6257,
+       0.1955
+      ]
+     },
+     "DEF-footL": {
+      "position": [
+       0.2538,
+       0.0668,
+       0.5678
+      ],
+      "quaternion": [
+       0.4908,
+       0.0582,
+       -0.1256,
+       0.8602
+      ]
+     },
+     "DEF-footR": {
+      "position": [
+       -0.1618,
+       0.0665,
+       0.5614
+      ],
+      "quaternion": [
+       0.4501,
+       0.0869,
+       0.1175,
+       0.8809
+      ]
+     }
+    }
+   },
+   "phases": [
+    {
+     "t": 0,
+     "hipsHeight": 0.611,
+     "face": "upright"
+    },
+    {
+     "t": 0.208,
+     "hipsHeight": 0.436,
+     "face": "up"
+    },
+    {
+     "t": 0.417,
+     "hipsHeight": 0.061,
+     "face": "up"
+    },
+    {
+     "t": 0.625,
+     "hipsHeight": 0.056,
+     "face": "up"
+    },
+    {
+     "t": 0.833,
+     "hipsHeight": 0.057,
+     "face": "up"
+    }
+   ],
+   "status": "source-mapped-unreviewed"
+  },
+  {
+   "bankId": "ual2full/IdleToLay",
+   "semantic": "shared.collapse",
+   "take": "IdleToLay",
+   "duration": 3,
+   "context": "grounded",
+   "role": "death-or-down",
+   "pairedGetup": "shared.getup.supine",
+   "fall": {
+    "displacement": 0.153,
+    "angleDeg": -179.1,
+    "direction": "backward"
+   },
+   "endPose": {
+    "t": 3,
+    "hipsHeight": 0.044,
+    "headHeight": 0.091,
+    "bellyUpDot": 0.988,
+    "face": "up",
+    "keyBones": {
+     "DEF-hips": {
+      "position": [
+       0.0028,
+       0.0436,
+       -0.2392
+      ],
+      "quaternion": [
+       -0.6712,
+       0,
+       0,
+       0.7413
+      ]
+     },
+     "DEF-head": {
+      "position": [
+       0.0025,
+       0.0905,
+       -0.8918
+      ],
+      "quaternion": [
+       -0.6963,
+       0.0255,
+       -0.0024,
+       0.7173
+      ]
+     },
+     "DEF-handL": {
+      "position": [
+       0.3086,
+       0.0189,
+       -0.2082
+      ],
+      "quaternion": [
+       0.0449,
+       0.7724,
+       0.6301,
+       -0.0661
+      ]
+     },
+     "DEF-handR": {
+      "position": [
+       -0.3065,
+       0.0262,
+       -0.2445
+      ],
+      "quaternion": [
+       -0.3933,
+       0.6476,
+       0.6179,
+       -0.2098
+      ]
+     },
+     "DEF-footL": {
+      "position": [
+       0.1694,
+       0.0385,
+       0.5621
+      ],
+      "quaternion": [
+       0.524,
+       0.0033,
+       -0.1581,
+       0.8369
+      ]
+     },
+     "DEF-footR": {
+      "position": [
+       -0.089,
+       0.0618,
+       0.5553
+      ],
+      "quaternion": [
+       0.4842,
+       0.0015,
+       0.0668,
+       0.8724
+      ]
+     }
+    }
+   },
+   "phases": [
+    {
+     "t": 0,
+     "hipsHeight": 0.877,
+     "face": "upright"
+    },
+    {
+     "t": 0.75,
+     "hipsHeight": 0.845,
+     "face": "upright"
+    },
+    {
+     "t": 1.5,
+     "hipsHeight": 0.217,
+     "face": "side"
+    },
+    {
+     "t": 2.25,
+     "hipsHeight": 0.026,
+     "face": "up"
+    },
+    {
+     "t": 3,
+     "hipsHeight": 0.044,
+     "face": "up"
+    }
+   ],
+   "status": "source-mapped-unreviewed"
+  },
+  {
+   "bankId": "ual2full/LiftAir_Fall",
+   "semantic": "death.airborne.fall",
+   "take": "LiftAir_Fall",
+   "duration": 0.9333333373069763,
+   "context": "airborne",
+   "role": "death-or-down",
+   "pairedGetup": null,
+   "chain": "death.airborne.fall.loop -> death.airborne.impact",
+   "fall": {
+    "displacement": 0.121,
+    "angleDeg": -179,
+    "direction": "in-place"
+   },
+   "endPose": {
+    "t": 0.933,
+    "hipsHeight": 0.044,
+    "headHeight": 0.091,
+    "bellyUpDot": 0.988,
+    "face": "up",
+    "keyBones": {
+     "DEF-hips": {
+      "position": [
+       0.0028,
+       0.0436,
+       -0.2392
+      ],
+      "quaternion": [
+       -0.6712,
+       0,
+       0,
+       0.7413
+      ]
+     },
+     "DEF-head": {
+      "position": [
+       0.0025,
+       0.0905,
+       -0.8918
+      ],
+      "quaternion": [
+       -0.6963,
+       0.0255,
+       -0.0024,
+       0.7173
+      ]
+     },
+     "DEF-handL": {
+      "position": [
+       0.3086,
+       0.0189,
+       -0.2082
+      ],
+      "quaternion": [
+       0.0449,
+       0.7724,
+       0.6301,
+       -0.0661
+      ]
+     },
+     "DEF-handR": {
+      "position": [
+       -0.3065,
+       0.0262,
+       -0.2445
+      ],
+      "quaternion": [
+       -0.3933,
+       0.6477,
+       0.6179,
+       -0.2098
+      ]
+     },
+     "DEF-footL": {
+      "position": [
+       0.1694,
+       0.0385,
+       0.5621
+      ],
+      "quaternion": [
+       0.524,
+       0.0033,
+       -0.1581,
+       0.8369
+      ]
+     },
+     "DEF-footR": {
+      "position": [
+       -0.089,
+       0.0618,
+       0.5553
+      ],
+      "quaternion": [
+       0.4842,
+       0.0015,
+       0.0668,
+       0.8724
+      ]
+     }
+    }
+   },
+   "phases": [
+    {
+     "t": 0,
+     "hipsHeight": 0.883,
+     "face": "upright"
+    },
+    {
+     "t": 0.233,
+     "hipsHeight": 0.266,
+     "face": "up"
+    },
+    {
+     "t": 0.467,
+     "hipsHeight": 0.346,
+     "face": "up"
+    },
+    {
+     "t": 0.7,
+     "hipsHeight": 0.03,
+     "face": "up"
+    },
+    {
+     "t": 0.933,
+     "hipsHeight": 0.044,
+     "face": "up"
+    }
+   ],
+   "status": "source-mapped-unreviewed"
+  },
+  {
+   "bankId": "ual2full/LiftAir_Fall_Air_Loop",
+   "semantic": "death.airborne.fall.loop",
+   "take": "LiftAir_Fall_Air_Loop",
+   "duration": 1.2999999523162842,
+   "context": "airborne",
+   "role": "death-or-down",
+   "pairedGetup": null,
+   "fall": {
+    "displacement": 0,
+    "angleDeg": 0,
+    "direction": "in-place"
+   },
+   "endPose": {
+    "t": 1.3,
+    "hipsHeight": 0.172,
+    "headHeight": 0.644,
+    "bellyUpDot": 0.926,
+    "face": "up",
+    "keyBones": {
+     "DEF-hips": {
+      "position": [
+       0.0026,
+       0.1715,
+       -0.2257
+      ],
+      "quaternion": [
+       -0.457,
+       -0.0634,
+       0.0314,
+       0.8867
+      ]
+     },
+     "DEF-head": {
+      "position": [
+       0.007,
+       0.6436,
+       -0.646
+      ],
+      "quaternion": [
+       -0.2914,
+       -0.0606,
+       0.004,
+       0.9547
+      ]
+     },
+     "DEF-handL": {
+      "position": [
+       0.3788,
+       0.9064,
+       -0.2497
+      ],
+      "quaternion": [
+       0.0096,
+       0.9547,
+       0.1927,
+       -0.2264
+      ]
+     },
+     "DEF-handR": {
+      "position": [
+       -0.3239,
+       0.9909,
+       -0.5467
+      ],
+      "quaternion": [
+       -0.0134,
+       0.9303,
+       -0.0169,
+       0.3662
+      ]
+     },
+     "DEF-footL": {
+      "position": [
+       0.1886,
+       0.7315,
+       0.4119
+      ],
+      "quaternion": [
+       0.2162,
+       -0.0483,
+       0.0348,
+       0.9745
+      ]
+     },
+     "DEF-footR": {
+      "position": [
+       -0.2352,
+       0.8395,
+       0.2479
+      ],
+      "quaternion": [
+       0.0999,
+       -0.0971,
+       0.1331,
+       0.9813
+      ]
+     }
+    }
+   },
+   "phases": [
+    {
+     "t": 0,
+     "hipsHeight": 0.172,
+     "face": "up"
+    },
+    {
+     "t": 0.325,
+     "hipsHeight": 0.183,
+     "face": "up"
+    },
+    {
+     "t": 0.65,
+     "hipsHeight": 0.194,
+     "face": "up"
+    },
+    {
+     "t": 0.975,
+     "hipsHeight": 0.183,
+     "face": "up"
+    },
+    {
+     "t": 1.3,
+     "hipsHeight": 0.172,
+     "face": "up"
+    }
+   ],
+   "status": "source-mapped-unreviewed"
+  },
+  {
+   "bankId": "ual2full/LiftAir_Fall_Impact",
+   "semantic": "death.airborne.impact",
+   "take": "LiftAir_Fall_Impact",
+   "duration": 0.6666666865348816,
+   "context": "grounded-from-air",
+   "role": "death-or-down",
+   "pairedGetup": "shared.getup.supine",
+   "fall": {
+    "displacement": 0.014,
+    "angleDeg": 179.2,
+    "direction": "in-place"
+   },
+   "endPose": {
+    "t": 0.667,
+    "hipsHeight": 0.044,
+    "headHeight": 0.091,
+    "bellyUpDot": 0.988,
+    "face": "up",
+    "keyBones": {
+     "DEF-hips": {
+      "position": [
+       0.0028,
+       0.0436,
+       -0.2392
+      ],
+      "quaternion": [
+       -0.6712,
+       0,
+       0,
+       0.7413
+      ]
+     },
+     "DEF-head": {
+      "position": [
+       0.0025,
+       0.0905,
+       -0.8918
+      ],
+      "quaternion": [
+       -0.6963,
+       0.0255,
+       -0.0024,
+       0.7173
+      ]
+     },
+     "DEF-handL": {
+      "position": [
+       0.3086,
+       0.0189,
+       -0.2082
+      ],
+      "quaternion": [
+       0.0449,
+       0.7724,
+       0.6301,
+       -0.0661
+      ]
+     },
+     "DEF-handR": {
+      "position": [
+       -0.3065,
+       0.0262,
+       -0.2445
+      ],
+      "quaternion": [
+       -0.3933,
+       0.6477,
+       0.6179,
+       -0.2098
+      ]
+     },
+     "DEF-footL": {
+      "position": [
+       0.1694,
+       0.0385,
+       0.5621
+      ],
+      "quaternion": [
+       0.524,
+       0.0033,
+       -0.1581,
+       0.8369
+      ]
+     },
+     "DEF-footR": {
+      "position": [
+       -0.089,
+       0.0618,
+       0.5553
+      ],
+      "quaternion": [
+       0.4842,
+       0.0015,
+       0.0668,
+       0.8724
+      ]
+     }
+    }
+   },
+   "phases": [
+    {
+     "t": 0,
+     "hipsHeight": 0.172,
+     "face": "up"
+    },
+    {
+     "t": 0.167,
+     "hipsHeight": 0.162,
+     "face": "up"
+    },
+    {
+     "t": 0.333,
+     "hipsHeight": 0.16,
+     "face": "up"
+    },
+    {
+     "t": 0.5,
+     "hipsHeight": 0.041,
+     "face": "up"
+    },
+    {
+     "t": 0.667,
+     "hipsHeight": 0.044,
+     "face": "up"
+    }
+   ],
+   "status": "source-mapped-unreviewed"
+  },
+  {
+   "bankId": "ual2full/LayToIdle",
+   "semantic": "shared.getup.supine",
+   "take": "LayToIdle",
+   "duration": 1.5333333015441895,
+   "context": "grounded",
+   "role": "recovery",
+   "pairedGetup": null,
+   "fall": {
+    "displacement": 0.153,
+    "angleDeg": 0.9,
+    "direction": "forward"
+   },
+   "endPose": {
+    "t": 1.533,
+    "hipsHeight": 0.877,
+    "headHeight": 1.526,
+    "bellyUpDot": 0.093,
+    "face": "upright",
+    "keyBones": {
+     "DEF-hips": {
+      "position": [
+       0.0053,
+       0.8772,
+       -0.0865
+      ],
+      "quaternion": [
+       0.0789,
+       -0.1156,
+       0.0092,
+       0.9901
+      ]
+     },
+     "DEF-head": {
+      "position": [
+       -0.0178,
+       1.5256,
+       0.0099
+      ],
+      "quaternion": [
+       0.1367,
+       -0.0193,
+       0.0271,
+       0.99
+      ]
+     },
+     "DEF-handL": {
+      "position": [
+       0.3518,
+       0.8999,
+       0.0051
+      ],
+      "quaternion": [
+       -0.2973,
+       0.229,
+       0.9239,
+       -0.0746
+      ]
+     },
+     "DEF-handR": {
+      "position": [
+       -0.2934,
+       0.9364,
+       -0.1908
+      ],
+      "quaternion": [
+       0.0145,
+       0.2343,
+       0.9703,
+       0.0584
+      ]
+     },
+     "DEF-footL": {
+      "position": [
+       0.1952,
+       0.1031,
+       0.127
+      ],
+      "quaternion": [
+       0.8681,
+       -0.0248,
+       0.0426,
+       0.494
+      ]
+     },
+     "DEF-footR": {
+      "position": [
+       -0.1618,
+       0.1037,
+       -0.2673
+      ],
+      "quaternion": [
+       0.8069,
+       -0.1842,
+       0.3228,
+       0.4591
+      ]
+     }
+    }
+   },
+   "phases": [
+    {
+     "t": 0,
+     "hipsHeight": 0.044,
+     "face": "up"
+    },
+    {
+     "t": 0.383,
+     "hipsHeight": 0.025,
+     "face": "up"
+    },
+    {
+     "t": 0.767,
+     "hipsHeight": 0.323,
+     "face": "up"
+    },
+    {
+     "t": 1.15,
+     "hipsHeight": 0.538,
+     "face": "side"
+    },
+    {
+     "t": 1.533,
+     "hipsHeight": 0.877,
+     "face": "upright"
+    }
+   ],
+   "status": "source-mapped-unreviewed"
+  },
+  {
+   "bankId": "ual2full/KipUp",
+   "semantic": "shared.getup.kipup",
+   "take": "KipUp",
+   "duration": 1.1666666269302368,
+   "context": "grounded",
+   "role": "recovery",
+   "pairedGetup": null,
+   "fall": {
+    "displacement": 0.153,
+    "angleDeg": 0.9,
+    "direction": "forward"
+   },
+   "endPose": {
+    "t": 1.167,
+    "hipsHeight": 0.877,
+    "headHeight": 1.526,
+    "bellyUpDot": 0.093,
+    "face": "upright",
+    "keyBones": {
+     "DEF-hips": {
+      "position": [
+       0.0053,
+       0.8772,
+       -0.0865
+      ],
+      "quaternion": [
+       0.0789,
+       -0.1156,
+       0.0092,
+       0.9901
+      ]
+     },
+     "DEF-head": {
+      "position": [
+       -0.0178,
+       1.5256,
+       0.0099
+      ],
+      "quaternion": [
+       0.1367,
+       -0.0193,
+       0.0271,
+       0.99
+      ]
+     },
+     "DEF-handL": {
+      "position": [
+       0.3489,
+       0.8991,
+       0.0092
+      ],
+      "quaternion": [
+       -0.2392,
+       0.2245,
+       0.9419,
+       -0.0723
+      ]
+     },
+     "DEF-handR": {
+      "position": [
+       -0.2927,
+       0.9225,
+       -0.1888
+      ],
+      "quaternion": [
+       0.0186,
+       0.2522,
+       0.9638,
+       0.0848
+      ]
+     },
+     "DEF-footL": {
+      "position": [
+       0.1952,
+       0.1031,
+       0.127
+      ],
+      "quaternion": [
+       0.8681,
+       -0.0248,
+       0.0426,
+       0.494
+      ]
+     },
+     "DEF-footR": {
+      "position": [
+       -0.1618,
+       0.1037,
+       -0.2673
+      ],
+      "quaternion": [
+       0.8069,
+       -0.1842,
+       0.3228,
+       0.4591
+      ]
+     }
+    }
+   },
+   "phases": [
+    {
+     "t": 0,
+     "hipsHeight": 0.044,
+     "face": "up"
+    },
+    {
+     "t": 0.292,
+     "hipsHeight": 0.212,
+     "face": "up"
+    },
+    {
+     "t": 0.583,
+     "hipsHeight": 0.658,
+     "face": "upright"
+    },
+    {
+     "t": 0.875,
+     "hipsHeight": 0.801,
+     "face": "upright"
+    },
+    {
+     "t": 1.167,
+     "hipsHeight": 0.877,
+     "face": "upright"
+    }
+   ],
+   "status": "source-mapped-unreviewed"
+  }
+ ]
+}
