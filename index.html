@@ -1,36 +1,5 @@
 <!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8" />
-<!-- ⚠ `viewport-fit=cover` IS LOAD-BEARING, NOT DECORATION — same as index.html. Without it iOS
-     never reports a safe area and every `env(safe-area-inset-*)` in the touch layer resolves to
-     0px, on the exact devices those rules exist for. -->
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-<title>POWERWORLD</title>
-<!-- The stage's own sky over its own rock — the same two colours `STAGE.sky`/`STAGE.rock` paint the
-     dimension with, so the tab icon and the world cannot drift apart. -->
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%231b6ea6'/%3E%3Cpath d='M10 78 34 40l16 22 12-16 18 32z' fill='%23c1a07c'/%3E%3Ccircle cx='72' cy='24' r='10' fill='%23fff3d6'/%3E%3C/svg%3E" />
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet" />
-<!-- ⚠ THE SAME FOUR SHEETS index.html LINKS, in the same order. `shell.css` was MOVED out of
-     index.html's inline <style> precisely so this page could have the base page and the touch layer
-     without a second copy of them. Nothing here is duplicated; the PowerWorld front door styles
-     itself from engine/pwTitle.js. -->
-<link rel="stylesheet" href="/src/styles/tokens.css" />
-<link rel="stylesheet" href="/src/styles/overlays.css" />
-<link rel="stylesheet" href="/src/styles/comic.css" />
-<link rel="stylesheet" href="/src/styles/shell.css" />
-</head>
-<body>
-  <canvas id="game"></canvas>
-  <div id="hud"></div>
-  <!-- ⚠ #title STAYS, EMPTY, AND STARTS HIDDEN. The HUD constructor binds it and several shared
-       overlays call hide/showTitle on the way past, so removing it would be a null deref at boot.
-       But shell.css styles it as a full-viewport flex panel with a gradient and pointer-events:auto,
-       and PowerWorld never calls showTitle/hideTitle — its door is #pwTitle. Left at its CSS
-       default it covered the running match in a dark veil and ate every click. `display:none` here
-       kills it before first paint; engine/pwTitle.js repeats it defensively for any other mount. -->
-  <div id="title" style="display:none"></div>
-  <script type="module" src="/src/pw-main.js"></script>
-</body>
-</html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>War World: Acendents</title><link rel="stylesheet" href="/src/styles/entry-hub.css"></head>
+<body><main id="entry-hub"><header><span>WAR WORLD / ACENDENTS</span><a href="./powerworld.html">Character select & settings ↗</a></header><section class="hub-hero"><img src="./images/highwall/loading.png" alt="War World Acendents"><div><p class="eyebrow">PLAY · PRACTICE · CREATE</p><h1>Choose your<br>next deployment.</h1><p>One place for the battlefields, training rooms and tools already in this build.</p><a class="hub-primary" href="./powerworld.html?highwall&scenario=combined">Play Highwall <span>→</span></a><small>Combined arms · soldiers, vehicles and open routes</small></div></section>
+<section class="hub-section"><h2>Battlefields & training</h2><div class="hub-grid"><a href="./powerworld.html?highwall&scenario=combined"><img class="destination-thumb" src="./images/destinations/highwall.png" alt=""><span>HIGHWALL / COMBINED ARMS</span><h3>Highwall</h3><p>Soldiers, open terrain and connected combat routes.</p><b>Enter Highwall →</b></a><a href="./powerworld.html?destination=desert"><img class="destination-thumb" src="./images/destinations/desert.png" alt=""><span>01 / OPEN WORLD</span><h3>Frontline desert</h3><p>The existing canyon desert, outpost and open flight space.</p><b>Enter desert →</b></a><a href="./powerworld.html?destination=vehicle-sim"><img class="destination-thumb" src="./images/destinations/vehicle-sim.png" alt=""><span>02 / VEHICLE TERRAIN</span><h3>Vehicle proving ground</h3><p>The existing desert simulator: plateau, valley, basin and driving course.</p><b>Enter proving ground →</b></a><a href="./powerworld.html?destination=training"><img class="destination-thumb" src="./images/destinations/training.png" alt=""><span>03 / PRACTICE</span><h3>Threat Room</h3><p>Choose opponents, rehearse combat and use the training equipment.</p><b>Enter training →</b></a><a href="./citygame.html"><img class="destination-thumb" src="./images/destinations/city.png" alt=""><span>04 / CITY GAME</span><h3>War World city</h3><p>The preserved city game, career and registry.</p><b>Open city game →</b></a></div></section>
+<section class="hub-section"><h2>Create & inspect</h2><div class="hub-tools"><a href="./character-foundation.html">Character editor <small>Soldiers, heroes and humanoid robots</small></a><a href="./asset-library.html?collection=fleet">Fleet library <small>Ground, air, sea, mechs and drones</small></a><a href="./asset-library.html?collection=characters">Creature & construct tools <small>Dogs, creatures and DEC-52 bodies</small></a><a href="./studio.html">Power & motion studio <small>Character kit, flight and attack preview</small></a><a href="./asset-library.html?collection=equipment">Equipment library <small>Weapons, armor and attachments</small></a><a href="./authoring/viewer/index.html">Authored packages <small>Versioned bodies, motions and evidence</small></a></div></section><footer>Choose a destination to load its world. Local saves remain owned by their existing tools.</footer></main><script type="module" src="/src/entry-hub.js"></script></body></html>

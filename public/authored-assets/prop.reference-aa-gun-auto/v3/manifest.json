@@ -1,0 +1,226 @@
+{
+ "format": "pw-asset-package",
+ "formatVersion": 1,
+ "id": "prop.reference-aa-gun-auto",
+ "version": 3,
+ "kind": "prop",
+ "displayName": "Automatic anti-air gun",
+ "tags": [
+  "reference-fleet",
+  "defense"
+ ],
+ "rig": {
+  "skeleton": "none"
+ },
+ "sockets": [
+  {
+   "name": "aim",
+   "parent": "elevation",
+   "position": [
+    0,
+    0,
+    11.90671
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "muzzle-left",
+   "parent": "aa-barrel-left",
+   "position": [
+    0,
+    0,
+    11.49257
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "muzzle-right",
+   "parent": "aa-barrel-right",
+   "position": [
+    0,
+    0,
+    11.49257
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  }
+ ],
+ "bounds": {
+  "min": [
+   -8.38647,
+   0,
+   -8.38647
+  ],
+  "max": [
+   8.38647,
+   14.58915,
+   11.61353
+  ]
+ },
+ "materials": [
+  {
+   "name": "fleet-machine"
+  },
+  {
+   "name": "fleet-red"
+  },
+  {
+   "name": "fleet-rubber"
+  },
+  {
+   "name": "fleet-edge"
+  },
+  {
+   "name": "fleet-painted-parts"
+  },
+  {
+   "name": "fleet-armor"
+  }
+ ],
+ "lods": [
+  {
+   "level": 0,
+   "output": "model.glb",
+   "triangles": 1120
+  }
+ ],
+ "units": {
+  "lengthUnit": "game-unit",
+  "metersPerUnit": 0.19,
+  "up": "+Y",
+  "forward": "+Z",
+  "handedness": "right",
+  "sourceConversion": {
+   "scale": 1,
+   "yawDegrees": 0,
+   "mirrorX": false,
+   "sourceUp": "+Y",
+   "sourceForward": "+Z",
+   "note": "authored directly in game units along the engine weapon axis (-Y toward the muzzle)"
+  }
+ },
+ "budgets": {
+  "profile": "desktop",
+  "measured": {
+   "triangles": 1120,
+   "drawCalls": 17,
+   "materials": 6,
+   "bones": 0,
+   "textures": 0,
+   "bytes": 121404
+  },
+  "limits": {
+   "triangles": 67793,
+   "drawCalls": 32,
+   "materials": 9,
+   "bones": 1,
+   "textures": 4,
+   "bytes": 3170030
+  }
+ },
+ "structural": {
+  "validator": "2.0.0-dev.3.10",
+  "errors": 0,
+  "warnings": 0
+ },
+ "provenance": {
+  "author": "Machine King Labs",
+  "license": "proprietary",
+  "terms": "Original model geometry authored for this project from creator-supplied concept references; reference redistribution rights are not independently verified.",
+  "redistribution": "internal",
+  "attribution": "Creator-supplied September 12, 2026 concepts."
+ },
+ "source": {
+  "adapter": "procedural-prop@1",
+  "files": [
+   {
+    "path": "authoring/recipes/reference-fleet/models.js",
+    "sha256": "733ed5f40a1ece45f4158c181d53d1cedbad589935296d742cf35644ef68e4fa"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/logistics.js",
+    "sha256": "d116aeadf7b5a29fe4a5ba75d0aee556d69e82a59b4beefe65f3cf52f997b38f"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/condition.js",
+    "sha256": "f94437a742dbd31aa6f7ddb6e8f06b6d8cbb894ecdafeb86d0e3a44f41a4edfa"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/air-mobility.js",
+    "sha256": "778f8f67a4f9560fbe8ce38828766c385b7ce739eafda7d84eb652fe9b439f77"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/damage.js",
+    "sha256": "ae41fae99dd3ad7c87d41e1611e82e448c21f298c4a4b57840ab5b6d1635e956"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/defense.js",
+    "sha256": "b3e912db260966d8936526b89e678358f3376b4a32c090e097d1046f3f2c710a"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/mechs.js",
+    "sha256": "4aa82d05f85799cba45040e179b5215cded994d368d313f534b1cc3d19c574c4"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/drone-tank.js",
+    "sha256": "ffb9bc81e598700abce165ce4ee960d8a1d133d52fecba4ef9f80f6aa4d144ff"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/crew-interiors.js",
+    "sha256": "02be4c7f5afd5ff6fcfa7f32d1a0a1f97d2d437342243db58f50cf92cf3e9e98"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/spider-mine.js",
+    "sha256": "cfa4f246a18744c2dd9ee1418906d323a700c47e3a5ecfe333ad6ef33fc6c424"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/aa-gun-auto/model.js",
+    "sha256": "2ab6209fa57f97da9504ff5c8cebf34f55ffc9686911ea408df786291b24b51e"
+   }
+  ],
+  "recipe": {
+   "path": "authoring/recipes/reference-fleet/aa-gun-auto/recipe.json",
+   "sha256": "4df85d7aa3380293620b0cd60936ccfb74105db9ac3df434407f14d9afd369ae"
+  }
+ },
+ "tool": {
+  "name": "powerworld-authoring",
+  "version": "0.1.0",
+  "three": "0.169.0",
+  "adapterVersion": 1
+ },
+ "build": {
+  "options": {},
+  "cacheKey": "27ee658008386c2f6dfd452ff98d556c2cdc1767268dc3f414f9e2d56c617cb4",
+  "contentHash": "58751ab85452923a76b5d95dbd4263b5b3582361061b72e9b4cc92e20ee517fd",
+  "profile": "desktop"
+ },
+ "acceptance": {
+  "visual": "unapproved",
+  "blockers": [],
+  "note": "Twin cannon · tracking sensor · independent azimuth and elevation; model and scale candidate, no handling or live equipment integration."
+ },
+ "outputs": [
+  {
+   "path": "model.glb",
+   "role": "glb",
+   "sha256": "2b6f7e4af47f51d690b7421dd2d9de2586264f3b24773fcc90a33c2721eea732",
+   "bytes": 121404
+  }
+ ],
+ "packageHash": "b780f8b74f599dcb635aec6f07fad721a869ee5dc9b3822bf00e8f63cc8b0932"
+}

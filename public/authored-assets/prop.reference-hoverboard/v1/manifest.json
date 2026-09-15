@@ -1,0 +1,290 @@
+{
+ "format": "pw-asset-package",
+ "formatVersion": 1,
+ "id": "prop.reference-hoverboard",
+ "version": 1,
+ "kind": "prop",
+ "displayName": "Thrust hoverboard",
+ "tags": [
+  "reference-fleet",
+  "ground"
+ ],
+ "rig": {
+  "skeleton": "none"
+ },
+ "sockets": [
+  {
+   "name": "entry-rider",
+   "parent": "hoverboard",
+   "position": [
+    -4.88146,
+    0.16121,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "exhaust-left",
+   "parent": "hoverboard",
+   "position": [
+    -0.93883,
+    0.52157,
+    -4.38122
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "exhaust-right",
+   "parent": "hoverboard",
+   "position": [
+    0.93883,
+    0.52157,
+    -4.38122
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "foot-left",
+   "parent": "hoverboard",
+   "position": [
+    -0.41726,
+    1.14746,
+    1.82551
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "foot-right",
+   "parent": "hoverboard",
+   "position": [
+    0.41726,
+    1.14746,
+    -1.82551
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-torso-rider",
+   "parent": "socket-seat-rider",
+   "position": [
+    0,
+    2.52632,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "rider",
+   "parent": "hoverboard",
+   "position": [
+    0,
+    1.14746,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "seat-rider",
+   "parent": "socket-rider",
+   "position": [
+    0,
+    0,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  }
+ ],
+ "bounds": {
+  "min": [
+   -1.46041,
+   0,
+   -4.38122
+  ],
+  "max": [
+   1.46041,
+   1.25178,
+   4.30299
+  ]
+ },
+ "materials": [
+  {
+   "name": "fleet-armor"
+  },
+  {
+   "name": "fleet-machine"
+  },
+  {
+   "name": "fleet-red"
+  },
+  {
+   "name": "fleet-rubber"
+  },
+  {
+   "name": "fleet-edge"
+  }
+ ],
+ "lods": [
+  {
+   "level": 0,
+   "output": "model.glb",
+   "triangles": 360
+  }
+ ],
+ "units": {
+  "lengthUnit": "game-unit",
+  "metersPerUnit": 0.19,
+  "up": "+Y",
+  "forward": "+Z",
+  "handedness": "right",
+  "sourceConversion": {
+   "scale": 1,
+   "yawDegrees": 0,
+   "mirrorX": false,
+   "sourceUp": "+Y",
+   "sourceForward": "+Z",
+   "note": "authored directly in game units along the engine weapon axis (-Y toward the muzzle)"
+  }
+ },
+ "budgets": {
+  "profile": "desktop",
+  "measured": {
+   "triangles": 360,
+   "drawCalls": 5,
+   "materials": 5,
+   "bones": 0,
+   "textures": 0,
+   "bytes": 39752
+  },
+  "limits": {
+   "triangles": 67793,
+   "drawCalls": 32,
+   "materials": 9,
+   "bones": 1,
+   "textures": 4,
+   "bytes": 3170030
+  }
+ },
+ "structural": {
+  "validator": "2.0.0-dev.3.10",
+  "errors": 0,
+  "warnings": 0
+ },
+ "provenance": {
+  "author": "Machine King Labs",
+  "license": "proprietary",
+  "terms": "Original model geometry authored for this project from creator-supplied concept references; reference redistribution rights are not independently verified.",
+  "redistribution": "internal",
+  "attribution": "Creator-supplied September 12, 2026 concepts."
+ },
+ "source": {
+  "adapter": "procedural-prop@1",
+  "files": [
+   {
+    "path": "authoring/recipes/reference-fleet/models.js",
+    "sha256": "0beefc4fab0791c3f57e555487eb60530433a650c78ae63aaa684d0d6307ef6d"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/air-mobility.js",
+    "sha256": "9d27ce244b8c3b3f0660708f676017af70e4537314bc0a7e65562a09d6272f44"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/damage.js",
+    "sha256": "3de0a59c37abf35dd6538cef69e1e8c7e057dd357ad511da4565cbad12f8566a"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/defense.js",
+    "sha256": "b3e912db260966d8936526b89e678358f3376b4a32c090e097d1046f3f2c710a"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/mechs.js",
+    "sha256": "4aa82d05f85799cba45040e179b5215cded994d368d313f534b1cc3d19c574c4"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/drone-tank.js",
+    "sha256": "ffb9bc81e598700abce165ce4ee960d8a1d133d52fecba4ef9f80f6aa4d144ff"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/crew-interiors.js",
+    "sha256": "e869251a24b29f7ac0a3de2d7e9d37f290f5cb5fc0cd96d10ca8b60ce444dbc5"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/spider-mine.js",
+    "sha256": "cfa4f246a18744c2dd9ee1418906d323a700c47e3a5ecfe333ad6ef33fc6c424"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/hoverboard/model.js",
+    "sha256": "e3e20a1bbc0f6fe31b25aeb254b6843bbb32e2eef45af8f22504ad6c6190652e"
+   }
+  ],
+  "recipe": {
+   "path": "authoring/recipes/reference-fleet/hoverboard/recipe.json",
+   "sha256": "9b2c5901d6febecc670910cd5b97372efbd7d638af8fecbd4f8445f4d1e805db"
+  }
+ },
+ "tool": {
+  "name": "powerworld-authoring",
+  "version": "0.1.0",
+  "three": "0.169.0",
+  "adapterVersion": 1
+ },
+ "build": {
+  "options": {},
+  "cacheKey": "18457adf504219e1156d6865163b9f24d0b5f61d0f0d0d961bf63ea6e5477675",
+  "contentHash": "a6196379b86614a708d1931d940db5c6c71a282d5ee4c6f4656161e032f7ff00",
+  "profile": "desktop"
+ },
+ "acceptance": {
+  "visual": "unapproved",
+  "blockers": [],
+  "note": "Skating deck · two foot pads · rear thrust · standing rider mount; model and scale candidate, no handling or live equipment integration."
+ },
+ "outputs": [
+  {
+   "path": "model.glb",
+   "role": "glb",
+   "sha256": "029618a8f37cc619725b85a554dfe363939fed4c991ed0c10112b7b8322b0fdf",
+   "bytes": 39752
+  }
+ ],
+ "packageHash": "6db95bf075967e0499a19ab65870409fc6877ad2388dbedda4d78939623a887f"
+}

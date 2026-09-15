@@ -1,0 +1,282 @@
+{
+ "format": "pw-asset-package",
+ "formatVersion": 1,
+ "id": "prop.reference-motorcycle",
+ "version": 4,
+ "kind": "prop",
+ "displayName": "Pursuit motorcycle",
+ "tags": [
+  "reference-fleet",
+  "ground"
+ ],
+ "rig": {
+  "skeleton": "none"
+ },
+ "sockets": [
+  {
+   "name": "entry-rider",
+   "parent": "motorcycle",
+   "position": [
+    -5.49119,
+    0.52632,
+    -2.51561
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "grip-left",
+   "parent": "steering",
+   "position": [
+    -1.67707,
+    -0.20963,
+    -0.26204
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "grip-right",
+   "parent": "steering",
+   "position": [
+    1.67707,
+    -0.20963,
+    -0.26204
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-eye-rider",
+   "parent": "socket-seat-rider",
+   "position": [
+    0,
+    5,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-torso-rider",
+   "parent": "socket-seat-rider",
+   "position": [
+    0,
+    2.52632,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "rider",
+   "parent": "motorcycle",
+   "position": [
+    0,
+    5.08363,
+    -2.51561
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "seat-rider",
+   "parent": "socket-rider",
+   "position": [
+    0,
+    0,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  }
+ ],
+ "bounds": {
+  "min": [
+   -2.07014,
+   0,
+   -6.18421
+  ],
+  "max": [
+   2.07014,
+   6.60348,
+   6.18421
+  ]
+ },
+ "materials": [
+  {
+   "name": "fleet-rubber"
+  },
+  {
+   "name": "fleet-edge"
+  },
+  {
+   "name": "fleet-machine"
+  },
+  {
+   "name": "fleet-armor"
+  },
+  {
+   "name": "fleet-glass"
+  },
+  {
+   "name": "fleet-red"
+  }
+ ],
+ "lods": [
+  {
+   "level": 0,
+   "output": "model.glb",
+   "triangles": 788
+  }
+ ],
+ "units": {
+  "lengthUnit": "game-unit",
+  "metersPerUnit": 0.19,
+  "up": "+Y",
+  "forward": "+Z",
+  "handedness": "right",
+  "sourceConversion": {
+   "scale": 1,
+   "yawDegrees": 0,
+   "mirrorX": false,
+   "sourceUp": "+Y",
+   "sourceForward": "+Z",
+   "note": "authored directly in game units along the engine weapon axis (-Y toward the muzzle)"
+  }
+ },
+ "budgets": {
+  "profile": "desktop",
+  "measured": {
+   "triangles": 788,
+   "drawCalls": 12,
+   "materials": 6,
+   "bones": 0,
+   "textures": 0,
+   "bytes": 85408
+  },
+  "limits": {
+   "triangles": 67793,
+   "drawCalls": 32,
+   "materials": 9,
+   "bones": 1,
+   "textures": 4,
+   "bytes": 3170030
+  }
+ },
+ "structural": {
+  "validator": "2.0.0-dev.3.10",
+  "errors": 0,
+  "warnings": 0
+ },
+ "provenance": {
+  "author": "Machine King Labs",
+  "license": "proprietary",
+  "terms": "Original model geometry authored for this project from creator-supplied concept references; reference redistribution rights are not independently verified.",
+  "redistribution": "internal",
+  "attribution": "Creator-supplied September 12, 2026 concepts."
+ },
+ "source": {
+  "adapter": "procedural-prop@1",
+  "files": [
+   {
+    "path": "authoring/recipes/reference-fleet/models.js",
+    "sha256": "acea002e5973adac504ceb9ee76dabfcec9262f072cd91f99f95139b98b8ca4c"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/air-mobility.js",
+    "sha256": "1723470ed8c9c0a559f630b6e14f53951f3ff6f1cd2c75c2a34d159bc8a5365d"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/damage.js",
+    "sha256": "3de0a59c37abf35dd6538cef69e1e8c7e057dd357ad511da4565cbad12f8566a"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/defense.js",
+    "sha256": "b3e912db260966d8936526b89e678358f3376b4a32c090e097d1046f3f2c710a"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/mechs.js",
+    "sha256": "4aa82d05f85799cba45040e179b5215cded994d368d313f534b1cc3d19c574c4"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/drone-tank.js",
+    "sha256": "ffb9bc81e598700abce165ce4ee960d8a1d133d52fecba4ef9f80f6aa4d144ff"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/crew-interiors.js",
+    "sha256": "0e317fb067017f5a7b3b5de5337c4863250ac4e6f17630a7a997063089ed1761"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/spider-mine.js",
+    "sha256": "cfa4f246a18744c2dd9ee1418906d323a700c47e3a5ecfe333ad6ef33fc6c424"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/motorcycle/model.js",
+    "sha256": "2bd2d3a2d63095bed37fae28421ce412380bcc6572f58ac9291f8fbede3f314f"
+   },
+   {
+    "path": "assets-src/reference-fleet/references/5.webp",
+    "sha256": "8480a974b32c003df106d0145cbf61beec69750cf15a4fda154f4eaae945c1d7"
+   }
+  ],
+  "recipe": {
+   "path": "authoring/recipes/reference-fleet/motorcycle/recipe.json",
+   "sha256": "6565165fc3a78df568726226fb6d17502333c75434eab7cb473a84f7592a54f2"
+  }
+ },
+ "tool": {
+  "name": "powerworld-authoring",
+  "version": "0.1.0",
+  "three": "0.169.0",
+  "adapterVersion": 1
+ },
+ "build": {
+  "options": {},
+  "cacheKey": "f11857d8129f8c4106e00df4063384f6ea065e27e6b0c1da1fad4c39845e2804",
+  "contentHash": "66f20beeb40c5f558c6c308e6208587f1955184ab35226d0cb39b2d3a7e9935e",
+  "profile": "desktop"
+ },
+ "acceptance": {
+  "visual": "unapproved",
+  "blockers": [],
+  "note": "Sport fairing · low clip-ons · raised tail · wide rear tire; model and scale candidate, no handling or live equipment integration."
+ },
+ "outputs": [
+  {
+   "path": "model.glb",
+   "role": "glb",
+   "sha256": "2ec3ebb5d30343bcb5d01087f8061a38e7e6648b0656db884a70567463772a54",
+   "bytes": 85408
+  }
+ ],
+ "packageHash": "d9a2e15543cad3b2c6f46d08b5b83fff1408ae2bcafafcb6f6ae553ebbf5cec2"
+}

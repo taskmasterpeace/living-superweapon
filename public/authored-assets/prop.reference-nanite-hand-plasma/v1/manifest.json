@@ -1,0 +1,216 @@
+{
+ "format": "pw-asset-package",
+ "formatVersion": 1,
+ "id": "prop.reference-nanite-hand-plasma",
+ "version": 1,
+ "kind": "prop",
+ "displayName": "Nanite hand · plasma cannon",
+ "tags": [
+  "reference-fleet",
+  "equipment"
+ ],
+ "rig": {
+  "skeleton": "none"
+ },
+ "sockets": [
+  {
+   "name": "module-mount",
+   "parent": "nanite-hand-plasma",
+   "position": [
+    0,
+    0.57185,
+    -1.01769
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "weapon-tip",
+   "parent": "nanite-hand-plasma",
+   "position": [
+    0,
+    0.57185,
+    1.26
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  }
+ ],
+ "bounds": {
+  "min": [
+   -0.57185,
+   0,
+   -1.01769
+  ],
+  "max": [
+   0.57185,
+   1.14369,
+   1.24546
+  ]
+ },
+ "materials": [
+  {
+   "name": "fleet-painted-parts"
+  }
+ ],
+ "lods": [
+  {
+   "level": 0,
+   "output": "model.glb",
+   "triangles": 140
+  }
+ ],
+ "units": {
+  "lengthUnit": "game-unit",
+  "metersPerUnit": 0.19,
+  "up": "+Y",
+  "forward": "+Z",
+  "handedness": "right",
+  "sourceConversion": {
+   "scale": 1,
+   "yawDegrees": 0,
+   "mirrorX": false,
+   "sourceUp": "+Y",
+   "sourceForward": "+Z",
+   "note": "authored directly in game units along the engine weapon axis (-Y toward the muzzle)"
+  }
+ },
+ "budgets": {
+  "profile": "desktop",
+  "measured": {
+   "triangles": 140,
+   "drawCalls": 1,
+   "materials": 1,
+   "bones": 0,
+   "textures": 0,
+   "bytes": 20060
+  },
+  "limits": {
+   "triangles": 67793,
+   "drawCalls": 32,
+   "materials": 9,
+   "bones": 1,
+   "textures": 4,
+   "bytes": 3170030
+  }
+ },
+ "structural": {
+  "validator": "2.0.0-dev.3.10",
+  "errors": 0,
+  "warnings": 0
+ },
+ "provenance": {
+  "author": "Machine King Labs",
+  "license": "proprietary",
+  "terms": "Original model geometry authored for this project from creator-supplied concept references; reference redistribution rights are not independently verified.",
+  "redistribution": "internal",
+  "attribution": "Creator-supplied September 12, 2026 concepts."
+ },
+ "source": {
+  "adapter": "procedural-prop@1",
+  "files": [
+   {
+    "path": "authoring/recipes/reference-fleet/nanite-robots.js",
+    "sha256": "51b227a8cec591b8c1fc487c59bea448dad229285a57a20abe015398496db92d"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/static-batch.js",
+    "sha256": "a5f089984d2ecd7c1f7629ca54774358795581652fce0614e6f759687e3fde55"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/expedition.js",
+    "sha256": "6f63f1b21a2f9f4f5dee888687f72a9980c164fd5c39e3681df434e91eb8f6a1"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/nanite-forms.js",
+    "sha256": "d883d81b0562ae1b7cf592f6fbab0644867eefcbfc9dfedb2c42bfa4aa210c72"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/models.js",
+    "sha256": "00c333656a622be95c1f15b0a01972f6702cec862913c3bc764659185d7e3056"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/logistics.js",
+    "sha256": "63757f47844ba6c567174bccd2e682471031eb5ed68b6b71fe9893a1beef537d"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/ordnance.js",
+    "sha256": "ab2369438732b8cf9036d2645705dd15c0eb77ccfef7b72212bd41039c805372"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/condition.js",
+    "sha256": "ab8180853faf5c8bb13470a82a84c806f54b96993c7b1806cf562d7fd9754f67"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/air-mobility.js",
+    "sha256": "778f8f67a4f9560fbe8ce38828766c385b7ce739eafda7d84eb652fe9b439f77"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/damage.js",
+    "sha256": "0c34abc49ebe1feacfbe9ef6cc1f850ea12cab5bf5dbcfb7ecef54976a7affef"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/defense.js",
+    "sha256": "b3e912db260966d8936526b89e678358f3376b4a32c090e097d1046f3f2c710a"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/mechs.js",
+    "sha256": "4aa82d05f85799cba45040e179b5215cded994d368d313f534b1cc3d19c574c4"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/drone-tank.js",
+    "sha256": "ffb9bc81e598700abce165ce4ee960d8a1d133d52fecba4ef9f80f6aa4d144ff"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/crew-interiors.js",
+    "sha256": "0048d0e741b0d7a7704e8fccd13cc53c6b4b298f5bd26704489f8aa57474802d"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/spider-mine.js",
+    "sha256": "cfa4f246a18744c2dd9ee1418906d323a700c47e3a5ecfe333ad6ef33fc6c424"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/nanite-hand-plasma/model.js",
+    "sha256": "dfdbb5da2eab64659e2f277f03ce1b14305869c02e8329e7c4f42ec7185285a9"
+   }
+  ],
+  "recipe": {
+   "path": "authoring/recipes/reference-fleet/nanite-hand-plasma/recipe.json",
+   "sha256": "4b7bdfa190a0910ff8318e33f13590bf3114766995c4f4c7c5363d747785b7ea"
+  }
+ },
+ "tool": {
+  "name": "powerworld-authoring",
+  "version": "0.1.0",
+  "three": "0.169.0",
+  "adapterVersion": 1
+ },
+ "build": {
+  "options": {},
+  "cacheKey": "dac6d0a368417b4c40a5fe40742ebe759e69c843180823e35f52cd6f96de3367",
+  "contentHash": "7de1460d2561f67539a7ce148067eed7460d394b897f1c8f691d72b538106bb7",
+  "profile": "desktop"
+ },
+ "acceptance": {
+  "visual": "unapproved",
+  "blockers": [],
+  "note": "Reforming wrist module · contained energy aperture · burst muzzle; model and scale candidate, no handling or live equipment integration."
+ },
+ "outputs": [
+  {
+   "path": "model.glb",
+   "role": "glb",
+   "sha256": "35e2f6e32f3531e2b5f2e0ae8a7c6153c0659075d0ae73211fc2415f2eaef81e",
+   "bytes": 20060
+  }
+ ],
+ "packageHash": "0f3b463d021f2fb99d03c98f2d8ef7b048f6ab7c751a24836a6522a0d28920d2"
+}

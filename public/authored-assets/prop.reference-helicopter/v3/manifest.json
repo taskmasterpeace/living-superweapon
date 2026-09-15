@@ -1,0 +1,566 @@
+{
+ "format": "pw-asset-package",
+ "formatVersion": 1,
+ "id": "prop.reference-helicopter",
+ "version": 3,
+ "kind": "prop",
+ "displayName": "Attack helicopter",
+ "tags": [
+  "reference-fleet",
+  "aircraft"
+ ],
+ "rig": {
+  "skeleton": "none"
+ },
+ "sockets": [
+  {
+   "name": "exhaust-left-large",
+   "parent": "store-left-large",
+   "position": [
+    0,
+    0,
+    -6.44211
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "exhaust-left-small",
+   "parent": "store-left-small",
+   "position": [
+    0,
+    0,
+    -2.55
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "exhaust-left-small-2",
+   "parent": "store-left-small-2",
+   "position": [
+    0,
+    0,
+    -2.55
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "exhaust-right-large",
+   "parent": "store-right-large",
+   "position": [
+    0,
+    0,
+    -6.44211
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "exhaust-right-small",
+   "parent": "store-right-small",
+   "position": [
+    0,
+    0,
+    -2.55
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "exhaust-right-small-2",
+   "parent": "store-right-small-2",
+   "position": [
+    0,
+    0,
+    -2.55
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "gunner",
+   "parent": "helicopter",
+   "position": [
+    0,
+    6.24612,
+    9.28477
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "hardpoint-left-large",
+   "parent": "helicopter",
+   "position": [
+    -8.4407,
+    3.09492,
+    -2.81357
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "hardpoint-left-small",
+   "parent": "helicopter",
+   "position": [
+    -12.66105,
+    3.65764,
+    -3.93899
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "hardpoint-left-small-2",
+   "parent": "helicopter",
+   "position": [
+    -14.63055,
+    3.65764,
+    -3.93899
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "hardpoint-right-large",
+   "parent": "helicopter",
+   "position": [
+    8.4407,
+    3.09492,
+    -2.81357
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "hardpoint-right-small",
+   "parent": "helicopter",
+   "position": [
+    12.66105,
+    3.65764,
+    -3.93899
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "hardpoint-right-small-2",
+   "parent": "helicopter",
+   "position": [
+    14.63055,
+    3.65764,
+    -3.93899
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "mount-left-large",
+   "parent": "store-left-large",
+   "position": [
+    0,
+    -0.82105,
+    -0.63158
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "mount-left-small",
+   "parent": "store-left-small",
+   "position": [
+    0,
+    -0.325,
+    -0.25
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "mount-left-small-2",
+   "parent": "store-left-small-2",
+   "position": [
+    0,
+    -0.325,
+    -0.25
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "mount-right-large",
+   "parent": "store-right-large",
+   "position": [
+    0,
+    -0.82105,
+    -0.63158
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "mount-right-small",
+   "parent": "store-right-small",
+   "position": [
+    0,
+    -0.325,
+    -0.25
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "mount-right-small-2",
+   "parent": "store-right-small-2",
+   "position": [
+    0,
+    -0.325,
+    -0.25
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "muzzle",
+   "parent": "gun",
+   "position": [
+    0,
+    -0.22509,
+    4.33289
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "nose-left-large",
+   "parent": "store-left-large",
+   "position": [
+    0,
+    0,
+    6.31579
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "nose-left-small",
+   "parent": "store-left-small",
+   "position": [
+    0,
+    0,
+    2.5
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "nose-left-small-2",
+   "parent": "store-left-small-2",
+   "position": [
+    0,
+    0,
+    2.5
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "nose-right-large",
+   "parent": "store-right-large",
+   "position": [
+    0,
+    0,
+    6.31579
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "nose-right-small",
+   "parent": "store-right-small",
+   "position": [
+    0,
+    0,
+    2.5
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "nose-right-small-2",
+   "parent": "store-right-small-2",
+   "position": [
+    0,
+    0,
+    2.5
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "pilot",
+   "parent": "helicopter",
+   "position": [
+    0,
+    9.05969,
+    0.84407
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  }
+ ],
+ "bounds": {
+  "min": [
+   -25.20957,
+   0,
+   -44.4825
+  ],
+  "max": [
+   25.20957,
+   18.0631,
+   21.83328
+  ]
+ },
+ "materials": [
+  {
+   "name": "fleet-painted-parts"
+  },
+  {
+   "name": "fleet-machine"
+  },
+  {
+   "name": "fleet-armor"
+  },
+  {
+   "name": "fleet-glass"
+  },
+  {
+   "name": "fleet-rubber"
+  },
+  {
+   "name": "fleet-red"
+  }
+ ],
+ "lods": [
+  {
+   "level": 0,
+   "output": "model.glb",
+   "triangles": 2488
+  }
+ ],
+ "units": {
+  "lengthUnit": "game-unit",
+  "metersPerUnit": 0.19,
+  "up": "+Y",
+  "forward": "+Z",
+  "handedness": "right",
+  "sourceConversion": {
+   "scale": 1,
+   "yawDegrees": 0,
+   "mirrorX": false,
+   "sourceUp": "+Y",
+   "sourceForward": "+Z",
+   "note": "authored directly in game units along the engine weapon axis (-Y toward the muzzle)"
+  }
+ },
+ "budgets": {
+  "profile": "desktop",
+  "measured": {
+   "triangles": 2488,
+   "drawCalls": 22,
+   "materials": 6,
+   "bones": 0,
+   "textures": 0,
+   "bytes": 316124
+  },
+  "limits": {
+   "triangles": 67793,
+   "drawCalls": 32,
+   "materials": 9,
+   "bones": 1,
+   "textures": 4,
+   "bytes": 3170030
+  }
+ },
+ "structural": {
+  "validator": "2.0.0-dev.3.10",
+  "errors": 0,
+  "warnings": 0
+ },
+ "provenance": {
+  "author": "Machine King Labs",
+  "license": "proprietary",
+  "terms": "Original model geometry authored for this project from creator-supplied concept references; reference redistribution rights are not independently verified.",
+  "redistribution": "internal",
+  "attribution": "Creator-supplied September 12, 2026 concepts."
+ },
+ "source": {
+  "adapter": "procedural-prop@1",
+  "files": [
+   {
+    "path": "authoring/recipes/reference-fleet/models.js",
+    "sha256": "2be6dcd8c4b479ad8648d954595c988c006c8cf53a065c973fd3fdee74fbe8a5"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/damage.js",
+    "sha256": "3de0a59c37abf35dd6538cef69e1e8c7e057dd357ad511da4565cbad12f8566a"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/defense.js",
+    "sha256": "b3e912db260966d8936526b89e678358f3376b4a32c090e097d1046f3f2c710a"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/mechs.js",
+    "sha256": "429c45318b6d89baa2e6df619ea4fe738aa8667d9281c130bca013527d26a6dc"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/spider-mine.js",
+    "sha256": "cfa4f246a18744c2dd9ee1418906d323a700c47e3a5ecfe333ad6ef33fc6c424"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/helicopter/model.js",
+    "sha256": "073c8e600641ff724be7ffc703fce5b131364886958f2b36241b567183a3b9ba"
+   }
+  ],
+  "recipe": {
+   "path": "authoring/recipes/reference-fleet/helicopter/recipe.json",
+   "sha256": "237285744ca1a9fbb023f7a1e6bc40c3fefab3aed8e01250d746397e28ef3ae1"
+  }
+ },
+ "tool": {
+  "name": "powerworld-authoring",
+  "version": "0.1.0",
+  "three": "0.169.0",
+  "adapterVersion": 1
+ },
+ "build": {
+  "options": {},
+  "cacheKey": "42d7b06121698e9aafe4a7e7d1cb919e167daddb8a054431a8217eacfd5c59f8",
+  "contentHash": "b7b194ccfedda3eb4705bc623d3a9da523ebf83d2f8e0de85368c092f333714c",
+  "profile": "desktop"
+ },
+ "acceptance": {
+  "visual": "unapproved",
+  "blockers": [],
+  "note": "Tandem canopy · four-blade rotor · tail rotor · missile stub wings; model and scale candidate, no handling or live equipment integration."
+ },
+ "outputs": [
+  {
+   "path": "model.glb",
+   "role": "glb",
+   "sha256": "cfb7d2501eaf147c7669fe097a65d33f8fb42b4ef8ca28b59a16f37bce4ceb6e",
+   "bytes": 316124
+  }
+ ],
+ "packageHash": "2d32e99146aa98f06d29f938d95898b6c9a08e141b674a351e7e769ed8df58fb"
+}

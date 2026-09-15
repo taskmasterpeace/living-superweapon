@@ -1,0 +1,212 @@
+{
+ "format": "pw-asset-package",
+ "formatVersion": 1,
+ "id": "prop.reference-strategic-launcher-destroyed",
+ "version": 2,
+ "kind": "prop",
+ "displayName": "Strategic missile launcher · destroyed",
+ "tags": [
+  "reference-fleet",
+  "defense"
+ ],
+ "rig": {
+  "skeleton": "none"
+ },
+ "sockets": [
+  {
+   "name": "strategic-launch-axis",
+   "parent": "strategic-erector",
+   "position": [
+    0,
+    9.21053,
+    115.78947
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "strategic-store",
+   "parent": "strategic-erector",
+   "position": [
+    0,
+    9.21053,
+    57.89474
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  }
+ ],
+ "bounds": {
+  "min": [
+   -28.94737,
+   0,
+   -68.42105
+  ],
+  "max": [
+   28.94737,
+   18.94737,
+   68.42105
+  ]
+ },
+ "materials": [
+  {
+   "name": "condition-destroyed-fleet-painted-parts"
+  }
+ ],
+ "lods": [
+  {
+   "level": 0,
+   "output": "model.glb",
+   "triangles": 276
+  }
+ ],
+ "units": {
+  "lengthUnit": "game-unit",
+  "metersPerUnit": 0.19,
+  "up": "+Y",
+  "forward": "+Z",
+  "handedness": "right",
+  "sourceConversion": {
+   "scale": 1,
+   "yawDegrees": 0,
+   "mirrorX": false,
+   "sourceUp": "+Y",
+   "sourceForward": "+Z",
+   "note": "authored directly in game units along the engine weapon axis (-Y toward the muzzle)"
+  }
+ },
+ "budgets": {
+  "profile": "desktop",
+  "measured": {
+   "triangles": 276,
+   "drawCalls": 2,
+   "materials": 1,
+   "bones": 0,
+   "textures": 0,
+   "bytes": 39488
+  },
+  "limits": {
+   "triangles": 67793,
+   "drawCalls": 32,
+   "materials": 9,
+   "bones": 1,
+   "textures": 4,
+   "bytes": 3170030
+  }
+ },
+ "structural": {
+  "validator": "2.0.0-dev.3.10",
+  "errors": 0,
+  "warnings": 0
+ },
+ "provenance": {
+  "author": "Machine King Labs",
+  "license": "proprietary",
+  "terms": "Original model geometry authored for this project from creator-supplied concept references; reference redistribution rights are not independently verified.",
+  "redistribution": "internal",
+  "attribution": "Creator-supplied September 12, 2026 concepts."
+ },
+ "source": {
+  "adapter": "procedural-prop@1",
+  "files": [
+   {
+    "path": "authoring/recipes/reference-fleet/static-batch.js",
+    "sha256": "a5f089984d2ecd7c1f7629ca54774358795581652fce0614e6f759687e3fde55"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/expedition.js",
+    "sha256": "6f63f1b21a2f9f4f5dee888687f72a9980c164fd5c39e3681df434e91eb8f6a1"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/nanite-forms.js",
+    "sha256": "16095e80dcea845fcbd30f91886fa2b94f580dea9feeb7dcc56ad43e7fffd8c1"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/models.js",
+    "sha256": "ef10bf960fb10877ceb5a1ec50124e5029dff4569c3fc840aff0aa5ee2747b43"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/logistics.js",
+    "sha256": "63757f47844ba6c567174bccd2e682471031eb5ed68b6b71fe9893a1beef537d"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/ordnance.js",
+    "sha256": "ab2369438732b8cf9036d2645705dd15c0eb77ccfef7b72212bd41039c805372"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/condition.js",
+    "sha256": "ab8180853faf5c8bb13470a82a84c806f54b96993c7b1806cf562d7fd9754f67"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/air-mobility.js",
+    "sha256": "778f8f67a4f9560fbe8ce38828766c385b7ce739eafda7d84eb652fe9b439f77"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/damage.js",
+    "sha256": "0c34abc49ebe1feacfbe9ef6cc1f850ea12cab5bf5dbcfb7ecef54976a7affef"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/defense.js",
+    "sha256": "b3e912db260966d8936526b89e678358f3376b4a32c090e097d1046f3f2c710a"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/mechs.js",
+    "sha256": "4aa82d05f85799cba45040e179b5215cded994d368d313f534b1cc3d19c574c4"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/drone-tank.js",
+    "sha256": "ffb9bc81e598700abce165ce4ee960d8a1d133d52fecba4ef9f80f6aa4d144ff"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/crew-interiors.js",
+    "sha256": "0048d0e741b0d7a7704e8fccd13cc53c6b4b298f5bd26704489f8aa57474802d"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/spider-mine.js",
+    "sha256": "cfa4f246a18744c2dd9ee1418906d323a700c47e3a5ecfe333ad6ef33fc6c424"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/strategic-launcher-destroyed/model.js",
+    "sha256": "0621367d1556805bb8bbceba6c4c438a30c5a949f608b6629835c081ab0e9b82"
+   }
+  ],
+  "recipe": {
+   "path": "authoring/recipes/reference-fleet/strategic-launcher-destroyed/recipe.json",
+   "sha256": "873f580a41e2b1ab5ae3f6b9a900cac4487f87983e3d3f208221ef8a6b496c5b"
+  }
+ },
+ "tool": {
+  "name": "powerworld-authoring",
+  "version": "0.1.0",
+  "three": "0.169.0",
+  "adapterVersion": 1
+ },
+ "build": {
+  "options": {},
+  "cacheKey": "d7130a5cab585be5af437b86bfe892568a4750049fe58147dd95c02dd8f32955",
+  "contentHash": "14f9cd3bb1d1b4a021c7c18a2be1135a13c2e62207ce0025510d82ea726b39b5",
+  "profile": "desktop"
+ },
+ "acceptance": {
+  "visual": "unapproved",
+  "blockers": [],
+  "note": "Elevating launch rail · full-size long-range missile · vertical launch preview; model and scale candidate, no handling or live equipment integration."
+ },
+ "outputs": [
+  {
+   "path": "model.glb",
+   "role": "glb",
+   "sha256": "69a37640f2e2bd25cb022281c76aa429476a54b8569031d6f06ee4e3b7f531fa",
+   "bytes": 39488
+  }
+ ],
+ "packageHash": "25874f752c517ea0a3a5987da327e85cfda56df8950fa78f19a20adf2ddeabc0"
+}

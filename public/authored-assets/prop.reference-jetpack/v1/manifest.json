@@ -1,0 +1,185 @@
+{
+ "format": "pw-asset-package",
+ "formatVersion": 1,
+ "id": "prop.reference-jetpack",
+ "version": 1,
+ "kind": "prop",
+ "displayName": "Jetpack",
+ "tags": [
+  "reference-fleet",
+  "equipment"
+ ],
+ "rig": {
+  "skeleton": "none"
+ },
+ "sockets": [
+  {
+   "name": "exhaust-left",
+   "parent": "jetpack",
+   "position": [
+    -1.35909,
+    0,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "exhaust-right",
+   "parent": "jetpack",
+   "position": [
+    1.35909,
+    0,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "torso-mount",
+   "parent": "jetpack",
+   "position": [
+    0,
+    2.13191,
+    0.74617
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  }
+ ],
+ "bounds": {
+  "min": [
+   -1.8521,
+   0,
+   -0.79947
+  ],
+  "max": [
+   1.8521,
+   4.21053,
+   1.77974
+  ]
+ },
+ "materials": [
+  {
+   "name": "fleet-armor"
+  },
+  {
+   "name": "fleet-red"
+  },
+  {
+   "name": "fleet-machine"
+  }
+ ],
+ "lods": [
+  {
+   "level": 0,
+   "output": "model.glb",
+   "triangles": 320
+  }
+ ],
+ "units": {
+  "lengthUnit": "game-unit",
+  "metersPerUnit": 0.19,
+  "up": "+Y",
+  "forward": "+Z",
+  "handedness": "right",
+  "sourceConversion": {
+   "scale": 1,
+   "yawDegrees": 0,
+   "mirrorX": false,
+   "sourceUp": "+Y",
+   "sourceForward": "+Z",
+   "note": "authored directly in game units along the engine weapon axis (-Y toward the muzzle)"
+  }
+ },
+ "budgets": {
+  "profile": "desktop",
+  "measured": {
+   "triangles": 320,
+   "drawCalls": 3,
+   "materials": 3,
+   "bones": 0,
+   "textures": 0,
+   "bytes": 33780
+  },
+  "limits": {
+   "triangles": 67793,
+   "drawCalls": 32,
+   "materials": 9,
+   "bones": 1,
+   "textures": 4,
+   "bytes": 3170030
+  }
+ },
+ "structural": {
+  "validator": "2.0.0-dev.3.10",
+  "errors": 0,
+  "warnings": 0
+ },
+ "provenance": {
+  "author": "Machine King Labs",
+  "license": "proprietary",
+  "terms": "Original model geometry authored for this project from creator-supplied concept references; reference redistribution rights are not independently verified.",
+  "redistribution": "internal",
+  "attribution": "Creator-supplied September 12, 2026 concepts."
+ },
+ "source": {
+  "adapter": "procedural-prop@1",
+  "files": [
+   {
+    "path": "authoring/recipes/reference-fleet/models.js",
+    "sha256": "f4a8666473a2739182a785434489623a126b2fb48618733465c5448b79992fe4"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/jetpack/model.js",
+    "sha256": "6606a73690513e5a2b10fa3dd9dd06e2a5726f10baa6b0094f668c7a5d844a9a"
+   },
+   {
+    "path": "assets-src/reference-fleet/references/8.webp",
+    "sha256": "dab1503da4346dd66e4619a0a0b9595d53c87d4a1a04949f066561e50e482cb6"
+   }
+  ],
+  "recipe": {
+   "path": "authoring/recipes/reference-fleet/jetpack/recipe.json",
+   "sha256": "478252cef612839f0ba399d92e0037ca30d15f315efa15438a223e42bcd0fd55"
+  }
+ },
+ "tool": {
+  "name": "powerworld-authoring",
+  "version": "0.1.0",
+  "three": "0.169.0",
+  "adapterVersion": 1
+ },
+ "build": {
+  "options": {},
+  "cacheKey": "366ae9d16a0bcc87c4fd9456ba27a29da73aaf0d9868956daca391b0e0ab0845",
+  "contentHash": "6cfc93b5a7a616c0c085f8752e9ab74bec24092761e928d5caa3e12e5f72fb70",
+  "profile": "desktop"
+ },
+ "acceptance": {
+  "visual": "unapproved",
+  "blockers": [],
+  "note": "Twin downward nozzles · torso mount · harness; model and scale candidate, no handling or live equipment integration."
+ },
+ "outputs": [
+  {
+   "path": "model.glb",
+   "role": "glb",
+   "sha256": "177fd082db7600631e40fe15645b9c5568b6350ff4c64e533e1fde82341f322c",
+   "bytes": 33780
+  }
+ ],
+ "packageHash": "39f321753422651fb12a5717f61e8fdb548063e7e923b2af23b520a3e014be78"
+}

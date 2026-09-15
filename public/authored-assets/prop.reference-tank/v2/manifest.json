@@ -1,0 +1,304 @@
+{
+ "format": "pw-asset-package",
+ "formatVersion": 1,
+ "id": "prop.reference-tank",
+ "version": 2,
+ "kind": "prop",
+ "displayName": "Battle tank",
+ "tags": [
+  "reference-fleet",
+  "ground"
+ ],
+ "rig": {
+  "skeleton": "none"
+ },
+ "sockets": [
+  {
+   "name": "driver",
+   "parent": "tank",
+   "position": [
+    -3.61482,
+    5.36393,
+    7.40455
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "entry-driver",
+   "parent": "tank",
+   "position": [
+    -13.974,
+    0.00158,
+    7.40455
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "entry-gunner",
+   "parent": "tank",
+   "position": [
+    -13.974,
+    0.00158,
+    -3.78973
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "gunner",
+   "parent": "turret",
+   "position": [
+    0,
+    -1.39929,
+    -2.33214
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "muzzle",
+   "parent": "barrel",
+   "position": [
+    0,
+    0,
+    20.98929
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-torso-driver",
+   "parent": "socket-seat-driver",
+   "position": [
+    0,
+    2.52632,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-torso-gunner",
+   "parent": "socket-seat-gunner",
+   "position": [
+    0,
+    2.52632,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "seat-driver",
+   "parent": "crew-chair-driver",
+   "position": [
+    0,
+    0.34211,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "seat-gunner",
+   "parent": "crew-chair-gunner",
+   "position": [
+    0,
+    0.34211,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  }
+ ],
+ "bounds": {
+  "min": [
+   -10.55295,
+   0,
+   -16.61652
+  ],
+  "max": [
+   10.55295,
+   17.02465,
+   26.01506
+  ]
+ },
+ "materials": [
+  {
+   "name": "fleet-machine"
+  },
+  {
+   "name": "fleet-armor"
+  },
+  {
+   "name": "fleet-rubber"
+  },
+  {
+   "name": "fleet-painted-parts"
+  },
+  {
+   "name": "fleet-glass"
+  },
+  {
+   "name": "fleet-red"
+  }
+ ],
+ "lods": [
+  {
+   "level": 0,
+   "output": "model.glb",
+   "triangles": 1692
+  }
+ ],
+ "units": {
+  "lengthUnit": "game-unit",
+  "metersPerUnit": 0.19,
+  "up": "+Y",
+  "forward": "+Z",
+  "handedness": "right",
+  "sourceConversion": {
+   "scale": 1,
+   "yawDegrees": 0,
+   "mirrorX": false,
+   "sourceUp": "+Y",
+   "sourceForward": "+Z",
+   "note": "authored directly in game units along the engine weapon axis (-Y toward the muzzle)"
+  }
+ },
+ "budgets": {
+  "profile": "desktop",
+  "measured": {
+   "triangles": 1692,
+   "drawCalls": 13,
+   "materials": 6,
+   "bones": 0,
+   "textures": 0,
+   "bytes": 182696
+  },
+  "limits": {
+   "triangles": 67793,
+   "drawCalls": 32,
+   "materials": 9,
+   "bones": 1,
+   "textures": 4,
+   "bytes": 3170030
+  }
+ },
+ "structural": {
+  "validator": "2.0.0-dev.3.10",
+  "errors": 0,
+  "warnings": 0
+ },
+ "provenance": {
+  "author": "Machine King Labs",
+  "license": "proprietary",
+  "terms": "Original model geometry authored for this project from creator-supplied concept references; reference redistribution rights are not independently verified.",
+  "redistribution": "internal",
+  "attribution": "Creator-supplied September 12, 2026 concepts."
+ },
+ "source": {
+  "adapter": "procedural-prop@1",
+  "files": [
+   {
+    "path": "authoring/recipes/reference-fleet/models.js",
+    "sha256": "81c26627f81aa46a90ab4b5f5163b6e2a6d6fca8cedfb6ccd4d93b40d491fe97"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/damage.js",
+    "sha256": "3de0a59c37abf35dd6538cef69e1e8c7e057dd357ad511da4565cbad12f8566a"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/defense.js",
+    "sha256": "b3e912db260966d8936526b89e678358f3376b4a32c090e097d1046f3f2c710a"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/mechs.js",
+    "sha256": "2a1bb841aa14d35b16b0b1c98fe220a19df215cbf9da5e4db57a77d608fab618"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/crew-interiors.js",
+    "sha256": "42a0f3b751172043a8aef2f60197913d31a774ee9b79f0f51393aaf8c6ef1d1e"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/spider-mine.js",
+    "sha256": "cfa4f246a18744c2dd9ee1418906d323a700c47e3a5ecfe333ad6ef33fc6c424"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/tank/model.js",
+    "sha256": "409892e8ed06aaec19e6b48f432fb58445f6076dd52fef058209dde0daf3d4b6"
+   },
+   {
+    "path": "assets-src/reference-fleet/references/3.webp",
+    "sha256": "dec76331e7b5c7885159c68de619793fae4eb49c77261446373c2d21824a607d"
+   }
+  ],
+  "recipe": {
+   "path": "authoring/recipes/reference-fleet/tank/recipe.json",
+   "sha256": "7db65f524e6092d4b4969dbf46b6ecde5a1da78e9a716cb956b505401347c14e"
+  }
+ },
+ "tool": {
+  "name": "powerworld-authoring",
+  "version": "0.1.0",
+  "three": "0.169.0",
+  "adapterVersion": 1
+ },
+ "build": {
+  "options": {},
+  "cacheKey": "29f63a7370a5bba18db017ff6d2b23f8350be65af921cde87b56c21c7b470fa5",
+  "contentHash": "1a8a37b41738c390234eb6b64d08f2c5ce53a09294faa21912524439095d4d14",
+  "profile": "desktop"
+ },
+ "acceptance": {
+  "visual": "unapproved",
+  "blockers": [],
+  "note": "Tracked hull · independent turret and barrel; model and scale candidate, no handling or live equipment integration."
+ },
+ "outputs": [
+  {
+   "path": "model.glb",
+   "role": "glb",
+   "sha256": "d7b13d33b25a6cc3b8057613cd51d14c75b7372b9fbaeb0e2c0dfb32b3bfdfff",
+   "bytes": 182696
+  }
+ ],
+ "packageHash": "231bae41cc46e4e7d25d4fb46b41f02e2a84ddda39a12fe8b6191cf25c458426"
+}

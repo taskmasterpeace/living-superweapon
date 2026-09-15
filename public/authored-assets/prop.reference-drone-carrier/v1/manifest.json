@@ -1,0 +1,378 @@
+{
+ "format": "pw-asset-package",
+ "formatVersion": 1,
+ "id": "prop.reference-drone-carrier",
+ "version": 1,
+ "kind": "prop",
+ "displayName": "Drone carrier · Kestrel",
+ "tags": [
+  "reference-fleet",
+  "aircraft"
+ ],
+ "rig": {
+  "skeleton": "none"
+ },
+ "sockets": [
+  {
+   "name": "contact-left",
+   "parent": "landing-gear-left",
+   "position": [
+    0,
+    -8.31002,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "contact-nose",
+   "parent": "landing-gear-nose",
+   "position": [
+    0,
+    -8.31002,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "contact-right",
+   "parent": "landing-gear-right",
+   "position": [
+    0,
+    -8.31002,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "drone-control",
+   "parent": "drone-carrier",
+   "position": [
+    0,
+    11.36053,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "drone-mount-gun-left",
+   "parent": "drone-carrier",
+   "position": [
+    -7.10033,
+    3.2083,
+    5.25951
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "drone-mount-gun-right",
+   "parent": "drone-carrier",
+   "position": [
+    7.10033,
+    3.2083,
+    5.25951
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "drone-mount-swarm-left0",
+   "parent": "drone-carrier",
+   "position": [
+    -14.72662,
+    4.52317,
+    -8.94116
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "drone-mount-swarm-left1",
+   "parent": "drone-carrier",
+   "position": [
+    -18.51346,
+    4.52317,
+    -12.35984
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "drone-mount-swarm-left2",
+   "parent": "drone-carrier",
+   "position": [
+    -22.3003,
+    4.52317,
+    -15.77852
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "drone-mount-swarm-left3",
+   "parent": "drone-carrier",
+   "position": [
+    -26.08715,
+    4.52317,
+    -19.19719
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "drone-mount-swarm-right0",
+   "parent": "drone-carrier",
+   "position": [
+    14.72662,
+    4.52317,
+    -8.94116
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "drone-mount-swarm-right1",
+   "parent": "drone-carrier",
+   "position": [
+    18.51346,
+    4.52317,
+    -12.35984
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "drone-mount-swarm-right2",
+   "parent": "drone-carrier",
+   "position": [
+    22.3003,
+    4.52317,
+    -15.77852
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "drone-mount-swarm-right3",
+   "parent": "drone-carrier",
+   "position": [
+    26.08715,
+    4.52317,
+    -19.19719
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  }
+ ],
+ "bounds": {
+  "min": [
+   -55.22481,
+   0,
+   -42.14179
+  ],
+  "max": [
+   55.22481,
+   19.6267,
+   52.59505
+  ]
+ },
+ "materials": [
+  {
+   "name": "fleet-painted-parts"
+  },
+  {
+   "name": "fleet-armor"
+  },
+  {
+   "name": "fleet-payload"
+  }
+ ],
+ "lods": [
+  {
+   "level": 0,
+   "output": "model.glb",
+   "triangles": 4492
+  }
+ ],
+ "units": {
+  "lengthUnit": "game-unit",
+  "metersPerUnit": 0.19,
+  "up": "+Y",
+  "forward": "+Z",
+  "handedness": "right",
+  "sourceConversion": {
+   "scale": 1,
+   "yawDegrees": 0,
+   "mirrorX": false,
+   "sourceUp": "+Y",
+   "sourceForward": "+Z",
+   "note": "authored directly in game units along the engine weapon axis (-Y toward the muzzle)"
+  }
+ },
+ "budgets": {
+  "profile": "desktop",
+  "measured": {
+   "triangles": 4492,
+   "drawCalls": 18,
+   "materials": 3,
+   "bones": 0,
+   "textures": 0,
+   "bytes": 614940
+  },
+  "limits": {
+   "triangles": 67793,
+   "drawCalls": 32,
+   "materials": 9,
+   "bones": 1,
+   "textures": 4,
+   "bytes": 3170030
+  }
+ },
+ "structural": {
+  "validator": "2.0.0-dev.3.10",
+  "errors": 0,
+  "warnings": 0
+ },
+ "provenance": {
+  "author": "Machine King Labs",
+  "license": "proprietary",
+  "terms": "Original model geometry authored for this project from creator-supplied concept references; reference redistribution rights are not independently verified.",
+  "redistribution": "internal",
+  "attribution": "Creator-supplied September 12, 2026 concepts."
+ },
+ "source": {
+  "adapter": "procedural-prop@1",
+  "files": [
+   {
+    "path": "authoring/recipes/reference-fleet/models.js",
+    "sha256": "e11bcb8c269f8e7bc4c60a2a48e9aacb190f9eea54d12e09d285fddcb31cbc19"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/air-mobility.js",
+    "sha256": "9d27ce244b8c3b3f0660708f676017af70e4537314bc0a7e65562a09d6272f44"
+   },
+   {
+    "path": "assets-src/reference-fleet/references/drone-carrier.jpg",
+    "sha256": "8f0b163a7f337cc7950935baa4deea88fdf6f0f6aa4279d14340c7819b55fee0"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/damage.js",
+    "sha256": "3de0a59c37abf35dd6538cef69e1e8c7e057dd357ad511da4565cbad12f8566a"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/defense.js",
+    "sha256": "b3e912db260966d8936526b89e678358f3376b4a32c090e097d1046f3f2c710a"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/mechs.js",
+    "sha256": "4aa82d05f85799cba45040e179b5215cded994d368d313f534b1cc3d19c574c4"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/drone-tank.js",
+    "sha256": "ffb9bc81e598700abce165ce4ee960d8a1d133d52fecba4ef9f80f6aa4d144ff"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/crew-interiors.js",
+    "sha256": "59d99424542295cfb0cccceb4ec73b3653e67ea4dc209aff46d7df9eaf1dbabc"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/spider-mine.js",
+    "sha256": "cfa4f246a18744c2dd9ee1418906d323a700c47e3a5ecfe333ad6ef33fc6c424"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/drone-carrier/model.js",
+    "sha256": "d51154b245a2bfcda45dd82f89d4b99f1e5751db0b16fa3322c45be573c9897a"
+   }
+  ],
+  "recipe": {
+   "path": "authoring/recipes/reference-fleet/drone-carrier/recipe.json",
+   "sha256": "6a687f6759a3b6e17ea38f7a04adcbb11c80ea8dbce994c779c419c830c8dacf"
+  }
+ },
+ "tool": {
+  "name": "powerworld-authoring",
+  "version": "0.1.0",
+  "three": "0.169.0",
+  "adapterVersion": 1
+ },
+ "build": {
+  "options": {},
+  "cacheKey": "3f8cf245adf32ebb0e3c5aaf2391a0e1448331a9a22d19b5dc3c84f76b7e0ba2",
+  "contentHash": "fb1da819e18ee2e281b8e1fa628673067379e2e71ee3082cc78f93b2b051b6ba",
+  "profile": "desktop"
+ },
+ "acceptance": {
+  "visual": "unapproved",
+  "blockers": [],
+  "note": "Flying wing · eight swarm drones · two gun drones · release racks; model and scale candidate, no handling or live equipment integration."
+ },
+ "outputs": [
+  {
+   "path": "model.glb",
+   "role": "glb",
+   "sha256": "e02d38ec5fd4e190d4469baaf50ca1d4a29a390ff42112e4e339d47527fc0b89",
+   "bytes": 614940
+  }
+ ],
+ "packageHash": "fa713da36a33c7936696c9f125cc20f4b88990e2fa084e88f652ee4fcf791954"
+}

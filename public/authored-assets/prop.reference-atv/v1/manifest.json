@@ -1,0 +1,207 @@
+{
+ "format": "pw-asset-package",
+ "formatVersion": 1,
+ "id": "prop.reference-atv",
+ "version": 1,
+ "kind": "prop",
+ "displayName": "ATV",
+ "tags": [
+  "reference-fleet",
+  "ground"
+ ],
+ "rig": {
+  "skeleton": "none"
+ },
+ "sockets": [
+  {
+   "name": "grip-left",
+   "parent": "atv",
+   "position": [
+    -2.07547,
+    6.77259,
+    3.27706
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "grip-right",
+   "parent": "atv",
+   "position": [
+    2.07547,
+    6.77259,
+    3.27706
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "rider",
+   "parent": "atv",
+   "position": [
+    0,
+    6.00794,
+    -0.98312
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  }
+ ],
+ "bounds": {
+  "min": [
+   -3.79593,
+   0,
+   -5.78947
+  ],
+  "max": [
+   3.79593,
+   6.9501,
+   5.78947
+  ]
+ },
+ "materials": [
+  {
+   "name": "fleet-machine"
+  },
+  {
+   "name": "fleet-rubber"
+  },
+  {
+   "name": "fleet-edge"
+  },
+  {
+   "name": "fleet-armor"
+  },
+  {
+   "name": "fleet-red"
+  }
+ ],
+ "lods": [
+  {
+   "level": 0,
+   "output": "model.glb",
+   "triangles": 692
+  }
+ ],
+ "units": {
+  "lengthUnit": "game-unit",
+  "metersPerUnit": 0.19,
+  "up": "+Y",
+  "forward": "+Z",
+  "handedness": "right",
+  "sourceConversion": {
+   "scale": 1,
+   "yawDegrees": 0,
+   "mirrorX": false,
+   "sourceUp": "+Y",
+   "sourceForward": "+Z",
+   "note": "authored directly in game units along the engine weapon axis (-Y toward the muzzle)"
+  }
+ },
+ "budgets": {
+  "profile": "desktop",
+  "measured": {
+   "triangles": 692,
+   "drawCalls": 12,
+   "materials": 5,
+   "bones": 0,
+   "textures": 0,
+   "bytes": 75928
+  },
+  "limits": {
+   "triangles": 67793,
+   "drawCalls": 32,
+   "materials": 9,
+   "bones": 1,
+   "textures": 4,
+   "bytes": 3170030
+  }
+ },
+ "structural": {
+  "validator": "2.0.0-dev.3.10",
+  "errors": 0,
+  "warnings": 0
+ },
+ "provenance": {
+  "author": "Machine King Labs",
+  "license": "proprietary",
+  "terms": "Original model geometry authored for this project from creator-supplied concept references; reference redistribution rights are not independently verified.",
+  "redistribution": "internal",
+  "attribution": "Creator-supplied September 12, 2026 concepts."
+ },
+ "source": {
+  "adapter": "procedural-prop@1",
+  "files": [
+   {
+    "path": "authoring/recipes/reference-fleet/models.js",
+    "sha256": "2be6dcd8c4b479ad8648d954595c988c006c8cf53a065c973fd3fdee74fbe8a5"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/damage.js",
+    "sha256": "3de0a59c37abf35dd6538cef69e1e8c7e057dd357ad511da4565cbad12f8566a"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/defense.js",
+    "sha256": "b3e912db260966d8936526b89e678358f3376b4a32c090e097d1046f3f2c710a"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/mechs.js",
+    "sha256": "429c45318b6d89baa2e6df619ea4fe738aa8667d9281c130bca013527d26a6dc"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/spider-mine.js",
+    "sha256": "cfa4f246a18744c2dd9ee1418906d323a700c47e3a5ecfe333ad6ef33fc6c424"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/atv/model.js",
+    "sha256": "702603e0661ec8291272aca1beacedafe64d32f0a1f6cff737bfb99ea20b50d1"
+   },
+   {
+    "path": "assets-src/reference-fleet/references/6.webp",
+    "sha256": "7d2a95e23d4881430e2587b70adb15bd7539dff333cf14a6f38c6c3beea0c0da"
+   }
+  ],
+  "recipe": {
+   "path": "authoring/recipes/reference-fleet/atv/recipe.json",
+   "sha256": "19289d5440543430182d5c5da8b64f376f21a999d23a21347c5bbadf628cbbc4"
+  }
+ },
+ "tool": {
+  "name": "powerworld-authoring",
+  "version": "0.1.0",
+  "three": "0.169.0",
+  "adapterVersion": 1
+ },
+ "build": {
+  "options": {},
+  "cacheKey": "18ecea271a8b109360cf2c73674a947a7c298fde7dab60b2a8b5b784f48f104f",
+  "contentHash": "088f5f0bac78bce41e19658ee1f68e27a7494a2d8c2e2ef91faf7f68fa9c481c",
+  "profile": "desktop"
+ },
+ "acceptance": {
+  "visual": "unapproved",
+  "blockers": [],
+  "note": "Quad reference included · separate wheel pivots; model and scale candidate, no handling or live equipment integration."
+ },
+ "outputs": [
+  {
+   "path": "model.glb",
+   "role": "glb",
+   "sha256": "e1a7cc44aae70291eb701259bfd65070fbd07a045691740e1ed89121f580c904",
+   "bytes": 75928
+  }
+ ],
+ "packageHash": "3f63561fda372cd46971108f4aab45d3610ee7c984c8eec8315110513f0fbbbd"
+}

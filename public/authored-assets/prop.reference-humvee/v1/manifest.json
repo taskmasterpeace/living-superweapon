@@ -1,0 +1,209 @@
+{
+ "format": "pw-asset-package",
+ "formatVersion": 1,
+ "id": "prop.reference-humvee",
+ "version": 1,
+ "kind": "prop",
+ "displayName": "Armored utility",
+ "tags": [
+  "reference-fleet",
+  "ground"
+ ],
+ "rig": {
+  "skeleton": "none"
+ },
+ "sockets": [
+  {
+   "name": "driver",
+   "parent": "humvee",
+   "position": [
+    -2.34357,
+    7.35773,
+    1.47155
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "gunner",
+   "parent": "turret",
+   "position": [
+    0,
+    1.19904,
+    -0.65402
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "muzzle",
+   "parent": "barrel",
+   "position": [
+    0,
+    0,
+    5.45017
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "passenger",
+   "parent": "humvee",
+   "position": [
+    2.34357,
+    7.35773,
+    1.47155
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  }
+ ],
+ "bounds": {
+  "min": [
+   -6.3222,
+   0,
+   -13.40743
+  ],
+  "max": [
+   6.3222,
+   16.35052,
+   13.43468
+  ]
+ },
+ "materials": [
+  {
+   "name": "fleet-rubber"
+  },
+  {
+   "name": "fleet-edge"
+  },
+  {
+   "name": "fleet-machine"
+  },
+  {
+   "name": "fleet-armor"
+  },
+  {
+   "name": "fleet-glass"
+  },
+  {
+   "name": "fleet-red"
+  }
+ ],
+ "lods": [
+  {
+   "level": 0,
+   "output": "model.glb",
+   "triangles": 1128
+  }
+ ],
+ "units": {
+  "lengthUnit": "game-unit",
+  "metersPerUnit": 0.19,
+  "up": "+Y",
+  "forward": "+Z",
+  "handedness": "right",
+  "sourceConversion": {
+   "scale": 1,
+   "yawDegrees": 0,
+   "mirrorX": false,
+   "sourceUp": "+Y",
+   "sourceForward": "+Z",
+   "note": "authored directly in game units along the engine weapon axis (-Y toward the muzzle)"
+  }
+ },
+ "budgets": {
+  "profile": "desktop",
+  "measured": {
+   "triangles": 1128,
+   "drawCalls": 16,
+   "materials": 6,
+   "bones": 0,
+   "textures": 0,
+   "bytes": 120640
+  },
+  "limits": {
+   "triangles": 67793,
+   "drawCalls": 32,
+   "materials": 9,
+   "bones": 1,
+   "textures": 4,
+   "bytes": 3170030
+  }
+ },
+ "structural": {
+  "validator": "2.0.0-dev.3.10",
+  "errors": 0,
+  "warnings": 0
+ },
+ "provenance": {
+  "author": "Machine King Labs",
+  "license": "proprietary",
+  "terms": "Original model geometry authored for this project from creator-supplied concept references; reference redistribution rights are not independently verified.",
+  "redistribution": "internal",
+  "attribution": "Creator-supplied September 12, 2026 concepts."
+ },
+ "source": {
+  "adapter": "procedural-prop@1",
+  "files": [
+   {
+    "path": "authoring/recipes/reference-fleet/models.js",
+    "sha256": "f4a8666473a2739182a785434489623a126b2fb48618733465c5448b79992fe4"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/humvee/model.js",
+    "sha256": "9c19c4845622da835c6f9bb0bc527e800fba15efd3fb97c0cdca16f2833902d8"
+   },
+   {
+    "path": "assets-src/reference-fleet/references/7.webp",
+    "sha256": "65ec65fe9696525ee36ee4e8a62f867c417cd85b13a6bd057e056c5f94211792"
+   }
+  ],
+  "recipe": {
+   "path": "authoring/recipes/reference-fleet/humvee/recipe.json",
+   "sha256": "36e08a0163b989421bf509f0b9e49a512f206f7f0856ed12bf794c35d2093d43"
+  }
+ },
+ "tool": {
+  "name": "powerworld-authoring",
+  "version": "0.1.0",
+  "three": "0.169.0",
+  "adapterVersion": 1
+ },
+ "build": {
+  "options": {},
+  "cacheKey": "97c36f3d8c61666ef2fe4fa3c1c2c1a34aaeb3ec840574c48019d9a57c0e476b",
+  "contentHash": "8516ef782db8236d7b820af52b54ebd5541933609fcc52fffe02fdda9b52472e",
+  "profile": "desktop"
+ },
+ "acceptance": {
+  "visual": "unapproved",
+  "blockers": [],
+  "note": "Four doors · protected roof mount; model and scale candidate, no handling or live equipment integration."
+ },
+ "outputs": [
+  {
+   "path": "model.glb",
+   "role": "glb",
+   "sha256": "ecb8c2df6bffcaa5abe0178b12bcb30bca70b8fa329c2868d9ab2e7b747fe484",
+   "bytes": 120640
+  }
+ ],
+ "packageHash": "2d9adc08473d2298400ddae5e80de079677a4b1ed71f931dc639805bf2c1cbf3"
+}

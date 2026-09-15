@@ -1,0 +1,313 @@
+{
+ "format": "pw-asset-package",
+ "formatVersion": 1,
+ "id": "prop.reference-hoverboard-damaged",
+ "version": 1,
+ "kind": "prop",
+ "displayName": "Thrust hoverboard · damaged",
+ "tags": [
+  "reference-fleet",
+  "ground"
+ ],
+ "rig": {
+  "skeleton": "none"
+ },
+ "sockets": [
+  {
+   "name": "entry-rider",
+   "parent": "hoverboard",
+   "position": [
+    -4.88146,
+    0.16121,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "exhaust-left",
+   "parent": "hoverboard",
+   "position": [
+    -0.93883,
+    0.52157,
+    -4.38122
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "exhaust-right",
+   "parent": "hoverboard",
+   "position": [
+    0.93883,
+    0.52157,
+    -4.38122
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "foot-left",
+   "parent": "hoverboard",
+   "position": [
+    -0.41726,
+    1.14746,
+    1.82551
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "foot-right",
+   "parent": "hoverboard",
+   "position": [
+    0.41726,
+    1.14746,
+    -1.82551
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-eye-rider",
+   "parent": "socket-seat-rider",
+   "position": [
+    0,
+    8.94737,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-torso-rider",
+   "parent": "socket-seat-rider",
+   "position": [
+    0,
+    2.52632,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "rider",
+   "parent": "hoverboard",
+   "position": [
+    0,
+    1.14746,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "seat-rider",
+   "parent": "socket-rider",
+   "position": [
+    0,
+    0,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  }
+ ],
+ "bounds": {
+  "min": [
+   -1.46041,
+   0,
+   -4.38122
+  ],
+  "max": [
+   1.46041,
+   1.25178,
+   4.30299
+  ]
+ },
+ "materials": [
+  {
+   "name": "condition-damaged-fleet-armor"
+  },
+  {
+   "name": "condition-damaged-fleet-machine"
+  },
+  {
+   "name": "condition-damaged-fleet-red"
+  },
+  {
+   "name": "condition-damaged-fleet-rubber"
+  },
+  {
+   "name": "condition-damaged-fleet-edge"
+  }
+ ],
+ "lods": [
+  {
+   "level": 0,
+   "output": "model.glb",
+   "triangles": 360
+  }
+ ],
+ "units": {
+  "lengthUnit": "game-unit",
+  "metersPerUnit": 0.19,
+  "up": "+Y",
+  "forward": "+Z",
+  "handedness": "right",
+  "sourceConversion": {
+   "scale": 1,
+   "yawDegrees": 0,
+   "mirrorX": false,
+   "sourceUp": "+Y",
+   "sourceForward": "+Z",
+   "note": "authored directly in game units along the engine weapon axis (-Y toward the muzzle)"
+  }
+ },
+ "budgets": {
+  "profile": "desktop",
+  "measured": {
+   "triangles": 360,
+   "drawCalls": 5,
+   "materials": 5,
+   "bones": 0,
+   "textures": 0,
+   "bytes": 39932
+  },
+  "limits": {
+   "triangles": 67793,
+   "drawCalls": 32,
+   "materials": 9,
+   "bones": 1,
+   "textures": 4,
+   "bytes": 3170030
+  }
+ },
+ "structural": {
+  "validator": "2.0.0-dev.3.10",
+  "errors": 0,
+  "warnings": 0
+ },
+ "provenance": {
+  "author": "Machine King Labs",
+  "license": "proprietary",
+  "terms": "Original model geometry authored for this project from creator-supplied concept references; reference redistribution rights are not independently verified.",
+  "redistribution": "internal",
+  "attribution": "Creator-supplied September 12, 2026 concepts."
+ },
+ "source": {
+  "adapter": "procedural-prop@1",
+  "files": [
+   {
+    "path": "authoring/recipes/reference-fleet/models.js",
+    "sha256": "903a9561113800aada3e96bf14dd80456ee41aad80b93bb4a4120dbe241e8b97"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/logistics.js",
+    "sha256": "d116aeadf7b5a29fe4a5ba75d0aee556d69e82a59b4beefe65f3cf52f997b38f"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/condition.js",
+    "sha256": "cc686eff6ee85c569b5d6a6156248c1535b487c594325113238b4d54fa4de8f9"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/air-mobility.js",
+    "sha256": "778f8f67a4f9560fbe8ce38828766c385b7ce739eafda7d84eb652fe9b439f77"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/damage.js",
+    "sha256": "ae41fae99dd3ad7c87d41e1611e82e448c21f298c4a4b57840ab5b6d1635e956"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/defense.js",
+    "sha256": "b3e912db260966d8936526b89e678358f3376b4a32c090e097d1046f3f2c710a"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/mechs.js",
+    "sha256": "4aa82d05f85799cba45040e179b5215cded994d368d313f534b1cc3d19c574c4"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/drone-tank.js",
+    "sha256": "ffb9bc81e598700abce165ce4ee960d8a1d133d52fecba4ef9f80f6aa4d144ff"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/crew-interiors.js",
+    "sha256": "02be4c7f5afd5ff6fcfa7f32d1a0a1f97d2d437342243db58f50cf92cf3e9e98"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/spider-mine.js",
+    "sha256": "cfa4f246a18744c2dd9ee1418906d323a700c47e3a5ecfe333ad6ef33fc6c424"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/hoverboard-damaged/model.js",
+    "sha256": "aa10e36bd9b846a9627d772f294a91c1233c6a0199066dd6fa24829bda63d4c4"
+   }
+  ],
+  "recipe": {
+   "path": "authoring/recipes/reference-fleet/hoverboard-damaged/recipe.json",
+   "sha256": "dc7912608aa56e8da008c767baa50ab72fceda65915ee78508bfe75bda65ae3c"
+  }
+ },
+ "tool": {
+  "name": "powerworld-authoring",
+  "version": "0.1.0",
+  "three": "0.169.0",
+  "adapterVersion": 1
+ },
+ "build": {
+  "options": {},
+  "cacheKey": "885bcd020beff644d64eda1a2e5320a2b943941e8cec83138c382885d989c0cc",
+  "contentHash": "9767b2777db825bd1eaacd54540579c56d6dd3c3070264c4a167d281ae4d2b0e",
+  "profile": "desktop"
+ },
+ "acceptance": {
+  "visual": "unapproved",
+  "blockers": [],
+  "note": "Skating deck · two foot pads · rear thrust · standing rider mount; model and scale candidate, no handling or live equipment integration."
+ },
+ "outputs": [
+  {
+   "path": "model.glb",
+   "role": "glb",
+   "sha256": "85b67cbb24da04dbe6e72cc48e6265a8237c106233fcd6c89ab4421e47f52434",
+   "bytes": 39932
+  }
+ ],
+ "packageHash": "5b60dd7d48576c0f1ba83b16ae6c3df26466c9965348d4adbac34aea794aba8a"
+}

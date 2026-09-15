@@ -1,0 +1,705 @@
+{
+ "format": "pw-asset-package",
+ "formatVersion": 1,
+ "id": "prop.reference-jet-a",
+ "version": 11,
+ "kind": "prop",
+ "displayName": "Strike jet",
+ "tags": [
+  "reference-fleet",
+  "aircraft"
+ ],
+ "rig": {
+  "skeleton": "none"
+ },
+ "sockets": [
+  {
+   "name": "contact-left",
+   "parent": "landing-gear-left",
+   "position": [
+    0,
+    -8.36712,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "contact-nose",
+   "parent": "landing-gear-nose",
+   "position": [
+    0,
+    -8.36712,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "contact-right",
+   "parent": "landing-gear-right",
+   "position": [
+    0,
+    -8.36712,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "engine-left",
+   "parent": "jet-a",
+   "position": [
+    -6.12803,
+    10.95975,
+    -28.87247
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "engine-right",
+   "parent": "jet-a",
+   "position": [
+    6.12803,
+    10.95975,
+    -28.87247
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "entry-pilot",
+   "parent": "jet-a",
+   "position": [
+    -33.35414,
+    5.59373,
+    3.5354
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "exhaust-left-large",
+   "parent": "store-left-large",
+   "position": [
+    0,
+    0,
+    -6.44211
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "exhaust-left-small",
+   "parent": "store-left-small",
+   "position": [
+    0,
+    0,
+    -2.55
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "exhaust-left-small-2",
+   "parent": "store-left-small-2",
+   "position": [
+    0,
+    0,
+    -2.55
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "exhaust-right-large",
+   "parent": "store-right-large",
+   "position": [
+    0,
+    0,
+    -6.44211
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "exhaust-right-small",
+   "parent": "store-right-small",
+   "position": [
+    0,
+    0,
+    -2.55
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "exhaust-right-small-2",
+   "parent": "store-right-small-2",
+   "position": [
+    0,
+    0,
+    -2.55
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "hardpoint-left-large",
+   "parent": "jet-a",
+   "position": [
+    -12.66853,
+    6.59942,
+    -4.41925
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "hardpoint-left-small",
+   "parent": "jet-a",
+   "position": [
+    -20.03396,
+    7.12973,
+    -6.48157
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "hardpoint-left-small-2",
+   "parent": "jet-a",
+   "position": [
+    -22.98013,
+    7.12973,
+    -6.48157
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "hardpoint-right-large",
+   "parent": "jet-a",
+   "position": [
+    12.66853,
+    6.59942,
+    -4.41925
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "hardpoint-right-small",
+   "parent": "jet-a",
+   "position": [
+    20.03396,
+    7.12973,
+    -6.48157
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "hardpoint-right-small-2",
+   "parent": "jet-a",
+   "position": [
+    22.98013,
+    7.12973,
+    -6.48157
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "mount-left-large",
+   "parent": "store-left-large",
+   "position": [
+    0,
+    -0.82105,
+    -0.63158
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "mount-left-small",
+   "parent": "store-left-small",
+   "position": [
+    0,
+    -0.325,
+    -0.25
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "mount-left-small-2",
+   "parent": "store-left-small-2",
+   "position": [
+    0,
+    -0.325,
+    -0.25
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "mount-right-large",
+   "parent": "store-right-large",
+   "position": [
+    0,
+    -0.82105,
+    -0.63158
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "mount-right-small",
+   "parent": "store-right-small",
+   "position": [
+    0,
+    -0.325,
+    -0.25
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "mount-right-small-2",
+   "parent": "store-right-small-2",
+   "position": [
+    0,
+    -0.325,
+    -0.25
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "muzzle",
+   "parent": "jet-a",
+   "position": [
+    0,
+    8.89743,
+    33.29172
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "nose-left-large",
+   "parent": "store-left-large",
+   "position": [
+    0,
+    0,
+    6.31579
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "nose-left-small",
+   "parent": "store-left-small",
+   "position": [
+    0,
+    0,
+    2.5
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "nose-left-small-2",
+   "parent": "store-left-small-2",
+   "position": [
+    0,
+    0,
+    2.5
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "nose-right-large",
+   "parent": "store-right-large",
+   "position": [
+    0,
+    0,
+    6.31579
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "nose-right-small",
+   "parent": "store-right-small",
+   "position": [
+    0,
+    0,
+    2.5
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "nose-right-small-2",
+   "parent": "store-right-small-2",
+   "position": [
+    0,
+    0,
+    2.5
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-eye-pilot",
+   "parent": "socket-seat-pilot",
+   "position": [
+    0,
+    5,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-torso-pilot",
+   "parent": "socket-seat-pilot",
+   "position": [
+    0,
+    2.52632,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "pilot",
+   "parent": "jet-a",
+   "position": [
+    0,
+    11.54899,
+    3.5354
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "seat-pilot",
+   "parent": "crew-chair-pilot",
+   "position": [
+    0,
+    0.34211,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  }
+ ],
+ "bounds": {
+  "min": [
+   -29.93309,
+   0,
+   -28.81354
+  ],
+  "max": [
+   29.93309,
+   25.39599,
+   33.29172
+  ]
+ },
+ "materials": [
+  {
+   "name": "fleet-painted-parts"
+  },
+  {
+   "name": "fleet-armor"
+  },
+  {
+   "name": "fleet-glass"
+  },
+  {
+   "name": "fleet-machine"
+  },
+  {
+   "name": "fleet-edge"
+  },
+  {
+   "name": "fleet-rubber"
+  },
+  {
+   "name": "fleet-red"
+  }
+ ],
+ "lods": [
+  {
+   "level": 0,
+   "output": "model.glb",
+   "triangles": 2796
+  }
+ ],
+ "units": {
+  "lengthUnit": "game-unit",
+  "metersPerUnit": 0.19,
+  "up": "+Y",
+  "forward": "+Z",
+  "handedness": "right",
+  "sourceConversion": {
+   "scale": 1,
+   "yawDegrees": 0,
+   "mirrorX": false,
+   "sourceUp": "+Y",
+   "sourceForward": "+Z",
+   "note": "authored directly in game units along the engine weapon axis (-Y toward the muzzle)"
+  }
+ },
+ "budgets": {
+  "profile": "desktop",
+  "measured": {
+   "triangles": 2796,
+   "drawCalls": 26,
+   "materials": 7,
+   "bones": 0,
+   "textures": 0,
+   "bytes": 372664
+  },
+  "limits": {
+   "triangles": 67793,
+   "drawCalls": 32,
+   "materials": 9,
+   "bones": 1,
+   "textures": 4,
+   "bytes": 3170030
+  }
+ },
+ "structural": {
+  "validator": "2.0.0-dev.3.10",
+  "errors": 0,
+  "warnings": 0
+ },
+ "provenance": {
+  "author": "Machine King Labs",
+  "license": "proprietary",
+  "terms": "Original model geometry authored for this project from creator-supplied concept references; reference redistribution rights are not independently verified.",
+  "redistribution": "internal",
+  "attribution": "Creator-supplied September 12, 2026 concepts."
+ },
+ "source": {
+  "adapter": "procedural-prop@1",
+  "files": [
+   {
+    "path": "authoring/recipes/reference-fleet/models.js",
+    "sha256": "acea002e5973adac504ceb9ee76dabfcec9262f072cd91f99f95139b98b8ca4c"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/air-mobility.js",
+    "sha256": "1723470ed8c9c0a559f630b6e14f53951f3ff6f1cd2c75c2a34d159bc8a5365d"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/damage.js",
+    "sha256": "3de0a59c37abf35dd6538cef69e1e8c7e057dd357ad511da4565cbad12f8566a"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/defense.js",
+    "sha256": "b3e912db260966d8936526b89e678358f3376b4a32c090e097d1046f3f2c710a"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/mechs.js",
+    "sha256": "4aa82d05f85799cba45040e179b5215cded994d368d313f534b1cc3d19c574c4"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/drone-tank.js",
+    "sha256": "ffb9bc81e598700abce165ce4ee960d8a1d133d52fecba4ef9f80f6aa4d144ff"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/crew-interiors.js",
+    "sha256": "0e317fb067017f5a7b3b5de5337c4863250ac4e6f17630a7a997063089ed1761"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/spider-mine.js",
+    "sha256": "cfa4f246a18744c2dd9ee1418906d323a700c47e3a5ecfe333ad6ef33fc6c424"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/jet-a/model.js",
+    "sha256": "6c94960c748232094974704082070dfa3a3ab3c6049022c8baf099fec8ea581b"
+   },
+   {
+    "path": "assets-src/reference-fleet/references/1.webp",
+    "sha256": "4e17da96208911a045fcf8d52a2ff4165f1ce463eb786fb42426591dd283e21c"
+   }
+  ],
+  "recipe": {
+   "path": "authoring/recipes/reference-fleet/jet-a/recipe.json",
+   "sha256": "6b4ed3f0da68e3d38c741dd05e77add5dbbc2d87b6291265d7fca7cbbc1a5741"
+  }
+ },
+ "tool": {
+  "name": "powerworld-authoring",
+  "version": "0.1.0",
+  "three": "0.169.0",
+  "adapterVersion": 1
+ },
+ "build": {
+  "options": {},
+  "cacheKey": "c44cdb4bd612c9c5dd6cce18b9af3e95bd033107a3cce4c1a69c0514ebdce03d",
+  "contentHash": "e4531bd3593acd4c8a5c523ba913976077090ca3db68dfde9fe42c09cf8346ca",
+  "profile": "desktop"
+ },
+ "acceptance": {
+  "visual": "unapproved",
+  "blockers": [],
+  "note": "Broad wings · moving control surfaces · six removable missiles; model and scale candidate, no handling or live equipment integration."
+ },
+ "outputs": [
+  {
+   "path": "model.glb",
+   "role": "glb",
+   "sha256": "869e3e8c708aa8c1c855b8677027a7d1dcd0d16f36e7bdb2e2bfc640aec1fb94",
+   "bytes": 372664
+  }
+ ],
+ "packageHash": "25f9a9ad18ec5db7dc53ee73c7d0b4940cef6a1703c9b5c684adff5feb327ce5"
+}

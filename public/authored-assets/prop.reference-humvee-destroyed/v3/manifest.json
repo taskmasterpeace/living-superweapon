@@ -1,0 +1,423 @@
+{
+ "format": "pw-asset-package",
+ "formatVersion": 1,
+ "id": "prop.reference-humvee-destroyed",
+ "version": 3,
+ "kind": "prop",
+ "displayName": "Armored utility · destroyed",
+ "tags": [
+  "reference-fleet",
+  "ground"
+ ],
+ "rig": {
+  "skeleton": "none"
+ },
+ "sockets": [
+  {
+   "name": "driver",
+   "parent": "humvee",
+   "position": [
+    -4.26547,
+    7.57285,
+    1.04996
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "entry-driver",
+   "parent": "humvee",
+   "position": [
+    -11.03328,
+    1.16942,
+    1.04996
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "entry-front-center",
+   "parent": "humvee",
+   "position": [
+    -11.03328,
+    1.16942,
+    1.04996
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "entry-gunner",
+   "parent": "humvee",
+   "position": [
+    -11.03328,
+    1.16942,
+    -2.6774
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "entry-passenger",
+   "parent": "humvee",
+   "position": [
+    11.03328,
+    1.16942,
+    1.04996
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "entry-rear-center",
+   "parent": "humvee",
+   "position": [
+    -11.03328,
+    1.16942,
+    -4.93482
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "entry-rear-left",
+   "parent": "humvee",
+   "position": [
+    -11.03328,
+    1.16942,
+    -4.93482
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "entry-rear-right",
+   "parent": "humvee",
+   "position": [
+    11.03328,
+    1.16942,
+    -4.93482
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "front-center",
+   "parent": "humvee",
+   "position": [
+    0,
+    7.57285,
+    1.04996
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "gunner",
+   "parent": "turret",
+   "position": [
+    0,
+    0.41998,
+    -0.83997
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "muzzle",
+   "parent": "barrel",
+   "position": [
+    0,
+    0,
+    5.24981
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "passenger",
+   "parent": "humvee",
+   "position": [
+    4.26547,
+    7.57285,
+    1.04996
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "rear-center",
+   "parent": "humvee",
+   "position": [
+    0,
+    7.57285,
+    -4.93482
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "rear-left",
+   "parent": "humvee",
+   "position": [
+    -4.26547,
+    7.57285,
+    -4.93482
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "rear-right",
+   "parent": "humvee",
+   "position": [
+    4.26547,
+    7.57285,
+    -4.93482
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  }
+ ],
+ "bounds": {
+  "min": [
+   -7.21849,
+   0,
+   -18.11185
+  ],
+  "max": [
+   7.61223,
+   18.64995,
+   12.94078
+  ]
+ },
+ "materials": [
+  {
+   "name": "condition-destroyed-fleet-rubber"
+  },
+  {
+   "name": "condition-destroyed-fleet-edge"
+  },
+  {
+   "name": "condition-destroyed-fleet-machine"
+  },
+  {
+   "name": "condition-destroyed-fleet-armor"
+  },
+  {
+   "name": "condition-destroyed-fleet-painted-parts"
+  }
+ ],
+ "lods": [
+  {
+   "level": 0,
+   "output": "model.glb",
+   "triangles": 1388
+  }
+ ],
+ "units": {
+  "lengthUnit": "game-unit",
+  "metersPerUnit": 0.19,
+  "up": "+Y",
+  "forward": "+Z",
+  "handedness": "right",
+  "sourceConversion": {
+   "scale": 1,
+   "yawDegrees": 0,
+   "mirrorX": false,
+   "sourceUp": "+Y",
+   "sourceForward": "+Z",
+   "note": "authored directly in game units along the engine weapon axis (-Y toward the muzzle)"
+  }
+ },
+ "budgets": {
+  "profile": "desktop",
+  "measured": {
+   "triangles": 1388,
+   "drawCalls": 8,
+   "materials": 5,
+   "bones": 0,
+   "textures": 0,
+   "bytes": 175612
+  },
+  "limits": {
+   "triangles": 67793,
+   "drawCalls": 32,
+   "materials": 9,
+   "bones": 1,
+   "textures": 4,
+   "bytes": 3170030
+  }
+ },
+ "structural": {
+  "validator": "2.0.0-dev.3.10",
+  "errors": 0,
+  "warnings": 0
+ },
+ "provenance": {
+  "author": "Machine King Labs",
+  "license": "proprietary",
+  "terms": "Original model geometry authored for this project from creator-supplied concept references; reference redistribution rights are not independently verified.",
+  "redistribution": "internal",
+  "attribution": "Creator-supplied September 12, 2026 concepts."
+ },
+ "source": {
+  "adapter": "procedural-prop@1",
+  "files": [
+   {
+    "path": "authoring/recipes/reference-fleet/static-batch.js",
+    "sha256": "a5f089984d2ecd7c1f7629ca54774358795581652fce0614e6f759687e3fde55"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/expedition.js",
+    "sha256": "6f63f1b21a2f9f4f5dee888687f72a9980c164fd5c39e3681df434e91eb8f6a1"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/nanite-forms.js",
+    "sha256": "16095e80dcea845fcbd30f91886fa2b94f580dea9feeb7dcc56ad43e7fffd8c1"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/models.js",
+    "sha256": "4a8f1396bb3b10b9535462e88cf45cd0da59648ea7a925f39ca12fcd452d69ee"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/logistics.js",
+    "sha256": "63757f47844ba6c567174bccd2e682471031eb5ed68b6b71fe9893a1beef537d"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/ordnance.js",
+    "sha256": "ab2369438732b8cf9036d2645705dd15c0eb77ccfef7b72212bd41039c805372"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/condition.js",
+    "sha256": "ab8180853faf5c8bb13470a82a84c806f54b96993c7b1806cf562d7fd9754f67"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/air-mobility.js",
+    "sha256": "778f8f67a4f9560fbe8ce38828766c385b7ce739eafda7d84eb652fe9b439f77"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/damage.js",
+    "sha256": "0c34abc49ebe1feacfbe9ef6cc1f850ea12cab5bf5dbcfb7ecef54976a7affef"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/defense.js",
+    "sha256": "b3e912db260966d8936526b89e678358f3376b4a32c090e097d1046f3f2c710a"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/mechs.js",
+    "sha256": "4aa82d05f85799cba45040e179b5215cded994d368d313f534b1cc3d19c574c4"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/drone-tank.js",
+    "sha256": "ffb9bc81e598700abce165ce4ee960d8a1d133d52fecba4ef9f80f6aa4d144ff"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/crew-interiors.js",
+    "sha256": "0048d0e741b0d7a7704e8fccd13cc53c6b4b298f5bd26704489f8aa57474802d"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/spider-mine.js",
+    "sha256": "cfa4f246a18744c2dd9ee1418906d323a700c47e3a5ecfe333ad6ef33fc6c424"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/humvee-destroyed/model.js",
+    "sha256": "0e50114079373a9ad88be07c93679cb5f26edcae5a3351c11c8f33659a16f7e7"
+   },
+   {
+    "path": "assets-src/reference-fleet/references/7.webp",
+    "sha256": "65ec65fe9696525ee36ee4e8a62f867c417cd85b13a6bd057e056c5f94211792"
+   }
+  ],
+  "recipe": {
+   "path": "authoring/recipes/reference-fleet/humvee-destroyed/recipe.json",
+   "sha256": "45575ede6eb3fafa99baad8c7dc9a676039e769cc7f6b040ec0e7b69e7321021"
+  }
+ },
+ "tool": {
+  "name": "powerworld-authoring",
+  "version": "0.1.0",
+  "three": "0.169.0",
+  "adapterVersion": 1
+ },
+ "build": {
+  "options": {},
+  "cacheKey": "e82d2e67e781919bd47173ae33cc1ff98b89ecc00beb9bff28eab50acc4d200b",
+  "contentHash": "f5945b6f43bbfd658baea6a8bdc1dd50690948fd3f7ff93e48b38fc75aad45c3",
+  "profile": "desktop"
+ },
+ "acceptance": {
+  "visual": "unapproved",
+  "blockers": [],
+  "note": "Six cabin seats · roof gunner · extended cargo trunk · armored tailgate; model and scale candidate, no handling or live equipment integration."
+ },
+ "outputs": [
+  {
+   "path": "model.glb",
+   "role": "glb",
+   "sha256": "70189deb93904f55a3e02ec09d61fe9b83d6d1b6cb116af1edd7a36b6e44b1f4",
+   "bytes": 175612
+  }
+ ],
+ "packageHash": "4a4d47b905775f12903d80fb7f35115c16bd122f440f0230b09c57e8a2ae69e5"
+}

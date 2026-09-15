@@ -1,0 +1,224 @@
+{
+ "format": "pw-asset-package",
+ "formatVersion": 1,
+ "id": "prop.reference-weapon-flame-sword",
+ "version": 1,
+ "kind": "prop",
+ "displayName": "Flaming sword",
+ "tags": [
+  "reference-fleet",
+  "equipment"
+ ],
+ "rig": {
+  "skeleton": "none"
+ },
+ "sockets": [
+  {
+   "name": "grip-primary",
+   "parent": "weapon-flame-sword",
+   "position": [
+    0,
+    0.16683,
+    -0.70348
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "weapon-tip",
+   "parent": "weapon-flame-sword",
+   "position": [
+    0,
+    0.16683,
+    4.78252
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  }
+ ],
+ "bounds": {
+  "min": [
+   -0.55611,
+   0,
+   -1.27905
+  ],
+  "max": [
+   0.56167,
+   0.30586,
+   4.61569
+  ]
+ },
+ "materials": [
+  {
+   "name": "fleet-painted-parts"
+  }
+ ],
+ "lods": [
+  {
+   "level": 0,
+   "output": "model.glb",
+   "triangles": 112
+  }
+ ],
+ "units": {
+  "lengthUnit": "game-unit",
+  "metersPerUnit": 0.19,
+  "up": "+Y",
+  "forward": "+Z",
+  "handedness": "right",
+  "sourceConversion": {
+   "scale": 1,
+   "yawDegrees": 0,
+   "mirrorX": false,
+   "sourceUp": "+Y",
+   "sourceForward": "+Z",
+   "note": "authored directly in game units along the engine weapon axis (-Y toward the muzzle)"
+  }
+ },
+ "budgets": {
+  "profile": "desktop",
+  "measured": {
+   "triangles": 112,
+   "drawCalls": 1,
+   "materials": 1,
+   "bones": 0,
+   "textures": 0,
+   "bytes": 16476
+  },
+  "limits": {
+   "triangles": 67793,
+   "drawCalls": 32,
+   "materials": 9,
+   "bones": 1,
+   "textures": 4,
+   "bytes": 3170030
+  }
+ },
+ "structural": {
+  "validator": "2.0.0-dev.3.10",
+  "errors": 0,
+  "warnings": 0
+ },
+ "provenance": {
+  "author": "Machine King Labs",
+  "license": "proprietary",
+  "terms": "Original model geometry authored for this project from creator-supplied concept references; reference redistribution rights are not independently verified.",
+  "redistribution": "internal",
+  "attribution": "Creator-supplied September 12, 2026 concepts."
+ },
+ "source": {
+  "adapter": "procedural-prop@1",
+  "files": [
+   {
+    "path": "authoring/recipes/reference-fleet/arsenal.js",
+    "sha256": "a59495f06a26b3f26dac4b7d03a78093a4f6fb33e3bccb5896d6920df9b65031"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/stealth.js",
+    "sha256": "4ce67fd59d660799c1e8b152e5129aae74eb62e72ea2860ded1764275a51d60b"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/nanite-robots.js",
+    "sha256": "e5c027ed100f5a9d4858c6da7bea861dfe05500f57513cc60e636927c7291ece"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/static-batch.js",
+    "sha256": "a5f089984d2ecd7c1f7629ca54774358795581652fce0614e6f759687e3fde55"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/expedition.js",
+    "sha256": "65207c429841fa6403554fa49e4c6e6e855735dbe9aaa95a55534c3998f16995"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/nanite-forms.js",
+    "sha256": "d883d81b0562ae1b7cf592f6fbab0644867eefcbfc9dfedb2c42bfa4aa210c72"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/models.js",
+    "sha256": "349fb09745990e5062a87ac1a47dfc5352ffbd31df74dcda7e8bb67bd5027a63"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/logistics.js",
+    "sha256": "63757f47844ba6c567174bccd2e682471031eb5ed68b6b71fe9893a1beef537d"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/ordnance.js",
+    "sha256": "ab2369438732b8cf9036d2645705dd15c0eb77ccfef7b72212bd41039c805372"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/condition.js",
+    "sha256": "ab8180853faf5c8bb13470a82a84c806f54b96993c7b1806cf562d7fd9754f67"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/air-mobility.js",
+    "sha256": "778f8f67a4f9560fbe8ce38828766c385b7ce739eafda7d84eb652fe9b439f77"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/damage.js",
+    "sha256": "13b05e82dc80d750293ca049542c9e3fb2e874c42a1572dcf16d39bc1fefaed2"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/defense.js",
+    "sha256": "b3e912db260966d8936526b89e678358f3376b4a32c090e097d1046f3f2c710a"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/mechs.js",
+    "sha256": "4aa82d05f85799cba45040e179b5215cded994d368d313f534b1cc3d19c574c4"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/drone-tank.js",
+    "sha256": "ffb9bc81e598700abce165ce4ee960d8a1d133d52fecba4ef9f80f6aa4d144ff"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/crew-interiors.js",
+    "sha256": "972a16c6c00b432c3e8ae1cdc0b6de8c047715ae4f4b4380d908d879107649a7"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/spider-mine.js",
+    "sha256": "cfa4f246a18744c2dd9ee1418906d323a700c47e3a5ecfe333ad6ef33fc6c424"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/weapon-flame-sword/model.js",
+    "sha256": "bafd460c42914dc823b74f8b34d36b354197640f8c014c40023760846bb57d61"
+   }
+  ],
+  "recipe": {
+   "path": "authoring/recipes/reference-fleet/weapon-flame-sword/recipe.json",
+   "sha256": "781c8d93e1b523f74f27bfd631fd247bd788a3c4899fd7afaf981a373e3f7376"
+  }
+ },
+ "tool": {
+  "name": "powerworld-authoring",
+  "version": "0.1.0",
+  "three": "0.169.0",
+  "adapterVersion": 1
+ },
+ "build": {
+  "options": {},
+  "cacheKey": "84740f0ff095ed64f08bea4861fadcce0e2e417e6289ef0c0c44f9beab315ca0",
+  "contentHash": "345616cc062d6c8bca2be503ffd0b6b1ea79c45ee8322d0cdb1f9a21d11adefe",
+  "profile": "desktop"
+ },
+ "acceptance": {
+  "visual": "unapproved",
+  "blockers": [],
+  "note": "Modular arsenal · physical prop and attachment sockets · gameplay integration pending; model and scale candidate, no handling or live equipment integration."
+ },
+ "outputs": [
+  {
+   "path": "model.glb",
+   "role": "glb",
+   "sha256": "0c8f1922f59036fd5a5bd544ee17c94d3cab414b2d2a8fc20ac380ff620904bd",
+   "bytes": 16476
+  }
+ ],
+ "packageHash": "4bd2f185a00d13ed2271746c1626c6039964483903bbd9f9e861eeca7500d6f9"
+}

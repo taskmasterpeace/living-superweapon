@@ -1,0 +1,310 @@
+{
+ "format": "pw-asset-package",
+ "formatVersion": 1,
+ "id": "prop.reference-tank-damaged",
+ "version": 2,
+ "kind": "prop",
+ "displayName": "Battle tank · damaged",
+ "tags": [
+  "reference-fleet",
+  "ground"
+ ],
+ "rig": {
+  "skeleton": "none"
+ },
+ "sockets": [
+  {
+   "name": "driver",
+   "parent": "tank-damaged",
+   "position": [
+    -3.61482,
+    5.42223,
+    7.40455
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "entry-driver",
+   "parent": "tank-damaged",
+   "position": [
+    -13.974,
+    0.05989,
+    7.40455
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "entry-gunner",
+   "parent": "tank-damaged",
+   "position": [
+    -13.974,
+    0.05989,
+    -3.78973
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "gunner",
+   "parent": "turret",
+   "position": [
+    0,
+    -1.39929,
+    -2.33214
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "muzzle",
+   "parent": "barrel",
+   "position": [
+    0,
+    0,
+    20.98929
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-torso-driver",
+   "parent": "socket-seat-driver",
+   "position": [
+    0,
+    2.52632,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-torso-gunner",
+   "parent": "socket-seat-gunner",
+   "position": [
+    0,
+    2.52632,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "seat-driver",
+   "parent": "crew-chair-driver",
+   "position": [
+    0,
+    0.34211,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "seat-gunner",
+   "parent": "crew-chair-gunner",
+   "position": [
+    0,
+    0.34211,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  }
+ ],
+ "bounds": {
+  "min": [
+   -10.55295,
+   0,
+   -16.61652
+  ],
+  "max": [
+   10.85266,
+   17.08295,
+   26.01506
+  ]
+ },
+ "materials": [
+  {
+   "name": "fleet-machine"
+  },
+  {
+   "name": "fleet-damage-charred"
+  },
+  {
+   "name": "fleet-rubber"
+  },
+  {
+   "name": "fleet-painted-parts"
+  },
+  {
+   "name": "fleet-glass"
+  },
+  {
+   "name": "fleet-armor"
+  },
+  {
+   "name": "fleet-red"
+  },
+  {
+   "name": "fleet-damage-metal"
+  }
+ ],
+ "lods": [
+  {
+   "level": 0,
+   "output": "model.glb",
+   "triangles": 1839
+  }
+ ],
+ "units": {
+  "lengthUnit": "game-unit",
+  "metersPerUnit": 0.19,
+  "up": "+Y",
+  "forward": "+Z",
+  "handedness": "right",
+  "sourceConversion": {
+   "scale": 1,
+   "yawDegrees": 0,
+   "mirrorX": false,
+   "sourceUp": "+Y",
+   "sourceForward": "+Z",
+   "note": "authored directly in game units along the engine weapon axis (-Y toward the muzzle)"
+  }
+ },
+ "budgets": {
+  "profile": "desktop",
+  "measured": {
+   "triangles": 1839,
+   "drawCalls": 15,
+   "materials": 8,
+   "bones": 0,
+   "textures": 0,
+   "bytes": 198604
+  },
+  "limits": {
+   "triangles": 67793,
+   "drawCalls": 32,
+   "materials": 9,
+   "bones": 1,
+   "textures": 4,
+   "bytes": 3170030
+  }
+ },
+ "structural": {
+  "validator": "2.0.0-dev.3.10",
+  "errors": 0,
+  "warnings": 0
+ },
+ "provenance": {
+  "author": "Machine King Labs",
+  "license": "proprietary",
+  "terms": "Original model geometry authored for this project from creator-supplied concept references; reference redistribution rights are not independently verified.",
+  "redistribution": "internal",
+  "attribution": "Creator-supplied September 12, 2026 concepts."
+ },
+ "source": {
+  "adapter": "procedural-prop@1",
+  "files": [
+   {
+    "path": "authoring/recipes/reference-fleet/models.js",
+    "sha256": "81c26627f81aa46a90ab4b5f5163b6e2a6d6fca8cedfb6ccd4d93b40d491fe97"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/damage.js",
+    "sha256": "3de0a59c37abf35dd6538cef69e1e8c7e057dd357ad511da4565cbad12f8566a"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/defense.js",
+    "sha256": "b3e912db260966d8936526b89e678358f3376b4a32c090e097d1046f3f2c710a"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/mechs.js",
+    "sha256": "2a1bb841aa14d35b16b0b1c98fe220a19df215cbf9da5e4db57a77d608fab618"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/crew-interiors.js",
+    "sha256": "42a0f3b751172043a8aef2f60197913d31a774ee9b79f0f51393aaf8c6ef1d1e"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/spider-mine.js",
+    "sha256": "cfa4f246a18744c2dd9ee1418906d323a700c47e3a5ecfe333ad6ef33fc6c424"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/tank-damaged/model.js",
+    "sha256": "0c0a471dde148aa9d9508bb5bc5129762253a4e072cad12b10fcd83d11728ecd"
+   },
+   {
+    "path": "assets-src/reference-fleet/references/3.webp",
+    "sha256": "dec76331e7b5c7885159c68de619793fae4eb49c77261446373c2d21824a607d"
+   }
+  ],
+  "recipe": {
+   "path": "authoring/recipes/reference-fleet/tank-damaged/recipe.json",
+   "sha256": "594f7f2cd94419599a719a48cf0762c6fff7e8aac01c4fb226c36e43fc5836f9"
+  }
+ },
+ "tool": {
+  "name": "powerworld-authoring",
+  "version": "0.1.0",
+  "three": "0.169.0",
+  "adapterVersion": 1
+ },
+ "build": {
+  "options": {},
+  "cacheKey": "4cecc1651b1612c3dceb68b461646e5eaad8b9d122987c12a53ad28093350b16",
+  "contentHash": "56f09e2817109e4f53115e8eeda553c0bda90c209fe45223cef9e121e01f71eb",
+  "profile": "desktop"
+ },
+ "acceptance": {
+  "visual": "unapproved",
+  "blockers": [],
+  "note": "Tracked hull · independent turret and barrel; model and scale candidate, no handling or live equipment integration."
+ },
+ "outputs": [
+  {
+   "path": "model.glb",
+   "role": "glb",
+   "sha256": "175553b05525d4e9d13d90e9d8049cbc06de4387bc325edff0418d94a6d3f723",
+   "bytes": 198604
+  }
+ ],
+ "packageHash": "c7e854e3ab0db932c2ee268c8db54d3bc8f9c9541a34bca023a8643fd5eeba07"
+}

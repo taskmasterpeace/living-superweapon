@@ -1,0 +1,261 @@
+{
+ "format": "pw-asset-package",
+ "formatVersion": 1,
+ "id": "prop.reference-jet-a-damaged",
+ "version": 2,
+ "kind": "prop",
+ "displayName": "Strike jet · damaged",
+ "tags": [
+  "reference-fleet",
+  "aircraft"
+ ],
+ "rig": {
+  "skeleton": "none"
+ },
+ "sockets": [
+  {
+   "name": "contact-left",
+   "parent": "landing-gear-left",
+   "position": [
+    0,
+    -8.36712,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "contact-nose",
+   "parent": "landing-gear-nose",
+   "position": [
+    0,
+    -8.36712,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "contact-right",
+   "parent": "landing-gear-right",
+   "position": [
+    0,
+    -8.36712,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "engine-left",
+   "parent": "jet-a-damaged",
+   "position": [
+    -6.12803,
+    10.95975,
+    -28.87247
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "engine-right",
+   "parent": "jet-a-damaged",
+   "position": [
+    6.12803,
+    10.95975,
+    -28.87247
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "muzzle",
+   "parent": "jet-a-damaged",
+   "position": [
+    0,
+    8.89743,
+    33.29172
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "pilot",
+   "parent": "jet-a-damaged",
+   "position": [
+    0,
+    13.02207,
+    6.59942
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  }
+ ],
+ "bounds": {
+  "min": [
+   -29.93309,
+   0,
+   -28.81354
+  ],
+  "max": [
+   19.80015,
+   26.34228,
+   33.29172
+  ]
+ },
+ "materials": [
+  {
+   "name": "fleet-rubber"
+  },
+  {
+   "name": "fleet-edge"
+  },
+  {
+   "name": "fleet-armor"
+  },
+  {
+   "name": "fleet-machine"
+  },
+  {
+   "name": "fleet-damage-charred"
+  },
+  {
+   "name": "fleet-red"
+  },
+  {
+   "name": "fleet-damage-metal"
+  }
+ ],
+ "lods": [
+  {
+   "level": 0,
+   "output": "model.glb",
+   "triangles": 1090
+  }
+ ],
+ "units": {
+  "lengthUnit": "game-unit",
+  "metersPerUnit": 0.19,
+  "up": "+Y",
+  "forward": "+Z",
+  "handedness": "right",
+  "sourceConversion": {
+   "scale": 1,
+   "yawDegrees": 0,
+   "mirrorX": false,
+   "sourceUp": "+Y",
+   "sourceForward": "+Z",
+   "note": "authored directly in game units along the engine weapon axis (-Y toward the muzzle)"
+  }
+ },
+ "budgets": {
+  "profile": "desktop",
+  "measured": {
+   "triangles": 1090,
+   "drawCalls": 16,
+   "materials": 7,
+   "bones": 0,
+   "textures": 0,
+   "bytes": 117920
+  },
+  "limits": {
+   "triangles": 67793,
+   "drawCalls": 32,
+   "materials": 9,
+   "bones": 1,
+   "textures": 4,
+   "bytes": 3170030
+  }
+ },
+ "structural": {
+  "validator": "2.0.0-dev.3.10",
+  "errors": 0,
+  "warnings": 0
+ },
+ "provenance": {
+  "author": "Machine King Labs",
+  "license": "proprietary",
+  "terms": "Original model geometry authored for this project from creator-supplied concept references; reference redistribution rights are not independently verified.",
+  "redistribution": "internal",
+  "attribution": "Creator-supplied September 12, 2026 concepts."
+ },
+ "source": {
+  "adapter": "procedural-prop@1",
+  "files": [
+   {
+    "path": "authoring/recipes/reference-fleet/models.js",
+    "sha256": "662cb593a9aab54092814c78296af8ddc1cda0640fb89f533506fa0084ee1547"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/damage.js",
+    "sha256": "860e2a4acd495f39e7651b9731c1200753752095d05281323b5c849b44105374"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/jet-a-damaged/model.js",
+    "sha256": "c44f476fe324ef01a8315c8ea43f6aef05e44228126ff68a653f4929fc5c3d44"
+   },
+   {
+    "path": "assets-src/reference-fleet/references/1.webp",
+    "sha256": "4e17da96208911a045fcf8d52a2ff4165f1ce463eb786fb42426591dd283e21c"
+   }
+  ],
+  "recipe": {
+   "path": "authoring/recipes/reference-fleet/jet-a-damaged/recipe.json",
+   "sha256": "1831d60494c10d9b5b742ad275a642b032a7ebe08b390bed0f203336b03c5099"
+  }
+ },
+ "tool": {
+  "name": "powerworld-authoring",
+  "version": "0.1.0",
+  "three": "0.169.0",
+  "adapterVersion": 1
+ },
+ "build": {
+  "options": {},
+  "cacheKey": "5c0aca4515732ef3973426edb687a7d35280b4ba8ba1f25b19c54f7805d4912d",
+  "contentHash": "b0edd0cf979f3a10db7c263293ce68a883db530f93434b3be7f71c893d651496",
+  "profile": "desktop"
+ },
+ "acceptance": {
+  "visual": "unapproved",
+  "blockers": [],
+  "note": "Broad wings · recessed intakes · underslung pods; model and scale candidate, no handling or live equipment integration."
+ },
+ "outputs": [
+  {
+   "path": "model.glb",
+   "role": "glb",
+   "sha256": "9cb33c7d1ff5614cd39cc70b2e7d917d8df5d3ad31b86a75d7410768b1d53b99",
+   "bytes": 117920
+  }
+ ],
+ "packageHash": "50e3944e79dea877996099c8d18c685580041734f9b40a83d5cf3cf9365b1e0c"
+}

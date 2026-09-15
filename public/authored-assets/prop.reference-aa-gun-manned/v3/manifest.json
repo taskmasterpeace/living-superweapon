@@ -1,0 +1,320 @@
+{
+ "format": "pw-asset-package",
+ "formatVersion": 1,
+ "id": "prop.reference-aa-gun-manned",
+ "version": 3,
+ "kind": "prop",
+ "displayName": "Seated anti-air gun",
+ "tags": [
+  "reference-fleet",
+  "defense"
+ ],
+ "rig": {
+  "skeleton": "none"
+ },
+ "sockets": [
+  {
+   "name": "aim",
+   "parent": "elevation",
+   "position": [
+    0,
+    0,
+    11.90671
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "entry",
+   "parent": "turret",
+   "position": [
+    0,
+    -3.36494,
+    -8.28293
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "entry-operator",
+   "parent": "aa-gun-manned",
+   "position": [
+    -11.79081,
+    0.52374,
+    -3.72732
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "grip-left",
+   "parent": "turret",
+   "position": [
+    -1.39774,
+    3.72732,
+    -1.24244
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "grip-right",
+   "parent": "turret",
+   "position": [
+    1.39774,
+    3.72732,
+    -1.24244
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "muzzle-left",
+   "parent": "aa-barrel-left",
+   "position": [
+    0,
+    0,
+    11.49257
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "muzzle-right",
+   "parent": "aa-barrel-right",
+   "position": [
+    0,
+    0,
+    11.49257
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-torso-operator",
+   "parent": "socket-seat-operator",
+   "position": [
+    0,
+    2.51397,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "operator-seat",
+   "parent": "turret",
+   "position": [
+    0,
+    2.07073,
+    -3.72732
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "seat-operator",
+   "parent": "socket-operator-seat",
+   "position": [
+    0,
+    0,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  }
+ ],
+ "bounds": {
+  "min": [
+   -8.38647,
+   0,
+   -8.38647
+  ],
+  "max": [
+   8.38647,
+   14.58915,
+   11.61353
+  ]
+ },
+ "materials": [
+  {
+   "name": "fleet-machine"
+  },
+  {
+   "name": "fleet-rubber"
+  },
+  {
+   "name": "fleet-edge"
+  },
+  {
+   "name": "fleet-armor"
+  },
+  {
+   "name": "fleet-red"
+  }
+ ],
+ "lods": [
+  {
+   "level": 0,
+   "output": "model.glb",
+   "triangles": 1264
+  }
+ ],
+ "units": {
+  "lengthUnit": "game-unit",
+  "metersPerUnit": 0.19,
+  "up": "+Y",
+  "forward": "+Z",
+  "handedness": "right",
+  "sourceConversion": {
+   "scale": 1,
+   "yawDegrees": 0,
+   "mirrorX": false,
+   "sourceUp": "+Y",
+   "sourceForward": "+Z",
+   "note": "authored directly in game units along the engine weapon axis (-Y toward the muzzle)"
+  }
+ },
+ "budgets": {
+  "profile": "desktop",
+  "measured": {
+   "triangles": 1264,
+   "drawCalls": 15,
+   "materials": 5,
+   "bones": 0,
+   "textures": 0,
+   "bytes": 133200
+  },
+  "limits": {
+   "triangles": 67793,
+   "drawCalls": 32,
+   "materials": 9,
+   "bones": 1,
+   "textures": 4,
+   "bytes": 3170030
+  }
+ },
+ "structural": {
+  "validator": "2.0.0-dev.3.10",
+  "errors": 0,
+  "warnings": 0
+ },
+ "provenance": {
+  "author": "Machine King Labs",
+  "license": "proprietary",
+  "terms": "Original model geometry authored for this project from creator-supplied concept references; reference redistribution rights are not independently verified.",
+  "redistribution": "internal",
+  "attribution": "Creator-supplied September 12, 2026 concepts."
+ },
+ "source": {
+  "adapter": "procedural-prop@1",
+  "files": [
+   {
+    "path": "authoring/recipes/reference-fleet/models.js",
+    "sha256": "0beefc4fab0791c3f57e555487eb60530433a650c78ae63aaa684d0d6307ef6d"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/air-mobility.js",
+    "sha256": "9d27ce244b8c3b3f0660708f676017af70e4537314bc0a7e65562a09d6272f44"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/damage.js",
+    "sha256": "3de0a59c37abf35dd6538cef69e1e8c7e057dd357ad511da4565cbad12f8566a"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/defense.js",
+    "sha256": "b3e912db260966d8936526b89e678358f3376b4a32c090e097d1046f3f2c710a"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/mechs.js",
+    "sha256": "4aa82d05f85799cba45040e179b5215cded994d368d313f534b1cc3d19c574c4"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/drone-tank.js",
+    "sha256": "ffb9bc81e598700abce165ce4ee960d8a1d133d52fecba4ef9f80f6aa4d144ff"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/crew-interiors.js",
+    "sha256": "e869251a24b29f7ac0a3de2d7e9d37f290f5cb5fc0cd96d10ca8b60ce444dbc5"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/spider-mine.js",
+    "sha256": "cfa4f246a18744c2dd9ee1418906d323a700c47e3a5ecfe333ad6ef33fc6c424"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/aa-gun-manned/model.js",
+    "sha256": "eec1929c29996239fa1781d764ce0566937698ceca8af6ca79fa3ce28c8f6148"
+   }
+  ],
+  "recipe": {
+   "path": "authoring/recipes/reference-fleet/aa-gun-manned/recipe.json",
+   "sha256": "d2a5b2914afb789027108a4d1e802180012b36adec8d7e429d9fb7beb979b4b0"
+  }
+ },
+ "tool": {
+  "name": "powerworld-authoring",
+  "version": "0.1.0",
+  "three": "0.169.0",
+  "adapterVersion": 1
+ },
+ "build": {
+  "options": {},
+  "cacheKey": "038461b524164012d1315c6418a813484153a1a6780ca160fdb6ae42bfe45394",
+  "contentHash": "eb63f655ac6fd1aeeee5a728020e7be63d7793f0b908d6443b4e894780f9fcf4",
+  "profile": "desktop"
+ },
+ "acceptance": {
+  "visual": "unapproved",
+  "blockers": [],
+  "note": "Operator seat · twin cannon · turning and elevation pivots; model and scale candidate, no handling or live equipment integration."
+ },
+ "outputs": [
+  {
+   "path": "model.glb",
+   "role": "glb",
+   "sha256": "2681a8817891f49a638718a4847c9b2baa01605a88eb68de2aa38049263d6f2e",
+   "bytes": 133200
+  }
+ ],
+ "packageHash": "49563c1c0c650f0df93d68b9285434d065c319fe8a87bc8ee4d18bc640223fb0"
+}

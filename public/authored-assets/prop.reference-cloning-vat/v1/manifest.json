@@ -1,0 +1,230 @@
+{
+ "format": "pw-asset-package",
+ "formatVersion": 1,
+ "id": "prop.reference-cloning-vat",
+ "version": 1,
+ "kind": "prop",
+ "displayName": "Cloning vat",
+ "tags": [
+  "reference-fleet",
+  "facilities"
+ ],
+ "rig": {
+  "skeleton": "none"
+ },
+ "sockets": [
+  {
+   "name": "clone-exit",
+   "parent": "cloning-vat",
+   "position": [
+    0,
+    1.78947,
+    11.57895
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "clone-origin",
+   "parent": "cloning-vat",
+   "position": [
+    0,
+    3.26316,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "emblem-front",
+   "parent": "cloning-vat",
+   "position": [
+    0,
+    17.89474,
+    5.65789
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  }
+ ],
+ "bounds": {
+  "min": [
+   -7.89474,
+   0,
+   -9.47368
+  ],
+  "max": [
+   7.89474,
+   18.81579,
+   12.10526
+  ]
+ },
+ "materials": [
+  {
+   "name": "fleet-painted-parts"
+  },
+  {
+   "name": "fleet-glass"
+  }
+ ],
+ "lods": [
+  {
+   "level": 0,
+   "output": "model.glb",
+   "triangles": 232
+  }
+ ],
+ "units": {
+  "lengthUnit": "game-unit",
+  "metersPerUnit": 0.19,
+  "up": "+Y",
+  "forward": "+Z",
+  "handedness": "right",
+  "sourceConversion": {
+   "scale": 1,
+   "yawDegrees": 0,
+   "mirrorX": false,
+   "sourceUp": "+Y",
+   "sourceForward": "+Z",
+   "note": "authored directly in game units along the engine weapon axis (-Y toward the muzzle)"
+  }
+ },
+ "budgets": {
+  "profile": "desktop",
+  "measured": {
+   "triangles": 232,
+   "drawCalls": 6,
+   "materials": 2,
+   "bones": 0,
+   "textures": 0,
+   "bytes": 34936
+  },
+  "limits": {
+   "triangles": 67793,
+   "drawCalls": 32,
+   "materials": 9,
+   "bones": 1,
+   "textures": 4,
+   "bytes": 3170030
+  }
+ },
+ "structural": {
+  "validator": "2.0.0-dev.3.10",
+  "errors": 0,
+  "warnings": 0
+ },
+ "provenance": {
+  "author": "Machine King Labs",
+  "license": "proprietary",
+  "terms": "Original model geometry authored for this project from creator-supplied concept references; reference redistribution rights are not independently verified.",
+  "redistribution": "internal",
+  "attribution": "Creator-supplied September 12, 2026 concepts."
+ },
+ "source": {
+  "adapter": "procedural-prop@1",
+  "files": [
+   {
+    "path": "authoring/recipes/reference-fleet/static-batch.js",
+    "sha256": "30f54b24ce61f0a9abf27b94795360e1f9e2a5ee6125924d1c79cf591591246f"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/expedition.js",
+    "sha256": "184d3c79b3920acb9e6b1936bd830f2c97b7ec88897b92b3c4dfa10777a8127e"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/nanite-forms.js",
+    "sha256": "35170d28c70f30b82a7c610521427b9e2bbde7f2fd538fc243edc0f38f90494e"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/models.js",
+    "sha256": "f2b86f10af63c6caf2484e1a7ef579d36035a5871c34dc791632a852a40bfd1e"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/logistics.js",
+    "sha256": "91bd34ea3a755cf8f2b74e5f0936d810c86242d013f219347128bd561b1e136f"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/ordnance.js",
+    "sha256": "ab2369438732b8cf9036d2645705dd15c0eb77ccfef7b72212bd41039c805372"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/condition.js",
+    "sha256": "db23e1bf130ccdc847798894ecf4c8bd97ed641c91b6d8e40a1094f1aa2f991d"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/air-mobility.js",
+    "sha256": "778f8f67a4f9560fbe8ce38828766c385b7ce739eafda7d84eb652fe9b439f77"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/damage.js",
+    "sha256": "0c34abc49ebe1feacfbe9ef6cc1f850ea12cab5bf5dbcfb7ecef54976a7affef"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/defense.js",
+    "sha256": "b3e912db260966d8936526b89e678358f3376b4a32c090e097d1046f3f2c710a"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/mechs.js",
+    "sha256": "4aa82d05f85799cba45040e179b5215cded994d368d313f534b1cc3d19c574c4"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/drone-tank.js",
+    "sha256": "ffb9bc81e598700abce165ce4ee960d8a1d133d52fecba4ef9f80f6aa4d144ff"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/crew-interiors.js",
+    "sha256": "0048d0e741b0d7a7704e8fccd13cc53c6b4b298f5bd26704489f8aa57474802d"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/spider-mine.js",
+    "sha256": "cfa4f246a18744c2dd9ee1418906d323a700c47e3a5ecfe333ad6ef33fc6c424"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/cloning-vat/model.js",
+    "sha256": "ec9ba1a2ed1e8a9bcfd1a6cec1d0396c1cc5fe8bc3174fa222189ccb5b88cb34"
+   }
+  ],
+  "recipe": {
+   "path": "authoring/recipes/reference-fleet/cloning-vat/recipe.json",
+   "sha256": "4f382c27809028fc8f801d8f05219780db069bdc0bdf4d14f4a37c4354866a4c"
+  }
+ },
+ "tool": {
+  "name": "powerworld-authoring",
+  "version": "0.1.0",
+  "three": "0.169.0",
+  "adapterVersion": 1
+ },
+ "build": {
+  "options": {},
+  "cacheKey": "4d4c59f591c92fdc2bd127fea53f50a97da6ce8110f0d28382e22e9e90558563",
+  "contentHash": "9898313b4013bdf9dbbf2139f14143f8fba28dcd2b2fce55bfb833d63d046bbd",
+  "profile": "desktop"
+ },
+ "acceptance": {
+  "visual": "unapproved",
+  "blockers": [],
+  "note": "Split transparent doors · human-size chamber · front exit; model and scale candidate, no handling or live equipment integration."
+ },
+ "outputs": [
+  {
+   "path": "model.glb",
+   "role": "glb",
+   "sha256": "4cc29d122158eaf8c329c78010ba1e325cda098a8a02c7b4cf319deb03814735",
+   "bytes": 34936
+  }
+ ],
+ "packageHash": "faa6b145bc4e26554019fa47a39ae367ea251e243e4c549fccc784638f93f7e3"
+}

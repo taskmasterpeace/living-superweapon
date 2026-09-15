@@ -1,0 +1,98 @@
+{
+  "samples": [
+    {
+      "alive": false,
+      "take": "Death01",
+      "elapsed": 0.1415000000000009,
+      "pos": [
+        230,
+        0,
+        -168
+      ],
+      "visible": true
+    },
+    {
+      "alive": false,
+      "take": "Death01",
+      "elapsed": 0.7212000000000018,
+      "pos": [
+        230,
+        0,
+        -168
+      ],
+      "visible": true
+    },
+    {
+      "alive": false,
+      "take": "Death01",
+      "elapsed": 1.350600000000002,
+      "pos": [
+        230,
+        0,
+        -168
+      ],
+      "visible": true
+    },
+    {
+      "alive": false,
+      "asleep": true,
+      "pos": [
+        229.94724325383157,
+        0,
+        -165.1218181636389
+      ],
+      "visible": true
+    },
+    {
+      "alive": false,
+      "asleep": true,
+      "pos": [
+        229.94724325383157,
+        0,
+        -165.1218181636389
+      ],
+      "visible": true
+    },
+    {
+      "alive": false,
+      "asleep": true,
+      "pos": [
+        229.94724325383157,
+        0,
+        -165.1218181636389
+      ],
+      "visible": true
+    },
+    {
+      "alive": false,
+      "asleep": true,
+      "pos": [
+        229.94724325383157,
+        0,
+        -165.1218181636389
+      ],
+      "visible": true
+    },
+    {
+      "alive": false,
+      "asleep": true,
+      "pos": [
+        229.94724325383157,
+        0,
+        -165.1218181636389
+      ],
+      "visible": true
+    },
+    {
+      "alive": false,
+      "asleep": true,
+      "pos": [
+        229.94724325383157,
+        0,
+        -165.1218181636389
+      ],
+      "visible": true
+    }
+  ],
+  "errors": []
+}

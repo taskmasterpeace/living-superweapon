@@ -1,0 +1,209 @@
+{
+ "format": "pw-asset-package",
+ "formatVersion": 1,
+ "id": "prop.reference-jet-a",
+ "version": 1,
+ "kind": "prop",
+ "displayName": "Strike jet",
+ "tags": [
+  "reference-fleet",
+  "aircraft"
+ ],
+ "rig": {
+  "skeleton": "none"
+ },
+ "sockets": [
+  {
+   "name": "engine-left",
+   "parent": "jet-a",
+   "position": [
+    -6.12803,
+    4.06571,
+    -28.87247
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "engine-right",
+   "parent": "jet-a",
+   "position": [
+    6.12803,
+    4.06571,
+    -28.87247
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "muzzle",
+   "parent": "jet-a",
+   "position": [
+    0,
+    2.0034,
+    33.29172
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "pilot",
+   "parent": "jet-a",
+   "position": [
+    0,
+    6.12803,
+    6.59942
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  }
+ ],
+ "bounds": {
+  "min": [
+   -29.93309,
+   0,
+   -28.81354
+  ],
+  "max": [
+   29.93309,
+   18.50195,
+   33.29172
+  ]
+ },
+ "materials": [
+  {
+   "name": "fleet-armor"
+  },
+  {
+   "name": "fleet-machine"
+  },
+  {
+   "name": "fleet-glass"
+  },
+  {
+   "name": "fleet-edge"
+  },
+  {
+   "name": "fleet-rubber"
+  },
+  {
+   "name": "fleet-red"
+  }
+ ],
+ "lods": [
+  {
+   "level": 0,
+   "output": "model.glb",
+   "triangles": 380
+  }
+ ],
+ "units": {
+  "lengthUnit": "game-unit",
+  "metersPerUnit": 0.19,
+  "up": "+Y",
+  "forward": "+Z",
+  "handedness": "right",
+  "sourceConversion": {
+   "scale": 1,
+   "yawDegrees": 0,
+   "mirrorX": false,
+   "sourceUp": "+Y",
+   "sourceForward": "+Z",
+   "note": "authored directly in game units along the engine weapon axis (-Y toward the muzzle)"
+  }
+ },
+ "budgets": {
+  "profile": "desktop",
+  "measured": {
+   "triangles": 380,
+   "drawCalls": 6,
+   "materials": 6,
+   "bones": 0,
+   "textures": 0,
+   "bytes": 42080
+  },
+  "limits": {
+   "triangles": 67793,
+   "drawCalls": 32,
+   "materials": 9,
+   "bones": 1,
+   "textures": 4,
+   "bytes": 3170030
+  }
+ },
+ "structural": {
+  "validator": "2.0.0-dev.3.10",
+  "errors": 0,
+  "warnings": 0
+ },
+ "provenance": {
+  "author": "Machine King Labs",
+  "license": "proprietary",
+  "terms": "Original model geometry authored for this project from creator-supplied concept references; reference redistribution rights are not independently verified.",
+  "redistribution": "internal",
+  "attribution": "Creator-supplied September 12, 2026 concepts."
+ },
+ "source": {
+  "adapter": "procedural-prop@1",
+  "files": [
+   {
+    "path": "authoring/recipes/reference-fleet/models.js",
+    "sha256": "f4a8666473a2739182a785434489623a126b2fb48618733465c5448b79992fe4"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/jet-a/model.js",
+    "sha256": "27568dd0b5cdc1b540dfc98aecfb86c4ec4d5117b28d043017e9385390bcb116"
+   },
+   {
+    "path": "assets-src/reference-fleet/references/1.webp",
+    "sha256": "4e17da96208911a045fcf8d52a2ff4165f1ce463eb786fb42426591dd283e21c"
+   }
+  ],
+  "recipe": {
+   "path": "authoring/recipes/reference-fleet/jet-a/recipe.json",
+   "sha256": "2ef99b62da755c24efdf5996b8e3ee492487e6e531ce91bb2d9b0448e259f3dd"
+  }
+ },
+ "tool": {
+  "name": "powerworld-authoring",
+  "version": "0.1.0",
+  "three": "0.169.0",
+  "adapterVersion": 1
+ },
+ "build": {
+  "options": {},
+  "cacheKey": "5902f77e2d59a24c7de3461fa6059760243e1f075d362962398c8ddf30395f60",
+  "contentHash": "fd033158e73669a4ccf60a8779af1eea8f3b014c2e6a86d738a8c2a751493f22",
+  "profile": "desktop"
+ },
+ "acceptance": {
+  "visual": "unapproved",
+  "blockers": [],
+  "note": "Broad wings · recessed intakes · underslung pods; model and scale candidate, no handling or live equipment integration."
+ },
+ "outputs": [
+  {
+   "path": "model.glb",
+   "role": "glb",
+   "sha256": "e507de359e9170685a4ccedc31e0d85aad71335c5fd0d2502cf62c6d460254bb",
+   "bytes": 42080
+  }
+ ],
+ "packageHash": "4cddd96308483eccead9cfce79a4d1878d8e5c53c28d504854f4be4bf71c4ea9"
+}

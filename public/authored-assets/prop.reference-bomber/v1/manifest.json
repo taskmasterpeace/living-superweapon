@@ -1,0 +1,236 @@
+{
+ "format": "pw-asset-package",
+ "formatVersion": 1,
+ "id": "prop.reference-bomber",
+ "version": 1,
+ "kind": "prop",
+ "displayName": "Heavy bomber",
+ "tags": [
+  "reference-fleet",
+  "aircraft"
+ ],
+ "rig": {
+  "skeleton": "none"
+ },
+ "sockets": [
+  {
+   "name": "engine--1-4.9",
+   "parent": "bomber",
+   "position": [
+    -28.07018,
+    5.25948,
+    -1.71858
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "engine--1-8",
+   "parent": "bomber",
+   "position": [
+    -45.82886,
+    5.25948,
+    -1.71858
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "engine-1-4.9",
+   "parent": "bomber",
+   "position": [
+    28.07018,
+    5.25948,
+    -1.71858
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "engine-1-8",
+   "parent": "bomber",
+   "position": [
+    45.82886,
+    5.25948,
+    -1.71858
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "payload",
+   "parent": "bomber",
+   "position": [
+    0,
+    5.25948,
+    21.19585
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "pilot",
+   "parent": "bomber",
+   "position": [
+    0,
+    14.42525,
+    45.82886
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  }
+ ],
+ "bounds": {
+  "min": [
+   -78.05228,
+   0,
+   -57.28607
+  ],
+  "max": [
+   78.05228,
+   28.74677,
+   69.02972
+  ]
+ },
+ "materials": [
+  {
+   "name": "fleet-armor"
+  },
+  {
+   "name": "fleet-machine"
+  },
+  {
+   "name": "fleet-glass"
+  },
+  {
+   "name": "fleet-red"
+  },
+  {
+   "name": "fleet-rubber"
+  }
+ ],
+ "lods": [
+  {
+   "level": 0,
+   "output": "model.glb",
+   "triangles": 640
+  }
+ ],
+ "units": {
+  "lengthUnit": "game-unit",
+  "metersPerUnit": 0.19,
+  "up": "+Y",
+  "forward": "+Z",
+  "handedness": "right",
+  "sourceConversion": {
+   "scale": 1,
+   "yawDegrees": 0,
+   "mirrorX": false,
+   "sourceUp": "+Y",
+   "sourceForward": "+Z",
+   "note": "authored directly in game units along the engine weapon axis (-Y toward the muzzle)"
+  }
+ },
+ "budgets": {
+  "profile": "desktop",
+  "measured": {
+   "triangles": 640,
+   "drawCalls": 5,
+   "materials": 5,
+   "bones": 0,
+   "textures": 0,
+   "bytes": 66448
+  },
+  "limits": {
+   "triangles": 67793,
+   "drawCalls": 32,
+   "materials": 9,
+   "bones": 1,
+   "textures": 4,
+   "bytes": 3170030
+  }
+ },
+ "structural": {
+  "validator": "2.0.0-dev.3.10",
+  "errors": 0,
+  "warnings": 0
+ },
+ "provenance": {
+  "author": "Machine King Labs",
+  "license": "proprietary",
+  "terms": "Original model geometry authored for this project from creator-supplied concept references; reference redistribution rights are not independently verified.",
+  "redistribution": "internal",
+  "attribution": "Creator-supplied September 12, 2026 concepts."
+ },
+ "source": {
+  "adapter": "procedural-prop@1",
+  "files": [
+   {
+    "path": "authoring/recipes/reference-fleet/models.js",
+    "sha256": "f4a8666473a2739182a785434489623a126b2fb48618733465c5448b79992fe4"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/bomber/model.js",
+    "sha256": "0f9cde4cd91be4470f04c6abb8afd7d5219fdb7562a153bbe4ac088eb881d564"
+   },
+   {
+    "path": "assets-src/reference-fleet/references/4.webp",
+    "sha256": "c0c61f8fac9f6d3b5a5f61fe7ccb55aaae489f9a519e4a54b4c64061c2a89424"
+   }
+  ],
+  "recipe": {
+   "path": "authoring/recipes/reference-fleet/bomber/recipe.json",
+   "sha256": "53c1ea04350b173a5bf3acfdaa4cd414a461eb7d277865b151ab6a6ad82d88bd"
+  }
+ },
+ "tool": {
+  "name": "powerworld-authoring",
+  "version": "0.1.0",
+  "three": "0.169.0",
+  "adapterVersion": 1
+ },
+ "build": {
+  "options": {},
+  "cacheKey": "6cc09146cb7127a508d668eb5a3a5ac9a4296e7f65cd1db4159f005e5e705fbc",
+  "contentHash": "16d80f17d1889c7c607d28bd802b68896cb07f29011d23e5c57054478d1f9d65",
+  "profile": "desktop"
+ },
+ "acceptance": {
+  "visual": "unapproved",
+  "blockers": [],
+  "note": "Four engines · wide straight wings · open payload bay; model and scale candidate, no handling or live equipment integration."
+ },
+ "outputs": [
+  {
+   "path": "model.glb",
+   "role": "glb",
+   "sha256": "4f78d47b68a34c33870816a64b02ced8abc0bd131d977d57997288b5af153ecf",
+   "bytes": 66448
+  }
+ ],
+ "packageHash": "b8c0280b087886eb45fd27dfc9b77c7832a4eb29c2c39d7f2245efed4e8a8f67"
+}

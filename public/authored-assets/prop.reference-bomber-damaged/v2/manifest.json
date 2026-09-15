@@ -1,0 +1,534 @@
+{
+ "format": "pw-asset-package",
+ "formatVersion": 1,
+ "id": "prop.reference-bomber-damaged",
+ "version": 2,
+ "kind": "prop",
+ "displayName": "Heavy bomber · damaged",
+ "tags": [
+  "reference-fleet",
+  "aircraft"
+ ],
+ "rig": {
+  "skeleton": "none"
+ },
+ "sockets": [
+  {
+   "name": "contact-left",
+   "parent": "landing-gear-left",
+   "position": [
+    0,
+    -13.80594,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "contact-nose",
+   "parent": "landing-gear-nose",
+   "position": [
+    0,
+    -13.80594,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "contact-right",
+   "parent": "landing-gear-right",
+   "position": [
+    0,
+    -13.80594,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "engine--1-4.9",
+   "parent": "bomber-damaged",
+   "position": [
+    -28.07018,
+    12.48795,
+    -1.71858
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "engine--1-8",
+   "parent": "bomber-damaged",
+   "position": [
+    -45.82886,
+    12.48795,
+    -1.71858
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "engine-1-4.9",
+   "parent": "bomber-damaged",
+   "position": [
+    28.07018,
+    12.48795,
+    -1.71858
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "engine-1-8",
+   "parent": "bomber-damaged",
+   "position": [
+    45.82886,
+    12.48795,
+    -1.71858
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "exhaust-left-large",
+   "parent": "store-left-large",
+   "position": [
+    0,
+    0,
+    -6.44211
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "exhaust-left-small",
+   "parent": "store-left-small",
+   "position": [
+    0,
+    0,
+    -2.55
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "exhaust-right-large",
+   "parent": "store-right-large",
+   "position": [
+    0,
+    0,
+    -6.44211
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "exhaust-right-small",
+   "parent": "store-right-small",
+   "position": [
+    0,
+    0,
+    -2.55
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "hardpoint-left-large",
+   "parent": "bomber-damaged",
+   "position": [
+    -17.75868,
+    11.34223,
+    8.59291
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "hardpoint-left-small",
+   "parent": "bomber-damaged",
+   "position": [
+    -60.15038,
+    13.06081,
+    2.8643
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "hardpoint-right-large",
+   "parent": "bomber-damaged",
+   "position": [
+    17.75868,
+    11.34223,
+    8.59291
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "hardpoint-right-small",
+   "parent": "bomber-damaged",
+   "position": [
+    60.15038,
+    13.06081,
+    2.8643
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "mount-left-large",
+   "parent": "store-left-large",
+   "position": [
+    0,
+    -0.82105,
+    -0.63158
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "mount-left-small",
+   "parent": "store-left-small",
+   "position": [
+    0,
+    -0.325,
+    -0.25
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "mount-right-large",
+   "parent": "store-right-large",
+   "position": [
+    0,
+    -0.82105,
+    -0.63158
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "mount-right-small",
+   "parent": "store-right-small",
+   "position": [
+    0,
+    -0.325,
+    -0.25
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "nose-left-large",
+   "parent": "store-left-large",
+   "position": [
+    0,
+    0,
+    6.31579
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "nose-left-small",
+   "parent": "store-left-small",
+   "position": [
+    0,
+    0,
+    2.5
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "nose-right-large",
+   "parent": "store-right-large",
+   "position": [
+    0,
+    0,
+    6.31579
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "nose-right-small",
+   "parent": "store-right-small",
+   "position": [
+    0,
+    0,
+    2.5
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "payload",
+   "parent": "bomber-damaged",
+   "position": [
+    0,
+    12.48795,
+    21.19585
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "pilot",
+   "parent": "bomber-damaged",
+   "position": [
+    0,
+    21.65372,
+    45.82886
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  }
+ ],
+ "bounds": {
+  "min": [
+   -78.05228,
+   0,
+   -57.28607
+  ],
+  "max": [
+   72.18045,
+   37.06864,
+   69.02972
+  ]
+ },
+ "materials": [
+  {
+   "name": "fleet-painted-parts"
+  },
+  {
+   "name": "fleet-edge"
+  },
+  {
+   "name": "fleet-armor"
+  },
+  {
+   "name": "fleet-machine"
+  },
+  {
+   "name": "fleet-damage-charred"
+  },
+  {
+   "name": "fleet-red"
+  },
+  {
+   "name": "fleet-rubber"
+  },
+  {
+   "name": "fleet-damage-metal"
+  }
+ ],
+ "lods": [
+  {
+   "level": 0,
+   "output": "model.glb",
+   "triangles": 3029
+  }
+ ],
+ "units": {
+  "lengthUnit": "game-unit",
+  "metersPerUnit": 0.19,
+  "up": "+Y",
+  "forward": "+Z",
+  "handedness": "right",
+  "sourceConversion": {
+   "scale": 1,
+   "yawDegrees": 0,
+   "mirrorX": false,
+   "sourceUp": "+Y",
+   "sourceForward": "+Z",
+   "note": "authored directly in game units along the engine weapon axis (-Y toward the muzzle)"
+  }
+ },
+ "budgets": {
+  "profile": "desktop",
+  "measured": {
+   "triangles": 3029,
+   "drawCalls": 25,
+   "materials": 8,
+   "bones": 0,
+   "textures": 0,
+   "bytes": 313084
+  },
+  "limits": {
+   "triangles": 67793,
+   "drawCalls": 32,
+   "materials": 9,
+   "bones": 1,
+   "textures": 4,
+   "bytes": 3170030
+  }
+ },
+ "structural": {
+  "validator": "2.0.0-dev.3.10",
+  "errors": 0,
+  "warnings": 0
+ },
+ "provenance": {
+  "author": "Machine King Labs",
+  "license": "proprietary",
+  "terms": "Original model geometry authored for this project from creator-supplied concept references; reference redistribution rights are not independently verified.",
+  "redistribution": "internal",
+  "attribution": "Creator-supplied September 12, 2026 concepts."
+ },
+ "source": {
+  "adapter": "procedural-prop@1",
+  "files": [
+   {
+    "path": "authoring/recipes/reference-fleet/models.js",
+    "sha256": "2c29565e21471e9fdf0b91163ec180ecfb97b14250c67e36f002c7df29602380"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/damage.js",
+    "sha256": "860e2a4acd495f39e7651b9731c1200753752095d05281323b5c849b44105374"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/bomber-damaged/model.js",
+    "sha256": "4e6a1e454285319c0147df09220f405e23d98d8c71b7308c6913a246cdf532b4"
+   },
+   {
+    "path": "assets-src/reference-fleet/references/4.webp",
+    "sha256": "c0c61f8fac9f6d3b5a5f61fe7ccb55aaae489f9a519e4a54b4c64061c2a89424"
+   }
+  ],
+  "recipe": {
+   "path": "authoring/recipes/reference-fleet/bomber-damaged/recipe.json",
+   "sha256": "8da8637048a67ab120e4a0a8f513dd445ca5230ab44d8b3419cdb70711a0e9ca"
+  }
+ },
+ "tool": {
+  "name": "powerworld-authoring",
+  "version": "0.1.0",
+  "three": "0.169.0",
+  "adapterVersion": 1
+ },
+ "build": {
+  "options": {},
+  "cacheKey": "55d63dfba60cd64988bb572f8994eacee6d4138f50dad000f56d631502a4015b",
+  "contentHash": "1d5cf022d835cafbe2c87b37d4dadcd14a998e78c44ee8211ebd5bba07ddcd46",
+  "profile": "desktop"
+ },
+ "acceptance": {
+  "visual": "unapproved",
+  "blockers": [],
+  "note": "Four engines · wide straight wings · open payload bay; model and scale candidate, no handling or live equipment integration."
+ },
+ "outputs": [
+  {
+   "path": "model.glb",
+   "role": "glb",
+   "sha256": "6eb41b0ae07462a8c3b7f3cc1b139e469d4287a956d05dc676a33188aad9f3d4",
+   "bytes": 313084
+  }
+ ],
+ "packageHash": "de777b6a92bf450e67b156a72296e44d2d7ebc267aa1c8769a721b1b3aeaa834"
+}

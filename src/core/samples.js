@@ -71,7 +71,7 @@ export const MANIFEST = {...FIREARM_SAMPLES,...LIBRARY_SAMPLES,...VEHICLE_SAMPLE
   'fx.glitch': { f: ['glitch_001', 'glitch_002', 'glitch_003', 'glitch_004'], g: 0.6, reach: 110 },
   'fx.forcefield': { f: ['forceField_000', 'forceField_001', 'forceField_002', 'forceField_003', 'forceField_004'], g: 0.55, reach: 130 },
   'fire.roar': { f: ['thrusterFire_000', 'thrusterFire_001', 'thrusterFire_002', 'thrusterFire_003', 'thrusterFire_004'], g: 0.6, reach: 140, loop: true },
-  'engine.charge': { f: ['engineCircular_000', 'engineCircular_001', 'engineCircular_002', 'engineCircular_003', 'engineCircular_004'], g: 0.5, reach: 120, loop: true },
+  'engine.charge': { f: ['ai-pass/final/charge-aura'], g: 0.5, reach: 120, loop: true },
   'engine.low': { f: ['spaceEngineLow_000', 'spaceEngineLow_001', 'spaceEngineLow_002', 'spaceEngineLow_003', 'spaceEngineLow_004'], g: 0.5, reach: 140, loop: true },
 
   // ---- steel and string ----
@@ -184,14 +184,14 @@ export class SampleBank {
     return b || null;
   }
   // Returns TRUE when the event is handled (played, muted, out of earshot) — FALSE only when
-  // no buffer is ready yet, which tells the caller to run its synth fallback.
+  // Unknown cues return false; known cold recordings are handled silently, never substituted.
   play(name, { pos = null, gain = 1, rate = 1, bus = 'sfx', reach, delay = 0 } = {}) {
     const a = this.a;
     if (!a.ok || a.muted) return true;
     const m = MANIFEST[name]; if (!m) return false;
     const pg = bounded(a._pg(pos, reach ?? m.reach ?? 130),0,1,0);
     if (pg === 0) return true;
-    const b = this._pick(m); if (!b) return false;
+    const b = this._pick(m); if (!b) return true; // Known recording owns this event; never substitute a cold-cache synth.
     const src = a.ctx.createBufferSource(); src.buffer = b;
     const rj = m.rj ?? 0.05;
     src.playbackRate.value = bounded(bounded(rate,.25,16,1) * (1 + (Math.random() * 2 - 1) * rj),.25,16,1);

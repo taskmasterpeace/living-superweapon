@@ -1,0 +1,353 @@
+{
+ "format": "pw-asset-package",
+ "formatVersion": 1,
+ "id": "prop.reference-nuclear-missile",
+ "version": 3,
+ "kind": "prop",
+ "displayName": "Nuclear missile · long-range",
+ "tags": [
+  "reference-fleet",
+  "ordnance"
+ ],
+ "rig": {
+  "skeleton": "none"
+ },
+ "sockets": [
+  {
+   "name": "exhaust",
+   "parent": "nuclear-missile",
+   "position": [
+    0,
+    11.3982,
+    -57.31669
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "mount",
+   "parent": "nuclear-missile",
+   "position": [
+    0,
+    19.70261,
+    -6.51326
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "nose",
+   "parent": "nuclear-missile",
+   "position": [
+    0,
+    11.3982,
+    58.61934
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "radiation-mark-0",
+   "parent": "nuclear-missile",
+   "position": [
+    0,
+    17.74863,
+    14.9805
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "radiation-mark-1",
+   "parent": "nuclear-missile",
+   "position": [
+    4.49043,
+    15.88863,
+    14.9805
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "radiation-mark-2",
+   "parent": "nuclear-missile",
+   "position": [
+    6.35043,
+    11.3982,
+    14.9805
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "radiation-mark-3",
+   "parent": "nuclear-missile",
+   "position": [
+    4.49043,
+    6.90777,
+    14.9805
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "radiation-mark-4",
+   "parent": "nuclear-missile",
+   "position": [
+    0,
+    5.04778,
+    14.9805
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "radiation-mark-5",
+   "parent": "nuclear-missile",
+   "position": [
+    -4.49043,
+    6.90777,
+    14.9805
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "radiation-mark-6",
+   "parent": "nuclear-missile",
+   "position": [
+    -6.35043,
+    11.3982,
+    14.9805
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "radiation-mark-7",
+   "parent": "nuclear-missile",
+   "position": [
+    -4.49043,
+    15.88863,
+    14.9805
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  }
+ ],
+ "bounds": {
+  "min": [
+   -20.84243,
+   0,
+   -57.17014
+  ],
+  "max": [
+   20.84243,
+   22.79641,
+   58.61934
+  ]
+ },
+ "materials": [
+  {
+   "name": "fleet-armor"
+  },
+  {
+   "name": "fleet-red"
+  },
+  {
+   "name": "fleet-machine"
+  },
+  {
+   "name": "hazard-yellow"
+  },
+  {
+   "name": "hazard-black"
+  },
+  {
+   "name": "fleet-edge"
+  },
+  {
+   "name": "fleet-rubber"
+  }
+ ],
+ "lods": [
+  {
+   "level": 0,
+   "output": "model.glb",
+   "triangles": 1204
+  }
+ ],
+ "units": {
+  "lengthUnit": "game-unit",
+  "metersPerUnit": 0.19,
+  "up": "+Y",
+  "forward": "+Z",
+  "handedness": "right",
+  "sourceConversion": {
+   "scale": 1,
+   "yawDegrees": 0,
+   "mirrorX": false,
+   "sourceUp": "+Y",
+   "sourceForward": "+Z",
+   "note": "authored directly in game units along the engine weapon axis (-Y toward the muzzle)"
+  }
+ },
+ "budgets": {
+  "profile": "desktop",
+  "measured": {
+   "triangles": 1204,
+   "drawCalls": 11,
+   "materials": 7,
+   "bones": 0,
+   "textures": 0,
+   "bytes": 125804
+  },
+  "limits": {
+   "triangles": 67793,
+   "drawCalls": 32,
+   "materials": 9,
+   "bones": 1,
+   "textures": 4,
+   "bytes": 3170030
+  }
+ },
+ "structural": {
+  "validator": "2.0.0-dev.3.10",
+  "errors": 0,
+  "warnings": 0
+ },
+ "provenance": {
+  "author": "Machine King Labs",
+  "license": "proprietary",
+  "terms": "Original model geometry authored for this project from creator-supplied concept references; reference redistribution rights are not independently verified.",
+  "redistribution": "internal",
+  "attribution": "Creator-supplied September 12, 2026 concepts."
+ },
+ "source": {
+  "adapter": "procedural-prop@1",
+  "files": [
+   {
+    "path": "authoring/recipes/reference-fleet/models.js",
+    "sha256": "ebe4842a28f455d491b3b8845f416cf786dc1ff30a98d57982205c28a4fb743c"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/logistics.js",
+    "sha256": "d116aeadf7b5a29fe4a5ba75d0aee556d69e82a59b4beefe65f3cf52f997b38f"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/ordnance.js",
+    "sha256": "ab2369438732b8cf9036d2645705dd15c0eb77ccfef7b72212bd41039c805372"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/condition.js",
+    "sha256": "db23e1bf130ccdc847798894ecf4c8bd97ed641c91b6d8e40a1094f1aa2f991d"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/air-mobility.js",
+    "sha256": "778f8f67a4f9560fbe8ce38828766c385b7ce739eafda7d84eb652fe9b439f77"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/damage.js",
+    "sha256": "ae41fae99dd3ad7c87d41e1611e82e448c21f298c4a4b57840ab5b6d1635e956"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/defense.js",
+    "sha256": "b3e912db260966d8936526b89e678358f3376b4a32c090e097d1046f3f2c710a"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/mechs.js",
+    "sha256": "4aa82d05f85799cba45040e179b5215cded994d368d313f534b1cc3d19c574c4"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/drone-tank.js",
+    "sha256": "ffb9bc81e598700abce165ce4ee960d8a1d133d52fecba4ef9f80f6aa4d144ff"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/crew-interiors.js",
+    "sha256": "02be4c7f5afd5ff6fcfa7f32d1a0a1f97d2d437342243db58f50cf92cf3e9e98"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/spider-mine.js",
+    "sha256": "cfa4f246a18744c2dd9ee1418906d323a700c47e3a5ecfe333ad6ef33fc6c424"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/nuclear-missile/model.js",
+    "sha256": "53fe9b841d6725562dc059133085a4787f77af73f582ce230615cbdf7b26cf83"
+   }
+  ],
+  "recipe": {
+   "path": "authoring/recipes/reference-fleet/nuclear-missile/recipe.json",
+   "sha256": "3bd4b22c036a330bd0010342f44bec92833350ad805e694c6c84d349f26c1c1c"
+  }
+ },
+ "tool": {
+  "name": "powerworld-authoring",
+  "version": "0.1.0",
+  "three": "0.169.0",
+  "adapterVersion": 1
+ },
+ "build": {
+  "options": {},
+  "cacheKey": "c55d09fb52dcc151aa3edbd61fd6c89c47cdb37972acee58a4eb742b9764bb9d",
+  "contentHash": "f611bcfa7a56602e020139d0f2253b2edc48256b7176b4b4032a63decfd83ee1",
+  "profile": "desktop"
+ },
+ "acceptance": {
+  "visual": "unapproved",
+  "blockers": [],
+  "note": "Strategic surface-strike missile · 22 m · swept wings · rear exhaust; model and scale candidate, no handling or live equipment integration."
+ },
+ "outputs": [
+  {
+   "path": "model.glb",
+   "role": "glb",
+   "sha256": "347335934e2717c75c7ede139899095bd6672148f7fb103e529b5202dcd6cd2f",
+   "bytes": 125804
+  }
+ ],
+ "packageHash": "8a1b4a29881d1bd7204fd28fb3107499ee5e898879b6a0eb56c4a7656a28b0e4"
+}

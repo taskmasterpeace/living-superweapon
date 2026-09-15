@@ -1,65 +1,1290 @@
 {
   "metersPerUnit": 0.19,
-  "acceptance": "Model candidates; gameplay integration pending",
+  "acceptance": "Authored vehicle library; runtime support is identified per model. Model presence is not full gameplay approval.",
   "models": [
     {
-      "id": "motorcycle",
-      "name": "Pursuit motorcycle",
-      "group": "Ground",
-      "reference": 5,
-      "length": 2.35,
-      "note": "Sport fairing · low clip-ons · raised tail · wide rear tire",
-      "url": "./authored-assets/prop.reference-motorcycle/v6/model.glb",
+      "id": "mothership",
+      "name": "Obsidian mothership",
+      "group": "Aircraft",
+      "landingGear": false,
+      "length": 320,
+      "note": "Two decks · stairs and hangar overlook · starboard bridge through security · 68 capsules · six catapult fighters",
+      "url": "./authored-assets/prop.reference-mothership/v10/model.glb",
       "dimensions": {
         "min": [
-          -2.14351,
+          -584.9715,
           0,
-          -6.18421
+          -842.10529
         ],
         "max": [
-          2.14351,
-          6.60348,
-          6.18421
+          584.9715,
+          290.53158,
+          842.10529
         ]
       },
       "budget": {
-        "triangles": 852,
-        "drawCalls": 14,
+        "triangles": 17240,
+        "drawCalls": 27,
+        "materials": 3,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 2328340
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "mothership-damaged",
+      "name": "Obsidian mothership · damaged",
+      "group": "Aircraft",
+      "landingGear": false,
+      "length": 320,
+      "note": "Two decks · stairs and hangar overlook · starboard bridge through security · 68 capsules · six catapult fighters",
+      "baseId": "mothership",
+      "damaged": true,
+      "condition": "damaged",
+      "url": "./authored-assets/prop.reference-mothership-damaged/v10/model.glb",
+      "dimensions": {
+        "min": [
+          -584.9715,
+          0,
+          -842.10529
+        ],
+        "max": [
+          584.9715,
+          290.53158,
+          842.10529
+        ]
+      },
+      "budget": {
+        "triangles": 17216,
+        "drawCalls": 26,
+        "materials": 3,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 2324304
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "mothership-destroyed",
+      "name": "Obsidian mothership · destroyed",
+      "group": "Aircraft",
+      "landingGear": false,
+      "length": 320,
+      "note": "Two decks · stairs and hangar overlook · starboard bridge through security · 68 capsules · six catapult fighters",
+      "baseId": "mothership",
+      "damaged": true,
+      "condition": "destroyed",
+      "url": "./authored-assets/prop.reference-mothership-destroyed/v10/model.glb",
+      "dimensions": {
+        "min": [
+          -584.9715,
+          0,
+          -842.10529
+        ],
+        "max": [
+          584.9715,
+          157.47368,
+          842.10529
+        ]
+      },
+      "budget": {
+        "triangles": 10508,
+        "drawCalls": 8,
+        "materials": 1,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 1439176
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "mothership-fighter",
+      "name": "Talon launch fighter",
+      "group": "Aircraft",
+      "length": 24,
+      "note": "Mothership launch fighter · blended cockpit fairing · opening canopy · side and dorsal emblem panels",
+      "url": "./authored-assets/prop.reference-mothership-fighter/v2/model.glb",
+      "dimensions": {
+        "min": [
+          -36.84211,
+          0,
+          -63.15789
+        ],
+        "max": [
+          36.84211,
+          31.58421,
+          63.15789
+        ]
+      },
+      "budget": {
+        "triangles": 824,
+        "drawCalls": 12,
+        "materials": 2,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 121044
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "mothership-fighter-damaged",
+      "name": "Talon launch fighter · damaged",
+      "group": "Aircraft",
+      "length": 24,
+      "note": "Mothership launch fighter · blended cockpit fairing · opening canopy · side and dorsal emblem panels",
+      "baseId": "mothership-fighter",
+      "damaged": true,
+      "condition": "damaged",
+      "url": "./authored-assets/prop.reference-mothership-fighter-damaged/v2/model.glb",
+      "dimensions": {
+        "min": [
+          -36.84211,
+          0,
+          -63.15789
+        ],
+        "max": [
+          36.84211,
+          31.58421,
+          63.15789
+        ]
+      },
+      "budget": {
+        "triangles": 800,
+        "drawCalls": 11,
+        "materials": 2,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 117136
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "mothership-fighter-destroyed",
+      "name": "Talon launch fighter · destroyed",
+      "group": "Aircraft",
+      "length": 24,
+      "note": "Mothership launch fighter · blended cockpit fairing · opening canopy · side and dorsal emblem panels",
+      "baseId": "mothership-fighter",
+      "damaged": true,
+      "condition": "destroyed",
+      "url": "./authored-assets/prop.reference-mothership-fighter-destroyed/v2/model.glb",
+      "dimensions": {
+        "min": [
+          -36.84211,
+          0,
+          -63.15789
+        ],
+        "max": [
+          36.84211,
+          18.15789,
+          63.15789
+        ]
+      },
+      "budget": {
+        "triangles": 624,
+        "drawCalls": 7,
+        "materials": 1,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 91224
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "stealth-jet",
+      "name": "Sable stealth jet",
+      "group": "Aircraft",
+      "length": 17,
+      "note": "Cloaking presentation · protected cockpit · twin forward guns · two canonical cell missiles",
+      "url": "./authored-assets/prop.reference-stealth-jet/v2/model.glb",
+      "dimensions": {
+        "min": [
+          -39.08182,
+          0,
+          -42.10178
+        ],
+        "max": [
+          39.08182,
+          13.44883,
+          47.3719
+        ]
+      },
+      "budget": {
+        "triangles": 1346,
+        "drawCalls": 18,
+        "materials": 2,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 196776
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "stealth-jet-damaged",
+      "name": "Sable stealth jet · damaged",
+      "group": "Aircraft",
+      "length": 17,
+      "note": "Cloaking presentation · protected cockpit · twin forward guns · two canonical cell missiles",
+      "baseId": "stealth-jet",
+      "damaged": true,
+      "condition": "damaged",
+      "url": "./authored-assets/prop.reference-stealth-jet-damaged/v2/model.glb",
+      "dimensions": {
+        "min": [
+          -39.08182,
+          0,
+          -42.10178
+        ],
+        "max": [
+          39.08182,
+          13.44883,
+          47.3719
+        ]
+      },
+      "budget": {
+        "triangles": 1334,
+        "drawCalls": 17,
+        "materials": 2,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 194420
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "stealth-jet-destroyed",
+      "name": "Sable stealth jet · destroyed",
+      "group": "Aircraft",
+      "length": 17,
+      "note": "Cloaking presentation · protected cockpit · twin forward guns · two canonical cell missiles",
+      "baseId": "stealth-jet",
+      "damaged": true,
+      "condition": "destroyed",
+      "url": "./authored-assets/prop.reference-stealth-jet-destroyed/v2/model.glb",
+      "dimensions": {
+        "min": [
+          -39.08182,
+          0,
+          -42.10178
+        ],
+        "max": [
+          39.08182,
+          13.15275,
+          47.3719
+        ]
+      },
+      "budget": {
+        "triangles": 434,
+        "drawCalls": 9,
+        "materials": 1,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 67432
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "troop-plane",
+      "name": "Twenty-troop jump transport",
+      "group": "Aircraft",
+      "length": 30,
+      "note": "Two pilots · twenty inward-facing troop seats · rear jump ramp · four propellers · defensive belly gun",
+      "reference": null,
+      "url": "./authored-assets/prop.reference-troop-plane/v4/model.glb",
+      "dimensions": {
+        "min": [
+          -89.62305,
+          0,
+          -79.07917
+        ],
+        "max": [
+          89.62305,
+          42.0174,
+          78.81557
+        ]
+      },
+      "budget": {
+        "triangles": 4380,
+        "drawCalls": 23,
+        "materials": 2,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 616776
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "troop-plane-damaged",
+      "name": "Twenty-troop jump transport · damaged",
+      "group": "Aircraft",
+      "length": 30,
+      "note": "Two pilots · twenty inward-facing troop seats · rear jump ramp · four propellers · defensive belly gun",
+      "reference": null,
+      "baseId": "troop-plane",
+      "damaged": true,
+      "condition": "damaged",
+      "url": "./authored-assets/prop.reference-troop-plane-damaged/v4/model.glb",
+      "dimensions": {
+        "min": [
+          -89.62305,
+          0,
+          -79.07917
+        ],
+        "max": [
+          89.62305,
+          42.0174,
+          78.81557
+        ]
+      },
+      "budget": {
+        "triangles": 4368,
+        "drawCalls": 22,
+        "materials": 2,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 614576
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "troop-plane-destroyed",
+      "name": "Twenty-troop jump transport · destroyed",
+      "group": "Aircraft",
+      "length": 30,
+      "note": "Two pilots · twenty inward-facing troop seats · rear jump ramp · four propellers · defensive belly gun",
+      "reference": null,
+      "baseId": "troop-plane",
+      "damaged": true,
+      "condition": "destroyed",
+      "url": "./authored-assets/prop.reference-troop-plane-destroyed/v4/model.glb",
+      "dimensions": {
+        "min": [
+          -89.62305,
+          0,
+          -79.07917
+        ],
+        "max": [
+          89.62305,
+          46.11694,
+          78.81557
+        ]
+      },
+      "budget": {
+        "triangles": 1568,
+        "drawCalls": 15,
+        "materials": 1,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 230656
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "hover-transport",
+      "name": "Armed hover transport",
+      "group": "Ground",
+      "length": 12,
+      "note": "Two crew · ten rear troop seats · turret machine gun · two large and four small seekers",
+      "reference": null,
+      "url": "./authored-assets/prop.reference-hover-transport/v4/model.glb",
+      "dimensions": {
+        "min": [
+          -21.05263,
+          0,
+          -30.62201
+        ],
+        "max": [
+          21.05263,
+          21.32604,
+          32.53588
+        ]
+      },
+      "budget": {
+        "triangles": 4308,
+        "drawCalls": 18,
+        "materials": 3,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 595040
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "hover-transport-damaged",
+      "name": "Armed hover transport · damaged",
+      "group": "Ground",
+      "length": 12,
+      "note": "Two crew · ten rear troop seats · turret machine gun · two large and four small seekers",
+      "reference": null,
+      "baseId": "hover-transport",
+      "damaged": true,
+      "condition": "damaged",
+      "url": "./authored-assets/prop.reference-hover-transport-damaged/v4/model.glb",
+      "dimensions": {
+        "min": [
+          -21.05263,
+          0,
+          -30.62201
+        ],
+        "max": [
+          21.05263,
+          21.32604,
+          32.53588
+        ]
+      },
+      "budget": {
+        "triangles": 4144,
+        "drawCalls": 16,
+        "materials": 3,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 571332
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "hover-transport-destroyed",
+      "name": "Armed hover transport · destroyed",
+      "group": "Ground",
+      "length": 12,
+      "note": "Two crew · ten rear troop seats · turret machine gun · two large and four small seekers",
+      "reference": null,
+      "baseId": "hover-transport",
+      "damaged": true,
+      "condition": "destroyed",
+      "url": "./authored-assets/prop.reference-hover-transport-destroyed/v5/model.glb",
+      "dimensions": {
+        "min": [
+          -21.05263,
+          0,
+          -30.62201
+        ],
+        "max": [
+          21.05263,
+          21.32604,
+          32.53588
+        ]
+      },
+      "budget": {
+        "triangles": 1392,
+        "drawCalls": 7,
+        "materials": 2,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 193396
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "mobile-fabricator",
+      "name": "Mobile vehicle fabricator",
+      "group": "Ground",
+      "length": 14,
+      "note": "Two-seat tracked workshop · stabilizers · vehicle print bed",
+      "reference": null,
+      "url": "./authored-assets/prop.reference-mobile-fabricator/v1/model.glb",
+      "dimensions": {
+        "min": [
+          -21.34024,
+          0,
+          -36.775
+        ],
+        "max": [
+          21.34024,
+          37.44607,
+          36.90921
+        ]
+      },
+      "budget": {
+        "triangles": 1592,
+        "drawCalls": 12,
+        "materials": 2,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 222468
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "mobile-fabricator-damaged",
+      "name": "Mobile vehicle fabricator · damaged",
+      "group": "Ground",
+      "length": 14,
+      "note": "Two-seat tracked workshop · stabilizers · vehicle print bed",
+      "reference": null,
+      "baseId": "mobile-fabricator",
+      "damaged": true,
+      "condition": "damaged",
+      "url": "./authored-assets/prop.reference-mobile-fabricator-damaged/v1/model.glb",
+      "dimensions": {
+        "min": [
+          -21.34024,
+          0,
+          -36.775
+        ],
+        "max": [
+          21.34024,
+          37.44607,
+          36.90921
+        ]
+      },
+      "budget": {
+        "triangles": 1580,
+        "drawCalls": 11,
+        "materials": 2,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 220100
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "mobile-fabricator-destroyed",
+      "name": "Mobile vehicle fabricator · destroyed",
+      "group": "Ground",
+      "length": 14,
+      "note": "Two-seat tracked workshop · stabilizers · vehicle print bed",
+      "reference": null,
+      "baseId": "mobile-fabricator",
+      "damaged": true,
+      "condition": "destroyed",
+      "url": "./authored-assets/prop.reference-mobile-fabricator-destroyed/v2/model.glb",
+      "dimensions": {
+        "min": [
+          -21.34024,
+          0,
+          -36.775
+        ],
+        "max": [
+          21.34024,
+          37.44607,
+          36.90921
+        ]
+      },
+      "budget": {
+        "triangles": 1268,
+        "drawCalls": 7,
+        "materials": 1,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 176412
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "strategic-launcher",
+      "name": "Strategic missile launcher",
+      "group": "Defense",
+      "length": 26,
+      "note": "Elevating launch rail · full-size long-range missile · vertical launch preview",
+      "reference": null,
+      "url": "./authored-assets/prop.reference-strategic-launcher/v2/model.glb",
+      "dimensions": {
+        "min": [
+          -28.94737,
+          0,
+          -68.42105
+        ],
+        "max": [
+          28.94737,
+          31.13505,
+          68.42105
+        ]
+      },
+      "budget": {
+        "triangles": 1480,
+        "drawCalls": 3,
+        "materials": 2,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 201120
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "strategic-launcher-damaged",
+      "name": "Strategic missile launcher · damaged",
+      "group": "Defense",
+      "length": 26,
+      "note": "Elevating launch rail · full-size long-range missile · vertical launch preview",
+      "reference": null,
+      "baseId": "strategic-launcher",
+      "damaged": true,
+      "condition": "damaged",
+      "url": "./authored-assets/prop.reference-strategic-launcher-damaged/v1/model.glb",
+      "dimensions": {
+        "min": [
+          -28.94737,
+          0,
+          -68.42105
+        ],
+        "max": [
+          28.94737,
+          31.13505,
+          68.42105
+        ]
+      },
+      "budget": {
+        "triangles": 1480,
+        "drawCalls": 3,
+        "materials": 2,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 201240
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "strategic-launcher-destroyed",
+      "name": "Strategic missile launcher · destroyed",
+      "group": "Defense",
+      "length": 26,
+      "note": "Elevating launch rail · full-size long-range missile · vertical launch preview",
+      "reference": null,
+      "baseId": "strategic-launcher",
+      "damaged": true,
+      "condition": "destroyed",
+      "url": "./authored-assets/prop.reference-strategic-launcher-destroyed/v2/model.glb",
+      "dimensions": {
+        "min": [
+          -28.94737,
+          0,
+          -68.42105
+        ],
+        "max": [
+          28.94737,
+          18.94737,
+          68.42105
+        ]
+      },
+      "budget": {
+        "triangles": 276,
+        "drawCalls": 2,
+        "materials": 1,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 39488
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "jet-c",
+      "name": "Two-seat escort jet",
+      "group": "Aircraft",
+      "reference": null,
+      "length": 16.8,
+      "note": "Side-by-side pilot and weapons officer · ventral turret · six shared missiles",
+      "url": "./authored-assets/prop.reference-jet-c/v2/model.glb",
+      "dimensions": {
+        "min": [
+          -41.10656,
+          0,
+          -41.02267
+        ],
+        "max": [
+          41.10656,
+          38.67372,
+          47.39838
+        ]
+      },
+      "budget": {
+        "triangles": 3100,
+        "drawCalls": 28,
+        "materials": 3,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 440052
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "jet-c-damaged",
+      "name": "Two-seat escort jet · damaged",
+      "group": "Aircraft",
+      "reference": null,
+      "length": 16.8,
+      "note": "Side-by-side pilot and weapons officer · ventral turret · six shared missiles",
+      "baseId": "jet-c",
+      "damaged": true,
+      "condition": "damaged",
+      "url": "./authored-assets/prop.reference-jet-c-damaged/v4/model.glb",
+      "dimensions": {
+        "min": [
+          -41.12501,
+          0,
+          -41.02267
+        ],
+        "max": [
+          41.11754,
+          38.67372,
+          47.39838
+        ]
+      },
+      "budget": {
+        "triangles": 3088,
+        "drawCalls": 27,
+        "materials": 3,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 437988
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "jet-c-destroyed",
+      "name": "Two-seat escort jet · destroyed",
+      "group": "Aircraft",
+      "reference": null,
+      "length": 16.8,
+      "note": "Side-by-side pilot and weapons officer · ventral turret · six shared missiles",
+      "baseId": "jet-c",
+      "damaged": true,
+      "condition": "destroyed",
+      "url": "./authored-assets/prop.reference-jet-c-destroyed/v1/model.glb",
+      "dimensions": {
+        "min": [
+          -40.26765,
+          0,
+          -41.02267
+        ],
+        "max": [
+          40.26765,
+          38.67372,
+          47.39838
+        ]
+      },
+      "budget": {
+        "triangles": 1260,
+        "drawCalls": 9,
+        "materials": 1,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 178616
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "aircraft-carrier",
+      "name": "Aircraft carrier · mobile airbase",
+      "group": "Sea",
+      "reference": null,
+      "length": 252,
+      "note": "18 Strike jet lengths · open stern hangar · removable flight deck · bridge seats",
+      "url": "./authored-assets/prop.reference-aircraft-carrier/v7/model.glb",
+      "dimensions": {
+        "min": [
+          -126.31579,
+          0,
+          -663.1579
+        ],
+        "max": [
+          126.31579,
+          205.26315,
+          663.1579
+        ]
+      },
+      "budget": {
+        "triangles": 8776,
+        "drawCalls": 30,
         "materials": 7,
         "bones": 0,
         "textures": 0,
-        "bytes": 95660
-      }
+        "bytes": 1164116
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
     },
     {
-      "id": "tank",
-      "sealedCrew": true,
-      "name": "Battle tank",
-      "group": "Ground",
-      "reference": 3,
-      "length": 8.1,
-      "note": "Tracked hull · independent turret and barrel",
-      "url": "./authored-assets/prop.reference-tank/v7/model.glb",
+      "id": "aircraft-carrier-damaged",
+      "name": "Aircraft carrier · mobile airbase · damaged",
+      "group": "Sea",
+      "reference": null,
+      "length": 252,
+      "note": "18 Strike jet lengths · open stern hangar · removable flight deck · bridge seats",
+      "baseId": "aircraft-carrier",
+      "damaged": true,
+      "condition": "damaged",
+      "url": "./authored-assets/prop.reference-aircraft-carrier-damaged/v7/model.glb",
       "dimensions": {
         "min": [
-          -10.55295,
+          -126.31579,
           0,
-          -16.61652
+          -663.1579
         ],
         "max": [
-          10.55295,
-          17.60768,
-          26.01506
+          126.31579,
+          205.26315,
+          663.1579
         ]
       },
       "budget": {
-        "triangles": 1868,
-        "drawCalls": 15,
+        "triangles": 8764,
+        "drawCalls": 29,
+        "materials": 7,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 1162408
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "aircraft-carrier-destroyed",
+      "name": "Aircraft carrier · mobile airbase · destroyed",
+      "group": "Sea",
+      "reference": null,
+      "length": 252,
+      "note": "18 Strike jet lengths · open stern hangar · removable flight deck · bridge seats",
+      "baseId": "aircraft-carrier",
+      "damaged": true,
+      "condition": "destroyed",
+      "url": "./authored-assets/prop.reference-aircraft-carrier-destroyed/v8/model.glb",
+      "dimensions": {
+        "min": [
+          -126.31579,
+          0,
+          -663.1579
+        ],
+        "max": [
+          126.31579,
+          205.26315,
+          663.1579
+        ]
+      },
+      "budget": {
+        "triangles": 1496,
+        "drawCalls": 6,
         "materials": 5,
         "bones": 0,
         "textures": 0,
-        "bytes": 258216
-      }
+        "bytes": 163080
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "cargo-transport",
+      "name": "Armored cargo transport",
+      "group": "Ground",
+      "reference": null,
+      "length": 8.5,
+      "note": "Two-seat protected cab · long cargo bed · rear loading ramp",
+      "url": "./authored-assets/prop.reference-cargo-transport/v1/model.glb",
+      "dimensions": {
+        "min": [
+          -8.22927,
+          0,
+          -22.31601
+        ],
+        "max": [
+          8.22927,
+          16.19647,
+          22.42084
+        ]
+      },
+      "budget": {
+        "triangles": 1440,
+        "drawCalls": 21,
+        "materials": 4,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 183088
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "cargo-transport-damaged",
+      "name": "Armored cargo transport · damaged",
+      "group": "Ground",
+      "reference": null,
+      "length": 8.5,
+      "note": "Two-seat protected cab · long cargo bed · rear loading ramp",
+      "baseId": "cargo-transport",
+      "damaged": true,
+      "condition": "damaged",
+      "url": "./authored-assets/prop.reference-cargo-transport-damaged/v1/model.glb",
+      "dimensions": {
+        "min": [
+          -7.48287,
+          0,
+          -22.31601
+        ],
+        "max": [
+          8.22927,
+          16.19647,
+          22.42084
+        ]
+      },
+      "budget": {
+        "triangles": 1428,
+        "drawCalls": 20,
+        "materials": 4,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 180796
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "cargo-transport-destroyed",
+      "name": "Armored cargo transport · destroyed",
+      "group": "Ground",
+      "reference": null,
+      "length": 8.5,
+      "note": "Two-seat protected cab · long cargo bed · rear loading ramp",
+      "baseId": "cargo-transport",
+      "damaged": true,
+      "condition": "destroyed",
+      "url": "./authored-assets/prop.reference-cargo-transport-destroyed/v2/model.glb",
+      "dimensions": {
+        "min": [
+          -7.48287,
+          0,
+          -22.31601
+        ],
+        "max": [
+          7.48287,
+          16.19647,
+          22.42084
+        ]
+      },
+      "budget": {
+        "triangles": 892,
+        "drawCalls": 10,
+        "materials": 3,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 111604
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "hoverboard",
+      "crewPose": "standing",
+      "name": "Thrust hoverboard",
+      "group": "Ground",
+      "reference": null,
+      "length": 1.65,
+      "note": "Skating deck · two foot pads · rear thrust · standing rider mount",
+      "url": "./authored-assets/prop.reference-hoverboard/v3/model.glb",
+      "dimensions": {
+        "min": [
+          -1.46041,
+          0,
+          -4.38122
+        ],
+        "max": [
+          1.46041,
+          1.25178,
+          4.30299
+        ]
+      },
+      "budget": {
+        "triangles": 360,
+        "drawCalls": 6,
+        "materials": 5,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 41676
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "hoverboard-damaged",
+      "crewPose": "standing",
+      "name": "Thrust hoverboard · damaged",
+      "group": "Ground",
+      "reference": null,
+      "length": 1.65,
+      "note": "Skating deck · two foot pads · rear thrust · standing rider mount",
+      "baseId": "hoverboard",
+      "damaged": true,
+      "condition": "damaged",
+      "url": "./authored-assets/prop.reference-hoverboard-damaged/v2/model.glb",
+      "dimensions": {
+        "min": [
+          -1.46041,
+          0,
+          -4.38122
+        ],
+        "max": [
+          1.46041,
+          1.25178,
+          4.30299
+        ]
+      },
+      "budget": {
+        "triangles": 348,
+        "drawCalls": 5,
+        "materials": 5,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 39372
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "hoverboard-destroyed",
+      "crewPose": "standing",
+      "name": "Thrust hoverboard · destroyed",
+      "group": "Ground",
+      "reference": null,
+      "length": 1.65,
+      "note": "Skating deck · two foot pads · rear thrust · standing rider mount",
+      "baseId": "hoverboard",
+      "damaged": true,
+      "condition": "destroyed",
+      "url": "./authored-assets/prop.reference-hoverboard-destroyed/v2/model.glb",
+      "dimensions": {
+        "min": [
+          -1.46041,
+          0,
+          -4.38122
+        ],
+        "max": [
+          1.46041,
+          1.25178,
+          4.30299
+        ]
+      },
+      "budget": {
+        "triangles": 336,
+        "drawCalls": 4,
+        "materials": 4,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 36792
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "drone-carrier",
+      "name": "Drone carrier · Kestrel",
+      "group": "Aircraft",
+      "reference": null,
+      "length": 18,
+      "note": "Flying wing · eight swarm drones · two gun drones · release racks",
+      "url": "./authored-assets/prop.reference-drone-carrier/v5/model.glb",
+      "dimensions": {
+        "min": [
+          -55.22481,
+          0,
+          -42.14179
+        ],
+        "max": [
+          55.22481,
+          19.6267,
+          52.59505
+        ]
+      },
+      "budget": {
+        "triangles": 4948,
+        "drawCalls": 23,
+        "materials": 3,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 681044
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "drone-carrier-damaged",
+      "name": "Drone carrier · Kestrel · damaged",
+      "group": "Aircraft",
+      "reference": null,
+      "length": 18,
+      "note": "Flying wing · eight swarm drones · two gun drones · release racks",
+      "baseId": "drone-carrier",
+      "damaged": true,
+      "condition": "damaged",
+      "url": "./authored-assets/prop.reference-drone-carrier-damaged/v2/model.glb",
+      "dimensions": {
+        "min": [
+          -55.22481,
+          0,
+          -42.14179
+        ],
+        "max": [
+          55.22481,
+          19.6267,
+          52.59505
+        ]
+      },
+      "budget": {
+        "triangles": 4932,
+        "drawCalls": 22,
+        "materials": 3,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 678292
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "drone-carrier-destroyed",
+      "name": "Drone carrier · Kestrel · destroyed",
+      "group": "Aircraft",
+      "reference": null,
+      "length": 18,
+      "note": "Flying wing · eight swarm drones · two gun drones · release racks",
+      "baseId": "drone-carrier",
+      "damaged": true,
+      "condition": "destroyed",
+      "url": "./authored-assets/prop.reference-drone-carrier-destroyed/v1/model.glb",
+      "dimensions": {
+        "min": [
+          -55.22481,
+          0,
+          -42.14179
+        ],
+        "max": [
+          55.22481,
+          17.48777,
+          52.59505
+        ]
+      },
+      "budget": {
+        "triangles": 932,
+        "drawCalls": 6,
+        "materials": 1,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 132104
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "drone-tank",
+      "name": "Drone tank · Sentinel",
+      "group": "Ground",
+      "reference": null,
+      "length": 4.2,
+      "note": "Unmanned tracked vehicle · remote gun turret · sensor mast · empty missile cells",
+      "url": "./authored-assets/prop.reference-drone-tank/v1/model.glb",
+      "dimensions": {
+        "min": [
+          -6.78287,
+          0,
+          -10.06832
+        ],
+        "max": [
+          6.78287,
+          11.28712,
+          12.03694
+        ]
+      },
+      "budget": {
+        "triangles": 1056,
+        "drawCalls": 25,
+        "materials": 4,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 120156
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "drone-tank-damaged",
+      "name": "Drone tank · Sentinel · damaged",
+      "group": "Ground",
+      "reference": null,
+      "length": 4.2,
+      "note": "Unmanned tracked vehicle · remote gun turret · sensor mast · empty missile cells",
+      "baseId": "drone-tank",
+      "damaged": true,
+      "condition": "damaged",
+      "url": "./authored-assets/prop.reference-drone-tank-damaged/v1/model.glb",
+      "dimensions": {
+        "min": [
+          -6.78287,
+          0,
+          -10.06832
+        ],
+        "max": [
+          6.78287,
+          11.28712,
+          12.06051
+        ]
+      },
+      "budget": {
+        "triangles": 996,
+        "drawCalls": 23,
+        "materials": 4,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 113132
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "drone-tank-destroyed",
+      "name": "Drone tank · Sentinel · destroyed",
+      "group": "Ground",
+      "reference": null,
+      "length": 4.2,
+      "note": "Unmanned tracked vehicle · remote gun turret · sensor mast · empty missile cells",
+      "baseId": "drone-tank",
+      "damaged": true,
+      "condition": "destroyed",
+      "url": "./authored-assets/prop.reference-drone-tank-destroyed/v3/model.glb",
+      "dimensions": {
+        "min": [
+          -6.78287,
+          0,
+          -10.06832
+        ],
+        "max": [
+          6.78287,
+          10.43926,
+          9.80336
+        ]
+      },
+      "budget": {
+        "triangles": 860,
+        "drawCalls": 19,
+        "materials": 4,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 97200
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
     },
     {
       "id": "mech-light",
@@ -89,7 +1314,976 @@
         "bones": 0,
         "textures": 0,
         "bytes": 340476
-      }
+      },
+      "collection": "fleet",
+      "runtime": "integrated-controller"
+    },
+    {
+      "id": "mech-light-damaged",
+      "name": "Light mech · outrider · damaged",
+      "group": "Mechs",
+      "reference": null,
+      "length": 3.2,
+      "dimension": "height",
+      "note": "Fast quadruped · twin machine guns · eight empty missile cells",
+      "baseId": "mech-light",
+      "damaged": true,
+      "condition": "damaged",
+      "url": "./authored-assets/prop.reference-mech-light-damaged/v2/model.glb",
+      "dimensions": {
+        "min": [
+          -6.81371,
+          0,
+          -6.08422
+        ],
+        "max": [
+          8.50737,
+          17.13575,
+          9.12965
+        ]
+      },
+      "budget": {
+        "triangles": 2072,
+        "drawCalls": 20,
+        "materials": 2,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 297068
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "mech-light-destroyed",
+      "name": "Light mech · outrider · destroyed",
+      "group": "Mechs",
+      "reference": null,
+      "length": 3.2,
+      "dimension": "height",
+      "note": "Fast quadruped · twin machine guns · eight empty missile cells",
+      "baseId": "mech-light",
+      "damaged": true,
+      "condition": "destroyed",
+      "url": "./authored-assets/prop.reference-mech-light-destroyed/v2/model.glb",
+      "dimensions": {
+        "min": [
+          -6.81371,
+          0,
+          -6.08422
+        ],
+        "max": [
+          6.81371,
+          17.67737,
+          9.12965
+        ]
+      },
+      "budget": {
+        "triangles": 1452,
+        "drawCalls": 14,
+        "materials": 1,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 208296
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "mech-medium",
+      "name": "Medium mech · all-purpose",
+      "group": "Mechs",
+      "reference": null,
+      "length": 4.6,
+      "dimension": "height",
+      "note": "Biped · recoil cannon · machine gun · six empty missile cells",
+      "url": "./authored-assets/prop.reference-mech-medium/v4/model.glb",
+      "dimensions": {
+        "min": [
+          -8.75282,
+          0,
+          -7.08361
+        ],
+        "max": [
+          13.55285,
+          24.21053,
+          12.96091
+        ]
+      },
+      "budget": {
+        "triangles": 1944,
+        "drawCalls": 15,
+        "materials": 2,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 275312
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "mech-medium-damaged",
+      "name": "Medium mech · all-purpose · damaged",
+      "group": "Mechs",
+      "reference": null,
+      "length": 4.6,
+      "dimension": "height",
+      "note": "Biped · recoil cannon · machine gun · six empty missile cells",
+      "baseId": "mech-medium",
+      "damaged": true,
+      "condition": "damaged",
+      "url": "./authored-assets/prop.reference-mech-medium-damaged/v2/model.glb",
+      "dimensions": {
+        "min": [
+          -8.97114,
+          0,
+          -7.08361
+        ],
+        "max": [
+          10.41441,
+          24.56189,
+          12.96091
+        ]
+      },
+      "budget": {
+        "triangles": 1512,
+        "drawCalls": 14,
+        "materials": 2,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 215468
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "mech-medium-destroyed",
+      "name": "Medium mech · all-purpose · destroyed",
+      "group": "Mechs",
+      "reference": null,
+      "length": 4.6,
+      "dimension": "height",
+      "note": "Biped · recoil cannon · machine gun · six empty missile cells",
+      "baseId": "mech-medium",
+      "damaged": true,
+      "condition": "destroyed",
+      "url": "./authored-assets/prop.reference-mech-medium-destroyed/v2/model.glb",
+      "dimensions": {
+        "min": [
+          -9.99973,
+          0,
+          -7.08361
+        ],
+        "max": [
+          10.37522,
+          26.28142,
+          10.95225
+        ]
+      },
+      "budget": {
+        "triangles": 1352,
+        "drawCalls": 11,
+        "materials": 1,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 191868
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "mech-heavy",
+      "name": "Heavy mech · two-crew",
+      "group": "Mechs",
+      "reference": null,
+      "length": 5.8,
+      "dimension": "height",
+      "note": "Armored biped · pilot/cannon seat · independent roof gunner · missile cells",
+      "url": "./authored-assets/prop.reference-mech-heavy/v5/model.glb",
+      "dimensions": {
+        "min": [
+          -18.8192,
+          0,
+          -9.5413
+        ],
+        "max": [
+          18.90993,
+          30.52632,
+          16.34314
+        ]
+      },
+      "budget": {
+        "triangles": 3008,
+        "drawCalls": 17,
+        "materials": 2,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 422660
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "mech-heavy-damaged",
+      "name": "Heavy mech · two-crew · damaged",
+      "group": "Mechs",
+      "reference": null,
+      "length": 5.8,
+      "dimension": "height",
+      "note": "Armored biped · pilot/cannon seat · independent roof gunner · missile cells",
+      "baseId": "mech-heavy",
+      "damaged": true,
+      "condition": "damaged",
+      "url": "./authored-assets/prop.reference-mech-heavy-damaged/v2/model.glb",
+      "dimensions": {
+        "min": [
+          -19.07048,
+          0,
+          -9.5413
+        ],
+        "max": [
+          14.37509,
+          30.599,
+          16.34314
+        ]
+      },
+      "budget": {
+        "triangles": 2396,
+        "drawCalls": 16,
+        "materials": 2,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 338148
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "mech-heavy-destroyed",
+      "name": "Heavy mech · two-crew · destroyed",
+      "group": "Mechs",
+      "reference": null,
+      "length": 5.8,
+      "dimension": "height",
+      "note": "Armored biped · pilot/cannon seat · independent roof gunner · missile cells",
+      "baseId": "mech-heavy",
+      "damaged": true,
+      "condition": "destroyed",
+      "url": "./authored-assets/prop.reference-mech-heavy-destroyed/v2/model.glb",
+      "dimensions": {
+        "min": [
+          -16.7564,
+          0,
+          -7.75597
+        ],
+        "max": [
+          14.24381,
+          28.2193,
+          16.34314
+        ]
+      },
+      "budget": {
+        "triangles": 1464,
+        "drawCalls": 11,
+        "materials": 1,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 207184
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "radar-station",
+      "name": "Radar station",
+      "group": "Defense",
+      "reference": null,
+      "length": 3.8,
+      "note": "Rotating antenna · mast · outriggers · power cabinet",
+      "url": "./authored-assets/prop.reference-radar-station/v1/model.glb",
+      "dimensions": {
+        "min": [
+          -10,
+          0,
+          -10
+        ],
+        "max": [
+          10,
+          23.7037,
+          10
+        ]
+      },
+      "budget": {
+        "triangles": 532,
+        "drawCalls": 8,
+        "materials": 4,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 57168
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "radar-station-damaged",
+      "name": "Radar station · damaged",
+      "group": "Defense",
+      "reference": null,
+      "length": 3.8,
+      "note": "Rotating antenna · mast · outriggers · power cabinet",
+      "baseId": "radar-station",
+      "damaged": true,
+      "condition": "damaged",
+      "url": "./authored-assets/prop.reference-radar-station-damaged/v1/model.glb",
+      "dimensions": {
+        "min": [
+          -10,
+          0,
+          -10
+        ],
+        "max": [
+          10,
+          20.37037,
+          10
+        ]
+      },
+      "budget": {
+        "triangles": 352,
+        "drawCalls": 4,
+        "materials": 4,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 37400
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "radar-station-destroyed",
+      "name": "Radar station · destroyed",
+      "group": "Defense",
+      "reference": null,
+      "length": 3.8,
+      "note": "Rotating antenna · mast · outriggers · power cabinet",
+      "baseId": "radar-station",
+      "damaged": true,
+      "condition": "destroyed",
+      "url": "./authored-assets/prop.reference-radar-station-destroyed/v2/model.glb",
+      "dimensions": {
+        "min": [
+          -10,
+          0,
+          -10
+        ],
+        "max": [
+          10,
+          20.37037,
+          10
+        ]
+      },
+      "budget": {
+        "triangles": 352,
+        "drawCalls": 4,
+        "materials": 4,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 37416
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "aa-gun-auto",
+      "name": "Automatic anti-air gun",
+      "group": "Defense",
+      "reference": null,
+      "length": 3.8,
+      "note": "Twin cannon · tracking sensor · independent azimuth and elevation",
+      "url": "./authored-assets/prop.reference-aa-gun-auto/v2/model.glb",
+      "dimensions": {
+        "min": [
+          -8.38647,
+          0,
+          -8.38647
+        ],
+        "max": [
+          8.38647,
+          14.58915,
+          11.61353
+        ]
+      },
+      "budget": {
+        "triangles": 1120,
+        "drawCalls": 16,
+        "materials": 5,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 119416
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "aa-gun-auto-damaged",
+      "name": "Automatic anti-air gun · damaged",
+      "group": "Defense",
+      "reference": null,
+      "length": 3.8,
+      "note": "Twin cannon · tracking sensor · independent azimuth and elevation",
+      "baseId": "aa-gun-auto",
+      "damaged": true,
+      "condition": "damaged",
+      "url": "./authored-assets/prop.reference-aa-gun-auto-damaged/v1/model.glb",
+      "dimensions": {
+        "min": [
+          -8.38647,
+          0,
+          -8.38647
+        ],
+        "max": [
+          8.38647,
+          14.58915,
+          12.032
+        ]
+      },
+      "budget": {
+        "triangles": 1096,
+        "drawCalls": 14,
+        "materials": 5,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 115948
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "aa-gun-auto-destroyed",
+      "name": "Automatic anti-air gun · destroyed",
+      "group": "Defense",
+      "reference": null,
+      "length": 3.8,
+      "note": "Twin cannon · tracking sensor · independent azimuth and elevation",
+      "baseId": "aa-gun-auto",
+      "damaged": true,
+      "condition": "destroyed",
+      "url": "./authored-assets/prop.reference-aa-gun-auto-destroyed/v4/model.glb",
+      "dimensions": {
+        "min": [
+          -8.38647,
+          0,
+          -8.38647
+        ],
+        "max": [
+          11.25249,
+          14.58915,
+          8.38647
+        ]
+      },
+      "budget": {
+        "triangles": 796,
+        "drawCalls": 11,
+        "materials": 5,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 85084
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "aa-gun-manned",
+      "name": "Seated anti-air gun",
+      "group": "Defense",
+      "reference": null,
+      "length": 3.8,
+      "note": "Operator seat · twin cannon · turning and elevation pivots",
+      "url": "./authored-assets/prop.reference-aa-gun-manned/v6/model.glb",
+      "dimensions": {
+        "min": [
+          -8.38647,
+          0,
+          -8.38647
+        ],
+        "max": [
+          8.38647,
+          14.58915,
+          11.61353
+        ]
+      },
+      "budget": {
+        "triangles": 1264,
+        "drawCalls": 16,
+        "materials": 6,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 134632
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "aa-gun-manned-damaged",
+      "name": "Seated anti-air gun · damaged",
+      "group": "Defense",
+      "reference": null,
+      "length": 3.8,
+      "note": "Operator seat · twin cannon · turning and elevation pivots",
+      "baseId": "aa-gun-manned",
+      "damaged": true,
+      "condition": "damaged",
+      "url": "./authored-assets/prop.reference-aa-gun-manned-damaged/v3/model.glb",
+      "dimensions": {
+        "min": [
+          -8.38647,
+          0,
+          -8.38647
+        ],
+        "max": [
+          8.38647,
+          14.58915,
+          12.032
+        ]
+      },
+      "budget": {
+        "triangles": 1252,
+        "drawCalls": 15,
+        "materials": 5,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 132284
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "aa-gun-manned-destroyed",
+      "name": "Seated anti-air gun · destroyed",
+      "group": "Defense",
+      "reference": null,
+      "length": 3.8,
+      "note": "Operator seat · twin cannon · turning and elevation pivots",
+      "baseId": "aa-gun-manned",
+      "damaged": true,
+      "condition": "destroyed",
+      "url": "./authored-assets/prop.reference-aa-gun-manned-destroyed/v4/model.glb",
+      "dimensions": {
+        "min": [
+          -8.38647,
+          0,
+          -8.38647
+        ],
+        "max": [
+          11.25249,
+          14.58915,
+          8.38647
+        ]
+      },
+      "budget": {
+        "triangles": 952,
+        "drawCalls": 12,
+        "materials": 5,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 101424
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "aa-missile-auto",
+      "name": "Automatic missile battery",
+      "group": "Defense",
+      "reference": null,
+      "length": 4.3,
+      "note": "Automatic mount · shared seeker missiles · turning and elevation",
+      "url": "./authored-assets/prop.reference-aa-missile-auto/v1/model.glb",
+      "dimensions": {
+        "min": [
+          -11.31579,
+          0,
+          -11.31579
+        ],
+        "max": [
+          11.31579,
+          19.78553,
+          11.31579
+        ]
+      },
+      "budget": {
+        "triangles": 1408,
+        "drawCalls": 12,
+        "materials": 4,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 178888
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "aa-missile-auto-damaged",
+      "name": "Automatic missile battery · damaged",
+      "group": "Defense",
+      "reference": null,
+      "length": 4.3,
+      "note": "Automatic mount · shared seeker missiles · turning and elevation",
+      "baseId": "aa-missile-auto",
+      "damaged": true,
+      "condition": "damaged",
+      "url": "./authored-assets/prop.reference-aa-missile-auto-damaged/v1/model.glb",
+      "dimensions": {
+        "min": [
+          -11.31579,
+          0,
+          -11.31579
+        ],
+        "max": [
+          11.31579,
+          19.78553,
+          11.31579
+        ]
+      },
+      "budget": {
+        "triangles": 1384,
+        "drawCalls": 10,
+        "materials": 4,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 175432
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "aa-missile-auto-destroyed",
+      "name": "Automatic missile battery · destroyed",
+      "group": "Defense",
+      "reference": null,
+      "length": 4.3,
+      "note": "Automatic mount · shared seeker missiles · turning and elevation",
+      "baseId": "aa-missile-auto",
+      "damaged": true,
+      "condition": "destroyed",
+      "url": "./authored-assets/prop.reference-aa-missile-auto-destroyed/v2/model.glb",
+      "dimensions": {
+        "min": [
+          -11.31579,
+          0,
+          -11.31579
+        ],
+        "max": [
+          12.61238,
+          19.74308,
+          12.636
+        ]
+      },
+      "budget": {
+        "triangles": 520,
+        "drawCalls": 6,
+        "materials": 3,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 55344
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "aa-missile-manned",
+      "name": "Seated missile battery",
+      "group": "Defense",
+      "reference": null,
+      "length": 4.3,
+      "note": "Operator seat · shared small and large seeker missiles",
+      "url": "./authored-assets/prop.reference-aa-missile-manned/v4/model.glb",
+      "dimensions": {
+        "min": [
+          -11.31579,
+          0,
+          -11.31579
+        ],
+        "max": [
+          11.31579,
+          19.78553,
+          11.31579
+        ]
+      },
+      "budget": {
+        "triangles": 1552,
+        "drawCalls": 12,
+        "materials": 5,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 194160
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "aa-missile-manned-damaged",
+      "name": "Seated missile battery · damaged",
+      "group": "Defense",
+      "reference": null,
+      "length": 4.3,
+      "note": "Operator seat · shared small and large seeker missiles",
+      "baseId": "aa-missile-manned",
+      "damaged": true,
+      "condition": "damaged",
+      "url": "./authored-assets/prop.reference-aa-missile-manned-damaged/v2/model.glb",
+      "dimensions": {
+        "min": [
+          -11.31579,
+          0,
+          -11.31579
+        ],
+        "max": [
+          11.31579,
+          19.78553,
+          11.31579
+        ]
+      },
+      "budget": {
+        "triangles": 1540,
+        "drawCalls": 11,
+        "materials": 5,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 191948
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "aa-missile-manned-destroyed",
+      "name": "Seated missile battery · destroyed",
+      "group": "Defense",
+      "reference": null,
+      "length": 4.3,
+      "note": "Operator seat · shared small and large seeker missiles",
+      "baseId": "aa-missile-manned",
+      "damaged": true,
+      "condition": "destroyed",
+      "url": "./authored-assets/prop.reference-aa-missile-manned-destroyed/v2/model.glb",
+      "dimensions": {
+        "min": [
+          -11.31579,
+          0,
+          -11.31579
+        ],
+        "max": [
+          12.61238,
+          19.74308,
+          12.636
+        ]
+      },
+      "budget": {
+        "triangles": 676,
+        "drawCalls": 7,
+        "materials": 4,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 71860
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "jet-a",
+      "name": "Strike jet",
+      "group": "Aircraft",
+      "reference": 1,
+      "length": 14,
+      "note": "Broad wings · moving control surfaces · six removable missiles",
+      "url": "./authored-assets/prop.reference-jet-a/v15/model.glb",
+      "dimensions": {
+        "min": [
+          -35.51383,
+          0,
+          -34.18556
+        ],
+        "max": [
+          35.51383,
+          30.13083,
+          39.49865
+        ]
+      },
+      "budget": {
+        "triangles": 3132,
+        "drawCalls": 28,
+        "materials": 3,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 444540
+      },
+      "collection": "fleet",
+      "runtime": "integrated-controller"
+    },
+    {
+      "id": "jet-a-damaged",
+      "name": "Strike jet · damaged",
+      "group": "Aircraft",
+      "reference": 1,
+      "length": 14,
+      "note": "Broad wings · moving control surfaces · six removable missiles",
+      "baseId": "jet-a",
+      "damaged": true,
+      "condition": "damaged",
+      "url": "./authored-assets/prop.reference-jet-a-damaged/v16/model.glb",
+      "dimensions": {
+        "min": [
+          -34.95456,
+          0,
+          -34.18556
+        ],
+        "max": [
+          35.51383,
+          30.13083,
+          39.49865
+        ]
+      },
+      "budget": {
+        "triangles": 3120,
+        "drawCalls": 27,
+        "materials": 3,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 442416
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "jet-a-destroyed",
+      "name": "Strike jet · destroyed",
+      "group": "Aircraft",
+      "reference": 1,
+      "length": 14,
+      "note": "Broad wings · moving control surfaces · six removable missiles",
+      "baseId": "jet-a",
+      "damaged": true,
+      "condition": "destroyed",
+      "url": "./authored-assets/prop.reference-jet-a-destroyed/v1/model.glb",
+      "dimensions": {
+        "min": [
+          -34.95456,
+          0,
+          -34.18556
+        ],
+        "max": [
+          34.95456,
+          30.13083,
+          39.49865
+        ]
+      },
+      "budget": {
+        "triangles": 1260,
+        "drawCalls": 9,
+        "materials": 1,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 178396
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "jet-b",
+      "name": "Interceptor",
+      "group": "Aircraft",
+      "reference": 2,
+      "length": 13.2,
+      "note": "Framed canopy · swept wings · moving surfaces · six missiles",
+      "url": "./authored-assets/prop.reference-jet-b/v15/model.glb",
+      "dimensions": {
+        "min": [
+          -32.29801,
+          0,
+          -32.2321
+        ],
+        "max": [
+          32.29801,
+          30.3865,
+          37.24158
+        ]
+      },
+      "budget": {
+        "triangles": 2968,
+        "drawCalls": 26,
+        "materials": 3,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 420656
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "jet-b-damaged",
+      "name": "Interceptor · damaged",
+      "group": "Aircraft",
+      "reference": 2,
+      "length": 13.2,
+      "note": "Framed canopy · swept wings · moving surfaces · six missiles",
+      "baseId": "jet-b",
+      "damaged": true,
+      "condition": "damaged",
+      "url": "./authored-assets/prop.reference-jet-b-damaged/v16/model.glb",
+      "dimensions": {
+        "min": [
+          -32.31251,
+          0,
+          -32.2321
+        ],
+        "max": [
+          32.30664,
+          30.3865,
+          37.24158
+        ]
+      },
+      "budget": {
+        "triangles": 2956,
+        "drawCalls": 25,
+        "materials": 3,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 418596
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "jet-b-destroyed",
+      "name": "Interceptor · destroyed",
+      "group": "Aircraft",
+      "reference": 2,
+      "length": 13.2,
+      "note": "Framed canopy · swept wings · moving surfaces · six missiles",
+      "baseId": "jet-b",
+      "damaged": true,
+      "condition": "destroyed",
+      "url": "./authored-assets/prop.reference-jet-b-destroyed/v1/model.glb",
+      "dimensions": {
+        "min": [
+          -31.63887,
+          0,
+          -32.2321
+        ],
+        "max": [
+          31.63887,
+          30.3865,
+          37.24158
+        ]
+      },
+      "budget": {
+        "triangles": 1260,
+        "drawCalls": 9,
+        "materials": 1,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 178388
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
     },
     {
       "id": "helicopter",
@@ -119,36 +2313,772 @@
         "bones": 0,
         "textures": 0,
         "bytes": 594428
-      }
+      },
+      "collection": "fleet",
+      "runtime": "integrated-controller"
     },
     {
-      "id": "jet-a",
-      "name": "Strike jet",
+      "id": "helicopter-damaged",
+      "hiddenCrew": true,
+      "name": "Attack helicopter · damaged",
       "group": "Aircraft",
-      "reference": 1,
-      "length": 14,
-      "note": "Broad wings · moving control surfaces · six removable missiles",
-      "url": "./authored-assets/prop.reference-jet-a/v15/model.glb",
+      "reference": null,
+      "length": 12.6,
+      "note": "Tandem canopy · four-blade rotor · tail rotor · missile stub wings",
+      "baseId": "helicopter",
+      "damaged": true,
+      "condition": "damaged",
+      "url": "./authored-assets/prop.reference-helicopter-damaged/v9/model.glb",
       "dimensions": {
         "min": [
-          -35.51383,
+          -25.20272,
           0,
-          -34.18556
+          -44.4825
         ],
         "max": [
-          35.51383,
-          30.13083,
-          39.49865
+          25.20194,
+          18.38106,
+          21.83328
         ]
       },
       "budget": {
-        "triangles": 3132,
-        "drawCalls": 28,
+        "triangles": 4224,
+        "drawCalls": 31,
         "materials": 3,
         "bones": 0,
         "textures": 0,
-        "bytes": 444540
-      }
+        "bytes": 592184
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "helicopter-destroyed",
+      "hiddenCrew": true,
+      "name": "Attack helicopter · destroyed",
+      "group": "Aircraft",
+      "reference": null,
+      "length": 12.6,
+      "note": "Tandem canopy · four-blade rotor · tail rotor · missile stub wings",
+      "baseId": "helicopter",
+      "damaged": true,
+      "condition": "destroyed",
+      "url": "./authored-assets/prop.reference-helicopter-destroyed/v1/model.glb",
+      "dimensions": {
+        "min": [
+          -14.63055,
+          0,
+          -44.4825
+        ],
+        "max": [
+          14.63055,
+          18.35612,
+          18.56955
+        ]
+      },
+      "budget": {
+        "triangles": 1500,
+        "drawCalls": 9,
+        "materials": 2,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 208104
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "tank",
+      "sealedCrew": true,
+      "name": "Battle tank",
+      "group": "Ground",
+      "reference": 3,
+      "length": 8.1,
+      "note": "Tracked hull · independent turret and barrel",
+      "url": "./authored-assets/prop.reference-tank/v7/model.glb",
+      "dimensions": {
+        "min": [
+          -10.55295,
+          0,
+          -16.61652
+        ],
+        "max": [
+          10.55295,
+          17.60768,
+          26.01506
+        ]
+      },
+      "budget": {
+        "triangles": 1868,
+        "drawCalls": 15,
+        "materials": 5,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 258216
+      },
+      "collection": "fleet",
+      "runtime": "integrated-controller"
+    },
+    {
+      "id": "tank-damaged",
+      "sealedCrew": true,
+      "name": "Battle tank · damaged",
+      "group": "Ground",
+      "reference": 3,
+      "length": 8.1,
+      "note": "Tracked hull · independent turret and barrel",
+      "baseId": "tank",
+      "damaged": true,
+      "condition": "damaged",
+      "url": "./authored-assets/prop.reference-tank-damaged/v7/model.glb",
+      "dimensions": {
+        "min": [
+          -10.55295,
+          0,
+          -16.61652
+        ],
+        "max": [
+          10.55295,
+          17.75988,
+          26.01438
+        ]
+      },
+      "budget": {
+        "triangles": 1856,
+        "drawCalls": 14,
+        "materials": 5,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 256072
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "tank-destroyed",
+      "sealedCrew": true,
+      "name": "Battle tank · destroyed",
+      "group": "Ground",
+      "reference": 3,
+      "length": 8.1,
+      "note": "Tracked hull · independent turret and barrel",
+      "baseId": "tank",
+      "damaged": true,
+      "condition": "destroyed",
+      "url": "./authored-assets/prop.reference-tank-destroyed/v2/model.glb",
+      "dimensions": {
+        "min": [
+          -10.55295,
+          0,
+          -16.61652
+        ],
+        "max": [
+          18.20388,
+          18.97774,
+          16.61652
+        ]
+      },
+      "budget": {
+        "triangles": 1476,
+        "drawCalls": 6,
+        "materials": 4,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 198724
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "bomber",
+      "name": "Heavy bomber",
+      "group": "Aircraft",
+      "reference": 4,
+      "length": 30,
+      "note": "Four engines · full-size strategic bomb bay · six seekers · ventral machine gun",
+      "url": "./authored-assets/prop.reference-bomber/v16/model.glb",
+      "dimensions": {
+        "min": [
+          -97.56534,
+          0,
+          -71.60759
+        ],
+        "max": [
+          97.56534,
+          44.82635,
+          86.28715
+        ]
+      },
+      "budget": {
+        "triangles": 4956,
+        "drawCalls": 32,
+        "materials": 3,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 693792
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "bomber-damaged",
+      "name": "Heavy bomber · damaged",
+      "group": "Aircraft",
+      "reference": 4,
+      "length": 30,
+      "note": "Four engines · full-size strategic bomb bay · six seekers · ventral machine gun",
+      "baseId": "bomber",
+      "damaged": true,
+      "condition": "damaged",
+      "url": "./authored-assets/prop.reference-bomber-damaged/v14/model.glb",
+      "dimensions": {
+        "min": [
+          -97.56534,
+          0,
+          -71.60759
+        ],
+        "max": [
+          97.56534,
+          44.82635,
+          86.28715
+        ]
+      },
+      "budget": {
+        "triangles": 4944,
+        "drawCalls": 31,
+        "materials": 3,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 691656
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "bomber-destroyed",
+      "name": "Heavy bomber · destroyed",
+      "group": "Aircraft",
+      "reference": 4,
+      "length": 30,
+      "note": "Four engines · full-size strategic bomb bay · six seekers · ventral machine gun",
+      "baseId": "bomber",
+      "damaged": true,
+      "condition": "destroyed",
+      "url": "./authored-assets/prop.reference-bomber-destroyed/v4/model.glb",
+      "dimensions": {
+        "min": [
+          -97.56534,
+          0,
+          -71.60759
+        ],
+        "max": [
+          97.56534,
+          56.36081,
+          86.28715
+        ]
+      },
+      "budget": {
+        "triangles": 2160,
+        "drawCalls": 18,
+        "materials": 1,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 307048
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "motorcycle",
+      "name": "Pursuit motorcycle",
+      "group": "Ground",
+      "reference": 5,
+      "length": 2.35,
+      "note": "Sport fairing · low clip-ons · raised tail · wide rear tire",
+      "url": "./authored-assets/prop.reference-motorcycle/v6/model.glb",
+      "dimensions": {
+        "min": [
+          -2.14351,
+          0,
+          -6.18421
+        ],
+        "max": [
+          2.14351,
+          6.60348,
+          6.18421
+        ]
+      },
+      "budget": {
+        "triangles": 852,
+        "drawCalls": 14,
+        "materials": 7,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 95660
+      },
+      "collection": "fleet",
+      "runtime": "integrated-controller"
+    },
+    {
+      "id": "motorcycle-damaged",
+      "name": "Pursuit motorcycle · damaged",
+      "group": "Ground",
+      "reference": 5,
+      "length": 2.35,
+      "note": "Sport fairing · low clip-ons · raised tail · wide rear tire",
+      "baseId": "motorcycle",
+      "damaged": true,
+      "condition": "damaged",
+      "url": "./authored-assets/prop.reference-motorcycle-damaged/v6/model.glb",
+      "dimensions": {
+        "min": [
+          -2.14351,
+          0,
+          -6.18421
+        ],
+        "max": [
+          2.14351,
+          6.60348,
+          6.18421
+        ]
+      },
+      "budget": {
+        "triangles": 832,
+        "drawCalls": 13,
+        "materials": 7,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 92368
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "motorcycle-destroyed",
+      "name": "Pursuit motorcycle · destroyed",
+      "group": "Ground",
+      "reference": 5,
+      "length": 2.35,
+      "note": "Sport fairing · low clip-ons · raised tail · wide rear tire",
+      "baseId": "motorcycle",
+      "damaged": true,
+      "condition": "destroyed",
+      "url": "./authored-assets/prop.reference-motorcycle-destroyed/v1/model.glb",
+      "dimensions": {
+        "min": [
+          -2.14351,
+          0,
+          -6.18421
+        ],
+        "max": [
+          2.14351,
+          6.23662,
+          6.18421
+        ]
+      },
+      "budget": {
+        "triangles": 772,
+        "drawCalls": 10,
+        "materials": 5,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 82528
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "atv",
+      "name": "ATV",
+      "group": "Ground",
+      "reference": 6,
+      "length": 2.2,
+      "note": "Quad reference included · separate wheel pivots",
+      "url": "./authored-assets/prop.reference-atv/v4/model.glb",
+      "dimensions": {
+        "min": [
+          -3.79593,
+          0,
+          -5.78947
+        ],
+        "max": [
+          3.79593,
+          6.9501,
+          5.78947
+        ]
+      },
+      "budget": {
+        "triangles": 692,
+        "drawCalls": 13,
+        "materials": 6,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 77608
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "atv-damaged",
+      "name": "ATV · damaged",
+      "group": "Ground",
+      "reference": 6,
+      "length": 2.2,
+      "note": "Quad reference included · separate wheel pivots",
+      "baseId": "atv",
+      "damaged": true,
+      "condition": "damaged",
+      "url": "./authored-assets/prop.reference-atv-damaged/v4/model.glb",
+      "dimensions": {
+        "min": [
+          -3.79593,
+          0,
+          -5.78947
+        ],
+        "max": [
+          3.79593,
+          6.9501,
+          5.78947
+        ]
+      },
+      "budget": {
+        "triangles": 680,
+        "drawCalls": 12,
+        "materials": 5,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 75200
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "atv-destroyed",
+      "name": "ATV · destroyed",
+      "group": "Ground",
+      "reference": 6,
+      "length": 2.2,
+      "note": "Quad reference included · separate wheel pivots",
+      "baseId": "atv",
+      "damaged": true,
+      "condition": "destroyed",
+      "url": "./authored-assets/prop.reference-atv-destroyed/v2/model.glb",
+      "dimensions": {
+        "min": [
+          -3.79593,
+          0,
+          -5.78947
+        ],
+        "max": [
+          3.79593,
+          6.9501,
+          5.78947
+        ]
+      },
+      "budget": {
+        "triangles": 456,
+        "drawCalls": 8,
+        "materials": 5,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 50948
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "humvee",
+      "name": "Armored utility",
+      "group": "Ground",
+      "reference": 7,
+      "length": 5.9,
+      "note": "Six cabin seats · roof gunner · extended cargo trunk · armored tailgate",
+      "url": "./authored-assets/prop.reference-humvee/v8/model.glb",
+      "dimensions": {
+        "min": [
+          -7.61223,
+          0,
+          -18.11185
+        ],
+        "max": [
+          7.61223,
+          19.71193,
+          12.94078
+        ]
+      },
+      "budget": {
+        "triangles": 2728,
+        "drawCalls": 31,
+        "materials": 6,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 360072
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "humvee-damaged",
+      "name": "Armored utility · damaged",
+      "group": "Ground",
+      "reference": 7,
+      "length": 5.9,
+      "note": "Six cabin seats · roof gunner · extended cargo trunk · armored tailgate",
+      "baseId": "humvee",
+      "damaged": true,
+      "condition": "damaged",
+      "url": "./authored-assets/prop.reference-humvee-damaged/v8/model.glb",
+      "dimensions": {
+        "min": [
+          -7.44817,
+          0,
+          -18.11185
+        ],
+        "max": [
+          7.61223,
+          19.71193,
+          12.94078
+        ]
+      },
+      "budget": {
+        "triangles": 2716,
+        "drawCalls": 30,
+        "materials": 6,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 357888
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "humvee-destroyed",
+      "name": "Armored utility · destroyed",
+      "group": "Ground",
+      "reference": 7,
+      "length": 5.9,
+      "note": "Six cabin seats · roof gunner · extended cargo trunk · armored tailgate",
+      "baseId": "humvee",
+      "damaged": true,
+      "condition": "destroyed",
+      "url": "./authored-assets/prop.reference-humvee-destroyed/v3/model.glb",
+      "dimensions": {
+        "min": [
+          -7.21849,
+          0,
+          -18.11185
+        ],
+        "max": [
+          7.61223,
+          18.64995,
+          12.94078
+        ]
+      },
+      "budget": {
+        "triangles": 1388,
+        "drawCalls": 8,
+        "materials": 5,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 175612
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "swarm-drone",
+      "name": "Swarm drone",
+      "group": "Drones",
+      "reference": 9,
+      "length": 0.72,
+      "note": "Compact quad · four independent rotors",
+      "url": "./authored-assets/prop.reference-swarm-drone/v2/model.glb",
+      "dimensions": {
+        "min": [
+          -2.34056,
+          0,
+          -1.89474
+        ],
+        "max": [
+          2.34056,
+          1.89474,
+          1.89474
+        ]
+      },
+      "budget": {
+        "triangles": 348,
+        "drawCalls": 11,
+        "materials": 3,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 41788
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "gun-drone",
+      "name": "Machine-gun drone",
+      "group": "Drones",
+      "reference": 10,
+      "length": 1.05,
+      "note": "Larger quad · underslung gun pivot",
+      "url": "./authored-assets/prop.reference-gun-drone/v2/model.glb",
+      "dimensions": {
+        "min": [
+          -3.13029,
+          0,
+          -2.53404
+        ],
+        "max": [
+          3.13029,
+          2.54398,
+          2.99227
+        ]
+      },
+      "budget": {
+        "triangles": 444,
+        "drawCalls": 12,
+        "materials": 3,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 51752
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "kamikaze-drone",
+      "name": "Kamikaze drone",
+      "group": "Drones",
+      "reference": null,
+      "length": 0.42,
+      "note": "Provisional · red central rotor · missing image",
+      "url": "./authored-assets/prop.reference-kamikaze-drone/v1/model.glb",
+      "dimensions": {
+        "min": [
+          -1.10526,
+          0,
+          -1.10526
+        ],
+        "max": [
+          1.10526,
+          1.36829,
+          1.10526
+        ]
+      },
+      "budget": {
+        "triangles": 304,
+        "drawCalls": 5,
+        "materials": 3,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 33428
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "aa-tank",
+      "sealedCrew": true,
+      "name": "Anti-air missile tank",
+      "group": "Ground",
+      "reference": 3,
+      "length": 6.4,
+      "note": "Tracked missile carrier · elevating racks · rotating sensor",
+      "url": "./authored-assets/prop.reference-aa-tank/v5/model.glb",
+      "dimensions": {
+        "min": [
+          -10.69621,
+          0,
+          -16.84211
+        ],
+        "max": [
+          10.69621,
+          18.88794,
+          16.84211
+        ]
+      },
+      "budget": {
+        "triangles": 2856,
+        "drawCalls": 23,
+        "materials": 5,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 393748
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "aa-tank-damaged",
+      "sealedCrew": true,
+      "name": "Anti-air missile tank · damaged",
+      "group": "Ground",
+      "reference": 3,
+      "length": 6.4,
+      "note": "Tracked missile carrier · elevating racks · rotating sensor",
+      "baseId": "aa-tank",
+      "damaged": true,
+      "condition": "damaged",
+      "url": "./authored-assets/prop.reference-aa-tank-damaged/v5/model.glb",
+      "dimensions": {
+        "min": [
+          -10.79332,
+          0,
+          -16.84211
+        ],
+        "max": [
+          10.72409,
+          18.88794,
+          16.84211
+        ]
+      },
+      "budget": {
+        "triangles": 2844,
+        "drawCalls": 22,
+        "materials": 5,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 391548
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
+    },
+    {
+      "id": "aa-tank-destroyed",
+      "sealedCrew": true,
+      "name": "Anti-air missile tank · destroyed",
+      "group": "Ground",
+      "reference": 3,
+      "length": 6.4,
+      "note": "Tracked missile carrier · elevating racks · rotating sensor",
+      "baseId": "aa-tank",
+      "damaged": true,
+      "condition": "destroyed",
+      "url": "./authored-assets/prop.reference-aa-tank-destroyed/v2/model.glb",
+      "dimensions": {
+        "min": [
+          -10.69621,
+          0,
+          -16.84211
+        ],
+        "max": [
+          10.69621,
+          16.72392,
+          16.84211
+        ]
+      },
+      "budget": {
+        "triangles": 1516,
+        "drawCalls": 9,
+        "materials": 4,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 203216
+      },
+      "collection": "fleet",
+      "runtime": "authored-model"
     }
   ]
 }

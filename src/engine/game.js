@@ -1,3 +1,4 @@
+import {characterSees} from './character-sight.js';
 import {resolveSharedImpact} from './shared-impact.js';
 import {beginPropPickup,updatePropPickup} from './prop-pickup.js';
 import {canReceiveShot} from './shot-contact-eligibility.js';
@@ -742,6 +743,7 @@ export class Game {
   // and a headless run needs a fake HUD shaped like the real one. One channel instead. If
   // nothing is listening, the sim simply carries on.
   ui(event, ...args) {
+    if(this.characterVisibility&&event==='damageNumber'&&args[0]&&!characterSees(this,this.player,{pos:args[0]}))return;
     const h = this.hud;
     if (!h || typeof h[event] !== 'function') return;
     try { return h[event](...args); } catch (e) { console.error('ui:' + event, e); }
@@ -1605,14 +1607,14 @@ export class Game {
     if (!p || !this.fov) { for (const e of this.entities) { e._vis = 1; if (e.obj) e.obj.visible = !piloting(e) && !e._highwallRetiredBody; } this.world.setFogEnabled(false); return; }
     this.world.setFogEnabled(true);
     const h2 = this.humans[1] && this.humans[1].fighter;
-    this.world.updateFog(p.pos.x, p.pos.z, p.aim.x, p.aim.z, p.def.colors.accent, (h2 && h2.alive) ? h2.pos : null);
+    this.world.updateFog(p.pos.x, p.pos.z, p.aim.x, p.aim.z, p.def.colors.accent, (h2 && h2.alive) ? h2.pos : null, p.pos.y + 5);
     for (const e of this.entities) {
       if (e._banished || e._highwallRetiredBody) { e.obj.visible = false; continue; }   // BANISHED: they are not on this field at all
       if (e._inert) { e.obj.visible = false; continue; }      // POSSESSED AWAY: the body is left behind, not here
       if (piloting(e)) { e._vis = 1; e.obj.visible = false; continue; }   // PILOTING a vehicle — known at the seat, but the body is not drawn
-      if (this.isHuman(e) || e.team === p.team) { e._vis = 1; e.obj.visible = true; continue; }   // your own side is always visible (incl. AI partners)
+      if (this.isHuman(e) || (!this.characterVisibility && e.team === p.team)) { e._vis = 1; e.obj.visible = true; continue; }
       let see = this._humanSees(p, e) || (h2 && h2.alive && this._humanSees(h2, e));
-      if (!see) { const d = Math.hypot(e.pos.x - p.pos.x, e.pos.z - p.pos.z); if (d < this.visReveal && this._bright(e)) see = true; }
+      if (!see && !this.characterVisibility) { const d = Math.hypot(e.pos.x - p.pos.x, e.pos.z - p.pos.z); if (d < this.visReveal && this._bright(e)) see = true; }
       e._vis = damp(e._vis == null ? (see ? 1 : 0) : e._vis, see ? 1 : 0, 12, dt);
       if (see && !e._seen) this._revealFx(e);
       // ⚠ ONE GHOST PER FIGHTER, AND NOT EVERY FRAME. The trigger is edge-based (seen -> unseen),
@@ -1621,13 +1623,16 @@ export class Game {
       // used to spawn a full ghost: a new mesh and two new materials, and a second '?' sprite
       // stacked on top of the first. Measured 40 live ghosts in one 90-second fight once the
       // police turned up. The marker is meant to say "they were here" once, not pile up.
-      if (!see && e._seen && this.time - (e._ghostT || -9) > 1.2) { e._ghostT = this.time; this._lastKnown(e); }
+      if (!this.characterVisibility && !see && e._seen && this.time - (e._ghostT || -9) > 1.2) { e._ghostT = this.time; this._lastKnown(e); }
       e._seen = see;
-      const show = e._vis > 0.35;
+      // Conceal immediately on losing actual sight; no fading silhouette through a wall.
+      if(this.characterVisibility && !see)e._vis=0;
+      const show = this.characterVisibility ? !!see : e._vis > 0.35;
       if (e.obj.visible !== show) e.obj.visible = show;
     }
   }
   _humanSees(p, e) {
+    if(this.characterVisibility)return characterSees(this,p,e);
     if (p._revealT > 0) return true;                 // The Ring Sees — the network is her retina
     const vm = ((p.sheet && p.sheet.visMult) || 1) * (p.blindT > 0 ? 0.28 : 1);   // AWARENESS extends the eye — smoke closes it (manual §14)
     const dx = e.pos.x - p.pos.x, dz = e.pos.z - p.pos.z, d = Math.hypot(dx, dz) || 1;
@@ -3061,6 +3066,9 @@ export class Game {
   }
 
   grantXp(f, amt) {
+    // A resettable proving ground cannot award campaign progression or change
+    // the tested character's tier midway through a damage/animation comparison.
+    if(this._highwall||this.ms?.highwall)return;
     if (!f) return; f.xp += amt;
     while (f.level < 10 && f.xp >= f.xpNext) { f.xp -= f.xpNext; this.levelUp(f); }
     if (f.level >= 10) f.xp = Math.min(f.xp, f.xpNext);

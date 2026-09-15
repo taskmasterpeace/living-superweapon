@@ -1,0 +1,1710 @@
+{
+ "format": "pw-asset-package",
+ "formatVersion": 1,
+ "id": "prop.reference-mothership-destroyed",
+ "version": 5,
+ "kind": "prop",
+ "displayName": "Obsidian mothership · destroyed",
+ "tags": [
+  "reference-fleet",
+  "aircraft"
+ ],
+ "rig": {
+  "skeleton": "none"
+ },
+ "sockets": [
+  {
+   "name": "bridge-0",
+   "parent": "mothership",
+   "position": [
+    263.15789,
+    77.89474,
+    431.57895
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "bridge-1",
+   "parent": "mothership",
+   "position": [
+    284.21053,
+    77.89474,
+    431.57895
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "bridge-2",
+   "parent": "mothership",
+   "position": [
+    305.26316,
+    77.89474,
+    431.57895
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "bridge-3",
+   "parent": "mothership",
+   "position": [
+    263.15789,
+    77.89474,
+    405.26316
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "bridge-4",
+   "parent": "mothership",
+   "position": [
+    284.21053,
+    77.89474,
+    405.26316
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "bridge-5",
+   "parent": "mothership",
+   "position": [
+    305.26316,
+    77.89474,
+    405.26316
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "bridge-view",
+   "parent": "mothership",
+   "position": [
+    284.21053,
+    83.68421,
+    342.10526
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "capsule-view",
+   "parent": "mothership",
+   "position": [
+    284.21053,
+    52.10526,
+    -468.42105
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "deck-origin",
+   "parent": "mothership",
+   "position": [
+    0,
+    43.15789,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "emblem-front",
+   "parent": "mothership",
+   "position": [
+    110.52632,
+    122.10526,
+    607.89474
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "emblem-left",
+   "parent": "mothership-side-hull--1",
+   "position": [
+    -579,
+    68.42105,
+    684.21053
+   ],
+   "rotation": [
+    0,
+    -0.707107,
+    0,
+    0.707107
+   ]
+  },
+  {
+   "name": "emblem-right",
+   "parent": "mothership-side-hull-1",
+   "position": [
+    579,
+    68.42105,
+    684.21053
+   ],
+   "rotation": [
+    0,
+    0.707107,
+    0,
+    0.707107
+   ]
+  },
+  {
+   "name": "emblem-top",
+   "parent": "mothership-roof",
+   "position": [
+    0,
+    156.47368,
+    -200
+   ],
+   "rotation": [
+    -0.707107,
+    0,
+    0,
+    0.707107
+   ]
+  },
+  {
+   "name": "energy-muzzle",
+   "parent": "mothership",
+   "position": [
+    0,
+    22.10526,
+    747.36842
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "entry-boarding",
+   "parent": "mothership",
+   "position": [
+    0,
+    43.15789,
+    600
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "entry-bridge-0",
+   "parent": "mothership",
+   "position": [
+    0,
+    43.15789,
+    600
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "entry-bridge-1",
+   "parent": "mothership",
+   "position": [
+    0,
+    43.15789,
+    600
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "entry-bridge-2",
+   "parent": "mothership",
+   "position": [
+    0,
+    43.15789,
+    600
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "entry-bridge-3",
+   "parent": "mothership",
+   "position": [
+    0,
+    43.15789,
+    600
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "entry-bridge-4",
+   "parent": "mothership",
+   "position": [
+    0,
+    43.15789,
+    600
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "entry-bridge-5",
+   "parent": "mothership",
+   "position": [
+    0,
+    43.15789,
+    600
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "fighter-berth-0",
+   "parent": "mothership",
+   "position": [
+    -115.78947,
+    43.15789,
+    -184.21053
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "fighter-berth-1",
+   "parent": "mothership",
+   "position": [
+    -115.78947,
+    43.15789,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "fighter-berth-2",
+   "parent": "mothership",
+   "position": [
+    -115.78947,
+    43.15789,
+    184.21053
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "fighter-berth-3",
+   "parent": "mothership",
+   "position": [
+    115.78947,
+    43.15789,
+    -184.21053
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "fighter-berth-4",
+   "parent": "mothership",
+   "position": [
+    115.78947,
+    43.15789,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "fighter-berth-5",
+   "parent": "mothership",
+   "position": [
+    115.78947,
+    43.15789,
+    184.21053
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "hangar-view",
+   "parent": "mothership",
+   "position": [
+    0,
+    52.10526,
+    452.63158
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "overlook-view",
+   "parent": "mothership",
+   "position": [
+    202.63158,
+    83.68421,
+    52.63158
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "security-view",
+   "parent": "mothership",
+   "position": [
+    284.21053,
+    83.68421,
+    178.94737
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "sleep-capsule-0",
+   "parent": "mothership",
+   "position": [
+    -294.21053,
+    47.47368,
+    -515.78947
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "sleep-capsule-1",
+   "parent": "mothership",
+   "position": [
+    -294.21053,
+    47.47368,
+    -486.31579
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "sleep-capsule-10",
+   "parent": "mothership",
+   "position": [
+    -294.21053,
+    47.47368,
+    -191.57895
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "sleep-capsule-11",
+   "parent": "mothership",
+   "position": [
+    -294.21053,
+    47.47368,
+    -162.10526
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "sleep-capsule-12",
+   "parent": "mothership",
+   "position": [
+    -294.21053,
+    47.47368,
+    -132.63158
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "sleep-capsule-13",
+   "parent": "mothership",
+   "position": [
+    -294.21053,
+    47.47368,
+    -103.15789
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "sleep-capsule-14",
+   "parent": "mothership",
+   "position": [
+    -294.21053,
+    47.47368,
+    -73.68421
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "sleep-capsule-15",
+   "parent": "mothership",
+   "position": [
+    -294.21053,
+    47.47368,
+    -44.21053
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "sleep-capsule-16",
+   "parent": "mothership",
+   "position": [
+    -294.21053,
+    47.47368,
+    -14.73684
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "sleep-capsule-17",
+   "parent": "mothership",
+   "position": [
+    -274.21053,
+    47.47368,
+    -515.78947
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "sleep-capsule-18",
+   "parent": "mothership",
+   "position": [
+    -274.21053,
+    47.47368,
+    -486.31579
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "sleep-capsule-19",
+   "parent": "mothership",
+   "position": [
+    -274.21053,
+    47.47368,
+    -456.84211
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "sleep-capsule-2",
+   "parent": "mothership",
+   "position": [
+    -294.21053,
+    47.47368,
+    -456.84211
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "sleep-capsule-20",
+   "parent": "mothership",
+   "position": [
+    -274.21053,
+    47.47368,
+    -397.89474
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "sleep-capsule-21",
+   "parent": "mothership",
+   "position": [
+    -274.21053,
+    47.47368,
+    -368.42105
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "sleep-capsule-22",
+   "parent": "mothership",
+   "position": [
+    -274.21053,
+    47.47368,
+    -338.94737
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "sleep-capsule-23",
+   "parent": "mothership",
+   "position": [
+    -274.21053,
+    47.47368,
+    -309.47368
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "sleep-capsule-24",
+   "parent": "mothership",
+   "position": [
+    -274.21053,
+    47.47368,
+    -280
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "sleep-capsule-25",
+   "parent": "mothership",
+   "position": [
+    -274.21053,
+    47.47368,
+    -250.52632
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "sleep-capsule-26",
+   "parent": "mothership",
+   "position": [
+    -274.21053,
+    47.47368,
+    -221.05263
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "sleep-capsule-27",
+   "parent": "mothership",
+   "position": [
+    -274.21053,
+    47.47368,
+    -191.57895
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "sleep-capsule-28",
+   "parent": "mothership",
+   "position": [
+    -274.21053,
+    47.47368,
+    -162.10526
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "sleep-capsule-29",
+   "parent": "mothership",
+   "position": [
+    -274.21053,
+    47.47368,
+    -132.63158
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "sleep-capsule-3",
+   "parent": "mothership",
+   "position": [
+    -294.21053,
+    47.47368,
+    -397.89474
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "sleep-capsule-30",
+   "parent": "mothership",
+   "position": [
+    -274.21053,
+    47.47368,
+    -103.15789
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "sleep-capsule-31",
+   "parent": "mothership",
+   "position": [
+    -274.21053,
+    47.47368,
+    -73.68421
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "sleep-capsule-32",
+   "parent": "mothership",
+   "position": [
+    -274.21053,
+    47.47368,
+    -44.21053
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "sleep-capsule-33",
+   "parent": "mothership",
+   "position": [
+    -274.21053,
+    47.47368,
+    -14.73684
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "sleep-capsule-34",
+   "parent": "mothership",
+   "position": [
+    274.21053,
+    47.47368,
+    -515.78947
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "sleep-capsule-35",
+   "parent": "mothership",
+   "position": [
+    274.21053,
+    47.47368,
+    -486.31579
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "sleep-capsule-36",
+   "parent": "mothership",
+   "position": [
+    274.21053,
+    47.47368,
+    -456.84211
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "sleep-capsule-37",
+   "parent": "mothership",
+   "position": [
+    274.21053,
+    47.47368,
+    -397.89474
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "sleep-capsule-38",
+   "parent": "mothership",
+   "position": [
+    274.21053,
+    47.47368,
+    -368.42105
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "sleep-capsule-39",
+   "parent": "mothership",
+   "position": [
+    274.21053,
+    47.47368,
+    -338.94737
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "sleep-capsule-4",
+   "parent": "mothership",
+   "position": [
+    -294.21053,
+    47.47368,
+    -368.42105
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "sleep-capsule-40",
+   "parent": "mothership",
+   "position": [
+    274.21053,
+    47.47368,
+    -309.47368
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "sleep-capsule-41",
+   "parent": "mothership",
+   "position": [
+    274.21053,
+    47.47368,
+    -280
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "sleep-capsule-42",
+   "parent": "mothership",
+   "position": [
+    274.21053,
+    47.47368,
+    -250.52632
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "sleep-capsule-43",
+   "parent": "mothership",
+   "position": [
+    274.21053,
+    47.47368,
+    -221.05263
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "sleep-capsule-44",
+   "parent": "mothership",
+   "position": [
+    274.21053,
+    47.47368,
+    -191.57895
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "sleep-capsule-45",
+   "parent": "mothership",
+   "position": [
+    274.21053,
+    47.47368,
+    -162.10526
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "sleep-capsule-46",
+   "parent": "mothership",
+   "position": [
+    274.21053,
+    47.47368,
+    -132.63158
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "sleep-capsule-47",
+   "parent": "mothership",
+   "position": [
+    274.21053,
+    47.47368,
+    -103.15789
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "sleep-capsule-48",
+   "parent": "mothership",
+   "position": [
+    274.21053,
+    47.47368,
+    -73.68421
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "sleep-capsule-49",
+   "parent": "mothership",
+   "position": [
+    274.21053,
+    47.47368,
+    -44.21053
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "sleep-capsule-5",
+   "parent": "mothership",
+   "position": [
+    -294.21053,
+    47.47368,
+    -338.94737
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "sleep-capsule-50",
+   "parent": "mothership",
+   "position": [
+    274.21053,
+    47.47368,
+    -14.73684
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "sleep-capsule-51",
+   "parent": "mothership",
+   "position": [
+    294.21053,
+    47.47368,
+    -515.78947
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "sleep-capsule-52",
+   "parent": "mothership",
+   "position": [
+    294.21053,
+    47.47368,
+    -486.31579
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "sleep-capsule-53",
+   "parent": "mothership",
+   "position": [
+    294.21053,
+    47.47368,
+    -456.84211
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "sleep-capsule-54",
+   "parent": "mothership",
+   "position": [
+    294.21053,
+    47.47368,
+    -397.89474
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "sleep-capsule-55",
+   "parent": "mothership",
+   "position": [
+    294.21053,
+    47.47368,
+    -368.42105
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "sleep-capsule-56",
+   "parent": "mothership",
+   "position": [
+    294.21053,
+    47.47368,
+    -338.94737
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "sleep-capsule-57",
+   "parent": "mothership",
+   "position": [
+    294.21053,
+    47.47368,
+    -309.47368
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "sleep-capsule-58",
+   "parent": "mothership",
+   "position": [
+    294.21053,
+    47.47368,
+    -280
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "sleep-capsule-59",
+   "parent": "mothership",
+   "position": [
+    294.21053,
+    47.47368,
+    -250.52632
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "sleep-capsule-6",
+   "parent": "mothership",
+   "position": [
+    -294.21053,
+    47.47368,
+    -309.47368
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "sleep-capsule-60",
+   "parent": "mothership",
+   "position": [
+    294.21053,
+    47.47368,
+    -221.05263
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "sleep-capsule-61",
+   "parent": "mothership",
+   "position": [
+    294.21053,
+    47.47368,
+    -191.57895
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "sleep-capsule-62",
+   "parent": "mothership",
+   "position": [
+    294.21053,
+    47.47368,
+    -162.10526
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "sleep-capsule-63",
+   "parent": "mothership",
+   "position": [
+    294.21053,
+    47.47368,
+    -132.63158
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "sleep-capsule-64",
+   "parent": "mothership",
+   "position": [
+    294.21053,
+    47.47368,
+    -103.15789
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "sleep-capsule-65",
+   "parent": "mothership",
+   "position": [
+    294.21053,
+    47.47368,
+    -73.68421
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "sleep-capsule-66",
+   "parent": "mothership",
+   "position": [
+    294.21053,
+    47.47368,
+    -44.21053
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "sleep-capsule-67",
+   "parent": "mothership",
+   "position": [
+    294.21053,
+    47.47368,
+    -14.73684
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "sleep-capsule-7",
+   "parent": "mothership",
+   "position": [
+    -294.21053,
+    47.47368,
+    -280
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "sleep-capsule-8",
+   "parent": "mothership",
+   "position": [
+    -294.21053,
+    47.47368,
+    -250.52632
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "sleep-capsule-9",
+   "parent": "mothership",
+   "position": [
+    -294.21053,
+    47.47368,
+    -221.05263
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "stairs-view",
+   "parent": "mothership",
+   "position": [
+    284.21053,
+    52.10526,
+    47.36842
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "upper-view",
+   "parent": "mothership",
+   "position": [
+    315.78947,
+    83.68421,
+    -273.68421
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  }
+ ],
+ "bounds": {
+  "min": [
+   -578.94739,
+   0,
+   -842.10529
+  ],
+  "max": [
+   578.94739,
+   157.47368,
+   842.10529
+  ]
+ },
+ "materials": [
+  {
+   "name": "condition-destroyed-fleet-painted-parts"
+  }
+ ],
+ "lods": [
+  {
+   "level": 0,
+   "output": "model.glb",
+   "triangles": 10148
+  }
+ ],
+ "units": {
+  "lengthUnit": "game-unit",
+  "metersPerUnit": 0.19,
+  "up": "+Y",
+  "forward": "+Z",
+  "handedness": "right",
+  "sourceConversion": {
+   "scale": 1,
+   "yawDegrees": 0,
+   "mirrorX": false,
+   "sourceUp": "+Y",
+   "sourceForward": "+Z",
+   "note": "authored directly in game units along the engine weapon axis (-Y toward the muzzle)"
+  }
+ },
+ "budgets": {
+  "profile": "desktop",
+  "measured": {
+   "triangles": 10148,
+   "drawCalls": 8,
+   "materials": 1,
+   "bones": 0,
+   "textures": 0,
+   "bytes": 1390416
+  },
+  "limits": {
+   "triangles": 67793,
+   "drawCalls": 32,
+   "materials": 9,
+   "bones": 1,
+   "textures": 4,
+   "bytes": 3170030
+  }
+ },
+ "structural": {
+  "validator": "2.0.0-dev.3.10",
+  "errors": 0,
+  "warnings": 0
+ },
+ "provenance": {
+  "author": "Machine King Labs",
+  "license": "proprietary",
+  "terms": "Original model geometry authored for this project from creator-supplied concept references; reference redistribution rights are not independently verified.",
+  "redistribution": "internal",
+  "attribution": "Creator-supplied September 12, 2026 concepts."
+ },
+ "source": {
+  "adapter": "procedural-prop@1",
+  "files": [
+   {
+    "path": "assets-src/reference-fleet/references/mothership.webp",
+    "sha256": "91af10c0af4be8d5ddd54451eaea9137fe107df11dd07e8a8313b7d74b5fa006"
+   },
+   {
+    "path": "assets-src/reference-fleet/references/mothership-fighter.webp",
+    "sha256": "02e7314029da5b2a7ace9694f758128e4c3e0b0f95ecdf92c323094d5753764c"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/mothership.js",
+    "sha256": "309158a38656ac0ab5bd1875b260afa0ae67ada8a39c789f4069255dc31c8aef"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/mothership-layout.js",
+    "sha256": "84a1a587ff0cdb721f2e8b13038ae6f5982cb9984260ceb2d15a02e4bf19bc96"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/arsenal.js",
+    "sha256": "277361e560ad8faf4e33f3601d9d5d76a0505bb406ac7d7127297e3ed46a100f"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/stealth.js",
+    "sha256": "317644ffc10aeb4f24c2b94ed26997a040b95bf008f54601226e74932e2df9aa"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/nanite-robots.js",
+    "sha256": "e5c027ed100f5a9d4858c6da7bea861dfe05500f57513cc60e636927c7291ece"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/static-batch.js",
+    "sha256": "a5f089984d2ecd7c1f7629ca54774358795581652fce0614e6f759687e3fde55"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/expedition.js",
+    "sha256": "65207c429841fa6403554fa49e4c6e6e855735dbe9aaa95a55534c3998f16995"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/nanite-forms.js",
+    "sha256": "d883d81b0562ae1b7cf592f6fbab0644867eefcbfc9dfedb2c42bfa4aa210c72"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/models.js",
+    "sha256": "8029b84f513deeab42482cea386fee2463ed0377648495c56698d48a978d6ee2"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/logistics.js",
+    "sha256": "63757f47844ba6c567174bccd2e682471031eb5ed68b6b71fe9893a1beef537d"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/ordnance.js",
+    "sha256": "ab2369438732b8cf9036d2645705dd15c0eb77ccfef7b72212bd41039c805372"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/condition.js",
+    "sha256": "ab8180853faf5c8bb13470a82a84c806f54b96993c7b1806cf562d7fd9754f67"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/air-mobility.js",
+    "sha256": "778f8f67a4f9560fbe8ce38828766c385b7ce739eafda7d84eb652fe9b439f77"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/damage.js",
+    "sha256": "e7141c39c511097b95387f9c5ca1bbd2edb6a6a4ccbc4346236e8ed8d5c3480b"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/defense.js",
+    "sha256": "b3e912db260966d8936526b89e678358f3376b4a32c090e097d1046f3f2c710a"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/mechs.js",
+    "sha256": "4aa82d05f85799cba45040e179b5215cded994d368d313f534b1cc3d19c574c4"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/drone-tank.js",
+    "sha256": "ffb9bc81e598700abce165ce4ee960d8a1d133d52fecba4ef9f80f6aa4d144ff"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/crew-interiors.js",
+    "sha256": "9c70591a5ced9b05d47d1b8732f290b416e006e8df4b98f7cbd92e7ed708beab"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/spider-mine.js",
+    "sha256": "cfa4f246a18744c2dd9ee1418906d323a700c47e3a5ecfe333ad6ef33fc6c424"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/mothership-destroyed/model.js",
+    "sha256": "23342d14c6cb0fdb5cb253f28a7aee469fa9caaa2ff0f22805a01d748e0ce588"
+   }
+  ],
+  "recipe": {
+   "path": "authoring/recipes/reference-fleet/mothership-destroyed/recipe.json",
+   "sha256": "cb16f72864da62c278b280c93fc843ab155a6871e45f79071ad4c18576a54b1e"
+  }
+ },
+ "tool": {
+  "name": "powerworld-authoring",
+  "version": "0.1.0",
+  "three": "0.169.0",
+  "adapterVersion": 1
+ },
+ "build": {
+  "options": {},
+  "cacheKey": "dadf2d84ea44a4c4a9436d4c68e4ac647e3c567ece42a258e3abd45ba8b75db3",
+  "contentHash": "830b4ae623cc47c4bfc115776a8a9eaa65745018765d84777df2ac7ff5d709c5",
+  "profile": "desktop"
+ },
+ "acceptance": {
+  "visual": "unapproved",
+  "blockers": [],
+  "note": "Two decks · stairs and hangar overlook · starboard bridge through security · 68 capsules · six catapult fighters; model and scale candidate, no handling or live equipment integration."
+ },
+ "outputs": [
+  {
+   "path": "model.glb",
+   "role": "glb",
+   "sha256": "be96938a2cffa2157816ba67a1aaafa7c0f23ebfae7ac7601278a199d0c82aa0",
+   "bytes": 1390416
+  }
+ ],
+ "packageHash": "8a7ee967f18fb2a98f55ac62a76748228cdc4db7fadadb00fc9f5bf4642fe4e9"
+}

@@ -1,0 +1,497 @@
+{
+ "format": "pw-asset-package",
+ "formatVersion": 1,
+ "id": "prop.reference-humvee-damaged",
+ "version": 2,
+ "kind": "prop",
+ "displayName": "Armored utility · damaged",
+ "tags": [
+  "reference-fleet",
+  "ground"
+ ],
+ "rig": {
+  "skeleton": "none"
+ },
+ "sockets": [
+  {
+   "name": "driver",
+   "parent": "humvee-damaged",
+   "position": [
+    -2.56158,
+    7.19423,
+    1.09003
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "entry-driver",
+   "parent": "humvee-damaged",
+   "position": [
+    -9.74325,
+    0.52632,
+    1.09003
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "entry-gunner",
+   "parent": "humvee-damaged",
+   "position": [
+    -9.74325,
+    0.52632,
+    -2.77959
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "entry-passenger",
+   "parent": "humvee-damaged",
+   "position": [
+    9.74325,
+    0.52632,
+    1.09003
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "entry-rear-left",
+   "parent": "humvee-damaged",
+   "position": [
+    -9.74325,
+    0.52632,
+    -5.12316
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "entry-rear-right",
+   "parent": "humvee-damaged",
+   "position": [
+    9.74325,
+    0.52632,
+    -5.12316
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "gunner",
+   "parent": "turret",
+   "position": [
+    0,
+    0.43601,
+    -0.87203
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "muzzle",
+   "parent": "barrel",
+   "position": [
+    0,
+    0,
+    5.45017
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-torso-driver",
+   "parent": "socket-seat-driver",
+   "position": [
+    0,
+    2.52632,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-torso-gunner",
+   "parent": "socket-seat-gunner",
+   "position": [
+    0,
+    2.52632,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-torso-passenger",
+   "parent": "socket-seat-passenger",
+   "position": [
+    0,
+    2.52632,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-torso-rear-left",
+   "parent": "socket-seat-rear-left",
+   "position": [
+    0,
+    2.52632,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-torso-rear-right",
+   "parent": "socket-seat-rear-right",
+   "position": [
+    0,
+    2.52632,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "passenger",
+   "parent": "humvee-damaged",
+   "position": [
+    2.56158,
+    7.19423,
+    1.09003
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "rear-left",
+   "parent": "humvee-damaged",
+   "position": [
+    -2.56158,
+    7.19423,
+    -5.12316
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "rear-right",
+   "parent": "humvee-damaged",
+   "position": [
+    2.56158,
+    7.19423,
+    -5.12316
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "seat-driver",
+   "parent": "crew-chair-driver",
+   "position": [
+    0,
+    0.34211,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "seat-gunner",
+   "parent": "crew-chair-gunner",
+   "position": [
+    0,
+    0.34211,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "seat-passenger",
+   "parent": "crew-chair-passenger",
+   "position": [
+    0,
+    0.34211,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "seat-rear-left",
+   "parent": "crew-chair-rear-left",
+   "position": [
+    0,
+    0.34211,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "seat-rear-right",
+   "parent": "crew-chair-rear-right",
+   "position": [
+    0,
+    0.34211,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  }
+ ],
+ "bounds": {
+  "min": [
+   -6.3222,
+   0,
+   -13.40743
+  ],
+  "max": [
+   6.54676,
+   19.61582,
+   13.43468
+  ]
+ },
+ "materials": [
+  {
+   "name": "fleet-rubber"
+  },
+  {
+   "name": "fleet-edge"
+  },
+  {
+   "name": "fleet-machine"
+  },
+  {
+   "name": "fleet-painted-parts"
+  },
+  {
+   "name": "fleet-glass"
+  },
+  {
+   "name": "fleet-armor"
+  },
+  {
+   "name": "fleet-red"
+  },
+  {
+   "name": "fleet-damage-charred"
+  },
+  {
+   "name": "fleet-damage-metal"
+  }
+ ],
+ "lods": [
+  {
+   "level": 0,
+   "output": "model.glb",
+   "triangles": 2215
+  }
+ ],
+ "units": {
+  "lengthUnit": "game-unit",
+  "metersPerUnit": 0.19,
+  "up": "+Y",
+  "forward": "+Z",
+  "handedness": "right",
+  "sourceConversion": {
+   "scale": 1,
+   "yawDegrees": 0,
+   "mirrorX": false,
+   "sourceUp": "+Y",
+   "sourceForward": "+Z",
+   "note": "authored directly in game units along the engine weapon axis (-Y toward the muzzle)"
+  }
+ },
+ "budgets": {
+  "profile": "desktop",
+  "measured": {
+   "triangles": 2215,
+   "drawCalls": 28,
+   "materials": 9,
+   "bones": 0,
+   "textures": 0,
+   "bytes": 259320
+  },
+  "limits": {
+   "triangles": 67793,
+   "drawCalls": 32,
+   "materials": 9,
+   "bones": 1,
+   "textures": 4,
+   "bytes": 3170030
+  }
+ },
+ "structural": {
+  "validator": "2.0.0-dev.3.10",
+  "errors": 0,
+  "warnings": 0
+ },
+ "provenance": {
+  "author": "Machine King Labs",
+  "license": "proprietary",
+  "terms": "Original model geometry authored for this project from creator-supplied concept references; reference redistribution rights are not independently verified.",
+  "redistribution": "internal",
+  "attribution": "Creator-supplied September 12, 2026 concepts."
+ },
+ "source": {
+  "adapter": "procedural-prop@1",
+  "files": [
+   {
+    "path": "authoring/recipes/reference-fleet/models.js",
+    "sha256": "492fa7f7fec38de17e45d3cacc982780d1873f46657542fe956b8e6cd7432c4d"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/damage.js",
+    "sha256": "3de0a59c37abf35dd6538cef69e1e8c7e057dd357ad511da4565cbad12f8566a"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/defense.js",
+    "sha256": "b3e912db260966d8936526b89e678358f3376b4a32c090e097d1046f3f2c710a"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/mechs.js",
+    "sha256": "4aa82d05f85799cba45040e179b5215cded994d368d313f534b1cc3d19c574c4"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/drone-tank.js",
+    "sha256": "ffb9bc81e598700abce165ce4ee960d8a1d133d52fecba4ef9f80f6aa4d144ff"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/crew-interiors.js",
+    "sha256": "19f1a49a5279414f5729c589494a24108cb184a9e45eb3c73710fb3e4de0616f"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/spider-mine.js",
+    "sha256": "cfa4f246a18744c2dd9ee1418906d323a700c47e3a5ecfe333ad6ef33fc6c424"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/humvee-damaged/model.js",
+    "sha256": "2c91762653de4cb3c954cac876372ceffd8ef585ac1c7bf179b982f2ecb15685"
+   },
+   {
+    "path": "assets-src/reference-fleet/references/7.webp",
+    "sha256": "65ec65fe9696525ee36ee4e8a62f867c417cd85b13a6bd057e056c5f94211792"
+   }
+  ],
+  "recipe": {
+   "path": "authoring/recipes/reference-fleet/humvee-damaged/recipe.json",
+   "sha256": "64b47bdda7f5c2d9f52987486fcdd91dffb1bb860702afc956d80ed3f9056ed7"
+  }
+ },
+ "tool": {
+  "name": "powerworld-authoring",
+  "version": "0.1.0",
+  "three": "0.169.0",
+  "adapterVersion": 1
+ },
+ "build": {
+  "options": {},
+  "cacheKey": "610dd0def43b2307b65f06841e8d5efedc928d22d10625d6d54df3a55049d03f",
+  "contentHash": "ad9393a05c265a48b6fb2b6bd0d720978c735dd6836e55ac90104f418cbfcae1",
+  "profile": "desktop"
+ },
+ "acceptance": {
+  "visual": "unapproved",
+  "blockers": [],
+  "note": "Four doors · protected roof mount; model and scale candidate, no handling or live equipment integration."
+ },
+ "outputs": [
+  {
+   "path": "model.glb",
+   "role": "glb",
+   "sha256": "1e3356fdf09200fd0d197c7299f3d6be00d22efbcd432cfdc487a116f94718b0",
+   "bytes": 259320
+  }
+ ],
+ "packageHash": "bdd9396aa79fda2777cdb4b8e15c8968beb30d08f9d3f6a09cae5983560db28a"
+}

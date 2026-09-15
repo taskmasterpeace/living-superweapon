@@ -1,0 +1,225 @@
+{
+ "format": "pw-asset-package",
+ "formatVersion": 1,
+ "id": "prop.reference-humvee",
+ "version": 2,
+ "kind": "prop",
+ "displayName": "Armored utility",
+ "tags": [
+  "reference-fleet",
+  "ground"
+ ],
+ "rig": {
+  "skeleton": "none"
+ },
+ "sockets": [
+  {
+   "name": "driver",
+   "parent": "humvee",
+   "position": [
+    -2.34357,
+    7.35773,
+    1.47155
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "gunner",
+   "parent": "turret",
+   "position": [
+    0,
+    1.19904,
+    -0.65402
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "muzzle",
+   "parent": "barrel",
+   "position": [
+    0,
+    0,
+    5.45017
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "passenger",
+   "parent": "humvee",
+   "position": [
+    2.34357,
+    7.35773,
+    1.47155
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  }
+ ],
+ "bounds": {
+  "min": [
+   -6.3222,
+   0,
+   -13.40743
+  ],
+  "max": [
+   6.3222,
+   16.35052,
+   13.43468
+  ]
+ },
+ "materials": [
+  {
+   "name": "fleet-rubber"
+  },
+  {
+   "name": "fleet-edge"
+  },
+  {
+   "name": "fleet-machine"
+  },
+  {
+   "name": "fleet-armor"
+  },
+  {
+   "name": "fleet-glass"
+  },
+  {
+   "name": "fleet-red"
+  }
+ ],
+ "lods": [
+  {
+   "level": 0,
+   "output": "model.glb",
+   "triangles": 1144
+  }
+ ],
+ "units": {
+  "lengthUnit": "game-unit",
+  "metersPerUnit": 0.19,
+  "up": "+Y",
+  "forward": "+Z",
+  "handedness": "right",
+  "sourceConversion": {
+   "scale": 1,
+   "yawDegrees": 0,
+   "mirrorX": false,
+   "sourceUp": "+Y",
+   "sourceForward": "+Z",
+   "note": "authored directly in game units along the engine weapon axis (-Y toward the muzzle)"
+  }
+ },
+ "budgets": {
+  "profile": "desktop",
+  "measured": {
+   "triangles": 1144,
+   "drawCalls": 16,
+   "materials": 6,
+   "bones": 0,
+   "textures": 0,
+   "bytes": 122176
+  },
+  "limits": {
+   "triangles": 67793,
+   "drawCalls": 32,
+   "materials": 9,
+   "bones": 1,
+   "textures": 4,
+   "bytes": 3170030
+  }
+ },
+ "structural": {
+  "validator": "2.0.0-dev.3.10",
+  "errors": 0,
+  "warnings": 0
+ },
+ "provenance": {
+  "author": "Machine King Labs",
+  "license": "proprietary",
+  "terms": "Original model geometry authored for this project from creator-supplied concept references; reference redistribution rights are not independently verified.",
+  "redistribution": "internal",
+  "attribution": "Creator-supplied September 12, 2026 concepts."
+ },
+ "source": {
+  "adapter": "procedural-prop@1",
+  "files": [
+   {
+    "path": "authoring/recipes/reference-fleet/models.js",
+    "sha256": "2be6dcd8c4b479ad8648d954595c988c006c8cf53a065c973fd3fdee74fbe8a5"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/damage.js",
+    "sha256": "3de0a59c37abf35dd6538cef69e1e8c7e057dd357ad511da4565cbad12f8566a"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/defense.js",
+    "sha256": "b3e912db260966d8936526b89e678358f3376b4a32c090e097d1046f3f2c710a"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/mechs.js",
+    "sha256": "429c45318b6d89baa2e6df619ea4fe738aa8667d9281c130bca013527d26a6dc"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/spider-mine.js",
+    "sha256": "cfa4f246a18744c2dd9ee1418906d323a700c47e3a5ecfe333ad6ef33fc6c424"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/humvee/model.js",
+    "sha256": "989b384b90dafd1538425b5d8854480fb6f29c60a3e04736cec33e1e712f0de5"
+   },
+   {
+    "path": "assets-src/reference-fleet/references/7.webp",
+    "sha256": "65ec65fe9696525ee36ee4e8a62f867c417cd85b13a6bd057e056c5f94211792"
+   }
+  ],
+  "recipe": {
+   "path": "authoring/recipes/reference-fleet/humvee/recipe.json",
+   "sha256": "f05ceb6280572a01b11345516d7c8d02a54f45d294f3618881c986ce71dd7eaa"
+  }
+ },
+ "tool": {
+  "name": "powerworld-authoring",
+  "version": "0.1.0",
+  "three": "0.169.0",
+  "adapterVersion": 1
+ },
+ "build": {
+  "options": {},
+  "cacheKey": "4c05a5836d783b98a1641f2a9583c438729e41d647065b2746e1d56aefece695",
+  "contentHash": "ec0212397f22bb8468a6625a99ab85a1fad3271ecee1bc718d17fd5d8ff8931e",
+  "profile": "desktop"
+ },
+ "acceptance": {
+  "visual": "unapproved",
+  "blockers": [],
+  "note": "Four doors · protected roof mount; model and scale candidate, no handling or live equipment integration."
+ },
+ "outputs": [
+  {
+   "path": "model.glb",
+   "role": "glb",
+   "sha256": "b2244f814a3c349ae04459283254d9addfd59215d41d15fd361430eb72dd06e6",
+   "bytes": 122176
+  }
+ ],
+ "packageHash": "6d430bf502f76c4d8ae23c2edaac516085aa5ce699e83fe6f2027860423cb7eb"
+}

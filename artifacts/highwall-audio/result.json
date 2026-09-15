@@ -1,0 +1,37 @@
+{
+  "method": "Native W, left mouse fire and R reload; master bus additionally connected to MediaStreamDestination. No audition or fabricated sound events. Subjective listening unverified.",
+  "errors": [],
+  "state": "running",
+  "ammo": {
+    "loaded": 30,
+    "capacity": 30,
+    "reserve": 172,
+    "dryUntil": 0
+  },
+  "events": [
+    {
+      "id": "reload",
+      "accepted": false,
+      "reason": "recording-not-decoded",
+      "time": 4.112
+    },
+    {
+      "id": "reload-eject",
+      "accepted": false,
+      "reason": "recording-not-decoded",
+      "time": 4.650666666666667
+    },
+    {
+      "id": "reload-insert",
+      "accepted": false,
+      "reason": "recording-not-decoded",
+      "time": 5.850666666666666
+    },
+    {
+      "id": "reload-chamber",
+      "accepted": false,
+      "reason": "recording-not-decoded",
+      "time": 6.872
+    }
+  ]
+}

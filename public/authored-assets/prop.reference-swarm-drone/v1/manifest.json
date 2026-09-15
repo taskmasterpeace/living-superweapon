@@ -1,0 +1,155 @@
+{
+ "format": "pw-asset-package",
+ "formatVersion": 1,
+ "id": "prop.reference-swarm-drone",
+ "version": 1,
+ "kind": "prop",
+ "displayName": "Swarm drone",
+ "tags": [
+  "reference-fleet",
+  "drones"
+ ],
+ "rig": {
+  "skeleton": "none"
+ },
+ "sockets": [
+  {
+   "name": "owner-anchor",
+   "parent": "swarm-drone",
+   "position": [
+    0,
+    0.69102,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  }
+ ],
+ "bounds": {
+  "min": [
+   -2.34056,
+   0,
+   -1.89474
+  ],
+  "max": [
+   2.34056,
+   1.89474,
+   1.89474
+  ]
+ },
+ "materials": [
+  {
+   "name": "fleet-machine"
+  },
+  {
+   "name": "fleet-armor"
+  },
+  {
+   "name": "fleet-red"
+  }
+ ],
+ "lods": [
+  {
+   "level": 0,
+   "output": "model.glb",
+   "triangles": 348
+  }
+ ],
+ "units": {
+  "lengthUnit": "game-unit",
+  "metersPerUnit": 0.19,
+  "up": "+Y",
+  "forward": "+Z",
+  "handedness": "right",
+  "sourceConversion": {
+   "scale": 1,
+   "yawDegrees": 0,
+   "mirrorX": false,
+   "sourceUp": "+Y",
+   "sourceForward": "+Z",
+   "note": "authored directly in game units along the engine weapon axis (-Y toward the muzzle)"
+  }
+ },
+ "budgets": {
+  "profile": "desktop",
+  "measured": {
+   "triangles": 348,
+   "drawCalls": 11,
+   "materials": 3,
+   "bones": 0,
+   "textures": 0,
+   "bytes": 41784
+  },
+  "limits": {
+   "triangles": 67793,
+   "drawCalls": 32,
+   "materials": 9,
+   "bones": 1,
+   "textures": 4,
+   "bytes": 3170030
+  }
+ },
+ "structural": {
+  "validator": "2.0.0-dev.3.10",
+  "errors": 0,
+  "warnings": 0
+ },
+ "provenance": {
+  "author": "Machine King Labs",
+  "license": "proprietary",
+  "terms": "Original model geometry authored for this project from creator-supplied concept references; reference redistribution rights are not independently verified.",
+  "redistribution": "internal",
+  "attribution": "Creator-supplied September 12, 2026 concepts."
+ },
+ "source": {
+  "adapter": "procedural-prop@1",
+  "files": [
+   {
+    "path": "authoring/recipes/reference-fleet/models.js",
+    "sha256": "dd0c5303d1e20c83702ef7d8ff89b3483d0e87a82a37ba0c72f15769473bcdef"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/swarm-drone/model.js",
+    "sha256": "f252ea535ac7f99248fe05f1367a52732bcbbe468d644370cc9e240290f2f315"
+   },
+   {
+    "path": "assets-src/reference-fleet/references/9.webp",
+    "sha256": "f843013c30d29b87c58d9ddff835ccf1652a6890fc34f4cf4bad1b34e01b2e76"
+   }
+  ],
+  "recipe": {
+   "path": "authoring/recipes/reference-fleet/swarm-drone/recipe.json",
+   "sha256": "add2807cbbeef26832995a1a58f72b7576987b37d45670bf54e3519e54c6a174"
+  }
+ },
+ "tool": {
+  "name": "powerworld-authoring",
+  "version": "0.1.0",
+  "three": "0.169.0",
+  "adapterVersion": 1
+ },
+ "build": {
+  "options": {},
+  "cacheKey": "eae625ed8ddcc8f73252416fcfb63f5ea7a6be93572a635eb707f048b12d0884",
+  "contentHash": "8482ae5f4ce733a7b18fa7ea1501b0e4ee3f0d83dea78246fdb840d712486625",
+  "profile": "desktop"
+ },
+ "acceptance": {
+  "visual": "unapproved",
+  "blockers": [],
+  "note": "Compact quad · four independent rotors; model and scale candidate, no handling or live equipment integration."
+ },
+ "outputs": [
+  {
+   "path": "model.glb",
+   "role": "glb",
+   "sha256": "c48a4d159896e99a12188041909d616f5bd864270d41cfe8f019c9521fa98e5e",
+   "bytes": 41784
+  }
+ ],
+ "packageHash": "67401aa387384a27e272daf2f8d5fefa89bd76083433f1209e43c8b67ff341f9"
+}

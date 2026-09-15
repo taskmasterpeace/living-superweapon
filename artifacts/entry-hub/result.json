@@ -1,0 +1,41 @@
+{
+  "fleet": {
+    "selected": "tank",
+    "count": 93,
+    "soldier": true
+  },
+  "houndTools": true,
+  "Character editor": {
+    "url": "http://127.0.0.1:5193/character-foundation.html"
+  },
+  "Power & motion studio": {
+    "url": "http://127.0.0.1:5193/studio.html"
+  },
+  "Authored packages": {
+    "url": "http://127.0.0.1:5193/authoring/viewer/index.html#body.hero-heavy@1"
+  },
+  "vehicle-sim": {
+    "url": "http://127.0.0.1:5193/powerworld.html?destination=vehicle-sim",
+    "mode": "powerworld",
+    "player": "sarge",
+    "sim": true,
+    "training": false
+  },
+  "training": {
+    "url": "http://127.0.0.1:5193/powerworld.html?destination=training",
+    "mode": "powerworld",
+    "player": "sarge",
+    "sim": false,
+    "training": true
+  },
+  "highwall": {
+    "url": "http://127.0.0.1:5193/powerworld.html?highwall&scenario=combined",
+    "mode": "powerworld",
+    "player": "sol",
+    "sim": false,
+    "training": false,
+    "highwall": "combined"
+  },
+  "cityPage": "http://127.0.0.1:5193/citygame.html",
+  "errors": []
+}

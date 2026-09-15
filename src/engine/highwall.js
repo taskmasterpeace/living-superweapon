@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import {characterSees} from './character-sight.js';
 import {highwallLayout} from '../data/highwall.js';
 import {createSoldierFamilyDefinition,SOLDIER_PRESETS,soldierLoadout} from '../data/soldier-family.js';
 import {zombieDefinition} from '../data/zombie-encounter.js';
@@ -43,6 +44,8 @@ export async function launchHighwall(g,preset='corridor',options={}){
   try{const vehicle=await spawnHighwallFleet(g,scope.scenario.vehicle,{scope});if(g._highwall===scope){scope.vehicle=vehicle;scope.tank=vehicle;scope.ready=!!vehicle;scope.tick();}}
   catch(e){if(g._highwall===scope){scope.error=`Vehicle unavailable: ${e.message}`;scope.tick();}console.error(e);}
  }
+ loading.stage('Preparing recorded gameplay audio');
+ g.audio.init();await g.audio.prepareSamples();await g.audio.soundLibrary.prepare();
  await loading.frame();loading.close();
  return scope;
  }catch(error){loading.fail(error);throw error;}
@@ -52,6 +55,8 @@ export class Highwall {
  constructor(g,preset,options){
   this.g=g;this.preset=preset;this.scenario=HIGHWALL_SCENARIOS[preset];this.options={...options};this.started=false;this.ready=true;this.units=[];this.infection=new HighwallInfection(this);
   this.layout=highwallLayout(options.layout);this.saved={};this.hidden=[];const w=g.world;
+  this.previousVision={fov:g.fov,characterVisibility:g.characterVisibility};
+  g.fov=true;g.characterVisibility=true;
   for(const key of ['cover','coverAll','cameraObstacles','interiors','rocks','cars','planes','treeSpots','ARENA','heightAt','waterAt','_ghTriangles','crater','flattenGrass'])this.saved[key]=w[key];
   for(const o of g.scene.children)if(!o.isLight&&!o.isPoints){this.hidden.push([o,o.visible]);o.visible=false;}
   this.background=g.scene.background;this.fog=g.scene.fog;
@@ -74,11 +79,13 @@ export class Highwall {
   }
   this.group?.userData.dispose();this.group=group;this.layout=layout;this.nav=nav;
   this.g.world.cover=solids;this.g.world.coverAll=solids;this.g.scene.add(group);
+  this.g.world._fitFog?.({arena:350});this.g.world.refreshFogBoxes?.();
   // Decorative sign planes obstruct framing, but are not bulletproof walls.
   this.g.world.cameraObstacles=layout.signs.map(s=>({x:s.x,z:s.z,hx:s.w/2,hz:.15,bottom:s.y-s.w/8,top:s.y+s.w/8,h:s.y+s.w/8,finiteBuilding:true}));
   const gate=layout.pieces.find(p=>p.id==='service-gate'),open=this.door?.open||false;this.door?.dispose();this.door=null;
   if(gate)this.door=new HighwallDoor({scene:this.g.scene,box:gate,open,actors:()=>this.g.entities,onProgress:(_,__,collider)=>{
    const index=this.g.world.cover.findIndex(p=>p.id==='service-gate');if(index>=0)this.g.world.cover[index]=collider;
+   this.g.world.refreshFogBoxes?.();
    this.nav.replace(this.g.world.cover,this.nav.revision+1);for(const f of this.units)delete f._highwallRoute;
   },onBlocked:message=>this.g.hud.feed(message)});
   if(this.devices)this.devices.doorController=this.door;
@@ -169,6 +176,7 @@ export class Highwall {
    }}
   }
   this.devices?.tick(dt);
+  for(const marker of this.loot?.markers.values()||[])marker.visible=characterSees(this.g,this.g.player,{pos:marker.position});
   if(!this.panel)return;
   const counts=[0,1,2].map(t=>this.units.filter(f=>f.team===t&&f.alive).length);
   const state=this.panel.querySelector('[data-state]');
@@ -201,7 +209,7 @@ export class Highwall {
  dispose(){
   if(this.disposed)return;this.disposed=true;
   const g=this.g;this.panel?.remove();this.prompt?.remove();this.devices?.dispose();this.door?.dispose();this.loot?.dispose();this.group?.userData.dispose();
-  Object.assign(g.world,this.saved);g.scene.background=this.background;g.scene.fog=this.fog;
+  Object.assign(g.world,this.saved);Object.assign(g,this.previousVision);g.world._fitFog?.();g.world.refreshFogBoxes?.();g.scene.background=this.background;g.scene.fog=this.fog;
   for(const [o,v]of this.hidden)o.visible=v;
   g.peds=this.peds;g.police=this.police;if(g._highwall===this)g._highwall=null;
  }

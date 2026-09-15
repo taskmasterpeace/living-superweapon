@@ -1,0 +1,348 @@
+{
+ "format": "pw-asset-package",
+ "formatVersion": 1,
+ "id": "prop.reference-mothership-fighter-damaged",
+ "version": 1,
+ "kind": "prop",
+ "displayName": "Talon launch fighter · damaged",
+ "tags": [
+  "reference-fleet",
+  "aircraft"
+ ],
+ "rig": {
+  "skeleton": "none"
+ },
+ "sockets": [
+  {
+   "name": "emblem-side--1",
+   "parent": "mothership-fighter",
+   "position": [
+    -10.21053,
+    10.52632,
+    -21.05263
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "emblem-side-1",
+   "parent": "mothership-fighter",
+   "position": [
+    10.21053,
+    10.52632,
+    -21.05263
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "emblem-top",
+   "parent": "mothership-fighter",
+   "position": [
+    0,
+    16.57895,
+    -26.31579
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "energy-muzzle",
+   "parent": "mothership-fighter",
+   "position": [
+    0,
+    7.10526,
+    11.57895
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "entry-pilot",
+   "parent": "mothership-fighter",
+   "position": [
+    -40.26316,
+    0.52632,
+    -1.84211
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-eye-pilot",
+   "parent": "socket-seat-pilot",
+   "position": [
+    0,
+    5,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-torso-pilot",
+   "parent": "socket-seat-pilot",
+   "position": [
+    0,
+    2.52632,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "pilot",
+   "parent": "mothership-fighter",
+   "position": [
+    0,
+    11.15789,
+    -1.84211
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "seat-pilot",
+   "parent": "crew-chair-pilot",
+   "position": [
+    0,
+    0.34211,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  }
+ ],
+ "bounds": {
+  "min": [
+   -36.84211,
+   0,
+   -63.15789
+  ],
+  "max": [
+   36.84211,
+   31.58421,
+   63.15789
+  ]
+ },
+ "materials": [
+  {
+   "name": "condition-damaged-fleet-painted-parts"
+  },
+  {
+   "name": "condition-damaged-fleet-glass"
+  }
+ ],
+ "lods": [
+  {
+   "level": 0,
+   "output": "model.glb",
+   "triangles": 732
+  }
+ ],
+ "units": {
+  "lengthUnit": "game-unit",
+  "metersPerUnit": 0.19,
+  "up": "+Y",
+  "forward": "+Z",
+  "handedness": "right",
+  "sourceConversion": {
+   "scale": 1,
+   "yawDegrees": 0,
+   "mirrorX": false,
+   "sourceUp": "+Y",
+   "sourceForward": "+Z",
+   "note": "authored directly in game units along the engine weapon axis (-Y toward the muzzle)"
+  }
+ },
+ "budgets": {
+  "profile": "desktop",
+  "measured": {
+   "triangles": 732,
+   "drawCalls": 11,
+   "materials": 2,
+   "bones": 0,
+   "textures": 0,
+   "bytes": 107524
+  },
+  "limits": {
+   "triangles": 67793,
+   "drawCalls": 32,
+   "materials": 9,
+   "bones": 1,
+   "textures": 4,
+   "bytes": 3170030
+  }
+ },
+ "structural": {
+  "validator": "2.0.0-dev.3.10",
+  "errors": 0,
+  "warnings": 0
+ },
+ "provenance": {
+  "author": "Machine King Labs",
+  "license": "proprietary",
+  "terms": "Original model geometry authored for this project from creator-supplied concept references; reference redistribution rights are not independently verified.",
+  "redistribution": "internal",
+  "attribution": "Creator-supplied September 12, 2026 concepts."
+ },
+ "source": {
+  "adapter": "procedural-prop@1",
+  "files": [
+   {
+    "path": "assets-src/reference-fleet/references/mothership.webp",
+    "sha256": "91af10c0af4be8d5ddd54451eaea9137fe107df11dd07e8a8313b7d74b5fa006"
+   },
+   {
+    "path": "assets-src/reference-fleet/references/mothership-fighter.webp",
+    "sha256": "02e7314029da5b2a7ace9694f758128e4c3e0b0f95ecdf92c323094d5753764c"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/mothership.js",
+    "sha256": "c11599cf6e16250e09e716f7e239f44de7a1fe31ffb81ef6492a8ba3fbfde8cd"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/mothership-layout.js",
+    "sha256": "d3fa54bac8be29360224b63e242b01b6c768af86aad402120f6051f830d4e8d3"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/arsenal.js",
+    "sha256": "277361e560ad8faf4e33f3601d9d5d76a0505bb406ac7d7127297e3ed46a100f"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/stealth.js",
+    "sha256": "317644ffc10aeb4f24c2b94ed26997a040b95bf008f54601226e74932e2df9aa"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/nanite-robots.js",
+    "sha256": "e5c027ed100f5a9d4858c6da7bea861dfe05500f57513cc60e636927c7291ece"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/static-batch.js",
+    "sha256": "a5f089984d2ecd7c1f7629ca54774358795581652fce0614e6f759687e3fde55"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/expedition.js",
+    "sha256": "65207c429841fa6403554fa49e4c6e6e855735dbe9aaa95a55534c3998f16995"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/nanite-forms.js",
+    "sha256": "d883d81b0562ae1b7cf592f6fbab0644867eefcbfc9dfedb2c42bfa4aa210c72"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/models.js",
+    "sha256": "3503f7c31950f0481967d2a587a08b1e4c71473322c29f7e7e7ae2dd8858239e"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/logistics.js",
+    "sha256": "63757f47844ba6c567174bccd2e682471031eb5ed68b6b71fe9893a1beef537d"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/ordnance.js",
+    "sha256": "ab2369438732b8cf9036d2645705dd15c0eb77ccfef7b72212bd41039c805372"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/condition.js",
+    "sha256": "ab8180853faf5c8bb13470a82a84c806f54b96993c7b1806cf562d7fd9754f67"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/air-mobility.js",
+    "sha256": "778f8f67a4f9560fbe8ce38828766c385b7ce739eafda7d84eb652fe9b439f77"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/damage.js",
+    "sha256": "e7141c39c511097b95387f9c5ca1bbd2edb6a6a4ccbc4346236e8ed8d5c3480b"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/defense.js",
+    "sha256": "b3e912db260966d8936526b89e678358f3376b4a32c090e097d1046f3f2c710a"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/mechs.js",
+    "sha256": "4aa82d05f85799cba45040e179b5215cded994d368d313f534b1cc3d19c574c4"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/drone-tank.js",
+    "sha256": "ffb9bc81e598700abce165ce4ee960d8a1d133d52fecba4ef9f80f6aa4d144ff"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/crew-interiors.js",
+    "sha256": "9c70591a5ced9b05d47d1b8732f290b416e006e8df4b98f7cbd92e7ed708beab"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/spider-mine.js",
+    "sha256": "cfa4f246a18744c2dd9ee1418906d323a700c47e3a5ecfe333ad6ef33fc6c424"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/mothership-fighter-damaged/model.js",
+    "sha256": "97adde9ad13c701ffadae223d73ff618562691764b33a87ef2526d29678883cd"
+   }
+  ],
+  "recipe": {
+   "path": "authoring/recipes/reference-fleet/mothership-fighter-damaged/recipe.json",
+   "sha256": "13eab38ad73f2335cf0c8bcba902b2074a094d7b81c05d668829aee76db4315d"
+  }
+ },
+ "tool": {
+  "name": "powerworld-authoring",
+  "version": "0.1.0",
+  "three": "0.169.0",
+  "adapterVersion": 1
+ },
+ "build": {
+  "options": {},
+  "cacheKey": "6c61c84d92468061eb9fb1d57bb900dfd1441ff5d803223248c694e4fd50702d",
+  "contentHash": "c814b9dd39b219b0afc53c1aba7027747357e2e236413ab4013a84dab405e91c",
+  "profile": "desktop"
+ },
+ "acceptance": {
+  "visual": "unapproved",
+  "blockers": [],
+  "note": "Mothership launch fighter � pilot seat � split nose � opening canopy � charged energy weapon; model and scale candidate, no handling or live equipment integration."
+ },
+ "outputs": [
+  {
+   "path": "model.glb",
+   "role": "glb",
+   "sha256": "5b22e84eb345c931f0fabb6d65db234a214523293dff2859db55c8f075d8271f",
+   "bytes": 107524
+  }
+ ],
+ "packageHash": "7c9ccc66b08e8f7a8bdeb257022145cbd2b160d902549ec8ebfc2b678373ced7"
+}

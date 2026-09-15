@@ -1,0 +1,2 @@
+import {chromium} from 'playwright';
+const b=await chromium.launch({headless:false}),p=await b.newPage({viewport:{width:1440,height:900}});const errors=[];p.on('pageerror',e=>errors.push(e.message));await p.goto('http://127.0.0.1:5193/authoring/viewer/index.html#equipment.carbine@1');await p.waitForTimeout(2000);console.log(JSON.stringify({errors,text:(await p.locator('body').innerText()).slice(0,1200)}));await p.screenshot({path:'artifacts/highwall-soldier/source-viewer-diagnostic.png'});await b.close();

@@ -46,10 +46,24 @@ window.PW = PW;
 // ever written against it. `PW` is the page's own name; `LSW` is the contract.
 window.LSW = PW;
 requestAnimationFrame(async()=>{
+  const destination=new URLSearchParams(location.search).get('destination');
   if(new URLSearchParams(location.search).has('highwall')){
     door?.close();PW.hud.hideSelect?.();
     const {launchHighwall}=await import('./engine/highwall.js');
     document.getElementById('warworld-boot-loading')?.remove();
     await launchHighwall(PW.game,new URLSearchParams(location.search).get('scenario')||'corridor');
+  }else if(['desert','vehicle-sim','training'].includes(destination)){
+    door?.close();PW.hud.hideSelect?.();
+    const loading=document.getElementById('warworld-boot-loading');
+    const status=loading?.querySelector('p');if(status)status.textContent='Loading '+({desert:'Frontline desert','vehicle-sim':'Vehicle proving ground',training:'Threat Room'}[destination]);
+    try{
+      PW.enter({mode:'powerworld',p1:'sarge',p2:'sol',twoPlayer:false,encounter:destination==='training'?'threatLab':'practice',cameraPreset:'frontline',daylight:'day',weatherPreset:'clear',...(destination==='training'?{squad:{side:'soldier',companions:[],soldiers:0,soldierReserves:2,lswReserves:2}}:{})});
+      await PW.game.pwStage?.frontlineLoading;
+      const preparation=PW.game.pwStage?.preparation;
+      if(preparation?.promise&&!(await preparation.promise))throw Error(preparation.error||'Battlefield preparation did not complete.');
+      if(destination==='vehicle-sim')await PW.game.deployVehicleSim(new URLSearchParams(location.search).get('vehicle')||'motorcycle');
+      loading?.remove();
+    }catch(error){console.error('Hub destination failed',error);if(status)status.textContent=`Unable to open destination: ${error.message}`;}
   }else document.getElementById('warworld-boot-loading')?.remove();
 });
+const hubLink=document.createElement('a');hubLink.href='./index.html';hubLink.textContent='← Deployment hub';hubLink.id='world-hub-link';hubLink.style.cssText='position:fixed;left:14px;bottom:14px;z-index:25;padding:8px 12px;border:1px solid #827651;border-radius:10px;background:#252e2ded;color:#ead69a;text-decoration:none;font:12px Inter,system-ui,sans-serif';hubLink.onpointerenter=()=>hubLink.style.background='#48503c';hubLink.onpointerleave=()=>hubLink.style.background='#252e2ded';document.body.append(hubLink);

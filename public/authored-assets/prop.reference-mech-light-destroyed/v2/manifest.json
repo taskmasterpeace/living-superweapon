@@ -1,0 +1,344 @@
+{
+ "format": "pw-asset-package",
+ "formatVersion": 1,
+ "id": "prop.reference-mech-light-destroyed",
+ "version": 2,
+ "kind": "prop",
+ "displayName": "Light mech · outrider · destroyed",
+ "tags": [
+  "reference-fleet",
+  "mechs"
+ ],
+ "rig": {
+  "skeleton": "none"
+ },
+ "sockets": [
+  {
+   "name": "entry",
+   "parent": "mech-torso",
+   "position": [
+    0,
+    0,
+    6.78206
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "entry-pilot",
+   "parent": "mech-light",
+   "position": [
+    -12.01166,
+    0.50371,
+    -1.13034
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "foot-0",
+   "parent": "mech-ankle-0",
+   "position": [
+    0,
+    -1.10774,
+    0.45214
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "foot-1",
+   "parent": "mech-ankle-1",
+   "position": [
+    0,
+    -1.10774,
+    0.45214
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "foot-2",
+   "parent": "mech-ankle-2",
+   "position": [
+    0,
+    -1.10774,
+    0.45214
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "foot-3",
+   "parent": "mech-ankle-3",
+   "position": [
+    0,
+    -1.10774,
+    0.45214
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-eye-pilot",
+   "parent": "socket-seat-pilot",
+   "position": [
+    0,
+    5,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-torso-pilot",
+   "parent": "socket-seat-pilot",
+   "position": [
+    0,
+    2.52632,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "pilot-seat",
+   "parent": "mech-seat-pilot",
+   "position": [
+    0,
+    0.36171,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "seat-pilot",
+   "parent": "socket-pilot-seat",
+   "position": [
+    0,
+    0,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  }
+ ],
+ "bounds": {
+  "min": [
+   -6.81371,
+   0,
+   -6.08422
+  ],
+  "max": [
+   6.81371,
+   17.67737,
+   9.12965
+  ]
+ },
+ "materials": [
+  {
+   "name": "condition-destroyed-fleet-painted-parts"
+  }
+ ],
+ "lods": [
+  {
+   "level": 0,
+   "output": "model.glb",
+   "triangles": 1452
+  }
+ ],
+ "units": {
+  "lengthUnit": "game-unit",
+  "metersPerUnit": 0.19,
+  "up": "+Y",
+  "forward": "+Z",
+  "handedness": "right",
+  "sourceConversion": {
+   "scale": 1,
+   "yawDegrees": 0,
+   "mirrorX": false,
+   "sourceUp": "+Y",
+   "sourceForward": "+Z",
+   "note": "authored directly in game units along the engine weapon axis (-Y toward the muzzle)"
+  }
+ },
+ "budgets": {
+  "profile": "desktop",
+  "measured": {
+   "triangles": 1452,
+   "drawCalls": 14,
+   "materials": 1,
+   "bones": 0,
+   "textures": 0,
+   "bytes": 208296
+  },
+  "limits": {
+   "triangles": 67793,
+   "drawCalls": 32,
+   "materials": 9,
+   "bones": 1,
+   "textures": 4,
+   "bytes": 3170030
+  }
+ },
+ "structural": {
+  "validator": "2.0.0-dev.3.10",
+  "errors": 0,
+  "warnings": 0
+ },
+ "provenance": {
+  "author": "Machine King Labs",
+  "license": "proprietary",
+  "terms": "Original model geometry authored for this project from creator-supplied concept references; reference redistribution rights are not independently verified.",
+  "redistribution": "internal",
+  "attribution": "Creator-supplied September 12, 2026 concepts."
+ },
+ "source": {
+  "adapter": "procedural-prop@1",
+  "files": [
+   {
+    "path": "authoring/recipes/reference-fleet/static-batch.js",
+    "sha256": "a5f089984d2ecd7c1f7629ca54774358795581652fce0614e6f759687e3fde55"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/expedition.js",
+    "sha256": "6f63f1b21a2f9f4f5dee888687f72a9980c164fd5c39e3681df434e91eb8f6a1"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/nanite-forms.js",
+    "sha256": "16095e80dcea845fcbd30f91886fa2b94f580dea9feeb7dcc56ad43e7fffd8c1"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/models.js",
+    "sha256": "4a8f1396bb3b10b9535462e88cf45cd0da59648ea7a925f39ca12fcd452d69ee"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/logistics.js",
+    "sha256": "63757f47844ba6c567174bccd2e682471031eb5ed68b6b71fe9893a1beef537d"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/ordnance.js",
+    "sha256": "ab2369438732b8cf9036d2645705dd15c0eb77ccfef7b72212bd41039c805372"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/condition.js",
+    "sha256": "ab8180853faf5c8bb13470a82a84c806f54b96993c7b1806cf562d7fd9754f67"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/air-mobility.js",
+    "sha256": "778f8f67a4f9560fbe8ce38828766c385b7ce739eafda7d84eb652fe9b439f77"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/damage.js",
+    "sha256": "0c34abc49ebe1feacfbe9ef6cc1f850ea12cab5bf5dbcfb7ecef54976a7affef"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/defense.js",
+    "sha256": "b3e912db260966d8936526b89e678358f3376b4a32c090e097d1046f3f2c710a"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/mechs.js",
+    "sha256": "4aa82d05f85799cba45040e179b5215cded994d368d313f534b1cc3d19c574c4"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/drone-tank.js",
+    "sha256": "ffb9bc81e598700abce165ce4ee960d8a1d133d52fecba4ef9f80f6aa4d144ff"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/crew-interiors.js",
+    "sha256": "0048d0e741b0d7a7704e8fccd13cc53c6b4b298f5bd26704489f8aa57474802d"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/spider-mine.js",
+    "sha256": "cfa4f246a18744c2dd9ee1418906d323a700c47e3a5ecfe333ad6ef33fc6c424"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/mech-light-destroyed/model.js",
+    "sha256": "a171cf9969eaf535782fc8b5c22eaa896d4f20c28d7957e8052b44129c195b09"
+   },
+   {
+    "path": "assets-src/reference-fleet/references/mech-0.webp",
+    "sha256": "7c846bd2b1c09ac9f67b0851ade0dd677bc2fe60391e8e7d2311d7c8f287bf51"
+   },
+   {
+    "path": "assets-src/reference-fleet/references/mech-1.webp",
+    "sha256": "5569537f6ad9111c8eab0cd37986efcc31881b65fd5f5f7fae2038f6b62d894a"
+   },
+   {
+    "path": "assets-src/reference-fleet/references/mech-2.webp",
+    "sha256": "fa9bb4377dd7ae6bcb84afa31992f9931c5c17c42c7eab3c21f8064ce250bf11"
+   }
+  ],
+  "recipe": {
+   "path": "authoring/recipes/reference-fleet/mech-light-destroyed/recipe.json",
+   "sha256": "5989eb6629bb6d8165758ea0e9cfb4becf3add33017dff14df0c921564524dee"
+  }
+ },
+ "tool": {
+  "name": "powerworld-authoring",
+  "version": "0.1.0",
+  "three": "0.169.0",
+  "adapterVersion": 1
+ },
+ "build": {
+  "options": {},
+  "cacheKey": "243dc0144f7fdaea81434fd2a893ec3fa06c0d69d17d516b33a0159c05b7a144",
+  "contentHash": "03073380a21c0a136c3f19f9e1fa2fdc0d5263199a495448247e23cb1980d013",
+  "profile": "desktop"
+ },
+ "acceptance": {
+  "visual": "unapproved",
+  "blockers": [],
+  "note": "Fast quadruped · twin machine guns · eight empty missile cells; model and scale candidate, no handling or live equipment integration."
+ },
+ "outputs": [
+  {
+   "path": "model.glb",
+   "role": "glb",
+   "sha256": "9e6d08b4c4481ef899995a67bb899e9a2d2dd547059028ba1500ae4b38f963aa",
+   "bytes": 208296
+  }
+ ],
+ "packageHash": "7e5d95221dd0b08e2c420c7495f7e943fd024ef382fc92e1dadc10d79ff82501"
+}

@@ -1,0 +1,405 @@
+{
+ "format": "pw-asset-package",
+ "formatVersion": 1,
+ "id": "prop.reference-aa-tank-damaged",
+ "version": 1,
+ "kind": "prop",
+ "displayName": "Anti-air missile tank · damaged",
+ "tags": [
+  "reference-fleet",
+  "ground"
+ ],
+ "rig": {
+  "skeleton": "none"
+ },
+ "sockets": [
+  {
+   "name": "driver",
+   "parent": "aa-tank-damaged",
+   "position": [
+    0,
+    6.61865,
+    7.68236
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "exhaust-left-a",
+   "parent": "loaded-missile--1--0.2",
+   "position": [
+    0,
+    0,
+    -5.57562
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "exhaust-left-b",
+   "parent": "loaded-missile--1-0.2",
+   "position": [
+    0,
+    0,
+    -5.57562
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "exhaust-right-a",
+   "parent": "loaded-missile-1--0.2",
+   "position": [
+    0,
+    0,
+    -5.57562
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "exhaust-right-b",
+   "parent": "loaded-missile-1-0.2",
+   "position": [
+    0,
+    0,
+    -5.57562
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "gunner",
+   "parent": "turret",
+   "position": [
+    0,
+    2.06833,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "launch-left",
+   "parent": "launcher-left",
+   "position": [
+    0,
+    0.41367,
+    6.50046
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "launch-right",
+   "parent": "launcher-right",
+   "position": [
+    0,
+    0.41367,
+    6.50046
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "mount-left-a",
+   "parent": "loaded-missile--1--0.2",
+   "position": [
+    0,
+    -0.71062,
+    -0.54663
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "mount-left-b",
+   "parent": "loaded-missile--1-0.2",
+   "position": [
+    0,
+    -0.71062,
+    -0.54663
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "mount-right-a",
+   "parent": "loaded-missile-1--0.2",
+   "position": [
+    0,
+    -0.71062,
+    -0.54663
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "mount-right-b",
+   "parent": "loaded-missile-1-0.2",
+   "position": [
+    0,
+    -0.71062,
+    -0.54663
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "nose-left-a",
+   "parent": "loaded-missile--1--0.2",
+   "position": [
+    0,
+    0,
+    5.4663
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "nose-left-b",
+   "parent": "loaded-missile--1-0.2",
+   "position": [
+    0,
+    0,
+    5.4663
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "nose-right-a",
+   "parent": "loaded-missile-1--0.2",
+   "position": [
+    0,
+    0,
+    5.4663
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "nose-right-b",
+   "parent": "loaded-missile-1-0.2",
+   "position": [
+    0,
+    0,
+    5.4663
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  }
+ ],
+ "bounds": {
+  "min": [
+   -10.69621,
+   0,
+   -16.84211
+  ],
+  "max": [
+   11,
+   19.02471,
+   16.84211
+  ]
+ },
+ "materials": [
+  {
+   "name": "fleet-armor"
+  },
+  {
+   "name": "fleet-machine"
+  },
+  {
+   "name": "fleet-red"
+  },
+  {
+   "name": "fleet-rubber"
+  },
+  {
+   "name": "fleet-damage-charred"
+  },
+  {
+   "name": "fleet-damage-metal"
+  }
+ ],
+ "lods": [
+  {
+   "level": 0,
+   "output": "model.glb",
+   "triangles": 2243
+  }
+ ],
+ "units": {
+  "lengthUnit": "game-unit",
+  "metersPerUnit": 0.19,
+  "up": "+Y",
+  "forward": "+Z",
+  "handedness": "right",
+  "sourceConversion": {
+   "scale": 1,
+   "yawDegrees": 0,
+   "mirrorX": false,
+   "sourceUp": "+Y",
+   "sourceForward": "+Z",
+   "note": "authored directly in game units along the engine weapon axis (-Y toward the muzzle)"
+  }
+ },
+ "budgets": {
+  "profile": "desktop",
+  "measured": {
+   "triangles": 2243,
+   "drawCalls": 28,
+   "materials": 6,
+   "bones": 0,
+   "textures": 0,
+   "bytes": 237104
+  },
+  "limits": {
+   "triangles": 67793,
+   "drawCalls": 32,
+   "materials": 9,
+   "bones": 1,
+   "textures": 4,
+   "bytes": 3170030
+  }
+ },
+ "structural": {
+  "validator": "2.0.0-dev.3.10",
+  "errors": 0,
+  "warnings": 0
+ },
+ "provenance": {
+  "author": "Machine King Labs",
+  "license": "proprietary",
+  "terms": "Original model geometry authored for this project from creator-supplied concept references; reference redistribution rights are not independently verified.",
+  "redistribution": "internal",
+  "attribution": "Creator-supplied September 12, 2026 concepts."
+ },
+ "source": {
+  "adapter": "procedural-prop@1",
+  "files": [
+   {
+    "path": "authoring/recipes/reference-fleet/models.js",
+    "sha256": "2be6dcd8c4b479ad8648d954595c988c006c8cf53a065c973fd3fdee74fbe8a5"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/damage.js",
+    "sha256": "3de0a59c37abf35dd6538cef69e1e8c7e057dd357ad511da4565cbad12f8566a"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/defense.js",
+    "sha256": "b3e912db260966d8936526b89e678358f3376b4a32c090e097d1046f3f2c710a"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/mechs.js",
+    "sha256": "429c45318b6d89baa2e6df619ea4fe738aa8667d9281c130bca013527d26a6dc"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/spider-mine.js",
+    "sha256": "cfa4f246a18744c2dd9ee1418906d323a700c47e3a5ecfe333ad6ef33fc6c424"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/aa-tank-damaged/model.js",
+    "sha256": "ab6498d2e9fa701566b7302e79edcbf44a2705edcb3e5586e1a3a9f604f8fa90"
+   },
+   {
+    "path": "assets-src/reference-fleet/references/3.webp",
+    "sha256": "dec76331e7b5c7885159c68de619793fae4eb49c77261446373c2d21824a607d"
+   }
+  ],
+  "recipe": {
+   "path": "authoring/recipes/reference-fleet/aa-tank-damaged/recipe.json",
+   "sha256": "468786a6206ccac233909934f4879f82fa6fbf7c65fae44ba724a86e6da223f5"
+  }
+ },
+ "tool": {
+  "name": "powerworld-authoring",
+  "version": "0.1.0",
+  "three": "0.169.0",
+  "adapterVersion": 1
+ },
+ "build": {
+  "options": {},
+  "cacheKey": "fd6ccd814fd8b265ca4e8122607d72e6e8fbd60a118c5c8ccb33e39bff98b509",
+  "contentHash": "d64a400c34175460a4c5be042c5a17755a4b9cb526244274b6da8441224c5f19",
+  "profile": "desktop"
+ },
+ "acceptance": {
+  "visual": "unapproved",
+  "blockers": [],
+  "note": "Tracked missile carrier · elevating racks · rotating sensor; model and scale candidate, no handling or live equipment integration."
+ },
+ "outputs": [
+  {
+   "path": "model.glb",
+   "role": "glb",
+   "sha256": "0b3a92c804794075d9f18b3659a6251a82e4d4dd036d3a83c09bfbf7164dd198",
+   "bytes": 237104
+  }
+ ],
+ "packageHash": "e1bed9f28f7a377de0b1c4061a4b4128d59988a82f6a2d7c11a5831df32ecf6f"
+}

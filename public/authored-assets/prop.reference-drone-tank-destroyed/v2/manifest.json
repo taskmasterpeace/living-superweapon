@@ -1,0 +1,239 @@
+{
+ "format": "pw-asset-package",
+ "formatVersion": 1,
+ "id": "prop.reference-drone-tank-destroyed",
+ "version": 2,
+ "kind": "prop",
+ "displayName": "Drone tank · Sentinel · destroyed",
+ "tags": [
+  "reference-fleet",
+  "ground"
+ ],
+ "rig": {
+  "skeleton": "none"
+ },
+ "sockets": [
+  {
+   "name": "empty-missile-cell--1",
+   "parent": "launcher--1",
+   "position": [
+    0,
+    0,
+    2.49058
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "empty-missile-cell-1",
+   "parent": "launcher-1",
+   "position": [
+    0,
+    0,
+    2.49058
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "muzzle",
+   "parent": "barrel",
+   "position": [
+    0,
+    0,
+    9.80336
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "remote-link",
+   "parent": "drone-tank",
+   "position": [
+    0,
+    4.87519,
+    -6.09398
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  }
+ ],
+ "bounds": {
+  "min": [
+   -6.78287,
+   0,
+   -10.06832
+  ],
+  "max": [
+   8.90889,
+   10.43926,
+   9.80336
+  ]
+ },
+ "materials": [
+  {
+   "name": "condition-destroyed-fleet-machine"
+  },
+  {
+   "name": "condition-destroyed-fleet-rubber"
+  },
+  {
+   "name": "condition-destroyed-fleet-armor"
+  },
+  {
+   "name": "condition-destroyed-fleet-red"
+  }
+ ],
+ "lods": [
+  {
+   "level": 0,
+   "output": "model.glb",
+   "triangles": 1032
+  }
+ ],
+ "units": {
+  "lengthUnit": "game-unit",
+  "metersPerUnit": 0.19,
+  "up": "+Y",
+  "forward": "+Z",
+  "handedness": "right",
+  "sourceConversion": {
+   "scale": 1,
+   "yawDegrees": 0,
+   "mirrorX": false,
+   "sourceUp": "+Y",
+   "sourceForward": "+Z",
+   "note": "authored directly in game units along the engine weapon axis (-Y toward the muzzle)"
+  }
+ },
+ "budgets": {
+  "profile": "desktop",
+  "measured": {
+   "triangles": 1032,
+   "drawCalls": 23,
+   "materials": 4,
+   "bones": 0,
+   "textures": 0,
+   "bytes": 116668
+  },
+  "limits": {
+   "triangles": 67793,
+   "drawCalls": 32,
+   "materials": 9,
+   "bones": 1,
+   "textures": 4,
+   "bytes": 3170030
+  }
+ },
+ "structural": {
+  "validator": "2.0.0-dev.3.10",
+  "errors": 0,
+  "warnings": 0
+ },
+ "provenance": {
+  "author": "Machine King Labs",
+  "license": "proprietary",
+  "terms": "Original model geometry authored for this project from creator-supplied concept references; reference redistribution rights are not independently verified.",
+  "redistribution": "internal",
+  "attribution": "Creator-supplied September 12, 2026 concepts."
+ },
+ "source": {
+  "adapter": "procedural-prop@1",
+  "files": [
+   {
+    "path": "authoring/recipes/reference-fleet/models.js",
+    "sha256": "ebe4842a28f455d491b3b8845f416cf786dc1ff30a98d57982205c28a4fb743c"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/logistics.js",
+    "sha256": "d116aeadf7b5a29fe4a5ba75d0aee556d69e82a59b4beefe65f3cf52f997b38f"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/ordnance.js",
+    "sha256": "ab2369438732b8cf9036d2645705dd15c0eb77ccfef7b72212bd41039c805372"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/condition.js",
+    "sha256": "a8943c4746398ab11a854285d9d8cea51523830e7c2894014490a86ec92b88ad"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/air-mobility.js",
+    "sha256": "778f8f67a4f9560fbe8ce38828766c385b7ce739eafda7d84eb652fe9b439f77"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/damage.js",
+    "sha256": "ae41fae99dd3ad7c87d41e1611e82e448c21f298c4a4b57840ab5b6d1635e956"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/defense.js",
+    "sha256": "b3e912db260966d8936526b89e678358f3376b4a32c090e097d1046f3f2c710a"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/mechs.js",
+    "sha256": "4aa82d05f85799cba45040e179b5215cded994d368d313f534b1cc3d19c574c4"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/drone-tank.js",
+    "sha256": "ffb9bc81e598700abce165ce4ee960d8a1d133d52fecba4ef9f80f6aa4d144ff"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/crew-interiors.js",
+    "sha256": "02be4c7f5afd5ff6fcfa7f32d1a0a1f97d2d437342243db58f50cf92cf3e9e98"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/spider-mine.js",
+    "sha256": "cfa4f246a18744c2dd9ee1418906d323a700c47e3a5ecfe333ad6ef33fc6c424"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/drone-tank-destroyed/model.js",
+    "sha256": "88effedf6549a8e559da44778236d647632bc5e7318c91671b28b8dcd481d9f3"
+   }
+  ],
+  "recipe": {
+   "path": "authoring/recipes/reference-fleet/drone-tank-destroyed/recipe.json",
+   "sha256": "6b90f8b129998d2858062f77d5999dc1911c704bb0aafb501848b2dac425805f"
+  }
+ },
+ "tool": {
+  "name": "powerworld-authoring",
+  "version": "0.1.0",
+  "three": "0.169.0",
+  "adapterVersion": 1
+ },
+ "build": {
+  "options": {},
+  "cacheKey": "9e4592ab4af4c84626e129181fc6732d8a43ef84b19f8d46ab439aabb90f2405",
+  "contentHash": "cbb0a65d41ef7aa16bdfc4d0b157ec4ce4e863f89fb752dbcdc8d7cf3715a3ec",
+  "profile": "desktop"
+ },
+ "acceptance": {
+  "visual": "unapproved",
+  "blockers": [],
+  "note": "Unmanned tracked vehicle · remote gun turret · sensor mast · empty missile cells; model and scale candidate, no handling or live equipment integration."
+ },
+ "outputs": [
+  {
+   "path": "model.glb",
+   "role": "glb",
+   "sha256": "0b6f0663865c3cebcc5d1ff86519580f7f305533e20d9bc5f65bed6de7369cb6",
+   "bytes": 116668
+  }
+ ],
+ "packageHash": "71c28f0f77a49a2e6064c90768bbe0c4bdb9df48952ca705ba3c812de7f7708c"
+}

@@ -1,0 +1,304 @@
+{
+ "format": "pw-asset-package",
+ "formatVersion": 1,
+ "id": "prop.reference-spider-mine",
+ "version": 1,
+ "kind": "prop",
+ "displayName": "Spider mine",
+ "tags": [
+  "reference-fleet",
+  "equipment"
+ ],
+ "rig": {
+  "skeleton": "none"
+ },
+ "sockets": [
+  {
+   "name": "carry",
+   "parent": "mine-chassis",
+   "position": [
+    0,
+    1.92982,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "foot-0",
+   "parent": "mine-knee-0",
+   "position": [
+    0.83182,
+    -0.96491,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "foot-1",
+   "parent": "mine-knee-1",
+   "position": [
+    0.83182,
+    -0.96491,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "foot-2",
+   "parent": "mine-knee-2",
+   "position": [
+    0.83182,
+    -0.96491,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "foot-3",
+   "parent": "mine-knee-3",
+   "position": [
+    0.83182,
+    -0.96491,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "foot-4",
+   "parent": "mine-knee-4",
+   "position": [
+    0.83182,
+    -0.96491,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "foot-5",
+   "parent": "mine-knee-5",
+   "position": [
+    0.83182,
+    -0.96491,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "payload",
+   "parent": "mine-chassis",
+   "position": [
+    0,
+    0.99819,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "scan-origin",
+   "parent": "mine-scanner",
+   "position": [
+    0,
+    0,
+    0.86509
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  }
+ ],
+ "bounds": {
+  "min": [
+   -2.6084,
+   0,
+   -2.89474
+  ],
+  "max": [
+   2.6084,
+   1.92982,
+   2.89474
+  ]
+ },
+ "materials": [
+  {
+   "name": "fleet-scanner"
+  },
+  {
+   "name": "fleet-painted-parts"
+  },
+  {
+   "name": "fleet-machine"
+  },
+  {
+   "name": "fleet-armor"
+  },
+  {
+   "name": "fleet-red"
+  },
+  {
+   "name": "fleet-glass"
+  }
+ ],
+ "lods": [
+  {
+   "level": 0,
+   "output": "model.glb",
+   "triangles": 1232
+  }
+ ],
+ "units": {
+  "lengthUnit": "game-unit",
+  "metersPerUnit": 0.19,
+  "up": "+Y",
+  "forward": "+Z",
+  "handedness": "right",
+  "sourceConversion": {
+   "scale": 1,
+   "yawDegrees": 0,
+   "mirrorX": false,
+   "sourceUp": "+Y",
+   "sourceForward": "+Z",
+   "note": "authored directly in game units along the engine weapon axis (-Y toward the muzzle)"
+  }
+ },
+ "budgets": {
+  "profile": "desktop",
+  "measured": {
+   "triangles": 1232,
+   "drawCalls": 17,
+   "materials": 6,
+   "bones": 0,
+   "textures": 0,
+   "bytes": 158912
+  },
+  "limits": {
+   "triangles": 67793,
+   "drawCalls": 32,
+   "materials": 9,
+   "bones": 1,
+   "textures": 4,
+   "bytes": 3170030
+  }
+ },
+ "structural": {
+  "validator": "2.0.0-dev.3.10",
+  "errors": 0,
+  "warnings": 0
+ },
+ "provenance": {
+  "author": "Machine King Labs",
+  "license": "proprietary",
+  "terms": "Original model geometry authored for this project from creator-supplied concept references; reference redistribution rights are not independently verified.",
+  "redistribution": "internal",
+  "attribution": "Creator-supplied September 12, 2026 concepts."
+ },
+ "source": {
+  "adapter": "procedural-prop@1",
+  "files": [
+   {
+    "path": "authoring/recipes/reference-fleet/models.js",
+    "sha256": "64d0cc1b7666273e89bd0b9173a9e0e4e29c9b900be81ba9b15f45b14ad30e97"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/damage.js",
+    "sha256": "3de0a59c37abf35dd6538cef69e1e8c7e057dd357ad511da4565cbad12f8566a"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/defense.js",
+    "sha256": "8f83a83205cd4c538da30f953276b4f4f76a7d944702079332be5f2c53db494f"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/spider-mine.js",
+    "sha256": "29b101f8c1aa03fae7385423417149bf209a2cbe8a307992091197b29d3662cb"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/spider-mine/model.js",
+    "sha256": "09bb2b32a919e960fa8a77c6965b9360d7241cd1a2e34dcf628678beb22d2821"
+   },
+   {
+    "path": "assets-src/reference-fleet/references/spider-1.jpg",
+    "sha256": "72b890bd57d447f65cee1ace887f9deb14cd784bb1c6ce24b9411bdbc6ae805c"
+   },
+   {
+    "path": "assets-src/reference-fleet/references/spider-2.jpg",
+    "sha256": "ade25bdb29f139c9886af8ac91e873c1cfd5c830a2791816b4a5ad146a7c04d5"
+   },
+   {
+    "path": "assets-src/reference-fleet/references/spider-3.jpg",
+    "sha256": "6cac4493eeb481f6a55721531e43ee4856d445cb558f59633325233b7ad6a887"
+   }
+  ],
+  "recipe": {
+   "path": "authoring/recipes/reference-fleet/spider-mine/recipe.json",
+   "sha256": "23373f77b9391e142829cff1a0e5a58e1193567bbe0e42fcf31586bf4262dce3"
+  }
+ },
+ "tool": {
+  "name": "powerworld-authoring",
+  "version": "0.1.0",
+  "three": "0.169.0",
+  "adapterVersion": 1
+ },
+ "build": {
+  "options": {},
+  "cacheKey": "c685b3021230035b48e2f3a1b8361209d521eba76f1bc4d16381649b6c507a16",
+  "contentHash": "55597aeb0df3c00ff9bf473916bdfe8cc6f0f34cc293348b9039397d99a7e5d9",
+  "profile": "desktop"
+ },
+ "acceptance": {
+  "visual": "unapproved",
+  "blockers": [],
+  "note": "Six hooked legs · circular scanning light · brace and pursuit study; model and scale candidate, no handling or live equipment integration."
+ },
+ "outputs": [
+  {
+   "path": "model.glb",
+   "role": "glb",
+   "sha256": "68d6f975339b835ef9f0fc3206aa15b0e1f70181f6f8527d06068552956d1edd",
+   "bytes": 158912
+  }
+ ],
+ "packageHash": "0fea0737cf6f7b086f99b63b5abc9678ae6b8135c93bd41e4af3738c84706f10"
+}

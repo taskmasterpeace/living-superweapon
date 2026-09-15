@@ -1,0 +1,191 @@
+{
+ "format": "pw-asset-package",
+ "formatVersion": 1,
+ "id": "prop.reference-motorcycle",
+ "version": 1,
+ "kind": "prop",
+ "displayName": "Motorcycle",
+ "tags": [
+  "reference-fleet",
+  "ground"
+ ],
+ "rig": {
+  "skeleton": "none"
+ },
+ "sockets": [
+  {
+   "name": "grip-left",
+   "parent": "motorcycle",
+   "position": [
+    -1.95833,
+    6.39035,
+    3.09211
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "grip-right",
+   "parent": "motorcycle",
+   "position": [
+    1.95833,
+    6.39035,
+    3.09211
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "rider",
+   "parent": "motorcycle",
+   "position": [
+    0,
+    5.66886,
+    -0.92763
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  }
+ ],
+ "bounds": {
+  "min": [
+   -2.55099,
+   0,
+   -5.97807
+  ],
+  "max": [
+   2.55099,
+   6.55784,
+   6.39035
+  ]
+ },
+ "materials": [
+  {
+   "name": "fleet-machine"
+  },
+  {
+   "name": "fleet-rubber"
+  },
+  {
+   "name": "fleet-edge"
+  },
+  {
+   "name": "fleet-armor"
+  },
+  {
+   "name": "fleet-red"
+  }
+ ],
+ "lods": [
+  {
+   "level": 0,
+   "output": "model.glb",
+   "triangles": 516
+  }
+ ],
+ "units": {
+  "lengthUnit": "game-unit",
+  "metersPerUnit": 0.19,
+  "up": "+Y",
+  "forward": "+Z",
+  "handedness": "right",
+  "sourceConversion": {
+   "scale": 1,
+   "yawDegrees": 0,
+   "mirrorX": false,
+   "sourceUp": "+Y",
+   "sourceForward": "+Z",
+   "note": "authored directly in game units along the engine weapon axis (-Y toward the muzzle)"
+  }
+ },
+ "budgets": {
+  "profile": "desktop",
+  "measured": {
+   "triangles": 516,
+   "drawCalls": 9,
+   "materials": 5,
+   "bones": 0,
+   "textures": 0,
+   "bytes": 56980
+  },
+  "limits": {
+   "triangles": 67793,
+   "drawCalls": 32,
+   "materials": 9,
+   "bones": 1,
+   "textures": 4,
+   "bytes": 3170030
+  }
+ },
+ "structural": {
+  "validator": "2.0.0-dev.3.10",
+  "errors": 0,
+  "warnings": 0
+ },
+ "provenance": {
+  "author": "Machine King Labs",
+  "license": "proprietary",
+  "terms": "Original model geometry authored for this project from creator-supplied concept references; reference redistribution rights are not independently verified.",
+  "redistribution": "internal",
+  "attribution": "Creator-supplied September 12, 2026 concepts."
+ },
+ "source": {
+  "adapter": "procedural-prop@1",
+  "files": [
+   {
+    "path": "authoring/recipes/reference-fleet/models.js",
+    "sha256": "8c5e620c534e189d51d1df8bb0d9a82ec8cf32dd2159b860c544b91934add4c7"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/motorcycle/model.js",
+    "sha256": "67a3acff1c0e192e1b100196a5a79c133e2bde2d5a2cc0069c0599a72c44e548"
+   },
+   {
+    "path": "assets-src/reference-fleet/references/5.webp",
+    "sha256": "8480a974b32c003df106d0145cbf61beec69750cf15a4fda154f4eaae945c1d7"
+   }
+  ],
+  "recipe": {
+   "path": "authoring/recipes/reference-fleet/motorcycle/recipe.json",
+   "sha256": "f696dd63f40889fae4852f042f39de86e5cc93a0a513887b3e7c79a7d646a6d8"
+  }
+ },
+ "tool": {
+  "name": "powerworld-authoring",
+  "version": "0.1.0",
+  "three": "0.169.0",
+  "adapterVersion": 1
+ },
+ "build": {
+  "options": {},
+  "cacheKey": "0e2a7ab1bd820f916da8cc3da32af1bf325baf3fc05c9f068b7c7a4b5b8dbf2a",
+  "contentHash": "a4fc3cc1634a53533a58cde52c4d793f978a5f0bf0482a42fc8b8ffce6fe58dc",
+  "profile": "desktop"
+ },
+ "acceptance": {
+  "visual": "unapproved",
+  "blockers": [],
+  "note": "Single saddle · front steering pivot; model and scale candidate, no handling or live equipment integration."
+ },
+ "outputs": [
+  {
+   "path": "model.glb",
+   "role": "glb",
+   "sha256": "4f9bfa8b3d095200a1193977ba62efc5fc664b8d3ac1aa4d8ebd00dfc5fcd678",
+   "bytes": 56980
+  }
+ ],
+ "packageHash": "fa28f45ce7bb58a2c0ff54748a69f2249c9e44926f8a86e0a8a91e3a09b01c09"
+}

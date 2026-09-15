@@ -1,0 +1,181 @@
+{
+ "format": "pw-asset-package",
+ "formatVersion": 1,
+ "id": "prop.reference-nuclear-bomb",
+ "version": 2,
+ "kind": "prop",
+ "displayName": "Nuclear bomb · air-dropped",
+ "tags": [
+  "reference-fleet",
+  "ordnance"
+ ],
+ "rig": {
+  "skeleton": "none"
+ },
+ "sockets": [
+  {
+   "name": "nose",
+   "parent": "nuclear-bomb",
+   "position": [
+    0,
+    7.54991,
+    15.33212
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "suspension",
+   "parent": "nuclear-bomb",
+   "position": [
+    0,
+    14.51906,
+    -2.32305
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  }
+ ],
+ "bounds": {
+  "min": [
+   -7.54991,
+   0,
+   -18.35209
+  ],
+  "max": [
+   7.54991,
+   15.09982,
+   15.33212
+  ]
+ },
+ "materials": [
+  {
+   "name": "fleet-machine"
+  },
+  {
+   "name": "fleet-red"
+  },
+  {
+   "name": "fleet-armor"
+  },
+  {
+   "name": "fleet-edge"
+  }
+ ],
+ "lods": [
+  {
+   "level": 0,
+   "output": "model.glb",
+   "triangles": 438
+  }
+ ],
+ "units": {
+  "lengthUnit": "game-unit",
+  "metersPerUnit": 0.19,
+  "up": "+Y",
+  "forward": "+Z",
+  "handedness": "right",
+  "sourceConversion": {
+   "scale": 1,
+   "yawDegrees": 0,
+   "mirrorX": false,
+   "sourceUp": "+Y",
+   "sourceForward": "+Z",
+   "note": "authored directly in game units along the engine weapon axis (-Y toward the muzzle)"
+  }
+ },
+ "budgets": {
+  "profile": "desktop",
+  "measured": {
+   "triangles": 438,
+   "drawCalls": 12,
+   "materials": 4,
+   "bones": 0,
+   "textures": 0,
+   "bytes": 51356
+  },
+  "limits": {
+   "triangles": 67793,
+   "drawCalls": 32,
+   "materials": 9,
+   "bones": 1,
+   "textures": 4,
+   "bytes": 3170030
+  }
+ },
+ "structural": {
+  "validator": "2.0.0-dev.3.10",
+  "errors": 0,
+  "warnings": 0
+ },
+ "provenance": {
+  "author": "Machine King Labs",
+  "license": "proprietary",
+  "terms": "Original model geometry authored for this project from creator-supplied concept references; reference redistribution rights are not independently verified.",
+  "redistribution": "internal",
+  "attribution": "Creator-supplied September 12, 2026 concepts."
+ },
+ "source": {
+  "adapter": "procedural-prop@1",
+  "files": [
+   {
+    "path": "authoring/recipes/reference-fleet/models.js",
+    "sha256": "8c054c3a22046618a73d99a8a2d6a6fafb710f0476afab606dfb801a3f997b2e"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/damage.js",
+    "sha256": "3de0a59c37abf35dd6538cef69e1e8c7e057dd357ad511da4565cbad12f8566a"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/defense.js",
+    "sha256": "0963efe3d94d81c1ff0e159bdfa9b5a2ffbbd72c0158fb25d5dd49ca5450b331"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/spider-mine.js",
+    "sha256": "cfa4f246a18744c2dd9ee1418906d323a700c47e3a5ecfe333ad6ef33fc6c424"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/nuclear-bomb/model.js",
+    "sha256": "7968db5bfcccbbb9e5ef19f46696dfc7dc87c859efbda46972b268613957abdc"
+   }
+  ],
+  "recipe": {
+   "path": "authoring/recipes/reference-fleet/nuclear-bomb/recipe.json",
+   "sha256": "6840203595ff6b6d86564da3f63287b60bc3f037f3cec5b5c8ee3cc8067cd3da"
+  }
+ },
+ "tool": {
+  "name": "powerworld-authoring",
+  "version": "0.1.0",
+  "three": "0.169.0",
+  "adapterVersion": 1
+ },
+ "build": {
+  "options": {},
+  "cacheKey": "60430256467ea1b75a62e72cd6c69d5e2c80e5305766bf0ea6664ebd1238eae1",
+  "contentHash": "cae567649ec9128567c81f6cec41734063f3413e4b752fe27cf1d8a3d9d71c79",
+  "profile": "desktop"
+ },
+ "acceptance": {
+  "visual": "unapproved",
+  "blockers": [],
+  "note": "Heavy gravity bomb · 6.4 m · finned tail · aircraft suspension; model and scale candidate, no handling or live equipment integration."
+ },
+ "outputs": [
+  {
+   "path": "model.glb",
+   "role": "glb",
+   "sha256": "9716638da777a3e728563f0a3710bf29f498547c32401aa6dddea8be5e5c7b32",
+   "bytes": 51356
+  }
+ ],
+ "packageHash": "7ec511d74cf46fd649e9c2f113fb0d359d96936be3171d9d93406a3ab31f4cd0"
+}

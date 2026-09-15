@@ -24,6 +24,11 @@ export const SOLDIER_TEAM_MARKINGS=freeze({0:'#4e93c9',1:'#c95a4f'});
 // classes. "Support" means sustained fire; no unimplemented squad orders.
 export const SOLDIER_ROLES=freeze({
  rifleman:{name:'Rifleman',loadoutId:'m16',range:48,aggro:.55,talents:['marksman']},
+ sidearm:{name:'Sidearm Operator',loadoutId:'p9',range:25,aggro:.6,talents:['marksman']},
+ patrol:{name:'Patrol Rifleman',loadoutId:'m16',range:48,aggro:.45,talents:['marksman','tactician']},
+ heavy:{name:'Kuchler Operator',loadoutId:'kuchler',range:48,aggro:.55,talents:['marksman']},
+ // Restored prop-library shotguns/snipers still need the live equipment socket
+ // and reload adapter; these roles are not default visual-review soldiers.
  breacher:{name:'Breacher',loadoutId:'pump',range:22,aggro:.7,talents:['marksman']},
  marksman:{name:'Marksman',loadoutId:'m24',range:70,aggro:.4,talents:['marksman','tactician']},
  support:{name:'Support Gunner',loadoutId:'saw',range:52,aggro:.55,talents:['marksman']},
@@ -33,9 +38,9 @@ export const SOLDIER_TRAINING=freeze({
 });
 export const SOLDIER_PRESETS=freeze([
  {id:'highwall-rifleman',name:'HIGHWALL RIFLEMAN',appearance:'olive',role:'rifleman',training:'cqc'},
- {id:'highwall-breacher',name:'HIGHWALL BREACHER',appearance:'desert',role:'breacher',training:'cqc'},
- {id:'highwall-marksman',name:'HIGHWALL MARKSMAN',appearance:'urban',role:'marksman',training:'boxing'},
- {id:'highwall-support',name:'HIGHWALL SUPPORT',appearance:'winter',role:'support',training:'judo'},
+ {id:'highwall-sidearm',name:'HIGHWALL SIDEARM OPERATOR',appearance:'desert',role:'sidearm',training:'cqc'},
+ {id:'highwall-patrol',name:'HIGHWALL PATROL RIFLEMAN',appearance:'urban',role:'patrol',training:'boxing'},
+ {id:'highwall-kuchler',name:'HIGHWALL KUCHLER OPERATOR',appearance:'winter',role:'heavy',training:'judo'},
 ]);
 
 function pick(table,key,label){if(!Object.hasOwn(table,key))throw new RangeError(`Unknown soldier ${label}: ${key}`);return table[key];}
@@ -71,5 +76,10 @@ export function createSoldierFamilyDefinition({id,name,appearance='olive',role='
 export function soldierLoadout(def){
  const row=FIREARMS.find(row=>row.id===def.loadoutId);
  if(!row)throw new RangeError(`Unknown soldier loadout: ${def.loadoutId}`);
- return structuredClone(row);
+ const result=structuredClone(row);
+ // Explicit presentation selections use existing grip-socket packages. No
+ // rifle geometry is passed off as a shotgun, sniper rifle or machine gun.
+ if(row.id==='m16')result.equipmentAsset='prop.reference-weapon-rifle-m16@4';
+ if(row.id==='p9')result.equipmentAsset='prop.reference-weapon-pistol-1@5';
+ return result;
 }

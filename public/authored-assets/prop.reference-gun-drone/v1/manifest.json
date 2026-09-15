@@ -1,0 +1,170 @@
+{
+ "format": "pw-asset-package",
+ "formatVersion": 1,
+ "id": "prop.reference-gun-drone",
+ "version": 1,
+ "kind": "prop",
+ "displayName": "Machine-gun drone",
+ "tags": [
+  "reference-fleet",
+  "drones"
+ ],
+ "rig": {
+  "skeleton": "none"
+ },
+ "sockets": [
+  {
+   "name": "muzzle",
+   "parent": "gun",
+   "position": [
+    0,
+    0,
+    2.03165
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "owner-anchor",
+   "parent": "gun-drone",
+   "position": [
+    0,
+    0.94958,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  }
+ ],
+ "bounds": {
+  "min": [
+   -3.13029,
+   0,
+   -2.53404
+  ],
+  "max": [
+   3.13029,
+   2.54398,
+   2.99227
+  ]
+ },
+ "materials": [
+  {
+   "name": "fleet-machine"
+  },
+  {
+   "name": "fleet-armor"
+  },
+  {
+   "name": "fleet-red"
+  }
+ ],
+ "lods": [
+  {
+   "level": 0,
+   "output": "model.glb",
+   "triangles": 444
+  }
+ ],
+ "units": {
+  "lengthUnit": "game-unit",
+  "metersPerUnit": 0.19,
+  "up": "+Y",
+  "forward": "+Z",
+  "handedness": "right",
+  "sourceConversion": {
+   "scale": 1,
+   "yawDegrees": 0,
+   "mirrorX": false,
+   "sourceUp": "+Y",
+   "sourceForward": "+Z",
+   "note": "authored directly in game units along the engine weapon axis (-Y toward the muzzle)"
+  }
+ },
+ "budgets": {
+  "profile": "desktop",
+  "measured": {
+   "triangles": 444,
+   "drawCalls": 12,
+   "materials": 3,
+   "bones": 0,
+   "textures": 0,
+   "bytes": 51756
+  },
+  "limits": {
+   "triangles": 67793,
+   "drawCalls": 32,
+   "materials": 9,
+   "bones": 1,
+   "textures": 4,
+   "bytes": 3170030
+  }
+ },
+ "structural": {
+  "validator": "2.0.0-dev.3.10",
+  "errors": 0,
+  "warnings": 0
+ },
+ "provenance": {
+  "author": "Machine King Labs",
+  "license": "proprietary",
+  "terms": "Original model geometry authored for this project from creator-supplied concept references; reference redistribution rights are not independently verified.",
+  "redistribution": "internal",
+  "attribution": "Creator-supplied September 12, 2026 concepts."
+ },
+ "source": {
+  "adapter": "procedural-prop@1",
+  "files": [
+   {
+    "path": "authoring/recipes/reference-fleet/models.js",
+    "sha256": "dd0c5303d1e20c83702ef7d8ff89b3483d0e87a82a37ba0c72f15769473bcdef"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/gun-drone/model.js",
+    "sha256": "e8a3ed2d0ca09b581df965ed9060c7015c29d3829287090ed91dd47bd05c23ae"
+   },
+   {
+    "path": "assets-src/reference-fleet/references/10.webp",
+    "sha256": "aa7b8f4d52678fc4d2c2f3dff762c4d58766ae166da3b406f0879f66f13a5a0b"
+   }
+  ],
+  "recipe": {
+   "path": "authoring/recipes/reference-fleet/gun-drone/recipe.json",
+   "sha256": "05ed6c78d6accbb0a62276bd1d51c2e320e3f0df89464d77355c7fca82694437"
+  }
+ },
+ "tool": {
+  "name": "powerworld-authoring",
+  "version": "0.1.0",
+  "three": "0.169.0",
+  "adapterVersion": 1
+ },
+ "build": {
+  "options": {},
+  "cacheKey": "56d4108a0d0aef5a2f1b86ab5a634447590149b36b5962947c453724fc2b450b",
+  "contentHash": "2093b6c643bef03683427aada363a32a8fdceb613a6e68c359b128b322686d9d",
+  "profile": "desktop"
+ },
+ "acceptance": {
+  "visual": "unapproved",
+  "blockers": [],
+  "note": "Larger quad · underslung gun pivot; model and scale candidate, no handling or live equipment integration."
+ },
+ "outputs": [
+  {
+   "path": "model.glb",
+   "role": "glb",
+   "sha256": "66d3d2b10168531629923db36eb9c015ed8a90ffa2e69bc7f9a779503476c7b4",
+   "bytes": 51756
+  }
+ ],
+ "packageHash": "0b7e3588b5ffc1a72a95f59e596d5f04f1828e0be55660de321896dc8c516420"
+}

@@ -7,6 +7,12 @@ import {validateModularRecipe} from '../src/engine/modular-costume.js';
 import {mainCombatFixture} from './helpers/main-combat-fixture.mjs';
 import {characterRecipeOf} from '../src/engine/modular-character.js';
 
+test('default practice soldiers each select an existing authored firearm without mislabeling a sniper or LMG',()=>{
+ const rows=SOLDIER_PRESETS.map(p=>soldierLoadout(createSoldierFamilyDefinition(p)));
+ assert.deepEqual(rows.map(r=>r.id),['m16','p9','m16','kuchler']);
+ assert.deepEqual(rows.map(r=>r.equipmentAsset),['prop.reference-weapon-rifle-m16@4','prop.reference-weapon-pistol-1@5','prop.reference-weapon-rifle-m16@4','equipment.kuchler-rifle@2']);
+});
+
 test('all presets share current soldier foundation with valid distinct modular appearances',()=>{
  const defs=SOLDIER_PRESETS.map(createSoldierFamilyDefinition);
  assert.equal(new Set(defs.map(d=>d.id)).size,4);

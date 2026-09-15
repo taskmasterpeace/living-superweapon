@@ -1,0 +1,181 @@
+{
+ "format": "pw-asset-package",
+ "formatVersion": 1,
+ "id": "prop.reference-nuclear-bomb",
+ "version": 1,
+ "kind": "prop",
+ "displayName": "Nuclear bomb",
+ "tags": [
+  "reference-fleet",
+  "ordnance"
+ ],
+ "rig": {
+  "skeleton": "none"
+ },
+ "sockets": [
+  {
+   "name": "nose",
+   "parent": "nuclear-bomb",
+   "position": [
+    0,
+    3.77495,
+    7.66606
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "suspension",
+   "parent": "nuclear-bomb",
+   "position": [
+    0,
+    7.25953,
+    -1.16152
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  }
+ ],
+ "bounds": {
+  "min": [
+   -3.77495,
+   0,
+   -9.17604
+  ],
+  "max": [
+   3.77495,
+   7.54991,
+   7.66606
+  ]
+ },
+ "materials": [
+  {
+   "name": "fleet-machine"
+  },
+  {
+   "name": "fleet-red"
+  },
+  {
+   "name": "fleet-armor"
+  },
+  {
+   "name": "fleet-edge"
+  }
+ ],
+ "lods": [
+  {
+   "level": 0,
+   "output": "model.glb",
+   "triangles": 438
+  }
+ ],
+ "units": {
+  "lengthUnit": "game-unit",
+  "metersPerUnit": 0.19,
+  "up": "+Y",
+  "forward": "+Z",
+  "handedness": "right",
+  "sourceConversion": {
+   "scale": 1,
+   "yawDegrees": 0,
+   "mirrorX": false,
+   "sourceUp": "+Y",
+   "sourceForward": "+Z",
+   "note": "authored directly in game units along the engine weapon axis (-Y toward the muzzle)"
+  }
+ },
+ "budgets": {
+  "profile": "desktop",
+  "measured": {
+   "triangles": 438,
+   "drawCalls": 12,
+   "materials": 4,
+   "bones": 0,
+   "textures": 0,
+   "bytes": 51392
+  },
+  "limits": {
+   "triangles": 67793,
+   "drawCalls": 32,
+   "materials": 9,
+   "bones": 1,
+   "textures": 4,
+   "bytes": 3170030
+  }
+ },
+ "structural": {
+  "validator": "2.0.0-dev.3.10",
+  "errors": 0,
+  "warnings": 0
+ },
+ "provenance": {
+  "author": "Machine King Labs",
+  "license": "proprietary",
+  "terms": "Original model geometry authored for this project from creator-supplied concept references; reference redistribution rights are not independently verified.",
+  "redistribution": "internal",
+  "attribution": "Creator-supplied September 12, 2026 concepts."
+ },
+ "source": {
+  "adapter": "procedural-prop@1",
+  "files": [
+   {
+    "path": "authoring/recipes/reference-fleet/models.js",
+    "sha256": "64d0cc1b7666273e89bd0b9173a9e0e4e29c9b900be81ba9b15f45b14ad30e97"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/damage.js",
+    "sha256": "3de0a59c37abf35dd6538cef69e1e8c7e057dd357ad511da4565cbad12f8566a"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/defense.js",
+    "sha256": "8f83a83205cd4c538da30f953276b4f4f76a7d944702079332be5f2c53db494f"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/spider-mine.js",
+    "sha256": "cfa4f246a18744c2dd9ee1418906d323a700c47e3a5ecfe333ad6ef33fc6c424"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/nuclear-bomb/model.js",
+    "sha256": "7968db5bfcccbbb9e5ef19f46696dfc7dc87c859efbda46972b268613957abdc"
+   }
+  ],
+  "recipe": {
+   "path": "authoring/recipes/reference-fleet/nuclear-bomb/recipe.json",
+   "sha256": "fb4df35dfa0643bed1b6023c513ddc89674f3558ebbe708b12fe1046098ec63a"
+  }
+ },
+ "tool": {
+  "name": "powerworld-authoring",
+  "version": "0.1.0",
+  "three": "0.169.0",
+  "adapterVersion": 1
+ },
+ "build": {
+  "options": {},
+  "cacheKey": "272074ad5ccdb2147bac45221d654236d24fc86d59c540a763bc6d7ea85d1dfc",
+  "contentHash": "be1a8164581b5da03faedfb8f43a409bbced34f33a9851c26472e4a235fb1bfd",
+  "profile": "desktop"
+ },
+ "acceptance": {
+  "visual": "unapproved",
+  "blockers": [],
+  "note": "Strategic bomb prop · finned tail · suspension sockets; model and scale candidate, no handling or live equipment integration."
+ },
+ "outputs": [
+  {
+   "path": "model.glb",
+   "role": "glb",
+   "sha256": "e0b4b8061818d0eb954613174ece54c1ee531636385795885b36684089f76144",
+   "bytes": 51392
+  }
+ ],
+ "packageHash": "dac28d9ea91969a9e0792e26c07330fd9c14828182ce1a40e6146c637d27bdee"
+}

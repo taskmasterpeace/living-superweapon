@@ -1,0 +1,3 @@
+import {chromium} from 'playwright';
+const b=await chromium.launch({headless:false}),p=await b.newPage({viewport:{width:1440,height:900}});
+try{for(const [name,id]of [['m16','weapon-rifle-m16'],['pistol','weapon-pistol-1']]){await p.goto('http://127.0.0.1:5193/asset-library.html?collection=equipment&model='+id);await p.waitForFunction(()=>ASSET_LIBRARY.model);await p.locator('#soldier').uncheck();await p.mouse.move(880,360);await p.mouse.wheel(0,name==='pistol'?-5200:-2200);await p.waitForTimeout(350);await p.screenshot({path:'artifacts/highwall-soldier/source-restored-'+name+'-detail.png'});}}finally{await b.close();}

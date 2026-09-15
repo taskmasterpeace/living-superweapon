@@ -1,3 +1,4 @@
+import {sampleDeathPresentation} from './death-presentation.js';
 import impactGetup from '../data/impact-getup-clip.json' with {type:'json'};
 import {animateModularHeldGrip,animateModularHeldReceiver} from './modular-held-pose.js';
 import {addModularMotions,canPoseInfectedFlight,poseInfectedFlight} from './modular-motions.js';
@@ -13,6 +14,7 @@ import {createModularFlightAdapter} from './modular-flight.js';
 import {STRIKES} from '../data/martial.js';
 import {meleeWeaponFor,WEAPON_GRIP_CENTERS} from './weapon-grip.js';
 import {setModularExpression} from './modular-face.js';
+import {syncModularWeaponGrip} from './modular-weapon-grip.js';
 
 // Shared live/portrait source: a saved edit overrides the authored unit recipe.
 // Custom family IDs can use the existing rig without registering roster heroes.
@@ -87,6 +89,7 @@ export async function loadModularCharacter(f,{load=modularAsset}={}){
   restoreWeapon();
   animateModularCape(c.meshes,f.animT||0,f.vel.length());signatureParts.update(f.animT||0,!!f.flying);imagePlacements.update(f.animT||0,!!f.flying);
   adapter.reset();
+  if(sampleDeathPresentation(f))return;
   const held=meleeWeaponFor(f),sourcedSword=held&&['sword','katana','knife'].includes(held.weapon.userData.weaponKind)&&!held.weapon.userData.twoHanded;
   // Busy native poses retain responsive aim/guard/grab and weapon attachments.
   // Bare-handed grounded strikes use full authored clips on this skeleton.
@@ -94,8 +97,9 @@ export async function loadModularCharacter(f,{load=modularAsset}={}){
   // Contact-authored strikes own both handedness and the committed target pose.
   const contactStrike=!!(f.mstate&&f._meleeMotion&&!sourcedSword);
   const rangedRecovery=!f.mstate&&!!rangedPoseChannels(f).dominant;
+  const armedFirearm=!!(f._gearMesh?.visible&&f._gearMesh.userData.authoredEquipment&&!f._inventoryStowed);
   const interaction=!!(contactStrike||rangedRecovery||f._firearmReload||f._throwAction||f._guidedSpearPose||f._guidedSpear?.hand||f._personThrowPose||zombieLegSpeed(f)<1||f._grapple||f.hanging||f._carry||f.grabState||f.meleeCharge>0||f.crouching||f._jumpMotion?.applied||f.downedT>0||f.launchT>0||f._slideT>0);
-  const native=interaction||incapacitated||f.flying||f.gliding||f.ragdoll||f.grabbing||f.grabbedBy||f.guarding||(f.state==='cast'&&!f.mstate)||(f._meleeMotion?.weapon&&!sourcedSword);
+  const native=armedFirearm||interaction||incapacitated||f.flying||f.gliding||f.ragdoll||f.grabbing||f.grabbedBy||f.guarding||(f.state==='cast'&&!f.mstate)||(f._meleeMotion?.weapon&&!sourcedSword);
   const airStrike=!interaction&&!incapacitated&&(f.flying||f.gliding)&&f.mstate&&!f.ragdoll&&!f.grabbing&&!f.grabbedBy&&(!held||sourcedSword);
   if((!native||airStrike)&&f.mstate&&STRIKES[f.mId]){
    const s=STRIKES[f.mId],pace=f.def.meleePace||1,phase=f.mstate==='startup'?'startup':f.mstate==='active'?'active':'recover';
@@ -126,6 +130,7 @@ export async function loadModularCharacter(f,{load=modularAsset}={}){
   animateModularHeldReceiver(f,c.actor);
   applyPaidMotion(f,c);
   animateModularHeldGrip(f,c.actor);syncModularSpearGrip(f,c);
+  syncModularWeaponGrip(f,c.actor);
   if(!held&&canPoseInfectedFlight(f,signatureRecipe?.infection))poseInfectedFlight(c.actor);
   if(sourcedSword&&(!native||airStrike)){
    // Drive the actual weapon, not a decorative duplicate. Native weapon

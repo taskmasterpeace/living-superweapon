@@ -1,0 +1,199 @@
+{
+ "format": "pw-asset-package",
+ "formatVersion": 1,
+ "id": "prop.reference-nuclear-missile",
+ "version": 1,
+ "kind": "prop",
+ "displayName": "Nuclear missile · long-range",
+ "tags": [
+  "reference-fleet",
+  "ordnance"
+ ],
+ "rig": {
+  "skeleton": "none"
+ },
+ "sockets": [
+  {
+   "name": "exhaust",
+   "parent": "nuclear-missile",
+   "position": [
+    0,
+    7.2534,
+    -36.47425
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "mount",
+   "parent": "nuclear-missile",
+   "position": [
+    0,
+    12.53802,
+    -4.1448
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "nose",
+   "parent": "nuclear-missile",
+   "position": [
+    0,
+    7.2534,
+    37.30321
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  }
+ ],
+ "bounds": {
+  "min": [
+   -13.26336,
+   0,
+   -36.381
+  ],
+  "max": [
+   13.26336,
+   14.50681,
+   37.30322
+  ]
+ },
+ "materials": [
+  {
+   "name": "fleet-armor"
+  },
+  {
+   "name": "fleet-red"
+  },
+  {
+   "name": "fleet-machine"
+  },
+  {
+   "name": "fleet-edge"
+  },
+  {
+   "name": "fleet-rubber"
+  }
+ ],
+ "lods": [
+  {
+   "level": 0,
+   "output": "model.glb",
+   "triangles": 532
+  }
+ ],
+ "units": {
+  "lengthUnit": "game-unit",
+  "metersPerUnit": 0.19,
+  "up": "+Y",
+  "forward": "+Z",
+  "handedness": "right",
+  "sourceConversion": {
+   "scale": 1,
+   "yawDegrees": 0,
+   "mirrorX": false,
+   "sourceUp": "+Y",
+   "sourceForward": "+Z",
+   "note": "authored directly in game units along the engine weapon axis (-Y toward the muzzle)"
+  }
+ },
+ "budgets": {
+  "profile": "desktop",
+  "measured": {
+   "triangles": 532,
+   "drawCalls": 9,
+   "materials": 5,
+   "bones": 0,
+   "textures": 0,
+   "bytes": 58732
+  },
+  "limits": {
+   "triangles": 67793,
+   "drawCalls": 32,
+   "materials": 9,
+   "bones": 1,
+   "textures": 4,
+   "bytes": 3170030
+  }
+ },
+ "structural": {
+  "validator": "2.0.0-dev.3.10",
+  "errors": 0,
+  "warnings": 0
+ },
+ "provenance": {
+  "author": "Machine King Labs",
+  "license": "proprietary",
+  "terms": "Original model geometry authored for this project from creator-supplied concept references; reference redistribution rights are not independently verified.",
+  "redistribution": "internal",
+  "attribution": "Creator-supplied September 12, 2026 concepts."
+ },
+ "source": {
+  "adapter": "procedural-prop@1",
+  "files": [
+   {
+    "path": "authoring/recipes/reference-fleet/models.js",
+    "sha256": "8c054c3a22046618a73d99a8a2d6a6fafb710f0476afab606dfb801a3f997b2e"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/damage.js",
+    "sha256": "3de0a59c37abf35dd6538cef69e1e8c7e057dd357ad511da4565cbad12f8566a"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/defense.js",
+    "sha256": "0963efe3d94d81c1ff0e159bdfa9b5a2ffbbd72c0158fb25d5dd49ca5450b331"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/spider-mine.js",
+    "sha256": "cfa4f246a18744c2dd9ee1418906d323a700c47e3a5ecfe333ad6ef33fc6c424"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/nuclear-missile/model.js",
+    "sha256": "c2c406960427b657a6be8c4b175554e451e141b47b0e44e748440a898cfd4aed"
+   }
+  ],
+  "recipe": {
+   "path": "authoring/recipes/reference-fleet/nuclear-missile/recipe.json",
+   "sha256": "401343c57f8c511d732b18251a431f439cc7d5570efe9e6b79b74a09985cf230"
+  }
+ },
+ "tool": {
+  "name": "powerworld-authoring",
+  "version": "0.1.0",
+  "three": "0.169.0",
+  "adapterVersion": 1
+ },
+ "build": {
+  "options": {},
+  "cacheKey": "9e250a70537949b0fb48604f9bac8735a2cd57965035c486c0e9b326c5bf5870",
+  "contentHash": "66b4a054171a5af0ad3cbd176e29ced39f1300af9390c7066785bd100de3be51",
+  "profile": "desktop"
+ },
+ "acceptance": {
+  "visual": "unapproved",
+  "blockers": [],
+  "note": "Long-range strategic missile · 14 m · swept wings · rear exhaust; model and scale candidate, no handling or live equipment integration."
+ },
+ "outputs": [
+  {
+   "path": "model.glb",
+   "role": "glb",
+   "sha256": "7bcf2d6ace292b7068012be83c3df9c822bc63b4fd80e5e68d31d75019cf4c06",
+   "bytes": 58732
+  }
+ ],
+ "packageHash": "04ea0e85f4eead3087e2ff911c4b8da85ca0cb3cd32135eedbb9f4a86df1c98a"
+}

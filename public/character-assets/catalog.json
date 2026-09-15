@@ -1,0 +1,234 @@
+{
+  "metersPerUnit": 0.19,
+  "models": [
+    {
+      "id": "nanite-hand-claws",
+      "name": "Dec-52 · hand · cutting claws",
+      "group": "Construct modules",
+      "length": 0.48,
+      "note": "Dec-52 nanite platform · Reforming wrist module · three metal-cutting claws · melee contact socket",
+      "family": "Dec-52",
+      "url": "./authored-assets/prop.reference-nanite-hand-claws/v1/model.glb",
+      "dimensions": {
+        "min": [
+          -0.52433,
+          0,
+          -1.00099
+        ],
+        "max": [
+          0.52433,
+          0.90566,
+          1.52532
+        ]
+      },
+      "budget": {
+        "triangles": 48,
+        "drawCalls": 1,
+        "materials": 1,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 7908
+      },
+      "collection": "characters",
+      "runtime": "authored-model",
+      "sourceGroup": "Equipment"
+    },
+    {
+      "id": "nanite-hand-gun",
+      "name": "Dec-52 · hand · bullet gun",
+      "group": "Construct modules",
+      "length": 0.46,
+      "note": "Dec-52 nanite platform · Reforming wrist module · four bullet barrels · muzzle socket",
+      "family": "Dec-52",
+      "url": "./authored-assets/prop.reference-nanite-hand-gun/v1/model.glb",
+      "dimensions": {
+        "min": [
+          -0.45032,
+          0,
+          -1.01684
+        ],
+        "max": [
+          0.79895,
+          0.90063,
+          1.40421
+        ]
+      },
+      "budget": {
+        "triangles": 168,
+        "drawCalls": 1,
+        "materials": 1,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 23872
+      },
+      "collection": "characters",
+      "runtime": "authored-model",
+      "sourceGroup": "Equipment"
+    },
+    {
+      "id": "nanite-hand-plasma",
+      "name": "Dec-52 · hand · plasma cannon",
+      "group": "Construct modules",
+      "length": 0.43,
+      "note": "Dec-52 nanite platform · Reforming wrist module · contained energy aperture · burst muzzle",
+      "family": "Dec-52",
+      "url": "./authored-assets/prop.reference-nanite-hand-plasma/v1/model.glb",
+      "dimensions": {
+        "min": [
+          -0.57185,
+          0,
+          -1.01769
+        ],
+        "max": [
+          0.57185,
+          1.14369,
+          1.24546
+        ]
+      },
+      "budget": {
+        "triangles": 140,
+        "drawCalls": 1,
+        "materials": 1,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 20060
+      },
+      "collection": "characters",
+      "runtime": "authored-model",
+      "sourceGroup": "Equipment"
+    },
+    {
+      "id": "nanite-cloud",
+      "name": "Dec-52 · cloud",
+      "group": "Construct bodies",
+      "length": 1.8,
+      "note": "Dec-52 nanite platform · Assembly cloud · converges into solid robotic forms",
+      "reference": null,
+      "family": "Dec-52",
+      "url": "./authored-assets/prop.reference-nanite-cloud/v2/model.glb",
+      "dimensions": {
+        "min": [
+          -4.62502,
+          0,
+          -4.86688
+        ],
+        "max": [
+          4.8658,
+          9.67313,
+          4.60681
+        ]
+      },
+      "budget": {
+        "triangles": 512,
+        "drawCalls": 1,
+        "materials": 1,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 73928
+      },
+      "collection": "characters",
+      "runtime": "authored-model",
+      "sourceGroup": "Equipment"
+    },
+    {
+      "id": "nanite-rat",
+      "name": "Dec-52 · rat",
+      "group": "Construct bodies",
+      "length": 0.8,
+      "note": "Dec-52 nanite platform · Cutting rat · metal teeth and hook claws · articulated sensor tail · Iron Jackal badges",
+      "reference": null,
+      "family": "Dec-52",
+      "url": "./authored-assets/prop.reference-nanite-rat/v4/model.glb",
+      "dimensions": {
+        "min": [
+          -0.72561,
+          0,
+          -2.48804
+        ],
+        "max": [
+          0.72561,
+          1.84231,
+          1.72249
+        ]
+      },
+      "budget": {
+        "triangles": 1036,
+        "drawCalls": 14,
+        "materials": 1,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 153036
+      },
+      "collection": "characters",
+      "runtime": "authored-model",
+      "sourceGroup": "Equipment"
+    },
+    {
+      "id": "nanite-hound",
+      "name": "Dec-52 · hound",
+      "group": "Construct bodies",
+      "length": 1.6,
+      "note": "Dec-52 nanite platform · Pit-bull robot · broad cutting jaw · articulated camera tail · Iron Jackal badges",
+      "reference": null,
+      "family": "Dec-52",
+      "url": "./authored-assets/prop.reference-nanite-hound/v4/model.glb",
+      "dimensions": {
+        "min": [
+          -1.8177,
+          0,
+          -4.26023
+        ],
+        "max": [
+          1.8177,
+          6.0126,
+          4.16082
+        ]
+      },
+      "budget": {
+        "triangles": 1016,
+        "drawCalls": 14,
+        "materials": 1,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 150260
+      },
+      "collection": "characters",
+      "runtime": "authored-model",
+      "sourceGroup": "Equipment"
+    },
+    {
+      "id": "nanite-mech",
+      "name": "Dec-52 · remote mech",
+      "group": "Construct bodies",
+      "length": 1.9,
+      "note": "Dec-52 nanite platform · Slim remote robot · transforming wrist weapons · compact flight pack · company chest emblem",
+      "reference": null,
+      "dimension": "height",
+      "family": "Dec-52",
+      "url": "./authored-assets/prop.reference-nanite-mech/v6/model.glb",
+      "dimensions": {
+        "min": [
+          -1.91576,
+          0,
+          -3.58696
+        ],
+        "max": [
+          1.91576,
+          10,
+          1.52174
+        ]
+      },
+      "budget": {
+        "triangles": 1238,
+        "drawCalls": 19,
+        "materials": 1,
+        "bones": 0,
+        "textures": 0,
+        "bytes": 184384
+      },
+      "collection": "characters",
+      "runtime": "authored-model",
+      "sourceGroup": "Equipment"
+    }
+  ]
+}

@@ -1,0 +1,398 @@
+{
+ "format": "pw-asset-package",
+ "formatVersion": 1,
+ "id": "prop.reference-mech-light",
+ "version": 1,
+ "kind": "prop",
+ "displayName": "Light mech · outrider",
+ "tags": [
+  "reference-fleet",
+  "mechs"
+ ],
+ "rig": {
+  "skeleton": "none"
+ },
+ "sockets": [
+  {
+   "name": "entry",
+   "parent": "mech-torso",
+   "position": [
+    0,
+    0,
+    6.78206
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "foot-0",
+   "parent": "mech-ankle-0",
+   "position": [
+    0,
+    -1.10774,
+    0.45214
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "foot-1",
+   "parent": "mech-ankle-1",
+   "position": [
+    0,
+    -1.10774,
+    0.45214
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "foot-2",
+   "parent": "mech-ankle-2",
+   "position": [
+    0,
+    -1.10774,
+    0.45214
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "foot-3",
+   "parent": "mech-ankle-3",
+   "position": [
+    0,
+    -1.10774,
+    0.45214
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "mg-muzzle-left",
+   "parent": "mech-mg-pitch-left",
+   "position": [
+    0,
+    0,
+    5.6065
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "mg-muzzle-right",
+   "parent": "mech-mg-pitch-right",
+   "position": [
+    0,
+    0,
+    5.6065
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "missile-cell-left-0-0",
+   "parent": "mech-silo-left",
+   "position": [
+    -0.97209,
+    -0.81385,
+    1.58248
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "missile-cell-left-0-1",
+   "parent": "mech-silo-left",
+   "position": [
+    0.97209,
+    -0.81385,
+    1.58248
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "missile-cell-left-1-0",
+   "parent": "mech-silo-left",
+   "position": [
+    -0.97209,
+    0.81385,
+    1.58248
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "missile-cell-left-1-1",
+   "parent": "mech-silo-left",
+   "position": [
+    0.97209,
+    0.81385,
+    1.58248
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "missile-cell-right-0-0",
+   "parent": "mech-silo-right",
+   "position": [
+    -0.97209,
+    -0.81385,
+    1.58248
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "missile-cell-right-0-1",
+   "parent": "mech-silo-right",
+   "position": [
+    0.97209,
+    -0.81385,
+    1.58248
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "missile-cell-right-1-0",
+   "parent": "mech-silo-right",
+   "position": [
+    -0.97209,
+    0.81385,
+    1.58248
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "missile-cell-right-1-1",
+   "parent": "mech-silo-right",
+   "position": [
+    0.97209,
+    0.81385,
+    1.58248
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "pilot-seat",
+   "parent": "mech-seat-pilot",
+   "position": [
+    0,
+    0.36171,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  }
+ ],
+ "bounds": {
+  "min": [
+   -6.81371,
+   0,
+   -6.08422
+  ],
+  "max": [
+   6.81371,
+   16.84211,
+   9.12965
+  ]
+ },
+ "materials": [
+  {
+   "name": "fleet-painted-parts"
+  }
+ ],
+ "lods": [
+  {
+   "level": 0,
+   "output": "model.glb",
+   "triangles": 2384
+  }
+ ],
+ "units": {
+  "lengthUnit": "game-unit",
+  "metersPerUnit": 0.19,
+  "up": "+Y",
+  "forward": "+Z",
+  "handedness": "right",
+  "sourceConversion": {
+   "scale": 1,
+   "yawDegrees": 0,
+   "mirrorX": false,
+   "sourceUp": "+Y",
+   "sourceForward": "+Z",
+   "note": "authored directly in game units along the engine weapon axis (-Y toward the muzzle)"
+  }
+ },
+ "budgets": {
+  "profile": "desktop",
+  "measured": {
+   "triangles": 2384,
+   "drawCalls": 20,
+   "materials": 1,
+   "bones": 0,
+   "textures": 0,
+   "bytes": 339804
+  },
+  "limits": {
+   "triangles": 67793,
+   "drawCalls": 32,
+   "materials": 9,
+   "bones": 1,
+   "textures": 4,
+   "bytes": 3170030
+  }
+ },
+ "structural": {
+  "validator": "2.0.0-dev.3.10",
+  "errors": 0,
+  "warnings": 0
+ },
+ "provenance": {
+  "author": "Machine King Labs",
+  "license": "proprietary",
+  "terms": "Original model geometry authored for this project from creator-supplied concept references; reference redistribution rights are not independently verified.",
+  "redistribution": "internal",
+  "attribution": "Creator-supplied September 12, 2026 concepts."
+ },
+ "source": {
+  "adapter": "procedural-prop@1",
+  "files": [
+   {
+    "path": "authoring/recipes/reference-fleet/models.js",
+    "sha256": "2be6dcd8c4b479ad8648d954595c988c006c8cf53a065c973fd3fdee74fbe8a5"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/damage.js",
+    "sha256": "3de0a59c37abf35dd6538cef69e1e8c7e057dd357ad511da4565cbad12f8566a"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/defense.js",
+    "sha256": "b3e912db260966d8936526b89e678358f3376b4a32c090e097d1046f3f2c710a"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/mechs.js",
+    "sha256": "26a75381c030a3990b6f46aad231d2951b26ee68563bc747430e4b83a0fcdbcc"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/spider-mine.js",
+    "sha256": "cfa4f246a18744c2dd9ee1418906d323a700c47e3a5ecfe333ad6ef33fc6c424"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/mech-light/model.js",
+    "sha256": "e3aa30ac0c3fd18bb2b64dce16b35a1ab001586cfbf1daea6e14bf8c10f8bdb5"
+   },
+   {
+    "path": "assets-src/reference-fleet/references/mech-0.webp",
+    "sha256": "7c846bd2b1c09ac9f67b0851ade0dd677bc2fe60391e8e7d2311d7c8f287bf51"
+   },
+   {
+    "path": "assets-src/reference-fleet/references/mech-1.webp",
+    "sha256": "5569537f6ad9111c8eab0cd37986efcc31881b65fd5f5f7fae2038f6b62d894a"
+   },
+   {
+    "path": "assets-src/reference-fleet/references/mech-2.webp",
+    "sha256": "fa9bb4377dd7ae6bcb84afa31992f9931c5c17c42c7eab3c21f8064ce250bf11"
+   }
+  ],
+  "recipe": {
+   "path": "authoring/recipes/reference-fleet/mech-light/recipe.json",
+   "sha256": "9eb23d3804b57729bd5615b7acbee78bb1e10ee9634cee03138215a0fa87634a"
+  }
+ },
+ "tool": {
+  "name": "powerworld-authoring",
+  "version": "0.1.0",
+  "three": "0.169.0",
+  "adapterVersion": 1
+ },
+ "build": {
+  "options": {},
+  "cacheKey": "d196289531e36dcce81f3a516dea0eaceedb7fdc525ba3edfeaf950b783629ab",
+  "contentHash": "8ed48671b5dd7229ffe58fb774ade3e0f81649655fdb9cf0e415f43678d30b90",
+  "profile": "desktop"
+ },
+ "acceptance": {
+  "visual": "unapproved",
+  "blockers": [],
+  "note": "Fast quadruped · twin machine guns · eight empty missile cells; model and scale candidate, no handling or live equipment integration."
+ },
+ "outputs": [
+  {
+   "path": "model.glb",
+   "role": "glb",
+   "sha256": "4e9d30e432295dd13bcef75aae5fed8754e47a4da9d34b6556338feb496f1352",
+   "bytes": 339804
+  }
+ ],
+ "packageHash": "7a3d9e74bd6bba6b1022f5d26d6c477a7d097999d2850bfe07eee456b873d1a3"
+}

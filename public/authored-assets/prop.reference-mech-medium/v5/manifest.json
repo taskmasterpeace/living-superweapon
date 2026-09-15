@@ -1,0 +1,436 @@
+{
+ "format": "pw-asset-package",
+ "formatVersion": 1,
+ "id": "prop.reference-mech-medium",
+ "version": 5,
+ "kind": "prop",
+ "displayName": "Medium mech · all-purpose",
+ "tags": [
+  "reference-fleet",
+  "mechs"
+ ],
+ "rig": {
+  "skeleton": "none"
+ },
+ "sockets": [
+  {
+   "name": "cannon-muzzle",
+   "parent": "mech-cannon-recoil",
+   "position": [
+    0,
+    0.78551,
+    10.26773
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "entry",
+   "parent": "mech-torso",
+   "position": [
+    0,
+    0,
+    8.41617
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "entry-pilot",
+   "parent": "mech-medium",
+   "position": [
+    -12.17387,
+    0.49826,
+    -1.4027
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "foot-0",
+   "parent": "mech-ankle-0",
+   "position": [
+    0,
+    -1.37464,
+    0.56108
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "foot-1",
+   "parent": "mech-ankle-1",
+   "position": [
+    0,
+    -1.37464,
+    0.56108
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "mg-muzzle-chin",
+   "parent": "mech-mg-pitch-chin",
+   "position": [
+    0,
+    0,
+    6.95737
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "missile-cell-right-0-0",
+   "parent": "mech-silo-right",
+   "position": [
+    -1.20632,
+    -2.01988,
+    3.47869
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "missile-cell-right-0-1",
+   "parent": "mech-silo-right",
+   "position": [
+    1.20632,
+    -2.01988,
+    3.47869
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "missile-cell-right-1-0",
+   "parent": "mech-silo-right",
+   "position": [
+    -1.20632,
+    0,
+    3.47869
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "missile-cell-right-1-1",
+   "parent": "mech-silo-right",
+   "position": [
+    1.20632,
+    0,
+    3.47869
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "missile-cell-right-2-0",
+   "parent": "mech-silo-right",
+   "position": [
+    -1.20632,
+    2.01988,
+    3.47869
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "missile-cell-right-2-1",
+   "parent": "mech-silo-right",
+   "position": [
+    1.20632,
+    2.01988,
+    3.47869
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-eye-pilot",
+   "parent": "socket-seat-pilot",
+   "position": [
+    0,
+    5,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-torso-pilot",
+   "parent": "socket-seat-pilot",
+   "position": [
+    0,
+    2.52632,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "pilot-seat",
+   "parent": "mech-seat-pilot",
+   "position": [
+    0,
+    0.44886,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "recoil-stop",
+   "parent": "mech-cannon-pitch",
+   "position": [
+    0,
+    0,
+    -1.96377
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "seat-pilot",
+   "parent": "socket-pilot-seat",
+   "position": [
+    0,
+    0,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  }
+ ],
+ "bounds": {
+  "min": [
+   -8.75282,
+   0,
+   -7.08361
+  ],
+  "max": [
+   13.55285,
+   24.21053,
+   12.96091
+  ]
+ },
+ "materials": [
+  {
+   "name": "fleet-painted-parts"
+  },
+  {
+   "name": "fleet-glass"
+  }
+ ],
+ "lods": [
+  {
+   "level": 0,
+   "output": "model.glb",
+   "triangles": 1944
+  }
+ ],
+ "units": {
+  "lengthUnit": "game-unit",
+  "metersPerUnit": 0.19,
+  "up": "+Y",
+  "forward": "+Z",
+  "handedness": "right",
+  "sourceConversion": {
+   "scale": 1,
+   "yawDegrees": 0,
+   "mirrorX": false,
+   "sourceUp": "+Y",
+   "sourceForward": "+Z",
+   "note": "authored directly in game units along the engine weapon axis (-Y toward the muzzle)"
+  }
+ },
+ "budgets": {
+  "profile": "desktop",
+  "measured": {
+   "triangles": 1944,
+   "drawCalls": 16,
+   "materials": 2,
+   "bones": 0,
+   "textures": 0,
+   "bytes": 276104
+  },
+  "limits": {
+   "triangles": 67793,
+   "drawCalls": 32,
+   "materials": 9,
+   "bones": 1,
+   "textures": 4,
+   "bytes": 3170030
+  }
+ },
+ "structural": {
+  "validator": "2.0.0-dev.3.10",
+  "errors": 0,
+  "warnings": 0
+ },
+ "provenance": {
+  "author": "Machine King Labs",
+  "license": "proprietary",
+  "terms": "Original model geometry authored for this project from creator-supplied concept references; reference redistribution rights are not independently verified.",
+  "redistribution": "internal",
+  "attribution": "Creator-supplied September 12, 2026 concepts."
+ },
+ "source": {
+  "adapter": "procedural-prop@1",
+  "files": [
+   {
+    "path": "authoring/recipes/reference-fleet/models.js",
+    "sha256": "733ed5f40a1ece45f4158c181d53d1cedbad589935296d742cf35644ef68e4fa"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/logistics.js",
+    "sha256": "d116aeadf7b5a29fe4a5ba75d0aee556d69e82a59b4beefe65f3cf52f997b38f"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/condition.js",
+    "sha256": "f94437a742dbd31aa6f7ddb6e8f06b6d8cbb894ecdafeb86d0e3a44f41a4edfa"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/air-mobility.js",
+    "sha256": "778f8f67a4f9560fbe8ce38828766c385b7ce739eafda7d84eb652fe9b439f77"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/damage.js",
+    "sha256": "ae41fae99dd3ad7c87d41e1611e82e448c21f298c4a4b57840ab5b6d1635e956"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/defense.js",
+    "sha256": "b3e912db260966d8936526b89e678358f3376b4a32c090e097d1046f3f2c710a"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/mechs.js",
+    "sha256": "4aa82d05f85799cba45040e179b5215cded994d368d313f534b1cc3d19c574c4"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/drone-tank.js",
+    "sha256": "ffb9bc81e598700abce165ce4ee960d8a1d133d52fecba4ef9f80f6aa4d144ff"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/crew-interiors.js",
+    "sha256": "02be4c7f5afd5ff6fcfa7f32d1a0a1f97d2d437342243db58f50cf92cf3e9e98"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/spider-mine.js",
+    "sha256": "cfa4f246a18744c2dd9ee1418906d323a700c47e3a5ecfe333ad6ef33fc6c424"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/mech-medium/model.js",
+    "sha256": "62a980f16717b8ddaf63ea275e6a23543e7995b877ce45a07c80a6b0161e9d56"
+   },
+   {
+    "path": "assets-src/reference-fleet/references/mech-0.webp",
+    "sha256": "7c846bd2b1c09ac9f67b0851ade0dd677bc2fe60391e8e7d2311d7c8f287bf51"
+   },
+   {
+    "path": "assets-src/reference-fleet/references/mech-1.webp",
+    "sha256": "5569537f6ad9111c8eab0cd37986efcc31881b65fd5f5f7fae2038f6b62d894a"
+   },
+   {
+    "path": "assets-src/reference-fleet/references/mech-2.webp",
+    "sha256": "fa9bb4377dd7ae6bcb84afa31992f9931c5c17c42c7eab3c21f8064ce250bf11"
+   }
+  ],
+  "recipe": {
+   "path": "authoring/recipes/reference-fleet/mech-medium/recipe.json",
+   "sha256": "3d7a415a2fc193d43278b15e08a8f249585c59ec2f228259374a1f3989bac9b7"
+  }
+ },
+ "tool": {
+  "name": "powerworld-authoring",
+  "version": "0.1.0",
+  "three": "0.169.0",
+  "adapterVersion": 1
+ },
+ "build": {
+  "options": {},
+  "cacheKey": "95ce50788bb3c4202ef9b3637709b2f6509c75b2970d84bb6f9751affebc3614",
+  "contentHash": "c515ef377b8db6a1061ddd640ea0de661e6febf08ffad8493c91f4dc6fe9cf7d",
+  "profile": "desktop"
+ },
+ "acceptance": {
+  "visual": "unapproved",
+  "blockers": [],
+  "note": "Biped · recoil cannon · machine gun · six empty missile cells; model and scale candidate, no handling or live equipment integration."
+ },
+ "outputs": [
+  {
+   "path": "model.glb",
+   "role": "glb",
+   "sha256": "99696025c14e7f503a7161d34ed12af202ce756fd7c9ac1f86c5e4ef415b27a2",
+   "bytes": 276104
+  }
+ ],
+ "packageHash": "aa1589af6551b71fb7b961c853674c6fa583ce9e20a9e1c4462cac0c68144c9e"
+}

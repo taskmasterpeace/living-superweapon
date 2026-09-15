@@ -3,6 +3,7 @@ import * as T from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 const $=id=>document.getElementById(id),renderer=new T.WebGLRenderer({canvas:$('view'),antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.localClippingEnabled=true;
+const initialFamily=new URLSearchParams(location.search).get('family');if([...$('family').options].some(o=>o.value===initialFamily))$('family').value=initialFamily;
 const scene=new T.Scene();scene.background=new T.Color('#343b32');scene.add(new T.HemisphereLight('#f5eddb','#525d51',3));const light=new T.DirectionalLight('#ffffff',3);light.position.set(4,8,5);scene.add(light);
 const camera=new T.PerspectiveCamera(38,innerWidth/innerHeight,.01,300),orbit=new OrbitControls(camera,renderer.domElement);scene.add(new T.GridHelper(30,30,'#686b50','#454f3e'));
 let animator,actor,joints=[],baseline=new Map(),phase=0,playing=true,last=performance.now(),request=0,height=2,bend=0,restartRequested=false;

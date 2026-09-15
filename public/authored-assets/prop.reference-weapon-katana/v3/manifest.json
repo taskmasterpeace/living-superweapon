@@ -1,0 +1,284 @@
+{
+ "format": "pw-asset-package",
+ "formatVersion": 1,
+ "id": "prop.reference-weapon-katana",
+ "version": 3,
+ "kind": "prop",
+ "displayName": "Samurai sword",
+ "tags": [
+  "reference-fleet",
+  "equipment"
+ ],
+ "rig": {
+  "skeleton": "none"
+ },
+ "sockets": [
+  {
+   "name": "emblem-left",
+   "parent": "weapon-katana",
+   "position": [
+    0,
+    -0.00052,
+    0.26079
+   ],
+   "rotation": [
+    0.707107,
+    0,
+    0,
+    0.707107
+   ]
+  },
+  {
+   "name": "emblem-right",
+   "parent": "weapon-katana",
+   "position": [
+    0,
+    0.28739,
+    0.26079
+   ],
+   "rotation": [
+    -0.707107,
+    0,
+    0,
+    0.707107
+   ]
+  },
+  {
+   "name": "grip-primary",
+   "parent": "weapon-katana",
+   "position": [
+    0,
+    0.24775,
+    -0.65979
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "tally-left",
+   "parent": "weapon-katana",
+   "position": [
+    0,
+    -0.00052,
+    -0.33902
+   ],
+   "rotation": [
+    0.707107,
+    0,
+    0,
+    0.707107
+   ]
+  },
+  {
+   "name": "tally-right",
+   "parent": "weapon-katana",
+   "position": [
+    0,
+    0.28739,
+    -0.33902
+   ],
+   "rotation": [
+    -0.707107,
+    0,
+    0,
+    0.707107
+   ]
+  },
+  {
+   "name": "weapon-tip",
+   "parent": "weapon-katana",
+   "position": [
+    0,
+    0.24775,
+    4.48554
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  }
+ ],
+ "bounds": {
+  "min": [
+   -0.33902,
+   0,
+   -1.19962
+  ],
+  "max": [
+   0.4955,
+   0.37814,
+   4.58985
+  ]
+ },
+ "materials": [
+  {
+   "name": "fleet-painted-parts"
+  }
+ ],
+ "lods": [
+  {
+   "level": 0,
+   "output": "model.glb",
+   "triangles": 108
+  }
+ ],
+ "units": {
+  "lengthUnit": "game-unit",
+  "metersPerUnit": 0.19,
+  "up": "+Y",
+  "forward": "+Z",
+  "handedness": "right",
+  "sourceConversion": {
+   "scale": 1,
+   "yawDegrees": 0,
+   "mirrorX": false,
+   "sourceUp": "+Y",
+   "sourceForward": "+Z",
+   "note": "authored directly in game units along the engine weapon axis (-Y toward the muzzle)"
+  }
+ },
+ "budgets": {
+  "profile": "desktop",
+  "measured": {
+   "triangles": 108,
+   "drawCalls": 1,
+   "materials": 1,
+   "bones": 0,
+   "textures": 0,
+   "bytes": 16868
+  },
+  "limits": {
+   "triangles": 67793,
+   "drawCalls": 32,
+   "materials": 9,
+   "bones": 1,
+   "textures": 4,
+   "bytes": 3170030
+  }
+ },
+ "structural": {
+  "validator": "2.0.0-dev.3.10",
+  "errors": 0,
+  "warnings": 0
+ },
+ "provenance": {
+  "author": "Machine King Labs",
+  "license": "proprietary",
+  "terms": "Original model geometry authored for this project from creator-supplied concept references; reference redistribution rights are not independently verified.",
+  "redistribution": "internal",
+  "attribution": "Creator-supplied September 12, 2026 concepts."
+ },
+ "source": {
+  "adapter": "procedural-prop@1",
+  "files": [
+   {
+    "path": "authoring/recipes/reference-fleet/arsenal.js",
+    "sha256": "9a256ca221ad95e25514afe5d35872090cad6bbbe790cb980ea7c7c3ff94a763"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/stealth.js",
+    "sha256": "317644ffc10aeb4f24c2b94ed26997a040b95bf008f54601226e74932e2df9aa"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/nanite-robots.js",
+    "sha256": "e5c027ed100f5a9d4858c6da7bea861dfe05500f57513cc60e636927c7291ece"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/static-batch.js",
+    "sha256": "a5f089984d2ecd7c1f7629ca54774358795581652fce0614e6f759687e3fde55"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/expedition.js",
+    "sha256": "65207c429841fa6403554fa49e4c6e6e855735dbe9aaa95a55534c3998f16995"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/nanite-forms.js",
+    "sha256": "d883d81b0562ae1b7cf592f6fbab0644867eefcbfc9dfedb2c42bfa4aa210c72"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/models.js",
+    "sha256": "dae6d017b4415fd584e4d41085f9f6f6f344ecbadbc76b7e2b050033f45d389f"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/logistics.js",
+    "sha256": "63757f47844ba6c567174bccd2e682471031eb5ed68b6b71fe9893a1beef537d"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/ordnance.js",
+    "sha256": "ab2369438732b8cf9036d2645705dd15c0eb77ccfef7b72212bd41039c805372"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/condition.js",
+    "sha256": "ab8180853faf5c8bb13470a82a84c806f54b96993c7b1806cf562d7fd9754f67"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/air-mobility.js",
+    "sha256": "778f8f67a4f9560fbe8ce38828766c385b7ce739eafda7d84eb652fe9b439f77"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/damage.js",
+    "sha256": "13b05e82dc80d750293ca049542c9e3fb2e874c42a1572dcf16d39bc1fefaed2"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/defense.js",
+    "sha256": "b3e912db260966d8936526b89e678358f3376b4a32c090e097d1046f3f2c710a"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/mechs.js",
+    "sha256": "4aa82d05f85799cba45040e179b5215cded994d368d313f534b1cc3d19c574c4"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/drone-tank.js",
+    "sha256": "ffb9bc81e598700abce165ce4ee960d8a1d133d52fecba4ef9f80f6aa4d144ff"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/crew-interiors.js",
+    "sha256": "972a16c6c00b432c3e8ae1cdc0b6de8c047715ae4f4b4380d908d879107649a7"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/spider-mine.js",
+    "sha256": "cfa4f246a18744c2dd9ee1418906d323a700c47e3a5ecfe333ad6ef33fc6c424"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/weapon-katana/model.js",
+    "sha256": "8dd59db90856b440ffbaee919ca70346cb6cb1e79fe07e2fa25484d6753c9108"
+   }
+  ],
+  "recipe": {
+   "path": "authoring/recipes/reference-fleet/weapon-katana/recipe.json",
+   "sha256": "d86770555cfccb4407f6f969b4b7e0f3299a7c81c3ff8e805c55187c8308399a"
+  }
+ },
+ "tool": {
+  "name": "powerworld-authoring",
+  "version": "0.1.0",
+  "three": "0.169.0",
+  "adapterVersion": 1
+ },
+ "build": {
+  "options": {},
+  "cacheKey": "1cdd180b0927d1202898475618cd5a734ead5b0aef8072e05c3e2df7ec4596f8",
+  "contentHash": "2c5ac7194180f3c63f14a43f2a7d25f7c7befc013d3d63edca61a60607950c54",
+  "profile": "desktop"
+ },
+ "acceptance": {
+  "visual": "unapproved",
+  "blockers": [],
+  "note": "Modular arsenal · physical prop and attachment sockets · gameplay integration pending; model and scale candidate, no handling or live equipment integration."
+ },
+ "outputs": [
+  {
+   "path": "model.glb",
+   "role": "glb",
+   "sha256": "648b135e85a4c694aa616e313c5ce8b8dc5565f9cc2ea78580b52c5347d7ec74",
+   "bytes": 16868
+  }
+ ],
+ "packageHash": "66464c5c32a4d8c7417e3dff74dc6f339441bdbee1ad6f5f7bd938a3a9cb1497"
+}

@@ -1,0 +1,291 @@
+{
+ "format": "pw-asset-package",
+ "formatVersion": 1,
+ "id": "prop.reference-atv-destroyed",
+ "version": 1,
+ "kind": "prop",
+ "displayName": "ATV · destroyed",
+ "tags": [
+  "reference-fleet",
+  "ground"
+ ],
+ "rig": {
+  "skeleton": "none"
+ },
+ "sockets": [
+  {
+   "name": "entry-rider",
+   "parent": "atv",
+   "position": [
+    -7.21698,
+    0.52632,
+    -0.98312
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "grip-left",
+   "parent": "atv",
+   "position": [
+    -2.07547,
+    6.77259,
+    3.27706
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "grip-right",
+   "parent": "atv",
+   "position": [
+    2.07547,
+    6.77259,
+    3.27706
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-eye-rider",
+   "parent": "socket-seat-rider",
+   "position": [
+    0,
+    5,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-torso-rider",
+   "parent": "socket-seat-rider",
+   "position": [
+    0,
+    2.52632,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "rider",
+   "parent": "atv",
+   "position": [
+    0,
+    6.00794,
+    -0.98312
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "seat-rider",
+   "parent": "socket-rider",
+   "position": [
+    0,
+    0,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  }
+ ],
+ "bounds": {
+  "min": [
+   -3.79593,
+   0,
+   -5.78947
+  ],
+  "max": [
+   3.79593,
+   6.9501,
+   5.78947
+  ]
+ },
+ "materials": [
+  {
+   "name": "condition-destroyed-fleet-machine"
+  },
+  {
+   "name": "condition-destroyed-fleet-rubber"
+  },
+  {
+   "name": "condition-destroyed-fleet-edge"
+  },
+  {
+   "name": "condition-destroyed-fleet-armor"
+  },
+  {
+   "name": "condition-destroyed-fleet-red"
+  }
+ ],
+ "lods": [
+  {
+   "level": 0,
+   "output": "model.glb",
+   "triangles": 680
+  }
+ ],
+ "units": {
+  "lengthUnit": "game-unit",
+  "metersPerUnit": 0.19,
+  "up": "+Y",
+  "forward": "+Z",
+  "handedness": "right",
+  "sourceConversion": {
+   "scale": 1,
+   "yawDegrees": 0,
+   "mirrorX": false,
+   "sourceUp": "+Y",
+   "sourceForward": "+Z",
+   "note": "authored directly in game units along the engine weapon axis (-Y toward the muzzle)"
+  }
+ },
+ "budgets": {
+  "profile": "desktop",
+  "measured": {
+   "triangles": 680,
+   "drawCalls": 12,
+   "materials": 5,
+   "bones": 0,
+   "textures": 0,
+   "bytes": 75220
+  },
+  "limits": {
+   "triangles": 67793,
+   "drawCalls": 32,
+   "materials": 9,
+   "bones": 1,
+   "textures": 4,
+   "bytes": 3170030
+  }
+ },
+ "structural": {
+  "validator": "2.0.0-dev.3.10",
+  "errors": 0,
+  "warnings": 0
+ },
+ "provenance": {
+  "author": "Machine King Labs",
+  "license": "proprietary",
+  "terms": "Original model geometry authored for this project from creator-supplied concept references; reference redistribution rights are not independently verified.",
+  "redistribution": "internal",
+  "attribution": "Creator-supplied September 12, 2026 concepts."
+ },
+ "source": {
+  "adapter": "procedural-prop@1",
+  "files": [
+   {
+    "path": "authoring/recipes/reference-fleet/models.js",
+    "sha256": "ebe4842a28f455d491b3b8845f416cf786dc1ff30a98d57982205c28a4fb743c"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/logistics.js",
+    "sha256": "d116aeadf7b5a29fe4a5ba75d0aee556d69e82a59b4beefe65f3cf52f997b38f"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/ordnance.js",
+    "sha256": "ab2369438732b8cf9036d2645705dd15c0eb77ccfef7b72212bd41039c805372"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/condition.js",
+    "sha256": "a8943c4746398ab11a854285d9d8cea51523830e7c2894014490a86ec92b88ad"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/air-mobility.js",
+    "sha256": "778f8f67a4f9560fbe8ce38828766c385b7ce739eafda7d84eb652fe9b439f77"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/damage.js",
+    "sha256": "ae41fae99dd3ad7c87d41e1611e82e448c21f298c4a4b57840ab5b6d1635e956"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/defense.js",
+    "sha256": "b3e912db260966d8936526b89e678358f3376b4a32c090e097d1046f3f2c710a"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/mechs.js",
+    "sha256": "4aa82d05f85799cba45040e179b5215cded994d368d313f534b1cc3d19c574c4"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/drone-tank.js",
+    "sha256": "ffb9bc81e598700abce165ce4ee960d8a1d133d52fecba4ef9f80f6aa4d144ff"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/crew-interiors.js",
+    "sha256": "02be4c7f5afd5ff6fcfa7f32d1a0a1f97d2d437342243db58f50cf92cf3e9e98"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/spider-mine.js",
+    "sha256": "cfa4f246a18744c2dd9ee1418906d323a700c47e3a5ecfe333ad6ef33fc6c424"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/atv-destroyed/model.js",
+    "sha256": "cc6af0d5758491be83a1d6ecb305efa506b1e642855563ab19d20d9c71da9ade"
+   },
+   {
+    "path": "assets-src/reference-fleet/references/6.webp",
+    "sha256": "7d2a95e23d4881430e2587b70adb15bd7539dff333cf14a6f38c6c3beea0c0da"
+   }
+  ],
+  "recipe": {
+   "path": "authoring/recipes/reference-fleet/atv-destroyed/recipe.json",
+   "sha256": "02270a9b741bff4a70ad11680948d48a07d1c6770c6fbca364bd84bbf256b2c6"
+  }
+ },
+ "tool": {
+  "name": "powerworld-authoring",
+  "version": "0.1.0",
+  "three": "0.169.0",
+  "adapterVersion": 1
+ },
+ "build": {
+  "options": {},
+  "cacheKey": "d73f306c60e67f38a7456ff9aded8457a77623809208383df862592162aa3f8d",
+  "contentHash": "1053c26ce1b9151e0639eb57ad0b99bfae164e6337be7fbfdbb16ccd991a5468",
+  "profile": "desktop"
+ },
+ "acceptance": {
+  "visual": "unapproved",
+  "blockers": [],
+  "note": "Quad reference included · separate wheel pivots; model and scale candidate, no handling or live equipment integration."
+ },
+ "outputs": [
+  {
+   "path": "model.glb",
+   "role": "glb",
+   "sha256": "0a30209aafb18b9d3d1c99eb243e14d0156e87d15403c280ab9c7ed1666dd719",
+   "bytes": 75220
+  }
+ ],
+ "packageHash": "22fd39b2c358802fa761a534d836a47eb2b3f914928730fc4e211366f0d8112d"
+}

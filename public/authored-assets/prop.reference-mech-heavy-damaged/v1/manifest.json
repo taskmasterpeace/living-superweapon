@@ -1,0 +1,691 @@
+{
+ "format": "pw-asset-package",
+ "formatVersion": 1,
+ "id": "prop.reference-mech-heavy-damaged",
+ "version": 1,
+ "kind": "prop",
+ "displayName": "Heavy mech · two-crew · damaged",
+ "tags": [
+  "reference-fleet",
+  "mechs"
+ ],
+ "rig": {
+  "skeleton": "none"
+ },
+ "sockets": [
+  {
+   "name": "cannon-muzzle",
+   "parent": "mech-cannon-recoil",
+   "position": [
+    0,
+    0.8195,
+    15.62901
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "entry",
+   "parent": "mech-torso",
+   "position": [
+    0,
+    0,
+    8.78034
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "entry-gunner",
+   "parent": "mech-heavy",
+   "position": [
+    -22.24025,
+    0.49705,
+    -6.96574
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "entry-pilot",
+   "parent": "mech-heavy",
+   "position": [
+    -22.24025,
+    0.49705,
+    -1.46339
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "foot-0",
+   "parent": "mech-ankle-0",
+   "position": [
+    0,
+    -1.43412,
+    0.58536
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "foot-1",
+   "parent": "mech-ankle-1",
+   "position": [
+    0,
+    -1.43412,
+    0.58536
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "gunner-seat",
+   "parent": "mech-seat-gunner",
+   "position": [
+    0,
+    0.46828,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "mg-muzzle-roof",
+   "parent": "mech-mg-pitch-roof",
+   "position": [
+    0,
+    0,
+    7.25841
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "missile-cell-left-lower-0-0",
+   "parent": "mech-silo-left-lower",
+   "position": [
+    -2.51703,
+    -2.10728,
+    3.62921
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "missile-cell-left-lower-0-1",
+   "parent": "mech-silo-left-lower",
+   "position": [
+    0,
+    -2.10728,
+    3.62921
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "missile-cell-left-lower-0-2",
+   "parent": "mech-silo-left-lower",
+   "position": [
+    2.51703,
+    -2.10728,
+    3.62921
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "missile-cell-left-lower-1-0",
+   "parent": "mech-silo-left-lower",
+   "position": [
+    -2.51703,
+    0,
+    3.62921
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "missile-cell-left-lower-1-1",
+   "parent": "mech-silo-left-lower",
+   "position": [
+    0,
+    0,
+    3.62921
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "missile-cell-left-lower-1-2",
+   "parent": "mech-silo-left-lower",
+   "position": [
+    2.51703,
+    0,
+    3.62921
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "missile-cell-left-lower-2-0",
+   "parent": "mech-silo-left-lower",
+   "position": [
+    -2.51703,
+    2.10728,
+    3.62921
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "missile-cell-left-lower-2-1",
+   "parent": "mech-silo-left-lower",
+   "position": [
+    0,
+    2.10728,
+    3.62921
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "missile-cell-left-lower-2-2",
+   "parent": "mech-silo-left-lower",
+   "position": [
+    2.51703,
+    2.10728,
+    3.62921
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "missile-cell-right-0-0",
+   "parent": "mech-silo-right",
+   "position": [
+    -2.51703,
+    -2.10728,
+    3.62921
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "missile-cell-right-0-1",
+   "parent": "mech-silo-right",
+   "position": [
+    0,
+    -2.10728,
+    3.62921
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "missile-cell-right-0-2",
+   "parent": "mech-silo-right",
+   "position": [
+    2.51703,
+    -2.10728,
+    3.62921
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "missile-cell-right-1-0",
+   "parent": "mech-silo-right",
+   "position": [
+    -2.51703,
+    0,
+    3.62921
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "missile-cell-right-1-1",
+   "parent": "mech-silo-right",
+   "position": [
+    0,
+    0,
+    3.62921
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "missile-cell-right-1-2",
+   "parent": "mech-silo-right",
+   "position": [
+    2.51703,
+    0,
+    3.62921
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "missile-cell-right-2-0",
+   "parent": "mech-silo-right",
+   "position": [
+    -2.51703,
+    2.10728,
+    3.62921
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "missile-cell-right-2-1",
+   "parent": "mech-silo-right",
+   "position": [
+    0,
+    2.10728,
+    3.62921
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "missile-cell-right-2-2",
+   "parent": "mech-silo-right",
+   "position": [
+    2.51703,
+    2.10728,
+    3.62921
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-eye-gunner",
+   "parent": "socket-seat-gunner",
+   "position": [
+    0,
+    5,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-eye-pilot",
+   "parent": "socket-seat-pilot",
+   "position": [
+    0,
+    5,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-torso-gunner",
+   "parent": "socket-seat-gunner",
+   "position": [
+    0,
+    2.52632,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-torso-pilot",
+   "parent": "socket-seat-pilot",
+   "position": [
+    0,
+    2.52632,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "pilot-seat",
+   "parent": "mech-seat-pilot",
+   "position": [
+    0,
+    0.46828,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "recoil-stop",
+   "parent": "mech-cannon-pitch",
+   "position": [
+    0,
+    0,
+    -2.04875
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "seat-gunner",
+   "parent": "socket-gunner-seat",
+   "position": [
+    0,
+    0,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "seat-pilot",
+   "parent": "socket-pilot-seat",
+   "position": [
+    0,
+    0,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  }
+ ],
+ "bounds": {
+  "min": [
+   -19.07048,
+   0,
+   -9.5413
+  ],
+  "max": [
+   18.76743,
+   30.599,
+   16.34314
+  ]
+ },
+ "materials": [
+  {
+   "name": "condition-damaged-fleet-painted-parts"
+  },
+  {
+   "name": "condition-damaged-fleet-glass"
+  }
+ ],
+ "lods": [
+  {
+   "level": 0,
+   "output": "model.glb",
+   "triangles": 3008
+  }
+ ],
+ "units": {
+  "lengthUnit": "game-unit",
+  "metersPerUnit": 0.19,
+  "up": "+Y",
+  "forward": "+Z",
+  "handedness": "right",
+  "sourceConversion": {
+   "scale": 1,
+   "yawDegrees": 0,
+   "mirrorX": false,
+   "sourceUp": "+Y",
+   "sourceForward": "+Z",
+   "note": "authored directly in game units along the engine weapon axis (-Y toward the muzzle)"
+  }
+ },
+ "budgets": {
+  "profile": "desktop",
+  "measured": {
+   "triangles": 3008,
+   "drawCalls": 17,
+   "materials": 2,
+   "bones": 0,
+   "textures": 0,
+   "bytes": 422796
+  },
+  "limits": {
+   "triangles": 67793,
+   "drawCalls": 32,
+   "materials": 9,
+   "bones": 1,
+   "textures": 4,
+   "bytes": 3170030
+  }
+ },
+ "structural": {
+  "validator": "2.0.0-dev.3.10",
+  "errors": 0,
+  "warnings": 0
+ },
+ "provenance": {
+  "author": "Machine King Labs",
+  "license": "proprietary",
+  "terms": "Original model geometry authored for this project from creator-supplied concept references; reference redistribution rights are not independently verified.",
+  "redistribution": "internal",
+  "attribution": "Creator-supplied September 12, 2026 concepts."
+ },
+ "source": {
+  "adapter": "procedural-prop@1",
+  "files": [
+   {
+    "path": "authoring/recipes/reference-fleet/models.js",
+    "sha256": "eb2b96166b418e2f81a9933c46cb6dbe92036f9e2e00c19123d76701540c338f"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/logistics.js",
+    "sha256": "d116aeadf7b5a29fe4a5ba75d0aee556d69e82a59b4beefe65f3cf52f997b38f"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/condition.js",
+    "sha256": "10fc69653fd6c0557adbe0d1ca4550f2710c9d7a85d0b12cdb28dbeb7409d984"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/air-mobility.js",
+    "sha256": "778f8f67a4f9560fbe8ce38828766c385b7ce739eafda7d84eb652fe9b439f77"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/damage.js",
+    "sha256": "ae41fae99dd3ad7c87d41e1611e82e448c21f298c4a4b57840ab5b6d1635e956"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/defense.js",
+    "sha256": "b3e912db260966d8936526b89e678358f3376b4a32c090e097d1046f3f2c710a"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/mechs.js",
+    "sha256": "4aa82d05f85799cba45040e179b5215cded994d368d313f534b1cc3d19c574c4"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/drone-tank.js",
+    "sha256": "ffb9bc81e598700abce165ce4ee960d8a1d133d52fecba4ef9f80f6aa4d144ff"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/crew-interiors.js",
+    "sha256": "02be4c7f5afd5ff6fcfa7f32d1a0a1f97d2d437342243db58f50cf92cf3e9e98"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/spider-mine.js",
+    "sha256": "cfa4f246a18744c2dd9ee1418906d323a700c47e3a5ecfe333ad6ef33fc6c424"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/mech-heavy-damaged/model.js",
+    "sha256": "7f0bc7fa0199db5d792bedce5c2b0a547ec2a0f1a885f8586ba576038d1a32f3"
+   },
+   {
+    "path": "assets-src/reference-fleet/references/mech-0.webp",
+    "sha256": "7c846bd2b1c09ac9f67b0851ade0dd677bc2fe60391e8e7d2311d7c8f287bf51"
+   },
+   {
+    "path": "assets-src/reference-fleet/references/mech-1.webp",
+    "sha256": "5569537f6ad9111c8eab0cd37986efcc31881b65fd5f5f7fae2038f6b62d894a"
+   },
+   {
+    "path": "assets-src/reference-fleet/references/mech-2.webp",
+    "sha256": "fa9bb4377dd7ae6bcb84afa31992f9931c5c17c42c7eab3c21f8064ce250bf11"
+   }
+  ],
+  "recipe": {
+   "path": "authoring/recipes/reference-fleet/mech-heavy-damaged/recipe.json",
+   "sha256": "8cc18cc757df36ed82fa46c15ac3abded10a9d9e2d915de011b87005bd8af738"
+  }
+ },
+ "tool": {
+  "name": "powerworld-authoring",
+  "version": "0.1.0",
+  "three": "0.169.0",
+  "adapterVersion": 1
+ },
+ "build": {
+  "options": {},
+  "cacheKey": "f90bdd1548bd146cc7b932788b364b18943ca5403fc26d099b017c18c03caf84",
+  "contentHash": "d7029c75cd270e877980028f8ed76071d1f9c261672e78652a8736f8fe8c9ba0",
+  "profile": "desktop"
+ },
+ "acceptance": {
+  "visual": "unapproved",
+  "blockers": [],
+  "note": "Armored biped · pilot/cannon seat · independent roof gunner · missile cells; model and scale candidate, no handling or live equipment integration."
+ },
+ "outputs": [
+  {
+   "path": "model.glb",
+   "role": "glb",
+   "sha256": "74b301de1888ba472a012beb05b6f1e7991b57902e31800de5569efb1c656885",
+   "bytes": 422796
+  }
+ ],
+ "packageHash": "bae7e78203ed95d10cd626a3679d128319e421926ab27d09cf8c0fef4af1f1fe"
+}

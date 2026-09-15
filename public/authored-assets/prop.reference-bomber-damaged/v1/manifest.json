@@ -1,0 +1,291 @@
+{
+ "format": "pw-asset-package",
+ "formatVersion": 1,
+ "id": "prop.reference-bomber-damaged",
+ "version": 1,
+ "kind": "prop",
+ "displayName": "Heavy bomber · damaged",
+ "tags": [
+  "reference-fleet",
+  "aircraft"
+ ],
+ "rig": {
+  "skeleton": "none"
+ },
+ "sockets": [
+  {
+   "name": "contact-left",
+   "parent": "landing-gear-left",
+   "position": [
+    0,
+    -13.80594,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "contact-nose",
+   "parent": "landing-gear-nose",
+   "position": [
+    0,
+    -13.80594,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "contact-right",
+   "parent": "landing-gear-right",
+   "position": [
+    0,
+    -13.80594,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "engine--1-4.9",
+   "parent": "bomber-damaged",
+   "position": [
+    -28.07018,
+    12.48406,
+    -1.71858
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "engine--1-8",
+   "parent": "bomber-damaged",
+   "position": [
+    -45.82886,
+    12.48406,
+    -1.71858
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "engine-1-4.9",
+   "parent": "bomber-damaged",
+   "position": [
+    28.07018,
+    12.48406,
+    -1.71858
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "engine-1-8",
+   "parent": "bomber-damaged",
+   "position": [
+    45.82886,
+    12.48406,
+    -1.71858
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "payload",
+   "parent": "bomber-damaged",
+   "position": [
+    0,
+    12.48406,
+    21.19585
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "pilot",
+   "parent": "bomber-damaged",
+   "position": [
+    0,
+    21.64983,
+    45.82886
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  }
+ ],
+ "bounds": {
+  "min": [
+   -78.05228,
+   0,
+   -57.28607
+  ],
+  "max": [
+   72.18045,
+   37.06474,
+   69.02972
+  ]
+ },
+ "materials": [
+  {
+   "name": "fleet-rubber"
+  },
+  {
+   "name": "fleet-edge"
+  },
+  {
+   "name": "fleet-armor"
+  },
+  {
+   "name": "fleet-machine"
+  },
+  {
+   "name": "fleet-damage-charred"
+  },
+  {
+   "name": "fleet-red"
+  },
+  {
+   "name": "fleet-damage-metal"
+  }
+ ],
+ "lods": [
+  {
+   "level": 0,
+   "output": "model.glb",
+   "triangles": 2093
+  }
+ ],
+ "units": {
+  "lengthUnit": "game-unit",
+  "metersPerUnit": 0.19,
+  "up": "+Y",
+  "forward": "+Z",
+  "handedness": "right",
+  "sourceConversion": {
+   "scale": 1,
+   "yawDegrees": 0,
+   "mirrorX": false,
+   "sourceUp": "+Y",
+   "sourceForward": "+Z",
+   "note": "authored directly in game units along the engine weapon axis (-Y toward the muzzle)"
+  }
+ },
+ "budgets": {
+  "profile": "desktop",
+  "measured": {
+   "triangles": 2093,
+   "drawCalls": 29,
+   "materials": 7,
+   "bones": 0,
+   "textures": 0,
+   "bytes": 223992
+  },
+  "limits": {
+   "triangles": 67793,
+   "drawCalls": 32,
+   "materials": 9,
+   "bones": 1,
+   "textures": 4,
+   "bytes": 3170030
+  }
+ },
+ "structural": {
+  "validator": "2.0.0-dev.3.10",
+  "errors": 0,
+  "warnings": 0
+ },
+ "provenance": {
+  "author": "Machine King Labs",
+  "license": "proprietary",
+  "terms": "Original model geometry authored for this project from creator-supplied concept references; reference redistribution rights are not independently verified.",
+  "redistribution": "internal",
+  "attribution": "Creator-supplied September 12, 2026 concepts."
+ },
+ "source": {
+  "adapter": "procedural-prop@1",
+  "files": [
+   {
+    "path": "authoring/recipes/reference-fleet/models.js",
+    "sha256": "662cb593a9aab54092814c78296af8ddc1cda0640fb89f533506fa0084ee1547"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/damage.js",
+    "sha256": "860e2a4acd495f39e7651b9731c1200753752095d05281323b5c849b44105374"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/bomber-damaged/model.js",
+    "sha256": "4e6a1e454285319c0147df09220f405e23d98d8c71b7308c6913a246cdf532b4"
+   },
+   {
+    "path": "assets-src/reference-fleet/references/4.webp",
+    "sha256": "c0c61f8fac9f6d3b5a5f61fe7ccb55aaae489f9a519e4a54b4c64061c2a89424"
+   }
+  ],
+  "recipe": {
+   "path": "authoring/recipes/reference-fleet/bomber-damaged/recipe.json",
+   "sha256": "8da8637048a67ab120e4a0a8f513dd445ca5230ab44d8b3419cdb70711a0e9ca"
+  }
+ },
+ "tool": {
+  "name": "powerworld-authoring",
+  "version": "0.1.0",
+  "three": "0.169.0",
+  "adapterVersion": 1
+ },
+ "build": {
+  "options": {},
+  "cacheKey": "ba6da06ac660c4ae1f838419101c12bf2617a2a92990bf0bac6c9284041259d7",
+  "contentHash": "6c8c3ef301621469cb711406ad33776609bf5241b82c128120a99342977f5df6",
+  "profile": "desktop"
+ },
+ "acceptance": {
+  "visual": "unapproved",
+  "blockers": [],
+  "note": "Four engines · wide straight wings · open payload bay; model and scale candidate, no handling or live equipment integration."
+ },
+ "outputs": [
+  {
+   "path": "model.glb",
+   "role": "glb",
+   "sha256": "33b59da8717e9455187679d08c81606af8f1a3b3127ee15186cde342f0c6d6db",
+   "bytes": 223992
+  }
+ ],
+ "packageHash": "aeb742b30dccfd01c35387196b1ccf8f9c17136e9af6699755df6b561c42990a"
+}

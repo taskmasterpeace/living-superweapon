@@ -233,7 +233,8 @@ body.phone #pwTitle h1{ font-size:34px; }
     el.innerHTML = `
       <div class="pwtop">
         <a href="./studio.html">CHARACTER / POWER HARNESS ↗</a>
-        <a href="./index.html" title="The full game — the city, the career, the registry">← WAR WORLD</a>
+        <a href="./index.html" title="Battlefields, training and authoring tools">← DEPLOYMENT HUB</a>
+        <a href="./asset-library.html?collection=fleet">FLEET LIBRARY ↗</a>
         <button id="pwNewsroom" aria-label="Newsroom">▣ Newsroom</button>
         <button id="pwCampaign">Campaign records</button>
         <button id="pwHighwall">HIGHWALL proving ground</button>

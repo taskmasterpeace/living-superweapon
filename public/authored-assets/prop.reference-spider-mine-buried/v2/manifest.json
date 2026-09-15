@@ -1,0 +1,311 @@
+{
+ "format": "pw-asset-package",
+ "formatVersion": 1,
+ "id": "prop.reference-spider-mine-buried",
+ "version": 2,
+ "kind": "prop",
+ "displayName": "Spider mine · concealed",
+ "tags": [
+  "reference-fleet",
+  "equipment"
+ ],
+ "rig": {
+  "skeleton": "none"
+ },
+ "sockets": [
+  {
+   "name": "carry",
+   "parent": "mine-chassis",
+   "position": [
+    0,
+    1.92982,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "foot-0",
+   "parent": "mine-knee-0",
+   "position": [
+    0.83182,
+    -0.96491,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "foot-1",
+   "parent": "mine-knee-1",
+   "position": [
+    0.83182,
+    -0.96491,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "foot-2",
+   "parent": "mine-knee-2",
+   "position": [
+    0.83182,
+    -0.96491,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "foot-3",
+   "parent": "mine-knee-3",
+   "position": [
+    0.83182,
+    -0.96491,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "foot-4",
+   "parent": "mine-knee-4",
+   "position": [
+    0.83182,
+    -0.96491,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "foot-5",
+   "parent": "mine-knee-5",
+   "position": [
+    0.83182,
+    -0.96491,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "payload",
+   "parent": "mine-chassis",
+   "position": [
+    0,
+    0.99819,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "scan-origin",
+   "parent": "mine-scanner",
+   "position": [
+    0,
+    0,
+    0.86509
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  }
+ ],
+ "bounds": {
+  "min": [
+   -4.73684,
+   0,
+   -4.73684
+  ],
+  "max": [
+   4.73684,
+   1.92982,
+   4.73684
+  ]
+ },
+ "materials": [
+  {
+   "name": "fleet-scanner"
+  },
+  {
+   "name": "fleet-painted-parts"
+  },
+  {
+   "name": "fleet-machine"
+  },
+  {
+   "name": "fleet-armor"
+  },
+  {
+   "name": "fleet-red"
+  },
+  {
+   "name": "fleet-glass"
+  },
+  {
+   "name": "fleet-soil"
+  }
+ ],
+ "lods": [
+  {
+   "level": 0,
+   "output": "model.glb",
+   "triangles": 1452
+  }
+ ],
+ "units": {
+  "lengthUnit": "game-unit",
+  "metersPerUnit": 0.19,
+  "up": "+Y",
+  "forward": "+Z",
+  "handedness": "right",
+  "sourceConversion": {
+   "scale": 1,
+   "yawDegrees": 0,
+   "mirrorX": false,
+   "sourceUp": "+Y",
+   "sourceForward": "+Z",
+   "note": "authored directly in game units along the engine weapon axis (-Y toward the muzzle)"
+  }
+ },
+ "budgets": {
+  "profile": "desktop",
+  "measured": {
+   "triangles": 1452,
+   "drawCalls": 18,
+   "materials": 7,
+   "bones": 0,
+   "textures": 0,
+   "bytes": 180888
+  },
+  "limits": {
+   "triangles": 67793,
+   "drawCalls": 32,
+   "materials": 9,
+   "bones": 1,
+   "textures": 4,
+   "bytes": 3170030
+  }
+ },
+ "structural": {
+  "validator": "2.0.0-dev.3.10",
+  "errors": 0,
+  "warnings": 0
+ },
+ "provenance": {
+  "author": "Machine King Labs",
+  "license": "proprietary",
+  "terms": "Original model geometry authored for this project from creator-supplied concept references; reference redistribution rights are not independently verified.",
+  "redistribution": "internal",
+  "attribution": "Creator-supplied September 12, 2026 concepts."
+ },
+ "source": {
+  "adapter": "procedural-prop@1",
+  "files": [
+   {
+    "path": "authoring/recipes/reference-fleet/models.js",
+    "sha256": "2be6dcd8c4b479ad8648d954595c988c006c8cf53a065c973fd3fdee74fbe8a5"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/damage.js",
+    "sha256": "3de0a59c37abf35dd6538cef69e1e8c7e057dd357ad511da4565cbad12f8566a"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/defense.js",
+    "sha256": "b3e912db260966d8936526b89e678358f3376b4a32c090e097d1046f3f2c710a"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/mechs.js",
+    "sha256": "429c45318b6d89baa2e6df619ea4fe738aa8667d9281c130bca013527d26a6dc"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/spider-mine.js",
+    "sha256": "cfa4f246a18744c2dd9ee1418906d323a700c47e3a5ecfe333ad6ef33fc6c424"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/spider-mine-buried/model.js",
+    "sha256": "1da5a7e34a28c4a502dd0453d12c9ed3fb2acfa016f49d5df10b5929352e674d"
+   },
+   {
+    "path": "assets-src/reference-fleet/references/spider-1.jpg",
+    "sha256": "72b890bd57d447f65cee1ace887f9deb14cd784bb1c6ce24b9411bdbc6ae805c"
+   },
+   {
+    "path": "assets-src/reference-fleet/references/spider-2.jpg",
+    "sha256": "ade25bdb29f139c9886af8ac91e873c1cfd5c830a2791816b4a5ad146a7c04d5"
+   },
+   {
+    "path": "assets-src/reference-fleet/references/spider-3.jpg",
+    "sha256": "6cac4493eeb481f6a55721531e43ee4856d445cb558f59633325233b7ad6a887"
+   }
+  ],
+  "recipe": {
+   "path": "authoring/recipes/reference-fleet/spider-mine-buried/recipe.json",
+   "sha256": "7ea3a5820df231e5869ea40a77161d56158e39ea453ee51ee3f7ddcaf9e2d95e"
+  }
+ },
+ "tool": {
+  "name": "powerworld-authoring",
+  "version": "0.1.0",
+  "three": "0.169.0",
+  "adapterVersion": 1
+ },
+ "build": {
+  "options": {},
+  "cacheKey": "4506d46de1a37cbfafcee9c652508f849d9fdd99cb930ed01b38994abe4dbf00",
+  "contentHash": "5e2ef26ce2f3ced2270e10683678fa324f32e7689b4939634e71ca7eefb44db2",
+  "profile": "desktop"
+ },
+ "acceptance": {
+  "visual": "unapproved",
+  "blockers": [],
+  "note": "Dirt mound · exposed scanner crown · emerging pursuit study; model and scale candidate, no handling or live equipment integration."
+ },
+ "outputs": [
+  {
+   "path": "model.glb",
+   "role": "glb",
+   "sha256": "4df6c67682678b94352f4b2bfbeb9e675bd880047dfe15f7e8faa0f416653d73",
+   "bytes": 180888
+  }
+ ],
+ "packageHash": "1f4a52b8d3628c00aee97d6063081cc06e09052a7d73669822ca95885eb1d131"
+}

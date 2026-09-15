@@ -1,0 +1,213 @@
+{
+ "format": "pw-asset-package",
+ "formatVersion": 1,
+ "id": "prop.reference-motorcycle-damaged",
+ "version": 1,
+ "kind": "prop",
+ "displayName": "Pursuit motorcycle · damaged",
+ "tags": [
+  "reference-fleet",
+  "ground"
+ ],
+ "rig": {
+  "skeleton": "none"
+ },
+ "sockets": [
+  {
+   "name": "grip-left",
+   "parent": "steering",
+   "position": [
+    -1.67707,
+    -0.20963,
+    -0.26204
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "grip-right",
+   "parent": "steering",
+   "position": [
+    1.67707,
+    -0.20963,
+    -0.26204
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "rider",
+   "parent": "motorcycle-damaged",
+   "position": [
+    0,
+    5.08363,
+    -2.51561
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  }
+ ],
+ "bounds": {
+  "min": [
+   -2.07014,
+   0,
+   -6.18421
+  ],
+  "max": [
+   2.25877,
+   6.62007,
+   6.18421
+  ]
+ },
+ "materials": [
+  {
+   "name": "fleet-rubber"
+  },
+  {
+   "name": "fleet-edge"
+  },
+  {
+   "name": "fleet-machine"
+  },
+  {
+   "name": "fleet-armor"
+  },
+  {
+   "name": "fleet-damage-metal"
+  },
+  {
+   "name": "fleet-damage-charred"
+  },
+  {
+   "name": "fleet-red"
+  }
+ ],
+ "lods": [
+  {
+   "level": 0,
+   "output": "model.glb",
+   "triangles": 935
+  }
+ ],
+ "units": {
+  "lengthUnit": "game-unit",
+  "metersPerUnit": 0.19,
+  "up": "+Y",
+  "forward": "+Z",
+  "handedness": "right",
+  "sourceConversion": {
+   "scale": 1,
+   "yawDegrees": 0,
+   "mirrorX": false,
+   "sourceUp": "+Y",
+   "sourceForward": "+Z",
+   "note": "authored directly in game units along the engine weapon axis (-Y toward the muzzle)"
+  }
+ },
+ "budgets": {
+  "profile": "desktop",
+  "measured": {
+   "triangles": 935,
+   "drawCalls": 13,
+   "materials": 7,
+   "bones": 0,
+   "textures": 0,
+   "bytes": 100116
+  },
+  "limits": {
+   "triangles": 67793,
+   "drawCalls": 32,
+   "materials": 9,
+   "bones": 1,
+   "textures": 4,
+   "bytes": 3170030
+  }
+ },
+ "structural": {
+  "validator": "2.0.0-dev.3.10",
+  "errors": 0,
+  "warnings": 0
+ },
+ "provenance": {
+  "author": "Machine King Labs",
+  "license": "proprietary",
+  "terms": "Original model geometry authored for this project from creator-supplied concept references; reference redistribution rights are not independently verified.",
+  "redistribution": "internal",
+  "attribution": "Creator-supplied September 12, 2026 concepts."
+ },
+ "source": {
+  "adapter": "procedural-prop@1",
+  "files": [
+   {
+    "path": "authoring/recipes/reference-fleet/models.js",
+    "sha256": "2be6dcd8c4b479ad8648d954595c988c006c8cf53a065c973fd3fdee74fbe8a5"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/damage.js",
+    "sha256": "3de0a59c37abf35dd6538cef69e1e8c7e057dd357ad511da4565cbad12f8566a"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/defense.js",
+    "sha256": "b3e912db260966d8936526b89e678358f3376b4a32c090e097d1046f3f2c710a"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/mechs.js",
+    "sha256": "429c45318b6d89baa2e6df619ea4fe738aa8667d9281c130bca013527d26a6dc"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/spider-mine.js",
+    "sha256": "cfa4f246a18744c2dd9ee1418906d323a700c47e3a5ecfe333ad6ef33fc6c424"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/motorcycle-damaged/model.js",
+    "sha256": "848cb994e4c93ae7b16a3860b935589cd99113f49975eb50b2ea96dbd8ea41d3"
+   },
+   {
+    "path": "assets-src/reference-fleet/references/5.webp",
+    "sha256": "8480a974b32c003df106d0145cbf61beec69750cf15a4fda154f4eaae945c1d7"
+   }
+  ],
+  "recipe": {
+   "path": "authoring/recipes/reference-fleet/motorcycle-damaged/recipe.json",
+   "sha256": "6894e2b052fa7733bdb0cb371568edee95d876f3f63410b099d9e8eb1646221d"
+  }
+ },
+ "tool": {
+  "name": "powerworld-authoring",
+  "version": "0.1.0",
+  "three": "0.169.0",
+  "adapterVersion": 1
+ },
+ "build": {
+  "options": {},
+  "cacheKey": "461eb424116be61d393fcd412c7c15a205b279485cfa897440ade3c8942d7603",
+  "contentHash": "1244032de41d2ea1cf36ddad637a3f18ef2bfb9e27792bfb14520521f2155e71",
+  "profile": "desktop"
+ },
+ "acceptance": {
+  "visual": "unapproved",
+  "blockers": [],
+  "note": "Sport fairing · low clip-ons · raised tail · wide rear tire; model and scale candidate, no handling or live equipment integration."
+ },
+ "outputs": [
+  {
+   "path": "model.glb",
+   "role": "glb",
+   "sha256": "cfd6e604ff07a35f7701ba3575daf23d5ca12c1cf8972dea0016b049dd7aa66e",
+   "bytes": 100116
+  }
+ ],
+ "packageHash": "465834743dfdcd0f8e4569119baac03b074d079968f4ae282af279a26505c419"
+}

@@ -1,0 +1,344 @@
+{
+ "format": "pw-asset-package",
+ "formatVersion": 1,
+ "id": "prop.reference-nuclear-bomb",
+ "version": 4,
+ "kind": "prop",
+ "displayName": "Nuclear bomb · air-dropped",
+ "tags": [
+  "reference-fleet",
+  "ordnance"
+ ],
+ "rig": {
+  "skeleton": "none"
+ },
+ "sockets": [
+  {
+   "name": "nose",
+   "parent": "nuclear-bomb",
+   "position": [
+    0,
+    11.79673,
+    23.95644
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "radiation-mark-0",
+   "parent": "nuclear-bomb",
+   "position": [
+    0,
+    20.50817,
+    -4.90018
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "radiation-mark-1",
+   "parent": "nuclear-bomb",
+   "position": [
+    6.15991,
+    17.95665,
+    -4.90018
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "radiation-mark-2",
+   "parent": "nuclear-bomb",
+   "position": [
+    8.71143,
+    11.79673,
+    -4.90018
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "radiation-mark-3",
+   "parent": "nuclear-bomb",
+   "position": [
+    6.15991,
+    5.63682,
+    -4.90018
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "radiation-mark-4",
+   "parent": "nuclear-bomb",
+   "position": [
+    0,
+    3.0853,
+    -4.90018
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "radiation-mark-5",
+   "parent": "nuclear-bomb",
+   "position": [
+    -6.15991,
+    5.63682,
+    -4.90018
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "radiation-mark-6",
+   "parent": "nuclear-bomb",
+   "position": [
+    -8.71143,
+    11.79673,
+    -4.90018
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "radiation-mark-7",
+   "parent": "nuclear-bomb",
+   "position": [
+    -6.15991,
+    17.95665,
+    -4.90018
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "suspension",
+   "parent": "nuclear-bomb",
+   "position": [
+    0,
+    22.68603,
+    -3.62976
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  }
+ ],
+ "bounds": {
+  "min": [
+   -11.79673,
+   0,
+   -28.67514
+  ],
+  "max": [
+   11.79673,
+   23.59347,
+   23.95644
+  ]
+ },
+ "materials": [
+  {
+   "name": "fleet-machine"
+  },
+  {
+   "name": "fleet-red"
+  },
+  {
+   "name": "hazard-yellow"
+  },
+  {
+   "name": "hazard-black"
+  },
+  {
+   "name": "fleet-armor"
+  }
+ ],
+ "lods": [
+  {
+   "level": 0,
+   "output": "model.glb",
+   "triangles": 1032
+  }
+ ],
+ "units": {
+  "lengthUnit": "game-unit",
+  "metersPerUnit": 0.19,
+  "up": "+Y",
+  "forward": "+Z",
+  "handedness": "right",
+  "sourceConversion": {
+   "scale": 1,
+   "yawDegrees": 0,
+   "mirrorX": false,
+   "sourceUp": "+Y",
+   "sourceForward": "+Z",
+   "note": "authored directly in game units along the engine weapon axis (-Y toward the muzzle)"
+  }
+ },
+ "budgets": {
+  "profile": "desktop",
+  "measured": {
+   "triangles": 1032,
+   "drawCalls": 13,
+   "materials": 5,
+   "bones": 0,
+   "textures": 0,
+   "bytes": 110120
+  },
+  "limits": {
+   "triangles": 67793,
+   "drawCalls": 32,
+   "materials": 9,
+   "bones": 1,
+   "textures": 4,
+   "bytes": 3170030
+  }
+ },
+ "structural": {
+  "validator": "2.0.0-dev.3.10",
+  "errors": 0,
+  "warnings": 0
+ },
+ "provenance": {
+  "author": "Machine King Labs",
+  "license": "proprietary",
+  "terms": "Original model geometry authored for this project from creator-supplied concept references; reference redistribution rights are not independently verified.",
+  "redistribution": "internal",
+  "attribution": "Creator-supplied September 12, 2026 concepts."
+ },
+ "source": {
+  "adapter": "procedural-prop@1",
+  "files": [
+   {
+    "path": "authoring/recipes/reference-fleet/static-batch.js",
+    "sha256": "a5f089984d2ecd7c1f7629ca54774358795581652fce0614e6f759687e3fde55"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/expedition.js",
+    "sha256": "6f63f1b21a2f9f4f5dee888687f72a9980c164fd5c39e3681df434e91eb8f6a1"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/nanite-forms.js",
+    "sha256": "16095e80dcea845fcbd30f91886fa2b94f580dea9feeb7dcc56ad43e7fffd8c1"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/models.js",
+    "sha256": "4a8f1396bb3b10b9535462e88cf45cd0da59648ea7a925f39ca12fcd452d69ee"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/logistics.js",
+    "sha256": "63757f47844ba6c567174bccd2e682471031eb5ed68b6b71fe9893a1beef537d"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/ordnance.js",
+    "sha256": "ab2369438732b8cf9036d2645705dd15c0eb77ccfef7b72212bd41039c805372"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/condition.js",
+    "sha256": "ab8180853faf5c8bb13470a82a84c806f54b96993c7b1806cf562d7fd9754f67"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/air-mobility.js",
+    "sha256": "778f8f67a4f9560fbe8ce38828766c385b7ce739eafda7d84eb652fe9b439f77"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/damage.js",
+    "sha256": "0c34abc49ebe1feacfbe9ef6cc1f850ea12cab5bf5dbcfb7ecef54976a7affef"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/defense.js",
+    "sha256": "b3e912db260966d8936526b89e678358f3376b4a32c090e097d1046f3f2c710a"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/mechs.js",
+    "sha256": "4aa82d05f85799cba45040e179b5215cded994d368d313f534b1cc3d19c574c4"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/drone-tank.js",
+    "sha256": "ffb9bc81e598700abce165ce4ee960d8a1d133d52fecba4ef9f80f6aa4d144ff"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/crew-interiors.js",
+    "sha256": "0048d0e741b0d7a7704e8fccd13cc53c6b4b298f5bd26704489f8aa57474802d"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/spider-mine.js",
+    "sha256": "cfa4f246a18744c2dd9ee1418906d323a700c47e3a5ecfe333ad6ef33fc6c424"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/nuclear-bomb/model.js",
+    "sha256": "5e499ddf81cb948444880cf85d21e12c0b0f343f96704e2fe3a41e69142acdcd"
+   }
+  ],
+  "recipe": {
+   "path": "authoring/recipes/reference-fleet/nuclear-bomb/recipe.json",
+   "sha256": "fe4165ae3568d8f468364e4ef94cb6237f069c96c0d67473603dd48e6e584639"
+  }
+ },
+ "tool": {
+  "name": "powerworld-authoring",
+  "version": "0.1.0",
+  "three": "0.169.0",
+  "adapterVersion": 1
+ },
+ "build": {
+  "options": {},
+  "cacheKey": "16d2134fec5b6a71eb6cf647f7db0a18fe68ab25e0b29bb42ff3655c7f4d2ec9",
+  "contentHash": "dce3046136044659973ed1479aef7823dbbbc0a197b5713fb123e783e798f905",
+  "profile": "desktop"
+ },
+ "acceptance": {
+  "visual": "unapproved",
+  "blockers": [],
+  "note": "Strategic surface-strike gravity bomb · 10 m · finned tail · aircraft suspension; model and scale candidate, no handling or live equipment integration."
+ },
+ "outputs": [
+  {
+   "path": "model.glb",
+   "role": "glb",
+   "sha256": "7f8feac81ae4e0620914e998d027cdcea66a935df89535c421e84d5541d546d3",
+   "bytes": 110120
+  }
+ ],
+ "packageHash": "5956ce97a1f9de6233ba50f6a23cfd71ee5820906ef03bc1cc3a10448c859133"
+}

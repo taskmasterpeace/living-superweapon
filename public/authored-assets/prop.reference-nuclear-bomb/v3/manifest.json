@@ -1,0 +1,320 @@
+{
+ "format": "pw-asset-package",
+ "formatVersion": 1,
+ "id": "prop.reference-nuclear-bomb",
+ "version": 3,
+ "kind": "prop",
+ "displayName": "Nuclear bomb · air-dropped",
+ "tags": [
+  "reference-fleet",
+  "ordnance"
+ ],
+ "rig": {
+  "skeleton": "none"
+ },
+ "sockets": [
+  {
+   "name": "nose",
+   "parent": "nuclear-bomb",
+   "position": [
+    0,
+    7.54991,
+    15.33212
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "radiation-mark-0",
+   "parent": "nuclear-bomb",
+   "position": [
+    0,
+    13.12523,
+    -3.13612
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "radiation-mark-1",
+   "parent": "nuclear-bomb",
+   "position": [
+    3.94234,
+    11.49225,
+    -3.13612
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "radiation-mark-2",
+   "parent": "nuclear-bomb",
+   "position": [
+    5.57532,
+    7.54991,
+    -3.13612
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "radiation-mark-3",
+   "parent": "nuclear-bomb",
+   "position": [
+    3.94234,
+    3.60756,
+    -3.13612
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "radiation-mark-4",
+   "parent": "nuclear-bomb",
+   "position": [
+    0,
+    1.97459,
+    -3.13612
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "radiation-mark-5",
+   "parent": "nuclear-bomb",
+   "position": [
+    -3.94234,
+    3.60756,
+    -3.13612
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "radiation-mark-6",
+   "parent": "nuclear-bomb",
+   "position": [
+    -5.57532,
+    7.54991,
+    -3.13612
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "radiation-mark-7",
+   "parent": "nuclear-bomb",
+   "position": [
+    -3.94234,
+    11.49225,
+    -3.13612
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "suspension",
+   "parent": "nuclear-bomb",
+   "position": [
+    0,
+    14.51906,
+    -2.32305
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  }
+ ],
+ "bounds": {
+  "min": [
+   -7.54991,
+   0,
+   -18.35209
+  ],
+  "max": [
+   7.54991,
+   15.09982,
+   15.33212
+  ]
+ },
+ "materials": [
+  {
+   "name": "fleet-machine"
+  },
+  {
+   "name": "fleet-red"
+  },
+  {
+   "name": "hazard-yellow"
+  },
+  {
+   "name": "hazard-black"
+  },
+  {
+   "name": "fleet-armor"
+  }
+ ],
+ "lods": [
+  {
+   "level": 0,
+   "output": "model.glb",
+   "triangles": 1032
+  }
+ ],
+ "units": {
+  "lengthUnit": "game-unit",
+  "metersPerUnit": 0.19,
+  "up": "+Y",
+  "forward": "+Z",
+  "handedness": "right",
+  "sourceConversion": {
+   "scale": 1,
+   "yawDegrees": 0,
+   "mirrorX": false,
+   "sourceUp": "+Y",
+   "sourceForward": "+Z",
+   "note": "authored directly in game units along the engine weapon axis (-Y toward the muzzle)"
+  }
+ },
+ "budgets": {
+  "profile": "desktop",
+  "measured": {
+   "triangles": 1032,
+   "drawCalls": 13,
+   "materials": 5,
+   "bones": 0,
+   "textures": 0,
+   "bytes": 110116
+  },
+  "limits": {
+   "triangles": 67793,
+   "drawCalls": 32,
+   "materials": 9,
+   "bones": 1,
+   "textures": 4,
+   "bytes": 3170030
+  }
+ },
+ "structural": {
+  "validator": "2.0.0-dev.3.10",
+  "errors": 0,
+  "warnings": 0
+ },
+ "provenance": {
+  "author": "Machine King Labs",
+  "license": "proprietary",
+  "terms": "Original model geometry authored for this project from creator-supplied concept references; reference redistribution rights are not independently verified.",
+  "redistribution": "internal",
+  "attribution": "Creator-supplied September 12, 2026 concepts."
+ },
+ "source": {
+  "adapter": "procedural-prop@1",
+  "files": [
+   {
+    "path": "authoring/recipes/reference-fleet/models.js",
+    "sha256": "acea002e5973adac504ceb9ee76dabfcec9262f072cd91f99f95139b98b8ca4c"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/air-mobility.js",
+    "sha256": "1723470ed8c9c0a559f630b6e14f53951f3ff6f1cd2c75c2a34d159bc8a5365d"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/damage.js",
+    "sha256": "3de0a59c37abf35dd6538cef69e1e8c7e057dd357ad511da4565cbad12f8566a"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/defense.js",
+    "sha256": "b3e912db260966d8936526b89e678358f3376b4a32c090e097d1046f3f2c710a"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/mechs.js",
+    "sha256": "4aa82d05f85799cba45040e179b5215cded994d368d313f534b1cc3d19c574c4"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/drone-tank.js",
+    "sha256": "ffb9bc81e598700abce165ce4ee960d8a1d133d52fecba4ef9f80f6aa4d144ff"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/crew-interiors.js",
+    "sha256": "0e317fb067017f5a7b3b5de5337c4863250ac4e6f17630a7a997063089ed1761"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/spider-mine.js",
+    "sha256": "cfa4f246a18744c2dd9ee1418906d323a700c47e3a5ecfe333ad6ef33fc6c424"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/nuclear-bomb/model.js",
+    "sha256": "7968db5bfcccbbb9e5ef19f46696dfc7dc87c859efbda46972b268613957abdc"
+   }
+  ],
+  "recipe": {
+   "path": "authoring/recipes/reference-fleet/nuclear-bomb/recipe.json",
+   "sha256": "b8c8ad21e76b53faa2550ab252224e524fa5e390258672c3c0ea115a3b00120b"
+  }
+ },
+ "tool": {
+  "name": "powerworld-authoring",
+  "version": "0.1.0",
+  "three": "0.169.0",
+  "adapterVersion": 1
+ },
+ "build": {
+  "options": {},
+  "cacheKey": "4cae7e17b400077258eec0f3048c37d4aa2c0bad8d27a2361ffaddd2789e5525",
+  "contentHash": "14ee3fecf99d9f8e95e51451558dc94d009cfd51d6ad8b8e0af689598ce34f15",
+  "profile": "desktop"
+ },
+ "acceptance": {
+  "visual": "unapproved",
+  "blockers": [],
+  "note": "Heavy gravity bomb · 6.4 m · finned tail · aircraft suspension; model and scale candidate, no handling or live equipment integration."
+ },
+ "outputs": [
+  {
+   "path": "model.glb",
+   "role": "glb",
+   "sha256": "3279ca15aa1426e7d7309c60a1fb09b7c824d81b068a1feb74e8601eca3925b9",
+   "bytes": 110116
+  }
+ ],
+ "packageHash": "5875938284f3af423aa3c8dd9cba9f90079e79b5a1c4d3c6392502dd4badb7b9"
+}

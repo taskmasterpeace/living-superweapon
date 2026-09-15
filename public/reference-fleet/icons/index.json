@@ -1,0 +1,3971 @@
+{
+  "format": "lsw-inventory-icon-library",
+  "version": 2,
+  "footprints": "Design proposals, not live inventory rules",
+  "rendering": {
+    "masterPixels": 512,
+    "hudPixels": 128,
+    "cellCssPixels": 64,
+    "texelsPerCell": 128,
+    "fit": "contain",
+    "background": "transparent",
+    "labels": "UI overlay; never baked into PNG"
+  },
+  "icons": [
+    {
+      "id": "weapon-rifle-ak",
+      "name": "Frontier rifle · curved magazine",
+      "png": "./reference-fleet/icons/weapon-rifle-ak.png",
+      "model": "./authored-assets/prop.reference-weapon-rifle-ak/v4/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "personal-equipment",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/weapon-rifle-ak-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": {
+        "png": "./reference-fleet/icons/weapon-rifle-ak-inventory.png",
+        "width": 256,
+        "height": 640,
+        "cells": [
+          2,
+          5
+        ],
+        "rotatable": true,
+        "cellCssPixels": 64,
+        "status": "proposed"
+      },
+      "inventoryItemId": null,
+      "personalFootprintProposal": [
+        2,
+        5
+      ],
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "weapon-rifle-m16",
+      "name": "Patrol rifle · carry handle",
+      "png": "./reference-fleet/icons/weapon-rifle-m16.png",
+      "model": "./authored-assets/prop.reference-weapon-rifle-m16/v4/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "personal-equipment",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/weapon-rifle-m16-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": {
+        "png": "./reference-fleet/icons/weapon-rifle-m16-inventory.png",
+        "width": 256,
+        "height": 640,
+        "cells": [
+          2,
+          5
+        ],
+        "rotatable": true,
+        "cellCssPixels": 64,
+        "status": "proposed"
+      },
+      "inventoryItemId": null,
+      "personalFootprintProposal": [
+        2,
+        5
+      ],
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "weapon-pistol-0",
+      "name": "Compact striker pistol",
+      "png": "./reference-fleet/icons/weapon-pistol-0.png",
+      "model": "./authored-assets/prop.reference-weapon-pistol-0/v6/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "personal-equipment",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/weapon-pistol-0-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": {
+        "png": "./reference-fleet/icons/weapon-pistol-0-inventory.png",
+        "width": 256,
+        "height": 256,
+        "cells": [
+          2,
+          2
+        ],
+        "rotatable": true,
+        "cellCssPixels": 64,
+        "status": "proposed"
+      },
+      "inventoryItemId": null,
+      "personalFootprintProposal": [
+        2,
+        2
+      ],
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "weapon-pistol-1",
+      "name": "Service duty pistol",
+      "png": "./reference-fleet/icons/weapon-pistol-1.png",
+      "model": "./authored-assets/prop.reference-weapon-pistol-1/v5/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "personal-equipment",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/weapon-pistol-1-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": {
+        "png": "./reference-fleet/icons/weapon-pistol-1-inventory.png",
+        "width": 256,
+        "height": 256,
+        "cells": [
+          2,
+          2
+        ],
+        "rotatable": true,
+        "cellCssPixels": 64,
+        "status": "proposed"
+      },
+      "inventoryItemId": null,
+      "personalFootprintProposal": [
+        2,
+        2
+      ],
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "weapon-pistol-2",
+      "name": "Heavy slide pistol",
+      "png": "./reference-fleet/icons/weapon-pistol-2.png",
+      "model": "./authored-assets/prop.reference-weapon-pistol-2/v5/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "personal-equipment",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/weapon-pistol-2-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": {
+        "png": "./reference-fleet/icons/weapon-pistol-2-inventory.png",
+        "width": 256,
+        "height": 256,
+        "cells": [
+          2,
+          2
+        ],
+        "rotatable": true,
+        "cellCssPixels": 64,
+        "status": "proposed"
+      },
+      "inventoryItemId": null,
+      "personalFootprintProposal": [
+        2,
+        2
+      ],
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "weapon-smg-0",
+      "name": "Compact folding SMG",
+      "png": "./reference-fleet/icons/weapon-smg-0.png",
+      "model": "./authored-assets/prop.reference-weapon-smg-0/v5/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "personal-equipment",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/weapon-smg-0-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": {
+        "png": "./reference-fleet/icons/weapon-smg-0-inventory.png",
+        "width": 256,
+        "height": 512,
+        "cells": [
+          2,
+          4
+        ],
+        "rotatable": true,
+        "cellCssPixels": 64,
+        "status": "proposed"
+      },
+      "inventoryItemId": null,
+      "personalFootprintProposal": [
+        2,
+        4
+      ],
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "weapon-smg-1",
+      "name": "Tactical rail SMG",
+      "png": "./reference-fleet/icons/weapon-smg-1.png",
+      "model": "./authored-assets/prop.reference-weapon-smg-1/v5/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "personal-equipment",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/weapon-smg-1-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": {
+        "png": "./reference-fleet/icons/weapon-smg-1-inventory.png",
+        "width": 256,
+        "height": 512,
+        "cells": [
+          2,
+          4
+        ],
+        "rotatable": true,
+        "cellCssPixels": 64,
+        "status": "proposed"
+      },
+      "inventoryItemId": null,
+      "personalFootprintProposal": [
+        2,
+        4
+      ],
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "weapon-smg-2",
+      "name": "Bullpup SMG",
+      "png": "./reference-fleet/icons/weapon-smg-2.png",
+      "model": "./authored-assets/prop.reference-weapon-smg-2/v5/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "personal-equipment",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/weapon-smg-2-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": {
+        "png": "./reference-fleet/icons/weapon-smg-2-inventory.png",
+        "width": 256,
+        "height": 512,
+        "cells": [
+          2,
+          4
+        ],
+        "rotatable": true,
+        "cellCssPixels": 64,
+        "status": "proposed"
+      },
+      "inventoryItemId": null,
+      "personalFootprintProposal": [
+        2,
+        4
+      ],
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "weapon-sniper-0",
+      "name": "Scout precision rifle",
+      "png": "./reference-fleet/icons/weapon-sniper-0.png",
+      "model": "./authored-assets/prop.reference-weapon-sniper-0/v4/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "personal-equipment",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/weapon-sniper-0-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": {
+        "png": "./reference-fleet/icons/weapon-sniper-0-inventory.png",
+        "width": 256,
+        "height": 896,
+        "cells": [
+          2,
+          7
+        ],
+        "rotatable": true,
+        "cellCssPixels": 64,
+        "status": "proposed"
+      },
+      "inventoryItemId": null,
+      "personalFootprintProposal": [
+        2,
+        7
+      ],
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "weapon-sniper-1",
+      "name": "Long bolt-action rifle",
+      "png": "./reference-fleet/icons/weapon-sniper-1.png",
+      "model": "./authored-assets/prop.reference-weapon-sniper-1/v4/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "personal-equipment",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/weapon-sniper-1-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": {
+        "png": "./reference-fleet/icons/weapon-sniper-1-inventory.png",
+        "width": 256,
+        "height": 896,
+        "cells": [
+          2,
+          7
+        ],
+        "rotatable": true,
+        "cellCssPixels": 64,
+        "status": "proposed"
+      },
+      "inventoryItemId": null,
+      "personalFootprintProposal": [
+        2,
+        7
+      ],
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "weapon-sniper-2",
+      "name": "Heavy precision rifle",
+      "png": "./reference-fleet/icons/weapon-sniper-2.png",
+      "model": "./authored-assets/prop.reference-weapon-sniper-2/v4/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "personal-equipment",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/weapon-sniper-2-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": {
+        "png": "./reference-fleet/icons/weapon-sniper-2-inventory.png",
+        "width": 256,
+        "height": 896,
+        "cells": [
+          2,
+          7
+        ],
+        "rotatable": true,
+        "cellCssPixels": 64,
+        "status": "proposed"
+      },
+      "inventoryItemId": null,
+      "personalFootprintProposal": [
+        2,
+        7
+      ],
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "weapon-shotgun-0",
+      "name": "Pump shotgun",
+      "png": "./reference-fleet/icons/weapon-shotgun-0.png",
+      "model": "./authored-assets/prop.reference-weapon-shotgun-0/v5/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "personal-equipment",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/weapon-shotgun-0-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": {
+        "png": "./reference-fleet/icons/weapon-shotgun-0-inventory.png",
+        "width": 256,
+        "height": 640,
+        "cells": [
+          2,
+          5
+        ],
+        "rotatable": true,
+        "cellCssPixels": 64,
+        "status": "proposed"
+      },
+      "inventoryItemId": null,
+      "personalFootprintProposal": [
+        2,
+        5
+      ],
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "weapon-shotgun-1",
+      "name": "Combat shotgun",
+      "png": "./reference-fleet/icons/weapon-shotgun-1.png",
+      "model": "./authored-assets/prop.reference-weapon-shotgun-1/v5/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "personal-equipment",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/weapon-shotgun-1-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": {
+        "png": "./reference-fleet/icons/weapon-shotgun-1-inventory.png",
+        "width": 256,
+        "height": 640,
+        "cells": [
+          2,
+          5
+        ],
+        "rotatable": true,
+        "cellCssPixels": 64,
+        "status": "proposed"
+      },
+      "inventoryItemId": null,
+      "personalFootprintProposal": [
+        2,
+        5
+      ],
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "weapon-shotgun-2",
+      "name": "Automatic drum shotgun",
+      "png": "./reference-fleet/icons/weapon-shotgun-2.png",
+      "model": "./authored-assets/prop.reference-weapon-shotgun-2/v4/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "personal-equipment",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/weapon-shotgun-2-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": {
+        "png": "./reference-fleet/icons/weapon-shotgun-2-inventory.png",
+        "width": 256,
+        "height": 640,
+        "cells": [
+          2,
+          5
+        ],
+        "rotatable": true,
+        "cellCssPixels": 64,
+        "status": "proposed"
+      },
+      "inventoryItemId": null,
+      "personalFootprintProposal": [
+        2,
+        5
+      ],
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "weapon-rocket-launcher",
+      "name": "Shoulder rocket launcher",
+      "png": "./reference-fleet/icons/weapon-rocket-launcher.png",
+      "model": "./authored-assets/prop.reference-weapon-rocket-launcher/v4/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "personal-equipment",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/weapon-rocket-launcher-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": {
+        "png": "./reference-fleet/icons/weapon-rocket-launcher-inventory.png",
+        "width": 256,
+        "height": 768,
+        "cells": [
+          2,
+          6
+        ],
+        "rotatable": true,
+        "cellCssPixels": 64,
+        "status": "proposed"
+      },
+      "inventoryItemId": null,
+      "personalFootprintProposal": [
+        2,
+        6
+      ],
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "weapon-flamethrower",
+      "name": "Flamethrower · canister fed",
+      "png": "./reference-fleet/icons/weapon-flamethrower.png",
+      "model": "./authored-assets/prop.reference-weapon-flamethrower/v4/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "personal-equipment",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/weapon-flamethrower-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": {
+        "png": "./reference-fleet/icons/weapon-flamethrower-inventory.png",
+        "width": 256,
+        "height": 640,
+        "cells": [
+          2,
+          5
+        ],
+        "rotatable": true,
+        "cellCssPixels": 64,
+        "status": "proposed"
+      },
+      "inventoryItemId": null,
+      "personalFootprintProposal": [
+        2,
+        5
+      ],
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "weapon-grenade-frag",
+      "name": "Fragmentation grenade",
+      "png": "./reference-fleet/icons/weapon-grenade-frag.png",
+      "model": "./authored-assets/prop.reference-weapon-grenade-frag/v2/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "personal-equipment",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/weapon-grenade-frag-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": {
+        "png": "./reference-fleet/icons/weapon-grenade-frag-inventory.png",
+        "width": 128,
+        "height": 256,
+        "cells": [
+          1,
+          2
+        ],
+        "rotatable": true,
+        "cellCssPixels": 64,
+        "status": "proposed"
+      },
+      "inventoryItemId": null,
+      "personalFootprintProposal": [
+        1,
+        2
+      ],
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "weapon-grenade-sticky",
+      "name": "Sticky grenade",
+      "png": "./reference-fleet/icons/weapon-grenade-sticky.png",
+      "model": "./authored-assets/prop.reference-weapon-grenade-sticky/v2/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "personal-equipment",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/weapon-grenade-sticky-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": {
+        "png": "./reference-fleet/icons/weapon-grenade-sticky-inventory.png",
+        "width": 128,
+        "height": 256,
+        "cells": [
+          1,
+          2
+        ],
+        "rotatable": true,
+        "cellCssPixels": 64,
+        "status": "proposed"
+      },
+      "inventoryItemId": null,
+      "personalFootprintProposal": [
+        1,
+        2
+      ],
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "weapon-grenade-smoke",
+      "name": "Smoke grenade",
+      "png": "./reference-fleet/icons/weapon-grenade-smoke.png",
+      "model": "./authored-assets/prop.reference-weapon-grenade-smoke/v2/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "personal-equipment",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/weapon-grenade-smoke-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": {
+        "png": "./reference-fleet/icons/weapon-grenade-smoke-inventory.png",
+        "width": 128,
+        "height": 256,
+        "cells": [
+          1,
+          2
+        ],
+        "rotatable": true,
+        "cellCssPixels": 64,
+        "status": "proposed"
+      },
+      "inventoryItemId": null,
+      "personalFootprintProposal": [
+        1,
+        2
+      ],
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "weapon-grenade-flash",
+      "name": "Flash grenade",
+      "png": "./reference-fleet/icons/weapon-grenade-flash.png",
+      "model": "./authored-assets/prop.reference-weapon-grenade-flash/v2/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "personal-equipment",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/weapon-grenade-flash-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": {
+        "png": "./reference-fleet/icons/weapon-grenade-flash-inventory.png",
+        "width": 128,
+        "height": 256,
+        "cells": [
+          1,
+          2
+        ],
+        "rotatable": true,
+        "cellCssPixels": 64,
+        "status": "proposed"
+      },
+      "inventoryItemId": null,
+      "personalFootprintProposal": [
+        1,
+        2
+      ],
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "weapon-c4",
+      "name": "C4-style remote charge",
+      "png": "./reference-fleet/icons/weapon-c4.png",
+      "model": "./authored-assets/prop.reference-weapon-c4/v4/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "personal-equipment",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/weapon-c4-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": {
+        "png": "./reference-fleet/icons/weapon-c4-inventory.png",
+        "width": 256,
+        "height": 128,
+        "cells": [
+          2,
+          1
+        ],
+        "rotatable": true,
+        "cellCssPixels": 64,
+        "status": "proposed"
+      },
+      "inventoryItemId": null,
+      "personalFootprintProposal": [
+        2,
+        1
+      ],
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "weapon-energy-sword",
+      "name": "Laser sword",
+      "png": "./reference-fleet/icons/weapon-energy-sword.png",
+      "model": "./authored-assets/prop.reference-weapon-energy-sword/v5/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "personal-equipment",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/weapon-energy-sword-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": {
+        "png": "./reference-fleet/icons/weapon-energy-sword-inventory.png",
+        "width": 128,
+        "height": 512,
+        "cells": [
+          1,
+          4
+        ],
+        "rotatable": true,
+        "cellCssPixels": 64,
+        "status": "proposed"
+      },
+      "inventoryItemId": null,
+      "personalFootprintProposal": [
+        1,
+        4
+      ],
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "weapon-katana",
+      "name": "Samurai sword",
+      "png": "./reference-fleet/icons/weapon-katana.png",
+      "model": "./authored-assets/prop.reference-weapon-katana/v5/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "personal-equipment",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/weapon-katana-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": {
+        "png": "./reference-fleet/icons/weapon-katana-inventory.png",
+        "width": 128,
+        "height": 512,
+        "cells": [
+          1,
+          4
+        ],
+        "rotatable": true,
+        "cellCssPixels": 64,
+        "status": "proposed"
+      },
+      "inventoryItemId": null,
+      "personalFootprintProposal": [
+        1,
+        4
+      ],
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "weapon-longsword",
+      "name": "Knight sword",
+      "png": "./reference-fleet/icons/weapon-longsword.png",
+      "model": "./authored-assets/prop.reference-weapon-longsword/v5/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "personal-equipment",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/weapon-longsword-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": {
+        "png": "./reference-fleet/icons/weapon-longsword-inventory.png",
+        "width": 128,
+        "height": 512,
+        "cells": [
+          1,
+          4
+        ],
+        "rotatable": true,
+        "cellCssPixels": 64,
+        "status": "proposed"
+      },
+      "inventoryItemId": null,
+      "personalFootprintProposal": [
+        1,
+        4
+      ],
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "weapon-flame-sword",
+      "name": "Flaming sword",
+      "png": "./reference-fleet/icons/weapon-flame-sword.png",
+      "model": "./authored-assets/prop.reference-weapon-flame-sword/v5/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "personal-equipment",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/weapon-flame-sword-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": {
+        "png": "./reference-fleet/icons/weapon-flame-sword-inventory.png",
+        "width": 128,
+        "height": 512,
+        "cells": [
+          1,
+          4
+        ],
+        "rotatable": true,
+        "cellCssPixels": 64,
+        "status": "proposed"
+      },
+      "inventoryItemId": null,
+      "personalFootprintProposal": [
+        1,
+        4
+      ],
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "weapon-spear",
+      "name": "Combat spear",
+      "png": "./reference-fleet/icons/weapon-spear.png",
+      "model": "./authored-assets/prop.reference-weapon-spear/v5/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "personal-equipment",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/weapon-spear-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": {
+        "png": "./reference-fleet/icons/weapon-spear-inventory.png",
+        "width": 128,
+        "height": 896,
+        "cells": [
+          1,
+          7
+        ],
+        "rotatable": true,
+        "cellCssPixels": 64,
+        "status": "proposed"
+      },
+      "inventoryItemId": null,
+      "personalFootprintProposal": [
+        1,
+        7
+      ],
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "weapon-knife",
+      "name": "Combat knife",
+      "png": "./reference-fleet/icons/weapon-knife.png",
+      "model": "./authored-assets/prop.reference-weapon-knife/v5/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "personal-equipment",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/weapon-knife-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": {
+        "png": "./reference-fleet/icons/weapon-knife-inventory.png",
+        "width": 128,
+        "height": 256,
+        "cells": [
+          1,
+          2
+        ],
+        "rotatable": true,
+        "cellCssPixels": 64,
+        "status": "proposed"
+      },
+      "inventoryItemId": null,
+      "personalFootprintProposal": [
+        1,
+        2
+      ],
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "weapon-axe",
+      "name": "Boarding axe",
+      "png": "./reference-fleet/icons/weapon-axe.png",
+      "model": "./authored-assets/prop.reference-weapon-axe/v5/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "personal-equipment",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/weapon-axe-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": {
+        "png": "./reference-fleet/icons/weapon-axe-inventory.png",
+        "width": 256,
+        "height": 384,
+        "cells": [
+          2,
+          3
+        ],
+        "rotatable": true,
+        "cellCssPixels": 64,
+        "status": "proposed"
+      },
+      "inventoryItemId": null,
+      "personalFootprintProposal": [
+        2,
+        3
+      ],
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "weapon-double-axe",
+      "name": "Judgment · double-headed axe",
+      "png": "./reference-fleet/icons/weapon-double-axe.png",
+      "model": "./authored-assets/prop.reference-weapon-double-axe/v3/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "personal-equipment",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/weapon-double-axe-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": {
+        "png": "./reference-fleet/icons/weapon-double-axe-inventory.png",
+        "width": 384,
+        "height": 640,
+        "cells": [
+          3,
+          5
+        ],
+        "rotatable": true,
+        "cellCssPixels": 64,
+        "status": "proposed"
+      },
+      "inventoryItemId": null,
+      "personalFootprintProposal": [
+        3,
+        5
+      ],
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "weapon-impact-hammer",
+      "name": "Thunderhead · impact hammer",
+      "png": "./reference-fleet/icons/weapon-impact-hammer.png",
+      "model": "./authored-assets/prop.reference-weapon-impact-hammer/v3/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "personal-equipment",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/weapon-impact-hammer-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": {
+        "png": "./reference-fleet/icons/weapon-impact-hammer-inventory.png",
+        "width": 384,
+        "height": 512,
+        "cells": [
+          3,
+          4
+        ],
+        "rotatable": true,
+        "cellCssPixels": 64,
+        "status": "proposed"
+      },
+      "inventoryItemId": null,
+      "personalFootprintProposal": [
+        3,
+        4
+      ],
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "weapon-shock-mace",
+      "name": "Blackout · shock mace",
+      "png": "./reference-fleet/icons/weapon-shock-mace.png",
+      "model": "./authored-assets/prop.reference-weapon-shock-mace/v3/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "personal-equipment",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/weapon-shock-mace-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": {
+        "png": "./reference-fleet/icons/weapon-shock-mace-inventory.png",
+        "width": 256,
+        "height": 384,
+        "cells": [
+          2,
+          3
+        ],
+        "rotatable": true,
+        "cellCssPixels": 64,
+        "status": "proposed"
+      },
+      "inventoryItemId": null,
+      "personalFootprintProposal": [
+        2,
+        3
+      ],
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "weapon-energy-staff",
+      "name": "Sentinel · energy staff",
+      "png": "./reference-fleet/icons/weapon-energy-staff.png",
+      "model": "./authored-assets/prop.reference-weapon-energy-staff/v3/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "personal-equipment",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/weapon-energy-staff-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": {
+        "png": "./reference-fleet/icons/weapon-energy-staff-inventory.png",
+        "width": 128,
+        "height": 768,
+        "cells": [
+          1,
+          6
+        ],
+        "rotatable": true,
+        "cellCssPixels": 64,
+        "status": "proposed"
+      },
+      "inventoryItemId": null,
+      "personalFootprintProposal": [
+        1,
+        6
+      ],
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "weapon-aegis-shield",
+      "name": "Aegis · kinetic shield",
+      "png": "./reference-fleet/icons/weapon-aegis-shield.png",
+      "model": "./authored-assets/prop.reference-weapon-aegis-shield/v3/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "personal-equipment",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/weapon-aegis-shield-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": {
+        "png": "./reference-fleet/icons/weapon-aegis-shield-inventory.png",
+        "width": 384,
+        "height": 512,
+        "cells": [
+          3,
+          4
+        ],
+        "rotatable": true,
+        "cellCssPixels": 64,
+        "status": "proposed"
+      },
+      "inventoryItemId": null,
+      "personalFootprintProposal": [
+        3,
+        4
+      ],
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "weapon-claw-gauntlet",
+      "name": "Raptor · claw gauntlet",
+      "png": "./reference-fleet/icons/weapon-claw-gauntlet.png",
+      "model": "./authored-assets/prop.reference-weapon-claw-gauntlet/v3/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "personal-equipment",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/weapon-claw-gauntlet-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": {
+        "png": "./reference-fleet/icons/weapon-claw-gauntlet-inventory.png",
+        "width": 256,
+        "height": 256,
+        "cells": [
+          2,
+          2
+        ],
+        "rotatable": true,
+        "cellCssPixels": 64,
+        "status": "proposed"
+      },
+      "inventoryItemId": null,
+      "personalFootprintProposal": [
+        2,
+        2
+      ],
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "weapon-bow",
+      "name": "Recurve bow",
+      "png": "./reference-fleet/icons/weapon-bow.png",
+      "model": "./authored-assets/prop.reference-weapon-bow/v4/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "personal-equipment",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/weapon-bow-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": {
+        "png": "./reference-fleet/icons/weapon-bow-inventory.png",
+        "width": 256,
+        "height": 640,
+        "cells": [
+          2,
+          5
+        ],
+        "rotatable": true,
+        "cellCssPixels": 64,
+        "status": "proposed"
+      },
+      "inventoryItemId": null,
+      "personalFootprintProposal": [
+        2,
+        5
+      ],
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "weapon-arrow",
+      "name": "Field arrow",
+      "png": "./reference-fleet/icons/weapon-arrow.png",
+      "model": "./authored-assets/prop.reference-weapon-arrow/v1/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "personal-equipment",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/weapon-arrow-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": {
+        "png": "./reference-fleet/icons/weapon-arrow-inventory.png",
+        "width": 128,
+        "height": 384,
+        "cells": [
+          1,
+          3
+        ],
+        "rotatable": true,
+        "cellCssPixels": 64,
+        "status": "proposed"
+      },
+      "inventoryItemId": null,
+      "personalFootprintProposal": [
+        1,
+        3
+      ],
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "weapon-arrow-quiver",
+      "name": "Arrow quiver",
+      "png": "./reference-fleet/icons/weapon-arrow-quiver.png",
+      "model": "./authored-assets/prop.reference-weapon-arrow-quiver/v2/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "personal-equipment",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/weapon-arrow-quiver-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": {
+        "png": "./reference-fleet/icons/weapon-arrow-quiver-inventory.png",
+        "width": 256,
+        "height": 384,
+        "cells": [
+          2,
+          3
+        ],
+        "rotatable": true,
+        "cellCssPixels": 64,
+        "status": "proposed"
+      },
+      "inventoryItemId": null,
+      "personalFootprintProposal": [
+        2,
+        3
+      ],
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "attachment-suppressor",
+      "name": "Modular suppressor",
+      "png": "./reference-fleet/icons/attachment-suppressor.png",
+      "model": "./authored-assets/prop.reference-attachment-suppressor/v2/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "personal-attachment",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/attachment-suppressor-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": {
+        "png": "./reference-fleet/icons/attachment-suppressor-inventory.png",
+        "width": 128,
+        "height": 256,
+        "cells": [
+          1,
+          2
+        ],
+        "rotatable": true,
+        "cellCssPixels": 64,
+        "status": "proposed"
+      },
+      "inventoryItemId": null,
+      "personalFootprintProposal": [
+        1,
+        2
+      ],
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "attachment-optic",
+      "name": "Modular reflex optic",
+      "png": "./reference-fleet/icons/attachment-optic.png",
+      "model": "./authored-assets/prop.reference-attachment-optic/v1/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "personal-attachment",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/attachment-optic-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": {
+        "png": "./reference-fleet/icons/attachment-optic-inventory.png",
+        "width": 128,
+        "height": 128,
+        "cells": [
+          1,
+          1
+        ],
+        "rotatable": true,
+        "cellCssPixels": 64,
+        "status": "proposed"
+      },
+      "inventoryItemId": null,
+      "personalFootprintProposal": [
+        1,
+        1
+      ],
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "attachment-scope",
+      "name": "Modular precision scope",
+      "png": "./reference-fleet/icons/attachment-scope.png",
+      "model": "./authored-assets/prop.reference-attachment-scope/v1/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "personal-attachment",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/attachment-scope-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": {
+        "png": "./reference-fleet/icons/attachment-scope-inventory.png",
+        "width": 128,
+        "height": 384,
+        "cells": [
+          1,
+          3
+        ],
+        "rotatable": true,
+        "cellCssPixels": 64,
+        "status": "proposed"
+      },
+      "inventoryItemId": null,
+      "personalFootprintProposal": [
+        1,
+        3
+      ],
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "parachute",
+      "name": "Troop parachute · deployed",
+      "png": "./reference-fleet/icons/parachute.png",
+      "model": "./authored-assets/prop.reference-parachute/v2/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "deployed-presentation",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/parachute-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": "parachute-pack",
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "parachute-pack",
+      "name": "Troop parachute · packed",
+      "png": "./reference-fleet/icons/parachute-pack.png",
+      "model": "./authored-assets/prop.reference-parachute-pack/v2/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "personal-equipment",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/parachute-pack-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": {
+        "png": "./reference-fleet/icons/parachute-pack-inventory.png",
+        "width": 256,
+        "height": 384,
+        "cells": [
+          2,
+          3
+        ],
+        "rotatable": true,
+        "cellCssPixels": 64,
+        "status": "proposed"
+      },
+      "inventoryItemId": null,
+      "personalFootprintProposal": [
+        2,
+        3
+      ],
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "mothership",
+      "name": "Obsidian mothership",
+      "png": "./reference-fleet/icons/mothership.png",
+      "model": "./authored-assets/prop.reference-mothership/v10/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/mothership-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "mothership-damaged",
+      "name": "Obsidian mothership · damaged",
+      "png": "./reference-fleet/icons/mothership-damaged.png",
+      "model": "./authored-assets/prop.reference-mothership-damaged/v10/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "damaged",
+      "hud": {
+        "png": "./reference-fleet/icons/mothership-damaged-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "mothership-destroyed",
+      "name": "Obsidian mothership · destroyed",
+      "png": "./reference-fleet/icons/mothership-destroyed.png",
+      "model": "./authored-assets/prop.reference-mothership-destroyed/v10/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "destroyed",
+      "hud": {
+        "png": "./reference-fleet/icons/mothership-destroyed-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "mothership-fighter",
+      "name": "Talon launch fighter",
+      "png": "./reference-fleet/icons/mothership-fighter.png",
+      "model": "./authored-assets/prop.reference-mothership-fighter/v2/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/mothership-fighter-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "mothership-fighter-damaged",
+      "name": "Talon launch fighter · damaged",
+      "png": "./reference-fleet/icons/mothership-fighter-damaged.png",
+      "model": "./authored-assets/prop.reference-mothership-fighter-damaged/v2/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "damaged",
+      "hud": {
+        "png": "./reference-fleet/icons/mothership-fighter-damaged-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "mothership-fighter-destroyed",
+      "name": "Talon launch fighter · destroyed",
+      "png": "./reference-fleet/icons/mothership-fighter-destroyed.png",
+      "model": "./authored-assets/prop.reference-mothership-fighter-destroyed/v2/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "destroyed",
+      "hud": {
+        "png": "./reference-fleet/icons/mothership-fighter-destroyed-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "stealth-jet",
+      "name": "Sable stealth jet",
+      "png": "./reference-fleet/icons/stealth-jet.png",
+      "model": "./authored-assets/prop.reference-stealth-jet/v2/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/stealth-jet-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "stealth-jet-damaged",
+      "name": "Sable stealth jet · damaged",
+      "png": "./reference-fleet/icons/stealth-jet-damaged.png",
+      "model": "./authored-assets/prop.reference-stealth-jet-damaged/v2/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "damaged",
+      "hud": {
+        "png": "./reference-fleet/icons/stealth-jet-damaged-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "stealth-jet-destroyed",
+      "name": "Sable stealth jet · destroyed",
+      "png": "./reference-fleet/icons/stealth-jet-destroyed.png",
+      "model": "./authored-assets/prop.reference-stealth-jet-destroyed/v2/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "destroyed",
+      "hud": {
+        "png": "./reference-fleet/icons/stealth-jet-destroyed-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "nanite-hand-claws",
+      "name": "Dec-52 · hand · cutting claws",
+      "png": "./reference-fleet/icons/nanite-hand-claws.png",
+      "model": "./authored-assets/prop.reference-nanite-hand-claws/v1/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "dec52-module",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/nanite-hand-claws-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "nanite-hand-gun",
+      "name": "Dec-52 · hand · bullet gun",
+      "png": "./reference-fleet/icons/nanite-hand-gun.png",
+      "model": "./authored-assets/prop.reference-nanite-hand-gun/v1/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "dec52-module",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/nanite-hand-gun-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "nanite-hand-plasma",
+      "name": "Dec-52 · hand · plasma cannon",
+      "png": "./reference-fleet/icons/nanite-hand-plasma.png",
+      "model": "./authored-assets/prop.reference-nanite-hand-plasma/v1/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "dec52-module",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/nanite-hand-plasma-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "field-rifle",
+      "name": "Service rifle · equipment print",
+      "png": "./reference-fleet/icons/field-rifle.png",
+      "model": "./authored-assets/prop.reference-field-rifle/v2/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "personal-equipment",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/field-rifle-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": {
+        "png": "./reference-fleet/icons/field-rifle-inventory.png",
+        "width": 256,
+        "height": 640,
+        "cells": [
+          2,
+          5
+        ],
+        "rotatable": true,
+        "cellCssPixels": 64,
+        "status": "proposed"
+      },
+      "inventoryItemId": null,
+      "personalFootprintProposal": [
+        2,
+        5
+      ],
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "troop-plane",
+      "name": "Twenty-troop jump transport",
+      "png": "./reference-fleet/icons/troop-plane.png",
+      "model": "./authored-assets/prop.reference-troop-plane/v4/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/troop-plane-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "troop-plane-damaged",
+      "name": "Twenty-troop jump transport · damaged",
+      "png": "./reference-fleet/icons/troop-plane-damaged.png",
+      "model": "./authored-assets/prop.reference-troop-plane-damaged/v4/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "damaged",
+      "hud": {
+        "png": "./reference-fleet/icons/troop-plane-damaged-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "troop-plane-destroyed",
+      "name": "Twenty-troop jump transport · destroyed",
+      "png": "./reference-fleet/icons/troop-plane-destroyed.png",
+      "model": "./authored-assets/prop.reference-troop-plane-destroyed/v4/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "destroyed",
+      "hud": {
+        "png": "./reference-fleet/icons/troop-plane-destroyed-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "hover-transport",
+      "name": "Armed hover transport",
+      "png": "./reference-fleet/icons/hover-transport.png",
+      "model": "./authored-assets/prop.reference-hover-transport/v4/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/hover-transport-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "hover-transport-damaged",
+      "name": "Armed hover transport · damaged",
+      "png": "./reference-fleet/icons/hover-transport-damaged.png",
+      "model": "./authored-assets/prop.reference-hover-transport-damaged/v4/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "damaged",
+      "hud": {
+        "png": "./reference-fleet/icons/hover-transport-damaged-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "hover-transport-destroyed",
+      "name": "Armed hover transport · destroyed",
+      "png": "./reference-fleet/icons/hover-transport-destroyed.png",
+      "model": "./authored-assets/prop.reference-hover-transport-destroyed/v5/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "destroyed",
+      "hud": {
+        "png": "./reference-fleet/icons/hover-transport-destroyed-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "mobile-fabricator",
+      "name": "Mobile vehicle fabricator",
+      "png": "./reference-fleet/icons/mobile-fabricator.png",
+      "model": "./authored-assets/prop.reference-mobile-fabricator/v1/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/mobile-fabricator-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "mobile-fabricator-damaged",
+      "name": "Mobile vehicle fabricator · damaged",
+      "png": "./reference-fleet/icons/mobile-fabricator-damaged.png",
+      "model": "./authored-assets/prop.reference-mobile-fabricator-damaged/v1/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "damaged",
+      "hud": {
+        "png": "./reference-fleet/icons/mobile-fabricator-damaged-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "mobile-fabricator-destroyed",
+      "name": "Mobile vehicle fabricator · destroyed",
+      "png": "./reference-fleet/icons/mobile-fabricator-destroyed.png",
+      "model": "./authored-assets/prop.reference-mobile-fabricator-destroyed/v2/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "destroyed",
+      "hud": {
+        "png": "./reference-fleet/icons/mobile-fabricator-destroyed-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "equipment-printer",
+      "name": "Gear and weapon printer",
+      "png": "./reference-fleet/icons/equipment-printer.png",
+      "model": "./authored-assets/prop.reference-equipment-printer/v1/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/equipment-printer-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "aircraft-printer",
+      "name": "Aircraft fabrication gantry",
+      "png": "./reference-fleet/icons/aircraft-printer.png",
+      "model": "./authored-assets/prop.reference-aircraft-printer/v1/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/aircraft-printer-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "cloning-vat",
+      "name": "Cloning vat",
+      "png": "./reference-fleet/icons/cloning-vat.png",
+      "model": "./authored-assets/prop.reference-cloning-vat/v3/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/cloning-vat-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "fleet-warehouse",
+      "name": "Fleet service warehouse",
+      "png": "./reference-fleet/icons/fleet-warehouse.png",
+      "model": "./authored-assets/prop.reference-fleet-warehouse/v5/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/fleet-warehouse-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "strategic-launcher",
+      "name": "Strategic missile launcher",
+      "png": "./reference-fleet/icons/strategic-launcher.png",
+      "model": "./authored-assets/prop.reference-strategic-launcher/v2/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/strategic-launcher-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "strategic-launcher-damaged",
+      "name": "Strategic missile launcher · damaged",
+      "png": "./reference-fleet/icons/strategic-launcher-damaged.png",
+      "model": "./authored-assets/prop.reference-strategic-launcher-damaged/v1/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "damaged",
+      "hud": {
+        "png": "./reference-fleet/icons/strategic-launcher-damaged-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "strategic-launcher-destroyed",
+      "name": "Strategic missile launcher · destroyed",
+      "png": "./reference-fleet/icons/strategic-launcher-destroyed.png",
+      "model": "./authored-assets/prop.reference-strategic-launcher-destroyed/v2/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "destroyed",
+      "hud": {
+        "png": "./reference-fleet/icons/strategic-launcher-destroyed-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "nanite-cloud",
+      "name": "Dec-52 · cloud",
+      "png": "./reference-fleet/icons/nanite-cloud.png",
+      "model": "./authored-assets/prop.reference-nanite-cloud/v2/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "dec52-unit",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/nanite-cloud-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "nanite-rat",
+      "name": "Dec-52 · rat",
+      "png": "./reference-fleet/icons/nanite-rat.png",
+      "model": "./authored-assets/prop.reference-nanite-rat/v4/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "dec52-unit",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/nanite-rat-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "nanite-hound",
+      "name": "Dec-52 · hound",
+      "png": "./reference-fleet/icons/nanite-hound.png",
+      "model": "./authored-assets/prop.reference-nanite-hound/v4/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "dec52-unit",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/nanite-hound-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "nanite-mech",
+      "name": "Dec-52 · remote mech",
+      "png": "./reference-fleet/icons/nanite-mech.png",
+      "model": "./authored-assets/prop.reference-nanite-mech/v6/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "dec52-unit",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/nanite-mech-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "jet-c",
+      "name": "Two-seat escort jet",
+      "png": "./reference-fleet/icons/jet-c.png",
+      "model": "./authored-assets/prop.reference-jet-c/v2/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/jet-c-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "jet-c-damaged",
+      "name": "Two-seat escort jet · damaged",
+      "png": "./reference-fleet/icons/jet-c-damaged.png",
+      "model": "./authored-assets/prop.reference-jet-c-damaged/v4/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "damaged",
+      "hud": {
+        "png": "./reference-fleet/icons/jet-c-damaged-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "jet-c-destroyed",
+      "name": "Two-seat escort jet · destroyed",
+      "png": "./reference-fleet/icons/jet-c-destroyed.png",
+      "model": "./authored-assets/prop.reference-jet-c-destroyed/v1/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "destroyed",
+      "hud": {
+        "png": "./reference-fleet/icons/jet-c-destroyed-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "aircraft-carrier",
+      "name": "Aircraft carrier · mobile airbase",
+      "png": "./reference-fleet/icons/aircraft-carrier.png",
+      "model": "./authored-assets/prop.reference-aircraft-carrier/v7/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/aircraft-carrier-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "aircraft-carrier-damaged",
+      "name": "Aircraft carrier · mobile airbase · damaged",
+      "png": "./reference-fleet/icons/aircraft-carrier-damaged.png",
+      "model": "./authored-assets/prop.reference-aircraft-carrier-damaged/v7/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "damaged",
+      "hud": {
+        "png": "./reference-fleet/icons/aircraft-carrier-damaged-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "aircraft-carrier-destroyed",
+      "name": "Aircraft carrier · mobile airbase · destroyed",
+      "png": "./reference-fleet/icons/aircraft-carrier-destroyed.png",
+      "model": "./authored-assets/prop.reference-aircraft-carrier-destroyed/v8/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "destroyed",
+      "hud": {
+        "png": "./reference-fleet/icons/aircraft-carrier-destroyed-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "cargo-transport",
+      "name": "Armored cargo transport",
+      "png": "./reference-fleet/icons/cargo-transport.png",
+      "model": "./authored-assets/prop.reference-cargo-transport/v1/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/cargo-transport-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "cargo-transport-damaged",
+      "name": "Armored cargo transport · damaged",
+      "png": "./reference-fleet/icons/cargo-transport-damaged.png",
+      "model": "./authored-assets/prop.reference-cargo-transport-damaged/v1/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "damaged",
+      "hud": {
+        "png": "./reference-fleet/icons/cargo-transport-damaged-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "cargo-transport-destroyed",
+      "name": "Armored cargo transport · destroyed",
+      "png": "./reference-fleet/icons/cargo-transport-destroyed.png",
+      "model": "./authored-assets/prop.reference-cargo-transport-destroyed/v2/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "destroyed",
+      "hud": {
+        "png": "./reference-fleet/icons/cargo-transport-destroyed-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "runway-strip",
+      "name": "Modular airstrip",
+      "png": "./reference-fleet/icons/runway-strip.png",
+      "model": "./authored-assets/prop.reference-runway-strip/v1/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/runway-strip-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "vehicle-printer",
+      "name": "Vehicle fabrication gantry",
+      "png": "./reference-fleet/icons/vehicle-printer.png",
+      "model": "./authored-assets/prop.reference-vehicle-printer/v1/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/vehicle-printer-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "missile-cell",
+      "name": "Cell missile · folded fins",
+      "png": "./reference-fleet/icons/missile-cell.png",
+      "model": "./authored-assets/prop.reference-missile-cell/v1/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-ordnance",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/missile-cell-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "hoverboard",
+      "name": "Thrust hoverboard",
+      "png": "./reference-fleet/icons/hoverboard.png",
+      "model": "./authored-assets/prop.reference-hoverboard/v3/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/hoverboard-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "hoverboard-damaged",
+      "name": "Thrust hoverboard · damaged",
+      "png": "./reference-fleet/icons/hoverboard-damaged.png",
+      "model": "./authored-assets/prop.reference-hoverboard-damaged/v2/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "damaged",
+      "hud": {
+        "png": "./reference-fleet/icons/hoverboard-damaged-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "hoverboard-destroyed",
+      "name": "Thrust hoverboard · destroyed",
+      "png": "./reference-fleet/icons/hoverboard-destroyed.png",
+      "model": "./authored-assets/prop.reference-hoverboard-destroyed/v2/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "destroyed",
+      "hud": {
+        "png": "./reference-fleet/icons/hoverboard-destroyed-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "drone-carrier",
+      "name": "Drone carrier · Kestrel",
+      "png": "./reference-fleet/icons/drone-carrier.png",
+      "model": "./authored-assets/prop.reference-drone-carrier/v5/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/drone-carrier-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "drone-carrier-damaged",
+      "name": "Drone carrier · Kestrel · damaged",
+      "png": "./reference-fleet/icons/drone-carrier-damaged.png",
+      "model": "./authored-assets/prop.reference-drone-carrier-damaged/v2/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "damaged",
+      "hud": {
+        "png": "./reference-fleet/icons/drone-carrier-damaged-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "drone-carrier-destroyed",
+      "name": "Drone carrier · Kestrel · destroyed",
+      "png": "./reference-fleet/icons/drone-carrier-destroyed.png",
+      "model": "./authored-assets/prop.reference-drone-carrier-destroyed/v1/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "destroyed",
+      "hud": {
+        "png": "./reference-fleet/icons/drone-carrier-destroyed-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "drone-tank",
+      "name": "Drone tank · Sentinel",
+      "png": "./reference-fleet/icons/drone-tank.png",
+      "model": "./authored-assets/prop.reference-drone-tank/v1/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/drone-tank-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "drone-tank-damaged",
+      "name": "Drone tank · Sentinel · damaged",
+      "png": "./reference-fleet/icons/drone-tank-damaged.png",
+      "model": "./authored-assets/prop.reference-drone-tank-damaged/v1/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "damaged",
+      "hud": {
+        "png": "./reference-fleet/icons/drone-tank-damaged-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "drone-tank-destroyed",
+      "name": "Drone tank · Sentinel · destroyed",
+      "png": "./reference-fleet/icons/drone-tank-destroyed.png",
+      "model": "./authored-assets/prop.reference-drone-tank-destroyed/v3/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "destroyed",
+      "hud": {
+        "png": "./reference-fleet/icons/drone-tank-destroyed-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "mech-light",
+      "name": "Light mech · outrider",
+      "png": "./reference-fleet/icons/mech-light.png",
+      "model": "./authored-assets/prop.reference-mech-light/v6/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/mech-light-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "mech-light-damaged",
+      "name": "Light mech · outrider · damaged",
+      "png": "./reference-fleet/icons/mech-light-damaged.png",
+      "model": "./authored-assets/prop.reference-mech-light-damaged/v2/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "damaged",
+      "hud": {
+        "png": "./reference-fleet/icons/mech-light-damaged-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "mech-light-destroyed",
+      "name": "Light mech · outrider · destroyed",
+      "png": "./reference-fleet/icons/mech-light-destroyed.png",
+      "model": "./authored-assets/prop.reference-mech-light-destroyed/v2/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "destroyed",
+      "hud": {
+        "png": "./reference-fleet/icons/mech-light-destroyed-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "mech-medium",
+      "name": "Medium mech · all-purpose",
+      "png": "./reference-fleet/icons/mech-medium.png",
+      "model": "./authored-assets/prop.reference-mech-medium/v4/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/mech-medium-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "mech-medium-damaged",
+      "name": "Medium mech · all-purpose · damaged",
+      "png": "./reference-fleet/icons/mech-medium-damaged.png",
+      "model": "./authored-assets/prop.reference-mech-medium-damaged/v2/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "damaged",
+      "hud": {
+        "png": "./reference-fleet/icons/mech-medium-damaged-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "mech-medium-destroyed",
+      "name": "Medium mech · all-purpose · destroyed",
+      "png": "./reference-fleet/icons/mech-medium-destroyed.png",
+      "model": "./authored-assets/prop.reference-mech-medium-destroyed/v2/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "destroyed",
+      "hud": {
+        "png": "./reference-fleet/icons/mech-medium-destroyed-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "mech-heavy",
+      "name": "Heavy mech · two-crew",
+      "png": "./reference-fleet/icons/mech-heavy.png",
+      "model": "./authored-assets/prop.reference-mech-heavy/v5/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/mech-heavy-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "mech-heavy-damaged",
+      "name": "Heavy mech · two-crew · damaged",
+      "png": "./reference-fleet/icons/mech-heavy-damaged.png",
+      "model": "./authored-assets/prop.reference-mech-heavy-damaged/v2/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "damaged",
+      "hud": {
+        "png": "./reference-fleet/icons/mech-heavy-damaged-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "mech-heavy-destroyed",
+      "name": "Heavy mech · two-crew · destroyed",
+      "png": "./reference-fleet/icons/mech-heavy-destroyed.png",
+      "model": "./authored-assets/prop.reference-mech-heavy-destroyed/v2/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "destroyed",
+      "hud": {
+        "png": "./reference-fleet/icons/mech-heavy-destroyed-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "spider-mine",
+      "name": "Spider mine",
+      "png": "./reference-fleet/icons/spider-mine.png",
+      "model": "./authored-assets/prop.reference-spider-mine/v3/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "personal-equipment",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/spider-mine-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": {
+        "png": "./reference-fleet/icons/spider-mine-inventory.png",
+        "width": 256,
+        "height": 256,
+        "cells": [
+          2,
+          2
+        ],
+        "rotatable": true,
+        "cellCssPixels": 64,
+        "status": "proposed"
+      },
+      "inventoryItemId": null,
+      "personalFootprintProposal": [
+        2,
+        2
+      ],
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "spider-mine-buried",
+      "name": "Spider mine · concealed",
+      "png": "./reference-fleet/icons/spider-mine-buried.png",
+      "model": "./authored-assets/prop.reference-spider-mine-buried/v3/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "deployed-presentation",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/spider-mine-buried-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": "spider-mine",
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "nuclear-bomb",
+      "name": "Nuclear bomb · air-dropped",
+      "png": "./reference-fleet/icons/nuclear-bomb.png",
+      "model": "./authored-assets/prop.reference-nuclear-bomb/v4/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-ordnance",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/nuclear-bomb-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "nuclear-missile",
+      "name": "Nuclear missile · long-range",
+      "png": "./reference-fleet/icons/nuclear-missile.png",
+      "model": "./authored-assets/prop.reference-nuclear-missile/v4/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-ordnance",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/nuclear-missile-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "radar-station",
+      "name": "Radar station",
+      "png": "./reference-fleet/icons/radar-station.png",
+      "model": "./authored-assets/prop.reference-radar-station/v1/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/radar-station-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "radar-station-damaged",
+      "name": "Radar station · damaged",
+      "png": "./reference-fleet/icons/radar-station-damaged.png",
+      "model": "./authored-assets/prop.reference-radar-station-damaged/v1/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "damaged",
+      "hud": {
+        "png": "./reference-fleet/icons/radar-station-damaged-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "radar-station-destroyed",
+      "name": "Radar station · destroyed",
+      "png": "./reference-fleet/icons/radar-station-destroyed.png",
+      "model": "./authored-assets/prop.reference-radar-station-destroyed/v2/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "destroyed",
+      "hud": {
+        "png": "./reference-fleet/icons/radar-station-destroyed-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "aa-gun-auto",
+      "name": "Automatic anti-air gun",
+      "png": "./reference-fleet/icons/aa-gun-auto.png",
+      "model": "./authored-assets/prop.reference-aa-gun-auto/v2/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/aa-gun-auto-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "aa-gun-auto-damaged",
+      "name": "Automatic anti-air gun · damaged",
+      "png": "./reference-fleet/icons/aa-gun-auto-damaged.png",
+      "model": "./authored-assets/prop.reference-aa-gun-auto-damaged/v1/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "damaged",
+      "hud": {
+        "png": "./reference-fleet/icons/aa-gun-auto-damaged-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "aa-gun-auto-destroyed",
+      "name": "Automatic anti-air gun · destroyed",
+      "png": "./reference-fleet/icons/aa-gun-auto-destroyed.png",
+      "model": "./authored-assets/prop.reference-aa-gun-auto-destroyed/v4/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "destroyed",
+      "hud": {
+        "png": "./reference-fleet/icons/aa-gun-auto-destroyed-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "aa-gun-manned",
+      "name": "Seated anti-air gun",
+      "png": "./reference-fleet/icons/aa-gun-manned.png",
+      "model": "./authored-assets/prop.reference-aa-gun-manned/v6/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/aa-gun-manned-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "aa-gun-manned-damaged",
+      "name": "Seated anti-air gun · damaged",
+      "png": "./reference-fleet/icons/aa-gun-manned-damaged.png",
+      "model": "./authored-assets/prop.reference-aa-gun-manned-damaged/v3/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "damaged",
+      "hud": {
+        "png": "./reference-fleet/icons/aa-gun-manned-damaged-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "aa-gun-manned-destroyed",
+      "name": "Seated anti-air gun · destroyed",
+      "png": "./reference-fleet/icons/aa-gun-manned-destroyed.png",
+      "model": "./authored-assets/prop.reference-aa-gun-manned-destroyed/v4/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "destroyed",
+      "hud": {
+        "png": "./reference-fleet/icons/aa-gun-manned-destroyed-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "aa-missile-auto",
+      "name": "Automatic missile battery",
+      "png": "./reference-fleet/icons/aa-missile-auto.png",
+      "model": "./authored-assets/prop.reference-aa-missile-auto/v1/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/aa-missile-auto-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "aa-missile-auto-damaged",
+      "name": "Automatic missile battery · damaged",
+      "png": "./reference-fleet/icons/aa-missile-auto-damaged.png",
+      "model": "./authored-assets/prop.reference-aa-missile-auto-damaged/v1/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "damaged",
+      "hud": {
+        "png": "./reference-fleet/icons/aa-missile-auto-damaged-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "aa-missile-auto-destroyed",
+      "name": "Automatic missile battery · destroyed",
+      "png": "./reference-fleet/icons/aa-missile-auto-destroyed.png",
+      "model": "./authored-assets/prop.reference-aa-missile-auto-destroyed/v2/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "destroyed",
+      "hud": {
+        "png": "./reference-fleet/icons/aa-missile-auto-destroyed-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "aa-missile-manned",
+      "name": "Seated missile battery",
+      "png": "./reference-fleet/icons/aa-missile-manned.png",
+      "model": "./authored-assets/prop.reference-aa-missile-manned/v4/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/aa-missile-manned-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "aa-missile-manned-damaged",
+      "name": "Seated missile battery · damaged",
+      "png": "./reference-fleet/icons/aa-missile-manned-damaged.png",
+      "model": "./authored-assets/prop.reference-aa-missile-manned-damaged/v2/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "damaged",
+      "hud": {
+        "png": "./reference-fleet/icons/aa-missile-manned-damaged-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "aa-missile-manned-destroyed",
+      "name": "Seated missile battery · destroyed",
+      "png": "./reference-fleet/icons/aa-missile-manned-destroyed.png",
+      "model": "./authored-assets/prop.reference-aa-missile-manned-destroyed/v2/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "destroyed",
+      "hud": {
+        "png": "./reference-fleet/icons/aa-missile-manned-destroyed-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "jet-a",
+      "name": "Strike jet",
+      "png": "./reference-fleet/icons/jet-a.png",
+      "model": "./authored-assets/prop.reference-jet-a/v15/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/jet-a-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "jet-a-damaged",
+      "name": "Strike jet · damaged",
+      "png": "./reference-fleet/icons/jet-a-damaged.png",
+      "model": "./authored-assets/prop.reference-jet-a-damaged/v16/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "damaged",
+      "hud": {
+        "png": "./reference-fleet/icons/jet-a-damaged-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "jet-a-destroyed",
+      "name": "Strike jet · destroyed",
+      "png": "./reference-fleet/icons/jet-a-destroyed.png",
+      "model": "./authored-assets/prop.reference-jet-a-destroyed/v1/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "destroyed",
+      "hud": {
+        "png": "./reference-fleet/icons/jet-a-destroyed-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "jet-b",
+      "name": "Interceptor",
+      "png": "./reference-fleet/icons/jet-b.png",
+      "model": "./authored-assets/prop.reference-jet-b/v15/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/jet-b-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "jet-b-damaged",
+      "name": "Interceptor · damaged",
+      "png": "./reference-fleet/icons/jet-b-damaged.png",
+      "model": "./authored-assets/prop.reference-jet-b-damaged/v16/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "damaged",
+      "hud": {
+        "png": "./reference-fleet/icons/jet-b-damaged-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "jet-b-destroyed",
+      "name": "Interceptor · destroyed",
+      "png": "./reference-fleet/icons/jet-b-destroyed.png",
+      "model": "./authored-assets/prop.reference-jet-b-destroyed/v1/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "destroyed",
+      "hud": {
+        "png": "./reference-fleet/icons/jet-b-destroyed-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "helicopter",
+      "name": "Attack helicopter",
+      "png": "./reference-fleet/icons/helicopter.png",
+      "model": "./authored-assets/prop.reference-helicopter/v8/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/helicopter-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "helicopter-damaged",
+      "name": "Attack helicopter · damaged",
+      "png": "./reference-fleet/icons/helicopter-damaged.png",
+      "model": "./authored-assets/prop.reference-helicopter-damaged/v9/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "damaged",
+      "hud": {
+        "png": "./reference-fleet/icons/helicopter-damaged-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "helicopter-destroyed",
+      "name": "Attack helicopter · destroyed",
+      "png": "./reference-fleet/icons/helicopter-destroyed.png",
+      "model": "./authored-assets/prop.reference-helicopter-destroyed/v1/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "destroyed",
+      "hud": {
+        "png": "./reference-fleet/icons/helicopter-destroyed-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "tank",
+      "name": "Battle tank",
+      "png": "./reference-fleet/icons/tank.png",
+      "model": "./authored-assets/prop.reference-tank/v7/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/tank-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "tank-damaged",
+      "name": "Battle tank · damaged",
+      "png": "./reference-fleet/icons/tank-damaged.png",
+      "model": "./authored-assets/prop.reference-tank-damaged/v7/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "damaged",
+      "hud": {
+        "png": "./reference-fleet/icons/tank-damaged-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "tank-destroyed",
+      "name": "Battle tank · destroyed",
+      "png": "./reference-fleet/icons/tank-destroyed.png",
+      "model": "./authored-assets/prop.reference-tank-destroyed/v2/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "destroyed",
+      "hud": {
+        "png": "./reference-fleet/icons/tank-destroyed-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "bomber",
+      "name": "Heavy bomber",
+      "png": "./reference-fleet/icons/bomber.png",
+      "model": "./authored-assets/prop.reference-bomber/v16/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/bomber-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "bomber-damaged",
+      "name": "Heavy bomber · damaged",
+      "png": "./reference-fleet/icons/bomber-damaged.png",
+      "model": "./authored-assets/prop.reference-bomber-damaged/v14/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "damaged",
+      "hud": {
+        "png": "./reference-fleet/icons/bomber-damaged-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "bomber-destroyed",
+      "name": "Heavy bomber · destroyed",
+      "png": "./reference-fleet/icons/bomber-destroyed.png",
+      "model": "./authored-assets/prop.reference-bomber-destroyed/v4/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "destroyed",
+      "hud": {
+        "png": "./reference-fleet/icons/bomber-destroyed-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "motorcycle",
+      "name": "Pursuit motorcycle",
+      "png": "./reference-fleet/icons/motorcycle.png",
+      "model": "./authored-assets/prop.reference-motorcycle/v6/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/motorcycle-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "motorcycle-damaged",
+      "name": "Pursuit motorcycle · damaged",
+      "png": "./reference-fleet/icons/motorcycle-damaged.png",
+      "model": "./authored-assets/prop.reference-motorcycle-damaged/v6/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "damaged",
+      "hud": {
+        "png": "./reference-fleet/icons/motorcycle-damaged-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "motorcycle-destroyed",
+      "name": "Pursuit motorcycle · destroyed",
+      "png": "./reference-fleet/icons/motorcycle-destroyed.png",
+      "model": "./authored-assets/prop.reference-motorcycle-destroyed/v1/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "destroyed",
+      "hud": {
+        "png": "./reference-fleet/icons/motorcycle-destroyed-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "atv",
+      "name": "ATV",
+      "png": "./reference-fleet/icons/atv.png",
+      "model": "./authored-assets/prop.reference-atv/v4/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/atv-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "atv-damaged",
+      "name": "ATV · damaged",
+      "png": "./reference-fleet/icons/atv-damaged.png",
+      "model": "./authored-assets/prop.reference-atv-damaged/v4/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "damaged",
+      "hud": {
+        "png": "./reference-fleet/icons/atv-damaged-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "atv-destroyed",
+      "name": "ATV · destroyed",
+      "png": "./reference-fleet/icons/atv-destroyed.png",
+      "model": "./authored-assets/prop.reference-atv-destroyed/v2/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "destroyed",
+      "hud": {
+        "png": "./reference-fleet/icons/atv-destroyed-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "humvee",
+      "name": "Armored utility",
+      "png": "./reference-fleet/icons/humvee.png",
+      "model": "./authored-assets/prop.reference-humvee/v8/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/humvee-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "humvee-damaged",
+      "name": "Armored utility · damaged",
+      "png": "./reference-fleet/icons/humvee-damaged.png",
+      "model": "./authored-assets/prop.reference-humvee-damaged/v8/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "damaged",
+      "hud": {
+        "png": "./reference-fleet/icons/humvee-damaged-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "humvee-destroyed",
+      "name": "Armored utility · destroyed",
+      "png": "./reference-fleet/icons/humvee-destroyed.png",
+      "model": "./authored-assets/prop.reference-humvee-destroyed/v3/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "destroyed",
+      "hud": {
+        "png": "./reference-fleet/icons/humvee-destroyed-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "jetpack",
+      "name": "Jetpack",
+      "png": "./reference-fleet/icons/jetpack.png",
+      "model": "./authored-assets/prop.reference-jetpack/v2/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "personal-equipment",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/jetpack-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": {
+        "png": "./reference-fleet/icons/jetpack-inventory.png",
+        "width": 256,
+        "height": 384,
+        "cells": [
+          2,
+          3
+        ],
+        "rotatable": true,
+        "cellCssPixels": 64,
+        "status": "proposed"
+      },
+      "inventoryItemId": null,
+      "personalFootprintProposal": [
+        2,
+        3
+      ],
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "swarm-drone",
+      "name": "Swarm drone",
+      "png": "./reference-fleet/icons/swarm-drone.png",
+      "model": "./authored-assets/prop.reference-swarm-drone/v2/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "personal-equipment",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/swarm-drone-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": {
+        "png": "./reference-fleet/icons/swarm-drone-inventory.png",
+        "width": 256,
+        "height": 256,
+        "cells": [
+          2,
+          2
+        ],
+        "rotatable": true,
+        "cellCssPixels": 64,
+        "status": "proposed"
+      },
+      "inventoryItemId": null,
+      "personalFootprintProposal": [
+        2,
+        2
+      ],
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "gun-drone",
+      "name": "Machine-gun drone",
+      "png": "./reference-fleet/icons/gun-drone.png",
+      "model": "./authored-assets/prop.reference-gun-drone/v2/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "personal-equipment",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/gun-drone-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": {
+        "png": "./reference-fleet/icons/gun-drone-inventory.png",
+        "width": 256,
+        "height": 256,
+        "cells": [
+          2,
+          2
+        ],
+        "rotatable": true,
+        "cellCssPixels": 64,
+        "status": "proposed"
+      },
+      "inventoryItemId": null,
+      "personalFootprintProposal": [
+        2,
+        2
+      ],
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "kamikaze-drone",
+      "name": "Kamikaze drone",
+      "png": "./reference-fleet/icons/kamikaze-drone.png",
+      "model": "./authored-assets/prop.reference-kamikaze-drone/v1/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "personal-equipment",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/kamikaze-drone-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": {
+        "png": "./reference-fleet/icons/kamikaze-drone-inventory.png",
+        "width": 128,
+        "height": 256,
+        "cells": [
+          1,
+          2
+        ],
+        "rotatable": true,
+        "cellCssPixels": 64,
+        "status": "proposed"
+      },
+      "inventoryItemId": null,
+      "personalFootprintProposal": [
+        1,
+        2
+      ],
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "aa-tank",
+      "name": "Anti-air missile tank",
+      "png": "./reference-fleet/icons/aa-tank.png",
+      "model": "./authored-assets/prop.reference-aa-tank/v5/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/aa-tank-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "aa-tank-damaged",
+      "name": "Anti-air missile tank · damaged",
+      "png": "./reference-fleet/icons/aa-tank-damaged.png",
+      "model": "./authored-assets/prop.reference-aa-tank-damaged/v5/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "damaged",
+      "hud": {
+        "png": "./reference-fleet/icons/aa-tank-damaged-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "aa-tank-destroyed",
+      "name": "Anti-air missile tank · destroyed",
+      "png": "./reference-fleet/icons/aa-tank-destroyed.png",
+      "model": "./authored-assets/prop.reference-aa-tank-destroyed/v2/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-and-base",
+      "appearance": "destroyed",
+      "hud": {
+        "png": "./reference-fleet/icons/aa-tank-destroyed-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "missile-small",
+      "name": "Small seeker missile",
+      "png": "./reference-fleet/icons/missile-small.png",
+      "model": "./authored-assets/prop.reference-missile-small/v1/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-ordnance",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/missile-small-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    },
+    {
+      "id": "missile-large",
+      "name": "Large seeker missile",
+      "png": "./reference-fleet/icons/missile-large.png",
+      "model": "./authored-assets/prop.reference-missile-large/v1/model.glb",
+      "width": 512,
+      "height": 512,
+      "alpha": true,
+      "revision": 2,
+      "category": "vehicle-ordnance",
+      "appearance": "intact",
+      "hud": {
+        "png": "./reference-fleet/icons/missile-large-hud.png",
+        "width": 128,
+        "height": 128
+      },
+      "inventory": null,
+      "inventoryItemId": null,
+      "personalFootprintProposal": null,
+      "source": "Rendered from authored GLB; no gameplay issuance implied"
+    }
+  ]
+}

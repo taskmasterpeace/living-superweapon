@@ -1,0 +1,512 @@
+{
+ "format": "pw-asset-package",
+ "formatVersion": 1,
+ "id": "prop.reference-aircraft-carrier-damaged",
+ "version": 2,
+ "kind": "prop",
+ "displayName": "Aircraft carrier · mobile airbase · damaged",
+ "tags": [
+  "reference-fleet",
+  "sea"
+ ],
+ "rig": {
+  "skeleton": "none"
+ },
+ "sockets": [
+  {
+   "name": "cloning-room-view",
+   "parent": "aircraft-carrier",
+   "position": [
+    -63.15789,
+    37.10526,
+    242.10526
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "corridor-view",
+   "parent": "aircraft-carrier",
+   "position": [
+    -63.15789,
+    37.10526,
+    -184.21053
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "deck-aircraft",
+   "parent": "aircraft-carrier",
+   "position": [
+    0,
+    96.63158,
+    368.42105
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "deck-printer",
+   "parent": "aircraft-carrier",
+   "position": [
+    0,
+    96.63158,
+    -368.42105
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "driver",
+   "parent": "aircraft-carrier",
+   "position": [
+    80.52632,
+    130.78947,
+    189.47368
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "entry-driver",
+   "parent": "aircraft-carrier",
+   "position": [
+    -129.73684,
+    0.52632,
+    189.47368
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "entry-passenger",
+   "parent": "aircraft-carrier",
+   "position": [
+    129.73684,
+    0.52632,
+    189.47368
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "equipment-room-view",
+   "parent": "aircraft-carrier",
+   "position": [
+    -63.15789,
+    37.10526,
+    315.78947
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "hangar-center",
+   "parent": "aircraft-carrier",
+   "position": [
+    0,
+    31.57895,
+    -131.57895
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "hangar-entry",
+   "parent": "aircraft-carrier",
+   "position": [
+    0,
+    28.68421,
+    -657.89474
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "hangar-park-left",
+   "parent": "aircraft-carrier",
+   "position": [
+    -40.52632,
+    28.52632,
+    -410.52632
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "hangar-park-right",
+   "parent": "aircraft-carrier",
+   "position": [
+    40.52632,
+    28.52632,
+    -410.52632
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-eye-driver",
+   "parent": "socket-seat-driver",
+   "position": [
+    0,
+    5,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-eye-passenger",
+   "parent": "socket-seat-passenger",
+   "position": [
+    0,
+    5,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-torso-driver",
+   "parent": "socket-seat-driver",
+   "position": [
+    0,
+    2.52632,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-torso-passenger",
+   "parent": "socket-seat-passenger",
+   "position": [
+    0,
+    2.52632,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "passenger",
+   "parent": "aircraft-carrier",
+   "position": [
+    98.42105,
+    130.78947,
+    189.47368
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "seat-driver",
+   "parent": "crew-chair-driver",
+   "position": [
+    0,
+    0.34211,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "seat-passenger",
+   "parent": "crew-chair-passenger",
+   "position": [
+    0,
+    0.34211,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "service-equipment",
+   "parent": "aircraft-carrier",
+   "position": [
+    -60.52632,
+    28.52632,
+    342.10526
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "service-vat",
+   "parent": "aircraft-carrier",
+   "position": [
+    -60.52632,
+    28.52632,
+    278.94737
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  }
+ ],
+ "bounds": {
+  "min": [
+   -126.31579,
+   0,
+   -663.1579
+  ],
+  "max": [
+   126.31579,
+   205.26315,
+   663.1579
+  ]
+ },
+ "materials": [
+  {
+   "name": "condition-damaged-fleet-painted-parts"
+  },
+  {
+   "name": "condition-damaged-fleet-glass"
+  },
+  {
+   "name": "condition-damaged-fleet-machine"
+  },
+  {
+   "name": "condition-damaged-fleet-edge"
+  },
+  {
+   "name": "condition-damaged-fleet-armor"
+  },
+  {
+   "name": "condition-damaged-fleet-red"
+  }
+ ],
+ "lods": [
+  {
+   "level": 0,
+   "output": "model.glb",
+   "triangles": 1784
+  }
+ ],
+ "units": {
+  "lengthUnit": "game-unit",
+  "metersPerUnit": 0.19,
+  "up": "+Y",
+  "forward": "+Z",
+  "handedness": "right",
+  "sourceConversion": {
+   "scale": 1,
+   "yawDegrees": 0,
+   "mirrorX": false,
+   "sourceUp": "+Y",
+   "sourceForward": "+Z",
+   "note": "authored directly in game units along the engine weapon axis (-Y toward the muzzle)"
+  }
+ },
+ "budgets": {
+  "profile": "desktop",
+  "measured": {
+   "triangles": 1784,
+   "drawCalls": 10,
+   "materials": 6,
+   "bones": 0,
+   "textures": 0,
+   "bytes": 203060
+  },
+  "limits": {
+   "triangles": 67793,
+   "drawCalls": 32,
+   "materials": 9,
+   "bones": 1,
+   "textures": 4,
+   "bytes": 3170030
+  }
+ },
+ "structural": {
+  "validator": "2.0.0-dev.3.10",
+  "errors": 0,
+  "warnings": 0
+ },
+ "provenance": {
+  "author": "Machine King Labs",
+  "license": "proprietary",
+  "terms": "Original model geometry authored for this project from creator-supplied concept references; reference redistribution rights are not independently verified.",
+  "redistribution": "internal",
+  "attribution": "Creator-supplied September 12, 2026 concepts."
+ },
+ "source": {
+  "adapter": "procedural-prop@1",
+  "files": [
+   {
+    "path": "authoring/recipes/reference-fleet/static-batch.js",
+    "sha256": "30f54b24ce61f0a9abf27b94795360e1f9e2a5ee6125924d1c79cf591591246f"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/expedition.js",
+    "sha256": "184d3c79b3920acb9e6b1936bd830f2c97b7ec88897b92b3c4dfa10777a8127e"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/nanite-forms.js",
+    "sha256": "35170d28c70f30b82a7c610521427b9e2bbde7f2fd538fc243edc0f38f90494e"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/models.js",
+    "sha256": "159924f182b21ed7689f7702cfd712e0204c34a76d9fae825e29d73c7279b94b"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/logistics.js",
+    "sha256": "91bd34ea3a755cf8f2b74e5f0936d810c86242d013f219347128bd561b1e136f"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/ordnance.js",
+    "sha256": "ab2369438732b8cf9036d2645705dd15c0eb77ccfef7b72212bd41039c805372"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/condition.js",
+    "sha256": "db23e1bf130ccdc847798894ecf4c8bd97ed641c91b6d8e40a1094f1aa2f991d"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/air-mobility.js",
+    "sha256": "778f8f67a4f9560fbe8ce38828766c385b7ce739eafda7d84eb652fe9b439f77"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/damage.js",
+    "sha256": "0c34abc49ebe1feacfbe9ef6cc1f850ea12cab5bf5dbcfb7ecef54976a7affef"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/defense.js",
+    "sha256": "b3e912db260966d8936526b89e678358f3376b4a32c090e097d1046f3f2c710a"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/mechs.js",
+    "sha256": "4aa82d05f85799cba45040e179b5215cded994d368d313f534b1cc3d19c574c4"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/drone-tank.js",
+    "sha256": "ffb9bc81e598700abce165ce4ee960d8a1d133d52fecba4ef9f80f6aa4d144ff"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/crew-interiors.js",
+    "sha256": "0048d0e741b0d7a7704e8fccd13cc53c6b4b298f5bd26704489f8aa57474802d"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/spider-mine.js",
+    "sha256": "cfa4f246a18744c2dd9ee1418906d323a700c47e3a5ecfe333ad6ef33fc6c424"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/aircraft-carrier-damaged/model.js",
+    "sha256": "ec9b3acaf69aba2860ee8fc412f6596d9ceaa5523834723c391f6ad3c90ba358"
+   }
+  ],
+  "recipe": {
+   "path": "authoring/recipes/reference-fleet/aircraft-carrier-damaged/recipe.json",
+   "sha256": "db68528620032359da6b7b82851e96734a161665bbfe6bb3051d64f67c9623fd"
+  }
+ },
+ "tool": {
+  "name": "powerworld-authoring",
+  "version": "0.1.0",
+  "three": "0.169.0",
+  "adapterVersion": 1
+ },
+ "build": {
+  "options": {},
+  "cacheKey": "bcccc0250451d6e1a51e97fea49a3695d979f839504ff08f843c8d3bbdc06589",
+  "contentHash": "c0029b945c4e0f214788cf0b56e2901d16d6d1c08ba11d219351632bfc9327b8",
+  "profile": "desktop"
+ },
+ "acceptance": {
+  "visual": "unapproved",
+  "blockers": [],
+  "note": "18 Strike jet lengths · open stern hangar · removable flight deck · bridge seats; model and scale candidate, no handling or live equipment integration."
+ },
+ "outputs": [
+  {
+   "path": "model.glb",
+   "role": "glb",
+   "sha256": "c89a69ea2be7d1d089300a6a7d5d128be572d24df39ef57f045003d587c1eaad",
+   "bytes": 203060
+  }
+ ],
+ "packageHash": "6ae5684d444ab2bce9fae2623e54791c46698a36ecf6106bfbb3ced103a4224c"
+}

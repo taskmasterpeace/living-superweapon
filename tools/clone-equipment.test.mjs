@@ -21,3 +21,10 @@ test('late equipment after leaving the encounter cannot resurrect disposed fight
  const loading=api.loadCloneEquipment(owner,{loader:{loadAsync:()=>new Promise(r=>resolve=r)}});owner.disposed=true;resolve(f.asset);await loading;
  assert.equal(disposed,1);assert.equal(f.fighters[0].parts.head.getObjectByName('clone_helmet_head'),undefined);
 });
+
+test('modular soldier uses its fitted skinned armor instead of a second native-body carrier',async()=>{
+ const f=fixture().fighters[0];f.def={id:'highwall-rifleman',model:{body:'faceted-v1',equipment:'soldier'}};let loads=0;
+ await api.loadSoldierEquipment(f,{loader:{loadAsync:async()=>{loads++;return fixture().asset;}}});
+ assert.equal(loads,0,'legacy carrier is fitted to a different body and must not race the modular outfit');
+ assert.equal(f.parts.torso.getObjectByName('clone_vest_torso'),undefined);
+});

@@ -82,8 +82,11 @@ export function inventoryAdmission(f,def,{replaceHeld=false,removeId=null}={}){
 // rebuild the mesh through game.equipFrom, then restore this SAME ammo object.
 export function captureHeldWeapon(f){
  if(!f._gearHeld||inventoryAttackActive(f)||f._firearmReload)return null;
- return {id:`weapon:${(f._inventorySerial=(f._inventorySerial||0)+1)}`,gear:{...f._gearHeld},ammo:f.slots?._gear?.ammo??null,cd:f.slots?._gear?.cd??0};
+ return {id:`weapon:${(f._inventorySerial=(f._inventorySerial||0)+1)}`,gear:logicalWeaponGear(f._gearHeld),ammo:f.slots?._gear?.ammo??null,cd:f.slots?._gear?.cd??0};
 }
+// Loading belongs to the live presentation. Keep its catalog reference in
+// inventoryRow, but never copy a Promise into storage, death loot or saves.
+export function logicalWeaponGear(gear){const {equipmentReady,...data}=gear;return data;}
 export function storeWeaponSnapshot(f,snapshot){if(snapshot)(f._inventoryWeapons??=[]).push(snapshot);}
 export function storedWeapon(f,id){return (f._inventoryWeapons||[]).find(s=>s.id===id)||null;}
 export function consumeStoredWeapon(f,id){const list=f._inventoryWeapons||[],i=list.findIndex(s=>s.id===id);return i<0?null:list.splice(i,1)[0];}

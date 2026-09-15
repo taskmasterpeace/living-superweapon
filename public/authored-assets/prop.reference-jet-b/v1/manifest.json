@@ -1,0 +1,209 @@
+{
+ "format": "pw-asset-package",
+ "formatVersion": 1,
+ "id": "prop.reference-jet-b",
+ "version": 1,
+ "kind": "prop",
+ "displayName": "Interceptor",
+ "tags": [
+  "reference-fleet",
+  "aircraft"
+ ],
+ "rig": {
+  "skeleton": "none"
+ },
+ "sockets": [
+  {
+   "name": "engine-left",
+   "parent": "jet-b",
+   "position": [
+    -5.40098,
+    3.58334,
+    -25.44692
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "engine-right",
+   "parent": "jet-b",
+   "position": [
+    5.40098,
+    3.58334,
+    -25.44692
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "muzzle",
+   "parent": "jet-b",
+   "position": [
+    0,
+    1.7657,
+    29.34186
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "pilot",
+   "parent": "jet-b",
+   "position": [
+    0,
+    5.40098,
+    5.81644
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  }
+ ],
+ "bounds": {
+  "min": [
+   -25.34305,
+   0,
+   -25.39499
+  ],
+  "max": [
+   25.34305,
+   17.86477,
+   29.34186
+  ]
+ },
+ "materials": [
+  {
+   "name": "fleet-armor"
+  },
+  {
+   "name": "fleet-machine"
+  },
+  {
+   "name": "fleet-glass"
+  },
+  {
+   "name": "fleet-edge"
+  },
+  {
+   "name": "fleet-rubber"
+  },
+  {
+   "name": "fleet-red"
+  }
+ ],
+ "lods": [
+  {
+   "level": 0,
+   "output": "model.glb",
+   "triangles": 424
+  }
+ ],
+ "units": {
+  "lengthUnit": "game-unit",
+  "metersPerUnit": 0.19,
+  "up": "+Y",
+  "forward": "+Z",
+  "handedness": "right",
+  "sourceConversion": {
+   "scale": 1,
+   "yawDegrees": 0,
+   "mirrorX": false,
+   "sourceUp": "+Y",
+   "sourceForward": "+Z",
+   "note": "authored directly in game units along the engine weapon axis (-Y toward the muzzle)"
+  }
+ },
+ "budgets": {
+  "profile": "desktop",
+  "measured": {
+   "triangles": 424,
+   "drawCalls": 6,
+   "materials": 6,
+   "bones": 0,
+   "textures": 0,
+   "bytes": 46312
+  },
+  "limits": {
+   "triangles": 67793,
+   "drawCalls": 32,
+   "materials": 9,
+   "bones": 1,
+   "textures": 4,
+   "bytes": 3170030
+  }
+ },
+ "structural": {
+  "validator": "2.0.0-dev.3.10",
+  "errors": 0,
+  "warnings": 0
+ },
+ "provenance": {
+  "author": "Machine King Labs",
+  "license": "proprietary",
+  "terms": "Original model geometry authored for this project from creator-supplied concept references; reference redistribution rights are not independently verified.",
+  "redistribution": "internal",
+  "attribution": "Creator-supplied September 12, 2026 concepts."
+ },
+ "source": {
+  "adapter": "procedural-prop@1",
+  "files": [
+   {
+    "path": "authoring/recipes/reference-fleet/models.js",
+    "sha256": "f4a8666473a2739182a785434489623a126b2fb48618733465c5448b79992fe4"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/jet-b/model.js",
+    "sha256": "2c2c659d50d841a671ca3d7c7784e07f2b76d35908473ff0adece7b8ccf83f98"
+   },
+   {
+    "path": "assets-src/reference-fleet/references/2.webp",
+    "sha256": "52bc79ec53810409a41793a968ed85c21004ffe6f59d6859e4514cab04b3753e"
+   }
+  ],
+  "recipe": {
+   "path": "authoring/recipes/reference-fleet/jet-b/recipe.json",
+   "sha256": "9e0520a4a091847cbba26621685c068b935286ddf969d12e25beadc921b33793"
+  }
+ },
+ "tool": {
+  "name": "powerworld-authoring",
+  "version": "0.1.0",
+  "three": "0.169.0",
+  "adapterVersion": 1
+ },
+ "build": {
+  "options": {},
+  "cacheKey": "5f36b036fd114d49834ed539e13897906fa30da0f0c045e5aa4cd7556f6dbc65",
+  "contentHash": "56403ce8f892a5e7b2f36b3532ab8189e55913a3c486e175d4bee85a22fcaa7e",
+  "profile": "desktop"
+ },
+ "acceptance": {
+  "visual": "unapproved",
+  "blockers": [],
+  "note": "Framed canopy · swept wings · red wingtip pods; model and scale candidate, no handling or live equipment integration."
+ },
+ "outputs": [
+  {
+   "path": "model.glb",
+   "role": "glb",
+   "sha256": "2935f246a91d6844bb8b6d29638b7af223d1f53f32858ab07c38d7980aaca7b8",
+   "bytes": 46312
+  }
+ ],
+ "packageHash": "d22f8c0c40afff1556d4b183fb975afdf03623952a7d496365a389c6e607fbc8"
+}

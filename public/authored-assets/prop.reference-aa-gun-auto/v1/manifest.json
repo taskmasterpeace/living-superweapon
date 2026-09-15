@@ -1,0 +1,195 @@
+{
+ "format": "pw-asset-package",
+ "formatVersion": 1,
+ "id": "prop.reference-aa-gun-auto",
+ "version": 1,
+ "kind": "prop",
+ "displayName": "Automatic anti-air gun",
+ "tags": [
+  "reference-fleet",
+  "defense"
+ ],
+ "rig": {
+  "skeleton": "none"
+ },
+ "sockets": [
+  {
+   "name": "aim",
+   "parent": "elevation",
+   "position": [
+    0,
+    0,
+    11.96517
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "muzzle-left",
+   "parent": "aa-barrel-left",
+   "position": [
+    0,
+    0,
+    11.54899
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "muzzle-right",
+   "parent": "aa-barrel-right",
+   "position": [
+    0,
+    0,
+    11.54899
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  }
+ ],
+ "bounds": {
+  "min": [
+   -8.42764,
+   0,
+   -8.42764
+  ],
+  "max": [
+   8.42764,
+   14.66078,
+   11.67055
+  ]
+ },
+ "materials": [
+  {
+   "name": "fleet-machine"
+  },
+  {
+   "name": "fleet-red"
+  },
+  {
+   "name": "fleet-rubber"
+  },
+  {
+   "name": "fleet-edge"
+  },
+  {
+   "name": "fleet-armor"
+  }
+ ],
+ "lods": [
+  {
+   "level": 0,
+   "output": "model.glb",
+   "triangles": 1120
+  }
+ ],
+ "units": {
+  "lengthUnit": "game-unit",
+  "metersPerUnit": 0.19,
+  "up": "+Y",
+  "forward": "+Z",
+  "handedness": "right",
+  "sourceConversion": {
+   "scale": 1,
+   "yawDegrees": 0,
+   "mirrorX": false,
+   "sourceUp": "+Y",
+   "sourceForward": "+Z",
+   "note": "authored directly in game units along the engine weapon axis (-Y toward the muzzle)"
+  }
+ },
+ "budgets": {
+  "profile": "desktop",
+  "measured": {
+   "triangles": 1120,
+   "drawCalls": 16,
+   "materials": 5,
+   "bones": 0,
+   "textures": 0,
+   "bytes": 119404
+  },
+  "limits": {
+   "triangles": 67793,
+   "drawCalls": 32,
+   "materials": 9,
+   "bones": 1,
+   "textures": 4,
+   "bytes": 3170030
+  }
+ },
+ "structural": {
+  "validator": "2.0.0-dev.3.10",
+  "errors": 0,
+  "warnings": 0
+ },
+ "provenance": {
+  "author": "Machine King Labs",
+  "license": "proprietary",
+  "terms": "Original model geometry authored for this project from creator-supplied concept references; reference redistribution rights are not independently verified.",
+  "redistribution": "internal",
+  "attribution": "Creator-supplied September 12, 2026 concepts."
+ },
+ "source": {
+  "adapter": "procedural-prop@1",
+  "files": [
+   {
+    "path": "authoring/recipes/reference-fleet/models.js",
+    "sha256": "0ea0fed997326f7831b6415b6c6b570ec8b31a2b638d38306488b3e7507ba44b"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/damage.js",
+    "sha256": "3de0a59c37abf35dd6538cef69e1e8c7e057dd357ad511da4565cbad12f8566a"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/defense.js",
+    "sha256": "8f83a83205cd4c538da30f953276b4f4f76a7d944702079332be5f2c53db494f"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/aa-gun-auto/model.js",
+    "sha256": "b4d06a8e545c7b7d2308a29c2e0b757f1ef7a7a5c4c915585328af77a91cd164"
+   }
+  ],
+  "recipe": {
+   "path": "authoring/recipes/reference-fleet/aa-gun-auto/recipe.json",
+   "sha256": "1e668a7bc62adbdf83834497ee5d0f35e3a76ca8d8d7440a7207d194c5386b78"
+  }
+ },
+ "tool": {
+  "name": "powerworld-authoring",
+  "version": "0.1.0",
+  "three": "0.169.0",
+  "adapterVersion": 1
+ },
+ "build": {
+  "options": {},
+  "cacheKey": "926c9d0a60e2cf59997a55edc68ac73daee7077bc18345776a5c88dc644c1989",
+  "contentHash": "415672cd13eeba12a009fae4d51b35bb3c126aa6c7e8fe1cea2cd63fccd1004f",
+  "profile": "desktop"
+ },
+ "acceptance": {
+  "visual": "unapproved",
+  "blockers": [],
+  "note": "Twin cannon · tracking sensor · independent azimuth and elevation; model and scale candidate, no handling or live equipment integration."
+ },
+ "outputs": [
+  {
+   "path": "model.glb",
+   "role": "glb",
+   "sha256": "5a4cebb985f2fba7329326dc1294143e7538d00c4bd3965dadbd1f689f5aba5c",
+   "bytes": 119404
+  }
+ ],
+ "packageHash": "da4a2744d1700098f0adb25ff08da53cd56c6a78fd513bd38185821689fed751"
+}

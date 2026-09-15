@@ -8,7 +8,7 @@ function fixture(){const x=mainCombatFixture();x.w.ARENA=1200;x.w.cover=highwall
 function trace(x,a,b){return earliestOrdinaryContact({pos:new T.Vector3(...a),radius:.01,ballistic:true,caster:x.p,life:10},new T.Vector3(...b),1,x.g);}
 test('authored Highwall wall and roof agree for native sight and ordinary projectile contact',()=>{
  const x=fixture();try{
- const checks=[{a:[-310,0,-220],b:[-270,0,-220],visible:false,hit:'spine-'},{a:[-310,HIGHWALL_HEIGHT+4,-220],b:[-270,HIGHWALL_HEIGHT+4,-220],visible:true},{a:[-40,0,-160],b:[-16,0,-160],visible:true},{a:[-28,0,-160],b:[-28,35,-160],visible:false,hit:'roof-'}];
+ const checks=[{a:[-303,0,-220],b:[-270,0,-220],visible:false,hit:'spine-'},{a:[-303,HIGHWALL_HEIGHT+4,-220],b:[-270,HIGHWALL_HEIGHT+4,-220],visible:true},{a:[-40,0,-160],b:[-16,0,-160],visible:true},{a:[-28,0,-160],b:[-28,35,-160],visible:false,hit:'roof-'}];
  for(const {a,b,visible,hit} of checks){assert.equal(x.g.canSee({pos:new T.Vector3(...a)},{pos:new T.Vector3(...b)}),visible,JSON.stringify({a,b}));const result=trace(x,[a[0],a[1]+5,a[2]],[b[0],b[1]+5,b[2]]);if(hit){assert.equal(result?.kind,'cover');assert.ok(result.target.id.startsWith(hit));}else assert.equal(result,null);}
  }finally{x.close();}
 });

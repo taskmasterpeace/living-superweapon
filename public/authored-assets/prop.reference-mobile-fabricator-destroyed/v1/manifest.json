@@ -1,0 +1,272 @@
+{
+ "format": "pw-asset-package",
+ "formatVersion": 1,
+ "id": "prop.reference-mobile-fabricator-destroyed",
+ "version": 1,
+ "kind": "prop",
+ "displayName": "Mobile vehicle fabricator · destroyed",
+ "tags": [
+  "reference-fleet",
+  "ground"
+ ],
+ "rig": {
+  "skeleton": "none"
+ },
+ "sockets": [
+  {
+   "name": "driver",
+   "parent": "mobile-fabricator",
+   "position": [
+    -3.75803,
+    9.26086,
+    27.91679
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "entry-driver",
+   "parent": "mobile-fabricator",
+   "position": [
+    -24.76129,
+    0.12367,
+    27.91679
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "entry-passenger",
+   "parent": "mobile-fabricator",
+   "position": [
+    24.76129,
+    0.12367,
+    27.91679
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "fabrication-origin",
+   "parent": "mobile-fabricator",
+   "position": [
+    0,
+    7.22078,
+    -7.24763
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "passenger",
+   "parent": "mobile-fabricator",
+   "position": [
+    3.75803,
+    9.26086,
+    27.91679
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "printer-tip",
+   "parent": "printer-head",
+   "position": [
+    0,
+    -4.83175,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  }
+ ],
+ "bounds": {
+  "min": [
+   -21.34024,
+   0,
+   -36.775
+  ],
+  "max": [
+   21.34024,
+   37.44607,
+   36.90921
+  ]
+ },
+ "materials": [
+  {
+   "name": "condition-destroyed-fleet-painted-parts"
+  }
+ ],
+ "lods": [
+  {
+   "level": 0,
+   "output": "model.glb",
+   "triangles": 1508
+  }
+ ],
+ "units": {
+  "lengthUnit": "game-unit",
+  "metersPerUnit": 0.19,
+  "up": "+Y",
+  "forward": "+Z",
+  "handedness": "right",
+  "sourceConversion": {
+   "scale": 1,
+   "yawDegrees": 0,
+   "mirrorX": false,
+   "sourceUp": "+Y",
+   "sourceForward": "+Z",
+   "note": "authored directly in game units along the engine weapon axis (-Y toward the muzzle)"
+  }
+ },
+ "budgets": {
+  "profile": "desktop",
+  "measured": {
+   "triangles": 1508,
+   "drawCalls": 8,
+   "materials": 1,
+   "bones": 0,
+   "textures": 0,
+   "bytes": 209740
+  },
+  "limits": {
+   "triangles": 67793,
+   "drawCalls": 32,
+   "materials": 9,
+   "bones": 1,
+   "textures": 4,
+   "bytes": 3170030
+  }
+ },
+ "structural": {
+  "validator": "2.0.0-dev.3.10",
+  "errors": 0,
+  "warnings": 0
+ },
+ "provenance": {
+  "author": "Machine King Labs",
+  "license": "proprietary",
+  "terms": "Original model geometry authored for this project from creator-supplied concept references; reference redistribution rights are not independently verified.",
+  "redistribution": "internal",
+  "attribution": "Creator-supplied September 12, 2026 concepts."
+ },
+ "source": {
+  "adapter": "procedural-prop@1",
+  "files": [
+   {
+    "path": "authoring/recipes/reference-fleet/static-batch.js",
+    "sha256": "30f54b24ce61f0a9abf27b94795360e1f9e2a5ee6125924d1c79cf591591246f"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/expedition.js",
+    "sha256": "3382f8caea09ffc8ac956e4e41af03a6250374043aba099d3108f028aad92ec3"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/nanite-forms.js",
+    "sha256": "35170d28c70f30b82a7c610521427b9e2bbde7f2fd538fc243edc0f38f90494e"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/models.js",
+    "sha256": "893881adc743e6dbecbb33702d32f3308dd5eb200ffe8b20a24deebaa6a7e4e2"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/logistics.js",
+    "sha256": "91bd34ea3a755cf8f2b74e5f0936d810c86242d013f219347128bd561b1e136f"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/ordnance.js",
+    "sha256": "ab2369438732b8cf9036d2645705dd15c0eb77ccfef7b72212bd41039c805372"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/condition.js",
+    "sha256": "db23e1bf130ccdc847798894ecf4c8bd97ed641c91b6d8e40a1094f1aa2f991d"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/air-mobility.js",
+    "sha256": "778f8f67a4f9560fbe8ce38828766c385b7ce739eafda7d84eb652fe9b439f77"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/damage.js",
+    "sha256": "0c34abc49ebe1feacfbe9ef6cc1f850ea12cab5bf5dbcfb7ecef54976a7affef"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/defense.js",
+    "sha256": "b3e912db260966d8936526b89e678358f3376b4a32c090e097d1046f3f2c710a"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/mechs.js",
+    "sha256": "4aa82d05f85799cba45040e179b5215cded994d368d313f534b1cc3d19c574c4"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/drone-tank.js",
+    "sha256": "ffb9bc81e598700abce165ce4ee960d8a1d133d52fecba4ef9f80f6aa4d144ff"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/crew-interiors.js",
+    "sha256": "0048d0e741b0d7a7704e8fccd13cc53c6b4b298f5bd26704489f8aa57474802d"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/spider-mine.js",
+    "sha256": "cfa4f246a18744c2dd9ee1418906d323a700c47e3a5ecfe333ad6ef33fc6c424"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/mobile-fabricator-destroyed/model.js",
+    "sha256": "f731a393846fe458f0da3f7bbad9891a90e2a3b3a60ef730ec3f15d1a0d495ed"
+   }
+  ],
+  "recipe": {
+   "path": "authoring/recipes/reference-fleet/mobile-fabricator-destroyed/recipe.json",
+   "sha256": "e8143454605991217c5273f75d593b5b81724eaa6c8a55b3dc14323b9e44b68d"
+  }
+ },
+ "tool": {
+  "name": "powerworld-authoring",
+  "version": "0.1.0",
+  "three": "0.169.0",
+  "adapterVersion": 1
+ },
+ "build": {
+  "options": {},
+  "cacheKey": "2b20cb46e5e3944ea89571c623f9a53f7e96e36df5d452e3d02efac1f9facbce",
+  "contentHash": "99cad776e04801dc9f388d5abfdb16a73944bcc37d685130ca4bf62975095886",
+  "profile": "desktop"
+ },
+ "acceptance": {
+  "visual": "unapproved",
+  "blockers": [],
+  "note": "Two-seat tracked workshop · stabilizers · vehicle print bed; model and scale candidate, no handling or live equipment integration."
+ },
+ "outputs": [
+  {
+   "path": "model.glb",
+   "role": "glb",
+   "sha256": "710dfebffb1da2966645e868ffeba3e808496212d87ac9e82c91c6fe67d83c8d",
+   "bytes": 209740
+  }
+ ],
+ "packageHash": "a02356ab8302379b77153e57bea6e08b36c1b8e9f588b919ff3e7ca0584f2f6e"
+}

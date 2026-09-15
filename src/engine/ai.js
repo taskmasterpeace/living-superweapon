@@ -156,7 +156,7 @@ export class AI {
     if(b._highwallUnit){
       // A mixed battle must not ignore an observed nearby foe solely because the
       // player (possibly hidden) was first in the historical target preference.
-      const visible=game.entities.filter(e=>e!==b&&e.alive&&game.isFoe(b,e)&&(e._vis??1)>.4).filter(e=>{
+      const visible=game.entities.filter(e=>e!==b&&e.alive&&game.isFoe(b,e)).filter(e=>{
         const dx=e.pos.x-b.pos.x,dz=e.pos.z-b.pos.z,d=Math.hypot(dx,dz)||1;
         return b.blindT<=0&&(d<this.seeNear||d<this.seeRange&&(dx*b.aim.x+dz*b.aim.z)/d>this.seeCos)&&game.canSee(b,e);
       });
@@ -164,7 +164,8 @@ export class AI {
     }
     if (b._psyche) {
       const seen = game.entities.filter(e => e.alive && e.def && !e.isDummy && game.isFoe(b, e)
-        && (e._vis == null || e._vis > 0.4) && Math.hypot(e.pos.x - b.pos.x, e.pos.z - b.pos.z) < 500);
+        && b.blindT<=0 && game.canSee(b,e) && Math.hypot(e.pos.x - b.pos.x, e.pos.z - b.pos.z) < this.seeRange
+        && (Math.hypot(e.pos.x-b.pos.x,e.pos.z-b.pos.z)<this.seeNear || ((e.pos.x-b.pos.x)*b.aim.x+(e.pos.z-b.pos.z)*b.aim.z)/Math.max(.001,Math.hypot(e.pos.x-b.pos.x,e.pos.z-b.pos.z))>this.seeCos));
       if (seen.length > 1) real = pickByPersonality(game, b, seen) || real;
     }
     if (!real) { out.aimDir = { x: Math.sin(b.facing), z: Math.cos(b.facing) }; return out; }

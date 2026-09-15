@@ -1,0 +1,270 @@
+{
+ "format": "pw-asset-package",
+ "formatVersion": 1,
+ "id": "prop.reference-atv-damaged",
+ "version": 2,
+ "kind": "prop",
+ "displayName": "ATV · damaged",
+ "tags": [
+  "reference-fleet",
+  "ground"
+ ],
+ "rig": {
+  "skeleton": "none"
+ },
+ "sockets": [
+  {
+   "name": "entry-rider",
+   "parent": "atv-damaged",
+   "position": [
+    -7.21698,
+    0.52632,
+    -0.98312
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "grip-left",
+   "parent": "atv-damaged",
+   "position": [
+    -2.07547,
+    6.77259,
+    3.27706
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "grip-right",
+   "parent": "atv-damaged",
+   "position": [
+    2.07547,
+    6.77259,
+    3.27706
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-torso-rider",
+   "parent": "socket-seat-rider",
+   "position": [
+    0,
+    2.52632,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "rider",
+   "parent": "atv-damaged",
+   "position": [
+    0,
+    6.00794,
+    -0.98312
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "seat-rider",
+   "parent": "socket-rider",
+   "position": [
+    0,
+    0,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  }
+ ],
+ "bounds": {
+  "min": [
+   -3.79593,
+   0,
+   -5.78947
+  ],
+  "max": [
+   3.82906,
+   6.9501,
+   5.78947
+  ]
+ },
+ "materials": [
+  {
+   "name": "fleet-machine"
+  },
+  {
+   "name": "fleet-rubber"
+  },
+  {
+   "name": "fleet-edge"
+  },
+  {
+   "name": "fleet-armor"
+  },
+  {
+   "name": "fleet-damage-metal"
+  },
+  {
+   "name": "fleet-red"
+  },
+  {
+   "name": "fleet-damage-charred"
+  }
+ ],
+ "lods": [
+  {
+   "level": 0,
+   "output": "model.glb",
+   "triangles": 839
+  }
+ ],
+ "units": {
+  "lengthUnit": "game-unit",
+  "metersPerUnit": 0.19,
+  "up": "+Y",
+  "forward": "+Z",
+  "handedness": "right",
+  "sourceConversion": {
+   "scale": 1,
+   "yawDegrees": 0,
+   "mirrorX": false,
+   "sourceUp": "+Y",
+   "sourceForward": "+Z",
+   "note": "authored directly in game units along the engine weapon axis (-Y toward the muzzle)"
+  }
+ },
+ "budgets": {
+  "profile": "desktop",
+  "measured": {
+   "triangles": 839,
+   "drawCalls": 14,
+   "materials": 7,
+   "bones": 0,
+   "textures": 0,
+   "bytes": 91988
+  },
+  "limits": {
+   "triangles": 67793,
+   "drawCalls": 32,
+   "materials": 9,
+   "bones": 1,
+   "textures": 4,
+   "bytes": 3170030
+  }
+ },
+ "structural": {
+  "validator": "2.0.0-dev.3.10",
+  "errors": 0,
+  "warnings": 0
+ },
+ "provenance": {
+  "author": "Machine King Labs",
+  "license": "proprietary",
+  "terms": "Original model geometry authored for this project from creator-supplied concept references; reference redistribution rights are not independently verified.",
+  "redistribution": "internal",
+  "attribution": "Creator-supplied September 12, 2026 concepts."
+ },
+ "source": {
+  "adapter": "procedural-prop@1",
+  "files": [
+   {
+    "path": "authoring/recipes/reference-fleet/models.js",
+    "sha256": "0beefc4fab0791c3f57e555487eb60530433a650c78ae63aaa684d0d6307ef6d"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/air-mobility.js",
+    "sha256": "9d27ce244b8c3b3f0660708f676017af70e4537314bc0a7e65562a09d6272f44"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/damage.js",
+    "sha256": "3de0a59c37abf35dd6538cef69e1e8c7e057dd357ad511da4565cbad12f8566a"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/defense.js",
+    "sha256": "b3e912db260966d8936526b89e678358f3376b4a32c090e097d1046f3f2c710a"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/mechs.js",
+    "sha256": "4aa82d05f85799cba45040e179b5215cded994d368d313f534b1cc3d19c574c4"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/drone-tank.js",
+    "sha256": "ffb9bc81e598700abce165ce4ee960d8a1d133d52fecba4ef9f80f6aa4d144ff"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/crew-interiors.js",
+    "sha256": "e869251a24b29f7ac0a3de2d7e9d37f290f5cb5fc0cd96d10ca8b60ce444dbc5"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/spider-mine.js",
+    "sha256": "cfa4f246a18744c2dd9ee1418906d323a700c47e3a5ecfe333ad6ef33fc6c424"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/atv-damaged/model.js",
+    "sha256": "cc37a89071d3292b2c3c87c0b98d9f0fb28315739b76f28c72c7bea89aa49dc0"
+   },
+   {
+    "path": "assets-src/reference-fleet/references/6.webp",
+    "sha256": "7d2a95e23d4881430e2587b70adb15bd7539dff333cf14a6f38c6c3beea0c0da"
+   }
+  ],
+  "recipe": {
+   "path": "authoring/recipes/reference-fleet/atv-damaged/recipe.json",
+   "sha256": "3a92ec00aeb42d77a1f4067ff871a4244687680a4af497ee416d8adb78997992"
+  }
+ },
+ "tool": {
+  "name": "powerworld-authoring",
+  "version": "0.1.0",
+  "three": "0.169.0",
+  "adapterVersion": 1
+ },
+ "build": {
+  "options": {},
+  "cacheKey": "782e9b2b721c82636388302b3e4a02c512b2a777f29c3fb3059d166803f23eb3",
+  "contentHash": "09c2794931f5c9aaba820e63546e071ed01cff7a1ea5467f24be91e6cf47b942",
+  "profile": "desktop"
+ },
+ "acceptance": {
+  "visual": "unapproved",
+  "blockers": [],
+  "note": "Quad reference included · separate wheel pivots; model and scale candidate, no handling or live equipment integration."
+ },
+ "outputs": [
+  {
+   "path": "model.glb",
+   "role": "glb",
+   "sha256": "acbd9f61aee403e2e4fdbf752dabc17fed1bcc12bfb725fd7df9bf7c6d9265dd",
+   "bytes": 91988
+  }
+ ],
+ "packageHash": "d7efaed62f9b916c4ba537ff084d9a2b4cca9b784e186805c5a70452cc357180"
+}

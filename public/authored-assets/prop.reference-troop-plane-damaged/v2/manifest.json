@@ -1,0 +1,1940 @@
+{
+ "format": "pw-asset-package",
+ "formatVersion": 1,
+ "id": "prop.reference-troop-plane-damaged",
+ "version": 2,
+ "kind": "prop",
+ "displayName": "Twenty-troop jump transport · damaged",
+ "tags": [
+  "reference-fleet",
+  "aircraft"
+ ],
+ "rig": {
+  "skeleton": "none"
+ },
+ "sockets": [
+  {
+   "name": "cabin-view",
+   "parent": "troop-plane",
+   "position": [
+    0,
+    16.71206,
+    -41.12117
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "contact-left",
+   "parent": "landing-gear-left",
+   "position": [
+    0,
+    -7.48616,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "contact-nose",
+   "parent": "landing-gear-nose",
+   "position": [
+    0,
+    -7.48616,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "contact-right",
+   "parent": "landing-gear-right",
+   "position": [
+    0,
+    -7.48616,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "copilot",
+   "parent": "troop-plane",
+   "position": [
+    3.42676,
+    10.64933,
+    43.75714
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "emblem-left",
+   "parent": "troop-plane",
+   "position": [
+    -13.12714,
+    12.75811,
+    -35.84922
+   ],
+   "rotation": [
+    0,
+    -0.707107,
+    0,
+    0.707107
+   ]
+  },
+  {
+   "name": "emblem-right",
+   "parent": "troop-plane",
+   "position": [
+    13.12714,
+    12.75811,
+    -35.84922
+   ],
+   "rotation": [
+    0,
+    0.707107,
+    0,
+    0.707107
+   ]
+  },
+  {
+   "name": "entry-copilot",
+   "parent": "troop-plane",
+   "position": [
+    -93.04411,
+    -0.15904,
+    43.75714
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "entry-pilot",
+   "parent": "troop-plane",
+   "position": [
+    -93.04411,
+    -0.15904,
+    43.75714
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "entry-troop-left-0",
+   "parent": "troop-plane",
+   "position": [
+    -93.04411,
+    -0.15904,
+    -30.05008
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "entry-troop-left-1",
+   "parent": "troop-plane",
+   "position": [
+    -93.04411,
+    -0.15904,
+    -24.56726
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "entry-troop-left-2",
+   "parent": "troop-plane",
+   "position": [
+    -93.04411,
+    -0.15904,
+    -19.08444
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "entry-troop-left-3",
+   "parent": "troop-plane",
+   "position": [
+    -93.04411,
+    -0.15904,
+    -13.60162
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "entry-troop-left-4",
+   "parent": "troop-plane",
+   "position": [
+    -93.04411,
+    -0.15904,
+    -8.11879
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "entry-troop-left-5",
+   "parent": "troop-plane",
+   "position": [
+    -93.04411,
+    -0.15904,
+    -2.63597
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "entry-troop-left-6",
+   "parent": "troop-plane",
+   "position": [
+    -93.04411,
+    -0.15904,
+    2.84685
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "entry-troop-left-7",
+   "parent": "troop-plane",
+   "position": [
+    -93.04411,
+    -0.15904,
+    8.32967
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "entry-troop-left-8",
+   "parent": "troop-plane",
+   "position": [
+    -93.04411,
+    -0.15904,
+    13.81249
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "entry-troop-left-9",
+   "parent": "troop-plane",
+   "position": [
+    -93.04411,
+    -0.15904,
+    19.29532
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "entry-troop-right-0",
+   "parent": "troop-plane",
+   "position": [
+    93.04411,
+    -0.15904,
+    -30.05008
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "entry-troop-right-1",
+   "parent": "troop-plane",
+   "position": [
+    93.04411,
+    -0.15904,
+    -24.56726
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "entry-troop-right-2",
+   "parent": "troop-plane",
+   "position": [
+    93.04411,
+    -0.15904,
+    -19.08444
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "entry-troop-right-3",
+   "parent": "troop-plane",
+   "position": [
+    93.04411,
+    -0.15904,
+    -13.60162
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "entry-troop-right-4",
+   "parent": "troop-plane",
+   "position": [
+    93.04411,
+    -0.15904,
+    -8.11879
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "entry-troop-right-5",
+   "parent": "troop-plane",
+   "position": [
+    93.04411,
+    -0.15904,
+    -2.63597
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "entry-troop-right-6",
+   "parent": "troop-plane",
+   "position": [
+    93.04411,
+    -0.15904,
+    2.84685
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "entry-troop-right-7",
+   "parent": "troop-plane",
+   "position": [
+    93.04411,
+    -0.15904,
+    8.32967
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "entry-troop-right-8",
+   "parent": "troop-plane",
+   "position": [
+    93.04411,
+    -0.15904,
+    13.81249
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "entry-troop-right-9",
+   "parent": "troop-plane",
+   "position": [
+    93.04411,
+    -0.15904,
+    19.29532
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-eye-copilot",
+   "parent": "socket-seat-copilot",
+   "position": [
+    0,
+    5,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-eye-pilot",
+   "parent": "socket-seat-pilot",
+   "position": [
+    0,
+    5,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-eye-troop-left-0",
+   "parent": "socket-seat-troop-left-0",
+   "position": [
+    0,
+    5,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-eye-troop-left-1",
+   "parent": "socket-seat-troop-left-1",
+   "position": [
+    0,
+    5,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-eye-troop-left-2",
+   "parent": "socket-seat-troop-left-2",
+   "position": [
+    0,
+    5,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-eye-troop-left-3",
+   "parent": "socket-seat-troop-left-3",
+   "position": [
+    0,
+    5,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-eye-troop-left-4",
+   "parent": "socket-seat-troop-left-4",
+   "position": [
+    0,
+    5,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-eye-troop-left-5",
+   "parent": "socket-seat-troop-left-5",
+   "position": [
+    0,
+    5,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-eye-troop-left-6",
+   "parent": "socket-seat-troop-left-6",
+   "position": [
+    0,
+    5,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-eye-troop-left-7",
+   "parent": "socket-seat-troop-left-7",
+   "position": [
+    0,
+    5,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-eye-troop-left-8",
+   "parent": "socket-seat-troop-left-8",
+   "position": [
+    0,
+    5,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-eye-troop-left-9",
+   "parent": "socket-seat-troop-left-9",
+   "position": [
+    0,
+    5,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-eye-troop-right-0",
+   "parent": "socket-seat-troop-right-0",
+   "position": [
+    0,
+    5,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-eye-troop-right-1",
+   "parent": "socket-seat-troop-right-1",
+   "position": [
+    0,
+    5,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-eye-troop-right-2",
+   "parent": "socket-seat-troop-right-2",
+   "position": [
+    0,
+    5,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-eye-troop-right-3",
+   "parent": "socket-seat-troop-right-3",
+   "position": [
+    0,
+    5,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-eye-troop-right-4",
+   "parent": "socket-seat-troop-right-4",
+   "position": [
+    0,
+    5,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-eye-troop-right-5",
+   "parent": "socket-seat-troop-right-5",
+   "position": [
+    0,
+    5,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-eye-troop-right-6",
+   "parent": "socket-seat-troop-right-6",
+   "position": [
+    0,
+    5,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-eye-troop-right-7",
+   "parent": "socket-seat-troop-right-7",
+   "position": [
+    0,
+    5,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-eye-troop-right-8",
+   "parent": "socket-seat-troop-right-8",
+   "position": [
+    0,
+    5,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-eye-troop-right-9",
+   "parent": "socket-seat-troop-right-9",
+   "position": [
+    0,
+    5,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-torso-copilot",
+   "parent": "socket-seat-copilot",
+   "position": [
+    0,
+    2.52632,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-torso-pilot",
+   "parent": "socket-seat-pilot",
+   "position": [
+    0,
+    2.52632,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-torso-troop-left-0",
+   "parent": "socket-seat-troop-left-0",
+   "position": [
+    0,
+    2.52632,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-torso-troop-left-1",
+   "parent": "socket-seat-troop-left-1",
+   "position": [
+    0,
+    2.52632,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-torso-troop-left-2",
+   "parent": "socket-seat-troop-left-2",
+   "position": [
+    0,
+    2.52632,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-torso-troop-left-3",
+   "parent": "socket-seat-troop-left-3",
+   "position": [
+    0,
+    2.52632,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-torso-troop-left-4",
+   "parent": "socket-seat-troop-left-4",
+   "position": [
+    0,
+    2.52632,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-torso-troop-left-5",
+   "parent": "socket-seat-troop-left-5",
+   "position": [
+    0,
+    2.52632,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-torso-troop-left-6",
+   "parent": "socket-seat-troop-left-6",
+   "position": [
+    0,
+    2.52632,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-torso-troop-left-7",
+   "parent": "socket-seat-troop-left-7",
+   "position": [
+    0,
+    2.52632,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-torso-troop-left-8",
+   "parent": "socket-seat-troop-left-8",
+   "position": [
+    0,
+    2.52632,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-torso-troop-left-9",
+   "parent": "socket-seat-troop-left-9",
+   "position": [
+    0,
+    2.52632,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-torso-troop-right-0",
+   "parent": "socket-seat-troop-right-0",
+   "position": [
+    0,
+    2.52632,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-torso-troop-right-1",
+   "parent": "socket-seat-troop-right-1",
+   "position": [
+    0,
+    2.52632,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-torso-troop-right-2",
+   "parent": "socket-seat-troop-right-2",
+   "position": [
+    0,
+    2.52632,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-torso-troop-right-3",
+   "parent": "socket-seat-troop-right-3",
+   "position": [
+    0,
+    2.52632,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-torso-troop-right-4",
+   "parent": "socket-seat-troop-right-4",
+   "position": [
+    0,
+    2.52632,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-torso-troop-right-5",
+   "parent": "socket-seat-troop-right-5",
+   "position": [
+    0,
+    2.52632,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-torso-troop-right-6",
+   "parent": "socket-seat-troop-right-6",
+   "position": [
+    0,
+    2.52632,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-torso-troop-right-7",
+   "parent": "socket-seat-troop-right-7",
+   "position": [
+    0,
+    2.52632,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-torso-troop-right-8",
+   "parent": "socket-seat-troop-right-8",
+   "position": [
+    0,
+    2.52632,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "occupant-torso-troop-right-9",
+   "parent": "socket-seat-troop-right-9",
+   "position": [
+    0,
+    2.52632,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "pilot",
+   "parent": "troop-plane",
+   "position": [
+    -3.42676,
+    10.64933,
+    43.75714
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "seat-copilot",
+   "parent": "crew-chair-copilot",
+   "position": [
+    0,
+    0.34211,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "seat-pilot",
+   "parent": "crew-chair-pilot",
+   "position": [
+    0,
+    0.34211,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "seat-troop-left-0",
+   "parent": "crew-chair-troop-left-0",
+   "position": [
+    0,
+    0.34211,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "seat-troop-left-1",
+   "parent": "crew-chair-troop-left-1",
+   "position": [
+    0,
+    0.34211,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "seat-troop-left-2",
+   "parent": "crew-chair-troop-left-2",
+   "position": [
+    0,
+    0.34211,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "seat-troop-left-3",
+   "parent": "crew-chair-troop-left-3",
+   "position": [
+    0,
+    0.34211,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "seat-troop-left-4",
+   "parent": "crew-chair-troop-left-4",
+   "position": [
+    0,
+    0.34211,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "seat-troop-left-5",
+   "parent": "crew-chair-troop-left-5",
+   "position": [
+    0,
+    0.34211,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "seat-troop-left-6",
+   "parent": "crew-chair-troop-left-6",
+   "position": [
+    0,
+    0.34211,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "seat-troop-left-7",
+   "parent": "crew-chair-troop-left-7",
+   "position": [
+    0,
+    0.34211,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "seat-troop-left-8",
+   "parent": "crew-chair-troop-left-8",
+   "position": [
+    0,
+    0.34211,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "seat-troop-left-9",
+   "parent": "crew-chair-troop-left-9",
+   "position": [
+    0,
+    0.34211,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "seat-troop-right-0",
+   "parent": "crew-chair-troop-right-0",
+   "position": [
+    0,
+    0.34211,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "seat-troop-right-1",
+   "parent": "crew-chair-troop-right-1",
+   "position": [
+    0,
+    0.34211,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "seat-troop-right-2",
+   "parent": "crew-chair-troop-right-2",
+   "position": [
+    0,
+    0.34211,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "seat-troop-right-3",
+   "parent": "crew-chair-troop-right-3",
+   "position": [
+    0,
+    0.34211,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "seat-troop-right-4",
+   "parent": "crew-chair-troop-right-4",
+   "position": [
+    0,
+    0.34211,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "seat-troop-right-5",
+   "parent": "crew-chair-troop-right-5",
+   "position": [
+    0,
+    0.34211,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "seat-troop-right-6",
+   "parent": "crew-chair-troop-right-6",
+   "position": [
+    0,
+    0.34211,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "seat-troop-right-7",
+   "parent": "crew-chair-troop-right-7",
+   "position": [
+    0,
+    0.34211,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "seat-troop-right-8",
+   "parent": "crew-chair-troop-right-8",
+   "position": [
+    0,
+    0.34211,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "seat-troop-right-9",
+   "parent": "crew-chair-troop-right-9",
+   "position": [
+    0,
+    0.34211,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "troop-exit",
+   "parent": "troop-plane",
+   "position": [
+    0,
+    8.54055,
+    -48.23829
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "troop-left-0",
+   "parent": "troop-plane",
+   "position": [
+    -10.28029,
+    10.64933,
+    -30.05008
+   ],
+   "rotation": [
+    0,
+    0.707107,
+    0,
+    0.707107
+   ]
+  },
+  {
+   "name": "troop-left-1",
+   "parent": "troop-plane",
+   "position": [
+    -10.28029,
+    10.64933,
+    -24.56726
+   ],
+   "rotation": [
+    0,
+    0.707107,
+    0,
+    0.707107
+   ]
+  },
+  {
+   "name": "troop-left-2",
+   "parent": "troop-plane",
+   "position": [
+    -10.28029,
+    10.64933,
+    -19.08444
+   ],
+   "rotation": [
+    0,
+    0.707107,
+    0,
+    0.707107
+   ]
+  },
+  {
+   "name": "troop-left-3",
+   "parent": "troop-plane",
+   "position": [
+    -10.28029,
+    10.64933,
+    -13.60162
+   ],
+   "rotation": [
+    0,
+    0.707107,
+    0,
+    0.707107
+   ]
+  },
+  {
+   "name": "troop-left-4",
+   "parent": "troop-plane",
+   "position": [
+    -10.28029,
+    10.64933,
+    -8.11879
+   ],
+   "rotation": [
+    0,
+    0.707107,
+    0,
+    0.707107
+   ]
+  },
+  {
+   "name": "troop-left-5",
+   "parent": "troop-plane",
+   "position": [
+    -10.28029,
+    10.64933,
+    -2.63597
+   ],
+   "rotation": [
+    0,
+    0.707107,
+    0,
+    0.707107
+   ]
+  },
+  {
+   "name": "troop-left-6",
+   "parent": "troop-plane",
+   "position": [
+    -10.28029,
+    10.64933,
+    2.84685
+   ],
+   "rotation": [
+    0,
+    0.707107,
+    0,
+    0.707107
+   ]
+  },
+  {
+   "name": "troop-left-7",
+   "parent": "troop-plane",
+   "position": [
+    -10.28029,
+    10.64933,
+    8.32967
+   ],
+   "rotation": [
+    0,
+    0.707107,
+    0,
+    0.707107
+   ]
+  },
+  {
+   "name": "troop-left-8",
+   "parent": "troop-plane",
+   "position": [
+    -10.28029,
+    10.64933,
+    13.81249
+   ],
+   "rotation": [
+    0,
+    0.707107,
+    0,
+    0.707107
+   ]
+  },
+  {
+   "name": "troop-left-9",
+   "parent": "troop-plane",
+   "position": [
+    -10.28029,
+    10.64933,
+    19.29532
+   ],
+   "rotation": [
+    0,
+    0.707107,
+    0,
+    0.707107
+   ]
+  },
+  {
+   "name": "troop-right-0",
+   "parent": "troop-plane",
+   "position": [
+    10.28029,
+    10.64933,
+    -30.05008
+   ],
+   "rotation": [
+    0,
+    -0.707107,
+    0,
+    0.707107
+   ]
+  },
+  {
+   "name": "troop-right-1",
+   "parent": "troop-plane",
+   "position": [
+    10.28029,
+    10.64933,
+    -24.56726
+   ],
+   "rotation": [
+    0,
+    -0.707107,
+    0,
+    0.707107
+   ]
+  },
+  {
+   "name": "troop-right-2",
+   "parent": "troop-plane",
+   "position": [
+    10.28029,
+    10.64933,
+    -19.08444
+   ],
+   "rotation": [
+    0,
+    -0.707107,
+    0,
+    0.707107
+   ]
+  },
+  {
+   "name": "troop-right-3",
+   "parent": "troop-plane",
+   "position": [
+    10.28029,
+    10.64933,
+    -13.60162
+   ],
+   "rotation": [
+    0,
+    -0.707107,
+    0,
+    0.707107
+   ]
+  },
+  {
+   "name": "troop-right-4",
+   "parent": "troop-plane",
+   "position": [
+    10.28029,
+    10.64933,
+    -8.11879
+   ],
+   "rotation": [
+    0,
+    -0.707107,
+    0,
+    0.707107
+   ]
+  },
+  {
+   "name": "troop-right-5",
+   "parent": "troop-plane",
+   "position": [
+    10.28029,
+    10.64933,
+    -2.63597
+   ],
+   "rotation": [
+    0,
+    -0.707107,
+    0,
+    0.707107
+   ]
+  },
+  {
+   "name": "troop-right-6",
+   "parent": "troop-plane",
+   "position": [
+    10.28029,
+    10.64933,
+    2.84685
+   ],
+   "rotation": [
+    0,
+    -0.707107,
+    0,
+    0.707107
+   ]
+  },
+  {
+   "name": "troop-right-7",
+   "parent": "troop-plane",
+   "position": [
+    10.28029,
+    10.64933,
+    8.32967
+   ],
+   "rotation": [
+    0,
+    -0.707107,
+    0,
+    0.707107
+   ]
+  },
+  {
+   "name": "troop-right-8",
+   "parent": "troop-plane",
+   "position": [
+    10.28029,
+    10.64933,
+    13.81249
+   ],
+   "rotation": [
+    0,
+    -0.707107,
+    0,
+    0.707107
+   ]
+  },
+  {
+   "name": "troop-right-9",
+   "parent": "troop-plane",
+   "position": [
+    10.28029,
+    10.64933,
+    19.29532
+   ],
+   "rotation": [
+    0,
+    -0.707107,
+    0,
+    0.707107
+   ]
+  }
+ ],
+ "bounds": {
+  "min": [
+   -89.62305,
+   0,
+   -79.07917
+  ],
+  "max": [
+   89.62305,
+   42.0174,
+   78.81557
+  ]
+ },
+ "materials": [
+  {
+   "name": "condition-damaged-fleet-painted-parts"
+  },
+  {
+   "name": "condition-damaged-fleet-glass"
+  }
+ ],
+ "lods": [
+  {
+   "level": 0,
+   "output": "model.glb",
+   "triangles": 4168
+  }
+ ],
+ "units": {
+  "lengthUnit": "game-unit",
+  "metersPerUnit": 0.19,
+  "up": "+Y",
+  "forward": "+Z",
+  "handedness": "right",
+  "sourceConversion": {
+   "scale": 1,
+   "yawDegrees": 0,
+   "mirrorX": false,
+   "sourceUp": "+Y",
+   "sourceForward": "+Z",
+   "note": "authored directly in game units along the engine weapon axis (-Y toward the muzzle)"
+  }
+ },
+ "budgets": {
+  "profile": "desktop",
+  "measured": {
+   "triangles": 4168,
+   "drawCalls": 20,
+   "materials": 2,
+   "bones": 0,
+   "textures": 0,
+   "bytes": 585544
+  },
+  "limits": {
+   "triangles": 67793,
+   "drawCalls": 32,
+   "materials": 9,
+   "bones": 1,
+   "textures": 4,
+   "bytes": 3170030
+  }
+ },
+ "structural": {
+  "validator": "2.0.0-dev.3.10",
+  "errors": 0,
+  "warnings": 0
+ },
+ "provenance": {
+  "author": "Machine King Labs",
+  "license": "proprietary",
+  "terms": "Original model geometry authored for this project from creator-supplied concept references; reference redistribution rights are not independently verified.",
+  "redistribution": "internal",
+  "attribution": "Creator-supplied September 12, 2026 concepts."
+ },
+ "source": {
+  "adapter": "procedural-prop@1",
+  "files": [
+   {
+    "path": "authoring/recipes/reference-fleet/static-batch.js",
+    "sha256": "a5f089984d2ecd7c1f7629ca54774358795581652fce0614e6f759687e3fde55"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/expedition.js",
+    "sha256": "6f63f1b21a2f9f4f5dee888687f72a9980c164fd5c39e3681df434e91eb8f6a1"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/nanite-forms.js",
+    "sha256": "16095e80dcea845fcbd30f91886fa2b94f580dea9feeb7dcc56ad43e7fffd8c1"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/models.js",
+    "sha256": "4a8f1396bb3b10b9535462e88cf45cd0da59648ea7a925f39ca12fcd452d69ee"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/logistics.js",
+    "sha256": "63757f47844ba6c567174bccd2e682471031eb5ed68b6b71fe9893a1beef537d"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/ordnance.js",
+    "sha256": "ab2369438732b8cf9036d2645705dd15c0eb77ccfef7b72212bd41039c805372"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/condition.js",
+    "sha256": "ab8180853faf5c8bb13470a82a84c806f54b96993c7b1806cf562d7fd9754f67"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/air-mobility.js",
+    "sha256": "778f8f67a4f9560fbe8ce38828766c385b7ce739eafda7d84eb652fe9b439f77"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/damage.js",
+    "sha256": "0c34abc49ebe1feacfbe9ef6cc1f850ea12cab5bf5dbcfb7ecef54976a7affef"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/defense.js",
+    "sha256": "b3e912db260966d8936526b89e678358f3376b4a32c090e097d1046f3f2c710a"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/mechs.js",
+    "sha256": "4aa82d05f85799cba45040e179b5215cded994d368d313f534b1cc3d19c574c4"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/drone-tank.js",
+    "sha256": "ffb9bc81e598700abce165ce4ee960d8a1d133d52fecba4ef9f80f6aa4d144ff"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/crew-interiors.js",
+    "sha256": "0048d0e741b0d7a7704e8fccd13cc53c6b4b298f5bd26704489f8aa57474802d"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/spider-mine.js",
+    "sha256": "cfa4f246a18744c2dd9ee1418906d323a700c47e3a5ecfe333ad6ef33fc6c424"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/troop-plane-damaged/model.js",
+    "sha256": "a9ddafa822f833be7bca43ff3e0243a53f8f06454dc2ffdcc61807fa01a8f918"
+   }
+  ],
+  "recipe": {
+   "path": "authoring/recipes/reference-fleet/troop-plane-damaged/recipe.json",
+   "sha256": "f95c3ee5869eda802759be5099d3a8209268b7355ee552fd3cdab7bd95e135c4"
+  }
+ },
+ "tool": {
+  "name": "powerworld-authoring",
+  "version": "0.1.0",
+  "three": "0.169.0",
+  "adapterVersion": 1
+ },
+ "build": {
+  "options": {},
+  "cacheKey": "515cc4d4d1beece11bf490074eb62d2da5e38aa62275ec6ba4db11772ebee274",
+  "contentHash": "ce04829846b18edd0981d4b810ca486d2024723a734f45d223065910f8284537",
+  "profile": "desktop"
+ },
+ "acceptance": {
+  "visual": "unapproved",
+  "blockers": [],
+  "note": "Two pilots · twenty inward-facing troop seats · rear jump ramp · four propellers; model and scale candidate, no handling or live equipment integration."
+ },
+ "outputs": [
+  {
+   "path": "model.glb",
+   "role": "glb",
+   "sha256": "ea374a41fd4000ff90df03dd06092a174fa55cbb9233824cd86bb1a28965ae55",
+   "bytes": 585544
+  }
+ ],
+ "packageHash": "cb6ce2da7d6c50165f330a51335b5021a95fd381bcb85db19aa7d3c68cdeafe0"
+}

@@ -418,6 +418,7 @@ export class AudioBus {
     // "audio must never throw into the game loop" law. Caught by the analyser test, not by reading.
     const rec = this.sampleLoop && this.sampleLoop('engine.charge', { pos });
     if (rec) return adaptLoop(rec);
+    return null; // Missing decoded sustain must not start the retired oscillator voice.
     if (!this.ok || this.muted) return null;
     const t = this.t;
     const g = this.ctx.createGain();
@@ -532,6 +533,7 @@ export class AudioBus {
     // beam losing a clash still audibly strains. `spaceEngineLow` is a real sustained recording.
     const rec = this.sampleLoop && this.sampleLoop('engine.low', { pos });
     if (rec) return adaptLoop(rec);
+    return null; // Missing decoded sustain must not start the retired oscillator voice.
     const t = this.t;
     const g = this.ctx.createGain();
     g.gain.setValueAtTime(0.0001, t);
@@ -871,7 +873,7 @@ export class AudioBus {
   // Deliberately NOT the `zap`/`blast` synth: guns must not sound like energy weapons.
   gunshot(power = 1, pos = null, voice = null, voiceKey = null) {
     if (!this.ok || this.muted) return;
-    const recorded=FIREARM_RECORDINGS[voiceKey];
+    const recorded=FIREARM_RECORDINGS[voiceKey]||'wpn.m16';
     if(recorded&&this.sample(recorded,{pos,gain:Math.min(1.2,Math.max(.1,fin(power,1)))}))return;
     // Preserve the procedural voice when the recording is absent or still loading.
     const V = voice || { crack: 1, body: 138, tail: 0.20, mech: 0.26 };

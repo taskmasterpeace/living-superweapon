@@ -1,0 +1,255 @@
+{
+ "format": "pw-asset-package",
+ "formatVersion": 1,
+ "id": "prop.reference-aa-gun-manned",
+ "version": 1,
+ "kind": "prop",
+ "displayName": "Seated anti-air gun",
+ "tags": [
+  "reference-fleet",
+  "defense"
+ ],
+ "rig": {
+  "skeleton": "none"
+ },
+ "sockets": [
+  {
+   "name": "aim",
+   "parent": "elevation",
+   "position": [
+    0,
+    0,
+    11.96517
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "entry",
+   "parent": "turret",
+   "position": [
+    0,
+    -3.38146,
+    -8.32359
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "grip-left",
+   "parent": "turret",
+   "position": [
+    -1.40461,
+    3.74562,
+    -1.24854
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "grip-right",
+   "parent": "turret",
+   "position": [
+    1.40461,
+    3.74562,
+    -1.24854
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "muzzle-left",
+   "parent": "aa-barrel-left",
+   "position": [
+    0,
+    0,
+    11.54899
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "muzzle-right",
+   "parent": "aa-barrel-right",
+   "position": [
+    0,
+    0,
+    11.54899
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "operator-seat",
+   "parent": "turret",
+   "position": [
+    0,
+    2.0809,
+    -3.74562
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  }
+ ],
+ "bounds": {
+  "min": [
+   -8.42764,
+   0,
+   -8.42764
+  ],
+  "max": [
+   8.42764,
+   14.66078,
+   11.67055
+  ]
+ },
+ "materials": [
+  {
+   "name": "fleet-machine"
+  },
+  {
+   "name": "fleet-rubber"
+  },
+  {
+   "name": "fleet-edge"
+  },
+  {
+   "name": "fleet-armor"
+  },
+  {
+   "name": "fleet-red"
+  }
+ ],
+ "lods": [
+  {
+   "level": 0,
+   "output": "model.glb",
+   "triangles": 1264
+  }
+ ],
+ "units": {
+  "lengthUnit": "game-unit",
+  "metersPerUnit": 0.19,
+  "up": "+Y",
+  "forward": "+Z",
+  "handedness": "right",
+  "sourceConversion": {
+   "scale": 1,
+   "yawDegrees": 0,
+   "mirrorX": false,
+   "sourceUp": "+Y",
+   "sourceForward": "+Z",
+   "note": "authored directly in game units along the engine weapon axis (-Y toward the muzzle)"
+  }
+ },
+ "budgets": {
+  "profile": "desktop",
+  "measured": {
+   "triangles": 1264,
+   "drawCalls": 15,
+   "materials": 5,
+   "bones": 0,
+   "textures": 0,
+   "bytes": 132928
+  },
+  "limits": {
+   "triangles": 67793,
+   "drawCalls": 32,
+   "materials": 9,
+   "bones": 1,
+   "textures": 4,
+   "bytes": 3170030
+  }
+ },
+ "structural": {
+  "validator": "2.0.0-dev.3.10",
+  "errors": 0,
+  "warnings": 0
+ },
+ "provenance": {
+  "author": "Machine King Labs",
+  "license": "proprietary",
+  "terms": "Original model geometry authored for this project from creator-supplied concept references; reference redistribution rights are not independently verified.",
+  "redistribution": "internal",
+  "attribution": "Creator-supplied September 12, 2026 concepts."
+ },
+ "source": {
+  "adapter": "procedural-prop@1",
+  "files": [
+   {
+    "path": "authoring/recipes/reference-fleet/models.js",
+    "sha256": "0ea0fed997326f7831b6415b6c6b570ec8b31a2b638d38306488b3e7507ba44b"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/damage.js",
+    "sha256": "3de0a59c37abf35dd6538cef69e1e8c7e057dd357ad511da4565cbad12f8566a"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/defense.js",
+    "sha256": "8f83a83205cd4c538da30f953276b4f4f76a7d944702079332be5f2c53db494f"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/aa-gun-manned/model.js",
+    "sha256": "eec1929c29996239fa1781d764ce0566937698ceca8af6ca79fa3ce28c8f6148"
+   }
+  ],
+  "recipe": {
+   "path": "authoring/recipes/reference-fleet/aa-gun-manned/recipe.json",
+   "sha256": "943947ef2b31ab3dfd0fa88a771047cafe62f0044643a23fab08a28f34127aff"
+  }
+ },
+ "tool": {
+  "name": "powerworld-authoring",
+  "version": "0.1.0",
+  "three": "0.169.0",
+  "adapterVersion": 1
+ },
+ "build": {
+  "options": {},
+  "cacheKey": "aaf96ed58676602504c332b58ee7fbe46a2ebd7f17e03d24b95906db80d2df21",
+  "contentHash": "bae21a4a0125372db75887a5c9ab6a601a958abf223c7fd2f4e70101561c65c8",
+  "profile": "desktop"
+ },
+ "acceptance": {
+  "visual": "unapproved",
+  "blockers": [],
+  "note": "Operator seat · twin cannon · turning and elevation pivots; model and scale candidate, no handling or live equipment integration."
+ },
+ "outputs": [
+  {
+   "path": "model.glb",
+   "role": "glb",
+   "sha256": "e62362880de6be83e8fdf9812630461823fa3e3f8abeea0593e2c4443d77cbbb",
+   "bytes": 132928
+  }
+ ],
+ "packageHash": "5498cb57beaeaacad206486076acc2500683ebd6e73927f6f7c56e290b48a16c"
+}

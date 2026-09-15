@@ -1,0 +1,269 @@
+{
+ "format": "pw-asset-package",
+ "formatVersion": 1,
+ "id": "prop.reference-weapon-rifle-ak",
+ "version": 2,
+ "kind": "prop",
+ "displayName": "Frontier rifle · curved magazine",
+ "tags": [
+  "reference-fleet",
+  "equipment"
+ ],
+ "rig": {
+  "skeleton": "none"
+ },
+ "sockets": [
+  {
+   "name": "attachment-muzzle",
+   "parent": "weapon-rifle-ak",
+   "position": [
+    0,
+    1.72389,
+    2.42892
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "attachment-optic",
+   "parent": "weapon-rifle-ak",
+   "position": [
+    0,
+    2.57536,
+    0.04481
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "grip-primary",
+   "parent": "weapon-rifle-ak",
+   "position": [
+    0,
+    0.73799,
+    -0.6274
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "grip-support",
+   "parent": "weapon-rifle-ak",
+   "position": [
+    0,
+    1.45501,
+    0.89628
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  },
+  {
+   "name": "muzzle",
+   "parent": "weapon-rifle-ak",
+   "position": [
+    0,
+    1.72389,
+    2.42892
+   ],
+   "rotation": [
+    0,
+    0,
+    0,
+    1
+   ]
+  }
+ ],
+ "bounds": {
+  "min": [
+   -0.25768,
+   0,
+   -2.31913
+  ],
+  "max": [
+   0.25768,
+   2.34233,
+   2.41772
+  ]
+ },
+ "materials": [
+  {
+   "name": "fleet-painted-parts"
+  }
+ ],
+ "lods": [
+  {
+   "level": 0,
+   "output": "model.glb",
+   "triangles": 352
+  }
+ ],
+ "units": {
+  "lengthUnit": "game-unit",
+  "metersPerUnit": 0.19,
+  "up": "+Y",
+  "forward": "+Z",
+  "handedness": "right",
+  "sourceConversion": {
+   "scale": 1,
+   "yawDegrees": 0,
+   "mirrorX": false,
+   "sourceUp": "+Y",
+   "sourceForward": "+Z",
+   "note": "authored directly in game units along the engine weapon axis (-Y toward the muzzle)"
+  }
+ },
+ "budgets": {
+  "profile": "desktop",
+  "measured": {
+   "triangles": 352,
+   "drawCalls": 1,
+   "materials": 1,
+   "bones": 0,
+   "textures": 0,
+   "bytes": 48992
+  },
+  "limits": {
+   "triangles": 67793,
+   "drawCalls": 32,
+   "materials": 9,
+   "bones": 1,
+   "textures": 4,
+   "bytes": 3170030
+  }
+ },
+ "structural": {
+  "validator": "2.0.0-dev.3.10",
+  "errors": 0,
+  "warnings": 0
+ },
+ "provenance": {
+  "author": "Machine King Labs",
+  "license": "proprietary",
+  "terms": "Original model geometry authored for this project from creator-supplied concept references; reference redistribution rights are not independently verified.",
+  "redistribution": "internal",
+  "attribution": "Creator-supplied September 12, 2026 concepts."
+ },
+ "source": {
+  "adapter": "procedural-prop@1",
+  "files": [
+   {
+    "path": "authoring/recipes/reference-fleet/arsenal.js",
+    "sha256": "c6037ddfc1178f34dcc8f8f093c28e5af591398c3faff322abf97eecab0e7499"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/stealth.js",
+    "sha256": "317644ffc10aeb4f24c2b94ed26997a040b95bf008f54601226e74932e2df9aa"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/nanite-robots.js",
+    "sha256": "e5c027ed100f5a9d4858c6da7bea861dfe05500f57513cc60e636927c7291ece"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/static-batch.js",
+    "sha256": "a5f089984d2ecd7c1f7629ca54774358795581652fce0614e6f759687e3fde55"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/expedition.js",
+    "sha256": "65207c429841fa6403554fa49e4c6e6e855735dbe9aaa95a55534c3998f16995"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/nanite-forms.js",
+    "sha256": "d883d81b0562ae1b7cf592f6fbab0644867eefcbfc9dfedb2c42bfa4aa210c72"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/models.js",
+    "sha256": "06500eb731999fe9d1936ca0e4fdf3cd5dd1c795a14092b80f38f98a79d27345"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/logistics.js",
+    "sha256": "63757f47844ba6c567174bccd2e682471031eb5ed68b6b71fe9893a1beef537d"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/ordnance.js",
+    "sha256": "ab2369438732b8cf9036d2645705dd15c0eb77ccfef7b72212bd41039c805372"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/condition.js",
+    "sha256": "ab8180853faf5c8bb13470a82a84c806f54b96993c7b1806cf562d7fd9754f67"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/air-mobility.js",
+    "sha256": "778f8f67a4f9560fbe8ce38828766c385b7ce739eafda7d84eb652fe9b439f77"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/damage.js",
+    "sha256": "13b05e82dc80d750293ca049542c9e3fb2e874c42a1572dcf16d39bc1fefaed2"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/defense.js",
+    "sha256": "b3e912db260966d8936526b89e678358f3376b4a32c090e097d1046f3f2c710a"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/mechs.js",
+    "sha256": "4aa82d05f85799cba45040e179b5215cded994d368d313f534b1cc3d19c574c4"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/drone-tank.js",
+    "sha256": "ffb9bc81e598700abce165ce4ee960d8a1d133d52fecba4ef9f80f6aa4d144ff"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/crew-interiors.js",
+    "sha256": "972a16c6c00b432c3e8ae1cdc0b6de8c047715ae4f4b4380d908d879107649a7"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/spider-mine.js",
+    "sha256": "cfa4f246a18744c2dd9ee1418906d323a700c47e3a5ecfe333ad6ef33fc6c424"
+   },
+   {
+    "path": "authoring/recipes/reference-fleet/weapon-rifle-ak/model.js",
+    "sha256": "51ac43411d4f83a8a92dddb500f18bc05d8b6f8b66e49d40bc9da667da4fb14c"
+   }
+  ],
+  "recipe": {
+   "path": "authoring/recipes/reference-fleet/weapon-rifle-ak/recipe.json",
+   "sha256": "76914f9c775b7a1c2ebea3abaa40fe62ff87c438e60a96ae5349a2707f6b9197"
+  }
+ },
+ "tool": {
+  "name": "powerworld-authoring",
+  "version": "0.1.0",
+  "three": "0.169.0",
+  "adapterVersion": 1
+ },
+ "build": {
+  "options": {},
+  "cacheKey": "8c92e0f125688dc31e7581a8958283d8d4b08b29cf7f69453e643885a66a468d",
+  "contentHash": "b0f1976053795c7f0ac136a61604c0d8bf6ceba3f15cb11193d5b6eaeebd9fce",
+  "profile": "desktop"
+ },
+ "acceptance": {
+  "visual": "unapproved",
+  "blockers": [],
+  "note": "Modular arsenal · physical prop and attachment sockets · gameplay integration pending; model and scale candidate, no handling or live equipment integration."
+ },
+ "outputs": [
+  {
+   "path": "model.glb",
+   "role": "glb",
+   "sha256": "a64e7106c06ea4b47e0ff9df9498dd7827ed5be1eb3ccade20dc0aab4f14acbf",
+   "bytes": 48992
+  }
+ ],
+ "packageHash": "8f2b6ab9bffe1ec4868deeb3d04b646f6de82285769f8d6fde8ece284104134c"
+}

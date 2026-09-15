@@ -1,0 +1,30 @@
+{
+  "method": "Production Highwall with explicit sight-fixture placement; native world LOS and rendering. Orbit uses existing camera state. Overview is diagnostic, not a player knowledge claim.",
+  "behindWall": {
+    "sight": false,
+    "visible": false,
+    "team": 0,
+    "playerTeam": 0
+  },
+  "overWall": {
+    "sight": true,
+    "visible": true
+  },
+  "audio": {
+    "context": "running"
+  },
+  "movement": {
+    "before": [
+      -247,
+      0,
+      240
+    ],
+    "after": [
+      -247,
+      0,
+      233.76065100000002
+    ]
+  },
+  "engineErrors": [],
+  "errors": []
+}

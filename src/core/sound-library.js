@@ -126,7 +126,7 @@ export class SoundLibrary {
   const authored=this.state.settings[id]||{},loop=loopOverride??authored.loop??cue.loop,now=ctx.currentTime;
   if(!audition&&(now-(this.lastCue.get(id)??-Infinity)<cue.cooldown||[...this.active].filter(h=>h.id===id).length>=cue.concurrency)){this._record({id,accepted:false,reason:'sfx-cooldown-or-concurrency'});return null;}
   const selected=source||this.source(id),decoded=this.buffers.get(id),recording=selected==='chosen-recording'&&decoded?.data===this.state.bindings[id]?.data?decoded.buffer:selected==='bundled-recording'?this.audio?.sampleBuffer?.(SOUND_LIBRARY_SAMPLES[id]):null;
-  if(selected==='chosen-recording'&&!recording){this._record({id,accepted:false,reason:'recording-not-decoded'});return null;}
+  if(!recording&&(!audition||selected!=='synthesized-placeholder')){this._record({id,accepted:false,reason:'recording-not-decoded'});return null;}
   const reach=cue.reach??150;
   const out=ctx.createGain(),baseLevel=Math.max(0,Math.min(1,Number.isFinite(gain)?gain:1))*(authored.gain??cue.gain),level=baseLevel*(audition?1:(this.audio?._pg?.(pos,reach)??1));
   out.gain.setValueAtTime(.00001,now);out.gain.linearRampToValueAtTime(level*.35,now+cue.placeholder.attack);

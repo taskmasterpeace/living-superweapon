@@ -1,4 +1,5 @@
 import {damageSymbol} from './damage-symbols.js';
+import {characterSees} from './character-sight.js';
 import {ImpactPolicy,impactView} from './impact-policy.js';
 // THE COMIC LAYER — captions, speech balloons and sound effects, anchored to the fight.
 //
@@ -516,6 +517,7 @@ export class Comic {
           }
         }
       } else if (it.kind === 'sfx' && it.world) {
+        if(this.g.characterVisibility&&!characterSees(this.g,this.g.player,{pos:it.world})){it.node.style.opacity='0';live.push(it);continue;}
         // ⚠ SFX SHARE THE OCCUPANCY LIST. They were placed independently, so a KRAKA-DOOM landed on
         // top of the balloon of the man it was happening to. A panel never does that.
         const sp = W.screenPosOf(it.world.x, it.world.y + 4, it.world.z);

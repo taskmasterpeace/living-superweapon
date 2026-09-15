@@ -1,3 +1,4 @@
+import {restoredEquipmentEntry} from '../data/restored-equipment.js';
 const REF=/^[a-z0-9][a-z0-9._-]{0,79}@[1-9]\d*$/;
 const HASH=/^[0-9a-f]{64}$/;
 
@@ -95,7 +96,7 @@ export function createAuthoredAssetLoader({fetch:fetchImpl=globalThis.fetch,base
   async function resolvePackage(ref,expectedKind){
     if(typeof ref!=='string'||!REF.test(ref))fail('INVALID_REFERENCE',`Invalid authored asset reference: ${String(ref)}.`,{ref});
     const key=`${ref}|${expectedKind??''}`;if(packageCache.has(key))return packageCache.get(key);
-    const promise=(async()=>{const catalog=await loadCatalog(),entry=catalog.packages.find(item=>`${item.id}@${item.version}`===ref);if(!entry)fail('PACKAGE_UNAVAILABLE',`Authored asset ${ref} is not in this catalog.`,{ref,retryable:true});
+    const promise=(async()=>{const catalog=await loadCatalog(),entry=catalog.packages.find(item=>`${item.id}@${item.version}`===ref)||restoredEquipmentEntry(ref);if(!entry)fail('PACKAGE_UNAVAILABLE',`Authored asset ${ref} is not in this catalog.`,{ref,retryable:true});
       if(expectedKind&&entry.kind!==expectedKind)fail('WRONG_KIND',`${ref} is ${entry.kind}, not ${expectedKind}.`,{ref});
       const packageDir=descendantUrl(entry.dir,rootUrl,'INVALID_CATALOG',ref),packageUrl=new URL(`${packageDir.href}/`),response=await get(new URL('manifest.json',packageUrl),'manifest',ref);let raw;try{raw=await response.json();}catch(cause){fail('INVALID_MANIFEST',`Manifest for ${ref} is not valid JSON.`,{ref,cause});}
       const manifest=validateManifest(raw,entry,expectedKind,ref);return freeze({manifest,baseUrl:packageUrl.href,packageHash:entry.packageHash});})();
@@ -110,7 +111,8 @@ export function createAuthoredAssetLoader({fetch:fetchImpl=globalThis.fetch,base
   }
   async function loadBodyDefinition(ref){return readOutput(ref,'body',{type:'json',expectedKind:'humanoid-body'});}
   async function loadEquipmentInstance(ref){
-    const pack=await resolvePackage(ref,'equipment'),bytes=await readOutput(ref,'glb',{type:'bytes',expectedKind:'equipment'});inspectGlb(bytes,ref);
+    const expectedKind=restoredEquipmentEntry(ref)?'prop':'equipment';
+    const pack=await resolvePackage(ref,expectedKind),bytes=await readOutput(ref,'glb',{type:'bytes',expectedKind});inspectGlb(bytes,ref);
     let gltf;if(parseGLB)gltf=await parseGLB(bytes.slice(0),pack.baseUrl);else{const {GLTFLoader}=await import('three/addons/loaders/GLTFLoader.js');gltf=await new GLTFLoader().parseAsync(bytes.slice(0),pack.baseUrl);}
     const root=gltf.scene??gltf.scenes?.[0];if(!root?.traverse)fail('INVALID_GLB',`${ref} did not contain a scene.`,{ref});
     return {root,manifest:pack.manifest,dispose:ownedDisposer(root)};

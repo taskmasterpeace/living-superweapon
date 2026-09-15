@@ -2,6 +2,7 @@ import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js';
 import {ConvexHull} from 'three/examples/jsm/math/ConvexHull.js';
 import {Color,Vector3} from 'three';
 import {disposeAircraftAsset} from './frontline-aircraft.js';
+import {heroModelOf} from '../data/hero-models.js';
 
 export const CLONE_EQUIPMENT_ASSET='./models/frontline/clone-kit.glb';
 const PALETTES={
@@ -109,5 +110,9 @@ export async function loadCloneEquipment(encounter,{loader=new GLTFLoader(),kind
 // is guarded against disposal AND a replacement appearance; stale gear must not
 // pop onto a new form. The Fighter owns disposal of the attached resources.
 export function loadSoldierEquipment(f,options={}){
+ // This carrier is authored against the native superhero body. The modular
+ // body already owns skinned vest/helmet slots, so adding it asynchronously
+ // creates a second outfit driven by unrelated torso and head proportions.
+ if(heroModelOf(f.def||{}).body==='faceted-v1')return Promise.resolve(false);
  return loadCloneEquipment({soldiers:[f],get disposed(){return !!f._formDisposed;}},{...options,kind:'soldier'});
 }

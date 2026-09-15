@@ -1,3 +1,4 @@
+import {beginDeathPresentation,sampleDeathPresentation,deathPoseJoints,seedDeathContactMeshes} from './death-presentation.js';
 import {advanceGuidedSpearPose,animateGuidedSpearPose,restoreGuidedSpearPose} from './guided-spear.js';
 import {physicalBodyWeightLb} from '../data/body-mass.js';
 import {vehicleContactSpeed,vehicleImpactDamage} from './shared-impact.js';
@@ -1215,6 +1216,7 @@ export class Fighter {
   }
 
   _ko(opts = {}) {
+    const deathAirborne=this.flying||this.gliding||this.pos.y>(this.groundY||0)+1;
     stopFlightAudio(this);
     const restorePose=this._lostControlPose?.applied?this._lostControlPose.nodes:[];this._lostControlPose=null;
     retirePowerUp(this);
@@ -1252,7 +1254,7 @@ export class Fighter {
     // become a ragdoll — carry the killing blow's knockback (+ a small pop) into the sim as launch
     if (this.canPhase) { for (const m of [this.parts.mats.suit, this.parts.mats.suit2]) { m.transparent = false; m.opacity = 1; } }
     const downward = opts.meleeMove === 'slam-release';
-    this.ragdoll = new Ragdoll(this, this.vel.clone().add(new THREE.Vector3(0, downward ? 0 : 12, 0)), { downward,restorePose });
+    if(!beginDeathPresentation(this,{airborne:deathAirborne}))this.ragdoll = new Ragdoll(this, this.vel.clone().add(new THREE.Vector3(0, downward ? 0 : 12, 0)), { downward,restorePose });
     this.vel.set(0, 0, 0);
   }
 
@@ -1633,6 +1635,11 @@ export class Fighter {
     this.poseGrab = damp(this.poseGrab, (this.grabState || this.grabbing) ? 1 : 0, 16, dt);
 
     if (this.state === 'ko') {
+      if(this._deathPresentation){
+        const s=this._deathPresentation;s.elapsed=Math.min(s.duration,s.elapsed+dt);sampleDeathPresentation(this);
+        if(s.elapsed>=s.duration){const capturedJoints=deathPoseJoints(this);const restorePose=seedDeathContactMeshes(this,capturedJoints);this._deathPresentation=null;this.ragdoll=new Ragdoll(this,new THREE.Vector3(),{capturedJoints,restorePose,downward:true});this.ragdoll.coreContact?.settleIsland(game.world);for(const point of Object.values(this.ragdoll.P))point.prev.copy(point.pos);this.ragdoll.asleep=true;this.ragdoll._authoredRest=true;}
+        else return;
+      }
       this._updateKO(dt, game);
       if (this.ragdoll) { this.ragdoll.step(dt, game); this.ragdoll.apply(this); this._sync(); return; }
       this._physics(dt, game); this._animate(dt); this._sync(); return;

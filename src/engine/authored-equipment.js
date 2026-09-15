@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import {loadEquipmentInstance as defaultLoadEquipmentInstance} from './authored-assets.js';
 import {mountHeldWeapon,unmountHeldWeapon} from './weapon-emission.js';
+import {restoredEquipmentMountManifest} from '../data/restored-equipment.js';
 
 const socketMatrix=socket=>new THREE.Matrix4().compose(new THREE.Vector3(...socket.position),new THREE.Quaternion(...socket.rotation),new THREE.Vector3(1,1,1));
 const copyTriangleAttributes=(geometry,keep,owned)=>{
@@ -49,12 +50,15 @@ function stockFromGeometry(wrapper){
 }
 
 export function createEquipmentMount(asset,{weaponKind}){
- const {root,manifest}=asset,wrapper=new THREE.Group();wrapper.name=`authored-${weaponKind}`;wrapper.userData.weaponKind=weaponKind;
+ const {root}=asset,wrapper=new THREE.Group();wrapper.name=`authored-${weaponKind}`;wrapper.userData.weaponKind=weaponKind;
  // The loader owns its original resources. Every split, including intermediate
  // remainders no longer in the graph, belongs to this mount instead.
  const owned=new Set();let disposed=false;
  wrapper.userData.disposeEquipment=()=>{if(disposed)return;disposed=true;for(const geometry of owned)geometry.dispose();owned.clear();asset.dispose();if(wrapper.userData.proceduralFallback)wrapper.userData.proceduralFallback.visible=true;wrapper.removeFromParent();};
  try{
+ const manifest=restoredEquipmentMountManifest(asset.manifest,weaponKind);
+ wrapper.userData.equipmentSource=`${manifest.id}@${manifest.version}`;
+ wrapper.userData.reloadPresentation=manifest.equipment?.reloadPresentation||'physical-magazine-bolt';
  wrapper.userData.rifleContact=!!manifest.equipment?.twoHanded;wrapper.userData.twoHanded=!!manifest.equipment?.twoHanded;
  root.updateMatrixWorld(true);const rootInverse=root.matrixWorld.clone().invert();
  const sockets=new Map((manifest.sockets||[]).map(socket=>{
@@ -64,7 +68,7 @@ export function createEquipmentMount(asset,{weaponKind}){
  const inverseGrip=grip.clone().invert();root.applyMatrix4(inverseGrip);wrapper.add(root);
  const frame=name=>sockets.has(name)?inverseGrip.clone().multiply(sockets.get(name)):null;
  for(const [source,target]of [['grip','weapon-primary-grip'],['support','weapon-support-grip'],['muzzle','weapon-muzzle'],['holster','weapon-holster']])if(sockets.has(source))alias(wrapper,target,frame(source));
- if(weaponKind==='rifle'){
+ if(weaponKind==='rifle'&&manifest.equipment?.sourceAdapter!=='restored-arsenal-v1'){
   const namedMagazine=namedActionPart(root,'weapon-magazine',frame('magazine'),owned);
   const magazine=namedMagazine||extractGeometry(root,'weapon-magazine',(x,y,z)=>Math.abs(x)<.18&&y>-.59&&y<-.09&&z>-.86&&z<-.18,owned);
   const bolt=namedActionPart(root,'weapon-charging-handle',frame('charging-handle'),owned)||extractGeometry(root,'weapon-charging-handle',(x,y,z)=>x<-.2&&x>-.44&&y>-.23&&y<-.05&&z>-.04&&z<.13,owned);
@@ -72,6 +76,7 @@ export function createEquipmentMount(asset,{weaponKind}){
   const magGrip=alias(magazine,'magazine-grip',new THREE.Matrix4().identity());if(!namedMagazine)magGrip.position.set(0,-.21,0);
   if(sockets.has('stock'))alias(wrapper,'weapon-stock-contact',frame('stock'));else stockFromGeometry(wrapper);
  }
+ if(weaponKind==='rifle'&&manifest.equipment?.sourceAdapter==='restored-arsenal-v1')stockFromGeometry(wrapper);
  wrapper.userData.authoredEquipment=true;return wrapper;
  }catch(error){wrapper.userData.disposeEquipment();throw error;}
 }

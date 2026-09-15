@@ -50,6 +50,9 @@ export function animateReloadPose(f){
  magazine.getObjectByName('magazine-grip').getWorldPosition(target);
  bolt.getWorldPosition(start);target.lerp(start,toBolt);arm.parent.worldToLocal(target);
  hand.getWorldPosition(start);arm.parent.worldToLocal(start);target.lerp(start,1-weight);
+ // Shared final contact for alternate body proportions. The visible modular
+ // palm follows this same magazine-to-bolt timeline instead of the foregrip.
+ s.contactWorld=arm.parent.localToWorld(target.clone());
  pole.set(0,-1,0).applyQuaternion(arm.quaternion);
  // Keep the reload elbow outside the carrier, following its current blade.
  if(f._pronePose?.weight)endPole.set(side,0,0);

@@ -1,20 +1,20 @@
 import * as THREE from 'three';
 import {equipmentPolicy} from './equipment-policy.js';
-import {inventoryAdmission,inventoryAttackActive,setHeldStowed,HANDHELD_DEVICE} from './inventory-model.js';
+import {inventoryAdmission,inventoryAttackActive,setHeldStowed,HANDHELD_DEVICE,logicalWeaponGear} from './inventory-model.js';
 
 // Persist logical ownership, not scene graphs. Infinity is used by existing
 // weapon lifetime/ammo rules and must survive JSON/localStorage round trips.
 const encode=value=>JSON.parse(JSON.stringify(value,(_,v)=>v===Infinity?'@ww:infinity':v));
 const decode=value=>JSON.parse(JSON.stringify(value),(_,v)=>v==='@ww:infinity'?Infinity:v);
 const clone=value=>structuredClone(value);
-function weaponSnapshot(gear,slot,id){return {id,gear:clone(gear),ammo:clone(slot?.ammo??null),cd:slot?.cd??0};}
+function weaponSnapshot(gear,slot,id){return {id,gear:clone(logicalWeaponGear(gear)),ammo:clone(slot?.ammo??null),cd:slot?.cd??0};}
 function gadgetSnapshot(it){return {itemId:it.itemId,def:clone(it.def),state:it.state,cd:it.cd||0,charges:it.charges??0,...(it.condition!==undefined?{condition:clone(it.condition)}:{}),...(it.attachments?{attachments:clone(it.attachments)}:{})};}
 export function snapshotInventory(f,{allowDeployed=false}={}){
  if(!allowDeployed&&(f.items||[]).some(it=>it.state==='deployed'))throw Error('Recall deployed gadgets before saving Highwall.');
  const nativeSlots=Object.fromEntries(Object.entries(f.slots||{}).filter(([key,slot])=>key!=='_gear'&&slot!==f.slots._gear&&slot.ammo).map(([key,slot])=>[key,{ammo:clone(slot.ammo),cd:slot.cd||0}]));
  return encode({schema:1,device:f._inventoryDevice!==false&&f.def.vocalFamily!=='zombie',deviceId:f._inventoryDeviceId,
   held:f._gearHeld?weaponSnapshot(f._gearHeld,f.slots._gear,'held'):null,
-  weapons:clone(f._inventoryWeapons||[]),items:(f.items||[]).map(gadgetSnapshot),
+  weapons:(f._inventoryWeapons||[]).map(saved=>weaponSnapshot(saved.gear,saved,saved.id)),items:(f.items||[]).map(gadgetSnapshot),
   nativeSlots,layout:clone(f._inventoryLayout||{}),serial:f._inventorySerial||0,stowed:!!f._inventoryStowed});
 }
 export function restoreInventory(game,f,input){
@@ -42,10 +42,11 @@ export function restoreInventory(game,f,input){
 export class HighwallLoot {
  constructor(game,{range=16}={}){
   this.game=game;this.range=range;this.containers=new Map();this.markers=new Map();this.dropped=new Set();this.serial=0;this.lifeIds=new WeakMap();
-  this.geometry=new THREE.BoxGeometry(2.6,3.1,1.5);this.material=new THREE.MeshStandardMaterial({color:'#b9a365',roughness:.85});
+  // A ground interaction marker, not an invented crate sitting over the body.
+  this.geometry=new THREE.RingGeometry(2.8,3,4);this.geometry.rotateX(-Math.PI/2);this.material=new THREE.MeshBasicMaterial({color:'#b9a365',side:THREE.DoubleSide});
  }
  sourceOf(f){if(!this.lifeIds.has(f))this.lifeIds.set(f,`life:${++this.serial}`);return this.lifeIds.get(f);}
- marker(c){const mesh=new THREE.Mesh(this.geometry,this.material);mesh.position.set(c.pos.x,c.pos.y+1.55,c.pos.z);mesh.castShadow=true;mesh.userData.highwallLoot=c.id;this.game.scene.add(mesh);this.markers.set(c.id,mesh);}
+ marker(c){const mesh=new THREE.Mesh(this.geometry,this.material);mesh.position.set(c.pos.x,c.pos.y+.08,c.pos.z);mesh.userData.highwallLoot=c.id;this.game.scene.add(mesh);this.markers.set(c.id,mesh);}
  dropDeath(f,{sourceId=this.sourceOf(f)}={}){
   if(f.alive!==false)return null;
   if(this.dropped.has(sourceId))return [...this.containers.values()].find(c=>c.sourceId===sourceId)||null;

@@ -58,7 +58,7 @@ const _a = new THREE.Vector3(), _b = new THREE.Vector3(), _m = new THREE.Vector3
 const _dir = new THREE.Vector3(), _up = new THREE.Vector3(0, 1, 0), _q = new THREE.Quaternion();
 
 export class Ragdoll {
-  constructor(fighter, impulse, { downward = false, restorePose = [], jointLimits = fighter.def.model?.body==='faceted-v1' } = {}) {
+  constructor(fighter, impulse, { downward = false, restorePose = [], capturedJoints = null, jointLimits = fighter.def.model?.body==='faceted-v1' } = {}) {
     this.f = fighter;
     const p = fighter.parts;
     // meshes we drive, and their pivots (zeroed so children live in group-local space, then restored)
@@ -86,7 +86,7 @@ export class Ragdoll {
     // Seed from the actual articulated pose, including body pitch and frame proportions.
     // A cruising KO must not pop upright or collapse every archetype onto one small skeleton.
     fighter.obj.updateMatrixWorld(true);
-    const joints = p.rig ? {
+    const joints = capturedJoints || (p.rig ? {
       head:p.head.getWorldPosition(new THREE.Vector3()),chest:p.torso.getWorldPosition(new THREE.Vector3()),
       pelvis:p.pelvis.getWorldPosition(new THREE.Vector3()),
       shL:p.armL.getWorldPosition(new THREE.Vector3()),shR:p.armR.getWorldPosition(new THREE.Vector3()),
@@ -96,7 +96,7 @@ export class Ragdoll {
       hiL:p.legL.getWorldPosition(new THREE.Vector3()),hiR:p.legR.getWorldPosition(new THREE.Vector3()),
       kneeL:p.legL.userData.knee.getWorldPosition(new THREE.Vector3()),kneeR:p.legR.userData.knee.getWorldPosition(new THREE.Vector3()),
       ftL:p.legL.userData.boot.getWorldPosition(new THREE.Vector3()),ftR:p.legR.userData.boot.getWorldPosition(new THREE.Vector3())
-    } : null;
+    } : null);
     const o = fighter.pos;                       // world feet
     this.P = {};
     const com = new THREE.Vector3();
@@ -118,7 +118,7 @@ export class Ragdoll {
     // launch: base knockback + upward pop + a somersault spin in the launch direction
     const base = impulse ? impulse.clone() : new THREE.Vector3();
     // Directed finishers keep their downward drive; ordinary KOs retain the small pop.
-    base.y = downward ? clamp(base.y, -160, -30) : clamp(base.y, -4, 20) + 7;
+    base.y = capturedJoints ? 0 : downward ? clamp(base.y, -160, -30) : clamp(base.y, -4, 20) + 7;
     base.x = clamp(base.x, -60, 60); base.z = clamp(base.z, -60, 60);
     const horiz = new THREE.Vector3(base.x, 0, base.z);
     const spinAxis = new THREE.Vector3().crossVectors(_up, horiz).normalize(); // tumble forward
@@ -128,9 +128,9 @@ export class Ragdoll {
       const pt = this.P[k];
       _a.subVectors(pt.pos, com);                         // r from COM
       _b.crossVectors(spinAxis, _a).multiplyScalar(spin); // angular contribution
-      const vx = base.x + _b.x + (Math.random() - 0.5) * 5;
-      const vy = base.y + _b.y + (Math.random() - 0.5) * 4;
-      const vz = base.z + _b.z + (Math.random() - 0.5) * 5;
+      const vx = base.x + _b.x + (capturedJoints?0:(Math.random() - 0.5) * 5);
+      const vy = base.y + _b.y + (capturedJoints?0:(Math.random() - 0.5) * 4);
+      const vz = base.z + _b.z + (capturedJoints?0:(Math.random() - 0.5) * 5);
       pt.prev.set(pt.pos.x - vx * dt0, pt.pos.y - vy * dt0, pt.pos.z - vz * dt0);
     }
     this.capePose=!jointLimits&&p.cape?.userData.rest?new RagdollCape(p,_a.subVectors(this.P.chest.pos,this.P.chest.prev).multiplyScalar(60)):null;
@@ -152,6 +152,19 @@ export class Ragdoll {
 
   step(dt, game) {
     this._clothDt+=clamp(dt,0,.05);this._clothWorld=game?.world;
+    if(this._authoredRest){
+      const supported=Object.entries(this.P).some(([key,pt])=>{
+        const bottom=pt.pos.y+(this.coreContact?.supports.get(key)?.finalBounds.min.y??-.5),w=game?.world;
+        if(bottom<=(w?.heightAt?.(pt.pos.x,pt.pos.z)??0)+.1)return true;
+        return (w?.cover||[]).some(c=>Math.abs(bottom-(c.top??c.h))<.1&&Math.abs(pt.pos.x-c.x)<=(c.hx??c.r)&&Math.abs(pt.pos.z-c.z)<=(c.hz??c.r));
+      });
+      if(!supported){
+        this.asleep=false;this._restFallVelocity=(this._restFallVelocity||0)+GRAV*Math.min(dt,.05);
+        for(const pt of Object.values(this.P)){pt.pos.y+=this._restFallVelocity*Math.min(dt,.05);pt.prev.copy(pt.pos);}
+        this.coreContact?.settleIsland(game?.world);
+      }else{this._restFallVelocity=0;this.asleep=true;}
+      return;
+    }
     if (this.asleep) return;
     dt = clamp(dt, 1 / 140, 1 / 45);
     const dt2 = dt * dt;
