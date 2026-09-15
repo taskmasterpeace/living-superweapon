@@ -141,6 +141,7 @@ export class FleetPilot {
     this._audio.update(this._c || {});
     const intent = fleetIntent(a.cls, this._c || {});
     if (this._aim) Object.assign(intent, turretSlewIntent(a.cls, a.motion, a.env, this._aim, dt));
+    if (a.disabled && intent.throttle) intent.throttle *= .45;   // a mauled drivetrain limps
     driveActor(a, intent, dt, this.game.world);
     // the mounted weapon: same fire path the AI crew uses (vehicle-weapons.js)
     const w = attachMount(a);

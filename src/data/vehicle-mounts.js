@@ -32,3 +32,20 @@ export const VEHICLE_MOUNTS = {
 };
 
 export function mountFor(id) { return VEHICLE_MOUNTS[id] || null; }
+
+// ---- HULLS — every fleet vehicle is a finite-volume damage receiver --------
+// hp scales are proposals on the city cover formula's order of magnitude.
+// `disabledAt` is the hull fraction below which the drivetrain limps.
+export const VEHICLE_HULLS = {
+  tank: { hp: 420 }, 'drone-tank': { hp: 300 }, 'aa-tank': { hp: 340 },
+  motorcycle: { hp: 70 }, atv: { hp: 90 }, humvee: { hp: 190 }, 'armored-scout': { hp: 180 },
+  'cargo-transport': { hp: 240 }, 'mobile-fabricator': { hp: 260 },
+  helicopter: { hp: 170 }, 'transport-helicopter': { hp: 210 },
+  'jet-a': { hp: 140 }, 'jet-b': { hp: 130 }, 'jet-c': { hp: 150 }, 'stealth-jet': { hp: 130 },
+  'mech-light': { hp: 320 }, 'mech-medium': { hp: 460 }, 'mech-heavy': { hp: 640 },
+};
+const CLASS_HULL = { tracked: 380, mech: 400, wheeled: 150, hover: 140, rotor: 180, fixedwing: 150, ship: 2400 };
+export function hullFor(actor) {
+  const row = VEHICLE_HULLS[actor?.id];
+  return { hp: row?.hp ?? CLASS_HULL[actor?.cls] ?? 160, disabledAt: row?.disabledAt ?? .25 };
+}

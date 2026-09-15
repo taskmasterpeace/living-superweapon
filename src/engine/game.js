@@ -25,6 +25,8 @@ import * as THREE from 'three';
 import {meleeApproach} from '../data/melee-approaches.js';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {FleetPilot} from './fleet-pilot.js';
+import {attachVehicleHull} from './vehicle-combat.js';
+import {measureMuzzle} from './vehicle-weapons.js';
 import {classOf as fleetClassOf, envelopeFor as fleetEnvelopeFor, drives as fleetDrives} from '../data/fleet-handling.js';
 import {initVehicleState,initAirborneVehicleState} from './vehicle-pilot.js';
 import {bindVehicleParts} from './vehicle-rig.js';
@@ -1643,6 +1645,10 @@ export class Game {
 
   canSee(a, b) {
     for (const c of this.world.cover) {
+      // A vehicle hull never hides its own crew: the occupant sits INSIDE the
+      // hull's cover box, so without this the whole world goes blind to an
+      // occupied tank — infantry must perceive the vehicle as the threat.
+      if (c.fleetVehicle && c.construct?.actor && (a._fleetVehicle === c.construct.actor || b._fleetVehicle === c.construct.actor)) continue;
       if(c.finiteBuilding){if(this.world.traceBox3(a.pos.x,a.pos.y+5,a.pos.z,b.pos.x,b.pos.y+5,b.pos.z,c)>=0)return false;continue;}
       if (Math.min(a.pos.y, b.pos.y) + 5 > (c.top ?? c.h)) continue;              // both above the block → seen over it
       if (this._segBox(a.pos.x, a.pos.z, b.pos.x, b.pos.z, c.x, c.z, (c.hx ?? c.r) + 1, (c.hz ?? c.r) + 1)) return false;
@@ -1966,7 +1972,7 @@ export class Game {
     if (this._ring) this._ring.close();
     if (this._pwStage) this._pwStage.close();   // POWERWORLD's stage is a transient like any other
     if (this._fleetPilot) { this._fleetPilot.dispose(); this._fleetPilot = null; }
-    if (this._fleetActors) { for (const a of this._fleetActors) if (a.wrapper) { this.scene.remove(a.wrapper); a.wrapper.traverse(o => o.geometry?.dispose?.()); } this._fleetActors = null; }
+    if (this._fleetActors) { for (const a of this._fleetActors) { a.hull?.dispose(); if (a.wrapper) { this.scene.remove(a.wrapper); a.wrapper.traverse(o => o.geometry?.dispose?.()); } } this._fleetActors = null; }
     teardownSimProps(this);   // dispose the sim's walls + water, unregister the wall cover
     if (this._simUndo) { restoreSimArena(this.world, this._simUndo); this._simUndo = null; }   // the sim arena's terrain is a transient — put the land back
     this._simActive = false; this._simVehicle = null; this._simFleet = null; this._simIndex = 0; this._simPrevActor = null; this._simFoe = null; this._simInRing = false; this._simRingScore = 0; this._simAir = 12; this._simDrownT = 0; this._simMissiles = null;
@@ -2159,6 +2165,7 @@ export class Game {
     if (this._simVehicle) {
       const old = this._simVehicle;
       if (this._fleetPilot?.actor === old) this._fleetPilot.exit({force:true});
+      old.hull?.dispose();
       if (old.wrapper) { this.scene.remove(old.wrapper); old.wrapper.traverse(o => o.geometry?.dispose?.()); }
       const i = this._fleetActors ? this._fleetActors.indexOf(old) : -1; if (i >= 0) this._fleetActors.splice(i, 1);
       this._simVehicle = null;
@@ -2170,6 +2177,7 @@ export class Game {
     if (!current()) {
       // A newer request can start between spawn's completion and this continuation.
       if (a) {
+        a.hull?.dispose();
         this.scene.remove(a.wrapper); a.wrapper.traverse(o => o.geometry?.dispose?.());
         const i = this._fleetActors?.indexOf(a) ?? -1; if (i >= 0) this._fleetActors.splice(i, 1);
       }
@@ -2304,6 +2312,8 @@ export class Game {
     wrapper.position.set(actor.pos.x, actor.pos.y, actor.pos.z);
     actor.parts = bindVehicleParts(model);   // turret/rotor/wheels/control surfaces, driven each frame by rigParts
     (this._fleetActors ??= []).push(actor);
+    attachVehicleHull(this, actor);          // every fleet vehicle is a finite-volume damage receiver
+    measureMuzzle(actor, THREE);             // muzzle truth from the real barrel node where one exists
     this._fleetPilot ??= new FleetPilot(this);
     this.hud?.feed?.(`${(row.name || id).toUpperCase()} DEPLOYED — WALK UP + J TO BOARD`, '#7fe6ff');
     return actor;
@@ -4562,6 +4572,7 @@ export class Game {
     }
     if (this.mode && !this.matchOver) this.mode.tick(this, dt);
     this._fleetPilot?.update(dt);   // generic fleet-vehicle driving (exists only once one is spawned)
+    for (const a of this._fleetActors || []) { a.hull?.update(dt); a.operator?.update?.(dt); }   // hull bounds ride the moving vehicle; AI operators think here
     if (this._simActive) {   // board a printed vehicle → warp into the simulation (Robert's "teleported somewhere else, looks like VR")
       const cur = this._fleetPilot?.actor || null;
       if (cur && cur !== this._simPrevActor) this._simWarpFx();

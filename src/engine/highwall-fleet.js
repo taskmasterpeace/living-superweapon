@@ -15,7 +15,7 @@ export function fleetSpawnReason(game,actor,{bounds=game._highwall?.layout?.boun
  for(const other of game._fleetActors||[])if(other!==actor&&!other.destroyed&&Math.abs(other.pos.y-y)<h+(other.bodyHeight||10)&&Math.hypot(other.pos.x-x,other.pos.z-z)<r+(other.bodyRadius||6)+2)return 'Vehicle placement overlaps another vehicle.';
  return null;
 }
-function discard(game,actor){actor.wrapper?.removeFromParent();actor.wrapper?.traverse(o=>o.geometry?.dispose());const i=(game._fleetActors||[]).indexOf(actor);if(i>=0)game._fleetActors.splice(i,1);}
+function discard(game,actor){actor.hull?.dispose();actor.wrapper?.removeFromParent();actor.wrapper?.traverse(o=>o.geometry?.dispose());const i=(game._fleetActors||[]).indexOf(actor);if(i>=0)game._fleetActors.splice(i,1);}
 export async function spawnHighwallFleet(game,id,{position,yaw,scope=game._highwall}={}){
  const preset=HIGHWALL_FLEET_PRESETS.find(p=>p.id===id);if(!preset)throw Error(`Unsupported Highwall vehicle: ${id}`);
  if(scope&&!preset.highwall)throw Error('Use the separate flight proving ground for the jet. Highwall is not a jet runway.');
