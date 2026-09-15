@@ -138,7 +138,12 @@ export function driveActor(actor, intent, dt, world) {
       }
     }else pos.y += rise;
     const floor = heightAt(world, pos.x, pos.z) + off;
-    if (pos.y <= floor) { pos.y = floor; if ((m.vy || 0) < 0) m.vy = 0; actor.grounded = true; } else actor.grounded = false;
+    if (pos.y <= floor) {
+      // TOUCHDOWN EVENT — stamped once per arrival with the honest contact
+      // numbers; the pilot layer decides landing vs hard landing vs crash.
+      if (!actor.grounded) actor.landedImpact = { vy: m.vy || 0, speed: Math.hypot(m.vx || 0, m.vz || 0), gearDown: m.gearDown !== false };
+      pos.y = floor; if ((m.vy || 0) < 0) m.vy = 0; actor.grounded = true;
+    } else actor.grounded = false;
   } else if (cls === 'wheeled') {
     // THE SUPPORT CONTRACT (the old conflict, fixed): the stepper owns m.y/m.vy/m.air,
     // and the adapter enforces the SAME ground number the stepper reasons about.

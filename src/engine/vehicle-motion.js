@@ -124,6 +124,7 @@ export function stepFixedwing(s, i, dt, e, ctx) {
   fin(s, ['speed', 'yaw', 'roll', 'pitch', 'lever', 'rollSpin', 'rollDir']); dt = dtc(dt); if (!dt || !i) return s;
   const parked = !!i.parked;
   s.lever = clamp(s.lever + clamp(i.throttle || 0, -1, 1) * e.throttleRate * dt, parked ? 0 : .12, 1);
+  if (parked && Math.abs(i.throttle || 0) < .001) s.lever = Math.max(0, s.lever - .35 * dt);   // on the strip, hands off = idle back (rollout actually stops)
   const burn = e.burnTop > 0 && !!i.burner && !parked && s.lever > .85;
   const max = burn ? e.burnTop : e.top;
   const bleed = clamp(1 - Math.max(0, s.pitch) * e.climbBleed, .15, 1);   // climbing bleeds; diving never does

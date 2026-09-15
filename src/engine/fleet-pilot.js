@@ -143,7 +143,21 @@ export class FleetPilot {
     const intent = fleetIntent(a.cls, this._c || {});
     if (this._aim) Object.assign(intent, turretSlewIntent(a.cls, a.motion, a.env, this._aim, dt));
     if (a.disabled && intent.throttle) intent.throttle *= .45;   // a mauled drivetrain limps
+    if (a.cls === 'fixedwing') intent.parked = !!a.grounded;     // on the ground: rollout drag + no pitch below rotate; full throttle is the takeoff roll
     driveActor(a, intent, dt, this.game.world);
+    // touchdown policy: a gentle, gear-down arrival is a LANDING; sink or a
+    // belly costs the hull through the real receiver (no scripted subtraction)
+    if (a.landedImpact) {
+      const li = a.landedImpact; a.landedImpact = null;
+      if (a.cls === 'fixedwing') {
+        // thresholds are ENVELOPE-relative: the authored lift-out sink rate is
+        // this model's normal glide arrival, not a crash
+        const sink = a.env?.sink ?? 27, belly = !li.gearDown && li.speed > 8;
+        if (belly || li.vy < -(sink * 2)) { a.hull?.hit((26 + Math.abs(li.vy)) * (belly ? 2 : 1), { team: NaN }); this.game.hud?.feed?.(belly ? 'BELLY LANDING — hull damaged' : 'CRASH LANDING — hull damaged', '#ff8b63'); }
+        else if (li.vy < -(sink + 8)) { a.hull?.hit(Math.abs(li.vy) * .8, { team: NaN }); this.game.hud?.feed?.('HARD LANDING', '#ffce75'); }
+        else this.game.hud?.feed?.('TOUCHDOWN — throttle up to take off again', '#7fe6ff');
+      }
+    }
     // the mounted weapon: same fire path the AI crew uses (vehicle-weapons.js)
     const w = attachMount(a);
     if (w) {
