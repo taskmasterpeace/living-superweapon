@@ -2,7 +2,7 @@ import {metersToUnits} from '../core/world-units.js';
 import {fortificationPlacement} from './fortification-kit.js';
 
 export const HIGHWALL_HEIGHT=metersToUnits(30*.3048);
-export const HIGHWALL_BOUNDS=Object.freeze({minX:-324,maxX:324,minZ:-300,maxZ:300});
+export const HIGHWALL_BOUNDS=Object.freeze({minX:-544,maxX:448,minZ:-416,maxZ:416});
 export const HIGHWALL_PRESETS=Object.freeze([
  {id:'corridor',name:'Corridor fight',description:'Blue: you + 3 soldiers. Red: 4 soldiers. Loop through the western junctions.'},
  {id:'infestation',name:'Infestation',description:'Blue: you + 3 soldiers. Red: 6 shamblers. Bounded groups, no respawns.'},
@@ -31,7 +31,7 @@ export function highwallLayout({gateClosed=true,revision=1}={}){
   for(const side of[-1,1])place(`${id}-end-${side}`,'tall-end-cap',x+(axis==='x'?side*total/2:0),z+(axis==='z'?side*total/2:0),{height:HIGHWALL_HEIGHT,rotation:axis==='x'?0:90});
  };
  // Repeated vertical spines, with generous transverse junctions and loops.
- for(const [i,x]of[-286,-208,-130,-52].entries()){
+ for(const [i,x]of[-286,-130].entries()){
   for(const[j,z]of[-220,-100,20,140].entries()){
    wall(`spine-${i}-${j}`,x,z,72);
   }
@@ -43,10 +43,14 @@ export function highwallLayout({gateClosed=true,revision=1}={}){
  wall('field-screen',245,80,126,'x');
  // Perimeter and watchtower kit establish a compound, rather than isolated test panels.
  // Tower windows are real openings between authored posts; these have no scripted guards.
- wall('compound-west',-313,0,550);
- wall('compound-north',-164,-286,298,'x');
- wall('compound-south-west',-281,282,64,'x');
- wall('compound-south-east',-80,282,100,'x');
+ // Spacious western extension: large right-angle rooms with alternating exits.
+ for(const [i,[x,z,rotation]] of [[-436,-210,0],[-436,80,180],[-270,320,180]].entries())place('large-corner-'+i,'tall-long-corner',x,z,{height:HIGHWALL_HEIGHT,rotation});
+ // Outer perimeter is twice main-wall height and long-panel length.
+ // South access remains an explicit 128u opening, never an invisible border.
+ const border=(id,x,z,span,rotation=0)=>place(id,'border-wall',x,z,{span,height:HIGHWALL_HEIGHT*2,rotation});
+ border('border-west',-524,0,800,90);border('border-east',428,0,800,90);
+ border('border-north',-48,-396,976);
+ border('border-south-west',-304,396,464);border('border-south-east',252,396,376);
  for(const [i,[x,z]]of[[-302,-274],[-302,270],[-28,-274]].entries()){
   place(`tower-${i}`,'tall-tower',x,z);
  }
@@ -83,7 +87,7 @@ export function highwallLayout({gateClosed=true,revision=1}={}){
  // Freestanding route boards have physical supports, rather than floating in space.
  for(const [i,s]of signs.entries())for(const side of[-1,1])box(`sign-support-${i}-${side}`,s.x+side*(s.w/2-2),s.z,2,2,s.y+s.w/8,0,'post');
  for(const module of modules)pieces.push(...fortificationPlacement(module).solids);
- return {version:2,revision,seed:1701,bounds:{...HIGHWALL_BOUNDS},pieces,modules,signs,
+ return {version:3,revision,seed:1701,bounds:{...HIGHWALL_BOUNDS},pieces,modules,signs,
   zones:[{id:'infantry',x:-169,z:-40,width:300,depth:490},{id:'armor',x:66,z:0,width:100,depth:570},{id:'air',x:233,z:-110,width:168,depth:320}],
   blue:[{x:-247,z:240},{x:-229,z:240},{x:-247,z:222},{x:-229,z:222}],
   red:[{x:-169,z:0},{x:-151,z:0},{x:-169,z:-18},{x:-151,z:-18}],

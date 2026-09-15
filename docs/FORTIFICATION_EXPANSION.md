@@ -9,3 +9,10 @@ Added complete portal variants `gate-closed/open/damaged/destroyed` and `door-cl
 Visual evidence: `artifacts/fortification-expansion/module-lineup.png`. This is an isolated rendered asset review, not a new native gameplay acceptance run. Existing kit bounds/skins, portal contact, long-wall sockets, curve hollow space and elevated navigation are regression-tested. No editor UI was added.
 
 Validation: 28 focused regression tests passed using the repository CSS import hook; production build passed (630 modules). Browser asset capture reported zero page errors.
+
+## Revision: L corners and spacious perimeter
+The rounded module was replaced by `tall-long-corner`, a 128u right-angle L with the same endpoint sockets. Main north/south maze lanes now have 156u center spacing rather than 78u. Three large L placements add western/southern space. Bounds expand from 648x600u to 992x832u. Existing spawn, gate, tank and bunker coordinates remain.
+
+`border-wall` defaults to 256x96x24u: twice long-panel length, height and thickness. Authored perimeter spans adapt to the outer boundary; Highwall height is exactly twice the 30ft main wall. The south has a 128u ground entrance. No invisible ceiling. Layout version is 3; reload/reset to rebuild geometry and navigation. Existing saves may retain their authored old layout.
+
+24 focused tests passed, including actual fighter stair navigation and current tower access. Production build passed. `artifacts/highwall-spacious/module-lineup.png` is an isolated layout inspection, not player vision or full battle acceptance. Expanded encounter balance still needs play review.
