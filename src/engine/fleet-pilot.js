@@ -10,6 +10,7 @@ import {FleetControlsHud,fleetControls} from './fleet-controls.js';
 import {canUseFlight} from './mobility-policy.js';
 import {sessionOf,seatBusy,SEAT_DRIVER} from './vehicle-session.js';
 import {turretSlewIntent,wrapAngle,attachMount,fireVehicleWeapon} from './vehicle-weapons.js';
+import {VehicleReticle} from './vehicle-reticle.js';
 
 const AIMED = new Set(['tracked','mech']);   // classes whose mount the mouse aims
 
@@ -61,7 +62,7 @@ export function fleetIntent(cls, c) {
 }
 
 export class FleetPilot {
-  constructor(game) { this.game = game; this.actor = null; this._tapT = 0; this._tapKey = ''; this._audio = new FleetAudio(game.audio); this._hud=new FleetControlsHud(); }
+  constructor(game) { this.game = game; this.actor = null; this._tapT = 0; this._tapKey = ''; this._audio = new FleetAudio(game.audio); this._hud=new FleetControlsHud(); this._reticle=new VehicleReticle(); }
 
   _blocked() { const g = this.game; return g.paused || g.running === false || g.matchOver || g.hud?.titleOpen || g.combatOverlayOpen; }
 
@@ -136,9 +137,9 @@ export class FleetPilot {
   _seat() { this.actor?.session?.tick(); }
 
   update(dt) {
-    const a = this.actor; if (!a) { this._audio.stop(); return; }
+    const a = this.actor; if (!a) { this._audio.stop(); this._reticle.hide(); return; }
     if (a.destroyed || !a.occupant?.alive || a.occupant !== this.game.player) { this.exit({force:true}); return; }
-    if (this._blocked() || !(dt > 0)) { this._audio.pause(); return; }
+    if (this._blocked() || !(dt > 0)) { this._audio.pause(); this._reticle.hide(); return; }
     this._audio.update(this._c || {});
     const intent = fleetIntent(a.cls, this._c || {});
     if (this._aim) Object.assign(intent, turretSlewIntent(a.cls, a.motion, a.env, this._aim, dt));
@@ -172,6 +173,7 @@ export class FleetPilot {
     }
     if(this._c)this._c.gearToggle=false;
     this._hud.update(a,{canSwitchVehicle:!!this.game._simActive});
+    this._reticle.update(this.game, a);   // weapon-truth mark (tracked/mech mounts)
     this._seat();
   }
 
@@ -180,6 +182,7 @@ export class FleetPilot {
     const destination=p?fleetExitPosition(this.game,a,p):null;
     if(p&&!force&&(busy(p)||!destination)){this.game.hud?.feed?.('No safe exit. Land or move the vehicle into clear space.','#ffce75');return false;}
     this._hud.dispose();
+    this._reticle.hide();
     this._audio.stop({off:!force&&!this._blocked()});
     if (!p) { this.actor = null; this._c=null;return false; }
     // Forced lifecycle cleanup always releases ownership. If boxed in, the
@@ -190,5 +193,5 @@ export class FleetPilot {
     return true;
   }
 
-  dispose() { this._audio.stop(); if (this.actor) this.exit({force:true}); }
+  dispose() { this._audio.stop(); this._reticle.dispose(); if (this.actor) this.exit({force:true}); }
 }

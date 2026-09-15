@@ -52,6 +52,12 @@ try{
  r.aimed=await sample();
  assert.ok(Math.abs(r.aimed.turretYaw-gunBefore)>0.05,'mouse slews the turret');
  assert.ok(Math.abs(r.aimed.yaw-hullYaw)<0.02,'the hull did not move while aiming');
+ // ---- the reticle is weapon truth: visible, tracks the turret, dims on reload ----
+ r.reticle=await p.evaluate(()=>{const el=document.getElementById('fleetReticle');return el?{shown:el.style.display!=='none',x:parseFloat(el.style.left),y:parseFloat(el.style.top),opacity:el.style.opacity}:null;});
+ assert.ok(r.reticle?.shown,'the weapon-truth reticle is on screen while aiming');
+ await p.mouse.move(1180,400);await p.mouse.move(700,420,{steps:8});await p.waitForTimeout(400);
+ r.reticleMoved=await p.evaluate(()=>{const el=document.getElementById('fleetReticle');return {x:parseFloat(el.style.left),shown:el.style.display!=='none'}});
+ assert.ok(r.reticleMoved.shown&&Math.abs(r.reticleMoved.x-r.reticle.x)>10,`the mark follows the gun, not the camera (moved ${(r.reticleMoved.x-r.reticle.x).toFixed(0)}px)`);
  // ---- fire the real main gun: shell exists, ammo decreases, reload runs ----
  const magBefore=r.aimed.mag,reserveBefore=r.aimed.reserve;
  await p.evaluate(()=>{const pr=PW.game.projectiles;if(!pr._counting){pr._counting=true;const o=pr.spawnProjectile.bind(pr);pr.spawnProjectile=(c,x)=>{pr._spawned=(pr._spawned||0)+1;return o(c,x);}}});
@@ -61,6 +67,8 @@ try{
  assert.ok(r.fired.spawned>0,'a REAL projectile left the muzzle');
  assert.ok(r.fired.mag<magBefore||r.fired.reloading,'ammunition decreased');
  assert.equal(r.fired.reloading,true,'single-shell magazine starts the reload');
+ r.reticleReload=await p.evaluate(()=>document.getElementById('fleetReticle')?.style.opacity);
+ assert.ok(parseFloat(r.reticleReload)<1,'the mark dims while the gun cannot fire');
  await p.waitForTimeout(3900);
  r.reloaded=await sample();
  assert.equal(r.reloaded.reloading,false,'reload completed on the envelope timing');

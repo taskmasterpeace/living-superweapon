@@ -1,5 +1,22 @@
 import {HIGHWALL_FLEET_PRESETS} from '../data/highwall-fleet.js';
 import {initVehicleState,initAirborneVehicleState,driveActor} from './vehicle-pilot.js';
+import {AAEmplacement} from './aa-emplacement.js';
+
+// HIGHWALL SUPPLIES THE MOUNTING LOCATION, fleet supplies the AA gameplay
+// (workstream §8): the layout's authored `aa-hardpoint` placements become real
+// tower-config AAEmplacements. Highwall itself is untouched — this reads the
+// pieces it already declares.
+export function spawnHighwallAA(game,{layout=game._highwall?.layout,team=0}={}){
+ const spots=new Map();
+ for(const p of layout?.pieces||[])if(p.moduleId==='aa-hardpoint'&&p.placementId&&!spots.has(p.placementId))
+  spots.set(p.placementId,{x:p.x,z:p.z,y:Math.max(...(layout.pieces.filter(q=>q.placementId===p.placementId).map(q=>q.top||0)))});
+ const out=[];
+ for(const [id,s] of spots){
+  const aa=new AAEmplacement(game,{config:'tower',pos:{x:s.x,y:s.y,z:s.z},team,name:id.toUpperCase()});
+  out.push(aa);
+ }
+ return out;
+}
 
 // Keep Game.spawnFleetVehicle as the asset/cache/rig owner. This seam only gives
 // those actual actors scenario placement, dimensions and a valid initial state.
