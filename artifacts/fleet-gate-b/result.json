@@ -1,0 +1,32 @@
+{
+  "errors": [],
+  "aaReady": [
+    {
+      "name": "BASE AA 1",
+      "ammo": 12,
+      "team": 0
+    },
+    {
+      "name": "BASE AA 2",
+      "ammo": 12,
+      "team": 0
+    },
+    {
+      "name": "BASE AA 3",
+      "ammo": 12,
+      "team": 0
+    }
+  ],
+  "intercept": {
+    "tracked": true,
+    "launched": 2,
+    "headings": 47,
+    "converged": true,
+    "hp0": 130,
+    "hp": 95.09509032114423,
+    "alive": true,
+    "dmgTaken": 34.90490967885577,
+    "missilesLive": 1
+  },
+  "verdict": "GATE B PASS"
+}

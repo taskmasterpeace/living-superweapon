@@ -30,11 +30,14 @@ test('sculpt/restore are safe no-ops without a terrain sculptor (never throw)', 
   assert.equal(bayPos({}).y, SIM.baseY);   // falls back to the declared base height
 });
 
-test('the AA turrets are TRACKING set dressing — no fire behaviour left (removed by request)', () => {
-  assert.equal(typeof AA.range, 'number', 'still tracks within a range');
-  assert.equal(typeof AA.minY, 'number', 'still has an airborne threshold');
-  // the missile/fire knobs are gone — the turrets swivel but do not shoot
+test('sim AA geometry data stays presentation-only — the REAL fire behaviour lives in aa-emplacement.js', () => {
+  // Fleet workstream §8: genuine AA returned as AAEmplacement (base-defense
+  // team, hostile flyers only — the no-missiles-at-the-player ruling holds).
+  // This module keeps ONLY the passive-tracking numbers; every fire knob
+  // belongs to AA_CONFIGS/MISSILE_PROFILES, never duplicated here.
+  assert.equal(typeof AA.range, 'number', 'passive tracking range');
+  assert.equal(typeof AA.minY, 'number', 'airborne threshold');
   for (const k of ['speed', 'turnRate', 'hitR', 'life', 'damage', 'cooldown', 'aimTol']) {
-    assert.equal(AA[k], undefined, `AA.${k} removed`);
+    assert.equal(AA[k], undefined, `AA.${k} lives in the missile/emplacement data, not here`);
   }
 });
