@@ -26,6 +26,7 @@ import {meleeApproach} from '../data/melee-approaches.js';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {FleetPilot} from './fleet-pilot.js';
 import {attachVehicleHull} from './vehicle-combat.js';
+import {spawnAIVehicle as crewAIVehicle} from './vehicle-ai.js';
 import {measureMuzzle} from './vehicle-weapons.js';
 import {classOf as fleetClassOf, envelopeFor as fleetEnvelopeFor, drives as fleetDrives} from '../data/fleet-handling.js';
 import {initVehicleState,initAirborneVehicleState} from './vehicle-pilot.js';
@@ -2318,6 +2319,10 @@ export class Game {
     this.hud?.feed?.(`${(row.name || id).toUpperCase()} DEPLOYED — WALK UP + J TO BOARD`, '#7fe6ff');
     return actor;
   }
+
+  // An AI-crewed fleet vehicle: same spawn, same envelopes, same weapons —
+  // the crew operates it through the session/intent paths, never a script.
+  spawnAIVehicle(id, pos, opts) { return crewAIVehicle(this, id, pos, opts); }
 
   // ---------- modes & players ----------
   spawnEnemy(charId, o = {}) {
