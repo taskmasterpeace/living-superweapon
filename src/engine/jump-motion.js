@@ -11,7 +11,13 @@ const bootBounds=new THREE.Box3(),supportOffset=new THREE.Vector3(),supportInver
 
 // Existing full-body owners retain their flight suppression/articulation. Only
 // free ballistic air is removed from the powered velocity-aligned family.
-export function usesFlightPose(f){return f.gliding||(f.airborne&&(f.flying||exclusivePose(f)));}
+export function usesFlightPose(f){
+ // Lost-control reactions own the body in a launch/stun. exclusivePose also
+ // includes those states; treating every exclusive pose as powered flight
+ // added a velocity-driven nosedive underneath the limp/flail articulation.
+ const reacting=!f.grabbedBy&&!f.hanging&&(f.launchT>0||f.stunT>0||f.staggerT>0||f.sleepT>0||f.downedT>0);
+ return !reacting&&(f.gliding||(f.airborne&&(f.flying||exclusivePose(f))));
+}
 export function restoreJumpBase(f){
  const s=f._jumpMotion;if(!s?.applied||s.rig!==f.parts.rig)return;
  for(const b of s.base){b.part.position.copy(b.position);b.part.quaternion.copy(b.quaternion);}s.applied=false;

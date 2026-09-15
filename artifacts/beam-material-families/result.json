@@ -1,0 +1,48 @@
+{
+  "kind": "Native renderer/BeamHose isolated visual fixture after application boot; not a gameplay acceptance test",
+  "errors": [],
+  "rows": [
+    {
+      "id": "torch",
+      "name": "Flame Jet",
+      "family": "fire",
+      "core": "beam-fire-tongues-v1",
+      "tip": 120,
+      "nodes": 42,
+      "finite": true
+    },
+    {
+      "id": "kano",
+      "name": "Wave Cannon",
+      "family": "energy",
+      "core": "beam-surface-v6",
+      "tip": 150,
+      "nodes": 42,
+      "finite": true
+    },
+    {
+      "id": "rime",
+      "name": "Cryo Beam",
+      "family": "ice",
+      "core": "beam-surface-v6",
+      "tip": 130,
+      "nodes": 42,
+      "finite": true
+    },
+    {
+      "id": "sol",
+      "name": "Heat Ray",
+      "family": "energy",
+      "core": "beam-surface-v6",
+      "tip": 145,
+      "nodes": 42,
+      "finite": true
+    },
+    {
+      "id": "torch-cone",
+      "name": "Fire Blast",
+      "flameParticles": 48,
+      "finite": true
+    }
+  ]
+}

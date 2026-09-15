@@ -1,0 +1,17 @@
+{
+  "kind": "Production Game training setup; real keyboard/panel interaction, current model",
+  "errors": [],
+  "soldier": {
+    "model": true,
+    "overlay": true,
+    "held": "p9",
+    "stored": 1
+  },
+  "drag": {
+    "x": 49,
+    "y": 129,
+    "width": 432,
+    "height": 804
+  },
+  "lsw": "Backpack\nSOL · Compact field kit\n✕\nIN YOUR HANDS\nLEFT\nFree\nRIGHT\nFree\nCARRIED EQUIPMENT\n2/8 cells\nGame device\nComing soon\n\nDrag equipment, or select an item then an empty cell. Layout stays with this character for the current life.\n\nPOWER SELECTION\nHeat Ray\nPrimary\nSecondary\nArctic Breath\nPrimary\nSecondary\nSky Smash\nPrimary\nSecondary\nSolar Flare\nPrimary\nSecondary\nHeat Flurry\nPrimary\nSecondary\nSuper Dash\nPrimary\nSecondary\nGame device\nReturn · I"
+}

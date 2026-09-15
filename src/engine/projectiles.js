@@ -7,7 +7,7 @@ import { domeBlocks } from './systems2.js';
 import {hasCivilians} from '../data/modes.js';
 import {resolveThrowRelease} from './throwable-action.js';
 import { BUILD_LOOK, TEMPER_LOOK } from '../data/visual.js';
-import {createBeamMaterials,createBeamSourceMaterial} from './beam-surface.js';
+import {createBeamMaterials,createBeamSourceMaterial,beamVisualFamily} from './beam-surface.js';
 import { BeamCurve } from './beam-curve.js';
 import { beamPathsTouch, pinBeamContact } from './beam-contact.js';
 import {beamBodyContact} from './beam-body-contact.js';
@@ -820,6 +820,7 @@ class BeamHose {
   constructor(game, caster, o) {
     this.game = game; this.caster = caster; this.team = caster.team;
     this._combatReadability = !!caster._openSky;
+    this.visualFamily=beamVisualFamily(o);this._flameClock=0;
     this._sparkClock = 0;
     this._contactNext = new WeakMap();
     this.pierceFighters=o.pierceFighters===true;
@@ -910,7 +911,7 @@ class BeamHose {
 
     // meshes: outer glow + bright core + tip. The two bodies are TUBES swept along the path now,
     // not cylinders — a cylinder cannot be bent.
-    const materials=createBeamMaterials(this.color,this.color2,this._combatReadability,this.temper.n>0);
+    const materials=createBeamMaterials(this.color,this.color2,this._combatReadability,this.temper.n>0,this.visualFamily);
     this.RADIAL = 8;
     this._glowGeo = this._tubeGeo((this._curve?.capacity||this.NODES)+1, this.RADIAL);
     this._coreGeo = this._tubeGeo((this._curve?.capacity||this.NODES)+1, this.RADIAL, true);
@@ -921,7 +922,7 @@ class BeamHose {
     this.grp = new THREE.Group(); this.grp.add(this.glow, this.core, this.tip); game.scene.add(this.grp);
     this.sourceGlow=o.sourceGlow??1;this.sourceScale=o.sourceScale??1;this.sourceLight=null;
     this.impactGlow=o.impactGlow??1;
-    this.source=new THREE.Mesh(GEO_ORB,createBeamSourceMaterial(this.color));
+    this.source=new THREE.Mesh(GEO_ORB,createBeamSourceMaterial(this.color,this.visualFamily));
     this.source.visible=false;this.grp.add(this.source);
     // ⚠ ONE INSTANCED DETAIL LAYER, SHARED BY EVERY TEMPER. This started life as VEGA's
     // hard-coded 26-orb helix; generalising it was almost free and it is what lets seven tempers
@@ -1066,7 +1067,11 @@ class BeamHose {
       }
       if(curve)rad=Math.min(rad,curve.radii[i]);
       for (let r = 0; r < R; r++) {
-        const a = (r / R) * Math.PI * 2, ca = Math.cos(a) * rad, sa = Math.sin(a) * rad;
+        const a = (r / R) * Math.PI * 2;
+        // Uneven flame lobes only shrink the already bounded visual envelope.
+        const flame=this.visualFamily==='fire'&&!receiver
+          ?.48+.52*(.5+.5*Math.sin(a*3+arc*.23-this.game.time*11+Math.sin(arc*.12+a*2))) : 1;
+        const ca = Math.cos(a) * rad*flame, sa = Math.sin(a) * rad*flame;
         const w = (i * R + r) * 3;
         pos[w] = px + ex * ca + fx * sa;
         pos[w + 1] = py + ey * ca + fy * sa;
@@ -1548,9 +1553,19 @@ class BeamHose {
     // is the point: a beam that has been swung has a bend in it and both layers carry it.
     const fade = this.sustaining ? 1 : Math.max(0, 1 - this.endT / 0.18);
     if(this._surfaceTime)this._surfaceTime.value=game.time;
+    // Frame-rate-independent, bounded ember emission on the reached path.
+    // Smoke uses the existing outer tube; no extra draw calls or growing lists.
+    if(this.visualFamily==='fire'&&this.sustaining&&this.pn>2){
+      this._flameClock+=dt;
+      if(this._flameClock>=.05){
+        this._flameClock%=.05;
+        const index=Math.min(this.pn-1,Math.max(1,Math.floor((.3+.6*(.5+.5*Math.sin(game.time*3.1)))*(this.pn-1))))*3;
+        game.particles.burst(this.path[index],this.path[index+1],this.path[index+2],{count:2,speed:5,up:3,grav:-2,life:.32,size:Math.min(.65,this.radius*.3),color:['#ff9b24','#ffc84a'],drag:2});
+      }
+    }
     const B = this.build;
     const renderCurve=this._curve?.update(this.path,Math.max(2,this.pn),this.sustaining?this.dir:null,this.radius);
-    this._sweep(this._coreGeo, this.radius * B.coreR, 1,renderCurve);
+    this._sweep(this._coreGeo, this.radius * (this.visualFamily==='fire'?.94:B.coreR), 1,renderCurve);
     this._sweep(this._glowGeo, this.radius * 1.5 * (0.9 + Math.sin(game.time * 40) * 0.1), B.flare,renderCurve);
     this.core.material.opacity = 0.95 * fade; this.glow.material.opacity = (this._combatReadability ? Math.max(.34,B.sheath) : B.sheath) * fade;
     const tipRadius=this._combatReadability
@@ -1563,6 +1578,10 @@ class BeamHose {
     // Retain charge-scaled width and the full hit volume.
     this.tip.position.copy(tipPos); this.tip.scale.setScalar(tipRadius*fade);
     this.tip.quaternion.identity();
+    if(this.visualFamily==='fire'&&!bodyHit){
+      this.tip.quaternion.setFromUnitVectors(_AZ,this.dir);
+      this.tip.scale.multiply(this._tmp.set(.5,.5,1));
+    }
     if(bodyHit){
       const hit=this._bodyContact,gap=hit.point.distanceTo(hit.surface);
       // A compressed impact cap bridges the existing collision envelope to the

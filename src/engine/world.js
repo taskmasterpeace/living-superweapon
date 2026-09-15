@@ -19,7 +19,7 @@ import { CAMERA_DEFAULTS } from '../data/flight-tuning.js';
 import {cameraProfileOf} from '../data/camera-presets.js';
 import {getCameraPreferences} from '../core/camera-settings.js';
 import {createFreeLook,advanceFreeLook,clearFreeLook,FREE_LOOK_DEFAULTS} from '../core/free-look.js';
-import {resolveGroundCamera,traceCameraGround} from './camera-ground.js';
+import {resolveGroundCamera,traceCameraGround,frameWallRecovery} from './camera-ground.js';
 import {frameFreeLook} from './free-look-framing.js';
 import {firearmSightZoom} from './firearm-aim.js';
 import {terrainEntry} from './projectile-contact.js';
@@ -2669,6 +2669,7 @@ export class World {
     const aim=this._combatAimDirection||(this._combatAimDirection=new THREE.Vector3());
     c.getWorldDirection(aim);
     (this._combatAimOrigin||(this._combatAimOrigin=new THREE.Vector3())).copy(c.position);
+    if(!this.freeLooking)frameWallRecovery(this,subject,a,c,pad,dt);
     if(this.freeLooking){
       // Slide the camera toward the requested shoulder and toe it inward. This
       // holds the player and target in a rear three-quarter composition while

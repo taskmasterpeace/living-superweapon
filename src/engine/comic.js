@@ -1,4 +1,5 @@
 import {damageSymbol} from './damage-symbols.js';
+import {ImpactPolicy,impactView} from './impact-policy.js';
 // THE COMIC LAYER — captions, speech balloons and sound effects, anchored to the fight.
 //
 // Robert: "do the caption layer, obsess over details, and find a comic book font for speech
@@ -90,6 +91,7 @@ export class Comic {
     this.g = game;
     this.items = [];
     this._speech = new SpeechPolicy();
+    this._impacts = new ImpactPolicy();
     this._point = new Vector3();
     this._viewMatrix = new Matrix4();
     this._clipCorners = Array.from({length:8},()=>new Vector3());
@@ -273,9 +275,26 @@ export class Comic {
   }
 
   impact(text,pos,opts={}) {
-    const it=this.sfx(text,pos,opts),feedback=opts.feedback;
+    const feedback=opts.feedback;
+    if(!feedback)return this.sfx(text,pos,opts);
+    const target=opts.target||(this.g.entities||[]).find(f=>f.pos===pos);
+    const view=impactView(this.g,target,opts.source,feedback);
+    this._impacts ||= new ImpactPolicy();
+    if(!this._impacts.admit(target,feedback.id,view.priority,this.g.time||0))return null;
+    const active=this.items.filter(i=>i.impact&&!i._out);
+    for(const old of active.filter(i=>target&&i.target===target)){old.node.remove();this.items.splice(this.items.indexOf(old),1);}
+    const remaining=this.items.filter(i=>i.impact&&!i._out);
+    if(remaining.length>=3){
+      const lowest=remaining.reduce((a,b)=>a.priority<=b.priority?a:b);
+      if(lowest.priority>view.priority)return null;
+      lowest.node.remove();this.items.splice(this.items.indexOf(lowest),1);
+    }
+    const it=this.sfx(view.word,pos,{...opts,power:0,size:view.size,life:view.life});
+    Object.assign(it,{impact:true,target,priority:view.priority});
+    it.node.classList.add('cm-owned-impact');
+    const owner=document.createElement('span');owner.className='impact-owner';owner.textContent=view.owner;it.node.prepend(owner);
     if(feedback){
-      it.node.classList.add('impact-'+feedback.id);it.node.dataset.impact=feedback.id;it.node.setAttribute('aria-label',feedback.label||text);
+      it.node.classList.add('impact-'+feedback.id);it.node.dataset.impact=feedback.id;it.node.setAttribute('aria-label',`${view.owner}: ${feedback.label||text}`);
       const label=document.createElement('span');label.className='impact-label';label.innerHTML=damageSymbol(feedback.dtype,17);label.append(document.createTextNode(feedback.label));it.node.appendChild(label);
     }
     return it;
@@ -553,5 +572,6 @@ export class Comic {
     for (const it of this.items) it.node.remove();
     this.items.length = 0;
     this._speech.clear();
+    this._impacts?.clear();
   }
 }

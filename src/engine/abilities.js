@@ -9,6 +9,7 @@ import * as THREE from 'three';
 import { clamp, rand, TAU, lerp } from '../core/util.js';
 import { ChargeGather } from './charge-gather.js';
 import {remoteAttack} from './remote-control.js';
+import {equipmentActionReason} from './equipment-policy.js';
 import {slotUnlocked,unlockLevel} from '../data/progression.js';
 import {TELEPORT_TIERS} from '../data/teleport-tuning.js';
 import {teleportDestination} from './teleport-destination.js';
@@ -418,6 +419,17 @@ export const TYPES = {
         for (let i = 0; i < 2; i++) {
           const a2 = Math.atan2(c.aim.z, c.aim.x) + rand(-arc, arc);
           g.particles.spawn({ x: c.pos.x + Math.cos(a2) * rand(4, range * 0.8), y: 0.6 + Math.random() * 2.2, z: c.pos.z + Math.sin(a2) * rand(4, range * 0.8), vx: Math.cos(a2) * 26, vz: Math.sin(a2) * 26, vy: rand(1, 4), life: 0.4, size: 2.6, color: ['#8a8577', '#6a655a'], drag: 1.6, shrink: true });
+        }
+      } else if(def.dtype==='fire'){
+        // Fixed visual cadence, independent of input/render FPS. The cone's
+        // existing target test above still owns every point of damage.
+        st._fireVisualClock=(st._fireVisualClock||0)+inp.dt;
+        const batches=Math.min(2,Math.floor((st._fireVisualClock+1e-8)*30));
+        st._fireVisualClock=Math.max(0,st._fireVisualClock-batches/30);
+        if(batches===2)st._fireVisualClock=Math.min(st._fireVisualClock,1/30);
+        for(let i=0;i<batches*3;i++){
+          const a=Math.atan2(c.aim.z,c.aim.x)+rand(-arc,arc);
+          g.particles.spawn({x:m.x,y:m.y+rand(-.6,.6),z:m.z,vx:Math.cos(a)*range*1.6,vz:Math.sin(a)*range*1.6,vy:rand(1,4),life:.55,size:6.5,color:i%3?'#ff6b18':'#ffc348',grav:-2,drag:1.1,shrink:true,shape:'flame'});
         }
       } else for (let i = 0; i < 4; i++) {
         const a = Math.atan2(c.aim.z, c.aim.x) + rand(-arc, arc);
@@ -1333,6 +1345,15 @@ export function runSlot(c, key, inp, g) {
     inp={...inp,pressed:false,held:false};
   }
   const ownedConstruct=st.def.type==='construct'?constructForSlot(g,c,st):null;
+  if(inp.pressed||inp.held){
+    const reason=equipmentActionReason(c,st.def);
+    if(reason){
+      if(inp.pressed&&g.isHuman?.(c))g.hud?.feed(reason);
+      // Key-up still reaches the handler so no previously held action leaks.
+      if(!inp.released)return;
+      inp={...inp,pressed:false,held:false};
+    }
+  }
   if (inp.pressed && !ownedConstruct && !(st.def.type==='weather'&&g.weather?.layers?.has(c)) && (st.def.cost || 0) > c.ki && st.cd <= 0 && g.onNoKi) g.onNoKi(c, key);
   // stamp real input on the slot — held types (cones/phase/lifedrain) leave no cd/sustain
   // trace, so this is what the tutorial (and any future telemetry) watches

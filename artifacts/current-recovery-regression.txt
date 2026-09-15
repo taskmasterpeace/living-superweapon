@@ -1,0 +1,136 @@
+(node:51396) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ grounded optic fire beside a wall keeps the reticle clear at 45 degrees, yaw -30 (500.6824ms)
+✔ grounded optic fire beside a wall keeps the reticle clear at 60 degrees, yaw -30 (247.0965ms)
+✔ grounded optic fire beside a wall keeps the reticle clear at 79 degrees, yaw -30 (193.191ms)
+✔ grounded optic fire beside a wall keeps the reticle clear at 89 degrees, yaw -30 (216.283ms)
+✔ grounded optic fire beside a wall keeps the reticle clear at 45 degrees, yaw 0 (230.45ms)
+✔ grounded optic fire beside a wall keeps the reticle clear at 60 degrees, yaw 0 (205.8211ms)
+✔ grounded optic fire beside a wall keeps the reticle clear at 79 degrees, yaw 0 (187.8197ms)
+✔ grounded optic fire beside a wall keeps the reticle clear at 89 degrees, yaw 0 (160.0375ms)
+✔ grounded optic fire beside a wall keeps the reticle clear at 45 degrees, yaw 30 (154.6211ms)
+✔ grounded optic fire beside a wall keeps the reticle clear at 60 degrees, yaw 30 (201.2582ms)
+✔ grounded optic fire beside a wall keeps the reticle clear at 79 degrees, yaw 30 (163.802ms)
+✔ grounded optic fire beside a wall keeps the reticle clear at 89 degrees, yaw 30 (194.2585ms)
+✔ passing a wall end does not teleport the ground camera across its clearance offset (36.9809ms)
+✔ wall-side approach and retreat preserve camera continuity at 30 Hz (173.6954ms)
+✔ wall-side approach and retreat preserve camera continuity at 60 Hz (261.2555ms)
+✔ wall-side approach and retreat preserve camera continuity at 120 Hz (475.4623ms)
+✔ tiny movements do not switch to the opposite clear rear arc (26.2104ms)
+✔ terrain-clear rear arcs are found beyond the cover boundary candidates (23.0832ms)
+✔ first terrain contact behind cover does not change framing discontinuously (24.5242ms)
+✔ combined cover/terrain entry, release and lateral exit remain continuous at 30 Hz (44.0851ms)
+✔ combined cover/terrain entry, release and lateral exit remain continuous at 60 Hz (55.4091ms)
+✔ combined cover/terrain entry, release and lateral exit remain continuous at 120 Hz (91.1656ms)
+✔ collision arc correction resets on camera snap and new subject (75.9352ms)
+✔ a costume-only rig rebuild preserves the camera collision branch (55.6317ms)
+✔ removing an obstacle releases the collision correction instead of freezing it (62.2543ms)
+(node:35796) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ close level lock keeps a back-side view instead of pitching down over the heads (193.4153ms)
+✔ ground camera retains upper-body orientation cues at 45 degrees on height 0 (59.8864ms)
+✔ ground camera retains upper-body orientation cues at 60 degrees on height 0 (52.1235ms)
+✔ ground camera retains upper-body orientation cues at 79 degrees on height 0 (41.1142ms)
+✔ ground camera retains upper-body orientation cues at 89 degrees on height 0 (34.8963ms)
+✔ ground camera retains upper-body orientation cues at 45 degrees on height 18 (47.6487ms)
+✔ ground camera retains upper-body orientation cues at 60 degrees on height 18 (34.9042ms)
+✔ ground camera retains upper-body orientation cues at 79 degrees on height 18 (42.9753ms)
+✔ ground camera retains upper-body orientation cues at 89 degrees on height 18 (45.6917ms)
+✔ unobstructed rear-side framing remains fixed through free airborne pitch (33.7232ms)
+✔ ground-clearance entry and exit have no discontinuous switch at 30 Hz (37.0546ms)
+✔ ground-clearance entry and exit have no discontinuous switch at 60 Hz (28.9273ms)
+✔ ground-clearance entry and exit have no discontinuous switch at 120 Hz (37.4078ms)
+✔ a heightfield ridge cannot sit between the fighter and an apparently clear camera endpoint (34.5954ms)
+✔ ground clearance retraces nearby walls after its lateral displacement (38.101ms)
+✔ native bilinear saddle is intercepted before its peak despite clear endpoints (24.426ms)
+✔ native triangulated saddle is intercepted at the rendered diagonal, not a bilinear approximation (28.2701ms)
+✔ near-plane footprint notices slope contact before the center ray touches it (26.3227ms)
+✔ triangle ridge inside the camera footprint is not missed between its corner rays (26.9629ms)
+✔ near plane clears a native ridge vertex between the center and corner traces (25.0946ms)
+✔ upward optic strafe keeps the camera stable and the reticle free throughout a running cycle (359.6106ms)
+(node:49424) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ recovery pauses for freeze, holds action gate through thaw, and retires on new launch (132.8694ms)
+✔ defeated and near-death actors never get a nonlethal recovery (58.9461ms)
+✔ standing stun does not fabricate an airborne impact recovery (61.4141ms)
+✔ contact presentation settles while stun pauses recovery progress (40.676ms)
+(node:51512) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ Game swaps stored primary and sidearm repeatedly without duplication, ammo reset or alias loss (154.5196ms)
+✔ Game rejects full backpack acquisition without changing held weapon, ammo, or stored items (48.0673ms)
+✔ stowed weapon can be replaced and later restored; stow then drop clears claim and alias (33.9557ms)
+✔ active weapon cannot be swapped into storage (37.1521ms)
+✔ swapping stored weapons in a completely full bag does not require extra capacity (38.8556ms)
+(node:58092) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ native short jump stays upright and plays takeoff/fall/landing at 30Hz (215.1649ms)
+✔ native short jump stays upright and plays takeoff/fall/landing at 60Hz (141.0192ms)
+✔ native short jump stays upright and plays takeoff/fall/landing at 120Hz (236.3347ms)
+✔ holding jump hands off to the existing powered cruise family (87.5874ms)
+✔ native first powered boundary bridges ballistic legs at 30Hz (69.8376ms)
+ℹ First powered boundary at 30Hz: maximum leg joint delta 2.6478 degrees
+ℹ First powered body delta 0.5831 degrees, 0.3053 rad/s
+✔ native first landing boundary bridges ballistic legs at 30Hz (60.8577ms)
+ℹ First landing boundary at 30Hz: maximum leg joint delta 3.0799 degrees
+ℹ First landing body delta 0.8030 degrees, 0.4204 rad/s
+✔ native first powered boundary bridges ballistic legs at 60Hz (101.458ms)
+ℹ First powered boundary at 60Hz: maximum leg joint delta 0.4198 degrees
+ℹ First powered body delta 0.0836 degrees, 0.0875 rad/s
+✔ native first landing boundary bridges ballistic legs at 60Hz (100.0922ms)
+ℹ First landing boundary at 60Hz: maximum leg joint delta 0.2378 degrees
+ℹ First landing body delta 0.0773 degrees, 0.0810 rad/s
+✔ native first powered boundary bridges ballistic legs at 120Hz (209.0562ms)
+ℹ First powered boundary at 120Hz: maximum leg joint delta 0.0594 degrees
+ℹ First powered body delta 0.0111 degrees, 0.0233 rad/s
+✔ native first landing boundary bridges ballistic legs at 120Hz (171.0347ms)
+ℹ First landing boundary at 120Hz: maximum leg joint delta 0.0362 degrees
+ℹ First landing body delta 0.0084 degrees, 0.0176 rad/s
+✔ source animation and procedural fallback produce identical native SARGE jump physics (227.7627ms)
+✔ jump preserves segment lengths and landing boot support (30Hz, scale 0.65) (52.2839ms)
+✔ jump preserves segment lengths and landing boot support (30Hz, scale 1) (44.3072ms)
+✔ jump preserves segment lengths and landing boot support (30Hz, scale 1.5) (48.0183ms)
+✔ jump preserves segment lengths and landing boot support (60Hz, scale 0.65) (88.7638ms)
+✔ jump preserves segment lengths and landing boot support (60Hz, scale 1) (84.9875ms)
+✔ jump preserves segment lengths and landing boot support (60Hz, scale 1.5) (88.3753ms)
+✔ jump preserves segment lengths and landing boot support (120Hz, scale 0.65) (202.373ms)
+✔ jump preserves segment lengths and landing boot support (120Hz, scale 1) (158.7378ms)
+✔ jump preserves segment lengths and landing boot support (120Hz, scale 1.5) (184.1121ms)
+✔ paused and live-hitstop jump sampling holds and form rebuild does not bake its old overlay (90.4065ms)
+✔ jump source yields immediately to guard (22.8751ms)
+✔ jump source yields immediately to melee (26.4919ms)
+✔ jump source yields immediately to launch (24.3139ms)
+✔ jump source yields immediately to grab (21.8454ms)
+✔ jump source yields immediately to ko (20.0131ms)
+✔ procedural locomotion selection disables imported jump but never makes it powered flight (33.8332ms)
+✔ actual KO/respawn retires jump playback without discarding its restorable rig snapshot (22.2352ms)
+✔ unarmed source motion keeps real forearm and boot volumes separate through takeoff and landing (152.6677ms)
+✔ a long natural fall wraps the imported loop and a missing take leaves a procedural fallback (170.846ms)
+✔ hand emitter remains aimed through native jump and landing (228.2701ms)
+✔ chest emitter remains aimed through native jump and landing (188.1545ms)
+✔ eye emitter remains aimed through native jump and landing (168.2736ms)
+✔ rifle emitter remains aimed through native jump and landing (208.5104ms)
+✔ Studio Ground jump replays native short input deterministically and seeking stays silent (293.8666ms)
+(node:45812) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ stunned airborne body has one reaction owner, not a powered nosedive underneath it (206.4006ms)
+✔ a supported actor on a raised platform does not keep playing an airborne flail (49.7386ms)
+✔ wall compression keeps a stunned character visibly third person (80.443ms)
+(node:47064) Warning: `--localstorage-file` was provided without a valid path
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ stun recovery 0.5 applies once at 30 Hz (115.9785ms)
+✔ stun recovery 0.5 applies once at 60 Hz (45.6133ms)
+✔ stun recovery 0.5 applies once at 120 Hz (35.5041ms)
+✔ stun recovery 1 applies once at 30 Hz (35.2023ms)
+✔ stun recovery 1 applies once at 60 Hz (31.3621ms)
+✔ stun recovery 1 applies once at 120 Hz (32.4462ms)
+✔ stun recovery 2 applies once at 30 Hz (27.7957ms)
+✔ stun recovery 2 applies once at 60 Hz (22.1048ms)
+✔ stun recovery 2 applies once at 120 Hz (21.6321ms)
+ℹ tests 102
+ℹ suites 0
+ℹ pass 102
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4756.2595

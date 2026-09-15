@@ -4,6 +4,51 @@ const cuts=[],xSlices=[],zSlices=[],desired=new THREE.Vector3(),extended=new THR
 const clamp=THREE.MathUtils.clamp;
 const arcPreferred=new THREE.Vector3(),arcBest=new THREE.Vector3(),baseEye=new THREE.Vector3(),correction=new THREE.Vector3();
 const diagonalStart=new THREE.Vector3(),diagonalEnd=new THREE.Vector3();
+const frameHead=new THREE.Vector3(),frameEye=new THREE.Vector3(),frameBest=new THREE.Vector3(),frameDirection=new THREE.Vector3();
+const frameNominal=new THREE.Quaternion(),frameLook=new THREE.Quaternion();
+
+// Presentation correction after the normal aim ray has been captured. A wall
+// detour changes the eye position; retaining the old parallel view direction
+// can put the entire knocked-back actor outside the frame. Keep collision and
+// movement unchanged during incapacitation. Hand the resulting view back to
+// mouse aim once recovery ends, rather than permanently looking at the actor.
+export function frameWallRecovery(world,subject,anchor,camera,pad,dt){
+ const reacting=subject.stunT>0||subject.staggerT>0||subject.launchT>0||subject._impactRecovery||subject.state==='hit';
+ let state=world._wallRecoveryFrame;
+ if(!state||state.subject!==subject)state=world._wallRecoveryFrame={subject,weight:0};
+ const handoff=state.wasReacting&&!reacting&&state.weight>0;
+ state.wasReacting=!!reacting;
+ camera.updateMatrixWorld(true);
+ const size=subject.sizeScale??1,minRange=12*size;
+ (subject.parts?.head?subject.parts.head.getWorldPosition(frameHead):frameHead.copy(anchor)).project(camera);
+ const crowded=camera.position.distanceTo(anchor)<minRange||Math.abs(frameHead.x)>.8||Math.abs(frameHead.y)>.8||frameHead.z>1;
+ const active=!!((reacting||handoff)&&world._groundCamState?.cover<.999&&(crowded||state.weight>.01));
+ if(active&&camera.position.distanceTo(anchor)<minRange){
+  const angle=Math.atan2(camera.position.x-anchor.x,camera.position.z-anchor.z);let best=Infinity;
+  for(let i=0;i<=24;i++)for(const sign of [-1,1]){
+   const turn=i*Math.PI/24*sign;
+   frameEye.set(anchor.x+Math.sin(angle+turn)*minRange,anchor.y+4*size,anchor.z+Math.cos(angle+turn)*minRange);
+   if(world._camNearestT(...anchor.toArray(),...frameEye.toArray(),pad)<.99999||traceCameraGround(world,anchor,frameEye,pad)<.99999)continue;
+   if(Math.abs(turn)<best){best=Math.abs(turn);frameBest.copy(frameEye);}
+  }
+  if(best<Infinity)camera.position.copy(frameBest);
+ }
+ // Correct immediately when the body is lost; ease out after the contact.
+ state.weight=active?1:Math.max(0,state.weight-Math.max(0,dt)*6);
+ if(state.weight<=0)return false;
+ frameNominal.copy(camera.quaternion);camera.lookAt(anchor);frameLook.copy(camera.quaternion);
+ camera.quaternion.copy(frameNominal).slerp(frameLook,state.weight);camera.updateMatrixWorld(true);
+ world.camPos.copy(camera.position);camera.getWorldDirection(frameDirection);
+ world.camTarget.copy(camera.position).addScaledVector(frameDirection,100);
+ if(handoff){
+  // Adopt the view the player is already seeing once, so the ordinary boom
+  // and shot direction resume together. Subsequent mouse input is unmodified.
+  world._lookYaw=Math.atan2(frameDirection.x,frameDirection.z);
+  world._lookPitch=Math.asin(clamp(frameDirection.y,-1,1));
+  state.weight=0;
+ }
+ return true;
+}
 
 // Terrain has already set a safe camera height. If cover blocks the lateral
 // clearance, keep that horizontal radius and find nearby visible space around
@@ -193,6 +238,7 @@ export function resolveGroundCamera(world,subject,anchor,eye,pad,dt=1/60){
  const h=Math.max(.5-Math.abs(1-safe),0)/.5;
  const ground=Math.max(0,Math.min(1,safe)-h*h*.125);
  const cover=world._camNearestT(anchor.x,anchor.y,anchor.z,desired.x,desired.y,desired.z,pad);
+ state.cover=cover;
  const activation=clamp((1-ground)/.6,0,1);
  // Cover can compress an airborne boom into the chest even with completely
  // clear terrain. Recover rear-arc space before entering the body envelope;

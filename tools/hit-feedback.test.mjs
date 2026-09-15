@@ -96,10 +96,10 @@ test('resolved automatic deflections coalesce per target and do not call damage 
 
 test('Comic.impact renders a visible semantic label and family hook',t=>{
   const previousDocument=globalThis.document;t.after(()=>{if(previousDocument===undefined)delete globalThis.document;else globalThis.document=previousDocument;});
-  const nodes=[];globalThis.document={createTextNode:text=>({textContent:text}),body:{classList:{contains:()=>false}},createElement(){return {className:'',style:{setProperty(){}},dataset:{},children:[],classList:{add(v){this.value=v;}},append(n){this.children.push(n);this.textContent=(this.textContent||'')+(n.textContent||'');},appendChild(n){this.children.push(n);},setAttribute(k,v){this[k]=v;}};}};
-  const comic={sfx(){const node=document.createElement('div');nodes.push(node);return{node};}};
+  const nodes=[];globalThis.document={createTextNode:text=>({textContent:text}),body:{classList:{contains:()=>false}},createElement(){return {className:'',style:{setProperty(){}},dataset:{},children:[],classList:{add(v){this.value=v;}},append(n){this.children.push(n);this.textContent=(this.textContent||'')+(n.textContent||'');},appendChild(n){this.children.push(n);},prepend(n){this.children.unshift(n);},setAttribute(k,v){this[k]=v;}};}};
+  const comic={g:{entities:[],time:1},items:[],sfx(){const node=document.createElement('div');nodes.push(node);return{node};}};
   Comic.prototype.impact.call(comic,'TINK!',new Vector3(),{feedback:selectHitFeedback(baseOutcome({absorbed:{plate:4,armor:0,shield:0,nanite:0}}))});
-  assert.equal(nodes[0].classList.value,'impact-armor-hit');assert.equal(nodes[0].children[0].textContent,'ARMOR HIT · 4 ABS');
+  assert.equal(nodes[0].classList.value,'impact-armor-hit');assert.equal(nodes[0].children[1].textContent,'ARMOR HIT · 4 ABS');
   delete globalThis.document;
 });
 

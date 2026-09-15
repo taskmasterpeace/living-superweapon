@@ -9,7 +9,15 @@ export function castHandMask(f,def){
  if(def.type==='volley'){
   const pattern=volleyPattern(def);return pattern==='left'?1:pattern==='right'?2:3;
  }
- if(def.type==='rifle')return firearmEmitter(f,def,{includeStowed:true}).side<0?1:2;
+ if(def.type==='rifle'){
+  const emitter=firearmEmitter(f,def,{includeStowed:true});
+  // Legacy native kits can independently mount a rifle and a sidearm. Do not
+  // turn every rifle-typed power into a second-hand claim. Authored support
+  // grips, paired weapons and issued two-hand gear own both hands explicitly.
+  const issuedTwoHand=f._gearHeld?.ab===def&&!(def.oneHand===true||def.weapon==='pistol');
+  if(def.dual||def.akimbo||def.firePattern==='akimbo'||def.twoHanded||def.oneHand===false||emitter.weapon?.userData?.twoHanded||emitter.weapon?.userData?.paired||issuedTwoHand)return 3;
+  return emitter.side<0?1:2;
+ }
  if(def.type==='beam'||def.type==='charge')return usesCombinedHands(f,def)?3:palmCastSide(def)<0?1:2;
  return def.type==='projectile'?2:0;
 }

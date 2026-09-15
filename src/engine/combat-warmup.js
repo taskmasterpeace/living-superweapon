@@ -11,8 +11,8 @@ export class CombatWarmup{
   const geometry=new THREE.SphereGeometry(1,8,6),count=geometry.attributes.position.count;
   geometry.setAttribute('beamArc',new THREE.BufferAttribute(new Float32Array(count),1));
   geometry.setAttribute('beamTangent',new THREE.BufferAttribute(new Float32Array(count*3),3));
-  for(const readable of [false,true]){
-   const materials=createBeamMaterials('#efb32c','#ffffff',readable,true);
+  for(const [readable,family] of [[false,'energy'],[true,'energy'],[true,'fire']]){
+   const materials=createBeamMaterials('#efb32c','#ffffff',readable,true,family);
    for(const key of ['core','glow','tip'])this.group.add(new THREE.Mesh(geometry,materials[key]));
    this.group.add(new THREE.InstancedMesh(geometry,materials.detail,1));
   }

@@ -1,0 +1,1046 @@
+{
+  "rosterCount": 55,
+  "publicStats": [
+    {
+      "k": "fgt",
+      "name": "Fighting",
+      "does": "melee & strike damage"
+    },
+    {
+      "k": "agl",
+      "name": "Agility",
+      "does": "evade recovery"
+    },
+    {
+      "k": "mgt",
+      "name": "Strength",
+      "does": "knockback resistance · throws · slams"
+    },
+    {
+      "k": "vig",
+      "name": "Resilience",
+      "does": "health pool · durability"
+    },
+    {
+      "k": "int",
+      "name": "Intelligence",
+      "does": "ability & gadget cooldowns"
+    },
+    {
+      "k": "awr",
+      "name": "Perception",
+      "does": "vision range"
+    },
+    {
+      "k": "res",
+      "name": "Mental",
+      "does": "ki & guard recovery · status recovery"
+    }
+  ],
+  "damageTypes": [
+    "physical",
+    "ballistic",
+    "energy",
+    "fire",
+    "cold",
+    "toxic",
+    "acid",
+    "magic"
+  ],
+  "styleCounts": {
+    "artillery": 6,
+    "beamer": 5,
+    "bruiser": 9,
+    "grappler": 3,
+    "rusher": 9,
+    "summoner": 2,
+    "trickster": 7,
+    "zoner": 14
+  },
+  "personalityCounts": {
+    "THE CHALLENGER": 12,
+    "THE GUARDIAN": 2,
+    "THE PREDATOR": 3,
+    "THE PROFESSIONAL": 4,
+    "THE PROVER": 1,
+    "THE TACTICIAN": 20,
+    "THE WILDCARD": 7,
+    "THE ZEALOT": 6
+  },
+  "definedPersonalities": [
+    {
+      "n": 1,
+      "target": 1,
+      "name": "THE CHALLENGER",
+      "blurb": "Wants the hardest fight in the room and says so.",
+      "bias": {
+        "angry": 1.2,
+        "happy": 1.1,
+        "fearful": 0.7
+      },
+      "targetRule": {
+        "id": "mostHealth",
+        "label": "THE BIGGEST",
+        "desc": "goes for whoever still has the most left"
+      },
+      "drives": {
+        "dominance": 1,
+        "glory": 0.6,
+        "safety": 0.3,
+        "vengeance": 0.5,
+        "duty": 0.3,
+        "order": 0.4,
+        "purpose": 0.5,
+        "vol": 1,
+        "rest": "happy"
+      }
+    },
+    {
+      "n": 2,
+      "target": 3,
+      "name": "THE PROFESSIONAL",
+      "blurb": "Neutralises the biggest gun first. No theatre.",
+      "bias": {
+        "bad": 1.1,
+        "angry": 0.8,
+        "fearful": 0.8
+      },
+      "targetRule": {
+        "id": "majorThreat",
+        "label": "THE DANGER",
+        "desc": "goes for whoever has done the most damage"
+      },
+      "drives": {
+        "dominance": 0.5,
+        "glory": 0.2,
+        "safety": 0.5,
+        "vengeance": 0.2,
+        "duty": 0.6,
+        "order": 1,
+        "purpose": 0.6,
+        "vol": 0.7,
+        "rest": "bad"
+      }
+    },
+    {
+      "n": 3,
+      "target": 4,
+      "name": "THE BULLY",
+      "blurb": "Finds the softest target and stays on it.",
+      "bias": {
+        "disgusted": 1.3,
+        "angry": 1.1,
+        "fearful": 1.2
+      },
+      "targetRule": {
+        "id": "minorThreat",
+        "label": "THE EASIEST",
+        "desc": "picks off whoever has done the least"
+      },
+      "drives": {
+        "dominance": 0.9,
+        "glory": 0.5,
+        "safety": 0.7,
+        "vengeance": 0.4,
+        "duty": 0.1,
+        "order": 0.3,
+        "purpose": 0.3,
+        "vol": 1.1,
+        "rest": "disgusted"
+      }
+    },
+    {
+      "n": 4,
+      "target": 4,
+      "name": "THE OPPORTUNIST",
+      "blurb": "Takes the free hit every time.",
+      "bias": {
+        "happy": 1.2,
+        "disgusted": 1
+      },
+      "targetRule": {
+        "id": "minorThreat",
+        "label": "THE EASIEST",
+        "desc": "picks off whoever has done the least"
+      },
+      "drives": {
+        "dominance": 0.6,
+        "glory": 0.4,
+        "safety": 0.8,
+        "vengeance": 0.3,
+        "duty": 0.2,
+        "order": 0.5,
+        "purpose": 0.4,
+        "vol": 0.9,
+        "rest": "happy"
+      }
+    },
+    {
+      "n": 5,
+      "target": 1,
+      "name": "THE PROVER",
+      "blurb": "Only a win against the strongest counts.",
+      "bias": {
+        "happy": 1.3,
+        "angry": 1.1,
+        "sad": 0.8
+      },
+      "targetRule": {
+        "id": "mostHealth",
+        "label": "THE BIGGEST",
+        "desc": "goes for whoever still has the most left"
+      },
+      "drives": {
+        "dominance": 1.1,
+        "glory": 0.9,
+        "safety": 0.3,
+        "vengeance": 0.5,
+        "duty": 0.3,
+        "order": 0.4,
+        "purpose": 0.6,
+        "vol": 1.1,
+        "rest": "happy"
+      }
+    },
+    {
+      "n": 6,
+      "target": 3,
+      "name": "THE GUARDIAN",
+      "blurb": "Stops whoever is doing the most harm.",
+      "bias": {
+        "sad": 1.2,
+        "angry": 1.1,
+        "fearful": 0.8
+      },
+      "targetRule": {
+        "id": "majorThreat",
+        "label": "THE DANGER",
+        "desc": "goes for whoever has done the most damage"
+      },
+      "drives": {
+        "dominance": 0.4,
+        "glory": 0.3,
+        "safety": 0.4,
+        "vengeance": 0.5,
+        "duty": 1.2,
+        "order": 0.6,
+        "purpose": 0.8,
+        "vol": 0.9,
+        "rest": "bad"
+      }
+    },
+    {
+      "n": 7,
+      "target": 4,
+      "name": "THE SCAVENGER",
+      "blurb": "Never picks a fight it might lose.",
+      "bias": {
+        "fearful": 1.3,
+        "bad": 1.1
+      },
+      "targetRule": {
+        "id": "minorThreat",
+        "label": "THE EASIEST",
+        "desc": "picks off whoever has done the least"
+      },
+      "drives": {
+        "dominance": 0.3,
+        "glory": 0.2,
+        "safety": 1.2,
+        "vengeance": 0.2,
+        "duty": 0.2,
+        "order": 0.5,
+        "purpose": 0.3,
+        "vol": 1,
+        "rest": "fearful"
+      }
+    },
+    {
+      "n": 8,
+      "target": 1,
+      "name": "THE ZEALOT",
+      "blurb": "Charges the centre of the strongest thing present.",
+      "bias": {
+        "angry": 1.4,
+        "fearful": 0.5
+      },
+      "targetRule": {
+        "id": "mostHealth",
+        "label": "THE BIGGEST",
+        "desc": "goes for whoever still has the most left"
+      },
+      "drives": {
+        "dominance": 1.2,
+        "glory": 0.5,
+        "safety": 0.1,
+        "vengeance": 0.7,
+        "duty": 0.4,
+        "order": 0.2,
+        "purpose": 0.9,
+        "vol": 1.3,
+        "rest": "angry"
+      }
+    },
+    {
+      "n": 9,
+      "target": 2,
+      "name": "THE CLOSER",
+      "blurb": "Ends what someone else started.",
+      "bias": {
+        "happy": 1.2,
+        "bad": 0.9
+      },
+      "targetRule": {
+        "id": "leastHealth",
+        "label": "THE WEAKEST",
+        "desc": "finishes whoever is nearly down"
+      },
+      "drives": {
+        "dominance": 0.7,
+        "glory": 0.5,
+        "safety": 0.5,
+        "vengeance": 0.4,
+        "duty": 0.3,
+        "order": 0.7,
+        "purpose": 0.5,
+        "vol": 0.8,
+        "rest": "happy"
+      }
+    },
+    {
+      "n": 10,
+      "target": 2,
+      "name": "THE PREDATOR",
+      "blurb": "Smells blood and follows it.",
+      "bias": {
+        "angry": 1.2,
+        "happy": 1.1,
+        "fearful": 0.7
+      },
+      "targetRule": {
+        "id": "leastHealth",
+        "label": "THE WEAKEST",
+        "desc": "finishes whoever is nearly down"
+      },
+      "drives": {
+        "dominance": 1,
+        "glory": 0.4,
+        "safety": 0.3,
+        "vengeance": 0.8,
+        "duty": 0.1,
+        "order": 0.3,
+        "purpose": 0.6,
+        "vol": 1.2,
+        "rest": "angry"
+      }
+    },
+    {
+      "n": 11,
+      "target": 1,
+      "name": "THE RIVAL",
+      "blurb": "Fixates on the one worth beating.",
+      "bias": {
+        "angry": 1.3,
+        "disgusted": 1.1
+      },
+      "targetRule": {
+        "id": "mostHealth",
+        "label": "THE BIGGEST",
+        "desc": "goes for whoever still has the most left"
+      },
+      "drives": {
+        "dominance": 1,
+        "glory": 0.7,
+        "safety": 0.4,
+        "vengeance": 1.1,
+        "duty": 0.2,
+        "order": 0.3,
+        "purpose": 0.5,
+        "vol": 1.2,
+        "rest": "angry"
+      }
+    },
+    {
+      "n": 12,
+      "target": 4,
+      "name": "THE COWARD",
+      "blurb": "Anything but the dangerous one.",
+      "bias": {
+        "fearful": 1.6,
+        "sad": 1.2,
+        "angry": 0.6
+      },
+      "targetRule": {
+        "id": "minorThreat",
+        "label": "THE EASIEST",
+        "desc": "picks off whoever has done the least"
+      },
+      "drives": {
+        "dominance": 0.2,
+        "glory": 0.2,
+        "safety": 1.4,
+        "vengeance": 0.1,
+        "duty": 0.3,
+        "order": 0.6,
+        "purpose": 0.3,
+        "vol": 1.2,
+        "rest": "fearful"
+      }
+    },
+    {
+      "n": 13,
+      "target": 2,
+      "name": "THE MERCILESS",
+      "blurb": "No such thing as a beaten opponent.",
+      "bias": {
+        "disgusted": 1.3,
+        "angry": 1.2
+      },
+      "targetRule": {
+        "id": "leastHealth",
+        "label": "THE WEAKEST",
+        "desc": "finishes whoever is nearly down"
+      },
+      "drives": {
+        "dominance": 0.9,
+        "glory": 0.3,
+        "safety": 0.3,
+        "vengeance": 0.9,
+        "duty": 0.1,
+        "order": 0.4,
+        "purpose": 0.5,
+        "vol": 1.1,
+        "rest": "disgusted"
+      }
+    },
+    {
+      "n": 14,
+      "target": 3,
+      "name": "THE TACTICIAN",
+      "blurb": "Reads the room and removes the problem.",
+      "bias": {
+        "surprised": 0.7,
+        "bad": 1.1,
+        "angry": 0.8
+      },
+      "targetRule": {
+        "id": "majorThreat",
+        "label": "THE DANGER",
+        "desc": "goes for whoever has done the most damage"
+      },
+      "drives": {
+        "dominance": 0.6,
+        "glory": 0.3,
+        "safety": 0.5,
+        "vengeance": 0.3,
+        "duty": 0.7,
+        "order": 1.2,
+        "purpose": 0.6,
+        "vol": 0.7,
+        "rest": "bad"
+      }
+    },
+    {
+      "n": 15,
+      "target": 3,
+      "name": "THE AVENGER",
+      "blurb": "Whoever hurt someone gets it back, doubled.",
+      "bias": {
+        "angry": 1.5,
+        "sad": 1.2
+      },
+      "targetRule": {
+        "id": "majorThreat",
+        "label": "THE DANGER",
+        "desc": "goes for whoever has done the most damage"
+      },
+      "drives": {
+        "dominance": 0.7,
+        "glory": 0.4,
+        "safety": 0.3,
+        "vengeance": 1.3,
+        "duty": 0.9,
+        "order": 0.3,
+        "purpose": 0.7,
+        "vol": 1.2,
+        "rest": "angry"
+      }
+    },
+    {
+      "n": 16,
+      "target": 3,
+      "name": "THE SENTINEL",
+      "blurb": "Holds the line against whatever is hitting hardest.",
+      "bias": {
+        "fearful": 0.7,
+        "sad": 1.1,
+        "angry": 1
+      },
+      "targetRule": {
+        "id": "majorThreat",
+        "label": "THE DANGER",
+        "desc": "goes for whoever has done the most damage"
+      },
+      "drives": {
+        "dominance": 0.6,
+        "glory": 0.3,
+        "safety": 0.4,
+        "vengeance": 0.4,
+        "duty": 1.3,
+        "order": 0.8,
+        "purpose": 0.7,
+        "vol": 0.8,
+        "rest": "bad"
+      }
+    },
+    {
+      "n": 17,
+      "target": 2,
+      "name": "THE FINISHER",
+      "blurb": "Cleans up, quietly.",
+      "bias": {
+        "bad": 1.2,
+        "happy": 1
+      },
+      "targetRule": {
+        "id": "leastHealth",
+        "label": "THE WEAKEST",
+        "desc": "finishes whoever is nearly down"
+      },
+      "drives": {
+        "dominance": 0.7,
+        "glory": 0.2,
+        "safety": 0.5,
+        "vengeance": 0.4,
+        "duty": 0.3,
+        "order": 0.8,
+        "purpose": 0.5,
+        "vol": 0.7,
+        "rest": "bad"
+      }
+    },
+    {
+      "n": 18,
+      "target": 5,
+      "name": "THE MADMAN",
+      "blurb": "There is no pattern. That is the pattern.",
+      "bias": {
+        "surprised": 1.4,
+        "angry": 1.3,
+        "fearful": 1.2
+      },
+      "targetRule": {
+        "id": "random",
+        "label": "WHOEVER",
+        "desc": "no pattern at all"
+      },
+      "drives": {
+        "dominance": 0.8,
+        "glory": 0.8,
+        "safety": 0.2,
+        "vengeance": 0.5,
+        "duty": 0.1,
+        "order": 0.1,
+        "purpose": 0.4,
+        "vol": 1.5,
+        "rest": "surprised"
+      }
+    },
+    {
+      "n": 19,
+      "target": 5,
+      "name": "THE WILDCARD",
+      "blurb": "Whoever happens to be in front of them.",
+      "bias": {
+        "surprised": 1.5,
+        "happy": 1.2
+      },
+      "targetRule": {
+        "id": "random",
+        "label": "WHOEVER",
+        "desc": "no pattern at all"
+      },
+      "drives": {
+        "dominance": 0.6,
+        "glory": 1,
+        "safety": 0.3,
+        "vengeance": 0.3,
+        "duty": 0.2,
+        "order": 0.1,
+        "purpose": 0.5,
+        "vol": 1.4,
+        "rest": "surprised"
+      }
+    },
+    {
+      "n": 20,
+      "target": 2,
+      "name": "THE VULTURE",
+      "blurb": "Waits, then takes the one who cannot answer.",
+      "bias": {
+        "disgusted": 1.2,
+        "bad": 1.1,
+        "fearful": 1
+      },
+      "targetRule": {
+        "id": "leastHealth",
+        "label": "THE WEAKEST",
+        "desc": "finishes whoever is nearly down"
+      },
+      "drives": {
+        "dominance": 0.6,
+        "glory": 0.2,
+        "safety": 0.8,
+        "vengeance": 0.5,
+        "duty": 0.1,
+        "order": 0.6,
+        "purpose": 0.4,
+        "vol": 0.8,
+        "rest": "bad"
+      }
+    }
+  ],
+  "explicitAssignments": 0,
+  "roster": [
+    {
+      "id": "sol",
+      "name": "SOL",
+      "explicitPersonality": null,
+      "personality": "THE CHALLENGER",
+      "personalityId": 1,
+      "style": "bruiser"
+    },
+    {
+      "id": "kano",
+      "name": "KANO",
+      "explicitPersonality": null,
+      "personality": "THE WILDCARD",
+      "personalityId": 19,
+      "style": "trickster"
+    },
+    {
+      "id": "vega",
+      "name": "VEGAS",
+      "explicitPersonality": null,
+      "personality": "THE PROFESSIONAL",
+      "personalityId": 2,
+      "style": "beamer"
+    },
+    {
+      "id": "aurum",
+      "name": "AURUM",
+      "explicitPersonality": null,
+      "personality": "THE TACTICIAN",
+      "personalityId": 14,
+      "style": "zoner"
+    },
+    {
+      "id": "nova",
+      "name": "NOVA",
+      "explicitPersonality": null,
+      "personality": "THE TACTICIAN",
+      "personalityId": 14,
+      "style": "artillery"
+    },
+    {
+      "id": "rime",
+      "name": "RIME",
+      "explicitPersonality": null,
+      "personality": "THE TACTICIAN",
+      "personalityId": 14,
+      "style": "zoner"
+    },
+    {
+      "id": "volt",
+      "name": "VOLT",
+      "explicitPersonality": null,
+      "personality": "THE ZEALOT",
+      "personalityId": 8,
+      "style": "rusher"
+    },
+    {
+      "id": "warden",
+      "name": "WARDEN",
+      "explicitPersonality": null,
+      "personality": "THE CHALLENGER",
+      "personalityId": 1,
+      "style": "bruiser"
+    },
+    {
+      "id": "hive",
+      "name": "HIVE",
+      "explicitPersonality": null,
+      "personality": "THE GUARDIAN",
+      "personalityId": 6,
+      "style": "summoner"
+    },
+    {
+      "id": "pyre",
+      "name": "PYRE",
+      "explicitPersonality": null,
+      "personality": "THE TACTICIAN",
+      "personalityId": 14,
+      "style": "artillery"
+    },
+    {
+      "id": "torch",
+      "name": "TORCH",
+      "explicitPersonality": null,
+      "personality": "THE CHALLENGER",
+      "personalityId": 1,
+      "style": "rusher"
+    },
+    {
+      "id": "apex",
+      "name": "APEX",
+      "explicitPersonality": null,
+      "personality": "THE PREDATOR",
+      "personalityId": 10,
+      "style": "grappler"
+    },
+    {
+      "id": "specter",
+      "name": "SPECTER",
+      "explicitPersonality": null,
+      "personality": "THE WILDCARD",
+      "personalityId": 19,
+      "style": "trickster"
+    },
+    {
+      "id": "vanguard",
+      "name": "VANGUARD",
+      "explicitPersonality": null,
+      "personality": "THE ZEALOT",
+      "personalityId": 8,
+      "style": "rusher"
+    },
+    {
+      "id": "kraken",
+      "name": "KRAKEN",
+      "explicitPersonality": null,
+      "personality": "THE PREDATOR",
+      "personalityId": 10,
+      "style": "grappler"
+    },
+    {
+      "id": "rift",
+      "name": "RIFT",
+      "explicitPersonality": null,
+      "personality": "THE WILDCARD",
+      "personalityId": 19,
+      "style": "trickster"
+    },
+    {
+      "id": "titan",
+      "name": "TITAN",
+      "explicitPersonality": null,
+      "personality": "THE PROFESSIONAL",
+      "personalityId": 2,
+      "style": "beamer"
+    },
+    {
+      "id": "sarge",
+      "name": "SARGE",
+      "explicitPersonality": null,
+      "personality": "THE TACTICIAN",
+      "personalityId": 14,
+      "style": "zoner"
+    },
+    {
+      "id": "merc",
+      "name": "MERC",
+      "explicitPersonality": null,
+      "personality": "THE TACTICIAN",
+      "personalityId": 14,
+      "style": "zoner"
+    },
+    {
+      "id": "kivuli",
+      "name": "KIVULI",
+      "explicitPersonality": null,
+      "personality": "THE WILDCARD",
+      "personalityId": 19,
+      "style": "trickster"
+    },
+    {
+      "id": "gale",
+      "name": "GALE",
+      "explicitPersonality": null,
+      "personality": "THE TACTICIAN",
+      "personalityId": 14,
+      "style": "artillery"
+    },
+    {
+      "id": "stefanos",
+      "name": "KING STEFANOS",
+      "explicitPersonality": null,
+      "personality": "THE TACTICIAN",
+      "personalityId": 14,
+      "style": "artillery"
+    },
+    {
+      "id": "sandra",
+      "name": "SANDRA",
+      "explicitPersonality": null,
+      "personality": "THE TACTICIAN",
+      "personalityId": 14,
+      "style": "zoner"
+    },
+    {
+      "id": "ironclad",
+      "name": "IRONCLAD",
+      "explicitPersonality": null,
+      "personality": "THE PROFESSIONAL",
+      "personalityId": 2,
+      "style": "beamer"
+    },
+    {
+      "id": "rage",
+      "name": "RAGE",
+      "explicitPersonality": null,
+      "personality": "THE ZEALOT",
+      "personalityId": 8,
+      "style": "bruiser"
+    },
+    {
+      "id": "stormcall",
+      "name": "STORMCALL",
+      "explicitPersonality": null,
+      "personality": "THE CHALLENGER",
+      "personalityId": 1,
+      "style": "bruiser"
+    },
+    {
+      "id": "webline",
+      "name": "WEBLINE",
+      "explicitPersonality": null,
+      "personality": "THE CHALLENGER",
+      "personalityId": 1,
+      "style": "rusher"
+    },
+    {
+      "id": "ripclaw",
+      "name": "RIPCLAW",
+      "explicitPersonality": null,
+      "personality": "THE ZEALOT",
+      "personalityId": 8,
+      "style": "rusher"
+    },
+    {
+      "id": "majesty",
+      "name": "MAJESTY",
+      "explicitPersonality": null,
+      "personality": "THE PROVER",
+      "personalityId": 5,
+      "style": "beamer"
+    },
+    {
+      "id": "mystward",
+      "name": "MAELSTROM",
+      "explicitPersonality": null,
+      "personality": "THE TACTICIAN",
+      "personalityId": 14,
+      "style": "zoner"
+    },
+    {
+      "id": "onyx",
+      "name": "ONYX",
+      "explicitPersonality": null,
+      "personality": "THE CHALLENGER",
+      "personalityId": 1,
+      "style": "rusher"
+    },
+    {
+      "id": "chainfire",
+      "name": "CHAINFIRE",
+      "explicitPersonality": null,
+      "personality": "THE PREDATOR",
+      "personalityId": 10,
+      "style": "grappler"
+    },
+    {
+      "id": "tempest",
+      "name": "TEMPEST",
+      "explicitPersonality": null,
+      "personality": "THE TACTICIAN",
+      "personalityId": 14,
+      "style": "artillery"
+    },
+    {
+      "id": "knightfall",
+      "name": "KNIGHTFALL",
+      "explicitPersonality": null,
+      "personality": "THE TACTICIAN",
+      "personalityId": 14,
+      "style": "zoner"
+    },
+    {
+      "id": "aegis",
+      "name": "AEGIS",
+      "explicitPersonality": null,
+      "personality": "THE CHALLENGER",
+      "personalityId": 1,
+      "style": "bruiser"
+    },
+    {
+      "id": "olympus",
+      "name": "OLYMPUS",
+      "explicitPersonality": null,
+      "personality": "THE CHALLENGER",
+      "personalityId": 1,
+      "style": "bruiser"
+    },
+    {
+      "id": "marshal",
+      "name": "MARSHAL",
+      "explicitPersonality": null,
+      "personality": "THE WILDCARD",
+      "personalityId": 19,
+      "style": "trickster"
+    },
+    {
+      "id": "circuit",
+      "name": "CIRCUIT",
+      "explicitPersonality": null,
+      "personality": "THE PROFESSIONAL",
+      "personalityId": 2,
+      "style": "beamer"
+    },
+    {
+      "id": "trench",
+      "name": "TRENCH",
+      "explicitPersonality": null,
+      "personality": "THE GUARDIAN",
+      "personalityId": 6,
+      "style": "summoner"
+    },
+    {
+      "id": "decibel",
+      "name": "DECIBEL",
+      "explicitPersonality": null,
+      "personality": "THE CHALLENGER",
+      "personalityId": 1,
+      "style": "bruiser"
+    },
+    {
+      "id": "coldsnap",
+      "name": "COLDSNAP",
+      "explicitPersonality": null,
+      "personality": "THE TACTICIAN",
+      "personalityId": 14,
+      "style": "zoner"
+    },
+    {
+      "id": "foundry",
+      "name": "CRUCIBLE",
+      "explicitPersonality": null,
+      "personality": "THE CHALLENGER",
+      "personalityId": 1,
+      "style": "bruiser"
+    },
+    {
+      "id": "talon",
+      "name": "TALON",
+      "explicitPersonality": null,
+      "personality": "THE CHALLENGER",
+      "personalityId": 1,
+      "style": "rusher"
+    },
+    {
+      "id": "abeo",
+      "name": "ABEO",
+      "explicitPersonality": null,
+      "personality": "THE CHALLENGER",
+      "personalityId": 1,
+      "style": "bruiser"
+    },
+    {
+      "id": "jelani",
+      "name": "JELANI",
+      "explicitPersonality": null,
+      "personality": "THE ZEALOT",
+      "personalityId": 8,
+      "style": "rusher"
+    },
+    {
+      "id": "kamaria",
+      "name": "KAMARIA",
+      "explicitPersonality": null,
+      "personality": "THE WILDCARD",
+      "personalityId": 19,
+      "style": "trickster"
+    },
+    {
+      "id": "ramiro",
+      "name": "RAMIRO",
+      "explicitPersonality": null,
+      "personality": "THE TACTICIAN",
+      "personalityId": 14,
+      "style": "zoner"
+    },
+    {
+      "id": "jawah",
+      "name": "JAWAH MATU",
+      "explicitPersonality": null,
+      "personality": "THE WILDCARD",
+      "personalityId": 19,
+      "style": "trickster"
+    },
+    {
+      "id": "moses",
+      "name": "MOSES APIO",
+      "explicitPersonality": null,
+      "personality": "THE TACTICIAN",
+      "personalityId": 14,
+      "style": "zoner"
+    },
+    {
+      "id": "dune",
+      "name": "DUNE",
+      "explicitPersonality": null,
+      "personality": "THE TACTICIAN",
+      "personalityId": 14,
+      "style": "zoner"
+    },
+    {
+      "id": "graven",
+      "name": "GRAVEN",
+      "explicitPersonality": null,
+      "personality": "THE TACTICIAN",
+      "personalityId": 14,
+      "style": "artillery"
+    },
+    {
+      "id": "bulwark",
+      "name": "BULWARK",
+      "explicitPersonality": null,
+      "personality": "THE TACTICIAN",
+      "personalityId": 14,
+      "style": "zoner"
+    },
+    {
+      "id": "feral",
+      "name": "FERAL",
+      "explicitPersonality": null,
+      "personality": "THE ZEALOT",
+      "personalityId": 8,
+      "style": "rusher"
+    },
+    {
+      "id": "breach",
+      "name": "BREACH",
+      "explicitPersonality": null,
+      "personality": "THE TACTICIAN",
+      "personalityId": 14,
+      "style": "zoner"
+    },
+    {
+      "id": "recon",
+      "name": "RECON",
+      "explicitPersonality": null,
+      "personality": "THE TACTICIAN",
+      "personalityId": 14,
+      "style": "zoner"
+    }
+  ]
+}

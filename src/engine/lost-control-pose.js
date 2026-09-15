@@ -5,8 +5,8 @@ const turn=new Quaternion(),euler=new Euler(),pivot=new Vector3(0,5,0);
 
 export function airControlState(f){
  if(!f.alive||f.ragdoll)return 'ko';
- if(f.grabbedBy||f.hanging||f._passengerTransport||f._aircraftVehicle||f._scoutVehicle)return 'attached';
- if(f.pos.y-(f.groundY||0)<=.05)return 'grounded';
+ if(f.grabbedBy||f.hanging||f._passengerTransport||f._aircraftVehicle||f._scoutVehicle||f._fleetVehicle)return 'attached';
+ if(f.onBlock||f.pos.y-(f.groundY||0)<=.05)return 'grounded';
  if(f.frozenT>0)return 'frozen';
  if(f.launchT>0||f.stunT>0||f.staggerT>0||f.sleepT>0||f.downedT>0)return 'uncontrolled';
  return f.flying?'flight':'falling';

@@ -72,6 +72,7 @@ import { BoxingRing, BOXING } from './boxingring.js';
 import { PowerWorldStage } from './powerworld.js';
 import { FrontlineEncounter } from './frontline-encounter.js';
 import {equipmentPolicy,selectedGadget} from './equipment-policy.js';
+import {inventoryAdmission,captureHeldWeapon,storeWeaponSnapshot,storedWeapon,consumeStoredWeapon,restoreWeaponState} from './inventory-model.js';
 import {ZombieEncounter} from './zombie-encounter.js';
 import {DesertSecurity} from './desert-security.js';
 import { STRIKES } from '../data/martial.js';
@@ -1426,6 +1427,8 @@ export class Game {
     }
     if (!best) return false;
     if(!equipmentPolicy(f).personalWeapons){if(this.isHuman(f))this.hud?.feed(equipmentPolicy(f).weaponReason,'#ffd24a');return false;}
+    const admission=inventoryAdmission(f,best.ab),previous=captureHeldWeapon(f);
+    if(!admission.ok||f._gearHeld&&!previous){if(this.isHuman(f))this.hud?.feed(admission.reason||'Finish the current action before changing weapons.');return false;}
     if (f._gearHeld) this.dropGear(f, false);              // hands are a slot: swap, don't stack
     const prof = weaponProficiency(f.def);
     const ab = best.ab;
@@ -1434,7 +1437,9 @@ export class Game {
       dmgMin: ab.dmgMin != null ? +(ab.dmgMin * prof).toFixed(2) : ab.dmgMin,
       dmgMax: ab.dmgMax != null ? +(ab.dmgMax * prof).toFixed(2) : ab.dmgMax,
       spread: ab.spread != null ? +(ab.spread / prof).toFixed(4) : ab.spread };   // proficiency shows in the HANDS
+    f._inventoryStowed=false;
     f._gearHeld = { ab: eff, base: ab, t: Infinity, prof };
+    storeWeaponSnapshot(f,previous);
     f.slots._gear = { def: eff, cd: 0, chargeT: 0, sustainT: 0 };
     firearmAmmo(f.slots._gear);
     const hand = buildWeapon(this._gearKind(ab), { armor: new THREE.MeshStandardMaterial({ color: '#565c66', roughness: 0.45, metalness: 0.7 }) });
@@ -1453,9 +1458,13 @@ export class Game {
    * ⚠ Proficiency shows in the HANDS, not in the weapon: the row is untouched and the EFFECTIVE
    * ability is what gets held. A soldier and a bruiser hold the same carbine differently.
    */
-  equipFrom(f, row, {primary=false}={}) {
+  equipFrom(f, row, {primary=false,fromInventoryId=null}={}) {
     if (!f || !row || !row.ab) return null;
     if(!equipmentPolicy(f).personalWeapons){if(this.isHuman(f))this.hud?.feed(equipmentPolicy(f).weaponReason,'#ffd24a');return null;}
+    const saved=fromInventoryId?storedWeapon(f,fromInventoryId):null;
+    if(fromInventoryId&&!saved)return null;
+    const admission=inventoryAdmission(f,row.ab,{removeId:fromInventoryId}),previous=captureHeldWeapon(f);
+    if(!admission.ok||f._gearHeld&&!previous){if(this.isHuman(f))this.hud?.feed(admission.reason||'Finish the current action before changing weapons.');return null;}
     if (f._gearHeld) this.dropGear(f, false);
     const prof = weaponProficiency(f.def);
     const ab = row.ab;
@@ -1465,7 +1474,8 @@ export class Game {
       dmgMax: ab.dmgMax != null ? +(ab.dmgMax * prof).toFixed(2) : ab.dmgMax,
       spread: ab.spread != null ? +(ab.spread / prof).toFixed(4) : ab.spread };
     // Issued and scavenged equipment share the same persistent lifetime.
-    f._gearHeld = { ab: eff, base: ab, t: Infinity, prof, chosen: true, rowId: row.id, primary };
+    f._inventoryStowed=false;
+    f._gearHeld = { ab: eff, base: ab, t: Infinity, prof, chosen: true, rowId: row.id, primary, inventoryRow:{id:row.id,mesh:row.mesh,equipmentAsset:row.equipmentAsset,ab} };
     f.slots._gear = { def: eff, cd: 0, chargeT: 0, sustainT: 0 };
     firearmAmmo(f.slots._gear);
     if(primary){
@@ -1477,7 +1487,15 @@ export class Game {
     const hand = buildWeapon(row.mesh||this._gearKind(ab), { armor: new THREE.MeshStandardMaterial({ color: '#565c66', roughness: 0.45, metalness: 0.7 }) });
     mountHeldWeapon(f,hand);
     if(row.equipmentAsset){const gear=f._gearHeld;gear.equipmentReady=replaceHeldEquipment(f,row.equipmentAsset,gear,{loader:this._equipmentAssetLoader});}
+    if(saved){consumeStoredWeapon(f,fromInventoryId);restoreWeaponState(f,saved);}
+    storeWeaponSnapshot(f,previous);
     return eff;
+  }
+
+  equipStoredWeapon(f,id){
+    const saved=storedWeapon(f,id);if(!saved)return null;
+    const row=saved.gear.inventoryRow||{id:saved.gear.rowId,ab:saved.gear.base||saved.gear.ab};
+    return this.equipFrom(f,row,{primary:!!saved.gear.primary,fromInventoryId:id});
   }
 
   dropGear(f, spawnDrop = true) {
@@ -1488,6 +1506,7 @@ export class Game {
     if(f._gearHeld.primary){f.slots.lmb=f._loadoutPrimary;delete f._loadoutPrimary;}
     delete f.slots._gear;
     f._gearHeld = null;
+    f._inventoryStowed=false;
     // ⚠ THE SELECTOR IS AN INTENT, AND AN EMPTY HAND MUST NOT KEEP CLAIMING A WEAPON. This is the ONE
     // path out of holding something, so it is the one place that can honestly say "you are on your
     // fists now" — and without it `_hand` still read 3 while the hands were empty, which is worse
@@ -2946,7 +2965,7 @@ export class Game {
     if (this.comic && victim && victim.pos) {
       try {
         const feedback=selectHitFeedback({knockedOut:true,healthLost:0,absorbed:{plate:0,armor:0,shield:0,nanite:0},guard:'none',deflected:false,statusesAdded:[]});
-        (this.comic.impact||this.comic.sfx).call(this.comic,killer?feedback.word:'DOWN!',victim.pos,{feedback,power:1,red:true,size:42,life:1.3});
+        (this.comic.impact||this.comic.sfx).call(this.comic,killer?feedback.word:'DOWN!',victim.pos,{feedback,target:victim,source:killer,power:1,red:true,size:42,life:1.3});
         if (combatView(this)!=='bfp'&&(this.isHuman(killer) || this.isHuman(victim))) {
           this.comic.caption((victim.name || 'THEY') + ' is down!', { where: 'top', red: !this.isHuman(killer), life: 2.4 });
         }
@@ -3253,12 +3272,12 @@ export class Game {
     if(t-last<=delay)return;
     if(!this._hitFeedbackTimes)this._hitFeedbackTimes=new WeakMap();
     targetTimes.set(family,t);this._hitFeedbackTimes.set(target,targetTimes);
-    if(this.hud&&feedback.label)this.hud.damageNumber(target.pos,feedback.label,
+    if(this.hud&&!this.comic&&feedback.label)this.hud.damageNumber(target.pos,feedback.label,
       family==='guard-broken'?'#ff5a4a':family==='deflect'?'#ffd24a':'#e8e2d6',true);
     if(this.comic&&feedback.word&&family!=='ko'){
       const pl=this.player,near=!pl||(Math.abs(pl.pos.x-target.pos.x)<260&&Math.abs(pl.pos.z-target.pos.z)<260);
       if(near)(this.comic.impact||this.comic.sfx).call(this.comic,feedback.word,target.pos,
-        {feedback,power:Math.min(1,Math.max(.25,(outcome.healthLost||0)/60)),red:family==='guard-broken'});
+        {feedback,target,source:opts.src,power:Math.min(1,Math.max(.25,(outcome.healthLost||0)/60)),red:family==='guard-broken'});
     }
   }
 
@@ -3323,7 +3342,7 @@ export class Game {
         if(!this._hitFeedbackTimes)this._hitFeedbackTimes=new WeakMap();
         targetTimes.set(family,t);this._hitFeedbackTimes.set(target,targetTimes);
         (this.comic.impact||this.comic.sfx).call(this.comic,feedback?.word||this._sfxWord(amount,opts),target.pos,
-          {feedback,power:opts.haymaker?1:Math.min(1,Math.max(.25,(outcome?.healthLost||amount)/60)),
+          {feedback,target,source:opts.src,power:opts.haymaker?1:Math.min(1,Math.max(.25,(outcome?.healthLost||amount)/60)),
             red:!!(feedback?.id==='ko'||feedback?.id==='guard-broken'||opts.slam||opts.haymaker||amount>48)});
       }
     }

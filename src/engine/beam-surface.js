@@ -6,9 +6,9 @@ const energySaturation=s=>Math.min(1,s/.15)*Math.max(.8,s);
 
 // One soft source envelope, not a stack of opaque spheres. Shared shader key
 // lets loading prepare this exact material before the first in-game emission.
-export function createBeamSourceMaterial(color){
+export function createBeamSourceMaterial(color,family='energy'){
  const material=new THREE.MeshBasicMaterial({color,transparent:true,opacity:.8,blending:THREE.AdditiveBlending,depthWrite:false});
- material.color.lerp(new THREE.Color('#ffffff'),.65).multiplyScalar(2.5);
+ material.color.lerp(new THREE.Color('#ffffff'),family==='fire'?.12:.65).multiplyScalar(family==='fire'?1.25:1.6);
  material.onBeforeCompile=shader=>{
   shader.vertexShader='varying vec3 sourceNormal,sourceView;\n'+shader.vertexShader.replace('#include <begin_vertex>',`#include <begin_vertex>
 sourceNormal=normalize(normalMatrix*normal);sourceView=-(modelViewMatrix*vec4(position,1.0)).xyz;`);
@@ -21,7 +21,15 @@ diffuseColor.a*=density*density;`);
 
 // Shared by the live hose and graphics preparation. Hold preparation materials
 // for the stage lifetime so Three retains their compiled program references.
-export function createBeamMaterials(color,color2,readable=false,hasDetail=false){
+export function beamVisualFamily(options={}){
+ // Heat vision deals thermal damage but is still an authored optical ray.
+ if(options.faceOrigin)return 'energy';
+ if(options.material==='fire'||options.dtype==='fire')return 'fire';
+ if(options.dtype==='cold')return 'ice';
+ return 'energy';
+}
+
+export function createBeamMaterials(color,color2,readable=false,hasDetail=false,family='energy'){
  const material=(tint,opacity,side=THREE.FrontSide)=>new THREE.MeshBasicMaterial({color:tint,opacity,side,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false});
  const core=material(color2,.8,THREE.DoubleSide),glow=material(color,.42,THREE.DoubleSide),tip=material(color2,.85),detail=hasDetail?material(color2,.9):null;
  let time=null;
@@ -30,8 +38,42 @@ export function createBeamMaterials(color,color2,readable=false,hasDetail=false)
   core.color.lerp(glow.color,.8);time=shadeBeamSurface(core,color);
   const hue={};glow.color.getHSL(hue);glow.color.setHSL(hue.h,energySaturation(hue.s),Math.min(.12,hue.l));
   shadeBeamSheath(glow);tip.color.set(color);if(detail)detail.color.set(color);
+  if(family==='fire'){
+   time={value:0};shadeFireSurface(core,time);shadeFireSurface(glow,time,true);
+   tip.color.set('#ffbf45');if(detail)detail.color.set('#ffc34a').multiplyScalar(1.2);
+  }
  }
  return{core,glow,tip,detail,time};
+}
+
+// Flame has broken, advecting tongues and a soot envelope. This shades the
+// existing traveled tube only: no new emission, hit radius or contact source.
+function shadeFireSurface(material,time,smoke=false){
+ material.side=THREE.DoubleSide;material.forceSinglePass=true;
+ material.onBeforeCompile=shader=>{
+  shader.uniforms.flameTime=time;
+  shader.vertexShader='attribute float beamArc;varying float flameArc;varying vec3 flameNormal,flameEye,flameField;\n'+shader.vertexShader.replace('#include <begin_vertex>',`#include <begin_vertex>
+flameArc=beamArc;flameNormal=normalize(normalMatrix*normal);
+flameField=normal;flameEye=-(modelViewMatrix*vec4(position,1.0)).xyz;`);
+  shader.fragmentShader='uniform float flameTime;varying float flameArc;varying vec3 flameNormal,flameEye,flameField;\n'+shader.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
+vec3 field=normalize(flameField);
+float flow=flameArc*.19-flameTime*11.0;
+float curl=sin(dot(field,vec3(4.1,6.3,2.7))+flow*.41);
+float tongues=.5+.5*sin(flow+dot(field,vec3(4.3,2.9,3.2))+curl*2.7);
+float breakup=.5+.5*sin(flow*.61-dot(field,vec3(2.2,7.8,3.1)));
+float facing=abs(dot(normalize(flameNormal),normalize(flameEye)));
+float density=smoothstep(.14,.78,tongues*.72+breakup*.28);
+${smoke?`diffuseColor.rgb=vec3(.09,.065,.045);
+diffuseColor.a*=.3*(1.0-density)*smoothstep(3.0,15.0,flameArc)*smoothstep(.02,.7,facing);`:`
+vec3 ember=vec3(.64,.025,.002),orange=vec3(1.2,.17,.008),yellow=vec3(1.5,.8,.12);
+diffuseColor.rgb=mix(ember,orange,density);
+diffuseColor.rgb=mix(diffuseColor.rgb,yellow,pow(density,4.0)*.8);
+diffuseColor.a*=smoothstep(.12,.54,tongues)*(.28+.72*breakup);
+diffuseColor.a*=smoothstep(.03,.55,facing)+.2;
+`}
+diffuseColor.a*=smoothstep(0.0,1.4,flameArc);`);
+ };
+ material.customProgramCacheKey=()=>smoke?'beam-fire-soot-v1':'beam-fire-tongues-v1';
 }
 
 // A translucent energy envelope is not an opaque pipe: a rear camera looks
@@ -61,7 +103,7 @@ export function shadeBeamSurface(material,color) {
   const hue={};new THREE.Color(color).getHSL(hue);
   const body=new THREE.Color().setHSL(hue.h,energySaturation(hue.s),.4);
   const edge=body.clone().multiplyScalar(.55);
-  const heat=new THREE.Color(color).lerp(new THREE.Color('#ffffff'),.88).multiplyScalar(2.5);
+  const heat=new THREE.Color(color).lerp(new THREE.Color('#ffffff'),.88).multiplyScalar(1.6);
   const time={value:0};
   material.onBeforeCompile=shader=>{
     Object.assign(shader.uniforms,{beamBody:{value:body},beamEdge:{value:edge},beamHeat:{value:heat},beamTime:time});

@@ -1,0 +1,11 @@
+import fs from 'node:fs';
+import {ROSTER} from '../src/data/characters.js';
+import {PERSONALITIES,derivePersonality,drivesFor,TARGET_RULES} from '../src/data/psyche.js';
+import {ATTR_DEFS} from '../src/data/ranks.js';
+import {DTYPES} from '../src/data/damage-types.js';
+import {AI} from '../src/engine/ai.js';
+const roster=ROSTER.map(d=>({id:d.id,name:d.name,explicitPersonality:d.personality??null,personality:derivePersonality(d).name,personalityId:derivePersonality(d).n,style:new AI({def:d,slots:{}}).style}));
+const count=k=>Object.fromEntries([...new Set(roster.map(x=>x[k]))].sort().map(v=>[v,roster.filter(x=>x[k]===v).length]));
+const report={rosterCount:roster.length,publicStats:ATTR_DEFS,damageTypes:DTYPES,styleCounts:count('style'),personalityCounts:count('personality'),definedPersonalities:PERSONALITIES.map(p=>({...p,targetRule:TARGET_RULES[p.target],drives:drivesFor(p.n)})),explicitAssignments:roster.filter(x=>x.explicitPersonality!==null).length,roster};
+fs.mkdirSync('docs/reports',{recursive:true});fs.writeFileSync('docs/reports/character-rules-personality-2026-09-15.json',JSON.stringify(report,null,2));
+console.log(JSON.stringify({...report,roster:undefined,definedPersonalities:undefined},null,2));
