@@ -1,0 +1,1760 @@
+{
+  "identity": {
+    "version": 1,
+    "worktree": "D:\\lsw\\.worktrees\\combat-release-review",
+    "branch": "codex/playable-integration",
+    "revision": "035641ef4cc4edba1cf329c86bba91c792c13a66",
+    "trackedDiffHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "newSourceHash": "c547a1485657d516418426f31791e3bc1f3aa6a2a90ec759ea518a26f8c9c371"
+  },
+  "method": "Native menu entry; built-in scripted Threat Room demonstrations; native V key charge releases",
+  "errors": [],
+  "demos": [
+    {
+      "kind": {
+        "kind": "native-controller-demonstration",
+        "phase": "complete",
+        "outcome": "complete",
+        "damage": 48,
+        "events": [
+          {
+            "time": 0,
+            "label": "Native takeoff / rear approach"
+          },
+          {
+            "time": 0.2917999999999993,
+            "label": "Reaching for rear capture"
+          },
+          {
+            "time": 0.44179999999999914,
+            "label": "Rear hold / moving carry"
+          },
+          {
+            "time": 1.0925,
+            "label": "Attached throw anticipation"
+          },
+          {
+            "time": 1.2990420000000005,
+            "label": "Aimed downward release"
+          },
+          {
+            "time": 1.4598419999999996,
+            "label": "Terrain impact: 48.0 health lost"
+          },
+          {
+            "time": 2.6693419999999954,
+            "label": "Recovery finished / control returned"
+          }
+        ]
+      },
+      "samples": [
+        {
+          "active": true,
+          "phase": "approach",
+          "summary": {
+            "kind": "native-controller-demonstration",
+            "phase": "approach",
+            "outcome": "incomplete",
+            "damage": 0,
+            "events": [
+              {
+                "time": 0,
+                "label": "Native takeoff / rear approach"
+              }
+            ]
+          },
+          "holderModel": true,
+          "targetModel": true,
+          "held": false,
+          "position": [
+            0,
+            8,
+            -50
+          ],
+          "velocity": [
+            0,
+            0,
+            0
+          ],
+          "recovery": null,
+          "canAct": true
+        },
+        {
+          "active": true,
+          "phase": "carry",
+          "summary": {
+            "kind": "native-controller-demonstration",
+            "phase": "carry",
+            "outcome": "incomplete",
+            "damage": 0,
+            "events": [
+              {
+                "time": 0,
+                "label": "Native takeoff / rear approach"
+              },
+              {
+                "time": 0.2917999999999993,
+                "label": "Reaching for rear capture"
+              },
+              {
+                "time": 0.44179999999999914,
+                "label": "Rear hold / moving carry"
+              }
+            ]
+          },
+          "holderModel": true,
+          "targetModel": true,
+          "held": true,
+          "position": [
+            0,
+            17.031711594366914,
+            -46.91547312125046
+          ],
+          "velocity": [
+            0,
+            0,
+            0
+          ],
+          "recovery": null,
+          "canAct": false
+        },
+        {
+          "active": true,
+          "phase": "carry",
+          "summary": {
+            "kind": "native-controller-demonstration",
+            "phase": "carry",
+            "outcome": "incomplete",
+            "damage": 0,
+            "events": [
+              {
+                "time": 0,
+                "label": "Native takeoff / rear approach"
+              },
+              {
+                "time": 0.2917999999999993,
+                "label": "Reaching for rear capture"
+              },
+              {
+                "time": 0.44179999999999914,
+                "label": "Rear hold / moving carry"
+              }
+            ]
+          },
+          "holderModel": true,
+          "targetModel": true,
+          "held": true,
+          "position": [
+            0,
+            22.22090414527647,
+            -30.689988431980588
+          ],
+          "velocity": [
+            0,
+            0,
+            0
+          ],
+          "recovery": null,
+          "canAct": false
+        },
+        {
+          "active": true,
+          "phase": "release",
+          "summary": {
+            "kind": "native-controller-demonstration",
+            "phase": "release",
+            "outcome": "incomplete",
+            "damage": 0,
+            "events": [
+              {
+                "time": 0,
+                "label": "Native takeoff / rear approach"
+              },
+              {
+                "time": 0.2917999999999993,
+                "label": "Reaching for rear capture"
+              },
+              {
+                "time": 0.44179999999999914,
+                "label": "Rear hold / moving carry"
+              },
+              {
+                "time": 1.0925,
+                "label": "Attached throw anticipation"
+              }
+            ]
+          },
+          "holderModel": true,
+          "targetModel": true,
+          "held": true,
+          "position": [
+            0,
+            25.19277395224323,
+            -20.830113067635015
+          ],
+          "velocity": [
+            0,
+            0,
+            0
+          ],
+          "recovery": null,
+          "canAct": false
+        },
+        {
+          "active": true,
+          "phase": "recovery",
+          "summary": {
+            "kind": "native-controller-demonstration",
+            "phase": "recovery",
+            "outcome": "incomplete",
+            "damage": 48,
+            "events": [
+              {
+                "time": 0,
+                "label": "Native takeoff / rear approach"
+              },
+              {
+                "time": 0.2917999999999993,
+                "label": "Reaching for rear capture"
+              },
+              {
+                "time": 0.44179999999999914,
+                "label": "Rear hold / moving carry"
+              },
+              {
+                "time": 1.0925,
+                "label": "Attached throw anticipation"
+              },
+              {
+                "time": 1.2990420000000005,
+                "label": "Aimed downward release"
+              },
+              {
+                "time": 1.4598419999999996,
+                "label": "Terrain impact: 48.0 health lost"
+              }
+            ]
+          },
+          "holderModel": true,
+          "targetModel": true,
+          "held": false,
+          "position": [
+            0,
+            0,
+            -18.850684334424145
+          ],
+          "velocity": [
+            0,
+            0,
+            0
+          ],
+          "recovery": {
+            "elapsed": 0
+          },
+          "canAct": false
+        },
+        {
+          "active": true,
+          "phase": "recovery",
+          "summary": {
+            "kind": "native-controller-demonstration",
+            "phase": "recovery",
+            "outcome": "incomplete",
+            "damage": 48,
+            "events": [
+              {
+                "time": 0,
+                "label": "Native takeoff / rear approach"
+              },
+              {
+                "time": 0.2917999999999993,
+                "label": "Reaching for rear capture"
+              },
+              {
+                "time": 0.44179999999999914,
+                "label": "Rear hold / moving carry"
+              },
+              {
+                "time": 1.0925,
+                "label": "Attached throw anticipation"
+              },
+              {
+                "time": 1.2990420000000005,
+                "label": "Aimed downward release"
+              },
+              {
+                "time": 1.4598419999999996,
+                "label": "Terrain impact: 48.0 health lost"
+              }
+            ]
+          },
+          "holderModel": true,
+          "targetModel": true,
+          "held": false,
+          "position": [
+            0,
+            0,
+            -18.850684334424145
+          ],
+          "velocity": [
+            0,
+            0,
+            0
+          ],
+          "recovery": {
+            "elapsed": 0.3544999999999999
+          },
+          "canAct": false
+        },
+        {
+          "active": true,
+          "phase": "recovery",
+          "summary": {
+            "kind": "native-controller-demonstration",
+            "phase": "recovery",
+            "outcome": "incomplete",
+            "damage": 48,
+            "events": [
+              {
+                "time": 0,
+                "label": "Native takeoff / rear approach"
+              },
+              {
+                "time": 0.2917999999999993,
+                "label": "Reaching for rear capture"
+              },
+              {
+                "time": 0.44179999999999914,
+                "label": "Rear hold / moving carry"
+              },
+              {
+                "time": 1.0925,
+                "label": "Attached throw anticipation"
+              },
+              {
+                "time": 1.2990420000000005,
+                "label": "Aimed downward release"
+              },
+              {
+                "time": 1.4598419999999996,
+                "label": "Terrain impact: 48.0 health lost"
+              }
+            ]
+          },
+          "holderModel": true,
+          "targetModel": true,
+          "held": false,
+          "position": [
+            0,
+            0,
+            -18.850684334424145
+          ],
+          "velocity": [
+            0,
+            0,
+            0
+          ],
+          "recovery": {
+            "elapsed": 0.5839000000000011
+          },
+          "canAct": false
+        },
+        {
+          "active": true,
+          "phase": "recovery",
+          "summary": {
+            "kind": "native-controller-demonstration",
+            "phase": "recovery",
+            "outcome": "incomplete",
+            "damage": 48,
+            "events": [
+              {
+                "time": 0,
+                "label": "Native takeoff / rear approach"
+              },
+              {
+                "time": 0.2917999999999993,
+                "label": "Reaching for rear capture"
+              },
+              {
+                "time": 0.44179999999999914,
+                "label": "Rear hold / moving carry"
+              },
+              {
+                "time": 1.0925,
+                "label": "Attached throw anticipation"
+              },
+              {
+                "time": 1.2990420000000005,
+                "label": "Aimed downward release"
+              },
+              {
+                "time": 1.4598419999999996,
+                "label": "Terrain impact: 48.0 health lost"
+              }
+            ]
+          },
+          "holderModel": true,
+          "targetModel": true,
+          "held": false,
+          "position": [
+            0,
+            0,
+            -18.850684334424145
+          ],
+          "velocity": [
+            0,
+            0,
+            0
+          ],
+          "recovery": {
+            "elapsed": 0.7966000000000018
+          },
+          "canAct": false
+        },
+        {
+          "active": true,
+          "phase": "recovery",
+          "summary": {
+            "kind": "native-controller-demonstration",
+            "phase": "recovery",
+            "outcome": "incomplete",
+            "damage": 48,
+            "events": [
+              {
+                "time": 0,
+                "label": "Native takeoff / rear approach"
+              },
+              {
+                "time": 0.2917999999999993,
+                "label": "Reaching for rear capture"
+              },
+              {
+                "time": 0.44179999999999914,
+                "label": "Rear hold / moving carry"
+              },
+              {
+                "time": 1.0925,
+                "label": "Attached throw anticipation"
+              },
+              {
+                "time": 1.2990420000000005,
+                "label": "Aimed downward release"
+              },
+              {
+                "time": 1.4598419999999996,
+                "label": "Terrain impact: 48.0 health lost"
+              }
+            ]
+          },
+          "holderModel": true,
+          "targetModel": true,
+          "held": false,
+          "position": [
+            0,
+            0,
+            -18.850684334424145
+          ],
+          "velocity": [
+            0,
+            0,
+            0
+          ],
+          "recovery": {
+            "elapsed": 1.0134999999999994
+          },
+          "canAct": false
+        },
+        {
+          "active": true,
+          "phase": "complete",
+          "summary": {
+            "kind": "native-controller-demonstration",
+            "phase": "complete",
+            "outcome": "incomplete",
+            "damage": 48,
+            "events": [
+              {
+                "time": 0,
+                "label": "Native takeoff / rear approach"
+              },
+              {
+                "time": 0.2917999999999993,
+                "label": "Reaching for rear capture"
+              },
+              {
+                "time": 0.44179999999999914,
+                "label": "Rear hold / moving carry"
+              },
+              {
+                "time": 1.0925,
+                "label": "Attached throw anticipation"
+              },
+              {
+                "time": 1.2990420000000005,
+                "label": "Aimed downward release"
+              },
+              {
+                "time": 1.4598419999999996,
+                "label": "Terrain impact: 48.0 health lost"
+              },
+              {
+                "time": 2.6693419999999954,
+                "label": "Recovery finished / control returned"
+              }
+            ]
+          },
+          "holderModel": true,
+          "targetModel": true,
+          "held": false,
+          "position": [
+            0,
+            0,
+            -18.850684334424145
+          ],
+          "velocity": [
+            0,
+            0,
+            0
+          ],
+          "recovery": null,
+          "canAct": true
+        },
+        {
+          "active": true,
+          "phase": "complete",
+          "summary": {
+            "kind": "native-controller-demonstration",
+            "phase": "complete",
+            "outcome": "incomplete",
+            "damage": 48,
+            "events": [
+              {
+                "time": 0,
+                "label": "Native takeoff / rear approach"
+              },
+              {
+                "time": 0.2917999999999993,
+                "label": "Reaching for rear capture"
+              },
+              {
+                "time": 0.44179999999999914,
+                "label": "Rear hold / moving carry"
+              },
+              {
+                "time": 1.0925,
+                "label": "Attached throw anticipation"
+              },
+              {
+                "time": 1.2990420000000005,
+                "label": "Aimed downward release"
+              },
+              {
+                "time": 1.4598419999999996,
+                "label": "Terrain impact: 48.0 health lost"
+              },
+              {
+                "time": 2.6693419999999954,
+                "label": "Recovery finished / control returned"
+              }
+            ]
+          },
+          "holderModel": true,
+          "targetModel": true,
+          "held": false,
+          "position": [
+            0,
+            0,
+            -18.850684334424145
+          ],
+          "velocity": [
+            0,
+            0,
+            0
+          ],
+          "recovery": null,
+          "canAct": true
+        },
+        {
+          "active": true,
+          "phase": "complete",
+          "summary": {
+            "kind": "native-controller-demonstration",
+            "phase": "complete",
+            "outcome": "incomplete",
+            "damage": 48,
+            "events": [
+              {
+                "time": 0,
+                "label": "Native takeoff / rear approach"
+              },
+              {
+                "time": 0.2917999999999993,
+                "label": "Reaching for rear capture"
+              },
+              {
+                "time": 0.44179999999999914,
+                "label": "Rear hold / moving carry"
+              },
+              {
+                "time": 1.0925,
+                "label": "Attached throw anticipation"
+              },
+              {
+                "time": 1.2990420000000005,
+                "label": "Aimed downward release"
+              },
+              {
+                "time": 1.4598419999999996,
+                "label": "Terrain impact: 48.0 health lost"
+              },
+              {
+                "time": 2.6693419999999954,
+                "label": "Recovery finished / control returned"
+              }
+            ]
+          },
+          "holderModel": true,
+          "targetModel": true,
+          "held": false,
+          "position": [
+            0,
+            0,
+            -18.850684334424145
+          ],
+          "velocity": [
+            0,
+            0,
+            0
+          ],
+          "recovery": null,
+          "canAct": true
+        },
+        {
+          "active": true,
+          "phase": "complete",
+          "summary": {
+            "kind": "native-controller-demonstration",
+            "phase": "complete",
+            "outcome": "incomplete",
+            "damage": 48,
+            "events": [
+              {
+                "time": 0,
+                "label": "Native takeoff / rear approach"
+              },
+              {
+                "time": 0.2917999999999993,
+                "label": "Reaching for rear capture"
+              },
+              {
+                "time": 0.44179999999999914,
+                "label": "Rear hold / moving carry"
+              },
+              {
+                "time": 1.0925,
+                "label": "Attached throw anticipation"
+              },
+              {
+                "time": 1.2990420000000005,
+                "label": "Aimed downward release"
+              },
+              {
+                "time": 1.4598419999999996,
+                "label": "Terrain impact: 48.0 health lost"
+              },
+              {
+                "time": 2.6693419999999954,
+                "label": "Recovery finished / control returned"
+              }
+            ]
+          },
+          "holderModel": true,
+          "targetModel": true,
+          "held": false,
+          "position": [
+            0,
+            0,
+            -18.850684334424145
+          ],
+          "velocity": [
+            0,
+            0,
+            0
+          ],
+          "recovery": null,
+          "canAct": true
+        },
+        {
+          "active": true,
+          "phase": "complete",
+          "summary": {
+            "kind": "native-controller-demonstration",
+            "phase": "complete",
+            "outcome": "incomplete",
+            "damage": 48,
+            "events": [
+              {
+                "time": 0,
+                "label": "Native takeoff / rear approach"
+              },
+              {
+                "time": 0.2917999999999993,
+                "label": "Reaching for rear capture"
+              },
+              {
+                "time": 0.44179999999999914,
+                "label": "Rear hold / moving carry"
+              },
+              {
+                "time": 1.0925,
+                "label": "Attached throw anticipation"
+              },
+              {
+                "time": 1.2990420000000005,
+                "label": "Aimed downward release"
+              },
+              {
+                "time": 1.4598419999999996,
+                "label": "Terrain impact: 48.0 health lost"
+              },
+              {
+                "time": 2.6693419999999954,
+                "label": "Recovery finished / control returned"
+              }
+            ]
+          },
+          "holderModel": true,
+          "targetModel": true,
+          "held": false,
+          "position": [
+            0,
+            0,
+            -18.850684334424145
+          ],
+          "velocity": [
+            0,
+            0,
+            0
+          ],
+          "recovery": null,
+          "canAct": true
+        },
+        {
+          "active": false,
+          "phase": "complete",
+          "summary": {
+            "kind": "native-controller-demonstration",
+            "phase": "complete",
+            "outcome": "complete",
+            "damage": 48,
+            "events": [
+              {
+                "time": 0,
+                "label": "Native takeoff / rear approach"
+              },
+              {
+                "time": 0.2917999999999993,
+                "label": "Reaching for rear capture"
+              },
+              {
+                "time": 0.44179999999999914,
+                "label": "Rear hold / moving carry"
+              },
+              {
+                "time": 1.0925,
+                "label": "Attached throw anticipation"
+              },
+              {
+                "time": 1.2990420000000005,
+                "label": "Aimed downward release"
+              },
+              {
+                "time": 1.4598419999999996,
+                "label": "Terrain impact: 48.0 health lost"
+              },
+              {
+                "time": 2.6693419999999954,
+                "label": "Recovery finished / control returned"
+              }
+            ]
+          },
+          "holderModel": true,
+          "targetModel": true,
+          "held": false,
+          "position": [
+            0,
+            0,
+            -18.850684334424145
+          ],
+          "velocity": [
+            0,
+            0,
+            0
+          ],
+          "recovery": null,
+          "canAct": true
+        }
+      ]
+    },
+    {
+      "kind": {
+        "kind": "native-airborne-stun-demonstration",
+        "phase": "complete",
+        "outcome": "complete",
+        "damage": 0,
+        "events": [
+          {
+            "time": 0,
+            "label": "Airborne stun: native status demonstration"
+          },
+          {
+            "time": 0.3544000000000015,
+            "label": "Stunned: flight relinquished to gravity"
+          },
+          {
+            "time": 1.1260000000000006,
+            "label": "Ground reached: 0.0 health lost under native fall rules"
+          },
+          {
+            "time": 3.0653999999999946,
+            "label": "Stun recovery finished / control returned"
+          }
+        ],
+        "flightReleased": true,
+        "limpObserved": true
+      },
+      "samples": [
+        {
+          "active": true,
+          "phase": "hover",
+          "summary": {
+            "kind": "native-airborne-stun-demonstration",
+            "phase": "hover",
+            "outcome": "incomplete",
+            "damage": 0,
+            "events": [
+              {
+                "time": 0,
+                "label": "Airborne stun: native status demonstration"
+              }
+            ],
+            "flightReleased": false,
+            "limpObserved": false
+          },
+          "holderModel": true,
+          "targetModel": true,
+          "held": false,
+          "position": [
+            0,
+            18,
+            -50
+          ],
+          "velocity": [
+            0,
+            0,
+            0
+          ],
+          "recovery": null,
+          "canAct": true
+        },
+        {
+          "active": true,
+          "phase": "fall",
+          "summary": {
+            "kind": "native-airborne-stun-demonstration",
+            "phase": "fall",
+            "outcome": "incomplete",
+            "damage": 0,
+            "events": [
+              {
+                "time": 0,
+                "label": "Airborne stun: native status demonstration"
+              },
+              {
+                "time": 0.3544000000000015,
+                "label": "Stunned: flight relinquished to gravity"
+              }
+            ],
+            "flightReleased": true,
+            "limpObserved": true
+          },
+          "holderModel": true,
+          "targetModel": true,
+          "held": false,
+          "position": [
+            0,
+            16.043642399999992,
+            -50
+          ],
+          "velocity": [
+            0,
+            -15.012000000000043,
+            0
+          ],
+          "recovery": null,
+          "canAct": false
+        },
+        {
+          "active": true,
+          "phase": "fall",
+          "summary": {
+            "kind": "native-airborne-stun-demonstration",
+            "phase": "fall",
+            "outcome": "incomplete",
+            "damage": 0,
+            "events": [
+              {
+                "time": 0,
+                "label": "Airborne stun: native status demonstration"
+              },
+              {
+                "time": 0.3544000000000015,
+                "label": "Stunned: flight relinquished to gravity"
+              }
+            ],
+            "flightReleased": true,
+            "limpObserved": true
+          },
+          "holderModel": true,
+          "targetModel": true,
+          "held": false,
+          "position": [
+            0,
+            5.299575599999944,
+            -50
+          ],
+          "velocity": [
+            0,
+            -38.784000000000106,
+            0
+          ],
+          "recovery": null,
+          "canAct": false
+        },
+        {
+          "active": true,
+          "phase": "recovery",
+          "summary": {
+            "kind": "native-airborne-stun-demonstration",
+            "phase": "recovery",
+            "outcome": "incomplete",
+            "damage": 0,
+            "events": [
+              {
+                "time": 0,
+                "label": "Airborne stun: native status demonstration"
+              },
+              {
+                "time": 0.3544000000000015,
+                "label": "Stunned: flight relinquished to gravity"
+              },
+              {
+                "time": 1.1260000000000006,
+                "label": "Ground reached: 0.0 health lost under native fall rules"
+              }
+            ],
+            "flightReleased": true,
+            "limpObserved": true
+          },
+          "holderModel": true,
+          "targetModel": true,
+          "held": false,
+          "position": [
+            0,
+            0,
+            -50
+          ],
+          "velocity": [
+            0,
+            0,
+            0
+          ],
+          "recovery": {
+            "elapsed": 0
+          },
+          "canAct": false
+        },
+        {
+          "active": true,
+          "phase": "recovery",
+          "summary": {
+            "kind": "native-airborne-stun-demonstration",
+            "phase": "recovery",
+            "outcome": "incomplete",
+            "damage": 0,
+            "events": [
+              {
+                "time": 0,
+                "label": "Airborne stun: native status demonstration"
+              },
+              {
+                "time": 0.3544000000000015,
+                "label": "Stunned: flight relinquished to gravity"
+              },
+              {
+                "time": 1.1260000000000006,
+                "label": "Ground reached: 0.0 health lost under native fall rules"
+              }
+            ],
+            "flightReleased": true,
+            "limpObserved": true
+          },
+          "holderModel": true,
+          "targetModel": true,
+          "held": false,
+          "position": [
+            0,
+            0,
+            -50
+          ],
+          "velocity": [
+            0,
+            0,
+            0
+          ],
+          "recovery": {
+            "elapsed": 0
+          },
+          "canAct": false
+        },
+        {
+          "active": true,
+          "phase": "recovery",
+          "summary": {
+            "kind": "native-airborne-stun-demonstration",
+            "phase": "recovery",
+            "outcome": "incomplete",
+            "damage": 0,
+            "events": [
+              {
+                "time": 0,
+                "label": "Airborne stun: native status demonstration"
+              },
+              {
+                "time": 0.3544000000000015,
+                "label": "Stunned: flight relinquished to gravity"
+              },
+              {
+                "time": 1.1260000000000006,
+                "label": "Ground reached: 0.0 health lost under native fall rules"
+              }
+            ],
+            "flightReleased": true,
+            "limpObserved": true
+          },
+          "holderModel": true,
+          "targetModel": true,
+          "held": false,
+          "position": [
+            0,
+            0,
+            -50
+          ],
+          "velocity": [
+            0,
+            0,
+            0
+          ],
+          "recovery": {
+            "elapsed": 0
+          },
+          "canAct": false
+        },
+        {
+          "active": true,
+          "phase": "recovery",
+          "summary": {
+            "kind": "native-airborne-stun-demonstration",
+            "phase": "recovery",
+            "outcome": "incomplete",
+            "damage": 0,
+            "events": [
+              {
+                "time": 0,
+                "label": "Airborne stun: native status demonstration"
+              },
+              {
+                "time": 0.3544000000000015,
+                "label": "Stunned: flight relinquished to gravity"
+              },
+              {
+                "time": 1.1260000000000006,
+                "label": "Ground reached: 0.0 health lost under native fall rules"
+              }
+            ],
+            "flightReleased": true,
+            "limpObserved": true
+          },
+          "holderModel": true,
+          "targetModel": true,
+          "held": false,
+          "position": [
+            0,
+            0,
+            -50
+          ],
+          "velocity": [
+            0,
+            0,
+            0
+          ],
+          "recovery": {
+            "elapsed": 0.03760000000000219
+          },
+          "canAct": false
+        },
+        {
+          "active": true,
+          "phase": "recovery",
+          "summary": {
+            "kind": "native-airborne-stun-demonstration",
+            "phase": "recovery",
+            "outcome": "incomplete",
+            "damage": 0,
+            "events": [
+              {
+                "time": 0,
+                "label": "Airborne stun: native status demonstration"
+              },
+              {
+                "time": 0.3544000000000015,
+                "label": "Stunned: flight relinquished to gravity"
+              },
+              {
+                "time": 1.1260000000000006,
+                "label": "Ground reached: 0.0 health lost under native fall rules"
+              }
+            ],
+            "flightReleased": true,
+            "limpObserved": true
+          },
+          "holderModel": true,
+          "targetModel": true,
+          "held": false,
+          "position": [
+            0,
+            0,
+            -50
+          ],
+          "velocity": [
+            0,
+            0,
+            0
+          ],
+          "recovery": {
+            "elapsed": 0.25029999999999936
+          },
+          "canAct": false
+        },
+        {
+          "active": true,
+          "phase": "recovery",
+          "summary": {
+            "kind": "native-airborne-stun-demonstration",
+            "phase": "recovery",
+            "outcome": "incomplete",
+            "damage": 0,
+            "events": [
+              {
+                "time": 0,
+                "label": "Airborne stun: native status demonstration"
+              },
+              {
+                "time": 0.3544000000000015,
+                "label": "Stunned: flight relinquished to gravity"
+              },
+              {
+                "time": 1.1260000000000006,
+                "label": "Ground reached: 0.0 health lost under native fall rules"
+              }
+            ],
+            "flightReleased": true,
+            "limpObserved": true
+          },
+          "holderModel": true,
+          "targetModel": true,
+          "held": false,
+          "position": [
+            0,
+            0,
+            -50
+          ],
+          "velocity": [
+            0,
+            0,
+            0
+          ],
+          "recovery": {
+            "elapsed": 0.47549999999999953
+          },
+          "canAct": false
+        },
+        {
+          "active": true,
+          "phase": "recovery",
+          "summary": {
+            "kind": "native-airborne-stun-demonstration",
+            "phase": "recovery",
+            "outcome": "incomplete",
+            "damage": 0,
+            "events": [
+              {
+                "time": 0,
+                "label": "Airborne stun: native status demonstration"
+              },
+              {
+                "time": 0.3544000000000015,
+                "label": "Stunned: flight relinquished to gravity"
+              },
+              {
+                "time": 1.1260000000000006,
+                "label": "Ground reached: 0.0 health lost under native fall rules"
+              }
+            ],
+            "flightReleased": true,
+            "limpObserved": true
+          },
+          "holderModel": true,
+          "targetModel": true,
+          "held": false,
+          "position": [
+            0,
+            0,
+            -50
+          ],
+          "velocity": [
+            0,
+            0,
+            0
+          ],
+          "recovery": {
+            "elapsed": 0.6882999999999992
+          },
+          "canAct": false
+        },
+        {
+          "active": true,
+          "phase": "recovery",
+          "summary": {
+            "kind": "native-airborne-stun-demonstration",
+            "phase": "recovery",
+            "outcome": "incomplete",
+            "damage": 0,
+            "events": [
+              {
+                "time": 0,
+                "label": "Airborne stun: native status demonstration"
+              },
+              {
+                "time": 0.3544000000000015,
+                "label": "Stunned: flight relinquished to gravity"
+              },
+              {
+                "time": 1.1260000000000006,
+                "label": "Ground reached: 0.0 health lost under native fall rules"
+              }
+            ],
+            "flightReleased": true,
+            "limpObserved": true
+          },
+          "holderModel": true,
+          "targetModel": true,
+          "held": false,
+          "position": [
+            0,
+            0,
+            -50
+          ],
+          "velocity": [
+            0,
+            0,
+            0
+          ],
+          "recovery": {
+            "elapsed": 0.9051000000000031
+          },
+          "canAct": false
+        },
+        {
+          "active": true,
+          "phase": "complete",
+          "summary": {
+            "kind": "native-airborne-stun-demonstration",
+            "phase": "complete",
+            "outcome": "incomplete",
+            "damage": 0,
+            "events": [
+              {
+                "time": 0,
+                "label": "Airborne stun: native status demonstration"
+              },
+              {
+                "time": 0.3544000000000015,
+                "label": "Stunned: flight relinquished to gravity"
+              },
+              {
+                "time": 1.1260000000000006,
+                "label": "Ground reached: 0.0 health lost under native fall rules"
+              },
+              {
+                "time": 3.0653999999999946,
+                "label": "Stun recovery finished / control returned"
+              }
+            ],
+            "flightReleased": true,
+            "limpObserved": true
+          },
+          "holderModel": true,
+          "targetModel": true,
+          "held": false,
+          "position": [
+            0,
+            0,
+            -50
+          ],
+          "velocity": [
+            0,
+            0,
+            0
+          ],
+          "recovery": null,
+          "canAct": true
+        },
+        {
+          "active": true,
+          "phase": "complete",
+          "summary": {
+            "kind": "native-airborne-stun-demonstration",
+            "phase": "complete",
+            "outcome": "incomplete",
+            "damage": 0,
+            "events": [
+              {
+                "time": 0,
+                "label": "Airborne stun: native status demonstration"
+              },
+              {
+                "time": 0.3544000000000015,
+                "label": "Stunned: flight relinquished to gravity"
+              },
+              {
+                "time": 1.1260000000000006,
+                "label": "Ground reached: 0.0 health lost under native fall rules"
+              },
+              {
+                "time": 3.0653999999999946,
+                "label": "Stun recovery finished / control returned"
+              }
+            ],
+            "flightReleased": true,
+            "limpObserved": true
+          },
+          "holderModel": true,
+          "targetModel": true,
+          "held": false,
+          "position": [
+            0,
+            0,
+            -50
+          ],
+          "velocity": [
+            0,
+            0,
+            0
+          ],
+          "recovery": null,
+          "canAct": true
+        },
+        {
+          "active": true,
+          "phase": "complete",
+          "summary": {
+            "kind": "native-airborne-stun-demonstration",
+            "phase": "complete",
+            "outcome": "incomplete",
+            "damage": 0,
+            "events": [
+              {
+                "time": 0,
+                "label": "Airborne stun: native status demonstration"
+              },
+              {
+                "time": 0.3544000000000015,
+                "label": "Stunned: flight relinquished to gravity"
+              },
+              {
+                "time": 1.1260000000000006,
+                "label": "Ground reached: 0.0 health lost under native fall rules"
+              },
+              {
+                "time": 3.0653999999999946,
+                "label": "Stun recovery finished / control returned"
+              }
+            ],
+            "flightReleased": true,
+            "limpObserved": true
+          },
+          "holderModel": true,
+          "targetModel": true,
+          "held": false,
+          "position": [
+            0,
+            0,
+            -50
+          ],
+          "velocity": [
+            0,
+            0,
+            0
+          ],
+          "recovery": null,
+          "canAct": true
+        },
+        {
+          "active": true,
+          "phase": "complete",
+          "summary": {
+            "kind": "native-airborne-stun-demonstration",
+            "phase": "complete",
+            "outcome": "incomplete",
+            "damage": 0,
+            "events": [
+              {
+                "time": 0,
+                "label": "Airborne stun: native status demonstration"
+              },
+              {
+                "time": 0.3544000000000015,
+                "label": "Stunned: flight relinquished to gravity"
+              },
+              {
+                "time": 1.1260000000000006,
+                "label": "Ground reached: 0.0 health lost under native fall rules"
+              },
+              {
+                "time": 3.0653999999999946,
+                "label": "Stun recovery finished / control returned"
+              }
+            ],
+            "flightReleased": true,
+            "limpObserved": true
+          },
+          "holderModel": true,
+          "targetModel": true,
+          "held": false,
+          "position": [
+            0,
+            0,
+            -50
+          ],
+          "velocity": [
+            0,
+            0,
+            0
+          ],
+          "recovery": null,
+          "canAct": true
+        },
+        {
+          "active": true,
+          "phase": "complete",
+          "summary": {
+            "kind": "native-airborne-stun-demonstration",
+            "phase": "complete",
+            "outcome": "incomplete",
+            "damage": 0,
+            "events": [
+              {
+                "time": 0,
+                "label": "Airborne stun: native status demonstration"
+              },
+              {
+                "time": 0.3544000000000015,
+                "label": "Stunned: flight relinquished to gravity"
+              },
+              {
+                "time": 1.1260000000000006,
+                "label": "Ground reached: 0.0 health lost under native fall rules"
+              },
+              {
+                "time": 3.0653999999999946,
+                "label": "Stun recovery finished / control returned"
+              }
+            ],
+            "flightReleased": true,
+            "limpObserved": true
+          },
+          "holderModel": true,
+          "targetModel": true,
+          "held": false,
+          "position": [
+            0,
+            0,
+            -50
+          ],
+          "velocity": [
+            0,
+            0,
+            0
+          ],
+          "recovery": null,
+          "canAct": true
+        },
+        {
+          "active": true,
+          "phase": "complete",
+          "summary": {
+            "kind": "native-airborne-stun-demonstration",
+            "phase": "complete",
+            "outcome": "incomplete",
+            "damage": 0,
+            "events": [
+              {
+                "time": 0,
+                "label": "Airborne stun: native status demonstration"
+              },
+              {
+                "time": 0.3544000000000015,
+                "label": "Stunned: flight relinquished to gravity"
+              },
+              {
+                "time": 1.1260000000000006,
+                "label": "Ground reached: 0.0 health lost under native fall rules"
+              },
+              {
+                "time": 3.0653999999999946,
+                "label": "Stun recovery finished / control returned"
+              }
+            ],
+            "flightReleased": true,
+            "limpObserved": true
+          },
+          "holderModel": true,
+          "targetModel": true,
+          "held": false,
+          "position": [
+            0,
+            0,
+            -50
+          ],
+          "velocity": [
+            0,
+            0,
+            0
+          ],
+          "recovery": null,
+          "canAct": true
+        },
+        {
+          "active": false,
+          "phase": "complete",
+          "summary": {
+            "kind": "native-airborne-stun-demonstration",
+            "phase": "complete",
+            "outcome": "complete",
+            "damage": 0,
+            "events": [
+              {
+                "time": 0,
+                "label": "Airborne stun: native status demonstration"
+              },
+              {
+                "time": 0.3544000000000015,
+                "label": "Stunned: flight relinquished to gravity"
+              },
+              {
+                "time": 1.1260000000000006,
+                "label": "Ground reached: 0.0 health lost under native fall rules"
+              },
+              {
+                "time": 3.0653999999999946,
+                "label": "Stun recovery finished / control returned"
+              }
+            ],
+            "flightReleased": true,
+            "limpObserved": true
+          },
+          "holderModel": true,
+          "targetModel": true,
+          "held": false,
+          "position": [
+            0,
+            0,
+            -50
+          ],
+          "velocity": [
+            0,
+            0,
+            0
+          ],
+          "recovery": null,
+          "canAct": true
+        }
+      ]
+    }
+  ],
+  "charge": {
+    "hero": "sol",
+    "records": [
+      {
+        "trial": "stationary",
+        "time": 0.25440000000000396,
+        "amount": 9.443200000000001,
+        "blocked": false,
+        "hp": 240.5568,
+        "playerKi": 120,
+        "healthLost": 9.44319999999999,
+        "guardEnergySpent": 0,
+        "guardBreakReason": null,
+        "result": "CONTACT",
+        "incoming": false,
+        "actor": 1,
+        "move": "light"
+      },
+      {
+        "entryReason": "ENTRY READY",
+        "entryRange": 40,
+        "entryFamily": "rush",
+        "trial": "stationary",
+        "kind": "jab",
+        "time": 0.15429999999999922,
+        "contacts": 1,
+        "approach": true,
+        "distance": 12,
+        "startup": 0.1,
+        "active": 0.06,
+        "recovery": 0.14,
+        "releaseCharge": 0.17092000000000265,
+        "releaseChoice": "combo",
+        "strikeKind": "light",
+        "context": "ground",
+        "interrupted": false,
+        "result": "contact",
+        "reason": "TARGET CONTACT"
+      },
+      {
+        "trial": "stationary",
+        "time": 1.7976000000000258,
+        "amount": 16.967599999999997,
+        "blocked": false,
+        "hp": 223.5892,
+        "playerKi": 120,
+        "healthLost": 16.967600000000004,
+        "guardEnergySpent": 0,
+        "guardBreakReason": null,
+        "result": "CONTACT",
+        "incoming": false,
+        "actor": 1,
+        "move": "heavy"
+      },
+      {
+        "entryReason": "ENTRY READY",
+        "entryRange": 40,
+        "entryFamily": "rush",
+        "trial": "stationary",
+        "kind": "cross",
+        "time": 1.6391000000000258,
+        "contacts": 1,
+        "approach": true,
+        "distance": 4.831162269513975,
+        "startup": 0.16,
+        "active": 0.07,
+        "recovery": 0.22,
+        "releaseCharge": 0.39136000000000365,
+        "releaseChoice": "cross",
+        "strikeKind": "heavy",
+        "context": "ground",
+        "interrupted": false,
+        "result": "contact",
+        "reason": "TARGET CONTACT"
+      },
+      {
+        "trial": "stationary",
+        "time": 4.679600000000107,
+        "amount": 42.267295600000004,
+        "blocked": false,
+        "hp": 181.3219044,
+        "playerKi": 120,
+        "healthLost": 42.26729560000001,
+        "guardEnergySpent": 0,
+        "guardBreakReason": null,
+        "result": "CONTACT",
+        "incoming": false,
+        "actor": 1,
+        "move": "heavy"
+      },
+      {
+        "entryReason": "ENTRY READY",
+        "entryRange": 40,
+        "entryFamily": "rush",
+        "trial": "stationary",
+        "kind": "power",
+        "time": 4.262600000000093,
+        "contacts": 1,
+        "approach": true,
+        "distance": 13.737792427303262,
+        "startup": 0.34,
+        "active": 0.09,
+        "recovery": 0.4,
+        "releaseCharge": 0.9770800000000002,
+        "releaseChoice": "power",
+        "strikeKind": "heavy",
+        "context": "ground",
+        "interrupted": false,
+        "result": "contact",
+        "reason": "TARGET CONTACT"
+      }
+    ],
+    "events": [
+      {
+        "kind": "charge-region",
+        "actor": 0,
+        "label": "RELEASE REGION · COMBO · 0.06 charge",
+        "releaseChoice": "combo",
+        "charge": 0.061,
+        "time": 8.600142000000037
+      },
+      {
+        "kind": "charge-region",
+        "actor": 0,
+        "label": "RELEASE REGION · COMBO · 0.01 charge",
+        "releaseChoice": "combo",
+        "charge": 0.010960000000003491,
+        "time": 9.859542000000063
+      },
+      {
+        "kind": "charge-region",
+        "actor": 0,
+        "label": "RELEASE REGION · STRAIGHT · 0.19 charge",
+        "releaseChoice": "cross",
+        "charge": 0.18616000000000354,
+        "time": 10.005542000000066
+      },
+      {
+        "kind": "charge-region",
+        "actor": 0,
+        "label": "RELEASE REGION · COMBO · 0.01 charge",
+        "releaseChoice": "combo",
+        "charge": 0.006040000000000873,
+        "time": 11.99084200000012
+      },
+      {
+        "kind": "charge-region",
+        "actor": 0,
+        "label": "RELEASE REGION · STRAIGHT · 0.18 charge",
+        "releaseChoice": "cross",
+        "charge": 0.1812400000000009,
+        "time": 12.136842000000126
+      },
+      {
+        "kind": "charge-region",
+        "actor": 0,
+        "label": "RELEASE REGION · HAYMAKER · 0.55 charge",
+        "releaseChoice": "power",
+        "charge": 0.551559999999999,
+        "time": 12.445442000000126
+      }
+    ]
+  }
+}
